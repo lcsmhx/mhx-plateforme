@@ -52,3 +52,22 @@
 ### Données déjà là
 - `aliments.json` 3109 CIQUAL, `aliments-usda.json` 8160, `recettes.json` 60, `rayons.json`.
 - Open Food Facts FR encore en conversion.
+
+- Lucas : **toute l’UI Nutrition en français** (l’ancienne app est en anglais : Energy/Carbs/Proteins/Fats, Shopping list, Diet plans, In progress). Traduire les libellés, pas copier l’anglais.
+- Lucas : l’ancienne app = **inspiration seulement**, pas un clone. Écran MHX original, français. Fonctions à reprendre : vue jour / repas, diète manuelle, diète IA, liste de courses.
+- Lucas : **juste fonctionnel**, pas une copie ni un polish. Composer / générer une diète + liste de courses.
+
+## 28 août 2026 — vidéo ancienne app (inspiration, pas clone)
+
+Lucas : **juste fonctionnel**, français, pas la même app.
+
+Vu dans la vidéo (vue client) :
+- Nutrition jour : petit-déj / collations / déjeuner / dîner, aliments + notes, case mangé → macros du repas.
+- Liste de courses : choisir début/fin, additionner les quantités. Chez eux c’est une liste plate ; **nous** on peut grouper avec `rayons.json`.
+- Plan : on assigne un plan existant (durée, recettes), pas de création from scratch à l’écran.
+
+Pas dans la vidéo (demandé à part par Lucas) :
+- Mode **manuel** : composer la diète.
+- Mode **IA** : générer depuis macros / régimes / allergènes.
+
+Ne pas recopier : accueil, boutique, questionnaires, libellés anglais.
