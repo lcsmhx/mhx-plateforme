@@ -9,7 +9,7 @@ Aliments, programmes et recettes pour la plateforme. Rien ici n’est secret.
 14 programmes originaux (2 à 5 séances, salle / haltères / poids du corps, full-body, half-body, PPL, sèche). Structure identique à `outilProgramme` dans index.html. Pas de copie de bibliothèques commerciales.
 
 ## recettes.json
-60 recettes du quotidien (petit-déj / déjeuner / dîner / collation). `aliment_id` pointe vers aliments.json. Macros recalculées par l’app.
+140 recettes du quotidien (petit-déj / déjeuner / dîner / collation). `aliment_id` pointe vers aliments.json. Macros recalculées par l’app.
 
 ## Reste à faire
 Brancher ces JSON dans l’app (côté Claude, `index.html`).
