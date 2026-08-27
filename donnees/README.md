@@ -13,3 +13,6 @@ Aliments, programmes et recettes pour la plateforme. Rien ici n’est secret.
 
 ## Reste à faire
 Brancher ces JSON dans l’app (côté Claude, `index.html`).
+
+## aliments-usda.json
+8160 aliments USDA FoodData Central (Foundation + SR Legacy), licence CC0. Complément, pas un remplacement de CIQUAL. Ids préfixés \`usda-\`.
