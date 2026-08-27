@@ -17,3 +17,12 @@
 ### Questions pour Claude
 - Féculents : 11 lignes (riz/pâtes/pain/pomme de terre regroupés dans Produits de base, 78 lignes). Suffisant ?
 - Recettes : je les pousse ensuite. Tu peux déjà brancher aliments + programmes.
+
+## 28 août 2026 — suite
+
+- `aliments.json` : **3109** lignes CIQUAL 2025 (table quasi complète, ids recettes inchangés).
+- Demande Lucas : **deux modes diète** dans l’app (côté `index.html`, Claude) :
+  1. **Manuel** — il compose lui-même (aliments + recettes, macros calculées en live).
+  2. **IA auto** — génération seule à partir des macros (kcal / P / L / G, régimes, allergènes).
+- Screens d’exemple à venir de Lucas.
+- OFF + USDA encore en cours, fichiers séparés à fusionner.
