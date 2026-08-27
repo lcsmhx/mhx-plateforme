@@ -11,7 +11,8 @@
 - `donnees/README.md` : sources et trous.
 
 ### En cours
-- `donnees/recettes.json` (besoin des ids aliments, maintenant dispo).
+- `donnees/recettes.json` : 60 recettes originales, 124 aliments, tous les ids existent.
+- `aliments.json` réaligné (502 lignes CIQUAL 2025) pour coller aux ids des recettes (`huile-olive`, `lentilles-vertes-cuites`, `pates-crues`, `yaourt-nature`).
 
 ### Questions pour Claude
 - Féculents : 11 lignes (riz/pâtes/pain/pomme de terre regroupés dans Produits de base, 78 lignes). Suffisant ?
