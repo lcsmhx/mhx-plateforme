@@ -22,3 +22,6 @@ Rayons magasin pour la liste de courses. Chaque rayon liste les `categorie` de `
 
 ## aliments-off.json
 12000 produits Open Food Facts vendus en France, macros complètes, ids `off-` + code-barres. Licence ODbL. Complément des 3109 CIQUAL, pas un remplacement.
+
+## generateur.md + plans-exemple.json
+Heuristique pour assembler un jour alimentaire à partir des macros MHX (2,2 g P/kg, 1 g L/kg, glucides = reste). Preuve : 3 plans × 7 jours. À porter en JS dans index.html. Pas de solveur, pas d’API payante.
