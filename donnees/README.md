@@ -16,3 +16,6 @@ Brancher ces JSON dans l’app (côté Claude, `index.html`).
 
 ## aliments-usda.json
 8160 aliments USDA FoodData Central (Foundation + SR Legacy), licence CC0. Complément, pas un remplacement de CIQUAL. Ids préfixés \`usda-\`.
+
+## rayons.json
+Rayons magasin pour la liste de courses. Chaque rayon liste les `categorie` de `aliments.json`. L’app additionne les ingrédients du plan et les range ici.

@@ -1,0 +1,50 @@
+[
+  {
+    "id": "fruits-legumes",
+    "nom": "Fruits et légumes",
+    "ordre": 1,
+    "categories": ["Fruits", "Légumes"]
+  },
+  {
+    "id": "viandes",
+    "nom": "Viandes",
+    "ordre": 2,
+    "categories": ["Viandes"]
+  },
+  {
+    "id": "poissons",
+    "nom": "Poissons et fruits de mer",
+    "ordre": 3,
+    "categories": ["Poissons"]
+  },
+  {
+    "id": "frais",
+    "nom": "Frais / crèmerie",
+    "ordre": 4,
+    "categories": ["Laitages", "Oeufs"]
+  },
+  {
+    "id": "feculents",
+    "nom": "Féculents et pain",
+    "ordre": 5,
+    "categories": ["Féculents"]
+  },
+  {
+    "id": "legumineuses",
+    "nom": "Légumineuses",
+    "ordre": 6,
+    "categories": ["Légumineuses"]
+  },
+  {
+    "id": "epicerie",
+    "nom": "Épicerie",
+    "ordre": 7,
+    "categories": ["Produits de base", "Oléagineux"]
+  },
+  {
+    "id": "matieres-grasses",
+    "nom": "Matières grasses",
+    "ordre": 8,
+    "categories": ["Matières grasses"]
+  }
+]
