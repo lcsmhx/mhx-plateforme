@@ -6524,5 +6524,1247 @@
       "halal",
       "casher"
     ]
+  },
+  {
+    "id": "blancs-oeufs-tomate-ciboulette",
+    "nom": "Blancs d'œufs brouillés, tomate et ciboulette",
+    "moment": "petit_dejeuner",
+    "temps_min": 12,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "blanc-doeuf-cru",
+        "grammes": 220
+      },
+      {
+        "aliment_id": "tomate-crue",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "ciboule-ou-ciboulette-fraiche",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 5
+      },
+      {
+        "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+        "grammes": 1
+      },
+      {
+        "aliment_id": "poivre-noir-poudre",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Battre les blancs d'œufs avec une pincée de sel.",
+      "Faire suer la tomate coupée en dés 2 min dans 1 c. à café d'huile.",
+      "Verser les blancs, remuer à feu doux jusqu'à ce qu'ils prennent.",
+      "Ciseler la ciboulette, poivrer et servir de suite."
+    ],
+    "allergenes": [
+      "oeufs"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
+  },
+  {
+    "id": "fromage-blanc-0-banane-cannelle",
+    "nom": "Fromage blanc 0 %, banane et cannelle",
+    "moment": "petit_dejeuner",
+    "temps_min": 5,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "fromage-blanc-0-mg",
+        "grammes": 250
+      },
+      {
+        "aliment_id": "banane-crue",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "cannelle-poudre",
+        "grammes": 1
+      },
+      {
+        "aliment_id": "miel",
+        "grammes": 10
+      }
+    ],
+    "etapes": [
+      "Mettre le fromage blanc dans un bol.",
+      "Couper la banane en rondelles et la poser dessus.",
+      "Saupoudrer de cannelle, nappe de miel et manger frais."
+    ],
+    "allergenes": [
+      "lait"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten",
+      "halal"
+    ]
+  },
+  {
+    "id": "skyr-peche-miel",
+    "nom": "Spécialité protéinée, pêche et miel",
+    "moment": "petit_dejeuner",
+    "temps_min": 5,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "specialite-laitiere-riche-en-proteines-nature",
+        "grammes": 250
+      },
+      {
+        "aliment_id": "peche-crue",
+        "grammes": 130
+      },
+      {
+        "aliment_id": "miel",
+        "grammes": 10
+      }
+    ],
+    "etapes": [
+      "Laver et couper la pêche en lamelles.",
+      "Verser la spécialité laitière dans un bol.",
+      "Ajouter la pêche et le miel, mélanger à peine."
+    ],
+    "allergenes": [
+      "lait"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten",
+      "halal"
+    ]
+  },
+  {
+    "id": "blancs-oeufs-epinards-champignons",
+    "nom": "Blancs d'œufs, épinards et champignons",
+    "moment": "petit_dejeuner",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "blanc-doeuf-cru",
+        "grammes": 220
+      },
+      {
+        "aliment_id": "epinard-cru",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "champignon-de-paris-ou-champignon-de-couche-cru",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "echalote-crue",
+        "grammes": 20
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 5
+      },
+      {
+        "aliment_id": "poivre-noir-poudre",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Émincer l'échalote et les champignons, les faire revenir 3 min dans l'huile.",
+      "Ajouter les épinards jusqu'à ce qu'ils tombent.",
+      "Verser les blancs d'œufs battus, cuire à feu doux en remuant.",
+      "Poivrer et servir chaud."
+    ],
+    "allergenes": [
+      "oeufs"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
+  },
+  {
+    "id": "faisselle-0-kiwi-miel",
+    "nom": "Faisselle 0 %, kiwi et miel",
+    "moment": "petit_dejeuner",
+    "temps_min": 5,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "faisselle-0-mg",
+        "grammes": 250
+      },
+      {
+        "aliment_id": "kiwi-cru",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "miel",
+        "grammes": 10
+      }
+    ],
+    "etapes": [
+      "Égoutter légèrement la faisselle si besoin.",
+      "Peler le kiwi et le couper en cubes.",
+      "Servir la faisselle nappée de kiwi et d'un filet de miel."
+    ],
+    "allergenes": [
+      "lait"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten",
+      "halal"
+    ]
+  },
+  {
+    "id": "tofu-brouille-tomate-curcuma",
+    "nom": "Tofu brouillé, tomate et curcuma",
+    "moment": "petit_dejeuner",
+    "temps_min": 12,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "tofu-nature",
+        "grammes": 140
+      },
+      {
+        "aliment_id": "tomate-crue",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "oignon-jaune-cru",
+        "grammes": 40
+      },
+      {
+        "aliment_id": "curcuma-poudre",
+        "grammes": 2
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 5
+      },
+      {
+        "aliment_id": "ciboule-ou-ciboulette-fraiche",
+        "grammes": 6
+      },
+      {
+        "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Émietter le tofu à la fourchette.",
+      "Faire suer l'oignon et la tomate 3 min dans l'huile.",
+      "Ajouter le tofu, le curcuma et le sel, remuer 4 min.",
+      "Ciseler la ciboulette et servir."
+    ],
+    "allergenes": [
+      "soja"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
+  },
+  {
+    "id": "fromage-blanc-0-pomme-miel",
+    "nom": "Fromage blanc 0 %, pomme et miel",
+    "moment": "petit_dejeuner",
+    "temps_min": 5,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "fromage-blanc-0-mg",
+        "grammes": 250
+      },
+      {
+        "aliment_id": "pomme-crue",
+        "grammes": 130
+      },
+      {
+        "aliment_id": "cannelle-poudre",
+        "grammes": 1
+      },
+      {
+        "aliment_id": "miel",
+        "grammes": 8
+      }
+    ],
+    "etapes": [
+      "Couper la pomme en petits dés, sans la peler.",
+      "Mélanger au fromage blanc avec la cannelle.",
+      "Ajouter le miel et servir de suite."
+    ],
+    "allergenes": [
+      "lait"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten",
+      "halal"
+    ]
+  },
+  {
+    "id": "lentilles-riz-courgettes",
+    "nom": "Lentilles, riz et courgettes",
+    "moment": "dejeuner",
+    "temps_min": 20,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "lentilles-vertes-cuites",
+        "grammes": 200
+      },
+      {
+        "aliment_id": "riz-blanc-cuit",
+        "grammes": 160
+      },
+      {
+        "aliment_id": "courgette-crue",
+        "grammes": 180
+      },
+      {
+        "aliment_id": "oignon-jaune-cru",
+        "grammes": 40
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 5
+      },
+      {
+        "aliment_id": "thym-frais",
+        "grammes": 3
+      },
+      {
+        "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Faire revenir l'oignon et la courgette en dés 6 min dans l'huile.",
+      "Ajouter les lentilles et le thym, réchauffer 3 min.",
+      "Servir avec le riz, saler légèrement."
+    ],
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
+  },
+  {
+    "id": "tofu-haricots-verts-riz-basmati",
+    "nom": "Tofu, haricots verts et riz basmati",
+    "moment": "dejeuner",
+    "temps_min": 20,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "tofu-nature",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "riz-basmati-cuit",
+        "grammes": 160
+      },
+      {
+        "aliment_id": "haricot-vert-cuit",
+        "grammes": 160
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 4
+      },
+      {
+        "aliment_id": "gingembre-racine-fraiche",
+        "grammes": 5
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 5
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 10
+      }
+    ],
+    "etapes": [
+      "Couper le tofu en cubes, le colorer 4 min dans l'huile avec l'ail et le gingembre.",
+      "Ajouter les haricots verts, réchauffer 3 min.",
+      "Servir sur le riz, arroser de citron."
+    ],
+    "allergenes": [
+      "soja"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
+  },
+  {
+    "id": "pois-chiches-pdt-brocoli",
+    "nom": "Pois chiches, pomme de terre et brocoli",
+    "moment": "dejeuner",
+    "temps_min": 25,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "pois-chiche-bouilli-cuit-a-leau",
+        "grammes": 180
+      },
+      {
+        "aliment_id": "pomme-de-terre-bouillie-cuite-a-leau",
+        "grammes": 180
+      },
+      {
+        "aliment_id": "brocoli-cuit-a-la-vapeur",
+        "grammes": 160
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 4
+      },
+      {
+        "aliment_id": "cumin-graine",
+        "grammes": 2
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 5
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 10
+      },
+      {
+        "aliment_id": "persil-frais",
+        "grammes": 6
+      }
+    ],
+    "etapes": [
+      "Réchauffer les pois chiches avec l'ail, le cumin et l'huile 4 min.",
+      "Ajouter la pomme de terre en morceaux et le brocoli.",
+      "Citronner, parsemer de persil et servir."
+    ],
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
+  },
+  {
+    "id": "pates-sg-tofu-tomate",
+    "nom": "Pâtes sans gluten, tofu et tomate",
+    "moment": "dejeuner",
+    "temps_min": 20,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "pates-seches-sans-gluten-cuites",
+        "grammes": 180
+      },
+      {
+        "aliment_id": "tofu-nature",
+        "grammes": 110
+      },
+      {
+        "aliment_id": "tomate-pelee-appertisee",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 4
+      },
+      {
+        "aliment_id": "basilic-frais",
+        "grammes": 6
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 5
+      },
+      {
+        "aliment_id": "poivre-noir-poudre",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Faire revenir l'ail et le tofu en cubes 4 min.",
+      "Ajouter les tomates, laisser mijoter 6 min.",
+      "Mélanger aux pâtes, poivrer, ciseler le basilic."
+    ],
+    "allergenes": [
+      "soja"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
+  },
+  {
+    "id": "salade-lentilles-concombre-fromage-blanc",
+    "nom": "Salade de lentilles, concombre et fromage blanc",
+    "moment": "dejeuner",
+    "temps_min": 10,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "lentilles-vertes-cuites",
+        "grammes": 180
+      },
+      {
+        "aliment_id": "fromage-blanc-0-mg",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "concombre-cru",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "tomate-cerise",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "oignon-rouge-cru",
+        "grammes": 20
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 10
+      },
+      {
+        "aliment_id": "menthe-fraiche",
+        "grammes": 5
+      },
+      {
+        "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Couper le concombre et les tomates cerises, émincer l'oignon.",
+      "Mélanger aux lentilles refroidies.",
+      "Ajouter le fromage blanc, le citron, la menthe et le sel."
+    ],
+    "allergenes": [
+      "lait"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten",
+      "halal"
+    ]
+  },
+  {
+    "id": "quinoa-lentilles-tomates-cerises",
+    "nom": "Quinoa, lentilles et tomates cerises",
+    "moment": "dejeuner",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "quinoa-bouilli-cuit-a-leau",
+        "grammes": 160
+      },
+      {
+        "aliment_id": "lentilles-vertes-cuites",
+        "grammes": 160
+      },
+      {
+        "aliment_id": "tomate-cerise",
+        "grammes": 100
+      },
+      {
+        "aliment_id": "concombre-cru",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 10
+      },
+      {
+        "aliment_id": "persil-frais",
+        "grammes": 6
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 5
+      }
+    ],
+    "etapes": [
+      "Mélanger le quinoa et les lentilles tièdes.",
+      "Ajouter les tomates cerises coupées et le concombre en dés.",
+      "Assaisonner d'huile, citron et persil."
+    ],
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
+  },
+  {
+    "id": "riz-pois-chiches-epinards-cumin",
+    "nom": "Riz, pois chiches et épinards au cumin",
+    "moment": "dejeuner",
+    "temps_min": 20,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "riz-blanc-cuit",
+        "grammes": 160
+      },
+      {
+        "aliment_id": "pois-chiche-bouilli-cuit-a-leau",
+        "grammes": 160
+      },
+      {
+        "aliment_id": "epinard-cru",
+        "grammes": 100
+      },
+      {
+        "aliment_id": "oignon-jaune-cru",
+        "grammes": 40
+      },
+      {
+        "aliment_id": "cumin-graine",
+        "grammes": 2
+      },
+      {
+        "aliment_id": "curcuma-poudre",
+        "grammes": 1
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 5
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 4
+      }
+    ],
+    "etapes": [
+      "Faire suer l'oignon et l'ail dans l'huile avec le cumin et le curcuma.",
+      "Ajouter les pois chiches puis les épinards jusqu'à ce qu'ils tombent.",
+      "Mélanger au riz et servir chaud."
+    ],
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
+  },
+  {
+    "id": "blancs-oeufs-pdt-haricots-verts",
+    "nom": "Blancs d'œufs, pomme de terre et haricots verts",
+    "moment": "dejeuner",
+    "temps_min": 20,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "blanc-doeuf-cru",
+        "grammes": 200
+      },
+      {
+        "aliment_id": "pomme-de-terre-bouillie-cuite-a-leau",
+        "grammes": 180
+      },
+      {
+        "aliment_id": "haricot-vert-cuit",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "echalote-crue",
+        "grammes": 20
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 5
+      },
+      {
+        "aliment_id": "persil-frais",
+        "grammes": 6
+      },
+      {
+        "aliment_id": "poivre-noir-poudre",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Faire suer l'échalote, ajouter les pommes de terre en cubes et les haricots.",
+      "Verser les blancs d'œufs battus, laisser prendre à feu doux.",
+      "Parsemer de persil, poivrer et servir."
+    ],
+    "allergenes": [
+      "oeufs"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
+  },
+  {
+    "id": "tofu-poivrons-riz-basmati",
+    "nom": "Tofu, poivrons et riz basmati",
+    "moment": "diner",
+    "temps_min": 20,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "tofu-nature",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "riz-basmati-cuit",
+        "grammes": 160
+      },
+      {
+        "aliment_id": "poivron-rouge-cru",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "courgette-crue",
+        "grammes": 100
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 4
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 5
+      },
+      {
+        "aliment_id": "paprika-poudre",
+        "grammes": 2
+      },
+      {
+        "aliment_id": "coriandre-fraiche",
+        "grammes": 6
+      }
+    ],
+    "etapes": [
+      "Couper le tofu, le poivron et la courgette.",
+      "Faire revenir 6 min avec l'ail, l'huile et le paprika.",
+      "Servir sur le riz, ciseler la coriandre."
+    ],
+    "allergenes": [
+      "soja"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
+  },
+  {
+    "id": "lentilles-poireaux-carottes",
+    "nom": "Lentilles, poireaux et carottes",
+    "moment": "diner",
+    "temps_min": 25,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "lentilles-vertes-cuites",
+        "grammes": 200
+      },
+      {
+        "aliment_id": "poireau-cru",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "carotte-crue",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "oignon-jaune-cru",
+        "grammes": 40
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 5
+      },
+      {
+        "aliment_id": "thym-frais",
+        "grammes": 3
+      },
+      {
+        "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Émincer le poireau et l'oignon, couper la carotte en rondelles.",
+      "Faire suer 8 min dans l'huile avec le thym.",
+      "Ajouter les lentilles et un fond d'eau, mijoter 8 min. Saler."
+    ],
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
+  },
+  {
+    "id": "pois-chiches-aubergine-tomate",
+    "nom": "Pois chiches, aubergine et tomate",
+    "moment": "diner",
+    "temps_min": 25,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "pois-chiche-bouilli-cuit-a-leau",
+        "grammes": 180
+      },
+      {
+        "aliment_id": "aubergine-crue",
+        "grammes": 160
+      },
+      {
+        "aliment_id": "tomate-pelee-appertisee",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "oignon-jaune-cru",
+        "grammes": 40
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 4
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 5
+      },
+      {
+        "aliment_id": "cumin-graine",
+        "grammes": 2
+      },
+      {
+        "aliment_id": "herbes-de-provence-sechees",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Faire revenir l'oignon, l'ail et l'aubergine en cubes 8 min.",
+      "Ajouter tomates, pois chiches, cumin et herbes.",
+      "Mijoter 10 min à couvert et servir."
+    ],
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
+  },
+  {
+    "id": "pates-sg-lentilles-epinards",
+    "nom": "Pâtes sans gluten, lentilles et épinards",
+    "moment": "diner",
+    "temps_min": 20,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "pates-seches-sans-gluten-cuites",
+        "grammes": 170
+      },
+      {
+        "aliment_id": "lentilles-vertes-cuites",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "epinard-cru",
+        "grammes": 100
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 4
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 5
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "poivre-noir-poudre",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Faire revenir l'ail dans l'huile, ajouter les épinards.",
+      "Incorporer les lentilles puis les pâtes.",
+      "Citronner, poivrer et servir chaud."
+    ],
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
+  },
+  {
+    "id": "blancs-oeufs-brocoli-pdt",
+    "nom": "Blancs d'œufs, brocoli et pomme de terre",
+    "moment": "diner",
+    "temps_min": 20,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "blanc-doeuf-cru",
+        "grammes": 200
+      },
+      {
+        "aliment_id": "brocoli-cuit-a-la-vapeur",
+        "grammes": 160
+      },
+      {
+        "aliment_id": "pomme-de-terre-bouillie-cuite-a-leau",
+        "grammes": 160
+      },
+      {
+        "aliment_id": "ciboule-ou-ciboulette-fraiche",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 5
+      },
+      {
+        "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+        "grammes": 1
+      },
+      {
+        "aliment_id": "poivre-noir-poudre",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Couper les pommes de terre, les réchauffer avec le brocoli dans l'huile.",
+      "Verser les blancs battus, laisser prendre à feu doux.",
+      "Ciseler la ciboulette, saler, poivrer."
+    ],
+    "allergenes": [
+      "oeufs"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
+  },
+  {
+    "id": "polenta-tofu-tomate-basilic",
+    "nom": "Polenta, tofu et tomate basilic",
+    "moment": "diner",
+    "temps_min": 20,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "polenta-ou-semoule-de-mais-cuite",
+        "grammes": 200
+      },
+      {
+        "aliment_id": "tofu-nature",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "tomate-pelee-appertisee",
+        "grammes": 140
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 4
+      },
+      {
+        "aliment_id": "basilic-frais",
+        "grammes": 6
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 5
+      },
+      {
+        "aliment_id": "origan-seche",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Faire revenir le tofu en cubes avec l'ail et l'huile.",
+      "Ajouter les tomates et l'origan, mijoter 6 min.",
+      "Servir sur la polenta, ciseler le basilic."
+    ],
+    "allergenes": [
+      "soja"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
+  },
+  {
+    "id": "soupe-lentilles-pdt-courgette",
+    "nom": "Soupe lentilles, pomme de terre et courgette",
+    "moment": "diner",
+    "temps_min": 30,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "lentilles-vertes-cuites",
+        "grammes": 180
+      },
+      {
+        "aliment_id": "pomme-de-terre-bouillie-cuite-a-leau",
+        "grammes": 140
+      },
+      {
+        "aliment_id": "courgette-crue",
+        "grammes": 140
+      },
+      {
+        "aliment_id": "carotte-crue",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "oignon-jaune-cru",
+        "grammes": 40
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 5
+      },
+      {
+        "aliment_id": "thym-frais",
+        "grammes": 3
+      },
+      {
+        "aliment_id": "poivre-noir-poudre",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Faire suer l'oignon, la carotte et la courgette 6 min.",
+      "Ajouter pomme de terre, lentilles, thym et de l'eau à hauteur.",
+      "Mijoter 15 min, mixer partiellement, poivrer."
+    ],
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
+  },
+  {
+    "id": "yaourt-0-myrtilles",
+    "nom": "Yaourt 0 % et myrtilles",
+    "moment": "collation",
+    "temps_min": 3,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "yaourt-nature-0",
+        "grammes": 200
+      },
+      {
+        "aliment_id": "myrtille-crue",
+        "grammes": 80
+      }
+    ],
+    "etapes": [
+      "Rincer les myrtilles.",
+      "Les verser sur le yaourt 0 % et manger frais."
+    ],
+    "allergenes": [
+      "lait"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten",
+      "halal"
+    ]
+  },
+  {
+    "id": "fromage-blanc-0-peche",
+    "nom": "Fromage blanc 0 % et pêche",
+    "moment": "collation",
+    "temps_min": 3,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "fromage-blanc-0-mg",
+        "grammes": 180
+      },
+      {
+        "aliment_id": "peche-crue",
+        "grammes": 120
+      }
+    ],
+    "etapes": [
+      "Couper la pêche en lamelles.",
+      "Servir avec le fromage blanc bien frais."
+    ],
+    "allergenes": [
+      "lait"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten",
+      "halal"
+    ]
+  },
+  {
+    "id": "blanc-oeuf-cuit-tomates-cerises",
+    "nom": "Blanc d'œuf cuit et tomates cerises",
+    "moment": "collation",
+    "temps_min": 8,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "oeuf-blanc-blanc-doeuf-cuit",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "tomate-cerise",
+        "grammes": 100
+      },
+      {
+        "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+        "grammes": 1
+      },
+      {
+        "aliment_id": "persil-frais",
+        "grammes": 4
+      }
+    ],
+    "etapes": [
+      "Couper le blanc d'œuf cuit en morceaux.",
+      "Rincer les tomates cerises, les couper en deux.",
+      "Saler, parsemer de persil et servir."
+    ],
+    "allergenes": [
+      "oeufs"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
   }
 ]
