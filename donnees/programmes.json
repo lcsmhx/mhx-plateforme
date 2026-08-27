@@ -1,0 +1,3635 @@
+[
+  {
+    "id": "corps-entier-2j-debutant",
+    "nom": "Corps entier — 2 séances",
+    "niveau": "Debutant",
+    "seances_semaine": 2,
+    "lieu": "Salle complète",
+    "objectif": "Prise de muscle",
+    "duree_semaines": 8,
+    "note": "72 h entre les deux séances. Échauffement 8 min (vélo + 2 séries légères du premier exo). Monte la charge dès que tu boucles toutes les séries dans le haut de la fourchette, technique propre, 2 reps en réserve.",
+    "seances": [
+      {
+        "nom": "Séance A — Squat et poussée",
+        "note": "Priorité : apprentissage du squat et du développé. Charge secondaire sur le reste.",
+        "exercices": [
+          {
+            "nom": "Squat barre",
+            "series": "4",
+            "reps": "8-10",
+            "repos": "150 s",
+            "tempo": "3-0-1",
+            "note": "Talons au sol, genoux dans l'axe des orteils, haltères au-dessus des genoux en bas.",
+            "lien": ""
+          },
+          {
+            "nom": "Développé couché",
+            "series": "4",
+            "reps": "8-10",
+            "repos": "150 s",
+            "tempo": "3-0-1",
+            "note": "Omoplates serrées, barre au bas des pecs, poignets droits.",
+            "lien": ""
+          },
+          {
+            "nom": "Rowing barre buste penché",
+            "series": "4",
+            "reps": "8-10",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "Dos plat, tirer vers le nombril, pas d'élan du bas du dos.",
+            "lien": ""
+          },
+          {
+            "nom": "Fentes haltères",
+            "series": "3",
+            "reps": "8-10/jambe",
+            "repos": "90 s",
+            "tempo": "2-0-1",
+            "note": "Grand pas, genou arrière vers le sol sans claquer.",
+            "lien": ""
+          },
+          {
+            "nom": "Élévations latérales haltères",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "60 s",
+            "tempo": "2-0-2",
+            "note": "Coudes légèrement fléchis, stoppe avant les épaules.",
+            "lien": ""
+          },
+          {
+            "nom": "Curl haltères",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Coudes collés au corps, pas de balancier.",
+            "lien": ""
+          },
+          {
+            "nom": "Planche",
+            "series": "3",
+            "reps": "30-45 s",
+            "repos": "45 s",
+            "tempo": "iso",
+            "note": "Bassin neutre, fessiers serrés, respire.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance B — Hanche et tirage",
+        "note": "Le soulevé de terre reste lourd mais propre. Si le dos s'arrondit, baisse la charge.",
+        "exercices": [
+          {
+            "nom": "Soulevé de terre",
+            "series": "4",
+            "reps": "6-8",
+            "repos": "180 s",
+            "tempo": "3-0-1",
+            "note": "Barre contre les tibias, ventre gainé, hanches et épaules montent ensemble.",
+            "lien": ""
+          },
+          {
+            "nom": "Développé haltères incliné",
+            "series": "4",
+            "reps": "8-10",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "Banc 30°, haltères qui se touchent en haut sans s'entrechoquer.",
+            "lien": ""
+          },
+          {
+            "nom": "Tirage vertical",
+            "series": "4",
+            "reps": "8-12",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "Poitrine vers la barre, coudes vers les hanches, pas de bascule arrière.",
+            "lien": ""
+          },
+          {
+            "nom": "Hip thrust",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "90 s",
+            "tempo": "2-1-1",
+            "note": "Menton rentré, pause 1 s en haut, descendre sans perdre le contact.",
+            "lien": ""
+          },
+          {
+            "nom": "Face pulls",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "60 s",
+            "tempo": "2-1-1",
+            "note": "Corde aux yeux, rotation externe en fin de course.",
+            "lien": ""
+          },
+          {
+            "nom": "Extension triceps corde",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Coudes fixes, ouvre la corde en bas.",
+            "lien": ""
+          },
+          {
+            "nom": "Crunch au sol",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Lombaires collées, expire en haut, amplitude courte.",
+            "lien": ""
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "corps-entier-3j-debutant-halteres",
+    "nom": "Corps entier haltères — 3 séances",
+    "niveau": "Debutant",
+    "seances_semaine": 3,
+    "lieu": "Maison avec haltères",
+    "objectif": "Prise de muscle",
+    "duree_semaines": 8,
+    "note": "A / B / C en rotation (ex. lun-mer-ven). Si tu manques un jour, enchaîne à la séance suivante sans rattraper. Une paire d'haltères suffit : le sol remplace le banc.",
+    "seances": [
+      {
+        "nom": "Séance A — Poussée",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Squat goblet",
+            "series": "4",
+            "reps": "10-12",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Haltère contre la poitrine, coudes dedans, descends sous la parallèle si les hanches le permettent.",
+            "lien": ""
+          },
+          {
+            "nom": "Développé haltères au sol",
+            "series": "4",
+            "reps": "8-10",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "Omoplates au sol, haltères s'arrêtent quand les triceps touchent. Pas besoin de banc.",
+            "lien": ""
+          },
+          {
+            "nom": "Rowing haltère un bras",
+            "series": "4",
+            "reps": "10-12/bras",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Appui main + genou sur un canapé ou une chaise stable, dos plat.",
+            "lien": ""
+          },
+          {
+            "nom": "Fentes arrière haltères",
+            "series": "3",
+            "reps": "8-10/jambe",
+            "repos": "75 s",
+            "tempo": "2-0-1",
+            "note": "Torse droit, genou avant au-dessus du pied.",
+            "lien": ""
+          },
+          {
+            "nom": "Développé haltères assis",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Assis au bord d'une chaise, pas de cambrure excessive.",
+            "lien": ""
+          },
+          {
+            "nom": "Curl marteau",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Pouces vers l'avant, coudes collés.",
+            "lien": ""
+          },
+          {
+            "nom": "Planche",
+            "series": "3",
+            "reps": "40 s",
+            "repos": "45 s",
+            "tempo": "iso",
+            "note": "Coudes sous les épaules, bassin ni trop haut ni trop bas.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance B — Tirage",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Soulevé de terre haltères",
+            "series": "4",
+            "reps": "8-10",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "Haltères le long des cuisses, tibia vertical, recule les hanches avant de plier les genoux.",
+            "lien": ""
+          },
+          {
+            "nom": "Rowing deux haltères buste penché",
+            "series": "4",
+            "reps": "10-12",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Buste à 45°, tirer vers les hanches, omoplates serrées en haut.",
+            "lien": ""
+          },
+          {
+            "nom": "Pompes sur haltères",
+            "series": "3",
+            "reps": "8-12",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Poignées d'haltères au sol si stables, sinon pompes classiques. Genoux si besoin.",
+            "lien": ""
+          },
+          {
+            "nom": "Pont fessier haltère",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "60 s",
+            "tempo": "2-1-1",
+            "note": "Haltère sur le bassin (serviette), pause en haut, descend sans poser.",
+            "lien": ""
+          },
+          {
+            "nom": "Oiseau haltères",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "60 s",
+            "tempo": "2-1-1",
+            "note": "Buste penché, pouces légèrement vers le sol, amplitude courte.",
+            "lien": ""
+          },
+          {
+            "nom": "Extension triceps haltère à deux mains",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Haltère derrière la tête, coudes vers le plafond, pas d'écartement.",
+            "lien": ""
+          },
+          {
+            "nom": "Dead bug",
+            "series": "3",
+            "reps": "8/côté",
+            "repos": "45 s",
+            "tempo": "2-1-2",
+            "note": "Lombaires collées au sol, bras et jambe opposés, lent.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance C — Jambes et épaules",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Squat sumo haltère",
+            "series": "4",
+            "reps": "10-12",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Pieds plus larges, haltère entre les pieds, genoux suivent les orteils.",
+            "lien": ""
+          },
+          {
+            "nom": "Soulevé de terre roumain haltères",
+            "series": "4",
+            "reps": "8-10",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "Légère flexion de genoux, haltères le long des cuisses jusqu'au milieu des tibias.",
+            "lien": ""
+          },
+          {
+            "nom": "Développé Arnold",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Rotation paume-vers-toi → paume-vers-l'avant pendant la montée.",
+            "lien": ""
+          },
+          {
+            "nom": "Fentes latérales haltère",
+            "series": "3",
+            "reps": "8/côté",
+            "repos": "75 s",
+            "tempo": "2-0-1",
+            "note": "Un haltère en goblet, recule les hanches, pied d'appui à plat.",
+            "lien": ""
+          },
+          {
+            "nom": "Élévations latérales",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "60 s",
+            "tempo": "2-0-2",
+            "note": "Charge légère, 2 s pour descendre.",
+            "lien": ""
+          },
+          {
+            "nom": "Mollets haltères",
+            "series": "3",
+            "reps": "15-20",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Sur une marche si possible, pause en haut.",
+            "lien": ""
+          },
+          {
+            "nom": "Hollow hold",
+            "series": "3",
+            "reps": "20-30 s",
+            "repos": "45 s",
+            "tempo": "iso",
+            "note": "Bas du dos collé, bras le long du corps si trop dur.",
+            "lien": ""
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "corps-entier-3j-debutant-poids-corps",
+    "nom": "Corps entier poids du corps — 3 séances",
+    "niveau": "Debutant",
+    "seances_semaine": 3,
+    "lieu": "Maison sans matériel",
+    "objectif": "Prise de muscle",
+    "duree_semaines": 8,
+    "note": "Pas de charge : tu progresses en rendant l'exercice plus dur (genoux → pompes → pieds surélevés, puis tempo plus lent). 1 jour de repos entre deux séances. Qualité avant le nombre de reps.",
+    "seances": [
+      {
+        "nom": "Séance A — Squat et pompe",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Squats",
+            "series": "4",
+            "reps": "12-15",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Pieds largeur d'épaules, descends jusqu'où le talon reste au sol.",
+            "lien": ""
+          },
+          {
+            "nom": "Pompes",
+            "series": "4",
+            "reps": "6-12",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Genoux au sol tant que tu ne tiens pas 8 reps strictes. Corps gainé.",
+            "lien": ""
+          },
+          {
+            "nom": "Rowing de table",
+            "series": "4",
+            "reps": "8-12",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Sous une table solide, tirage poitrine vers le plateau, corps gainé.",
+            "lien": ""
+          },
+          {
+            "nom": "Fentes arrière",
+            "series": "3",
+            "reps": "10/jambe",
+            "repos": "60 s",
+            "tempo": "2-0-1",
+            "note": "Torse droit, petit équilibre d'abord, amplitude ensuite.",
+            "lien": ""
+          },
+          {
+            "nom": "Pike push-up",
+            "series": "3",
+            "reps": "6-10",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Fesses hautes, tête vers le sol entre les mains. Genoux au sol si trop dur.",
+            "lien": ""
+          },
+          {
+            "nom": "Pont fessier",
+            "series": "3",
+            "reps": "15-20",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Pieds près des fesses, pause 1 s en haut, pas d'hyperlordose.",
+            "lien": ""
+          },
+          {
+            "nom": "Planche",
+            "series": "3",
+            "reps": "30-40 s",
+            "repos": "45 s",
+            "tempo": "iso",
+            "note": "Si ça tremble, raccourcis le temps et recommence propre.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance B — Dips et hanche",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Squats sumo",
+            "series": "4",
+            "reps": "12-15",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Pieds plus ouverts, genoux qui suivent les orteils.",
+            "lien": ""
+          },
+          {
+            "nom": "Dips de chaise",
+            "series": "4",
+            "reps": "8-12",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Chaise contre un mur, fesses près du bord, coudes vers l'arrière.",
+            "lien": ""
+          },
+          {
+            "nom": "Superman",
+            "series": "3",
+            "reps": "8-12",
+            "repos": "60 s",
+            "tempo": "2-1-1",
+            "note": "Bras et jambes décollés, regard vers le sol, pause 1 s.",
+            "lien": ""
+          },
+          {
+            "nom": "Pont fessier une jambe",
+            "series": "3",
+            "reps": "8-10/jambe",
+            "repos": "60 s",
+            "tempo": "2-1-1",
+            "note": "Bassin droit, l'autre jambe tendue. Reviens à deux pieds si le bassin bascule.",
+            "lien": ""
+          },
+          {
+            "nom": "Pompes diamant",
+            "series": "3",
+            "reps": "6-10",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Pouces et index se touchent. Genoux autorisés.",
+            "lien": ""
+          },
+          {
+            "nom": "Crunch",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Mains aux tempes, expire en décollant les omoplates seulement.",
+            "lien": ""
+          },
+          {
+            "nom": "Mollets unipodal",
+            "series": "3",
+            "reps": "12-15/jambe",
+            "repos": "30 s",
+            "tempo": "2-1-1",
+            "note": "Appui léger au mur, amplitude complète.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance C — Fentes et tirage",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Fentes marchées",
+            "series": "4",
+            "reps": "10/jambe",
+            "repos": "75 s",
+            "tempo": "2-0-1",
+            "note": "Sur place si l'espace manque : alterne avant/arrière.",
+            "lien": ""
+          },
+          {
+            "nom": "Pompes pieds surélevés",
+            "series": "3",
+            "reps": "6-10",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Pieds sur une marche. Reviens à plat si tu casses la ligne.",
+            "lien": ""
+          },
+          {
+            "nom": "Rowing de table prise large",
+            "series": "4",
+            "reps": "8-12",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Mains plus écartées que A, tirer vers la poitrine.",
+            "lien": ""
+          },
+          {
+            "nom": "Good morning poids du corps",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Mains derrière la tête, recule les hanches, dos plat, genoux souples.",
+            "lien": ""
+          },
+          {
+            "nom": "Abduction de hanche au sol",
+            "series": "3",
+            "reps": "10/côté",
+            "repos": "45 s",
+            "tempo": "2-0-1",
+            "note": "Allongé sur le côté, jambe tendue, pas de rotation du bassin.",
+            "lien": ""
+          },
+          {
+            "nom": "Dead bug",
+            "series": "3",
+            "reps": "8/côté",
+            "repos": "45 s",
+            "tempo": "2-1-2",
+            "note": "Lent, lombaires collées, expire en tendant.",
+            "lien": ""
+          },
+          {
+            "nom": "Wall sit",
+            "series": "3",
+            "reps": "30-45 s",
+            "repos": "60 s",
+            "tempo": "iso",
+            "note": "Cuisses parallèles au sol, dos contre le mur, talons à plat.",
+            "lien": ""
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "haut-bas-4j-intermediaire",
+    "nom": "Haut / Bas — 4 séances",
+    "niveau": "Intermediaire",
+    "seances_semaine": 4,
+    "lieu": "Salle complète",
+    "objectif": "Prise de muscle",
+    "duree_semaines": 10,
+    "note": "48 h entre deux séances haut, 48 h entre deux séances bas (ex. lun haut A, mar bas A, jeu haut B, ven bas B). Semaines 1-5 : vise le haut de la fourchette. Semaines 6-10 : -2 reps, +charge. 1-2 reps en réserve sur les composés.",
+    "seances": [
+      {
+        "nom": "Séance A — Haut horizontal",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Développé couché",
+            "series": "4",
+            "reps": "6-8",
+            "repos": "150 s",
+            "tempo": "3-0-1",
+            "note": "Descente contrôlée, pas de rebond sur la poitrine.",
+            "lien": ""
+          },
+          {
+            "nom": "Rowing barre",
+            "series": "4",
+            "reps": "6-8",
+            "repos": "150 s",
+            "tempo": "3-0-1",
+            "note": "Buste figé, tirer vers le bas de la cage.",
+            "lien": ""
+          },
+          {
+            "nom": "Développé haltères incliné",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "Banc 30°, haltères qui convergent sans se toucher fort.",
+            "lien": ""
+          },
+          {
+            "nom": "Tirage vertical",
+            "series": "3",
+            "reps": "8-12",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Poitrine haute, coudes bas, pas d'élan des hanches.",
+            "lien": ""
+          },
+          {
+            "nom": "Élévations latérales",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "60 s",
+            "tempo": "2-0-2",
+            "note": "Stoppe à hauteur d'épaule, 2 s de descente.",
+            "lien": ""
+          },
+          {
+            "nom": "Curl barre",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Coudes calés, pas d'ouverture vers l'avant.",
+            "lien": ""
+          },
+          {
+            "nom": "Extension triceps poulie",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Épaules basses, seule l'avant-bras bouge.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance B — Bas squat",
+        "note": "Si le squat du jour est lourd, la presse reste une pompe, pas un max.",
+        "exercices": [
+          {
+            "nom": "Squat barre",
+            "series": "4",
+            "reps": "6-8",
+            "repos": "180 s",
+            "tempo": "3-0-1",
+            "note": "Respire et gaine avant de descendre. Profondeur identique à chaque série.",
+            "lien": ""
+          },
+          {
+            "nom": "Presse à cuisses",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "Pieds milieu du plateau, ne verrouille pas les genoux en haut.",
+            "lien": ""
+          },
+          {
+            "nom": "Leg curl",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Bassin collé, amplitude complète, pas d'élan.",
+            "lien": ""
+          },
+          {
+            "nom": "Fentes bulgares",
+            "series": "3",
+            "reps": "8-10/jambe",
+            "repos": "90 s",
+            "tempo": "2-0-1",
+            "note": "Pied arrière sur un banc, torse légèrement penché.",
+            "lien": ""
+          },
+          {
+            "nom": "Mollets à la presse",
+            "series": "4",
+            "reps": "12-15",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Pause 1 s en haut, étirement en bas sans rebond.",
+            "lien": ""
+          },
+          {
+            "nom": "Relevé de jambes suspendu",
+            "series": "3",
+            "reps": "8-12",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Bassin qui bascule, pas seulement les genoux. Genoux fléchis si besoin.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance C — Haut vertical",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Développé militaire",
+            "series": "4",
+            "reps": "6-8",
+            "repos": "150 s",
+            "tempo": "3-0-1",
+            "note": "Barre devant, gainage dur, pas de bascule lombaire.",
+            "lien": ""
+          },
+          {
+            "nom": "Tractions",
+            "series": "4",
+            "reps": "6-10",
+            "repos": "150 s",
+            "tempo": "3-0-1",
+            "note": "Lest ou assistance pour rester dans la fourchette. Menton au-dessus, descente complète.",
+            "lien": ""
+          },
+          {
+            "nom": "Développé haltères plat",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "Course plus longue que la barre, contrôle en bas.",
+            "lien": ""
+          },
+          {
+            "nom": "Rowing haltère",
+            "series": "3",
+            "reps": "8-10/bras",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Coude ras le corps, haltère vers la hanche.",
+            "lien": ""
+          },
+          {
+            "nom": "Face pulls",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "60 s",
+            "tempo": "2-1-1",
+            "note": "Rotation externe en fin de course, charge légère.",
+            "lien": ""
+          },
+          {
+            "nom": "Curl marteau",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Pouces vers l'avant, pas de swing.",
+            "lien": ""
+          },
+          {
+            "nom": "Dips",
+            "series": "3",
+            "reps": "6-10",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Torse légèrement penché pour les pecs, ou droit pour les triceps. Assistance si besoin.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance D — Bas hanche",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Soulevé de terre",
+            "series": "4",
+            "reps": "5-7",
+            "repos": "180 s",
+            "tempo": "3-0-1",
+            "note": "Une seule série d'approche lourde. Stoppe si le dos s'arrondit.",
+            "lien": ""
+          },
+          {
+            "nom": "Hip thrust",
+            "series": "4",
+            "reps": "8-10",
+            "repos": "120 s",
+            "tempo": "2-1-1",
+            "note": "Menton rentré, pause 1 s, tibia vertical en haut.",
+            "lien": ""
+          },
+          {
+            "nom": "Leg extension",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Dossier reculé, 1 s de contraction en haut sans claquer.",
+            "lien": ""
+          },
+          {
+            "nom": "Fentes marchées",
+            "series": "3",
+            "reps": "8/jambe",
+            "repos": "90 s",
+            "tempo": "2-0-1",
+            "note": "Haltères, grand pas, genou arrière proche du sol.",
+            "lien": ""
+          },
+          {
+            "nom": "Abducteurs machine",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Dossier collé, amplitude confortable, pas d'élan.",
+            "lien": ""
+          },
+          {
+            "nom": "Gainage latéral",
+            "series": "3",
+            "reps": "25-35 s/côté",
+            "repos": "45 s",
+            "tempo": "iso",
+            "note": "Épaule-hanche-cheville alignées, bassin ni en avant ni en arrière.",
+            "lien": ""
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ppl-4j-intermediaire",
+    "nom": "Push / Pull / Legs — 4 séances",
+    "niveau": "Intermediaire",
+    "seances_semaine": 4,
+    "lieu": "Salle complète",
+    "objectif": "Prise de muscle",
+    "duree_semaines": 8,
+    "note": "48 h de repos entre deux séances travaillant le même groupe. Ordre type : Push, Pull, repos, Legs, Relance. La Relance n'est pas un second Push : volume d'épaules, bras et chaîne postérieure, charges modérées.",
+    "seances": [
+      {
+        "nom": "Séance A — Push",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Développé couché",
+            "series": "4",
+            "reps": "6-8",
+            "repos": "150 s",
+            "tempo": "3-0-1",
+            "note": "Descente contrôlée, 1-2 reps en réserve.",
+            "lien": ""
+          },
+          {
+            "nom": "Développé militaire",
+            "series": "4",
+            "reps": "6-8",
+            "repos": "150 s",
+            "tempo": "3-0-1",
+            "note": "Après le couché : baisse la charge, garde le gainage.",
+            "lien": ""
+          },
+          {
+            "nom": "Développé haltères incliné",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "30°, haltères stables en bas.",
+            "lien": ""
+          },
+          {
+            "nom": "Écartés poulie vis-à-vis",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Léger coude fléchi, étirement en arrière, pas de claquement devant.",
+            "lien": ""
+          },
+          {
+            "nom": "Élévations latérales",
+            "series": "4",
+            "reps": "12-15",
+            "repos": "60 s",
+            "tempo": "2-0-2",
+            "note": "4 séries courtes > 2 séries lourdes et moche.",
+            "lien": ""
+          },
+          {
+            "nom": "Extension triceps corde",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Ouvre la corde en bas, coudes cloués.",
+            "lien": ""
+          },
+          {
+            "nom": "Dips",
+            "series": "3",
+            "reps": "6-10",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Série de finition. Assistance ou lest pour rester dans 6-10.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance B — Pull",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Tractions",
+            "series": "4",
+            "reps": "6-8",
+            "repos": "150 s",
+            "tempo": "3-0-1",
+            "note": "Lest ou élastique pour tenir 6-8 strictes. Pas de kipping.",
+            "lien": ""
+          },
+          {
+            "nom": "Rowing barre",
+            "series": "4",
+            "reps": "6-8",
+            "repos": "150 s",
+            "tempo": "3-0-1",
+            "note": "Buste figé à 45°, tirage vers le nombril.",
+            "lien": ""
+          },
+          {
+            "nom": "Tirage horizontal",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Poitrine haute, omoplates d'abord, puis coudes.",
+            "lien": ""
+          },
+          {
+            "nom": "Oiseau haltères",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "60 s",
+            "tempo": "2-1-1",
+            "note": "Charge légère, haut du dos, pas d'élan lombaire.",
+            "lien": ""
+          },
+          {
+            "nom": "Face pulls",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Corde aux yeux, rotation externe.",
+            "lien": ""
+          },
+          {
+            "nom": "Curl barre",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Coudes calés contre les hanches.",
+            "lien": ""
+          },
+          {
+            "nom": "Curl pupitre",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Étirement en bas sans déverrouiller le coude.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance C — Legs",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Squat barre",
+            "series": "4",
+            "reps": "6-8",
+            "repos": "180 s",
+            "tempo": "3-0-1",
+            "note": "Profondeur identique. Ceinture si tu dépasses ~80 % du max ressenti.",
+            "lien": ""
+          },
+          {
+            "nom": "Soulevé de terre roumain",
+            "series": "4",
+            "reps": "8-10",
+            "repos": "150 s",
+            "tempo": "3-0-1",
+            "note": "Barre le long des cuisses, hanches en arrière, ischios étirés.",
+            "lien": ""
+          },
+          {
+            "nom": "Presse à cuisses",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "Contrôle 3 s en descente, pas de rebond en bas.",
+            "lien": ""
+          },
+          {
+            "nom": "Fentes bulgares",
+            "series": "3",
+            "reps": "8-10/jambe",
+            "repos": "90 s",
+            "tempo": "2-0-1",
+            "note": "Haltères, genou avant stable.",
+            "lien": ""
+          },
+          {
+            "nom": "Leg curl",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Bassin collé, pause 1 s en contraction si tu triches l'élan.",
+            "lien": ""
+          },
+          {
+            "nom": "Mollets debout",
+            "series": "4",
+            "reps": "12-15",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Étirement bas, contraction haut, pas de rebond.",
+            "lien": ""
+          },
+          {
+            "nom": "Crunch à la poulie",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Arrondis le dos, bassin qui bascule, charge légère.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance D — Relance",
+        "note": "Charges 1 cran sous tes séances A/B. Objectif : volume propre, pas de record.",
+        "exercices": [
+          {
+            "nom": "Développé haltères assis",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "Volume d'épaules, pas un max. Dossier réglé quasi droit.",
+            "lien": ""
+          },
+          {
+            "nom": "Tirage vertical prise serrée",
+            "series": "3",
+            "reps": "8-12",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Poignée triangle, coudes le long du corps.",
+            "lien": ""
+          },
+          {
+            "nom": "Hip thrust",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "90 s",
+            "tempo": "2-1-1",
+            "note": "Rappel fessiers après le jour jambes, charge modérée.",
+            "lien": ""
+          },
+          {
+            "nom": "Élévations latérales",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "60 s",
+            "tempo": "2-0-2",
+            "note": "Deuxième dose de la semaine, reste loin de l'échec.",
+            "lien": ""
+          },
+          {
+            "nom": "Curl marteau",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Avant-bras et brachial, pas de swing.",
+            "lien": ""
+          },
+          {
+            "nom": "Extension nuque haltère",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Deux mains, coudes au plafond, amplitude complète.",
+            "lien": ""
+          },
+          {
+            "nom": "Relevé de jambes au sol",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Bas du dos collé, jambes tendues ou fléchies selon le niveau.",
+            "lien": ""
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ppl-5j-avance",
+    "nom": "Push / Pull / Legs — 5 séances",
+    "niveau": "Avance",
+    "seances_semaine": 5,
+    "lieu": "Salle complète",
+    "objectif": "Prise de muscle",
+    "duree_semaines": 10,
+    "note": "Cinq séances : Push force, Pull volume, Legs, Push volume, Pull force. Alterne intensité sur un même schéma. 1 jour off après la séance E. Sur les séries 4-6, vise 1 rep en réserve. Semaine 5 et 10 : baisse toutes les charges de 10 % (décharge).",
+    "seances": [
+      {
+        "nom": "Séance A — Push force",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Développé couché",
+            "series": "5",
+            "reps": "4-6",
+            "repos": "180 s",
+            "tempo": "3-1-1",
+            "note": "Pause 1 s à la poitrine, pas de rebond. Dernière série à 1 RIR.",
+            "lien": ""
+          },
+          {
+            "nom": "Développé militaire",
+            "series": "4",
+            "reps": "5-7",
+            "repos": "150 s",
+            "tempo": "3-0-1",
+            "note": "Debout, gainage prioritaire sur la charge.",
+            "lien": ""
+          },
+          {
+            "nom": "Dips lestés",
+            "series": "4",
+            "reps": "6-8",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "Ceinture ou haltère entre les pieds. Descente sous 90°.",
+            "lien": ""
+          },
+          {
+            "nom": "Développé haltères incliné",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Back-off après le lourd : pompe de pecs, pas un second max.",
+            "lien": ""
+          },
+          {
+            "nom": "Élévations latérales",
+            "series": "4",
+            "reps": "10-12",
+            "repos": "60 s",
+            "tempo": "2-0-2",
+            "note": "Reste 2 reps sous l'échec, épaules déjà fatiguées.",
+            "lien": ""
+          },
+          {
+            "nom": "Extension triceps barre au front",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Coudes stables, barre vers le front pas vers le nez.",
+            "lien": ""
+          },
+          {
+            "nom": "Écartés haltères",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Étirement en bas, pas de claquement des haltères.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance B — Pull volume",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Tractions lestées",
+            "series": "4",
+            "reps": "6-8",
+            "repos": "150 s",
+            "tempo": "3-0-1",
+            "note": "Lest pour rester dans 6-8. Descente complète, scapulas d'abord.",
+            "lien": ""
+          },
+          {
+            "nom": "Rowing barre",
+            "series": "4",
+            "reps": "8-10",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "Un cran plus léger que tes séries de force, plus de reps.",
+            "lien": ""
+          },
+          {
+            "nom": "Tirage vertical",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Prise un peu plus large que les tractions.",
+            "lien": ""
+          },
+          {
+            "nom": "Rowing haltère",
+            "series": "3",
+            "reps": "10-12/bras",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Poitrine ouverte, haltère vers la hanche.",
+            "lien": ""
+          },
+          {
+            "nom": "Face pulls",
+            "series": "4",
+            "reps": "12-15",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Volume d'arrière d'épaule, charge cosmétique.",
+            "lien": ""
+          },
+          {
+            "nom": "Curl barre",
+            "series": "4",
+            "reps": "8-10",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "4 séries : la 4e s'arrête à 1 RIR.",
+            "lien": ""
+          },
+          {
+            "nom": "Curl haltères incliné",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "60 s",
+            "tempo": "3-1-1",
+            "note": "Banc 45°, bras pendants, pause 1 s en étirement.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance C — Legs",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Squat barre",
+            "series": "5",
+            "reps": "4-6",
+            "repos": "180 s",
+            "tempo": "3-0-1",
+            "note": "Top set lourd puis 4 séries stables. Profondeur filmée une fois par mois.",
+            "lien": ""
+          },
+          {
+            "nom": "Soulevé de terre roumain",
+            "series": "4",
+            "reps": "6-8",
+            "repos": "150 s",
+            "tempo": "3-0-1",
+            "note": "Barre ras les cuisses, stretch ischio, pas un soulevé complet.",
+            "lien": ""
+          },
+          {
+            "nom": "Presse à cuisses",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "Pieds bas = plus de quadri. Contrôle 3 s.",
+            "lien": ""
+          },
+          {
+            "nom": "Fentes bulgares",
+            "series": "3",
+            "reps": "8/jambe",
+            "repos": "90 s",
+            "tempo": "2-0-1",
+            "note": "Haltères lourds, torse un peu penché.",
+            "lien": ""
+          },
+          {
+            "nom": "Leg curl",
+            "series": "4",
+            "reps": "10-12",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "4e série : drop de 20 % si tu as encore 3 reps propres.",
+            "lien": ""
+          },
+          {
+            "nom": "Leg extension",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "60 s",
+            "tempo": "3-1-1",
+            "note": "Pause 1 s en haut, bas du siège reculé.",
+            "lien": ""
+          },
+          {
+            "nom": "Mollets assis",
+            "series": "4",
+            "reps": "10-12",
+            "repos": "45 s",
+            "tempo": "2-2-1",
+            "note": "Pause 2 s en étirement, 1 s en haut.",
+            "lien": ""
+          },
+          {
+            "nom": "Crunch à la poulie",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Bassin qui bascule, charge secondaire.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance D — Push volume",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Développé haltères plat",
+            "series": "4",
+            "reps": "8-10",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "Course longue, pas de pontage excessif.",
+            "lien": ""
+          },
+          {
+            "nom": "Développé Gérard",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Coudes à 45°, haltères qui se rejoignent en haut.",
+            "lien": ""
+          },
+          {
+            "nom": "Pompes lestées",
+            "series": "3",
+            "reps": "8-12",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Disque sur le dos ou sac. Corps gainé, poitrine au sol.",
+            "lien": ""
+          },
+          {
+            "nom": "Élévations latérales",
+            "series": "4",
+            "reps": "12-15",
+            "repos": "45 s",
+            "tempo": "2-0-2",
+            "note": "Deuxième dose de la semaine, reste loin de l'échec dur.",
+            "lien": ""
+          },
+          {
+            "nom": "Oiseau poulie",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Poulie vis-à-vis, croisement léger devant, rear delts.",
+            "lien": ""
+          },
+          {
+            "nom": "Extension triceps corde",
+            "series": "4",
+            "reps": "12-15",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Volume, pas de charge de développé.",
+            "lien": ""
+          },
+          {
+            "nom": "Kickback poulie",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "45 s",
+            "tempo": "2-0-1",
+            "note": "Coude collé, isolation, charge cosmétique.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance E — Pull force",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Soulevé de terre",
+            "series": "4",
+            "reps": "4-6",
+            "repos": "210 s",
+            "tempo": "3-0-1",
+            "note": "Pas plus de 4 séries de travail. Technique filmée. Stop net si le dos s'arrondit.",
+            "lien": ""
+          },
+          {
+            "nom": "Tractions",
+            "series": "4",
+            "reps": "5-7",
+            "repos": "150 s",
+            "tempo": "3-0-1",
+            "note": "Sans lest ou lest léger : explosif en montée, 3 s en descente.",
+            "lien": ""
+          },
+          {
+            "nom": "Rowing T-bar",
+            "series": "4",
+            "reps": "6-8",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "Poitrine ouverte, amplitude complète, pas de cheat du bas du dos.",
+            "lien": ""
+          },
+          {
+            "nom": "Shrug barre",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "75 s",
+            "tempo": "2-1-1",
+            "note": "Épaules vers les oreilles, pause 1 s, pas de roulement.",
+            "lien": ""
+          },
+          {
+            "nom": "Face pulls",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Santé d'épaule après le lourd.",
+            "lien": ""
+          },
+          {
+            "nom": "Curl marteau",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Un peu plus lourd que le jour volume.",
+            "lien": ""
+          },
+          {
+            "nom": "Curl pupitre",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Finition biceps, 1 RIR.",
+            "lien": ""
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "perte-gras-4j-intermediaire",
+    "nom": "Sèche salle — 4 séances",
+    "niveau": "Intermediaire",
+    "seances_semaine": 4,
+    "lieu": "Salle complète",
+    "objectif": "Perte de gras",
+    "duree_semaines": 8,
+    "note": "Objectif : garder les composés assez lourds pour ne pas perdre de muscle, raccourcir le repos sur le reste. Marche 7-10 k pas les jours off. Déficit alimentaire d'abord : ce n'est pas un programme de HIIT. Si la force des composés chute plus de 2 semaines, on rallonge le repos, on ne coupe pas encore les calories.",
+    "seances": [
+      {
+        "nom": "Séance A — Squat et poussée",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Squat barre",
+            "series": "4",
+            "reps": "8-10",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Charge de travail, pas de max. Technique identique à la prise de muscle.",
+            "lien": ""
+          },
+          {
+            "nom": "Développé haltères plat",
+            "series": "4",
+            "reps": "8-10",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Repos un cran plus court que d'habitude, 1-2 RIR.",
+            "lien": ""
+          },
+          {
+            "nom": "Fentes marchées",
+            "series": "3",
+            "reps": "10/jambe",
+            "repos": "60 s",
+            "tempo": "2-0-1",
+            "note": "Haltères, rythme régulier, pas de pause en haut.",
+            "lien": ""
+          },
+          {
+            "nom": "Élévations latérales",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "45 s",
+            "tempo": "2-0-2",
+            "note": "Isolation, reste loin de l'échec musculaire local.",
+            "lien": ""
+          },
+          {
+            "nom": "Dips",
+            "series": "3",
+            "reps": "8-12",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Assistance si tu sors de la fourchette.",
+            "lien": ""
+          },
+          {
+            "nom": "Mountain climbers",
+            "series": "3",
+            "reps": "30 s",
+            "repos": "30 s",
+            "tempo": "regulier",
+            "note": "Hanche basse, pieds rapides, pas un sprint désordonné.",
+            "lien": ""
+          },
+          {
+            "nom": "Planche",
+            "series": "3",
+            "reps": "40 s",
+            "repos": "30 s",
+            "tempo": "iso",
+            "note": "Fessiers serrés, respiration calme.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance B — Hanche et tirage",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Soulevé de terre roumain",
+            "series": "4",
+            "reps": "8-10",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Garde la charge. C'est le composé qui protège le muscle en sèche.",
+            "lien": ""
+          },
+          {
+            "nom": "Tirage vertical",
+            "series": "4",
+            "reps": "8-12",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Poitrine haute, pas d'élan pour gonfler les reps.",
+            "lien": ""
+          },
+          {
+            "nom": "Hip thrust",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "60 s",
+            "tempo": "2-1-1",
+            "note": "Pause 1 s, charge modérée, qualité de contraction.",
+            "lien": ""
+          },
+          {
+            "nom": "Rowing haltère",
+            "series": "3",
+            "reps": "10-12/bras",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Un bras après l'autre, dos plat.",
+            "lien": ""
+          },
+          {
+            "nom": "Face pulls",
+            "series": "3",
+            "reps": "15",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Santé d'épaule, charge légère.",
+            "lien": ""
+          },
+          {
+            "nom": "Curl haltères",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "45 s",
+            "tempo": "3-0-1",
+            "note": "Volume biceps sans rallonger la séance.",
+            "lien": ""
+          },
+          {
+            "nom": "Relevé de jambes",
+            "series": "3",
+            "reps": "12",
+            "repos": "30 s",
+            "tempo": "2-1-1",
+            "note": "Bas du dos collé, rythme soutenu.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance C — Densité haut du corps",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Développé militaire",
+            "series": "4",
+            "reps": "8-10",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Debout, repos court mais technique non négociable.",
+            "lien": ""
+          },
+          {
+            "nom": "Tractions",
+            "series": "4",
+            "reps": "6-10",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Assistance plutôt que triche. Menton au-dessus.",
+            "lien": ""
+          },
+          {
+            "nom": "Développé haltères incliné",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Pompe de pecs, 1 RIR.",
+            "lien": ""
+          },
+          {
+            "nom": "Tirage horizontal",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Omoplates d'abord.",
+            "lien": ""
+          },
+          {
+            "nom": "Écartés poulie",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "45 s",
+            "tempo": "3-0-1",
+            "note": "Étirement, charge cosmétique.",
+            "lien": ""
+          },
+          {
+            "nom": "Extension triceps corde",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "45 s",
+            "tempo": "3-0-1",
+            "note": "Finition rapide.",
+            "lien": ""
+          },
+          {
+            "nom": "Hollow hold",
+            "series": "3",
+            "reps": "25 s",
+            "repos": "30 s",
+            "tempo": "iso",
+            "note": "Bas du dos collé, si ça décolle tu raccourcis.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance D — Bas et tronc",
+        "note": "Finisher volontairement court : 3 séries, pas un circuit de 20 min.",
+        "exercices": [
+          {
+            "nom": "Presse à cuisses",
+            "series": "4",
+            "reps": "12-15",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Plus de reps, moins de charge que le squat du lundi.",
+            "lien": ""
+          },
+          {
+            "nom": "Leg curl",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "45 s",
+            "tempo": "3-0-1",
+            "note": "Isolation ischio, rythme continu.",
+            "lien": ""
+          },
+          {
+            "nom": "Fentes bulgares",
+            "series": "3",
+            "reps": "10/jambe",
+            "repos": "60 s",
+            "tempo": "2-0-1",
+            "note": "Haltères légers, équilibre et amplitude.",
+            "lien": ""
+          },
+          {
+            "nom": "Mollets debout",
+            "series": "4",
+            "reps": "15-20",
+            "repos": "30 s",
+            "tempo": "2-1-1",
+            "note": "Volume, pause en haut.",
+            "lien": ""
+          },
+          {
+            "nom": "Abducteurs machine",
+            "series": "3",
+            "reps": "15",
+            "repos": "30 s",
+            "tempo": "2-0-1",
+            "note": "Contrôle, pas d'élan.",
+            "lien": ""
+          },
+          {
+            "nom": "Crunch",
+            "series": "3",
+            "reps": "15",
+            "repos": "30 s",
+            "tempo": "2-1-1",
+            "note": "Omoplates décollées seulement.",
+            "lien": ""
+          },
+          {
+            "nom": "Burpees contrôlés",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "45 s",
+            "tempo": "2-0-1",
+            "note": "Pas de rebond. Pompe optionnelle. Qualité > vitesse.",
+            "lien": ""
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "perte-gras-3j-debutant-poids-corps",
+    "nom": "Sèche maison — 3 séances",
+    "niveau": "Debutant",
+    "seances_semaine": 3,
+    "lieu": "Maison sans matériel",
+    "objectif": "Perte de gras",
+    "duree_semaines": 8,
+    "note": "Trois séances corps entier, repos 45-60 s. La perte de gras se joue surtout à table et aux pas (vise 8 000/j). Ici on maintient le muscle et on bouge. Marche 20-30 min les jours sans séance. Progression : +2 reps ou version plus dure toutes les 2 semaines.",
+    "seances": [
+      {
+        "nom": "Séance A — Jambes et poussée",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Squats",
+            "series": "4",
+            "reps": "15-20",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Si 20 reps deviennent faciles, passe en tempo 4-0-1 avant d'ajouter des sauts.",
+            "lien": ""
+          },
+          {
+            "nom": "Pompes",
+            "series": "4",
+            "reps": "8-15",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Genoux si besoin. Ligne épaules-hanches-chevilles.",
+            "lien": ""
+          },
+          {
+            "nom": "Fentes arrière",
+            "series": "3",
+            "reps": "12/jambe",
+            "repos": "45 s",
+            "tempo": "2-0-1",
+            "note": "Rythme continu, main au mur si l'équilibre lâche.",
+            "lien": ""
+          },
+          {
+            "nom": "Pike push-up",
+            "series": "3",
+            "reps": "6-10",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Fesses hautes, tête vers le sol.",
+            "lien": ""
+          },
+          {
+            "nom": "Pont fessier",
+            "series": "3",
+            "reps": "15-20",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Pause en haut, descend sans poser les fesses.",
+            "lien": ""
+          },
+          {
+            "nom": "Planche",
+            "series": "3",
+            "reps": "30-40 s",
+            "repos": "30 s",
+            "tempo": "iso",
+            "note": "Si ça tremble avant 30 s, coupe en 2 × 20 s propres.",
+            "lien": ""
+          },
+          {
+            "nom": "Marche sur place genoux hauts",
+            "series": "3",
+            "reps": "40 s",
+            "repos": "30 s",
+            "tempo": "regulier",
+            "note": "Posture droite, pieds qui posent, pas un sprint sur place.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance B — Tirage et hanche",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Good morning poids du corps",
+            "series": "4",
+            "reps": "12-15",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Mains croisées sur la poitrine, dos plat, hanches en arrière.",
+            "lien": ""
+          },
+          {
+            "nom": "Rowing de table",
+            "series": "4",
+            "reps": "8-12",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Table testée avant. Corps gainé, poitrine vers le plateau.",
+            "lien": ""
+          },
+          {
+            "nom": "Pont fessier une jambe",
+            "series": "3",
+            "reps": "8-12/jambe",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Bassin droit. Deux pieds si ça bascule.",
+            "lien": ""
+          },
+          {
+            "nom": "Dips de chaise",
+            "series": "3",
+            "reps": "8-12",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Chaise calée contre un mur.",
+            "lien": ""
+          },
+          {
+            "nom": "Superman",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Regard vers le sol, pause 1 s.",
+            "lien": ""
+          },
+          {
+            "nom": "Dead bug",
+            "series": "3",
+            "reps": "8/côté",
+            "repos": "30 s",
+            "tempo": "2-1-2",
+            "note": "Lent, lombaires collées.",
+            "lien": ""
+          },
+          {
+            "nom": "Wall sit",
+            "series": "3",
+            "reps": "35-45 s",
+            "repos": "45 s",
+            "tempo": "iso",
+            "note": "Cuisses parallèles, talons à plat.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance C — Densité complète",
+        "note": "Le finisher reste structuré : tu comptes, tu ne fonces pas dans le mur.",
+        "exercices": [
+          {
+            "nom": "Fentes marchées",
+            "series": "4",
+            "reps": "10/jambe",
+            "repos": "45 s",
+            "tempo": "2-0-1",
+            "note": "Sur place en alterné si tu manques de place.",
+            "lien": ""
+          },
+          {
+            "nom": "Pompes pieds surélevés",
+            "series": "3",
+            "reps": "6-10",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Reviens à plat dès que la ligne casse.",
+            "lien": ""
+          },
+          {
+            "nom": "Rowing de table prise large",
+            "series": "3",
+            "reps": "8-12",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Mains plus écartées, tirer vers la poitrine.",
+            "lien": ""
+          },
+          {
+            "nom": "Squats sumo",
+            "series": "3",
+            "reps": "15-20",
+            "repos": "45 s",
+            "tempo": "3-0-1",
+            "note": "Pieds ouverts, genoux qui suivent.",
+            "lien": ""
+          },
+          {
+            "nom": "Crunch",
+            "series": "3",
+            "reps": "15",
+            "repos": "30 s",
+            "tempo": "2-1-1",
+            "note": "Expire en haut, amplitude courte.",
+            "lien": ""
+          },
+          {
+            "nom": "Gainage latéral",
+            "series": "3",
+            "reps": "20-30 s/côté",
+            "repos": "30 s",
+            "tempo": "iso",
+            "note": "Hanche alignée, genou au sol autorisé.",
+            "lien": ""
+          },
+          {
+            "nom": "Montées de genoux + squats",
+            "series": "3",
+            "reps": "20 s + 10 squats",
+            "repos": "45 s",
+            "tempo": "regulier",
+            "note": "20 s de genoux hauts puis 10 squats lents. Pas de burpee jeté.",
+            "lien": ""
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "recomp-3j-intermediaire",
+    "nom": "Recomposition — 3 séances",
+    "niveau": "Intermediaire",
+    "seances_semaine": 3,
+    "lieu": "Salle complète",
+    "objectif": "Recomposition",
+    "duree_semaines": 10,
+    "note": "Trois full body : chaque groupe passe 2 à 3 fois par semaine, volume total raisonnable. Composés en 6-8 (force-hypertrophie), accessoires en 10-12. Calories proches de la maintenance. 1-2 RIR partout. Lun / mer / ven, week-end off.",
+    "seances": [
+      {
+        "nom": "Séance A — Squat, couché, rowing",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Squat barre",
+            "series": "4",
+            "reps": "6-8",
+            "repos": "150 s",
+            "tempo": "3-0-1",
+            "note": "Charge de travail. Film une série toutes les 3 semaines.",
+            "lien": ""
+          },
+          {
+            "nom": "Développé couché",
+            "series": "4",
+            "reps": "6-8",
+            "repos": "150 s",
+            "tempo": "3-0-1",
+            "note": "Même fourchette que le squat : progresse les deux en parallèle.",
+            "lien": ""
+          },
+          {
+            "nom": "Rowing barre",
+            "series": "4",
+            "reps": "8-10",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "Buste figé, dos qui travaille, pas les biceps d'abord.",
+            "lien": ""
+          },
+          {
+            "nom": "Fentes haltères",
+            "series": "3",
+            "reps": "8/jambe",
+            "repos": "90 s",
+            "tempo": "2-0-1",
+            "note": "Unilatéral pour rattraper les écarts.",
+            "lien": ""
+          },
+          {
+            "nom": "Élévations latérales",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "60 s",
+            "tempo": "2-0-2",
+            "note": "Volume d'épaule sans fatiguer le développé.",
+            "lien": ""
+          },
+          {
+            "nom": "Curl barre",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Finition, 1 RIR.",
+            "lien": ""
+          },
+          {
+            "nom": "Planche",
+            "series": "3",
+            "reps": "40 s",
+            "repos": "45 s",
+            "tempo": "iso",
+            "note": "Gainage après les composés, pas avant.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance B — Terre, militaire, tractions",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Soulevé de terre",
+            "series": "4",
+            "reps": "5-7",
+            "repos": "180 s",
+            "tempo": "3-0-1",
+            "note": "Moins de reps que le squat. Qualité de dos non négociable.",
+            "lien": ""
+          },
+          {
+            "nom": "Développé militaire",
+            "series": "4",
+            "reps": "6-8",
+            "repos": "150 s",
+            "tempo": "3-0-1",
+            "note": "Debout. Si le bas du dos lâche, passe assis dossier haut.",
+            "lien": ""
+          },
+          {
+            "nom": "Tractions",
+            "series": "4",
+            "reps": "6-10",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "Lest ou élastique pour rester dans la fourchette.",
+            "lien": ""
+          },
+          {
+            "nom": "Hip thrust",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "90 s",
+            "tempo": "2-1-1",
+            "note": "Rappel fessiers, pause 1 s.",
+            "lien": ""
+          },
+          {
+            "nom": "Face pulls",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "60 s",
+            "tempo": "2-1-1",
+            "note": "Santé d'épaule, chaque séance B.",
+            "lien": ""
+          },
+          {
+            "nom": "Dips",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Assistance si tu sors de 8-10.",
+            "lien": ""
+          },
+          {
+            "nom": "Crunch à la poulie",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Bassin qui bascule.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance C — Presse, incliné, vertical",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Presse à cuisses",
+            "series": "4",
+            "reps": "8-10",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "Moins neuronal que le squat, plus de pompe. Pieds milieu.",
+            "lien": ""
+          },
+          {
+            "nom": "Développé haltères incliné",
+            "series": "4",
+            "reps": "8-10",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "30°, course longue, 1 RIR.",
+            "lien": ""
+          },
+          {
+            "nom": "Tirage vertical",
+            "series": "4",
+            "reps": "8-12",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Poitrine vers la barre, pas de bascule.",
+            "lien": ""
+          },
+          {
+            "nom": "Soulevé de terre roumain",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "Deuxième dose d'ischios de la semaine, charge modérée.",
+            "lien": ""
+          },
+          {
+            "nom": "Oiseau haltères",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "60 s",
+            "tempo": "2-1-1",
+            "note": "Haut du dos, charge légère.",
+            "lien": ""
+          },
+          {
+            "nom": "Extension triceps corde",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Coudes fixes.",
+            "lien": ""
+          },
+          {
+            "nom": "Dead bug",
+            "series": "3",
+            "reps": "8/côté",
+            "repos": "45 s",
+            "tempo": "2-1-2",
+            "note": "Anti-extension après la presse.",
+            "lien": ""
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "force-4j-avance",
+    "nom": "Force et hypertrophie — 4 séances",
+    "niveau": "Avance",
+    "seances_semaine": 4,
+    "lieu": "Salle complète",
+    "objectif": "Force",
+    "duree_semaines": 12,
+    "note": "Haut/bas 4 jours. Les composés partent en 4-6 (force), suivis d'un back-off en 8-10. Semaines 4, 8 et 12 : décharge (−10 % charge, mêmes reps). 1 RIR sur les top sets, 2 RIR sur le volume. Ceinture et sangles autorisées sur les séries lourdes seulement.",
+    "seances": [
+      {
+        "nom": "Séance A — Haut force poussée",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Développé couché",
+            "series": "5",
+            "reps": "4-6",
+            "repos": "180 s",
+            "tempo": "3-1-1",
+            "note": "Pause 1 s à la poitrine. 5e série = top set, les 4 premières montent.",
+            "lien": ""
+          },
+          {
+            "nom": "Développé haltères plat",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Back-off : même schéma, charge −25 % environ.",
+            "lien": ""
+          },
+          {
+            "nom": "Rowing barre",
+            "series": "4",
+            "reps": "5-7",
+            "repos": "150 s",
+            "tempo": "3-0-1",
+            "note": "Lourd, buste figé, pas de cheat lombaire.",
+            "lien": ""
+          },
+          {
+            "nom": "Tractions",
+            "series": "3",
+            "reps": "6-8",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "Lest si 8 reps strictes passent trop vite.",
+            "lien": ""
+          },
+          {
+            "nom": "Développé militaire",
+            "series": "3",
+            "reps": "6-8",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "Après le couché : ego au vestiaire.",
+            "lien": ""
+          },
+          {
+            "nom": "Curl barre",
+            "series": "3",
+            "reps": "6-8",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Un peu plus lourd que d'habitude, coudes calés.",
+            "lien": ""
+          },
+          {
+            "nom": "Extension barre au front",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Coudes stables, charge secondaire.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance B — Bas force squat",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Squat barre",
+            "series": "5",
+            "reps": "4-6",
+            "repos": "210 s",
+            "tempo": "3-0-1",
+            "note": "Profondeur filmée. Ceinture à partir des séries de travail.",
+            "lien": ""
+          },
+          {
+            "nom": "Presse à cuisses",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "Back-off quadriceps, pas un second max.",
+            "lien": ""
+          },
+          {
+            "nom": "Soulevé de terre roumain",
+            "series": "4",
+            "reps": "6-8",
+            "repos": "150 s",
+            "tempo": "3-0-1",
+            "note": "Barre ras les cuisses, stretch, pas un terre complet.",
+            "lien": ""
+          },
+          {
+            "nom": "Leg curl",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Isolation après le lourd.",
+            "lien": ""
+          },
+          {
+            "nom": "Mollets debout",
+            "series": "4",
+            "reps": "8-10",
+            "repos": "60 s",
+            "tempo": "2-1-1",
+            "note": "Un peu plus lourd, amplitude complète.",
+            "lien": ""
+          },
+          {
+            "nom": "Relevé de jambes suspendu",
+            "series": "3",
+            "reps": "8-12",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Bassin qui bascule.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance C — Haut force verticale",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Développé militaire",
+            "series": "5",
+            "reps": "4-6",
+            "repos": "180 s",
+            "tempo": "3-0-1",
+            "note": "Debout, top set en 5e. Gainage prioritaire.",
+            "lien": ""
+          },
+          {
+            "nom": "Dips lestés",
+            "series": "4",
+            "reps": "6-8",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "Torse légèrement penché, descente sous 90°.",
+            "lien": ""
+          },
+          {
+            "nom": "Tractions lestées",
+            "series": "4",
+            "reps": "4-6",
+            "repos": "150 s",
+            "tempo": "3-0-1",
+            "note": "Lest pour la force, descente 3 s.",
+            "lien": ""
+          },
+          {
+            "nom": "Rowing haltère",
+            "series": "3",
+            "reps": "8-10/bras",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Back-off unilatéral, corrige les écarts.",
+            "lien": ""
+          },
+          {
+            "nom": "Face pulls",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "60 s",
+            "tempo": "2-1-1",
+            "note": "Santé, chaque haut.",
+            "lien": ""
+          },
+          {
+            "nom": "Curl marteau",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Brachial, charge honnête.",
+            "lien": ""
+          },
+          {
+            "nom": "Écartés haltères",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Étirement, pas un développé déguisé.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance D — Bas force hanche",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Soulevé de terre",
+            "series": "4",
+            "reps": "3-5",
+            "repos": "210 s",
+            "tempo": "3-0-1",
+            "note": "4 séries de travail max. Pas de 5e. Stop si le dos s'arrondit.",
+            "lien": ""
+          },
+          {
+            "nom": "Hip thrust",
+            "series": "4",
+            "reps": "6-8",
+            "repos": "120 s",
+            "tempo": "2-1-1",
+            "note": "Lourd, pause 1 s, tibia vertical.",
+            "lien": ""
+          },
+          {
+            "nom": "Fentes bulgares",
+            "series": "3",
+            "reps": "6-8/jambe",
+            "repos": "90 s",
+            "tempo": "2-0-1",
+            "note": "Haltères lourds, unilatéral après le terre.",
+            "lien": ""
+          },
+          {
+            "nom": "Leg extension",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "75 s",
+            "tempo": "3-1-1",
+            "note": "Pompe quadri, pause 1 s.",
+            "lien": ""
+          },
+          {
+            "nom": "Mollets assis",
+            "series": "4",
+            "reps": "10-12",
+            "repos": "60 s",
+            "tempo": "2-2-1",
+            "note": "Pause 2 s en bas.",
+            "lien": ""
+          },
+          {
+            "nom": "Gainage",
+            "series": "3",
+            "reps": "45 s",
+            "repos": "45 s",
+            "tempo": "iso",
+            "note": "Après le terre : gainage simple, pas un circus.",
+            "lien": ""
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "haut-bas-4j-halteres",
+    "nom": "Haut / Bas haltères — 4 séances",
+    "niveau": "Intermediaire",
+    "seances_semaine": 4,
+    "lieu": "Maison avec haltères",
+    "objectif": "Prise de muscle",
+    "duree_semaines": 8,
+    "note": "Même logique haut/bas qu'en salle, outillage limité à une paire d'haltères. Si tes haltères saturent (20 reps faciles), passe en unilatéral, rallonge le tempo à 4-0-1, ou ajoute une pause 1 s. Lun/mar/jeu/ven, mercredi et week-end off.",
+    "seances": [
+      {
+        "nom": "Séance A — Haut poussée",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Développé haltères au sol",
+            "series": "4",
+            "reps": "6-8",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "Triceps au sol = fin de course. Plus lourd que le développé classique maison.",
+            "lien": ""
+          },
+          {
+            "nom": "Rowing haltère un bras",
+            "series": "4",
+            "reps": "8-10/bras",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Appui stable, dos plat, haltère vers la hanche.",
+            "lien": ""
+          },
+          {
+            "nom": "Développé haltères incliné",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Canapé ou banc 30° si tu en as un, sinon au sol pieds surélevés.",
+            "lien": ""
+          },
+          {
+            "nom": "Rowing deux haltères buste penché",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Buste à 45°, omoplates serrées.",
+            "lien": ""
+          },
+          {
+            "nom": "Élévations latérales",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "60 s",
+            "tempo": "2-0-2",
+            "note": "Si trop léger : 4-0-1 ou haltère unique à deux mains en haltère-couché latéral.",
+            "lien": ""
+          },
+          {
+            "nom": "Curl haltères",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Alterné ou simultané, coudes calés.",
+            "lien": ""
+          },
+          {
+            "nom": "Extension triceps haltère",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Deux mains derrière la tête, coudes au plafond.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance B — Bas squat",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Squat goblet",
+            "series": "4",
+            "reps": "8-10",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Haltère lourd contre la poitrine. Si trop facile : pause 2 s en bas.",
+            "lien": ""
+          },
+          {
+            "nom": "Fentes bulgares haltères",
+            "series": "3",
+            "reps": "8-10/jambe",
+            "repos": "90 s",
+            "tempo": "2-0-1",
+            "note": "Pied arrière sur un canapé, haltères le long du corps.",
+            "lien": ""
+          },
+          {
+            "nom": "Pont fessier haltère",
+            "series": "4",
+            "reps": "10-12",
+            "repos": "75 s",
+            "tempo": "2-1-1",
+            "note": "Haltère sur le bassin, pause 1 s.",
+            "lien": ""
+          },
+          {
+            "nom": "Soulevé de terre roumain haltères",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Haltères le long des cuisses, stretch ischio.",
+            "lien": ""
+          },
+          {
+            "nom": "Mollets haltères",
+            "series": "4",
+            "reps": "12-15",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Sur une marche, pause en haut.",
+            "lien": ""
+          },
+          {
+            "nom": "Hollow hold",
+            "series": "3",
+            "reps": "25-35 s",
+            "repos": "45 s",
+            "tempo": "iso",
+            "note": "Bas du dos collé.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance C — Haut tirage",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Rowing haltère un bras",
+            "series": "4",
+            "reps": "6-8/bras",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "Plus lourd que A, un peu moins de reps. Dos plat non négociable.",
+            "lien": ""
+          },
+          {
+            "nom": "Développé Arnold",
+            "series": "4",
+            "reps": "8-10",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Assis, rotation complète, gainage.",
+            "lien": ""
+          },
+          {
+            "nom": "Pompes haltères",
+            "series": "3",
+            "reps": "8-12",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Poignées stables, course plus longue qu'au sol.",
+            "lien": ""
+          },
+          {
+            "nom": "Oiseau haltères",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "60 s",
+            "tempo": "2-1-1",
+            "note": "Buste penché, rear delts.",
+            "lien": ""
+          },
+          {
+            "nom": "Élévations latérales",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "45 s",
+            "tempo": "2-0-2",
+            "note": "Deuxième dose, reste loin de l'échec.",
+            "lien": ""
+          },
+          {
+            "nom": "Curl marteau",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Pouces vers l'avant.",
+            "lien": ""
+          },
+          {
+            "nom": "Dips de chaise",
+            "series": "3",
+            "reps": "8-12",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Chaise calée, fesses près du bord.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance D — Bas hanche",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Soulevé de terre haltères",
+            "series": "4",
+            "reps": "6-8",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "Haltères à l'extérieur des pieds, dos plat, hanches et épaules ensemble.",
+            "lien": ""
+          },
+          {
+            "nom": "Squat sumo haltère",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Un haltère entre les pieds, genoux qui suivent.",
+            "lien": ""
+          },
+          {
+            "nom": "Fentes arrière haltères",
+            "series": "3",
+            "reps": "8-10/jambe",
+            "repos": "75 s",
+            "tempo": "2-0-1",
+            "note": "Grand pas, genou arrière proche du sol.",
+            "lien": ""
+          },
+          {
+            "nom": "Pont fessier une jambe",
+            "series": "3",
+            "reps": "8-10/jambe",
+            "repos": "60 s",
+            "tempo": "2-1-1",
+            "note": "Haltère optionnel sur le bassin si l'unilatéral est trop facile.",
+            "lien": ""
+          },
+          {
+            "nom": "Mollets unipodal haltère",
+            "series": "3",
+            "reps": "12-15/jambe",
+            "repos": "30 s",
+            "tempo": "2-1-1",
+            "note": "Appui léger au mur.",
+            "lien": ""
+          },
+          {
+            "nom": "Dead bug",
+            "series": "3",
+            "reps": "8/côté",
+            "repos": "45 s",
+            "tempo": "2-1-2",
+            "note": "Lent, lombaires collées.",
+            "lien": ""
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "poids-corps-5j-intermediaire",
+    "nom": "Poids du corps — 5 séances",
+    "niveau": "Intermediaire",
+    "seances_semaine": 5,
+    "lieu": "Maison sans matériel",
+    "objectif": "Performance",
+    "duree_semaines": 8,
+    "note": "Cinq séances courtes (40-50 min). Push, tirage horizontal, jambes, skill/gainage, puis un full densité. Progression : version plus dure, tempo plus lent, ou pause. 1 jour off (idéalement après le full). Table solide obligatoire pour les rowings.",
+    "seances": [
+      {
+        "nom": "Séance A — Poussée",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Pompes",
+            "series": "4",
+            "reps": "8-15",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Si 15 faciles : pieds surélevés ou pause 1 s au sol.",
+            "lien": ""
+          },
+          {
+            "nom": "Pike push-up",
+            "series": "4",
+            "reps": "6-10",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Fesses hautes. Vers hindush push-up si 10 reps passent.",
+            "lien": ""
+          },
+          {
+            "nom": "Dips de chaise",
+            "series": "3",
+            "reps": "8-12",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Pieds plus loin = plus dur. Chaise calée.",
+            "lien": ""
+          },
+          {
+            "nom": "Pompes diamant",
+            "series": "3",
+            "reps": "6-10",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Isolation triceps, genoux si la forme casse.",
+            "lien": ""
+          },
+          {
+            "nom": "Planche épaules (scapular)",
+            "series": "3",
+            "reps": "10",
+            "repos": "45 s",
+            "tempo": "2-1-2",
+            "note": "En pompe haute, enfonce puis écarte les omoplates, bras tendus.",
+            "lien": ""
+          },
+          {
+            "nom": "Hollow hold",
+            "series": "3",
+            "reps": "25-35 s",
+            "repos": "45 s",
+            "tempo": "iso",
+            "note": "Anti-extension après la poussée.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance B — Tirage",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Rowing de table",
+            "series": "5",
+            "reps": "6-10",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Si 10 faciles : pieds surélevés ou pause 1 s poitrine au plateau.",
+            "lien": ""
+          },
+          {
+            "nom": "Rowing de table prise large",
+            "series": "3",
+            "reps": "8-12",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Mains plus écartées, tirer vers la poitrine.",
+            "lien": ""
+          },
+          {
+            "nom": "Superman",
+            "series": "4",
+            "reps": "10-12",
+            "repos": "60 s",
+            "tempo": "2-1-1",
+            "note": "Pause 1 s, regard au sol.",
+            "lien": ""
+          },
+          {
+            "nom": "Oiseau au sol",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Ventre au sol, pouces vers le ciel, petite amplitude.",
+            "lien": ""
+          },
+          {
+            "nom": "Face pull serviette",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Serviette autour d'un montant solide, tirer vers le visage, rotation externe.",
+            "lien": ""
+          },
+          {
+            "nom": "Dead bug",
+            "series": "3",
+            "reps": "8/côté",
+            "repos": "45 s",
+            "tempo": "2-1-2",
+            "note": "Lent.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance C — Jambes",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Squats",
+            "series": "4",
+            "reps": "15-20",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Si 20 faciles : squat pause 3 s ou pistol assisté (chaise).",
+            "lien": ""
+          },
+          {
+            "nom": "Fentes bulgares",
+            "series": "4",
+            "reps": "8-12/jambe",
+            "repos": "75 s",
+            "tempo": "2-0-1",
+            "note": "Pied arrière surélevé, torse un peu penché.",
+            "lien": ""
+          },
+          {
+            "nom": "Pont fessier une jambe",
+            "series": "3",
+            "reps": "10-12/jambe",
+            "repos": "60 s",
+            "tempo": "2-1-1",
+            "note": "Bassin droit.",
+            "lien": ""
+          },
+          {
+            "nom": "Good morning poids du corps",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Hanche en arrière, dos plat.",
+            "lien": ""
+          },
+          {
+            "nom": "Wall sit",
+            "series": "3",
+            "reps": "40-50 s",
+            "repos": "60 s",
+            "tempo": "iso",
+            "note": "Cuisses parallèles.",
+            "lien": ""
+          },
+          {
+            "nom": "Mollets unipodal",
+            "series": "4",
+            "reps": "12-15/jambe",
+            "repos": "30 s",
+            "tempo": "2-1-1",
+            "note": "Sur une marche.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance D — Skill et tronc",
+        "note": "Jour technique : charges nulles, exigence de forme maximale.",
+        "exercices": [
+          {
+            "nom": "Pompes en descente lente",
+            "series": "3",
+            "reps": "5",
+            "repos": "90 s",
+            "tempo": "5-0-1",
+            "note": "5 s pour descendre, pousse normale. Force excentrique.",
+            "lien": ""
+          },
+          {
+            "nom": "Rowing de table en pause",
+            "series": "3",
+            "reps": "6",
+            "repos": "90 s",
+            "tempo": "3-2-1",
+            "note": "2 s poitrine au plateau.",
+            "lien": ""
+          },
+          {
+            "nom": "Pike push-up pause",
+            "series": "3",
+            "reps": "5-8",
+            "repos": "75 s",
+            "tempo": "3-1-1",
+            "note": "Pause 1 s en bas, tête proche du sol.",
+            "lien": ""
+          },
+          {
+            "nom": "Hollow body rock",
+            "series": "3",
+            "reps": "8-12",
+            "repos": "45 s",
+            "tempo": "regulier",
+            "note": "Garde la forme hollow, petits basculements, pas un crunch.",
+            "lien": ""
+          },
+          {
+            "nom": "Gainage latéral",
+            "series": "3",
+            "reps": "30-40 s/côté",
+            "repos": "45 s",
+            "tempo": "iso",
+            "note": "Pied sur pied, hanche haute.",
+            "lien": ""
+          },
+          {
+            "nom": "Bird dog",
+            "series": "3",
+            "reps": "8/côté",
+            "repos": "45 s",
+            "tempo": "2-1-2",
+            "note": "Bassin calme, bras et jambe opposés.",
+            "lien": ""
+          },
+          {
+            "nom": "Dead bug",
+            "series": "3",
+            "reps": "8/côté",
+            "repos": "45 s",
+            "tempo": "2-1-2",
+            "note": "Deuxième dose, plus lent que d'habitude.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance E — Full densité",
+        "note": "Densité, pas d'échec musculaire : tu dois finir la séance entière.",
+        "exercices": [
+          {
+            "nom": "Squats",
+            "series": "3",
+            "reps": "15",
+            "repos": "45 s",
+            "tempo": "2-0-1",
+            "note": "Un cran plus vite, forme intacte.",
+            "lien": ""
+          },
+          {
+            "nom": "Pompes",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "45 s",
+            "tempo": "2-0-1",
+            "note": "Version que tu maîtrises, pas la plus dure.",
+            "lien": ""
+          },
+          {
+            "nom": "Rowing de table",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "45 s",
+            "tempo": "2-0-1",
+            "note": "Repos court, 2 RIR.",
+            "lien": ""
+          },
+          {
+            "nom": "Fentes arrière",
+            "series": "3",
+            "reps": "10/jambe",
+            "repos": "45 s",
+            "tempo": "2-0-1",
+            "note": "Rythme continu.",
+            "lien": ""
+          },
+          {
+            "nom": "Dips de chaise",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "45 s",
+            "tempo": "2-0-1",
+            "note": "Finition triceps.",
+            "lien": ""
+          },
+          {
+            "nom": "Crunch",
+            "series": "3",
+            "reps": "15",
+            "repos": "30 s",
+            "tempo": "2-1-1",
+            "note": "Amplitude courte.",
+            "lien": ""
+          },
+          {
+            "nom": "Planche",
+            "series": "3",
+            "reps": "40 s",
+            "repos": "30 s",
+            "tempo": "iso",
+            "note": "Clôture. Respire.",
+            "lien": ""
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "corps-entier-2j-intermediaire",
+    "nom": "Corps entier occupé — 2 séances",
+    "niveau": "Intermediaire",
+    "seances_semaine": 2,
+    "lieu": "Salle complète",
+    "objectif": "Prise de muscle",
+    "duree_semaines": 8,
+    "note": "Deux séances denses pour ceux qui ne tiennent que 2 créneaux. Chaque groupe est vu 2 fois. 72 h entre A et B. Séance de 60-70 min, pas plus : si tu débordes, coupe la dernière isolation, pas le composé. 1-2 RIR. Marche les autres jours.",
+    "seances": [
+      {
+        "nom": "Séance A — Squat, couché, tirage",
+        "note": "8 exercices : enchaîne, ne traîne pas entre les isolation.",
+        "exercices": [
+          {
+            "nom": "Squat barre",
+            "series": "4",
+            "reps": "6-8",
+            "repos": "150 s",
+            "tempo": "3-0-1",
+            "note": "Premier composé, tête fraîche. Charge de travail.",
+            "lien": ""
+          },
+          {
+            "nom": "Développé couché",
+            "series": "4",
+            "reps": "6-8",
+            "repos": "150 s",
+            "tempo": "3-0-1",
+            "note": "Même fourchette. Progresse squat et couché en parallèle.",
+            "lien": ""
+          },
+          {
+            "nom": "Tirage vertical",
+            "series": "4",
+            "reps": "8-12",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "Poitrine haute. Tractions si tu en as plus de 8 strictes : 4 × 6-8.",
+            "lien": ""
+          },
+          {
+            "nom": "Soulevé de terre roumain",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "Ischios et dos, pas un terre lourd le jour A.",
+            "lien": ""
+          },
+          {
+            "nom": "Développé haltères incliné",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Volume pecs après le couché barre.",
+            "lien": ""
+          },
+          {
+            "nom": "Élévations latérales",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "60 s",
+            "tempo": "2-0-2",
+            "note": "Épaules, 2 s de descente.",
+            "lien": ""
+          },
+          {
+            "nom": "Curl barre",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Finition biceps.",
+            "lien": ""
+          },
+          {
+            "nom": "Planche",
+            "series": "3",
+            "reps": "40 s",
+            "repos": "45 s",
+            "tempo": "iso",
+            "note": "Clôture tronc.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance B — Terre, militaire, rowing",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Soulevé de terre",
+            "series": "4",
+            "reps": "5-7",
+            "repos": "180 s",
+            "tempo": "3-0-1",
+            "note": "Le lourd du mercredi ou samedi. Dos plat, stop net si ça s'arrondit.",
+            "lien": ""
+          },
+          {
+            "nom": "Développé militaire",
+            "series": "4",
+            "reps": "6-8",
+            "repos": "150 s",
+            "tempo": "3-0-1",
+            "note": "Debout, après le terre : baisse la charge, garde le gainage.",
+            "lien": ""
+          },
+          {
+            "nom": "Rowing barre",
+            "series": "4",
+            "reps": "6-8",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "Buste figé, tirage vers le nombril.",
+            "lien": ""
+          },
+          {
+            "nom": "Presse à cuisses",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Volume quadri, le squat est déjà fait en A.",
+            "lien": ""
+          },
+          {
+            "nom": "Hip thrust",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "90 s",
+            "tempo": "2-1-1",
+            "note": "Pause 1 s, fessiers.",
+            "lien": ""
+          },
+          {
+            "nom": "Face pulls",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "60 s",
+            "tempo": "2-1-1",
+            "note": "Santé d'épaule, chaque B.",
+            "lien": ""
+          },
+          {
+            "nom": "Dips",
+            "series": "3",
+            "reps": "6-10",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Assistance ou lest pour rester dans la fourchette.",
+            "lien": ""
+          },
+          {
+            "nom": "Crunch à la poulie",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Bassin qui bascule.",
+            "lien": ""
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "haut-bas-5j-avance",
+    "nom": "Haut / Bas — 5 séances",
+    "niveau": "Avance",
+    "seances_semaine": 5,
+    "lieu": "Salle complète",
+    "objectif": "Prise de muscle",
+    "duree_semaines": 12,
+    "note": "Quatre séances haut/bas + une Finition (épaules, bras, mollets, tronc) en milieu ou fin de semaine. Volume élevé : 1-2 RIR partout, pas d'échec dur avant la dernière isolation. Semaines 4, 8, 12 : décharge. 48 h entre deux haut et deux bas (ex. lun haut A, mar bas A, mer finition, ven haut B, sam bas B).",
+    "seances": [
+      {
+        "nom": "Séance A — Haut horizontal lourd",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Développé couché",
+            "series": "5",
+            "reps": "5-7",
+            "repos": "180 s",
+            "tempo": "3-0-1",
+            "note": "Force-hypertrophie. 5e série = la plus lourde propre.",
+            "lien": ""
+          },
+          {
+            "nom": "Rowing barre",
+            "series": "4",
+            "reps": "6-8",
+            "repos": "150 s",
+            "tempo": "3-0-1",
+            "note": "Lourd, buste figé.",
+            "lien": ""
+          },
+          {
+            "nom": "Développé haltères incliné",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "30°, course longue.",
+            "lien": ""
+          },
+          {
+            "nom": "Tirage horizontal",
+            "series": "3",
+            "reps": "8-12",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Omoplates d'abord.",
+            "lien": ""
+          },
+          {
+            "nom": "Écartés poulie",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Étirement, 1 RIR.",
+            "lien": ""
+          },
+          {
+            "nom": "Curl barre",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Volume, la grosse dose biceps est en Finition.",
+            "lien": ""
+          },
+          {
+            "nom": "Extension corde",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Idem triceps : dose d'entretien.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance B — Bas squat",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Squat barre",
+            "series": "5",
+            "reps": "5-7",
+            "repos": "180 s",
+            "tempo": "3-0-1",
+            "note": "Profondeur identique. Ceinture sur les séries de travail.",
+            "lien": ""
+          },
+          {
+            "nom": "Presse à cuisses",
+            "series": "4",
+            "reps": "8-10",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "Pieds milieu, 3 s de descente.",
+            "lien": ""
+          },
+          {
+            "nom": "Leg curl",
+            "series": "4",
+            "reps": "10-12",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "4 séries : ischios souvent en retard.",
+            "lien": ""
+          },
+          {
+            "nom": "Fentes bulgares",
+            "series": "3",
+            "reps": "8/jambe",
+            "repos": "90 s",
+            "tempo": "2-0-1",
+            "note": "Haltères, unilatéral.",
+            "lien": ""
+          },
+          {
+            "nom": "Leg extension",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "60 s",
+            "tempo": "3-1-1",
+            "note": "Pause 1 s en haut.",
+            "lien": ""
+          },
+          {
+            "nom": "Mollets à la presse",
+            "series": "4",
+            "reps": "12-15",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Volume, la dose lourde est en D ou Finition.",
+            "lien": ""
+          },
+          {
+            "nom": "Relevé de jambes suspendu",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Bassin qui bascule.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance C — Finition",
+        "note": "Pas de composé lourd. Si tu arrives cuit, baisse les charges, garde les séries.",
+        "exercices": [
+          {
+            "nom": "Élévations latérales",
+            "series": "5",
+            "reps": "12-15",
+            "repos": "45 s",
+            "tempo": "2-0-2",
+            "note": "Le gros volume d'épaule du programme. Charge cosmétique, 5 séries.",
+            "lien": ""
+          },
+          {
+            "nom": "Face pulls",
+            "series": "4",
+            "reps": "12-15",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Rear delts + santé, chaque semaine.",
+            "lien": ""
+          },
+          {
+            "nom": "Curl haltères incliné",
+            "series": "4",
+            "reps": "10-12",
+            "repos": "60 s",
+            "tempo": "3-1-1",
+            "note": "Étirement 1 s, banc 45°.",
+            "lien": ""
+          },
+          {
+            "nom": "Extension nuque haltère",
+            "series": "4",
+            "reps": "10-12",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Coudes au plafond, isolation.",
+            "lien": ""
+          },
+          {
+            "nom": "Curl marteau",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "45 s",
+            "tempo": "3-0-1",
+            "note": "Brachial après le curl incliné.",
+            "lien": ""
+          },
+          {
+            "nom": "Mollets assis",
+            "series": "4",
+            "reps": "12-15",
+            "repos": "30 s",
+            "tempo": "2-2-1",
+            "note": "Pause 2 s en bas.",
+            "lien": ""
+          },
+          {
+            "nom": "Crunch à la poulie",
+            "series": "4",
+            "reps": "12-15",
+            "repos": "30 s",
+            "tempo": "2-1-1",
+            "note": "Volume tronc, charge secondaire.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance D — Haut vertical",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Développé militaire",
+            "series": "4",
+            "reps": "6-8",
+            "repos": "150 s",
+            "tempo": "3-0-1",
+            "note": "Debout, après la Finition d'épaules : écoute l'épaule, pas l'ego.",
+            "lien": ""
+          },
+          {
+            "nom": "Tractions lestées",
+            "series": "4",
+            "reps": "5-8",
+            "repos": "150 s",
+            "tempo": "3-0-1",
+            "note": "Lest pour la fourchette. Descente complète.",
+            "lien": ""
+          },
+          {
+            "nom": "Développé haltères plat",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "Course longue, 1 RIR.",
+            "lien": ""
+          },
+          {
+            "nom": "Rowing haltère",
+            "series": "3",
+            "reps": "8-10/bras",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Unilatéral, corrige les écarts.",
+            "lien": ""
+          },
+          {
+            "nom": "Oiseau poulie",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "60 s",
+            "tempo": "2-1-1",
+            "note": "Rear delts, complément des face pulls.",
+            "lien": ""
+          },
+          {
+            "nom": "Dips lestés",
+            "series": "3",
+            "reps": "6-8",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Torse un peu penché.",
+            "lien": ""
+          },
+          {
+            "nom": "Curl pupitre",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Finition biceps du haut B.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance E — Bas hanche",
+        "note": "",
+        "exercices": [
+          {
+            "nom": "Soulevé de terre",
+            "series": "4",
+            "reps": "4-6",
+            "repos": "210 s",
+            "tempo": "3-0-1",
+            "note": "4 séries. Pas de 5e. Film trimestriel.",
+            "lien": ""
+          },
+          {
+            "nom": "Hip thrust",
+            "series": "4",
+            "reps": "8-10",
+            "repos": "120 s",
+            "tempo": "2-1-1",
+            "note": "Lourd, pause 1 s.",
+            "lien": ""
+          },
+          {
+            "nom": "Soulevé de terre roumain",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "150 s",
+            "tempo": "3-0-1",
+            "note": "Charge modérée après le terre, stretch.",
+            "lien": ""
+          },
+          {
+            "nom": "Fentes marchées",
+            "series": "3",
+            "reps": "8/jambe",
+            "repos": "90 s",
+            "tempo": "2-0-1",
+            "note": "Haltères, grand pas.",
+            "lien": ""
+          },
+          {
+            "nom": "Abducteurs machine",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Contrôle, fessier moyen.",
+            "lien": ""
+          },
+          {
+            "nom": "Mollets debout",
+            "series": "4",
+            "reps": "10-12",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Un peu plus lourd que la presse du jour B.",
+            "lien": ""
+          },
+          {
+            "nom": "Gainage latéral",
+            "series": "3",
+            "reps": "30-40 s/côté",
+            "repos": "45 s",
+            "tempo": "iso",
+            "note": "Après le terre, simple et propre.",
+            "lien": ""
+          }
+        ]
+      }
+    ]
+  }
+]
