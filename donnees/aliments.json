@@ -35,57 +35,9 @@
     "fibres": 8.3,
     "portion_g": 40,
     "portion_nom": "1 poignée",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
+    "allergenes": [
+      "sulfites"
     ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "abricot-sec-moelleux-rehydrate-a-35-45",
-    "nom": "Abricot, sec, moelleux (réhydraté à 35-45%)",
-    "categorie": "Fruits",
-    "kcal": 200,
-    "proteines": 2.3,
-    "glucides": 51.1,
-    "lipides": 0.4,
-    "fibres": 3.5,
-    "portion_g": 40,
-    "portion_nom": "1 poignée",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "ananas-victoria-ou-queen-victoria-crue-preleve-a-la-reunion",
-    "nom": "Ananas Victoria ou Queen Victoria, crue, prélevé à La Réunion",
-    "categorie": "Fruits",
-    "kcal": 70,
-    "proteines": 0.9,
-    "glucides": 15.1,
-    "lipides": 0.0,
-    "fibres": 2.4,
-    "portion_g": 150,
-    "portion_nom": "1 fruit / portion",
-    "allergenes": [],
     "regimes": [
       "omnivore",
       "vegetarien",
@@ -226,7 +178,7 @@
   },
   {
     "id": "citron-vert-ou-lime-cru",
-    "nom": "Citron vert ou lime, cru",
+    "nom": "Citron vert (lime)",
     "categorie": "Fruits",
     "kcal": 39,
     "proteines": 1.1,
@@ -283,8 +235,8 @@
     "glucides": 9.2,
     "lipides": 0.0,
     "fibres": 1.7,
-    "portion_g": 150,
-    "portion_nom": "1 fruit / portion",
+    "portion_g": 80,
+    "portion_nom": "1 fruit",
     "allergenes": [],
     "regimes": [
       "omnivore",
@@ -476,7 +428,7 @@
   },
   {
     "id": "fruit-de-la-passion-ou-maracudja-cru",
-    "nom": "Fruit de la passion ou maracudja, cru",
+    "nom": "Fruit de la passion",
     "categorie": "Fruits",
     "kcal": 102,
     "proteines": 2.1,
@@ -536,33 +488,6 @@
     "portion_g": 150,
     "portion_nom": "1 fruit / portion",
     "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "groseille-a-maquereau-crue",
-    "nom": "Groseille à maquereau, crue",
-    "categorie": "Fruits",
-    "kcal": 39,
-    "proteines": 0.9,
-    "glucides": 4.5,
-    "lipides": 0.6,
-    "fibres": 4.3,
-    "portion_g": 150,
-    "portion_nom": "1 fruit / portion",
-    "allergenes": [
-      "poissons"
-    ],
     "regimes": [
       "omnivore",
       "vegetarien",
@@ -677,31 +602,6 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "mangue-jose-crue-prelevee-a-la-reunion-mangifera-indica-l",
-    "nom": "Mangue José, crue, prélevée à La Réunion (Mangifera indica L.)",
-    "categorie": "Fruits",
-    "kcal": 89,
-    "proteines": 0.8,
-    "glucides": 19.3,
-    "lipides": 0.5,
-    "fibres": 1.8,
-    "portion_g": 150,
-    "portion_nom": "1 fruit / portion",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
     "id": "mangue-crue",
     "nom": "Mangue, crue",
     "categorie": "Fruits",
@@ -728,7 +628,7 @@
   },
   {
     "id": "melon-cantaloup-par-ex-charentais-cru",
-    "nom": "Melon cantaloup (par ex.: Charentais), cru",
+    "nom": "Melon cantaloup / charentais",
     "categorie": "Fruits",
     "kcal": 60,
     "proteines": 1.1,
@@ -753,7 +653,7 @@
   },
   {
     "id": "melon-miel-ou-melon-honeydew-cru",
-    "nom": "Melon miel ou melon honeydew, cru",
+    "nom": "Melon miel (honeydew)",
     "categorie": "Fruits",
     "kcal": 22,
     "proteines": 0.5,
@@ -762,31 +662,6 @@
     "fibres": 0.8,
     "portion_g": 200,
     "portion_nom": "1 part",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "mure-de-ronce-crue",
-    "nom": "Mûre (de ronce), crue",
-    "categorie": "Fruits",
-    "kcal": 46,
-    "proteines": 1.1,
-    "glucides": 6.5,
-    "lipides": 0.7,
-    "fibres": 5.2,
-    "portion_g": 150,
-    "portion_nom": "1 fruit / portion",
     "allergenes": [],
     "regimes": [
       "omnivore",
@@ -827,14 +702,14 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "nefle-du-japon-crue",
-    "nom": "Nèfle du Japon, crue",
+    "id": "mure-de-ronce-crue",
+    "nom": "Mûre",
     "categorie": "Fruits",
-    "kcal": 48,
-    "proteines": 0.4,
-    "glucides": 9.9,
-    "lipides": 0.2,
-    "fibres": 1.7,
+    "kcal": 46,
+    "proteines": 1.1,
+    "glucides": 6.5,
+    "lipides": 0.7,
+    "fibres": 5.2,
     "portion_g": 150,
     "portion_nom": "1 fruit / portion",
     "allergenes": [],
@@ -877,14 +752,14 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "papaye-colombo-fruit-mur-crue-prelevee-a-la-reunion-carica-papay",
-    "nom": "Papaye Colombo (fruit mûr), crue, prélevée à La Réunion (Carica papay…",
+    "id": "pomelo-dit-pamplemousse-cru",
+    "nom": "Pamplemousse / pomelo cru",
     "categorie": "Fruits",
-    "kcal": 38,
-    "proteines": 0.6,
-    "glucides": 7.9,
+    "kcal": 34,
+    "proteines": 0.8,
+    "glucides": 5.9,
     "lipides": 0.0,
-    "fibres": 2.2,
+    "fibres": 1.1,
     "portion_g": 150,
     "portion_nom": "1 fruit / portion",
     "allergenes": [],
@@ -935,108 +810,8 @@
     "glucides": 8.3,
     "lipides": 0.0,
     "fibres": 0.5,
-    "portion_g": 150,
-    "portion_nom": "1 fruit / portion",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "peche-blanche-crue",
-    "nom": "Pêche blanche, crue",
-    "categorie": "Fruits",
-    "kcal": 44,
-    "proteines": 0.7,
-    "glucides": 9.5,
-    "lipides": 0.0,
-    "fibres": 2.1,
-    "portion_g": 150,
-    "portion_nom": "1 fruit / portion",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "peche-blanche-crue-2",
-    "nom": "Pêche blanche, crue",
-    "categorie": "Fruits",
-    "kcal": 44,
-    "proteines": 0.6,
-    "glucides": 9.6,
-    "lipides": 0.0,
-    "fibres": 1.1,
-    "portion_g": 150,
-    "portion_nom": "1 fruit / portion",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "peche-jaune-crue",
-    "nom": "Pêche jaune, crue",
-    "categorie": "Fruits",
-    "kcal": 44,
-    "proteines": 0.7,
-    "glucides": 9.8,
-    "lipides": 0.0,
-    "fibres": 1.0,
-    "portion_g": 150,
-    "portion_nom": "1 fruit / portion",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "peche-crue",
-    "nom": "Pêche, crue",
-    "categorie": "Fruits",
-    "kcal": 38,
-    "proteines": 0.9,
-    "glucides": 7.5,
-    "lipides": 0.2,
-    "fibres": 1.5,
-    "portion_g": 150,
-    "portion_nom": "1 fruit / portion",
+    "portion_g": 200,
+    "portion_nom": "1 part",
     "allergenes": [],
     "regimes": [
       "omnivore",
@@ -1087,31 +862,6 @@
     "fibres": 2.9,
     "portion_g": 150,
     "portion_nom": "1 fruit",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "pomelo-dit-pamplemousse-cru",
-    "nom": "Pomelo (dit Pamplemousse), cru",
-    "categorie": "Fruits",
-    "kcal": 34,
-    "proteines": 0.8,
-    "glucides": 5.9,
-    "lipides": 0.0,
-    "fibres": 1.1,
-    "portion_g": 150,
-    "portion_nom": "1 fruit / portion",
     "allergenes": [],
     "regimes": [
       "omnivore",
@@ -1302,8 +1052,83 @@
     "source": "CIQUAL 2025"
   },
   {
+    "id": "peche-blanche-crue",
+    "nom": "Pêche blanche, crue",
+    "categorie": "Fruits",
+    "kcal": 44,
+    "proteines": 0.7,
+    "glucides": 9.5,
+    "lipides": 0.0,
+    "fibres": 2.1,
+    "portion_g": 150,
+    "portion_nom": "1 fruit",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "peche-jaune-crue",
+    "nom": "Pêche jaune, crue",
+    "categorie": "Fruits",
+    "kcal": 44,
+    "proteines": 0.7,
+    "glucides": 9.8,
+    "lipides": 0.0,
+    "fibres": 1.0,
+    "portion_g": 150,
+    "portion_nom": "1 fruit",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "peche-crue",
+    "nom": "Pêche, crue",
+    "categorie": "Fruits",
+    "kcal": 38,
+    "proteines": 0.9,
+    "glucides": 7.5,
+    "lipides": 0.2,
+    "fibres": 1.5,
+    "portion_g": 150,
+    "portion_nom": "1 fruit",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
     "id": "raisin-blanc-a-gros-grain-type-italia-ou-dattier-cru",
-    "nom": "Raisin blanc, à gros grain (type Italia ou Dattier), cru",
+    "nom": "Raisin blanc cru",
     "categorie": "Fruits",
     "kcal": 72,
     "proteines": 0.8,
@@ -1405,7 +1230,7 @@
   },
   {
     "id": "frites-de-pommes-de-terre-surgelees-cuites-en-friteuse",
-    "nom": "Frites de pommes de terre, surgelées, cuites en friteuse",
+    "nom": "Frites",
     "categorie": "Féculents",
     "kcal": 258,
     "proteines": 3.3,
@@ -1476,56 +1301,8 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "pomme-de-terre-poelee-avec-matiere-grasse",
-    "nom": "Pomme de terre poêlée, avec matière grasse",
-    "categorie": "Féculents",
-    "kcal": 137,
-    "proteines": 2.5,
-    "glucides": 17.3,
-    "lipides": 5.7,
-    "fibres": 2.6,
-    "portion_g": 200,
-    "portion_nom": "1 portion",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "pomme-de-terre-bouillie-cuite-a-leau",
-    "nom": "Pomme de terre, bouillie/cuite à l'eau",
-    "categorie": "Féculents",
-    "kcal": 81,
-    "proteines": 1.8,
-    "glucides": 16.8,
-    "lipides": 0.3,
-    "fibres": 1.8,
-    "portion_g": 200,
-    "portion_nom": "1 portion",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
     "id": "pomme-de-terre-rotie-cuite-au-four",
-    "nom": "Pomme de terre, rôtie/cuite au four",
+    "nom": "Pomme de terre au four",
     "categorie": "Féculents",
     "kcal": 91,
     "proteines": 2.5,
@@ -1572,14 +1349,38 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "pomme-de-terre-sans-peau-rotie-cuite-au-four",
-    "nom": "Pomme de terre, sans peau, rôtie/cuite au four",
+    "id": "pomme-de-terre-bouillie-cuite-a-leau",
+    "nom": "Pomme de terre cuite à l'eau",
     "categorie": "Féculents",
-    "kcal": 92,
-    "proteines": 2.0,
-    "glucides": 20.1,
-    "lipides": 0.1,
-    "fibres": 1.5,
+    "kcal": 81,
+    "proteines": 1.8,
+    "glucides": 16.8,
+    "lipides": 0.3,
+    "fibres": 1.8,
+    "portion_g": 200,
+    "portion_nom": "1 portion",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "pomme-de-terre-poelee-avec-matiere-grasse",
+    "nom": "Pommes de terre poêlées",
+    "categorie": "Féculents",
+    "kcal": 137,
+    "proteines": 2.5,
+    "glucides": 17.3,
+    "lipides": 5.7,
+    "fibres": 2.6,
     "portion_g": 200,
     "portion_nom": "1 portion",
     "allergenes": [],
@@ -1597,7 +1398,7 @@
   },
   {
     "id": "puree-de-pomme-de-terre-avec-lait-et-beurre",
-    "nom": "Purée de pomme de terre, avec lait et beurre",
+    "nom": "Purée de pomme de terre",
     "categorie": "Féculents",
     "kcal": 95,
     "proteines": 1.9,
@@ -1605,12 +1406,14 @@
     "lipides": 2.4,
     "fibres": 1.5,
     "portion_g": 200,
-    "portion_nom": "1 portion",
+    "portion_nom": "1 bol",
     "allergenes": [
       "lait"
     ],
     "regimes": [
       "omnivore",
+      "vegetarien",
+      "pescetarien",
       "sans_gluten",
       "halal"
     ],
@@ -1711,76 +1514,6 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "boisson-a-lamande-nature-sans-sucres-ajoutes-non-enrichie",
-    "nom": "Boisson à l'amande, nature, sans sucres ajoutés, non enrichie",
-    "categorie": "Laitages",
-    "kcal": 36,
-    "proteines": 1.1,
-    "glucides": 0.7,
-    "lipides": 3.2,
-    "fibres": 0.0,
-    "portion_g": 30,
-    "portion_nom": "1 portion (30 g)",
-    "allergenes": [
-      "lait",
-      "fruits_a_coque"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "boisson-a-lavoine-nature-sans-sucres-ajoutes-non-enrichie",
-    "nom": "Boisson à l'avoine, nature, sans sucres ajoutés, non enrichie",
-    "categorie": "Laitages",
-    "kcal": 41,
-    "proteines": 0.2,
-    "glucides": 7.8,
-    "lipides": 1.1,
-    "fibres": 0.0,
-    "portion_g": 30,
-    "portion_nom": "1 portion (30 g)",
-    "allergenes": [
-      "gluten",
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "boisson-a-la-noix-de-coco-nature",
-    "nom": "Boisson à la noix de coco, nature",
-    "categorie": "Laitages",
-    "kcal": 30,
-    "proteines": 0.2,
-    "glucides": 2.8,
-    "lipides": 2.1,
-    "fibres": 0.0,
-    "portion_g": 30,
-    "portion_nom": "1 portion (30 g)",
-    "allergenes": [
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
     "id": "boisson-au-riz-nature",
     "nom": "Boisson au riz, nature",
     "categorie": "Laitages",
@@ -1818,6 +1551,81 @@
     "allergenes": [
       "soja"
     ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "boisson-a-lamande-nature-sans-sucres-ajoutes-non-enrichie",
+    "nom": "Boisson à l'amande",
+    "categorie": "Laitages",
+    "kcal": 36,
+    "proteines": 1.1,
+    "glucides": 0.7,
+    "lipides": 3.2,
+    "fibres": 0.0,
+    "portion_g": 250,
+    "portion_nom": "1 verre",
+    "allergenes": [
+      "fruits_a_coque"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "boisson-a-lavoine-nature-sans-sucres-ajoutes-non-enrichie",
+    "nom": "Boisson à l'avoine",
+    "categorie": "Laitages",
+    "kcal": 41,
+    "proteines": 0.2,
+    "glucides": 7.8,
+    "lipides": 1.1,
+    "fibres": 0.0,
+    "portion_g": 250,
+    "portion_nom": "1 verre",
+    "allergenes": [
+      "gluten"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "boisson-a-la-noix-de-coco-nature",
+    "nom": "Boisson à la noix de coco, nature",
+    "categorie": "Laitages",
+    "kcal": 30,
+    "proteines": 0.2,
+    "glucides": 2.8,
+    "lipides": 2.1,
+    "fibres": 0.0,
+    "portion_g": 250,
+    "portion_nom": "1 verre",
+    "allergenes": [],
     "regimes": [
       "omnivore",
       "vegetarien",
@@ -1877,6 +1685,29 @@
     "source": "CIQUAL 2025"
   },
   {
+    "id": "fromage-de-chevre-buche",
+    "nom": "Bûche de chèvre",
+    "categorie": "Laitages",
+    "kcal": 285,
+    "proteines": 18.4,
+    "glucides": 0.0,
+    "lipides": 23.3,
+    "fibres": 0.0,
+    "portion_g": 30,
+    "portion_nom": "1 portion (30 g)",
+    "allergenes": [
+      "lait"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten",
+      "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
     "id": "camembert-au-lait-pasteurise",
     "nom": "Camembert au lait pasteurisé",
     "categorie": "Laitages",
@@ -1901,7 +1732,7 @@
   },
   {
     "id": "cancoillotte-specialite-fromagere-fondue",
-    "nom": "Cancoillotte (spécialité fromagère fondue)",
+    "nom": "Cancoillotte",
     "categorie": "Laitages",
     "kcal": 151,
     "proteines": 13.6,
@@ -1992,6 +1823,29 @@
     "source": "CIQUAL 2025"
   },
   {
+    "id": "fromage-de-chevre-frais-type-palet-crottin-ou-buchette",
+    "nom": "Chèvre frais",
+    "categorie": "Laitages",
+    "kcal": 194,
+    "proteines": 11.7,
+    "glucides": 2.5,
+    "lipides": 15.2,
+    "fibres": 0.0,
+    "portion_g": 30,
+    "portion_nom": "1 portion (30 g)",
+    "allergenes": [
+      "lait"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten",
+      "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
     "id": "comte",
     "nom": "Comté",
     "categorie": "Laitages",
@@ -2038,77 +1892,8 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "creme-12-a-25-mg-legere-semi-epaisse-uht",
-    "nom": "Crème 12 à 25% MG, légère, semi-épaisse, UHT",
-    "categorie": "Laitages",
-    "kcal": 189,
-    "proteines": 2.7,
-    "glucides": 4.3,
-    "lipides": 17.6,
-    "fibres": 1.5,
-    "portion_g": 30,
-    "portion_nom": "1 portion (30 g)",
-    "allergenes": [
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "creme-30-mg-epaisse",
-    "nom": "Crème 30% MG, épaisse",
-    "categorie": "Laitages",
-    "kcal": 285,
-    "proteines": 2.3,
-    "glucides": 1.4,
-    "lipides": 29.9,
-    "fibres": 0.0,
-    "portion_g": 30,
-    "portion_nom": "1 portion (30 g)",
-    "allergenes": [
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "creme-30-mg-fluide-uht",
-    "nom": "Crème 30% MG, fluide, UHT",
-    "categorie": "Laitages",
-    "kcal": 293,
-    "proteines": 2.2,
-    "glucides": 3.7,
-    "lipides": 30.0,
-    "fibres": 0.0,
-    "portion_g": 30,
-    "portion_nom": "1 portion (30 g)",
-    "allergenes": [
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
     "id": "crottin-de-chevre-sans-precision-sur-le-type-de-lait-pasteurise-ou",
-    "nom": "Crottin de chèvre, sans précision sur le type de lait - pasteurisé ou…",
+    "nom": "Crottin de chèvre",
     "categorie": "Laitages",
     "kcal": 344,
     "proteines": 21.9,
@@ -2130,8 +1915,77 @@
     "source": "CIQUAL 2025"
   },
   {
+    "id": "creme-30-mg-fluide-uht",
+    "nom": "Crème fluide 30% UHT",
+    "categorie": "Laitages",
+    "kcal": 293,
+    "proteines": 2.2,
+    "glucides": 3.7,
+    "lipides": 30.0,
+    "fibres": 0.0,
+    "portion_g": 30,
+    "portion_nom": "2 c. à s.",
+    "allergenes": [
+      "lait"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten",
+      "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "creme-30-mg-epaisse",
+    "nom": "Crème fraîche épaisse 30%",
+    "categorie": "Laitages",
+    "kcal": 285,
+    "proteines": 2.3,
+    "glucides": 1.4,
+    "lipides": 29.9,
+    "fibres": 0.0,
+    "portion_g": 30,
+    "portion_nom": "2 c. à s.",
+    "allergenes": [
+      "lait"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten",
+      "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "creme-12-a-25-mg-legere-semi-epaisse-uht",
+    "nom": "Crème légère 15-20%",
+    "categorie": "Laitages",
+    "kcal": 189,
+    "proteines": 2.7,
+    "glucides": 4.3,
+    "lipides": 17.6,
+    "fibres": 1.5,
+    "portion_g": 30,
+    "portion_nom": "2 c. à s.",
+    "allergenes": [
+      "lait"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten",
+      "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
     "id": "dessert-au-soja-nature-sans-sucres-ajoutes-non-enrichi-fermente",
-    "nom": "Dessert au soja, nature, sans sucres ajoutés, non enrichi, fermenté",
+    "nom": "Dessert au soja nature",
     "categorie": "Laitages",
     "kcal": 45,
     "proteines": 4.1,
@@ -2180,7 +2034,7 @@
   },
   {
     "id": "emmental-ou-emmenthal",
-    "nom": "Emmental ou emmenthal",
+    "nom": "Emmental",
     "categorie": "Laitages",
     "kcal": 373,
     "proteines": 27.3,
@@ -2203,38 +2057,15 @@
   },
   {
     "id": "emmental-ou-emmenthal-rape",
-    "nom": "Emmental ou emmenthal, râpé",
+    "nom": "Emmental râpé",
     "categorie": "Laitages",
     "kcal": 368,
     "proteines": 27.1,
     "glucides": 0.6,
     "lipides": 28.2,
     "fibres": 0.0,
-    "portion_g": 30,
-    "portion_nom": "1 portion (30 g)",
-    "allergenes": [
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "epoisses",
-    "nom": "Époisses",
-    "categorie": "Laitages",
-    "kcal": 286,
-    "proteines": 17.3,
-    "glucides": 0.0,
-    "lipides": 24.0,
-    "fibres": 0.0,
-    "portion_g": 30,
-    "portion_nom": "1 portion (30 g)",
+    "portion_g": 20,
+    "portion_nom": "2 c. à s. râpé",
     "allergenes": [
       "lait"
     ],
@@ -2295,7 +2126,7 @@
   },
   {
     "id": "feta-au-lait-de-brebis-70-minimum-et-lait-de-chevre-30-maximum",
-    "nom": "Feta, au lait de brebis 70% minimum et lait de chèvre 30% maximum",
+    "nom": "Feta",
     "categorie": "Laitages",
     "kcal": 284,
     "proteines": 14.8,
@@ -2432,98 +2263,6 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "fromage-de-chevre-buche",
-    "nom": "Fromage de chèvre bûche",
-    "categorie": "Laitages",
-    "kcal": 285,
-    "proteines": 18.4,
-    "glucides": 0.0,
-    "lipides": 23.3,
-    "fibres": 0.0,
-    "portion_g": 30,
-    "portion_nom": "1 portion (30 g)",
-    "allergenes": [
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "fromage-de-chevre-frais-type-palet-crottin-ou-buchette",
-    "nom": "Fromage de chèvre frais, type palet, crottin ou bûchette",
-    "categorie": "Laitages",
-    "kcal": 194,
-    "proteines": 11.7,
-    "glucides": 2.5,
-    "lipides": 15.2,
-    "fibres": 0.0,
-    "portion_g": 30,
-    "portion_nom": "1 portion (30 g)",
-    "allergenes": [
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "fromage-frais-type-petit-suisse-nature-0-mg",
-    "nom": "Fromage frais type petit suisse, nature, 0% MG",
-    "categorie": "Laitages",
-    "kcal": 56,
-    "proteines": 9.7,
-    "glucides": 4.2,
-    "lipides": 0.1,
-    "fibres": 0.0,
-    "portion_g": 100,
-    "portion_nom": "1 pot (100 g)",
-    "allergenes": [
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "fromage-frais-type-petit-suisse-nature-10-mg-environ",
-    "nom": "Fromage frais type petit suisse, nature, 10% MG environ",
-    "categorie": "Laitages",
-    "kcal": 137,
-    "proteines": 9.0,
-    "glucides": 2.6,
-    "lipides": 9.9,
-    "fibres": 0.8,
-    "portion_g": 100,
-    "portion_nom": "1 pot (100 g)",
-    "allergenes": [
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
     "id": "gorgonzola",
     "nom": "Gorgonzola",
     "categorie": "Laitages",
@@ -2594,7 +2333,7 @@
   },
   {
     "id": "gruyere-igp-france",
-    "nom": "Gruyère IGP France",
+    "nom": "Gruyère",
     "categorie": "Laitages",
     "kcal": 415,
     "proteines": 27.6,
@@ -2624,8 +2363,8 @@
     "glucides": 4.5,
     "lipides": 3.4,
     "fibres": 0.0,
-    "portion_g": 30,
-    "portion_nom": "1 portion (30 g)",
+    "portion_g": 125,
+    "portion_nom": "1 pot",
     "allergenes": [
       "lait"
     ],
@@ -2640,7 +2379,7 @@
   },
   {
     "id": "lait-de-brebis-entier",
-    "nom": "Lait de brebis, entier",
+    "nom": "Lait de brebis entier",
     "categorie": "Laitages",
     "kcal": 103,
     "proteines": 5.6,
@@ -2663,7 +2402,7 @@
   },
   {
     "id": "lait-de-chevre-entier-uht",
-    "nom": "Lait de chèvre, entier, UHT",
+    "nom": "Lait de chèvre entier UHT",
     "categorie": "Laitages",
     "kcal": 65,
     "proteines": 2.9,
@@ -2686,7 +2425,7 @@
   },
   {
     "id": "lait-demi-ecreme-uht",
-    "nom": "Lait demi-écrémé, UHT",
+    "nom": "Lait demi-écrémé UHT",
     "categorie": "Laitages",
     "kcal": 48,
     "proteines": 3.4,
@@ -2708,13 +2447,37 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "lait-ecreme-uht",
-    "nom": "Lait écrémé, UHT",
+    "id": "lait-demi-ecreme-sans-lactose",
+    "nom": "Lait demi-écrémé UHT à teneur réduite en lactose",
     "categorie": "Laitages",
-    "kcal": 34,
-    "proteines": 3.5,
-    "glucides": 5.0,
-    "lipides": 0.0,
+    "kcal": 44,
+    "proteines": 3.4,
+    "glucides": 4.7,
+    "lipides": 1.3,
+    "fibres": 0.0,
+    "portion_g": 250,
+    "portion_nom": "1 verre",
+    "allergenes": [
+      "lait"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "lait-en-poudre-entier",
+    "nom": "Lait en poudre entier",
+    "categorie": "Laitages",
+    "kcal": 508,
+    "proteines": 26.0,
+    "glucides": 42.0,
+    "lipides": 26.2,
     "fibres": 0.0,
     "portion_g": 250,
     "portion_nom": "1 verre",
@@ -2732,35 +2495,12 @@
   },
   {
     "id": "lait-en-poudre-ecreme",
-    "nom": "Lait en poudre, écrémé",
+    "nom": "Lait en poudre écrémé",
     "categorie": "Laitages",
     "kcal": 361,
     "proteines": 34.6,
     "glucides": 54.0,
     "lipides": 0.7,
-    "fibres": 0.0,
-    "portion_g": 250,
-    "portion_nom": "1 verre",
-    "allergenes": [
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "lait-en-poudre-entier",
-    "nom": "Lait en poudre, entier",
-    "categorie": "Laitages",
-    "kcal": 508,
-    "proteines": 26.0,
-    "glucides": 42.0,
-    "lipides": 26.2,
     "fibres": 0.0,
     "portion_g": 250,
     "portion_nom": "1 verre",
@@ -2801,12 +2541,35 @@
   },
   {
     "id": "lait-fermente-a-boire-ou-lait-ribot-nature-au-lait-entier",
-    "nom": "Lait fermenté à boire ou lait ribot, nature, au lait entier",
+    "nom": "Lait ribot",
     "categorie": "Laitages",
     "kcal": 53,
     "proteines": 3.3,
     "glucides": 2.0,
     "lipides": 3.2,
+    "fibres": 0.0,
+    "portion_g": 250,
+    "portion_nom": "1 verre",
+    "allergenes": [
+      "lait"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten",
+      "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "lait-ecreme-uht",
+    "nom": "Lait écrémé UHT",
+    "categorie": "Laitages",
+    "kcal": 34,
+    "proteines": 3.5,
+    "glucides": 5.0,
+    "lipides": 0.0,
     "fibres": 0.0,
     "portion_g": 250,
     "portion_nom": "1 verre",
@@ -2847,7 +2610,7 @@
   },
   {
     "id": "maroilles-sans-precision",
-    "nom": "Maroilles, sans précision",
+    "nom": "Maroilles",
     "categorie": "Laitages",
     "kcal": 325,
     "proteines": 21.5,
@@ -2893,7 +2656,7 @@
   },
   {
     "id": "mimolette-sans-precision",
-    "nom": "Mimolette, sans précision",
+    "nom": "Mimolette",
     "categorie": "Laitages",
     "kcal": 319,
     "proteines": 25.3,
@@ -3008,7 +2771,7 @@
   },
   {
     "id": "ossau-iraty-fromage-de-brebis",
-    "nom": "Ossau-Iraty (fromage de brebis)",
+    "nom": "Ossau-Iraty",
     "categorie": "Laitages",
     "kcal": 423,
     "proteines": 23.7,
@@ -3054,7 +2817,7 @@
   },
   {
     "id": "pecorino-fromage-de-brebis",
-    "nom": "Pecorino (fromage de brebis)",
+    "nom": "Pecorino",
     "categorie": "Laitages",
     "kcal": 383,
     "proteines": 25.0,
@@ -3076,8 +2839,54 @@
     "source": "CIQUAL 2025"
   },
   {
+    "id": "fromage-frais-type-petit-suisse-nature-0-mg",
+    "nom": "Petit-suisse nature 0% MG",
+    "categorie": "Laitages",
+    "kcal": 56,
+    "proteines": 9.7,
+    "glucides": 4.2,
+    "lipides": 0.1,
+    "fibres": 0.0,
+    "portion_g": 30,
+    "portion_nom": "1 portion (30 g)",
+    "allergenes": [
+      "lait"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten",
+      "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "fromage-frais-type-petit-suisse-nature-10-mg-environ",
+    "nom": "Petit-suisse nature 10% MG",
+    "categorie": "Laitages",
+    "kcal": 137,
+    "proteines": 9.0,
+    "glucides": 2.6,
+    "lipides": 9.9,
+    "fibres": 0.8,
+    "portion_g": 30,
+    "portion_nom": "1 portion (30 g)",
+    "allergenes": [
+      "lait"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten",
+      "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
     "id": "pont-leveque",
-    "nom": "Pont l'Évêque",
+    "nom": "Pont-l'Évêque",
     "categorie": "Laitages",
     "kcal": 326,
     "proteines": 22.2,
@@ -3100,7 +2909,7 @@
   },
   {
     "id": "raclette-fromage",
-    "nom": "Raclette (fromage)",
+    "nom": "Raclette",
     "categorie": "Laitages",
     "kcal": 342,
     "proteines": 22.9,
@@ -3146,7 +2955,7 @@
   },
   {
     "id": "roquefort-fromage-de-brebis",
-    "nom": "Roquefort (fromage de brebis)",
+    "nom": "Roquefort",
     "categorie": "Laitages",
     "kcal": 384,
     "proteines": 19.1,
@@ -3169,7 +2978,7 @@
   },
   {
     "id": "saint-nectaire-sans-precision",
-    "nom": "Saint-Nectaire, sans précision",
+    "nom": "Saint-Nectaire",
     "categorie": "Laitages",
     "kcal": 342,
     "proteines": 23.0,
@@ -3192,7 +3001,7 @@
   },
   {
     "id": "saint-paulin-fromage-a-pate-pressee-non-cuite-demi-ferme",
-    "nom": "Saint-Paulin (fromage à pâte pressée non cuite demi-ferme)",
+    "nom": "Saint-Paulin",
     "categorie": "Laitages",
     "kcal": 327,
     "proteines": 21.8,
@@ -3208,14 +3017,13 @@
       "omnivore",
       "vegetarien",
       "pescetarien",
-      "sans_gluten",
-      "halal"
+      "sans_gluten"
     ],
     "source": "CIQUAL 2025"
   },
   {
     "id": "sainte-maure-de-touraine-fromage-de-chevre",
-    "nom": "Sainte-Maure de Touraine (fromage de chèvre)",
+    "nom": "Sainte-Maure de Touraine",
     "categorie": "Laitages",
     "kcal": 286,
     "proteines": 18.1,
@@ -3245,8 +3053,8 @@
     "glucides": 3.5,
     "lipides": 2.7,
     "fibres": 0.0,
-    "portion_g": 30,
-    "portion_nom": "1 portion (30 g)",
+    "portion_g": 100,
+    "portion_nom": "1 pot (100 g)",
     "allergenes": [
       "lait"
     ],
@@ -3270,29 +3078,6 @@
     "fibres": 0.0,
     "portion_g": 30,
     "portion_nom": "1 portion (30 g)",
-    "allergenes": [
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "yaourt-a-la-grecque-nature",
-    "nom": "Yaourt à la grecque nature",
-    "categorie": "Laitages",
-    "kcal": 103,
-    "proteines": 3.0,
-    "glucides": 3.7,
-    "lipides": 8.2,
-    "fibres": 0.1,
-    "portion_g": 125,
-    "portion_nom": "1 pot",
     "allergenes": [
       "lait"
     ],
@@ -3352,8 +3137,8 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "yaourt-ou-lait-fermente-nature",
-    "nom": "Yaourt ou lait fermenté, nature",
+    "id": "yaourt-nature",
+    "nom": "Yaourt nature",
     "categorie": "Laitages",
     "kcal": 50,
     "proteines": 3.8,
@@ -3375,8 +3160,8 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "yaourt-ou-lait-fermente-nature-0-mg",
-    "nom": "Yaourt ou lait fermenté, nature, 0% MG",
+    "id": "yaourt-nature-0",
+    "nom": "Yaourt nature 0% MG",
     "categorie": "Laitages",
     "kcal": 39,
     "proteines": 4.1,
@@ -3385,6 +3170,52 @@
     "fibres": 0.0,
     "portion_g": 125,
     "portion_nom": "1 pot",
+    "allergenes": [
+      "lait"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten",
+      "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "yaourt-a-la-grecque-nature",
+    "nom": "Yaourt à la grecque nature",
+    "categorie": "Laitages",
+    "kcal": 103,
+    "proteines": 3.0,
+    "glucides": 3.7,
+    "lipides": 8.2,
+    "fibres": 0.1,
+    "portion_g": 125,
+    "portion_nom": "1 pot",
+    "allergenes": [
+      "lait"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten",
+      "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "epoisses",
+    "nom": "Époisses",
+    "categorie": "Laitages",
+    "kcal": 286,
+    "proteines": 17.3,
+    "glucides": 0.0,
+    "lipides": 24.0,
+    "fibres": 0.0,
+    "portion_g": 30,
+    "portion_nom": "1 portion (30 g)",
     "allergenes": [
       "lait"
     ],
@@ -3499,7 +3330,7 @@
   },
   {
     "id": "asperge-blanche-bouillie-cuite-a-leau",
-    "nom": "Asperge blanche, bouillie/cuite à l'eau",
+    "nom": "Asperge blanche cuite",
     "categorie": "Légumes",
     "kcal": 17,
     "proteines": 1.4,
@@ -3524,7 +3355,7 @@
   },
   {
     "id": "asperge-verte-bouillie-cuite-a-leau",
-    "nom": "Asperge verte, bouillie/cuite à l'eau",
+    "nom": "Asperge verte cuite",
     "categorie": "Légumes",
     "kcal": 25,
     "proteines": 2.7,
@@ -3723,81 +3554,6 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "celeri-branche-cru",
-    "nom": "Céleri branche, cru",
-    "categorie": "Légumes",
-    "kcal": 15,
-    "proteines": 0.6,
-    "glucides": 2.4,
-    "lipides": 0.0,
-    "fibres": 2.2,
-    "portion_g": 150,
-    "portion_nom": "1 portion",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "celeri-rave-cru",
-    "nom": "Céleri-rave, cru",
-    "categorie": "Légumes",
-    "kcal": 26,
-    "proteines": 1.4,
-    "glucides": 4.0,
-    "lipides": 0.0,
-    "fibres": 4.5,
-    "portion_g": 150,
-    "portion_nom": "1 portion",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "celeri-rave-cuit",
-    "nom": "Céleri-rave, cuit",
-    "categorie": "Légumes",
-    "kcal": 36,
-    "proteines": 1.3,
-    "glucides": 4.6,
-    "lipides": 0.9,
-    "fibres": 2.6,
-    "portion_g": 150,
-    "portion_nom": "1 portion",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
     "id": "champignon-pleurote-crue",
     "nom": "Champignon, pleurote, crue",
     "categorie": "Légumes",
@@ -3808,9 +3564,32 @@
     "fibres": 2.3,
     "portion_g": 150,
     "portion_nom": "1 portion",
-    "allergenes": [
-      "fruits_a_coque"
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
     ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "salade-ou-chicoree-frisee-crue",
+    "nom": "Chicorée frisée",
+    "categorie": "Légumes",
+    "kcal": 26,
+    "proteines": 1.7,
+    "glucides": 2.1,
+    "lipides": 0.3,
+    "fibres": 4.0,
+    "portion_g": 150,
+    "portion_nom": "1 portion",
+    "allergenes": [],
     "regimes": [
       "omnivore",
       "vegetarien",
@@ -4101,15 +3880,40 @@
   },
   {
     "id": "ciboule-ou-ciboulette-fraiche",
-    "nom": "Ciboule ou ciboulette, fraîche",
+    "nom": "Ciboulette",
     "categorie": "Légumes",
     "kcal": 31,
     "proteines": 2.5,
     "glucides": 2.9,
     "lipides": 0.5,
     "fibres": 2.5,
-    "portion_g": 10,
-    "portion_nom": "1 c. à s. (frais)",
+    "portion_g": 150,
+    "portion_nom": "1 portion",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "tomate-concentre-appertise",
+    "nom": "Concentré de tomate",
+    "categorie": "Légumes",
+    "kcal": 99,
+    "proteines": 4.4,
+    "glucides": 17.1,
+    "lipides": 0.5,
+    "fibres": 4.2,
+    "portion_g": 30,
+    "portion_nom": "2 c. à s.",
     "allergenes": [],
     "regimes": [
       "omnivore",
@@ -4175,8 +3979,33 @@
     "source": "CIQUAL 2025"
   },
   {
+    "id": "tomate-coulis-appertise-puree-de-tomates-mi-reduite-a-11",
+    "nom": "Coulis de tomate",
+    "categorie": "Légumes",
+    "kcal": 46,
+    "proteines": 2.0,
+    "glucides": 7.6,
+    "lipides": 0.2,
+    "fibres": 2.6,
+    "portion_g": 30,
+    "portion_nom": "2 c. à s.",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
     "id": "courge-butternut-doubeurre-crue",
-    "nom": "Courge butternut (doubeurre), crue",
+    "nom": "Courge butternut crue",
     "categorie": "Légumes",
     "kcal": 30,
     "proteines": 1.0,
@@ -4185,20 +4014,23 @@
     "fibres": 2.0,
     "portion_g": 150,
     "portion_nom": "1 portion",
-    "allergenes": [
-      "lait"
-    ],
+    "allergenes": [],
     "regimes": [
       "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
       "paleo",
       "sans_gluten",
-      "halal"
+      "sans_lactose",
+      "halal",
+      "casher"
     ],
     "source": "CIQUAL 2025"
   },
   {
     "id": "courge-butternut-doubeurre-cuite",
-    "nom": "Courge butternut (doubeurre), cuite",
+    "nom": "Courge butternut cuite",
     "categorie": "Légumes",
     "kcal": 29,
     "proteines": 1.1,
@@ -4207,14 +4039,17 @@
     "fibres": 1.8,
     "portion_g": 150,
     "portion_nom": "1 portion",
-    "allergenes": [
-      "lait"
-    ],
+    "allergenes": [],
     "regimes": [
       "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
       "paleo",
       "sans_gluten",
-      "halal"
+      "sans_lactose",
+      "halal",
+      "casher"
     ],
     "source": "CIQUAL 2025"
   },
@@ -4319,17 +4154,19 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "echalote-crue",
-    "nom": "Échalote, crue",
+    "id": "celeri-branche-cru",
+    "nom": "Céleri branche, cru",
     "categorie": "Légumes",
-    "kcal": 62,
-    "proteines": 1.8,
-    "glucides": 12.2,
+    "kcal": 15,
+    "proteines": 0.6,
+    "glucides": 2.4,
     "lipides": 0.0,
-    "fibres": 2.6,
+    "fibres": 2.2,
     "portion_g": 150,
     "portion_nom": "1 portion",
-    "allergenes": [],
+    "allergenes": [
+      "celeri"
+    ],
     "regimes": [
       "omnivore",
       "vegetarien",
@@ -4344,17 +4181,46 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "echalote-cuite",
-    "nom": "Échalote, cuite",
+    "id": "celeri-rave-cru",
+    "nom": "Céleri-rave, cru",
     "categorie": "Légumes",
-    "kcal": 69,
-    "proteines": 2.1,
-    "glucides": 13.5,
+    "kcal": 26,
+    "proteines": 1.4,
+    "glucides": 4.0,
     "lipides": 0.0,
-    "fibres": 3.4,
+    "fibres": 4.5,
     "portion_g": 150,
     "portion_nom": "1 portion",
-    "allergenes": [],
+    "allergenes": [
+      "celeri"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "celeri-rave-cuit",
+    "nom": "Céleri-rave, cuit",
+    "categorie": "Légumes",
+    "kcal": 36,
+    "proteines": 1.3,
+    "glucides": 4.6,
+    "lipides": 0.9,
+    "fibres": 2.6,
+    "portion_g": 150,
+    "portion_nom": "1 portion",
+    "allergenes": [
+      "celeri"
+    ],
     "regimes": [
       "omnivore",
       "vegetarien",
@@ -4394,56 +4260,6 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "epinard-cru",
-    "nom": "Épinard, cru",
-    "categorie": "Légumes",
-    "kcal": 33,
-    "proteines": 2.7,
-    "glucides": 3.1,
-    "lipides": 0.4,
-    "fibres": 2.6,
-    "portion_g": 150,
-    "portion_nom": "1 portion",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "epinard-cuit",
-    "nom": "Épinard, cuit",
-    "categorie": "Légumes",
-    "kcal": 20,
-    "proteines": 3.2,
-    "glucides": 0.2,
-    "lipides": 0.1,
-    "fibres": 2.7,
-    "portion_g": 150,
-    "portion_nom": "1 portion",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
     "id": "fenouil-cru",
     "nom": "Fenouil, cru",
     "categorie": "Légumes",
@@ -4452,58 +4268,6 @@
     "glucides": 2.6,
     "lipides": 0.0,
     "fibres": 2.6,
-    "portion_g": 150,
-    "portion_nom": "1 portion",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "graine-germee-de-haricot-mungo-ou-pousse-de-soja-crue",
-    "nom": "Graine germée de haricot mungo ou pousse de \"soja\", crue",
-    "categorie": "Légumes",
-    "kcal": 28,
-    "proteines": 2.8,
-    "glucides": 3.4,
-    "lipides": 0.0,
-    "fibres": 1.7,
-    "portion_g": 150,
-    "portion_nom": "1 portion",
-    "allergenes": [
-      "soja"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "haricot-vert-appertise",
-    "nom": "Haricot vert, appertisé",
-    "categorie": "Légumes",
-    "kcal": 23,
-    "proteines": 1.3,
-    "glucides": 2.1,
-    "lipides": 0.3,
-    "fibres": 3.4,
     "portion_g": 150,
     "portion_nom": "1 portion",
     "allergenes": [],
@@ -4571,8 +4335,33 @@
     "source": "CIQUAL 2025"
   },
   {
+    "id": "haricot-vert-appertise",
+    "nom": "Haricots verts en conserve",
+    "categorie": "Légumes",
+    "kcal": 23,
+    "proteines": 1.3,
+    "glucides": 2.1,
+    "lipides": 0.3,
+    "fibres": 3.4,
+    "portion_g": 150,
+    "portion_nom": "1 portion",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
     "id": "laitue-romaine-crue",
-    "nom": "Laitue romaine, crue",
+    "nom": "Laitue romaine",
     "categorie": "Légumes",
     "kcal": 17,
     "proteines": 1.2,
@@ -4621,33 +4410,8 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "mache-crue",
-    "nom": "Mâche, crue",
-    "categorie": "Légumes",
-    "kcal": 15,
-    "proteines": 2.0,
-    "glucides": 0.5,
-    "lipides": 0.0,
-    "fibres": 2.3,
-    "portion_g": 150,
-    "portion_nom": "1 portion",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
     "id": "mais-doux-appertise",
-    "nom": "Maïs doux, appertisé",
+    "nom": "Maïs doux en conserve",
     "categorie": "Légumes",
     "kcal": 105,
     "proteines": 2.7,
@@ -4662,7 +4426,6 @@
       "vegetarien",
       "vegan",
       "pescetarien",
-      "paleo",
       "sans_gluten",
       "sans_lactose",
       "halal",
@@ -4681,6 +4444,31 @@
     "fibres": 7.4,
     "portion_g": 10,
     "portion_nom": "1 c. à s. (frais)",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "mache-crue",
+    "nom": "Mâche, crue",
+    "categorie": "Légumes",
+    "kcal": 15,
+    "proteines": 2.0,
+    "glucides": 0.5,
+    "lipides": 0.0,
+    "fibres": 2.3,
+    "portion_g": 80,
+    "portion_nom": "1 assiette",
     "allergenes": [],
     "regimes": [
       "omnivore",
@@ -4922,7 +4710,7 @@
   },
   {
     "id": "pois-mange-tout-ou-pois-gourmand-cru",
-    "nom": "Pois mange-tout ou pois gourmand, cru",
+    "nom": "Pois mange-tout crus",
     "categorie": "Légumes",
     "kcal": 43,
     "proteines": 2.8,
@@ -5171,6 +4959,33 @@
     "source": "CIQUAL 2025"
   },
   {
+    "id": "graine-germee-de-haricot-mungo-ou-pousse-de-soja-crue",
+    "nom": "Pousses de soja (haricot mungo)",
+    "categorie": "Légumes",
+    "kcal": 28,
+    "proteines": 2.8,
+    "glucides": 3.4,
+    "lipides": 0.0,
+    "fibres": 1.7,
+    "portion_g": 150,
+    "portion_nom": "1 portion",
+    "allergenes": [
+      "soja"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
     "id": "radis-rouge-cru",
     "nom": "Radis rouge, cru",
     "categorie": "Légumes",
@@ -5246,33 +5061,8 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "salade-ou-chicoree-frisee-crue",
-    "nom": "Salade ou chicorée frisée, crue",
-    "categorie": "Légumes",
-    "kcal": 26,
-    "proteines": 1.7,
-    "glucides": 2.1,
-    "lipides": 0.3,
-    "fibres": 4.0,
-    "portion_g": 80,
-    "portion_nom": "1 assiette",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
     "id": "salade-verte-crue-sans-assaisonnement",
-    "nom": "Salade verte, crue, sans assaisonnement",
+    "nom": "Salade verte",
     "categorie": "Légumes",
     "kcal": 14,
     "proteines": 1.0,
@@ -5371,58 +5161,8 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "tomate-concentre-appertise",
-    "nom": "Tomate, concentré, appertisé",
-    "categorie": "Légumes",
-    "kcal": 99,
-    "proteines": 4.4,
-    "glucides": 17.1,
-    "lipides": 0.5,
-    "fibres": 4.2,
-    "portion_g": 150,
-    "portion_nom": "1 portion",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "tomate-coulis-appertise-puree-de-tomates-mi-reduite-a-11",
-    "nom": "Tomate, coulis, appertisé (purée de tomates mi-réduite à 11%)",
-    "categorie": "Légumes",
-    "kcal": 46,
-    "proteines": 2.0,
-    "glucides": 7.6,
-    "lipides": 0.2,
-    "fibres": 2.6,
-    "portion_g": 30,
-    "portion_nom": "2 c. à s.",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
     "id": "tomate-pelee-appertisee",
-    "nom": "Tomate, pelée, appertisée",
+    "nom": "Tomates pelées en conserve",
     "categorie": "Légumes",
     "kcal": 16,
     "proteines": 0.9,
@@ -5438,6 +5178,130 @@
       "vegan",
       "pescetarien",
       "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "echalote-crue",
+    "nom": "Échalote, crue",
+    "categorie": "Légumes",
+    "kcal": 62,
+    "proteines": 1.8,
+    "glucides": 12.2,
+    "lipides": 0.0,
+    "fibres": 2.6,
+    "portion_g": 150,
+    "portion_nom": "1 portion",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "echalote-cuite",
+    "nom": "Échalote, cuite",
+    "categorie": "Légumes",
+    "kcal": 69,
+    "proteines": 2.1,
+    "glucides": 13.5,
+    "lipides": 0.0,
+    "fibres": 3.4,
+    "portion_g": 150,
+    "portion_nom": "1 portion",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "epinard-cru",
+    "nom": "Épinard, cru",
+    "categorie": "Légumes",
+    "kcal": 33,
+    "proteines": 2.7,
+    "glucides": 3.1,
+    "lipides": 0.4,
+    "fibres": 2.6,
+    "portion_g": 150,
+    "portion_nom": "1 portion",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "epinard-cuit",
+    "nom": "Épinard, cuit",
+    "categorie": "Légumes",
+    "kcal": 20,
+    "proteines": 3.2,
+    "glucides": 0.2,
+    "lipides": 0.1,
+    "fibres": 2.7,
+    "portion_g": 150,
+    "portion_nom": "1 portion",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "haricot-flageolet-bouilli-cuit-a-leau",
+    "nom": "Flageolets cuits",
+    "categorie": "Légumineuses",
+    "kcal": 112,
+    "proteines": 6.8,
+    "glucides": 12.0,
+    "lipides": 1.1,
+    "fibres": 13.8,
+    "portion_g": 150,
+    "portion_nom": "1 bol (cuit)",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
       "sans_gluten",
       "sans_lactose",
       "halal",
@@ -5542,54 +5406,6 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "haricot-blanc-bouilli-cuit-a-leau",
-    "nom": "Haricot blanc, bouilli/cuit à l'eau",
-    "categorie": "Légumineuses",
-    "kcal": 112,
-    "proteines": 6.8,
-    "glucides": 12.0,
-    "lipides": 1.1,
-    "fibres": 13.8,
-    "portion_g": 150,
-    "portion_nom": "1 bol (cuit)",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "haricot-blanc-sec",
-    "nom": "Haricot blanc, sec",
-    "categorie": "Légumineuses",
-    "kcal": 307,
-    "proteines": 23.4,
-    "glucides": 43.9,
-    "lipides": 0.8,
-    "fibres": 15.2,
-    "portion_g": 80,
-    "portion_nom": "1 portion crue (80 g)",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
     "id": "haricot-coco-bouilli-cuit-a-leau",
     "nom": "Haricot coco, bouilli/cuit à l'eau",
     "categorie": "Légumineuses",
@@ -5622,30 +5438,6 @@
     "glucides": 12.2,
     "lipides": 0.8,
     "fibres": 6.3,
-    "portion_g": 150,
-    "portion_nom": "1 bol (cuit)",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "haricot-flageolet-bouilli-cuit-a-leau",
-    "nom": "Haricot flageolet, bouilli/cuit à l'eau",
-    "categorie": "Légumineuses",
-    "kcal": 112,
-    "proteines": 6.8,
-    "glucides": 12.0,
-    "lipides": 1.1,
-    "fibres": 13.8,
     "portion_g": 150,
     "portion_nom": "1 bol (cuit)",
     "allergenes": [],
@@ -5782,8 +5574,56 @@
     "source": "CIQUAL 2025"
   },
   {
+    "id": "haricot-blanc-bouilli-cuit-a-leau",
+    "nom": "Haricots blancs cuits",
+    "categorie": "Légumineuses",
+    "kcal": 112,
+    "proteines": 6.8,
+    "glucides": 12.0,
+    "lipides": 1.1,
+    "fibres": 13.8,
+    "portion_g": 150,
+    "portion_nom": "1 bol (cuit)",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "haricot-blanc-sec",
+    "nom": "Haricots blancs secs",
+    "categorie": "Légumineuses",
+    "kcal": 307,
+    "proteines": 23.4,
+    "glucides": 43.9,
+    "lipides": 0.8,
+    "fibres": 15.2,
+    "portion_g": 150,
+    "portion_nom": "1 bol (cuit)",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
     "id": "haricot-rouge-bouilli-cuit-a-leau",
-    "nom": "Haricot rouge, bouilli/cuit à l'eau",
+    "nom": "Haricots rouges cuits",
     "categorie": "Légumineuses",
     "kcal": 116,
     "proteines": 9.6,
@@ -5807,15 +5647,15 @@
   },
   {
     "id": "haricot-rouge-sec",
-    "nom": "Haricot rouge, sec",
+    "nom": "Haricots rouges secs",
     "categorie": "Légumineuses",
     "kcal": 314,
     "proteines": 22.5,
     "glucides": 46.1,
     "lipides": 1.1,
     "fibres": 15.2,
-    "portion_g": 80,
-    "portion_nom": "1 portion crue (80 g)",
+    "portion_g": 150,
+    "portion_nom": "1 bol (cuit)",
     "allergenes": [],
     "regimes": [
       "omnivore",
@@ -5854,150 +5694,6 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "lentille-blonde-bouillie-cuite-a-leau",
-    "nom": "Lentille blonde, bouillie/cuite à l'eau",
-    "categorie": "Légumineuses",
-    "kcal": 122,
-    "proteines": 9.7,
-    "glucides": 16.3,
-    "lipides": 0.7,
-    "fibres": 6.0,
-    "portion_g": 150,
-    "portion_nom": "1 bol (cuit)",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "lentille-blonde-seche",
-    "nom": "Lentille blonde, sèche",
-    "categorie": "Légumineuses",
-    "kcal": 339,
-    "proteines": 26.1,
-    "glucides": 48.3,
-    "lipides": 1.9,
-    "fibres": 12.1,
-    "portion_g": 80,
-    "portion_nom": "1 portion crue (80 g)",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "lentille-corail-bouillie-cuite-a-leau",
-    "nom": "Lentille corail, bouillie/cuite à l'eau",
-    "categorie": "Légumineuses",
-    "kcal": 123,
-    "proteines": 10.6,
-    "glucides": 15.0,
-    "lipides": 0.5,
-    "fibres": 8.2,
-    "portion_g": 150,
-    "portion_nom": "1 bol (cuit)",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "lentille-corail-seche",
-    "nom": "Lentille corail, sèche",
-    "categorie": "Légumineuses",
-    "kcal": 328,
-    "proteines": 27.7,
-    "glucides": 44.9,
-    "lipides": 0.8,
-    "fibres": 15.4,
-    "portion_g": 80,
-    "portion_nom": "1 portion crue (80 g)",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "lentille-verte-bouillie-cuite-a-leau",
-    "nom": "Lentille verte, bouillie/cuite à l'eau",
-    "categorie": "Légumineuses",
-    "kcal": 125,
-    "proteines": 10.1,
-    "glucides": 16.2,
-    "lipides": 0.6,
-    "fibres": 8.4,
-    "portion_g": 150,
-    "portion_nom": "1 bol (cuit)",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "lentille-verte-seche",
-    "nom": "Lentille verte, sèche",
-    "categorie": "Légumineuses",
-    "kcal": 327,
-    "proteines": 25.1,
-    "glucides": 44.5,
-    "lipides": 1.8,
-    "fibres": 16.4,
-    "portion_g": 80,
-    "portion_nom": "1 portion crue (80 g)",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
     "id": "lentille-cuisinee-appertisee",
     "nom": "Lentille, cuisinée, appertisée",
     "categorie": "Légumineuses",
@@ -6022,19 +5718,17 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "lupin-graine-sec",
-    "nom": "Lupin, graine, sec",
+    "id": "lentille-blonde-bouillie-cuite-a-leau",
+    "nom": "Lentilles blondes cuites",
     "categorie": "Légumineuses",
-    "kcal": 356,
-    "proteines": 36.2,
-    "glucides": 21.5,
-    "lipides": 9.7,
-    "fibres": 18.9,
-    "portion_g": 80,
-    "portion_nom": "1 portion crue (80 g)",
-    "allergenes": [
-      "lupin"
-    ],
+    "kcal": 122,
+    "proteines": 9.7,
+    "glucides": 16.3,
+    "lipides": 0.7,
+    "fibres": 6.0,
+    "portion_g": 150,
+    "portion_nom": "1 bol (cuit)",
+    "allergenes": [],
     "regimes": [
       "omnivore",
       "vegetarien",
@@ -6048,17 +5742,139 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "pois-casse-bouilli-cuit-a-leau",
-    "nom": "Pois cassé, bouilli/cuit à l'eau",
+    "id": "lentille-blonde-seche",
+    "nom": "Lentilles blondes sèches",
     "categorie": "Légumineuses",
-    "kcal": 129,
-    "proteines": 8.6,
-    "glucides": 16.3,
-    "lipides": 1.5,
-    "fibres": 8.0,
+    "kcal": 339,
+    "proteines": 26.1,
+    "glucides": 48.3,
+    "lipides": 1.9,
+    "fibres": 12.1,
     "portion_g": 150,
     "portion_nom": "1 bol (cuit)",
     "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "lentille-corail-bouillie-cuite-a-leau",
+    "nom": "Lentilles corail cuites",
+    "categorie": "Légumineuses",
+    "kcal": 123,
+    "proteines": 10.6,
+    "glucides": 15.0,
+    "lipides": 0.5,
+    "fibres": 8.2,
+    "portion_g": 150,
+    "portion_nom": "1 bol (cuit)",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "lentille-corail-seche",
+    "nom": "Lentilles corail sèches",
+    "categorie": "Légumineuses",
+    "kcal": 328,
+    "proteines": 27.7,
+    "glucides": 44.9,
+    "lipides": 0.8,
+    "fibres": 15.4,
+    "portion_g": 150,
+    "portion_nom": "1 bol (cuit)",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "lentilles-vertes-cuites",
+    "nom": "Lentilles vertes cuites",
+    "categorie": "Légumineuses",
+    "kcal": 125,
+    "proteines": 10.1,
+    "glucides": 16.2,
+    "lipides": 0.6,
+    "fibres": 8.4,
+    "portion_g": 150,
+    "portion_nom": "1 bol (cuit)",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "lentille-verte-seche",
+    "nom": "Lentilles vertes sèches",
+    "categorie": "Légumineuses",
+    "kcal": 327,
+    "proteines": 25.1,
+    "glucides": 44.5,
+    "lipides": 1.8,
+    "fibres": 16.4,
+    "portion_g": 150,
+    "portion_nom": "1 bol (cuit)",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "lupin-graine-sec",
+    "nom": "Lupin (graines sèches)",
+    "categorie": "Légumineuses",
+    "kcal": 356,
+    "proteines": 36.2,
+    "glucides": 21.5,
+    "lipides": 9.7,
+    "fibres": 18.9,
+    "portion_g": 150,
+    "portion_nom": "1 bol (cuit)",
+    "allergenes": [
+      "lupin"
+    ],
     "regimes": [
       "omnivore",
       "vegetarien",
@@ -6082,6 +5898,30 @@
     "fibres": 25.5,
     "portion_g": 80,
     "portion_nom": "1 portion crue (80 g)",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "pois-casse-bouilli-cuit-a-leau",
+    "nom": "Pois cassés cuits",
+    "categorie": "Légumineuses",
+    "kcal": 129,
+    "proteines": 8.6,
+    "glucides": 16.3,
+    "lipides": 1.5,
+    "fibres": 8.0,
+    "portion_g": 150,
+    "portion_nom": "1 bol (cuit)",
     "allergenes": [],
     "regimes": [
       "omnivore",
@@ -6121,7 +5961,7 @@
   },
   {
     "id": "pois-chiche-bouilli-cuit-a-leau",
-    "nom": "Pois chiche, bouilli/cuit à l'eau",
+    "nom": "Pois chiches cuits",
     "categorie": "Légumineuses",
     "kcal": 148,
     "proteines": 8.3,
@@ -6152,8 +5992,8 @@
     "glucides": 47.5,
     "lipides": 6.0,
     "fibres": 12.2,
-    "portion_g": 80,
-    "portion_nom": "1 portion crue (80 g)",
+    "portion_g": 150,
+    "portion_nom": "1 bol (cuit)",
     "allergenes": [],
     "regimes": [
       "omnivore",
@@ -6247,12 +6087,35 @@
   },
   {
     "id": "beurre-a-80-mg-minimum-doux",
-    "nom": "Beurre à 80% MG minimum, doux",
+    "nom": "Beurre doux",
     "categorie": "Matières grasses",
     "kcal": 753,
     "proteines": 0.6,
     "glucides": 0.7,
     "lipides": 83.0,
+    "fibres": 0.0,
+    "portion_g": 10,
+    "portion_nom": "1 noix (1 c. à s.)",
+    "allergenes": [
+      "lait"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten",
+      "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "beurre-a-80-mg-sale",
+    "nom": "Beurre salé",
+    "categorie": "Matières grasses",
+    "kcal": 732,
+    "proteines": 0.5,
+    "glucides": 0.7,
+    "lipides": 80.8,
     "fibres": 0.0,
     "portion_g": 10,
     "portion_nom": "1 noix (1 c. à s.)",
@@ -6315,29 +6178,6 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "beurre-a-80-mg-sale",
-    "nom": "Beurre à 80% MG, salé",
-    "categorie": "Matières grasses",
-    "kcal": 732,
-    "proteines": 0.5,
-    "glucides": 0.7,
-    "lipides": 80.8,
-    "fibres": 0.0,
-    "portion_g": 10,
-    "portion_nom": "1 noix (1 c. à s.)",
-    "allergenes": [
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
     "id": "huile-darachide",
     "nom": "Huile d'arachide",
     "categorie": "Matières grasses",
@@ -6366,7 +6206,7 @@
   },
   {
     "id": "huile-dargan-ou-dargane",
-    "nom": "Huile d'argan ou d'argane",
+    "nom": "Huile d'argan",
     "categorie": "Matières grasses",
     "kcal": 889,
     "proteines": 0.0,
@@ -6415,8 +6255,33 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "huile-dolive-vierge-extra",
+    "id": "huile-olive",
     "nom": "Huile d'olive vierge extra",
+    "categorie": "Matières grasses",
+    "kcal": 899,
+    "proteines": 0.2,
+    "glucides": 0.0,
+    "lipides": 99.9,
+    "fibres": 0.0,
+    "portion_g": 10,
+    "portion_nom": "1 c. à s.",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "huile-ou-graisse-de-coco-vierge",
+    "nom": "Huile de coco vierge",
     "categorie": "Matières grasses",
     "kcal": 899,
     "proteines": 0.2,
@@ -6567,8 +6432,8 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "huile-de-sesame",
-    "nom": "Huile de sésame",
+    "id": "huile-de-soja",
+    "nom": "Huile de soja",
     "categorie": "Matières grasses",
     "kcal": 900,
     "proteines": 0.0,
@@ -6577,7 +6442,9 @@
     "fibres": 0.0,
     "portion_g": 10,
     "portion_nom": "1 c. à s.",
-    "allergenes": [],
+    "allergenes": [
+      "soja"
+    ],
     "regimes": [
       "omnivore",
       "vegetarien",
@@ -6592,8 +6459,8 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "huile-de-soja",
-    "nom": "Huile de soja",
+    "id": "huile-de-sesame",
+    "nom": "Huile de sésame",
     "categorie": "Matières grasses",
     "kcal": 900,
     "proteines": 0.0,
@@ -6603,7 +6470,7 @@
     "portion_g": 10,
     "portion_nom": "1 c. à s.",
     "allergenes": [
-      "soja"
+      "sesame"
     ],
     "regimes": [
       "omnivore",
@@ -6644,31 +6511,6 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "huile-ou-graisse-de-coco-vierge",
-    "nom": "Huile ou graisse de coco, vierge",
-    "categorie": "Matières grasses",
-    "kcal": 899,
-    "proteines": 0.2,
-    "glucides": 0.0,
-    "lipides": 99.9,
-    "fibres": 0.0,
-    "portion_g": 10,
-    "portion_nom": "1 c. à s.",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
     "id": "saindoux",
     "nom": "Saindoux",
     "categorie": "Matières grasses",
@@ -6684,161 +6526,6 @@
       "omnivore",
       "sans_gluten",
       "sans_lactose"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "oeuf-a-la-coque",
-    "nom": "Oeuf à la coque",
-    "categorie": "Oeufs",
-    "kcal": 142,
-    "proteines": 12.2,
-    "glucides": 1.1,
-    "lipides": 9.8,
-    "fibres": 0.0,
-    "portion_g": 60,
-    "portion_nom": "1 œuf",
-    "allergenes": [
-      "oeufs",
-      "mollusques"
-    ],
-    "regimes": [
-      "omnivore",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "oeuf-au-plat-sans-matiere-grasse",
-    "nom": "Oeuf au plat, sans matière grasse",
-    "categorie": "Oeufs",
-    "kcal": 157,
-    "proteines": 14.6,
-    "glucides": 1.4,
-    "lipides": 10.4,
-    "fibres": 0.0,
-    "portion_g": 60,
-    "portion_nom": "1 œuf",
-    "allergenes": [
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "oeuf-cru",
-    "nom": "Œuf cru",
-    "categorie": "Oeufs",
-    "kcal": 140,
-    "proteines": 12.8,
-    "glucides": 0.1,
-    "lipides": 9.8,
-    "fibres": 0.0,
-    "portion_g": 60,
-    "portion_nom": "1 œuf",
-    "allergenes": [
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "oeuf-de-caille-cru",
-    "nom": "Oeuf de caille, cru",
-    "categorie": "Oeufs",
-    "kcal": 154,
-    "proteines": 13.1,
-    "glucides": 0.4,
-    "lipides": 11.1,
-    "fibres": 0.0,
-    "portion_g": 12,
-    "portion_nom": "1 œuf de caille",
-    "allergenes": [
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "oeuf-dur",
-    "nom": "Œuf dur",
-    "categorie": "Oeufs",
-    "kcal": 134,
-    "proteines": 13.5,
-    "glucides": 0.5,
-    "lipides": 8.6,
-    "fibres": 0.0,
-    "portion_g": 60,
-    "portion_nom": "1 œuf",
-    "allergenes": [
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "oeuf-poche",
-    "nom": "Oeuf poché",
-    "categorie": "Oeufs",
-    "kcal": 139,
-    "proteines": 12.5,
-    "glucides": 0.9,
-    "lipides": 9.5,
-    "fibres": 0.0,
-    "portion_g": 60,
-    "portion_nom": "1 œuf",
-    "allergenes": [
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ],
     "source": "CIQUAL 2025"
   },
@@ -6921,8 +6608,163 @@
     "source": "CIQUAL 2025"
   },
   {
+    "id": "oeuf-au-plat-sans-matiere-grasse",
+    "nom": "Œuf au plat",
+    "categorie": "Oeufs",
+    "kcal": 157,
+    "proteines": 14.6,
+    "glucides": 1.4,
+    "lipides": 10.4,
+    "fibres": 0.0,
+    "portion_g": 60,
+    "portion_nom": "1 œuf",
+    "allergenes": [
+      "oeufs"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "oeuf-cru",
+    "nom": "Œuf cru",
+    "categorie": "Oeufs",
+    "kcal": 140,
+    "proteines": 12.8,
+    "glucides": 0.1,
+    "lipides": 9.8,
+    "fibres": 0.0,
+    "portion_g": 60,
+    "portion_nom": "1 œuf",
+    "allergenes": [
+      "oeufs"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "oeuf-de-caille-cru",
+    "nom": "Œuf de caille cru",
+    "categorie": "Oeufs",
+    "kcal": 154,
+    "proteines": 13.1,
+    "glucides": 0.4,
+    "lipides": 11.1,
+    "fibres": 0.0,
+    "portion_g": 12,
+    "portion_nom": "1 œuf de caille",
+    "allergenes": [
+      "oeufs"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "oeuf-dur",
+    "nom": "Œuf dur",
+    "categorie": "Oeufs",
+    "kcal": 134,
+    "proteines": 13.5,
+    "glucides": 0.5,
+    "lipides": 8.6,
+    "fibres": 0.0,
+    "portion_g": 60,
+    "portion_nom": "1 œuf",
+    "allergenes": [
+      "oeufs"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "oeuf-poche",
+    "nom": "Œuf poché",
+    "categorie": "Oeufs",
+    "kcal": 139,
+    "proteines": 12.5,
+    "glucides": 0.9,
+    "lipides": 9.5,
+    "fibres": 0.0,
+    "portion_g": 60,
+    "portion_nom": "1 œuf",
+    "allergenes": [
+      "oeufs"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "oeuf-a-la-coque",
+    "nom": "Œuf à la coque",
+    "categorie": "Oeufs",
+    "kcal": 142,
+    "proteines": 12.2,
+    "glucides": 1.1,
+    "lipides": 9.8,
+    "fibres": 0.0,
+    "portion_g": 60,
+    "portion_nom": "1 œuf",
+    "allergenes": [
+      "oeufs",
+      "mollusques"
+    ],
+    "regimes": [
+      "omnivore",
+      "pescetarien",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
     "id": "amande-avec-peau",
-    "nom": "Amande, avec peau",
+    "nom": "Amandes",
     "categorie": "Oléagineux",
     "kcal": 615,
     "proteines": 22.6,
@@ -6931,9 +6773,7 @@
     "fibres": 12.5,
     "portion_g": 30,
     "portion_nom": "1 poignée",
-    "allergenes": [
-      "fruits_a_coque"
-    ],
+    "allergenes": [],
     "regimes": [
       "omnivore",
       "vegetarien",
@@ -6956,57 +6796,11 @@
     "glucides": 17.3,
     "lipides": 51.4,
     "fibres": 5.0,
-    "portion_g": 30,
-    "portion_nom": "1 poignée",
+    "portion_g": 20,
+    "portion_nom": "1 c. à s.",
     "allergenes": [
-      "arachides",
-      "lait"
+      "arachides"
     ],
-    "regimes": [
-      "omnivore",
-      "paleo",
-      "sans_gluten",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "cacahuete-grillee-a-sec-salee",
-    "nom": "Cacahuète, grillée à sec, salée",
-    "categorie": "Oléagineux",
-    "kcal": 615,
-    "proteines": 24.8,
-    "glucides": 17.9,
-    "lipides": 47.7,
-    "fibres": 7.4,
-    "portion_g": 30,
-    "portion_nom": "1 poignée",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "cacahuete-grillee",
-    "nom": "Cacahuète, grillée",
-    "categorie": "Oléagineux",
-    "kcal": 644,
-    "proteines": 26.9,
-    "glucides": 14.4,
-    "lipides": 51.9,
-    "fibres": 5.7,
-    "portion_g": 30,
-    "portion_nom": "1 poignée",
-    "allergenes": [],
     "regimes": [
       "omnivore",
       "vegetarien",
@@ -7031,7 +6825,63 @@
     "fibres": 8.6,
     "portion_g": 30,
     "portion_nom": "1 poignée",
-    "allergenes": [],
+    "allergenes": [
+      "arachides"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "cacahuete-grillee",
+    "nom": "Cacahuète, grillée",
+    "categorie": "Oléagineux",
+    "kcal": 644,
+    "proteines": 26.9,
+    "glucides": 14.4,
+    "lipides": 51.9,
+    "fibres": 5.7,
+    "portion_g": 30,
+    "portion_nom": "1 poignée",
+    "allergenes": [
+      "arachides"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "cacahuete-grillee-a-sec-salee",
+    "nom": "Cacahuète, grillée à sec, salée",
+    "categorie": "Oléagineux",
+    "kcal": 615,
+    "proteines": 24.8,
+    "glucides": 17.9,
+    "lipides": 47.7,
+    "fibres": 7.4,
+    "portion_g": 30,
+    "portion_nom": "1 poignée",
+    "allergenes": [
+      "arachides"
+    ],
     "regimes": [
       "omnivore",
       "vegetarien",
@@ -7056,7 +6906,9 @@
     "fibres": 8.1,
     "portion_g": 30,
     "portion_nom": "1 poignée",
-    "allergenes": [],
+    "allergenes": [
+      "fruits_a_coque"
+    ],
     "regimes": [
       "omnivore",
       "vegetarien",
@@ -7072,15 +6924,15 @@
   },
   {
     "id": "chia-graine-sechee",
-    "nom": "Chia, graine, séchée",
+    "nom": "Graines de chia",
     "categorie": "Oléagineux",
     "kcal": 454,
     "proteines": 19.5,
     "glucides": 7.7,
     "lipides": 30.7,
     "fibres": 34.4,
-    "portion_g": 15,
-    "portion_nom": "1 c. à s.",
+    "portion_g": 30,
+    "portion_nom": "1 poignée",
     "allergenes": [],
     "regimes": [
       "omnivore",
@@ -7097,15 +6949,15 @@
   },
   {
     "id": "courge-graine-sechee",
-    "nom": "Courge, graine, séchée",
+    "nom": "Graines de courge",
     "categorie": "Oléagineux",
     "kcal": 618,
     "proteines": 35.6,
     "glucides": 5.4,
     "lipides": 49.1,
     "fibres": 6.0,
-    "portion_g": 15,
-    "portion_nom": "1 c. à s.",
+    "portion_g": 30,
+    "portion_nom": "1 poignée",
     "allergenes": [],
     "regimes": [
       "omnivore",
@@ -7122,15 +6974,40 @@
   },
   {
     "id": "lin-graine",
-    "nom": "Lin, graine",
+    "nom": "Graines de lin",
     "categorie": "Oléagineux",
     "kcal": 528,
     "proteines": 22.4,
     "glucides": 6.5,
     "lipides": 40.3,
     "fibres": 24.4,
-    "portion_g": 15,
-    "portion_nom": "1 c. à s.",
+    "portion_g": 30,
+    "portion_nom": "1 poignée",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "tournesol-graine",
+    "nom": "Graines de tournesol",
+    "categorie": "Oléagineux",
+    "kcal": 653,
+    "proteines": 25.1,
+    "glucides": 10.1,
+    "lipides": 55.5,
+    "fibres": 6.4,
+    "portion_g": 30,
+    "portion_nom": "1 poignée",
     "allergenes": [],
     "regimes": [
       "omnivore",
@@ -7147,13 +7024,38 @@
   },
   {
     "id": "noisette",
-    "nom": "Noisette",
+    "nom": "Noisettes",
     "categorie": "Oléagineux",
     "kcal": 632,
     "proteines": 17.0,
     "glucides": 7.2,
     "lipides": 56.9,
     "fibres": 11.6,
+    "portion_g": 30,
+    "portion_nom": "1 poignée",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "noix-cerneau-sechee",
+    "nom": "Noix",
+    "categorie": "Oléagineux",
+    "kcal": 709,
+    "proteines": 15.7,
+    "glucides": 6.9,
+    "lipides": 67.3,
+    "fibres": 6.7,
     "portion_g": 30,
     "portion_nom": "1 poignée",
     "allergenes": [
@@ -7174,7 +7076,7 @@
   },
   {
     "id": "noix-de-cajou-grillee",
-    "nom": "Noix de cajou, grillée",
+    "nom": "Noix de cajou",
     "categorie": "Oléagineux",
     "kcal": 618,
     "proteines": 20.5,
@@ -7305,7 +7207,7 @@
   },
   {
     "id": "noix-du-bresil-ou-noix-damazonie",
-    "nom": "Noix du Brésil ou noix d'Amazonie",
+    "nom": "Noix du Brésil",
     "categorie": "Oléagineux",
     "kcal": 701,
     "proteines": 16.4,
@@ -7331,19 +7233,17 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "noix-cerneau-sechee",
-    "nom": "Noix, cerneau, séchée",
+    "id": "olive-noire-en-saumure",
+    "nom": "Olives noires au vinaigre",
     "categorie": "Oléagineux",
-    "kcal": 709,
-    "proteines": 15.7,
-    "glucides": 6.9,
-    "lipides": 67.3,
-    "fibres": 6.7,
+    "kcal": 173,
+    "proteines": 1.4,
+    "glucides": 0.0,
+    "lipides": 17.2,
+    "fibres": 6.2,
     "portion_g": 30,
     "portion_nom": "1 poignée",
-    "allergenes": [
-      "fruits_a_coque"
-    ],
+    "allergenes": [],
     "regimes": [
       "omnivore",
       "vegetarien",
@@ -7359,7 +7259,7 @@
   },
   {
     "id": "olive-noire-a-lhuile-a-la-grecque",
-    "nom": "Olive noire, à l'huile (à la grecque)",
+    "nom": "Olives noires à l'huile",
     "categorie": "Oléagineux",
     "kcal": 349,
     "proteines": 2.2,
@@ -7383,33 +7283,8 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "olive-noire-en-saumure",
-    "nom": "Olive noire, en saumure",
-    "categorie": "Oléagineux",
-    "kcal": 173,
-    "proteines": 1.4,
-    "glucides": 0.0,
-    "lipides": 17.2,
-    "fibres": 6.2,
-    "portion_g": 30,
-    "portion_nom": "une poignée (≈ 8 olives)",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
     "id": "olive-verte-en-saumure",
-    "nom": "Olive verte, en saumure",
+    "nom": "Olives vertes au vinaigre",
     "categorie": "Oléagineux",
     "kcal": 164,
     "proteines": 1.1,
@@ -7417,7 +7292,7 @@
     "lipides": 16.6,
     "fibres": 3.6,
     "portion_g": 30,
-    "portion_nom": "une poignée (≈ 8 olives)",
+    "portion_nom": "1 poignée",
     "allergenes": [],
     "regimes": [
       "omnivore",
@@ -7434,7 +7309,7 @@
   },
   {
     "id": "pignon-de-pin",
-    "nom": "Pignon de pin",
+    "nom": "Pignons de pin",
     "categorie": "Oléagineux",
     "kcal": 712,
     "proteines": 16.2,
@@ -7443,9 +7318,7 @@
     "fibres": 10.0,
     "portion_g": 30,
     "portion_nom": "1 poignée",
-    "allergenes": [
-      "fruits_a_coque"
-    ],
+    "allergenes": [],
     "regimes": [
       "omnivore",
       "vegetarien",
@@ -7461,7 +7334,7 @@
   },
   {
     "id": "pistache-grillee",
-    "nom": "Pistache, grillée",
+    "nom": "Pistaches",
     "categorie": "Oléagineux",
     "kcal": 631,
     "proteines": 21.7,
@@ -7470,9 +7343,7 @@
     "fibres": 10.2,
     "portion_g": 30,
     "portion_nom": "1 poignée",
-    "allergenes": [
-      "fruits_a_coque"
-    ],
+    "allergenes": [],
     "regimes": [
       "omnivore",
       "vegetarien",
@@ -7497,7 +7368,9 @@
     "fibres": 11.8,
     "portion_g": 15,
     "portion_nom": "1 c. à s.",
-    "allergenes": [],
+    "allergenes": [
+      "sesame"
+    ],
     "regimes": [
       "omnivore",
       "vegetarien",
@@ -7539,33 +7412,8 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "tournesol-graine",
-    "nom": "Tournesol, graine",
-    "categorie": "Oléagineux",
-    "kcal": 653,
-    "proteines": 25.1,
-    "glucides": 10.1,
-    "lipides": 55.5,
-    "fibres": 6.4,
-    "portion_g": 15,
-    "portion_nom": "1 c. à s.",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
     "id": "anchois-filets-sales-a-lhuile-dolive-semi-conserves",
-    "nom": "Anchois, filets, salés, à l'huile d'olive, semi-conserves",
+    "nom": "Anchois à l'huile d'olive",
     "categorie": "Poissons",
     "kcal": 197,
     "proteines": 25.0,
@@ -7588,8 +7436,32 @@
     "source": "CIQUAL 2025"
   },
   {
+    "id": "bar-commun-ou-loup-roti-cuit-au-four",
+    "nom": "Bar / loup au four",
+    "categorie": "Poissons",
+    "kcal": 151,
+    "proteines": 22.2,
+    "glucides": 1.0,
+    "lipides": 6.5,
+    "fibres": 0.0,
+    "portion_g": 150,
+    "portion_nom": "1 pavé / filet",
+    "allergenes": [
+      "poissons"
+    ],
+    "regimes": [
+      "omnivore",
+      "pescetarien",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
     "id": "bar-commun-ou-loup-cru",
-    "nom": "Bar commun ou loup, cru",
+    "nom": "Bar / loup cru",
     "categorie": "Poissons",
     "kcal": 86,
     "proteines": 19.1,
@@ -7612,13 +7484,13 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "bar-commun-ou-loup-roti-cuit-au-four",
-    "nom": "Bar commun ou loup, rôti/cuit au four",
+    "id": "cabillaud-cuit-a-la-vapeur",
+    "nom": "Cabillaud vapeur",
     "categorie": "Poissons",
-    "kcal": 151,
-    "proteines": 22.2,
-    "glucides": 1.0,
-    "lipides": 6.5,
+    "kcal": 106,
+    "proteines": 24.5,
+    "glucides": 0.0,
+    "lipides": 0.9,
     "fibres": 0.0,
     "portion_g": 150,
     "portion_nom": "1 pavé / filet",
@@ -7660,55 +7532,8 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "cabillaud-cuit-a-la-vapeur",
-    "nom": "Cabillaud, cuit à la vapeur",
-    "categorie": "Poissons",
-    "kcal": 106,
-    "proteines": 24.5,
-    "glucides": 0.0,
-    "lipides": 0.9,
-    "fibres": 0.0,
-    "portion_g": 150,
-    "portion_nom": "1 pavé / filet",
-    "allergenes": [
-      "poissons"
-    ],
-    "regimes": [
-      "omnivore",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "calmar-ou-calamar-ou-encornet-bouilli-cuit-a-leau",
-    "nom": "Calmar ou calamar ou encornet, bouilli/cuit à l'eau",
-    "categorie": "Poissons",
-    "kcal": 149,
-    "proteines": 32.5,
-    "glucides": 1.6,
-    "lipides": 1.4,
-    "fibres": 0.0,
-    "portion_g": 150,
-    "portion_nom": "1 pavé / filet",
-    "allergenes": [
-      "mollusques"
-    ],
-    "regimes": [
-      "omnivore",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
     "id": "calmar-ou-calamar-ou-encornet-cru",
-    "nom": "Calmar ou calamar ou encornet, cru",
+    "nom": "Calamar cru",
     "categorie": "Poissons",
     "kcal": 77,
     "proteines": 14.4,
@@ -7730,18 +7555,17 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "coquille-saint-jacques-noix-et-corail-cuite",
-    "nom": "Coquille Saint-Jacques, noix et corail, cuite",
+    "id": "calmar-ou-calamar-ou-encornet-bouilli-cuit-a-leau",
+    "nom": "Calamar cuit",
     "categorie": "Poissons",
-    "kcal": 110,
-    "proteines": 20.2,
-    "glucides": 3.2,
-    "lipides": 1.8,
+    "kcal": 149,
+    "proteines": 32.5,
+    "glucides": 1.6,
+    "lipides": 1.4,
     "fibres": 0.0,
-    "portion_g": 100,
-    "portion_nom": "4 noix",
+    "portion_g": 150,
+    "portion_nom": "1 pavé / filet",
     "allergenes": [
-      "fruits_a_coque",
       "mollusques"
     ],
     "regimes": [
@@ -7754,32 +7578,80 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "coquille-saint-jacques-noix-crue",
-    "nom": "Coquille Saint-Jacques, noix, crue",
+    "id": "lieu-jaune-ou-colin-cru",
+    "nom": "Colin / lieu jaune cru",
     "categorie": "Poissons",
-    "kcal": 84,
-    "proteines": 17.9,
-    "glucides": 1.1,
-    "lipides": 0.8,
+    "kcal": 76,
+    "proteines": 17.7,
+    "glucides": 0.0,
+    "lipides": 0.5,
     "fibres": 0.0,
-    "portion_g": 100,
-    "portion_nom": "4 noix",
+    "portion_g": 150,
+    "portion_nom": "1 pavé / filet",
     "allergenes": [
-      "fruits_a_coque",
-      "mollusques"
+      "poissons"
     ],
     "regimes": [
       "omnivore",
       "pescetarien",
       "paleo",
       "sans_gluten",
-      "sans_lactose"
+      "sans_lactose",
+      "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "lieu-jaune-ou-colin-cuit",
+    "nom": "Colin / lieu jaune cuit",
+    "categorie": "Poissons",
+    "kcal": 98,
+    "proteines": 24.4,
+    "glucides": 0.0,
+    "lipides": 0.0,
+    "fibres": 0.0,
+    "portion_g": 150,
+    "portion_nom": "1 pavé / filet",
+    "allergenes": [
+      "poissons"
+    ],
+    "regimes": [
+      "omnivore",
+      "pescetarien",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "lieu-ou-colin-dalaska-cru",
+    "nom": "Colin d'Alaska cru",
+    "categorie": "Poissons",
+    "kcal": 73,
+    "proteines": 16.3,
+    "glucides": 0.5,
+    "lipides": 0.6,
+    "fibres": 0.0,
+    "portion_g": 150,
+    "portion_nom": "1 pavé / filet",
+    "allergenes": [
+      "poissons"
+    ],
+    "regimes": [
+      "omnivore",
+      "pescetarien",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
     ],
     "source": "CIQUAL 2025"
   },
   {
     "id": "crabe-ou-tourteau-bouilli-cuit-a-leau",
-    "nom": "Crabe ou tourteau, bouilli/cuit à l'eau",
+    "nom": "Crabe / tourteau cuit",
     "categorie": "Poissons",
     "kcal": 124,
     "proteines": 19.5,
@@ -7847,13 +7719,13 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "dorade-royale-ou-daurade-ou-vraie-daurade-elevage-crue",
-    "nom": "Dorade royale ou daurade ou vraie daurade, élevage, crue",
+    "id": "dorade-royale-ou-daurade-ou-vraie-daurade-rotie-cuite-au-four",
+    "nom": "Dorade royale au four",
     "categorie": "Poissons",
-    "kcal": 129,
-    "proteines": 20.9,
+    "kcal": 148,
+    "proteines": 23.6,
     "glucides": 0.0,
-    "lipides": 5.1,
+    "lipides": 5.9,
     "fibres": 0.0,
     "portion_g": 150,
     "portion_nom": "1 pavé / filet",
@@ -7871,13 +7743,13 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "dorade-royale-ou-daurade-ou-vraie-daurade-rotie-cuite-au-four",
-    "nom": "Dorade royale ou daurade ou vraie daurade, rôtie/cuite au four",
+    "id": "dorade-royale-ou-daurade-ou-vraie-daurade-elevage-crue",
+    "nom": "Dorade royale crue",
     "categorie": "Poissons",
-    "kcal": 148,
-    "proteines": 23.6,
+    "kcal": 129,
+    "proteines": 20.9,
     "glucides": 0.0,
-    "lipides": 5.9,
+    "lipides": 5.1,
     "fibres": 0.0,
     "portion_g": 150,
     "portion_nom": "1 pavé / filet",
@@ -7967,7 +7839,7 @@
   },
   {
     "id": "homard-bouilli-cuit-a-leau",
-    "nom": "Homard, bouilli/cuit à l'eau",
+    "nom": "Homard cuit",
     "categorie": "Poissons",
     "kcal": 91,
     "proteines": 19.6,
@@ -7990,7 +7862,7 @@
   },
   {
     "id": "langoustine-bouillie-cuite-a-leau",
-    "nom": "Langoustine, bouillie/cuite à l'eau",
+    "nom": "Langoustine cuite",
     "categorie": "Poissons",
     "kcal": 93,
     "proteines": 20.9,
@@ -8012,56 +7884,8 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "lieu-jaune-ou-colin-cru",
-    "nom": "Lieu jaune ou colin, cru",
-    "categorie": "Poissons",
-    "kcal": 76,
-    "proteines": 17.7,
-    "glucides": 0.0,
-    "lipides": 0.5,
-    "fibres": 0.0,
-    "portion_g": 150,
-    "portion_nom": "1 pavé / filet",
-    "allergenes": [
-      "poissons"
-    ],
-    "regimes": [
-      "omnivore",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "lieu-jaune-ou-colin-cuit",
-    "nom": "Lieu jaune ou colin, cuit",
-    "categorie": "Poissons",
-    "kcal": 98,
-    "proteines": 24.4,
-    "glucides": 0.0,
-    "lipides": 0.0,
-    "fibres": 0.0,
-    "portion_g": 150,
-    "portion_nom": "1 pavé / filet",
-    "allergenes": [
-      "poissons"
-    ],
-    "regimes": [
-      "omnivore",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
     "id": "lieu-noir-cru",
-    "nom": "Lieu noir, cru",
+    "nom": "Lieu noir cru",
     "categorie": "Poissons",
     "kcal": 82,
     "proteines": 18.8,
@@ -8085,7 +7909,7 @@
   },
   {
     "id": "lieu-noir-cuit",
-    "nom": "Lieu noir, cuit",
+    "nom": "Lieu noir cuit",
     "categorie": "Poissons",
     "kcal": 100,
     "proteines": 23.1,
@@ -8108,32 +7932,8 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "lieu-ou-colin-dalaska-cru",
-    "nom": "Lieu ou colin d'Alaska, cru",
-    "categorie": "Poissons",
-    "kcal": 73,
-    "proteines": 16.3,
-    "glucides": 0.5,
-    "lipides": 0.6,
-    "fibres": 0.0,
-    "portion_g": 150,
-    "portion_nom": "1 pavé / filet",
-    "allergenes": [
-      "poissons"
-    ],
-    "regimes": [
-      "omnivore",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
     "id": "lotte-ou-baudroie-crue",
-    "nom": "Lotte ou baudroie, crue",
+    "nom": "Lotte crue",
     "categorie": "Poissons",
     "kcal": 67,
     "proteines": 15.1,
@@ -8157,7 +7957,7 @@
   },
   {
     "id": "lotte-ou-baudroie-grillee-poelee",
-    "nom": "Lotte ou baudroie, grillée/poêlée",
+    "nom": "Lotte grillée",
     "categorie": "Poissons",
     "kcal": 98,
     "proteines": 23.0,
@@ -8166,6 +7966,30 @@
     "fibres": 0.0,
     "portion_g": 150,
     "portion_nom": "1 pavé / filet",
+    "allergenes": [
+      "poissons"
+    ],
+    "regimes": [
+      "omnivore",
+      "pescetarien",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "maquereau-filet-grille-ou-non-au-naturel-appertise",
+    "nom": "Maquereau au naturel en conserve",
+    "categorie": "Poissons",
+    "kcal": 221,
+    "proteines": 18.8,
+    "glucides": 0.0,
+    "lipides": 16.2,
+    "fibres": 0.0,
+    "portion_g": 100,
+    "portion_nom": "1 boîte égouttée",
     "allergenes": [
       "poissons"
     ],
@@ -8190,30 +8014,6 @@
     "fibres": 0.0,
     "portion_g": 150,
     "portion_nom": "1 pavé / filet",
-    "allergenes": [
-      "poissons"
-    ],
-    "regimes": [
-      "omnivore",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "maquereau-filet-grille-ou-non-au-naturel-appertise",
-    "nom": "Maquereau, filet (grillé ou non), au naturel, appertisé",
-    "categorie": "Poissons",
-    "kcal": 221,
-    "proteines": 18.8,
-    "glucides": 0.0,
-    "lipides": 16.2,
-    "fibres": 0.0,
-    "portion_g": 100,
-    "portion_nom": "1 boîte égouttée",
     "allergenes": [
       "poissons"
     ],
@@ -8349,30 +8149,31 @@
   },
   {
     "id": "moule-bouillie-cuite-a-leau",
-    "nom": "Moule, bouillie/cuite à l'eau",
+    "nom": "Moules cuites",
     "categorie": "Poissons",
     "kcal": 108,
     "proteines": 17.2,
     "glucides": 5.1,
     "lipides": 2.1,
     "fibres": 0.0,
-    "portion_g": 200,
-    "portion_nom": "1 assiette (chair)",
+    "portion_g": 150,
+    "portion_nom": "1 pavé / filet",
     "allergenes": [
-      "mollusques"
+      "poissons"
     ],
     "regimes": [
       "omnivore",
       "pescetarien",
       "paleo",
       "sans_gluten",
-      "sans_lactose"
+      "sans_lactose",
+      "halal"
     ],
     "source": "CIQUAL 2025"
   },
   {
     "id": "pangas-poisson-chat-machoiron-cru",
-    "nom": "Pangas, poisson-chat, machoiron, cru",
+    "nom": "Pangas cru",
     "categorie": "Poissons",
     "kcal": 65,
     "proteines": 13.5,
@@ -8396,7 +8197,7 @@
   },
   {
     "id": "pangas-poisson-chat-machoiron-cuit",
-    "nom": "Pangas, poisson-chat, machoiron, cuit",
+    "nom": "Pangas cuit",
     "categorie": "Poissons",
     "kcal": 79,
     "proteines": 17.5,
@@ -8419,26 +8220,48 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "sardine-a-lhuile-dolive-appertisee",
-    "nom": "Sardine, à l'huile d'olive, appertisée",
+    "id": "coquille-saint-jacques-noix-crue",
+    "nom": "Saint-Jacques crues",
     "categorie": "Poissons",
-    "kcal": 224,
-    "proteines": 23.3,
-    "glucides": 0.1,
-    "lipides": 14.5,
+    "kcal": 84,
+    "proteines": 17.9,
+    "glucides": 1.1,
+    "lipides": 0.8,
     "fibres": 0.0,
-    "portion_g": 10,
-    "portion_nom": "1 c. à s.",
+    "portion_g": 100,
+    "portion_nom": "4 noix",
     "allergenes": [
-      "poissons"
+      "mollusques"
     ],
     "regimes": [
       "omnivore",
       "pescetarien",
       "paleo",
       "sans_gluten",
-      "sans_lactose",
-      "halal"
+      "sans_lactose"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "coquille-saint-jacques-noix-et-corail-cuite",
+    "nom": "Saint-Jacques cuites",
+    "categorie": "Poissons",
+    "kcal": 110,
+    "proteines": 20.2,
+    "glucides": 3.2,
+    "lipides": 1.8,
+    "fibres": 0.0,
+    "portion_g": 100,
+    "portion_nom": "4 noix",
+    "allergenes": [
+      "mollusques"
+    ],
+    "regimes": [
+      "omnivore",
+      "pescetarien",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose"
     ],
     "source": "CIQUAL 2025"
   },
@@ -8491,16 +8314,16 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "saumon-fume",
-    "nom": "Saumon fumé",
+    "id": "sardine-a-lhuile-dolive-appertisee",
+    "nom": "Sardines à l'huile d'olive",
     "categorie": "Poissons",
-    "kcal": 184,
-    "proteines": 22.2,
+    "kcal": 224,
+    "proteines": 23.3,
     "glucides": 0.1,
-    "lipides": 10.5,
-    "fibres": 0.3,
-    "portion_g": 150,
-    "portion_nom": "1 pavé / filet",
+    "lipides": 14.5,
+    "fibres": 0.0,
+    "portion_g": 10,
+    "portion_nom": "1 c. à s.",
     "allergenes": [
       "poissons"
     ],
@@ -8515,13 +8338,13 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "saumon-cuit-a-la-vapeur",
-    "nom": "Saumon, cuit à la vapeur",
+    "id": "saumon-elevage-cru",
+    "nom": "Saumon cru",
     "categorie": "Poissons",
-    "kcal": 199,
-    "proteines": 23.0,
-    "glucides": 0.9,
-    "lipides": 11.5,
+    "kcal": 193,
+    "proteines": 20.5,
+    "glucides": 0.0,
+    "lipides": 12.4,
     "fibres": 0.0,
     "portion_g": 150,
     "portion_nom": "1 pavé / filet",
@@ -8539,13 +8362,37 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "saumon-elevage-cru",
-    "nom": "Saumon, élevage, cru",
+    "id": "saumon-fume",
+    "nom": "Saumon fumé",
     "categorie": "Poissons",
-    "kcal": 193,
-    "proteines": 20.5,
-    "glucides": 0.0,
-    "lipides": 12.4,
+    "kcal": 184,
+    "proteines": 22.2,
+    "glucides": 0.1,
+    "lipides": 10.5,
+    "fibres": 0.3,
+    "portion_g": 50,
+    "portion_nom": "2-3 tranches",
+    "allergenes": [
+      "poissons"
+    ],
+    "regimes": [
+      "omnivore",
+      "pescetarien",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "saumon-cuit-a-la-vapeur",
+    "nom": "Saumon vapeur",
+    "categorie": "Poissons",
+    "kcal": 199,
+    "proteines": 23.0,
+    "glucides": 0.9,
+    "lipides": 11.5,
     "fibres": 0.0,
     "portion_g": 150,
     "portion_nom": "1 pavé / filet",
@@ -8611,16 +8458,16 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "thon-a-lhuile-de-tournesol-entier-appertise",
-    "nom": "Thon à l'huile de tournesol, entier, appertisé",
+    "id": "thon-au-naturel-appertise",
+    "nom": "Thon au naturel en conserve",
     "categorie": "Poissons",
-    "kcal": 206,
-    "proteines": 23.3,
-    "glucides": 0.8,
-    "lipides": 12.2,
+    "kcal": 143,
+    "proteines": 26.8,
+    "glucides": 0.0,
+    "lipides": 3.9,
     "fibres": 0.0,
-    "portion_g": 10,
-    "portion_nom": "1 c. à s.",
+    "portion_g": 100,
+    "portion_nom": "1 boîte égouttée",
     "allergenes": [
       "poissons"
     ],
@@ -8636,7 +8483,7 @@
   },
   {
     "id": "thon-germon-ou-thon-blanc-a-lhuile-dolive-appertise",
-    "nom": "Thon germon ou thon blanc, à l'huile d'olive, appertisé",
+    "nom": "Thon à l'huile d'olive en conserve",
     "categorie": "Poissons",
     "kcal": 192,
     "proteines": 31.3,
@@ -8659,16 +8506,16 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "thon-au-naturel-appertise",
-    "nom": "Thon, au naturel, appertisé",
+    "id": "thon-a-lhuile-de-tournesol-entier-appertise",
+    "nom": "Thon à l'huile de tournesol en conserve",
     "categorie": "Poissons",
-    "kcal": 143,
-    "proteines": 26.8,
-    "glucides": 0.0,
-    "lipides": 3.9,
+    "kcal": 206,
+    "proteines": 23.3,
+    "glucides": 0.8,
+    "lipides": 12.2,
     "fibres": 0.0,
-    "portion_g": 100,
-    "portion_nom": "1 boîte égouttée",
+    "portion_g": 10,
+    "portion_nom": "1 c. à s.",
     "allergenes": [
       "poissons"
     ],
@@ -8756,7 +8603,7 @@
   },
   {
     "id": "truite-arc-en-ciel-elevage-crue",
-    "nom": "Truite arc en ciel, élevage, crue",
+    "nom": "Truite crue",
     "categorie": "Poissons",
     "kcal": 132,
     "proteines": 19.0,
@@ -8779,14 +8626,14 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "truite-arc-en-ciel-elevage-cuite-a-la-vapeur",
-    "nom": "Truite arc en ciel, élevage, cuite à la vapeur",
+    "id": "truite-elevage-fumee",
+    "nom": "Truite fumée",
     "categorie": "Poissons",
-    "kcal": 117,
-    "proteines": 20.0,
-    "glucides": 0.0,
-    "lipides": 4.1,
-    "fibres": 0.0,
+    "kcal": 171,
+    "proteines": 22.3,
+    "glucides": 3.2,
+    "lipides": 7.7,
+    "fibres": 0.3,
     "portion_g": 150,
     "portion_nom": "1 pavé / filet",
     "allergenes": [
@@ -8803,14 +8650,14 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "truite-elevage-fumee",
-    "nom": "Truite, élevage, fumée",
+    "id": "truite-arc-en-ciel-elevage-cuite-a-la-vapeur",
+    "nom": "Truite vapeur",
     "categorie": "Poissons",
-    "kcal": 171,
-    "proteines": 22.3,
-    "glucides": 3.2,
-    "lipides": 7.7,
-    "fibres": 0.3,
+    "kcal": 117,
+    "proteines": 20.0,
+    "glucides": 0.0,
+    "lipides": 4.1,
+    "fibres": 0.0,
     "portion_g": 150,
     "portion_nom": "1 pavé / filet",
     "allergenes": [
@@ -8860,7 +8707,7 @@
     "lipides": 6.9,
     "fibres": 10.6,
     "portion_g": 40,
-    "portion_nom": "1 bol (cru)",
+    "portion_nom": "4 c. à s. (crues)",
     "allergenes": [
       "gluten"
     ],
@@ -8927,7 +8774,7 @@
   },
   {
     "id": "boulgour-de-ble-cru",
-    "nom": "Boulgour de blé, cru",
+    "nom": "Boulgour cru",
     "categorie": "Produits de base",
     "kcal": 347,
     "proteines": 12.6,
@@ -8952,7 +8799,7 @@
   },
   {
     "id": "boulgour-de-ble-cuit",
-    "nom": "Boulgour de blé, cuit",
+    "nom": "Boulgour cuit",
     "categorie": "Produits de base",
     "kcal": 131,
     "proteines": 4.6,
@@ -9026,15 +8873,15 @@
   },
   {
     "id": "cornichon-au-vinaigre",
-    "nom": "Cornichon, au vinaigre",
+    "nom": "Cornichons",
     "categorie": "Produits de base",
     "kcal": 16,
     "proteines": 1.1,
     "glucides": 0.8,
     "lipides": 0.0,
     "fibres": 1.5,
-    "portion_g": 10,
-    "portion_nom": "1 c. à s.",
+    "portion_g": 50,
+    "portion_nom": "1 portion",
     "allergenes": [],
     "regimes": [
       "omnivore",
@@ -9042,6 +8889,31 @@
       "vegan",
       "pescetarien",
       "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "semoule-ou-graine-de-couscous-cuite",
+    "nom": "Couscous cuit",
+    "categorie": "Produits de base",
+    "kcal": 164,
+    "proteines": 6.4,
+    "glucides": 31.0,
+    "lipides": 0.9,
+    "fibres": 2.8,
+    "portion_g": 180,
+    "portion_nom": "1 assiette (cuit)",
+    "allergenes": [
+      "gluten"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
       "sans_lactose",
       "halal",
       "casher"
@@ -9121,32 +8993,8 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "epeautre-cru",
-    "nom": "Épeautre, cru",
-    "categorie": "Produits de base",
-    "kcal": 344,
-    "proteines": 15.6,
-    "glucides": 59.5,
-    "lipides": 2.4,
-    "fibres": 10.7,
-    "portion_g": 50,
-    "portion_nom": "1 portion",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
     "id": "farine-de-ble-tendre-ou-froment-t55-pour-pains",
-    "nom": "Farine de blé tendre ou froment T55 (pour pains)",
+    "nom": "Farine de blé T55",
     "categorie": "Produits de base",
     "kcal": 350,
     "proteines": 9.9,
@@ -9171,7 +9019,7 @@
   },
   {
     "id": "farine-de-ble-tendre-ou-froment-t65",
-    "nom": "Farine de blé tendre ou froment T65",
+    "nom": "Farine de blé T65",
     "categorie": "Produits de base",
     "kcal": 346,
     "proteines": 11.0,
@@ -9316,32 +9164,8 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "fecule-de-pomme-de-terre",
-    "nom": "Fécule de pomme de terre",
-    "categorie": "Produits de base",
-    "kcal": 348,
-    "proteines": 0.0,
-    "glucides": 86.3,
-    "lipides": 0.2,
-    "fibres": 0.6,
-    "portion_g": 50,
-    "portion_nom": "1 portion",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
     "id": "fleur-de-sel-non-iodee-non-fluoree",
-    "nom": "Fleur de sel, non iodée, non fluorée",
+    "nom": "Fleur de sel",
     "categorie": "Produits de base",
     "kcal": 0,
     "proteines": 0.0,
@@ -9365,7 +9189,7 @@
   },
   {
     "id": "flocons-davoine-bouillis-cuits-a-leau",
-    "nom": "Flocons d'avoine bouillis/cuits à l'eau",
+    "nom": "Flocons d'avoine cuits",
     "categorie": "Produits de base",
     "kcal": 69,
     "proteines": 2.7,
@@ -9382,6 +9206,30 @@
       "vegetarien",
       "vegan",
       "pescetarien",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "fecule-de-pomme-de-terre",
+    "nom": "Fécule de pomme de terre",
+    "categorie": "Produits de base",
+    "kcal": 348,
+    "proteines": 0.0,
+    "glucides": 86.3,
+    "lipides": 0.2,
+    "fibres": 0.6,
+    "portion_g": 100,
+    "portion_nom": "100 g",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_gluten",
       "sans_lactose",
       "halal",
       "casher"
@@ -9414,7 +9262,7 @@
   },
   {
     "id": "gingembre-poudre",
-    "nom": "Gingembre, poudre",
+    "nom": "Gingembre en poudre",
     "categorie": "Produits de base",
     "kcal": 335,
     "proteines": 9.0,
@@ -9422,7 +9270,7 @@
     "lipides": 4.2,
     "fibres": 14.1,
     "portion_g": 2,
-    "portion_nom": "1 pincée / 1 c. à c.",
+    "portion_nom": "1 c. à c.",
     "allergenes": [],
     "regimes": [
       "omnivore",
@@ -9438,15 +9286,15 @@
   },
   {
     "id": "gingembre-racine-fraiche",
-    "nom": "Gingembre, racine fraîche",
+    "nom": "Gingembre frais",
     "categorie": "Produits de base",
     "kcal": 33,
     "proteines": 1.1,
     "glucides": 3.4,
     "lipides": 1.1,
     "fibres": 2.7,
-    "portion_g": 10,
-    "portion_nom": "1 petit morceau",
+    "portion_g": 2,
+    "portion_nom": "1 c. à c.",
     "allergenes": [],
     "regimes": [
       "omnivore",
@@ -9462,7 +9310,7 @@
   },
   {
     "id": "gnocchi-a-la-pomme-de-terre-cuit",
-    "nom": "Gnocchi à la pomme de terre, cuit",
+    "nom": "Gnocchi",
     "categorie": "Produits de base",
     "kcal": 178,
     "proteines": 5.0,
@@ -9482,28 +9330,6 @@
       "sans_lactose",
       "halal",
       "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "graine-de-couscous-semoule-de-ble-dur-precuite-a-cuire",
-    "nom": "Graine de couscous (semoule de blé dur précuite), à cuire",
-    "categorie": "Produits de base",
-    "kcal": 366,
-    "proteines": 13.5,
-    "glucides": 72.7,
-    "lipides": 1.3,
-    "fibres": 4.5,
-    "portion_g": 180,
-    "portion_nom": "1 assiette (cuit)",
-    "allergenes": [
-      "gluten",
-      "mollusques"
-    ],
-    "regimes": [
-      "omnivore",
-      "pescetarien",
-      "sans_lactose"
     ],
     "source": "CIQUAL 2025"
   },
@@ -9617,8 +9443,8 @@
     "glucides": 24.4,
     "lipides": 0.4,
     "fibres": 3.8,
-    "portion_g": 2,
-    "portion_nom": "1 pincée / 1 c. à c.",
+    "portion_g": 50,
+    "portion_nom": "1 portion",
     "allergenes": [
       "gluten"
     ],
@@ -9710,15 +9536,15 @@
   },
   {
     "id": "pain-complet-ou-integral-a-la-farine-t150",
-    "nom": "Pain complet ou intégral (à la farine T150)",
+    "nom": "Pain complet",
     "categorie": "Produits de base",
     "kcal": 234,
     "proteines": 9.5,
     "glucides": 41.2,
     "lipides": 1.7,
     "fibres": 7.3,
-    "portion_g": 100,
-    "portion_nom": "100 g",
+    "portion_g": 50,
+    "portion_nom": "1/5 de baguette (50 g)",
     "allergenes": [
       "gluten"
     ],
@@ -9742,31 +9568,6 @@
     "glucides": 50.0,
     "lipides": 1.3,
     "fibres": 4.3,
-    "portion_g": 50,
-    "portion_nom": "1/5 de baguette (50 g)",
-    "allergenes": [
-      "gluten"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "pain-de-campagne-2",
-    "nom": "Pain de campagne",
-    "categorie": "Produits de base",
-    "kcal": 257,
-    "proteines": 7.3,
-    "glucides": 48.7,
-    "lipides": 2.8,
-    "fibres": 3.8,
     "portion_g": 50,
     "portion_nom": "1/5 de baguette (50 g)",
     "allergenes": [
@@ -9957,212 +9758,16 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "pates-fraiches-aux-oeufs-crues",
-    "nom": "Pâtes fraîches, aux oeufs, crues",
-    "categorie": "Produits de base",
-    "kcal": 283,
-    "proteines": 11.1,
-    "glucides": 53.8,
-    "lipides": 1.9,
-    "fibres": 3.2,
-    "portion_g": 50,
-    "portion_nom": "1 portion",
-    "allergenes": [
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "pates-fraiches-aux-oeufs-cuites",
-    "nom": "Pâtes fraîches, aux oeufs, cuites",
-    "categorie": "Produits de base",
-    "kcal": 168,
-    "proteines": 6.3,
-    "glucides": 32.0,
-    "lipides": 1.3,
-    "fibres": 1.5,
-    "portion_g": 2,
-    "portion_nom": "1 pincée / 1 c. à c.",
-    "allergenes": [
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "pates-seches-au-ble-complet-crues",
-    "nom": "Pâtes sèches, au blé complet, crues",
-    "categorie": "Produits de base",
-    "kcal": 353,
-    "proteines": 12.6,
-    "glucides": 67.6,
-    "lipides": 2.2,
-    "fibres": 6.1,
-    "portion_g": 50,
-    "portion_nom": "1 portion",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "pates-seches-au-ble-complet-cuites",
-    "nom": "Pâtes sèches, au blé complet, cuites",
-    "categorie": "Produits de base",
-    "kcal": 179,
-    "proteines": 7.9,
-    "glucides": 31.3,
-    "lipides": 1.4,
-    "fibres": 5.1,
-    "portion_g": 2,
-    "portion_nom": "1 pincée / 1 c. à c.",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "pates-seches-sans-gluten-crues",
-    "nom": "Pâtes sèches, sans gluten, crues",
-    "categorie": "Produits de base",
-    "kcal": 358,
-    "proteines": 6.5,
-    "glucides": 79.0,
-    "lipides": 1.5,
-    "fibres": 1.0,
-    "portion_g": 50,
-    "portion_nom": "1 portion",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "pates-seches-sans-gluten-cuites",
-    "nom": "Pâtes sèches, sans gluten, cuites",
-    "categorie": "Produits de base",
-    "kcal": 163,
-    "proteines": 3.2,
-    "glucides": 34.4,
-    "lipides": 1.1,
-    "fibres": 1.0,
-    "portion_g": 2,
-    "portion_nom": "1 pincée / 1 c. à c.",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "pates-seches-standard-crues",
-    "nom": "Pâtes sèches, standard, crues",
-    "categorie": "Produits de base",
-    "kcal": 364,
-    "proteines": 13.1,
-    "glucides": 72.7,
-    "lipides": 1.6,
-    "fibres": 2.9,
-    "portion_g": 50,
-    "portion_nom": "1 portion",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "pates-seches-standard-cuites",
-    "nom": "Pâtes sèches, standard, cuites",
-    "categorie": "Produits de base",
-    "kcal": 167,
-    "proteines": 6.7,
-    "glucides": 31.4,
-    "lipides": 1.1,
-    "fibres": 2.2,
-    "portion_g": 2,
-    "portion_nom": "1 pincée / 1 c. à c.",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
     "id": "poivre-de-cayenne-ou-piment-de-cayenne-poudre",
-    "nom": "Poivre de Cayenne ou piment de Cayenne, poudre",
+    "nom": "Piment de Cayenne",
     "categorie": "Produits de base",
     "kcal": 376,
     "proteines": 12.0,
     "glucides": 29.4,
     "lipides": 17.3,
     "fibres": 27.2,
-    "portion_g": 2,
-    "portion_nom": "1 pincée / 1 c. à c.",
+    "portion_g": 50,
+    "portion_nom": "1 portion",
     "allergenes": [],
     "regimes": [
       "omnivore",
@@ -10178,7 +9783,7 @@
   },
   {
     "id": "poivre-noir-poudre",
-    "nom": "Poivre noir, poudre",
+    "nom": "Poivre noir",
     "categorie": "Produits de base",
     "kcal": 331,
     "proteines": 13.3,
@@ -10201,8 +9806,32 @@
     "source": "CIQUAL 2025"
   },
   {
+    "id": "polenta-ou-semoule-de-mais-precuite-a-cuire",
+    "nom": "Polenta (à cuire)",
+    "categorie": "Produits de base",
+    "kcal": 350,
+    "proteines": 7.9,
+    "glucides": 74.0,
+    "lipides": 1.8,
+    "fibres": 3.2,
+    "portion_g": 80,
+    "portion_nom": "1 portion crue",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
     "id": "polenta-ou-semoule-de-mais-cuite",
-    "nom": "Polenta ou semoule de maïs, cuite",
+    "nom": "Polenta cuite",
     "categorie": "Produits de base",
     "kcal": 76,
     "proteines": 1.4,
@@ -10211,50 +9840,204 @@
     "fibres": 1.6,
     "portion_g": 180,
     "portion_nom": "1 assiette (cuit)",
-    "allergenes": [
-      "mollusques"
-    ],
+    "allergenes": [],
     "regimes": [
       "omnivore",
+      "vegetarien",
+      "vegan",
       "pescetarien",
       "sans_gluten",
-      "sans_lactose"
+      "sans_lactose",
+      "halal",
+      "casher"
     ],
     "source": "CIQUAL 2025"
   },
   {
-    "id": "polenta-ou-semoule-de-mais-precuite-a-cuire",
-    "nom": "Polenta ou semoule de maïs, précuite, à cuire",
+    "id": "pates-seches-au-ble-complet-crues",
+    "nom": "Pâtes complètes crues",
     "categorie": "Produits de base",
-    "kcal": 350,
+    "kcal": 353,
+    "proteines": 12.6,
+    "glucides": 67.6,
+    "lipides": 2.2,
+    "fibres": 6.1,
+    "portion_g": 200,
+    "portion_nom": "1 assiette (cuites)",
+    "allergenes": [
+      "gluten"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "pates-seches-au-ble-complet-cuites",
+    "nom": "Pâtes complètes cuites",
+    "categorie": "Produits de base",
+    "kcal": 179,
     "proteines": 7.9,
-    "glucides": 74.0,
-    "lipides": 1.8,
-    "fibres": 3.2,
-    "portion_g": 180,
-    "portion_nom": "1 assiette (cuit)",
+    "glucides": 31.3,
+    "lipides": 1.4,
+    "fibres": 5.1,
+    "portion_g": 200,
+    "portion_nom": "1 assiette (cuites)",
     "allergenes": [
-      "mollusques"
+      "gluten"
     ],
     "regimes": [
       "omnivore",
+      "vegetarien",
+      "vegan",
       "pescetarien",
-      "sans_gluten",
-      "sans_lactose"
+      "sans_lactose",
+      "halal",
+      "casher"
     ],
     "source": "CIQUAL 2025"
   },
   {
-    "id": "quinoa-bouilli-cuit-a-leau",
-    "nom": "Quinoa, bouilli/cuit à l'eau",
+    "id": "pates-crues",
+    "nom": "Pâtes crues",
     "categorie": "Produits de base",
-    "kcal": 149,
-    "proteines": 5.0,
-    "glucides": 27.9,
+    "kcal": 364,
+    "proteines": 13.1,
+    "glucides": 72.7,
+    "lipides": 1.6,
+    "fibres": 2.9,
+    "portion_g": 200,
+    "portion_nom": "1 assiette (cuites)",
+    "allergenes": [
+      "gluten"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "pates-cuites",
+    "nom": "Pâtes cuites",
+    "categorie": "Produits de base",
+    "kcal": 167,
+    "proteines": 6.7,
+    "glucides": 31.4,
     "lipides": 1.1,
-    "fibres": 3.8,
-    "portion_g": 180,
-    "portion_nom": "1 assiette (cuit)",
+    "fibres": 2.2,
+    "portion_g": 200,
+    "portion_nom": "1 assiette (cuites)",
+    "allergenes": [
+      "gluten"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "pates-fraiches-aux-oeufs-crues",
+    "nom": "Pâtes fraîches aux œufs crues",
+    "categorie": "Produits de base",
+    "kcal": 283,
+    "proteines": 11.1,
+    "glucides": 53.8,
+    "lipides": 1.9,
+    "fibres": 3.2,
+    "portion_g": 200,
+    "portion_nom": "1 assiette (cuites)",
+    "allergenes": [
+      "gluten"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "pates-fraiches-aux-oeufs-cuites",
+    "nom": "Pâtes fraîches aux œufs cuites",
+    "categorie": "Produits de base",
+    "kcal": 168,
+    "proteines": 6.3,
+    "glucides": 32.0,
+    "lipides": 1.3,
+    "fibres": 1.5,
+    "portion_g": 200,
+    "portion_nom": "1 assiette (cuites)",
+    "allergenes": [
+      "gluten"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "pates-seches-sans-gluten-crues",
+    "nom": "Pâtes sans gluten crues",
+    "categorie": "Produits de base",
+    "kcal": 358,
+    "proteines": 6.5,
+    "glucides": 79.0,
+    "lipides": 1.5,
+    "fibres": 1.0,
+    "portion_g": 200,
+    "portion_nom": "1 assiette (cuites)",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "pates-seches-sans-gluten-cuites",
+    "nom": "Pâtes sans gluten cuites",
+    "categorie": "Produits de base",
+    "kcal": 163,
+    "proteines": 3.2,
+    "glucides": 34.4,
+    "lipides": 1.1,
+    "fibres": 1.0,
+    "portion_g": 200,
+    "portion_nom": "1 assiette (cuites)",
     "allergenes": [],
     "regimes": [
       "omnivore",
@@ -10279,6 +10062,30 @@
     "fibres": 7.0,
     "portion_g": 80,
     "portion_nom": "1 portion crue",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "quinoa-bouilli-cuit-a-leau",
+    "nom": "Quinoa cuit",
+    "categorie": "Produits de base",
+    "kcal": 149,
+    "proteines": 5.0,
+    "glucides": 27.9,
+    "lipides": 1.1,
+    "fibres": 3.8,
+    "portion_g": 180,
+    "portion_nom": "1 assiette (cuit)",
     "allergenes": [],
     "regimes": [
       "omnivore",
@@ -10472,35 +10279,41 @@
     "portion_g": 50,
     "portion_nom": "1 portion",
     "allergenes": [
-      "mollusques"
+      "gluten"
     ],
     "regimes": [
       "omnivore",
+      "vegetarien",
+      "vegan",
       "pescetarien",
-      "sans_gluten",
-      "sans_lactose"
+      "sans_lactose",
+      "halal",
+      "casher"
     ],
     "source": "CIQUAL 2025"
   },
   {
-    "id": "semoule-ou-graine-de-couscous-cuite",
-    "nom": "Semoule ou graine de couscous, cuite",
+    "id": "graine-de-couscous-semoule-de-ble-dur-precuite-a-cuire",
+    "nom": "Semoule de couscous (à cuire)",
     "categorie": "Produits de base",
-    "kcal": 164,
-    "proteines": 6.4,
-    "glucides": 31.0,
-    "lipides": 0.9,
-    "fibres": 2.8,
-    "portion_g": 180,
-    "portion_nom": "1 assiette (cuit)",
+    "kcal": 366,
+    "proteines": 13.5,
+    "glucides": 72.7,
+    "lipides": 1.3,
+    "fibres": 4.5,
+    "portion_g": 80,
+    "portion_nom": "1 portion crue",
     "allergenes": [
-      "gluten",
-      "mollusques"
+      "gluten"
     ],
     "regimes": [
       "omnivore",
+      "vegetarien",
+      "vegan",
       "pescetarien",
-      "sans_lactose"
+      "sans_lactose",
+      "halal",
+      "casher"
     ],
     "source": "CIQUAL 2025"
   },
@@ -10587,13 +10400,14 @@
     "fibres": 2.9,
     "portion_g": 40,
     "portion_nom": "1 tortilla",
-    "allergenes": [],
+    "allergenes": [
+      "gluten"
+    ],
     "regimes": [
       "omnivore",
       "vegetarien",
       "vegan",
       "pescetarien",
-      "sans_gluten",
       "sans_lactose",
       "halal",
       "casher"
@@ -10625,16 +10439,16 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "vermicelle-de-riz-cuite",
-    "nom": "Vermicelle de riz, cuite",
+    "id": "vermicelles-de-riz-seches-crues",
+    "nom": "Vermicelles de riz crues",
     "categorie": "Produits de base",
-    "kcal": 87,
-    "proteines": 1.5,
-    "glucides": 20.1,
-    "lipides": 0.0,
-    "fibres": 0.0,
-    "portion_g": 150,
-    "portion_nom": "1 assiette",
+    "kcal": 365,
+    "proteines": 7.8,
+    "glucides": 80.5,
+    "lipides": 1.0,
+    "fibres": 1.2,
+    "portion_g": 50,
+    "portion_nom": "1 portion",
     "allergenes": [],
     "regimes": [
       "omnivore",
@@ -10649,16 +10463,16 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "vermicelles-de-riz-seches-crues",
-    "nom": "Vermicelles de riz sèches, crues",
+    "id": "vermicelle-de-riz-cuite",
+    "nom": "Vermicelles de riz cuites",
     "categorie": "Produits de base",
-    "kcal": 365,
-    "proteines": 7.8,
-    "glucides": 80.5,
-    "lipides": 1.0,
-    "fibres": 1.2,
-    "portion_g": 150,
-    "portion_nom": "1 assiette",
+    "kcal": 87,
+    "proteines": 1.5,
+    "glucides": 20.1,
+    "lipides": 0.0,
+    "fibres": 0.0,
+    "portion_g": 50,
+    "portion_nom": "1 portion",
     "allergenes": [],
     "regimes": [
       "omnivore",
@@ -10721,103 +10535,42 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "agneau-cotelette-crue",
-    "nom": "Agneau, côtelette crue",
-    "categorie": "Viandes",
-    "kcal": 333,
-    "proteines": 15.4,
-    "glucides": 0.0,
-    "lipides": 30.1,
-    "fibres": 0.0,
-    "portion_g": 125,
-    "portion_nom": "1 portion",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "agneau-cotelette-grillee-poelee",
-    "nom": "Agneau, côtelette grillée/poêlée",
-    "categorie": "Viandes",
-    "kcal": 240,
-    "proteines": 25.7,
-    "glucides": 0.0,
-    "lipides": 15.2,
-    "fibres": 0.0,
-    "portion_g": 125,
-    "portion_nom": "1 portion",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "agneau-gigot-cru",
-    "nom": "Agneau, gigot cru",
-    "categorie": "Viandes",
-    "kcal": 128,
-    "proteines": 20.0,
-    "glucides": 0.5,
-    "lipides": 5.1,
-    "fibres": 0.0,
-    "portion_g": 125,
-    "portion_nom": "1 portion",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "agneau-gigot-roti-cuit-au-four",
-    "nom": "Agneau, gigot rôti/cuit au four",
-    "categorie": "Viandes",
-    "kcal": 169,
-    "proteines": 26.8,
-    "glucides": 0.0,
-    "lipides": 6.8,
-    "fibres": 0.0,
-    "portion_g": 125,
-    "portion_nom": "1 portion",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "boeuf-a-bourguignon-ou-pot-au-feu-cru",
-    "nom": "Boeuf, à bourguignon ou pot-au-feu, cru",
-    "categorie": "Viandes",
-    "kcal": 164,
-    "proteines": 24.0,
-    "glucides": 0.0,
-    "lipides": 7.5,
-    "fibres": 0.0,
-    "portion_g": 125,
+    "id": "epeautre-cru",
+    "nom": "Épeautre, cru",
+    "categorie": "Produits de base",
+    "kcal": 344,
+    "proteines": 15.6,
+    "glucides": 59.5,
+    "lipides": 2.4,
+    "fibres": 10.7,
+    "portion_g": 50,
     "portion_nom": "1 portion",
     "allergenes": [
-      "oeufs"
+      "gluten"
     ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "aile-de-poulet-crue",
+    "nom": "Aile de poulet crue",
+    "categorie": "Viandes",
+    "kcal": 181,
+    "proteines": 20.4,
+    "glucides": 0.0,
+    "lipides": 11.0,
+    "fibres": 0.0,
+    "portion_g": 80,
+    "portion_nom": "1 aile",
+    "allergenes": [],
     "regimes": [
       "omnivore",
       "paleo",
@@ -10828,31 +10581,48 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "boeuf-a-bourguignon-ou-pot-au-feu-cuit",
-    "nom": "Boeuf, à bourguignon ou pot-au-feu, cuit",
+    "id": "poulet-aile-viande-et-peau-roties-cuites-au-four",
+    "nom": "Aile de poulet rôtie",
     "categorie": "Viandes",
-    "kcal": 172,
-    "proteines": 34.0,
+    "kcal": 247,
+    "proteines": 23.8,
     "glucides": 0.0,
-    "lipides": 4.0,
+    "lipides": 16.9,
     "fibres": 0.0,
-    "portion_g": 125,
-    "portion_nom": "1 portion",
-    "allergenes": [
-      "oeufs"
-    ],
+    "portion_g": 80,
+    "portion_nom": "1 aile",
+    "allergenes": [],
     "regimes": [
       "omnivore",
       "paleo",
       "sans_gluten",
       "sans_lactose",
       "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "filet-de-bacon",
+    "nom": "Bacon",
+    "categorie": "Viandes",
+    "kcal": 118,
+    "proteines": 23.1,
+    "glucides": 0.7,
+    "lipides": 2.6,
+    "fibres": 0.0,
+    "portion_g": 50,
+    "portion_nom": "2 tranches",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "sans_gluten",
+      "sans_lactose"
     ],
     "source": "CIQUAL 2025"
   },
   {
     "id": "boeuf-bavette-daloyau-crue",
-    "nom": "Boeuf, bavette d'aloyau crue",
+    "nom": "Bavette de bœuf crue",
     "categorie": "Viandes",
     "kcal": 133,
     "proteines": 20.4,
@@ -10861,9 +10631,7 @@
     "fibres": 0.0,
     "portion_g": 150,
     "portion_nom": "1 steak",
-    "allergenes": [
-      "oeufs"
-    ],
+    "allergenes": [],
     "regimes": [
       "omnivore",
       "paleo",
@@ -10875,7 +10643,7 @@
   },
   {
     "id": "boeuf-bavette-daloyau-grillee-poelee",
-    "nom": "Boeuf, bavette d'aloyau grillée/poêlée",
+    "nom": "Bavette de bœuf grillée",
     "categorie": "Viandes",
     "kcal": 162,
     "proteines": 25.0,
@@ -10884,9 +10652,7 @@
     "fibres": 0.0,
     "portion_g": 150,
     "portion_nom": "1 steak",
-    "allergenes": [
-      "oeufs"
-    ],
+    "allergenes": [],
     "regimes": [
       "omnivore",
       "paleo",
@@ -10897,19 +10663,17 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "boeuf-entrecote-crue",
-    "nom": "Boeuf, entrecôte crue",
+    "id": "jambon-de-dinde-ou-blanc-de-dinde-en-tranche",
+    "nom": "Blanc de dinde tranché",
     "categorie": "Viandes",
-    "kcal": 231,
-    "proteines": 19.4,
+    "kcal": 99,
+    "proteines": 20.9,
     "glucides": 0.0,
-    "lipides": 17.1,
-    "fibres": 0.0,
+    "lipides": 1.7,
+    "fibres": 0.4,
     "portion_g": 125,
     "portion_nom": "1 portion",
-    "allergenes": [
-      "oeufs"
-    ],
+    "allergenes": [],
     "regimes": [
       "omnivore",
       "paleo",
@@ -10920,42 +10684,17 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "boeuf-entrecote-partie-maigre-grillee-poelee",
-    "nom": "Boeuf, entrecôte, partie maigre grillée/poêlée",
+    "id": "poulet-blanc-cru",
+    "nom": "Blanc de poulet cru",
     "categorie": "Viandes",
-    "kcal": 198,
-    "proteines": 25.5,
+    "kcal": 110,
+    "proteines": 23.4,
     "glucides": 0.0,
-    "lipides": 10.7,
-    "fibres": 0.0,
-    "portion_g": 125,
-    "portion_nom": "1 portion",
-    "allergenes": [
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "boeuf-faux-filet-cru",
-    "nom": "Boeuf, faux-filet cru",
-    "categorie": "Viandes",
-    "kcal": 152,
-    "proteines": 22.3,
-    "glucides": 0.6,
-    "lipides": 6.7,
+    "lipides": 1.5,
     "fibres": 0.0,
     "portion_g": 150,
     "portion_nom": "1 filet",
-    "allergenes": [
-      "oeufs"
-    ],
+    "allergenes": [],
     "regimes": [
       "omnivore",
       "paleo",
@@ -10966,19 +10705,17 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "boeuf-faux-filet-grille-poele",
-    "nom": "Boeuf, faux-filet grillé/poêlé",
+    "id": "poulet-blanc-grille",
+    "nom": "Blanc de poulet grillé",
     "categorie": "Viandes",
-    "kcal": 182,
-    "proteines": 27.1,
+    "kcal": 141,
+    "proteines": 30.1,
     "glucides": 0.0,
-    "lipides": 8.2,
+    "lipides": 2.0,
     "fibres": 0.0,
     "portion_g": 150,
     "portion_nom": "1 filet",
-    "allergenes": [
-      "oeufs"
-    ],
+    "allergenes": [],
     "regimes": [
       "omnivore",
       "paleo",
@@ -10989,203 +10726,17 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "boeuf-rosbif-roti-cuit-au-four",
-    "nom": "Boeuf, rosbif rôti/cuit au four",
+    "id": "blanc-de-poulet-tranche",
+    "nom": "Blanc de poulet tranché",
     "categorie": "Viandes",
-    "kcal": 126,
-    "proteines": 24.1,
-    "glucides": 0.3,
-    "lipides": 3.2,
-    "fibres": 0.0,
-    "portion_g": 125,
-    "portion_nom": "1 portion",
-    "allergenes": [
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "boeuf-rumsteck-cru",
-    "nom": "Boeuf, rumsteck cru",
-    "categorie": "Viandes",
-    "kcal": 118,
-    "proteines": 23.5,
-    "glucides": 0.4,
-    "lipides": 2.5,
-    "fibres": 0.0,
+    "kcal": 105,
+    "proteines": 20.7,
+    "glucides": 1.4,
+    "lipides": 1.8,
+    "fibres": 0.5,
     "portion_g": 150,
-    "portion_nom": "1 steak",
-    "allergenes": [
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "boeuf-rumsteck-grille-poele",
-    "nom": "Boeuf, rumsteck grillé/poêlé",
-    "categorie": "Viandes",
-    "kcal": 138,
-    "proteines": 29.0,
-    "glucides": 0.0,
-    "lipides": 2.1,
-    "fibres": 0.0,
-    "portion_g": 150,
-    "portion_nom": "1 steak",
-    "allergenes": [
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "boeuf-steak-hache-15-mg-cru",
-    "nom": "Boeuf, steak haché 15% MG cru",
-    "categorie": "Viandes",
-    "kcal": 215,
-    "proteines": 20.2,
-    "glucides": 0.5,
-    "lipides": 14.8,
-    "fibres": 0.0,
-    "portion_g": 150,
-    "portion_nom": "1 steak",
-    "allergenes": [
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "boeuf-steak-hache-15-mg-cuit",
-    "nom": "Boeuf, steak haché 15% MG cuit",
-    "categorie": "Viandes",
-    "kcal": 239,
-    "proteines": 23.6,
-    "glucides": 0.0,
-    "lipides": 16.1,
-    "fibres": 0.0,
-    "portion_g": 150,
-    "portion_nom": "1 steak",
-    "allergenes": [
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "boeuf-steak-hache-5-mg-cru",
-    "nom": "Boeuf, steak haché 5% MG cru",
-    "categorie": "Viandes",
-    "kcal": 130,
-    "proteines": 21.9,
-    "glucides": 0.3,
-    "lipides": 4.6,
-    "fibres": 0.0,
-    "portion_g": 150,
-    "portion_nom": "1 steak",
-    "allergenes": [
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "boeuf-steak-hache-5-mg-cuit",
-    "nom": "Boeuf, steak haché 5% MG cuit",
-    "categorie": "Viandes",
-    "kcal": 155,
-    "proteines": 25.5,
-    "glucides": 0.0,
-    "lipides": 5.8,
-    "fibres": 0.0,
-    "portion_g": 150,
-    "portion_nom": "1 steak",
-    "allergenes": [
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "steak-de-boeuf-cru",
-    "nom": "Steak de bœuf cru",
-    "categorie": "Viandes",
-    "kcal": 229,
-    "proteines": 18.7,
-    "glucides": 0.1,
-    "lipides": 17.2,
-    "fibres": 0.0,
-    "portion_g": 150,
-    "portion_nom": "1 steak",
-    "allergenes": [
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "boeuf-steak-ou-bifteck-grille-poele",
-    "nom": "Boeuf, steak ou bifteck grillé/poêlé",
-    "categorie": "Viandes",
-    "kcal": 128,
-    "proteines": 27.6,
-    "glucides": 0.0,
-    "lipides": 1.9,
-    "fibres": 0.0,
-    "portion_g": 150,
-    "portion_nom": "1 steak",
-    "allergenes": [
-      "oeufs"
-    ],
+    "portion_nom": "1 filet",
+    "allergenes": [],
     "regimes": [
       "omnivore",
       "paleo",
@@ -11215,16 +10766,16 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "magret-de-canard-cru",
-    "nom": "Magret de canard cru",
+    "id": "boeuf-a-bourguignon-ou-pot-au-feu-cru",
+    "nom": "Bœuf à bourguignon / pot-au-feu cru",
     "categorie": "Viandes",
-    "kcal": 337,
-    "proteines": 17.9,
-    "glucides": 0.1,
-    "lipides": 29.4,
+    "kcal": 164,
+    "proteines": 24.0,
+    "glucides": 0.0,
+    "lipides": 7.5,
     "fibres": 0.0,
-    "portion_g": 150,
-    "portion_nom": "1 filet",
+    "portion_g": 125,
+    "portion_nom": "1 portion",
     "allergenes": [],
     "regimes": [
       "omnivore",
@@ -11236,16 +10787,16 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "canard-magret-grille-poele",
-    "nom": "Canard, magret grillé/poêlé",
+    "id": "boeuf-a-bourguignon-ou-pot-au-feu-cuit",
+    "nom": "Bœuf à bourguignon / pot-au-feu cuit",
     "categorie": "Viandes",
-    "kcal": 188,
-    "proteines": 26.7,
+    "kcal": 172,
+    "proteines": 34.0,
     "glucides": 0.0,
-    "lipides": 9.1,
+    "lipides": 4.0,
     "fibres": 0.0,
-    "portion_g": 150,
-    "portion_nom": "1 filet",
+    "portion_g": 125,
+    "portion_nom": "1 portion",
     "allergenes": [],
     "regimes": [
       "omnivore",
@@ -11333,6 +10884,172 @@
     "source": "CIQUAL 2025"
   },
   {
+    "id": "cuisse-de-poulet-crue-avec-peau",
+    "nom": "Cuisse de poulet crue (avec peau)",
+    "categorie": "Viandes",
+    "kcal": 192,
+    "proteines": 17.3,
+    "glucides": 0.0,
+    "lipides": 13.5,
+    "fibres": 0.0,
+    "portion_g": 150,
+    "portion_nom": "1 cuisse",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "poulet-cuisse-viande-et-peau-rotie-cuite-au-four",
+    "nom": "Cuisse de poulet rôtie (avec peau)",
+    "categorie": "Viandes",
+    "kcal": 205,
+    "proteines": 25.9,
+    "glucides": 0.0,
+    "lipides": 11.3,
+    "fibres": 0.0,
+    "portion_g": 150,
+    "portion_nom": "1 cuisse",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "porc-cote-crue",
+    "nom": "Côte de porc crue",
+    "categorie": "Viandes",
+    "kcal": 164,
+    "proteines": 19.8,
+    "glucides": 0.4,
+    "lipides": 9.3,
+    "fibres": 0.0,
+    "portion_g": 150,
+    "portion_nom": "1 côte",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "porc-cote-grillee-poelee",
+    "nom": "Côte de porc grillée",
+    "categorie": "Viandes",
+    "kcal": 211,
+    "proteines": 29.6,
+    "glucides": 0.0,
+    "lipides": 10.3,
+    "fibres": 0.0,
+    "portion_g": 150,
+    "portion_nom": "1 côte",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "agneau-cotelette-crue",
+    "nom": "Côtelette d'agneau crue",
+    "categorie": "Viandes",
+    "kcal": 333,
+    "proteines": 15.4,
+    "glucides": 0.0,
+    "lipides": 30.1,
+    "fibres": 0.0,
+    "portion_g": 150,
+    "portion_nom": "1 côte",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "agneau-cotelette-grillee-poelee",
+    "nom": "Côtelette d'agneau grillée",
+    "categorie": "Viandes",
+    "kcal": 240,
+    "proteines": 25.7,
+    "glucides": 0.0,
+    "lipides": 15.2,
+    "fibres": 0.0,
+    "portion_g": 150,
+    "portion_nom": "1 côte",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "boeuf-entrecote-crue",
+    "nom": "Entrecôte de bœuf crue",
+    "categorie": "Viandes",
+    "kcal": 231,
+    "proteines": 19.4,
+    "glucides": 0.0,
+    "lipides": 17.1,
+    "fibres": 0.0,
+    "portion_g": 150,
+    "portion_nom": "1 steak",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "boeuf-entrecote-partie-maigre-grillee-poelee",
+    "nom": "Entrecôte de bœuf grillée",
+    "categorie": "Viandes",
+    "kcal": 198,
+    "proteines": 25.5,
+    "glucides": 0.0,
+    "lipides": 10.7,
+    "fibres": 0.0,
+    "portion_g": 150,
+    "portion_nom": "1 steak",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
     "id": "escalope-de-dinde-crue",
     "nom": "Escalope de dinde crue",
     "categorie": "Viandes",
@@ -11355,7 +11072,7 @@
   },
   {
     "id": "dinde-escalope-grillee-poelee",
-    "nom": "Dinde, escalope grillée/poêlée",
+    "nom": "Escalope de dinde grillée",
     "categorie": "Viandes",
     "kcal": 124,
     "proteines": 28.5,
@@ -11375,19 +11092,124 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "filet-de-bacon",
-    "nom": "Filet de bacon",
+    "id": "veau-escalope-crue",
+    "nom": "Escalope de veau crue",
     "categorie": "Viandes",
-    "kcal": 118,
-    "proteines": 23.1,
-    "glucides": 0.7,
-    "lipides": 2.6,
+    "kcal": 114,
+    "proteines": 20.5,
+    "glucides": 0.6,
+    "lipides": 3.3,
     "fibres": 0.0,
-    "portion_g": 50,
-    "portion_nom": "2 tranches",
+    "portion_g": 150,
+    "portion_nom": "1 filet",
     "allergenes": [],
     "regimes": [
       "omnivore",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "veau-escalope-cuite",
+    "nom": "Escalope de veau cuite",
+    "categorie": "Viandes",
+    "kcal": 147,
+    "proteines": 31.0,
+    "glucides": 0.0,
+    "lipides": 2.5,
+    "fibres": 0.0,
+    "portion_g": 150,
+    "portion_nom": "1 filet",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "boeuf-faux-filet-cru",
+    "nom": "Faux-filet de bœuf cru",
+    "categorie": "Viandes",
+    "kcal": 152,
+    "proteines": 22.3,
+    "glucides": 0.6,
+    "lipides": 6.7,
+    "fibres": 0.0,
+    "portion_g": 150,
+    "portion_nom": "1 filet",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "boeuf-faux-filet-grille-poele",
+    "nom": "Faux-filet de bœuf grillé",
+    "categorie": "Viandes",
+    "kcal": 182,
+    "proteines": 27.1,
+    "glucides": 0.0,
+    "lipides": 8.2,
+    "fibres": 0.0,
+    "portion_g": 150,
+    "portion_nom": "1 filet",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "filet-mignon-de-porc-cru",
+    "nom": "Filet mignon de porc cru",
+    "categorie": "Viandes",
+    "kcal": 123,
+    "proteines": 21.2,
+    "glucides": 0.4,
+    "lipides": 4.1,
+    "fibres": 0.0,
+    "portion_g": 150,
+    "portion_nom": "1 filet",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "filet-mignon-de-porc-cuit",
+    "nom": "Filet mignon de porc cuit",
+    "categorie": "Viandes",
+    "kcal": 168,
+    "proteines": 26.1,
+    "glucides": 0.0,
+    "lipides": 7.1,
+    "fibres": 0.0,
+    "portion_g": 150,
+    "portion_nom": "1 filet",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "paleo",
       "sans_gluten",
       "sans_lactose"
     ],
@@ -11395,7 +11217,7 @@
   },
   {
     "id": "foie-veau-cru",
-    "nom": "Foie, veau, cru",
+    "nom": "Foie de veau cru",
     "categorie": "Viandes",
     "kcal": 120,
     "proteines": 15.5,
@@ -11416,12 +11238,54 @@
   },
   {
     "id": "foie-veau-cuit",
-    "nom": "Foie, veau, cuit",
+    "nom": "Foie de veau cuit",
     "categorie": "Viandes",
     "kcal": 140,
     "proteines": 19.0,
     "glucides": 9.2,
     "lipides": 3.0,
+    "fibres": 0.0,
+    "portion_g": 125,
+    "portion_nom": "1 portion",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "agneau-gigot-cru",
+    "nom": "Gigot d'agneau cru",
+    "categorie": "Viandes",
+    "kcal": 128,
+    "proteines": 20.0,
+    "glucides": 0.5,
+    "lipides": 5.1,
+    "fibres": 0.0,
+    "portion_g": 125,
+    "portion_nom": "1 portion",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "agneau-gigot-roti-cuit-au-four",
+    "nom": "Gigot d'agneau rôti",
+    "categorie": "Viandes",
+    "kcal": 169,
+    "proteines": 26.8,
+    "glucides": 0.0,
+    "lipides": 6.8,
     "fibres": 0.0,
     "portion_g": 125,
     "portion_nom": "1 portion",
@@ -11456,7 +11320,7 @@
   },
   {
     "id": "jambon-cuit-superieur-decouenne",
-    "nom": "Jambon cuit, supérieur, découenné",
+    "nom": "Jambon cuit supérieur",
     "categorie": "Viandes",
     "kcal": 117,
     "proteines": 20.5,
@@ -11493,46 +11357,6 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "jambon-de-dinde-ou-blanc-de-dinde-en-tranche",
-    "nom": "Jambon de dinde ou blanc de dinde en tranche",
-    "categorie": "Viandes",
-    "kcal": 99,
-    "proteines": 20.9,
-    "glucides": 0.0,
-    "lipides": 1.7,
-    "fibres": 0.4,
-    "portion_g": 50,
-    "portion_nom": "2 tranches",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "blanc-de-poulet-tranche",
-    "nom": "Blanc de poulet tranché",
-    "categorie": "Viandes",
-    "kcal": 105,
-    "proteines": 20.7,
-    "glucides": 1.4,
-    "lipides": 1.8,
-    "fibres": 0.5,
-    "portion_g": 50,
-    "portion_nom": "2 tranches",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
     "id": "jambon-sec",
     "nom": "Jambon sec",
     "categorie": "Viandes",
@@ -11553,7 +11377,7 @@
   },
   {
     "id": "lapin-viande-crue",
-    "nom": "Lapin, viande crue",
+    "nom": "Lapin cru",
     "categorie": "Viandes",
     "kcal": 188,
     "proteines": 20.4,
@@ -11573,7 +11397,7 @@
   },
   {
     "id": "lapin-viande-cuite",
-    "nom": "Lapin, viande cuite",
+    "nom": "Lapin cuit",
     "categorie": "Viandes",
     "kcal": 167,
     "proteines": 20.5,
@@ -11630,8 +11454,50 @@
     "source": "CIQUAL 2025"
   },
   {
+    "id": "magret-de-canard-cru",
+    "nom": "Magret de canard cru",
+    "categorie": "Viandes",
+    "kcal": 337,
+    "proteines": 17.9,
+    "glucides": 0.1,
+    "lipides": 29.4,
+    "fibres": 0.0,
+    "portion_g": 150,
+    "portion_nom": "1 filet",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "canard-magret-grille-poele",
+    "nom": "Magret de canard grillé",
+    "categorie": "Viandes",
+    "kcal": 188,
+    "proteines": 26.7,
+    "glucides": 0.0,
+    "lipides": 9.1,
+    "fibres": 0.0,
+    "portion_g": 150,
+    "portion_nom": "1 filet",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
     "id": "merguez-boeuf-et-mouton-crue",
-    "nom": "Merguez, boeuf et mouton, crue",
+    "nom": "Merguez crue",
     "categorie": "Viandes",
     "kcal": 315,
     "proteines": 14.0,
@@ -11640,9 +11506,7 @@
     "fibres": 0.0,
     "portion_g": 100,
     "portion_nom": "2 pièces",
-    "allergenes": [
-      "oeufs"
-    ],
+    "allergenes": [],
     "regimes": [
       "omnivore",
       "sans_gluten",
@@ -11653,7 +11517,7 @@
   },
   {
     "id": "merguez-boeuf-et-mouton-cuite",
-    "nom": "Merguez, boeuf et mouton, cuite",
+    "nom": "Merguez cuite",
     "categorie": "Viandes",
     "kcal": 283,
     "proteines": 19.8,
@@ -11662,358 +11526,9 @@
     "fibres": 0.0,
     "portion_g": 100,
     "portion_nom": "2 pièces",
-    "allergenes": [
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "pate-ou-terrine-de-campagne",
-    "nom": "Pâté ou terrine de campagne",
-    "categorie": "Viandes",
-    "kcal": 323,
-    "proteines": 15.5,
-    "glucides": 1.5,
-    "lipides": 28.2,
-    "fibres": 0.0,
-    "portion_g": 125,
-    "portion_nom": "1 portion",
     "allergenes": [],
     "regimes": [
       "omnivore",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "porc-cote-crue",
-    "nom": "Porc, côte crue",
-    "categorie": "Viandes",
-    "kcal": 164,
-    "proteines": 19.8,
-    "glucides": 0.4,
-    "lipides": 9.3,
-    "fibres": 0.0,
-    "portion_g": 125,
-    "portion_nom": "1 portion",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "porc-cote-grillee-poelee",
-    "nom": "Porc, côte grillée/poêlée",
-    "categorie": "Viandes",
-    "kcal": 211,
-    "proteines": 29.6,
-    "glucides": 0.0,
-    "lipides": 10.3,
-    "fibres": 0.0,
-    "portion_g": 125,
-    "portion_nom": "1 portion",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "porc-echine-crue",
-    "nom": "Porc, échine crue",
-    "categorie": "Viandes",
-    "kcal": 238,
-    "proteines": 17.1,
-    "glucides": 0.1,
-    "lipides": 18.8,
-    "fibres": 0.0,
-    "portion_g": 125,
-    "portion_nom": "1 portion",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "porc-echine-rotie-cuite-au-four",
-    "nom": "Porc, échine rôtie/cuite au four",
-    "categorie": "Viandes",
-    "kcal": 295,
-    "proteines": 26.2,
-    "glucides": 0.0,
-    "lipides": 21.2,
-    "fibres": 0.0,
-    "portion_g": 125,
-    "portion_nom": "1 portion",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "filet-mignon-de-porc-cru",
-    "nom": "Filet mignon de porc cru",
-    "categorie": "Viandes",
-    "kcal": 123,
-    "proteines": 21.2,
-    "glucides": 0.4,
-    "lipides": 4.1,
-    "fibres": 0.0,
-    "portion_g": 150,
-    "portion_nom": "1 filet",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "filet-mignon-de-porc-cuit",
-    "nom": "Filet mignon de porc cuit",
-    "categorie": "Viandes",
-    "kcal": 168,
-    "proteines": 26.1,
-    "glucides": 0.0,
-    "lipides": 7.1,
-    "fibres": 0.0,
-    "portion_g": 150,
-    "portion_nom": "1 filet",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "porc-roti-cru",
-    "nom": "Porc, rôti cru",
-    "categorie": "Viandes",
-    "kcal": 153,
-    "proteines": 22.3,
-    "glucides": 0.5,
-    "lipides": 6.9,
-    "fibres": 0.0,
-    "portion_g": 125,
-    "portion_nom": "1 portion",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "porc-roti-cuit",
-    "nom": "Porc, rôti cuit",
-    "categorie": "Viandes",
-    "kcal": 163,
-    "proteines": 30.5,
-    "glucides": 0.7,
-    "lipides": 4.3,
-    "fibres": 0.0,
-    "portion_g": 125,
-    "portion_nom": "1 portion",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "porc-travers-braise",
-    "nom": "Porc, travers braisé",
-    "categorie": "Viandes",
-    "kcal": 332,
-    "proteines": 23.1,
-    "glucides": 0.0,
-    "lipides": 26.6,
-    "fibres": 0.0,
-    "portion_g": 125,
-    "portion_nom": "1 portion",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "porc-travers-cru",
-    "nom": "Porc, travers cru",
-    "categorie": "Viandes",
-    "kcal": 237,
-    "proteines": 18.0,
-    "glucides": 0.6,
-    "lipides": 18.0,
-    "fibres": 0.0,
-    "portion_g": 125,
-    "portion_nom": "1 portion",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "aile-de-poulet-crue",
-    "nom": "Aile de poulet crue",
-    "categorie": "Viandes",
-    "kcal": 181,
-    "proteines": 20.4,
-    "glucides": 0.0,
-    "lipides": 11.0,
-    "fibres": 0.0,
-    "portion_g": 80,
-    "portion_nom": "1 aile",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "poulet-aile-viande-et-peau-roties-cuites-au-four",
-    "nom": "Poulet, aile, viande et peau rôties/cuites au four",
-    "categorie": "Viandes",
-    "kcal": 247,
-    "proteines": 23.8,
-    "glucides": 0.0,
-    "lipides": 16.9,
-    "fibres": 0.0,
-    "portion_g": 80,
-    "portion_nom": "1 aile",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "cuisse-de-poulet-crue-avec-peau",
-    "nom": "Cuisse de poulet crue (avec peau)",
-    "categorie": "Viandes",
-    "kcal": 192,
-    "proteines": 17.3,
-    "glucides": 0.0,
-    "lipides": 13.5,
-    "fibres": 0.0,
-    "portion_g": 150,
-    "portion_nom": "1 cuisse",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "poulet-cuisse-viande-et-peau-rotie-cuite-au-four",
-    "nom": "Poulet, cuisse, viande et peau rôtie/cuite au four",
-    "categorie": "Viandes",
-    "kcal": 205,
-    "proteines": 25.9,
-    "glucides": 0.0,
-    "lipides": 11.3,
-    "fibres": 0.0,
-    "portion_g": 150,
-    "portion_nom": "1 cuisse",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "poulet-blanc-cru",
-    "nom": "Blanc de poulet cru",
-    "categorie": "Viandes",
-    "kcal": 110,
-    "proteines": 23.4,
-    "glucides": 0.0,
-    "lipides": 1.5,
-    "fibres": 0.0,
-    "portion_g": 150,
-    "portion_nom": "1 filet",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
-    ],
-    "source": "CIQUAL 2025"
-  },
-  {
-    "id": "poulet-filet-sans-peau-grille-poele",
-    "nom": "Poulet, filet sans peau grillé/poêlé",
-    "categorie": "Viandes",
-    "kcal": 141,
-    "proteines": 30.1,
-    "glucides": 0.0,
-    "lipides": 2.0,
-    "fibres": 0.0,
-    "portion_g": 150,
-    "portion_nom": "1 filet",
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "paleo",
       "sans_gluten",
       "sans_lactose",
       "halal"
@@ -12022,7 +11537,7 @@
   },
   {
     "id": "poulet-poitrine-viande-et-peau-crues",
-    "nom": "Poulet, poitrine, viande et peau crues",
+    "nom": "Poitrine de poulet crue (avec peau)",
     "categorie": "Viandes",
     "kcal": 167,
     "proteines": 20.9,
@@ -12043,7 +11558,7 @@
   },
   {
     "id": "poulet-poitrine-viande-et-peau-roties-cuites-au-four",
-    "nom": "Poulet, poitrine, viande et peau rôties/cuites au four",
+    "nom": "Poitrine de poulet rôtie (avec peau)",
     "categorie": "Viandes",
     "kcal": 189,
     "proteines": 29.8,
@@ -12063,6 +11578,25 @@
     "source": "CIQUAL 2025"
   },
   {
+    "id": "pate-ou-terrine-de-campagne",
+    "nom": "Pâté de campagne",
+    "categorie": "Viandes",
+    "kcal": 323,
+    "proteines": 15.5,
+    "glucides": 1.5,
+    "lipides": 28.2,
+    "fibres": 0.0,
+    "portion_g": 40,
+    "portion_nom": "1 portion",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "sans_gluten",
+      "sans_lactose"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
     "id": "rillettes-traditionnelles-de-porc",
     "nom": "Rillettes traditionnelles de porc",
     "categorie": "Viandes",
@@ -12076,6 +11610,109 @@
     "allergenes": [],
     "regimes": [
       "omnivore",
+      "sans_gluten",
+      "sans_lactose"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "boeuf-rosbif-roti-cuit-au-four",
+    "nom": "Rosbif de bœuf",
+    "categorie": "Viandes",
+    "kcal": 126,
+    "proteines": 24.1,
+    "glucides": 0.3,
+    "lipides": 3.2,
+    "fibres": 0.0,
+    "portion_g": 125,
+    "portion_nom": "1 portion",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "boeuf-rumsteck-cru",
+    "nom": "Rumsteck de bœuf cru",
+    "categorie": "Viandes",
+    "kcal": 118,
+    "proteines": 23.5,
+    "glucides": 0.4,
+    "lipides": 2.5,
+    "fibres": 0.0,
+    "portion_g": 150,
+    "portion_nom": "1 steak",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "boeuf-rumsteck-grille-poele",
+    "nom": "Rumsteck de bœuf grillé",
+    "categorie": "Viandes",
+    "kcal": 138,
+    "proteines": 29.0,
+    "glucides": 0.0,
+    "lipides": 2.1,
+    "fibres": 0.0,
+    "portion_g": 150,
+    "portion_nom": "1 steak",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "porc-roti-cru",
+    "nom": "Rôti de porc cru",
+    "categorie": "Viandes",
+    "kcal": 153,
+    "proteines": 22.3,
+    "glucides": 0.5,
+    "lipides": 6.9,
+    "fibres": 0.0,
+    "portion_g": 125,
+    "portion_nom": "1 portion",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "porc-roti-cuit",
+    "nom": "Rôti de porc cuit",
+    "categorie": "Viandes",
+    "kcal": 163,
+    "proteines": 30.5,
+    "glucides": 0.7,
+    "lipides": 4.3,
+    "fibres": 0.0,
+    "portion_g": 125,
+    "portion_nom": "1 portion",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "paleo",
       "sans_gluten",
       "sans_lactose"
     ],
@@ -12139,16 +11776,16 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "veau-escalope-crue",
-    "nom": "Veau, escalope crue",
+    "id": "steak-de-boeuf-cru",
+    "nom": "Steak de bœuf cru",
     "categorie": "Viandes",
-    "kcal": 114,
-    "proteines": 20.5,
-    "glucides": 0.6,
-    "lipides": 3.3,
+    "kcal": 229,
+    "proteines": 18.7,
+    "glucides": 0.1,
+    "lipides": 17.2,
     "fibres": 0.0,
     "portion_g": 150,
-    "portion_nom": "1 filet",
+    "portion_nom": "1 steak",
     "allergenes": [],
     "regimes": [
       "omnivore",
@@ -12160,16 +11797,16 @@
     "source": "CIQUAL 2025"
   },
   {
-    "id": "veau-escalope-cuite",
-    "nom": "Veau, escalope cuite",
+    "id": "boeuf-steak-ou-bifteck-grille-poele",
+    "nom": "Steak de bœuf grillé",
     "categorie": "Viandes",
-    "kcal": 147,
-    "proteines": 31.0,
+    "kcal": 128,
+    "proteines": 27.6,
     "glucides": 0.0,
-    "lipides": 2.5,
+    "lipides": 1.9,
     "fibres": 0.0,
     "portion_g": 150,
-    "portion_nom": "1 filet",
+    "portion_nom": "1 steak",
     "allergenes": [],
     "regimes": [
       "omnivore",
@@ -12177,6 +11814,170 @@
       "sans_gluten",
       "sans_lactose",
       "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "boeuf-steak-hache-15-mg-cru",
+    "nom": "Steak haché de bœuf 15% MG cru",
+    "categorie": "Viandes",
+    "kcal": 215,
+    "proteines": 20.2,
+    "glucides": 0.5,
+    "lipides": 14.8,
+    "fibres": 0.0,
+    "portion_g": 125,
+    "portion_nom": "1 steak haché",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "boeuf-steak-hache-15-mg-cuit",
+    "nom": "Steak haché de bœuf 15% MG cuit",
+    "categorie": "Viandes",
+    "kcal": 239,
+    "proteines": 23.6,
+    "glucides": 0.0,
+    "lipides": 16.1,
+    "fibres": 0.0,
+    "portion_g": 125,
+    "portion_nom": "1 steak haché",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "boeuf-steak-hache-5-mg-cru",
+    "nom": "Steak haché de bœuf 5% MG cru",
+    "categorie": "Viandes",
+    "kcal": 130,
+    "proteines": 21.9,
+    "glucides": 0.3,
+    "lipides": 4.6,
+    "fibres": 0.0,
+    "portion_g": 125,
+    "portion_nom": "1 steak haché",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "boeuf-steak-hache-5-mg-cuit",
+    "nom": "Steak haché de bœuf 5% MG cuit",
+    "categorie": "Viandes",
+    "kcal": 155,
+    "proteines": 25.5,
+    "glucides": 0.0,
+    "lipides": 5.8,
+    "fibres": 0.0,
+    "portion_g": 125,
+    "portion_nom": "1 steak haché",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "porc-travers-braise",
+    "nom": "Travers de porc braisé",
+    "categorie": "Viandes",
+    "kcal": 332,
+    "proteines": 23.1,
+    "glucides": 0.0,
+    "lipides": 26.6,
+    "fibres": 0.0,
+    "portion_g": 125,
+    "portion_nom": "1 portion",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "porc-travers-cru",
+    "nom": "Travers de porc cru",
+    "categorie": "Viandes",
+    "kcal": 237,
+    "proteines": 18.0,
+    "glucides": 0.6,
+    "lipides": 18.0,
+    "fibres": 0.0,
+    "portion_g": 125,
+    "portion_nom": "1 portion",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "porc-echine-crue",
+    "nom": "Échine de porc crue",
+    "categorie": "Viandes",
+    "kcal": 238,
+    "proteines": 17.1,
+    "glucides": 0.1,
+    "lipides": 18.8,
+    "fibres": 0.0,
+    "portion_g": 125,
+    "portion_nom": "1 portion",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose"
+    ],
+    "source": "CIQUAL 2025"
+  },
+  {
+    "id": "porc-echine-rotie-cuite-au-four",
+    "nom": "Échine de porc rôtie",
+    "categorie": "Viandes",
+    "kcal": 295,
+    "proteines": 26.2,
+    "glucides": 0.0,
+    "lipides": 21.2,
+    "fibres": 0.0,
+    "portion_g": 125,
+    "portion_nom": "1 portion",
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose"
     ],
     "source": "CIQUAL 2025"
   }
