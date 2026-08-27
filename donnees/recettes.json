@@ -1,0 +1,2894 @@
+[
+  {
+    "id": "flocons-avoine-banane-miel",
+    "nom": "Flocons d'avoine, banane et miel",
+    "moment": "petit_dejeuner",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "avoine-crue",
+        "grammes": 50
+      },
+      {
+        "aliment_id": "lait-demi-ecreme-uht",
+        "grammes": 200
+      },
+      {
+        "aliment_id": "banane-crue",
+        "grammes": 100
+      },
+      {
+        "aliment_id": "miel",
+        "grammes": 15
+      },
+      {
+        "aliment_id": "cannelle-poudre",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Verser les flocons et le lait dans une casserole.",
+      "Chauffer à feu moyen 8 à 10 min en remuant, jusqu'à épaissir.",
+      "Écraser la banane au-dessus, ajouter le miel et la cannelle.",
+      "Mélanger hors du feu et servir tiède."
+    ],
+    "allergenes": [
+      "gluten",
+      "lait"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "halal"
+    ]
+  },
+  {
+    "id": "yaourt-grec-fruits-amandes",
+    "nom": "Yaourt à la grecque, fruits et amandes",
+    "moment": "petit_dejeuner",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "yaourt-a-la-grecque-nature",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "fraise",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "myrtille-crue",
+        "grammes": 40
+      },
+      {
+        "aliment_id": "amande-avec-peau",
+        "grammes": 20
+      },
+      {
+        "aliment_id": "miel",
+        "grammes": 10
+      }
+    ],
+    "etapes": [
+      "Rincer les fraises et les myrtilles, couper les fraises en deux.",
+      "Mettre le yaourt dans un bol.",
+      "Ajouter les fruits, les amandes concassées et le miel.",
+      "Mélanger légèrement et manger de suite."
+    ],
+    "allergenes": [
+      "lait"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten",
+      "halal"
+    ]
+  },
+  {
+    "id": "oeufs-brouilles-pain-tomate",
+    "nom": "Œufs brouillés, pain et tomate",
+    "moment": "petit_dejeuner",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "oeuf-cru",
+        "grammes": 110
+      },
+      {
+        "aliment_id": "lait-demi-ecreme-uht",
+        "grammes": 20
+      },
+      {
+        "aliment_id": "beurre-a-80-mg-minimum-doux",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "pain-complet-ou-integral-a-la-farine-t150",
+        "grammes": 60
+      },
+      {
+        "aliment_id": "tomate-crue",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+        "grammes": 1
+      },
+      {
+        "aliment_id": "poivre-noir-poudre",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Battre les œufs avec le lait, le sel et le poivre.",
+      "Faire fondre le beurre à feu doux, verser les œufs.",
+      "Remuer sans cesse 3 à 4 min jusqu'à ce qu'ils soient juste pris.",
+      "Toaster le pain, couper la tomate en rondelles, dresser."
+    ],
+    "allergenes": [
+      "gluten",
+      "lait",
+      "oeufs"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "halal"
+    ]
+  },
+  {
+    "id": "fromage-blanc-kiwi-chia",
+    "nom": "Fromage blanc, kiwi et graines de chia",
+    "moment": "petit_dejeuner",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "fromage-blanc-0-mg",
+        "grammes": 200
+      },
+      {
+        "aliment_id": "kiwi-cru",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "chia-graine-sechee",
+        "grammes": 10
+      },
+      {
+        "aliment_id": "miel",
+        "grammes": 10
+      }
+    ],
+    "etapes": [
+      "Éplucher le kiwi et le couper en dés.",
+      "Mélanger le fromage blanc et le miel dans un bol.",
+      "Ajouter le kiwi et les graines de chia.",
+      "Laisser 5 min le chia gonfler un peu, puis servir."
+    ],
+    "allergenes": [
+      "lait"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten",
+      "halal"
+    ]
+  },
+  {
+    "id": "galettes-riz-cacahuete-banane",
+    "nom": "Galettes de riz, beurre de cacahuète et banane",
+    "moment": "petit_dejeuner",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "galette-de-riz-complet-souffle",
+        "grammes": 30
+      },
+      {
+        "aliment_id": "beurre-de-cacahuete-ou-pate-darachide",
+        "grammes": 25
+      },
+      {
+        "aliment_id": "banane-crue",
+        "grammes": 90
+      }
+    ],
+    "etapes": [
+      "Tartiner les galettes de riz avec le beurre de cacahuète.",
+      "Couper la banane en rondelles.",
+      "Les répartir sur les galettes et manger de suite."
+    ],
+    "allergenes": [
+      "arachides"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
+  },
+  {
+    "id": "tartine-avocat-oeuf",
+    "nom": "Tartine avocat et œuf mollet",
+    "moment": "petit_dejeuner",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "pain-complet-ou-integral-a-la-farine-t150",
+        "grammes": 70
+      },
+      {
+        "aliment_id": "avocat-cru",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "oeuf-cru",
+        "grammes": 55
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 10
+      },
+      {
+        "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+        "grammes": 1
+      },
+      {
+        "aliment_id": "poivre-noir-poudre",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Plonger l'œuf 6 min 30 dans l'eau frémissante, puis le passer sous l'eau froide.",
+      "Toaster le pain. Écraser l'avocat avec un filet de citron, sel et poivre.",
+      "Tartiner, écaler l'œuf, le couper en deux et le poser dessus."
+    ],
+    "allergenes": [
+      "gluten",
+      "oeufs"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
+  },
+  {
+    "id": "porridge-pomme-cannelle",
+    "nom": "Porridge pomme-cannelle au lait d'avoine",
+    "moment": "petit_dejeuner",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "avoine-crue",
+        "grammes": 50
+      },
+      {
+        "aliment_id": "boisson-a-lavoine-nature-sans-sucres-ajoutes-non-enrichie",
+        "grammes": 220
+      },
+      {
+        "aliment_id": "pomme-crue",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "cannelle-poudre",
+        "grammes": 2
+      },
+      {
+        "aliment_id": "raisin-sec",
+        "grammes": 15
+      }
+    ],
+    "etapes": [
+      "Couper la pomme en petits cubes, sans pépins.",
+      "Mettre flocons, boisson d'avoine, pomme, raisins et cannelle dans une casserole.",
+      "Cuire 10 min à feu moyen en remuant, jusqu'à consistance crémeuse.",
+      "Servir tiède."
+    ],
+    "allergenes": [
+      "gluten",
+      "sulfites"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
+  },
+  {
+    "id": "omelette-pleurotes-persil",
+    "nom": "Omelette aux pleurotes et persil",
+    "moment": "petit_dejeuner",
+    "temps_min": 20,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "oeuf-cru",
+        "grammes": 110
+      },
+      {
+        "aliment_id": "champignon-pleurote-crue",
+        "grammes": 100
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "persil-frais",
+        "grammes": 5
+      },
+      {
+        "aliment_id": "echalote-crue",
+        "grammes": 20
+      },
+      {
+        "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+        "grammes": 1
+      },
+      {
+        "aliment_id": "poivre-noir-poudre",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Ciseler l'échalote, effeuiller les pleurotes.",
+      "Les faire suer 5 min dans l'huile, sans trop colorer.",
+      "Battre les œufs, sel, poivre et persil haché, verser dans la poêle.",
+      "Cuire 3 à 4 min, plier l'omelette et servir."
+    ],
+    "allergenes": [
+      "oeufs"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
+  },
+  {
+    "id": "smoothie-banane-lait-avoine",
+    "nom": "Smoothie banane, lait et flocons",
+    "moment": "petit_dejeuner",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "banane-crue",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "lait-demi-ecreme-uht",
+        "grammes": 200
+      },
+      {
+        "aliment_id": "avoine-crue",
+        "grammes": 20
+      },
+      {
+        "aliment_id": "beurre-de-cacahuete-ou-pate-darachide",
+        "grammes": 15
+      }
+    ],
+    "etapes": [
+      "Couper la banane en morceaux.",
+      "Mixer avec le lait, les flocons et le beurre de cacahuète.",
+      "Boire de suite, éventuellement avec quelques glaçons."
+    ],
+    "allergenes": [
+      "arachides",
+      "gluten",
+      "lait"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "halal"
+    ]
+  },
+  {
+    "id": "tartine-chevre-miel",
+    "nom": "Tartine chèvre frais et miel",
+    "moment": "petit_dejeuner",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "pain-de-campagne",
+        "grammes": 70
+      },
+      {
+        "aliment_id": "fromage-de-chevre-frais-type-palet-crottin-ou-buchette",
+        "grammes": 50
+      },
+      {
+        "aliment_id": "miel",
+        "grammes": 12
+      },
+      {
+        "aliment_id": "noix-cerneau-sechee",
+        "grammes": 15
+      }
+    ],
+    "etapes": [
+      "Toaster légèrement le pain.",
+      "Tartiner le chèvre frais.",
+      "Napper d'un filet de miel et parsemer de cerneaux de noix cassés."
+    ],
+    "allergenes": [
+      "fruits_a_coque",
+      "gluten",
+      "lait"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "halal"
+    ]
+  },
+  {
+    "id": "pancakes-farine-oeuf-miel",
+    "nom": "Pancakes à la poêle, miel et fruits",
+    "moment": "petit_dejeuner",
+    "temps_min": 25,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "farine-de-ble-tendre-ou-froment-t65",
+        "grammes": 70
+      },
+      {
+        "aliment_id": "oeuf-cru",
+        "grammes": 55
+      },
+      {
+        "aliment_id": "lait-demi-ecreme-uht",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "huile-de-tournesol",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "miel",
+        "grammes": 15
+      },
+      {
+        "aliment_id": "fraise",
+        "grammes": 60
+      }
+    ],
+    "etapes": [
+      "Mélanger farine, œuf et lait jusqu'à pâte lisse, sans grumeaux.",
+      "Chauffer un peu d'huile dans une poêle antiadhésive.",
+      "Cuire 3 petits pancakes 2 min de chaque côté.",
+      "Servir avec le miel et les fraises coupées."
+    ],
+    "allergenes": [
+      "gluten",
+      "lait",
+      "oeufs"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "halal"
+    ]
+  },
+  {
+    "id": "porridge-soja-fruits-rouges",
+    "nom": "Porridge au soja et fruits rouges",
+    "moment": "petit_dejeuner",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "avoine-crue",
+        "grammes": 50
+      },
+      {
+        "aliment_id": "boisson-au-soja-nature-non-enrichie",
+        "grammes": 220
+      },
+      {
+        "aliment_id": "framboise-crue",
+        "grammes": 50
+      },
+      {
+        "aliment_id": "myrtille-crue",
+        "grammes": 40
+      },
+      {
+        "aliment_id": "lin-graine",
+        "grammes": 8
+      }
+    ],
+    "etapes": [
+      "Porter la boisson soja à petit bouillon avec les flocons.",
+      "Cuire 8 à 10 min en remuant.",
+      "Verser dans un bol, ajouter framboises, myrtilles et graines de lin."
+    ],
+    "allergenes": [
+      "gluten",
+      "soja"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
+  },
+  {
+    "id": "poulet-riz-brocoli",
+    "nom": "Poulet, riz basmati et brocolis",
+    "moment": "dejeuner",
+    "temps_min": 25,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "poulet-blanc-cru",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "riz-thai-ou-basmati-cru",
+        "grammes": 70
+      },
+      {
+        "aliment_id": "brocoli-cru",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 4
+      },
+      {
+        "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+        "grammes": 1
+      },
+      {
+        "aliment_id": "poivre-noir-poudre",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Rincer le riz et le cuire 12 min dans deux fois son volume d'eau salée.",
+      "Couper le poulet en dés. Le dorer 6 à 8 min à la poêle avec l'huile et l'ail écrasé.",
+      "Ajouter les bouquets de brocoli, couvrir 5 min pour les attendrir.",
+      "Poivrer, rectifier le sel, dresser riz, poulet et brocoli."
+    ],
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ]
+  },
+  {
+    "id": "pates-thon-tomate",
+    "nom": "Pâtes au thon et tomates",
+    "moment": "dejeuner",
+    "temps_min": 20,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "pates-crues",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "thon-au-naturel-appertise",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "tomate-pelee-appertisee",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "oignon-jaune-cru",
+        "grammes": 40
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "basilic-frais",
+        "grammes": 4
+      },
+      {
+        "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Cuire les pâtes dans l'eau salée selon le temps indiqué sur le paquet.",
+      "Faire revenir l'oignon émincé dans l'huile, ajouter les tomates pelées écrasées.",
+      "Laisser réduire 8 min, égoutter le thon et l'incorporer hors du feu.",
+      "Mélanger aux pâtes, parsemer de basilic."
+    ],
+    "allergenes": [
+      "gluten",
+      "poissons"
+    ],
+    "regimes": [
+      "omnivore",
+      "pescetarien",
+      "sans_lactose",
+      "halal"
+    ]
+  },
+  {
+    "id": "salade-quinoa-pois-chiches",
+    "nom": "Salade de quinoa, pois chiches et concombre",
+    "moment": "dejeuner",
+    "temps_min": 25,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "quinoa-cru",
+        "grammes": 70
+      },
+      {
+        "aliment_id": "pois-chiche-appertise",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "concombre-cru",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "tomate-cerise",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 10
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 15
+      },
+      {
+        "aliment_id": "menthe-fraiche",
+        "grammes": 4
+      },
+      {
+        "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Rincer le quinoa, le cuire 12 min dans de l'eau, puis l'égoutter et le laisser tiédir.",
+      "Rincer les pois chiches. Couper concombre et tomates cerises.",
+      "Mélanger le tout avec l'huile, le jus de citron, le sel et la menthe ciselée."
+    ],
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
+  },
+  {
+    "id": "wrap-poulet-crudites",
+    "nom": "Wrap poulet et crudités",
+    "moment": "dejeuner",
+    "temps_min": 20,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "tortilla-souple-a-garnir-a-base-de-ble",
+        "grammes": 60
+      },
+      {
+        "aliment_id": "poulet-blanc-cru",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "yaourt-nature",
+        "grammes": 30
+      },
+      {
+        "aliment_id": "laitue-crue",
+        "grammes": 40
+      },
+      {
+        "aliment_id": "tomate-crue",
+        "grammes": 60
+      },
+      {
+        "aliment_id": "concombre-cru",
+        "grammes": 40
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 5
+      },
+      {
+        "aliment_id": "poivre-noir-poudre",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Couper le poulet en lanières, le poêler 7 à 8 min dans l'huile jusqu'à ce qu'il soit cuit.",
+      "Laisser tiédir. Couper tomate et concombre en lamelles.",
+      "Tartiner la tortilla de yaourt, poser salade, poulet et crudités.",
+      "Poivrer, rouler fermement et couper en deux."
+    ],
+    "allergenes": [
+      "gluten",
+      "lait"
+    ],
+    "regimes": [
+      "omnivore",
+      "halal"
+    ]
+  },
+  {
+    "id": "steak-hache-pdt-haricots",
+    "nom": "Steak haché, pommes de terre et haricots verts",
+    "moment": "dejeuner",
+    "temps_min": 30,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "boeuf-steak-hache-5-mg-cru",
+        "grammes": 125
+      },
+      {
+        "aliment_id": "pomme-de-terre-crue",
+        "grammes": 200
+      },
+      {
+        "aliment_id": "haricot-vert-cru",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+        "grammes": 1
+      },
+      {
+        "aliment_id": "poivre-noir-poudre",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Éplucher les pommes de terre, les couper en quartiers, les cuire 15 min à l'eau salée.",
+      "Cuire les haricots verts 8 min à l'eau bouillante, puis les égoutter.",
+      "Poêler le steak haché 3 à 4 min de chaque côté dans un filet d'huile.",
+      "Saler, poivrer, dresser les trois éléments dans l'assiette."
+    ],
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ]
+  },
+  {
+    "id": "bowl-saumon-riz-avocat",
+    "nom": "Bol saumon, riz et avocat",
+    "moment": "dejeuner",
+    "temps_min": 25,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "saumon-elevage-cru",
+        "grammes": 130
+      },
+      {
+        "aliment_id": "riz-thai-ou-basmati-cru",
+        "grammes": 70
+      },
+      {
+        "aliment_id": "avocat-cru",
+        "grammes": 70
+      },
+      {
+        "aliment_id": "concombre-cru",
+        "grammes": 50
+      },
+      {
+        "aliment_id": "huile-de-sesame",
+        "grammes": 6
+      },
+      {
+        "aliment_id": "citron-vert-ou-lime-cru",
+        "grammes": 10
+      },
+      {
+        "aliment_id": "sesame-graine",
+        "grammes": 4
+      }
+    ],
+    "etapes": [
+      "Cuire le riz 12 min, l'égoutter.",
+      "Poêler le pavé de saumon 4 min côté peau puis 3 min de l'autre, à feu moyen.",
+      "Couper avocat et concombre. Dresser le riz, le saumon et les crudités.",
+      "Arroser d'huile de sésame et de citron vert, parsemer de graines."
+    ],
+    "allergenes": [
+      "poissons",
+      "sesame"
+    ],
+    "regimes": [
+      "omnivore",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ]
+  },
+  {
+    "id": "omelette-pdt-oignons",
+    "nom": "Omelette pommes de terre et oignon",
+    "moment": "dejeuner",
+    "temps_min": 25,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "oeuf-cru",
+        "grammes": 110
+      },
+      {
+        "aliment_id": "pomme-de-terre-crue",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "oignon-jaune-cru",
+        "grammes": 50
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 10
+      },
+      {
+        "aliment_id": "persil-frais",
+        "grammes": 4
+      },
+      {
+        "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+        "grammes": 1
+      },
+      {
+        "aliment_id": "poivre-noir-poudre",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Éplucher la pomme de terre, la couper en petits dés, l'oignon en lamelles.",
+      "Les faire dorer 10 min dans l'huile, à couvert, jusqu'à ce qu'ils soient tendres.",
+      "Battre les œufs, sel, poivre et persil, verser dans la poêle.",
+      "Cuire 5 min à feu doux, glisser dans l'assiette sans plier."
+    ],
+    "allergenes": [
+      "oeufs"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
+  },
+  {
+    "id": "pates-courgette-parmesan",
+    "nom": "Pâtes courgette et parmesan",
+    "moment": "dejeuner",
+    "temps_min": 20,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "pates-crues",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "courgette-crue",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "parmesan",
+        "grammes": 20
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 4
+      },
+      {
+        "aliment_id": "poivre-noir-poudre",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Cuire les pâtes dans l'eau salée.",
+      "Râper la courgette en gros filaments. La faire revenir 5 min avec l'ail et l'huile.",
+      "Égoutter les pâtes en gardant une louche d'eau de cuisson.",
+      "Mélanger pâtes, courgette, parmesan et un peu d'eau, poivrer."
+    ],
+    "allergenes": [
+      "gluten",
+      "lait"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "halal"
+    ]
+  },
+  {
+    "id": "salade-lentilles-feta",
+    "nom": "Salade de lentilles, feta et tomates",
+    "moment": "dejeuner",
+    "temps_min": 20,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "lentilles-vertes-cuites",
+        "grammes": 180
+      },
+      {
+        "aliment_id": "feta-au-lait-de-brebis-70-minimum-et-lait-de-chevre-30-maximum",
+        "grammes": 50
+      },
+      {
+        "aliment_id": "tomate-cerise",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "oignon-rouge-cru",
+        "grammes": 30
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 10
+      },
+      {
+        "aliment_id": "vinaigre-balsamique",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "persil-frais",
+        "grammes": 4
+      }
+    ],
+    "etapes": [
+      "Si les lentilles sont froides, les rincer et les égoutter.",
+      "Couper les tomates en deux, émincer l'oignon rouge très fin, émietter la feta.",
+      "Mélanger lentilles, tomates, oignon, huile et vinaigre.",
+      "Ajouter feta et persil au dernier moment."
+    ],
+    "allergenes": [
+      "lait",
+      "sulfites"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten"
+    ]
+  },
+  {
+    "id": "poulet-curry-riz",
+    "nom": "Poulet au curry et riz",
+    "moment": "dejeuner",
+    "temps_min": 30,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "poulet-blanc-cru",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "riz-thai-ou-basmati-cru",
+        "grammes": 70
+      },
+      {
+        "aliment_id": "oignon-jaune-cru",
+        "grammes": 50
+      },
+      {
+        "aliment_id": "boisson-a-la-noix-de-coco-nature",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "curry-poudre",
+        "grammes": 6
+      },
+      {
+        "aliment_id": "huile-de-colza",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 4
+      }
+    ],
+    "etapes": [
+      "Cuire le riz 12 min.",
+      "Couper le poulet en dés, émincer l'oignon. Faire revenir le tout 6 min dans l'huile.",
+      "Ajouter l'ail, le curry, puis la boisson coco. Laisser mijoter 10 min à feu doux.",
+      "Servir le poulet nappé sur le riz."
+    ],
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ]
+  },
+  {
+    "id": "cabillaud-pdt-brocoli",
+    "nom": "Cabillaud, pommes de terre et brocoli",
+    "moment": "dejeuner",
+    "temps_min": 25,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "cabillaud-cru",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "pomme-de-terre-crue",
+        "grammes": 180
+      },
+      {
+        "aliment_id": "brocoli-cru",
+        "grammes": 140
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 15
+      },
+      {
+        "aliment_id": "persil-frais",
+        "grammes": 4
+      },
+      {
+        "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Cuire les pommes de terre épluchées 15 min à l'eau salée.",
+      "Cuire les bouquets de brocoli 6 min à la vapeur ou à l'eau.",
+      "Poêler le cabillaud 4 min de chaque côté dans l'huile.",
+      "Arroser de citron, parsemer de persil, saler légèrement."
+    ],
+    "allergenes": [
+      "poissons"
+    ],
+    "regimes": [
+      "omnivore",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ]
+  },
+  {
+    "id": "dinde-poivrons-riz",
+    "nom": "Dinde poêlée, poivrons et riz",
+    "moment": "dejeuner",
+    "temps_min": 25,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "escalope-de-dinde-crue",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "riz-blanc-cru",
+        "grammes": 70
+      },
+      {
+        "aliment_id": "poivron-rouge-cru",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "poivron-vert-cru",
+        "grammes": 60
+      },
+      {
+        "aliment_id": "oignon-jaune-cru",
+        "grammes": 40
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "paprika-poudre",
+        "grammes": 3
+      }
+    ],
+    "etapes": [
+      "Cuire le riz 12 min.",
+      "Couper la dinde en lanières, les poivrons et l'oignon en lamelles.",
+      "Faire sauter le tout 10 min à feu vif avec l'huile et le paprika.",
+      "Servir sur le riz."
+    ],
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ]
+  },
+  {
+    "id": "pates-bolognaise-maison",
+    "nom": "Pâtes à la bolognaise maison",
+    "moment": "dejeuner",
+    "temps_min": 35,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "pates-crues",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "boeuf-steak-hache-5-mg-cru",
+        "grammes": 100
+      },
+      {
+        "aliment_id": "tomate-pelee-appertisee",
+        "grammes": 180
+      },
+      {
+        "aliment_id": "oignon-jaune-cru",
+        "grammes": 40
+      },
+      {
+        "aliment_id": "carotte-crue",
+        "grammes": 40
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 4
+      },
+      {
+        "aliment_id": "thym-frais",
+        "grammes": 2
+      }
+    ],
+    "etapes": [
+      "Émincer oignon et carotte. Les faire suer dans l'huile, ajouter le haché et le dorer.",
+      "Ajouter ail, tomates écrasées et thym. Laisser mijoter 20 min à feu doux.",
+      "Cuire les pâtes pendant ce temps, les égoutter et les mélanger à la sauce."
+    ],
+    "allergenes": [
+      "gluten"
+    ],
+    "regimes": [
+      "omnivore",
+      "sans_lactose",
+      "halal"
+    ]
+  },
+  {
+    "id": "salade-thon-oeuf-haricots",
+    "nom": "Salade thon, œuf dur et haricots verts",
+    "moment": "dejeuner",
+    "temps_min": 25,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "thon-au-naturel-appertise",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "oeuf-cru",
+        "grammes": 55
+      },
+      {
+        "aliment_id": "haricot-vert-cru",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "tomate-crue",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "laitue-crue",
+        "grammes": 50
+      },
+      {
+        "aliment_id": "olive-noire-en-saumure",
+        "grammes": 20
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 10
+      },
+      {
+        "aliment_id": "vinaigre-de-vin-rouge",
+        "grammes": 8
+      }
+    ],
+    "etapes": [
+      "Cuire l'œuf 9 min à l'eau, le passer sous l'eau froide et l'écaler.",
+      "Cuire les haricots 8 min, les passer sous l'eau froide.",
+      "Disposer la laitue, tomate, haricots, thon égoutté, œuf en quartiers et olives.",
+      "Arroser d'huile et de vinaigre au moment de servir."
+    ],
+    "allergenes": [
+      "oeufs",
+      "poissons",
+      "sulfites"
+    ],
+    "regimes": [
+      "omnivore",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose"
+    ]
+  },
+  {
+    "id": "riz-oeuf-petits-pois",
+    "nom": "Riz sauté à l'œuf et petits pois",
+    "moment": "dejeuner",
+    "temps_min": 20,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "riz-blanc-cru",
+        "grammes": 70
+      },
+      {
+        "aliment_id": "oeuf-cru",
+        "grammes": 55
+      },
+      {
+        "aliment_id": "petits-pois-appertisess",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "oignon-jaune-cru",
+        "grammes": 40
+      },
+      {
+        "aliment_id": "huile-de-colza",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "gingembre-racine-fraiche",
+        "grammes": 5
+      },
+      {
+        "aliment_id": "ciboule-ou-ciboulette-fraiche",
+        "grammes": 4
+      }
+    ],
+    "etapes": [
+      "Cuire le riz, l'égoutter et le laisser un peu sécher.",
+      "Faire revenir l'oignon et le gingembre râpé, ajouter les petits pois égouttés.",
+      "Pousser sur le côté, brouiller l'œuf dans la poêle, puis mélanger avec le riz.",
+      "Sauter 3 min à feu vif, parsemer de ciboule."
+    ],
+    "allergenes": [
+      "oeufs"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
+  },
+  {
+    "id": "filet-mignon-patate-douce",
+    "nom": "Filet mignon de porc et patate douce",
+    "moment": "dejeuner",
+    "temps_min": 30,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "filet-mignon-de-porc-cru",
+        "grammes": 140
+      },
+      {
+        "aliment_id": "patate-douce-crue",
+        "grammes": 200
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "romarin-frais",
+        "grammes": 2
+      },
+      {
+        "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+        "grammes": 1
+      },
+      {
+        "aliment_id": "poivre-noir-poudre",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Couper la patate douce en cubes, les rôtir 20 min à la poêle avec huile et romarin.",
+      "Poêler le filet mignon entier 3 min de chaque côté, puis 8 min à feu doux à couvert.",
+      "Laisser reposer 3 min, trancher, saler, poivrer, servir avec la patate douce."
+    ],
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "sans_gluten",
+      "sans_lactose"
+    ]
+  },
+  {
+    "id": "bowl-tofu-quinoa-legumes",
+    "nom": "Bol tofu, quinoa et légumes",
+    "moment": "dejeuner",
+    "temps_min": 25,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "tofu-nature",
+        "grammes": 140
+      },
+      {
+        "aliment_id": "quinoa-cru",
+        "grammes": 70
+      },
+      {
+        "aliment_id": "carotte-crue",
+        "grammes": 60
+      },
+      {
+        "aliment_id": "epinard-cru",
+        "grammes": 50
+      },
+      {
+        "aliment_id": "avocat-cru",
+        "grammes": 50
+      },
+      {
+        "aliment_id": "huile-de-sesame",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "tahin-ou-puree-de-sesame",
+        "grammes": 15
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 10
+      }
+    ],
+    "etapes": [
+      "Cuire le quinoa 12 min, l'égoutter.",
+      "Couper le tofu en cubes, le dorer 6 min dans un peu d'huile de sésame.",
+      "Râper la carotte. Dresser quinoa, tofu, carotte, épinards et avocat.",
+      "Délayer le tahin avec le citron et un trait d'eau, napper le bol."
+    ],
+    "allergenes": [
+      "sesame",
+      "soja"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
+  },
+  {
+    "id": "saumon-haricots-riz",
+    "nom": "Saumon poêlé, haricots verts et riz",
+    "moment": "diner",
+    "temps_min": 30,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "saumon-elevage-cru",
+        "grammes": 140
+      },
+      {
+        "aliment_id": "riz-complet-cru",
+        "grammes": 70
+      },
+      {
+        "aliment_id": "haricot-vert-cru",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 6
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 12
+      },
+      {
+        "aliment_id": "aneth-frais",
+        "grammes": 3
+      }
+    ],
+    "etapes": [
+      "Cuire le riz complet 25 min (le lancer en premier).",
+      "Cuire les haricots 8 min à l'eau bouillante.",
+      "Poêler le saumon 4 min de chaque côté dans l'huile.",
+      "Arroser de citron, parsemer d'aneth, dresser avec le riz et les haricots."
+    ],
+    "allergenes": [
+      "poissons"
+    ],
+    "regimes": [
+      "omnivore",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ]
+  },
+  {
+    "id": "soupe-lentilles-corail",
+    "nom": "Soupe de lentilles corail au cumin",
+    "moment": "diner",
+    "temps_min": 30,
+    "portions": 2,
+    "ingredients": [
+      {
+        "aliment_id": "lentille-corail-seche",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "carotte-crue",
+        "grammes": 100
+      },
+      {
+        "aliment_id": "oignon-jaune-cru",
+        "grammes": 60
+      },
+      {
+        "aliment_id": "tomate-concentre-appertise",
+        "grammes": 20
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 10
+      },
+      {
+        "aliment_id": "cumin-graine",
+        "grammes": 3
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 6
+      },
+      {
+        "aliment_id": "curcuma-poudre",
+        "grammes": 2
+      }
+    ],
+    "etapes": [
+      "Émincer oignon et carotte. Les faire suer 5 min dans l'huile avec cumin et curcuma.",
+      "Ajouter les lentilles rincées, le concentré de tomate, l'ail et 600 ml d'eau.",
+      "Cuire 20 min à petits bouillons. Mixer en partie pour épaissir, laisser des morceaux."
+    ],
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
+  },
+  {
+    "id": "poulet-tomate-courgette-aubergine",
+    "nom": "Poulet mijoté, tomate, courgette et aubergine",
+    "moment": "diner",
+    "temps_min": 35,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "poulet-blanc-cru",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "aubergine-crue",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "courgette-crue",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "tomate-pelee-appertisee",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "oignon-jaune-cru",
+        "grammes": 40
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 10
+      },
+      {
+        "aliment_id": "thym-frais",
+        "grammes": 2
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 4
+      }
+    ],
+    "etapes": [
+      "Couper poulet, aubergine et courgette en cubes. Émincer l'oignon.",
+      "Dorer le poulet 5 min dans l'huile, réserver. Faire suer oignon, aubergine, courgette.",
+      "Remettre le poulet, ajouter tomates, ail et thym. Mijoter 20 min à couvert.",
+      "Rectifier le sel et servir chaud."
+    ],
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ]
+  },
+  {
+    "id": "merlu-fenouil-pdt",
+    "nom": "Merlu au fenouil et pommes de terre",
+    "moment": "diner",
+    "temps_min": 30,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "merlu-cru",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "fenouil-cru",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "pomme-de-terre-crue",
+        "grammes": 160
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 15
+      },
+      {
+        "aliment_id": "aneth-frais",
+        "grammes": 3
+      }
+    ],
+    "etapes": [
+      "Couper pommes de terre et fenouil en quartiers. Les cuire 12 min à l'eau salée.",
+      "Les égoutter, les faire blondir 5 min dans l'huile.",
+      "Poser le merlu dessus, couvrir 8 min à feu doux.",
+      "Arroser de citron, parsemer d'aneth."
+    ],
+    "allergenes": [
+      "poissons"
+    ],
+    "regimes": [
+      "omnivore",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ]
+  },
+  {
+    "id": "omelette-epinards",
+    "nom": "Omelette aux épinards",
+    "moment": "diner",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "oeuf-cru",
+        "grammes": 110
+      },
+      {
+        "aliment_id": "epinard-cru",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 3
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+        "grammes": 1
+      },
+      {
+        "aliment_id": "noix-de-muscade",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Faire tomber les épinards 3 min dans l'huile avec l'ail, jusqu'à ce qu'ils rendent leur eau.",
+      "Battre les œufs avec sel et une pincée de muscade.",
+      "Verser sur les épinards, cuire 4 min à feu doux, plier et servir."
+    ],
+    "allergenes": [
+      "oeufs"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
+  },
+  {
+    "id": "tofu-poele-legumes",
+    "nom": "Tofu poêlé aux légumes",
+    "moment": "diner",
+    "temps_min": 25,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "tofu-nature",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "brocoli-cru",
+        "grammes": 100
+      },
+      {
+        "aliment_id": "carotte-crue",
+        "grammes": 60
+      },
+      {
+        "aliment_id": "poivron-rouge-cru",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "huile-de-sesame",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "gingembre-racine-fraiche",
+        "grammes": 6
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 4
+      },
+      {
+        "aliment_id": "graine-germee-de-haricot-mungo-ou-pousse-de-soja-crue",
+        "grammes": 40
+      }
+    ],
+    "etapes": [
+      "Couper le tofu et les légumes en morceaux réguliers.",
+      "Dorer le tofu 5 min dans l'huile, réserver.",
+      "Sauter carotte, poivron et brocoli 7 min avec gingembre et ail.",
+      "Remettre le tofu, ajouter les pousses, mélanger 1 min et servir."
+    ],
+    "allergenes": [
+      "sesame",
+      "soja"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
+  },
+  {
+    "id": "chili-haricots-rouges",
+    "nom": "Chili de haricots rouges",
+    "moment": "diner",
+    "temps_min": 30,
+    "portions": 2,
+    "ingredients": [
+      {
+        "aliment_id": "haricot-rouge-appertise",
+        "grammes": 250
+      },
+      {
+        "aliment_id": "tomate-pelee-appertisee",
+        "grammes": 300
+      },
+      {
+        "aliment_id": "oignon-jaune-cru",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "poivron-rouge-cru",
+        "grammes": 100
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 10
+      },
+      {
+        "aliment_id": "cumin-graine",
+        "grammes": 3
+      },
+      {
+        "aliment_id": "paprika-poudre",
+        "grammes": 4
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 6
+      },
+      {
+        "aliment_id": "piment-cru",
+        "grammes": 5
+      }
+    ],
+    "etapes": [
+      "Émincer oignon, poivron et ail. Les faire suer 6 min dans l'huile.",
+      "Ajouter cumin, paprika et piment ciselé, puis les tomates écrasées.",
+      "Incorporer les haricots rincés, mijoter 15 min à feu doux.",
+      "Rectifier l'assaisonnement et servir chaud."
+    ],
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
+  },
+  {
+    "id": "courgettes-farcies-hache",
+    "nom": "Courgettes farcies au bœuf haché",
+    "moment": "diner",
+    "temps_min": 40,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "courgette-crue",
+        "grammes": 280
+      },
+      {
+        "aliment_id": "boeuf-steak-hache-5-mg-cru",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "tomate-coulis-appertise-puree-de-tomates-mi-reduite-a-11",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "oignon-jaune-cru",
+        "grammes": 40
+      },
+      {
+        "aliment_id": "riz-blanc-cru",
+        "grammes": 30
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "persil-frais",
+        "grammes": 4
+      }
+    ],
+    "etapes": [
+      "Couper les courgettes en deux dans la longueur, les évider. Préchauffer le four à 200 °C.",
+      "Mélanger haché, oignon ciselé, riz cru, persil et un peu de coulis.",
+      "Farcir, napper du reste de coulis, enfourner 30 min.",
+      "Vérifier que le riz est tendre avant de servir."
+    ],
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ]
+  },
+  {
+    "id": "truite-epinards-quinoa",
+    "nom": "Truite, épinards et quinoa",
+    "moment": "diner",
+    "temps_min": 25,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "truite-arc-en-ciel-elevage-crue",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "quinoa-cru",
+        "grammes": 70
+      },
+      {
+        "aliment_id": "epinard-cru",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 3
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 10
+      }
+    ],
+    "etapes": [
+      "Cuire le quinoa 12 min.",
+      "Poêler la truite 4 min côté peau, 3 min de l'autre.",
+      "Faire tomber les épinards 2 min avec l'ail et un filet d'huile.",
+      "Dresser, arroser de citron."
+    ],
+    "allergenes": [
+      "poissons"
+    ],
+    "regimes": [
+      "omnivore",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ]
+  },
+  {
+    "id": "poulet-citron-thym-pdt",
+    "nom": "Poulet citron-thym et pommes de terre",
+    "moment": "diner",
+    "temps_min": 35,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "poulet-blanc-cru",
+        "grammes": 160
+      },
+      {
+        "aliment_id": "pomme-de-terre-crue",
+        "grammes": 200
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 40
+      },
+      {
+        "aliment_id": "thym-frais",
+        "grammes": 3
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 10
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 4
+      },
+      {
+        "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Préchauffer le four à 200 °C. Couper les pommes de terre en quartiers.",
+      "Mélanger poulet, pommes de terre, huile, thym, ail, sel et jus plus zestes de citron.",
+      "Enfourner 30 min, retourner à mi-cuisson.",
+      "Vérifier que le poulet n'est plus rosé avant de servir."
+    ],
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ]
+  },
+  {
+    "id": "wok-tofu-vermicelles",
+    "nom": "Wok de tofu et vermicelles de riz",
+    "moment": "diner",
+    "temps_min": 20,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "vermicelles-de-riz-seches-crues",
+        "grammes": 60
+      },
+      {
+        "aliment_id": "tofu-nature",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "poivron-rouge-cru",
+        "grammes": 70
+      },
+      {
+        "aliment_id": "carotte-crue",
+        "grammes": 50
+      },
+      {
+        "aliment_id": "graine-germee-de-haricot-mungo-ou-pousse-de-soja-crue",
+        "grammes": 50
+      },
+      {
+        "aliment_id": "huile-de-sesame",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 4
+      },
+      {
+        "aliment_id": "gingembre-racine-fraiche",
+        "grammes": 5
+      }
+    ],
+    "etapes": [
+      "Tremper les vermicelles 5 min dans l'eau bouillante, les égoutter.",
+      "Dorer le tofu en cubes 5 min, ajouter carotte, poivron, ail et gingembre.",
+      "Sauter 5 min, ajouter vermicelles et pousses, mélanger 2 min."
+    ],
+    "allergenes": [
+      "sesame",
+      "soja"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
+  },
+  {
+    "id": "dorade-tomates-courgette",
+    "nom": "Dorade, tomates cerises et courgette",
+    "moment": "diner",
+    "temps_min": 25,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "dorade-royale-ou-daurade-ou-vraie-daurade-elevage-crue",
+        "grammes": 160
+      },
+      {
+        "aliment_id": "tomate-cerise",
+        "grammes": 100
+      },
+      {
+        "aliment_id": "courgette-crue",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 3
+      },
+      {
+        "aliment_id": "thym-frais",
+        "grammes": 2
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 15
+      }
+    ],
+    "etapes": [
+      "Couper la courgette en rondelles, les tomates en deux.",
+      "Les faire revenir 6 min avec ail et thym.",
+      "Poser le filet de dorade dessus, couvrir 8 min à feu moyen.",
+      "Arroser de citron et servir dans la poêle."
+    ],
+    "allergenes": [
+      "poissons"
+    ],
+    "regimes": [
+      "omnivore",
+      "pescetarien",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ]
+  },
+  {
+    "id": "salade-chevre-miel-noix",
+    "nom": "Salade chèvre, miel et noix",
+    "moment": "diner",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "salade-verte-crue-sans-assaisonnement",
+        "grammes": 60
+      },
+      {
+        "aliment_id": "fromage-de-chevre-buche",
+        "grammes": 50
+      },
+      {
+        "aliment_id": "pain-de-campagne",
+        "grammes": 40
+      },
+      {
+        "aliment_id": "noix-cerneau-sechee",
+        "grammes": 20
+      },
+      {
+        "aliment_id": "miel",
+        "grammes": 10
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "vinaigre-balsamique",
+        "grammes": 6
+      }
+    ],
+    "etapes": [
+      "Laver la salade, l'essorer. Toaster le pain, poser une tranche de chèvre dessus.",
+      "Passer 3 min sous le grill jusqu'à ce que le fromage ramollisse.",
+      "Dresser la salade, ajouter pain-chèvre, noix, miel, huile et vinaigre."
+    ],
+    "allergenes": [
+      "fruits_a_coque",
+      "gluten",
+      "lait",
+      "sulfites"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien"
+    ]
+  },
+  {
+    "id": "escalope-veau-courgettes",
+    "nom": "Escalope de veau et courgettes",
+    "moment": "diner",
+    "temps_min": 20,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "veau-escalope-crue",
+        "grammes": 140
+      },
+      {
+        "aliment_id": "courgette-crue",
+        "grammes": 180
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 12
+      },
+      {
+        "aliment_id": "persil-frais",
+        "grammes": 4
+      },
+      {
+        "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+        "grammes": 1
+      },
+      {
+        "aliment_id": "poivre-noir-poudre",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Couper les courgettes en rondelles, les faire dorer 8 min dans l'huile.",
+      "Dans la même poêle, cuire l'escalope 3 min de chaque côté.",
+      "Saler, poivrer, arroser de citron, parsemer de persil."
+    ],
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ]
+  },
+  {
+    "id": "poelee-pois-chiches-epinards",
+    "nom": "Poêlée de pois chiches et épinards",
+    "moment": "diner",
+    "temps_min": 20,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "pois-chiche-appertise",
+        "grammes": 200
+      },
+      {
+        "aliment_id": "epinard-cru",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "oignon-jaune-cru",
+        "grammes": 50
+      },
+      {
+        "aliment_id": "tomate-cerise",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 10
+      },
+      {
+        "aliment_id": "cumin-graine",
+        "grammes": 2
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 4
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 10
+      }
+    ],
+    "etapes": [
+      "Faire suer l'oignon dans l'huile, ajouter cumin et ail.",
+      "Incorporer les pois chiches rincés, les faire dorer 5 min.",
+      "Ajouter épinards et tomates, cuire 4 min jusqu'à ce que les feuilles tombent.",
+      "Finir avec un filet de citron."
+    ],
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
+  },
+  {
+    "id": "lotte-poireaux-pdt",
+    "nom": "Lotte, poireaux et pommes de terre",
+    "moment": "diner",
+    "temps_min": 30,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "lotte-ou-baudroie-crue",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "poireau-cru",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "pomme-de-terre-crue",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+        "grammes": 1
+      },
+      {
+        "aliment_id": "poivre-noir-poudre",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Émincer le poireau, couper les pommes de terre en dés.",
+      "Les faire étuver 12 min dans l'huile avec un fond d'eau, à couvert.",
+      "Poser les médaillons de lotte, couvrir encore 8 min.",
+      "Saler, poivrer, servir bien chaud."
+    ],
+    "allergenes": [
+      "poissons"
+    ],
+    "regimes": [
+      "omnivore",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal"
+    ]
+  },
+  {
+    "id": "oeufs-lardons-salade",
+    "nom": "Salade d'œufs et lardons",
+    "moment": "diner",
+    "temps_min": 20,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "oeuf-cru",
+        "grammes": 110
+      },
+      {
+        "aliment_id": "lardon-fume-cru",
+        "grammes": 50
+      },
+      {
+        "aliment_id": "salade-ou-chicoree-frisee-crue",
+        "grammes": 70
+      },
+      {
+        "aliment_id": "pain-de-campagne",
+        "grammes": 40
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "vinaigre-de-vin-rouge",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "moutarde",
+        "grammes": 6
+      }
+    ],
+    "etapes": [
+      "Cuire les œufs 9 min, les écaler. Faire rissoler les lardons sans matière grasse.",
+      "Couper le pain en dés, les dorer 3 min dans la poêle des lardons.",
+      "Délayer moutarde, vinaigre et huile. Mélanger salade, croûtons, lardons, œufs en quartiers."
+    ],
+    "allergenes": [
+      "gluten",
+      "moutarde",
+      "oeufs",
+      "sulfites"
+    ],
+    "regimes": [
+      "omnivore",
+      "sans_lactose"
+    ]
+  },
+  {
+    "id": "yaourt-miel-noix",
+    "nom": "Yaourt, miel et noix",
+    "moment": "collation",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "yaourt-nature",
+        "grammes": 125
+      },
+      {
+        "aliment_id": "miel",
+        "grammes": 12
+      },
+      {
+        "aliment_id": "noix-cerneau-sechee",
+        "grammes": 20
+      }
+    ],
+    "etapes": [
+      "Verser le yaourt dans un bol.",
+      "Ajouter le miel et les cerneaux cassés grossièrement.",
+      "Mélanger et manger de suite."
+    ],
+    "allergenes": [
+      "fruits_a_coque",
+      "lait"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten",
+      "halal"
+    ]
+  },
+  {
+    "id": "pomme-amandes",
+    "nom": "Pomme et amandes",
+    "moment": "collation",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "pomme-crue",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "amande-avec-peau",
+        "grammes": 25
+      }
+    ],
+    "etapes": [
+      "Laver la pomme, la couper en quartiers en retirant le cœur.",
+      "Servir avec les amandes à côté."
+    ],
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
+  },
+  {
+    "id": "houmous-carottes",
+    "nom": "Houmous et bâtonnets de carotte",
+    "moment": "collation",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "houmous",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "carotte-crue",
+        "grammes": 100
+      }
+    ],
+    "etapes": [
+      "Éplucher la carotte et la couper en bâtonnets.",
+      "Servir avec le houmous pour tremper."
+    ],
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
+  },
+  {
+    "id": "banane-beurre-cacahuete",
+    "nom": "Banane et beurre de cacahuète",
+    "moment": "collation",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "banane-crue",
+        "grammes": 110
+      },
+      {
+        "aliment_id": "beurre-de-cacahuete-ou-pate-darachide",
+        "grammes": 20
+      }
+    ],
+    "etapes": [
+      "Couper la banane en deux dans la longueur.",
+      "Tartiner de beurre de cacahuète et manger de suite."
+    ],
+    "allergenes": [
+      "arachides"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
+  },
+  {
+    "id": "oeuf-dur-tomates-cerises",
+    "nom": "Œuf dur et tomates cerises",
+    "moment": "collation",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "oeuf-cru",
+        "grammes": 55
+      },
+      {
+        "aliment_id": "tomate-cerise",
+        "grammes": 100
+      },
+      {
+        "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Cuire l'œuf 9 min à l'eau, le passer sous l'eau froide, l'écaler.",
+      "Rincer les tomates cerises, saler légèrement, servir avec l'œuf."
+    ],
+    "allergenes": [
+      "oeufs"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
+  },
+  {
+    "id": "fromage-blanc-fraises",
+    "nom": "Fromage blanc et fraises",
+    "moment": "collation",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "fromage-blanc-0-mg",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "fraise",
+        "grammes": 100
+      }
+    ],
+    "etapes": [
+      "Rincer les fraises, les équeuter, les couper en deux.",
+      "Les mélanger au fromage blanc."
+    ],
+    "allergenes": [
+      "lait"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten",
+      "halal"
+    ]
+  },
+  {
+    "id": "poire-noisettes",
+    "nom": "Poire et noisettes",
+    "moment": "collation",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "poire-crue",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "noisette",
+        "grammes": 20
+      }
+    ],
+    "etapes": [
+      "Laver la poire, la couper en tranches.",
+      "Servir avec les noisettes."
+    ],
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "paleo",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
+  },
+  {
+    "id": "skyr-myrtilles",
+    "nom": "Spécialité protéinée et myrtilles",
+    "moment": "collation",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "specialite-laitiere-riche-en-proteines-nature",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "myrtille-crue",
+        "grammes": 60
+      }
+    ],
+    "etapes": [
+      "Rincer les myrtilles.",
+      "Les mélanger à la spécialité laitière."
+    ],
+    "allergenes": [
+      "lait"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten",
+      "halal"
+    ]
+  },
+  {
+    "id": "concombre-houmous",
+    "nom": "Concombre et houmous",
+    "moment": "collation",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "concombre-cru",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "houmous",
+        "grammes": 70
+      }
+    ],
+    "etapes": [
+      "Couper le concombre en rondelles.",
+      "Servir avec le houmous pour tremper."
+    ],
+    "allergenes": [],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "vegan",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose",
+      "halal",
+      "casher"
+    ]
+  },
+  {
+    "id": "compote-fromage-blanc",
+    "nom": "Compote de pomme et fromage blanc",
+    "moment": "collation",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "compote-de-pomme",
+        "grammes": 100
+      },
+      {
+        "aliment_id": "fromage-blanc-0-mg",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "cannelle-poudre",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Mélanger fromage blanc et compote.",
+      "Saupoudrer de cannelle."
+    ],
+    "allergenes": [
+      "lait"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten",
+      "halal"
+    ]
+  },
+  {
+    "id": "merguez-semoule-legumes",
+    "nom": "Merguez, semoule et légumes",
+    "moment": "dejeuner",
+    "temps_min": 25,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "merguez-boeuf-et-mouton-crue",
+        "grammes": 100
+      },
+      {
+        "aliment_id": "semoule-de-ble-dur-crue",
+        "grammes": 70
+      },
+      {
+        "aliment_id": "courgette-crue",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "poivron-rouge-cru",
+        "grammes": 60
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "cumin-graine",
+        "grammes": 2
+      }
+    ],
+    "etapes": [
+      "Poêler les merguez 10 min en les retournant, jusqu'à ce qu'elles soient cuites à cœur.",
+      "Couper courgette et poivron, les faire sauter 8 min avec le cumin.",
+      "Verser la semoule dans un bol, ajouter le même volume d'eau bouillante, couvrir 5 min.",
+      "Égrainer à la fourchette, dresser avec légumes et merguez."
+    ],
+    "allergenes": [
+      "gluten"
+    ],
+    "regimes": [
+      "omnivore",
+      "sans_lactose",
+      "halal"
+    ]
+  },
+  {
+    "id": "galette-sarrasin-oeuf-salade",
+    "nom": "Galette de sarrasin, œuf et salade",
+    "moment": "diner",
+    "temps_min": 25,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "farine-de-sarrasin",
+        "grammes": 50
+      },
+      {
+        "aliment_id": "oeuf-cru",
+        "grammes": 110
+      },
+      {
+        "aliment_id": "lait-demi-ecreme-uht",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "huile-de-tournesol",
+        "grammes": 6
+      },
+      {
+        "aliment_id": "salade-verte-crue-sans-assaisonnement",
+        "grammes": 50
+      },
+      {
+        "aliment_id": "tomate-crue",
+        "grammes": 60
+      }
+    ],
+    "etapes": [
+      "Mélanger farine, un œuf battu et le lait jusqu'à pâte fluide. Laisser 5 min.",
+      "Cuire une grande galette 2 min de chaque côté dans un peu d'huile.",
+      "Casser le second œuf au centre, plier les bords, cuire encore 2 min.",
+      "Servir avec la salade et la tomate."
+    ],
+    "allergenes": [
+      "lait",
+      "oeufs"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten",
+      "halal"
+    ]
+  },
+  {
+    "id": "tartine-saumon-fume-fromage-blanc",
+    "nom": "Tartine saumon fumé et fromage blanc",
+    "moment": "petit_dejeuner",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "pain-complet-ou-integral-a-la-farine-t150",
+        "grammes": 70
+      },
+      {
+        "aliment_id": "saumon-fume",
+        "grammes": 50
+      },
+      {
+        "aliment_id": "fromage-blanc-0-mg",
+        "grammes": 40
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "aneth-frais",
+        "grammes": 2
+      },
+      {
+        "aliment_id": "poivre-noir-poudre",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Toaster le pain. Tartiner de fromage blanc.",
+      "Disposer le saumon fumé, un filet de citron, l'aneth et le poivre."
+    ],
+    "allergenes": [
+      "gluten",
+      "lait",
+      "poissons"
+    ],
+    "regimes": [
+      "omnivore",
+      "pescetarien",
+      "halal"
+    ]
+  },
+  {
+    "id": "crevettes-courgettes-riz",
+    "nom": "Crevettes, courgettes et riz",
+    "moment": "diner",
+    "temps_min": 20,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "crevette-crue",
+        "grammes": 130
+      },
+      {
+        "aliment_id": "riz-thai-ou-basmati-cru",
+        "grammes": 70
+      },
+      {
+        "aliment_id": "courgette-crue",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 4
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "piment-cru",
+        "grammes": 3
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 10
+      }
+    ],
+    "etapes": [
+      "Cuire le riz 12 min.",
+      "Décortiquer les crevettes si besoin. Couper la courgette en demi-lunes.",
+      "Sauter courgette, ail et piment 5 min, ajouter les crevettes 3 min.",
+      "Arroser de citron, servir sur le riz."
+    ],
+    "allergenes": [
+      "crustaces"
+    ],
+    "regimes": [
+      "omnivore",
+      "pescetarien",
+      "sans_gluten",
+      "sans_lactose"
+    ]
+  }
+]
