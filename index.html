@@ -1,0 +1,2067 @@
+<title>Plateforme MHX Coaching</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<!--
+=====================================================================
+  PLATEFORME MHX COACHING — fichier unique, autonome
+  ---------------------------------------------------------------
+  COMMENT S'Y RETROUVER (dans l'ordre du fichier) :
+
+  [A] JETONS DE DESIGN .... couleurs, ombres, thème clair/sombre
+  [B] STYLES COMMUNS ...... mise en page, boutons, champs, tableaux
+  [C] STYLES DES OUTILS ... styles propres à chaque outil
+  [D] CONFIG .............. textes de marque + TOUTES les constantes
+                            de calcul (macros, facteurs d'activité,
+                            zones de mensuration, modèle de séance)
+  [E] BOÎTE À OUTILS ...... helpers, stockage, composant graphique
+  [F] OUTILS .............. un objet par outil : id, nom, html, init
+  [G] NAVIGATION ......... barre du haut + routage par #ancre
+  ---------------------------------------------------------------
+  POUR AJOUTER UN 4e OUTIL : copier un objet de la section [F],
+  changer id / nom / icone / html() / init(), et l'ajouter au
+  tableau OUTILS tout en bas de cette même section. Rien d'autre
+  à toucher : la navigation se construit toute seule.
+=====================================================================
+-->
+<style>
+/* ==================================================================
+   [A] JETONS DE DESIGN
+   Change une couleur ici et tout le site suit.
+   ================================================================== */
+*,*::before,*::after{box-sizing:border-box}
+:root{
+  color-scheme:light;
+  --ground:#eceef1; --surface:#ffffff; --sunken:#e5e8ec;
+  --ink:#0a0d13; --ink-2:#454b57; --ink-3:#767d8b;
+  --line:#d8dce2; --line-strong:#b9bfc9;
+  --accent:#8a6a1a; --accent-ink:#ffffff; --accent-soft:rgba(138,106,26,.10);
+  --good:#006300; --warn:#8a5a12; --bad:#b3312f;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100;
+  --grid:#dfe3e8; --axis:#c3c2b7;
+  --nav-bg:rgba(236,238,241,.88);
+  --shadow:0 1px 2px rgba(10,13,19,.06),0 8px 24px -12px rgba(10,13,19,.18);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --ground:#06090f; --surface:#0f141c; --sunken:#0a0e15;
+    --ink:#f2f4f7; --ink-2:#9fa6b3; --ink-3:#6f7683;
+    --line:#1e2530; --line-strong:#2c3542;
+    --accent:#d3a53c; --accent-ink:#0a0d13; --accent-soft:rgba(211,165,60,.12);
+    --good:#0ca30c; --warn:#fab219; --bad:#e66767;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+    --grid:#232a34; --axis:#383835;
+    --nav-bg:rgba(6,9,15,.88);
+    --shadow:0 1px 2px rgba(0,0,0,.5),0 12px 32px -16px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --ground:#06090f; --surface:#0f141c; --sunken:#0a0e15;
+  --ink:#f2f4f7; --ink-2:#9fa6b3; --ink-3:#6f7683;
+  --line:#1e2530; --line-strong:#2c3542;
+  --accent:#d3a53c; --accent-ink:#0a0d13; --accent-soft:rgba(211,165,60,.12);
+  --good:#0ca30c; --warn:#fab219; --bad:#e66767;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+  --grid:#232a34; --axis:#383835;
+  --nav-bg:rgba(6,9,15,.88);
+  --shadow:0 1px 2px rgba(0,0,0,.5),0 12px 32px -16px rgba(0,0,0,.8);
+}
+
+/* ==================================================================
+   [B] STYLES COMMUNS
+   ================================================================== */
+body{margin:0;background:var(--ground);color:var(--ink);
+  font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:960px;margin:0 auto;padding:0 20px}
+
+/* --- barre de navigation --- */
+.topbar{position:sticky;top:0;z-index:20;background:var(--nav-bg);backdrop-filter:saturate(140%) blur(10px);border-bottom:1px solid var(--line)}
+.topbar .wrap{display:flex;align-items:center;gap:18px;min-height:62px;flex-wrap:wrap;padding-top:10px;padding-bottom:10px}
+.brand{display:flex;flex-direction:column;line-height:1.1;margin-right:auto}
+.brand .b-name{font-family:"Oswald",Impact,sans-serif;font-weight:600;font-size:19px;letter-spacing:.09em;text-transform:uppercase}
+.brand .b-sub{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:600}
+.nav{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;margin:0 -4px;padding:0 4px}
+.nav::-webkit-scrollbar{display:none}
+.nav a{display:inline-flex;align-items:center;gap:8px;white-space:nowrap;text-decoration:none;
+  padding:9px 15px;border-radius:999px;border:1px solid var(--line);color:var(--ink-2);
+  font-size:14px;font-weight:500;transition:color .15s,border-color .15s,background .15s}
+.nav a:hover{color:var(--ink);border-color:var(--line-strong)}
+.nav a[aria-current="page"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.nav .ico{font-size:15px;line-height:1}
+
+/* --- en-tête d'outil --- */
+.masthead{padding:34px 0 24px;margin-bottom:26px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:7px}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:600}
+h1{font-family:"Oswald",Impact,sans-serif;font-weight:600;font-size:clamp(29px,5.4vw,44px);line-height:1.05;margin:0;text-wrap:balance;text-transform:uppercase}
+.lede{color:var(--ink-2);max-width:62ch;margin:0;font-size:15px}
+
+/* --- blocs --- */
+main{padding-bottom:70px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:22px;box-shadow:var(--shadow)}
+.panel + .panel{margin-top:22px}
+h2{font-family:"Oswald",Impact,sans-serif;text-transform:uppercase;letter-spacing:.04em;font-weight:500;font-size:19px;margin:0 0 16px}
+h3{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin:0 0 10px}
+label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);margin-bottom:6px;font-weight:500}
+input,select,textarea{width:100%;background:var(--sunken);color:var(--ink);border:1px solid var(--line);
+  border-radius:4px;padding:9px 11px;font-family:"IBM Plex Mono",monospace;font-size:15px;font-variant-numeric:tabular-nums}
+input:focus,select:focus,textarea:focus,button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.seg{display:flex;border:1px solid var(--line);border-radius:4px;overflow:hidden;background:var(--sunken)}
+.seg button{flex:1;background:transparent;border:0;color:var(--ink-2);padding:9px 10px;
+  font-family:"IBM Plex Sans",sans-serif;font-size:14px;cursor:pointer;transition:background .15s,color .15s}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:600}
+button.btn{background:var(--accent);color:var(--accent-ink);border:1px solid var(--accent);border-radius:4px;
+  padding:10px 18px;font-family:"IBM Plex Sans",sans-serif;font-size:14px;font-weight:600;cursor:pointer}
+button.ghost{background:transparent;color:var(--ink-2);border-color:var(--line-strong)}
+button.ghost:hover{color:var(--ink);border-color:var(--accent)}
+.readout{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;font-weight:600;letter-spacing:-.02em}
+.hero{display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px}
+.hero-num{font-size:clamp(44px,9vw,66px);line-height:1}
+.unit{font-size:14px;color:var(--ink-3);letter-spacing:.1em;text-transform:uppercase;font-weight:500}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:14px}
+th{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);
+  text-align:right;padding:8px 10px;border-bottom:1px solid var(--line-strong);white-space:nowrap;font-weight:600}
+th:first-child,td:first-child{text-align:left}
+td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:right;font-family:"IBM Plex Mono",monospace}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.note{font-size:13px;color:var(--ink-3);line-height:1.6}
+details{border-top:1px solid var(--line);margin-top:20px;padding-top:14px}
+summary{cursor:pointer;font-size:13px;color:var(--ink-2);font-weight:500}
+summary:hover{color:var(--accent)}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;align-items:center}
+.msg{font-size:13px;color:var(--good);min-height:18px}
+.del{background:none;border:1px solid transparent;border-radius:4px;color:var(--ink-3);cursor:pointer;font-size:16px;line-height:1;padding:6px 9px}
+.del:hover{color:var(--bad);border-color:var(--bad)}
+.empty{text-align:center;color:var(--ink-3);font-size:14px;padding:38px 16px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px}
+.tile{background:var(--sunken);border:1px solid var(--line);border-radius:5px;padding:14px}
+.tile .t-lbl{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+.tile .t-val{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;font-size:30px;font-weight:600;line-height:1.15;margin-top:4px}
+.tile .t-sub{font-size:12px;color:var(--ink-3);font-family:"IBM Plex Mono",monospace}
+.pos{color:var(--good)} .neg{color:var(--bad)}
+footer{border-top:1px solid var(--line);color:var(--ink-3);font-size:13px}
+footer .wrap{display:flex;flex-wrap:wrap;gap:10px 20px;justify-content:space-between;padding-top:20px;padding-bottom:34px}
+footer a{color:var(--accent)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* --- connexion --- */
+.portail{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.carte-co{width:100%;max-width:420px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:30px;box-shadow:var(--shadow)}
+.carte-co .logo{font-family:"Oswald",Impact,sans-serif;font-weight:600;font-size:24px;letter-spacing:.09em;text-transform:uppercase;text-align:center}
+.carte-co .sous{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:600;text-align:center;margin-bottom:22px}
+.carte-co h2{text-align:center;font-size:17px;margin-bottom:18px}
+.carte-co .champ{margin-bottom:14px}
+.carte-co button.btn{width:100%;padding:12px}
+.bascule{text-align:center;margin-top:16px;font-size:13px;color:var(--ink-3)}
+.bascule button{background:none;border:0;color:var(--accent);cursor:pointer;font-size:13px;font-family:inherit;text-decoration:underline;padding:0}
+.erreur{background:var(--accent-soft);border-left:3px solid var(--bad);color:var(--ink-2);font-size:13px;padding:10px 12px;border-radius:0 4px 4px 0;margin-bottom:14px}
+.ok{border-left-color:var(--good)}
+
+/* --- barre du haut : compte --- */
+.compte{display:flex;align-items:center;gap:10px;margin-left:auto}
+.compte .qui{font-size:13px;color:var(--ink-2);white-space:nowrap}
+.compte button{background:none;border:1px solid var(--line);border-radius:999px;color:var(--ink-3);font-size:12px;padding:6px 12px;cursor:pointer;font-family:inherit}
+.compte button:hover{color:var(--ink);border-color:var(--accent)}
+.etat{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-3);white-space:nowrap}
+.etat.erreur{color:var(--warn);background:none;border:0;padding:0}
+
+/* --- consultation d'une fiche client --- */
+.bandeau{display:flex;flex-wrap:wrap;align-items:center;gap:12px;background:var(--accent-soft);border:1px solid var(--accent);border-radius:6px;padding:12px 16px;margin-bottom:22px}
+.bandeau strong{font-size:15px}
+.bandeau .sortir{margin-left:auto;background:var(--accent);color:var(--accent-ink);border:0;border-radius:4px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+.lecture-seule .panel input,.lecture-seule .panel select,.lecture-seule .panel textarea,
+.lecture-seule .panel button,.lecture-seule .panel a.btn{pointer-events:none;opacity:.7}
+
+/* --- programmes --- */
+.seance{background:var(--sunken);border:1px solid var(--line);border-radius:6px;padding:16px;margin-bottom:16px}
+.seance-tete{display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin-bottom:12px}
+.seance-tete > div:first-child{flex:1;min-width:200px}
+.ex-table{width:100%;border-collapse:separate;border-spacing:0 8px}
+.ex-table th{font-size:10px;padding:0 8px 4px}
+.ex-ligne{background:var(--surface);border:1px solid var(--line);border-radius:5px;padding:12px;margin-bottom:10px;
+  display:grid;grid-template-columns:2fr 70px 90px 90px 36px;gap:10px;align-items:end}
+.ex-ligne .plein{grid-column:1/-1}
+.ex-ligne input{padding:8px 10px;font-size:14px}
+.ex-lecture{background:var(--surface);border:1px solid var(--line);border-radius:5px;padding:12px 14px;margin-bottom:8px}
+.ex-lecture .haut{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:baseline}
+.ex-lecture .nom{font-weight:600;font-size:15px;flex:1;min-width:160px}
+.ex-lecture .chiffre{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--ink-2);white-space:nowrap}
+.ex-lecture .chiffre b{color:var(--ink)}
+.ex-lecture .obs{font-size:13px;color:var(--ink-3);margin-top:6px}
+.biblio-l{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:14px;background:var(--sunken);
+  border:1px solid var(--line);border-radius:5px;margin-bottom:10px}
+.biblio-l .nom{font-weight:600}
+.biblio-l .actions-b{margin-left:auto;display:flex;gap:8px}
+.biblio-l button{background:transparent;border:1px solid var(--line-strong);border-radius:4px;color:var(--ink-2);
+  padding:7px 12px;font-size:13px;cursor:pointer;font-family:inherit}
+.biblio-l button:hover{color:var(--ink);border-color:var(--accent)}
+@media (max-width:640px){ .ex-ligne{grid-template-columns:1fr 1fr; } .ex-ligne .nom-c{grid-column:1/-1} }
+
+/* --- liste des clients --- */
+.client-l{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:14px;background:var(--sunken);border:1px solid var(--line);border-radius:5px;margin-bottom:10px}
+.client-l .nom{font-weight:600;font-size:15px}
+.client-l .meta{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ink-3)}
+.client-l .voir{margin-left:auto;background:transparent;border:1px solid var(--line-strong);border-radius:4px;color:var(--ink-2);padding:8px 14px;font-size:13px;cursor:pointer;font-family:inherit}
+.client-l .voir:hover{color:var(--ink);border-color:var(--accent)}
+.pastille{font-size:11px;font-family:"IBM Plex Mono",monospace;padding:2px 8px;border-radius:999px;border:1px solid var(--line-strong);color:var(--ink-3)}
+
+/* ==================================================================
+   [C] STYLES DES OUTILS
+   ================================================================== */
+/* --- outil : calculateur --- */
+.obj-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.obj{background:var(--sunken);border:1px solid var(--line);border-radius:5px;padding:14px;cursor:pointer;text-align:left;transition:border-color .15s,background .15s}
+.obj[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.obj .lbl{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);font-family:"IBM Plex Mono",monospace;font-weight:600}
+.obj .val{display:block;font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;font-size:26px;font-weight:600;margin-top:4px}
+.macro{display:flex;flex-direction:column;gap:6px;background:var(--sunken);border:1px solid var(--line);border-radius:5px;padding:14px}
+.macro .m-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.macro .m-name{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);font-weight:600}
+.macro .m-g{font-family:"IBM Plex Mono",monospace;font-size:28px;font-weight:600;font-variant-numeric:tabular-nums}
+.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:3px}
+.m-sub{font-size:12px;color:var(--ink-3);font-family:"IBM Plex Mono",monospace}
+.flag{margin-top:14px;padding:10px 12px;border-left:3px solid var(--warn);background:var(--accent-soft);font-size:13px;color:var(--ink-2);border-radius:0 4px 4px 0}
+
+/* --- outil : mensurations --- */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.chip{display:inline-flex;align-items:center;gap:7px;background:var(--sunken);border:1px solid var(--line);border-radius:999px;padding:6px 13px;font-size:13px;color:var(--ink-2);cursor:pointer}
+.chip[aria-pressed="true"]{border-color:var(--accent);color:var(--ink);background:var(--accent-soft)}
+.chip .dot{width:9px;height:9px;border-radius:50%;background:var(--line-strong)}
+.chartbox{position:relative;background:var(--sunken);border:1px solid var(--line);border-radius:5px;padding:12px 8px 6px}
+svg.chart{display:block;width:100%;height:260px;overflow:visible}
+.tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--line-strong);border-radius:4px;
+  padding:8px 10px;font-size:12px;box-shadow:var(--shadow);opacity:0;transition:opacity .1s;white-space:nowrap;z-index:5}
+.tip b{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+.tip .row{display:flex;align-items:center;gap:7px;margin-top:3px}
+.tip .sw{width:8px;height:8px;border-radius:2px;display:inline-block}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;font-size:12px;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:3px;border-radius:2px;display:inline-block}
+
+/* --- outil : entraînement --- */
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
+.tab{background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:9px 15px;
+  font-family:"Oswald",sans-serif;text-transform:uppercase;letter-spacing:.05em;font-size:14px;color:var(--ink-2);cursor:pointer}
+.tab[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:500}
+.exo{background:var(--sunken);border:1px solid var(--line);border-radius:5px;padding:16px;margin-bottom:14px}
+.exo-head{display:grid;grid-template-columns:1fr 152px 42px;gap:10px;align-items:end}
+.exo-head select{font-size:14px;padding:9px 6px}
+.sets{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:14px}
+.set{background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:10px}
+.set .s-lbl{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin-bottom:8px}
+.set .pair{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.set input{padding:7px 8px;font-size:14px;text-align:center}
+.set .cap{font-size:10px;color:var(--ink-3);text-align:center;margin-top:3px;font-family:"IBM Plex Mono",monospace;letter-spacing:.06em}
+.exo-foot{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.stat{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.stat b{color:var(--ink);font-size:16px}
+.prev{font-size:12px;font-family:"IBM Plex Mono",monospace;padding:3px 9px;border-radius:999px;background:var(--surface);border:1px solid var(--line)}
+.up{color:var(--good);border-color:var(--good)} .down{color:var(--bad)} .same{color:var(--ink-3)}
+.extra{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:12px}
+.link-a{color:var(--accent);font-size:12px;text-decoration:none}
+
+@media (max-width:560px){
+  .panel{padding:16px}
+  .topbar .wrap{min-height:56px}
+  .exo-head{grid-template-columns:1fr 42px;grid-template-areas:"nom del" "plage plage"}
+  .exo-head > div:nth-child(1){grid-area:nom}
+  .exo-head > div:nth-child(2){grid-area:plage}
+  .exo-head > div:nth-child(3){grid-area:del}
+}
+</style>
+
+<div class="topbar">
+  <div class="wrap">
+    <div class="brand">
+      <span class="b-name" id="brand-name">MHX Coaching</span>
+      <span class="b-sub" id="brand-sub">SPEEDFORM 1.0</span>
+    </div>
+    <nav class="nav" id="nav" aria-label="Outils"></nav>
+    <div class="compte" id="compte" hidden>
+      <span class="etat" id="etat"></span>
+      <span class="qui" id="qui"></span>
+      <button type="button" id="deco">Se déconnecter</button>
+    </div>
+  </div>
+</div>
+
+<main class="wrap" id="vue"></main>
+
+<footer>
+  <div class="wrap">
+    <span id="foot-left"></span>
+    <span id="foot-right"></span>
+  </div>
+</footer>
+
+<script>
+/* ==================================================================
+   [D] CONFIG — tout ce qui se modifie sans toucher au code
+   ================================================================== */
+const CONFIG = {
+
+  marque: {
+    nom: "MHX Coaching",
+    programme: "SPEEDFORM 1.0",
+    instagram: "https://www.instagram.com/lucasmhxcoaching/",
+    pseudo: "@lucasmhxcoaching",
+    email: "contact@lcsmhxcoaching.com",
+
+    /* Lien du formulaire de bilan Notion.
+       Laisse vide tant qu'il n'existe pas : le bouton se contente alors
+       de copier le récapitulatif dans le presse-papier. */
+    formulaire_bilan: ""
+  },
+
+  /* --- Connexion a la base Supabase (comptes + donnees) --- */
+  supabase: {
+    url: "https://nzynbuczmogifuidcjed.supabase.co",
+    cle: "sb_publishable_bxhCWuzxgVyrmzIKlfOXhg_wGpNq-8n"
+  },
+
+  /* --- Calculateur métabolique : toutes les constantes du calcul --- */
+  calcul: {
+    proteines_g_par_kg: 2.2,   // grammes de protéines par kg de poids de corps
+    lipides_g_par_kg:   1.0,   // grammes de lipides par kg de poids de corps
+    deficit_perte:      0.10,  // -10 % des calories de maintenance
+    surplus_prise:      0.10,  // +10 % des calories de maintenance
+    facteur_base:       1.20,  // point de départ : sédentaire
+    bonus_10000_pas:    0.15,  // ce qu'ajoutent 10 000 pas par jour
+    plafond_pas:        16670, // au-delà, le bonus de pas ne monte plus
+    bonus_par_heure:    0.03,  // ce qu'ajoute 1 h d'entraînement par semaine
+    plafond_heures:     15,    // au-delà, le bonus d'entraînement ne monte plus
+    seuil_alerte_glucides: 50, // en dessous de X g, on affiche l'avertissement
+    valeurs_depart: { sexe:"H", age:25, taille:178, poids:80, pas:10000, heures:10 }
+  },
+
+  /* --- Suivi des mensurations --- */
+  mensurations: {
+    zones: ["Poitrine","Épaules","Bras gauche","Bras droit","Taille",
+            "Ventre","Hanches","Cuisse gauche","Cuisse droite","Mollet"],
+    zones_affichees_au_depart: [4, 5],  // index des zones tracées par défaut
+    max_courbes: 4                       // nombre max de courbes simultanées
+  },
+
+  /* --- Journal d'entraînement --- */
+  entrainement: {
+    nb_seances: 5,
+    plages: { "6-8":[6,7,8], "8-10":[8,9,10], "10-12":[10,11,12], "12-15":[12,13,14,15] },
+    modele_seance: ["6-8","8-10","10-12","8-10","10-12","10-12","10-12"], // 7 exercices
+    nb_series: 4
+  }
+};
+
+/* ==================================================================
+   [E] BOÎTE À OUTILS — helpers partagés par tous les outils
+   ================================================================== */
+const $  = (id) => document.getElementById(id);
+const $$ = (sel, racine) => Array.from((racine || document).querySelectorAll(sel));
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const num = (v) => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
+const fmt = (n) => Math.round(n).toLocaleString("fr-FR");
+const n1  = (n) => (Math.round(n*10)/10).toLocaleString("fr-FR",{minimumFractionDigits:1,maximumFractionDigits:1});
+const aujourdhui = () => new Date().toISOString().slice(0,10);
+
+function flash(id, texte){
+  const e = $(id); if(!e) return;
+  e.textContent = texte;
+  setTimeout(() => { if (e.textContent === texte) e.textContent = ""; }, 3200);
+}
+
+/* --- AUTHENTIFICATION -------------------------------------------------
+   Petit client maison : aucune librairie externe, tout passe par les
+   points d'entree officiels de Supabase. La session est gardee dans le
+   navigateur et rafraichie automatiquement. --------------------------- */
+const Auth = {
+  cleSession: "mhx_session",
+  session: null,
+
+  charger(){
+    try { this.session = JSON.parse(localStorage.getItem(this.cleSession)); } catch(e){ this.session = null; }
+    return this.session;
+  },
+  memoriser(s){
+    if (s && s.access_token){
+      s.expire_le = Date.now() + (s.expires_in || 3600) * 1000;
+      this.session = s;
+      try { localStorage.setItem(this.cleSession, JSON.stringify(s)); } catch(e){}
+    }
+    return s;
+  },
+  oublier(){
+    this.session = null;
+    try { localStorage.removeItem(this.cleSession); } catch(e){}
+  },
+  connecte(){ return !!(this.session && this.session.access_token); },
+  utilisateur(){ return this.session ? this.session.user : null; },
+
+  async appel(chemin, options){
+    options = options || {};
+    const entetes = Object.assign({
+      "apikey": CONFIG.supabase.cle,
+      "Content-Type": "application/json"
+    }, options.headers || {});
+    if (options.avecJeton !== false && this.session && this.session.access_token){
+      entetes["Authorization"] = "Bearer " + this.session.access_token;
+    }
+    const r = await fetch(CONFIG.supabase.url + chemin, {
+      method: options.method || "GET",
+      headers: entetes,
+      body: options.body ? JSON.stringify(options.body) : undefined
+    });
+    const texte = await r.text();
+    let data = null;
+    try { data = texte ? JSON.parse(texte) : null; } catch(e){ data = texte; }
+    if (!r.ok){
+      const err = new Error((data && (data.msg || data.message || data.error_description || data.error)) || ("Erreur " + r.status));
+      err.statut = r.status;
+      throw err;
+    }
+    return data;
+  },
+
+  async rafraichir(){
+    if (!this.session || !this.session.refresh_token) return false;
+    try {
+      const s = await this.appel("/auth/v1/token?grant_type=refresh_token", {
+        method: "POST", avecJeton: false, body: { refresh_token: this.session.refresh_token }
+      });
+      this.memoriser(s); return true;
+    } catch(e){ this.oublier(); return false; }
+  },
+  async assurer(){
+    if (!this.connecte()) return false;
+    if (this.session.expire_le && Date.now() > this.session.expire_le - 60000) return await this.rafraichir();
+    return true;
+  },
+
+  async inscrire(email, motdepasse, prenom, nom){
+    const s = await this.appel("/auth/v1/signup", {
+      method: "POST", avecJeton: false,
+      body: { email, password: motdepasse, data: { prenom, nom } }
+    });
+    if (s && s.access_token) this.memoriser(s);
+    return s;
+  },
+  async connecter(email, motdepasse){
+    const s = await this.appel("/auth/v1/token?grant_type=password", {
+      method: "POST", avecJeton: false, body: { email, password: motdepasse }
+    });
+    return this.memoriser(s);
+  },
+  async motDePasseOublie(email){
+    return this.appel("/auth/v1/recover", { method: "POST", avecJeton: false, body: { email } });
+  },
+  async deconnecter(){
+    try { await this.appel("/auth/v1/logout", { method: "POST" }); } catch(e){}
+    this.oublier();
+    Object.keys(localStorage).forEach(k => { if (k.indexOf("mhx_") === 0) localStorage.removeItem(k); });
+    location.hash = "";
+    location.reload();
+  },
+
+  /* Profil (prenom, nom, role) de la personne connectee */
+  profil: null,
+  async chargerProfil(){
+    const u = this.utilisateur(); if (!u) return null;
+    const r = await Auth.appel("/rest/v1/profils?id=eq." + u.id + "&select=*");
+    this.profil = (r && r[0]) || null;
+    return this.profil;
+  },
+  estCoach(){ return !!(this.profil && this.profil.role === "coach"); }
+};
+
+/* --- STOCKAGE ---------------------------------------------------------
+   Meme interface qu'avant (lire / ecrire) : les outils n'ont pas
+   conscience du changement. Les donnees vivent maintenant dans la base,
+   donc elles suivent le client d'un appareil a l'autre. ---------------- */
+const Store = {
+  cache: {},
+  attente: {},
+  idConsulte: null,   // quand le coach consulte la fiche d'un client
+
+  cible(){ return this.idConsulte || (Auth.utilisateur() && Auth.utilisateur().id); },
+  lectureSeule(){ return !!this.idConsulte; },
+
+  async lire(cle, defaut){
+    const uid = this.cible(); if (!uid) return defaut;
+    try {
+      const r = await Auth.appel("/rest/v1/donnees?user_id=eq." + uid + "&outil=eq." + encodeURIComponent(cle) + "&select=contenu");
+      const contenu = (r && r[0] && r[0].contenu) || null;
+      const val = contenu ? Object.assign({}, defaut, contenu) : defaut;
+      this.cache[cle] = val;
+      return val;
+    } catch(e){ return defaut; }
+  },
+
+  ecrire(cle, valeur){
+    this.cache[cle] = valeur;
+    /* seule exception a la lecture seule : le coach ecrit le programme du client */
+    if (this.lectureSeule() && !(Auth.estCoach() && cle === "programme")) return;
+    clearTimeout(this.attente[cle]);
+    this.attente[cle] = setTimeout(() => this.envoyer(cle, valeur), 700);   // on groupe les frappes
+  },
+  async envoyer(cle, valeur){
+    const uid = this.cible(); if (!uid) return;
+    majEtat("enregistrement");
+    try {
+      await Auth.assurer();
+      await Auth.appel("/rest/v1/donnees?on_conflict=user_id,outil", {
+        method: "POST",
+        headers: { "Prefer": "resolution=merge-duplicates,return=minimal" },
+        body: [{ user_id: uid, outil: cle, contenu: valeur, maj_le: new Date().toISOString() }]
+      });
+      majEtat("enregistre");
+    } catch(e){ majEtat("erreur"); }
+  },
+
+  /* Sauvegarde manuelle : toujours disponible, en plus de la base */
+  exporter(){
+    const out = {};
+    OUTILS.forEach(o => { if (o.cle && this.cache[o.cle]) out[o.cle] = this.cache[o.cle]; });
+    return JSON.stringify({ plateforme:"mhx", version:2, donnees: out });
+  },
+  async importer(texte){
+    const p = JSON.parse(texte);
+    const d = (p && p.donnees) ? p.donnees : p;
+    if (!d || typeof d !== "object") throw new Error("format");
+    for (const cle in d){ this.cache[cle] = d[cle]; await this.envoyer(cle, d[cle]); }
+    return true;
+  }
+};
+
+/* Petit temoin d'enregistrement dans la barre du haut */
+function majEtat(etat){
+  const e = document.getElementById("etat"); if (!e) return;
+  const libelles = { enregistrement:"Enregistrement…", enregistre:"Enregistre", erreur:"Hors ligne — reessai au prochain changement" };
+  e.textContent = libelles[etat] || "";
+  e.className = "etat " + etat;
+  if (etat === "enregistre") setTimeout(() => { if (e.className.indexOf("enregistre") > -1) e.textContent = ""; }, 2000);
+}
+
+/* --- Bloc de sauvegarde, identique en bas de chaque outil --- */
+function blocSauvegarde(){
+  return `
+  <section class="panel">
+    <h2>Sauvegarde</h2>
+    <p class="note">Tout est enregistré automatiquement dans ton compte : tu retrouves tes données sur n'importe quel appareil en te connectant. Ce bouton sert si tu veux garder une copie de ton côté, ou reprendre des données venues de l'ancienne version.</p>
+    <div class="actions">
+      <button class="btn ghost" id="sv-copy">Copier ma sauvegarde</button>
+      <button class="btn ghost" id="sv-paste">Restaurer une sauvegarde</button>
+      <span class="msg" id="sv-msg"></span>
+    </div>
+  </section>`;
+}
+function initSauvegarde(){
+  if (!$("sv-copy")) return;
+  $("sv-copy").addEventListener("click", () => {
+    const t = Store.exporter();
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(
+        () => flash("sv-msg","Sauvegarde copiée. Colle-la dans une note."),
+        () => flash("sv-msg","Copie impossible sur ce navigateur.")
+      );
+    } else flash("sv-msg","Copie impossible sur ce navigateur.");
+  });
+  $("sv-paste").addEventListener("click", () => {
+    const t = prompt("Colle ici la sauvegarde que tu avais copiée :");
+    if (!t) return;
+    Store.importer(t)
+      .then(() => { flash("sv-msg","Sauvegarde restaurée."); setTimeout(() => afficher(courant, true), 500); })
+      .catch(() => flash("sv-msg","Cette sauvegarde n'est pas lisible."));
+  });
+}
+
+/* --- Composant graphique : courbes + survol. Sert au suivi des mensurations,
+       et reste disponible pour tout futur outil. --- */
+const Graphique = {
+  echelle(min, max){
+    if (min === max){ min -= 1; max += 1; }
+    const marge = (max-min)*0.12; min -= marge; max += marge;
+    let pas = Math.pow(10, Math.floor(Math.log10((max-min)/4)));
+    const m = (max-min)/4/pas;
+    pas *= m>5 ? 10 : m>2 ? 5 : m>1 ? 2 : 1;
+    return { bas: Math.floor(min/pas)*pas, haut: Math.ceil(max/pas)*pas, pas };
+  },
+  dessiner(idSvg, idTip, series, unite){
+    const svg = $(idSvg), tip = $(idTip);
+    if (!svg) return;
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    const boite = svg.parentNode.getBoundingClientRect();
+    const W = Math.max(320, boite.width - 16), H = 260;
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    const NS = "http://www.w3.org/2000/svg";
+    const el = (n,a) => { const e = document.createElementNS(NS,n); for (const k in a) e.setAttribute(k,a[k]); return e; };
+
+    const vivantes = series.filter(s => s.points.length > 0);
+    if (!vivantes.length){
+      const t = el("text",{x:W/2,y:H/2,"text-anchor":"middle",fill:"var(--ink-3)","font-size":14,"font-family":'"IBM Plex Sans",sans-serif'});
+      t.textContent = "Enregistre au moins deux semaines pour voir la courbe.";
+      svg.appendChild(t); if (tip) tip.style.opacity = 0; return;
+    }
+    const L=46, R=16, T=14, B=30, pw=W-L-R, ph=H-T-B;
+    const xs=[], ys=[];
+    vivantes.forEach(s => s.points.forEach(p => { xs.push(p.x); ys.push(p.y); }));
+    const x0 = Math.min(...xs); let x1 = Math.max(...xs); if (x0===x1) x1 = x0+1;
+    const yr = this.echelle(Math.min(...ys), Math.max(...ys));
+    const X = v => L + (v-x0)/(x1-x0)*pw;
+    const Y = v => T + ph - (v-yr.bas)/(yr.haut-yr.bas)*ph;
+
+    for (let v=yr.bas; v<=yr.haut+1e-9; v+=yr.pas){
+      svg.appendChild(el("line",{x1:L,x2:L+pw,y1:Y(v),y2:Y(v),stroke:"var(--grid)","stroke-width":1}));
+      const lb = el("text",{x:L-9,y:Y(v)+4,"text-anchor":"end",fill:"var(--ink-3)","font-size":11,"font-family":'"IBM Plex Mono",monospace'});
+      lb.textContent = Math.round(v*10)/10; svg.appendChild(lb);
+    }
+    svg.appendChild(el("line",{x1:L,x2:L+pw,y1:T+ph,y2:T+ph,stroke:"var(--axis)","stroke-width":1}));
+    const pasX = Math.max(1, Math.ceil((x1-x0)/6));
+    for (let xv=x0; xv<=x1; xv+=pasX){
+      const t = el("text",{x:X(xv),y:T+ph+19,"text-anchor":"middle",fill:"var(--ink-3)","font-size":11,"font-family":'"IBM Plex Mono",monospace'});
+      t.textContent = "S"+xv; svg.appendChild(t);
+    }
+    const croix = el("line",{x1:0,x2:0,y1:T,y2:T+ph,stroke:"var(--line-strong)","stroke-width":1,opacity:0});
+    svg.appendChild(croix);
+
+    vivantes.forEach(s => {
+      const d = s.points.map((p,i) => (i?"L":"M")+X(p.x)+" "+Y(p.y)).join(" ");
+      if (vivantes.length === 1){
+        const aire = d + ` L${X(s.points[s.points.length-1].x)} ${T+ph} L${X(s.points[0].x)} ${T+ph} Z`;
+        svg.appendChild(el("path",{d:aire,fill:s.couleur,opacity:.10}));
+      }
+      svg.appendChild(el("path",{d,fill:"none",stroke:s.couleur,"stroke-width":2,"stroke-linejoin":"round","stroke-linecap":"round"}));
+      const dernier = s.points[s.points.length-1];
+      svg.appendChild(el("circle",{cx:X(dernier.x),cy:Y(dernier.y),r:4.5,fill:s.couleur,stroke:"var(--sunken)","stroke-width":2}));
+    });
+
+    const reperes = vivantes.map(s => el("circle",{cx:-99,cy:-99,r:4,fill:s.couleur,stroke:"var(--sunken)","stroke-width":2,opacity:0}));
+    reperes.forEach(m => svg.appendChild(m));
+    const zone = el("rect",{x:L,y:T,width:pw,height:ph,fill:"transparent"});
+    svg.appendChild(zone);
+
+    const bouger = ev => {
+      const rc = svg.getBoundingClientRect();
+      const cx = (ev.touches ? ev.touches[0].clientX : ev.clientX) - rc.left;
+      let semaine = Math.round(x0 + (cx/rc.width*W - L)/pw*(x1-x0));
+      semaine = Math.max(x0, Math.min(x1, semaine));
+      croix.setAttribute("x1", X(semaine)); croix.setAttribute("x2", X(semaine)); croix.setAttribute("opacity", 1);
+      let lignes = "", trouve = false;
+      vivantes.forEach((s,i) => {
+        const pt = s.points.find(p => p.x === semaine);
+        if (pt){
+          trouve = true;
+          reperes[i].setAttribute("cx",X(pt.x)); reperes[i].setAttribute("cy",Y(pt.y)); reperes[i].setAttribute("opacity",1);
+          lignes += `<div class="row"><span class="sw" style="background:${s.couleur}"></span>${esc(s.nom)} <b>${n1(pt.y)}</b> ${unite}</div>`;
+        } else reperes[i].setAttribute("opacity",0);
+      });
+      if (!trouve){ tip.style.opacity = 0; return; }
+      tip.innerHTML = `<b>Semaine ${semaine}</b>${lignes}`;
+      tip.style.opacity = 1;
+      let px = X(semaine)/W*rc.width + 8;
+      if (px + tip.offsetWidth > rc.width - 4) px = X(semaine)/W*rc.width - tip.offsetWidth - 8;
+      tip.style.left = Math.max(4, px) + "px";
+      tip.style.top = "14px";
+    };
+    const quitter = () => { tip.style.opacity = 0; croix.setAttribute("opacity",0); reperes.forEach(m => m.setAttribute("opacity",0)); };
+    zone.addEventListener("mousemove", bouger);
+    zone.addEventListener("mouseleave", quitter);
+    zone.addEventListener("touchstart", bouger, {passive:true});
+    zone.addEventListener("touchmove",  bouger, {passive:true});
+    zone.addEventListener("touchend",   quitter);
+  }
+};
+
+/* ==================================================================
+   [F] OUTILS
+   Chaque outil est un objet autonome :
+     id       — utilisé dans l'adresse (#/calculateur)
+     cle      — clé de stockage (préfixée "mhx_")
+     nom      — libellé dans la navigation
+     icone    — emoji de la navigation
+     titre    — grand titre de la page
+     accroche — phrase d'introduction
+     html()   — le contenu de la page
+     init()   — branche les interactions ; peut renvoyer une fonction
+                de nettoyage appelée quand on quitte l'outil
+   ================================================================== */
+
+/* ------------------------------------------------------------------
+   OUTIL 1 — Calculateur métabolique
+   ------------------------------------------------------------------ */
+const outilCalculateur = {
+  id: "calculateur",
+  cle: "calc",
+  nom: "Calculateur",
+  icone: "🔥",
+  titre: "Calculateur métabolique",
+  accroche: "Tes calories de maintenance et tes macros, calculées sur ta morphologie et ton niveau d'activité réel. Tout se met à jour en direct.",
+
+  html(){
+    return `
+    <section class="panel">
+      <h2>Tes données</h2>
+      <div class="grid g2">
+        <div>
+          <label for="sexe">Sexe</label>
+          <div class="seg" id="sexe" role="group" aria-label="Sexe">
+            <button type="button" data-v="H">Homme</button>
+            <button type="button" data-v="F">Femme</button>
+          </div>
+        </div>
+        <div><label for="age">Âge (ans)</label><input id="age" type="number" min="14" max="90" step="1"></div>
+        <div><label for="taille">Taille (cm)</label><input id="taille" type="number" min="130" max="220" step="1"></div>
+        <div><label for="poids">Poids (kg)</label><input id="poids" type="number" min="35" max="250" step="0.1"></div>
+        <div><label for="pas">Pas par jour</label><input id="pas" type="number" min="0" max="30000" step="500"></div>
+        <div><label for="heures">Entraînement (h / semaine)</label><input id="heures" type="number" min="0" max="25" step="0.5"></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Ta maintenance</h2>
+      <div class="hero"><span class="readout hero-num" id="tdee">—</span><span class="unit">kcal / jour</span></div>
+      <p class="note" style="margin:10px 0 20px">C'est ce que ton corps dépense sur une journée type. Manger ça, c'est rester au même poids.</p>
+      <h3>Choisis ton objectif</h3>
+      <div class="obj-grid" id="objs">
+        <button class="obj" type="button" data-k="perte"><span class="lbl">Perte de poids −10%</span><span class="val readout" id="v-perte">—</span></button>
+        <button class="obj" type="button" data-k="maintien"><span class="lbl">Maintien</span><span class="val readout" id="v-maintien">—</span></button>
+        <button class="obj" type="button" data-k="prise"><span class="lbl">Prise de masse +10%</span><span class="val readout" id="v-prise">—</span></button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Tes macros — <span id="obj-name">maintien</span></h2>
+      <div class="grid g3">
+        <div class="macro"><div class="m-top"><span class="m-name">Protéines</span><span class="m-g readout" id="g-prot">—</span></div><div class="bar"><i id="b-prot" style="background:var(--s1)"></i></div><span class="m-sub" id="s-prot"></span></div>
+        <div class="macro"><div class="m-top"><span class="m-name">Lipides</span><span class="m-g readout" id="g-lip">—</span></div><div class="bar"><i id="b-lip" style="background:var(--s2)"></i></div><span class="m-sub" id="s-lip"></span></div>
+        <div class="macro"><div class="m-top"><span class="m-name">Glucides</span><span class="m-g readout" id="g-gluc">—</span></div><div class="bar"><i id="b-gluc" style="background:var(--s3)"></i></div><span class="m-sub" id="s-gluc"></span></div>
+      </div>
+      <p class="note" style="margin-top:14px">Grammes par jour. Protéines fixées à ${CONFIG.calcul.proteines_g_par_kg} g par kg de poids de corps, lipides à ${CONFIG.calcul.lipides_g_par_kg} g par kg, les glucides complètent le total de calories de ton objectif.</p>
+      <div id="flag" class="flag" hidden></div>
+      <details>
+        <summary>Comment ces chiffres sont calculés</summary>
+        <p class="note" style="margin-top:12px"><strong>1. Métabolisme de base</strong> — formule de Mifflin-St Jeor, la référence actuelle :<br><span class="readout" id="f-bmr"></span></p>
+        <p class="note"><strong>2. Facteur d'activité</strong> — on part d'une base sédentaire de ${String(CONFIG.calcul.facteur_base).replace(".",",")}, puis on ajoute ton activité réelle :<br><span class="readout" id="f-fact"></span></p>
+        <p class="note"><strong>3. Maintenance</strong> = métabolisme de base × facteur d'activité = <span class="readout" id="f-tdee"></span></p>
+        <p class="note">Ces formules donnent une estimation solide, pas une vérité absolue. La vraie mesure, c'est la balance : garde le même apport pendant 2 semaines, et si ton poids ne bouge pas dans le sens voulu, ajuste de 150 à 200 kcal.</p>
+      </details>
+    </section>`;
+  },
+
+  /* --- le calcul, isolé pour pouvoir être modifié sans toucher au reste --- */
+  metabolismeDeBase(d){
+    const b = 10*d.poids + 6.25*d.taille - 5*d.age;
+    return d.sexe === "H" ? b + 5 : b - 161;
+  },
+  facteurActivite(d){
+    const c = CONFIG.calcul;
+    const parPas    = Math.min(d.pas, c.plafond_pas)/10000 * c.bonus_10000_pas;
+    const parHeures = Math.min(d.heures, c.plafond_heures) * c.bonus_par_heure;
+    return { total: c.facteur_base + parPas + parHeures, parPas, parHeures };
+  },
+  macros(kcal, poids){
+    const c = CONFIG.calcul;
+    const prot = c.proteines_g_par_kg * poids;
+    const lip  = c.lipides_g_par_kg  * poids;
+    const gluc = (kcal - prot*4 - lip*9) / 4;
+    return { prot, lip, gluc: Math.max(gluc, 0), glucBrut: gluc };
+  },
+
+  async init(){
+    const c = CONFIG.calcul;
+    const D = await Store.lire(this.cle, Object.assign({ objectif:"maintien" }, c.valeurs_depart));
+    const self = this;
+    const sauver = () => Store.ecrire(self.cle, D);
+
+    const rendre = () => {
+      const B = self.metabolismeDeBase(D);
+      const F = self.facteurActivite(D);
+      const T = B * F.total;
+      const cibles = { perte: T*(1-c.deficit_perte), maintien: T, prise: T*(1+c.surplus_prise) };
+
+      $("tdee").textContent = fmt(T);
+      $("v-perte").textContent = fmt(cibles.perte);
+      $("v-maintien").textContent = fmt(cibles.maintien);
+      $("v-prise").textContent = fmt(cibles.prise);
+
+      const kc = cibles[D.objectif];
+      const m = self.macros(kc, D.poids);
+      const flag = $("flag");
+      if (m.glucBrut < c.seuil_alerte_glucides){
+        flag.hidden = false;
+        flag.textContent = "À ce niveau de calories, il ne reste presque plus de place pour les glucides. Baisse les protéines à 2 g/kg ou revois ton objectif à la hausse — s'entraîner dur sans glucides ne tient pas dans la durée.";
+      } else flag.hidden = true;
+
+      const kp = m.prot*4, kl = m.lip*9, kg = m.gluc*4, tot = kp+kl+kg || 1;
+      $("g-prot").textContent = fmt(m.prot);  $("g-lip").textContent = fmt(m.lip);  $("g-gluc").textContent = fmt(m.gluc);
+      $("s-prot").textContent = `${fmt(kp)} kcal · ${Math.round(kp/tot*100)}%`;
+      $("s-lip").textContent  = `${fmt(kl)} kcal · ${Math.round(kl/tot*100)}%`;
+      $("s-gluc").textContent = `${fmt(kg)} kcal · ${Math.round(kg/tot*100)}%`;
+      $("b-prot").style.width = (kp/tot*100)+"%";
+      $("b-lip").style.width  = (kl/tot*100)+"%";
+      $("b-gluc").style.width = (kg/tot*100)+"%";
+      $("obj-name").textContent = { perte:"perte de poids", maintien:"maintien", prise:"prise de masse" }[D.objectif];
+
+      const signe = D.sexe === "H" ? "+ 5" : "− 161";
+      $("f-bmr").textContent  = `(10 × ${D.poids}) + (6,25 × ${D.taille}) − (5 × ${D.age}) ${signe} = ${fmt(B)} kcal`;
+      $("f-fact").textContent = `${String(c.facteur_base).replace(".",",")} + ${F.parPas.toFixed(2).replace(".",",")} (pas) + ${F.parHeures.toFixed(2).replace(".",",")} (entraînement) = ${F.total.toFixed(2).replace(".",",")}`;
+      $("f-tdee").textContent = `${fmt(B)} × ${F.total.toFixed(2).replace(".",",")} = ${fmt(T)} kcal / jour`;
+      sauver();
+    };
+
+    ["age","taille","poids","pas","heures"].forEach(k => {
+      const e = $(k); e.value = D[k];
+      e.addEventListener("input", () => { const v = parseFloat(e.value); if (isFinite(v)) D[k] = v; rendre(); });
+    });
+    $$("#sexe button").forEach(b => {
+      b.setAttribute("aria-pressed", String(b.dataset.v === D.sexe));
+      b.addEventListener("click", () => {
+        D.sexe = b.dataset.v;
+        $$("#sexe button").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.v === D.sexe)));
+        rendre();
+      });
+    });
+    $$("#objs button").forEach(b => {
+      b.setAttribute("aria-pressed", String(b.dataset.k === D.objectif));
+      b.addEventListener("click", () => {
+        D.objectif = b.dataset.k;
+        $$("#objs button").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.k === D.objectif)));
+        rendre();
+      });
+    });
+    rendre();
+  }
+};
+
+/* ------------------------------------------------------------------
+   OUTIL 2 — Suivi des mensurations
+   ------------------------------------------------------------------ */
+const outilMensurations = {
+  id: "mensurations",
+  cle: "mens",
+  nom: "Mensurations",
+  icone: "📏",
+  titre: "Suivi des mensurations",
+  accroche: "Ton poids et tes tours de taille semaine après semaine. Les courbes se tracent toutes seules à partir de ce que tu saisis.",
+  couleurs: ["var(--s1)","var(--s2)","var(--s3)","var(--s4)"],
+
+  html(){
+    return `
+    <section class="panel">
+      <h2>Ton point de départ</h2>
+      <div class="grid g2">
+        <div><label for="dstart">Date de départ</label><input id="dstart" type="date"></div>
+        <div><label for="pstart">Poids de départ (kg)</label><input id="pstart" type="number" step="0.1" min="30" max="300" placeholder="80"></div>
+      </div>
+      <details>
+        <summary>Renommer les zones que tu mesures</summary>
+        <div class="grid g2" id="zone-edit" style="margin-top:14px"></div>
+        <p class="note" style="margin-top:10px">Mesure toujours au même endroit, le matin, à jeun, sans tirer sur le mètre. La régularité compte plus que la précision absolue.</p>
+      </details>
+    </section>
+
+    <section class="panel">
+      <h2>Où tu en es</h2>
+      <div class="tiles">
+        <div class="tile"><div class="t-lbl">Poids actuel</div><div class="t-val readout" id="k-poids">—</div><div class="t-sub" id="k-poids-d">Pas encore de mesure</div></div>
+        <div class="tile"><div class="t-lbl">Variation de poids</div><div class="t-val readout" id="k-delta">—</div><div class="t-sub">depuis le départ</div></div>
+        <div class="tile"><div class="t-lbl">Centimètres perdus</div><div class="t-val readout" id="k-cm">—</div><div class="t-sub">toutes zones cumulées</div></div>
+        <div class="tile"><div class="t-lbl">Semaines suivies</div><div class="t-val readout" id="k-sem">0</div><div class="t-sub" id="k-sem-sub">Commence cette semaine</div></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Nouvelle mesure</h2>
+      <div class="grid g2">
+        <div><label for="e-sem">Semaine</label><input id="e-sem" type="number" min="0" step="1"></div>
+        <div><label for="e-date">Date</label><input id="e-date" type="date"></div>
+        <div><label for="e-poids">Poids (kg)</label><input id="e-poids" type="number" step="0.1" min="30" max="300"></div>
+      </div>
+      <h3 style="margin-top:20px">Mensurations (cm)</h3>
+      <div class="grid g3" id="entry-zones"></div>
+      <div class="actions"><button class="btn" id="add">Enregistrer la semaine</button><span class="msg" id="msg"></span></div>
+    </section>
+
+    <section class="panel">
+      <h2>Courbe de poids</h2>
+      <div class="chartbox"><svg class="chart" id="chart-poids" role="img" aria-label="Évolution du poids semaine par semaine"></svg><div class="tip" id="tip-poids"></div></div>
+    </section>
+
+    <section class="panel">
+      <h2>Courbes de mensurations</h2>
+      <div class="chips" id="chips"></div>
+      <div class="chartbox"><svg class="chart" id="chart-mens" role="img" aria-label="Évolution des mensurations semaine par semaine"></svg><div class="tip" id="tip-mens"></div></div>
+      <div class="legend" id="legend"></div>
+      <p class="note" style="margin-top:10px">${CONFIG.mensurations.max_courbes} zones maximum à l'écran — au-delà les courbes deviennent illisibles.</p>
+    </section>
+
+    <section class="panel">
+      <h2>Toutes tes mesures</h2>
+      <div class="scroll"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+    </section>`;
+  },
+
+  async init(){
+    const cfg = CONFIG.mensurations, self = this;
+    const D = await Store.lire(this.cle, {
+      dstart:"", pstart:null,
+      zones: cfg.zones.slice(),
+      affichees: cfg.zones_affichees_au_depart.slice(),
+      mesures: []
+    });
+    const sauver = () => Store.ecrire(self.cle, D);
+
+    const serieDuPoids = () => {
+      const pts = [];
+      if (D.pstart != null && isFinite(D.pstart)) pts.push({x:0, y:D.pstart});
+      D.mesures.forEach(m => { if (m.poids != null && isFinite(m.poids)) pts.push({x:m.sem, y:m.poids}); });
+      return pts.sort((a,b) => a.x-b.x);
+    };
+    const serieDeZone = i => D.mesures
+      .filter(m => m.vals[i] != null && isFinite(m.vals[i]))
+      .map(m => ({x:m.sem, y:m.vals[i]}))
+      .sort((a,b) => a.x-b.x);
+
+    const construireZones = () => {
+      const b = $("zone-edit"); b.innerHTML = "";
+      D.zones.forEach((z,i) => {
+        const d = document.createElement("div");
+        d.innerHTML = `<label for="z${i}">Zone ${i+1}</label><input id="z${i}" type="text">`;
+        b.appendChild(d);
+        const inp = d.querySelector("input"); inp.value = z;
+        inp.addEventListener("input", () => {
+          D.zones[i] = inp.value || ("Zone "+(i+1));
+          sauver(); construireChips(); construireSaisie(); dessinerTable(); tout();
+        });
+      });
+    };
+    const construireSaisie = () => {
+      const b = $("entry-zones"); b.innerHTML = "";
+      D.zones.forEach((z,i) => {
+        const d = document.createElement("div");
+        d.innerHTML = `<label for="ez${i}">${esc(z)}</label><input id="ez${i}" type="number" step="0.1" min="0" max="300" placeholder="cm">`;
+        b.appendChild(d);
+      });
+    };
+    const semaineSuivante = () => D.mesures.length ? Math.max(...D.mesures.map(m => m.sem)) + 1 : 1;
+    const viderFormulaire = () => {
+      $("e-sem").value = semaineSuivante();
+      $("e-date").value = aujourdhui();
+      $("e-poids").value = "";
+      D.zones.forEach((z,i) => { const e = $("ez"+i); if (e) e.value = ""; });
+    };
+
+    const construireChips = () => {
+      const c = $("chips"); c.innerHTML = "";
+      D.zones.forEach((z,i) => {
+        const rang = D.affichees.indexOf(i), actif = rang > -1;
+        const b = document.createElement("button");
+        b.type = "button"; b.className = "chip"; b.setAttribute("aria-pressed", String(actif));
+        b.innerHTML = `<span class="dot"${actif ? ` style="background:${self.couleurs[rang]}"` : ""}></span>${esc(z)}`;
+        b.addEventListener("click", () => {
+          const k = D.affichees.indexOf(i);
+          if (k > -1) D.affichees.splice(k,1);
+          else {
+            if (D.affichees.length >= cfg.max_courbes){ flash("msg", `${cfg.max_courbes} zones maximum à l'écran.`); return; }
+            D.affichees.push(i);
+          }
+          sauver(); construireChips(); tout();
+        });
+        c.appendChild(b);
+      });
+    };
+
+    const dessinerKPI = () => {
+      const w = serieDuPoids(), dernier = w[w.length-1];
+      $("k-poids").textContent = dernier ? n1(dernier.y) : "—";
+      $("k-poids-d").textContent = dernier ? ("semaine "+dernier.x) : "Pas encore de mesure";
+      const d = $("k-delta");
+      if (w.length > 1){
+        const dd = w[w.length-1].y - w[0].y;
+        d.textContent = (dd > 0 ? "+" : "−") + n1(Math.abs(dd));
+        d.className = "t-val readout " + (dd < 0 ? "pos" : dd > 0 ? "neg" : "");
+      } else { d.textContent = "—"; d.className = "t-val readout"; }
+      let total = 0, trouve = false;
+      D.zones.forEach((z,i) => { const s = serieDeZone(i); if (s.length > 1){ total += s[0].y - s[s.length-1].y; trouve = true; } });
+      const c = $("k-cm");
+      c.textContent = trouve ? ((total >= 0 ? "−" : "+") + n1(Math.abs(total))) : "—";
+      c.className = "t-val readout " + (trouve ? (total > 0 ? "pos" : total < 0 ? "neg" : "") : "");
+      $("k-sem").textContent = D.mesures.length;
+      $("k-sem-sub").textContent = D.mesures.length ? ("dernière : semaine " + D.mesures[D.mesures.length-1].sem) : "Commence cette semaine";
+    };
+
+    const dessinerLegende = sel => {
+      const l = $("legend"); l.innerHTML = "";
+      sel.forEach(s => { const sp = document.createElement("span"); sp.innerHTML = `<i style="background:${s.couleur}"></i>${esc(s.nom)}`; l.appendChild(sp); });
+    };
+
+    const dessinerTable = () => {
+      const th = $("thead"), tb = $("tbody");
+      th.innerHTML = `<tr><th>Semaine</th><th>Date</th><th>Poids</th>${D.zones.map(z => `<th>${esc(z)}</th>`).join("")}<th></th></tr>`;
+      tb.innerHTML = "";
+      if (!D.mesures.length){
+        tb.innerHTML = `<tr><td colspan="${D.zones.length+4}" class="empty">Aucune mesure enregistrée pour le moment.</td></tr>`;
+        return;
+      }
+      D.mesures.forEach((m, idx) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>S${m.sem}</td><td>${esc(m.date || "—")}</td><td>${m.poids != null ? n1(m.poids) : "—"}</td>` +
+          D.zones.map((z,i) => `<td>${(m.vals[i] != null && isFinite(m.vals[i])) ? n1(m.vals[i]) : "—"}</td>`).join("") +
+          `<td><button class="del" aria-label="Supprimer la semaine ${m.sem}">×</button></td>`;
+        tr.querySelector(".del").addEventListener("click", () => {
+          D.mesures.splice(idx,1); sauver(); dessinerTable(); tout(); viderFormulaire();
+        });
+        tb.appendChild(tr);
+      });
+    };
+
+    const tout = () => {
+      dessinerKPI();
+      Graphique.dessiner("chart-poids","tip-poids",[{nom:"Poids",couleur:"var(--s1)",points:serieDuPoids()}],"kg");
+      const sel = D.affichees.map((i,k) => ({nom:D.zones[i], couleur:self.couleurs[k], points:serieDeZone(i)}));
+      Graphique.dessiner("chart-mens","tip-mens", sel, "cm");
+      dessinerLegende(sel.filter(s => s.points.length));
+    };
+
+    $("dstart").value = D.dstart || "";
+    $("pstart").value = D.pstart == null ? "" : D.pstart;
+    $("dstart").addEventListener("input", function(){ D.dstart = this.value; sauver(); });
+    $("pstart").addEventListener("input", function(){ const v = parseFloat(this.value); D.pstart = isFinite(v) ? v : null; sauver(); tout(); });
+
+    $("add").addEventListener("click", () => {
+      const sem = parseInt($("e-sem").value, 10);
+      const poids = parseFloat($("e-poids").value);
+      if (!isFinite(sem)){ flash("msg","Indique un numéro de semaine."); return; }
+      const vals = {}; let une = false;
+      D.zones.forEach((z,i) => { const v = parseFloat($("ez"+i).value); if (isFinite(v)){ vals[i] = v; une = true; } });
+      if (!isFinite(poids) && !une){ flash("msg","Renseigne au moins ton poids ou une mensuration."); return; }
+      D.mesures = D.mesures.filter(m => m.sem !== sem);
+      D.mesures.push({ sem, date: $("e-date").value || "", poids: isFinite(poids) ? poids : null, vals });
+      D.mesures.sort((a,b) => a.sem - b.sem);
+      sauver(); viderFormulaire(); dessinerTable(); tout();
+      flash("msg", `Semaine ${sem} enregistrée.`);
+    });
+
+    construireZones(); construireSaisie(); construireChips(); dessinerTable(); viderFormulaire(); tout();
+
+    let t; const redim = () => { clearTimeout(t); t = setTimeout(tout, 150); };
+    window.addEventListener("resize", redim);
+    return () => window.removeEventListener("resize", redim);
+  }
+};
+
+/* ------------------------------------------------------------------
+   OUTIL 3 — Journal d'entraînement
+   ------------------------------------------------------------------ */
+const outilEntrainement = {
+  id: "entrainement",
+  cle: "perf",
+  nom: "Entraînement",
+  icone: "🏋️",
+  titre: "Journal d'entraînement",
+  accroche: "Tes séances, tes charges et tes répétitions. À chaque séance enregistrée, l'outil te rappelle ce que tu avais fait la fois d'avant — c'est comme ça qu'on progresse pour de vrai.",
+
+  /* --- fabriques : servent aussi à réinitialiser --- */
+  nouvelExercice(plage){
+    return {
+      nom:"", plage: plage || "10-12",
+      series: Array.from({length: CONFIG.entrainement.nb_series}, () => ({r:"", c:""})),
+      obs:"", lien:""
+    };
+  },
+  nouvelleSeance(i){
+    return { nom: "Séance " + (i+1), ex: CONFIG.entrainement.modele_seance.map(p => this.nouvelExercice(p)) };
+  },
+
+  /* --- calculs, isolés --- */
+  volumeExercice(e){ return e.series.reduce((v,s) => v + num(s.r)*num(s.c), 0); },
+  chargeMax(e){ return e.series.reduce((m,s) => Math.max(m, num(s.c)), 0); },
+  seriesRemplies(e){ return e.series.filter(s => num(s.r) > 0 && num(s.c) > 0).length; },
+  volumeSeance(sc){ return sc.ex.reduce((v,e) => v + this.volumeExercice(e), 0); },
+
+  html(){
+    return `
+    <div class="tabs" id="tabs"></div>
+
+    <section class="panel">
+      <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:end;justify-content:space-between;margin-bottom:18px">
+        <div style="flex:1;min-width:220px"><label for="snom">Nom de la séance</label><input id="snom" type="text" placeholder="Ex. Haut du corps"></div>
+        <div><label for="sdate">Date</label><input id="sdate" type="date"></div>
+      </div>
+      <div class="tiles">
+        <div class="tile"><div class="t-lbl">Volume de la séance</div><div class="t-val readout" id="k-vol">0</div><div class="t-sub">kg soulevés au total</div></div>
+        <div class="tile"><div class="t-lbl">Séries effectuées</div><div class="t-val readout" id="k-set">0</div><div class="t-sub">séries remplies</div></div>
+        <div class="tile"><div class="t-lbl">Vs séance précédente</div><div class="t-val readout" id="k-cmp">—</div><div class="t-sub" id="k-cmp-s">Aucun historique</div></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Tes exercices</h2>
+      <div id="exos"></div>
+      <div class="actions">
+        <button class="btn ghost" id="addexo">+ Ajouter un exercice</button>
+        <button class="btn" id="savesess">Enregistrer la séance</button>
+        <span class="msg" id="msg"></span>
+      </div>
+      <p class="note" style="margin-top:12px">Le volume, c'est répétitions × charge, additionné sur toutes tes séries. C'est l'indicateur le plus fiable de ta progression : si ton volume monte de semaine en semaine, tu progresses, même quand la charge maximale stagne.</p>
+    </section>
+
+    <section class="panel">
+      <h2>Historique</h2>
+      <div class="scroll"><table><thead><tr><th>Date</th><th>Séance</th><th>Exercices</th><th>Séries</th><th>Volume</th><th></th></tr></thead><tbody id="hist"></tbody></table></div>
+    </section>`;
+  },
+
+  async init(){
+    const cfg = CONFIG.entrainement, self = this;
+    const D = await Store.lire(this.cle, {
+      courante: 0, date: "",
+      seances: Array.from({length: cfg.nb_seances}, (_,i) => self.nouvelleSeance(i)),
+      historique: []
+    });
+    const sauver = () => Store.ecrire(self.cle, D);
+
+    const derniereSeance = si => {
+      for (let i = D.historique.length-1; i >= 0; i--) if (D.historique[i].si === si) return D.historique[i];
+      return null;
+    };
+    const dernierExercice = (si, nom) => {
+      const h = derniereSeance(si);
+      if (!h || !nom) return null;
+      return h.exos.find(x => x.nom && x.nom.toLowerCase() === nom.toLowerCase()) || null;
+    };
+
+    const construireOnglets = () => {
+      const t = $("tabs"); t.innerHTML = "";
+      D.seances.forEach((sc,i) => {
+        const b = document.createElement("button");
+        b.type = "button"; b.className = "tab"; b.setAttribute("aria-pressed", String(i === D.courante));
+        b.textContent = sc.nom || ("Séance " + (i+1));
+        b.addEventListener("click", () => {
+          D.courante = i; sauver();
+          construireOnglets(); construireExercices(); $("snom").value = D.seances[i].nom; dessinerKPI();
+        });
+        t.appendChild(b);
+      });
+    };
+
+    const construireExercices = () => {
+      const box = $("exos"); box.innerHTML = "";
+      const sc = D.seances[D.courante];
+      if (!sc.ex.length){ box.innerHTML = '<div class="empty">Aucun exercice. Ajoute le premier ci-dessous.</div>'; return; }
+
+      sc.ex.forEach((e,i) => {
+        const d = document.createElement("div"); d.className = "exo";
+        const options = Object.keys(cfg.plages)
+          .map(p => `<option value="${p}"${p === e.plage ? " selected" : ""}>${p} reps</option>`).join("");
+        const series = e.series.map((s,j) => `
+          <div class="set">
+            <div class="s-lbl">Série ${j+1}</div>
+            <div class="pair">
+              <input type="number" min="0" max="100" step="1" placeholder="reps" value="${esc(s.r)}" data-e="${i}" data-s="${j}" data-f="r">
+              <input type="number" min="0" step="0.5" placeholder="kg" value="${esc(s.c)}" data-e="${i}" data-s="${j}" data-f="c">
+            </div>
+            <div class="cap">reps · kg</div>
+          </div>`).join("");
+        const prec = dernierExercice(D.courante, e.nom);
+        let badge = "";
+        if (prec){
+          const v = self.volumeExercice(e), delta = v - prec.vol;
+          const cls = v === 0 ? "same" : delta > 0 ? "up" : delta < 0 ? "down" : "same";
+          badge = `<span class="prev ${cls}">Dernière fois : ${fmt(prec.vol)} kg de volume · max ${fmt(prec.max)} kg</span>`;
+        }
+        d.innerHTML = `
+          <div class="exo-head">
+            <div><label>Exercice</label><input type="text" placeholder="Ex. Développé couché" value="${esc(e.nom)}" data-e="${i}" data-f="nom"></div>
+            <div><label>Répétitions</label><select data-e="${i}" data-f="plage">${options}</select></div>
+            <div><button class="del" data-del="${i}" aria-label="Supprimer cet exercice">×</button></div>
+          </div>
+          <div class="sets">${series}</div>
+          <div class="extra">
+            <div><label>Observations</label><input type="text" placeholder="Sensations, douleurs, technique…" value="${esc(e.obs)}" data-e="${i}" data-f="obs"></div>
+            <div><label>Lien vidéo</label><input type="url" placeholder="https://" value="${esc(e.lien)}" data-e="${i}" data-f="lien"></div>
+          </div>
+          <div class="exo-foot">
+            <span class="stat">Volume <b>${fmt(self.volumeExercice(e))}</b> kg</span>
+            <span class="stat">Charge max <b>${fmt(self.chargeMax(e))}</b> kg</span>
+            ${badge}
+            ${e.lien ? `<a class="link-a" href="${esc(e.lien)}" target="_blank" rel="noopener">Voir la vidéo →</a>` : ""}
+          </div>`;
+        box.appendChild(d);
+      });
+
+      $$("[data-f]", box).forEach(el => {
+        const evt = el.tagName === "SELECT" ? "change" : "input";
+        el.addEventListener(evt, () => {
+          const e = D.seances[D.courante].ex[+el.dataset.e], f = el.dataset.f;
+          if (f === "r" || f === "c") e.series[+el.dataset.s][f] = el.value;
+          else e[f] = el.value;
+          sauver(); dessinerKPI();
+          if (f === "nom" || f === "plage" || f === "lien"){
+            const pos = el.selectionStart;
+            construireExercices();
+            const rendu = $("exos").querySelector(`[data-e="${el.dataset.e}"][data-f="${f}"]`);
+            if (rendu){ rendu.focus(); try { rendu.setSelectionRange(pos, pos); } catch(x){} }
+          } else rafraichirPied(+el.dataset.e);
+        });
+      });
+      $$("[data-del]", box).forEach(b => {
+        b.addEventListener("click", () => {
+          D.seances[D.courante].ex.splice(+b.dataset.del, 1);
+          sauver(); construireExercices(); dessinerKPI();
+        });
+      });
+    };
+
+    const rafraichirPied = i => {
+      const e = D.seances[D.courante].ex[i];
+      const carte = $("exos").children[i]; if (!carte) return;
+      const st = carte.querySelectorAll(".exo-foot .stat b");
+      if (st[0]) st[0].textContent = fmt(self.volumeExercice(e));
+      if (st[1]) st[1].textContent = fmt(self.chargeMax(e));
+      const pv = carte.querySelector(".prev"), prec = dernierExercice(D.courante, e.nom);
+      if (pv && prec){
+        const v = self.volumeExercice(e), delta = v - prec.vol;
+        pv.className = "prev " + (v === 0 ? "same" : delta > 0 ? "up" : delta < 0 ? "down" : "same");
+      }
+    };
+
+    const dessinerKPI = () => {
+      const sc = D.seances[D.courante];
+      const vol = self.volumeSeance(sc);
+      const series = sc.ex.reduce((n,e) => n + self.seriesRemplies(e), 0);
+      $("k-vol").textContent = fmt(vol);
+      $("k-set").textContent = series;
+      const h = derniereSeance(D.courante), c = $("k-cmp"), cs = $("k-cmp-s");
+      if (h && h.vol > 0 && vol > 0){
+        const delta = vol - h.vol, pct = Math.round(delta / h.vol * 100);
+        c.textContent = (delta > 0 ? "+" : delta < 0 ? "−" : "") + Math.abs(pct) + "%";
+        c.className = "t-val readout " + (delta > 0 ? "pos" : delta < 0 ? "neg" : "");
+        cs.textContent = `dernière : ${fmt(h.vol)} kg le ${h.date || "—"}`;
+      } else {
+        c.textContent = "—"; c.className = "t-val readout";
+        cs.textContent = h ? `dernière : ${fmt(h.vol)} kg` : "Aucun historique";
+      }
+    };
+
+    const dessinerHistorique = () => {
+      const tb = $("hist"); tb.innerHTML = "";
+      if (!D.historique.length){
+        tb.innerHTML = '<tr><td colspan="6" class="empty">Aucune séance enregistrée pour le moment.</td></tr>';
+        return;
+      }
+      D.historique.slice().reverse().forEach(h => {
+        const idx = D.historique.indexOf(h);
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${esc(h.date)}</td><td>${esc(h.nom)}</td><td>${h.exos.length}</td><td>${h.series || 0}</td><td>${fmt(h.vol)} kg</td>` +
+                       `<td><button class="del" aria-label="Supprimer cette séance">×</button></td>`;
+        tr.querySelector(".del").addEventListener("click", () => {
+          D.historique.splice(idx,1); sauver(); dessinerHistorique(); construireExercices(); dessinerKPI();
+        });
+        tb.appendChild(tr);
+      });
+    };
+
+    $("addexo").addEventListener("click", () => {
+      D.seances[D.courante].ex.push(self.nouvelExercice("10-12"));
+      sauver(); construireExercices();
+    });
+    $("snom").addEventListener("input", function(){ D.seances[D.courante].nom = this.value; sauver(); construireOnglets(); });
+    $("sdate").addEventListener("input", function(){ D.date = this.value; sauver(); });
+
+    $("savesess").addEventListener("click", () => {
+      const sc = D.seances[D.courante];
+      const vol = self.volumeSeance(sc);
+      if (vol <= 0){ flash("msg","Remplis au moins une série (reps et charge) avant d'enregistrer."); return; }
+      const exos = []; let series = 0;
+      sc.ex.forEach(e => {
+        if (self.volumeExercice(e) > 0){
+          exos.push({ nom: e.nom || "Sans nom", vol: self.volumeExercice(e), max: self.chargeMax(e) });
+          series += self.seriesRemplies(e);
+        }
+      });
+      D.historique.push({ date: $("sdate").value || aujourdhui(), si: D.courante, nom: sc.nom, exos, series, vol });
+      D.historique.sort((a,b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+      sauver(); dessinerHistorique(); construireExercices(); dessinerKPI();
+      flash("msg","Séance enregistrée. Tes charges restent affichées pour la prochaine fois.");
+    });
+
+    $("sdate").value = D.date || aujourdhui();
+    $("snom").value = D.seances[D.courante].nom;
+    construireOnglets(); construireExercices(); dessinerHistorique(); dessinerKPI();
+  }
+};
+
+/* ------------------------------------------------------------------
+   OUTIL — Mon profil (questionnaire de depart)
+   Rempli par le client a sa premiere connexion, consultable par le coach.
+   Pour ajouter/retirer une question : modifier QUESTIONS ci-dessous.
+   ------------------------------------------------------------------ */
+const QUESTIONS = [
+  { section:"1 · Identité & logistique" },
+  { id:"nom",        label:"Prénom et nom", type:"texte", requis:true },
+  { id:"age",        label:"Âge", type:"nombre", requis:true },
+  { id:"ville",      label:"Ville / Pays", type:"texte" },
+  { id:"fuseau",     label:"Fuseau horaire", type:"texte" },
+  { id:"email",      label:"Email", type:"texte" },
+  { id:"whatsapp",   label:"Numéro WhatsApp (avec indicatif)", type:"texte" },
+  { id:"metier",     label:"Ton métier et ton rythme de travail", type:"long",
+    aide:"Horaires, déplacements, poste sédentaire ou physique." },
+  { id:"taille",     label:"Taille (cm)", type:"nombre", requis:true },
+  { id:"poids",      label:"Poids actuel (kg)", type:"nombre", requis:true },
+  { id:"poids_obj",  label:"Poids objectif (kg)", type:"nombre" },
+  { soustitre:"Mensurations du jour (cm)", aide:"Le matin à jeun, mètre bien à plat, sans serrer." },
+  { id:"m_taille",   label:"Taille", type:"nombre" },
+  { id:"m_hanches",  label:"Hanches", type:"nombre" },
+  { id:"m_cuisse",   label:"Cuisse", type:"nombre" },
+  { id:"m_bras",     label:"Bras", type:"nombre" },
+  { id:"m_poitrine", label:"Poitrine", type:"nombre" },
+  { id:"photos",     label:"Photos de départ envoyées ?", type:"select", options:["Pas encore","Oui, envoyées"],
+    aide:"À envoyer par WhatsApp : face, profil, dos — tenue ajustée, même lumière, même endroit. Elles servent uniquement au suivi et ne sont jamais publiées sans ton accord écrit." },
+
+  { section:"2 · Ton objectif" },
+  { id:"objectif",   label:"Quel est ton objectif principal ?", type:"select", requis:true,
+    options:["Perte de poids / sèche","Prise de muscle","Recomposition (perdre du gras + prendre du muscle)","Performance / condition physique","Santé & énergie au quotidien"] },
+  { id:"objectif_phrase", label:"Décris ton objectif en une phrase, avec un chiffre si possible", type:"long",
+    aide:"Ex : perdre 8 kg d'ici décembre, tenir 10 tractions, retrouver de l'énergie l'après-midi." },
+  { id:"echeance",   label:"Y a-t-il une échéance précise ?", type:"texte",
+    aide:"Vacances, mariage, compétition, shooting." },
+  { id:"pourquoi",   label:"Pourquoi maintenant ? Qu'est-ce qui a déclenché ta décision ?", type:"long" },
+  { id:"pret",       label:"À quel point es-tu prêt à changer tes habitudes ?", type:"echelle",
+    aide:"1 = très faible · 10 = maximum" },
+  { id:"echecs",     label:"Qu'est-ce qui t'a fait échouer par le passé, selon toi ?", type:"long" },
+
+  { section:"3 · Santé & antécédents" },
+  { id:"blessures",  label:"Blessures actuelles ou passées", type:"long",
+    aide:"Dos, genoux, épaules, hernies, opérations… précise l'année et l'état actuel." },
+  { id:"pathologies",label:"Problèmes de santé, pathologies ou traitements médicaux en cours", type:"long" },
+  { id:"suivi_pro",  label:"Es-tu suivi actuellement par un professionnel de santé ?", type:"long",
+    aide:"Médecin, kiné, nutritionniste, psychologue…" },
+  { id:"contre_ind", label:"As-tu une contre-indication médicale au sport ou à un changement alimentaire ?", type:"select",
+    options:["Non","Oui"] },
+  { id:"contre_ind_detail", label:"Si oui, précise", type:"long" },
+  { id:"douleurs",   label:"Douleurs ou limitations sur certains mouvements", type:"long",
+    aide:"Squat, développé, tractions, course, amplitude d'épaule…" },
+  { id:"cycle",      label:"Pour les femmes : cycle régulier ? Grossesse, post-partum ou contraception à prendre en compte ?", type:"long" },
+  { id:"rapport_nourriture", label:"Y a-t-il un antécédent de trouble du comportement alimentaire, ou une relation compliquée avec la nourriture, dont je dois tenir compte ?", type:"long",
+    aide:"Facultatif, et aucune obligation de détailler. Cela me permet simplement d'adapter mon approche et, si besoin, de t'orienter vers un professionnel de santé." },
+
+  { section:"4 · Pratique sportive" },
+  { id:"niveau",     label:"Quel est ton niveau ?", type:"select", requis:true,
+    options:["Débutant (0 à 6 mois)","Intermédiaire (6 mois à 2 ans)","Avancé (2 ans et +)"] },
+  { id:"activite",   label:"Que fais-tu comme activité physique actuellement ?", type:"long",
+    aide:"Type, fréquence, depuis quand." },
+  { id:"lieu",       label:"Où vas-tu t'entraîner ?", type:"select", requis:true,
+    options:["Salle complète","Salle basique","À la maison","Extérieur"] },
+  { id:"materiel",   label:"Si à la maison : quel matériel as-tu ?", type:"long" },
+  { id:"seances",    label:"Combien de séances par semaine peux-tu RÉELLEMENT tenir ?", type:"select", requis:true,
+    options:["2","3","4","5","6"],
+    aide:"Sois réaliste : mieux vaut 3 séances tenues que 5 prévues et 2 faites." },
+  { id:"duree",      label:"Durée maximum par séance", type:"select", options:["30 min","45 min","60 min","90 min"] },
+  { id:"creneaux",   label:"Quels jours et à quel moment de la journée ?", type:"long" },
+  { id:"gouts",      label:"Exercices ou types de séances que tu détestes / que tu adores", type:"long" },
+  { id:"cardio",     label:"Fais-tu du cardio ? Lequel, combien de fois par semaine ?", type:"long" },
+  { id:"pas",        label:"Nombre de pas moyen par jour (si tu le suis)", type:"nombre" },
+
+  { section:"5 · Alimentation" },
+  { id:"journee_type", label:"Décris une journée type de repas", type:"long", requis:true, grand:true,
+    aide:"Petit-déjeuner, déjeuner, dîner, collations, boissons — avec les quantités approximatives. C'est la question la plus importante du questionnaire : prends 5 minutes dessus." },
+  { id:"repas_horaires", label:"Combien de repas par jour, et à quels horaires ?", type:"long" },
+  { id:"cuisine",    label:"Qui cuisine ? Combien de temps peux-tu y consacrer par jour ?", type:"long" },
+  { id:"exterieur",  label:"Combien de fois par semaine manges-tu à l'extérieur ou au restaurant ?", type:"texte" },
+  { id:"allergies",  label:"Allergies, intolérances, régime particulier", type:"long",
+    aide:"Végétarien, vegan, halal, sans lactose, sans gluten…" },
+  { id:"jamais",     label:"Aliments que tu ne mangeras jamais, quoi qu'il arrive", type:"long" },
+  { id:"indispensable", label:"Aliments dont tu ne veux surtout pas te passer", type:"long" },
+  { id:"grignotage", label:"Grignotage : quand et pourquoi ?", type:"long",
+    aide:"Ennui, stress, fatigue, soir devant un écran, après le travail…" },
+  { id:"alcool",     label:"Alcool : fréquence et quantité", type:"texte" },
+  { id:"eau",        label:"Eau par jour (L)", type:"nombre" },
+  { id:"cafes",      label:"Cafés par jour", type:"nombre" },
+  { id:"sodas",      label:"Sodas, jus par jour", type:"nombre" },
+  { id:"complements",label:"Compléments alimentaires actuels", type:"long",
+    aide:"Protéine, créatine, vitamines, oméga 3…" },
+  { id:"regimes",    label:"As-tu déjà suivi un régime ou compté tes calories ? Avec quel résultat ?", type:"long" },
+  { id:"budget",     label:"As-tu des contraintes de budget alimentaire ?", type:"long" },
+
+  { section:"6 · Mode de vie" },
+  { id:"sommeil_h",  label:"Heures de sommeil / nuit", type:"nombre" },
+  { id:"coucher",    label:"Heure de coucher", type:"texte" },
+  { id:"lever",      label:"Heure de lever", type:"texte" },
+  { id:"qualite_sommeil", label:"Qualité de ton sommeil", type:"echelle", aide:"1 = très faible · 10 = maximum" },
+  { id:"stress",     label:"Niveau de stress au quotidien", type:"echelle", aide:"1 = très faible · 10 = maximum" },
+  { id:"stress_src", label:"Source principale de ce stress", type:"texte" },
+  { id:"energie",    label:"Niveau d'énergie dans la journée", type:"echelle", aide:"1 = très faible · 10 = maximum" },
+  { id:"coup_barre", label:"À quel moment de la journée as-tu tes coups de barre ?", type:"texte" },
+  { id:"famille",    label:"Situation familiale et contraintes horaires", type:"long",
+    aide:"Enfants, vie de couple, horaires imposés…" },
+  { id:"entourage",  label:"Ton entourage va-t-il soutenir ta démarche ou la compliquer ?", type:"long" },
+  { id:"fume",       label:"Fumes-tu ?", type:"select", options:["Non","Occasionnellement","Oui, quotidiennement"] }
+];
+
+const outilProfil = {
+  id: "profil",
+  cle: "intake",
+  nom: "Mon profil",
+  icone: "📝",
+  titre: "Ton profil",
+  accroche: "Plus tes réponses sont précises, plus ton programme sera adapté. Ne cherche pas la bonne réponse : cherche la vraie. Compte 10 à 15 minutes.",
+
+  champ(q, valeur){
+    const v = valeur == null ? "" : valeur;
+    if (q.type === "echelle"){
+      let o = '<option value="">—</option>';
+      for (let n = 1; n <= 10; n++) o += `<option value="${n}"${String(v) === String(n) ? " selected" : ""}>${n}</option>`;
+      return `<select id="q-${q.id}" data-q="${q.id}">${o}</select>`;
+    }
+    if (q.type === "select"){
+      return `<select id="q-${q.id}" data-q="${q.id}">
+        <option value=""${v === "" ? " selected" : ""}>— choisis —</option>
+        ${q.options.map(o => `<option value="${esc(o)}"${v === o ? " selected" : ""}>${esc(o)}</option>`).join("")}
+      </select>`;
+    }
+    if (q.type === "long")   return `<textarea id="q-${q.id}" data-q="${q.id}" rows="${q.grand ? 6 : 2}">${esc(v)}</textarea>`;
+    if (q.type === "nombre") return `<input id="q-${q.id}" data-q="${q.id}" type="number" step="0.1" value="${esc(v)}">`;
+    if (q.type === "date")   return `<input id="q-${q.id}" data-q="${q.id}" type="date" value="${esc(v)}">`;
+    return `<input id="q-${q.id}" data-q="${q.id}" type="text" value="${esc(v)}">`;
+  },
+
+  html(){
+    const D = Store.cache["intake"] || {};
+    let corps = "", ouverte = false;
+    QUESTIONS.forEach(q => {
+      if (q.section){
+        if (ouverte) corps += `</div></section>`;
+        corps += `<section class="panel"><h2>${esc(q.section)}</h2><div class="grid g2">`;
+        ouverte = true;
+        return;
+      }
+      if (q.soustitre){
+        corps += `<div style="grid-column:1/-1"><h3 style="margin-top:8px">${esc(q.soustitre)}</h3>${q.aide ? `<p class="note" style="margin:-4px 0 0">${esc(q.aide)}</p>` : ""}</div>`;
+        return;
+      }
+      const large = (q.type === "long" || q.grand) ? ' style="grid-column:1/-1"' : "";
+      corps += `<div${large}>
+        <label for="q-${q.id}">${esc(q.label)}${q.requis ? " *" : ""}</label>
+        ${q.aide ? `<p class="note" style="margin:-2px 0 8px">${esc(q.aide)}</p>` : ""}
+        ${this.champ(q, D[q.id])}</div>`;
+    });
+    if (ouverte) corps += `</div></section>`;
+    return corps + `
+    <section class="panel">
+      <div class="actions">
+        <button class="btn" id="p-save">Enregistrer mon profil</button>
+        <span class="msg" id="p-msg"></span>
+      </div>
+      <p class="note" style="margin-top:10px">Les questions marquées d'une étoile sont indispensables. Tu peux revenir modifier tes réponses à tout moment.</p>
+    </section>`;
+  },
+
+  async init(){
+    const D = await Store.lire(this.cle, {});
+    Store.cache[this.cle] = D;
+
+    /* si le cache etait vide au moment du rendu, on re-remplit les champs */
+    QUESTIONS.forEach(q => {
+      if (!q.id) return;
+      const el = $("q-" + q.id);
+      if (el && D[q.id] != null && el.value !== D[q.id]) el.value = D[q.id];
+    });
+
+    const enregistrer = () => {
+      QUESTIONS.forEach(q => { if (!q.id) return; const el = $("q-" + q.id); if (el) D[q.id] = el.value; });
+      const manquants = QUESTIONS.filter(q => q.requis && !D[q.id]);
+      D.complet = manquants.length === 0;
+      Store.ecrire(this.cle, D);
+      return manquants;
+    };
+
+    $$("[data-q]").forEach(el => el.addEventListener("change", () => enregistrer()));
+
+    $("p-save").addEventListener("click", () => {
+      const manquants = enregistrer();
+      if (manquants.length){
+        flash("p-msg", "Il manque : " + manquants.map(q => q.label).join(", "));
+        return;
+      }
+      flash("p-msg", "Profil enregistré. Ton coach le voit de son côté.");
+      if (premiereFois){ premiereFois = false; setTimeout(() => { location.hash = "#/calculateur"; }, 900); }
+    });
+  }
+};
+
+/* ------------------------------------------------------------------
+   OUTIL — Le programme d'entrainement
+   Le coach l'ecrit depuis la fiche du client ; le client le lit.
+   ------------------------------------------------------------------ */
+const outilProgramme = {
+  id: "programme",
+  cle: "programme",
+  nom: "Mon programme",
+  icone: "📋",
+  titre: "Le programme",
+  accroche: "Les séances construites pour toi : les exercices, les séries, les répétitions et les temps de repos.",
+
+  seanceVide(n){ return { nom: "Séance " + String.fromCharCode(64 + n), note: "", exercices: [ this.exoVide() ] }; },
+  exoVide(){ return { nom:"", series:"", reps:"", repos:"", tempo:"", note:"", lien:"" }; },
+
+  /* ---------- vue client : lecture ---------- */
+  vueLecture(P){
+    if (!P.seances || !P.seances.length){
+      return `<section class="panel"><div class="empty">Ton coach n'a pas encore déposé ton programme. Tu recevras un message quand il sera prêt.</div></section>`;
+    }
+    let h = "";
+    if (P.note) h += `<section class="panel"><h2>Mot du coach</h2><p style="margin:0">${esc(P.note)}</p></section>`;
+    P.seances.forEach(sc => {
+      h += `<section class="panel"><h2>${esc(sc.nom || "Séance")}</h2>`;
+      if (sc.note) h += `<p class="note" style="margin:-8px 0 14px">${esc(sc.note)}</p>`;
+      (sc.exercices || []).forEach(e => {
+        if (!e.nom) return;
+        h += `<div class="ex-lecture">
+          <div class="haut">
+            <span class="nom">${esc(e.nom)}</span>
+            ${e.series ? `<span class="chiffre"><b>${esc(e.series)}</b> séries</span>` : ""}
+            ${e.reps ? `<span class="chiffre"><b>${esc(e.reps)}</b> reps</span>` : ""}
+            ${e.repos ? `<span class="chiffre">repos <b>${esc(e.repos)}</b></span>` : ""}
+            ${e.tempo ? `<span class="chiffre">tempo <b>${esc(e.tempo)}</b></span>` : ""}
+          </div>
+          ${e.note ? `<div class="obs">${esc(e.note)}</div>` : ""}
+          ${e.lien ? `<a class="link-a" href="${esc(e.lien)}" target="_blank" rel="noopener">Voir la démonstration →</a>` : ""}
+        </div>`;
+      });
+      h += `</section>`;
+    });
+    if (P.maj) h += `<p class="note" style="text-align:center">Programme mis à jour le ${esc(P.maj)}</p>`;
+    return h;
+  },
+
+  /* ---------- vue coach : edition ---------- */
+  vueEdition(P){
+    let h = `<section class="panel">
+      <h2>Réglages du programme</h2>
+      <div class="grid g2">
+        <div><label for="pg-nom">Nom du programme</label><input id="pg-nom" type="text" value="${esc(P.nom || "")}" placeholder="Ex. Bloc 1 — 4 semaines"></div>
+        <div><label for="pg-biblio">Charger depuis ma bibliothèque</label><select id="pg-biblio"><option value="">— choisis un entraînement —</option></select></div>
+        <div style="grid-column:1/-1"><label for="pg-note">Mot pour ton client</label><textarea id="pg-note" rows="2" placeholder="Consignes générales, priorités du bloc…">${esc(P.note || "")}</textarea></div>
+      </div>
+    </section>`;
+
+    (P.seances || []).forEach((sc, si) => {
+      h += `<section class="panel seance">
+        <div class="seance-tete">
+          <div><label>Nom de la séance</label><input type="text" data-s="${si}" data-f="nom" value="${esc(sc.nom || "")}" placeholder="Séance A — Haut du corps"></div>
+          <button class="del" data-suppr-s="${si}" aria-label="Supprimer la séance">×</button>
+        </div>
+        <div style="margin-bottom:12px"><label>Note sur la séance</label><input type="text" data-s="${si}" data-f="note" value="${esc(sc.note || "")}" placeholder="Échauffement 10 min avant"></div>`;
+
+      (sc.exercices || []).forEach((e, ei) => {
+        h += `<div class="ex-ligne">
+          <div class="nom-c"><label>Exercice</label><input type="text" data-s="${si}" data-e="${ei}" data-f="nom" value="${esc(e.nom)}" placeholder="Développé couché"></div>
+          <div><label>Séries</label><input type="text" data-s="${si}" data-e="${ei}" data-f="series" value="${esc(e.series)}" placeholder="4"></div>
+          <div><label>Reps</label><input type="text" data-s="${si}" data-e="${ei}" data-f="reps" value="${esc(e.reps)}" placeholder="8-10"></div>
+          <div><label>Repos</label><input type="text" data-s="${si}" data-e="${ei}" data-f="repos" value="${esc(e.repos)}" placeholder="90 s"></div>
+          <div><button class="del" data-suppr-e="${si}:${ei}" aria-label="Supprimer l'exercice">×</button></div>
+          <div class="plein" style="display:grid;grid-template-columns:110px 1fr 1fr;gap:10px">
+            <div><label>Tempo</label><input type="text" data-s="${si}" data-e="${ei}" data-f="tempo" value="${esc(e.tempo)}" placeholder="3-0-1"></div>
+            <div><label>Consigne</label><input type="text" data-s="${si}" data-e="${ei}" data-f="note" value="${esc(e.note)}" placeholder="Descente contrôlée"></div>
+            <div><label>Lien vidéo</label><input type="url" data-s="${si}" data-e="${ei}" data-f="lien" value="${esc(e.lien)}" placeholder="https://"></div>
+          </div>
+        </div>`;
+      });
+
+      h += `<div class="actions"><button class="btn ghost" data-ajout-e="${si}">+ Ajouter un exercice</button></div></section>`;
+    });
+
+    h += `<section class="panel">
+      <div class="actions">
+        <button class="btn ghost" id="pg-ajout-s">+ Ajouter une séance</button>
+        <button class="btn" id="pg-save">Envoyer au client</button>
+        <button class="btn ghost" id="pg-biblio-save">Enregistrer dans ma bibliothèque</button>
+        <span class="msg" id="pg-msg"></span>
+      </div>
+      <p class="note" style="margin-top:10px">Tout est enregistré automatiquement au fil de la saisie. « Envoyer au client » date le programme et le lui rend visible immédiatement.</p>
+    </section>`;
+    return h;
+  },
+
+  html(){
+    return `<div id="prog-vue"><section class="panel"><div class="empty">Chargement…</div></section></div>`;
+  },
+
+  async init(){
+    const self = this;
+    const edition = Auth.estCoach() && Store.idConsulte;
+    const P = await Store.lire(this.cle, { nom:"", note:"", seances:[], maj:"" });
+    Store.cache[this.cle] = P;
+    const zone = $("prog-vue");
+    if (!zone) return;
+
+    const sauver = () => Store.ecrire(self.cle, P);
+
+    if (!edition){ zone.innerHTML = self.vueLecture(P); return; }
+
+    const redessiner = () => { zone.innerHTML = self.vueEdition(P); brancher(); };
+
+    const brancher = () => {
+      $$("[data-f]", zone).forEach(el => {
+        el.addEventListener("input", () => {
+          const si = +el.dataset.s, f = el.dataset.f;
+          if (el.dataset.e === undefined) P.seances[si][f] = el.value;
+          else P.seances[si].exercices[+el.dataset.e][f] = el.value;
+          sauver();
+        });
+      });
+      const n = $("pg-nom"), no = $("pg-note");
+      if (n)  n.addEventListener("input", () => { P.nom = n.value; sauver(); });
+      if (no) no.addEventListener("input", () => { P.note = no.value; sauver(); });
+
+      $$("[data-ajout-e]", zone).forEach(b => b.addEventListener("click", () => {
+        P.seances[+b.dataset.ajoutE].exercices.push(self.exoVide()); sauver(); redessiner();
+      }));
+      $$("[data-suppr-e]", zone).forEach(b => b.addEventListener("click", () => {
+        const [si, ei] = b.dataset.supprE.split(":").map(Number);
+        P.seances[si].exercices.splice(ei, 1); sauver(); redessiner();
+      }));
+      $$("[data-suppr-s]", zone).forEach(b => b.addEventListener("click", () => {
+        P.seances.splice(+b.dataset.supprS, 1); sauver(); redessiner();
+      }));
+      const as = $("pg-ajout-s");
+      if (as) as.addEventListener("click", () => { P.seances.push(self.seanceVide(P.seances.length + 1)); sauver(); redessiner(); });
+
+      const save = $("pg-save");
+      if (save) save.addEventListener("click", () => {
+        P.maj = new Date().toLocaleDateString("fr-FR");
+        Store.ecrire(self.cle, P);
+        flash("pg-msg", "Programme envoyé. Ton client le voit dès sa prochaine ouverture.");
+      });
+
+      const bs = $("pg-biblio-save");
+      if (bs) bs.addEventListener("click", async () => {
+        const nom = prompt("Sous quel nom l'enregistrer dans ta bibliothèque ?", P.nom || "Entraînement");
+        if (!nom) return;
+        try {
+          await Auth.appel("/rest/v1/bibliotheque", {
+            method: "POST",
+            headers: { "Prefer": "return=minimal" },
+            body: [{ coach_id: Auth.utilisateur().id, nom, note: P.note || "", contenu: { seances: P.seances } }]
+          });
+          flash("pg-msg", "Enregistré dans ta bibliothèque.");
+          chargerBiblio();
+        } catch(e){ flash("pg-msg", "Enregistrement impossible."); }
+      });
+
+      chargerBiblio();
+    };
+
+    const chargerBiblio = async () => {
+      const sel = $("pg-biblio"); if (!sel) return;
+      try {
+        const l = await Auth.appel("/rest/v1/bibliotheque?select=id,nom&order=cree_le.desc");
+        sel.innerHTML = `<option value="">— choisis un entraînement —</option>` +
+          (l || []).map(x => `<option value="${x.id}">${esc(x.nom)}</option>`).join("");
+        sel.onchange = async () => {
+          if (!sel.value) return;
+          if (!confirm("Charger cet entraînement ? Il remplacera les séances actuelles de ce client.")) { sel.value = ""; return; }
+          const r = await Auth.appel("/rest/v1/bibliotheque?id=eq." + sel.value + "&select=contenu,nom,note");
+          if (r && r[0]){
+            P.seances = JSON.parse(JSON.stringify(r[0].contenu.seances || []));
+            if (!P.nom) P.nom = r[0].nom;
+            sauver(); redessiner();
+          }
+        };
+      } catch(e){}
+    };
+
+    redessiner();
+  }
+};
+
+/* ------------------------------------------------------------------
+   OUTIL COACH — Ma bibliotheque d'entrainements
+   ------------------------------------------------------------------ */
+const outilBibliotheque = {
+  id: "bibliotheque",
+  cle: null,
+  nom: "Bibliothèque",
+  icone: "📚",
+  role: "coach",
+  titre: "Ma bibliothèque",
+  accroche: "Tes entraînements enregistrés, prêts à être réutilisés. Depuis la fiche d'un client, tu les charges en deux clics.",
+
+  html(){
+    return `<section class="panel">
+      <h2>Mes entraînements</h2>
+      <div id="bib-liste"><div class="empty">Chargement…</div></div>
+      <p class="note" style="margin-top:14px">Pour en ajouter un : ouvre la fiche d'un client, construis son programme, puis clique sur « Enregistrer dans ma bibliothèque ».</p>
+    </section>`;
+  },
+
+  async init(){
+    const box = $("bib-liste");
+    const charger = async () => {
+      try {
+        const l = await Auth.appel("/rest/v1/bibliotheque?select=*&order=cree_le.desc");
+        if (!l || !l.length){ box.innerHTML = '<div class="empty">Ta bibliothèque est vide pour le moment.</div>'; return; }
+        box.innerHTML = "";
+        l.forEach(x => {
+          const nbS = (x.contenu && x.contenu.seances) ? x.contenu.seances.length : 0;
+          const nbE = (x.contenu && x.contenu.seances) ? x.contenu.seances.reduce((n,s) => n + ((s.exercices||[]).filter(e=>e.nom).length), 0) : 0;
+          const el = document.createElement("div");
+          el.className = "biblio-l";
+          el.innerHTML = `<span class="nom">${esc(x.nom)}</span>
+            <span class="meta">${nbS} séance${nbS>1?"s":""} · ${nbE} exercice${nbE>1?"s":""}</span>
+            <span class="actions-b"><button data-suppr="${x.id}">Supprimer</button></span>`;
+          el.querySelector("[data-suppr]").addEventListener("click", async () => {
+            if (!confirm("Supprimer « " + x.nom + " » de ta bibliothèque ?")) return;
+            try { await Auth.appel("/rest/v1/bibliotheque?id=eq." + x.id, { method:"DELETE", headers:{ "Prefer":"return=minimal" } }); charger(); }
+            catch(e){}
+          });
+          box.appendChild(el);
+        });
+      } catch(e){ box.innerHTML = '<div class="empty">Impossible de charger la bibliothèque.</div>'; }
+    };
+    charger();
+  }
+};
+
+/* ------------------------------------------------------------------
+   OUTIL COACH — Mes clients (invisible pour les clients)
+   ------------------------------------------------------------------ */
+const outilClients = {
+  id: "clients",
+  cle: null,
+  nom: "Mes clients",
+  icone: "👥",
+  role: "coach",          // n'apparait que pour le coach
+  titre: "Mes clients",
+  accroche: "Tous tes clients et leurs données, en direct. Ouvre une fiche pour voir ses courbes, ses charges et ses macros telles qu'il les a saisies.",
+
+  html(){
+    return `
+    <section class="panel">
+      <h2>Comptes actifs</h2>
+      <div id="liste-clients"><div class="empty">Chargement…</div></div>
+    </section>
+
+    <section class="panel">
+      <h2>Créer un accès client</h2>
+      <p class="note" style="margin-bottom:16px">Le client recevra ces identifiants. Il pourra changer son mot de passe lui-même depuis l'écran de connexion.</p>
+      <div class="grid g2">
+        <div><label for="n-prenom">Prénom</label><input id="n-prenom" type="text"></div>
+        <div><label for="n-nom">Nom</label><input id="n-nom" type="text"></div>
+        <div><label for="n-email">Email</label><input id="n-email" type="email"></div>
+        <div><label for="n-mdp">Mot de passe provisoire</label><input id="n-mdp" type="text"></div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="n-creer">Créer le compte</button>
+        <button class="btn ghost" id="n-gen">Générer un mot de passe</button>
+        <span class="msg" id="n-msg"></span>
+      </div>
+    </section>`;
+  },
+
+  async init(){
+    const self = this;
+
+    const charger = async () => {
+      const box = $("liste-clients");
+      try {
+        const profils = await Auth.appel("/rest/v1/profils?select=*&order=cree_le.desc");
+        const donnees = await Auth.appel("/rest/v1/donnees?select=user_id,outil,maj_le");
+        const parClient = {};
+        (donnees || []).forEach(d => {
+          if (!parClient[d.user_id] || d.maj_le > parClient[d.user_id]) parClient[d.user_id] = d.maj_le;
+        });
+        const clients = (profils || []).filter(p => p.role !== "coach");
+        if (!clients.length){ box.innerHTML = '<div class="empty">Aucun client pour le moment. Crée le premier accès ci-dessous.</div>'; return; }
+        box.innerHTML = "";
+        clients.forEach(p => {
+          const d = parClient[p.id];
+          const quand = d ? new Date(d).toLocaleDateString("fr-FR") : "jamais";
+          const el = document.createElement("div");
+          el.className = "client-l";
+          el.innerHTML = `<span class="nom">${esc(((p.prenom||"") + " " + (p.nom||"")).trim() || "Sans nom")}</span>
+                          <span class="pastille">${d ? "actif" : "pas encore utilisé"}</span>
+                          <span class="meta">dernière saisie : ${quand}</span>
+                          <button class="voir" type="button">Ouvrir sa fiche</button>`;
+          el.querySelector(".voir").addEventListener("click", () => {
+            Store.idConsulte = p.id;
+            Store.nomConsulte = ((p.prenom||"") + " " + (p.nom||"")).trim() || "ce client";
+            location.hash = "#/mensurations";
+          });
+          box.appendChild(el);
+        });
+      } catch(e){ box.innerHTML = '<div class="empty">Impossible de charger la liste.</div>'; }
+    };
+
+    $("n-gen").addEventListener("click", () => {
+      const a = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      let m = ""; for (let i=0;i<10;i++) m += a[Math.floor(Math.random()*a.length)];
+      $("n-mdp").value = m;
+    });
+
+    $("n-creer").addEventListener("click", async () => {
+      const prenom = $("n-prenom").value.trim(), nom = $("n-nom").value.trim();
+      const email = $("n-email").value.trim(), mdp = $("n-mdp").value;
+      if (!email || !mdp){ flash("n-msg","Il faut au moins un email et un mot de passe."); return; }
+      if (mdp.length < 6){ flash("n-msg","Le mot de passe doit faire au moins 6 caractères."); return; }
+      const sessionCoach = Auth.session;          // on met la session du coach de côté
+      try {
+        await Auth.inscrire(email, mdp, prenom, nom);
+        Auth.session = sessionCoach;              // on la restaure : on reste connecté en coach
+        try { localStorage.setItem(Auth.cleSession, JSON.stringify(sessionCoach)); } catch(e){}
+        $("n-prenom").value = $("n-nom").value = $("n-email").value = $("n-mdp").value = "";
+        flash("n-msg", "Compte créé. Transmets-lui ses identifiants.");
+        charger();
+      } catch(e){
+        Auth.session = sessionCoach;
+        flash("n-msg", e.message || "Création impossible.");
+      }
+    });
+
+    charger();
+  }
+};
+
+/* ------------------------------------------------------------------
+   LISTE DES OUTILS — ajouter un objet ici suffit à créer un onglet
+   ------------------------------------------------------------------ */
+const OUTILS = [outilProfil, outilProgramme, outilCalculateur, outilMensurations, outilEntrainement, outilBibliotheque, outilClients];
+
+/* ==================================================================
+   [G] NAVIGATION, CONNEXION ET DEMARRAGE
+   Chaque outil a sa propre adresse : #/calculateur, #/mensurations,
+   #/entrainement. Le coach voit en plus #/clients.
+   ================================================================== */
+let courant = OUTILS[0].id;
+let nettoyage = null;
+
+function outilsVisibles(){
+  return OUTILS.filter(o => !o.role || (o.role === "coach" && Auth.estCoach()));
+}
+
+function construireNav(){
+  const nav = $("nav");
+  nav.innerHTML = outilsVisibles().map(o =>
+    `<a href="#/${o.id}" data-id="${o.id}"><span class="ico" aria-hidden="true">${o.icone}</span>${esc(o.nom)}</a>`
+  ).join("");
+  $("brand-name").textContent = CONFIG.marque.nom;
+  $("brand-sub").textContent  = CONFIG.marque.programme;
+  $("foot-left").textContent  = `${CONFIG.marque.programme} — ${CONFIG.marque.nom}`;
+  $("foot-right").innerHTML   = `Une question ? <a href="${CONFIG.marque.instagram}" target="_blank" rel="noopener">${esc(CONFIG.marque.pseudo)}</a> · ${esc(CONFIG.marque.email)}`;
+
+  const p = Auth.profil, u = Auth.utilisateur();
+  const nom = p && (p.prenom || p.nom) ? ((p.prenom || "") + " " + (p.nom || "")).trim() : (u ? u.email : "");
+  $("qui").textContent = nom + (Auth.estCoach() ? " · coach" : "");
+  $("compte").hidden = false;
+  $("deco").onclick = () => Auth.deconnecter();
+}
+
+function marquerNav(id){
+  $$("#nav a").forEach(a => {
+    if (a.dataset.id === id) a.setAttribute("aria-current","page");
+    else a.removeAttribute("aria-current");
+  });
+}
+
+function bandeauConsultation(){
+  if (!Store.idConsulte) return "";
+  return `<div class="bandeau">
+    <strong>Fiche de ${esc(Store.nomConsulte || "ce client")}</strong>
+    <span class="note">Lecture seule — tu vois ses données telles qu'il les a saisies.</span>
+    <button class="sortir" type="button" id="sortir-fiche">Revenir à mes clients</button>
+  </div>`;
+}
+
+async function afficher(id, silencieux){
+  const dispo = outilsVisibles();
+  const outil = dispo.find(o => o.id === id) || dispo[0];
+  courant = outil.id;
+  if (nettoyage){ nettoyage(); nettoyage = null; }
+
+  if (outil.role === "coach"){ Store.idConsulte = null; Store.nomConsulte = null; }
+
+  $("vue").innerHTML = `
+    ${bandeauConsultation()}
+    <header class="masthead">
+      <span class="eyebrow">${esc(CONFIG.marque.programme)} — ${esc(outil.nom)}</span>
+      <h1>${esc(outil.titre)}</h1>
+      <p class="lede">${esc(outil.accroche)}</p>
+    </header>
+    ${outil.html()}
+    ${outil.cle ? blocSauvegarde() : ""}`;
+
+  const modifiable = !Store.idConsulte || (Auth.estCoach() && outil.id === "programme");
+  $("vue").className = modifiable ? "wrap" : "wrap lecture-seule";
+
+  nettoyage = (await outil.init()) || null;
+  if (outil.cle){ initSauvegarde(); }
+  const sortir = $("sortir-fiche");
+  if (sortir) sortir.addEventListener("click", () => {
+    Store.idConsulte = null; Store.nomConsulte = null; location.hash = "#/clients";
+  });
+
+  marquerNav(outil.id);
+  if (!silencieux) window.scrollTo(0, 0);
+}
+
+function routeDepuisAdresse(){
+  let id = (location.hash || "").replace(/^#\/?/, "");
+  if (id.indexOf("=") > -1 || id.indexOf("&") > -1) id = "";
+  afficher(outilsVisibles().some(o => o.id === id) ? id : outilsVisibles()[0].id);
+}
+
+/* ---------------------- ÉCRAN DE CONNEXION ---------------------- */
+function portail(mode){
+  mode = mode || "connexion";
+  document.body.innerHTML = `
+  <div class="portail">
+    <div class="carte-co">
+      <div class="logo">${esc(CONFIG.marque.nom)}</div>
+      <div class="sous">${esc(CONFIG.marque.programme)}</div>
+      <h2>${mode === "connexion" ? "Connexion à ton espace" : mode === "oubli" ? "Mot de passe oublié" : "Créer mon accès"}</h2>
+      <div id="co-err"></div>
+      ${mode === "inscription" ? `
+        <div class="champ"><label for="c-prenom">Prénom</label><input id="c-prenom" type="text" autocomplete="given-name"></div>
+        <div class="champ"><label for="c-nom">Nom</label><input id="c-nom" type="text" autocomplete="family-name"></div>` : ""}
+      <div class="champ"><label for="c-email">Email</label><input id="c-email" type="email" autocomplete="email"></div>
+      ${mode !== "oubli" ? `<div class="champ"><label for="c-mdp">Mot de passe</label><input id="c-mdp" type="password" autocomplete="${mode === "inscription" ? "new-password" : "current-password"}"></div>` : ""}
+      ${mode === "inscription" ? `<div class="champ"><label for="c-mdp2">Confirme ton mot de passe</label><input id="c-mdp2" type="password" autocomplete="new-password"></div>` : ""}
+      <button class="btn" id="c-go">${mode === "connexion" ? "Se connecter" : mode === "oubli" ? "Recevoir le lien" : "Créer mon accès"}</button>
+      <div class="bascule">
+        ${mode === "connexion"
+          ? `<button type="button" data-mode="oubli">Mot de passe oublié ?</button>`
+          : `<button type="button" data-mode="connexion">Retour à la connexion</button>`}
+      </div>
+    </div>
+  </div>`;
+
+  const err = (msg, ok) => { const e = $("co-err"); e.className = "erreur" + (ok ? " ok" : ""); e.textContent = msg; };
+
+  $$("[data-mode]").forEach(b => b.addEventListener("click", () => portail(b.dataset.mode)));
+
+  const valider = async () => {
+    const email = ($("c-email").value || "").trim();
+    const mdp = $("c-mdp") ? $("c-mdp").value : "";
+    if (!email){ err("Indique ton email."); return; }
+    const bouton = $("c-go"); bouton.disabled = true; bouton.textContent = "Un instant…";
+    try {
+      if (mode === "oubli"){
+        await Auth.motDePasseOublie(email);
+        err("Si un compte existe pour cet email, tu vas recevoir un lien.", true);
+      } else if (mode === "inscription"){
+        if (mdp.length < 6) throw new Error("Le mot de passe doit faire au moins 6 caractères.");
+        if (mdp !== $("c-mdp2").value) throw new Error("Les deux mots de passe ne sont pas identiques.");
+        await Auth.inscrire(email, mdp, ($("c-prenom").value||"").trim(), ($("c-nom").value||"").trim());
+        location.reload();
+      } else {
+        await Auth.connecter(email, mdp);
+        location.reload();
+      }
+    } catch(e){
+      const m = (e.message || "").toLowerCase();
+      err(m.indexOf("invalid") > -1 ? "Email ou mot de passe incorrect."
+        : m.indexOf("password") > -1 ? "Le mot de passe doit faire au moins 6 caractères."
+        : e.message || "Une erreur est survenue.");
+    }
+    bouton.disabled = false;
+    bouton.textContent = mode === "connexion" ? "Se connecter" : mode === "oubli" ? "Recevoir le lien" : "Créer mon accès";
+  };
+
+  $("c-go").addEventListener("click", valider);
+  document.addEventListener("keydown", e => { if (e.key === "Enter") valider(); });
+}
+
+/* ---------------------- NOUVEAU MOT DE PASSE ----------------------
+   Quand le client clique sur le lien recu par email, Supabase le renvoie
+   ici avec un jeton dans l'adresse. On lui fait choisir son mot de passe. */
+function lireAdresse(){
+  const h = (location.hash || "").replace(/^#\/?/, "");
+  const p = {};
+  h.split("&").forEach(kv => {
+    const [k, v] = kv.split("=");
+    if (k) p[decodeURIComponent(k)] = decodeURIComponent((v || "").replace(/\+/g, " "));
+  });
+  return p;
+}
+
+function ecranNouveauMotDePasse(jeton){
+  document.body.innerHTML = `
+  <div class="portail">
+    <div class="carte-co">
+      <div class="logo">${esc(CONFIG.marque.nom)}</div>
+      <div class="sous">${esc(CONFIG.marque.programme)}</div>
+      <h2>Choisis ton nouveau mot de passe</h2>
+      <div id="co-err"></div>
+      <div class="champ"><label for="r-mdp">Nouveau mot de passe</label><input id="r-mdp" type="password" autocomplete="new-password"></div>
+      <div class="champ"><label for="r-mdp2">Confirme-le</label><input id="r-mdp2" type="password" autocomplete="new-password"></div>
+      <button class="btn" id="r-go">Enregistrer</button>
+    </div>
+  </div>`;
+  const err = (m, ok) => { const e = $("co-err"); e.className = "erreur" + (ok ? " ok" : ""); e.textContent = m; };
+  $("r-go").addEventListener("click", async () => {
+    const a = $("r-mdp").value, b = $("r-mdp2").value;
+    if (a.length < 6){ err("Le mot de passe doit faire au moins 6 caractères."); return; }
+    if (a !== b){ err("Les deux mots de passe ne sont pas identiques."); return; }
+    const bouton = $("r-go"); bouton.disabled = true; bouton.textContent = "Un instant…";
+    try {
+      await fetch(CONFIG.supabase.url + "/auth/v1/user", {
+        method: "PUT",
+        headers: { "apikey": CONFIG.supabase.cle, "Content-Type": "application/json", "Authorization": "Bearer " + jeton },
+        body: JSON.stringify({ password: a })
+      }).then(async r => { if (!r.ok) throw new Error((await r.json()).msg || "Lien expiré."); });
+      err("Mot de passe enregistré. Tu peux te connecter.", true);
+      setTimeout(() => { location.hash = ""; location.reload(); }, 1400);
+    } catch(e){
+      err(e.message || "Ce lien n'est plus valable. Redemande-en un depuis « Mot de passe oublié ».");
+      bouton.disabled = false; bouton.textContent = "Enregistrer";
+    }
+  });
+}
+
+/* ---------------------- DÉMARRAGE ---------------------- */
+let premiereFois = false;
+
+(async function demarrer(){
+  const p = lireAdresse();
+
+  /* lien de reinitialisation recu par email */
+  if (p.type === "recovery" && p.access_token){ ecranNouveauMotDePasse(p.access_token); return; }
+  if (p.error_description){
+    Auth.oublier();
+    portail("connexion");
+    setTimeout(() => { const e = $("co-err"); if (e){ e.className = "erreur"; e.textContent = p.error_description; } }, 60);
+    return;
+  }
+
+  Auth.charger();
+  const veutSinscrire = (location.hash || "").indexOf("inscription") > -1;
+  if (!Auth.connecte()){ portail(veutSinscrire ? "inscription" : "connexion"); return; }
+  const ok = await Auth.assurer();
+  if (!ok){ portail("connexion"); return; }
+  try { await Auth.chargerProfil(); } catch(e){}
+
+  construireNav();
+  window.addEventListener("hashchange", routeDepuisAdresse);
+
+  /* Premiere connexion d'un client : on l'envoie remplir son profil */
+  if (!Auth.estCoach()){
+    const intake = await Store.lire("intake", {});
+    if (!intake || !intake.complet){
+      premiereFois = true;
+      location.hash = "#/profil";
+      await afficher("profil");
+      const v = $("vue");
+      const mot = document.createElement("div");
+      mot.className = "bandeau";
+      mot.innerHTML = `<strong>Bienvenue !</strong><span class="note">Commence par remplir ton profil : c'est ce qui permet à ton coach de construire ton suivi.</span>`;
+      v.insertBefore(mot, v.firstChild);
+      return;
+    }
+  }
+
+  routeDepuisAdresse();
+})();
+</script>
