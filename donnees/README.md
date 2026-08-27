@@ -19,3 +19,6 @@ Brancher ces JSON dans l’app (côté Claude, `index.html`).
 
 ## rayons.json
 Rayons magasin pour la liste de courses. Chaque rayon liste les `categorie` de `aliments.json`. L’app additionne les ingrédients du plan et les range ici.
+
+## aliments-off.json
+12000 produits Open Food Facts vendus en France, macros complètes, ids `off-` + code-barres. Licence ODbL. Complément des 3109 CIQUAL, pas un remplacement.
