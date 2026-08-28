@@ -415,6 +415,31 @@ const CONFIG = {
     ],
     facteur_min: 0.6,   // on ne descend pas une recette en dessous de 60 % de sa portion
     facteur_max: 2.0,   // ni au dessus du double
+
+    /* Ajustement fin aux macros : on retouche les portions ingredient par
+       ingredient. Ces bornes evitent les assiettes absurdes (400 g d'huile
+       ou 15 g de riz) meme quand la cible est difficile a atteindre. */
+    ajustement: {
+      tours: 60,             // iterations de l'ajustement
+      mult_min: 0.45,        // une portion ne descend pas sous 45 % de la recette
+      mult_max: 2.60,        // ni au dessus de 260 %
+      plafond_gras: 40,      // g maximum pour une matiere grasse pure (huile, beurre)
+      plafond_solide: 450,   // g maximum pour tout le reste
+      plancher: 5,           // g minimum : en dessous, l'ingredient n'a plus de sens
+      pas_arrondi: 5,        // les grammages affiches sont arrondis a 5 g
+      priorite: { proteines: 3, lipides: 1.5, glucides: 1 },  // ce qu'on refuse le plus de rater
+
+      /* Quand une journee tombe sous la cible, on la complete avec un de ces
+         aliments — dans cet ordre, le premier compatible gagne. C'est une
+         liste ecrite a la main plutot qu'un choix automatique : un tri par
+         "meilleur ratio proteines/calories" finit toujours par proposer du
+         blanc d'oeuf en poudre ou de la gelatine. Ajoute ou retire ce que
+         tu veux ici, en gardant des aliments du quotidien. */
+      complements_proteines: ["fromage blanc", "skyr", "yaourt nature", "blanc de poulet",
+        "thon", "oeuf", "tofu", "lentille", "proteine", "whey", "jambon", "sardine", "amande"],
+      complements_glucides: ["riz", "patate douce", "pomme de terre", "flocons d'avoine",
+        "banane", "pain complet", "quinoa", "semoule", "pates", "pois chiche"]
+    },
     /* Les régimes que le filtre sait appliquer sur les ingrédients.
        Halal et casher ne figurent pas ici : ils dépendent du mode
        d'abattage et de la certification, pas de la composition — le
@@ -779,7 +804,8 @@ const Normaliser = {
     if (!viande && !poisson && !a_mer) r.push("vegetarien");
     if (!animal) r.push("vegan");
     if (!viande) r.push("pescetarien");
-    if (!laitier && !a_lait && !cereale && !legum && !sucre) r.push("paleo");
+    const tubercule = /(patate douce|igname|manioc|topinambour|panais|potimarron|courge|butternut|betterave)/.test(t);
+    if ((!cereale || tubercule) && !laitier && !a_lait && !legum && !sucre) r.push("paleo");
     if (allergenes.indexOf("gluten") === -1) r.push("sans_gluten");
     if (!laitier && !a_lait) r.push("sans_lactose");
     if (!porc && !alcool) r.push("sans_porc");
@@ -2088,6 +2114,25 @@ const outilNutrition = {
       f = Math.min(CONFIG.nutrition.facteur_max, Math.max(CONFIG.nutrition.facteur_min, f));
       sortie.push(await this.figer(r, f, slot));
     }
+    /* Les recettes sont choisies et mises a l'echelle des calories ;
+       on affine ensuite les portions pour tomber sur les macros. */
+    if (sortie.length && cible && cible.prot){
+      await this.ajusterAuxMacros(sortie, cible);
+      const ajouts = [];
+      /* Jusqu'a trois complements : un seul ne suffit pas toujours
+         quand le regime limite fortement les sources de proteines. */
+      for (let n = 0; n < 3; n++){
+        const ajoutP = await this.completerProteines(sortie, cible, regime, allergenes,
+                                                     ajouts.map(x => x.id));
+        if (!ajoutP) break;
+        await this.ajusterAuxMacros(sortie, cible);
+        ajouts.push(ajoutP);
+      }
+      const ajoutG = await this.completerEnergie(sortie, cible, regime, allergenes);
+      if (ajoutG){ await this.ajusterAuxMacros(sortie, cible); ajouts.push(ajoutG); }
+      if (ajouts.length) sortie.complement = ajouts;
+      sortie.diagnostic = this.diagnostic(sortie, cible);
+    }
     sortie.manquants = manquants.map(sl => sl.nom);
     return sortie;
   },
@@ -2131,6 +2176,196 @@ const outilNutrition = {
     carte.allergenes = Object.keys(al);
     carte.inconnus = inconnus;
     return carte;
+  },
+
+  /* ================= ajustement fin aux macros =================
+     Mettre la journee au bon nombre de calories ne suffit pas : un plan
+     a 2 400 kcal peut tres bien tomber 30 g de proteines sous la cible,
+     et c'est justement le chiffre qui compte pour garder du muscle.
+     On retouche donc les portions ingredient par ingredient.
+
+     Le principe, en une phrase : chaque ingredient est range dans la
+     famille du macro qu'il apporte surtout (proteines, glucides, lipides,
+     ou legumes), et on ajuste une poignee de curseurs — un par famille —
+     jusqu'a ce que la journee tombe juste. Les legumes ne bougent pas :
+     ils ne servent pas de variable d'ajustement.
+     ================================================================ */
+  famille(a){
+    const kcal = (+a.kcal) || 0;
+    if (kcal < 25) return "legume";                       // legumes, fruits peu caloriques
+    const p = (+a.proteines||0)*4, g = (+a.glucides||0)*4, l = (+a.lipides||0)*9;
+    const t = p + g + l;
+    if (t <= 0) return "legume";
+    if (p / t >= 0.40) return "proteines";
+    if (l / t >= 0.55) return "lipides";
+    if (g / t >= 0.45) return "glucides";
+    return "legume";
+  },
+
+  async ajusterAuxMacros(cartes, cible){
+    const idx = await Catalogue.indexAliments();
+    const A = CONFIG.nutrition.ajustement;
+    const lignes = [];
+    cartes.forEach((c, ci) => (c.ingredients || []).forEach((i, ii) => {
+      const a = idx[i.aliment_id]; if (!a) return;
+      const gras = ((+a.lipides||0) * 9) / Math.max(1, (+a.kcal||1)) > 0.85;
+      lignes.push({ ci, ii, a, base: i.grammes, fam: this.famille(a),
+                    max: Math.min(gras ? A.plafond_gras : A.plafond_solide, i.grammes * A.mult_max),
+                    min: Math.max(A.plancher, i.grammes * A.mult_min) });
+    }));
+    if (!lignes.length) return { ok:false };
+
+    const familles = ["proteines","glucides","lipides"];
+    const mult = { proteines:1, glucides:1, lipides:1, legume:1 };
+
+    /* grammes courants d'une ligne, bornes comprises */
+    const grammes = (L) => Math.min(L.max, Math.max(L.min, L.base * mult[L.fam]));
+    const total = () => {
+      const t = { proteines:0, glucides:0, lipides:0, kcal:0 };
+      lignes.forEach(L => {
+        const k = grammes(L) / 100;
+        t.proteines += (+L.a.proteines||0)*k; t.glucides += (+L.a.glucides||0)*k;
+        t.lipides   += (+L.a.lipides||0)*k;   t.kcal     += (+L.a.kcal||0)*k;
+      });
+      return t;
+    };
+    /* ce qu'apporte une famille sur un macro donne, aux grammages courants */
+    const apport = (fam, macro) => {
+      let v = 0;
+      lignes.forEach(L => { if (L.fam === fam) v += (+L.a[macro]||0) * grammes(L) / 100; });
+      return v;
+    };
+
+    const cibles = { proteines: cible.prot, lipides: cible.lip };
+
+    /* L'ordre suit la logique du calculateur : les proteines et les lipides
+       sont fixes par le poids de corps, les glucides completent les calories.
+       On cale donc les deux premieres familles sur leur macro, et la famille
+       des glucides sur ce qui manque en calories — pas sur un objectif propre. */
+    for (let tour = 0; tour < A.tours; tour++){
+      ["proteines","lipides"].forEach(fam => {
+        const t = total();
+        const propre = apport(fam, fam);
+        if (propre < 0.5) return;
+        const autres = t[fam] - propre;
+        const voulu  = Math.max(0, cibles[fam] - autres);
+        mult[fam] = Math.min(A.mult_max, Math.max(A.mult_min, mult[fam] * (voulu / propre)));
+      });
+      const t = total();
+      const kcalGluc = apport("glucides", "kcal");
+      if (kcalGluc > 1){
+        const voulu = Math.max(0, cible.kcal - (t.kcal - kcalGluc));
+        mult.glucides = Math.min(A.mult_max, Math.max(A.mult_min, mult.glucides * (voulu / kcalGluc)));
+      }
+    }
+
+    /* On applique, en arrondissant a 5 g : c'est ce qu'une balance de
+       cuisine sait faire, et un gramme pres n'a aucun sens biologique. */
+    lignes.forEach(L => {
+      const g = Math.round(grammes(L) / A.pas_arrondi) * A.pas_arrondi;
+      cartes[L.ci].ingredients[L.ii].grammes = Math.max(A.pas_arrondi, g);
+    });
+    for (const c of cartes) await this.recalculer(c);
+
+    const fin = this.totaux({ repas: cartes });
+    return {
+      ok: true,
+      ecarts: {
+        kcal: Math.round(fin.kcal - cible.kcal),
+        proteines: Math.round(fin.proteines - cible.prot),
+        glucides: Math.round(fin.glucides - cible.gluc),
+        lipides: Math.round(fin.lipides - cible.lip)
+      }
+    };
+  },
+
+  /* Quand les recettes choisies ne portent pas assez de proteines — cela
+     arrive sur les regimes vegetariens et vegetaliens — on ajoute une
+     source proteinee plutot que de livrer une journee sous la cible.
+     C'est exactement ce que ferait un coach : compléter, pas laisser filer. */
+  async completerProteines(cartes, cible, regime, allergenes, dejaUtilises){
+    const manque = cible.prot - this.totaux({ repas: cartes }).proteines;
+    if (manque < 15) return null;
+    const alims = await Catalogue.aliments();
+    const trouve = this.trouverComplement(alims, CONFIG.nutrition.ajustement.complements_proteines,
+                                     regime, allergenes, x => (+x.proteines || 0) >= 10,
+                                     dejaUtilises || []);
+    if (!trouve) return null;
+    const a = trouve.aliment;
+    /* 250 g est deja une belle portion : au-dela, mieux vaut un deuxieme
+       aliment qu'une assiette que personne ne finira. */
+    const gr = Math.min(250, Math.max(20, Math.round(manque / (a.proteines / 100) / 5) * 5));
+    const slot = CONFIG.nutrition.repas.find(s => s.id === "collation") || CONFIG.nutrition.repas[CONFIG.nutrition.repas.length - 1];
+    const carte = {
+      moment: slot.id, moment_nom: slot.nom, recette_id: null,
+      nom: a.nom, temps_min: null, etapes: [],
+      complement: true,
+      ingredients: [{ aliment_id: a.id, nom: a.nom, categorie: a.categorie, grammes: gr }]
+    };
+    await this.recalculer(carte);
+    cartes.push(carte);
+    return { id: trouve.mot, nom: a.nom, grammes: gr };
+  },
+
+  /* Meme logique cote energie : si la journee reste nettement sous la cible
+     apres ajustement, c'est que les recettes tirees ne portent pas assez de
+     glucides — frequent en paleo ou en sans gluten. On ajoute une source
+     glucidique compatible plutot que de livrer un plan qui affame le client. */
+  async completerEnergie(cartes, cible, regime, allergenes){
+    const t = this.totaux({ repas: cartes });
+    const manque = cible.kcal - t.kcal;
+    if (manque < cible.kcal * 0.06) return null;
+    const alims = await Catalogue.aliments();
+    const trouve = this.trouverComplement(alims, CONFIG.nutrition.ajustement.complements_glucides,
+                                     regime, allergenes, x => (+x.glucides || 0) >= 12 && (+x.kcal || 0) > 60);
+    if (!trouve) return null;
+    const a = trouve.aliment;
+    const gr = Math.min(400, Math.max(20, Math.round(manque / ((+a.kcal) / 100) / 5) * 5));
+    const slot = CONFIG.nutrition.repas.find(s => s.id === "dejeuner") || CONFIG.nutrition.repas[0];
+    const carte = {
+      moment: slot.id, moment_nom: slot.nom, recette_id: null,
+      nom: a.nom + " (accompagnement)", temps_min: null, etapes: [],
+      complement: true,
+      ingredients: [{ aliment_id: a.id, nom: a.nom, categorie: a.categorie, grammes: gr }]
+    };
+    await this.recalculer(carte);
+    cartes.push(carte);
+    return { id: trouve.mot, nom: a.nom, grammes: gr };
+  },
+
+  /* Cherche dans le catalogue le premier aliment de la liste ecrite dans
+     CONFIG qui soit compatible avec le regime et les allergies. On prend le
+     nom le plus court parmi les correspondances : dans une table officielle,
+     "Riz blanc cru" passe avant "Riz blanc precuit assaisonne, en sachet". */
+  trouverComplement(alims, souhaits, regime, allergenes, filtre, exclus){
+    /* On exclut par mot-cle et non par identifiant : sans cela, "Oeuf cru"
+       puis "Oeuf dur" seraient deux aliments differents pour le programme,
+       et le client se retrouverait avec dix oeufs dans la journee. */
+    for (const mot of souhaits){
+      if ((exclus || []).indexOf(mot) > -1) continue;
+      const cible = Normaliser.aplatir(mot);
+      const trouves = alims
+        .filter(a => Normaliser.aplatir(a.nom).indexOf(cible) > -1)
+        .filter(a => filtre(a))
+        .filter(a => !/(poudre|deshydrat|lyophilis|isolat|aromatis|gelee|gelatine|sauce|bouillon|conserve au sirop|sucre|confit)/.test(Normaliser.aplatir(a.nom)) || /proteine|whey/.test(Normaliser.aplatir(a.nom)))
+        .filter(a => this.compatible(a, regime, allergenes))
+        .sort((a, b) => a.nom.length - b.nom.length);
+      if (trouves.length) return { aliment: trouves[0], mot: mot };
+    }
+    return null;
+  },
+
+  /* Ce que le catalogue ne permet pas d'atteindre, on le dit — plutot que
+     de livrer une journee fausse sans explication. */
+  diagnostic(cartes, cible){
+    const t = this.totaux({ repas: cartes });
+    const msgs = [];
+    const dK = t.kcal - cible.kcal, dP = t.proteines - cible.prot, dG = t.glucides - cible.gluc, dL = t.lipides - cible.lip;
+    if (Math.abs(dP) > 12) msgs.push(`protéines ${dP > 0 ? "au-dessus" : "en dessous"} de ${fmt(Math.abs(dP))} g`);
+    if (Math.abs(dL) > 15) msgs.push(`lipides ${dL > 0 ? "au-dessus" : "en dessous"} de ${fmt(Math.abs(dL))} g — sur ce régime, les sources de protéines apportent beaucoup de gras`);
+    if (Math.abs(dK) > cible.kcal * 0.07) msgs.push(`calories ${dK > 0 ? "au-dessus" : "en dessous"} de ${fmt(Math.abs(dK))} kcal`);
+    if (dG < -60) msgs.push(`glucides en dessous de ${fmt(Math.abs(dG))} g — ce régime offre peu de sources de glucides dans le catalogue`);
+    return msgs;
   },
 
   totaux(R){
@@ -2304,6 +2539,8 @@ const outilNutrition = {
         ${R.cible ? `<p class="note" style="margin-top:14px">Cible : ${fmt(R.cible.kcal)} kcal · ${fmt(R.cible.prot)} g prot. · ${fmt(R.cible.gluc)} g gluc. · ${fmt(R.cible.lip)} g lip.<br>
           Écart : <b>${ecart > 0 ? "+" : ""}${fmt(ecart)} kcal</b>${Math.abs(ecart) > R.cible.kcal * 0.1 ? " — au-delà de 10 %, ajuste un repas" : ""} · protéines <b>${t.proteines >= R.cible.prot ? "+" : ""}${fmt(t.proteines - R.cible.prot)} g</b>${t.proteines < R.cible.prot * 0.9 ? " — trop bas, ajoute une source de protéines" : ""}.</p>` : ""}
         ${(R.manquants && R.manquants.length) ? `<div class="flag"><b>Repas sans recette compatible :</b> ${esc(R.manquants.join(", "))}. Leurs calories ont été réparties sur les autres repas. Ajoute des recettes au catalogue pour ce régime.</div>` : ""}
+        ${(R.complement && R.complement.length) ? `<p class="note">Les recettes tirées ne suffisaient pas à atteindre la cible : ${R.complement.map(c => `<b>${esc(c.nom)}</b> (${fmt(c.grammes)} g)`).join(" et ")} ${R.complement.length > 1 ? "ont été ajoutés" : "a été ajouté"} pour la compléter.</p>` : ""}
+        ${(R.diagnostic && R.diagnostic.length) ? `<div class="flag"><b>Ce que le catalogue ne permet pas d'atteindre ici :</b> ${esc(R.diagnostic.join(" · "))}. Ajuste à la main, ou ajoute des recettes adaptées à ce régime.</div>` : ""}
       </section>`;
       R.repas.forEach((x, i) => h += this.carteRepas(x, true, i, null));
       h += this.blocCourses(R, {});
@@ -2316,7 +2553,8 @@ const outilNutrition = {
         <button class="btn" id="nu-save">Valider et envoyer au client</button>
         <span class="msg" id="nu-msg2"></span>
       </div>
-      <p class="note" style="margin-top:10px">Rien n'est envoyé automatiquement : relis les ingrédients — les allergies en premier — puis valide. Le client voit la journée dès sa prochaine ouverture.</p>
+      <p class="note" style="margin-top:10px">Un mot sur les glucides : ils apparaissent souvent 20 à 40 g sous la cible théorique alors que les calories tombent juste. C'est normal — la cible est calculée en comptant 4 kcal par gramme de glucide, alors que les valeurs réelles des aliments (fibres, amidon résistant) donnent un peu moins. Fie-toi aux calories et aux protéines.</p>
+      <p class="note">Rien n'est envoyé automatiquement : relis les ingrédients — les allergies en premier — puis valide. Le client voit la journée dès sa prochaine ouverture.</p>
       <p class="note">Le filtre travaille sur la composition des aliments. Il ne remplace pas ta lecture : une allergie sévère, un interdit religieux qui dépend de la certification, un aliment que le client ne supporte pas sans le savoir — c'est toi qui les attrapes.</p>
     </section>`;
     return h;
@@ -2464,6 +2702,8 @@ const outilNutrition = {
         g.disabled = false; g.textContent = "Générer une journée";
         if (!liste.length){ flash("nu-msg","Aucune recette ne correspond à ces critères. Importe le catalogue ou assouplis les filtres."); return; }
         R.repas = liste; R.manquants = liste.manquants || [];
+        R.diagnostic = liste.diagnostic || [];
+        R.complement = liste.complement || null;
         sauver(); redessiner();
         if (R.manquants.length) flash("nu-msg", "Aucune recette compatible pour : " + R.manquants.join(", ") + ". Les calories ont été réparties sur les autres repas.");
       });
