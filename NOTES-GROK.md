@@ -71,3 +71,11 @@ Pas dans la vidéo (demandé à part par Lucas) :
 - Mode **IA** : générer depuis macros / régimes / allergènes.
 
 Ne pas recopier : accueil, boutique, questionnaires, libellés anglais.
+
+## 28 août 2026 — régimes / recettes / programmes (après-midi)
+
+- `aliments.json` : régimes recalculés. Plus de `halal`/`casher`. Ajout `sans_porc` si l’aliment n’est pas du porc (doute = pas de tag). Macros / ids / noms / source / allergènes inchangés. 3109 aliments, json.tool OK.
+- `recettes.json` : champs `allergenes` et `regimes` retirés partout. Schéma : id, nom, moment, temps_min, portions, ingredients, etapes. 198 recettes, 0 aliment_id manquant. Trous vegan+SG PD, vegan dîner, paleo PD/déj (et dîner/collation) bouchés. Claude calcule l’intersection à l’import.
+- `programmes.json` : +4 (pas de doublon, pas femme enceinte) : `seniors-3j-equilibre`, `reprise-blessure-3j`, `ppl-6j-avance`, `elastiques-3j-maison`.
+- `donnees/generateur.md` : liste des régimes à jour, recettes sans allergenes/regimes.
+- Import Supabase = côté Claude. Pas de commit / push. `index.html` non touché.

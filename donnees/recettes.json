@@ -32,16 +32,6 @@
       "Chauffer à feu moyen 8 à 10 min en remuant, jusqu'à épaissir.",
       "Écraser la banane au-dessus, ajouter le miel et la cannelle.",
       "Mélanger hors du feu et servir tiède."
-    ],
-    "allergenes": [
-      "gluten",
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "halal"
     ]
   },
   {
@@ -77,16 +67,6 @@
       "Mettre le yaourt dans un bol.",
       "Ajouter les fruits, les amandes concassées et le miel.",
       "Mélanger légèrement et manger de suite."
-    ],
-    "allergenes": [
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal"
     ]
   },
   {
@@ -130,17 +110,6 @@
       "Faire fondre le beurre à feu doux, verser les œufs.",
       "Remuer sans cesse 3 à 4 min jusqu'à ce qu'ils soient juste pris.",
       "Toaster le pain, couper la tomate en rondelles, dresser."
-    ],
-    "allergenes": [
-      "gluten",
-      "lait",
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "halal"
     ]
   },
   {
@@ -172,16 +141,6 @@
       "Mélanger le fromage blanc et le miel dans un bol.",
       "Ajouter le kiwi et les graines de chia.",
       "Laisser 5 min le chia gonfler un peu, puis servir."
-    ],
-    "allergenes": [
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal"
     ]
   },
   {
@@ -208,19 +167,6 @@
       "Tartiner les galettes de riz avec le beurre de cacahuète.",
       "Couper la banane en rondelles.",
       "Les répartir sur les galettes et manger de suite."
-    ],
-    "allergenes": [
-      "arachides"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -259,18 +205,6 @@
       "Plonger l'œuf 6 min 30 dans l'eau frémissante, puis le passer sous l'eau froide.",
       "Toaster le pain. Écraser l'avocat avec un filet de citron, sel et poivre.",
       "Tartiner, écaler l'œuf, le couper en deux et le poser dessus."
-    ],
-    "allergenes": [
-      "gluten",
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -306,19 +240,6 @@
       "Mettre flocons, boisson d'avoine, pomme, raisins et cannelle dans une casserole.",
       "Cuire 10 min à feu moyen en remuant, jusqu'à consistance crémeuse.",
       "Servir tiède."
-    ],
-    "allergenes": [
-      "gluten",
-      "sulfites"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -362,18 +283,6 @@
       "Les faire suer 5 min dans l'huile, sans trop colorer.",
       "Battre les œufs, sel, poivre et persil haché, verser dans la poêle.",
       "Cuire 3 à 4 min, plier l'omelette et servir."
-    ],
-    "allergenes": [
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -404,17 +313,6 @@
       "Couper la banane en morceaux.",
       "Mixer avec le lait, les flocons et le beurre de cacahuète.",
       "Boire de suite, éventuellement avec quelques glaçons."
-    ],
-    "allergenes": [
-      "arachides",
-      "gluten",
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "halal"
     ]
   },
   {
@@ -445,17 +343,6 @@
       "Toaster légèrement le pain.",
       "Tartiner le chèvre frais.",
       "Napper d'un filet de miel et parsemer de cerneaux de noix cassés."
-    ],
-    "allergenes": [
-      "fruits_a_coque",
-      "gluten",
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "halal"
     ]
   },
   {
@@ -495,17 +382,6 @@
       "Chauffer un peu d'huile dans une poêle antiadhésive.",
       "Cuire 3 petits pancakes 2 min de chaque côté.",
       "Servir avec le miel et les fraises coupées."
-    ],
-    "allergenes": [
-      "gluten",
-      "lait",
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "halal"
     ]
   },
   {
@@ -540,19 +416,6 @@
       "Porter la boisson soja à petit bouillon avec les flocons.",
       "Cuire 8 à 10 min en remuant.",
       "Verser dans un bol, ajouter framboises, myrtilles et graines de lin."
-    ],
-    "allergenes": [
-      "gluten",
-      "soja"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -596,13 +459,6 @@
       "Couper le poulet en dés. Le dorer 6 à 8 min à la poêle avec l'huile et l'ail écrasé.",
       "Ajouter les bouquets de brocoli, couvrir 5 min pour les attendrir.",
       "Poivrer, rectifier le sel, dresser riz, poulet et brocoli."
-    ],
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -646,16 +502,6 @@
       "Faire revenir l'oignon émincé dans l'huile, ajouter les tomates pelées écrasées.",
       "Laisser réduire 8 min, égoutter le thon et l'incorporer hors du feu.",
       "Mélanger aux pâtes, parsemer de basilic."
-    ],
-    "allergenes": [
-      "gluten",
-      "poissons"
-    ],
-    "regimes": [
-      "omnivore",
-      "pescetarien",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -702,17 +548,6 @@
       "Rincer le quinoa, le cuire 12 min dans de l'eau, puis l'égoutter et le laisser tiédir.",
       "Rincer les pois chiches. Couper concombre et tomates cerises.",
       "Mélanger le tout avec l'huile, le jus de citron, le sel et la menthe ciselée."
-    ],
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -760,14 +595,6 @@
       "Laisser tiédir. Couper tomate et concombre en lamelles.",
       "Tartiner la tortilla de yaourt, poser salade, poulet et crudités.",
       "Poivrer, rouler fermement et couper en deux."
-    ],
-    "allergenes": [
-      "gluten",
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "halal"
     ]
   },
   {
@@ -807,13 +634,6 @@
       "Cuire les haricots verts 8 min à l'eau bouillante, puis les égoutter.",
       "Poêler le steak haché 3 à 4 min de chaque côté dans un filet d'huile.",
       "Saler, poivrer, dresser les trois éléments dans l'assiette."
-    ],
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -857,17 +677,6 @@
       "Poêler le pavé de saumon 4 min côté peau puis 3 min de l'autre, à feu moyen.",
       "Couper avocat et concombre. Dresser le riz, le saumon et les crudités.",
       "Arroser d'huile de sésame et de citron vert, parsemer de graines."
-    ],
-    "allergenes": [
-      "poissons",
-      "sesame"
-    ],
-    "regimes": [
-      "omnivore",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -911,18 +720,6 @@
       "Les faire dorer 10 min dans l'huile, à couvert, jusqu'à ce qu'ils soient tendres.",
       "Battre les œufs, sel, poivre et persil, verser dans la poêle.",
       "Cuire 5 min à feu doux, glisser dans l'assiette sans plier."
-    ],
-    "allergenes": [
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -962,16 +759,6 @@
       "Râper la courgette en gros filaments. La faire revenir 5 min avec l'ail et l'huile.",
       "Égoutter les pâtes en gardant une louche d'eau de cuisson.",
       "Mélanger pâtes, courgette, parmesan et un peu d'eau, poivrer."
-    ],
-    "allergenes": [
-      "gluten",
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "halal"
     ]
   },
   {
@@ -1015,16 +802,6 @@
       "Couper les tomates en deux, émincer l'oignon rouge très fin, émietter la feta.",
       "Mélanger lentilles, tomates, oignon, huile et vinaigre.",
       "Ajouter feta et persil au dernier moment."
-    ],
-    "allergenes": [
-      "lait",
-      "sulfites"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten"
     ]
   },
   {
@@ -1068,13 +845,6 @@
       "Couper le poulet en dés, émincer l'oignon. Faire revenir le tout 6 min dans l'huile.",
       "Ajouter l'ail, le curry, puis la boisson coco. Laisser mijoter 10 min à feu doux.",
       "Servir le poulet nappé sur le riz."
-    ],
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -1118,16 +888,6 @@
       "Cuire les bouquets de brocoli 6 min à la vapeur ou à l'eau.",
       "Poêler le cabillaud 4 min de chaque côté dans l'huile.",
       "Arroser de citron, parsemer de persil, saler légèrement."
-    ],
-    "allergenes": [
-      "poissons"
-    ],
-    "regimes": [
-      "omnivore",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -1171,13 +931,6 @@
       "Couper la dinde en lanières, les poivrons et l'oignon en lamelles.",
       "Faire sauter le tout 10 min à feu vif avec l'huile et le paprika.",
       "Servir sur le riz."
-    ],
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -1224,14 +977,6 @@
       "Émincer oignon et carotte. Les faire suer dans l'huile, ajouter le haché et le dorer.",
       "Ajouter ail, tomates écrasées et thym. Laisser mijoter 20 min à feu doux.",
       "Cuire les pâtes pendant ce temps, les égoutter et les mélanger à la sauce."
-    ],
-    "allergenes": [
-      "gluten"
-    ],
-    "regimes": [
-      "omnivore",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -1279,17 +1024,6 @@
       "Cuire les haricots 8 min, les passer sous l'eau froide.",
       "Disposer la laitue, tomate, haricots, thon égoutté, œuf en quartiers et olives.",
       "Arroser d'huile et de vinaigre au moment de servir."
-    ],
-    "allergenes": [
-      "oeufs",
-      "poissons",
-      "sulfites"
-    ],
-    "regimes": [
-      "omnivore",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose"
     ]
   },
   {
@@ -1333,18 +1067,6 @@
       "Faire revenir l'oignon et le gingembre râpé, ajouter les petits pois égouttés.",
       "Pousser sur le côté, brouiller l'œuf dans la poêle, puis mélanger avec le riz.",
       "Sauter 3 min à feu vif, parsemer de ciboule."
-    ],
-    "allergenes": [
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -1383,12 +1105,6 @@
       "Couper la patate douce en cubes, les rôtir 20 min à la poêle avec huile et romarin.",
       "Poêler le filet mignon entier 3 min de chaque côté, puis 8 min à feu doux à couvert.",
       "Laisser reposer 3 min, trancher, saler, poivrer, servir avec la patate douce."
-    ],
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "sans_gluten",
-      "sans_lactose"
     ]
   },
   {
@@ -1436,20 +1152,6 @@
       "Couper le tofu en cubes, le dorer 6 min dans un peu d'huile de sésame.",
       "Râper la carotte. Dresser quinoa, tofu, carotte, épinards et avocat.",
       "Délayer le tahin avec le citron et un trait d'eau, napper le bol."
-    ],
-    "allergenes": [
-      "sesame",
-      "soja"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -1489,16 +1191,6 @@
       "Cuire les haricots 8 min à l'eau bouillante.",
       "Poêler le saumon 4 min de chaque côté dans l'huile.",
       "Arroser de citron, parsemer d'aneth, dresser avec le riz et les haricots."
-    ],
-    "allergenes": [
-      "poissons"
-    ],
-    "regimes": [
-      "omnivore",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -1545,17 +1237,6 @@
       "Émincer oignon et carotte. Les faire suer 5 min dans l'huile avec cumin et curcuma.",
       "Ajouter les lentilles rincées, le concentré de tomate, l'ail et 600 ml d'eau.",
       "Cuire 20 min à petits bouillons. Mixer en partie pour épaissir, laisser des morceaux."
-    ],
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -1603,14 +1284,6 @@
       "Dorer le poulet 5 min dans l'huile, réserver. Faire suer oignon, aubergine, courgette.",
       "Remettre le poulet, ajouter tomates, ail et thym. Mijoter 20 min à couvert.",
       "Rectifier le sel et servir chaud."
-    ],
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -1650,16 +1323,6 @@
       "Les égoutter, les faire blondir 5 min dans l'huile.",
       "Poser le merlu dessus, couvrir 8 min à feu doux.",
       "Arroser de citron, parsemer d'aneth."
-    ],
-    "allergenes": [
-      "poissons"
-    ],
-    "regimes": [
-      "omnivore",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -1698,18 +1361,6 @@
       "Faire tomber les épinards 3 min dans l'huile avec l'ail, jusqu'à ce qu'ils rendent leur eau.",
       "Battre les œufs avec sel et une pincée de muscade.",
       "Verser sur les épinards, cuire 4 min à feu doux, plier et servir."
-    ],
-    "allergenes": [
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -1757,20 +1408,6 @@
       "Dorer le tofu 5 min dans l'huile, réserver.",
       "Sauter carotte, poivron et brocoli 7 min avec gingembre et ail.",
       "Remettre le tofu, ajouter les pousses, mélanger 1 min et servir."
-    ],
-    "allergenes": [
-      "sesame",
-      "soja"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -1822,17 +1459,6 @@
       "Ajouter cumin, paprika et piment ciselé, puis les tomates écrasées.",
       "Incorporer les haricots rincés, mijoter 15 min à feu doux.",
       "Rectifier l'assaisonnement et servir chaud."
-    ],
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -1876,13 +1502,6 @@
       "Mélanger haché, oignon ciselé, riz cru, persil et un peu de coulis.",
       "Farcir, napper du reste de coulis, enfourner 30 min.",
       "Vérifier que le riz est tendre avant de servir."
-    ],
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -1922,16 +1541,6 @@
       "Poêler la truite 4 min côté peau, 3 min de l'autre.",
       "Faire tomber les épinards 2 min avec l'ail et un filet d'huile.",
       "Dresser, arroser de citron."
-    ],
-    "allergenes": [
-      "poissons"
-    ],
-    "regimes": [
-      "omnivore",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -1975,13 +1584,6 @@
       "Mélanger poulet, pommes de terre, huile, thym, ail, sel et jus plus zestes de citron.",
       "Enfourner 30 min, retourner à mi-cuisson.",
       "Vérifier que le poulet n'est plus rosé avant de servir."
-    ],
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -2028,20 +1630,6 @@
       "Tremper les vermicelles 5 min dans l'eau bouillante, les égoutter.",
       "Dorer le tofu en cubes 5 min, ajouter carotte, poivron, ail et gingembre.",
       "Sauter 5 min, ajouter vermicelles et pousses, mélanger 2 min."
-    ],
-    "allergenes": [
-      "sesame",
-      "soja"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -2085,17 +1673,6 @@
       "Les faire revenir 6 min avec ail et thym.",
       "Poser le filet de dorade dessus, couvrir 8 min à feu moyen.",
       "Arroser de citron et servir dans la poêle."
-    ],
-    "allergenes": [
-      "poissons"
-    ],
-    "regimes": [
-      "omnivore",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -2138,17 +1715,6 @@
       "Laver la salade, l'essorer. Toaster le pain, poser une tranche de chèvre dessus.",
       "Passer 3 min sous le grill jusqu'à ce que le fromage ramollisse.",
       "Dresser la salade, ajouter pain-chèvre, noix, miel, huile et vinaigre."
-    ],
-    "allergenes": [
-      "fruits_a_coque",
-      "gluten",
-      "lait",
-      "sulfites"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien"
     ]
   },
   {
@@ -2191,13 +1757,6 @@
       "Couper les courgettes en rondelles, les faire dorer 8 min dans l'huile.",
       "Dans la même poêle, cuire l'escalope 3 min de chaque côté.",
       "Saler, poivrer, arroser de citron, parsemer de persil."
-    ],
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -2245,17 +1804,6 @@
       "Incorporer les pois chiches rincés, les faire dorer 5 min.",
       "Ajouter épinards et tomates, cuire 4 min jusqu'à ce que les feuilles tombent.",
       "Finir avec un filet de citron."
-    ],
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -2295,16 +1843,6 @@
       "Les faire étuver 12 min dans l'huile avec un fond d'eau, à couvert.",
       "Poser les médaillons de lotte, couvrir encore 8 min.",
       "Saler, poivrer, servir bien chaud."
-    ],
-    "allergenes": [
-      "poissons"
-    ],
-    "regimes": [
-      "omnivore",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -2347,16 +1885,6 @@
       "Cuire les œufs 9 min, les écaler. Faire rissoler les lardons sans matière grasse.",
       "Couper le pain en dés, les dorer 3 min dans la poêle des lardons.",
       "Délayer moutarde, vinaigre et huile. Mélanger salade, croûtons, lardons, œufs en quartiers."
-    ],
-    "allergenes": [
-      "gluten",
-      "moutarde",
-      "oeufs",
-      "sulfites"
-    ],
-    "regimes": [
-      "omnivore",
-      "sans_lactose"
     ]
   },
   {
@@ -2383,17 +1911,6 @@
       "Verser le yaourt dans un bol.",
       "Ajouter le miel et les cerneaux cassés grossièrement.",
       "Mélanger et manger de suite."
-    ],
-    "allergenes": [
-      "fruits_a_coque",
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal"
     ]
   },
   {
@@ -2415,18 +1932,6 @@
     "etapes": [
       "Laver la pomme, la couper en quartiers en retirant le cœur.",
       "Servir avec les amandes à côté."
-    ],
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -2448,17 +1953,6 @@
     "etapes": [
       "Éplucher la carotte et la couper en bâtonnets.",
       "Servir avec le houmous pour tremper."
-    ],
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -2480,20 +1974,6 @@
     "etapes": [
       "Couper la banane en deux dans la longueur.",
       "Tartiner de beurre de cacahuète et manger de suite."
-    ],
-    "allergenes": [
-      "arachides"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -2519,18 +1999,6 @@
     "etapes": [
       "Cuire l'œuf 9 min à l'eau, le passer sous l'eau froide, l'écaler.",
       "Rincer les tomates cerises, saler légèrement, servir avec l'œuf."
-    ],
-    "allergenes": [
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -2552,16 +2020,6 @@
     "etapes": [
       "Rincer les fraises, les équeuter, les couper en deux.",
       "Les mélanger au fromage blanc."
-    ],
-    "allergenes": [
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal"
     ]
   },
   {
@@ -2583,18 +2041,6 @@
     "etapes": [
       "Laver la poire, la couper en tranches.",
       "Servir avec les noisettes."
-    ],
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -2616,16 +2062,6 @@
     "etapes": [
       "Rincer les myrtilles.",
       "Les mélanger à la spécialité laitière."
-    ],
-    "allergenes": [
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal"
     ]
   },
   {
@@ -2647,17 +2083,6 @@
     "etapes": [
       "Couper le concombre en rondelles.",
       "Servir avec le houmous pour tremper."
-    ],
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -2683,16 +2108,6 @@
     "etapes": [
       "Mélanger fromage blanc et compote.",
       "Saupoudrer de cannelle."
-    ],
-    "allergenes": [
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal"
     ]
   },
   {
@@ -2732,14 +2147,6 @@
       "Couper courgette et poivron, les faire sauter 8 min avec le cumin.",
       "Verser la semoule dans un bol, ajouter le même volume d'eau bouillante, couvrir 5 min.",
       "Égrainer à la fourchette, dresser avec légumes et merguez."
-    ],
-    "allergenes": [
-      "gluten"
-    ],
-    "regimes": [
-      "omnivore",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -2779,17 +2186,6 @@
       "Cuire une grande galette 2 min de chaque côté dans un peu d'huile.",
       "Casser le second œuf au centre, plier les bords, cuire encore 2 min.",
       "Servir avec la salade et la tomate."
-    ],
-    "allergenes": [
-      "lait",
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal"
     ]
   },
   {
@@ -2827,16 +2223,6 @@
     "etapes": [
       "Toaster le pain. Tartiner de fromage blanc.",
       "Disposer le saumon fumé, un filet de citron, l'aneth et le poivre."
-    ],
-    "allergenes": [
-      "gluten",
-      "lait",
-      "poissons"
-    ],
-    "regimes": [
-      "omnivore",
-      "pescetarien",
-      "halal"
     ]
   },
   {
@@ -2880,15 +2266,6 @@
       "Décortiquer les crevettes si besoin. Couper la courgette en demi-lunes.",
       "Sauter courgette, ail et piment 5 min, ajouter les crevettes 3 min.",
       "Arroser de citron, servir sur le riz."
-    ],
-    "allergenes": [
-      "crustaces"
-    ],
-    "regimes": [
-      "omnivore",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose"
     ]
   },
   {
@@ -2919,18 +2296,6 @@
       "Mettre le skyr dans un bol.",
       "Couper la banane en rondelles, concasser les amandes.",
       "Ajouter le miel et mélanger."
-    ],
-    "allergenes": [
-      "fruits_a_coque",
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -2970,18 +2335,6 @@
       "Chauffer l'huile, faire revenir la tomate 2 min.",
       "Verser les œufs, parsemer d'emmental, cuire 3 à 4 min.",
       "Servir avec le persil et le poivre."
-    ],
-    "allergenes": [
-      "lait",
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -3016,18 +2369,6 @@
       "Verser les flocons et le lait dans une casserole.",
       "Cuire 8 à 10 min en remuant, jusqu'à épaissir.",
       "Ajouter la poire en dés, les noisettes concassées et la cannelle."
-    ],
-    "allergenes": [
-      "fruits_a_coque",
-      "gluten",
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -3062,13 +2403,6 @@
       "Toaster le pain. Tartiner de fromage blanc.",
       "Disposer le jambon et les rondelles de tomate.",
       "Poivrer et manger de suite."
-    ],
-    "allergenes": [
-      "gluten",
-      "lait"
-    ],
-    "regimes": [
-      "omnivore"
     ]
   },
   {
@@ -3103,17 +2437,6 @@
       "Rincer les fraises.",
       "Mixer fraises, skyr, flocons, lait et miel jusqu'à texture lisse.",
       "Boire de suite."
-    ],
-    "allergenes": [
-      "gluten",
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -3152,18 +2475,6 @@
       "Faire revenir l'ail et les épinards 3 min dans l'huile.",
       "Casser les œufs à côté, cuire 3 min.",
       "Saler, servir avec le pain toasté."
-    ],
-    "allergenes": [
-      "gluten",
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -3193,18 +2504,6 @@
     "etapes": [
       "Mettre le fromage blanc dans un bol.",
       "Ajouter les noix de cajou concassées, le miel et la cannelle."
-    ],
-    "allergenes": [
-      "fruits_a_coque",
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -3239,19 +2538,6 @@
       "Toaster le pain. Tartiner de houmous.",
       "Ajouter le concombre en rondelles et les tomates cerises coupées.",
       "Arroser d'un filet d'huile d'olive."
-    ],
-    "allergenes": [
-      "gluten",
-      "sesame"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -3290,18 +2576,6 @@
       "Mélanger farine, œuf et lait jusqu'à pâte fluide.",
       "Cuire 2 crêpes fines dans un peu d'huile, 1 min de chaque côté.",
       "Arroser de citron et de miel, plier et servir."
-    ],
-    "allergenes": [
-      "gluten",
-      "lait",
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -3336,17 +2610,6 @@
       "Chauffer flocons, lait et cacao 8 à 10 min en remuant.",
       "Écraser la banane au-dessus, ajouter le miel.",
       "Mélanger hors du feu et servir tiède."
-    ],
-    "allergenes": [
-      "gluten",
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -3377,17 +2640,6 @@
       "Couper la mangue en dés.",
       "Mélanger yaourt, chia et miel. Laisser 5 min.",
       "Ajouter la mangue et servir."
-    ],
-    "allergenes": [
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -3426,18 +2678,6 @@
       "Émincer champignons et échalote, les faire sauter 5 min.",
       "Verser les œufs battus, cuire 3 à 4 min.",
       "Parsemer de persil et poivrer."
-    ],
-    "allergenes": [
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -3476,18 +2716,6 @@
       "Toaster le pain. Écraser l'avocat avec le citron.",
       "Tartiner, ajouter les tomates cerises coupées.",
       "Saler et arroser d'huile d'olive."
-    ],
-    "allergenes": [
-      "gluten"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -3522,18 +2750,6 @@
       "Rincer les épinards.",
       "Mixer tous les ingrédients jusqu'à texture lisse.",
       "Boire de suite."
-    ],
-    "allergenes": [
-      "fruits_a_coque",
-      "gluten",
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -3563,17 +2779,6 @@
     "etapes": [
       "Tartiner les galettes de skyr.",
       "Ajouter les framboises et un filet de miel."
-    ],
-    "allergenes": [
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -3612,18 +2817,6 @@
       "Râper la courgette, la faire revenir 4 min dans l'huile.",
       "Ajouter les œufs battus, remuer 2 à 3 min à feu doux.",
       "Saler, poivrer, parsemer de ciboulette."
-    ],
-    "allergenes": [
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -3658,18 +2851,6 @@
       "Chauffer flocons et boisson coco 8 à 10 min.",
       "Ajouter l'ananas en dés, les graines de chia et la cannelle.",
       "Laisser 2 min hors du feu et servir."
-    ],
-    "allergenes": [
-      "gluten"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -3709,13 +2890,6 @@
       "Poêler le poulet 8 min avec ail et thym.",
       "Cuire les haricots verts 8 min, égoutter.",
       "Dresser avec un filet d'huile d'olive."
-    ],
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -3755,17 +2929,6 @@
       "Égoutter le thon, couper avocat et concombre.",
       "Dresser le riz, ajouter thon, avocat, concombre.",
       "Arroser de citron, parsemer de sésame."
-    ],
-    "allergenes": [
-      "poissons",
-      "sesame"
-    ],
-    "regimes": [
-      "omnivore",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -3804,16 +2967,6 @@
       "Mélanger le thon égoutté et le fromage blanc.",
       "Garnir la tortilla de salade, tomate, concombre et mélange thon.",
       "Rouler fermement et couper en deux."
-    ],
-    "allergenes": [
-      "gluten",
-      "lait",
-      "poissons"
-    ],
-    "regimes": [
-      "omnivore",
-      "pescetarien",
-      "halal"
     ]
   },
   {
@@ -3856,13 +3009,6 @@
       "Cuire le quinoa 12 min, égoutter et laisser tiédir.",
       "Poêler le poulet 8 min, le couper en lamelles.",
       "Mélanger quinoa, poulet, concombre, tomates, huile, citron et menthe."
-    ],
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -3906,16 +3052,6 @@
       "Poêler le saumon 4 min de chaque côté, l'émietter.",
       "Faire tomber les épinards avec l'ail 2 min.",
       "Mélanger pâtes, saumon, épinards, citron et poivre."
-    ],
-    "allergenes": [
-      "gluten",
-      "poissons"
-    ],
-    "regimes": [
-      "omnivore",
-      "pescetarien",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -3955,14 +3091,6 @@
       "Sauter la courgette en dés 8 min avec le cumin.",
       "Hydrater la semoule avec le même volume d'eau bouillante, 5 min.",
       "Égrainer, dresser avec dinde, légumes et citron."
-    ],
-    "allergenes": [
-      "gluten"
-    ],
-    "regimes": [
-      "omnivore",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -4001,13 +3129,6 @@
       "Cuire le riz 12 min. Cuire le brocoli 8 min à la vapeur.",
       "Poêler le steak 3 min de chaque côté dans l'huile et l'ail.",
       "Poivrer et servir avec riz et brocoli."
-    ],
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -4054,17 +3175,6 @@
       "Couper tomate, concombre, oignon et feta.",
       "Mélanger avec olives, huile et origan.",
       "Servir avec le pain."
-    ],
-    "allergenes": [
-      "gluten",
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -4107,13 +3217,6 @@
       "Poêler le poulet 8 min, réserver.",
       "Faire revenir ail et pois chiches égouttés 5 min avec le cumin.",
       "Ajouter les épinards 2 min, remettre le poulet, arroser de citron."
-    ],
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -4152,16 +3255,6 @@
       "Couper la patate douce, la cuire 15 min.",
       "Poêler la courgette 8 min. Cuire le cabillaud 4 min de chaque côté avec le thym.",
       "Dresser, arroser de citron et d'huile."
-    ],
-    "allergenes": [
-      "poissons"
-    ],
-    "regimes": [
-      "omnivore",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -4200,14 +3293,6 @@
       "Cuire les pâtes 10 min. Ajouter le brocoli les 5 dernières minutes.",
       "Poêler le poulet 8 min avec l'ail.",
       "Mélanger pâtes, brocoli et poulet, parsemer de parmesan."
-    ],
-    "allergenes": [
-      "gluten",
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "halal"
     ]
   },
   {
@@ -4250,18 +3335,6 @@
       "Cuire le boulgour 12 min. Cuire l'œuf dur 9 min.",
       "Sauter courgette et poivron 8 min, ajouter les pois chiches.",
       "Dresser le boulgour, les légumes et l'œuf coupé, arroser de citron."
-    ],
-    "allergenes": [
-      "gluten",
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -4300,14 +3373,6 @@
       "Poêler la dinde 8 min, la couper en lamelles.",
       "Écraser l'avocat avec le fromage blanc.",
       "Garnir la tortilla, rouler et couper en deux."
-    ],
-    "allergenes": [
-      "gluten",
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "halal"
     ]
   },
   {
@@ -4350,17 +3415,6 @@
       "Faire revenir oignon et carotte râpée 5 min.",
       "Ajouter lentilles, riz, cumin, curcuma et 400 ml d'eau.",
       "Cuire 20 min à couvert, jusqu'à absorption."
-    ],
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -4399,16 +3453,6 @@
       "Cuire le quinoa 12 min. Cuire le brocoli 8 min à la vapeur.",
       "Poêler le saumon 4 min de chaque côté.",
       "Servir avec citron, aneth et un filet d'huile."
-    ],
-    "allergenes": [
-      "poissons"
-    ],
-    "regimes": [
-      "omnivore",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -4447,18 +3491,6 @@
       "Faire revenir oignon et poivrons 8 min.",
       "Verser les œufs battus, émietter la feta.",
       "Cuire 4 min, plier et servir."
-    ],
-    "allergenes": [
-      "lait",
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -4497,13 +3529,6 @@
       "Cuire le riz 12 min.",
       "Poêler le poulet 8 min, réserver. Sauter les champignons et l'ail 6 min.",
       "Remettre le poulet, parsemer de persil, servir sur le riz."
-    ],
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -4546,16 +3571,6 @@
       "Cuire les pommes de terre 20 min, les couper en rondelles tièdes.",
       "Égoutter les sardines.",
       "Assembler avec salade, tomate, oignon, citron et huile."
-    ],
-    "allergenes": [
-      "poissons"
-    ],
-    "regimes": [
-      "omnivore",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -4594,13 +3609,6 @@
       "Cuire les pommes de terre 20 min.",
       "Faire revenir oignon et haché 10 min.",
       "Ajouter les petits pois 3 min, parsemer de persil, servir avec les pommes de terre."
-    ],
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -4643,18 +3651,6 @@
       "Cuire le quinoa 12 min. Cuire l'œuf dur 9 min.",
       "Couper avocat et tomates. Dresser avec la roquette.",
       "Arroser de citron et d'huile."
-    ],
-    "allergenes": [
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -4693,16 +3689,6 @@
       "Cuire le riz 12 min. Cuire les haricots 8 min.",
       "Poêler le merlu 4 min de chaque côté avec l'ail.",
       "Servir avec citron et un filet d'huile."
-    ],
-    "allergenes": [
-      "poissons"
-    ],
-    "regimes": [
-      "omnivore",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -4741,17 +3727,6 @@
       "Cuire les pâtes 10 min, égoutter.",
       "Faire revenir ail et tomates cerises 4 min.",
       "Mélanger pâtes, tomates, mozzarella coupée et basilic."
-    ],
-    "allergenes": [
-      "gluten",
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -4790,18 +3765,6 @@
       "Faire revenir l'oignon 4 min. Ajouter potiron et pomme de terre en cubes.",
       "Couvrir d'eau, ajouter le cumin, cuire 20 min.",
       "Mixer, servir avec le pain."
-    ],
-    "allergenes": [
-      "gluten"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -4840,13 +3803,6 @@
       "Cuire les pommes de terre 20 min.",
       "Poêler le poulet 8 min avec le thym. Réserver.",
       "Faire revenir les endives 8 min, déglacer au citron, servir le tout."
-    ],
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -4885,16 +3841,6 @@
       "Cuire le riz 12 min.",
       "Faire réduire ail et tomates 8 min.",
       "Pocher le lieu 6 min dans la sauce, parsemer de basilic, servir sur le riz."
-    ],
-    "allergenes": [
-      "poissons"
-    ],
-    "regimes": [
-      "omnivore",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -4933,18 +3879,6 @@
       "Battre les œufs, émietter le chèvre.",
       "Cuire l'omelette 4 min dans un peu d'huile.",
       "Servir avec la salade, la tomate et la ciboulette."
-    ],
-    "allergenes": [
-      "lait",
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -4987,20 +3921,6 @@
       "Cuire le riz 15 min. Cuire le brocoli 8 min.",
       "Poêler le tofu en cubes 8 min avec ail et gingembre.",
       "Ajouter soja et huile de sésame, servir sur le riz."
-    ],
-    "allergenes": [
-      "sesame",
-      "soja"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -5044,14 +3964,6 @@
       "Sauter courgette et tomate 8 min avec le cumin.",
       "Hydrater la semoule 5 min à l'eau bouillante.",
       "Dresser avec la menthe."
-    ],
-    "allergenes": [
-      "gluten"
-    ],
-    "regimes": [
-      "omnivore",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -5090,16 +4002,6 @@
       "Cuire les pommes de terre 20 min. Faire suer les poireaux 10 min.",
       "Poêler le bar 4 min de chaque côté.",
       "Servir avec citron et aneth."
-    ],
-    "allergenes": [
-      "poissons"
-    ],
-    "regimes": [
-      "omnivore",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -5138,13 +4040,6 @@
       "Cuire la patate douce en cubes 15 min.",
       "Poêler la dinde 8 min. Faire tomber les épinards avec l'ail 3 min.",
       "Muscader légèrement et dresser."
-    ],
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -5187,16 +4082,6 @@
       "Cuire les pâtes 10 min.",
       "Sauter la courgette râpée 6 min avec l'ail.",
       "Ajouter le thon égoutté, les pâtes, citron et basilic."
-    ],
-    "allergenes": [
-      "gluten",
-      "poissons"
-    ],
-    "regimes": [
-      "omnivore",
-      "pescetarien",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -5235,17 +4120,6 @@
       "Faire revenir oignon et poireaux 6 min.",
       "Ajouter la pomme de terre, le thym et de l'eau à hauteur. Cuire 20 min.",
       "Mixer grossièrement, poivrer et servir."
-    ],
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -5284,16 +4158,6 @@
       "Cuire le riz 12 min. Émincer le fenouil, le faire revenir 10 min.",
       "Poêler le saumon 4 min de chaque côté.",
       "Servir avec citron et aneth."
-    ],
-    "allergenes": [
-      "poissons"
-    ],
-    "regimes": [
-      "omnivore",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -5336,14 +4200,6 @@
       "Détailler le chou-fleur en bouquets, le cuire 10 min.",
       "Poêler le poulet 8 min avec ail et curry.",
       "Ajouter le chou-fleur 5 min, arroser de citron, parsemer de coriandre."
-    ],
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -5382,15 +4238,6 @@
       "Poêler le poulet 8 min, le couper en lamelles.",
       "Tartiner la tortilla de houmous, ajouter salade, carotte râpée, concombre et poulet.",
       "Rouler et couper en deux."
-    ],
-    "allergenes": [
-      "gluten",
-      "sesame"
-    ],
-    "regimes": [
-      "omnivore",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -5429,18 +4276,6 @@
       "Faire suer les poireaux 10 min dans l'huile.",
       "Verser les œufs battus, cuire 4 min.",
       "Saler, poivrer, parsemer de ciboulette."
-    ],
-    "allergenes": [
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -5479,16 +4314,6 @@
       "Cuire le riz 12 min.",
       "Faire tomber les épinards avec l'ail 3 min.",
       "Poêler le cabillaud 4 min de chaque côté, servir avec citron."
-    ],
-    "allergenes": [
-      "poissons"
-    ],
-    "regimes": [
-      "omnivore",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -5527,14 +4352,6 @@
       "Façonner le steak, le poêler 4 min de chaque côté.",
       "Sauter courgette et tomate 10 min avec ail et herbes.",
       "Servir le steak sur les légumes."
-    ],
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -5577,18 +4394,6 @@
       "Faire revenir oignon et carotte 8 min.",
       "Ajouter les lentilles et le thym, chauffer 5 min.",
       "Cuire l'œuf dur 9 min, couper, dresser avec un filet de vinaigre."
-    ],
-    "allergenes": [
-      "oeufs",
-      "sulfites"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "casher"
     ]
   },
   {
@@ -5631,15 +4436,6 @@
       "Cuire le quinoa 12 min. Cuire le brocoli 8 min.",
       "Sauter ail, piment et crevettes 4 min.",
       "Arroser de citron, servir sur le quinoa."
-    ],
-    "allergenes": [
-      "crustaces"
-    ],
-    "regimes": [
-      "omnivore",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose"
     ]
   },
   {
@@ -5678,13 +4474,6 @@
       "Cuire le riz 12 min.",
       "Poêler le veau 3 min de chaque côté, réserver.",
       "Sauter les champignons et l'ail 6 min, remettre le veau, parsemer de persil."
-    ],
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "sans_gluten",
-      "sans_lactose",
-      "halal"
     ]
   },
   {
@@ -5731,18 +4520,6 @@
       "Couper tous les légumes. Les faire revenir 15 min avec les herbes.",
       "Creuser un puits, casser l'œuf, couvrir 4 min.",
       "Servir dès que le blanc est pris."
-    ],
-    "allergenes": [
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -5785,15 +4562,6 @@
       "Cuire les pommes de terre 20 min. Gratter les moules, jeter celles qui restent ouvertes.",
       "Faire suer poireau et ail 5 min, ajouter les moules, couvrir 6 min.",
       "Jeter les moules fermées, parsemer de persil, servir avec les pommes de terre."
-    ],
-    "allergenes": [
-      "mollusques"
-    ],
-    "regimes": [
-      "omnivore",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose"
     ]
   },
   {
@@ -5819,18 +4587,6 @@
     "etapes": [
       "Mettre le skyr dans un bol.",
       "Ajouter les amandes concassées et le miel."
-    ],
-    "allergenes": [
-      "fruits_a_coque",
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -5861,17 +4617,6 @@
       "Couper les carottes en bâtonnets.",
       "Mélanger fromage blanc, ciboulette et poivre.",
       "Tremper et manger."
-    ],
-    "allergenes": [
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -5893,20 +4638,6 @@
     "etapes": [
       "Éplucher le kiwi, le couper en rondelles.",
       "Manger avec les amandes."
-    ],
-    "allergenes": [
-      "fruits_a_coque"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -5932,18 +4663,6 @@
     "etapes": [
       "Cuire l'œuf 9 min, refroidir, écaler.",
       "Couper le concombre en rondelles, saler légèrement."
-    ],
-    "allergenes": [
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -5973,17 +4692,6 @@
     "etapes": [
       "Écraser la banane dans le yaourt.",
       "Ajouter cacao et miel, mélanger."
-    ],
-    "allergenes": [
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -6009,19 +4717,6 @@
     "etapes": [
       "Tartiner les galettes de houmous.",
       "Ajouter quelques rondelles de concombre."
-    ],
-    "allergenes": [
-      "sesame"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -6043,20 +4738,6 @@
     "etapes": [
       "Éplucher l'orange, la séparer en quartiers.",
       "Manger avec les amandes."
-    ],
-    "allergenes": [
-      "fruits_a_coque"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -6082,19 +4763,6 @@
     "etapes": [
       "Couper les abricots secs.",
       "Mélanger au fromage blanc avec les amandes."
-    ],
-    "allergenes": [
-      "fruits_a_coque",
-      "lait",
-      "sulfites"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -6120,17 +4788,6 @@
     "etapes": [
       "Rincer et couper les fraises.",
       "Mélanger au skyr avec les graines de chia."
-    ],
-    "allergenes": [
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -6152,20 +4809,6 @@
     "etapes": [
       "Couper la pomme en quartiers.",
       "Tartiner de beurre de cacahuète ou tremper."
-    ],
-    "allergenes": [
-      "arachides"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -6195,17 +4838,6 @@
     "etapes": [
       "Couper le concombre en bâtonnets.",
       "Mélanger fromage blanc, ciboulette et citron. Tremper."
-    ],
-    "allergenes": [
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -6227,20 +4859,6 @@
     "etapes": [
       "Laver la poire, la couper en quartiers.",
       "Manger avec les noix de cajou."
-    ],
-    "allergenes": [
-      "fruits_a_coque"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -6262,17 +4880,6 @@
     "etapes": [
       "Couper les pruneaux en morceaux.",
       "Les mélanger au yaourt."
-    ],
-    "allergenes": [
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -6302,17 +4909,6 @@
     "etapes": [
       "Couper les tomates cerises et la feta.",
       "Arroser d'huile, parsemer d'origan."
-    ],
-    "allergenes": [
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -6338,17 +4934,6 @@
     "etapes": [
       "Mixer lait, banane et cacao jusqu'à texture lisse.",
       "Boire de suite."
-    ],
-    "allergenes": [
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -6370,19 +4955,6 @@
     "etapes": [
       "Couper le poivron en lamelles.",
       "Tremper dans le houmous."
-    ],
-    "allergenes": [
-      "sesame"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -6408,17 +4980,6 @@
     "etapes": [
       "Couper la poire en dés.",
       "Mélanger au skyr avec la cannelle."
-    ],
-    "allergenes": [
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -6440,17 +5001,6 @@
     "etapes": [
       "Éplucher et couper le kiwi.",
       "Mélanger au fromage blanc."
-    ],
-    "allergenes": [
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -6472,20 +5022,6 @@
     "etapes": [
       "Éplucher la banane.",
       "Manger avec les amandes."
-    ],
-    "allergenes": [
-      "fruits_a_coque"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "paleo",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -6511,18 +5047,6 @@
     "etapes": [
       "Cuire l'œuf 9 min, écaler.",
       "Laver les radis, saler légèrement et servir."
-    ],
-    "allergenes": [
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -6562,18 +5086,6 @@
       "Faire suer la tomate coupée en dés 2 min dans 1 c. à café d'huile.",
       "Verser les blancs, remuer à feu doux jusqu'à ce qu'ils prennent.",
       "Ciseler la ciboulette, poivrer et servir de suite."
-    ],
-    "allergenes": [
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -6604,16 +5116,6 @@
       "Mettre le fromage blanc dans un bol.",
       "Couper la banane en rondelles et la poser dessus.",
       "Saupoudrer de cannelle, nappe de miel et manger frais."
-    ],
-    "allergenes": [
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal"
     ]
   },
   {
@@ -6640,16 +5142,6 @@
       "Laver et couper la pêche en lamelles.",
       "Verser la spécialité laitière dans un bol.",
       "Ajouter la pêche et le miel, mélanger à peine."
-    ],
-    "allergenes": [
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal"
     ]
   },
   {
@@ -6689,18 +5181,6 @@
       "Ajouter les épinards jusqu'à ce qu'ils tombent.",
       "Verser les blancs d'œufs battus, cuire à feu doux en remuant.",
       "Poivrer et servir chaud."
-    ],
-    "allergenes": [
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -6727,16 +5207,6 @@
       "Égoutter légèrement la faisselle si besoin.",
       "Peler le kiwi et le couper en cubes.",
       "Servir la faisselle nappée de kiwi et d'un filet de miel."
-    ],
-    "allergenes": [
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal"
     ]
   },
   {
@@ -6780,19 +5250,6 @@
       "Faire suer l'oignon et la tomate 3 min dans l'huile.",
       "Ajouter le tofu, le curcuma et le sel, remuer 4 min.",
       "Ciseler la ciboulette et servir."
-    ],
-    "allergenes": [
-      "soja"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -6823,16 +5280,6 @@
       "Couper la pomme en petits dés, sans la peler.",
       "Mélanger au fromage blanc avec la cannelle.",
       "Ajouter le miel et servir de suite."
-    ],
-    "allergenes": [
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal"
     ]
   },
   {
@@ -6875,17 +5322,6 @@
       "Faire revenir l'oignon et la courgette en dés 6 min dans l'huile.",
       "Ajouter les lentilles et le thym, réchauffer 3 min.",
       "Servir avec le riz, saler légèrement."
-    ],
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -6928,19 +5364,6 @@
       "Couper le tofu en cubes, le colorer 4 min dans l'huile avec l'ail et le gingembre.",
       "Ajouter les haricots verts, réchauffer 3 min.",
       "Servir sur le riz, arroser de citron."
-    ],
-    "allergenes": [
-      "soja"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -6987,17 +5410,6 @@
       "Réchauffer les pois chiches avec l'ail, le cumin et l'huile 4 min.",
       "Ajouter la pomme de terre en morceaux et le brocoli.",
       "Citronner, parsemer de persil et servir."
-    ],
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -7040,19 +5452,6 @@
       "Faire revenir l'ail et le tofu en cubes 4 min.",
       "Ajouter les tomates, laisser mijoter 6 min.",
       "Mélanger aux pâtes, poivrer, ciseler le basilic."
-    ],
-    "allergenes": [
-      "soja"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -7099,16 +5498,6 @@
       "Couper le concombre et les tomates cerises, émincer l'oignon.",
       "Mélanger aux lentilles refroidies.",
       "Ajouter le fromage blanc, le citron, la menthe et le sel."
-    ],
-    "allergenes": [
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal"
     ]
   },
   {
@@ -7151,17 +5540,6 @@
       "Mélanger le quinoa et les lentilles tièdes.",
       "Ajouter les tomates cerises coupées et le concombre en dés.",
       "Assaisonner d'huile, citron et persil."
-    ],
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -7208,17 +5586,6 @@
       "Faire suer l'oignon et l'ail dans l'huile avec le cumin et le curcuma.",
       "Ajouter les pois chiches puis les épinards jusqu'à ce qu'ils tombent.",
       "Mélanger au riz et servir chaud."
-    ],
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -7261,18 +5628,6 @@
       "Faire suer l'échalote, ajouter les pommes de terre en cubes et les haricots.",
       "Verser les blancs d'œufs battus, laisser prendre à feu doux.",
       "Parsemer de persil, poivrer et servir."
-    ],
-    "allergenes": [
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -7319,19 +5674,6 @@
       "Couper le tofu, le poivron et la courgette.",
       "Faire revenir 6 min avec l'ail, l'huile et le paprika.",
       "Servir sur le riz, ciseler la coriandre."
-    ],
-    "allergenes": [
-      "soja"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -7374,17 +5716,6 @@
       "Émincer le poireau et l'oignon, couper la carotte en rondelles.",
       "Faire suer 8 min dans l'huile avec le thym.",
       "Ajouter les lentilles et un fond d'eau, mijoter 8 min. Saler."
-    ],
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -7431,17 +5762,6 @@
       "Faire revenir l'oignon, l'ail et l'aubergine en cubes 8 min.",
       "Ajouter tomates, pois chiches, cumin et herbes.",
       "Mijoter 10 min à couvert et servir."
-    ],
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -7484,17 +5804,6 @@
       "Faire revenir l'ail dans l'huile, ajouter les épinards.",
       "Incorporer les lentilles puis les pâtes.",
       "Citronner, poivrer et servir chaud."
-    ],
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -7537,18 +5846,6 @@
       "Couper les pommes de terre, les réchauffer avec le brocoli dans l'huile.",
       "Verser les blancs battus, laisser prendre à feu doux.",
       "Ciseler la ciboulette, saler, poivrer."
-    ],
-    "allergenes": [
-      "oeufs"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -7591,19 +5888,6 @@
       "Faire revenir le tofu en cubes avec l'ail et l'huile.",
       "Ajouter les tomates et l'origan, mijoter 6 min.",
       "Servir sur la polenta, ciseler le basilic."
-    ],
-    "allergenes": [
-      "soja"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -7650,17 +5934,6 @@
       "Faire suer l'oignon, la carotte et la courgette 6 min.",
       "Ajouter pomme de terre, lentilles, thym et de l'eau à hauteur.",
       "Mijoter 15 min, mixer partiellement, poivrer."
-    ],
-    "allergenes": [],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
     ]
   },
   {
@@ -7682,16 +5955,6 @@
     "etapes": [
       "Rincer les myrtilles.",
       "Les verser sur le yaourt 0 % et manger frais."
-    ],
-    "allergenes": [
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal"
     ]
   },
   {
@@ -7713,16 +5976,6 @@
     "etapes": [
       "Couper la pêche en lamelles.",
       "Servir avec le fromage blanc bien frais."
-    ],
-    "allergenes": [
-      "lait"
-    ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "halal"
     ]
   },
   {
@@ -7753,18 +6006,1061 @@
       "Couper le blanc d'œuf cuit en morceaux.",
       "Rincer les tomates cerises, les couper en deux.",
       "Saler, parsemer de persil et servir."
+    ]
+  },
+  {
+    "id": "chia-lait-amande-framboises",
+    "nom": "Pudding chia, lait d'amande et framboises",
+    "moment": "petit_dejeuner",
+    "temps_min": 10,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "chia-graine-sechee",
+        "grammes": 20
+      },
+      {
+        "aliment_id": "boisson-a-lamande-nature-sans-sucres-ajoutes-non-enrichie",
+        "grammes": 200
+      },
+      {
+        "aliment_id": "framboise-crue",
+        "grammes": 80
+      }
     ],
-    "allergenes": [
-      "oeufs"
+    "etapes": [
+      "Mélanger les graines de chia et le lait d'amande dans un bol.",
+      "Laisser gonfler 8 min (ou la veille au frais), remuer une fois.",
+      "Garnir de framboises et servir."
+    ]
+  },
+  {
+    "id": "quinoa-chaud-amande-banane",
+    "nom": "Quinoa chaud, lait d'amande et banane",
+    "moment": "petit_dejeuner",
+    "temps_min": 10,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "quinoa-bouilli-cuit-a-leau",
+        "grammes": 200
+      },
+      {
+        "aliment_id": "boisson-a-lamande-nature-sans-sucres-ajoutes-non-enrichie",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "banane-crue",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "cannelle-poudre",
+        "grammes": 1
+      }
     ],
-    "regimes": [
-      "omnivore",
-      "vegetarien",
-      "pescetarien",
-      "sans_gluten",
-      "sans_lactose",
-      "halal",
-      "casher"
+    "etapes": [
+      "Réchauffer le quinoa avec le lait d'amande 3 à 4 min à feu doux.",
+      "Écraser la banane au-dessus, saupoudrer de cannelle.",
+      "Mélanger et servir tiède."
+    ]
+  },
+  {
+    "id": "smoothie-amande-banane-epinard",
+    "nom": "Smoothie amande, banane et épinard",
+    "moment": "petit_dejeuner",
+    "temps_min": 5,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "boisson-a-lamande-nature-sans-sucres-ajoutes-non-enrichie",
+        "grammes": 250
+      },
+      {
+        "aliment_id": "banane-crue",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "epinard-cru",
+        "grammes": 40
+      },
+      {
+        "aliment_id": "lin-graine",
+        "grammes": 10
+      }
+    ],
+    "etapes": [
+      "Mixer la boisson amande, la banane, les épinards et les graines de lin.",
+      "Boire frais, sans sucrer."
+    ]
+  },
+  {
+    "id": "galettes-riz-avocat-citron",
+    "nom": "Galettes de riz, avocat et citron",
+    "moment": "petit_dejeuner",
+    "temps_min": 5,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "galette-de-riz-complet-souffle",
+        "grammes": 30
+      },
+      {
+        "aliment_id": "avocat-cru",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 10
+      },
+      {
+        "aliment_id": "tomate-cerise",
+        "grammes": 60
+      }
+    ],
+    "etapes": [
+      "Écraser l'avocat avec le jus de citron.",
+      "Tartiner les galettes, ajouter les tomates cerises coupées."
+    ]
+  },
+  {
+    "id": "polenta-compote-amandes",
+    "nom": "Polenta, compote de pomme et amandes",
+    "moment": "petit_dejeuner",
+    "temps_min": 10,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "polenta-ou-semoule-de-mais-cuite",
+        "grammes": 200
+      },
+      {
+        "aliment_id": "compote-de-pomme",
+        "grammes": 100
+      },
+      {
+        "aliment_id": "amande-avec-peau",
+        "grammes": 20
+      }
+    ],
+    "etapes": [
+      "Réchauffer la polenta 3 min à feu doux.",
+      "Servir avec la compote et les amandes concassées."
+    ]
+  },
+  {
+    "id": "porridge-sarrasin-lait-riz-pomme",
+    "nom": "Porridge de sarrasin, lait de riz et pomme",
+    "moment": "petit_dejeuner",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "sarrasin-complet-cru",
+        "grammes": 50
+      },
+      {
+        "aliment_id": "boisson-au-riz-nature",
+        "grammes": 220
+      },
+      {
+        "aliment_id": "pomme-crue",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "raisin-sec",
+        "grammes": 15
+      }
+    ],
+    "etapes": [
+      "Rincer le sarrasin. Le cuire 12 min dans le lait de riz en remuant.",
+      "Ajouter la pomme en dés et les raisins secs hors du feu.",
+      "Laisser 2 min et servir tiède."
+    ]
+  },
+  {
+    "id": "omelette-avocat-tomates",
+    "nom": "Omelette avocat et tomates cerises",
+    "moment": "petit_dejeuner",
+    "temps_min": 10,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "oeuf-cru",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "avocat-cru",
+        "grammes": 70
+      },
+      {
+        "aliment_id": "tomate-cerise",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "ciboule-ou-ciboulette-fraiche",
+        "grammes": 5
+      }
+    ],
+    "etapes": [
+      "Battre les œufs. Chauffer l'huile, verser, laisser prendre.",
+      "Ajouter avocat en dés et tomates coupées, plier l'omelette.",
+      "Ciboulette et servir."
+    ]
+  },
+  {
+    "id": "oeufs-brouilles-epinards-huile",
+    "nom": "Œufs brouillés aux épinards",
+    "moment": "petit_dejeuner",
+    "temps_min": 10,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "oeuf-cru",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "epinard-cru",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 3
+      }
+    ],
+    "etapes": [
+      "Faire tomber les épinards 2 min avec l'ail dans l'huile.",
+      "Verser les œufs battus, remuer à feu doux jusqu'à crèmeux."
+    ]
+  },
+  {
+    "id": "blancs-oeufs-saumon-citron",
+    "nom": "Blancs d'œufs, saumon fumé et citron",
+    "moment": "petit_dejeuner",
+    "temps_min": 10,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "blanc-doeuf-cru",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "saumon-fume",
+        "grammes": 40
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 10
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 5
+      },
+      {
+        "aliment_id": "ciboule-ou-ciboulette-fraiche",
+        "grammes": 5
+      }
+    ],
+    "etapes": [
+      "Cuire les blancs à la poêle avec l'huile, sans dorer trop.",
+      "Ajouter le saumon fumé en lanières hors du feu.",
+      "Citron, ciboulette, servir."
+    ]
+  },
+  {
+    "id": "oeufs-plat-courgette-herbes",
+    "nom": "Œufs au plat, courgette et herbes",
+    "moment": "petit_dejeuner",
+    "temps_min": 12,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "oeuf-cru",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "courgette-crue",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "herbes-de-provence-sechees",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Faire revenir la courgette en rondelles 6 min dans l'huile.",
+      "Casser les œufs dessus, couvrir 3 min.",
+      "Herbes de Provence et servir."
+    ]
+  },
+  {
+    "id": "oeuf-dur-avocat-concombre",
+    "nom": "Œuf dur, avocat et concombre",
+    "moment": "petit_dejeuner",
+    "temps_min": 12,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "oeuf-dur",
+        "grammes": 110
+      },
+      {
+        "aliment_id": "avocat-cru",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "concombre-cru",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 5
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 8
+      }
+    ],
+    "etapes": [
+      "Couper l'œuf dur, l'avocat et le concombre.",
+      "Arroser d'huile et de citron. Servir froid."
+    ]
+  },
+  {
+    "id": "oeufs-champignons-persil",
+    "nom": "Œufs brouillés, champignons et persil",
+    "moment": "petit_dejeuner",
+    "temps_min": 12,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "oeuf-cru",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "champignon-de-paris-ou-champignon-de-couche-cru",
+        "grammes": 100
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "persil-frais",
+        "grammes": 5
+      }
+    ],
+    "etapes": [
+      "Faire suer les champignons émincés 5 min dans l'huile.",
+      "Ajouter les œufs battus, remuer à feu doux.",
+      "Persil et servir."
+    ]
+  },
+  {
+    "id": "poulet-brocoli-huile-olive",
+    "nom": "Poulet poêlé et brocoli",
+    "moment": "dejeuner",
+    "temps_min": 20,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "poulet-blanc-cru",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "brocoli-cru",
+        "grammes": 200
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 10
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 4
+      },
+      {
+        "aliment_id": "thym-frais",
+        "grammes": 3
+      }
+    ],
+    "etapes": [
+      "Dorer le poulet 7 min à l'huile avec l'ail.",
+      "Ajouter les bouquets de brocoli, thym, couvrir 6 min.",
+      "Rectifier et dresser."
+    ]
+  },
+  {
+    "id": "saumon-courgettes-citron",
+    "nom": "Saumon, courgettes et citron",
+    "moment": "dejeuner",
+    "temps_min": 20,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "saumon-elevage-cru",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "courgette-crue",
+        "grammes": 200
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 20
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "thym-frais",
+        "grammes": 2
+      }
+    ],
+    "etapes": [
+      "Poêler le saumon 4 min par face dans l'huile.",
+      "Réserver, faire revenir la courgette 6 min, thym.",
+      "Dresser avec le citron pressé."
+    ]
+  },
+  {
+    "id": "steak-hache-salade-avocat",
+    "nom": "Steak haché, salade et avocat",
+    "moment": "dejeuner",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "boeuf-steak-hache-5-mg-cru",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "laitue-crue",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "tomate-crue",
+        "grammes": 100
+      },
+      {
+        "aliment_id": "avocat-cru",
+        "grammes": 60
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 10
+      }
+    ],
+    "etapes": [
+      "Cuire le steak haché 3 à 4 min par face, sans matière grasse extra.",
+      "Assaisonner la laitue, tomate et avocat avec huile et citron.",
+      "Servir le steak à côté."
+    ]
+  },
+  {
+    "id": "dinde-poivrons-courgette",
+    "nom": "Dinde, poivrons et courgette",
+    "moment": "dejeuner",
+    "temps_min": 20,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "escalope-de-dinde-crue",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "poivron-rouge-cru",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "courgette-crue",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 4
+      },
+      {
+        "aliment_id": "herbes-de-provence-sechees",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Couper la dinde en lanières, dorer 6 min à l'huile.",
+      "Ajouter poivron et courgette, ail, herbes. Cuire 8 min."
+    ]
+  },
+  {
+    "id": "cabillaud-haricots-huile",
+    "nom": "Cabillaud et haricots verts",
+    "moment": "dejeuner",
+    "temps_min": 20,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "cabillaud-cru",
+        "grammes": 160
+      },
+      {
+        "aliment_id": "haricot-vert-cru",
+        "grammes": 200
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 15
+      },
+      {
+        "aliment_id": "persil-frais",
+        "grammes": 5
+      }
+    ],
+    "etapes": [
+      "Cuire les haricots 8 min à la vapeur ou à l'eau.",
+      "Poêler le cabillaud 4 min par face dans l'huile.",
+      "Citron, persil, dresser."
+    ]
+  },
+  {
+    "id": "thon-oeuf-salade-tomate",
+    "nom": "Salade thon, œuf dur et tomate",
+    "moment": "dejeuner",
+    "temps_min": 10,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "thon-au-naturel-appertise",
+        "grammes": 100
+      },
+      {
+        "aliment_id": "oeuf-dur",
+        "grammes": 55
+      },
+      {
+        "aliment_id": "tomate-crue",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "concombre-cru",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "laitue-crue",
+        "grammes": 50
+      }
+    ],
+    "etapes": [
+      "Égoutter le thon. Couper l'œuf, la tomate et le concombre.",
+      "Mélanger avec la laitue, huile d'olive. Servir froid."
+    ]
+  },
+  {
+    "id": "tempeh-courgettes-riz",
+    "nom": "Tempeh, courgettes et riz complet",
+    "moment": "diner",
+    "temps_min": 20,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "tempeh",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "courgette-crue",
+        "grammes": 200
+      },
+      {
+        "aliment_id": "riz-complet-cuit",
+        "grammes": 180
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 4
+      },
+      {
+        "aliment_id": "thym-frais",
+        "grammes": 2
+      }
+    ],
+    "etapes": [
+      "Dorer le tempeh en dés 5 min dans l'huile avec l'ail.",
+      "Ajouter la courgette, thym, 8 min à couvert.",
+      "Servir avec le riz complet réchauffé."
+    ]
+  },
+  {
+    "id": "quinoa-brocoli-tahin",
+    "nom": "Quinoa, brocoli et tahin",
+    "moment": "diner",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "quinoa-bouilli-cuit-a-leau",
+        "grammes": 200
+      },
+      {
+        "aliment_id": "brocoli-cru",
+        "grammes": 200
+      },
+      {
+        "aliment_id": "tahin-ou-puree-de-sesame",
+        "grammes": 15
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 10
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 5
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 3
+      }
+    ],
+    "etapes": [
+      "Cuire le brocoli 6 min à la vapeur.",
+      "Délayer le tahin avec citron, huile et ail écrasé.",
+      "Mélanger quinoa, brocoli et sauce. Servir tiède."
+    ]
+  },
+  {
+    "id": "patate-douce-pois-chiches-epinards",
+    "nom": "Patate douce, pois chiches et épinards",
+    "moment": "diner",
+    "temps_min": 20,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "patate-douce-cuite",
+        "grammes": 200
+      },
+      {
+        "aliment_id": "pois-chiche-bouilli-cuit-a-leau",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "epinard-cru",
+        "grammes": 100
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "oignon-jaune-cru",
+        "grammes": 50
+      },
+      {
+        "aliment_id": "curcuma-poudre",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Faire suer l'oignon dans l'huile, ajouter curcuma.",
+      "Pois chiches 3 min, épinards jusqu'à tomber.",
+      "Servir sur la patate douce coupée."
+    ]
+  },
+  {
+    "id": "tofu-chou-fleur-riz",
+    "nom": "Tofu, chou-fleur et riz",
+    "moment": "diner",
+    "temps_min": 20,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "tofu-nature",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "chou-fleur-cru",
+        "grammes": 200
+      },
+      {
+        "aliment_id": "riz-blanc-cuit",
+        "grammes": 180
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "curcuma-poudre",
+        "grammes": 1
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 4
+      }
+    ],
+    "etapes": [
+      "Dorer le tofu 5 min. Ajouter ail et curcuma.",
+      "Chou-fleur en bouquets, 8 min à couvert avec un fond d'eau.",
+      "Servir avec le riz."
+    ]
+  },
+  {
+    "id": "galette-sarrasin-avocat-roquette",
+    "nom": "Galette de sarrasin, avocat et roquette",
+    "moment": "diner",
+    "temps_min": 10,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "galette-de-sarrasin-nature-souple-a-garnir-preemballee",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "avocat-cru",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "roquette-crue",
+        "grammes": 40
+      },
+      {
+        "aliment_id": "tomate-cerise",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 5
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 8
+      }
+    ],
+    "etapes": [
+      "Réchauffer la galette 1 min à la poêle.",
+      "Garnir d'avocat, roquette, tomates, huile et citron.",
+      "Plier et servir."
+    ]
+  },
+  {
+    "id": "poulet-champignons-epinards",
+    "nom": "Poulet, champignons et épinards",
+    "moment": "diner",
+    "temps_min": 20,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "poulet-blanc-cru",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "champignon-de-paris-ou-champignon-de-couche-cru",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "epinard-cru",
+        "grammes": 100
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 4
+      },
+      {
+        "aliment_id": "thym-frais",
+        "grammes": 2
+      }
+    ],
+    "etapes": [
+      "Dorer le poulet 6 min. Ajouter champignons et ail, 5 min.",
+      "Épinards et thym jusqu'à tomber. Servir."
+    ]
+  },
+  {
+    "id": "veau-courgettes-thym",
+    "nom": "Escalope de veau et courgettes au thym",
+    "moment": "diner",
+    "temps_min": 18,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "veau-escalope-crue",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "courgette-crue",
+        "grammes": 200
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "thym-frais",
+        "grammes": 3
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 4
+      }
+    ],
+    "etapes": [
+      "Saisir l'escalope 3 min par face dans l'huile.",
+      "Réserver, courgettes et ail 6 min, thym.",
+      "Remettre le veau 1 min et dresser."
+    ]
+  },
+  {
+    "id": "crevettes-courgette-ail",
+    "nom": "Crevettes, courgette et ail",
+    "moment": "diner",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "crevette-cuite",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "courgette-crue",
+        "grammes": 200
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 5
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 10
+      },
+      {
+        "aliment_id": "persil-frais",
+        "grammes": 5
+      }
+    ],
+    "etapes": [
+      "Faire revenir la courgette 6 min à l'huile.",
+      "Ajouter ail et crevettes 3 min pour les chauffer.",
+      "Citron, persil, servir."
+    ]
+  },
+  {
+    "id": "lieu-brocoli-huile",
+    "nom": "Lieu noir et brocoli",
+    "moment": "diner",
+    "temps_min": 20,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "lieu-noir-cru",
+        "grammes": 160
+      },
+      {
+        "aliment_id": "brocoli-cru",
+        "grammes": 200
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 12
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 3
+      }
+    ],
+    "etapes": [
+      "Cuire le brocoli 6 min à la vapeur.",
+      "Poêler le lieu 4 min par face avec l'huile et l'ail.",
+      "Citron et dresser."
+    ]
+  },
+  {
+    "id": "poulet-endives-huile",
+    "nom": "Poulet braisé aux endives",
+    "moment": "diner",
+    "temps_min": 25,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "poulet-blanc-cru",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "endive-crue",
+        "grammes": 180
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "thym-frais",
+        "grammes": 2
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 10
+      }
+    ],
+    "etapes": [
+      "Dorer le poulet 5 min. Ajouter les endives coupées en deux.",
+      "Thym, un fond d'eau, couvrir 12 min.",
+      "Citron en fin de cuisson."
+    ]
+  },
+  {
+    "id": "oeuf-dur-avocat",
+    "nom": "Œuf dur et avocat",
+    "moment": "collation",
+    "temps_min": 10,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "oeuf-dur",
+        "grammes": 55
+      },
+      {
+        "aliment_id": "avocat-cru",
+        "grammes": 60
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 5
+      }
+    ],
+    "etapes": [
+      "Couper l'œuf dur et l'avocat.",
+      "Quelques gouttes de citron. Servir."
+    ]
+  },
+  {
+    "id": "peche-amandes",
+    "nom": "Pêche et amandes",
+    "moment": "collation",
+    "temps_min": 2,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "peche-crue",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "amande-avec-peau",
+        "grammes": 20
+      }
+    ],
+    "etapes": [
+      "Laver la pêche, l'accompagner des amandes."
+    ]
+  },
+  {
+    "id": "dattes-noisettes",
+    "nom": "Dattes et noisettes",
+    "moment": "collation",
+    "temps_min": 2,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "datte-seche",
+        "grammes": 40
+      },
+      {
+        "aliment_id": "noisette",
+        "grammes": 20
+      }
+    ],
+    "etapes": [
+      "Servir les dattes avec les noisettes."
+    ]
+  },
+  {
+    "id": "carottes-tahin",
+    "nom": "Carottes et tahin",
+    "moment": "collation",
+    "temps_min": 5,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "carotte-crue",
+        "grammes": 100
+      },
+      {
+        "aliment_id": "tahin-ou-puree-de-sesame",
+        "grammes": 20
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 5
+      }
+    ],
+    "etapes": [
+      "Couper les carottes en bâtonnets.",
+      "Mélanger tahin et citron, dipper."
+    ]
+  },
+  {
+    "id": "concombre-avocat-citron",
+    "nom": "Concombre et avocat citronné",
+    "moment": "collation",
+    "temps_min": 5,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "concombre-cru",
+        "grammes": 100
+      },
+      {
+        "aliment_id": "avocat-cru",
+        "grammes": 60
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 8
+      }
+    ],
+    "etapes": [
+      "Couper concombre et avocat.",
+      "Arroser de citron. Servir froid."
     ]
   }
 ]

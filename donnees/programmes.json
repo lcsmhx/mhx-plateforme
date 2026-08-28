@@ -3631,5 +3631,1079 @@
         ]
       }
     ]
+  },
+  {
+    "id": "seniors-3j-equilibre",
+    "nom": "Séniors — 3 séances",
+    "niveau": "Debutant",
+    "seances_semaine": 3,
+    "lieu": "Maison sans matériel",
+    "objectif": "Performance",
+    "duree_semaines": 8,
+    "note": "Travail doux : assis / debout, équilibre près d'un appui. Pas de charges lourdes. Douleur, vertige ou essoufflement anormal : tu t'arrêtes. 1 jour de repos entre deux séances. Chaussures fermées, chaise stable à portée de main.",
+    "seances": [
+      {
+        "nom": "Séance A — Assis et debout",
+        "note": "Chaise sans roulettes, dos droit. On vise le contrôle, pas la vitesse.",
+        "exercices": [
+          {
+            "nom": "Marche sur place",
+            "series": "3",
+            "reps": "45-60 s",
+            "repos": "45 s",
+            "tempo": "regulier",
+            "note": "Près d'un plan de travail. Talons qui posent, bras libres.",
+            "lien": ""
+          },
+          {
+            "nom": "Assis-debout sur chaise",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Sans s'effondrer. Mains sur les cuisses si besoin, pas d'élan.",
+            "lien": ""
+          },
+          {
+            "nom": "Élévations de genoux assis",
+            "series": "3",
+            "reps": "8/côté",
+            "repos": "45 s",
+            "tempo": "2-0-1",
+            "note": "Dos calé, pied qui décolle sans compenser du tronc.",
+            "lien": ""
+          },
+          {
+            "nom": "Extensions de genoux assis",
+            "series": "3",
+            "reps": "8/jambe",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Tendre la jambe, pause 1 s, redescendre sans claquer.",
+            "lien": ""
+          },
+          {
+            "nom": "Élévations latérales de bras",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "45 s",
+            "tempo": "2-0-2",
+            "note": "Sans haltère. Stoppe à hauteur d'épaule, coudes souples.",
+            "lien": ""
+          },
+          {
+            "nom": "Rotations d'épaules",
+            "series": "2",
+            "reps": "8/sens",
+            "repos": "30 s",
+            "tempo": "regulier",
+            "note": "Cercles lents, amplitude confortable, pas de douleur d'épaule.",
+            "lien": ""
+          },
+          {
+            "nom": "Respiration diaphragme assis",
+            "series": "2",
+            "reps": "6 souffles",
+            "repos": "30 s",
+            "tempo": "iso",
+            "note": "Ventre qui gonfle à l'inspire, expire long par la bouche.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance B — Équilibre",
+        "note": "Toujours un appui (chaise, mur) à portée. On retire la main seulement si c'est stable.",
+        "exercices": [
+          {
+            "nom": "Équilibre unipodal avec appui",
+            "series": "3",
+            "reps": "15-25 s/jambe",
+            "repos": "45 s",
+            "tempo": "iso",
+            "note": "Pied d'appui ancré, genou souple. Main sur la chaise dès que ça vacille.",
+            "lien": ""
+          },
+          {
+            "nom": "Marche tandem (pied devant l'autre)",
+            "series": "3",
+            "reps": "8-10 pas",
+            "repos": "45 s",
+            "tempo": "regulier",
+            "note": "Le long d'un mur. Regard à l'horizon, pas au sol.",
+            "lien": ""
+          },
+          {
+            "nom": "Montées de talons debout",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Main sur la chaise. Pause 1 s en haut, descente contrôlée.",
+            "lien": ""
+          },
+          {
+            "nom": "Transfert de poids latéral",
+            "series": "3",
+            "reps": "8/côté",
+            "repos": "45 s",
+            "tempo": "2-1-2",
+            "note": "Pieds largeur d'épaules, pousser dans un pied puis l'autre, bassin calme.",
+            "lien": ""
+          },
+          {
+            "nom": "Pont fessier au sol",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "60 s",
+            "tempo": "2-1-1",
+            "note": "Sur un tapis. Décolle le bassin sans cambrer, redescend vertèbre par vertèbre.",
+            "lien": ""
+          },
+          {
+            "nom": "Bird dog lent",
+            "series": "3",
+            "reps": "6/côté",
+            "repos": "45 s",
+            "tempo": "2-1-2",
+            "note": "Genoux-mains. Bras et jambe opposés, bassin qui ne bascule pas.",
+            "lien": ""
+          },
+          {
+            "nom": "Gainage sur les avant-bras genoux au sol",
+            "series": "3",
+            "reps": "15-25 s",
+            "repos": "45 s",
+            "tempo": "iso",
+            "note": "Ligne nuque-bassin. Si le dos creuse, tu t'arrêtes.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance C — Souplesse et marche",
+        "note": "Journée plus légère. Tout reste indolore. On cherche l'amplitude, pas l'étirement forcé.",
+        "exercices": [
+          {
+            "nom": "Marche dans le logement ou le couloir",
+            "series": "3",
+            "reps": "2 min",
+            "repos": "60 s",
+            "tempo": "regulier",
+            "note": "Pas confortable, bras qui balancent. Tu peux tenir un mur au demi-tour.",
+            "lien": ""
+          },
+          {
+            "nom": "Cercles de chevilles assis",
+            "series": "2",
+            "reps": "8/sens/cheville",
+            "repos": "30 s",
+            "tempo": "regulier",
+            "note": "Petit cercle, genou calme.",
+            "lien": ""
+          },
+          {
+            "nom": "Ouverture de poitrine à la chaise",
+            "series": "3",
+            "reps": "6 souffles",
+            "repos": "30 s",
+            "tempo": "iso",
+            "note": "Assis au bord, mains au dossier, ouvrir la poitrine sans cambrer le bas du dos.",
+            "lien": ""
+          },
+          {
+            "nom": "Rotation de tronc assis",
+            "series": "3",
+            "reps": "6/côté",
+            "repos": "30 s",
+            "tempo": "2-1-2",
+            "note": "Main sur le genou opposé, rotation courte, regard qui suit.",
+            "lien": ""
+          },
+          {
+            "nom": "Flexion de hanche debout avec appui",
+            "series": "3",
+            "reps": "8/jambe",
+            "repos": "45 s",
+            "tempo": "2-0-1",
+            "note": "Genou qui monte à hauteur de hanche max, bassin fixe.",
+            "lien": ""
+          },
+          {
+            "nom": "Étirements mollets au mur",
+            "series": "2",
+            "reps": "20-25 s/jambe",
+            "repos": "30 s",
+            "tempo": "iso",
+            "note": "Talon au sol, genou arrière tendu. Pas de rebond.",
+            "lien": ""
+          },
+          {
+            "nom": "Respiration au sol genoux pliés",
+            "series": "2",
+            "reps": "8 souffles",
+            "repos": "30 s",
+            "tempo": "iso",
+            "note": "Lombaires qui cherchent le tapis, épaules lourdes.",
+            "lien": ""
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "reprise-blessure-3j",
+    "nom": "Reprise après blessure légère — 3 séances",
+    "niveau": "Debutant",
+    "seances_semaine": 3,
+    "lieu": "Maison sans matériel",
+    "objectif": "Performance",
+    "duree_semaines": 6,
+    "note": "Blessure légère déjà vue par un pro de santé : ce n'est pas un protocole médical. Amplitude contrôlée, 3-4 reps en réserve, zéro douleur vive. Si la douleur apparaît ou augmente le lendemain, tu recules d'une semaine. Pas de charge lourde, pas de rebond, pas d'échec musculaire.",
+    "seances": [
+      {
+        "nom": "Séance A — Tronc et hanche",
+        "note": "Priorité : contrôler le bassin. Amplitude courte si une zone tire.",
+        "exercices": [
+          {
+            "nom": "Respiration 90-90 au sol",
+            "series": "3",
+            "reps": "6 souffles",
+            "repos": "45 s",
+            "tempo": "iso",
+            "note": "Pieds au mur, genoux 90°. Expire long, côtes qui descendent, pas de force.",
+            "lien": ""
+          },
+          {
+            "nom": "Dead bug amplitude courte",
+            "series": "3",
+            "reps": "6/côté",
+            "repos": "45 s",
+            "tempo": "2-1-2",
+            "note": "Lombaires collées. Tu réduis l'amplitude dès que le dos décolle.",
+            "lien": ""
+          },
+          {
+            "nom": "Pont fessier",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "60 s",
+            "tempo": "3-1-1",
+            "note": "Montée lente, pause 1 s, descente en 3 s. Stop si douleur lombaire.",
+            "lien": ""
+          },
+          {
+            "nom": "Coquillage (clamshell) au sol",
+            "series": "3",
+            "reps": "10/côté",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Talons ensemble, ouverture petite. Fessier moyen, pas le dos.",
+            "lien": ""
+          },
+          {
+            "nom": "Abduction de hanche au sol",
+            "series": "3",
+            "reps": "8/côté",
+            "repos": "45 s",
+            "tempo": "2-0-1",
+            "note": "Côté allongé, jambe haute tendue, mouvement court et propre.",
+            "lien": ""
+          },
+          {
+            "nom": "Bird dog",
+            "series": "3",
+            "reps": "6/côté",
+            "repos": "45 s",
+            "tempo": "2-1-2",
+            "note": "Si une épaule ou un genou gène, tu gardes le genou au sol et tu bouges seulement le bras.",
+            "lien": ""
+          },
+          {
+            "nom": "Gainage latéral genou au sol",
+            "series": "3",
+            "reps": "15-20 s/côté",
+            "repos": "45 s",
+            "tempo": "iso",
+            "note": "Épaule au-dessus du coude. Douleur d'épaule = tu passes.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance B — Haut du corps, amplitude",
+        "note": "Coudes et épaules dans une zone indolore. On n'accroche pas en fin de course.",
+        "exercices": [
+          {
+            "nom": "Wall angels",
+            "series": "3",
+            "reps": "8",
+            "repos": "45 s",
+            "tempo": "3-0-3",
+            "note": "Dos au mur, menton rentré. Amplitude où les poignets restent au mur sans forcer.",
+            "lien": ""
+          },
+          {
+            "nom": "Pompes murales",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Loin du mur = plus dur. Poitrine vers le mur, omoplates stables. Douleur d'épaule = recule les pieds.",
+            "lien": ""
+          },
+          {
+            "nom": "Rowing de table partiel",
+            "series": "3",
+            "reps": "6-8",
+            "repos": "75 s",
+            "tempo": "3-1-1",
+            "note": "Table très stable. Tirage court, pause 1 s. Si le dos tire, tu réduis l'amplitude.",
+            "lien": ""
+          },
+          {
+            "nom": "Face pull serviette",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Serviette à hauteur d'yeux, rotation externe douce, pas d'arc lombaire.",
+            "lien": ""
+          },
+          {
+            "nom": "Curl isométrique contre l'autre main",
+            "series": "3",
+            "reps": "20-25 s/bras",
+            "repos": "45 s",
+            "tempo": "iso",
+            "note": "Coude au corps, opposition légère. Pas de à-coups.",
+            "lien": ""
+          },
+          {
+            "nom": "Extension triceps au mur",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "45 s",
+            "tempo": "3-0-1",
+            "note": "Avant-bras au mur, poussée courte. Stop sous le seuil de douleur.",
+            "lien": ""
+          },
+          {
+            "nom": "Gainage épaules contre le mur",
+            "series": "3",
+            "reps": "20-30 s",
+            "repos": "45 s",
+            "tempo": "iso",
+            "note": "Avant-bras au mur, corps gaine. Respire, ne bloque pas.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance C — Jambes, amplitude",
+        "note": "Genoux et chevilles : on reste dans la zone qui ne réveille pas la blessure. Box haute d'abord.",
+        "exercices": [
+          {
+            "nom": "Squat sur chaise partielle",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "75 s",
+            "tempo": "3-1-1",
+            "note": "Descendre seulement jusqu'à la chaise, pause, remonter. Pas de genoux qui rentrent.",
+            "lien": ""
+          },
+          {
+            "nom": "Pont fessier pieds rapprochés",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "60 s",
+            "tempo": "3-1-1",
+            "note": "Si le genou parle, écarte un peu les pieds et réduis la hauteur.",
+            "lien": ""
+          },
+          {
+            "nom": "Step-up bas (marche d'escalier)",
+            "series": "3",
+            "reps": "6/jambe",
+            "repos": "75 s",
+            "tempo": "2-0-1",
+            "note": "Marche basse. Pousse dans le talon avant, contrôle la descente. Appui main-rampe OK.",
+            "lien": ""
+          },
+          {
+            "nom": "Fente statique courte",
+            "series": "3",
+            "reps": "6/jambe",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Petit pas, genou avant visible. Tu t'arrêtes avant la zone douloureuse.",
+            "lien": ""
+          },
+          {
+            "nom": "Mollets deux pieds",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Appui chaise. Amplitude complète seulement si la cheville le permet.",
+            "lien": ""
+          },
+          {
+            "nom": "Good morning poids du corps court",
+            "series": "3",
+            "reps": "8",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Flexion de hanche petite, dos plat. Stop si le bas du dos tire.",
+            "lien": ""
+          },
+          {
+            "nom": "Wall sit court",
+            "series": "3",
+            "reps": "20-30 s",
+            "repos": "60 s",
+            "tempo": "iso",
+            "note": "Cuisses pas forcément à 90°. Douleur de genou = tu remontes le bassin.",
+            "lien": ""
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ppl-6j-avance",
+    "nom": "Push / Pull / Legs — 6 séances",
+    "niveau": "Avance",
+    "seances_semaine": 6,
+    "lieu": "Salle complète",
+    "objectif": "Prise de muscle",
+    "duree_semaines": 8,
+    "note": "Split avancé salle : Push / Pull / Legs deux fois. Force en A-B-C (4-6 reps, 1 rep en réserve), volume en D-E-F (8-15). Un seul jour off, idéalement après la séance F. Sommeil et kcal à la hauteur, sinon tu coupes une série d'isolation. Semaine 4 et 8 : -1 série sur les composés.",
+    "seances": [
+      {
+        "nom": "Séance A — Push force",
+        "note": "Composés lourds d'abord. Les isolations restent propres, pas d'échec.",
+        "exercices": [
+          {
+            "nom": "Développé couché",
+            "series": "5",
+            "reps": "4-6",
+            "repos": "180 s",
+            "tempo": "3-1-1",
+            "note": "Omoplates serrées, pause 1 s sur la poitrine, 1 rep en réserve.",
+            "lien": ""
+          },
+          {
+            "nom": "Développé militaire barre",
+            "series": "4",
+            "reps": "5-7",
+            "repos": "150 s",
+            "tempo": "3-0-1",
+            "note": "Abdos serrés, barre devant le visage, pas de bascule lombaire.",
+            "lien": ""
+          },
+          {
+            "nom": "Dips lestés",
+            "series": "4",
+            "reps": "6-8",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "Leste seulement si 8 reps au poids du corps sont faciles et indolores.",
+            "lien": ""
+          },
+          {
+            "nom": "Développé haltères incliné",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Banc 30°. Haltères qui se touchent en haut sans s'entrechoquer.",
+            "lien": ""
+          },
+          {
+            "nom": "Élévations latérales haltères",
+            "series": "4",
+            "reps": "10-12",
+            "repos": "60 s",
+            "tempo": "2-0-2",
+            "note": "Stoppe avant la ligne des épaules, peu d'élan.",
+            "lien": ""
+          },
+          {
+            "nom": "Extension triceps barre au front",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Coudes fixes, barre vers le front, pas vers le nez.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance B — Pull force",
+        "note": "Dos lourd, biceps ensuite. Le terre reste technique.",
+        "exercices": [
+          {
+            "nom": "Soulevé de terre",
+            "series": "4",
+            "reps": "4-6",
+            "repos": "210 s",
+            "tempo": "3-0-1",
+            "note": "Barre contre les tibias, ventre gainé. Si le dos s'arrondit, baisse la charge.",
+            "lien": ""
+          },
+          {
+            "nom": "Tractions lestées",
+            "series": "4",
+            "reps": "5-7",
+            "repos": "150 s",
+            "tempo": "3-0-1",
+            "note": "Poitrine vers la barre. Leste léger : mieux vaut 5 reps propres.",
+            "lien": ""
+          },
+          {
+            "nom": "Rowing barre buste penché",
+            "series": "4",
+            "reps": "6-8",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "Dos plat, tirer vers le nombril, 1 s en contraction.",
+            "lien": ""
+          },
+          {
+            "nom": "Rowing haltère un bras",
+            "series": "3",
+            "reps": "8-10/bras",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Appui banc, omoplate qui recule, pas d'ouverture du buste.",
+            "lien": ""
+          },
+          {
+            "nom": "Face pulls",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Corde aux yeux, rotation externe en fin de course.",
+            "lien": ""
+          },
+          {
+            "nom": "Curl barre",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Coudes collés, pas de bascule du bassin.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance C — Legs force",
+        "note": "Squat et terre roumain lourds. Le reste sert la technique, pas l'égo.",
+        "exercices": [
+          {
+            "nom": "Squat barre",
+            "series": "5",
+            "reps": "4-6",
+            "repos": "180 s",
+            "tempo": "3-0-1",
+            "note": "Talons au sol, genoux dans l'axe, 1 rep en réserve.",
+            "lien": ""
+          },
+          {
+            "nom": "Soulevé de terre roumain",
+            "series": "4",
+            "reps": "6-8",
+            "repos": "150 s",
+            "tempo": "3-0-1",
+            "note": "Barre près des cuisses, hanches en arrière, ischio sous tension.",
+            "lien": ""
+          },
+          {
+            "nom": "Presse à cuisses",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "Pieds milieu de plaque, bas du dos collé, pas de genoux qui rentrent.",
+            "lien": ""
+          },
+          {
+            "nom": "Fentes bulgares haltères",
+            "series": "3",
+            "reps": "6-8/jambe",
+            "repos": "90 s",
+            "tempo": "2-0-1",
+            "note": "Torse un peu en avant, genou arrière vers le sol sans claquer.",
+            "lien": ""
+          },
+          {
+            "nom": "Leg curl",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Bassin calé, amplitude complète sans décoller les hanches.",
+            "lien": ""
+          },
+          {
+            "nom": "Mollets debout",
+            "series": "4",
+            "reps": "8-10",
+            "repos": "45 s",
+            "tempo": "2-2-1",
+            "note": "Pause 2 s en bas, 2 s en haut. Lourd mais contrôlé.",
+            "lien": ""
+          },
+          {
+            "nom": "Crunch à la poulie",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Côtes vers le bassin, pas les mains qui tirent la tête.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance D — Push volume",
+        "note": "Plus de reps, moins de charge. Tu dois finir toutes les séries.",
+        "exercices": [
+          {
+            "nom": "Développé haltères plat",
+            "series": "4",
+            "reps": "8-10",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "Omoplates serrées, haltères alignées aux pecs en bas.",
+            "lien": ""
+          },
+          {
+            "nom": "Développé Gérard",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Coudes sous les haltères, pas trop bas en bas de course.",
+            "lien": ""
+          },
+          {
+            "nom": "Écartés haltères",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Léger fléchissement des coudes, étirement sans douleur d'épaule.",
+            "lien": ""
+          },
+          {
+            "nom": "Élévations latérales poulie",
+            "series": "4",
+            "reps": "12-15",
+            "repos": "45 s",
+            "tempo": "2-0-2",
+            "note": "Poulie basse, pouce vers le sol, stop avant les trapèzes.",
+            "lien": ""
+          },
+          {
+            "nom": "Oiseau poulie",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Buste penché, tirer vers l'arrière, pas vers le plafond.",
+            "lien": ""
+          },
+          {
+            "nom": "Extension triceps corde",
+            "series": "4",
+            "reps": "12-15",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Coudes collés, ouvre la corde en bas.",
+            "lien": ""
+          },
+          {
+            "nom": "Kickback poulie",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "45 s",
+            "tempo": "2-0-1",
+            "note": "Bras collé au corps, avant-bras seul qui bouge.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance E — Pull volume",
+        "note": "Volume dos large et biceps. Pas de cheating sur le rowing.",
+        "exercices": [
+          {
+            "nom": "Tractions prise large",
+            "series": "4",
+            "reps": "6-10",
+            "repos": "120 s",
+            "tempo": "3-0-1",
+            "note": "Sans leste. Si tu tombes sous 6, passe en assistance ou en négatif.",
+            "lien": ""
+          },
+          {
+            "nom": "Tirage vertical",
+            "series": "4",
+            "reps": "8-12",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Poitrine haute, coudes vers les hanches, pas de bascule arrière.",
+            "lien": ""
+          },
+          {
+            "nom": "Rowing T-bar",
+            "series": "3",
+            "reps": "8-10",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Poitrine ouverte, tirer vers le bas du sternum.",
+            "lien": ""
+          },
+          {
+            "nom": "Tirage horizontal prise neutre",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Omoplates d'abord, puis les coudes. Pas d'élan des fesses.",
+            "lien": ""
+          },
+          {
+            "nom": "Shrug barre",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "60 s",
+            "tempo": "2-1-1",
+            "note": "Épaules vers les oreilles, pause, pas de roulement.",
+            "lien": ""
+          },
+          {
+            "nom": "Curl haltères incliné",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "60 s",
+            "tempo": "3-1-1",
+            "note": "Banc 45°, bras pendants, stretch en bas contrôlé.",
+            "lien": ""
+          },
+          {
+            "nom": "Curl marteau",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Pouces vers le haut, coudes collés.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance F — Legs volume",
+        "note": "Moins lourd que le jour C, plus de sang dans les cuisses. Qualité des fentes.",
+        "exercices": [
+          {
+            "nom": "Squat front",
+            "series": "4",
+            "reps": "8-10",
+            "repos": "150 s",
+            "tempo": "3-0-1",
+            "note": "Coudes hauts, torso vertical. Charge secondaire par rapport au squat du jour C.",
+            "lien": ""
+          },
+          {
+            "nom": "Presse à cuisses pieds hauts",
+            "series": "4",
+            "reps": "10-12",
+            "repos": "90 s",
+            "tempo": "3-0-1",
+            "note": "Pieds hauts sur la plaque pour cibler un peu plus les fessiers.",
+            "lien": ""
+          },
+          {
+            "nom": "Fentes marchées haltères",
+            "series": "3",
+            "reps": "10/jambe",
+            "repos": "75 s",
+            "tempo": "2-0-1",
+            "note": "Grand pas, genou arrière bas, haltères collées aux cuisses.",
+            "lien": ""
+          },
+          {
+            "nom": "Hip thrust",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "90 s",
+            "tempo": "2-1-1",
+            "note": "Menton rentré, pause 1 s en haut, descente sans perdre le contact barre.",
+            "lien": ""
+          },
+          {
+            "nom": "Leg extension",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "60 s",
+            "tempo": "3-1-1",
+            "note": "Dos calé, pause 1 s en haut, pas de genoux qui décollent.",
+            "lien": ""
+          },
+          {
+            "nom": "Leg curl unilatéral",
+            "series": "3",
+            "reps": "10-12/jambe",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Hanche collée, pas de cambrure pour finir la série.",
+            "lien": ""
+          },
+          {
+            "nom": "Mollets assis",
+            "series": "4",
+            "reps": "12-15",
+            "repos": "45 s",
+            "tempo": "2-2-1",
+            "note": "Pause haute et basse. Tu peux aller plus lourd qu'en debout.",
+            "lien": ""
+          },
+          {
+            "nom": "Gainage latéral",
+            "series": "3",
+            "reps": "30-40 s/côté",
+            "repos": "45 s",
+            "tempo": "iso",
+            "note": "Épaule-hanche-cheville alignées après les cuisses.",
+            "lien": ""
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "elastiques-3j-maison",
+    "nom": "Élastiques — 3 séances",
+    "niveau": "Debutant",
+    "seances_semaine": 3,
+    "lieu": "Maison sans matériel",
+    "objectif": "Prise de muscle",
+    "duree_semaines": 8,
+    "note": "Bande élastique (une légère, une moyenne). Ancrage solide : porte fermée avec un coussin, ou pieds. 1 jour de repos entre deux séances. Tu progresses en bande plus forte, en reculant pour plus de tension, ou en ralentissant le tempo. Jamais une bande usée en ancrage tête.",
+    "seances": [
+      {
+        "nom": "Séance A — Poussée et squat",
+        "note": "Bande sous les pieds ou autour du dos. Tension dès le départ du mouvement.",
+        "exercices": [
+          {
+            "nom": "Squat à la bande",
+            "series": "4",
+            "reps": "12-15",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Bande sous les pieds, autres anses aux épaules. Genoux dans l'axe, profondeur confortable.",
+            "lien": ""
+          },
+          {
+            "nom": "Développé pectoraux à la bande",
+            "series": "4",
+            "reps": "10-12",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Bande dans le dos, poussée devant la poitrine, omoplates stables.",
+            "lien": ""
+          },
+          {
+            "nom": "Développé épaules à la bande",
+            "series": "3",
+            "reps": "10-12",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Bande sous les pieds, poussée verticale, abdos serrés. Charge = tension, pas d'arc.",
+            "lien": ""
+          },
+          {
+            "nom": "Fentes avant à la bande",
+            "series": "3",
+            "reps": "10/jambe",
+            "repos": "60 s",
+            "tempo": "2-0-1",
+            "note": "Bande sous le pied avant, anses aux épaules. Grand pas, genou arrière bas.",
+            "lien": ""
+          },
+          {
+            "nom": "Élévations latérales à la bande",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "45 s",
+            "tempo": "2-0-2",
+            "note": "Bande sous un pied, un bras. Stoppe à hauteur d'épaule.",
+            "lien": ""
+          },
+          {
+            "nom": "Extension triceps à la bande",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "45 s",
+            "tempo": "3-0-1",
+            "note": "Ancrage haut (porte). Coudes collés, extension complète sans claquer.",
+            "lien": ""
+          },
+          {
+            "nom": "Planche",
+            "series": "3",
+            "reps": "30-40 s",
+            "repos": "45 s",
+            "tempo": "iso",
+            "note": "Bassin neutre, fessiers serrés. Pas de bande ici.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance B — Tirage et hanche",
+        "note": "Ancrage porte à hauteur de poitrine pour les rowings. Teste l'ancrage avant la série.",
+        "exercices": [
+          {
+            "nom": "Rowing à la bande",
+            "series": "4",
+            "reps": "12-15",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Ancrage poitrine, tirer vers le nombril, omoplates d'abord.",
+            "lien": ""
+          },
+          {
+            "nom": "Tirage vertical à la bande",
+            "series": "4",
+            "reps": "10-12",
+            "repos": "75 s",
+            "tempo": "3-0-1",
+            "note": "Ancrage haut. Poitrine vers les anses, coudes vers les hanches.",
+            "lien": ""
+          },
+          {
+            "nom": "Good morning à la bande",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Bande sous les pieds, autres anses aux épaules. Hanche en arrière, dos plat.",
+            "lien": ""
+          },
+          {
+            "nom": "Hip thrust à la bande",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "60 s",
+            "tempo": "2-1-1",
+            "note": "Bande au-dessus des genoux ou au bassin (ancrage bas). Pause 1 s en haut.",
+            "lien": ""
+          },
+          {
+            "nom": "Face pull à la bande",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Ancrage visage, rotation externe en fin de course.",
+            "lien": ""
+          },
+          {
+            "nom": "Curl biceps à la bande",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "45 s",
+            "tempo": "3-0-1",
+            "note": "Bande sous les pieds, coudes collés, pas de balancier.",
+            "lien": ""
+          },
+          {
+            "nom": "Pallof press à la bande",
+            "series": "3",
+            "reps": "8-10/côté",
+            "repos": "45 s",
+            "tempo": "2-1-2",
+            "note": "Ancrage latéral. Pousse les mains devant toi, bassin qui ne tourne pas.",
+            "lien": ""
+          }
+        ]
+      },
+      {
+        "nom": "Séance C — Full bande",
+        "note": "Un peu de tout, densité moyenne. Tu dois pouvoir parler pendant les repos.",
+        "exercices": [
+          {
+            "nom": "Squat à la bande",
+            "series": "3",
+            "reps": "15",
+            "repos": "60 s",
+            "tempo": "2-0-1",
+            "note": "Même setup que le jour A, un cran plus léger, plus de reps.",
+            "lien": ""
+          },
+          {
+            "nom": "Développé pectoraux à la bande",
+            "series": "3",
+            "reps": "12",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Tension continue, pas de relâchement en bas.",
+            "lien": ""
+          },
+          {
+            "nom": "Rowing à la bande",
+            "series": "3",
+            "reps": "12",
+            "repos": "60 s",
+            "tempo": "3-0-1",
+            "note": "Poitrine ouverte, pas d'élan du bas du dos.",
+            "lien": ""
+          },
+          {
+            "nom": "Fentes arrière à la bande",
+            "series": "3",
+            "reps": "10/jambe",
+            "repos": "60 s",
+            "tempo": "2-0-1",
+            "note": "Bande sous le pied avant. Recule l'autre jambe, genou vers le sol.",
+            "lien": ""
+          },
+          {
+            "nom": "Pull-apart",
+            "series": "3",
+            "reps": "15",
+            "repos": "45 s",
+            "tempo": "2-1-1",
+            "note": "Bande à bout de bras, écarter jusqu'à la poitrine, omoplates serrées.",
+            "lien": ""
+          },
+          {
+            "nom": "Extension triceps à la bande",
+            "series": "3",
+            "reps": "12",
+            "repos": "45 s",
+            "tempo": "3-0-1",
+            "note": "Ancrage haut, même consigne que le jour A.",
+            "lien": ""
+          },
+          {
+            "nom": "Crunch au sol",
+            "series": "3",
+            "reps": "12-15",
+            "repos": "30 s",
+            "tempo": "2-1-1",
+            "note": "Lombaires collées, expire en haut. Bande optionnelle sur la poitrine.",
+            "lien": ""
+          }
+        ]
+      }
+    ]
   }
 ]

@@ -24,8 +24,9 @@ Les kcal / P / L / G d’un repas = **somme** des ingrédients via `aliments.jso
 
 Profil : `poids_kg`, `kcal_cibles`, `regimes[]`, `allergenes[]`, `nb_jours` (7).
 
-- `regimes` : tags CIQUAL (`omnivore`, `vegetarien`, `vegan`, `pescetarien`, `sans_gluten`, …).
-- `allergenes` : tags à exclure (`gluten`, `lait`, `oeufs`, `poissons`, …).
+- `regimes` autorisés : `omnivore`, `vegetarien`, `vegan`, `pescetarien`, `paleo`, `sans_gluten`, `sans_lactose`, `sans_porc`.
+  Plus de `halal` / `casher`. Hiérarchie aliments : vegan ⊂ vegetarien ⊂ pescetarien ⊂ omnivore.
+- `allergenes` : tags à exclure (`gluten`, `lait`, `oeufs`, `poissons`, …), lus sur **l'aliment**, pas sur la recette.
 - Végétarien sans gluten = `regimes: ["vegetarien","sans_gluten"]` **et** `allergenes: ["gluten"]`.
 
 ---
@@ -34,14 +35,19 @@ Profil : `poids_kg`, `kcal_cibles`, `regimes[]`, `allergenes[]`, `nb_jours` (7).
 
 ### 1. Filtrer les recettes
 
+Les recettes **n’ont pas** de champs `regimes` ni `allergenes`. Claude les calcule à partir des ingrédients (`aliments.json`) :
+
+- `regimes` recette = **intersection** des `regimes` de chaque `aliment_id`.
+- `allergenes` recette = **union** des `allergenes` de chaque `aliment_id`.
+
 Garder une recette si :
 
-1. **Intersection des régimes** : chaque tag du profil est dans `recette.regimes`.
-2. **Allergènes** : aucun `recette.allergenes` n’est dans la liste interdite du profil.
+1. **Intersection des régimes** : chaque tag du profil est dans les régimes calculés de la recette.
+2. **Allergènes** : aucun allergène calculé de la recette n’est dans la liste interdite du profil.
 
 Même règle sur un aliment isolé (`aliment.regimes` / `aliment.allergenes`) pour les compléments et le repas ancre.
 
-Pool **végétarien + sans gluten** (preuve actuelle, 165 recettes au total) : **18 PD / 16 déj / 20 dîners / 33 collations** (87 recettes). Cuisine maigre : ancre = blanc d’œuf, fromage blanc 0 %, spécialité laitière riche en protéines, tofu, lentilles cuites, pois chiches cuits. Pas de noix comme ancre.
+Pool **végétarien + sans gluten** (preuve `plans-exemple.json`, pool d’alors) : **18 PD / 16 déj / 20 dîners / 33 collations**. Recettes actuelles : **198**. Cuisine maigre : ancre = blanc d’œuf, fromage blanc 0 %, spécialité laitière riche en protéines, tofu, lentilles cuites, pois chiches cuits. Pas de noix comme ancre.
 
 ### 2. Répartition kcal du jour (fixe)
 
@@ -152,12 +158,14 @@ Le plan porte aussi `liste_courses` (§6).
 
 | Fichier | Rôle |
 |---------|------|
-| `donnees/aliments.json` | CIQUAL 2025, lecture seule |
-| `donnees/recettes.json` | 165 recettes, lecture seule côté app |
+| `donnees/aliments.json` | CIQUAL 2025, 3109 lignes ; régimes sans halal/casher, + `sans_porc` |
+| `donnees/recettes.json` | 198 recettes, schéma `id, nom, moment, temps_min, portions, ingredients, etapes` (pas de `allergenes`/`regimes`) |
 | `donnees/rayons.json` | catégories CIQUAL → rayons magasin |
 | `donnees/plans-exemple.json` | 3 plans générés (preuve) |
 | `donnees/generateur.md` | cette spec |
 
-**Interdit ici :** modifier `index.html`, `aliments.json`, `aliments-off.json`, `aliments-usda.json` ; `git commit` / `git push`.
+**Import Supabase :** côté Claude (`index.html`). Grok ne cherche pas de clé et n’importe pas.
+
+**Interdit :** modifier `index.html`, `aliments-off.json`, `aliments-usda.json` ; `git commit` / `git push`.
 
 **Toujours : porter en JS, Grok ne touche pas `index.html`.**
