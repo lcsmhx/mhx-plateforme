@@ -1,3 +1,5 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Plateforme MHX Coaching</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 
@@ -277,7 +279,7 @@ svg.chart{display:block;width:100%;height:260px;overflow:visible}
 
 /* --- Nutrition : cases a cocher, tuiles de bilan, cartes de repas --- */
 .coches{display:flex;flex-wrap:wrap;gap:8px 14px;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--sunken)}
-.coche{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--ink-2);cursor:pointer;margin:0;font-weight:500}
+.coche{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--ink-2);cursor:pointer;margin:0;font-weight:500;text-transform:none;letter-spacing:normal;font-family:inherit}
 .coche input{width:16px;height:16px;accent-color:var(--accent);cursor:pointer;margin:0}
 .bilan-jour .tuile{display:flex;flex-direction:column;gap:2px;padding:14px;border:1px solid var(--line);border-radius:8px;background:var(--sunken)}
 .tuile .t-lbl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
@@ -295,6 +297,38 @@ ul.ingr li{display:flex;justify-content:space-between;gap:12px;padding:6px 0;bor
 ul.ingr li b{font-family:"IBM Plex Mono",ui-monospace,monospace;color:var(--ink)}
 ol.etapes{margin:0;padding-left:18px;font-size:14px;color:var(--ink-2)}
 ol.etapes li{margin-bottom:6px}
+.pastille.manque{background:var(--accent-soft);color:var(--warn);border-color:var(--warn)}
+#tb-clients td{vertical-align:middle}
+#tb-clients .voir{font:inherit;font-size:12px;padding:5px 11px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-2);border-radius:5px;cursor:pointer;white-space:nowrap}
+#tb-clients .voir:hover{border-color:var(--accent);color:var(--accent)}
+.repas-c.mange{opacity:.72}
+.repas-c.mange h2{text-decoration:line-through;text-decoration-thickness:1px}
+.jauge{height:10px;border-radius:999px;background:var(--sunken);overflow:hidden;border:1px solid var(--line)}
+.jauge i{display:block;height:100%;background:var(--accent);transition:width .25s}
+.g-edit{display:inline-flex;align-items:center;gap:6px;color:var(--ink-3);font-size:13px}
+.g-edit input{width:78px;padding:5px 7px;text-align:right;font-family:"IBM Plex Mono",ui-monospace,monospace}
+.g-edit .del{border:0;background:none;color:var(--ink-3);cursor:pointer;font-size:17px;line-height:1;padding:0 2px}
+.g-edit .del:hover{color:var(--bad)}
+ul.courses-l li{align-items:center}
+ul.courses-l .coche{font-size:14px;color:var(--ink-2)}
+.resultats{margin-top:14px}
+.resultats h3{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin:14px 0 6px}
+.res-l{display:flex;align-items:center;gap:12px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;margin-bottom:6px;background:var(--surface)}
+.res-l .nom{font-weight:500;flex:1;min-width:0}
+.res-l .meta{font-size:12px;color:var(--ink-3);white-space:nowrap}
+.res-l.exclu{border-color:var(--bad)}
+.res-l.exclu .meta b{color:var(--bad)}
+.res-l button{font:inherit;font-size:12px;padding:5px 11px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-2);border-radius:5px;cursor:pointer}
+.res-l button:hover{border-color:var(--accent);color:var(--accent)}
+@media(max-width:560px){.res-l{flex-wrap:wrap}.res-l .meta{white-space:normal}}
+#cat-journal{max-height:320px;overflow-y:auto;border:1px solid var(--line);border-radius:6px;background:var(--sunken)}
+#cat-journal:empty{display:none}
+.j-ligne{padding:7px 12px;border-bottom:1px solid var(--line);font-size:13px;color:var(--ink-2);font-family:"IBM Plex Mono",ui-monospace,monospace}
+.j-ligne:last-child{border-bottom:0}
+.j-ligne b{color:var(--ink)}
+.j-ligne.attention{color:var(--warn)}
+.j-ligne.erreur-l{color:var(--bad)}
+.j-ligne.ok-l{color:var(--good);font-weight:600}
 </style>
 
 <div class="topbar">
@@ -387,6 +421,22 @@ const CONFIG = {
        filtre "sans porc ni alcool" en couvre la partie vérifiable,
        le reste relève de ta vérification. */
     regimes: ["Omnivore","Végétarien","Végétalien (vegan)","Pescétarien","Paléo","Sans gluten","Sans lactose","Sans porc ni alcool"],
+    /* D'ou viennent les donnees importables (depot public GitHub).
+       Change l'adresse ici si le depot change de nom. */
+    source_donnees: "https://raw.githubusercontent.com/lcsmhx/mhx-plateforme/main/donnees/",
+
+    /* Rayons du magasin, pour la liste de courses */
+    rayons: [
+      { id:"fruits-legumes",   nom:"Fruits et légumes",       categories:["Fruits","Légumes"] },
+      { id:"viandes",          nom:"Viandes",                 categories:["Viandes"] },
+      { id:"poissons",         nom:"Poissons et fruits de mer", categories:["Poissons"] },
+      { id:"frais",            nom:"Frais / crèmerie",        categories:["Laitages","Oeufs"] },
+      { id:"feculents",        nom:"Féculents et pain",       categories:["Féculents"] },
+      { id:"legumineuses",     nom:"Légumineuses",            categories:["Légumineuses"] },
+      { id:"epicerie",         nom:"Épicerie",                categories:["Produits de base","Oléagineux"] },
+      { id:"matieres-grasses", nom:"Matières grasses",        categories:["Matières grasses"] }
+    ],
+
     /* Les 14 allergenes a declaration obligatoire (reglement UE 1169/2011) */
     allergenes: [
       { id:"gluten",         nom:"Gluten" },
@@ -638,6 +688,155 @@ const Catalogue = {
       t.lipides   += (+a.lipides   || 0) * k;
     });
     return t;
+  }
+};
+
+/* ------------------------------------------------------------------
+   NORMALISATION DES DONNEES IMPORTEES
+   Les tables nutritionnelles sont fiables sur les chiffres, beaucoup
+   moins sur les etiquettes "vegan", "sans gluten" ou les allergenes.
+   On ne fait donc jamais confiance aux etiquettes fournies :
+   - pour les ALLERGENES, on garde ceux du fichier ET on ajoute ceux
+     que le nom trahit (on n'en retire jamais : le doute protege) ;
+   - pour les REGIMES, on recalcule tout depuis zero, et en cas de
+     doute on refuse le regime plutot que de l'accorder.
+   Une erreur ici se traduit par une assiette qu'un client ne peut pas
+   manger : c'est le point le plus sensible de toute l'application.
+   ------------------------------------------------------------------ */
+const Normaliser = {
+  /* Les tables officielles melangent les encodages : "pates" peut s'ecrire
+     avec un accent circonflexe combinant, "oeufs" avec la ligature œ.
+     Un filtre naif passe alors a cote et laisse des pates aux oeufs
+     etiquetees vegetaliennes. On aplatit donc tout avant de chercher :
+     minuscules, accents retires, ligatures separees. */
+  aplatir(t){
+    return String(t || "").toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/œ/g, "oe").replace(/æ/g, "ae");
+  },
+
+  mots: {
+    viande:  /(poulet|poule|boeuf|porc|agneau|mouton|veau|dinde|canard|\boie\b|lapin|cheval|jambon|saucis|lardon|bacon|chorizo|andouill|boudin|rillette|\bpate\b|pate de (foie|campagne)|\bfoie\b|gesier|merguez|viande|volaille|charcuterie|steak|escalope|brochette|kebab|nugget|cordon.?bleu|saindoux|gelatine|graisse (de|d')\s?(dinde|poulet|canard|oie|porc|mouton|boeuf)|bouillon de (boeuf|poule|volaille|viande))/,
+    poisson: /(poisson|thon|saumon|cabillaud|colin|merlu|\blieu\b|sardine|maquereau|anchois|truite|hareng|\bsole\b|dorade|\bbar\b|\braie\b|lotte|espadon|surimi|tarama|caviar|crevette|crabe|homard|langoustine|ecrevisse|langouste|tourteau|moule|huitre|coquille|calamar|calmar|poulpe|seiche|bulot|palourde|saint.?jacques|escargot|anguille|carpe|perche|brochet|bigorneau)/,
+    laitier: /(\blait\b|laitier|laitiere|fromage|yaourt|yoghourt|beurre|\bcreme\b|petit.suisse|skyr|mascarpone|ricotta|mozzarella|parmesan|emmental|comte\b|gruyere|camembert|roquefort|\bchevre\b|brebis|kefir|faisselle|babeurre|lactose|caseine|petit.lait|\bfeta\b|cheddar|raclette|reblochon|munster|brie\b|bleu d)/,
+    oeuf:    /(\boeuf|omelette|mayonnaise|meringue|quiche|\bflan\b|aux oeufs)/,
+    miel:    /(\bmiel\b|gelee royale|propolis)/,
+    cereale: /(\bble\b|\bpain\b|\bpates\b|\bpate\b|\briz\b|avoine|\borge\b|seigle|epeautre|\bmais\b|semoule|couscous|boulgour|quinoa|sarrasin|millet|farine|biscuit|gateau|cereale|corn.?flakes|muesli|brioche|croissant|pizza|\btarte\b|crepe|gaufre|chapelure|panure|galette|biscotte|viennoiserie|sandwich|burger|wrap\b)/,
+    legumineuse: /(lentille|\bpois\b|pois chiche|haricot|\bfeve\b|\bsoja\b|\btofu\b|tempeh|edamame|lupin|arachide|cacahuete)/,
+    sucre:   /(\bsucre|sirop|bonbon|confiserie|confiture|chocolat|pate a tartiner|\bsoda\b|\bcola\b|limonade)/,
+    porc:    /(\bporc\b|porcin|jambon|lardon|bacon|chorizo|andouill|boudin|rillette|saucisson|saindoux|charcuterie|coppa|pancetta|gelatine)/,
+    alcool:  /(\bvin\b|\bbiere\b|alcool|\brhum\b|whisky|vodka|liqueur|\bcidre\b|champagne|kirsch|cognac|armagnac|\bporto\b)/
+  },
+
+  allergenesMots: {
+    gluten:        /(\bble\b|\bpain\b|\bpates\b|semoule|couscous|boulgour|\borge\b|seigle|epeautre|avoine|farine|biscuit|brioche|croissant|gateau|chapelure|panure|panne|pizza|\btarte\b|crepe|gaufre|biscotte|\bbiere\b|\bmalt\b|viennoiserie|sandwich|burger|nouille|raviol|lasagne|tortilla|pita\b)/,
+    crustaces:     /(crevette|crabe|homard|langoustine|ecrevisse|langouste|tourteau)/,
+    mollusques:    /(moule|huitre|coquille|calamar|calmar|poulpe|seiche|bulot|palourde|saint.?jacques|escargot|bigorneau|\bcoque\b)/,
+    soja:          /(\bsoja\b|\btofu\b|tempeh|edamame|\bmiso\b|tamari)/,
+    fruits_a_coque:/(amande|\bnoix\b|noisette|pistache|\bcajou\b|pecan|macadamia|chataigne|\bmarron\b)/,
+    arachides:     /(arachide|cacahuete)/,
+    sesame:        /(sesame|tahin)/,
+    celeri:        /(celeri)/,
+    moutarde:      /(moutarde)/,
+    lupin:         /(lupin)/
+  },
+
+  /* Une mention "sans gluten" sur l'etiquette prime sur le mot "pates" */
+  sansGluten: /(sans gluten|sans.?ble)/,
+
+  aliment(a){
+    const t = this.aplatir((a.nom || "") + " " + (a.categorie || ""));
+    const m = this.mots, cat = a.categorie || "";
+    const viande  = m.viande.test(t)  || cat === "Viandes";
+    const poisson = m.poisson.test(t) || cat === "Poissons";
+    const laitier = m.laitier.test(t) || cat === "Laitages";
+    const oeuf    = m.oeuf.test(t)    || cat === "Oeufs";
+    const miel    = m.miel.test(t);
+    const cereale = m.cereale.test(t) || cat === "Féculents";
+    const legum   = m.legumineuse.test(t) || cat === "Légumineuses";
+    const sucre   = m.sucre.test(t);
+    const porc    = m.porc.test(t);
+    const alcool  = m.alcool.test(t);
+
+    /* --- allergenes : on garde ceux du fichier ET on ajoute ceux que le
+       nom trahit. On n'en retire jamais : le doute protege. --- */
+    const al = {};
+    (a.allergenes || []).forEach(x => { al[x] = true; });
+    if (laitier) al.lait = true;
+    if (oeuf)    al.oeufs = true;
+    if (poisson && !this.allergenesMots.crustaces.test(t) && !this.allergenesMots.mollusques.test(t)) al.poissons = true;
+    for (const cle in this.allergenesMots){
+      if (this.allergenesMots[cle].test(t)) al[cle] = true;
+    }
+    if (this.sansGluten.test(t)) delete al.gluten;   // seule exception : l'etiquette le dit
+    const allergenes = Object.keys(al).filter(x => CONFIG.nutrition.allergenes.some(z => z.id === x));
+
+    /* --- regimes : entierement recalcules, restrictifs en cas de doute --- */
+    const a_lait = allergenes.indexOf("lait") > -1, a_oeuf = allergenes.indexOf("oeufs") > -1;
+    const a_mer  = ["poissons","crustaces","mollusques"].some(x => allergenes.indexOf(x) > -1);
+    const animal = viande || poisson || laitier || oeuf || miel || a_lait || a_oeuf || a_mer;
+    const r = ["omnivore"];
+    if (!viande && !poisson && !a_mer) r.push("vegetarien");
+    if (!animal) r.push("vegan");
+    if (!viande) r.push("pescetarien");
+    if (!laitier && !a_lait && !cereale && !legum && !sucre) r.push("paleo");
+    if (allergenes.indexOf("gluten") === -1) r.push("sans_gluten");
+    if (!laitier && !a_lait) r.push("sans_lactose");
+    if (!porc && !alcool) r.push("sans_porc");
+
+    return {
+      id: a.id, nom: a.nom, categorie: a.categorie || null,
+      kcal: +a.kcal || 0, proteines: +a.proteines || 0, glucides: +a.glucides || 0,
+      lipides: +a.lipides || 0, fibres: +a.fibres || 0,
+      portion_g: a.portion_g || null, portion_nom: a.portion_nom || null,
+      allergenes: allergenes, regimes: r, source: a.source || null
+    };
+  },
+
+  /* Les etiquettes d'une recette ne sont jamais reprises du fichier :
+     elles se deduisent de ses ingredients. Union des allergenes,
+     intersection des regimes. */
+  recette(r, idx){
+    const al = {}; let reg = null; const manquants = [];
+    (r.ingredients || []).forEach(i => {
+      const a = idx[i.aliment_id];
+      if (!a){ manquants.push(i.aliment_id); return; }
+      (a.allergenes || []).forEach(x => { al[x] = true; });
+      const s = a.regimes || [];
+      reg = reg === null ? s.slice() : reg.filter(x => s.indexOf(x) > -1);
+    });
+    return {
+      fiche: {
+        id: r.id, nom: r.nom, moment: r.moment || null, temps_min: r.temps_min || null,
+        portions: r.portions || 1, ingredients: r.ingredients || [], etapes: r.etapes || [],
+        allergenes: Object.keys(al), regimes: reg || [], source: r.source || null
+      },
+      manquants: manquants
+    };
+  }
+};
+
+/* ------------------------------------------------------------------
+   IMPORT DU CATALOGUE depuis le depot public.
+   Le coach declenche, l'application telecharge, normalise et enregistre.
+   ------------------------------------------------------------------ */
+const Import = {
+  async fichier(nom){
+    const r = await fetch(CONFIG.nutrition.source_donnees + nom, { cache: "no-store" });
+    if (!r.ok) throw new Error("Fichier introuvable : " + nom + " (" + r.status + ")");
+    return r.json();
+  },
+  async envoyer(table, lignes, journal){
+    const paquet = 300;
+    for (let i = 0; i < lignes.length; i += paquet){
+      await Auth.assurer();
+      await Auth.appel("/rest/v1/" + table + "?on_conflict=id", {
+        method: "POST",
+        headers: { "Prefer": "resolution=merge-duplicates,return=minimal" },
+        body: lignes.slice(i, i + paquet)
+      });
+      if (journal) journal(table, Math.min(i + paquet, lignes.length), lignes.length);
+    }
   }
 };
 
@@ -1847,9 +2046,9 @@ const outilNutrition = {
   titre: "La journée type",
   accroche: "Des repas construits sur tes calories et tes macros, avec des aliments qu'on trouve en France — et qui respectent ton régime et tes allergies.",
 
-  vide(){ return { nom:"", note:"", cible:null, regime:"", allergenes:[], repas:[], maj:"" }; },
+  vide(){ return { nom:"", note:"", cible:null, regime:"", allergenes:[], repas:[], manquants:[], jours_courses:7, maj:"" }; },
 
-  /* ---------- filtrage : c'est ici que se joue la securite ---------- */
+  /* ================= filtrage : le point sensible ================= */
   compatible(r, regime, allergenes){
     if (allergenes && allergenes.length){
       const a = r.allergenes || [];
@@ -1869,13 +2068,10 @@ const outilNutrition = {
     }[nom] || "";
   },
 
-  /* ---------- composition d'une journee ---------- */
+  /* ================= composition automatique ================= */
   async composer(cible, regime, allergenes, eviterIds){
     const recettes = await Catalogue.recettes();
     const dispo = recettes.filter(r => this.compatible(r, regime, allergenes));
-
-    /* Un repas sans aucune recette compatible n'est pas simplement retire :
-       ses calories sont reparties sur les repas restants, et on previent le coach. */
     const servis = CONFIG.nutrition.repas.filter(sl => dispo.some(r => r.moment === sl.id));
     const manquants = CONFIG.nutrition.repas.filter(sl => servis.indexOf(sl) === -1);
     const somme = servis.reduce((t, sl) => t + sl.part, 0);
@@ -1897,68 +2093,143 @@ const outilNutrition = {
   },
 
   /* On fige la recette dans le plan : le client garde ses grammages
-     meme si la recette est modifiee plus tard dans le catalogue. */
+     meme si la recette change plus tard dans le catalogue. */
   async figer(r, f, slot){
     const idx = await Catalogue.indexAliments();
-    const m = await Catalogue.macros(r, f);
-    return {
-      moment: slot.id, moment_nom: slot.nom,
-      recette_id: r.id, nom: r.nom, temps_min: r.temps_min || null,
-      facteur: Math.round(f * 100) / 100,
-      ingredients: (r.ingredients || []).map(i => ({
-        nom: (idx[i.aliment_id] && idx[i.aliment_id].nom) || i.aliment_id,
-        grammes: Math.round(i.grammes * f)
-      })),
-      etapes: r.etapes || [],
-      allergenes: r.allergenes || [],
-      macros: { kcal: Math.round(m.kcal), proteines: Math.round(m.proteines),
-                glucides: Math.round(m.glucides), lipides: Math.round(m.lipides) }
+    const carte = {
+      moment: slot.id, moment_nom: slot.nom, recette_id: r.id, nom: r.nom,
+      temps_min: r.temps_min || null, etapes: r.etapes || [],
+      ingredients: (r.ingredients || []).map(i => {
+        const a = idx[i.aliment_id] || {};
+        return { aliment_id: i.aliment_id, nom: a.nom || i.aliment_id,
+                 categorie: a.categorie || null, grammes: Math.round(i.grammes * f) };
+      })
     };
+    await this.recalculer(carte);
+    return carte;
+  },
+
+  /* Macros d'une carte, recalculees depuis ses ingredients et leurs grammes.
+     Un ingredient inconnu du catalogue est signale, jamais ignore en silence :
+     sinon le plat serait annonce plus leger qu'il n'est. */
+  async recalculer(carte){
+    const idx = await Catalogue.indexAliments();
+    const t = { kcal:0, proteines:0, glucides:0, lipides:0 };
+    let inconnus = 0; const al = {};
+    (carte.ingredients || []).forEach(i => {
+      const a = idx[i.aliment_id];
+      if (!a){ inconnus++; return; }
+      const k = i.grammes / 100;
+      t.kcal += (+a.kcal||0)*k; t.proteines += (+a.proteines||0)*k;
+      t.glucides += (+a.glucides||0)*k; t.lipides += (+a.lipides||0)*k;
+      (a.allergenes || []).forEach(x => { al[x] = true; });
+      if (!i.nom) i.nom = a.nom;
+      if (!i.categorie) i.categorie = a.categorie;
+    });
+    carte.macros = { kcal: Math.round(t.kcal), proteines: Math.round(t.proteines),
+                     glucides: Math.round(t.glucides), lipides: Math.round(t.lipides) };
+    carte.allergenes = Object.keys(al);
+    carte.inconnus = inconnus;
+    return carte;
   },
 
   totaux(R){
     const t = { kcal:0, proteines:0, glucides:0, lipides:0 };
     (R.repas || []).forEach(x => {
+      if (!x.macros) return;
       t.kcal += x.macros.kcal; t.proteines += x.macros.proteines;
       t.glucides += x.macros.glucides; t.lipides += x.macros.lipides;
     });
     return t;
   },
 
-  /* ---------- vue client ---------- */
-  vueLecture(R){
+  /* ================= liste de courses ================= */
+  courses(R, jours){
+    const somme = {};
+    (R.repas || []).forEach(c => (c.ingredients || []).forEach(i => {
+      const cle = i.aliment_id;
+      if (!somme[cle]) somme[cle] = { nom: i.nom || cle, categorie: i.categorie, grammes: 0 };
+      somme[cle].grammes += i.grammes * jours;
+    }));
+    const rayons = CONFIG.nutrition.rayons.map(r => ({ id:r.id, nom:r.nom, lignes:[] }));
+    const autre = { id:"autre", nom:"Divers", lignes:[] };
+    Object.keys(somme).forEach(cle => {
+      const l = somme[cle];
+      const r = rayons.find(x => (CONFIG.nutrition.rayons.find(y => y.id === x.id).categories || []).indexOf(l.categorie) > -1);
+      (r || autre).lignes.push({ id: cle, nom: l.nom, grammes: Math.round(l.grammes) });
+    });
+    if (autre.lignes.length) rayons.push(autre);
+    rayons.forEach(r => r.lignes.sort((a,b) => a.nom.localeCompare(b.nom, "fr")));
+    return rayons.filter(r => r.lignes.length);
+  },
+
+  blocCourses(R, coches){
+    const jours = R.jours_courses || 7;
+    const rayons = this.courses(R, jours);
+    if (!rayons.length) return "";
+    let h = `<section class="panel">
+      <div class="repas-tete">
+        <div><h2 style="margin:0">Liste de courses</h2>
+          <p class="note" style="margin:4px 0 0">Les quantités de la journée type, multipliées par le nombre de jours.</p></div>
+        <div style="min-width:150px"><label for="nu-jours">Nombre de jours</label>
+          <input id="nu-jours" type="number" min="1" max="31" step="1" value="${jours}"></div>
+      </div>`;
+    rayons.forEach(r => {
+      h += `<h3 style="margin-top:18px">${esc(r.nom)}</h3><ul class="ingr courses-l">` +
+        r.lignes.map(l => `<li><label class="coche"><input type="checkbox" data-course="${esc(l.id)}"${coches[l.id] ? " checked" : ""}> ${esc(l.nom)}</label><b>${fmt(l.grammes)} g</b></li>`).join("") +
+        `</ul>`;
+    });
+    h += `<p class="note" style="margin-top:16px">Les poids sont donnés tels qu'ils entrent dans les recettes — crus pour la viande, le poisson et les féculents. Prévois un peu plus pour les pertes à la cuisson.</p></section>`;
+    return h;
+  },
+
+  /* ================= vue client ================= */
+  vueLecture(R, suivi){
     if (!R.repas || !R.repas.length){
       return `<section class="panel"><div class="empty">Ton coach n'a pas encore validé tes repas. Remplis ton profil — régime et allergies comprises — pour qu'il puisse les préparer.</div></section>`;
     }
     const t = this.totaux(R);
+    const mange = { kcal:0, proteines:0, glucides:0, lipides:0 };
+    (R.repas || []).forEach((x, i) => { if (suivi.mange && suivi.mange[i] && x.macros){
+      mange.kcal += x.macros.kcal; mange.proteines += x.macros.proteines;
+      mange.glucides += x.macros.glucides; mange.lipides += x.macros.lipides; } });
+    const reste = Math.max(0, t.kcal - mange.kcal);
+    const pct = t.kcal ? Math.min(100, Math.round(mange.kcal / t.kcal * 100)) : 0;
+
     let h = "";
     if (R.note) h += `<section class="panel"><h2>Mot du coach</h2><p style="margin:0">${esc(R.note)}</p></section>`;
-    h += `<section class="panel"><h2>Ta journée en un coup d'œil</h2>
+    h += `<section class="panel">
+      <h2>Ta journée</h2>
+      <div class="jauge"><i style="width:${pct}%"></i></div>
+      <p class="note" style="margin:8px 0 18px">${fmt(mange.kcal)} kcal consommées sur ${fmt(t.kcal)} — il te reste <b>${fmt(reste)} kcal</b>.</p>
       <div class="grid g4 bilan-jour">
-        <div class="tuile"><span class="t-lbl">Calories</span><span class="t-val readout">${fmt(t.kcal)}</span><span class="t-u">kcal</span></div>
+        <div class="tuile"><span class="t-lbl">Calories</span><span class="t-val readout">${fmt(t.kcal)}</span><span class="t-u">kcal prévus</span></div>
         <div class="tuile"><span class="t-lbl">Protéines</span><span class="t-val readout">${fmt(t.proteines)}</span><span class="t-u">g</span></div>
         <div class="tuile"><span class="t-lbl">Glucides</span><span class="t-val readout">${fmt(t.glucides)}</span><span class="t-u">g</span></div>
         <div class="tuile"><span class="t-lbl">Lipides</span><span class="t-val readout">${fmt(t.lipides)}</span><span class="t-u">g</span></div>
       </div>
       ${R.cible ? `<p class="note" style="margin-top:14px">Objectif visé : ${fmt(R.cible.kcal)} kcal · ${fmt(R.cible.prot)} g de protéines · ${fmt(R.cible.gluc)} g de glucides · ${fmt(R.cible.lip)} g de lipides.</p>` : ""}
     </section>`;
-    (R.repas || []).forEach(x => h += this.carteRepas(x, false));
+    (R.repas || []).forEach((x, i) => h += this.carteRepas(x, false, i, suivi));
+    h += this.blocCourses(R, suivi.courses || {});
     h += `<section class="panel"><p class="note" style="margin:0">Les grammages sont donnés crus, sauf mention contraire. Si un aliment ne te convient pas, dis-le à ton coach : il remplacera le plat sans changer tes macros.</p></section>`;
     if (R.maj) h += `<p class="note" style="text-align:center">Repas mis à jour le ${esc(R.maj)}</p>`;
     return h;
   },
 
-  carteRepas(x, edition, i){
-    const m = x.macros;
-    return `<section class="panel repas-c">
+  carteRepas(x, edition, i, suivi){
+    const m = x.macros || { kcal:0, proteines:0, glucides:0, lipides:0 };
+    const coche = suivi && suivi.mange && suivi.mange[i];
+    return `<section class="panel repas-c${coche ? " mange" : ""}">
       <div class="repas-tete">
         <div>
           <span class="eyebrow">${esc(x.moment_nom || "")}</span>
           <h2 style="margin:2px 0 0">${esc(x.nom)}</h2>
         </div>
         ${edition ? `<span class="actions-b">
-          <button data-autre="${i}">Autre proposition</button>
-          <button data-retirer="${i}">Retirer</button></span>` : ""}
+          ${x.recette_id ? `<button data-autre="${i}">Autre proposition</button>` : ""}
+          <button data-retirer="${i}">Retirer</button></span>`
+        : `<label class="coche"><input type="checkbox" data-mange="${i}"${coche ? " checked" : ""}> mangé</label>`}
       </div>
       <div class="repas-macros">
         <span><b>${fmt(m.kcal)}</b> kcal</span>
@@ -1967,20 +2238,24 @@ const outilNutrition = {
         <span><b>${fmt(m.lipides)}</b> g lip.</span>
         ${x.temps_min ? `<span>${x.temps_min} min</span>` : ""}
       </div>
+      ${x.inconnus ? `<div class="flag">${x.inconnus} ingrédient${x.inconnus>1?"s":""} absent${x.inconnus>1?"s":""} du catalogue : les macros affichées sont incomplètes.</div>` : ""}
       <div class="grid g2" style="margin-top:14px">
         <div>
           <h3>Ingrédients</h3>
-          <ul class="ingr">${(x.ingredients || []).map(i2 => `<li><span>${esc(i2.nom)}</span><b>${fmt(i2.grammes)} g</b></li>`).join("")}</ul>
+          <ul class="ingr">${(x.ingredients || []).map((g, j) => edition
+            ? `<li><span>${esc(g.nom)}</span><span class="g-edit"><input type="number" min="0" step="5" value="${g.grammes}" data-gr="${i}:${j}"> g <button class="del" data-suppr-i="${i}:${j}" aria-label="Retirer">×</button></span></li>`
+            : `<li><span>${esc(g.nom)}</span><b>${fmt(g.grammes)} g</b></li>`).join("")}</ul>
+          ${edition ? `<div class="actions" style="margin-top:10px"><button class="btn ghost" data-ajout-i="${i}">+ Ajouter un aliment</button></div>` : ""}
         </div>
         <div>
           <h3>Préparation</h3>
-          <ol class="etapes">${(x.etapes || []).map(e => `<li>${esc(e)}</li>`).join("")}</ol>
+          ${(x.etapes && x.etapes.length) ? `<ol class="etapes">${x.etapes.map(e => `<li>${esc(e)}</li>`).join("")}</ol>` : `<p class="note" style="margin:0">Aucune préparation : ce repas se compose tel quel.</p>`}
         </div>
       </div>
     </section>`;
   },
 
-  /* ---------- vue coach ---------- */
+  /* ================= vue coach ================= */
   vueEdition(R, ctx){
     const t = this.totaux(R);
     const ecart = R.cible ? Math.round(t.kcal - R.cible.kcal) : 0;
@@ -1999,11 +2274,23 @@ const outilNutrition = {
       <div class="actions" style="margin-top:14px">
         <button class="btn" id="nu-gen">Générer une journée</button>
         <button class="btn ghost" id="nu-biblio-save">Enregistrer dans ma bibliothèque</button>
-        <select id="nu-biblio" style="max-width:260px"><option value="">— charger depuis ma bibliothèque —</option></select>
+        <select id="nu-biblio" style="max-width:250px"><option value="">— charger depuis ma bibliothèque —</option></select>
         <span class="msg" id="nu-msg"></span>
       </div>
-      ${ctx.prerempli ? `<p class="note" style="margin-top:10px">Pré-rempli avec le profil et le calculateur de ce client${ctx.autres ? ` — il a aussi signalé : « ${esc(ctx.autres)} »` : ""}.</p>` : ""}
+      ${ctx.prerempli ? `<p class="note" style="margin-top:10px">Pré-rempli avec le profil et le calculateur de ce client.</p>` : ""}
       ${ctx.autres ? `<div class="flag" style="margin-top:12px"><b>À vérifier avant d'envoyer :</b> ce client a écrit « ${esc(ctx.autres)} » dans ses allergies. Aucun filtre automatique ne couvre ce texte : relis les ingrédients toi-même.</div>` : ""}
+    </section>
+
+    <section class="panel">
+      <h2>Ajouter à la main</h2>
+      <div class="grid g2">
+        <div style="grid-column:1/-1"><label for="nu-q">Chercher un aliment ou une recette</label>
+          <input id="nu-q" type="search" placeholder="Poulet, flocons d'avoine, saumon…" autocomplete="off"></div>
+        <div><label for="nu-slot">Dans quel repas</label><select id="nu-slot">${CONFIG.nutrition.repas.map(r => `<option value="${r.id}">${esc(r.nom)}</option>`).join("")}</select></div>
+        <div><label for="nu-gr">Quantité (g)</label><input id="nu-gr" type="number" min="0" step="10" value="100"></div>
+      </div>
+      <div id="nu-res" class="resultats"></div>
+      <p class="note" style="margin-top:12px">La recherche montre tout le catalogue. Ce qui ne respecte pas le régime ou les allergies du client est signalé en rouge : tu peux quand même l'ajouter, mais tu le fais en connaissance de cause.</p>
     </section>`;
 
     if (R.repas && R.repas.length){
@@ -2015,12 +2302,13 @@ const outilNutrition = {
           <div class="tuile"><span class="t-lbl">Lipides</span><span class="t-val readout">${fmt(t.lipides)}</span><span class="t-u">g</span></div>
         </div>
         ${R.cible ? `<p class="note" style="margin-top:14px">Cible : ${fmt(R.cible.kcal)} kcal · ${fmt(R.cible.prot)} g prot. · ${fmt(R.cible.gluc)} g gluc. · ${fmt(R.cible.lip)} g lip.<br>
-          Écart : <b>${ecart > 0 ? "+" : ""}${fmt(ecart)} kcal</b>${Math.abs(ecart) > R.cible.kcal * 0.1 ? " — au-delà de 10 %, ajuste un repas" : ""} · protéines <b>${t.proteines >= R.cible.prot ? "+" : ""}${fmt(t.proteines - R.cible.prot)} g</b>${t.proteines < R.cible.prot * 0.9 ? " — trop bas, remplace un plat par une source de protéines" : ""}.</p>` : ""}
+          Écart : <b>${ecart > 0 ? "+" : ""}${fmt(ecart)} kcal</b>${Math.abs(ecart) > R.cible.kcal * 0.1 ? " — au-delà de 10 %, ajuste un repas" : ""} · protéines <b>${t.proteines >= R.cible.prot ? "+" : ""}${fmt(t.proteines - R.cible.prot)} g</b>${t.proteines < R.cible.prot * 0.9 ? " — trop bas, ajoute une source de protéines" : ""}.</p>` : ""}
         ${(R.manquants && R.manquants.length) ? `<div class="flag"><b>Repas sans recette compatible :</b> ${esc(R.manquants.join(", "))}. Leurs calories ont été réparties sur les autres repas. Ajoute des recettes au catalogue pour ce régime.</div>` : ""}
       </section>`;
-      R.repas.forEach((x, i) => h += this.carteRepas(x, true, i));
+      R.repas.forEach((x, i) => h += this.carteRepas(x, true, i, null));
+      h += this.blocCourses(R, {});
     } else {
-      h += `<section class="panel"><div class="empty">Aucun repas pour l'instant. Renseigne les calories visées et clique sur « Générer une journée ».</div></section>`;
+      h += `<section class="panel"><div class="empty">Aucun repas pour l'instant. Génère une journée, ou ajoute des aliments à la main.</div></section>`;
     }
 
     h += `<section class="panel">
@@ -2045,9 +2333,34 @@ const outilNutrition = {
     if (!zone) return;
     const sauver = () => Store.ecrire(self.cle, R);
 
-    if (!edition){ zone.innerHTML = self.vueLecture(R); return; }
+    /* ---------- cote client : lecture + suivi personnel ---------- */
+    if (!edition){
+      const suivi = await Store.lire("repas_suivi", { date:"", mange:{}, courses:{} });
+      if (suivi.date !== aujourdhui()){ suivi.date = aujourdhui(); suivi.mange = {}; }
+      Store.cache["repas_suivi"] = suivi;
+      const dessiner = () => {
+        zone.innerHTML = self.vueLecture(R, suivi);
+        $$("[data-mange]", zone).forEach(c => c.addEventListener("change", () => {
+          suivi.mange[c.dataset.mange] = c.checked;
+          Store.ecrire("repas_suivi", suivi); dessiner();
+        }));
+        $$("[data-course]", zone).forEach(c => c.addEventListener("change", () => {
+          suivi.courses = suivi.courses || {};
+          suivi.courses[c.dataset.course] = c.checked;
+          Store.ecrire("repas_suivi", suivi);
+        }));
+        const j = $("nu-jours");
+        if (j) j.addEventListener("change", () => {
+          const n = Math.max(1, Math.min(31, Math.round(num(j.value)) || 7));
+          suivi.jours = n; R.jours_courses = n; dessiner();
+        });
+      };
+      if (suivi.jours) R.jours_courses = suivi.jours;
+      dessiner();
+      return;
+    }
 
-    /* pre-remplissage a partir du profil et du calculateur du client */
+    /* ---------- cote coach : edition ---------- */
     const ctx = { prerempli:false, autres:"" };
     let intake = {}, calc = null;
     try { intake = await Store.lire("intake", {}) || {}; } catch(e){}
@@ -2086,29 +2399,78 @@ const outilNutrition = {
       R.allergenes = $$("#nu-allerg input:checked").map(c => c.value);
     };
 
+    /* --- recherche pour la composition manuelle --- */
+    let minuteur = null;
+    const chercher = async (q) => {
+      const box = $("nu-res"); if (!box) return;
+      if (q.length < 2){ box.innerHTML = ""; return; }
+      const t = Normaliser.aplatir(q);
+      const [alims, recs] = await Promise.all([Catalogue.aliments(), Catalogue.recettes()]);
+      const score = (nom) => Normaliser.aplatir(nom).indexOf(t);
+      const ra = alims.filter(a => score(a.nom) > -1).sort((a,b) => score(a.nom) - score(b.nom) || a.nom.length - b.nom.length).slice(0, 12);
+      const rr = recs.filter(r => score(r.nom) > -1).sort((a,b) => score(a.nom) - score(b.nom)).slice(0, 6);
+      if (!ra.length && !rr.length){ box.innerHTML = `<div class="empty">Rien ne correspond à « ${esc(q)} ».</div>`; return; }
+      const ligne = (o, type) => {
+        const ok = self.compatible(o, R.regime, R.allergenes);
+        const pourquoi = ok ? "" : ((o.allergenes || []).filter(x => (R.allergenes || []).indexOf(x) > -1)
+              .map(x => (CONFIG.nutrition.allergenes.find(z => z.id === x) || {}).nom).join(", ") || "hors régime");
+        return `<div class="res-l${ok ? "" : " exclu"}">
+          <span class="nom">${esc(o.nom)}</span>
+          <span class="meta">${type === "aliment" ? `${fmt(o.kcal)} kcal / 100 g` : `recette · ${esc((CONFIG.nutrition.repas.find(s => s.id === o.moment) || {}).nom || "")}`}${ok ? "" : ` · <b>${esc(pourquoi)}</b>`}</span>
+          <span class="actions-b"><button data-add="${type}:${esc(o.id)}">Ajouter</button></span>
+        </div>`;
+      };
+      box.innerHTML = (rr.length ? `<h3>Recettes</h3>` + rr.map(r => ligne(r, "recette")).join("") : "") +
+                      (ra.length ? `<h3>Aliments</h3>` + ra.map(a => ligne(a, "aliment")).join("") : "");
+      $$("[data-add]", box).forEach(b => b.addEventListener("click", async () => {
+        const [type, ...reste] = b.dataset.add.split(":");
+        const id = reste.join(":");
+        const slotId = $("nu-slot").value;
+        const slot = CONFIG.nutrition.repas.find(s => s.id === slotId);
+        if (type === "recette"){
+          const r = (await Catalogue.recettes()).find(x => x.id === id);
+          if (r) R.repas.push(await self.figer(r, 1, slot));
+        } else {
+          const idx = await Catalogue.indexAliments(); const a = idx[id];
+          if (a){
+            const gr = Math.max(1, Math.round(num($("nu-gr").value) || a.portion_g || 100));
+            const carte = { moment: slot.id, moment_nom: slot.nom, recette_id: null, nom: a.nom,
+                            temps_min: null, etapes: [],
+                            ingredients: [{ aliment_id: a.id, nom: a.nom, categorie: a.categorie, grammes: gr }] };
+            await self.recalculer(carte);
+            R.repas.push(carte);
+          }
+        }
+        R.repas.sort((x, y) => CONFIG.nutrition.repas.findIndex(s => s.id === x.moment) - CONFIG.nutrition.repas.findIndex(s => s.id === y.moment));
+        sauver(); redessiner();
+      }));
+    };
+
     const brancher = () => {
       ["nu-kcal","nu-regime","nu-note"].forEach(id => {
         const el = $(id); if (el) el.addEventListener("change", () => { lireReglages(); sauver(); });
       });
       $$("#nu-allerg input").forEach(c => c.addEventListener("change", () => { lireReglages(); sauver(); }));
 
+      const q = $("nu-q");
+      if (q) q.addEventListener("input", () => { clearTimeout(minuteur); minuteur = setTimeout(() => chercher(q.value.trim()), 200); });
+
       const g = $("nu-gen");
       if (g) g.addEventListener("click", async () => {
         lireReglages();
         if (!R.cible || !R.cible.kcal){ flash("nu-msg","Indique d'abord les calories visées."); return; }
         g.disabled = true; g.textContent = "Composition…";
-        R.repas = await self.composer(R.cible, R.regime, R.allergenes, []);
+        const liste = await self.composer(R.cible, R.regime, R.allergenes, []);
         g.disabled = false; g.textContent = "Générer une journée";
-        if (!R.repas.length){ flash("nu-msg","Aucune recette ne correspond à ces critères. Ajoute des recettes au catalogue ou assouplis les filtres."); return; }
-        R.manquants = R.repas.manquants || [];
+        if (!liste.length){ flash("nu-msg","Aucune recette ne correspond à ces critères. Importe le catalogue ou assouplis les filtres."); return; }
+        R.repas = liste; R.manquants = liste.manquants || [];
         sauver(); redessiner();
-        if (R.manquants.length) flash("nu-msg", "Aucune recette compatible pour : " + R.manquants.join(", ") + ". Les calories ont été réparties sur les autres repas — ajoute des recettes au catalogue pour combler ce trou.");
+        if (R.manquants.length) flash("nu-msg", "Aucune recette compatible pour : " + R.manquants.join(", ") + ". Les calories ont été réparties sur les autres repas.");
       });
 
       $$("[data-autre]", zone).forEach(b => b.addEventListener("click", async () => {
         const i = +b.dataset.autre, x = R.repas[i];
-        const slot = CONFIG.nutrition.repas.find(sl => sl.id === x.moment);
-        const remplacants = await self.composer(R.cible, R.regime, R.allergenes, [x.recette_id]);
+        const remplacants = await self.composer(R.cible || { kcal: (x.macros.kcal * 4) }, R.regime, R.allergenes, [x.recette_id]);
         const nouveau = remplacants.find(n => n.moment === x.moment);
         if (nouveau){ R.repas[i] = nouveau; sauver(); redessiner(); }
         else flash("nu-msg", "Pas d'autre recette disponible pour ce repas.");
@@ -2116,6 +2478,31 @@ const outilNutrition = {
       $$("[data-retirer]", zone).forEach(b => b.addEventListener("click", () => {
         R.repas.splice(+b.dataset.retirer, 1); sauver(); redessiner();
       }));
+      $$("[data-suppr-i]", zone).forEach(b => b.addEventListener("click", async () => {
+        const [i, j] = b.dataset.supprI.split(":").map(Number);
+        R.repas[i].ingredients.splice(j, 1);
+        if (!R.repas[i].ingredients.length) R.repas.splice(i, 1);
+        else await self.recalculer(R.repas[i]);
+        sauver(); redessiner();
+      }));
+      $$("[data-gr]", zone).forEach(el => el.addEventListener("change", async () => {
+        const [i, j] = el.dataset.gr.split(":").map(Number);
+        R.repas[i].ingredients[j].grammes = Math.max(0, Math.round(num(el.value)));
+        await self.recalculer(R.repas[i]);
+        sauver(); redessiner();
+      }));
+      $$("[data-ajout-i]", zone).forEach(b => b.addEventListener("click", () => {
+        const i = +b.dataset.ajoutI;
+        $("nu-slot").value = R.repas[i].moment;
+        $("nu-q").focus();
+        $("nu-q").scrollIntoView({ behavior:"smooth", block:"center" });
+      }));
+
+      const j = $("nu-jours");
+      if (j) j.addEventListener("change", () => {
+        R.jours_courses = Math.max(1, Math.min(31, Math.round(num(j.value)) || 7));
+        sauver(); redessiner();
+      });
 
       const sv = $("nu-save");
       if (sv) sv.addEventListener("click", () => {
@@ -2240,6 +2627,147 @@ const outilBibliotheque = {
 };
 
 /* ------------------------------------------------------------------
+   OUTIL COACH — Le catalogue (aliments, recettes, programmes)
+   Importe les donnees du depot public et les corrige au passage.
+   ------------------------------------------------------------------ */
+const outilCatalogue = {
+  id: "catalogue",
+  cle: null,
+  nom: "Catalogue",
+  icone: "📦",
+  role: "coach",
+  titre: "Le catalogue",
+  accroche: "Les aliments, les recettes et les programmes dans lesquels l'application pioche. Tu peux les recharger à tout moment depuis le dépôt.",
+
+  html(){
+    return `<section class="panel">
+      <h2>Ce que contient ton catalogue</h2>
+      <div class="grid g4 bilan-jour" id="cat-compteurs">
+        <div class="tuile"><span class="t-lbl">Aliments</span><span class="t-val readout" id="cat-n-aliments">…</span><span class="t-u">fiches</span></div>
+        <div class="tuile"><span class="t-lbl">Recettes</span><span class="t-val readout" id="cat-n-recettes">…</span><span class="t-u">plats</span></div>
+        <div class="tuile"><span class="t-lbl">Programmes</span><span class="t-val readout" id="cat-n-programmes">…</span><span class="t-u">prêts à l'emploi</span></div>
+        <div class="tuile"><span class="t-lbl">Recettes vegan</span><span class="t-val readout" id="cat-n-vegan">…</span><span class="t-u">sur le total</span></div>
+      </div>
+      <div id="cat-couverture" style="margin-top:18px"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Recharger depuis le dépôt</h2>
+      <p class="note" style="margin-top:0">Les données viennent de <span class="readout">${esc(CONFIG.nutrition.source_donnees)}</span>. À chaque import, les régimes et les allergènes sont <strong>recalculés</strong> à partir du nom et de la composition de chaque aliment : les étiquettes du fichier ne sont jamais reprises telles quelles, et les recettes héritent des étiquettes de leurs ingrédients.</p>
+      <div class="actions">
+        <button class="btn" id="cat-go">Importer le catalogue</button>
+        <span class="msg" id="cat-msg"></span>
+      </div>
+      <div id="cat-journal" style="margin-top:16px"></div>
+    </section>`;
+  },
+
+  async compteurs(){
+    const [al, re, pr] = await Promise.all([Catalogue.aliments(), Catalogue.recettes(), Catalogue.programmes()]);
+    $("cat-n-aliments").textContent   = fmt(al.length);
+    $("cat-n-recettes").textContent   = fmt(re.length);
+    $("cat-n-programmes").textContent = fmt(pr.length);
+    $("cat-n-vegan").textContent      = fmt(re.filter(r => (r.regimes||[]).indexOf("vegan") > -1).length);
+
+    /* Couverture : un client d'un regime donne a-t-il de quoi manger a chaque repas ? */
+    const cles = [["vegan","Végétalien"],["vegetarien","Végétarien"],["sans_gluten","Sans gluten"],
+                  ["sans_lactose","Sans lactose"],["paleo","Paléo"],["pescetarien","Pescétarien"]];
+    let h = `<h3 style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin:0 0 10px">Couverture par régime et par repas</h3>
+      <div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Régime</th>` +
+      CONFIG.nutrition.repas.map(r => `<th>${esc(r.nom)}</th>`).join("") + `</tr></thead><tbody>`;
+    let trous = 0;
+    cles.forEach(([k, nom]) => {
+      h += `<tr><td>${esc(nom)}</td>`;
+      CONFIG.nutrition.repas.forEach(slot => {
+        const n = re.filter(r => r.moment === slot.id && (r.regimes||[]).indexOf(k) > -1).length;
+        if (n === 0) trous++;
+        h += `<td${n === 0 ? ' style="color:var(--bad);font-weight:600"' : (n < 3 ? ' style="color:var(--warn)"' : "")}>${n}</td>`;
+      });
+      h += `</tr>`;
+    });
+    h += `</tbody></table></div>
+      <p class="note" style="margin-top:10px">${trous ? `<strong>${trous} case${trous>1?"s":""} à zéro</strong> : pour ces combinaisons, le générateur n'a rien à proposer et répartira les calories sur les autres repas. C'est là qu'il faut ajouter des recettes.` : "Chaque régime a au moins une recette pour chaque repas de la journée."}</p>`;
+    $("cat-couverture").innerHTML = h;
+  },
+
+  async init(){
+    const self = this;
+    Catalogue._c = {}; Catalogue._idx = null;
+    await this.compteurs();
+
+    const journal = $("cat-journal");
+    const dire = (txt, classe) => {
+      const d = document.createElement("div");
+      d.className = "j-ligne" + (classe ? " " + classe : "");
+      d.innerHTML = txt; journal.appendChild(d); journal.scrollTop = journal.scrollHeight;
+    };
+
+    $("cat-go").addEventListener("click", async () => {
+      const b = $("cat-go"); b.disabled = true; b.textContent = "Import en cours…";
+      journal.innerHTML = "";
+      try {
+        /* --- 1. aliments --- */
+        dire("Téléchargement des aliments…");
+        const brutA = await Import.fichier("aliments.json");
+        let corriges = 0, allergAjoutes = 0;
+        const aliments = brutA.map(a => {
+          const n = Normaliser.aliment(a);
+          const avant = (a.regimes || []).slice().sort().join(","), apres = n.regimes.slice().sort().join(",");
+          if (avant !== apres) corriges++;
+          const plus = n.allergenes.filter(x => (a.allergenes || []).indexOf(x) === -1).length;
+          allergAjoutes += plus;
+          return n;
+        });
+        dire(`<b>${fmt(aliments.length)} aliments</b> lus. Régimes recalculés : <b>${fmt(corriges)}</b> fiches corrigées, <b>${fmt(allergAjoutes)}</b> allergènes ajoutés.`, corriges ? "attention" : "");
+        await Import.envoyer("aliments", aliments, (t, i, n) => dire(`Aliments enregistrés : ${fmt(i)} / ${fmt(n)}`));
+
+        /* --- 2. recettes : etiquettes deduites des ingredients --- */
+        dire("Téléchargement des recettes…");
+        const brutR = await Import.fichier("recettes.json");
+        const idx = {}; aliments.forEach(a => { idx[a.id] = a; });
+        const recettes = []; let orphelines = 0, ecarts = 0;
+        brutR.forEach(r => {
+          const res = Normaliser.recette(r, idx);
+          if (res.manquants.length){ orphelines++; dire(`Recette écartée — ingrédient inconnu dans « ${esc(r.nom)} » : ${esc(res.manquants.join(", "))}`, "erreur-l"); return; }
+          const avant = (r.regimes || []).slice().sort().join(","), apres = res.fiche.regimes.slice().sort().join(",");
+          if (avant !== apres) ecarts++;
+          recettes.push(res.fiche);
+        });
+        dire(`<b>${fmt(recettes.length)} recettes</b> retenues${orphelines ? `, ${fmt(orphelines)} écartée${orphelines>1?"s":""}` : ""}. Étiquettes déduites des ingrédients : <b>${fmt(ecarts)}</b> différaient du fichier.`, ecarts ? "attention" : "");
+        await Import.envoyer("recettes", recettes, (t, i, n) => dire(`Recettes enregistrées : ${fmt(i)} / ${fmt(n)}`));
+
+        /* --- 3. programmes --- */
+        dire("Téléchargement des programmes…");
+        const brutP = await Import.fichier("programmes.json");
+        const programmes = brutP.filter(x => x && x.id && x.seances && x.seances.length).map(x => ({
+          id: x.id, nom: x.nom, niveau: x.niveau || null, seances_semaine: x.seances_semaine || null,
+          lieu: x.lieu || null, objectif: x.objectif || null, duree_semaines: x.duree_semaines || null,
+          note: x.note || null,
+          seances: x.seances.map(sc => ({
+            nom: sc.nom || "Séance", note: sc.note || "",
+            exercices: (sc.exercices || []).map(e => ({
+              nom: e.nom || "", series: String(e.series || ""), reps: String(e.reps || ""),
+              repos: String(e.repos || ""), tempo: String(e.tempo || ""), note: e.note || "", lien: e.lien || ""
+            }))
+          }))
+        }));
+        await Import.envoyer("programmes_types", programmes, null);
+        dire(`<b>${fmt(programmes.length)} programmes</b> enregistrés.`);
+
+        Catalogue._c = {}; Catalogue._idx = null;
+        await self.compteurs();
+        dire("Import terminé.", "ok-l");
+        flash("cat-msg", "Catalogue à jour.");
+      } catch(e){
+        dire("Import interrompu : " + esc(e.message || String(e)), "erreur-l");
+        flash("cat-msg", "L'import n'a pas abouti — rien n'a été perdu, tu peux réessayer.");
+      }
+      b.disabled = false; b.textContent = "Importer le catalogue";
+    });
+  }
+};
+
+/* ------------------------------------------------------------------
    OUTIL COACH — Mes clients (invisible pour les clients)
    ------------------------------------------------------------------ */
 const outilClients = {
@@ -2249,12 +2777,127 @@ const outilClients = {
   icone: "👥",
   role: "coach",          // n'apparait que pour le coach
   titre: "Mes clients",
-  accroche: "Tous tes clients et leurs données, en direct. Ouvre une fiche pour voir ses courbes, ses charges et ses macros telles qu'il les a saisies.",
+  accroche: "Tous tes clients et leurs données, en direct. Le tableau te dit d'un coup d'œil qui avance, qui décroche, et à qui il manque quelque chose.",
+
+  jours(iso){
+    if (!iso) return null;
+    return Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+  },
+
+  /* Evolution du poids d'un client a partir de ses mensurations */
+  evolution(mens){
+    if (!mens || !mens.mesures || !mens.mesures.length) return null;
+    const m = mens.mesures.filter(x => x.poids).slice().sort((a,b) => (a.date||"") < (b.date||"") ? -1 : 1);
+    if (!m.length) return null;
+    const dernier = m[m.length - 1];
+    const depart = mens.pstart || m[0].poids;
+    /* on cherche la mesure la plus proche de 28 jours avant la derniere */
+    const cible = new Date(dernier.date || aujourdhui()).getTime() - 28 * 86400000;
+    let ref = m[0], ecartMin = Infinity;
+    m.forEach(x => {
+      const e = Math.abs(new Date(x.date || aujourdhui()).getTime() - cible);
+      if (e < ecartMin){ ecartMin = e; ref = x; }
+    });
+    /* On ne parle de "quatre semaines" que si la mesure de reference tombe
+       vraiment dans cette fenetre : sinon on affiche rien plutot qu'un
+       chiffre calcule sur une periode differente de celle annoncee. */
+    const ecartJours = Math.round(Math.abs(new Date(dernier.date || aujourdhui()).getTime() - new Date(ref.date || aujourdhui()).getTime()) / 86400000);
+    const fenetreValide = ref !== dernier && ecartJours >= 14 && ecartJours <= 45;
+    return {
+      depart: depart, actuel: dernier.poids, date: dernier.date,
+      total: dernier.poids - depart,
+      mois: fenetreValide ? dernier.poids - ref.poids : null,
+      jours_fenetre: fenetreValide ? ecartJours : null,
+      n: m.length
+    };
+  },
+
+  tableau(profils, parClient, contenus){
+    const tb = $("tb-clients"), zoneA = $("alertes-clients");
+    if (!tb) return;
+    const clients = (profils || []).filter(p => p.role !== "coach");
+    if (!clients.length){
+      tb.innerHTML = '<tr><td colspan="9">Aucun client pour le moment.</td></tr>';
+      if (zoneA) zoneA.innerHTML = "";
+      return;
+    }
+
+    const lignes = clients.map(p => {
+      const c = contenus[p.id] || {};
+      const ev = this.evolution(c.mens);
+      const j = this.jours(parClient[p.id]);
+      const objectif = (c.intake && c.intake.objectif) || "";
+      /* Le sens du progres depend de l'objectif : perdre, c'est descendre. */
+      const sens = /perte|s[èe]che/i.test(objectif) ? -1 : /prise|masse/i.test(objectif) ? 1 : 0;
+      return {
+        p: p, ev: ev, jours: j,
+        nom: ((p.prenom||"") + " " + (p.nom||"")).trim() || (p.id.slice(0,8)),
+        intake: !!(c.intake && c.intake.complet),
+        programme: !!(c.programme && (c.programme.seances||[]).length),
+        diete: !!(c.repas && (c.repas.repas||[]).length),
+        sens: sens
+      };
+    });
+
+    /* Ceux qui demandent une action passent devant. */
+    const urgence = (l) => (l.jours === null ? 100 : l.jours >= 10 ? 90 : 0) +
+                           (!l.intake ? 50 : 0) + (!l.programme ? 20 : 0) + (!l.diete ? 10 : 0);
+    lignes.sort((a,b) => urgence(b) - urgence(a) || (b.jours||0) - (a.jours||0));
+
+    const pastille = (ok, txtOk, txtNon) =>
+      `<span class="pastille${ok ? "" : " manque"}">${ok ? txtOk : txtNon}</span>`;
+    const variation = (v, sens) => {
+      if (v === null || v === undefined) return '<span class="meta">—</span>';
+      const t = (v > 0 ? "+" : "") + n1(v) + " kg";
+      const bon = sens === 0 ? null : (sens < 0 ? v < -0.2 : v > 0.2);
+      return `<b style="color:${bon === null ? "var(--ink)" : bon ? "var(--good)" : (Math.abs(v) < 0.3 ? "var(--ink-3)" : "var(--warn)")}">${t}</b>`;
+    };
+
+    tb.innerHTML = lignes.map(l => `<tr>
+      <td><b>${esc(l.nom)}</b></td>
+      <td>${l.jours === null ? '<span class="pastille manque">jamais</span>'
+            : l.jours >= 10 ? `<span class="pastille manque">${l.jours} j</span>`
+            : `<span class="meta">${l.jours === 0 ? "aujourd'hui" : "il y a " + l.jours + " j"}</span>`}</td>
+      <td>${l.ev ? `${n1(l.ev.actuel)} kg <span class="meta">(départ ${n1(l.ev.depart)})</span>` : '<span class="meta">aucune mesure</span>'}</td>
+      <td>${l.ev ? variation(l.ev.total, l.sens) : '<span class="meta">—</span>'}</td>
+      <td>${l.ev && l.ev.mois !== null ? variation(l.ev.mois, l.sens) + (l.ev.jours_fenetre !== 28 ? ` <span class="meta">sur ${l.ev.jours_fenetre} j</span>` : "") : '<span class="meta">pas assez de recul</span>'}</td>
+      <td>${pastille(l.intake, "rempli", "à remplir")}</td>
+      <td>${pastille(l.programme, "envoyé", "à faire")}</td>
+      <td>${pastille(l.diete, "envoyée", "à faire")}</td>
+      <td><button class="voir" type="button" data-ouvrir="${esc(l.p.id)}" data-nom="${esc(l.nom)}">Ouvrir</button></td>
+    </tr>`).join("");
+
+    $$("[data-ouvrir]", tb).forEach(b => b.addEventListener("click", () => {
+      Store.idConsulte = b.dataset.ouvrir;
+      Store.nomConsulte = b.dataset.nom;
+      location.hash = "#/mensurations";
+    }));
+
+    if (zoneA){
+      const muets = lignes.filter(l => l.jours === null || l.jours >= 10);
+      const aFaire = lignes.filter(l => !l.programme || !l.diete || !l.intake);
+      let h = "";
+      if (muets.length) h += `<div class="flag"><b>Sans nouvelles depuis 10 jours ou plus :</b> ${muets.map(l => esc(l.nom)).join(", ")}. C'est le moment de reprendre contact.</div>`;
+      if (aFaire.length) h += `<div class="flag" style="margin-top:8px"><b>Il manque quelque chose pour :</b> ${aFaire.map(l => esc(l.nom) + " (" + [!l.intake ? "questionnaire" : null, !l.programme ? "programme" : null, !l.diete ? "diète" : null].filter(Boolean).join(", ") + ")").join(" · ")}.</div>`;
+      if (!h) h = `<p class="note" style="margin:0">Tous tes clients ont leur questionnaire, leur programme et leur diète, et se sont manifestés dans les dix derniers jours.</p>`;
+      zoneA.innerHTML = h;
+    }
+  },
 
   html(){
     return `
     <section class="panel">
-      <h2>Comptes actifs</h2>
+      <h2>Suivi de mes clients</h2>
+      <div id="alertes-clients"></div>
+      <div class="scroll" style="margin-top:14px"><table><thead><tr>
+        <th>Client</th><th>Activité</th><th>Poids</th><th>Depuis le début</th><th>4 dernières sem.</th>
+        <th>Questionnaire</th><th>Programme</th><th>Diète</th><th></th>
+      </tr></thead><tbody id="tb-clients"><tr><td colspan="9">Chargement…</td></tr></tbody></table></div>
+      <p class="note" style="margin-top:12px">« Activité » compte les jours depuis la dernière saisie du client, quelle qu'elle soit. Une variation de poids se lit sur quatre semaines : en dessous, c'est du bruit.</p>
+    </section>
+
+    <section class="panel">
+      <h2>Comptes</h2>
       <div id="liste-clients"><div class="empty">Chargement…</div></div>
     </section>
 
@@ -2282,11 +2925,13 @@ const outilClients = {
       const box = $("liste-clients");
       try {
         const profils = await Auth.appel("/rest/v1/profils?select=*&order=cree_le.desc");
-        const donnees = await Auth.appel("/rest/v1/donnees?select=user_id,outil,maj_le");
-        const parClient = {};
+        const donnees = await Auth.appel("/rest/v1/donnees?select=user_id,outil,contenu,maj_le");
+        const parClient = {}, contenus = {};
         (donnees || []).forEach(d => {
           if (!parClient[d.user_id] || d.maj_le > parClient[d.user_id]) parClient[d.user_id] = d.maj_le;
+          (contenus[d.user_id] = contenus[d.user_id] || {})[d.outil] = d.contenu;
         });
+        self.tableau(profils, parClient, contenus);
         const clients = (profils || []).filter(p => p.role !== "coach");
         if (!clients.length){ box.innerHTML = '<div class="empty">Aucun client pour le moment. Crée le premier accès ci-dessous.</div>'; return; }
         box.innerHTML = "";
@@ -2306,7 +2951,10 @@ const outilClients = {
           });
           box.appendChild(el);
         });
-      } catch(e){ box.innerHTML = '<div class="empty">Impossible de charger la liste.</div>'; }
+      } catch(e){
+        box.innerHTML = '<div class="empty">Impossible de charger la liste.</div>';
+        const tb = $("tb-clients"); if (tb) tb.innerHTML = '<tr><td colspan="9">Impossible de charger le suivi.</td></tr>';
+      }
     };
 
     $("n-gen").addEventListener("click", () => {
@@ -2341,7 +2989,7 @@ const outilClients = {
 /* ------------------------------------------------------------------
    LISTE DES OUTILS — ajouter un objet ici suffit à créer un onglet
    ------------------------------------------------------------------ */
-const OUTILS = [outilProfil, outilProgramme, outilNutrition, outilCalculateur, outilMensurations, outilEntrainement, outilBibliotheque, outilClients];
+const OUTILS = [outilProfil, outilProgramme, outilNutrition, outilCalculateur, outilMensurations, outilEntrainement, outilBibliotheque, outilCatalogue, outilClients];
 
 /* ==================================================================
    [G] NAVIGATION, CONNEXION ET DEMARRAGE
