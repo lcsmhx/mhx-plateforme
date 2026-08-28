@@ -79,3 +79,4 @@ Ne pas recopier : accueil, boutique, questionnaires, libellés anglais.
 - `programmes.json` : +4 (pas de doublon, pas femme enceinte) : `seniors-3j-equilibre`, `reprise-blessure-3j`, `ppl-6j-avance`, `elastiques-3j-maison`.
 - `donnees/generateur.md` : liste des régimes à jour, recettes sans allergenes/regimes.
 - Import Supabase = côté Claude. Pas de commit / push. `index.html` non touché.
+- QA 28 août : générateur filtre par ingrédients (plus recette.regimes). Plans d’exemple régénérés, |kcal|<6 %.

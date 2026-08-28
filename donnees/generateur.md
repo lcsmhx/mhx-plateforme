@@ -35,19 +35,20 @@ Profil : `poids_kg`, `kcal_cibles`, `regimes[]`, `allergenes[]`, `nb_jours` (7).
 
 ### 1. Filtrer les recettes
 
-Les recettes **n’ont pas** de champs `regimes` ni `allergenes`. Claude les calcule à partir des ingrédients (`aliments.json`) :
+Les recettes **n’ont pas** de champs `regimes` ni `allergenes` (champs retirés du JSON, ne pas les recréer).  
+Claude **et** `/tmp/gen_plans_mhx.py` calculent le filtre **uniquement** à partir des ingrédients (`aliments.json`) :
 
 - `regimes` recette = **intersection** des `regimes` de chaque `aliment_id`.
 - `allergenes` recette = **union** des `allergenes` de chaque `aliment_id`.
+
+Ne **jamais** lire `recette.regimes` / `recette.allergenes` : ces clés n’existent plus. Un aliment isolé (complément, repas ancre) se filtre pareil via `aliment.regimes` / `aliment.allergenes`.
 
 Garder une recette si :
 
 1. **Intersection des régimes** : chaque tag du profil est dans les régimes calculés de la recette.
 2. **Allergènes** : aucun allergène calculé de la recette n’est dans la liste interdite du profil.
 
-Même règle sur un aliment isolé (`aliment.regimes` / `aliment.allergenes`) pour les compléments et le repas ancre.
-
-Pool **végétarien + sans gluten** (preuve `plans-exemple.json`, pool d’alors) : **18 PD / 16 déj / 20 dîners / 33 collations**. Recettes actuelles : **198**. Cuisine maigre : ancre = blanc d’œuf, fromage blanc 0 %, spécialité laitière riche en protéines, tofu, lentilles cuites, pois chiches cuits. Pas de noix comme ancre.
+Pool **végétarien + sans gluten** (preuve `plans-exemple.json`, intersection ingrédients, 28 août 2026) : **29 PD / 16 déj / 25 dîners / 38 collations**. Recettes : **198**. Cuisine maigre : ancre = blanc d’œuf, fromage blanc 0 %, spécialité laitière riche en protéines, tofu, lentilles cuites, pois chiches cuits. Pas de noix comme ancre.
 
 ### 2. Répartition kcal du jour (fixe)
 
@@ -148,7 +149,7 @@ Le plan porte aussi `liste_courses` (§6).
 ## Limites (heuristique, assumées)
 
 - 2,2 g P/kg dans 1650–1900 kcal est tendu : le rattrapage P se fait au blanc d’œuf / fromage blanc 0 % / poulet grillé, **pas** en gonflant les féculents ni les oléagineux.
-- Pool **végétarien + sans gluten** agrandi (18 / 16 / 20 / 33). Les omelettes / huile / fruits secs du vieux pool faisaient dériver L ; le score + trim lipides + ancre maigre calent L et P dans ±8 g sur la preuve.
+- Pool **végétarien + sans gluten** (intersection ingrédients) : 29 / 16 / 25 / 38. Les omelettes / huile / fruits secs du vieux pool faisaient dériver L ; le score + trim lipides + ancre maigre calent L et P dans ±8 g sur la preuve.
 - Bornes d’échelle 0,6–1,8 : on ne dénature pas une recette. Ce n’est pas un solveur d’optimalité.
 - Objectif preuve : |écart kcal| < 6 % si possible, P ±8 g, L ±8 g. Si un profil ne peut pas y coller (plafond kcal vs P 2,2 g/kg), le documenter plutôt que d’inventer des macros.
 
@@ -161,7 +162,7 @@ Le plan porte aussi `liste_courses` (§6).
 | `donnees/aliments.json` | CIQUAL 2025, 3109 lignes ; régimes sans halal/casher, + `sans_porc` |
 | `donnees/recettes.json` | 198 recettes, schéma `id, nom, moment, temps_min, portions, ingredients, etapes` (pas de `allergenes`/`regimes`) |
 | `donnees/rayons.json` | catégories CIQUAL → rayons magasin |
-| `donnees/plans-exemple.json` | 3 plans générés (preuve) |
+| `donnees/plans-exemple.json` | 3 plans générés (preuve, filtre par ingrédients) |
 | `donnees/generateur.md` | cette spec |
 
 **Import Supabase :** côté Claude (`index.html`). Grok ne cherche pas de clé et n’importe pas.

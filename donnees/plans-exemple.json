@@ -225,44 +225,29 @@
           "repas": [
             {
               "moment": "petit_dejeuner",
-              "recette_id": "blancs-oeufs-tomate-ciboulette",
-              "nom": "Blancs d'œufs brouillés, tomate et ciboulette",
+              "recette_id": "skyr-peche-miel",
+              "nom": "Spécialité protéinée, pêche et miel",
               "items": [
                 {
-                  "aliment_id": "blanc-doeuf-cru",
-                  "nom": "Blanc d'œuf cru",
-                  "grammes": 355
+                  "aliment_id": "specialite-laitiere-riche-en-proteines-nature",
+                  "nom": "Spécialité laitière riche en protéines, nature",
+                  "grammes": 360
                 },
                 {
-                  "aliment_id": "tomate-crue",
-                  "nom": "Tomate crue",
-                  "grammes": 195
+                  "aliment_id": "peche-crue",
+                  "nom": "Pêche, crue",
+                  "grammes": 190
                 },
                 {
-                  "aliment_id": "ciboule-ou-ciboulette-fraiche",
-                  "nom": "Ciboulette",
+                  "aliment_id": "miel",
+                  "nom": "Miel",
                   "grammes": 15
-                },
-                {
-                  "aliment_id": "huile-olive",
-                  "nom": "Huile d'olive vierge extra",
-                  "grammes": 10
-                },
-                {
-                  "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
-                  "nom": "Fleur de sel",
-                  "grammes": 5
-                },
-                {
-                  "aliment_id": "poivre-noir-poudre",
-                  "nom": "Poivre noir",
-                  "grammes": 5
                 }
               ],
-              "kcal": 316.6,
-              "proteines": 40.7,
-              "glucides": 11.5,
-              "lipides": 11.2
+              "kcal": 388.2,
+              "proteines": 34.6,
+              "glucides": 39.2,
+              "lipides": 10.1
             },
             {
               "moment": "dejeuner",
@@ -353,36 +338,36 @@
             },
             {
               "moment": "collation",
-              "recette_id": "skyr-poire-cannelle",
-              "nom": "Skyr, poire et cannelle",
+              "recette_id": "oeuf-dur-tomates-cerises",
+              "nom": "Œuf dur et tomates cerises",
               "items": [
                 {
-                  "aliment_id": "specialite-laitiere-riche-en-proteines-nature",
-                  "nom": "Spécialité laitière riche en protéines, nature",
-                  "grammes": 135
+                  "aliment_id": "oeuf-cru",
+                  "nom": "Œuf cru",
+                  "grammes": 80
                 },
                 {
-                  "aliment_id": "poire-crue",
-                  "nom": "Poire crue",
-                  "grammes": 90
+                  "aliment_id": "tomate-cerise",
+                  "nom": "Tomate cerise",
+                  "grammes": 140
                 },
                 {
-                  "aliment_id": "cannelle-poudre",
-                  "nom": "Cannelle, poudre",
+                  "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+                  "nom": "Fleur de sel",
                   "grammes": 5
                 }
               ],
-              "kcal": 163.4,
-              "proteines": 12.8,
-              "glucides": 17.2,
-              "lipides": 4.0
+              "kcal": 156.8,
+              "proteines": 12.1,
+              "glucides": 7.9,
+              "lipides": 7.8
             }
           ],
           "totaux": {
-            "kcal": 1634.8,
-            "proteines": 142.5,
-            "glucides": 113.2,
-            "lipides": 61.5
+            "kcal": 1699.9,
+            "proteines": 135.6,
+            "glucides": 131.6,
+            "lipides": 64.3
           },
           "cibles": {
             "kcal": 1650.0,
@@ -391,525 +376,14 @@
             "lipides": 65.0
           },
           "ecart_pct": {
-            "kcal": -0.9,
-            "proteines": -0.3,
-            "glucides": -8.1,
-            "lipides": -5.5
+            "kcal": 3.0,
+            "proteines": -5.2,
+            "glucides": 6.8,
+            "lipides": -1.1
           }
         },
         {
           "date_index": 3,
-          "repas": [
-            {
-              "moment": "petit_dejeuner",
-              "recette_id": "oeufs-plat-epinards-pain",
-              "nom": "Œufs au plat, épinards et pain",
-              "items": [
-                {
-                  "aliment_id": "oeuf-cru",
-                  "nom": "Œuf cru",
-                  "grammes": 120
-                },
-                {
-                  "aliment_id": "epinard-cru",
-                  "nom": "Épinard, cru",
-                  "grammes": 80
-                },
-                {
-                  "aliment_id": "pain-complet-ou-integral-a-la-farine-t150",
-                  "nom": "Pain complet",
-                  "grammes": 60
-                },
-                {
-                  "aliment_id": "huile-olive",
-                  "nom": "Huile d'olive vierge extra",
-                  "grammes": 5
-                },
-                {
-                  "aliment_id": "ail-cru",
-                  "nom": "Ail, cru",
-                  "grammes": 5
-                },
-                {
-                  "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
-                  "nom": "Fleur de sel",
-                  "grammes": 5
-                }
-              ],
-              "kcal": 385.2,
-              "proteines": 23.5,
-              "glucides": 28.3,
-              "lipides": 18.1
-            },
-            {
-              "moment": "dejeuner",
-              "recette_id": "poulet-patate-douce-haricots-verts",
-              "nom": "Poulet, patate douce et haricots verts",
-              "items": [
-                {
-                  "aliment_id": "poulet-blanc-cru",
-                  "nom": "Blanc de poulet cru",
-                  "grammes": 180
-                },
-                {
-                  "aliment_id": "patate-douce-crue",
-                  "nom": "Patate douce, crue",
-                  "grammes": 235
-                },
-                {
-                  "aliment_id": "haricot-vert-cru",
-                  "nom": "Haricot vert cru",
-                  "grammes": 155
-                },
-                {
-                  "aliment_id": "huile-olive",
-                  "nom": "Huile d'olive vierge extra",
-                  "grammes": 10
-                },
-                {
-                  "aliment_id": "thym-frais",
-                  "nom": "Thym, frais",
-                  "grammes": 5
-                },
-                {
-                  "aliment_id": "ail-cru",
-                  "nom": "Ail, cru",
-                  "grammes": 5
-                }
-              ],
-              "kcal": 538.7,
-              "proteines": 49.2,
-              "glucides": 48.0,
-              "lipides": 13.3
-            },
-            {
-              "moment": "diner",
-              "recette_id": "truite-epinards-quinoa",
-              "nom": "Truite, épinards et quinoa",
-              "items": [
-                {
-                  "aliment_id": "truite-arc-en-ciel-elevage-crue",
-                  "nom": "Truite crue",
-                  "grammes": 125
-                },
-                {
-                  "aliment_id": "quinoa-cru",
-                  "nom": "Quinoa cru",
-                  "grammes": 60
-                },
-                {
-                  "aliment_id": "epinard-cru",
-                  "nom": "Épinard, cru",
-                  "grammes": 100
-                },
-                {
-                  "aliment_id": "huile-olive",
-                  "nom": "Huile d'olive vierge extra",
-                  "grammes": 10
-                },
-                {
-                  "aliment_id": "ail-cru",
-                  "nom": "Ail, cru",
-                  "grammes": 5
-                },
-                {
-                  "aliment_id": "citron-cru",
-                  "nom": "Citron, cru",
-                  "grammes": 10
-                }
-              ],
-              "kcal": 510.5,
-              "proteines": 35.2,
-              "glucides": 39.0,
-              "lipides": 21.8
-            },
-            {
-              "moment": "collation",
-              "recette_id": "skyr-miel-amandes",
-              "nom": "Skyr, miel et amandes",
-              "items": [
-                {
-                  "aliment_id": "specialite-laitiere-riche-en-proteines-nature",
-                  "nom": "Spécialité laitière riche en protéines, nature",
-                  "grammes": 100
-                },
-                {
-                  "aliment_id": "amande-avec-peau",
-                  "nom": "Amandes",
-                  "grammes": 10
-                },
-                {
-                  "aliment_id": "miel",
-                  "nom": "Miel",
-                  "grammes": 5
-                },
-                {
-                  "aliment_id": "blanc-doeuf-cru",
-                  "nom": "Blanc d'œuf cru",
-                  "grammes": 215
-                }
-              ],
-              "kcal": 255.2,
-              "proteines": 34.8,
-              "glucides": 10.1,
-              "lipides": 8.3
-            }
-          ],
-          "totaux": {
-            "kcal": 1689.7,
-            "proteines": 142.8,
-            "glucides": 125.4,
-            "lipides": 61.5
-          },
-          "cibles": {
-            "kcal": 1650.0,
-            "proteines": 143.0,
-            "glucides": 123.2,
-            "lipides": 65.0
-          },
-          "ecart_pct": {
-            "kcal": 2.4,
-            "proteines": -0.2,
-            "glucides": 1.7,
-            "lipides": -5.4
-          }
-        },
-        {
-          "date_index": 4,
-          "repas": [
-            {
-              "moment": "petit_dejeuner",
-              "recette_id": "fromage-blanc-miel-cajou",
-              "nom": "Fromage blanc, miel et cajou",
-              "items": [
-                {
-                  "aliment_id": "fromage-blanc-0-mg",
-                  "nom": "Fromage blanc 0% MG",
-                  "grammes": 245
-                },
-                {
-                  "aliment_id": "noix-de-cajou-grillee",
-                  "nom": "Noix de cajou",
-                  "grammes": 35
-                },
-                {
-                  "aliment_id": "miel",
-                  "nom": "Miel",
-                  "grammes": 20
-                },
-                {
-                  "aliment_id": "cannelle-poudre",
-                  "nom": "Cannelle, poudre",
-                  "grammes": 5
-                }
-              ],
-              "kcal": 412.2,
-              "proteines": 25.2,
-              "glucides": 35.5,
-              "lipides": 16.9
-            },
-            {
-              "moment": "dejeuner",
-              "recette_id": "dinde-courgettes-semoule",
-              "nom": "Dinde, courgettes et semoule",
-              "items": [
-                {
-                  "aliment_id": "escalope-de-dinde-crue",
-                  "nom": "Escalope de dinde crue",
-                  "grammes": 145
-                },
-                {
-                  "aliment_id": "semoule-de-ble-dur-crue",
-                  "nom": "Semoule de blé dur, crue",
-                  "grammes": 75
-                },
-                {
-                  "aliment_id": "courgette-crue",
-                  "nom": "Courgette crue",
-                  "grammes": 155
-                },
-                {
-                  "aliment_id": "huile-olive",
-                  "nom": "Huile d'olive vierge extra",
-                  "grammes": 10
-                },
-                {
-                  "aliment_id": "cumin-graine",
-                  "nom": "Cumin, graine",
-                  "grammes": 5
-                },
-                {
-                  "aliment_id": "citron-cru",
-                  "nom": "Citron, cru",
-                  "grammes": 10
-                }
-              ],
-              "kcal": 559.1,
-              "proteines": 46.9,
-              "glucides": 57.0,
-              "lipides": 14.7
-            },
-            {
-              "moment": "diner",
-              "recette_id": "poulet-endives-pdt",
-              "nom": "Poulet, endives et pomme de terre",
-              "items": [
-                {
-                  "aliment_id": "poulet-blanc-cru",
-                  "nom": "Blanc de poulet cru",
-                  "grammes": 160
-                },
-                {
-                  "aliment_id": "endive-crue",
-                  "nom": "Endive, crue",
-                  "grammes": 170
-                },
-                {
-                  "aliment_id": "pomme-de-terre-crue",
-                  "nom": "Pomme de terre crue",
-                  "grammes": 195
-                },
-                {
-                  "aliment_id": "huile-olive",
-                  "nom": "Huile d'olive vierge extra",
-                  "grammes": 20
-                },
-                {
-                  "aliment_id": "citron-cru",
-                  "nom": "Citron, cru",
-                  "grammes": 10
-                },
-                {
-                  "aliment_id": "thym-frais",
-                  "nom": "Thym, frais",
-                  "grammes": 5
-                }
-              ],
-              "kcal": 548.5,
-              "proteines": 43.7,
-              "glucides": 37.0,
-              "lipides": 22.7
-            },
-            {
-              "moment": "collation",
-              "recette_id": "oeuf-dur-concombre",
-              "nom": "Œuf dur et concombre",
-              "items": [
-                {
-                  "aliment_id": "oeuf-cru",
-                  "nom": "Œuf cru",
-                  "grammes": 90
-                },
-                {
-                  "aliment_id": "concombre-cru",
-                  "nom": "Concombre, cru",
-                  "grammes": 160
-                },
-                {
-                  "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
-                  "nom": "Fleur de sel",
-                  "grammes": 5
-                },
-                {
-                  "aliment_id": "blanc-doeuf-cru",
-                  "nom": "Blanc d'œuf cru",
-                  "grammes": 110
-                }
-              ],
-              "kcal": 206.0,
-              "proteines": 24.6,
-              "glucides": 5.5,
-              "lipides": 9.2
-            }
-          ],
-          "totaux": {
-            "kcal": 1725.8,
-            "proteines": 140.4,
-            "glucides": 135.1,
-            "lipides": 63.5
-          },
-          "cibles": {
-            "kcal": 1650.0,
-            "proteines": 143.0,
-            "glucides": 123.2,
-            "lipides": 65.0
-          },
-          "ecart_pct": {
-            "kcal": 4.6,
-            "proteines": -1.8,
-            "glucides": 9.6,
-            "lipides": -2.3
-          }
-        },
-        {
-          "date_index": 5,
-          "repas": [
-            {
-              "moment": "petit_dejeuner",
-              "recette_id": "porridge-soja-fruits-rouges",
-              "nom": "Porridge au soja et fruits rouges",
-              "items": [
-                {
-                  "aliment_id": "avoine-crue",
-                  "nom": "Avoine, crue",
-                  "grammes": 15
-                },
-                {
-                  "aliment_id": "boisson-au-soja-nature-non-enrichie",
-                  "nom": "Boisson au soja, nature, non enrichie",
-                  "grammes": 230
-                },
-                {
-                  "aliment_id": "framboise-crue",
-                  "nom": "Framboise, crue",
-                  "grammes": 50
-                },
-                {
-                  "aliment_id": "myrtille-crue",
-                  "nom": "Myrtille, crue",
-                  "grammes": 40
-                },
-                {
-                  "aliment_id": "lin-graine",
-                  "nom": "Graines de lin",
-                  "grammes": 10
-                }
-              ],
-              "kcal": 253.3,
-              "proteines": 14.0,
-              "glucides": 20.5,
-              "lipides": 10.4
-            },
-            {
-              "moment": "dejeuner",
-              "recette_id": "pates-completes-poulet-brocoli",
-              "nom": "Pâtes complètes, poulet et brocoli",
-              "items": [
-                {
-                  "aliment_id": "pates-seches-au-ble-complet-crues",
-                  "nom": "Pâtes complètes crues",
-                  "grammes": 75
-                },
-                {
-                  "aliment_id": "poulet-blanc-cru",
-                  "nom": "Blanc de poulet cru",
-                  "grammes": 110
-                },
-                {
-                  "aliment_id": "brocoli-cru",
-                  "nom": "Brocoli cru",
-                  "grammes": 110
-                },
-                {
-                  "aliment_id": "huile-olive",
-                  "nom": "Huile d'olive vierge extra",
-                  "grammes": 15
-                },
-                {
-                  "aliment_id": "ail-cru",
-                  "nom": "Ail, cru",
-                  "grammes": 5
-                },
-                {
-                  "aliment_id": "parmesan",
-                  "nom": "Parmesan",
-                  "grammes": 15
-                }
-              ],
-              "kcal": 622.9,
-              "proteines": 43.2,
-              "glucides": 54.1,
-              "lipides": 23.4
-            },
-            {
-              "moment": "diner",
-              "recette_id": "bar-poireaux-pdt",
-              "nom": "Bar, poireaux et pomme de terre",
-              "items": [
-                {
-                  "aliment_id": "bar-commun-ou-loup-cru",
-                  "nom": "Bar / loup cru",
-                  "grammes": 175
-                },
-                {
-                  "aliment_id": "poireau-cru",
-                  "nom": "Poireau, cru",
-                  "grammes": 175
-                },
-                {
-                  "aliment_id": "pomme-de-terre-crue",
-                  "nom": "Pomme de terre crue",
-                  "grammes": 215
-                },
-                {
-                  "aliment_id": "huile-olive",
-                  "nom": "Huile d'olive vierge extra",
-                  "grammes": 25
-                },
-                {
-                  "aliment_id": "citron-cru",
-                  "nom": "Citron, cru",
-                  "grammes": 10
-                },
-                {
-                  "aliment_id": "aneth-frais",
-                  "nom": "Aneth, frais",
-                  "grammes": 5
-                }
-              ],
-              "kcal": 604.5,
-              "proteines": 40.6,
-              "glucides": 44.6,
-              "lipides": 27.0
-            },
-            {
-              "moment": "collation",
-              "recette_id": "fromage-blanc-0-peche",
-              "nom": "Fromage blanc 0 % et pêche",
-              "items": [
-                {
-                  "aliment_id": "fromage-blanc-0-mg",
-                  "nom": "Fromage blanc 0% MG",
-                  "grammes": 205
-                },
-                {
-                  "aliment_id": "peche-crue",
-                  "nom": "Pêche, crue",
-                  "grammes": 135
-                },
-                {
-                  "aliment_id": "blanc-doeuf-cru",
-                  "nom": "Blanc d'œuf cru",
-                  "grammes": 210
-                }
-              ],
-              "kcal": 250.5,
-              "proteines": 38.9,
-              "glucides": 20.2,
-              "lipides": 0.7
-            }
-          ],
-          "totaux": {
-            "kcal": 1731.3,
-            "proteines": 136.7,
-            "glucides": 139.5,
-            "lipides": 61.5
-          },
-          "cibles": {
-            "kcal": 1650.0,
-            "proteines": 143.0,
-            "glucides": 123.2,
-            "lipides": 65.0
-          },
-          "ecart_pct": {
-            "kcal": 4.9,
-            "proteines": -4.4,
-            "glucides": 13.2,
-            "lipides": -5.4
-          }
-        },
-        {
-          "date_index": 6,
           "repas": [
             {
               "moment": "petit_dejeuner",
@@ -919,7 +393,7 @@
                 {
                   "aliment_id": "pain-complet-ou-integral-a-la-farine-t150",
                   "nom": "Pain complet",
-                  "grammes": 80
+                  "grammes": 95
                 },
                 {
                   "aliment_id": "saumon-fume",
@@ -947,35 +421,333 @@
                   "grammes": 5
                 }
               ],
-              "kcal": 363.7,
-              "proteines": 28.0,
-              "glucides": 37.7,
-              "lipides": 9.1
+              "kcal": 398.8,
+              "proteines": 29.4,
+              "glucides": 43.9,
+              "lipides": 9.4
             },
             {
               "moment": "dejeuner",
-              "recette_id": "steak-hache-pdt-haricots",
-              "nom": "Steak haché, pommes de terre et haricots verts",
+              "recette_id": "poulet-brocoli-huile-olive",
+              "nom": "Poulet poêlé et brocoli",
               "items": [
                 {
-                  "aliment_id": "boeuf-steak-hache-5-mg-cru",
-                  "nom": "Steak haché de bœuf 5% MG cru",
-                  "grammes": 150
+                  "aliment_id": "poulet-blanc-cru",
+                  "nom": "Blanc de poulet cru",
+                  "grammes": 205
                 },
                 {
-                  "aliment_id": "pomme-de-terre-crue",
-                  "nom": "Pomme de terre crue",
-                  "grammes": 245
-                },
-                {
-                  "aliment_id": "haricot-vert-cru",
-                  "nom": "Haricot vert cru",
-                  "grammes": 185
+                  "aliment_id": "brocoli-cru",
+                  "nom": "Brocoli cru",
+                  "grammes": 270
                 },
                 {
                   "aliment_id": "huile-olive",
                   "nom": "Huile d'olive vierge extra",
                   "grammes": 15
+                },
+                {
+                  "aliment_id": "ail-cru",
+                  "nom": "Ail, cru",
+                  "grammes": 5
+                },
+                {
+                  "aliment_id": "thym-frais",
+                  "nom": "Thym, frais",
+                  "grammes": 5
+                }
+              ],
+              "kcal": 457.6,
+              "proteines": 56.4,
+              "glucides": 7.1,
+              "lipides": 19.2
+            },
+            {
+              "moment": "diner",
+              "recette_id": "truite-epinards-quinoa",
+              "nom": "Truite, épinards et quinoa",
+              "items": [
+                {
+                  "aliment_id": "truite-arc-en-ciel-elevage-crue",
+                  "nom": "Truite crue",
+                  "grammes": 125
+                },
+                {
+                  "aliment_id": "quinoa-cru",
+                  "nom": "Quinoa cru",
+                  "grammes": 60
+                },
+                {
+                  "aliment_id": "epinard-cru",
+                  "nom": "Épinard, cru",
+                  "grammes": 100
+                },
+                {
+                  "aliment_id": "huile-olive",
+                  "nom": "Huile d'olive vierge extra",
+                  "grammes": 20
+                },
+                {
+                  "aliment_id": "ail-cru",
+                  "nom": "Ail, cru",
+                  "grammes": 5
+                },
+                {
+                  "aliment_id": "citron-cru",
+                  "nom": "Citron, cru",
+                  "grammes": 10
+                }
+              ],
+              "kcal": 600.4,
+              "proteines": 35.2,
+              "glucides": 39.0,
+              "lipides": 31.8
+            },
+            {
+              "moment": "collation",
+              "recette_id": "blanc-oeuf-cuit-tomates-cerises",
+              "nom": "Blanc d'œuf cuit et tomates cerises",
+              "items": [
+                {
+                  "aliment_id": "oeuf-blanc-blanc-doeuf-cuit",
+                  "nom": "Oeuf, blanc (blanc d'oeuf), cuit",
+                  "grammes": 140
+                },
+                {
+                  "aliment_id": "tomate-cerise",
+                  "nom": "Tomate cerise",
+                  "grammes": 95
+                },
+                {
+                  "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+                  "nom": "Fleur de sel",
+                  "grammes": 5
+                },
+                {
+                  "aliment_id": "persil-frais",
+                  "nom": "Persil, frais",
+                  "grammes": 5
+                },
+                {
+                  "aliment_id": "banane-crue",
+                  "nom": "Banane crue",
+                  "grammes": 135
+                }
+              ],
+              "kcal": 217.1,
+              "proteines": 17.3,
+              "glucides": 33.7,
+              "lipides": 0.3
+            }
+          ],
+          "totaux": {
+            "kcal": 1674.0,
+            "proteines": 138.3,
+            "glucides": 123.7,
+            "lipides": 60.7
+          },
+          "cibles": {
+            "kcal": 1650.0,
+            "proteines": 143.0,
+            "glucides": 123.2,
+            "lipides": 65.0
+          },
+          "ecart_pct": {
+            "kcal": 1.5,
+            "proteines": -3.3,
+            "glucides": 0.4,
+            "lipides": -6.6
+          }
+        },
+        {
+          "date_index": 4,
+          "repas": [
+            {
+              "moment": "petit_dejeuner",
+              "recette_id": "skyr-banane-amandes",
+              "nom": "Skyr, banane et amandes",
+              "items": [
+                {
+                  "aliment_id": "specialite-laitiere-riche-en-proteines-nature",
+                  "nom": "Spécialité laitière riche en protéines, nature",
+                  "grammes": 165
+                },
+                {
+                  "aliment_id": "banane-crue",
+                  "nom": "Banane crue",
+                  "grammes": 110
+                },
+                {
+                  "aliment_id": "amande-avec-peau",
+                  "nom": "Amandes",
+                  "grammes": 20
+                },
+                {
+                  "aliment_id": "miel",
+                  "nom": "Miel",
+                  "grammes": 10
+                }
+              ],
+              "kcal": 375.0,
+              "proteines": 20.8,
+              "glucides": 37.6,
+              "lipides": 14.7
+            },
+            {
+              "moment": "dejeuner",
+              "recette_id": "dinde-poivrons-courgette",
+              "nom": "Dinde, poivrons et courgette",
+              "items": [
+                {
+                  "aliment_id": "escalope-de-dinde-crue",
+                  "nom": "Escalope de dinde crue",
+                  "grammes": 215
+                },
+                {
+                  "aliment_id": "poivron-rouge-cru",
+                  "nom": "Poivron rouge, cru",
+                  "grammes": 170
+                },
+                {
+                  "aliment_id": "courgette-crue",
+                  "nom": "Courgette crue",
+                  "grammes": 215
+                },
+                {
+                  "aliment_id": "huile-olive",
+                  "nom": "Huile d'olive vierge extra",
+                  "grammes": 15
+                },
+                {
+                  "aliment_id": "ail-cru",
+                  "nom": "Ail, cru",
+                  "grammes": 5
+                },
+                {
+                  "aliment_id": "herbes-de-provence-sechees",
+                  "nom": "Herbes de Provence, séchées",
+                  "grammes": 5
+                }
+              ],
+              "kcal": 481.0,
+              "proteines": 56.3,
+              "glucides": 16.2,
+              "lipides": 19.2
+            },
+            {
+              "moment": "diner",
+              "recette_id": "poulet-endives-pdt",
+              "nom": "Poulet, endives et pomme de terre",
+              "items": [
+                {
+                  "aliment_id": "poulet-blanc-cru",
+                  "nom": "Blanc de poulet cru",
+                  "grammes": 165
+                },
+                {
+                  "aliment_id": "endive-crue",
+                  "nom": "Endive, crue",
+                  "grammes": 175
+                },
+                {
+                  "aliment_id": "pomme-de-terre-crue",
+                  "nom": "Pomme de terre crue",
+                  "grammes": 210
+                },
+                {
+                  "aliment_id": "huile-olive",
+                  "nom": "Huile d'olive vierge extra",
+                  "grammes": 25
+                },
+                {
+                  "aliment_id": "citron-cru",
+                  "nom": "Citron, cru",
+                  "grammes": 10
+                },
+                {
+                  "aliment_id": "thym-frais",
+                  "nom": "Thym, frais",
+                  "grammes": 5
+                }
+              ],
+              "kcal": 611.8,
+              "proteines": 45.3,
+              "glucides": 39.6,
+              "lipides": 27.7
+            },
+            {
+              "moment": "collation",
+              "recette_id": "fromage-blanc-fraises",
+              "nom": "Fromage blanc et fraises",
+              "items": [
+                {
+                  "aliment_id": "fromage-blanc-0-mg",
+                  "nom": "Fromage blanc 0% MG",
+                  "grammes": 210
+                },
+                {
+                  "aliment_id": "fraise",
+                  "nom": "Fraise",
+                  "grammes": 140
+                }
+              ],
+              "kcal": 149.8,
+              "proteines": 16.0,
+              "glucides": 17.2,
+              "lipides": 0.0
+            }
+          ],
+          "totaux": {
+            "kcal": 1617.5,
+            "proteines": 138.3,
+            "glucides": 110.5,
+            "lipides": 61.7
+          },
+          "cibles": {
+            "kcal": 1650.0,
+            "proteines": 143.0,
+            "glucides": 123.2,
+            "lipides": 65.0
+          },
+          "ecart_pct": {
+            "kcal": -2.0,
+            "proteines": -3.3,
+            "glucides": -10.3,
+            "lipides": -5.1
+          }
+        },
+        {
+          "date_index": 5,
+          "repas": [
+            {
+              "moment": "petit_dejeuner",
+              "recette_id": "oeufs-brouilles-pain-tomate",
+              "nom": "Œufs brouillés, pain et tomate",
+              "items": [
+                {
+                  "aliment_id": "oeuf-cru",
+                  "nom": "Œuf cru",
+                  "grammes": 110
+                },
+                {
+                  "aliment_id": "lait-demi-ecreme-uht",
+                  "nom": "Lait demi-écrémé UHT",
+                  "grammes": 20
+                },
+                {
+                  "aliment_id": "beurre-a-80-mg-minimum-doux",
+                  "nom": "Beurre doux",
+                  "grammes": 10
+                },
+                {
+                  "aliment_id": "pain-complet-ou-integral-a-la-farine-t150",
+                  "nom": "Pain complet",
+                  "grammes": 60
+                },
+                {
+                  "aliment_id": "tomate-crue",
+                  "nom": "Tomate crue",
+                  "grammes": 80
                 },
                 {
                   "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
@@ -988,10 +760,228 @@
                   "grammes": 5
                 }
               ],
-              "kcal": 601.6,
-              "proteines": 41.8,
-              "glucides": 49.7,
-              "lipides": 22.9
+              "kcal": 410.2,
+              "proteines": 21.6,
+              "glucides": 30.6,
+              "lipides": 20.8
+            },
+            {
+              "moment": "dejeuner",
+              "recette_id": "salade-poulet-quinoa",
+              "nom": "Salade poulet et quinoa",
+              "items": [
+                {
+                  "aliment_id": "poulet-blanc-cru",
+                  "nom": "Blanc de poulet cru",
+                  "grammes": 130
+                },
+                {
+                  "aliment_id": "quinoa-cru",
+                  "nom": "Quinoa cru",
+                  "grammes": 75
+                },
+                {
+                  "aliment_id": "concombre-cru",
+                  "nom": "Concombre, cru",
+                  "grammes": 85
+                },
+                {
+                  "aliment_id": "tomate-cerise",
+                  "nom": "Tomate cerise",
+                  "grammes": 85
+                },
+                {
+                  "aliment_id": "huile-olive",
+                  "nom": "Huile d'olive vierge extra",
+                  "grammes": 10
+                },
+                {
+                  "aliment_id": "citron-cru",
+                  "nom": "Citron, cru",
+                  "grammes": 10
+                },
+                {
+                  "aliment_id": "menthe-fraiche",
+                  "nom": "Menthe, fraîche",
+                  "grammes": 5
+                }
+              ],
+              "kcal": 548.3,
+              "proteines": 42.9,
+              "glucides": 51.2,
+              "lipides": 16.6
+            },
+            {
+              "moment": "diner",
+              "recette_id": "lieu-brocoli-huile",
+              "nom": "Lieu noir et brocoli",
+              "items": [
+                {
+                  "aliment_id": "lieu-noir-cru",
+                  "nom": "Lieu noir cru",
+                  "grammes": 215
+                },
+                {
+                  "aliment_id": "brocoli-cru",
+                  "nom": "Brocoli cru",
+                  "grammes": 265
+                },
+                {
+                  "aliment_id": "huile-olive",
+                  "nom": "Huile d'olive vierge extra",
+                  "grammes": 20
+                },
+                {
+                  "aliment_id": "citron-cru",
+                  "nom": "Citron, cru",
+                  "grammes": 15
+                },
+                {
+                  "aliment_id": "ail-cru",
+                  "nom": "Ail, cru",
+                  "grammes": 5
+                }
+              ],
+              "kcal": 449.9,
+              "proteines": 48.4,
+              "glucides": 6.7,
+              "lipides": 22.8
+            },
+            {
+              "moment": "collation",
+              "recette_id": "fromage-blanc-0-peche",
+              "nom": "Fromage blanc 0 % et pêche",
+              "items": [
+                {
+                  "aliment_id": "fromage-blanc-0-mg",
+                  "nom": "Fromage blanc 0% MG",
+                  "grammes": 205
+                },
+                {
+                  "aliment_id": "peche-crue",
+                  "nom": "Pêche, crue",
+                  "grammes": 135
+                },
+                {
+                  "aliment_id": "blanc-doeuf-cru",
+                  "nom": "Blanc d'œuf cru",
+                  "grammes": 130
+                },
+                {
+                  "aliment_id": "banane-crue",
+                  "nom": "Banane crue",
+                  "grammes": 75
+                }
+              ],
+              "kcal": 278.1,
+              "proteines": 31.0,
+              "glucides": 34.4,
+              "lipides": 0.5
+            }
+          ],
+          "totaux": {
+            "kcal": 1686.7,
+            "proteines": 143.9,
+            "glucides": 123.0,
+            "lipides": 60.7
+          },
+          "cibles": {
+            "kcal": 1650.0,
+            "proteines": 143.0,
+            "glucides": 123.2,
+            "lipides": 65.0
+          },
+          "ecart_pct": {
+            "kcal": 2.2,
+            "proteines": 0.6,
+            "glucides": -0.2,
+            "lipides": -6.6
+          }
+        },
+        {
+          "date_index": 6,
+          "repas": [
+            {
+              "moment": "petit_dejeuner",
+              "recette_id": "blancs-oeufs-tomate-ciboulette",
+              "nom": "Blancs d'œufs brouillés, tomate et ciboulette",
+              "items": [
+                {
+                  "aliment_id": "blanc-doeuf-cru",
+                  "nom": "Blanc d'œuf cru",
+                  "grammes": 355
+                },
+                {
+                  "aliment_id": "tomate-crue",
+                  "nom": "Tomate crue",
+                  "grammes": 195
+                },
+                {
+                  "aliment_id": "ciboule-ou-ciboulette-fraiche",
+                  "nom": "Ciboulette",
+                  "grammes": 15
+                },
+                {
+                  "aliment_id": "huile-olive",
+                  "nom": "Huile d'olive vierge extra",
+                  "grammes": 10
+                },
+                {
+                  "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+                  "nom": "Fleur de sel",
+                  "grammes": 5
+                },
+                {
+                  "aliment_id": "poivre-noir-poudre",
+                  "nom": "Poivre noir",
+                  "grammes": 5
+                }
+              ],
+              "kcal": 316.6,
+              "proteines": 40.7,
+              "glucides": 11.5,
+              "lipides": 11.2
+            },
+            {
+              "moment": "dejeuner",
+              "recette_id": "wrap-dinde-avocat",
+              "nom": "Wrap dinde et avocat",
+              "items": [
+                {
+                  "aliment_id": "tortilla-souple-a-garnir-a-base-de-ble",
+                  "nom": "Tortilla souple (à garnir), à base de blé",
+                  "grammes": 75
+                },
+                {
+                  "aliment_id": "escalope-de-dinde-crue",
+                  "nom": "Escalope de dinde crue",
+                  "grammes": 125
+                },
+                {
+                  "aliment_id": "avocat-cru",
+                  "nom": "Avocat cru",
+                  "grammes": 65
+                },
+                {
+                  "aliment_id": "salade-verte-crue-sans-assaisonnement",
+                  "nom": "Salade verte",
+                  "grammes": 50
+                },
+                {
+                  "aliment_id": "tomate-crue",
+                  "nom": "Tomate crue",
+                  "grammes": 65
+                },
+                {
+                  "aliment_id": "fromage-blanc-0-mg",
+                  "nom": "Fromage blanc 0% MG",
+                  "grammes": 40
+                }
+              ],
+              "kcal": 544.9,
+              "proteines": 41.0,
+              "glucides": 44.4,
+              "lipides": 20.9
             },
             {
               "moment": "diner",
@@ -1036,46 +1026,36 @@
             },
             {
               "moment": "collation",
-              "recette_id": "blanc-oeuf-cuit-tomates-cerises",
-              "nom": "Blanc d'œuf cuit et tomates cerises",
+              "recette_id": "skyr-myrtilles",
+              "nom": "Spécialité protéinée et myrtilles",
               "items": [
                 {
-                  "aliment_id": "oeuf-blanc-blanc-doeuf-cuit",
-                  "nom": "Oeuf, blanc (blanc d'oeuf), cuit",
-                  "grammes": 140
+                  "aliment_id": "specialite-laitiere-riche-en-proteines-nature",
+                  "nom": "Spécialité laitière riche en protéines, nature",
+                  "grammes": 160
                 },
                 {
-                  "aliment_id": "tomate-cerise",
-                  "nom": "Tomate cerise",
-                  "grammes": 95
+                  "aliment_id": "myrtille-crue",
+                  "nom": "Myrtille, crue",
+                  "grammes": 65
                 },
                 {
-                  "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
-                  "nom": "Fleur de sel",
-                  "grammes": 5
-                },
-                {
-                  "aliment_id": "persil-frais",
-                  "nom": "Persil, frais",
-                  "grammes": 5
-                },
-                {
-                  "aliment_id": "blanc-doeuf-cru",
-                  "nom": "Blanc d'œuf cru",
-                  "grammes": 140
+                  "aliment_id": "banane-crue",
+                  "nom": "Banane crue",
+                  "grammes": 75
                 }
               ],
-              "kcal": 165.5,
-              "proteines": 31.1,
-              "glucides": 8.0,
-              "lipides": 0.6
+              "kcal": 222.1,
+              "proteines": 16.0,
+              "glucides": 27.3,
+              "lipides": 4.5
             }
           ],
           "totaux": {
-            "kcal": 1727.8,
-            "proteines": 141.6,
-            "glucides": 135.1,
-            "lipides": 60.6
+            "kcal": 1680.5,
+            "proteines": 138.4,
+            "glucides": 122.8,
+            "lipides": 64.6
           },
           "cibles": {
             "kcal": 1650.0,
@@ -1084,10 +1064,10 @@
             "lipides": 65.0
           },
           "ecart_pct": {
-            "kcal": 4.7,
-            "proteines": -1.0,
-            "glucides": 9.6,
-            "lipides": -6.8
+            "kcal": 1.8,
+            "proteines": -3.2,
+            "glucides": -0.4,
+            "lipides": -0.7
           }
         },
         {
@@ -1095,29 +1075,39 @@
           "repas": [
             {
               "moment": "petit_dejeuner",
-              "recette_id": "skyr-peche-miel",
-              "nom": "Spécialité protéinée, pêche et miel",
+              "recette_id": "blancs-oeufs-saumon-citron",
+              "nom": "Blancs d'œufs, saumon fumé et citron",
               "items": [
                 {
-                  "aliment_id": "specialite-laitiere-riche-en-proteines-nature",
-                  "nom": "Spécialité laitière riche en protéines, nature",
-                  "grammes": 360
+                  "aliment_id": "blanc-doeuf-cru",
+                  "nom": "Blanc d'œuf cru",
+                  "grammes": 235
                 },
                 {
-                  "aliment_id": "peche-crue",
-                  "nom": "Pêche, crue",
-                  "grammes": 190
+                  "aliment_id": "saumon-fume",
+                  "nom": "Saumon fumé",
+                  "grammes": 65
                 },
                 {
-                  "aliment_id": "miel",
-                  "nom": "Miel",
+                  "aliment_id": "citron-cru",
+                  "nom": "Citron, cru",
                   "grammes": 15
+                },
+                {
+                  "aliment_id": "huile-olive",
+                  "nom": "Huile d'olive vierge extra",
+                  "grammes": 10
+                },
+                {
+                  "aliment_id": "ciboule-ou-ciboulette-fraiche",
+                  "nom": "Ciboulette",
+                  "grammes": 10
                 }
               ],
-              "kcal": 388.2,
-              "proteines": 34.6,
-              "glucides": 39.2,
-              "lipides": 10.1
+              "kcal": 329.0,
+              "proteines": 40.3,
+              "glucides": 2.2,
+              "lipides": 17.3
             },
             {
               "moment": "dejeuner",
@@ -1218,41 +1208,36 @@
             },
             {
               "moment": "collation",
-              "recette_id": "oeuf-dur-tomates-cerises",
-              "nom": "Œuf dur et tomates cerises",
+              "recette_id": "fromage-blanc-abricots-secs",
+              "nom": "Fromage blanc et abricots secs",
               "items": [
                 {
-                  "aliment_id": "oeuf-cru",
-                  "nom": "Œuf cru",
-                  "grammes": 80
+                  "aliment_id": "fromage-blanc-0-mg",
+                  "nom": "Fromage blanc 0% MG",
+                  "grammes": 100
                 },
                 {
-                  "aliment_id": "tomate-cerise",
-                  "nom": "Tomate cerise",
-                  "grammes": 140
+                  "aliment_id": "abricot-sec",
+                  "nom": "Abricot, sec",
+                  "grammes": 25
                 },
                 {
-                  "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
-                  "nom": "Fleur de sel",
-                  "grammes": 5
-                },
-                {
-                  "aliment_id": "blanc-doeuf-cru",
-                  "nom": "Blanc d'œuf cru",
-                  "grammes": 105
+                  "aliment_id": "amande-avec-peau",
+                  "nom": "Amandes",
+                  "grammes": 10
                 }
               ],
-              "kcal": 207.2,
-              "proteines": 23.5,
-              "glucides": 8.7,
-              "lipides": 8.1
+              "kcal": 169.2,
+              "proteines": 10.2,
+              "glucides": 19.9,
+              "lipides": 5.3
             }
           ],
           "totaux": {
-            "kcal": 1703.1,
-            "proteines": 143.0,
-            "glucides": 137.5,
-            "lipides": 60.1
+            "kcal": 1605.9,
+            "proteines": 135.5,
+            "glucides": 111.8,
+            "lipides": 64.5
           },
           "cibles": {
             "kcal": 1650.0,
@@ -1261,10 +1246,10 @@
             "lipides": 65.0
           },
           "ecart_pct": {
-            "kcal": 3.2,
-            "proteines": 0.0,
-            "glucides": 11.6,
-            "lipides": -7.6
+            "kcal": -2.7,
+            "proteines": -5.3,
+            "glucides": -9.3,
+            "lipides": -0.8
           }
         }
       ],
@@ -1274,6 +1259,11 @@
           "rayon_nom": "Fruits et légumes",
           "items": [
             {
+              "aliment_id": "abricot-sec",
+              "nom": "Abricot, sec",
+              "grammes": 25
+            },
+            {
               "aliment_id": "ail-cru",
               "nom": "Ail, cru",
               "grammes": 35
@@ -1281,17 +1271,22 @@
             {
               "aliment_id": "aneth-frais",
               "nom": "Aneth, frais",
-              "grammes": 15
+              "grammes": 10
+            },
+            {
+              "aliment_id": "avocat-cru",
+              "nom": "Avocat cru",
+              "grammes": 65
             },
             {
               "aliment_id": "banane-crue",
               "nom": "Banane crue",
-              "grammes": 140
+              "grammes": 535
             },
             {
               "aliment_id": "brocoli-cru",
               "nom": "Brocoli cru",
-              "grammes": 110
+              "grammes": 535
             },
             {
               "aliment_id": "champignon-de-paris-ou-champignon-de-couche-cru",
@@ -1301,17 +1296,17 @@
             {
               "aliment_id": "ciboule-ou-ciboulette-fraiche",
               "nom": "Ciboulette",
-              "grammes": 15
+              "grammes": 25
             },
             {
               "aliment_id": "citron-cru",
               "nom": "Citron, cru",
-              "grammes": 120
+              "grammes": 140
             },
             {
               "aliment_id": "concombre-cru",
               "nom": "Concombre, cru",
-              "grammes": 215
+              "grammes": 140
             },
             {
               "aliment_id": "tomate-coulis-appertise-puree-de-tomates-mi-reduite-a-11",
@@ -1321,12 +1316,12 @@
             {
               "aliment_id": "courgette-crue",
               "nom": "Courgette crue",
-              "grammes": 455
+              "grammes": 515
             },
             {
               "aliment_id": "endive-crue",
               "nom": "Endive, crue",
-              "grammes": 170
+              "grammes": 175
             },
             {
               "aliment_id": "fenouil-cru",
@@ -1336,17 +1331,12 @@
             {
               "aliment_id": "fraise",
               "nom": "Fraise",
-              "grammes": 70
+              "grammes": 210
             },
             {
-              "aliment_id": "framboise-crue",
-              "nom": "Framboise, crue",
-              "grammes": 50
-            },
-            {
-              "aliment_id": "haricot-vert-cru",
-              "nom": "Haricot vert cru",
-              "grammes": 340
+              "aliment_id": "herbes-de-provence-sechees",
+              "nom": "Herbes de Provence, séchées",
+              "grammes": 5
             },
             {
               "aliment_id": "laitue-crue",
@@ -1354,9 +1344,14 @@
               "grammes": 55
             },
             {
+              "aliment_id": "menthe-fraiche",
+              "nom": "Menthe, fraîche",
+              "grammes": 5
+            },
+            {
               "aliment_id": "myrtille-crue",
               "nom": "Myrtille, crue",
-              "grammes": 40
+              "grammes": 65
             },
             {
               "aliment_id": "oignon-jaune-cru",
@@ -1369,14 +1364,14 @@
               "grammes": 15
             },
             {
-              "aliment_id": "poire-crue",
-              "nom": "Poire crue",
-              "grammes": 90
-            },
-            {
               "aliment_id": "poireau-cru",
               "nom": "Poireau, cru",
-              "grammes": 280
+              "grammes": 105
+            },
+            {
+              "aliment_id": "poivron-rouge-cru",
+              "nom": "Poivron rouge, cru",
+              "grammes": 170
             },
             {
               "aliment_id": "peche-crue",
@@ -1389,6 +1384,11 @@
               "grammes": 5
             },
             {
+              "aliment_id": "salade-verte-crue-sans-assaisonnement",
+              "nom": "Salade verte",
+              "grammes": 50
+            },
+            {
               "aliment_id": "thym-frais",
               "nom": "Thym, frais",
               "grammes": 15
@@ -1396,12 +1396,12 @@
             {
               "aliment_id": "tomate-cerise",
               "nom": "Tomate cerise",
-              "grammes": 235
+              "grammes": 320
             },
             {
               "aliment_id": "tomate-crue",
               "nom": "Tomate crue",
-              "grammes": 275
+              "grammes": 420
             },
             {
               "aliment_id": "echalote-crue",
@@ -1411,7 +1411,7 @@
             {
               "aliment_id": "epinard-cru",
               "nom": "Épinard, cru",
-              "grammes": 405
+              "grammes": 325
             }
           ]
         },
@@ -1422,12 +1422,12 @@
             {
               "aliment_id": "poulet-blanc-cru",
               "nom": "Blanc de poulet cru",
-              "grammes": 955
+              "grammes": 1005
             },
             {
               "aliment_id": "escalope-de-dinde-crue",
               "nom": "Escalope de dinde crue",
-              "grammes": 145
+              "grammes": 340
             },
             {
               "aliment_id": "filet-mignon-de-porc-cru",
@@ -1437,7 +1437,7 @@
             {
               "aliment_id": "boeuf-steak-hache-5-mg-cru",
               "nom": "Steak haché de bœuf 5% MG cru",
-              "grammes": 280
+              "grammes": 130
             }
           ]
         },
@@ -1446,9 +1446,9 @@
           "rayon_nom": "Poissons et fruits de mer",
           "items": [
             {
-              "aliment_id": "bar-commun-ou-loup-cru",
-              "nom": "Bar / loup cru",
-              "grammes": 175
+              "aliment_id": "lieu-noir-cru",
+              "nom": "Lieu noir cru",
+              "grammes": 215
             },
             {
               "aliment_id": "merlu-cru",
@@ -1463,7 +1463,7 @@
             {
               "aliment_id": "saumon-fume",
               "nom": "Saumon fumé",
-              "grammes": 70
+              "grammes": 135
             },
             {
               "aliment_id": "truite-arc-en-ciel-elevage-crue",
@@ -1479,17 +1479,17 @@
             {
               "aliment_id": "blanc-doeuf-cru",
               "nom": "Blanc d'œuf cru",
-              "grammes": 1430
-            },
-            {
-              "aliment_id": "boisson-au-soja-nature-non-enrichie",
-              "nom": "Boisson au soja, nature, non enrichie",
-              "grammes": 230
+              "grammes": 1015
             },
             {
               "aliment_id": "fromage-blanc-0-mg",
               "nom": "Fromage blanc 0% MG",
-              "grammes": 505
+              "grammes": 610
+            },
+            {
+              "aliment_id": "lait-demi-ecreme-uht",
+              "nom": "Lait demi-écrémé UHT",
+              "grammes": 20
             },
             {
               "aliment_id": "oeuf-blanc-blanc-doeuf-cuit",
@@ -1497,14 +1497,9 @@
               "grammes": 140
             },
             {
-              "aliment_id": "parmesan",
-              "nom": "Parmesan",
-              "grammes": 15
-            },
-            {
               "aliment_id": "specialite-laitiere-riche-en-proteines-nature",
               "nom": "Spécialité laitière riche en protéines, nature",
-              "grammes": 730
+              "grammes": 820
             },
             {
               "aliment_id": "yaourt-nature",
@@ -1514,7 +1509,7 @@
             {
               "aliment_id": "oeuf-cru",
               "nom": "Œuf cru",
-              "grammes": 290
+              "grammes": 190
             }
           ]
         },
@@ -1525,12 +1520,12 @@
             {
               "aliment_id": "patate-douce-crue",
               "nom": "Patate douce, crue",
-              "grammes": 500
+              "grammes": 265
             },
             {
               "aliment_id": "pomme-de-terre-crue",
               "nom": "Pomme de terre crue",
-              "grammes": 1230
+              "grammes": 785
             }
           ]
         },
@@ -1552,27 +1547,17 @@
             {
               "aliment_id": "amande-avec-peau",
               "nom": "Amandes",
-              "grammes": 10
-            },
-            {
-              "aliment_id": "avoine-crue",
-              "nom": "Avoine, crue",
-              "grammes": 15
-            },
-            {
-              "aliment_id": "cannelle-poudre",
-              "nom": "Cannelle, poudre",
-              "grammes": 10
+              "grammes": 30
             },
             {
               "aliment_id": "cumin-graine",
               "nom": "Cumin, graine",
-              "grammes": 10
+              "grammes": 5
             },
             {
               "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
               "nom": "Fleur de sel",
-              "grammes": 40
+              "grammes": 30
             },
             {
               "aliment_id": "chia-graine-sechee",
@@ -1580,24 +1565,14 @@
               "grammes": 5
             },
             {
-              "aliment_id": "lin-graine",
-              "nom": "Graines de lin",
-              "grammes": 10
-            },
-            {
               "aliment_id": "miel",
               "nom": "Miel",
-              "grammes": 40
-            },
-            {
-              "aliment_id": "noix-de-cajou-grillee",
-              "nom": "Noix de cajou",
-              "grammes": 35
+              "grammes": 25
             },
             {
               "aliment_id": "pain-complet-ou-integral-a-la-farine-t150",
               "nom": "Pain complet",
-              "grammes": 140
+              "grammes": 155
             },
             {
               "aliment_id": "poivre-noir-poudre",
@@ -1605,14 +1580,9 @@
               "grammes": 35
             },
             {
-              "aliment_id": "pates-seches-au-ble-complet-crues",
-              "nom": "Pâtes complètes crues",
-              "grammes": 75
-            },
-            {
               "aliment_id": "quinoa-cru",
               "nom": "Quinoa cru",
-              "grammes": 60
+              "grammes": 135
             },
             {
               "aliment_id": "riz-blanc-cru",
@@ -1620,14 +1590,9 @@
               "grammes": 30
             },
             {
-              "aliment_id": "semoule-de-ble-dur-crue",
-              "nom": "Semoule de blé dur, crue",
-              "grammes": 75
-            },
-            {
               "aliment_id": "tortilla-souple-a-garnir-a-base-de-ble",
               "nom": "Tortilla souple (à garnir), à base de blé",
-              "grammes": 80
+              "grammes": 155
             }
           ]
         },
@@ -1636,9 +1601,14 @@
           "rayon_nom": "Matières grasses",
           "items": [
             {
+              "aliment_id": "beurre-a-80-mg-minimum-doux",
+              "nom": "Beurre doux",
+              "grammes": 10
+            },
+            {
               "aliment_id": "huile-olive",
               "nom": "Huile d'olive vierge extra",
-              "grammes": 245
+              "grammes": 250
             }
           ]
         }
@@ -2011,44 +1981,44 @@
           "repas": [
             {
               "moment": "petit_dejeuner",
-              "recette_id": "pancakes-farine-oeuf-miel",
-              "nom": "Pancakes à la poêle, miel et fruits",
+              "recette_id": "blancs-oeufs-epinards-champignons",
+              "nom": "Blancs d'œufs, épinards et champignons",
               "items": [
                 {
-                  "aliment_id": "farine-de-ble-tendre-ou-froment-t65",
-                  "nom": "Farine de blé T65",
-                  "grammes": 80
+                  "aliment_id": "blanc-doeuf-cru",
+                  "nom": "Blanc d'œuf cru",
+                  "grammes": 290
                 },
                 {
-                  "aliment_id": "oeuf-cru",
-                  "nom": "Œuf cru",
-                  "grammes": 65
+                  "aliment_id": "epinard-cru",
+                  "nom": "Épinard, cru",
+                  "grammes": 140
                 },
                 {
-                  "aliment_id": "lait-demi-ecreme-uht",
-                  "nom": "Lait demi-écrémé UHT",
-                  "grammes": 95
+                  "aliment_id": "champignon-de-paris-ou-champignon-de-couche-cru",
+                  "nom": "Champignon de Paris ou champignon de couche, cru",
+                  "grammes": 140
                 },
                 {
-                  "aliment_id": "huile-de-tournesol",
-                  "nom": "Huile de tournesol",
+                  "aliment_id": "echalote-crue",
+                  "nom": "Échalote, crue",
+                  "grammes": 35
+                },
+                {
+                  "aliment_id": "huile-olive",
+                  "nom": "Huile d'olive vierge extra",
                   "grammes": 10
                 },
                 {
-                  "aliment_id": "miel",
-                  "nom": "Miel",
-                  "grammes": 20
-                },
-                {
-                  "aliment_id": "fraise",
-                  "nom": "Fraise",
-                  "grammes": 70
+                  "aliment_id": "poivre-noir-poudre",
+                  "nom": "Poivre noir",
+                  "grammes": 5
                 }
               ],
-              "kcal": 594.1,
-              "proteines": 20.9,
-              "glucides": 82.6,
-              "lipides": 18.7
+              "kcal": 342.9,
+              "proteines": 39.6,
+              "glucides": 15.2,
+              "lipides": 12.1
             },
             {
               "moment": "dejeuner",
@@ -2063,7 +2033,7 @@
                 {
                   "aliment_id": "riz-thai-ou-basmati-cru",
                   "nom": "Riz thaï ou basmati, cru",
-                  "grammes": 105
+                  "grammes": 100
                 },
                 {
                   "aliment_id": "brocoli-cru",
@@ -2073,7 +2043,7 @@
                 {
                   "aliment_id": "huile-olive",
                   "nom": "Huile d'olive vierge extra",
-                  "grammes": 10
+                  "grammes": 20
                 },
                 {
                   "aliment_id": "ail-cru",
@@ -2091,10 +2061,10 @@
                   "grammes": 5
                 }
               ],
-              "kcal": 807.0,
-              "proteines": 69.2,
-              "glucides": 90.1,
-              "lipides": 15.4
+              "kcal": 879.4,
+              "proteines": 68.9,
+              "glucides": 86.2,
+              "lipides": 25.3
             },
             {
               "moment": "diner",
@@ -2109,7 +2079,7 @@
                 {
                   "aliment_id": "quinoa-cru",
                   "nom": "Quinoa cru",
-                  "grammes": 100
+                  "grammes": 95
                 },
                 {
                   "aliment_id": "brocoli-cru",
@@ -2119,7 +2089,7 @@
                 {
                   "aliment_id": "huile-olive",
                   "nom": "Huile d'olive vierge extra",
-                  "grammes": 30
+                  "grammes": 25
                 },
                 {
                   "aliment_id": "ail-cru",
@@ -2137,10 +2107,10 @@
                   "grammes": 5
                 }
               ],
-              "kcal": 876.2,
-              "proteines": 55.9,
-              "glucides": 69.0,
-              "lipides": 38.2
+              "kcal": 813.3,
+              "proteines": 55.2,
+              "glucides": 66.1,
+              "lipides": 33.0
             },
             {
               "moment": "collation",
@@ -2163,22 +2133,22 @@
                   "grammes": 10
                 },
                 {
-                  "aliment_id": "blanc-doeuf-cru",
-                  "nom": "Blanc d'œuf cru",
-                  "grammes": 145
+                  "aliment_id": "riz-blanc-cuit",
+                  "nom": "Riz blanc, cuit",
+                  "grammes": 185
                 }
               ],
-              "kcal": 286.8,
-              "proteines": 29.9,
-              "glucides": 28.9,
-              "lipides": 5.6
+              "kcal": 503.9,
+              "proteines": 20.2,
+              "glucides": 89.4,
+              "lipides": 6.6
             }
           ],
           "totaux": {
-            "kcal": 2564.0,
-            "proteines": 175.9,
-            "glucides": 270.7,
-            "lipides": 77.9
+            "kcal": 2539.5,
+            "proteines": 183.9,
+            "glucides": 256.8,
+            "lipides": 76.9
           },
           "cibles": {
             "kcal": 2500.0,
@@ -2187,10 +2157,10 @@
             "lipides": 80.0
           },
           "ecart_pct": {
-            "kcal": 2.6,
-            "proteines": -0.0,
-            "glucides": 0.6,
-            "lipides": -2.6
+            "kcal": 1.6,
+            "proteines": 4.5,
+            "glucides": -4.5,
+            "lipides": -3.8
           }
         },
         {
@@ -2198,44 +2168,34 @@
           "repas": [
             {
               "moment": "petit_dejeuner",
-              "recette_id": "tartine-saumon-fume-fromage-blanc",
-              "nom": "Tartine saumon fumé et fromage blanc",
+              "recette_id": "skyr-banane-amandes",
+              "nom": "Skyr, banane et amandes",
               "items": [
                 {
-                  "aliment_id": "pain-complet-ou-integral-a-la-farine-t150",
-                  "nom": "Pain complet",
-                  "grammes": 125
+                  "aliment_id": "specialite-laitiere-riche-en-proteines-nature",
+                  "nom": "Spécialité laitière riche en protéines, nature",
+                  "grammes": 250
                 },
                 {
-                  "aliment_id": "saumon-fume",
-                  "nom": "Saumon fumé",
-                  "grammes": 90
+                  "aliment_id": "banane-crue",
+                  "nom": "Banane crue",
+                  "grammes": 165
                 },
                 {
-                  "aliment_id": "fromage-blanc-0-mg",
-                  "nom": "Fromage blanc 0% MG",
-                  "grammes": 70
+                  "aliment_id": "amande-avec-peau",
+                  "nom": "Amandes",
+                  "grammes": 35
                 },
                 {
-                  "aliment_id": "citron-cru",
-                  "nom": "Citron, cru",
+                  "aliment_id": "miel",
+                  "nom": "Miel",
                   "grammes": 15
-                },
-                {
-                  "aliment_id": "aneth-frais",
-                  "nom": "Aneth, frais",
-                  "grammes": 5
-                },
-                {
-                  "aliment_id": "poivre-noir-poudre",
-                  "nom": "Poivre noir",
-                  "grammes": 5
                 }
               ],
-              "kcal": 514.2,
-              "proteines": 37.8,
-              "glucides": 57.0,
-              "lipides": 12.0
+              "kcal": 595.1,
+              "proteines": 32.6,
+              "glucides": 56.9,
+              "lipides": 24.7
             },
             {
               "moment": "dejeuner",
@@ -2311,7 +2271,7 @@
                 {
                   "aliment_id": "huile-olive",
                   "nom": "Huile d'olive vierge extra",
-                  "grammes": 35
+                  "grammes": 15
                 },
                 {
                   "aliment_id": "persil-frais",
@@ -2319,89 +2279,25 @@
                   "grammes": 5
                 }
               ],
-              "kcal": 905.8,
-              "proteines": 55.5,
+              "kcal": 726.0,
+              "proteines": 55.4,
               "glucides": 61.8,
-              "lipides": 46.0
+              "lipides": 26.0
             },
             {
               "moment": "collation",
-              "recette_id": "blanc-oeuf-cuit-tomates-cerises",
-              "nom": "Blanc d'œuf cuit et tomates cerises",
+              "recette_id": "yaourt-cacao-banane",
+              "nom": "Yaourt, cacao et banane",
               "items": [
                 {
-                  "aliment_id": "oeuf-blanc-blanc-doeuf-cuit",
-                  "nom": "Oeuf, blanc (blanc d'oeuf), cuit",
-                  "grammes": 165
-                },
-                {
-                  "aliment_id": "tomate-cerise",
-                  "nom": "Tomate cerise",
-                  "grammes": 115
-                },
-                {
-                  "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
-                  "nom": "Fleur de sel",
-                  "grammes": 5
-                },
-                {
-                  "aliment_id": "persil-frais",
-                  "nom": "Persil, frais",
-                  "grammes": 5
-                },
-                {
-                  "aliment_id": "riz-blanc-cuit",
-                  "nom": "Riz blanc, cuit",
-                  "grammes": 145
-                }
-              ],
-              "kcal": 341.2,
-              "proteines": 23.4,
-              "glucides": 56.6,
-              "lipides": 1.4
-            }
-          ],
-          "totaux": {
-            "kcal": 2600.1,
-            "proteines": 183.5,
-            "glucides": 269.1,
-            "lipides": 79.5
-          },
-          "cibles": {
-            "kcal": 2500.0,
-            "proteines": 176.0,
-            "glucides": 269.0,
-            "lipides": 80.0
-          },
-          "ecart_pct": {
-            "kcal": 4.0,
-            "proteines": 4.3,
-            "glucides": 0.0,
-            "lipides": -0.6
-          }
-        },
-        {
-          "date_index": 5,
-          "repas": [
-            {
-              "moment": "petit_dejeuner",
-              "recette_id": "porridge-cacao-banane",
-              "nom": "Porridge cacao et banane",
-              "items": [
-                {
-                  "aliment_id": "avoine-crue",
-                  "nom": "Avoine, crue",
-                  "grammes": 70
-                },
-                {
-                  "aliment_id": "lait-demi-ecreme-uht",
-                  "nom": "Lait demi-écrémé UHT",
-                  "grammes": 280
+                  "aliment_id": "yaourt-nature",
+                  "nom": "Yaourt nature",
+                  "grammes": 160
                 },
                 {
                   "aliment_id": "banane-crue",
                   "nom": "Banane crue",
-                  "grammes": 110
+                  "grammes": 200
                 },
                 {
                   "aliment_id": "cacao-sans-sucres-ajoutes-poudre-soluble",
@@ -2411,13 +2307,82 @@
                 {
                   "aliment_id": "miel",
                   "nom": "Miel",
-                  "grammes": 15
+                  "grammes": 10
+                },
+                {
+                  "aliment_id": "blanc-doeuf-cru",
+                  "nom": "Blanc d'œuf cru",
+                  "grammes": 105
                 }
               ],
-              "kcal": 584.1,
-              "proteines": 25.7,
-              "glucides": 88.1,
-              "lipides": 11.4
+              "kcal": 378.2,
+              "proteines": 22.0,
+              "glucides": 56.4,
+              "lipides": 5.0
+            }
+          ],
+          "totaux": {
+            "kcal": 2538.1,
+            "proteines": 176.9,
+            "glucides": 268.8,
+            "lipides": 75.9
+          },
+          "cibles": {
+            "kcal": 2500.0,
+            "proteines": 176.0,
+            "glucides": 269.0,
+            "lipides": 80.0
+          },
+          "ecart_pct": {
+            "kcal": 1.5,
+            "proteines": 0.5,
+            "glucides": -0.1,
+            "lipides": -5.2
+          }
+        },
+        {
+          "date_index": 5,
+          "repas": [
+            {
+              "moment": "petit_dejeuner",
+              "recette_id": "blancs-oeufs-tomate-ciboulette",
+              "nom": "Blancs d'œufs brouillés, tomate et ciboulette",
+              "items": [
+                {
+                  "aliment_id": "blanc-doeuf-cru",
+                  "nom": "Blanc d'œuf cru",
+                  "grammes": 390
+                },
+                {
+                  "aliment_id": "tomate-crue",
+                  "nom": "Tomate crue",
+                  "grammes": 215
+                },
+                {
+                  "aliment_id": "ciboule-ou-ciboulette-fraiche",
+                  "nom": "Ciboulette",
+                  "grammes": 15
+                },
+                {
+                  "aliment_id": "huile-olive",
+                  "nom": "Huile d'olive vierge extra",
+                  "grammes": 10
+                },
+                {
+                  "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+                  "nom": "Fleur de sel",
+                  "grammes": 5
+                },
+                {
+                  "aliment_id": "poivre-noir-poudre",
+                  "nom": "Poivre noir",
+                  "grammes": 5
+                }
+              ],
+              "kcal": 337.0,
+              "proteines": 44.6,
+              "glucides": 12.5,
+              "lipides": 11.2
             },
             {
               "moment": "dejeuner",
@@ -2488,7 +2453,7 @@
                 {
                   "aliment_id": "huile-olive",
                   "nom": "Huile d'olive vierge extra",
-                  "grammes": 20
+                  "grammes": 30
                 },
                 {
                   "aliment_id": "cumin-graine",
@@ -2511,25 +2476,25 @@
                   "grammes": 5
                 }
               ],
-              "kcal": 762.2,
+              "kcal": 852.1,
               "proteines": 38.0,
               "glucides": 72.4,
-              "lipides": 26.5
+              "lipides": 36.5
             },
             {
               "moment": "collation",
-              "recette_id": "oeuf-dur-tomates-cerises",
-              "nom": "Œuf dur et tomates cerises",
+              "recette_id": "blanc-oeuf-cuit-tomates-cerises",
+              "nom": "Blanc d'œuf cuit et tomates cerises",
               "items": [
                 {
-                  "aliment_id": "oeuf-cru",
-                  "nom": "Œuf cru",
-                  "grammes": 100
+                  "aliment_id": "oeuf-blanc-blanc-doeuf-cuit",
+                  "nom": "Oeuf, blanc (blanc d'oeuf), cuit",
+                  "grammes": 175
                 },
                 {
                   "aliment_id": "tomate-cerise",
                   "nom": "Tomate cerise",
-                  "grammes": 180
+                  "grammes": 115
                 },
                 {
                   "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
@@ -2537,32 +2502,32 @@
                   "grammes": 5
                 },
                 {
+                  "aliment_id": "persil-frais",
+                  "nom": "Persil, frais",
+                  "grammes": 5
+                },
+                {
                   "aliment_id": "blanc-doeuf-cru",
                   "nom": "Blanc d'œuf cru",
-                  "grammes": 300
+                  "grammes": 190
                 },
                 {
-                  "aliment_id": "poulet-blanc-grille",
-                  "nom": "Blanc de poulet grillé",
-                  "grammes": 40
-                },
-                {
-                  "aliment_id": "banane-crue",
-                  "nom": "Banane crue",
-                  "grammes": 55
+                  "aliment_id": "riz-blanc-cuit",
+                  "nom": "Riz blanc, cuit",
+                  "grammes": 250
                 }
               ],
-              "kcal": 446.4,
-              "proteines": 60.5,
-              "glucides": 23.1,
-              "lipides": 11.2
+              "kcal": 599.8,
+              "proteines": 48.6,
+              "glucides": 92.9,
+              "lipides": 2.5
             }
           ],
           "totaux": {
-            "kcal": 2624.5,
-            "proteines": 176.9,
-            "glucides": 264.0,
-            "lipides": 78.0
+            "kcal": 2620.7,
+            "proteines": 183.9,
+            "glucides": 258.1,
+            "lipides": 79.2
           },
           "cibles": {
             "kcal": 2500.0,
@@ -2571,10 +2536,10 @@
             "lipides": 80.0
           },
           "ecart_pct": {
-            "kcal": 5.0,
-            "proteines": 0.5,
-            "glucides": -1.9,
-            "lipides": -2.5
+            "kcal": 4.8,
+            "proteines": 4.5,
+            "glucides": -4.1,
+            "lipides": -1.0
           }
         },
         {
@@ -2582,28 +2547,23 @@
           "repas": [
             {
               "moment": "petit_dejeuner",
-              "recette_id": "blancs-oeufs-epinards-champignons",
-              "nom": "Blancs d'œufs, épinards et champignons",
+              "recette_id": "blancs-oeufs-saumon-citron",
+              "nom": "Blancs d'œufs, saumon fumé et citron",
               "items": [
                 {
                   "aliment_id": "blanc-doeuf-cru",
                   "nom": "Blanc d'œuf cru",
-                  "grammes": 235
+                  "grammes": 155
                 },
                 {
-                  "aliment_id": "epinard-cru",
-                  "nom": "Épinard, cru",
-                  "grammes": 140
+                  "aliment_id": "saumon-fume",
+                  "nom": "Saumon fumé",
+                  "grammes": 70
                 },
                 {
-                  "aliment_id": "champignon-de-paris-ou-champignon-de-couche-cru",
-                  "nom": "Champignon de Paris ou champignon de couche, cru",
-                  "grammes": 140
-                },
-                {
-                  "aliment_id": "echalote-crue",
-                  "nom": "Échalote, crue",
-                  "grammes": 35
+                  "aliment_id": "citron-cru",
+                  "nom": "Citron, cru",
+                  "grammes": 20
                 },
                 {
                   "aliment_id": "huile-olive",
@@ -2611,15 +2571,15 @@
                   "grammes": 10
                 },
                 {
-                  "aliment_id": "poivre-noir-poudre",
-                  "nom": "Poivre noir",
-                  "grammes": 5
+                  "aliment_id": "ciboule-ou-ciboulette-fraiche",
+                  "nom": "Ciboulette",
+                  "grammes": 10
                 }
               ],
-              "kcal": 316.6,
-              "proteines": 33.7,
-              "glucides": 14.8,
-              "lipides": 12.0
+              "kcal": 301.0,
+              "proteines": 32.7,
+              "glucides": 1.8,
+              "lipides": 17.7
             },
             {
               "moment": "dejeuner",
@@ -2634,7 +2594,7 @@
                 {
                   "aliment_id": "riz-thai-ou-basmati-cru",
                   "nom": "Riz thaï ou basmati, cru",
-                  "grammes": 100
+                  "grammes": 105
                 },
                 {
                   "aliment_id": "oignon-jaune-cru",
@@ -2660,17 +2620,12 @@
                   "aliment_id": "ail-cru",
                   "nom": "Ail, cru",
                   "grammes": 5
-                },
-                {
-                  "aliment_id": "huile-olive",
-                  "nom": "Huile d'olive vierge extra",
-                  "grammes": 5
                 }
               ],
-              "kcal": 832.0,
-              "proteines": 62.9,
-              "glucides": 87.8,
-              "lipides": 22.9
+              "kcal": 804.6,
+              "proteines": 63.3,
+              "glucides": 91.7,
+              "lipides": 17.9
             },
             {
               "moment": "diner",
@@ -2690,7 +2645,7 @@
                 {
                   "aliment_id": "pomme-de-terre-crue",
                   "nom": "Pomme de terre crue",
-                  "grammes": 225
+                  "grammes": 230
                 },
                 {
                   "aliment_id": "ail-cru",
@@ -2713,43 +2668,48 @@
                   "grammes": 5
                 }
               ],
-              "kcal": 808.7,
-              "proteines": 59.6,
-              "glucides": 59.2,
+              "kcal": 812.7,
+              "proteines": 59.7,
+              "glucides": 60.0,
               "lipides": 34.4
             },
             {
               "moment": "collation",
-              "recette_id": "skyr-myrtilles",
-              "nom": "Spécialité protéinée et myrtilles",
+              "recette_id": "skyr-fraise-chia",
+              "nom": "Skyr, fraises et chia",
               "items": [
                 {
                   "aliment_id": "specialite-laitiere-riche-en-proteines-nature",
                   "nom": "Spécialité laitière riche en protéines, nature",
-                  "grammes": 210
+                  "grammes": 190
                 },
                 {
-                  "aliment_id": "myrtille-crue",
-                  "nom": "Myrtille, crue",
-                  "grammes": 80
+                  "aliment_id": "fraise",
+                  "nom": "Fraise",
+                  "grammes": 100
+                },
+                {
+                  "aliment_id": "chia-graine-sechee",
+                  "nom": "Graines de chia",
+                  "grammes": 10
                 },
                 {
                   "aliment_id": "riz-blanc-cuit",
                   "nom": "Riz blanc, cuit",
-                  "grammes": 235
+                  "grammes": 250
                 }
               ],
-              "kcal": 566.0,
-              "proteines": 27.6,
-              "glucides": 93.9,
-              "lipides": 7.6
+              "kcal": 608.5,
+              "proteines": 28.1,
+              "glucides": 96.4,
+              "lipides": 9.9
             }
           ],
           "totaux": {
-            "kcal": 2523.3,
+            "kcal": 2526.8,
             "proteines": 183.8,
-            "glucides": 255.6,
-            "lipides": 76.8
+            "glucides": 249.8,
+            "lipides": 80.0
           },
           "cibles": {
             "kcal": 2500.0,
@@ -2758,10 +2718,10 @@
             "lipides": 80.0
           },
           "ecart_pct": {
-            "kcal": 0.9,
-            "proteines": 4.4,
-            "glucides": -5.0,
-            "lipides": -4.0
+            "kcal": 1.1,
+            "proteines": 4.5,
+            "glucides": -7.1,
+            "lipides": -0.0
           }
         },
         {
@@ -2872,7 +2832,7 @@
                 {
                   "aliment_id": "huile-olive",
                   "nom": "Huile d'olive vierge extra",
-                  "grammes": 15
+                  "grammes": 25
                 },
                 {
                   "aliment_id": "ail-cru",
@@ -2890,53 +2850,43 @@
                   "grammes": 5
                 }
               ],
-              "kcal": 737.9,
+              "kcal": 827.8,
               "proteines": 46.9,
               "glucides": 85.0,
-              "lipides": 21.7
+              "lipides": 31.7
             },
             {
               "moment": "collation",
-              "recette_id": "skyr-fraise-chia",
-              "nom": "Skyr, fraises et chia",
+              "recette_id": "fromage-blanc-0-peche",
+              "nom": "Fromage blanc 0 % et pêche",
               "items": [
                 {
-                  "aliment_id": "specialite-laitiere-riche-en-proteines-nature",
-                  "nom": "Spécialité laitière riche en protéines, nature",
-                  "grammes": 190
+                  "aliment_id": "fromage-blanc-0-mg",
+                  "nom": "Fromage blanc 0% MG",
+                  "grammes": 255
                 },
                 {
-                  "aliment_id": "fraise",
-                  "nom": "Fraise",
-                  "grammes": 100
-                },
-                {
-                  "aliment_id": "chia-graine-sechee",
-                  "nom": "Graines de chia",
-                  "grammes": 10
+                  "aliment_id": "peche-crue",
+                  "nom": "Pêche, crue",
+                  "grammes": 170
                 },
                 {
                   "aliment_id": "blanc-doeuf-cru",
                   "nom": "Blanc d'œuf cru",
                   "grammes": 170
-                },
-                {
-                  "aliment_id": "banane-crue",
-                  "nom": "Banane crue",
-                  "grammes": 110
                 }
               ],
-              "kcal": 399.4,
-              "proteines": 39.6,
-              "glucides": 36.3,
-              "lipides": 8.5
+              "kcal": 268.6,
+              "proteines": 38.4,
+              "glucides": 24.7,
+              "lipides": 0.7
             }
           ],
           "totaux": {
-            "kcal": 2564.8,
-            "proteines": 177.4,
-            "glucides": 268.8,
-            "lipides": 76.1
+            "kcal": 2523.9,
+            "proteines": 176.3,
+            "glucides": 257.2,
+            "lipides": 78.2
           },
           "cibles": {
             "kcal": 2500.0,
@@ -2945,10 +2895,10 @@
             "lipides": 80.0
           },
           "ecart_pct": {
-            "kcal": 2.6,
-            "proteines": 0.8,
-            "glucides": -0.1,
-            "lipides": -4.9
+            "kcal": 1.0,
+            "proteines": 0.1,
+            "glucides": -4.4,
+            "lipides": -2.3
           }
         }
       ],
@@ -2968,14 +2918,9 @@
               "grammes": 50
             },
             {
-              "aliment_id": "aneth-frais",
-              "nom": "Aneth, frais",
-              "grammes": 5
-            },
-            {
               "aliment_id": "banane-crue",
               "nom": "Banane crue",
-              "grammes": 510
+              "grammes": 600
             },
             {
               "aliment_id": "basilic-frais",
@@ -2993,9 +2938,14 @@
               "grammes": 335
             },
             {
+              "aliment_id": "ciboule-ou-ciboulette-fraiche",
+              "nom": "Ciboulette",
+              "grammes": 25
+            },
+            {
               "aliment_id": "citron-cru",
               "nom": "Citron, cru",
-              "grammes": 75
+              "grammes": 80
             },
             {
               "aliment_id": "concombre-cru",
@@ -3015,7 +2965,7 @@
             {
               "aliment_id": "fraise",
               "nom": "Fraise",
-              "grammes": 170
+              "grammes": 100
             },
             {
               "aliment_id": "framboise-crue",
@@ -3030,7 +2980,7 @@
             {
               "aliment_id": "myrtille-crue",
               "nom": "Myrtille, crue",
-              "grammes": 145
+              "grammes": 65
             },
             {
               "aliment_id": "oignon-jaune-cru",
@@ -3070,17 +3020,17 @@
             {
               "aliment_id": "peche-crue",
               "nom": "Pêche, crue",
-              "grammes": 235
+              "grammes": 405
             },
             {
               "aliment_id": "tomate-cerise",
               "nom": "Tomate cerise",
-              "grammes": 425
+              "grammes": 245
             },
             {
               "aliment_id": "tomate-crue",
               "nom": "Tomate crue",
-              "grammes": 105
+              "grammes": 320
             },
             {
               "aliment_id": "tomate-pelee-appertisee",
@@ -3107,11 +3057,6 @@
               "aliment_id": "poulet-blanc-cru",
               "nom": "Blanc de poulet cru",
               "grammes": 1050
-            },
-            {
-              "aliment_id": "poulet-blanc-grille",
-              "nom": "Blanc de poulet grillé",
-              "grammes": 40
             },
             {
               "aliment_id": "escalope-de-dinde-crue",
@@ -3152,7 +3097,7 @@
             {
               "aliment_id": "saumon-fume",
               "nom": "Saumon fumé",
-              "grammes": 90
+              "grammes": 70
             },
             {
               "aliment_id": "thon-au-naturel-appertise",
@@ -3173,7 +3118,7 @@
             {
               "aliment_id": "blanc-doeuf-cru",
               "nom": "Blanc d'œuf cru",
-              "grammes": 945
+              "grammes": 1395
             },
             {
               "aliment_id": "boisson-au-soja-nature-non-enrichie",
@@ -3188,17 +3133,17 @@
             {
               "aliment_id": "fromage-blanc-0-mg",
               "nom": "Fromage blanc 0% MG",
-              "grammes": 220
+              "grammes": 405
             },
             {
               "aliment_id": "lait-demi-ecreme-uht",
               "nom": "Lait demi-écrémé UHT",
-              "grammes": 865
+              "grammes": 490
             },
             {
               "aliment_id": "oeuf-blanc-blanc-doeuf-cuit",
               "nom": "Oeuf, blanc (blanc d'oeuf), cuit",
-              "grammes": 165
+              "grammes": 175
             },
             {
               "aliment_id": "parmesan",
@@ -3208,12 +3153,12 @@
             {
               "aliment_id": "specialite-laitiere-riche-en-proteines-nature",
               "nom": "Spécialité laitière riche en protéines, nature",
-              "grammes": 1055
+              "grammes": 1095
             },
             {
-              "aliment_id": "oeuf-cru",
-              "nom": "Œuf cru",
-              "grammes": 165
+              "aliment_id": "yaourt-nature",
+              "nom": "Yaourt nature",
+              "grammes": 160
             }
           ]
         },
@@ -3224,7 +3169,7 @@
             {
               "aliment_id": "pomme-de-terre-crue",
               "nom": "Pomme de terre crue",
-              "grammes": 530
+              "grammes": 535
             }
           ]
         },
@@ -3246,12 +3191,12 @@
             {
               "aliment_id": "amande-avec-peau",
               "nom": "Amandes",
-              "grammes": 10
+              "grammes": 45
             },
             {
               "aliment_id": "avoine-crue",
               "nom": "Avoine, crue",
-              "grammes": 215
+              "grammes": 145
             },
             {
               "aliment_id": "cacao-sans-sucres-ajoutes-poudre-soluble",
@@ -3274,11 +3219,6 @@
               "grammes": 10
             },
             {
-              "aliment_id": "farine-de-ble-tendre-ou-froment-t65",
-              "nom": "Farine de blé T65",
-              "grammes": 80
-            },
-            {
               "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
               "nom": "Fleur de sel",
               "grammes": 15
@@ -3296,17 +3236,12 @@
             {
               "aliment_id": "miel",
               "nom": "Miel",
-              "grammes": 55
+              "grammes": 45
             },
             {
               "aliment_id": "noisette",
               "nom": "Noisettes",
               "grammes": 20
-            },
-            {
-              "aliment_id": "pain-complet-ou-integral-a-la-farine-t150",
-              "nom": "Pain complet",
-              "grammes": 125
             },
             {
               "aliment_id": "paprika-poudre",
@@ -3331,7 +3266,7 @@
             {
               "aliment_id": "quinoa-cru",
               "nom": "Quinoa cru",
-              "grammes": 300
+              "grammes": 295
             },
             {
               "aliment_id": "riz-blanc-cru",
@@ -3341,7 +3276,7 @@
             {
               "aliment_id": "riz-blanc-cuit",
               "nom": "Riz blanc, cuit",
-              "grammes": 525
+              "grammes": 830
             },
             {
               "aliment_id": "riz-thai-ou-basmati-cru",
@@ -3362,16 +3297,11 @@
             {
               "aliment_id": "huile-olive",
               "nom": "Huile d'olive vierge extra",
-              "grammes": 260
+              "grammes": 280
             },
             {
               "aliment_id": "huile-de-colza",
               "nom": "Huile de colza",
-              "grammes": 10
-            },
-            {
-              "aliment_id": "huile-de-tournesol",
-              "nom": "Huile de tournesol",
               "grammes": 10
             }
           ]
@@ -4173,7 +4103,7 @@
                 {
                   "aliment_id": "pomme-crue",
                   "nom": "Pomme crue",
-                  "grammes": 220
+                  "grammes": 140
                 },
                 {
                   "aliment_id": "cannelle-poudre",
@@ -4186,10 +4116,10 @@
                   "grammes": 15
                 }
               ],
-              "kcal": 396.6,
-              "proteines": 33.1,
-              "glucides": 58.1,
-              "lipides": 0.5
+              "kcal": 353.4,
+              "proteines": 33.0,
+              "glucides": 48.8,
+              "lipides": 0.3
             },
             {
               "moment": "dejeuner",
@@ -4199,7 +4129,7 @@
                 {
                   "aliment_id": "quinoa-bouilli-cuit-a-leau",
                   "nom": "Quinoa cuit",
-                  "grammes": 160
+                  "grammes": 5
                 },
                 {
                   "aliment_id": "lentilles-vertes-cuites",
@@ -4214,7 +4144,7 @@
                 {
                   "aliment_id": "concombre-cru",
                   "nom": "Concombre, cru",
-                  "grammes": 95
+                  "grammes": 90
                 },
                 {
                   "aliment_id": "citron-cru",
@@ -4229,28 +4159,23 @@
                 {
                   "aliment_id": "huile-olive",
                   "nom": "Huile d'olive vierge extra",
-                  "grammes": 5
+                  "grammes": 15
                 }
               ],
-              "kcal": 570.5,
-              "proteines": 29.0,
-              "glucides": 83.9,
-              "lipides": 8.0
+              "kcal": 428.5,
+              "proteines": 21.2,
+              "glucides": 40.5,
+              "lipides": 16.3
             },
             {
               "moment": "diner",
-              "recette_id": "tofu-poele-legumes",
-              "nom": "Tofu poêlé aux légumes",
+              "recette_id": "soupe-lentilles-corail",
+              "nom": "Soupe de lentilles corail au cumin",
               "items": [
                 {
-                  "aliment_id": "tofu-nature",
-                  "nom": "Tofu nature",
-                  "grammes": 210
-                },
-                {
-                  "aliment_id": "brocoli-cru",
-                  "nom": "Brocoli cru",
-                  "grammes": 135
+                  "aliment_id": "lentille-corail-seche",
+                  "nom": "Lentilles corail sèches",
+                  "grammes": 105
                 },
                 {
                   "aliment_id": "carotte-crue",
@@ -4258,19 +4183,24 @@
                   "grammes": 85
                 },
                 {
-                  "aliment_id": "poivron-rouge-cru",
-                  "nom": "Poivron rouge, cru",
-                  "grammes": 105
+                  "aliment_id": "oignon-jaune-cru",
+                  "nom": "Oignon jaune, cru",
+                  "grammes": 55
                 },
                 {
-                  "aliment_id": "huile-de-sesame",
-                  "nom": "Huile de sésame",
-                  "grammes": 10
+                  "aliment_id": "tomate-concentre-appertise",
+                  "nom": "Concentré de tomate",
+                  "grammes": 20
                 },
                 {
-                  "aliment_id": "gingembre-racine-fraiche",
-                  "nom": "Gingembre frais",
-                  "grammes": 10
+                  "aliment_id": "huile-olive",
+                  "nom": "Huile d'olive vierge extra",
+                  "grammes": 40
+                },
+                {
+                  "aliment_id": "cumin-graine",
+                  "nom": "Cumin, graine",
+                  "grammes": 5
                 },
                 {
                   "aliment_id": "ail-cru",
@@ -4278,20 +4208,15 @@
                   "grammes": 5
                 },
                 {
-                  "aliment_id": "graine-germee-de-haricot-mungo-ou-pousse-de-soja-crue",
-                  "nom": "Pousses de soja (haricot mungo)",
-                  "grammes": 55
-                },
-                {
-                  "aliment_id": "huile-olive",
-                  "nom": "Huile d'olive vierge extra",
-                  "grammes": 20
+                  "aliment_id": "curcuma-poudre",
+                  "nom": "Curcuma, poudre",
+                  "grammes": 5
                 }
               ],
-              "kcal": 707.0,
-              "proteines": 38.6,
-              "glucides": 22.8,
-              "lipides": 48.5
+              "kcal": 810.5,
+              "proteines": 33.0,
+              "glucides": 63.3,
+              "lipides": 42.2
             },
             {
               "moment": "collation",
@@ -4316,20 +4241,25 @@
                 {
                   "aliment_id": "blanc-doeuf-cru",
                   "nom": "Blanc d'œuf cru",
-                  "grammes": 300
+                  "grammes": 385
+                },
+                {
+                  "aliment_id": "fromage-blanc-0-mg",
+                  "nom": "Fromage blanc 0% MG",
+                  "grammes": 130
                 }
               ],
-              "kcal": 313.8,
-              "proteines": 46.7,
-              "glucides": 7.3,
-              "lipides": 10.6
+              "kcal": 417.0,
+              "proteines": 65.4,
+              "glucides": 13.3,
+              "lipides": 10.7
             }
           ],
           "totaux": {
-            "kcal": 1987.9,
-            "proteines": 147.4,
-            "glucides": 172.1,
-            "lipides": 67.5
+            "kcal": 2009.3,
+            "proteines": 152.6,
+            "glucides": 166.0,
+            "lipides": 69.5
           },
           "cibles": {
             "kcal": 1900.0,
@@ -4338,10 +4268,10 @@
             "lipides": 70.0
           },
           "ecart_pct": {
-            "kcal": 4.6,
-            "proteines": -4.3,
-            "glucides": 5.2,
-            "lipides": -3.5
+            "kcal": 5.8,
+            "proteines": -0.9,
+            "glucides": 1.5,
+            "lipides": -0.7
           }
         },
         {
@@ -4441,37 +4371,37 @@
             },
             {
               "moment": "diner",
-              "recette_id": "wok-tofu-vermicelles",
-              "nom": "Wok de tofu et vermicelles de riz",
+              "recette_id": "tofu-poele-legumes",
+              "nom": "Tofu poêlé aux légumes",
               "items": [
-                {
-                  "aliment_id": "vermicelles-de-riz-seches-crues",
-                  "nom": "Vermicelles de riz crues",
-                  "grammes": 60
-                },
                 {
                   "aliment_id": "tofu-nature",
                   "nom": "Tofu nature",
-                  "grammes": 120
+                  "grammes": 210
                 },
                 {
-                  "aliment_id": "poivron-rouge-cru",
-                  "nom": "Poivron rouge, cru",
-                  "grammes": 70
+                  "aliment_id": "brocoli-cru",
+                  "nom": "Brocoli cru",
+                  "grammes": 140
                 },
                 {
                   "aliment_id": "carotte-crue",
                   "nom": "Carotte crue",
-                  "grammes": 50
+                  "grammes": 85
                 },
                 {
-                  "aliment_id": "graine-germee-de-haricot-mungo-ou-pousse-de-soja-crue",
-                  "nom": "Pousses de soja (haricot mungo)",
-                  "grammes": 50
+                  "aliment_id": "poivron-rouge-cru",
+                  "nom": "Poivron rouge, cru",
+                  "grammes": 110
                 },
                 {
                   "aliment_id": "huile-de-sesame",
                   "nom": "Huile de sésame",
+                  "grammes": 10
+                },
+                {
+                  "aliment_id": "gingembre-racine-fraiche",
+                  "nom": "Gingembre frais",
                   "grammes": 10
                 },
                 {
@@ -4480,20 +4410,20 @@
                   "grammes": 5
                 },
                 {
-                  "aliment_id": "gingembre-racine-fraiche",
-                  "nom": "Gingembre frais",
-                  "grammes": 5
+                  "aliment_id": "graine-germee-de-haricot-mungo-ou-pousse-de-soja-crue",
+                  "nom": "Pousses de soja (haricot mungo)",
+                  "grammes": 55
                 },
                 {
                   "aliment_id": "huile-olive",
                   "nom": "Huile d'olive vierge extra",
-                  "grammes": 10
+                  "grammes": 5
                 }
               ],
-              "kcal": 635.2,
-              "proteines": 25.2,
-              "glucides": 61.4,
-              "lipides": 30.8
+              "kcal": 575.5,
+              "proteines": 38.7,
+              "glucides": 23.2,
+              "lipides": 33.5
             },
             {
               "moment": "collation",
@@ -4513,25 +4443,25 @@
                 {
                   "aliment_id": "blanc-doeuf-cru",
                   "nom": "Blanc d'œuf cru",
-                  "grammes": 300
+                  "grammes": 295
                 },
                 {
-                  "aliment_id": "fromage-blanc-0-mg",
-                  "nom": "Fromage blanc 0% MG",
-                  "grammes": 175
+                  "aliment_id": "riz-blanc-cuit",
+                  "nom": "Riz blanc, cuit",
+                  "grammes": 105
                 }
               ],
-              "kcal": 404.7,
-              "proteines": 62.4,
-              "glucides": 23.7,
-              "lipides": 5.7
+              "kcal": 481.1,
+              "proteines": 52.7,
+              "glucides": 51.2,
+              "lipides": 6.4
             }
           ],
           "totaux": {
-            "kcal": 1972.6,
-            "proteines": 153.9,
-            "glucides": 173.4,
-            "lipides": 66.5
+            "kcal": 1989.2,
+            "proteines": 157.7,
+            "glucides": 162.7,
+            "lipides": 69.9
           },
           "cibles": {
             "kcal": 1900.0,
@@ -4540,10 +4470,10 @@
             "lipides": 70.0
           },
           "ecart_pct": {
-            "kcal": 3.8,
-            "proteines": -0.1,
-            "glucides": 6.1,
-            "lipides": -5.0
+            "kcal": 4.7,
+            "proteines": 2.4,
+            "glucides": -0.5,
+            "lipides": -0.1
           }
         },
         {
@@ -4598,7 +4528,7 @@
                 {
                   "aliment_id": "pates-seches-sans-gluten-cuites",
                   "nom": "Pâtes sans gluten cuites",
-                  "grammes": 210
+                  "grammes": 205
                 },
                 {
                   "aliment_id": "tofu-nature",
@@ -4631,76 +4561,76 @@
                   "grammes": 5
                 }
               ],
-              "kcal": 630.1,
-              "proteines": 28.5,
-              "glucides": 81.9,
-              "lipides": 19.3
+              "kcal": 622.0,
+              "proteines": 28.3,
+              "glucides": 80.2,
+              "lipides": 19.2
             },
             {
               "moment": "diner",
-              "recette_id": "lentilles-carottes-oeuf",
-              "nom": "Lentilles, carottes et œuf",
+              "recette_id": "poelee-pois-chiches-epinards",
+              "nom": "Poêlée de pois chiches et épinards",
               "items": [
                 {
-                  "aliment_id": "lentilles-vertes-cuites",
-                  "nom": "Lentilles vertes cuites",
-                  "grammes": 230
+                  "aliment_id": "pois-chiche-appertise",
+                  "nom": "Pois chiche, appertisé",
+                  "grammes": 240
                 },
                 {
-                  "aliment_id": "carotte-crue",
-                  "nom": "Carotte crue",
-                  "grammes": 105
-                },
-                {
-                  "aliment_id": "oeuf-cru",
-                  "nom": "Œuf cru",
-                  "grammes": 70
+                  "aliment_id": "epinard-cru",
+                  "nom": "Épinard, cru",
+                  "grammes": 180
                 },
                 {
                   "aliment_id": "oignon-jaune-cru",
                   "nom": "Oignon jaune, cru",
-                  "grammes": 50
+                  "grammes": 60
+                },
+                {
+                  "aliment_id": "tomate-cerise",
+                  "nom": "Tomate cerise",
+                  "grammes": 95
                 },
                 {
                   "aliment_id": "huile-olive",
                   "nom": "Huile d'olive vierge extra",
-                  "grammes": 20
+                  "grammes": 25
                 },
                 {
-                  "aliment_id": "thym-frais",
-                  "nom": "Thym, frais",
+                  "aliment_id": "cumin-graine",
+                  "nom": "Cumin, graine",
                   "grammes": 5
                 },
                 {
-                  "aliment_id": "vinaigre-de-vin-rouge",
-                  "nom": "Vinaigre de vin rouge",
+                  "aliment_id": "ail-cru",
+                  "nom": "Ail, cru",
                   "grammes": 5
+                },
+                {
+                  "aliment_id": "citron-cru",
+                  "nom": "Citron, cru",
+                  "grammes": 10
                 }
               ],
-              "kcal": 621.2,
-              "proteines": 34.0,
-              "glucides": 46.5,
-              "lipides": 28.3
+              "kcal": 658.2,
+              "proteines": 24.1,
+              "glucides": 53.5,
+              "lipides": 33.3
             },
             {
               "moment": "collation",
-              "recette_id": "skyr-miel-amandes",
-              "nom": "Skyr, miel et amandes",
+              "recette_id": "fromage-blanc-0-peche",
+              "nom": "Fromage blanc 0 % et pêche",
               "items": [
                 {
-                  "aliment_id": "specialite-laitiere-riche-en-proteines-nature",
-                  "nom": "Spécialité laitière riche en protéines, nature",
-                  "grammes": 115
+                  "aliment_id": "fromage-blanc-0-mg",
+                  "nom": "Fromage blanc 0% MG",
+                  "grammes": 330
                 },
                 {
-                  "aliment_id": "amande-avec-peau",
-                  "nom": "Amandes",
-                  "grammes": 10
-                },
-                {
-                  "aliment_id": "miel",
-                  "nom": "Miel",
-                  "grammes": 10
+                  "aliment_id": "peche-crue",
+                  "nom": "Pêche, crue",
+                  "grammes": 140
                 },
                 {
                   "aliment_id": "blanc-doeuf-cru",
@@ -4708,17 +4638,17 @@
                   "grammes": 300
                 }
               ],
-              "kcal": 323.7,
-              "proteines": 45.5,
-              "glucides": 15.3,
-              "lipides": 8.8
+              "kcal": 355.6,
+              "proteines": 57.7,
+              "glucides": 26.5,
+              "lipides": 0.9
             }
           ],
           "totaux": {
-            "kcal": 1925.6,
-            "proteines": 151.5,
-            "glucides": 157.6,
-            "lipides": 68.4
+            "kcal": 1986.4,
+            "proteines": 153.7,
+            "glucides": 174.0,
+            "lipides": 65.4
           },
           "cibles": {
             "kcal": 1900.0,
@@ -4727,10 +4657,10 @@
             "lipides": 70.0
           },
           "ecart_pct": {
-            "kcal": 1.3,
-            "proteines": -1.7,
-            "glucides": -3.6,
-            "lipides": -2.3
+            "kcal": 4.5,
+            "proteines": -0.2,
+            "glucides": 6.4,
+            "lipides": -6.6
           }
         }
       ],
@@ -4747,7 +4677,7 @@
             {
               "aliment_id": "ail-cru",
               "nom": "Ail, cru",
-              "grammes": 35
+              "grammes": 40
             },
             {
               "aliment_id": "banane-crue",
@@ -4762,7 +4692,7 @@
             {
               "aliment_id": "brocoli-cru",
               "nom": "Brocoli cru",
-              "grammes": 135
+              "grammes": 140
             },
             {
               "aliment_id": "brocoli-cuit-a-la-vapeur",
@@ -4772,7 +4702,7 @@
             {
               "aliment_id": "carotte-crue",
               "nom": "Carotte crue",
-              "grammes": 395
+              "grammes": 325
             },
             {
               "aliment_id": "champignon-de-paris-ou-champignon-de-couche-cru",
@@ -4787,12 +4717,17 @@
             {
               "aliment_id": "citron-cru",
               "nom": "Citron, cru",
-              "grammes": 50
+              "grammes": 60
+            },
+            {
+              "aliment_id": "tomate-concentre-appertise",
+              "nom": "Concentré de tomate",
+              "grammes": 20
             },
             {
               "aliment_id": "concombre-cru",
               "nom": "Concombre, cru",
-              "grammes": 365
+              "grammes": 360
             },
             {
               "aliment_id": "haricot-vert-cuit",
@@ -4812,7 +4747,7 @@
             {
               "aliment_id": "oignon-jaune-cru",
               "nom": "Oignon jaune, cru",
-              "grammes": 300
+              "grammes": 365
             },
             {
               "aliment_id": "oignon-rouge-cru",
@@ -4852,32 +4787,32 @@
             {
               "aliment_id": "poivron-rouge-cru",
               "nom": "Poivron rouge, cru",
-              "grammes": 275
+              "grammes": 210
             },
             {
               "aliment_id": "pomme-crue",
               "nom": "Pomme crue",
-              "grammes": 220
+              "grammes": 140
             },
             {
               "aliment_id": "graine-germee-de-haricot-mungo-ou-pousse-de-soja-crue",
               "nom": "Pousses de soja (haricot mungo)",
-              "grammes": 105
+              "grammes": 55
             },
             {
               "aliment_id": "peche-crue",
               "nom": "Pêche, crue",
-              "grammes": 215
+              "grammes": 355
             },
             {
               "aliment_id": "thym-frais",
               "nom": "Thym, frais",
-              "grammes": 10
+              "grammes": 5
             },
             {
               "aliment_id": "tomate-cerise",
               "nom": "Tomate cerise",
-              "grammes": 565
+              "grammes": 660
             },
             {
               "aliment_id": "tomate-crue",
@@ -4897,7 +4832,7 @@
             {
               "aliment_id": "epinard-cru",
               "nom": "Épinard, cru",
-              "grammes": 120
+              "grammes": 300
             }
           ]
         },
@@ -4908,7 +4843,7 @@
             {
               "aliment_id": "blanc-doeuf-cru",
               "nom": "Blanc d'œuf cru",
-              "grammes": 3045
+              "grammes": 3125
             },
             {
               "aliment_id": "feta-au-lait-de-brebis-70-minimum-et-lait-de-chevre-30-maximum",
@@ -4918,7 +4853,7 @@
             {
               "aliment_id": "fromage-blanc-0-mg",
               "nom": "Fromage blanc 0% MG",
-              "grammes": 1425
+              "grammes": 1710
             },
             {
               "aliment_id": "oeuf-blanc-blanc-doeuf-cuit",
@@ -4928,12 +4863,12 @@
             {
               "aliment_id": "specialite-laitiere-riche-en-proteines-nature",
               "nom": "Spécialité laitière riche en protéines, nature",
-              "grammes": 1265
+              "grammes": 1150
             },
             {
               "aliment_id": "oeuf-cru",
               "nom": "Œuf cru",
-              "grammes": 330
+              "grammes": 260
             }
           ]
         },
@@ -4958,14 +4893,19 @@
               "grammes": 260
             },
             {
+              "aliment_id": "lentille-corail-seche",
+              "nom": "Lentilles corail sèches",
+              "grammes": 105
+            },
+            {
               "aliment_id": "lentilles-vertes-cuites",
               "nom": "Lentilles vertes cuites",
-              "grammes": 910
+              "grammes": 680
             },
             {
               "aliment_id": "pois-chiche-appertise",
               "nom": "Pois chiche, appertisé",
-              "grammes": 140
+              "grammes": 380
             },
             {
               "aliment_id": "pois-chiche-bouilli-cuit-a-leau",
@@ -4975,7 +4915,7 @@
             {
               "aliment_id": "tofu-nature",
               "nom": "Tofu nature",
-              "grammes": 975
+              "grammes": 855
             }
           ]
         },
@@ -4986,7 +4926,7 @@
             {
               "aliment_id": "amande-avec-peau",
               "nom": "Amandes",
-              "grammes": 45
+              "grammes": 35
             },
             {
               "aliment_id": "cannelle-poudre",
@@ -4996,12 +4936,12 @@
             {
               "aliment_id": "cumin-graine",
               "nom": "Cumin, graine",
-              "grammes": 10
+              "grammes": 20
             },
             {
               "aliment_id": "curcuma-poudre",
               "nom": "Curcuma, poudre",
-              "grammes": 5
+              "grammes": 10
             },
             {
               "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
@@ -5011,12 +4951,12 @@
             {
               "aliment_id": "gingembre-racine-fraiche",
               "nom": "Gingembre frais",
-              "grammes": 25
+              "grammes": 20
             },
             {
               "aliment_id": "miel",
               "nom": "Miel",
-              "grammes": 75
+              "grammes": 65
             },
             {
               "aliment_id": "noix-de-cajou-grillee",
@@ -5041,7 +4981,7 @@
             {
               "aliment_id": "pates-seches-sans-gluten-cuites",
               "nom": "Pâtes sans gluten cuites",
-              "grammes": 210
+              "grammes": 205
             },
             {
               "aliment_id": "quinoa-cru",
@@ -5051,7 +4991,7 @@
             {
               "aliment_id": "quinoa-bouilli-cuit-a-leau",
               "nom": "Quinoa cuit",
-              "grammes": 160
+              "grammes": 5
             },
             {
               "aliment_id": "riz-basmati-cuit",
@@ -5064,19 +5004,14 @@
               "grammes": 55
             },
             {
-              "aliment_id": "vermicelles-de-riz-seches-crues",
-              "nom": "Vermicelles de riz crues",
-              "grammes": 60
+              "aliment_id": "riz-blanc-cuit",
+              "nom": "Riz blanc, cuit",
+              "grammes": 105
             },
             {
               "aliment_id": "vinaigre-balsamique",
               "nom": "Vinaigre balsamique",
               "grammes": 10
-            },
-            {
-              "aliment_id": "vinaigre-de-vin-rouge",
-              "nom": "Vinaigre de vin rouge",
-              "grammes": 5
             }
           ]
         },
@@ -5087,7 +5022,7 @@
             {
               "aliment_id": "huile-olive",
               "nom": "Huile d'olive vierge extra",
-              "grammes": 185
+              "grammes": 215
             },
             {
               "aliment_id": "huile-de-colza",
@@ -5097,7 +5032,7 @@
             {
               "aliment_id": "huile-de-sesame",
               "nom": "Huile de sésame",
-              "grammes": 20
+              "grammes": 10
             }
           ]
         }
