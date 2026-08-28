@@ -110,6 +110,7 @@ input:focus,select:focus,textarea:focus,button:focus-visible,a:focus-visible{out
 .grid{display:grid;gap:16px}
 .g2{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
 .g3{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
 .seg{display:flex;border:1px solid var(--line);border-radius:4px;overflow:hidden;background:var(--sunken)}
 .seg button{flex:1;background:transparent;border:0;color:var(--ink-2);padding:9px 10px;
   font-family:"IBM Plex Sans",sans-serif;font-size:14px;cursor:pointer;transition:background .15s,color .15s}
@@ -273,6 +274,27 @@ svg.chart{display:block;width:100%;height:260px;overflow:visible}
   .exo-head > div:nth-child(2){grid-area:plage}
   .exo-head > div:nth-child(3){grid-area:del}
 }
+
+/* --- Nutrition : cases a cocher, tuiles de bilan, cartes de repas --- */
+.coches{display:flex;flex-wrap:wrap;gap:8px 14px;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--sunken)}
+.coche{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--ink-2);cursor:pointer;margin:0;font-weight:500}
+.coche input{width:16px;height:16px;accent-color:var(--accent);cursor:pointer;margin:0}
+.bilan-jour .tuile{display:flex;flex-direction:column;gap:2px;padding:14px;border:1px solid var(--line);border-radius:8px;background:var(--sunken)}
+.tuile .t-lbl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.tuile .t-val{font-size:26px;line-height:1.1;color:var(--ink)}
+.tuile .t-u{font-size:12px;color:var(--ink-3)}
+.repas-c .repas-tete{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.repas-c .repas-tete .actions-b{display:flex;gap:8px;flex-wrap:wrap}
+.repas-c .repas-tete button{font:inherit;font-size:12px;padding:6px 10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-2);border-radius:5px;cursor:pointer}
+.repas-c .repas-tete button:hover{border-color:var(--accent);color:var(--accent)}
+.repas-macros{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-size:13px;color:var(--ink-3)}
+.repas-macros b{color:var(--ink);font-family:"IBM Plex Mono",ui-monospace,monospace}
+.repas-c h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin:0 0 8px}
+ul.ingr{list-style:none;margin:0;padding:0}
+ul.ingr li{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
+ul.ingr li b{font-family:"IBM Plex Mono",ui-monospace,monospace;color:var(--ink)}
+ol.etapes{margin:0;padding-left:18px;font-size:14px;color:var(--ink-2)}
+ol.etapes li{margin-bottom:6px}
 </style>
 
 <div class="topbar">
@@ -345,6 +367,43 @@ const CONFIG = {
             "Ventre","Hanches","Cuisse gauche","Cuisse droite","Mollet"],
     zones_affichees_au_depart: [4, 5],  // index des zones tracées par défaut
     max_courbes: 4                       // nombre max de courbes simultanées
+  },
+
+  /* --- Nutrition : generateur de journee type ---
+     Change les parts ci-dessous pour repartir les calories autrement
+     entre les repas. Le total doit faire 1. --- */
+  nutrition: {
+    repas: [
+      { id:"petit_dejeuner", nom:"Petit-déjeuner", part:0.25 },
+      { id:"dejeuner",       nom:"Déjeuner",       part:0.35 },
+      { id:"diner",          nom:"Dîner",          part:0.30 },
+      { id:"collation",      nom:"Collation",      part:0.10 }
+    ],
+    facteur_min: 0.6,   // on ne descend pas une recette en dessous de 60 % de sa portion
+    facteur_max: 2.0,   // ni au dessus du double
+    /* Les régimes que le filtre sait appliquer sur les ingrédients.
+       Halal et casher ne figurent pas ici : ils dépendent du mode
+       d'abattage et de la certification, pas de la composition — le
+       filtre "sans porc ni alcool" en couvre la partie vérifiable,
+       le reste relève de ta vérification. */
+    regimes: ["Omnivore","Végétarien","Végétalien (vegan)","Pescétarien","Paléo","Sans gluten","Sans lactose","Sans porc ni alcool"],
+    /* Les 14 allergenes a declaration obligatoire (reglement UE 1169/2011) */
+    allergenes: [
+      { id:"gluten",         nom:"Gluten" },
+      { id:"crustaces",      nom:"Crustacés" },
+      { id:"oeufs",          nom:"Œufs" },
+      { id:"poissons",       nom:"Poissons" },
+      { id:"arachides",      nom:"Arachides" },
+      { id:"soja",           nom:"Soja" },
+      { id:"lait",           nom:"Lait" },
+      { id:"fruits_a_coque", nom:"Fruits à coque" },
+      { id:"celeri",         nom:"Céleri" },
+      { id:"moutarde",       nom:"Moutarde" },
+      { id:"sesame",         nom:"Sésame" },
+      { id:"sulfites",       nom:"Sulfites" },
+      { id:"lupin",          nom:"Lupin" },
+      { id:"mollusques",     nom:"Mollusques" }
+    ]
   },
 
   /* --- Journal d'entraînement --- */
@@ -502,7 +561,7 @@ const Store = {
   ecrire(cle, valeur){
     this.cache[cle] = valeur;
     /* seule exception a la lecture seule : le coach ecrit le programme du client */
-    if (this.lectureSeule() && !(Auth.estCoach() && cle === "programme")) return;
+    if (this.lectureSeule() && !(Auth.estCoach() && (cle === "programme" || cle === "repas"))) return;
     clearTimeout(this.attente[cle]);
     this.attente[cle] = setTimeout(() => this.envoyer(cle, valeur), 700);   // on groupe les frappes
   },
@@ -532,6 +591,53 @@ const Store = {
     if (!d || typeof d !== "object") throw new Error("format");
     for (const cle in d){ this.cache[cle] = d[cle]; await this.envoyer(cle, d[cle]); }
     return true;
+  }
+};
+
+/* ------------------------------------------------------------------
+   CATALOGUE PARTAGE — aliments, recettes et programmes prets a l'emploi.
+   Ces trois tables vivent dans Supabase : tu peux y ajouter une recette
+   ou un programme sans jamais retoucher a ce fichier.
+   Tout le monde les lit ; seul le coach peut les modifier.
+   ------------------------------------------------------------------ */
+const Catalogue = {
+  _c: {},
+  async lire(table){
+    if (this._c[table]) return this._c[table];
+    try {
+      const r = await Auth.appel("/rest/v1/" + table + "?select=*&order=nom.asc");
+      this._c[table] = r || [];
+    } catch(e){ this._c[table] = []; }
+    return this._c[table];
+  },
+  aliments(){ return this.lire("aliments"); },
+  recettes(){ return this.lire("recettes"); },
+  programmes(){ return this.lire("programmes_types"); },
+
+  /* index id -> aliment, pour calculer les macros d'une recette */
+  async indexAliments(){
+    if (this._idx) return this._idx;
+    const l = await this.aliments();
+    this._idx = {}; l.forEach(a => { this._idx[a.id] = a; });
+    return this._idx;
+  },
+
+  /* Macros d'une recette, calculees a partir de ses ingredients.
+     facteur = 1 -> portion telle qu'ecrite. */
+  async macros(recette, facteur){
+    const idx = await this.indexAliments();
+    const f = facteur || 1;
+    const t = { kcal:0, proteines:0, glucides:0, lipides:0, manquants:0 };
+    (recette.ingredients || []).forEach(i => {
+      const a = idx[i.aliment_id];
+      if (!a){ t.manquants++; return; }
+      const k = (i.grammes * f) / 100;
+      t.kcal      += (+a.kcal      || 0) * k;
+      t.proteines += (+a.proteines || 0) * k;
+      t.glucides  += (+a.glucides  || 0) * k;
+      t.lipides   += (+a.lipides   || 0) * k;
+    });
+    return t;
   }
 };
 
@@ -1371,8 +1477,15 @@ const QUESTIONS = [
   { id:"repas_horaires", label:"Combien de repas par jour, et à quels horaires ?", type:"long" },
   { id:"cuisine",    label:"Qui cuisine ? Combien de temps peux-tu y consacrer par jour ?", type:"long" },
   { id:"exterieur",  label:"Combien de fois par semaine manges-tu à l'extérieur ou au restaurant ?", type:"texte" },
-  { id:"allergies",  label:"Allergies, intolérances, régime particulier", type:"long",
-    aide:"Végétarien, vegan, halal, sans lactose, sans gluten…" },
+  { id:"regime_type", label:"Ton régime alimentaire", type:"select", requis:true,
+    options: CONFIG.nutrition.regimes,
+    aide:"Sert à composer tes repas : aucun plat proposé ne sortira de ce cadre." },
+  { id:"allergenes", label:"Allergies et intolérances", type:"multi",
+    options: CONFIG.nutrition.allergenes.map(a => a.nom),
+    grand: true,
+    aide:"Coche tout ce qui te concerne. Les aliments correspondants seront écartés de tes repas. Signale aussi toute allergie qui ne figure pas dans cette liste dans le champ suivant." },
+  { id:"allergies",  label:"Autres allergies, intolérances ou interdits alimentaires", type:"long",
+    aide:"Tout ce que la liste ci-dessus ne couvre pas. Ton coach en tient compte avant de valider tes repas." },
   { id:"jamais",     label:"Aliments que tu ne mangeras jamais, quoi qu'il arrive", type:"long" },
   { id:"indispensable", label:"Aliments dont tu ne veux surtout pas te passer", type:"long" },
   { id:"grignotage", label:"Grignotage : quand et pourquoi ?", type:"long",
@@ -1422,6 +1535,12 @@ const outilProfil = {
         ${q.options.map(o => `<option value="${esc(o)}"${v === o ? " selected" : ""}>${esc(o)}</option>`).join("")}
       </select>`;
     }
+    if (q.type === "multi"){
+      const choisis = String(v || "").split("|").filter(Boolean);
+      return `<div class="coches" id="q-${q.id}" data-q="${q.id}" data-multi="1">` +
+        q.options.map(o => `<label class="coche"><input type="checkbox" value="${esc(o)}"${choisis.indexOf(o) > -1 ? " checked" : ""}> ${esc(o)}</label>`).join("") +
+        `</div>`;
+    }
     if (q.type === "long")   return `<textarea id="q-${q.id}" data-q="${q.id}" rows="${q.grand ? 6 : 2}">${esc(v)}</textarea>`;
     if (q.type === "nombre") return `<input id="q-${q.id}" data-q="${q.id}" type="number" step="0.1" value="${esc(v)}">`;
     if (q.type === "date")   return `<input id="q-${q.id}" data-q="${q.id}" type="date" value="${esc(v)}">`;
@@ -1459,19 +1578,31 @@ const outilProfil = {
     </section>`;
   },
 
+  /* lit la valeur d'un champ ; les cases a cocher sont stockees "A|B|C" */
+  valeur(q){
+    const el = $("q-" + q.id); if (!el) return "";
+    if (q.type === "multi") return $$("input:checked", el).map(c => c.value).join("|");
+    return el.value;
+  },
+  poser(q, v){
+    const el = $("q-" + q.id); if (!el || v == null) return;
+    if (q.type === "multi"){
+      const choisis = String(v).split("|");
+      $$("input", el).forEach(c => { c.checked = choisis.indexOf(c.value) > -1; });
+      return;
+    }
+    if (el.value !== v) el.value = v;
+  },
+
   async init(){
     const D = await Store.lire(this.cle, {});
     Store.cache[this.cle] = D;
 
     /* si le cache etait vide au moment du rendu, on re-remplit les champs */
-    QUESTIONS.forEach(q => {
-      if (!q.id) return;
-      const el = $("q-" + q.id);
-      if (el && D[q.id] != null && el.value !== D[q.id]) el.value = D[q.id];
-    });
+    QUESTIONS.forEach(q => { if (q.id) this.poser(q, D[q.id]); });
 
     const enregistrer = () => {
-      QUESTIONS.forEach(q => { if (!q.id) return; const el = $("q-" + q.id); if (el) D[q.id] = el.value; });
+      QUESTIONS.forEach(q => { if (!q.id) return; const el = $("q-" + q.id); if (el) D[q.id] = this.valeur(q); });
       const manquants = QUESTIONS.filter(q => q.requis && !D[q.id]);
       D.complet = manquants.length === 0;
       Store.ecrire(this.cle, D);
@@ -1479,6 +1610,7 @@ const outilProfil = {
     };
 
     $$("[data-q]").forEach(el => el.addEventListener("change", () => enregistrer()));
+    $$('[data-multi="1"] input').forEach(c => c.addEventListener("change", () => enregistrer()));
 
     $("p-save").addEventListener("click", () => {
       const manquants = enregistrer();
@@ -1544,6 +1676,8 @@ const outilProgramme = {
       <div class="grid g2">
         <div><label for="pg-nom">Nom du programme</label><input id="pg-nom" type="text" value="${esc(P.nom || "")}" placeholder="Ex. Bloc 1 — 4 semaines"></div>
         <div><label for="pg-biblio">Charger depuis ma bibliothèque</label><select id="pg-biblio"><option value="">— choisis un entraînement —</option></select></div>
+        <div style="grid-column:1/-1"><label for="pg-prets">Programmes prêts à l'emploi</label><select id="pg-prets"><option value="">— choisis un programme du catalogue —</option></select>
+          <p class="note" style="margin:6px 0 0">Charge un programme complet, puis adapte-le à ce client : c'est un point de départ, pas une fatalité.</p></div>
         <div style="grid-column:1/-1"><label for="pg-note">Mot pour ton client</label><textarea id="pg-note" rows="2" placeholder="Consignes générales, priorités du bloc…">${esc(P.note || "")}</textarea></div>
       </div>
     </section>`;
@@ -1645,7 +1779,7 @@ const outilProgramme = {
           await Auth.appel("/rest/v1/bibliotheque", {
             method: "POST",
             headers: { "Prefer": "return=minimal" },
-            body: [{ coach_id: Auth.utilisateur().id, nom, note: P.note || "", contenu: { seances: P.seances } }]
+            body: [{ coach_id: Auth.utilisateur().id, nom, note: P.note || "", contenu: { type:"entrainement", seances: P.seances } }]
           });
           flash("pg-msg", "Enregistré dans ta bibliothèque.");
           chargerBiblio();
@@ -1653,14 +1787,35 @@ const outilProgramme = {
       });
 
       chargerBiblio();
+      chargerPrets();
+    };
+
+    /* Catalogue partage : les programmes tout faits (table programmes_types) */
+    const chargerPrets = async () => {
+      const sel = $("pg-prets"); if (!sel) return;
+      const l = await Catalogue.programmes();
+      if (!l.length){ sel.innerHTML = `<option value="">— aucun programme dans le catalogue —</option>`; return; }
+      sel.innerHTML = `<option value="">— choisis un programme du catalogue —</option>` +
+        l.map(x => `<option value="${esc(x.id)}">${esc(x.nom)}${x.seances_semaine ? " · " + x.seances_semaine + " séances" : ""}${x.niveau ? " · " + esc(x.niveau) : ""}</option>`).join("");
+      sel.onchange = () => {
+        if (!sel.value) return;
+        const x = l.find(y => String(y.id) === sel.value);
+        if (!x) return;
+        if (!confirm("Charger « " + x.nom + " » ? Il remplacera les séances actuelles de ce client.")){ sel.value = ""; return; }
+        P.seances = JSON.parse(JSON.stringify(x.seances || []));
+        if (!P.nom) P.nom = x.nom;
+        if (!P.note && x.note) P.note = x.note;
+        sauver(); redessiner();
+      };
     };
 
     const chargerBiblio = async () => {
       const sel = $("pg-biblio"); if (!sel) return;
       try {
-        const l = await Auth.appel("/rest/v1/bibliotheque?select=id,nom&order=cree_le.desc");
+        const tout = await Auth.appel("/rest/v1/bibliotheque?select=id,nom,contenu&order=cree_le.desc");
+        const l = (tout || []).filter(x => !x.contenu || x.contenu.type !== "repas");
         sel.innerHTML = `<option value="">— choisis un entraînement —</option>` +
-          (l || []).map(x => `<option value="${x.id}">${esc(x.nom)}</option>`).join("");
+          l.map(x => `<option value="${x.id}">${esc(x.nom)}</option>`).join("");
         sel.onchange = async () => {
           if (!sel.value) return;
           if (!confirm("Charger cet entraînement ? Il remplacera les séances actuelles de ce client.")) { sel.value = ""; return; }
@@ -1679,7 +1834,341 @@ const outilProgramme = {
 };
 
 /* ------------------------------------------------------------------
-   OUTIL COACH — Ma bibliotheque d'entrainements
+   OUTIL — Nutrition : la journee type
+   Le coach la genere depuis la fiche du client, la relit, l'envoie.
+   Le client la consulte. Les aliments et recettes viennent du
+   catalogue Supabase (Catalogue.aliments / Catalogue.recettes).
+   ------------------------------------------------------------------ */
+const outilNutrition = {
+  id: "nutrition",
+  cle: "repas",
+  nom: "Mes repas",
+  icone: "🥗",
+  titre: "La journée type",
+  accroche: "Des repas construits sur tes calories et tes macros, avec des aliments qu'on trouve en France — et qui respectent ton régime et tes allergies.",
+
+  vide(){ return { nom:"", note:"", cible:null, regime:"", allergenes:[], repas:[], maj:"" }; },
+
+  /* ---------- filtrage : c'est ici que se joue la securite ---------- */
+  compatible(r, regime, allergenes){
+    if (allergenes && allergenes.length){
+      const a = r.allergenes || [];
+      for (let i = 0; i < allergenes.length; i++) if (a.indexOf(allergenes[i]) > -1) return false;
+    }
+    if (regime && regime !== "Omnivore"){
+      const cle = this.cleRegime(regime);
+      if (cle && (r.regimes || []).indexOf(cle) === -1) return false;
+    }
+    return true;
+  },
+  cleRegime(nom){
+    return {
+      "Omnivore":"omnivore", "Végétarien":"vegetarien", "Végétalien (vegan)":"vegan",
+      "Pescétarien":"pescetarien", "Paléo":"paleo", "Sans gluten":"sans_gluten",
+      "Sans lactose":"sans_lactose", "Sans porc ni alcool":"sans_porc"
+    }[nom] || "";
+  },
+
+  /* ---------- composition d'une journee ---------- */
+  async composer(cible, regime, allergenes, eviterIds){
+    const recettes = await Catalogue.recettes();
+    const dispo = recettes.filter(r => this.compatible(r, regime, allergenes));
+
+    /* Un repas sans aucune recette compatible n'est pas simplement retire :
+       ses calories sont reparties sur les repas restants, et on previent le coach. */
+    const servis = CONFIG.nutrition.repas.filter(sl => dispo.some(r => r.moment === sl.id));
+    const manquants = CONFIG.nutrition.repas.filter(sl => servis.indexOf(sl) === -1);
+    const somme = servis.reduce((t, sl) => t + sl.part, 0);
+
+    const sortie = [];
+    for (const slot of servis){
+      const kcalSlot = cible.kcal * (somme > 0 ? slot.part / somme : slot.part);
+      let choix = dispo.filter(r => r.moment === slot.id);
+      const evites = choix.filter(r => (eviterIds || []).indexOf(r.id) === -1);
+      if (evites.length) choix = evites;
+      const r = choix[Math.floor(Math.random() * choix.length)];
+      const base = await Catalogue.macros(r, 1);
+      let f = base.kcal > 0 ? kcalSlot / base.kcal : 1;
+      f = Math.min(CONFIG.nutrition.facteur_max, Math.max(CONFIG.nutrition.facteur_min, f));
+      sortie.push(await this.figer(r, f, slot));
+    }
+    sortie.manquants = manquants.map(sl => sl.nom);
+    return sortie;
+  },
+
+  /* On fige la recette dans le plan : le client garde ses grammages
+     meme si la recette est modifiee plus tard dans le catalogue. */
+  async figer(r, f, slot){
+    const idx = await Catalogue.indexAliments();
+    const m = await Catalogue.macros(r, f);
+    return {
+      moment: slot.id, moment_nom: slot.nom,
+      recette_id: r.id, nom: r.nom, temps_min: r.temps_min || null,
+      facteur: Math.round(f * 100) / 100,
+      ingredients: (r.ingredients || []).map(i => ({
+        nom: (idx[i.aliment_id] && idx[i.aliment_id].nom) || i.aliment_id,
+        grammes: Math.round(i.grammes * f)
+      })),
+      etapes: r.etapes || [],
+      allergenes: r.allergenes || [],
+      macros: { kcal: Math.round(m.kcal), proteines: Math.round(m.proteines),
+                glucides: Math.round(m.glucides), lipides: Math.round(m.lipides) }
+    };
+  },
+
+  totaux(R){
+    const t = { kcal:0, proteines:0, glucides:0, lipides:0 };
+    (R.repas || []).forEach(x => {
+      t.kcal += x.macros.kcal; t.proteines += x.macros.proteines;
+      t.glucides += x.macros.glucides; t.lipides += x.macros.lipides;
+    });
+    return t;
+  },
+
+  /* ---------- vue client ---------- */
+  vueLecture(R){
+    if (!R.repas || !R.repas.length){
+      return `<section class="panel"><div class="empty">Ton coach n'a pas encore validé tes repas. Remplis ton profil — régime et allergies comprises — pour qu'il puisse les préparer.</div></section>`;
+    }
+    const t = this.totaux(R);
+    let h = "";
+    if (R.note) h += `<section class="panel"><h2>Mot du coach</h2><p style="margin:0">${esc(R.note)}</p></section>`;
+    h += `<section class="panel"><h2>Ta journée en un coup d'œil</h2>
+      <div class="grid g4 bilan-jour">
+        <div class="tuile"><span class="t-lbl">Calories</span><span class="t-val readout">${fmt(t.kcal)}</span><span class="t-u">kcal</span></div>
+        <div class="tuile"><span class="t-lbl">Protéines</span><span class="t-val readout">${fmt(t.proteines)}</span><span class="t-u">g</span></div>
+        <div class="tuile"><span class="t-lbl">Glucides</span><span class="t-val readout">${fmt(t.glucides)}</span><span class="t-u">g</span></div>
+        <div class="tuile"><span class="t-lbl">Lipides</span><span class="t-val readout">${fmt(t.lipides)}</span><span class="t-u">g</span></div>
+      </div>
+      ${R.cible ? `<p class="note" style="margin-top:14px">Objectif visé : ${fmt(R.cible.kcal)} kcal · ${fmt(R.cible.prot)} g de protéines · ${fmt(R.cible.gluc)} g de glucides · ${fmt(R.cible.lip)} g de lipides.</p>` : ""}
+    </section>`;
+    (R.repas || []).forEach(x => h += this.carteRepas(x, false));
+    h += `<section class="panel"><p class="note" style="margin:0">Les grammages sont donnés crus, sauf mention contraire. Si un aliment ne te convient pas, dis-le à ton coach : il remplacera le plat sans changer tes macros.</p></section>`;
+    if (R.maj) h += `<p class="note" style="text-align:center">Repas mis à jour le ${esc(R.maj)}</p>`;
+    return h;
+  },
+
+  carteRepas(x, edition, i){
+    const m = x.macros;
+    return `<section class="panel repas-c">
+      <div class="repas-tete">
+        <div>
+          <span class="eyebrow">${esc(x.moment_nom || "")}</span>
+          <h2 style="margin:2px 0 0">${esc(x.nom)}</h2>
+        </div>
+        ${edition ? `<span class="actions-b">
+          <button data-autre="${i}">Autre proposition</button>
+          <button data-retirer="${i}">Retirer</button></span>` : ""}
+      </div>
+      <div class="repas-macros">
+        <span><b>${fmt(m.kcal)}</b> kcal</span>
+        <span><b>${fmt(m.proteines)}</b> g prot.</span>
+        <span><b>${fmt(m.glucides)}</b> g gluc.</span>
+        <span><b>${fmt(m.lipides)}</b> g lip.</span>
+        ${x.temps_min ? `<span>${x.temps_min} min</span>` : ""}
+      </div>
+      <div class="grid g2" style="margin-top:14px">
+        <div>
+          <h3>Ingrédients</h3>
+          <ul class="ingr">${(x.ingredients || []).map(i2 => `<li><span>${esc(i2.nom)}</span><b>${fmt(i2.grammes)} g</b></li>`).join("")}</ul>
+        </div>
+        <div>
+          <h3>Préparation</h3>
+          <ol class="etapes">${(x.etapes || []).map(e => `<li>${esc(e)}</li>`).join("")}</ol>
+        </div>
+      </div>
+    </section>`;
+  },
+
+  /* ---------- vue coach ---------- */
+  vueEdition(R, ctx){
+    const t = this.totaux(R);
+    const ecart = R.cible ? Math.round(t.kcal - R.cible.kcal) : 0;
+    let h = `<section class="panel">
+      <h2>Composer la journée</h2>
+      <div class="grid g2">
+        <div><label for="nu-kcal">Calories visées</label><input id="nu-kcal" type="number" step="10" value="${R.cible ? Math.round(R.cible.kcal) : ""}" placeholder="2400"></div>
+        <div><label for="nu-regime">Régime</label><select id="nu-regime">${CONFIG.nutrition.regimes.map(o => `<option value="${esc(o)}"${R.regime === o ? " selected" : ""}>${esc(o)}</option>`).join("")}</select></div>
+        <div style="grid-column:1/-1">
+          <label>Allergènes à écarter</label>
+          <div class="coches" id="nu-allerg">${CONFIG.nutrition.allergenes.map(a =>
+            `<label class="coche"><input type="checkbox" value="${a.id}"${(R.allergenes || []).indexOf(a.id) > -1 ? " checked" : ""}> ${esc(a.nom)}</label>`).join("")}</div>
+        </div>
+        <div style="grid-column:1/-1"><label for="nu-note">Mot pour ton client</label><textarea id="nu-note" rows="2" placeholder="Consignes, substitutions autorisées…">${esc(R.note || "")}</textarea></div>
+      </div>
+      <div class="actions" style="margin-top:14px">
+        <button class="btn" id="nu-gen">Générer une journée</button>
+        <button class="btn ghost" id="nu-biblio-save">Enregistrer dans ma bibliothèque</button>
+        <select id="nu-biblio" style="max-width:260px"><option value="">— charger depuis ma bibliothèque —</option></select>
+        <span class="msg" id="nu-msg"></span>
+      </div>
+      ${ctx.prerempli ? `<p class="note" style="margin-top:10px">Pré-rempli avec le profil et le calculateur de ce client${ctx.autres ? ` — il a aussi signalé : « ${esc(ctx.autres)} »` : ""}.</p>` : ""}
+      ${ctx.autres ? `<div class="flag" style="margin-top:12px"><b>À vérifier avant d'envoyer :</b> ce client a écrit « ${esc(ctx.autres)} » dans ses allergies. Aucun filtre automatique ne couvre ce texte : relis les ingrédients toi-même.</div>` : ""}
+    </section>`;
+
+    if (R.repas && R.repas.length){
+      h += `<section class="panel"><h2>Total de la journée</h2>
+        <div class="grid g4 bilan-jour">
+          <div class="tuile"><span class="t-lbl">Calories</span><span class="t-val readout">${fmt(t.kcal)}</span><span class="t-u">kcal</span></div>
+          <div class="tuile"><span class="t-lbl">Protéines</span><span class="t-val readout">${fmt(t.proteines)}</span><span class="t-u">g</span></div>
+          <div class="tuile"><span class="t-lbl">Glucides</span><span class="t-val readout">${fmt(t.glucides)}</span><span class="t-u">g</span></div>
+          <div class="tuile"><span class="t-lbl">Lipides</span><span class="t-val readout">${fmt(t.lipides)}</span><span class="t-u">g</span></div>
+        </div>
+        ${R.cible ? `<p class="note" style="margin-top:14px">Cible : ${fmt(R.cible.kcal)} kcal · ${fmt(R.cible.prot)} g prot. · ${fmt(R.cible.gluc)} g gluc. · ${fmt(R.cible.lip)} g lip.<br>
+          Écart : <b>${ecart > 0 ? "+" : ""}${fmt(ecart)} kcal</b>${Math.abs(ecart) > R.cible.kcal * 0.1 ? " — au-delà de 10 %, ajuste un repas" : ""} · protéines <b>${t.proteines >= R.cible.prot ? "+" : ""}${fmt(t.proteines - R.cible.prot)} g</b>${t.proteines < R.cible.prot * 0.9 ? " — trop bas, remplace un plat par une source de protéines" : ""}.</p>` : ""}
+        ${(R.manquants && R.manquants.length) ? `<div class="flag"><b>Repas sans recette compatible :</b> ${esc(R.manquants.join(", "))}. Leurs calories ont été réparties sur les autres repas. Ajoute des recettes au catalogue pour ce régime.</div>` : ""}
+      </section>`;
+      R.repas.forEach((x, i) => h += this.carteRepas(x, true, i));
+    } else {
+      h += `<section class="panel"><div class="empty">Aucun repas pour l'instant. Renseigne les calories visées et clique sur « Générer une journée ».</div></section>`;
+    }
+
+    h += `<section class="panel">
+      <div class="actions">
+        <button class="btn" id="nu-save">Valider et envoyer au client</button>
+        <span class="msg" id="nu-msg2"></span>
+      </div>
+      <p class="note" style="margin-top:10px">Rien n'est envoyé automatiquement : relis les ingrédients — les allergies en premier — puis valide. Le client voit la journée dès sa prochaine ouverture.</p>
+      <p class="note">Le filtre travaille sur la composition des aliments. Il ne remplace pas ta lecture : une allergie sévère, un interdit religieux qui dépend de la certification, un aliment que le client ne supporte pas sans le savoir — c'est toi qui les attrapes.</p>
+    </section>`;
+    return h;
+  },
+
+  html(){ return `<div id="nu-vue"><section class="panel"><div class="empty">Chargement…</div></section></div>`; },
+
+  async init(){
+    const self = this;
+    const edition = Auth.estCoach() && Store.idConsulte;
+    const R = await Store.lire(this.cle, this.vide());
+    Store.cache[this.cle] = R;
+    const zone = $("nu-vue");
+    if (!zone) return;
+    const sauver = () => Store.ecrire(self.cle, R);
+
+    if (!edition){ zone.innerHTML = self.vueLecture(R); return; }
+
+    /* pre-remplissage a partir du profil et du calculateur du client */
+    const ctx = { prerempli:false, autres:"" };
+    let intake = {}, calc = null;
+    try { intake = await Store.lire("intake", {}) || {}; } catch(e){}
+    try { calc   = await Store.lire("calc", null); } catch(e){}
+    ctx.autres = (intake.allergies || "").trim();
+
+    if (!R.regime && intake.regime_type){ R.regime = intake.regime_type; ctx.prerempli = true; }
+    if ((!R.allergenes || !R.allergenes.length) && intake.allergenes){
+      const noms = String(intake.allergenes).split("|").filter(Boolean);
+      R.allergenes = CONFIG.nutrition.allergenes.filter(a => noms.indexOf(a.nom) > -1).map(a => a.id);
+      if (R.allergenes.length) ctx.prerempli = true;
+    }
+    if (!R.cible && calc && calc.poids){
+      const bmr  = outilCalculateur.metabolismeDeBase(calc);
+      const tdee = bmr * outilCalculateur.facteurActivite(calc).total;
+      const c = CONFIG.calcul;
+      const kcal = calc.objectif === "perte" ? tdee * (1 - c.deficit_perte)
+                 : calc.objectif === "prise" ? tdee * (1 + c.surplus_prise) : tdee;
+      const m = outilCalculateur.macros(kcal, calc.poids);
+      R.cible = { kcal: Math.round(kcal), prot: Math.round(m.prot), lip: Math.round(m.lip), gluc: Math.round(m.gluc) };
+      ctx.prerempli = true;
+    }
+
+    const redessiner = () => { zone.innerHTML = self.vueEdition(R, ctx); brancher(); };
+
+    const lireReglages = () => {
+      const k = $("nu-kcal"), rg = $("nu-regime"), no = $("nu-note");
+      if (k && k.value){
+        const kcal = num(k.value);
+        const poids = (calc && calc.poids) || num(intake.poids) || 0;
+        const m = poids ? outilCalculateur.macros(kcal, poids) : { prot:0, lip:0, gluc:0 };
+        R.cible = { kcal: Math.round(kcal), prot: Math.round(m.prot), lip: Math.round(m.lip), gluc: Math.round(m.gluc) };
+      }
+      if (rg) R.regime = rg.value;
+      if (no) R.note = no.value;
+      R.allergenes = $$("#nu-allerg input:checked").map(c => c.value);
+    };
+
+    const brancher = () => {
+      ["nu-kcal","nu-regime","nu-note"].forEach(id => {
+        const el = $(id); if (el) el.addEventListener("change", () => { lireReglages(); sauver(); });
+      });
+      $$("#nu-allerg input").forEach(c => c.addEventListener("change", () => { lireReglages(); sauver(); }));
+
+      const g = $("nu-gen");
+      if (g) g.addEventListener("click", async () => {
+        lireReglages();
+        if (!R.cible || !R.cible.kcal){ flash("nu-msg","Indique d'abord les calories visées."); return; }
+        g.disabled = true; g.textContent = "Composition…";
+        R.repas = await self.composer(R.cible, R.regime, R.allergenes, []);
+        g.disabled = false; g.textContent = "Générer une journée";
+        if (!R.repas.length){ flash("nu-msg","Aucune recette ne correspond à ces critères. Ajoute des recettes au catalogue ou assouplis les filtres."); return; }
+        R.manquants = R.repas.manquants || [];
+        sauver(); redessiner();
+        if (R.manquants.length) flash("nu-msg", "Aucune recette compatible pour : " + R.manquants.join(", ") + ". Les calories ont été réparties sur les autres repas — ajoute des recettes au catalogue pour combler ce trou.");
+      });
+
+      $$("[data-autre]", zone).forEach(b => b.addEventListener("click", async () => {
+        const i = +b.dataset.autre, x = R.repas[i];
+        const slot = CONFIG.nutrition.repas.find(sl => sl.id === x.moment);
+        const remplacants = await self.composer(R.cible, R.regime, R.allergenes, [x.recette_id]);
+        const nouveau = remplacants.find(n => n.moment === x.moment);
+        if (nouveau){ R.repas[i] = nouveau; sauver(); redessiner(); }
+        else flash("nu-msg", "Pas d'autre recette disponible pour ce repas.");
+      }));
+      $$("[data-retirer]", zone).forEach(b => b.addEventListener("click", () => {
+        R.repas.splice(+b.dataset.retirer, 1); sauver(); redessiner();
+      }));
+
+      const sv = $("nu-save");
+      if (sv) sv.addEventListener("click", () => {
+        if (!R.repas || !R.repas.length){ flash("nu-msg2","Il n'y a encore aucun repas à envoyer."); return; }
+        R.maj = new Date().toLocaleDateString("fr-FR");
+        Store.ecrire(self.cle, R);
+        flash("nu-msg2","Journée envoyée. Ton client la voit dès sa prochaine ouverture.");
+      });
+
+      const bs = $("nu-biblio-save");
+      if (bs) bs.addEventListener("click", async () => {
+        if (!R.repas || !R.repas.length){ flash("nu-msg","Compose d'abord une journée."); return; }
+        const nom = prompt("Sous quel nom l'enregistrer dans ta bibliothèque ?", R.nom || "Journée type");
+        if (!nom) return;
+        try {
+          await Auth.appel("/rest/v1/bibliotheque", {
+            method:"POST", headers:{ "Prefer":"return=minimal" },
+            body:[{ coach_id: Auth.utilisateur().id, nom, note: R.note || "",
+                    contenu: { type:"repas", repas: R.repas, cible: R.cible, regime: R.regime, allergenes: R.allergenes } }]
+          });
+          flash("nu-msg","Enregistré dans ta bibliothèque.");
+          chargerBiblio();
+        } catch(e){ flash("nu-msg","Enregistrement impossible."); }
+      });
+
+      chargerBiblio();
+    };
+
+    const chargerBiblio = async () => {
+      const sel = $("nu-biblio"); if (!sel) return;
+      try {
+        const l = await Auth.appel("/rest/v1/bibliotheque?select=id,nom,contenu&order=cree_le.desc");
+        const repas = (l || []).filter(x => x.contenu && x.contenu.type === "repas");
+        sel.innerHTML = `<option value="">— charger depuis ma bibliothèque —</option>` +
+          repas.map(x => `<option value="${x.id}">${esc(x.nom)}</option>`).join("");
+        sel.onchange = () => {
+          if (!sel.value) return;
+          const x = repas.find(y => String(y.id) === sel.value);
+          if (!x) return;
+          if (!confirm("Charger « " + x.nom + " » ? Cela remplacera les repas actuels de ce client.")){ sel.value = ""; return; }
+          R.repas = JSON.parse(JSON.stringify(x.contenu.repas || []));
+          if (x.contenu.cible) R.cible = x.contenu.cible;
+          sauver(); redessiner();
+        };
+      } catch(e){}
+    };
+
+    redessiner();
+  }
+};
+
+/* ------------------------------------------------------------------
+   OUTIL COACH — Ma bibliotheque d'entrainements et de repas
    ------------------------------------------------------------------ */
 const outilBibliotheque = {
   id: "bibliotheque",
@@ -1688,39 +2177,63 @@ const outilBibliotheque = {
   icone: "📚",
   role: "coach",
   titre: "Ma bibliothèque",
-  accroche: "Tes entraînements enregistrés, prêts à être réutilisés. Depuis la fiche d'un client, tu les charges en deux clics.",
+  accroche: "Tes entraînements et tes journées types enregistrés, prêts à être réutilisés. Depuis la fiche d'un client, tu les charges en deux clics.",
 
   html(){
     return `<section class="panel">
       <h2>Mes entraînements</h2>
-      <div id="bib-liste"><div class="empty">Chargement…</div></div>
+      <div id="bib-entrainements"><div class="empty">Chargement…</div></div>
       <p class="note" style="margin-top:14px">Pour en ajouter un : ouvre la fiche d'un client, construis son programme, puis clique sur « Enregistrer dans ma bibliothèque ».</p>
+    </section>
+    <section class="panel">
+      <h2>Mes journées types</h2>
+      <div id="bib-repas"><div class="empty">Chargement…</div></div>
+      <p class="note" style="margin-top:14px">Pour en ajouter une : ouvre la fiche d'un client, va dans « Mes repas », compose la journée, puis enregistre-la ici.</p>
     </section>`;
   },
 
   async init(){
-    const box = $("bib-liste");
+    const boxE = $("bib-entrainements"), boxR = $("bib-repas");
+
+    const resume = (x) => {
+      if (x.contenu && x.contenu.type === "repas"){
+        const n = (x.contenu.repas || []).length;
+        const k = (x.contenu.repas || []).reduce((t,r) => t + ((r.macros && r.macros.kcal) || 0), 0);
+        return `${n} repas · ${fmt(k)} kcal`;
+      }
+      const seances = (x.contenu && x.contenu.seances) || [];
+      const nbE = seances.reduce((n,s) => n + ((s.exercices||[]).filter(e=>e.nom).length), 0);
+      return `${seances.length} séance${seances.length>1?"s":""} · ${nbE} exercice${nbE>1?"s":""}`;
+    };
+
     const charger = async () => {
       try {
         const l = await Auth.appel("/rest/v1/bibliotheque?select=*&order=cree_le.desc");
-        if (!l || !l.length){ box.innerHTML = '<div class="empty">Ta bibliothèque est vide pour le moment.</div>'; return; }
-        box.innerHTML = "";
-        l.forEach(x => {
-          const nbS = (x.contenu && x.contenu.seances) ? x.contenu.seances.length : 0;
-          const nbE = (x.contenu && x.contenu.seances) ? x.contenu.seances.reduce((n,s) => n + ((s.exercices||[]).filter(e=>e.nom).length), 0) : 0;
-          const el = document.createElement("div");
-          el.className = "biblio-l";
-          el.innerHTML = `<span class="nom">${esc(x.nom)}</span>
-            <span class="meta">${nbS} séance${nbS>1?"s":""} · ${nbE} exercice${nbE>1?"s":""}</span>
-            <span class="actions-b"><button data-suppr="${x.id}">Supprimer</button></span>`;
-          el.querySelector("[data-suppr]").addEventListener("click", async () => {
-            if (!confirm("Supprimer « " + x.nom + " » de ta bibliothèque ?")) return;
-            try { await Auth.appel("/rest/v1/bibliotheque?id=eq." + x.id, { method:"DELETE", headers:{ "Prefer":"return=minimal" } }); charger(); }
-            catch(e){}
+        const groupes = [
+          { box: boxE, items: (l||[]).filter(x => !x.contenu || x.contenu.type !== "repas"), vide: "Aucun entraînement enregistré pour le moment." },
+          { box: boxR, items: (l||[]).filter(x => x.contenu && x.contenu.type === "repas"),  vide: "Aucune journée type enregistrée pour le moment." }
+        ];
+        groupes.forEach(g => {
+          if (!g.box) return;
+          if (!g.items.length){ g.box.innerHTML = '<div class="empty">' + g.vide + '</div>'; return; }
+          g.box.innerHTML = "";
+          g.items.forEach(x => {
+            const el = document.createElement("div");
+            el.className = "biblio-l";
+            el.innerHTML = `<span class="nom">${esc(x.nom)}</span>
+              <span class="meta">${resume(x)}</span>
+              <span class="actions-b"><button data-suppr="${x.id}">Supprimer</button></span>`;
+            el.querySelector("[data-suppr]").addEventListener("click", async () => {
+              if (!confirm("Supprimer « " + x.nom + " » de ta bibliothèque ?")) return;
+              try { await Auth.appel("/rest/v1/bibliotheque?id=eq." + x.id, { method:"DELETE", headers:{ "Prefer":"return=minimal" } }); charger(); }
+              catch(e){}
+            });
+            g.box.appendChild(el);
           });
-          box.appendChild(el);
         });
-      } catch(e){ box.innerHTML = '<div class="empty">Impossible de charger la bibliothèque.</div>'; }
+      } catch(e){
+        [boxE, boxR].forEach(b => { if (b) b.innerHTML = '<div class="empty">Impossible de charger la bibliothèque.</div>'; });
+      }
     };
     charger();
   }
@@ -1828,7 +2341,7 @@ const outilClients = {
 /* ------------------------------------------------------------------
    LISTE DES OUTILS — ajouter un objet ici suffit à créer un onglet
    ------------------------------------------------------------------ */
-const OUTILS = [outilProfil, outilProgramme, outilCalculateur, outilMensurations, outilEntrainement, outilBibliotheque, outilClients];
+const OUTILS = [outilProfil, outilProgramme, outilNutrition, outilCalculateur, outilMensurations, outilEntrainement, outilBibliotheque, outilClients];
 
 /* ==================================================================
    [G] NAVIGATION, CONNEXION ET DEMARRAGE
@@ -1893,7 +2406,7 @@ async function afficher(id, silencieux){
     ${outil.html()}
     ${outil.cle ? blocSauvegarde() : ""}`;
 
-  const modifiable = !Store.idConsulte || (Auth.estCoach() && outil.id === "programme");
+  const modifiable = !Store.idConsulte || (Auth.estCoach() && (outil.id === "programme" || outil.id === "nutrition"));
   $("vue").className = modifiable ? "wrap" : "wrap lecture-seule";
 
   nettoyage = (await outil.init()) || null;
