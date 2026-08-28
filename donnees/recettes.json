@@ -7062,5 +7062,474 @@
       "Couper concombre et avocat.",
       "Arroser de citron. Servir froid."
     ]
+  },
+  {
+    "id": "poulet-epinards-champignons",
+    "nom": "Poulet poêlé, épinards et champignons",
+    "moment": "dejeuner",
+    "temps_min": 20,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "poulet-blanc-cru",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "epinard-cru",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "champignon-de-paris-ou-champignon-de-couche-cru",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 10
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 5
+      },
+      {
+        "aliment_id": "thym-frais",
+        "grammes": 2
+      }
+    ],
+    "etapes": [
+      "Couper le poulet en lanières et émincer les champignons.",
+      "Faire revenir le poulet dans l'huile 6 à 7 min, ajouter l'ail.",
+      "Ajouter champignons et épinards, cuire 5 min jusqu'à ce que les feuilles tombent.",
+      "Parsemer de thym et servir."
+    ]
+  },
+  {
+    "id": "saumon-fenouil-citron",
+    "nom": "Saumon rôti, fenouil et citron",
+    "moment": "dejeuner",
+    "temps_min": 25,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "saumon-elevage-cru",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "fenouil-cru",
+        "grammes": 180
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 20
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 10
+      },
+      {
+        "aliment_id": "persil-frais",
+        "grammes": 5
+      }
+    ],
+    "etapes": [
+      "Émincer le fenouil, le faire revenir 8 min dans l'huile.",
+      "Poser le pavé de saumon dessus, arroser de citron.",
+      "Couvrir et cuire 10 min à feu moyen.",
+      "Ciseler le persil et servir."
+    ]
+  },
+  {
+    "id": "oeufs-brouilles-epinards-avocat",
+    "nom": "Œufs brouillés, épinards et avocat",
+    "moment": "dejeuner",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "oeuf-cru",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "epinard-cru",
+        "grammes": 100
+      },
+      {
+        "aliment_id": "avocat-cru",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "ciboule-ou-ciboulette-fraiche",
+        "grammes": 5
+      }
+    ],
+    "etapes": [
+      "Faire tomber les épinards 2 min dans une poêle avec un peu d'huile.",
+      "Battre les œufs, les verser et remuer à feu doux jusqu'à crémeux.",
+      "Servir avec l'avocat tranché et la ciboulette."
+    ]
+  },
+  {
+    "id": "cabillaud-chou-fleur-citron",
+    "nom": "Cabillaud, chou-fleur et citron",
+    "moment": "dejeuner",
+    "temps_min": 25,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "cabillaud-cru",
+        "grammes": 160
+      },
+      {
+        "aliment_id": "chou-fleur-cru",
+        "grammes": 200
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 15
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 10
+      },
+      {
+        "aliment_id": "persil-frais",
+        "grammes": 5
+      }
+    ],
+    "etapes": [
+      "Séparer le chou-fleur en bouquets, le cuire à la vapeur 10 min.",
+      "Cuire le cabillaud à la vapeur 8 min.",
+      "Arroser d'huile et de citron, parsemer de persil."
+    ]
+  },
+  {
+    "id": "dinde-aubergine-tomate",
+    "nom": "Dinde, aubergine et tomate",
+    "moment": "dejeuner",
+    "temps_min": 25,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "escalope-de-dinde-crue",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "aubergine-crue",
+        "grammes": 180
+      },
+      {
+        "aliment_id": "tomate-crue",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 10
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 5
+      },
+      {
+        "aliment_id": "basilic-frais",
+        "grammes": 5
+      }
+    ],
+    "etapes": [
+      "Couper aubergine et tomate en dés.",
+      "Saisir la dinde dans l'huile 4 min de chaque côté, réserver.",
+      "Faire revenir aubergine, tomate et ail 8 min.",
+      "Remettre la dinde, ciseler le basilic et servir."
+    ]
+  },
+  {
+    "id": "veau-courgettes-herbes",
+    "nom": "Escalope de veau, courgettes et herbes",
+    "moment": "dejeuner",
+    "temps_min": 20,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "veau-escalope-crue",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "courgette-crue",
+        "grammes": 200
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 10
+      },
+      {
+        "aliment_id": "herbes-de-provence-sechees",
+        "grammes": 2
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 4
+      }
+    ],
+    "etapes": [
+      "Couper les courgettes en rondelles.",
+      "Saisir l'escalope 3 min par face dans l'huile, réserver.",
+      "Poêler courgettes, ail et herbes 8 min.",
+      "Servir le veau sur les courgettes."
+    ]
+  },
+  {
+    "id": "dorade-poivrons-citron",
+    "nom": "Dorade, poivrons et citron",
+    "moment": "dejeuner",
+    "temps_min": 25,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "dorade-royale-ou-daurade-ou-vraie-daurade-elevage-crue",
+        "grammes": 160
+      },
+      {
+        "aliment_id": "poivron-rouge-cru",
+        "grammes": 100
+      },
+      {
+        "aliment_id": "poivron-vert-cru",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 15
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 10
+      },
+      {
+        "aliment_id": "persil-frais",
+        "grammes": 5
+      }
+    ],
+    "etapes": [
+      "Émincer les poivrons, les faire revenir 8 min dans l'huile.",
+      "Poser le filet de dorade, arroser de citron.",
+      "Couvrir 8 à 10 min à feu moyen.",
+      "Parsemer de persil et servir."
+    ]
+  },
+  {
+    "id": "galette-sarrasin-tofu-avocat",
+    "nom": "Galette de sarrasin, tofu et avocat",
+    "moment": "petit_dejeuner",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "galette-de-sarrasin-nature-souple-a-garnir-preemballee",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "tofu-nature",
+        "grammes": 100
+      },
+      {
+        "aliment_id": "avocat-cru",
+        "grammes": 60
+      },
+      {
+        "aliment_id": "tomate-crue",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      }
+    ],
+    "etapes": [
+      "Faire revenir le tofu émietté 5 min dans l'huile.",
+      "Réchauffer la galette de sarrasin à la poêle 1 min par face.",
+      "Garnir de tofu, avocat et tomate en tranches. Servir de suite."
+    ]
+  },
+  {
+    "id": "riz-chaud-lait-soja-banane",
+    "nom": "Riz chaud, lait de soja et banane",
+    "moment": "petit_dejeuner",
+    "temps_min": 10,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "riz-blanc-cuit",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "boisson-au-soja-nature-non-enrichie",
+        "grammes": 180
+      },
+      {
+        "aliment_id": "banane-crue",
+        "grammes": 100
+      },
+      {
+        "aliment_id": "cannelle-poudre",
+        "grammes": 2
+      }
+    ],
+    "etapes": [
+      "Chauffer le riz avec le lait de soja 5 min en remuant.",
+      "Écraser la banane au-dessus, saupoudrer de cannelle.",
+      "Mélanger et servir tiède."
+    ]
+  },
+  {
+    "id": "smoothie-soja-mangue-chia",
+    "nom": "Smoothie soja, mangue et chia",
+    "moment": "petit_dejeuner",
+    "temps_min": 5,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "boisson-au-soja-nature-non-enrichie",
+        "grammes": 250
+      },
+      {
+        "aliment_id": "mangue-crue",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "chia-graine-sechee",
+        "grammes": 15
+      },
+      {
+        "aliment_id": "banane-crue",
+        "grammes": 80
+      }
+    ],
+    "etapes": [
+      "Couper la mangue et la banane.",
+      "Mixer avec le lait de soja.",
+      "Ajouter les graines de chia, attendre 2 min et boire."
+    ]
+  },
+  {
+    "id": "riz-souffle-lait-riz-fraises",
+    "nom": "Riz soufflé, lait de riz et fraises",
+    "moment": "petit_dejeuner",
+    "temps_min": 5,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "riz-souffle-nature-enrichi-en-vitamines-et-mineraux",
+        "grammes": 40
+      },
+      {
+        "aliment_id": "boisson-au-riz-nature",
+        "grammes": 200
+      },
+      {
+        "aliment_id": "fraise",
+        "grammes": 100
+      }
+    ],
+    "etapes": [
+      "Rincer et couper les fraises.",
+      "Mettre le riz soufflé dans un bol, verser le lait de riz.",
+      "Ajouter les fraises et servir de suite."
+    ]
+  },
+  {
+    "id": "tofu-poivrons-petit-dej",
+    "nom": "Tofu poêlé aux poivrons",
+    "moment": "petit_dejeuner",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "tofu-nature",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "poivron-rouge-cru",
+        "grammes": 100
+      },
+      {
+        "aliment_id": "oignon-jaune-cru",
+        "grammes": 40
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "persil-frais",
+        "grammes": 5
+      }
+    ],
+    "etapes": [
+      "Émincer poivron et oignon.",
+      "Faire revenir 5 min dans l'huile, ajouter le tofu en dés.",
+      "Cuire 6 min en remuant. Ciseler le persil et servir."
+    ]
+  },
+  {
+    "id": "sarrasin-lait-soja-myrtilles",
+    "nom": "Sarrasin, lait de soja et myrtilles",
+    "moment": "petit_dejeuner",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "sarrasin-complet-cru",
+        "grammes": 50
+      },
+      {
+        "aliment_id": "boisson-au-soja-nature-non-enrichie",
+        "grammes": 200
+      },
+      {
+        "aliment_id": "myrtille-crue",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "amande-avec-peau",
+        "grammes": 15
+      }
+    ],
+    "etapes": [
+      "Rincer le sarrasin, le cuire 10 min dans le lait de soja.",
+      "Hors du feu, ajouter les myrtilles et les amandes concassées.",
+      "Servir tiède."
+    ]
+  },
+  {
+    "id": "flocons-avoine-lait-soja-poire",
+    "nom": "Flocons d'avoine, lait de soja et poire",
+    "moment": "petit_dejeuner",
+    "temps_min": 10,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "flocons-davoine",
+        "grammes": 50
+      },
+      {
+        "aliment_id": "boisson-au-soja-nature-non-enrichie",
+        "grammes": 200
+      },
+      {
+        "aliment_id": "poire-crue",
+        "grammes": 100
+      },
+      {
+        "aliment_id": "lin-graine",
+        "grammes": 10
+      }
+    ],
+    "etapes": [
+      "Chauffer flocons et lait de soja 8 min en remuant.",
+      "Couper la poire en dés, l'ajouter hors du feu avec les graines de lin.",
+      "Mélanger et servir tiède."
+    ]
   }
 ]

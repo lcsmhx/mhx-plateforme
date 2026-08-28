@@ -80,3 +80,18 @@ Ne pas recopier : accueil, boutique, questionnaires, libellés anglais.
 - `donnees/generateur.md` : liste des régimes à jour, recettes sans allergenes/regimes.
 - Import Supabase = côté Claude. Pas de commit / push. `index.html` non touché.
 - QA 28 août : générateur filtre par ingrédients (plus recette.regimes). Plans d’exemple régénérés, |kcal|<6 %.
+
+## 28 août 2026 — fin d’après-midi (recettes paléo/vegan + correspondances)
+
+- `aliments.json` : **3111** lignes (3109 CIQUAL 2025 + `skyr` + `whey`). Skyr / whey = étiquettes, **pas CIQUAL** :
+  - `skyr` — Étiquette Yoplait Skyr Nature (100 g), yoplait.fr, 2026
+  - `whey` — Étiquette Nutripure Whey Isolate Native nature (100 g), nutripure.fr
+- `recettes.json` : **212** recettes (+14 originales FR, portions 1, 0 champ allergenes/regimes, 0 aliment_id manquant, json.tool OK).
+  - paléo × déjeuner : **+7** (viande/poisson/œuf + légumes + huile, ids CIQUAL réels). Intersection : **13** déj paléo.
+  - vegan × petit-déj : **+7** dont **6 aussi sans gluten** (sarrasin, riz, tofu, lait soja `boisson-au-soja-nature-non-enrichie`). `flocons-davoine` = gluten. Intersection : **20** vegan PD / **14** vegan+SG PD.
+- `donnees/correspondances-ids.json` : 44 mappings `{ancien,nouveau,note}` pour le tableau Claude. 3 corrections :
+  - `amandes` → `amande-avec-peau` (pas d’id `amandes`)
+  - `boeuf-hache-5` → `boeuf-steak-hache-5-mg-cru` (pas `steak-hache-de-boeuf-5-mg-cru`)
+  - `saumon` → `saumon-elevage-cru` (pas `saumon-cru`)
+  Les autres mappings Claude sont bons (ids vérifiés dans aliments.json).
+- Pas de commit / push. `index.html`, `aliments-off.json`, `aliments-usda.json` non touchés.

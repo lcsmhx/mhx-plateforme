@@ -71510,5 +71510,51 @@
       "sans_porc"
     ],
     "source": "CIQUAL 2025"
+  },
+  {
+    "id": "skyr",
+    "nom": "Skyr nature",
+    "categorie": "Laitages",
+    "kcal": 56,
+    "proteines": 9.3,
+    "glucides": 3.6,
+    "lipides": 0.2,
+    "fibres": 0.0,
+    "portion_g": 150,
+    "portion_nom": "1 pot",
+    "allergenes": [
+      "lait"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten",
+      "sans_porc"
+    ],
+    "source": "Étiquette Yoplait Skyr Nature (100 g), yoplait.fr, 2026 — pas CIQUAL"
+  },
+  {
+    "id": "whey",
+    "nom": "Whey isolate (poudre)",
+    "categorie": "Produits de base",
+    "kcal": 382,
+    "proteines": 89.0,
+    "glucides": 3.1,
+    "lipides": 1.8,
+    "fibres": 0.0,
+    "portion_g": 30,
+    "portion_nom": "1 dose",
+    "allergenes": [
+      "lait"
+    ],
+    "regimes": [
+      "omnivore",
+      "vegetarien",
+      "pescetarien",
+      "sans_gluten",
+      "sans_porc"
+    ],
+    "source": "Étiquette Nutripure Whey Isolate Native nature (100 g), nutripure.fr — pas CIQUAL"
   }
 ]

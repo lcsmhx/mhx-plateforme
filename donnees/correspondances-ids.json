@@ -1,0 +1,222 @@
+[
+  {
+    "ancien": "oignon",
+    "nouveau": "oignon-cru",
+    "note": "Oignon, cru"
+  },
+  {
+    "ancien": "tomate",
+    "nouveau": "tomate-crue",
+    "note": "Tomate crue"
+  },
+  {
+    "ancien": "oeuf",
+    "nouveau": "oeuf-cru",
+    "note": "Œuf cru"
+  },
+  {
+    "ancien": "banane",
+    "nouveau": "banane-crue",
+    "note": "Banane crue"
+  },
+  {
+    "ancien": "carotte",
+    "nouveau": "carotte-crue",
+    "note": "Carotte crue"
+  },
+  {
+    "ancien": "courgette",
+    "nouveau": "courgette-crue",
+    "note": "Courgette crue"
+  },
+  {
+    "ancien": "poivron",
+    "nouveau": "poivron-rouge-cru",
+    "note": "Poivron rouge, cru"
+  },
+  {
+    "ancien": "amandes",
+    "nouveau": "amande-avec-peau",
+    "note": "pas d'id amandes ; Amandes avec peau"
+  },
+  {
+    "ancien": "blanc-oeuf",
+    "nouveau": "blanc-doeuf-cru",
+    "note": "Blanc d'œuf cru"
+  },
+  {
+    "ancien": "flocons-avoine",
+    "nouveau": "flocons-davoine",
+    "note": "Flocons d'avoine"
+  },
+  {
+    "ancien": "fromage-blanc-0",
+    "nouveau": "fromage-blanc-0-mg",
+    "note": "Fromage blanc 0% MG"
+  },
+  {
+    "ancien": "haricots-verts",
+    "nouveau": "haricot-vert-cru",
+    "note": "Haricot vert cru"
+  },
+  {
+    "ancien": "lait-demi",
+    "nouveau": "lait-demi-ecreme-uht",
+    "note": "Lait demi-écrémé UHT"
+  },
+  {
+    "ancien": "lentilles",
+    "nouveau": "lentilles-vertes-cuites",
+    "note": "Lentilles vertes cuites"
+  },
+  {
+    "ancien": "myrtilles",
+    "nouveau": "myrtille-crue",
+    "note": "Myrtille, crue"
+  },
+  {
+    "ancien": "pain-complet",
+    "nouveau": "pain-complet-ou-integral-a-la-farine-t150",
+    "note": "Pain complet"
+  },
+  {
+    "ancien": "riz-basmati",
+    "nouveau": "riz-thai-ou-basmati-cru",
+    "note": "Riz thaï ou basmati, cru"
+  },
+  {
+    "ancien": "salade-verte",
+    "nouveau": "salade-verte-crue-sans-assaisonnement",
+    "note": "Salade verte"
+  },
+  {
+    "ancien": "tofu",
+    "nouveau": "tofu-nature",
+    "note": "Tofu nature"
+  },
+  {
+    "ancien": "avocat",
+    "nouveau": "avocat-cru",
+    "note": "Avocat cru"
+  },
+  {
+    "ancien": "beurre-cacahuete",
+    "nouveau": "beurre-de-cacahuete-ou-pate-darachide",
+    "note": "Beurre de cacahuète"
+  },
+  {
+    "ancien": "boeuf-hache-5",
+    "nouveau": "boeuf-steak-hache-5-mg-cru",
+    "note": "pas steak-hache-de-boeuf-5-mg-cru ; Steak haché de bœuf 5% MG cru"
+  },
+  {
+    "ancien": "brocoli",
+    "nouveau": "brocoli-cru",
+    "note": "Brocoli cru"
+  },
+  {
+    "ancien": "cabillaud",
+    "nouveau": "cabillaud-cru",
+    "note": "Cabillaud, cru"
+  },
+  {
+    "ancien": "champignons",
+    "nouveau": "champignon-de-paris-ou-champignon-de-couche-cru",
+    "note": "Champignon de Paris, cru"
+  },
+  {
+    "ancien": "chocolat-noir",
+    "nouveau": "chocolat-noir-70-de-cacao-environ-de-degustation-tablette",
+    "note": "Chocolat noir 70%"
+  },
+  {
+    "ancien": "crevettes",
+    "nouveau": "crevette-cuite",
+    "note": "Crevette, cuite"
+  },
+  {
+    "ancien": "dinde-escalope",
+    "nouveau": "escalope-de-dinde-crue",
+    "note": "Escalope de dinde crue"
+  },
+  {
+    "ancien": "epinards",
+    "nouveau": "epinard-cru",
+    "note": "Épinard, cru"
+  },
+  {
+    "ancien": "fraises",
+    "nouveau": "fraise",
+    "note": "Fraise"
+  },
+  {
+    "ancien": "galette-riz",
+    "nouveau": "galette-de-riz-complet-souffle",
+    "note": "Galette de riz complet soufflé"
+  },
+  {
+    "ancien": "graines-chia",
+    "nouveau": "chia-graine-sechee",
+    "note": "Graines de chia"
+  },
+  {
+    "ancien": "olives",
+    "nouveau": "olive-verte-en-saumure",
+    "note": "Olives vertes au vinaigre"
+  },
+  {
+    "ancien": "orange",
+    "nouveau": "orange-crue",
+    "note": "Orange, crue"
+  },
+  {
+    "ancien": "patate-douce",
+    "nouveau": "patate-douce-crue",
+    "note": "Patate douce, crue"
+  },
+  {
+    "ancien": "pates-completes",
+    "nouveau": "pates-seches-au-ble-complet-crues",
+    "note": "Pâtes complètes crues"
+  },
+  {
+    "ancien": "pois-chiches",
+    "nouveau": "pois-chiche-bouilli-cuit-a-leau",
+    "note": "Pois chiches cuits"
+  },
+  {
+    "ancien": "pomme",
+    "nouveau": "pomme-crue",
+    "note": "Pomme crue"
+  },
+  {
+    "ancien": "pomme-de-terre",
+    "nouveau": "pomme-de-terre-crue",
+    "note": "Pomme de terre crue"
+  },
+  {
+    "ancien": "poulet-cuisse",
+    "nouveau": "poulet-cuisse-viande-crue",
+    "note": "Poulet, cuisse, viande crue (sans peau)"
+  },
+  {
+    "ancien": "quinoa",
+    "nouveau": "quinoa-cru",
+    "note": "Quinoa cru"
+  },
+  {
+    "ancien": "saumon",
+    "nouveau": "saumon-elevage-cru",
+    "note": "pas saumon-cru ; Saumon d'élevage cru"
+  },
+  {
+    "ancien": "semoule",
+    "nouveau": "semoule-de-ble-dur-crue",
+    "note": "Semoule de blé dur, crue"
+  },
+  {
+    "ancien": "thon-naturel",
+    "nouveau": "thon-albacore-au-naturel-appertise-egoutte",
+    "note": "Thon albacore, au naturel, appertisé, égoutté"
+  }
+]
