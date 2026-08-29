@@ -297,6 +297,15 @@ ul.ingr li{display:flex;justify-content:space-between;gap:12px;padding:6px 0;bor
 ul.ingr li b{font-family:"IBM Plex Mono",ui-monospace,monospace;color:var(--ink)}
 ol.etapes{margin:0;padding-left:18px;font-size:14px;color:var(--ink-2)}
 ol.etapes li{margin-bottom:6px}
+.bandeau-tete{display:flex;flex-direction:column;gap:2px}
+.bandeau-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+.b-act{display:inline-flex;align-items:center;text-decoration:none;font-size:13px;font-weight:500;
+  padding:7px 13px;border-radius:999px;border:1px solid var(--line-strong);color:var(--ink-2);background:var(--surface)}
+.b-act:hover{border-color:var(--accent);color:var(--accent)}
+.b-act.fort{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.b-act.ici{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.bandeau-actions .sortir{margin-left:auto}
+@media(max-width:560px){.bandeau-actions .sortir{margin-left:0;width:100%}}
 .pastille.manque{background:var(--accent-soft);color:var(--warn);border-color:var(--warn)}
 #tb-clients td{vertical-align:middle}
 #tb-clients .voir{font:inherit;font-size:12px;padding:5px 11px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-2);border-radius:5px;cursor:pointer;white-space:nowrap}
@@ -2017,6 +2026,10 @@ const outilProgramme = {
 
       const save = $("pg-save");
       if (save) save.addEventListener("click", () => {
+        /* Un programme vide envoye, c'est un client qui ouvre son onglet
+           et n'y trouve rien — sans savoir si c'est un bug ou un oubli. */
+        const exos = (P.seances || []).reduce((n, sc) => n + (sc.exercices || []).filter(e => e.nom).length, 0);
+        if (!exos){ flash("pg-msg", "Ce programme est vide : ajoute au moins une séance avec un exercice avant de l'envoyer."); return; }
         P.maj = new Date().toLocaleDateString("fr-FR");
         Store.ecrire(self.cle, P);
         flash("pg-msg", "Programme envoyé. Ton client le voit dès sa prochaine ouverture.");
@@ -3137,7 +3150,7 @@ const outilClients = {
     $$("[data-ouvrir]", tb).forEach(b => b.addEventListener("click", () => {
       Store.idConsulte = b.dataset.ouvrir;
       Store.nomConsulte = b.dataset.nom;
-      location.hash = "#/mensurations";
+      location.hash = "#/profil";
     }));
 
     if (zoneA){
@@ -3214,7 +3227,7 @@ const outilClients = {
           el.querySelector(".voir").addEventListener("click", () => {
             Store.idConsulte = p.id;
             Store.nomConsulte = ((p.prenom||"") + " " + (p.nom||"")).trim() || "ce client";
-            location.hash = "#/mensurations";
+            location.hash = "#/profil";
           });
           box.appendChild(el);
         });
@@ -3270,10 +3283,21 @@ function outilsVisibles(){
   return OUTILS.filter(o => !o.role || (o.role === "coach" && Auth.estCoach()));
 }
 
+/* « Mon programme » devient « Son programme » quand le coach consulte
+   une fiche : le meme mot pour deux personnes differentes, c'est ce qui
+   fait qu'on ne sait plus chez qui on ecrit. */
+function nomOnglet(o){
+  /* Les outils du coach gardent leur nom : « Mes clients » ne devient
+     jamais « Ses clients ». Seuls les outils qui affichent les donnees
+     d'un client changent de possessif. */
+  if (!Store.idConsulte || o.role === "coach") return o.nom;
+  return o.nom.replace(/^Mon /, "Son ").replace(/^Mes /, "Ses ").replace(/^Ma /, "Sa ");
+}
+
 function construireNav(){
   const nav = $("nav");
   nav.innerHTML = outilsVisibles().map(o =>
-    `<a href="#/${o.id}" data-id="${o.id}"><span class="ico" aria-hidden="true">${o.icone}</span>${esc(o.nom)}</a>`
+    `<a href="#/${o.id}" data-id="${o.id}"><span class="ico" aria-hidden="true">${o.icone}</span>${esc(nomOnglet(o))}</a>`
   ).join("");
   $("brand-name").textContent = CONFIG.marque.nom;
   $("brand-sub").textContent  = CONFIG.marque.programme;
@@ -3296,10 +3320,25 @@ function marquerNav(id){
 
 function bandeauConsultation(){
   if (!Store.idConsulte) return "";
+  /* Sans ces boutons, le coach atterrit sur une page et ne devine pas que
+     tout le reste de la fiche est accessible par les onglets du haut.
+     Un mode implicite est un mode qu'on ne trouve pas. */
+  const actions = [
+    { id:"profil",       nom:"Son questionnaire" },
+    { id:"programme",    nom:"Son programme",  fort:true },
+    { id:"nutrition",    nom:"Ses repas",      fort:true },
+    { id:"mensurations", nom:"Ses courbes" },
+    { id:"entrainement", nom:"Ses séances" }
+  ];
   return `<div class="bandeau">
-    <strong>Fiche de ${esc(Store.nomConsulte || "ce client")}</strong>
-    <span class="note">Lecture seule — tu vois ses données telles qu'il les a saisies.</span>
-    <button class="sortir" type="button" id="sortir-fiche">Revenir à mes clients</button>
+    <div class="bandeau-tete">
+      <strong>Fiche de ${esc(Store.nomConsulte || "ce client")}</strong>
+      <span class="note">Tu vois ses données. Les deux boutons dorés sont les seuls endroits où tu écris pour lui.</span>
+    </div>
+    <div class="bandeau-actions">
+      ${actions.map(a => `<a href="#/${a.id}" class="b-act${a.fort ? " fort" : ""}${courant === a.id ? " ici" : ""}">${esc(a.nom)}</a>`).join("")}
+      <button class="sortir" type="button" id="sortir-fiche">Revenir à mes clients</button>
+    </div>
   </div>`;
 }
 
@@ -3314,13 +3353,14 @@ async function afficher(id, silencieux){
   $("vue").innerHTML = `
     ${bandeauConsultation()}
     <header class="masthead">
-      <span class="eyebrow">${esc(CONFIG.marque.programme)} — ${esc(outil.nom)}</span>
-      <h1>${esc(outil.titre)}</h1>
-      <p class="lede">${esc(outil.accroche)}</p>
+      <span class="eyebrow">${Store.idConsulte ? esc(Store.nomConsulte || "client") : esc(CONFIG.marque.programme)} — ${esc(nomOnglet(outil))}</span>
+      <h1>${Store.idConsulte ? esc(nomOnglet(outil)) : esc(outil.titre)}</h1>
+      ${Store.idConsulte ? "" : `<p class="lede">${esc(outil.accroche)}</p>`}
     </header>
     ${outil.html()}
     ${outil.cle ? blocSauvegarde() : ""}`;
 
+  construireNav();   // les libelles dependent du mode : on les rafraichit
   const modifiable = !Store.idConsulte || (Auth.estCoach() && (outil.id === "programme" || outil.id === "nutrition"));
   $("vue").className = modifiable ? "wrap" : "wrap lecture-seule";
 
