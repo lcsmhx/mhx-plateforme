@@ -7531,5 +7531,192 @@
       "Couper la poire en dés, l'ajouter hors du feu avec les graines de lin.",
       "Mélanger et servir tiède."
     ]
+  },
+  {
+    "id": "magret-canard-chou-pomme",
+    "nom": "Magret de canard, chou rouge et pomme",
+    "moment": "dejeuner",
+    "temps_min": 25,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "magret-de-canard-cru",
+        "grammes": 160
+      },
+      {
+        "aliment_id": "chou-rouge-cru",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "pomme-crue",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 5
+      },
+      {
+        "aliment_id": "thym-frais",
+        "grammes": 2
+      }
+    ],
+    "etapes": [
+      "Incise la peau du magret en croisillons, sans entamer la chair.",
+      "Pose-le peau vers le bas dans une poêle froide : 8 min pour fondre la graisse, puis 4 min sur la chair.",
+      "Émince le chou et la pomme, fais-les revenir 6 min dans un filet d'huile et le thym.",
+      "Tranche le magret et sers-le sur le chou tiède."
+    ]
+  },
+  {
+    "id": "crevettes-avocat-roquette",
+    "nom": "Crevettes poêlées, avocat et roquette",
+    "moment": "dejeuner",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "crevette-crue",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "avocat-cru",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "roquette-crue",
+        "grammes": 50
+      },
+      {
+        "aliment_id": "tomate-cerise",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 15
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      }
+    ],
+    "etapes": [
+      "Saisis les crevettes 3 min dans l'huile, jusqu'à ce qu'elles deviennent roses.",
+      "Coupe l'avocat et les tomates cerises, presse le citron dessus.",
+      "Dispose la roquette, l'avocat et les tomates dans l'assiette.",
+      "Ajoute les crevettes encore chaudes et nappe d'un filet d'huile."
+    ]
+  },
+  {
+    "id": "rumsteck-asperges-champignons",
+    "nom": "Rumsteck, asperges vertes et champignons",
+    "moment": "dejeuner",
+    "temps_min": 20,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "boeuf-rumsteck-cru",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "asperge-verte-crue",
+        "grammes": 180
+      },
+      {
+        "aliment_id": "champignon-de-paris-ou-champignon-de-couche-cru",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 10
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 4
+      },
+      {
+        "aliment_id": "persil-frais",
+        "grammes": 5
+      }
+    ],
+    "etapes": [
+      "Casse le pied des asperges et émince les champignons.",
+      "Saisis le rumsteck 3 min de chaque côté dans l'huile, réserve-le sous papier.",
+      "Fais sauter asperges, champignons et ail 6 min dans la même poêle.",
+      "Cisèle le persil, tranche le rumsteck et dresse le tout."
+    ]
+  },
+  {
+    "id": "agneau-endives-romarin",
+    "nom": "Gigot d'agneau poêlé, endives et romarin",
+    "moment": "dejeuner",
+    "temps_min": 25,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "agneau-gigot-cru",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "endive-crue",
+        "grammes": 200
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 10
+      },
+      {
+        "aliment_id": "romarin-frais",
+        "grammes": 3
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 4
+      }
+    ],
+    "etapes": [
+      "Coupe l'agneau en lamelles et les endives en deux dans la longueur.",
+      "Dore l'agneau 5 min à l'huile avec l'ail et le romarin, réserve.",
+      "Fais fondre les endives 8 min dans la poêle, face coupée vers le bas.",
+      "Remets l'agneau 2 min pour le réchauffer, puis dresse."
+    ]
+  },
+  {
+    "id": "maquereau-tomates-aneth",
+    "nom": "Maquereau au four, tomates et aneth",
+    "moment": "dejeuner",
+    "temps_min": 25,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "maquereau-cru",
+        "grammes": 160
+      },
+      {
+        "aliment_id": "tomate-crue",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "oignon-jaune-cru",
+        "grammes": 40
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 15
+      },
+      {
+        "aliment_id": "aneth-frais",
+        "grammes": 5
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      }
+    ],
+    "etapes": [
+      "Préchauffe le four à 200 °C. Émince l'oignon et coupe les tomates en quartiers.",
+      "Dispose poisson, tomates et oignon dans un plat, arrose d'huile et de citron.",
+      "Enfourne 18 min. Parsème d'aneth ciselé au sortir du four.",
+      "Sers aussitôt, avec le jus du plat."
+    ]
   }
 ]

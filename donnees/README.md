@@ -12,7 +12,7 @@ Régimes : omnivore, vegetarien, vegan, pescetarien, paleo, sans_gluten, sans_la
 18 programmes originaux (2 à 5 séances, salle / haltères / poids du corps, full-body, half-body, PPL, sèche). Structure identique à `outilProgramme` dans index.html. Pas de copie de bibliothèques commerciales.
 
 ## recettes.json
-**212** recettes du quotidien (petit-déj / déjeuner / dîner / collation). Schéma : `id`, `nom`, `moment`, `temps_min`, `portions`, `ingredients`, `etapes` — **pas** de champs `allergenes` / `regimes` (Claude calcule l’intersection des ingrédients). `aliment_id` pointe vers aliments.json. Macros recalculées par l’app. 0 id manquant.
+**217** recettes du quotidien (petit-déj / déjeuner / dîner / collation). Paléo déjeuner : 18. Vegan petit-déj : 20. Schéma : `id`, `nom`, `moment`, `temps_min`, `portions`, `ingredients`, `etapes` — **pas** de champs `allergenes` / `regimes` (Claude calcule l’intersection des ingrédients). `aliment_id` pointe vers aliments.json. Macros recalculées par l’app. 0 id manquant.
 
 ## correspondances-ids.json
 Liste `{ancien, nouveau, note}` pour remplacer les ids courts du tableau Claude par les ids CIQUAL de `aliments.json`. Trois corrections Grok :
