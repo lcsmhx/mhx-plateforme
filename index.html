@@ -683,12 +683,21 @@ const Catalogue = {
       const r = await Auth.appel("/rest/v1/" + table + "?select=*&order=nom.asc");
       this._c[table] = r || [];
     } catch(e){ this._c[table] = []; }
+    /* Secours : si la table est vide — base en pause, import jamais lancé —
+       on lit directement le dépôt. Les aliments passent par la MEME
+       normalisation que l'import : sans elle, on servirait des plans batis
+       sur des etiquettes de regime non verifiees, ce qui est precisement
+       le risque que l'import existe pour ecarter. */
     if (!this._c[table].length){
       const fichier = { aliments:"aliments.json", recettes:"recettes.json", programmes_types:"programmes.json" }[table];
       if (fichier){
         try {
           const f = await fetch(CONFIG.nutrition.source_donnees + fichier, { cache: "no-store" });
-          if (f.ok) this._c[table] = await f.json();
+          if (f.ok){
+            const brut = await f.json();
+            this._c[table] = (table === "aliments") ? brut.map(a => Normaliser.aliment(a)) : brut;
+            this.secours = true;
+          }
         } catch(e){}
       }
     }
@@ -2530,6 +2539,7 @@ const outilNutrition = {
         <span class="msg" id="nu-msg"></span>
       </div>
       ${ctx.prerempli ? `<p class="note" style="margin-top:10px">Pré-rempli avec le profil et le calculateur de ce client.</p>` : ""}
+      ${Catalogue.secours ? `<div class="flag" style="margin-top:12px"><b>Catalogue de secours.</b> Ta base ne répond pas — projet Supabase en pause, ou import jamais lancé. L'application lit les données directement depuis le dépôt pour rester utilisable, mais rien de ce que tu fais ici n'est enregistré tant que la base ne répond pas.</div>` : ""}
       ${ctx.autres ? `<div class="flag" style="margin-top:12px"><b>À vérifier avant d'envoyer :</b> ce client a écrit « ${esc(ctx.autres)} » dans ses allergies. Aucun filtre automatique ne couvre ce texte : relis les ingrédients toi-même.</div>` : ""}
     </section>
 
