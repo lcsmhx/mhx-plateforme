@@ -683,10 +683,27 @@ const Catalogue = {
       const r = await Auth.appel("/rest/v1/" + table + "?select=*&order=nom.asc");
       this._c[table] = r || [];
     } catch(e){ this._c[table] = []; }
+    if (!this._c[table].length){
+      const fichier = { aliments:"aliments.json", recettes:"recettes.json", programmes_types:"programmes.json" }[table];
+      if (fichier){
+        try {
+          const f = await fetch(CONFIG.nutrition.source_donnees + fichier, { cache: "no-store" });
+          if (f.ok) this._c[table] = await f.json();
+        } catch(e){}
+      }
+    }
     return this._c[table];
   },
   aliments(){ return this.lire("aliments"); },
-  recettes(){ return this.lire("recettes"); },
+  async recettes(){
+    const l = await this.lire("recettes");
+    const idx = await this.indexAliments();
+    return l.map(r => {
+      if ((r.regimes && r.regimes.length) || (r.allergenes && r.allergenes.length)) return r;
+      const n = Normaliser.recette(r, idx).fiche;
+      return Object.assign({}, r, { allergenes: n.allergenes, regimes: n.regimes });
+    });
+  },
   programmes(){ return this.lire("programmes_types"); },
 
   /* index id -> aliment, pour calculer les macros d'une recette */
