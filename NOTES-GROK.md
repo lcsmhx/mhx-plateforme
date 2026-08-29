@@ -102,3 +102,12 @@ Ne pas recopier : accueil, boutique, questionnaires, libellés anglais.
 - Join : `slug(nom du programme) == id`. Aucune collision de slug. `lien` vide. Cues originales MHX.
 - `index.html` non touché. Poussé sur `main`.
 
+## 29 août 2026 — plan semaine + courses (pour Claude)
+
+Lucas veut les deux mécaniques : **plan alimentaire Jour 1…N** + **liste de courses** depuis le plan assigné.
+
+- Spec : `donnees/plan-semaine.md`. Catalogues MHX only. Pas d’import dump.
+- `index.html` **non touché** (règle). À brancher dans `outilNutrition`.
+- Déjà là : journée type + `courses()` × N jours + rayons (0 ingrédient hors rayon).
+- À faire : cartes Jour 1 = lundi …, créneau = note | recette | aliment, macros calculées, assignation par copie, courses = somme des jours de la semaine (plus « journée × 7 » dès que le plan a plusieurs jours), extras cochés côté client.
+- Preuve génération 7 jours : `plans-exemple.json`. Recettes **217**. Exercices **172** dans `exercices.json`.

@@ -54,3 +54,6 @@ Rayons magasin pour la liste de courses. Chaque rayon liste les `categorie` de `
 
 ## generateur.md + plans-exemple.json
 Heuristique pour assembler un jour alimentaire à partir des macros MHX (2,2 g P/kg, 1 g L/kg, glucides = reste). Preuve : 3 plans × 7 jours. À porter en JS dans index.html. Pas de solveur, pas d’API payante.
+
+## plan-semaine.md
+Spec Claude : plan Jour 1…N (lundi) + liste de courses depuis le plan, groupée par `rayons.json`. Grok ne touche pas `index.html`.
