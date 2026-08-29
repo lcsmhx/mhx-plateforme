@@ -164,3 +164,23 @@ Bugs vus à l’envoi (à corriger) :
 
 RLS repas : l’envoi a marché (pas de 401).
 
+
+## 30 août 2026 — QA complète live (client + coach)
+
+Cause des 0 kcal : **PostgREST cap 1000**. `Catalogue.lire` fait un seul `GET /rest/v1/aliments?select=*&order=nom.asc` **sans** `Range` / pagination. La table a (ou l’UI montre) **1000** lignes ; GitHub en a **3111**. Le secours GitHub ne part **que si la table est vide**, donc jamais ici. `faisselle-0-mg`, `kiwi-cru`, `miel`, `skyr`, `whey` existent dans `aliments.json` mais pas dans les 1000 premiers `order=nom.asc`.
+
+**Fix Claude :** paginer `lire()` (Range 0-999, 1000-1999, … jusqu’à page courte) pour aliments **et** toute table > 1000. Ne pas se fier à un réimport seul : sans pagination l’UI restera à 1000. Compteur Catalogue = longueur après pagination.
+
+Autre vu en live :
+- Table clients : test grok questionnaire ✅ programme ✅ **diète à faire** (faux, 7 jours envoyés).
+- 9 repas à 0 kcal, 6 warnings « ingrédients absents ».
+- Dates mensurations `MM/DD/YYYY`.
+- Courbe : 2 points presque plats, point de départ non tracé.
+- Entraînement client : exo ajouté persiste (OK).
+- Toutes les fiches « Comment faire ? » du programme test OK (172).
+- Cases mangé + courses persistent dans la session (OK). Le reset UTC n’a pas pu être rejoué J+1.
+- Bibliothèque vide : normal si on n’a pas cliqué « Enregistrer dans ma bibliothèque » (on a chargé un programme prêt). Le résumé « 0 repas » pour un plan `jours[]` reste un bug de libellé si on enregistre un plan repas.
+- Calculateur laissé à 72 kg après le test (autosave).
+
+`index.html` non touché.
+
