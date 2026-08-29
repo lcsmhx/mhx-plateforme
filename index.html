@@ -297,6 +297,25 @@ ul.ingr li{display:flex;justify-content:space-between;gap:12px;padding:6px 0;bor
 ul.ingr li b{font-family:"IBM Plex Mono",ui-monospace,monospace;color:var(--ink)}
 ol.etapes{margin:0;padding-left:18px;font-size:14px;color:var(--ink-2)}
 ol.etapes li{margin-bottom:6px}
+.ex-fiche{margin-top:10px;font:inherit;font-size:12px;padding:5px 11px;border:1px solid var(--line-strong);
+  background:var(--surface);color:var(--ink-2);border-radius:5px;cursor:pointer}
+.ex-fiche:hover{border-color:var(--accent);color:var(--accent)}
+.fiche-ex{margin-top:12px;padding:14px 16px;border-left:3px solid var(--accent);background:var(--sunken);border-radius:0 6px 6px 0}
+.fiche-ex h3{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin:14px 0 6px}
+.fiche-ex h3:first-of-type{margin-top:0}
+.fiche-tags{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+ul.erreurs{margin:0;padding-left:18px;font-size:14px;color:var(--ink-2)}
+ul.erreurs li{margin-bottom:5px}
+.jours-onglets{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin-bottom:18px;padding-bottom:2px}
+.jours-onglets::-webkit-scrollbar{display:none}
+.j-onglet{display:flex;flex-direction:column;gap:2px;min-width:104px;padding:10px 14px;border:1px solid var(--line);
+  border-radius:8px;background:var(--surface);cursor:pointer;font:inherit;text-align:left}
+.j-onglet:hover{border-color:var(--line-strong)}
+.j-onglet.ici{border-color:var(--accent);background:var(--accent-soft)}
+.j-onglet .j-nom{font-size:13px;font-weight:600;color:var(--ink)}
+.j-onglet .j-kcal{font-size:11px;color:var(--ink-3);font-family:"IBM Plex Mono",ui-monospace,monospace}
+ul.courses-l li.pris{opacity:.5}
+ul.courses-l li.pris .coche{text-decoration:line-through}
 .bandeau-tete{display:flex;flex-direction:column;gap:2px}
 .bandeau-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
 .b-act{display:inline-flex;align-items:center;text-decoration:none;font-size:13px;font-weight:500;
@@ -698,7 +717,7 @@ const Catalogue = {
        sur des etiquettes de regime non verifiees, ce qui est precisement
        le risque que l'import existe pour ecarter. */
     if (!this._c[table].length){
-      const fichier = { aliments:"aliments.json", recettes:"recettes.json", programmes_types:"programmes.json" }[table];
+      const fichier = { aliments:"aliments.json", recettes:"recettes.json", programmes_types:"programmes.json", exercices:"exercices.json" }[table];
       if (fichier){
         try {
           const f = await fetch(CONFIG.nutrition.source_donnees + fichier, { cache: "no-store" });
@@ -723,6 +742,21 @@ const Catalogue = {
     });
   },
   programmes(){ return this.lire("programmes_types"); },
+  exercices(){ return this.lire("exercices"); },
+
+  /* Les programmes designent leurs exercices par leur NOM. On indexe donc
+     sur le nom aplati, et on garde l'identifiant en secours. */
+  async indexExercices(){
+    if (this._idxEx) return this._idxEx;
+    const l = await this.exercices();
+    this._idxEx = {};
+    l.forEach(e => { this._idxEx[Normaliser.aplatir(e.nom)] = e; this._idxEx[e.id] = e; });
+    return this._idxEx;
+  },
+  async fiche(nom){
+    const idx = await this.indexExercices();
+    return idx[Normaliser.aplatir(nom || "")] || null;
+  },
 
   /* index id -> aliment, pour calculer les macros d'une recette */
   async indexAliments(){
@@ -1899,6 +1933,38 @@ const outilProgramme = {
   seanceVide(n){ return { nom: "Séance " + String.fromCharCode(64 + n), note: "", exercices: [ this.exoVide() ] }; },
   exoVide(){ return { nom:"", series:"", reps:"", repos:"", tempo:"", note:"", lien:"" }; },
 
+  /* Une ligne « Développé couché — 4 x 8-10 » ne dit pas comment faire le
+     mouvement. La fiche s'ouvre sous l'exercice, sans quitter la page. */
+  ficheHTML(f){
+    if (!f) return `<div class="fiche-ex"><p class="note" style="margin:0">Aucune fiche pour cet exercice. Demande à ton coach.</p></div>`;
+    return `<div class="fiche-ex">
+      <div class="fiche-tags">
+        ${f.groupe ? `<span class="pastille">${esc(f.groupe)}</span>` : ""}
+        ${f.materiel ? `<span class="pastille">${esc(f.materiel)}</span>` : ""}
+        ${f.niveau ? `<span class="pastille">${esc(f.niveau)}</span>` : ""}
+        ${(f.muscles || []).length ? `<span class="meta">${esc(f.muscles.join(" · "))}</span>` : ""}
+      </div>
+      ${(f.execution || []).length ? `<h3>Exécution</h3><ol class="etapes">${f.execution.map(x => `<li>${esc(x)}</li>`).join("")}</ol>` : ""}
+      ${(f.erreurs || []).length ? `<h3>Erreurs fréquentes</h3><ul class="erreurs">${f.erreurs.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
+      ${f.respiration ? `<p class="note"><b>Respiration :</b> ${esc(f.respiration)}</p>` : ""}
+      ${f.lien ? `<a class="link-a" href="${esc(f.lien)}" target="_blank" rel="noopener">Voir la démonstration →</a>` : ""}
+    </div>`;
+  },
+
+  /* Branche les boutons « fiche » d'une zone déjà rendue. */
+  brancherFiches(zone){
+    $$("[data-fiche]", zone).forEach(b => b.addEventListener("click", async () => {
+      const boite = b.closest(".ex-lecture").querySelector(".fiche-boite");
+      if (!boite) return;
+      if (boite.innerHTML){ boite.hidden = !boite.hidden; b.textContent = boite.hidden ? "Comment faire ?" : "Masquer"; return; }
+      b.textContent = "…";
+      const f = await Catalogue.fiche(b.dataset.fiche);
+      boite.innerHTML = this.ficheHTML(f);
+      boite.hidden = false;
+      b.textContent = "Masquer";
+    }));
+  },
+
   /* ---------- vue client : lecture ---------- */
   vueLecture(P){
     if (!P.seances || !P.seances.length){
@@ -1921,6 +1987,8 @@ const outilProgramme = {
           </div>
           ${e.note ? `<div class="obs">${esc(e.note)}</div>` : ""}
           ${e.lien ? `<a class="link-a" href="${esc(e.lien)}" target="_blank" rel="noopener">Voir la démonstration →</a>` : ""}
+          <button type="button" class="ex-fiche" data-fiche="${esc(e.nom)}">Comment faire ?</button>
+          <div class="fiche-boite" hidden></div>
         </div>`;
       });
       h += `</section>`;
@@ -1994,7 +2062,7 @@ const outilProgramme = {
 
     const sauver = () => Store.ecrire(self.cle, P);
 
-    if (!edition){ zone.innerHTML = self.vueLecture(P); return; }
+    if (!edition){ zone.innerHTML = self.vueLecture(P); self.brancherFiches(zone); return; }
 
     const redessiner = () => { zone.innerHTML = self.vueEdition(P); brancher(); };
 
@@ -2111,7 +2179,36 @@ const outilNutrition = {
   titre: "La journée type",
   accroche: "Des repas construits sur tes calories et tes macros, avec des aliments qu'on trouve en France — et qui respectent ton régime et tes allergies.",
 
-  vide(){ return { nom:"", note:"", cible:null, regime:"", allergenes:[], repas:[], manquants:[], jours_courses:7, maj:"" }; },
+  vide(){ return { nom:"", note:"", cible:null, regime:"", allergenes:[], jours:[], maj:"" }; },
+
+  JOURS: ["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"],
+
+  /* Les plans crees avant la semaine n'avaient qu'une journee type.
+     On les convertit au premier chargement plutot que de les perdre. */
+  migrer(R){
+    if (!R.jours) R.jours = [];
+    if (!R.jours.length && R.repas && R.repas.length){
+      R.jours = [{ nom: this.JOURS[0], repas: R.repas, manquants: R.manquants || [],
+                   complement: R.complement || null, diagnostic: R.diagnostic || [] }];
+    }
+    delete R.repas;
+    R.jours.forEach((j, i) => { if (!j.nom) j.nom = this.JOURS[i % 7]; if (!j.repas) j.repas = []; });
+    return R;
+  },
+
+  /* Une semaine, ce n'est pas sept fois la meme journee : on retient les
+     recettes deja servies pour ne pas les reproposer le lendemain. */
+  async composerSemaine(cible, regime, allergenes, nb, progres){
+    const jours = [], vus = [];
+    for (let i = 0; i < nb; i++){
+      if (progres) progres(i + 1, nb);
+      const liste = await this.composer(cible, regime, allergenes, vus.slice());
+      liste.forEach(c => { if (c.recette_id && vus.indexOf(c.recette_id) === -1) vus.push(c.recette_id); });
+      jours.push({ nom: this.JOURS[i % 7], repas: liste, manquants: liste.manquants || [],
+                   complement: liste.complement || null, diagnostic: liste.diagnostic || [] });
+    }
+    return jours;
+  },
 
   /* ================= filtrage : le point sensible ================= */
   compatible(r, regime, allergenes){
@@ -2363,7 +2460,9 @@ const outilNutrition = {
     const slot = CONFIG.nutrition.repas.find(s => s.id === "dejeuner") || CONFIG.nutrition.repas[0];
     const carte = {
       moment: slot.id, moment_nom: slot.nom, recette_id: null,
-      nom: a.nom + " (accompagnement)", temps_min: null, etapes: [],
+      /* "Riz blanc cru (accompagnement)" se lit mal dans une assiette :
+         les grammages sont crus par convention, inutile de le repeter. */
+      nom: a.nom.replace(/,?\s+crue?$/i, "") + " (accompagnement)", temps_min: null, etapes: [],
       complement: true,
       ingredients: [{ aliment_id: a.id, nom: a.nom, categorie: a.categorie, grammes: gr }]
     };
@@ -2386,7 +2485,9 @@ const outilNutrition = {
       const trouves = alims
         .filter(a => Normaliser.aplatir(a.nom).indexOf(cible) > -1)
         .filter(a => filtre(a))
-        .filter(a => !/(poudre|deshydrat|lyophilis|isolat|aromatis|gelee|gelatine|sauce|bouillon|conserve au sirop|sucre|confit)/.test(Normaliser.aplatir(a.nom)) || /proteine|whey/.test(Normaliser.aplatir(a.nom)))
+        /* "Son de riz" n'est pas du riz, "germe de ble" n'est pas du pain :
+           ces sous-produits sortent en tete parce que leur nom est court. */
+        .filter(a => !/(poudre|deshydrat|lyophilis|isolat|aromatis|gelee|gelatine|sauce|bouillon|conserve au sirop|sucre|confit|\bson de\b|germe de|farine de|amidon|fecule|extrait)/.test(Normaliser.aplatir(a.nom)) || /proteine|whey/.test(Normaliser.aplatir(a.nom)))
         .filter(a => this.compatible(a, regime, allergenes))
         .sort((a, b) => a.nom.length - b.nom.length);
       if (trouves.length) return { aliment: trouves[0], mot: mot };
@@ -2407,9 +2508,9 @@ const outilNutrition = {
     return msgs;
   },
 
-  totaux(R){
+  totaux(jour){
     const t = { kcal:0, proteines:0, glucides:0, lipides:0 };
-    (R.repas || []).forEach(x => {
+    ((jour && jour.repas) || []).forEach(x => {
       if (!x.macros) return;
       t.kcal += x.macros.kcal; t.proteines += x.macros.proteines;
       t.glucides += x.macros.glucides; t.lipides += x.macros.lipides;
@@ -2417,19 +2518,35 @@ const outilNutrition = {
     return t;
   },
 
-  /* ================= liste de courses ================= */
-  courses(R, jours){
+  moyenne(R){
+    const j = (R.jours || []).filter(x => (x.repas || []).length);
+    if (!j.length) return { kcal:0, proteines:0, glucides:0, lipides:0 };
+    const t = { kcal:0, proteines:0, glucides:0, lipides:0 };
+    j.forEach(x => { const d = this.totaux(x);
+      t.kcal += d.kcal; t.proteines += d.proteines; t.glucides += d.glucides; t.lipides += d.lipides; });
+    Object.keys(t).forEach(k => { t[k] = Math.round(t[k] / j.length); });
+    return t;
+  },
+
+  /* ================= liste de courses =================
+     Elle se calcule sur les jours coches, pas sur un multiplicateur :
+     si le client mange chez ses parents le dimanche, il decoche dimanche
+     et la liste s'ajuste. */
+  courses(R, actifs){
     const somme = {};
-    (R.repas || []).forEach(c => (c.ingredients || []).forEach(i => {
-      const cle = i.aliment_id;
-      if (!somme[cle]) somme[cle] = { nom: i.nom || cle, categorie: i.categorie, grammes: 0 };
-      somme[cle].grammes += i.grammes * jours;
-    }));
-    const rayons = CONFIG.nutrition.rayons.map(r => ({ id:r.id, nom:r.nom, lignes:[] }));
+    (R.jours || []).forEach((j, ji) => {
+      if (actifs && actifs[ji] === false) return;
+      (j.repas || []).forEach(c => (c.ingredients || []).forEach(i => {
+        const cle = i.aliment_id;
+        if (!somme[cle]) somme[cle] = { nom: i.nom || cle, categorie: i.categorie, grammes: 0 };
+        somme[cle].grammes += i.grammes;
+      }));
+    });
+    const rayons = CONFIG.nutrition.rayons.map(r => ({ id:r.id, nom:r.nom, categories:r.categories, lignes:[] }));
     const autre = { id:"autre", nom:"Divers", lignes:[] };
     Object.keys(somme).forEach(cle => {
       const l = somme[cle];
-      const r = rayons.find(x => (CONFIG.nutrition.rayons.find(y => y.id === x.id).categories || []).indexOf(l.categorie) > -1);
+      const r = rayons.find(x => (x.categories || []).indexOf(l.categorie) > -1);
       (r || autre).lignes.push({ id: cle, nom: l.nom, grammes: Math.round(l.grammes) });
     });
     if (autre.lignes.length) rayons.push(autre);
@@ -2437,45 +2554,67 @@ const outilNutrition = {
     return rayons.filter(r => r.lignes.length);
   },
 
-  blocCourses(R, coches){
-    const jours = R.jours_courses || 7;
-    const rayons = this.courses(R, jours);
-    if (!rayons.length) return "";
+  blocCourses(R, suivi){
+    if (!(R.jours || []).some(j => (j.repas || []).length)) return "";
+    const actifs = (suivi && suivi.joursCourses) || {};
+    const coches = (suivi && suivi.courses) || {};
+    const rayons = this.courses(R, actifs);
+    const nbJours = (R.jours || []).filter((j, i) => actifs[i] !== false && (j.repas || []).length).length;
+    const total = rayons.reduce((n, r) => n + r.lignes.length, 0);
+    const faits  = rayons.reduce((n, r) => n + r.lignes.filter(l => coches[l.id]).length, 0);
+
     let h = `<section class="panel">
-      <div class="repas-tete">
-        <div><h2 style="margin:0">Liste de courses</h2>
-          <p class="note" style="margin:4px 0 0">Les quantités de la journée type, multipliées par le nombre de jours.</p></div>
-        <div style="min-width:150px"><label for="nu-jours">Nombre de jours</label>
-          <input id="nu-jours" type="number" min="1" max="31" step="1" value="${jours}"></div>
-      </div>`;
+      <h2>Liste de courses</h2>
+      <p class="note" style="margin-top:0">Coche les jours que tu veux acheter : la liste se recalcule. ${nbJours} jour${nbJours > 1 ? "s" : ""} sélectionné${nbJours > 1 ? "s" : ""}.</p>
+      <div class="coches" style="margin-bottom:16px">${(R.jours || []).map((j, i) =>
+        (j.repas || []).length ? `<label class="coche"><input type="checkbox" data-jc="${i}"${actifs[i] === false ? "" : " checked"}> ${esc(j.nom)}</label>` : "").join("")}</div>
+      <div class="jauge"><i style="width:${total ? Math.round(faits / total * 100) : 0}%"></i></div>
+      <p class="note" style="margin:8px 0 4px">${faits} article${faits > 1 ? "s" : ""} sur ${total} dans le panier.</p>`;
     rayons.forEach(r => {
       h += `<h3 style="margin-top:18px">${esc(r.nom)}</h3><ul class="ingr courses-l">` +
-        r.lignes.map(l => `<li><label class="coche"><input type="checkbox" data-course="${esc(l.id)}"${coches[l.id] ? " checked" : ""}> ${esc(l.nom)}</label><b>${fmt(l.grammes)} g</b></li>`).join("") +
+        r.lignes.map(l => `<li class="${coches[l.id] ? "pris" : ""}"><label class="coche"><input type="checkbox" data-course="${esc(l.id)}"${coches[l.id] ? " checked" : ""}> ${esc(l.nom)}</label><b>${fmt(l.grammes)} g</b></li>`).join("") +
         `</ul>`;
     });
-    h += `<p class="note" style="margin-top:16px">Les poids sont donnés tels qu'ils entrent dans les recettes — crus pour la viande, le poisson et les féculents. Prévois un peu plus pour les pertes à la cuisson.</p></section>`;
+    h += `<p class="note" style="margin-top:16px">Les poids sont ceux qui entrent dans les recettes — crus pour la viande, le poisson et les féculents. Prévois un peu plus pour les pertes à la cuisson.</p></section>`;
     return h;
   },
 
+  /* ================= onglets des jours ================= */
+  ongletsJours(R, actif, prefixe){
+    if (!(R.jours || []).length) return "";
+    return `<div class="jours-onglets">${R.jours.map((j, i) => {
+      const t = this.totaux(j);
+      return `<button type="button" class="j-onglet${i === actif ? " ici" : ""}" data-${prefixe}="${i}">
+        <span class="j-nom">${esc(j.nom)}</span>
+        <span class="j-kcal">${(j.repas || []).length ? fmt(t.kcal) + " kcal" : "vide"}</span>
+      </button>`;
+    }).join("")}</div>`;
+  },
+
   /* ================= vue client ================= */
-  vueLecture(R, suivi){
-    if (!R.repas || !R.repas.length){
+  vueLecture(R, suivi, actif){
+    if (!(R.jours || []).some(j => (j.repas || []).length)){
       return `<section class="panel"><div class="empty">Ton coach n'a pas encore validé tes repas. Remplis ton profil — régime et allergies comprises — pour qu'il puisse les préparer.</div></section>`;
     }
-    const t = this.totaux(R);
+    const jour = R.jours[actif] || R.jours[0];
+    const t = this.totaux(jour);
     const mange = { kcal:0, proteines:0, glucides:0, lipides:0 };
-    (R.repas || []).forEach((x, i) => { if (suivi.mange && suivi.mange[i] && x.macros){
-      mange.kcal += x.macros.kcal; mange.proteines += x.macros.proteines;
-      mange.glucides += x.macros.glucides; mange.lipides += x.macros.lipides; } });
+    (jour.repas || []).forEach((x, i) => {
+      if (suivi.mange && suivi.mange[actif + ":" + i] && x.macros){
+        mange.kcal += x.macros.kcal; mange.proteines += x.macros.proteines;
+        mange.glucides += x.macros.glucides; mange.lipides += x.macros.lipides;
+      }
+    });
     const reste = Math.max(0, t.kcal - mange.kcal);
     const pct = t.kcal ? Math.min(100, Math.round(mange.kcal / t.kcal * 100)) : 0;
 
     let h = "";
     if (R.note) h += `<section class="panel"><h2>Mot du coach</h2><p style="margin:0">${esc(R.note)}</p></section>`;
+    h += this.ongletsJours(R, actif, "jour");
     h += `<section class="panel">
-      <h2>Ta journée</h2>
+      <h2>${esc(jour.nom)}</h2>
       <div class="jauge"><i style="width:${pct}%"></i></div>
-      <p class="note" style="margin:8px 0 18px">${fmt(mange.kcal)} kcal consommées sur ${fmt(t.kcal)} — il te reste <b>${fmt(reste)} kcal</b>.</p>
+      <p class="note" style="margin:8px 0 18px">${fmt(mange.kcal)} kcal consommées sur ${fmt(t.kcal)} — il te reste <b>${fmt(reste)} kcal</b> aujourd'hui.</p>
       <div class="grid g4 bilan-jour">
         <div class="tuile"><span class="t-lbl">Calories</span><span class="t-val readout">${fmt(t.kcal)}</span><span class="t-u">kcal prévus</span></div>
         <div class="tuile"><span class="t-lbl">Protéines</span><span class="t-val readout">${fmt(t.proteines)}</span><span class="t-u">g</span></div>
@@ -2484,16 +2623,16 @@ const outilNutrition = {
       </div>
       ${R.cible ? `<p class="note" style="margin-top:14px">Objectif visé : ${fmt(R.cible.kcal)} kcal · ${fmt(R.cible.prot)} g de protéines · ${fmt(R.cible.gluc)} g de glucides · ${fmt(R.cible.lip)} g de lipides.</p>` : ""}
     </section>`;
-    (R.repas || []).forEach((x, i) => h += this.carteRepas(x, false, i, suivi));
-    h += this.blocCourses(R, suivi.courses || {});
-    h += `<section class="panel"><p class="note" style="margin:0">Les grammages sont donnés crus, sauf mention contraire. Si un aliment ne te convient pas, dis-le à ton coach : il remplacera le plat sans changer tes macros.</p></section>`;
+    (jour.repas || []).forEach((x, i) => h += this.carteRepas(x, false, actif + ":" + i, suivi));
+    h += this.blocCourses(R, suivi);
+    h += `<section class="panel"><p class="note" style="margin:0">Les grammages sont donnés crus, sauf mention contraire. Si un plat ne te convient pas, dis-le à ton coach : il le remplacera sans changer tes macros.</p></section>`;
     if (R.maj) h += `<p class="note" style="text-align:center">Repas mis à jour le ${esc(R.maj)}</p>`;
     return h;
   },
 
-  carteRepas(x, edition, i, suivi){
+  carteRepas(x, edition, cle, suivi){
     const m = x.macros || { kcal:0, proteines:0, glucides:0, lipides:0 };
-    const coche = suivi && suivi.mange && suivi.mange[i];
+    const coche = suivi && suivi.mange && suivi.mange[cle];
     return `<section class="panel repas-c${coche ? " mange" : ""}">
       <div class="repas-tete">
         <div>
@@ -2501,9 +2640,9 @@ const outilNutrition = {
           <h2 style="margin:2px 0 0">${esc(x.nom)}</h2>
         </div>
         ${edition ? `<span class="actions-b">
-          ${x.recette_id ? `<button data-autre="${i}">Autre proposition</button>` : ""}
-          <button data-retirer="${i}">Retirer</button></span>`
-        : `<label class="coche"><input type="checkbox" data-mange="${i}"${coche ? " checked" : ""}> mangé</label>`}
+          ${x.recette_id ? `<button data-autre="${cle}">Autre proposition</button>` : ""}
+          <button data-retirer="${cle}">Retirer</button></span>`
+        : `<label class="coche"><input type="checkbox" data-mange="${cle}"${coche ? " checked" : ""}> mangé</label>`}
       </div>
       <div class="repas-macros">
         <span><b>${fmt(m.kcal)}</b> kcal</span>
@@ -2517,9 +2656,9 @@ const outilNutrition = {
         <div>
           <h3>Ingrédients</h3>
           <ul class="ingr">${(x.ingredients || []).map((g, j) => edition
-            ? `<li><span>${esc(g.nom)}</span><span class="g-edit"><input type="number" min="0" step="5" value="${g.grammes}" data-gr="${i}:${j}"> g <button class="del" data-suppr-i="${i}:${j}" aria-label="Retirer">×</button></span></li>`
+            ? `<li><span>${esc(g.nom)}</span><span class="g-edit"><input type="number" min="0" step="5" value="${g.grammes}" data-gr="${cle}:${j}"> g <button class="del" data-suppr-i="${cle}:${j}" aria-label="Retirer">×</button></span></li>`
             : `<li><span>${esc(g.nom)}</span><b>${fmt(g.grammes)} g</b></li>`).join("")}</ul>
-          ${edition ? `<div class="actions" style="margin-top:10px"><button class="btn ghost" data-ajout-i="${i}">+ Ajouter un aliment</button></div>` : ""}
+          ${edition ? `<div class="actions" style="margin-top:10px"><button class="btn ghost" data-ajout-i="${cle}">+ Ajouter un aliment</button></div>` : ""}
         </div>
         <div>
           <h3>Préparation</h3>
@@ -2530,14 +2669,18 @@ const outilNutrition = {
   },
 
   /* ================= vue coach ================= */
-  vueEdition(R, ctx){
-    const t = this.totaux(R);
-    const ecart = R.cible ? Math.round(t.kcal - R.cible.kcal) : 0;
+  vueEdition(R, ctx, actif){
+    const jour = R.jours[actif] || null;
+    const t = jour ? this.totaux(jour) : { kcal:0, proteines:0, glucides:0, lipides:0 };
+    const ecart = (jour && R.cible) ? Math.round(t.kcal - R.cible.kcal) : 0;
+    const moy = this.moyenne(R);
+
     let h = `<section class="panel">
-      <h2>Composer la journée</h2>
+      <h2>Composer la semaine</h2>
       <div class="grid g2">
         <div><label for="nu-kcal">Calories visées</label><input id="nu-kcal" type="number" step="10" value="${R.cible ? Math.round(R.cible.kcal) : ""}" placeholder="2400"></div>
         <div><label for="nu-regime">Régime</label><select id="nu-regime">${CONFIG.nutrition.regimes.map(o => `<option value="${esc(o)}"${R.regime === o ? " selected" : ""}>${esc(o)}</option>`).join("")}</select></div>
+        <div><label for="nu-nb">Nombre de jours différents</label><select id="nu-nb">${[1,2,3,4,5,6,7].map(n => `<option value="${n}"${(R.jours.length || 7) === n ? " selected" : ""}>${n} jour${n>1?"s":""}</option>`).join("")}</select></div>
         <div style="grid-column:1/-1">
           <label>Allergènes à écarter</label>
           <div class="coches" id="nu-allerg">${CONFIG.nutrition.allergenes.map(a =>
@@ -2546,17 +2689,51 @@ const outilNutrition = {
         <div style="grid-column:1/-1"><label for="nu-note">Mot pour ton client</label><textarea id="nu-note" rows="2" placeholder="Consignes, substitutions autorisées…">${esc(R.note || "")}</textarea></div>
       </div>
       <div class="actions" style="margin-top:14px">
-        <button class="btn" id="nu-gen">Générer une journée</button>
+        <button class="btn" id="nu-gen">Générer la semaine</button>
+        ${R.jours.length ? `<button class="btn ghost" id="nu-gen-jour">Refaire seulement ${esc((R.jours[actif]||{}).nom || "ce jour")}</button>` : ""}
         <button class="btn ghost" id="nu-biblio-save">Enregistrer dans ma bibliothèque</button>
-        <select id="nu-biblio" style="max-width:250px"><option value="">— charger depuis ma bibliothèque —</option></select>
+        <select id="nu-biblio" style="max-width:240px"><option value="">— charger depuis ma bibliothèque —</option></select>
         <span class="msg" id="nu-msg"></span>
       </div>
       ${ctx.prerempli ? `<p class="note" style="margin-top:10px">Pré-rempli avec le profil et le calculateur de ce client.</p>` : ""}
-      ${Catalogue.secours ? `<div class="flag" style="margin-top:12px"><b>Catalogue de secours.</b> Ta base ne répond pas — projet Supabase en pause, ou import jamais lancé. L'application lit les données directement depuis le dépôt pour rester utilisable, mais rien de ce que tu fais ici n'est enregistré tant que la base ne répond pas.</div>` : ""}
+      ${Catalogue.secours ? `<div class="flag" style="margin-top:12px"><b>Catalogue de secours.</b> Ta base ne répond pas — projet Supabase en pause, ou import jamais lancé. L'application lit les données depuis le dépôt pour rester utilisable, mais rien n'est enregistré tant que la base ne répond pas.</div>` : ""}
       ${ctx.autres ? `<div class="flag" style="margin-top:12px"><b>À vérifier avant d'envoyer :</b> ce client a écrit « ${esc(ctx.autres)} » dans ses allergies. Aucun filtre automatique ne couvre ce texte : relis les ingrédients toi-même.</div>` : ""}
-    </section>
+    </section>`;
 
-    <section class="panel">
+    if (!R.jours.length){
+      h += `<section class="panel"><div class="empty">Aucun repas pour l'instant. Renseigne les calories visées et clique sur « Générer la semaine ».</div></section>`;
+      return h + this.blocEnvoi(R);
+    }
+
+    h += `<section class="panel">
+      <h2>La semaine en moyenne</h2>
+      <div class="grid g4 bilan-jour">
+        <div class="tuile"><span class="t-lbl">Calories</span><span class="t-val readout">${fmt(moy.kcal)}</span><span class="t-u">kcal / jour</span></div>
+        <div class="tuile"><span class="t-lbl">Protéines</span><span class="t-val readout">${fmt(moy.proteines)}</span><span class="t-u">g / jour</span></div>
+        <div class="tuile"><span class="t-lbl">Glucides</span><span class="t-val readout">${fmt(moy.glucides)}</span><span class="t-u">g / jour</span></div>
+        <div class="tuile"><span class="t-lbl">Lipides</span><span class="t-val readout">${fmt(moy.lipides)}</span><span class="t-u">g / jour</span></div>
+      </div>
+      ${R.cible ? `<p class="note" style="margin-top:14px">Cible : ${fmt(R.cible.kcal)} kcal · ${fmt(R.cible.prot)} g prot. · ${fmt(R.cible.gluc)} g gluc. · ${fmt(R.cible.lip)} g lip. — moyenne de la semaine à <b>${moy.kcal - R.cible.kcal > 0 ? "+" : ""}${fmt(moy.kcal - R.cible.kcal)} kcal</b> et <b>${moy.proteines - R.cible.prot > 0 ? "+" : ""}${fmt(moy.proteines - R.cible.prot)} g</b> de protéines.</p>` : ""}
+    </section>`;
+
+    h += this.ongletsJours(R, actif, "jed");
+    h += `<section class="panel">
+      <h2>${esc(jour.nom)}</h2>
+      <div class="grid g4 bilan-jour">
+        <div class="tuile"><span class="t-lbl">Calories</span><span class="t-val readout">${fmt(t.kcal)}</span><span class="t-u">kcal</span></div>
+        <div class="tuile"><span class="t-lbl">Protéines</span><span class="t-val readout">${fmt(t.proteines)}</span><span class="t-u">g</span></div>
+        <div class="tuile"><span class="t-lbl">Glucides</span><span class="t-val readout">${fmt(t.glucides)}</span><span class="t-u">g</span></div>
+        <div class="tuile"><span class="t-lbl">Lipides</span><span class="t-val readout">${fmt(t.lipides)}</span><span class="t-u">g</span></div>
+      </div>
+      ${R.cible ? `<p class="note" style="margin-top:14px">Écart du jour : <b>${ecart > 0 ? "+" : ""}${fmt(ecart)} kcal</b>${Math.abs(ecart) > R.cible.kcal * 0.1 ? " — au-delà de 10 %, ajuste un repas" : ""} · protéines <b>${t.proteines >= R.cible.prot ? "+" : ""}${fmt(t.proteines - R.cible.prot)} g</b>.</p>` : ""}
+      ${(jour.manquants && jour.manquants.length) ? `<div class="flag"><b>Repas sans recette compatible :</b> ${esc(jour.manquants.join(", "))}. Leurs calories ont été réparties sur les autres repas.</div>` : ""}
+      ${(jour.complement && jour.complement.length) ? `<p class="note">Complété avec ${jour.complement.map(c => `<b>${esc(c.nom)}</b> (${fmt(c.grammes)} g)`).join(" et ")} pour atteindre la cible.</p>` : ""}
+      ${(jour.diagnostic && jour.diagnostic.length) ? `<div class="flag"><b>Ce que le catalogue ne permet pas d'atteindre ici :</b> ${esc(jour.diagnostic.join(" · "))}.</div>` : ""}
+    </section>`;
+
+    (jour.repas || []).forEach((x, i) => h += this.carteRepas(x, true, actif + ":" + i, null));
+
+    h += `<section class="panel">
       <h2>Ajouter à la main</h2>
       <div class="grid g2">
         <div style="grid-column:1/-1"><label for="nu-q">Chercher un aliment ou une recette</label>
@@ -2565,39 +2742,23 @@ const outilNutrition = {
         <div><label for="nu-gr">Quantité (g)</label><input id="nu-gr" type="number" min="0" step="10" value="100"></div>
       </div>
       <div id="nu-res" class="resultats"></div>
-      <p class="note" style="margin-top:12px">La recherche montre tout le catalogue. Ce qui ne respecte pas le régime ou les allergies du client est signalé en rouge : tu peux quand même l'ajouter, mais tu le fais en connaissance de cause.</p>
+      <p class="note" style="margin-top:12px">L'ajout se fait dans <b>${esc(jour.nom)}</b>. Ce qui ne respecte pas le régime ou les allergies du client est signalé en rouge : tu peux quand même l'ajouter, mais en connaissance de cause.</p>
     </section>`;
 
-    if (R.repas && R.repas.length){
-      h += `<section class="panel"><h2>Total de la journée</h2>
-        <div class="grid g4 bilan-jour">
-          <div class="tuile"><span class="t-lbl">Calories</span><span class="t-val readout">${fmt(t.kcal)}</span><span class="t-u">kcal</span></div>
-          <div class="tuile"><span class="t-lbl">Protéines</span><span class="t-val readout">${fmt(t.proteines)}</span><span class="t-u">g</span></div>
-          <div class="tuile"><span class="t-lbl">Glucides</span><span class="t-val readout">${fmt(t.glucides)}</span><span class="t-u">g</span></div>
-          <div class="tuile"><span class="t-lbl">Lipides</span><span class="t-val readout">${fmt(t.lipides)}</span><span class="t-u">g</span></div>
-        </div>
-        ${R.cible ? `<p class="note" style="margin-top:14px">Cible : ${fmt(R.cible.kcal)} kcal · ${fmt(R.cible.prot)} g prot. · ${fmt(R.cible.gluc)} g gluc. · ${fmt(R.cible.lip)} g lip.<br>
-          Écart : <b>${ecart > 0 ? "+" : ""}${fmt(ecart)} kcal</b>${Math.abs(ecart) > R.cible.kcal * 0.1 ? " — au-delà de 10 %, ajuste un repas" : ""} · protéines <b>${t.proteines >= R.cible.prot ? "+" : ""}${fmt(t.proteines - R.cible.prot)} g</b>${t.proteines < R.cible.prot * 0.9 ? " — trop bas, ajoute une source de protéines" : ""}.</p>` : ""}
-        ${(R.manquants && R.manquants.length) ? `<div class="flag"><b>Repas sans recette compatible :</b> ${esc(R.manquants.join(", "))}. Leurs calories ont été réparties sur les autres repas. Ajoute des recettes au catalogue pour ce régime.</div>` : ""}
-        ${(R.complement && R.complement.length) ? `<p class="note">Les recettes tirées ne suffisaient pas à atteindre la cible : ${R.complement.map(c => `<b>${esc(c.nom)}</b> (${fmt(c.grammes)} g)`).join(" et ")} ${R.complement.length > 1 ? "ont été ajoutés" : "a été ajouté"} pour la compléter.</p>` : ""}
-        ${(R.diagnostic && R.diagnostic.length) ? `<div class="flag"><b>Ce que le catalogue ne permet pas d'atteindre ici :</b> ${esc(R.diagnostic.join(" · "))}. Ajuste à la main, ou ajoute des recettes adaptées à ce régime.</div>` : ""}
-      </section>`;
-      R.repas.forEach((x, i) => h += this.carteRepas(x, true, i, null));
-      h += this.blocCourses(R, {});
-    } else {
-      h += `<section class="panel"><div class="empty">Aucun repas pour l'instant. Génère une journée, ou ajoute des aliments à la main.</div></section>`;
-    }
+    h += this.blocCourses(R, { joursCourses:{}, courses:{} });
+    return h + this.blocEnvoi(R);
+  },
 
-    h += `<section class="panel">
+  blocEnvoi(R){
+    return `<section class="panel">
       <div class="actions">
         <button class="btn" id="nu-save">Valider et envoyer au client</button>
         <span class="msg" id="nu-msg2"></span>
       </div>
-      <p class="note" style="margin-top:10px">Un mot sur les glucides : ils apparaissent souvent 20 à 40 g sous la cible théorique alors que les calories tombent juste. C'est normal — la cible est calculée en comptant 4 kcal par gramme de glucide, alors que les valeurs réelles des aliments (fibres, amidon résistant) donnent un peu moins. Fie-toi aux calories et aux protéines.</p>
-      <p class="note">Rien n'est envoyé automatiquement : relis les ingrédients — les allergies en premier — puis valide. Le client voit la journée dès sa prochaine ouverture.</p>
+      <p class="note" style="margin-top:10px">Un mot sur les glucides : ils apparaissent souvent 20 à 40 g sous la cible théorique alors que les calories tombent juste. C'est normal — la cible compte 4 kcal par gramme de glucide, les valeurs réelles des aliments en donnent un peu moins. Fie-toi aux calories et aux protéines.</p>
+      <p class="note">Rien n'est envoyé automatiquement : relis les ingrédients — les allergies en premier — puis valide. Le client voit la semaine dès sa prochaine ouverture.</p>
       <p class="note">Le filtre travaille sur la composition des aliments. Il ne remplace pas ta lecture : une allergie sévère, un interdit religieux qui dépend de la certification, un aliment que le client ne supporte pas sans le savoir — c'est toi qui les attrapes.</p>
     </section>`;
-    return h;
   },
 
   html(){ return `<div id="nu-vue"><section class="panel"><div class="empty">Chargement…</div></section></div>`; },
@@ -2605,42 +2766,44 @@ const outilNutrition = {
   async init(){
     const self = this;
     const edition = Auth.estCoach() && Store.idConsulte;
-    const R = await Store.lire(this.cle, this.vide());
+    const R = this.migrer(await Store.lire(this.cle, this.vide()));
     Store.cache[this.cle] = R;
     const zone = $("nu-vue");
     if (!zone) return;
     const sauver = () => Store.ecrire(self.cle, R);
 
-    /* ---------- cote client : lecture + suivi personnel ---------- */
+    /* ---------- cote client ---------- */
     if (!edition){
-      const suivi = await Store.lire("repas_suivi", { date:"", mange:{}, courses:{} });
+      const suivi = await Store.lire("repas_suivi", { date:"", mange:{}, courses:{}, joursCourses:{} });
       if (suivi.date !== aujourdhui()){ suivi.date = aujourdhui(); suivi.mange = {}; }
+      if (!suivi.joursCourses) suivi.joursCourses = {};
       Store.cache["repas_suivi"] = suivi;
+      /* on ouvre sur le jour de la semaine reel : lundi = 0 */
+      let actif = R.jours.length ? Math.min(R.jours.length - 1, (new Date().getDay() + 6) % 7) : 0;
+
       const dessiner = () => {
-        zone.innerHTML = self.vueLecture(R, suivi);
+        zone.innerHTML = self.vueLecture(R, suivi, actif);
+        $$("[data-jour]", zone).forEach(b => b.addEventListener("click", () => { actif = +b.dataset.jour; dessiner(); }));
         $$("[data-mange]", zone).forEach(c => c.addEventListener("change", () => {
-          suivi.mange[c.dataset.mange] = c.checked;
-          Store.ecrire("repas_suivi", suivi); dessiner();
+          suivi.mange[c.dataset.mange] = c.checked; Store.ecrire("repas_suivi", suivi); dessiner();
         }));
         $$("[data-course]", zone).forEach(c => c.addEventListener("change", () => {
           suivi.courses = suivi.courses || {};
           suivi.courses[c.dataset.course] = c.checked;
-          Store.ecrire("repas_suivi", suivi);
+          Store.ecrire("repas_suivi", suivi); dessiner();
         }));
-        const j = $("nu-jours");
-        if (j) j.addEventListener("change", () => {
-          const n = Math.max(1, Math.min(31, Math.round(num(j.value)) || 7));
-          suivi.jours = n; R.jours_courses = n; dessiner();
-        });
+        $$("[data-jc]", zone).forEach(c => c.addEventListener("change", () => {
+          suivi.joursCourses[c.dataset.jc] = c.checked;
+          Store.ecrire("repas_suivi", suivi); dessiner();
+        }));
       };
-      if (suivi.jours) R.jours_courses = suivi.jours;
       dessiner();
       return;
     }
 
-    /* ---------- cote coach : edition ---------- */
+    /* ---------- cote coach ---------- */
     const ctx = { prerempli:false, autres:"" };
-    let intake = {}, calc = null;
+    let intake = {}, calc = null, actif = 0;
     try { intake = await Store.lire("intake", {}) || {}; } catch(e){}
     try { calc   = await Store.lire("calc", null); } catch(e){}
     ctx.autres = (intake.allergies || "").trim();
@@ -2662,7 +2825,7 @@ const outilNutrition = {
       ctx.prerempli = true;
     }
 
-    const redessiner = () => { zone.innerHTML = self.vueEdition(R, ctx); brancher(); };
+    const redessiner = () => { zone.innerHTML = self.vueEdition(R, ctx, actif); brancher(); };
 
     const lireReglages = () => {
       const k = $("nu-kcal"), rg = $("nu-regime"), no = $("nu-note");
@@ -2677,7 +2840,6 @@ const outilNutrition = {
       R.allergenes = $$("#nu-allerg input:checked").map(c => c.value);
     };
 
-    /* --- recherche pour la composition manuelle --- */
     let minuteur = null;
     const chercher = async (q) => {
       const box = $("nu-res"); if (!box) return;
@@ -2703,11 +2865,11 @@ const outilNutrition = {
       $$("[data-add]", box).forEach(b => b.addEventListener("click", async () => {
         const [type, ...reste] = b.dataset.add.split(":");
         const id = reste.join(":");
-        const slotId = $("nu-slot").value;
-        const slot = CONFIG.nutrition.repas.find(s => s.id === slotId);
+        const slot = CONFIG.nutrition.repas.find(s => s.id === $("nu-slot").value);
+        const jour = R.jours[actif]; if (!jour) return;
         if (type === "recette"){
           const r = (await Catalogue.recettes()).find(x => x.id === id);
-          if (r) R.repas.push(await self.figer(r, 1, slot));
+          if (r) jour.repas.push(await self.figer(r, 1, slot));
         } else {
           const idx = await Catalogue.indexAliments(); const a = idx[id];
           if (a){
@@ -2716,10 +2878,10 @@ const outilNutrition = {
                             temps_min: null, etapes: [],
                             ingredients: [{ aliment_id: a.id, nom: a.nom, categorie: a.categorie, grammes: gr }] };
             await self.recalculer(carte);
-            R.repas.push(carte);
+            jour.repas.push(carte);
           }
         }
-        R.repas.sort((x, y) => CONFIG.nutrition.repas.findIndex(s => s.id === x.moment) - CONFIG.nutrition.repas.findIndex(s => s.id === y.moment));
+        jour.repas.sort((x, y) => CONFIG.nutrition.repas.findIndex(s => s.id === x.moment) - CONFIG.nutrition.repas.findIndex(s => s.id === y.moment));
         sauver(); redessiner();
       }));
     };
@@ -2729,6 +2891,7 @@ const outilNutrition = {
         const el = $(id); if (el) el.addEventListener("change", () => { lireReglages(); sauver(); });
       });
       $$("#nu-allerg input").forEach(c => c.addEventListener("change", () => { lireReglages(); sauver(); }));
+      $$("[data-jed]", zone).forEach(b => b.addEventListener("click", () => { actif = +b.dataset.jed; redessiner(); }));
 
       const q = $("nu-q");
       if (q) q.addEventListener("input", () => { clearTimeout(minuteur); minuteur = setTimeout(() => chercher(q.value.trim()), 200); });
@@ -2737,71 +2900,86 @@ const outilNutrition = {
       if (g) g.addEventListener("click", async () => {
         lireReglages();
         if (!R.cible || !R.cible.kcal){ flash("nu-msg","Indique d'abord les calories visées."); return; }
-        g.disabled = true; g.textContent = "Composition…";
-        const liste = await self.composer(R.cible, R.regime, R.allergenes, []);
-        g.disabled = false; g.textContent = "Générer une journée";
-        if (!liste.length){ flash("nu-msg","Aucune recette ne correspond à ces critères. Importe le catalogue ou assouplis les filtres."); return; }
-        R.repas = liste; R.manquants = liste.manquants || [];
-        R.diagnostic = liste.diagnostic || [];
-        R.complement = liste.complement || null;
+        const nb = +($("nu-nb") ? $("nu-nb").value : 7) || 7;
+        g.disabled = true;
+        const jours = await self.composerSemaine(R.cible, R.regime, R.allergenes, nb,
+                        (i, n) => { g.textContent = `Composition… jour ${i} sur ${n}`; });
+        g.disabled = false; g.textContent = "Générer la semaine";
+        if (!jours.length || !jours[0].repas.length){ flash("nu-msg","Aucune recette ne correspond à ces critères. Importe le catalogue ou assouplis les filtres."); return; }
+        R.jours = jours; actif = 0;
         sauver(); redessiner();
-        if (R.manquants.length) flash("nu-msg", "Aucune recette compatible pour : " + R.manquants.join(", ") + ". Les calories ont été réparties sur les autres repas.");
       });
 
+      const gj = $("nu-gen-jour");
+      if (gj) gj.addEventListener("click", async () => {
+        lireReglages();
+        if (!R.cible || !R.cible.kcal){ flash("nu-msg","Indique d'abord les calories visées."); return; }
+        gj.disabled = true; gj.textContent = "Composition…";
+        /* on evite les recettes des autres jours pour garder la variete */
+        const vus = [];
+        R.jours.forEach((j, i) => { if (i !== actif) (j.repas || []).forEach(c => { if (c.recette_id) vus.push(c.recette_id); }); });
+        const liste = await self.composer(R.cible, R.regime, R.allergenes, vus);
+        gj.disabled = false;
+        if (!liste.length){ flash("nu-msg","Aucune recette compatible."); return; }
+        R.jours[actif] = { nom: R.jours[actif].nom, repas: liste, manquants: liste.manquants || [],
+                           complement: liste.complement || null, diagnostic: liste.diagnostic || [] };
+        sauver(); redessiner();
+      });
+
+      const cible = (cle) => { const [d, i] = cle.split(":").map(Number); return { jour: R.jours[d], i: i }; };
+
       $$("[data-autre]", zone).forEach(b => b.addEventListener("click", async () => {
-        const i = +b.dataset.autre, x = R.repas[i];
-        const remplacants = await self.composer(R.cible || { kcal: (x.macros.kcal * 4) }, R.regime, R.allergenes, [x.recette_id]);
+        const { jour, i } = cible(b.dataset.autre); const x = jour.repas[i];
+        const vus = []; R.jours.forEach(j => (j.repas || []).forEach(c => { if (c.recette_id) vus.push(c.recette_id); }));
+        const remplacants = await self.composer(R.cible || { kcal: x.macros.kcal * 4, prot:0 }, R.regime, R.allergenes, vus);
         const nouveau = remplacants.find(n => n.moment === x.moment);
-        if (nouveau){ R.repas[i] = nouveau; sauver(); redessiner(); }
+        if (nouveau){ jour.repas[i] = nouveau; sauver(); redessiner(); }
         else flash("nu-msg", "Pas d'autre recette disponible pour ce repas.");
       }));
       $$("[data-retirer]", zone).forEach(b => b.addEventListener("click", () => {
-        R.repas.splice(+b.dataset.retirer, 1); sauver(); redessiner();
+        const { jour, i } = cible(b.dataset.retirer); jour.repas.splice(i, 1); sauver(); redessiner();
       }));
       $$("[data-suppr-i]", zone).forEach(b => b.addEventListener("click", async () => {
-        const [i, j] = b.dataset.supprI.split(":").map(Number);
-        R.repas[i].ingredients.splice(j, 1);
-        if (!R.repas[i].ingredients.length) R.repas.splice(i, 1);
-        else await self.recalculer(R.repas[i]);
+        const p = b.dataset.supprI.split(":").map(Number);
+        const jour = R.jours[p[0]];
+        jour.repas[p[1]].ingredients.splice(p[2], 1);
+        if (!jour.repas[p[1]].ingredients.length) jour.repas.splice(p[1], 1);
+        else await self.recalculer(jour.repas[p[1]]);
         sauver(); redessiner();
       }));
       $$("[data-gr]", zone).forEach(el => el.addEventListener("change", async () => {
-        const [i, j] = el.dataset.gr.split(":").map(Number);
-        R.repas[i].ingredients[j].grammes = Math.max(0, Math.round(num(el.value)));
-        await self.recalculer(R.repas[i]);
+        const p = el.dataset.gr.split(":").map(Number);
+        const jour = R.jours[p[0]];
+        jour.repas[p[1]].ingredients[p[2]].grammes = Math.max(0, Math.round(num(el.value)));
+        await self.recalculer(jour.repas[p[1]]);
         sauver(); redessiner();
       }));
       $$("[data-ajout-i]", zone).forEach(b => b.addEventListener("click", () => {
-        const i = +b.dataset.ajoutI;
-        $("nu-slot").value = R.repas[i].moment;
+        const { jour, i } = cible(b.dataset.ajoutI);
+        $("nu-slot").value = jour.repas[i].moment;
         $("nu-q").focus();
         $("nu-q").scrollIntoView({ behavior:"smooth", block:"center" });
       }));
 
-      const j = $("nu-jours");
-      if (j) j.addEventListener("change", () => {
-        R.jours_courses = Math.max(1, Math.min(31, Math.round(num(j.value)) || 7));
-        sauver(); redessiner();
-      });
-
       const sv = $("nu-save");
       if (sv) sv.addEventListener("click", () => {
-        if (!R.repas || !R.repas.length){ flash("nu-msg2","Il n'y a encore aucun repas à envoyer."); return; }
+        const nbRepas = R.jours.reduce((n, j) => n + (j.repas || []).length, 0);
+        if (!nbRepas){ flash("nu-msg2","Il n'y a encore aucun repas à envoyer."); return; }
         R.maj = new Date().toLocaleDateString("fr-FR");
         Store.ecrire(self.cle, R);
-        flash("nu-msg2","Journée envoyée. Ton client la voit dès sa prochaine ouverture.");
+        flash("nu-msg2", `Semaine envoyée — ${R.jours.length} jour${R.jours.length > 1 ? "s" : ""}. Ton client la voit dès sa prochaine ouverture.`);
       });
 
       const bs = $("nu-biblio-save");
       if (bs) bs.addEventListener("click", async () => {
-        if (!R.repas || !R.repas.length){ flash("nu-msg","Compose d'abord une journée."); return; }
-        const nom = prompt("Sous quel nom l'enregistrer dans ta bibliothèque ?", R.nom || "Journée type");
+        if (!R.jours.length){ flash("nu-msg","Compose d'abord une semaine."); return; }
+        const nom = prompt("Sous quel nom l'enregistrer dans ta bibliothèque ?", R.nom || "Semaine type");
         if (!nom) return;
         try {
           await Auth.appel("/rest/v1/bibliotheque", {
             method:"POST", headers:{ "Prefer":"return=minimal" },
             body:[{ coach_id: Auth.utilisateur().id, nom, note: R.note || "",
-                    contenu: { type:"repas", repas: R.repas, cible: R.cible, regime: R.regime, allergenes: R.allergenes } }]
+                    contenu: { type:"repas", jours: R.jours, cible: R.cible, regime: R.regime, allergenes: R.allergenes } }]
           });
           flash("nu-msg","Enregistré dans ta bibliothèque.");
           chargerBiblio();
@@ -2823,9 +3001,11 @@ const outilNutrition = {
           const x = repas.find(y => String(y.id) === sel.value);
           if (!x) return;
           if (!confirm("Charger « " + x.nom + " » ? Cela remplacera les repas actuels de ce client.")){ sel.value = ""; return; }
-          R.repas = JSON.parse(JSON.stringify(x.contenu.repas || []));
+          /* les entrees d'avant la semaine ne contiennent qu'une journee */
+          R.jours = x.contenu.jours ? JSON.parse(JSON.stringify(x.contenu.jours))
+                                    : [{ nom: self.JOURS[0], repas: JSON.parse(JSON.stringify(x.contenu.repas || [])) }];
           if (x.contenu.cible) R.cible = x.contenu.cible;
-          sauver(); redessiner();
+          actif = 0; sauver(); redessiner();
         };
       } catch(e){}
     };
@@ -2926,7 +3106,7 @@ const outilCatalogue = {
         <div class="tuile"><span class="t-lbl">Aliments</span><span class="t-val readout" id="cat-n-aliments">…</span><span class="t-u">fiches</span></div>
         <div class="tuile"><span class="t-lbl">Recettes</span><span class="t-val readout" id="cat-n-recettes">…</span><span class="t-u">plats</span></div>
         <div class="tuile"><span class="t-lbl">Programmes</span><span class="t-val readout" id="cat-n-programmes">…</span><span class="t-u">prêts à l'emploi</span></div>
-        <div class="tuile"><span class="t-lbl">Recettes vegan</span><span class="t-val readout" id="cat-n-vegan">…</span><span class="t-u">sur le total</span></div>
+        <div class="tuile"><span class="t-lbl">Exercices</span><span class="t-val readout" id="cat-n-vegan">…</span><span class="t-u">fiches détaillées</span></div>
       </div>
       <div id="cat-couverture" style="margin-top:18px"></div>
     </section>
@@ -2943,11 +3123,11 @@ const outilCatalogue = {
   },
 
   async compteurs(){
-    const [al, re, pr] = await Promise.all([Catalogue.aliments(), Catalogue.recettes(), Catalogue.programmes()]);
+    const [al, re, pr, ex] = await Promise.all([Catalogue.aliments(), Catalogue.recettes(), Catalogue.programmes(), Catalogue.exercices()]);
     $("cat-n-aliments").textContent   = fmt(al.length);
     $("cat-n-recettes").textContent   = fmt(re.length);
     $("cat-n-programmes").textContent = fmt(pr.length);
-    $("cat-n-vegan").textContent      = fmt(re.filter(r => (r.regimes||[]).indexOf("vegan") > -1).length);
+    $("cat-n-vegan").textContent      = fmt(ex.length);
 
     /* Couverture : un client d'un regime donne a-t-il de quoi manger a chaque repas ? */
     const cles = [["vegan","Végétalien"],["vegetarien","Végétarien"],["sans_gluten","Sans gluten"],
@@ -2972,7 +3152,7 @@ const outilCatalogue = {
 
   async init(){
     const self = this;
-    Catalogue._c = {}; Catalogue._idx = null;
+    Catalogue._c = {}; Catalogue._idx = null; Catalogue._idxEx = null;
     await this.compteurs();
 
     const journal = $("cat-journal");
@@ -3034,7 +3214,30 @@ const outilCatalogue = {
         await Import.envoyer("programmes_types", programmes, null);
         dire(`<b>${fmt(programmes.length)} programmes</b> enregistrés.`);
 
-        Catalogue._c = {}; Catalogue._idx = null;
+        /* --- 4. fiches d'exercices --- */
+        dire("Téléchargement des fiches d'exercices…");
+        let exercices = [];
+        try { exercices = await Import.fichier("exercices.json"); }
+        catch(e){ dire("Pas de fichier d'exercices dans le dépôt — on continue sans.", "attention"); }
+        if (exercices.length){
+          const fiches = exercices.filter(x => x && x.id && x.nom).map(x => ({
+            id: x.id, nom: x.nom, groupe: x.groupe || null,
+            muscles: x.muscles || [], materiel: x.materiel || null, niveau: x.niveau || null,
+            type: x.type || null, execution: x.execution || [], erreurs: x.erreurs || [],
+            respiration: x.respiration || null, alternatives: x.alternatives || [], lien: x.lien || ""
+          }));
+          await Import.envoyer("exercices", fiches, null);
+          /* on verifie tout de suite ce qui compte : un exercice de programme
+             sans fiche, c'est un client qui ne sait pas quoi faire */
+          const idx = {}; fiches.forEach(f => { idx[Normaliser.aplatir(f.nom)] = true; });
+          const noms = {};
+          programmes.forEach(pr => (pr.seances||[]).forEach(sc => (sc.exercices||[]).forEach(e => {
+            if (e.nom) noms[Normaliser.aplatir(e.nom)] = e.nom; })));
+          const sans = Object.keys(noms).filter(k => !idx[k]);
+          dire(`<b>${fmt(fiches.length)} fiches d'exercices</b> enregistrées. ${sans.length ? `<b>${sans.length}</b> exercice(s) des programmes n'ont pas de fiche : ${esc(sans.slice(0,5).map(k => noms[k]).join(", "))}${sans.length > 5 ? "…" : ""}` : "Tous les exercices des programmes ont leur fiche."}`, sans.length ? "attention" : "");
+        }
+
+        Catalogue._c = {}; Catalogue._idx = null; Catalogue._idxEx = null;
         await self.compteurs();
         dire("Import terminé.", "ok-l");
         flash("cat-msg", "Catalogue à jour.");
