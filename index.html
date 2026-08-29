@@ -528,6 +528,13 @@ const num = (v) => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
 const fmt = (n) => Math.round(n).toLocaleString("fr-FR");
 const n1  = (n) => (Math.round(n*10)/10).toLocaleString("fr-FR",{minimumFractionDigits:1,maximumFractionDigits:1});
 const aujourdhui = () => new Date().toISOString().slice(0,10);
+/* Les dates sont stockees au format ISO (2026-08-29) parce que c'est le seul
+   qui se trie correctement. On les affiche a la francaise. */
+const dateFr = (iso) => {
+  if (!iso) return "—";
+  const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? m[3] + "/" + m[2] + "/" + m[1] : String(iso);
+};
 
 function flash(id, texte){
   const e = $(id); if(!e) return;
@@ -705,12 +712,28 @@ const Store = {
    ------------------------------------------------------------------ */
 const Catalogue = {
   _c: {},
+  /* Une requete PostgREST renvoie au maximum 1 000 lignes. Sans pagination,
+     on ne recevait que le premier millier d'aliments par ordre alphabetique :
+     tout ce qui vient apres — du skyr au yaourt — etait introuvable, et les
+     recettes qui les utilisent s'affichaient a 0 kcal avec un avertissement
+     « ingredients absents ». Le secours GitHub ne se declenchait pas, puisque
+     la table n'etait pas vide. On lit donc page par page jusqu'au bout. */
   async lire(table){
     if (this._c[table]) return this._c[table];
+    const PAGE = 1000;
+    const tout = [];
     try {
-      const r = await Auth.appel("/rest/v1/" + table + "?select=*&order=nom.asc");
-      this._c[table] = r || [];
-    } catch(e){ this._c[table] = []; }
+      for (let debut = 0; ; debut += PAGE){
+        const lot = await Auth.appel("/rest/v1/" + table + "?select=*&order=id.asc", {
+          headers: { "Range-Unit": "items", "Range": debut + "-" + (debut + PAGE - 1) }
+        });
+        if (!lot || !lot.length) break;
+        tout.push.apply(tout, lot);
+        if (lot.length < PAGE) break;
+        if (debut > 50000) break;          // garde-fou
+      }
+      this._c[table] = tout;
+    } catch(e){ this._c[table] = tout.length ? tout : []; }
     /* Secours : si la table est vide — base en pause, import jamais lancé —
        on lit directement le dépôt. Les aliments passent par la MEME
        normalisation que l'import : sans elle, on servirait des plans batis
@@ -1407,7 +1430,7 @@ const outilMensurations = {
       }
       D.mesures.forEach((m, idx) => {
         const tr = document.createElement("tr");
-        tr.innerHTML = `<td>S${m.sem}</td><td>${esc(m.date || "—")}</td><td>${m.poids != null ? n1(m.poids) : "—"}</td>` +
+        tr.innerHTML = `<td>S${m.sem}</td><td>${esc(dateFr(m.date))}</td><td>${m.poids != null ? n1(m.poids) : "—"}</td>` +
           D.zones.map((z,i) => `<td>${(m.vals[i] != null && isFinite(m.vals[i])) ? n1(m.vals[i]) : "—"}</td>`).join("") +
           `<td><button class="del" aria-label="Supprimer la semaine ${m.sem}">×</button></td>`;
         tr.querySelector(".del").addEventListener("click", () => {
@@ -1639,7 +1662,7 @@ const outilEntrainement = {
         const delta = vol - h.vol, pct = Math.round(delta / h.vol * 100);
         c.textContent = (delta > 0 ? "+" : delta < 0 ? "−" : "") + Math.abs(pct) + "%";
         c.className = "t-val readout " + (delta > 0 ? "pos" : delta < 0 ? "neg" : "");
-        cs.textContent = `dernière : ${fmt(h.vol)} kg le ${h.date || "—"}`;
+        cs.textContent = `dernière : ${fmt(h.vol)} kg le ${dateFr(h.date)}`;
       } else {
         c.textContent = "—"; c.className = "t-val readout";
         cs.textContent = h ? `dernière : ${fmt(h.vol)} kg` : "Aucun historique";
@@ -1655,7 +1678,7 @@ const outilEntrainement = {
       D.historique.slice().reverse().forEach(h => {
         const idx = D.historique.indexOf(h);
         const tr = document.createElement("tr");
-        tr.innerHTML = `<td>${esc(h.date)}</td><td>${esc(h.nom)}</td><td>${h.exos.length}</td><td>${h.series || 0}</td><td>${fmt(h.vol)} kg</td>` +
+        tr.innerHTML = `<td>${esc(dateFr(h.date))}</td><td>${esc(h.nom)}</td><td>${h.exos.length}</td><td>${h.series || 0}</td><td>${fmt(h.vol)} kg</td>` +
                        `<td><button class="del" aria-label="Supprimer cette séance">×</button></td>`;
         tr.querySelector(".del").addEventListener("click", () => {
           D.historique.splice(idx,1); sauver(); dessinerHistorique(); construireExercices(); dessinerKPI();
@@ -2004,7 +2027,10 @@ const outilProgramme = {
       <div class="grid g2">
         <div><label for="pg-nom">Nom du programme</label><input id="pg-nom" type="text" value="${esc(P.nom || "")}" placeholder="Ex. Bloc 1 — 4 semaines"></div>
         <div><label for="pg-biblio">Charger depuis ma bibliothèque</label><select id="pg-biblio"><option value="">— choisis un entraînement —</option></select></div>
-        <div style="grid-column:1/-1"><label for="pg-prets">Programmes prêts à l'emploi</label><select id="pg-prets"><option value="">— choisis un programme du catalogue —</option></select>
+        <div style="grid-column:1/-1"><label for="pg-prets">Programmes prêts à l'emploi</label><select id="pg-prets">
+          <option value="">— choisis un programme du catalogue —</option>
+          ${(this.prets || []).map(x => `<option value="${esc(x.id)}">${esc(x.nom)}${x.seances_semaine ? " · " + x.seances_semaine + " séances" : ""}${x.niveau ? " · " + esc(x.niveau) : ""}</option>`).join("")}
+        </select>
           <p class="note" style="margin:6px 0 0">Charge un programme complet, puis adapte-le à ce client : c'est un point de départ, pas une fatalité.</p></div>
         <div style="grid-column:1/-1"><label for="pg-note">Mot pour ton client</label><textarea id="pg-note" rows="2" placeholder="Consignes générales, priorités du bloc…">${esc(P.note || "")}</textarea></div>
       </div>
@@ -2055,6 +2081,7 @@ const outilProgramme = {
   async init(){
     const self = this;
     const edition = Auth.estCoach() && Store.idConsulte;
+    if (edition && !this.prets){ try { this.prets = await Catalogue.programmes(); } catch(e){ this.prets = []; } }
     const P = await Store.lire(this.cle, { nom:"", note:"", seances:[], maj:"" });
     Store.cache[this.cle] = P;
     const zone = $("prog-vue");
@@ -2123,12 +2150,13 @@ const outilProgramme = {
     };
 
     /* Catalogue partage : les programmes tout faits (table programmes_types) */
+    /* Le catalogue est charge une fois pour toutes avant le premier rendu :
+       la liste etait auparavant remplie apres coup, ce qui obligeait a
+       choisir deux fois quand le clic arrivait avant la reponse du serveur. */
     const chargerPrets = async () => {
       const sel = $("pg-prets"); if (!sel) return;
-      const l = await Catalogue.programmes();
+      const l = self.prets || [];
       if (!l.length){ sel.innerHTML = `<option value="">— aucun programme dans le catalogue —</option>`; return; }
-      sel.innerHTML = `<option value="">— choisis un programme du catalogue —</option>` +
-        l.map(x => `<option value="${esc(x.id)}">${esc(x.nom)}${x.seances_semaine ? " · " + x.seances_semaine + " séances" : ""}${x.niveau ? " · " + esc(x.niveau) : ""}</option>`).join("");
       sel.onchange = () => {
         if (!sel.value) return;
         const x = l.find(y => String(y.id) === sel.value);
@@ -3044,9 +3072,13 @@ const outilBibliotheque = {
 
     const resume = (x) => {
       if (x.contenu && x.contenu.type === "repas"){
-        const n = (x.contenu.repas || []).length;
-        const k = (x.contenu.repas || []).reduce((t,r) => t + ((r.macros && r.macros.kcal) || 0), 0);
-        return `${n} repas · ${fmt(k)} kcal`;
+        /* un plan enregistre peut etre une semaine (jours[]) ou, pour les
+           entrees d'avant, une journee unique (repas[]) */
+        const jours = x.contenu.jours || (x.contenu.repas ? [{ repas: x.contenu.repas }] : []);
+        const n = jours.reduce((t, j) => t + (j.repas || []).length, 0);
+        const k = jours.reduce((t, j) => t + (j.repas || []).reduce((u, r) => u + ((r.macros && r.macros.kcal) || 0), 0), 0);
+        const moy = jours.length ? Math.round(k / jours.length) : 0;
+        return `${jours.length} jour${jours.length>1?"s":""} · ${n} repas · ${fmt(moy)} kcal / jour`;
       }
       const seances = (x.contenu && x.contenu.seances) || [];
       const nbE = seances.reduce((n,s) => n + ((s.exercices||[]).filter(e=>e.nom).length), 0);
@@ -3317,7 +3349,7 @@ const outilClients = {
         nom: ((p.prenom||"") + " " + (p.nom||"")).trim() || (p.id.slice(0,8)),
         intake: !!(c.intake && c.intake.complet),
         programme: !!(c.programme && (c.programme.seances||[]).length),
-        diete: !!(c.repas && (c.repas.repas||[]).length),
+        diete: !!(c.repas && ((c.repas.jours || []).some(j => (j.repas || []).length) || (c.repas.repas || []).length)),
         sens: sens
       };
     });
@@ -3561,14 +3593,14 @@ async function afficher(id, silencieux){
       ${Store.idConsulte ? "" : `<p class="lede">${esc(outil.accroche)}</p>`}
     </header>
     ${outil.html()}
-    ${outil.cle ? blocSauvegarde() : ""}`;
+    ${(outil.cle && !Store.idConsulte) ? blocSauvegarde() : ""}`;
 
   construireNav();   // les libelles dependent du mode : on les rafraichit
   const modifiable = !Store.idConsulte || (Auth.estCoach() && (outil.id === "programme" || outil.id === "nutrition"));
   $("vue").className = modifiable ? "wrap" : "wrap lecture-seule";
 
   nettoyage = (await outil.init()) || null;
-  if (outil.cle){ initSauvegarde(); }
+  if (outil.cle && !Store.idConsulte){ initSauvegarde(); }
   const sortir = $("sortir-fiche");
   if (sortir) sortir.addEventListener("click", () => {
     Store.idConsulte = null; Store.nomConsulte = null; location.hash = "#/clients";
