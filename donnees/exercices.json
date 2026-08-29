@@ -1,0 +1,5190 @@
+[
+  {
+    "id": "elevations-laterales",
+    "nom": "Élévations latérales",
+    "groupe": "Épaules",
+    "muscles": [
+      "Deltoïdes latéraux",
+      "Trapèzes supérieurs"
+    ],
+    "materiel": "Haltères",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Prends des haltères légers, bras le long du corps, coudes un peu fléchis.",
+      "Lève les bras sur les côtés jusqu'à hauteur d'épaule, pouces légèrement vers le sol.",
+      "Descends en deux secondes sans relâcher en bas.",
+      "Garde les omoplates basses : ce n'est pas un haussement d'épaules."
+    ],
+    "erreurs": [
+      "Haltères trop lourds : tu balances le buste et les trapèzes volent le travail des deltoïdes.",
+      "Bras tendus verrouillés : tu charges le coude au lieu de l'épaule.",
+      "Monter au-dessus de la ligne des épaules : tu bascules en trapèzes et tu perds le stimulus latéral."
+    ],
+    "respiration": "Expire en montant, inspire en descendant.",
+    "alternatives": [
+      "elevations-laterales-a-la-bande",
+      "elevations-laterales-de-bras",
+      "elevations-laterales-poulie"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "face-pulls",
+    "nom": "Face pulls",
+    "groupe": "Épaules",
+    "muscles": [
+      "Deltoïdes postérieurs",
+      "Trapèzes moyens",
+      "Rotateurs externes"
+    ],
+    "materiel": "Poulie",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Régle la poulie à hauteur des yeux, corde en prise.",
+      "Tire vers le visage en écartant la corde, coudes hauts.",
+      "Termine par une petite rotation externe : pouces vers l'arrière.",
+      "Reviens lentement, omoplates qui restent actives."
+    ],
+    "erreurs": [
+      "Charge trop lourde : tu te penches en arrière et le bas du dos prend le relais.",
+      "Tirer vers le nombril : tu transformes le mouvement en rowing et tu rates l'arrière d'épaule.",
+      "Épaules qui montent vers les oreilles : les trapèzes hauts compactent l'articulation."
+    ],
+    "respiration": "Expire en tirant, inspire au retour.",
+    "alternatives": [
+      "face-pull-a-la-bande",
+      "face-pull-serviette",
+      "oiseau-halteres"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "developpe-halteres-incline",
+    "nom": "Développé haltères incliné",
+    "groupe": "Pectoraux",
+    "muscles": [
+      "Pectoraux (haut)",
+      "Triceps",
+      "Épaules antérieures"
+    ],
+    "materiel": "Haltères",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Régle le banc à 30°, omoplates serrées, pieds au sol.",
+      "Descends les haltères au niveau du haut des pecs, coudes à 45° du buste.",
+      "Pousse et rapproche un peu les haltères en haut sans les entrechoquer.",
+      "Garde les poignets au-dessus des coudes sur toute la course."
+    ],
+    "erreurs": [
+      "Banc trop vertical : tu bascules en développé d'épaules et tu perds les pecs.",
+      "Coudes collés au corps : tu raccourcis l'étirement et tu charges trop les triceps.",
+      "Rebond en bas : tu perds le contrôle et tu risques l'épaule."
+    ],
+    "respiration": "Inspire à la descente, souffle à la poussée.",
+    "alternatives": [
+      "developpe-halteres-plat",
+      "pompes-pieds-sureleves",
+      "developpe-pectoraux-a-la-bande"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "squat-barre",
+    "nom": "Squat barre",
+    "groupe": "Quadriceps",
+    "muscles": [
+      "Quadriceps",
+      "Fessiers",
+      "Ischios"
+    ],
+    "materiel": "Barre",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Barre sur le haut du dos, pieds largeur d'épaules, orteils un peu ouverts.",
+      "Gaine le ventre, recule les hanches et descends jusqu'où les talons restent collés.",
+      "Genoux dans l'axe des orteils, poitrine ouverte.",
+      "Pousse dans tout le pied pour remonter, sans rebond en bas."
+    ],
+    "erreurs": [
+      "Talons qui décollent : tu perds la base et tu charges trop l'avant du genou.",
+      "Genoux qui rentrent : les hanches lâchent et tu perds la force des fessiers.",
+      "Dos qui s'arrondit en bas : la charge passe dans les lombaires au lieu des jambes."
+    ],
+    "respiration": "Inspire et gaine avant de descendre, souffle en remontant.",
+    "alternatives": [
+      "squat-goblet",
+      "squats",
+      "presse-a-cuisses"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "developpe-couche",
+    "nom": "Développé couché",
+    "groupe": "Pectoraux",
+    "muscles": [
+      "Pectoraux",
+      "Triceps",
+      "Épaules antérieures"
+    ],
+    "materiel": "Barre et banc",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Omoplates serrées dans le banc, pieds au sol, poignets droits.",
+      "Descends la barre au bas des pecs, contrôlée, sans rebond.",
+      "Pousse vers le haut en gardant les fesses collées.",
+      "Les avant-bras restent à peu près verticaux en bas de course."
+    ],
+    "erreurs": [
+      "Fesses qui décollent : tu triches l'amplitude et tu charges les lombaires.",
+      "Barre trop haute vers le cou : tu mets l'épaule en danger et tu perds les pecs.",
+      "Coudes à 90° du buste : tu ouvres trop l'épaule et tu perds la stabilité."
+    ],
+    "respiration": "Inspire à la descente, souffle à la poussée.",
+    "alternatives": [
+      "developpe-halteres-plat",
+      "developpe-halteres-au-sol",
+      "pompes"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "developpe-militaire",
+    "nom": "Développé militaire",
+    "groupe": "Épaules",
+    "muscles": [
+      "Deltoïdes",
+      "Triceps",
+      "Haut des pectoraux"
+    ],
+    "materiel": "Barre",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Debout, barre au niveau des clavicules, coudes un peu devant la barre.",
+      "Gaine dur et pousse à la verticale, tête qui recule puis passe sous la barre.",
+      "Verrouille en haut sans cambrer le bas du dos.",
+      "Redescends au contact des épaules, contrôlé."
+    ],
+    "erreurs": [
+      "Bascule lombaire : tu compenses avec le bas du dos au lieu des épaules.",
+      "Pousser trop devant : tu perds le levier et tu charges le haut des pecs au hasard.",
+      "Genoux qui plient à chaque rep : tu transformes le mouvement en push press et tu perds le contrôle."
+    ],
+    "respiration": "Inspire en bas, souffle en poussant.",
+    "alternatives": [
+      "developpe-halteres-assis",
+      "developpe-epaules-a-la-bande",
+      "pike-push-up"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "hip-thrust",
+    "nom": "Hip thrust",
+    "groupe": "Fessiers",
+    "muscles": [
+      "Fessiers",
+      "Ischios",
+      "Lombaires"
+    ],
+    "materiel": "Barre",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Haut du dos sur un banc, barre au pli des hanches, menton rentré.",
+      "Pieds à plat, tibias verticaux en haut de course.",
+      "Pousse le bassin vers le plafond, pause une seconde, fessiers serrés.",
+      "Redescends sans perdre le contact de la barre."
+    ],
+    "erreurs": [
+      "Hyperlordose en haut : tu charges les lombaires au lieu de contracter les fessiers.",
+      "Pieds trop loin : tu bascules en ischios et tu perds l'extension de hanche.",
+      "Menton vers le ciel : tu casses la ligne et tu perds le gainage."
+    ],
+    "respiration": "Expire en haut de la poussée, inspire à la descente.",
+    "alternatives": [
+      "pont-fessier-haltere",
+      "hip-thrust-a-la-bande",
+      "pont-fessier"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "planche",
+    "nom": "Planche",
+    "groupe": "Abdominaux",
+    "muscles": [
+      "Abdominaux",
+      "Fessiers",
+      "Épaules"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Gainage",
+    "execution": [
+      "Avant-bras au sol, coudes sous les épaules, corps en ligne.",
+      "Serre les fessiers et rentre un peu le bassin, regard vers le sol.",
+      "Respire calmement sans laisser le bas du dos se creuser.",
+      "Si ça tremble trop tôt, coupe le temps et recommence propre."
+    ],
+    "erreurs": [
+      "Bassin trop haut : tu te reposes sur les hanches et tu perds le travail du tronc.",
+      "Dos qui se creuse : les lombaires prennent la charge à la place des abdos.",
+      "Tête qui tombe : tu perds l'alignement et tu tires sur la nuque."
+    ],
+    "respiration": "Respire petit et régulier, ne bloque pas l'air.",
+    "alternatives": [
+      "gainage",
+      "gainage-sur-les-avant-bras-genoux-au-sol",
+      "hollow-hold"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "presse-a-cuisses",
+    "nom": "Presse à cuisses",
+    "groupe": "Quadriceps",
+    "muscles": [
+      "Quadriceps",
+      "Fessiers"
+    ],
+    "materiel": "Machine",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Pieds au milieu du plateau, bas du dos collé au dossier.",
+      "Descends en trois secondes jusqu'à un angle confortable des genoux.",
+      "Pousse sans verrouiller les genoux en haut.",
+      "Garde les genoux dans l'axe des orteils sur toute la course."
+    ],
+    "erreurs": [
+      "Bas du dos qui décolle : tu arrondis les lombaires et tu perds la protection du tronc.",
+      "Rebond en bas : tu délégués la force aux articulations au lieu des cuisses.",
+      "Genoux qui rentrent : tu perds le contrôle hanche et tu charges le genou en torsion."
+    ],
+    "respiration": "Inspire à la descente, souffle à la poussée.",
+    "alternatives": [
+      "squat-barre",
+      "leg-extension",
+      "squat-goblet"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "curl-barre",
+    "nom": "Curl barre",
+    "groupe": "Biceps",
+    "muscles": [
+      "Biceps",
+      "Brachial"
+    ],
+    "materiel": "Barre",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Barre en prise supination, coudes calés contre les hanches.",
+      "Monte jusqu'à contracter le biceps, sans avancer les coudes.",
+      "Redescends en trois secondes jusqu'à presque tendre.",
+      "Garde le buste figé, pas de balancier."
+    ],
+    "erreurs": [
+      "Élan du bas du dos : tu voles le travail des biceps et tu charges les lombaires.",
+      "Coudes qui partent en avant : tu raccourcis la course et tu transformes le curl en développé.",
+      "Poignets cassés en arrière : tu fatigues l'avant-bras avant le biceps."
+    ],
+    "respiration": "Expire en montant, inspire en descendant.",
+    "alternatives": [
+      "curl-halteres",
+      "curl-biceps-a-la-bande",
+      "curl-marteau"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "curl-marteau",
+    "nom": "Curl marteau",
+    "groupe": "Biceps",
+    "muscles": [
+      "Brachial",
+      "Biceps",
+      "Avant-bras"
+    ],
+    "materiel": "Haltères",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Haltères en prise neutre, pouces vers l'avant, coudes collés.",
+      "Monte sans tourner le poignet, haltère parallèle au buste.",
+      "Stoppe avant que l'épaule ne monte.",
+      "Redescends contrôlé, même rythme des deux côtés."
+    ],
+    "erreurs": [
+      "Swing des haltères : tu utilises l'inertie et tu rates le brachial.",
+      "Coudes qui s'écartent : tu perds le levier et tu charges l'épaule.",
+      "Monter les épaules : les trapèzes prennent le relais du bras."
+    ],
+    "respiration": "Expire en montant, inspire en descendant.",
+    "alternatives": [
+      "curl-halteres",
+      "curl-barre",
+      "curl-biceps-a-la-bande"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "souleve-de-terre",
+    "nom": "Soulevé de terre",
+    "groupe": "Dos",
+    "muscles": [
+      "Chaîne postérieure",
+      "Ischios",
+      "Fessiers",
+      "Dos"
+    ],
+    "materiel": "Barre",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Barre contre les tibias, hanches plus hautes que les genoux, dos plat.",
+      "Gaine le ventre, tire le relâchement des bras, puis pousse le sol.",
+      "Hanches et épaules montent ensemble jusqu'à l'extension.",
+      "Redescends en reculant les hanches, barre collée aux cuisses."
+    ],
+    "erreurs": [
+      "Dos qui s'arrondit : la charge passe dans les disques au lieu de la chaîne postérieure.",
+      "Barre qui part en avant : tu perds le levier et tu tires avec le bas du dos.",
+      "Hanches qui se relèvent trop vite : tu transformes le terre en good morning chargé."
+    ],
+    "respiration": "Inspire et gaine avant de tirer, souffle une fois passé les genoux.",
+    "alternatives": [
+      "souleve-de-terre-halteres",
+      "souleve-de-terre-roumain",
+      "good-morning-poids-du-corps"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "souleve-de-terre-roumain",
+    "nom": "Soulevé de terre roumain",
+    "groupe": "Ischios",
+    "muscles": [
+      "Ischios",
+      "Fessiers",
+      "Lombaires"
+    ],
+    "materiel": "Barre",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Barre contre les cuisses, genoux souples, dos plat.",
+      "Recule les hanches jusqu'à sentir l'étirement des ischios.",
+      "Stoppe au milieu des tibias ou dès que le dos veut s'arrondir.",
+      "Reviens en poussant les hanches vers l'avant, fessiers serrés."
+    ],
+    "erreurs": [
+      "Genoux trop pliés : tu en fais un squat et tu perds l'étirement des ischios.",
+      "Dos rond : la charge passe dans les disques au lieu des ischios.",
+      "Barre qui s'éloigne des cuisses : tu allonges le bras de levier lombaire."
+    ],
+    "respiration": "Inspire en descendant les hanches, souffle en revenant.",
+    "alternatives": [
+      "souleve-de-terre-roumain-halteres",
+      "good-morning-a-la-bande",
+      "leg-curl"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "dead-bug",
+    "nom": "Dead bug",
+    "groupe": "Abdominaux",
+    "muscles": [
+      "Abdominaux profonds",
+      "Fléchisseurs de hanche"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Gainage",
+    "execution": [
+      "Sur le dos, bras au plafond, genoux à 90°, lombaires collées.",
+      "Écarte un bras et la jambe opposée, lentement, sans décoller le bas du dos.",
+      "Reviens au centre et change de côté.",
+      "Expire en tendant, comme si tu voulais coller le nombril au tapis."
+    ],
+    "erreurs": [
+      "Lombaires qui décollent : tu perds l'anti-extension et tu charges le bas du dos.",
+      "Mouvement trop vite : tu compenses avec l'élan au lieu du contrôle.",
+      "Épaules qui se hissent : tu tires sur la nuque au lieu de gagner le tronc."
+    ],
+    "respiration": "Expire en éloignant bras et jambe, inspire au retour.",
+    "alternatives": [
+      "dead-bug-amplitude-courte",
+      "hollow-hold",
+      "planche"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "fentes-bulgares",
+    "nom": "Fentes bulgares",
+    "groupe": "Quadriceps",
+    "muscles": [
+      "Quadriceps",
+      "Fessiers",
+      "Ischios"
+    ],
+    "materiel": "Haltères",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Pied arrière sur un banc, haltères le long du corps, torse un peu penché.",
+      "Descends le genou arrière vers le sol sans claquer.",
+      "Pousse dans le talon avant pour remonter.",
+      "Garde le genou avant dans l'axe du pied."
+    ],
+    "erreurs": [
+      "Torse trop droit et genou qui dépasse fort : tu charges l'avant du genou sans les fessiers.",
+      "Appui arrière qui pousse : tu voles le travail de la jambe avant.",
+      "Bassin qui bascule sur le côté : tu perds l'équilibre et tu charges la hanche en torsion."
+    ],
+    "respiration": "Inspire en descendant, souffle en poussant.",
+    "alternatives": [
+      "fentes-bulgares-halteres",
+      "fentes-arriere",
+      "fentes-halteres"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "leg-curl",
+    "nom": "Leg curl",
+    "groupe": "Ischios",
+    "muscles": [
+      "Ischios"
+    ],
+    "materiel": "Machine",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Bassin collé au pad, rotule juste au bord du siège.",
+      "Ramène les talons vers les fesses sur toute l'amplitude.",
+      "Pause courte en contraction, redescends sans lâcher.",
+      "Garde les hanches calées, pas d'élan du bas du dos."
+    ],
+    "erreurs": [
+      "Hanches qui décollent : tu triches avec les lombaires et tu rates les ischios.",
+      "Course coupée en bas : tu perds l'étirement, là où le muscle travaille le plus.",
+      "Élan en début de série : tu transformes l'isolation en balancier."
+    ],
+    "respiration": "Expire en fléchissant, inspire en relâchant.",
+    "alternatives": [
+      "leg-curl-unilateral",
+      "souleve-de-terre-roumain",
+      "good-morning-poids-du-corps"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "rowing-barre",
+    "nom": "Rowing barre",
+    "groupe": "Dos",
+    "muscles": [
+      "Dorsaux",
+      "Rhomboïdes",
+      "Biceps"
+    ],
+    "materiel": "Barre",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Buste figé autour de 45°, dos plat, genoux souples.",
+      "Tire la barre vers le nombril, coudes près du corps.",
+      "Serre les omoplates en haut, pause courte.",
+      "Redescends contrôlé jusqu'à tendre les bras."
+    ],
+    "erreurs": [
+      "Élan du bas du dos : tu transformes le rowing en squats-jetés et tu rates le dos.",
+      "Tirer avec les biceps d'abord : les omoplates ne reculent pas et le dos reste passif.",
+      "Tête qui se jette en arrière : tu casses la ligne et tu tires sur la nuque."
+    ],
+    "respiration": "Expire en tirant, inspire au retour.",
+    "alternatives": [
+      "rowing-barre-buste-penche",
+      "rowing-deux-halteres-buste-penche",
+      "rowing-de-table"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "tirage-vertical",
+    "nom": "Tirage vertical",
+    "groupe": "Dos",
+    "muscles": [
+      "Dorsaux",
+      "Biceps",
+      "Rhomboïdes"
+    ],
+    "materiel": "Machine",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Poitrine haute, prise un peu plus large que les épaules.",
+      "Tire la barre vers le haut de la poitrine, coudes vers les hanches.",
+      "Contrôle la remontée jusqu'à presque tendre.",
+      "Garde le buste stable, pas de bascule arrière."
+    ],
+    "erreurs": [
+      "Bascule arrière : tu triches avec le poids du corps et tu perds les dorsaux.",
+      "Barre tirée derrière la nuque : tu mets l'épaule dans une position fragile.",
+      "Épaules qui montent : tu tires en trapèzes et tu compactes l'articulation."
+    ],
+    "respiration": "Expire en tirant, inspire en relâchant.",
+    "alternatives": [
+      "tirage-vertical-a-la-bande",
+      "tractions",
+      "tirage-vertical-prise-serree"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "crunch-a-la-poulie",
+    "nom": "Crunch à la poulie",
+    "groupe": "Abdominaux",
+    "muscles": [
+      "Grands droits",
+      "Obliques"
+    ],
+    "materiel": "Poulie",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "À genoux face à la poulie haute, corde aux tempes.",
+      "Rapproche les côtes du bassin, dos qui s'arrondit volontairement.",
+      "Pause en bas, reviens sans relâcher d'un coup.",
+      "Les hanches restent à peu près au même endroit."
+    ],
+    "erreurs": [
+      "Tirer avec les bras : tu transformes le crunch en pulldown et tu rates les abs.",
+      "Hanches qui reculent : tu fais un squat et tu perds le travail du tronc.",
+      "Charge trop lourde : tu sacades et tu charges la nuque."
+    ],
+    "respiration": "Expire en rentrant les côtes, inspire au retour.",
+    "alternatives": [
+      "crunch",
+      "crunch-au-sol",
+      "releve-de-jambes-au-sol"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "developpe-halteres-plat",
+    "nom": "Développé haltères plat",
+    "groupe": "Pectoraux",
+    "muscles": [
+      "Pectoraux",
+      "Triceps",
+      "Épaules antérieures"
+    ],
+    "materiel": "Haltères",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Omoplates serrées, haltères au niveau des pecs en bas, poignets neutres.",
+      "Pousse et rapproche un peu les haltères en haut sans les cogner.",
+      "Descends plus bas qu'avec une barre, contrôlé.",
+      "Garde les fesses et le dos en contact avec le banc."
+    ],
+    "erreurs": [
+      "Pontage excessif : tu triches l'amplitude et tu charges les lombaires.",
+      "Haltères qui partent trop larges : tu ouvres l'épaule et tu perds la poussée.",
+      "Course coupée en bas : tu perds l'étirement des pecs, l'intérêt des haltères."
+    ],
+    "respiration": "Inspire à la descente, souffle à la poussée.",
+    "alternatives": [
+      "developpe-couche",
+      "developpe-halteres-au-sol",
+      "pompes"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "extension-triceps-corde",
+    "nom": "Extension triceps corde",
+    "groupe": "Triceps",
+    "muscles": [
+      "Triceps"
+    ],
+    "materiel": "Poulie",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Coudes cloués contre les côtes, corde en prise.",
+      "Étends les avant-bras et ouvre la corde en bas.",
+      "Reviens jusqu'à 90° sans avancer les coudes.",
+      "Épaules basses, buste figé."
+    ],
+    "erreurs": [
+      "Coudes qui s'ouvrent : tu perds l'isolation et tu charges les épaules.",
+      "Buste qui penche : tu triches avec le poids du corps.",
+      "Ne pas ouvrir la corde : tu coupes la contraction de la longue portion."
+    ],
+    "respiration": "Expire en tendant, inspire au retour.",
+    "alternatives": [
+      "extension-corde",
+      "extension-triceps-a-la-bande",
+      "dips-de-chaise"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "tractions",
+    "nom": "Tractions",
+    "groupe": "Dos",
+    "muscles": [
+      "Dorsaux",
+      "Biceps",
+      "Rhomboïdes"
+    ],
+    "materiel": "Barre de traction",
+    "niveau": "Intermédiaire",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Prise pronation, poitrine haute, omoplates qui s'engagent avant de plier les bras.",
+      "Monte jusqu'au menton au-dessus de la barre, poitrine vers la barre.",
+      "Descends complètement, contrôlé, jusqu'à tendre.",
+      "Assistance élastique ou lest pour rester dans une fourchette propre."
+    ],
+    "erreurs": [
+      "Kipping / élan des hanches : tu voles le dos et tu charges les épaules en vrac.",
+      "Course coupée en bas : tu perds l'étirement des dorsaux.",
+      "Menton qui se jette : tu triches la hauteur et tu tires sur la nuque."
+    ],
+    "respiration": "Expire en montant, inspire en descendant.",
+    "alternatives": [
+      "tirage-vertical",
+      "tractions-prise-large",
+      "rowing-de-table"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "dips",
+    "nom": "Dips",
+    "groupe": "Pectoraux",
+    "muscles": [
+      "Pectoraux",
+      "Triceps",
+      "Épaules antérieures"
+    ],
+    "materiel": "Machine",
+    "niveau": "Intermédiaire",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Barres parallèles, torse légèrement penché pour les pecs (plus droit pour les triceps).",
+      "Descends jusqu'à environ 90° aux coudes, épaules basses.",
+      "Pousse jusqu'à tendre sans hausser les épaules.",
+      "Assistance si tu sors de 8-10 reps propres."
+    ],
+    "erreurs": [
+      "Épaules qui s'enroulent en avant : tu mets l'articulation en cisaillement.",
+      "Descente trop profonde d'un coup : tu étires l'épaule au-delà de ce qu'elle contrôle.",
+      "Jambes qui s'agitent : tu compenses l'équilibre et tu perds la poussée."
+    ],
+    "respiration": "Inspire à la descente, souffle à la poussée.",
+    "alternatives": [
+      "dips-de-chaise",
+      "pompes",
+      "developpe-halteres-plat"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "dips-de-chaise",
+    "nom": "Dips de chaise",
+    "groupe": "Triceps",
+    "muscles": [
+      "Triceps",
+      "Pectoraux",
+      "Épaules antérieures"
+    ],
+    "materiel": "Banc",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Mains sur le bord d'une chaise calée, fesses près du bord, pieds au sol.",
+      "Fléchis les coudes vers l'arrière et descends le bassin.",
+      "Pousse dans les paumes pour remonter, épaules basses.",
+      "Éloigne les pieds pour durcir, rapproche-les pour alléger."
+    ],
+    "erreurs": [
+      "Fesses trop loin du bord : tu charges l'épaule en étirement et tu perds les triceps.",
+      "Coudes qui partent sur les côtés : tu ouvres l'épaule et tu perds le levier.",
+      "Chaise qui glisse : tu te mets en danger dès la première descente."
+    ],
+    "respiration": "Inspire en descendant, souffle en poussant.",
+    "alternatives": [
+      "pompes-diamant",
+      "extension-triceps-a-la-bande",
+      "dips"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "fentes-marchees",
+    "nom": "Fentes marchées",
+    "groupe": "Quadriceps",
+    "muscles": [
+      "Quadriceps",
+      "Fessiers",
+      "Ischios"
+    ],
+    "materiel": "Haltères",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Grand pas en avant, haltères le long des cuisses, torse droit.",
+      "Genou arrière proche du sol, sans claquer.",
+      "Pousse dans le talon avant et enchaîne l'autre jambe.",
+      "Sur place en alterné si tu manques d'espace."
+    ],
+    "erreurs": [
+      "Petit pas : le genou avant s'avance trop et tu charges l'articulation.",
+      "Torse qui s'effondre : tu perds le gainage et tu charges le bas du dos.",
+      "Genou qui rentre : tu perds le contrôle hanche et tu torses le genou."
+    ],
+    "respiration": "Inspire en descendant, souffle en avançant.",
+    "alternatives": [
+      "fentes-marchees-halteres",
+      "fentes-arriere",
+      "fentes-avant-a-la-bande"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "gainage-lateral",
+    "nom": "Gainage latéral",
+    "groupe": "Abdominaux",
+    "muscles": [
+      "Obliques",
+      "Moyen fessier",
+      "Épaules"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Gainage",
+    "execution": [
+      "Coude sous l'épaule, pied sur pied, hanche décollée.",
+      "Aligne épaule, hanche et cheville, bassin ni en avant ni en arrière.",
+      "Respire, tiens, change de côté.",
+      "Genou au sol autorisé si la hanche bascule."
+    ],
+    "erreurs": [
+      "Hanche qui retombe : tu perds le travail des obliques et tu charges l'épaule.",
+      "Rotation du buste vers le sol : tu sors de l'alignement et tu rates le gainage latéral.",
+      "Épaule trop loin du coude : tu cisaille l'articulation au lieu de la stabiliser."
+    ],
+    "respiration": "Respire calme par le nez, ne bloque pas.",
+    "alternatives": [
+      "gainage-lateral-genou-au-sol",
+      "pallof-press-a-la-bande",
+      "planche"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "leg-extension",
+    "nom": "Leg extension",
+    "groupe": "Quadriceps",
+    "muscles": [
+      "Quadriceps"
+    ],
+    "materiel": "Machine",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Dos calé, pad sur le bas des tibias, genoux dans l'axe.",
+      "Tends les jambes, pause une seconde en haut sans claquer.",
+      "Redescends contrôlé jusqu'à 90°.",
+      "Garde les hanches collées au siège."
+    ],
+    "erreurs": [
+      "Fesses qui décollent : tu triches avec les hanches et tu perds l'isolation.",
+      "Claquer en haut : tu charges le genou en hyperextension.",
+      "Dossier trop reculé et élan : tu transformes l'isolation en balancier."
+    ],
+    "respiration": "Expire en tendant, inspire en fléchissant.",
+    "alternatives": [
+      "extensions-de-genoux-assis",
+      "presse-a-cuisses",
+      "wall-sit"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "mollets-debout",
+    "nom": "Mollets debout",
+    "groupe": "Mollets",
+    "muscles": [
+      "Gastrocnémiens",
+      "Soléaire"
+    ],
+    "materiel": "Machine",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Avant-pieds sur le rebord, hanches alignées, genoux souples.",
+      "Descends en étirement deux secondes, sans rebond.",
+      "Monte sur la pointe, pause deux secondes en haut.",
+      "Garde les chevilles dans l'axe, pas de rotation."
+    ],
+    "erreurs": [
+      "Rebond en bas : tu délégués le travail au tendon au lieu du mollet.",
+      "Course coupée : tu rates l'étirement, là où le mollet progresse.",
+      "Genoux qui se verrouillent d'un coup : tu charges l'articulation sans gagner de force."
+    ],
+    "respiration": "Expire en montant, inspire en descendant.",
+    "alternatives": [
+      "mollets-halteres",
+      "mollets-unipodal",
+      "mollets-a-la-presse"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "rowing-haltere",
+    "nom": "Rowing haltère",
+    "groupe": "Dos",
+    "muscles": [
+      "Dorsaux",
+      "Rhomboïdes",
+      "Biceps"
+    ],
+    "materiel": "Haltères",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Un genou et une main sur le banc, dos plat, haltère pendante.",
+      "Tire vers la hanche, coude ras le corps, omoplate qui recule.",
+      "Redescends jusqu'à l'étirement, sans tordre le buste.",
+      "Change de côté, même amplitude."
+    ],
+    "erreurs": [
+      "Ouvrir le buste à chaque rep : tu transformes le rowing en rotation et tu rates le dos.",
+      "Tirer vers l'épaule : tu charges le trapèze haut au lieu du dorsal.",
+      "Dos rond : la charge passe dans les lombaires."
+    ],
+    "respiration": "Expire en tirant, inspire au retour.",
+    "alternatives": [
+      "rowing-haltere-un-bras",
+      "rowing-de-table",
+      "rowing-a-la-bande"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "crunch",
+    "nom": "Crunch",
+    "groupe": "Abdominaux",
+    "muscles": [
+      "Grands droits"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Sur le dos, genoux pliés, mains aux tempes.",
+      "Décolle seulement les omoplates, côtes vers le bassin.",
+      "Expire en haut, redescends sans poser la tête d'un coup.",
+      "Amplitude courte, pas un sit-up."
+    ],
+    "erreurs": [
+      "Tirer sur la nuque : tu charges le cou au lieu des abdos.",
+      "Décolle tout le dos : tu transformes le crunch en sit-up et tu tires sur les fléchisseurs.",
+      "Blocage de souffle : tu compenses en pression au lieu de contracter."
+    ],
+    "respiration": "Expire en décollant les omoplates, inspire en redescendant.",
+    "alternatives": [
+      "crunch-au-sol",
+      "crunch-a-la-poulie",
+      "dead-bug"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "dips-lestes",
+    "nom": "Dips lestés",
+    "groupe": "Pectoraux",
+    "muscles": [
+      "Pectoraux",
+      "Triceps",
+      "Épaules antérieures"
+    ],
+    "materiel": "Machine",
+    "niveau": "Avancé",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Ceinture ou haltère entre les pieds, seulement si 8 dips strictes passent indolores.",
+      "Torse un peu penché, descente sous 90° contrôlée.",
+      "Pousse jusqu'à l'extension, épaules basses.",
+      "Garde les omoplates stables, pas d'enroulement avant."
+    ],
+    "erreurs": [
+      "Lest trop tôt : tu casses la technique et tu charges l'épaule en étirement.",
+      "Descente en chute : tu rebondis sur la capsule au lieu de pousser.",
+      "Épaules collées aux oreilles : tu compactes l'articulation sous charge."
+    ],
+    "respiration": "Inspire à la descente, souffle à la poussée.",
+    "alternatives": [
+      "dips",
+      "pompes-lestees",
+      "developpe-couche"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "hollow-hold",
+    "nom": "Hollow hold",
+    "groupe": "Abdominaux",
+    "muscles": [
+      "Abdominaux",
+      "Fléchisseurs de hanche"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Gainage",
+    "execution": [
+      "Sur le dos, bas du dos collé, bras le long du corps ou au-dessus de la tête.",
+      "Décolle épaules et omoplates, jambes tendues un peu au-dessus du sol.",
+      "Tiens la forme, respire, sans laisser le bas du dos se décoller.",
+      "Raccourcis bras ou genoux si le dos lâche."
+    ],
+    "erreurs": [
+      "Bas du dos qui décolle : tu perds l'anti-extension et tu charges les lombaires.",
+      "Jambes trop basses d'un coup : tu forces le fléchisseur et tu sors de la position.",
+      "Retenir la respiration : tu tiens moins longtemps et tu compenses en pression."
+    ],
+    "respiration": "Respire petit et continu, côtes vers le bassin.",
+    "alternatives": [
+      "hollow-body-rock",
+      "dead-bug",
+      "planche"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "mollets-assis",
+    "nom": "Mollets assis",
+    "groupe": "Mollets",
+    "muscles": [
+      "Soléaire",
+      "Gastrocnémiens"
+    ],
+    "materiel": "Machine",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Pad sur les genoux, avant-pieds sur le rebord.",
+      "Étire deux secondes en bas, monte, pause une seconde en haut.",
+      "Garde les hanches calées, pas de rebond.",
+      "Tu peux aller un peu plus lourd qu'en debout."
+    ],
+    "erreurs": [
+      "Rebond en bas : le tendon travaille, le soléaire non.",
+      "Course coupée : tu rates le soléaire, qui aime l'amplitude.",
+      "Fesses qui décollent : tu triches avec les hanches."
+    ],
+    "respiration": "Expire en montant, inspire en étirant.",
+    "alternatives": [
+      "mollets-debout",
+      "mollets-halteres",
+      "montees-de-talons-debout"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "oiseau-halteres",
+    "nom": "Oiseau haltères",
+    "groupe": "Épaules",
+    "muscles": [
+      "Deltoïdes postérieurs",
+      "Rhomboïdes"
+    ],
+    "materiel": "Haltères",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Buste penché, dos plat, haltères légères, pouces un peu vers le sol.",
+      "Ouvre les bras à hauteur d'épaule, amplitude courte.",
+      "Serre les omoplates sans hausser les épaules.",
+      "Redescends lentement, sans élan lombaire."
+    ],
+    "erreurs": [
+      "Charge trop lourde : tu balances le dos et tu rates l'arrière d'épaule.",
+      "Bras trop tendus : tu charges le coude et tu perds le levier.",
+      "Tête qui se jette : tu casses la ligne et tu tires sur la nuque."
+    ],
+    "respiration": "Expire en ouvrant, inspire au retour.",
+    "alternatives": [
+      "oiseau-poulie",
+      "oiseau-au-sol",
+      "face-pulls"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "pompes",
+    "nom": "Pompes",
+    "groupe": "Pectoraux",
+    "muscles": [
+      "Pectoraux",
+      "Triceps",
+      "Épaules antérieures"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Mains sous les épaules, corps gainé, ligne épaules-hanches-chevilles.",
+      "Descends la poitrine vers le sol, coudes à 45°.",
+      "Pousse jusqu'à tendre, omoplates stables.",
+      "Genoux au sol tant que tu ne tiens pas 8 reps strictes."
+    ],
+    "erreurs": [
+      "Hanches qui s'effondrent : tu charges les lombaires au lieu de pousser.",
+      "Tête qui plonge : tu raccourcis la course et tu tires sur la nuque.",
+      "Coudes collés aux oreilles : tu ouvres trop l'épaule."
+    ],
+    "respiration": "Inspire à la descente, souffle à la poussée.",
+    "alternatives": [
+      "pompes-murales",
+      "dips-de-chaise",
+      "developpe-halteres-au-sol"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "pont-fessier-une-jambe",
+    "nom": "Pont fessier une jambe",
+    "groupe": "Fessiers",
+    "muscles": [
+      "Fessiers",
+      "Ischios"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Sur le dos, un pied au sol, l'autre jambe tendue.",
+      "Pousse dans le talon, bassin droit, pause en haut.",
+      "Redescends sans poser les fesses.",
+      "Reviens à deux pieds si le bassin bascule."
+    ],
+    "erreurs": [
+      "Bassin qui bascule : tu perds l'unilatéral et tu charges le bas du dos.",
+      "Pousser dans les orteils : tu bascules en mollet et tu rates le fessier.",
+      "Cambrer en haut : tu charges les lombaires au lieu de serrer les fessiers."
+    ],
+    "respiration": "Expire en montant, inspire en descendant.",
+    "alternatives": [
+      "pont-fessier",
+      "pont-fessier-haltere",
+      "hip-thrust"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "rowing-de-table",
+    "nom": "Rowing de table",
+    "groupe": "Dos",
+    "muscles": [
+      "Dorsaux",
+      "Rhomboïdes",
+      "Biceps"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Allonge-toi sous une table testée, prends le plateau, corps gainé.",
+      "Tire la poitrine vers le plateau, coudes près du corps.",
+      "Pause courte, redescends sans poser les omoplates d'un coup.",
+      "Pieds plus loin ou surélevés si 10 reps sont faciles."
+    ],
+    "erreurs": [
+      "Table instable : tu te mets en danger dès la première traction.",
+      "Hanches qui s'effondrent : tu perds la ligne et tu charges les lombaires.",
+      "Tirer du cou : tu rates le dos et tu tires sur la nuque."
+    ],
+    "respiration": "Expire en tirant, inspire au retour.",
+    "alternatives": [
+      "rowing-de-table-prise-large",
+      "rowing-a-la-bande",
+      "tirage-horizontal"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "rowing-haltere-un-bras",
+    "nom": "Rowing haltère un bras",
+    "groupe": "Dos",
+    "muscles": [
+      "Dorsaux",
+      "Rhomboïdes",
+      "Biceps"
+    ],
+    "materiel": "Haltères",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Main et genou sur un appui stable, dos plat, haltère vers la hanche.",
+      "Omoplate qui recule avant le coude, pas d'ouverture du buste.",
+      "Redescends jusqu'à l'étirement.",
+      "Garde le cou neutre, regard vers le sol."
+    ],
+    "erreurs": [
+      "Rotation du buste : tu triches avec le poids du corps et tu rates le dorsal.",
+      "Dos rond : la charge passe dans les lombaires.",
+      "Haltère tirée trop haute vers l'oreille : tu charges le trapèze haut."
+    ],
+    "respiration": "Expire en tirant, inspire au retour.",
+    "alternatives": [
+      "rowing-haltere",
+      "rowing-deux-halteres-buste-penche",
+      "rowing-de-table"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "squats",
+    "nom": "Squats",
+    "groupe": "Quadriceps",
+    "muscles": [
+      "Quadriceps",
+      "Fessiers"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Pieds largeur d'épaules, bras devant pour l'équilibre.",
+      "Recule les hanches, descends jusqu'où les talons restent au sol.",
+      "Pousse dans tout le pied, poitrine ouverte.",
+      "Si 20 reps sont faciles, passe en tempo 4-0-1 avant d'ajouter des sauts."
+    ],
+    "erreurs": [
+      "Genoux qui rentrent : tu perds le contrôle hanche et tu torses le genou.",
+      "Talons qui décollent : tu charges l'avant du genou.",
+      "Dos qui s'effondre : tu transformes le squat en inclinaison lombaire."
+    ],
+    "respiration": "Inspire en descendant, souffle en remontant.",
+    "alternatives": [
+      "squat-goblet",
+      "assis-debout-sur-chaise",
+      "squat-a-la-bande"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "tractions-lestees",
+    "nom": "Tractions lestées",
+    "groupe": "Dos",
+    "muscles": [
+      "Dorsaux",
+      "Biceps",
+      "Rhomboïdes"
+    ],
+    "materiel": "Barre de traction",
+    "niveau": "Avancé",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Leste pour rester dans 6-8 reps, descente complète en trois secondes.",
+      "Omoplates d'abord, poitrine vers la barre, menton au-dessus.",
+      "Pas de kipping, pas d'élan de hanches.",
+      "Mieux vaut 5 reps propres qu'un lest trop lourd."
+    ],
+    "erreurs": [
+      "Lest trop lourd : tu coupes la course et tu charges les épaules en vrac.",
+      "Descente en chute : tu perds le travail excentrique et tu risques le biceps.",
+      "Épaules collées aux oreilles : tu compactes l'articulation sous charge."
+    ],
+    "respiration": "Expire en montant, inspire en descendant.",
+    "alternatives": [
+      "tractions",
+      "tirage-vertical",
+      "tractions-prise-large"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "abducteurs-machine",
+    "nom": "Abducteurs machine",
+    "groupe": "Fessiers",
+    "muscles": [
+      "Moyen fessier",
+      "Petit fessier"
+    ],
+    "materiel": "Machine",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Dossier collé, pads contre l'extérieur des genoux.",
+      "Ouvre dans une amplitude confortable, contrôle le retour.",
+      "Pas d'élan, bassin calme.",
+      "Garde le buste contre le dossier."
+    ],
+    "erreurs": [
+      "Élan en début de série : tu voles le moyen fessier et tu charges les hanches en à-coups.",
+      "Dos qui se décolle : tu triches avec le buste.",
+      "Amplitude forcée : tu étire la hanche au-delà de ce qu'elle contrôle."
+    ],
+    "respiration": "Expire en ouvrant, inspire au retour.",
+    "alternatives": [
+      "abduction-de-hanche-au-sol",
+      "coquillage-clamshell-au-sol",
+      "fentes-laterales-haltere"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "curl-halteres",
+    "nom": "Curl haltères",
+    "groupe": "Biceps",
+    "muscles": [
+      "Biceps",
+      "Brachial"
+    ],
+    "materiel": "Haltères",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Haltères le long du corps, coudes collés, alterné ou simultané.",
+      "Monte sans avancer les coudes, poignets neutres.",
+      "Redescends contrôlé jusqu'à presque tendre.",
+      "Buste figé, pas de balancier."
+    ],
+    "erreurs": [
+      "Balancier du buste : tu voles le biceps et tu charges les lombaires.",
+      "Coudes qui s'écartent : tu perds le levier.",
+      "Poignets cassés : tu fatigues l'avant-bras avant le biceps."
+    ],
+    "respiration": "Expire en montant, inspire en descendant.",
+    "alternatives": [
+      "curl-barre",
+      "curl-marteau",
+      "curl-biceps-a-la-bande"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "curl-halteres-incline",
+    "nom": "Curl haltères incliné",
+    "groupe": "Biceps",
+    "muscles": [
+      "Biceps (longue portion)"
+    ],
+    "materiel": "Haltères",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Banc à 45°, bras pendants, omoplates contre le dossier.",
+      "Monte sans avancer les coudes, pause une seconde en étirement en bas.",
+      "Garde la tête contre le banc.",
+      "Charge honnête, course complète."
+    ],
+    "erreurs": [
+      "Coudes qui avancent : tu coupes l'étirement, tout l'intérêt du banc incliné.",
+      "Élan en bas : tu risques le biceps en position étirée.",
+      "Dossier trop plat : tu perds l'étirement et tu reviens à un curl classique."
+    ],
+    "respiration": "Expire en montant, inspire en étirant.",
+    "alternatives": [
+      "curl-pupitre",
+      "curl-halteres",
+      "curl-barre"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "curl-pupitre",
+    "nom": "Curl pupitre",
+    "groupe": "Biceps",
+    "muscles": [
+      "Biceps",
+      "Brachial"
+    ],
+    "materiel": "Machine",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Aisselles au bord du pupitre, bras en appui, poignets droits.",
+      "Monte jusqu'à contracter, sans décoller les coudes.",
+      "Redescends jusqu'à l'étirement sans déverrouiller le coude d'un coup.",
+      "Reste à une rep en réserve."
+    ],
+    "erreurs": [
+      "Fesses qui décollent : tu changes l'angle et tu triches la charge.",
+      "Déverrouiller le coude en bas : tu charges l'articulation en hyperextension.",
+      "Barre trop lourde : tu sacades et tu rates l'isolation."
+    ],
+    "respiration": "Expire en montant, inspire en descendant.",
+    "alternatives": [
+      "curl-halteres-incline",
+      "curl-barre",
+      "curl-biceps-a-la-bande"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "fentes-arriere",
+    "nom": "Fentes arrière",
+    "groupe": "Quadriceps",
+    "muscles": [
+      "Quadriceps",
+      "Fessiers"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Torse droit, recule un grand pas, genou arrière vers le sol.",
+      "Pousse dans le talon avant pour revenir.",
+      "Alternez, rythme continu, main au mur si l'équilibre lâche.",
+      "Amplitude d'abord, vitesse ensuite."
+    ],
+    "erreurs": [
+      "Petit pas : le genou avant s'avance trop et tu charges l'articulation.",
+      "Torse qui penche : tu perds l'équilibre et tu charges le bas du dos.",
+      "Genou arrière qui claque au sol : tu prends le choc dans l'articulation."
+    ],
+    "respiration": "Inspire en reculant, souffle en revenant.",
+    "alternatives": [
+      "fentes-arriere-halteres",
+      "fentes-arriere-a-la-bande",
+      "fente-statique-courte"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "good-morning-poids-du-corps",
+    "nom": "Good morning poids du corps",
+    "groupe": "Ischios",
+    "muscles": [
+      "Ischios",
+      "Fessiers",
+      "Lombaires"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Mains croisées sur la poitrine ou derrière la tête, genoux souples.",
+      "Recule les hanches, dos plat, regard un peu devant toi.",
+      "Stoppe quand le buste est à peu près parallèle, ou avant si le dos rond.",
+      "Reviens en poussant les hanches vers l'avant."
+    ],
+    "erreurs": [
+      "Dos qui s'arrondit : tu charges les lombaires au lieu des ischios.",
+      "Genoux trop pliés : tu en fais un squat et tu perds la charnière de hanche.",
+      "Tête qui se jette en arrière : tu casses la ligne et tu tires sur la nuque."
+    ],
+    "respiration": "Inspire en reculant les hanches, souffle en revenant.",
+    "alternatives": [
+      "good-morning-a-la-bande",
+      "souleve-de-terre-roumain-halteres",
+      "good-morning-poids-du-corps-court"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "oiseau-poulie",
+    "nom": "Oiseau poulie",
+    "groupe": "Épaules",
+    "muscles": [
+      "Deltoïdes postérieurs",
+      "Rhomboïdes"
+    ],
+    "materiel": "Poulie",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Poulies vis-à-vis, croisement léger devant, buste un peu penché.",
+      "Tire vers l'arrière, pas vers le plafond, pouces vers le sol.",
+      "Serre les omoplates, charge légère.",
+      "Retour contrôlé, tension continue."
+    ],
+    "erreurs": [
+      "Tirer vers le haut : tu bascules en trapèzes et tu rates l'arrière d'épaule.",
+      "Charge trop lourde : tu balances le buste.",
+      "Coudes verrouillés : tu charges l'articulation au lieu du muscle."
+    ],
+    "respiration": "Expire en ouvrant, inspire au retour.",
+    "alternatives": [
+      "oiseau-halteres",
+      "face-pulls",
+      "pull-apart"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "pike-push-up",
+    "nom": "Pike push-up",
+    "groupe": "Épaules",
+    "muscles": [
+      "Deltoïdes",
+      "Triceps",
+      "Haut des pectoraux"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Fesses hautes, tête vers le sol entre les mains, jambes plutôt tendues.",
+      "Fléchis les coudes et amène le sommet du crâne vers le sol.",
+      "Pousse jusqu'à tendre, hanches qui restent hautes.",
+      "Genoux au sol si trop dur."
+    ],
+    "erreurs": [
+      "Hanches qui s'effondrent : tu reviens en pompe classique et tu perds les épaules.",
+      "Coudes qui s'ouvrent à 90° : tu charges l'épaule en cisaillement.",
+      "Regard vers l'avant : tu casses l'alignement et tu tires sur la nuque."
+    ],
+    "respiration": "Inspire à la descente, souffle à la poussée.",
+    "alternatives": [
+      "pike-push-up-pause",
+      "developpe-epaules-a-la-bande",
+      "pompes-murales"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "pont-fessier",
+    "nom": "Pont fessier",
+    "groupe": "Fessiers",
+    "muscles": [
+      "Fessiers",
+      "Ischios"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Pieds près des fesses, bras au sol, menton rentré.",
+      "Pousse le bassin, pause une seconde, fessiers serrés.",
+      "Redescends en trois secondes sans poser les fesses.",
+      "Stoppe si le bas du dos tire : tu réduis la hauteur."
+    ],
+    "erreurs": [
+      "Hyperlordose : tu charges les lombaires au lieu des fessiers.",
+      "Pieds trop loin : tu bascules en ischios et tu perds l'extension.",
+      "Pousser dans les orteils : tu rates le talon et le fessier."
+    ],
+    "respiration": "Expire en haut, inspire à la descente.",
+    "alternatives": [
+      "pont-fessier-au-sol",
+      "pont-fessier-une-jambe",
+      "hip-thrust-a-la-bande"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "releve-de-jambes-suspendu",
+    "nom": "Relevé de jambes suspendu",
+    "groupe": "Abdominaux",
+    "muscles": [
+      "Abdominaux",
+      "Fléchisseurs de hanche"
+    ],
+    "materiel": "Barre de traction",
+    "niveau": "Intermédiaire",
+    "type": "Isolation",
+    "execution": [
+      "Suspendu, épaules basses, bassin qui bascule en avant.",
+      "Ramène les genoux (ou les jambes) vers la poitrine, pas seulement un coup de genoux.",
+      "Redescends contrôlé sans te balancer.",
+      "Genoux fléchis si les jambes tendues cassent la forme."
+    ],
+    "erreurs": [
+      "Balancier : tu voles les abs et tu charges les épaules en élan.",
+      "Seulement les genoux sans bascule de bassin : tu travailles surtout le psoas.",
+      "Épaules collées aux oreilles : tu compactes l'articulation suspendue."
+    ],
+    "respiration": "Expire en basculant le bassin, inspire au retour.",
+    "alternatives": [
+      "releve-de-jambes",
+      "releve-de-jambes-au-sol",
+      "crunch-a-la-poulie"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "rowing-de-table-prise-large",
+    "nom": "Rowing de table prise large",
+    "groupe": "Dos",
+    "muscles": [
+      "Dorsaux",
+      "Deltoïdes postérieurs",
+      "Rhomboïdes"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Mains plus écartées que d'habitude, poitrine vers le plateau.",
+      "Tire vers la poitrine, pas vers le nombril.",
+      "Corps gainé, pause courte en haut.",
+      "Table testée avant de charger le mouvement."
+    ],
+    "erreurs": [
+      "Prise trop large d'un coup : tu charges l'épaule et tu perds la force.",
+      "Hanches molles : tu perds la ligne et tu rates le dos.",
+      "Tirer du cou : tu triches la hauteur."
+    ],
+    "respiration": "Expire en tirant, inspire au retour.",
+    "alternatives": [
+      "rowing-de-table",
+      "oiseau-au-sol",
+      "face-pull-serviette"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "superman",
+    "nom": "Superman",
+    "groupe": "Dos",
+    "muscles": [
+      "Lombaires",
+      "Fessiers",
+      "Deltoïdes postérieurs"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Ventre au sol, bras devant, regard vers le tapis.",
+      "Décolle bras et jambes ensemble, pause une seconde.",
+      "Redescends sans claquer.",
+      "Amplitude petite et propre, pas un cobra forcé."
+    ],
+    "erreurs": [
+      "Regard vers le mur du fond : tu cambrer la nuque et tu perds l'alignement.",
+      "Amplitude trop grande : tu compactes les lombaires.",
+      "Retenir la respiration : tu raidis tout le dos au lieu de contrôler."
+    ],
+    "respiration": "Expire en décollant, inspire en reposant.",
+    "alternatives": [
+      "bird-dog",
+      "oiseau-au-sol",
+      "good-morning-poids-du-corps"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "tirage-horizontal",
+    "nom": "Tirage horizontal",
+    "groupe": "Dos",
+    "muscles": [
+      "Dorsaux",
+      "Rhomboïdes",
+      "Biceps"
+    ],
+    "materiel": "Machine",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Poitrine haute, pieds calés, omoplates d'abord puis coudes.",
+      "Tire vers le bas du sternum, buste stable.",
+      "Retourne contrôlé jusqu'à l'étirement.",
+      "Pas d'élan des fesses."
+    ],
+    "erreurs": [
+      "Bascule arrière : tu triches avec le poids du corps.",
+      "Tirer des bras seulement : les omoplates restent passives et le dos ne travaille pas.",
+      "Épaules qui montent : tu compactes l'articulation."
+    ],
+    "respiration": "Expire en tirant, inspire au retour.",
+    "alternatives": [
+      "tirage-horizontal-prise-neutre",
+      "rowing-a-la-bande",
+      "rowing-barre"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "wall-sit",
+    "nom": "Wall sit",
+    "groupe": "Quadriceps",
+    "muscles": [
+      "Quadriceps",
+      "Fessiers"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Gainage",
+    "execution": [
+      "Dos contre le mur, cuisses parallèles au sol, talons à plat.",
+      "Genoux au-dessus des chevilles, mains le long du corps.",
+      "Tiens, respire, sans remonter en cachette.",
+      "Remonte un peu si les talons décollent."
+    ],
+    "erreurs": [
+      "Talons qui décollent : tu charges l'avant du genou et tu perds la base.",
+      "Dos qui se décolle : tu perds le mur et tu changes l'angle.",
+      "Retenir la respiration : tu tiens moins et tu compenses en pression."
+    ],
+    "respiration": "Respire régulier, ne bloque pas.",
+    "alternatives": [
+      "wall-sit-court",
+      "squats",
+      "assis-debout-sur-chaise"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "ecartes-halteres",
+    "nom": "Écartés haltères",
+    "groupe": "Pectoraux",
+    "muscles": [
+      "Pectoraux"
+    ],
+    "materiel": "Haltères",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Sur un banc plat, coudes légèrement fléchis, haltères au-dessus des pecs.",
+      "Ouvre jusqu'à l'étirement sans douleur d'épaule.",
+      "Reviens en arc, sans claquer les haltères.",
+      "Ce n'est pas un développé : les coudes gardent le même angle."
+    ],
+    "erreurs": [
+      "Coudes qui se plient trop : tu transformes l'écarté en développé et tu rates l'étirement.",
+      "Descendre trop bas : tu mets l'épaule en danger.",
+      "Haltères trop lourds : tu sacades et tu perds le contrôle."
+    ],
+    "respiration": "Inspire en ouvrant, souffle en refermant.",
+    "alternatives": [
+      "ecartes-poulie",
+      "ecartes-poulie-vis-a-vis",
+      "developpe-halteres-plat"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "abduction-de-hanche-au-sol",
+    "nom": "Abduction de hanche au sol",
+    "groupe": "Fessiers",
+    "muscles": [
+      "Moyen fessier"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Allongé sur le côté, jambe du dessus tendue, bassin empilé.",
+      "Lève la jambe dans un mouvement court, sans tourner le pied vers le plafond.",
+      "Redescends sans poser.",
+      "Torse calme, main au sol devant toi."
+    ],
+    "erreurs": [
+      "Rotation du bassin en arrière : tu voles le moyen fessier avec le TFL ou le dos.",
+      "Jambe trop haute : tu sors de l'amplitude utile et tu charges la hanche.",
+      "Pied en rotation externe forcée : tu changes le muscle cible."
+    ],
+    "respiration": "Expire en levant, inspire en redescendant.",
+    "alternatives": [
+      "coquillage-clamshell-au-sol",
+      "abducteurs-machine",
+      "transfert-de-poids-lateral"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "bird-dog",
+    "nom": "Bird dog",
+    "groupe": "Abdominaux",
+    "muscles": [
+      "Abdominaux profonds",
+      "Fessiers",
+      "Lombaires"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Gainage",
+    "execution": [
+      "À quatre pattes, dos neutre, regard vers le sol.",
+      "Écarte le bras et la jambe opposés, bassin qui ne bascule pas.",
+      "Pause, reviens, change de côté.",
+      "Si une épaule gène, tu gardes le genou au sol et tu bouges seulement le bras."
+    ],
+    "erreurs": [
+      "Bassin qui pivote : tu perds l'anti-rotation et tu charges les lombaires.",
+      "Cambrer pour lever plus haut : tu compactes le bas du dos.",
+      "Tête qui se jette : tu casses la ligne."
+    ],
+    "respiration": "Expire en tendant, inspire au retour.",
+    "alternatives": [
+      "bird-dog-lent",
+      "dead-bug",
+      "superman"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "crunch-au-sol",
+    "nom": "Crunch au sol",
+    "groupe": "Abdominaux",
+    "muscles": [
+      "Grands droits"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Lombaires collées, genoux pliés, bande optionnelle sur la poitrine.",
+      "Expire en décollant les omoplates, amplitude courte.",
+      "Redescends sans relâcher d'un coup.",
+      "Menton un peu rentré, pas collé au sternum."
+    ],
+    "erreurs": [
+      "Tirer sur la tête : tu charges la nuque.",
+      "Bas du dos qui décolle : tu perds le crunch et tu tires sur les fléchisseurs.",
+      "Amplitude trop grande : tu sors de l'isolation."
+    ],
+    "respiration": "Expire en haut, inspire en redescendant.",
+    "alternatives": [
+      "crunch",
+      "dead-bug",
+      "planche"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "developpe-arnold",
+    "nom": "Développé Arnold",
+    "groupe": "Épaules",
+    "muscles": [
+      "Deltoïdes",
+      "Triceps"
+    ],
+    "materiel": "Haltères",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Assis, haltères devant les épaules, paumes vers toi.",
+      "Pousse et tourne les paumes vers l'avant pendant la montée.",
+      "Reviens en défaisant la rotation, gainage dur.",
+      "Pas de cambrure excessive."
+    ],
+    "erreurs": [
+      "Rotation trop tardive : tu perds le chemin et tu charges l'avant d'épaule.",
+      "Bascule lombaire : tu triches la charge avec le bas du dos.",
+      "Haltères trop lourds : tu sacades la rotation et tu rates le contrôle."
+    ],
+    "respiration": "Expire en poussant, inspire au retour.",
+    "alternatives": [
+      "developpe-halteres-assis",
+      "developpe-militaire",
+      "pike-push-up"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "developpe-gerard",
+    "nom": "Développé Gérard",
+    "groupe": "Pectoraux",
+    "muscles": [
+      "Pectoraux",
+      "Triceps",
+      "Épaules antérieures"
+    ],
+    "materiel": "Haltères",
+    "niveau": "Intermédiaire",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Sur un banc, haltères en prise neutre, coudes sous les haltères.",
+      "Coudes autour de 45°, haltères qui se rejoignent en haut.",
+      "Ne descends pas trop bas : stoppe avant que l'épaule ne tire.",
+      "Course fluide, poignets droits."
+    ],
+    "erreurs": [
+      "Coudes trop bas en bas de course : tu mets l'épaule en étirement fragile.",
+      "Prise qui s'ouvre : tu perds le levier neutre et tu charges l'avant d'épaule.",
+      "Pontage lombaire : tu triches l'amplitude."
+    ],
+    "respiration": "Inspire à la descente, souffle à la poussée.",
+    "alternatives": [
+      "developpe-halteres-plat",
+      "developpe-couche",
+      "pompes-sur-halteres"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "developpe-halteres-assis",
+    "nom": "Développé haltères assis",
+    "groupe": "Épaules",
+    "muscles": [
+      "Deltoïdes",
+      "Triceps"
+    ],
+    "materiel": "Haltères",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Assis, dossier quasi droit, haltères au niveau des oreilles.",
+      "Pousse à la verticale, sans claquer en haut.",
+      "Redescends jusqu'au niveau des oreilles, contrôlé.",
+      "Abdos serrés, pas de cambrure excessive."
+    ],
+    "erreurs": [
+      "Dossier trop incliné : tu bascules en développé incliné et tu perds les épaules.",
+      "Bascule lombaire : tu charges le bas du dos.",
+      "Haltères qui partent trop larges : tu ouvres l'épaule."
+    ],
+    "respiration": "Expire en poussant, inspire en descendant.",
+    "alternatives": [
+      "developpe-militaire",
+      "developpe-epaules-a-la-bande",
+      "developpe-arnold"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "developpe-halteres-au-sol",
+    "nom": "Développé haltères au sol",
+    "groupe": "Pectoraux",
+    "muscles": [
+      "Pectoraux",
+      "Triceps"
+    ],
+    "materiel": "Haltères",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Sur le dos, omoplates au sol, haltères au-dessus des pecs.",
+      "Descends jusqu'à ce que les triceps touchent le sol, pause courte.",
+      "Pousse, haltères qui se rapprochent sans se cogner.",
+      "Pieds au sol, bassin calme. Pas besoin de banc."
+    ],
+    "erreurs": [
+      "Rebond des triceps au sol : tu perds le contrôle et tu charges le coude.",
+      "Omoplates qui s'ouvrent : tu perds la base et tu étire mal l'épaule.",
+      "Pontage : tu triches avec les fessiers au lieu de pousser."
+    ],
+    "respiration": "Inspire à la descente, souffle à la poussée.",
+    "alternatives": [
+      "pompes",
+      "developpe-halteres-plat",
+      "developpe-pectoraux-a-la-bande"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "developpe-pectoraux-a-la-bande",
+    "nom": "Développé pectoraux à la bande",
+    "groupe": "Pectoraux",
+    "muscles": [
+      "Pectoraux",
+      "Triceps"
+    ],
+    "materiel": "Élastique",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Bande dans le dos, anses dans les mains, poussée devant la poitrine.",
+      "Omoplates stables, tension continue, pas de relâchement en bas.",
+      "Étends sans verrouiller d'un coup.",
+      "Avance un pied si tu as besoin d'équilibre."
+    ],
+    "erreurs": [
+      "Bande qui glisse : tu perds la tension et tu sacades.",
+      "Épaules qui s'enroulent : tu charges l'avant d'épaule.",
+      "Coudes trop ouverts : tu sors du levier pecs-triceps."
+    ],
+    "respiration": "Expire en poussant, inspire au retour.",
+    "alternatives": [
+      "pompes",
+      "developpe-halteres-au-sol",
+      "pompes-murales"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "extension-nuque-haltere",
+    "nom": "Extension nuque haltère",
+    "groupe": "Triceps",
+    "muscles": [
+      "Triceps (longue portion)"
+    ],
+    "materiel": "Haltères",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Deux mains sur un haltère, coudes au plafond, derrière la tête.",
+      "Descends derrière la nuque, amplitude complète, coudes stables.",
+      "Pousse jusqu'à tendre sans écarter les coudes.",
+      "Gainage, côtes vers le bas."
+    ],
+    "erreurs": [
+      "Coudes qui s'écartent : tu perds l'isolation et tu charges l'épaule.",
+      "Cambrer pour finir : tu triches avec le bas du dos.",
+      "Descendre trop vite : tu risques le coude en étirement."
+    ],
+    "respiration": "Inspire en descendant, souffle en tendant.",
+    "alternatives": [
+      "extension-triceps-haltere-a-deux-mains",
+      "extension-triceps-haltere",
+      "extension-triceps-barre-au-front"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "extension-triceps-barre-au-front",
+    "nom": "Extension triceps barre au front",
+    "groupe": "Triceps",
+    "muscles": [
+      "Triceps"
+    ],
+    "materiel": "Barre",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Sur le banc, barre au-dessus de la poitrine, coudes fixes.",
+      "Amène la barre vers le front, pas vers le nez.",
+      "Pousse en gardant les bras au même angle.",
+      "Avant-bras seuls qui bougent."
+    ],
+    "erreurs": [
+      "Barre vers le nez : tu changes le levier et tu charges le coude autrement.",
+      "Coudes qui avancent : tu transformes le skull crusher en développé.",
+      "Ouvrir les coudes : tu perds l'isolation."
+    ],
+    "respiration": "Inspire en descendant, souffle en tendant.",
+    "alternatives": [
+      "extension-barre-au-front",
+      "extension-triceps-corde",
+      "pompes-diamant"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "extension-triceps-a-la-bande",
+    "nom": "Extension triceps à la bande",
+    "groupe": "Triceps",
+    "muscles": [
+      "Triceps"
+    ],
+    "materiel": "Élastique",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Ancrage haut (porte), coudes collés, poignées en main.",
+      "Étends complètement sans claquer, épaules basses.",
+      "Reviens à 90°, tension continue.",
+      "Buste figé, pas d'élan."
+    ],
+    "erreurs": [
+      "Ancrage trop bas : tu changes l'angle et tu rates l'extension.",
+      "Coudes qui s'ouvrent : tu perds l'isolation.",
+      "Claquer en extension : tu charges le coude à vide."
+    ],
+    "respiration": "Expire en tendant, inspire au retour.",
+    "alternatives": [
+      "extension-triceps-corde",
+      "dips-de-chaise",
+      "pompes-diamant"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "face-pull-serviette",
+    "nom": "Face pull serviette",
+    "groupe": "Épaules",
+    "muscles": [
+      "Deltoïdes postérieurs",
+      "Rotateurs externes"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Serviette autour d'un montant solide, à hauteur d'yeux.",
+      "Tire vers le visage, rotation externe douce, coudes hauts.",
+      "Pas d'arc lombaire, charge = friction de la serviette.",
+      "Reviens contrôlé."
+    ],
+    "erreurs": [
+      "Tirer trop bas : tu en fais un rowing et tu rates l'arrière d'épaule.",
+      "Arc lombaire : tu triches avec le bas du dos.",
+      "Montant instable : tu te mets en danger."
+    ],
+    "respiration": "Expire en tirant, inspire au retour.",
+    "alternatives": [
+      "face-pulls",
+      "face-pull-a-la-bande",
+      "oiseau-au-sol"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "fentes-arriere-halteres",
+    "nom": "Fentes arrière haltères",
+    "groupe": "Quadriceps",
+    "muscles": [
+      "Quadriceps",
+      "Fessiers"
+    ],
+    "materiel": "Haltères",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Haltères le long du corps, grand pas en arrière, torse droit.",
+      "Genou avant au-dessus du pied, genou arrière proche du sol.",
+      "Pousse dans le talon avant pour revenir.",
+      "Alternez, rythme régulier."
+    ],
+    "erreurs": [
+      "Petit pas : tu charges l'avant du genou.",
+      "Torse qui s'effondre : tu perds le gainage.",
+      "Haltères qui balancent : tu perds l'équilibre et tu sacades."
+    ],
+    "respiration": "Inspire en reculant, souffle en revenant.",
+    "alternatives": [
+      "fentes-arriere",
+      "fentes-halteres",
+      "fentes-arriere-a-la-bande"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "fentes-bulgares-halteres",
+    "nom": "Fentes bulgares haltères",
+    "groupe": "Quadriceps",
+    "muscles": [
+      "Quadriceps",
+      "Fessiers"
+    ],
+    "materiel": "Haltères",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Pied arrière sur un canapé, haltères le long du corps.",
+      "Torse un peu en avant, genou arrière vers le sol sans claquer.",
+      "Pousse dans le talon avant.",
+      "Garde le bassin de face."
+    ],
+    "erreurs": [
+      "Pied avant trop près du canapé : tu charges le genou et tu perds l'équilibre.",
+      "Appui arrière qui pousse : tu voles la jambe avant.",
+      "Bassin de travers : tu charges la hanche en torsion."
+    ],
+    "respiration": "Inspire en descendant, souffle en poussant.",
+    "alternatives": [
+      "fentes-bulgares",
+      "fentes-arriere-halteres",
+      "squat-goblet"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "fentes-halteres",
+    "nom": "Fentes haltères",
+    "groupe": "Quadriceps",
+    "muscles": [
+      "Quadriceps",
+      "Fessiers"
+    ],
+    "materiel": "Haltères",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Grand pas, haltères stables, genou arrière vers le sol sans claquer.",
+      "Torse droit, genou avant dans l'axe.",
+      "Pousse pour revenir ou enchaîne en marchant.",
+      "Unilatéral pour rattraper les écarts droite-gauche."
+    ],
+    "erreurs": [
+      "Genou qui rentre : tu torses l'articulation.",
+      "Pas trop court : tu charges l'avant du genou.",
+      "Dos rond : tu perds le gainage sous charge."
+    ],
+    "respiration": "Inspire en descendant, souffle en poussant.",
+    "alternatives": [
+      "fentes-arriere-halteres",
+      "fentes-marchees",
+      "fentes-bulgares"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "kickback-poulie",
+    "nom": "Kickback poulie",
+    "groupe": "Triceps",
+    "muscles": [
+      "Triceps"
+    ],
+    "materiel": "Poulie",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Bras collé au corps, avant-bras seul qui bouge, poulie basse.",
+      "Étends jusqu'à l'alignement, pause, reviens.",
+      "Charge cosmétique, isolation, buste figé.",
+      "Épaule basse."
+    ],
+    "erreurs": [
+      "Bras qui se décolle : tu transformes le kickback en rowing.",
+      "Charge trop lourde : tu balances le buste et tu rates le triceps.",
+      "Épaule qui monte : tu voles le mouvement avec le trapèze."
+    ],
+    "respiration": "Expire en tendant, inspire au retour.",
+    "alternatives": [
+      "extension-triceps-corde",
+      "extension-triceps-a-la-bande",
+      "pompes-diamant"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "mollets-halteres",
+    "nom": "Mollets haltères",
+    "groupe": "Mollets",
+    "muscles": [
+      "Gastrocnémiens",
+      "Soléaire"
+    ],
+    "materiel": "Haltères",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Sur une marche si possible, haltères le long du corps.",
+      "Étire en bas, monte, pause en haut.",
+      "Appui léger au mur si l'équilibre lâche.",
+      "Pas de rebond."
+    ],
+    "erreurs": [
+      "Rebond : tu délégués au tendon.",
+      "Course coupée : tu rates l'étirement.",
+      "Genoux qui plient à chaque rep : tu changes le muscle cible."
+    ],
+    "respiration": "Expire en montant, inspire en descendant.",
+    "alternatives": [
+      "mollets-unipodal",
+      "mollets-debout",
+      "mollets-unipodal-haltere"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "mollets-unipodal",
+    "nom": "Mollets unipodal",
+    "groupe": "Mollets",
+    "muscles": [
+      "Gastrocnémiens",
+      "Soléaire"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Un pied sur une marche, appui léger au mur.",
+      "Amplitude complète, pause en haut, descente contrôlée.",
+      "Change de pied, même nombre de reps.",
+      "Cheville dans l'axe."
+    ],
+    "erreurs": [
+      "S'aider trop du mur : tu voles le mollet.",
+      "Rebond : tu rates le travail.",
+      "Pied qui s'affaisse en dedans : tu charges la cheville en torsion."
+    ],
+    "respiration": "Expire en montant, inspire en descendant.",
+    "alternatives": [
+      "mollets-deux-pieds",
+      "mollets-halteres",
+      "montees-de-talons-debout"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "mollets-a-la-presse",
+    "nom": "Mollets à la presse",
+    "groupe": "Mollets",
+    "muscles": [
+      "Gastrocnémiens",
+      "Soléaire"
+    ],
+    "materiel": "Machine",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Avant-pieds en bas du plateau, genoux quasi tendus sans verrouiller.",
+      "Étire en bas sans rebond, pause une seconde en haut.",
+      "Bas du dos collé.",
+      "Volume, pas un max."
+    ],
+    "erreurs": [
+      "Rebond en bas : tendon au lieu du mollet.",
+      "Verrouiller les genoux : tu charges l'articulation.",
+      "Bas du dos qui décolle : tu perds la base."
+    ],
+    "respiration": "Expire en poussant, inspire en étirant.",
+    "alternatives": [
+      "mollets-debout",
+      "mollets-assis",
+      "mollets-halteres"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "pompes-diamant",
+    "nom": "Pompes diamant",
+    "groupe": "Triceps",
+    "muscles": [
+      "Triceps",
+      "Pectoraux"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Pouces et index se touchent sous la poitrine, corps gainé.",
+      "Descends les coudes le long du buste.",
+      "Pousse jusqu'à tendre, genoux autorisés si la forme casse.",
+      "Poitrine vers les mains, pas la tête."
+    ],
+    "erreurs": [
+      "Hanches qui s'effondrent : tu charges les lombaires.",
+      "Coudes qui s'ouvrent : tu perds les triceps et tu charges l'épaule.",
+      "Mains trop en avant : tu changes le levier et tu rates l'isolation."
+    ],
+    "respiration": "Inspire à la descente, souffle à la poussée.",
+    "alternatives": [
+      "dips-de-chaise",
+      "pompes",
+      "extension-triceps-a-la-bande"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "pompes-pieds-sureleves",
+    "nom": "Pompes pieds surélevés",
+    "groupe": "Pectoraux",
+    "muscles": [
+      "Pectoraux (haut)",
+      "Triceps",
+      "Épaules"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Pieds sur une marche, mains au sol, corps en ligne.",
+      "Descends la poitrine vers le sol, coudes à 45°.",
+      "Pousse, omoplates stables.",
+      "Reviens à plat dès que la ligne casse."
+    ],
+    "erreurs": [
+      "Hanches cassées : tu perds le gainage et tu charges le bas du dos.",
+      "Marche trop haute trop tôt : tu bascules en épaules et tu perds les pecs.",
+      "Tête qui plonge : tu raccourcis la course."
+    ],
+    "respiration": "Inspire à la descente, souffle à la poussée.",
+    "alternatives": [
+      "pompes",
+      "pike-push-up",
+      "developpe-halteres-incline"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "pont-fessier-haltere",
+    "nom": "Pont fessier haltère",
+    "groupe": "Fessiers",
+    "muscles": [
+      "Fessiers",
+      "Ischios"
+    ],
+    "materiel": "Haltères",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Haltère sur le bassin (serviette), pieds près des fesses.",
+      "Pousse, pause une seconde, fessiers serrés.",
+      "Descends sans poser les fesses.",
+      "Menton rentré, côtes vers le bas."
+    ],
+    "erreurs": [
+      "Haltère qui roule : tu perds la charge et tu risques le ventre.",
+      "Cambrer : tu charges les lombaires.",
+      "Pousser dans les orteils : tu rates le fessier."
+    ],
+    "respiration": "Expire en haut, inspire à la descente.",
+    "alternatives": [
+      "pont-fessier",
+      "hip-thrust",
+      "pont-fessier-une-jambe"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "rowing-t-bar",
+    "nom": "Rowing T-bar",
+    "groupe": "Dos",
+    "muscles": [
+      "Dorsaux",
+      "Rhomboïdes",
+      "Trapèzes"
+    ],
+    "materiel": "Barre",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Poitrine ouverte, buste penché, tire vers le bas du sternum.",
+      "Amplitude complète, omoplates qui se serrent.",
+      "Pas de cheat du bas du dos.",
+      "Reviens jusqu'à l'étirement."
+    ],
+    "erreurs": [
+      "Élan lombaire : tu voles le dos et tu charges les disques.",
+      "Tirer trop haut vers le cou : tu bascules en trapèzes hauts.",
+      "Dos rond : tu perds la base."
+    ],
+    "respiration": "Expire en tirant, inspire au retour.",
+    "alternatives": [
+      "rowing-barre",
+      "tirage-horizontal",
+      "rowing-deux-halteres-buste-penche"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "rowing-barre-buste-penche",
+    "nom": "Rowing barre buste penché",
+    "groupe": "Dos",
+    "muscles": [
+      "Dorsaux",
+      "Rhomboïdes",
+      "Biceps"
+    ],
+    "materiel": "Barre",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Dos plat, buste autour de 45°, barre vers le nombril.",
+      "Pause une seconde en contraction, coudes près du corps.",
+      "Pas d'élan du bas du dos.",
+      "Tête alignée, regard un peu devant."
+    ],
+    "erreurs": [
+      "Dos rond : la charge passe dans les lombaires.",
+      "Redresser le buste à chaque rep : tu triches la charge.",
+      "Tirer des biceps d'abord : les omoplates restent passives."
+    ],
+    "respiration": "Expire en tirant, inspire au retour.",
+    "alternatives": [
+      "rowing-barre",
+      "rowing-deux-halteres-buste-penche",
+      "rowing-de-table"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "rowing-deux-halteres-buste-penche",
+    "nom": "Rowing deux haltères buste penché",
+    "groupe": "Dos",
+    "muscles": [
+      "Dorsaux",
+      "Rhomboïdes",
+      "Biceps"
+    ],
+    "materiel": "Haltères",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Buste à 45°, haltères vers les hanches, omoplates serrées en haut.",
+      "Genoux souples, dos plat.",
+      "Redescends jusqu'à l'étirement.",
+      "Gaine, pas de balancier."
+    ],
+    "erreurs": [
+      "Haltères qui pendent trop loin : tu charges les lombaires.",
+      "Tête qui se jette : tu casses la ligne.",
+      "Élan : tu rates le dos."
+    ],
+    "respiration": "Expire en tirant, inspire au retour.",
+    "alternatives": [
+      "rowing-haltere-un-bras",
+      "rowing-barre-buste-penche",
+      "rowing-a-la-bande"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "rowing-a-la-bande",
+    "nom": "Rowing à la bande",
+    "groupe": "Dos",
+    "muscles": [
+      "Dorsaux",
+      "Rhomboïdes",
+      "Biceps"
+    ],
+    "materiel": "Élastique",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Ancrage à hauteur de poitrine, tirer vers le nombril, omoplates d'abord.",
+      "Poitrine ouverte, pas d'élan du bas du dos.",
+      "Tension continue, retour contrôlé.",
+      "Coudes près du corps."
+    ],
+    "erreurs": [
+      "Ancrage trop haut : tu bascules en tirage vertical et tu changes le stimulus.",
+      "Élan lombaire : tu voles le dos.",
+      "Épaules qui montent : tu compactes l'articulation."
+    ],
+    "respiration": "Expire en tirant, inspire au retour.",
+    "alternatives": [
+      "rowing-de-table",
+      "tirage-horizontal",
+      "rowing-deux-halteres-buste-penche"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "shrug-barre",
+    "nom": "Shrug barre",
+    "groupe": "Dos",
+    "muscles": [
+      "Trapèzes supérieurs"
+    ],
+    "materiel": "Barre",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Barre au contact des cuisses, bras tendus, épaules vers les oreilles.",
+      "Pause une seconde en haut, pas de roulement.",
+      "Redescends contrôlé.",
+      "Cou neutre, regard devant."
+    ],
+    "erreurs": [
+      "Roulement d'épaules : tu charges l'articulation en cisaillement inutile.",
+      "Pli des coudes : tu transformes le shrug en curl.",
+      "Tête en avant : tu tires sur la nuque."
+    ],
+    "respiration": "Expire en haussant, inspire en relâchant.",
+    "alternatives": [
+      "face-pulls",
+      "tirage-vertical",
+      "pull-apart"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "souleve-de-terre-halteres",
+    "nom": "Soulevé de terre haltères",
+    "groupe": "Dos",
+    "muscles": [
+      "Chaîne postérieure",
+      "Ischios",
+      "Fessiers"
+    ],
+    "materiel": "Haltères",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Haltères à l'extérieur des pieds ou le long des cuisses, dos plat.",
+      "Recule les hanches avant de plier les genoux, tibia plutôt vertical.",
+      "Hanches et épaules montent ensemble.",
+      "Gaine le ventre, haltères collées."
+    ],
+    "erreurs": [
+      "Dos rond : la charge passe dans les disques.",
+      "Haltères qui partent en avant : tu allonges le levier lombaire.",
+      "Genoux qui plient trop tôt : tu en fais un squat et tu perds la charnière."
+    ],
+    "respiration": "Inspire et gaine avant de tirer, souffle en haut.",
+    "alternatives": [
+      "souleve-de-terre",
+      "souleve-de-terre-roumain-halteres",
+      "good-morning-poids-du-corps"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "souleve-de-terre-roumain-halteres",
+    "nom": "Soulevé de terre roumain haltères",
+    "groupe": "Ischios",
+    "muscles": [
+      "Ischios",
+      "Fessiers"
+    ],
+    "materiel": "Haltères",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Légère flexion de genoux, haltères le long des cuisses jusqu'au milieu des tibias.",
+      "Recule les hanches, stretch ischio, dos plat.",
+      "Reviens en poussant les hanches.",
+      "Stoppe avant que le dos ne s'arrondisse."
+    ],
+    "erreurs": [
+      "Dos rond : charge dans les lombaires au lieu des ischios.",
+      "Genoux trop pliés : tu perds l'étirement.",
+      "Haltères qui s'éloignent : tu allonges le levier lombaire."
+    ],
+    "respiration": "Inspire en descendant, souffle en revenant.",
+    "alternatives": [
+      "souleve-de-terre-roumain",
+      "good-morning-a-la-bande",
+      "leg-curl"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "squat-goblet",
+    "nom": "Squat goblet",
+    "groupe": "Quadriceps",
+    "muscles": [
+      "Quadriceps",
+      "Fessiers"
+    ],
+    "materiel": "Haltères",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Haltère contre la poitrine, coudes dedans, pieds largeur d'épaules.",
+      "Descends sous la parallèle si les hanches le permettent, talons au sol.",
+      "Pousse dans tout le pied, poitrine ouverte.",
+      "Si trop facile : pause deux secondes en bas."
+    ],
+    "erreurs": [
+      "Coudes qui s'écartent : l'haltère part en avant et tu perds le levier.",
+      "Talons qui décollent : tu charges l'avant du genou.",
+      "Dos qui s'effondre : tu perds le gainage."
+    ],
+    "respiration": "Inspire en descendant, souffle en remontant.",
+    "alternatives": [
+      "squats",
+      "squat-barre",
+      "squat-a-la-bande"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "squat-sumo-haltere",
+    "nom": "Squat sumo haltère",
+    "groupe": "Quadriceps",
+    "muscles": [
+      "Quadriceps",
+      "Fessiers",
+      "Adducteurs"
+    ],
+    "materiel": "Haltères",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Pieds plus larges, orteils ouverts, un haltère entre les pieds.",
+      "Genoux qui suivent les orteils, torse plutôt vertical.",
+      "Descends, pousse dans tout le pied.",
+      "Garde la poitrine ouverte."
+    ],
+    "erreurs": [
+      "Genoux qui rentrent : tu perds l'axe et tu charges le genou.",
+      "Pieds trop larges d'un coup : tu perds l'équilibre et l'amplitude.",
+      "Dos rond pour attraper l'haltère : tu charges les lombaires."
+    ],
+    "respiration": "Inspire en descendant, souffle en poussant.",
+    "alternatives": [
+      "squats-sumo",
+      "squat-goblet",
+      "fentes-laterales-haltere"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "squat-a-la-bande",
+    "nom": "Squat à la bande",
+    "groupe": "Quadriceps",
+    "muscles": [
+      "Quadriceps",
+      "Fessiers"
+    ],
+    "materiel": "Élastique",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Bande sous les pieds, autres anses aux épaules.",
+      "Genoux dans l'axe, profondeur confortable, talons au sol.",
+      "Pousse contre la bande, poitrine ouverte.",
+      "Tension plus forte en haut : contrôle la fin de course."
+    ],
+    "erreurs": [
+      "Bande qui glisse des épaules : tu perds la charge et tu sacades.",
+      "Genoux qui rentrent : la bande n'excuse pas l'axe.",
+      "Dos rond : tu charges les lombaires."
+    ],
+    "respiration": "Inspire en descendant, souffle en remontant.",
+    "alternatives": [
+      "squats",
+      "squat-goblet",
+      "fentes-avant-a-la-bande"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "squats-sumo",
+    "nom": "Squats sumo",
+    "groupe": "Quadriceps",
+    "muscles": [
+      "Quadriceps",
+      "Fessiers",
+      "Adducteurs"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Pieds plus ouverts que d'habitude, orteils dehors.",
+      "Genoux qui suivent les orteils, descends, talons au sol.",
+      "Pousse, poitrine ouverte.",
+      "Mains devant pour l'équilibre."
+    ],
+    "erreurs": [
+      "Genoux qui rentrent : tu rates les fessiers et tu torses le genou.",
+      "Talons qui décollent : tu charges l'avant du genou.",
+      "Torse qui s'effondre : tu perds le gainage."
+    ],
+    "respiration": "Inspire en descendant, souffle en remontant.",
+    "alternatives": [
+      "squat-sumo-haltere",
+      "squats",
+      "fentes-laterales-haltere"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "ecartes-poulie",
+    "nom": "Écartés poulie",
+    "groupe": "Pectoraux",
+    "muscles": [
+      "Pectoraux"
+    ],
+    "materiel": "Poulie",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Poulies hautes ou vis-à-vis, coudes légèrement fléchis.",
+      "Ramène les mains devant, étirement en arrière, charge cosmétique.",
+      "Pas de claquement devant, tension continue.",
+      "Un pas en fente pour la stabilité."
+    ],
+    "erreurs": [
+      "Coudes trop pliés : tu en fais un développé et tu rates l'écarté.",
+      "Charge trop lourde : tu sacades et tu charges l'épaule.",
+      "Buste qui bascule : tu triches avec le poids du corps."
+    ],
+    "respiration": "Expire en refermant, inspire en ouvrant.",
+    "alternatives": [
+      "ecartes-poulie-vis-a-vis",
+      "ecartes-halteres",
+      "developpe-pectoraux-a-la-bande"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "elevations-laterales-halteres",
+    "nom": "Élévations latérales haltères",
+    "groupe": "Épaules",
+    "muscles": [
+      "Deltoïdes latéraux"
+    ],
+    "materiel": "Haltères",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Coudes légèrement fléchis, lève jusqu'à juste avant la ligne des épaules.",
+      "Peu d'élan, descente en deux secondes.",
+      "Omoplates basses, pouces un peu vers le sol.",
+      "Charge légère, série propre."
+    ],
+    "erreurs": [
+      "Monter trop haut : tu bascules en trapèzes.",
+      "Balancier du buste : tu voles le deltoïde.",
+      "Bras verrouillés : tu charges le coude."
+    ],
+    "respiration": "Expire en montant, inspire en descendant.",
+    "alternatives": [
+      "elevations-laterales",
+      "elevations-laterales-a-la-bande",
+      "elevations-laterales-de-bras"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "assis-debout-sur-chaise",
+    "nom": "Assis-debout sur chaise",
+    "groupe": "Quadriceps",
+    "muscles": [
+      "Quadriceps",
+      "Fessiers"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Assis au bord d'une chaise stable, pieds à plat, un peu en avant.",
+      "Pousse dans les talons pour te lever sans élan, poitrine ouverte.",
+      "Reviens t'asseoir contrôlé, sans t'effondrer.",
+      "Mains sur les cuisses si besoin, pas un lancer du buste."
+    ],
+    "erreurs": [
+      "Élan des bras : tu voles les jambes et tu perds l'équilibre en haut.",
+      "Genoux qui rentrent : tu charges le genou en torsion.",
+      "Se laisser tomber : tu prends le choc dans les hanches et le dos."
+    ],
+    "respiration": "Souffle en te levant, inspire en t'asseyant.",
+    "alternatives": [
+      "squat-sur-chaise-partielle",
+      "squats",
+      "wall-sit-court"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "bird-dog-lent",
+    "nom": "Bird dog lent",
+    "groupe": "Abdominaux",
+    "muscles": [
+      "Abdominaux profonds",
+      "Fessiers"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Gainage",
+    "execution": [
+      "Genoux et mains au sol, dos neutre.",
+      "Écarte bras et jambe opposés très lentement, bassin qui ne bascule pas.",
+      "Pause, reviens au même rythme, change de côté.",
+      "Amplitude petite si le bassin bouge."
+    ],
+    "erreurs": [
+      "Bassin qui pivote : tu perds l'anti-rotation et tu charges les lombaires.",
+      "Aller trop vite : tu rates le contrôle, tout l'intérêt de la version lente.",
+      "Cambrer pour lever plus haut : tu compactes le bas du dos."
+    ],
+    "respiration": "Expire en tendant, inspire au retour.",
+    "alternatives": [
+      "bird-dog",
+      "dead-bug-amplitude-courte",
+      "planche"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "burpees-controles",
+    "nom": "Burpees contrôlés",
+    "groupe": "Cardio",
+    "muscles": [
+      "Pectoraux",
+      "Quadriceps",
+      "Abdominaux"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Cardio",
+    "execution": [
+      "Pose les mains, recule les pieds, pompe optionnelle, reviens, debout.",
+      "Pas de rebond, chaque étape posée.",
+      "Qualité avant la vitesse, poitrine ouverte en haut.",
+      "Coupe la pompe si tu perds la ligne."
+    ],
+    "erreurs": [
+      "Rebond au sol : tu charges poignets et épaules en choc.",
+      "Dos qui se casse au milieu : tu rates le gainage et tu tires sur les lombaires.",
+      "Saut jeté à chaque rep : tu perds le contrôle et tu fatigues trop tôt."
+    ],
+    "respiration": "Souffle à la poussée et au relevé, inspire entre les étapes.",
+    "alternatives": [
+      "mountain-climbers",
+      "pompes",
+      "montees-de-genoux-squats"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "cercles-de-chevilles-assis",
+    "nom": "Cercles de chevilles assis",
+    "groupe": "Mobilité",
+    "muscles": [
+      "Mollets",
+      "Péroniers"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Mobilité",
+    "execution": [
+      "Assis, genou calme, dessine un petit cercle avec la pointe du pied.",
+      "Change de sens après quelques tours, même amplitude.",
+      "Pas de rebond, mouvement fluide.",
+      "Garde le tibia plutôt stable."
+    ],
+    "erreurs": [
+      "Cercle trop grand d'un coup : tu forces l'articulation au lieu de la lubrifier.",
+      "Genou qui tourne avec le pied : tu rates la cheville.",
+      "Aller trop vite : tu perds le contrôle et tu sacades."
+    ],
+    "respiration": "Respire calme, un cercle n'a pas besoin d'apnée.",
+    "alternatives": [
+      "etirements-mollets-au-mur",
+      "mollets-deux-pieds",
+      "montees-de-talons-debout"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "coquillage-clamshell-au-sol",
+    "nom": "Coquillage (clamshell) au sol",
+    "groupe": "Fessiers",
+    "muscles": [
+      "Moyen fessier"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Allongé sur le côté, genoux pliés, talons ensemble.",
+      "Ouvre le genou du dessus dans une petite amplitude, bassin empilé.",
+      "Redescends sans poser, fessier moyen qui travaille, pas le dos.",
+      "Torse calme, main au sol devant toi."
+    ],
+    "erreurs": [
+      "Bassin qui bascule en arrière : tu voles le moyen fessier avec le dos.",
+      "Ouverture trop grande : tu sors de l'amplitude utile.",
+      "Talons qui se séparent : tu changes le levier et tu rates le clamshell."
+    ],
+    "respiration": "Expire en ouvrant, inspire en refermant.",
+    "alternatives": [
+      "abduction-de-hanche-au-sol",
+      "abducteurs-machine",
+      "pont-fessier-pieds-rapproches"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "curl-biceps-a-la-bande",
+    "nom": "Curl biceps à la bande",
+    "groupe": "Biceps",
+    "muscles": [
+      "Biceps",
+      "Brachial"
+    ],
+    "materiel": "Élastique",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Bande sous les pieds, coudes collés, paumes vers toi.",
+      "Monte sans balancier, redescends contre la tension.",
+      "Garde les épaules basses.",
+      "Écarte un peu les pieds pour durcir."
+    ],
+    "erreurs": [
+      "Balancier du buste : tu voles le biceps.",
+      "Coudes qui avancent : tu raccourcis la course.",
+      "Bande trop lâche en bas : tu perds la tension, tout l'intérêt de l'élastique."
+    ],
+    "respiration": "Expire en montant, inspire en descendant.",
+    "alternatives": [
+      "curl-halteres",
+      "curl-isometrique-contre-l-autre-main",
+      "curl-barre"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "curl-isometrique-contre-l-autre-main",
+    "nom": "Curl isométrique contre l'autre main",
+    "groupe": "Biceps",
+    "muscles": [
+      "Biceps"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Coude au corps, l'autre main pousse contre l'avant-bras.",
+      "Opposition légère, tiens quelques secondes, relâche.",
+      "Pas de à-coups, amplitude confortable.",
+      "Change de bras, même effort."
+    ],
+    "erreurs": [
+      "Pousser trop fort d'un coup : tu sacades le coude au lieu de contracter.",
+      "Épaule qui monte : tu voles le biceps avec le trapèze.",
+      "Bloquer la respiration : tu raidis tout le cou."
+    ],
+    "respiration": "Respire lentement pendant la poussée, ne fais pas d'apnée.",
+    "alternatives": [
+      "curl-biceps-a-la-bande",
+      "curl-halteres",
+      "extension-triceps-au-mur"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "dead-bug-amplitude-courte",
+    "nom": "Dead bug amplitude courte",
+    "groupe": "Abdominaux",
+    "muscles": [
+      "Abdominaux profonds"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Gainage",
+    "execution": [
+      "Sur le dos, lombaires collées, bras et genoux au plafond.",
+      "Écarte un peu seulement, tu réduis dès que le dos décolle.",
+      "Lent, expire en éloignant.",
+      "Reviens au centre avant de changer de côté."
+    ],
+    "erreurs": [
+      "Vouloir la grande amplitude : le dos décolle et tu charges les lombaires.",
+      "Aller trop vite : tu perds le collé lombaire.",
+      "Épaules haussées : tu tires sur la nuque."
+    ],
+    "respiration": "Expire en éloignant, inspire au retour.",
+    "alternatives": [
+      "dead-bug",
+      "respiration-au-sol-genoux-plies",
+      "hollow-hold"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "developpe-militaire-barre",
+    "nom": "Développé militaire barre",
+    "groupe": "Épaules",
+    "muscles": [
+      "Deltoïdes",
+      "Triceps"
+    ],
+    "materiel": "Barre",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Abdos serrés, barre devant le visage, pieds ancrés.",
+      "Pousse à la verticale, tête qui passe sous la barre en haut.",
+      "Pas de bascule lombaire, redescends au contact des épaules.",
+      "Gainage prioritaire sur la charge."
+    ],
+    "erreurs": [
+      "Bascule lombaire : tu charges le bas du dos au lieu des épaules.",
+      "Barre trop devant : tu perds le levier.",
+      "Genoux qui plient : tu transformes le mouvement en push press."
+    ],
+    "respiration": "Inspire en bas, souffle en poussant.",
+    "alternatives": [
+      "developpe-militaire",
+      "developpe-halteres-assis",
+      "pike-push-up"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "developpe-epaules-a-la-bande",
+    "nom": "Développé épaules à la bande",
+    "groupe": "Épaules",
+    "muscles": [
+      "Deltoïdes",
+      "Triceps"
+    ],
+    "materiel": "Élastique",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Bande sous les pieds, anses à hauteur d'épaules, poussée verticale.",
+      "Abdos serrés, charge = tension, pas d'arc lombaire.",
+      "Étends sans claquer, reviens contrôlé.",
+      "Écarte les pieds pour plus de tension."
+    ],
+    "erreurs": [
+      "Arc lombaire : tu triches la verticale avec le bas du dos.",
+      "Bande trop courte : tu sacades le départ.",
+      "Coudes trop en arrière : tu ouvres l'épaule."
+    ],
+    "respiration": "Expire en poussant, inspire au retour.",
+    "alternatives": [
+      "pike-push-up",
+      "developpe-halteres-assis",
+      "pompes-murales"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "extension-barre-au-front",
+    "nom": "Extension barre au front",
+    "groupe": "Triceps",
+    "muscles": [
+      "Triceps"
+    ],
+    "materiel": "Barre",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Couché, coudes stables, barre vers le front.",
+      "Pousse jusqu'à tendre, charge secondaire.",
+      "Avant-bras seuls qui bougent.",
+      "Poignets droits."
+    ],
+    "erreurs": [
+      "Coudes qui avancent : tu en fais un développé.",
+      "Barre trop lourde : tu sacades et tu charges le coude.",
+      "Ouvrir les coudes : tu perds l'isolation."
+    ],
+    "respiration": "Inspire en descendant, souffle en tendant.",
+    "alternatives": [
+      "extension-triceps-barre-au-front",
+      "extension-triceps-corde",
+      "dips-de-chaise"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "extension-corde",
+    "nom": "Extension corde",
+    "groupe": "Triceps",
+    "muscles": [
+      "Triceps"
+    ],
+    "materiel": "Poulie",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Poulie haute, corde, coudes collés.",
+      "Ouvre la corde en bas, extension complète.",
+      "Reviens à 90°, dose d'entretien, pas un max.",
+      "Épaules basses."
+    ],
+    "erreurs": [
+      "Coudes qui s'écartent : tu perds l'isolation.",
+      "Buste qui penche : tu triches avec le poids du corps.",
+      "Ne pas ouvrir la corde : tu coupes la contraction."
+    ],
+    "respiration": "Expire en tendant, inspire au retour.",
+    "alternatives": [
+      "extension-triceps-corde",
+      "extension-triceps-poulie",
+      "kickback-poulie"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "extension-triceps-au-mur",
+    "nom": "Extension triceps au mur",
+    "groupe": "Triceps",
+    "muscles": [
+      "Triceps"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Avant-bras au mur, coude près du corps, poussée courte.",
+      "Stoppe sous le seuil de gêne, amplitude contrôlée.",
+      "Reviens lentement, change de bras.",
+      "Épaule basse, pas un développé mural."
+    ],
+    "erreurs": [
+      "Pousser trop fort : tu sors du contrôle et tu charges le coude.",
+      "Épaule qui monte : tu voles le triceps.",
+      "Corps trop loin du mur : tu changes le levier et tu perds l'isolation."
+    ],
+    "respiration": "Expire en poussant, inspire au retour.",
+    "alternatives": [
+      "dips-de-chaise",
+      "extension-triceps-a-la-bande",
+      "pompes-murales"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "extension-triceps-haltere",
+    "nom": "Extension triceps haltère",
+    "groupe": "Triceps",
+    "muscles": [
+      "Triceps"
+    ],
+    "materiel": "Haltères",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Deux mains derrière la tête, coudes au plafond.",
+      "Descends l'haltère, pousse jusqu'à tendre, coudes stables.",
+      "Côtes vers le bas, pas d'arc.",
+      "Charge honnête."
+    ],
+    "erreurs": [
+      "Coudes qui s'écartent : tu perds l'isolation.",
+      "Cambrer : tu charges les lombaires.",
+      "Descendre trop vite : tu risques le coude."
+    ],
+    "respiration": "Inspire en descendant, souffle en tendant.",
+    "alternatives": [
+      "extension-triceps-haltere-a-deux-mains",
+      "extension-nuque-haltere",
+      "extension-triceps-a-la-bande"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "extension-triceps-haltere-a-deux-mains",
+    "nom": "Extension triceps haltère à deux mains",
+    "groupe": "Triceps",
+    "muscles": [
+      "Triceps (longue portion)"
+    ],
+    "materiel": "Haltères",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Haltère derrière la tête, coudes vers le plafond, pas d'écartement.",
+      "Amplitude complète, poussée verticale.",
+      "Gaine, regard devant.",
+      "Stoppe avant que les coudes ne partent."
+    ],
+    "erreurs": [
+      "Coudes qui s'ouvrent : tu charges les épaules.",
+      "Arc lombaire : tu triches la fin de course.",
+      "Prise instable : l'haltère bascule et tu rates le triceps."
+    ],
+    "respiration": "Inspire en descendant, souffle en tendant.",
+    "alternatives": [
+      "extension-triceps-haltere",
+      "extension-nuque-haltere",
+      "dips-de-chaise"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "extension-triceps-poulie",
+    "nom": "Extension triceps poulie",
+    "groupe": "Triceps",
+    "muscles": [
+      "Triceps"
+    ],
+    "materiel": "Poulie",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Épaules basses, seule l'avant-bras bouge, barre ou corde.",
+      "Étends sans claquer, reviens à 90°.",
+      "Buste figé, coudes cloués.",
+      "Tension continue."
+    ],
+    "erreurs": [
+      "Épaules qui montent : tu voles le triceps avec les trapèzes.",
+      "Coudes qui avancent : tu changes le levier.",
+      "Charge trop lourde : tu penche le buste."
+    ],
+    "respiration": "Expire en tendant, inspire au retour.",
+    "alternatives": [
+      "extension-triceps-corde",
+      "extension-corde",
+      "kickback-poulie"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "extensions-de-genoux-assis",
+    "nom": "Extensions de genoux assis",
+    "groupe": "Quadriceps",
+    "muscles": [
+      "Quadriceps"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Assis, dos calé, tends une jambe, pause une seconde.",
+      "Redescends sans claquer, change de jambe.",
+      "Pied flex, genou dans l'axe.",
+      "Mains sur les côtés de la chaise pour la stabilité."
+    ],
+    "erreurs": [
+      "Claquer en bas : tu charges le genou à vide.",
+      "Dos qui se décolle : tu triches avec le buste.",
+      "Balancier de la jambe : tu rates le quadri."
+    ],
+    "respiration": "Expire en tendant, inspire en fléchissant.",
+    "alternatives": [
+      "leg-extension",
+      "assis-debout-sur-chaise",
+      "wall-sit-court"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "face-pull-a-la-bande",
+    "nom": "Face pull à la bande",
+    "groupe": "Épaules",
+    "muscles": [
+      "Deltoïdes postérieurs",
+      "Rotateurs externes"
+    ],
+    "materiel": "Élastique",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Ancrage à hauteur de visage, tire vers les yeux, rotation externe en fin de course.",
+      "Coudes hauts, charge légère.",
+      "Retour contrôlé, tension continue.",
+      "Buste figé."
+    ],
+    "erreurs": [
+      "Tirer trop bas : tu en fais un rowing.",
+      "Arc lombaire : tu triches avec le dos.",
+      "Bande trop forte : tu sacades et tu rates la rotation externe."
+    ],
+    "respiration": "Expire en tirant, inspire au retour.",
+    "alternatives": [
+      "face-pulls",
+      "face-pull-serviette",
+      "pull-apart"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "fente-statique-courte",
+    "nom": "Fente statique courte",
+    "groupe": "Quadriceps",
+    "muscles": [
+      "Quadriceps",
+      "Fessiers"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Petit pas, genou avant visible au-dessus du pied.",
+      "Descends un peu, tu t'arrêtes avant la zone gênante.",
+      "Pousse pour revenir, bassin de face.",
+      "Main au mur si l'équilibre lâche."
+    ],
+    "erreurs": [
+      "Descendre trop bas trop tôt : tu sors de l'amplitude contrôlée.",
+      "Genou qui rentre : tu charges l'articulation en torsion.",
+      "Torse qui s'effondre : tu perds le gainage."
+    ],
+    "respiration": "Inspire en descendant, souffle en revenant.",
+    "alternatives": [
+      "fentes-arriere",
+      "squat-sur-chaise-partielle",
+      "step-up-bas-marche-d-escalier"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "fentes-arriere-a-la-bande",
+    "nom": "Fentes arrière à la bande",
+    "groupe": "Quadriceps",
+    "muscles": [
+      "Quadriceps",
+      "Fessiers"
+    ],
+    "materiel": "Élastique",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Bande sous le pied avant, recule l'autre jambe, genou vers le sol.",
+      "Torse droit, pousse dans le talon avant pour revenir.",
+      "Tension continue, pas d'élan.",
+      "Anses tenues ou aux épaules."
+    ],
+    "erreurs": [
+      "Bande sous le mauvais pied : tu perds la tension utile.",
+      "Petit pas : tu charges l'avant du genou.",
+      "Dos rond : tu perds le gainage contre la bande."
+    ],
+    "respiration": "Inspire en reculant, souffle en revenant.",
+    "alternatives": [
+      "fentes-arriere",
+      "fentes-avant-a-la-bande",
+      "squat-a-la-bande"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "fentes-avant-a-la-bande",
+    "nom": "Fentes avant à la bande",
+    "groupe": "Quadriceps",
+    "muscles": [
+      "Quadriceps",
+      "Fessiers"
+    ],
+    "materiel": "Élastique",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Bande sous le pied avant, anses aux épaules.",
+      "Grand pas, genou arrière bas, torse ouvert.",
+      "Pousse pour revenir, genou avant dans l'axe.",
+      "Change de jambe, même amplitude."
+    ],
+    "erreurs": [
+      "Anses qui glissent : tu perds la charge et tu sacades.",
+      "Genou qui rentre : tu torses l'articulation.",
+      "Pas trop court : tu charges l'avant du genou."
+    ],
+    "respiration": "Inspire en avançant, souffle en revenant.",
+    "alternatives": [
+      "fentes-arriere-a-la-bande",
+      "fentes-marchees",
+      "squat-a-la-bande"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "fentes-laterales-haltere",
+    "nom": "Fentes latérales haltère",
+    "groupe": "Quadriceps",
+    "muscles": [
+      "Quadriceps",
+      "Fessiers",
+      "Adducteurs"
+    ],
+    "materiel": "Haltères",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Un haltère en goblet, grand pas sur le côté, recule les hanches.",
+      "Pied d'appui à plat, l'autre jambe plutôt tendue.",
+      "Pousse pour revenir au centre, poitrine ouverte.",
+      "Alternez, rythme contrôlé."
+    ],
+    "erreurs": [
+      "Pied d'appui qui décolle : tu perds la base et tu charges le genou.",
+      "Torse qui s'effondre : tu rates les fessiers.",
+      "Pas trop étroit : tu n'as plus de latéral, tu reviens en squat."
+    ],
+    "respiration": "Inspire en t'écartant, souffle en revenant.",
+    "alternatives": [
+      "squat-sumo-haltere",
+      "abducteurs-machine",
+      "fentes-halteres"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "fentes-marchees-halteres",
+    "nom": "Fentes marchées haltères",
+    "groupe": "Quadriceps",
+    "muscles": [
+      "Quadriceps",
+      "Fessiers"
+    ],
+    "materiel": "Haltères",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Grand pas, genou arrière bas, haltères collées aux cuisses.",
+      "Enchaîne sans pause en haut, torse droit.",
+      "Genou avant dans l'axe du pied.",
+      "Sur place si l'espace manque."
+    ],
+    "erreurs": [
+      "Haltères qui balancent : tu perds l'équilibre.",
+      "Petit pas : tu charges l'avant du genou.",
+      "Dos rond : tu perds le gainage sous charge."
+    ],
+    "respiration": "Inspire en descendant, souffle en avançant.",
+    "alternatives": [
+      "fentes-marchees",
+      "fentes-halteres",
+      "fentes-bulgares-halteres"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "flexion-de-hanche-debout-avec-appui",
+    "nom": "Flexion de hanche debout avec appui",
+    "groupe": "Mobilité",
+    "muscles": [
+      "Fléchisseurs de hanche",
+      "Abdominaux"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Mobilité",
+    "execution": [
+      "Debout près d'une chaise, genou qui monte à hauteur de hanche max.",
+      "Bassin fixe, pied qui redescend contrôlé.",
+      "Change de jambe, pas de bascule du buste.",
+      "Main sur l'appui dès que ça vacille."
+    ],
+    "erreurs": [
+      "Bascule du bassin : tu rates le contrôle et tu charges le dos.",
+      "Monter trop haut en compensant : tu cambrer pour tricher la hauteur.",
+      "S'aider du balancier : tu perds l'équilibre unipodal."
+    ],
+    "respiration": "Expire en montant le genou, inspire en redescendant.",
+    "alternatives": [
+      "elevations-de-genoux-assis",
+      "marche-sur-place",
+      "equilibre-unipodal-avec-appui"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "gainage",
+    "nom": "Gainage",
+    "groupe": "Abdominaux",
+    "muscles": [
+      "Abdominaux",
+      "Fessiers"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Gainage",
+    "execution": [
+      "Avant-bras ou mains, corps en ligne, fessiers serrés.",
+      "Bassin ni trop haut ni trop bas, respire.",
+      "Tiens propre, coupe si le dos se creuse.",
+      "Simple et stable, pas un cirque."
+    ],
+    "erreurs": [
+      "Dos qui se creuse : les lombaires prennent la charge.",
+      "Bassin trop haut : tu te reposes et tu perds le tronc.",
+      "Apnée : tu tiens moins et tu raidis la nuque."
+    ],
+    "respiration": "Respire petit et régulier, ne bloque pas.",
+    "alternatives": [
+      "planche",
+      "gainage-sur-les-avant-bras-genoux-au-sol",
+      "hollow-hold"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "gainage-lateral-genou-au-sol",
+    "nom": "Gainage latéral genou au sol",
+    "groupe": "Abdominaux",
+    "muscles": [
+      "Obliques",
+      "Moyen fessier"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Gainage",
+    "execution": [
+      "Coude sous l'épaule, genou au sol, hanche décollée.",
+      "Épaule au-dessus du coude, bassin aligné.",
+      "Si l'épaule gène, tu passes ou tu réduis le temps.",
+      "Change de côté, même tenue."
+    ],
+    "erreurs": [
+      "Épaule trop loin du coude : tu cisaille l'articulation.",
+      "Hanche qui retombe : tu perds les obliques.",
+      "Rotation du buste : tu sors de l'alignement."
+    ],
+    "respiration": "Respire calme, ne bloque pas.",
+    "alternatives": [
+      "gainage-lateral",
+      "gainage-epaules-contre-le-mur",
+      "planche"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "gainage-sur-les-avant-bras-genoux-au-sol",
+    "nom": "Gainage sur les avant-bras genoux au sol",
+    "groupe": "Abdominaux",
+    "muscles": [
+      "Abdominaux",
+      "Fessiers"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Gainage",
+    "execution": [
+      "Avant-bras au sol, genoux au tapis, ligne nuque-bassin.",
+      "Serre les fessiers, respire.",
+      "Si le dos creuse, tu t'arrêtes et tu raccourcis.",
+      "Regard vers le sol."
+    ],
+    "erreurs": [
+      "Dos qui se creuse : tu charges les lombaires.",
+      "Tête qui tombe : tu tires sur la nuque.",
+      "Fesses trop hautes : tu rates le gainage."
+    ],
+    "respiration": "Respire calme par le nez.",
+    "alternatives": [
+      "planche",
+      "gainage",
+      "gainage-epaules-contre-le-mur"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "gainage-epaules-contre-le-mur",
+    "nom": "Gainage épaules contre le mur",
+    "groupe": "Abdominaux",
+    "muscles": [
+      "Abdominaux",
+      "Épaules"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Gainage",
+    "execution": [
+      "Avant-bras au mur, corps en ligne, pieds un peu en retrait.",
+      "Gaine, respire, ne bloque pas.",
+      "Rapproche les pieds du mur si c'est trop dur.",
+      "Épaules basses, nuque longue."
+    ],
+    "erreurs": [
+      "Hanches qui avancent : tu perds la ligne et tu charges les lombaires.",
+      "Épaules collées aux oreilles : tu compactes l'articulation.",
+      "Apnée : tu raidis tout le haut du corps."
+    ],
+    "respiration": "Respire petit, côtes calmes.",
+    "alternatives": [
+      "planche",
+      "pompes-murales",
+      "gainage-sur-les-avant-bras-genoux-au-sol"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "good-morning-poids-du-corps-court",
+    "nom": "Good morning poids du corps court",
+    "groupe": "Ischios",
+    "muscles": [
+      "Ischios",
+      "Fessiers"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Flexion de hanche petite, dos plat, genoux souples.",
+      "Recule un peu les hanches, reviens en serrant les fessiers.",
+      "Stoppe si le bas du dos tire.",
+      "Mains sur les hanches pour sentir la charnière."
+    ],
+    "erreurs": [
+      "Dos rond : tu charges les lombaires.",
+      "Trop d'amplitude trop tôt : tu sors du contrôle.",
+      "Genoux verrouillés : tu raidis toute la chaîne."
+    ],
+    "respiration": "Inspire en reculant, souffle en revenant.",
+    "alternatives": [
+      "good-morning-poids-du-corps",
+      "pont-fessier",
+      "souleve-de-terre-roumain-halteres"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "good-morning-a-la-bande",
+    "nom": "Good morning à la bande",
+    "groupe": "Ischios",
+    "muscles": [
+      "Ischios",
+      "Fessiers",
+      "Lombaires"
+    ],
+    "materiel": "Élastique",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Bande sous les pieds, anses aux épaules, hanche en arrière, dos plat.",
+      "Étire les ischios, reviens en poussant les hanches.",
+      "Genoux souples, regard un peu devant.",
+      "Tension continue."
+    ],
+    "erreurs": [
+      "Dos rond : la charge passe dans les lombaires.",
+      "Bande trop courte : tu sacades le départ.",
+      "Genoux trop pliés : tu perds la charnière."
+    ],
+    "respiration": "Inspire en reculant les hanches, souffle en revenant.",
+    "alternatives": [
+      "good-morning-poids-du-corps",
+      "souleve-de-terre-roumain-halteres",
+      "hip-thrust-a-la-bande"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "hip-thrust-a-la-bande",
+    "nom": "Hip thrust à la bande",
+    "groupe": "Fessiers",
+    "muscles": [
+      "Fessiers",
+      "Ischios"
+    ],
+    "materiel": "Élastique",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Bande au-dessus des genoux ou au bassin (ancrage bas), haut du dos sur un appui.",
+      "Pousse le bassin, pause une seconde en haut, fessiers serrés.",
+      "Redescends sans perdre la tension.",
+      "Menton rentré, côtes vers le bas."
+    ],
+    "erreurs": [
+      "Cambrer en haut : tu charges les lombaires.",
+      "Bande trop lâche : tu perds le stimulus.",
+      "Genoux qui rentrent : tu rates le moyen fessier."
+    ],
+    "respiration": "Expire en haut, inspire à la descente.",
+    "alternatives": [
+      "pont-fessier",
+      "hip-thrust",
+      "pont-fessier-haltere"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "hollow-body-rock",
+    "nom": "Hollow body rock",
+    "groupe": "Abdominaux",
+    "muscles": [
+      "Abdominaux",
+      "Fléchisseurs de hanche"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Intermédiaire",
+    "type": "Gainage",
+    "execution": [
+      "Prends la forme hollow, bas du dos collé, puis petits basculements.",
+      "Ce n'est pas un crunch : la forme reste figée.",
+      "Réduis l'amplitude si le dos décolle.",
+      "Bras le long du corps si trop dur."
+    ],
+    "erreurs": [
+      "Transformer le rock en crunch : tu perds l'anti-extension.",
+      "Dos qui décolle : tu charges les lombaires.",
+      "Amplitude trop grande : tu sors de la position."
+    ],
+    "respiration": "Respire petit, côtes vers le bassin.",
+    "alternatives": [
+      "hollow-hold",
+      "dead-bug",
+      "planche"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "leg-curl-unilateral",
+    "nom": "Leg curl unilatéral",
+    "groupe": "Ischios",
+    "muscles": [
+      "Ischios"
+    ],
+    "materiel": "Machine",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Hanche collée au pad, une jambe, amplitude complète.",
+      "Ramène le talon, pause, redescends sans cambrer pour finir.",
+      "Change de jambe, même charge honnête.",
+      "Bassin calme."
+    ],
+    "erreurs": [
+      "Cambrure pour finir la série : tu voles l'ischio avec les lombaires.",
+      "Course coupée : tu rates l'étirement.",
+      "Élan : tu perds l'isolation unilatérale."
+    ],
+    "respiration": "Expire en fléchissant, inspire en relâchant.",
+    "alternatives": [
+      "leg-curl",
+      "souleve-de-terre-roumain",
+      "good-morning-poids-du-corps"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "marche-dans-le-logement-ou-le-couloir",
+    "nom": "Marche dans le logement ou le couloir",
+    "groupe": "Cardio",
+    "muscles": [
+      "Quadriceps",
+      "Mollets",
+      "Fessiers"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Cardio",
+    "execution": [
+      "Pas confortable, bras qui balancent, regard à l'horizon.",
+      "Tu peux tenir un mur au demi-tour.",
+      "Rythme régulier, talons qui posent.",
+      "Arrête-toi si tu t'essouffles trop : marche plus lent, plus longtemps."
+    ],
+    "erreurs": [
+      "Pas trop longs d'un coup : tu perds l'équilibre au demi-tour.",
+      "Regarder les pieds : tu casses la posture et tu fatigues la nuque.",
+      "Se presser : tu rates le but, bouger longtemps proprement."
+    ],
+    "respiration": "Respire par le nez si tu peux, souffle calme.",
+    "alternatives": [
+      "marche-sur-place",
+      "marche-tandem-pied-devant-l-autre",
+      "marche-sur-place-genoux-hauts"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "marche-sur-place",
+    "nom": "Marche sur place",
+    "groupe": "Cardio",
+    "muscles": [
+      "Quadriceps",
+      "Mollets"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Cardio",
+    "execution": [
+      "Près d'un plan de travail, talons qui posent, bras libres.",
+      "Posture droite, rythme de promenade.",
+      "Main proche de l'appui, sans s'y pendre.",
+      "Alternez les pieds, pas un jogging sur place."
+    ],
+    "erreurs": [
+      "Se penche en avant : tu perds l'équilibre et tu charges le bas du dos.",
+      "Monter trop les genoux trop tôt : tu sors du rythme confortable.",
+      "Apnée : tu te fatigues pour rien."
+    ],
+    "respiration": "Respire régulier, un pas n'a pas besoin d'apnée.",
+    "alternatives": [
+      "marche-dans-le-logement-ou-le-couloir",
+      "marche-sur-place-genoux-hauts",
+      "flexion-de-hanche-debout-avec-appui"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "marche-sur-place-genoux-hauts",
+    "nom": "Marche sur place genoux hauts",
+    "groupe": "Cardio",
+    "muscles": [
+      "Fléchisseurs de hanche",
+      "Abdominaux",
+      "Quadriceps"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Cardio",
+    "execution": [
+      "Posture droite, genoux qui montent, pieds qui posent, pas un sprint.",
+      "Bras qui balancent, bassin calme.",
+      "Garde le rythme, pas la hauteur maximale.",
+      "Reviens en marche simple si tu perds l'équilibre."
+    ],
+    "erreurs": [
+      "Sprint désordonné : tu perds le contrôle et tu charges les hanches.",
+      "Cambrer pour monter les genoux : tu tires sur les lombaires.",
+      "Atterrir sur les pointes seulement : tu charges les mollets et tu perds la stabilité."
+    ],
+    "respiration": "Souffle en rythme avec les pas, ne bloque pas.",
+    "alternatives": [
+      "montees-de-genoux-squats",
+      "marche-sur-place",
+      "mountain-climbers"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "marche-tandem-pied-devant-l-autre",
+    "nom": "Marche tandem (pied devant l'autre)",
+    "groupe": "Mobilité",
+    "muscles": [
+      "Moyen fessier",
+      "Mollets",
+      "Abdominaux"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Mobilité",
+    "execution": [
+      "Le long d'un mur, un pied juste devant l'autre, talon contre orteils.",
+      "Regard à l'horizon, pas au sol.",
+      "Main proche du mur, sans s'y écraser.",
+      "Pas lents, bassin calme."
+    ],
+    "erreurs": [
+      "Regarder les pieds : tu perds l'équilibre et tu casses la nuque.",
+      "Pas trop écartés : tu sors du tandem et tu rates le défi.",
+      "Se raidir : tu trembles plus et tu perds le contrôle."
+    ],
+    "respiration": "Respire calme, l'équilibre aime l'air.",
+    "alternatives": [
+      "equilibre-unipodal-avec-appui",
+      "transfert-de-poids-lateral",
+      "marche-sur-place"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "mollets-deux-pieds",
+    "nom": "Mollets deux pieds",
+    "groupe": "Mollets",
+    "muscles": [
+      "Gastrocnémiens",
+      "Soléaire"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Appui chaise, deux pieds, monte sur la pointe, pause, redescends.",
+      "Amplitude complète seulement si la cheville le permet.",
+      "Talons qui descendent contrôlés, pas de rebond.",
+      "Poids réparti sur l'avant-pied."
+    ],
+    "erreurs": [
+      "Rebond : tu rates le mollet.",
+      "S'asseoir sur l'appui : tu voles le mouvement.",
+      "Cheville qui s'affaisse : tu charges l'articulation en torsion."
+    ],
+    "respiration": "Expire en montant, inspire en descendant.",
+    "alternatives": [
+      "montees-de-talons-debout",
+      "mollets-unipodal",
+      "etirements-mollets-au-mur"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "mollets-unipodal-haltere",
+    "nom": "Mollets unipodal haltère",
+    "groupe": "Mollets",
+    "muscles": [
+      "Gastrocnémiens",
+      "Soléaire"
+    ],
+    "materiel": "Haltères",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Un haltère du côté de la jambe d'appui, appui léger au mur.",
+      "Amplitude complète, pause en haut, descente contrôlée.",
+      "Change de pied, même charge.",
+      "Cheville dans l'axe."
+    ],
+    "erreurs": [
+      "S'aider trop du mur : tu voles le mollet.",
+      "Rebond : tendon au lieu du muscle.",
+      "Torse qui penche : tu perds l'équilibre et tu sacades."
+    ],
+    "respiration": "Expire en montant, inspire en descendant.",
+    "alternatives": [
+      "mollets-unipodal",
+      "mollets-halteres",
+      "mollets-debout"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "montees-de-genoux-squats",
+    "nom": "Montées de genoux + squats",
+    "groupe": "Cardio",
+    "muscles": [
+      "Quadriceps",
+      "Fléchisseurs de hanche",
+      "Fessiers"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Cardio",
+    "execution": [
+      "Vingt secondes de genoux hauts puis dix squats lents.",
+      "Pas de burpee jeté, posture droite.",
+      "Enchaîne propre, souffle entre les deux blocs.",
+      "Réduis les squats si les genoux parlent."
+    ],
+    "erreurs": [
+      "Tout mélanger en sprint : tu perds la qualité des deux mouvements.",
+      "Squats en rebond : tu charges les genoux.",
+      "Dos rond sur les squats : tu rates le bloc force."
+    ],
+    "respiration": "Souffle sur les squats, reste fluide sur les genoux hauts.",
+    "alternatives": [
+      "marche-sur-place-genoux-hauts",
+      "squats",
+      "burpees-controles"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "montees-de-talons-debout",
+    "nom": "Montées de talons debout",
+    "groupe": "Mollets",
+    "muscles": [
+      "Gastrocnémiens",
+      "Soléaire"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Main sur la chaise, monte sur la pointe, pause une seconde en haut.",
+      "Descente contrôlée, talons vers le sol.",
+      "Deux pieds, genoux souples.",
+      "Regarde devant, pas tes pieds."
+    ],
+    "erreurs": [
+      "Rebond : tu rates le mollet.",
+      "Se pendre à la chaise : tu voles les mollets.",
+      "Genoux verrouillés d'un coup : tu charges l'articulation."
+    ],
+    "respiration": "Expire en montant, inspire en descendant.",
+    "alternatives": [
+      "mollets-deux-pieds",
+      "mollets-unipodal",
+      "etirements-mollets-au-mur"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "mountain-climbers",
+    "nom": "Mountain climbers",
+    "groupe": "Cardio",
+    "muscles": [
+      "Abdominaux",
+      "Fléchisseurs de hanche",
+      "Épaules"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Cardio",
+    "execution": [
+      "En position de pompe, hanche basse, ramène un genou puis l'autre.",
+      "Pieds rapides, pas un sprint désordonné.",
+      "Mains sous les épaules, tête neutre.",
+      "Ralentis dès que les fesses montent."
+    ],
+    "erreurs": [
+      "Fesses trop hautes : tu rates le tronc et tu en fais un sprint sur place.",
+      "Dos qui se casse : tu charges les lombaires.",
+      "Sauts désordonnés : tu perds les épaules et les poignets."
+    ],
+    "respiration": "Souffle en rythme, ne bloque pas.",
+    "alternatives": [
+      "burpees-controles",
+      "planche",
+      "marche-sur-place-genoux-hauts"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "oiseau-au-sol",
+    "nom": "Oiseau au sol",
+    "groupe": "Épaules",
+    "muscles": [
+      "Deltoïdes postérieurs",
+      "Rhomboïdes"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Ventre au sol, pouces vers le ciel, petite amplitude.",
+      "Ouvre les bras, serre les omoplates, pause.",
+      "Redescends sans claquer, regard vers le tapis.",
+      "Coudes souples."
+    ],
+    "erreurs": [
+      "Amplitude trop grande : tu cambrer le bas du dos.",
+      "Tête qui se jette : tu tires sur la nuque.",
+      "Bras tendus verrouillés : tu charges les coudes."
+    ],
+    "respiration": "Expire en ouvrant, inspire au retour.",
+    "alternatives": [
+      "oiseau-halteres",
+      "face-pull-serviette",
+      "pull-apart"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "ouverture-de-poitrine-a-la-chaise",
+    "nom": "Ouverture de poitrine à la chaise",
+    "groupe": "Mobilité",
+    "muscles": [
+      "Pectoraux",
+      "Épaules"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Mobilité",
+    "execution": [
+      "Assis au bord, mains au dossier derrière toi, ouvre la poitrine.",
+      "Sans cambrer le bas du dos, regard un peu vers le haut.",
+      "Respire, reviens, recommence.",
+      "Amplitude confortable, pas un étirement forcé."
+    ],
+    "erreurs": [
+      "Cambrer les lombaires : tu rates la poitrine et tu charges le bas du dos.",
+      "Tirer trop fort sur le dossier : tu forces l'épaule.",
+      "Retenir la respiration : tu raidis le thorax."
+    ],
+    "respiration": "Inspire en ouvrant, expire en revenant.",
+    "alternatives": [
+      "wall-angels",
+      "rotations-d-epaules",
+      "pull-apart"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "pallof-press-a-la-bande",
+    "nom": "Pallof press à la bande",
+    "groupe": "Abdominaux",
+    "muscles": [
+      "Obliques",
+      "Abdominaux profonds"
+    ],
+    "materiel": "Élastique",
+    "niveau": "Débutant",
+    "type": "Gainage",
+    "execution": [
+      "Ancrage latéral, pieds largeur d'épaules, bande à deux mains contre la poitrine.",
+      "Pousse les mains devant toi, bassin qui ne tourne pas.",
+      "Tiens une seconde, reviens, change de côté.",
+      "Genoux souples, fessiers actifs."
+    ],
+    "erreurs": [
+      "Bassin qui tourne : tu perds l'anti-rotation, tout l'intérêt du Pallof.",
+      "Bande trop forte : tu sacades et tu penche.",
+      "Épaules qui montent : tu voles le tronc avec les trapèzes."
+    ],
+    "respiration": "Expire en poussant, inspire au retour.",
+    "alternatives": [
+      "gainage-lateral",
+      "planche",
+      "crunch-au-sol"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "pike-push-up-pause",
+    "nom": "Pike push-up pause",
+    "groupe": "Épaules",
+    "muscles": [
+      "Deltoïdes",
+      "Triceps"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Intermédiaire",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Même setup que le pike : fesses hautes, tête vers le sol.",
+      "Pause une seconde en bas, tête proche du sol, puis pousse.",
+      "Hanches qui restent hautes.",
+      "Genoux au sol si la pause casse la forme."
+    ],
+    "erreurs": [
+      "Couper la pause : tu perds l'intérêt de la version.",
+      "Hanches qui s'effondrent : tu reviens en pompe.",
+      "Coudes trop ouverts : tu charges l'épaule."
+    ],
+    "respiration": "Inspire en descendant, souffle en poussant après la pause.",
+    "alternatives": [
+      "pike-push-up",
+      "developpe-epaules-a-la-bande",
+      "pompes-en-descente-lente"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "planche-epaules-scapular",
+    "nom": "Planche épaules (scapular)",
+    "groupe": "Épaules",
+    "muscles": [
+      "Serratus",
+      "Trapèzes inférieurs",
+      "Abdominaux"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Gainage",
+    "execution": [
+      "En pompe haute, bras tendus, enfonce puis écarte les omoplates.",
+      "Le buste monte et descend d'un centimètre, pas les coudes.",
+      "Corps gainé, regard vers le sol.",
+      "Petit mouvement, ressenti entre les omoplates."
+    ],
+    "erreurs": [
+      "Pli des coudes : tu en fais une pompe et tu rates les omoplates.",
+      "Hanches molles : tu charges les lombaires.",
+      "Amplitude trop grande : tu sors du contrôle scapulaire."
+    ],
+    "respiration": "Expire en écartant les omoplates, inspire en relâchant un peu.",
+    "alternatives": [
+      "pompes",
+      "wall-angels",
+      "planche"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "pompes-en-descente-lente",
+    "nom": "Pompes en descente lente",
+    "groupe": "Pectoraux",
+    "muscles": [
+      "Pectoraux",
+      "Triceps"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Cinq secondes pour descendre, poitrine vers le sol, corps gainé.",
+      "Pousse normale pour remonter, ou genoux pour la montée.",
+      "Ligne épaules-hanches-chevilles.",
+      "Force excentrique, pas un effondrement."
+    ],
+    "erreurs": [
+      "Descendre en chute : tu rates l'excentrique et tu charges les épaules.",
+      "Hanches cassées : tu perds le gainage.",
+      "Coudes trop ouverts : tu cisaille l'épaule."
+    ],
+    "respiration": "Inspire pendant la descente lente, souffle à la poussée.",
+    "alternatives": [
+      "pompes",
+      "pompes-murales",
+      "dips-de-chaise"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "pompes-halteres",
+    "nom": "Pompes haltères",
+    "groupe": "Pectoraux",
+    "muscles": [
+      "Pectoraux",
+      "Triceps"
+    ],
+    "materiel": "Haltères",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Poignées d'haltères stables au sol, course plus longue qu'à plat.",
+      "Corps gainé, poitrine entre les haltères.",
+      "Pousse, omoplates stables.",
+      "Si les haltères roulent, reviens en pompes classiques."
+    ],
+    "erreurs": [
+      "Haltères instables : tu risques le poignet.",
+      "Hanches molles : tu charges les lombaires.",
+      "Descendre trop bas : tu étire l'épaule au-delà du contrôle."
+    ],
+    "respiration": "Inspire à la descente, souffle à la poussée.",
+    "alternatives": [
+      "pompes-sur-halteres",
+      "pompes",
+      "developpe-halteres-au-sol"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "pompes-lestees",
+    "nom": "Pompes lestées",
+    "groupe": "Pectoraux",
+    "muscles": [
+      "Pectoraux",
+      "Triceps",
+      "Épaules antérieures"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Avancé",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Disque sur le dos ou sac, corps gainé, poitrine au sol.",
+      "Descends contrôlé, pousse sans perdre la ligne.",
+      "Un partenaire pour poser le disque si besoin.",
+      "Charge seulement si 15 pompes strictes passent."
+    ],
+    "erreurs": [
+      "Lest trop haut sur le cou : tu charges la nuque.",
+      "Hanches qui s'effondrent sous le poids : tu rates les pecs et tu tires sur le dos.",
+      "Rebond au sol : tu perds le contrôle sous charge."
+    ],
+    "respiration": "Inspire à la descente, souffle à la poussée.",
+    "alternatives": [
+      "pompes",
+      "dips-lestes",
+      "developpe-couche"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "pompes-murales",
+    "nom": "Pompes murales",
+    "groupe": "Pectoraux",
+    "muscles": [
+      "Pectoraux",
+      "Triceps",
+      "Épaules"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Mains au mur, pieds en retrait : plus loin = plus dur.",
+      "Poitrine vers le mur, omoplates stables, corps en ligne.",
+      "Si l'épaule gène, recule les pieds (plus vertical, plus facile).",
+      "Pousse jusqu'à tendre, reviens contrôlé."
+    ],
+    "erreurs": [
+      "Fesses qui partent en arrière : tu rates la ligne et tu charges les lombaires.",
+      "Coudes trop ouverts : tu charges l'épaule.",
+      "Tête qui plonge : tu tires sur la nuque."
+    ],
+    "respiration": "Inspire à la descente, souffle à la poussée.",
+    "alternatives": [
+      "pompes",
+      "gainage-epaules-contre-le-mur",
+      "developpe-pectoraux-a-la-bande"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "pompes-sur-halteres",
+    "nom": "Pompes sur haltères",
+    "groupe": "Pectoraux",
+    "muscles": [
+      "Pectoraux",
+      "Triceps"
+    ],
+    "materiel": "Haltères",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Poignées d'haltères au sol si stables, sinon pompes classiques.",
+      "Genoux si besoin, corps gainé, poitrine entre les haltères.",
+      "Course un peu plus longue, poignets plus neutres.",
+      "Pousse, omoplates basses."
+    ],
+    "erreurs": [
+      "Haltères qui roulent : tu risques le poignet.",
+      "Hanches cassées : tu perds le gainage.",
+      "Descendre trop bas : tu étire l'épaule."
+    ],
+    "respiration": "Inspire à la descente, souffle à la poussée.",
+    "alternatives": [
+      "pompes-halteres",
+      "pompes",
+      "developpe-halteres-au-sol"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "pont-fessier-au-sol",
+    "nom": "Pont fessier au sol",
+    "groupe": "Fessiers",
+    "muscles": [
+      "Fessiers",
+      "Ischios"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Sur un tapis, pieds à plat, décolle le bassin sans cambrer.",
+      "Redescends vertèbre par vertèbre.",
+      "Pause courte en haut, fessiers serrés.",
+      "Bras au sol pour la stabilité."
+    ],
+    "erreurs": [
+      "Cambrer : tu charges les lombaires.",
+      "Pousser dans les orteils : tu rates le fessier.",
+      "Remonter d'un bloc : tu perds le contrôle vertèbre par vertèbre."
+    ],
+    "respiration": "Expire en montant, inspire en redescendant.",
+    "alternatives": [
+      "pont-fessier",
+      "pont-fessier-pieds-rapproches",
+      "hip-thrust-a-la-bande"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "pont-fessier-pieds-rapproches",
+    "nom": "Pont fessier pieds rapprochés",
+    "groupe": "Fessiers",
+    "muscles": [
+      "Fessiers",
+      "Ischios"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Pieds plus près des fesses, pousse le bassin, amplitude confortable.",
+      "Si le genou parle, écarte un peu les pieds et réduis la hauteur.",
+      "Pause en haut, redescends sans poser.",
+      "Menton rentré."
+    ],
+    "erreurs": [
+      "Forcer la hauteur malgré le genou : tu sors du contrôle.",
+      "Cambrer : tu charges les lombaires.",
+      "Pieds qui glissent : tu perds la base."
+    ],
+    "respiration": "Expire en haut, inspire à la descente.",
+    "alternatives": [
+      "pont-fessier-au-sol",
+      "pont-fessier",
+      "coquillage-clamshell-au-sol"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "presse-a-cuisses-pieds-hauts",
+    "nom": "Presse à cuisses pieds hauts",
+    "groupe": "Fessiers",
+    "muscles": [
+      "Fessiers",
+      "Ischios",
+      "Quadriceps"
+    ],
+    "materiel": "Machine",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Pieds hauts sur la plaque pour cibler un peu plus les fessiers.",
+      "Bas du dos collé, descente contrôlée, poussée sans verrouiller.",
+      "Genoux dans l'axe des orteils.",
+      "Charge honnête, pas un second max."
+    ],
+    "erreurs": [
+      "Bas du dos qui décolle : tu arrondis les lombaires.",
+      "Pieds trop hauts d'un coup : tu perds l'amplitude et tu charges les ischios en vrac.",
+      "Rebond : tu délégués aux articulations."
+    ],
+    "respiration": "Inspire à la descente, souffle à la poussée.",
+    "alternatives": [
+      "presse-a-cuisses",
+      "hip-thrust",
+      "souleve-de-terre-roumain"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "pull-apart",
+    "nom": "Pull-apart",
+    "groupe": "Épaules",
+    "muscles": [
+      "Deltoïdes postérieurs",
+      "Rhomboïdes"
+    ],
+    "materiel": "Élastique",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Bande à bout de bras, écarter jusqu'à la poitrine, omoplates serrées.",
+      "Coudes souples, poitrine ouverte.",
+      "Retour contrôlé, tension continue.",
+      "Stoppe si les épaules montent."
+    ],
+    "erreurs": [
+      "Bande trop forte : tu balances le buste.",
+      "Coudes verrouillés : tu charges l'articulation.",
+      "Épaules aux oreilles : tu rates l'arrière d'épaule."
+    ],
+    "respiration": "Expire en écartant, inspire au retour.",
+    "alternatives": [
+      "face-pull-a-la-bande",
+      "oiseau-au-sol",
+      "oiseau-halteres"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "releve-de-jambes",
+    "nom": "Relevé de jambes",
+    "groupe": "Abdominaux",
+    "muscles": [
+      "Abdominaux",
+      "Fléchisseurs de hanche"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Sur le dos, bas du dos collé, ramène les jambes, rythme soutenu.",
+      "Redescends sans poser les talons si tu tiens le collé.",
+      "Genoux fléchis si le dos décolle.",
+      "Tête au sol, pas un sit-up."
+    ],
+    "erreurs": [
+      "Dos qui décolle : tu charges les lombaires.",
+      "Élan des jambes : tu voles les abs.",
+      "Tirer sur la nuque : tu rates le tronc."
+    ],
+    "respiration": "Expire en montant les jambes, inspire en descendant.",
+    "alternatives": [
+      "releve-de-jambes-au-sol",
+      "crunch",
+      "dead-bug"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "releve-de-jambes-au-sol",
+    "nom": "Relevé de jambes au sol",
+    "groupe": "Abdominaux",
+    "muscles": [
+      "Abdominaux",
+      "Fléchisseurs de hanche"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Bas du dos collé, jambes tendues ou fléchies selon le niveau.",
+      "Monte jusqu'à la verticale, redescends contrôlé.",
+      "Mains sous les fesses si besoin pour coller le dos.",
+      "Stoppe avant que le bas du dos ne décolle."
+    ],
+    "erreurs": [
+      "Lombaires décollées : tu tires sur le psoas et le dos.",
+      "Claquer les talons au sol : tu perds le contrôle.",
+      "Aller trop vite : tu rates les abs."
+    ],
+    "respiration": "Expire en montant, inspire en descendant.",
+    "alternatives": [
+      "releve-de-jambes",
+      "dead-bug",
+      "crunch-au-sol"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "respiration-90-90-au-sol",
+    "nom": "Respiration 90-90 au sol",
+    "groupe": "Mobilité",
+    "muscles": [
+      "Diaphragme",
+      "Abdominaux profonds"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Mobilité",
+    "execution": [
+      "Pieds au mur, genoux et hanches à 90°, bras au sol.",
+      "Expire long, côtes qui descendent, pas de force.",
+      "Inspire calme par le nez, ventre qui se remplit.",
+      "Lombaires qui cherchent le tapis, sans forcer."
+    ],
+    "erreurs": [
+      "Forcer l'expire : tu raidis le cou et tu rates le diaphragme.",
+      "Cambrer pour coller : tu fais l'inverse du but.",
+      "Épaules haussées : tu respires haut au lieu de bas."
+    ],
+    "respiration": "Expire plus long que l'inspire, bouche relâchée.",
+    "alternatives": [
+      "respiration-au-sol-genoux-plies",
+      "respiration-diaphragme-assis",
+      "dead-bug-amplitude-courte"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "respiration-au-sol-genoux-plies",
+    "nom": "Respiration au sol genoux pliés",
+    "groupe": "Mobilité",
+    "muscles": [
+      "Diaphragme",
+      "Abdominaux"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Mobilité",
+    "execution": [
+      "Sur le dos, genoux pliés, pieds au sol, épaules lourdes.",
+      "Lombaires qui cherchent le tapis, inspire ventre, expire long.",
+      "Pas de force, juste poser le corps.",
+      "Mains sur le ventre pour sentir le mouvement."
+    ],
+    "erreurs": [
+      "Forcer le plat lombaire : tu cambrer ailleurs et tu raidis.",
+      "Respirer seulement dans la poitrine : tu rates le diaphragme.",
+      "Regarder l'écran en même temps : tu perds le calme du drill."
+    ],
+    "respiration": "Inspire nez, expire bouche plus long.",
+    "alternatives": [
+      "respiration-90-90-au-sol",
+      "respiration-diaphragme-assis",
+      "pont-fessier-au-sol"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "respiration-diaphragme-assis",
+    "nom": "Respiration diaphragme assis",
+    "groupe": "Mobilité",
+    "muscles": [
+      "Diaphragme",
+      "Abdominaux"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Mobilité",
+    "execution": [
+      "Assis, dos long, ventre qui gonfle à l'inspire.",
+      "Expire long par la bouche, côtes qui redescendent.",
+      "Épaules lourdes, mâchoire relâchée.",
+      "Quelques cycles, sans forcer."
+    ],
+    "erreurs": [
+      "Hausser les épaules : tu respires haut et tu rates le diaphragme.",
+      "Apnée entre les cycles : tu raidis le cou.",
+      "Dos affaissé : tu bloques le ventre et tu forces la poitrine."
+    ],
+    "respiration": "Ventre à l'inspire, expire plus long que l'inspire.",
+    "alternatives": [
+      "respiration-au-sol-genoux-plies",
+      "respiration-90-90-au-sol",
+      "ouverture-de-poitrine-a-la-chaise"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "rotation-de-tronc-assis",
+    "nom": "Rotation de tronc assis",
+    "groupe": "Mobilité",
+    "muscles": [
+      "Obliques",
+      "Rotateurs du tronc"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Mobilité",
+    "execution": [
+      "Assis, dos long, main sur le genou opposé, rotation courte.",
+      "Le regard suit, bassin plutôt calme.",
+      "Reviens au centre, change de côté.",
+      "Amplitude confortable, pas un twist forcé."
+    ],
+    "erreurs": [
+      "Tourner le bassin avec le buste : tu rates la rotation thoracique.",
+      "Tirer trop fort sur le genou : tu forces les lombaires.",
+      "Retenir la respiration : tu raidis le thorax."
+    ],
+    "respiration": "Expire en tournant, inspire au centre.",
+    "alternatives": [
+      "pallof-press-a-la-bande",
+      "ouverture-de-poitrine-a-la-chaise",
+      "gainage-lateral-genou-au-sol"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "rotations-d-epaules",
+    "nom": "Rotations d'épaules",
+    "groupe": "Mobilité",
+    "muscles": [
+      "Épaules",
+      "Rotateurs"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Mobilité",
+    "execution": [
+      "Debout ou assis, cercles lents, amplitude confortable.",
+      "Un sens puis l'autre, pas de douleur d'épaule.",
+      "Coudes souples, poitrine ouverte.",
+      "Réduis le cercle dès que ça pince."
+    ],
+    "erreurs": [
+      "Cercle trop grand d'un coup : tu forces l'articulation.",
+      "Aller trop vite : tu sacades et tu rates la mobilité.",
+      "Hausser les épaules : tu compactes au lieu d'ouvrir."
+    ],
+    "respiration": "Respire calme, un cercle n'a pas besoin d'apnée.",
+    "alternatives": [
+      "wall-angels",
+      "elevations-laterales-de-bras",
+      "ouverture-de-poitrine-a-la-chaise"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "rowing-de-table-en-pause",
+    "nom": "Rowing de table en pause",
+    "groupe": "Dos",
+    "muscles": [
+      "Dorsaux",
+      "Rhomboïdes"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Même setup que le rowing de table, deux secondes poitrine au plateau.",
+      "Corps gainé, coudes près du corps.",
+      "Redescends contrôlé.",
+      "Table testée avant."
+    ],
+    "erreurs": [
+      "Couper la pause : tu perds l'intérêt de la version.",
+      "Hanches molles : tu perds la ligne.",
+      "Tirer du cou : tu triches la hauteur."
+    ],
+    "respiration": "Expire en tirant, tiens, inspire au retour.",
+    "alternatives": [
+      "rowing-de-table",
+      "rowing-de-table-prise-large",
+      "rowing-de-table-partiel"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "rowing-de-table-partiel",
+    "nom": "Rowing de table partiel",
+    "groupe": "Dos",
+    "muscles": [
+      "Dorsaux",
+      "Rhomboïdes"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Table très stable, tirage court, pause une seconde.",
+      "Si le dos tire, tu réduis encore l'amplitude.",
+      "Corps plutôt tendu, omoplates qui reculent un peu.",
+      "Pas un max, un mouvement contrôlé."
+    ],
+    "erreurs": [
+      "Vouloir la course complète trop tôt : tu sors du contrôle.",
+      "Table instable : tu te mets en danger.",
+      "Dos rond : tu charges les lombaires."
+    ],
+    "respiration": "Expire en tirant, inspire au retour.",
+    "alternatives": [
+      "rowing-de-table",
+      "face-pull-serviette",
+      "rowing-a-la-bande"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "squat-front",
+    "nom": "Squat front",
+    "groupe": "Quadriceps",
+    "muscles": [
+      "Quadriceps",
+      "Fessiers",
+      "Abdominaux"
+    ],
+    "materiel": "Barre",
+    "niveau": "Intermédiaire",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Barre sur les deltoïdes avant, coudes hauts, torse vertical.",
+      "Descends, talons au sol, genoux dans l'axe.",
+      "Charge secondaire par rapport au squat dos.",
+      "Pousse, poitrine ouverte, coudes qui restent hauts."
+    ],
+    "erreurs": [
+      "Coudes qui tombent : la barre glisse et tu perds le torse vertical.",
+      "Talons qui décollent : tu charges l'avant du genou.",
+      "Dos qui s'arrondit : tu rates le squat avant et tu charges les lombaires."
+    ],
+    "respiration": "Inspire et gaine avant de descendre, souffle en remontant.",
+    "alternatives": [
+      "squat-barre",
+      "squat-goblet",
+      "presse-a-cuisses"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "squat-sur-chaise-partielle",
+    "nom": "Squat sur chaise partielle",
+    "groupe": "Quadriceps",
+    "muscles": [
+      "Quadriceps",
+      "Fessiers"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Descendre seulement jusqu'à la chaise, pause, remonter.",
+      "Pas de genoux qui rentrent, talons au sol.",
+      "Touche la chaise sans t'asseoir d'un coup.",
+      "Mains devant pour l'équilibre."
+    ],
+    "erreurs": [
+      "Se laisser tomber : tu prends le choc et tu rates le contrôle.",
+      "Genoux qui rentrent : tu charges l'articulation en torsion.",
+      "Talons qui décollent : tu perds la base."
+    ],
+    "respiration": "Inspire en descendant, souffle en remontant.",
+    "alternatives": [
+      "assis-debout-sur-chaise",
+      "squats",
+      "fente-statique-courte"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "step-up-bas-marche-d-escalier",
+    "nom": "Step-up bas (marche d'escalier)",
+    "groupe": "Quadriceps",
+    "muscles": [
+      "Quadriceps",
+      "Fessiers"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Marche basse, pousse dans le talon avant, contrôle la descente.",
+      "Appui main-rampe OK, bassin de face.",
+      "Change de jambe, même nombre de pas.",
+      "Pas un saut : pose, pousse, redescends."
+    ],
+    "erreurs": [
+      "Pousser avec la jambe du bas : tu voles la jambe de travail.",
+      "Marche trop haute trop tôt : tu charges le genou.",
+      "Bassin de travers : tu perds l'unilatéral."
+    ],
+    "respiration": "Souffle en montant, inspire en redescendant.",
+    "alternatives": [
+      "fente-statique-courte",
+      "assis-debout-sur-chaise",
+      "fentes-arriere"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "tirage-horizontal-prise-neutre",
+    "nom": "Tirage horizontal prise neutre",
+    "groupe": "Dos",
+    "muscles": [
+      "Dorsaux",
+      "Rhomboïdes",
+      "Biceps"
+    ],
+    "materiel": "Machine",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Poignée triangle, omoplates d'abord, puis les coudes.",
+      "Tire vers le bas du sternum, pas d'élan des fesses.",
+      "Poitrine haute, retour jusqu'à l'étirement.",
+      "Coudes près du corps."
+    ],
+    "erreurs": [
+      "Élan des fesses : tu triches avec le poids du corps.",
+      "Tirer des bras seulement : le dos reste passif.",
+      "Épaules qui montent : tu compactes l'articulation."
+    ],
+    "respiration": "Expire en tirant, inspire au retour.",
+    "alternatives": [
+      "tirage-horizontal",
+      "rowing-a-la-bande",
+      "tirage-vertical-prise-serree"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "tirage-vertical-prise-serree",
+    "nom": "Tirage vertical prise serrée",
+    "groupe": "Dos",
+    "muscles": [
+      "Dorsaux",
+      "Biceps"
+    ],
+    "materiel": "Machine",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Poignée triangle, coudes le long du corps, poitrine haute.",
+      "Tire vers le haut de la poitrine, pas derrière la nuque.",
+      "Contrôle la remontée.",
+      "Buste stable, pas de bascule."
+    ],
+    "erreurs": [
+      "Bascule arrière : tu triches.",
+      "Coudes qui s'ouvrent : tu perds la prise serrée utile.",
+      "Épaules aux oreilles : tu compactes."
+    ],
+    "respiration": "Expire en tirant, inspire au retour.",
+    "alternatives": [
+      "tirage-vertical",
+      "tractions",
+      "tirage-vertical-a-la-bande"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "tirage-vertical-a-la-bande",
+    "nom": "Tirage vertical à la bande",
+    "groupe": "Dos",
+    "muscles": [
+      "Dorsaux",
+      "Biceps"
+    ],
+    "materiel": "Élastique",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Ancrage haut, poitrine vers les anses, coudes vers les hanches.",
+      "Tension continue, pas d'élan du bas du dos.",
+      "Reviens jusqu'à presque tendre.",
+      "Un genou au sol si tu as besoin de stabilité."
+    ],
+    "erreurs": [
+      "Ancrage trop bas : tu en fais un rowing.",
+      "Bascule : tu triches avec le poids du corps.",
+      "Bande trop forte : tu sacades les épaules."
+    ],
+    "respiration": "Expire en tirant, inspire au retour.",
+    "alternatives": [
+      "tirage-vertical",
+      "rowing-de-table",
+      "tractions"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "tractions-prise-large",
+    "nom": "Tractions prise large",
+    "groupe": "Dos",
+    "muscles": [
+      "Dorsaux",
+      "Biceps",
+      "Deltoïdes postérieurs"
+    ],
+    "materiel": "Barre de traction",
+    "niveau": "Intermédiaire",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Prise un peu plus large que les épaules, sans lest.",
+      "Poitrine vers la barre, descente complète.",
+      "Si tu tombes sous 6, passe en assistance ou en négatif.",
+      "Pas de kipping."
+    ],
+    "erreurs": [
+      "Prise trop large d'un coup : tu charges l'épaule et tu perds la force.",
+      "Élan de hanches : tu voles le dos.",
+      "Course coupée : tu rates l'étirement."
+    ],
+    "respiration": "Expire en montant, inspire en descendant.",
+    "alternatives": [
+      "tractions",
+      "tirage-vertical",
+      "tractions-lestees"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "transfert-de-poids-lateral",
+    "nom": "Transfert de poids latéral",
+    "groupe": "Mobilité",
+    "muscles": [
+      "Moyen fessier",
+      "Quadriceps"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Mobilité",
+    "execution": [
+      "Pieds largeur d'épaules, pousse dans un pied puis l'autre, bassin calme.",
+      "Genoux souples, regard à l'horizon.",
+      "Le pied opposé reste au sol, tu charges puis tu reviens.",
+      "Près d'un appui si ça vacille."
+    ],
+    "erreurs": [
+      "Bassin qui part sur le côté : tu perds le contrôle hanche.",
+      "Verrouiller les genoux : tu raidis et tu perds l'équilibre.",
+      "Regarder les pieds : tu casses la posture."
+    ],
+    "respiration": "Expire en chargeant un pied, inspire au centre.",
+    "alternatives": [
+      "equilibre-unipodal-avec-appui",
+      "marche-tandem-pied-devant-l-autre",
+      "abduction-de-hanche-au-sol"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "wall-angels",
+    "nom": "Wall angels",
+    "groupe": "Mobilité",
+    "muscles": [
+      "Épaules",
+      "Rhomboïdes",
+      "Serratus"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Mobilité",
+    "execution": [
+      "Dos au mur, menton rentré, bras en W puis en Y.",
+      "Amplitude où les poignets restent au mur sans forcer.",
+      "Côtes vers le bas, pas d'arc lombaire.",
+      "Lent, respire, réduis si ça décolle."
+    ],
+    "erreurs": [
+      "Forcer les poignets au mur : tu compenser en cambrant.",
+      "Menton vers l'avant : tu perds l'alignement cervical.",
+      "Aller trop haut trop tôt : tu hausses les épaules."
+    ],
+    "respiration": "Expire en montant les bras, inspire en redescendant.",
+    "alternatives": [
+      "rotations-d-epaules",
+      "pull-apart",
+      "planche-epaules-scapular"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "wall-sit-court",
+    "nom": "Wall sit court",
+    "groupe": "Quadriceps",
+    "muscles": [
+      "Quadriceps",
+      "Fessiers"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Gainage",
+    "execution": [
+      "Dos au mur, cuisses pas forcément à 90°.",
+      "Si le genou parle, tu remontes le bassin.",
+      "Talons à plat, tiens, respire.",
+      "Temps court et propre, pas un record."
+    ],
+    "erreurs": [
+      "Descendre trop bas malgré le genou : tu sors du contrôle.",
+      "Talons qui décollent : tu charges l'avant du genou.",
+      "Apnée : tu tiens moins."
+    ],
+    "respiration": "Respire régulier, ne bloque pas.",
+    "alternatives": [
+      "wall-sit",
+      "squat-sur-chaise-partielle",
+      "assis-debout-sur-chaise"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "ecartes-poulie-vis-a-vis",
+    "nom": "Écartés poulie vis-à-vis",
+    "groupe": "Pectoraux",
+    "muscles": [
+      "Pectoraux"
+    ],
+    "materiel": "Poulie",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Poulies vis-à-vis, léger coude fléchi, étirement en arrière.",
+      "Ramène les mains devant sans claquement.",
+      "Un pas en fente, buste stable.",
+      "Charge cosmétique, tension continue."
+    ],
+    "erreurs": [
+      "Claquer devant : tu perds la tension et tu charges l'épaule.",
+      "Coudes trop pliés : tu en fais un développé.",
+      "Buste qui bascule : tu triches."
+    ],
+    "respiration": "Expire en refermant, inspire en ouvrant.",
+    "alternatives": [
+      "ecartes-poulie",
+      "ecartes-halteres",
+      "developpe-pectoraux-a-la-bande"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "elevations-de-genoux-assis",
+    "nom": "Élévations de genoux assis",
+    "groupe": "Mobilité",
+    "muscles": [
+      "Fléchisseurs de hanche",
+      "Abdominaux"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Mobilité",
+    "execution": [
+      "Dos calé, un pied qui décolle sans compenser du tronc.",
+      "Pause courte, repose, change de jambe.",
+      "Mains sur les côtés de la chaise.",
+      "Hauteur petite et propre."
+    ],
+    "erreurs": [
+      "Bascule du buste : tu voles le fléchisseur avec le dos.",
+      "Monter trop haut : tu sors du contrôle.",
+      "Retenir la respiration : tu raidis."
+    ],
+    "respiration": "Expire en décollant le pied, inspire en reposant.",
+    "alternatives": [
+      "flexion-de-hanche-debout-avec-appui",
+      "dead-bug-amplitude-courte",
+      "marche-sur-place"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "elevations-laterales-de-bras",
+    "nom": "Élévations latérales de bras",
+    "groupe": "Épaules",
+    "muscles": [
+      "Deltoïdes latéraux"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Sans haltère, lève les bras sur le côté, stoppe à hauteur d'épaule.",
+      "Coudes souples, omoplates basses.",
+      "Redescends lentement.",
+      "Peux ajouter une pause en haut."
+    ],
+    "erreurs": [
+      "Monter trop haut : tu bascules en trapèzes.",
+      "Élan du buste : tu rates le deltoïde.",
+      "Épaules aux oreilles : tu compactes."
+    ],
+    "respiration": "Expire en montant, inspire en descendant.",
+    "alternatives": [
+      "elevations-laterales",
+      "elevations-laterales-a-la-bande",
+      "rotations-d-epaules"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "elevations-laterales-poulie",
+    "nom": "Élévations latérales poulie",
+    "groupe": "Épaules",
+    "muscles": [
+      "Deltoïdes latéraux"
+    ],
+    "materiel": "Poulie",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Poulie basse, pouce vers le sol, stop avant les trapèzes.",
+      "Coude légèrement fléchi, buste figé.",
+      "Tension continue, un bras puis l'autre.",
+      "Charge légère."
+    ],
+    "erreurs": [
+      "Tirer trop haut : tu voles avec les trapèzes.",
+      "Buste qui penche : tu triches.",
+      "Poulie trop loin : tu changes le levier et tu rates le latéral."
+    ],
+    "respiration": "Expire en montant, inspire en descendant.",
+    "alternatives": [
+      "elevations-laterales",
+      "elevations-laterales-halteres",
+      "elevations-laterales-a-la-bande"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "elevations-laterales-a-la-bande",
+    "nom": "Élévations latérales à la bande",
+    "groupe": "Épaules",
+    "muscles": [
+      "Deltoïdes latéraux"
+    ],
+    "materiel": "Élastique",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Bande sous un pied, un bras, stoppe à hauteur d'épaule.",
+      "Coude souple, omoplate basse, descente contrôlée.",
+      "Change de bras, même tension.",
+      "Écarte le pied d'ancrage pour durcir."
+    ],
+    "erreurs": [
+      "Bande trop forte : tu balances le buste.",
+      "Monter au-dessus de l'épaule : tu bascules en trapèzes.",
+      "Épaule qui monte : tu compactes."
+    ],
+    "respiration": "Expire en montant, inspire en descendant.",
+    "alternatives": [
+      "elevations-laterales",
+      "elevations-laterales-de-bras",
+      "elevations-laterales-poulie"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "equilibre-unipodal-avec-appui",
+    "nom": "Équilibre unipodal avec appui",
+    "groupe": "Mobilité",
+    "muscles": [
+      "Moyen fessier",
+      "Mollets",
+      "Abdominaux"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Mobilité",
+    "execution": [
+      "Pied d'appui ancré, genou souple, l'autre pied décollé.",
+      "Main sur la chaise dès que ça vacille.",
+      "Regard à l'horizon, bassin calme.",
+      "Change de pied, même temps."
+    ],
+    "erreurs": [
+      "Verrouiller le genou : tu raidis et tu perds l'équilibre.",
+      "Regarder les pieds : tu casses la posture.",
+      "Se pendre à la chaise : tu voles le travail de hanche."
+    ],
+    "respiration": "Respire calme, l'équilibre aime l'air.",
+    "alternatives": [
+      "marche-tandem-pied-devant-l-autre",
+      "transfert-de-poids-lateral",
+      "mollets-unipodal"
+    ],
+    "lien": ""
+  },
+  {
+    "id": "etirements-mollets-au-mur",
+    "nom": "Étirements mollets au mur",
+    "groupe": "Mobilité",
+    "muscles": [
+      "Gastrocnémiens",
+      "Soléaire"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Mobilité",
+    "execution": [
+      "Mains au mur, une jambe en arrière, talon au sol, genou arrière tendu.",
+      "Penche un peu, pas de rebond, tiens, change de jambe.",
+      "Plie un peu le genou arrière pour le soléaire.",
+      "Amplitude confortable."
+    ],
+    "erreurs": [
+      "Rebond : tu rates l'étirement et tu sacades le tendon.",
+      "Talon qui décolle : tu perds le stretch.",
+      "Pied arrière en rotation : tu charges la cheville de travers."
+    ],
+    "respiration": "Expire en t'enfonçant un peu, inspire en relâchant.",
+    "alternatives": [
+      "mollets-deux-pieds",
+      "cercles-de-chevilles-assis",
+      "montees-de-talons-debout"
+    ],
+    "lien": ""
+  }
+]

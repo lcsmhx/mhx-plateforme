@@ -95,3 +95,10 @@ Ne pas recopier : accueil, boutique, questionnaires, libellés anglais.
   - `saumon` → `saumon-elevage-cru` (pas `saumon-cru`)
   Les autres mappings Claude sont bons (ids vérifiés dans aliments.json).
 - Pas de commit / push. `index.html`, `aliments-off.json`, `aliments-usda.json` non touchés.
+
+## 29 août 2026 — exercices.json
+
+- `donnees/exercices.json` : **172** fiches (une par nom distinct de `programmes.json`). Fichier nouveau demandé, **pas** une table SQL inventée ici — Claude / l’app brancheront l’import.
+- Join : `slug(nom du programme) == id`. Aucune collision de slug. `lien` vide. Cues originales MHX.
+- `index.html` non touché. Poussé sur `main`.
+

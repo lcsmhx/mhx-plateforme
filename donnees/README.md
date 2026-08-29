@@ -11,6 +11,25 @@ Régimes : omnivore, vegetarien, vegan, pescetarien, paleo, sans_gluten, sans_la
 ## programmes.json
 18 programmes originaux (2 à 5 séances, salle / haltères / poids du corps, full-body, half-body, PPL, sèche). Structure identique à `outilProgramme` dans index.html. Pas de copie de bibliothèques commerciales.
 
+## exercices.json
+**172** fiches, une par nom d’exercice distinct dans `programmes.json` (18 programmes, 455 occurrences). Cues MHX originales (tutoiement), pas de copie Muscle & Strength / Bodybuilding.com / JEFIT / Alpha Progression / Azeoo. `lien` toujours vide : Lucas filmera.
+
+**Join** : `slug(exercice.nom dans programmes.json) == exercices.id`. Le champ `nom` de la fiche est identique au `nom` du programme (accents, libellé).
+
+**Slug** (Python) :
+
+```python
+import unicodedata, re
+def slug(nom: str) -> str:
+    s = unicodedata.normalize('NFD', nom)
+    s = ''.join(c for c in s if unicodedata.category(c) != 'Mn')
+    s = s.lower()
+    s = re.sub(r'[^a-z0-9]+', '-', s)
+    return s.strip('-')
+```
+
+Exemple : `"Développé couché"` → `"developpe-couche"`. Aucune collision de slug sur les 172 noms. Schéma : `id`, `nom`, `groupe`, `muscles`, `materiel`, `niveau`, `type`, `execution`, `erreurs`, `respiration`, `alternatives`, `lien`. Enums `groupe` / `materiel` / `niveau` / `type` documentés dans le fichier (valeurs FR). `alternatives` = 1–3 ids qui existent dans ce même fichier.
+
 ## recettes.json
 **217** recettes du quotidien (petit-déj / déjeuner / dîner / collation). Paléo déjeuner : 18. Vegan petit-déj : 20. Schéma : `id`, `nom`, `moment`, `temps_min`, `portions`, `ingredients`, `etapes` — **pas** de champs `allergenes` / `regimes` (Claude calcule l’intersection des ingrédients). `aliment_id` pointe vers aliments.json. Macros recalculées par l’app. 0 id manquant.
 
