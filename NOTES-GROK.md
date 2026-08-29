@@ -111,3 +111,37 @@ Lucas veut les deux mécaniques : **plan alimentaire Jour 1…N** + **liste de c
 - Déjà là : journée type + `courses()` × N jours + rayons (0 ingrédient hors rayon).
 - À faire : cartes Jour 1 = lundi …, créneau = note | recette | aliment, macros calculées, assignation par copie, courses = somme des jours de la semaine (plus « journée × 7 » dès que le plan a plusieurs jours), extras cochés côté client.
 - Preuve génération 7 jours : `plans-exemple.json`. Recettes **217**. Exercices **172** dans `exercices.json`.
+
+## 30 août 2026 — QA client live + code (pour Claude)
+
+Compte test : `mhx.client.test@gmail.com` (créé par Lucas). Site : https://lcsmhxcoaching.netlify.app
+Grok **n’a pas touché** `index.html`. Formules 2,2 / 1,0 / Mifflin OK. Pas de `service_role` dans le HTML.
+
+### Vu en live (rôle client)
+
+Nav client : Profil, Programme, Repas, Calculateur, Mensurations, Entraînement. Pas Catalogue / Clients / Bibliothèque. Logout OK, garde de route OK. 0 erreur JS. États vides programme/repas OK (rien d’assigné). Pas de bouton Générer côté client. 100 % français (sauf label login « Email »).
+
+### Bugs à corriger (priorité)
+
+1. **Calculateur écrit 80 kg / Homme / 25 ans / 178 cm dès le premier affichage** (`outilCalculateur.init` + `rendre` → `sauver`). Après le questionnaire, redirect `#/calculateur` publie ces défauts. Le poids du profil n’est pas recopié. Vu en live : 2 958 kcal maintien, 176 P. **Fix :** ne pas `Store.ecrire` tant que le client n’a pas édité ; initialiser depuis `intake` (poids, taille, âge, sexe) si `calc` est vide.
+2. **Questionnaire pas bloquant.** Les 10 champs requis ne ferment pas la nav. Autosave `change` peut poser `complet:true` sans Enregistrer. Course `hashchange` vs `location.hash = "#/profil"`. **Fix :** enregistrer le listener hash **après** le hash profil, garder la nav sur profil tant que `!complet`.
+3. **« Restaurer une sauvegarde »** visible pour le client (profil, et `blocSauvegarde` sur chaque outil avec `cle`). `Store.importer` peut POST `programme` et `repas` du client. **Fix :** pas de Restaurer sur programme/nutrition en client ; `Store.ecrire` refuse `programme` et `repas` si `!estCoach()`.
+4. **Cases « mangé »** (code, pas testable sans plan) : `suivi.mange = {}` dès que `suivi.date !== aujourdhui()`. `aujourdhui()` = `toISOString().slice(0,10)` → reset à 08:00 WITA. **Fix :** ne pas vider les autres jours ; aujourd’hui en local, pas UTC.
+5. **Coach `diete` flag** lit `c.repas.repas` alors que `migrer()` a `jours[]` et `delete R.repas` → client avec semaine = « à faire ». Lire `c.repas.jours`.
+6. **« il te reste X kcal aujourd'hui »** utilise le jour de l’onglet, pas le jour calendaire.
+7. **Pas de `<!DOCTYPE html>` ni `lang="fr"`** → quirks mode. Ajouter.
+8. **Netlify :** chemins `/dashboard`, `/signup` → 404. Ajouter redirect `/* /index.html 200`.
+9. **`#/catalogue` et `#/clients` en client** : silencieux, affichent Profil, URL inchangée. Message « accès réservé au coach » ou rester sur l’outil précédent.
+10. **Nav mobile 390 px** : pastilles scrollables, Entraînement hors écran, pas de flèche. Affordance ou nav compacte.
+11. **Champs date** natifs en `mm/dd/yyyy` (locale navigateur) sur UI FR.
+12. **Mot de passe oublié** : body `{ email }` sans `redirect_to`. Vérifier Site URL + hash recovery.
+13. Inscription cachée si le hash contient `inscription`.
+
+### Pas des bugs (spec)
+
+Pas d’extras courses, pas de type note par créneau, pas d’anneau kcal (barres FR), pas de thème clair/sombre (absent du live). Questionnaire 68 champs / 10 requis (plus 49).
+
+### Encore à tester (besoin d’un plan + programme assignés au compte test)
+
+Courses sur une vraie semaine, cases mangé J+1, rendu Jour 1…N, graphique mensurations ≥ 2 semaines, RLS `repas` / `repas_suivi`.
+
