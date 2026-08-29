@@ -145,3 +145,22 @@ Pas d’extras courses, pas de type note par créneau, pas d’anneau kcal (barr
 
 Courses sur une vraie semaine, cases mangé J+1, rendu Jour 1…N, graphique mensurations ≥ 2 semaines, RLS `repas` / `repas_suivi`.
 
+
+## 30 août 2026 — envoi live coach → client test
+
+Compte coach `lucasmahauxpro@gmail.com` → client `mhx.client.test` (Test Grok).
+
+Envoyé :
+- Programme catalogue **Haut / Bas — 4 séances** (intermédiaire, salle).
+- Semaine 7 jours omnivore, « Valider et envoyer au client » OK.
+
+Bugs vus à l’envoi (à corriger) :
+1. **Macros de génération = calculateur, pas le profil.** Profil 72 kg / 175 cm / 28 ans ; le formulaire repas était à **3288 kcal / ~220 g P** (trace d’un poids ~100 kg dans `calc`). La diète envoyée n’est pas celle du questionnaire.
+2. **Liste de courses « Divers »** : beaucoup de lignes en **id brut** (`faisselle-0-mg`, `oeuf-cru`, `pain-complet-ou-integral-a-la-farine-t150`…) alors que d’autres rayons ont le `nom`. `courses()` utilise `i.nom || aliment_id` et `i.categorie` pour le rayon — les ingrédients figés n’ont pas toujours nom/catégorie.
+3. **En-tête recette à 0 kcal** alors que les ingrédients ont des grammes (ex. « Faisselle 0 %, kiwi et miel »).
+4. Compléments générateur peu crédibles (ex. biscuit apéritif 300 g, blanc de poulet cru seul) pour coller aux macros trop hautes.
+5. Select « Programmes prêts à l’emploi » : 2 essais avant que la valeur reste (re-render).
+6. `Restaurer une sauvegarde` toujours visible sur la fiche client côté coach (et côté client).
+
+RLS repas : l’envoi a marché (pas de 401).
+
