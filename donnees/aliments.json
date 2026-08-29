@@ -3386,9 +3386,6 @@
     "allergenes": [],
     "regimes": [
       "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
       "sans_gluten",
       "sans_lactose",
       "sans_porc"
@@ -3735,9 +3732,6 @@
     "allergenes": [],
     "regimes": [
       "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
       "sans_gluten",
       "sans_lactose",
       "sans_porc"
@@ -4738,7 +4732,9 @@
     "fibres": 0.5,
     "portion_g": 250,
     "portion_nom": "1 verre",
-    "allergenes": [],
+    "allergenes": [
+      "lait"
+    ],
     "regimes": [
       "omnivore",
       "vegetarien",
@@ -13234,7 +13230,9 @@
     "fibres": 3.0,
     "portion_g": 150,
     "portion_nom": "1 portion",
-    "allergenes": [],
+    "allergenes": [
+      "lait"
+    ],
     "regimes": [
       "omnivore",
       "vegetarien",
@@ -19312,9 +19310,6 @@
     ],
     "regimes": [
       "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
       "sans_gluten",
       "sans_lactose",
       "sans_porc"
@@ -20412,9 +20407,6 @@
     "allergenes": [],
     "regimes": [
       "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
       "paleo",
       "sans_gluten",
       "sans_lactose",
@@ -20460,9 +20452,6 @@
     "allergenes": [],
     "regimes": [
       "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
       "paleo",
       "sans_gluten",
       "sans_lactose",
@@ -21076,8 +21065,6 @@
     ],
     "regimes": [
       "omnivore",
-      "vegetarien",
-      "vegan",
       "pescetarien",
       "paleo",
       "sans_gluten",
@@ -22222,8 +22209,6 @@
     ],
     "regimes": [
       "omnivore",
-      "vegetarien",
-      "pescetarien",
       "paleo",
       "sans_gluten",
       "sans_lactose"
@@ -37938,9 +37923,6 @@
     "allergenes": [],
     "regimes": [
       "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
       "sans_gluten",
       "sans_lactose"
     ],
@@ -43718,9 +43700,6 @@
     ],
     "regimes": [
       "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
       "sans_lactose"
     ],
     "source": "CIQUAL 2025"
@@ -52335,7 +52314,8 @@
     "portion_g": 200,
     "portion_nom": "1 assiette (cuites)",
     "allergenes": [
-      "gluten"
+      "gluten",
+      "lait"
     ],
     "regimes": [
       "omnivore",
@@ -53452,10 +53432,7 @@
       "lait"
     ],
     "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien"
+      "omnivore"
     ],
     "source": "CIQUAL 2025"
   },
@@ -53627,7 +53604,8 @@
     "portion_g": 300,
     "portion_nom": "1 part / pizza individuelle",
     "allergenes": [
-      "gluten"
+      "gluten",
+      "lait"
     ],
     "regimes": [
       "omnivore",
@@ -53679,10 +53657,7 @@
       "lait"
     ],
     "regimes": [
-      "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien"
+      "omnivore"
     ],
     "source": "CIQUAL 2025"
   },
@@ -54897,7 +54872,9 @@
     "fibres": 0.7,
     "portion_g": 300,
     "portion_nom": "1 assiette",
-    "allergenes": [],
+    "allergenes": [
+      "lait"
+    ],
     "regimes": [
       "omnivore",
       "vegetarien",
@@ -61549,9 +61526,6 @@
     "allergenes": [],
     "regimes": [
       "omnivore",
-      "vegetarien",
-      "vegan",
-      "pescetarien",
       "sans_gluten",
       "sans_lactose"
     ],
