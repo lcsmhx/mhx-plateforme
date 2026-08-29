@@ -1,3 +1,137 @@
+# Audit QA — 30 août 2026
+
+Lecture seule. **Aucun patch** (sauf le commit `2135ac1` déjà poussé plus tôt : 12 régimes + 5 `lait`). Formules Mifflin / 2,2 / 1,0 **intouchées**. Pas de `service_role` dans `index.html`.
+
+Scan **intégral** `donnees/aliments.json` : **3111** fiches. Recettes **217** (0 `aliment_id` cassé). Programmes **18**.
+
+Sans session, GET anon sur `aliments` / `recettes` / `programmes_types` → **0 lignes** (RLS). L’audit catalogue porte donc sur le JSON d’import (source de vérité). En session coach, l’UI n’en montrait que **1000** (cap PostgREST, B1).
+
+---
+
+## Bugs bloquants
+
+### C1. Encore 59 aliments animaux étiquetés vegan **et** végétarien
+**Où :** `donnees/aliments.json` (catégories Produits de base / Matières grasses / Légumineuses — **pas** Viandes/Poissons : le tagger par catégorie est propre).
+**Pourquoi :** un client vegan/végétarien peut se voir proposer lard, cassoulet, hot-dog, huile de foie de morue, gélatine, etc. Le patch `2135ac1` (12 fiches) **tient**. `graisse-de-dinde` était dans le hunk git mais **n’avait pas été modifié**.
+**Fix proposé (à valider) :** retirer `vegan` et `vegetarien` (et `pescetarien` si ce n’est pas du poisson). Garder `omnivore`. Pour les huiles de poisson : retirer vegan/vegetarien, **garder** `pescetarien`. Liste :
+
+`lard-gras-cru`, `graisse-doie`, `graisse-de-dinde`, `huile-de-foie-de-morue`, `huile-de-hareng`, `huile-de-sardine`, `gelatine-seche`, `saucisse-de-volaille-type-knack-contenant-du-soja-preemballee`, `olives-vertes-fourrees-ou-farcies-anchois-poivrons-etc`, `bouchee-a-la-reine-a-la-viande-volaille-quenelle`, `bouillon-de-viande-et-legumes-type-pot-au-feu-degraisse-deshydrate`, `bouillon-de-viande-et-legumes-type-pot-au-feu-non-degraisse-deshydrate`, `bouillon-de-viande-et-legumes-type-pot-au-feu-pret-a-consommer`, `bouillon-de-volaille-deshydrate`, `bouillon-de-volaille-deshydrate-reconstitue`, `brochette-de-crevettes`, `brochette-de-volaille-cuite`, `brochette-mixte-de-viande`, `cassoulet-appertise`, `chili-con-carne-preemballe`, `choucroute-garnie-preemballee`, `coq-au-vin`, `cordon-bleu-de-volaille-preemballe`, `couscous-a-la-viande-preemballe`, `couscous-au-mouton`, `couscous-royal-avec-plusieurs-viandes-preemballe`, `feuillete-ou-friand-a-la-viande-preemballe`, `fond-de-volaille-pour-sauces-et-cuisson-deshydrate`, `hachis-parmentier-a-la-viande-preemballe`, `hot-dog-preemballe`, `lapin-a-la-moutarde-preemballe`, `lasagnes-ou-canellonis-a-la-viande-bolognaise-preemballes`, `moules-farcies-matiere-grasse-persillade-preemballees-crues`, `moules-marinieres-oignons-et-vin-blanc-preemballees`, `nouilles-aux-crevettes-preemballees-sautees-poelees`, `nuggets-ou-croquette-panee-de-volaille-preemballe`, `paupiette-de-volaille`, `pates-a-la-bolognaise-spaghetti-tagliatelles-preemballees`, `pizza-a-la-viande-type-bolognaise-preemballee`, `pizza-au-chorizo-ou-salami-preemballee`, `pot-au-feu-preemballe`, `salade-alaska-au-surimi-ananas-carottes-avec-sauce-preemballee`, `salade-composee-a-base-de-crudites-charcuterie-et-fromage-avec-sauce-preemballee`, `salade-de-cervelas-avec-sauce-preemballee`, `salade-de-pates-au-surimi-avec-sauce-preemballee`, `sandwich-baguette-merguez-ketchup-moutarde`, `sandwich-pain-de-mie-complet-bacon-crudites-preemballe`, `sandwich-pain-de-mie-complet-saucisson-ou-rosette-preemballe`, `sauce-pour-nems-a-base-de-nuoc-mam-dilue-preemballee`, `sauce-tomate-a-la-viande-ou-sauce-bolognaise-preemballee`, `soupe-a-la-volaille-et-aux-legumes-deshydratee-reconstituee`, `soupe-a-la-volaille-et-aux-legumes-preemballee-a-rechauffer`, `soupe-a-la-volaille-et-aux-vermicelles-deshydratee-reconstituee`, `soupe-a-la-volaille-et-aux-vermicelles-preemballee-a-rechauffer`, `soupe-chorba-frik-a-base-de-viande-et-de-frik`, `soupe-de-poissons-et-ou-crustaces-deshydratee-reconstituee`, `soupe-de-poissons-et-ou-crustaces-preemballee-a-rechauffer`, `tajine-de-mouton-preemballe`, `tripes-a-la-tomate-ou-a-la-provencale-preemballees`
+
+### C2. 126 aliments laitiers encore `vegan` (végétarien OK)
+**Où :** surtout Produits de base (chocolat au lait, glaces, pains au lait, pizzas fromage, crèmes…). Catégorie Laitages réellement laitière encore vegan : **1** (`boisson-au-x-fruit-s-et-au-lait` — allergène `lait` déjà ajouté).
+**Pourquoi :** un plan vegan peut coller du chocolat au lait / de la crème.
+**Fix proposé :** retirer `vegan` seulement. Les 31 Laitages vegan restants sont des boissons végétales — **les garder**.
+
+### C3. 7 produits laitiers évidents sans allergène `lait`
+**Où :**
+- `tartiflette-pommes-de-terre-reblochon-lardons-preemballee` (régimes OK, encore `sans_lactose`)
+- `aligot-puree-de-pomme-de-terre-a-la-tomme-fraiche-preemballe`
+- `tarte-au-maroilles-ou-flamiche-au-maroilles-preemballee`
+- `matiere-grasse-laitiere-a-15-25-mg-legere-a-tartiner-doux-enrichie-en-vitamine-s` (vegan + sans_lactose + allergenes [])
+- `chocolat-blanc-tablette`
+- `chocolat-blanc-aux-fruits-secs-noisettes-amandes-raisins-praline-tablette`
+- `cookie-aux-cranberries-et-au-chocolat-blanc-preemballe`
+**Fix proposé :** ajouter `lait` ; retirer `sans_lactose` / `vegan` si présents. Tous les **Laitages** vraiment laitiers ont déjà `lait` (0 miss dans cette catégorie).
+
+### C4. `Catalogue.lire` — cap PostgREST 1000
+**Où :** `index.html` `Catalogue.lire` (~L708). Un GET sans `Range`. Secours GitHub seulement si table **vide**.
+**Pourquoi :** 9 repas à 0 kcal en live, Divers en ids bruts, kiwi/faisselle/miel « absents » alors qu’ils sont dans les 3111.
+**Fix :** paginer Range 0-999, 1000-1999… jusqu’à page courte, pour **toute** table > 1000 (y compris `donnees` de la liste clients). Réimporter **sans** pagination ne change rien.
+
+### C5. Calculateur POST 80 kg / H / 25 / 178 dès l’ouverture
+**Où :** `outilCalculateur.init` / `rendre` → `sauver()`. `intake` jamais recopié. Nutrition coach lit `calc.poids`.
+**Pourquoi :** diète test à 3288 kcal / 220 P pour un profil 72 kg.
+**Fix :** ne pas `ecrire` avant édition ; seed depuis `intake`.
+
+### C6. `Store.lire` en erreur → défaut éditable → écrase la vraie ligne
+**Où :** `Store.lire` catch `return defaut`.
+**Fix :** distinguer 404 (vraiment vide) et réseau/401 ; `ecrire` no-op tant que le GET n’a pas réussi.
+
+### C7. Debounce 700 ms : `cible()` lu trop tard
+**Où :** `Store.ecrire` / `envoyer`. Switch de fiche ou « Revenir aux clients » avant 700 ms → UPSERT sur B ou sur le **coach**.
+**Fix :** capturer `uid` au moment de `ecrire`. Flush/clear timers + cache au switch.
+
+### C8. Cache Store non keyé par uid + même hash ne recharge pas
+**Où :** `Store.cache[cle]` ; ouvrir B depuis `#/profil` déjà ouvert.
+**Fix :** `cache[uid][cle]` ; forcer `afficher` même si le hash ne change pas.
+
+### C9. Questionnaire non bloquant + `complet` sur `change`
+**Où :** `demarrer`, `outilProfil.enregistrer`.
+**Fix :** `complet` seulement sur Enregistrer ; nav forcée profil tant que `!complet`.
+
+---
+
+## Bugs gênants
+
+- **G1** Flag diète lit `c.repas.repas` au lieu de `c.repas.jours` → « à faire » à tort. `outilClients.tableau`.
+- **G2** Bibliothèque « 0 repas » : lit `contenu.repas` au lieu de `jours`.
+- **G3** Graphique : un seul cercle (le dernier point) ; 1 point ≠ empty state ; dates `type=date` en MM/DD/YYYY.
+- **G4** « Restaurer une sauvegarde » côté client peut POST `programme` / `repas`.
+- **G5** Select programmes prêts : rebuild remet `value=""`.
+- **G6** « kcal aujourd'hui » = onglet, pas le jour calendaire.
+- **G7** Cases mangé vidées si `suivi.date !== toISOString()` → reset **08:00 WITA**, toute la semaine.
+- **G8** `fmt(undefined)` → `"NaN"`.
+- **G9** Mensurations : 0 / valeurs énormes acceptées (HTML min/max seulement).
+- **G10** `keydown` Enter empilé sur l’écran login à chaque bascule mot de passe oublié.
+- **G11** Pas de `<!DOCTYPE html>` / `lang="fr"` ; Netlify `/signup` → 404 (pas de `/* /index.html 200`).
+- **G12** Nav et `.j-onglet` (min-width 104px) scrollables sans barre visible, 390 px.
+- **G13** `#/catalogue` / `#/clients` en client : silencieux, pas de « accès refusé ».
+- **G14** Allergènes haute confiance encore manquants (noms) : gluten 19, oeufs 23, fruits_a_coque 24, poissons 23, crustaces 4, mollusques 6, arachides 1. Soja/sésame 0 miss. Vegan+œuf 19, vegan+miel 8 (strict).
+- **G15** 19 vegan+œuf, 8 vegan+miel. Questionnable : `biscuit-…-gout-bacon`, `sauce-bourguignonne-preemballee`.
+
+Doublons aliments/recettes/programmes : **0**. Recettes sans `regimes`/`allergenes` : **OK**.
+
+---
+
+## Points de sécurité
+
+1. **RLS non vérifiable à fond sans dashboard.** Anon : catalogues = 0 lignes (bon : pas de fuite publique). `profils` → 401 `permission denied for function est_coach`. `donnees` n’a pas de colonne `id` (requête `?select=id` 400). **Question :** un JWT client peut-il GET/UPSERT `donnees?user_id=eq.<autre>` ? Le code coach GET `donnees?select=user_id,outil,contenu,maj_le` **sans filtre** — si la policy « auth.uid() = user_id » est en place, le coach ne verrait que **ses** lignes, pas les clients. Si une policy `est_coach()` SELECT all existe, c’est voulu. **À confirmer dans le dashboard.**
+2. **`javascript:` dans `href`** : `esc()` n’échappe pas `javascript:`. Champs `lien` exercice (client entraînement + coach programme).
+3. Clé **anon** dans le HTML (normal). Pas de `service_role`.
+4. Hash `#inscription` : signup public caché si on connaît l’URL.
+5. Mot de passe oublié : body `{ email }` sans `redirect_to`.
+6. Inscription coach `n-creer` : « Compte créé » même si confirm-email encore on ; pas de PATCH `profils` explicite → « Sans nom » possible.
+7. Texte libre : la plupart des notes passent par `esc()`. Apostrophes/emojis OK via `esc`. Liens URL non validés.
+
+---
+
+## Suggestions d’amélioration (ne pas faire maintenant)
+
+- Pagination catalogue + compteur Catalogue = longueur réelle.
+- Source de vérité macros = profil, calculateur optionnel.
+- Clamp mensurations côté JS.
+- Cercles sur tous les points de la courbe ; empty si < 2.
+- Affordance de scroll (flèche) sur nav et jours.
+- Import `exercices` : si la table n’existe pas, ne pas interrompre aliments/recettes déjà écrits (pas de transaction aujourd’hui).
+- `fmt` → `"—"` si non fini.
+
+---
+
+## Parcours simulés (code)
+
+| Parcours | Résultat |
+|---|---|
+| Client profil vide | Empty repas/programme OK. Nav **pas** bloquée. Calculateur crée 80 kg. |
+| Mensurations 0 / énormes | Pas de crash. Courbe 1 point dégénérée. |
+| Diète 7 j + beaucoup d’allergènes | Pool vide → flash, semaine non écrite. Pool maigre → compléments peu crédibles. 0 kcal si ids hors cap 1000. |
+| Coach 0 client | Tableau vide, pas de throw. |
+| Coach beaucoup de clients | 2 GET (pas N+1). `donnees` aussi cap 1000 → tableau tronqué vers ~170 clients. |
+| Deux clients / switch | Debounce + cache = mélange possible (C7/C8). |
+
+---
+
+## Questions (voulu vs bug)
+
+- Faut-il retirer `pescetarien` sur les plats terre (cassoulet, hot-dog) ? (proposé : oui)
+- Miel en vegan : strict non, beaucoup de gens l’acceptent. **8** fiches.
+- `biscuit goût bacon` / sauce bourguignonne : arôme vs vraie viande ?
+- Signup public via `#inscription` : voulu pour le coach seulement ?
+- Confirm-email : NOTESCLAUDE dit off — à reconfirmer dashboard.
+
+---
+
+## Journal antérieur
+
 # NOTES — Grok Bot
 
 ## 28 août 2026
