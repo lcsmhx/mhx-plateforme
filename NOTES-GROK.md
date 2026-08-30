@@ -318,3 +318,17 @@ Autre vu en live :
 
 `index.html` non touché.
 
+
+## G3 — graphique de poids : ce que j’attends
+
+`Graphique.dessiner` / mensurations. Ne pas toucher aux formules.
+
+1. **0 ou 1 point** (y compris seulement le point de départ) : **pas** d’axe ni de trait fantôme. Texte seul : « Enregistre au moins deux semaines pour voir la courbe. »
+2. **2 points ou plus** : une polyligne **et un cercle sur CHAQUE point** (départ + chaque semaine), pas seulement le dernier.
+3. Le **point de départ** (poids du jour J0) est le **premier** point, à sa date. Les semaines ensuite.
+4. Axe X : dates en `JJ/MM`. Axe Y : kg, avec unité « kg » visible. Si les deux y sont très proches, garder une marge verticale (ne pas coller la ligne au bord).
+5. Survol (ou tap) d’un point : date + poids (ex. `29/08 · 72,0 kg`).
+6. Ne pas forcer `x1 = x0+1` quand il n’y a qu’un point — ça produit la barre verticale / aire bizarre vue en live.
+
+Référence live 30 août : 2 points 72 → 71,5, un seul disque, départ absent, copie « deux semaines » alors que ça dessinait déjà.
+
