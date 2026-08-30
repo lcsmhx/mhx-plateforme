@@ -7718,5 +7718,271 @@
       "Enfourne 18 min. Parsème d'aneth ciselé au sortir du four.",
       "Sers aussitôt, avec le jus du plat."
     ]
+  },
+  {
+    "id": "tempeh-sarrasin-betterave",
+    "nom": "Tempeh poêlé, sarrasin et betterave",
+    "moment": "dejeuner",
+    "temps_min": 25,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "tempeh",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "sarrasin-complet-cru",
+        "grammes": 60
+      },
+      {
+        "aliment_id": "betterave-rouge-cuite",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "roquette-crue",
+        "grammes": 40
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 10
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 15
+      },
+      {
+        "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Rince le sarrasin, fais-le cuire 15 min dans de l'eau, puis égoutte-le.",
+      "Coupe le tempeh en lamelles et dore-le 6 min dans l'huile.",
+      "Coupe la betterave en dés, presse le citron.",
+      "Dresse sarrasin, tempeh, betterave et roquette, sale et citronne."
+    ]
+  },
+  {
+    "id": "houmous-quinoa-crudites",
+    "nom": "Bol de houmous, quinoa et crudités",
+    "moment": "dejeuner",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "houmous",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "quinoa-bouilli-cuit-a-leau",
+        "grammes": 160
+      },
+      {
+        "aliment_id": "concombre-cru",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "carotte-crue",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "tomate-cerise",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 10
+      }
+    ],
+    "etapes": [
+      "Réchauffe le quinoa s'il est froid, ou laisse-le tiède.",
+      "Coupe le concombre, râpe la carotte, coupe les tomates cerises en deux.",
+      "Étale le houmous au fond du bol, ajoute quinoa et crudités.",
+      "Arrose d'huile et de citron, puis mélange légèrement."
+    ]
+  },
+  {
+    "id": "haricots-rouges-riz-avocat",
+    "nom": "Haricots rouges, riz et avocat",
+    "moment": "dejeuner",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "haricot-rouge-bouilli-cuit-a-leau",
+        "grammes": 160
+      },
+      {
+        "aliment_id": "riz-blanc-cuit",
+        "grammes": 160
+      },
+      {
+        "aliment_id": "avocat-cru",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "tomate-crue",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "oignon-rouge-cru",
+        "grammes": 30
+      },
+      {
+        "aliment_id": "coriandre-fraiche",
+        "grammes": 5
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 15
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      }
+    ],
+    "etapes": [
+      "Réchauffe le riz et les haricots rouges 3 min.",
+      "Coupe l'avocat et la tomate, émince l'oignon rouge.",
+      "Dispose le tout dans l'assiette, cisèle la coriandre.",
+      "Arrose d'huile et de citron, mélange et sers."
+    ]
+  },
+  {
+    "id": "tofu-fume-lentilles-fenouil",
+    "nom": "Tofu fumé, lentilles et fenouil",
+    "moment": "dejeuner",
+    "temps_min": 20,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "tofu-fume-preemballe",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "lentilles-vertes-cuites",
+        "grammes": 160
+      },
+      {
+        "aliment_id": "fenouil-cru",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 4
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 10
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 15
+      },
+      {
+        "aliment_id": "aneth-frais",
+        "grammes": 5
+      }
+    ],
+    "etapes": [
+      "Émince le fenouil et fais-le suer 8 min dans l'huile avec l'ail.",
+      "Ajoute le tofu fumé en lamelles, dore 4 min.",
+      "Incorpore les lentilles, réchauffe 2 min.",
+      "Citronne, parsème d'aneth ciselé et sers."
+    ]
+  },
+  {
+    "id": "falafel-roquette-tomate",
+    "nom": "Falafels, roquette et tomate",
+    "moment": "dejeuner",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "falafel-ou-boulette-de-pois-chiche-et-ou-feve-preemballe",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "roquette-crue",
+        "grammes": 50
+      },
+      {
+        "aliment_id": "tomate-crue",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "concombre-cru",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "houmous",
+        "grammes": 40
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 10
+      }
+    ],
+    "etapes": [
+      "Réchauffe les falafels 6 min à la poêle avec un filet d'huile.",
+      "Coupe la tomate et le concombre, dispose-les sur la roquette.",
+      "Ajoute les falafels encore chauds et une cuillère de houmous.",
+      "Arrose de citron et du reste d'huile, puis sers."
+    ]
+  },
+  {
+    "id": "flageolets-patate-douce-epinards",
+    "nom": "Flageolets, patate douce et épinards",
+    "moment": "dejeuner",
+    "temps_min": 20,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "haricot-flageolet-bouilli-cuit-a-leau",
+        "grammes": 160
+      },
+      {
+        "aliment_id": "patate-douce-cuite",
+        "grammes": 180
+      },
+      {
+        "aliment_id": "epinard-cru",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "oignon-jaune-cru",
+        "grammes": 40
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 4
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "thym-frais",
+        "grammes": 3
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 10
+      }
+    ],
+    "etapes": [
+      "Fais revenir l'oignon et l'ail 4 min dans l'huile.",
+      "Ajoute la patate douce en cubes et le thym, 5 min.",
+      "Incorpore les flageolets et les épinards jusqu'à ce qu'ils tombent.",
+      "Citronne et sers chaud."
+    ]
   }
 ]

@@ -359,3 +359,5 @@ Le trou le plus maigre n’est plus paléo déjeuner (19) : c’est **végétali
 
 G3 graphique : spec déjà dans ce fichier. C9 questionnaire bloquant : **écarté**, compris.
 
+## 30 août — +6 déjeuners vegan
+`tempeh-sarrasin-betterave`, `houmous-quinoa-crudites`, `haricots-rouges-riz-avocat`, `tofu-fume-lentilles-fenouil`, `falafel-roquette-tomate`, `flageolets-patate-douce-epinards`. Recettes **223**. Vegan déjeuner brut **15**. À réimporter.
