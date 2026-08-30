@@ -720,7 +720,7 @@ const Store = {
     const uid = this.cible(); if (!uid) return;
     this.boite(uid)[cle] = valeur;
     /* seule exception a la lecture seule : le coach ecrit le programme et les repas */
-    if (this.lectureSeule() && !(Auth.estCoach() && (cle === "programme" || cle === "repas"))) return;
+    if (this.lectureSeule() && !(Auth.estCoach() && (cle === "programme" || cle === "repas" || cle === "calc"))) return;
     const k = uid + "|" + cle;
     if (this.charge[k] === false) return;              // on n'a pas pu lire : on n'ecrit pas
     clearTimeout(this.attente[k]);
@@ -1201,6 +1201,7 @@ const Graphique = {
 const outilCalculateur = {
   id: "calculateur",
   cle: "calc",
+  masque_client: true,     // c'est le coach qui regle les calories, pas le client
   nom: "Calculateur",
   icone: "🔥",
   titre: "Calculateur métabolique",
@@ -1287,6 +1288,11 @@ const outilCalculateur = {
     if (num(intake.poids))  depart.poids  = num(intake.poids);
     if (num(intake.taille)) depart.taille = num(intake.taille);
     if (num(intake.age))    depart.age    = num(intake.age);
+    if (intake.sexe)        depart.sexe   = (intake.sexe === "Femme") ? "F" : "H";
+    if (num(intake.pas))    depart.pas    = num(intake.pas);
+    if (num(intake.seances)) depart.heures = num(intake.seances) * 1.25;   // ~1 h 15 par seance
+    if (/perte|s[èe]che/i.test(intake.objectif || "")) depart.objectif = "perte";
+    else if (/prise|masse/i.test(intake.objectif || "")) depart.objectif = "prise";
     const D = await Store.lire(this.cle, depart);
     const self = this;
     let touche = false;
@@ -1575,6 +1581,7 @@ const outilMensurations = {
 const outilEntrainement = {
   id: "entrainement",
   cle: "perf",
+  masque_client: true,     // outil de travail du coach : le client ne le voit pas
   nom: "Entraînement",
   icone: "🏋️",
   titre: "Journal d'entraînement",
@@ -1820,6 +1827,8 @@ const QUESTIONS = [
   { section:"1 · Identité & logistique" },
   { id:"nom",        label:"Prénom et nom", type:"texte", requis:true },
   { id:"age",        label:"Âge", type:"nombre", requis:true },
+  { id:"sexe",       label:"Sexe", type:"select", requis:true, options:["Homme","Femme"],
+    aide:"Demandé uniquement pour le calcul du métabolisme de base : la formule de référence donne un résultat différent d'environ 160 kcal par jour." },
   { id:"ville",      label:"Ville / Pays", type:"texte" },
   { id:"fuseau",     label:"Fuseau horaire", type:"texte" },
   { id:"email",      label:"Email", type:"texte" },
@@ -2873,7 +2882,7 @@ const outilNutrition = {
         <select id="nu-biblio" style="max-width:240px"><option value="">— charger depuis ma bibliothèque —</option></select>
         <span class="msg" id="nu-msg"></span>
       </div>
-      ${ctx.prerempli ? `<p class="note" style="margin-top:10px">Pré-rempli avec le profil et le calculateur de ce client.</p>` : ""}
+      ${ctx.prerempli ? `<p class="note" style="margin-top:10px">Pré-rempli avec ${ctx.depuisQuestionnaire ? "son questionnaire — passe par « Ses calories » si tu veux affiner son activité" : "son profil et son calculateur"}.</p>` : ""}
       ${Catalogue.secours ? `<div class="flag" style="margin-top:12px"><b>Catalogue de secours.</b> Ta base ne répond pas — projet Supabase en pause, ou import jamais lancé. L'application lit les données depuis le dépôt pour rester utilisable, mais rien n'est enregistré tant que la base ne répond pas.</div>` : ""}
       ${ctx.autres ? `<div class="flag" style="margin-top:12px"><b>À vérifier avant d'envoyer :</b> ce client a écrit « ${esc(ctx.autres)} » dans ses allergies. Aucun filtre automatique ne couvre ce texte : relis les ingrédients toi-même.</div>` : ""}
     </section>`;
@@ -2992,7 +3001,21 @@ const outilNutrition = {
       R.allergenes = CONFIG.nutrition.allergenes.filter(a => noms.indexOf(a.nom) > -1).map(a => a.id);
       if (R.allergenes.length) ctx.prerempli = true;
     }
-    if (!R.cible && calc && calc.poids){
+    /* Le client n'a plus acces au calculateur : si le coach ne l'a pas encore
+       rempli, on calcule la cible directement depuis le questionnaire plutot
+       que de laisser le champ vide. */
+    let base = calc;
+    if ((!base || !base.poids) && num(intake.poids)){
+      base = { sexe: intake.sexe === "Femme" ? "F" : "H", age: num(intake.age) || 30,
+               taille: num(intake.taille) || 170, poids: num(intake.poids),
+               pas: num(intake.pas) || CONFIG.calcul.valeurs_depart.pas,
+               heures: (num(intake.seances) || 3) * 1.25,
+               objectif: /perte|s[èe]che/i.test(intake.objectif || "") ? "perte"
+                       : /prise|masse/i.test(intake.objectif || "") ? "prise" : "maintien" };
+      ctx.depuisQuestionnaire = true;
+    }
+    if (!R.cible && base && base.poids){
+      const calc = base;
       const bmr  = outilCalculateur.metabolismeDeBase(calc);
       const tdee = bmr * outilCalculateur.facteurActivite(calc).total;
       const c = CONFIG.calcul;
@@ -3693,7 +3716,10 @@ let courant = OUTILS[0].id;
 let nettoyage = null;
 
 function outilsVisibles(){
-  return OUTILS.filter(o => !o.role || (o.role === "coach" && Auth.estCoach()));
+  /* role: "coach"      -> outil du coach, quitte la fiche client quand on l'ouvre
+     masque_client: true -> outil du coach, mais qui reste dans la fiche du client */
+  return OUTILS.filter(o => (!o.role || (o.role === "coach" && Auth.estCoach()))
+                         && (!o.masque_client || Auth.estCoach()));
 }
 
 /* « Mon programme » devient « Son programme » quand le coach consulte
@@ -3749,6 +3775,7 @@ function bandeauConsultation(){
     { id:"profil",       nom:"Son questionnaire" },
     { id:"programme",    nom:"Son programme",  fort:true },
     { id:"nutrition",    nom:"Ses repas",      fort:true },
+    { id:"calculateur",  nom:"Ses calories", fort:true },
     { id:"mensurations", nom:"Ses courbes" },
     { id:"entrainement", nom:"Ses séances" }
   ];
@@ -3783,7 +3810,7 @@ async function afficher(id, silencieux){
     ${(outil.cle && !Store.idConsulte) ? blocSauvegarde() : ""}`;
 
   construireNav();   // les libelles dependent du mode : on les rafraichit
-  const modifiable = !Store.idConsulte || (Auth.estCoach() && (outil.id === "programme" || outil.id === "nutrition"));
+  const modifiable = !Store.idConsulte || (Auth.estCoach() && (outil.id === "programme" || outil.id === "nutrition" || outil.id === "calculateur"));
   $("vue").className = modifiable ? "wrap" : "wrap lecture-seule";
 
   nettoyage = (await outil.init()) || null;
