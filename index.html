@@ -3413,12 +3413,25 @@ const outilCatalogue = {
           }));
           /* Les vidéos vivent dans un fichier à part : les fiches viennent de
              Grok Bot, les liens de Lucas. On les recolle ici, sur l'identifiant. */
+          /* le fichier peut s'appeler avec ou sans tiret : GitHub et macOS
+             renomment volontiers, on essaie les deux plutot que d'echouer */
           let liens = {};
-          try { liens = await Import.fichier("liens-exercices.json"); } catch(e){}
+          for (const nom of ["liens-exercices.json", "liensexercices.json"]){
+            try { liens = await Import.fichier(nom); if (Object.keys(liens).length) break; } catch(e){}
+          }
+          /* on retrouve l'identifiant de la video dans n'importe quelle
+             adresse YouTube : ainsi les liens ecrits directement dans les
+             fiches donnent aussi un lecteur, pas seulement un lien sortant */
+          const idYoutube = (url) => {
+            const m = String(url || "").match(/(?:v=|youtu\.be\/|embed\/)([A-Za-z0-9_-]{6,})/);
+            return m ? m[1] : "";
+          };
           let avecVideo = 0;
           fiches.forEach(f => {
             const l = liens[f.id];
-            if (l && l.lien){ f.lien = l.lien; f.video_id = l.yt || ""; avecVideo++; }
+            if (l && l.lien){ f.lien = l.lien; f.video_id = l.yt || idYoutube(l.lien); }
+            else if (f.lien) f.video_id = idYoutube(f.lien);
+            if (f.video_id) avecVideo++;
           });
           await Import.envoyer("exercices", fiches, null);
           if (Object.keys(liens).length) dire(`<b>${fmt(avecVideo)} exercices</b> ont leur vidéo de démonstration.`);
