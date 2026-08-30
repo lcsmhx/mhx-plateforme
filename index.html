@@ -297,6 +297,15 @@ ul.ingr li{display:flex;justify-content:space-between;gap:12px;padding:6px 0;bor
 ul.ingr li b{font-family:"IBM Plex Mono",ui-monospace,monospace;color:var(--ink)}
 ol.etapes{margin:0;padding-left:18px;font-size:14px;color:var(--ink-2)}
 ol.etapes li{margin-bottom:6px}
+.video-boite{margin-top:14px}
+.video-vignette{display:block;position:relative;width:100%;max-width:420px;padding:0;border:1px solid var(--line);
+  border-radius:8px;overflow:hidden;cursor:pointer;background:var(--sunken)}
+.video-vignette img{display:block;width:100%;height:auto}
+.video-vignette .jouer{position:absolute;left:0;right:0;bottom:0;padding:9px 12px;font-size:13px;font-weight:600;
+  color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.78));text-align:left}
+.video-vignette:hover{border-color:var(--accent)}
+.video-cadre{position:relative;width:100%;max-width:420px;aspect-ratio:16/9;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
+.video-cadre iframe{position:absolute;inset:0;width:100%;height:100%}
 .brand{display:flex;flex-direction:row;align-items:center;gap:11px;margin-right:auto}
 .brand .b-texte{display:flex;flex-direction:column;line-height:1.1}
 @media(max-width:520px){.brand .b-name{font-size:16px}.b-logo{max-width:96px}}
@@ -887,7 +896,10 @@ const Normaliser = {
   },
 
   mots: {
-    viande:  /(poulet|poule|boeuf|porc|agneau|mouton|veau|dinde|canard|\boie\b|lapin|cheval|jambon|saucis|lardon|bacon|chorizo|andouill|boudin|rillette|\bpate\b|pate de (foie|campagne)|\bfoie\b|gesier|merguez|viande|volaille|charcuterie|steak|escalope|brochette|kebab|nugget|cordon.?bleu|saindoux|gelatine|graisse (de|d')\s?(dinde|poulet|canard|oie|porc|mouton|boeuf)|bouillon de (boeuf|poule|volaille|viande))/,
+    viande:  /(poulet|poule|boeuf|porc|agneau|mouton|veau|dinde|canard|\boie\b|lapin|cheval|jambon|saucis|lardon|bacon|chorizo|andouill|boudin|rillette|\bfoie gras\b|gesier|merguez|viande|volaille|charcuterie|steak|escalope|brochette|kebab|nugget|cordon.?bleu|saindoux|gelatine|graisse (de|d')\s?(dinde|poulet|canard|oie|porc|mouton|boeuf)|bouillon de (boeuf|poule|volaille|viande))/,
+    /* « pate » sans accent, c'est aussi bien le pâté que la pâte d'arachide
+       ou la pâte à tartiner : on n'accuse qu'avec le contexte. */
+    pate_animale: /pate (de (foie|campagne|tete|lapin|canard|porc|volaille)|en croute|imperial)/,
     poisson: /(poisson|thon|saumon|cabillaud|colin|merlu|\blieu\b|sardine|maquereau|anchois|truite|hareng|\bsole\b|dorade|\bbar\b|\braie\b|lotte|espadon|surimi|tarama|caviar|crevette|crabe|homard|langoustine|ecrevisse|langouste|tourteau|moule|huitre|coquille|calamar|calmar|poulpe|seiche|bulot|palourde|saint.?jacques|escargot|anguille|carpe|perche|brochet|bigorneau)/,
     laitier: /(\blait\b|laitier|laitiere|fromage|yaourt|yoghourt|beurre|\bcreme\b|petit.suisse|skyr|mascarpone|ricotta|mozzarella|parmesan|emmental|comte\b|gruyere|camembert|roquefort|\bchevre\b|brebis|kefir|faisselle|babeurre|lactose|caseine|petit.lait|\bfeta\b|cheddar|raclette|reblochon|munster|brie\b|bleu d)/,
     oeuf:    /(\boeuf|omelette|mayonnaise|meringue|quiche|\bflan\b|aux oeufs)/,
@@ -895,7 +907,7 @@ const Normaliser = {
     cereale: /(\bble\b|\bpain\b|\bpates\b|\bpate\b|\briz\b|avoine|\borge\b|seigle|epeautre|\bmais\b|semoule|couscous|boulgour|quinoa|sarrasin|millet|farine|biscuit|gateau|cereale|corn.?flakes|muesli|brioche|croissant|pizza|\btarte\b|crepe|gaufre|chapelure|panure|galette|biscotte|viennoiserie|sandwich|burger|wrap\b)/,
     legumineuse: /(lentille|\bpois\b|pois chiche|haricot|\bfeve\b|\bsoja\b|\btofu\b|tempeh|edamame|lupin|arachide|cacahuete)/,
     sucre:   /(\bsucre|sirop|bonbon|confiserie|confiture|chocolat|pate a tartiner|\bsoda\b|\bcola\b|limonade)/,
-    porc:    /(\bporc\b|porcin|jambon|lardon|\blard\b|bacon|chorizo|andouill|boudin|rillette|saucisson|saindoux|charcuterie|coppa|pancetta|gelatine|choucroute garnie|cassoulet)/,
+    porc:    /(\bporc\b|porcin|jambon|lardon|\blard\b|bacon|chorizo|andouill|boudin|rillette|saucisson|saindoux|charcuterie|coppa|pancetta|gelatine|choucroute garnie|cassoulet|hot.?dog|knack|strasbourg|francfort|cervelas|mortadelle|salami|pate de (campagne|tete|porc)|museau|couenne)/,
 
     /* Un plat porte rarement le mot « viande » dans son nom : le cassoulet,
        le hot-dog, le coq au vin et les tripes passaient pour vegetaliens.
@@ -935,7 +947,7 @@ const Normaliser = {
        cette mention prime sur tout le reste, y compris sur le mot « vegetal ». */
     const refuse = /ne convient pas aux (veganes|vegetaliens|vegetariens)/.test(t);
     const exV = m.ex_viande.test(t) && !refuse, exL = m.ex_lait.test(t) && !refuse;
-    const viande  = ((m.viande.test(t) || m.plats_animaux.test(t)) && !exV) || cat === "Viandes";
+    const viande  = ((m.viande.test(t) || m.plats_animaux.test(t) || m.pate_animale.test(t)) && !exV) || cat === "Viandes";
     const poisson = ((m.poisson.test(t) || m.plats_marins.test(t)) && !exV) || cat === "Poissons";
     const laitier = ((m.laitier.test(t) || m.fromages.test(t)) || cat === "Laitages") && !exL;
     const oeuf    = m.oeuf.test(t)    || cat === "Oeufs";
@@ -943,7 +955,8 @@ const Normaliser = {
     const cereale = m.cereale.test(t) || cat === "Féculents";
     const legum   = m.legumineuse.test(t) || cat === "Légumineuses";
     const sucre   = m.sucre.test(t);
-    const porc    = m.porc.test(t);
+    /* le pain a hot-dog n'est pas du porc : la meme protection que pour la viande */
+    const porc    = m.porc.test(t) && !exV;
     const alcool  = m.alcool.test(t);
 
     /* --- allergenes : on garde ceux du fichier ET on ajoute ceux que le
@@ -2051,7 +2064,14 @@ const outilProgramme = {
       ${(f.execution || []).length ? `<h3>Exécution</h3><ol class="etapes">${f.execution.map(x => `<li>${esc(x)}</li>`).join("")}</ol>` : ""}
       ${(f.erreurs || []).length ? `<h3>Erreurs fréquentes</h3><ul class="erreurs">${f.erreurs.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
       ${f.respiration ? `<p class="note"><b>Respiration :</b> ${esc(f.respiration)}</p>` : ""}
-      ${f.lien ? `<a class="link-a" href="${esc(f.lien)}" target="_blank" rel="noopener">Voir la démonstration →</a>` : ""}
+      ${f.video_id ? `<div class="video-boite">
+        <button type="button" class="video-vignette" data-yt="${esc(f.video_id)}" aria-label="Voir la démonstration">
+          <img src="https://img.youtube.com/vi/${esc(f.video_id)}/hqdefault.jpg" alt="" loading="lazy">
+          <span class="jouer">▶ Voir la démonstration</span>
+        </button>
+        <p class="note" style="margin:8px 0 0">Vidéo hébergée sur YouTube, d'une chaîne tierce. Elle s'ouvre ici, sans quitter ton espace.</p>
+      </div>`
+      : (f.lien ? `<a class="link-a" href="${esc(f.lien)}" target="_blank" rel="noopener">Voir la démonstration →</a>` : "")}
     </div>`;
   },
 
@@ -2066,6 +2086,15 @@ const outilProgramme = {
       boite.innerHTML = this.ficheHTML(f);
       boite.hidden = false;
       b.textContent = "Masquer";
+      /* on ne charge le lecteur qu'au clic : sinon chaque fiche ouverte
+         tirerait une video, et la page deviendrait lourde sur mobile */
+      $$(".video-vignette", boite).forEach(v => v.addEventListener("click", () => {
+        const id = v.dataset.yt;
+        const cadre = document.createElement("div");
+        cadre.className = "video-cadre";
+        cadre.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${id}?rel=0&autoplay=1" title="Démonstration" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+        v.parentNode.replaceChild(cadre, v);
+      }));
     }));
   },
 
@@ -3379,9 +3408,20 @@ const outilCatalogue = {
             id: x.id, nom: x.nom, groupe: x.groupe || null,
             muscles: x.muscles || [], materiel: x.materiel || null, niveau: x.niveau || null,
             type: x.type || null, execution: x.execution || [], erreurs: x.erreurs || [],
-            respiration: x.respiration || null, alternatives: x.alternatives || [], lien: x.lien || ""
+            respiration: x.respiration || null, alternatives: x.alternatives || [],
+            lien: x.lien || "", video_id: x.video_id || ""
           }));
+          /* Les vidéos vivent dans un fichier à part : les fiches viennent de
+             Grok Bot, les liens de Lucas. On les recolle ici, sur l'identifiant. */
+          let liens = {};
+          try { liens = await Import.fichier("liens-exercices.json"); } catch(e){}
+          let avecVideo = 0;
+          fiches.forEach(f => {
+            const l = liens[f.id];
+            if (l && l.lien){ f.lien = l.lien; f.video_id = l.yt || ""; avecVideo++; }
+          });
           await Import.envoyer("exercices", fiches, null);
+          if (Object.keys(liens).length) dire(`<b>${fmt(avecVideo)} exercices</b> ont leur vidéo de démonstration.`);
           /* on verifie tout de suite ce qui compte : un exercice de programme
              sans fiche, c'est un client qui ne sait pas quoi faire */
           const idx = {}; fiches.forEach(f => { idx[Normaliser.aplatir(f.nom)] = true; });
