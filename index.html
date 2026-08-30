@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Le fichier change plusieurs fois par jour : on interdit au navigateur de
+     servir une version gardee en cache. Sans ca, un client peut rester des
+     jours sur l'ancienne sans le savoir. -->
+<meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
 <title>Plateforme MHX Coaching</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 
@@ -230,6 +234,9 @@ footer a{color:var(--accent)}
 .bar i{display:block;height:100%;border-radius:3px}
 .m-sub{font-size:12px;color:var(--ink-3);font-family:"IBM Plex Mono",monospace}
 .flag{margin-top:14px;padding:10px 12px;border-left:3px solid var(--warn);background:var(--accent-soft);font-size:13px;color:var(--ink-2);border-radius:0 4px 4px 0}
+.flag.grave{border-left-color:var(--bad);background:rgba(179,49,47,.08)}
+.flag.grave b{color:var(--ink)}
+.flag.grave li{margin-bottom:5px;line-height:1.6}
 
 /* --- outil : mensurations --- */
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
@@ -484,6 +491,12 @@ label.fo-case{display:flex;align-items:flex-start;gap:10px;cursor:pointer;flex:1
 .fo-axe{background:var(--sunken);border:1px solid var(--line);border-radius:4px;padding:11px;font-size:13.5px}
 .fo-defis li{border-bottom:1px solid var(--line);padding:9px 0}
 .fo-defis li:last-child{border-bottom:0}
+.co-rester{display:flex;align-items:center;gap:9px;margin:0 0 16px;cursor:pointer;
+  font-size:13px;text-transform:none;letter-spacing:0;color:var(--ink-2);font-weight:400}
+.co-rester input{width:16px;height:16px;margin:0;flex:0 0 auto;accent-color:var(--accent)}
+.version{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.06em;color:var(--ink-3)}
+.pastille.role-coach{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.carte-co .co-aide{font-size:12px;color:var(--ink-3);text-align:center;margin:12px 0 0;line-height:1.5}
 </style>
 
 <div class="topbar">
@@ -529,6 +542,10 @@ const CONFIG = {
 
     /* Nom du programme affiche sous la marque. Laisse vide si tu n'en veux pas. */
     programme: "",
+    /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
+       question qui compte apres une mise en ligne : « est-ce que je regarde
+       bien la nouvelle version ? » */
+    version: "2026-08-30 · 15",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -687,21 +704,40 @@ const Auth = {
   cleSession: "mhx_session",
   session: null,
 
+  /* « Rester connecte » decide seulement d'OU la session est rangee :
+     localStorage survit a la fermeture du navigateur, sessionStorage
+     s'efface avec l'onglet. Sur un ordinateur partage, la case decochee
+     est la seule chose qui empeche le suivant d'ouvrir la fiche. */
+  persistant: true,
+  magasin(){ return this.persistant ? localStorage : sessionStorage; },
+
   charger(){
-    try { this.session = JSON.parse(localStorage.getItem(this.cleSession)); } catch(e){ this.session = null; }
+    this.session = null;
+    /* on regarde les deux : on ne sait pas ce que la personne avait choisi */
+    for (const m of [localStorage, sessionStorage]){
+      try {
+        const brut = m.getItem(this.cleSession);
+        if (brut){ this.session = JSON.parse(brut); this.persistant = (m === localStorage); break; }
+      } catch(e){}
+    }
     return this.session;
   },
   memoriser(s){
     if (s && s.access_token){
       s.expire_le = Date.now() + (s.expires_in || 3600) * 1000;
       this.session = s;
-      try { localStorage.setItem(this.cleSession, JSON.stringify(s)); } catch(e){}
+      /* on ecrit dans un seul des deux, et on nettoie l'autre : sinon une
+         ancienne session tramerait et « rester connecte » ne voudrait
+         plus rien dire */
+      try { this.magasin().setItem(this.cleSession, JSON.stringify(s)); } catch(e){}
+      try { (this.persistant ? sessionStorage : localStorage).removeItem(this.cleSession); } catch(e){}
     }
     return s;
   },
   oublier(){
     this.session = null;
     try { localStorage.removeItem(this.cleSession); } catch(e){}
+    try { sessionStorage.removeItem(this.cleSession); } catch(e){}
   },
   connecte(){ return !!(this.session && this.session.access_token); },
   utilisateur(){ return this.session ? this.session.user : null; },
@@ -760,13 +796,35 @@ const Auth = {
     });
     return this.memoriser(s);
   },
+  /* Supabase ne redemande pas l'ancien mot de passe. On le verifie nous-memes :
+     sinon un telephone laisse deverrouille suffit a se faire voler le compte. */
+  async changerMotDePasse(actuel, nouveau){
+    const u = this.utilisateur();
+    if (!u || !u.email) throw new Error("Session expirée. Reconnecte-toi.");
+    try {
+      await this.appel("/auth/v1/token?grant_type=password", {
+        method: "POST", avecJeton: false, body: { email: u.email, password: actuel }
+      });
+    } catch(e){ throw new Error("Ton mot de passe actuel n'est pas le bon."); }
+    await this.appel("/auth/v1/user", { method: "PUT", body: { password: nouveau } });
+  },
+
+  /* Le changement d'email n'est effectif qu'apres confirmation sur la nouvelle
+     adresse : c'est ce qui empeche d'enfermer quelqu'un hors de son compte. */
+  async changerEmail(nouveau){
+    const r = await this.appel("/auth/v1/user", { method: "PUT", body: { email: nouveau } });
+    return r;
+  },
+
   async motDePasseOublie(email){
     return this.appel("/auth/v1/recover", { method: "POST", avecJeton: false, body: { email } });
   },
   async deconnecter(){
     try { await this.appel("/auth/v1/logout", { method: "POST" }); } catch(e){}
     this.oublier();
-    Object.keys(localStorage).forEach(k => { if (k.indexOf("mhx_") === 0) localStorage.removeItem(k); });
+    [localStorage, sessionStorage].forEach(m => {
+      Object.keys(m).forEach(k => { if (k.indexOf("mhx_") === 0) m.removeItem(k); });
+    });
     location.hash = "";
     location.reload();
   },
@@ -2117,6 +2175,34 @@ const outilProfil = {
         <span class="msg" id="p-msg"></span>
       </div>
       <p class="note" style="margin-top:10px">Les questions marquées d'une étoile sont indispensables. Tu peux revenir modifier tes réponses à tout moment.</p>
+    </section>` + this.compteHTML();
+  },
+
+  /* Le compte n'appartient qu'a son proprietaire : quand le coach consulte la
+     fiche d'un client, ce bloc n'existe pas. Il ne change pas le mot de passe
+     de quelqu'un d'autre depuis ici. */
+  compteHTML(){
+    if (Store.idConsulte) return "";
+    const u = Auth.utilisateur();
+    return `
+    <section class="panel">
+      <h2>Mon compte</h2>
+      <p class="note" style="margin:0 0 18px">Adresse actuelle : <b>${esc((u && u.email) || "—")}</b>. C'est à cette adresse qu'arrive le lien si tu oublies ton mot de passe — garde-la à jour.</p>
+
+      <h3 style="font-family:Oswald,sans-serif;text-transform:uppercase;letter-spacing:.05em;font-size:14px;font-weight:500;color:var(--ink-2);margin:0 0 12px">Changer mon mot de passe</h3>
+      <div class="grid g2">
+        <div><label for="mc-actuel">Mot de passe actuel</label><input id="mc-actuel" type="password" autocomplete="current-password"></div>
+        <div><label for="mc-nouveau">Nouveau mot de passe</label><input id="mc-nouveau" type="password" autocomplete="new-password"></div>
+        <div><label for="mc-nouveau2">Confirme le nouveau</label><input id="mc-nouveau2" type="password" autocomplete="new-password"></div>
+      </div>
+      <div class="actions"><button class="btn ghost" id="mc-mdp">Changer mon mot de passe</button><span class="msg" id="mc-mdp-msg"></span></div>
+
+      <h3 style="font-family:Oswald,sans-serif;text-transform:uppercase;letter-spacing:.05em;font-size:14px;font-weight:500;color:var(--ink-2);margin:26px 0 12px">Changer mon adresse email</h3>
+      <div class="grid g2">
+        <div><label for="mc-email">Nouvelle adresse</label><input id="mc-email" type="email" autocomplete="email"></div>
+      </div>
+      <div class="actions"><button class="btn ghost" id="mc-maj-email">Changer mon adresse</button><span class="msg" id="mc-email-msg"></span></div>
+      <p class="note" style="margin-top:10px">Un lien de confirmation part sur la nouvelle adresse. Tant que tu n'as pas cliqué dessus, tu continues de te connecter avec l'ancienne — c'est ce qui t'évite de perdre ton compte en cas de faute de frappe.</p>
     </section>`;
   },
 
@@ -2169,6 +2255,41 @@ const outilProfil = {
       $$(".manque").forEach(e => e.classList.remove("manque"));
       flash("p-msg", "Profil enregistré. Ton coach le voit de son côté.");
       if (premiereFois){ premiereFois = false; setTimeout(() => { location.hash = "#/mensurations"; }, 900); }
+    });
+
+    this.brancherCompte();
+  },
+
+  brancherCompte(){
+    const bMdp = $("mc-mdp");
+    if (bMdp) bMdp.addEventListener("click", async () => {
+      const actuel = $("mc-actuel").value, nouveau = $("mc-nouveau").value, nouveau2 = $("mc-nouveau2").value;
+      if (!actuel || !nouveau)      return flash("mc-mdp-msg", "Remplis les trois champs.");
+      if (nouveau.length < 6)       return flash("mc-mdp-msg", "Le nouveau mot de passe doit faire au moins 6 caractères.");
+      if (nouveau !== nouveau2)     return flash("mc-mdp-msg", "Les deux nouveaux mots de passe ne sont pas identiques.");
+      if (nouveau === actuel)       return flash("mc-mdp-msg", "Le nouveau mot de passe est le même que l'ancien.");
+      bMdp.disabled = true; flash("mc-mdp-msg", "Un instant…");
+      try {
+        await Auth.changerMotDePasse(actuel, nouveau);
+        $("mc-actuel").value = $("mc-nouveau").value = $("mc-nouveau2").value = "";
+        flash("mc-mdp-msg", "Mot de passe changé. Utilise le nouveau à ta prochaine connexion.");
+      } catch(e){ flash("mc-mdp-msg", e.message || "Changement impossible."); }
+      bMdp.disabled = false;
+    });
+
+    const bMail = $("mc-maj-email");
+    if (bMail) bMail.addEventListener("click", async () => {
+      const nouveau = ($("mc-email").value || "").trim();
+      const u = Auth.utilisateur();
+      if (!nouveau || nouveau.indexOf("@") < 1) return flash("mc-email-msg", "Indique une adresse valide.");
+      if (u && nouveau.toLowerCase() === String(u.email || "").toLowerCase())
+        return flash("mc-email-msg", "C'est déjà ton adresse actuelle.");
+      bMail.disabled = true; flash("mc-email-msg", "Un instant…");
+      try {
+        await Auth.changerEmail(nouveau);
+        flash("mc-email-msg", "Un lien de confirmation part sur " + nouveau + ". Clique dessus pour valider.");
+      } catch(e){ flash("mc-email-msg", e.message || "Changement impossible."); }
+      bMail.disabled = false;
     });
   }
 };
@@ -3655,6 +3776,43 @@ const outilClients = {
     };
   },
 
+  /* Le calculateur et le questionnaire peuvent diverger : le client remplit
+     son formulaire, le coach ouvre le calculateur, et personne ne remarque
+     que les deux ne parlent pas de la meme personne. Un cas reel : 80 kg /
+     178 cm / 25 ans dans le calculateur contre 62 / 158 / 37 dans le
+     questionnaire — environ 950 kcal d'ecart par jour, invisible a l'ecran. */
+  SEUILS: { poids: 2, taille: 2, age: 2 },
+
+  ecarts(intake, calc){
+    if (!intake || !calc) return [];
+    const out = [];
+    [["poids","kg"],["taille","cm"],["age","ans"]].forEach(([cle, unite]) => {
+      const a = parseFloat(intake[cle]), b = parseFloat(calc[cle]);
+      if (!isFinite(a) || !isFinite(b)) return;
+      if (Math.abs(a - b) >= this.SEUILS[cle]) out.push({ cle, unite, forms: a, calc: b });
+    });
+    /* le sexe n'a pas de seuil : c'est juste ou c'est faux */
+    const sf = intake.sexe === "Homme" ? "H" : intake.sexe === "Femme" ? "F" : null;
+    if (sf && calc.sexe && sf !== calc.sexe)
+      out.push({ cle:"sexe", unite:"", forms: intake.sexe, calc: calc.sexe === "H" ? "Homme" : "Femme" });
+    return out;
+  },
+
+  /* Combien de calories par jour separent les deux versions. C'est le chiffre
+     qui dit si l'ecart est un detail ou une erreur de plan alimentaire. */
+  ecartKcal(intake, calc){
+    try {
+      const depuisForm = Object.assign({}, calc, {
+        poids:  parseFloat(intake.poids)  || calc.poids,
+        taille: parseFloat(intake.taille) || calc.taille,
+        age:    parseFloat(intake.age)    || calc.age,
+        sexe:   intake.sexe === "Homme" ? "H" : intake.sexe === "Femme" ? "F" : calc.sexe
+      });
+      const t = d => outilCalculateur.metabolismeDeBase(d) * outilCalculateur.facteurActivite(d).total;
+      return Math.round(t(calc) - t(depuisForm));
+    } catch(e){ return null; }
+  },
+
   tableau(profils, parClient, contenus){
     const tb = $("tb-clients"), zoneA = $("alertes-clients");
     if (!tb) return;
@@ -3672,8 +3830,11 @@ const outilClients = {
       const objectif = (c.intake && c.intake.objectif) || "";
       /* Le sens du progres depend de l'objectif : perdre, c'est descendre. */
       const sens = /perte|s[èe]che/i.test(objectif) ? -1 : /prise|masse/i.test(objectif) ? 1 : 0;
+      const ec = this.ecarts(c.intake, c.calc);
       return {
         p: p, ev: ev, jours: j,
+        ecarts: ec,
+        ecartKcal: ec.length ? this.ecartKcal(c.intake, c.calc) : null,
         nom: ((p.prenom||"") + " " + (p.nom||"")).trim() || (p.id.slice(0,8)),
         intake: !!(c.intake && c.intake.complet),
         programme: !!(c.programme && (c.programme.seances||[]).length),
@@ -3683,7 +3844,8 @@ const outilClients = {
     });
 
     /* Ceux qui demandent une action passent devant. */
-    const urgence = (l) => (l.jours === null ? 100 : l.jours >= 10 ? 90 : 0) +
+    const urgence = (l) => (l.ecarts.length ? 200 : 0) +
+                           (l.jours === null ? 100 : l.jours >= 10 ? 90 : 0) +
                            (!l.intake ? 50 : 0) + (!l.programme ? 20 : 0) + (!l.diete ? 10 : 0);
     lignes.sort((a,b) => urgence(b) - urgence(a) || (b.jours||0) - (a.jours||0));
 
@@ -3697,7 +3859,7 @@ const outilClients = {
     };
 
     tb.innerHTML = lignes.map(l => `<tr>
-      <td><b>${esc(l.nom)}</b></td>
+      <td><b>${esc(l.nom)}</b>${l.ecarts.length ? ` <span class="pastille manque" title="Le calculateur ne correspond pas au questionnaire">chiffres à vérifier</span>` : ""}</td>
       <td>${l.jours === null ? '<span class="pastille manque">jamais</span>'
             : l.jours >= 10 ? `<span class="pastille manque">${l.jours} j</span>`
             : `<span class="meta">${l.jours === 0 ? "aujourd'hui" : "il y a " + l.jours + " j"}</span>`}</td>
@@ -3720,7 +3882,17 @@ const outilClients = {
     if (zoneA){
       const muets = lignes.filter(l => l.jours === null || l.jours >= 10);
       const aFaire = lignes.filter(l => !l.programme || !l.diete || !l.intake);
+      const incoherents = lignes.filter(l => l.ecarts.length);
       let h = "";
+      if (incoherents.length){
+        h += `<div class="flag grave"><b>Le calculateur ne correspond pas au questionnaire :</b><ul style="margin:8px 0 0;padding-left:20px">` +
+          incoherents.map(l => `<li><b>${esc(l.nom)}</b> — ` +
+            l.ecarts.map(e => `${e.cle} : ${esc(String(e.forms))}${e.unite ? " " + e.unite : ""} au questionnaire, ` +
+                              `${esc(String(e.calc))}${e.unite ? " " + e.unite : ""} au calculateur`).join(" · ") +
+            (l.ecartKcal ? ` <b>(${l.ecartKcal > 0 ? "+" : ""}${fmt(l.ecartKcal)} kcal/jour)</b>` : "") +
+            `</li>`).join("") +
+          `</ul><p class="note" style="margin:10px 0 0">Sa diète est calculée sur les chiffres du calculateur. Ouvre sa fiche et corrige avant d'envoyer un plan.</p></div>`;
+      }
       if (muets.length) h += `<div class="flag"><b>Sans nouvelles depuis 10 jours ou plus :</b> ${muets.map(l => esc(l.nom)).join(", ")}. C'est le moment de reprendre contact.</div>`;
       if (aFaire.length) h += `<div class="flag" style="margin-top:8px"><b>Il manque quelque chose pour :</b> ${aFaire.map(l => esc(l.nom) + " (" + [!l.intake ? "questionnaire" : null, !l.programme ? "programme" : null, !l.diete ? "diète" : null].filter(Boolean).join(", ") + ")").join(" · ")}.</div>`;
       if (!h) h = `<p class="note" style="margin:0">Tous tes clients ont leur questionnaire, leur programme et leur diète, et se sont manifestés dans les dix derniers jours.</p>`;
@@ -3742,6 +3914,7 @@ const outilClients = {
 
     <section class="panel">
       <h2>Comptes</h2>
+      <p class="note" style="margin:0 0 16px">« Accès complet » donne à une personne de ton équipe exactement ta vue : toutes les fiches, tous les questionnaires de santé, tous les programmes. Donne-le à un compte créé pour elle, jamais en partageant ton mot de passe — sinon tu ne sauras plus qui a modifié quoi, et tu ne pourras pas le lui retirer.</p>
       <div id="liste-clients"><div class="empty">Chargement…</div></div>
     </section>
 
@@ -3776,23 +3949,48 @@ const outilClients = {
           (contenus[d.user_id] = contenus[d.user_id] || {})[d.outil] = d.contenu;
         });
         self.tableau(profils, parClient, contenus);
-        const clients = (profils || []).filter(p => p.role !== "coach");
-        if (!clients.length){ box.innerHTML = '<div class="empty">Aucun client pour le moment. Crée le premier accès ci-dessous.</div>'; return; }
+        /* Tous les comptes, coachs compris : c'est ici qu'on donne l'acces
+           complet a quelqu'un de l'equipe, et qu'on le retire. */
+        const moi = Auth.utilisateur() && Auth.utilisateur().id;
+        const comptes = (profils || []);
+        if (!comptes.length){ box.innerHTML = '<div class="empty">Aucun compte pour le moment. Crée le premier accès ci-dessous.</div>'; return; }
         box.innerHTML = "";
-        clients.forEach(p => {
+        comptes.forEach(p => {
           const d = parClient[p.id];
           const quand = d ? new Date(d).toLocaleDateString("fr-FR") : "jamais";
+          const estCoach = p.role === "coach", cestMoi = p.id === moi;
           const el = document.createElement("div");
           el.className = "client-l";
           el.innerHTML = `<span class="nom">${esc(((p.prenom||"") + " " + (p.nom||"")).trim() || "Sans nom")}</span>
-                          <span class="pastille">${d ? "actif" : "pas encore utilisé"}</span>
-                          <span class="meta">dernière saisie : ${quand}</span>
-                          <button class="voir" type="button">Ouvrir sa fiche</button>`;
-          el.querySelector(".voir").addEventListener("click", () => {
+                          ${estCoach ? `<span class="pastille role-coach">accès complet</span>` : `<span class="pastille">${d ? "actif" : "pas encore utilisé"}</span>`}
+                          <span class="meta">${estCoach ? (cestMoi ? "c'est toi" : "voit tout, comme toi") : "dernière saisie : " + quand}</span>
+                          ${estCoach ? "" : `<button class="voir" type="button">Ouvrir sa fiche</button>`}
+                          ${cestMoi ? "" : `<button class="voir role" type="button" data-role="${estCoach ? "client" : "coach"}">${estCoach ? "Retirer l'accès complet" : "Donner l'accès complet"}</button>`}`;
+          const bv = el.querySelector(".voir:not(.role)");
+          if (bv) bv.addEventListener("click", () => {
             Store.oublier(Store.idConsulte);
             Store.idConsulte = p.id;
             Store.nomConsulte = ((p.prenom||"") + " " + (p.nom||"")).trim() || "ce client";
             location.hash = "#/profil";
+          });
+          const br = el.querySelector(".role");
+          if (br) br.addEventListener("click", async () => {
+            const vers = br.dataset.role;
+            const nom = ((p.prenom||"") + " " + (p.nom||"")).trim() || "ce compte";
+            const message = vers === "coach"
+              ? "Donner l'accès complet à " + nom + " ?\n\nCette personne verra exactement ce que tu vois : les fiches de tous tes clients, leur questionnaire de santé, leurs programmes et leur diète. Elle pourra aussi les modifier."
+              : "Retirer l'accès complet à " + nom + " ?\n\nElle redeviendra un client ordinaire et ne verra plus que ses propres données.";
+            if (!confirm(message)) return;
+            br.disabled = true; br.textContent = "…";
+            try {
+              await Auth.appel("/rest/v1/profils?id=eq." + p.id, {
+                method: "PATCH", headers: { "Prefer": "return=minimal" }, body: { role: vers }
+              });
+              await charger();
+            } catch(e){
+              br.disabled = false;
+              alert("Changement impossible : " + (e.message || "erreur inconnue"));
+            }
           });
           box.appendChild(el);
         });
@@ -3817,7 +4015,7 @@ const outilClients = {
       try {
         await Auth.inscrire(email, mdp, prenom, nom);
         Auth.session = sessionCoach;              // on la restaure : on reste connecté en coach
-        try { localStorage.setItem(Auth.cleSession, JSON.stringify(sessionCoach)); } catch(e){}
+        try { Auth.magasin().setItem(Auth.cleSession, JSON.stringify(sessionCoach)); } catch(e){}
         $("n-prenom").value = $("n-nom").value = $("n-email").value = $("n-mdp").value = "";
         flash("n-msg", "Compte créé. Transmets-lui ses identifiants.");
         charger();
@@ -4020,7 +4218,6 @@ const FORMATION = {
       ],
       interne:[
         {t:"Ton suivi de mensurations", id:"mensurations"},
-        {t:"Ton journal d'entraînement", id:"entrainement"},
         {t:"Tes repas et ta liste de courses", id:"nutrition"}
       ],
       ressources:[
@@ -4727,7 +4924,7 @@ function construireNav(){
     lg.hidden = false;
   } else lg.hidden = true;
   $("foot-left").textContent  = CONFIG.marque.programme ? `${CONFIG.marque.programme} — ${CONFIG.marque.nom}` : CONFIG.marque.nom;
-  $("foot-right").innerHTML   = `Une question ? <a href="${CONFIG.marque.instagram}" target="_blank" rel="noopener">${esc(CONFIG.marque.pseudo)}</a> · ${esc(CONFIG.marque.email)}`;
+  $("foot-right").innerHTML   = `Une question ? <a href="${CONFIG.marque.instagram}" target="_blank" rel="noopener">${esc(CONFIG.marque.pseudo)}</a> · ${esc(CONFIG.marque.email)}` + (CONFIG.marque.version ? ` · <span class="version">v${esc(CONFIG.marque.version)}</span>` : "");
 
   const p = Auth.profil, u = Auth.utilisateur();
   const nom = p && (p.prenom || p.nom) ? ((p.prenom || "") + " " + (p.nom || "")).trim() : (u ? u.email : "");
@@ -4824,7 +5021,9 @@ function portail(mode){
       <div class="champ"><label for="c-email">Email</label><input id="c-email" type="email" autocomplete="email"></div>
       ${mode !== "oubli" ? `<div class="champ"><label for="c-mdp">Mot de passe</label><input id="c-mdp" type="password" autocomplete="${mode === "inscription" ? "new-password" : "current-password"}"></div>` : ""}
       ${mode === "inscription" ? `<div class="champ"><label for="c-mdp2">Confirme ton mot de passe</label><input id="c-mdp2" type="password" autocomplete="new-password"></div>` : ""}
+      ${mode !== "oubli" ? `<label class="co-rester"><input type="checkbox" id="c-rester" checked><span>Rester connecté</span></label>` : ""}
       <button class="btn" id="c-go">${mode === "connexion" ? "Se connecter" : mode === "oubli" ? "Recevoir le lien" : "Créer mon accès"}</button>
+      ${CONFIG.marque.version ? `<p class="co-aide">v${esc(CONFIG.marque.version)}</p>` : ""}
       <div class="bascule">
         ${mode === "connexion"
           ? `<button type="button" data-mode="oubli">Mot de passe oublié ?</button>`
@@ -4841,6 +5040,10 @@ function portail(mode){
     const email = ($("c-email").value || "").trim();
     const mdp = $("c-mdp") ? $("c-mdp").value : "";
     if (!email){ err("Indique ton email."); return; }
+    /* le choix doit etre pris AVANT la connexion : c'est lui qui decide
+       ou la session sera rangee */
+    const rester = $("c-rester");
+    Auth.persistant = rester ? rester.checked : true;
     const bouton = $("c-go"); bouton.disabled = true; bouton.textContent = "Un instant…";
     try {
       if (mode === "oubli"){
