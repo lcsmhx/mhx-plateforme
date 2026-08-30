@@ -361,3 +361,13 @@ G3 graphique : spec déjà dans ce fichier. C9 questionnaire bloquant : **écart
 
 ## 30 août — +6 déjeuners vegan
 `tempeh-sarrasin-betterave`, `houmous-quinoa-crudites`, `haricots-rouges-riz-avocat`, `tofu-fume-lentilles-fenouil`, `falafel-roquette-tomate`, `flageolets-patate-douce-epinards`. Recettes **223**. Vegan déjeuner brut **15**. À réimporter.
+
+## 30 août — liens YouTube sur les exercices
+
+Fichier source : 1067 démos (pas importées dans le catalogue). Champ `lien` = URL watch YouTube. Pas d’embed Azeoo.
+
+- **95 / 172** fiches (`exercices.json`) ont un lien.
+- **345** occurrences renseignées dans `programmes.json`.
+- **77** noms laissés vides (bande, chaise, tempo, variante trop loin du nom EN).
+
+Table des correspondances : `donnees/liens-youtube.md`. Claude n’a rien à faire côté `index.html` si `outilEntrainement` lit déjà `exercice.lien`.
