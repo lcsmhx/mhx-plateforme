@@ -2,14 +2,16 @@
 
 Correspondances **prudentes** : nom MHX français → nom de la bibliothèque vidéo. `lien` = URL YouTube watch. Pas d’embed Azeoo. Les noms sans match restent vides.
 
-Noms uniques avec lien : **95** / 172.
-Fiches `exercices.json` : **95** / 172.
-Occurrences dans les 18 programmes : **345**.
+Noms uniques avec lien : **104** / 172.
+Fiches `exercices.json` : **104** / 172.
+Occurrences dans les 18 programmes : **361**.
 
 | Exercice MHX | Vidéo | URL |
 |---|---|---|
 | Abducteurs machine | Thigh Abductor | https://www.youtube.com/watch?v=FIqBQ-CxAfQ |
 | Abduction de hanche au sol | Side Lying Hip Abduction | https://www.youtube.com/watch?v=PpPwXRcW2Ic |
+| Bird dog | Bird-Dog | https://www.youtube.com/watch?v=xJ74GJhnJEY |
+| Bird dog lent | Bird-Dog | https://www.youtube.com/watch?v=xJ74GJhnJEY |
 | Burpees contrôlés | Burpee | https://www.youtube.com/watch?v=lcU1JlGjSuY |
 | Crunch | Crunch | https://www.youtube.com/watch?v=VBAgK577WmM |
 | Crunch au sol | Crunch | https://www.youtube.com/watch?v=VBAgK577WmM |
@@ -42,8 +44,10 @@ Occurrences dans les 18 programmes : **345**.
 | Fentes bulgares | Split squat | https://www.youtube.com/watch?v=rndmlyIJapk |
 | Fentes bulgares haltères | Split squat | https://www.youtube.com/watch?v=rndmlyIJapk |
 | Fentes haltères | Dumbbell Lunge | https://www.youtube.com/watch?v=GpGhcj-Knnw |
+| Fentes latérales haltère | Kettlebell Lateral Lunge | https://www.youtube.com/watch?v=CmROUcVInew |
 | Fentes marchées | Forward Lunge | https://www.youtube.com/watch?v=LphXqrsgLUI |
 | Gainage | Plank | https://www.youtube.com/watch?v=R4FB7v-v6x0 |
+| Gainage latéral | Side Plank Up Down | https://www.youtube.com/watch?v=pQXEcierrHM |
 | Gainage sur les avant-bras genoux au sol | Plank on Knees | https://www.youtube.com/watch?v=8GEUl5t8HG0 |
 | Good morning poids du corps | Good Morning | https://www.youtube.com/watch?v=0tfsZsWg4Ik |
 | Good morning à la bande | Band Good Morning | https://www.youtube.com/watch?v=8zcMST7m4zQ |
@@ -70,9 +74,12 @@ Occurrences dans les 18 programmes : **345**.
 | Pompes pieds surélevés | Decline Push-Up | https://www.youtube.com/watch?v=gdAZfTfqL8o |
 | Pont fessier | Glute Bridge | https://www.youtube.com/watch?v=bnKpYIMmvtw |
 | Pont fessier au sol | Glute Bridge | https://www.youtube.com/watch?v=bnKpYIMmvtw |
+| Pont fessier haltère | Dumbbell Glute Bridge | https://www.youtube.com/watch?v=Sk4O3kvkQws |
 | Pont fessier une jambe | Single Leg Glute Bridge | https://www.youtube.com/watch?v=f4tgrrkDOaI |
 | Presse à cuisses | Leg Press | https://www.youtube.com/watch?v=wsZqaefajGc |
 | Pull-apart | Band Pull Apart | https://www.youtube.com/watch?v=PkpPaoPeIus |
+| Relevé de jambes | Laying Leg Raises | https://www.youtube.com/watch?v=joPSV4tyAFE |
+| Relevé de jambes au sol | Laying Leg Raises | https://www.youtube.com/watch?v=joPSV4tyAFE |
 | Relevé de jambes suspendu | Hanging Leg Raise | https://www.youtube.com/watch?v=Ch2CccHXUso |
 | Rowing barre | Bent Over Barbell Row | https://www.youtube.com/watch?v=2ke_edQiqO8 |
 | Rowing barre buste penché | Bent Over Barbell Row | https://www.youtube.com/watch?v=2ke_edQiqO8 |
@@ -88,6 +95,7 @@ Occurrences dans les 18 programmes : **345**.
 | Squat front | Front Squat | https://www.youtube.com/watch?v=lWuaIsGgmDA |
 | Squat goblet | Goblet Squat | https://www.youtube.com/watch?v=gCESNsDsbqk |
 | Squats | Bodyweight Squat Air Squat | https://www.youtube.com/watch?v=G9nGRJjQFXw |
+| Squats sumo | Sumo Squat | https://www.youtube.com/watch?v=8mEk9sKbAqM |
 | Superman | Superman | https://www.youtube.com/watch?v=LfdMBYJ8wvA |
 | Tirage horizontal | Seated Cable Rows | https://www.youtube.com/watch?v=59iS-DtCaXw |
 | Tirage vertical | Wide-Grip Lat Pulldown | https://www.youtube.com/watch?v=KNM8U6Y72Y4 |
@@ -102,13 +110,12 @@ Occurrences dans les 18 programmes : **345**.
 | Élévations latérales | Side dumbbell lateral raises | https://www.youtube.com/watch?v=-Emurq_o8pI |
 | Élévations latérales haltères | Side dumbbell lateral raises | https://www.youtube.com/watch?v=-Emurq_o8pI |
 | Élévations latérales poulie | Cable Seated Lateral Raise | https://www.youtube.com/watch?v=otheGQ6qLdw |
+| Élévations latérales à la bande | Band Lateral Raise | https://www.youtube.com/watch?v=9d2EAB11hNI |
 | Étirements mollets au mur | Calf Stretch on Wall | https://www.youtube.com/watch?v=-0xcqlBurdc |
 
 ## Sans lien (volontaire)
 
 - Assis-debout sur chaise
-- Bird dog
-- Bird dog lent
 - Cercles de chevilles assis
 - Coquillage (clamshell) au sol
 - Curl biceps à la bande
@@ -128,10 +135,8 @@ Occurrences dans les 18 programmes : **345**.
 - Fentes arrière haltères
 - Fentes arrière à la bande
 - Fentes avant à la bande
-- Fentes latérales haltère
 - Fentes marchées haltères
 - Flexion de hanche debout avec appui
-- Gainage latéral
 - Gainage latéral genou au sol
 - Gainage épaules contre le mur
 - Good morning poids du corps court
@@ -153,11 +158,8 @@ Occurrences dans les 18 programmes : **345**.
 - Pompes haltères
 - Pompes lestées
 - Pompes sur haltères
-- Pont fessier haltère
 - Pont fessier pieds rapprochés
 - Presse à cuisses pieds hauts
-- Relevé de jambes
-- Relevé de jambes au sol
 - Respiration 90-90 au sol
 - Respiration au sol genoux pliés
 - Respiration diaphragme assis
@@ -172,7 +174,6 @@ Occurrences dans les 18 programmes : **345**.
 - Squat sumo haltère
 - Squat sur chaise partielle
 - Squat à la bande
-- Squats sumo
 - Step-up bas (marche d'escalier)
 - Tirage horizontal prise neutre
 - Tirage vertical à la bande
@@ -181,5 +182,4 @@ Occurrences dans les 18 programmes : **345**.
 - Wall angels
 - Élévations de genoux assis
 - Élévations latérales de bras
-- Élévations latérales à la bande
 - Équilibre unipodal avec appui

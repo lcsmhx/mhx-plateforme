@@ -558,4 +558,4 @@ Données poussées :
 - 6 shakers collation : `shaker-whey-eau`, `shaker-whey-lait`, `shaker-whey-banane`, `shaker-whey-cacahuete`, `shaker-whey-fruits-rouges`, `shaker-whey-soja`. Recettes **248**.
 - `donnees/echauffements.json` : `osteo-articulaire`, `cardio-leger`, `activation-fessiers`, `activation-epaules`, `mobilite-hanches-genoux`.
 - `donnees/programme-auto.json` : table questionnaire → programme.
-Lien Gainage latéral : dans le lot YouTube qui suit. Réimporter recettes + échauffements.
+Lien **Gainage latéral** : Side Plank Up Down (`pQXEcierrHM`) — pas de Side Plank simple dans la bibliothèque. 104/172 fiches ont un lien. Réimporter exercices + recettes + échauffements.

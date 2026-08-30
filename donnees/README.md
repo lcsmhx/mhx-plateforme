@@ -12,7 +12,7 @@ Régimes : omnivore, vegetarien, vegan, pescetarien, paleo, sans_gluten, sans_la
 18 programmes originaux (2 à 5 séances, salle / haltères / poids du corps, full-body, half-body, PPL, sèche). Structure identique à `outilProgramme` dans index.html. Pas de copie de bibliothèques commerciales.
 
 ## exercices.json
-**172** fiches, une par nom d’exercice distinct dans `programmes.json` (18 programmes, 455 occurrences). Cues MHX originales (tutoiement), pas de copie Muscle & Strength / Bodybuilding.com / JEFIT / Alpha Progression / Azeoo. **95** fiches ont un `lien` YouTube watch (démo, pas un catalogue) ; **77** restent vides (match trop incertain). Détail : `liens-youtube.md`.
+**172** fiches, une par nom d’exercice distinct dans `programmes.json` (18 programmes, 455 occurrences). Cues MHX originales (tutoiement), pas de copie Muscle & Strength / Bodybuilding.com / JEFIT / Alpha Progression / Azeoo. **104** fiches ont un `lien` YouTube watch (démo, pas un catalogue) ; **68** restent vides (match trop incertain). `Gainage latéral` pointe vers **Side Plank Up Down** (variante up-down ; pas de Side Plank simple dans la bibliothèque). Détail : `liens-youtube.md`.
 
 **Join** : `slug(exercice.nom dans programmes.json) == exercices.id`. Le champ `nom` de la fiche est identique au `nom` du programme (accents, libellé).
 
