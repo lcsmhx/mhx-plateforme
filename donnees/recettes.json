@@ -8777,5 +8777,155 @@
       "Casse les noisettes.",
       "Saupoudre d'un peu de cannelle et dresse."
     ]
+  },
+  {
+    "id": "shaker-whey-eau",
+    "nom": "Shaker whey à l'eau",
+    "moment": "collation",
+    "temps_min": 2,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "whey",
+        "grammes": 30
+      }
+    ],
+    "etapes": [
+      "Verse 250 ml d'eau froide dans ton shaker (l'eau n'est pas au catalogue).",
+      "Ajoute 30 g de whey isolate.",
+      "Ferme bien et secoue 15 à 20 secondes jusqu'à dissolution.",
+      "Bois de suite, avant que la mousse retombe."
+    ]
+  },
+  {
+    "id": "shaker-whey-lait",
+    "nom": "Shaker whey au lait",
+    "moment": "collation",
+    "temps_min": 2,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "whey",
+        "grammes": 30
+      },
+      {
+        "aliment_id": "lait-demi-ecreme-uht",
+        "grammes": 250
+      }
+    ],
+    "etapes": [
+      "Verse 250 g de lait demi-écrémé UHT froid dans le shaker.",
+      "Ajoute 30 g de whey isolate.",
+      "Ferme et secoue 20 secondes jusqu'à ce que le mélange soit lisse.",
+      "Goûte : s'il reste des grumeaux, re-secoue 5 secondes."
+    ]
+  },
+  {
+    "id": "shaker-whey-banane",
+    "nom": "Shaker whey banane",
+    "moment": "collation",
+    "temps_min": 4,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "whey",
+        "grammes": 30
+      },
+      {
+        "aliment_id": "lait-demi-ecreme-uht",
+        "grammes": 200
+      },
+      {
+        "aliment_id": "banane-crue",
+        "grammes": 100
+      }
+    ],
+    "etapes": [
+      "Épluche la banane et coupe-la en rondelles.",
+      "Mixe-la avec 200 g de lait demi-écrémé UHT jusqu'à obtenir un velouté.",
+      "Ajoute 30 g de whey isolate et mixe encore 10 secondes.",
+      "Verse dans un verre et bois de suite."
+    ]
+  },
+  {
+    "id": "shaker-whey-cacahuete",
+    "nom": "Shaker whey cacahuète",
+    "moment": "collation",
+    "temps_min": 3,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "whey",
+        "grammes": 30
+      },
+      {
+        "aliment_id": "lait-demi-ecreme-uht",
+        "grammes": 250
+      },
+      {
+        "aliment_id": "beurre-de-cacahuete-ou-pate-darachide",
+        "grammes": 15
+      }
+    ],
+    "etapes": [
+      "Dépose 15 g de beurre de cacahuète au fond du blender.",
+      "Ajoute 250 g de lait demi-écrémé UHT et 30 g de whey isolate.",
+      "Mixe 20 secondes jusqu'à ce que le beurre soit bien dilué.",
+      "Sers froid : racle les parois s'il reste un peu de pâte."
+    ]
+  },
+  {
+    "id": "shaker-whey-fruits-rouges",
+    "nom": "Shaker whey fruits rouges",
+    "moment": "collation",
+    "temps_min": 4,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "whey",
+        "grammes": 30
+      },
+      {
+        "aliment_id": "lait-demi-ecreme-uht",
+        "grammes": 200
+      },
+      {
+        "aliment_id": "fraise",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "myrtille-crue",
+        "grammes": 40
+      }
+    ],
+    "etapes": [
+      "Rince les fraises et les myrtilles, équeute les fraises.",
+      "Mixe les fruits avec 200 g de lait demi-écrémé UHT.",
+      "Ajoute 30 g de whey isolate et mixe encore quelques secondes.",
+      "Goûte et bois de suite, bien froid."
+    ]
+  },
+  {
+    "id": "shaker-whey-soja",
+    "nom": "Shaker whey au soja",
+    "moment": "collation",
+    "temps_min": 2,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "whey",
+        "grammes": 30
+      },
+      {
+        "aliment_id": "boisson-au-soja-nature-non-enrichie",
+        "grammes": 250
+      }
+    ],
+    "etapes": [
+      "Verse 250 g de boisson au soja nature froide dans le shaker.",
+      "Ajoute 30 g de whey isolate.",
+      "Ferme et secoue 20 secondes jusqu'à dissolution complète.",
+      "Bois de suite : le soja mousse un peu, c'est normal."
+    ]
   }
 ]

@@ -554,4 +554,8 @@ Bouton « C’est fait ». Plus jamais après. Pas de service worker.
 
 ---
 
-Données que je pousse dans ce lot : shakers, `echauffements.json`, lien Gainage latéral, table ci-dessus. Réimporter recettes + exercices + échauffements.
+Données poussées :
+- 6 shakers collation : `shaker-whey-eau`, `shaker-whey-lait`, `shaker-whey-banane`, `shaker-whey-cacahuete`, `shaker-whey-fruits-rouges`, `shaker-whey-soja`. Recettes **248**.
+- `donnees/echauffements.json` : `osteo-articulaire`, `cardio-leger`, `activation-fessiers`, `activation-epaules`, `mobilite-hanches-genoux`.
+- `donnees/programme-auto.json` : table questionnaire → programme.
+Lien Gainage latéral : dans le lot YouTube qui suit. Réimporter recettes + échauffements.

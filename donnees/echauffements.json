@@ -1,0 +1,187 @@
+[
+  {
+    "id": "osteo-articulaire",
+    "nom": "Échauffement ostéo-articulaire",
+    "type": "osteo-articulaire",
+    "duree_min": 6,
+    "note": "Enchaîne sans matériel, articulations une par une. Garde une amplitude confortable : tu cherches à lubrifier, pas à forcer en fin de course.",
+    "mouvements": [
+      {
+        "nom": "Rotations de cou",
+        "duree": "30 s",
+        "consigne": "Debout, épaules basses. Dessine de petits cercles lents, dans un sens puis l'autre. N'écarte pas trop la tête en arrière."
+      },
+      {
+        "nom": "Cercles d'épaules",
+        "duree": "30 s",
+        "consigne": "Bras le long du corps, fais de grands cercles vers l'avant puis vers l'arrière. Relâche les trapèzes, ne hausse pas les épaules."
+      },
+      {
+        "nom": "Rotations de poignets",
+        "duree": "30 s",
+        "consigne": "Mains en avant, poings souples. Tourne les poignets dans les deux sens, puis ouvre et ferme les doigts."
+      },
+      {
+        "nom": "Cercles de hanches",
+        "duree": "8 reps",
+        "consigne": "Mains sur les hanches, bassin relâché. Trace un cercle large dans un sens (8 reps) puis dans l'autre. Genoux souples."
+      },
+      {
+        "nom": "Mobilité de chevilles",
+        "duree": "8 reps",
+        "consigne": "Une cheville après l'autre : cercles lents, puis pointe et talon. Garde l'appui stable sur l'autre pied."
+      },
+      {
+        "nom": "Rotations thoraciques debout",
+        "duree": "8 reps",
+        "consigne": "Pieds largeur d'épaules, bras à l'horizontale. Tourne le buste à droite puis à gauche sans bouger le bassin. Expire à chaque rotation."
+      }
+    ]
+  },
+  {
+    "id": "cardio-leger",
+    "nom": "Cardio léger de mise en route",
+    "type": "cardio-leger",
+    "duree_min": 6,
+    "note": "Monte le rythme progressivement. Tu dois pouvoir parler en phrases courtes : si tu t'essouffles trop, reviens à la marche sur place.",
+    "mouvements": [
+      {
+        "nom": "Marche sur place",
+        "duree": "60 s",
+        "consigne": "Lève les genoux à hauteur de hanche, bras qui accompagnent. Pose tout le pied, respire par le nez si tu peux."
+      },
+      {
+        "nom": "Montées de genoux légères",
+        "duree": "30 s",
+        "consigne": "Même schéma, un cran plus vif. Garde le buste droit, ne cambré pas."
+      },
+      {
+        "nom": "Jumping jacks",
+        "duree": "30 s",
+        "consigne": "Écarte pieds et bras ensemble, reviens au centre. Atterris souple, genoux déverrouillés. Version sans saut : pas chassés."
+      },
+      {
+        "nom": "Talons-fesses",
+        "duree": "30 s",
+        "consigne": "Ramène les talons vers les fesses en rythme. Reste léger sur l'avant-pied, bras décontractés."
+      },
+      {
+        "nom": "Mountain climbers légers",
+        "duree": "30 s",
+        "consigne": "Planche sur les mains, bassin stable. Alterne les genoux vers la poitrine sans sprinter : un tempo régulier suffit."
+      },
+      {
+        "nom": "Marche sur place de récupération",
+        "duree": "30 s",
+        "consigne": "Reviens à une marche calme, souffle long. Tu enchaînes ensuite ta première série de travail."
+      }
+    ]
+  },
+  {
+    "id": "activation-fessiers",
+    "nom": "Activation fessiers",
+    "type": "activation",
+    "duree_min": 7,
+    "note": "Cherche la contraction du fessier avant la charge lourde. Si tu sens surtout le bas du dos ou l'avant de la cuisse, réduis l'amplitude et pousse le talon au sol.",
+    "mouvements": [
+      {
+        "nom": "Pont fessier au sol",
+        "duree": "8 reps",
+        "consigne": "Allongé, pieds à plat, bassin au sol. Serre les fessiers et monte jusqu'à aligner épaules-hanches-genoux. Marque 1 s en haut, redescends sans relâcher."
+      },
+      {
+        "nom": "Pont unipodal (léger)",
+        "duree": "8 reps",
+        "consigne": "Même position, une jambe tendue. Monte en restant de niveau : le bassin ne bascule pas. Change de côté."
+      },
+      {
+        "nom": "Coquillage (clamshell)",
+        "duree": "8 reps",
+        "consigne": "Allongé sur le côté, genoux fléchis, pieds collés. Ouvre le genou du dessus sans reculer le bassin. Tu dois sentir le moyen fessier."
+      },
+      {
+        "nom": "Abductions de hanche au sol",
+        "duree": "8 reps",
+        "consigne": "Toujours sur le côté, jambe du dessus tendue. Lève-la légèrement en arrière de la ligne du corps, pied flex. Contrôle la descente."
+      },
+      {
+        "nom": "Abductions debout",
+        "duree": "8 reps",
+        "consigne": "Debout, appui sur une jambe. Écarte l'autre jambe sur le côté, buste immobile. Option bande au-dessus des genoux si tu en as une."
+      }
+    ]
+  },
+  {
+    "id": "activation-epaules",
+    "nom": "Activation épaules",
+    "type": "activation",
+    "duree_min": 6,
+    "note": "Échauffe la coiffe et l'arrière d'épaule avant de pousser ou tirer lourd. Prends une bande légère : tu dois finir chaud, pas fatigué.",
+    "mouvements": [
+      {
+        "nom": "Rotations d'épaules bras tendus",
+        "duree": "30 s",
+        "consigne": "Bras à l'horizontale, palmes vers le sol. Petits cercles avant puis arrière. Coudes souples, trapèzes bas."
+      },
+      {
+        "nom": "Rotations externes coudes au corps",
+        "duree": "8 reps",
+        "consigne": "Coudes collés aux côtes, avant-bras à 90°. Écarte les mains vers l'extérieur (bande ou sans). N'ouvre pas les coudes."
+      },
+      {
+        "nom": "Pull-apart à la bande",
+        "duree": "8 reps",
+        "consigne": "Bande à bout de bras, pouces vers le haut. Écarte jusqu'à toucher le sternum, omoplates qui se rapprochent. Reviens lentement sans relâcher la bande."
+      },
+      {
+        "nom": "Élévations frontales légères",
+        "duree": "8 reps",
+        "consigne": "Haltères très légers ou bouteille d'eau. Monte jusqu'à hauteur d'épaules, pouces un peu vers le ciel. Pas de balancier du buste."
+      },
+      {
+        "nom": "Élévations latérales légères",
+        "duree": "8 reps",
+        "consigne": "Même charge, lève sur les côtés jusqu'à la ligne des épaules. Stoppe avant que les trapèzes prennent le relais."
+      }
+    ]
+  },
+  {
+    "id": "mobilite-hanches-genoux",
+    "nom": "Mobilité hanches et genoux",
+    "type": "mobilite",
+    "duree_min": 8,
+    "note": "Ouvre hanches et genoux avant squat, fente ou hip hinge. Respire dans les positions : tu ne forces pas sur un genou douloureux.",
+    "mouvements": [
+      {
+        "nom": "Squat profond tenu",
+        "duree": "30 s",
+        "consigne": "Pieds un peu plus larges que les hanches, descends en squat confortable. Coudes contre les genoux, dos long. Oscille un peu le poids d'un pied à l'autre."
+      },
+      {
+        "nom": "Fente arrière dynamique",
+        "duree": "8 reps",
+        "consigne": "Grand pas en arrière, genou avant au-dessus du milieu du pied. Pousse pour revenir. Alterne les jambes, buste droit."
+      },
+      {
+        "nom": "90/90 bascule de hanche",
+        "duree": "8 reps",
+        "consigne": "Assis, une hanche en rotation interne, l'autre en externe. Passe d'un côté à l'autre sans t'aider des mains si tu peux. Garde le dos haut."
+      },
+      {
+        "nom": "Ouverture de hanche en fente (coude-genou)",
+        "duree": "30 s",
+        "consigne": "Fente avant, main intérieure au sol. Ouvre le bras du même côté vers le plafond en suivant du regard. Change de jambe à mi-temps."
+      },
+      {
+        "nom": "Circonductions de genou",
+        "duree": "8 reps",
+        "consigne": "Mains sur un genou, pied au sol. Trace un petit cercle contrôlé dans un sens puis l'autre. Pas de charge, juste glisser l'articulation."
+      },
+      {
+        "nom": "Good morning sans charge",
+        "duree": "8 reps",
+        "consigne": "Pieds largeur de hanches, genoux souples. Pousse les hanches en arrière, dos plat, jusqu'à sentir l'arrière de cuisse. Reviens en serrant les fessiers."
+      }
+    ]
+  }
+]
