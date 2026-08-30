@@ -650,33 +650,53 @@ const Auth = {
    conscience du changement. Les donnees vivent maintenant dans la base,
    donc elles suivent le client d'un appareil a l'autre. ---------------- */
 const Store = {
-  cache: {},
+  /* Le cache est range PAR UTILISATEUR. Avant, il etait commun : ouvrir la
+     fiche de Marie apres celle de Jean pouvait afficher — et reenregistrer —
+     les donnees de Jean chez Marie. */
+  boites: {},
   attente: {},
-  idConsulte: null,   // quand le coach consulte la fiche d'un client
+  charge: {},          // le GET a-t-il reussi ? on n'ecrase pas ce qu'on n'a pas pu lire
+  idConsulte: null,    // quand le coach consulte la fiche d'un client
 
   cible(){ return this.idConsulte || (Auth.utilisateur() && Auth.utilisateur().id); },
   lectureSeule(){ return !!this.idConsulte; },
+  boite(uid){ const k = uid || "_"; return this.boites[k] || (this.boites[k] = {}); },
+  /* les outils ecrivent Store.cache[cle] : on leur sert la boite du moment */
+  get cache(){ return this.boite(this.cible()); },
 
   async lire(cle, defaut){
     const uid = this.cible(); if (!uid) return defaut;
+    const k = uid + "|" + cle;
     try {
       const r = await Auth.appel("/rest/v1/donnees?user_id=eq." + uid + "&outil=eq." + encodeURIComponent(cle) + "&select=contenu");
       const contenu = (r && r[0] && r[0].contenu) || null;
       const val = contenu ? Object.assign({}, defaut, contenu) : defaut;
-      this.cache[cle] = val;
+      this.boite(uid)[cle] = val;
+      this.charge[k] = true;
       return val;
-    } catch(e){ return defaut; }
+    } catch(e){
+      /* lecture ratee : on rend le defaut pour l'affichage, mais on interdit
+         l'ecriture — sinon un simple probleme de reseau ecraserait la vraie
+         fiche du client par un formulaire vide. */
+      this.charge[k] = false;
+      return defaut;
+    }
   },
 
   ecrire(cle, valeur){
-    this.cache[cle] = valeur;
-    /* seule exception a la lecture seule : le coach ecrit le programme du client */
-    if (this.lectureSeule() && !(Auth.estCoach() && (cle === "programme" || cle === "repas"))) return;
-    clearTimeout(this.attente[cle]);
-    this.attente[cle] = setTimeout(() => this.envoyer(cle, valeur), 700);   // on groupe les frappes
-  },
-  async envoyer(cle, valeur){
     const uid = this.cible(); if (!uid) return;
+    this.boite(uid)[cle] = valeur;
+    /* seule exception a la lecture seule : le coach ecrit le programme et les repas */
+    if (this.lectureSeule() && !(Auth.estCoach() && (cle === "programme" || cle === "repas"))) return;
+    const k = uid + "|" + cle;
+    if (this.charge[k] === false) return;              // on n'a pas pu lire : on n'ecrit pas
+    clearTimeout(this.attente[k]);
+    /* l'identifiant est fige ici : si le coach change de fiche pendant les
+       700 ms d'attente, l'enregistrement part quand meme chez le bon client */
+    this.attente[k] = setTimeout(() => this.envoyer(cle, valeur, uid), 700);
+  },
+  async envoyer(cle, valeur, uidFige){
+    const uid = uidFige || this.cible(); if (!uid) return;
     majEtat("enregistrement");
     try {
       await Auth.assurer();
@@ -687,6 +707,14 @@ const Store = {
       });
       majEtat("enregistre");
     } catch(e){ majEtat("erreur"); }
+  },
+
+  /* Vide le cache d'un client : appele quand on change de fiche. */
+  oublier(uid){
+    const k = uid || "_";
+    Object.keys(this.attente).forEach(x => { if (x.indexOf(k + "|") === 0) clearTimeout(this.attente[x]); });
+    delete this.boites[k];
+    Object.keys(this.charge).forEach(x => { if (x.indexOf(k + "|") === 0) delete this.charge[x]; });
   },
 
   /* Sauvegarde manuelle : toujours disponible, en plus de la base */
@@ -841,7 +869,20 @@ const Normaliser = {
     cereale: /(\bble\b|\bpain\b|\bpates\b|\bpate\b|\briz\b|avoine|\borge\b|seigle|epeautre|\bmais\b|semoule|couscous|boulgour|quinoa|sarrasin|millet|farine|biscuit|gateau|cereale|corn.?flakes|muesli|brioche|croissant|pizza|\btarte\b|crepe|gaufre|chapelure|panure|galette|biscotte|viennoiserie|sandwich|burger|wrap\b)/,
     legumineuse: /(lentille|\bpois\b|pois chiche|haricot|\bfeve\b|\bsoja\b|\btofu\b|tempeh|edamame|lupin|arachide|cacahuete)/,
     sucre:   /(\bsucre|sirop|bonbon|confiserie|confiture|chocolat|pate a tartiner|\bsoda\b|\bcola\b|limonade)/,
-    porc:    /(\bporc\b|porcin|jambon|lardon|bacon|chorizo|andouill|boudin|rillette|saucisson|saindoux|charcuterie|coppa|pancetta|gelatine)/,
+    porc:    /(\bporc\b|porcin|jambon|lardon|\blard\b|bacon|chorizo|andouill|boudin|rillette|saucisson|saindoux|charcuterie|coppa|pancetta|gelatine|choucroute garnie|cassoulet)/,
+
+    /* Un plat porte rarement le mot « viande » dans son nom : le cassoulet,
+       le hot-dog, le coq au vin et les tripes passaient pour vegetaliens.
+       On reconnait donc les plats eux-memes. */
+    plats_animaux: /(cassoulet|choucroute garnie|pot.?au.?feu|coq au vin|hachis parmentier|\btripes\b|paupiette|nugget|cordon.?bleu|hot.?dog|chili con carne|tajine|blanquette|bourguignon|osso.?buco|quenelle|terrine|foie gras|pate en croute|feuillete a la viande|friand a la viande|bolognaise|carbonara|kebab|gyros|gibier|pot.?au.?feu|fricassee|parmentier|bouillon de (volaille|viande|poule|boeuf|pot.?au.?feu)|fond de volaille|graisse (de|d')\s?(canard|oie|dinde|poulet|porc|boeuf|mouton)|\blard\b)/,
+    plats_marins:  /(nuoc.?mam|surimi|tarama|huile de (foie de morue|hareng|sardine|poisson|krill)|bouillabaisse|paella|brandade|rillettes de (thon|saumon|maquereau))/,
+
+    /* Fromages et derives laitiers qui ne portent ni « lait » ni « fromage ». */
+    fromages: /(maroilles|\btomme\b|cantal|morbier|gouda|edam|mimolette|\bbrie\b|coulommiers|livarot|epoisses|beaufort|abondance|ossau|pecorino|gorgonzola|stilton|halloumi|burrata|chocolat blanc|aligot|tartiflette|gratin dauphinois|croque.?monsieur)/,
+
+    /* Faux positifs a proteger : ces produits sont bien vegetaux. */
+    ex_viande: /(pain pour|\bbun\b|pour burger|pour hot.?dog|legumes pour couscous|couscous (cuit|de legumes|aux legumes)|vegetarien|vegetal|vegan|sans viande|substitut|steak de soja|galette de cereales)/,
+    ex_lait:   /(lait de (soja|coco|amande|riz|avoine|noisette|noix)|boisson (au soja|vegetale|d'amande|d'avoine|de riz|de coco|au riz)|creme de (soja|coco|riz|avoine|marron)|beurre de (cacahuete|arachide|amande|noisette|cajou|karite|coco|sesame)|fromage vegetal|yaourt (au soja|vegetal|de soja)|dessert (au soja|vegetal))/,
     alcool:  /(\bvin\b|\bbiere\b|alcool|\brhum\b|whisky|vodka|liqueur|\bcidre\b|champagne|kirsch|cognac|armagnac|\bporto\b)/
   },
 
@@ -864,9 +905,13 @@ const Normaliser = {
   aliment(a){
     const t = this.aplatir((a.nom || "") + " " + (a.categorie || ""));
     const m = this.mots, cat = a.categorie || "";
-    const viande  = m.viande.test(t)  || cat === "Viandes";
-    const poisson = m.poisson.test(t) || cat === "Poissons";
-    const laitier = m.laitier.test(t) || cat === "Laitages";
+    /* CIQUAL precise parfois « ne convient pas aux veganes » dans le nom :
+       cette mention prime sur tout le reste, y compris sur le mot « vegetal ». */
+    const refuse = /ne convient pas aux (veganes|vegetaliens|vegetariens)/.test(t);
+    const exV = m.ex_viande.test(t) && !refuse, exL = m.ex_lait.test(t) && !refuse;
+    const viande  = ((m.viande.test(t) || m.plats_animaux.test(t)) && !exV) || cat === "Viandes";
+    const poisson = ((m.poisson.test(t) || m.plats_marins.test(t)) && !exV) || cat === "Poissons";
+    const laitier = ((m.laitier.test(t) || m.fromages.test(t)) || cat === "Laitages") && !exL;
     const oeuf    = m.oeuf.test(t)    || cat === "Oeufs";
     const miel    = m.miel.test(t);
     const cereale = m.cereale.test(t) || cat === "Féculents";
@@ -893,8 +938,8 @@ const Normaliser = {
     const a_mer  = ["poissons","crustaces","mollusques"].some(x => allergenes.indexOf(x) > -1);
     const animal = viande || poisson || laitier || oeuf || miel || a_lait || a_oeuf || a_mer;
     const r = ["omnivore"];
-    if (!viande && !poisson && !a_mer) r.push("vegetarien");
-    if (!animal) r.push("vegan");
+    if (!viande && !poisson && !a_mer && !refuse) r.push("vegetarien");
+    if (!animal && !refuse) r.push("vegan");
     if (!viande) r.push("pescetarien");
     const tubercule = /(patate douce|igname|manioc|topinambour|panais|potimarron|courge|butternut|betterave)/.test(t);
     if ((!cereale || tubercule) && !laitier && !a_lait && !legum && !sucre) r.push("paleo");
@@ -1194,9 +1239,19 @@ const outilCalculateur = {
 
   async init(){
     const c = CONFIG.calcul;
-    const D = await Store.lire(this.cle, Object.assign({ objectif:"maintien" }, c.valeurs_depart));
+    /* Le calculateur partait sur 80 kg / 25 ans / 178 cm et enregistrait ces
+       valeurs des l'ouverture. La diete d'un client de 72 kg etait alors
+       calculee sur 80 kg. On part donc de son questionnaire, et on n'ecrit
+       rien tant qu'il n'a rien touche. */
+    const intake = Store.cache["intake"] || await Store.lire("intake", {});
+    const depart = Object.assign({ objectif:"maintien" }, c.valeurs_depart);
+    if (num(intake.poids))  depart.poids  = num(intake.poids);
+    if (num(intake.taille)) depart.taille = num(intake.taille);
+    if (num(intake.age))    depart.age    = num(intake.age);
+    const D = await Store.lire(this.cle, depart);
     const self = this;
-    const sauver = () => Store.ecrire(self.cle, D);
+    let touche = false;
+    const sauver = () => { if (touche) Store.ecrire(self.cle, D); };
 
     const rendre = () => {
       const B = self.metabolismeDeBase(D);
@@ -1236,12 +1291,12 @@ const outilCalculateur = {
 
     ["age","taille","poids","pas","heures"].forEach(k => {
       const e = $(k); e.value = D[k];
-      e.addEventListener("input", () => { const v = parseFloat(e.value); if (isFinite(v)) D[k] = v; rendre(); });
+      e.addEventListener("input", () => { const v = parseFloat(e.value); if (isFinite(v)) D[k] = v; touche = true; rendre(); });
     });
     $$("#sexe button").forEach(b => {
       b.setAttribute("aria-pressed", String(b.dataset.v === D.sexe));
       b.addEventListener("click", () => {
-        D.sexe = b.dataset.v;
+        D.sexe = b.dataset.v; touche = true;
         $$("#sexe button").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.v === D.sexe)));
         rendre();
       });
@@ -1249,7 +1304,7 @@ const outilCalculateur = {
     $$("#objs button").forEach(b => {
       b.setAttribute("aria-pressed", String(b.dataset.k === D.objectif));
       b.addEventListener("click", () => {
-        D.objectif = b.dataset.k;
+        D.objectif = b.dataset.k; touche = true;
         $$("#objs button").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.k === D.objectif)));
         rendre();
       });
@@ -3383,6 +3438,7 @@ const outilClients = {
     </tr>`).join("");
 
     $$("[data-ouvrir]", tb).forEach(b => b.addEventListener("click", () => {
+      Store.oublier(Store.idConsulte);
       Store.idConsulte = b.dataset.ouvrir;
       Store.nomConsulte = b.dataset.nom;
       location.hash = "#/profil";
@@ -3460,6 +3516,7 @@ const outilClients = {
                           <span class="meta">dernière saisie : ${quand}</span>
                           <button class="voir" type="button">Ouvrir sa fiche</button>`;
           el.querySelector(".voir").addEventListener("click", () => {
+            Store.oublier(Store.idConsulte);
             Store.idConsulte = p.id;
             Store.nomConsulte = ((p.prenom||"") + " " + (p.nom||"")).trim() || "ce client";
             location.hash = "#/profil";
@@ -3583,7 +3640,7 @@ async function afficher(id, silencieux){
   courant = outil.id;
   if (nettoyage){ nettoyage(); nettoyage = null; }
 
-  if (outil.role === "coach"){ Store.idConsulte = null; Store.nomConsulte = null; }
+  if (outil.role === "coach"){ Store.oublier(Store.idConsulte); Store.idConsulte = null; Store.nomConsulte = null; }
 
   $("vue").innerHTML = `
     ${bandeauConsultation()}
@@ -3603,7 +3660,7 @@ async function afficher(id, silencieux){
   if (outil.cle && !Store.idConsulte){ initSauvegarde(); }
   const sortir = $("sortir-fiche");
   if (sortir) sortir.addEventListener("click", () => {
-    Store.idConsulte = null; Store.nomConsulte = null; location.hash = "#/clients";
+    Store.oublier(Store.idConsulte); Store.idConsulte = null; Store.nomConsulte = null; location.hash = "#/clients";
   });
 
   marquerNav(outil.id);
