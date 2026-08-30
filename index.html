@@ -1025,7 +1025,18 @@ const Normaliser = {
     /* Faux positifs a proteger : ces produits sont bien vegetaux. */
     ex_viande: /(pain pour|\bbun\b|pour burger|pour hot.?dog|legumes pour couscous|couscous (cuit|de legumes|aux legumes)|vegetarien|vegetal|vegan|sans viande|substitut|steak de soja|galette de cereales)/,
     ex_lait:   /(lait de (soja|coco|amande|riz|avoine|noisette|noix)|boisson (au soja|vegetale|d'amande|d'avoine|de riz|de coco|au riz)|creme de (soja|coco|riz|avoine|marron)|beurre de (cacahuete|arachide|amande|noisette|cajou|karite|coco|sesame)|fromage vegetal|yaourt (au soja|vegetal|de soja)|dessert (au soja|vegetal))/,
-    alcool:  /(\bvin\b|\bbiere\b|alcool|\brhum\b|whisky|vodka|liqueur|\bcidre\b|champagne|kirsch|cognac|armagnac|\bporto\b)/
+    alcool:  /(\bvin\b|\bbiere\b|alcool|\brhum\b|whisky|vodka|liqueur|\bcidre\b|champagne|kirsch|cognac|armagnac|\bporto\b)/,
+
+    /* --- paleo ---
+       Le paleo etait ecrit en negatif : tout ce qui n'etait ni cereale, ni
+       laitage, ni legumineuse, ni sucre passait. La biere, le chorizo, le
+       hot-dog et les plats prepares y entraient. On l'ecrit en positif :
+       un aliment brut d'une vraie categorie, et rien de transforme. */
+    transforme: /(preemball|\bpane\b|\bpanee\b|panure|chapelure|beignet|\bfrit\b|\bfrite|nugget|cordon.?bleu|en sauce|\bsauce\b|charcuterie|saucis|chorizo|\bjambon|lardon|bacon|salami|mortadelle|rillette|boudin|andouill|merguez|surimi|tarama|plat cuisine|aperitif|apero|biscuit|barre |margarine|sorbet|\bglace\b|creme glacee|bouillon|cube |\bpizza\b|sandwich|\bburger\b|kebab|quiche|\btarte\b|feuillete|friand|\bpate\b|pate a |\bsirop\b|\bsoda\b|limonade|boisson|\bjus\b|nectar|\bchips\b|croute|croûton|crouton|conserve au sirop)/,
+
+    /* Les seules choses de la categorie fourre-tout « Produits de base »
+       qu'un paleo mange : les aromates, le sel, le vinaigre et l'eau. */
+    aromate: /(\bpoivre|\bsel\b|fleur de sel|gros sel|epice|aromate|curcuma|\bcumin|paprika|cannelle|muscade|gingembre|\bcurry\b|origan|basilic|romarin|laurier|estragon|coriandre|\baneth\b|safran|vanille|girofle|cardamome|\bpiment\b|herbes de provence|herbe aromatique|\bmenthe\b|\bsauge\b|\bcerfeuil\b|\bciboulette\b|vinaigre|eau du robinet|eau de source|eau minerale|eau de coco|eau gazeuse)/
   },
 
   allergenesMots: {
@@ -1055,7 +1066,9 @@ const Normaliser = {
     const poisson = ((m.poisson.test(t) || m.plats_marins.test(t)) && !exV) || cat === "Poissons";
     const laitier = ((m.laitier.test(t) || m.fromages.test(t)) || cat === "Laitages") && !exL;
     const oeuf    = m.oeuf.test(t)    || cat === "Oeufs";
-    const miel    = m.miel.test(t);
+    /* « Melon miel » est un melon, pas du miel : sans cette garde il
+       sortait du vegetalien. */
+    const miel    = m.miel.test(t) && !/melon (miel|d'eau)/.test(t);
     const cereale = m.cereale.test(t) || cat === "Féculents";
     const legum   = m.legumineuse.test(t) || cat === "Légumineuses";
     const sucre   = m.sucre.test(t);
@@ -1085,7 +1098,12 @@ const Normaliser = {
     if (!animal && !refuse) r.push("vegan");
     if (!viande) r.push("pescetarien");
     const tubercule = /(patate douce|igname|manioc|topinambour|panais|potimarron|courge|butternut|betterave)/.test(t);
-    if ((!cereale || tubercule) && !laitier && !a_lait && !legum && !sucre) r.push("paleo");
+    /* Le paleo se decide d'abord sur ce que l'aliment EST, pas sur ce qu'il
+       n'est pas : une vraie categorie d'aliment brut (ou un aromate), et
+       aucune trace de transformation industrielle. */
+    const catPaleo = ["Viandes","Poissons","Légumes","Fruits","Oléagineux","Oeufs","Matières grasses"].indexOf(cat) > -1;
+    const brut = (catPaleo || tubercule || m.aromate.test(t)) && !m.transforme.test(t) && !alcool;
+    if (brut && (!cereale || tubercule) && !laitier && !a_lait && !legum && !sucre) r.push("paleo");
     if (allergenes.indexOf("gluten") === -1) r.push("sans_gluten");
     if (!laitier && !a_lait) r.push("sans_lactose");
     if (!porc && !alcool) r.push("sans_porc");
