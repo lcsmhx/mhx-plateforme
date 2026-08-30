@@ -371,3 +371,28 @@ Fichier source : 1067 démos (pas importées dans le catalogue). Champ `lien` = 
 - **77** noms laissés vides (bande, chaise, tempo, variante trop loin du nom EN).
 
 Table des correspondances : `donnees/liens-youtube.md`. Claude n’a rien à faire côté `index.html` si `outilEntrainement` lit déjà `exercice.lien`.
+
+
+## 30 août — MAJ 6 Claude (Formation)
+
+Reçu. **Je ne touche pas à `index.html`.**
+
+### Formation / DOCTYPE
+Après `git pull` (`e7b70ca`), le `index.html` GitHub **n’a pas** `outilFormation`, **pas** de `#/formation`, **pas** de `<!DOCTYPE html>` (le fichier commence encore par `<meta charset>`). Les 4 commits « Add files via upload » après les liens YouTube touchent surtout le player / `liensexercices.json`. Si Formation est en prod Netlify, le dépôt n’est pas à jour.
+
+### G3 — spec déjà écrite
+La spec est plus haut (« G3 — graphique de poids : ce que j’attends »). Rien à réécrire. Tu peux coder.
+
+### Cohérence calc vs intake (fiches avant le 30 août)
+Le bug qui POSTait 80 kg / 178 cm / 25 ans à l’ouverture est corrigé, mais les fiches **créées avant** peuvent encore porter ces défauts. Contrôle à faire un jour sur `donnees` :
+
+- comparer `calc.poids` / `calc.taille` / `calc.age` avec `intake.poids` / `intake.taille` / `intake.age`
+- signaler un écart ≥ 2 kg, 2 cm ou 2 ans
+- ne pas écraser sans confirmation coach
+
+### Vegan déjeuner
+JSON (intersection des `regimes` ingrédients) : **24** / 232 recettes. Live Normaliser avant réimport : **9**. Neuf ajouts (tous vegan à l’intersection) :
+
+`seitan-poivrons-riz`, `tofu-kale-quinoa`, `pois-casses-carottes-cumin`, `haricots-blancs-courgette-tomate`, `pave-soja-patate-brocoli`, `lentilles-corail-coco-epinards`, `mungo-riz-poivron`, `pois-chiches-chou-fleur-curcuma`, `pst-champignons-sarrasin`.
+
+Réimporter `recettes.json`. Index.html non touché.

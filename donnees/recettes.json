@@ -7984,5 +7984,452 @@
       "Incorpore les flageolets et les épinards jusqu'à ce qu'ils tombent.",
       "Citronne et sers chaud."
     ]
+  },
+  {
+    "id": "seitan-poivrons-riz",
+    "nom": "Seitan, poivrons et riz",
+    "moment": "dejeuner",
+    "temps_min": 25,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "seitan-preemballe",
+        "grammes": 140
+      },
+      {
+        "aliment_id": "poivron-rouge-cru",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "riz-thai-ou-basmati-cru",
+        "grammes": 70
+      },
+      {
+        "aliment_id": "oignon-jaune-cru",
+        "grammes": 40
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 4
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "cumin-graine",
+        "grammes": 2
+      },
+      {
+        "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+        "grammes": 1
+      },
+      {
+        "aliment_id": "poivre-noir-poudre",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Rince le riz et cuis-le 12 min dans de l'eau, puis égoutte-le.",
+      "Émince l'oignon et le poivron, hache l'ail.",
+      "Fais revenir oignon, poivron et ail 6 min dans l'huile avec le cumin.",
+      "Ajoute le seitan en lanières, sale, poivre, mélange 3 min et sers avec le riz."
+    ]
+  },
+  {
+    "id": "tofu-kale-quinoa",
+    "nom": "Tofu, kale et quinoa",
+    "moment": "dejeuner",
+    "temps_min": 25,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "tofu-nature",
+        "grammes": 140
+      },
+      {
+        "aliment_id": "chou-kale-cru",
+        "grammes": 100
+      },
+      {
+        "aliment_id": "quinoa-cru",
+        "grammes": 70
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 4
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 15
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+        "grammes": 1
+      },
+      {
+        "aliment_id": "poivre-noir-poudre",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Rince le quinoa, cuis-le 12 min, puis égoutte-le.",
+      "Coupe le tofu en cubes et dore-le 6 min dans l'huile avec l'ail.",
+      "Équeute le kale, émince-le et fais-le tomber 3 min dans la poêle.",
+      "Ajoute le quinoa, sale, poivre, citronne et sers."
+    ]
+  },
+  {
+    "id": "pois-casses-carottes-cumin",
+    "nom": "Pois cassés, carottes et riz au cumin",
+    "moment": "dejeuner",
+    "temps_min": 30,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "pois-casse-sec",
+        "grammes": 70
+      },
+      {
+        "aliment_id": "carotte-crue",
+        "grammes": 100
+      },
+      {
+        "aliment_id": "oignon-jaune-cru",
+        "grammes": 40
+      },
+      {
+        "aliment_id": "cumin-graine",
+        "grammes": 2
+      },
+      {
+        "aliment_id": "curcuma-poudre",
+        "grammes": 1
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+        "grammes": 1
+      },
+      {
+        "aliment_id": "poivre-noir-poudre",
+        "grammes": 1
+      },
+      {
+        "aliment_id": "riz-thai-ou-basmati-cru",
+        "grammes": 70
+      }
+    ],
+    "etapes": [
+      "Rince les pois cassés et le riz.",
+      "Fais suer l'oignon et la carotte en rondelles 5 min dans l'huile avec le cumin et le curcuma.",
+      "Ajoute pois cassés, riz, sel, poivre et 450 ml d'eau.",
+      "Cuis 22 min à couvert jusqu'à absorption, puis sers."
+    ]
+  },
+  {
+    "id": "haricots-blancs-courgette-tomate",
+    "nom": "Haricots blancs, courgette, tomates et sarrasin",
+    "moment": "dejeuner",
+    "temps_min": 30,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "haricot-blanc-sec",
+        "grammes": 70
+      },
+      {
+        "aliment_id": "courgette-crue",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "tomate-cerise",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 4
+      },
+      {
+        "aliment_id": "basilic-frais",
+        "grammes": 6
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+        "grammes": 1
+      },
+      {
+        "aliment_id": "poivre-noir-poudre",
+        "grammes": 1
+      },
+      {
+        "aliment_id": "sarrasin-complet-cru",
+        "grammes": 70
+      }
+    ],
+    "etapes": [
+      "Cuis les haricots blancs trempés la veille 20 min, puis égoutte-les.",
+      "Rince le sarrasin, cuis-le 15 min et égoutte-le.",
+      "Fais revenir la courgette en dés, l'ail et les tomates cerises 8 min dans l'huile.",
+      "Ajoute les haricots, sale, poivre, cisèle le basilic et sers avec le sarrasin."
+    ]
+  },
+  {
+    "id": "pave-soja-patate-brocoli",
+    "nom": "Pavé de soja, patate douce et brocoli",
+    "moment": "dejeuner",
+    "temps_min": 25,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "galette-ou-pave-au-soja",
+        "grammes": 140
+      },
+      {
+        "aliment_id": "patate-douce-crue",
+        "grammes": 180
+      },
+      {
+        "aliment_id": "brocoli-cru",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "paprika-poudre",
+        "grammes": 2
+      },
+      {
+        "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+        "grammes": 1
+      },
+      {
+        "aliment_id": "poivre-noir-poudre",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Coupe la patate douce en cubes, cuis-la 12 min à l'eau, puis égoutte-la.",
+      "Fais cuire le brocoli 6 min à la vapeur.",
+      "Dore le pavé de soja 4 min de chaque côté dans l'huile, saupoudre de paprika.",
+      "Dresse patate, brocoli et pavé, sale, poivre et sers."
+    ]
+  },
+  {
+    "id": "lentilles-corail-coco-epinards",
+    "nom": "Lentilles corail au lait de coco et épinards",
+    "moment": "dejeuner",
+    "temps_min": 25,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "lentille-corail-seche",
+        "grammes": 70
+      },
+      {
+        "aliment_id": "lait-de-coco",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "epinard-cru",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "oignon-jaune-cru",
+        "grammes": 40
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 4
+      },
+      {
+        "aliment_id": "curcuma-poudre",
+        "grammes": 1
+      },
+      {
+        "aliment_id": "gingembre-racine-fraiche",
+        "grammes": 5
+      },
+      {
+        "aliment_id": "riz-thai-ou-basmati-cru",
+        "grammes": 70
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+        "grammes": 1
+      },
+      {
+        "aliment_id": "poivre-noir-poudre",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Rince le riz et cuis-le 12 min, puis égoutte-le.",
+      "Fais suer oignon, ail et gingembre 4 min dans l'huile.",
+      "Ajoute lentilles, curcuma, lait de coco, sel, poivre et 250 ml d'eau, cuis 15 min.",
+      "Incorpore les épinards jusqu'à ce qu'ils tombent, puis sers sur le riz."
+    ]
+  },
+  {
+    "id": "mungo-riz-poivron",
+    "nom": "Haricots mungo, riz et poivron",
+    "moment": "dejeuner",
+    "temps_min": 30,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "haricot-mungo-sec",
+        "grammes": 70
+      },
+      {
+        "aliment_id": "riz-thai-ou-basmati-cru",
+        "grammes": 70
+      },
+      {
+        "aliment_id": "poivron-rouge-cru",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "oignon-jaune-cru",
+        "grammes": 40
+      },
+      {
+        "aliment_id": "sauce-soja-preemballee",
+        "grammes": 10
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "poivre-noir-poudre",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Cuis les haricots mungo trempés la veille 18 min, puis égoutte-les.",
+      "Rince le riz, cuis-le 12 min et égoutte-le.",
+      "Fais revenir oignon et poivron 6 min dans l'huile, ajoute les mungo et la sauce soja.",
+      "Poivre, mélange avec le riz 2 min et sers."
+    ]
+  },
+  {
+    "id": "pois-chiches-chou-fleur-curcuma",
+    "nom": "Pois chiches et chou-fleur au curcuma",
+    "moment": "dejeuner",
+    "temps_min": 30,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "pois-chiches-secs",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "chou-fleur-cru",
+        "grammes": 180
+      },
+      {
+        "aliment_id": "curcuma-poudre",
+        "grammes": 1
+      },
+      {
+        "aliment_id": "cumin-graine",
+        "grammes": 2
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "persil-frais",
+        "grammes": 6
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 15
+      },
+      {
+        "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+        "grammes": 1
+      },
+      {
+        "aliment_id": "poivre-noir-poudre",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Cuis les pois chiches trempés la veille 20 min, puis égoutte-les.",
+      "Sépare le chou-fleur en bouquets et fais-les dorer 8 min dans l'huile avec cumin et curcuma.",
+      "Ajoute les pois chiches, sale, poivre, poursuis 4 min.",
+      "Citronne, parsème de persil ciselé et sers."
+    ]
+  },
+  {
+    "id": "pst-champignons-sarrasin",
+    "nom": "Protéines de soja, champignons et sarrasin",
+    "moment": "dejeuner",
+    "temps_min": 25,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "proteine-de-soja-texturee-rehydratee",
+        "grammes": 140
+      },
+      {
+        "aliment_id": "champignon-de-paris-ou-champignon-de-couche-cru",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "sarrasin-complet-cru",
+        "grammes": 70
+      },
+      {
+        "aliment_id": "oignon-jaune-cru",
+        "grammes": 40
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 4
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "thym-frais",
+        "grammes": 3
+      },
+      {
+        "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+        "grammes": 1
+      },
+      {
+        "aliment_id": "poivre-noir-poudre",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Rince le sarrasin, cuis-le 15 min dans de l'eau, puis égoutte-le.",
+      "Émince l'oignon et les champignons, hache l'ail.",
+      "Fais revenir oignon, champignons, ail et thym 8 min dans l'huile.",
+      "Ajoute les protéines de soja, sale, poivre, mélange 3 min et sers avec le sarrasin."
+    ]
   }
 ]
