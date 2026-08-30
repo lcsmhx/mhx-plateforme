@@ -1,0 +1,902 @@
+{
+ "elevations-laterales": {
+  "nom": "Élévations latérales",
+  "video": "Side dumbbell lateral raises",
+  "lien": "https://www.youtube.com/watch?v=-Emurq_o8pI",
+  "yt": "-Emurq_o8pI"
+ },
+ "elevations-laterales-de-bras": {
+  "nom": "Élévations latérales de bras",
+  "video": "Side dumbbell lateral raises",
+  "lien": "https://www.youtube.com/watch?v=-Emurq_o8pI",
+  "yt": "-Emurq_o8pI"
+ },
+ "face-pulls": {
+  "nom": "Face pulls",
+  "video": "Face Pull",
+  "lien": "https://www.youtube.com/watch?v=aVmO9p8Kxj4",
+  "yt": "aVmO9p8Kxj4"
+ },
+ "squat-barre": {
+  "nom": "Squat barre",
+  "video": "Back Squat",
+  "lien": "https://www.youtube.com/watch?v=LSAalN4gEjY",
+  "yt": "LSAalN4gEjY"
+ },
+ "squats": {
+  "nom": "Squats",
+  "video": "Back Squat",
+  "lien": "https://www.youtube.com/watch?v=LSAalN4gEjY",
+  "yt": "LSAalN4gEjY"
+ },
+ "squat-sumo-haltere": {
+  "nom": "Squat sumo haltère",
+  "video": "Sumo Squat",
+  "lien": "https://www.youtube.com/watch?v=8mEk9sKbAqM",
+  "yt": "8mEk9sKbAqM"
+ },
+ "developpe-couche": {
+  "nom": "Développé couché",
+  "video": "Barbell Bench Press - Medium Grip",
+  "lien": "https://www.youtube.com/watch?v=_N_3lENcda4",
+  "yt": "_N_3lENcda4"
+ },
+ "developpe-halteres-incline": {
+  "nom": "Développé haltères incliné",
+  "video": "Incline Dumbbell Press",
+  "lien": "https://www.youtube.com/watch?v=SHX2G9h4jGY",
+  "yt": "SHX2G9h4jGY"
+ },
+ "developpe-halteres-plat": {
+  "nom": "Développé haltères plat",
+  "video": "Dumbbell Bench Press",
+  "lien": "https://www.youtube.com/watch?v=MoxtltClaJ0",
+  "yt": "MoxtltClaJ0"
+ },
+ "developpe-militaire": {
+  "nom": "Développé militaire",
+  "video": "Standing Military Press",
+  "lien": "https://www.youtube.com/watch?v=VZcMoeLZGAw",
+  "yt": "VZcMoeLZGAw"
+ },
+ "developpe-arnold": {
+  "nom": "Développé Arnold",
+  "video": "Arnold Dumbbell Press",
+  "lien": "https://www.youtube.com/watch?v=ZYmaVMC5WWk",
+  "yt": "ZYmaVMC5WWk"
+ },
+ "hip-thrust": {
+  "nom": "Hip thrust",
+  "video": "Hip Thrust",
+  "lien": "https://www.youtube.com/watch?v=W89Ha5B357s",
+  "yt": "W89Ha5B357s"
+ },
+ "planche": {
+  "nom": "Planche",
+  "video": "Plank",
+  "lien": "https://www.youtube.com/watch?v=R4FB7v-v6x0",
+  "yt": "R4FB7v-v6x0"
+ },
+ "gainage-lateral": {
+  "nom": "Gainage latéral",
+  "video": "Side Plank Up Down",
+  "lien": "https://www.youtube.com/watch?v=pQXEcierrHM",
+  "yt": "pQXEcierrHM"
+ },
+ "presse-a-cuisses": {
+  "nom": "Presse à cuisses",
+  "video": "Leg Press",
+  "lien": "https://www.youtube.com/watch?v=wsZqaefajGc",
+  "yt": "wsZqaefajGc"
+ },
+ "souleve-de-terre": {
+  "nom": "Soulevé de terre",
+  "video": "Barbell Deadlift",
+  "lien": "https://www.youtube.com/watch?v=78XFxKk9yIk",
+  "yt": "78XFxKk9yIk"
+ },
+ "souleve-de-terre-roumain": {
+  "nom": "Soulevé de terre roumain",
+  "video": "Romanian Deadlift",
+  "lien": "https://www.youtube.com/watch?v=6Z88b9ZR6jw",
+  "yt": "6Z88b9ZR6jw"
+ },
+ "curl-marteau": {
+  "nom": "Curl marteau",
+  "video": "Hammer Curls",
+  "lien": "https://www.youtube.com/watch?v=i3UXqenZPG4",
+  "yt": "i3UXqenZPG4"
+ },
+ "curl-barre": {
+  "nom": "Curl barre",
+  "video": "Barbell Curl",
+  "lien": "https://www.youtube.com/watch?v=VQbPTqk-djs",
+  "yt": "VQbPTqk-djs"
+ },
+ "curl-halteres": {
+  "nom": "Curl haltères",
+  "video": "Preacher Hammer Dumbbell Curl",
+  "lien": "https://www.youtube.com/watch?v=5FY8DsusGZ8",
+  "yt": "5FY8DsusGZ8"
+ },
+ "curl-pupitre": {
+  "nom": "Curl pupitre",
+  "video": "Preacher Curl",
+  "lien": "https://www.youtube.com/watch?v=RcVdAVVtvGc",
+  "yt": "RcVdAVVtvGc"
+ },
+ "tirage-vertical": {
+  "nom": "Tirage vertical",
+  "video": "Wide-Grip Lat Pulldown",
+  "lien": "https://www.youtube.com/watch?v=KNM8U6Y72Y4",
+  "yt": "KNM8U6Y72Y4"
+ },
+ "tirage-vertical-prise-serree": {
+  "nom": "Tirage vertical prise serrée",
+  "video": "Close-Grip Front Lat Pulldown",
+  "lien": "https://www.youtube.com/watch?v=dRoRXtCX2eM",
+  "yt": "dRoRXtCX2eM"
+ },
+ "tirage-horizontal": {
+  "nom": "Tirage horizontal",
+  "video": "Seated Cable Rows",
+  "lien": "https://www.youtube.com/watch?v=59iS-DtCaXw",
+  "yt": "59iS-DtCaXw"
+ },
+ "dead-bug": {
+  "nom": "Dead bug",
+  "video": "Dead Bug",
+  "lien": "https://www.youtube.com/watch?v=rbemelnkHag",
+  "yt": "rbemelnkHag"
+ },
+ "rowing-barre": {
+  "nom": "Rowing barre",
+  "video": "Reverse Grip Bent-Over Rows",
+  "lien": "https://www.youtube.com/watch?v=R9qxaP9PDAk",
+  "yt": "R9qxaP9PDAk"
+ },
+ "rowing-haltere": {
+  "nom": "Rowing haltère",
+  "video": "Dumbbell row",
+  "lien": "https://www.youtube.com/watch?v=ZPFkeki3poA",
+  "yt": "ZPFkeki3poA"
+ },
+ "rowing-haltere-un-bras": {
+  "nom": "Rowing haltère un bras",
+  "video": "One-Arm Dumbbell Row",
+  "lien": "https://www.youtube.com/watch?v=FUV_Tx2Oqqs",
+  "yt": "FUV_Tx2Oqqs"
+ },
+ "rowing-deux-halteres-buste-penche": {
+  "nom": "Rowing deux haltères buste penché",
+  "video": "Dumbbell row",
+  "lien": "https://www.youtube.com/watch?v=ZPFkeki3poA",
+  "yt": "ZPFkeki3poA"
+ },
+ "leg-curl": {
+  "nom": "Leg curl",
+  "video": "Lying Leg Curls",
+  "lien": "https://www.youtube.com/watch?v=9p23QLa_e6g",
+  "yt": "9p23QLa_e6g"
+ },
+ "leg-extension": {
+  "nom": "Leg extension",
+  "video": "Leg Extensions",
+  "lien": "https://www.youtube.com/watch?v=C26wr0pvhcQ",
+  "yt": "C26wr0pvhcQ"
+ },
+ "fentes-bulgares": {
+  "nom": "Fentes bulgares",
+  "video": "Assisted Bulgarian Split Squat",
+  "lien": "https://www.youtube.com/watch?v=VpEUdmw_PaM",
+  "yt": "VpEUdmw_PaM"
+ },
+ "fentes-marchees": {
+  "nom": "Fentes marchées",
+  "video": "Barbell Lunge",
+  "lien": "https://www.youtube.com/watch?v=QRewx1DhJF8",
+  "yt": "QRewx1DhJF8"
+ },
+ "fentes-arriere": {
+  "nom": "Fentes arrière",
+  "video": "Reverse Lunge",
+  "lien": "https://www.youtube.com/watch?v=Ur-RGDw5e_U",
+  "yt": "Ur-RGDw5e_U"
+ },
+ "extension-triceps-corde": {
+  "nom": "Extension triceps corde",
+  "video": "Triceps Pushdown - Rope Attachment",
+  "lien": "https://www.youtube.com/watch?v=oEqFRI9Me3Q",
+  "yt": "oEqFRI9Me3Q"
+ },
+ "extension-triceps-poulie": {
+  "nom": "Extension triceps poulie",
+  "video": "Triceps Pushdown",
+  "lien": "https://www.youtube.com/watch?v=cGCJKdAuQG0",
+  "yt": "cGCJKdAuQG0"
+ },
+ "extension-triceps-barre-au-front": {
+  "nom": "Extension triceps barre au front",
+  "video": "Dumbbell Skullcrusher",
+  "lien": "https://www.youtube.com/watch?v=2cdO-saZ5DA",
+  "yt": "2cdO-saZ5DA"
+ },
+ "extension-nuque-haltere": {
+  "nom": "Extension nuque haltère",
+  "video": "Dumbbell Skullcrusher",
+  "lien": "https://www.youtube.com/watch?v=2cdO-saZ5DA",
+  "yt": "2cdO-saZ5DA"
+ },
+ "tractions": {
+  "nom": "Tractions",
+  "video": "Pull-Up",
+  "lien": "https://www.youtube.com/watch?v=GGgKFXjeYZ8",
+  "yt": "GGgKFXjeYZ8"
+ },
+ "tractions-lestees": {
+  "nom": "Tractions lestées",
+  "video": "Pull-Up",
+  "lien": "https://www.youtube.com/watch?v=GGgKFXjeYZ8",
+  "yt": "GGgKFXjeYZ8"
+ },
+ "crunch-a-la-poulie": {
+  "nom": "Crunch à la poulie",
+  "video": "Cable Crunch",
+  "lien": "https://www.youtube.com/watch?v=gIajQJYpGAg",
+  "yt": "gIajQJYpGAg"
+ },
+ "crunch": {
+  "nom": "Crunch",
+  "video": "Crunch",
+  "lien": "https://www.youtube.com/watch?v=VBAgK577WmM",
+  "yt": "VBAgK577WmM"
+ },
+ "dips": {
+  "nom": "Dips",
+  "video": "Dips - Triceps Version",
+  "lien": "https://www.youtube.com/watch?v=dmGLQ0-HmeM",
+  "yt": "dmGLQ0-HmeM"
+ },
+ "dips-lestes": {
+  "nom": "Dips lestés",
+  "video": "Dips - Triceps Version",
+  "lien": "https://www.youtube.com/watch?v=dmGLQ0-HmeM",
+  "yt": "dmGLQ0-HmeM"
+ },
+ "dips-de-chaise": {
+  "nom": "Dips de chaise",
+  "video": "Triceps Chair Dips",
+  "lien": "https://www.youtube.com/watch?v=HCf97NPYeGY",
+  "yt": "HCf97NPYeGY"
+ },
+ "mollets-debout": {
+  "nom": "Mollets debout",
+  "video": "Standing Calf Raises",
+  "lien": "https://www.youtube.com/watch?v=g_E7_q1z2bo",
+  "yt": "g_E7_q1z2bo"
+ },
+ "mollets-assis": {
+  "nom": "Mollets assis",
+  "video": "Barbell Seated Calf Raise",
+  "lien": "https://www.youtube.com/watch?v=TMaY8lgKYyI",
+  "yt": "TMaY8lgKYyI"
+ },
+ "oiseau-halteres": {
+  "nom": "Oiseau haltères",
+  "video": "Reverse Fly",
+  "lien": "https://www.youtube.com/watch?v=lscvrLVszYc",
+  "yt": "lscvrLVszYc"
+ },
+ "hollow-hold": {
+  "nom": "Hollow hold",
+  "video": "Hollow Hold",
+  "lien": "https://www.youtube.com/watch?v=0P6UlhuEsJ0",
+  "yt": "0P6UlhuEsJ0"
+ },
+ "pompes": {
+  "nom": "Pompes",
+  "video": "Push-Up",
+  "lien": "https://www.youtube.com/watch?v=jdM0CTRKTKU",
+  "yt": "jdM0CTRKTKU"
+ },
+ "pompes-diamant": {
+  "nom": "Pompes diamant",
+  "video": "Push-Up",
+  "lien": "https://www.youtube.com/watch?v=jdM0CTRKTKU",
+  "yt": "jdM0CTRKTKU"
+ },
+ "pike-push-up": {
+  "nom": "Pike push-up",
+  "video": "Pike Push-Up",
+  "lien": "https://www.youtube.com/watch?v=lovo89HLXts",
+  "yt": "lovo89HLXts"
+ },
+ "pont-fessier": {
+  "nom": "Pont fessier",
+  "video": "Glute Bridge",
+  "lien": "https://www.youtube.com/watch?v=bnKpYIMmvtw",
+  "yt": "bnKpYIMmvtw"
+ },
+ "pont-fessier-une-jambe": {
+  "nom": "Pont fessier une jambe",
+  "video": "Single Leg Glute Bridge",
+  "lien": "https://www.youtube.com/watch?v=dF5E0hm4ic8",
+  "yt": "dF5E0hm4ic8"
+ },
+ "superman": {
+  "nom": "Superman",
+  "video": "Superman",
+  "lien": "https://www.youtube.com/watch?v=LfdMBYJ8wvA",
+  "yt": "LfdMBYJ8wvA"
+ },
+ "ecartes-halteres": {
+  "nom": "Écartés haltères",
+  "video": "Dumbbell Flyes",
+  "lien": "https://www.youtube.com/watch?v=Bhq25TveHAQ",
+  "yt": "Bhq25TveHAQ"
+ },
+ "shrug-barre": {
+  "nom": "Shrug barre",
+  "video": "Barbell Shrug",
+  "lien": "https://www.youtube.com/watch?v=qPYNv6OaN_g",
+  "yt": "qPYNv6OaN_g"
+ },
+ "abducteurs-machine": {
+  "nom": "Abducteurs machine",
+  "video": "Machine Abduction",
+  "lien": "https://www.youtube.com/watch?v=lwKkqZG09qs",
+  "yt": "lwKkqZG09qs"
+ },
+ "mountain-climbers": {
+  "nom": "Mountain climbers",
+  "video": "Mountain Climber",
+  "lien": "https://www.youtube.com/watch?v=e51MITfR2bA",
+  "yt": "e51MITfR2bA"
+ },
+ "rowing-de-table": {
+  "nom": "Rowing de table",
+  "video": "Inverted Row",
+  "lien": "https://www.youtube.com/watch?v=AVuNzju--XQ",
+  "yt": "AVuNzju--XQ"
+ },
+ "rowing-de-table-prise-large": {
+  "nom": "Rowing de table prise large",
+  "video": "Inverted Row",
+  "lien": "https://www.youtube.com/watch?v=AVuNzju--XQ",
+  "yt": "AVuNzju--XQ"
+ },
+ "curl-halteres-incline": {
+  "nom": "Curl haltères incliné",
+  "video": "Incline Dumbbell Curl",
+  "lien": "https://www.youtube.com/watch?v=jW9Pq0x53TI",
+  "yt": "jW9Pq0x53TI"
+ },
+ "curl-isometrique-contre-l-autre-main": {
+  "nom": "Curl isométrique contre l'autre main",
+  "video": "Concentration Curls",
+  "lien": "https://www.youtube.com/watch?v=uMMs9GmLsYI",
+  "yt": "uMMs9GmLsYI"
+ },
+ "good-morning-poids-du-corps": {
+  "nom": "Good morning poids du corps",
+  "video": "Single Leg Good Morning",
+  "lien": "https://www.youtube.com/watch?v=QQqrHWkVQLs",
+  "yt": "QQqrHWkVQLs"
+ },
+ "good-morning-poids-du-corps-court": {
+  "nom": "Good morning poids du corps court",
+  "video": "Single Leg Good Morning",
+  "lien": "https://www.youtube.com/watch?v=QQqrHWkVQLs",
+  "yt": "QQqrHWkVQLs"
+ },
+ "good-morning-a-la-bande": {
+  "nom": "Good morning à la bande",
+  "video": "Band Good Morning",
+  "lien": "https://www.youtube.com/watch?v=8zcMST7m4zQ",
+  "yt": "8zcMST7m4zQ"
+ },
+ "oiseau-poulie": {
+  "nom": "Oiseau poulie",
+  "video": "Cable Rear Delt Fly",
+  "lien": "https://www.youtube.com/watch?v=GMLX3Urd5gA",
+  "yt": "GMLX3Urd5gA"
+ },
+ "oiseau-au-sol": {
+  "nom": "Oiseau au sol",
+  "video": "Reverse Fly",
+  "lien": "https://www.youtube.com/watch?v=lscvrLVszYc",
+  "yt": "lscvrLVszYc"
+ },
+ "releve-de-jambes-suspendu": {
+  "nom": "Relevé de jambes suspendu",
+  "video": "Hanging Leg Raise",
+  "lien": "https://www.youtube.com/watch?v=Ch2CccHXUso",
+  "yt": "Ch2CccHXUso"
+ },
+ "releve-de-jambes": {
+  "nom": "Relevé de jambes",
+  "video": "Laying Leg Raises",
+  "lien": "https://www.youtube.com/watch?v=joPSV4tyAFE",
+  "yt": "joPSV4tyAFE"
+ },
+ "releve-de-jambes-au-sol": {
+  "nom": "Relevé de jambes au sol",
+  "video": "Laying Leg Raises",
+  "lien": "https://www.youtube.com/watch?v=joPSV4tyAFE",
+  "yt": "joPSV4tyAFE"
+ },
+ "wall-sit": {
+  "nom": "Wall sit",
+  "video": "Wall Squat",
+  "lien": "https://www.youtube.com/watch?v=90wz-xiMes8",
+  "yt": "90wz-xiMes8"
+ },
+ "wall-sit-court": {
+  "nom": "Wall sit court",
+  "video": "Wall Squat",
+  "lien": "https://www.youtube.com/watch?v=90wz-xiMes8",
+  "yt": "90wz-xiMes8"
+ },
+ "squat-sur-chaise-partielle": {
+  "nom": "Squat sur chaise partielle",
+  "video": "Box Squat",
+  "lien": "https://www.youtube.com/watch?v=okQc_XooGEs",
+  "yt": "okQc_XooGEs"
+ },
+ "assis-debout-sur-chaise": {
+  "nom": "Assis-debout sur chaise",
+  "video": "Box Squat",
+  "lien": "https://www.youtube.com/watch?v=okQc_XooGEs",
+  "yt": "okQc_XooGEs"
+ },
+ "bird-dog": {
+  "nom": "Bird dog",
+  "video": "Bird-Dog",
+  "lien": "https://www.youtube.com/watch?v=xJ74GJhnJEY",
+  "yt": "xJ74GJhnJEY"
+ },
+ "bird-dog-lent": {
+  "nom": "Bird dog lent",
+  "video": "Bird-Dog",
+  "lien": "https://www.youtube.com/watch?v=xJ74GJhnJEY",
+  "yt": "xJ74GJhnJEY"
+ },
+ "crunch-au-sol": {
+  "nom": "Crunch au sol",
+  "video": "Crunch",
+  "lien": "https://www.youtube.com/watch?v=VBAgK577WmM",
+  "yt": "VBAgK577WmM"
+ },
+ "developpe-halteres-assis": {
+  "nom": "Développé haltères assis",
+  "video": "Dumbbell Shoulder Press",
+  "lien": "https://www.youtube.com/watch?v=y5b02W-jVTs",
+  "yt": "y5b02W-jVTs"
+ },
+ "developpe-halteres-au-sol": {
+  "nom": "Développé haltères au sol",
+  "video": "Dumbbell Bench Press",
+  "lien": "https://www.youtube.com/watch?v=MoxtltClaJ0",
+  "yt": "MoxtltClaJ0"
+ },
+ "developpe-epaules-a-la-bande": {
+  "nom": "Développé épaules à la bande",
+  "video": "Band Overhead Press",
+  "lien": "https://www.youtube.com/watch?v=whBio4zr_sU",
+  "yt": "whBio4zr_sU"
+ },
+ "developpe-militaire-barre": {
+  "nom": "Développé militaire barre",
+  "video": "Standing Military Press",
+  "lien": "https://www.youtube.com/watch?v=VZcMoeLZGAw",
+  "yt": "VZcMoeLZGAw"
+ },
+ "extension-triceps-a-la-bande": {
+  "nom": "Extension triceps à la bande",
+  "video": "Band Pushdown",
+  "lien": "https://www.youtube.com/watch?v=D0YmzURIuH8",
+  "yt": "D0YmzURIuH8"
+ },
+ "extension-barre-au-front": {
+  "nom": "Extension barre au front",
+  "video": "Dumbbell Skullcrusher",
+  "lien": "https://www.youtube.com/watch?v=2cdO-saZ5DA",
+  "yt": "2cdO-saZ5DA"
+ },
+ "extension-corde": {
+  "nom": "Extension corde",
+  "video": "Triceps Pushdown - Rope Attachment",
+  "lien": "https://www.youtube.com/watch?v=oEqFRI9Me3Q",
+  "yt": "oEqFRI9Me3Q"
+ },
+ "extension-triceps-haltere": {
+  "nom": "Extension triceps haltère",
+  "video": "Dumbbell Skullcrusher",
+  "lien": "https://www.youtube.com/watch?v=2cdO-saZ5DA",
+  "yt": "2cdO-saZ5DA"
+ },
+ "extension-triceps-haltere-a-deux-mains": {
+  "nom": "Extension triceps haltère à deux mains",
+  "video": "Dumbbell Skullcrusher",
+  "lien": "https://www.youtube.com/watch?v=2cdO-saZ5DA",
+  "yt": "2cdO-saZ5DA"
+ },
+ "fentes-arriere-halteres": {
+  "nom": "Fentes arrière haltères",
+  "video": "Reverse Lunge",
+  "lien": "https://www.youtube.com/watch?v=Ur-RGDw5e_U",
+  "yt": "Ur-RGDw5e_U"
+ },
+ "fentes-arriere-a-la-bande": {
+  "nom": "Fentes arrière à la bande",
+  "video": "Reverse Lunge",
+  "lien": "https://www.youtube.com/watch?v=Ur-RGDw5e_U",
+  "yt": "Ur-RGDw5e_U"
+ },
+ "fentes-bulgares-halteres": {
+  "nom": "Fentes bulgares haltères",
+  "video": "Dumbbell Goblet Bulgarian Split Squat",
+  "lien": "https://www.youtube.com/watch?v=71S_wM6zJ4M",
+  "yt": "71S_wM6zJ4M"
+ },
+ "fentes-halteres": {
+  "nom": "Fentes haltères",
+  "video": "Barbell Lunge",
+  "lien": "https://www.youtube.com/watch?v=QRewx1DhJF8",
+  "yt": "QRewx1DhJF8"
+ },
+ "fentes-marchees-halteres": {
+  "nom": "Fentes marchées haltères",
+  "video": "Barbell Lunge",
+  "lien": "https://www.youtube.com/watch?v=QRewx1DhJF8",
+  "yt": "QRewx1DhJF8"
+ },
+ "fentes-avant-a-la-bande": {
+  "nom": "Fentes avant à la bande",
+  "video": "Forward Lunge",
+  "lien": "https://www.youtube.com/watch?v=LphXqrsgLUI",
+  "yt": "LphXqrsgLUI"
+ },
+ "fentes-laterales-haltere": {
+  "nom": "Fentes latérales haltère",
+  "video": "Side Lunges",
+  "lien": "https://www.youtube.com/watch?v=XOAzj8Vu-EU",
+  "yt": "XOAzj8Vu-EU"
+ },
+ "kickback-poulie": {
+  "nom": "Kickback poulie",
+  "video": "Cable Kickback",
+  "lien": "https://www.youtube.com/watch?v=Z_OgUF5ms50",
+  "yt": "Z_OgUF5ms50"
+ },
+ "mollets-halteres": {
+  "nom": "Mollets haltères",
+  "video": "Single Leg Calf Raise",
+  "lien": "https://www.youtube.com/watch?v=oUksNcguEfk",
+  "yt": "oUksNcguEfk"
+ },
+ "mollets-unipodal": {
+  "nom": "Mollets unipodal",
+  "video": "Single Leg Calf Raise",
+  "lien": "https://www.youtube.com/watch?v=oUksNcguEfk",
+  "yt": "oUksNcguEfk"
+ },
+ "mollets-unipodal-haltere": {
+  "nom": "Mollets unipodal haltère",
+  "video": "Single Leg Calf Raise",
+  "lien": "https://www.youtube.com/watch?v=oUksNcguEfk",
+  "yt": "oUksNcguEfk"
+ },
+ "mollets-deux-pieds": {
+  "nom": "Mollets deux pieds",
+  "video": "Calf Raises",
+  "lien": "https://www.youtube.com/watch?v=qcfwh0cQLd8",
+  "yt": "qcfwh0cQLd8"
+ },
+ "montees-de-talons-debout": {
+  "nom": "Montées de talons debout",
+  "video": "Calf Raises",
+  "lien": "https://www.youtube.com/watch?v=qcfwh0cQLd8",
+  "yt": "qcfwh0cQLd8"
+ },
+ "mollets-a-la-presse": {
+  "nom": "Mollets à la presse",
+  "video": "Calf Press On The Leg Press Machine",
+  "lien": "https://www.youtube.com/watch?v=1YjDjUOHFUM",
+  "yt": "1YjDjUOHFUM"
+ },
+ "pompes-pieds-sureleves": {
+  "nom": "Pompes pieds surélevés",
+  "video": "Decline Push-Up",
+  "lien": "https://www.youtube.com/watch?v=gdAZfTfqL8o",
+  "yt": "gdAZfTfqL8o"
+ },
+ "pompes-en-descente-lente": {
+  "nom": "Pompes en descente lente",
+  "video": "Push-Up",
+  "lien": "https://www.youtube.com/watch?v=jdM0CTRKTKU",
+  "yt": "jdM0CTRKTKU"
+ },
+ "pompes-lestees": {
+  "nom": "Pompes lestées",
+  "video": "Push-Up",
+  "lien": "https://www.youtube.com/watch?v=jdM0CTRKTKU",
+  "yt": "jdM0CTRKTKU"
+ },
+ "pompes-sur-halteres": {
+  "nom": "Pompes sur haltères",
+  "video": "Push-Up",
+  "lien": "https://www.youtube.com/watch?v=jdM0CTRKTKU",
+  "yt": "jdM0CTRKTKU"
+ },
+ "pompes-halteres": {
+  "nom": "Pompes haltères",
+  "video": "Push-Up",
+  "lien": "https://www.youtube.com/watch?v=jdM0CTRKTKU",
+  "yt": "jdM0CTRKTKU"
+ },
+ "pont-fessier-haltere": {
+  "nom": "Pont fessier haltère",
+  "video": "Dumbbell Glute Bridge",
+  "lien": "https://www.youtube.com/watch?v=Sk4O3kvkQws",
+  "yt": "Sk4O3kvkQws"
+ },
+ "pont-fessier-au-sol": {
+  "nom": "Pont fessier au sol",
+  "video": "Glute Bridge",
+  "lien": "https://www.youtube.com/watch?v=bnKpYIMmvtw",
+  "yt": "bnKpYIMmvtw"
+ },
+ "pont-fessier-pieds-rapproches": {
+  "nom": "Pont fessier pieds rapprochés",
+  "video": "Glute Bridge",
+  "lien": "https://www.youtube.com/watch?v=bnKpYIMmvtw",
+  "yt": "bnKpYIMmvtw"
+ },
+ "hip-thrust-a-la-bande": {
+  "nom": "Hip thrust à la bande",
+  "video": "Banded Hip Thrust",
+  "lien": "https://www.youtube.com/watch?v=uiX8HCwcOPQ",
+  "yt": "uiX8HCwcOPQ"
+ },
+ "rowing-barre-buste-penche": {
+  "nom": "Rowing barre buste penché",
+  "video": "Reverse Grip Bent-Over Rows",
+  "lien": "https://www.youtube.com/watch?v=R9qxaP9PDAk",
+  "yt": "R9qxaP9PDAk"
+ },
+ "rowing-a-la-bande": {
+  "nom": "Rowing à la bande",
+  "video": "Banded Bent Over Row",
+  "lien": "https://www.youtube.com/watch?v=xy6olxPL-AU",
+  "yt": "xy6olxPL-AU"
+ },
+ "rowing-de-table-en-pause": {
+  "nom": "Rowing de table en pause",
+  "video": "Inverted Row",
+  "lien": "https://www.youtube.com/watch?v=AVuNzju--XQ",
+  "yt": "AVuNzju--XQ"
+ },
+ "rowing-de-table-partiel": {
+  "nom": "Rowing de table partiel",
+  "video": "Inverted Row",
+  "lien": "https://www.youtube.com/watch?v=AVuNzju--XQ",
+  "yt": "AVuNzju--XQ"
+ },
+ "tirage-horizontal-prise-neutre": {
+  "nom": "Tirage horizontal prise neutre",
+  "video": "Seated Cable Rows",
+  "lien": "https://www.youtube.com/watch?v=59iS-DtCaXw",
+  "yt": "59iS-DtCaXw"
+ },
+ "tractions-prise-large": {
+  "nom": "Tractions prise large",
+  "video": "Wide-Grip Pull-Up",
+  "lien": "https://www.youtube.com/watch?v=8PLF1dygzAM",
+  "yt": "8PLF1dygzAM"
+ },
+ "souleve-de-terre-halteres": {
+  "nom": "Soulevé de terre haltères",
+  "video": "Dumbbell Deadlift",
+  "lien": "https://www.youtube.com/watch?v=0a7GUsvQt2A",
+  "yt": "0a7GUsvQt2A"
+ },
+ "souleve-de-terre-roumain-halteres": {
+  "nom": "Soulevé de terre roumain haltères",
+  "video": "Romanian Deadlift",
+  "lien": "https://www.youtube.com/watch?v=6Z88b9ZR6jw",
+  "yt": "6Z88b9ZR6jw"
+ },
+ "squat-goblet": {
+  "nom": "Squat goblet",
+  "video": "Goblet Squat",
+  "lien": "https://www.youtube.com/watch?v=gCESNsDsbqk",
+  "yt": "gCESNsDsbqk"
+ },
+ "squats-sumo": {
+  "nom": "Squats sumo",
+  "video": "Sumo Squat",
+  "lien": "https://www.youtube.com/watch?v=8mEk9sKbAqM",
+  "yt": "8mEk9sKbAqM"
+ },
+ "squat-front": {
+  "nom": "Squat front",
+  "video": "Front Squat",
+  "lien": "https://www.youtube.com/watch?v=lWuaIsGgmDA",
+  "yt": "lWuaIsGgmDA"
+ },
+ "ecartes-poulie": {
+  "nom": "Écartés poulie",
+  "video": "Flat Bench Cable Flyes",
+  "lien": "https://www.youtube.com/watch?v=EAuMLAIBtSg",
+  "yt": "EAuMLAIBtSg"
+ },
+ "ecartes-poulie-vis-a-vis": {
+  "nom": "Écartés poulie vis-à-vis",
+  "video": "Flat Bench Cable Flyes",
+  "lien": "https://www.youtube.com/watch?v=EAuMLAIBtSg",
+  "yt": "EAuMLAIBtSg"
+ },
+ "elevations-laterales-halteres": {
+  "nom": "Élévations latérales haltères",
+  "video": "Side dumbbell lateral raises",
+  "lien": "https://www.youtube.com/watch?v=-Emurq_o8pI",
+  "yt": "-Emurq_o8pI"
+ },
+ "elevations-laterales-a-la-bande": {
+  "nom": "Élévations latérales à la bande",
+  "video": "Band Lateral Raise",
+  "lien": "https://www.youtube.com/watch?v=9d2EAB11hNI",
+  "yt": "9d2EAB11hNI"
+ },
+ "face-pull-a-la-bande": {
+  "nom": "Face pull à la bande",
+  "video": "Band Face Pull",
+  "lien": "https://www.youtube.com/watch?v=1fh_oeKDDEM",
+  "yt": "1fh_oeKDDEM"
+ },
+ "abduction-de-hanche-au-sol": {
+  "nom": "Abduction de hanche au sol",
+  "video": "Side Lying Hip Abduction",
+  "lien": "https://www.youtube.com/watch?v=PpPwXRcW2Ic",
+  "yt": "PpPwXRcW2Ic"
+ },
+ "leg-curl-unilateral": {
+  "nom": "Leg curl unilatéral",
+  "video": "Lying Leg Curls",
+  "lien": "https://www.youtube.com/watch?v=9p23QLa_e6g",
+  "yt": "9p23QLa_e6g"
+ },
+ "extensions-de-genoux-assis": {
+  "nom": "Extensions de genoux assis",
+  "video": "Leg Extensions",
+  "lien": "https://www.youtube.com/watch?v=C26wr0pvhcQ",
+  "yt": "C26wr0pvhcQ"
+ },
+ "presse-a-cuisses-pieds-hauts": {
+  "nom": "Presse à cuisses pieds hauts",
+  "video": "Leg Press",
+  "lien": "https://www.youtube.com/watch?v=wsZqaefajGc",
+  "yt": "wsZqaefajGc"
+ },
+ "gainage": {
+  "nom": "Gainage",
+  "video": "Plank",
+  "lien": "https://www.youtube.com/watch?v=R4FB7v-v6x0",
+  "yt": "R4FB7v-v6x0"
+ },
+ "gainage-lateral-genou-au-sol": {
+  "nom": "Gainage latéral genou au sol",
+  "video": "Side Plank Up Down",
+  "lien": "https://www.youtube.com/watch?v=pQXEcierrHM",
+  "yt": "pQXEcierrHM"
+ },
+ "gainage-sur-les-avant-bras-genoux-au-sol": {
+  "nom": "Gainage sur les avant-bras genoux au sol",
+  "video": "Plank",
+  "lien": "https://www.youtube.com/watch?v=R4FB7v-v6x0",
+  "yt": "R4FB7v-v6x0"
+ },
+ "hollow-body-rock": {
+  "nom": "Hollow body rock",
+  "video": "Hollow Rock",
+  "lien": "https://www.youtube.com/watch?v=Dj0zURIFkGA",
+  "yt": "Dj0zURIFkGA"
+ },
+ "dead-bug-amplitude-courte": {
+  "nom": "Dead bug amplitude courte",
+  "video": "Dead Bug",
+  "lien": "https://www.youtube.com/watch?v=rbemelnkHag",
+  "yt": "rbemelnkHag"
+ },
+ "pull-apart": {
+  "nom": "Pull-apart",
+  "video": "Band Pull Apart",
+  "lien": "https://www.youtube.com/watch?v=PkpPaoPeIus",
+  "yt": "PkpPaoPeIus"
+ },
+ "burpees-controles": {
+  "nom": "Burpees contrôlés",
+  "video": "Burpee",
+  "lien": "https://www.youtube.com/watch?v=lcU1JlGjSuY",
+  "yt": "lcU1JlGjSuY"
+ },
+ "pike-push-up-pause": {
+  "nom": "Pike push-up pause",
+  "video": "Pike Push-Up",
+  "lien": "https://www.youtube.com/watch?v=lovo89HLXts",
+  "yt": "lovo89HLXts"
+ },
+ "step-up-bas-marche-d-escalier": {
+  "nom": "Step-up bas (marche d'escalier)",
+  "video": "Dumbbell Step Ups",
+  "lien": "https://www.youtube.com/watch?v=gaIMSRdjtJ8",
+  "yt": "gaIMSRdjtJ8"
+ },
+ "curl-biceps-a-la-bande": {
+  "nom": "Curl biceps à la bande",
+  "video": "Dumbbell Bicep Curl",
+  "lien": "https://www.youtube.com/watch?v=S_3lSw7gwu0",
+  "yt": "S_3lSw7gwu0"
+ },
+ "developpe-pectoraux-a-la-bande": {
+  "nom": "Développé pectoraux à la bande",
+  "video": "Band Chest Fly",
+  "lien": "https://www.youtube.com/watch?v=_Ag8fBiNQxM",
+  "yt": "_Ag8fBiNQxM"
+ },
+ "pompes-murales": {
+  "nom": "Pompes murales",
+  "video": "Push-Up",
+  "lien": "https://www.youtube.com/watch?v=jdM0CTRKTKU",
+  "yt": "jdM0CTRKTKU"
+ },
+ "rowing-t-bar": {
+  "nom": "Rowing T-bar",
+  "video": "Lying T-Bar Row",
+  "lien": "https://www.youtube.com/watch?v=FlNOdtaL_6E",
+  "yt": "FlNOdtaL_6E"
+ },
+ "tirage-vertical-a-la-bande": {
+  "nom": "Tirage vertical à la bande",
+  "video": "Wide-Grip Lat Pulldown",
+  "lien": "https://www.youtube.com/watch?v=KNM8U6Y72Y4",
+  "yt": "KNM8U6Y72Y4"
+ },
+ "squat-a-la-bande": {
+  "nom": "Squat à la bande",
+  "video": "Band Squat Hold",
+  "lien": "https://www.youtube.com/watch?v=uCp7aUFmbh8",
+  "yt": "uCp7aUFmbh8"
+ },
+ "elevations-laterales-poulie": {
+  "nom": "Élévations latérales poulie",
+  "video": "Side dumbbell lateral raises",
+  "lien": "https://www.youtube.com/watch?v=-Emurq_o8pI",
+  "yt": "-Emurq_o8pI"
+ },
+ "coquillage-clamshell-au-sol": {
+  "nom": "Coquillage (clamshell) au sol",
+  "video": "Theraband Clamshell Side Plank",
+  "lien": "https://www.youtube.com/watch?v=3LDGO6xZVRk",
+  "yt": "3LDGO6xZVRk"
+ },
+ "pallof-press-a-la-bande": {
+  "nom": "Pallof press à la bande",
+  "video": "Band Pallof Press",
+  "lien": "https://www.youtube.com/watch?v=gbMukGhuJdM",
+  "yt": "gbMukGhuJdM"
+ },
+ "marche-sur-place-genoux-hauts": {
+  "nom": "Marche sur place genoux hauts",
+  "video": "High Knee Jog",
+  "lien": "https://www.youtube.com/watch?v=oDdkytliOqE",
+  "yt": "oDdkytliOqE"
+ },
+ "montees-de-genoux-squats": {
+  "nom": "Montées de genoux + squats",
+  "video": "Knee Raise",
+  "lien": "https://www.youtube.com/watch?v=G4TXQzNMZEY",
+  "yt": "G4TXQzNMZEY"
+ }
+}
