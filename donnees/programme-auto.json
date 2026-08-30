@@ -1,0 +1,19 @@
+{
+  "defaut": "corps-entier-3j-debutant-poids-corps",
+  "regles": [
+    {"seances": 2, "lieu": ["salle"], "id": "corps-entier-2j-debutant", "si_niveau": {"Intermédiaire": "corps-entier-2j-intermediaire", "Avancé": "corps-entier-2j-intermediaire"}},
+    {"seances": 3, "lieu": ["salle"], "objectif": ["Prise de muscle", "Performance / condition physique"], "id": "recomp-3j-intermediaire"},
+    {"seances": 3, "lieu": ["maison", "sans"], "objectif": ["Perte de poids / sèche", "Santé & énergie au quotidien"], "id": "perte-gras-3j-debutant-poids-corps"},
+    {"seances": 3, "lieu": ["haltère", "halteres", "haltères"], "id": "corps-entier-3j-debutant-halteres"},
+    {"seances": 3, "lieu": ["élastique", "elastique"], "id": "elastiques-3j-maison"},
+    {"seances": 3, "lieu": ["sénior", "senior", "équilibre"], "id": "seniors-3j-equilibre"},
+    {"seances": 3, "blessure": true, "id": "reprise-blessure-3j"},
+    {"seances": 4, "lieu": ["salle"], "objectif": ["Perte de poids / sèche"], "id": "perte-gras-4j-intermediaire"},
+    {"seances": 4, "lieu": ["salle"], "id": "haut-bas-4j-intermediaire"},
+    {"seances": 4, "lieu": ["haltère", "halteres", "haltères"], "id": "haut-bas-4j-halteres"},
+    {"seances": 5, "lieu": ["salle"], "id": "ppl-5j-avance"},
+    {"seances": 5, "lieu": ["maison", "sans", "poids"], "id": "poids-corps-5j-intermediaire"},
+    {"seances": 6, "id": "ppl-6j-avance"}
+  ],
+  "note": "Première règle qui matche gagne. Lieu/objectif : sous-chaîne insensible aux accents. Le coach confirme avant envoi."
+}

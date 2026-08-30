@@ -457,3 +457,101 @@ Recettes **242**. Paléo petit-déj **21** (les 11 live + 10). Réimporter.
 - Netlify : ignorer `index (*).html`, afficher un hash de version dans le pied. Avant le PWA.
 - La commerciale en 2e coach : plus simple qu’un rôle. Plus tard, un log « qui a ouvert quelle fiche ».
 - Rate-limit signup le temps de fermer.
+
+
+## 30 août — Feu vert Lucas (binôme) + MAJ 10
+
+`git pull` → `f27d8ae`. Le brief dit v16 ; **ce dépôt a encore `CONFIG.marque.version = "2026-08-30 · 15"`** (l.548), titre « Créer un accès client » (l.3922), pas de `#n-type`. Si v16 est en prod Netlify, elle n’est pas sur GitHub. Je spécifie ici ; tu codes dans `index.html`. Je ne le touche pas.
+
+### Sécu (MAJ 10 A) — jeton client réel `mhx.client.test`
+
+- `PATCH profils` `role=coach` sur soi → **400 P0001** « Seul un coach peut changer un rôle. » Trigger tient.
+- `POST upsert` merge-duplicates → **403** RLS.
+- `PATCH` le profil d’un autre (Clio) avec `return=representation` → **200 []** (0 ligne). Prénom Clio inchangé.
+- `PATCH donnees` calc d’un autre → **200 []**.
+- `PATCH` son propre `prenom` → **204** (autorisé, hors rôle).
+
+Je n’ai pas contourné. Deux coaches en base : Lucas + Ines Temmar (voulu).
+
+« Mon compte » : `outilProfil.compteHTML` retourne `""` si `Store.idConsulte` (l.2185). OK sur cette copie.
+
+Je n’ai pas rejoué le parcours client live (création d’accès masquée) faute de v16 dans le fichier GitHub. À retester dès que v16 est push.
+
+Audit cohérence + 10 paléo PD : déjà livrés (733c558). Clio a été recalé de ton côté.
+
+---
+
+### Répartition du feu vert Lucas
+
+#### 1. Alimentation — MOI données / TOI app
+
+**Shakers en collation.** Recettes `moment: collation` avec `whey` 30 g (ids `shaker-whey-*`). Le générateur doit les accepter comme collation, pas comme repas. Si le client a une collation dans `repas_horaires`, un shaker peut remplir le créneau (protéines 2,2 g/kg : le shaker compte).
+
+**Nombre de repas = `intake.repas_horaires`.** Champ texte libre aujourd’hui. Parse un entier 2–5 (regex `(\d)\s*repas` ou le premier nombre 2–5). Sinon défaut 4 (PD/déj/dîner/collation actuel).
+
+Parts actuelles (l.593) : 0.25 / 0.35 / 0.30 / 0.10.
+
+| nb | créneaux | parts |
+|---|---|---|
+| 2 | déjeuner, dîner | 0.45 / 0.55 |
+| 3 | petit-déj, déjeuner, dîner | 0.25 / 0.40 / 0.35 |
+| 4 | + 1 collation | comme aujourd’hui |
+| 5 | + 2 collations (dont 1 shaker si whey ok) | 0.20 / 0.30 / 0.30 / 0.10 / 0.10 |
+
+Ne change pas les formules kcal/macros. Tu répartis seulement les repas.
+
+**Onglet alimentaire.** Aujourd’hui Nutrition est un outil coach (`masque_client` à vérifier). Lucas veut un onglet **client** : sa diète du jour, ses créneaux (2–5), liste de courses, shaker. Le coach garde l’édition. Nom d’onglet : « Alimentation ».
+
+#### 2. Sport — MOI données / TOI app
+
+**Programmes enregistrés en base.** `bibliotheque` existe déjà (l.2422). Quand Lucas crée/modifie un programme type, `POST bibliotheque` (pas seulement `programmes_types` GitHub). Catalogue.programmes() = `programmes_types` + bibliothèque du coach.
+
+**Programme auto selon questionnaire.**
+
+```
+seances = nombre intake.seances (2–6)
+lieu    = intake.lieu (salle / maison haltères / sans matériel)
+objectif= intake.objectif (perte / prise / recomp / perf / santé)
+duree   = intake.duree (minutes, pour la note d’échauffement)
+```
+
+Table (ids déjà dans `programmes.json`) :
+
+| séances | lieu | objectif | id |
+|---|---|---|---|
+| 2 | salle | (défaut) | `corps-entier-2j-debutant` ou `corps-entier-2j-intermediaire` si niveau ≠ débutant |
+| 3 | salle | prise / perf | `recomp-3j-intermediaire` |
+| 3 | maison sans matos | sèche / santé | `perte-gras-3j-debutant-poids-corps` |
+| 3 | maison haltères | (défaut) | `corps-entier-3j-debutant-halteres` |
+| 3 | élastiques / maison | (défaut) | `elastiques-3j-maison` |
+| 4 | salle | sèche | `perte-gras-4j-intermediaire` |
+| 4 | salle | prise / force | `haut-bas-4j-intermediaire` ou `ppl-4j-intermediaire` |
+| 4 | haltères | (défaut) | `haut-bas-4j-halteres` |
+| 5 | salle | (défaut) | `ppl-5j-avance` |
+| 5 | poids du corps | (défaut) | `poids-corps-5j-intermediaire` |
+| 6 | salle | (défaut) | `ppl-6j-avance` |
+| 3 | sénior / équilibre | | `seniors-3j-equilibre` |
+| 3 | blessure | | `reprise-blessure-3j` |
+
+Si rien ne matche : `corps-entier-3j-debutant-poids-corps`. Le coach peut changer après. Ne pas envoyer sans qu’il clique.
+
+**Échauffement en tête de séance.** Fichier `donnees/echauffements.json` (ostéo-articulaire, cardio léger, activation fessiers, activation épaules, mobilité hanches). Champ optionnel `seance.echauffement_id`. Case coach : « Ajouter un échauffement » + select. Si vide, rien.
+
+**Créer ma séance.** Onglet coach « Séance » : liste d’exos, séries/reps/repos, enregistrer dans `bibliotheque` `{type:"seance", exercices:[...]}`. Réutilisable dans un programme.
+
+**Lien YouTube auto.** Join `exercices.json` : `slug(nom) == id`, copier `fiche.lien` dès que le nom matche (accents compris). Si l’exo n’existe pas : fiche minimale, `lien=""`, Lucas colle l’URL une fois.
+
+**Gainage latéral sans vidéo.** Pas de « Side Plank » simple dans la bibliothèque YouTube (1067). Seulement des variantes (Up Down, TRX, Band Pull). Je n’avais pas voulu coller une variante. Je mets **Side Plank Up Down** sur Gainage latéral (même motif, plus dur). Genou au sol : toujours vide.
+
+#### 3. Interface — TOI
+
+Bannière écran d’accueil (le manifeste v16 n’est pas dans ce GitHub). `localStorage.mhx_accueil_ok`.
+
+iOS : Partager → Sur l’écran d’accueil.
+Android Chrome : menu → Ajouter à l’écran d’accueil.
+
+Bouton « C’est fait ». Plus jamais après. Pas de service worker.
+
+---
+
+Données que je pousse dans ce lot : shakers, `echauffements.json`, lien Gainage latéral, table ci-dessus. Réimporter recettes + exercices + échauffements.
