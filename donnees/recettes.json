@@ -8431,5 +8431,351 @@
       "Fais revenir oignon, champignons, ail et thym 8 min dans l'huile.",
       "Ajoute les protéines de soja, sale, poivre, mélange 3 min et sers avec le sarrasin."
     ]
+  },
+  {
+    "id": "omelette-roquette-tomate",
+    "nom": "Omelette roquette et tomates cerises",
+    "moment": "petit_dejeuner",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "oeuf-cru",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "roquette-crue",
+        "grammes": 40
+      },
+      {
+        "aliment_id": "tomate-cerise",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+        "grammes": 1
+      },
+      {
+        "aliment_id": "poivre-noir-poudre",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Bats les œufs avec le sel et le poivre.",
+      "Fais chauffer l'huile à feu moyen.",
+      "Verse les œufs, ajoute la roquette et les tomates coupées.",
+      "Plie l'omelette dès qu'elle prend et sers."
+    ]
+  },
+  {
+    "id": "oeufs-plat-brocoli-ail",
+    "nom": "Œufs au plat, brocoli et ail",
+    "moment": "petit_dejeuner",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "oeuf-cru",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "brocoli-cru",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 4
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+        "grammes": 1
+      },
+      {
+        "aliment_id": "poivre-noir-poudre",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Coupe le brocoli en bouquets et fais-le revenir 5 min avec l'ail dans l'huile.",
+      "Cale deux œufs au plat dans la poêle.",
+      "Sale, poivre, couvre 2 min pour figer le blanc.",
+      "Sers dès que le jaune est encore coulant."
+    ]
+  },
+  {
+    "id": "oeuf-dur-fraise-amandes",
+    "nom": "Œuf dur, fraises et amandes",
+    "moment": "petit_dejeuner",
+    "temps_min": 12,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "oeuf-dur",
+        "grammes": 100
+      },
+      {
+        "aliment_id": "fraise",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "amande-avec-peau",
+        "grammes": 25
+      }
+    ],
+    "etapes": [
+      "Fais durcir l'œuf 9 min puis passe-le sous l'eau froide.",
+      "Écosse-le et coupe-le en deux.",
+      "Rince les fraises.",
+      "Sers avec les amandes entières."
+    ]
+  },
+  {
+    "id": "saumon-cru-avocat-citron",
+    "nom": "Saumon, avocat et citron",
+    "moment": "petit_dejeuner",
+    "temps_min": 10,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "saumon-elevage-cru",
+        "grammes": 100
+      },
+      {
+        "aliment_id": "avocat-cru",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "citron-cru",
+        "grammes": 20
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 5
+      },
+      {
+        "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+        "grammes": 1
+      },
+      {
+        "aliment_id": "aneth-frais",
+        "grammes": 3
+      }
+    ],
+    "etapes": [
+      "Taille le saumon en lamelles.",
+      "Écrase l'avocat à la fourchette avec le jus de citron.",
+      "Arrose d'huile, sale.",
+      "Parsème d'aneth et dresse à côté du saumon."
+    ]
+  },
+  {
+    "id": "oeufs-poivron-ciboulette",
+    "nom": "Œufs brouillés, poivron et ciboulette",
+    "moment": "petit_dejeuner",
+    "temps_min": 12,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "oeuf-cru",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "poivron-rouge-cru",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "ciboule-ou-ciboulette-fraiche",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Émince le poivron et fais-le revenir 4 min dans l'huile.",
+      "Verse les œufs battus, mélange doucement.",
+      "Hors du feu, cisele la ciboulette.",
+      "Sale et sers tout de suite."
+    ]
+  },
+  {
+    "id": "bol-kiwi-myrtille-amandes",
+    "nom": "Bol kiwi, myrtilles et amandes",
+    "moment": "petit_dejeuner",
+    "temps_min": 5,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "kiwi-cru",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "myrtille-crue",
+        "grammes": 80
+      },
+      {
+        "aliment_id": "amande-avec-peau",
+        "grammes": 30
+      },
+      {
+        "aliment_id": "chia-graine-sechee",
+        "grammes": 10
+      }
+    ],
+    "etapes": [
+      "Épluche et coupe le kiwi.",
+      "Rince les myrtilles.",
+      "Mélange fruits, amandes et graines de chia.",
+      "Sers sans attendre."
+    ]
+  },
+  {
+    "id": "oeufs-brouilles-asperges",
+    "nom": "Œufs brouillés et asperges",
+    "moment": "petit_dejeuner",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "oeuf-cru",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "asperge-blanche-ou-violette-pelee-crue",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+        "grammes": 1
+      },
+      {
+        "aliment_id": "poivre-noir-poudre",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Coupe les asperges en tronçons et fais-les sauter 5 min dans l'huile.",
+      "Ajoute les œufs battus.",
+      "Remue à feu doux jusqu'à ce qu'ils prennent.",
+      "Sale, poivre, sers."
+    ]
+  },
+  {
+    "id": "omelette-champignons-thym",
+    "nom": "Omelette champignons et thym",
+    "moment": "petit_dejeuner",
+    "temps_min": 15,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "oeuf-cru",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "champignon-de-paris-ou-champignon-de-couche-cru",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "thym-frais",
+        "grammes": 3
+      },
+      {
+        "aliment_id": "huile-olive",
+        "grammes": 8
+      },
+      {
+        "aliment_id": "ail-cru",
+        "grammes": 3
+      },
+      {
+        "aliment_id": "fleur-de-sel-non-iodee-non-fluoree",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Émince les champignons et fais-les rendre leur eau avec l'ail.",
+      "Bats les œufs, sale, ajoute le thym.",
+      "Verse dans la poêle et laisse prendre.",
+      "Plie et sers."
+    ]
+  },
+  {
+    "id": "banane-noix-cannelle",
+    "nom": "Banane, noix et cannelle",
+    "moment": "petit_dejeuner",
+    "temps_min": 5,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "banane-crue",
+        "grammes": 120
+      },
+      {
+        "aliment_id": "noix-cerneau-sechee",
+        "grammes": 25
+      },
+      {
+        "aliment_id": "cannelle-poudre",
+        "grammes": 1
+      },
+      {
+        "aliment_id": "huile-ou-graisse-de-coco-vierge",
+        "grammes": 5
+      }
+    ],
+    "etapes": [
+      "Coupe la banane en rondelles.",
+      "Fais-les dorer 1 min dans l'huile de coco.",
+      "Ajoute les noix concassées.",
+      "Saupoudre de cannelle et sers tiède."
+    ]
+  },
+  {
+    "id": "oeuf-dur-pomme-noisettes",
+    "nom": "Œuf dur, pomme et noisettes",
+    "moment": "petit_dejeuner",
+    "temps_min": 12,
+    "portions": 1,
+    "ingredients": [
+      {
+        "aliment_id": "oeuf-dur",
+        "grammes": 100
+      },
+      {
+        "aliment_id": "pomme-crue",
+        "grammes": 150
+      },
+      {
+        "aliment_id": "noisette",
+        "grammes": 25
+      },
+      {
+        "aliment_id": "cannelle-poudre",
+        "grammes": 1
+      }
+    ],
+    "etapes": [
+      "Fais durcir l'œuf 9 min, écosse-le.",
+      "Coupe la pomme en quartiers.",
+      "Casse les noisettes.",
+      "Saupoudre d'un peu de cannelle et dresse."
+    ]
   }
 ]

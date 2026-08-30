@@ -31,7 +31,7 @@ def slug(nom: str) -> str:
 Exemple : `"Développé couché"` → `"developpe-couche"`. Aucune collision de slug sur les 172 noms. Schéma : `id`, `nom`, `groupe`, `muscles`, `materiel`, `niveau`, `type`, `execution`, `erreurs`, `respiration`, `alternatives`, `lien`. Enums `groupe` / `materiel` / `niveau` / `type` documentés dans le fichier (valeurs FR). `alternatives` = 1–3 ids qui existent dans ce même fichier.
 
 ## recettes.json
-**232** recettes du quotidien (petit-déj / déjeuner / dîner / collation). Paléo déjeuner : 18. Vegan petit-déj : 20. Schéma : `id`, `nom`, `moment`, `temps_min`, `portions`, `ingredients`, `etapes` — **pas** de champs `allergenes` / `regimes` (Claude calcule l’intersection des ingrédients). `aliment_id` pointe vers aliments.json. Macros recalculées par l’app. 0 id manquant.
+**242** recettes du quotidien (petit-déj / déjeuner / dîner / collation). Paléo petit-déj : 21 (filtre positif). Paléo déjeuner : 18. Vegan petit-déj : 20. Vegan déjeuner : 24. Schéma : `id`, `nom`, `moment`, `temps_min`, `portions`, `ingredients`, `etapes` — **pas** de champs `allergenes` / `regimes` (Claude calcule l’intersection des ingrédients). `aliment_id` pointe vers aliments.json. Macros recalculées par l’app. 0 id manquant.
 
 ## correspondances-ids.json
 Liste `{ancien, nouveau, note}` pour remplacer les ids courts du tableau Claude par les ids CIQUAL de `aliments.json`. Trois corrections Grok :

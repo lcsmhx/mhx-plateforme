@@ -396,3 +396,64 @@ JSON (intersection des `regimes` ingrédients) : **24** / 232 recettes. Live Nor
 `seitan-poivrons-riz`, `tofu-kale-quinoa`, `pois-casses-carottes-cumin`, `haricots-blancs-courgette-tomate`, `pave-soja-patate-brocoli`, `lentilles-corail-coco-epinards`, `mungo-riz-poivron`, `pois-chiches-chou-fleur-curcuma`, `pst-champignons-sarrasin`.
 
 Réimporter `recettes.json`. Index.html non touché.
+
+
+## 30 août — MAJ 8 (brief Supabase)
+
+Lu `briefs` id 1 après `git pull` (`6558aff`). `index.html` non touché.
+
+### A. Ordre
+
+Le tien : 1) cohérence 2) mdp+email 3) version+cache 4) PWA 5) légal.
+
+Ce que je changerais :
+
+1. **Fermer l’inscription publique.** Avant tout le reste, y compris la cohérence. Voir B1 : n’importe qui crée un compte, est confirmé tout de suite, et a la formation (elle est dans `index.html`). PWA et version n’ont aucun sens tant que la porte est ouverte.
+2. **Cohérence calc/intake** — d’accord, c’est ta n°1 actuelle, et Clio le justifie. Alerte coach, ne pas écraser.
+3. **Email vérifié à la création + changement de mot de passe dans l’app.** La copie coach (l.3750) dit déjà que le client peut changer son mot de passe « depuis l’écran de connexion ». La récupération par lien existe ; le changement *connecté* manque. La faute de frappe sur l’email est plus grave que le PWA : compte perdu, formation injoignable.
+4. **Version affichée + cache** (1 h) — oui, après la porte fermée. `index (1).html` est un problème de dépôt Netlify, pas d’app.
+5. **Mentions + suppression de compte.** Clients en France : export à moitié et suppression absente, c’est du RGPD, pas du cosmétique. La case contre-indication existe déjà dans `intake` (`contre_ind`, `contre_ind_detail`) — ce qui manque, c’est la **date** et le **blocage** avant d’envoyer un programme.
+6. **PWA : sors-le de cette liste.** 3 h pour 6 clients, zéro urgence. Ça empile un second cache par-dessus celui qui vous a déjà coûté 2 h.
+
+À garder mais pas dans le top : journal d’entraînement vs module 3 (clients actuels, plus urgent que PWA), 2e compte coach pour la commerciale (décision déjà prise, 1 h), historique des programmes, photos.
+
+### B. Sécurité (jeton réel, pas le code)
+
+**B1. Inscription ouverte : vrai.** `portail("inscription")` si le hash contient `inscription` (l.4936). L’écran de login n’affiche pas le lien, l’URL `#/inscription` suffit. `POST /auth/v1/signup` avec la clé publique → **200, `access_token`, email confirmé à la seconde.** Un profil `role=client` est créé. J’ai laissé un compte sonde : `grok.inscription.probe.20260830@gmail.com` (id `3ef9207d-…`). **Supprime-le.** Tant que Supabase accepte les signups, cacher le hash ne suffit pas.
+
+**B2. Isolation `donnees` / `profils` : tient.** Jeton client `mhx.client.test` :
+- `GET /donnees` (sans filtre) → 7 lignes, toutes `user_id` = lui
+- `GET /donnees?user_id=neq.<lui>` → 0
+- `POST /donnees` vers l’uid coach → **403** RLS
+- `GET /profils` → 1 ligne, la sienne
+Catalogue `aliments` / `recettes` lisible en client : voulu (catalogue partagé). Je n’ai pas cassé l’isolation des fiches. Pas la priorité absolue.
+
+### C. Audit cohérence
+
+Fichier : `donnees/audit-coherence.md`. Rien corrigé.
+
+- **clio clio** : calc 80/178/25 vs intake 62/158/37 → **+602 kcal/j** (même activité que le calc). C’est le cas ~950 selon l’activité qu’on colle ; avec 10 h d’entraînement restées en défaut vs 3 séances, l’écart gonfle encore.
+- **test grok** : 72 kg ok, taille 178 vs 175, âge 25 vs 28 → **+56 kcal/j**. Reliquat du seed âge/taille.
+- paul verzele, aissa lelover : alignés.
+- Lucas (coach) : calc encore à 80/178/25, pas d’intake.
+
+Lucas tranche. Je ne touche pas aux fiches.
+
+### D. Dix petit-déj paléo
+
+Ajoutés, validés contre le filtre **positif** live (`catPaleo || tubercule || aromate`, moins `transforme`, moins alcool, moins céréale/lait/légumineuse/sucre). Aucun préemballé.
+
+`omelette-roquette-tomate`, `oeufs-plat-brocoli-ail`, `oeuf-dur-fraise-amandes`, `saumon-cru-avocat-citron`, `oeufs-poivron-ciboulette`, `bol-kiwi-myrtille-amandes`, `oeufs-brouilles-asperges`, `omelette-champignons-thym`, `banane-noix-cannelle`, `oeuf-dur-pomme-noisettes`.
+
+Recettes **242**. Paléo petit-déj **21** (les 11 live + 10). Réimporter.
+
+### E. Ce que tu n’as pas listé
+
+- **Couper les signups côté Supabase**, pas seulement l’UI. Sinon un `curl` suffit.
+- **Confirmer l’email du client à la création** (lien magique). Ça tue la faute de frappe et ça ferme l’inscription fantôme.
+- **`intake.sexe` est vide** sur toutes les fiches lues. Le calculateur a un sexe ; le questionnaire ne le recopie pas sous `sexe`. À vérifier dans `QUESTIONS`.
+- Formation dans `index.html` = tout compte = tout le cours. Fermer l’inscription, c’est aussi protéger le contenu.
+- Module 0/2 demandent des photos : pas de stockage. Enlève la tâche ou ajoute un bucket, pas les deux.
+- Netlify : ignorer `index (*).html`, afficher un hash de version dans le pied. Avant le PWA.
+- La commerciale en 2e coach : plus simple qu’un rôle. Plus tard, un log « qui a ouvert quelle fiche ».
+- Rate-limit signup le temps de fermer.
