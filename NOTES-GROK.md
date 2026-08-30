@@ -332,3 +332,30 @@ Autre vu en live :
 
 Référence live 30 août : 2 points 72 → 71,5, un seul disque, départ absent, copie « deux semaines » alors que ça dessinait déjà.
 
+
+## Recontrôle live 30 août (après normalisation + pagination)
+
+Site `lcsmhxcoaching.netlify.app`, session coach. **Ne plus scanner `aliments.json` pour les régimes** : les tags viennent de `Normaliser` à l’import.
+
+- Catalogue : **3111** aliments, 217 recettes, 18 programmes, 172 exercices. Cap 1000 **levé**.
+- Cassoulet, hot-dog, pot-au-feu, coq au vin, lard gras, graisse d’oie, nuoc-mâm : **plus vegan/végétarien**. Tartiflette / aligot / chocolat blanc : allergène **lait**. Kiwi, faisselle, miel, skyr, whey : **trouvés**. Pain hot-dog : **reste vegan**. Beurre de cacahuète : **pas** d’allergène lait (OK). Boisson soja : vegan, allergène soja seulement.
+- Calculateur test grok : **72 kg**. Petit-déj lundi : **440 kcal** (plus 0). Drapeau diète : **envoyée**.
+
+Couverture recettes **après** normalisation (table Catalogue) :
+
+| Régime | PD | Déj | Dîner | Collation |
+|---|---|---|---|---|
+| Végétalien | 14 | **9** | 19 | 14 |
+| Paléo | 12 | 19 | 14 | 15 |
+
+Le trou le plus maigre n’est plus paléo déjeuner (19) : c’est **végétalien déjeuner (9)**. Vegan petit-déj 14 (cible ~15).
+
+### Restes pour le normaliseur (pas le JSON)
+
+1. **`beurre-de-cacahuete`** : planté, donc vegan/végétarien. Le motif `beurre` le sort encore. Exclure `beurre de cacahuète` / `beurre de…` végétal comme `ex_lait` le fait pour lait de soja.
+2. **`hot-dog-preemballe`** porte encore `sans_porc` (un hot-dog FR est en général du porc). Question : retirer `sans_porc` ?
+3. Calculateur : poids 72 OK, mais **âge 25 / taille 178** encore les défauts (le profil test est 28 ans / 175 cm). Seed incomplet ?
+4. Recherche « lait de soja » : 0 hit ; le nom CIQUAL est **Boisson au soja**. Rien à faire côté données, éventuellement un alias plus tard.
+
+G3 graphique : spec déjà dans ce fichier. C9 questionnaire bloquant : **écarté**, compris.
+
