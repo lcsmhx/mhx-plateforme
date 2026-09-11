@@ -599,7 +599,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-09-11 · 19",
+    version: "2026-09-11 · 20",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -886,14 +886,27 @@ const Auth = {
     return true;
   },
 
-  async inscrire(email, motdepasse, prenom, nom){
-    const s = await this.appel("/auth/v1/signup?redirect_to=" + encodeURIComponent(this.retour()), {
-      method: "POST", avecJeton: false,
-      body: { email, password: motdepasse, data: { prenom, nom } }
+  /* La creation de comptes ne passe plus par /auth/v1/signup : cette route
+     accepte la cle publique, qui est dans le fichier que tout le monde
+     telecharge. N'importe qui pouvait donc se creer un compte et entrer dans
+     l'espace, formation comprise. Elle passe par une fonction serveur qui
+     verifie d'abord que l'appelant est bien un coach. */
+  async creerAcces(email, motdepasse, prenom, nom, role){
+    const r = await fetch(CONFIG.supabase.url + "/functions/v1/creer-acces", {
+      method: "POST",
+      headers: {
+        "apikey": CONFIG.supabase.cle,
+        "Authorization": "Bearer " + ((this.session && this.session.access_token) || ""),
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email, motdepasse, prenom, nom, role: role || "client" })
     });
-    if (s && s.access_token) this.memoriser(s);
-    return s;
+    let d = null;
+    try { d = await r.json(); } catch(e){}
+    if (!r.ok) throw new Error((d && d.erreur) || "Création impossible.");
+    return d;
   },
+
   async connecter(email, motdepasse){
     const s = await this.appel("/auth/v1/token?grant_type=password", {
       method: "POST", avecJeton: false, body: { email, password: motdepasse }
@@ -4477,7 +4490,7 @@ const outilClients = {
 
     <section class="panel">
       <h2>Créer un accès</h2>
-      <p class="note" style="margin-bottom:16px">La personne recevra ces identifiants. Elle pourra changer son mot de passe et son adresse elle-même, depuis son profil.</p>
+      <p class="note" style="margin-bottom:16px">La personne recevra ces identifiants. Elle pourra changer son mot de passe et son adresse elle-même, depuis son profil. Personne ne peut créer de compte sans passer par toi.</p>
       <div class="grid g2">
         <div><label for="n-prenom">Prénom</label><input id="n-prenom" type="text"></div>
         <div><label for="n-nom">Nom</label><input id="n-nom" type="text"></div>
@@ -4580,35 +4593,26 @@ const outilClients = {
       const type = $("n-type") ? $("n-type").value : "client";
       if (!email || !mdp){ flash("n-msg","Il faut au moins un email et un mot de passe."); return; }
       if (type === "coach" && !confirm("Donner l'accès complet à " + (email) + " ?\n\nCette personne verra exactement ce que tu vois : toutes les fiches, les questionnaires de santé, les programmes et les diètes de tous tes clients.")) return;
-      if (mdp.length < 6){ flash("n-msg","Le mot de passe doit faire au moins 6 caractères."); return; }
-      const sessionCoach = Auth.session;          // on met la session du coach de côté
+      if (mdp.length < 8){ flash("n-msg","Le mot de passe doit faire au moins 8 caractères."); return; }
+      const b = $("n-creer"); b.disabled = true;
+      flash("n-msg", "Création…");
       try {
-        const cree = await Auth.inscrire(email, mdp, prenom, nom);
-        Auth.session = sessionCoach;              // on la restaure : on reste connecté en coach
-        try { Auth.magasin().setItem(Auth.cleSession, JSON.stringify(sessionCoach)); } catch(e){}
-        /* Le compte est cree en client ; on le passe en equipe juste apres,
-           avec la session du coach — un client ne peut pas se promouvoir. */
-        let mot = "Compte créé. Transmets-lui ses identifiants.";
-        if (type === "coach"){
-          /* signup renvoie soit la session (user.id), soit l'utilisateur seul */
-          const cible = (cree && ((cree.user && cree.user.id) || cree.id)) || null;
-          if (cible){
-            await Auth.appel("/rest/v1/profils?id=eq." + cible, {
-              method: "PATCH", headers: { "Prefer": "return=minimal" }, body: { role: "coach" }
-            });
-            mot = "Compte d'équipe créé, avec l'accès complet. Transmets-lui ses identifiants.";
-          } else {
-            mot = "Compte créé, mais l'accès complet n'a pas pu être donné. Fais-le depuis la liste « Comptes » juste au-dessus.";
-          }
-        }
+        /* Le serveur cree le compte, verifie que c'est bien un coach qui le
+           demande, et pose le role. Ta session n'est plus touchee : avant,
+           la creation te reconnectait sous le nouveau compte et il fallait
+           remettre la tienne en place a la main. */
+        await Auth.creerAcces(email, mdp, prenom, nom, type);
         $("n-prenom").value = $("n-nom").value = $("n-email").value = $("n-mdp").value = "";
-        $("n-type").value = "client"; $("n-avert").hidden = true;
-        flash("n-msg", mot);
+        if ($("n-type")) $("n-type").value = "client";
+        if ($("n-avert")) $("n-avert").hidden = true;
+        flash("n-msg", type === "coach"
+          ? "Compte d'équipe créé, avec l'accès complet. Transmets-lui ses identifiants."
+          : "Compte créé. Transmets-lui ses identifiants.");
         charger();
       } catch(e){
-        Auth.session = sessionCoach;
         flash("n-msg", e.message || "Création impossible.");
       }
+      b.disabled = false;
     });
 
     charger();
@@ -6002,23 +6006,19 @@ function routeDepuisAdresse(){
 
 /* ---------------------- ÉCRAN DE CONNEXION ---------------------- */
 function portail(mode){
-  mode = mode || "connexion";
+  mode = (mode === "oubli") ? "oubli" : "connexion";
   document.body.innerHTML = `
   <div class="portail">
     <div class="carte-co">
       ${CONFIG.marque.logo ? `<img class="logo-img" src="${esc(CONFIG.marque.logo)}" alt="${esc(CONFIG.marque.nom)}">` : ""}
       <div class="logo">${esc(CONFIG.marque.nom)}</div>
       ${CONFIG.marque.programme ? `<div class="sous">${esc(CONFIG.marque.programme)}</div>` : ""}
-      <h2>${mode === "connexion" ? "Connexion à ton espace" : mode === "oubli" ? "Mot de passe oublié" : "Créer mon accès"}</h2>
+      <h2>${mode === "oubli" ? "Mot de passe oublié" : "Connexion à ton espace"}</h2>
       <div id="co-err"></div>
-      ${mode === "inscription" ? `
-        <div class="champ"><label for="c-prenom">Prénom</label><input id="c-prenom" type="text" autocomplete="given-name"></div>
-        <div class="champ"><label for="c-nom">Nom</label><input id="c-nom" type="text" autocomplete="family-name"></div>` : ""}
       <div class="champ"><label for="c-email">Email</label><input id="c-email" type="email" autocomplete="email"></div>
-      ${mode !== "oubli" ? `<div class="champ"><label for="c-mdp">Mot de passe</label><input id="c-mdp" type="password" autocomplete="${mode === "inscription" ? "new-password" : "current-password"}"></div>` : ""}
-      ${mode === "inscription" ? `<div class="champ"><label for="c-mdp2">Confirme ton mot de passe</label><input id="c-mdp2" type="password" autocomplete="new-password"></div>` : ""}
+      ${mode !== "oubli" ? `<div class="champ"><label for="c-mdp">Mot de passe</label><input id="c-mdp" type="password" autocomplete="current-password"></div>` : ""}
       ${mode !== "oubli" ? `<label class="co-rester"><input type="checkbox" id="c-rester" checked><span>Rester connecté</span></label>` : ""}
-      <button class="btn" id="c-go">${mode === "connexion" ? "Se connecter" : mode === "oubli" ? "Recevoir le lien" : "Créer mon accès"}</button>
+      <button class="btn" id="c-go">${mode === "oubli" ? "Recevoir le lien" : "Se connecter"}</button>
       ${CONFIG.marque.version ? `<p class="co-aide">v${esc(CONFIG.marque.version)}</p>` : ""}
       <div class="bascule">
         ${mode === "connexion"
@@ -6045,11 +6045,6 @@ function portail(mode){
       if (mode === "oubli"){
         await Auth.motDePasseOublie(email);
         err("Si un compte existe pour cet email, tu vas recevoir un lien.", true);
-      } else if (mode === "inscription"){
-        if (mdp.length < 6) throw new Error("Le mot de passe doit faire au moins 6 caractères.");
-        if (mdp !== $("c-mdp2").value) throw new Error("Les deux mots de passe ne sont pas identiques.");
-        await Auth.inscrire(email, mdp, ($("c-prenom").value||"").trim(), ($("c-nom").value||"").trim());
-        location.reload();
       } else {
         await Auth.connecter(email, mdp);
         location.reload();
@@ -6061,7 +6056,7 @@ function portail(mode){
         : e.message || "Une erreur est survenue.");
     }
     bouton.disabled = false;
-    bouton.textContent = mode === "connexion" ? "Se connecter" : mode === "oubli" ? "Recevoir le lien" : "Créer mon accès";
+    bouton.textContent = mode === "oubli" ? "Recevoir le lien" : "Se connecter";
   };
 
   $("c-go").addEventListener("click", valider);
@@ -6133,8 +6128,10 @@ let premiereFois = false;
   }
 
   Auth.charger();
-  const veutSinscrire = (location.hash || "").indexOf("inscription") > -1;
-  if (!Auth.connecte()){ portail(veutSinscrire ? "inscription" : "connexion"); return; }
+  /* Il n'y a plus d'inscription libre : les comptes sont crees par le coach.
+     L'adresse #/inscription ne mene donc plus nulle part — elle ouvre l'ecran
+     de connexion comme n'importe quelle autre. */
+  if (!Auth.connecte()){ portail("connexion"); return; }
   const ok = await Auth.assurer();
   if (!ok){ portail("connexion"); return; }
   try { await Auth.chargerProfil(); } catch(e){}
