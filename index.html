@@ -599,7 +599,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-09-11 · 18",
+    version: "2026-09-11 · 19",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -887,7 +887,7 @@ const Auth = {
   },
 
   async inscrire(email, motdepasse, prenom, nom){
-    const s = await this.appel("/auth/v1/signup", {
+    const s = await this.appel("/auth/v1/signup?redirect_to=" + encodeURIComponent(this.retour()), {
       method: "POST", avecJeton: false,
       body: { email, password: motdepasse, data: { prenom, nom } }
     });
@@ -916,12 +916,22 @@ const Auth = {
   /* Le changement d'email n'est effectif qu'apres confirmation sur la nouvelle
      adresse : c'est ce qui empeche d'enfermer quelqu'un hors de son compte. */
   async changerEmail(nouveau){
-    const r = await this.appel("/auth/v1/user", { method: "PUT", body: { email: nouveau } });
-    return r;
+    return this.appel("/auth/v1/user?redirect_to=" + encodeURIComponent(this.retour()),
+                      { method: "PUT", body: { email: nouveau } });
+  },
+
+  /* L'adresse ou revenir apres un lien recu par email. Supabase ne retient
+     que le DOMAINE du « Site URL » de son tableau de bord et jette le chemin :
+     un hebergement en sous-dossier renvoyait donc le client sur une page 404.
+     On impose l'adresse exacte de l'application a chaque envoi — ce qui la
+     rend aussi indifferente a l'hebergeur. */
+  retour(){
+    return location.origin + location.pathname;
   },
 
   async motDePasseOublie(email){
-    return this.appel("/auth/v1/recover", { method: "POST", avecJeton: false, body: { email } });
+    return this.appel("/auth/v1/recover?redirect_to=" + encodeURIComponent(this.retour()),
+                      { method: "POST", avecJeton: false, body: { email } });
   },
   async deconnecter(){
     try { await this.appel("/auth/v1/logout", { method: "POST" }); } catch(e){}
