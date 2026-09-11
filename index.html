@@ -551,6 +551,17 @@ label.fo-case{display:flex;align-items:flex-start;gap:10px;cursor:pointer;flex:1
 .ech-ligne{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .ech-ligne select{flex:1;min-width:220px}
 .ech-ligne button{flex:0 0 auto}
+
+/* --- zone de suppression : on la distingue nettement du reste --- */
+.zone-danger{margin-top:26px;padding-top:20px;border-top:1px solid var(--line)}
+.zone-danger h3{font-family:"Oswald",Impact,sans-serif;text-transform:uppercase;letter-spacing:.05em;
+  font-size:14px;font-weight:500;color:var(--bad);margin:0 0 8px}
+.zone-danger p{font-size:14px;color:var(--ink-2);line-height:1.6;margin:0}
+button.btn.danger{background:transparent;color:var(--bad);border-color:var(--bad)}
+button.btn.danger:hover{background:var(--bad);color:#fff}
+
+.client-l .voir.suppr{color:var(--bad);border-color:var(--bad)}
+.client-l .voir.suppr:hover{background:var(--bad);color:#fff}
 </style>
 
 <div class="topbar">
@@ -599,7 +610,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-09-11 · 20",
+    version: "2026-09-11 · 21",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -942,6 +953,26 @@ const Auth = {
     return location.origin + location.pathname;
   },
 
+  /* Suppression definitive. Sans identifiant, on supprime SON propre compte —
+     c'est le droit a l'effacement. Avec un identifiant, il faut etre coach.
+     Le serveur reverifie tout, y compris le mot « SUPPRIMER » : l'ecran ne
+     protege que ceux qui passent par l'ecran. */
+  async supprimerCompte(id, confirmation){
+    const r = await fetch(CONFIG.supabase.url + "/functions/v1/supprimer-acces", {
+      method: "POST",
+      headers: {
+        "apikey": CONFIG.supabase.cle,
+        "Authorization": "Bearer " + ((this.session && this.session.access_token) || ""),
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ id: id || undefined, confirmation: confirmation })
+    });
+    let d = null;
+    try { d = await r.json(); } catch(e){}
+    if (!r.ok) throw new Error((d && d.erreur) || "Suppression impossible.");
+    return d;
+  },
+
   async motDePasseOublie(email){
     return this.appel("/auth/v1/recover?redirect_to=" + encodeURIComponent(this.retour()),
                       { method: "POST", avecJeton: false, body: { email } });
@@ -1044,6 +1075,30 @@ const Store = {
     const out = {};
     OUTILS.forEach(o => { if (o.cle && this.cache[o.cle]) out[o.cle] = this.cache[o.cle]; });
     return JSON.stringify({ plateforme:"mhx", version:2, donnees: out });
+  },
+
+  /* L'export ci-dessus ne contient que ce que la personne a ouvert pendant sa
+     visite. Pour le droit d'acces (RGPD art. 15), il faut TOUT : on relit la
+     base, pas le cache. */
+  async exportComplet(){
+    const u = Auth.utilisateur();
+    const uid = this.cible();
+    const lignes = await Auth.appel("/rest/v1/donnees?user_id=eq." + uid + "&select=outil,contenu,maj_le");
+    const profil = await Auth.appel("/rest/v1/profils?id=eq." + uid + "&select=*");
+    const donnees = {};
+    (lignes || []).forEach(l => { donnees[l.outil] = { contenu: l.contenu, modifie_le: l.maj_le }; });
+    return {
+      plateforme: "MHX Coaching",
+      export_du: new Date().toISOString(),
+      compte: {
+        identifiant: uid,
+        email: (u && u.email) || null,
+        prenom: (profil && profil[0] && profil[0].prenom) || null,
+        nom: (profil && profil[0] && profil[0].nom) || null,
+        cree_le: (profil && profil[0] && profil[0].cree_le) || null
+      },
+      donnees: donnees
+    };
   },
   async importer(texte){
     const p = JSON.parse(texte);
@@ -1396,17 +1451,77 @@ function majEtat(etat){
 function blocSauvegarde(){
   return `
   <section class="panel">
-    <h2>Sauvegarde</h2>
-    <p class="note">Tout est enregistré automatiquement dans ton compte : tu retrouves tes données sur n'importe quel appareil en te connectant. Ce bouton sert si tu veux garder une copie de ton côté, ou reprendre des données venues de l'ancienne version.</p>
+    <h2>Mes données</h2>
+    <p class="note">Tout est enregistré dans ton compte : tu retrouves tes données sur n'importe quel appareil en te connectant. Tu peux en récupérer une copie complète quand tu veux, et demander leur effacement.</p>
     <div class="actions">
+      <button class="btn ghost" id="sv-export">Télécharger toutes mes données</button>
       <button class="btn ghost" id="sv-copy">Copier ma sauvegarde</button>
       <button class="btn ghost" id="sv-paste">Restaurer une sauvegarde</button>
       <span class="msg" id="sv-msg"></span>
     </div>
+
+    <div class="zone-danger">
+      <h3>Supprimer mon compte</h3>
+      <p>Ton profil, tes mensurations, ton programme, tes repas et ta progression de formation seront effacés. Ton coach n'y aura plus accès non plus. <b>C'est définitif : il n'y a pas de corbeille.</b></p>
+      <p class="note" style="margin:8px 0 0">Pense à télécharger tes données avant, si tu veux les garder.</p>
+      <div class="actions">
+        <button class="btn danger" id="sv-suppr">Supprimer mon compte</button>
+        <span class="msg" id="sv-suppr-msg"></span>
+      </div>
+    </div>
   </section>`;
 }
+/* Propose un fichier au telechargement. L'application est un site normal :
+   le navigateur sait faire, il suffit de lui donner un lien et de le cliquer. */
+function telecharger(nomFichier, texte){
+  const blob = new Blob([texte], { type: "application/json;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = nomFichier;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
 function initSauvegarde(){
   if (!$("sv-copy")) return;
+
+  const ex = $("sv-export");
+  if (ex) ex.addEventListener("click", async () => {
+    ex.disabled = true; flash("sv-msg", "Préparation…");
+    try {
+      const tout = await Store.exportComplet();
+      const qui = (tout.compte.prenom || "mes") + "-" + (tout.compte.nom || "donnees");
+      telecharger("mhx-" + Normaliser.aplatir(qui).replace(/[^a-z0-9]+/g, "-") + "-" + aujourdhui() + ".json",
+                  JSON.stringify(tout, null, 2));
+      flash("sv-msg", "Fichier téléchargé.");
+    } catch(e){ flash("sv-msg", "Export impossible pour le moment."); }
+    ex.disabled = false;
+  });
+
+  const sup = $("sv-suppr");
+  if (sup) sup.addEventListener("click", async () => {
+    if (!confirm("Supprimer définitivement ton compte et toutes tes données ?\n\nCette action ne peut pas être annulée.")) return;
+    const mot = prompt("Pour confirmer, écris SUPPRIMER en majuscules :");
+    if (mot === null) return;
+    if (String(mot).trim().toUpperCase() !== "SUPPRIMER"){
+      flash("sv-suppr-msg", "Ce n'est pas le mot attendu : rien n'a été supprimé.");
+      return;
+    }
+    sup.disabled = true; flash("sv-suppr-msg", "Suppression…");
+    try {
+      await Auth.supprimerCompte(null, "SUPPRIMER");
+      Auth.oublier();
+      [localStorage, sessionStorage].forEach(m => {
+        try { Object.keys(m).forEach(k => { if (k.indexOf("mhx_") === 0) m.removeItem(k); }); } catch(e){}
+      });
+      alert("Ton compte est supprimé. Merci d'avoir utilisé l'application.");
+      location.hash = ""; location.reload();
+    } catch(e){
+      sup.disabled = false;
+      flash("sv-suppr-msg", e.message || "Suppression impossible.");
+    }
+  });
+
   $("sv-copy").addEventListener("click", () => {
     const t = Store.exporter();
     if (navigator.clipboard && navigator.clipboard.writeText){
@@ -4484,7 +4599,7 @@ const outilClients = {
 
     <section class="panel">
       <h2>Comptes</h2>
-      <p class="note" style="margin:0 0 16px">« Accès complet » donne à une personne de ton équipe exactement ta vue : toutes les fiches, tous les questionnaires de santé, tous les programmes. Donne-le à un compte créé pour elle, jamais en partageant ton mot de passe — sinon tu ne sauras plus qui a modifié quoi, et tu ne pourras pas le lui retirer.</p>
+      <p class="note" style="margin:0 0 16px">« Supprimer » efface définitivement un compte et toutes ses données — c'est ce qu'il faut faire quand un client le demande. « Accès complet » donne à une personne de ton équipe exactement ta vue : toutes les fiches, tous les questionnaires de santé, tous les programmes. Donne-le à un compte créé pour elle, jamais en partageant ton mot de passe — sinon tu ne sauras plus qui a modifié quoi, et tu ne pourras pas le lui retirer.</p>
       <div id="liste-clients"><div class="empty">Chargement…</div></div>
     </section>
 
@@ -4542,7 +4657,8 @@ const outilClients = {
                           ${estCoach ? `<span class="pastille role-coach">accès complet</span>` : `<span class="pastille">${d ? "actif" : "pas encore utilisé"}</span>`}
                           <span class="meta">${estCoach ? (cestMoi ? "c'est toi" : "voit tout, comme toi") : "dernière saisie : " + quand}</span>
                           ${estCoach ? "" : `<button class="voir" type="button">Ouvrir sa fiche</button>`}
-                          ${cestMoi ? "" : `<button class="voir role" type="button" data-role="${estCoach ? "client" : "coach"}">${estCoach ? "Retirer l'accès complet" : "Donner l'accès complet"}</button>`}`;
+                          ${cestMoi ? "" : `<button class="voir role" type="button" data-role="${estCoach ? "client" : "coach"}">${estCoach ? "Retirer l'accès complet" : "Donner l'accès complet"}</button>`}
+                          ${cestMoi ? "" : `<button class="voir suppr" type="button">Supprimer</button>`}`;
           const bv = el.querySelector(".voir:not(.role)");
           if (bv) bv.addEventListener("click", () => {
             Store.oublier(Store.idConsulte);
@@ -4550,6 +4666,29 @@ const outilClients = {
             Store.nomConsulte = ((p.prenom||"") + " " + (p.nom||"")).trim() || "ce client";
             location.hash = "#/profil";
           });
+          const bsup = el.querySelector(".suppr");
+          if (bsup) bsup.addEventListener("click", async () => {
+            const nom = ((p.prenom||"") + " " + (p.nom||"")).trim() || "ce compte";
+            if (!confirm("Supprimer définitivement le compte de " + nom + " ?\n\n" +
+                         "Son profil, ses mensurations, son programme, ses repas et sa progression seront effacés. " +
+                         "Tu n'y auras plus accès non plus.\n\nC'est définitif : il n'y a pas de corbeille.")) return;
+            const mot = prompt("Pour confirmer la suppression de " + nom + ", écris SUPPRIMER en majuscules :");
+            if (mot === null) return;
+            if (String(mot).trim().toUpperCase() !== "SUPPRIMER"){
+              alert("Ce n'est pas le mot attendu : rien n'a été supprimé.");
+              return;
+            }
+            bsup.disabled = true; bsup.textContent = "…";
+            try {
+              await Auth.supprimerCompte(p.id, "SUPPRIMER");
+              if (Store.idConsulte === p.id){ Store.oublier(p.id); Store.idConsulte = null; Store.nomConsulte = null; }
+              await charger();
+            } catch(e){
+              bsup.disabled = false; bsup.textContent = "Supprimer";
+              alert("Suppression impossible : " + (e.message || "erreur inconnue"));
+            }
+          });
+
           const br = el.querySelector(".role");
           if (br) br.addEventListener("click", async () => {
             const vers = br.dataset.role;
