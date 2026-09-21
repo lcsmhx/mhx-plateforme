@@ -610,7 +610,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-09-22 · 22",
+    version: "2026-09-22 · 23",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -1057,7 +1057,11 @@ const Store = {
     const uid = this.cible(); if (!uid) return;
     this.boite(uid)[cle] = valeur;
     /* seule exception a la lecture seule : le coach ecrit le programme et les repas */
-    if (this.lectureSeule() && !(Auth.estCoach() && (cle === "programme" || cle === "repas" || cle === "calc"))) return;
+    /* Ce que le coach a le droit d'ecrire dans la fiche d'un client. Doit
+       rester aligne sur MODIFIABLES (plus bas) ET sur les regles de la base :
+       les complements y manquaient, donc ce que le coach saisissait pour un
+       client disparaissait a la fermeture, sans aucun message. */
+    if (this.lectureSeule() && !(Auth.estCoach() && ["programme", "repas", "calc", "complements"].indexOf(cle) > -1)) return;
     const k = uid + "|" + cle;
     if (this.charge[k] === false) return;              // on n'a pas pu lire : on n'ecrit pas
     clearTimeout(this.attente[k]);
