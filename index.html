@@ -610,7 +610,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-09-22 · 23",
+    version: "2026-09-22 · 24",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -1347,7 +1347,10 @@ const Normaliser = {
   },
 
   allergenesMots: {
-    gluten:        /(\bble\b|\bpain\b|\bpates\b|semoule|couscous|boulgour|\borge\b|seigle|epeautre|avoine|farine|biscuit|brioche|croissant|gateau|chapelure|panure|panne|pizza|\btarte\b|crepe|gaufre|biscotte|\bbiere\b|\bmalt\b|viennoiserie|sandwich|burger|nouille|raviol|lasagne|tortilla|pita\b)/,
+    /* Liste elargie le 22/09 : beignets, croutons, cookies, feuilletes,
+       panes, nuggets, cereales du petit-dejeuner et vermicelles passaient
+       pour « sans gluten » (82 aliments). « panne » etait une coquille. */
+    gluten:        /(\bble\b|\bpain\b|\bpates\b|semoule|couscous|boulgour|\borge\b|seigle|epeautre|avoine|farine|biscuit|brioche|croissant|gateau|chapelure|panure|\bpanee?s?\b|pizza|\btarte\b|crepe|gaufre|biscotte|\bbiere\b|\bmalt\b|viennoiserie|sandwich|burger|nouille|raviol|lasagne|tortilla|pita\b|beignet|donut|crouton|cookie|madeleine|feuillete|friand|nugget|croquette|cordon.?bleu|hot.?dog|vermicelle|cereales|\bfrik\b|bouchee a la (reine|vapeur)|a la romaine|galette des rois|muesli|seitan|cracker|\bwrap\b)/,
     crustaces:     /(crevette|crabe|homard|langoustine|ecrevisse|langouste|tourteau)/,
     mollusques:    /(moule|huitre|coquille|calamar|calmar|poulpe|seiche|bulot|palourde|saint.?jacques|escargot|bigorneau|\bcoque\b)/,
     soja:          /(\bsoja\b|\btofu\b|tempeh|edamame|\bmiso\b|tamari)/,
