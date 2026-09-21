@@ -610,7 +610,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-09-11 · 21",
+    version: "2026-09-22 · 22",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -794,9 +794,26 @@ const $  = (id) => document.getElementById(id);
 const $$ = (sel, racine) => Array.from((racine || document).querySelectorAll(sel));
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const num = (v) => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
-const fmt = (n) => Math.round(n).toLocaleString("fr-FR");
-const n1  = (n) => (Math.round(n*10)/10).toLocaleString("fr-FR",{minimumFractionDigits:1,maximumFractionDigits:1});
-const aujourdhui = () => new Date().toISOString().slice(0,10);
+/* Un nombre absent ou illisible s'affiche « — », jamais « NaN ». */
+const fmt = (n) => isFinite(Number(n)) ? Math.round(Number(n)).toLocaleString("fr-FR") : "—";
+const n1  = (n) => isFinite(Number(n)) ? (Math.round(Number(n)*10)/10).toLocaleString("fr-FR",{minimumFractionDigits:1,maximumFractionDigits:1}) : "—";
+/* La date du jour est celle de la montre de la personne, pas celle de
+   Londres. Avant, toISOString() donnait la date UTC : a Bali, avant 8 h du
+   matin, on etait encore « hier » — mesures mal datees et cases « mangé »
+   remises a zero a 8 h au lieu de minuit. */
+const aujourdhui = () => {
+  const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+};
+/* Un lien saisi a la main (video d'exercice, ressource) n'est accepte que
+   s'il commence par http:// ou https://. Un lien « javascript:… » colle dans
+   une fiche s'executerait chez celui qui clique — le coach, qui voit tout. */
+const lienSur = (u) => {
+  const s = String(u == null ? "" : u).trim();
+  if (/^https?:\/\//i.test(s)) return s;
+  if (/^www\./i.test(s)) return "https://" + s;
+  return "";
+};
 /* Les dates sont stockees au format ISO (2026-08-29) parce que c'est le seul
    qui se trie correctement. On les affiche a la francaise. */
 const dateFr = (iso) => {
@@ -1104,7 +1121,19 @@ const Store = {
     const p = JSON.parse(texte);
     const d = (p && p.donnees) ? p.donnees : p;
     if (!d || typeof d !== "object") throw new Error("format");
-    for (const cle in d){ this.cache[cle] = d[cle]; await this.envoyer(cle, d[cle]); }
+    /* On ne restaure que des outils qui existent. Et un client ne peut pas
+       ecraser ce que le coach a prepare pour lui (programme, repas,
+       calories) avec une vieille copie : ca, c'est le coach qui le decide. */
+    const connues = OUTILS.map(o => o.cle).filter(Boolean);
+    const duCoach = ["programme", "repas", "calc"];
+    let n = 0;
+    for (const cle in d){
+      if (connues.indexOf(cle) === -1) continue;
+      if (!Auth.estCoach() && duCoach.indexOf(cle) > -1) continue;
+      if (!d[cle] || typeof d[cle] !== "object") continue;
+      this.cache[cle] = d[cle]; await this.envoyer(cle, d[cle]); n++;
+    }
+    if (!n) throw new Error("vide");
     return true;
   }
 };
@@ -2057,7 +2086,7 @@ const outilMensurations = {
     $("dstart").value = D.dstart || "";
     $("pstart").value = D.pstart == null ? "" : D.pstart;
     $("dstart").addEventListener("input", function(){ D.dstart = this.value; sauver(); });
-    $("pstart").addEventListener("input", function(){ const v = parseFloat(this.value); D.pstart = isFinite(v) ? v : null; sauver(); tout(); });
+    $("pstart").addEventListener("input", function(){ const v = parseFloat(this.value); D.pstart = (isFinite(v) && v >= 30 && v <= 300) ? v : null; sauver(); tout(); });
 
     $("add").addEventListener("click", () => {
       const sem = parseInt($("e-sem").value, 10);
@@ -2066,6 +2095,13 @@ const outilMensurations = {
       const vals = {}; let une = false;
       D.zones.forEach((z,i) => { const v = parseFloat($("ez"+i).value); if (isFinite(v)){ vals[i] = v; une = true; } });
       if (!isFinite(poids) && !une){ flash("msg","Renseigne au moins ton poids ou une mensuration."); return; }
+      /* Une faute de frappe (7,5 au lieu de 75) ecrase la courbe pour
+         toujours : on refuse les valeurs impossibles avant d'enregistrer. */
+      if (sem < 0 || sem > 520){ flash("msg","Numéro de semaine invalide."); return; }
+      if (isFinite(poids) && (poids < 30 || poids > 300)){ flash("msg","Poids entre 30 et 300 kg, vérifie la virgule."); return; }
+      const horsBornes = D.zones.filter((z,i) => vals[i] != null && (vals[i] < 10 || vals[i] > 250));
+      if (horsBornes.length){ flash("msg", horsBornes[0] + " : entre 10 et 250 cm, vérifie la saisie."); return; }
+      if (D.mesures.some(m => m.sem === sem) && !confirm("La semaine " + sem + " existe déjà. La remplacer ?")) return;
       D.mesures = D.mesures.filter(m => m.sem !== sem);
       D.mesures.push({ sem, date: $("e-date").value || "", poids: isFinite(poids) ? poids : null, vals });
       D.mesures.sort((a,b) => a.sem - b.sem);
@@ -2217,7 +2253,7 @@ const outilEntrainement = {
             <span class="stat">Volume <b>${fmt(self.volumeExercice(e))}</b> kg</span>
             <span class="stat">Charge max <b>${fmt(self.chargeMax(e))}</b> kg</span>
             ${badge}
-            ${e.lien ? `<a class="link-a" href="${esc(e.lien)}" target="_blank" rel="noopener">Voir la vidéo →</a>` : ""}
+            ${lienSur(e.lien) ? `<a class="link-a" href="${esc(lienSur(e.lien))}" target="_blank" rel="noopener">Voir la vidéo →</a>` : ""}
           </div>`;
         box.appendChild(d);
       });
@@ -2659,7 +2695,7 @@ const outilProgramme = {
         </button>
         <p class="note" style="margin:8px 0 0">Vidéo hébergée sur YouTube, d'une chaîne tierce. Elle s'ouvre ici, sans quitter ton espace.</p>
       </div>`
-      : (f.lien ? `<a class="link-a" href="${esc(f.lien)}" target="_blank" rel="noopener">Voir la démonstration →</a>` : "")}
+      : (lienSur(f.lien) ? `<a class="link-a" href="${esc(lienSur(f.lien))}" target="_blank" rel="noopener">Voir la démonstration →</a>` : "")}
     </div>`;
   },
 
@@ -2706,7 +2742,7 @@ const outilProgramme = {
             ${e.repos ? `<span class="chiffre">repos <b>${esc(e.repos)}</b></span>` : ""}
           </div>
           ${e.note ? `<div class="obs">${esc(e.note)}</div>` : ""}
-          ${e.lien ? `<a class="link-a" href="${esc(e.lien)}" target="_blank" rel="noopener">Voir la démonstration →</a>` : ""}
+          ${lienSur(e.lien) ? `<a class="link-a" href="${esc(lienSur(e.lien))}" target="_blank" rel="noopener">Voir la démonstration →</a>` : ""}
           <button type="button" class="ex-fiche" data-fiche="${esc(e.nom)}">Comment faire ?</button>
           <div class="fiche-boite" hidden></div>
         </div>`;
@@ -5314,7 +5350,7 @@ const outilFormation = {
         }
         if ((m.ressources || []).length){
           h += `<h3>Tes ressources à télécharger</h3><ul class="fo-ress">${m.ressources.map(r =>
-            `<li><a class="link-a" href="${esc(r.u)}" target="_blank" rel="noopener">${esc(r.t)} ↗</a></li>`).join("")}</ul>`;
+            (lienSur(r.u) ? `<li><a class="link-a" href="${esc(lienSur(r.u))}" target="_blank" rel="noopener">${esc(r.t)} ↗</a></li>` : `<li>${esc(r.t)}</li>`)).join("")}</ul>`;
         }
         if (m.note) h += `<p class="note">${esc(m.note)}</p>`;
         h += `</div>`;
@@ -6199,7 +6235,12 @@ function portail(mode){
   };
 
   $("c-go").addEventListener("click", valider);
-  document.addEventListener("keydown", e => { if (e.key === "Enter") valider(); });
+  /* Un seul ecouteur a la fois. Avant, chaque aller-retour « mot de passe
+     oublie » en ajoutait un : Entree envoyait alors un email de
+     reinitialisation EN PLUS de la connexion. */
+  if (portail._entree) document.removeEventListener("keydown", portail._entree);
+  portail._entree = e => { if (e.key === "Enter") valider(); };
+  document.addEventListener("keydown", portail._entree);
 }
 
 /* ---------------------- NOUVEAU MOT DE PASSE ----------------------
