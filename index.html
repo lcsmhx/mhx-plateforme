@@ -162,6 +162,24 @@ summary:hover{color:var(--accent)}
 .del{background:none;border:1px solid transparent;border-radius:4px;color:var(--ink-3);cursor:pointer;font-size:16px;line-height:1;padding:6px 9px}
 .del:hover{color:var(--bad);border-color:var(--bad)}
 .empty{text-align:center;color:var(--ink-3);font-size:14px;padding:38px 16px}
+.cta-vide{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:16px}
+.cta-vide .btn{text-decoration:none;display:inline-flex;align-items:center}
+/* les liens habilles en bouton (ecrans vides) prennent le style des vrais boutons */
+a.btn{background:var(--accent);color:var(--accent-ink);border:1px solid var(--accent);border-radius:4px;
+  padding:10px 18px;font-family:"IBM Plex Sans",sans-serif;font-size:14px;font-weight:600;cursor:pointer}
+a.btn.ghost{background:transparent;color:var(--ink-2);border-color:var(--line-strong)}
+a.btn.ghost:hover{color:var(--ink);border-color:var(--accent)}
+/* Mobile : la page ne doit jamais defiler de cote. Un bloc de grille sans
+   min-width:0 s'elargit a la taille du tableau qu'il contient. */
+.panel,.scroll{min-width:0;max-width:100%}
+/* Barre d'onglets et onglets des jours : on devine qu'il y a une suite */
+.nav,.jours-onglets{-webkit-mask-image:linear-gradient(to right,#000 88%,transparent);mask-image:linear-gradient(to right,#000 88%,transparent)}
+.nav.fin,.jours-onglets.fin{-webkit-mask-image:none;mask-image:none}
+@media (max-width:560px){
+  .nav{order:3;flex-basis:100%;margin:0}
+  .scroll table{font-size:13px}
+  .scroll th,.scroll td{padding:7px 8px}
+}
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px}
 .tile{background:var(--sunken);border:1px solid var(--line);border-radius:5px;padding:14px}
 .tile .t-lbl{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
@@ -610,7 +628,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-09-22 · 24",
+    version: "2026-09-22 · 25",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -814,6 +832,17 @@ const lienSur = (u) => {
   if (/^www\./i.test(s)) return "https://" + s;
   return "";
 };
+/* Un ecran vide doit toujours proposer quoi faire. Sans bouton, le client
+   se dit que l'app ne marche pas et ne revient plus. Rien en consultation
+   coach : c'est le coach lui-meme qui regarde. */
+function ctaVide(profil){
+  if (typeof Store !== "undefined" && Store.idConsulte) return "";
+  const ig = lienSur(CONFIG.marque.instagram);
+  return `<div class="cta-vide">` +
+    (profil ? `<a class="btn" href="#/profil">Compléter mon profil</a>` : "") +
+    (ig ? `<a class="btn ghost" href="${esc(ig)}" target="_blank" rel="noopener">Écrire à mon coach</a>` : "") +
+    `</div>`;
+}
 /* Les dates sont stockees au format ISO (2026-08-29) parce que c'est le seul
    qui se trie correctement. On les affiche a la francaise. */
 const dateFr = (iso) => {
@@ -1350,11 +1379,12 @@ const Normaliser = {
     /* Liste elargie le 22/09 : beignets, croutons, cookies, feuilletes,
        panes, nuggets, cereales du petit-dejeuner et vermicelles passaient
        pour « sans gluten » (82 aliments). « panne » etait une coquille. */
-    gluten:        /(\bble\b|\bpain\b|\bpates\b|semoule|couscous|boulgour|\borge\b|seigle|epeautre|avoine|farine|biscuit|brioche|croissant|gateau|chapelure|panure|\bpanee?s?\b|pizza|\btarte\b|crepe|gaufre|biscotte|\bbiere\b|\bmalt\b|viennoiserie|sandwich|burger|nouille|raviol|lasagne|tortilla|pita\b|beignet|donut|crouton|cookie|madeleine|feuillete|friand|nugget|croquette|cordon.?bleu|hot.?dog|vermicelle|cereales|\bfrik\b|bouchee a la (reine|vapeur)|a la romaine|galette des rois|muesli|seitan|cracker|\bwrap\b)/,
+    gluten:        /(\bble\b|\bpain\b|\bpates\b|semoule|couscous|boulgour|\borge\b|seigle|epeautre|avoine|farine|biscuit|brioche|croissant|gateau|chapelure|panure|\bpanee?s?\b|pizza|\btarte\b|crepe|gaufre|biscotte|\bbiere\b|\bmalt\b|viennoiserie|sandwich|burger|(nouille|vermicelle)s?\b(?! de (riz|soja|haricot|sarrasin))|raviol|lasagne|tortilla|pita\b|beignet|donut|crouton|cookie|madeleine|feuillete|friand|nugget|croquette|cordon.?bleu|hot.?dog|cereales|\bfrik\b|bouchee a la (reine|vapeur)|a la romaine|galette des rois|muesli|seitan|cracker|\bwrap\b)/,
     crustaces:     /(crevette|crabe|homard|langoustine|ecrevisse|langouste|tourteau)/,
-    mollusques:    /(moule|huitre|coquille|calamar|calmar|poulpe|seiche|bulot|palourde|saint.?jacques|escargot|bigorneau|\bcoque\b)/,
+    mollusques:    /(moule|huitre|coquille|calamar|calmar|poulpe|seiche|bulot|palourde|saint.?jacques|escargot|bigorneau|\bcoque\b|petoncle|peigne du perou|praire|couteau de mer|ormeau)/,
     soja:          /(\bsoja\b|\btofu\b|tempeh|edamame|\bmiso\b|tamari)/,
-    fruits_a_coque:/(amande|\bnoix\b|noisette|pistache|\bcajou\b|pecan|macadamia|chataigne|\bmarron\b)/,
+    /* « noix de pétoncle » et « noix de Saint-Jacques » sont des mollusques */
+    fruits_a_coque:/(amande|\bnoix\b(?! de (petoncle|saint.?jacques|st.?jacques))|noisette|pistache|\bcajou\b|pecan|macadamia|chataigne|\bmarron\b)/,
     arachides:     /(arachide|cacahuete)/,
     sesame:        /(sesame|tahin)/,
     celeri:        /(celeri)/,
@@ -1397,6 +1427,14 @@ const Normaliser = {
       if (this.allergenesMots[cle].test(t)) al[cle] = true;
     }
     if (this.sansGluten.test(t)) delete al.gluten;   // seule exception : l'etiquette le dit
+    if (/sans soja/.test(t) && !/(tofu|tempeh|edamame|miso|tamari)/.test(t)) delete al.soja;   // idem : « sans soja » sur l'etiquette
+    /* Les vrais poissons, cherches dans le NOM seul (la categorie CIQUAL
+       « Poissons » couvre aussi crevettes et coquillages) : un plat « poisson
+       a la mariniere, moules » doit porter les deux allergenes. */
+    if (/(poisson|\bthon\b|saumon|cabillaud|\bcolin\b|merlu|\blieu\b|sardine|maquereau|anchois|truite|hareng|\bsole\b|dorade|\bbar\b|\braie\b|lotte|espadon|tarama|caviar|anguille|carpe|perche|brochet|morue|limande|flétan|fletan|merlan|haddock|tilapia|panga|rouget|turbot|eglefin|surimi|nuoc.?mam)/.test(this.aplatir(a.nom))) al.poissons = true;
+    /* « noix » de petoncle ou de Saint-Jacques : c'est la chair du coquillage,
+       pas un fruit a coque. Seul cas ou le mot trompe le filtre. */
+    if (/(petoncle|saint.?jacques|st.?jacques)/.test(t) && !/(amande|noisette|pistache|cajou|pecan|macadamia|chataigne|marron|noix de (coco|grenoble))/.test(t)) delete al.fruits_a_coque;
     const allergenes = Object.keys(al).filter(x => CONFIG.nutrition.allergenes.some(z => z.id === x));
 
     /* --- regimes : entierement recalcules, restrictifs en cas de doute --- */
@@ -2067,9 +2105,21 @@ const outilMensurations = {
       th.innerHTML = `<tr><th>Semaine</th><th>Date</th><th>Poids</th>${D.zones.map(z => `<th>${esc(z)}</th>`).join("")}<th></th></tr>`;
       tb.innerHTML = "";
       if (!D.mesures.length){
-        tb.innerHTML = `<tr><td colspan="${D.zones.length+4}" class="empty">Aucune mesure enregistrée pour le moment.</td></tr>`;
+        /* Le message vit HORS du tableau : dans un tableau large qui defile de
+           cote, sur telephone, il etait coupe et le bouton hors de l'ecran. */
+        th.innerHTML = "";
+        const bloc = tb.closest(".scroll");
+        if (bloc) bloc.hidden = true;
+        let vide = $("mens-vide");
+        if (!vide && bloc){ vide = document.createElement("div"); vide.id = "mens-vide"; vide.className = "empty"; bloc.parentNode.insertBefore(vide, bloc.nextSibling); }
+        if (vide) vide.innerHTML = Store.idConsulte
+          ? `Aucune mesure enregistrée pour le moment.`
+          : `Aucune mesure enregistrée pour le moment.<br>Commence par ton poids du jour : c'est ta semaine 1, et la base de ta courbe.<div class="cta-vide"><button type="button" class="btn" id="mens-go">Ajouter ma première mesure</button></div>`;
+        const go = $("mens-go");
+        if (go) go.addEventListener("click", () => { const e = $("e-poids"); if (e){ e.scrollIntoView({ behavior:"smooth", block:"center" }); e.focus(); } });
         return;
       }
+      { const bloc = tb.closest(".scroll"); if (bloc) bloc.hidden = false; const v = $("mens-vide"); if (v) v.remove(); }
       D.mesures.forEach((m, idx) => {
         const tr = document.createElement("tr");
         tr.innerHTML = `<td>S${m.sem}</td><td>${esc(dateFr(m.date))}</td><td>${m.poids != null ? n1(m.poids) : "—"}</td>` +
@@ -2732,7 +2782,7 @@ const outilProgramme = {
   /* ---------- vue client : lecture ---------- */
   vueLecture(P){
     if (!P.seances || !P.seances.length){
-      return `<section class="panel"><div class="empty">Ton coach n'a pas encore déposé ton programme. Tu recevras un message quand il sera prêt.</div></section>`;
+      return `<section class="panel"><div class="empty">Ton coach n'a pas encore déposé ton programme. Tu recevras un message quand il sera prêt.${ctaVide(true)}</div></section>`;
     }
     let h = "";
     if (P.note) h += `<section class="panel"><h2>Mot du coach</h2><p style="margin:0">${esc(P.note)}</p></section>`;
@@ -3734,7 +3784,7 @@ const outilNutrition = {
   /* ================= vue client ================= */
   vueLecture(R, suivi, actif){
     if (!(R.jours || []).some(j => (j.repas || []).length)){
-      return `<section class="panel"><div class="empty">Ton coach n'a pas encore validé tes repas. Remplis ton profil — régime et allergies comprises — pour qu'il puisse les préparer.</div></section>`;
+      return `<section class="panel"><div class="empty">Ton coach n'a pas encore validé tes repas. Remplis ton profil — régime et allergies comprises — pour qu'il puisse les préparer.${ctaVide(true)}</div></section>`;
     }
     const jour = R.jours[actif] || R.jours[0];
     const t = this.totaux(jour);
@@ -6016,10 +6066,29 @@ function construireNav(){
 
 function marquerNav(id){
   $$("#nav a").forEach(a => {
-    if (a.dataset.id === id) a.setAttribute("aria-current","page");
+    if (a.dataset.id === id){
+      a.setAttribute("aria-current","page");
+      /* sur telephone, l'onglet ouvert peut etre hors de l'ecran */
+      try { a.scrollIntoView({ block:"nearest", inline:"nearest" }); } catch(e){}
+    }
     else a.removeAttribute("aria-current");
   });
+  setTimeout(majFondus, 80);
 }
+
+/* Le degrade a droite des barres d'onglets dit « il y a une suite ». On
+   l'enleve quand on est au bout, ou quand tout tient a l'ecran. */
+function majFondus(){
+  document.querySelectorAll(".nav, .jours-onglets").forEach(el => {
+    el.classList.toggle("fin", el.scrollLeft + el.clientWidth >= el.scrollWidth - 4);
+  });
+}
+document.addEventListener("scroll", e => {
+  const t = e.target;
+  if (t && t.classList && (t.classList.contains("nav") || t.classList.contains("jours-onglets"))) majFondus();
+}, true);
+document.addEventListener("click", () => setTimeout(majFondus, 80), true);
+window.addEventListener("resize", () => setTimeout(majFondus, 80));
 
 function bandeauConsultation(){
   if (!Store.idConsulte) return "";
