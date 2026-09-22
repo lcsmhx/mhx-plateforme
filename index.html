@@ -631,7 +631,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-09-22 · 27",
+    version: "2026-09-22 · 28",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -960,6 +960,41 @@ async function basculerLangue(){
   else afficher(courant);
 }
 function libelleLangue(){ return I18N.langue === "en" ? "🇫🇷 FR" : "🇺🇸 EN"; }
+
+/* --- CONTENUS TRADUITS (v28) ------------------------------------------------
+   Les exercices et les programmes types portent leur traduction dans la base
+   (colonne traductions = {"en": {...meme forme que le francais...}}). En
+   anglais, on les charge une fois et on ajoute chaque paire francais ->
+   anglais au dictionnaire : la couche de traduction s'occupe du reste,
+   partout ou ces textes s'affichent (programme du client, fiches exercices).
+   Les notes ecrites a la main par le coach n'ont pas de traduction : elles
+   restent telles quelles. */
+const Contenus = {
+  fait: false,
+  ajouter(fr, en){
+    if (typeof fr !== "string" || typeof en !== "string" || !fr.trim() || !en.trim()) return;
+    const k = Traduction.norm(fr);
+    if (k && k !== en && !Object.prototype.hasOwnProperty.call(I18N.en, k)) I18N.en[k] = en;
+  },
+  /* parcourt le francais et l'anglais cote a cote, cle par cle, case par case */
+  zip(fr, en){
+    if (Array.isArray(fr) && Array.isArray(en)) fr.forEach((x, i) => this.zip(x, en[i]));
+    else if (fr && en && typeof fr === "object" && typeof en === "object") Object.keys(en).forEach(k => this.zip(fr[k], en[k]));
+    else this.ajouter(fr, en);
+  },
+  async charger(){
+    if (I18N.langue !== "en" || this.fait) return;
+    this.fait = true;
+    try {
+      const [ex, pt] = await Promise.all([
+        Auth.appel("/rest/v1/exercices?select=nom,execution,erreurs,respiration,traductions&traductions=not.is.null"),
+        Auth.appel("/rest/v1/programmes_types?select=nom,note,seances,traductions&traductions=not.is.null")
+      ]);
+      [].concat(ex || [], pt || []).forEach(r => { if (r && r.traductions && r.traductions.en) this.zip(r, r.traductions.en); });
+      Traduction.noeud(document.body);
+    } catch(e){ this.fait = false; }
+  }
+};
 
 /* Dictionnaire anglais (US) — genere depuis i18n/en_data.py. Cle = texte francais exact. */
 I18N.en = {
@@ -1340,9 +1375,70 @@ I18N.en = {
 "Plateforme MHX Coaching": "MHX Coaching Platform",
 "Hors ligne": "Offline",
 "Enregistré": "Saved",
-"Voir": "Show"
+"Voir": "Show",
+"Exécution": "How to do it",
+"Erreurs fréquentes": "Common mistakes",
+"Respiration :": "Breathing:",
+"Aucune fiche pour cet exercice. Demande à ton coach.": "No guide for this exercise yet. Ask your coach.",
+"▶ Voir la démonstration": "▶ Watch the demo",
+"Voir la démonstration": "Watch the demo",
+"Démonstration": "Demo",
+"Vidéo hébergée sur YouTube, d'une chaîne tierce. Elle s'ouvre ici, sans quitter ton espace.": "Video hosted on YouTube, from a third-party channel. It opens right here, without leaving your space.",
+"Séance": "Workout",
+"Abdominaux": "Abs",
+"Dos": "Back",
+"Fessiers": "Glutes",
+"Ischios": "Hamstrings",
+"Mobilité": "Mobility",
+"Mollets": "Calves",
+"Pectoraux": "Chest",
+"Quadriceps": "Quads",
+"Épaules": "Shoulders",
+"Aucun": "None",
+"Banc": "Bench",
+"Barre": "Barbell",
+"Barre de traction": "Pull-up bar",
+"Barre et banc": "Barbell and bench",
+"Haltères": "Dumbbells",
+"Poulie": "Cable",
+"Élastique": "Resistance band",
+"Avancé": "Advanced",
+"Débutant": "Beginner",
+"Intermédiaire": "Intermediate",
+"Abdominaux profonds": "Deep core",
+"Adducteurs": "Adductors",
+"Avant-bras": "Forearms",
+"Biceps (longue portion)": "Biceps (long head)",
+"Brachial": "Brachialis",
+"Chaîne postérieure": "Posterior chain",
+"Deltoïdes": "Delts",
+"Deltoïdes latéraux": "Side delts",
+"Deltoïdes postérieurs": "Rear delts",
+"Diaphragme": "Diaphragm",
+"Dorsaux": "Lats",
+"Fléchisseurs de hanche": "Hip flexors",
+"Gastrocnémiens": "Gastrocnemius",
+"Grands droits": "Rectus abdominis",
+"Haut des pectoraux": "Upper chest",
+"Lombaires": "Lower back",
+"Moyen fessier": "Glute medius",
+"Pectoraux (haut)": "Upper chest",
+"Petit fessier": "Glute minimus",
+"Péroniers": "Peroneals",
+"Rhomboïdes": "Rhomboids",
+"Rotateurs": "Rotator cuff",
+"Rotateurs du tronc": "Trunk rotators",
+"Rotateurs externes": "External rotators",
+"Soléaire": "Soleus",
+"Trapèzes": "Traps",
+"Trapèzes inférieurs": "Lower traps",
+"Trapèzes moyens": "Middle traps",
+"Trapèzes supérieurs": "Upper traps",
+"Triceps (longue portion)": "Triceps (long head)",
+"Épaules antérieures": "Front delts",
+"regulier": "steady"
 };
-I18N.motifs = [["^(\\d+) articles? sur (\\d+) dans le panier\\.$", "$1 of $2 items in your cart."], ["^(\\d+) étapes? validées? sur (\\d+) — (\\d+) %$", "$1 of $2 steps completed — $3%"], ["^([\\d\\s\\u202f\\u00a0.,−-]+?) kcal$", "$1 Cal"], ["^([\\d\\s\\u202f\\u00a0.,−-]+?) kcal · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de protéines par dose$", "$1 Cal · $2 g protein per serving"], ["^([\\d\\s\\u202f\\u00a0.,−-]+?) kcal consommées sur ([\\d\\s\\u202f\\u00a0.,−-]+?) — il te reste$", "$1 Cal eaten out of $2 — you have"], ["^Objectif visé : ([\\d\\s\\u202f\\u00a0.,−-]+?) kcal · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de protéines · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de glucides · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de lipides\\.$", "Target: $1 Cal · $2 g protein · $3 g carbs · $4 g fat."], ["^Coche les jours que tu veux acheter : la liste se recalcule\\. (\\d+) jours? sélectionnés?\\.$", "Check the days you want to shop for: the list updates automatically. $1 day(s) selected."], ["^Programme mis à jour le (\\d{1,2})/(\\d{1,2})/(\\d{4})$", "Program updated $2/$1/$3"], ["^Repas mis à jour le (\\d{1,2})/(\\d{1,2})/(\\d{4})$", "Meals updated $2/$1/$3"], ["^S(\\d+)$", "W$1"], ["^Supprimer la semaine (\\d+)$", "Delete week $1"], ["^dernière : semaine (\\d+)$", "latest: week $1"], ["^semaine (\\d+)$", "week $1"], ["^Semaine (\\d+) enregistrée\\.$", "Week $1 saved."], ["^(\\d+)/jambe$", "$1/leg"], ["^(\\d+)-(\\d+)/jambe$", "$1-$2/leg"], ["^(\\d+)/bras$", "$1/arm"], ["^(\\d+)-(\\d+)/bras$", "$1-$2/arm"], ["^(\\d+)-(\\d+) s/côté$", "$1-$2 s/side"], ["^protéines au-dessus de ([\\d\\s\\u202f\\u00a0.,−-]+?) g$", "protein over by $1 g"], ["^protéines en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) g$", "protein under by $1 g"], ["^lipides au-dessus de ([\\d\\s\\u202f\\u00a0.,−-]+?) g — sur ce régime, les sources de protéines apportent beaucoup de gras$", "fat over by $1 g — on this diet, protein sources bring a lot of fat"], ["^lipides en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) g — sur ce régime, les sources de protéines apportent beaucoup de gras$", "fat under by $1 g"], ["^calories au-dessus de ([\\d\\s\\u202f\\u00a0.,−-]+?) kcal$", "calories over by $1 Cal"], ["^calories en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) kcal$", "calories under by $1 Cal"], ["^glucides en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) g — ce régime offre peu de sources de glucides dans le catalogue$", "carbs under by $1 g — this diet has few carb sources in the catalog"]].map(([p, r]) => [new RegExp(p), r]);
+I18N.motifs = [["^(\\d+) articles? sur (\\d+) dans le panier\\.$", "$1 of $2 items in your cart."], ["^(\\d+) étapes? validées? sur (\\d+) — (\\d+) %$", "$1 of $2 steps completed — $3%"], ["^([\\d\\s\\u202f\\u00a0.,−-]+?) kcal$", "$1 Cal"], ["^([\\d\\s\\u202f\\u00a0.,−-]+?) kcal · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de protéines par dose$", "$1 Cal · $2 g protein per serving"], ["^([\\d\\s\\u202f\\u00a0.,−-]+?) kcal consommées sur ([\\d\\s\\u202f\\u00a0.,−-]+?) — il te reste$", "$1 Cal eaten out of $2 — you have"], ["^Objectif visé : ([\\d\\s\\u202f\\u00a0.,−-]+?) kcal · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de protéines · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de glucides · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de lipides\\.$", "Target: $1 Cal · $2 g protein · $3 g carbs · $4 g fat."], ["^Coche les jours que tu veux acheter : la liste se recalcule\\. (\\d+) jours? sélectionnés?\\.$", "Check the days you want to shop for: the list updates automatically. $1 day(s) selected."], ["^Programme mis à jour le (\\d{1,2})/(\\d{1,2})/(\\d{4})$", "Program updated $2/$1/$3"], ["^Repas mis à jour le (\\d{1,2})/(\\d{1,2})/(\\d{4})$", "Meals updated $2/$1/$3"], ["^S(\\d+)$", "W$1"], ["^Supprimer la semaine (\\d+)$", "Delete week $1"], ["^dernière : semaine (\\d+)$", "latest: week $1"], ["^semaine (\\d+)$", "week $1"], ["^Semaine (\\d+) enregistrée\\.$", "Week $1 saved."], ["^(\\d+)/jambe$", "$1/leg"], ["^(\\d+)-(\\d+)/jambe$", "$1-$2/leg"], ["^(\\d+)/bras$", "$1/arm"], ["^(\\d+)-(\\d+)/bras$", "$1-$2/arm"], ["^(\\d+)-(\\d+) s/côté$", "$1-$2 s/side"], ["^protéines au-dessus de ([\\d\\s\\u202f\\u00a0.,−-]+?) g$", "protein over by $1 g"], ["^protéines en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) g$", "protein under by $1 g"], ["^lipides au-dessus de ([\\d\\s\\u202f\\u00a0.,−-]+?) g — sur ce régime, les sources de protéines apportent beaucoup de gras$", "fat over by $1 g — on this diet, protein sources bring a lot of fat"], ["^lipides en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) g — sur ce régime, les sources de protéines apportent beaucoup de gras$", "fat under by $1 g"], ["^calories au-dessus de ([\\d\\s\\u202f\\u00a0.,−-]+?) kcal$", "calories over by $1 Cal"], ["^calories en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) kcal$", "calories under by $1 Cal"], ["^glucides en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) g — ce régime offre peu de sources de glucides dans le catalogue$", "carbs under by $1 g — this diet has few carb sources in the catalog"], ["^(\\d+(?:-\\d+)?(?: s)?)/jambe$", "$1/leg"], ["^(\\d+(?:-\\d+)?(?: s)?)/bras$", "$1/arm"], ["^(\\d+(?:-\\d+)?(?: s)?)/côté$", "$1/side"], ["^(\\d+)/sens$", "$1/direction"], ["^(\\d+)/sens/cheville$", "$1/direction/ankle"], ["^(\\d+) souffles$", "$1 breaths"], ["^(\\d+) respirations$", "$1 breaths"], ["^(\\d+(?:-\\d+)?) pas$", "$1 steps"], ["^(\\d+) dans chaque sens$", "$1 each direction"], ["^(\\d+) par côté$", "$1 per side"], ["^(\\d+) par jambe$", "$1 per leg"], ["^(\\d+) par cheville$", "$1 per ankle"], ["^(\\d+) s par (côté)$", "$1 s per side"], ["^(\\d+) s par jambe$", "$1 s per leg"], ["^(\\d+) s \\+ (\\d+) squats$", "$1 s + $2 squats"]].map(([p, r]) => [new RegExp(p), r]);
 
 
 /* Les dates sont stockees au format ISO (2026-08-29) parce que c'est le seul
@@ -3243,7 +3339,7 @@ const outilProgramme = {
         ${f.groupe ? `<span class="pastille">${esc(f.groupe)}</span>` : ""}
         ${f.materiel ? `<span class="pastille">${esc(f.materiel)}</span>` : ""}
         ${f.niveau ? `<span class="pastille">${esc(f.niveau)}</span>` : ""}
-        ${(f.muscles || []).length ? `<span class="meta">${esc(f.muscles.join(" · "))}</span>` : ""}
+        ${(f.muscles || []).length ? `<span class="meta">${f.muscles.map(m => `<span>${esc(m)}</span>`).join(" · ")}</span>` : ""}
       </div>
       ${(f.execution || []).length ? `<h3>Exécution</h3><ol class="etapes">${f.execution.map(x => `<li>${esc(x)}</li>`).join("")}</ol>` : ""}
       ${(f.erreurs || []).length ? `<h3>Erreurs fréquentes</h3><ul class="erreurs">${f.erreurs.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
@@ -6936,6 +7032,7 @@ let premiereFois = false;
   } catch(e){}
 
   construireNav();
+  Contenus.charger();
   window.addEventListener("hashchange", routeDepuisAdresse);
 
   /* Premiere connexion d'un client : on l'envoie remplir son profil */
