@@ -628,7 +628,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-09-22 · 25",
+    version: "2026-09-22 · 26",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -6194,8 +6194,23 @@ function dejaInstalle(){
   } catch(e){ return false; }
 }
 
+/* La banniere n'apparait qu'a partir de la 2e visite. A la toute premiere,
+   le nouveau client doit voir son espace et remplir son profil : une grande
+   fenetre qui masque tout, c'est la pire premiere impression (retour QA de
+   GROK, 22/09). Une visite = une ouverture de l'application, comptee une
+   seule fois meme si on change d'onglet. */
+function visiteSuivante(){
+  try {
+    if (!sessionStorage.getItem("mhx_visite_comptee")){
+      sessionStorage.setItem("mhx_visite_comptee", "1");
+      localStorage.setItem("mhx_visites", String((parseInt(localStorage.getItem("mhx_visites"), 10) || 0) + 1));
+    }
+    return (parseInt(localStorage.getItem("mhx_visites"), 10) || 0) >= 2;
+  } catch(e){ return true; }
+}
+
 function bandeauInstallation(){
-  if (!Auth.connecte() || Store.idConsulte || dejaInstalle()) return "";
+  if (!Auth.connecte() || Store.idConsulte || dejaInstalle() || !visiteSuivante()) return "";
   const ios = /iphone|ipad|ipod/i.test(navigator.userAgent || "");
   return `<div class="installe" id="installe">
     <button type="button" class="fermer" id="inst-plus-tard" aria-label="Plus tard">×</button>
