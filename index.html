@@ -162,6 +162,8 @@ summary:hover{color:var(--accent)}
 .del{background:none;border:1px solid transparent;border-radius:4px;color:var(--ink-3);cursor:pointer;font-size:16px;line-height:1;padding:6px 9px}
 .del:hover{color:var(--bad);border-color:var(--bad)}
 .empty{text-align:center;color:var(--ink-3);font-size:14px;padding:38px 16px}
+.co-langue{position:absolute;top:14px;right:14px;background:none;border:1px solid var(--line);border-radius:999px;color:var(--ink-3);font-size:12px;padding:5px 11px;cursor:pointer;font-family:inherit}
+.carte-co{position:relative}
 .cta-vide{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:16px}
 .cta-vide .btn{text-decoration:none;display:inline-flex;align-items:center}
 /* les liens habilles en bouton (ecrans vides) prennent le style des vrais boutons */
@@ -595,6 +597,7 @@ button.btn.danger:hover{background:var(--bad);color:#fff}
     <div class="compte" id="compte" hidden>
       <span class="etat" id="etat"></span>
       <span class="qui" id="qui"></span>
+      <button type="button" id="langue" data-notr></button>
       <button type="button" id="deco">Se déconnecter</button>
     </div>
   </div>
@@ -628,7 +631,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-09-22 · 26",
+    version: "2026-09-22 · 27",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -813,8 +816,10 @@ const $$ = (sel, racine) => Array.from((racine || document).querySelectorAll(sel
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const num = (v) => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
 /* Un nombre absent ou illisible s'affiche « — », jamais « NaN ». */
-const fmt = (n) => isFinite(Number(n)) ? Math.round(Number(n)).toLocaleString("fr-FR") : "—";
-const n1  = (n) => isFinite(Number(n)) ? (Math.round(Number(n)*10)/10).toLocaleString("fr-FR",{minimumFractionDigits:1,maximumFractionDigits:1}) : "—";
+/* en anglais : 3,288 et 79.4 (format americain) au lieu de 3 288 et 79,4 */
+const locale = () => (window.__langue === "en" ? "en-US" : "fr-FR");
+const fmt = (n) => isFinite(Number(n)) ? Math.round(Number(n)).toLocaleString(locale()) : "—";
+const n1  = (n) => isFinite(Number(n)) ? (Math.round(Number(n)*10)/10).toLocaleString(locale(),{minimumFractionDigits:1,maximumFractionDigits:1}) : "—";
 /* La date du jour est celle de la montre de la personne, pas celle de
    Londres. Avant, toISOString() donnait la date UTC : a Bali, avant 8 h du
    matin, on etait encore « hier » — mesures mal datees et cases « mangé »
@@ -843,12 +848,510 @@ function ctaVide(profil){
     (ig ? `<a class="btn ghost" href="${esc(ig)}" target="_blank" rel="noopener">Écrire à mon coach</a>` : "") +
     `</div>`;
 }
+
+/* --- LANGUE (v27) ---------------------------------------------------------
+   L'app reste ecrite en francais. En anglais, une couche traduit ce qui
+   s'affiche, a partir du dictionnaire I18N.en (texte francais exact ->
+   anglais) et de quelques motifs pour les phrases qui contiennent un nombre.
+   Une entree absente = le texte reste en francais : rien ne peut casser.
+   Les ecrans du coach ne sont pas traduits (ils ne servent qu'a l'equipe).
+   Ce que saisit l'utilisateur n'est jamais touche : seuls les textes qui
+   correspondent EXACTEMENT a une entree du dictionnaire sont remplaces. */
+const I18N = {
+  cle: "mhx_langue",
+  langue: "fr",
+  en: {},
+  motifs: [],
+  charger(){
+    try { this.langue = localStorage.getItem(this.cle) === "en" ? "en" : "fr"; } catch(e){ this.langue = "fr"; }
+    document.documentElement.lang = this.langue;
+    window.__langue = this.langue;
+    return this.langue;
+  },
+  /* renvoie true si le choix a bien ete range sur l'appareil */
+  choisir(l){
+    this.langue = (l === "en") ? "en" : "fr";
+    document.documentElement.lang = this.langue;
+    window.__langue = this.langue;
+    try { localStorage.setItem(this.cle, this.langue); return localStorage.getItem(this.cle) === this.langue; } catch(e){ return false; }
+  }
+};
+/* Pour les textes qui ne passent pas par l'ecran (confirm, alert, prompt).
+   Nom long expres : une variable locale « t » existe deja a plusieurs endroits. */
+function trad(fr, vars){
+  let s = (I18N.langue === "en" && I18N.en[fr]) || fr;
+  if (vars) for (const k in vars) s = s.split("{" + k + "}").join(String(vars[k]));
+  return s;
+}
+const Traduction = {
+  norm: (s) => String(s).replace(/\s+/g, " ").trim(),
+  inlines: /^(B|STRONG|EM|I|BR|SMALL|CODE|SPAN|SUP|SUB|U)$/,
+  blocs: "p,li,h1,h2,h3,h4,label,button,a,summary,th,td,option,legend,dt,dd,span,div,small,strong,b,em",
+  exclu(el){ return !el || !!(el.closest && el.closest("[data-notr],textarea,script,style")); },
+  /* un bloc « simple » ne contient que de la mise en forme : on peut le
+     remplacer d'un coup sans detruire un champ ou un bouton branche */
+  blocSimple(el){
+    if (!el.children.length) return false;
+    for (const d of el.querySelectorAll("*")){
+      if (!this.inlines.test(d.tagName) || d.id) return false;
+      for (const a of d.attributes) if (a.name.indexOf("data-") === 0 || a.name.indexOf("on") === 0) return false;
+    }
+    return true;
+  },
+  texte(s){
+    const n = this.norm(s);
+    if (!n || !/[a-zàâçéèêëîïôûùüœ]/i.test(n)) return null;
+    if (Object.prototype.hasOwnProperty.call(I18N.en, n)) return I18N.en[n];
+    for (const [re, r] of I18N.motifs) if (re.test(n)) return n.replace(re, r);
+    return null;
+  },
+  tn(nd){
+    const p = nd.parentElement;
+    if (!p || this.exclu(p)) return;
+    const v = nd.nodeValue, tr = this.texte(v);
+    if (tr != null && tr !== this.norm(v)) nd.nodeValue = v.match(/^\s*/)[0] + tr + v.match(/\s*$/)[0];
+  },
+  attributs(el){
+    for (const a of ["placeholder", "title", "aria-label"]){
+      const v = el.getAttribute && el.getAttribute(a);
+      if (v){ const tr = this.texte(v); if (tr != null && tr !== v) el.setAttribute(a, tr); }
+    }
+  },
+  noeud(racine){
+    if (I18N.langue !== "en" || !racine) return;
+    if (racine.nodeType === 3){ this.tn(racine); return; }
+    if (racine.nodeType !== 1 || this.exclu(racine)) return;
+    const els = [racine].concat(Array.from(racine.querySelectorAll(this.blocs)));
+    for (const el of els){
+      if (!el.isConnected || this.exclu(el) || !this.blocSimple(el)) continue;
+      const k = this.norm(el.innerHTML);
+      if (Object.prototype.hasOwnProperty.call(I18N.en, k) && I18N.en[k] !== k) el.innerHTML = I18N.en[k];
+    }
+    this.attributs(racine);
+    racine.querySelectorAll("[placeholder],[title],[aria-label]").forEach(el => { if (!this.exclu(el)) this.attributs(el); });
+    const w = document.createTreeWalker(racine, NodeFilter.SHOW_TEXT);
+    const liste = []; let n; while ((n = w.nextNode())) liste.push(n);
+    liste.forEach(x => this.tn(x));
+    if (racine === document.body){ const tt = this.texte(document.title); if (tt) document.title = tt; }
+  },
+  demarrer(){
+    if (this.obs) return;
+    this.obs = new MutationObserver(ms => {
+      if (I18N.langue !== "en") return;
+      for (const m of ms){
+        if (m.type === "characterData") this.tn(m.target);
+        else if (m.type === "attributes") { if (!this.exclu(m.target)) this.attributs(m.target); }
+        else m.addedNodes.forEach(nd => this.noeud(nd));
+      }
+    });
+    this.obs.observe(document.body, { childList:true, subtree:true, characterData:true, attributes:true, attributeFilter:["placeholder","title","aria-label"] });
+    this.noeud(document.body);
+  }
+};
+async function basculerLangue(){
+  const l = I18N.langue === "en" ? "fr" : "en";
+  const range = I18N.choisir(l);
+  /* le choix suit le client d'un appareil a l'autre */
+  try {
+    const u = Auth.utilisateur();
+    if (u && !Store.idConsulte) await Store.envoyer("prefs", { langue: l }, u.id);
+  } catch(e){}
+  if (range) location.reload();
+  else afficher(courant);
+}
+function libelleLangue(){ return I18N.langue === "en" ? "🇫🇷 FR" : "🇺🇸 EN"; }
+
+/* Dictionnaire anglais (US) — genere depuis i18n/en_data.py. Cle = texte francais exact. */
+I18N.en = {
+". C'est à cette adresse qu'arrive le lien si tu oublies ton mot de passe — garde-la à jour.": ". This is where the reset link goes if you forget your password — keep it up to date.",
+"<span class=\"ico\" aria-hidden=\"true\">🎓</span>Ma formation": "<span class=\"ico\" aria-hidden=\"true\">🎓</span>My course",
+"<span class=\"ico\" aria-hidden=\"true\">💊</span>Mes compléments": "<span class=\"ico\" aria-hidden=\"true\">💊</span>My supplements",
+"<span class=\"ico\" aria-hidden=\"true\">📋</span>Mon programme": "<span class=\"ico\" aria-hidden=\"true\">📋</span>My program",
+"<span class=\"ico\" aria-hidden=\"true\">📏</span>Mensurations": "<span class=\"ico\" aria-hidden=\"true\">📏</span>Measurements",
+"<span class=\"ico\" aria-hidden=\"true\">📝</span>Mon profil": "<span class=\"ico\" aria-hidden=\"true\">📝</span>My profile",
+"<span class=\"ico\" aria-hidden=\"true\">🥗</span>Mes repas": "<span class=\"ico\" aria-hidden=\"true\">🥗</span>My meals",
+"<strong>Bienvenue !</strong><span class=\"note\">Commence par remplir ton profil : c'est ce qui permet à ton coach de construire ton suivi.</span>": "<strong>Welcome!</strong><span class=\"note\">Start by filling in your profile: it's what lets your coach build your plan.</span>",
+"Adresse actuelle :": "Current email:",
+"Ajouter ma première mesure": "Add my first measurement",
+"Alcool : fréquence et quantité": "Alcohol: how often and how much",
+"Aliments dont tu ne veux surtout pas te passer": "Foods you really don't want to give up",
+"Aliments que tu ne mangeras jamais, quoi qu'il arrive": "Foods you will never eat, no matter what",
+"Allergies et intolérances": "Allergies and intolerances",
+"Arachides": "Peanuts",
+"As-tu des contraintes de budget alimentaire ?": "Do you have a food budget to stick to?",
+"As-tu déjà suivi un régime ou compté tes calories ? Avec quel résultat ?": "Have you ever dieted or counted calories? How did it go?",
+"As-tu une contre-indication médicale au sport ou à un changement alimentaire ?": "Do you have any medical reason not to exercise or change your diet?",
+"Aucune mesure enregistrée pour le moment.": "No measurements saved yet.",
+"Autres allergies, intolérances ou interdits alimentaires": "Other allergies, intolerances or foods you avoid",
+"Bienvenue !": "Welcome!",
+"Blessures actuelles ou passées": "Current or past injuries",
+"Bras": "Arm",
+"Bras droit": "Right arm",
+"Bras gauche": "Left arm",
+"C'est définitif : il n'y a pas de corbeille.": "This is permanent: there's no trash to restore from.",
+"C'est fait": "Done",
+"C'est sur cette réponse que ton plan alimentaire sera bâti. Compte les collations comme des repas.": "Your meal plan is built on this answer. Count snacks as meals.",
+"Cafés par jour": "Coffees per day",
+"Ce que tu prends": "What you take",
+"Ce que tu prends, à quelle dose et à quel moment. Rien d'obligatoire : un complément complète une alimentation, il ne la remplace pas.": "What you take, how much and when. Nothing is mandatory: a supplement complements your diet, it doesn't replace it.",
+"Centimètres perdus": "Centimeters lost",
+"Changer mon adresse": "Change my email",
+"Changer mon adresse email": "Change my email address",
+"Changer mon mot de passe": "Change my password",
+"Chaque jour, à n'importe quelle heure": "Every day, at any time",
+"Choisis": "Choose",
+"Choisis <b>« Installer l'application »</b> ou <b>« Ajouter à l'écran d'accueil »</b>.": "Choose <b>“Install app”</b> or <b>“Add to Home Screen”</b>.",
+"Coche tout ce qui te concerne. Les aliments correspondants seront écartés de tes repas. Signale aussi toute allergie qui ne figure pas dans cette liste dans le champ suivant.": "Check everything that applies to you. Those foods will be kept out of your meals. Also mention any allergy that isn't on this list in the next field.",
+"Collation": "Snack",
+"Collation ou après la séance": "Snack or after your workout",
+"Combien de fois par semaine manges-tu à l'extérieur ou au restaurant ?": "How many times a week do you eat out or at a restaurant?",
+"Combien de repas par jour ? *": "How many meals a day? *",
+"Combien de séances par semaine peux-tu RÉELLEMENT tenir ? *": "How many workouts a week can you REALLY keep up? *",
+"Commence cette semaine": "Start this week",
+"Commence par remplir ton profil : c'est ce qui permet à ton coach de construire ton suivi.": "Start by filling in your profile: it's what lets your coach build your plan.",
+"Commencer ton défi": "Start your challenge",
+"Commencer ton rééquilibrage alimentaire": "Start rebalancing your diet",
+"Comment faire ?": "How to do it",
+"Compléments alimentaires actuels": "Supplements you currently take",
+"Compléter mon profil": "Complete my profile",
+"Comprendre et utiliser les outils pour ta transformation": "Understand and use the tools for your transformation",
+"Confirme le nouveau": "Confirm the new one",
+"Confirme.": "Confirm.",
+"Connexion à ton espace": "Log in to your space",
+"Copier ma sauvegarde": "Copy my backup",
+"Courbe de poids": "Weight curve",
+"Courbes de mensurations": "Measurement curves",
+"Crustacés": "Crustaceans",
+"Créatine monohydrate": "Creatine monohydrate",
+"Cuisse": "Thigh",
+"Cuisse droite": "Right thigh",
+"Cuisse gauche": "Left thigh",
+"Céleri": "Celery",
+"Date de départ": "Start date",
+"Des repas construits sur tes calories et tes macros, avec des aliments qu'on trouve en France — et qui respectent ton régime et tes allergies.": "Meals built around your calories and macros, with everyday foods — and that respect your diet and your allergies.",
+"Dimanche": "Sunday",
+"Dos, genoux, épaules, hernies, opérations… précise l'année et l'état actuel.": "Back, knees, shoulders, hernias, surgeries… tell me the year and how it is now.",
+"Douleurs ou limitations sur certains mouvements": "Pain or limits on certain movements",
+"Durée maximum par séance": "Maximum time per workout",
+"Décris ton objectif en une phrase, avec un chiffre si possible": "Describe your goal in one sentence, with a number if you can",
+"Décris une journée type de repas *": "Describe a typical day of eating *",
+"Déjeuner": "Lunch",
+"Dîner": "Dinner",
+"Eau par jour (L)": "Water per day (L)",
+"Enfants, vie de couple, horaires imposés…": "Kids, relationship, fixed schedules…",
+"Ennui, stress, fatigue, soir devant un écran, après le travail…": "Boredom, stress, tiredness, evenings in front of a screen, after work…",
+"Enregistre au moins deux semaines pour voir la courbe.": "Save at least two weeks to see the curve.",
+"Enregistrer la semaine": "Save this week",
+"Enregistrer mon profil": "Save my profile",
+"Envoyer tes photos avant / après (premier et dernier jour)": "Send your before / after photos (first and last day)",
+"Envoyer ton retour d'expérience": "Send your feedback",
+"Envoyer ton tableau de mensurations": "Send your measurement chart",
+"Es-tu suivi actuellement par un professionnel de santé ?": "Are you currently seeing a health professional?",
+"Exercices ou types de séances que tu détestes / que tu adores": "Exercises or types of workouts you hate / love",
+"Extérieur": "Outdoors",
+"Facultatif, et aucune obligation de détailler. Cela me permet simplement d'adapter mon approche et, si besoin, de t'orienter vers un professionnel de santé.": "Optional, and you don't have to go into detail. It just helps me adapt my approach and, if needed, point you to a health professional.",
+"Fais-tu du cardio ? Lequel, combien de fois par semaine ?": "Do you do cardio? What kind, and how many times a week?",
+"Femme": "Female",
+"Frais / crèmerie": "Fresh / dairy",
+"Fruits et légumes": "Produce",
+"Fruits à coque": "Tree nuts",
+"Fumes-tu ?": "Do you smoke?",
+"Fuseau horaire": "Time zone",
+"Féculents et pain": "Starches and bread",
+"Glucides": "Carbs",
+"Grignotage : quand et pourquoi ?": "Snacking: when and why?",
+"Hanches": "Hips",
+"Heure de coucher": "Bedtime",
+"Heure de lever": "Wake-up time",
+"Heures de sommeil / nuit": "Hours of sleep per night",
+"Homme": "Male",
+"Horaires, déplacements, poste sédentaire ou physique.": "Hours, commute, desk job or physical job.",
+"Ingrédients": "Ingredients",
+"Je suis sur iPhone": "I'm on iPhone",
+"Jeudi": "Thursday",
+"La journée type": "Your sample day",
+"Lait": "Milk",
+"Lancer ta première séance": "Start your first workout",
+"Le matin à jeun, mètre bien à plat, sans serrer.": "In the morning on an empty stomach, tape flat, without pulling tight.",
+"Le processus, étape par étape": "The process, step by step",
+"Le programme": "Your program",
+"Les compléments": "Your supplements",
+"Les grammages sont donnés crus, sauf mention contraire. Si un plat ne te convient pas, dis-le à ton coach : il le remplacera sans changer tes macros.": "Weights are given raw unless stated otherwise. If a dish doesn't work for you, tell your coach: they'll swap it without changing your macros.",
+"Les poids sont ceux qui entrent dans les recettes — crus pour la viande, le poisson et les féculents. Prévois un peu plus pour les pertes à la cuisson.": "These are the weights used in the recipes — raw for meat, fish and starches. Buy a little extra for cooking losses.",
+"Les questions marquées d'une étoile sont indispensables. Tu peux revenir modifier tes réponses à tout moment.": "Questions marked with an asterisk are required. You can come back and change your answers at any time.",
+"Les séances construites pour toi : les exercices, les séries, les répétitions et les temps de repos.": "Workouts built for you: the exercises, sets, reps and rest times.",
+"Lipides": "Fat",
+"Lire la vidéo": "Play the video",
+"Liste de courses": "Grocery list",
+"Lundi": "Monday",
+"Ma formation": "My course",
+"Mardi": "Tuesday",
+"Mensurations": "Measurements",
+"Mensurations (cm)": "Measurements (cm)",
+"Mensurations du jour (cm)": "Today's measurements (cm)",
+"Mercredi": "Wednesday",
+"Mes compléments": "My supplements",
+"Mes données": "My data",
+"Mes repas": "My meals",
+"Mesure toujours au même endroit, le matin, à jeun, sans tirer sur le mètre. La régularité compte plus que la précision absolue.": "Always measure at the same spot, in the morning, on an empty stomach, without pulling the tape. Consistency matters more than perfect precision.",
+"Mets MHX Coaching sur ton écran d'accueil": "Add MHX Coaching to your home screen",
+"Mollet": "Calf",
+"Mollusques": "Mollusks",
+"Mon compte": "My account",
+"Mon profil": "My profile",
+"Mon programme": "My program",
+"Mot de passe": "Password",
+"Mot de passe actuel": "Current password",
+"Mot de passe oublié": "Forgot password",
+"Mot de passe oublié ?": "Forgot your password?",
+"Mot du coach": "Note from your coach",
+"Médecin, kiné, nutritionniste, psychologue…": "Doctor, physical therapist, nutritionist, psychologist…",
+"Niveau d'énergie dans la journée": "Energy level during the day",
+"Niveau de stress au quotidien": "Day-to-day stress level",
+"Nombre de pas moyen par jour (si tu le suis)": "Average steps per day (if you track them)",
+"Non": "No",
+"Nouveau mot de passe": "New password",
+"Nouvelle adresse": "New email",
+"Nouvelle mesure": "New measurement",
+"Numéro WhatsApp (avec indicatif)": "WhatsApp number (with country code)",
+"Occasionnellement": "Occasionally",
+"Oui": "Yes",
+"Oui, envoyées": "Yes, sent",
+"Oui, quotidiennement": "Yes, daily",
+"Outils": "Tools",
+"Ouvre le menu de ton navigateur — les trois points en haut à droite.": "Open your browser menu — the three dots at the top right.",
+"Où tu en es": "Where you're at",
+"Où vas-tu t'entraîner ? *": "Where will you train? *",
+"Paléo": "Paleo",
+"Pas encore": "Not yet",
+"Pas encore de mesure": "No measurement yet",
+"Pense à télécharger tes données avant, si tu veux les garder.": "Remember to download your data first if you want to keep it.",
+"Performance / condition physique": "Performance / fitness",
+"Perte de poids / sèche": "Weight loss / cutting",
+"Pescétarien": "Pescatarian",
+"Petit-déjeuner": "Breakfast",
+"Photos de départ envoyées ?": "Starting photos sent?",
+"Plus tard": "Later",
+"Poids": "Weight",
+"Poids (kg)": "Weight (kg)",
+"Poids actuel": "Current weight",
+"Poids actuel (kg) *": "Current weight (kg) *",
+"Poids de départ (kg)": "Starting weight (kg)",
+"Poids objectif (kg)": "Goal weight (kg)",
+"Poissons": "Fish",
+"Poissons et fruits de mer": "Fish and seafood",
+"Poitrine": "Chest",
+"Pour les femmes : cycle régulier ? Grossesse, post-partum ou contraception à prendre en compte ?": "For women: regular cycle? Pregnancy, postpartum or birth control to take into account?",
+"Pourquoi maintenant ? Qu'est-ce qui a déclenché ta décision ?": "Why now? What made you decide?",
+"Prendre ton poids, tes mensurations et tes photos (face, dos, profil)": "Take your weight, measurements and photos (front, back, side)",
+"Prise de muscle": "Muscle gain",
+"Problèmes de santé, pathologies ou traitements médicaux en cours": "Health issues, conditions or current medical treatments",
+"Protéine whey": "Whey protein",
+"Protéines": "Protein",
+"Prénom et nom *": "First and last name *",
+"Préparation": "Prep",
+"Qu'est-ce qui t'a fait échouer par le passé, selon toi ?": "What do you think made you fail in the past?",
+"Qualité de ton sommeil": "Sleep quality",
+"Que fais-tu comme activité physique actuellement ?": "What physical activity do you do right now?",
+"Quel est ton niveau ? *": "What's your level? *",
+"Quel est ton objectif principal ? *": "What's your main goal? *",
+"Quels jours et à quel moment de la journée ?": "Which days and what time of day?",
+"Qui cuisine ? Combien de temps peux-tu y consacrer par jour ?": "Who cooks? How much time can you spend on it each day?",
+"Recevoir le lien": "Send me the link",
+"Recomposition (perdre du gras + prendre du muscle)": "Recomp (lose fat + build muscle)",
+"Renommer les zones que tu mesures": "Rename the areas you measure",
+"Reprendre poids et mensurations chaque semaine": "Take your weight and measurements again every week",
+"Restaurer une sauvegarde": "Restore a backup",
+"Rester connecté": "Stay logged in",
+"Retour à la connexion": "Back to login",
+"Réviser le module concerné en cas de difficulté": "Review the related module if you get stuck",
+"Salle basique": "Basic gym",
+"Salle complète": "Full gym",
+"Samedi": "Saturday",
+"Sans gluten": "Gluten-free",
+"Sans lactose": "Lactose-free",
+"Sans porc ni alcool": "No pork, no alcohol",
+"Santé & énergie au quotidien": "Everyday health & energy",
+"Se connecter": "Log in",
+"Se déconnecter": "Log out",
+"Semaine": "Week",
+"Semaines suivies": "Weeks tracked",
+"Sert à composer tes repas : aucun plat proposé ne sortira de ce cadre.": "Used to build your meals: no dish will ever step outside these limits.",
+"Sexe *": "Sex *",
+"Si oui, précise": "If yes, please specify",
+"Si à la maison : quel matériel as-tu ?": "If at home: what equipment do you have?",
+"Situation familiale et contraintes horaires": "Family situation and schedule constraints",
+"Sodas, jus par jour": "Sodas, juices per day",
+"Soja": "Soy",
+"Source principale de ce stress": "Main source of this stress",
+"Squat, développé, tractions, course, amplitude d'épaule…": "Squat, bench press, pull-ups, running, shoulder mobility…",
+"Suivi des mensurations": "Measurement tracking",
+"Supprimer mon compte": "Delete my account",
+"Sésame": "Sesame",
+"Ta formation complète : les vidéos, les guides et tes outils de suivi. Ce que tu coches ici reste enregistré.": "Your full course: videos, guides and your tracking tools. What you check here stays saved.",
+"Taille": "Waist",
+"Taille (cm) *": "Height (cm) *",
+"Tes habitudes et ta routine sont installées": "Your habits and routine are in place",
+"Ton coach n'a pas encore déposé ton programme. Tu recevras un message quand il sera prêt.": "Your coach hasn't uploaded your program yet. You'll get a message when it's ready.",
+"Ton coach n'a pas encore validé tes repas. Remplis ton profil — régime et allergies comprises — pour qu'il puisse les préparer.": "Your coach hasn't approved your meals yet. Fill in your profile — including your diet and allergies — so they can prepare them.",
+"Ton coach ne t'a pas prescrit de complément. C'est une bonne nouvelle : rien ne remplace tes repas.": "Your coach hasn't prescribed any supplements. That's good news: nothing replaces your meals.",
+"Ton entourage va-t-il soutenir ta démarche ou la compliquer ?": "Will the people around you support your journey or make it harder?",
+"Ton métier et ton rythme de travail": "Your job and work schedule",
+"Ton parcours": "Your journey",
+"Ton poids et tes tours de taille semaine après semaine. Les courbes se tracent toutes seules à partir de ce que tu saisis.": "Your weight and measurements, week after week. The curves draw themselves from what you enter.",
+"Ton point de départ": "Your starting point",
+"Ton profil": "Your profile",
+"Ton profil, tes mensurations, ton programme, tes repas et ta progression de formation seront effacés. Ton coach n'y aura plus accès non plus.": "Your profile, measurements, program, meals and course progress will be erased. Your coach won't have access to them anymore either.",
+"Ton profil, tes mensurations, ton programme, tes repas et ta progression de formation seront effacés. Ton coach n'y aura plus accès non plus. <b>C'est définitif : il n'y a pas de corbeille.</b>": "Your profile, measurements, program, meals and course progress will be erased. Your coach won't have access to them anymore either. <b>This is permanent: there's no trash to restore from.</b>",
+"Ton régime alimentaire *": "Your diet *",
+"Tout ce que la liste ci-dessus ne couvre pas. Ton coach en tient compte avant de valider tes repas.": "Anything the list above doesn't cover. Your coach takes it into account before approving your meals.",
+"Tout est enregistré dans ton compte : tu retrouves tes données sur n'importe quel appareil en te connectant. Tu peux en récupérer une copie complète quand tu veux, et demander leur effacement.": "Everything is saved to your account: log in on any device to find your data. You can get a full copy whenever you want, and ask for it to be deleted.",
+"Toutes tes mesures": "All your measurements",
+"Tu fais des points réguliers et tu observes des résultats": "You check in regularly and you're seeing results",
+"Tu l'ouvres d'un doigt, elle s'affiche en plein écran, et tu n'as plus à retenir l'adresse.": "You open it with one tap, it goes full screen, and you don't have to remember the address.",
+"Type, fréquence, depuis quand.": "Type, how often, since when.",
+"Télécharger toutes mes données": "Download all my data",
+"Un complément ne rattrape pas une alimentation qui ne va pas : commence toujours par tes repas. Si tu prends un traitement, si tu es enceinte ou si tu as une pathologie, demande à ton médecin avant d'en ajouter un — certains interagissent avec des médicaments. Ton coach n'est pas médecin.": "A supplement won't make up for a diet that isn't working: always start with your meals. If you take medication, are pregnant or have a health condition, ask your doctor before adding one — some interact with medications. Your coach is not a doctor.",
+"Un lien de confirmation part sur la nouvelle adresse. Tant que tu n'as pas cliqué dessus, tu continues de te connecter avec l'ancienne — c'est ce qui t'évite de perdre ton compte en cas de faute de frappe.": "A confirmation link is sent to the new email. Until you click it, you keep logging in with the old one — that's what keeps you from losing your account over a typo.",
+"Une question ?": "Questions?",
+"Vacances, mariage, compétition, shooting.": "Vacation, wedding, competition, photo shoot.",
+"Variation de poids": "Weight change",
+"Vendredi": "Friday",
+"Ventre": "Belly",
+"Ville / Pays": "City / Country",
+"Voir la démonstration →": "Watch the demo →",
+"Végétalien (vegan)": "Vegan",
+"Végétarien": "Vegetarian",
+"Y a-t-il un antécédent de trouble du comportement alimentaire, ou une relation compliquée avec la nourriture, dont je dois tenir compte ?": "Is there any history of eating disorders, or a complicated relationship with food, that I should take into account?",
+"Y a-t-il une échéance précise ?": "Is there a specific deadline?",
+"aujourd'hui.": "today.",
+"compté dans tes repas": "counted in your meals",
+"depuis le départ": "since the start",
+"g gluc.": "g carbs",
+"g lip.": "g fat",
+"g prot.": "g protein",
+"kcal": "Cal",
+"kcal prévus": "Cal planned",
+"mangé": "eaten",
+"ou": "or",
+"repos": "rest",
+"séries": "sets",
+"toutes zones cumulées": "all areas combined",
+"« Ajouter à l'écran d'accueil »": "“Add to Home Screen”",
+"« Installer l'application »": "“Install app”",
+"À envoyer par WhatsApp : face, profil, dos — tenue ajustée, même lumière, même endroit. Elles servent uniquement au suivi et ne sont jamais publiées sans ton accord écrit.": "Send them on WhatsApp: front, side, back — fitted clothes, same light, same spot. They're only used to track your progress and are never shared without your written consent.",
+"À la maison": "At home",
+"À quel moment de la journée as-tu tes coups de barre ?": "What time of day do you hit an energy slump?",
+"À quel point es-tu prêt à changer tes habitudes ?": "How ready are you to change your habits?",
+"À quels horaires ?": "At what times?",
+"Âge *": "Age *",
+"Écrire à mon coach": "Message my coach",
+"Écris directement à ton coach :": "Message your coach directly:",
+"Épicerie": "Pantry",
+"Évolution des mensurations semaine par semaine": "Measurements week by week",
+"Évolution du poids semaine par semaine": "Weight week by week",
+"Œufs": "Eggs",
+"— choisis —": "— choose —",
+"▶ Voir la présentation de la formation": "▶ Watch the course intro",
+"1 = très faible · 10 = maximum": "1 = very low · 10 = maximum",
+"1 · Identité & logistique": "1 · Identity & logistics",
+"2 repas": "2 meals",
+"3 repas": "3 meals",
+"2 · Ton objectif": "2 · Your goal",
+"3 · Santé & antécédents": "3 · Health & history",
+"4 repas (3 + une collation)": "4 meals (3 + 1 snack)",
+"4 zones maximum à l'écran — au-delà les courbes deviennent illisibles.": "4 areas max on screen — beyond that the curves become unreadable.",
+"4 · Pratique sportive": "4 · Training",
+"5 repas (3 + deux collations)": "5 meals (3 + 2 snacks)",
+"5 · Alimentation": "5 · Nutrition",
+"6 repas (3 + trois collations)": "6 meals (3 + 3 snacks)",
+"6 · Mode de vie": "6 · Lifestyle",
+"8-10/jambe": "8-10/leg",
+"Avancé (2 ans et +)": "Advanced (2+ years)",
+"Commence par ton poids du jour : c'est ta semaine 1, et la base de ta courbe.": "Start with today's weight: it's your week 1, and the base of your curve.",
+"Demandé uniquement pour le calcul du métabolisme de base : la formule de référence donne un résultat différent d'environ 160 kcal par jour.": "Only used to calculate your basal metabolic rate: the reference formula gives a result about 160 Cal a day different.",
+"Débutant (0 à 6 mois)": "Beginner (0 to 6 months)",
+"Ex : perdre 8 kg d'ici décembre, tenir 10 tractions, retrouver de l'énergie l'après-midi.": "E.g.: lose 8 kg by December, do 10 pull-ups, get my afternoon energy back.",
+"Intermédiaire (6 mois à 2 ans)": "Intermediate (6 months to 2 years)",
+"Petit-déjeuner, déjeuner, dîner, collations, boissons — avec les quantités approximatives. C'est la question la plus importante du questionnaire : prends 5 minutes dessus.": "Breakfast, lunch, dinner, snacks, drinks — with rough amounts. This is the most important question in the questionnaire: take 5 minutes on it.",
+"Plus tes réponses sont précises, plus ton programme sera adapté. Ne cherche pas la bonne réponse : cherche la vraie. Compte 10 à 15 minutes.": "The more precise your answers, the better your program will fit you. Don't look for the right answer: look for the true one. Allow 10 to 15 minutes.",
+"Protéine, créatine, vitamines, oméga 3…": "Protein, creatine, vitamins, omega-3…",
+"Sois réaliste : mieux vaut 3 séances tenues que 5 prévues et 2 faites.": "Be realistic: 3 workouts you actually do beat 5 planned and 2 done.",
+"Choisir un défi dans le module 5": "Pick a challenge in module 5",
+"Comprendre et valider les étapes du module 2": "Understand and complete the steps of module 2",
+"Comprendre, valider les étapes et choisir son entraînement dans le module 3": "Understand, complete the steps and pick your workout plan in module 3",
+"Faire un bilan écrit toutes les 4 semaines : discipline, performances, points forts et points faibles": "Write a check-in every 4 weeks: discipline, performance, strengths and weaknesses",
+"Module 2 — L'alimentation": "Module 2 — Nutrition",
+"Module 3 — L'entraînement": "Module 3 — Training",
+"Module 4 — L'organisation": "Module 4 — Organization",
+"Module 5 — Les challenges": "Module 5 — Challenges",
+"Module 6 — Accélérateurs et ressources": "Module 6 — Boosters and resources",
+"Noter ta progression tous les 7 jours": "Log your progress every 7 days",
+"Noter ta progression tous les 7 jours, et ton ressenti de fin de semaine": "Log your progress every 7 days, and how you feel at the end of the week",
+"Prendre des photos toutes les 4 semaines (face, dos, profil)": "Take photos every 4 weeks (front, back, side)",
+"Regarder la vidéo de présentation et valider le module 0": "Watch the intro video and complete module 0",
+"Remplir toutes les informations du module 4": "Fill in all the information in module 4",
+"Une méthode simple et efficace pour perdre tes premiers kilos en 14 jours, sans programme complexe ni séance interminable. Conçue pour les personnes occupées : le plan s'intègre dans ta routine, entre le travail et la famille.": "A simple, effective method to lose your first pounds in 14 days, with no complicated program or endless workouts. Built for busy people: the plan fits into your routine, between work and family.",
+"Valider toutes les étapes du module 1 sur le mindset": "Complete all the steps of module 1 on mindset",
+"Étape 1 — Poser les bases de ta transformation": "Step 1 — Lay the foundations of your transformation",
+"Étape 2 — Passer à l'action": "Step 2 — Take action",
+"Étape 3 — Renforcer tes habitudes": "Step 3 — Strengthen your habits",
+"Étape 4 — Continuer": "Step 4 — Keep going",
+"Étape 5 — Célébrer tes succès": "Step 5 — Celebrate your wins",
+"C'est déjà ton adresse actuelle.": "That's already your current email.",
+"Ce n'est pas le mot attendu : rien n'a été supprimé.": "That's not the expected word: nothing was deleted.",
+"Cette sauvegarde n'est pas lisible.": "This backup can't be read.",
+"Copie impossible sur ce navigateur.": "Copying isn't possible in this browser.",
+"Enregistrement impossible.": "Couldn't save.",
+"Enregistrement…": "Saving…",
+"Enregistrer": "Save",
+"Export impossible pour le moment.": "Export isn't possible right now.",
+"Fichier téléchargé.": "File downloaded.",
+"Indique ton email.": "Enter your email.",
+"Indique un numéro de semaine.": "Enter a week number.",
+"Indique une adresse valide.": "Enter a valid email.",
+"Le mot de passe doit faire au moins 6 caractères.": "Password must be at least 6 characters.",
+"Le mot de passe doit faire au moins 8 caractères.": "Password must be at least 8 characters.",
+"Le nouveau mot de passe doit faire au moins 6 caractères.": "The new password must be at least 6 characters.",
+"Le nouveau mot de passe est le même que l'ancien.": "The new password is the same as the old one.",
+"Les deux mots de passe ne sont pas identiques.": "The two passwords don't match.",
+"Les deux nouveaux mots de passe ne sont pas identiques.": "The two new passwords don't match.",
+"Masquer": "Hide",
+"Mot de passe changé. Utilise le nouveau à ta prochaine connexion.": "Password changed. Use the new one next time you log in.",
+"Mot de passe enregistré. Tu peux te connecter.": "Password saved. You can log in now.",
+"Numéro de semaine invalide.": "Invalid week number.",
+"Poids entre 30 et 300 kg, vérifie la virgule.": "Weight must be between 30 and 300 kg — check the decimal point.",
+"Profil enregistré. Ton coach le voit de son côté.": "Profile saved. Your coach can see it on their side.",
+"Remplis les trois champs.": "Fill in all three fields.",
+"Renseigne au moins ton poids ou une mensuration.": "Enter at least your weight or one measurement.",
+"Sauvegarde copiée. Colle-la dans une note.": "Backup copied. Paste it into a note.",
+"Sauvegarde restaurée.": "Backup restored.",
+"Si un compte existe pour cet email, tu vas recevoir un lien.": "If an account exists for this email, you'll receive a link.",
+"Suppression…": "Deleting…",
+"Supprimer": "Delete",
+"Un instant…": "One moment…",
+"Supprimer définitivement ton compte et toutes tes données ?\n\nCette action ne peut pas être annulée.": "Permanently delete your account and all your data?\n\nThis can't be undone.",
+"Pour confirmer, écris SUPPRIMER en majuscules :": "To confirm, type DELETE in capital letters:",
+"Ton compte est supprimé. Merci d'avoir utilisé l'application.": "Your account has been deleted. Thanks for using the app.",
+"Colle ici la sauvegarde que tu avais copiée :": "Paste the backup you copied here:",
+"La semaine {n} existe déjà. La remplacer ?": "Week {n} already exists. Replace it?",
+"Email ou mot de passe incorrect.": "Incorrect email or password.",
+"Une erreur est survenue.": "Something went wrong.",
+"Plateforme MHX Coaching": "MHX Coaching Platform",
+"Hors ligne": "Offline",
+"Enregistré": "Saved",
+"Voir": "Show"
+};
+I18N.motifs = [["^(\\d+) articles? sur (\\d+) dans le panier\\.$", "$1 of $2 items in your cart."], ["^(\\d+) étapes? validées? sur (\\d+) — (\\d+) %$", "$1 of $2 steps completed — $3%"], ["^([\\d\\s\\u202f\\u00a0.,−-]+?) kcal$", "$1 Cal"], ["^([\\d\\s\\u202f\\u00a0.,−-]+?) kcal · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de protéines par dose$", "$1 Cal · $2 g protein per serving"], ["^([\\d\\s\\u202f\\u00a0.,−-]+?) kcal consommées sur ([\\d\\s\\u202f\\u00a0.,−-]+?) — il te reste$", "$1 Cal eaten out of $2 — you have"], ["^Objectif visé : ([\\d\\s\\u202f\\u00a0.,−-]+?) kcal · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de protéines · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de glucides · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de lipides\\.$", "Target: $1 Cal · $2 g protein · $3 g carbs · $4 g fat."], ["^Coche les jours que tu veux acheter : la liste se recalcule\\. (\\d+) jours? sélectionnés?\\.$", "Check the days you want to shop for: the list updates automatically. $1 day(s) selected."], ["^Programme mis à jour le (\\d{1,2})/(\\d{1,2})/(\\d{4})$", "Program updated $2/$1/$3"], ["^Repas mis à jour le (\\d{1,2})/(\\d{1,2})/(\\d{4})$", "Meals updated $2/$1/$3"], ["^S(\\d+)$", "W$1"], ["^Supprimer la semaine (\\d+)$", "Delete week $1"], ["^dernière : semaine (\\d+)$", "latest: week $1"], ["^semaine (\\d+)$", "week $1"], ["^Semaine (\\d+) enregistrée\\.$", "Week $1 saved."], ["^(\\d+)/jambe$", "$1/leg"], ["^(\\d+)-(\\d+)/jambe$", "$1-$2/leg"], ["^(\\d+)/bras$", "$1/arm"], ["^(\\d+)-(\\d+)/bras$", "$1-$2/arm"], ["^(\\d+)-(\\d+) s/côté$", "$1-$2 s/side"], ["^protéines au-dessus de ([\\d\\s\\u202f\\u00a0.,−-]+?) g$", "protein over by $1 g"], ["^protéines en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) g$", "protein under by $1 g"], ["^lipides au-dessus de ([\\d\\s\\u202f\\u00a0.,−-]+?) g — sur ce régime, les sources de protéines apportent beaucoup de gras$", "fat over by $1 g — on this diet, protein sources bring a lot of fat"], ["^lipides en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) g — sur ce régime, les sources de protéines apportent beaucoup de gras$", "fat under by $1 g"], ["^calories au-dessus de ([\\d\\s\\u202f\\u00a0.,−-]+?) kcal$", "calories over by $1 Cal"], ["^calories en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) kcal$", "calories under by $1 Cal"], ["^glucides en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) g — ce régime offre peu de sources de glucides dans le catalogue$", "carbs under by $1 g — this diet has few carb sources in the catalog"]].map(([p, r]) => [new RegExp(p), r]);
+
+
 /* Les dates sont stockees au format ISO (2026-08-29) parce que c'est le seul
    qui se trie correctement. On les affiche a la francaise. */
 const dateFr = (iso) => {
   if (!iso) return "—";
   const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
-  return m ? m[3] + "/" + m[2] + "/" + m[1] : String(iso);
+  if (!m) return String(iso);
+  return window.__langue === "en" ? m[2] + "/" + m[3] + "/" + m[1] : m[3] + "/" + m[2] + "/" + m[1];   // US : mois/jour/annee
 };
 
 function flash(id, texte){
@@ -1574,10 +2077,10 @@ function initSauvegarde(){
 
   const sup = $("sv-suppr");
   if (sup) sup.addEventListener("click", async () => {
-    if (!confirm("Supprimer définitivement ton compte et toutes tes données ?\n\nCette action ne peut pas être annulée.")) return;
-    const mot = prompt("Pour confirmer, écris SUPPRIMER en majuscules :");
+    if (!confirm(trad("Supprimer définitivement ton compte et toutes tes données ?\n\nCette action ne peut pas être annulée."))) return;
+    const mot = prompt(trad("Pour confirmer, écris SUPPRIMER en majuscules :"));
     if (mot === null) return;
-    if (String(mot).trim().toUpperCase() !== "SUPPRIMER"){
+    if (["SUPPRIMER", "DELETE"].indexOf(String(mot).trim().toUpperCase()) === -1){
       flash("sv-suppr-msg", "Ce n'est pas le mot attendu : rien n'a été supprimé.");
       return;
     }
@@ -1588,7 +2091,7 @@ function initSauvegarde(){
       [localStorage, sessionStorage].forEach(m => {
         try { Object.keys(m).forEach(k => { if (k.indexOf("mhx_") === 0) m.removeItem(k); }); } catch(e){}
       });
-      alert("Ton compte est supprimé. Merci d'avoir utilisé l'application.");
+      alert(trad("Ton compte est supprimé. Merci d'avoir utilisé l'application."));
       location.hash = ""; location.reload();
     } catch(e){
       sup.disabled = false;
@@ -1606,7 +2109,7 @@ function initSauvegarde(){
     } else flash("sv-msg","Copie impossible sur ce navigateur.");
   });
   $("sv-paste").addEventListener("click", () => {
-    const t = prompt("Colle ici la sauvegarde que tu avais copiée :");
+    const t = prompt(trad("Colle ici la sauvegarde que tu avais copiée :"));
     if (!t) return;
     Store.importer(t)
       .then(() => { flash("sv-msg","Sauvegarde restaurée."); setTimeout(() => afficher(courant, true), 500); })
@@ -2158,7 +2661,7 @@ const outilMensurations = {
       if (isFinite(poids) && (poids < 30 || poids > 300)){ flash("msg","Poids entre 30 et 300 kg, vérifie la virgule."); return; }
       const horsBornes = D.zones.filter((z,i) => vals[i] != null && (vals[i] < 10 || vals[i] > 250));
       if (horsBornes.length){ flash("msg", horsBornes[0] + " : entre 10 et 250 cm, vérifie la saisie."); return; }
-      if (D.mesures.some(m => m.sem === sem) && !confirm("La semaine " + sem + " existe déjà. La remplacer ?")) return;
+      if (D.mesures.some(m => m.sem === sem) && !confirm(trad("La semaine {n} existe déjà. La remplacer ?", { n: sem }))) return;
       D.mesures = D.mesures.filter(m => m.sem !== sem);
       D.mesures.push({ sem, date: $("e-date").value || "", poids: isFinite(poids) ? poids : null, vals });
       D.mesures.sort((a,b) => a.sem - b.sem);
@@ -4746,7 +5249,9 @@ const outilClients = {
           const estCoach = p.role === "coach", cestMoi = p.id === moi;
           const el = document.createElement("div");
           el.className = "client-l";
-          el.innerHTML = `<span class="nom">${esc(((p.prenom||"") + " " + (p.nom||"")).trim() || "Sans nom")}</span>
+          /* le client a choisi l'anglais : le coach le voit, et ecrit ses notes en anglais */
+          const enAnglais = !estCoach && contenus[p.id] && contenus[p.id].prefs && contenus[p.id].prefs.langue === "en";
+          el.innerHTML = `<span class="nom">${esc(((p.prenom||"") + " " + (p.nom||"")).trim() || "Sans nom")}${enAnglais ? ` <span class="pastille" title="Ce client utilise l'app en anglais : écris-lui tes notes en anglais">🇺🇸 anglais</span>` : ""}</span>
                           ${estCoach ? `<span class="pastille role-coach">accès complet</span>` : `<span class="pastille">${d ? "actif" : "pas encore utilisé"}</span>`}
                           <span class="meta">${estCoach ? (cestMoi ? "c'est toi" : "voit tout, comme toi") : "dernière saisie : " + quand}</span>
                           ${estCoach ? "" : `<button class="voir" type="button">Ouvrir sa fiche</button>`}
@@ -6062,6 +6567,12 @@ function construireNav(){
   $("qui").textContent = nom + (Auth.estCoach() ? " · coach" : "");
   $("compte").hidden = false;
   $("deco").onclick = () => Auth.deconnecter();
+  const bl = $("langue");
+  if (bl){
+    bl.textContent = libelleLangue();
+    bl.title = I18N.langue === "en" ? "Passer en français" : "Switch to English";
+    bl.onclick = basculerLangue;
+  }
 }
 
 function marquerNav(id){
@@ -6276,6 +6787,7 @@ function portail(mode){
   document.body.innerHTML = `
   <div class="portail">
     <div class="carte-co">
+      <button type="button" class="co-langue" id="co-langue" data-notr>${I18N.langue === "en" ? "🇫🇷 Français" : "🇺🇸 English"}</button>
       ${CONFIG.marque.logo ? `<img class="logo-img" src="${esc(CONFIG.marque.logo)}" alt="${esc(CONFIG.marque.nom)}">` : ""}
       <div class="logo">${esc(CONFIG.marque.nom)}</div>
       ${CONFIG.marque.programme ? `<div class="sous">${esc(CONFIG.marque.programme)}</div>` : ""}
@@ -6297,6 +6809,10 @@ function portail(mode){
   const err = (msg, ok) => { const e = $("co-err"); e.className = "erreur" + (ok ? " ok" : ""); e.textContent = msg; };
 
   $$("[data-mode]").forEach(b => b.addEventListener("click", () => portail(b.dataset.mode)));
+  $("co-langue").addEventListener("click", () => {
+    const ok = I18N.choisir(I18N.langue === "en" ? "fr" : "en");
+    if (ok) location.reload(); else portail(mode);
+  });
 
   const valider = async () => {
     const email = ($("c-email").value || "").trim();
@@ -6386,6 +6902,8 @@ function ecranNouveauMotDePasse(jeton){
 let premiereFois = false;
 
 (async function demarrer(){
+  I18N.charger();
+  Traduction.demarrer();
   ancrerManifeste();
   const p = lireAdresse();
 
@@ -6406,6 +6924,16 @@ let premiereFois = false;
   const ok = await Auth.assurer();
   if (!ok){ portail("connexion"); return; }
   try { await Auth.chargerProfil(); } catch(e){}
+
+  /* la langue choisie sur un autre appareil l'emporte */
+  try {
+    const pr = await Store.lire("prefs", {});
+    if (pr && (pr.langue === "en" || pr.langue === "fr") && pr.langue !== I18N.langue){
+      const ok = I18N.choisir(pr.langue);
+      if (pr.langue === "fr" && ok){ location.reload(); return; }
+      if (pr.langue === "en") Traduction.noeud(document.body);
+    }
+  } catch(e){}
 
   construireNav();
   window.addEventListener("hashchange", routeDepuisAdresse);
