@@ -5672,5 +5672,246 @@
       "transfert-de-poids-lateral"
     ],
     "lien": "https://www.youtube.com/watch?v=RJTezdqvB2A"
+  },
+  {
+    "id": "cercles-de-chevilles",
+    "nom": "Cercles de chevilles",
+    "groupe": "Mobilité",
+    "muscles": [
+      "Chevilles",
+      "Mollets"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Mobilité",
+    "execution": [
+      "Debout, une main sur un appui si besoin, le poids sur une jambe.",
+      "Pose la pointe de l'autre pied au sol, genou relâché.",
+      "Dessine des cercles lents avec la cheville, dans un sens puis dans l'autre.",
+      "Change de pied et recommence."
+    ],
+    "erreurs": [
+      "Aller vite : tu balances le pied au lieu de mobiliser la cheville.",
+      "Genou verrouillé : la jambe se raidit et le cercle devient petit.",
+      "Mettre du poids sur la pointe : la cheville se bloque au lieu de tourner."
+    ],
+    "respiration": "Respire calmement, sans bloquer.",
+    "alternatives": [
+      "cercles-de-chevilles-assis",
+      "mobilite-hanches-et-chevilles",
+      "mollets-deux-pieds"
+    ],
+    "lien": "https://www.youtube.com/watch?v=GSJroLOkSU8"
+  },
+  {
+    "id": "petites-flexions-de-genoux-mains-sur-les-genoux",
+    "nom": "Petites flexions de genoux mains sur les genoux",
+    "groupe": "Mobilité",
+    "muscles": [
+      "Genoux",
+      "Quadriceps"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Mobilité",
+    "execution": [
+      "Debout, pieds serrés, mains posées sur les genoux.",
+      "Fléchis un peu les genoux, sur une amplitude courte.",
+      "Fais de petits cercles avec les genoux ensemble, dans un sens puis dans l'autre.",
+      "Reste dans une zone sans douleur, talons au sol."
+    ],
+    "erreurs": [
+      "Descendre trop bas : l'échauffement devient une charge pour le genou.",
+      "Appuyer fort avec les mains : tu écrases l'articulation au lieu de la mobiliser.",
+      "Continuer malgré une gêne : on arrête et on réduit l'amplitude."
+    ],
+    "respiration": "Respire calmement, sans bloquer.",
+    "alternatives": [
+      "mobilite-hanches-et-chevilles",
+      "extensions-de-genoux-assis",
+      "elevations-de-genoux-assis"
+    ],
+    "lien": "https://www.youtube.com/watch?v=Aw9h9cjx1g8"
+  },
+  {
+    "id": "cercles-de-hanche-genou-flechi",
+    "nom": "Cercles de hanche genou fléchi",
+    "groupe": "Mobilité",
+    "muscles": [
+      "Hanches",
+      "Fessiers"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Mobilité",
+    "execution": [
+      "Debout, une main sur un appui si besoin, le poids sur une jambe.",
+      "Monte l'autre genou fléchi devant toi.",
+      "Dessine un grand cercle avec le genou : devant, sur le côté, derrière, puis retour.",
+      "Fais les cercles dans les deux sens, puis change de jambe."
+    ],
+    "erreurs": [
+      "Bassin qui bascule : c'est le tronc qui bouge, pas la hanche.",
+      "Aller vite : tu perds le contrôle et l'amplitude.",
+      "Se pencher sur la jambe d'appui : l'équilibre compense au lieu de la hanche."
+    ],
+    "respiration": "Respire calmement, sans bloquer.",
+    "alternatives": [
+      "mobilite-hanches-et-chevilles",
+      "flexion-de-hanche-debout-avec-appui",
+      "rotations-de-bassin"
+    ],
+    "lien": "https://www.youtube.com/watch?v=yFi1FDOFXq0"
+  },
+  {
+    "id": "rotations-de-bassin",
+    "nom": "Rotations de bassin",
+    "groupe": "Mobilité",
+    "muscles": [
+      "Hanches",
+      "Lombaires"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Mobilité",
+    "execution": [
+      "Debout, pieds écartés largeur d'épaules, mains sur les hanches.",
+      "Genoux souples, buste droit.",
+      "Dessine de grands cercles avec le bassin, sans bouger les épaules.",
+      "Fais les cercles dans un sens, puis dans l'autre."
+    ],
+    "erreurs": [
+      "Bouger les épaules avec le bassin : le mouvement part du haut du corps.",
+      "Genoux verrouillés : le bas du dos force.",
+      "Petits cercles rapides : tu ne mobilises presque rien."
+    ],
+    "respiration": "Respire calmement, sans bloquer.",
+    "alternatives": [
+      "mobilite-hanches-et-chevilles",
+      "cercles-de-hanche-genou-flechi",
+      "transfert-de-poids-lateral"
+    ],
+    "lien": "https://www.youtube.com/watch?v=9WijvBkWGEo"
+  },
+  {
+    "id": "rotations-du-buste-bras-relaches",
+    "nom": "Rotations du buste bras relâchés",
+    "groupe": "Mobilité",
+    "muscles": [
+      "Rachis thoracique",
+      "Obliques"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Mobilité",
+    "execution": [
+      "Debout, pieds largeur d'épaules, genoux souples, bras relâchés le long du corps.",
+      "Tourne le buste à droite puis à gauche, bassin face à l'avant.",
+      "Laisse les bras suivre le mouvement, sans les lancer.",
+      "Augmente l'amplitude petit à petit."
+    ],
+    "erreurs": [
+      "Tirer avec les bras : ils prennent de l'élan et forcent la rotation.",
+      "Tourner le bassin avec le buste : la rotation ne se fait plus dans le dos.",
+      "Aller trop vite dès le départ : on commence petit et lent."
+    ],
+    "respiration": "Expire à chaque rotation.",
+    "alternatives": [
+      "rotation-de-tronc-assis",
+      "ouverture-de-poitrine-a-la-chaise",
+      "rotations-de-bassin"
+    ],
+    "lien": "https://www.youtube.com/watch?v=JroqpO-_trk"
+  },
+  {
+    "id": "cercles-d-epaules",
+    "nom": "Cercles d'épaules",
+    "groupe": "Mobilité",
+    "muscles": [
+      "Épaules",
+      "Trapèzes"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Mobilité",
+    "execution": [
+      "Debout, bras relâchés le long du corps.",
+      "Monte les épaules vers les oreilles, emmène-les vers l'arrière, puis descends.",
+      "Fais de grands cercles, 10 vers l'avant puis 10 vers l'arrière.",
+      "Garde la nuque longue et le regard droit devant."
+    ],
+    "erreurs": [
+      "Petits cercles : tu restes en surface et l'épaule ne se mobilise pas.",
+      "Tendre le cou : les trapèzes se crispent.",
+      "Enchaîner trop vite : le mouvement devient saccadé."
+    ],
+    "respiration": "Inspire en montant les épaules, expire en les descendant.",
+    "alternatives": [
+      "rotations-d-epaules",
+      "wall-angels",
+      "rotations-du-buste-bras-relaches"
+    ],
+    "lien": "https://www.youtube.com/watch?v=831d53pAlho"
+  },
+  {
+    "id": "rotations-de-coudes-et-de-poignets",
+    "nom": "Rotations de coudes et de poignets",
+    "groupe": "Mobilité",
+    "muscles": [
+      "Coudes",
+      "Poignets",
+      "Avant-bras"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Mobilité",
+    "execution": [
+      "Debout, bras tendus devant toi à hauteur de poitrine.",
+      "Coudes : fais tourner les avant-bras autour du coude, dans un sens puis dans l'autre.",
+      "Poignets : poings souples, dessine des cercles dans les deux sens.",
+      "Termine en ouvrant et fermant les mains quelques fois."
+    ],
+    "erreurs": [
+      "Crisper les poings : l'avant-bras se raidit et le poignet tourne moins.",
+      "Hausser les épaules : garde-les basses et relâchées.",
+      "Aller trop vite : on cherche l'amplitude, pas la vitesse."
+    ],
+    "respiration": "Respire calmement, sans bloquer.",
+    "alternatives": [
+      "rotations-d-epaules",
+      "cercles-d-epaules",
+      "extension-triceps-au-mur"
+    ],
+    "lien": "https://www.youtube.com/watch?v=-0OK5ZbZnws"
+  },
+  {
+    "id": "demi-cercles-de-nuque",
+    "nom": "Demi-cercles de nuque",
+    "groupe": "Mobilité",
+    "muscles": [
+      "Nuque",
+      "Trapèzes supérieurs"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Mobilité",
+    "execution": [
+      "Debout, épaules basses, regard droit devant.",
+      "Penche la tête vers une épaule, oreille vers l'épaule.",
+      "Fais rouler le menton vers la poitrine, puis vers l'autre épaule.",
+      "Reviens très lentement : un demi-cercle par l'avant uniquement."
+    ],
+    "erreurs": [
+      "Passer la tête en arrière : l'extension complète comprime la nuque.",
+      "Monter l'épaule vers l'oreille : c'est la tête qui descend, pas l'épaule qui monte.",
+      "Aller vite : sur la nuque, on reste très lent."
+    ],
+    "respiration": "Respire lentement, expire en descendant le menton.",
+    "alternatives": [
+      "rotations-d-epaules",
+      "cercles-d-epaules",
+      "respiration-diaphragme-assis"
+    ],
+    "lien": "https://www.youtube.com/watch?v=8QCjZMdcIpc"
   }
 ]

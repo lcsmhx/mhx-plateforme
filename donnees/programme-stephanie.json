@@ -14,6 +14,100 @@
   "maj": "23/09/2026",
   "seances": [
     {
+      "nom": "Échauffement ostéo-articulaire",
+      "note": "Avant chaque séance · 5 min · Sans charge, debout, amplitudes progressives, des chevilles vers la nuque",
+      "exercices": [
+        {
+          "nom": "Cercles de chevilles",
+          "id": "cercles-de-chevilles",
+          "lien": "https://www.youtube.com/watch?v=GSJroLOkSU8",
+          "series": "1",
+          "reps": "10 par sens, par pied",
+          "tempo": "lent",
+          "repos": "",
+          "note": "Appui sur la pointe, genou relâché. Tempo lent. Alternative : Assis sur un banc.",
+          "alternative": "Assis sur un banc"
+        },
+        {
+          "nom": "Petites flexions de genoux mains sur les genoux",
+          "id": "petites-flexions-de-genoux-mains-sur-les-genoux",
+          "lien": "https://www.youtube.com/watch?v=Aw9h9cjx1g8",
+          "series": "1",
+          "reps": "10 par sens",
+          "tempo": "lent",
+          "repos": "",
+          "note": "Amplitude courte et indolore, ne jamais forcer. Tempo lent. Alternative : Flexions sans cercles.",
+          "alternative": "Flexions sans cercles"
+        },
+        {
+          "nom": "Cercles de hanche genou fléchi",
+          "id": "cercles-de-hanche-genou-flechi",
+          "lien": "https://www.youtube.com/watch?v=yFi1FDOFXq0",
+          "series": "1",
+          "reps": "10 par sens, par jambe",
+          "tempo": "lent",
+          "repos": "",
+          "note": "Le genou dessine un cercle, bassin stable. Tempo lent. Alternative : Se tenir à un support.",
+          "alternative": "Se tenir à un support"
+        },
+        {
+          "nom": "Rotations de bassin",
+          "id": "rotations-de-bassin",
+          "lien": "https://www.youtube.com/watch?v=9WijvBkWGEo",
+          "series": "1",
+          "reps": "10 par sens",
+          "tempo": "lent",
+          "repos": "",
+          "note": "Pieds écartés largeur d'épaules. Tempo lent.",
+          "alternative": ""
+        },
+        {
+          "nom": "Rotations du buste bras relâchés",
+          "id": "rotations-du-buste-bras-relaches",
+          "lien": "https://www.youtube.com/watch?v=JroqpO-_trk",
+          "series": "1",
+          "reps": "10 par sens",
+          "tempo": "lent",
+          "repos": "",
+          "note": "Les bras suivent, ils ne tirent pas. Tempo lent.",
+          "alternative": ""
+        },
+        {
+          "nom": "Cercles d'épaules",
+          "id": "cercles-d-epaules",
+          "lien": "https://www.youtube.com/watch?v=831d53pAlho",
+          "series": "1",
+          "reps": "10 avant, 10 arrière",
+          "tempo": "lent",
+          "repos": "",
+          "note": "Grandes amplitudes. Tempo lent.",
+          "alternative": ""
+        },
+        {
+          "nom": "Rotations de coudes et de poignets",
+          "id": "rotations-de-coudes-et-de-poignets",
+          "lien": "https://www.youtube.com/watch?v=-0OK5ZbZnws",
+          "series": "1",
+          "reps": "10 par sens",
+          "tempo": "lent",
+          "repos": "",
+          "note": "Tempo lent.",
+          "alternative": ""
+        },
+        {
+          "nom": "Demi-cercles de nuque",
+          "id": "demi-cercles-de-nuque",
+          "lien": "https://www.youtube.com/watch?v=8QCjZMdcIpc",
+          "series": "1",
+          "reps": "5 par sens",
+          "tempo": "très lent",
+          "repos": "",
+          "note": "Jamais en extension complète vers l'arrière. Tempo très lent. Alternative : Rotations gauche-droite.",
+          "alternative": "Rotations gauche-droite"
+        }
+      ]
+    },
+    {
       "nom": "Jambes A",
       "note": "Mardi 18h",
       "exercices": [

@@ -208,3 +208,18 @@ Versions machine ou guidées exactes, vérifiées le 23/09/2026 : lien actif, li
 | Mobilité hanches et chevilles | Joint Rotations Warm-Up Sequence | https://www.youtube.com/watch?v=RJTezdqvB2A |
 | Presse à cuisses pieds hauts | High and Wide Leg Press: How To | https://www.youtube.com/watch?v=OIq-tsCx_9k |
 | Mollets à la presse | Calf Press On The Leg Press Machine | https://www.youtube.com/watch?v=1YjDjUOHFUM |
+
+## Ajouts du 23/09/2026 (2) — échauffement ostéo-articulaire de Stéphanie (Claude)
+
+AZEOO cherché en premier : seule une version assise des cercles de chevilles existe (Slow Ankle Circles), pas les versions debout demandées. Autres chaînes, vérifiées : lien actif, lisible en intégré, pas de Short, moins d'une minute et demie.
+
+| Exercice MHX | Vidéo | URL |
+|---|---|---|
+| Cercles de chevilles | Standing Ankle Circles - both ways | https://www.youtube.com/watch?v=GSJroLOkSU8 |
+| Petites flexions de genoux mains sur les genoux | Quick Guide to Knee Circles | https://www.youtube.com/watch?v=Aw9h9cjx1g8 |
+| Cercles de hanche genou fléchi | Standing Hip Circles | https://www.youtube.com/watch?v=yFi1FDOFXq0 |
+| Rotations de bassin | Hip Circles | https://www.youtube.com/watch?v=9WijvBkWGEo |
+| Rotations du buste bras relâchés | Warm Up Torso Twist | Meta Burn Fitness | https://www.youtube.com/watch?v=JroqpO-_trk |
+| Cercles d'épaules | Shoulder Circles | Nuffield Health | https://www.youtube.com/watch?v=831d53pAlho |
+| Rotations de coudes et de poignets | Elbow and Wrist Warm Up | https://www.youtube.com/watch?v=-0OK5ZbZnws |
+| Demi-cercles de nuque | Neck semi circles | https://www.youtube.com/watch?v=8QCjZMdcIpc |

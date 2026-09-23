@@ -16,6 +16,8 @@ Régimes : omnivore, vegetarien, vegan, pescetarien, paleo, sans_gluten, sans_la
 
 **23/09/2026 (Claude)** : +16 fiches machines/guidées pour le programme de Stéphanie → **188** fiches, **122** avec `lien`. Liens aussi posés dans `liensexercices.json` (l'import en base lit ce fichier en priorité). Liste dans `liens-youtube.md`, section du 23/09.
 
+**23/09/2026 (Claude, 2)** : +8 fiches de mobilité (échauffement ostéo-articulaire) → **196** fiches, **130** avec `lien`.
+
 **Join** : `slug(exercice.nom dans programmes.json) == exercices.id`. Le champ `nom` de la fiche est identique au `nom` du programme (accents, libellé).
 
 **Slug** (Python) :
@@ -33,7 +35,7 @@ def slug(nom: str) -> str:
 Exemple : `"Développé couché"` → `"developpe-couche"`. Aucune collision de slug sur les 172 noms. Schéma : `id`, `nom`, `groupe`, `muscles`, `materiel`, `niveau`, `type`, `execution`, `erreurs`, `respiration`, `alternatives`, `lien`. Enums `groupe` / `materiel` / `niveau` / `type` documentés dans le fichier (valeurs FR). `alternatives` = 1–3 ids qui existent dans ce même fichier.
 
 ## programme-stephanie.json
-Programme client de Stéphanie (semaine 1, 5 séances : Jambes A, Haut du corps, Jambes B, 2 bonus). Même structure que le `programme` enregistré dans la table `donnees` (outil `programme`) : `nom`, `note`, `maj`, `seances[].exercices[]` avec `nom` (= `nom` de la fiche, pour que la fiche s'ouvre), `id`, `lien`, `series`, `reps`, `tempo`, `repos`, `note`, `alternative` (+ `superset` sur le bonus 2). Pas de RPE. L'app n'affiche côté client que `note` : tempo et alternative y sont donc aussi écrits en clair. Échauffement commun placé en tête de chaque séance.
+Programme client de Stéphanie (semaine 1, 6 séances : Échauffement ostéo-articulaire, Jambes A, Haut du corps, Jambes B, 2 bonus). Même structure que le `programme` enregistré dans la table `donnees` (outil `programme`) : `nom`, `note`, `maj`, `seances[].exercices[]` avec `nom` (= `nom` de la fiche, pour que la fiche s'ouvre), `id`, `lien`, `series`, `reps`, `tempo`, `repos`, `note`, `alternative` (+ `superset` sur le bonus 2). Pas de RPE. L'app n'affiche côté client que `note` : tempo et alternative y sont donc aussi écrits en clair. Échauffement commun placé en tête de chaque séance.
 
 ## recettes.json
 **248** recettes du quotidien (petit-déj / déjeuner / dîner / collation). Paléo petit-déj : 21 (filtre positif). Paléo déjeuner : 18. Vegan petit-déj : 20. Vegan déjeuner : 24. Schéma : `id`, `nom`, `moment`, `temps_min`, `portions`, `ingredients`, `etapes` — **pas** de champs `allergenes` / `regimes` (Claude calcule l’intersection des ingrédients). `aliment_id` pointe vers aliments.json. Macros recalculées par l’app. 0 id manquant.
