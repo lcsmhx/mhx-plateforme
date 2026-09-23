@@ -2238,7 +2238,7 @@
       "mollets-assis",
       "mollets-halteres"
     ],
-    "lien": ""
+    "lien": "https://www.youtube.com/watch?v=1YjDjUOHFUM"
   },
   {
     "id": "pompes-diamant",
@@ -4374,7 +4374,7 @@
       "hip-thrust",
       "souleve-de-terre-roumain"
     ],
-    "lien": ""
+    "lien": "https://www.youtube.com/watch?v=OIq-tsCx_9k"
   },
   {
     "id": "pull-apart",
@@ -5186,5 +5186,491 @@
       "montees-de-talons-debout"
     ],
     "lien": "https://www.youtube.com/watch?v=-0xcqlBurdc"
+  },
+  {
+    "id": "hip-thrust-a-la-machine",
+    "nom": "Hip thrust à la machine",
+    "groupe": "Fessiers",
+    "muscles": [
+      "Grand fessier",
+      "Ischios"
+    ],
+    "materiel": "Machine",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Règle le dossier pour avoir le haut du dos calé, la sangle ou le coussin au pli des hanches.",
+      "Pieds à plat largeur de bassin, tibias verticaux quand les hanches sont en haut.",
+      "Pousse dans les talons et monte le bassin jusqu'à l'alignement épaules-hanches-genoux.",
+      "Pause une seconde en haut, menton rentré, puis redescends en deux secondes."
+    ],
+    "erreurs": [
+      "Cambrer en haut : tu finis avec le bas du dos au lieu des fessiers.",
+      "Pieds trop loin : les ischios prennent le relais et les fessiers travaillent moins.",
+      "Regarder le plafond : la tête part en arrière et le bassin bascule avec."
+    ],
+    "respiration": "Expire en montant, inspire en redescendant.",
+    "alternatives": [
+      "hip-thrust",
+      "pont-fessier-haltere",
+      "machine-a-fessiers"
+    ],
+    "lien": "https://www.youtube.com/watch?v=_jPpHwTzGTs"
+  },
+  {
+    "id": "extension-de-hanche-a-la-poulie-jambe-tendue",
+    "nom": "Extension de hanche à la poulie jambe tendue",
+    "groupe": "Fessiers",
+    "muscles": [
+      "Grand fessier",
+      "Ischios"
+    ],
+    "materiel": "Poulie",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Sangle à la cheville, poulie basse, face à la machine, mains sur les supports.",
+      "Buste légèrement penché, jambe d'appui un peu fléchie.",
+      "Tire la jambe vers l'arrière en la gardant tendue, jusqu'à sentir le fessier serrer.",
+      "Pause une seconde, reviens lentement sans laisser retomber la charge."
+    ],
+    "erreurs": [
+      "Cambrer pour monter plus haut : l'amplitude vient du dos, pas de la hanche.",
+      "Plier le genou : tu transformes l'exercice en leg curl.",
+      "Tourner le bassin : la jambe part sur le côté et le fessier décroche."
+    ],
+    "respiration": "Expire en tirant la jambe, inspire au retour.",
+    "alternatives": [
+      "machine-a-fessiers",
+      "hip-thrust-a-la-machine",
+      "pont-fessier-au-sol"
+    ],
+    "lien": "https://www.youtube.com/watch?v=iCyZBzWWNG4"
+  },
+  {
+    "id": "extension-lombaire-a-la-machine-assise",
+    "nom": "Extension lombaire à la machine assise",
+    "groupe": "Dos",
+    "muscles": [
+      "Lombaires",
+      "Grand fessier"
+    ],
+    "materiel": "Machine",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Assieds-toi, pieds calés, le rouleau au milieu du dos, sangle serrée si la machine en a une.",
+      "Bras croisés sur la poitrine, buste légèrement enroulé vers l'avant au départ.",
+      "Pousse le rouleau vers l'arrière jusqu'à avoir le buste aligné, pas plus loin.",
+      "Pause une seconde, reviens en deux secondes en gardant le contrôle."
+    ],
+    "erreurs": [
+      "Partir en hyperextension : tu écrases les vertèbres au lieu de renforcer.",
+      "Donner un coup de reins : l'élan remplace le travail des lombaires.",
+      "Charge trop lourde : le mouvement devient court et saccadé."
+    ],
+    "respiration": "Expire en poussant vers l'arrière, inspire au retour.",
+    "alternatives": [
+      "bird-dog",
+      "superman",
+      "good-morning-poids-du-corps"
+    ],
+    "lien": "https://www.youtube.com/watch?v=l1BmzpEiPQI"
+  },
+  {
+    "id": "developpe-pectoraux-machine-assis",
+    "nom": "Développé pectoraux machine assis",
+    "groupe": "Pectoraux",
+    "muscles": [
+      "Pectoraux",
+      "Deltoïdes antérieurs",
+      "Triceps"
+    ],
+    "materiel": "Machine",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Règle le siège pour avoir les poignées à hauteur de poitrine.",
+      "Dos collé au dossier, omoplates serrées et basses, pieds au sol.",
+      "Pousse les poignées devant toi sans verrouiller les coudes.",
+      "Reviens en trois secondes jusqu'à sentir l'étirement des pectoraux."
+    ],
+    "erreurs": [
+      "Siège trop bas : les épaules prennent la charge à la place des pectoraux.",
+      "Décoller le dos du dossier : tu perds la stabilité et tu forces en épaules.",
+      "Laisser claquer les charges au retour : tu perds la moitié du travail."
+    ],
+    "respiration": "Expire en poussant, inspire au retour.",
+    "alternatives": [
+      "developpe-halteres-plat",
+      "pompes",
+      "ecartes-poulie"
+    ],
+    "lien": "https://www.youtube.com/watch?v=sNUV7xiBva0"
+  },
+  {
+    "id": "rowing-a-la-machine-assis",
+    "nom": "Rowing à la machine assis",
+    "groupe": "Dos",
+    "muscles": [
+      "Grand dorsal",
+      "Rhomboïdes",
+      "Trapèzes moyens",
+      "Biceps"
+    ],
+    "materiel": "Machine",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Règle le siège pour avoir les poignées à hauteur de poitrine, buste contre l'appui.",
+      "Serre d'abord les omoplates, puis tire les coudes vers l'arrière.",
+      "Pause une seconde en fin de tirage, poitrine haute.",
+      "Reviens bras tendus en contrôlant, sans décoller la poitrine de l'appui."
+    ],
+    "erreurs": [
+      "Reculer avec le dos : tu tires avec l'élan au lieu des dorsaux.",
+      "Hausser les épaules : les trapèzes supérieurs volent le mouvement.",
+      "Tirer seulement avec les bras : le dos ne travaille presque pas."
+    ],
+    "respiration": "Expire en tirant, inspire en relâchant.",
+    "alternatives": [
+      "tirage-horizontal",
+      "rowing-haltere",
+      "rowing-a-la-bande"
+    ],
+    "lien": "https://www.youtube.com/watch?v=cokA7y9iZPY"
+  },
+  {
+    "id": "tirage-vertical-a-la-machine",
+    "nom": "Tirage vertical à la machine",
+    "groupe": "Dos",
+    "muscles": [
+      "Grand dorsal",
+      "Biceps",
+      "Rhomboïdes"
+    ],
+    "materiel": "Machine",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Règle le siège et le boudin pour bloquer les cuisses, poignées juste à portée de main.",
+      "Poitrine haute, épaules basses avant de tirer.",
+      "Tire les poignées vers le bas en envoyant les coudes vers les hanches.",
+      "Pause une seconde en bas, remonte en deux secondes jusqu'à bras presque tendus."
+    ],
+    "erreurs": [
+      "Se balancer en arrière : l'élan fait le travail à la place du dos.",
+      "Épaules qui montent aux oreilles : tu perds le grand dorsal.",
+      "Remonter trop vite : tu rates la moitié excentrique du mouvement."
+    ],
+    "respiration": "Expire en tirant, inspire en remontant.",
+    "alternatives": [
+      "tirage-vertical",
+      "tirage-vertical-prise-serree",
+      "tirage-vertical-a-la-bande"
+    ],
+    "lien": "https://www.youtube.com/watch?v=IlXpICLahjE"
+  },
+  {
+    "id": "curl-a-la-machine",
+    "nom": "Curl à la machine",
+    "groupe": "Biceps",
+    "muscles": [
+      "Biceps",
+      "Brachial"
+    ],
+    "materiel": "Machine",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Règle le siège pour avoir les coudes posés sur le pupitre, alignés avec l'axe de la machine.",
+      "Poignées en supination, bras presque tendus au départ.",
+      "Monte en fléchissant les coudes jusqu'à contracter le biceps.",
+      "Redescends en trois secondes, coudes toujours calés sur le pupitre."
+    ],
+    "erreurs": [
+      "Coudes qui décollent du pupitre : les épaules aident et le biceps travaille moins.",
+      "Descente relâchée : tu perds la partie qui fait progresser.",
+      "Siège mal réglé : le coude n'est pas dans l'axe et l'articulation force."
+    ],
+    "respiration": "Expire en montant, inspire en descendant.",
+    "alternatives": [
+      "curl-pupitre",
+      "curl-a-la-poulie",
+      "curl-halteres"
+    ],
+    "lien": "https://www.youtube.com/watch?v=u3_0hKrRvI4"
+  },
+  {
+    "id": "elevations-laterales-a-la-machine",
+    "nom": "Élévations latérales à la machine",
+    "groupe": "Épaules",
+    "muscles": [
+      "Deltoïdes latéraux"
+    ],
+    "materiel": "Machine",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Règle le siège pour aligner tes épaules avec l'axe de la machine, coussins contre l'extérieur des bras.",
+      "Épaules basses, buste collé au dossier ou au support.",
+      "Monte les bras sur les côtés jusqu'à hauteur d'épaule.",
+      "Redescends en deux secondes sans laisser les charges se toucher."
+    ],
+    "erreurs": [
+      "Hausser les épaules : les trapèzes font le travail des deltoïdes.",
+      "Monter au-dessus des épaules : tu perds la tension sur le deltoïde latéral.",
+      "Charge trop lourde : tu donnes des à-coups avec le buste."
+    ],
+    "respiration": "Expire en montant, inspire en descendant.",
+    "alternatives": [
+      "elevations-laterales-poulie",
+      "elevations-laterales",
+      "elevations-laterales-a-la-bande"
+    ],
+    "lien": "https://www.youtube.com/watch?v=XrPEE2wHtCY"
+  },
+  {
+    "id": "velo-elliptique",
+    "nom": "Vélo elliptique",
+    "groupe": "Cardio",
+    "muscles": [
+      "Quadriceps",
+      "Fessiers",
+      "Cœur et poumons"
+    ],
+    "materiel": "Machine",
+    "niveau": "Débutant",
+    "type": "Cardio",
+    "execution": [
+      "Monte sur les pédales en te tenant aux poignées fixes, puis lance le mouvement.",
+      "Buste droit, pieds à plat sur toute la pédale, talons qui restent posés.",
+      "Choisis la résistance : tu dois pouvoir parler en allure souple, phrases courtes en allure soutenue.",
+      "Pour ralentir, baisse d'abord la cadence, puis descends quand les pédales sont arrêtées."
+    ],
+    "erreurs": [
+      "Talons qui décollent : la charge part sur l'avant du pied et le genou encaisse.",
+      "S'affaler sur les poignées : les jambes travaillent moins.",
+      "Résistance à zéro et cadence folle : tu mouilles le t-shirt sans vraie dépense."
+    ],
+    "respiration": "Respire par le nez en allure souple, par la bouche en allure soutenue.",
+    "alternatives": [
+      "marche-sur-place",
+      "marche-sur-place-genoux-hauts",
+      "montees-de-genoux-squats"
+    ],
+    "lien": "https://www.youtube.com/watch?v=yISC2qwdh9I"
+  },
+  {
+    "id": "squat-sur-box-a-la-barre-smith",
+    "nom": "Squat sur box à la barre Smith",
+    "groupe": "Quadriceps",
+    "muscles": [
+      "Quadriceps",
+      "Grand fessier",
+      "Adducteurs"
+    ],
+    "materiel": "Machine",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Place une box derrière toi à une hauteur qui arrête la descente au niveau voulu.",
+      "Barre sur le haut du dos, pieds un peu en avant de la barre, largeur d'épaules.",
+      "Descends lentement jusqu'à effleurer la box avec les fesses, sans t'y relâcher.",
+      "Remonte en poussant dans tout le pied, genoux dans l'axe des orteils."
+    ],
+    "erreurs": [
+      "S'asseoir lourdement sur la box : la colonne encaisse le choc.",
+      "Genoux qui rentrent vers l'intérieur : l'articulation travaille de travers.",
+      "Pieds sous la barre : tu bascules sur l'avant et les genoux passent loin devant."
+    ],
+    "respiration": "Inspire en descendant, expire en remontant.",
+    "alternatives": [
+      "presse-a-cuisses",
+      "squat-goblet",
+      "assis-debout-sur-chaise"
+    ],
+    "lien": "https://www.youtube.com/watch?v=_E33cTWX9oo"
+  },
+  {
+    "id": "machine-a-fessiers",
+    "nom": "Machine à fessiers",
+    "groupe": "Fessiers",
+    "muscles": [
+      "Grand fessier",
+      "Ischios"
+    ],
+    "materiel": "Machine",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Buste calé contre le support, mains sur les poignées, talon sur la plateforme mobile.",
+      "Pousse la plateforme vers l'arrière avec le talon, jusqu'à l'extension de la hanche.",
+      "Pause une seconde en contraction, sans cambrer.",
+      "Reviens lentement jusqu'à sentir l'étirement du fessier."
+    ],
+    "erreurs": [
+      "Cambrer en fin de poussée : le dos prend le relais du fessier.",
+      "Pousser avec la pointe du pied : les quadriceps et les mollets volent le travail.",
+      "Balancer le buste : la jambe d'appui et le tronc perdent la stabilité."
+    ],
+    "respiration": "Expire en poussant, inspire au retour.",
+    "alternatives": [
+      "extension-de-hanche-a-la-poulie-jambe-tendue",
+      "hip-thrust-a-la-machine",
+      "pont-fessier-une-jambe"
+    ],
+    "lien": "https://www.youtube.com/watch?v=s8VmxXzDHIw"
+  },
+  {
+    "id": "leg-curl-assis",
+    "nom": "Leg curl assis",
+    "groupe": "Ischios",
+    "muscles": [
+      "Ischios",
+      "Mollets"
+    ],
+    "materiel": "Machine",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Règle le dossier pour aligner tes genoux avec l'axe de la machine, boudin au-dessus des genoux.",
+      "Rouleau sous les mollets, juste au-dessus des talons.",
+      "Ramène les talons sous le siège en fléchissant les genoux.",
+      "Pause une seconde, puis remonte en contrôlant sans verrouiller les genoux."
+    ],
+    "erreurs": [
+      "Genoux hors de l'axe : l'articulation force et les ischios travaillent moins.",
+      "Décoller les fesses du siège : tu triches avec les hanches.",
+      "Remonter d'un coup : tu perds la phase qui construit le muscle."
+    ],
+    "respiration": "Expire en fléchissant, inspire en remontant.",
+    "alternatives": [
+      "leg-curl",
+      "leg-curl-unilateral",
+      "souleve-de-terre-roumain-halteres"
+    ],
+    "lien": "https://www.youtube.com/watch?v=ZCWmb6J43KY"
+  },
+  {
+    "id": "developpe-epaules-a-la-machine",
+    "nom": "Développé épaules à la machine",
+    "groupe": "Épaules",
+    "muscles": [
+      "Deltoïdes antérieurs",
+      "Deltoïdes latéraux",
+      "Triceps"
+    ],
+    "materiel": "Machine",
+    "niveau": "Débutant",
+    "type": "Polyarticulaire",
+    "execution": [
+      "Règle le siège pour avoir les poignées à hauteur d'épaules.",
+      "Dos collé au dossier, gainage serré, pieds au sol.",
+      "Pousse les poignées vers le haut sans verrouiller les coudes.",
+      "Redescends en deux secondes jusqu'à hauteur d'oreilles."
+    ],
+    "erreurs": [
+      "Cambrer pour pousser : le bas du dos compense des épaules trop chargées.",
+      "Descendre trop bas : l'épaule part en position fragile.",
+      "Coudes verrouillés en haut : tu relâches la tension et tu charges l'articulation."
+    ],
+    "respiration": "Expire en poussant, inspire en redescendant.",
+    "alternatives": [
+      "developpe-halteres-assis",
+      "developpe-militaire",
+      "developpe-epaules-a-la-bande"
+    ],
+    "lien": "https://www.youtube.com/watch?v=MuF8cuj-ons"
+  },
+  {
+    "id": "curl-a-la-poulie",
+    "nom": "Curl à la poulie",
+    "groupe": "Biceps",
+    "muscles": [
+      "Biceps",
+      "Brachial"
+    ],
+    "materiel": "Poulie",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Poulie basse, barre droite ou coudée, prise en supination largeur d'épaules.",
+      "Debout face à la poulie, coudes collés au corps.",
+      "Monte la barre en fléchissant les coudes jusqu'à contracter le biceps.",
+      "Redescends en deux secondes, bras presque tendus en bas."
+    ],
+    "erreurs": [
+      "Coudes qui avancent : les épaules aident et le biceps décroche.",
+      "Balancer le buste : l'élan remplace le muscle.",
+      "Lâcher la charge en descente : tu perds la tension continue de la poulie."
+    ],
+    "respiration": "Expire en montant, inspire en descendant.",
+    "alternatives": [
+      "curl-a-la-machine",
+      "curl-biceps-a-la-bande",
+      "curl-halteres"
+    ],
+    "lien": "https://www.youtube.com/watch?v=a8T2IV3j39s"
+  },
+  {
+    "id": "pas-lateraux-mini-bande",
+    "nom": "Pas latéraux mini-bande",
+    "groupe": "Fessiers",
+    "muscles": [
+      "Moyen fessier",
+      "Petit fessier"
+    ],
+    "materiel": "Élastique",
+    "niveau": "Débutant",
+    "type": "Isolation",
+    "execution": [
+      "Mini-bande autour des jambes, juste au-dessus des genoux ou aux chevilles.",
+      "Demi-squat léger, pieds largeur de hanches, buste un peu penché.",
+      "Fais un pas sur le côté en gardant la bande tendue, puis ramène l'autre pied sans coller les pieds.",
+      "Enchaîne les pas d'un côté, puis reviens de l'autre."
+    ],
+    "erreurs": [
+      "Laisser les genoux rentrer : la bande gagne et le moyen fessier ne travaille plus.",
+      "Se redresser complètement : tu perds la tension sur les fessiers.",
+      "Balancer le buste à chaque pas : c'est le tronc qui compense."
+    ],
+    "respiration": "Respire calmement, sans bloquer.",
+    "alternatives": [
+      "abduction-de-hanche-au-sol",
+      "coquillage-clamshell-au-sol",
+      "abducteurs-machine"
+    ],
+    "lien": "https://www.youtube.com/watch?v=A12uKYg-Kuo"
+  },
+  {
+    "id": "mobilite-hanches-et-chevilles",
+    "nom": "Mobilité hanches et chevilles",
+    "groupe": "Mobilité",
+    "muscles": [
+      "Hanches",
+      "Chevilles"
+    ],
+    "materiel": "Aucun",
+    "niveau": "Débutant",
+    "type": "Mobilité",
+    "execution": [
+      "Debout, une main sur un appui si besoin.",
+      "Chevilles : cercles lents dans un sens puis dans l'autre, un pied après l'autre.",
+      "Hanches : mains sur les hanches, grands cercles du bassin, pieds serrés puis écartés.",
+      "Reste dans une amplitude confortable : on lubrifie, on ne force pas."
+    ],
+    "erreurs": [
+      "Aller vite : tu balances au lieu de mobiliser.",
+      "Forcer en fin d'amplitude : une mobilité d'échauffement ne doit pas tirer.",
+      "Oublier un côté : chaque articulation fait les deux sens."
+    ],
+    "respiration": "Respire lentement et régulièrement.",
+    "alternatives": [
+      "cercles-de-chevilles-assis",
+      "rotations-d-epaules",
+      "transfert-de-poids-lateral"
+    ],
+    "lien": "https://www.youtube.com/watch?v=RJTezdqvB2A"
   }
 ]

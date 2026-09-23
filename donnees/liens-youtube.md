@@ -183,3 +183,28 @@ Occurrences dans les 18 programmes : **361**.
 - Élévations de genoux assis
 - Élévations latérales de bras
 - Équilibre unipodal avec appui
+
+## Ajouts du 23/09/2026 — programme de Stéphanie (Claude)
+
+Versions machine ou guidées exactes, vérifiées le 23/09/2026 : lien actif, lisible en intégré, format paysage (pas de Short), moins de 5 min. Source prioritaire : la chaîne AZEOO (même bibliothèque que les liens de Grok Bot) ; autres chaînes seulement quand AZEOO n'a pas la version machine.
+
+| Exercice MHX | Vidéo | URL |
+|---|---|---|
+| Hip thrust à la machine | How To Do A MACHINE HIP THRUST (Matrix Glute Trainer) | https://www.youtube.com/watch?v=_jPpHwTzGTs |
+| Extension de hanche à la poulie jambe tendue | Extension de la hanche à la poulie basse | https://www.youtube.com/watch?v=iCyZBzWWNG4 |
+| Extension lombaire à la machine assise | How To Do A SEATED MACHINE BACK EXTENSION (Matrix) | https://www.youtube.com/watch?v=l1BmzpEiPQI |
+| Développé pectoraux machine assis | Développé assis à la machine convergente | https://www.youtube.com/watch?v=sNUV7xiBva0 |
+| Rowing à la machine assis | Rowing assis à la machine | https://www.youtube.com/watch?v=cokA7y9iZPY |
+| Tirage vertical à la machine | Traction à la machine convergente | https://www.youtube.com/watch?v=IlXpICLahjE |
+| Curl à la machine | Machine Preacher Curls | https://www.youtube.com/watch?v=u3_0hKrRvI4 |
+| Élévations latérales à la machine | Élévation latérale à la machine | https://www.youtube.com/watch?v=XrPEE2wHtCY |
+| Vélo elliptique | How To Use The Cross Trainer | https://www.youtube.com/watch?v=yISC2qwdh9I |
+| Squat sur box à la barre Smith | Smith Machine Box Squat | https://www.youtube.com/watch?v=_E33cTWX9oo |
+| Machine à fessiers | Extension de la hanche à la machine | https://www.youtube.com/watch?v=s8VmxXzDHIw |
+| Leg curl assis | Ischio-jambiers assis à la machine | https://www.youtube.com/watch?v=ZCWmb6J43KY |
+| Développé épaules à la machine | Développé épaules à la machine | https://www.youtube.com/watch?v=MuF8cuj-ons |
+| Curl à la poulie | Curl à la poulie basse | https://www.youtube.com/watch?v=a8T2IV3j39s |
+| Pas latéraux mini-bande | Lateral Band Walks (Exercise Library) | https://www.youtube.com/watch?v=A12uKYg-Kuo |
+| Mobilité hanches et chevilles | Joint Rotations Warm-Up Sequence | https://www.youtube.com/watch?v=RJTezdqvB2A |
+| Presse à cuisses pieds hauts | High and Wide Leg Press: How To | https://www.youtube.com/watch?v=OIq-tsCx_9k |
+| Mollets à la presse | Calf Press On The Leg Press Machine | https://www.youtube.com/watch?v=1YjDjUOHFUM |

@@ -1,0 +1,659 @@
+{
+  "nom": "Stéphanie — Semaine 1 · Recomposition",
+  "client": "Stéphanie",
+  "semaine": 1,
+  "objectif": "Recomposition — endurance musculaire — priorité cuisses et bras",
+  "contraintes": [
+    "Instabilité rotulienne genou droit : aucun impact, aucune course, aucun tapis",
+    "Aucune fente, sous aucune forme",
+    "Cardio : vélo elliptique uniquement",
+    "Exercices qui sollicitent le genou : charge légère, tempo lent, jamais sous 90 degrés de flexion",
+    "Machines guidées en priorité : aucun exercice technique en charge libre"
+  ],
+  "note": "Objectif : recomposition, endurance musculaire, priorité cuisses et bras. Échauffement commun en tête de chaque séance. À respecter : instabilité rotulienne genou droit : aucun impact, aucune course, aucun tapis ; aucune fente, sous aucune forme ; cardio : vélo elliptique uniquement ; exercices qui sollicitent le genou : charge légère, tempo lent, jamais sous 90 degrés de flexion ; machines guidées en priorité : aucun exercice technique en charge libre.",
+  "maj": "23/09/2026",
+  "seances": [
+    {
+      "nom": "Jambes A",
+      "note": "Mardi 18h",
+      "exercices": [
+        {
+          "nom": "Vélo elliptique",
+          "id": "velo-elliptique",
+          "lien": "https://www.youtube.com/watch?v=yISC2qwdh9I",
+          "series": "1",
+          "reps": "5 min",
+          "tempo": "",
+          "repos": "",
+          "note": "Échauffement. Allure progressive.",
+          "alternative": ""
+        },
+        {
+          "nom": "Pas latéraux mini-bande",
+          "id": "pas-lateraux-mini-bande",
+          "lien": "https://www.youtube.com/watch?v=A12uKYg-Kuo",
+          "series": "2",
+          "reps": "15/côté",
+          "tempo": "",
+          "repos": "",
+          "note": "Échauffement.",
+          "alternative": ""
+        },
+        {
+          "nom": "Pont fessier au sol",
+          "id": "pont-fessier-au-sol",
+          "lien": "https://www.youtube.com/watch?v=bnKpYIMmvtw",
+          "series": "2",
+          "reps": "15",
+          "tempo": "",
+          "repos": "",
+          "note": "Échauffement.",
+          "alternative": ""
+        },
+        {
+          "nom": "Mobilité hanches et chevilles",
+          "id": "mobilite-hanches-et-chevilles",
+          "lien": "https://www.youtube.com/watch?v=RJTezdqvB2A",
+          "series": "1",
+          "reps": "2 min",
+          "tempo": "",
+          "repos": "",
+          "note": "Échauffement.",
+          "alternative": ""
+        },
+        {
+          "nom": "Hip thrust à la machine",
+          "id": "hip-thrust-a-la-machine",
+          "lien": "https://www.youtube.com/watch?v=_jPpHwTzGTs",
+          "series": "4",
+          "reps": "12-15",
+          "tempo": "2-1-2",
+          "repos": "60 s",
+          "note": "Pause 1 s en haut, menton rentré. Tempo 2-1-2. Alternative : Hip thrust à la barre appui banc.",
+          "alternative": "Hip thrust à la barre appui banc"
+        },
+        {
+          "nom": "Extension de hanche à la poulie jambe tendue",
+          "id": "extension-de-hanche-a-la-poulie-jambe-tendue",
+          "lien": "https://www.youtube.com/watch?v=iCyZBzWWNG4",
+          "series": "3",
+          "reps": "15/jambe",
+          "tempo": "2-1-2",
+          "repos": "45 s",
+          "note": "Se tenir à la machine, buste fixe. Tempo 2-1-2. Alternative : Kickback à la machine.",
+          "alternative": "Kickback à la machine"
+        },
+        {
+          "nom": "Leg curl",
+          "id": "leg-curl",
+          "lien": "https://www.youtube.com/watch?v=9p23QLa_e6g",
+          "series": "4",
+          "reps": "15-20",
+          "tempo": "2-1-2",
+          "repos": "45 s",
+          "note": "Allongée sur le ventre. Bassin plaqué, pas d'à-coups. Tempo 2-1-2. Alternative : Leg curl assis.",
+          "alternative": "Leg curl assis"
+        },
+        {
+          "nom": "Presse à cuisses pieds hauts",
+          "id": "presse-a-cuisses-pieds-hauts",
+          "lien": "https://www.youtube.com/watch?v=OIq-tsCx_9k",
+          "series": "3",
+          "reps": "10-12",
+          "tempo": "3-0-3",
+          "repos": "60 s",
+          "note": "Pieds hauts et larges sur le plateau. Charge légère, ne pas descendre sous 90 degrés de genou. Tempo 3-0-3. Alternative : Amplitude encore plus courte.",
+          "alternative": "Amplitude encore plus courte"
+        },
+        {
+          "nom": "Abducteurs machine",
+          "id": "abducteurs-machine",
+          "lien": "https://www.youtube.com/watch?v=lwKkqZG09qs",
+          "series": "3",
+          "reps": "20",
+          "tempo": "2-0-2",
+          "repos": "30 s",
+          "note": "Buste légèrement penché en avant. Tempo 2-0-2. Alternative : Abduction à la poulie.",
+          "alternative": "Abduction à la poulie"
+        },
+        {
+          "nom": "Extension lombaire à la machine assise",
+          "id": "extension-lombaire-a-la-machine-assise",
+          "lien": "https://www.youtube.com/watch?v=l1BmzpEiPQI",
+          "series": "3",
+          "reps": "15",
+          "tempo": "2-1-2",
+          "repos": "45 s",
+          "note": "S'arrêter à l'alignement, pas d'hyperextension. Tempo 2-1-2. Alternative : Bird dog 3x12/côté.",
+          "alternative": "Bird dog 3x12/côté"
+        },
+        {
+          "nom": "Dead bug",
+          "id": "dead-bug",
+          "lien": "https://www.youtube.com/watch?v=rbemelnkHag",
+          "series": "3",
+          "reps": "12/côté",
+          "tempo": "lent",
+          "repos": "30 s",
+          "note": "Bas du dos collé au sol. Tempo lent. Alternative : Gainage ventral 3x40 s.",
+          "alternative": "Gainage ventral 3x40 s"
+        }
+      ]
+    },
+    {
+      "nom": "Haut du corps — machines et cardio",
+      "note": "Jeudi 18h · Séries classiques, pas de circuit, cardio en fin de séance",
+      "exercices": [
+        {
+          "nom": "Vélo elliptique",
+          "id": "velo-elliptique",
+          "lien": "https://www.youtube.com/watch?v=yISC2qwdh9I",
+          "series": "1",
+          "reps": "5 min",
+          "tempo": "",
+          "repos": "",
+          "note": "Échauffement. Allure progressive.",
+          "alternative": ""
+        },
+        {
+          "nom": "Pas latéraux mini-bande",
+          "id": "pas-lateraux-mini-bande",
+          "lien": "https://www.youtube.com/watch?v=A12uKYg-Kuo",
+          "series": "2",
+          "reps": "15/côté",
+          "tempo": "",
+          "repos": "",
+          "note": "Échauffement.",
+          "alternative": ""
+        },
+        {
+          "nom": "Pont fessier au sol",
+          "id": "pont-fessier-au-sol",
+          "lien": "https://www.youtube.com/watch?v=bnKpYIMmvtw",
+          "series": "2",
+          "reps": "15",
+          "tempo": "",
+          "repos": "",
+          "note": "Échauffement.",
+          "alternative": ""
+        },
+        {
+          "nom": "Mobilité hanches et chevilles",
+          "id": "mobilite-hanches-et-chevilles",
+          "lien": "https://www.youtube.com/watch?v=RJTezdqvB2A",
+          "series": "1",
+          "reps": "2 min",
+          "tempo": "",
+          "repos": "",
+          "note": "Échauffement.",
+          "alternative": ""
+        },
+        {
+          "nom": "Tirage vertical à la machine",
+          "id": "tirage-vertical-a-la-machine",
+          "lien": "https://www.youtube.com/watch?v=IlXpICLahjE",
+          "series": "4",
+          "reps": "12-15",
+          "tempo": "2-1-2",
+          "repos": "60 s",
+          "note": "Coudes vers les hanches, pas de balancier. Tempo 2-1-2. Alternative : Tirage vertical poulie haute.",
+          "alternative": "Tirage vertical poulie haute"
+        },
+        {
+          "nom": "Développé pectoraux machine assis",
+          "id": "developpe-pectoraux-machine-assis",
+          "lien": "https://www.youtube.com/watch?v=sNUV7xiBva0",
+          "series": "3",
+          "reps": "12-15",
+          "tempo": "3-0-2",
+          "repos": "60 s",
+          "note": "Poignées à hauteur de poitrine, omoplates serrées. Tempo 3-0-2. Alternative : Développé incliné machine.",
+          "alternative": "Développé incliné machine"
+        },
+        {
+          "nom": "Rowing à la machine assis",
+          "id": "rowing-a-la-machine-assis",
+          "lien": "https://www.youtube.com/watch?v=cokA7y9iZPY",
+          "series": "3",
+          "reps": "12-15",
+          "tempo": "2-1-2",
+          "repos": "60 s",
+          "note": "Buste fixe, ne pas reculer avec le dos. Tempo 2-1-2. Alternative : Rowing assis à la poulie.",
+          "alternative": "Rowing assis à la poulie"
+        },
+        {
+          "nom": "Curl à la machine",
+          "id": "curl-a-la-machine",
+          "lien": "https://www.youtube.com/watch?v=u3_0hKrRvI4",
+          "series": "4",
+          "reps": "15",
+          "tempo": "3-0-2",
+          "repos": "45 s",
+          "note": "Coudes calés sur le pupitre, descente freinée. Tempo 3-0-2. Alternative : Curl à la poulie basse.",
+          "alternative": "Curl à la poulie basse"
+        },
+        {
+          "nom": "Extension triceps corde",
+          "id": "extension-triceps-corde",
+          "lien": "https://www.youtube.com/watch?v=oEqFRI9Me3Q",
+          "series": "4",
+          "reps": "15",
+          "tempo": "2-0-2",
+          "repos": "45 s",
+          "note": "Écarter la corde en fin de mouvement. Tempo 2-0-2. Alternative : Extension triceps machine.",
+          "alternative": "Extension triceps machine"
+        },
+        {
+          "nom": "Élévations latérales à la machine",
+          "id": "elevations-laterales-a-la-machine",
+          "lien": "https://www.youtube.com/watch?v=XrPEE2wHtCY",
+          "series": "3",
+          "reps": "15-20",
+          "tempo": "2-0-2",
+          "repos": "45 s",
+          "note": "Charge légère, épaules basses. Tempo 2-0-2. Alternative : Élévations latérales à la poulie.",
+          "alternative": "Élévations latérales à la poulie"
+        },
+        {
+          "nom": "Vélo elliptique",
+          "id": "velo-elliptique",
+          "lien": "https://www.youtube.com/watch?v=yISC2qwdh9I",
+          "series": "1",
+          "reps": "12-15 min",
+          "tempo": "1 min soutenu / 2 min souple",
+          "repos": "",
+          "note": "En intervalles. Zéro impact, genou protégé. Tempo 1 min soutenu / 2 min souple. Alternative : Vélo assis.",
+          "alternative": "Vélo assis"
+        }
+      ]
+    },
+    {
+      "nom": "Jambes B",
+      "note": "Samedi matin",
+      "exercices": [
+        {
+          "nom": "Vélo elliptique",
+          "id": "velo-elliptique",
+          "lien": "https://www.youtube.com/watch?v=yISC2qwdh9I",
+          "series": "1",
+          "reps": "5 min",
+          "tempo": "",
+          "repos": "",
+          "note": "Échauffement. Allure progressive.",
+          "alternative": ""
+        },
+        {
+          "nom": "Pas latéraux mini-bande",
+          "id": "pas-lateraux-mini-bande",
+          "lien": "https://www.youtube.com/watch?v=A12uKYg-Kuo",
+          "series": "2",
+          "reps": "15/côté",
+          "tempo": "",
+          "repos": "",
+          "note": "Échauffement.",
+          "alternative": ""
+        },
+        {
+          "nom": "Pont fessier au sol",
+          "id": "pont-fessier-au-sol",
+          "lien": "https://www.youtube.com/watch?v=bnKpYIMmvtw",
+          "series": "2",
+          "reps": "15",
+          "tempo": "",
+          "repos": "",
+          "note": "Échauffement.",
+          "alternative": ""
+        },
+        {
+          "nom": "Mobilité hanches et chevilles",
+          "id": "mobilite-hanches-et-chevilles",
+          "lien": "https://www.youtube.com/watch?v=RJTezdqvB2A",
+          "series": "1",
+          "reps": "2 min",
+          "tempo": "",
+          "repos": "",
+          "note": "Échauffement.",
+          "alternative": ""
+        },
+        {
+          "nom": "Presse à cuisses",
+          "id": "presse-a-cuisses",
+          "lien": "https://www.youtube.com/watch?v=wsZqaefajGc",
+          "series": "4",
+          "reps": "10-12",
+          "tempo": "3-0-3",
+          "repos": "60 s",
+          "note": "Pieds au milieu du plateau. Genoux jamais verrouillés, pas sous 90 degrés. Tempo 3-0-3. Alternative : Pieds plus hauts.",
+          "alternative": "Pieds plus hauts"
+        },
+        {
+          "nom": "Squat sur box à la barre Smith",
+          "id": "squat-sur-box-a-la-barre-smith",
+          "lien": "https://www.youtube.com/watch?v=_E33cTWX9oo",
+          "series": "3",
+          "reps": "8-10",
+          "tempo": "4-0-4",
+          "repos": "75 s",
+          "note": "Barre à vide, la box bloque la profondeur. Tempo 4-0-4. Alternative : Presse à cuisses amplitude courte.",
+          "alternative": "Presse à cuisses amplitude courte"
+        },
+        {
+          "nom": "Leg extension",
+          "id": "leg-extension",
+          "lien": "https://www.youtube.com/watch?v=C26wr0pvhcQ",
+          "series": "3",
+          "reps": "15",
+          "tempo": "2-0-2",
+          "repos": "45 s",
+          "note": "Partie haute du mouvement uniquement, charge légère. Tempo 2-0-2. Alternative : Presse amplitude courte.",
+          "alternative": "Presse amplitude courte"
+        },
+        {
+          "nom": "Machine à fessiers",
+          "id": "machine-a-fessiers",
+          "lien": "https://www.youtube.com/watch?v=s8VmxXzDHIw",
+          "series": "3",
+          "reps": "15/jambe",
+          "tempo": "2-1-2",
+          "repos": "45 s",
+          "note": "Pause 1 s en contraction. Tempo 2-1-2. Alternative : Extension de hanche à la poulie.",
+          "alternative": "Extension de hanche à la poulie"
+        },
+        {
+          "nom": "Leg curl assis",
+          "id": "leg-curl-assis",
+          "lien": "https://www.youtube.com/watch?v=ZCWmb6J43KY",
+          "series": "3",
+          "reps": "15",
+          "tempo": "2-1-2",
+          "repos": "45 s",
+          "note": "Seul exercice ischios de la séance. Tempo 2-1-2. Alternative : Leg curl allongé.",
+          "alternative": "Leg curl allongé"
+        },
+        {
+          "nom": "Mollets à la presse",
+          "id": "mollets-a-la-presse",
+          "lien": "https://www.youtube.com/watch?v=1YjDjUOHFUM",
+          "series": "4",
+          "reps": "20",
+          "tempo": "2-1-2",
+          "repos": "30 s",
+          "note": "Amplitude complète, pause en bas. Tempo 2-1-2. Alternative : Mollets assis à la machine.",
+          "alternative": "Mollets assis à la machine"
+        },
+        {
+          "nom": "Crunch à la poulie",
+          "id": "crunch-a-la-poulie",
+          "lien": "https://www.youtube.com/watch?v=gIajQJYpGAg",
+          "series": "3",
+          "reps": "15",
+          "tempo": "2-1-2",
+          "repos": "30 s",
+          "note": "Enrouler le buste, pas de traction avec les bras. Tempo 2-1-2. Alternative : Crunch à la machine.",
+          "alternative": "Crunch à la machine"
+        }
+      ]
+    },
+    {
+      "nom": "Bonus — full body et cardio",
+      "note": "Optionnel · Circuit 3 tours, repos 60 s entre les tours, puis cardio",
+      "exercices": [
+        {
+          "nom": "Vélo elliptique",
+          "id": "velo-elliptique",
+          "lien": "https://www.youtube.com/watch?v=yISC2qwdh9I",
+          "series": "1",
+          "reps": "5 min",
+          "tempo": "",
+          "repos": "",
+          "note": "Échauffement. Allure progressive.",
+          "alternative": ""
+        },
+        {
+          "nom": "Pas latéraux mini-bande",
+          "id": "pas-lateraux-mini-bande",
+          "lien": "https://www.youtube.com/watch?v=A12uKYg-Kuo",
+          "series": "2",
+          "reps": "15/côté",
+          "tempo": "",
+          "repos": "",
+          "note": "Échauffement.",
+          "alternative": ""
+        },
+        {
+          "nom": "Pont fessier au sol",
+          "id": "pont-fessier-au-sol",
+          "lien": "https://www.youtube.com/watch?v=bnKpYIMmvtw",
+          "series": "2",
+          "reps": "15",
+          "tempo": "",
+          "repos": "",
+          "note": "Échauffement.",
+          "alternative": ""
+        },
+        {
+          "nom": "Mobilité hanches et chevilles",
+          "id": "mobilite-hanches-et-chevilles",
+          "lien": "https://www.youtube.com/watch?v=RJTezdqvB2A",
+          "series": "1",
+          "reps": "2 min",
+          "tempo": "",
+          "repos": "",
+          "note": "Échauffement.",
+          "alternative": ""
+        },
+        {
+          "nom": "Hip thrust à la machine",
+          "id": "hip-thrust-a-la-machine",
+          "lien": "https://www.youtube.com/watch?v=_jPpHwTzGTs",
+          "series": "3",
+          "reps": "15",
+          "tempo": "2-1-2",
+          "repos": "enchaîné",
+          "note": "Tempo 2-1-2. Alternative : Hip thrust à la barre appui banc.",
+          "alternative": "Hip thrust à la barre appui banc"
+        },
+        {
+          "nom": "Tirage vertical à la machine",
+          "id": "tirage-vertical-a-la-machine",
+          "lien": "https://www.youtube.com/watch?v=IlXpICLahjE",
+          "series": "3",
+          "reps": "15",
+          "tempo": "2-1-2",
+          "repos": "enchaîné",
+          "note": "Tempo 2-1-2. Alternative : Tirage à la poulie haute.",
+          "alternative": "Tirage à la poulie haute"
+        },
+        {
+          "nom": "Presse à cuisses pieds hauts",
+          "id": "presse-a-cuisses-pieds-hauts",
+          "lien": "https://www.youtube.com/watch?v=OIq-tsCx_9k",
+          "series": "3",
+          "reps": "12",
+          "tempo": "3-0-3",
+          "repos": "enchaîné",
+          "note": "Pieds hauts et larges sur le plateau. Charge légère. Tempo 3-0-3. Alternative : Amplitude courte.",
+          "alternative": "Amplitude courte"
+        },
+        {
+          "nom": "Développé épaules à la machine",
+          "id": "developpe-epaules-a-la-machine",
+          "lien": "https://www.youtube.com/watch?v=MuF8cuj-ons",
+          "series": "3",
+          "reps": "12",
+          "tempo": "2-0-2",
+          "repos": "enchaîné",
+          "note": "Tempo 2-0-2. Alternative : Développé pectoraux machine.",
+          "alternative": "Développé pectoraux machine"
+        },
+        {
+          "nom": "Curl à la machine",
+          "id": "curl-a-la-machine",
+          "lien": "https://www.youtube.com/watch?v=u3_0hKrRvI4",
+          "series": "3",
+          "reps": "15",
+          "tempo": "2-0-2",
+          "repos": "enchaîné",
+          "note": "Tempo 2-0-2. Alternative : Curl à la poulie basse.",
+          "alternative": "Curl à la poulie basse"
+        },
+        {
+          "nom": "Gainage",
+          "id": "gainage",
+          "lien": "https://www.youtube.com/watch?v=R4FB7v-v6x0",
+          "series": "3",
+          "reps": "40 s",
+          "tempo": "iso",
+          "repos": "60 s en fin de tour",
+          "note": "Gainage ventral sur les avant-bras. Tempo iso. Alternative : Gainage genoux au sol.",
+          "alternative": "Gainage genoux au sol"
+        },
+        {
+          "nom": "Vélo elliptique",
+          "id": "velo-elliptique",
+          "lien": "https://www.youtube.com/watch?v=yISC2qwdh9I",
+          "series": "1",
+          "reps": "15 min",
+          "tempo": "1 min soutenu / 2 min souple",
+          "repos": "",
+          "note": "En intervalles. Zéro impact. Tempo 1 min soutenu / 2 min souple. Alternative : Vélo assis.",
+          "alternative": "Vélo assis"
+        }
+      ]
+    },
+    {
+      "nom": "Bonus — points faibles cuisses et bras",
+      "note": "Optionnel · 3 supersets puis finisher dégressif",
+      "exercices": [
+        {
+          "nom": "Vélo elliptique",
+          "id": "velo-elliptique",
+          "lien": "https://www.youtube.com/watch?v=yISC2qwdh9I",
+          "series": "1",
+          "reps": "5 min",
+          "tempo": "",
+          "repos": "",
+          "note": "Échauffement. Allure progressive.",
+          "alternative": ""
+        },
+        {
+          "nom": "Pas latéraux mini-bande",
+          "id": "pas-lateraux-mini-bande",
+          "lien": "https://www.youtube.com/watch?v=A12uKYg-Kuo",
+          "series": "2",
+          "reps": "15/côté",
+          "tempo": "",
+          "repos": "",
+          "note": "Échauffement.",
+          "alternative": ""
+        },
+        {
+          "nom": "Pont fessier au sol",
+          "id": "pont-fessier-au-sol",
+          "lien": "https://www.youtube.com/watch?v=bnKpYIMmvtw",
+          "series": "2",
+          "reps": "15",
+          "tempo": "",
+          "repos": "",
+          "note": "Échauffement.",
+          "alternative": ""
+        },
+        {
+          "nom": "Mobilité hanches et chevilles",
+          "id": "mobilite-hanches-et-chevilles",
+          "lien": "https://www.youtube.com/watch?v=RJTezdqvB2A",
+          "series": "1",
+          "reps": "2 min",
+          "tempo": "",
+          "repos": "",
+          "note": "Échauffement.",
+          "alternative": ""
+        },
+        {
+          "nom": "Abducteurs machine",
+          "id": "abducteurs-machine",
+          "lien": "https://www.youtube.com/watch?v=lwKkqZG09qs",
+          "series": "3",
+          "reps": "20",
+          "tempo": "2-0-2",
+          "repos": "enchaîné",
+          "note": "Superset A. Tempo 2-0-2. Alternative : Abduction à la poulie.",
+          "alternative": "Abduction à la poulie",
+          "superset": "A"
+        },
+        {
+          "nom": "Presse à cuisses pieds hauts",
+          "id": "presse-a-cuisses-pieds-hauts",
+          "lien": "https://www.youtube.com/watch?v=OIq-tsCx_9k",
+          "series": "3",
+          "reps": "12",
+          "tempo": "3-0-3",
+          "repos": "45 s",
+          "note": "Superset A. Pieds hauts et larges sur le plateau. Charge légère. Tempo 3-0-3. Alternative : Amplitude courte.",
+          "alternative": "Amplitude courte",
+          "superset": "A"
+        },
+        {
+          "nom": "Curl à la machine",
+          "id": "curl-a-la-machine",
+          "lien": "https://www.youtube.com/watch?v=u3_0hKrRvI4",
+          "series": "3",
+          "reps": "20",
+          "tempo": "2-0-2",
+          "repos": "enchaîné",
+          "note": "Superset B. Tempo 2-0-2. Alternative : Curl à la poulie basse.",
+          "alternative": "Curl à la poulie basse",
+          "superset": "B"
+        },
+        {
+          "nom": "Extension triceps corde",
+          "id": "extension-triceps-corde",
+          "lien": "https://www.youtube.com/watch?v=oEqFRI9Me3Q",
+          "series": "3",
+          "reps": "20",
+          "tempo": "2-0-2",
+          "repos": "45 s",
+          "note": "Superset B. Tempo 2-0-2. Alternative : Extension triceps machine.",
+          "alternative": "Extension triceps machine",
+          "superset": "B"
+        },
+        {
+          "nom": "Machine à fessiers",
+          "id": "machine-a-fessiers",
+          "lien": "https://www.youtube.com/watch?v=s8VmxXzDHIw",
+          "series": "3",
+          "reps": "15/jambe",
+          "tempo": "2-1-2",
+          "repos": "enchaîné",
+          "note": "Superset C. Tempo 2-1-2. Alternative : Extension de hanche à la poulie.",
+          "alternative": "Extension de hanche à la poulie",
+          "superset": "C"
+        },
+        {
+          "nom": "Élévations latérales à la machine",
+          "id": "elevations-laterales-a-la-machine",
+          "lien": "https://www.youtube.com/watch?v=XrPEE2wHtCY",
+          "series": "3",
+          "reps": "20",
+          "tempo": "2-0-2",
+          "repos": "45 s",
+          "note": "Superset C. Charge légère. Tempo 2-0-2. Alternative : Élévations à la poulie.",
+          "alternative": "Élévations à la poulie",
+          "superset": "C"
+        },
+        {
+          "nom": "Curl à la poulie",
+          "id": "curl-a-la-poulie",
+          "lien": "https://www.youtube.com/watch?v=a8T2IV3j39s",
+          "series": "2",
+          "reps": "max en dégressif",
+          "tempo": "2-0-2",
+          "repos": "60 s",
+          "note": "Finisher. 3 baisses de charge sans repos. Tempo 2-0-2. Alternative : Curl à la machine dégressif.",
+          "alternative": "Curl à la machine dégressif",
+          "superset": "finisher"
+        }
+      ]
+    }
+  ]
+}

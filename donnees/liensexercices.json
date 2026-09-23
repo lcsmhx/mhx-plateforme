@@ -775,9 +775,9 @@
  },
  "presse-a-cuisses-pieds-hauts": {
   "nom": "Presse à cuisses pieds hauts",
-  "video": "Leg Press",
-  "lien": "https://www.youtube.com/watch?v=wsZqaefajGc",
-  "yt": "wsZqaefajGc"
+  "video": "High and Wide Leg Press: How To",
+  "lien": "https://www.youtube.com/watch?v=OIq-tsCx_9k",
+  "yt": "OIq-tsCx_9k"
  },
  "gainage": {
   "nom": "Gainage",
@@ -898,5 +898,101 @@
   "video": "Knee Raise",
   "lien": "https://www.youtube.com/watch?v=G4TXQzNMZEY",
   "yt": "G4TXQzNMZEY"
+ },
+ "hip-thrust-a-la-machine": {
+  "nom": "Hip thrust à la machine",
+  "video": "How To Do A MACHINE HIP THRUST (Matrix Glute Trainer)",
+  "lien": "https://www.youtube.com/watch?v=_jPpHwTzGTs",
+  "yt": "_jPpHwTzGTs"
+ },
+ "extension-de-hanche-a-la-poulie-jambe-tendue": {
+  "nom": "Extension de hanche à la poulie jambe tendue",
+  "video": "Extension de la hanche à la poulie basse",
+  "lien": "https://www.youtube.com/watch?v=iCyZBzWWNG4",
+  "yt": "iCyZBzWWNG4"
+ },
+ "extension-lombaire-a-la-machine-assise": {
+  "nom": "Extension lombaire à la machine assise",
+  "video": "How To Do A SEATED MACHINE BACK EXTENSION (Matrix)",
+  "lien": "https://www.youtube.com/watch?v=l1BmzpEiPQI",
+  "yt": "l1BmzpEiPQI"
+ },
+ "developpe-pectoraux-machine-assis": {
+  "nom": "Développé pectoraux machine assis",
+  "video": "Développé assis à la machine convergente",
+  "lien": "https://www.youtube.com/watch?v=sNUV7xiBva0",
+  "yt": "sNUV7xiBva0"
+ },
+ "rowing-a-la-machine-assis": {
+  "nom": "Rowing à la machine assis",
+  "video": "Rowing assis à la machine",
+  "lien": "https://www.youtube.com/watch?v=cokA7y9iZPY",
+  "yt": "cokA7y9iZPY"
+ },
+ "tirage-vertical-a-la-machine": {
+  "nom": "Tirage vertical à la machine",
+  "video": "Traction à la machine convergente",
+  "lien": "https://www.youtube.com/watch?v=IlXpICLahjE",
+  "yt": "IlXpICLahjE"
+ },
+ "curl-a-la-machine": {
+  "nom": "Curl à la machine",
+  "video": "Machine Preacher Curls",
+  "lien": "https://www.youtube.com/watch?v=u3_0hKrRvI4",
+  "yt": "u3_0hKrRvI4"
+ },
+ "elevations-laterales-a-la-machine": {
+  "nom": "Élévations latérales à la machine",
+  "video": "Élévation latérale à la machine",
+  "lien": "https://www.youtube.com/watch?v=XrPEE2wHtCY",
+  "yt": "XrPEE2wHtCY"
+ },
+ "velo-elliptique": {
+  "nom": "Vélo elliptique",
+  "video": "How To Use The Cross Trainer",
+  "lien": "https://www.youtube.com/watch?v=yISC2qwdh9I",
+  "yt": "yISC2qwdh9I"
+ },
+ "squat-sur-box-a-la-barre-smith": {
+  "nom": "Squat sur box à la barre Smith",
+  "video": "Smith Machine Box Squat",
+  "lien": "https://www.youtube.com/watch?v=_E33cTWX9oo",
+  "yt": "_E33cTWX9oo"
+ },
+ "machine-a-fessiers": {
+  "nom": "Machine à fessiers",
+  "video": "Extension de la hanche à la machine",
+  "lien": "https://www.youtube.com/watch?v=s8VmxXzDHIw",
+  "yt": "s8VmxXzDHIw"
+ },
+ "leg-curl-assis": {
+  "nom": "Leg curl assis",
+  "video": "Ischio-jambiers assis à la machine",
+  "lien": "https://www.youtube.com/watch?v=ZCWmb6J43KY",
+  "yt": "ZCWmb6J43KY"
+ },
+ "developpe-epaules-a-la-machine": {
+  "nom": "Développé épaules à la machine",
+  "video": "Développé épaules à la machine",
+  "lien": "https://www.youtube.com/watch?v=MuF8cuj-ons",
+  "yt": "MuF8cuj-ons"
+ },
+ "curl-a-la-poulie": {
+  "nom": "Curl à la poulie",
+  "video": "Curl à la poulie basse",
+  "lien": "https://www.youtube.com/watch?v=a8T2IV3j39s",
+  "yt": "a8T2IV3j39s"
+ },
+ "pas-lateraux-mini-bande": {
+  "nom": "Pas latéraux mini-bande",
+  "video": "Lateral Band Walks (Exercise Library)",
+  "lien": "https://www.youtube.com/watch?v=A12uKYg-Kuo",
+  "yt": "A12uKYg-Kuo"
+ },
+ "mobilite-hanches-et-chevilles": {
+  "nom": "Mobilité hanches et chevilles",
+  "video": "Joint Rotations Warm-Up Sequence",
+  "lien": "https://www.youtube.com/watch?v=RJTezdqvB2A",
+  "yt": "RJTezdqvB2A"
  }
 }
