@@ -188,6 +188,11 @@ a.btn.ghost:hover{color:var(--ink);border-color:var(--accent)}
 .tile .t-val{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;font-size:30px;font-weight:600;line-height:1.15;margin-top:4px}
 .tile .t-sub{font-size:12px;color:var(--ink-3);font-family:"IBM Plex Mono",monospace}
 .pos{color:var(--good)} .neg{color:var(--bad)}
+.hist-entree{border-top:1px solid var(--line);margin-top:0;padding:12px 0}
+.hist-entree summary{cursor:pointer}
+.hist-entree .hist-dates{color:var(--ink-3);font-size:13px;margin-left:6px}
+.hist-bloc{margin-top:14px}
+.hist-bloc h3 .hist-dates{font-weight:400}
 footer{border-top:1px solid var(--line);color:var(--ink-3);font-size:13px}
 footer .wrap{display:flex;flex-wrap:wrap;gap:10px 20px;justify-content:space-between;padding-top:20px;padding-bottom:34px}
 footer a{color:var(--accent)}
@@ -631,7 +636,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-09-22 · 28",
+    version: "2026-09-24 · 30",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -668,7 +673,21 @@ const CONFIG = {
     zones: ["Poitrine","Épaules","Bras gauche","Bras droit","Taille",
             "Ventre","Hanches","Cuisse gauche","Cuisse droite","Mollet"],
     zones_affichees_au_depart: [4, 5],  // index des zones tracées par défaut
-    max_courbes: 4                       // nombre max de courbes simultanées
+    max_courbes: 4,                      // nombre max de courbes simultanées
+
+    /* Balance a impedancemetre : champs FACULTATIFS, tout le monde n'en a pas.
+       bas / haut = bornes de saisie (une faute de frappe ne doit pas casser
+       la courbe). sens = ce qui est une bonne nouvelle : -1 si baisser est
+       bien, +1 si monter est bien, 0 si c'est neutre. */
+    composition: [
+      { id:"mg",   nom:"Masse grasse",        unite:"%",      pas:0.1, bas:3,   haut:70,   sens:-1 },
+      { id:"mm",   nom:"Masse musculaire",    unite:"kg",     pas:0.1, bas:10,  haut:150,  sens:1 },
+      { id:"eau",  nom:"Eau corporelle",      unite:"%",      pas:0.1, bas:30,  haut:80,   sens:0 },
+      { id:"visc", nom:"Graisse viscérale",   unite:"indice", pas:1,   bas:1,   haut:60,   sens:-1 },
+      { id:"os",   nom:"Masse osseuse",       unite:"kg",     pas:0.1, bas:0.5, haut:10,   sens:0 },
+      { id:"mb",   nom:"Métabolisme de base", unite:"kcal",   pas:1,   bas:800, haut:5000, sens:0 },
+      { id:"age",  nom:"Âge métabolique",     unite:"ans",    pas:1,   bas:10,  haut:100,  sens:-1 }
+    ]
   },
 
   /* --- Nutrition : generateur de journee type ---
@@ -1439,6 +1458,66 @@ I18N.en = {
 "regulier": "steady"
 };
 I18N.motifs = [["^(\\d+) articles? sur (\\d+) dans le panier\\.$", "$1 of $2 items in your cart."], ["^(\\d+) étapes? validées? sur (\\d+) — (\\d+) %$", "$1 of $2 steps completed — $3%"], ["^([\\d\\s\\u202f\\u00a0.,−-]+?) kcal$", "$1 Cal"], ["^([\\d\\s\\u202f\\u00a0.,−-]+?) kcal · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de protéines par dose$", "$1 Cal · $2 g protein per serving"], ["^([\\d\\s\\u202f\\u00a0.,−-]+?) kcal consommées sur ([\\d\\s\\u202f\\u00a0.,−-]+?) — il te reste$", "$1 Cal eaten out of $2 — you have"], ["^Objectif visé : ([\\d\\s\\u202f\\u00a0.,−-]+?) kcal · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de protéines · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de glucides · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de lipides\\.$", "Target: $1 Cal · $2 g protein · $3 g carbs · $4 g fat."], ["^Coche les jours que tu veux acheter : la liste se recalcule\\. (\\d+) jours? sélectionnés?\\.$", "Check the days you want to shop for: the list updates automatically. $1 day(s) selected."], ["^Programme mis à jour le (\\d{1,2})/(\\d{1,2})/(\\d{4})$", "Program updated $2/$1/$3"], ["^Repas mis à jour le (\\d{1,2})/(\\d{1,2})/(\\d{4})$", "Meals updated $2/$1/$3"], ["^S(\\d+)$", "W$1"], ["^Supprimer la semaine (\\d+)$", "Delete week $1"], ["^dernière : semaine (\\d+)$", "latest: week $1"], ["^semaine (\\d+)$", "week $1"], ["^Semaine (\\d+) enregistrée\\.$", "Week $1 saved."], ["^(\\d+)/jambe$", "$1/leg"], ["^(\\d+)-(\\d+)/jambe$", "$1-$2/leg"], ["^(\\d+)/bras$", "$1/arm"], ["^(\\d+)-(\\d+)/bras$", "$1-$2/arm"], ["^(\\d+)-(\\d+) s/côté$", "$1-$2 s/side"], ["^protéines au-dessus de ([\\d\\s\\u202f\\u00a0.,−-]+?) g$", "protein over by $1 g"], ["^protéines en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) g$", "protein under by $1 g"], ["^lipides au-dessus de ([\\d\\s\\u202f\\u00a0.,−-]+?) g — sur ce régime, les sources de protéines apportent beaucoup de gras$", "fat over by $1 g — on this diet, protein sources bring a lot of fat"], ["^lipides en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) g — sur ce régime, les sources de protéines apportent beaucoup de gras$", "fat under by $1 g"], ["^calories au-dessus de ([\\d\\s\\u202f\\u00a0.,−-]+?) kcal$", "calories over by $1 Cal"], ["^calories en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) kcal$", "calories under by $1 Cal"], ["^glucides en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) g — ce régime offre peu de sources de glucides dans le catalogue$", "carbs under by $1 g — this diet has few carb sources in the catalog"], ["^(\\d+(?:-\\d+)?(?: s)?)/jambe$", "$1/leg"], ["^(\\d+(?:-\\d+)?(?: s)?)/bras$", "$1/arm"], ["^(\\d+(?:-\\d+)?(?: s)?)/côté$", "$1/side"], ["^(\\d+)/sens$", "$1/direction"], ["^(\\d+)/sens/cheville$", "$1/direction/ankle"], ["^(\\d+) souffles$", "$1 breaths"], ["^(\\d+) respirations$", "$1 breaths"], ["^(\\d+(?:-\\d+)?) pas$", "$1 steps"], ["^(\\d+) dans chaque sens$", "$1 each direction"], ["^(\\d+) par côté$", "$1 per side"], ["^(\\d+) par jambe$", "$1 per leg"], ["^(\\d+) par cheville$", "$1 per ankle"], ["^(\\d+) s par (côté)$", "$1 s per side"], ["^(\\d+) s par jambe$", "$1 s per leg"], ["^(\\d+) s \\+ (\\d+) squats$", "$1 s + $2 squats"]].map(([p, r]) => [new RegExp(p), r]);
+
+/* v29 — composition corporelle + historique des plans */
+Object.assign(I18N.en, {
+  "Balance à impédancemètre (facultatif)": "Smart scale (optional)",
+  "Pèse-toi toujours dans les mêmes conditions : le matin, à jeun, après être passé(e) aux toilettes et avant de boire. Ces balances ne sont pas précises au chiffre près : c'est l'évolution qui compte. Et compare-toi seulement à toi-même : deux marques de balance ne donnent pas les mêmes chiffres.": "Always weigh yourself under the same conditions: in the morning, on an empty stomach, after using the bathroom and before drinking. These scales aren't precise to the decimal: the trend is what matters. And only compare yourself to yourself: two scale brands won't give the same numbers.",
+  "Composition corporelle": "Body composition",
+  "Mesures de balance à impédancemètre : fie-toi à la tendance, pas au chiffre d'un jour.": "Smart scale readings: trust the trend, not a single day's number.",
+  "Évolution de la composition corporelle semaine par semaine": "Body composition week by week",
+  "Masse grasse": "Body fat", "Masse musculaire": "Muscle mass", "Eau corporelle": "Body water",
+  "Graisse viscérale": "Visceral fat", "Masse osseuse": "Bone mass", "Métabolisme de base": "Basal metabolic rate", "Âge métabolique": "Metabolic age",
+  "Masse grasse (%)": "Body fat (%)", "Masse musculaire (kg)": "Muscle mass (kg)", "Eau corporelle (%)": "Body water (%)",
+  "Graisse viscérale (indice)": "Visceral fat (index)", "Masse osseuse (kg)": "Bone mass (kg)",
+  "Métabolisme de base (kcal)": "Basal metabolic rate (Cal)", "Âge métabolique (ans)": "Metabolic age (years)",
+  "depuis le début": "since the start",
+  "Renseigne au moins ton poids, une mensuration ou une mesure de balance.": "Enter at least your weight, one measurement or one scale reading.",
+  "{nom} : entre {bas} et {haut}, vérifie la saisie.": "{nom}: between {bas} and {haut}, check your entry.",
+  "Mes anciens programmes": "My past programs", "Historique des programmes": "Program history",
+  "Mes anciennes diètes": "My past meal plans", "Historique des diètes": "Meal plan history",
+  "Chaque programme remplacé est rangé ici avec ses dates. Rien ne s'efface.": "Every replaced program is kept here with its dates. Nothing gets deleted.",
+  "Chaque diète remplacée est rangée ici avec ses dates. Rien ne s'efface.": "Every replaced meal plan is kept here with its dates. Nothing gets deleted.",
+  "Afficher l'historique": "Show history",
+  "Aucun ancien programme pour le moment.": "No past programs yet.",
+  "Aucune ancienne diète pour le moment.": "No past meal plans yet.",
+  "Programme sans nom": "Untitled program", "Diète sans nom": "Untitled meal plan",
+  "Programme vide.": "Empty program.", "Diète vide.": "Empty meal plan.",
+  "Remettre ce programme": "Restore this program", "Remettre cette diète": "Restore this meal plan",
+  "L'ancien programme n'a pas pu être rangé dans l'historique. Le remplacer quand même ?": "The old program couldn't be saved to history. Replace it anyway?",
+  "L'ancienne diète n'a pas pu être rangée dans l'historique. La remplacer quand même ?": "The old meal plan couldn't be saved to history. Replace it anyway?",
+  "Remettre « {nom} » ? Le programme actuel sera rangé dans l'historique.": "Restore “{nom}”? The current program will be moved to history.",
+  "Remettre « {nom} » ? La diète actuelle sera rangée dans l'historique.": "Restore “{nom}”? The current meal plan will be moved to history.",
+  "Programme remis en place. Relis-le, puis clique sur « Envoyer » pour le dater.": "Program restored. Review it, then click “Send” to date it.",
+  "Diète remise en place. Relis-la, puis clique sur « Envoyer » pour la dater.": "Meal plan restored. Review it, then click “Send” to date it."
+});
+I18N.motifs.push(
+  [/^du (.+) au (.+)$/, "from $1 to $2"],
+  [/^jusqu'au (.+)$/, "until $1"],
+  [/^([+−]?[\d\s\u202f\u00a0.,]+) (%|kg|indice|kcal|ans) depuis le début$/, "$1 $2 since the start"]
+);
+
+/* v30 — journal client, progression automatique, remplacement de repas */
+Object.assign(I18N.en, {
+  "Noter ma séance": "Log my workout", "Séance terminée": "Workout done", "Annuler": "Cancel",
+  "Note tes répétitions et ta charge pour chaque série. La charge proposée vient de ta dernière séance : ajuste-la si besoin.": "Enter your reps and weight for each set. The suggested weight comes from your last workout: adjust it if needed.",
+  "Note au moins une série pour enregistrer ta séance.": "Log at least one set to save your workout.",
+  "Vérifie tes chiffres : jusqu'à 100 reps et 500 kg par série.": "Check your numbers: up to 100 reps and 500 kg per set.",
+  "Séance enregistrée. Bravo !": "Workout saved. Well done!",
+  "Toutes tes séries ont atteint {n} reps : passe à {kg} kg.": "All your sets hit {n} reps: move up to {kg} kg.",
+  "Garde {kg} kg et vise {n} reps sur chaque série.": "Stay at {kg} kg and aim for {n} reps on every set.",
+  "Toutes tes séries ont atteint {n} reps : ajoute 1 à 2 répétitions ou un peu de charge.": "All your sets hit {n} reps: add 1-2 reps or a little weight.",
+  "Vise {n} reps sur chaque série.": "Aim for {n} reps on every set.",
+  "Dernière fois ({date}) : {detail}": "Last time ({date}): {detail}",
+  "Dernière séance notée le {date}": "Last workout logged on {date}",
+  "Séances notées par ton client": "Workouts logged by your client",
+  "Aucune séance notée pour le moment.": "No workouts logged yet.",
+  "Exercices": "Exercises", "Séries": "Sets", "Répétitions": "Reps", "Charge en kg": "Weight in kg",
+  "Remplacer": "Swap", "Changé par ton client": "Changed by your client",
+  "Pas d'autre recette disponible pour ce repas pour le moment.": "No other recipe available for this meal right now.",
+  "Les grammages sont donnés crus, sauf mention contraire. Si un plat ne te convient pas, touche « Remplacer » : l'app t'en propose un autre avec les mêmes calories.": "Weights are given raw unless stated otherwise. If a dish doesn't work for you, tap “Swap”: the app suggests another one with the same calories."
+});
+I18N.motifs.push([/^Série (\d+)$/, "Set $1"]);
 
 
 /* Les dates sont stockees au format ISO (2026-08-29) parce que c'est le seul
@@ -2583,6 +2662,11 @@ const outilMensurations = {
       </div>
       <h3 style="margin-top:20px">Mensurations (cm)</h3>
       <div class="grid g3" id="entry-zones"></div>
+      <details id="compo-saisie">
+        <summary>Balance à impédancemètre (facultatif)</summary>
+        <div class="grid g3" id="entry-compo" style="margin-top:14px"></div>
+        <p class="note" style="margin-top:10px">Pèse-toi toujours dans les mêmes conditions : le matin, à jeun, après être passé(e) aux toilettes et avant de boire. Ces balances ne sont pas précises au chiffre près : c'est l'évolution qui compte. Et compare-toi seulement à toi-même : deux marques de balance ne donnent pas les mêmes chiffres.</p>
+      </details>
       <div class="actions"><button class="btn" id="add">Enregistrer la semaine</button><span class="msg" id="msg"></span></div>
     </section>
 
@@ -2599,6 +2683,14 @@ const outilMensurations = {
       <p class="note" style="margin-top:10px">${CONFIG.mensurations.max_courbes} zones maximum à l'écran — au-delà les courbes deviennent illisibles.</p>
     </section>
 
+    <section class="panel" id="compo-panel" hidden>
+      <h2>Composition corporelle</h2>
+      <div class="tiles" id="compo-tiles"></div>
+      <div class="chips" id="compo-chips" style="margin-top:18px"></div>
+      <div class="chartbox"><svg class="chart" id="chart-compo" role="img" aria-label="Évolution de la composition corporelle semaine par semaine"></svg><div class="tip" id="tip-compo"></div></div>
+      <p class="note" style="margin-top:10px">Mesures de balance à impédancemètre : fie-toi à la tendance, pas au chiffre d'un jour.</p>
+    </section>
+
     <section class="panel">
       <h2>Toutes tes mesures</h2>
       <div class="scroll"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
@@ -2611,6 +2703,7 @@ const outilMensurations = {
       dstart:"", pstart:null,
       zones: cfg.zones.slice(),
       affichees: cfg.zones_affichees_au_depart.slice(),
+      compo_affichee: "mg",
       mesures: []
     });
     const sauver = () => Store.ecrire(self.cle, D);
@@ -2625,6 +2718,13 @@ const outilMensurations = {
       .filter(m => m.vals[i] != null && isFinite(m.vals[i]))
       .map(m => ({x:m.sem, y:m.vals[i]}))
       .sort((a,b) => a.x-b.x);
+    /* composition corporelle (balance a impedancemetre) */
+    const serieCompo = id => D.mesures
+      .filter(m => m.compo && m.compo[id] != null && isFinite(m.compo[id]))
+      .map(m => ({x:m.sem, y:m.compo[id]}))
+      .sort((a,b) => a.x-b.x);
+    const compoPresentes = () => cfg.composition.filter(c => serieCompo(c.id).length);
+    const valCompo = (c, v) => c.pas >= 1 ? fmt(v) : n1(v);
 
     const construireZones = () => {
       const b = $("zone-edit"); b.innerHTML = "";
@@ -2646,6 +2746,9 @@ const outilMensurations = {
         d.innerHTML = `<label for="ez${i}">${esc(z)}</label><input id="ez${i}" type="number" step="0.1" min="0" max="300" placeholder="cm">`;
         b.appendChild(d);
       });
+      const bc = $("entry-compo");
+      if (bc) bc.innerHTML = cfg.composition.map(c =>
+        `<div><label for="ec-${c.id}">${esc(c.nom)} (${esc(c.unite)})</label><input id="ec-${c.id}" type="number" step="${c.pas}" min="${c.bas}" max="${c.haut}"></div>`).join("");
     };
     const semaineSuivante = () => D.mesures.length ? Math.max(...D.mesures.map(m => m.sem)) + 1 : 1;
     const viderFormulaire = () => {
@@ -2653,6 +2756,7 @@ const outilMensurations = {
       $("e-date").value = aujourdhui();
       $("e-poids").value = "";
       D.zones.forEach((z,i) => { const e = $("ez"+i); if (e) e.value = ""; });
+      cfg.composition.forEach(c => { const e = $("ec-" + c.id); if (e) e.value = ""; });
     };
 
     const construireChips = () => {
@@ -2701,7 +2805,8 @@ const outilMensurations = {
 
     const dessinerTable = () => {
       const th = $("thead"), tb = $("tbody");
-      th.innerHTML = `<tr><th>Semaine</th><th>Date</th><th>Poids</th>${D.zones.map(z => `<th>${esc(z)}</th>`).join("")}<th></th></tr>`;
+      const cols = compoPresentes();
+      th.innerHTML = `<tr><th>Semaine</th><th>Date</th><th>Poids</th>${D.zones.map(z => `<th>${esc(z)}</th>`).join("")}${cols.map(c => `<th>${esc(c.nom)}</th>`).join("")}<th></th></tr>`;
       tb.innerHTML = "";
       if (!D.mesures.length){
         /* Le message vit HORS du tableau : dans un tableau large qui defile de
@@ -2723,6 +2828,7 @@ const outilMensurations = {
         const tr = document.createElement("tr");
         tr.innerHTML = `<td>S${m.sem}</td><td>${esc(dateFr(m.date))}</td><td>${m.poids != null ? n1(m.poids) : "—"}</td>` +
           D.zones.map((z,i) => `<td>${(m.vals[i] != null && isFinite(m.vals[i])) ? n1(m.vals[i]) : "—"}</td>`).join("") +
+          cols.map(c => `<td>${(m.compo && m.compo[c.id] != null && isFinite(m.compo[c.id])) ? valCompo(c, m.compo[c.id]) : "—"}</td>`).join("") +
           `<td><button class="del" aria-label="Supprimer la semaine ${m.sem}">×</button></td>`;
         tr.querySelector(".del").addEventListener("click", () => {
           D.mesures.splice(idx,1); sauver(); dessinerTable(); tout(); viderFormulaire();
@@ -2731,8 +2837,38 @@ const outilMensurations = {
       });
     };
 
+    const dessinerCompo = () => {
+      const panneau = $("compo-panel"); if (!panneau) return;
+      const l = compoPresentes();
+      panneau.hidden = !l.length;
+      if (!l.length) return;
+      $("compo-tiles").innerHTML = l.map(c => {
+        const s = serieCompo(c.id), der = s[s.length-1];
+        let sous = "semaine " + der.x;
+        if (s.length > 1){
+          const dd = der.y - s[0].y;
+          const bon = c.sens ? (dd * c.sens > 0 ? "pos" : dd * c.sens < 0 ? "neg" : "") : "";
+          sous = `<span class="${bon}">${dd > 0 ? "+" : dd < 0 ? "−" : ""}${valCompo(c, Math.abs(dd))} ${esc(c.unite)}</span> depuis le début`;
+        }
+        return `<div class="tile"><div class="t-lbl">${esc(c.nom)}</div><div class="t-val readout">${valCompo(c, der.y)}</div><div class="t-sub">${sous}</div></div>`;
+      }).join("");
+      if (!l.some(c => c.id === D.compo_affichee)) D.compo_affichee = l[0].id;
+      const ch = $("compo-chips"); ch.innerHTML = "";
+      l.forEach(c => {
+        const b = document.createElement("button");
+        const actif = c.id === D.compo_affichee;
+        b.type = "button"; b.className = "chip"; b.setAttribute("aria-pressed", String(actif));
+        b.innerHTML = `<span class="dot"${actif ? ` style="background:var(--s2)"` : ""}></span>${esc(c.nom)}`;
+        b.addEventListener("click", () => { D.compo_affichee = c.id; sauver(); dessinerCompo(); });
+        ch.appendChild(b);
+      });
+      const c = l.find(x => x.id === D.compo_affichee);
+      Graphique.dessiner("chart-compo", "tip-compo", [{ nom: c.nom, couleur: "var(--s2)", points: serieCompo(c.id) }], c.unite);
+    };
+
     const tout = () => {
       dessinerKPI();
+      dessinerCompo();
       Graphique.dessiner("chart-poids","tip-poids",[{nom:"Poids",couleur:"var(--s1)",points:serieDuPoids()}],"kg");
       const sel = D.affichees.map((i,k) => ({nom:D.zones[i], couleur:self.couleurs[k], points:serieDeZone(i)}));
       Graphique.dessiner("chart-mens","tip-mens", sel, "cm");
@@ -2750,7 +2886,14 @@ const outilMensurations = {
       if (!isFinite(sem)){ flash("msg","Indique un numéro de semaine."); return; }
       const vals = {}; let une = false;
       D.zones.forEach((z,i) => { const v = parseFloat($("ez"+i).value); if (isFinite(v)){ vals[i] = v; une = true; } });
-      if (!isFinite(poids) && !une){ flash("msg","Renseigne au moins ton poids ou une mensuration."); return; }
+      const compo = {}; let uneCompo = false;
+      for (const c of cfg.composition){
+        const e = $("ec-" + c.id); const v = e ? parseFloat(e.value) : NaN;
+        if (!isFinite(v)) continue;
+        if (v < c.bas || v > c.haut){ flash("msg", trad("{nom} : entre {bas} et {haut}, vérifie la saisie.", { nom: trad(c.nom), bas: c.bas, haut: c.haut })); return; }
+        compo[c.id] = v; uneCompo = true;
+      }
+      if (!isFinite(poids) && !une && !uneCompo){ flash("msg","Renseigne au moins ton poids, une mensuration ou une mesure de balance."); return; }
       /* Une faute de frappe (7,5 au lieu de 75) ecrase la courbe pour
          toujours : on refuse les valeurs impossibles avant d'enregistrer. */
       if (sem < 0 || sem > 520){ flash("msg","Numéro de semaine invalide."); return; }
@@ -2759,13 +2902,17 @@ const outilMensurations = {
       if (horsBornes.length){ flash("msg", horsBornes[0] + " : entre 10 et 250 cm, vérifie la saisie."); return; }
       if (D.mesures.some(m => m.sem === sem) && !confirm(trad("La semaine {n} existe déjà. La remplacer ?", { n: sem }))) return;
       D.mesures = D.mesures.filter(m => m.sem !== sem);
-      D.mesures.push({ sem, date: $("e-date").value || "", poids: isFinite(poids) ? poids : null, vals });
+      const mesure = { sem, date: $("e-date").value || "", poids: isFinite(poids) ? poids : null, vals };
+      if (uneCompo) mesure.compo = compo;
+      D.mesures.push(mesure);
       D.mesures.sort((a,b) => a.sem - b.sem);
       sauver(); viderFormulaire(); dessinerTable(); tout();
       flash("msg", `Semaine ${sem} enregistrée.`);
     });
 
     construireZones(); construireSaisie(); construireChips(); dessinerTable(); viderFormulaire(); tout();
+    /* qui a deja saisi des mesures de balance les retrouve deplies */
+    if (compoPresentes().length && $("compo-saisie")) $("compo-saisie").open = true;
 
     let t; const redim = () => { clearTimeout(t); t = setTimeout(tout, 150); };
     window.addEventListener("resize", redim);
@@ -3319,6 +3466,284 @@ const outilProfil = {
    OUTIL — Le programme d'entrainement
    Le coach l'ecrit depuis la fiche du client ; le client le lit.
    ------------------------------------------------------------------ */
+/* ------------------------------------------------------------------
+   HISTORIQUE — les anciens programmes et les anciennes dietes.
+   Avant qu'un plan en remplace un autre, l'ancien est range ici : ni le
+   client ni le coach ne perdent plus ce qui a ete fait.
+   Range A PART (hist_programme / hist_repas) et lu seulement quand on ouvre
+   l'historique : une semaine de repas pese ~30 ko, on ne veut pas la
+   recharger a chaque ouverture de l'onglet.
+   Seuls les plans reellement ENVOYES (date d'envoi renseignee) entrent dans
+   l'historique : les brouillons que le coach genere trois fois de suite
+   pour trouver le bon n'ont rien a y faire.
+   ------------------------------------------------------------------ */
+const Historique = {
+  max: 24,
+  cles: { programme: "hist_programme", repas: "hist_repas" },
+
+  utile(type, x){
+    if (!x) return false;
+    if (type === "programme") return (x.seances || []).some(sc => (sc.exercices || []).some(e => e.nom));
+    return (x.jours || []).some(j => (j.repas || []).length);
+  },
+  empreinte(type, x){ return JSON.stringify(type === "programme" ? (x.seances || []) : (x.jours || [])); },
+
+  async lire(type){ return await Store.lire(this.cles[type], { liste: [] }); },
+
+  /* Range le plan courant. Renvoie false si l'archive n'a pas pu partir. */
+  async archiver(type, x){
+    if (!x || !x.maj || !this.utile(type, x)) return true;
+    const cle = this.cles[type], uid = Store.cible();
+    if (!uid) return false;
+    const H = await this.lire(type);
+    /* lecture ratee : surtout ne pas ecraser l'historique existant */
+    if (Store.charge[uid + "|" + cle] === false) return false;
+    const l = Array.isArray(H.liste) ? H.liste.slice() : [];
+    const copie = JSON.parse(JSON.stringify(x));
+    if (l[0] && l[0].contenu && this.empreinte(type, l[0].contenu) === this.empreinte(type, copie)) return true;
+    l.unshift({ nom: x.nom || "", du: x.debut || x.maj || "", au: aujourdhui(), contenu: copie });
+    const val = { liste: l.slice(0, this.max) };
+    try {
+      await Auth.assurer();
+      await Auth.appel("/rest/v1/donnees?on_conflict=user_id,outil", {
+        method: "POST",
+        headers: { "Prefer": "resolution=merge-duplicates,return=minimal" },
+        body: [{ user_id: uid, outil: cle, contenu: val, maj_le: new Date().toISOString() }]
+      });
+      Store.boite(uid)[cle] = val;
+      return true;
+    } catch(e){ return false; }
+  },
+
+  /* A appeler juste avant de remplacer un plan. true = on peut remplacer. */
+  async avantRemplacement(type, x){
+    if (await this.archiver(type, x)) return true;
+    return confirm(trad(type === "programme"
+      ? "L'ancien programme n'a pas pu être rangé dans l'historique. Le remplacer quand même ?"
+      : "L'ancienne diète n'a pas pu être rangée dans l'historique. La remplacer quand même ?"));
+  },
+
+  date(s){ return /^\d{4}-\d{2}-\d{2}/.test(s || "") ? dateFr(s) : (s || ""); },
+  periode(x){ return x.du ? "du " + this.date(x.du) + " au " + this.date(x.au) : "jusqu'au " + this.date(x.au); },
+
+  htmlProgramme(P){
+    const s = (P && P.seances) || [];
+    let h = (P && P.note) ? `<p class="note">${esc(P.note)}</p>` : "";
+    s.forEach(sc => {
+      const ex = (sc.exercices || []).filter(e => e.nom);
+      if (!ex.length) return;
+      h += `<div class="hist-bloc"><h3>${esc(sc.nom || "Séance")}</h3>` + ex.map(e => `<div class="ex-lecture"><div class="haut">
+          <span class="nom">${esc(e.nom)}</span>
+          ${e.series ? `<span class="chiffre"><b>${esc(e.series)}</b> séries</span>` : ""}
+          ${e.reps ? `<span class="chiffre"><b>${esc(e.reps)}</b> reps</span>` : ""}
+          ${e.repos ? `<span class="chiffre">repos <b>${esc(e.repos)}</b></span>` : ""}
+        </div></div>`).join("") + `</div>`;
+    });
+    return h || `<p class="note">Programme vide.</p>`;
+  },
+
+  htmlRepas(R){
+    const jours = ((R && R.jours) || []).filter(j => (j.repas || []).length);
+    const kcal = j => (j.repas || []).reduce((n, x) => n + ((x.macros && x.macros.kcal) || 0), 0);
+    let h = (R && R.note) ? `<p class="note">${esc(R.note)}</p>` : "";
+    jours.forEach(j => {
+      h += `<div class="hist-bloc"><h3>${esc(j.nom)} <span class="hist-dates">${fmt(kcal(j))} kcal</span></h3><ul class="ingr">` +
+        j.repas.map(x => `<li><span>${x.moment_nom ? `<span class="hist-dates" style="margin:0">${esc(x.moment_nom)}</span><br>` : ""}${esc(x.nom)}` +
+          `${(x.ingredients || []).length ? `<br><small>${x.ingredients.map(g => esc(g.nom) + " " + fmt(g.grammes) + " g").join(" · ")}</small>` : ""}</span>` +
+          `<b>${fmt(x.macros ? x.macros.kcal : 0)} kcal</b></li>`).join("") + `</ul></div>`;
+    });
+    return h || `<p class="note">Diète vide.</p>`;
+  },
+
+  /* Le panneau sous le plan en cours. Rien n'est charge tant qu'on ne
+     l'ouvre pas. restaurer(contenu) n'existe que cote coach. */
+  monter(type, idZone, restaurer){
+    const zone = $(idZone); if (!zone) return;
+    const prog = type === "programme", coach = typeof restaurer === "function";
+    const titre = prog ? (coach ? "Historique des programmes" : "Mes anciens programmes")
+                       : (coach ? "Historique des diètes" : "Mes anciennes diètes");
+    zone.innerHTML = `<section class="panel"><h2>${titre}</h2>
+      <p class="note" style="margin:0 0 12px">${prog ? "Chaque programme remplacé est rangé ici avec ses dates. Rien ne s'efface." : "Chaque diète remplacée est rangée ici avec ses dates. Rien ne s'efface."}</p>
+      <div class="actions"><button type="button" class="btn ghost" data-hist-ouvrir>Afficher l'historique</button></div>
+      <div data-hist-liste></div></section>`;
+    const bouton = zone.querySelector("[data-hist-ouvrir]"), boite = zone.querySelector("[data-hist-liste]");
+    const dessiner = async () => {
+      bouton.disabled = true;
+      const H = await this.lire(type);
+      bouton.hidden = true;
+      const l = (H && Array.isArray(H.liste)) ? H.liste : [];
+      if (!l.length){
+        boite.innerHTML = `<div class="empty">${prog ? "Aucun ancien programme pour le moment." : "Aucune ancienne diète pour le moment."}</div>`;
+        return;
+      }
+      boite.innerHTML = l.map((x, i) => `<details class="hist-entree">
+          <summary><b>${esc(x.nom || (prog ? "Programme sans nom" : "Diète sans nom"))}</b> <span class="hist-dates">${esc(this.periode(x))}</span></summary>
+          ${prog ? this.htmlProgramme(x.contenu) : this.htmlRepas(x.contenu)}
+          ${coach ? `<div class="actions" style="margin-top:12px"><button type="button" class="btn ghost" data-hist-remettre="${i}">${prog ? "Remettre ce programme" : "Remettre cette diète"}</button><span class="msg" id="hist-msg-${type}-${i}"></span></div>` : ""}
+        </details>`).join("");
+      if (coach) $$("[data-hist-remettre]", boite).forEach(b => b.addEventListener("click", async () => {
+        const x = l[+b.dataset.histRemettre]; if (!x || !x.contenu) return;
+        if (!confirm(trad(prog ? "Remettre « {nom} » ? Le programme actuel sera rangé dans l'historique."
+                               : "Remettre « {nom} » ? La diète actuelle sera rangée dans l'historique.", { nom: x.nom || "" }))) return;
+        b.disabled = true;
+        const ok = await restaurer(JSON.parse(JSON.stringify(x.contenu)));
+        if (ok) await dessiner(); else b.disabled = false;
+      }));
+    };
+    bouton.addEventListener("click", dessiner);
+  }
+};
+
+/* ------------------------------------------------------------------
+   JOURNAL CLIENT — la cliente note ses seances depuis « Mon programme ».
+   Chaque exercice rappelle ce qu'elle a fait la derniere fois et propose
+   la charge a viser : double progression. Tant que toutes les series
+   n'atteignent pas le haut de la fourchette de repetitions, on garde la
+   charge ; quand elles l'atteignent toutes, on monte (+1 kg sous 20 kg,
+   +2,5 kg au-dessus). C'est ce qu'un coach fait a la main.
+   Range dans la cle « journal », qui appartient a la cliente : le coach
+   la lit, il ne l'ecrit pas.
+   ------------------------------------------------------------------ */
+const Journal = {
+  cle: "journal",
+  max: 400,
+  vide(){ return { seances: [] }; },
+
+  /* « 8-10 » -> {8,10} ; « 12 » -> {12,12} ; « 30 s », « 1 min » -> rien */
+  cibleReps(reps){
+    const s = String(reps || "");
+    if (/\d\s*(s|sec|min)\b/i.test(s)) return null;
+    const m = s.match(/(\d+)\s*(?:-|–|à)\s*(\d+)/);
+    if (m) return { min: +m[1], max: Math.max(+m[1], +m[2]) };
+    const u = s.match(/^\s*(\d+)\s*$/);
+    return u ? { min: +u[1], max: +u[1] } : null;
+  },
+  nbSeries(s){ const n = parseInt(s, 10); return (n >= 1 && n <= 10) ? n : 3; },
+  kg(v){ return (Math.round(v * 2) / 2).toLocaleString(locale()); },
+
+  /* la derniere fois que cet exercice a ete fait, toutes seances confondues */
+  dernier(J, nom){
+    const k = Normaliser.aplatir(nom || "");
+    if (!k) return null;
+    for (let i = J.seances.length - 1; i >= 0; i--){
+      const e = (J.seances[i].exos || []).find(x => Normaliser.aplatir(x.nom || "") === k && (x.series || []).some(s => num(s.r) > 0));
+      if (e) return { date: J.seances[i].date, e: e };
+    }
+    return null;
+  },
+
+  conseil(ex, prec){
+    if (!prec) return null;
+    const faites = (prec.e.series || []).filter(s => num(s.r) > 0);
+    if (!faites.length) return null;
+    const cible = this.cibleReps(ex.reps);
+    const kg = Math.max(...faites.map(s => num(s.c)));
+    const repsMin = Math.min(...faites.map(s => num(s.r)));
+    if (!cible) return { kg: kg || null, texte: "" };
+    if (kg > 0){
+      if (repsMin >= cible.max){
+        const nv = Math.round((kg + (kg < 20 ? 1 : 2.5)) * 2) / 2;
+        return { kg: nv, monte: true, texte: trad("Toutes tes séries ont atteint {n} reps : passe à {kg} kg.", { n: cible.max, kg: this.kg(nv) }) };
+      }
+      return { kg: kg, texte: trad("Garde {kg} kg et vise {n} reps sur chaque série.", { kg: this.kg(kg), n: cible.max }) };
+    }
+    if (repsMin >= cible.max) return { kg: null, monte: true, texte: trad("Toutes tes séries ont atteint {n} reps : ajoute 1 à 2 répétitions ou un peu de charge.", { n: cible.max }) };
+    return { kg: null, texte: trad("Vise {n} reps sur chaque série.", { n: cible.max }) };
+  },
+
+  resumeSeries(e){
+    return (e.series || []).filter(s => num(s.r) > 0)
+      .map(s => num(s.c) > 0 ? s.r + " × " + this.kg(num(s.c)) + " kg" : s.r + " reps").join(" · ");
+  },
+
+  htmlSeance(J, sc, si){
+    const exos = (sc.exercices || []).filter(e => e.nom);
+    if (!exos.length) return "";
+    let der = null;
+    for (let i = J.seances.length - 1; i >= 0; i--) if (J.seances[i].si === si){ der = J.seances[i]; break; }
+    const corps = exos.map((e, ei) => {
+      const prec = this.dernier(J, e.nom), c = this.conseil(e, prec);
+      const rc = this.cibleReps(e.reps);
+      return `<div class="exo jr-ex" data-jr-ex="${ei}">
+        <b>${esc(e.nom)}</b>
+        ${prec ? `<p class="note" style="margin:6px 0 0">${esc(trad("Dernière fois ({date}) : {detail}", { date: dateFr(prec.date), detail: this.resumeSeries(prec.e) }))}</p>` : ""}
+        ${c && c.texte ? `<p class="note" style="margin:4px 0 0"><b class="${c.monte ? "pos" : ""}">${esc(c.texte)}</b></p>` : ""}
+        <div class="sets">${Array.from({ length: this.nbSeries(e.series) }, (_, j) => `<div class="set"><div class="s-lbl">Série ${j + 1}</div><div class="pair">
+            <input type="number" min="0" max="100" step="1" inputmode="numeric" placeholder="${rc ? rc.max : "reps"}" data-r="${j}" aria-label="Répétitions">
+            <input type="number" min="0" max="500" step="0.5" inputmode="decimal" placeholder="kg" value="${c && c.kg ? c.kg : ""}" data-c="${j}" aria-label="Charge en kg">
+          </div><div class="cap">reps · kg</div></div>`).join("")}</div>
+      </div>`;
+    }).join("");
+    return `<div class="jr-zone" data-jr="${si}">
+      <div class="actions">
+        <button type="button" class="btn" data-jr-ouvrir="${si}">Noter ma séance</button>
+        ${der ? `<span class="note" style="margin:0">${esc(trad("Dernière séance notée le {date}", { date: dateFr(der.date) }))}</span>` : ""}
+        <span class="msg" id="jr-ok-${si}"></span>
+      </div>
+      <div data-jr-form hidden>
+        <p class="note">Note tes répétitions et ta charge pour chaque série. La charge proposée vient de ta dernière séance : ajuste-la si besoin.</p>
+        ${corps}
+        <div class="actions"><button type="button" class="btn" data-jr-fin="${si}">Séance terminée</button><button type="button" class="btn ghost" data-jr-annuler>Annuler</button><span class="msg" id="jr-msg-${si}"></span></div>
+      </div>
+    </div>`;
+  },
+
+  /* Remplit les emplacements laisses par outilProgramme.vueLecture */
+  async brancher(zone, P){
+    const J = await Store.lire(this.cle, this.vide());
+    if (!Array.isArray(J.seances)) J.seances = [];
+    const self = this;
+    const remplir = () => {
+      $$("[data-jr-place]", zone).forEach(pl => {
+        const si = +pl.dataset.jrPlace, sc = (P.seances || [])[si];
+        pl.innerHTML = sc ? self.htmlSeance(J, sc, si) : "";
+      });
+      $$("[data-jr-ouvrir]", zone).forEach(b => b.addEventListener("click", () => {
+        b.closest(".jr-zone").querySelector("[data-jr-form]").hidden = false;
+        b.hidden = true;
+      }));
+      $$("[data-jr-annuler]", zone).forEach(b => b.addEventListener("click", remplir));
+      $$("[data-jr-fin]", zone).forEach(b => b.addEventListener("click", () => {
+        const si = +b.dataset.jrFin, sc = P.seances[si], boite = b.closest(".jr-zone");
+        let aberrant = false;
+        const exos = (sc.exercices || []).filter(e => e.nom).map((e, ei) => {
+          const bloc = boite.querySelector(`[data-jr-ex="${ei}"]`);
+          const series = [];
+          $$("[data-r]", bloc).forEach(inp => {
+            const j = inp.dataset.r, r = num(inp.value);
+            const ci = bloc.querySelector(`[data-c="${j}"]`), c = ci ? num(ci.value) : 0;
+            if (r > 100 || c > 500 || r < 0 || c < 0) aberrant = true;
+            if (r > 0) series.push({ r: r, c: c > 0 ? c : 0 });
+          });
+          return { nom: e.nom, series: series };
+        }).filter(x => x.series.length);
+        if (aberrant){ flash("jr-msg-" + si, "Vérifie tes chiffres : jusqu'à 100 reps et 500 kg par série."); return; }
+        if (!exos.length){ flash("jr-msg-" + si, "Note au moins une série pour enregistrer ta séance."); return; }
+        const date = aujourdhui();
+        J.seances = J.seances.filter(x => !(x.si === si && x.date === date));
+        J.seances.push({ date: date, si: si, nom: sc.nom || "", exos: exos });
+        if (J.seances.length > self.max) J.seances = J.seances.slice(-self.max);
+        Store.ecrire(self.cle, J);
+        remplir();
+        flash("jr-ok-" + si, "Séance enregistrée. Bravo !");
+      }));
+    };
+    remplir();
+  },
+
+  /* Cote coach : les dernieres seances notees par le client */
+  async resumeCoach(idZone){
+    const z = $(idZone); if (!z) return;
+    const J = await Store.lire(this.cle, this.vide());
+    const l = (Array.isArray(J.seances) ? J.seances : []).slice(-8).reverse();
+    z.innerHTML = `<section class="panel"><h2>Séances notées par ton client</h2>` + (l.length
+      ? `<div class="scroll"><table><thead><tr><th>Date</th><th>Séance</th><th>Exercices</th><th>Séries</th></tr></thead><tbody>` +
+        l.map(x => `<tr><td>${esc(dateFr(x.date))}</td><td>${esc(x.nom || "—")}</td><td>${(x.exos || []).length}</td><td>${(x.exos || []).reduce((n, e) => n + (e.series || []).length, 0)}</td></tr>`).join("") +
+        `</tbody></table></div>`
+      : `<div class="empty">Aucune séance notée pour le moment.</div>`) + `</section>`;
+  }
+};
+
 const outilProgramme = {
   id: "programme",
   cle: "programme",
@@ -3385,7 +3810,7 @@ const outilProgramme = {
     }
     let h = "";
     if (P.note) h += `<section class="panel"><h2>Mot du coach</h2><p style="margin:0">${esc(P.note)}</p></section>`;
-    P.seances.forEach(sc => {
+    P.seances.forEach((sc, si) => {
       h += `<section class="panel"><h2>${esc(sc.nom || "Séance")}</h2>`;
       if (sc.note) h += `<p class="note" style="margin:-8px 0 14px">${esc(sc.note)}</p>`;
       (sc.exercices || []).forEach(e => {
@@ -3403,7 +3828,7 @@ const outilProgramme = {
           <div class="fiche-boite" hidden></div>
         </div>`;
       });
-      h += `</section>`;
+      h += `<div data-jr-place="${si}"></div></section>`;
     });
     if (P.maj) h += `<p class="note" style="text-align:center">Programme mis à jour le ${esc(P.maj)}</p>`;
     return h;
@@ -3723,7 +4148,7 @@ const outilProgramme = {
   },
 
   html(){
-    return `<div id="prog-vue"><section class="panel"><div class="empty">Chargement…</div></section></div>`;
+    return `<div id="prog-vue"><section class="panel"><div class="empty">Chargement…</div></section></div><div id="prog-jr"></div><div id="prog-hist"></div>`;
   },
 
   async init(){
@@ -3746,7 +4171,12 @@ const outilProgramme = {
 
     const sauver = () => Store.ecrire(self.cle, P);
 
-    if (!edition){ zone.innerHTML = self.vueLecture(P); self.brancherFiches(zone); return; }
+    if (!edition){
+      zone.innerHTML = self.vueLecture(P); self.brancherFiches(zone);
+      await Journal.brancher(zone, P);
+      Historique.monter("programme", "prog-hist");
+      return;
+    }
 
     const redessiner = () => { zone.innerHTML = self.vueEdition(P); brancher(); };
 
@@ -3783,7 +4213,7 @@ const outilProgramme = {
       if (no) no.addEventListener("input", () => { P.note = no.value; sauver(); });
 
       const auto = $("pg-auto");
-      if (auto) auto.addEventListener("click", () => {
+      if (auto) auto.addEventListener("click", async () => {
         const choix = self.proposer(intake);
         if (!choix){
           flash("pg-auto-msg", (self.prets || []).length
@@ -3792,6 +4222,8 @@ const outilProgramme = {
           return;
         }
         if (P.seances.length && !confirm("Remplacer le programme en cours par « " + choix.prog.nom + " » ?")) return;
+        if (!(await Historique.avantRemplacement("programme", P))) return;
+        P.debut = aujourdhui(); P.maj = "";
         P.nom = choix.prog.nom;
         P.note = choix.prog.note || P.note;
         P.seances = JSON.parse(JSON.stringify(choix.prog.seances || []));
@@ -3851,11 +4283,13 @@ const outilProgramme = {
           $("pg-prets").innerHTML = self.optionsPrets();
         });
       });
-      sel.onchange = () => {
+      sel.onchange = async () => {
         if (!sel.value) return;
         const x = l.find(y => String(y.id) === sel.value);
         if (!x) return;
         if (!confirm("Charger « " + x.nom + " » ? Il remplacera les séances actuelles de ce client.")){ sel.value = ""; return; }
+        if (!(await Historique.avantRemplacement("programme", P))){ sel.value = ""; return; }
+        P.debut = aujourdhui(); P.maj = "";
         P.seances = JSON.parse(JSON.stringify(x.seances || []));
         if (!P.nom) P.nom = x.nom;
         if (!P.note && x.note) P.note = x.note;
@@ -3875,6 +4309,8 @@ const outilProgramme = {
           if (!confirm("Charger cet entraînement ? Il remplacera les séances actuelles de ce client.")) { sel.value = ""; return; }
           const r = await Auth.appel("/rest/v1/bibliotheque?id=eq." + sel.value + "&select=contenu,nom,note");
           if (r && r[0]){
+            if (!(await Historique.avantRemplacement("programme", P))){ sel.value = ""; return; }
+            P.debut = aujourdhui(); P.maj = "";
             P.seances = JSON.parse(JSON.stringify(r[0].contenu.seances || []));
             if (!P.nom) P.nom = r[0].nom;
             sauver(); redessiner();
@@ -3884,6 +4320,15 @@ const outilProgramme = {
     };
 
     redessiner();
+    Journal.resumeCoach("prog-jr");
+    Historique.monter("programme", "prog-hist", async (C) => {
+      if (!(await Historique.avantRemplacement("programme", P))) return false;
+      P.nom = C.nom || P.nom; P.note = C.note || ""; P.seances = C.seances || [];
+      P.debut = aujourdhui(); P.maj = "";
+      sauver(); redessiner();
+      alert(trad("Programme remis en place. Relis-le, puis clique sur « Envoyer » pour le dater."));
+      return true;
+    });
   }
 };
 
@@ -4414,7 +4859,7 @@ const outilNutrition = {
     </section>`;
     (jour.repas || []).forEach((x, i) => h += this.carteRepas(x, false, actif + ":" + i, suivi));
     h += this.blocCourses(R, suivi);
-    h += `<section class="panel"><p class="note" style="margin:0">Les grammages sont donnés crus, sauf mention contraire. Si un plat ne te convient pas, dis-le à ton coach : il le remplacera sans changer tes macros.</p></section>`;
+    h += `<section class="panel"><p class="note" style="margin:0">Les grammages sont donnés crus, sauf mention contraire. Si un plat ne te convient pas, touche « Remplacer » : l'app t'en propose un autre avec les mêmes calories.</p></section>`;
     if (R.maj) h += `<p class="note" style="text-align:center">Repas mis à jour le ${esc(R.maj)}</p>`;
     return h;
   },
@@ -4427,11 +4872,12 @@ const outilNutrition = {
         <div>
           <span class="eyebrow">${esc(x.moment_nom || "")}</span>
           <h2 style="margin:2px 0 0">${esc(x.nom)}</h2>
+          ${edition && x.change_client ? `<span class="pastille">Changé par ton client</span>` : ""}
         </div>
         ${edition ? `<span class="actions-b">
           ${x.recette_id ? `<button data-autre="${cle}">Autre proposition</button>` : ""}
           <button data-retirer="${cle}">Retirer</button></span>`
-        : `<label class="coche"><input type="checkbox" data-mange="${cle}"${coche ? " checked" : ""}> mangé</label>`}
+        : `<span class="actions-b">${x.recette_id ? `<button type="button" data-remplacer="${cle}">Remplacer</button>` : ""}<label class="coche"><input type="checkbox" data-mange="${cle}"${coche ? " checked" : ""}> mangé</label></span>`}
       </div>
       <div class="repas-macros">
         <span><b>${fmt(m.kcal)}</b> kcal</span>
@@ -4553,7 +4999,7 @@ const outilNutrition = {
     </section>`;
   },
 
-  html(){ return `<div id="nu-vue"><section class="panel"><div class="empty">Chargement…</div></section></div>`; },
+  html(){ return `<div id="nu-vue"><section class="panel"><div class="empty">Chargement…</div></section></div><div id="nu-hist"></div>`; },
 
   async init(){
     const self = this;
@@ -4572,6 +5018,9 @@ const outilNutrition = {
       Store.cache["repas_suivi"] = suivi;
       /* on ouvre sur le jour de la semaine reel : lundi = 0 */
       let actif = R.jours.length ? Math.min(R.jours.length - 1, (new Date().getDay() + 6) % 7) : 0;
+      /* recettes deja refusees pendant cette visite : « Remplacer » propose
+         a chaque clic un plat nouveau au lieu d'osciller entre deux */
+      const refuses = [];
 
       const dessiner = () => {
         zone.innerHTML = self.vueLecture(R, suivi, actif);
@@ -4588,8 +5037,34 @@ const outilNutrition = {
           suivi.joursCourses[c.dataset.jc] = c.checked;
           Store.ecrire("repas_suivi", suivi); dessiner();
         }));
+        $$("[data-remplacer]", zone).forEach(b => b.addEventListener("click", async () => {
+          const [d, i] = b.dataset.remplacer.split(":").map(Number);
+          const jour = R.jours[d], x = jour && jour.repas[i];
+          if (!x) return;
+          b.disabled = true; b.textContent = "…";
+          if (x.recette_id) refuses.push(x.recette_id);
+          const vus = refuses.slice();
+          R.jours.forEach(j => (j.repas || []).forEach(c => { if (c.recette_id) vus.push(c.recette_id); }));
+          let nouveau = null;
+          try {
+            const l = await self.composer(R.cible || { kcal: (x.macros ? x.macros.kcal : 500) * 4, prot: 0 },
+                                          R.regime, R.allergenes, vus, R.nb_repas);
+            nouveau = l.find(n => n.moment === x.moment) || null;
+          } catch(e){}
+          if (!nouveau){
+            refuses.length = 0;
+            alert(trad("Pas d'autre recette disponible pour ce repas pour le moment."));
+            dessiner(); return;
+          }
+          nouveau.change_client = aujourdhui();
+          jour.repas[i] = nouveau;
+          if (suivi.mange) delete suivi.mange[b.dataset.remplacer];
+          Store.ecrire(self.cle, R); Store.ecrire("repas_suivi", suivi);
+          dessiner();
+        }));
       };
       dessiner();
+      Historique.monter("repas", "nu-hist");
       return;
     }
 
@@ -4734,6 +5209,8 @@ const outilNutrition = {
                         (i, n) => { g.textContent = `Composition… jour ${i} sur ${n}`; }, R.nb_repas, sh);
         g.disabled = false; g.textContent = "Générer la semaine";
         if (!jours.length || !jours[0].repas.length){ flash("nu-msg","Aucune recette ne correspond à ces critères. Importe le catalogue ou assouplis les filtres."); return; }
+        if (!(await Historique.avantRemplacement("repas", R))) return;
+        R.debut = aujourdhui(); R.maj = "";
         R.jours = jours; actif = 0;
         sauver(); redessiner();
       });
@@ -4824,11 +5301,13 @@ const outilNutrition = {
         const repas = (l || []).filter(x => x.contenu && x.contenu.type === "repas");
         sel.innerHTML = `<option value="">— charger depuis ma bibliothèque —</option>` +
           repas.map(x => `<option value="${x.id}">${esc(x.nom)}</option>`).join("");
-        sel.onchange = () => {
+        sel.onchange = async () => {
           if (!sel.value) return;
           const x = repas.find(y => String(y.id) === sel.value);
           if (!x) return;
           if (!confirm("Charger « " + x.nom + " » ? Cela remplacera les repas actuels de ce client.")){ sel.value = ""; return; }
+          if (!(await Historique.avantRemplacement("repas", R))){ sel.value = ""; return; }
+          R.debut = aujourdhui(); R.maj = "";
           /* les entrees d'avant la semaine ne contiennent qu'une journee */
           R.jours = x.contenu.jours ? JSON.parse(JSON.stringify(x.contenu.jours))
                                     : [{ nom: self.JOURS[0], repas: JSON.parse(JSON.stringify(x.contenu.repas || [])) }];
@@ -4839,6 +5318,15 @@ const outilNutrition = {
     };
 
     redessiner();
+    Historique.monter("repas", "nu-hist", async (C) => {
+      if (!(await Historique.avantRemplacement("repas", R))) return false;
+      ["nom", "note", "cible", "regime", "allergenes", "nb_repas"].forEach(k => { if (C[k] !== undefined) R[k] = C[k]; });
+      R.jours = C.jours || [];
+      R.debut = aujourdhui(); R.maj = ""; actif = 0;
+      sauver(); redessiner();
+      alert(trad("Diète remise en place. Relis-la, puis clique sur « Envoyer » pour la dater."));
+      return true;
+    });
   }
 };
 
