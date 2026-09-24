@@ -1,0 +1,271 @@
+# HANDOFF — Refonte premium de la plateforme MHX Coaching → Claude Code
+
+Rédigé le 25 septembre 2026 (matin, heure de Bali) par Claude (Cowork), à la demande de Lucas.
+Objet : passer la main à Claude Code sur `index.html` sans rien casser. Lis ce fichier en entier avant de toucher au code, puis `NOTESCLAUDE.md` (journal des versions, aussi lu par Grok Bot) et `BRIEFHANDOVERPLATEFORMEMHX.md` (brief d'origine, toujours valable pour les pièges Supabase).
+
+---
+
+## 0. En une minute
+
+- **Application** : un seul fichier `index.html` (≈ 9 000 lignes), sans framework ni build, hébergé sur GitHub Pages : https://lcsmhx.github.io/mhx-plateforme/ — déploiement = fichier poussé sur `main`.
+- **Backend** : Supabase (ref `nzynbuczmogifuidcjed`, plan gratuit), appelé par `fetch` direct (client maison `Auth.appel`). **7 clients réels + 1 coach. Données de production.**
+- **État en ligne** : **v37**, commit `8dcbe7d` (25/09/2026 06:09 +08:00). Phases faites : 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 14, 17, 19 et la partie « sans base » de la 18. Restent : **10, 13, 15, 16, 18 (base)** — toutes touchent la base ou les permissions — puis **20** (tests complets).
+- **Règle n° 1 : ZÉRO PERTE DE DONNÉES.** Voir §3. Aucune migration destructive, backup + comptage avant/après, validation de Lucas à chaque étape sensible.
+- **Règle n° 2 : rien ne part en production (GitHub ou base) sans le « oui » de Lucas.** Il téléverse lui-même les fichiers sur GitHub (glisser-déposer sur https://github.com/lcsmhx/mhx-plateforme/upload/main). Si Claude Code dispose d'un `git push` authentifié, il ne l'utilise qu'après ce « oui ».
+- **Règle n° 3 : on fait évoluer l'existant, on ne le réécrit pas.** Réutiliser `Regularite`, `Journal`, `Historique`, `Checkin`, `Clients`, le questionnaire, le générateur de diète, l'éditeur de programme… Ne pas changer un modèle de données sans nécessité ; ne jamais remplacer une fonctionnalité qui marche par une réimplémentation.
+- **Grok Bot** (agent Cursor, machine externe) travaille **uniquement dans `donnees/`** (aliments, recettes, programmes, exercices). **Jamais `index.html`.** Coordination par fichiers : `NOTESCLAUDE.md` (Claude → Grok) et `NOTES-GROK.md` (Grok → Claude), plus la table Supabase `briefs` (lecture publique, écriture réservée).
+
+> Note : le message de passation de Lucas parlait de « phase 2 en ligne (v33, commit 30b44b7), prochaine étape phase 3 ». C'est dépassé : Lucas a téléversé v34 (7be60e1), v35 (c910296), v36 (03531c5) et v37 (8dcbe7d) dans la foulée. Le site en ligne est bien la v37 (vérifié octet par octet).
+
+---
+
+## 1. Contexte produit et direction artistique validée
+
+MHX Coaching = coaching sportif et alimentaire en ligne (perte de poids, recomposition), clientèle mixte, femmes 25-34 en priorité, tutoiement. L'app doit ressembler à une **plateforme de coaching premium** (références de qualité : WHOOP, Oura, Linear, Stripe, Notion), pas à une app de bodybuilding ni à un template. **Design neutre homme / femme** : données, typographie, graphiques, barres de progression, icônes ; aucune silhouette genrée, aucun visuel de salle. **Aucun prix dans l'application.**
+
+**Design system v33 (livré, en ligne)** — section [A] et [B] du CSS :
+- Thème **sombre par défaut** (`:root`), clair en option (`:root[data-theme="light"]`), bouton ☀/☾ dans la barre du haut et sur l'écran de connexion, choix rangé sur l'appareil (clé `localStorage` `mhx_theme`), objet `Theme` (`charger`, `appliquer`, `basculer`, `majBoutons`). Le thème ne suit plus l'OS : c'est voulu.
+- Jetons : `--ground` (#07090d), `--surface`, `--sunken`, `--raised`, `--ink/-2/-3`, `--line/-strong`, `--accent` doré #d4a844 (**accent seulement** : CTA, actifs, chiffres clés — jamais un fond), `--accent-soft/-line`, `--good/-soft`, `--warn/-soft`, `--bad/-soft`, `--s1..s4` (séries de courbes), `--r-sm/--r/--r-lg` (rayons 6/10/14), `--vite/--doux` (durées).
+- Typo : IBM Plex Sans (texte, titres en casse normale), IBM Plex Mono (chiffres, étiquettes en capitales espacées), Oswald réservé au nom de la marque. Google Fonts est la seule ressource externe.
+- Composants (une seule famille, anciens noms conservés) : `.panel` (carte), `.tile` = `.tuile` (stat card : `.t-lbl / .t-val / .t-sub`, `.pos/.moyen/.neg` pour la couleur de sens), `.bar` = `.jauge` = `.fo-jauge` (barre), `.pastille` (+ `.ok .attention .mauvais .accent`), `.point` (feu vert/orange/rouge), `.btn` (+ `.ghost .danger .petit`), champs, `.seg` (segmenté), `.tab`, `.chip`, `.flag` (+ `.grave .info .bon`), `.empty`, `.verrou` (état verrouillé), `.avatar`, `.timeline`, `.objectif` (carte objectif), `.switch`, `.modale`, `.volet`, `.toast`, `.acces` (ligne d'accès rapide), `.reg-evo` (barres d'évolution), `.attention-c` (carte d'alerte), `.fiche-grille`.
+- Objet `UI` (section [E]) : `UI.confirmer(texte, {ok, annuler, danger, titre})` → Promise<bool>, `UI.demander(texte, defaut, {type, placeholder, ok})` → Promise<string|null>, `UI.alerte(texte)`, `UI.toast(texte, "ok"|"attention"|"mauvais")`, `UI.volet({titre, corps(html)})`, `UI.verrou({titre, texte, lien, cta})` → html. **Interdit d'utiliser `alert / confirm / prompt` natifs** (les 29 anciens ont été remplacés). Annuler / Échap / clic à côté = rien ne se passe.
+- Animations : apparition douce des `.panel`, transitions courtes, tout désactivé sous `prefers-reduced-motion`.
+- Icônes : `ICONES` (SVG en trait, clé = id de l'outil) + `SVG` (soleil, lune, cadenas, croix). Plus d'emoji dans la navigation.
+- Mobile-first : barre d'onglets fixe en bas (`#barre-bas`, 4 onglets + « Plus » qui ouvre un volet), `main` avec marge basse, tables du back-office en cartes sous 720 px (`td[data-l]`).
+- i18n : l'app est écrite en français ; l'anglais est une couche (`I18N.en`, dictionnaire texte exact → anglais, + `Traduction` par MutationObserver). **Toute nouvelle chaîne visible côté client doit avoir son entrée `I18N.en`** (les écrans coach ne sont pas traduits, c'est voulu). Attention aux clés dupliquées : la dernière gagne (« Remplacer » = « Swap » pour le bouton repas, d'où « Oui, remplacer » pour les fenêtres). Script de contrôle en §8.
+
+---
+
+## 2. Architecture technique
+
+### 2.1 `index.html` — ordre du fichier
+`[A]` jetons de design · `[B]` styles communs / composants · `[C]` styles des outils · `[D]` `CONFIG` (marque, Supabase, calcul, mensurations, nutrition, régularité, bilan, entraînement) · `[E]` boîte à outils (helpers, `SVG`, `ICONES`, `Theme`, `UI`, `I18N`/`Traduction`/`Contenus`, `Auth`, `Store`, `Catalogue`, `Normaliser`, `Import`, `Graphique`, `ECHAUFFEMENTS`) · `[F]` outils (un objet par écran) · `[G]` navigation, connexion, démarrage.
+
+Un **outil** = `{ id, cle, nom, icone, titre, accroche, html(), init(), role?, masque_client?, client_seul?, masque_nav?, principal?, principal_coach?, sans_entete? }`, listé dans `OUTILS` (l'ordre = la navigation). `afficher(id)` rend `html()` dans `#vue` puis `init()` (qui peut renvoyer une fonction de nettoyage). Routage par ancre `#/<id>` ; `ALIAS_ROUTES` (`progression` → `mensurations`, `repas` → `nutrition`, `home` → `accueil`). `outilParDefaut()` : coach → `tableau`, client → `accueil`.
+
+Ordre client : `accueil` · `programme` · `nutrition` · `mensurations` (« Ma progression ») · `suivi` (« Mon suivi ») · `bilan` (masqué de la nav, reste à `#/bilan` = « Préparer le call ») · `formation` (« Speed Formation ») · `complements` · `profil`. Coach : `tableau` · `clients` · `atelier` · `bibliotheque` · `catalogue` · `calculateur` · `entrainement` (les deux derniers `masque_client`).
+
+Mode **consultation** (coach dans la fiche d'un client) : `Store.idConsulte` + `Store.nomConsulte` ; page en `lecture-seule` sauf outils listés dans `MODIFIABLES` (`programme, nutrition, calculateur, complements, bilan` — la fiche `accueil` est en lecture seule en v37). Bandeau `bandeauConsultation()` : Fiche · Préparer le call · Son suivi · Son questionnaire · Son programme · Ses repas · Ses calories · Ses courbes · Ses séances · Revenir à mes clients.
+
+### 2.2 Données — table `donnees(user_id, outil, contenu jsonb, maj_le)` (un document par clé)
+`Store.lire(cle, defaut)` (1 GET, fusionne les défauts, pose le drapeau `charge`), `Store.ecrire(cle, valeur)` (débounce 700 ms, upsert `on_conflict=user_id,outil`, refuse d'écrire si la lecture a échoué), `Store.lireTout(cles, {dates})` (une requête `outil=in.(...)`, lecture seule, ne touche pas au cache).
+
+| Clé | Propriétaire | Écrit par | Contenu (forme) |
+|---|---|---|---|
+| `intake` | client | client | questionnaire (`QUESTIONS`, 57 ids) + `complet` |
+| `programme` | client | **coach** | `{nom, note, seances[{nom, note, exercices[{nom, series, reps, repos, note, lien, id}]}], maj (date fr), debut (ISO, posé à l'envoi), cycle, duree_semaines, objectifs:{mois, liste[3], statuts[3]}}` |
+| `journal` | client | client | `{seances[{date, si, nom, exos[{nom, series[{r,c}]}]}]}` (400 max) |
+| `repas` | client | **coach** (+ client via « Remplacer ») | `{nom, note, cible{kcal,prot,gluc,lip}, regime, allergenes[], nb_repas, maj, debut, jours[{nom, repas[carte], manquants, complement, diagnostic}]}` |
+| `repas_suivi` | client | client | `{date, mange{"jour:i":bool}, courses{}, joursCourses{}, hist{iso:{c,p}}}` (70 j) |
+| `mens` | client | client | `{dstart, pstart, zones[10], affichees[], compo_affichee, mesures[{sem, date, poids, vals{i:cm}, compo{mg,mm,eau,visc,os,mb,age}}]}` |
+| `objectifs_faits` | client | client | `{mois, faits[bool]}` |
+| `checkins` (v36) | client | client | `{liste[{semaine (lundi ISO), fin, envoye_le, reponses{id:valeur}}]}` (60 max) |
+| `complements` | client | **coach** | `{liste[{ref, nom, dose, unite, moment, note, proteine, par100}], note}` |
+| `calc` | client | **coach** | `{sexe, age, taille, poids, pas, heures, objectif}` |
+| `formation` | client | client | `{coches{}, ouvert, lecon, challenge, defis{}, diete{}, semaine, jour, priorites{}, notes[], objectifs[]}` |
+| `hist_programme` / `hist_repas` | client | **coach** | `{liste[{nom, du, au, contenu}]}` (24 max) |
+| `prefs` | client | client | `{langue}` |
+| `perf` | coach | coach | journal d'entraînement du coach |
+| `atelier` | coach | coach | brouillon de programme modèle |
+| `feedbacks` (phase 10, à venir) | client | **coach** | `{liste[{semaine, date, texte}]}` |
+| `notes_coach` (phase 18, à venir) | client | **coach**, **illisible par le client** | `{texte, maj}` |
+| `photos` (phase 13, à venir) | client | client | index des photos Storage |
+
+Autres tables : `profils(id, prenom, nom, role 'client'|'coach', cree_le)` (+ `statut` en phase 15), `bibliotheque(id, coach_id, nom, note, contenu, cree_le)`, catalogue `aliments` (3 111), `recettes` (248), `programmes_types` (18), `exercices` (196, 130 avec vidéo) — toutes avec colonne `traductions` jsonb —, `briefs` (canal Grok).
+
+**Les trois endroits à aligner** quand le coach doit écrire une nouvelle clé dans la fiche d'un client (sinon l'écriture échoue en silence) : (1) la liste dans `Store.ecrire` (`["programme","repas","calc","complements", …]`), (2) `MODIFIABLES` dans `afficher()`, (3) les policies RLS « le coach cree / modifie la fiche client ».
+
+### 2.3 Supabase — état exact au 25/09/2026
+- Auth email + mot de passe. Confirmation d'email **désactivée** (décision de Lucas). Création de compte réservée au coach via l'edge function `creer-acces` (vérifie `est_coach`, crée l'utilisateur avec la clé service, renvoie `{id, email, role}`) ; `supprimer-acces` (droit à l'effacement, mot « SUPPRIMER » revérifié serveur). L'inscription publique est vraisemblablement **coupée** dans le dashboard (à vérifier : Authentication → Providers → Email → « Enable email signup ») — elle sera rouverte en tout dernier lors de la phase 15.
+- Fonctions SQL : `est_coach()` (SECURITY DEFINER, `profils.role = 'coach'`), `creer_profil()` (trigger AFTER INSERT sur `auth.users` : insère `profils(id, prenom, nom)` depuis `raw_user_meta_data`), `protege_role()` (trigger BEFORE UPDATE sur `profils` : seul un coach change `role`).
+- Policies (texte exact) :
+  - `donnees` SELECT « donnees lisibles par leur proprietaire ou le coach » : `(auth.uid() = user_id) OR est_coach()`
+  - `donnees` INSERT « donnees creees par leur proprietaire » with_check : `auth.uid() = user_id`
+  - `donnees` UPDATE « donnees modifiees par leur proprietaire » using : `auth.uid() = user_id`
+  - `donnees` DELETE « donnees supprimees par leur proprietaire » using : `auth.uid() = user_id`
+  - `donnees` INSERT « le coach cree dans la fiche client » with_check : `est_coach() AND outil = ANY (ARRAY['programme','repas','calc','complements','hist_programme','hist_repas'])`
+  - `donnees` UPDATE « le coach modifie la fiche client » using + with_check : idem
+  - `profils` SELECT / UPDATE : `auth.uid() = id OR est_coach()`
+  - `bibliotheque` ALL : `auth.uid() = coach_id AND est_coach()`
+  - catalogue (4 tables) : SELECT `true` pour `authenticated`, ALL `est_coach()`
+  - `briefs` SELECT `true` (anon + authenticated)
+- Pas de bucket Storage. Advisors : `est_coach()` exposé en RPC (sans risque), protection « mots de passe compromis » désactivée (réglage dashboard).
+- PostgREST renvoie 1 000 lignes max : `Catalogue.lire` pagine avec l'en-tête `Range`.
+
+### 2.4 Déploiement et versions
+- `CONFIG.marque.version` (ex. `"2026-09-25 · 37"`) s'affiche en pied de page et sur l'écran de connexion : **incrémenter à chaque livraison**, c'est le seul moyen de savoir ce qui est en ligne. `<meta http-equiv="Cache-Control" content="no-cache">` : les clients rechargent la dernière version.
+- Livraison = `index.html` (+ `NOTESCLAUDE.md` mis à jour) → Lucas glisse les fichiers sur GitHub → GitHub Pages met ~1 minute. Vérifier ensuite la version sur le site.
+- Historique récent sur `main` : `3576aec` v32 (avant refonte) · `30b44b7` v33 · `7be60e1` v34 · `c910296` v35 · `03531c5` v36 · `8dcbe7d` v37. Le détail de chaque version se relit avec `git diff 3576aec..30b44b7` (v33), `30b44b7..7be60e1` (v34), etc.
+
+---
+
+## 3. RÈGLES ABSOLUES — zéro perte de données (posées par Lucas, non négociables)
+
+Concerne tout : comptes, profils, questionnaire, programmes, diètes, repas suivis, historiques, poids, mensurations, composition, journal, objectifs, formation, compléments, préférences, toutes les clés `donnees` existantes et futures, catalogue, bibliothèque, données coach.
+
+1. **Backup avant toute migration** (structure Supabase / SQL / RLS / trigger / Storage / profils) : export complet vérifiable (par SELECT : `profils`, `donnees` avec `contenu`, `bibliotheque`, catalogue, **et le texte des policies / fonctions / triggers actuels**), livré à Lucas en fichier, avec vérification que les 7 clients y sont. Procédure de rollback écrite avant de commencer.
+2. **Migrations non destructives uniquement** : `ADD COLUMN`, `ALTER POLICY`, `CREATE OR REPLACE FUNCTION`, `CREATE POLICY`, backfill explicite, valeurs par défaut contrôlées. **Jamais** `DROP`, `DELETE`, `TRUNCATE`, `RESET`, recréation de table. L'ancien format de données doit rester lu.
+3. **Ne pas modifier les données existantes sans nécessité.** Exemple appliqué : les objectifs — `P.objectifs.liste[]` et `objectifs_faits` continuent de fonctionner, le statut est un champ ajouté (`statuts[]`) et `Regularite.statutObjectif` lit les deux.
+4. **Avant / après** pour toute migration : comptage (profils par rôle, lignes `donnees` par client et par clé, catalogue) identique après. **Écart inattendu = STOP**, on ne continue pas les phases suivantes.
+5. **Tester d'abord avec un client existant** (compte de test désigné par Lucas ; ne jamais se connecter avec le compte d'un vrai client sans que Lucas donne lui-même l'accès) : connexion, profil, programme, repas, progression, mensurations, questionnaire, objectifs, formation, historique, journal. Puis seulement appliquer à tous.
+6. **FREE / CLIENT (phase 15)** : logique de statut ajoutée sans rien changer au comportement ; les 7 clients restent `client`, le coach reste `coach` ; RLS vérifiées ; accès des clients existants strictement identiques ; test d'un prospect séparément ; un prospect n'accède jamais aux données ou fonctionnalités privées d'un client. Le défaut `prospect` ne doit jamais toucher les comptes existants (d'où : ADD COLUMN sans défaut → backfill `client` → SET DEFAULT `prospect`).
+7. **RLS** : toute modification testée avec au minimum coach, client existant, prospect, et tentative d'accès croisé. Coach → accès prévu ; client → ses données seulement ; prospect → seulement le mode gratuit. Personne ne lit les données privées d'un autre.
+8. **`notes_coach`** : strictement privées au coach, protégées **par la RLS**, pas seulement par l'interface (le client ne doit pas pouvoir les lire même en connaissant la clé).
+9. **Photos** : bucket créé seulement après avoir défini et testé les règles d'accès ; privées ; un client ne voit jamais celles d'un autre ; le coach voit celles de ses clients.
+10. **Phases sensibles 10, 13, 15, 18** : AVANT — expliquer la migration, montrer tables / colonnes / policies, expliquer la protection des données existantes et le rollback → validation de Lucas → backup → migration → tests → vérification → validation → suite.
+
+Méthode de travail (validée) : une phase = un pré-brief (trouvé / à modifier / fichiers / conservé / risques) → implémentation → post-brief (ajouté / modifié / conservé / tests). Tests obligatoires après chaque modification importante : compile (syntaxe JS), routes, interactions, formulaires, données, authentification, permissions, responsive, fonctionnalités existantes concernées. Lucas a dit « n'attends pas mon go, fonce » pour les phases **sans base** ; les phases avec base attendent son « oui ». Il lit les livraisons avec des captures avant/après.
+
+---
+
+## 4. Les 20 phases — état et contenu
+
+| # | Phase | État | Où c'est dans le code |
+|---|---|---|---|
+| 1 | Audit | fait | (rapport dans la conversation Cowork ; l'essentiel est ici) |
+| 2 | Design system | **en ligne v33** | [A][B][C], `Theme`, `UI`, `SVG` |
+| 3 | Navigation | **en ligne v34** | `OUTILS`, `outilsVisibles`, `outilParDefaut`, `outilsPrincipaux`, `construireNav`, `construireBarreBas`, `ALIAS_ROUTES`, `ICONES` ; bloc « Mes données » uniquement dans Profil ; bannière PWA sous le contenu |
+| 4 | Accueil | **en ligne v34** | `outilAccueil` (client) ; `Store.lireTout` |
+| 5 | Programme | **en ligne v35** | `outilProgramme.avancement / faitesCetteSemaine / vueLecture(P, J)` ; champs coach `pg-cycle`, `pg-duree` ; `P.debut` posé à l'envoi |
+| 6 | Nutrition | **en ligne v35** | bouton `.respect` (« Respecté / Non respecté »), compteur du jour, préparation repliée ; même clé `repas_suivi` |
+| 7 | Progression | **en ligne v35** | `outilMensurations.html()` réorganisé (ids conservés), saisie repliée (`#mens-saisie`, `#mens-ajouter`), tuile `k-depart` |
+| 8 | Mon suivi | **en ligne v35** | `outilSuivi` = `Regularite.monterClient(zone, P, J, pre)` (évolution 5 semaines, objectifs en cartes) + `outilBilan.calculer/vue` ; `outilBilan.masque_nav` |
+| 9 | Bilan hebdo | **en ligne v36** | `CONFIG.bilan`, objet `Checkin`, clé `checkins` ; formulaire dans Mon suivi, statut sur l'Accueil, lecture coach dans « Préparer le call » et la fiche |
+| 10 | Feedback coach | **à faire (base)** | voir §5 |
+| 11 | Objectifs (statuts) | **en ligne v36** | `Regularite.statutObjectif / libelleStatut / classeStatut`, `objectifsCoach` (select par objectif), `P.objectifs.statuts` |
+| 12 | Régularité paramétrable | **en ligne v36** | `CONFIG.regularite` (`poids`, `seuils`), `Regularite.poids` (getter), `niveau` |
+| 13 | Photos | **à faire (base : Storage)** | voir §5 |
+| 14 | Speed Formation | **en ligne v36** | `outilFormation.vue` (en-tête bibliothèque, modules numérotés) ; contenu intact |
+| 15 | FREE / CLIENT | **à faire (base : `profils.statut`)** | voir §5 |
+| 16 | Locked states + Calendly | **à faire (dépend de 15)** | `UI.verrou` existe ; lien : https://calendly.com/mhx-coaching/30min ; aucun prix |
+| 17 | Back-office | **en ligne v37** | `outilTableau`, module `Clients` (`charger`, `resumer`, `alertes`, `ouvrir`), « Mes clients » en cartes sur mobile |
+| 18 | Fiche client | **partie sans base en ligne v37** ; notes privées / feedbacks / calls **à faire** | `outilAccueil.fiche()` (consultation) |
+| 19 | Alertes | **en ligne v37** | `Clients.alertes` |
+| 20 | Tests complets | à faire à la fin | banc de test §8 |
+
+Format à respecter pour chaque phase : **avant** — ce qui est trouvé dans le code, ce qui sera modifié, fichiers/sections concernés, ce qui est conservé, risques ; **après** — ajouté, modifié, conservé, tests effectués. Une version (`vNN`) par livraison, une note datée dans `NOTESCLAUDE.md`.
+
+---
+
+## 5. Les phases restantes — conception proposée à Lucas (en attente de son « oui »)
+
+Tout par `ALTER / ADD / CREATE OR REPLACE`, dans une transaction, après backup et comptage. Le code applicatif peut être écrit avant la migration à condition de **détecter la capacité** (colonne présente ? écriture refusée 401/403 ? bucket absent ?) et d'afficher un message clair au lieu d'échouer en silence.
+
+### A. Phases 10 (feedback) et 18 (notes privées) — table `donnees`, 4 policies par `ALTER POLICY`
+1. « le coach cree dans la fiche client » et « le coach modifie la fiche client » : liste des clés + `'feedbacks', 'notes_coach'`.
+2. « donnees lisibles par leur proprietaire ou le coach » → `((auth.uid() = user_id) AND outil <> 'notes_coach') OR est_coach()`.
+3. « donnees creees / modifiees / supprimees par leur proprietaire » → `(auth.uid() = user_id) AND outil NOT IN ('notes_coach','feedbacks')`.
+Aucune ligne modifiée. Rollback = ré-appliquer les expressions du §2.3. Tests SQL en transaction annulée : `SET LOCAL ROLE authenticated; SET LOCAL request.jwt.claims = '{"sub":"<uuid>","role":"authenticated"}'` pour un coach, un client, un prospect ; vérifier lecture de `notes_coach` refusée au client, écriture feedback autorisée au coach, pas de lecture croisée.
+App : objet `Feedback` (clé `feedbacks`, une entrée par `semaine` = lundi du bilan, écriture directe par `Auth.appel` upsert avec gestion d'erreur — pas `Store.ecrire` — pour pouvoir dire « migration non appliquée » sur 403) ; éditeur dans « Préparer le call » sous chaque bilan hebdo reçu (+ un feedback « sans bilan » pour la semaine visée) et dans la fiche ; côté client : « Feedback de ton coach » dans Mon suivi (dernier + historique) et carte « Ton feedback est disponible » sur l'Accueil (feedback de moins de 7 jours) ; alerte `bilan_recu` éteinte dès qu'un feedback existe pour cette semaine. Objet `Notes` (clé `notes_coach`, `{texte, maj}`) : zone de texte auto-enregistrée dans la fiche, coach uniquement. Ajouter les deux clés dans la liste de `Store.ecrire` et ajouter `accueil` à `MODIFIABLES` (en v37 la fiche est en lecture seule) — ou écrire ces deux clés directement par `Auth.appel`, ce qui contourne proprement `Store.ecrire` et son cache par utilisateur.
+
+### B. Phase 15 (FREE / CLIENT) — table `profils`
+1. `ALTER TABLE public.profils ADD COLUMN statut text;` (nullable, **sans défaut**).
+2. `UPDATE public.profils SET statut = 'client';` — backfill explicite des 8 comptes, comptage avant/après.
+3. `ALTER TABLE public.profils ALTER COLUMN statut SET DEFAULT 'prospect';` (ne concerne que les comptes créés ensuite).
+4. `CREATE OR REPLACE FUNCTION public.protege_role()` : ajouter `or new.statut is distinct from old.statut` à la condition « seul un coach peut changer » (sinon un prospect se passe `client` par l'API).
+5. App : `Auth.estProspect()` = `profil.role !== 'coach' && profil.statut === 'prospect'` (colonne absente → personne n'est prospect : rien ne change). Après `Auth.creerAcces` (qui renvoie `{id}`), `PATCH profils?id=eq.<id> {statut:'client'}` (le coach a le droit d'UPDATE). Dans « Mes clients » : badge statut + bouton « Passer client / Repasser prospect », affiché seulement si la colonne existe (`"statut" in p`). KPI « Prospects » du tableau de bord (déjà codé, lit `p.statut`).
+6. Inscription libre, en dernier : `Auth.inscrire(email, mdp, prenom, nom)` = `POST /auth/v1/signup` avec `data:{prenom, nom}` (le trigger `creer_profil` lit `raw_user_meta_data`), écran « Créer mon compte » sur le portail, visible seulement si `CONFIG.marque.inscription_libre === true` (drapeau à créer, `false` par défaut) ; Lucas active « Enable email signup » dans Supabase à ce moment-là. Un prospect ne possède que ses propres lignes (RLS inchangées).
+Rollback : la colonne reste (sans effet si l'app ne la lit pas), trigger remis à sa version actuelle.
+
+### C. Phase 16 (locked states) — sans base, après 15
+Dans `afficher()` : si `Auth.estProspect()` et `outil.verrou` et pas de consultation → rendre l'en-tête + `UI.verrou({titre, texte: "Cette fonctionnalité est disponible avec l'accompagnement MHX.", lien: CONFIG.marque.calendly /* à ajouter dans CONFIG.marque : "https://calendly.com/mhx-coaching/30min" */, cta: "Réserver mon appel"})` et ne pas appeler `init()`. Verrouillés : `programme`, `nutrition`, `mensurations`, `suivi`, `bilan`, `complements`. Ouverts : `accueil` (version prospect : bienvenue, CTA formation, liste de ce que débloque l'accompagnement, CTA Calendly), `formation`, `profil`. Cadenas dans la nav pour les onglets verrouillés. Entrées `I18N.en` déjà présentes : « Cette fonctionnalité est disponible avec l'accompagnement MHX. », « Réserver mon appel ». **Aucun prix.**
+
+### D. Phase 13 (photos) — Storage
+Bucket privé `photos` (5 Mo max, `image/jpeg,image/png,image/webp`), chemin `<user_id>/s<NNN>-<face|profil|dos>.jpg`. Policies `storage.objects` : propriétaire (`(storage.foldername(name))[1] = auth.uid()::text`) SELECT / INSERT / UPDATE / DELETE, coach (`est_coach()`) SELECT. App : objet `Photos` — compression canvas (max 1080 px, JPEG 0,82, ≈ 200 Ko), envoi `POST /storage/v1/object/photos/<chemin>` (`x-upsert: true`, `Content-Type: image/jpeg`, Bearer), lecture `GET /storage/v1/object/authenticated/photos/<chemin>` → blob → `URL.createObjectURL`, index dans la clé client `photos` `{liste[{semaine, date, vues{face, profil, dos}}]}` ; section « Photos de progression » dans Ma progression (envoi pour la semaine choisie, comparaison Début / S4 / S8 / S12 ou deux semaines au choix, vue par vue), lecture seule pour le coach dans la fiche. Bucket absent → toast « Les photos ne sont pas encore activées ». Rollback : bucket conservé, nos policies retirées.
+
+### E. Phase 20 — tests complets
+Parcours client / prospect / coach, mobile / tablette / desktop, FR / EN, RLS (aucune lecture croisée, `notes_coach` illisible), non-régression : générateur de diète, import catalogue, export RGPD, suppression de compte, journal, historiques.
+
+---
+
+## 6. Ce que Claude Code doit savoir pour ne rien casser
+
+- **Un seul fichier, pas de build, pas de librairie.** Lucas doit pouvoir ouvrir et modifier `index.html` lui-même. Pas de découpage, pas de `npm`.
+- **Ne pas toucher aux formules** (Mifflin-St Jeor, facteur d'activité, 2,2 g/kg, 1,0 g/kg, ajustement des portions) sans accord écrit de Lucas dans `NOTESCLAUDE.md`.
+- **`Normaliser`** (régimes / allergènes recalculés à l'import) est le point le plus sensible de l'app : une erreur = un client vegan qui reçoit du lard. Ne pas y toucher sans tests sur `donnees/aliments.json`.
+- **Clé Supabase** dans le fichier = clé *publishable* (publique). La clé `service_role` ne doit jamais entrer dans le dépôt.
+- **Écriture coach** : trois endroits à aligner (§2.2). Oublier l'un des trois = écriture silencieusement perdue.
+- **`Store.lire` refuse d'écrire après une lecture ratée** (drapeau `charge`) : un outil qui lit une clé via `lireTout` mais veut l'écrire doit d'abord la relire par `Store.lire` (cas de `checkins` dans `outilSuivi`).
+- **`repas_suivi.mange` est remis à zéro chaque jour à l'ouverture** ; l'historique par jour vit dans `repas_suivi.hist` (70 jours) et c'est lui que lit `Regularite`.
+- **`Regularite.bornes(decalage)`** : semaine lundi → dimanche, `0` = semaine en cours (jusqu'à aujourd'hui). Le score : séances notées (50), repas cochés (30), mesure de la semaine (20) ; une partie sans objet sort du calcul. C'est un indicateur de motivation, jamais présenté comme médical.
+- **Objectifs** : `P.objectifs.mois` = mois en cours au moment où le coach tape un objectif ; `objectifs_faits.faits` n'est lu que si `mois` correspond.
+- **`Checkin.semaineVisee()`** : du jour d'ouverture (vendredi, `CONFIG.bilan.jour_ouverture`) au dimanche suivant → la semaine en cours ; lundi → jeudi → la semaine précédente. Une entrée par lundi ISO. Jamais bloquant.
+- **`Clients.charger`** télécharge toutes les lignes `donnees` (sauf historiques) : correct jusqu'à quelques dizaines de clients ; au-delà, paginer ou filtrer.
+- **`Catalogue.lire`** pagine par 1 000 et bascule sur les JSON GitHub si la table est vide (`Catalogue.secours`).
+- **Consultation** : `Store.oublier(uid)` en sortant d'une fiche ; le cache est par utilisateur (mélanger deux fiches était un bug historique).
+- **Traduction** : `Traduction.noeud` traduit les blocs simples par `innerHTML` exact et les nœuds texte par correspondance exacte ; les `svg` ne sont pas « inline » pour lui, donc un `<a>` de nav avec SVG est traduit nœud par nœud (prévoir l'entrée du libellé seul). `data-notr` exclut un élément.
+- **Version** : incrémenter `CONFIG.marque.version` à chaque livraison.
+- **Tests** : rien n'est fini parce que l'écran s'affiche. Rejouer le banc de test (§8) : 0 erreur console, aucune écriture inattendue.
+
+---
+
+## 7. En suspens / à surveiller
+
+- **Phases 10, 13, 15, 16, 18 (base) et 20** : à faire, dans cet ordre suggéré : A (policies feedback/notes) → B (statut) → C (locked states) → D (photos) → 20. Chaque bloc avec backup + brief + « oui ».
+- **Inscription publique** : à vérifier dans le dashboard Supabase avant la phase 15 (elle doit rester coupée jusqu'à la toute fin).
+- **Compte de test** : Lucas n'en a pas encore désigné ; il faut un compte client de test (créé depuis « Mes clients ») pour les tests réels des phases sensibles.
+- **KPI « Prospects »** du tableau de bord affiche 0 tant que la colonne `statut` n'existe pas (normal).
+- **Fiche client** : « Calls » n'a pas de source de données (rien n'existe pour les appels) — à décider avec Lucas (clé `calls` écrite par le coach ?) ; notes privées et feedbacks arrivent avec A.
+- **Qualité des données catalogue — 14 aliments animaux étiquetés `vegetarien` + `vegan` à tort dans `donnees/aliments.json`** (relevé le 25/09/2026, inchangé depuis le dernier commit Grok Bot `a3f279d` du 30 août) : `graisse-de-dinde`, `huile-de-foie-de-morue`, `bouillon-de-viande-et-legumes-type-pot-au-feu-degraisse-deshydrate`, `bouillon-de-viande-et-legumes-type-pot-au-feu-non-degraisse-deshydrate`, `bouillon-de-viande-et-legumes-type-pot-au-feu-pret-a-consommer`, `saucisse-de-volaille-type-knack-contenant-du-soja-preemballee`, `biscuit-ou-cracker-aperitif-souffle-gout-bacon`, `pizza-au-chorizo-ou-salami-preemballee`, `pizza-kebab-preemballee`, `sandwich-baguette-merguez-ketchup-moutarde`, `sandwich-grec-ou-kebab-baguette-crudites`, `sandwich-grec-ou-kebab-pita-crudites`, `sandwich-pain-de-mie-complet-bacon-crudites-preemballe`, `sauce-kebab-preemballee`. Vérifié le 25/09 en exécutant le `Normaliser` de la v37 sur ces 14 fiches : **les 14 sont corrigées à l'import et dans le catalogue de secours** (`vegan`/`vegetarien` retirés, `pescetarien` conservé pour l'huile de foie de morue) — le filet fonctionne, mais la source JSON reste fausse. La correction du JSON appartient à **Grok Bot** (`donnees/`), pas à `index.html` ; à lui demander via `NOTESCLAUDE.md`. Autres restes signalés par Grok (30 août, `NOTES-GROK.md`) : produits laitiers sans allergène `lait` (C3), `beurre-de-cacahuete` sorti de vegan par le motif « beurre », `hot-dog-preemballe` encore `sans_porc`.
+- **Fichiers dormants** : `CONFIG.marque.formulaire_bilan` (vide, jamais lu), `CONFIG.marque.programme` (vide), `donnees/echauffements.json` et `programme-auto.json` (l'app embarque ses propres `ECHAUFFEMENTS` ; pas de table), `aliments-usda.json` / `aliments-off.json` (jamais importés), `POURGROKBOTMAJ6/7.md`.
+- **Speed Formation** : les widgets (diète, priorités, notes, objectifs, challenges) doublonnent des fonctions de l'app ; conservés volontairement (contenu historique de Notion, cases cochées des clients).
+- **Sécurité (mineur)** : `est_coach()` exposé en RPC (renvoie un booléen) ; protection « mots de passe compromis » désactivée ; un client peut techniquement réécrire ses propres clés `programme` / `repas` par l'API (voulu : « Remplacer un repas »).
+- **Bugs corrigés en route** : erreur console à la sortie de « Ma progression » (redimensionnement en attente) — garde ajoutée dans `tout()` ; « il y a -1 j » dans Mes clients (horloge en avance) — `jours()` ne renvoie plus de négatif.
+- **Poids du fichier** : ≈ 650 Ko (≈ 150 Ko de base64 : logo, icônes, manifeste), rechargé à chaque visite (`no-cache`). Acceptable ; ne pas laisser grossir sans raison.
+- **Journal `perf` du coach et « Entraînement »** : outil historique du coach, conservé, non refondu.
+
+---
+
+## 8. Banc de test local (à réutiliser) — dossier `tests-locaux/` à la racine du dépôt
+
+Playwright + Chromium, **Supabase simulé** (aucun appel à la vraie base ; toute écriture est interceptée et journalisée), données fictives et aucune clé (`fixtures.js` : 1 coach « Coach Démo », 3 clients — Thomas complet, Sarah sans programme ni diète, Julien inactif et questionnaire incomplet ; catalogue = fichiers `donnees/`).
+
+```
+# depuis le dossier tests-locaux/ (à la racine du dépôt ; donnees/ est lu dans le dossier parent)
+export NODE_PATH=$(npm root -g)          # playwright installé globalement
+node rig.js --html ../index.html --out captures/vNN [--theme light] [--only client|coach|anon] [--lang en]
+      # rend ~64 pages (client, coach, fiche client, connexion) en mobile et desktop, capture, relève les erreurs console
+node flux.js ../index.html captures/flux   # 19 tests : fenêtres UI (annuler = aucune écriture), thème, anglais
+node verif34.js ../index.html              # navigation, accueil, bloc Mes données, alias
+node verif35.js ../index.html              # programme (badge notée), nutrition (Respecté), suivi (objectif), progression (saisie repliée)
+node verif36.js ../index.html              # bilan hebdo (envoi = clé checkins), statuts d'objectifs, Préparer le call
+node verif37.js ../index.html              # tableau de bord (KPI, alertes), fiche, Mes clients en cartes
+```
+Contrôles rapides sans navigateur :
+```
+node -e "const s=require('fs').readFileSync('index.html','utf8');const js=s.slice(s.indexOf('<script>')+8,s.lastIndexOf('</script>'));new Function(js);console.log('JS OK');
+const css=s.slice(s.indexOf('<style>')+7,s.indexOf('</style>'));console.log('CSS',(css.match(/{/g)||[]).length,(css.match(/}/g)||[]).length);
+const m=js.match(/I18N\.en = \{([\s\S]*?)\n\};/);const k=[...m[1].matchAll(/\"((?:[^\"\\\\]|\\\\.)*)\":/g)].map(x=>x[1]);console.log('clés I18N dupliquées:',k.filter((x,i)=>k.indexOf(x)!==i));"
+```
+Comparer les appels API entre deux versions (ils doivent rester identiques hors ajout voulu) :
+```
+grep -o '"/rest/v1/[^"]*"\|"/auth/v1/[^"]*"\|"/functions/v1/[^"]*"' index.html | sort | uniq -c
+```
+Comptages « avant / après » pour une migration (SQL, lecture seule) :
+```sql
+select role, count(*) from public.profils group by role;
+select user_id, outil, length(contenu::text) as taille, maj_le from public.donnees order by user_id, outil;
+select outil, count(*) from public.donnees group by outil order by outil;
+select (select count(*) from aliments), (select count(*) from recettes), (select count(*) from programmes_types), (select count(*) from exercices), (select count(*) from bibliotheque);
+select tablename, policyname, cmd, qual, with_check from pg_policies where schemaname='public' order by 1,2;
+select proname, pg_get_functiondef(oid) from pg_proc where pronamespace='public'::regnamespace;
+```
+
+---
+
+## 9. Coordination avec Grok Bot
+
+- Grok Bot lit `NOTESCLAUDE.md` à chaque tour et écrit dans `NOTES-GROK.md` (messages courts et datés, une ligne par point). Il ne touche pas à `index.html` ; s'il teste la plateforme en ligne, ses retours QA vont dans ces fichiers.
+- Chaque livraison de Claude Code = une section datée dans `NOTESCLAUDE.md` : version, phases, ce qui a changé, clés / champs ajoutés, tests. C'est aussi la mémoire du projet.
+- Lucas veut que les deux agents travaillent **en équipe, pas en parallèle** : signaler à Grok Bot toute donnée dont l'app aurait besoin (ex. nouveaux champs dans `exercices.json`), et relire ses commits dans `donnees/` avant un import (`Catalogue` → « Importer le catalogue » dans l'onglet coach).
+- Une conversation automatique Lucas × Claude × Grok existe aussi dans Notion (« CONVERSATION — LUCAS × CLAUDE × GROK ») et une revue hebdomadaire de la plateforme le lundi ; hors périmètre de Claude Code, mais Lucas peut y faire référence.
+
+---
+
+## 10. Checklist de reprise
+
+1. Cloner `https://github.com/lcsmhx/mhx-plateforme` ; vérifier `CONFIG.marque.version` = `2026-09-25 · 37` et que https://lcsmhx.github.io/mhx-plateforme/ affiche v37.
+2. Lire `NOTESCLAUDE.md` en entier (sections du 25/09/2026 : v33 → v37).
+3. Installer le banc de test (`tests-locaux/README.md`), le lancer sur la v37 : 64 pages, 0 erreur, 19 + 13 + 14 + 13 + 15 vérifications (revérifié le 25/09 avant la passation).
+4. Pour la suite (phases sensibles) : rédiger le brief de migration (§5), attendre le « oui », faire le backup et les comptages, migrer dans une transaction, tester en SQL par rôle, tester sur le compte de test, comparer les comptages, livrer, noter dans `NOTESCLAUDE.md`.
+5. Ne jamais pousser sans le « oui » de Lucas. Ne jamais toucher `donnees/` (Grok Bot) ni les formules.
