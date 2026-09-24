@@ -330,6 +330,41 @@ footer a{color:var(--accent)}
 .client-l .voir{margin-left:auto;background:transparent;border:1px solid var(--line-strong);border-radius:var(--r-sm);color:var(--ink-2);padding:8px 14px;font-size:13px;cursor:pointer;font-family:inherit;min-height:34px}
 .client-l .voir:hover{color:var(--ink);border-color:var(--accent)}
 
+/* --- fiche client --- */
+.fiche-grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:16px}
+.fiche-grille .panel + .panel{margin-top:0}
+ul.fiche-l li{font-size:13.5px}
+ul.fiche-l li b{font-family:"IBM Plex Sans",sans-serif;text-align:right}
+a.pastille{text-decoration:none;cursor:pointer}
+
+/* --- tableau de bord coach --- */
+.tb-tiles{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+a.tb-tuile{text-decoration:none;color:inherit;transition:border-color var(--vite)}
+a.tb-tuile:hover{border-color:var(--accent-line)}
+.tb-tuile.attention .t-val{color:var(--warn)}
+.attention-l{display:flex;flex-direction:column;gap:10px}
+.attention-c{background:var(--sunken);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.attention-tete{display:flex;align-items:center;gap:12px}
+.attention-nom{flex:1;min-width:0;display:flex;flex-direction:column}
+.attention-nom small{font-size:12.5px;color:var(--ink-3)}
+.attention-alertes{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.attention-alertes .pastille{cursor:pointer;font-family:"IBM Plex Sans",sans-serif;font-size:12.5px;padding:4px 11px;min-height:28px}
+.attention-alertes .pastille:hover{filter:brightness(1.15)}
+/* Mes clients : le tableau devient des cartes sur telephone */
+@media (max-width:720px){
+  #tb-clients{display:block}
+  #tb-clients tr{display:block;background:var(--sunken);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;margin-bottom:10px}
+  #tb-clients td{display:flex;justify-content:space-between;align-items:center;gap:10px;border:0;padding:5px 0;text-align:right;font-family:"IBM Plex Sans",sans-serif;font-size:14px}
+  #tb-clients td::before{content:attr(data-l);font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);text-align:left}
+  #tb-clients td:first-child{font-size:15px;justify-content:flex-start;gap:8px}
+  #tb-clients td:first-child::before{display:none}
+  #tb-clients td.td-actions{justify-content:flex-start;padding-top:10px}
+  #tb-clients td.td-actions::before{display:none}
+  #tb-clients tbody tr:hover td{background:transparent}
+  .tb-clients-table{display:block}
+  .tb-clients-table thead{display:none}
+}
+
 /* --- bilan hebdomadaire --- */
 .checkin-q{margin-bottom:16px}
 .checkin-q.echelle{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
@@ -831,7 +866,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-09-25 · 36",
+    version: "2026-09-25 · 37",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -2265,15 +2300,15 @@ const Store = {
      { cle: contenu | null }. Ne touche ni au cache ni aux drapeaux de
      lecture : chaque outil continue de faire son propre lire() avec ses
      valeurs par defaut. */
-  async lireTout(cles){
-    const uid = this.cible(); const out = {};
+  async lireTout(cles, opts){
+    const uid = this.cible(); const out = {}, dates = {};
     cles.forEach(k => { out[k] = null; });
-    if (!uid) return out;
+    if (!uid) return (opts && opts.dates) ? { valeurs: out, dates } : out;
     try {
-      const r = await Auth.appel("/rest/v1/donnees?user_id=eq." + uid + "&outil=in.(" + cles.map(encodeURIComponent).join(",") + ")&select=outil,contenu");
-      (r || []).forEach(l => { if (l && l.outil in out) out[l.outil] = l.contenu || null; });
+      const r = await Auth.appel("/rest/v1/donnees?user_id=eq." + uid + "&outil=in.(" + cles.map(encodeURIComponent).join(",") + ")&select=outil,contenu,maj_le");
+      (r || []).forEach(l => { if (l && l.outil in out){ out[l.outil] = l.contenu || null; dates[l.outil] = l.maj_le || null; } });
     } catch(e){}
-    return out;
+    return (opts && opts.dates) ? { valeurs: out, dates } : out;
   },
 
   ecrire(cle, valeur){
@@ -6371,7 +6406,6 @@ const outilCatalogue = {
   id: "catalogue",
   cle: null,
   nom: "Catalogue",
-  principal_coach: true,
   icone: "📦",
   role: "coach",
   titre: "Le catalogue",
@@ -6569,7 +6603,8 @@ const outilClients = {
 
   jours(iso){
     if (!iso) return null;
-    return Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+    /* jamais negatif : une horloge un peu en avance donnait « il y a -1 j » */
+    return Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86400000));
   },
 
   /* Evolution du poids d'un client a partir de ses mensurations */
@@ -6646,41 +6681,9 @@ const outilClients = {
       if (zoneA) zoneA.innerHTML = "";
       return;
     }
-
-    const lignes = clients.map(p => {
-      const c = contenus[p.id] || {};
-      const ev = this.evolution(c.mens);
-      const j = this.jours(parClient[p.id]);
-      const objectif = (c.intake && c.intake.objectif) || "";
-      /* Le sens du progres depend de l'objectif : perdre, c'est descendre. */
-      const sens = /perte|s[èe]che/i.test(objectif) ? -1 : /prise|masse/i.test(objectif) ? 1 : 0;
-      const ec = this.ecarts(c.intake, c.calc);
-      return {
-        p: p, ev: ev, jours: j,
-        ecarts: ec,
-        ecartKcal: ec.length ? this.ecartKcal(c.intake, c.calc) : null,
-        nom: ((p.prenom||"") + " " + (p.nom||"")).trim() || (p.id.slice(0,8)),
-        intake: !!(c.intake && c.intake.complet),
-        programme: !!(c.programme && (c.programme.seances||[]).length),
-        diete: !!(c.repas && ((c.repas.jours || []).some(j => (j.repas || []).length) || (c.repas.repas || []).length)),
-        sens: sens
-      };
-    });
-    /* regularite : la semaine passee (complete) sert au tri, celle en cours
-       est donnee a titre indicatif. Rien tant qu'il n'a ni programme ni diete. */
-    lignes.forEach(l => {
-      const c = contenus[l.p.id] || {};
-      if (!l.programme && !l.diete){ l.reg = null; l.regEnCours = null; return; }
-      l.reg = Regularite.calculer(c, -1).score;
-      l.regEnCours = Regularite.calculer(c, 0).score;
-    });
-
-    /* Ceux qui demandent une action passent devant. */
-    const urgence = (l) => (l.ecarts.length ? 200 : 0) +
-                           (l.jours === null ? 100 : l.jours >= 10 ? 90 : 0) +
-                           (!l.intake ? 50 : 0) + (!l.programme ? 20 : 0) + (!l.diete ? 10 : 0) +
-                           (l.reg == null ? 0 : l.reg < 40 ? 60 : l.reg < 70 ? 25 : 0);
-    lignes.sort((a,b) => urgence(b) - urgence(a) || (b.jours||0) - (a.jours||0));
+    /* v37 — le resume de chaque client et son tri par urgence vivent dans
+       Clients.resumer : le tableau de bord et la fiche s'en servent aussi */
+    const lignes = Clients.resumer(profils, parClient, contenus);
 
     const pastille = (ok, txtOk, txtNon) =>
       `<span class="pastille${ok ? "" : " manque"}">${ok ? txtOk : txtNon}</span>`;
@@ -6691,27 +6694,28 @@ const outilClients = {
       return `<b style="color:${bon === null ? "var(--ink)" : bon ? "var(--good)" : (Math.abs(v) < 0.3 ? "var(--ink-3)" : "var(--warn)")}">${t}</b>`;
     };
 
+    const feu = l => { const n = l.alertes.some(a => a.niveau === "mauvais") ? "mauvais" : l.alertes.some(a => a.niveau === "attention") ? "attention" : "ok"; return `<span class="point ${n}" title="${esc(l.alertes.map(a => a.texte).join(" · ") || "Rien à signaler")}"></span>`; };
     tb.innerHTML = lignes.map(l => `<tr>
-      <td><b>${esc(l.nom)}</b>${l.ecarts.length ? ` <span class="pastille manque" title="Le calculateur ne correspond pas au questionnaire">chiffres à vérifier</span>` : ""}</td>
-      <td>${l.jours === null ? '<span class="pastille manque">jamais</span>'
+      <td data-l="Client">${feu(l)} <b>${esc(l.nom)}</b>${l.ecarts.length ? ` <span class="pastille manque" title="Le calculateur ne correspond pas au questionnaire">chiffres à vérifier</span>` : ""}</td>
+      <td data-l="Activité">${l.jours === null ? '<span class="pastille manque">jamais</span>'
             : l.jours >= 10 ? `<span class="pastille manque">${l.jours} j</span>`
             : `<span class="meta">${l.jours === 0 ? "aujourd'hui" : "il y a " + l.jours + " j"}</span>`}</td>
-      <td>${l.reg == null ? '<span class="meta">—</span>'
+      <td data-l="Régularité">${l.reg == null ? '<span class="meta">—</span>'
             : `<b class="${Regularite.niveau(l.reg)}">${l.reg}</b><span class="meta">/100</span>${l.regEnCours != null ? ` <span class="meta">(en cours : ${l.regEnCours})</span>` : ""}`}</td>
-      <td>${l.ev ? `${n1(l.ev.actuel)} kg <span class="meta">(départ ${n1(l.ev.depart)})</span>` : '<span class="meta">aucune mesure</span>'}</td>
-      <td>${l.ev ? variation(l.ev.total, l.sens) : '<span class="meta">—</span>'}</td>
-      <td>${l.ev && l.ev.mois !== null ? variation(l.ev.mois, l.sens) + (l.ev.jours_fenetre !== 28 ? ` <span class="meta">sur ${l.ev.jours_fenetre} j</span>` : "") : '<span class="meta">pas assez de recul</span>'}</td>
-      <td>${pastille(l.intake, "rempli", "à remplir")}</td>
-      <td>${pastille(l.programme, "envoyé", "à faire")}</td>
-      <td>${pastille(l.diete, "envoyée", "à faire")}</td>
-      <td><button class="voir" type="button" data-bilan="${esc(l.p.id)}" data-nom="${esc(l.nom)}">Préparer le call</button> <button class="voir" type="button" data-ouvrir="${esc(l.p.id)}" data-nom="${esc(l.nom)}">Ouvrir</button></td>
+      <td data-l="Poids">${l.ev ? `${n1(l.ev.actuel)} kg <span class="meta">(départ ${n1(l.ev.depart)})</span>` : '<span class="meta">aucune mesure</span>'}</td>
+      <td data-l="Depuis le début">${l.ev ? variation(l.ev.total, l.sens) : '<span class="meta">—</span>'}</td>
+      <td data-l="4 dernières sem.">${l.ev && l.ev.mois !== null ? variation(l.ev.mois, l.sens) + (l.ev.jours_fenetre !== 28 ? ` <span class="meta">sur ${l.ev.jours_fenetre} j</span>` : "") : '<span class="meta">pas assez de recul</span>'}</td>
+      <td data-l="Questionnaire">${pastille(l.intake, "rempli", "à remplir")}</td>
+      <td data-l="Programme">${pastille(l.programme, "envoyé", "à faire")}</td>
+      <td data-l="Diète">${pastille(l.diete, "envoyée", "à faire")}</td>
+      <td data-l="" class="td-actions"><button class="voir" type="button" data-bilan="${esc(l.p.id)}" data-nom="${esc(l.nom)}">Préparer le call</button> <button class="voir" type="button" data-ouvrir="${esc(l.p.id)}" data-nom="${esc(l.nom)}">Ouvrir</button></td>
     </tr>`).join("");
 
     $$("[data-ouvrir]", tb).forEach(b => b.addEventListener("click", () => {
       Store.oublier(Store.idConsulte);
       Store.idConsulte = b.dataset.ouvrir;
       Store.nomConsulte = b.dataset.nom;
-      location.hash = "#/profil";
+      location.hash = "#/accueil";     // v37 : la fiche s'ouvre sur la vue d'ensemble
     }));
     $$("[data-bilan]", tb).forEach(b => b.addEventListener("click", () => {
       Store.oublier(Store.idConsulte);
@@ -6748,7 +6752,7 @@ const outilClients = {
     <section class="panel">
       <h2>Suivi de mes clients</h2>
       <div id="alertes-clients"></div>
-      <div class="scroll" style="margin-top:14px"><table><thead><tr>
+      <div class="scroll" style="margin-top:14px"><table class="tb-clients-table"><thead><tr>
         <th>Client</th><th>Activité</th><th>Régularité</th><th>Poids</th><th>Depuis le début</th><th>4 dernières sem.</th>
         <th>Questionnaire</th><th>Programme</th><th>Diète</th><th></th>
       </tr></thead><tbody id="tb-clients"><tr><td colspan="10">Chargement…</td></tr></tbody></table></div>
@@ -6791,18 +6795,7 @@ const outilClients = {
     const charger = async () => {
       const box = $("liste-clients");
       try {
-        const profils = await Auth.appel("/rest/v1/profils?select=*&order=cree_le.desc");
-        /* les historiques (jusqu'a 24 plans par client) ne servent pas ici :
-           on ne les telecharge pas */
-        const donnees = await Auth.appel("/rest/v1/donnees?select=user_id,outil,contenu,maj_le&outil=not.in.(hist_programme,hist_repas)");
-        const parClient = {}, contenus = {};
-        /* « Activite » = ce que le CLIENT a saisi. Ce que le coach ecrit dans
-           sa fiche (programme, diete, calories) ne dit rien de lui. */
-        const ecritParCoach = ["programme", "repas", "calc", "complements"];
-        (donnees || []).forEach(d => {
-          if (ecritParCoach.indexOf(d.outil) === -1 && (!parClient[d.user_id] || d.maj_le > parClient[d.user_id])) parClient[d.user_id] = d.maj_le;
-          (contenus[d.user_id] = contenus[d.user_id] || {})[d.outil] = d.contenu;
-        });
+        const { profils, parClient, contenus } = await Clients.charger();
         self.tableau(profils, parClient, contenus);
         /* Tous les comptes, coachs compris : c'est ici qu'on donne l'acces
            complet a quelqu'un de l'equipe, et qu'on le retire. */
@@ -6920,6 +6913,188 @@ const outilClients = {
     });
 
     charger();
+  }
+};
+
+/* ------------------------------------------------------------------
+   CLIENTS (v37) — ce que le coach sait de chaque client, en un objet.
+   Chargement partage (profils + donnees, sans les historiques), resume
+   par client (poids, activite, regularite, ce qui manque) et ALERTES.
+   Les alertes repondent a une seule question : « qui a besoin de moi
+   aujourd'hui ? ». Pas d'usine a gaz : des regles simples, chacune avec
+   l'ecran ou aller.
+   ------------------------------------------------------------------ */
+const Clients = {
+  async charger(){
+    const profils = await Auth.appel("/rest/v1/profils?select=*&order=cree_le.desc");
+    /* les historiques (jusqu'a 24 plans par client) ne servent pas ici :
+       on ne les telecharge pas */
+    const donnees = await Auth.appel("/rest/v1/donnees?select=user_id,outil,contenu,maj_le&outil=not.in.(hist_programme,hist_repas)");
+    const parClient = {}, contenus = {};
+    /* « Activite » = ce que le CLIENT a saisi. Ce que le coach ecrit dans
+       sa fiche (programme, diete, calories) ne dit rien de lui. */
+    const ecritParCoach = ["programme", "repas", "calc", "complements"];
+    (donnees || []).forEach(d => {
+      if (ecritParCoach.indexOf(d.outil) === -1 && (!parClient[d.user_id] || d.maj_le > parClient[d.user_id])) parClient[d.user_id] = d.maj_le;
+      (contenus[d.user_id] = contenus[d.user_id] || {})[d.outil] = d.contenu;
+    });
+    return { profils: profils || [], parClient, contenus };
+  },
+
+  /* le resume d'un client (memes calculs qu'avant dans Mes clients) */
+  resumerUn(p, c, dernierMaj){
+    const K = outilClients;
+    const ev = K.evolution(c.mens);
+    const j = K.jours(dernierMaj);
+    const objectif = (c.intake && c.intake.objectif) || "";
+    const sens = /perte|s[èe]che/i.test(objectif) ? -1 : /prise|masse/i.test(objectif) ? 1 : 0;
+    const ec = K.ecarts(c.intake, c.calc);
+    const l = {
+      p: p, ev: ev, jours: j, ecarts: ec,
+      ecartKcal: ec.length ? K.ecartKcal(c.intake, c.calc) : null,
+      nom: ((p.prenom||"") + " " + (p.nom||"")).trim() || (p.id.slice(0,8)),
+      intake: !!(c.intake && c.intake.complet),
+      programme: !!(c.programme && (c.programme.seances||[]).length),
+      diete: !!(c.repas && ((c.repas.jours || []).some(j => (j.repas || []).length) || (c.repas.repas || []).length)),
+      sens: sens
+    };
+    /* regularite : la semaine passee (complete) sert au tri, celle en cours
+       est donnee a titre indicatif. Rien tant qu'il n'a ni programme ni diete. */
+    if (!l.programme && !l.diete){ l.reg = null; l.regEnCours = null; }
+    else { l.reg = Regularite.calculer(c, -1).score; l.regEnCours = Regularite.calculer(c, 0).score; }
+    l.alertes = this.alertes(l, c);
+    return l;
+  },
+
+  resumer(profils, parClient, contenus){
+    const lignes = (profils || []).filter(p => p.role !== "coach").map(p => this.resumerUn(p, contenus[p.id] || {}, parClient[p.id]));
+    /* Ceux qui demandent une action passent devant. */
+    const seuils = (CONFIG.regularite && CONFIG.regularite.seuils) || { bon: 70, moyen: 40 };
+    const urgence = (l) => (l.ecarts.length ? 200 : 0) +
+                           (l.jours === null ? 100 : l.jours >= 10 ? 90 : 0) +
+                           (!l.intake ? 50 : 0) + (!l.programme ? 20 : 0) + (!l.diete ? 10 : 0) +
+                           (l.reg == null ? 0 : l.reg < seuils.moyen ? 60 : l.reg < seuils.bon ? 25 : 0) +
+                           l.alertes.reduce((n, a) => n + (a.niveau === "mauvais" ? 30 : a.niveau === "attention" ? 12 : 3), 0);
+    lignes.sort((a,b) => urgence(b) - urgence(a) || (b.jours||0) - (a.jours||0));
+    return lignes;
+  },
+
+  /* ---------- ALERTES (phase 19) ----------
+     niveau : mauvais (agir aujourd'hui) · attention (cette semaine) · info (bon a savoir)
+     cible  : l'onglet de la fiche a ouvrir */
+  alertes(l, c){
+    const out = [];
+    const seuils = (CONFIG.regularite && CONFIG.regularite.seuils) || { bon: 70, moyen: 40 };
+    const auj = aujourdhui();
+    if (l.ecarts.length) out.push({ type: "chiffres", niveau: "mauvais", cible: "calculateur",
+      texte: "Calculateur ≠ questionnaire" + (l.ecartKcal ? ` (${l.ecartKcal > 0 ? "+" : ""}${fmt(l.ecartKcal)} kcal/j)` : "") });
+    if (l.jours === null) out.push({ type: "inactif", niveau: "attention", cible: "profil", texte: "Jamais rien saisi" });
+    else if (l.jours >= 10) out.push({ type: "inactif", niveau: "mauvais", cible: "accueil", texte: `Inactif depuis ${l.jours} j` });
+    if (!l.intake) out.push({ type: "manque", niveau: "attention", cible: "profil", texte: "Questionnaire à remplir" });
+    if (!l.programme) out.push({ type: "manque", niveau: "attention", cible: "programme", texte: "Programme à envoyer" });
+    if (!l.diete) out.push({ type: "manque", niveau: "attention", cible: "nutrition", texte: "Diète à envoyer" });
+    if (l.reg != null && l.reg < seuils.moyen) out.push({ type: "regularite", niveau: "mauvais", cible: "suivi", texte: `Régularité faible : ${l.reg}/100` });
+    /* bilan hebdomadaire : recu (a lire) ou manquant */
+    if (l.programme || l.diete){
+      const ck = c.checkins || { liste: [] }, e = Checkin.etat(ck);
+      const il7 = (() => { const d = new Date(); d.setDate(d.getDate() - 7); return Regularite.iso(d); })();
+      /* recu : un bilan envoye dans les sept derniers jours, quelle que soit sa semaine */
+      const recent = (ck.liste || []).filter(x => x.envoye_le && x.envoye_le >= il7);
+      if (recent.length) out.push({ type: "bilan_recu", niveau: "info", cible: "bilan", texte: "Bilan hebdo reçu — à lire" });
+      else if (!e.fait && e.semaine.fin < auj) out.push({ type: "bilan_manque", niveau: "attention", cible: "suivi", texte: "Bilan hebdo non complété" });
+    }
+    /* objectif du mois non atteint (statut pose par le coach) */
+    const o = c.programme && c.programme.objectifs;
+    if (o && o.mois === auj.slice(0, 7)) (o.statuts || []).forEach((st, i) => { if (st === "non_atteint" && (o.liste || [])[i]) out.push({ type: "objectif", niveau: "attention", cible: "suivi", texte: `Objectif non atteint : ${(o.liste || [])[i]}` }); });
+    /* stagnation : au moins trois mesures sur trois semaines, et le poids n'a pas bouge */
+    if (l.sens && c.mens && (c.mens.mesures || []).length >= 3){
+      const m = c.mens.mesures.filter(x => x.date && x.poids != null).slice().sort((a, b) => a.date < b.date ? -1 : 1);
+      if (m.length >= 3){
+        const der = m[m.length - 1], ref = m.find(x => (new Date(der.date) - new Date(x.date)) / 86400000 <= 28) || m[0];
+        const jours = Math.round((new Date(der.date) - new Date(ref.date)) / 86400000);
+        if (jours >= 21 && Math.abs(der.poids - ref.poids) < 0.3) out.push({ type: "stagnation", niveau: "info", cible: "mensurations", texte: `Poids stable depuis ${jours} j (${n1(der.poids)} kg)` });
+      }
+    }
+    const rang = { mauvais: 0, attention: 1, info: 2 };
+    return out.sort((a, b) => rang[a.niveau] - rang[b.niveau]);
+  },
+
+  /* ouvre la fiche d'un client sur un onglet */
+  ouvrir(p, nom, cible){
+    Store.oublier(Store.idConsulte);
+    Store.idConsulte = p; Store.nomConsulte = nom;
+    location.hash = "#/" + (cible || "accueil");
+  },
+
+  initiales(nom){ return String(nom || "").split(/\s+/).filter(Boolean).slice(0, 2).map(x => x[0].toUpperCase()).join("") || "?"; }
+};
+
+/* ------------------------------------------------------------------
+   OUTIL COACH — Tableau de bord (v37). La page d'arrivee du coach :
+   « qui necessite mon attention aujourd'hui ? ». Ne fait que lire.
+   ------------------------------------------------------------------ */
+const outilTableau = {
+  id: "tableau",
+  cle: null,
+  nom: "Tableau de bord",
+  icone: "📈",
+  role: "coach",
+  principal_coach: true,
+  sans_entete: true,
+  titre: "Tableau de bord",
+  accroche: "",
+
+  html(){ return `<div id="tb-vue"><header class="masthead"><h1>Tableau de bord</h1></header><section class="panel"><div class="empty">Chargement…</div></section></div>`; },
+
+  async init(){
+    const zone = $("tb-vue"); if (!zone) return;
+    let profils, parClient, contenus;
+    try { ({ profils, parClient, contenus } = await Clients.charger()); }
+    catch(e){ zone.innerHTML = `<section class="panel"><div class="empty">Impossible de charger tes clients pour le moment.</div></section>`; return; }
+    const lignes = Clients.resumer(profils, parClient, contenus);
+    const prospects = profils.filter(p => p.role !== "coach" && p.statut === "prospect");
+    const clients = lignes.filter(l => l.p.statut !== "prospect");
+    const aTraiter = clients.filter(l => l.alertes.some(a => a.type === "bilan_recu")).length;
+    const nonCompletes = clients.filter(l => l.alertes.some(a => a.type === "bilan_manque")).length;
+    const aSurveiller = clients.filter(l => l.alertes.some(a => a.niveau !== "info"));
+    const prenom = (Auth.profil && Auth.profil.prenom) || "";
+    const tuile = (lbl, val, sub, cls, lien) => `<a class="tile tb-tuile${cls ? " " + cls : ""}" href="${lien || "#/clients"}"><div class="t-lbl">${lbl}</div><div class="t-val readout">${val}</div><div class="t-sub">${sub}</div></a>`;
+    const carte = l => `<div class="attention-c">
+        <div class="attention-tete"><span class="avatar">${esc(Clients.initiales(l.nom))}</span>
+          <div class="attention-nom"><b>${esc(l.nom)}</b><small>${l.jours === null ? "jamais rien saisi" : l.jours === 0 ? "actif aujourd'hui" : "dernière saisie il y a " + l.jours + " j"}${l.reg != null ? ` · régularité <b class="${Regularite.niveau(l.reg)}">${l.reg}</b>/100` : ""}</small></div>
+          <button type="button" class="btn ghost petit" data-fiche="${esc(l.p.id)}" data-nom="${esc(l.nom)}" data-cible="accueil">Ouvrir</button></div>
+        <div class="attention-alertes">${l.alertes.map(a => `<button type="button" class="pastille ${a.niveau === "info" ? "accent" : a.niveau}" data-fiche="${esc(l.p.id)}" data-nom="${esc(l.nom)}" data-cible="${esc(a.cible)}">${esc(a.texte)}</button>`).join("")}</div>
+      </div>`;
+    zone.innerHTML = `
+      <header class="masthead">
+        <span class="eyebrow">${esc(outilAccueil.dateLongue())}</span>
+        <h1>Bonjour${prenom ? " " + esc(prenom) : ""}</h1>
+        <p class="lede">${aSurveiller.length ? `${aSurveiller.length} client${aSurveiller.length > 1 ? "s" : ""} ${aSurveiller.length > 1 ? "demandent" : "demande"} ton attention aujourd'hui.` : "Rien d'urgent : tes clients avancent."}</p>
+      </header>
+      <section class="panel">
+        <div class="tiles tb-tiles">
+          ${tuile("Clients actifs", clients.length, "accompagnement en cours")}
+          ${tuile("Prospects", prospects.length, "comptes gratuits")}
+          ${tuile("Bilans à traiter", aTraiter, "reçus cette semaine", aTraiter ? "cle" : "")}
+          ${tuile("Bilans non complétés", nonCompletes, "semaine passée", nonCompletes ? "attention" : "")}
+          ${tuile("À surveiller", aSurveiller.length, "au moins une alerte", aSurveiller.length ? "attention" : "")}
+        </div>
+      </section>
+      <section class="panel">
+        <h2>Qui nécessite ton attention aujourd'hui ?</h2>
+        ${aSurveiller.length ? `<div class="attention-l">${aSurveiller.map(carte).join("")}</div>` : `<div class="empty">Tout est en ordre : questionnaires remplis, programmes et diètes envoyés, bilans à jour, personne d'inactif.</div>`}
+        ${clients.length - aSurveiller.length > 0 ? `<p class="note" style="margin:12px 0 0">${clients.length - aSurveiller.length} client${clients.length - aSurveiller.length > 1 ? "s" : ""} sans alerte. <a class="link-a" href="#/clients">Voir le tableau complet →</a></p>` : ""}
+      </section>
+      <section class="panel">
+        <h2>Raccourcis</h2>
+        <div class="acces-l">
+          <a class="acces" href="#/clients"><span class="ico">${ICONES.clients}</span><span class="txt"><b>Mes clients</b><small>tableau complet, comptes, création d'accès</small></span><span class="fleche">›</span></a>
+          <a class="acces" href="#/atelier"><span class="ico">${ICONES.atelier}</span><span class="txt"><b>Mes séances</b><small>construire un programme modèle</small></span><span class="fleche">›</span></a>
+          <a class="acces" href="#/bibliotheque"><span class="ico">${ICONES.bibliotheque}</span><span class="txt"><b>Bibliothèque</b><small>entraînements et journées types</small></span><span class="fleche">›</span></a>
+          <a class="acces" href="#/catalogue"><span class="ico">${ICONES.catalogue}</span><span class="txt"><b>Catalogue</b><small>aliments, recettes, programmes, exercices</small></span><span class="fleche">›</span></a>
+        </div>
+      </section>`;
+    $$("[data-fiche]", zone).forEach(b => b.addEventListener("click", () => Clients.ouvrir(b.dataset.fiche, b.dataset.nom, b.dataset.cible)));
   }
 };
 
@@ -8136,9 +8311,83 @@ const outilAccueil = {
     return { prochaine: reste.length ? reste[0] : null, faites: faites.size, total: seances.length };
   },
 
+  /* ---------- FICHE CLIENT (v37, phase 18) ----------
+     Ce que le coach voit en ouvrant un client : tout l'etat en une page,
+     avec un lien vers l'editeur de chaque bloc. Lecture seule ici. Les
+     notes privees et les feedbacks arrivent avec les phases 10 et 18. */
+  async fiche(zone){
+    const cles = ["intake", "programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "checkins", "complements", "calc", "formation", "hist_programme", "hist_repas", "prefs"];
+    const { valeurs: d, dates } = await Store.lireTout(cles, { dates: true });
+    const I = d.intake || {}, P = d.programme || {}, J = d.journal || { seances: [] }, R = d.repas || {}, S = d.repas_suivi || {}, M = d.mens || {}, CK = d.checkins || { liste: [] };
+    if (!Array.isArray(J.seances)) J.seances = [];
+    const nomC = Store.nomConsulte || "Client";
+    const profil = { id: Store.idConsulte, prenom: nomC.split(" ")[0], nom: nomC.split(" ").slice(1).join(" "), role: "client" };
+    const ecritParCoach = ["programme", "repas", "calc", "complements"];
+    const dernier = Object.keys(dates).filter(k => ecritParCoach.indexOf(k) === -1 && dates[k]).map(k => dates[k]).sort().pop() || null;
+    const l = Clients.resumerUn(profil, d, dernier);
+    const r = Regularite.calculer({ programme: P, journal: J, repas: R, repas_suivi: S, mens: M }, 0), prec = Regularite.calculer({ programme: P, journal: J, repas: R, repas_suivi: S, mens: M }, -1);
+    const b = outilBilan.calculer({ programme: P, journal: J, repas: R, repas_suivi: S, mens: M, objectifs_faits: d.objectifs_faits || {} });
+    const av = outilProgramme.avancement(P);
+    const seances = (P.seances || []).filter(sc => (sc.exercices || []).some(e => e.nom));
+    const derniereSeance = J.seances.length ? J.seances[J.seances.length - 1] : null;
+    const e = Checkin.etat(CK);
+    const dernierCk = (CK.liste || []).length ? CK.liste[CK.liste.length - 1] : null;
+    const obj = (P.objectifs && (P.objectifs.liste || []).some(Boolean)) ? P.objectifs : null;
+    const cible = R.cible || null;
+    const nbJours = (R.jours || []).filter(j => (j.repas || []).length).length;
+    const nbCompl = ((d.complements || {}).liste || []).length;
+    const histP = ((d.hist_programme || {}).liste || []).length, histR = ((d.hist_repas || {}).liste || []).length;
+    const fo = d.formation ? outilFormation.compte(outilFormation.migrer(d.formation)) : null;
+    const lien = (id, txt) => `<a class="link-a" href="#/${id}">${esc(txt)} →</a>`;
+    const ligne = (k, v) => v == null || v === "" ? "" : `<li><span>${esc(k)}</span><b>${esc(String(v))}</b></li>`;
+    const alertes = l.alertes;
+    zone.innerHTML = `
+      <header class="masthead">
+        <span class="eyebrow">${esc(trad("Fiche client"))} · ${esc(this.dateLongue())}</span>
+        <h1>${esc(nomC)}${(d.prefs && d.prefs.langue === "en") ? ` <span class="pastille" title="Ce client utilise l'app en anglais">🇺🇸 anglais</span>` : ""}</h1>
+        <p class="lede">${alertes.length ? `${alertes.length} point${alertes.length > 1 ? "s" : ""} à regarder.` : "Rien à signaler : tout est en ordre."}</p>
+        ${alertes.length ? `<div class="attention-alertes" style="margin-top:4px">${alertes.map(a => `<a class="pastille ${a.niveau === "info" ? "accent" : a.niveau}" href="#/${esc(a.cible)}">${esc(a.texte)}</a>`).join("")}</div>` : ""}
+      </header>
+      <section class="panel">
+        <h2>En bref</h2>
+        <div class="tiles">
+          <div class="tile"><div class="t-lbl">Régularité</div><div class="t-val readout ${Regularite.niveau(r.score)}">${r.score == null ? "—" : r.score}<small>/100</small></div><div class="t-sub">${prec.score != null ? "semaine passée : " + prec.score : "en cours"}</div></div>
+          <div class="tile"><div class="t-lbl">Poids</div><div class="t-val readout">${l.ev ? n1(l.ev.actuel) : "—"}<small>kg</small></div><div class="t-sub">${l.ev ? `départ ${n1(l.ev.depart)} · <span class="${l.sens ? (l.ev.total * l.sens < -0.2 ? "pos" : l.ev.total * l.sens > 0.2 ? "neg" : "") : ""}">${l.ev.total > 0 ? "+" : ""}${n1(l.ev.total)} kg</span>` : "aucune mesure"}</div></div>
+          <div class="tile"><div class="t-lbl">Séances</div><div class="t-val readout">${r.parts.seances ? r.parts.seances.faites : "—"}<small>${r.parts.seances ? "/ " + r.parts.seances.cible : ""}</small></div><div class="t-sub">notées cette semaine</div></div>
+          <div class="tile"><div class="t-lbl">Repas respectés</div><div class="t-val readout">${b.repas != null ? b.repas : "—"}<small>${b.repas != null ? "%" : ""}</small></div><div class="t-sub">sur 28 jours</div></div>
+          <div class="tile"><div class="t-lbl">Activité</div><div class="t-val readout${l.jours != null && l.jours >= 10 ? " neg" : ""}">${l.jours == null ? "—" : l.jours === 0 ? "auj." : l.jours + "<small>j</small>"}</div><div class="t-sub">${l.jours == null ? "jamais rien saisi" : "depuis sa dernière saisie"}</div></div>
+          <div class="tile"><div class="t-lbl">Bilan hebdo</div><div class="t-val readout${dernierCk ? " pos" : ""}">${dernierCk ? "✓" : "—"}</div><div class="t-sub">${dernierCk ? "dernier envoyé le " + dateFr(dernierCk.envoye_le) : "jamais envoyé"}</div></div>
+        </div>
+      </section>
+      <div class="fiche-grille">
+      <section class="panel"><div class="seance-c-tete"><h2>Profil</h2>${I.complet ? `<span class="pastille ok">questionnaire complet</span>` : `<span class="pastille attention">questionnaire incomplet</span>`}</div>
+        <ul class="ingr fiche-l">${ligne("Âge", I.age ? I.age + " ans" : "")}${ligne("Sexe", I.sexe)}${ligne("Taille", I.taille ? I.taille + " cm" : "")}${ligne("Poids déclaré", I.poids ? I.poids + " kg" : "")}${ligne("Poids objectif", I.poids_obj ? I.poids_obj + " kg" : "")}${ligne("Objectif", I.objectif)}${ligne("Niveau", I.niveau)}${ligne("Lieu", I.lieu)}${ligne("Séances / semaine", I.seances)}${ligne("Régime", I.regime_type)}${ligne("Allergènes", (I.allergenes || "").split("|").filter(Boolean).join(", "))}${ligne("Ville", I.ville)}</ul>
+        <p class="note" style="margin:10px 0 0">${lien("profil", "Son questionnaire complet")}</p></section>
+      <section class="panel"><div class="seance-c-tete"><h2>Objectifs du mois</h2>${obj ? `<span class="pastille">${b.statuts.filter(x => x === "atteint").length} / ${obj.liste.filter(Boolean).length}</span>` : ""}</div>
+        ${obj ? obj.liste.map((t, i) => t ? `<div class="objectif${b.statuts[i] === "atteint" ? " atteint" : ""}${b.statuts[i] === "non_atteint" ? " rate" : ""}"><span class="num">0${i + 1}</span><span class="texte" data-notr>${esc(t)}</span><span class="pastille ${Regularite.classeStatut(b.statuts[i])}">${esc(Regularite.libelleStatut(b.statuts[i]))}</span></div>` : "").join("") : `<div class="empty">Pas d'objectifs ce mois-ci.</div>`}
+        <p class="note" style="margin:10px 0 0">${lien("programme", "Écrire ou modifier les objectifs")}</p></section>
+      <section class="panel"><div class="seance-c-tete"><h2>Programme</h2>${seances.length ? `<span class="pastille ok">envoyé</span>` : `<span class="pastille attention">à faire</span>`}</div>
+        <ul class="ingr fiche-l">${ligne("Nom", P.nom)}${seances.length ? ligne("Cycle", "Cycle " + String(av.cycle).padStart(2, "0") + (av.semaine != null ? " · semaine " + Math.min(av.semaine, av.duree) + " / " + av.duree : "")) : ""}${ligne("Séances / semaine", seances.length || "")}${ligne("Envoyé le", P.maj)}${ligne("Dernière séance notée", derniereSeance ? dateFr(derniereSeance.date) + " — " + (derniereSeance.nom || "") : "")}</ul>
+        <p class="note" style="margin:10px 0 0">${lien("programme", "Son programme")}</p></section>
+      <section class="panel"><div class="seance-c-tete"><h2>Nutrition</h2>${nbJours ? `<span class="pastille ok">envoyée</span>` : `<span class="pastille attention">à faire</span>`}</div>
+        <ul class="ingr fiche-l">${ligne("Cible", cible ? fmt(cible.kcal) + " kcal · " + fmt(cible.prot) + " g prot." : "")}${ligne("Régime", R.regime)}${ligne("Allergènes écartés", (R.allergenes || []).join(", "))}${ligne("Jours différents", nbJours || "")}${ligne("Envoyée le", R.maj)}${ligne("Repas respectés (28 j)", b.repas != null ? b.repas + " %" : "")}${ligne("Repas remplacés ce mois", b.remplaces.length || "")}</ul>
+        <p class="note" style="margin:10px 0 0">${lien("nutrition", "Ses repas")} · ${lien("calculateur", "Ses calories")}</p></section>
+      <section class="panel"><h2>Poids et mensurations</h2>
+        <ul class="ingr fiche-l">${ligne("Poids actuel", l.ev ? n1(l.ev.actuel) + " kg" : "")}${ligne("Départ", l.ev ? n1(l.ev.depart) + " kg" : "")}${ligne("Depuis le début", l.ev ? (l.ev.total > 0 ? "+" : "") + n1(l.ev.total) + " kg" : "")}${ligne("4 dernières semaines", l.ev && l.ev.mois != null ? (l.ev.mois > 0 ? "+" : "") + n1(l.ev.mois) + " kg" : "")}${ligne("Mesures", (M.mesures || []).length || "")}${ligne("Dernière mesure", l.ev && l.ev.date ? dateFr(l.ev.date) : "")}${b.zones.map(z => ligne(z.nom, n1(z.de) + " → " + n1(z.a) + " cm")).join("")}</ul>
+        <p class="note" style="margin:10px 0 0">${lien("mensurations", "Ses courbes")}</p></section>
+      <section class="panel"><div class="seance-c-tete"><h2>Bilan hebdomadaire</h2>${e.fait ? `<span class="pastille ok">reçu cette semaine</span>` : dernierCk ? `<span class="pastille">${esc(trad("dernier : {d}", { d: dateFr(dernierCk.envoye_le) }))}</span>` : `<span class="pastille attention">aucun</span>`}</div>
+        ${dernierCk ? `<p class="note" style="margin:0 0 8px">${esc(Checkin.periode(dernierCk))}</p>${Checkin.reponsesHTML(dernierCk)}` : `<div class="empty">Aucun bilan hebdomadaire envoyé pour le moment.</div>`}
+        <p class="note" style="margin:10px 0 0">${lien("bilan", "Préparer le call")} · ${lien("suivi", "Son suivi")}</p></section>
+      <section class="panel"><h2>Le reste</h2>
+        <ul class="ingr fiche-l">${ligne("Compléments", nbCompl ? nbCompl + " prescrit" + (nbCompl > 1 ? "s" : "") : "aucun")}${ligne("Formation", fo ? fo.pct + " % (" + fo.faits + " / " + fo.tot + ")" : "pas commencée")}${ligne("Anciens programmes", histP || "0")}${ligne("Anciennes diètes", histR || "0")}</ul>
+        <p class="note" style="margin:10px 0 0">${lien("complements", "Ses compléments")} · ${lien("formation", "Sa formation")}</p></section>
+      </div>`;
+  },
+
   async init(){
     const zone = $("acc-vue"); if (!zone) return;
     const consult = !!Store.idConsulte;
+    if (consult) return this.fiche(zone);
     const d = await Store.lireTout(["intake", "programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "checkins"]);
     const I = d.intake || {}, P = d.programme || {}, J = d.journal || { seances: [] }, R = d.repas || {}, S = d.repas_suivi || {}, M = d.mens || {}, OF = d.objectifs_faits || {}, CK = d.checkins || { liste: [] };
     if (!Array.isArray(J.seances)) J.seances = [];
@@ -8400,7 +8649,7 @@ const outilSuivi = {
    Ma progression · Mon bilan (devient « Mon suivi » en phase 8) · Speed
    Formation · Mes compléments · Profil. Les outils du coach suivent. Les ids
    (adresses #/…) ne changent pas : tous les liens existants restent valables. */
-const OUTILS = [outilAccueil, outilProgramme, outilNutrition, outilMensurations, outilSuivi, outilBilan, outilFormation, outilComplements, outilProfil, outilCalculateur, outilEntrainement, outilAtelier, outilBibliotheque, outilCatalogue, outilClients];
+const OUTILS = [outilAccueil, outilProgramme, outilNutrition, outilMensurations, outilSuivi, outilBilan, outilFormation, outilComplements, outilProfil, outilTableau, outilClients, outilAtelier, outilBibliotheque, outilCatalogue, outilCalculateur, outilEntrainement];
 
 /* Adresses d'hier et de demain : #/progression ouvre « Ma progression »,
    #/suivi ouvre le bilan (puis « Mon suivi » quand il existera). */
@@ -8426,7 +8675,7 @@ function outilsVisibles(){
 /* La page d'arrivee : le coach tombe sur ses clients, le client sur son accueil. */
 function outilParDefaut(){
   const v = outilsVisibles();
-  if (Auth.estCoach() && !Store.idConsulte && v.some(o => o.id === "clients")) return "clients";
+  if (Auth.estCoach() && !Store.idConsulte){ if (v.some(o => o.id === "tableau")) return "tableau"; if (v.some(o => o.id === "clients")) return "clients"; }
   return v[0].id;
 }
 
@@ -8454,7 +8703,11 @@ function nomOnglet(o){
 
 function construireNav(){
   const nav = $("nav");
-  nav.innerHTML = outilsVisibles().filter(o => !o.masque_nav).map(o =>
+  /* le coach hors fiche : ses outils d'abord, ses propres onglets client ensuite */
+  const coachSeul = Auth.estCoach() && !Store.idConsulte;
+  const visibles = outilsVisibles().filter(o => !o.masque_nav);
+  const ordre = coachSeul ? visibles.filter(o => o.role === "coach").concat(visibles.filter(o => o.role !== "coach")) : visibles;
+  nav.innerHTML = ordre.map(o =>
     `<a href="#/${o.id}" data-id="${o.id}">${iconeOutil(o)}${esc(nomOnglet(o))}</a>`
   ).join("");
   construireBarreBas();
@@ -8544,7 +8797,7 @@ function bandeauConsultation(){
      tout le reste de la fiche est accessible par les onglets du haut.
      Un mode implicite est un mode qu'on ne trouve pas. */
   const actions = [
-    { id:"accueil",      nom:"Vue d'ensemble" },
+    { id:"accueil",      nom:"Fiche" },
     { id:"bilan",        nom:"Préparer le call" },
     { id:"suivi",        nom:"Son suivi" },
     { id:"profil",       nom:"Son questionnaire" },
