@@ -117,7 +117,35 @@ body{margin:0;background:var(--ground);color:var(--ink);
   font-size:14px;font-weight:500;transition:color var(--vite),border-color var(--vite),background var(--vite)}
 .nav a:hover{color:var(--ink);background:var(--raised)}
 .nav a[aria-current="page"]{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent);font-weight:600}
-.nav .ico{font-size:14px;line-height:1;opacity:.85}
+.nav .ico{font-size:14px;line-height:1;opacity:.85;display:inline-flex}
+.nav .ico svg,.barre-bas .ico svg,.menu-plus .ico svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nav a[aria-current="page"] .ico{opacity:1}
+
+/* --- barre du bas (telephone) : 4 onglets + « Plus » --- */
+.barre-bas{display:none}
+.menu-plus{list-style:none;margin:0;padding:0}
+.menu-plus li{border-bottom:1px solid var(--line)}
+.menu-plus a{display:flex;align-items:center;gap:12px;padding:13px 4px;color:var(--ink);text-decoration:none;font-size:15px;font-weight:500}
+.menu-plus a .ico{display:inline-flex;color:var(--ink-3)}
+.menu-plus a .ico svg{width:20px;height:20px}
+.menu-plus a[aria-current="page"]{color:var(--accent)} .menu-plus a[aria-current="page"] .ico{color:var(--accent)}
+@media (max-width:720px){
+  .topbar .nav{display:none}
+  main{padding-bottom:96px}
+  .barre-bas{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;justify-content:space-around;align-items:stretch;
+    background:var(--nav-bg);backdrop-filter:saturate(140%) blur(12px);-webkit-backdrop-filter:saturate(140%) blur(12px);
+    border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+  .barre-bas[hidden]{display:none}
+  .barre-bas a,.barre-bas button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:50px;
+    background:none;border:0;padding:4px 2px;border-radius:var(--r);color:var(--ink-3);text-decoration:none;font-family:inherit;cursor:pointer;
+    transition:color var(--vite),background var(--vite)}
+  .barre-bas .ico{display:inline-flex}
+  .barre-bas .ico svg{width:22px;height:22px;stroke-width:1.7}
+  .barre-bas .lbl{font-size:10.5px;font-weight:500;letter-spacing:.01em;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+  .barre-bas a[aria-current="page"],.barre-bas button.ici{color:var(--accent)}
+  .barre-bas a[aria-current="page"] .ico{background:var(--accent-soft);border-radius:999px;padding:3px 10px;margin:-3px -10px}
+  .toasts{bottom:calc(84px + env(safe-area-inset-bottom))}
+}
 
 /* --- en-tête d'outil --- */
 .masthead{padding:28px 0 20px;margin-bottom:22px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
@@ -301,6 +329,18 @@ footer a{color:var(--accent)}
 .client-l .meta{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ink-3)}
 .client-l .voir{margin-left:auto;background:transparent;border:1px solid var(--line-strong);border-radius:var(--r-sm);color:var(--ink-2);padding:8px 14px;font-size:13px;cursor:pointer;font-family:inherit;min-height:34px}
 .client-l .voir:hover{color:var(--ink);border-color:var(--accent)}
+
+/* --- acces rapides de l'accueil --- */
+.acces-l{display:flex;flex-direction:column;gap:8px}
+.acces{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--sunken);border:1px solid var(--line);border-radius:var(--r);color:var(--ink);text-decoration:none;transition:border-color var(--vite),background var(--vite)}
+.acces:hover{border-color:var(--accent-line);background:var(--raised)}
+.acces .ico{display:inline-flex;width:36px;height:36px;border-radius:50%;align-items:center;justify-content:center;background:var(--accent-soft);color:var(--accent);flex:0 0 auto}
+.acces .ico svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.acces.fait .ico{background:var(--good-soft);color:var(--good)}
+.acces .txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.acces .txt b{font-size:15px;font-weight:600}
+.acces .txt small{font-size:13px;color:var(--ink-3)}
+.acces .fleche{color:var(--ink-3);font-size:20px;line-height:1}
 
 /* --- avatar (initiales) --- */
 .avatar{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:var(--accent-soft);color:var(--accent);
@@ -742,7 +782,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-09-25 · 33",
+    version: "2026-09-25 · 34",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -1579,7 +1619,31 @@ I18N.en = {
 "Passer en sombre": "Switch to dark mode",
 "Passer en clair": "Switch to light mode",
 "Cette fonctionnalité est disponible avec l'accompagnement MHX.": "This feature is available with MHX coaching.",
-"Réserver mon appel": "Book my call"
+"Réserver mon appel": "Book my call",
+/* v34 — navigation et accueil */
+"Accueil": "Home", "Nutrition": "Nutrition", "Ma progression": "My progress", "Sa progression": "Their progress",
+"Speed Formation": "Speed Formation", "Profil": "Profile", "Plus": "More", "Tout mon espace": "My whole space",
+"Programme": "Program", "Progression": "Progress", "Bilan": "Review", "Compléments": "Supplements", "Formation": "Course",
+"Bonjour": "Hello", "Vue d'ensemble": "Overview", "Cette semaine": "This week", "Aujourd'hui": "Today",
+"Sa semaine en un coup d'œil.": "Their week at a glance.",
+"Ton coach prépare ton programme et tes repas. En attendant, ta formation t'attend.": "Your coach is preparing your program and your meals. In the meantime, your course is waiting for you.",
+"{a} séance sur {b}": "{a} workout out of {b}", "{a} séances sur {b}": "{a} workouts out of {b}",
+"{a} repas cochés sur {b}": "{a} meals checked out of {b}",
+" : régularité {n}/100 cette semaine.": " — consistency {n}/100 this week.",
+"Une nouvelle semaine commence : à toi de jouer.": "A new week starts: it's your move.",
+"Régularité": "Consistency", "Poids": "Weight", "Entraînement": "Training", "Objectifs": "Goals",
+"semaine dernière : {n}": "last week: {n}", "semaine {n}": "week {n}", "depuis la mesure d'avant": "since the previous entry",
+"aucune mesure": "no entry yet", "séances notées": "workouts logged", "repas respectés": "meals on plan", "ce mois-ci": "this month",
+"Séance {n}": "Workout {n}", "Toutes tes séances de la semaine sont notées": "All your workouts this week are logged",
+"Bravo. Revoir mon programme": "Well done. Back to my program", "Mes repas du jour": "Today's meals",
+"{a} sur {b} cochés aujourd'hui": "{a} of {b} checked today", "Mesure de la semaine faite": "This week's entry is done",
+"Voir ma progression": "See my progress", "Ma mesure de la semaine": "My weekly entry", "Poids et tours de taille, à jeun": "Weight and measurements, fasted",
+"C'est ce qui permet à ton coach de construire ton suivi": "This is what lets your coach build your follow-up",
+"Commencer la Speed Formation": "Start the Speed Formation", "Les bases, à ton rythme": "The basics, at your pace",
+"La régularité mesure ce que tu fais — séances, repas, mesure — pas ce que dit la balance.": "Consistency measures what you do — workouts, meals, weekly entry — not what the scale says.",
+"Tes objectifs du mois": "Your goals this month", "Atteint": "Reached", "En cours": "In progress", "Cocher mes objectifs": "Tick my goals",
+"Mon bilan": "My review", "Tes quatre dernières semaines : régularité, poids, ce qui a bougé et la progression de tes charges.": "Your last four weeks: consistency, weight, what changed and how your loads progressed.",
+"Voir mon bilan du mois": "See my monthly review"
 };
 I18N.motifs = [["^(\\d+) articles? sur (\\d+) dans le panier\\.$", "$1 of $2 items in your cart."], ["^(\\d+) étapes? validées? sur (\\d+) — (\\d+) %$", "$1 of $2 steps completed — $3%"], ["^([\\d\\s\\u202f\\u00a0.,−-]+?) kcal$", "$1 Cal"], ["^([\\d\\s\\u202f\\u00a0.,−-]+?) kcal · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de protéines par dose$", "$1 Cal · $2 g protein per serving"], ["^([\\d\\s\\u202f\\u00a0.,−-]+?) kcal consommées sur ([\\d\\s\\u202f\\u00a0.,−-]+?) — il te reste$", "$1 Cal eaten out of $2 — you have"], ["^Objectif visé : ([\\d\\s\\u202f\\u00a0.,−-]+?) kcal · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de protéines · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de glucides · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de lipides\\.$", "Target: $1 Cal · $2 g protein · $3 g carbs · $4 g fat."], ["^Coche les jours que tu veux acheter : la liste se recalcule\\. (\\d+) jours? sélectionnés?\\.$", "Check the days you want to shop for: the list updates automatically. $1 day(s) selected."], ["^Programme mis à jour le (\\d{1,2})/(\\d{1,2})/(\\d{4})$", "Program updated $2/$1/$3"], ["^Repas mis à jour le (\\d{1,2})/(\\d{1,2})/(\\d{4})$", "Meals updated $2/$1/$3"], ["^S(\\d+)$", "W$1"], ["^Supprimer la semaine (\\d+)$", "Delete week $1"], ["^dernière : semaine (\\d+)$", "latest: week $1"], ["^semaine (\\d+)$", "week $1"], ["^Semaine (\\d+) enregistrée\\.$", "Week $1 saved."], ["^(\\d+)/jambe$", "$1/leg"], ["^(\\d+)-(\\d+)/jambe$", "$1-$2/leg"], ["^(\\d+)/bras$", "$1/arm"], ["^(\\d+)-(\\d+)/bras$", "$1-$2/arm"], ["^(\\d+)-(\\d+) s/côté$", "$1-$2 s/side"], ["^protéines au-dessus de ([\\d\\s\\u202f\\u00a0.,−-]+?) g$", "protein over by $1 g"], ["^protéines en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) g$", "protein under by $1 g"], ["^lipides au-dessus de ([\\d\\s\\u202f\\u00a0.,−-]+?) g — sur ce régime, les sources de protéines apportent beaucoup de gras$", "fat over by $1 g — on this diet, protein sources bring a lot of fat"], ["^lipides en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) g — sur ce régime, les sources de protéines apportent beaucoup de gras$", "fat under by $1 g"], ["^calories au-dessus de ([\\d\\s\\u202f\\u00a0.,−-]+?) kcal$", "calories over by $1 Cal"], ["^calories en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) kcal$", "calories under by $1 Cal"], ["^glucides en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) g — ce régime offre peu de sources de glucides dans le catalogue$", "carbs under by $1 g — this diet has few carb sources in the catalog"], ["^(\\d+(?:-\\d+)?(?: s)?)/jambe$", "$1/leg"], ["^(\\d+(?:-\\d+)?(?: s)?)/bras$", "$1/arm"], ["^(\\d+(?:-\\d+)?(?: s)?)/côté$", "$1/side"], ["^(\\d+)/sens$", "$1/direction"], ["^(\\d+)/sens/cheville$", "$1/direction/ankle"], ["^(\\d+) souffles$", "$1 breaths"], ["^(\\d+) respirations$", "$1 breaths"], ["^(\\d+(?:-\\d+)?) pas$", "$1 steps"], ["^(\\d+) dans chaque sens$", "$1 each direction"], ["^(\\d+) par côté$", "$1 per side"], ["^(\\d+) par jambe$", "$1 per leg"], ["^(\\d+) par cheville$", "$1 per ankle"], ["^(\\d+) s par (côté)$", "$1 s per side"], ["^(\\d+) s par jambe$", "$1 s per leg"], ["^(\\d+) s \\+ (\\d+) squats$", "$1 s + $2 squats"]].map(([p, r]) => [new RegExp(p), r]);
 
@@ -1695,6 +1759,25 @@ const SVG = {
   lune:   '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>',
   cadenas:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>',
   croix:  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>'
+};
+/* Une icone par outil (cle = id de l'outil). En trait, 24x24, couleur du texte. */
+const ICONES = {
+  accueil:      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>',
+  programme:    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7v10M18 7v10M2.5 9.5v5M21.5 9.5v5M6 12h12"/></svg>',
+  nutrition:    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16"/><path d="M5 12a7 7 0 0 0 14 0"/><path d="M12 12V7"/><path d="M12 7c1.2-2.4 3.6-3 6-2-1.2 2.6-3.6 3.4-6 2z"/></svg>',
+  mensurations: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>',
+  bilan:        '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4.5V3h6v1.5"/><path d="M9 13l2 2 4-4"/></svg>',
+  suivi:        '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4.5V3h6v1.5"/><path d="M9 13l2 2 4-4"/></svg>',
+  formation:    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11.5V16c3 2.2 9 2.2 12 0v-4.5"/><path d="M22 9v5"/></svg>',
+  complements:  '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="8.5" width="19" height="7" rx="3.5" transform="rotate(-45 12 12)"/><path d="M8.5 15.5l7-7"/></svg>',
+  profil:       '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg>',
+  clients:      '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-4 3-6.5 7-6.5s7 2.5 7 6.5"/><circle cx="17" cy="9" r="3"/><path d="M17.5 14.5c2.8 0 4.5 2.2 4.5 5"/></svg>',
+  atelier:      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L18 10l-4-4L4 16z"/><path d="M13 7l4 4"/></svg>',
+  bibliotheque: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 5h7a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H2z"/><path d="M22 5h-7a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h8z"/></svg>',
+  catalogue:    '<svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>',
+  calculateur:  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c1 4 5 5.5 5 10a5 5 0 0 1-10 0c0-2 1-3.2 2-4.2 0 2 1 3.2 2.2 3.2C10.5 9 11 6 12 3z"/></svg>',
+  entrainement: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>',
+  plus:         '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>'
 };
 
 /* --- THEME (v33) ------------------------------------------------------------
@@ -2059,6 +2142,21 @@ const Store = {
       this.charge[k] = false;
       return defaut;
     }
+  },
+
+  /* Plusieurs cles en UNE seule requete (l'accueil en lit sept). Renvoie
+     { cle: contenu | null }. Ne touche ni au cache ni aux drapeaux de
+     lecture : chaque outil continue de faire son propre lire() avec ses
+     valeurs par defaut. */
+  async lireTout(cles){
+    const uid = this.cible(); const out = {};
+    cles.forEach(k => { out[k] = null; });
+    if (!uid) return out;
+    try {
+      const r = await Auth.appel("/rest/v1/donnees?user_id=eq." + uid + "&outil=in.(" + cles.map(encodeURIComponent).join(",") + ")&select=outil,contenu");
+      (r || []).forEach(l => { if (l && l.outil in out) out[l.outil] = l.contenu || null; });
+    } catch(e){}
+    return out;
   },
 
   ecrire(cle, valeur){
@@ -2923,7 +3021,8 @@ const outilCalculateur = {
 const outilMensurations = {
   id: "mensurations",
   cle: "mens",
-  nom: "Mensurations",
+  nom: "Ma progression",
+  principal: true,
   icone: "📏",
   titre: "Suivi des mensurations",
   accroche: "Ton poids et tes tours de taille semaine après semaine. Les courbes se tracent toutes seules à partir de ce que tu saisis.",
@@ -3589,7 +3688,7 @@ const QUESTIONS = [
 const outilProfil = {
   id: "profil",
   cle: "intake",
-  nom: "Mon profil",
+  nom: "Profil",
   icone: "📝",
   titre: "Ton profil",
   accroche: "Plus tes réponses sont précises, plus ton programme sera adapté. Ne cherche pas la bonne réponse : cherche la vraie. Compte 10 à 15 minutes.",
@@ -4180,6 +4279,7 @@ const outilProgramme = {
   id: "programme",
   cle: "programme",
   nom: "Mon programme",
+  principal: true,
   icone: "📋",
   titre: "Le programme",
   accroche: "Les séances construites pour toi : les exercices, les séries, les répétitions et les temps de repos.",
@@ -4777,7 +4877,8 @@ const outilProgramme = {
 const outilNutrition = {
   id: "nutrition",
   cle: "repas",
-  nom: "Mes repas",
+  nom: "Nutrition",
+  principal: true,
   icone: "🥗",
   titre: "La journée type",
   accroche: "Des repas construits sur tes calories et tes macros, avec des aliments qu'on trouve en France — et qui respectent ton régime et tes allergies.",
@@ -5951,6 +6052,7 @@ const outilBibliotheque = {
   id: "bibliotheque",
   cle: null,
   nom: "Bibliothèque",
+  principal_coach: true,
   icone: "📚",
   role: "coach",
   titre: "Ma bibliothèque",
@@ -6028,6 +6130,7 @@ const outilCatalogue = {
   id: "catalogue",
   cle: null,
   nom: "Catalogue",
+  principal_coach: true,
   icone: "📦",
   role: "coach",
   titre: "Le catalogue",
@@ -6217,6 +6320,7 @@ const outilClients = {
   id: "clients",
   cle: null,
   nom: "Mes clients",
+  principal_coach: true,
   icone: "👥",
   role: "coach",          // n'apparait que pour le coach
   titre: "Mes clients",
@@ -7022,7 +7126,7 @@ const REPAS_SEM = ["Petit-déjeuner","Collation matin","Déjeuner","Collation ap
 const outilFormation = {
   id: "formation",
   cle: "formation",
-  nom: "Ma formation",
+  nom: "Speed Formation",
   icone: "🎓",
   titre: FORMATION.titre,
   accroche: "Ta formation complète : les vidéos, les guides et tes outils de suivi. Ce que tu coches ici reste enregistré.",
@@ -7609,6 +7713,7 @@ const outilAtelier = {
   id: "atelier",
   cle: "atelier",
   role: "coach",
+  principal_coach: true,
   nom: "Mes séances",
   icone: "🧱",
   titre: "L'atelier",
@@ -7737,7 +7842,150 @@ const outilAtelier = {
 /* ------------------------------------------------------------------
    LISTE DES OUTILS — ajouter un objet ici suffit à créer un onglet
    ------------------------------------------------------------------ */
-const OUTILS = [outilProfil, outilFormation, outilProgramme, outilNutrition, outilComplements, outilCalculateur, outilMensurations, outilBilan, outilEntrainement, outilAtelier, outilBibliotheque, outilCatalogue, outilClients];
+/* ------------------------------------------------------------------
+   OUTIL — Accueil (v34). Le tableau de bord du client : en cinq secondes,
+   ou il en est cette semaine, et quoi faire aujourd'hui. Il ne fait que
+   LIRE (une seule requete) et reutilise Regularite, le journal, les repas
+   coches, les mesures et les objectifs du mois tels qu'ils existent.
+   Le coach le voit en consultant une fiche (« Vue d'ensemble »).
+   ------------------------------------------------------------------ */
+const outilAccueil = {
+  id: "accueil",
+  cle: null,
+  nom: "Accueil",
+  icone: "🏠",
+  principal: true,
+  client_seul: true,
+  sans_entete: true,
+  titre: "Accueil",
+  accroche: "",
+
+  html(){ return `<div id="acc-vue"><header class="masthead"><h1>Bonjour</h1></header><section class="panel"><div class="empty">Chargement…</div></section></div>`; },
+
+  dateLongue(){
+    const t = new Date().toLocaleDateString(locale(), { weekday: "long", day: "numeric", month: "long" });
+    return t.charAt(0).toUpperCase() + t.slice(1);
+  },
+
+  /* le poids : derniere mesure, et l'ecart avec la precedente (ou le depart) */
+  poids(M){
+    const l = (M.mesures || []).filter(m => m.poids != null && isFinite(m.poids)).slice().sort((a, b) => a.sem - b.sem);
+    if (!l.length) return null;
+    const der = l[l.length - 1];
+    const ref = l.length > 1 ? l[l.length - 2].poids : (M.pstart != null && isFinite(M.pstart) ? M.pstart : null);
+    return { actuel: der.poids, delta: ref == null ? null : der.poids - ref, sem: der.sem };
+  },
+
+  /* la prochaine seance a noter cette semaine */
+  prochaineSeance(P, J, bornes){
+    const seances = (P.seances || []).map((sc, si) => ({ sc, si })).filter(x => (x.sc.exercices || []).some(e => e.nom));
+    if (!seances.length) return null;
+    const faites = new Set((J.seances || []).filter(x => x.date >= bornes.debut && x.date <= bornes.fin).map(x => x.si));
+    const reste = seances.filter(x => !faites.has(x.si));
+    return { prochaine: reste.length ? reste[0] : null, faites: faites.size, total: seances.length };
+  },
+
+  async init(){
+    const zone = $("acc-vue"); if (!zone) return;
+    const consult = !!Store.idConsulte;
+    const d = await Store.lireTout(["intake", "programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits"]);
+    const I = d.intake || {}, P = d.programme || {}, J = d.journal || { seances: [] }, R = d.repas || {}, S = d.repas_suivi || {}, M = d.mens || {}, OF = d.objectifs_faits || {};
+    if (!Array.isArray(J.seances)) J.seances = [];
+    const c = { programme: P, journal: J, repas: R, repas_suivi: S, mens: M };
+    const r = Regularite.calculer(c, 0), prec = Regularite.calculer(c, -1);
+    const p = r.parts;
+    const objectif = I.objectif || "";
+    const sens = /perte|s[èe]che/i.test(objectif) ? -1 : /prise|masse/i.test(objectif) ? 1 : 0;
+    const pd = this.poids(M);
+    const obj = (P.objectifs && (P.objectifs.liste || []).some(Boolean)) ? P.objectifs : null;
+    const faits = (obj && OF.mois === obj.mois && Array.isArray(OF.faits)) ? OF.faits : [];
+    const nbObj = obj ? obj.liste.filter(Boolean).length : 0, nbFaits = obj ? obj.liste.filter((t, i) => t && faits[i]).length : 0;
+    const aProgramme = (P.seances || []).some(sc => (sc.exercices || []).some(e => e.nom));
+    const aDiete = (R.jours || []).some(j => (j.repas || []).length);
+    const prenom = consult ? (Store.nomConsulte || "").split(" ")[0]
+                 : ((Auth.profil && Auth.profil.prenom) || String(I.nom || "").split(" ")[0] || "");
+
+    /* --- la phrase du haut --- */
+    let resume;
+    if (consult) resume = trad("Sa semaine en un coup d'œil.");
+    else if (!aProgramme && !aDiete) resume = trad("Ton coach prépare ton programme et tes repas. En attendant, ta formation t'attend.");
+    else {
+      const bouts = [];
+      if (p.seances) bouts.push(trad(p.seances.faites > 1 ? "{a} séances sur {b}" : "{a} séance sur {b}", { a: p.seances.faites, b: p.seances.cible }));
+      if (p.repas) bouts.push(trad("{a} repas cochés sur {b}", { a: p.repas.coches, b: p.repas.prevus }));
+      resume = bouts.length ? bouts.join(", ") + (r.score != null ? trad(" : régularité {n}/100 cette semaine.", { n: r.score }) : ".")
+                            : trad("Une nouvelle semaine commence : à toi de jouer.");
+    }
+
+    /* --- les tuiles de la semaine --- */
+    let tuiles = "";
+    tuiles += `<div class="tile"><div class="t-lbl">Régularité</div><div class="t-val readout ${Regularite.niveau(r.score)}">${r.score == null ? "—" : r.score}<small>/100</small></div><div class="t-sub">${prec.score != null ? esc(trad("semaine dernière : {n}", { n: prec.score })) : esc(trad("remis à zéro chaque lundi"))}</div></div>`;
+    if (pd){
+      const bon = pd.delta == null || !sens ? "" : (pd.delta * sens > 0.05 ? "pos" : pd.delta * sens < -0.05 ? "neg" : "");
+      const sub = pd.delta == null ? esc(trad("semaine {n}", { n: pd.sem })) : `<span class="${bon}">${pd.delta > 0 ? "+" : pd.delta < 0 ? "−" : ""}${n1(Math.abs(pd.delta))} kg</span> ${esc(trad("depuis la mesure d'avant"))}`;
+      tuiles += `<div class="tile"><div class="t-lbl">Poids</div><div class="t-val readout">${n1(pd.actuel)}<small>kg</small></div><div class="t-sub">${sub}</div></div>`;
+    } else if (aProgramme || aDiete){
+      tuiles += `<div class="tile"><div class="t-lbl">Poids</div><div class="t-val readout">—</div><div class="t-sub">${esc(trad("aucune mesure"))}</div></div>`;
+    }
+    if (p.seances) tuiles += `<div class="tile"><div class="t-lbl">Entraînement</div><div class="t-val readout${p.seances.faites >= p.seances.cible ? " pos" : ""}">${p.seances.faites}<small>/ ${p.seances.cible}</small></div><div class="t-sub">${esc(trad("séances notées"))}</div></div>`;
+    if (p.repas) tuiles += `<div class="tile"><div class="t-lbl">Nutrition</div><div class="t-val readout${p.repas.ratio >= 0.9 ? " pos" : ""}">${p.repas.coches}<small>/ ${p.repas.prevus}</small></div><div class="t-sub">${esc(trad("repas respectés"))}</div></div>`;
+    if (obj) tuiles += `<div class="tile"><div class="t-lbl">Objectifs</div><div class="t-val readout${nbFaits === nbObj ? " pos" : ""}">${nbFaits}<small>/ ${nbObj}</small></div><div class="t-sub">${esc(trad("ce mois-ci"))}</div></div>`;
+
+    /* --- aujourd'hui : quoi faire --- */
+    const acces = [];
+    const ps = this.prochaineSeance(P, J, r.bornes);
+    if (ps){
+      if (ps.prochaine) acces.push({ id: "programme", ico: ICONES.programme, t: trad("Noter ma séance"), s: ps.prochaine.sc.nom || trad("Séance {n}", { n: ps.prochaine.si + 1 }) });
+      else acces.push({ id: "programme", ico: ICONES.programme, t: trad("Toutes tes séances de la semaine sont notées"), s: trad("Bravo. Revoir mon programme"), ok: true });
+    }
+    if (aDiete){
+      const auj = aujourdhui(), prevus = Regularite.prevusLe(R, auj);
+      const coches = Math.min(prevus, (S.hist && S.hist[auj] && S.hist[auj].c) || 0);
+      acces.push({ id: "nutrition", ico: ICONES.nutrition, t: trad("Mes repas du jour"), s: trad("{a} sur {b} cochés aujourd'hui", { a: coches, b: prevus }), ok: prevus > 0 && coches >= prevus });
+    }
+    if (aProgramme || aDiete || (M.mesures || []).length){
+      acces.push(p.mesure.faite
+        ? { id: "mensurations", ico: ICONES.mensurations, t: trad("Mesure de la semaine faite"), s: trad("Voir ma progression"), ok: true }
+        : { id: "mensurations", ico: ICONES.mensurations, t: trad("Ma mesure de la semaine"), s: trad("Poids et tours de taille, à jeun") });
+    }
+    if (!consult && !I.complet) acces.unshift({ id: "profil", ico: ICONES.profil, t: trad("Compléter mon profil"), s: trad("C'est ce qui permet à ton coach de construire ton suivi") });
+    if (!consult && !aProgramme && !aDiete) acces.push({ id: "formation", ico: ICONES.formation, t: trad("Commencer la Speed Formation"), s: trad("Les bases, à ton rythme") });
+
+    const ligne = a => `<a class="acces${a.ok ? " fait" : ""}" href="#/${a.id}"><span class="ico">${a.ico}</span><span class="txt"><b>${esc(a.t)}</b><small>${esc(a.s)}</small></span><span class="fleche">›</span></a>`;
+
+    zone.innerHTML = `
+      <header class="masthead">
+        <span class="eyebrow">${esc(this.dateLongue())}</span>
+        <h1>${consult ? esc(trad("Vue d'ensemble")) + (prenom ? " — " + esc(prenom) : "") : esc(trad("Bonjour")) + (prenom ? " " + esc(prenom) : "")}</h1>
+        <p class="lede">${esc(resume)}</p>
+      </header>
+      <section class="panel">
+        <h2>${esc(trad("Cette semaine"))}</h2>
+        <div class="tiles">${tuiles}</div>
+        <p class="note" style="margin:12px 0 0">${esc(trad("La régularité mesure ce que tu fais — séances, repas, mesure — pas ce que dit la balance."))}</p>
+      </section>
+      ${acces.length ? `<section class="panel"><h2>${esc(trad("Aujourd'hui"))}</h2><div class="acces-l">${acces.map(ligne).join("")}</div></section>` : ""}
+      ${obj ? `<section class="panel"><h2>${esc(trad("Tes objectifs du mois"))}</h2>
+        ${obj.liste.map((t, i) => t ? `<div class="objectif${faits[i] ? " atteint" : ""}"><span class="num">0${i + 1}</span><span class="texte" data-notr>${esc(t)}</span><span class="pastille ${faits[i] ? "ok" : ""}">${faits[i] ? esc(trad("Atteint")) : esc(trad("En cours"))}</span></div>` : "").join("")}
+        <div class="actions"><a class="btn ghost petit" href="#/programme">${esc(trad("Cocher mes objectifs"))}</a></div>
+      </section>` : ""}
+      <section class="panel">
+        <h2>${esc(trad("Mon bilan"))}</h2>
+        <p class="note" style="margin:0 0 12px">${esc(trad("Tes quatre dernières semaines : régularité, poids, ce qui a bougé et la progression de tes charges."))}</p>
+        <div class="actions" style="margin-top:0"><a class="btn ghost petit" href="#/bilan">${esc(trad("Voir mon bilan du mois"))}</a></div>
+      </section>`;
+  }
+};
+
+/* v34 — ordre de la navigation client : Accueil · Mon programme · Nutrition ·
+   Ma progression · Mon bilan (devient « Mon suivi » en phase 8) · Speed
+   Formation · Mes compléments · Profil. Les outils du coach suivent. Les ids
+   (adresses #/…) ne changent pas : tous les liens existants restent valables. */
+const OUTILS = [outilAccueil, outilProgramme, outilNutrition, outilMensurations, outilBilan, outilFormation, outilComplements, outilProfil, outilCalculateur, outilEntrainement, outilAtelier, outilBibliotheque, outilCatalogue, outilClients];
+
+/* Adresses d'hier et de demain : #/progression ouvre « Ma progression »,
+   #/suivi ouvre le bilan (puis « Mon suivi » quand il existera). */
+const ALIAS_ROUTES = { progression: "mensurations", suivi: "bilan", repas: "nutrition", home: "accueil" };
 
 /* ==================================================================
    [G] NAVIGATION, CONNEXION ET DEMARRAGE
@@ -7749,9 +7997,29 @@ let nettoyage = null;
 
 function outilsVisibles(){
   /* role: "coach"      -> outil du coach, quitte la fiche client quand on l'ouvre
-     masque_client: true -> outil du coach, mais qui reste dans la fiche du client */
+     masque_client: true -> outil du coach, mais qui reste dans la fiche du client
+     client_seul: true   -> outil du client ; le coach ne le voit qu'en consultant une fiche */
   return OUTILS.filter(o => (!o.role || (o.role === "coach" && Auth.estCoach()))
-                         && (!o.masque_client || Auth.estCoach()));
+                         && (!o.masque_client || Auth.estCoach())
+                         && (!o.client_seul || !Auth.estCoach() || Store.idConsulte));
+}
+
+/* La page d'arrivee : le coach tombe sur ses clients, le client sur son accueil. */
+function outilParDefaut(){
+  const v = outilsVisibles();
+  if (Auth.estCoach() && !Store.idConsulte && v.some(o => o.id === "clients")) return "clients";
+  return v[0].id;
+}
+
+/* Les onglets de la barre du bas (telephone) : quatre au plus, le reste
+   derriere « Plus ». En consultation d'une fiche, ce sont ceux du client. */
+function outilsPrincipaux(){
+  const v = outilsVisibles();
+  const coach = Auth.estCoach() && !Store.idConsulte;
+  return v.filter(o => coach ? o.principal_coach : o.principal).slice(0, 4);
+}
+function iconeOutil(o){
+  return ICONES[o.id] ? `<span class="ico" aria-hidden="true">${ICONES[o.id]}</span>` : `<span class="ico" aria-hidden="true">${o.icone || ""}</span>`;
 }
 
 /* « Mon programme » devient « Son programme » quand le coach consulte
@@ -7768,8 +8036,9 @@ function nomOnglet(o){
 function construireNav(){
   const nav = $("nav");
   nav.innerHTML = outilsVisibles().map(o =>
-    `<a href="#/${o.id}" data-id="${o.id}"><span class="ico" aria-hidden="true">${o.icone}</span>${esc(nomOnglet(o))}</a>`
+    `<a href="#/${o.id}" data-id="${o.id}">${iconeOutil(o)}${esc(nomOnglet(o))}</a>`
   ).join("");
+  construireBarreBas();
   $("brand-name").textContent = CONFIG.marque.nom;
   const sub = $("brand-sub");
   sub.textContent = CONFIG.marque.programme || "";
@@ -7798,7 +8067,33 @@ function construireNav(){
   Theme.majBoutons();
 }
 
+/* --- barre du bas (telephone) --- */
+function construireBarreBas(){
+  let b = $("barre-bas");
+  if (!b){ b = document.createElement("nav"); b.id = "barre-bas"; b.className = "barre-bas"; b.setAttribute("aria-label", "Navigation"); document.body.appendChild(b); }
+  const principaux = outilsPrincipaux();
+  const autres = outilsVisibles().filter(o => principaux.indexOf(o) === -1);
+  b.innerHTML = principaux.map(o =>
+    `<a href="#/${o.id}" data-id="${o.id}">${iconeOutil(o)}<span class="lbl">${esc(nomCourt(o))}</span></a>`).join("") +
+    (autres.length ? `<button type="button" data-plus><span class="ico" aria-hidden="true">${ICONES.plus}</span><span class="lbl">Plus</span></button>` : "");
+  const plus = b.querySelector("[data-plus]");
+  if (plus) plus.addEventListener("click", () => {
+    UI.volet({ titre: trad("Tout mon espace"), corps: `<ul class="menu-plus">` + autres.map(o =>
+      `<li><a href="#/${o.id}" data-id="${o.id}"${courant === o.id ? ' aria-current="page"' : ""}>${iconeOutil(o)}<span>${esc(nomOnglet(o))}</span></a></li>`).join("") + `</ul>` });
+    /* un clic sur un lien du volet le referme */
+    setTimeout(() => $$(".volet .menu-plus a").forEach(a => a.addEventListener("click", () => UI.fermer())), 0);
+  });
+  b.hidden = !Auth.connecte();
+}
+/* le libelle sous l'icone, court : « Programme » plutot que « Mon programme » */
+function nomCourt(o){
+  return nomOnglet(o).replace(/^(Mon|Mes|Ma|Son|Ses|Sa) /, "").replace(/^./, c => c.toUpperCase());
+}
+
 function marquerNav(id){
+  $$("#barre-bas a, .menu-plus a").forEach(a => { if (a.dataset.id === id) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+  const plus = document.querySelector("#barre-bas [data-plus]");
+  if (plus) plus.classList.toggle("ici", !outilsPrincipaux().some(o => o.id === id));
   $$("#nav a").forEach(a => {
     if (a.dataset.id === id){
       a.setAttribute("aria-current","page");
@@ -7830,6 +8125,7 @@ function bandeauConsultation(){
      tout le reste de la fiche est accessible par les onglets du haut.
      Un mode implicite est un mode qu'on ne trouve pas. */
   const actions = [
+    { id:"accueil",      nom:"Vue d'ensemble" },
     { id:"bilan",        nom:"Préparer le call" },
     { id:"profil",       nom:"Son questionnaire" },
     { id:"programme",    nom:"Son programme",  fort:true },
@@ -7852,22 +8148,25 @@ function bandeauConsultation(){
 
 async function afficher(id, silencieux){
   const dispo = outilsVisibles();
-  const outil = dispo.find(o => o.id === id) || dispo[0];
+  const outil = dispo.find(o => o.id === id) || dispo.find(o => o.id === outilParDefaut()) || dispo[0];
   courant = outil.id;
   if (nettoyage){ nettoyage(); nettoyage = null; }
 
   if (outil.role === "coach"){ Store.oublier(Store.idConsulte); Store.idConsulte = null; Store.nomConsulte = null; }
 
+  /* Le bloc « Mes donnees » (export, restauration, suppression) ne vit plus
+     qu'au bas du Profil : le repeter sous chaque page alourdissait tout. */
+  const avecDonnees = outil.id === "profil" && !Store.idConsulte;
   $("vue").innerHTML = `
     ${bandeauConsultation()}
-    ${bandeauInstallation()}
-    <header class="masthead">
+    ${outil.sans_entete ? "" : `<header class="masthead">
       <span class="eyebrow">${Store.idConsulte ? esc(Store.nomConsulte || "client") + " — " : (CONFIG.marque.programme ? esc(CONFIG.marque.programme) + " — " : "")}${esc(nomOnglet(outil))}</span>
       <h1>${Store.idConsulte ? esc(nomOnglet(outil)) : esc(outil.titre)}</h1>
       ${Store.idConsulte ? "" : `<p class="lede">${esc(outil.accroche)}</p>`}
-    </header>
+    </header>`}
     ${outil.html()}
-    ${(outil.cle && !Store.idConsulte) ? blocSauvegarde() : ""}`;
+    ${avecDonnees ? blocSauvegarde() : ""}
+    ${bandeauInstallation()}`;
 
   construireNav();   // les libelles dependent du mode : on les rafraichit
   /* Les outils que le coach REMPLIT depuis la fiche d'un client. Oublier
@@ -7879,7 +8178,7 @@ async function afficher(id, silencieux){
   $("vue").className = modifiable ? "wrap" : "wrap lecture-seule";
 
   nettoyage = (await outil.init()) || null;
-  if (outil.cle && !Store.idConsulte){ initSauvegarde(); }
+  if (avecDonnees){ initSauvegarde(); }
   const sortir = $("sortir-fiche");
   if (sortir) sortir.addEventListener("click", () => {
     Store.oublier(Store.idConsulte); Store.idConsulte = null; Store.nomConsulte = null; location.hash = "#/clients";
@@ -8003,7 +8302,8 @@ function brancherInstallation(){
 function routeDepuisAdresse(){
   let id = (location.hash || "").replace(/^#\/?/, "");
   if (id.indexOf("=") > -1 || id.indexOf("&") > -1) id = "";
-  afficher(outilsVisibles().some(o => o.id === id) ? id : outilsVisibles()[0].id);
+  if (ALIAS_ROUTES[id]) id = ALIAS_ROUTES[id];
+  afficher(outilsVisibles().some(o => o.id === id) ? id : outilParDefaut());
 }
 
 /* ---------------------- ÉCRAN DE CONNEXION ---------------------- */

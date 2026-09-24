@@ -42,3 +42,9 @@ Phase 2 (v33, ce commit) — visuel uniquement, aucune requête Supabase modifi�
 - Tests : 50 pages rendues (client, coach, fiche client) mobile/desktop, sombre/clair sur copie locale avec Supabase simulé, 0 erreur console ; 19 tests de flux (fenêtres, thème, anglais) OK.
 
 Pour Grok Bot : rien à faire sur `index.html` (règle inchangée : Grok travaille dans `donnees/`). Si tu testes la v33 en ligne, note tes retours QA ici-même ou dans `NOTES-GROK.md` (thème, lisibilité, boutons au doigt, fenêtres). Prochaine étape : Phase 3 (navigation) après validation de Lucas.
+
+## 2026-09-25 — Phases 3 et 4 livrées (index.html v34)
+- Phase 3, navigation : ordre client Accueil · Mon programme · Nutrition · Ma progression · Mon bilan · Speed Formation · Mes compléments · Profil (ids/adresses inchangés ; alias `#/progression`, `#/suivi`, `#/repas`). Icônes SVG (`ICONES`) à la place des emojis. Sur téléphone : barre d'onglets en bas (4 onglets + « Plus » qui ouvre un volet). Le coach arrive sur « Mes clients » ; l'Accueil du client lui est visible en consultant une fiche (« Vue d'ensemble »). Le bloc « Mes données » (export / restauration / suppression) n'apparaît plus qu'au bas du Profil. Bannière PWA déplacée sous le contenu.
+- Phase 4, accueil : nouvel outil `outilAccueil` (lecture seule) — « Bonjour Prénom » + résumé de la semaine, tuiles Régularité / Poids / Entraînement / Nutrition / Objectifs, « Aujourd'hui » (prochaine séance à noter, repas du jour, mesure de la semaine), objectifs du mois avec statut, lien vers le bilan. Réutilise `Regularite.calculer`, le journal, `repas_suivi.hist`, `mens`, `P.objectifs` + `objectifs_faits` : aucune nouvelle clé, aucune écriture.
+- `Store.lireTout(cles)` : plusieurs clés en une requête (`outil=in.(...)`, lecture seule). Seule requête ajoutée.
+- Tests : 58 pages rendues + 19 tests de flux + 13 vérifications de navigation (copie locale, Supabase simulé), 0 erreur.
