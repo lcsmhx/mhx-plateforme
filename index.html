@@ -330,6 +330,21 @@ footer a{color:var(--accent)}
 .client-l .voir{margin-left:auto;background:transparent;border:1px solid var(--line-strong);border-radius:var(--r-sm);color:var(--ink-2);padding:8px 14px;font-size:13px;cursor:pointer;font-family:inherit;min-height:34px}
 .client-l .voir:hover{color:var(--ink);border-color:var(--accent)}
 
+/* --- bilan hebdomadaire --- */
+.checkin-q{margin-bottom:16px}
+.checkin-q.echelle{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+.checkin-q.echelle label{margin:0;flex:1;min-width:120px}
+.seg.echelle5{max-width:260px;flex:0 0 auto;width:100%}
+@media (min-width:560px){.seg.echelle5{width:260px}}
+.seg.echelle5 button{min-height:36px;font-family:"IBM Plex Mono",monospace;font-weight:600}
+.checkin-echelles{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.checkin-echelles .pastille b{color:var(--ink);margin-left:2px}
+.checkin-rep{margin:8px 0;font-size:14px;line-height:1.55}
+.checkin-rep .lbl{display:block;font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin-bottom:2px}
+.acces.attention .ico{background:var(--warn-soft);color:var(--warn)}
+.acces.statique{cursor:default}
+.acces.statique:hover{border-color:var(--line);background:var(--sunken)}
+
 /* --- regularite : evolution sur cinq semaines, objectifs a cocher --- */
 .reg-evo{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:16px;align-items:end}
 .reg-evo-col{display:flex;flex-direction:column;align-items:center;gap:4px}
@@ -384,6 +399,7 @@ label.objectif{cursor:pointer;text-transform:none;letter-spacing:0;font-weight:4
 .objectif .num{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.12em;color:var(--ink-3);font-weight:600;padding-top:3px}
 .objectif .texte{flex:1;font-size:15px;line-height:1.5}
 .objectif.atteint .texte{color:var(--ink-2)}
+.objectif.rate{border-color:var(--bad-soft)}
 
 /* --- etat verrouille (fonctionnalite reservee a l'accompagnement) --- */
 .verrou{text-align:center;padding:34px 20px;border:1px dashed var(--line-strong);border-radius:var(--r-lg);background:var(--sunken)}
@@ -629,6 +645,13 @@ label.fo-case{display:flex;align-items:flex-start;gap:10px;cursor:pointer;flex:1
   padding:18px 22px;cursor:pointer;text-align:left;color:var(--ink)}
 .fo-tete:hover{background:var(--raised)}
 .fo-ico{font-size:20px;line-height:1}
+.fo-num{font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:600;color:var(--accent);width:36px;height:36px;border-radius:50%;background:var(--accent-soft);display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
+.fo-mod.fini .fo-num{background:var(--good-soft);color:var(--good)}
+.fo-corps-tete{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.fo-obj-court{font-size:13px;color:var(--ink-3);line-height:1.4}
+.fo-jauge.fo-jauge-mod{display:block;height:4px;margin-top:6px;max-width:220px}
+.fo-jauge-mod .fo-jauge-in{display:block}
+.fo-mod.ouvert{border-color:var(--accent-line)}
 .fo-nom{flex:1;font-family:"IBM Plex Sans",sans-serif;font-weight:600;font-size:16px;letter-spacing:-.01em}
 .fo-fleche{color:var(--ink-3);font-size:13px}
 .fo-corps{padding:0 22px 22px;border-top:1px solid var(--line)}
@@ -808,7 +831,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-09-25 · 35",
+    version: "2026-09-25 · 36",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -987,6 +1010,38 @@ const CONFIG = {
       { id:"sulfites",       nom:"Sulfites" },
       { id:"lupin",          nom:"Lupin" },
       { id:"mollusques",     nom:"Mollusques" }
+    ]
+  },
+
+  /* --- Score de régularité (v36) --- un indicateur de motivation, pas une
+     mesure médicale. Les parts se donnent en points : une partie sans objet
+     (pas de programme, pas de diète) sort du calcul au lieu de faire baisser
+     la note. Change les chiffres ici, rien d'autre. */
+  regularite: {
+    poids: { seances: 50, repas: 30, mesure: 20 },   // points par partie
+    seuils: { bon: 70, moyen: 40 }                    // vert à partir de 70, orange à partir de 40, rouge en dessous
+  },
+
+  /* --- Bilan hebdomadaire (v36) --- le questionnaire que le client remplit
+     chaque semaine. Ajoute, retire ou reformule une question ici : l'écran
+     suit. Types : echelle5 (1 → 5), nombre, long (texte libre), select.
+     Le bilan de la semaine s'ouvre le jour indiqué (1 = lundi … 7 = dimanche)
+     et reste ouvert jusqu'au dimanche de la semaine suivante. Il n'est jamais
+     bloquant : seulement fortement recommandé. */
+  bilan: {
+    jour_ouverture: 5,
+    questions: [
+      { id:"semaine",      label:"Comment s'est passée ta semaine ?", type:"long" },
+      { id:"energie",      label:"Énergie",    type:"echelle5" },
+      { id:"motivation",   label:"Motivation", type:"echelle5" },
+      { id:"sommeil",      label:"Sommeil",    type:"echelle5" },
+      { id:"stress",       label:"Stress",     type:"echelle5", aide:"1 = très calme · 5 = très stressé" },
+      { id:"seances",      label:"Combien de séances as-tu réalisées ?", type:"nombre" },
+      { id:"alimentation", label:"Comment s'est passée ton alimentation ?", type:"long" },
+      { id:"reussite",     label:"Quelle a été ta principale réussite ?", type:"long" },
+      { id:"difficulte",   label:"Quelle a été ta principale difficulté ?", type:"long" },
+      { id:"ajustement",   label:"As-tu besoin d'un ajustement ?", type:"select", options:["Non", "Oui — mon programme", "Oui — mon alimentation", "Oui — les deux"] },
+      { id:"ajustement_detail", label:"Si oui, précise", type:"long" }
     ]
   },
 
@@ -1687,7 +1742,25 @@ I18N.en = {
 "Ta progression": "Your progress",
 "Ton poids, tes mensurations et ta composition corporelle, semaine après semaine. Une mesure par semaine, toujours dans les mêmes conditions : c'est la tendance qui compte.": "Your weight, measurements and body composition, week after week. One entry a week, always in the same conditions: the trend is what matters.",
 "Ajouter ma mesure": "Add my entry", "Poids de départ": "Starting weight", "à renseigner": "to fill in", "le {d}": "on {d}", "point de départ": "starting point", "première mesure": "first entry",
-"Point de départ et réglages": "Starting point and settings"
+"Point de départ et réglages": "Starting point and settings",
+/* v36 — bilan hebdomadaire, statuts d'objectifs */
+"Bilan hebdomadaire": "Weekly check-in", "disponible": "available", "envoyé": "sent", "Non atteint": "Not reached",
+"Ton bilan de la semaine est disponible": "Your weekly check-in is available",
+"5 minutes, avant dimanche soir : c'est ce qui permet à ton coach d'ajuster": "5 minutes, before Sunday evening: it's what lets your coach adjust",
+"Bilan de la semaine envoyé": "Weekly check-in sent",
+"le {d} — merci, ton coach le lit avant votre prochain échange": "on {d} — thank you, your coach reads it before your next exchange",
+"Semaine du {a} au {b}": "Week from {a} to {b}", "envoyé le {d}": "sent on {d}",
+"Réponds simplement, avec tes mots. Rien n'est noté : ça sert à ajuster ton suivi.": "Answer simply, in your own words. Nothing is graded: it's there to adjust your follow-up.",
+"Envoyer mon bilan": "Send my check-in", "Mettre à jour mon bilan": "Update my check-in", "Modifier mon bilan": "Edit my check-in",
+"Il manque : {l}": "Missing: {l}", "Bilan envoyé. Ton coach le lira avant votre prochain échange.": "Check-in sent. Your coach will read it before your next exchange.",
+"Mes bilans précédents": "My previous check-ins", "Pas encore de bilan pour cette semaine.": "No check-in for this week yet.",
+"Comment s'est passée ta semaine ?": "How did your week go?", "Énergie": "Energy", "Motivation": "Motivation", "Sommeil": "Sleep", "Stress": "Stress",
+"1 = très calme · 5 = très stressé": "1 = very calm · 5 = very stressed",
+"Combien de séances as-tu réalisées ?": "How many workouts did you do?", "Comment s'est passée ton alimentation ?": "How did your nutrition go?",
+"Quelle a été ta principale réussite ?": "What was your main win?", "Quelle a été ta principale difficulté ?": "What was your main difficulty?",
+"As-tu besoin d'un ajustement ?": "Do you need an adjustment?",
+"Oui — mon programme": "Yes — my program", "Oui — mon alimentation": "Yes — my nutrition", "Oui — les deux": "Yes — both",
+"Bibliothèque": "Library", "modules": "modules", "étapes": "steps", "module terminé": "module completed", "modules terminés": "modules completed", "sur": "of"
 };
 I18N.motifs = [["^(\\d+) articles? sur (\\d+) dans le panier\\.$", "$1 of $2 items in your cart."], ["^(\\d+) étapes? validées? sur (\\d+) — (\\d+) %$", "$1 of $2 steps completed — $3%"], ["^([\\d\\s\\u202f\\u00a0.,−-]+?) kcal$", "$1 Cal"], ["^([\\d\\s\\u202f\\u00a0.,−-]+?) kcal · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de protéines par dose$", "$1 Cal · $2 g protein per serving"], ["^([\\d\\s\\u202f\\u00a0.,−-]+?) kcal consommées sur ([\\d\\s\\u202f\\u00a0.,−-]+?) — il te reste$", "$1 Cal eaten out of $2 — you have"], ["^Objectif visé : ([\\d\\s\\u202f\\u00a0.,−-]+?) kcal · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de protéines · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de glucides · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de lipides\\.$", "Target: $1 Cal · $2 g protein · $3 g carbs · $4 g fat."], ["^Coche les jours que tu veux acheter : la liste se recalcule\\. (\\d+) jours? sélectionnés?\\.$", "Check the days you want to shop for: the list updates automatically. $1 day(s) selected."], ["^Programme mis à jour le (\\d{1,2})/(\\d{1,2})/(\\d{4})$", "Program updated $2/$1/$3"], ["^Repas mis à jour le (\\d{1,2})/(\\d{1,2})/(\\d{4})$", "Meals updated $2/$1/$3"], ["^S(\\d+)$", "W$1"], ["^Supprimer la semaine (\\d+)$", "Delete week $1"], ["^dernière : semaine (\\d+)$", "latest: week $1"], ["^semaine (\\d+)$", "week $1"], ["^Semaine (\\d+) enregistrée\\.$", "Week $1 saved."], ["^(\\d+)/jambe$", "$1/leg"], ["^(\\d+)-(\\d+)/jambe$", "$1-$2/leg"], ["^(\\d+)/bras$", "$1/arm"], ["^(\\d+)-(\\d+)/bras$", "$1-$2/arm"], ["^(\\d+)-(\\d+) s/côté$", "$1-$2 s/side"], ["^protéines au-dessus de ([\\d\\s\\u202f\\u00a0.,−-]+?) g$", "protein over by $1 g"], ["^protéines en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) g$", "protein under by $1 g"], ["^lipides au-dessus de ([\\d\\s\\u202f\\u00a0.,−-]+?) g — sur ce régime, les sources de protéines apportent beaucoup de gras$", "fat over by $1 g — on this diet, protein sources bring a lot of fat"], ["^lipides en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) g — sur ce régime, les sources de protéines apportent beaucoup de gras$", "fat under by $1 g"], ["^calories au-dessus de ([\\d\\s\\u202f\\u00a0.,−-]+?) kcal$", "calories over by $1 Cal"], ["^calories en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) kcal$", "calories under by $1 Cal"], ["^glucides en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) g — ce régime offre peu de sources de glucides dans le catalogue$", "carbs under by $1 g — this diet has few carb sources in the catalog"], ["^(\\d+(?:-\\d+)?(?: s)?)/jambe$", "$1/leg"], ["^(\\d+(?:-\\d+)?(?: s)?)/bras$", "$1/arm"], ["^(\\d+(?:-\\d+)?(?: s)?)/côté$", "$1/side"], ["^(\\d+)/sens$", "$1/direction"], ["^(\\d+)/sens/cheville$", "$1/direction/ankle"], ["^(\\d+) souffles$", "$1 breaths"], ["^(\\d+) respirations$", "$1 breaths"], ["^(\\d+(?:-\\d+)?) pas$", "$1 steps"], ["^(\\d+) dans chaque sens$", "$1 each direction"], ["^(\\d+) par côté$", "$1 per side"], ["^(\\d+) par jambe$", "$1 per leg"], ["^(\\d+) par cheville$", "$1 per ankle"], ["^(\\d+) s par (côté)$", "$1 s per side"], ["^(\\d+) s par jambe$", "$1 s per leg"], ["^(\\d+) s \\+ (\\d+) squats$", "$1 s + $2 squats"]].map(([p, r]) => [new RegExp(p), r]);
 
@@ -4215,7 +4288,8 @@ const Journal = {
    les jours d'avant l'existence du suivi ne sont pas des jours rates.
    ------------------------------------------------------------------ */
 const Regularite = {
-  poids: { seances: 50, repas: 30, mesure: 20 },
+  /* les points de chaque partie vivent dans CONFIG.regularite (v36) */
+  get poids(){ return (CONFIG.regularite && CONFIG.regularite.poids) || { seances: 50, repas: 30, mesure: 20 }; },
 
   iso(d){ return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); },
   /* decalage 0 = semaine en cours (du lundi a aujourd'hui), -1 = la precedente, complete */
@@ -4266,7 +4340,25 @@ const Regularite = {
     return { score: poids ? Math.round(total / poids * 100) : null, parts: parts, bornes: b };
   },
 
-  niveau(s){ return s == null ? "" : s >= 70 ? "pos" : s >= 40 ? "moyen" : "neg"; },
+  niveau(s){
+    const t = (CONFIG.regularite && CONFIG.regularite.seuils) || { bon: 70, moyen: 40 };
+    return s == null ? "" : s >= t.bon ? "pos" : s >= t.moyen ? "moyen" : "neg";
+  },
+
+  /* ---------- objectifs du mois (v36) ----------
+     Deux sources, toutes deux conservees : le coach pose un statut
+     (P.objectifs.statuts[i] : en_cours | atteint | non_atteint), le client
+     coche (objectifs_faits.faits[i]). Le statut du coach l'emporte quand il
+     tranche (atteint / non atteint) ; sinon la case du client fait foi. */
+  statutObjectif(P, OF, i){
+    const o = P && P.objectifs || {};
+    const coach = (o.statuts || [])[i] || "";
+    if (coach === "atteint" || coach === "non_atteint") return coach;
+    const faits = (OF && OF.mois === o.mois && Array.isArray(OF.faits)) ? OF.faits : [];
+    return faits[i] ? "atteint" : "en_cours";
+  },
+  libelleStatut(st){ return st === "atteint" ? trad("Atteint") : st === "non_atteint" ? trad("Non atteint") : trad("En cours"); },
+  classeStatut(st){ return st === "atteint" ? "ok" : st === "non_atteint" ? "mauvais" : ""; },
 
   /* appele a chaque case « mange » : garde le compte du jour, 70 jours max */
   noterRepas(R, suivi){
@@ -4301,7 +4393,7 @@ const Regularite = {
       const evo = [-4, -3, -2, -1].map(k => this.calculer(c, k).score).concat([r.score]);
       const obj = (P.objectifs && (P.objectifs.liste || []).some(Boolean)) ? P.objectifs : null;
       if (obj && OF.mois !== obj.mois){ OF.mois = obj.mois; OF.faits = []; }
-      const nbObj = obj ? obj.liste.filter(Boolean).length : 0, nbFaits = obj ? obj.liste.filter((t, i) => t && OF.faits[i]).length : 0;
+      const nbObj = obj ? obj.liste.filter(Boolean).length : 0, nbFaits = obj ? obj.liste.filter((t, i) => t && this.statutObjectif(P, OF, i) === "atteint").length : 0;
       z.innerHTML = `<section class="panel"><h2>${esc(trad("Ta régularité"))}</h2>
         <div class="tiles">
           <div class="tile"><div class="t-lbl">Score de régularité</div><div class="t-val readout ${this.niveau(r.score)}">${r.score == null ? "—" : r.score}<small>/100</small></div><div class="t-sub">remis à zéro chaque lundi</div></div>
@@ -4313,7 +4405,8 @@ const Regularite = {
         <p class="note" style="margin:12px 0 0">${esc(trad("Un indicateur de motivation, pas une mesure médicale : il compte ce que tu fais — séances, repas, mesure — pas ce que dit la balance."))}</p>
       </section>
       <section class="panel"><div class="seance-c-tete"><h2>${esc(trad("Tes objectifs du mois"))}</h2>${obj ? `<span class="pastille${nbFaits === nbObj ? " ok" : ""}">${nbFaits} / ${nbObj}</span>` : ""}</div>
-        ${obj ? obj.liste.map((t, i) => t ? `<label class="objectif${OF.faits[i] ? " atteint" : ""}"><input type="checkbox" class="obj-case" data-obj="${i}"${OF.faits[i] ? " checked" : ""}><span class="texte" data-notr>${esc(t)}</span><span class="pastille ${OF.faits[i] ? "ok" : ""}">${OF.faits[i] ? esc(trad("Atteint")) : esc(trad("En cours"))}</span></label>` : "").join("")
+        ${obj ? obj.liste.map((t, i) => { if (!t) return ""; const st = this.statutObjectif(P, OF, i), tranche = st === "non_atteint" || ((obj.statuts || [])[i] === "atteint");
+             return `<label class="objectif${st === "atteint" ? " atteint" : ""}${st === "non_atteint" ? " rate" : ""}"><input type="checkbox" class="obj-case" data-obj="${i}"${OF.faits[i] ? " checked" : ""}${tranche ? " disabled" : ""}><span class="texte" data-notr>${esc(t)}</span><span class="pastille ${this.classeStatut(st)}">${esc(this.libelleStatut(st))}</span></label>`; }).join("")
              : `<div class="empty">${esc(trad("Ton coach écrit tes trois objectifs après votre call. Ils apparaîtront ici."))}</div>`}
         ${obj ? `<p class="note" style="margin:12px 0 0">${esc(trad("Coche un objectif quand tu l'as atteint : ton coach le voit."))}</p>` : ""}
       </section>`;
@@ -4333,15 +4426,27 @@ const Regularite = {
     const o = P.objectifs || { mois: "", liste: ["", "", ""] };
     const moisTxt = o.mois ? new Date(o.mois + "-15T12:00:00").toLocaleDateString(locale(), { month: "long", year: "numeric" }) : "";
     const exemples = ["Ex. 3 séances par semaine", "Ex. 2 L d'eau par jour", "Ex. 8 000 pas par jour"];
+    const statuts = o.statuts || ["", "", ""];
+    const opt = (v, l, sel) => `<option value="${v}"${sel === v ? " selected" : ""}>${l}</option>`;
     z.innerHTML = `<section class="panel"><h2>Les 3 objectifs du mois</h2>
-      <p class="note" style="margin:0 0 12px">Remplis-les juste après ton call du mois : ils s'affichent en haut de son programme, et ton client peut les cocher.</p>
+      <p class="note" style="margin:0 0 12px">Remplis-les juste après ton call du mois : ils s'affichent dans « Mon suivi » et sur l'accueil de ton client, qui peut les cocher. Le statut que tu poses (atteint / non atteint) l'emporte sur sa case.</p>
       ${moisTxt ? `<p class="note" style="margin:0 0 12px">${esc(trad("Dernière mise à jour : {mois}.", { mois: moisTxt }))}</p>` : ""}
-      <div class="grid g3">${[0, 1, 2].map(i => `<div><label for="obj-${i}">Objectif ${i + 1}</label><input id="obj-${i}" type="text" maxlength="120" value="${esc((o.liste || [])[i] || "")}" placeholder="${esc(exemples[i])}"></div>`).join("")}</div>
+      <div class="grid g3">${[0, 1, 2].map(i => `<div><label for="obj-${i}">Objectif ${i + 1}</label><input id="obj-${i}" type="text" maxlength="120" value="${esc((o.liste || [])[i] || "")}" placeholder="${esc(exemples[i])}">
+        <select id="obj-st-${i}" style="margin-top:6px">${opt("", "En cours", statuts[i] || "")}${opt("atteint", "Atteint", statuts[i])}${opt("non_atteint", "Non atteint", statuts[i])}</select></div>`).join("")}</div>
     </section>`;
-    [0, 1, 2].forEach(i => $("obj-" + i).addEventListener("input", () => {
-      P.objectifs = { mois: aujourdhui().slice(0, 7), liste: [0, 1, 2].map(k => $("obj-" + k).value.trim()) };
+    const lire = () => {
+      P.objectifs = Object.assign({}, P.objectifs || {}, {
+        mois: (P.objectifs && P.objectifs.mois) || aujourdhui().slice(0, 7),
+        liste: [0, 1, 2].map(k => $("obj-" + k).value.trim()),
+        statuts: [0, 1, 2].map(k => $("obj-st-" + k).value)
+      });
       sauver();
-    }));
+    };
+    [0, 1, 2].forEach(i => {
+      /* un objectif retape = nouveau mois d'objectifs ; un statut change sans toucher au mois */
+      $("obj-" + i).addEventListener("input", () => { if (P.objectifs) P.objectifs.mois = aujourdhui().slice(0, 7); lire(); });
+      $("obj-st-" + i).addEventListener("change", lire);
+    });
   }
 };
 
@@ -6086,6 +6191,7 @@ const outilBilan = {
     b.charges = this.charges(J, debut);
     b.objectifs = (P.objectifs && (P.objectifs.liste || []).some(Boolean)) ? P.objectifs : null;
     b.faits = (c.objectifs_faits && c.objectifs_faits.mois === (b.objectifs && b.objectifs.mois)) ? (c.objectifs_faits.faits || []) : [];
+    b.statuts = b.objectifs ? b.objectifs.liste.map((t, i) => t ? Regularite.statutObjectif(P, c.objectifs_faits || {}, i) : "") : [];
     b.vide = !mes.length && !(J.seances || []).length && b.repas == null;
     return b;
   },
@@ -6113,8 +6219,8 @@ const outilBilan = {
     b.charges.filter(x => x.stable).slice(0, 3).forEach(x => out.push(`${x.nom} : même charge (${Journal.kg(x.a)} kg) sur les 3 dernières séances — regarde ses répétitions avant de changer quoi que ce soit.`));
     if (b.remplaces.length >= 3) out.push(`A remplacé ${b.remplaces.length} repas ce mois-ci : ajuste la diète à ses goûts.`);
     if (b.objectifs){
-      const n = (b.objectifs.liste || []).filter(Boolean).length, f = (b.objectifs.liste || []).filter((t, i) => t && b.faits[i]).length;
-      out.push(`Objectifs du mois : ${f} sur ${n} cochés. Fais le point, puis écris ceux du mois prochain.`);
+      const n = (b.objectifs.liste || []).filter(Boolean).length, f = b.statuts.filter(x => x === "atteint").length, r = b.statuts.filter(x => x === "non_atteint").length;
+      out.push(`Objectifs du mois : ${f} sur ${n} atteints${r ? `, ${r} non atteint${r > 1 ? "s" : ""}` : ""}. Fais le point, pose les statuts, puis écris ceux du mois prochain.`);
     } else out.push("Pas d'objectifs ce mois-ci : écris-en 3 juste après le call.");
     return out;
   },
@@ -6155,7 +6261,7 @@ const outilBilan = {
       }</tbody></table></div></section>`;
     }
     if (b.objectifs){
-      h += `<section class="panel"><h2>Objectifs du mois</h2><ul class="obj-l">${b.objectifs.liste.map((t, i) => t ? `<li>${b.faits[i] ? "✓" : "—"} <span data-notr>${esc(t)}</span></li>` : "").join("")}</ul></section>`;
+      h += `<section class="panel"><h2>Objectifs du mois</h2>${b.objectifs.liste.map((t, i) => t ? `<div class="objectif${b.statuts[i] === "atteint" ? " atteint" : ""}${b.statuts[i] === "non_atteint" ? " rate" : ""}"><span class="num">0${i + 1}</span><span class="texte" data-notr>${esc(t)}</span><span class="pastille ${Regularite.classeStatut(b.statuts[i])}">${esc(Regularite.libelleStatut(b.statuts[i]))}</span></div>` : "").join("")}</section>`;
     }
     return h;
   },
@@ -6163,12 +6269,20 @@ const outilBilan = {
   async init(){
     const zone = $("bilan-vue"); if (!zone) return;
     const coach = Auth.estCoach() && !!Store.idConsulte;
-    const [programme, journal, repas, repas_suivi, mens, objectifs_faits, intake] = await Promise.all([
+    const [programme, journal, repas, repas_suivi, mens, objectifs_faits, intake, checkins] = await Promise.all([
       Store.lire("programme", {}), Store.lire("journal", { seances: [] }), Store.lire("repas", {}),
-      Store.lire("repas_suivi", {}), Store.lire("mens", {}), Store.lire("objectifs_faits", {}), Store.lire("intake", {})
+      Store.lire("repas_suivi", {}), Store.lire("mens", {}), Store.lire("objectifs_faits", {}), Store.lire("intake", {}),
+      Store.lire(Checkin.cle, Checkin.vide())
     ]);
     const b = this.calculer({ programme, journal, repas, repas_suivi, mens, objectifs_faits });
     zone.innerHTML = this.vue(b, coach, (intake && intake.objectif) || "");
+    /* v36 — ce que le client a ecrit dans ses bilans hebdo : a lire avant le call */
+    if (coach){
+      const l = ((checkins && checkins.liste) || []).slice(-4).reverse();
+      zone.insertAdjacentHTML("beforeend", `<section class="panel"><h2>Ses bilans hebdomadaires</h2>${l.length
+        ? l.map((x, i) => `<details class="hist-entree"${i === 0 ? " open" : ""}><summary><b>${esc(Checkin.periode(x))}</b> <span class="hist-dates">envoyé le ${esc(dateFr(x.envoye_le))}</span></summary>${Checkin.reponsesHTML(x)}</details>`).join("")
+        : `<div class="empty">Aucun bilan hebdomadaire envoyé pour le moment.</div>`}</section>`);
+    }
   }
 };
 
@@ -7306,12 +7420,19 @@ const outilFormation = {
     const c = this.compte(D);
     let h = "";
 
-    /* en-tete : progression + video de presentation */
+    /* en-tete : progression + video de presentation (v36 : bibliotheque) */
+    const nbModules = FORMATION.modules.length, modulesFinis = FORMATION.modules.filter(m => { const cm = this.compteModule(D, m); return cm.tot && cm.faits === cm.tot; }).length;
     h += `<section class="panel">
-      <h2>Ton parcours</h2>
-      <p style="margin:0 0 14px">${esc(FORMATION.intro)}</p>
-      <div class="fo-jauge"><div class="fo-jauge-in" style="width:${c.pct}%"></div></div>
-      <p class="note" style="margin:8px 0 16px">${c.faits} étape${c.faits > 1 ? "s" : ""} validée${c.faits > 1 ? "s" : ""} sur ${c.tot} — ${c.pct} %</p>
+      <div class="prog-tete-haut">
+        <div>
+          <span class="eyebrow">${esc(trad("Bibliothèque"))} · ${nbModules} ${esc(trad("modules"))}</span>
+          <h2 style="margin:4px 0 8px">Ton parcours</h2>
+          <p style="margin:0">${esc(FORMATION.intro)}</p>
+        </div>
+        <div class="tile prog-compteur"><div class="t-lbl">Progression</div><div class="t-val readout${c.pct >= 100 ? " pos" : ""}">${c.pct}<small>%</small></div><div class="t-sub">${c.faits} / ${c.tot} ${esc(trad("étapes"))}</div></div>
+      </div>
+      <div class="fo-jauge" style="margin-top:14px"><div class="fo-jauge-in" style="width:${c.pct}%"></div></div>
+      <p class="note" style="margin:8px 0 16px">${modulesFinis} ${esc(trad(modulesFinis > 1 ? "modules terminés" : "module terminé"))} ${esc(trad("sur"))} ${nbModules}</p>
       ${this.video(FORMATION.video, "Voir la présentation de la formation")}
     </section>`;
 
@@ -7324,14 +7445,17 @@ const outilFormation = {
     });
     h += `</section>`;
 
-    /* les modules */
-    FORMATION.modules.forEach(m => {
+    /* les modules : une carte numerotee, sa barre, et son contenu quand on l'ouvre */
+    FORMATION.modules.forEach((m, idx) => {
       const cm = this.compteModule(D, m);
       const ouvert = D.ouvert === m.id;
-      h += `<section class="panel fo-mod">
+      const pct = cm.tot ? Math.round(cm.faits / cm.tot * 100) : 0;
+      const titre = String(m.titre || "").replace(/^Module \d+\s*[—-]\s*/, "");
+      h += `<section class="panel fo-mod${ouvert ? " ouvert" : ""}${cm.tot && cm.faits === cm.tot ? " fini" : ""}">
         <button type="button" class="fo-tete" data-mod="${esc(m.id)}" aria-expanded="${ouvert}">
-          <span class="fo-ico" aria-hidden="true">${m.icone}</span>
-          <span class="fo-nom">${esc(m.titre)}</span>
+          <span class="fo-num" aria-hidden="true">${String(idx).padStart(2, "0")}</span>
+          <span class="fo-corps-tete"><span class="fo-nom">${esc(titre)}</span><span class="fo-obj-court">${esc(m.objectif || "")}</span>
+            ${cm.tot ? `<span class="fo-jauge fo-jauge-mod"><span class="fo-jauge-in" style="width:${pct}%"></span></span>` : ""}</span>
           ${cm.tot ? `<span class="pastille${cm.faits === cm.tot ? " fo-ok" : ""}">${cm.faits}/${cm.tot}</span>` : ""}
           <span class="fo-fleche">${ouvert ? "▾" : "▸"}</span>
         </button>`;
@@ -8015,8 +8139,8 @@ const outilAccueil = {
   async init(){
     const zone = $("acc-vue"); if (!zone) return;
     const consult = !!Store.idConsulte;
-    const d = await Store.lireTout(["intake", "programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits"]);
-    const I = d.intake || {}, P = d.programme || {}, J = d.journal || { seances: [] }, R = d.repas || {}, S = d.repas_suivi || {}, M = d.mens || {}, OF = d.objectifs_faits || {};
+    const d = await Store.lireTout(["intake", "programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "checkins"]);
+    const I = d.intake || {}, P = d.programme || {}, J = d.journal || { seances: [] }, R = d.repas || {}, S = d.repas_suivi || {}, M = d.mens || {}, OF = d.objectifs_faits || {}, CK = d.checkins || { liste: [] };
     if (!Array.isArray(J.seances)) J.seances = [];
     const c = { programme: P, journal: J, repas: R, repas_suivi: S, mens: M };
     const r = Regularite.calculer(c, 0), prec = Regularite.calculer(c, -1);
@@ -8026,7 +8150,7 @@ const outilAccueil = {
     const pd = this.poids(M);
     const obj = (P.objectifs && (P.objectifs.liste || []).some(Boolean)) ? P.objectifs : null;
     const faits = (obj && OF.mois === obj.mois && Array.isArray(OF.faits)) ? OF.faits : [];
-    const nbObj = obj ? obj.liste.filter(Boolean).length : 0, nbFaits = obj ? obj.liste.filter((t, i) => t && faits[i]).length : 0;
+    const nbObj = obj ? obj.liste.filter(Boolean).length : 0, nbFaits = obj ? obj.liste.filter((t, i) => t && Regularite.statutObjectif(P, OF, i) === "atteint").length : 0;
     const aProgramme = (P.seances || []).some(sc => (sc.exercices || []).some(e => e.nom));
     const aDiete = (R.jours || []).some(j => (j.repas || []).length);
     const prenom = consult ? (Store.nomConsulte || "").split(" ")[0]
@@ -8091,9 +8215,10 @@ const outilAccueil = {
         <div class="tiles">${tuiles}</div>
         <p class="note" style="margin:12px 0 0">${esc(trad("La régularité mesure ce que tu fais — séances, repas, mesure — pas ce que dit la balance."))}</p>
       </section>
+      ${(aProgramme || aDiete) ? `<section class="panel"><h2>${esc(trad("Bilan hebdomadaire"))}</h2><div class="acces-l">${Checkin.statutHTML(CK, { lien: "#/suivi" })}</div></section>` : ""}
       ${acces.length ? `<section class="panel"><h2>${esc(trad("Aujourd'hui"))}</h2><div class="acces-l">${acces.map(ligne).join("")}</div></section>` : ""}
       ${obj ? `<section class="panel"><h2>${esc(trad("Tes objectifs du mois"))}</h2>
-        ${obj.liste.map((t, i) => t ? `<div class="objectif${faits[i] ? " atteint" : ""}"><span class="num">0${i + 1}</span><span class="texte" data-notr>${esc(t)}</span><span class="pastille ${faits[i] ? "ok" : ""}">${faits[i] ? esc(trad("Atteint")) : esc(trad("En cours"))}</span></div>` : "").join("")}
+        ${obj.liste.map((t, i) => { if (!t) return ""; const st = Regularite.statutObjectif(P, OF, i); return `<div class="objectif${st === "atteint" ? " atteint" : ""}${st === "non_atteint" ? " rate" : ""}"><span class="num">0${i + 1}</span><span class="texte" data-notr>${esc(t)}</span><span class="pastille ${Regularite.classeStatut(st)}">${esc(Regularite.libelleStatut(st))}</span></div>`; }).join("")}
         <div class="actions"><a class="btn ghost petit" href="#/suivi">${esc(trad("Cocher mes objectifs"))}</a></div>
       </section>` : ""}
       <section class="panel">
@@ -8101,6 +8226,140 @@ const outilAccueil = {
         <p class="note" style="margin:0 0 12px">${esc(trad("Tes quatre dernières semaines : régularité, poids, ce qui a bougé et la progression de tes charges."))}</p>
         <div class="actions" style="margin-top:0"><a class="btn ghost petit" href="#/suivi">${esc(trad("Voir mon bilan du mois"))}</a></div>
       </section>`;
+  }
+};
+
+/* ------------------------------------------------------------------
+   BILAN HEBDOMADAIRE (v36) — le check-in du client.
+   Les questions vivent dans CONFIG.bilan.questions. Les reponses sont
+   rangees dans la cle « checkins » (au client), une entree par semaine,
+   reperee par son lundi. Jamais bloquant : disponible, recommande, c'est
+   tout. Le coach lit les bilans dans « Preparer le call » et « Son suivi » ;
+   la phase 10 y accrochera son feedback.
+   ------------------------------------------------------------------ */
+const Checkin = {
+  cle: "checkins",
+  max: 60,
+  vide(){ return { liste: [] }; },
+  questions(){ return (CONFIG.bilan && CONFIG.bilan.questions) || []; },
+
+  /* La semaine visee : des le jour d'ouverture (vendredi par defaut), la
+     semaine en cours ; avant, la semaine passee, encore ouverte. */
+  semaineVisee(){
+    const jour = (new Date().getDay() + 6) % 7 + 1;
+    const ouverture = (CONFIG.bilan && CONFIG.bilan.jour_ouverture) || 5;
+    const b = Regularite.bornes(jour >= ouverture ? 0 : -1);
+    return { debut: b.debut, fin: b.fin };
+  },
+  entree(C, debut){ return ((C && C.liste) || []).find(x => x.semaine === debut) || null; },
+  etat(C){ const v = this.semaineVisee(); const e = this.entree(C, v.debut); return { semaine: v, entree: e, fait: !!e }; },
+  periode(x){ return trad("Semaine du {a} au {b}", { a: dateFr(x.semaine), b: dateFr(x.fin || x.semaine) }); },
+
+  champ(q, v){
+    const val = v == null ? "" : v;
+    if (q.type === "echelle5") return `<div class="seg echelle5" data-q="${esc(q.id)}" role="group" aria-label="${esc(q.label)}">${[1,2,3,4,5].map(n => `<button type="button" data-v="${n}" aria-pressed="${String(val) === String(n)}">${n}</button>`).join("")}</div>`;
+    if (q.type === "nombre") return `<input type="number" min="0" max="30" step="1" inputmode="numeric" data-q="${esc(q.id)}" value="${esc(val)}">`;
+    if (q.type === "select") return `<select data-q="${esc(q.id)}"><option value="">— choisis —</option>${(q.options || []).map(o => `<option value="${esc(o)}"${val === o ? " selected" : ""}>${esc(o)}</option>`).join("")}</select>`;
+    return `<textarea rows="2" data-q="${esc(q.id)}">${esc(val)}</textarea>`;
+  },
+
+  formulaire(C, entree){
+    const r = (entree && entree.reponses) || {};
+    return `<form class="checkin-form" data-checkin>
+      ${this.questions().map(q => `<div class="checkin-q${q.type === "echelle5" ? " echelle" : ""}">
+        <label>${esc(q.label)}</label>
+        ${q.aide ? `<p class="note" style="margin:-2px 0 8px">${esc(q.aide)}</p>` : ""}
+        ${this.champ(q, r[q.id])}
+      </div>`).join("")}
+      <div class="actions"><button type="submit" class="btn">${esc(entree ? trad("Mettre à jour mon bilan") : trad("Envoyer mon bilan"))}</button>${entree ? `<button type="button" class="btn ghost" data-checkin-annuler>${esc(trad("Annuler"))}</button>` : ""}<span class="msg" data-checkin-msg></span></div>
+    </form>`;
+  },
+
+  lire(form){
+    const rep = {};
+    this.questions().forEach(q => {
+      if (q.type === "echelle5"){ const b = form.querySelector(`[data-q="${q.id}"] [aria-pressed="true"]`); rep[q.id] = b ? +b.dataset.v : null; return; }
+      const el = form.querySelector(`[data-q="${q.id}"]`); if (!el) return;
+      rep[q.id] = q.type === "nombre" ? (el.value === "" ? null : num(el.value)) : el.value.trim();
+    });
+    return rep;
+  },
+
+  /* branche un formulaire deja rendu ; apres(entree) est appele une fois enregistre */
+  brancher(zone, C, apres){
+    const form = zone.querySelector("[data-checkin]"); if (!form) return;
+    $$(".echelle5 button", form).forEach(b => b.addEventListener("click", () => {
+      $$("button", b.parentNode).forEach(x => x.setAttribute("aria-pressed", "false"));
+      b.setAttribute("aria-pressed", "true");
+    }));
+    const annuler = form.querySelector("[data-checkin-annuler]");
+    if (annuler) annuler.addEventListener("click", () => { if (typeof apres === "function") apres(null); });
+    form.addEventListener("submit", ev => {
+      ev.preventDefault();
+      const rep = this.lire(form);
+      const echelles = this.questions().filter(q => q.type === "echelle5");
+      const manque = echelles.filter(q => rep[q.id] == null);
+      if (manque.length){ const m = form.querySelector("[data-checkin-msg]"); if (m){ m.textContent = trad("Il manque : {l}", { l: manque.map(q => q.label).join(", ") }); setTimeout(() => { m.textContent = ""; }, 3200); } return; }
+      const v = this.semaineVisee();
+      if (!Array.isArray(C.liste)) C.liste = [];
+      C.liste = C.liste.filter(x => x.semaine !== v.debut);
+      const entree = { semaine: v.debut, fin: v.fin, envoye_le: aujourdhui(), reponses: rep };
+      C.liste.push(entree);
+      C.liste.sort((a, b) => a.semaine < b.semaine ? -1 : 1);
+      if (C.liste.length > this.max) C.liste = C.liste.slice(-this.max);
+      Store.ecrire(this.cle, C);
+      UI.toast(trad("Bilan envoyé. Ton coach le lira avant votre prochain échange."), "ok");
+      if (typeof apres === "function") apres(entree);
+    });
+  },
+
+  /* les reponses d'une entree, en lecture */
+  reponsesHTML(x){
+    const r = x.reponses || {};
+    const echelles = this.questions().filter(q => q.type === "echelle5" && r[q.id] != null);
+    const textes = this.questions().filter(q => q.type !== "echelle5" && r[q.id] != null && r[q.id] !== "");
+    return `${echelles.length ? `<div class="checkin-echelles">${echelles.map(q => `<span class="pastille"><span data-notr>${esc(q.label)}</span> <b>${r[q.id]}</b>/5</span>`).join("")}</div>` : ""}
+      ${textes.map(q => `<p class="checkin-rep"><span class="lbl">${esc(q.label)}</span>${esc(String(r[q.id]))}</p>`).join("")}`;
+  },
+
+  /* le bloc « statut » : disponible / envoye, pour Mon suivi et l'accueil */
+  statutHTML(C, opts){
+    opts = opts || {};
+    const e = this.etat(C);
+    if (e.fait){
+      return `<div class="acces fait${opts.lien ? "" : " statique"}"${opts.lien ? ` href="${opts.lien}"` : ""}><span class="ico">${ICONES.bilan}</span><span class="txt"><b>${esc(trad("Bilan de la semaine envoyé"))}</b><small>${esc(trad("le {d} — merci, ton coach le lit avant votre prochain échange", { d: dateFr(e.entree.envoye_le) }))}</small></span>${opts.lien ? `<span class="fleche">›</span>` : ""}</div>`;
+    }
+    return `<a class="acces attention" href="${opts.lien || "#/suivi"}"><span class="ico">${ICONES.bilan}</span><span class="txt"><b>${esc(trad("Ton bilan de la semaine est disponible"))}</b><small>${esc(trad("5 minutes, avant dimanche soir : c'est ce qui permet à ton coach d'ajuster"))}</small></span><span class="fleche">›</span></a>`;
+  },
+
+  /* l'historique, du plus recent au plus ancien */
+  historiqueHTML(C, sauf){
+    const l = ((C && C.liste) || []).filter(x => x.semaine !== sauf).slice().reverse();
+    if (!l.length) return "";
+    return `<h3 style="margin-top:20px">${esc(trad("Mes bilans précédents"))}</h3>` + l.map(x => `<details class="hist-entree"><summary><b>${esc(this.periode(x))}</b> <span class="hist-dates">${esc(trad("envoyé le {d}", { d: dateFr(x.envoye_le) }))}</span></summary>${this.reponsesHTML(x)}</details>`).join("");
+  },
+
+  /* Mon suivi : le panneau complet (client : formulaire ; coach : lecture) */
+  monter(idZone, C){
+    const z = $(idZone); if (!z) return;
+    const consult = !!Store.idConsulte;
+    const dessiner = (ouvert) => {
+      const e = this.etat(C);
+      let corps = "";
+      if (consult){
+        corps = e.fait ? `<p class="note" style="margin:0 0 10px">${esc(this.periode(e.entree))} · ${esc(trad("envoyé le {d}", { d: dateFr(e.entree.envoye_le) }))}</p>${this.reponsesHTML(e.entree)}`
+                       : `<div class="empty">${esc(trad("Pas encore de bilan pour cette semaine."))}</div>`;
+      } else if (ouvert || !e.fait){
+        corps = `<p class="note" style="margin:0 0 14px">${esc(trad("Semaine du {a} au {b}", { a: dateFr(e.semaine.debut), b: dateFr(e.semaine.fin) }))} · ${esc(trad("Réponds simplement, avec tes mots. Rien n'est noté : ça sert à ajuster ton suivi."))}</p>` + this.formulaire(C, e.entree);
+      } else {
+        corps = this.statutHTML(C, {}) + `<div style="margin-top:12px">${this.reponsesHTML(e.entree)}</div><div class="actions"><button type="button" class="btn ghost petit" data-checkin-modifier>${esc(trad("Modifier mon bilan"))}</button></div>`;
+      }
+      z.innerHTML = `<section class="panel"><div class="seance-c-tete"><h2>${esc(trad("Bilan hebdomadaire"))}</h2>${e.fait ? `<span class="pastille ok">✓ ${esc(trad("envoyé"))}</span>` : `<span class="pastille attention">${esc(trad("disponible"))}</span>`}</div>
+        ${corps}${this.historiqueHTML(C, e.entree ? e.entree.semaine : null)}</section>`;
+      const mod = z.querySelector("[data-checkin-modifier]"); if (mod) mod.addEventListener("click", () => dessiner(true));
+      this.brancher(z, C, () => dessiner(false));
+    };
+    dessiner(false);
   }
 };
 
@@ -8119,12 +8378,17 @@ const outilSuivi = {
   titre: "Ton suivi",
   accroche: "Comment se passe ton accompagnement : ta régularité, tes objectifs du mois et ton bilan des quatre dernières semaines.",
 
-  html(){ return `<div id="suivi-reg"><section class="panel"><div class="empty">Chargement…</div></section></div><div id="suivi-bilan"></div>`; },
+  html(){ return `<div id="suivi-checkin"></div><div id="suivi-reg"><section class="panel"><div class="empty">Chargement…</div></section></div><div id="suivi-bilan"></div>`; },
 
   async init(){
-    const d = await Store.lireTout(["programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "intake"]);
+    const d = await Store.lireTout(["programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "intake", "checkins"]);
     const P = d.programme || {}, J = d.journal || { seances: [] };
     if (!Array.isArray(J.seances)) J.seances = [];
+    /* le bilan hebdo : la cle est lue ici, mais on la re-lit par Store.lire
+       pour que l'ecriture soit autorisee (drapeau de lecture) */
+    const C = await Store.lire(Checkin.cle, Checkin.vide());
+    if (!Array.isArray(C.liste)) C.liste = [];
+    Checkin.monter("suivi-checkin", C);
     await Regularite.monterClient("suivi-reg", P, J, d);
     const zb = $("suivi-bilan"); if (!zb) return;
     const b = outilBilan.calculer({ programme: P, journal: J, repas: d.repas || {}, repas_suivi: d.repas_suivi || {}, mens: d.mens || {}, objectifs_faits: d.objectifs_faits || {} });
