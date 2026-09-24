@@ -187,7 +187,10 @@ a.btn.ghost:hover{color:var(--ink);border-color:var(--accent)}
 .tile .t-lbl{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
 .tile .t-val{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;font-size:30px;font-weight:600;line-height:1.15;margin-top:4px}
 .tile .t-sub{font-size:12px;color:var(--ink-3);font-family:"IBM Plex Mono",monospace}
-.pos{color:var(--good)} .neg{color:var(--bad)}
+.pos{color:var(--good)} .neg{color:var(--bad)} .moyen{color:var(--warn)}
+.obj-l{list-style:none;padding:0;margin:8px 0 0}
+.obj-l li{padding:6px 0;border-top:1px solid var(--line)}
+.tile .t-val small{font-size:.45em;color:var(--ink-3);margin-left:2px}
 .hist-entree{border-top:1px solid var(--line);margin-top:0;padding:12px 0}
 .hist-entree summary{cursor:pointer}
 .hist-entree .hist-dates{color:var(--ink-3);font-size:13px;margin-left:6px}
@@ -636,7 +639,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-09-24 · 30",
+    version: "2026-09-25 · 31",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -1518,6 +1521,21 @@ Object.assign(I18N.en, {
   "Les grammages sont donnés crus, sauf mention contraire. Si un plat ne te convient pas, touche « Remplacer » : l'app t'en propose un autre avec les mêmes calories.": "Weights are given raw unless stated otherwise. If a dish doesn't work for you, tap “Swap”: the app suggests another one with the same calories."
 });
 I18N.motifs.push([/^Série (\d+)$/, "Set $1"]);
+
+/* v31 — regularite, objectifs du mois */
+Object.assign(I18N.en, {
+  "Ta semaine": "Your week", "Score de régularité": "Consistency score", "remis à zéro chaque lundi": "resets every Monday",
+  "Séances notées": "Workouts logged", "cette semaine": "this week", "Repas cochés": "Meals checked",
+  "Mesure de la semaine": "This week's check-in", "c'est fait": "done", "dans Mensurations": "in Measurements",
+  "Ton score mesure ta régularité, pas ton poids : tes séances, tes repas cochés et ta mesure de la semaine.": "Your score measures consistency, not your weight: your workouts, your checked meals and your weekly check-in.",
+  "Tes 3 objectifs du mois": "Your 3 goals this month",
+  "Les 3 objectifs du mois": "This month's 3 goals",
+  "Remplis-les juste après ton call du mois : ils s'affichent en haut de son programme, et ton client peut les cocher.": "Fill them in right after your monthly call: they show at the top of their program, and your client can check them off.",
+  "Dernière mise à jour : {mois}.": "Last updated: {mois}.",
+  "Ex. 3 séances par semaine": "E.g. 3 workouts a week", "Ex. 2 L d'eau par jour": "E.g. 2 L of water a day", "Ex. 8 000 pas par jour": "E.g. 8,000 steps a day",
+  "Régularité": "Consistency", "Régularité faible la semaine dernière :": "Low consistency last week:"
+});
+I18N.motifs.push([/^Objectif (\d)$/, "Goal $1"], [/^\(en cours : (\d+)\)$/, "(this week: $1)"]);
 
 
 /* Les dates sont stockees au format ISO (2026-08-29) parce que c'est le seul
@@ -3689,8 +3707,8 @@ const Journal = {
   },
 
   /* Remplit les emplacements laisses par outilProgramme.vueLecture */
-  async brancher(zone, P){
-    const J = await Store.lire(this.cle, this.vide());
+  async brancher(zone, P, Jfourni, apres){
+    const J = Jfourni || await Store.lire(this.cle, this.vide());
     if (!Array.isArray(J.seances)) J.seances = [];
     const self = this;
     const remplir = () => {
@@ -3725,6 +3743,7 @@ const Journal = {
         if (J.seances.length > self.max) J.seances = J.seances.slice(-self.max);
         Store.ecrire(self.cle, J);
         remplir();
+        if (typeof apres === "function") apres();
         flash("jr-ok-" + si, "Séance enregistrée. Bravo !");
       }));
     };
@@ -3741,6 +3760,133 @@ const Journal = {
         l.map(x => `<tr><td>${esc(dateFr(x.date))}</td><td>${esc(x.nom || "—")}</td><td>${(x.exos || []).length}</td><td>${(x.exos || []).reduce((n, e) => n + (e.series || []).length, 0)}</td></tr>`).join("") +
         `</tbody></table></div>`
       : `<div class="empty">Aucune séance notée pour le moment.</div>`) + `</section>`;
+  }
+};
+
+/* ------------------------------------------------------------------
+   REGULARITE — un score sur 100 par semaine (du lundi au dimanche).
+   Il mesure ce que le client FAIT, pas ce que dit la balance : seances
+   notees (50), repas coches (30), mesure de la semaine (20).
+   Une partie sans objet (pas de programme, pas de diete, repas jamais
+   coches) sort du calcul au lieu de faire baisser la note. Les repas ne
+   comptent qu'a partir du premier jour ou le client a coche quelque chose :
+   les jours d'avant l'existence du suivi ne sont pas des jours rates.
+   ------------------------------------------------------------------ */
+const Regularite = {
+  poids: { seances: 50, repas: 30, mesure: 20 },
+
+  iso(d){ return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); },
+  /* decalage 0 = semaine en cours (du lundi a aujourd'hui), -1 = la precedente, complete */
+  bornes(decalage){
+    const l = new Date(); l.setHours(12, 0, 0, 0);
+    l.setDate(l.getDate() - ((l.getDay() + 6) % 7) + 7 * (decalage || 0));
+    const fin = new Date(l); fin.setDate(l.getDate() + 6);
+    const auj = new Date(); auj.setHours(12, 0, 0, 0);
+    const dernier = (decalage || 0) === 0 ? auj : fin;
+    const jours = [];
+    for (const d = new Date(l); d <= dernier; d.setDate(d.getDate() + 1)) jours.push(this.iso(d));
+    return { debut: this.iso(l), fin: this.iso(fin), jours: jours };
+  },
+
+  /* repas prevus un jour donne : le plan suit les jours de la semaine */
+  prevusLe(R, iso){
+    const jours = (R && R.jours) || [];
+    if (!jours.length) return 0;
+    const d = new Date(iso + "T12:00:00");
+    const j = jours[Math.min(jours.length - 1, (d.getDay() + 6) % 7)];
+    return (j && j.repas) ? j.repas.length : 0;
+  },
+
+  calculer(c, decalage){
+    const b = this.bornes(decalage);
+    const P = c.programme || {}, J = c.journal || {}, R = c.repas || {}, S = c.repas_suivi || {}, M = c.mens || {};
+    const parts = {};
+    const nb = Math.min(7, (P.seances || []).filter(sc => (sc.exercices || []).some(e => e.nom)).length);
+    if (nb){
+      const faites = new Set((J.seances || []).filter(x => x.date >= b.debut && x.date <= b.fin).map(x => x.date + "|" + x.si)).size;
+      parts.seances = { faites: faites, cible: nb, ratio: Math.min(1, faites / nb) };
+    }
+    const hist = S.hist || {};
+    const debutHist = Object.keys(hist).sort()[0];
+    if (debutHist && (R.jours || []).some(j => (j.repas || []).length)){
+      let coches = 0, prevus = 0;
+      b.jours.forEach(iso => {
+        if (iso < debutHist) return;
+        const p = this.prevusLe(R, iso);
+        prevus += p; coches += Math.min(p, (hist[iso] && hist[iso].c) || 0);
+      });
+      if (prevus) parts.repas = { coches: coches, prevus: prevus, ratio: coches / prevus };
+    }
+    const faite = (M.mesures || []).some(m => m.date && m.date >= b.debut && m.date <= b.fin);
+    parts.mesure = { faite: faite, ratio: faite ? 1 : 0 };
+    let total = 0, poids = 0;
+    for (const k in parts){ total += this.poids[k] * parts[k].ratio; poids += this.poids[k]; }
+    return { score: poids ? Math.round(total / poids * 100) : null, parts: parts, bornes: b };
+  },
+
+  niveau(s){ return s == null ? "" : s >= 70 ? "pos" : s >= 40 ? "moyen" : "neg"; },
+
+  /* appele a chaque case « mange » : garde le compte du jour, 70 jours max */
+  noterRepas(R, suivi){
+    const jours = (R && R.jours) || [];
+    if (!jours.length) return;
+    const iso = aujourdhui();
+    const idx = Math.min(jours.length - 1, (new Date().getDay() + 6) % 7);
+    const c = Object.keys(suivi.mange || {}).filter(k => suivi.mange[k] && k.indexOf(idx + ":") === 0).length;
+    suivi.hist = suivi.hist || {};
+    suivi.hist[iso] = { c: c, p: this.prevusLe(R, iso) };
+    const cles = Object.keys(suivi.hist).sort();
+    while (cles.length > 70) delete suivi.hist[cles.shift()];
+  },
+
+  /* Cote client : le panneau « Ta semaine » en haut de « Mon programme ».
+     Renvoie une fonction pour le redessiner (apres une seance notee). */
+  async monterClient(idZone, P, J){
+    const z = $(idZone); if (!z) return () => {};
+    const [R, S, M, OF] = await Promise.all([
+      Store.lire("repas", {}), Store.lire("repas_suivi", {}), Store.lire("mens", {}),
+      Store.lire("objectifs_faits", { mois: "", faits: [] })
+    ]);
+    if (!Array.isArray(OF.faits)) OF.faits = [];
+    const dessiner = () => {
+      const r = this.calculer({ programme: P, journal: J, repas: R, repas_suivi: S, mens: M }, 0);
+      const p = r.parts;
+      const obj = (P.objectifs && (P.objectifs.liste || []).some(Boolean)) ? P.objectifs : null;
+      if (obj && OF.mois !== obj.mois){ OF.mois = obj.mois; OF.faits = []; }
+      z.innerHTML = `<section class="panel"><h2>Ta semaine</h2>
+        <div class="tiles">
+          <div class="tile"><div class="t-lbl">Score de régularité</div><div class="t-val readout ${this.niveau(r.score)}">${r.score == null ? "—" : r.score}<small>/100</small></div><div class="t-sub">remis à zéro chaque lundi</div></div>
+          ${p.seances ? `<div class="tile"><div class="t-lbl">Séances notées</div><div class="t-val readout">${p.seances.faites}/${p.seances.cible}</div><div class="t-sub">cette semaine</div></div>` : ""}
+          ${p.repas ? `<div class="tile"><div class="t-lbl">Repas cochés</div><div class="t-val readout">${p.repas.coches}/${p.repas.prevus}</div><div class="t-sub">cette semaine</div></div>` : ""}
+          <div class="tile"><div class="t-lbl">Mesure de la semaine</div><div class="t-val readout ${p.mesure.faite ? "pos" : ""}">${p.mesure.faite ? "✓" : "—"}</div><div class="t-sub">${p.mesure.faite ? "c'est fait" : "dans Mensurations"}</div></div>
+        </div>
+        <p class="note" style="margin:12px 0 0">Ton score mesure ta régularité, pas ton poids : tes séances, tes repas cochés et ta mesure de la semaine.</p>
+        ${obj ? `<h3 style="margin-top:20px">Tes 3 objectifs du mois</h3><ul class="obj-l">${obj.liste.map((t, i) => t ? `<li><label class="coche"><input type="checkbox" data-obj="${i}"${OF.faits[i] ? " checked" : ""}> <span data-notr>${esc(t)}</span></label></li>` : "").join("")}</ul>` : ""}
+      </section>`;
+      $$("[data-obj]", z).forEach(c => c.addEventListener("change", () => {
+        OF.faits[+c.dataset.obj] = c.checked;
+        Store.ecrire("objectifs_faits", OF);
+      }));
+    };
+    dessiner();
+    return dessiner;
+  },
+
+  /* Cote coach : les 3 objectifs, sur la fiche programme du client */
+  objectifsCoach(idZone, P, sauver){
+    const z = $(idZone); if (!z) return;
+    const o = P.objectifs || { mois: "", liste: ["", "", ""] };
+    const moisTxt = o.mois ? new Date(o.mois + "-15T12:00:00").toLocaleDateString(locale(), { month: "long", year: "numeric" }) : "";
+    const exemples = ["Ex. 3 séances par semaine", "Ex. 2 L d'eau par jour", "Ex. 8 000 pas par jour"];
+    z.innerHTML = `<section class="panel"><h2>Les 3 objectifs du mois</h2>
+      <p class="note" style="margin:0 0 12px">Remplis-les juste après ton call du mois : ils s'affichent en haut de son programme, et ton client peut les cocher.</p>
+      ${moisTxt ? `<p class="note" style="margin:0 0 12px">${esc(trad("Dernière mise à jour : {mois}.", { mois: moisTxt }))}</p>` : ""}
+      <div class="grid g3">${[0, 1, 2].map(i => `<div><label for="obj-${i}">Objectif ${i + 1}</label><input id="obj-${i}" type="text" maxlength="120" value="${esc((o.liste || [])[i] || "")}" placeholder="${esc(exemples[i])}"></div>`).join("")}</div>
+    </section>`;
+    [0, 1, 2].forEach(i => $("obj-" + i).addEventListener("input", () => {
+      P.objectifs = { mois: aujourdhui().slice(0, 7), liste: [0, 1, 2].map(k => $("obj-" + k).value.trim()) };
+      sauver();
+    }));
   }
 };
 
@@ -4148,7 +4294,7 @@ const outilProgramme = {
   },
 
   html(){
-    return `<div id="prog-vue"><section class="panel"><div class="empty">Chargement…</div></section></div><div id="prog-jr"></div><div id="prog-hist"></div>`;
+    return `<div id="prog-semaine"></div><div id="prog-vue"><section class="panel"><div class="empty">Chargement…</div></section></div><div id="prog-obj"></div><div id="prog-jr"></div><div id="prog-hist"></div>`;
   },
 
   async init(){
@@ -4173,7 +4319,10 @@ const outilProgramme = {
 
     if (!edition){
       zone.innerHTML = self.vueLecture(P); self.brancherFiches(zone);
-      await Journal.brancher(zone, P);
+      const J = await Store.lire(Journal.cle, Journal.vide());
+      if (!Array.isArray(J.seances)) J.seances = [];
+      const semaine = await Regularite.monterClient("prog-semaine", P, J);
+      await Journal.brancher(zone, P, J, semaine);
       Historique.monter("programme", "prog-hist");
       return;
     }
@@ -4320,6 +4469,7 @@ const outilProgramme = {
     };
 
     redessiner();
+    Regularite.objectifsCoach("prog-obj", P, sauver);
     Journal.resumeCoach("prog-jr");
     Historique.monter("programme", "prog-hist", async (C) => {
       if (!(await Historique.avantRemplacement("programme", P))) return false;
@@ -5026,7 +5176,7 @@ const outilNutrition = {
         zone.innerHTML = self.vueLecture(R, suivi, actif);
         $$("[data-jour]", zone).forEach(b => b.addEventListener("click", () => { actif = +b.dataset.jour; dessiner(); }));
         $$("[data-mange]", zone).forEach(c => c.addEventListener("change", () => {
-          suivi.mange[c.dataset.mange] = c.checked; Store.ecrire("repas_suivi", suivi); dessiner();
+          suivi.mange[c.dataset.mange] = c.checked; Regularite.noterRepas(R, suivi); Store.ecrire("repas_suivi", suivi); dessiner();
         }));
         $$("[data-course]", zone).forEach(c => c.addEventListener("change", () => {
           suivi.courses = suivi.courses || {};
@@ -5059,6 +5209,7 @@ const outilNutrition = {
           nouveau.change_client = aujourdhui();
           jour.repas[i] = nouveau;
           if (suivi.mange) delete suivi.mange[b.dataset.remplacer];
+          Regularite.noterRepas(R, suivi);
           Store.ecrire(self.cle, R); Store.ecrire("repas_suivi", suivi);
           dessiner();
         }));
@@ -5683,7 +5834,7 @@ const outilClients = {
     if (!tb) return;
     const clients = (profils || []).filter(p => p.role !== "coach");
     if (!clients.length){
-      tb.innerHTML = '<tr><td colspan="9">Aucun client pour le moment.</td></tr>';
+      tb.innerHTML = '<tr><td colspan="10">Aucun client pour le moment.</td></tr>';
       if (zoneA) zoneA.innerHTML = "";
       return;
     }
@@ -5707,11 +5858,20 @@ const outilClients = {
         sens: sens
       };
     });
+    /* regularite : la semaine passee (complete) sert au tri, celle en cours
+       est donnee a titre indicatif. Rien tant qu'il n'a ni programme ni diete. */
+    lignes.forEach(l => {
+      const c = contenus[l.p.id] || {};
+      if (!l.programme && !l.diete){ l.reg = null; l.regEnCours = null; return; }
+      l.reg = Regularite.calculer(c, -1).score;
+      l.regEnCours = Regularite.calculer(c, 0).score;
+    });
 
     /* Ceux qui demandent une action passent devant. */
     const urgence = (l) => (l.ecarts.length ? 200 : 0) +
                            (l.jours === null ? 100 : l.jours >= 10 ? 90 : 0) +
-                           (!l.intake ? 50 : 0) + (!l.programme ? 20 : 0) + (!l.diete ? 10 : 0);
+                           (!l.intake ? 50 : 0) + (!l.programme ? 20 : 0) + (!l.diete ? 10 : 0) +
+                           (l.reg == null ? 0 : l.reg < 40 ? 60 : l.reg < 70 ? 25 : 0);
     lignes.sort((a,b) => urgence(b) - urgence(a) || (b.jours||0) - (a.jours||0));
 
     const pastille = (ok, txtOk, txtNon) =>
@@ -5728,6 +5888,8 @@ const outilClients = {
       <td>${l.jours === null ? '<span class="pastille manque">jamais</span>'
             : l.jours >= 10 ? `<span class="pastille manque">${l.jours} j</span>`
             : `<span class="meta">${l.jours === 0 ? "aujourd'hui" : "il y a " + l.jours + " j"}</span>`}</td>
+      <td>${l.reg == null ? '<span class="meta">—</span>'
+            : `<b class="${Regularite.niveau(l.reg)}">${l.reg}</b><span class="meta">/100</span>${l.regEnCours != null ? ` <span class="meta">(en cours : ${l.regEnCours})</span>` : ""}`}</td>
       <td>${l.ev ? `${n1(l.ev.actuel)} kg <span class="meta">(départ ${n1(l.ev.depart)})</span>` : '<span class="meta">aucune mesure</span>'}</td>
       <td>${l.ev ? variation(l.ev.total, l.sens) : '<span class="meta">—</span>'}</td>
       <td>${l.ev && l.ev.mois !== null ? variation(l.ev.mois, l.sens) + (l.ev.jours_fenetre !== 28 ? ` <span class="meta">sur ${l.ev.jours_fenetre} j</span>` : "") : '<span class="meta">pas assez de recul</span>'}</td>
@@ -5758,6 +5920,8 @@ const outilClients = {
             `</li>`).join("") +
           `</ul><p class="note" style="margin:10px 0 0">Sa diète est calculée sur les chiffres du calculateur. Ouvre sa fiche et corrige avant d'envoyer un plan.</p></div>`;
       }
+      const irreguliers = lignes.filter(l => l.reg != null && l.reg < 40);
+      if (irreguliers.length) h += `<div class="flag" style="margin-bottom:8px"><b>Régularité faible la semaine dernière :</b> ${irreguliers.map(l => esc(l.nom) + " (" + l.reg + "/100)").join(", ")}. Un message d'encouragement maintenant peut éviter un départ.</div>`;
       if (muets.length) h += `<div class="flag"><b>Sans nouvelles depuis 10 jours ou plus :</b> ${muets.map(l => esc(l.nom)).join(", ")}. C'est le moment de reprendre contact.</div>`;
       if (aFaire.length) h += `<div class="flag" style="margin-top:8px"><b>Il manque quelque chose pour :</b> ${aFaire.map(l => esc(l.nom) + " (" + [!l.intake ? "questionnaire" : null, !l.programme ? "programme" : null, !l.diete ? "diète" : null].filter(Boolean).join(", ") + ")").join(" · ")}.</div>`;
       if (!h) h = `<p class="note" style="margin:0">Tous tes clients ont leur questionnaire, leur programme et leur diète, et se sont manifestés dans les dix derniers jours.</p>`;
@@ -5771,9 +5935,9 @@ const outilClients = {
       <h2>Suivi de mes clients</h2>
       <div id="alertes-clients"></div>
       <div class="scroll" style="margin-top:14px"><table><thead><tr>
-        <th>Client</th><th>Activité</th><th>Poids</th><th>Depuis le début</th><th>4 dernières sem.</th>
+        <th>Client</th><th>Activité</th><th>Régularité</th><th>Poids</th><th>Depuis le début</th><th>4 dernières sem.</th>
         <th>Questionnaire</th><th>Programme</th><th>Diète</th><th></th>
-      </tr></thead><tbody id="tb-clients"><tr><td colspan="9">Chargement…</td></tr></tbody></table></div>
+      </tr></thead><tbody id="tb-clients"><tr><td colspan="10">Chargement…</td></tr></tbody></table></div>
       <p class="note" style="margin-top:12px">« Activité » compte les jours depuis la dernière saisie du client, quelle qu'elle soit. Une variation de poids se lit sur quatre semaines : en dessous, c'est du bruit.</p>
     </section>
 
@@ -5814,10 +5978,15 @@ const outilClients = {
       const box = $("liste-clients");
       try {
         const profils = await Auth.appel("/rest/v1/profils?select=*&order=cree_le.desc");
-        const donnees = await Auth.appel("/rest/v1/donnees?select=user_id,outil,contenu,maj_le");
+        /* les historiques (jusqu'a 24 plans par client) ne servent pas ici :
+           on ne les telecharge pas */
+        const donnees = await Auth.appel("/rest/v1/donnees?select=user_id,outil,contenu,maj_le&outil=not.in.(hist_programme,hist_repas)");
         const parClient = {}, contenus = {};
+        /* « Activite » = ce que le CLIENT a saisi. Ce que le coach ecrit dans
+           sa fiche (programme, diete, calories) ne dit rien de lui. */
+        const ecritParCoach = ["programme", "repas", "calc", "complements"];
         (donnees || []).forEach(d => {
-          if (!parClient[d.user_id] || d.maj_le > parClient[d.user_id]) parClient[d.user_id] = d.maj_le;
+          if (ecritParCoach.indexOf(d.outil) === -1 && (!parClient[d.user_id] || d.maj_le > parClient[d.user_id])) parClient[d.user_id] = d.maj_le;
           (contenus[d.user_id] = contenus[d.user_id] || {})[d.outil] = d.contenu;
         });
         self.tableau(profils, parClient, contenus);
@@ -5894,7 +6063,7 @@ const outilClients = {
         });
       } catch(e){
         box.innerHTML = '<div class="empty">Impossible de charger la liste.</div>';
-        const tb = $("tb-clients"); if (tb) tb.innerHTML = '<tr><td colspan="9">Impossible de charger le suivi.</td></tr>';
+        const tb = $("tb-clients"); if (tb) tb.innerHTML = '<tr><td colspan="10">Impossible de charger le suivi.</td></tr>';
       }
     };
 
