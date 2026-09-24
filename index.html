@@ -330,6 +330,27 @@ footer a{color:var(--accent)}
 .client-l .voir{margin-left:auto;background:transparent;border:1px solid var(--line-strong);border-radius:var(--r-sm);color:var(--ink-2);padding:8px 14px;font-size:13px;cursor:pointer;font-family:inherit;min-height:34px}
 .client-l .voir:hover{color:var(--ink);border-color:var(--accent)}
 
+/* --- regularite : evolution sur cinq semaines, objectifs a cocher --- */
+.reg-evo{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:16px;align-items:end}
+.reg-evo-col{display:flex;flex-direction:column;align-items:center;gap:4px}
+.reg-evo-barre{width:100%;height:56px;background:var(--line);border-radius:6px;position:relative;overflow:hidden}
+.reg-evo-barre i{position:absolute;left:0;right:0;bottom:0;background:var(--ink-3);border-radius:6px;transition:height .5s cubic-bezier(.2,.7,.2,1)}
+.reg-evo-col.ici .reg-evo-barre i{background:var(--accent)}
+.reg-evo-val{font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:600}
+.reg-evo-lbl{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+label.objectif{cursor:pointer;text-transform:none;letter-spacing:0;font-weight:400;color:var(--ink);margin:0}
+.objectif .obj-case{width:18px;height:18px;margin:2px 0 0;accent-color:var(--accent);flex:0 0 auto;cursor:pointer}
+.suivi-sep{margin:28px 0 14px}
+
+/* --- programme : carte de tete et cartes de seance --- */
+.prog-tete-haut{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start;justify-content:space-between}
+.prog-tete-haut > div:first-child{flex:1;min-width:200px}
+.prog-compteur{min-width:150px}
+.seance-c-tete{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:14px}
+.seance-c-tete h2{margin:0;flex:1}
+.seance-c.faite{border-color:var(--good-soft)}
+.seance-c.faite .ex-lecture{opacity:.85}
+
 /* --- acces rapides de l'accueil --- */
 .acces-l{display:flex;flex-direction:column;gap:8px}
 .acces{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--sunken);border:1px solid var(--line);border-radius:var(--r);color:var(--ink);text-decoration:none;transition:border-color var(--vite),background var(--vite)}
@@ -555,8 +576,13 @@ ul.courses-l li.pris .coche{text-decoration:line-through}
 #tb-clients td{vertical-align:middle}
 #tb-clients .voir{font:inherit;font-size:12px;padding:5px 11px;min-height:30px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-2);border-radius:var(--r-sm);cursor:pointer;white-space:nowrap}
 #tb-clients .voir:hover{border-color:var(--accent);color:var(--accent)}
-.repas-c.mange{opacity:.72}
-.repas-c.mange h2{text-decoration:line-through;text-decoration-thickness:1px}
+.repas-c.mange{border-color:var(--good-soft);box-shadow:inset 3px 0 0 var(--good)}
+.repas-c .repas-tete .respect{font:inherit;font-size:12px;font-weight:600;padding:6px 12px;min-height:32px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-2);border-radius:999px;cursor:pointer;transition:background var(--vite),color var(--vite),border-color var(--vite)}
+.repas-c .repas-tete .respect:hover{border-color:var(--good);color:var(--good)}
+.repas-c .repas-tete .respect.on{background:var(--good-soft);border-color:transparent;color:var(--good)}
+.repas-c details.prep{border:0;margin:0;padding:0}
+.repas-c details.prep summary{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin:0 0 8px}
+.repas-c details.prep[open] summary{color:var(--ink-2)}
 /* .jauge : meme barre que .bar (voir [B]) */
 .g-edit{display:inline-flex;align-items:center;gap:6px;color:var(--ink-3);font-size:13px}
 .g-edit input{width:78px;padding:5px 7px;text-align:right;font-family:"IBM Plex Mono",ui-monospace,monospace}
@@ -782,7 +808,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-09-25 · 34",
+    version: "2026-09-25 · 35",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -1631,7 +1657,7 @@ I18N.en = {
 "{a} repas cochés sur {b}": "{a} meals checked out of {b}",
 " : régularité {n}/100 cette semaine.": " — consistency {n}/100 this week.",
 "Une nouvelle semaine commence : à toi de jouer.": "A new week starts: it's your move.",
-"Régularité": "Consistency", "Poids": "Weight", "Entraînement": "Training", "Objectifs": "Goals",
+"Régularité": "Consistency", "Entraînement": "Training", "Objectifs": "Goals",
 "semaine dernière : {n}": "last week: {n}", "semaine {n}": "week {n}", "depuis la mesure d'avant": "since the previous entry",
 "aucune mesure": "no entry yet", "séances notées": "workouts logged", "repas respectés": "meals on plan", "ce mois-ci": "this month",
 "Séance {n}": "Workout {n}", "Toutes tes séances de la semaine sont notées": "All your workouts this week are logged",
@@ -1643,7 +1669,25 @@ I18N.en = {
 "La régularité mesure ce que tu fais — séances, repas, mesure — pas ce que dit la balance.": "Consistency measures what you do — workouts, meals, weekly entry — not what the scale says.",
 "Tes objectifs du mois": "Your goals this month", "Atteint": "Reached", "En cours": "In progress", "Cocher mes objectifs": "Tick my goals",
 "Mon bilan": "My review", "Tes quatre dernières semaines : régularité, poids, ce qui a bougé et la progression de tes charges.": "Your last four weeks: consistency, weight, what changed and how your loads progressed.",
-"Voir mon bilan du mois": "See my monthly review"
+"Voir mon bilan du mois": "See my monthly review",
+/* v35 — programme, nutrition, progression, suivi */
+"Mon suivi": "My follow-up", "Son suivi": "Their follow-up", "Suivi": "Follow-up", "Ton suivi": "Your follow-up",
+"Comment se passe ton accompagnement : ta régularité, tes objectifs du mois et ton bilan des quatre dernières semaines.": "How your coaching is going: your consistency, your goals for the month and your review of the last four weeks.",
+"Ta régularité": "Your consistency", "Training": "Training", "dans Ma progression": "in My progress", "en cours": "current",
+"Régularité des cinq dernières semaines": "Consistency over the last five weeks",
+"Un indicateur de motivation, pas une mesure médicale : il compte ce que tu fais — séances, repas, mesure — pas ce que dit la balance.": "A motivation indicator, not a medical measure: it counts what you do — workouts, meals, weekly entry — not what the scale says.",
+"Ton coach écrit tes trois objectifs après votre call. Ils apparaîtront ici.": "Your coach writes your three goals after your call. They will show up here.",
+"Coche un objectif quand tu l'as atteint : ton coach le voit.": "Tick a goal once you've reached it: your coach sees it.",
+"Ton bilan du mois": "Your monthly review",
+"Cycle {n}": "Cycle {n}", "Semaine {a} sur {b}": "Week {a} of {b}", "Semaine {a} — cycle terminé": "Week {a} — cycle complete",
+"Ce cycle est terminé : ton coach prépare la suite.": "This cycle is complete: your coach is preparing what comes next.",
+"{n} séances par semaine. Note chaque séance : c'est ce qui fait avancer ta régularité.": "{n} workouts a week. Log every workout: that's what moves your consistency.",
+"notée le {d}": "logged on {d}", "à faire": "to do",
+"{a} / {b} repas respectés": "{a} / {b} meals on plan", "aujourd'hui": "today", "Respecté": "On plan", "Non respecté": "Off plan",
+"Ta progression": "Your progress",
+"Ton poids, tes mensurations et ta composition corporelle, semaine après semaine. Une mesure par semaine, toujours dans les mêmes conditions : c'est la tendance qui compte.": "Your weight, measurements and body composition, week after week. One entry a week, always in the same conditions: the trend is what matters.",
+"Ajouter ma mesure": "Add my entry", "Poids de départ": "Starting weight", "à renseigner": "to fill in", "le {d}": "on {d}", "point de départ": "starting point", "première mesure": "first entry",
+"Point de départ et réglages": "Starting point and settings"
 };
 I18N.motifs = [["^(\\d+) articles? sur (\\d+) dans le panier\\.$", "$1 of $2 items in your cart."], ["^(\\d+) étapes? validées? sur (\\d+) — (\\d+) %$", "$1 of $2 steps completed — $3%"], ["^([\\d\\s\\u202f\\u00a0.,−-]+?) kcal$", "$1 Cal"], ["^([\\d\\s\\u202f\\u00a0.,−-]+?) kcal · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de protéines par dose$", "$1 Cal · $2 g protein per serving"], ["^([\\d\\s\\u202f\\u00a0.,−-]+?) kcal consommées sur ([\\d\\s\\u202f\\u00a0.,−-]+?) — il te reste$", "$1 Cal eaten out of $2 — you have"], ["^Objectif visé : ([\\d\\s\\u202f\\u00a0.,−-]+?) kcal · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de protéines · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de glucides · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de lipides\\.$", "Target: $1 Cal · $2 g protein · $3 g carbs · $4 g fat."], ["^Coche les jours que tu veux acheter : la liste se recalcule\\. (\\d+) jours? sélectionnés?\\.$", "Check the days you want to shop for: the list updates automatically. $1 day(s) selected."], ["^Programme mis à jour le (\\d{1,2})/(\\d{1,2})/(\\d{4})$", "Program updated $2/$1/$3"], ["^Repas mis à jour le (\\d{1,2})/(\\d{1,2})/(\\d{4})$", "Meals updated $2/$1/$3"], ["^S(\\d+)$", "W$1"], ["^Supprimer la semaine (\\d+)$", "Delete week $1"], ["^dernière : semaine (\\d+)$", "latest: week $1"], ["^semaine (\\d+)$", "week $1"], ["^Semaine (\\d+) enregistrée\\.$", "Week $1 saved."], ["^(\\d+)/jambe$", "$1/leg"], ["^(\\d+)-(\\d+)/jambe$", "$1-$2/leg"], ["^(\\d+)/bras$", "$1/arm"], ["^(\\d+)-(\\d+)/bras$", "$1-$2/arm"], ["^(\\d+)-(\\d+) s/côté$", "$1-$2 s/side"], ["^protéines au-dessus de ([\\d\\s\\u202f\\u00a0.,−-]+?) g$", "protein over by $1 g"], ["^protéines en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) g$", "protein under by $1 g"], ["^lipides au-dessus de ([\\d\\s\\u202f\\u00a0.,−-]+?) g — sur ce régime, les sources de protéines apportent beaucoup de gras$", "fat over by $1 g — on this diet, protein sources bring a lot of fat"], ["^lipides en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) g — sur ce régime, les sources de protéines apportent beaucoup de gras$", "fat under by $1 g"], ["^calories au-dessus de ([\\d\\s\\u202f\\u00a0.,−-]+?) kcal$", "calories over by $1 Cal"], ["^calories en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) kcal$", "calories under by $1 Cal"], ["^glucides en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) g — ce régime offre peu de sources de glucides dans le catalogue$", "carbs under by $1 g — this diet has few carb sources in the catalog"], ["^(\\d+(?:-\\d+)?(?: s)?)/jambe$", "$1/leg"], ["^(\\d+(?:-\\d+)?(?: s)?)/bras$", "$1/arm"], ["^(\\d+(?:-\\d+)?(?: s)?)/côté$", "$1/side"], ["^(\\d+)/sens$", "$1/direction"], ["^(\\d+)/sens/cheville$", "$1/direction/ankle"], ["^(\\d+) souffles$", "$1 breaths"], ["^(\\d+) respirations$", "$1 breaths"], ["^(\\d+(?:-\\d+)?) pas$", "$1 steps"], ["^(\\d+) dans chaque sens$", "$1 each direction"], ["^(\\d+) par côté$", "$1 per side"], ["^(\\d+) par jambe$", "$1 per leg"], ["^(\\d+) par cheville$", "$1 per ankle"], ["^(\\d+) s par (côté)$", "$1 s per side"], ["^(\\d+) s par jambe$", "$1 s per leg"], ["^(\\d+) s \\+ (\\d+) squats$", "$1 s + $2 squats"]].map(([p, r]) => [new RegExp(p), r]);
 
@@ -3024,36 +3068,30 @@ const outilMensurations = {
   nom: "Ma progression",
   principal: true,
   icone: "📏",
-  titre: "Suivi des mensurations",
-  accroche: "Ton poids et tes tours de taille semaine après semaine. Les courbes se tracent toutes seules à partir de ce que tu saisis.",
+  titre: "Ta progression",
+  accroche: "Ton poids, tes mensurations et ta composition corporelle, semaine après semaine. Une mesure par semaine, toujours dans les mêmes conditions : c'est la tendance qui compte.",
   couleurs: ["var(--s1)","var(--s2)","var(--s3)","var(--s4)"],
 
+  /* v35 — la page repond a « est-ce que je progresse ? » : d'abord ou tu en
+     es et la courbe de poids, puis les mensurations, puis la composition
+     corporelle. La saisie se replie derriere « Ajouter ma mesure », les
+     reglages (point de depart, noms des zones) passent en bas. Tous les
+     identifiants sont ceux d'avant : la logique n'a pas bouge. */
   html(){
     return `
     <section class="panel">
-      <h2>Ton point de départ</h2>
-      <div class="grid g2">
-        <div><label for="dstart">Date de départ</label><input id="dstart" type="date"></div>
-        <div><label for="pstart">Poids de départ (kg)</label><input id="pstart" type="number" step="0.1" min="30" max="300" placeholder="80"></div>
-      </div>
-      <details>
-        <summary>Renommer les zones que tu mesures</summary>
-        <div class="grid g2" id="zone-edit" style="margin-top:14px"></div>
-        <p class="note" style="margin-top:10px">Mesure toujours au même endroit, le matin, à jeun, sans tirer sur le mètre. La régularité compte plus que la précision absolue.</p>
-      </details>
-    </section>
-
-    <section class="panel">
-      <h2>Où tu en es</h2>
+      <div class="seance-c-tete"><h2>${esc(trad("Poids"))}</h2>
+        ${Store.idConsulte ? "" : `<button type="button" class="btn petit" id="mens-ajouter">+ ${esc(trad("Ajouter ma mesure"))}</button>`}</div>
       <div class="tiles">
         <div class="tile"><div class="t-lbl">Poids actuel</div><div class="t-val readout" id="k-poids">—</div><div class="t-sub" id="k-poids-d">Pas encore de mesure</div></div>
+        <div class="tile"><div class="t-lbl">Poids de départ</div><div class="t-val readout" id="k-depart">—</div><div class="t-sub" id="k-depart-d">à renseigner</div></div>
         <div class="tile"><div class="t-lbl">Variation de poids</div><div class="t-val readout" id="k-delta">—</div><div class="t-sub">depuis le départ</div></div>
-        <div class="tile"><div class="t-lbl">Centimètres perdus</div><div class="t-val readout" id="k-cm">—</div><div class="t-sub">toutes zones cumulées</div></div>
         <div class="tile"><div class="t-lbl">Semaines suivies</div><div class="t-val readout" id="k-sem">0</div><div class="t-sub" id="k-sem-sub">Commence cette semaine</div></div>
       </div>
+      <div class="chartbox" style="margin-top:16px"><svg class="chart" id="chart-poids" role="img" aria-label="Évolution du poids semaine par semaine"></svg><div class="tip" id="tip-poids"></div></div>
     </section>
 
-    <section class="panel">
+    <section class="panel" id="mens-saisie"${Store.idConsulte ? " hidden" : ""}>
       <h2>Nouvelle mesure</h2>
       <div class="grid g2">
         <div><label for="e-sem">Semaine</label><input id="e-sem" type="number" min="0" step="1"></div>
@@ -3067,16 +3105,14 @@ const outilMensurations = {
         <div class="grid g3" id="entry-compo" style="margin-top:14px"></div>
         <p class="note" style="margin-top:10px">Pèse-toi toujours dans les mêmes conditions : le matin, à jeun, après être passé(e) aux toilettes et avant de boire. Ces balances ne sont pas précises au chiffre près : c'est l'évolution qui compte. Et compare-toi seulement à toi-même : deux marques de balance ne donnent pas les mêmes chiffres.</p>
       </details>
-      <div class="actions"><button class="btn" id="add">Enregistrer la semaine</button><span class="msg" id="msg"></span></div>
+      <div class="actions"><button class="btn" id="add">Enregistrer la semaine</button><button class="btn ghost" type="button" id="mens-fermer">Fermer</button><span class="msg" id="msg"></span></div>
     </section>
 
     <section class="panel">
-      <h2>Courbe de poids</h2>
-      <div class="chartbox"><svg class="chart" id="chart-poids" role="img" aria-label="Évolution du poids semaine par semaine"></svg><div class="tip" id="tip-poids"></div></div>
-    </section>
-
-    <section class="panel">
-      <h2>Courbes de mensurations</h2>
+      <h2>Mensurations</h2>
+      <div class="tiles" style="margin-bottom:16px">
+        <div class="tile"><div class="t-lbl">Centimètres perdus</div><div class="t-val readout" id="k-cm">—</div><div class="t-sub">toutes zones cumulées</div></div>
+      </div>
       <div class="chips" id="chips"></div>
       <div class="chartbox"><svg class="chart" id="chart-mens" role="img" aria-label="Évolution des mensurations semaine par semaine"></svg><div class="tip" id="tip-mens"></div></div>
       <div class="legend" id="legend"></div>
@@ -3094,6 +3130,19 @@ const outilMensurations = {
     <section class="panel">
       <h2>Toutes tes mesures</h2>
       <div class="scroll"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+    </section>
+
+    <section class="panel">
+      <details>
+        <summary>${esc(trad("Point de départ et réglages"))}</summary>
+        <div class="grid g2" style="margin-top:14px">
+          <div><label for="dstart">Date de départ</label><input id="dstart" type="date"></div>
+          <div><label for="pstart">Poids de départ (kg)</label><input id="pstart" type="number" step="0.1" min="30" max="300" placeholder="80"></div>
+        </div>
+        <h3 style="margin-top:18px">Renommer les zones que tu mesures</h3>
+        <div class="grid g2" id="zone-edit"></div>
+        <p class="note" style="margin-top:10px">Mesure toujours au même endroit, le matin, à jeun, sans tirer sur le mètre. La régularité compte plus que la précision absolue.</p>
+      </details>
     </section>`;
   },
 
@@ -3183,6 +3232,9 @@ const outilMensurations = {
       const w = serieDuPoids(), dernier = w[w.length-1];
       $("k-poids").textContent = dernier ? n1(dernier.y) : "—";
       $("k-poids-d").textContent = dernier ? ("semaine "+dernier.x) : "Pas encore de mesure";
+      const kd = $("k-depart"), kdd = $("k-depart-d");
+      if (kd){ kd.textContent = (D.pstart != null && isFinite(D.pstart)) ? n1(D.pstart) : (w.length ? n1(w[0].y) : "—"); }
+      if (kdd){ kdd.textContent = D.dstart ? trad("le {d}", { d: dateFr(D.dstart) }) : (D.pstart != null ? trad("point de départ") : trad("première mesure")); }
       const d = $("k-delta");
       if (w.length > 1){
         const dd = w[w.length-1].y - w[0].y;
@@ -3220,7 +3272,7 @@ const outilMensurations = {
           ? `Aucune mesure enregistrée pour le moment.`
           : `Aucune mesure enregistrée pour le moment.<br>Commence par ton poids du jour : c'est ta semaine 1, et la base de ta courbe.<div class="cta-vide"><button type="button" class="btn" id="mens-go">Ajouter ma première mesure</button></div>`;
         const go = $("mens-go");
-        if (go) go.addEventListener("click", () => { const e = $("e-poids"); if (e){ e.scrollIntoView({ behavior:"smooth", block:"center" }); e.focus(); } });
+        if (go) go.addEventListener("click", () => { const sa = $("mens-saisie"); if (sa) sa.hidden = false; const e = $("e-poids"); if (e){ e.scrollIntoView({ behavior:"smooth", block:"center" }); e.focus(); } });
         return;
       }
       { const bloc = tb.closest(".scroll"); if (bloc) bloc.hidden = false; const v = $("mens-vide"); if (v) v.remove(); }
@@ -3316,6 +3368,11 @@ const outilMensurations = {
     construireZones(); construireSaisie(); construireChips(); dessinerTable(); viderFormulaire(); tout();
     /* qui a deja saisi des mesures de balance les retrouve deplies */
     if (compoPresentes().length && $("compo-saisie")) $("compo-saisie").open = true;
+    /* la saisie est repliee tant qu'il y a des mesures ; ouverte a la premiere fois */
+    const saisie = $("mens-saisie"), ouvrirSaisie = () => { if (!saisie) return; saisie.hidden = false; saisie.scrollIntoView({ behavior:"smooth", block:"start" }); const e = $("e-poids"); if (e) e.focus(); };
+    if (saisie && !Store.idConsulte) saisie.hidden = D.mesures.length > 0;
+    const ba = $("mens-ajouter"); if (ba) ba.addEventListener("click", ouvrirSaisie);
+    const bf = $("mens-fermer"); if (bf) bf.addEventListener("click", () => { if (saisie) saisie.hidden = true; });
 
     let t; const redim = () => { clearTimeout(t); t = setTimeout(tout, 150); };
     window.addEventListener("resize", redim);
@@ -4226,31 +4283,44 @@ const Regularite = {
 
   /* Cote client : le panneau « Ta semaine » en haut de « Mon programme ».
      Renvoie une fonction pour le redessiner (apres une seance notee). */
-  async monterClient(idZone, P, J){
+  /* pre : donnees deja lues (l'outil Mon suivi les charge en une requete) */
+  async monterClient(idZone, P, J, pre){
     const z = $(idZone); if (!z) return () => {};
-    const [R, S, M, OF] = await Promise.all([
-      Store.lire("repas", {}), Store.lire("repas_suivi", {}), Store.lire("mens", {}),
-      Store.lire("objectifs_faits", { mois: "", faits: [] })
-    ]);
+    const [R, S, M, OF] = pre
+      ? [pre.repas || {}, pre.repas_suivi || {}, pre.mens || {}, Object.assign({ mois: "", faits: [] }, pre.objectifs_faits || {})]
+      : await Promise.all([
+          Store.lire("repas", {}), Store.lire("repas_suivi", {}), Store.lire("mens", {}),
+          Store.lire("objectifs_faits", { mois: "", faits: [] })
+        ]);
     if (!Array.isArray(OF.faits)) OF.faits = [];
     const dessiner = () => {
-      const r = this.calculer({ programme: P, journal: J, repas: R, repas_suivi: S, mens: M }, 0);
+      const c = { programme: P, journal: J, repas: R, repas_suivi: S, mens: M };
+      const r = this.calculer(c, 0);
       const p = r.parts;
+      /* v35 — les quatre semaines precedentes, pour voir la tendance */
+      const evo = [-4, -3, -2, -1].map(k => this.calculer(c, k).score).concat([r.score]);
       const obj = (P.objectifs && (P.objectifs.liste || []).some(Boolean)) ? P.objectifs : null;
       if (obj && OF.mois !== obj.mois){ OF.mois = obj.mois; OF.faits = []; }
-      z.innerHTML = `<section class="panel"><h2>Ta semaine</h2>
+      const nbObj = obj ? obj.liste.filter(Boolean).length : 0, nbFaits = obj ? obj.liste.filter((t, i) => t && OF.faits[i]).length : 0;
+      z.innerHTML = `<section class="panel"><h2>${esc(trad("Ta régularité"))}</h2>
         <div class="tiles">
           <div class="tile"><div class="t-lbl">Score de régularité</div><div class="t-val readout ${this.niveau(r.score)}">${r.score == null ? "—" : r.score}<small>/100</small></div><div class="t-sub">remis à zéro chaque lundi</div></div>
-          ${p.seances ? `<div class="tile"><div class="t-lbl">Séances notées</div><div class="t-val readout">${p.seances.faites}/${p.seances.cible}</div><div class="t-sub">cette semaine</div></div>` : ""}
-          ${p.repas ? `<div class="tile"><div class="t-lbl">Repas cochés</div><div class="t-val readout">${p.repas.coches}/${p.repas.prevus}</div><div class="t-sub">cette semaine</div></div>` : ""}
-          <div class="tile"><div class="t-lbl">Mesure de la semaine</div><div class="t-val readout ${p.mesure.faite ? "pos" : ""}">${p.mesure.faite ? "✓" : "—"}</div><div class="t-sub">${p.mesure.faite ? "c'est fait" : "dans Mensurations"}</div></div>
+          ${p.seances ? `<div class="tile"><div class="t-lbl">Training</div><div class="t-val readout${p.seances.faites >= p.seances.cible ? " pos" : ""}">${p.seances.faites}<small>/ ${p.seances.cible}</small></div><div class="t-sub">${esc(trad("séances notées"))}</div></div>` : ""}
+          ${p.repas ? `<div class="tile"><div class="t-lbl">Nutrition</div><div class="t-val readout${p.repas.ratio >= 0.9 ? " pos" : ""}">${p.repas.coches}<small>/ ${p.repas.prevus}</small></div><div class="t-sub">${esc(trad("repas respectés"))}</div></div>` : ""}
+          <div class="tile"><div class="t-lbl">Mesure de la semaine</div><div class="t-val readout ${p.mesure.faite ? "pos" : ""}">${p.mesure.faite ? "✓" : "—"}</div><div class="t-sub">${p.mesure.faite ? "c'est fait" : esc(trad("dans Ma progression"))}</div></div>
         </div>
-        <p class="note" style="margin:12px 0 0">Ton score mesure ta régularité, pas ton poids : tes séances, tes repas cochés et ta mesure de la semaine.</p>
-        ${obj ? `<h3 style="margin-top:20px">Tes 3 objectifs du mois</h3><ul class="obj-l">${obj.liste.map((t, i) => t ? `<li><label class="coche"><input type="checkbox" data-obj="${i}"${OF.faits[i] ? " checked" : ""}> <span data-notr>${esc(t)}</span></label></li>` : "").join("")}</ul>` : ""}
+        <div class="reg-evo" aria-label="${esc(trad("Régularité des cinq dernières semaines"))}">${evo.map((v, i) => `<div class="reg-evo-col${i === evo.length - 1 ? " ici" : ""}"><div class="reg-evo-barre"><i style="height:${v == null ? 0 : Math.max(4, v)}%"></i></div><span class="reg-evo-val ${this.niveau(v)}">${v == null ? "—" : v}</span><span class="reg-evo-lbl">${i === evo.length - 1 ? esc(trad("en cours")) : "S−" + (evo.length - 1 - i)}</span></div>`).join("")}</div>
+        <p class="note" style="margin:12px 0 0">${esc(trad("Un indicateur de motivation, pas une mesure médicale : il compte ce que tu fais — séances, repas, mesure — pas ce que dit la balance."))}</p>
+      </section>
+      <section class="panel"><div class="seance-c-tete"><h2>${esc(trad("Tes objectifs du mois"))}</h2>${obj ? `<span class="pastille${nbFaits === nbObj ? " ok" : ""}">${nbFaits} / ${nbObj}</span>` : ""}</div>
+        ${obj ? obj.liste.map((t, i) => t ? `<label class="objectif${OF.faits[i] ? " atteint" : ""}"><input type="checkbox" class="obj-case" data-obj="${i}"${OF.faits[i] ? " checked" : ""}><span class="texte" data-notr>${esc(t)}</span><span class="pastille ${OF.faits[i] ? "ok" : ""}">${OF.faits[i] ? esc(trad("Atteint")) : esc(trad("En cours"))}</span></label>` : "").join("")
+             : `<div class="empty">${esc(trad("Ton coach écrit tes trois objectifs après votre call. Ils apparaîtront ici."))}</div>`}
+        ${obj ? `<p class="note" style="margin:12px 0 0">${esc(trad("Coche un objectif quand tu l'as atteint : ton coach le voit."))}</p>` : ""}
       </section>`;
       $$("[data-obj]", z).forEach(c => c.addEventListener("change", () => {
         OF.faits[+c.dataset.obj] = c.checked;
         Store.ecrire("objectifs_faits", OF);
+        dessiner();
       }));
     };
     dessiner();
@@ -4336,15 +4406,54 @@ const outilProgramme = {
   },
 
   /* ---------- vue client : lecture ---------- */
-  vueLecture(P){
+  /* v35 — ou en est le programme : cycle (pose par le coach) et semaine en
+     cours, comptee depuis la date d'envoi (P.debut, lundi a dimanche). Un
+     programme sans date ne dit rien : on n'invente pas. */
+  avancement(P){
+    const duree = Math.max(1, Math.min(52, parseInt(P.duree_semaines, 10) || 4));
+    const cycle = Math.max(1, parseInt(P.cycle, 10) || 1);
+    const debut = /^\d{4}-\d{2}-\d{2}/.test(P.debut || "") ? new Date(P.debut + "T12:00:00") : null;
+    let semaine = null;
+    if (debut){
+      const l = new Date(debut); l.setDate(l.getDate() - ((l.getDay() + 6) % 7));
+      const auj = new Date(); auj.setHours(12, 0, 0, 0);
+      semaine = Math.floor((auj - l) / (7 * 86400000)) + 1;
+      if (semaine < 1) semaine = 1;
+    }
+    return { cycle, duree, semaine, depassee: semaine != null && semaine > duree, pct: semaine == null ? 0 : Math.min(100, Math.round(Math.min(semaine, duree) / duree * 100)) };
+  },
+
+  /* seances notees cette semaine (lundi -> aujourd'hui), par index de seance */
+  faitesCetteSemaine(J){
+    const b = Regularite.bornes(0), out = {};
+    (J && J.seances || []).forEach(x => { if (x.date >= b.debut && x.date <= b.fin) out[x.si] = x.date; });
+    return out;
+  },
+
+  vueLecture(P, J){
     if (!P.seances || !P.seances.length){
       return `<section class="panel"><div class="empty">Ton coach n'a pas encore déposé ton programme. Tu recevras un message quand il sera prêt.${ctaVide(true)}</div></section>`;
     }
-    let h = "";
-    if (P.note) h += `<section class="panel"><h2>Mot du coach</h2><p style="margin:0">${esc(P.note)}</p></section>`;
+    const av = this.avancement(P), faites = this.faitesCetteSemaine(J);
+    const seances = P.seances.filter(sc => (sc.exercices || []).some(e => e.nom));
+    const nbFaites = seances.reduce((n, sc) => n + (faites[P.seances.indexOf(sc)] != null ? 1 : 0), 0);
+    let h = `<section class="panel prog-tete">
+      <div class="prog-tete-haut">
+        <div>
+          <span class="eyebrow">${esc(trad("Cycle {n}", { n: String(av.cycle).padStart(2, "0") }))}${av.semaine != null ? ` · ${esc(trad(av.depassee ? "Semaine {a} — cycle terminé" : "Semaine {a} sur {b}", { a: Math.min(av.semaine, av.duree), b: av.duree }))}` : ""}</span>
+          <h2 style="margin:4px 0 0">${esc(P.nom || trad("Mon programme"))}</h2>
+        </div>
+        <div class="tile prog-compteur"><div class="t-lbl">${esc(trad("Cette semaine"))}</div><div class="t-val readout${seances.length && nbFaites >= seances.length ? " pos" : ""}" id="prog-nb">${nbFaites}<small>/ ${seances.length}</small></div><div class="t-sub">${esc(trad("séances notées"))}</div></div>
+      </div>
+      ${av.semaine != null ? `<div class="bar" style="margin-top:14px"><i style="width:${av.pct}%"></i></div>
+      <p class="note" style="margin:8px 0 0">${esc(av.depassee ? trad("Ce cycle est terminé : ton coach prépare la suite.") : trad("{n} séances par semaine. Note chaque séance : c'est ce qui fait avancer ta régularité.", { n: seances.length }))}</p>` : ""}
+      ${P.note ? `<div class="flag info" style="margin-top:14px"><b>${esc(trad("Mot du coach"))}</b><br>${esc(P.note)}</div>` : ""}
+    </section>`;
     P.seances.forEach((sc, si) => {
-      h += `<section class="panel"><h2>${esc(sc.nom || "Séance")}</h2>`;
-      if (sc.note) h += `<p class="note" style="margin:-8px 0 14px">${esc(sc.note)}</p>`;
+      const faite = faites[si];
+      h += `<section class="panel seance-c${faite ? " faite" : ""}" id="seance-${si}">
+        <div class="seance-c-tete"><h2>${esc(sc.nom || "Séance")}</h2>${faite ? `<span class="pastille ok">✓ ${esc(trad("notée le {d}", { d: dateFr(faite) }))}</span>` : `<span class="pastille">${esc(trad("à faire"))}</span>`}</div>`;
+      if (sc.note) h += `<p class="note" style="margin:-6px 0 14px">${esc(sc.note)}</p>`;
       (sc.exercices || []).forEach(e => {
         if (!e.nom) return;
         h += `<div class="ex-lecture">
@@ -4552,6 +4661,10 @@ const outilProgramme = {
       <h2>Réglages du programme</h2>
       <div class="grid g2">
         <div><label for="pg-nom">Nom du programme</label><input id="pg-nom" type="text" value="${esc(P.nom || "")}" placeholder="Ex. Bloc 1 — 4 semaines"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div><label for="pg-cycle">Cycle n°</label><input id="pg-cycle" type="number" min="1" max="99" step="1" value="${esc(P.cycle || 1)}"></div>
+          <div><label for="pg-duree">Durée (semaines)</label><input id="pg-duree" type="number" min="1" max="52" step="1" value="${esc(P.duree_semaines || 4)}"></div>
+        </div>
         <div><label for="pg-biblio">Charger depuis ma bibliothèque</label><select id="pg-biblio"><option value="">— choisis un entraînement —</option></select></div>
         <div><label for="pg-lieu">Où s'entraîne-t-il ?</label><select id="pg-lieu">
           <option value="">Tous les lieux</option>
@@ -4680,7 +4793,7 @@ const outilProgramme = {
   },
 
   html(){
-    return `<div id="prog-semaine"></div><div id="prog-vue"><section class="panel"><div class="empty">Chargement…</div></section></div><div id="prog-obj"></div><div id="prog-jr"></div><div id="prog-hist"></div>`;
+    return `<div id="prog-vue"><section class="panel"><div class="empty">Chargement…</div></section></div><div id="prog-obj"></div><div id="prog-jr"></div><div id="prog-hist"></div>`;
   },
 
   async init(){
@@ -4704,11 +4817,13 @@ const outilProgramme = {
     const sauver = () => Store.ecrire(self.cle, P);
 
     if (!edition){
-      zone.innerHTML = self.vueLecture(P); self.brancherFiches(zone);
       const J = await Store.lire(Journal.cle, Journal.vide());
       if (!Array.isArray(J.seances)) J.seances = [];
-      const semaine = await Regularite.monterClient("prog-semaine", P, J);
-      await Journal.brancher(zone, P, J, semaine);
+      const dessiner = () => { zone.innerHTML = self.vueLecture(P, J); self.brancherFiches(zone); };
+      dessiner();
+      /* apres une seance notee : on redessine (badge « notée », compteur) et on rebranche le journal */
+      const apres = () => { dessiner(); Journal.brancher(zone, P, J, apres); };
+      await Journal.brancher(zone, P, J, apres);
       Historique.monter("programme", "prog-hist");
       return;
     }
@@ -4743,9 +4858,12 @@ const outilProgramme = {
     const brancher = () => {
       self.brancherEditeur(P, zone, sauver, redessiner);
 
-      const n = $("pg-nom"), no = $("pg-note");
+      const n = $("pg-nom"), no = $("pg-note"), cy = $("pg-cycle"), du = $("pg-duree");
       if (n)  n.addEventListener("input", () => { P.nom = n.value; sauver(); });
       if (no) no.addEventListener("input", () => { P.note = no.value; sauver(); });
+      /* le cycle et la duree : ce qui fait « Cycle 01 · Semaine 2 sur 4 » chez le client */
+      if (cy) cy.addEventListener("input", () => { const v = parseInt(cy.value, 10); if (v >= 1) P.cycle = v; sauver(); });
+      if (du) du.addEventListener("input", () => { const v = parseInt(du.value, 10); if (v >= 1) P.duree_semaines = v; sauver(); });
 
       const auto = $("pg-auto");
       if (auto) auto.addEventListener("click", async () => {
@@ -4780,6 +4898,7 @@ const outilProgramme = {
         const exos = (P.seances || []).reduce((n, sc) => n + (sc.exercices || []).filter(e => e.nom).length, 0);
         if (!exos){ flash("pg-msg", "Ce programme est vide : ajoute au moins une séance avec un exercice avant de l'envoyer."); return; }
         P.maj = new Date().toLocaleDateString("fr-FR");
+        if (!P.debut) P.debut = aujourdhui();     // la semaine 1 commence a l'envoi
         Store.ecrire(self.cle, P);
         flash("pg-msg", "Programme envoyé. Ton client le voit dès sa prochaine ouverture.");
       });
@@ -5379,11 +5498,16 @@ const outilNutrition = {
     const reste = Math.max(0, t.kcal - mange.kcal);
     const pct = t.kcal ? Math.min(100, Math.round(mange.kcal / t.kcal * 100)) : 0;
 
+    /* v35 — repas respectes du jour affiche, et « aujourd'hui » nomme */
+    const nbRepas = (jour.repas || []).length;
+    const nbCoches = (jour.repas || []).filter((x, i) => suivi.mange && suivi.mange[actif + ":" + i]).length;
+    const estAujourdhui = R.jours.length && actif === Math.min(R.jours.length - 1, (new Date().getDay() + 6) % 7);
     let h = "";
-    if (R.note) h += `<section class="panel"><h2>Mot du coach</h2><p style="margin:0">${esc(R.note)}</p></section>`;
+    if (R.note) h += `<section class="panel"><div class="flag info" style="margin:0"><b>${esc(trad("Mot du coach"))}</b><br>${esc(R.note)}</div></section>`;
     h += this.ongletsJours(R, actif, "jour");
     h += `<section class="panel">
-      <h2>${esc(jour.nom)}</h2>
+      <div class="seance-c-tete"><h2>${esc(jour.nom)}${estAujourdhui ? ` <span class="pastille accent">${esc(trad("aujourd'hui"))}</span>` : ""}</h2>
+        <span class="pastille${nbRepas && nbCoches >= nbRepas ? " ok" : ""}">${esc(trad("{a} / {b} repas respectés", { a: nbCoches, b: nbRepas }))}</span></div>
       <div class="jauge"><i style="width:${pct}%"></i></div>
       <p class="note" style="margin:8px 0 18px">${fmt(mange.kcal)} kcal consommées sur ${fmt(t.kcal)} — il te reste <b>${fmt(reste)} kcal</b> aujourd'hui.</p>
       <div class="grid g4 bilan-jour">
@@ -5414,7 +5538,7 @@ const outilNutrition = {
         ${edition ? `<span class="actions-b">
           ${x.recette_id ? `<button data-autre="${cle}">Autre proposition</button>` : ""}
           <button data-retirer="${cle}">Retirer</button></span>`
-        : `<span class="actions-b">${x.recette_id ? `<button type="button" data-remplacer="${cle}">Remplacer</button>` : ""}<label class="coche"><input type="checkbox" data-mange="${cle}"${coche ? " checked" : ""}> mangé</label></span>`}
+        : `<span class="actions-b">${x.recette_id ? `<button type="button" data-remplacer="${cle}">Remplacer</button>` : ""}<button type="button" class="respect${coche ? " on" : ""}" data-mange="${cle}" aria-pressed="${coche ? "true" : "false"}">${coche ? "✓ " + esc(trad("Respecté")) : esc(trad("Non respecté"))}</button></span>`}
       </div>
       <div class="repas-macros">
         <span><b>${fmt(m.kcal)}</b> kcal</span>
@@ -5433,8 +5557,9 @@ const outilNutrition = {
           ${edition ? `<div class="actions" style="margin-top:10px"><button class="btn ghost" data-ajout-i="${cle}">+ Ajouter un aliment</button></div>` : ""}
         </div>
         <div>
-          <h3>Préparation</h3>
+          ${edition ? `<h3>Préparation</h3>` : `<details class="prep"><summary>${esc(trad("Préparation"))}</summary>`}
           ${(x.etapes && x.etapes.length) ? `<ol class="etapes">${x.etapes.map(e => `<li>${esc(e)}</li>`).join("")}</ol>` : `<p class="note" style="margin:0">Aucune préparation : ce repas se compose tel quel.</p>`}
+          ${edition ? "" : `</details>`}
         </div>
       </div>
     </section>`;
@@ -5562,8 +5687,9 @@ const outilNutrition = {
       const dessiner = () => {
         zone.innerHTML = self.vueLecture(R, suivi, actif);
         $$("[data-jour]", zone).forEach(b => b.addEventListener("click", () => { actif = +b.dataset.jour; dessiner(); }));
-        $$("[data-mange]", zone).forEach(c => c.addEventListener("change", () => {
-          suivi.mange[c.dataset.mange] = c.checked; Regularite.noterRepas(R, suivi); Store.ecrire("repas_suivi", suivi); dessiner();
+        $$("[data-mange]", zone).forEach(c => c.addEventListener("click", () => {
+          suivi.mange[c.dataset.mange] = !suivi.mange[c.dataset.mange];
+          Regularite.noterRepas(R, suivi); Store.ecrire("repas_suivi", suivi); dessiner();
         }));
         $$("[data-course]", zone).forEach(c => c.addEventListener("change", () => {
           suivi.courses = suivi.courses || {};
@@ -5878,6 +6004,7 @@ const outilBilan = {
   id: "bilan",
   cle: null,
   nom: "Mon bilan",
+  masque_nav: true,      // v35 : vit dans « Mon suivi » ; le coach y accede par « Préparer le call »
   icone: "📊",
   titre: "Ton bilan du mois",
   accroche: "Tes quatre dernières semaines en un coup d'œil : ce que tu as fait, ce qui a bougé et ce qu'on travaille ensuite.",
@@ -7967,13 +8094,41 @@ const outilAccueil = {
       ${acces.length ? `<section class="panel"><h2>${esc(trad("Aujourd'hui"))}</h2><div class="acces-l">${acces.map(ligne).join("")}</div></section>` : ""}
       ${obj ? `<section class="panel"><h2>${esc(trad("Tes objectifs du mois"))}</h2>
         ${obj.liste.map((t, i) => t ? `<div class="objectif${faits[i] ? " atteint" : ""}"><span class="num">0${i + 1}</span><span class="texte" data-notr>${esc(t)}</span><span class="pastille ${faits[i] ? "ok" : ""}">${faits[i] ? esc(trad("Atteint")) : esc(trad("En cours"))}</span></div>` : "").join("")}
-        <div class="actions"><a class="btn ghost petit" href="#/programme">${esc(trad("Cocher mes objectifs"))}</a></div>
+        <div class="actions"><a class="btn ghost petit" href="#/suivi">${esc(trad("Cocher mes objectifs"))}</a></div>
       </section>` : ""}
       <section class="panel">
         <h2>${esc(trad("Mon bilan"))}</h2>
         <p class="note" style="margin:0 0 12px">${esc(trad("Tes quatre dernières semaines : régularité, poids, ce qui a bougé et la progression de tes charges."))}</p>
-        <div class="actions" style="margin-top:0"><a class="btn ghost petit" href="#/bilan">${esc(trad("Voir mon bilan du mois"))}</a></div>
+        <div class="actions" style="margin-top:0"><a class="btn ghost petit" href="#/suivi">${esc(trad("Voir mon bilan du mois"))}</a></div>
       </section>`;
+  }
+};
+
+/* ------------------------------------------------------------------
+   OUTIL — Mon suivi (v35). « Comment se passe mon accompagnement ? » :
+   la regularite et son evolution, les objectifs du mois (a cocher), et le
+   bilan des quatre dernieres semaines. Il reutilise Regularite.monterClient
+   et outilBilan tels quels ; les phases 9 et 10 y ajouteront le bilan
+   hebdomadaire et le feedback du coach. Le coach le voit en fiche client.
+   ------------------------------------------------------------------ */
+const outilSuivi = {
+  id: "suivi",
+  cle: null,
+  nom: "Mon suivi",
+  icone: "📊",
+  titre: "Ton suivi",
+  accroche: "Comment se passe ton accompagnement : ta régularité, tes objectifs du mois et ton bilan des quatre dernières semaines.",
+
+  html(){ return `<div id="suivi-reg"><section class="panel"><div class="empty">Chargement…</div></section></div><div id="suivi-bilan"></div>`; },
+
+  async init(){
+    const d = await Store.lireTout(["programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "intake"]);
+    const P = d.programme || {}, J = d.journal || { seances: [] };
+    if (!Array.isArray(J.seances)) J.seances = [];
+    await Regularite.monterClient("suivi-reg", P, J, d);
+    const zb = $("suivi-bilan"); if (!zb) return;
+    const b = outilBilan.calculer({ programme: P, journal: J, repas: d.repas || {}, repas_suivi: d.repas_suivi || {}, mens: d.mens || {}, objectifs_faits: d.objectifs_faits || {} });
+    zb.innerHTML = `<div class="suivi-sep"><h2 style="margin:0">${esc(trad("Ton bilan du mois"))}</h2><p class="note" style="margin:4px 0 0">${esc(outilBilan.accroche)}</p></div>` + outilBilan.vue(b, false, (d.intake && d.intake.objectif) || "");
   }
 };
 
@@ -7981,11 +8136,11 @@ const outilAccueil = {
    Ma progression · Mon bilan (devient « Mon suivi » en phase 8) · Speed
    Formation · Mes compléments · Profil. Les outils du coach suivent. Les ids
    (adresses #/…) ne changent pas : tous les liens existants restent valables. */
-const OUTILS = [outilAccueil, outilProgramme, outilNutrition, outilMensurations, outilBilan, outilFormation, outilComplements, outilProfil, outilCalculateur, outilEntrainement, outilAtelier, outilBibliotheque, outilCatalogue, outilClients];
+const OUTILS = [outilAccueil, outilProgramme, outilNutrition, outilMensurations, outilSuivi, outilBilan, outilFormation, outilComplements, outilProfil, outilCalculateur, outilEntrainement, outilAtelier, outilBibliotheque, outilCatalogue, outilClients];
 
 /* Adresses d'hier et de demain : #/progression ouvre « Ma progression »,
    #/suivi ouvre le bilan (puis « Mon suivi » quand il existera). */
-const ALIAS_ROUTES = { progression: "mensurations", suivi: "bilan", repas: "nutrition", home: "accueil" };
+const ALIAS_ROUTES = { progression: "mensurations", repas: "nutrition", home: "accueil" };
 
 /* ==================================================================
    [G] NAVIGATION, CONNEXION ET DEMARRAGE
@@ -8035,7 +8190,7 @@ function nomOnglet(o){
 
 function construireNav(){
   const nav = $("nav");
-  nav.innerHTML = outilsVisibles().map(o =>
+  nav.innerHTML = outilsVisibles().filter(o => !o.masque_nav).map(o =>
     `<a href="#/${o.id}" data-id="${o.id}">${iconeOutil(o)}${esc(nomOnglet(o))}</a>`
   ).join("");
   construireBarreBas();
@@ -8072,7 +8227,7 @@ function construireBarreBas(){
   let b = $("barre-bas");
   if (!b){ b = document.createElement("nav"); b.id = "barre-bas"; b.className = "barre-bas"; b.setAttribute("aria-label", "Navigation"); document.body.appendChild(b); }
   const principaux = outilsPrincipaux();
-  const autres = outilsVisibles().filter(o => principaux.indexOf(o) === -1);
+  const autres = outilsVisibles().filter(o => principaux.indexOf(o) === -1 && !o.masque_nav);
   b.innerHTML = principaux.map(o =>
     `<a href="#/${o.id}" data-id="${o.id}">${iconeOutil(o)}<span class="lbl">${esc(nomCourt(o))}</span></a>`).join("") +
     (autres.length ? `<button type="button" data-plus><span class="ico" aria-hidden="true">${ICONES.plus}</span><span class="lbl">Plus</span></button>` : "");
@@ -8127,6 +8282,7 @@ function bandeauConsultation(){
   const actions = [
     { id:"accueil",      nom:"Vue d'ensemble" },
     { id:"bilan",        nom:"Préparer le call" },
+    { id:"suivi",        nom:"Son suivi" },
     { id:"profil",       nom:"Son questionnaire" },
     { id:"programme",    nom:"Son programme",  fort:true },
     { id:"nutrition",    nom:"Ses repas",      fort:true },
