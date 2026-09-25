@@ -866,7 +866,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-09-25 · 37",
+    version: "2026-09-25 · 37.1",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -1893,7 +1893,7 @@ Object.assign(I18N.en, {
 const dateFr = (iso) => {
   if (!iso) return "—";
   const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (!m) return String(iso);
+  if (!m) return esc(String(iso));   // jamais une valeur brute dans du HTML
   return window.__langue === "en" ? m[2] + "/" + m[3] + "/" + m[1] : m[3] + "/" + m[2] + "/" + m[1];   // US : mois/jour/annee
 };
 
@@ -3386,10 +3386,10 @@ const outilMensurations = {
       { const bloc = tb.closest(".scroll"); if (bloc) bloc.hidden = false; const v = $("mens-vide"); if (v) v.remove(); }
       D.mesures.forEach((m, idx) => {
         const tr = document.createElement("tr");
-        tr.innerHTML = `<td>S${m.sem}</td><td>${esc(dateFr(m.date))}</td><td>${m.poids != null ? n1(m.poids) : "—"}</td>` +
+        tr.innerHTML = `<td>S${esc(m.sem)}</td><td>${esc(dateFr(m.date))}</td><td>${m.poids != null ? n1(m.poids) : "—"}</td>` +
           D.zones.map((z,i) => `<td>${(m.vals[i] != null && isFinite(m.vals[i])) ? n1(m.vals[i]) : "—"}</td>`).join("") +
           cols.map(c => `<td>${(m.compo && m.compo[c.id] != null && isFinite(m.compo[c.id])) ? valCompo(c, m.compo[c.id]) : "—"}</td>`).join("") +
-          `<td><button class="del" aria-label="Supprimer la semaine ${m.sem}">×</button></td>`;
+          `<td><button class="del" aria-label="Supprimer la semaine ${esc(m.sem)}">×</button></td>`;
         tr.querySelector(".del").addEventListener("click", () => {
           D.mesures.splice(idx,1); sauver(); dessinerTable(); tout(); viderFormulaire();
         });
@@ -3404,7 +3404,7 @@ const outilMensurations = {
       if (!l.length) return;
       $("compo-tiles").innerHTML = l.map(c => {
         const s = serieCompo(c.id), der = s[s.length-1];
-        let sous = "semaine " + der.x;
+        let sous = "semaine " + esc(der.x);
         if (s.length > 1){
           const dd = der.y - s[0].y;
           const bon = c.sens ? (dd * c.sens > 0 ? "pos" : dd * c.sens < 0 ? "neg" : "") : "";
@@ -3692,7 +3692,7 @@ const outilEntrainement = {
       D.historique.slice().reverse().forEach(h => {
         const idx = D.historique.indexOf(h);
         const tr = document.createElement("tr");
-        tr.innerHTML = `<td>${esc(dateFr(h.date))}</td><td>${esc(h.nom)}</td><td>${h.exos.length}</td><td>${h.series || 0}</td><td>${fmt(h.vol)} kg</td>` +
+        tr.innerHTML = `<td>${esc(dateFr(h.date))}</td><td>${esc(h.nom)}</td><td>${fmt(Array.isArray(h.exos) ? h.exos.length : 0)}</td><td>${fmt(h.series || 0)}</td><td>${fmt(h.vol)} kg</td>` +
                        `<td><button class="del" aria-label="Supprimer cette séance">×</button></td>`;
         tr.querySelector(".del").addEventListener("click", () => {
           D.historique.splice(idx,1); sauver(); dessinerHistorique(); construireExercices(); dessinerKPI();
@@ -4307,7 +4307,7 @@ const Journal = {
     const l = (Array.isArray(J.seances) ? J.seances : []).slice(-8).reverse();
     z.innerHTML = `<section class="panel"><h2>Séances notées par ton client</h2>` + (l.length
       ? `<div class="scroll"><table><thead><tr><th>Date</th><th>Séance</th><th>Exercices</th><th>Séries</th></tr></thead><tbody>` +
-        l.map(x => `<tr><td>${esc(dateFr(x.date))}</td><td>${esc(x.nom || "—")}</td><td>${(x.exos || []).length}</td><td>${(x.exos || []).reduce((n, e) => n + (e.series || []).length, 0)}</td></tr>`).join("") +
+        l.map(x => `<tr><td>${esc(dateFr(x.date))}</td><td>${esc(x.nom || "—")}</td><td>${fmt(Array.isArray(x.exos) ? x.exos.length : 0)}</td><td>${fmt((Array.isArray(x.exos) ? x.exos : []).reduce((n, e) => n + (e && Array.isArray(e.series) ? e.series.length : 0), 0))}</td></tr>`).join("") +
         `</tbody></table></div>`
       : `<div class="empty">Aucune séance notée pour le moment.</div>`) + `</section>`;
   }
@@ -4345,7 +4345,7 @@ const Regularite = {
     if (!jours.length) return 0;
     const d = new Date(iso + "T12:00:00");
     const j = jours[Math.min(jours.length - 1, (d.getDay() + 6) % 7)];
-    return (j && j.repas) ? j.repas.length : 0;
+    return (j && Array.isArray(j.repas)) ? j.repas.length : 0;
   },
 
   calculer(c, decalage){
@@ -4433,7 +4433,7 @@ const Regularite = {
         <div class="tiles">
           <div class="tile"><div class="t-lbl">Score de régularité</div><div class="t-val readout ${this.niveau(r.score)}">${r.score == null ? "—" : r.score}<small>/100</small></div><div class="t-sub">remis à zéro chaque lundi</div></div>
           ${p.seances ? `<div class="tile"><div class="t-lbl">Training</div><div class="t-val readout${p.seances.faites >= p.seances.cible ? " pos" : ""}">${p.seances.faites}<small>/ ${p.seances.cible}</small></div><div class="t-sub">${esc(trad("séances notées"))}</div></div>` : ""}
-          ${p.repas ? `<div class="tile"><div class="t-lbl">Nutrition</div><div class="t-val readout${p.repas.ratio >= 0.9 ? " pos" : ""}">${p.repas.coches}<small>/ ${p.repas.prevus}</small></div><div class="t-sub">${esc(trad("repas respectés"))}</div></div>` : ""}
+          ${p.repas ? `<div class="tile"><div class="t-lbl">Nutrition</div><div class="t-val readout${p.repas.ratio >= 0.9 ? " pos" : ""}">${fmt(p.repas.coches)}<small>/ ${fmt(p.repas.prevus)}</small></div><div class="t-sub">${esc(trad("repas respectés"))}</div></div>` : ""}
           <div class="tile"><div class="t-lbl">Mesure de la semaine</div><div class="t-val readout ${p.mesure.faite ? "pos" : ""}">${p.mesure.faite ? "✓" : "—"}</div><div class="t-sub">${p.mesure.faite ? "c'est fait" : esc(trad("dans Ma progression"))}</div></div>
         </div>
         <div class="reg-evo" aria-label="${esc(trad("Régularité des cinq dernières semaines"))}">${evo.map((v, i) => `<div class="reg-evo-col${i === evo.length - 1 ? " ici" : ""}"><div class="reg-evo-barre"><i style="height:${v == null ? 0 : Math.max(4, v)}%"></i></div><span class="reg-evo-val ${this.niveau(v)}">${v == null ? "—" : v}</span><span class="reg-evo-lbl">${i === evo.length - 1 ? esc(trad("en cours")) : "S−" + (evo.length - 1 - i)}</span></div>`).join("")}</div>
@@ -5685,14 +5685,14 @@ const outilNutrition = {
         <span><b>${fmt(m.proteines)}</b> g prot.</span>
         <span><b>${fmt(m.glucides)}</b> g gluc.</span>
         <span><b>${fmt(m.lipides)}</b> g lip.</span>
-        ${x.temps_min ? `<span>${x.temps_min} min</span>` : ""}
+        ${x.temps_min ? `<span>${fmt(x.temps_min)} min</span>` : ""}
       </div>
-      ${x.inconnus ? `<div class="flag">${x.inconnus} ingrédient${x.inconnus>1?"s":""} absent${x.inconnus>1?"s":""} du catalogue : les macros affichées sont incomplètes.</div>` : ""}
+      ${x.inconnus ? `<div class="flag">${fmt(x.inconnus)} ingrédient${x.inconnus>1?"s":""} absent${x.inconnus>1?"s":""} du catalogue : les macros affichées sont incomplètes.</div>` : ""}
       <div class="grid g2" style="margin-top:14px">
         <div>
           <h3>Ingrédients</h3>
           <ul class="ingr">${(x.ingredients || []).map((g, j) => edition
-            ? `<li><span>${esc(g.nom)}</span><span class="g-edit"><input type="number" min="0" step="5" value="${g.grammes}" data-gr="${cle}:${j}"> g <button class="del" data-suppr-i="${cle}:${j}" aria-label="Retirer">×</button></span></li>`
+            ? `<li><span>${esc(g.nom)}</span><span class="g-edit"><input type="number" min="0" step="5" value="${esc(g.grammes)}" data-gr="${cle}:${j}"> g <button class="del" data-suppr-i="${cle}:${j}" aria-label="Retirer">×</button></span></li>`
             : `<li><span>${esc(g.nom)}</span><b>${fmt(g.grammes)} g</b></li>`).join("")}</ul>
           ${edition ? `<div class="actions" style="margin-top:10px"><button class="btn ghost" data-ajout-i="${cle}">+ Ajouter un aliment</button></div>` : ""}
         </div>
@@ -8356,7 +8356,7 @@ const outilAccueil = {
           <div class="tile"><div class="t-lbl">Séances</div><div class="t-val readout">${r.parts.seances ? r.parts.seances.faites : "—"}<small>${r.parts.seances ? "/ " + r.parts.seances.cible : ""}</small></div><div class="t-sub">notées cette semaine</div></div>
           <div class="tile"><div class="t-lbl">Repas respectés</div><div class="t-val readout">${b.repas != null ? b.repas : "—"}<small>${b.repas != null ? "%" : ""}</small></div><div class="t-sub">sur 28 jours</div></div>
           <div class="tile"><div class="t-lbl">Activité</div><div class="t-val readout${l.jours != null && l.jours >= 10 ? " neg" : ""}">${l.jours == null ? "—" : l.jours === 0 ? "auj." : l.jours + "<small>j</small>"}</div><div class="t-sub">${l.jours == null ? "jamais rien saisi" : "depuis sa dernière saisie"}</div></div>
-          <div class="tile"><div class="t-lbl">Bilan hebdo</div><div class="t-val readout${dernierCk ? " pos" : ""}">${dernierCk ? "✓" : "—"}</div><div class="t-sub">${dernierCk ? "dernier envoyé le " + dateFr(dernierCk.envoye_le) : "jamais envoyé"}</div></div>
+          <div class="tile"><div class="t-lbl">Bilan hebdo</div><div class="t-val readout${dernierCk ? " pos" : ""}">${dernierCk ? "✓" : "—"}</div><div class="t-sub">${dernierCk ? "dernier envoyé le " + esc(dateFr(dernierCk.envoye_le)) : "jamais envoyé"}</div></div>
         </div>
       </section>
       <div class="fiche-grille">
@@ -8428,7 +8428,7 @@ const outilAccueil = {
       tuiles += `<div class="tile"><div class="t-lbl">Poids</div><div class="t-val readout">—</div><div class="t-sub">${esc(trad("aucune mesure"))}</div></div>`;
     }
     if (p.seances) tuiles += `<div class="tile"><div class="t-lbl">Entraînement</div><div class="t-val readout${p.seances.faites >= p.seances.cible ? " pos" : ""}">${p.seances.faites}<small>/ ${p.seances.cible}</small></div><div class="t-sub">${esc(trad("séances notées"))}</div></div>`;
-    if (p.repas) tuiles += `<div class="tile"><div class="t-lbl">Nutrition</div><div class="t-val readout${p.repas.ratio >= 0.9 ? " pos" : ""}">${p.repas.coches}<small>/ ${p.repas.prevus}</small></div><div class="t-sub">${esc(trad("repas respectés"))}</div></div>`;
+    if (p.repas) tuiles += `<div class="tile"><div class="t-lbl">Nutrition</div><div class="t-val readout${p.repas.ratio >= 0.9 ? " pos" : ""}">${fmt(p.repas.coches)}<small>/ ${fmt(p.repas.prevus)}</small></div><div class="t-sub">${esc(trad("repas respectés"))}</div></div>`;
     if (obj) tuiles += `<div class="tile"><div class="t-lbl">Objectifs</div><div class="t-val readout${nbFaits === nbObj ? " pos" : ""}">${nbFaits}<small>/ ${nbObj}</small></div><div class="t-sub">${esc(trad("ce mois-ci"))}</div></div>`;
 
     /* --- aujourd'hui : quoi faire --- */
@@ -8567,7 +8567,7 @@ const Checkin = {
     const r = x.reponses || {};
     const echelles = this.questions().filter(q => q.type === "echelle5" && r[q.id] != null);
     const textes = this.questions().filter(q => q.type !== "echelle5" && r[q.id] != null && r[q.id] !== "");
-    return `${echelles.length ? `<div class="checkin-echelles">${echelles.map(q => `<span class="pastille"><span data-notr>${esc(q.label)}</span> <b>${r[q.id]}</b>/5</span>`).join("")}</div>` : ""}
+    return `${echelles.length ? `<div class="checkin-echelles">${echelles.map(q => `<span class="pastille"><span data-notr>${esc(q.label)}</span> <b>${esc(r[q.id])}</b>/5</span>`).join("")}</div>` : ""}
       ${textes.map(q => `<p class="checkin-rep"><span class="lbl">${esc(q.label)}</span>${esc(String(r[q.id]))}</p>`).join("")}`;
   },
 
