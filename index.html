@@ -454,11 +454,21 @@ label.objectif{cursor:pointer;text-transform:none;letter-spacing:0;font-weight:4
 .nav-cadenas{display:inline-flex;margin-left:6px;opacity:.7;vertical-align:-1px}
 /* le texte « (verrouillé) » des lecteurs d'ecran (.sr-only, en absolu) reste dans son lien : sinon il deborde de la barre du haut */
 .nav a,.menu-plus a,.barre-bas a.verrouille{position:relative}
+.lecture-seule #photos-panel select{pointer-events:auto;opacity:1}
 .barre-bas a.verrouille .nav-cadenas{position:absolute;top:7px;left:calc(50% + 9px);margin:0}
 .nav-cadenas svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .barre-bas a.verrouille .ico{opacity:.55}
 .verrou-plus{text-align:center;margin:14px auto 0;max-width:520px}
 .liste-debloque{margin:0;padding-left:20px;line-height:1.8;font-size:14.5px}
+/* v41 — photos de progression */
+.photos-vues{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.ph-lbl{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin-bottom:6px}
+.ph-cadre{aspect-ratio:3/4;border:1px solid var(--line);border-radius:var(--r);background:var(--sunken);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.ph-cadre img{width:100%;height:100%;object-fit:cover;display:block}
+.ph-vide{color:var(--ink-3);font-size:13px}
+.photos-compare{margin-top:12px;display:flex;flex-direction:column;gap:14px}
+.ph-paire{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:560px){ .photos-vues{grid-template-columns:1fr 1fr} .photos-vues .ph-vue:last-child{grid-column:1 / -1;max-width:50%} }
 .verrou p{margin:0 auto;max-width:44ch;color:var(--ink-2);font-size:14px;line-height:1.6}
 .verrou .actions{justify-content:center}
 
@@ -884,7 +894,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-09-25 · 40",
+    version: "2026-09-25 · 41",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -1846,7 +1856,16 @@ I18N.en = {
 "Bienvenue": "Welcome", "Ton espace gratuit MHX : commence par la Speed Formation, à ton rythme.": "Your free MHX space: start with the Speed Formation, at your own pace.",
 "Ton espace gratuit": "Your free space", "Avec l'accompagnement MHX": "With MHX coaching",
 "Ton questionnaire et tes réglages": "Your questionnaire and settings",
-"Un appel de 30 minutes avec ton coach, pour faire le point sur tes objectifs.": "A 30-minute call with your coach to review your goals."
+"Un appel de 30 minutes avec ton coach, pour faire le point sur tes objectifs.": "A 30-minute call with your coach to review your goals.",
+/* v41 — photos de progression */
+"Photos de progression": "Progress photos", "privées": "private",
+"Visibles par toi et ton coach seulement. Même lumière, même tenue, même position : c'est ce qui rend la comparaison utile.": "Visible only to you and your coach. Same light, same outfit, same pose: that's what makes the comparison useful.",
+"De face": "Front", "De profil": "Side", "De dos": "Back", "Choisir une photo": "Choose a photo", "Changer la photo": "Change the photo",
+"Retirer": "Remove", "Comparer": "Compare", "Première semaine": "First week", "Seconde semaine": "Second week", "Semaine {n}": "Week {n}",
+"Aucune photo pour le moment.": "No photos yet.", "Indique la semaine.": "Enter the week.", "Envoi…": "Uploading…",
+"Photo enregistrée.": "Photo saved.", "Photo retirée.": "Photo removed.", "Retirer cette photo ?": "Remove this photo?", "Oui, retirer": "Yes, remove",
+"Les photos ne sont pas encore activées.": "Photos are not enabled yet.", "Envoi refusé : reconnecte-toi puis réessaie.": "Upload refused: sign in again and retry.",
+"Photo trop lourde.": "Photo too large.", "Le retrait n'a pas abouti, réessaie.": "The removal failed, please try again.", "Tes photos n'ont pas pu être chargées : recharge la page pour en ajouter.": "Your photos couldn't be loaded: reload the page to add some.", "Cette image ne peut pas être lue : choisis une photo JPEG ou PNG.": "This image can't be read: choose a JPEG or PNG photo.", "L'envoi n'a pas abouti, réessaie.": "The upload failed, please try again.", "indisponible": "unavailable"
 };
 I18N.motifs = [["^(\\d+) articles? sur (\\d+) dans le panier\\.$", "$1 of $2 items in your cart."], ["^(\\d+) étapes? validées? sur (\\d+) — (\\d+) %$", "$1 of $2 steps completed — $3%"], ["^([\\d\\s\\u202f\\u00a0.,−-]+?) kcal$", "$1 Cal"], ["^([\\d\\s\\u202f\\u00a0.,−-]+?) kcal · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de protéines par dose$", "$1 Cal · $2 g protein per serving"], ["^([\\d\\s\\u202f\\u00a0.,−-]+?) kcal consommées sur ([\\d\\s\\u202f\\u00a0.,−-]+?) — il te reste$", "$1 Cal eaten out of $2 — you have"], ["^Objectif visé : ([\\d\\s\\u202f\\u00a0.,−-]+?) kcal · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de protéines · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de glucides · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de lipides\\.$", "Target: $1 Cal · $2 g protein · $3 g carbs · $4 g fat."], ["^Coche les jours que tu veux acheter : la liste se recalcule\\. (\\d+) jours? sélectionnés?\\.$", "Check the days you want to shop for: the list updates automatically. $1 day(s) selected."], ["^Programme mis à jour le (\\d{1,2})/(\\d{1,2})/(\\d{4})$", "Program updated $2/$1/$3"], ["^Repas mis à jour le (\\d{1,2})/(\\d{1,2})/(\\d{4})$", "Meals updated $2/$1/$3"], ["^S(\\d+)$", "W$1"], ["^Supprimer la semaine (\\d+)$", "Delete week $1"], ["^dernière : semaine (\\d+)$", "latest: week $1"], ["^semaine (\\d+)$", "week $1"], ["^Semaine (\\d+) enregistrée\\.$", "Week $1 saved."], ["^(\\d+)/jambe$", "$1/leg"], ["^(\\d+)-(\\d+)/jambe$", "$1-$2/leg"], ["^(\\d+)/bras$", "$1/arm"], ["^(\\d+)-(\\d+)/bras$", "$1-$2/arm"], ["^(\\d+)-(\\d+) s/côté$", "$1-$2 s/side"], ["^protéines au-dessus de ([\\d\\s\\u202f\\u00a0.,−-]+?) g$", "protein over by $1 g"], ["^protéines en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) g$", "protein under by $1 g"], ["^lipides au-dessus de ([\\d\\s\\u202f\\u00a0.,−-]+?) g — sur ce régime, les sources de protéines apportent beaucoup de gras$", "fat over by $1 g — on this diet, protein sources bring a lot of fat"], ["^lipides en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) g — sur ce régime, les sources de protéines apportent beaucoup de gras$", "fat under by $1 g"], ["^calories au-dessus de ([\\d\\s\\u202f\\u00a0.,−-]+?) kcal$", "calories over by $1 Cal"], ["^calories en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) kcal$", "calories under by $1 Cal"], ["^glucides en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) g — ce régime offre peu de sources de glucides dans le catalogue$", "carbs under by $1 g — this diet has few carb sources in the catalog"], ["^(\\d+(?:-\\d+)?(?: s)?)/jambe$", "$1/leg"], ["^(\\d+(?:-\\d+)?(?: s)?)/bras$", "$1/arm"], ["^(\\d+(?:-\\d+)?(?: s)?)/côté$", "$1/side"], ["^(\\d+)/sens$", "$1/direction"], ["^(\\d+)/sens/cheville$", "$1/direction/ankle"], ["^(\\d+) souffles$", "$1 breaths"], ["^(\\d+) respirations$", "$1 breaths"], ["^(\\d+(?:-\\d+)?) pas$", "$1 steps"], ["^(\\d+) dans chaque sens$", "$1 each direction"], ["^(\\d+) par côté$", "$1 per side"], ["^(\\d+) par jambe$", "$1 per leg"], ["^(\\d+) par cheville$", "$1 per ankle"], ["^(\\d+) s par (côté)$", "$1 s per side"], ["^(\\d+) s par jambe$", "$1 s per leg"], ["^(\\d+) s \\+ (\\d+) squats$", "$1 s + $2 squats"]].map(([p, r]) => [new RegExp(p), r]);
 
@@ -3248,6 +3267,209 @@ const outilCalculateur = {
 /* ------------------------------------------------------------------
    OUTIL 2 — Suivi des mensurations
    ------------------------------------------------------------------ */
+/* ------------------------------------------------------------------
+   v41 — PHOTOS DE PROGRESSION (phase 13)
+   Les images vivent dans le bucket PRIVE « photos » de Supabase Storage, un
+   dossier par compte : <user_id>/s<NNN>-<face|profil|dos>.jpg. Les regles de
+   la base (policies du 25/09/2026) : chacun ne depose, ne lit, ne remplace et
+   ne retire que dans son dossier ; le coach lit tout, n'ecrit rien. L'index
+   est la cle client « photos » = { liste: [{ semaine, date, vues: { face,
+   profil, dos } }] }. Les images sont reduites dans le navigateur (1080 px,
+   JPEG) avant l'envoi et relues avec le jeton de la personne : jamais
+   d'adresse publique.
+   ------------------------------------------------------------------ */
+const Photos = {
+  cle: "photos",
+  bucket: "photos",
+  vues: [["face", "De face"], ["profil", "De profil"], ["dos", "De dos"]],
+  urls: {},   // chemin -> adresse locale de l'image deja lue (liberee en quittant la page)
+  enCours: {},   // chemin -> lecture en cours (la meme photo affichee deux fois = une seule requete)
+  vide(){ return { liste: [] }; },
+  chemin(uid, semaine, vue){ return uid + "/s" + String(semaine).padStart(3, "0") + "-" + vue + ".jpg"; },
+  entree(P, semaine){ return ((P && P.liste) || []).find(x => x && x.semaine === semaine) || null; },
+  /* l'index est ecrit par le client (il peut l'ecrire par l'API) : on ne suit
+     qu'un chemin de la forme exacte <uid du compte affiche>/sNNN-vue.jpg */
+  valide(uid, chemin){ return typeof chemin === "string" && chemin.indexOf(uid + "/") === 0 && /^[0-9a-f-]{36}\/s\d{3,4}-(face|profil|dos)\.jpg$/.test(chemin); },
+  semaines(P){ return ((P && P.liste) || []).filter(x => x && Number.isInteger(x.semaine) && x.vues && typeof x.vues === "object" && Object.keys(x.vues).some(k => x.vues[k])).map(x => x.semaine).sort((a, b) => a - b); },
+  entetes(){ return { "apikey": CONFIG.supabase.cle, "Authorization": "Bearer " + ((Auth.session && Auth.session.access_token) || "") }; },
+  erreur(r, texte){
+    /* Storage repond souvent 400 avec le vrai code dans le corps ({ statusCode: "404" }) */
+    let code = r.status;
+    try { const d = JSON.parse(texte || "{}"); if (d && d.statusCode && +d.statusCode) code = +d.statusCode; } catch(x){}
+    const e = new Error(texte || ("Erreur " + r.status)); e.statut = code;
+    e.absent = /bucket not found/i.test(texte || "");           // le stockage n'est pas encore active
+    e.introuvable = code === 404 && !e.absent;                   // ce fichier-la n'existe pas (ou plus)
+    return e;
+  },
+  /* reduit l'image (1080 px au plus, JPEG 0,82) : quelques centaines de Ko */
+  async reduire(fichier){
+    let img;
+    try { img = await createImageBitmap(fichier); }
+    catch(e){
+      img = await new Promise((ok, ko) => { const i = new Image(), u = URL.createObjectURL(fichier); i.onload = () => { URL.revokeObjectURL(u); ok(i); }; i.onerror = () => { URL.revokeObjectURL(u); ko(Object.assign(new Error("image"), { illisible: true })); }; i.src = u; });
+    }
+    const k = Math.min(1, 1080 / Math.max(img.width, img.height));
+    const c = document.createElement("canvas");
+    c.width = Math.max(1, Math.round(img.width * k)); c.height = Math.max(1, Math.round(img.height * k));
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    return await new Promise((ok, ko) => c.toBlob(b => b ? ok(b) : ko(new Error("image")), "image/jpeg", 0.82));
+  },
+  async envoyer(chemin, blob){
+    if (!(await Auth.assurer())) throw Object.assign(new Error("session"), { statut: 401 });
+    const r = await fetch(CONFIG.supabase.url + "/storage/v1/object/" + this.bucket + "/" + chemin, {
+      method: "POST", headers: Object.assign(this.entetes(), { "Content-Type": "image/jpeg", "x-upsert": "true", "cache-control": "no-cache" }), body: blob
+    });
+    if (!r.ok) throw this.erreur(r, await r.text().catch(() => ""));
+    delete this.enCours[chemin];
+    if (this.urls[chemin]){ URL.revokeObjectURL(this.urls[chemin]); delete this.urls[chemin]; }
+  },
+  image(chemin){
+    if (this.urls[chemin]) return Promise.resolve(this.urls[chemin]);
+    if (this.enCours[chemin]) return this.enCours[chemin];
+    const p = (async () => {
+      if (!(await Auth.assurer())) throw Object.assign(new Error("session"), { statut: 401 });
+      const r = await fetch(CONFIG.supabase.url + "/storage/v1/object/authenticated/" + this.bucket + "/" + chemin, { headers: this.entetes(), cache: "no-store" });
+      if (!r.ok) throw this.erreur(r, await r.text().catch(() => ""));
+      const b = await r.blob();
+      if (this.enCours[chemin] !== p) return null;   // lecture perimee (page quittee, photo remplacee) : personne ne l'affiche
+      return (this.urls[chemin] = URL.createObjectURL(b));
+    })();
+    this.enCours[chemin] = p;
+    const fini = () => { if (this.enCours[chemin] === p) delete this.enCours[chemin]; };
+    p.then(fini, fini);
+    return p;
+  },
+  async retirer(chemin){
+    if (!(await Auth.assurer())) throw Object.assign(new Error("session"), { statut: 401 });
+    const r = await fetch(CONFIG.supabase.url + "/storage/v1/object/" + this.bucket + "/" + chemin, { method: "DELETE", headers: this.entetes() });
+    if (!r.ok){
+      const e = this.erreur(r, await r.text().catch(() => ""));
+      if (!e.introuvable) throw e;                                  // deja retiree : c'est ce qu'on voulait
+    }
+    delete this.enCours[chemin];
+    if (this.urls[chemin]){ URL.revokeObjectURL(this.urls[chemin]); delete this.urls[chemin]; }
+  },
+  oublier(){ Object.keys(this.urls).forEach(k => URL.revokeObjectURL(this.urls[k])); this.urls = {}; this.enCours = {}; },
+  message(e, retrait){
+    if (e && e.illisible) return trad("Cette image ne peut pas être lue : choisis une photo JPEG ou PNG.");
+    if (retrait && !(e && (e.statut === 401 || e.statut === 403))) return trad("Le retrait n'a pas abouti, réessaie.");
+    if (e && e.absent) return trad("Les photos ne sont pas encore activées.");
+    if (e && (e.statut === 401 || e.statut === 403)) return trad("Envoi refusé : reconnecte-toi puis réessaie.");
+    if (e && e.statut === 413) return trad("Photo trop lourde.");
+    return trad("L'envoi n'a pas abouti, réessaie.");
+  },
+
+  html(){
+    const coach = !!Store.idConsulte;
+    return `<section class="panel" id="photos-panel">
+      <div class="seance-c-tete"><h2>${esc(trad("Photos de progression"))}</h2><span class="pastille">${esc(trad("privées"))}</span></div>
+      <p class="note" style="margin:0 0 14px">${esc(trad(coach ? "Visibles par ton client et toi seulement." : "Visibles par toi et ton coach seulement. Même lumière, même tenue, même position : c'est ce qui rend la comparaison utile."))}</p>
+      ${coach ? "" : `<div class="grid g2" style="margin-bottom:12px"><div><label for="ph-sem">${esc(trad("Semaine"))}</label><input id="ph-sem" type="number" min="0" max="520" step="1"></div></div>
+      <div class="photos-vues" id="ph-envoi"></div><p class="msg" id="ph-msg"></p>`}
+      <h3 style="margin-top:18px">${esc(trad("Comparer"))}</h3>
+      <div class="grid g2"><div><select id="ph-a" aria-label="${esc(trad("Première semaine"))}"></select></div><div><select id="ph-b" aria-label="${esc(trad("Seconde semaine"))}"></select></div></div>
+      <div id="ph-comparaison" class="photos-compare"></div>
+    </section>`;
+  },
+
+  /* branche la section ; uid = le compte affiche ; semaineParDefaut = derniere mesure */
+  async monter(uid, semaineParDefaut){
+    const panneau = $("photos-panel"); if (!panneau || !uid) return;
+    const coach = !!Store.idConsulte;
+    const P = await Store.lire(this.cle, this.vide());
+    if (!panneau.isConnected) return;   // page ou fiche changee pendant la lecture
+    P.liste = Array.isArray(P.liste) ? P.liste.filter(x => x && typeof x === "object" && !Array.isArray(x)) : [];
+    /* index illisible (reseau) : on n'envoie rien, sinon une photo remplacerait
+       l'ancienne sans que l'index puisse etre ecrit (Store n'ecrit pas ce qu'il n'a pas lu) */
+    const indexLu = Store.charge[uid + "|" + this.cle] !== false;
+    const msg = $("ph-msg");
+    const dire = (t, ko) => { if (msg){ msg.classList.toggle("ko", !!ko); msg.textContent = t; } };
+    const vignette = async (el, chemin) => {
+      if (!el) return;
+      const j = el.__ph = (el.__ph || 0) + 1;   // seule la derniere demande de cet emplacement s'affiche (meme vide)
+      if (!this.valide(uid, chemin)){ el.innerHTML = `<span class="ph-vide">—</span>`; return; }
+      el.innerHTML = `<span class="ph-vide">…</span>`;
+      try { const u = await this.image(chemin); if (u && el.isConnected && el.__ph === j) el.innerHTML = `<img src="${esc(u)}" alt="">`; }
+      catch(e){ if (el.isConnected && el.__ph === j) el.innerHTML = `<span class="ph-vide">${esc(e.absent || e.introuvable ? "—" : trad("indisponible"))}</span>`; }
+    };
+    const semaine = () => {
+      const t = $("ph-sem") ? String($("ph-sem").value).trim() : "";
+      if (t === "") return null;   // champ vide : pas de « semaine 0 » par defaut
+      const n = Math.round(Number(t)); return isFinite(n) && n >= 0 && n <= 520 ? n : null;
+    };
+    /* les trois emplacements sont construits UNE fois : changer de semaine ne
+       remplace pas les boutons (sinon le clic qui suit une saisie se perd) */
+    const majEnvoi = () => {
+      const z = $("ph-envoi"); if (!z) return;
+      const n = semaine(), e = n == null ? null : this.entree(P, n);
+      this.vues.forEach(([v]) => {
+        const a = e && e.vues && typeof e.vues === "object" ? e.vues[v] : null;
+        const ch = z.querySelector(`[data-choisir="${v}"]`), rt = z.querySelector(`[data-retirer="${v}"]`);
+        if (ch) ch.textContent = trad(a ? "Changer la photo" : "Choisir une photo");
+        if (rt) rt.hidden = !a;
+        vignette(z.querySelector(`[data-cadre="${v}"]`), a);
+      });
+    };
+    const construireEnvoi = () => {
+      const z = $("ph-envoi"); if (!z) return;
+      z.innerHTML = this.vues.map(([v, lbl]) => `<div class="ph-vue" data-vue="${v}">
+        <div class="ph-lbl">${esc(trad(lbl))}</div><div class="ph-cadre" data-cadre="${v}"></div>
+        <input type="file" accept="image/jpeg,image/png,image/webp" hidden data-fichier="${v}">
+        <div class="actions" style="margin-top:8px"><button type="button" class="btn petit" data-choisir="${v}">${esc(trad("Choisir une photo"))}</button><button type="button" class="btn ghost petit" data-retirer="${v}" hidden>${esc(trad("Retirer"))}</button></div>
+      </div>`).join("");
+      $$("[data-choisir]", z).forEach(b => b.addEventListener("click", () => { if (semaine() == null){ dire(trad("Indique la semaine."), true); return; } z.querySelector(`[data-fichier="${b.dataset.choisir}"]`).click(); }));
+      $$("[data-fichier]", z).forEach(inp => inp.addEventListener("change", async () => {
+        const f = inp.files && inp.files[0]; inp.value = ""; if (!f) return;
+        const n = semaine(), v = inp.dataset.fichier; if (n == null) return;
+        dire(trad("Envoi…"));
+        try {
+          const chemin = this.chemin(uid, n, v);
+          await this.envoyer(chemin, await this.reduire(f));
+          let x = this.entree(P, n);
+          if (!x){ x = { semaine: n, date: aujourdhui(), vues: {} }; P.liste.push(x); P.liste.sort((a, b) => (+a.semaine || 0) - (+b.semaine || 0)); }
+          x.vues = Object.assign({}, x.vues, { [v]: chemin }); x.date = aujourdhui();
+          Store.ecrire(this.cle, P);
+          dire(trad("Photo enregistrée.")); majEnvoi(); dessinerComparaison(true);
+        } catch(e){ dire(this.message(e), true); }
+      }));
+      $$("[data-retirer]", z).forEach(b => b.addEventListener("click", async () => {
+        const n = semaine(), v = b.dataset.retirer, x = n == null ? null : this.entree(P, n);
+        if (!x || !x.vues || !x.vues[v]) return;
+        if (!this.valide(uid, x.vues[v])){ const vues = Object.assign({}, x.vues); delete vues[v]; x.vues = vues; Store.ecrire(this.cle, P); majEnvoi(); dessinerComparaison(true); return; }   // chemin etranger : on l'oublie sans rien effacer
+        if (!(await UI.confirmer(trad("Retirer cette photo ?"), { ok: trad("Oui, retirer"), danger: true }))) return;
+        try {
+          await this.retirer(x.vues[v]);
+          const vues = Object.assign({}, x.vues); delete vues[v]; x.vues = vues;
+          P.liste = P.liste.filter(y => y && y.vues && Object.keys(y.vues).some(k => y.vues[k]));
+          Store.ecrire(this.cle, P);
+          dire(trad("Photo retirée.")); majEnvoi(); dessinerComparaison(true);
+        } catch(e){ dire(this.message(e, true), true); }
+      }));
+      majEnvoi();
+    };
+    const dessinerComparaison = (garder) => {
+      const a = $("ph-a"), b = $("ph-b"), z = $("ph-comparaison"); if (!a || !b || !z) return;
+      const l = this.semaines(P);
+      if (!l.length){ a.innerHTML = b.innerHTML = ""; a.disabled = b.disabled = true; z.innerHTML = `<div class="empty">${esc(trad("Aucune photo pour le moment."))}</div>`; return; }
+      const va = garder && l.indexOf(+a.value) > -1 ? +a.value : l[0], vb = garder && l.indexOf(+b.value) > -1 ? +b.value : l[l.length - 1];
+      const opts = l.map(n => `<option value="${n}">${esc(trad("Semaine {n}", { n: n }))}</option>`).join("");
+      a.innerHTML = b.innerHTML = opts; a.disabled = b.disabled = false; a.value = String(va); b.value = String(vb);
+      const ea = this.entree(P, va), eb = this.entree(P, vb);
+      z.innerHTML = this.vues.map(([v, lbl]) => `<div class="ph-ligne"><div class="ph-lbl">${esc(trad(lbl))}</div><div class="ph-paire"><div class="ph-cadre" data-c="a-${v}"></div><div class="ph-cadre" data-c="b-${v}"></div></div></div>`).join("");
+      this.vues.forEach(([v]) => { vignette(z.querySelector(`[data-c="a-${v}"]`), ea && ea.vues ? ea.vues[v] : null); vignette(z.querySelector(`[data-c="b-${v}"]`), eb && eb.vues ? eb.vues[v] : null); });
+    };
+    if (!coach && !indexLu){
+      const z = $("ph-envoi"); if (z) z.innerHTML = `<p class="note ko" style="margin:0">${esc(trad("Tes photos n'ont pas pu être chargées : recharge la page pour en ajouter."))}</p>`;
+      const s = $("ph-sem"); if (s) s.disabled = true;
+    } else if (!coach){
+      const s = $("ph-sem"); if (s){ s.value = semaineParDefaut != null ? semaineParDefaut : (this.semaines(P).slice(-1)[0] || 1); s.addEventListener("input", majEnvoi); }
+      construireEnvoi();
+    }
+    ["ph-a", "ph-b"].forEach(id => { const el = $(id); if (el) el.addEventListener("change", () => dessinerComparaison(true)); });
+    dessinerComparaison(false);
+  }
+};
+
 const outilMensurations = {
   id: "mensurations",
   cle: "mens",
@@ -3312,6 +3534,8 @@ const outilMensurations = {
       <div class="chartbox"><svg class="chart" id="chart-compo" role="img" aria-label="Évolution de la composition corporelle semaine par semaine"></svg><div class="tip" id="tip-compo"></div></div>
       <p class="note" style="margin-top:10px">Mesures de balance à impédancemètre : fie-toi à la tendance, pas au chiffre d'un jour.</p>
     </section>
+
+    ${Photos.html()}
 
     <section class="panel">
       <h2>Toutes tes mesures</h2>
@@ -3560,9 +3784,13 @@ const outilMensurations = {
     const ba = $("mens-ajouter"); if (ba) ba.addEventListener("click", ouvrirSaisie);
     const bf = $("mens-fermer"); if (bf) bf.addEventListener("click", () => { if (saisie) saisie.hidden = true; });
 
+    /* v41 — photos de progression (lecture seule pour le coach) */
+    const derniere = D.mesures.length ? D.mesures[D.mesures.length - 1].sem : null;
+    Photos.monter(Store.idConsulte || (Auth.utilisateur() && Auth.utilisateur().id), derniere);
+
     let t; const redim = () => { clearTimeout(t); t = setTimeout(tout, 150); };
     window.addEventListener("resize", redim);
-    return () => window.removeEventListener("resize", redim);
+    return () => { window.removeEventListener("resize", redim); Photos.oublier(); };
   }
 };
 

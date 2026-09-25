@@ -30,8 +30,9 @@ node verif38.js ../index.html              # feedback, notes privées, RLS simul
 node verif-xss.js ../index.html            # données client piégées : aucune injection dans les écrans coach et client (5)
 node verif39.js ../index.html              # statut prospect / client, création d'accès, inscription libre (34)
 node verif40.js ../index.html              # mode gratuit : cadenas, pages verrouillées, Calendly, aucun prix, pas de débordement (26)
+node verif41.js ../index.html              # photos de progression (Storage simulé avec ses règles) : envoi, comparaison, retrait, coach, index piégé, fichier disparu, index illisible (25)
 ```
-Attendu sur la v40 : 64 pages, 0 erreur, 0 écriture ; 19 + 13 + 14 + 13 + 15 + 67 vérifications ; verif39 34/34 ; verif40 26/26 ; verif-xss 5/5 (sur la v37, verif-xss détecte 15 exécutions : c'est ce qui prouve qu'il teste vraiment).
+Attendu sur la v41 : 64 pages, 0 erreur, 0 écriture ; 19 + 13 + 14 + 13 + 15 + 67 vérifications ; verif39 34/34 ; verif40 26/26 ; verif41 25/25 ; verif-xss 5/5 (sur la v37, verif-xss détecte 15 exécutions : c'est ce qui prouve qu'il teste vraiment).
 
 ## Sans Chromium Playwright : le Chrome de la machine
 Si `npx playwright install chromium` n'a pas été fait, le préchargement `chrome-systeme.js` fait tourner tous les scripts avec Google Chrome installé (canal « chrome »), sans toucher aux tests :
