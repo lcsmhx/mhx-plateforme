@@ -450,6 +450,15 @@ label.objectif{cursor:pointer;text-transform:none;letter-spacing:0;font-weight:4
 .verrou .cadenas{width:44px;height:44px;margin:0 auto 14px;border-radius:50%;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;color:var(--accent)}
 .verrou .cadenas svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .verrou h2{margin-bottom:6px}
+/* v40 — onglets verrouilles (mode gratuit) */
+.nav-cadenas{display:inline-flex;margin-left:6px;opacity:.7;vertical-align:-1px}
+/* le texte « (verrouillé) » des lecteurs d'ecran (.sr-only, en absolu) reste dans son lien : sinon il deborde de la barre du haut */
+.nav a,.menu-plus a,.barre-bas a.verrouille{position:relative}
+.barre-bas a.verrouille .nav-cadenas{position:absolute;top:7px;left:calc(50% + 9px);margin:0}
+.nav-cadenas svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.barre-bas a.verrouille .ico{opacity:.55}
+.verrou-plus{text-align:center;margin:14px auto 0;max-width:520px}
+.liste-debloque{margin:0;padding-left:20px;line-height:1.8;font-size:14.5px}
 .verrou p{margin:0 auto;max-width:44ch;color:var(--ink-2);font-size:14px;line-height:1.6}
 .verrou .actions{justify-content:center}
 
@@ -875,7 +884,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-09-25 · 39",
+    version: "2026-09-25 · 40",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -889,7 +898,13 @@ const CONFIG = {
        Laisse false tant que l'inscription publique est coupée dans Supabase
        (Authentication → Sign In / Providers → Email). Un compte créé ainsi
        naît « prospect » (compte gratuit) : c'est la base qui le décide. */
-    inscription_libre: false
+    inscription_libre: false,
+
+    /* v40 — Mode gratuit (prospects). Le lien de l'appel découverte, et les
+       SEULS onglets ouverts à un prospect : tous les autres affichent un
+       cadenas et « Réserver mon appel ». Aucun prix dans l'application. */
+    calendly: "https://calendly.com/mhx-coaching/30min",
+    gratuit_ouverts: ["accueil", "formation", "profil"]
   },
 
   /* --- Connexion a la base Supabase (comptes + donnees) --- */
@@ -1750,7 +1765,7 @@ I18N.en = {
 "Passer en sombre": "Switch to dark mode",
 "Passer en clair": "Switch to light mode",
 "Cette fonctionnalité est disponible avec l'accompagnement MHX.": "This feature is available with MHX coaching.",
-"Réserver mon appel": "Book my call",
+"verrouillé": "locked", "Réserver mon appel": "Book my call",
 /* v34 — navigation et accueil */
 "Accueil": "Home", "Nutrition": "Nutrition", "Ma progression": "My progress", "Sa progression": "Their progress",
 "Speed Formation": "Speed Formation", "Profil": "Profile", "Plus": "More", "Tout mon espace": "My whole space",
@@ -1820,7 +1835,18 @@ I18N.en = {
 "Indique ton prénom.": "Enter your first name.",
 "Compte créé. Ouvre le lien reçu par email pour le confirmer, puis connecte-toi.": "Account created. Open the link we emailed you to confirm it, then sign in.",
 "Un compte existe déjà avec cet email : connecte-toi.": "An account already exists with this email: sign in.",
-"Les inscriptions ne sont pas encore ouvertes.": "Sign-ups are not open yet."
+"Les inscriptions ne sont pas encore ouvertes.": "Sign-ups are not open yet.",
+/* v40 — mode gratuit */
+"Ton programme d'entraînement sur mesure, construit et ajusté par ton coach.": "Your tailored training program, built and adjusted by your coach.",
+"Ta diète personnalisée, tes repas du jour et ta liste de courses.": "Your personalized meal plan, your meals of the day and your shopping list.",
+"Ton poids, tes mensurations et ta composition corporelle, semaine après semaine.": "Your weight, measurements and body composition, week after week.",
+"Ta régularité, tes objectifs du mois, ton bilan de la semaine et les retours de ton coach.": "Your consistency, your monthly goals, your weekly check-in and your coach's feedback.",
+"Ton bilan du mois, préparé avec ton coach.": "Your monthly review, prepared with your coach.",
+"Tes compléments conseillés, avec les doses et les moments.": "Your recommended supplements, with doses and timing.",
+"Bienvenue": "Welcome", "Ton espace gratuit MHX : commence par la Speed Formation, à ton rythme.": "Your free MHX space: start with the Speed Formation, at your own pace.",
+"Ton espace gratuit": "Your free space", "Avec l'accompagnement MHX": "With MHX coaching",
+"Ton questionnaire et tes réglages": "Your questionnaire and settings",
+"Un appel de 30 minutes avec ton coach, pour faire le point sur tes objectifs.": "A 30-minute call with your coach to review your goals."
 };
 I18N.motifs = [["^(\\d+) articles? sur (\\d+) dans le panier\\.$", "$1 of $2 items in your cart."], ["^(\\d+) étapes? validées? sur (\\d+) — (\\d+) %$", "$1 of $2 steps completed — $3%"], ["^([\\d\\s\\u202f\\u00a0.,−-]+?) kcal$", "$1 Cal"], ["^([\\d\\s\\u202f\\u00a0.,−-]+?) kcal · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de protéines par dose$", "$1 Cal · $2 g protein per serving"], ["^([\\d\\s\\u202f\\u00a0.,−-]+?) kcal consommées sur ([\\d\\s\\u202f\\u00a0.,−-]+?) — il te reste$", "$1 Cal eaten out of $2 — you have"], ["^Objectif visé : ([\\d\\s\\u202f\\u00a0.,−-]+?) kcal · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de protéines · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de glucides · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de lipides\\.$", "Target: $1 Cal · $2 g protein · $3 g carbs · $4 g fat."], ["^Coche les jours que tu veux acheter : la liste se recalcule\\. (\\d+) jours? sélectionnés?\\.$", "Check the days you want to shop for: the list updates automatically. $1 day(s) selected."], ["^Programme mis à jour le (\\d{1,2})/(\\d{1,2})/(\\d{4})$", "Program updated $2/$1/$3"], ["^Repas mis à jour le (\\d{1,2})/(\\d{1,2})/(\\d{4})$", "Meals updated $2/$1/$3"], ["^S(\\d+)$", "W$1"], ["^Supprimer la semaine (\\d+)$", "Delete week $1"], ["^dernière : semaine (\\d+)$", "latest: week $1"], ["^semaine (\\d+)$", "week $1"], ["^Semaine (\\d+) enregistrée\\.$", "Week $1 saved."], ["^(\\d+)/jambe$", "$1/leg"], ["^(\\d+)-(\\d+)/jambe$", "$1-$2/leg"], ["^(\\d+)/bras$", "$1/arm"], ["^(\\d+)-(\\d+)/bras$", "$1-$2/arm"], ["^(\\d+)-(\\d+) s/côté$", "$1-$2 s/side"], ["^protéines au-dessus de ([\\d\\s\\u202f\\u00a0.,−-]+?) g$", "protein over by $1 g"], ["^protéines en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) g$", "protein under by $1 g"], ["^lipides au-dessus de ([\\d\\s\\u202f\\u00a0.,−-]+?) g — sur ce régime, les sources de protéines apportent beaucoup de gras$", "fat over by $1 g — on this diet, protein sources bring a lot of fat"], ["^lipides en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) g — sur ce régime, les sources de protéines apportent beaucoup de gras$", "fat under by $1 g"], ["^calories au-dessus de ([\\d\\s\\u202f\\u00a0.,−-]+?) kcal$", "calories over by $1 Cal"], ["^calories en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) kcal$", "calories under by $1 Cal"], ["^glucides en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) g — ce régime offre peu de sources de glucides dans le catalogue$", "carbs under by $1 g — this diet has few carb sources in the catalog"], ["^(\\d+(?:-\\d+)?(?: s)?)/jambe$", "$1/leg"], ["^(\\d+(?:-\\d+)?(?: s)?)/bras$", "$1/arm"], ["^(\\d+(?:-\\d+)?(?: s)?)/côté$", "$1/side"], ["^(\\d+)/sens$", "$1/direction"], ["^(\\d+)/sens/cheville$", "$1/direction/ankle"], ["^(\\d+) souffles$", "$1 breaths"], ["^(\\d+) respirations$", "$1 breaths"], ["^(\\d+(?:-\\d+)?) pas$", "$1 steps"], ["^(\\d+) dans chaque sens$", "$1 each direction"], ["^(\\d+) par côté$", "$1 per side"], ["^(\\d+) par jambe$", "$1 per leg"], ["^(\\d+) par cheville$", "$1 per ankle"], ["^(\\d+) s par (côté)$", "$1 s per side"], ["^(\\d+) s par jambe$", "$1 s per leg"], ["^(\\d+) s \\+ (\\d+) squats$", "$1 s + $2 squats"]].map(([p, r]) => [new RegExp(p), r]);
 
@@ -4042,7 +4068,7 @@ const outilProfil = {
       }
       $$(".manque").forEach(e => e.classList.remove("manque"));
       flash("p-msg", "Profil enregistré. Ton coach le voit de son côté.");
-      if (premiereFois){ premiereFois = false; setTimeout(() => { location.hash = "#/mensurations"; }, 900); }
+      if (premiereFois){ premiereFois = false; setTimeout(() => { location.hash = estVerrouille(outilMensurations) ? "#/accueil" : "#/mensurations"; }, 900); }
     });
 
     this.brancherCompte();
@@ -6922,7 +6948,7 @@ const outilClients = {
             const nom = ((p.prenom||"") + " " + (p.nom||"")).trim() || "ce compte";
             const message = vers === "client"
               ? "Passer " + nom + " en client ?\n\nIl aura accès à tout son espace d'accompagnement."
-              : "Repasser " + nom + " en prospect ?\n\nIl redevient un compte gratuit : il ne sera plus suivi comme un client (plus d'alertes de suivi). Ses données restent intactes.";
+              : "Repasser " + nom + " en prospect ?\n\nIl redevient un compte gratuit : son espace sera limité au mode gratuit (" + ((CONFIG.marque.gratuit_ouverts || []).map(id => (OUTILS.find(o => o.id === id) || {}).nom).filter(Boolean).join(", ") || "accueil") + ") à sa prochaine ouverture de l'application, et il ne sera plus suivi comme un client. Ses données restent intactes.";
             if (!(await UI.confirmer(message, { ok: vers === "client" ? "Passer client" : "Repasser prospect", danger: vers === "prospect" }))) return;
             bst.disabled = true; bst.textContent = "…";
             try {
@@ -8425,6 +8451,32 @@ const outilAccueil = {
     return { prochaine: reste.length ? reste[0] : null, faites: faites.size, total: seances.length };
   },
 
+  /* ---------- ACCUEIL DU MODE GRATUIT (v40, phase 16) ----------
+     Ce qui est ouvert (formation, profil), ce que l'accompagnement apporte, et
+     l'appel decouverte. Aucun prix. */
+  gratuit(zone){
+    const prenom = (Auth.profil && Auth.profil.prenom) || "";
+    const acces = (id, t, s) => `<a class="acces" href="#/${id}"><span class="ico">${ICONES[id] || ""}</span><span class="txt"><b>${esc(trad(t))}</b><small>${esc(trad(s))}</small></span><span class="fleche">›</span></a>`;
+    zone.innerHTML = `
+      <header class="masthead">
+        <span class="eyebrow">${esc(this.dateLongue())}</span>
+        <h1>${esc(trad("Bienvenue"))}${prenom ? " " + esc(prenom) : ""}</h1>
+        <p class="lede">${esc(trad("Ton espace gratuit MHX : commence par la Speed Formation, à ton rythme."))}</p>
+      </header>
+      <section class="panel"><h2>${esc(trad("Ton espace gratuit"))}</h2><div class="acces-l">
+        ${acces("formation", "Speed Formation", "Les bases, à ton rythme")}
+        ${acces("profil", "Mon profil", "Ton questionnaire et tes réglages")}
+      </div></section>
+      <section class="panel"><h2>${esc(trad("Avec l'accompagnement MHX"))}</h2>
+        <ul class="liste-debloque">
+          <li>${esc(trad(AVANTAGES.programme))}</li><li>${esc(trad(AVANTAGES.nutrition))}</li>
+          <li>${esc(trad(AVANTAGES.mensurations))}</li><li>${esc(trad(AVANTAGES.suivi))}</li>
+        </ul>
+        <div class="actions"><a class="btn" href="${esc(lienSur(CONFIG.marque.calendly))}" target="_blank" rel="noopener">${esc(trad("Réserver mon appel"))}</a></div>
+        <p class="note" style="margin:10px 0 0">${esc(trad("Un appel de 30 minutes avec ton coach, pour faire le point sur tes objectifs."))}</p>
+      </section>`;
+  },
+
   /* ---------- FICHE CLIENT (v37, phase 18) ----------
      Ce que le coach voit en ouvrant un client : tout l'etat en une page,
      avec un lien vers l'editeur de chaque bloc. Lecture seule ici. Les
@@ -8515,6 +8567,7 @@ const outilAccueil = {
     const zone = $("acc-vue"); if (!zone) return;
     const consult = !!Store.idConsulte;
     if (consult) return this.fiche(zone);
+    if (Auth.estProspect()) return this.gratuit(zone);   // v40 : l'accueil du mode gratuit
     const d = await Store.lireTout(["intake", "programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "checkins", "feedbacks"]);
     const I = d.intake || {}, P = d.programme || {}, J = d.journal || { seances: [] }, R = d.repas || {}, S = d.repas_suivi || {}, M = d.mens || {}, OF = d.objectifs_faits || {}, CK = d.checkins || { liste: [] };
     const fbR = Feedback.recent(d.feedbacks);   // v38 : un feedback du coach de moins de 7 jours
@@ -9084,6 +9137,31 @@ function outilsVisibles(){
                          && (!o.client_seul || !Auth.estCoach() || Store.idConsulte));
 }
 
+/* v40 — MODE GRATUIT. Un prospect (Auth.estProspect) n'a d'ouverts que les
+   onglets de CONFIG.marque.gratuit_ouverts ; tous les autres affichent un
+   cadenas, ce que l'accompagnement apporte et « Réserver mon appel ». Liste
+   blanche : un onglet ajoute plus tard est verrouille par defaut. Le coach
+   qui consulte une fiche voit tout. */
+function estVerrouille(o){
+  if (!o || o.role === "coach" || Store.idConsulte || !Auth.estProspect()) return false;
+  const ouverts = (CONFIG.marque && CONFIG.marque.gratuit_ouverts) || ["accueil", "formation", "profil"];
+  return ouverts.indexOf(o.id) === -1;
+}
+function cadenasNav(o){ return estVerrouille(o) ? `<span class="nav-cadenas" aria-hidden="true">${SVG.cadenas}</span><span class="sr-only"> (${esc(trad("verrouillé"))})</span>` : ""; }
+const AVANTAGES = {
+  programme: "Ton programme d'entraînement sur mesure, construit et ajusté par ton coach.",
+  nutrition: "Ta diète personnalisée, tes repas du jour et ta liste de courses.",
+  mensurations: "Ton poids, tes mensurations et ta composition corporelle, semaine après semaine.",
+  suivi: "Ta régularité, tes objectifs du mois, ton bilan de la semaine et les retours de ton coach.",
+  bilan: "Ton bilan du mois, préparé avec ton coach.",
+  complements: "Tes compléments conseillés, avec les doses et les moments."
+};
+function pageVerrouillee(o){
+  const plus = AVANTAGES[o.id];
+  return `<section class="panel">${UI.verrou({ titre: trad(nomOnglet(o)), texte: trad("Cette fonctionnalité est disponible avec l'accompagnement MHX."), lien: CONFIG.marque.calendly, cta: trad("Réserver mon appel") })}
+    ${plus ? `<p class="note verrou-plus">${esc(trad(plus))}</p>` : ""}</section>`;
+}
+
 /* La page d'arrivee : le coach tombe sur ses clients, le client sur son accueil. */
 function outilParDefaut(){
   const v = outilsVisibles();
@@ -9096,6 +9174,11 @@ function outilParDefaut(){
 function outilsPrincipaux(){
   const v = outilsVisibles();
   const coach = Auth.estCoach() && !Store.idConsulte;
+  /* v40 : un prospect voit d'abord ce qui lui est ouvert (accueil, formation,
+     profil), puis un onglet verrouille ; le reste derriere « Plus » */
+  if (!coach && v.some(o => estVerrouille(o))){
+    return v.filter(o => !o.masque_nav && !estVerrouille(o)).concat(v.filter(o => o.principal && estVerrouille(o))).slice(0, 4);
+  }
   return v.filter(o => coach ? o.principal_coach : o.principal).slice(0, 4);
 }
 function iconeOutil(o){
@@ -9120,7 +9203,7 @@ function construireNav(){
   const visibles = outilsVisibles().filter(o => !o.masque_nav);
   const ordre = coachSeul ? visibles.filter(o => o.role === "coach").concat(visibles.filter(o => o.role !== "coach")) : visibles;
   nav.innerHTML = ordre.map(o =>
-    `<a href="#/${o.id}" data-id="${o.id}">${iconeOutil(o)}${esc(nomOnglet(o))}</a>`
+    `<a href="#/${o.id}" data-id="${o.id}">${iconeOutil(o)}${esc(nomOnglet(o))}${cadenasNav(o)}</a>`
   ).join("");
   construireBarreBas();
   $("brand-name").textContent = CONFIG.marque.nom;
@@ -9158,12 +9241,12 @@ function construireBarreBas(){
   const principaux = outilsPrincipaux();
   const autres = outilsVisibles().filter(o => principaux.indexOf(o) === -1 && !o.masque_nav);
   b.innerHTML = principaux.map(o =>
-    `<a href="#/${o.id}" data-id="${o.id}">${iconeOutil(o)}<span class="lbl">${esc(nomCourt(o))}</span></a>`).join("") +
+    `<a href="#/${o.id}" data-id="${o.id}"${estVerrouille(o) ? ' class="verrouille"' : ""}>${iconeOutil(o)}<span class="lbl">${esc(nomCourt(o))}</span>${cadenasNav(o)}</a>`).join("") +
     (autres.length ? `<button type="button" data-plus><span class="ico" aria-hidden="true">${ICONES.plus}</span><span class="lbl">Plus</span></button>` : "");
   const plus = b.querySelector("[data-plus]");
   if (plus) plus.addEventListener("click", () => {
     UI.volet({ titre: trad("Tout mon espace"), corps: `<ul class="menu-plus">` + autres.map(o =>
-      `<li><a href="#/${o.id}" data-id="${o.id}"${courant === o.id ? ' aria-current="page"' : ""}>${iconeOutil(o)}<span>${esc(nomOnglet(o))}</span></a></li>`).join("") + `</ul>` });
+      `<li><a href="#/${o.id}" data-id="${o.id}"${courant === o.id ? ' aria-current="page"' : ""}>${iconeOutil(o)}<span>${esc(nomOnglet(o))}${cadenasNav(o)}</span></a></li>`).join("") + `</ul>` });
     /* un clic sur un lien du volet le referme */
     setTimeout(() => $$(".volet .menu-plus a").forEach(a => a.addEventListener("click", () => UI.fermer())), 0);
   });
@@ -9243,6 +9326,7 @@ async function afficher(id, silencieux){
   /* Le bloc « Mes donnees » (export, restauration, suppression) ne vit plus
      qu'au bas du Profil : le repeter sous chaque page alourdissait tout. */
   const avecDonnees = outil.id === "profil" && !Store.idConsulte;
+  const verrouille = estVerrouille(outil);   // v40 : mode gratuit
   $("vue").innerHTML = `
     ${bandeauConsultation()}
     ${outil.sans_entete ? "" : `<header class="masthead">
@@ -9250,7 +9334,7 @@ async function afficher(id, silencieux){
       <h1>${Store.idConsulte ? esc(nomOnglet(outil)) : esc(outil.titre)}</h1>
       ${Store.idConsulte ? "" : `<p class="lede">${esc(outil.accroche)}</p>`}
     </header>`}
-    ${outil.html()}
+    ${verrouille ? pageVerrouillee(outil) : outil.html()}
     ${avecDonnees ? blocSauvegarde() : ""}
     ${bandeauInstallation()}`;
 
@@ -9264,7 +9348,7 @@ async function afficher(id, silencieux){
   const modifiable = !Store.idConsulte || (Auth.estCoach() && MODIFIABLES.indexOf(outil.id) > -1);
   $("vue").className = modifiable ? "wrap" : "wrap lecture-seule";
 
-  const fin = (await outil.init()) || null;
+  const fin = verrouille ? null : ((await outil.init()) || null);
   /* une autre page a ete demandee pendant le chargement : sa fonction de sortie
      est deja en place ; celle-ci est perimee (on l'execute tout de suite) */
   if (jeton !== affichage){ if (typeof fin === "function") fin(); return; }

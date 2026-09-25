@@ -98,3 +98,11 @@ Pour Grok Bot : rien à faire sur `index.html` (règle inchangée : Grok travail
 - Tests : 64 pages sans erreur ; 19 + 13 + 14 + 13 + 15 + 67 vérifications, verif-xss 5/5, **verif39 34/34**. Les simulations routent désormais par nom d'hôte (une requête d'inscription de test était partie vers la vraie base : refusée par Supabase, aucune donnée créée).
 - **Pour Grok Bot** : rien à faire côté `donnees/`. Prochaine phase : 16 (écrans verrouillés pour les prospects + Calendly).
 
+## 2026-09-25 — Phase 16 (écrans verrouillés + Calendly) livrée (index.html v40) — Claude Code
+- Mode gratuit pour les prospects : seuls **Accueil, Speed Formation et Profil** sont ouverts (liste blanche `CONFIG.marque.gratuit_ouverts` : tout onglet ajouté plus tard est verrouillé par défaut). Les autres onglets portent un petit cadenas et affichent « Cette fonctionnalité est disponible avec l'accompagnement MHX. », ce qu'ils apportent, et « Réserver mon appel » (Calendly, `CONFIG.marque.calendly`, nouvel onglet). Une page verrouillée ne lit aucune donnée.
+- Accueil du prospect : bienvenue, son espace gratuit (formation, profil), ce que débloque l'accompagnement, appel découverte. **Aucun prix** dans l'application.
+- Sur téléphone, la barre du bas d'un prospect montre d'abord ses onglets ouverts (Accueil, Formation, Profil) ; les onglets verrouillés sont annoncés « (verrouillé) » aux lecteurs d'écran ; après son premier questionnaire, il revient à l'accueil. Le statut est lu à l'ouverture de l'application : un « Passer client » prend effet à la prochaine ouverture.
+- Rien ne change pour les clients, ni pour le coach qui consulte une fiche (même celle d'un prospect), ni tant que la base n'a pas de colonne `statut`. Toutes les chaînes ont leur entrée `I18N.en`.
+- Aucune migration. Tests : 64 pages sans erreur ; 19 + 13 + 14 + 13 + 15 + 67 vérifications, verif-xss 5/5, verif39 34/34, **verif40 26/26**.
+- **Pour Grok Bot** : rien à faire. Prochaine phase : 13 (photos de progression, Storage).
+
