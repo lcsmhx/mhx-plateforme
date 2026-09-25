@@ -300,7 +300,7 @@ Tutoiement, phrases courtes, neutre homme / femme (formulations sans accord de g
 
 ---
 
-## 6. Ouverture de l'inscription (aperçu ; la marche à suivre détaillée arrive avec la v47)
+## 6. Ouverture de l'inscription (aperçu ; la marche à suivre détaillée est dans `OUVERTURE-INSCRIPTION.md`, livrée avec la v47)
 
 1. `inscription_libre: true` dans `CONFIG.marque` (je le ferai dans un commit dédié quand tu le décides, ou toi-même).
 2. Supabase → Authentication → Sign In / Providers → Email : « Allow new users to sign up » **et** « Confirm email » activés.
@@ -324,7 +324,7 @@ Tutoiement, phrases courtes, neutre homme / femme (formulations sans accord de g
 - Hub du prospect, profil allégé, démarrage sur le jour 1, Speed Formation verrouillée jusqu'à la fin, bloc « Avec l'accompagnement MHX » à partir du jour 5 ou à la fin (clic Calendly noté dans `challenge.cta`).
 - **Mode test (décision 9)** : `#/challenge-libre` sur l'appareil de test → tous les jours ouverts, pastille « Mode test » ; `#/challenge-rythme` pour revenir au rythme normal. Compte prospect de test : Comptes → créer un accès jetable → « Repasser prospect ».
 - Aucune migration ; sauvegarde vérifiée avant (28/28 lignes) et empreintes identiques après ; banc complet vert (78 pages) ; relecture indépendante (15 réserves corrigées : bornes et garde-fou santé au jour 1, touche Entrée, anglais, jour jamais bloqué, formation) ; inscription toujours fermée. À arbitrer par Lucas : âge minimum (18 par défaut) et Calendly sur les pages verrouillées dès le jour 1.
-- À venir : v47 (retour du lien de confirmation, écran « Vérifie ta boîte mail », bloc coach, marche à suivre : SMTP externe, confirmation d'email, URL, test, Instagram).
+- Toutes les versions sont livrées (v44 → v47). Reste l'ouverture par Lucas : `OUVERTURE-INSCRIPTION.md`.
 
 ### v45 — Jours 2, 3, 4 (livrée le 25/09/2026)
 - Jour 2 nutrition (5 erreurs, action liée au choix, ressenti), jour 3 entraînement (échauffement embarqué, circuit de 5 exercices au poids du corps, tours selon le niveau, démonstrations vidéo du catalogue chargées au clic, sécurité, tours + ressenti), jour 4 habitudes (5 habitudes, intention quand / où, mindset, carte coach sans bouton).
@@ -336,4 +336,12 @@ Tutoiement, phrases courtes, neutre homme / femme (formulations sans accord de g
 - CTA progressifs conformes au plan (rien avant le jour 4, volet au jour 5, secondaire au jour 6, principal au jour 7 puis hub) ; chaque clic Calendly noté dans `challenge.cta.clics`.
 - Relecture indépendante avant le push : 16 réserves (aucune bloquante), 14 corrigées dans la v46 (file d'écriture, jour 7 après relecture ratée, encarts « Recharge la page », fourchette « à la portée » ou absente si l'objectif va dans l'autre sens, rythme « 0,25 », textes, focus, CSS), 2 arbitrages pour Lucas (protéines 2,2 g/kg aux poids élevés, intensité du bouton Calendly du hub dès le jour 5 — en attendant, bouton fantôme avant la fin) ; second tour VALIDE, trois remarques mineures corrigées.
 - Aucune migration ; banc complet vert (verif46 74/74, verif45 54/54, verif44 81/81, 78 pages FR/EN/clair) ; inscription toujours fermée. Le challenge est complet.
+
+### v47 — Finitions et ouverture (livrée le 26/09/2026)
+- Retour du lien de confirmation d'email (`type=signup`) : entrée directe sur le jour 1 avec un mot d'accueil ; lien périmé → connexion avec un mot ; `type=recovery` inchangé.
+- Écran « Vérifie ta boîte mail » après l'inscription quand la confirmation est exigée.
+- Côté coach (décision 5, lecture seule, aucune requête nouvelle) : pastilles « Challenge n/7 » / « terminé » / « a cliqué Réserver » / « appel réservé » dans Mes clients, tuile du tableau de bord, bloc « Challenge 7 jours » dans la fiche.
+- `OUVERTURE-INSCRIPTION.md` : la marche à suivre complète (SMTP externe gratuit, Supabase Auth, adresses de retour, modèle d'email, interrupteur en dernier, test, CAPTCHA, Instagram, quoi regarder ensuite, refermer).
+- Relecture indépendante avant le push : 10 réserves dont 2 bloquantes pour l'ouverture (lien périmé réel renvoyé par Supabase sous forme d'erreur dans l'adresse ; prospect piégé qui pouvait faire tomber Mes clients), toutes corrigées : lien périmé sans boucle ni déconnexion, pas de bascule silencieuse de compte, messages Supabase traduits, données piégées absorbées, Mes clients lu par pages, guide d'ouverture corrigé (SMTP intégré réservé à l'équipe, identifiant Brevo, délivrabilité Gmail, ordre des étapes, vérifications SQL) ; second tour VALIDE, points mineurs corrigés.
+- Aucune migration ; banc complet vert (verif47 46/46, verif46 74/74, verif45 54/54, verif44 81/81, 78 pages FR/EN/clair) ; inscription toujours fermée.
 

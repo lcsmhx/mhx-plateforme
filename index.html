@@ -889,6 +889,9 @@ label.fo-case{display:flex;align-items:flex-start;gap:10px;cursor:pointer;flex:1
 .tile .t-val.ch-t-texte{font-family:"IBM Plex Sans",sans-serif;font-size:15px;font-weight:600;line-height:1.35;padding-top:4px}
 .ch-segtexte{max-width:none;width:100%;flex-wrap:wrap}
 .ch-segtexte button{flex:1 1 42%;min-height:36px;font-weight:600}
+/* v47 — fiche coach : les 7 etapes en lecture seule */
+.ch-etapes-fiche{margin:0 0 12px}
+.ch-etapes-fiche .ch-etape{cursor:default}
 .ch-etape{display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;color:var(--ink-3);font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:6px 2px;border-radius:var(--r-sm);text-align:center;line-height:1.2}
 .ch-etape .num{width:30px;height:30px;border-radius:50%;border:1px solid var(--line-strong);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;background:var(--sunken);color:var(--ink-2);transition:border-color var(--vite),background var(--vite)}
 .ch-etape.fait .num{background:var(--good-soft);border-color:var(--good);color:var(--good)}
@@ -970,7 +973,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-09-26 · 46",
+    version: "2026-09-26 · 47",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -1239,7 +1242,20 @@ const CHALLENGE7 = {
     cgu_avant: "J'accepte les",
     cgu_lien: "conditions d'utilisation et la politique de confidentialité",
     cgu_manque: "Coche la case des conditions pour continuer.",
-    note: "Le challenge ne remplace pas un avis médical. Si tu as un doute sur ta santé, parles-en à un professionnel avant de commencer."
+    note: "Le challenge ne remplace pas un avis médical. Si tu as un doute sur ta santé, parles-en à un professionnel avant de commencer.",
+    /* v47 : apres l'inscription quand l'email doit etre confirme, et au retour du lien */
+    verif_titre: "Vérifie ta boîte mail",
+    verif_texte: "On vient d'envoyer un lien à {e}. Ouvre-le pour confirmer ton compte : tu arriveras directement sur ton jour 1.",
+    verif_note: "Rien reçu après quelques minutes ? Regarde dans les indésirables. Le lien ne sert qu'une fois. Déjà un compte avec cet email ? Connecte-toi directement.",
+    verif_retour: "Retour à la connexion",
+    lien_ok: "Ton email est confirmé{e}. Bienvenue dans le challenge !",
+    lien_entree: "Connexion réussie{e}.",
+    lien_rate: "Ce lien n'est plus valable (il ne sert qu'une fois). Connecte-toi avec ton email et ton mot de passe, ou redemande un lien depuis « Mot de passe oublié ».",
+    lien_rate_connecte: "Ce lien n'est plus valable ou n'a pas pu être vérifié, mais tu es déjà dans ton espace : rien à faire.",
+    lien_reseau: "Ton email est bien confirmé, mais l'entrée automatique a échoué (réseau). Connecte-toi avec ton email et ton mot de passe.",
+    lien_autre_compte: "Un autre compte est déjà connecté sur cet appareil : ce lien n'a pas été utilisé. Déconnecte-toi d'abord, puis connecte-toi avec le nouveau compte (son email est confirmé).",
+    non_confirme: "Ton email n'est pas encore confirmé : ouvre le lien reçu (regarde dans les indésirables).",
+    trop_demandes: "Trop de demandes d'un coup : réessaie dans une minute."
   },
 
   /* --- conditions et confidentialité (volet ouvert depuis l'inscription) --- */
@@ -1483,7 +1499,19 @@ const CHALLENGE7 = {
       cgu_avant: "I accept the",
       cgu_lien: "terms of use and privacy policy",
       cgu_manque: "Tick the terms box to continue.",
-      note: "The challenge is not medical advice. If you have any doubt about your health, talk to a professional before starting."
+      note: "The challenge is not medical advice. If you have any doubt about your health, talk to a professional before starting.",
+      verif_titre: "Check your inbox",
+      verif_texte: "We've just sent a link to {e}. Open it to confirm your account: you'll land straight on your day 1.",
+      verif_note: "Nothing after a few minutes? Check your spam folder. The link works only once. Already have an account with this email? Just sign in.",
+      verif_retour: "Back to sign in",
+      lien_ok: "Your email is confirmed{e}. Welcome to the challenge!",
+      lien_entree: "Signed in{e}.",
+      lien_rate: "This link is no longer valid (it works only once). Sign in with your email and password, or request a new one from “Forgot password”.",
+      lien_rate_connecte: "This link is no longer valid or could not be checked, but you're already in your space: nothing to do.",
+      lien_reseau: "Your email is confirmed, but automatic sign-in failed (network). Sign in with your email and password.",
+      lien_autre_compte: "Another account is already signed in on this device: this link was not used. Sign out first, then sign in with the new account (its email is confirmed).",
+      non_confirme: "Your email isn't confirmed yet: open the link we sent you (check your spam folder).",
+      trop_demandes: "Too many requests at once: try again in a minute."
     },
     confidentialite: {
       titre: "Terms of use and privacy",
@@ -7727,7 +7755,7 @@ const outilClients = {
 
     const feu = l => { const n = l.alertes.some(a => a.niveau === "mauvais") ? "mauvais" : l.alertes.some(a => a.niveau === "attention") ? "attention" : "ok"; return `<span class="point ${n}" title="${esc(l.alertes.map(a => a.texte).join(" · ") || "Rien à signaler")}"></span>`; };
     tb.innerHTML = lignes.map(l => `<tr>
-      <td data-l="Client">${feu(l)} <b>${esc(l.nom)}</b>${l.p.statut === "prospect" ? ` <span class="pastille accent" title="Compte gratuit : pas encore accompagné">prospect</span>` : ""}${l.ecarts.length ? ` <span class="pastille manque" title="Le calculateur ne correspond pas au questionnaire">chiffres à vérifier</span>` : ""}</td>
+      <td data-l="Client">${feu(l)} <b>${esc(l.nom)}</b>${l.p.statut === "prospect" ? ` <span class="pastille accent" title="Compte gratuit : pas encore accompagné">prospect</span> ` + Challenge.pastilleCoach(l.ch) : ""}${l.ecarts.length ? ` <span class="pastille manque" title="Le calculateur ne correspond pas au questionnaire">chiffres à vérifier</span>` : ""}</td>
       <td data-l="Activité">${l.jours === null ? '<span class="pastille manque">jamais</span>'
             : l.jours >= 10 ? `<span class="pastille manque">${l.jours} j</span>`
             : `<span class="meta">${l.jours === 0 ? "aujourd'hui" : "il y a " + l.jours + " j"}</span>`}</td>
@@ -8005,12 +8033,31 @@ const outilClients = {
    l'ecran ou aller.
    ------------------------------------------------------------------ */
 const Clients = {
+  /* v47 : lecture par pages de 1 000 (Supabase coupe a 1 000 lignes sans prevenir : avec l'inscription
+     ouverte, quelques centaines de prospects suffiraient a faire disparaitre des clients de la liste) */
+  async pages(chemin, cle){
+    const PAGE = 1000, tout = [], vus = new Set();
+    let precedent = null;
+    for (let debut = 0; ; debut += PAGE){
+      let lot;
+      try { lot = await Auth.appel(chemin, { headers: { "Range-Unit": "items", "Range": debut + "-" + (debut + PAGE - 1) } }); }
+      catch(e){ if (e && e.statut === 416) break; throw e; }   // 416 = au-dela de la fin
+      if (!Array.isArray(lot) || !lot.length) break;
+      const k0 = cle(lot[0]);
+      if (precedent !== null && k0 === precedent) break;   // le serveur ignore Range : on a deja tout
+      lot.forEach(l => { const k = cle(l); if (!vus.has(k)){ vus.add(k); tout.push(l); } });   // une inscription entre deux pages ne cree pas de doublon
+      precedent = k0;
+      if (lot.length !== PAGE) break;
+      if (debut > 200000) break;   // garde-fou
+    }
+    return tout;
+  },
   async charger(){
-    const profils = await Auth.appel("/rest/v1/profils?select=*&order=cree_le.desc");
+    const profils = await this.pages("/rest/v1/profils?select=*&order=cree_le.desc,id.asc", l => String(l && l.id));
     /* les historiques (jusqu'a 24 plans par client) ne servent pas ici :
        on ne les telecharge pas */
     /* v38 : les notes privees ne servent pas ici non plus */
-    const donnees = await Auth.appel("/rest/v1/donnees?select=user_id,outil,contenu,maj_le&outil=not.in.(hist_programme,hist_repas,notes_coach)");
+    const donnees = await this.pages("/rest/v1/donnees?select=user_id,outil,contenu,maj_le&outil=not.in.(hist_programme,hist_repas,notes_coach)&order=user_id.asc,outil.asc", l => String(l && l.user_id) + "|" + String(l && l.outil));
     const parClient = {}, contenus = {};
     /* « Activite » = ce que le CLIENT a saisi. Ce que le coach ecrit dans
        sa fiche (programme, diete, calories, feedbacks, notes) ne dit rien de lui. */
@@ -8037,7 +8084,8 @@ const Clients = {
       intake: !!(c.intake && c.intake.complet),
       programme: !!(c.programme && (c.programme.seances||[]).length),
       diete: !!(c.repas && ((c.repas.jours || []).some(j => (j.repas || []).length) || (c.repas.repas || []).length)),
-      sens: sens
+      sens: sens,
+      ch: (c.challenge && typeof c.challenge === "object") ? c.challenge : null   // v47 : pastille « Challenge n/7 » (prospects)
     };
     /* regularite : la semaine passee (complete) sert au tri, celle en cours
        est donnee a titre indicatif. Rien tant qu'il n'a ni programme ni diete. */
@@ -8156,6 +8204,7 @@ const outilTableau = {
     catch(e){ zone.innerHTML = `<section class="panel"><div class="empty">Impossible de charger tes clients pour le moment.</div></section>`; return; }
     const lignes = Clients.resumer(profils, parClient, contenus);
     const prospects = profils.filter(p => p.role !== "coach" && p.statut === "prospect");
+    const finis = lignes.filter(l => l.p.statut === "prospect" && l.ch && Challenge.termine(l.ch)).length;   // v47
     const clients = lignes.filter(l => l.p.statut !== "prospect");
     const aTraiter = clients.filter(l => l.alertes.some(a => a.type === "bilan_recu")).length;
     const nonCompletes = clients.filter(l => l.alertes.some(a => a.type === "bilan_manque")).length;
@@ -8177,7 +8226,7 @@ const outilTableau = {
       <section class="panel">
         <div class="tiles tb-tiles">
           ${tuile("Clients actifs", clients.length, "accompagnement en cours")}
-          ${tuile("Prospects", prospects.length, "comptes gratuits")}
+          ${tuile("Prospects", prospects.length, finis ? `${finis} challenge${finis > 1 ? "s" : ""} terminé${finis > 1 ? "s" : ""}` : "comptes gratuits", finis ? "cle" : "")}
           ${tuile("Bilans à traiter", aTraiter, "reçus cette semaine", aTraiter ? "cle" : "")}
           ${tuile("Bilans non complétés", nonCompletes, "semaine passée", nonCompletes ? "attention" : "")}
           ${tuile("À surveiller", aSurveiller.length, "au moins une alerte", aSurveiller.length ? "attention" : "")}
@@ -9462,12 +9511,53 @@ const outilAccueil = {
     $$("a[target=_blank]", zone).forEach(a => { if (cal && a.getAttribute("href") === cal) a.addEventListener("click", () => Challenge.clic(C, e.termine ? Challenge.NB : e.nbFaits)); });
   },
 
+  /* v47 — bloc « Challenge 7 jours » de la fiche : ce que le prospect a fait et choisi, en lecture seule */
+  challengeFicheHTML(C){
+    if (!C) return "";
+    try { return this._challengeFicheHTML(C); }
+    catch(e){ console.warn("[MHX] bloc challenge illisible", e); return `<section class="panel" id="fiche-challenge"><h2>Challenge 7 jours</h2><div class="empty">Données du challenge illisibles — à vérifier.</div></section>`; }
+  },
+  _challengeFicheHTML(C){
+    const r = Challenge.resume(C);
+    /* tout ce qui vient du prospect passe par s() (chaine ou nombre, sinon rien) ou dt() (date en chaine, sinon —) */
+    const s = v => (typeof v === "string" || typeof v === "number") ? String(v) : "";
+    const dt = v => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v)) ? dateFr(v) : "—";
+    const def = n => Challenge.def(n) || {};
+    const e = n => Challenge.entree(C, n) || {};
+    const lab = (liste, id) => { id = s(id); const x = (liste || []).find(o => o && o.id === id); return x ? (x.titre || x.texte || "") : id; };   // les erreurs du jour 2 ont un titre court
+    const etapes = [];
+    for (let n = 1; n <= Challenge.NB; n++){
+      const x = Challenge.fait(C, n) ? Challenge.entree(C, n) : null, j = def(n);
+      const quand = x ? dt(typeof x.date === "string" ? x.date : x.fait) : "";
+      etapes.push(`<li><span class="ch-etape${x ? " fait" : " ferme"}" role="img" aria-label="${esc("Jour " + n + " : " + (x ? "validé le " + quand : "pas encore"))}" title="${esc("Jour " + n + (x ? " · validé le " + quand : " · pas encore"))}"><span class="num" aria-hidden="true">${x ? "✓" : n}</span><span class="lbl" aria-hidden="true">${esc(j.eyebrow || "")}</span></span></li>`);
+    }
+    const j2 = e(2), j3 = e(3), j4 = e(4), j5 = e(5), j6 = e(6);
+    const tours = (typeof j3.tours === "number" || typeof j3.tours === "string") && Number(j3.tours) > 0 ? Math.round(Number(j3.tours)) : 0;
+    const lignes = [
+      ["Jours validés", r.nbFaits + " / 7" + (r.termine ? " · terminé le " + dt(C.termine) : r.prochain ? " · prochain : jour " + r.prochain : "")],
+      ["Commencé le", r.debut ? dt(r.debut) : ""],
+      ["Dernier jour validé le", r.dernier ? dt(r.dernier) : ""],
+      ["Erreur choisie (jour 2)", s(j2.erreur) ? lab(def(2).erreurs, j2.erreur) + (s(j2.ressenti) ? " · action jugée « " + lab(def(2).ressentis, j2.ressenti).toLowerCase() + " »" : "") : ""],
+      ["Séance (jour 3)", tours ? tours + " tour" + (tours > 1 ? "s" : "") + " · ressenti " + (s(j3.ressenti) || "—") + "/5" : ""],
+      ["Habitude (jour 4)", s(j4.habitude) ? lab(def(4).habitudes, j4.habitude) + ((s(j4.quand) || s(j4.ou)) ? " (" + [s(j4.quand), s(j4.ou)].filter(Boolean).join(", ") + ")" : "") : ""],
+      ["Ce qui lui parle (jour 5)", s(j5.interet) ? lab(def(5).interets, j5.interet) : ""],
+      ["« Où en es-tu ? » (jour 6)", s(j6.etat) ? lab(def(6).etats, j6.etat) : ""],
+      ["Bouton « Réserver mon appel »", r.clics ? r.clics + " clic" + (r.clics > 1 ? "s" : "") + (r.dernierClic ? ", le dernier le " + dt(r.dernierClic) : "") : "jamais cliqué"],
+      ["Case « J'ai réservé mon appel »", r.reserve ? "cochée le " + dt(r.reserve) : ""]
+    ];
+    const ligne = (k, v) => v ? `<li><span>${esc(k)}</span><b>${esc(String(v))}</b></li>` : "";
+    return `<section class="panel" id="fiche-challenge"><div class="seance-c-tete"><h2>Challenge 7 jours</h2>${r.termine ? `<span class="pastille ok">terminé</span>` : `<span class="pastille">${r.nbFaits} / 7</span>`}${r.reserve ? ` <span class="pastille ok">appel réservé</span>` : r.clics ? ` <span class="pastille accent">a cliqué Réserver</span>` : ""}</div>
+      <ol class="ch-etapes ch-etapes-fiche">${etapes.join("")}</ol>
+      <ul class="ingr fiche-l">${lignes.map(x => ligne(x[0], x[1])).join("")}</ul>
+      <p class="note" style="margin:10px 0 0">Ses réponses du jour 1 (âge, poids, objectif, « pourquoi ») sont dans son questionnaire, ci-dessous. Lecture seule : rien ne s'écrit d'ici.</p></section>`;
+  },
+
   /* ---------- FICHE CLIENT (v37, phase 18) ----------
      Ce que le coach voit en ouvrant un client : tout l'etat en une page,
      avec un lien vers l'editeur de chaque bloc. Lecture seule ici. Les
      notes privees et les feedbacks arrivent avec les phases 10 et 18. */
   async fiche(zone){
-    const cles = ["intake", "programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "checkins", "complements", "calc", "formation", "hist_programme", "hist_repas", "prefs", "feedbacks"];
+    const cles = ["intake", "programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "checkins", "complements", "calc", "formation", "hist_programme", "hist_repas", "prefs", "feedbacks", "challenge"];   // v47 : + challenge
     const uidFiche = Store.idConsulte;
     const [{ valeurs: d, dates }, pr] = await Promise.all([
       Store.lireTout(cles, { dates: true }),
@@ -9498,6 +9588,7 @@ const outilAccueil = {
     const nbCompl = ((d.complements || {}).liste || []).length;
     const histP = ((d.hist_programme || {}).liste || []).length, histR = ((d.hist_repas || {}).liste || []).length;
     const fo = d.formation ? outilFormation.compte(outilFormation.migrer(d.formation)) : null;
+    const CH = (d.challenge && Challenge.nbFaits(d.challenge)) ? d.challenge : null, rch = CH ? Challenge.resume(CH) : null;   // v47
     const lien = (id, txt) => `<a class="link-a" href="#/${id}">${esc(txt)} →</a>`;
     const ligne = (k, v) => v == null || v === "" ? "" : `<li><span>${esc(k)}</span><b>${esc(String(v))}</b></li>`;
     const alertes = l.alertes;
@@ -9505,7 +9596,7 @@ const outilAccueil = {
       <header class="masthead">
         <span class="eyebrow">${esc(trad("Fiche client"))} · ${esc(this.dateLongue())}</span>
         <h1>${esc(nomC)}${profil.statut === "prospect" ? ` <span class="pastille accent" title="Compte gratuit : pas encore accompagné">prospect</span>` : ""}${(d.prefs && d.prefs.langue === "en") ? ` <span class="pastille" title="Ce client utilise l'app en anglais">🇺🇸 anglais</span>` : ""}</h1>
-        <p class="lede">${profil.statut === "prospect" ? "Compte gratuit : pas de suivi à assurer tant qu'il n'est pas passé client." : alertes.length ? `${alertes.length} point${alertes.length > 1 ? "s" : ""} à regarder.` : "Rien à signaler : tout est en ordre."}</p>
+        <p class="lede">${profil.statut === "prospect" ? "Compte gratuit : pas de suivi à assurer tant qu'il n'est pas passé client." + (rch ? " Challenge 7 jours : " + (rch.termine ? "terminé." : rch.nbFaits + " / 7.") : " Challenge 7 jours : pas encore commencé.") : alertes.length ? `${alertes.length} point${alertes.length > 1 ? "s" : ""} à regarder.` : "Rien à signaler : tout est en ordre."}</p>
         ${alertes.length ? `<div class="attention-alertes" style="margin-top:4px">${alertes.map(a => `<a class="pastille ${a.niveau === "info" ? "accent" : a.niveau}" href="#/${esc(a.cible)}">${esc(a.texte)}</a>`).join("")}</div>` : ""}
       </header>
       <section class="panel">
@@ -9519,6 +9610,7 @@ const outilAccueil = {
           <div class="tile"><div class="t-lbl">Bilan hebdo</div><div class="t-val readout${dernierCk ? " pos" : ""}">${dernierCk ? "✓" : "—"}</div><div class="t-sub">${dernierCk ? "dernier envoyé le " + esc(dateFr(dernierCk.envoye_le)) : "jamais envoyé"}</div></div>
         </div>
       </section>
+      ${this.challengeFicheHTML(CH)}
       ${NotesCoach.html()}
       <div class="fiche-grille">
       <section class="panel"><div class="seance-c-tete"><h2>Profil</h2>${I.complet ? `<span class="pastille ok">questionnaire complet</span>` : `<span class="pastille attention">questionnaire incomplet</span>`}</div>
@@ -10128,8 +10220,9 @@ const Challenge = {
 
   /* jours ecoules entre une date locale (AAAA-MM-JJ) et aujourd'hui ; null si illisible */
   joursEcoules(debut){
+    if (typeof debut !== "string") return null;   // v47 : une valeur piegee (objet) ne doit jamais faire tomber une page
     const re = /^(\d{4})-(\d{2})-(\d{2})$/;
-    const m = re.exec(String(debut || "")), a = re.exec(aujourdhui());
+    const m = re.exec(debut), a = re.exec(aujourdhui());
     if (!m || !a) return null;
     return Math.round((Date.UTC(+a[1], +a[2] - 1, +a[3]) - Date.UTC(+m[1], +m[2] - 1, +m[3])) / 86400000);
   },
@@ -10152,7 +10245,7 @@ const Challenge = {
   derniereDate(C){
     let der = null;
     const auj = aujourdhui();
-    for (let n = 1; n <= this.NB; n++){ const e = this.entree(C, n); if (this.fait(C, n) && /^\d{4}-\d{2}-\d{2}$/.test(String(e.date || "")) && e.date <= auj && (!der || e.date > der)) der = e.date; }
+    for (let n = 1; n <= this.NB; n++){ const e = this.entree(C, n); if (this.fait(C, n) && typeof e.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(e.date) && e.date <= auj && (!der || e.date > der)) der = e.date; }
     return der;
   },
   disponible(C, n){
@@ -10253,6 +10346,27 @@ const Challenge = {
   },
 
   /* ---------- briques d'affichage (hub et page du jour) ---------- */
+  /* v47 — resume pour le coach (lecture seule) : jours faits, prochain jour, clics « Reserver », case « J'ai reserve » */
+  resume(C){
+    if (!C || typeof C !== "object" || Array.isArray(C)) return null;
+    const ch = v => typeof v === "string" ? v : null;   // seules des chaines sortent d'ici (le prospect ecrit ce qu'il veut dans sa cle)
+    const j7 = this.entree(C, 7) || {};
+    const clics = (C.cta && typeof C.cta === "object" && Array.isArray(C.cta.clics)) ? C.cta.clics.filter(x => x && typeof x === "object" && !Array.isArray(x)) : [];
+    /* sans etat() : ni le rythme, ni le mode test de l'appareil du coach n'entrent en jeu */
+    return { nbFaits: this.nbFaits(C), termine: this.termine(C), prochain: this.prochain(C), debut: ch(C.debut), dernier: this.derniereDate(C),
+             clics: clics.length, dernierClic: clics.length ? ch(clics[clics.length - 1].date) : null, reserve: ch(j7.reserve) };
+  },
+  /* v47 — pastilles « Challenge n/7 » (+ appel) pour Mes clients : prospects seulement */
+  pastilleCoach(C){
+    let r = null;
+    try { r = this.resume(C); } catch(e){ return `<span class="pastille attention" title="Données du challenge illisibles">Challenge illisible</span>`; }
+    if (!r || !r.nbFaits) return `<span class="pastille" title="Challenge 7 jours : pas encore commencé">Challenge 0/7</span>`;
+    let h = r.termine ? `<span class="pastille ok" title="Challenge 7 jours terminé">Challenge terminé</span>`
+                      : `<span class="pastille" title="Challenge 7 jours : ${r.nbFaits} jour${r.nbFaits > 1 ? "s" : ""} validé${r.nbFaits > 1 ? "s" : ""}">Challenge ${r.nbFaits}/7</span>`;
+    if (r.reserve) h += ` <span class="pastille ok" title="A coché « J'ai réservé mon appel »">appel réservé</span>`;
+    else if (r.clics) h += ` <span class="pastille accent" title="A cliqué « Réserver mon appel » ${r.clics} fois">a cliqué Réserver</span>`;
+    return h;
+  },
   etapesHTML(C, courant){
     const e = this.etat(C);
     return `<ol class="ch-etapes">` + (CHALLENGE7.jours || []).map(j => {
@@ -11307,10 +11421,11 @@ function portail(mode){
         /* v44 : prenom seul (le nom viendra avec le questionnaire) ; l'acceptation des conditions est datee */
         const connecte = await Auth.inscrire(email, mdp, prenom, "", { consentement: new Date().toISOString(), conditions_version: CHALLENGE7.confidentialite.version });
         if (connecte){ location.hash = ""; location.reload(); return; }
-        err("Compte créé. Ouvre le lien reçu par email pour le confirmer, puis connecte-toi.", true);
+        ecranVerifieEmail(email); return;   // v47 : un ecran dedie, pas une ligne de message
       } catch(e){
         const m = (e.message || "").toLowerCase();
-        err(m.indexOf("already") > -1 || m.indexOf("registered") > -1 ? "Un compte existe déjà avec cet email : connecte-toi."
+        err(/rate limit|security purposes|after \d+ seconds/.test(m) ? trad(CHALLENGE7.inscription.trop_demandes)   // v47
+          : m.indexOf("already") > -1 || m.indexOf("registered") > -1 ? "Un compte existe déjà avec cet email : connecte-toi."
           : m.indexOf("disabled") > -1 || m.indexOf("not allowed") > -1 ? "Les inscriptions ne sont pas encore ouvertes."
           : e.message || "Une erreur est survenue.");
       }
@@ -11328,7 +11443,10 @@ function portail(mode){
       }
     } catch(e){
       const m = (e.message || "").toLowerCase();
-      err(m.indexOf("invalid") > -1 ? "Email ou mot de passe incorrect."
+      /* v47 : les messages de Supabase qui arrivent sur le parcours du funnel, en francais */
+      err(m.indexOf("not confirmed") > -1 ? trad(CHALLENGE7.inscription.non_confirme)
+        : /rate limit|security purposes|after \d+ seconds/.test(m) ? trad(CHALLENGE7.inscription.trop_demandes)
+        : m.indexOf("invalid") > -1 ? "Email ou mot de passe incorrect."
         : m.indexOf("password") > -1 ? "Le mot de passe doit faire au moins 6 caractères."
         : e.message || "Une erreur est survenue.");
     }
@@ -11359,9 +11477,63 @@ function lireAdresse(){
   const p = {};
   h.split("&").forEach(kv => {
     const [k, v] = kv.split("=");
-    if (k) p[decodeURIComponent(k)] = decodeURIComponent((v || "").replace(/\+/g, " "));
+    const dec = x => { try { return decodeURIComponent(x); } catch(e){ return x; } };   // v47 : « #% » ne doit pas bloquer le demarrage
+    if (k) p[dec(k)] = dec((v || "").replace(/\+/g, " "));
   });
   return p;
+}
+
+/* v47 — apres l'inscription, quand Supabase demande de confirmer l'email : la carte du portail
+   devient « Verifie ta boite mail » (l'adresse, ou chercher, et un retour a la connexion) */
+function ecranVerifieEmail(email){
+  const carte = document.querySelector(".portail .carte-co"); if (!carte) return;
+  const T = CHALLENGE7.inscription;
+  /* le formulaire n'existe plus : la touche Entree ne doit plus chercher a l'envoyer */
+  if (portail._entree){ document.removeEventListener("keydown", portail._entree); portail._entree = null; }
+  carte.innerHTML = `
+      ${CONFIG.marque.logo ? `<img class="logo-img" src="${esc(CONFIG.marque.logo)}" alt="${esc(CONFIG.marque.nom)}">` : ""}
+      <div class="logo">${esc(CONFIG.marque.nom)}</div>
+      <h2 id="co-verif" tabindex="-1">${esc(trad(T.verif_titre))}</h2>
+      <p class="co-sous">${esc(trad(T.verif_texte, { e: email }))}</p>
+      <p class="co-note">${esc(trad(T.verif_note))}</p>
+      <div class="bascule"><button type="button" data-mode="connexion">${esc(trad(T.verif_retour))}</button></div>`;
+  $$("[data-mode]", carte).forEach(b => b.addEventListener("click", () => portail(b.dataset.mode)));
+  const h2 = $("co-verif"); if (h2) h2.focus();
+}
+
+/* v47 — entree par un lien recu par email (confirmation d'inscription, lien magique) : les jetons
+   sont dans l'adresse. On va chercher la personne avec ce jeton, on memorise la session comme
+   apres une connexion, on retire les jetons de l'adresse, et le demarrage continue (un prospect
+   arrive sur son jour 1). Lien perime : la connexion, avec un mot ; deja connecte sur cet
+   appareil : on entre quand meme, avec un mot. */
+async function entrerParLien(p){
+  const nettoyer = () => { try { history.replaceState(null, "", location.pathname + location.search); } catch(e){} };
+  Auth.charger();
+  const avant = Auth.utilisateur();   // un compte deja connecte sur cet appareil ?
+  try {
+    if (!/^[\w-]+\.[\w-]+\.[\w-]*$/.test(String(p.access_token))) throw Object.assign(new Error("sans utilisateur"), { statut: 400 });   // un jeton qui n'en a pas la forme : pas d'appel
+    const u = await Auth.appel("/auth/v1/user", { avecJeton: false, headers: { "Authorization": "Bearer " + p.access_token } });
+    if (!u || typeof u !== "object" || typeof u.id !== "string" || !u.id) throw new Error("sans utilisateur");
+    nettoyer();
+    lienEmailType = p.type; lienEmailAdresse = typeof u.email === "string" ? u.email : "";
+    /* un autre compte est connecte : on ne bascule jamais en silence (un lien envoye par un tiers
+       ferait saisir ses reponses dans le compte du tiers) ; l'email du lien est de toute facon confirme */
+    if (avant && avant.id && avant.id !== u.id){ lienEmail = "autre_compte"; return true; }
+    Auth.persistant = true;
+    const duree = Math.min(Math.max(parseInt(p.expires_in, 10) || 3600, 60), 3600);   // borne : un lien fabrique ne doit pas figer une session
+    Auth.memoriser({ access_token: p.access_token, refresh_token: p.refresh_token, expires_in: duree, token_type: p.token_type || "bearer", user: u });
+    lienEmail = "ok";
+    return true;
+  } catch(e){
+    nettoyer();
+    Auth.charger();
+    if (Auth.connecte()){ lienEmail = "rate_connecte"; return true; }
+    /* jeton refuse (4xx) : lien plus valable ; sinon (reseau, 5xx) l'email est confirme mais l'entree a echoue */
+    const refuse = e && e.statut >= 400 && e.statut < 500 && e.statut !== 429;   // 429 = trop de demandes, pas un lien perime
+    portail("connexion");
+    setTimeout(() => { const z = $("co-err"); if (z){ z.className = "erreur"; z.textContent = trad(CHALLENGE7.inscription[refuse || !(e && e.statut) && /sans utilisateur/.test(String(e && e.message)) ? "lien_rate" : "lien_reseau"]); } }, 60);
+    return false;
+  }
 }
 
 function ecranNouveauMotDePasse(jeton){
@@ -11401,6 +11573,7 @@ function ecranNouveauMotDePasse(jeton){
 
 /* ---------------------- DÉMARRAGE ---------------------- */
 let premiereFois = false;
+let lienEmail = null, lienEmailType = "", lienEmailAdresse = "";   // v47 : "ok" | "autre_compte" | "rate_connecte" apres un lien d'email (mot affiche une fois l'ecran construit)
 
 (async function demarrer(){
   I18N.charger();   // v44 : en anglais, les textes du challenge rejoignent le dictionnaire ici (Contenus.challenge)
@@ -11410,11 +11583,25 @@ let premiereFois = false;
 
   /* lien de reinitialisation recu par email */
   if (p.type === "recovery" && p.access_token){ ecranNouveauMotDePasse(p.access_token); return; }
-  if (p.error_description){
-    Auth.oublier();
-    portail("connexion");
-    setTimeout(() => { const e = $("co-err"); if (e){ e.className = "erreur"; e.textContent = p.error_description; } }, 60);
-    return;
+  /* v47 — lien de confirmation d'inscription (ou lien magique) : entree directe */
+  if (p.access_token && p.refresh_token && (p.type === "signup" || p.type === "magiclink")){
+    if (!(await entrerParLien(p))) return;
+  } else if (p.access_token){
+    try { history.replaceState(null, "", location.pathname + location.search); } catch(e){}   // autre lien (changement d'email…) : les jetons ne restent pas dans l'adresse
+  }
+  /* v47 — lien perime ou deja utilise : Supabase revient SANS jeton, avec #error=…&error_code=otp_expired&error_description=…
+     (deuxieme clic sur l'email de confirmation, lien de plus de 24 h, lien « visite » par un filtre anti-spam).
+     L'adresse est nettoyee d'abord (sinon chaque rechargement relit l'erreur : boucle), le texte anglais brut n'est
+     jamais affiche, et une session deja ouverte sur l'appareil n'est pas touchee. */
+  if (p.error || p.error_code || p.error_description){
+    try { history.replaceState(null, "", location.pathname + location.search); } catch(e){}
+    Auth.charger();
+    if (Auth.connecte()) lienEmail = "rate_connecte";
+    else {
+      portail("connexion");
+      setTimeout(() => { const e = $("co-err"); if (e){ e.className = "erreur"; e.textContent = trad(CHALLENGE7.inscription.lien_rate); } }, 60);
+      return;
+    }
   }
 
   Auth.charger();
@@ -11423,7 +11610,12 @@ let premiereFois = false;
      creation de compte ; sinon, l'ecran de connexion comme n'importe quelle autre adresse. */
   if (!Auth.connecte()){ portail(/inscription/.test(location.hash) ? "inscription" : "connexion"); return; }
   const ok = await Auth.assurer();
-  if (!ok){ portail("connexion"); return; }
+  if (!ok){
+    portail("connexion");
+    /* v47 : on arrivait par un lien d'email et la session enregistree ne se renouvelle plus : le dire */
+    if (lienEmail) setTimeout(() => { const z = $("co-err"); if (z){ z.className = "erreur"; z.textContent = trad(CHALLENGE7.inscription.lien_rate); } }, 60);
+    return;
+  }
   try { await Auth.chargerProfil(); } catch(e){}
 
   /* la langue choisie sur un autre appareil l'emporte */
@@ -11445,6 +11637,12 @@ let premiereFois = false;
   construireNav();
   Contenus.charger();
   window.addEventListener("hashchange", routeDepuisAdresse);
+  /* v47 — un mot apres un lien d'email, une fois l'ecran construit */
+  if (lienEmail) setTimeout(() => { try {
+    const T = CHALLENGE7.inscription;
+    const cle = lienEmail === "ok" ? (lienEmailType === "signup" && Auth.estProspect() ? "lien_ok" : "lien_entree") : lienEmail === "autre_compte" ? "lien_autre_compte" : "lien_rate_connecte";
+    UI.toast(trad(T[cle], { e: lienEmailAdresse ? " (" + lienEmailAdresse + ")" : "" }), lienEmail === "ok" ? "ok" : "attention", 7000);
+  } catch(e){} }, 600);
 
   /* Premiere connexion d'un client : on l'envoie remplir son profil */
   if (!Auth.estCoach() && !Auth.estProspect()){
