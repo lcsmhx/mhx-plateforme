@@ -237,7 +237,7 @@ const ecrituresDe = (db, outil) => db.ecritures.filter(e => e.table === "donnees
     ok("jour 1 fait hier : arrivée sur l'accueil (pas de redirection vers le challenge), « Aujourd'hui : jour 2 »", ["", "#/accueil"].includes(await page.evaluate(() => location.hash)) && !!(await page.$("#acc-vue")) && (await texte(page, "#acc-vue")).includes("Aujourd'hui : jour 2"), await page.evaluate(() => location.hash));
     await aller(page, "#/challenge", 1300);
     const t = await texte(page, "#ch-vue");
-    ok("jour 1 fait hier : #/challenge ouvre le jour 2 (disponible ; en v44 : « arrive bientôt »)", t.includes("Jour 2 / 7") && t.includes("Ce jour arrive bientôt") && !t.includes("Disponible demain"));
+    ok("jour 1 fait hier : #/challenge ouvre le jour 2 (disponible, pas « demain »)", t.includes("Jour 2 / 7") && !t.includes("Disponible demain"));
     await c.close();
   }
   {

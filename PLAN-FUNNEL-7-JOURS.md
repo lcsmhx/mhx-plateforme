@@ -84,7 +84,7 @@ challenge: {
     "1": { fait: "2026-09-26T08:12:00Z" },
     "2": { fait: "…", erreur: "boire", ressenti: "moyen" },
     "3": { fait: "…", tours: 3, ressenti: 4 },
-    "4": { fait: "…", habitude: "eau", quand: "au réveil, cuisine" },
+    "4": { fait: "…", habitude: "eau", quand: "au réveil", ou: "cuisine" },
     "5": { fait: "…", interet: "calories" },
     "6": { fait: "…", etat: "avancer" | "hesite" | "pas_maintenant" },
     "7": { fait: "…", reserve: true }
@@ -324,5 +324,10 @@ Tutoiement, phrases courtes, neutre homme / femme (formulations sans accord de g
 - Hub du prospect, profil allégé, démarrage sur le jour 1, Speed Formation verrouillée jusqu'à la fin, bloc « Avec l'accompagnement MHX » à partir du jour 5 ou à la fin (clic Calendly noté dans `challenge.cta`).
 - **Mode test (décision 9)** : `#/challenge-libre` sur l'appareil de test → tous les jours ouverts, pastille « Mode test » ; `#/challenge-rythme` pour revenir au rythme normal. Compte prospect de test : Comptes → créer un accès jetable → « Repasser prospect ».
 - Aucune migration ; sauvegarde vérifiée avant (28/28 lignes) et empreintes identiques après ; banc complet vert (78 pages) ; relecture indépendante (15 réserves corrigées : bornes et garde-fou santé au jour 1, touche Entrée, anglais, jour jamais bloqué, formation) ; inscription toujours fermée. À arbitrer par Lucas : âge minimum (18 par défaut) et Calendly sur les pages verrouillées dès le jour 1.
-- À venir : v45 (jours 2, 3, 4), v46 (jours 5, 6, 7 + CTA), v47 (retour du lien de confirmation, écran « Vérifie ta boîte mail », bloc coach, marche à suivre : SMTP externe, confirmation d'email, URL, test, Instagram).
+- À venir : v46 (jours 5, 6, 7 + CTA), v47 (retour du lien de confirmation, écran « Vérifie ta boîte mail », bloc coach, marche à suivre : SMTP externe, confirmation d'email, URL, test, Instagram).
+
+### v45 — Jours 2, 3, 4 (livrée le 25/09/2026)
+- Jour 2 nutrition (5 erreurs, action liée au choix, ressenti), jour 3 entraînement (échauffement embarqué, circuit de 5 exercices au poids du corps, tours selon le niveau, démonstrations vidéo du catalogue chargées au clic, sécurité, tours + ressenti), jour 4 habitudes (5 habitudes, intention quand / où, mindset, carte coach sans bouton).
+- Relecture de la clé `challenge` avant chaque écriture (jeton renouvelé, écriture en attente envoyée d'abord, jour déjà validé ailleurs jamais réécrit, relecture ratée = rien n'est écrit) ; jours faits en lecture seule ; textes FR/EN de même forme (contrôle statique). Relecture indépendante : 13 réserves corrigées (dont félicitations des jours 2 à 4, quand / où obligatoires, accessibilité, une vidéo à la fois).
+- Aucune migration ; banc complet vert (verif45 54/54, verif44 81/81, 78 pages FR/EN/clair) ; relecture indépendante ; inscription toujours fermée.
 

@@ -850,6 +850,24 @@ label.fo-case{display:flex;align-items:flex-start;gap:10px;cursor:pointer;flex:1
 .ch-etape{flex:1;min-width:0}
 @media (max-width:360px){.ch-etapes{gap:3px}.ch-etapes .ch-etape .num{width:26px;height:26px;font-size:11px}}
 .co-mdp input::-ms-reveal{display:none}
+/* v45 — jours 2 a 4 */
+.ch-exos{list-style:none;margin:0;padding:0}
+.ch-exos li{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.ch-exos li:last-child{border-bottom:0}
+.ch-exos b{font-size:15px;min-width:130px}
+.ch-exos .reps{color:var(--ink-2);font-size:14px;flex:1;min-width:160px}
+.ch-exos .video-cadre{flex-basis:100%;margin-top:6px}
+.ch-tours{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
+.ch-seg3,.ch-seg4{max-width:300px;flex:0 0 auto;width:100%}
+@media (min-width:560px){.ch-seg3,.ch-seg4{width:300px}}
+.ch-seg3 button,.ch-seg4 button{min-height:36px;font-weight:600}
+.ch-action{font-size:16px;line-height:1.55;margin:0;padding:14px 16px;background:var(--accent-soft);border:1px solid var(--accent-line);border-radius:var(--r)}
+.ch-intention{display:grid;gap:12px}
+@media (min-width:560px){.ch-intention{grid-template-columns:1fr 1fr}}
+.ch-info{border-left:3px solid var(--accent)}
+.ch-recap{margin-top:4px}
+.ch-recap li span{flex:0 0 auto;max-width:40%}
+.ch-recap li b{overflow-wrap:anywhere;min-width:0;text-align:right}
 .ch-etape{display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;color:var(--ink-3);font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:6px 2px;border-radius:var(--r-sm);text-align:center;line-height:1.2}
 .ch-etape .num{width:30px;height:30px;border-radius:50%;border:1px solid var(--line-strong);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;background:var(--sunken);color:var(--ink-2);transition:border-color var(--vite),background var(--vite)}
 .ch-etape.fait .num{background:var(--good-soft);border-color:var(--good);color:var(--good)}
@@ -931,7 +949,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-09-25 · 44",
+    version: "2026-09-25 · 45",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -1255,10 +1273,12 @@ const CHALLENGE7 = {
     manque: "Il manque : {l}",
     verifie: "Vérifie : {l}",
     accueil: "Revenir à l'accueil",
-    suivant: "Passer au jour {n}"
+    suivant: "Passer au jour {n}",
+    deja: "Ce jour avait déjà été validé sur un autre appareil : voici tes réponses."
   },
 
-  /* --- les 7 jours --- */
+  /* --- les 7 jours. Les textes se modifient librement ; les identifiants (id des erreurs, des
+     habitudes, des ressentis) sont enregistres dans les reponses des prospects : ne pas les changer. --- */
   jours: [
     { n: 1, cle: "diagnostic", eyebrow: "Diagnostic", titre: "Ton point de départ",
       intro: "Avant de changer quoi que ce soit, on regarde la réalité en face. 3 minutes, une douzaine de questions, et tu sauras d'où tu pars. Réponds vrai, pas « bien ».",
@@ -1290,9 +1310,66 @@ const CHALLENGE7 = {
       bravo: "Ce que tu viens de faire, la plupart des gens ne le font jamais : mesurer honnêtement leur point de départ. C'est déjà le premier pas.",
       action: "J'ai fait mon point de départ",
       demain: "l'erreur alimentaire qui bloque presque tout le monde." },
-    { n: 2, cle: "nutrition", eyebrow: "Nutrition", titre: "L'erreur qui bloque presque tout le monde", bientot: true },
-    { n: 3, cle: "entrainement", eyebrow: "Entraînement", titre: "Ta première séance, sans matériel", bientot: true },
-    { n: 4, cle: "habitudes", eyebrow: "Habitudes", titre: "Ce qui fait tenir", bientot: true },
+    { n: 2, cle: "nutrition", eyebrow: "Nutrition", titre: "L'erreur qui bloque presque tout le monde",
+      intro: "Tu n'as pas besoin d'un régime parfait. Tu as besoin de retirer l'erreur qui annule tes efforts.",
+      choix_titre: "Laquelle te ressemble le plus ?",
+      erreurs: [
+        { id: "sauter", titre: "Sauter des repas, puis compenser le soir", texte: "Le corps réclame ce qu'on lui a refusé. Le soir, il gagne.", action: "Aujourd'hui, aucun repas sauté : un vrai déjeuner avec une source de protéines." },
+        { id: "boire", titre: "Boire ses calories", texte: "Sodas, jus, cafés sucrés, alcool : des calories qui ne rassasient pas.", action: "Aujourd'hui, uniquement de l'eau, du café ou du thé sans sucre. Note ce que tu as remplacé." },
+        { id: "proteines", titre: "Trop peu de protéines", texte: "Sans protéines à chaque repas, la faim revient vite et le muscle ne suit pas.", action: "Aujourd'hui, une source de protéines à chaque repas : œufs, poisson, viande, tofu, légumineuses, laitages." },
+        { id: "toutourien", titre: "Le tout ou rien", texte: "Parfait du lundi au vendredi, dérapage le week-end. Le week-end gagne aussi.", action: "Aujourd'hui, un repas volontairement « moyen » : ni parfait, ni craqué. Le juste milieu, ça s'entraîne." },
+        { id: "reperes", titre: "Manger sans repère", texte: "Aucune idée des quantités : impossible de corriger ce qu'on ne voit pas.", action: "Aujourd'hui, prends en photo un repas complet avant de manger. Juste regarder, sans juger." }
+      ],
+      action_titre: "Ton action du jour",
+      choisir: "Choisis d'abord l'erreur qui te ressemble.",
+      pourquoi: "Corriger une seule erreur pendant 7 jours vaut plus qu'un régime parfait pendant 3 jours.",
+      ressenti_titre: "C'était :",
+      ressentis: [{ id: "facile", texte: "Facile" }, { id: "moyen", texte: "Moyen" }, { id: "dur", texte: "Dur" }],
+      action: "Action faite",
+      recap_erreur: "Ton erreur", recap_action: "Ton action", recap_ressenti: "C'était",
+      bravo: "Tu viens de faire quelque chose de précis, pas « manger mieux ». C'est toute la différence.",
+      demain: "ta première séance, 15 à 20 minutes, sans matériel." },
+    { n: 3, cle: "entrainement", eyebrow: "Entraînement", titre: "Ta première séance, sans matériel",
+      intro: "15 à 20 minutes, chez toi, aucun matériel. Le but n'est pas de te détruire : c'est de faire, proprement.",
+      echauffement_titre: "Échauffement · 5 minutes", echauffement: "cardio",
+      circuit_titre: "Le circuit",
+      circuit_note: "{n} tours (ton niveau : {niv}), 45 à 60 secondes de repos entre les tours.",
+      tours: { debutant: 2, intermediaire: 3, avance: 4 },
+      exercices: [
+        { nom: "Squats", reps: "12 répétitions", video: "G9nGRJjQFXw" },
+        { nom: "Pompes", reps: "8 à 12 (contre un mur ou sur les genoux si besoin)", video: "jdM0CTRKTKU" },
+        { nom: "Fentes arrière", reps: "8 par jambe", video: "hYbhf31d49w" },
+        { nom: "Pont fessier", reps: "15 répétitions", video: "bnKpYIMmvtw" },
+        { nom: "Gainage", reps: "30 secondes", video: "R4FB7v-v6x0" }
+      ],
+      demo: "Démonstration",
+      securite: "Une gêne musculaire, c'est normal. Une douleur vive, non : arrête l'exercice.",
+      tours_titre: "Tours réalisés", ressenti_titre: "Ressenti (1 = facile, 5 = très dur)",
+      action: "Séance faite",
+      choisir: "Indique tes tours et ton ressenti.",
+      recap_tours: "Tours réalisés", recap_ressenti: "Ressenti",
+      bravo: "Tu viens de faire ce que la plupart repoussent « à lundi ».",
+      demain: "ce qui fait tenir quand la motivation baisse." },
+    { n: 4, cle: "habitudes", eyebrow: "Habitudes", titre: "Ce qui fait tenir",
+      intro: "La motivation va et vient. Ce qui reste, ce sont les habitudes que tu poses. Aujourd'hui : une seule, minuscule, mais ancrée.",
+      choix_titre: "Choisis une habitude",
+      habitudes: [
+        { id: "eau", texte: "Boire un grand verre d'eau au réveil" },
+        { id: "marche", texte: "Marcher 10 minutes après un repas" },
+        { id: "repas", texte: "Préparer mon repas de midi la veille" },
+        { id: "ecrans", texte: "Couper les écrans 30 minutes avant de dormir" },
+        { id: "noter", texte: "Noter mes repas de la journée (juste noter)" }
+      ],
+      intention_titre: "Ton intention", quand: "Je le ferai… (quand)", ou: "… (où)",
+      intention_note: "Une habitude sans moment ni lieu reste une intention.",
+      mindset: "Tu n'as pas besoin de motivation tous les jours. Tu as besoin d'un système qui ne dépend pas de ta motivation. C'est exactement ce qu'un plan construit.",
+      action: "Habitude faite aujourd'hui",
+      choisir: "Choisis une habitude et note quand et où.",
+      coach_titre: "Ce que change un coach à ce stade",
+      coach: "Il choisit avec toi les 2 ou 3 habitudes qui comptent vraiment pour ton objectif, et il vérifie chaque semaine qu'elles tiennent.",
+      recap_titre: "Ton habitude", recap_habitude: "Ton habitude", recap_intention: "Quand et où",
+      bravo: "Une habitude posée avec un moment et un lieu tient bien mieux. Tu viens de le faire.",
+      demain: "ce que tes réponses disent de toi." },
     { n: 5, cle: "personnalisation", eyebrow: "Personnalisation", titre: "Ce que tes réponses disent de toi", bientot: true },
     { n: 6, cle: "projection", eyebrow: "Projection", titre: "Dans 90 jours", bientot: true },
     { n: 7, cle: "conversion", eyebrow: "Dernière étape", titre: "Tu viens de terminer ton Challenge 7 jours", bientot: true }
@@ -1357,7 +1434,8 @@ const CHALLENGE7 = {
       manque: "Missing: {l}",
       verifie: "Check: {l}",
       accueil: "Back to home",
-      suivant: "Go to day {n}"
+      suivant: "Go to day {n}",
+      deja: "This day had already been completed on another device: here are your answers."
     },
     jours: [
       { eyebrow: "Diagnosis", titre: "Your starting point",
@@ -1387,9 +1465,65 @@ const CHALLENGE7 = {
         bravo: "What you just did, most people never do: honestly measure their starting point. That's already the first step.",
         action: "I've done my starting point",
         demain: "the food mistake that holds almost everyone back." },
-      { eyebrow: "Nutrition", titre: "The mistake that holds almost everyone back" },
-      { eyebrow: "Training", titre: "Your first session, no equipment" },
-      { eyebrow: "Habits", titre: "What makes it stick" },
+      { eyebrow: "Nutrition", titre: "The mistake that holds almost everyone back",
+        intro: "You don't need a perfect diet. You need to remove the mistake that cancels your efforts.",
+        choix_titre: "Which one sounds most like you?",
+        erreurs: [
+          { titre: "Skipping meals, then making up for it at night", texte: "The body claims what it was denied. At night, it wins.", action: "Today, no skipped meal: a real lunch with a source of protein." },
+          { titre: "Drinking your calories", texte: "Sodas, juices, sweet coffees, alcohol: calories that don't fill you up.", action: "Today, only water, coffee or tea without sugar. Note what you replaced." },
+          { titre: "Too little protein", texte: "Without protein at every meal, hunger comes back fast and muscle doesn't follow.", action: "Today, a source of protein at every meal: eggs, fish, meat, tofu, legumes, dairy." },
+          { titre: "All or nothing", texte: "Perfect from Monday to Friday, off the rails at the weekend. The weekend wins too.", action: "Today, one deliberately \"average\" meal: neither perfect nor a blowout. The middle ground is a skill." },
+          { titre: "Eating without a reference", texte: "No idea of the amounts: you can't fix what you can't see.", action: "Today, take a photo of a full meal before eating. Just look, without judging." }
+        ],
+        action_titre: "Your action for today",
+        choisir: "First choose the mistake that sounds like you.",
+        pourquoi: "Fixing a single mistake for 7 days is worth more than a perfect diet for 3 days.",
+        ressenti_titre: "It was:",
+        ressentis: [{ texte: "Easy" }, { texte: "Medium" }, { texte: "Hard" }],
+        action: "Action done",
+        recap_erreur: "Your mistake", recap_action: "Your action", recap_ressenti: "It was",
+        bravo: "You just did something precise, not \"eat better\". That's the whole difference.",
+        demain: "your first session, 15 to 20 minutes, no equipment." },
+      { eyebrow: "Training", titre: "Your first session, no equipment",
+        intro: "15 to 20 minutes, at home, no equipment. The goal isn't to wreck you: it's to do it, properly.",
+        echauffement_titre: "Warm-up · 5 minutes",
+        circuit_titre: "The circuit",
+        circuit_note: "{n} rounds (your level: {niv}), 45 to 60 seconds of rest between rounds.",
+        exercices: [
+          { nom: "Squats", reps: "12 reps" },
+          { nom: "Push-ups", reps: "8 to 12 (against a wall or on the knees if needed)" },
+          { nom: "Reverse lunges", reps: "8 per leg" },
+          { nom: "Glute bridge", reps: "15 reps" },
+          { nom: "Plank", reps: "30 seconds" }
+        ],
+        demo: "Demo",
+        securite: "Muscle discomfort is normal. Sharp pain is not: stop the exercise.",
+        tours_titre: "Rounds completed", ressenti_titre: "How it felt (1 = easy, 5 = very hard)",
+        action: "Session done",
+        choisir: "Enter your rounds and how it felt.",
+        recap_tours: "Rounds completed", recap_ressenti: "How it felt",
+        bravo: "You just did what most people put off \"until Monday\".",
+        demain: "what makes it stick when motivation drops." },
+      { eyebrow: "Habits", titre: "What makes it stick",
+        intro: "Motivation comes and goes. What stays are the habits you set. Today: just one, tiny, but anchored.",
+        choix_titre: "Choose a habit",
+        habitudes: [
+          { texte: "Drink a big glass of water when I wake up" },
+          { texte: "Walk 10 minutes after a meal" },
+          { texte: "Prepare my lunch the day before" },
+          { texte: "Turn off screens 30 minutes before sleep" },
+          { texte: "Write down my meals of the day (just write them down)" }
+        ],
+        intention_titre: "Your intention", quand: "I'll do it… (when)", ou: "… (where)",
+        intention_note: "A habit without a moment or a place stays an intention.",
+        mindset: "You don't need motivation every day. You need a system that doesn't depend on your motivation. That's exactly what a plan builds.",
+        action: "Habit done today",
+        choisir: "Choose a habit and note when and where.",
+        coach_titre: "What a coach changes at this stage",
+        coach: "They choose with you the 2 or 3 habits that really matter for your goal, and check every week that they hold.",
+        recap_titre: "Your habit", recap_habitude: "Your habit", recap_intention: "When and where",
+        bravo: "A habit set with a moment and a place holds much better. You just did that.",
+        demain: "what your answers say about you." },
       { eyebrow: "Personalization", titre: "What your answers say about you" },
       { eyebrow: "Projection", titre: "In 90 days" },
       { eyebrow: "Last step", titre: "You've just finished your 7-Day Challenge" }
@@ -2154,7 +2288,9 @@ I18N.en = {
 "Revenir au challenge": "Back to the challenge", "Ton compte et tes réglages.": "Your account and settings.",
 "Bienvenue dans l'accompagnement !": "Welcome to your coaching!",
 "Tes réponses du challenge sont déjà là : complète le reste du questionnaire et enregistre.": "Your challenge answers are already here: complete the rest of the questionnaire and save.",
-"Heures de sommeil / nuit *": "Hours of sleep per night *", "Niveau d'énergie dans la journée *": "Energy level during the day *", "/ sem": "/ wk", "Jour {n} : {e}": "Day {n}: {e}", "fait": "done", "À partir de {n} ans.": "From {n} years old.", "La Speed Formation s'ouvre à la fin de ton Challenge 7 jours.": "The Speed Formation unlocks at the end of your 7-Day Challenge.", "Ouvrir mon challenge": "Open my challenge", "{a} à {b}": "{a} to {b}"
+"Heures de sommeil / nuit *": "Hours of sleep per night *", "Niveau d'énergie dans la journée *": "Energy level during the day *", "/ sem": "/ wk", "Jour {n} : {e}": "Day {n}: {e}", "fait": "done", "À partir de {n} ans.": "From {n} years old.", "La Speed Formation s'ouvre à la fin de ton Challenge 7 jours.": "The Speed Formation unlocks at the end of your 7-Day Challenge.", "Ouvrir mon challenge": "Open my challenge", "{a} à {b}": "{a} to {b}",
+/* v45 — jours 2 a 4 */
+"Démonstration de l'exercice": "Exercise demonstration", "Marche sur place": "March in place", "Marche sur place genoux hauts": "High-knee march in place", "Montées de genoux + squats": "High knees + squats", "Monter la température avant une séance intense ou un circuit.": "Raise your body temperature before an intense session or a circuit."
 };
 I18N.motifs = [["^(\\d+) articles? sur (\\d+) dans le panier\\.$", "$1 of $2 items in your cart."], ["^(\\d+) étapes? validées? sur (\\d+) — (\\d+) %$", "$1 of $2 steps completed — $3%"], ["^([\\d\\s\\u202f\\u00a0.,−-]+?) kcal$", "$1 Cal"], ["^([\\d\\s\\u202f\\u00a0.,−-]+?) kcal · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de protéines par dose$", "$1 Cal · $2 g protein per serving"], ["^([\\d\\s\\u202f\\u00a0.,−-]+?) kcal consommées sur ([\\d\\s\\u202f\\u00a0.,−-]+?) — il te reste$", "$1 Cal eaten out of $2 — you have"], ["^Objectif visé : ([\\d\\s\\u202f\\u00a0.,−-]+?) kcal · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de protéines · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de glucides · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de lipides\\.$", "Target: $1 Cal · $2 g protein · $3 g carbs · $4 g fat."], ["^Coche les jours que tu veux acheter : la liste se recalcule\\. (\\d+) jours? sélectionnés?\\.$", "Check the days you want to shop for: the list updates automatically. $1 day(s) selected."], ["^Programme mis à jour le (\\d{1,2})/(\\d{1,2})/(\\d{4})$", "Program updated $2/$1/$3"], ["^Repas mis à jour le (\\d{1,2})/(\\d{1,2})/(\\d{4})$", "Meals updated $2/$1/$3"], ["^S(\\d+)$", "W$1"], ["^Supprimer la semaine (\\d+)$", "Delete week $1"], ["^dernière : semaine (\\d+)$", "latest: week $1"], ["^semaine (\\d+)$", "week $1"], ["^Semaine (\\d+) enregistrée\\.$", "Week $1 saved."], ["^(\\d+)/jambe$", "$1/leg"], ["^(\\d+)-(\\d+)/jambe$", "$1-$2/leg"], ["^(\\d+)/bras$", "$1/arm"], ["^(\\d+)-(\\d+)/bras$", "$1-$2/arm"], ["^(\\d+)-(\\d+) s/côté$", "$1-$2 s/side"], ["^protéines au-dessus de ([\\d\\s\\u202f\\u00a0.,−-]+?) g$", "protein over by $1 g"], ["^protéines en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) g$", "protein under by $1 g"], ["^lipides au-dessus de ([\\d\\s\\u202f\\u00a0.,−-]+?) g — sur ce régime, les sources de protéines apportent beaucoup de gras$", "fat over by $1 g — on this diet, protein sources bring a lot of fat"], ["^lipides en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) g — sur ce régime, les sources de protéines apportent beaucoup de gras$", "fat under by $1 g"], ["^calories au-dessus de ([\\d\\s\\u202f\\u00a0.,−-]+?) kcal$", "calories over by $1 Cal"], ["^calories en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) kcal$", "calories under by $1 Cal"], ["^glucides en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) g — ce régime offre peu de sources de glucides dans le catalogue$", "carbs under by $1 g — this diet has few carb sources in the catalog"], ["^(\\d+(?:-\\d+)?(?: s)?)/jambe$", "$1/leg"], ["^(\\d+(?:-\\d+)?(?: s)?)/bras$", "$1/arm"], ["^(\\d+(?:-\\d+)?(?: s)?)/côté$", "$1/side"], ["^(\\d+)/sens$", "$1/direction"], ["^(\\d+)/sens/cheville$", "$1/direction/ankle"], ["^(\\d+) souffles$", "$1 breaths"], ["^(\\d+) respirations$", "$1 breaths"], ["^(\\d+(?:-\\d+)?) pas$", "$1 steps"], ["^(\\d+) dans chaque sens$", "$1 each direction"], ["^(\\d+) par côté$", "$1 per side"], ["^(\\d+) par jambe$", "$1 per leg"], ["^(\\d+) par cheville$", "$1 per ankle"], ["^(\\d+) s par (côté)$", "$1 s per side"], ["^(\\d+) s par jambe$", "$1 s per leg"], ["^(\\d+) s \\+ (\\d+) squats$", "$1 s + $2 squats"]].map(([p, r]) => [new RegExp(p), r]);
 
@@ -2703,6 +2839,7 @@ const Store = {
      les donnees de Jean chez Marie. */
   boites: {},
   attente: {},
+  valeursEnAttente: {},   // v45 : la valeur qui attend son envoi (700 ms), par cle ; effacee quand l'envoi part
   charge: {},          // le GET a-t-il reussi ? on n'ecrase pas ce qu'on n'a pas pu lire
   idConsulte: null,    // quand le coach consulte la fiche d'un client
   /* v38 — cles rangees chez le client mais ecrites par le coach seul, par
@@ -2786,7 +2923,8 @@ const Store = {
     clearTimeout(this.attente[k]);
     /* l'identifiant est fige ici : si le coach change de fiche pendant les
        700 ms d'attente, l'enregistrement part quand meme chez le bon client */
-    this.attente[k] = setTimeout(() => this.envoyer(cle, valeur, uid), 700);
+    this.valeursEnAttente[k] = valeur;
+    this.attente[k] = setTimeout(() => { delete this.attente[k]; delete this.valeursEnAttente[k]; this.envoyer(cle, valeur, uid); }, 700);
     return true;
   },
   async envoyer(cle, valeur, uidFige){
@@ -9859,8 +9997,45 @@ const Challenge = {
              enAttente: prochain != null && !this.disponible(C, prochain) };
   },
 
-  /* valide un jour et l'ecrit ; renvoie false si l'ecriture est refusee (rien ne change alors) */
-  valider(C, n, extra){
+  /* la cle relue juste avant d'ecrire (v45) : un onglet reste ouvert ailleurs n'ecrase pas un
+     jour valide entre-temps. Avant la relecture, la connexion est renouvelee si besoin et une
+     ecriture locale encore en attente (700 ms) part d'abord. Rend null si la relecture echoue :
+     rien n'est ecrit et la copie en memoire garde l'etat affiche. Sinon l'objet a jour, complete
+     des jours et des clics deja presents ici que le serveur n'aurait pas encore. */
+  async fraiche(C){
+    const uid = Store.cible(); if (!uid) return null;
+    const k = uid + "|" + this.cle;
+    try { await Auth.assurer(); } catch(e){}
+    const enAttente = Store.valeursEnAttente[k];
+    if (Store.attente[k] && enAttente !== undefined){ clearTimeout(Store.attente[k]); delete Store.attente[k]; delete Store.valeursEnAttente[k]; try { await Store.envoyer(this.cle, enAttente, uid); } catch(e){} }
+    let F = null;
+    try { F = await Store.lire(this.cle, this.vide()); } catch(e){ F = null; }
+    if (!F || typeof F !== "object" || Store.nonLus.has(F)){
+      if (C && typeof C === "object") Store.boite(uid)[this.cle] = C;
+      Store.lectureRatee(k);
+      return null;
+    }
+    if (C && typeof C === "object" && C !== F){
+      if (C.jours && typeof C.jours === "object" && !Array.isArray(C.jours)){
+        if (!F.jours || typeof F.jours !== "object" || Array.isArray(F.jours)) F.jours = {};
+        Object.keys(C.jours).forEach(j => { const n = +j; if (n >= 1 && n <= this.NB && this.fait(C, n) && !this.fait(F, n)) F.jours[j] = C.jours[j]; });
+      }
+      if (C.cta && typeof C.cta === "object" && Array.isArray(C.cta.clics)){
+        if (!F.cta || typeof F.cta !== "object" || Array.isArray(F.cta)) F.cta = { clics: [] };
+        if (!Array.isArray(F.cta.clics)) F.cta.clics = [];
+        C.cta.clics.forEach(x => { if (x && typeof x === "object" && !F.cta.clics.some(y => y && y.date === x.date)) F.cta.clics.push(x); });
+      }
+    }
+    return F;
+  },
+  /* valide un jour et l'ecrit ; renvoie l'objet a jour, ou null si l'ecriture est refusee (rien ne change alors).
+     Un jour deja valide ailleurs (autre onglet) n'est pas reecrit : la page se relit en lecture seule. */
+  deja: false,   // vrai apres valider() quand le jour avait deja ete valide ailleurs (autre onglet ou appareil)
+  async valider(C, n, extra){
+    this.deja = false;
+    const F = await this.fraiche(C); if (!F) return null;
+    if (this.fait(F, n)){ this.deja = true; return F; }
+    C = F;
     if (!C.jours || typeof C.jours !== "object" || Array.isArray(C.jours)) C.jours = {};
     const k = String(n);
     const avant = { avait: Object.prototype.hasOwnProperty.call(C.jours, k), entree: C.jours[k], debut: C.debut, termine: C.termine };
@@ -9868,12 +10043,14 @@ const Challenge = {
     if (n === 1 && !C.debut) C.debut = aujourdhui();
     if (this.nbFaits(C) >= this.NB && !C.termine) C.termine = new Date().toISOString();
     const ok = Store.ecrire(this.cle, C);
-    if (!ok){ if (avant.avait) C.jours[k] = avant.entree; else delete C.jours[k]; C.debut = avant.debut; C.termine = avant.termine; }
-    return ok;
+    if (!ok){ if (avant.avait) C.jours[k] = avant.entree; else delete C.jours[k]; C.debut = avant.debut; C.termine = avant.termine; return null; }
+    return C;
   },
   /* un clic sur « Reserver mon appel » : enregistre pour le coach, jamais bloquant */
-  clic(C, n){
+  async clic(C, n){
     try {
+      const F = await this.fraiche(C); if (!F) return;
+      C = F;
       if (!C.cta || typeof C.cta !== "object" || Array.isArray(C.cta)) C.cta = { clics: [] };
       if (!Array.isArray(C.cta.clics)) C.cta.clics = [];
       C.cta.clics.push({ jour: n || null, date: new Date().toISOString() });
@@ -9955,6 +10132,9 @@ const outilChallenge = {
     else if (def.bientot) corps = `<section class="panel"><div class="ch-attente"><h2>${esc(trad(CHALLENGE7.page.bientot_titre))}</h2><p class="note" style="margin:0">${esc(trad(CHALLENGE7.page.bientot_texte))}</p>
       <div class="actions" style="justify-content:center"><a class="btn ghost" href="#/accueil">${esc(trad(CHALLENGE7.page.accueil))}</a></div></div></section>`;
     else if (n === 1) corps = this.jour1(C, I, def);
+    else if (n === 2) corps = this.jour2(C, def);
+    else if (n === 3) corps = this.jour3(C, I, def);
+    else if (n === 4) corps = this.jour4(C, def);
     zone.innerHTML = this.entete(n, def) + Challenge.testHTML() + `<section class="panel">${Challenge.barreHTML(C)}${Challenge.etapesHTML(C, n)}</section>` + corps;
     this.brancher(zone, C, I, n, def);
   },
@@ -9988,7 +10168,7 @@ const outilChallenge = {
       return `<div${large}><label for="q-${q.id}">${esc(q.label)}${requis ? " *" : ""}</label>${aide ? `<p class="note" style="margin:-2px 0 8px">${esc(aide)}</p>` : ""}${outilProfil.champ(q, I[q.id])}</div>`;
     }).join("");
     return `<section class="panel"><h2>${esc(trad(def.questions_titre || ""))}</h2><div class="grid g2">${champs}</div>
-      <div class="actions"><button class="btn" id="ch-voir" type="button">${esc(trad(def.bouton || ""))}</button><span class="msg" id="ch-msg"></span></div>
+      <div class="actions"><button class="btn" id="ch-voir" type="button">${esc(trad(def.bouton || ""))}</button><span class="msg" id="ch-msg" role="status" aria-live="polite"></span></div>
       <p class="note" style="margin-top:10px">${esc(trad(CHALLENGE7.inscription.note))}</p></section>`;
   },
 
@@ -10041,7 +10221,8 @@ const outilChallenge = {
     const quand = e.date || (e.fait ? String(e.fait).slice(0, 10) : aujourdhui());
     const suivant = n < Challenge.NB ? n + 1 : null;
     const dispo = suivant ? Challenge.disponible(C, suivant) : false;
-    return `<section class="panel ch-bravo"><span class="pastille ok">${esc(trad(CHALLENGE7.page.valide_le, { n: n, d: dateFr(quand) }))}</span>
+    return `<section class="panel ch-bravo"><span class="pastille ok" id="ch-fait" tabindex="-1">${esc(trad(CHALLENGE7.page.valide_le, { n: n, d: dateFr(quand) }))}</span>
+      ${n >= 2 && def.bravo ? `<p style="margin:10px 0 0">${esc(trad(def.bravo))}</p>` : ""}
       ${def.demain && suivant ? `<p class="ch-demain">${esc(trad(CHALLENGE7.page.demain, { n: suivant, t: trad(def.demain) }))}</p>` : ""}
       <div class="actions">${suivant && dispo ? `<a class="btn" href="#/challenge/${suivant}">${esc(trad(CHALLENGE7.page.suivant, { n: suivant }))}</a>` : ""}<a class="btn ghost" href="#/accueil">${esc(trad(CHALLENGE7.page.accueil))}</a></div>
     </section>`;
@@ -10078,16 +10259,166 @@ const outilChallenge = {
     const modifier = zone.querySelector("#ch-modifier");
     if (modifier) modifier.addEventListener("click", () => { self._apercu = false; self.rendre(zone, C, I, n); });
     const valider = zone.querySelector("#ch-valider");
-    if (valider) valider.addEventListener("click", () => {
-      if (n === 1 && Store.ecrire("intake", I) === false) return;   // les reponses repartent (un envoi rate ne les perd pas)
-      if (!Challenge.valider(C, n)) return;   // ecriture refusee : rien ne change (message deja affiche)
+    if (valider && n === 1) valider.addEventListener("click", async () => {
+      if (Store.ecrire("intake", I) === false) return;   // les reponses repartent (un envoi rate ne les perd pas)
+      valider.disabled = true;
+      const F = await Challenge.valider(C, n);
+      valider.disabled = false;
+      if (!F) return;   // ecriture refusee : rien ne change (message deja affiche)
       self._apercu = false;
-      UI.toast(trad(CHALLENGE7.page.valide, { n: n }), "ok");
-      self.rendre(zone, C, I, n);
+      UI.toast(Challenge.deja ? trad(CHALLENGE7.page.deja) : trad(CHALLENGE7.page.valide, { n: n }), Challenge.deja ? "attention" : "ok");
+      self.rendre(zone, F, I, n);
       construireNav(); marquerNav(courant);   // la barre et les cadenas suivent l'avancement (formation apres le jour 7)
       window.scrollTo(0, 0);
+      const fait = zone.querySelector("#ch-fait"); if (fait) fait.focus();
     });
-  }
+    if (n >= 2 && n <= 4) this.brancherJour(zone, C, I, n, def);
+  },
+
+  /* ---------- jours 2, 3, 4 (v45) : nutrition, mini-seance, habitude ---------- */
+  /* la ligne d'un choix (radio) : titre + texte */
+  choixHTML(nom, liste, choisi, avecTexte, label){
+    return `<div class="ch-choix" role="radiogroup" aria-label="${esc(label || "")}">` + (liste || []).map(x =>
+      `<label><input type="radio" name="${esc(nom)}" value="${esc(x.id)}"${choisi === x.id ? " checked" : ""}><span><b>${esc(trad(x.titre || x.texte || ""))}</b>${avecTexte && x.texte && x.titre ? `<small>${esc(trad(x.texte))}</small>` : ""}</span></label>`).join("") + `</div>`;
+  },
+  /* un groupe de boutons (Facile / Moyen / Dur, ou 1 → 5) */
+  segHTML(id, options, valeur, classe, label){
+    return `<div class="seg ${classe || ""}" id="${esc(id)}" role="group" aria-label="${esc(label || "")}">` + options.map(o =>
+      `<button type="button" data-v="${esc(o.id)}" aria-pressed="${String(valeur) === String(o.id)}">${esc(trad(o.texte))}</button>`).join("") + `</div>`;
+  },
+  segValeur(zone, id){ const b = zone.querySelector(`#${id} button[aria-pressed="true"]`); return b ? b.dataset.v : ""; },
+  brancherSeg(zone){
+    $$(".seg[role=group] button", zone).forEach(b => b.addEventListener("click", () => {
+      $$("button", b.parentNode).forEach(x => x.setAttribute("aria-pressed", "false"));
+      b.setAttribute("aria-pressed", "true");
+    }));
+  },
+  recapHTML(lignes){
+    return `<ul class="ingr fiche-l ch-recap">${lignes.filter(l => l && l[1]).map(l => `<li><span>${esc(trad(l[0]))}</span><b>${esc(l[1])}</b></li>`).join("")}</ul>`;
+  },
+
+  /* ----- jour 2 : l'erreur a corriger ----- */
+  jour2(C, def){
+    const e = Challenge.entree(C, 2) || {};
+    if (Challenge.fait(C, 2)){
+      const err = (def.erreurs || []).find(x => x.id === e.erreur), res = (def.ressentis || []).find(x => x.id === e.ressenti);
+      return `<section class="panel"><h2>${esc(trad(def.action_titre || ""))}</h2>${this.recapHTML([[def.recap_erreur, err ? trad(err.titre) : ""], [def.recap_action, err ? trad(err.action) : ""], [def.recap_ressenti, res ? trad(res.texte) : ""]])}
+        <p class="note" style="margin-top:12px">${esc(trad(def.pourquoi || ""))}</p></section>` + this.bravoHTML(C, 2, def);
+    }
+    const choisi = e.erreur || "";
+    const err = (def.erreurs || []).find(x => x.id === choisi);
+    return `<section class="panel"><h2>${esc(trad(def.choix_titre || ""))}</h2>${this.choixHTML("ch-erreur", def.erreurs, choisi, true, trad(def.choix_titre || ""))}</section>
+      <section class="panel"><h2>${esc(trad(def.action_titre || ""))}</h2>
+        <p class="ch-action" id="ch-action">${esc(err ? trad(err.action) : trad(def.choisir || ""))}</p>
+        <p class="note" style="margin:10px 0 0">${esc(trad(def.pourquoi || ""))}</p>
+        <div class="ch-tours" style="margin-top:16px"><span class="note">${esc(trad(def.ressenti_titre || ""))}</span>${this.segHTML("ch-ressenti", def.ressentis || [], e.ressenti || "", "ch-seg3", trad(def.ressenti_titre || ""))}</div>
+        <div class="actions"><button class="btn" id="ch-valider" type="button">${esc(trad(def.action || ""))}</button><span class="msg" id="ch-msg" role="status" aria-live="polite"></span></div>
+      </section>`;
+  },
+
+  /* ----- jour 3 : la mini-seance ----- */
+  toursPour(I, def){
+    const niv = String((I && I.niveau) || "");
+    const t = def.tours || {};
+    if (/avanc/i.test(niv)) return { n: t.avance || 4, niv: trad("Avancé") };
+    if (/interm/i.test(niv)) return { n: t.intermediaire || 3, niv: trad("Intermédiaire") };
+    return { n: t.debutant || 2, niv: trad("Débutant") };
+  },
+  jour3(C, I, def){
+    const e = Challenge.entree(C, 3) || {};
+    const ech = (ECHAUFFEMENTS || []).find(x => x.id === def.echauffement) || null;
+    const tp = this.toursPour(I, def);
+    const exos = `<ul class="ch-exos">${(def.exercices || []).map(x => `<li><b>${esc(trad(x.nom))}</b><span class="reps">${esc(trad(x.reps))}</span>${idVideo(x.video) ? `<button type="button" class="btn ghost petit" data-yt="${esc(x.video)}" aria-label="${esc(trad(def.demo || "Démonstration") + " : " + trad(x.nom))}">${esc(trad(def.demo || "Démonstration"))}</button>` : ""}</li>`).join("")}</ul>`;
+    if (Challenge.fait(C, 3)){
+      return `<section class="panel"><h2>${esc(trad(def.circuit_titre || ""))}</h2>${exos}${this.recapHTML([[def.recap_tours, e.tours != null ? String(e.tours) : ""], [def.recap_ressenti, e.ressenti != null ? e.ressenti + " / 5" : ""]])}</section>` + this.bravoHTML(C, 3, def);
+    }
+    const tours = [1, 2, 3, 4].map(k => ({ id: k, texte: String(k) }));
+    return `<section class="panel"><h2>${esc(trad(def.echauffement_titre || ""))}</h2>
+        ${ech ? `<p class="note" style="margin:0 0 10px">${esc(trad(ech.pour || ""))}</p><ul class="ingr fiche-l">${(ech.exercices || []).map(x => `<li><span>${esc(trad(x.nom))}</span><b>${esc(x.series && x.series !== "1" ? x.series + " × " + x.reps : x.reps)}</b></li>`).join("")}</ul>` : ""}
+      </section>
+      <section class="panel"><h2>${esc(trad(def.circuit_titre || ""))}</h2>
+        <p class="note" style="margin:0 0 10px">${esc(trad(def.circuit_note || "", { n: tp.n, niv: tp.niv }))}</p>
+        ${exos}
+        <p class="flag" style="margin-top:14px">${esc(trad(def.securite || ""))}</p>
+        <div class="ch-tours" style="margin-top:16px"><span class="note">${esc(trad(def.tours_titre || ""))}</span>${this.segHTML("ch-tours", tours, e.tours || tp.n, "ch-seg4", trad(def.tours_titre || ""))}</div>
+        <div class="ch-tours" style="margin-top:12px"><span class="note">${esc(trad(def.ressenti_titre || ""))}</span>${this.segHTML("ch-ressenti", [1, 2, 3, 4, 5].map(k => ({ id: k, texte: String(k) })), e.ressenti || "", "echelle5", trad(def.ressenti_titre || ""))}</div>
+        <div class="actions"><button class="btn" id="ch-valider" type="button">${esc(trad(def.action || ""))}</button><span class="msg" id="ch-msg" role="status" aria-live="polite"></span></div>
+      </section>`;
+  },
+
+  /* ----- jour 4 : l'habitude ----- */
+  jour4(C, def){
+    const e = Challenge.entree(C, 4) || {};
+    const coach = `<section class="panel ch-info"><span class="eyebrow">${esc(trad(def.coach_titre || ""))}</span><p style="margin:8px 0 0">${esc(trad(def.coach || ""))}</p></section>`;
+    if (Challenge.fait(C, 4)){
+      const h = (def.habitudes || []).find(x => x.id === e.habitude);
+      const txt = v => typeof v === "string" ? v.slice(0, 80) : "";   // par l'API, n'importe quoi peut s'y trouver
+      const quandOu = [txt(e.quand), txt(e.ou)].filter(Boolean).join(", ");
+      return `<section class="panel"><h2>${esc(trad(def.recap_titre || def.choix_titre || ""))}</h2>${this.recapHTML([[def.recap_habitude, h ? trad(h.texte) : ""], [def.recap_intention, quandOu]])}
+        <p class="note" style="margin-top:12px">${esc(trad(def.mindset || ""))}</p></section>` + this.bravoHTML(C, 4, def) + coach;
+    }
+    return `<section class="panel"><h2>${esc(trad(def.choix_titre || ""))}</h2>${this.choixHTML("ch-habitude", def.habitudes, e.habitude || "", false, trad(def.choix_titre || ""))}</section>
+      <section class="panel"><h2>${esc(trad(def.intention_titre || ""))}</h2>
+        <div class="ch-intention"><div><label for="ch-quand">${esc(trad(def.quand || ""))}</label><input id="ch-quand" type="text" maxlength="80" value="${esc(e.quand || "")}"></div>
+        <div><label for="ch-ou">${esc(trad(def.ou || ""))}</label><input id="ch-ou" type="text" maxlength="80" value="${esc(e.ou || "")}"></div></div>
+        <p class="note" style="margin:10px 0 0">${esc(trad(def.intention_note || ""))}</p>
+        <p style="margin:16px 0 0">${esc(trad(def.mindset || ""))}</p>
+        <div class="actions"><button class="btn" id="ch-valider" type="button">${esc(trad(def.action || ""))}</button><span class="msg" id="ch-msg" role="status" aria-live="polite"></span></div>
+      </section>` + coach;
+  },
+
+  /* les reponses du jour, ou null (avec le message) si quelque chose manque */
+  reponsesJour(zone, n, def){
+    if (n === 2){
+      const r = zone.querySelector('input[name="ch-erreur"]:checked');
+      if (!r && (def.erreurs || []).length) return { manque: def.choisir };
+      return { extra: { erreur: r ? r.value : "", ressenti: this.segValeur(zone, "ch-ressenti") || "" } };
+    }
+    if (n === 3){
+      const tours = +this.segValeur(zone, "ch-tours"), res = +this.segValeur(zone, "ch-ressenti");
+      if (!tours || !res) return { manque: def.choisir };
+      return { extra: { tours: tours, ressenti: res } };
+    }
+    if (n === 4){
+      const r = zone.querySelector('input[name="ch-habitude"]:checked');
+      const quand = ($("ch-quand") ? $("ch-quand").value : "").trim().slice(0, 80), ou = ($("ch-ou") ? $("ch-ou").value : "").trim().slice(0, 80);
+      if ((!r && (def.habitudes || []).length) || !quand || !ou) return { manque: def.choisir };   // le moment et le lieu font partie de l'habitude
+      return { extra: { habitude: r ? r.value : "", quand: quand, ou: ou } };
+    }
+    return { extra: {} };
+  },
+
+  /* branchements communs aux jours 2 a 4 : choix, boutons, demonstrations video */
+  brancherJour(zone, C, I, n, def){
+    const self = this;
+    this.brancherSeg(zone);
+    $$('input[name="ch-erreur"]', zone).forEach(r => r.addEventListener("change", () => {
+      const err = (def.erreurs || []).find(x => x.id === r.value); const p = $("ch-action");
+      if (p) p.textContent = err ? trad(err.action) : trad(def.choisir || "");
+    }));
+    $$("[data-yt]", zone).forEach(b => b.addEventListener("click", () => {
+      const id = idVideo(b.dataset.yt); if (!id) return;
+      /* une seule video a la fois : les autres lecteurs redeviennent des boutons */
+      $$(".video-cadre", zone).forEach(cd => { if (cd._bouton && cd.parentNode) cd.parentNode.replaceChild(cd._bouton, cd); });
+      const cadre = document.createElement("div"); cadre.className = "video-cadre"; cadre._bouton = b;
+      cadre.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${id}?rel=0&autoplay=1" title="${esc(trad("Démonstration de l'exercice"))}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+      b.parentNode.replaceChild(cadre, b);
+    }));
+    const valider = zone.querySelector("#ch-valider");
+    if (valider) valider.addEventListener("click", async () => {
+      const r = self.reponsesJour(zone, n, def);
+      if (r.manque){ flash("ch-msg", trad(r.manque)); return; }
+      valider.disabled = true;
+      const F = await Challenge.valider(C, n, r.extra);
+      valider.disabled = false;
+      if (!F) return;   // ecriture refusee : rien ne change (message deja affiche)
+      UI.toast(Challenge.deja ? trad(CHALLENGE7.page.deja) : trad(CHALLENGE7.page.valide, { n: n }), Challenge.deja ? "attention" : "ok");
+      self.rendre(zone, F, I, n);
+      construireNav(); marquerNav(courant);
+      window.scrollTo(0, 0);
+      const fait = zone.querySelector("#ch-fait"); if (fait) fait.focus();
+    });
+  },
 };
 
 const OUTILS = [outilAccueil, outilChallenge, outilProgramme, outilNutrition, outilMensurations, outilSuivi, outilBilan, outilFormation, outilComplements, outilProfil, outilTableau, outilClients, outilAtelier, outilBibliotheque, outilCatalogue, outilCalculateur, outilEntrainement];
