@@ -868,6 +868,27 @@ label.fo-case{display:flex;align-items:flex-start;gap:10px;cursor:pointer;flex:1
 .ch-recap{margin-top:4px}
 .ch-recap li span{flex:0 0 auto;max-width:40%}
 .ch-recap li b{overflow-wrap:anywhere;min-width:0;text-align:right}
+/* v46 — jours 5 a 7 */
+.ch-blocs-l .ch-bloc{padding:12px 0;border-bottom:1px solid var(--line)}
+.ch-blocs-l .ch-bloc:first-child{padding-top:0}
+.ch-blocs-l .ch-bloc:last-child{border-bottom:0}
+.ch-bloc h3{margin:0 0 6px;font-size:15px}
+.ch-bloc p{margin:0 0 6px;line-height:1.55}
+.ch-projection{display:grid;gap:12px}
+@media (min-width:720px){.ch-projection{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.ch-col{background:var(--sunken);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;min-width:0}
+.ch-col .eyebrow{display:block;margin-bottom:8px}
+.ch-col p{margin:0 0 8px;font-size:14.5px;line-height:1.5;overflow-wrap:anywhere}
+.ch-col p:last-child{margin-bottom:0}
+.ch-col-90{border-color:var(--accent-line);background:var(--accent-soft)}
+.ch-hero{text-align:center;border-color:var(--accent-line)}
+.ch-hero h2{margin-bottom:14px}
+.ch-cta{font-size:15px;padding:14px 26px;text-transform:uppercase;letter-spacing:.06em}
+.ch-case{display:flex;gap:10px;align-items:flex-start;justify-content:center;margin:16px 0 0;cursor:pointer;text-transform:none;letter-spacing:0;font-weight:400;color:var(--ink);font-size:14px}
+.ch-case input{width:18px;height:18px;accent-color:var(--accent);margin:1px 0 0;flex:0 0 auto}
+.tile .t-val.ch-t-texte{font-family:"IBM Plex Sans",sans-serif;font-size:15px;font-weight:600;line-height:1.35;padding-top:4px}
+.ch-segtexte{max-width:none;width:100%;flex-wrap:wrap}
+.ch-segtexte button{flex:1 1 42%;min-height:36px;font-weight:600}
 .ch-etape{display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;color:var(--ink-3);font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:6px 2px;border-radius:var(--r-sm);text-align:center;line-height:1.2}
 .ch-etape .num{width:30px;height:30px;border-radius:50%;border:1px solid var(--line-strong);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;background:var(--sunken);color:var(--ink-2);transition:border-color var(--vite),background var(--vite)}
 .ch-etape.fait .num{background:var(--good-soft);border-color:var(--good);color:var(--good)}
@@ -949,7 +970,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-09-25 · 45",
+    version: "2026-09-26 · 46",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -1274,7 +1295,13 @@ const CHALLENGE7 = {
     verifie: "Vérifie : {l}",
     accueil: "Revenir à l'accueil",
     suivant: "Passer au jour {n}",
-    deja: "Ce jour avait déjà été validé sur un autre appareil : voici tes réponses."
+    deja: "Ce jour avait déjà été validé sur un autre appareil : voici tes réponses.",
+    non_enregistre_titre: "Ta dernière étape n'a pas pu être enregistrée",
+    non_enregistre_texte: "Tes réponses sont intactes. Recharge la page pour terminer ton challenge.",
+    intake_rate_titre: "Tes réponses n'ont pas pu être chargées",
+    intake_rate_texte: "Recharge la page : cette étape se construit à partir de tes réponses du jour 1.",
+    charge_rate_titre: "Ton challenge n'a pas pu être chargé",
+    charge_rate_texte: "Recharge la page pour retrouver ta progression. Rien n'est perdu."
   },
 
   /* --- les 7 jours. Les textes se modifient librement ; les identifiants (id des erreurs, des
@@ -1370,9 +1397,79 @@ const CHALLENGE7 = {
       recap_titre: "Ton habitude", recap_habitude: "Ton habitude", recap_intention: "Quand et où",
       bravo: "Une habitude posée avec un moment et un lieu tient bien mieux. Tu viens de le faire.",
       demain: "ce que tes réponses disent de toi." },
-    { n: 5, cle: "personnalisation", eyebrow: "Personnalisation", titre: "Ce que tes réponses disent de toi", bientot: true },
-    { n: 6, cle: "projection", eyebrow: "Projection", titre: "Dans 90 jours", bientot: true },
-    { n: 7, cle: "conversion", eyebrow: "Dernière étape", titre: "Tu viens de terminer ton Challenge 7 jours", bientot: true }
+    { n: 5, cle: "personnalisation", eyebrow: "Personnalisation", titre: "Ce que tes réponses disent de toi",
+      intro: "Tout ce que tu lis ici vient de tes réponses des jours 1 à 4. Pas de conseil générique : ton cas.",
+      objectif_titre: "Ton objectif",
+      objectif_ecart: "{o} · écart : {x} kg.",
+      objectif_sans_ecart: "{o}.",
+      rythme_perte: "Un rythme durable, c'est en général {a} à {b} kg par semaine. Plus vite, ça se paie : faim, fatigue, reprise.",
+      rythme_prise: "En prise de muscle, un rythme durable, c'est en général {a} à {b} kg par semaine : lent, mais ce qui est pris reste.",
+      rythme_autre: "Pas de chiffre à viser sur la balance : ce sont tes mensurations, tes charges et ton énergie qui diront si ça avance.",
+      calories_titre: "Tes calories",
+      calories: "Dépense estimée : {t} kcal par jour. Pour ton objectif, une cible autour de {c} kcal. Protéines : environ {p} g par jour.",
+      calories_maintien: "Dépense estimée : {t} kcal par jour. Une cible autour de {c} kcal pour te stabiliser. Protéines : environ {p} g par jour.",
+      calories_sante: "Dépense estimée : {t} kcal par jour. Aucune cible en déficit ici : ton poids, ou ton poids objectif, est en dessous d'un poids de forme habituel. Parles-en à un professionnel de santé.",
+      calories_note: "Ces chiffres sont une estimation solide, pas une vérité absolue : la balance tranche en deux semaines. Ton coach les ajuste à ce que tu manges vraiment.",
+      entrainement_titre: "Ton entraînement",
+      split_2: "Deux séances par semaine : deux séances corps entier, c'est ce qui progresse le mieux.",
+      split_3: "Trois séances par semaine : corps entier, ou haut / bas en alternance.",
+      split_4: "{n} séances par semaine : haut / bas, avec une progression de charge d'une semaine à l'autre.",
+      seance_jour3: "Ta séance du jour 3 : {t} tours, ressenti {r} sur 5. Elle était la même pour tout le monde. Ton programme, lui, doit partir de ton niveau ({niv}), de ton matériel ({lieu}) et de tes créneaux.",
+      seance_sans: "La séance du jour 3 était la même pour tout le monde. Ton programme, lui, doit partir de ton niveau ({niv}), de ton matériel ({lieu}) et de tes créneaux.",
+      alimentation_titre: "Ton alimentation",
+      levier: "Ton premier levier : corriger « {e} ». Ton plan se construit sur {n} repas par jour, avec des aliments que tu manges vraiment.",
+      levier_sans: "Ton plan se construit sur {n} repas par jour, avec des aliments que tu manges vraiment.",
+      habitudes_titre: "Tes habitudes",
+      habitude: "Ton habitude : « {h} ».",
+      sommeil_court: "{x} h de sommeil : la récupération sera un sujet, avant d'en demander plus à ton corps.",
+      sommeil_ok: "{x} h de sommeil : une base solide pour progresser.",
+      energie_basse: "Énergie {x}/10 : ça se règle souvent par les repas et le sommeil, pas par plus d'entraînement.",
+      conclusion: "Tu vois le principe : chaque recommandation dépend de tes réponses. Et il reste ce qu'un questionnaire ne voit pas : tes journées réelles, tes goûts, ce que tu as déjà essayé. C'est là qu'un plan devient vraiment le tien.",
+      voir: "Voir ce que comprend l'accompagnement",
+      volet_titre: "Avec l'accompagnement MHX",
+      volet_note: "Un appel de 30 minutes avec ton coach, pour faire le point sur tes objectifs.",
+      interet_titre: "Ce qui te parle le plus :",
+      interets: [{ id: "calories", texte: "Calories" }, { id: "entrainement", texte: "Entraînement" }, { id: "alimentation", texte: "Alimentation" }, { id: "habitudes", texte: "Habitudes" }],
+      action: "J'ai lu mes recommandations",
+      recap_interet: "Ce qui te parle le plus",
+      bravo: "Tu as maintenant une lecture claire de ton point de départ. Demain, on regarde plus loin.",
+      demain: "dans 90 jours." },
+    { n: 6, cle: "projection", eyebrow: "Projection", titre: "Dans 90 jours",
+      intro: "Six jours. Regarde ce que ça t'a demandé : peu. Regarde ce que ça a changé : un point de départ mesuré, une erreur corrigée, une séance faite, une habitude posée, tes chiffres compris. Maintenant, projette-toi.",
+      col_auj: "Aujourd'hui", col_obj: "Ton objectif", col_90: "Avec 90 jours d'accompagnement",
+      auj_poids: "{x} kg", auj_seances: "{n} séances par semaine", auj_sommeil: "{x} h de sommeil",
+      obj_poids: "{x} kg", obj_pourquoi: "« {p} »",
+      phases: [
+        { titre: "Semaines 1-2", texte: "Plan alimentaire construit sur ta journée type, programme adapté à ton niveau et ton matériel, calories fixées." },
+        { titre: "Semaines 3-8", texte: "Ajustements chaque semaine à partir de ton bilan : poids, mensurations, photos, ressenti." },
+        { titre: "Semaines 9-12", texte: "Consolidation : tu sais faire, le plan évolue, les habitudes restent." }
+      ],
+      fourchette_perte: "À un rythme durable, 12 semaines représentent en général {a} à {b} kg de moins, à titre indicatif.",
+      fourchette_prise: "À un rythme durable, 12 semaines représentent en général {a} à {b} kg de muscle en plus, à titre indicatif.",
+      fourchette_portee: "Ton objectif ({x} kg) est à la portée d'un rythme durable sur 12 semaines, à titre indicatif.",
+      fourchette_note: "Ça dépend de ton point de départ, de ta régularité et de ta vie. Personne ne peut te garantir un chiffre, et méfie-toi de ceux qui le font.",
+      etat_titre: "Où en es-tu ?",
+      etats: [{ id: "avancer", texte: "Je veux avancer avec un accompagnement" }, { id: "hesite", texte: "J'hésite encore" }, { id: "pas_maintenant", texte: "Pas maintenant" }],
+      cta_note: "ou attends demain pour la dernière étape.",
+      action: "Projection faite",
+      choisir: "Dis-nous où tu en es.",
+      recap_etat: "Où tu en es",
+      bravo: "Se projeter honnêtement, c'est déjà décider. Demain, dernière étape.",
+      demain: "ta dernière étape." },
+    { n: 7, cle: "conversion", eyebrow: "Dernière étape", titre: "Tu viens de terminer ton Challenge 7 jours", court: "Ta dernière étape",
+      intro: "7 jours. 7 actions. Sans plan, sans suivi, avec des recommandations générales. Si tu as obtenu ça en 7 jours, imagine 90 jours avec un plan construit pour toi et quelqu'un qui le suit avec toi chaque semaine.",
+      tuiles: { jours: "Jours validés", ecart: "Ton écart", cible: "Cible estimée", habitude: "Ton habitude", seance: "Ta séance" },
+      seance_val: "{t} tours · {r}/5",
+      construire: "Maintenant, construisons ton plan personnalisé.",
+      cta: "Réserver mon appel",
+      cta_note: "Un appel de 30 minutes avec Lucas. On regarde ton point de départ, ton objectif, et on voit si l'accompagnement est fait pour toi. Sans engagement.",
+      reserve: "J'ai réservé mon appel",
+      reserve_ok: "Noté. À très vite.",
+      plus_tard: "Pas encore le moment ? Tes réponses restent ici. Tu peux réserver quand tu veux.",
+      instagram: "Une question ? Écris-moi sur Instagram :",
+      formation: "La Speed Formation est maintenant ouverte : les bases, à ton rythme.",
+      bravo: "Challenge terminé. Tes 7 jours restent consultables.",
+      demain: "" }
   ],
 
   /* --- anglais : même forme, texte par texte --- */
@@ -1435,7 +1532,13 @@ const CHALLENGE7 = {
       verifie: "Check: {l}",
       accueil: "Back to home",
       suivant: "Go to day {n}",
-      deja: "This day had already been completed on another device: here are your answers."
+      deja: "This day had already been completed on another device: here are your answers.",
+      non_enregistre_titre: "Your last step could not be saved",
+      non_enregistre_texte: "Your answers are intact. Reload the page to finish your challenge.",
+      intake_rate_titre: "Your answers could not be loaded",
+      intake_rate_texte: "Reload the page: this step is built from your day 1 answers.",
+      charge_rate_titre: "Your challenge could not be loaded",
+      charge_rate_texte: "Reload the page to get your progress back. Nothing is lost."
     },
     jours: [
       { eyebrow: "Diagnosis", titre: "Your starting point",
@@ -1524,9 +1627,79 @@ const CHALLENGE7 = {
         recap_titre: "Your habit", recap_habitude: "Your habit", recap_intention: "When and where",
         bravo: "A habit set with a moment and a place holds much better. You just did that.",
         demain: "what your answers say about you." },
-      { eyebrow: "Personalization", titre: "What your answers say about you" },
-      { eyebrow: "Projection", titre: "In 90 days" },
-      { eyebrow: "Last step", titre: "You've just finished your 7-Day Challenge" }
+      { eyebrow: "Personalization", titre: "What your answers say about you",
+        intro: "Everything you read here comes from your answers on days 1 to 4. No generic advice: your case.",
+        objectif_titre: "Your goal",
+        objectif_ecart: "{o} · gap: {x} kg.",
+        objectif_sans_ecart: "{o}.",
+        rythme_perte: "A sustainable pace is usually {a} to {b} kg per week. Faster comes at a price: hunger, fatigue, rebound.",
+        rythme_prise: "For muscle gain, a sustainable pace is usually {a} to {b} kg per week: slow, but what you gain stays.",
+        rythme_autre: "No number to chase on the scale: your measurements, your loads and your energy will tell if it's moving.",
+        calories_titre: "Your calories",
+        calories: "Estimated expenditure: {t} kcal per day. For your goal, a target around {c} kcal. Protein: about {p} g per day.",
+        calories_maintien: "Estimated expenditure: {t} kcal per day. A target around {c} kcal to stay stable. Protein: about {p} g per day.",
+        calories_sante: "Estimated expenditure: {t} kcal per day. No deficit target here: your weight, or your goal weight, is below a usual healthy weight. Talk to a health professional.",
+        calories_note: "These numbers are a solid estimate, not an absolute truth: the scale decides within two weeks. Your coach adjusts them to what you actually eat.",
+        entrainement_titre: "Your training",
+        split_2: "Two sessions a week: two full-body sessions, that's what progresses best.",
+        split_3: "Three sessions a week: full body, or alternating upper / lower.",
+        split_4: "{n} sessions a week: upper / lower, with a load progression from one week to the next.",
+        seance_jour3: "Your day 3 session: {t} rounds, felt {r} out of 5. It was the same for everyone. Your program must start from your level ({niv}), your equipment ({lieu}) and your schedule.",
+        seance_sans: "The day 3 session was the same for everyone. Your program must start from your level ({niv}), your equipment ({lieu}) and your schedule.",
+        alimentation_titre: "Your nutrition",
+        levier: "Your first lever: fixing \"{e}\". Your plan is built on {n} meals a day, with foods you actually eat.",
+        levier_sans: "Your plan is built on {n} meals a day, with foods you actually eat.",
+        habitudes_titre: "Your habits",
+        habitude: "Your habit: \"{h}\".",
+        sommeil_court: "{x} h of sleep: recovery will be a topic, before asking more of your body.",
+        sommeil_ok: "{x} h of sleep: a solid base to progress.",
+        energie_basse: "Energy {x}/10: this is often fixed with meals and sleep, not with more training.",
+        conclusion: "You see the principle: every recommendation depends on your answers. And there's what a questionnaire can't see: your real days, your tastes, what you've already tried. That's where a plan truly becomes yours.",
+        voir: "See what the coaching includes",
+        volet_titre: "With MHX coaching",
+        volet_note: "A 30-minute call with your coach, to take stock of your goals.",
+        interet_titre: "What speaks to you most:",
+        interets: [{ texte: "Calories" }, { texte: "Training" }, { texte: "Nutrition" }, { texte: "Habits" }],
+        action: "I've read my recommendations",
+        recap_interet: "What speaks to you most",
+        bravo: "You now have a clear reading of your starting point. Tomorrow, we look further ahead.",
+        demain: "in 90 days." },
+      { eyebrow: "Projection", titre: "In 90 days",
+        intro: "Six days. Look at what it asked of you: little. Look at what it changed: a measured starting point, a mistake fixed, a session done, a habit set, your numbers understood. Now, look ahead.",
+        col_auj: "Today", col_obj: "Your goal", col_90: "With 90 days of coaching",
+        auj_poids: "{x} kg", auj_seances: "{n} sessions a week", auj_sommeil: "{x} h of sleep",
+        obj_poids: "{x} kg", obj_pourquoi: "\"{p}\"",
+        phases: [
+          { titre: "Weeks 1-2", texte: "Meal plan built on your typical day, program adapted to your level and equipment, calories set." },
+          { titre: "Weeks 3-8", texte: "Weekly adjustments from your check-in: weight, measurements, photos, how you feel." },
+          { titre: "Weeks 9-12", texte: "Consolidation: you know how, the plan evolves, the habits stay." }
+        ],
+        fourchette_perte: "At a sustainable pace, 12 weeks usually represent {a} to {b} kg less, as an indication.",
+        fourchette_prise: "At a sustainable pace, 12 weeks usually represent {a} to {b} kg more muscle, as an indication.",
+        fourchette_portee: "Your goal ({x} kg) is within reach of a sustainable pace over 12 weeks, as an indication.",
+        fourchette_note: "It depends on your starting point, your consistency and your life. Nobody can guarantee you a number, and beware of those who do.",
+        etat_titre: "Where are you at?",
+        etats: [{ texte: "I want to move forward with coaching" }, { texte: "I'm still hesitating" }, { texte: "Not now" }],
+        cta_note: "or wait until tomorrow for the last step.",
+        action: "Projection done",
+        choisir: "Tell us where you're at.",
+        recap_etat: "Where you're at",
+        bravo: "Looking ahead honestly is already deciding. Tomorrow, last step.",
+        demain: "your last step." },
+      { eyebrow: "Last step", titre: "You've just finished your 7-Day Challenge", court: "Your last step",
+        intro: "7 days. 7 actions. No plan, no follow-up, with general recommendations. If you got this in 7 days, imagine 90 days with a plan built for you and someone following it with you every week.",
+        tuiles: { jours: "Days completed", ecart: "Your gap", cible: "Estimated target", habitude: "Your habit", seance: "Your session" },
+        seance_val: "{t} rounds · {r}/5",
+        construire: "Now, let's build your personalized plan.",
+        cta: "Book my call",
+        cta_note: "A 30-minute call with Lucas. We look at your starting point, your goal, and see whether the coaching is right for you. No commitment.",
+        reserve: "I've booked my call",
+        reserve_ok: "Noted. See you very soon.",
+        plus_tard: "Not the right time yet? Your answers stay here. You can book whenever you want.",
+        instagram: "A question? Write to me on Instagram:",
+        formation: "The Speed Formation is now open: the basics, at your pace.",
+        bravo: "Challenge complete. Your 7 days stay available to read.",
+        demain: "" }
     ]
   }
 };
@@ -9256,7 +9429,7 @@ const outilAccueil = {
            + acces("challenge", trad(H.revoir), trad(H.termine_sous), "#/challenge/" + Challenge.NB, false);
     } else {
       const def = Challenge.def(e.prochain) || {};
-      const titre = trad(def.titre || "");
+      const titre = trad(def.court || def.titre || "");   // v46 : le jour 7 a un titre court pour le hub
       if (e.enAttente) jour = `<div class="acces statique"><span class="ico">${ICONES.challenge}</span><span class="txt"><b>${esc(trad(H.attente, { n: e.prochain, t: titre }))}</b><small>${esc(trad(H.attente_sous))}</small></span></div>`;
       else jour = acces("challenge", trad(H.aujourdhui, { n: e.prochain, t: titre }), trad(e.nbFaits ? H.ouvrir : H.commencer, { n: e.prochain }), "#/challenge/" + e.prochain, false);
     }
@@ -9281,7 +9454,7 @@ const outilAccueil = {
           <li>${esc(trad(AVANTAGES.programme))}</li><li>${esc(trad(AVANTAGES.nutrition))}</li>
           <li>${esc(trad(AVANTAGES.mensurations))}</li><li>${esc(trad(AVANTAGES.suivi))}</li>
         </ul>
-        <div class="actions"><a class="btn" href="${esc(lienSur(CONFIG.marque.calendly))}" target="_blank" rel="noopener">${esc(trad("Réserver mon appel"))}</a></div>
+        <div class="actions"><a class="btn${e.termine ? "" : " ghost"}" href="${esc(lienSur(CONFIG.marque.calendly))}" target="_blank" rel="noopener">${esc(trad("Réserver mon appel"))}</a></div>
         <p class="note" style="margin:10px 0 0">${esc(trad("Un appel de 30 minutes avec ton coach, pour faire le point sur tes objectifs."))}</p>
       </section>` : ""}`;
     /* chaque clic vers Calendly est note pour le coach (jour atteint) */
@@ -10028,10 +10201,20 @@ const Challenge = {
     }
     return F;
   },
+  /* v46 : une seule relecture-ecriture a la fois (un clic Calendly et une validation lances presque
+     ensemble se suivent au lieu de se chevaucher : aucun des deux ne peut effacer l'autre) */
+  _file: Promise.resolve(),
+  enFile(fn){
+    const p = this._file.then(fn, fn);
+    /* le maillon suivant attend celui-ci, mais jamais plus de 15 s (requete qui pend sur un reseau mobile) : l'attente est bornee */
+    this._file = Promise.race([p.then(() => {}, () => {}), new Promise(r => setTimeout(r, 15000))]);
+    return p;
+  },
   /* valide un jour et l'ecrit ; renvoie l'objet a jour, ou null si l'ecriture est refusee (rien ne change alors).
      Un jour deja valide ailleurs (autre onglet) n'est pas reecrit : la page se relit en lecture seule. */
   deja: false,   // vrai apres valider() quand le jour avait deja ete valide ailleurs (autre onglet ou appareil)
-  async valider(C, n, extra){
+  valider(C, n, extra){ return this.enFile(() => this._valider(C, n, extra)); },
+  async _valider(C, n, extra){
     this.deja = false;
     const F = await this.fraiche(C); if (!F) return null;
     if (this.fait(F, n)){ this.deja = true; return F; }
@@ -10046,8 +10229,18 @@ const Challenge = {
     if (!ok){ if (avant.avait) C.jours[k] = avant.entree; else delete C.jours[k]; C.debut = avant.debut; C.termine = avant.termine; return null; }
     return C;
   },
+  /* complete un jour deja fait (ex. « J'ai reserve mon appel ») sans toucher a sa validation ;
+     l'objet a jour, ou null si le jour n'est pas fait ou si l'ecriture est refusee */
+  completer(C, n, extra){ return this.enFile(() => this._completer(C, n, extra)); },
+  async _completer(C, n, extra){
+    const F = await this.fraiche(C); if (!F) return null;
+    const e = this.entree(F, n); if (!e || !this.fait(F, n)) return null;
+    F.jours[String(n)] = Object.assign({}, e, extra || {});
+    return Store.ecrire(this.cle, F) ? F : null;
+  },
   /* un clic sur « Reserver mon appel » : enregistre pour le coach, jamais bloquant */
-  async clic(C, n){
+  clic(C, n){ return this.enFile(() => this._clic(C, n)); },
+  async _clic(C, n){
     try {
       const F = await this.fraiche(C); if (!F) return;
       C = F;
@@ -10108,12 +10301,18 @@ const outilChallenge = {
   async init(){
     const zone = $("ch-vue"); if (!zone) return;
     this._apercu = false;
-    const C = await Store.lire(Challenge.cle, Challenge.vide());
+    let C = await Store.lire(Challenge.cle, Challenge.vide());
     const I = await Store.lire("intake", {});
     if (!zone.isConnected) return;
     const e = Challenge.etat(C);
     let n = parseInt(sousRoute, 10);
     if (!(n >= 1 && n <= Challenge.NB)) n = e.prochain || Challenge.NB;
+    /* v46 : le jour 7 se valide en s'ouvrant (c'est la page de fin) ; la formation s'ouvre dans la foulee */
+    if (n === Challenge.NB && !Challenge.fait(C, n) && Challenge.disponible(C, n)){
+      const F = await Challenge.valider(C, n);
+      if (F){ C = F; construireNav(); marquerNav(courant); UI.toast(trad(CHALLENGE7.page.valide, { n: n }), "ok"); }
+      if (!zone.isConnected) return;
+    }
     this.rendre(zone, C, I, n);
   },
 
@@ -10128,13 +10327,18 @@ const outilChallenge = {
   rendre(zone, C, I, n){
     const def = Challenge.def(n) || { n: n, titre: "", eyebrow: "" };
     let corps = "";
-    if (!Challenge.disponible(C, n)) corps = this.attente(C, n);
+    if (Store.nonLus.has(C)) corps = `<section class="panel"><div class="ch-attente"><h2>${esc(trad(CHALLENGE7.page.charge_rate_titre))}</h2><p class="note" style="margin:0">${esc(trad(CHALLENGE7.page.charge_rate_texte))}</p></div></section>`;   // v46 : lecture ratee → on le dit, rien n'est jouable
+    else if (!Challenge.disponible(C, n)) corps = this.attente(C, n);
     else if (def.bientot) corps = `<section class="panel"><div class="ch-attente"><h2>${esc(trad(CHALLENGE7.page.bientot_titre))}</h2><p class="note" style="margin:0">${esc(trad(CHALLENGE7.page.bientot_texte))}</p>
       <div class="actions" style="justify-content:center"><a class="btn ghost" href="#/accueil">${esc(trad(CHALLENGE7.page.accueil))}</a></div></div></section>`;
     else if (n === 1) corps = this.jour1(C, I, def);
     else if (n === 2) corps = this.jour2(C, def);
     else if (n === 3) corps = this.jour3(C, I, def);
     else if (n === 4) corps = this.jour4(C, def);
+    else if (n >= 5 && Store.nonLus.has(I)) corps = `<section class="panel"><div class="ch-attente"><h2>${esc(trad(CHALLENGE7.page.intake_rate_titre))}</h2><p class="note" style="margin:0">${esc(trad(CHALLENGE7.page.intake_rate_texte))}</p></div></section>`;
+    else if (n === 5) corps = this.jour5(C, I, def);
+    else if (n === 6) corps = this.jour6(C, I, def);
+    else if (n === 7) corps = this.jour7(C, I, def);
     zone.innerHTML = this.entete(n, def) + Challenge.testHTML() + `<section class="panel">${Challenge.barreHTML(C)}${Challenge.etapesHTML(C, n)}</section>` + corps;
     this.brancher(zone, C, I, n, def);
   },
@@ -10273,7 +10477,186 @@ const outilChallenge = {
       const fait = zone.querySelector("#ch-fait"); if (fait) fait.focus();
     });
     if (n >= 2 && n <= 4) this.brancherJour(zone, C, I, n, def);
+    if (n >= 5) this.brancherJour567(zone, C, I, n, def);
   },
+  /* ---------- jours 5, 6, 7 (v46) : personnalisation, projection, conversion ---------- */
+  /* tout ce que les jours 5 a 7 disent de la personne, calcule une fois (formules du calculateur, intouchees) */
+  perso(I, C){
+    I = I || {};
+    const d = outilCalculateur.departDepuis(I);
+    const sansPas = !(num(I.pas) > 0);
+    if (sansPas) d.pas = (CONFIG.challenge && CONFIG.challenge.pas_defaut) || 6000;
+    const c = CONFIG.calcul, poids = num(I.poids), obj = num(I.poids_obj), taille = num(I.taille);
+    const imc = (kg) => (taille > 0 && kg > 0) ? kg / Math.pow(taille / 100, 2) : null;
+    const sens = d.objectif;   // perte | prise | maintien (recomposition, performance, sante)
+    const veutPerdre = sens === "perte" || (poids > 0 && obj > 0 && obj < poids);
+    const imcBas = veutPerdre && ((imc(poids) != null && imc(poids) < 18.5) || (imc(obj) != null && imc(obj) < 18.5));
+    let T = null, cible = null, prot = null;
+    if (poids > 0 && taille > 0 && num(I.age) > 0){
+      T = outilCalculateur.metabolismeDeBase(d) * outilCalculateur.facteurActivite(d).total;
+      cible = imcBas ? T : sens === "perte" ? T * (1 - c.deficit_perte) : sens === "prise" ? T * (1 + c.surplus_prise) : T;
+      prot = c.proteines_g_par_kg * poids;
+    }
+    const j2 = Challenge.entree(C, 2) || {}, j3 = Challenge.entree(C, 3) || {}, j4 = Challenge.entree(C, 4) || {};
+    const d2 = Challenge.def(2) || {}, d4 = Challenge.def(4) || {};
+    const erreur = (d2.erreurs || []).find(x => x.id === j2.erreur) || null;
+    const habitude = (d4.habitudes || []).find(x => x.id === j4.habitude) || null;
+    /* l'ecart n'a de sens que dans la direction de l'objectif (perte : objectif plus bas ; prise : plus haut) */
+    const coherent = poids > 0 && obj > 0 && obj !== poids && ((sens === "perte" && obj < poids) || (sens === "prise" && obj > poids));
+    const pq = typeof I.pourquoi === "string" ? Array.from(I.pourquoi.trim()) : [];
+    return { sens, poids, obj, ecart: (coherent && !imcBas) ? obj - poids : null, imcBas, T, cible, prot, sansPas,
+             seances: num(I.seances), niveau: String(I.niveau || ""), lieu: String(I.lieu || ""), nbRepas: String(I.nb_repas || ""),
+             erreur, habitude, tours: num(j3.tours) || null, ressenti3: num(j3.ressenti) || null,
+             sommeil: num(I.sommeil_h), energie: num(I.energie), pourquoi: pq.slice(0, 140).join("") + (pq.length > 140 ? "…" : "") };
+  },
+  /* un taux hebdomadaire lisible : 0,25 reste 0,25 (pas 0,3) */
+  taux(v){ return Number(v).toLocaleString(locale(), { minimumFractionDigits: 1, maximumFractionDigits: 2 }); },
+  /* fourchette prudente sur 12 semaines (CONFIG.challenge.rythme), plafonnee a l'ecart connu ; null si sans objet */
+  fourchette(p){
+    const r = (CONFIG.challenge && CONFIG.challenge.rythme) || {};
+    if (p.imcBas || (p.sens !== "perte" && p.sens !== "prise")) return null;
+    const bornes = p.sens === "perte" ? r.perte : r.prise; if (!bornes || bornes.length < 2) return null;
+    let a = 12 * bornes[0], b = 12 * bornes[1];
+    /* un objectif chiffre dans l'autre sens que l'objectif declare : pas de fourchette du tout */
+    if (p.poids > 0 && p.obj > 0 && p.ecart == null) return null;
+    /* tout au dixieme de kilo : 64,4 → 61,4 donne 3,000000000000007 en flottant, ce qui ne doit jamais afficher « 3,0 a 3,0 » */
+    const dix = v => Math.round(v * 10);
+    const ecart = p.ecart != null ? dix(Math.abs(p.ecart)) / 10 : null;
+    if (ecart != null){
+      if (dix(ecart) <= dix(a)) return { portee: true, x: n1(ecart), sens: p.sens };   // a la portee d'un rythme durable : pas de « a a a »
+      b = Math.min(b, ecart);
+    }
+    if (!(dix(b) > dix(a))) return null;
+    return { a: n1(a), b: n1(b), sens: p.sens };
+  },
+  nbRepasNombre(p){ const m = /(\d+)/.exec(p.nbRepas || ""); return m ? +m[1] : null; },
+
+  /* ----- jour 5 : ce que les reponses disent ----- */
+  jour5(C, I, def){
+    const p = this.perso(I, C), e = Challenge.entree(C, 5) || {};
+    const L = def;
+    const bloc = (titre, lignes) => `<div class="ch-bloc"><h3>${esc(trad(titre))}</h3>${lignes.filter(Boolean).map(x => `<p>${esc(x)}</p>`).join("")}</div>`;
+    const objectifTxt = I.objectif ? trad(String(I.objectif)) : "";
+    const objectif = [];
+    if (p.imcBas) objectif.push(trad((Challenge.def(1) || {}).lecture ? Challenge.def(1).lecture.imc_bas : ""));
+    else if (objectifTxt) objectif.push(p.ecart != null ? trad(L.objectif_ecart, { o: objectifTxt, x: n1(Math.abs(p.ecart)) }) : trad(L.objectif_sans_ecart, { o: objectifTxt }));
+    const r = (CONFIG.challenge && CONFIG.challenge.rythme) || {};
+    if (!p.imcBas) objectif.push(p.sens === "perte" && r.perte ? trad(L.rythme_perte, { a: this.taux(r.perte[0]), b: this.taux(r.perte[1]) }) : p.sens === "prise" && r.prise ? trad(L.rythme_prise, { a: this.taux(r.prise[0]), b: this.taux(r.prise[1]) }) : trad(L.rythme_autre));
+    const calories = [];
+    if (p.T != null) calories.push(p.imcBas ? trad(L.calories_sante, { t: fmt(p.T) }) : trad(p.sens === "perte" || p.sens === "prise" ? L.calories : L.calories_maintien, { t: fmt(p.T), c: fmt(p.cible), p: fmt(p.prot) }));
+    calories.push(trad(L.calories_note));
+    const entr = [];
+    if (p.seances >= 4) entr.push(trad(L.split_4, { n: p.seances })); else if (p.seances === 3) entr.push(trad(L.split_3)); else if (p.seances > 0) entr.push(trad(L.split_2));
+    const niv = p.niveau ? this.toursPour(I, Challenge.def(3) || {}).niv : "—", lieu = p.lieu ? trad(p.lieu) : "—";
+    entr.push(p.tours && p.ressenti3 ? trad(L.seance_jour3, { t: p.tours, r: p.ressenti3, niv: niv, lieu: lieu }) : trad(L.seance_sans, { niv: niv, lieu: lieu }));
+    const nb = this.nbRepasNombre(p);
+    const alim = [p.erreur ? trad(L.levier, { e: trad(p.erreur.titre), n: nb || "—" }) : trad(L.levier_sans, { n: nb || "—" })];
+    const hab = [];
+    const minuscule = t => t ? t.charAt(0).toLowerCase() + t.slice(1) : t;
+    if (p.habitude) hab.push(trad(L.habitude, { h: minuscule(trad(p.habitude.texte)) }));
+    if (p.sommeil > 0) hab.push(trad(p.sommeil < 7 ? L.sommeil_court : L.sommeil_ok, { x: n1(p.sommeil) }));
+    if (p.energie > 0 && p.energie <= 5) hab.push(trad(L.energie_basse, { x: p.energie }));
+    const lecture = `<section class="panel ch-blocs"><div class="ch-blocs-l">${bloc(L.objectif_titre, objectif)}${bloc(L.calories_titre, calories)}${bloc(L.entrainement_titre, entr)}${bloc(L.alimentation_titre, alim)}${bloc(L.habitudes_titre, hab)}</div>
+      <p style="margin:14px 0 0">${esc(trad(L.conclusion))}</p>
+      <div class="actions" style="margin-top:14px"><button type="button" class="btn ghost" id="ch-voir-accomp">${esc(trad(L.voir))}</button></div></section>`;
+    if (Challenge.fait(C, 5)){
+      const it = (def.interets || []).find(x => x.id === e.interet);
+      return lecture + (it ? `<section class="panel">${this.recapHTML([[def.recap_interet, trad(it.texte)]])}</section>` : "") + this.bravoHTML(C, 5, def);
+    }
+    return lecture + `<section class="panel">
+      <div class="ch-tours"><span class="note">${esc(trad(L.interet_titre))}</span>${this.segHTML("ch-interet", def.interets || [], e.interet || "", "ch-segtexte", trad(L.interet_titre))}</div>
+      <div class="actions"><button class="btn" id="ch-valider" type="button">${esc(trad(def.action || ""))}</button><span class="msg" id="ch-msg" role="status" aria-live="polite"></span></div></section>`;
+  },
+  /* le volet « ce que comprend l'accompagnement » (jour 5 et suivants) */
+  voletAccompagnement(C, n){
+    const L = Challenge.def(5) || {};
+    const cal = lienSur(CONFIG.marque.calendly);
+    UI.volet({ titre: trad(L.volet_titre || "Avec l'accompagnement MHX"), corps: `<ul class="liste-debloque">
+        <li>${esc(trad(AVANTAGES.programme))}</li><li>${esc(trad(AVANTAGES.nutrition))}</li><li>${esc(trad(AVANTAGES.mensurations))}</li><li>${esc(trad(AVANTAGES.suivi))}</li></ul>
+      ${cal ? `<div class="actions"><a class="btn ghost" href="${esc(cal)}" target="_blank" rel="noopener" data-ch-cal="${n}">${esc(trad("Réserver mon appel"))}</a></div>` : ""}
+      <p class="note" style="margin:10px 0 0">${esc(trad(L.volet_note || ""))}</p>` });
+    setTimeout(() => { $$(".volet [data-ch-cal]").forEach(a => a.addEventListener("click", () => Challenge.clic(C, n))); const f = document.querySelector(".volet [data-ui-fermer]"); if (f) f.focus(); }, 40);
+  },
+
+  /* ----- jour 6 : la projection ----- */
+  jour6(C, I, def){
+    const p = this.perso(I, C), e = Challenge.entree(C, 6) || {}, L = def;
+    const auj = [p.poids > 0 ? trad(L.auj_poids, { x: n1(p.poids) }) : "", p.seances > 0 ? trad(L.auj_seances, { n: p.seances }) : "", p.sommeil > 0 ? trad(L.auj_sommeil, { x: n1(p.sommeil) }) : ""].filter(Boolean);
+    const obj = [p.obj > 0 && !p.imcBas ? trad(L.obj_poids, { x: n1(p.obj) }) : (I.objectif ? trad(String(I.objectif)) : ""), p.pourquoi ? trad(L.obj_pourquoi, { p: p.pourquoi }) : ""].filter(Boolean);
+    const col = (titre, lignes) => `<div class="ch-col"><span class="eyebrow">${esc(trad(titre))}</span>${lignes.map(x => `<p>${esc(x)}</p>`).join("") || `<p class="note">—</p>`}</div>`;
+    const phases = `<div class="ch-col ch-col-90"><span class="eyebrow">${esc(trad(L.col_90))}</span>${(L.phases || []).map(ph => `<p><b>${esc(trad(ph.titre))}</b><br>${esc(trad(ph.texte))}</p>`).join("")}</div>`;
+    const f = this.fourchette(p);
+    const fourchette = f ? `<p style="margin:14px 0 0">${esc(f.portee ? trad(L.fourchette_portee, { x: f.x }) : trad(f.sens === "perte" ? L.fourchette_perte : L.fourchette_prise, { a: f.a, b: f.b }))}</p><p class="note" style="margin:6px 0 0">${esc(trad(L.fourchette_note))}</p>` : (p.imcBas ? `<p class="note" style="margin:14px 0 0">${esc(trad((Challenge.def(1) || {}).lecture ? Challenge.def(1).lecture.imc_bas : ""))}</p>` : "");
+    const projection = `<section class="panel"><div class="ch-projection">${col(L.col_auj, auj)}${col(L.col_obj, obj)}${phases}</div>${fourchette}</section>`;
+    if (Challenge.fait(C, 6)){
+      const et = (def.etats || []).find(x => x.id === e.etat);
+      return projection + (et ? `<section class="panel">${this.recapHTML([[def.recap_etat, trad(et.texte)]])}</section>` : "") + this.bravoHTML(C, 6, def);
+    }
+    const cal = lienSur(CONFIG.marque.calendly);
+    return projection + `<section class="panel"><h2>${esc(trad(L.etat_titre))}</h2>${this.choixHTML("ch-etat", def.etats, e.etat || "", false, trad(L.etat_titre))}
+      <div class="actions"><button class="btn" id="ch-valider" type="button">${esc(trad(def.action || ""))}</button>${cal ? `<a class="btn ghost" href="${esc(cal)}" target="_blank" rel="noopener" data-ch-cal="6">${esc(trad("Réserver mon appel"))}</a>` : ""}<span class="msg" id="ch-msg" role="status" aria-live="polite"></span></div>
+      <p class="note" style="margin:8px 0 0">${esc(trad(L.cta_note))}</p></section>`;
+  },
+
+  /* ----- jour 7 : la conversion (valide a l'ouverture, voir init) ----- */
+  jour7(C, I, def){
+    const p = this.perso(I, C), e = Challenge.entree(C, 7) || {}, L = def, T = L.tuiles || {};
+    const tuiles = [{ lbl: T.jours, val: String(Challenge.nbFaits(C)), unite: "/ 7" }];
+    if (p.ecart != null) tuiles.push({ lbl: T.ecart, val: n1(Math.abs(p.ecart)), unite: "kg" });
+    if (p.cible != null && !p.imcBas) tuiles.push({ lbl: T.cible, val: fmt(p.cible), unite: "kcal" });
+    if (p.habitude) tuiles.push({ lbl: T.habitude, val: trad(p.habitude.texte), unite: "", texte: true });
+    if (p.tours && p.ressenti3) tuiles.push({ lbl: T.seance, val: trad(L.seance_val, { t: p.tours, r: p.ressenti3 }), unite: "", texte: true });
+    const tuile = x => `<div class="tile"><div class="t-lbl">${esc(trad(x.lbl || ""))}</div><div class="t-val readout${x.texte ? " ch-t-texte" : ""}">${esc(x.val)}${x.unite ? `<small>${esc(x.unite)}</small>` : ""}</div></div>`;
+    const cal = lienSur(CONFIG.marque.calendly), ig = lienSur(CONFIG.marque.instagram);
+    const reserve = !!(e.reserve), fait = Challenge.fait(C, 7);
+    /* si la validation a l'ouverture n'a pas pu etre enregistree (relecture ratee), on le dit : pas de fin annoncee, pas de case */
+    const enregistre = fait ? "" : `<section class="panel"><div class="ch-attente"><h2>${esc(trad(CHALLENGE7.page.non_enregistre_titre))}</h2><p class="note" style="margin:0">${esc(trad(CHALLENGE7.page.non_enregistre_texte))}</p></div></section>`;
+    return enregistre + `<section class="panel"><div class="tiles">${tuiles.map(tuile).join("")}</div></section>
+      <section class="panel ch-hero"><h2>${esc(trad(L.construire))}</h2>
+        ${cal ? `<div class="actions" style="justify-content:center"><a class="btn ch-cta" href="${esc(cal)}" target="_blank" rel="noopener" data-ch-cal="7">${esc(trad(L.cta))}</a></div>` : ""}
+        <p class="note" style="margin:12px 0 0">${esc(trad(L.cta_note))}</p>
+        ${fait ? `<label class="ch-case"><input type="checkbox" id="ch-reserve"${reserve ? " checked disabled" : ""}><span>${esc(trad(L.reserve))}${reserve ? " · " + esc(trad(L.reserve_ok)) : ""}</span></label>` : ""}
+        <span class="msg" id="ch-msg" role="status" aria-live="polite"></span>
+      </section>
+      <section class="panel"><p style="margin:0">${esc(trad(L.plus_tard))}</p>
+        ${ig ? `<p class="note" style="margin:8px 0 0">${esc(trad(L.instagram, { p: CONFIG.marque.pseudo || "Instagram" }))} <a class="link-a" href="${esc(ig)}" target="_blank" rel="noopener">${esc(CONFIG.marque.pseudo || "Instagram")}</a></p>` : ""}
+        ${!estVerrouille(outilFormation) ? `<p class="note" style="margin:8px 0 0"><a class="link-a" href="#/formation">${esc(trad(L.formation))}</a></p>` : ""}
+      </section>` + (fait ? this.bravoHTML(C, 7, def) : "");
+  },
+
+  brancherJour567(zone, C, I, n, def){
+    const self = this;
+    this.brancherSeg(zone);
+    const voir = zone.querySelector("#ch-voir-accomp");
+    if (voir) voir.addEventListener("click", () => self.voletAccompagnement(C, n));
+    $$("[data-ch-cal]", zone).forEach(a => a.addEventListener("click", () => Challenge.clic(C, +a.dataset.chCal || n)));
+    const reserve = zone.querySelector("#ch-reserve");
+    if (reserve && !reserve.disabled) reserve.addEventListener("change", async () => {
+      if (!reserve.checked) return;
+      reserve.disabled = true;
+      const F = await Challenge.completer(C, 7, { reserve: new Date().toISOString() });
+      if (!F){ reserve.disabled = false; reserve.checked = false; return; }
+      UI.toast(trad(def.reserve_ok || ""), "ok");
+      self.rendre(zone, F, I, n);
+      const fait = zone.querySelector("#ch-fait"); if (fait) fait.focus();
+    });
+    const valider = zone.querySelector("#ch-valider");
+    if (valider) valider.addEventListener("click", async () => {
+      let extra = {};
+      if (n === 5) extra = { interet: self.segValeur(zone, "ch-interet") || "" };
+      if (n === 6){ const r = zone.querySelector('input[name="ch-etat"]:checked'); if (!r && (def.etats || []).length){ flash("ch-msg", trad(def.choisir)); return; } extra = { etat: r ? r.value : "" }; }
+      valider.disabled = true;
+      const F = await Challenge.valider(C, n, extra);
+      valider.disabled = false;
+      if (!F) return;
+      UI.toast(Challenge.deja ? trad(CHALLENGE7.page.deja) : trad(CHALLENGE7.page.valide, { n: n }), Challenge.deja ? "attention" : "ok");
+      self.rendre(zone, F, I, n);
+      construireNav(); marquerNav(courant);
+      window.scrollTo(0, 0);
+      const fait = zone.querySelector("#ch-fait"); if (fait) fait.focus();
+    });
+  },
+
 
   /* ---------- jours 2, 3, 4 (v45) : nutrition, mini-seance, habitude ---------- */
   /* la ligne d'un choix (radio) : titre + texte */

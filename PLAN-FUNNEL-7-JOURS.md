@@ -87,7 +87,7 @@ challenge: {
     "4": { fait: "…", habitude: "eau", quand: "au réveil", ou: "cuisine" },
     "5": { fait: "…", interet: "calories" },
     "6": { fait: "…", etat: "avancer" | "hesite" | "pas_maintenant" },
-    "7": { fait: "…", reserve: true }
+    "7": { fait: "…", reserve: "<instant de la case « J'ai réservé mon appel »>" }
   },
   cta: { clics: [ { jour: 6, date: "…" } ] },  // clics sur « Réserver mon appel »
   termine: "2026-10-02T…" | null
@@ -324,10 +324,16 @@ Tutoiement, phrases courtes, neutre homme / femme (formulations sans accord de g
 - Hub du prospect, profil allégé, démarrage sur le jour 1, Speed Formation verrouillée jusqu'à la fin, bloc « Avec l'accompagnement MHX » à partir du jour 5 ou à la fin (clic Calendly noté dans `challenge.cta`).
 - **Mode test (décision 9)** : `#/challenge-libre` sur l'appareil de test → tous les jours ouverts, pastille « Mode test » ; `#/challenge-rythme` pour revenir au rythme normal. Compte prospect de test : Comptes → créer un accès jetable → « Repasser prospect ».
 - Aucune migration ; sauvegarde vérifiée avant (28/28 lignes) et empreintes identiques après ; banc complet vert (78 pages) ; relecture indépendante (15 réserves corrigées : bornes et garde-fou santé au jour 1, touche Entrée, anglais, jour jamais bloqué, formation) ; inscription toujours fermée. À arbitrer par Lucas : âge minimum (18 par défaut) et Calendly sur les pages verrouillées dès le jour 1.
-- À venir : v46 (jours 5, 6, 7 + CTA), v47 (retour du lien de confirmation, écran « Vérifie ta boîte mail », bloc coach, marche à suivre : SMTP externe, confirmation d'email, URL, test, Instagram).
+- À venir : v47 (retour du lien de confirmation, écran « Vérifie ta boîte mail », bloc coach, marche à suivre : SMTP externe, confirmation d'email, URL, test, Instagram).
 
 ### v45 — Jours 2, 3, 4 (livrée le 25/09/2026)
 - Jour 2 nutrition (5 erreurs, action liée au choix, ressenti), jour 3 entraînement (échauffement embarqué, circuit de 5 exercices au poids du corps, tours selon le niveau, démonstrations vidéo du catalogue chargées au clic, sécurité, tours + ressenti), jour 4 habitudes (5 habitudes, intention quand / où, mindset, carte coach sans bouton).
 - Relecture de la clé `challenge` avant chaque écriture (jeton renouvelé, écriture en attente envoyée d'abord, jour déjà validé ailleurs jamais réécrit, relecture ratée = rien n'est écrit) ; jours faits en lecture seule ; textes FR/EN de même forme (contrôle statique). Relecture indépendante : 13 réserves corrigées (dont félicitations des jours 2 à 4, quand / où obligatoires, accessibilité, une vidéo à la fois).
 - Aucune migration ; banc complet vert (verif45 54/54, verif44 81/81, 78 pages FR/EN/clair) ; relecture indépendante ; inscription toujours fermée.
+
+### v46 — Jours 5, 6, 7 et appels à l'action (livrée le 26/09/2026)
+- Jour 5 personnalisation (objectif, rythme prudent, calories et protéines par les formules du calculateur, entraînement, alimentation, habitudes ; garde-fou santé ; volet « ce que comprend l'accompagnement »), jour 6 projection (trois colonnes, fourchette prudente plafonnée à l'écart, « Où en es-tu ? » avec « Pas maintenant », appel secondaire), jour 7 conversion (validé à l'ouverture, tuiles, « Maintenant, construisons ton plan personnalisé. », appel principal, case « J'ai réservé mon appel », formation ouverte).
+- CTA progressifs conformes au plan (rien avant le jour 4, volet au jour 5, secondaire au jour 6, principal au jour 7 puis hub) ; chaque clic Calendly noté dans `challenge.cta.clics`.
+- Relecture indépendante avant le push : 16 réserves (aucune bloquante), 14 corrigées dans la v46 (file d'écriture, jour 7 après relecture ratée, encarts « Recharge la page », fourchette « à la portée » ou absente si l'objectif va dans l'autre sens, rythme « 0,25 », textes, focus, CSS), 2 arbitrages pour Lucas (protéines 2,2 g/kg aux poids élevés, intensité du bouton Calendly du hub dès le jour 5 — en attendant, bouton fantôme avant la fin) ; second tour VALIDE, trois remarques mineures corrigées.
+- Aucune migration ; banc complet vert (verif46 74/74, verif45 54/54, verif44 81/81, 78 pages FR/EN/clair) ; inscription toujours fermée. Le challenge est complet.
 
