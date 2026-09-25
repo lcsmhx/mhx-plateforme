@@ -376,6 +376,15 @@ a.tb-tuile:hover{border-color:var(--accent-line)}
 .checkin-echelles .pastille b{color:var(--ink);margin-left:2px}
 .checkin-rep{margin:8px 0;font-size:14px;line-height:1.55}
 .checkin-rep .lbl{display:block;font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin-bottom:2px}
+/* v38 — feedback du coach, notes privees */
+.fb-entree{padding:12px 14px;border:1px solid var(--accent-line);border-radius:var(--r);background:var(--sunken)}
+.fb-tete{margin-bottom:4px}
+.fb-texte{margin:6px 0 0;font-size:14.5px;line-height:1.6;white-space:pre-line;overflow-wrap:anywhere}
+.fb-editeur{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)}
+.fb-editeur .fb-etat{text-transform:none;letter-spacing:0;color:var(--ink-3)}
+.fb-editeur .actions{margin-top:10px}
+.notes-coach textarea{min-height:120px;resize:vertical}
+.msg.ko,.note.ko{color:var(--bad)}
 .acces.attention .ico{background:var(--warn-soft);color:var(--warn)}
 .acces.statique{cursor:default}
 .acces.statique:hover{border-color:var(--line);background:var(--sunken)}
@@ -866,7 +875,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-09-25 · 37.1",
+    version: "2026-09-25 · 38",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -1795,7 +1804,10 @@ I18N.en = {
 "Quelle a été ta principale réussite ?": "What was your main win?", "Quelle a été ta principale difficulté ?": "What was your main difficulty?",
 "As-tu besoin d'un ajustement ?": "Do you need an adjustment?",
 "Oui — mon programme": "Yes — my program", "Oui — mon alimentation": "Yes — my nutrition", "Oui — les deux": "Yes — both",
-"Bibliothèque": "Library", "modules": "modules", "étapes": "steps", "module terminé": "module completed", "modules terminés": "modules completed", "sur": "of"
+"Bibliothèque": "Library", "modules": "modules", "étapes": "steps", "module terminé": "module completed", "modules terminés": "modules completed", "sur": "of",
+/* v38 — feedback du coach */
+"Feedback de ton coach": "Your coach's feedback", "Feedbacks précédents": "Previous feedback", "écrit le {d}": "written on {d}", "nouveau": "new",
+"Ton feedback est disponible": "Your feedback is available", "Ton coach a répondu : {p}": "Your coach replied: {p}"
 };
 I18N.motifs = [["^(\\d+) articles? sur (\\d+) dans le panier\\.$", "$1 of $2 items in your cart."], ["^(\\d+) étapes? validées? sur (\\d+) — (\\d+) %$", "$1 of $2 steps completed — $3%"], ["^([\\d\\s\\u202f\\u00a0.,−-]+?) kcal$", "$1 Cal"], ["^([\\d\\s\\u202f\\u00a0.,−-]+?) kcal · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de protéines par dose$", "$1 Cal · $2 g protein per serving"], ["^([\\d\\s\\u202f\\u00a0.,−-]+?) kcal consommées sur ([\\d\\s\\u202f\\u00a0.,−-]+?) — il te reste$", "$1 Cal eaten out of $2 — you have"], ["^Objectif visé : ([\\d\\s\\u202f\\u00a0.,−-]+?) kcal · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de protéines · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de glucides · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de lipides\\.$", "Target: $1 Cal · $2 g protein · $3 g carbs · $4 g fat."], ["^Coche les jours que tu veux acheter : la liste se recalcule\\. (\\d+) jours? sélectionnés?\\.$", "Check the days you want to shop for: the list updates automatically. $1 day(s) selected."], ["^Programme mis à jour le (\\d{1,2})/(\\d{1,2})/(\\d{4})$", "Program updated $2/$1/$3"], ["^Repas mis à jour le (\\d{1,2})/(\\d{1,2})/(\\d{4})$", "Meals updated $2/$1/$3"], ["^S(\\d+)$", "W$1"], ["^Supprimer la semaine (\\d+)$", "Delete week $1"], ["^dernière : semaine (\\d+)$", "latest: week $1"], ["^semaine (\\d+)$", "week $1"], ["^Semaine (\\d+) enregistrée\\.$", "Week $1 saved."], ["^(\\d+)/jambe$", "$1/leg"], ["^(\\d+)-(\\d+)/jambe$", "$1-$2/leg"], ["^(\\d+)/bras$", "$1/arm"], ["^(\\d+)-(\\d+)/bras$", "$1-$2/arm"], ["^(\\d+)-(\\d+) s/côté$", "$1-$2 s/side"], ["^protéines au-dessus de ([\\d\\s\\u202f\\u00a0.,−-]+?) g$", "protein over by $1 g"], ["^protéines en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) g$", "protein under by $1 g"], ["^lipides au-dessus de ([\\d\\s\\u202f\\u00a0.,−-]+?) g — sur ce régime, les sources de protéines apportent beaucoup de gras$", "fat over by $1 g — on this diet, protein sources bring a lot of fat"], ["^lipides en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) g — sur ce régime, les sources de protéines apportent beaucoup de gras$", "fat under by $1 g"], ["^calories au-dessus de ([\\d\\s\\u202f\\u00a0.,−-]+?) kcal$", "calories over by $1 Cal"], ["^calories en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) kcal$", "calories under by $1 Cal"], ["^glucides en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) g — ce régime offre peu de sources de glucides dans le catalogue$", "carbs under by $1 g — this diet has few carb sources in the catalog"], ["^(\\d+(?:-\\d+)?(?: s)?)/jambe$", "$1/leg"], ["^(\\d+(?:-\\d+)?(?: s)?)/bras$", "$1/arm"], ["^(\\d+(?:-\\d+)?(?: s)?)/côté$", "$1/side"], ["^(\\d+)/sens$", "$1/direction"], ["^(\\d+)/sens/cheville$", "$1/direction/ankle"], ["^(\\d+) souffles$", "$1 breaths"], ["^(\\d+) respirations$", "$1 breaths"], ["^(\\d+(?:-\\d+)?) pas$", "$1 steps"], ["^(\\d+) dans chaque sens$", "$1 each direction"], ["^(\\d+) par côté$", "$1 per side"], ["^(\\d+) par jambe$", "$1 per leg"], ["^(\\d+) par cheville$", "$1 per ankle"], ["^(\\d+) s par (côté)$", "$1 s per side"], ["^(\\d+) s par jambe$", "$1 s per leg"], ["^(\\d+) s \\+ (\\d+) squats$", "$1 s + $2 squats"]].map(([p, r]) => [new RegExp(p), r]);
 
@@ -2270,6 +2282,10 @@ const Store = {
   attente: {},
   charge: {},          // le GET a-t-il reussi ? on n'ecrase pas ce qu'on n'a pas pu lire
   idConsulte: null,    // quand le coach consulte la fiche d'un client
+  /* v38 — cles rangees chez le client mais ecrites par le coach seul, par
+     leur propre chemin (Feedback, NotesCoach) : jamais par ecrire(), envoyer()
+     ni une restauration de sauvegarde. La base le refuse de toute facon. */
+  clesCoachSeul: ["feedbacks", "notes_coach"],
 
   cible(){ return this.idConsulte || (Auth.utilisateur() && Auth.utilisateur().id); },
   lectureSeule(){ return !!this.idConsulte; },
@@ -2313,6 +2329,7 @@ const Store = {
 
   ecrire(cle, valeur){
     const uid = this.cible(); if (!uid) return;
+    if (this.clesCoachSeul.indexOf(cle) > -1) return;
     this.boite(uid)[cle] = valeur;
     /* seule exception a la lecture seule : le coach ecrit le programme et les repas */
     /* Ce que le coach a le droit d'ecrire dans la fiche d'un client. Doit
@@ -2329,6 +2346,7 @@ const Store = {
   },
   async envoyer(cle, valeur, uidFige){
     const uid = uidFige || this.cible(); if (!uid) return;
+    if (this.clesCoachSeul.indexOf(cle) > -1) return;
     majEtat("enregistrement");
     try {
       await Auth.assurer();
@@ -2390,6 +2408,9 @@ const Store = {
     const duCoach = ["programme", "repas", "calc"];
     let n = 0;
     for (const cle in d){
+      /* v38 : une vieille copie (ou une copie retouchee) ne remplace jamais
+         un feedback ou une note du coach, pas meme depuis le compte coach */
+      if (this.clesCoachSeul.indexOf(cle) > -1) continue;
       if (connues.indexOf(cle) === -1) continue;
       if (!Auth.estCoach() && duCoach.indexOf(cle) > -1) continue;
       if (!d[cle] || typeof d[cle] !== "object") continue;
@@ -6311,12 +6332,24 @@ const outilBilan = {
     ]);
     const b = this.calculer({ programme, journal, repas, repas_suivi, mens, objectifs_faits });
     zone.innerHTML = this.vue(b, coach, (intake && intake.objectif) || "");
-    /* v36 — ce que le client a ecrit dans ses bilans hebdo : a lire avant le call */
+    /* v36 — ce que le client a ecrit dans ses bilans hebdo : a lire avant le call.
+       v38 — et, sous chaque bilan, le feedback du coach (cle feedbacks). La
+       semaine en cours a aussi son editeur tant qu'elle n'a pas de bilan. */
     if (coach){
+      const uid = Store.idConsulte;
+      let F = null, lu = true;
+      try { F = await CleCoach.lire(uid, Feedback.cle); } catch(e){ lu = false; }
+      if (!zone.isConnected || Store.idConsulte !== uid) return;   // on a change de page entre-temps
       const l = ((checkins && checkins.liste) || []).slice(-4).reverse();
-      zone.insertAdjacentHTML("beforeend", `<section class="panel"><h2>Ses bilans hebdomadaires</h2>${l.length
-        ? l.map((x, i) => `<details class="hist-entree"${i === 0 ? " open" : ""}><summary><b>${esc(Checkin.periode(x))}</b> <span class="hist-dates">envoyé le ${esc(dateFr(x.envoye_le))}</span></summary>${Checkin.reponsesHTML(x)}</details>`).join("")
-        : `<div class="empty">Aucun bilan hebdomadaire envoyé pour le moment.</div>`}</section>`);
+      const v = Checkin.semaineVisee();
+      const sansBilan = !l.some(x => x.semaine === v.debut);
+      zone.insertAdjacentHTML("beforeend", `<section class="panel"><h2>Ses bilans hebdomadaires et ton feedback</h2>
+        ${lu ? "" : `<p class="msg ko">Ses feedbacks n'ont pas pu être lus : recharge la page pour écrire. Rien n'a été modifié.</p>`}
+        ${l.map((x, i) => `<details class="hist-entree"${i === 0 ? " open" : ""}><summary><b>${esc(Checkin.periode(x))}</b> <span class="hist-dates">envoyé le ${esc(dateFr(x.envoye_le))}${Feedback.repond(F, x) ? " · feedback envoyé" : Feedback.pour(F, x.semaine) ? " · feedback à relire" : ""}</span></summary>${Checkin.reponsesHTML(x)}${Feedback.editeurHTML(x.semaine, x.fin, F, x, !lu)}</details>`).join("")}
+        ${l.length ? "" : `<div class="empty">Aucun bilan hebdomadaire envoyé pour le moment.</div>`}
+        ${sansBilan ? `<div class="hist-entree"><p class="note" style="margin:0"><b>${esc(Checkin.periode({ semaine: v.debut, fin: v.fin }))}</b> · pas encore de bilan pour cette semaine. Tu peux quand même lui écrire.</p>${Feedback.editeurHTML(v.debut, v.fin, F, null, !lu)}</div>` : ""}
+      </section>`);
+      Feedback.brancher(zone, uid, F);
     }
   }
 };
@@ -6929,11 +6962,12 @@ const Clients = {
     const profils = await Auth.appel("/rest/v1/profils?select=*&order=cree_le.desc");
     /* les historiques (jusqu'a 24 plans par client) ne servent pas ici :
        on ne les telecharge pas */
-    const donnees = await Auth.appel("/rest/v1/donnees?select=user_id,outil,contenu,maj_le&outil=not.in.(hist_programme,hist_repas)");
+    /* v38 : les notes privees ne servent pas ici non plus */
+    const donnees = await Auth.appel("/rest/v1/donnees?select=user_id,outil,contenu,maj_le&outil=not.in.(hist_programme,hist_repas,notes_coach)");
     const parClient = {}, contenus = {};
     /* « Activite » = ce que le CLIENT a saisi. Ce que le coach ecrit dans
-       sa fiche (programme, diete, calories) ne dit rien de lui. */
-    const ecritParCoach = ["programme", "repas", "calc", "complements"];
+       sa fiche (programme, diete, calories, feedbacks, notes) ne dit rien de lui. */
+    const ecritParCoach = ["programme", "repas", "calc", "complements", "feedbacks", "notes_coach"];
     (donnees || []).forEach(d => {
       if (ecritParCoach.indexOf(d.outil) === -1 && (!parClient[d.user_id] || d.maj_le > parClient[d.user_id])) parClient[d.user_id] = d.maj_le;
       (contenus[d.user_id] = contenus[d.user_id] || {})[d.outil] = d.contenu;
@@ -6998,8 +7032,10 @@ const Clients = {
     if (l.programme || l.diete){
       const ck = c.checkins || { liste: [] }, e = Checkin.etat(ck);
       const il7 = (() => { const d = new Date(); d.setDate(d.getDate() - 7); return Regularite.iso(d); })();
-      /* recu : un bilan envoye dans les sept derniers jours, quelle que soit sa semaine */
-      const recent = (ck.liste || []).filter(x => x.envoye_le && x.envoye_le >= il7);
+      /* recu : un bilan envoye dans les sept derniers jours, quelle que soit sa
+         semaine, et auquel le coach n'a pas encore repondu (v38 : un feedback
+         ecrit sous CE bilan ; un mot ecrit avant son arrivee ne compte pas) */
+      const recent = (ck.liste || []).filter(x => x.envoye_le && x.envoye_le >= il7 && !Feedback.repond(c.feedbacks, x));
       if (recent.length) out.push({ type: "bilan_recu", niveau: "info", cible: "bilan", texte: "Bilan hebdo reçu — à lire" });
       else if (!e.fait && e.semaine.fin < auj) out.push({ type: "bilan_manque", niveau: "attention", cible: "suivi", texte: "Bilan hebdo non complété" });
     }
@@ -8316,13 +8352,15 @@ const outilAccueil = {
      avec un lien vers l'editeur de chaque bloc. Lecture seule ici. Les
      notes privees et les feedbacks arrivent avec les phases 10 et 18. */
   async fiche(zone){
-    const cles = ["intake", "programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "checkins", "complements", "calc", "formation", "hist_programme", "hist_repas", "prefs"];
+    const cles = ["intake", "programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "checkins", "complements", "calc", "formation", "hist_programme", "hist_repas", "prefs", "feedbacks"];
+    const uidFiche = Store.idConsulte;
     const { valeurs: d, dates } = await Store.lireTout(cles, { dates: true });
+    if (!zone.isConnected || Store.idConsulte !== uidFiche) return;   // on a change de fiche entre-temps
     const I = d.intake || {}, P = d.programme || {}, J = d.journal || { seances: [] }, R = d.repas || {}, S = d.repas_suivi || {}, M = d.mens || {}, CK = d.checkins || { liste: [] };
     if (!Array.isArray(J.seances)) J.seances = [];
     const nomC = Store.nomConsulte || "Client";
     const profil = { id: Store.idConsulte, prenom: nomC.split(" ")[0], nom: nomC.split(" ").slice(1).join(" "), role: "client" };
-    const ecritParCoach = ["programme", "repas", "calc", "complements"];
+    const ecritParCoach = ["programme", "repas", "calc", "complements", "feedbacks", "notes_coach"];
     const dernier = Object.keys(dates).filter(k => ecritParCoach.indexOf(k) === -1 && dates[k]).map(k => dates[k]).sort().pop() || null;
     const l = Clients.resumerUn(profil, d, dernier);
     const r = Regularite.calculer({ programme: P, journal: J, repas: R, repas_suivi: S, mens: M }, 0), prec = Regularite.calculer({ programme: P, journal: J, repas: R, repas_suivi: S, mens: M }, -1);
@@ -8332,6 +8370,8 @@ const outilAccueil = {
     const derniereSeance = J.seances.length ? J.seances[J.seances.length - 1] : null;
     const e = Checkin.etat(CK);
     const dernierCk = (CK.liste || []).length ? CK.liste[CK.liste.length - 1] : null;
+    const fbCk = dernierCk ? Feedback.repond(d.feedbacks, dernierCk) : null;
+    const fbAvant = (dernierCk && !fbCk) ? Feedback.pour(d.feedbacks, dernierCk.semaine) : null;
     const obj = (P.objectifs && (P.objectifs.liste || []).some(Boolean)) ? P.objectifs : null;
     const cible = R.cible || null;
     const nbJours = (R.jours || []).filter(j => (j.repas || []).length).length;
@@ -8359,6 +8399,7 @@ const outilAccueil = {
           <div class="tile"><div class="t-lbl">Bilan hebdo</div><div class="t-val readout${dernierCk ? " pos" : ""}">${dernierCk ? "✓" : "—"}</div><div class="t-sub">${dernierCk ? "dernier envoyé le " + esc(dateFr(dernierCk.envoye_le)) : "jamais envoyé"}</div></div>
         </div>
       </section>
+      ${NotesCoach.html()}
       <div class="fiche-grille">
       <section class="panel"><div class="seance-c-tete"><h2>Profil</h2>${I.complet ? `<span class="pastille ok">questionnaire complet</span>` : `<span class="pastille attention">questionnaire incomplet</span>`}</div>
         <ul class="ingr fiche-l">${ligne("Âge", I.age ? I.age + " ans" : "")}${ligne("Sexe", I.sexe)}${ligne("Taille", I.taille ? I.taille + " cm" : "")}${ligne("Poids déclaré", I.poids ? I.poids + " kg" : "")}${ligne("Poids objectif", I.poids_obj ? I.poids_obj + " kg" : "")}${ligne("Objectif", I.objectif)}${ligne("Niveau", I.niveau)}${ligne("Lieu", I.lieu)}${ligne("Séances / semaine", I.seances)}${ligne("Régime", I.regime_type)}${ligne("Allergènes", (I.allergenes || "").split("|").filter(Boolean).join(", "))}${ligne("Ville", I.ville)}</ul>
@@ -8377,19 +8418,23 @@ const outilAccueil = {
         <p class="note" style="margin:10px 0 0">${lien("mensurations", "Ses courbes")}</p></section>
       <section class="panel"><div class="seance-c-tete"><h2>Bilan hebdomadaire</h2>${e.fait ? `<span class="pastille ok">reçu cette semaine</span>` : dernierCk ? `<span class="pastille">${esc(trad("dernier : {d}", { d: dateFr(dernierCk.envoye_le) }))}</span>` : `<span class="pastille attention">aucun</span>`}</div>
         ${dernierCk ? `<p class="note" style="margin:0 0 8px">${esc(Checkin.periode(dernierCk))}</p>${Checkin.reponsesHTML(dernierCk)}` : `<div class="empty">Aucun bilan hebdomadaire envoyé pour le moment.</div>`}
+        ${dernierCk ? `<p class="note" style="margin:10px 0 0">Ton feedback sur ce bilan : ${fbCk ? "envoyé le " + esc(dateFr(fbCk.date)) : fbAvant ? "<b>écrit avant ce bilan, à relire</b>" : "<b>à écrire</b>"}</p>` : ""}
         <p class="note" style="margin:10px 0 0">${lien("bilan", "Préparer le call")} · ${lien("suivi", "Son suivi")}</p></section>
       <section class="panel"><h2>Le reste</h2>
         <ul class="ingr fiche-l">${ligne("Compléments", nbCompl ? nbCompl + " prescrit" + (nbCompl > 1 ? "s" : "") : "aucun")}${ligne("Formation", fo ? fo.pct + " % (" + fo.faits + " / " + fo.tot + ")" : "pas commencée")}${ligne("Anciens programmes", histP || "0")}${ligne("Anciennes diètes", histR || "0")}</ul>
         <p class="note" style="margin:10px 0 0">${lien("complements", "Ses compléments")} · ${lien("formation", "Sa formation")}</p></section>
       </div>`;
+    /* v38 — notes privees : la fonction rendue enregistre ce qui attend quand on quitte la fiche */
+    return NotesCoach.monter(Store.idConsulte);
   },
 
   async init(){
     const zone = $("acc-vue"); if (!zone) return;
     const consult = !!Store.idConsulte;
     if (consult) return this.fiche(zone);
-    const d = await Store.lireTout(["intake", "programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "checkins"]);
+    const d = await Store.lireTout(["intake", "programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "checkins", "feedbacks"]);
     const I = d.intake || {}, P = d.programme || {}, J = d.journal || { seances: [] }, R = d.repas || {}, S = d.repas_suivi || {}, M = d.mens || {}, OF = d.objectifs_faits || {}, CK = d.checkins || { liste: [] };
+    const fbR = Feedback.recent(d.feedbacks);   // v38 : un feedback du coach de moins de 7 jours
     if (!Array.isArray(J.seances)) J.seances = [];
     const c = { programme: P, journal: J, repas: R, repas_suivi: S, mens: M };
     const r = Regularite.calculer(c, 0), prec = Regularite.calculer(c, -1);
@@ -8464,7 +8509,7 @@ const outilAccueil = {
         <div class="tiles">${tuiles}</div>
         <p class="note" style="margin:12px 0 0">${esc(trad("La régularité mesure ce que tu fais — séances, repas, mesure — pas ce que dit la balance."))}</p>
       </section>
-      ${(aProgramme || aDiete) ? `<section class="panel"><h2>${esc(trad("Bilan hebdomadaire"))}</h2><div class="acces-l">${Checkin.statutHTML(CK, { lien: "#/suivi" })}</div></section>` : ""}
+      ${(aProgramme || aDiete || fbR) ? `<section class="panel"><h2>${esc(trad("Bilan hebdomadaire"))}</h2><div class="acces-l">${fbR ? Feedback.accesHTML(fbR) : ""}${(aProgramme || aDiete) ? Checkin.statutHTML(CK, { lien: "#/suivi" }) : ""}</div></section>` : ""}
       ${acces.length ? `<section class="panel"><h2>${esc(trad("Aujourd'hui"))}</h2><div class="acces-l">${acces.map(ligne).join("")}</div></section>` : ""}
       ${obj ? `<section class="panel"><h2>${esc(trad("Tes objectifs du mois"))}</h2>
         ${obj.liste.map((t, i) => { if (!t) return ""; const st = Regularite.statutObjectif(P, OF, i); return `<div class="objectif${st === "atteint" ? " atteint" : ""}${st === "non_atteint" ? " rate" : ""}"><span class="num">0${i + 1}</span><span class="texte" data-notr>${esc(t)}</span><span class="pastille ${Regularite.classeStatut(st)}">${esc(Regularite.libelleStatut(st))}</span></div>`; }).join("")}
@@ -8552,7 +8597,7 @@ const Checkin = {
       const v = this.semaineVisee();
       if (!Array.isArray(C.liste)) C.liste = [];
       C.liste = C.liste.filter(x => x.semaine !== v.debut);
-      const entree = { semaine: v.debut, fin: v.fin, envoye_le: aujourdhui(), reponses: rep };
+      const entree = { semaine: v.debut, fin: v.fin, envoye_le: aujourdhui(), envoye_a: new Date().toISOString(), reponses: rep };
       C.liste.push(entree);
       C.liste.sort((a, b) => a.semaine < b.semaine ? -1 : 1);
       if (C.liste.length > this.max) C.liste = C.liste.slice(-this.max);
@@ -8613,6 +8658,285 @@ const Checkin = {
 };
 
 /* ------------------------------------------------------------------
+   v38 — FEEDBACK DU COACH (phase 10) et NOTES PRIVEES (phase 18)
+   Deux cles rangees chez le client mais ecrites par le coach seul :
+   - feedbacks   = { liste: [{ semaine (lundi ISO), fin, date (ISO), texte, bilan? }] }
+                   une entree par semaine de bilan ; « bilan » = date d'envoi du
+                   bilan auquel ce feedback repond ; le client LIT cette cle ;
+   - notes_coach = { texte, maj, avant? } : le client ne peut ni la lire ni
+                   l'ecrire ; « avant » = la version trouvee a l'ouverture.
+   C'est la base qui le garantit (policies RLS du 25/09/2026), pas l'ecran.
+   Elles ne passent pas par Store.ecrire : on relit la ligne juste avant
+   d'ecrire (rien d'autre n'est ecrase, et rien n'est ecrit si elle a change
+   depuis l'affichage) et on n'annonce « enregistre » que si la base renvoie
+   la ligne. Un refus est dit clairement, et le texte tape reste dans le champ.
+   ------------------------------------------------------------------ */
+const CleCoach = {
+  /* une session qu'on ne peut plus renouveler n'est pas « aucune donnee » :
+     on s'arrete net plutot que de lire sans jeton */
+  async session(){ if (!(await Auth.assurer())) throw Object.assign(new Error("session"), { statut: 401 }); },
+  /* la ligne telle qu'en base : { contenu, maj_le }, ou null */
+  async ligne(uid, cle){
+    await this.session();
+    const r = await Auth.appel("/rest/v1/donnees?user_id=eq." + uid + "&outil=eq." + encodeURIComponent(cle) + "&select=contenu,maj_le");
+    return (r && r[0]) || null;
+  },
+  async lire(uid, cle){ const l = await this.ligne(uid, cle); return (l && l.contenu) || null; },
+  /* ecriture CONDITIONNELLE : seulement si la ligne n'a pas bouge depuis la
+     lecture (meme maj_le), ou si elle n'existe toujours pas. Sinon rien n'est
+     ecrit et l'erreur porte « conflit ». Renvoie la ligne enregistree. */
+  async ecrireSi(uid, cle, contenu, lue){
+    await this.session();
+    const maj = new Date().toISOString();
+    const conflit = () => Object.assign(new Error("conflit"), { conflit: true });
+    const refus = () => Object.assign(new Error("refus"), { statut: 403 });
+    let r;
+    if (lue){
+      const filtre = lue.maj_le ? "&maj_le=eq." + encodeURIComponent(lue.maj_le) : "&maj_le=is.null";
+      r = await Auth.appel("/rest/v1/donnees?user_id=eq." + uid + "&outil=eq." + encodeURIComponent(cle) + filtre, {
+        method: "PATCH", headers: { "Prefer": "return=representation" }, body: { contenu: contenu, maj_le: maj }
+      });
+      if (!Array.isArray(r) || !r[0]){
+        /* aucune ligne touchee : elle a bouge (conflit)… ou la base nous l'interdit */
+        const l = await this.ligne(uid, cle);
+        if (l && l.maj_le === lue.maj_le) throw refus();
+        throw conflit();
+      }
+    } else {
+      try {
+        r = await Auth.appel("/rest/v1/donnees", {
+          method: "POST", headers: { "Prefer": "return=representation" },
+          body: [{ user_id: uid, outil: cle, contenu: contenu, maj_le: maj }]
+        });
+      } catch(e){
+        /* 409 : la ligne existe deja (conflit)… ou le compte n'existe plus */
+        if (e && e.statut === 409){ const l = await this.ligne(uid, cle); throw l ? conflit() : refus(); }
+        throw e;
+      }
+      if (!Array.isArray(r) || !r[0]) throw refus();
+    }
+    return r[0];
+  },
+  message(e){
+    if (e && (e.statut === 403 || e.statut === 409)) return "Non enregistré : la base refuse cette écriture. Ton texte est gardé.";
+    if (e && e.statut === 401) return "Non enregistré : ta session a expiré. Reconnecte-toi, ton texte est gardé ici.";
+    return "Non enregistré : la connexion a échoué. Ton texte est gardé, réessaie.";
+  }
+};
+
+const Feedback = {
+  cle: "feedbacks",
+  max: 60,
+  file: Promise.resolve(),   // les envois partent l'un apres l'autre
+  liste(F){ return ((F && F.liste) || []).filter(x => x && x.semaine && x.texte); },
+  pour(F, semaine){ return this.liste(F).find(x => x.semaine === semaine) || null; },
+  /* le feedback qui REPOND a ce bilan : ecrit sous ce bilan-la, pour cette
+     date d'envoi. Un mot ecrit avant que le bilan arrive (ou avant qu'il soit
+     renvoye) ne compte pas : le bilan reste « a lire ». */
+  repond(F, x){
+    const f = x ? this.pour(F, x.semaine) : null, envoi = x ? this.envoi(x) : "";
+    return (f && f.bilan && envoi && f.bilan === envoi) ? f : null;
+  },
+  /* l'instant d'envoi du bilan (envoye_a, depuis la v38) ; sinon son jour */
+  envoi(x){ return (x && (x.envoye_a || x.envoye_le)) || ""; },
+  /* du plus recent au plus ancien : la semaine, puis la date d'ecriture */
+  tries(F){ return this.liste(F).slice().sort((a, b) => a.semaine !== b.semaine ? (a.semaine < b.semaine ? 1 : -1) : (String(a.date) < String(b.date) ? 1 : -1)); },
+  /* le dernier ecrit ou mis a jour, s'il date de moins de 7 jours */
+  recent(F){
+    const d = new Date(); d.setDate(d.getDate() - 7);
+    const il7 = Regularite.iso(d);
+    const l = this.liste(F).filter(x => x.date && x.date >= il7).sort((a, b) => String(a.date) < String(b.date) ? 1 : -1);
+    return l[0] || null;
+  },
+  finDe(semaine){ const d = new Date(semaine + "T12:00:00"); d.setDate(d.getDate() + 6); return Regularite.iso(d); },
+  empreinte(x){ return x ? JSON.stringify([x.date || "", x.texte || "", x.bilan || ""]) : ""; },
+
+  /* texte vide = retirer le feedback de cette semaine. La base est relue juste
+     avant : les autres semaines sont reprises telles quelles, et si celle-ci a
+     change depuis l'affichage (autre onglet, autre appareil), rien n'est ecrit.
+     Renvoie l'entree enregistree (null si retiree). */
+  async enregistrer(uid, semaine, fin, texte, bilan, base, deja){
+    const t = String(texte || "").trim();
+    const meme = (x, y) => !!(x && y && x.texte === y.texte && (x.bilan || "") === (y.bilan || ""));
+    for (let essai = 1; ; essai++){
+      const lue = await CleCoach.ligne(uid, this.cle);
+      const actuel = lue && lue.contenu;
+      const brute = (actuel && Array.isArray(actuel.liste)) ? actuel.liste : [];
+      const cour = brute.find(x => x && x.semaine === semaine && x.texte) || null;
+      /* deja comme on le veut (une tentative precedente est passee, sa reponse s'est perdue) */
+      if (t ? meme(cour, { texte: t, bilan: bilan }) : !cour) return cour;
+      /* l'entree a change depuis l'affichage, et ce n'est pas notre propre tentative : conflit */
+      if (this.empreinte(cour) !== this.empreinte(base) && !meme(cour, deja)) throw Object.assign(new Error("conflit"), { conflit: true });
+      const l = brute.filter(x => !(x && x.semaine === semaine));
+      let entree = null;
+      if (t){
+        entree = { semaine: semaine, fin: fin || this.finDe(semaine), date: aujourdhui(), texte: t };
+        if (bilan) entree.bilan = bilan;
+        l.push(entree);
+      }
+      l.sort((a, b) => String(a && a.semaine) < String(b && b.semaine) ? -1 : 1);
+      try {
+        await CleCoach.ecrireSi(uid, this.cle, { liste: l.slice(-this.max) }, lue);
+        return entree;
+      } catch(e){
+        /* une autre semaine a ete ecrite entre la lecture et l'ecriture (autre
+           onglet, autre appareil) : on relit et on recommence, deux fois au plus */
+        if (!(e && e.conflit) || essai >= 3) throw e;
+      }
+    }
+  },
+
+  /* ----- cote client (et coach dans « Son suivi ») : lecture ----- */
+  periode(x){ return Checkin.periode({ semaine: x.semaine, fin: x.fin || this.finDe(x.semaine) }); },
+  panneauHTML(F){
+    const l = this.tries(F);
+    if (!l.length) return "";
+    const d = l[0], reste = l.slice(1);
+    return `<section class="panel fb-panneau"><div class="seance-c-tete"><h2>${esc(trad("Feedback de ton coach"))}</h2>${this.recent(F) ? `<span class="pastille accent">${esc(trad("nouveau"))}</span>` : ""}</div>
+      <div class="fb-entree"><div class="fb-tete"><b>${esc(this.periode(d))}</b> <span class="hist-dates">${esc(trad("écrit le {d}", { d: dateFr(d.date) }))}</span></div><p class="fb-texte" data-notr>${esc(d.texte)}</p></div>
+      ${reste.length ? `<h3 style="margin-top:20px">${esc(trad("Feedbacks précédents"))}</h3>` + reste.map(x => `<details class="hist-entree"><summary><b>${esc(this.periode(x))}</b> <span class="hist-dates">${esc(trad("écrit le {d}", { d: dateFr(x.date) }))}</span></summary><p class="fb-texte" data-notr>${esc(x.texte)}</p></details>`).join("") : ""}
+    </section>`;
+  },
+  /* la carte de l'accueil, pour un feedback de moins de 7 jours */
+  accesHTML(x){
+    return `<a class="acces" href="#/suivi"><span class="ico">${ICONES.suivi || ICONES.bilan}</span><span class="txt"><b>${esc(trad("Ton feedback est disponible"))}</b><small>${esc(trad("Ton coach a répondu : {p}", { p: this.periode(x) }))}</small></span><span class="fleche">›</span></a>`;
+  },
+
+  /* ----- cote coach (« Préparer le call ») : ecriture -----
+     bilan = l'entree de bilan hebdo sous laquelle s'affiche l'editeur (null pour
+     une semaine sans bilan) ; ferme = feedbacks illisibles : on ne propose pas
+     d'ecrire par-dessus ce qu'on n'a pas pu lire. */
+  editeurHTML(semaine, fin, F, bilan, ferme){
+    const f = this.pour(F, semaine);
+    const avantBilan = !!(f && bilan && !(f.bilan && f.bilan === this.envoi(bilan)));
+    const etat = !f ? "— pas encore envoyé" : avantBilan ? "— écrit le " + dateFr(f.date) + ", avant ce bilan : relis-le et renvoie-le" : "— envoyé le " + dateFr(f.date);
+    return `<div class="fb-editeur" data-fb-semaine="${esc(semaine)}" data-fb-fin="${esc(fin || "")}" data-fb-bilan="${esc(bilan ? this.envoi(bilan) : "")}">
+      <label>Ton feedback pour cette semaine <span class="fb-etat">${esc(etat)}</span></label>
+      <textarea rows="3"${ferme ? " disabled" : ""} placeholder="Ce qui va bien, ce qu'on ajuste, l'objectif de la semaine qui vient…">${esc(f ? f.texte : "")}</textarea>
+      <div class="actions"><button type="button" class="btn petit" data-fb-enregistrer${ferme ? " disabled" : ""}>${f ? "Mettre à jour le feedback" : "Envoyer le feedback"}</button><span class="msg" data-fb-msg></span></div>
+    </div>`;
+  },
+  brancher(zone, uid, F){
+    $$("[data-fb-semaine]", zone).forEach(bloc => {
+      const btn = bloc.querySelector("[data-fb-enregistrer]"), ta = bloc.querySelector("textarea");
+      const msg = bloc.querySelector("[data-fb-msg]"), etat = bloc.querySelector(".fb-etat");
+      let base = this.pour(F, bloc.dataset.fbSemaine);   // ce que l'editeur a affiche
+      let deja = null;   // une tentative dont la reponse s'est perdue (elle a pu passer)
+      btn.addEventListener("click", async () => {
+        const texte = ta.value;
+        msg.classList.remove("ko"); msg.textContent = "";
+        if (!texte.trim()){
+          if (!base){ msg.textContent = "Écris d'abord ton feedback."; return; }
+          if (!(await UI.confirmer("Retirer le feedback de cette semaine ? Ton client ne le verra plus.", { titre: "Retirer le feedback", ok: "Oui, retirer", danger: true }))) return;
+        }
+        btn.disabled = true; msg.textContent = "Enregistrement…";
+        const tentative = { texte: texte.trim(), bilan: bloc.dataset.fbBilan || "" };
+        const tache = this.file.then(() => this.enregistrer(uid, bloc.dataset.fbSemaine, bloc.dataset.fbFin, texte, bloc.dataset.fbBilan, base, deja));
+        this.file = tache.catch(() => {});
+        try {
+          const entree = await tache;
+          base = entree; deja = null;
+          etat.textContent = entree ? "— envoyé le " + dateFr(entree.date) : "— pas encore envoyé";
+          btn.textContent = entree ? "Mettre à jour le feedback" : "Envoyer le feedback";
+          msg.textContent = entree ? "Feedback enregistré : ton client le voit dans « Mon suivi »." : "Feedback retiré.";
+        } catch(e){
+          if (!(e && e.conflit) && tentative.texte) deja = tentative;
+          msg.classList.add("ko");
+          msg.textContent = (e && e.conflit) ? "Ce feedback a changé entre-temps (autre onglet ou appareil) : recharge la page avant d'écrire. Ton texte est gardé ici." : CleCoach.message(e);
+        }
+        btn.disabled = false;
+      });
+    });
+  }
+};
+
+/* Notes privees du coach, dans la fiche : enregistrees toutes seules une
+   seconde apres la derniere frappe (et tout de suite en quittant la fiche).
+   Si la lecture echoue, le champ reste ferme. Chaque ecriture est
+   conditionnelle : si les notes ont change ailleurs, rien n'est ecrase et les
+   deux versions sont gardees. */
+const NotesCoach = {
+  cle: "notes_coach",
+  html(){
+    return `<section class="panel notes-coach"><div class="seance-c-tete"><h2>Notes privées</h2><span class="pastille">jamais visibles par le client</span></div>
+      <textarea id="nc-texte" rows="5" disabled placeholder="Contexte, points à suivre, ce qui s'est dit en call… Ton client ne voit jamais ces notes."></textarea>
+      <p class="note" style="margin:8px 0 0" id="nc-etat">Chargement…</p></section>`;
+  },
+  /* renvoie la fonction a appeler en quittant la fiche */
+  monter(uid){
+    const ta = $("nc-texte"), etat = $("nc-etat");
+    if (!ta || !etat || !uid) return () => {};
+    let minuterie = null, enCours = false, encore = false, lu = false, bloque = false;
+    let dernier = "", ligneLue = null, avant = null;
+    let envois = [];   // « maj » des ecritures dont la reponse n'est pas revenue (elles ont pu passer)
+    const quand = (iso) => { const d = new Date(iso); return isNaN(d) ? "" : d.toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }); };
+    const dire = (t, ko) => { etat.classList.toggle("ko", !!ko); etat.textContent = t; };
+    /* ecrit le texte du champ, par ecriture conditionnelle. Sur un conflit : si
+       c'etait notre propre ecriture (reponse perdue), on la reprend ; si les
+       notes ont vraiment change ailleurs, on garde LES DEUX versions (la notre
+       a la suite, datee) : aucune frappe n'est jamais jetee. */
+    const envoyer = async () => {
+      let fusion = false;
+      for (let essai = 1; essai <= 3; essai++){
+        const texte = ta.value;
+        const contenu = { texte: texte, maj: new Date().toISOString() };
+        if (avant) contenu.avant = avant;
+        envois.push(contenu.maj);
+        try {
+          const r = await CleCoach.ecrireSi(uid, this.cle, contenu, ligneLue);
+          ligneLue = { maj_le: r.maj_le }; dernier = texte; envois = [];
+          dire((fusion ? "Ces notes avaient changé ailleurs : les deux versions sont gardées, la tienne à la suite. " : "") + "Enregistré · " + quand(contenu.maj));
+          return;
+        } catch(e){ if (!(e && e.conflit)) throw e; }
+        const l = await CleCoach.ligne(uid, this.cle);
+        const c = (l && l.contenu) || {};
+        const distant = typeof c.texte === "string" ? c.texte : "";
+        ligneLue = l ? { maj_le: l.maj_le } : null;
+        if (c.maj && envois.indexOf(c.maj) > -1){
+          /* notre propre ecriture etait passee : on repart d'elle */
+          dernier = distant; envois = [];
+          if (ta.value === dernier){ dire("Enregistré · " + quand(c.maj)); return; }
+          continue;
+        }
+        const local = ta.value;
+        const ajout = (local.indexOf(dernier) === 0 ? local.slice(dernier.length) : local).trim();
+        dernier = distant; fusion = true;
+        ta.value = ajout ? distant + (distant ? "\n\n" : "") + "— ajouté depuis un autre onglet ou appareil, le " + quand(new Date().toISOString()) + " —\n" + ajout : distant;
+        if (ta.value === dernier){ dire("Ces notes avaient changé ailleurs : la dernière version est affichée."); return; }
+      }
+      bloque = true; ta.readOnly = true;
+      dire("Tes notes changent ailleurs en même temps : copie ton texte ci-dessus, puis rouvre la fiche.", true);
+    };
+    const sauver = async () => {
+      minuterie = null;
+      if (!lu || bloque) return;
+      if (enCours){ encore = true; return; }
+      if (ta.value === dernier) return;
+      enCours = true; dire("Enregistrement…");
+      try { await envoyer(); } catch(e){ dire(CleCoach.message(e), true); }
+      enCours = false;
+      if (encore && !bloque){ encore = false; sauver(); }
+    };
+    /* en quittant la fiche (ou le champ) : ce qui attend part tout de suite,
+       y compris un texte dont le dernier enregistrement a echoue */
+    const maintenant = () => { if (minuterie || (lu && !bloque && ta.value !== dernier)){ clearTimeout(minuterie); sauver(); } };
+    CleCoach.ligne(uid, this.cle).then(l => {
+      const c = l && l.contenu;
+      lu = true; ligneLue = l ? { maj_le: l.maj_le } : null;
+      dernier = (c && typeof c.texte === "string") ? c.texte : "";
+      /* la version trouvee a l'ouverture est gardee a cote : un effacement
+         par erreur pendant cette seance se rattrape */
+      avant = dernier ? { texte: dernier, maj: (c && c.maj) || null } : ((c && c.avant) || null);
+      ta.value = dernier; ta.disabled = false;
+      dire((c && c.maj) ? "Dernière modification : " + quand(c.maj) : "Enregistrement automatique.");
+    }).catch(() => dire("Tes notes n'ont pas pu être lues : rouvre la fiche pour réessayer. Rien n'a été modifié.", true));
+    ta.addEventListener("input", () => { if (bloque) return; clearTimeout(minuterie); dire("Modifié…"); minuterie = setTimeout(sauver, 1000); });
+    ta.addEventListener("blur", maintenant);
+    return maintenant;
+  }
+};
+
+/* ------------------------------------------------------------------
    OUTIL — Mon suivi (v35). « Comment se passe mon accompagnement ? » :
    la regularite et son evolution, les objectifs du mois (a cocher), et le
    bilan des quatre dernieres semaines. Il reutilise Regularite.monterClient
@@ -8627,10 +8951,10 @@ const outilSuivi = {
   titre: "Ton suivi",
   accroche: "Comment se passe ton accompagnement : ta régularité, tes objectifs du mois et ton bilan des quatre dernières semaines.",
 
-  html(){ return `<div id="suivi-checkin"></div><div id="suivi-reg"><section class="panel"><div class="empty">Chargement…</div></section></div><div id="suivi-bilan"></div>`; },
+  html(){ return `<div id="suivi-fb-haut"></div><div id="suivi-checkin"></div><div id="suivi-fb-bas"></div><div id="suivi-reg"><section class="panel"><div class="empty">Chargement…</div></section></div><div id="suivi-bilan"></div>`; },
 
   async init(){
-    const d = await Store.lireTout(["programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "intake", "checkins"]);
+    const d = await Store.lireTout(["programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "intake", "checkins", "feedbacks"]);
     const P = d.programme || {}, J = d.journal || { seances: [] };
     if (!Array.isArray(J.seances)) J.seances = [];
     /* le bilan hebdo : la cle est lue ici, mais on la re-lit par Store.lire
@@ -8638,6 +8962,10 @@ const outilSuivi = {
     const C = await Store.lire(Checkin.cle, Checkin.vide());
     if (!Array.isArray(C.liste)) C.liste = [];
     Checkin.monter("suivi-checkin", C);
+    /* v38 — le feedback du coach : en tete s'il date de la semaine, sinon sous le bilan */
+    const fb = Feedback.panneauHTML(d.feedbacks);
+    const zf = $(Feedback.recent(d.feedbacks) ? "suivi-fb-haut" : "suivi-fb-bas");
+    if (zf && fb) zf.innerHTML = fb;
     await Regularite.monterClient("suivi-reg", P, J, d);
     const zb = $("suivi-bilan"); if (!zb) return;
     const b = outilBilan.calculer({ programme: P, journal: J, repas: d.repas || {}, repas_suivi: d.repas_suivi || {}, mens: d.mens || {}, objectifs_faits: d.objectifs_faits || {} });
@@ -8662,6 +8990,7 @@ const ALIAS_ROUTES = { progression: "mensurations", repas: "nutrition", home: "a
    ================================================================== */
 let courant = OUTILS[0].id;
 let nettoyage = null;
+let affichage = 0;   // numero du dernier affichage demande
 
 function outilsVisibles(){
   /* role: "coach"      -> outil du coach, quitte la fiche client quand on l'ouvre
@@ -8810,7 +9139,7 @@ function bandeauConsultation(){
   return `<div class="bandeau">
     <div class="bandeau-tete">
       <strong>Fiche de ${esc(Store.nomConsulte || "ce client")}</strong>
-      <span class="note">Tu vois ses données. Les deux boutons dorés sont les seuls endroits où tu écris pour lui.</span>
+      <span class="note">Tu vois ses données. Tu écris pour lui dans les boutons dorés, dans « Préparer le call » (ton feedback) et dans la fiche (tes notes privées, qu'il ne voit jamais).</span>
     </div>
     <div class="bandeau-actions">
       ${actions.map(a => `<a href="#/${a.id}" class="b-act${a.fort ? " fort" : ""}${courant === a.id ? " ici" : ""}">${esc(a.nom)}</a>`).join("")}
@@ -8820,6 +9149,7 @@ function bandeauConsultation(){
 }
 
 async function afficher(id, silencieux){
+  const jeton = ++affichage;
   const dispo = outilsVisibles();
   const outil = dispo.find(o => o.id === id) || dispo.find(o => o.id === outilParDefaut()) || dispo[0];
   courant = outil.id;
@@ -8845,12 +9175,17 @@ async function afficher(id, silencieux){
   /* Les outils que le coach REMPLIT depuis la fiche d'un client. Oublier
      d'inscrire un outil ici le rend muet : la page passe en lecture seule et
      tous ses boutons deviennent inertes, sans message d'erreur. */
-  /* « bilan » n'ecrit rien : il y figure pour que ses liens restent cliquables */
-  const MODIFIABLES = ["programme", "nutrition", "calculateur", "complements", "bilan"];
+  /* « bilan » y figure pour ses liens et, depuis la v38, pour les feedbacks ;
+     « accueil » (la fiche) pour les notes privees, qu'elle seule ecrit */
+  const MODIFIABLES = ["programme", "nutrition", "calculateur", "complements", "bilan", "accueil"];
   const modifiable = !Store.idConsulte || (Auth.estCoach() && MODIFIABLES.indexOf(outil.id) > -1);
   $("vue").className = modifiable ? "wrap" : "wrap lecture-seule";
 
-  nettoyage = (await outil.init()) || null;
+  const fin = (await outil.init()) || null;
+  /* une autre page a ete demandee pendant le chargement : sa fonction de sortie
+     est deja en place ; celle-ci est perimee (on l'execute tout de suite) */
+  if (jeton !== affichage){ if (typeof fin === "function") fin(); return; }
+  nettoyage = fin;
   if (avecDonnees){ initSauvegarde(); }
   const sortir = $("sortir-fiche");
   if (sortir) sortir.addEventListener("click", () => {
