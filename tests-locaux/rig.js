@@ -16,6 +16,9 @@ const SCHEME = arg("scheme", "light");       // prefers-color-scheme simulé
 const THEME = arg("theme", "");              // mhx_theme (après phase 2)
 const ONLY = arg("only", "");
 const LANG = arg("lang", "fr");
+/* la langue enregistree du compte l'emporte sur celle de l'appareil (l'app recharge la page) :
+   en anglais, les comptes fictifs ont donc aussi « en », sinon le script d'init la remettrait a chaque chargement */
+if (LANG !== "fr") F.donnees.forEach(d => { if (d.outil === "prefs") d.contenu = Object.assign({}, d.contenu, { langue: LANG }); });
 const PORT = 8765 + Math.floor(Math.random() * 200);
 fs.mkdirSync(OUT, { recursive: true });
 
