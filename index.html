@@ -894,7 +894,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-09-25 · 42",
+    version: "2026-09-25 · 43",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -7137,7 +7137,10 @@ const outilClients = {
     if (zoneA){
       /* v39 : un prospect (compte gratuit) n'a pas de suivi a assurer */
       const suivis = lignes.filter(l => !(l.p && l.p.statut === "prospect"));
-      const muets = suivis.filter(l => l.jours === null || l.jours >= 10);
+      /* v43 : un compte qui n'a jamais rien saisi est classe a part : il n'est
+         pas « sans nouvelles depuis 10 jours », il n'a jamais commence */
+      const jamais = suivis.filter(l => l.jours === null);
+      const muets = suivis.filter(l => l.jours !== null && l.jours >= 10);
       const aFaire = suivis.filter(l => !l.programme || !l.diete || !l.intake);
       const incoherents = suivis.filter(l => l.ecarts.length);
       let h = "";
@@ -7153,6 +7156,7 @@ const outilClients = {
       const irreguliers = suivis.filter(l => l.reg != null && l.reg < 40);
       if (irreguliers.length) h += `<div class="flag" style="margin-bottom:8px"><b>Régularité faible la semaine dernière :</b> ${irreguliers.map(l => esc(l.nom) + " (" + l.reg + "/100)").join(", ")}. Un message d'encouragement maintenant peut éviter un départ.</div>`;
       if (muets.length) h += `<div class="flag"><b>Sans nouvelles depuis 10 jours ou plus :</b> ${muets.map(l => esc(l.nom)).join(", ")}. C'est le moment de reprendre contact.</div>`;
+      if (jamais.length) h += `<div class="flag" style="margin-top:8px"><b>Jamais rien saisi :</b> ${jamais.map(l => esc(l.nom)).join(", ")}. ${jamais.length > 1 ? "Ces comptes n'ont encore rien enregistré : vérifie que leurs accès sont bien arrivés." : "Ce compte n'a encore rien enregistré : vérifie que ses accès sont bien arrivés."}</div>`;
       if (aFaire.length) h += `<div class="flag" style="margin-top:8px"><b>Il manque quelque chose pour :</b> ${aFaire.map(l => esc(l.nom) + " (" + [!l.intake ? "questionnaire" : null, !l.programme ? "programme" : null, !l.diete ? "diète" : null].filter(Boolean).join(", ") + ")").join(" · ")}.</div>`;
       if (!h) h = `<p class="note" style="margin:0">Tous tes clients ont leur questionnaire, leur programme et leur diète, et se sont manifestés dans les dix derniers jours.</p>`;
       zoneA.innerHTML = h;
@@ -7223,7 +7227,7 @@ const outilClients = {
           el.className = "client-l";
           /* le client a choisi l'anglais : le coach le voit, et ecrit ses notes en anglais */
           const enAnglais = !estCoach && contenus[p.id] && contenus[p.id].prefs && contenus[p.id].prefs.langue === "en";
-          el.innerHTML = `<span class="nom">${esc(((p.prenom||"") + " " + (p.nom||"")).trim() || "Sans nom")}${enAnglais ? ` <span class="pastille" title="Ce client utilise l'app en anglais : écris-lui tes notes en anglais">🇺🇸 anglais</span>` : ""}</span>
+          el.innerHTML = `<span class="nom">${esc(Clients.nom(p))}${enAnglais ? ` <span class="pastille" title="Ce client utilise l'app en anglais : écris-lui tes notes en anglais">🇺🇸 anglais</span>` : ""}</span>
                           ${estCoach ? `<span class="pastille role-coach">accès complet</span>` : `<span class="pastille">${d ? "actif" : "pas encore utilisé"}</span>`}
                           ${!estCoach && "statut" in p ? `<span class="pastille${p.statut === "prospect" ? " accent" : " ok"}">${p.statut === "prospect" ? "prospect" : "client"}</span>` : ""}
                           <span class="meta">${estCoach ? (cestMoi ? "c'est toi" : "voit tout, comme toi") : "dernière saisie : " + quand}</span>
@@ -7235,12 +7239,12 @@ const outilClients = {
           if (bv) bv.addEventListener("click", () => {
             Store.oublier(Store.idConsulte);
             Store.idConsulte = p.id;
-            Store.nomConsulte = ((p.prenom||"") + " " + (p.nom||"")).trim() || "ce client";
+            Store.nomConsulte = Clients.nom(p);   // v43 : « Sans nom », comme dans la liste
             location.hash = "#/profil";
           });
           const bsup = el.querySelector(".suppr");
           if (bsup) bsup.addEventListener("click", async () => {
-            const nom = ((p.prenom||"") + " " + (p.nom||"")).trim() || "ce compte";
+            const nom = Clients.nom(p);
             if (!(await UI.confirmer("Supprimer définitivement le compte de " + nom + " ?\n\n" +
                          "Son profil, ses mensurations, son programme, ses repas et sa progression seront effacés. " +
                          "Tu n'y auras plus accès non plus.\n\nC'est définitif : il n'y a pas de corbeille.", { titre: "Supprimer un compte", ok: "Continuer", danger: true }))) return;
@@ -7265,7 +7269,7 @@ const outilClients = {
           const bst = el.querySelector(".statut");
           if (bst) bst.addEventListener("click", async () => {
             const vers = bst.dataset.statut;
-            const nom = ((p.prenom||"") + " " + (p.nom||"")).trim() || "ce compte";
+            const nom = Clients.nom(p);
             const message = vers === "client"
               ? "Passer " + nom + " en client ?\n\nIl aura accès à tout son espace d'accompagnement."
               : "Repasser " + nom + " en prospect ?\n\nIl redevient un compte gratuit : son espace sera limité au mode gratuit (" + ((CONFIG.marque.gratuit_ouverts || []).map(id => (OUTILS.find(o => o.id === id) || {}).nom).filter(Boolean).join(", ") || "accueil") + ") à sa prochaine ouverture de l'application, et il ne sera plus suivi comme un client. Ses données restent intactes.";
@@ -7286,7 +7290,7 @@ const outilClients = {
           const br = el.querySelector(".role");
           if (br) br.addEventListener("click", async () => {
             const vers = br.dataset.role;
-            const nom = ((p.prenom||"") + " " + (p.nom||"")).trim() || "ce compte";
+            const nom = Clients.nom(p);
             const message = vers === "coach"
               ? "Donner l'accès complet à " + nom + " ?\n\nCette personne verra exactement ce que tu vois : les fiches de tous tes clients, leur questionnaire de santé, leurs programmes et leur diète. Elle pourra aussi les modifier."
               : "Retirer l'accès complet à " + nom + " ?\n\nElle redeviendra un client ordinaire et ne verra plus que ses propres données.";
@@ -7408,7 +7412,7 @@ const Clients = {
     const l = {
       p: p, ev: ev, jours: j, ecarts: ec,
       ecartKcal: ec.length ? K.ecartKcal(c.intake, c.calc) : null,
-      nom: ((p.prenom||"") + " " + (p.nom||"")).trim() || (p.id.slice(0,8)),
+      nom: Clients.nom(p),   // v43 : « Sans nom » plutot que son identifiant
       intake: !!(c.intake && c.intake.complet),
       programme: !!(c.programme && (c.programme.seances||[]).length),
       diete: !!(c.repas && ((c.repas.jours || []).some(j => (j.repas || []).length) || (c.repas.repas || []).length)),
@@ -7497,7 +7501,14 @@ const Clients = {
     location.hash = "#/" + (cible || "accueil");
   },
 
-  initiales(nom){ return String(nom || "").split(/\s+/).filter(Boolean).slice(0, 2).map(x => x[0].toUpperCase()).join("") || "?"; }
+  /* v43 — le nom affiche d'un compte, le meme partout (tableau de bord, Mes
+     clients, Comptes, fiche, bandeau, fil d'Ariane). Sans prenom ni nom :
+     « Sans nom », jamais l'identifiant du compte. */
+  SANS_NOM: "Sans nom",
+  nom(p){ return (((p && p.prenom) || "") + " " + ((p && p.nom) || "")).trim() || Clients.SANS_NOM; },
+  initiales(nom){ if (!nom || nom === Clients.SANS_NOM) return "?"; return String(nom).split(/\s+/).filter(Boolean).slice(0, 2).map(x => x[0].toUpperCase()).join("") || "?"; },
+  /* l'avatar (initiales) ; neutre — gris, « ? » — pour un compte sans nom */
+  avatar(nom){ const neutre = !nom || nom === Clients.SANS_NOM; return `<span class="avatar${neutre ? " neutre" : ""}">${esc(Clients.initiales(nom))}</span>`; }
 };
 
 /* ------------------------------------------------------------------
@@ -7531,7 +7542,7 @@ const outilTableau = {
     const prenom = (Auth.profil && Auth.profil.prenom) || "";
     const tuile = (lbl, val, sub, cls, lien) => `<a class="tile tb-tuile${cls ? " " + cls : ""}" href="${lien || "#/clients"}"><div class="t-lbl">${lbl}</div><div class="t-val readout">${val}</div><div class="t-sub">${sub}</div></a>`;
     const carte = l => `<div class="attention-c">
-        <div class="attention-tete"><span class="avatar">${esc(Clients.initiales(l.nom))}</span>
+        <div class="attention-tete">${Clients.avatar(l.nom)}
           <div class="attention-nom"><b>${esc(l.nom)}</b><small>${l.jours === null ? "jamais rien saisi" : l.jours === 0 ? "actif aujourd'hui" : "dernière saisie il y a " + l.jours + " j"}${l.reg != null ? ` · régularité <b class="${Regularite.niveau(l.reg)}">${l.reg}</b>/100` : ""}</small></div>
           <button type="button" class="btn ghost petit" data-fiche="${esc(l.p.id)}" data-nom="${esc(l.nom)}" data-cible="accueil">Ouvrir</button></div>
         <div class="attention-alertes">${l.alertes.map(a => `<button type="button" class="pastille ${a.niveau === "info" ? "accent" : a.niveau}" data-fiche="${esc(l.p.id)}" data-nom="${esc(l.nom)}" data-cible="${esc(a.cible)}">${esc(a.texte)}</button>`).join("")}</div>
@@ -9633,7 +9644,7 @@ function bandeauConsultation(){
   ];
   return `<div class="bandeau">
     <div class="bandeau-tete">
-      <strong>Fiche de ${esc(Store.nomConsulte || "ce client")}</strong>
+      <strong>${Store.nomConsulte === Clients.SANS_NOM ? "Fiche — " : "Fiche de "}${esc(Store.nomConsulte || "ce client")}</strong>
       <span class="note">Tu vois ses données. Tu écris pour lui dans les boutons dorés, dans « Préparer le call » (ton feedback) et dans la fiche (tes notes privées, qu'il ne voit jamais).</span>
     </div>
     <div class="bandeau-actions">

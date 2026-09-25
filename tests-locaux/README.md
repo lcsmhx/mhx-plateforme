@@ -32,8 +32,9 @@ node verif39.js ../index.html              # statut prospect / client, création
 node verif40.js ../index.html              # mode gratuit : cadenas, pages verrouillées, Calendly, aucun prix, pas de débordement (26)
 node verif41.js ../index.html              # photos de progression (Storage simulé avec ses règles) : envoi, comparaison, retrait, coach, index piégé, fichier disparu, index illisible (25)
 node verif42.js ../index.html              # robustesse : clients aux données piégées (types faux, contenus bruts, listes piégées), filet de sécurité, page quittée pendant son chargement, changement de fiche, lecture ratée (20)
+node verif43.js ../index.html              # affichage coach : compte sans prénom ni nom → « Sans nom » partout (avatar neutre, jamais l'identifiant) ; « Jamais rien saisi » classé à part de « Sans nouvelles depuis 10 jours » (34)
 ```
-Attendu sur la v42 : 64 pages, 0 erreur, 0 écriture (aussi avec `--lang en` et `--theme light`) ; 19 + 13 + 14 + 13 + 15 + 67 vérifications ; verif39 35/35 ; verif40 26/26 ; verif41 25/25 ; verif42 20/20 ; verif-xss 5/5 (sur la v37, verif-xss détecte 15 exécutions : c'est ce qui prouve qu'il teste vraiment).
+Attendu sur la v43 : 64 pages, 0 erreur, 0 écriture (aussi avec `--lang en` et `--theme light`) ; 19 + 13 + 14 + 13 + 15 + 67 vérifications ; verif39 35/35 ; verif40 26/26 ; verif41 25/25 ; verif42 20/20 ; verif43 34/34 (sur la v42, verif43 tombe à 16/34 : c'est ce qui prouve qu'il teste vraiment) ; verif-xss 5/5 (sur la v37, verif-xss détecte 15 exécutions : c'est ce qui prouve qu'il teste vraiment).
 
 ## Sans Chromium Playwright : le Chrome de la machine
 Si `npx playwright install chromium` n'a pas été fait, le préchargement `chrome-systeme.js` fait tourner tous les scripts avec Google Chrome installé (canal « chrome »), sans toucher aux tests :
