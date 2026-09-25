@@ -17,8 +17,8 @@ async function contexte(browser, who, viewport, langue) {
   const ctx = await browser.newContext({ viewport: viewport || { width: 390, height: 844 }, locale: "fr-FR" });
   await ctx.route("**/*", route => {
     const req = route.request(); const u = req.url();
-    if (u.indexOf("localhost") > -1) return route.continue();
-    if (u.indexOf("supabase.co") === -1) return route.abort();
+    if (new URL(u).hostname === "localhost") return route.continue();
+    if (!new URL(u).hostname.endsWith(".supabase.co")) return route.abort();
     const url = new URL(u); const p = url.pathname, q = url.searchParams, m = req.method();
     const json = (b, st) => route.fulfill({ status: st || 200, contentType: "application/json", body: b === null ? "" : JSON.stringify(b) });
     if (m !== "GET" && !p.startsWith("/auth/")) { ecritures.push(m + " " + p + url.search); return json(null, m === "DELETE" ? 204 : 201); }

@@ -42,8 +42,8 @@ async function contexte(b, who, lignes) {
   const c = await b.newContext({ viewport: { width: 1280, height: 900 } });
   await c.route("**/*", r => {
     const req = r.request(); const u = req.url();
-    if (u.includes("localhost")) return r.continue();
-    if (!u.includes("supabase.co")) return r.abort();
+    if (new URL(u).hostname === "localhost") return r.continue();
+    if (!new URL(u).hostname.endsWith(".supabase.co")) return r.abort();
     const url = new URL(u); const p = url.pathname, q = url.searchParams, m = req.method();
     const json = (body, status) => r.fulfill({ status: status || 200, contentType: "application/json", body: body === null ? "" : JSON.stringify(body) });
     if (p.startsWith("/auth/v1/token")) return json(F.session(who.id, who.email));

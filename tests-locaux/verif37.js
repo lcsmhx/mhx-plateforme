@@ -6,7 +6,7 @@ const server = http.createServer((req,res)=>{res.writeHead(200,{"Content-Type":"
   const ok=(n,c,d)=>res.push((c?"  ✓ ":"  ✗ ")+n+(c?"":"  — "+(d||"")));
   const who={id:F.IDS.coach,email:"c@e.fr",session:F.session(F.IDS.coach,"c@e.fr")};
   const c = await b.newContext({ viewport:{width:1280,height:900} });
-  await c.route("**/*", r => { const req=r.request(); const u=req.url(); if(u.includes("localhost")) return r.continue(); if(!u.includes("supabase.co")) return r.abort();
+  await c.route("**/*", r => { const req=r.request(); const u=req.url(); if(new URL(u).hostname === "localhost") return r.continue(); if(!new URL(u).hostname.endsWith(".supabase.co")) return r.abort();
     const url=new URL(u); const p=url.pathname, q=url.searchParams, m=req.method();
     if (m!=="GET" && !p.startsWith("/auth/")){ ecr.push(m+" "+p); return r.fulfill({status:201,contentType:"application/json",body:""}); }
     let body=[];
@@ -43,7 +43,7 @@ const server = http.createServer((req,res)=>{res.writeHead(200,{"Content-Type":"
   /* mes clients en mobile : cartes */
   await c.close();
   const c2 = await b.newContext({ viewport:{width:390,height:844} });
-  await c2.route("**/*", r => r.request().url().includes("localhost") ? r.continue() : r.request().url().includes("supabase.co") ? (()=>{ const url=new URL(r.request().url()); const p=url.pathname,q=url.searchParams; let body=[]; if(p.startsWith("/auth/v1/token")) body=F.session(who.id,who.email); else if(p==="/rest/v1/profils"){const id=q.get("id"); body=id?F.profils.filter(x=>x.id===id.slice(3)):F.profils;} else if(p==="/rest/v1/donnees"){ body=F.donnees; const o=q.get("outil"); if(o&&o.startsWith("not.in.(")){const l=o.slice(8,-1).split(","); body=body.filter(x=>!l.includes(x.outil));} const sel=(q.get("select")||"*").split(","); if(!sel.includes("*")) body=body.map(x=>Object.fromEntries(sel.map(k=>[k,x[k]]))); } return r.fulfill({status:200,contentType:"application/json",body:JSON.stringify(body)}); })() : r.abort());
+  await c2.route("**/*", r => new URL(r.request().url()).hostname === "localhost" ? r.continue() : new URL(r.request().url()).hostname.endsWith(".supabase.co") ? (()=>{ const url=new URL(r.request().url()); const p=url.pathname,q=url.searchParams; let body=[]; if(p.startsWith("/auth/v1/token")) body=F.session(who.id,who.email); else if(p==="/rest/v1/profils"){const id=q.get("id"); body=id?F.profils.filter(x=>x.id===id.slice(3)):F.profils;} else if(p==="/rest/v1/donnees"){ body=F.donnees; const o=q.get("outil"); if(o&&o.startsWith("not.in.(")){const l=o.slice(8,-1).split(","); body=body.filter(x=>!l.includes(x.outil));} const sel=(q.get("select")||"*").split(","); if(!sel.includes("*")) body=body.map(x=>Object.fromEntries(sel.map(k=>[k,x[k]]))); } return r.fulfill({status:200,contentType:"application/json",body:JSON.stringify(body)}); })() : r.abort());
   await c2.addInitScript((s)=>{localStorage.setItem("mhx_session",JSON.stringify(s));localStorage.setItem("mhx_installe","1");localStorage.setItem("mhx_visites","3");},who.session);
   const p2 = await c2.newPage(); await p2.goto("http://localhost:9666/#/clients"); await p2.waitForTimeout(1500);
   const disp = await p2.$eval("#tb-clients tr", e=>getComputedStyle(e).display);

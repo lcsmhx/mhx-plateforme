@@ -875,7 +875,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-09-25 · 38",
+    version: "2026-09-25 · 39",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -883,7 +883,13 @@ const CONFIG = {
     /* Lien du formulaire de bilan Notion.
        Laisse vide tant qu'il n'existe pas : le bouton se contente alors
        de copier le récapitulatif dans le presse-papier. */
-    formulaire_bilan: ""
+    formulaire_bilan: "",
+
+    /* v39 — Inscription libre : « Créer mon compte » sur l'écran de connexion.
+       Laisse false tant que l'inscription publique est coupée dans Supabase
+       (Authentication → Sign In / Providers → Email). Un compte créé ainsi
+       naît « prospect » (compte gratuit) : c'est la base qui le décide. */
+    inscription_libre: false
   },
 
   /* --- Connexion a la base Supabase (comptes + donnees) --- */
@@ -1807,7 +1813,14 @@ I18N.en = {
 "Bibliothèque": "Library", "modules": "modules", "étapes": "steps", "module terminé": "module completed", "modules terminés": "modules completed", "sur": "of",
 /* v38 — feedback du coach */
 "Feedback de ton coach": "Your coach's feedback", "Feedbacks précédents": "Previous feedback", "écrit le {d}": "written on {d}", "nouveau": "new",
-"Ton feedback est disponible": "Your feedback is available", "Ton coach a répondu : {p}": "Your coach replied: {p}"
+"Ton feedback est disponible": "Your feedback is available", "Ton coach a répondu : {p}": "Your coach replied: {p}",
+/* v39 — inscription libre */
+"Crée ton compte": "Create your account", "Créer mon compte": "Create my account", "J'ai déjà un compte": "I already have an account",
+"Ton prénom": "Your first name", "Ton nom": "Your last name", "Confirme ton mot de passe": "Confirm your password",
+"Indique ton prénom.": "Enter your first name.",
+"Compte créé. Ouvre le lien reçu par email pour le confirmer, puis connecte-toi.": "Account created. Open the link we emailed you to confirm it, then sign in.",
+"Un compte existe déjà avec cet email : connecte-toi.": "An account already exists with this email: sign in.",
+"Les inscriptions ne sont pas encore ouvertes.": "Sign-ups are not open yet."
 };
 I18N.motifs = [["^(\\d+) articles? sur (\\d+) dans le panier\\.$", "$1 of $2 items in your cart."], ["^(\\d+) étapes? validées? sur (\\d+) — (\\d+) %$", "$1 of $2 steps completed — $3%"], ["^([\\d\\s\\u202f\\u00a0.,−-]+?) kcal$", "$1 Cal"], ["^([\\d\\s\\u202f\\u00a0.,−-]+?) kcal · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de protéines par dose$", "$1 Cal · $2 g protein per serving"], ["^([\\d\\s\\u202f\\u00a0.,−-]+?) kcal consommées sur ([\\d\\s\\u202f\\u00a0.,−-]+?) — il te reste$", "$1 Cal eaten out of $2 — you have"], ["^Objectif visé : ([\\d\\s\\u202f\\u00a0.,−-]+?) kcal · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de protéines · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de glucides · ([\\d\\s\\u202f\\u00a0.,−-]+?) g de lipides\\.$", "Target: $1 Cal · $2 g protein · $3 g carbs · $4 g fat."], ["^Coche les jours que tu veux acheter : la liste se recalcule\\. (\\d+) jours? sélectionnés?\\.$", "Check the days you want to shop for: the list updates automatically. $1 day(s) selected."], ["^Programme mis à jour le (\\d{1,2})/(\\d{1,2})/(\\d{4})$", "Program updated $2/$1/$3"], ["^Repas mis à jour le (\\d{1,2})/(\\d{1,2})/(\\d{4})$", "Meals updated $2/$1/$3"], ["^S(\\d+)$", "W$1"], ["^Supprimer la semaine (\\d+)$", "Delete week $1"], ["^dernière : semaine (\\d+)$", "latest: week $1"], ["^semaine (\\d+)$", "week $1"], ["^Semaine (\\d+) enregistrée\\.$", "Week $1 saved."], ["^(\\d+)/jambe$", "$1/leg"], ["^(\\d+)-(\\d+)/jambe$", "$1-$2/leg"], ["^(\\d+)/bras$", "$1/arm"], ["^(\\d+)-(\\d+)/bras$", "$1-$2/arm"], ["^(\\d+)-(\\d+) s/côté$", "$1-$2 s/side"], ["^protéines au-dessus de ([\\d\\s\\u202f\\u00a0.,−-]+?) g$", "protein over by $1 g"], ["^protéines en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) g$", "protein under by $1 g"], ["^lipides au-dessus de ([\\d\\s\\u202f\\u00a0.,−-]+?) g — sur ce régime, les sources de protéines apportent beaucoup de gras$", "fat over by $1 g — on this diet, protein sources bring a lot of fat"], ["^lipides en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) g — sur ce régime, les sources de protéines apportent beaucoup de gras$", "fat under by $1 g"], ["^calories au-dessus de ([\\d\\s\\u202f\\u00a0.,−-]+?) kcal$", "calories over by $1 Cal"], ["^calories en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) kcal$", "calories under by $1 Cal"], ["^glucides en dessous de ([\\d\\s\\u202f\\u00a0.,−-]+?) g — ce régime offre peu de sources de glucides dans le catalogue$", "carbs under by $1 g — this diet has few carb sources in the catalog"], ["^(\\d+(?:-\\d+)?(?: s)?)/jambe$", "$1/leg"], ["^(\\d+(?:-\\d+)?(?: s)?)/bras$", "$1/arm"], ["^(\\d+(?:-\\d+)?(?: s)?)/côté$", "$1/side"], ["^(\\d+)/sens$", "$1/direction"], ["^(\\d+)/sens/cheville$", "$1/direction/ankle"], ["^(\\d+) souffles$", "$1 breaths"], ["^(\\d+) respirations$", "$1 breaths"], ["^(\\d+(?:-\\d+)?) pas$", "$1 steps"], ["^(\\d+) dans chaque sens$", "$1 each direction"], ["^(\\d+) par côté$", "$1 per side"], ["^(\\d+) par jambe$", "$1 per leg"], ["^(\\d+) par cheville$", "$1 per ankle"], ["^(\\d+) s par (côté)$", "$1 s per side"], ["^(\\d+) s par jambe$", "$1 s per leg"], ["^(\\d+) s \\+ (\\d+) squats$", "$1 s + $2 squats"]].map(([p, r]) => [new RegExp(p), r]);
 
@@ -2149,6 +2162,7 @@ const Auth = {
     if (!r.ok){
       const err = new Error((data && (data.msg || data.message || data.error_description || data.error)) || ("Erreur " + r.status));
       err.statut = r.status;
+      if (data && typeof data === "object" && data.code) err.code = data.code;
       throw err;
     }
     return data;
@@ -2267,7 +2281,24 @@ const Auth = {
     this.profil = (r && r[0]) || null;
     return this.profil;
   },
-  estCoach(){ return !!(this.profil && this.profil.role === "coach"); }
+  estCoach(){ return !!(this.profil && this.profil.role === "coach"); },
+  /* v39 — compte gratuit : seulement si la base porte la colonne statut
+     (sans elle, personne n'est prospect et rien ne change) */
+  estProspect(){ return !!(this.profil && this.profil.role !== "coach" && this.profil.statut === "prospect"); },
+
+  /* v39 — inscription libre (voir CONFIG.marque.inscription_libre). Le
+     declencheur de la base cree le profil avec prenom et nom ; le statut
+     « prospect » est la valeur par defaut de la colonne. Renvoie true si la
+     personne est connectee tout de suite, false si un email de confirmation
+     lui a ete envoye. */
+  async inscrire(email, motdepasse, prenom, nom){
+    const s = await this.appel("/auth/v1/signup?redirect_to=" + encodeURIComponent(this.retour()), {
+      method: "POST", avecJeton: false,
+      body: { email: email, password: motdepasse, data: { prenom: prenom, nom: nom } }
+    });
+    if (s && s.access_token){ this.memoriser(s); return true; }
+    return false;
+  }
 };
 
 /* --- STOCKAGE ---------------------------------------------------------
@@ -6729,7 +6760,7 @@ const outilClients = {
 
     const feu = l => { const n = l.alertes.some(a => a.niveau === "mauvais") ? "mauvais" : l.alertes.some(a => a.niveau === "attention") ? "attention" : "ok"; return `<span class="point ${n}" title="${esc(l.alertes.map(a => a.texte).join(" · ") || "Rien à signaler")}"></span>`; };
     tb.innerHTML = lignes.map(l => `<tr>
-      <td data-l="Client">${feu(l)} <b>${esc(l.nom)}</b>${l.ecarts.length ? ` <span class="pastille manque" title="Le calculateur ne correspond pas au questionnaire">chiffres à vérifier</span>` : ""}</td>
+      <td data-l="Client">${feu(l)} <b>${esc(l.nom)}</b>${l.p.statut === "prospect" ? ` <span class="pastille accent" title="Compte gratuit : pas encore accompagné">prospect</span>` : ""}${l.ecarts.length ? ` <span class="pastille manque" title="Le calculateur ne correspond pas au questionnaire">chiffres à vérifier</span>` : ""}</td>
       <td data-l="Activité">${l.jours === null ? '<span class="pastille manque">jamais</span>'
             : l.jours >= 10 ? `<span class="pastille manque">${l.jours} j</span>`
             : `<span class="meta">${l.jours === 0 ? "aujourd'hui" : "il y a " + l.jours + " j"}</span>`}</td>
@@ -6758,9 +6789,11 @@ const outilClients = {
     }));
 
     if (zoneA){
-      const muets = lignes.filter(l => l.jours === null || l.jours >= 10);
-      const aFaire = lignes.filter(l => !l.programme || !l.diete || !l.intake);
-      const incoherents = lignes.filter(l => l.ecarts.length);
+      /* v39 : un prospect (compte gratuit) n'a pas de suivi a assurer */
+      const suivis = lignes.filter(l => !(l.p && l.p.statut === "prospect"));
+      const muets = suivis.filter(l => l.jours === null || l.jours >= 10);
+      const aFaire = suivis.filter(l => !l.programme || !l.diete || !l.intake);
+      const incoherents = suivis.filter(l => l.ecarts.length);
       let h = "";
       if (incoherents.length){
         h += `<div class="flag grave"><b>Le calculateur ne correspond pas au questionnaire :</b><ul style="margin:8px 0 0;padding-left:20px">` +
@@ -6771,7 +6804,7 @@ const outilClients = {
             `</li>`).join("") +
           `</ul><p class="note" style="margin:10px 0 0">Sa diète est calculée sur les chiffres du calculateur. Ouvre sa fiche et corrige avant d'envoyer un plan.</p></div>`;
       }
-      const irreguliers = lignes.filter(l => l.reg != null && l.reg < 40);
+      const irreguliers = suivis.filter(l => l.reg != null && l.reg < 40);
       if (irreguliers.length) h += `<div class="flag" style="margin-bottom:8px"><b>Régularité faible la semaine dernière :</b> ${irreguliers.map(l => esc(l.nom) + " (" + l.reg + "/100)").join(", ")}. Un message d'encouragement maintenant peut éviter un départ.</div>`;
       if (muets.length) h += `<div class="flag"><b>Sans nouvelles depuis 10 jours ou plus :</b> ${muets.map(l => esc(l.nom)).join(", ")}. C'est le moment de reprendre contact.</div>`;
       if (aFaire.length) h += `<div class="flag" style="margin-top:8px"><b>Il manque quelque chose pour :</b> ${aFaire.map(l => esc(l.nom) + " (" + [!l.intake ? "questionnaire" : null, !l.programme ? "programme" : null, !l.diete ? "diète" : null].filter(Boolean).join(", ") + ")").join(" · ")}.</div>`;
@@ -6846,11 +6879,13 @@ const outilClients = {
           const enAnglais = !estCoach && contenus[p.id] && contenus[p.id].prefs && contenus[p.id].prefs.langue === "en";
           el.innerHTML = `<span class="nom">${esc(((p.prenom||"") + " " + (p.nom||"")).trim() || "Sans nom")}${enAnglais ? ` <span class="pastille" title="Ce client utilise l'app en anglais : écris-lui tes notes en anglais">🇺🇸 anglais</span>` : ""}</span>
                           ${estCoach ? `<span class="pastille role-coach">accès complet</span>` : `<span class="pastille">${d ? "actif" : "pas encore utilisé"}</span>`}
+                          ${!estCoach && "statut" in p ? `<span class="pastille${p.statut === "prospect" ? " accent" : " ok"}">${p.statut === "prospect" ? "prospect" : "client"}</span>` : ""}
                           <span class="meta">${estCoach ? (cestMoi ? "c'est toi" : "voit tout, comme toi") : "dernière saisie : " + quand}</span>
                           ${estCoach ? "" : `<button class="voir" type="button">Ouvrir sa fiche</button>`}
                           ${cestMoi ? "" : `<button class="voir role" type="button" data-role="${estCoach ? "client" : "coach"}">${estCoach ? "Retirer l'accès complet" : "Donner l'accès complet"}</button>`}
+                          ${!estCoach && "statut" in p ? `<button class="voir statut" type="button" data-statut="${p.statut === "prospect" ? "client" : "prospect"}">${p.statut === "prospect" ? "Passer client" : "Repasser prospect"}</button>` : ""}
                           ${cestMoi ? "" : `<button class="voir suppr" type="button">Supprimer</button>`}`;
-          const bv = el.querySelector(".voir:not(.role)");
+          const bv = el.querySelector(".voir:not(.role):not(.statut):not(.suppr)");
           if (bv) bv.addEventListener("click", () => {
             Store.oublier(Store.idConsulte);
             Store.idConsulte = p.id;
@@ -6880,6 +6915,28 @@ const outilClients = {
             }
           });
 
+          /* v39 — prospect <-> client : seul un coach peut le changer (garanti par la base) */
+          const bst = el.querySelector(".statut");
+          if (bst) bst.addEventListener("click", async () => {
+            const vers = bst.dataset.statut;
+            const nom = ((p.prenom||"") + " " + (p.nom||"")).trim() || "ce compte";
+            const message = vers === "client"
+              ? "Passer " + nom + " en client ?\n\nIl aura accès à tout son espace d'accompagnement."
+              : "Repasser " + nom + " en prospect ?\n\nIl redevient un compte gratuit : il ne sera plus suivi comme un client (plus d'alertes de suivi). Ses données restent intactes.";
+            if (!(await UI.confirmer(message, { ok: vers === "client" ? "Passer client" : "Repasser prospect", danger: vers === "prospect" }))) return;
+            bst.disabled = true; bst.textContent = "…";
+            try {
+              const r = await Auth.appel("/rest/v1/profils?id=eq." + p.id, {
+                method: "PATCH", headers: { "Prefer": "return=representation" }, body: { statut: vers }
+              });
+              if (!Array.isArray(r) || !r[0] || r[0].statut !== vers) throw new Error("la base n'a pas confirmé le changement");
+              await charger();
+            } catch(e){
+              bst.disabled = false; bst.textContent = vers === "client" ? "Passer client" : "Repasser prospect";
+              UI.alerte("Changement impossible : " + (e.message || "erreur inconnue"));
+            }
+          });
+
           const br = el.querySelector(".role");
           if (br) br.addEventListener("click", async () => {
             const vers = br.dataset.role;
@@ -6895,7 +6952,7 @@ const outilClients = {
               });
               await charger();
             } catch(e){
-              br.disabled = false;
+              br.disabled = false; br.textContent = vers === "coach" ? "Donner l'accès complet" : "Retirer l'accès complet";
               UI.alerte("Changement impossible : " + (e.message || "erreur inconnue"));
             }
           });
@@ -6931,11 +6988,30 @@ const outilClients = {
            demande, et pose le role. Ta session n'est plus touchee : avant,
            la creation te reconnectait sous le nouveau compte et il fallait
            remettre la tienne en place a la main. */
-        await Auth.creerAcces(email, mdp, prenom, nom, type);
+        const cree = await Auth.creerAcces(email, mdp, prenom, nom, type);
+        /* v39 : un compte cree par la base nait « prospect » ; un acces cree par
+           le coach est un client (ou un membre de l'equipe) : on le pose tout de suite */
+        let statutOk = true;
+        if (cree && cree.id){
+          try {
+            const r = await Auth.appel("/rest/v1/profils?id=eq." + cree.id, {
+              method: "PATCH", headers: { "Prefer": "return=representation" }, body: { statut: "client" }
+            });
+            statutOk = Array.isArray(r) && !!r[0] && r[0].statut === "client";
+          } catch(e){ statutOk = !!(e && e.code === "PGRST204"); }   // PGRST204 : la base n'a pas (encore) de colonne statut, rien a poser
+        } else statutOk = false;   // pas d'identifiant en retour : on ne peut pas verifier, on le dit
         $("n-prenom").value = $("n-nom").value = $("n-email").value = $("n-mdp").value = "";
         if ($("n-type")) $("n-type").value = "client";
         if ($("n-avert")) $("n-avert").hidden = true;
-        flash("n-msg", type === "coach"
+        /* la fonction renvoie le role REELLEMENT pose (v39) : un acces d'equipe refuse se voit */
+        const sansAcces = type === "coach" && cree && cree.role !== "coach";
+        if (!statutOk) UI.alerte("Le compte de " + (((prenom + " " + nom).trim()) || email) + " est créé, mais il est encore « prospect » : son espace resterait limité.\n\nClique « Passer client » sur sa ligne, dans la liste des comptes.");
+        else if (sansAcces) UI.alerte("Le compte de " + (((prenom + " " + nom).trim()) || email) + " est créé, mais sans l'accès complet.\n\nClique « Donner l'accès complet » sur sa ligne, dans la liste des comptes.");
+        flash("n-msg", !statutOk
+          ? "Compte créé, mais il est encore « prospect » : clique « Passer client » sur sa ligne."
+          : sansAcces
+          ? "Compte créé, mais sans l'accès complet : clique « Donner l'accès complet » sur sa ligne."
+          : type === "coach"
           ? "Compte d'équipe créé, avec l'accès complet. Transmets-lui ses identifiants."
           : "Compte créé. Transmets-lui ses identifiants.");
         charger();
@@ -7018,6 +7094,8 @@ const Clients = {
      cible  : l'onglet de la fiche a ouvrir */
   alertes(l, c){
     const out = [];
+    /* v39 : un prospect (compte gratuit) n'a pas de suivi a assurer */
+    if (l.p && l.p.statut === "prospect") return out;
     const seuils = (CONFIG.regularite && CONFIG.regularite.seuils) || { bon: 70, moyen: 40 };
     const auj = aujourdhui();
     if (l.ecarts.length) out.push({ type: "chiffres", niveau: "mauvais", cible: "calculateur",
@@ -8354,12 +8432,17 @@ const outilAccueil = {
   async fiche(zone){
     const cles = ["intake", "programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "checkins", "complements", "calc", "formation", "hist_programme", "hist_repas", "prefs", "feedbacks"];
     const uidFiche = Store.idConsulte;
-    const { valeurs: d, dates } = await Store.lireTout(cles, { dates: true });
+    const [{ valeurs: d, dates }, pr] = await Promise.all([
+      Store.lireTout(cles, { dates: true }),
+      /* v39 : prospect ou client ? (colonne absente ou lecture ratee : rien ne change) */
+      Auth.appel("/rest/v1/profils?id=eq." + uidFiche + "&select=*").then(r => Array.isArray(r) ? r[0] || null : null).catch(() => null)
+    ]);
     if (!zone.isConnected || Store.idConsulte !== uidFiche) return;   // on a change de fiche entre-temps
     const I = d.intake || {}, P = d.programme || {}, J = d.journal || { seances: [] }, R = d.repas || {}, S = d.repas_suivi || {}, M = d.mens || {}, CK = d.checkins || { liste: [] };
     if (!Array.isArray(J.seances)) J.seances = [];
     const nomC = Store.nomConsulte || "Client";
     const profil = { id: Store.idConsulte, prenom: nomC.split(" ")[0], nom: nomC.split(" ").slice(1).join(" "), role: "client" };
+    if (pr && "statut" in pr) profil.statut = pr.statut;
     const ecritParCoach = ["programme", "repas", "calc", "complements", "feedbacks", "notes_coach"];
     const dernier = Object.keys(dates).filter(k => ecritParCoach.indexOf(k) === -1 && dates[k]).map(k => dates[k]).sort().pop() || null;
     const l = Clients.resumerUn(profil, d, dernier);
@@ -8384,8 +8467,8 @@ const outilAccueil = {
     zone.innerHTML = `
       <header class="masthead">
         <span class="eyebrow">${esc(trad("Fiche client"))} · ${esc(this.dateLongue())}</span>
-        <h1>${esc(nomC)}${(d.prefs && d.prefs.langue === "en") ? ` <span class="pastille" title="Ce client utilise l'app en anglais">🇺🇸 anglais</span>` : ""}</h1>
-        <p class="lede">${alertes.length ? `${alertes.length} point${alertes.length > 1 ? "s" : ""} à regarder.` : "Rien à signaler : tout est en ordre."}</p>
+        <h1>${esc(nomC)}${profil.statut === "prospect" ? ` <span class="pastille accent" title="Compte gratuit : pas encore accompagné">prospect</span>` : ""}${(d.prefs && d.prefs.langue === "en") ? ` <span class="pastille" title="Ce client utilise l'app en anglais">🇺🇸 anglais</span>` : ""}</h1>
+        <p class="lede">${profil.statut === "prospect" ? "Compte gratuit : pas de suivi à assurer tant qu'il n'est pas passé client." : alertes.length ? `${alertes.length} point${alertes.length > 1 ? "s" : ""} à regarder.` : "Rien à signaler : tout est en ordre."}</p>
         ${alertes.length ? `<div class="attention-alertes" style="margin-top:4px">${alertes.map(a => `<a class="pastille ${a.niveau === "info" ? "accent" : a.niveau}" href="#/${esc(a.cible)}">${esc(a.texte)}</a>`).join("")}</div>` : ""}
       </header>
       <section class="panel">
@@ -8755,7 +8838,7 @@ const Feedback = {
      avant : les autres semaines sont reprises telles quelles, et si celle-ci a
      change depuis l'affichage (autre onglet, autre appareil), rien n'est ecrit.
      Renvoie l'entree enregistree (null si retiree). */
-  async enregistrer(uid, semaine, fin, texte, bilan, base, deja){
+  async enregistrer(uid, semaine, fin, texte, bilan, base, dejas){
     const t = String(texte || "").trim();
     const meme = (x, y) => !!(x && y && x.texte === y.texte && (x.bilan || "") === (y.bilan || ""));
     for (let essai = 1; ; essai++){
@@ -8766,7 +8849,7 @@ const Feedback = {
       /* deja comme on le veut (une tentative precedente est passee, sa reponse s'est perdue) */
       if (t ? meme(cour, { texte: t, bilan: bilan }) : !cour) return cour;
       /* l'entree a change depuis l'affichage, et ce n'est pas notre propre tentative : conflit */
-      if (this.empreinte(cour) !== this.empreinte(base) && !meme(cour, deja)) throw Object.assign(new Error("conflit"), { conflit: true });
+      if (this.empreinte(cour) !== this.empreinte(base) && !(dejas || []).some(x => meme(cour, x))) throw Object.assign(new Error("conflit"), { conflit: true });
       const l = brute.filter(x => !(x && x.semaine === semaine));
       let entree = null;
       if (t){
@@ -8821,7 +8904,7 @@ const Feedback = {
       const btn = bloc.querySelector("[data-fb-enregistrer]"), ta = bloc.querySelector("textarea");
       const msg = bloc.querySelector("[data-fb-msg]"), etat = bloc.querySelector(".fb-etat");
       let base = this.pour(F, bloc.dataset.fbSemaine);   // ce que l'editeur a affiche
-      let deja = null;   // une tentative dont la reponse s'est perdue (elle a pu passer)
+      let dejas = [];   // les tentatives sans reponse depuis le dernier succes (elles ont pu passer)
       btn.addEventListener("click", async () => {
         const texte = ta.value;
         msg.classList.remove("ko"); msg.textContent = "";
@@ -8831,16 +8914,16 @@ const Feedback = {
         }
         btn.disabled = true; msg.textContent = "Enregistrement…";
         const tentative = { texte: texte.trim(), bilan: bloc.dataset.fbBilan || "" };
-        const tache = this.file.then(() => this.enregistrer(uid, bloc.dataset.fbSemaine, bloc.dataset.fbFin, texte, bloc.dataset.fbBilan, base, deja));
+        const tache = this.file.then(() => this.enregistrer(uid, bloc.dataset.fbSemaine, bloc.dataset.fbFin, texte, bloc.dataset.fbBilan, base, dejas));
         this.file = tache.catch(() => {});
         try {
           const entree = await tache;
-          base = entree; deja = null;
+          base = entree; dejas = [];
           etat.textContent = entree ? "— envoyé le " + dateFr(entree.date) : "— pas encore envoyé";
           btn.textContent = entree ? "Mettre à jour le feedback" : "Envoyer le feedback";
           msg.textContent = entree ? "Feedback enregistré : ton client le voit dans « Mon suivi »." : "Feedback retiré.";
         } catch(e){
-          if (!(e && e.conflit) && tentative.texte) deja = tentative;
+          if (!(e && e.conflit) && tentative.texte) dejas.push(tentative);
           msg.classList.add("ko");
           msg.textContent = (e && e.conflit) ? "Ce feedback a changé entre-temps (autre onglet ou appareil) : recharge la page avant d'écrire. Ton texte est gardé ici." : CleCoach.message(e);
         }
@@ -9316,7 +9399,11 @@ function routeDepuisAdresse(){
 
 /* ---------------------- ÉCRAN DE CONNEXION ---------------------- */
 function portail(mode){
-  mode = (mode === "oubli") ? "oubli" : "connexion";
+  /* v39 : « inscription » n'existe que si l'inscription libre est ouverte */
+  const libre = !!(CONFIG.marque && CONFIG.marque.inscription_libre);
+  mode = (mode === "oubli") ? "oubli" : (mode === "inscription" && libre) ? "inscription" : "connexion";
+  const titre = mode === "oubli" ? "Mot de passe oublié" : mode === "inscription" ? "Crée ton compte" : "Connexion à ton espace";
+  const bouton = mode === "oubli" ? "Recevoir le lien" : mode === "inscription" ? "Créer mon compte" : "Se connecter";
   document.body.innerHTML = `
   <div class="portail">
     <div class="carte-co">
@@ -9325,16 +9412,21 @@ function portail(mode){
       ${CONFIG.marque.logo ? `<img class="logo-img" src="${esc(CONFIG.marque.logo)}" alt="${esc(CONFIG.marque.nom)}">` : ""}
       <div class="logo">${esc(CONFIG.marque.nom)}</div>
       ${CONFIG.marque.programme ? `<div class="sous">${esc(CONFIG.marque.programme)}</div>` : ""}
-      <h2>${mode === "oubli" ? "Mot de passe oublié" : "Connexion à ton espace"}</h2>
+      <h2>${titre}</h2>
       <div id="co-err"></div>
+      ${mode === "inscription" ? `<div class="champ"><label for="c-prenom">Ton prénom</label><input id="c-prenom" type="text" autocomplete="given-name"></div>
+      <div class="champ"><label for="c-nom">Ton nom</label><input id="c-nom" type="text" autocomplete="family-name"></div>` : ""}
       <div class="champ"><label for="c-email">Email</label><input id="c-email" type="email" autocomplete="email"></div>
-      ${mode !== "oubli" ? `<div class="champ"><label for="c-mdp">Mot de passe</label><input id="c-mdp" type="password" autocomplete="current-password"></div>` : ""}
+      ${mode !== "oubli" ? `<div class="champ"><label for="c-mdp">Mot de passe</label><input id="c-mdp" type="password" autocomplete="${mode === "inscription" ? "new-password" : "current-password"}"></div>` : ""}
+      ${mode === "inscription" ? `<div class="champ"><label for="c-mdp2">Confirme ton mot de passe</label><input id="c-mdp2" type="password" autocomplete="new-password"></div>` : ""}
       ${mode !== "oubli" ? `<label class="co-rester"><input type="checkbox" id="c-rester" checked><span>Rester connecté</span></label>` : ""}
-      <button class="btn" id="c-go">${mode === "oubli" ? "Recevoir le lien" : "Se connecter"}</button>
+      <button class="btn" id="c-go">${bouton}</button>
       ${CONFIG.marque.version ? `<p class="co-aide">v${esc(CONFIG.marque.version)}</p>` : ""}
       <div class="bascule">
         ${mode === "connexion"
-          ? `<button type="button" data-mode="oubli">Mot de passe oublié ?</button>`
+          ? `<button type="button" data-mode="oubli">Mot de passe oublié ?</button>${libre ? `<button type="button" data-mode="inscription">Créer mon compte</button>` : ""}`
+          : mode === "inscription"
+          ? `<button type="button" data-mode="connexion">J'ai déjà un compte</button>`
           : `<button type="button" data-mode="connexion">Retour à la connexion</button>`}
       </div>
     </div>
@@ -9357,7 +9449,27 @@ function portail(mode){
        ou la session sera rangee */
     const rester = $("c-rester");
     Auth.persistant = rester ? rester.checked : true;
-    const bouton = $("c-go"); bouton.disabled = true; bouton.textContent = "Un instant…";
+    const b = $("c-go");
+    if (mode === "inscription"){
+      const prenom = ($("c-prenom").value || "").trim(), nom = ($("c-nom").value || "").trim();
+      if (!prenom){ err("Indique ton prénom."); return; }
+      if (mdp.length < 8){ err("Le mot de passe doit faire au moins 8 caractères."); return; }
+      if (mdp !== ($("c-mdp2") ? $("c-mdp2").value : "")){ err("Les deux mots de passe ne sont pas identiques."); return; }
+      b.disabled = true; b.textContent = "Un instant…";
+      try {
+        const connecte = await Auth.inscrire(email, mdp, prenom, nom);
+        if (connecte){ location.hash = ""; location.reload(); return; }
+        err("Compte créé. Ouvre le lien reçu par email pour le confirmer, puis connecte-toi.", true);
+      } catch(e){
+        const m = (e.message || "").toLowerCase();
+        err(m.indexOf("already") > -1 || m.indexOf("registered") > -1 ? "Un compte existe déjà avec cet email : connecte-toi."
+          : m.indexOf("disabled") > -1 || m.indexOf("not allowed") > -1 ? "Les inscriptions ne sont pas encore ouvertes."
+          : e.message || "Une erreur est survenue.");
+      }
+      b.disabled = false; b.textContent = bouton;
+      return;
+    }
+    b.disabled = true; b.textContent = "Un instant…";
     try {
       if (mode === "oubli"){
         await Auth.motDePasseOublie(email);
@@ -9372,8 +9484,8 @@ function portail(mode){
         : m.indexOf("password") > -1 ? "Le mot de passe doit faire au moins 6 caractères."
         : e.message || "Une erreur est survenue.");
     }
-    bouton.disabled = false;
-    bouton.textContent = mode === "oubli" ? "Recevoir le lien" : "Se connecter";
+    b.disabled = false;
+    b.textContent = bouton;
   };
 
   $("c-go").addEventListener("click", valider);
@@ -9452,10 +9564,10 @@ let premiereFois = false;
   }
 
   Auth.charger();
-  /* Il n'y a plus d'inscription libre : les comptes sont crees par le coach.
-     L'adresse #/inscription ne mene donc plus nulle part — elle ouvre l'ecran
-     de connexion comme n'importe quelle autre. */
-  if (!Auth.connecte()){ portail("connexion"); return; }
+  /* Les comptes sont crees par le coach. L'inscription libre (v39) n'existe que
+     si CONFIG.marque.inscription_libre vaut true : #/inscription ouvre alors la
+     creation de compte ; sinon, l'ecran de connexion comme n'importe quelle autre adresse. */
+  if (!Auth.connecte()){ portail(/inscription/.test(location.hash) ? "inscription" : "connexion"); return; }
   const ok = await Auth.assurer();
   if (!ok){ portail("connexion"); return; }
   try { await Auth.chargerProfil(); } catch(e){}

@@ -28,8 +28,8 @@ async function contexte(b, who, opts) {
   const db = opts.db;
   await c.route("**/*", async r => {
     const req = r.request(); const u = req.url();
-    if (u.includes("localhost")) return r.continue();
-    if (!u.includes("supabase.co")) return r.abort();
+    if (new URL(u).hostname === "localhost") return r.continue();
+    if (!new URL(u).hostname.endsWith(".supabase.co")) return r.abort();
     const url = new URL(u); const p = url.pathname, q = url.searchParams, m = req.method();
     const json = (body, status) => r.fulfill({ status: status || 200, contentType: "application/json", body: body === null ? "" : JSON.stringify(body) });
     if (p.startsWith("/auth/v1/token")) { if (opts.refreshKo && url.search.includes("refresh_token")) return json({ error: "invalid_grant" }, 400); return json(F.session(who.id, who.email)); }
@@ -65,8 +65,10 @@ async function contexte(b, who, opts) {
         if (mj === "is.null") cibles = cibles.filter(x => !x.maj_le);
         if (cibles.length && opts.refus403 && PRIVEES.includes(o)) { db.ecritures.push({ refus: true, outil: o, user_id: uid }); return json({ code: "42501", message: "rls" }, 403); }
         if (opts.patchVide) return json([], 200);   // comme une RLS qui filtre la ligne : aucune erreur, aucune ligne
+        const etapeP = (opts.sequence && opts.sequence.outil === o) ? opts.sequence.etapes.shift() : null;
+        if (etapeP === "avant") return r.abort("failed");   // la requete n'arrive jamais
         for (const x of cibles) { Object.assign(x, corps); db.ecritures.push({ outil: x.outil, user_id: x.user_id, contenu: corps.contenu, patch: true }); }
-        if (cibles.length && opts.perdre && opts.perdre.outil === o && opts.perdre.fois > 0) { opts.perdre.fois--; return r.abort("failed"); }   // ecrite, mais la reponse se perd
+        if (cibles.length && ((opts.perdre && opts.perdre.outil === o && opts.perdre.fois > 0 && opts.perdre.fois--) || etapeP === "apres")) return r.abort("failed");   // ecrite, mais la reponse se perd
         return json(rep ? JSON.parse(JSON.stringify(cibles)) : null, 200);
       }
       const upsert = !!q.get("on_conflict");
@@ -77,12 +79,14 @@ async function contexte(b, who, opts) {
         if (!permis || (opts.refus403 && PRIVEES.includes(x.outil))) { db.ecritures.push({ refus: true, outil: x.outil, user_id: x.user_id }); return json({ code: "42501", message: "new row violates row-level security policy" }, 403); }
       }
       if (!upsert && rows.some(x => db.lignes.some(y => y.user_id === x.user_id && y.outil === x.outil))) return json({ code: "23505", message: "duplicate key" }, 409);
+      if (opts.sequence && rows.some(x => x.outil === opts.sequence.outil)) { const et = opts.sequence.etapes.shift(); if (et === "avant") return r.abort("failed"); opts.sequence.derniere = et; }
       for (const x of rows) {
         db.ecritures.push({ outil: x.outil, user_id: x.user_id, contenu: x.contenu });
         const i = db.lignes.findIndex(y => y.user_id === x.user_id && y.outil === x.outil);
         if (i > -1) db.lignes[i] = Object.assign({}, db.lignes[i], x); else db.lignes.push(x);
       }
       if (opts.perdre && rows.some(x => x.outil === opts.perdre.outil) && opts.perdre.fois > 0) { opts.perdre.fois--; return r.abort("failed"); }
+      if (opts.sequence && rows.some(x => x.outil === opts.sequence.outil) && opts.sequence.derniere === "apres") { opts.sequence.derniere = null; return r.abort("failed"); }
       return json(rep ? rows : null, 201);
     }
     const t = p.replace("/rest/v1/", "");
@@ -395,6 +399,24 @@ const ecr = (db, outil) => db.ecritures.filter(e => e.outil === outil && !e.refu
     await ouvrirFiche(page, F.IDS.c1);
     await page.fill("#nc-texte", "Note modifiée."); await attendre(page, 1800);
     ok("refus silencieux de la base (mise à jour vide) : « la base refuse », pas un faux conflit", (await page.textContent("#nc-etat")).includes("la base refuse") && (await page.inputValue("#nc-texte")) === "Note modifiée.");
+    await c.close();
+  }
+
+  {
+    /* réponse perdue (écrite), retouche, envoi jamais arrivé, puis 3e essai : la retouche passe */
+    const db = base();
+    const opts = { db, sequence: { outil: "feedbacks", etapes: ["apres", "avant"] } };
+    const { c, page } = await contexte(b, coach, opts);
+    await page.goto(`http://localhost:${PORT}/`); await attendre(page, 1500);
+    await ouvrirFiche(page, F.IDS.c1); await aller(page, "#/bilan", 1500);
+    const sel = `[data-fb-semaine="${lundiPrec}"]`;
+    await page.fill(sel + " textarea", "Version 1.");
+    await page.click(sel + " [data-fb-enregistrer]"); await attendre(page, 800);
+    await page.fill(sel + " textarea", "Version 2, retouchée.");
+    await page.click(sel + " [data-fb-enregistrer]"); await attendre(page, 800);
+    await page.click(sel + " [data-fb-enregistrer]"); await attendre(page, 900);
+    const l = db.lignes.find(x => x.user_id === F.IDS.c1 && x.outil === "feedbacks").contenu.liste;
+    ok("feedback : 2 envois ratés de suite (l'un écrit, l'autre jamais arrivé) puis 3e essai : la retouche est en base, sans faux conflit", (await page.textContent(sel + " [data-fb-msg]")).includes("Feedback enregistré") && l.length === 1 && l[0].texte === "Version 2, retouchée.", JSON.stringify(l) + " | " + (await page.textContent(sel + " [data-fb-msg]")));
     await c.close();
   }
 

@@ -26,13 +26,17 @@ Copier `verif37.js` en `verifNN.js`, garder la simulation Supabase telle quelle,
 
 ## v38 — feedback du coach et notes privées
 ```
-node verif38.js ../index.html              # feedback, notes privées, RLS simulée, conflits, réponse perdue, refus 403, restauration, anglais, mobile (66)
+node verif38.js ../index.html              # feedback, notes privées, RLS simulée, conflits, réponse perdue, refus 403, restauration, anglais, mobile (67)
 node verif-xss.js ../index.html            # données client piégées : aucune injection dans les écrans coach et client (5)
+node verif39.js ../index.html              # statut prospect / client, création d'accès, inscription libre (34)
 ```
-Attendu sur la v38 : 64 pages, 0 erreur, 0 écriture ; 19 + 13 + 14 + 13 + 15 + 66 vérifications ; verif-xss 5/5 (sur la v37, verif-xss détecte 15 exécutions : c'est ce qui prouve qu'il teste vraiment).
+Attendu sur la v39 : 64 pages, 0 erreur, 0 écriture ; 19 + 13 + 14 + 13 + 15 + 67 vérifications ; verif39 34/34 ; verif-xss 5/5 (sur la v37, verif-xss détecte 15 exécutions : c'est ce qui prouve qu'il teste vraiment).
 
 ## Sans Chromium Playwright : le Chrome de la machine
 Si `npx playwright install chromium` n'a pas été fait, le préchargement `chrome-systeme.js` fait tourner tous les scripts avec Google Chrome installé (canal « chrome »), sans toucher aux tests :
 ```
 NODE_OPTIONS="--require ./chrome-systeme.js" node rig.js --html ../index.html --out captures/v38
 ```
+
+## Règle d'or des simulations
+Chaque script intercepte Supabase et **ne doit jamais laisser partir une requête vers la vraie base**. Router par nom d'hôte (`new URL(u).hostname === "localhost"`, `.endsWith(".supabase.co")`), jamais par sous-chaîne de l'URL : les appels d'authentification portent `redirect_to=http://localhost…` et seraient sinon envoyés à la vraie base (incident du 25/09/2026, sans conséquence : inscriptions refusées par Supabase, aucune donnée créée).

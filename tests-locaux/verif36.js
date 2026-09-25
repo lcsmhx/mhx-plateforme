@@ -6,7 +6,7 @@ const server = http.createServer((req,res)=>{res.writeHead(200,{"Content-Type":"
   const ok=(n,c,d)=>res.push((c?"  ✓ ":"  ✗ ")+n+(c?"":"  — "+(d||"")));
   async function ctx(who){
     const c = await b.newContext({ viewport:{width:390,height:844} });
-    await c.route("**/*", r => { const req=r.request(); const u=req.url(); if(u.includes("localhost")) return r.continue(); if(!u.includes("supabase.co")) return r.abort();
+    await c.route("**/*", r => { const req=r.request(); const u=req.url(); if(new URL(u).hostname === "localhost") return r.continue(); if(!new URL(u).hostname.endsWith(".supabase.co")) return r.abort();
       const url=new URL(u); const p=url.pathname, q=url.searchParams, m=req.method();
       if (m!=="GET" && !p.startsWith("/auth/")){ ecr.push(m+" "+p+" "+(req.postData()||"").slice(0,4000)); return r.fulfill({status:201,contentType:"application/json",body:""}); }
       let body=[];

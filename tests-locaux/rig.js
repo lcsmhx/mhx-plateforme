@@ -85,8 +85,8 @@ async function main() {
     const ctx = await browser.newContext({ viewport, colorScheme: SCHEME, locale: "fr-FR", deviceScaleFactor: 1 });
     await ctx.route("**/*", route => {
       const u = route.request().url();
-      if (u.indexOf("supabase.co") > -1) return supabase(route);
-      if (u.indexOf("localhost") > -1 || u.indexOf("127.0.0.1") > -1) return route.continue();
+      if (new URL(u).hostname.endsWith(".supabase.co")) return supabase(route);
+      if (["localhost", "127.0.0.1"].includes(new URL(u).hostname)) return route.continue();
       journal.externes.push(u.split("?")[0]);
       if (u.indexOf("fonts.googleapis.com") > -1) return route.fulfill({ status: 200, contentType: "text/css", body: "" });
       return route.abort();
