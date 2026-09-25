@@ -23,15 +23,26 @@ const PORT = 8765 + Math.floor(Math.random() * 200);
 fs.mkdirSync(OUT, { recursive: true });
 
 /* --- serveur statique minimal --- */
+let inscriptionLibre = false;   // v44 : l'ecran d'inscription n'existe que si CONFIG.marque.inscription_libre vaut true
 const server = http.createServer((req, res) => {
   if (req.url.split("?")[0] === "/" || req.url.startsWith("/index.html")) {
     res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-    res.end(fs.readFileSync(HTML));
+    let h = fs.readFileSync(HTML, "utf8");
+    if (inscriptionLibre) h = h.replace("inscription_libre: false", "inscription_libre: true");
+    res.end(h);
   } else { res.writeHead(404); res.end(); }
 });
 
 const journal = { appels: [], ecritures: [], erreurs: [], externes: [] };
 let persona = null;
+
+/* v44 — prospecte (compte gratuit) « Léa Démo » avec son Challenge 7 jours en cours : jour 1 fait hier */
+const PROSPECT_ID = "00000000-0000-4000-8000-000000000c04";
+const HIER = (() => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - 1); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); })();
+F.profils.forEach(p => { p.statut = "client"; });
+F.profils.push({ id: PROSPECT_ID, prenom: "Léa", nom: "", role: "client", statut: "prospect", cree_le: "2026-09-24T10:00:00Z" });
+F.donnees.push({ user_id: PROSPECT_ID, outil: "intake", contenu: { sexe: "Femme", age: "29", taille: "168", poids: "64", poids_obj: "60", objectif: "Perte de poids / sèche", niveau: "Débutant (0 à 6 mois)", seances: "3", lieu: "À la maison", nb_repas: "3 repas", sommeil_h: "6.5", energie: "4", pourquoi: "Retrouver de l'énergie." }, maj_le: HIER + "T08:00:00+00:00" });
+F.donnees.push({ user_id: PROSPECT_ID, outil: "challenge", contenu: { version: 1, debut: HIER, jours: { "1": { fait: HIER + "T08:00:00.000Z", date: HIER } }, cta: { clics: [] }, termine: null }, maj_le: HIER + "T08:00:00+00:00" });
 
 function supabase(route) {
   const req = route.request();
@@ -127,7 +138,8 @@ async function main() {
   const VIEWS = { mobile: { width: 390, height: 844 }, desktop: { width: 1280, height: 900 } };
   const personas = {
     client: { id: F.IDS.c1, email: "thomas@exemple.fr", session: F.session(F.IDS.c1, "thomas@exemple.fr") },
-    coach: { id: F.IDS.coach, email: "coach@exemple.fr", session: F.session(F.IDS.coach, "coach@exemple.fr") }
+    coach: { id: F.IDS.coach, email: "coach@exemple.fr", session: F.session(F.IDS.coach, "coach@exemple.fr") },
+    prospect: { id: PROSPECT_ID, email: "lea@exemple.fr", session: F.session(PROSPECT_ID, "lea@exemple.fr") }
   };
 
   for (const [vn, vp] of Object.entries(VIEWS)) {
@@ -137,6 +149,20 @@ async function main() {
       await page.goto(`http://localhost:${PORT}/index.html`);
       await capture(page, `anon-connexion-${vn}`);
       const oubli = await page.$('[data-mode="oubli"]'); if (oubli) { await oubli.click(); await capture(page, `anon-oubli-${vn}`); }
+      await ctx.close();
+      /* v44 : l'ecran d'inscription (fichier servi avec inscription_libre: true) */
+      inscriptionLibre = true;
+      { const { ctx: c2, page: p2 } = await ouvrir(vp, null); await p2.goto(`http://localhost:${PORT}/index.html#/inscription`); await capture(p2, `anon-inscription-${vn}`); await c2.close(); }
+      inscriptionLibre = false;
+    }
+    /* --- prospect (v44) : hub, challenge, jour 1 fait, profil allege, pages verrouillees --- */
+    if (!ONLY || ONLY === "prospect") {
+      const { ctx, page } = await ouvrir(vp, personas.prospect);
+      await page.goto(`http://localhost:${PORT}/index.html#/accueil`);
+      await capture(page, `prospect-accueil-${vn}`);
+      for (const r of ["challenge", "challenge/1", "profil", "formation", "programme"]) {
+        await aller(page, "#/" + r); await capture(page, `prospect-${r.replace("/", "-")}-${vn}`);
+      }
       await ctx.close();
     }
     /* --- client --- */

@@ -97,52 +97,43 @@ const ligneCompte = (page, nom) => page.locator("#liste-clients .client-l", { ha
   const b = await chromium.launch();
   const lea = { id: PROSPECT, email: "l@e.fr", session: F.session(PROSPECT, "l@e.fr") };
   const thomas = { id: F.IDS.c1, email: "t@e.fr", session: F.session(F.IDS.c1, "t@e.fr") };
-  const VERROUILLES = ["programme", "nutrition", "mensurations", "suivi", "complements", "bilan"];
+  const VERROUILLES = ["programme", "nutrition", "mensurations", "suivi", "complements", "bilan", "formation"];   // v44 : la formation attend la fin du challenge
   const CAL = "https://calendly.com/mhx-coaching/30min";
 
   /* ---------- A. Prospect ---------- */
   {
     const db = base();
     const { c, page } = await contexte(b, lea, db);
-    await page.goto(`http://localhost:${PORT}/`); await attendre(page, 1800);
+    await page.goto(`http://localhost:${PORT}/#/accueil`); await attendre(page, 1800);
     const acc = await page.textContent("#acc-vue");
-    ok("prospect : accueil du mode gratuit (bienvenue, espace gratuit, ce que débloque l'accompagnement)", acc.includes("Bienvenue") && acc.includes("Ton espace gratuit") && acc.includes("Avec l'accompagnement MHX"));
+    ok("prospect : accueil = hub du Challenge 7 jours (v44 : Bonjour, Challenge 7 jours, Ton espace)", acc.includes("Bonjour") && acc.includes("Challenge 7 jours") && acc.includes("Ton espace"));
     await page.screenshot({ path: path.join(OUT, "prospect-accueil.png"), fullPage: true });
-    ok("prospect : accueil → lien « Réserver mon appel » vers Calendly (nouvel onglet)", await page.$eval(`#acc-vue a[href="${CAL}"]`, a => a.target === "_blank" && a.rel.includes("noopener")).catch(() => false));
+    ok("prospect : accueil sans « Réserver mon appel » avant le jour 5 (v44 : CTA progressifs)", !(await page.$(`#acc-vue a[href="${CAL}"]`)));
     let textes = await page.evaluate(() => document.body.innerText);
     const cadenas = await page.$$eval("#nav a", l => l.filter(a => a.querySelector(".nav-cadenas")).map(a => a.dataset.id));
     ok("prospect : chaque onglet verrouillé est annoncé « (verrouillé) » aux lecteurs d'écran", await page.$$eval("#nav a", l => l.filter(a => a.querySelector(".nav-cadenas")).every(a => (a.querySelector(".sr-only") || {}).textContent === " (verrouillé)")));
     const barre = await page.$$eval("#barre-bas a", l => l.map(a => a.dataset.id));
-    ok("prospect : barre du bas = accueil, formation, profil, puis un onglet verrouillé", JSON.stringify(barre) === '["accueil","formation","profil","programme"]', JSON.stringify(barre));
-    ok("prospect : cadenas sur les onglets verrouillés, pas sur accueil / formation / profil", VERROUILLES.filter(x => x !== "bilan").every(x => cadenas.includes(x)) && !cadenas.some(x => ["accueil", "formation", "profil"].includes(x)), JSON.stringify(cadenas));
+    ok("prospect : barre du bas = accueil, challenge, profil, puis un onglet verrouillé (v44)", JSON.stringify(barre) === '["accueil","challenge","profil","programme"]', JSON.stringify(barre));
+    ok("prospect : cadenas sur les onglets verrouillés, pas sur accueil / challenge / profil", VERROUILLES.filter(x => x !== "bilan").every(x => cadenas.includes(x)) && !cadenas.some(x => ["accueil", "challenge", "profil"].includes(x)), JSON.stringify(cadenas));
     for (const r of VERROUILLES) {
       page.lectures.length = 0;
       await aller(page, "#/" + r, 1200);
       const v = await page.$("#vue .verrou");
       const lien = v ? await page.$eval("#vue .verrou a", a => a.href).catch(() => "") : "";
       const lu = page.lectures.filter(u => u.includes("outil=eq.") || u.includes("outil=in.("));
-      ok(`prospect : #/${r} verrouillé (cadenas + Calendly), aucune donnée lue`, !!v && lien === CAL && lu.length === 0, lien + " | " + lu.join(" ; "));
+      /* v44 : la formation renvoie vers le challenge (elle s'ouvre a la fin), les autres vers Calendly */
+      ok(`prospect : #/${r} verrouillé (cadenas + ${r === "formation" ? "lien vers le challenge" : "Calendly"}), aucune donnée lue`, !!v && (r === "formation" ? /#\/challenge$/.test(lien) : lien === CAL) && lu.length === 0, lien + " | " + lu.join(" ; "));
       textes += "\n" + await page.evaluate(() => document.body.innerText);
     }
-    for (const r of ["formation", "profil"]) {
+    for (const r of ["challenge", "profil"]) {
       await aller(page, "#/" + r, 1300);
       ok(`prospect : #/${r} ouvert`, !(await page.$("#vue .verrou")));
       textes += "\n" + await page.evaluate(() => document.body.innerText);
     }
     ok("prospect : aucun prix affiché sur aucune des pages visitées (€, prix, tarif)", !/€|\bprix\b|tarif/i.test(textes));
-    /* premier enregistrement du questionnaire : vers l'accueil, pas vers une page verrouillée */
-    await page.evaluate(() => {
-      /* questionnaire complet (tous les champs requis), puis « premiere fois » */
-      QUESTIONS.filter(q => q.requis && q.id).forEach(q => {
-        const el = document.getElementById("q-" + q.id); if (!el) return;
-        if (q.type === "multi"){ const c = el.querySelector("input"); if (c && !el.querySelector("input:checked")) c.checked = true; return; }
-        if (el.tagName === "SELECT"){ if (!el.value) el.selectedIndex = el.options.length - 1; return; }
-        if (!el.value) el.value = el.type === "number" ? "30" : "test";
-      });
-      premiereFois = true;
-    });
-    await page.click("#p-save"); await attendre(page, 1600);
-    ok("prospect : premier enregistrement du questionnaire → accueil (pas Ma progression, verrouillée)", (await page.evaluate(() => location.hash)) === "#/accueil", await page.evaluate(() => location.hash));
+    /* v44 : le prospect n'a plus le questionnaire complet dans Profil (il arrive avec l'accompagnement) */
+    await aller(page, "#/profil", 1300);
+    ok("prospect : profil allégé (v44) — pas de questionnaire complet, bloc « Mon compte »", !(await page.$("#p-save")) && (await page.textContent("#vue")).includes("Mon compte"));
     await c.close();
   }
   {
@@ -174,7 +165,7 @@ const ligneCompte = (page, nom) => page.locator("#liste-clients .client-l", { ha
     const t = await page.textContent("#vue");
     ok("prospect en anglais : « This feature is available with MHX coaching. » et « Book my call »", t.includes("This feature is available with MHX coaching.") && t.includes("Book my call"), t.slice(0, 200));
     await aller(page, "#/accueil", 1500);
-    ok("prospect en anglais : accueil « Welcome », « Your free space »", (await page.textContent("#acc-vue")).includes("Your free space"));
+    ok("prospect en anglais : accueil « 7-Day Challenge », « Your starting point » (v44)", (await page.textContent("#acc-vue")).includes("7-Day Challenge") && (await page.textContent("#acc-vue")).includes("Your starting point"));
     await c.close();
   }
 

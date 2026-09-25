@@ -231,18 +231,18 @@ const ligneCompte = (page, nom) => page.locator("#liste-clients .client-l", { ha
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 1200);
     ok("inscription ouverte : bouton « Créer mon compte » sur la connexion", !!(await page.$('[data-mode="inscription"]')));
     await page.click('[data-mode="inscription"]'); await attendre(page, 400);
-    await page.fill("#c-email", "nouvelle@exemple.fr"); await page.fill("#c-mdp", "court"); await page.fill("#c-mdp2", "court");
+    await page.fill("#c-email", "nouvelle@exemple.fr"); await page.fill("#c-mdp", "court");
     await page.click("#c-go"); await attendre(page, 300);
     ok("inscription : prénom obligatoire", (await page.textContent("#co-err")).includes("prénom"));
-    await page.fill("#c-prenom", "Zoé"); await page.fill("#c-nom", "Démo");
+    await page.fill("#c-prenom", "Zoé");
     await page.click("#c-go"); await attendre(page, 300);
     ok("inscription : 8 caractères minimum", (await page.textContent("#co-err")).includes("8 caractères"));
-    await page.fill("#c-mdp", "motdepasse1"); await page.fill("#c-mdp2", "motdepasse2");
+    await page.fill("#c-mdp", "motdepasse1");
     await page.click("#c-go"); await attendre(page, 300);
-    ok("inscription : les deux mots de passe doivent être identiques", (await page.textContent("#co-err")).includes("identiques") && db.inscriptions.length === 0);
-    await page.fill("#c-mdp2", "motdepasse1");
+    ok("inscription : la case des conditions est obligatoire (v44)", (await page.textContent("#co-err")).includes("Coche la case") && db.inscriptions.length === 0);
+    await page.check("#c-cgu");
     await page.click("#c-go"); await attendre(page, 2500);
-    ok("inscription : POST /auth/v1/signup avec prénom et nom", db.inscriptions.length === 1 && db.inscriptions[0].data.prenom === "Zoé" && db.inscriptions[0].data.nom === "Démo" && db.inscriptions[0].email === "nouvelle@exemple.fr");
+    ok("inscription : POST /auth/v1/signup avec le prénom seul, nom vide, consentement daté (v44)", db.inscriptions.length === 1 && db.inscriptions[0].data.prenom === "Zoé" && db.inscriptions[0].data.nom === "" && /^\d{4}-\d{2}-\d{2}T/.test(db.inscriptions[0].data.consentement || "") && db.inscriptions[0].email === "nouvelle@exemple.fr");
     ok("inscription : connecté ensuite, et prospect", await page.evaluate(() => Auth.connecte() && Auth.estProspect()).catch(() => false));
     await c.close();
   }
@@ -252,8 +252,8 @@ const ligneCompte = (page, nom) => page.locator("#liste-clients .client-l", { ha
     const { c, page } = await contexte(b, null, db, { inscriptionKo: true, langue: "en" });
     await page.goto(`http://localhost:${PORT}/#/inscription`); await attendre(page, 1200);
     const t = await page.textContent("body");
-    ok("inscription en anglais : « Create your account »", t.includes("Create your account") && t.includes("Your first name"));
-    await page.fill("#c-prenom", "Zoé"); await page.fill("#c-email", "z@exemple.fr"); await page.fill("#c-mdp", "motdepasse1"); await page.fill("#c-mdp2", "motdepasse1");
+    ok("inscription en anglais : « Join the 7-Day Challenge » (v44)", t.includes("Join the 7-Day Challenge") && t.includes("Your first name"));
+    await page.fill("#c-prenom", "Zoé"); await page.fill("#c-email", "z@exemple.fr"); await page.fill("#c-mdp", "motdepasse1"); await page.check("#c-cgu");
     await page.click("#c-go"); await attendre(page, 800);
     ok("inscription refusée par Supabase : « Sign-ups are not open yet. »", (await page.textContent("#co-err")).includes("Sign-ups are not open yet"));
     await c.close();
