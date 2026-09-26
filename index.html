@@ -10668,7 +10668,10 @@ const Decouverte = {
    ------------------------------------------------------------------ */
 const outilDecouverte = {
   id: "decouverte",
-  cle: "intake",
+  /* cle des traitements generiques (nom dans l'alerte hors ligne, sauvegarde et restauration de « Mes donnees ») :
+     celle de l'ancien outil Challenge, lue par Decouverte. L'outil lit « intake » et Decouverte.cle en dur ;
+     « intake » reste ainsi rattachee au Profil (sinon un client lirait « Découverte » dans l'alerte hors ligne) */
+  cle: "challenge",
   nom: "Découverte",
   court: "Découverte",
   icone: "🧭",
