@@ -1012,12 +1012,12 @@ const CONFIG = {
 
     /* v40 — Mode gratuit (prospects). Le lien de l'appel découverte, et les
        SEULS onglets ouverts à un prospect : tous les autres affichent un
-       cadenas et « Réserver mon appel ». Aucun prix dans l'application. */
+       cadenas et « Réserver mon bilan ». Aucun prix dans l'application. */
     calendly: "https://calendly.com/mhx-coaching/30min",
     /* v50 — true : le prenom et l'email du prospect connecte sont pre-remplis dans Calendly (parametres
        officiels name et email) : il n'a rien a retaper et sa reservation porte l'email de son compte.
-       Eteint tant que Lucas ne l'a pas decide (la confidentialite mentionne deja Calendly). */
-    calendly_prerempli: false,
+       Allume le 26/09/2026 (decision de Lucas) ; la confidentialite mentionne Calendly et le pre-remplissage. */
+    calendly_prerempli: true,
     /* v44 : la Speed Formation n'est plus dans la liste : elle s'ouvre au
        prospect une fois ses 7 jours faits (CONFIG.challenge.formation_apres_jour7) */
     gratuit_ouverts: ["accueil", "challenge", "profil"],
@@ -1053,7 +1053,7 @@ const CONFIG = {
   /* --- v49 : suivi commercial des prospects (page « Prospects » du coach). Les seuils en jours
      qui decident de la temperature et de la prochaine action ; tout se change ici. --- */
   suivi: {
-    clic_recent_jours: 3,            // un clic « Réserver mon appel » de moins de 3 jours rend le prospect CHAUD
+    clic_recent_jours: 3,            // un clic « Réserver mon bilan » de moins de 3 jours rend le prospect CHAUD
     inactif_jours: 4,                // 4 jours sans rien faire pendant le challenge : FROID
     sans_debut_jours: 2,             // inscrit depuis 2 jours sans avoir fait le jour 1 : FROID
     relance_attente_jours: 3,        // après une relance, on attend 3 jours avant d'en proposer une autre
@@ -1503,7 +1503,7 @@ const CHALLENGE7 = {
       conclusion: "Tu vois le principe : chaque recommandation dépend de tes réponses. Et il reste ce qu'un questionnaire ne voit pas : tes journées réelles, tes goûts, ce que tu as déjà essayé. C'est là qu'un plan devient vraiment le tien.",
       voir: "Voir ce que comprend l'accompagnement",
       volet_titre: "Avec l'accompagnement MHX",
-      volet_note: "Un appel de 30 minutes avec ton coach, pour faire le point sur tes objectifs.",
+      volet_note: "Un bilan de 30 minutes avec ton coach, pour faire le point sur tes objectifs.",
       interet_titre: "Ce qui te parle le plus :",
       interets: [{ id: "calories", texte: "Calories" }, { id: "entrainement", texte: "Entraînement" }, { id: "alimentation", texte: "Alimentation" }, { id: "habitudes", texte: "Habitudes" }],
       action: "J'ai lu mes recommandations",
@@ -1537,9 +1537,9 @@ const CHALLENGE7 = {
       tuiles: { jours: "Jours validés", ecart: "Ton écart", cible: "Cible estimée", habitude: "Ton habitude", seance: "Ta séance" },
       seance_val: "{t} tours · {r}/5",
       construire: "Maintenant, construisons ton plan personnalisé.",
-      cta: "Réserver mon appel",
+      cta: "Réserver mon bilan",
       cta_note: "Un appel de 30 minutes avec Lucas. On regarde ton point de départ, ton objectif, et on voit si l'accompagnement est fait pour toi. Sans engagement.",
-      reserve: "J'ai réservé mon appel",
+      reserve: "J'ai réservé mon bilan",
       reserve_ok: "Noté. À très vite.",
       plus_tard: "Pas encore le moment ? Tes réponses restent ici. Tu peux réserver quand tu veux.",
       instagram: "Une question ? Écris-moi sur Instagram :",
@@ -1750,7 +1750,7 @@ const CHALLENGE7 = {
         conclusion: "You see the principle: every recommendation depends on your answers. And there's what a questionnaire can't see: your real days, your tastes, what you've already tried. That's where a plan truly becomes yours.",
         voir: "See what the coaching includes",
         volet_titre: "With MHX coaching",
-        volet_note: "A 30-minute call with your coach, to take stock of your goals.",
+        volet_note: "A 30-minute assessment with your coach, to take stock of your goals.",
         interet_titre: "What speaks to you most:",
         interets: [{ texte: "Calories" }, { texte: "Training" }, { texte: "Nutrition" }, { texte: "Habits" }],
         action: "I've read my recommendations",
@@ -1784,9 +1784,9 @@ const CHALLENGE7 = {
         tuiles: { jours: "Days completed", ecart: "Your gap", cible: "Estimated target", habitude: "Your habit", seance: "Your session" },
         seance_val: "{t} rounds · {r}/5",
         construire: "Now, let's build your personalized plan.",
-        cta: "Book my call",
+        cta: "Book my assessment",
         cta_note: "A 30-minute call with Lucas. We look at your starting point, your goal, and see whether the coaching is right for you. No commitment.",
-        reserve: "I've booked my call",
+        reserve: "I've booked my assessment",
         reserve_ok: "Noted. See you very soon.",
         plus_tard: "Not the right time yet? Your answers stay here. You can book whenever you want.",
         instagram: "A question? Write to me on Instagram:",
@@ -2038,17 +2038,22 @@ const lienSur = (u) => {
 };
 /* v50 — le lien de reservation, le meme partout. Pre-remplissage (prenom + email du prospect connecte)
    seulement si CONFIG.marque.calendly_prerempli vaut true ; jamais pour le coach qui consulte une fiche. */
-function lienCalendly(){
+/* source : l'ecran d'ou part le clic (decouverte, verrou-programme…), transmis a Calendly en utm_content
+   (aucune donnee personnelle) : le coach voit dans Calendly d'ou vient chaque reservation */
+function lienCalendly(source){
   const base = lienSur(CONFIG.marque && CONFIG.marque.calendly); if (!base) return "";
   try {
-    if (!(CONFIG.marque && CONFIG.marque.calendly_prerempli === true) || !Auth.estProspect() || Store.idConsulte) return base;
-    const u = Auth.utilisateur(), p = Auth.profil || {}, params = [];
-    const prenom = typeof p.prenom === "string" ? p.prenom.trim() : "";
-    const email = u && typeof u.email === "string" ? u.email.trim() : "";
-    /* name : champ « Nom » ; first_name : si l'evenement demande prenom et nom separement (Calendly prend celui qui existe) */
-    if (prenom) params.push("name=" + encodeURIComponent(prenom), "first_name=" + encodeURIComponent(prenom));
-    if (email) params.push("email=" + encodeURIComponent(email));
-    if (!params.length) return base;
+    if (!Auth.estProspect() || Store.idConsulte) return base;
+    const params = ["utm_source=app-mhx", "utm_medium=app"];
+    if (typeof source === "string" && /^[a-z0-9-]{1,40}$/.test(source)) params.push("utm_content=" + source);
+    if (CONFIG.marque && CONFIG.marque.calendly_prerempli === true){
+      const u = Auth.utilisateur(), p = Auth.profil || {};
+      const prenom = typeof p.prenom === "string" ? p.prenom.trim() : "";
+      const email = u && typeof u.email === "string" ? u.email.trim() : "";
+      /* name : champ « Nom » ; first_name : si l'evenement demande prenom et nom separement (Calendly prend celui qui existe) */
+      if (prenom) params.push("name=" + encodeURIComponent(prenom), "first_name=" + encodeURIComponent(prenom));
+      if (email) params.push("email=" + encodeURIComponent(email));
+    }
     const i = base.indexOf("#"), avant = i > -1 ? base.slice(0, i) : base, apres = i > -1 ? base.slice(i) : "";   // les parametres avant un eventuel #
     return avant + (avant.indexOf("?") > -1 ? "&" : "?") + params.join("&") + apres;
   } catch(e){ return base; }   // un caractere mal forme ne doit jamais empecher la page de s'afficher
@@ -2691,7 +2696,7 @@ I18N.en = {
 "Passer en sombre": "Switch to dark mode",
 "Passer en clair": "Switch to light mode",
 "Cette fonctionnalité est disponible avec l'accompagnement MHX.": "This feature is available with MHX coaching.",
-"verrouillé": "locked", "Réserver mon appel": "Book my call",
+"verrouillé": "locked", "Réserver mon bilan": "Book my assessment",
 /* v34 — navigation et accueil */
 "Accueil": "Home", "Nutrition": "Nutrition", "Ma progression": "My progress", "Sa progression": "Their progress",
 "Speed Formation": "Speed Formation", "Profil": "Profile", "Plus": "More", "Tout mon espace": "My whole space",
@@ -2772,7 +2777,7 @@ I18N.en = {
 "Bienvenue": "Welcome", "Ton espace gratuit MHX : commence par la Speed Formation, à ton rythme.": "Your free MHX space: start with the Speed Formation, at your own pace.",
 "Ton espace gratuit": "Your free space", "Avec l'accompagnement MHX": "With MHX coaching",
 "Ton questionnaire et tes réglages": "Your questionnaire and settings",
-"Un appel de 30 minutes avec ton coach, pour faire le point sur tes objectifs.": "A 30-minute call with your coach to review your goals.",
+"Un bilan de 30 minutes avec ton coach, pour faire le point sur tes objectifs.": "A 30-minute assessment with your coach to review your goals.",
 /* v41 — photos de progression */
 "Photos de progression": "Progress photos", "privées": "private",
 "Visibles par toi et ton coach seulement. Même lumière, même tenue, même position : c'est ce qui rend la comparaison utile.": "Visible only to you and your coach. Same light, same outfit, same pose: that's what makes the comparison useful.",
@@ -8760,16 +8765,16 @@ const Commercial = {
     const inactif = nb > 0 && actif != null && actif >= cfg.inactif_jours;
     const actifRecemment = actif != null && actif < cfg.sans_debut_jours;
     const chaud = [], froid = [], tiede = [];
-    if (r && r.reserve) chaud.push("A coché « J'ai réservé mon appel » " + this.quand(this.depuis(r.reserve)) + ".");
+    if (r && r.reserve) chaud.push("A coché « J'ai réservé mon bilan » " + this.quand(this.depuis(r.reserve)) + ".");
     if (etat6 === "avancer" && (d6 == null || d6 <= cfg.chaud_jours)) chaud.push("Jour 6 : « Je veux avancer avec un accompagnement ».");
-    if (clic != null && clic <= cfg.clic_recent_jours) chaud.push("A cliqué « Réserver mon appel » (" + r.clics + " fois), la dernière " + this.quand(clic) + ".");
+    if (clic != null && clic <= cfg.clic_recent_jours) chaud.push("A cliqué « Réserver mon bilan » (" + r.clics + " fois), la dernière " + this.quand(clic) + ".");
     if (etat6 === "pas_maintenant") froid.push("Jour 6 : « Pas maintenant ».");
     if (inactif) froid.push(termine ? "Challenge terminé, plus d'activité depuis " + actif + " jours." : "Inactif depuis " + actif + " jours, arrêté au jour " + ((r && r.prochain) || nb) + ".");
     if (!nb && inscrit != null && inscrit >= cfg.sans_debut_jours && !actifRecemment) froid.push("Inscrit " + this.quand(inscrit) + ", challenge pas commencé.");
     if (etat6 === "hesite") tiede.push("Jour 6 : « J'hésite encore ».");
     if (etat6 === "avancer" && d6 != null && d6 > cfg.chaud_jours) tiede.push("Jour 6 : « Je veux avancer » " + this.quand(d6) + ", sans suite depuis.");
-    if (clic != null && clic > cfg.clic_recent_jours) tiede.push("A cliqué « Réserver mon appel » " + this.quand(clic) + ", sans réserver.");
-    if (termine && !inactif) tiede.push("Challenge terminé" + (r.clics ? "." : ", sans avoir cliqué « Réserver mon appel »."));
+    if (clic != null && clic > cfg.clic_recent_jours) tiede.push("A cliqué « Réserver mon bilan » " + this.quand(clic) + ", sans réserver.");
+    if (termine && !inactif) tiede.push("Challenge terminé" + (r.clics ? "." : ", sans avoir cliqué « Réserver mon bilan »."));
     else if (nb > 0 && !inactif) tiede.push("Avance : " + nb + "/7 jours, dernière activité " + this.quand(actif) + ".");
     if (!nb && actifRecemment) tiede.push("A commencé son diagnostic (dernière activité " + this.quand(actif) + ").");
     else if (!nb && !(inscrit != null && inscrit >= cfg.sans_debut_jours)) tiede.push("Vient de s'inscrire" + (inscrit != null ? " (" + this.quand(inscrit) + ")" : "") + ".");
@@ -10308,7 +10313,7 @@ const outilAccueil = {
     const lede = e.termine ? trad(H.termine) : e.nbFaits === 0 ? trad(H.debut) : e.nbFaits === 1 ? trad(H.encours_1) : trad(H.encours, { n: e.nbFaits });
     let jour = "";
     if (e.termine){
-      jour = acces("profil", trad("Réserver mon appel"), trad("Un appel de 30 minutes avec ton coach, pour faire le point sur tes objectifs."), lienCalendly(), true)
+      jour = acces("profil", trad("Réserver mon bilan"), trad("Un bilan de 30 minutes avec ton coach, pour faire le point sur tes objectifs."), lienCalendly(), true)
            + acces("challenge", trad(H.revoir), trad(H.termine_sous), "#/challenge/" + Challenge.NB, false);
     } else {
       const def = Challenge.def(e.prochain) || {};
@@ -10337,8 +10342,8 @@ const outilAccueil = {
           <li>${esc(trad(AVANTAGES.programme))}</li><li>${esc(trad(AVANTAGES.nutrition))}</li>
           <li>${esc(trad(AVANTAGES.mensurations))}</li><li>${esc(trad(AVANTAGES.suivi))}</li>
         </ul>
-        <div class="actions"><a class="btn${e.termine ? "" : " ghost"}" href="${esc(lienCalendly())}" target="_blank" rel="noopener">${esc(trad("Réserver mon appel"))}</a></div>
-        <p class="note" style="margin:10px 0 0">${esc(trad("Un appel de 30 minutes avec ton coach, pour faire le point sur tes objectifs."))}</p>
+        <div class="actions"><a class="btn${e.termine ? "" : " ghost"}" href="${esc(lienCalendly())}" target="_blank" rel="noopener">${esc(trad("Réserver mon bilan"))}</a></div>
+        <p class="note" style="margin:10px 0 0">${esc(trad("Un bilan de 30 minutes avec ton coach, pour faire le point sur tes objectifs."))}</p>
       </section>` : ""}`;
     /* chaque clic vers Calendly est note pour le coach (jour atteint) */
     const cal = lienCalendly();
@@ -10376,8 +10381,8 @@ const outilAccueil = {
       ["Habitude (jour 4)", s(j4.habitude) ? lab(def(4).habitudes, j4.habitude) + ((s(j4.quand) || s(j4.ou)) ? " (" + [s(j4.quand), s(j4.ou)].filter(Boolean).join(", ") + ")" : "") : ""],
       ["Ce qui lui parle (jour 5)", s(j5.interet) ? lab(def(5).interets, j5.interet) : ""],
       ["« Où en es-tu ? » (jour 6)", s(j6.etat) ? lab(def(6).etats, j6.etat) : ""],
-      ["Bouton « Réserver mon appel »", r.clics ? r.clics + " clic" + (r.clics > 1 ? "s" : "") + (r.dernierClic ? ", le dernier le " + dt(r.dernierClic) : "") : "jamais cliqué"],
-      ["Case « J'ai réservé mon appel »", r.reserve ? "cochée le " + dt(r.reserve) : ""]
+      ["Bouton « Réserver mon bilan »", r.clics ? r.clics + " clic" + (r.clics > 1 ? "s" : "") + (r.dernierClic ? ", le dernier le " + dt(r.dernierClic) : "") : "jamais cliqué"],
+      ["Case « J'ai réservé mon bilan »", r.reserve ? "cochée le " + dt(r.reserve) : ""]
     ];
     const ligne = (k, v) => v ? `<li><span>${esc(k)}</span><b>${esc(String(v))}</b></li>` : "";
     return `<section class="panel" id="fiche-challenge"><div class="seance-c-tete"><h2>Challenge 7 jours</h2>${r.termine ? `<span class="pastille ok">terminé</span>` : `<span class="pastille">${r.nbFaits} / 7</span>`}${r.reserve ? ` <span class="pastille ok">appel réservé</span>` : r.clics ? ` <span class="pastille accent">a cliqué Réserver</span>` : ""}</div>
@@ -11213,8 +11218,8 @@ const Challenge = {
     if (!r || !r.nbFaits) return `<span class="pastille" title="Challenge 7 jours : pas encore commencé">Challenge 0/7</span>`;
     let h = r.termine ? `<span class="pastille ok" title="Challenge 7 jours terminé">Challenge terminé</span>`
                       : `<span class="pastille" title="Challenge 7 jours : ${r.nbFaits} jour${r.nbFaits > 1 ? "s" : ""} validé${r.nbFaits > 1 ? "s" : ""}">Challenge ${r.nbFaits}/7</span>`;
-    if (r.reserve) h += ` <span class="pastille ok" title="A coché « J'ai réservé mon appel »">appel réservé</span>`;
-    else if (r.clics) h += ` <span class="pastille accent" title="A cliqué « Réserver mon appel » ${r.clics} fois">a cliqué Réserver</span>`;
+    if (r.reserve) h += ` <span class="pastille ok" title="A coché « J'ai réservé mon bilan »">appel réservé</span>`;
+    else if (r.clics) h += ` <span class="pastille accent" title="A cliqué « Réserver mon bilan » ${r.clics} fois">a cliqué Réserver</span>`;
     return h;
   },
   etapesHTML(C, courant){
@@ -11669,7 +11674,7 @@ const outilChallenge = {
     const cal = lienCalendly();
     UI.volet({ titre: trad(L.volet_titre || "Avec l'accompagnement MHX"), corps: `<ul class="liste-debloque">
         <li>${esc(trad(AVANTAGES.programme))}</li><li>${esc(trad(AVANTAGES.nutrition))}</li><li>${esc(trad(AVANTAGES.mensurations))}</li><li>${esc(trad(AVANTAGES.suivi))}</li></ul>
-      ${cal ? `<div class="actions"><a class="btn ghost" href="${esc(cal)}" target="_blank" rel="noopener" data-ch-cal="${n}">${esc(trad("Réserver mon appel"))}</a></div>` : ""}
+      ${cal ? `<div class="actions"><a class="btn ghost" href="${esc(cal)}" target="_blank" rel="noopener" data-ch-cal="${n}">${esc(trad("Réserver mon bilan"))}</a></div>` : ""}
       <p class="note" style="margin:10px 0 0">${esc(trad(L.volet_note || ""))}</p>` });
     setTimeout(() => { $$(".volet [data-ch-cal]").forEach(a => a.addEventListener("click", () => Challenge.clic(C, n))); const f = document.querySelector(".volet [data-ui-fermer]"); if (f) f.focus(); }, 40);
   },
@@ -11690,7 +11695,7 @@ const outilChallenge = {
     }
     const cal = lienCalendly();
     return projection + `<section class="panel"><h2>${esc(trad(L.etat_titre))}</h2>${this.choixHTML("ch-etat", def.etats, e.etat || "", false, trad(L.etat_titre))}
-      <div class="actions"><button class="btn" id="ch-valider" type="button">${esc(trad(def.action || ""))}</button>${cal ? `<a class="btn ghost" href="${esc(cal)}" target="_blank" rel="noopener" data-ch-cal="6">${esc(trad("Réserver mon appel"))}</a>` : ""}<span class="msg" id="ch-msg" role="status" aria-live="polite"></span></div>
+      <div class="actions"><button class="btn" id="ch-valider" type="button">${esc(trad(def.action || ""))}</button>${cal ? `<a class="btn ghost" href="${esc(cal)}" target="_blank" rel="noopener" data-ch-cal="6">${esc(trad("Réserver mon bilan"))}</a>` : ""}<span class="msg" id="ch-msg" role="status" aria-live="polite"></span></div>
       <p class="note" style="margin:8px 0 0">${esc(trad(L.cta_note))}</p></section>`;
   },
 
@@ -11929,7 +11934,7 @@ function outilsVisibles(){
 
 /* v40 — MODE GRATUIT. Un prospect (Auth.estProspect) n'a d'ouverts que les
    onglets de CONFIG.marque.gratuit_ouverts ; tous les autres affichent un
-   cadenas, ce que l'accompagnement apporte et « Réserver mon appel ». Liste
+   cadenas, ce que l'accompagnement apporte et « Réserver mon bilan ». Liste
    blanche : un onglet ajoute plus tard est verrouille par defaut. Le coach
    qui consulte une fiche voit tout. */
 function estVerrouille(o){
@@ -11964,7 +11969,7 @@ function pageVerrouillee(o){
       <div class="actions"><a class="btn" href="#/challenge">${esc(trad("Ouvrir mon challenge"))}</a></div></div></section>`;
   }
   const plus = AVANTAGES[o.id];
-  return `<section class="panel">${UI.verrou({ titre: trad(nomOnglet(o)), texte: trad("Cette fonctionnalité est disponible avec l'accompagnement MHX."), lien: lienCalendly(), cta: trad("Réserver mon appel") })}
+  return `<section class="panel">${UI.verrou({ titre: trad(nomOnglet(o)), texte: trad("Cette fonctionnalité est disponible avec l'accompagnement MHX."), lien: lienCalendly("verrou-" + o.id), cta: trad("Réserver mon bilan") })}
     ${plus ? `<p class="note verrou-plus">${esc(trad(plus))}</p>` : ""}</section>`;
 }
 
@@ -12178,8 +12183,8 @@ async function afficher(id, silencieux){
   $("vue").className = modifiable ? "wrap" : "wrap lecture-seule";
 
   let fin = null;
-  /* v50 : un clic « Réserver mon appel » depuis une page verrouillee compte (suivi commercial du coach) */
-  if (verrouille && Auth.estProspect() && !Store.idConsulte) $$("#vue .verrou a[target=_blank]").forEach(a => a.addEventListener("click", () => { try { Challenge.clic(Store.cache[Challenge.cle] || Challenge.vide(), null); } catch(e){} }));
+  /* v50 : un clic « Réserver mon bilan » depuis une page verrouillee compte (suivi commercial du coach) */
+  if (verrouille && Auth.estProspect() && !Store.idConsulte) $$("#vue .verrou a[target=_blank]").forEach(a => a.addEventListener("click", () => { try { Decouverte.clic(Store.cache[Decouverte.cle] || Decouverte.vide(), "verrou-" + outil.id); } catch(e){} }));
   if (!verrouille){
     try { fin = (await outil.init()) || null; }
     catch(e){
