@@ -1286,6 +1286,8 @@ const CHALLENGE7 = {
     cgu_avant: "J'accepte les",
     cgu_lien: "conditions d'utilisation et la politique de confidentialité",
     cgu_manque: "Coche la case des conditions pour continuer.",
+    sante_avant: "J'accepte le traitement de mes données de santé conformément à la politique",
+    sante_manque: "Accepte le traitement de tes données de santé pour continuer.",
     note: "Le challenge ne remplace pas un avis médical. Si tu as un doute sur ta santé, parles-en à un professionnel avant de commencer.",
     /* v47 : apres l'inscription quand l'email doit etre confirme, et au retour du lien */
     verif_titre: "Vérifie ta boîte mail",
@@ -1308,9 +1310,10 @@ const CHALLENGE7 = {
     titre: "Conditions d'utilisation et confidentialité",
     paragraphes: [
       "Le Challenge 7 jours de MHX Coaching est un programme gratuit d'information et d'entraînement général, réservé aux adultes. Il ne remplace pas un avis médical : en cas de doute sur ta santé, parles-en à un professionnel avant de commencer.",
-      "Données collectées : ton prénom, ton email, tes réponses au challenge (âge, taille, poids, objectif, habitudes) et ta progression.",
+      "Données collectées : ton prénom, ton email, tes réponses au challenge (âge, taille, poids, objectif, habitudes) et ta progression. Données de santé : poids, blessures, contre-indications médicales (voir case dédiée ci-dessous).",
       "Usage : te faire suivre le challenge, adapter ce qui s'affiche à tes réponses et te proposer un appel avec le coach. Aucune revente, aucune publicité.",
       "Suivi par le coach : il voit ta progression et note, pour son suivi, l'issue de ton appel et ses relances. Ces notes n'apparaissent pas dans l'app : tu peux en demander une copie ou la suppression en lui écrivant.",
+      "Données de santé (RGPD article 9) : tu dois accepter explicitement le traitement de tes données concernant ta santé (poids, blessures, contre-indications). Tu peux les consulter ou les supprimer à tout moment. Ces données sont conservées tant que ton compte existe.",
       "Hébergement : Supabase, serveurs en Europe (Irlande).",
       "Prise de rendez-vous : l'appel se réserve sur Calendly (société américaine), qui enregistre ta réservation pour le compte du coach ; ces données peuvent être traitées aux États-Unis (cadre de protection des données UE–États-Unis). Ton prénom et ton email peuvent y être pré-remplis dès que tu ouvres la page de réservation.",
       "Tes droits : tu peux exporter ou supprimer ton compte et toutes tes données à tout moment depuis Profil, section « Mes données », ou en écrivant au coach.",
@@ -1545,6 +1548,8 @@ const CHALLENGE7 = {
       cgu_avant: "I accept the",
       cgu_lien: "terms of use and privacy policy",
       cgu_manque: "Tick the terms box to continue.",
+      sante_avant: "I accept the processing of my health data in accordance with the privacy policy",
+      sante_manque: "Accept the processing of your health data to continue.",
       note: "The challenge is not medical advice. If you have any doubt about your health, talk to a professional before starting.",
       verif_titre: "Check your inbox",
       verif_texte: "We've just sent a link to {e}. Open it to confirm your account: you'll land straight on your day 1.",
@@ -1563,9 +1568,10 @@ const CHALLENGE7 = {
       titre: "Terms of use and privacy",
       paragraphes: [
         "The MHX Coaching 7-Day Challenge is a free program of general information and training, for adults only. It is not medical advice: if you have any doubt about your health, talk to a professional before starting.",
-        "Data collected: your first name, your email, your challenge answers (age, height, weight, goal, habits) and your progress.",
+        "Data collected: your first name, your email, your challenge answers (age, height, weight, goal, habits) and your progress. Health data: weight, injuries, medical contraindications (see dedicated box below).",
         "Use: to guide you through the challenge, adapt what you see to your answers and offer you a call with the coach. No resale, no advertising.",
         "Coach follow-up: the coach sees your progress and records, for his follow-up, the outcome of your call and his follow-up messages. These notes don't appear in the app: you can ask him for a copy or their deletion by writing to him.",
+        "Health data (GDPR article 9): you must explicitly accept the processing of your health data (weight, injuries, medical contraindications). You can view or delete this data at any time. This data is kept as long as your account exists.",
         "Hosting: Supabase, servers in Europe (Ireland).",
         "Booking: the call is booked on Calendly (a US company), which records your booking on the coach's behalf; this data may be processed in the United States (EU–US Data Privacy Framework). Your first name and email may be pre-filled as soon as you open the booking page.",
         "Your rights: you can export or delete your account and all your data at any time from Profile, section \"My data\", or by writing to the coach.",
@@ -12000,7 +12006,8 @@ function portail(mode){
       ${mode === "inscription"
         /* v44 : prenom, email, mot de passe (un seul, avec « Afficher ») et la case des conditions */
         ? `<div class="champ"><label for="c-mdp">${esc(CHALLENGE7.inscription.mdp)}</label><div class="co-mdp"><input id="c-mdp" type="password" autocomplete="new-password"><button type="button" class="voir" id="c-voir" aria-pressed="false" aria-label="Afficher le mot de passe">Afficher</button></div></div>
-      <label class="co-rester co-cgu"><input type="checkbox" id="c-cgu"><span>${esc(CHALLENGE7.inscription.cgu_avant)} <button type="button" class="lien" id="c-cgu-lien">${esc(CHALLENGE7.inscription.cgu_lien)}</button></span></label>`
+      <label class="co-rester co-cgu"><input type="checkbox" id="c-cgu"><span>${esc(CHALLENGE7.inscription.cgu_avant)} <button type="button" class="lien" id="c-cgu-lien">${esc(CHALLENGE7.inscription.cgu_lien)}</button></span></label>
+      <label class="co-rester co-sante"><input type="checkbox" id="c-sante"><span>${esc(CHALLENGE7.inscription.sante_avant)}</span></label>`
         : mode !== "oubli" ? `<div class="champ"><label for="c-mdp">Mot de passe</label><input id="c-mdp" type="password" autocomplete="current-password"></div>` : ""}
       ${mode !== "oubli" ? `<label class="co-rester"><input type="checkbox" id="c-rester" checked><span>Rester connecté</span></label>` : ""}
       <button class="btn" id="c-go">${esc(bouton)}</button>
@@ -12055,10 +12062,13 @@ function portail(mode){
       if (mdp.length < 8){ err("Le mot de passe doit faire au moins 8 caractères."); return; }
       const cgu = $("c-cgu");
       if (!cgu || !cgu.checked){ err(trad(CHALLENGE7.inscription.cgu_manque)); return; }
+      const sante = $("c-sante");
+      if (!sante || !sante.checked){ err(trad(CHALLENGE7.inscription.sante_manque)); return; }
       b.disabled = true; b.textContent = "Un instant…";
       try {
         /* v44 : prenom seul (le nom viendra avec le questionnaire) ; l'acceptation des conditions est datee */
-        const connecte = await Auth.inscrire(email, mdp, prenom, "", { consentement: new Date().toISOString(), conditions_version: CHALLENGE7.confidentialite.version });
+        /* P0.5 : consentement santé séparé, horodaté */
+        const connecte = await Auth.inscrire(email, mdp, prenom, "", { consentement: new Date().toISOString(), conditions_version: CHALLENGE7.confidentialite.version, consentement_sante: new Date().toISOString() });
         if (connecte){ location.hash = ""; location.reload(); return; }
         ecranVerifieEmail(email); return;   // v47 : un ecran dedie, pas une ligne de message
       } catch(e){
