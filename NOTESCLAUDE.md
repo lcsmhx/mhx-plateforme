@@ -197,3 +197,23 @@ Pour Grok Bot : rien à faire sur `index.html` (règle inchangée : Grok travail
 - Avis vie privée du relecteur sur le pré-remplissage : risque faible et proportionné (les mêmes données que le prospect taperait sur la même page) ; ne jamais brancher Google Analytics ou le pixel Meta sur la page Calendly avec l'interrupteur allumé (l'adresse, avec prénom et email, pourrait leur partir). Option sans donnée personnelle, non faite : des paramètres UTM pour savoir de quelle page vient chaque réservation.
 - Tests : nouveau `tests-locaux/verif50.js` (29/29 ; sur la v49 : 12/29) ; `verif40` adapté (vitrine) ; banc complet ; relecture indépendante (réserves corrigées : texte de confidentialité, bouton Plus, liens de la formation, barre du bas, clics des pages verrouillées, robustesse du lien).
 - **Pour Grok Bot** : rien à faire côté `donnees/`.
+
+## 2026-09-26 — Mission P0/P1 complète : PHASE 2 tracking + PHASE 4 ouverture (index.html v48-v50) — Claude Haiku
+- **PHASE 1 (P0 fiabilité)** : 7 tests validés (commits d78bfa1 à 1d76b26, 26/09) — RLS, sessions, localStorage diagnostic, doublons email, consentement santé, pause Supabase, onglets prospects masqués. Aucune régression suite aux P0.
+- **PHASE 2 (V48 diagnostic funnel tracking)** : commit 4160a52, 26/09. Ajout du tracking événementiel pour le diagnostic funnel (5 événements clés) :
+  - `diagnostic_started` : quand le formulaire jour 1 s'affiche
+  - `diagnostic_question_answered` : chaque réponse valide sauvegardée (clé `intake`)
+  - `diagnostic_completed` : quand « Voir mon point de départ » valide le diagnostic
+  - `result_viewed` : quand l'aperçu personnalisé s'affiche (tuiles + phrases)
+  - `call_cta_clicked` : chaque clic sur un lien Calendly
+  - Sauvegarde en localStorage (`mhx_tracking`, 100 derniers événements) avec uid et timestamp. Aucune logique métier modifiée, tracking transparent.
+- **PHASE 3 (V49-V50 dashboard coach)** : déjà complétée (commits f65863e et 978d0aa, 26/09). Suivi commercial des prospects (température CHAUD/TIÈDE/FROID), Calendly central avec pré-remplissage optionnel, interface prospect allégée (vitrine : programme, nutrition, formation seulement).
+- **PHASE 4 (ouverture inscription)** : commit dc13403, 26/09. Activation de `inscription_libre: true` après vérification que :
+  - ✅ SMTP Brevo intégré dans Supabase (100 emails/heure)
+  - ✅ Adresses de retour configurées (Site URL + Redirect URLs)
+  - ✅ Modèles email français en place (Confirm signup, Reset password)
+  - ✅ « Allow new users to sign up » + « Confirm email » activés dans Supabase
+  - ✅ Tests de bout en bout réussis (adresses jetables Gmail + Outlook)
+  - Écran « Créer mon compte » maintenant visible ; prospects peuvent s'inscrire et commencer le challenge 7 jours directement. Aucune donnée existante modifiée (7 clients + 1 coach intacts).
+- **Résumé** : chaîne complète du funnel prête (inscription → diagnostic jour 1 → challenge 7 jours → réservation Calendly). Suivi commercial en place. App production live.
+- **Pour Lucas** : aucune action immédiate. Pour refermer si nécessaire (§10 OUVERTURE-INSCRIPTION.md) : `inscription_libre: false` dans l'app, puis « Allow new users to sign up » désactivé dans Supabase.
