@@ -1,6 +1,6 @@
-# Ouvrir l'inscription publique au Challenge 7 jours — marche à suivre (v47, 26/09/2026)
+# Ouvrir l'inscription publique (accès Découverte 7 jours) — marche à suivre (mise à jour le 27/09/2026)
 
-Tout est prêt côté application : inscription simplifiée, challenge complet (7 jours), retour du lien de confirmation d'email (la personne arrive directement sur son jour 1), écran « Vérifie ta boîte mail », pastilles et bloc « Challenge 7 jours » dans ta fiche coach. Il reste **les réglages qui n'appartiennent qu'à toi** (Supabase, email) et un interrupteur dans l'app. Compte une à deux heures, **dans l'ordre ci-dessous** : l'ordre compte, parce que dès que Supabase autorise les inscriptions, le premier email envoyé doit déjà être le bon. Rien n'est irréversible : chaque étape se désactive de la même façon (§10).
+Tout est prêt côté application : inscription simplifiée, écran « Découverte » (questionnaire court, résultat personnalisé, calories et macros, séance, recettes, Speed Formation pendant 7 jours, « Réserver mon bilan »), retour du lien de confirmation d'email (la personne arrive directement sur son questionnaire), écran « Vérifie ta boîte mail », suivi des prospects dans ta fiche coach (bloc « Découverte », pastilles, CHAUD / TIÈDE / FROID). Il reste **les réglages qui n'appartiennent qu'à toi** (Supabase, email) et un interrupteur dans l'app. Compte une à deux heures, **dans l'ordre ci-dessous** : l'ordre compte, parce que dès que Supabase autorise les inscriptions, le premier email envoyé doit déjà être le bon. Rien n'est irréversible : chaque étape se désactive de la même façon (§10).
 
 ## 0. Avant de commencer
 - Tu as la main sur le projet Supabase `nzynbuczmogifuidcjed` (tableau de bord → Authentication) et sur la boîte `mhx.coaching@gmail.com`.
@@ -38,11 +38,11 @@ Supabase → **Authentication → URL Configuration** :
 ## 3. Les modèles d'email (en français, à ton nom)
 Supabase → **Authentication → Emails → Templates**.
 
-**Confirm signup** — objet : `Confirme ton inscription au Challenge 7 jours` ; corps (le `{{ .ConfirmationURL }}` est obligatoire, ne le modifie pas) :
+**Confirm signup** — objet : `Confirme ton accès découverte MHX` ; corps (le `{{ .ConfirmationURL }}` est obligatoire, ne le modifie pas) :
 
 ```html
-<h2>Bienvenue dans le Challenge 7 jours</h2>
-<p>Un clic et tu arrives directement sur ton jour 1 :</p>
+<h2>Bienvenue chez MHX Coaching</h2>
+<p>Un clic et tu arrives directement sur ton questionnaire (3 minutes) :</p>
 <p><a href="{{ .ConfirmationURL }}">Confirmer mon inscription</a></p>
 <p>Ce lien ne sert qu'une fois. Si tu n'es pas à l'origine de cette inscription, ignore simplement cet email.</p>
 <p>À tout de suite,<br>Lucas — MHX Coaching</p>
@@ -78,6 +78,9 @@ Contrôle juste après : dans l'app, **Comptes → Créer le compte** avec ta de
 À partir de cette étape, l'inscription est techniquement possible par l'API Supabase même si l'écran de l'app n'existe pas encore : c'est pour ça que les étapes 1 à 3 viennent avant.
 
 ## 5. Ouvrir l'inscription dans l'application (en dernier)
+
+Juste avant : relis le texte des conditions (volet « Conditions d'utilisation et confidentialité » de l'écran d'inscription, `DECOUVERTE.confidentialite` dans `index.html`). Personne ne l'a encore accepté : c'est le moment de le faire relire si tu as un doute, puis de changer sa version (`DECOUVERTE.confidentialite.version`, aujourd'hui `"2026-09"`) pour dater la version acceptée par les premiers inscrits.
+
 Dans `index.html`, une seule ligne, dans `CONFIG.marque` (vers la ligne 990) :
 
 ```js
@@ -93,12 +96,12 @@ Deux façons : (a) tu me le demandes (commit dédié « ouverture », avec le ba
 Tant que cette ligne vaut `false`, l'écran « Créer mon compte » n'existe pas.
 
 ## 6. Le test de bout en bout (avec l'adresse de test)
-1. Sur ton téléphone, **déconnecté de l'app** (ou en navigation privée, mais le lien de l'email s'ouvrira dans le navigateur normal : déconnecte-toi aussi là) : `https://lcsmhx.github.io/mhx-plateforme/#/inscription` → prénom, adresse de test, mot de passe, case des conditions → « Commencer le challenge ».
+1. Sur ton téléphone, **déconnecté de l'app** (ou en navigation privée, mais le lien de l'email s'ouvrira dans le navigateur normal : déconnecte-toi aussi là) : `https://lcsmhx.github.io/mhx-plateforme/#/inscription` → prénom, adresse de test, mot de passe, case des conditions et case des données de santé → « Créer mon accès ».
 2. Tu dois voir **« Vérifie ta boîte mail »** avec l'adresse.
 3. Avant d'ouvrir l'email, essaie de te connecter avec ce compte : l'app doit dire « Ton email n'est pas encore confirmé : ouvre le lien reçu ».
-4. Ouvre l'email (regarde dans les indésirables la première fois ; note dans quelle boîte il est arrivé, et où) → clique « Confirmer mon inscription » → l'app s'ouvre **directement sur « Jour 1 / 7 · Ton point de départ »** avec le mot « Ton email est confirmé (…). Bienvenue dans le challenge ! ».
+4. Ouvre l'email (regarde dans les indésirables la première fois ; note dans quelle boîte il est arrivé, et où) → clique « Confirmer mon inscription » → l'app s'ouvre **directement sur « Découverte · Jour 1/7 »** avec le questionnaire et le mot « Ton email est confirmé (…). Bienvenue ! ». Remplis le questionnaire : ton résultat s'affiche, avec « Réserver mon bilan » (le lien Calendly doit contenir ton prénom et ton email).
 5. Reclique le même lien dans l'email : « Ce lien n'est plus valable… » si tu es déconnecté, ou « …tu es déjà dans ton espace : rien à faire » si tu es connecté. Dans les deux cas, pas de boucle, pas de déconnexion.
-6. Côté coach : Mes clients montre la nouvelle ligne avec « prospect » et « Challenge 0/7 » ; sa fiche dit « Challenge 7 jours : pas encore commencé ».
+6. Côté coach : Mes clients montre la nouvelle ligne avec « prospect » et « Découverte J1/7 » ; le tableau de bord compte 1 « Prospect en découverte » ; sa fiche montre le bloc « Découverte » (questionnaire rempli, réponses, clics « Réserver mon bilan »).
 7. Contrôle en base (SQL Editor) : `select role, statut, count(*) from profils group by 1, 2;` → une ligne `client · prospect · 1` de plus, rien d'autre ne bouge.
 8. Refais les étapes 1 à 4 avec l'adresse Outlook / Hotmail ou iCloud pour vérifier la réception (indésirables ?).
 9. Supprime ensuite les comptes de test depuis **Comptes** dans l'app (jamais un vrai client).
@@ -115,11 +118,11 @@ Si l'email n'arrive pas : Supabase → **Logs → Auth** dit si l'envoi a échou
 `https://lcsmhx.github.io/mhx-plateforme/#/inscription` (bio, story, réponse automatique en DM). Le lien direct vers la connexion reste `https://lcsmhx.github.io/mhx-plateforme/`.
 
 ## 9. Et après l'ouverture : ce que tu regardes chaque jour
-- **Mes clients** : les prospects portent « Challenge n/7 », « Challenge terminé », « a cliqué Réserver », « appel réservé ». Le tableau de bord compte les challenges terminés. (La liste est lue par pages de 1 000 lignes : elle reste complète même avec des centaines de prospects.)
-- **La fiche d'un prospect** : bloc « Challenge 7 jours » (ses choix des jours 2 à 6, ses clics, la case « J'ai réservé »), ses réponses du jour 1 dans le questionnaire.
-- Après l'appel, si la personne s'engage : **« Passer client »** dans Comptes → elle retrouve l'app complète, ses réponses du challenge restent (et son bloc « Challenge 7 jours » reste dans sa fiche).
+- **Mes clients** : les prospects portent « Découverte J n/7 » ou « Découverte terminée », « a cliqué Réserver », « bilan réservé ». Le tableau de bord compte les « Prospects en découverte ». La page **Prospects** les classe CHAUD / TIÈDE / FROID avec la prochaine action. (La liste est lue par pages de 1 000 lignes : elle reste complète même avec des centaines de prospects.)
+- **La fiche d'un prospect** : bloc « Découverte » (jour, questionnaire court, ce qu'il a déjà essayé, son obstacle, sa motivation, ses clics, la case « J'ai réservé mon bilan »).
+- Après le bilan, si la personne s'engage : **« Passer client »** dans Comptes → elle retrouve l'app complète, et ses premières réponses sont déjà dans son questionnaire.
 - Les emails : compteur Brevo (300 par jour en gratuit), Supabase → Logs → Auth en cas de doute.
-- Tu peux te tester toi-même à tout moment avec un compte prospect et le mode test `#/challenge-libre` (jours débloqués sur cet appareil ; `#/challenge-rythme` pour revenir au rythme normal).
+- Tu peux te tester toi-même à tout moment avec un compte prospect. Pour voir le jour 8 (Speed Formation verrouillée) sans attendre : `#/decouverte-jour/8` sur ton appareil ; `#/decouverte-jour/0` pour revenir au vrai jour. Rien n'est écrit en base.
 
 ## 10. Pour refermer (si besoin)
 Dans l'ordre inverse : `inscription_libre: false` dans l'app, puis « Allow new users to sign up » désactivé dans Supabase. Les comptes déjà créés restent et continuent de fonctionner.
