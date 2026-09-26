@@ -994,7 +994,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-09-26 · 49",
+    version: "2026-09-26 · 50",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -1014,9 +1014,18 @@ const CONFIG = {
        SEULS onglets ouverts à un prospect : tous les autres affichent un
        cadenas et « Réserver mon appel ». Aucun prix dans l'application. */
     calendly: "https://calendly.com/mhx-coaching/30min",
+    /* v50 — true : le prenom et l'email du prospect connecte sont pre-remplis dans Calendly (parametres
+       officiels name et email) : il n'a rien a retaper et sa reservation porte l'email de son compte.
+       Eteint tant que Lucas ne l'a pas decide (la confidentialite mentionne deja Calendly). */
+    calendly_prerempli: false,
     /* v44 : la Speed Formation n'est plus dans la liste : elle s'ouvre au
        prospect une fois ses 7 jours faits (CONFIG.challenge.formation_apres_jour7) */
-    gratuit_ouverts: ["accueil", "challenge", "profil"]
+    gratuit_ouverts: ["accueil", "challenge", "profil"],
+    /* v50 — onglets verrouilles qu'un prospect voit quand meme (cadenas + ce qu'apporte l'accompagnement) :
+       la vitrine de l'offre. Les autres onglets verrouilles sont caches de sa navigation (leur adresse
+       montre toujours la page verrouillee). Pour tout remontrer comme avant : ajouter "mensurations",
+       "suivi", "complements". */
+    gratuit_vitrine: ["programme", "nutrition", "formation"]
   },
 
   /* --- v44 — Challenge 7 jours (prospects) : les réglages ; les textes sont dans CHALLENGE7 --- */
@@ -1303,6 +1312,7 @@ const CHALLENGE7 = {
       "Usage : te faire suivre le challenge, adapter ce qui s'affiche à tes réponses et te proposer un appel avec le coach. Aucune revente, aucune publicité.",
       "Suivi par le coach : il voit ta progression et note, pour son suivi, l'issue de ton appel et ses relances. Ces notes n'apparaissent pas dans l'app : tu peux en demander une copie ou la suppression en lui écrivant.",
       "Hébergement : Supabase, serveurs en Europe (Irlande).",
+      "Prise de rendez-vous : l'appel se réserve sur Calendly (société américaine), qui enregistre ta réservation pour le compte du coach ; ces données peuvent être traitées aux États-Unis (cadre de protection des données UE–États-Unis). Ton prénom et ton email peuvent y être pré-remplis dès que tu ouvres la page de réservation.",
       "Tes droits : tu peux exporter ou supprimer ton compte et toutes tes données à tout moment depuis Profil, section « Mes données », ou en écrivant au coach.",
       "Conservation : tant que ton compte existe.",
       "En cochant la case, tu acceptes ces conditions."
@@ -1557,6 +1567,7 @@ const CHALLENGE7 = {
         "Use: to guide you through the challenge, adapt what you see to your answers and offer you a call with the coach. No resale, no advertising.",
         "Coach follow-up: the coach sees your progress and records, for his follow-up, the outcome of your call and his follow-up messages. These notes don't appear in the app: you can ask him for a copy or their deletion by writing to him.",
         "Hosting: Supabase, servers in Europe (Ireland).",
+        "Booking: the call is booked on Calendly (a US company), which records your booking on the coach's behalf; this data may be processed in the United States (EU–US Data Privacy Framework). Your first name and email may be pre-filled as soon as you open the booking page.",
         "Your rights: you can export or delete your account and all your data at any time from Profile, section \"My data\", or by writing to the coach.",
         "Retention: as long as your account exists.",
         "By ticking the box, you accept these terms."
@@ -1800,6 +1811,23 @@ const lienSur = (u) => {
   if (/^www\./i.test(s)) return "https://" + s;
   return "";
 };
+/* v50 — le lien de reservation, le meme partout. Pre-remplissage (prenom + email du prospect connecte)
+   seulement si CONFIG.marque.calendly_prerempli vaut true ; jamais pour le coach qui consulte une fiche. */
+function lienCalendly(){
+  const base = lienSur(CONFIG.marque && CONFIG.marque.calendly); if (!base) return "";
+  try {
+    if (!(CONFIG.marque && CONFIG.marque.calendly_prerempli === true) || !Auth.estProspect() || Store.idConsulte) return base;
+    const u = Auth.utilisateur(), p = Auth.profil || {}, params = [];
+    const prenom = typeof p.prenom === "string" ? p.prenom.trim() : "";
+    const email = u && typeof u.email === "string" ? u.email.trim() : "";
+    /* name : champ « Nom » ; first_name : si l'evenement demande prenom et nom separement (Calendly prend celui qui existe) */
+    if (prenom) params.push("name=" + encodeURIComponent(prenom), "first_name=" + encodeURIComponent(prenom));
+    if (email) params.push("email=" + encodeURIComponent(email));
+    if (!params.length) return base;
+    const i = base.indexOf("#"), avant = i > -1 ? base.slice(0, i) : base, apres = i > -1 ? base.slice(i) : "";   // les parametres avant un eventuel #
+    return avant + (avant.indexOf("?") > -1 ? "&" : "?") + params.join("&") + apres;
+  } catch(e){ return base; }   // un caractere mal forme ne doit jamais empecher la page de s'afficher
+}
 /* Un ecran vide doit toujours proposer quoi faire. Sans bouton, le client
    se dit que l'app ne marche pas et ne revient plus. Rien en consultation
    coach : c'est le coach lui-meme qui regarde. */
@@ -5194,8 +5222,10 @@ const outilProfil = {
   compteHTML(){
     if (Store.idConsulte) return "";
     const u = Auth.utilisateur();
+    /* v50 : un prospect peut relire a tout moment les conditions acceptees a l'inscription */
+    const conditions = Auth.estProspect() ? `<p class="note" style="margin:0 0 14px"><button type="button" class="lien-bouton" id="mc-conditions">${esc(trad(CHALLENGE7.confidentialite.titre))}</button></p>` : "";
     return `
-    <section class="panel">
+    <section class="panel">${conditions}
       <h2>Mon compte</h2>
       <p class="note" style="margin:0 0 18px">Adresse actuelle : <b>${esc((u && u.email) || "—")}</b>. C'est à cette adresse qu'arrive le lien si tu oublies ton mot de passe — garde-la à jour.</p>
 
@@ -5277,6 +5307,8 @@ const outilProfil = {
   },
 
   brancherCompte(){
+    const bCond = $("mc-conditions");
+    if (bCond) bCond.addEventListener("click", () => UI.volet({ titre: trad(CHALLENGE7.confidentialite.titre), corps: (CHALLENGE7.confidentialite.paragraphes || []).map(p => `<p>${esc(trad(p))}</p>`).join("") }));
     const bMdp = $("mc-mdp");
     if (bMdp) bMdp.addEventListener("click", async () => {
       const actuel = $("mc-actuel").value, nouveau = $("mc-nouveau").value, nouveau2 = $("mc-nouveau2").value;
@@ -9529,7 +9561,7 @@ const outilFormation = {
     const zone = $("fo-vue");
     if (!zone) return;
     const sauver = () => Store.ecrire(self.cle, D);
-    const visibles = outilsVisibles().map(o => o.id);
+    const visibles = outilsVisibles().filter(o => !horsVitrine(o)).map(o => o.id);   // v50 : pas de lien vers un onglet cache au prospect
     const nouvelId = () => "x" + Date.now().toString(36) + Math.floor(Math.random() * 1000);
 
     const dessiner = () => {
@@ -10032,7 +10064,7 @@ const outilAccueil = {
     const lede = e.termine ? trad(H.termine) : e.nbFaits === 0 ? trad(H.debut) : e.nbFaits === 1 ? trad(H.encours_1) : trad(H.encours, { n: e.nbFaits });
     let jour = "";
     if (e.termine){
-      jour = acces("profil", trad("Réserver mon appel"), trad("Un appel de 30 minutes avec ton coach, pour faire le point sur tes objectifs."), lienSur(CONFIG.marque.calendly), true)
+      jour = acces("profil", trad("Réserver mon appel"), trad("Un appel de 30 minutes avec ton coach, pour faire le point sur tes objectifs."), lienCalendly(), true)
            + acces("challenge", trad(H.revoir), trad(H.termine_sous), "#/challenge/" + Challenge.NB, false);
     } else {
       const def = Challenge.def(e.prochain) || {};
@@ -10061,11 +10093,11 @@ const outilAccueil = {
           <li>${esc(trad(AVANTAGES.programme))}</li><li>${esc(trad(AVANTAGES.nutrition))}</li>
           <li>${esc(trad(AVANTAGES.mensurations))}</li><li>${esc(trad(AVANTAGES.suivi))}</li>
         </ul>
-        <div class="actions"><a class="btn${e.termine ? "" : " ghost"}" href="${esc(lienSur(CONFIG.marque.calendly))}" target="_blank" rel="noopener">${esc(trad("Réserver mon appel"))}</a></div>
+        <div class="actions"><a class="btn${e.termine ? "" : " ghost"}" href="${esc(lienCalendly())}" target="_blank" rel="noopener">${esc(trad("Réserver mon appel"))}</a></div>
         <p class="note" style="margin:10px 0 0">${esc(trad("Un appel de 30 minutes avec ton coach, pour faire le point sur tes objectifs."))}</p>
       </section>` : ""}`;
     /* chaque clic vers Calendly est note pour le coach (jour atteint) */
-    const cal = lienSur(CONFIG.marque.calendly);
+    const cal = lienCalendly();
     $$("a[target=_blank]", zone).forEach(a => { if (cal && a.getAttribute("href") === cal) a.addEventListener("click", () => Challenge.clic(C, e.termine ? Challenge.NB : e.nbFaits)); });
   },
 
@@ -11281,7 +11313,7 @@ const outilChallenge = {
   /* le volet « ce que comprend l'accompagnement » (jour 5 et suivants) */
   voletAccompagnement(C, n){
     const L = Challenge.def(5) || {};
-    const cal = lienSur(CONFIG.marque.calendly);
+    const cal = lienCalendly();
     UI.volet({ titre: trad(L.volet_titre || "Avec l'accompagnement MHX"), corps: `<ul class="liste-debloque">
         <li>${esc(trad(AVANTAGES.programme))}</li><li>${esc(trad(AVANTAGES.nutrition))}</li><li>${esc(trad(AVANTAGES.mensurations))}</li><li>${esc(trad(AVANTAGES.suivi))}</li></ul>
       ${cal ? `<div class="actions"><a class="btn ghost" href="${esc(cal)}" target="_blank" rel="noopener" data-ch-cal="${n}">${esc(trad("Réserver mon appel"))}</a></div>` : ""}
@@ -11303,7 +11335,7 @@ const outilChallenge = {
       const et = (def.etats || []).find(x => x.id === e.etat);
       return projection + (et ? `<section class="panel">${this.recapHTML([[def.recap_etat, trad(et.texte)]])}</section>` : "") + this.bravoHTML(C, 6, def);
     }
-    const cal = lienSur(CONFIG.marque.calendly);
+    const cal = lienCalendly();
     return projection + `<section class="panel"><h2>${esc(trad(L.etat_titre))}</h2>${this.choixHTML("ch-etat", def.etats, e.etat || "", false, trad(L.etat_titre))}
       <div class="actions"><button class="btn" id="ch-valider" type="button">${esc(trad(def.action || ""))}</button>${cal ? `<a class="btn ghost" href="${esc(cal)}" target="_blank" rel="noopener" data-ch-cal="6">${esc(trad("Réserver mon appel"))}</a>` : ""}<span class="msg" id="ch-msg" role="status" aria-live="polite"></span></div>
       <p class="note" style="margin:8px 0 0">${esc(trad(L.cta_note))}</p></section>`;
@@ -11318,7 +11350,7 @@ const outilChallenge = {
     if (p.habitude) tuiles.push({ lbl: T.habitude, val: trad(p.habitude.texte), unite: "", texte: true });
     if (p.tours && p.ressenti3) tuiles.push({ lbl: T.seance, val: trad(L.seance_val, { t: p.tours, r: p.ressenti3 }), unite: "", texte: true });
     const tuile = x => `<div class="tile"><div class="t-lbl">${esc(trad(x.lbl || ""))}</div><div class="t-val readout${x.texte ? " ch-t-texte" : ""}">${esc(x.val)}${x.unite ? `<small>${esc(x.unite)}</small>` : ""}</div></div>`;
-    const cal = lienSur(CONFIG.marque.calendly), ig = lienSur(CONFIG.marque.instagram);
+    const cal = lienCalendly(), ig = lienSur(CONFIG.marque.instagram);
     const reserve = !!(e.reserve), fait = Challenge.fait(C, 7);
     /* si la validation a l'ouverture n'a pas pu etre enregistree (relecture ratee), on le dit : pas de fin annoncee, pas de case */
     const enregistre = fait ? "" : `<section class="panel"><div class="ch-attente"><h2>${esc(trad(CHALLENGE7.page.non_enregistre_titre))}</h2><p class="note" style="margin:0">${esc(trad(CHALLENGE7.page.non_enregistre_texte))}</p></div></section>`;
@@ -11555,6 +11587,13 @@ function estVerrouille(o){
   if (o.id === "formation" && (CONFIG.challenge || {}).formation_apres_jour7 !== false && Challenge.termine(Store.cache[Challenge.cle])) return false;
   return true;
 }
+/* v50 — un onglet verrouille hors de la vitrine (CONFIG.marque.gratuit_vitrine) n'encombre pas la navigation
+   du prospect ; son adresse reste valable (page verrouillee). Rien ne change pour un client ni pour le coach. */
+function horsVitrine(o){
+  if (!o || !Auth.estProspect() || Store.idConsulte || !estVerrouille(o)) return false;
+  const v = CONFIG.marque && CONFIG.marque.gratuit_vitrine;
+  return Array.isArray(v) && v.indexOf(o.id) === -1;
+}
 function cadenasNav(o){ return estVerrouille(o) ? `<span class="nav-cadenas" aria-hidden="true">${SVG.cadenas}</span><span class="sr-only"> (${esc(trad("verrouillé"))})</span>` : ""; }
 const AVANTAGES = {
   programme: "Ton programme d'entraînement sur mesure, construit et ajusté par ton coach.",
@@ -11572,7 +11611,7 @@ function pageVerrouillee(o){
       <div class="actions"><a class="btn" href="#/challenge">${esc(trad("Ouvrir mon challenge"))}</a></div></div></section>`;
   }
   const plus = AVANTAGES[o.id];
-  return `<section class="panel">${UI.verrou({ titre: trad(nomOnglet(o)), texte: trad("Cette fonctionnalité est disponible avec l'accompagnement MHX."), lien: CONFIG.marque.calendly, cta: trad("Réserver mon appel") })}
+  return `<section class="panel">${UI.verrou({ titre: trad(nomOnglet(o)), texte: trad("Cette fonctionnalité est disponible avec l'accompagnement MHX."), lien: lienCalendly(), cta: trad("Réserver mon appel") })}
     ${plus ? `<p class="note verrou-plus">${esc(trad(plus))}</p>` : ""}</section>`;
 }
 
@@ -11591,7 +11630,7 @@ function outilsPrincipaux(){
   /* v40 : un prospect voit d'abord ce qui lui est ouvert (accueil, formation,
      profil), puis un onglet verrouille ; le reste derriere « Plus » */
   if (!coach && v.some(o => estVerrouille(o))){
-    return v.filter(o => !o.masque_nav && !estVerrouille(o)).concat(v.filter(o => o.principal && estVerrouille(o))).slice(0, 4);
+    return v.filter(o => !o.masque_nav && !estVerrouille(o)).concat(v.filter(o => o.principal && estVerrouille(o) && !horsVitrine(o))).slice(0, 4);
   }
   return v.filter(o => coach ? o.principal_coach : o.principal).slice(0, 4);
 }
@@ -11614,7 +11653,7 @@ function construireNav(){
   const nav = $("nav");
   /* le coach hors fiche : ses outils d'abord, ses propres onglets client ensuite */
   const coachSeul = Auth.estCoach() && !Store.idConsulte;
-  const visibles = outilsVisibles().filter(o => !o.masque_nav);
+  const visibles = outilsVisibles().filter(o => !o.masque_nav && !horsVitrine(o));   // v50
   const ordre = coachSeul ? visibles.filter(o => o.role === "coach").concat(visibles.filter(o => o.role !== "coach")) : visibles;
   nav.innerHTML = ordre.map(o =>
     `<a href="#/${o.id}" data-id="${o.id}">${iconeOutil(o)}${esc(nomOnglet(o))}${cadenasNav(o)}</a>`
@@ -11653,7 +11692,7 @@ function construireBarreBas(){
   let b = $("barre-bas");
   if (!b){ b = document.createElement("nav"); b.id = "barre-bas"; b.className = "barre-bas"; b.setAttribute("aria-label", "Navigation"); document.body.appendChild(b); }
   const principaux = outilsPrincipaux();
-  const autres = outilsVisibles().filter(o => principaux.indexOf(o) === -1 && !o.masque_nav);
+  const autres = outilsVisibles().filter(o => principaux.indexOf(o) === -1 && !o.masque_nav && !horsVitrine(o));   // v50
   b.innerHTML = principaux.map(o =>
     `<a href="#/${o.id}" data-id="${o.id}"${estVerrouille(o) ? ' class="verrouille"' : ""}>${iconeOutil(o)}<span class="lbl">${esc(nomCourt(o))}</span>${cadenasNav(o)}</a>`).join("") +
     (autres.length ? `<button type="button" data-plus><span class="ico" aria-hidden="true">${ICONES.plus}</span><span class="lbl">Plus</span></button>` : "");
@@ -11675,7 +11714,7 @@ function nomCourt(o){
 function marquerNav(id){
   $$("#barre-bas a, .menu-plus a").forEach(a => { if (a.dataset.id === id) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
   const plus = document.querySelector("#barre-bas [data-plus]");
-  if (plus) plus.classList.toggle("ici", !outilsPrincipaux().some(o => o.id === id));
+  if (plus) plus.classList.toggle("ici", !outilsPrincipaux().some(o => o.id === id) && !horsVitrine(OUTILS.find(o => o.id === id)));   // v50 : une page cachee n'est pas dans « Plus »
   $$("#nav a").forEach(a => {
     if (a.dataset.id === id){
       a.setAttribute("aria-current","page");
@@ -11786,6 +11825,8 @@ async function afficher(id, silencieux){
   $("vue").className = modifiable ? "wrap" : "wrap lecture-seule";
 
   let fin = null;
+  /* v50 : un clic « Réserver mon appel » depuis une page verrouillee compte (suivi commercial du coach) */
+  if (verrouille && Auth.estProspect() && !Store.idConsulte) $$("#vue .verrou a[target=_blank]").forEach(a => a.addEventListener("click", () => { try { Challenge.clic(Store.cache[Challenge.cle] || Challenge.vide(), null); } catch(e){} }));
   if (!verrouille){
     try { fin = (await outil.init()) || null; }
     catch(e){

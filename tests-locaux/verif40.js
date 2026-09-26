@@ -114,7 +114,8 @@ const ligneCompte = (page, nom) => page.locator("#liste-clients .client-l", { ha
     ok("prospect : chaque onglet verrouillé est annoncé « (verrouillé) » aux lecteurs d'écran", await page.$$eval("#nav a", l => l.filter(a => a.querySelector(".nav-cadenas")).every(a => (a.querySelector(".sr-only") || {}).textContent === " (verrouillé)")));
     const barre = await page.$$eval("#barre-bas a", l => l.map(a => a.dataset.id));
     ok("prospect : barre du bas = accueil, challenge, profil, puis un onglet verrouillé (v44)", JSON.stringify(barre) === '["accueil","challenge","profil","programme"]', JSON.stringify(barre));
-    ok("prospect : cadenas sur les onglets verrouillés, pas sur accueil / challenge / profil", VERROUILLES.filter(x => x !== "bilan").every(x => cadenas.includes(x)) && !cadenas.some(x => ["accueil", "challenge", "profil"].includes(x)), JSON.stringify(cadenas));
+    /* v50 : la navigation ne garde que la vitrine (programme, nutrition, formation) ; les autres onglets verrouilles sont caches, leur adresse reste verrouillee (boucle ci-dessous) */
+    ok("prospect : cadenas sur la vitrine (programme, nutrition, formation), onglets sans intérêt cachés, rien sur accueil / challenge / profil", ["programme", "nutrition", "formation"].every(x => cadenas.includes(x)) && !cadenas.some(x => ["mensurations", "suivi", "complements"].includes(x)) && !cadenas.some(x => ["accueil", "challenge", "profil"].includes(x)), JSON.stringify(cadenas));
     for (const r of VERROUILLES) {
       page.lectures.length = 0;
       await aller(page, "#/" + r, 1200);
