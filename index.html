@@ -1025,9 +1025,10 @@ const CONFIG = {
     gratuit_ouverts: ["accueil", "decouverte", "profil"],
     /* v50 — onglets verrouilles qu'un prospect voit quand meme (cadenas + ce qu'apporte l'accompagnement) :
        la vitrine de l'offre. Les autres onglets verrouilles sont caches de sa navigation (leur adresse
-       montre toujours la page verrouillee). Pour tout remontrer comme avant : ajouter "mensurations",
-       "suivi", "complements". */
-    gratuit_vitrine: ["programme", "nutrition", "formation"]
+       montre toujours la page verrouillee). Decouverte : programme, nutrition, suivi (bilan hebdo compris)
+       visibles mais verrouilles, formation apres la decouverte. Pour tout remontrer : ajouter "mensurations",
+       "complements". */
+    gratuit_vitrine: ["programme", "nutrition", "suivi", "formation"]
   },
 
   /* --- Découverte (prospects) : les réglages ; les textes sont dans DECOUVERTE --- */
