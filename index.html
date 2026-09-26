@@ -8327,7 +8327,7 @@ const Commercial = {
     if (!fait && inscrit != null && inscrit >= cfg.sans_debut_jours && !actifRecemment) froid.push("Inscrit " + this.quand(inscrit) + ", questionnaire pas rempli.");
     if (clic != null && clic > cfg.clic_recent_jours) tiede.push("A cliqué « Réserver mon bilan » " + this.quand(clic) + ", sans réserver.");
     if (fait && !inactif) tiede.push("Questionnaire rempli " + this.quand(this.depuis(r.questionnaire)) + (motiv ? ", motivation " + motiv + "/10" : "") + (etape ? ", " + etape : "") + ".");
-    if (!fait && actifRecemment) tiede.push("A commencé son questionnaire (dernière activité " + this.quand(actif) + ").");
+    if (!fait && actifRecemment) tiede.push("Actif (dernière activité " + this.quand(actif) + "), questionnaire pas encore rempli.");
     else if (!fait && !(inscrit != null && inscrit >= cfg.sans_debut_jours)) tiede.push("Vient de s'inscrire" + (inscrit != null ? " (" + this.quand(inscrit) + ")" : "") + ".");
     if (sansReponse) (sansReponse >= cfg.relances_max ? froid : tiede).push("Relancé " + sansReponse + " fois sans réponse.");
     if (issue && revenu) chaud.unshift("Revenu après l'issue « " + this.ISSUES[issue] + " » : a recliqué « Réserver » ou coché « J'ai réservé ».");
@@ -8360,7 +8360,7 @@ const Commercial = {
     else if (fait && motiv >= cfg.motivation_forte) action = siPasRelance("DM : il se dit motivé à " + motiv + "/10, propose-lui le bilan.");
     else if (clic != null) action = siPasRelance("DM : il a cliqué sans réserver, demande-lui ce qui le retient.");
     else if (fait && finie) action = siPasRelance("DM : sa découverte est terminée, propose-lui le bilan.");
-    else if (!fait) action = actifRecemment ? "Rien à faire aujourd'hui : il remplit son questionnaire." : "Rien à faire aujourd'hui : il vient de s'inscrire.";
+    else if (!fait) action = actifRecemment ? "Rien à faire aujourd'hui : il est actif, questionnaire pas encore rempli." : "Rien à faire aujourd'hui : il vient de s'inscrire.";
     else action = "Rien à faire aujourd'hui : il découvre" + (jour != null ? " (jour " + jour + "/" + r.duree + ")" : "") + ".";
     const etat = issue || temperature;
     const rang = issue === "signe" ? (urgent ? 0 : 9) : issue === "absent" ? (urgent ? 3 : 7) : issue === "perdu" ? (urgent ? 4 : 9)
