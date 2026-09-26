@@ -185,14 +185,15 @@ const ecrituresDe = (db, outil) => db.ecritures.filter(e => e.table === "donnees
     await page.selectOption("#q-objectif", "Perte de poids / sèche"); await page.selectOption("#q-niveau", "Débutant (0 à 6 mois)"); await page.selectOption("#q-seances", "3");
     await page.selectOption("#q-lieu", "À la maison"); await page.selectOption("#q-nb_repas", "3 repas"); await page.fill("#q-sommeil_h", "6.5"); await page.selectOption("#q-energie", "4");
     await page.click("#ch-voir"); await attendre(page, 900);
-    ok("jour 1 : taille en mètres et âge de 15 ans → « Vérifie : Âge (18 à 90), Taille (120 à 230) », aucune écriture", /Vérifie : .*Âge.*18 à 90.*Taille.*120 à 230/.test(await texte(page, "#ch-msg")) && db.ecritures.length === 0 && !!(await page.$("#q-taille.manque")), await texte(page, "#ch-msg"));
+    /* v48 : brouillon pendant la saisie, mais jamais avant un age valide ; une valeur hors bornes, jamais */
+    ok("jour 1 : taille en mètres et âge de 15 ans → « Vérifie : Âge (18 à 90), Taille (120 à 230) », aucune écriture (v48 : aucun brouillon tant que l'âge n'est pas valide)", /Vérifie : .*Âge.*18 à 90.*Taille.*120 à 230/.test(await texte(page, "#ch-msg")) && db.ecritures.length === 0 && !!(await page.$("#q-taille.manque")), await texte(page, "#ch-msg"));
     ok("jour 1 : aides de saisie (centimètres, kilos, à partir de 18 ans)", (await texte(page, "#ch-vue")).includes("En centimètres") && (await texte(page, "#ch-vue")).includes("À partir de 18 ans"));
     await page.fill("#q-age", "29"); await page.fill("#q-taille", "168");
     await page.selectOption("#q-objectif", "Perte de poids / sèche"); await page.selectOption("#q-niveau", "Débutant (0 à 6 mois)"); await page.selectOption("#q-seances", "3");
     await page.selectOption("#q-lieu", "À la maison"); await page.selectOption("#q-nb_repas", "3 repas"); await page.fill("#q-sommeil_h", "6.5"); await page.selectOption("#q-energie", "4");
     await page.fill("#q-pourquoi", "Retrouver de l'énergie.");
     await page.click("#ch-voir"); await attendre(page, 1600);
-    const wi = ecrituresDe(db, "intake");
+    const wi0 = ecrituresDe(db, "intake"), wi = wi0.length ? [wi0[wi0.length - 1]] : [];   // v48 : des brouillons ont pu partir avant, on regarde le dernier envoi
     ok("jour 1 : « Voir mon point de départ » écrit le questionnaire (clé intake, mêmes identifiants), pas encore le challenge", wi.length === 1 && wi[0].contenu.age === "29" && wi[0].contenu.objectif === "Perte de poids / sèche" && wi[0].contenu.pourquoi === "Retrouver de l'énergie." && !wi[0].contenu.complet && ecrituresDe(db, "challenge").length === 0, JSON.stringify(db.ecritures).slice(0, 300));
     t = await texte(page, "#ch-vue");
     ok("jour 1 : point de départ — écart 4,0 kg, dépense estimée, séances, sommeil, énergie", t.includes("Ton écart") && t.includes("4,0") && t.includes("Dépense estimée") && /\d\s?\d{3}\s*kcal/.test(t.replace(/ | /g, " ")) && t.includes("Tes séances") && t.includes("6,5") && t.includes("Énergie"));

@@ -293,6 +293,10 @@ footer a{color:var(--accent)}
 
 /* --- consultation d'une fiche client --- */
 .bandeau{display:flex;flex-wrap:wrap;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:var(--r);padding:14px 16px;margin-bottom:20px}
+/* v48 — session terminee : bandeau fixe, la page reste intacte dessous */
+.bandeau.session-perdue{position:fixed;left:12px;right:12px;bottom:calc(76px + env(safe-area-inset-bottom, 0px));z-index:60;margin:0;box-shadow:var(--shadow);border-left-color:var(--warn)}
+.bandeau.session-perdue span{flex:1 1 260px;min-width:0}
+@media (min-width:900px){.bandeau.session-perdue{left:auto;right:24px;bottom:24px;max-width:520px}}
 .bandeau strong{font-size:15px}
 .bandeau .sortir{margin-left:auto;background:var(--accent);color:var(--accent-ink);border:0;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;min-height:36px}
 .lecture-seule .panel input,.lecture-seule .panel select,.lecture-seule .panel textarea,
@@ -973,7 +977,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-09-26 · 47",
+    version: "2026-09-26 · 48",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -2310,6 +2314,16 @@ I18N.en = {
 "Une erreur est survenue.": "Something went wrong.",
 "Plateforme MHX Coaching": "MHX Coaching Platform",
 "Hors ligne": "Offline",
+"Hors ligne — gardé sur cet appareil, renvoi automatique": "Offline — kept on this device, will resend automatically",
+"Non enregistré — modification refusée": "Not saved — change refused",
+"Hors ligne — modification non enregistrée": "Offline — change not saved",
+"Une modification faite hors ligne n'a pas été envoyée ({o}, {d}) : une version plus récente existe déjà.": "A change made offline was not sent ({o}, {d}): a newer version already exists.",
+"Des modifications n'ont pas encore pu être envoyées (hors ligne). Si tu te déconnectes maintenant, elles seront perdues.": "Some changes could not be sent yet (offline). If you log out now, they will be lost.",
+"Me déconnecter quand même": "Log out anyway",
+"Ta session a pris fin (déconnexion depuis un autre appareil ?). Ce qui est à l'écran reste là : copie ton texte si besoin, puis reconnecte-toi. Ce que tu avais saisi avant est gardé sur cet appareil et repartira ; ce que tu saisis maintenant n'est plus enregistré.": "Your session has ended (logged out from another device?). What is on screen stays there: copy your text if needed, then sign in again. What you entered before is kept on this device and will be sent; what you enter now is no longer saved.",
+"Me reconnecter": "Sign in again",
+"Reconnecte-toi : ce que tu avais saisi est gardé sur cet appareil et repartira.": "Sign in again: what you entered is kept on this device and will be sent.",
+"fiche d'un client": "a client's file",
 "Enregistré": "Saved",
 "Voir": "Show",
 "Exécution": "How to do it",
@@ -2814,6 +2828,30 @@ const Auth = {
   connecte(){ return !!(this.session && this.session.access_token); },
   utilisateur(){ return this.session ? this.session.user : null; },
 
+  /* v48 — plusieurs onglets (ou l'app installee + le navigateur) partagent la meme session.
+     Supabase fait tourner le jeton de renouvellement : le premier onglet qui renouvelle range la
+     nouvelle session ; les autres doivent la REPRENDRE, pas presenter l'ancien jeton (refuse,
+     « deja utilise ») puis tout effacer — ce qui deconnectait tout le monde. */
+  stockee(){
+    for (const m of [localStorage, sessionStorage]){
+      try { const brut = m.getItem(this.cleSession); if (brut){ const s = JSON.parse(brut); if (s && s.access_token) return s; } } catch(e){}
+    }
+    return null;
+  },
+  plusRecente(){
+    const s = this.stockee(), c = this.session;
+    if (!s || !c || !s.user || !c.user || s.user.id !== c.user.id) return null;   // jamais la session d'un autre compte
+    if (s.refresh_token === c.refresh_token) return null;
+    if (!(s.expire_le > Date.now() + 60000)) return null;
+    if (c.expire_le && s.expire_le <= c.expire_le) return null;
+    return s;
+  },
+  /* un autre onglet vient de ranger une session : meme compte → on la prend (evenement « storage ») */
+  depuisAutreOnglet(e){
+    if (!e || e.key !== this.cleSession || !e.newValue || !this.session || !this.session.user) return;
+    try { const s = JSON.parse(e.newValue); if (s && s.access_token && s.user && s.user.id === this.session.user.id) this.session = s; } catch(err){}
+  },
+
   async appel(chemin, options){
     options = options || {};
     const entetes = Object.assign({
@@ -2823,15 +2861,23 @@ const Auth = {
     if (options.avecJeton !== false && this.session && this.session.access_token){
       entetes["Authorization"] = "Bearer " + this.session.access_token;
     }
+    const corps = options.body ? JSON.stringify(options.body) : undefined;
     const r = await fetch(CONFIG.supabase.url + chemin, {
       method: options.method || "GET",
       headers: entetes,
-      body: options.body ? JSON.stringify(options.body) : undefined
+      body: corps,
+      /* v48 : envoi qui doit survivre a la fermeture de l'onglet (limite du navigateur : 64 Ko) */
+      keepalive: !!(options.keepalive && (!corps || corps.length < 60000))
     });
     const texte = await r.text();
     let data = null;
     try { data = texte ? JSON.parse(texte) : null; } catch(e){ data = texte; }
     if (!r.ok){
+      /* v48 — jeton expire ou revoque en cours de route (onglet reste ouvert, telephone en veille) :
+         un renouvellement, puis UN seul nouvel essai. Refuse = rien n'a ete applique : reessayer est sans risque. */
+      if (r.status === 401 && options.avecJeton !== false && !options._reessai && this.session && this.session.refresh_token && !/^\/auth\/v1\/(token|logout)/.test(chemin)){
+        if (await this.rafraichir()) return this.appel(chemin, Object.assign({}, options, { _reessai: true }));
+      }
       const err = new Error((data && (data.msg || data.message || data.error_description || data.error)) || ("Erreur " + r.status));
       err.statut = r.status;
       if (data && typeof data === "object" && data.code) err.code = data.code;
@@ -2841,13 +2887,41 @@ const Auth = {
   },
 
   async rafraichir(){
-    if (!this.session || !this.session.refresh_token) return false;
-    try {
-      const s = await this.appel("/auth/v1/token?grant_type=refresh_token", {
-        method: "POST", avecJeton: false, body: { refresh_token: this.session.refresh_token }
-      });
-      this.memoriser(s); return true;
-    } catch(e){ this.oublier(); return false; }
+    /* v48 : un seul renouvellement a la fois dans l'onglet (plusieurs enregistrements simultanes n'en lancent qu'un) */
+    if (this._renouvellement) return this._renouvellement;
+    this._renouvellement = (async () => {
+      if (!this.session || !this.session.refresh_token) return false;
+      const autre = this.plusRecente(); if (autre){ this.session = autre; return true; }   // un autre onglet l'a deja fait
+      const jeton = this.session.refresh_token;
+      try {
+        const s = await this.appel("/auth/v1/token?grant_type=refresh_token", {
+          method: "POST", avecJeton: false, body: { refresh_token: jeton }
+        });
+        this.memoriser(s); return true;
+      } catch(e){
+        /* renouvele ailleurs pendant ce temps : soit la session en memoire a deja ete remplacee (evenement
+           « storage » d'un autre onglet), soit une plus recente est rangee */
+        const reprise = () => {
+          if (this.session && this.session.refresh_token !== jeton && this.session.expire_le > Date.now() + 60000) return true;
+          const a = this.plusRecente(); if (a){ this.session = a; return true; }
+          return false;
+        };
+        if (reprise()) return true;
+        /* reseau coupe ou serveur indisponible : la session est gardee, on reessaiera (avant : tout etait efface,
+           et un simple passage hors ligne deconnectait) */
+        const rejete = e && e.statut >= 400 && e.statut < 500 && e.statut !== 408 && e.statut !== 429;
+        if (!rejete) return false;
+        /* jeton vraiment refuse. Un autre onglet est peut-etre en train de le renouveler (il l'a presente
+           juste avant nous) : on lui laisse un instant, puis on reprend sa session s'il l'a rangee */
+        let st = this.stockee();
+        if (st && st.refresh_token === jeton){ await new Promise(r => setTimeout(r, 1500)); if (reprise()) return true; st = this.stockee(); }
+        /* on n'efface que NOTRE session, jamais celle qu'un autre onglet vient de ranger */
+        if (!st || st.refresh_token === jeton) this.oublier(); else this.session = null;
+        if (typeof sessionPerdue === "function") setTimeout(sessionPerdue, 0);   // l'app tournait : retour a la connexion, avec un mot
+        return false;
+      }
+    })();
+    try { return await this._renouvellement; } finally { this._renouvellement = null; }
   },
   async assurer(){
     if (!this.connecte()) return false;
@@ -2936,6 +3010,12 @@ const Auth = {
                       { method: "POST", avecJeton: false, body: { email } });
   },
   async deconnecter(){
+    /* v48 : ce qui attend part d'abord, avec le jeton ; s'il reste des modifications non envoyees (hors ligne),
+       on le dit avant de tout effacer de l'appareil */
+    try { await Promise.race([Store.toutEnvoyer(false), new Promise(r => setTimeout(r, 4000))]); } catch(e){}
+    const moi = this.utilisateur();
+    const nonEnvoyees = moi ? Object.values(Store.attenteLire()).filter(e => e && e.a === moi.id).length : 0;
+    if (nonEnvoyees && !(await UI.confirmer(trad("Des modifications n'ont pas encore pu être envoyées (hors ligne). Si tu te déconnectes maintenant, elles seront perdues."), { ok: trad("Me déconnecter quand même"), danger: true }))) return;
     try { await this.appel("/auth/v1/logout", { method: "POST" }); } catch(e){}
     this.oublier();
     [localStorage, sessionStorage].forEach(m => {
@@ -3125,22 +3205,147 @@ const Store = {
     /* l'identifiant est fige ici : si le coach change de fiche pendant les
        700 ms d'attente, l'enregistrement part quand meme chez le bon client */
     this.valeursEnAttente[k] = valeur;
-    this.attente[k] = setTimeout(() => { delete this.attente[k]; delete this.valeursEnAttente[k]; this.envoyer(cle, valeur, uid); }, 700);
+    const t = this.garder(uid, cle, valeur);   // v48 : une copie reste sur l'appareil jusqu'a l'arrivee au serveur
+    this.tEnAttente[k] = t;
+    this.attente[k] = setTimeout(() => { delete this.attente[k]; delete this.valeursEnAttente[k]; delete this.tEnAttente[k]; this.envoyer(cle, valeur, uid, t); }, 700);
     return true;
   },
-  async envoyer(cle, valeur, uidFige){
+
+  /* ---------- v48 : ce qui n'est pas encore arrive au serveur reste sur l'appareil ----------
+     Fermer l'app dans la seconde, perdre le reseau ou la session ne perd plus une saisie : une copie
+     (rangee au meme endroit que la session : « Rester connecte » decoche = elle disparait avec
+     l'onglet ; une cle par copie, « mhx_attente|compte|cle », pour que deux onglets ne s'ecrasent
+     jamais) repart d'elle-meme — retour du reseau, retour sur l'onglet, nouvel essai toutes les 30 s,
+     demarrage suivant — UNIQUEMENT si le serveur n'a rien de plus recent, et jamais apres une
+     saisie plus recente de ce meme onglet. Une copie ecartee (plus recent ailleurs) est signalee. */
+  PREFIXE_ATTENTE: "mhx_attente|",
+  tEnAttente: {},
+  dernierT: {},   // « compte|cle » → instant de la saisie la plus recente deja partie de cet onglet
+  attenteLire(){
+    const out = {}, P = this.PREFIXE_ATTENTE;
+    try {
+      const m = Auth.magasin();
+      for (let i = 0; i < m.length; i++){
+        const c = m.key(i); if (!c || c.indexOf(P) !== 0) continue;
+        let e = null; try { e = JSON.parse(m.getItem(c)); } catch(err){ e = null; }
+        out[c.slice(P.length)] = (e && typeof e === "object") ? e : null;
+      }
+    } catch(e){}
+    return out;
+  },
+  garder(uid, cle, valeur){
+    const u = Auth.utilisateur(), t = new Date().toISOString();
+    if (!u || !u.id) return t;
+    try { Auth.magasin().setItem(this.PREFIXE_ATTENTE + uid + "|" + cle, JSON.stringify({ a: u.id, t: t, v: valeur })); } catch(e){}   // appareil plein ou stockage interdit : comme avant la v48
+    return t;
+  },
+  aUneCopie(uid, cle){ try { return !!Auth.magasin().getItem(this.PREFIXE_ATTENTE + uid + "|" + cle); } catch(e){ return false; } },
+  /* retire la copie une fois la modification arrivee — seulement si c'est bien elle (pas une plus recente) */
+  lacher(uid, cle, t, valeur){
+    const c = this.PREFIXE_ATTENTE + uid + "|" + cle;
+    try {
+      const brut = Auth.magasin().getItem(c); if (!brut) return;
+      let e = null; try { e = JSON.parse(brut); } catch(err){ e = null; }
+      const meme = !e || (t ? e.t === t : (valeur === undefined || JSON.stringify(e.v) === JSON.stringify(valeur)));
+      if (meme) Auth.magasin().removeItem(c);
+    } catch(e){}
+  },
+  /* « Rester connecte » a change depuis la derniere fois : les copies du meme compte restees dans l'autre
+     rangement sont rapatriees (sinon elles resteraient orphelines) */
+  rapatrier(uid){
+    try {
+      const ici = Auth.magasin(), autre = ici === localStorage ? sessionStorage : localStorage, P = this.PREFIXE_ATTENTE, cles = [];
+      for (let i = 0; i < autre.length; i++){ const c = autre.key(i); if (c && c.indexOf(P) === 0) cles.push(c); }
+      cles.forEach(c => {
+        let e = null; try { e = JSON.parse(autre.getItem(c)); } catch(err){}
+        if (!e || e.a !== uid) return;
+        let x = null; try { x = JSON.parse(ici.getItem(c)); } catch(err){}
+        if (!x || !(typeof x.t === "string" && x.t >= e.t)) ici.setItem(c, JSON.stringify(e));
+        autre.removeItem(c);
+      });
+    } catch(e){}
+  },
+  /* l'onglet se cache ou se ferme (vite : keepalive, sans renouvellement) ou la personne se deconnecte
+     (vite === false : avec le jeton, on attend les reponses) : ce qui attendait ses 700 ms part tout de suite */
+  toutEnvoyer(vite){
+    const envois = [];
+    Object.keys(this.attente).forEach(k => {
+      const v = this.valeursEnAttente[k]; if (v === undefined) return;
+      const t = this.tEnAttente[k];
+      clearTimeout(this.attente[k]); delete this.attente[k]; delete this.valeursEnAttente[k]; delete this.tEnAttente[k];
+      const i = k.indexOf("|");
+      envois.push(this.envoyer(k.slice(i + 1), v, k.slice(0, i), t, vite !== false));
+    });
+    return Promise.all(envois);
+  },
+  planifierReprise(){
+    if (this._reprise) return;
+    this._reprise = setTimeout(() => { this._reprise = null; this.reprendre(); }, 30000);
+  },
+  /* renvoie ce qui attend pour le compte connecte, si le serveur n'a rien de plus recent */
+  async reprendre(auDemarrage){
+    if (this._reprend) return;
+    const u = Auth.utilisateur(); if (!u || !u.id) return;
+    if (typeof navigator !== "undefined" && navigator.onLine === false) return;
+    if (auDemarrage) this.rapatrier(u.id);
+    const o = this.attenteLire(), cles = Object.keys(o); if (!cles.length) return;
+    this._reprend = true;
+    let reste = false; const ecartees = [];
+    try {
+      for (const k of cles){
+        const e = o[k], i = k.indexOf("|"), uid = k.slice(0, i), cle = k.slice(i + 1);
+        if (this.attente[k]) continue;   // une saisie en cours : son propre envoi part dans la seconde
+        if (!e || typeof e.t !== "string" || !uid || !cle || this.clesCoachSeul.indexOf(cle) > -1){ this.lacher(uid, cle); continue; }
+        /* ecrite par un autre compte sur cet appareil : jamais envoyee ; retiree seulement au demarrage */
+        if (e.a !== u.id){ if (auDemarrage) this.lacher(uid, cle); continue; }
+        try {
+          const r = await Auth.appel("/rest/v1/donnees?user_id=eq." + uid + "&outil=eq." + encodeURIComponent(cle) + "&select=maj_le");
+          const m = r && r[0] && r[0].maj_le;
+          /* relue apres la lecture (lente quand le reseau revient) : une saisie plus recente a pu arriver */
+          const cur = this.attenteLire()[k];
+          if (!cur || cur.t !== e.t || this.attente[k]){ if (cur && cur.t !== e.t) reste = true; continue; }
+          const ms = m ? new Date(m).getTime() : NaN, ts = new Date(e.t).getTime();
+          /* meme instant : la copie etait deja arrivee (envoi a la fermeture de l'onglet) → retiree sans rien dire ;
+             serveur strictement plus recent : on ne l'ecrase pas, et on le dit */
+          if (m && !(ms < ts)){ this.lacher(uid, cle, e.t); if (ms > ts) ecartees.push({ cle: cle, t: e.t, autre: uid !== u.id }); continue; }
+          await this.envoyer(cle, e.v, uid, e.t, false, true);
+          if (this.attenteLire()[k]) reste = true;
+        } catch(err){ reste = true; }
+      }
+    } finally { this._reprend = false; }
+    if (ecartees.length){
+      const nom = c => { const x = (typeof OUTILS !== "undefined" ? OUTILS : []).find(y => y.cle === c); return x ? trad(nomOnglet(x)) : c; };
+      const jourLocal = t => { const d = new Date(t); return isNaN(d) ? "" : d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+      try { UI.toast(trad("Une modification faite hors ligne n'a pas été envoyée ({o}, {d}) : une version plus récente existe déjà.", { o: ecartees.map(x => nom(x.cle) + (x.autre ? " · " + trad("fiche d'un client") : "")).join(", "), d: dateFr(jourLocal(ecartees[0].t)) }), "attention", 9000); } catch(e){}
+    }
+    if (reste) this.planifierReprise();
+  },
+  async envoyer(cle, valeur, uidFige, t, vite, repris){
     const uid = uidFige || this.cible(); if (!uid) return;
     if (this.clesCoachSeul.indexOf(cle) > -1) return;
+    const k = uid + "|" + cle, tt = t || new Date().toISOString();
+    /* une copie REPRISE ne passe jamais apres une saisie plus recente de cet onglet (reprise lente, retour sur
+       l'onglet) ; une saisie fraiche passe toujours (une horloge qui recule ne doit rien faire perdre) */
+    if (repris && this.dernierT[k] && tt < this.dernierT[k]){ this.lacher(uid, cle, t); return; }
+    if (!this.dernierT[k] || tt > this.dernierT[k]) this.dernierT[k] = tt;
     majEtat("enregistrement");
     try {
-      await Auth.assurer();
+      if (!vite) await Auth.assurer();   // en quittant la page : pas le temps d'un renouvellement (la copie gardee prend le relais)
       await Auth.appel("/rest/v1/donnees?on_conflict=user_id,outil", {
         method: "POST",
         headers: { "Prefer": "resolution=merge-duplicates,return=minimal" },
-        body: [{ user_id: uid, outil: cle, contenu: valeur, maj_le: new Date().toISOString() }]
+        /* v48 : maj_le = l'instant de la saisie (un envoi repris plus tard garde sa vraie date) */
+        body: [{ user_id: uid, outil: cle, contenu: valeur, maj_le: tt }],
+        keepalive: !!vite
       });
+      this.lacher(uid, cle, t, valeur);
       majEtat("enregistre");
-    } catch(e){ majEtat("erreur"); }
+    } catch(e){
+      /* refus definitif (droits, requete invalide) : un nouvel essai n'y changerait rien, la copie est retiree, on le dit */
+      if (e && e.statut >= 400 && e.statut < 500 && [401, 408, 429].indexOf(e.statut) === -1){ console.warn("[MHX] enregistrement refusé", cle, e.statut); this.lacher(uid, cle, t, valeur); majEtat("refuse"); return; }
+      this.planifierReprise();
+      majEtat(this.aUneCopie(uid, cle) ? "erreur" : "perdu");   // « gardé sur cet appareil » seulement s'il l'est vraiment
+    }
   },
 
   /* Vide le cache d'un client : appele quand on change de fiche. */
@@ -3550,7 +3755,8 @@ const Import = {
 /* Petit temoin d'enregistrement dans la barre du haut */
 function majEtat(etat){
   const e = document.getElementById("etat"); if (!e) return;
-  const libelles = { enregistrement:"Enregistrement…", enregistre:"Enregistre", erreur:"Hors ligne — reessai au prochain changement" };
+  const libelles = { enregistrement:"Enregistrement…", enregistre:"Enregistré", erreur:"Hors ligne — gardé sur cet appareil, renvoi automatique",
+                     refuse:"Non enregistré — modification refusée", perdu:"Hors ligne — modification non enregistrée" };
   e.textContent = libelles[etat] || "";
   e.className = "etat " + etat;
   if (etat === "enregistre") setTimeout(() => { if (e.className.indexOf("enregistre") > -1) e.textContent = ""; }, 2000);
@@ -5011,7 +5217,11 @@ const outilProfil = {
       return manquants;
     };
 
-    $$("[data-q]").forEach(el => el.addEventListener("change", () => enregistrer()));
+    $$("[data-q]").forEach(el => {
+      el.addEventListener("change", () => enregistrer());
+      /* v48 : les textes partent pendant la frappe (fermer l'app sans quitter le champ les perdait) */
+      if (el.matches("textarea, input:not([type=checkbox]):not([type=radio])")) el.addEventListener("input", () => enregistrer());
+    });
     $$('[data-multi="1"] input').forEach(c => c.addEventListener("change", () => enregistrer()));
 
     $("p-save").addEventListener("click", () => {
@@ -10549,12 +10759,34 @@ const outilChallenge = {
   brancher(zone, C, I, n, def){
     const self = this;
     const voir = zone.querySelector("#ch-voir");
+    if (voir){
+      /* v48 : chaque reponse du diagnostic part pendant la saisie (meme cle intake) : fermer l'app au
+         milieu ne perd rien, et la personne retrouve ses reponses en revenant */
+      const qs0 = self.questionsJour1(def), B0 = self.bornes();
+      /* une valeur hors bornes (taille en metres, age d'enfant) ne part jamais : la reponse precedente reste */
+      const valide = (q, v) => { const b = B0[q.id]; if (!b || String(v == null ? "" : v).trim() === "") return true; const x = num(v); return x >= b[0] && x <= b[1]; };
+      const qAge = qs0.find(q => q.id === "age");
+      const brouillon = () => {
+        /* rien ne part tant que l'age n'est pas rempli et dans les bornes (18 ans et plus) : les reponses
+           d'une personne mineure n'arrivent jamais en base */
+        if (qAge){ const a = outilProfil.valeur(qAge); if (!String(a == null ? "" : a).trim() || !valide(qAge, a)) return; }
+        qs0.forEach(q => { const el = $("q-" + q.id); if (!el) return; const v = outilProfil.valeur(q); if (valide(q, v)) I[q.id] = v; });
+        Store.ecrire("intake", I);
+      };
+      qs0.forEach(q => {
+        const el = $("q-" + q.id); if (!el) return;
+        el.addEventListener("change", brouillon);
+        if (el.matches("textarea, input:not([type=checkbox]):not([type=radio])")) el.addEventListener("input", brouillon);
+      });
+    }
     if (voir) voir.addEventListener("click", () => {
       const qs = self.questionsJour1(def);
-      qs.forEach(q => { const el = $("q-" + q.id); if (el) I[q.id] = outilProfil.valeur(q); });
-      const manquants = qs.filter(q => (def.requis || []).indexOf(q.id) > -1 && (q.type === "nombre" ? !(num(I[q.id]) > 0) : !I[q.id]));
+      /* v48 : on verifie une COPIE ; les reponses n'entrent dans le questionnaire (et dans un brouillon en attente) que valides */
+      const V = Object.assign({}, I);
+      qs.forEach(q => { const el = $("q-" + q.id); if (el) V[q.id] = outilProfil.valeur(q); });
+      const manquants = qs.filter(q => (def.requis || []).indexOf(q.id) > -1 && (q.type === "nombre" ? !(num(V[q.id]) > 0) : !V[q.id]));
       const B = self.bornes();
-      const hors = qs.filter(q => B[q.id] && String(I[q.id] || "").trim() !== "" && (num(I[q.id]) < B[q.id][0] || num(I[q.id]) > B[q.id][1]));
+      const hors = qs.filter(q => B[q.id] && String(V[q.id] || "").trim() !== "" && (num(V[q.id]) < B[q.id][0] || num(V[q.id]) > B[q.id][1]));
       /* le dictionnaire connait les libelles requis avec leur etoile (« Âge * ») : on traduit par la, sans l'etoile */
       const lib = q => { const k = q.label + " *", t = trad(k); return t !== k ? t.replace(/\s*\*$/, "") : trad(q.label); };
       if (manquants.length || hors.length){
@@ -10569,6 +10801,7 @@ const outilChallenge = {
       }
       /* les reponses rejoignent le questionnaire (meme cle intake) : le coach les voit,
          et le questionnaire complet sera pre-rempli si la personne devient cliente */
+      Object.assign(I, V);
       if (Store.ecrire("intake", I) === false) return;   // refusee (message deja affiche)
       self._apercu = true;
       self.rendre(zone, C, I, n);
@@ -11324,6 +11557,7 @@ function brancherInstallation(){
 }
 
 function routeDepuisAdresse(){
+  if (!$("vue") || $("session-perdue")) return;   // v48 : session terminee (bandeau ou ecran de connexion) : rien a router
   let id = (location.hash || "").replace(/^#\/?/, "");
   if (id.indexOf("=") > -1 || id.indexOf("&") > -1) id = "";
   /* v44 — mode test du challenge (Lucas) : #/challenge-libre debloque les jours sur cet
@@ -11573,6 +11807,22 @@ function ecranNouveauMotDePasse(jeton){
 
 /* ---------------------- DÉMARRAGE ---------------------- */
 let premiereFois = false;
+let appPrete = false;   // v48 : demarrage termine (une session refusee ensuite renvoie a la connexion, avec un mot)
+function sessionPerdue(){
+  /* la page n'est PAS remplacee : un texte en cours (feedback, notes privees) reste a l'ecran et peut etre copie ;
+     un bandeau propose de se reconnecter. Les saisies gardees sur l'appareil repartiront apres reconnexion. */
+  if (!appPrete || $("session-perdue")) return;
+  const d = document.createElement("div");
+  d.id = "session-perdue"; d.className = "bandeau session-perdue"; d.setAttribute("role", "alert");
+  d.innerHTML = `<span>${esc(trad("Ta session a pris fin (déconnexion depuis un autre appareil ?). Ce qui est à l'écran reste là : copie ton texte si besoin, puis reconnecte-toi. Ce que tu avais saisi avant est gardé sur cet appareil et repartira ; ce que tu saisis maintenant n'est plus enregistré."))}</span><button type="button" class="btn">${esc(trad("Me reconnecter"))}</button>`;
+  document.body.appendChild(d);
+  d.querySelector("button").addEventListener("click", () => {
+    appPrete = false;
+    window.removeEventListener("hashchange", routeDepuisAdresse);
+    portail("connexion");
+    setTimeout(() => { const z = $("co-err"); if (z){ z.className = "erreur"; z.textContent = trad("Reconnecte-toi : ce que tu avais saisi est gardé sur cet appareil et repartira."); } }, 60);
+  });
+}
 let lienEmail = null, lienEmailType = "", lienEmailAdresse = "";   // v47 : "ok" | "autre_compte" | "rate_connecte" apres un lien d'email (mot affiche une fois l'ecran construit)
 
 (async function demarrer(){
@@ -11610,6 +11860,11 @@ let lienEmail = null, lienEmailType = "", lienEmailAdresse = "";   // v47 : "ok"
      creation de compte ; sinon, l'ecran de connexion comme n'importe quelle autre adresse. */
   if (!Auth.connecte()){ portail(/inscription/.test(location.hash) ? "inscription" : "connexion"); return; }
   const ok = await Auth.assurer();
+  /* v48 : sessions partagees entre onglets, modifications gardees sur l'appareil */
+  window.addEventListener("storage", e => Auth.depuisAutreOnglet(e));
+  window.addEventListener("online", () => Store.reprendre());
+  window.addEventListener("pagehide", () => Store.toutEnvoyer());
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") Store.toutEnvoyer(); else Store.reprendre(); });
   if (!ok){
     portail("connexion");
     /* v47 : on arrivait par un lien d'email et la session enregistree ne se renouvelle plus : le dire */
@@ -11617,6 +11872,8 @@ let lienEmail = null, lienEmailType = "", lienEmailAdresse = "";   // v47 : "ok"
     return;
   }
   try { await Auth.chargerProfil(); } catch(e){}
+  /* v48 : ce qui n'etait pas arrive au serveur la derniere fois repart avant le premier affichage (4 s au plus) */
+  try { await Promise.race([Store.reprendre(true), new Promise(r => setTimeout(r, 4000))]); } catch(e){}
 
   /* la langue choisie sur un autre appareil l'emporte */
   try {
@@ -11664,10 +11921,12 @@ let lienEmail = null, lienEmailType = "", lienEmailAdresse = "";   // v47 : "ok"
         ? `<strong>Une réponse manque à ton profil.</strong><span class="note">Une question a été ajoutée depuis ton inscription. Complète-la et enregistre : ça prend dix secondes.</span>`
         : `<strong>Bienvenue !</strong><span class="note">Commence par remplir ton profil : c'est ce qui permet à ton coach de construire ton suivi.</span>`;
       v.insertBefore(mot, v.firstChild);
+      appPrete = true;
       return;
     }
   }
 
+  appPrete = true;
   routeDepuisAdresse();
 })();
 </script>

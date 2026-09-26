@@ -109,6 +109,7 @@ Si l'email n'arrive pas : Supabase → **Logs → Auth** dit si l'envoi a échou
 - **CAPTCHA** : ne l'active jamais seul dans Supabase (Attack Protection → Captcha). L'app ne le gère pas encore : il bloquerait la connexion de tes clients. Si des comptes indésirables apparaissent, on ajoute d'abord le code (inscription + connexion + mot de passe oublié), puis on l'active.
 - Ne désactive pas « Confirm email » après coup « pour aller plus vite » : c'est ce qui filtre les fausses adresses.
 - Ne touche pas aux Row Level Security, aux fonctions ni à la table `profils`.
+- Facultatif, si ton offre Supabase le permet (offre Pro) : **Authentication → Sign In / Providers → Email → « Prevent use of leaked passwords »** (refuse les mots de passe déjà apparus dans des fuites connues). Le conseiller de sécurité de Supabase le recommande ; rien ne change pour les comptes existants.
 
 ## 8. Le lien à mettre sur Instagram
 `https://lcsmhx.github.io/mhx-plateforme/#/inscription` (bio, story, réponse automatique en DM). Le lien direct vers la connexion reste `https://lcsmhx.github.io/mhx-plateforme/`.
