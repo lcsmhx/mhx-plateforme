@@ -10712,6 +10712,8 @@ const outilDecouverte = {
         <h1>${esc(trad("Bonjour"))}${p.prenom ? " " + esc(p.prenom) : ""}</h1>${lede ? `<p class="lede">${esc(lede)}</p>` : ""}
         ${cal ? `<div class="actions"><a class="btn" href="${esc(cal)}" target="_blank" rel="noopener" data-dc-cal="decouverte">${esc(trad("Réserver mon bilan"))}</a></div>` : ""}</header>`
       + (form ? this.formulaireHTML(I) : this.resultatHTML(I) + this.calculHTML(I) + this.seanceHTML(I) + this.recettesHTML() + this.formationHTML() + this.accompHTML(C));
+    /* chaque clic vers Calendly est note pour le coach, avec l'ecran d'origine (resultat comme « Modifier mes reponses ») */
+    $$("[data-dc-cal]", zone).forEach(a => a.addEventListener("click", () => Decouverte.clic(C, a.dataset.dcCal)));
     if (form) this.brancherFormulaire(zone, I, C);
     else { Tracking.enregistrer("result_viewed"); this.brancherPage(zone, I, C); }
   },
@@ -10723,7 +10725,9 @@ const outilDecouverte = {
       const large = (q.type === "long" || q.grand) ? ' style="grid-column:1/-1"' : "";
       let aide = q.aide || "";
       if (q.id === "age" && B.age) aide = trad(L.age_aide, { n: B.age[0] }) + (aide ? " " + aide : "");
-      return `<div${large}><label for="q-${q.id}">${esc(q.label)}${req.indexOf(q.id) > -1 ? " *" : ""}</label>${aide ? `<p class="note" style="margin:-2px 0 8px">${esc(aide)}</p>` : ""}${outilProfil.champ(q, I[q.id])}</div>`;
+      /* libelle traduit avant l'etoile (le dictionnaire connait certains libelles avec leur etoile, d'autres sans) */
+      const etoile = q.label + " *", lib = req.indexOf(q.id) > -1 ? (trad(etoile) !== etoile ? trad(etoile) : trad(q.label) + " *") : trad(q.label);
+      return `<div${large}><label for="q-${q.id}">${esc(lib)}</label>${aide ? `<p class="note" style="margin:-2px 0 8px">${esc(aide)}</p>` : ""}${outilProfil.champ(q, I[q.id])}</div>`;
     }).join("");
     return `<section class="panel"><h2>${esc(trad(L.titre))}</h2><div class="grid g2">${champs}</div>
       <div class="actions"><button class="btn" id="dc-voir" type="button">${esc(trad(L.bouton))}</button>${Decouverte.questionnaireFait(I) ? `<button class="btn ghost" id="dc-annuler" type="button">${esc(trad(L.annuler))}</button>` : ""}<span class="msg" id="dc-msg" role="status" aria-live="polite"></span></div>
@@ -10914,8 +10918,6 @@ const outilDecouverte = {
     const self = this;
     const mod = zone.querySelector("#dc-modifier");
     if (mod) mod.addEventListener("click", () => { self._form = true; self.rendre(zone, I, C); window.scrollTo(0, 0); });
-    /* chaque clic vers Calendly est note pour le coach, avec l'ecran d'origine */
-    $$("[data-dc-cal]", zone).forEach(a => a.addEventListener("click", () => Decouverte.clic(C, a.dataset.dcCal)));
     $$("[data-yt]", zone).forEach(b => b.addEventListener("click", () => {
       const id = idVideo(b.dataset.yt); if (!id) return;
       /* une seule video a la fois : les autres lecteurs redeviennent des boutons */
@@ -11102,6 +11104,7 @@ function nomCourt(o){
 }
 
 function marquerNav(id){
+  if (id === "decouverte") id = "accueil";   // la Decouverte est l'accueil du prospect (sans onglet a elle) : « Accueil » est marque, pas « Plus »
   $$("#barre-bas a, .menu-plus a").forEach(a => { if (a.dataset.id === id) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
   const plus = document.querySelector("#barre-bas [data-plus]");
   if (plus) plus.classList.toggle("ici", !outilsPrincipaux().some(o => o.id === id) && !horsVitrine(OUTILS.find(o => o.id === id)));   // v50 : une page cachee n'est pas dans « Plus »
