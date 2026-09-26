@@ -8284,7 +8284,7 @@ const outilClients = {
 
     const feu = l => { const n = l.alertes.some(a => a.niveau === "mauvais") ? "mauvais" : l.alertes.some(a => a.niveau === "attention") ? "attention" : "ok"; return `<span class="point ${n}" title="${esc(l.alertes.map(a => a.texte).join(" · ") || "Rien à signaler")}"></span>`; };
     tb.innerHTML = lignes.map(l => `<tr>
-      <td data-l="Client">${feu(l)} <b>${esc(l.nom)}</b>${l.p.statut === "prospect" ? ` <span class="pastille accent" title="Compte gratuit : pas encore accompagné">prospect</span> ` + Challenge.pastilleCoach(l.ch) + " " + Commercial.pastilleLigne(l) : ""}${l.ecarts.length ? ` <span class="pastille manque" title="Le calculateur ne correspond pas au questionnaire">chiffres à vérifier</span>` : ""}</td>
+      <td data-l="Client">${feu(l)} <b>${esc(l.nom)}</b>${l.p.statut === "prospect" ? ` <span class="pastille accent" title="Compte gratuit : pas encore accompagné">prospect</span> ` + Decouverte.pastilleCoach(l) + " " + Commercial.pastilleLigne(l) : ""}${l.ecarts.length ? ` <span class="pastille manque" title="Le calculateur ne correspond pas au questionnaire">chiffres à vérifier</span>` : ""}</td>
       <td data-l="Activité">${l.jours === null ? '<span class="pastille manque">jamais</span>'
             : l.jours >= 10 ? `<span class="pastille manque">${l.jours} j</span>`
             : `<span class="meta">${l.jours === 0 ? "aujourd'hui" : "il y a " + l.jours + " j"}</span>`}</td>
@@ -8614,7 +8614,9 @@ const Clients = {
       programme: !!(c.programme && (c.programme.seances||[]).length),
       diete: !!(c.repas && ((c.repas.jours || []).some(j => (j.repas || []).length) || (c.repas.repas || []).length)),
       sens: sens,
-      ch: (c.challenge && typeof c.challenge === "object") ? c.challenge : null,   // v47 : pastille « Challenge n/7 » (prospects)
+      ch: (c.challenge && typeof c.challenge === "object") ? c.challenge : null,   // clics « Réserver mon bilan » et case « J'ai réservé » (prospects)
+      /* questionnaire court du prospect (Decouverte) : seulement ce que le suivi commercial lit */
+      dc: (c.intake && typeof c.intake === "object") ? { court_le: c.intake.court_le, motivation: c.intake.motivation } : null,
       suivi: (c.suivi_prospect && typeof c.suivi_prospect === "object") ? c.suivi_prospect : null,   // v49 : suivi commercial
       activite: dernierMaj || null
     };
@@ -11297,6 +11299,17 @@ const Decouverte = {
     const cl = this.clics(C), der = cl.length ? cl[cl.length - 1].date : null, j = this.jour(p, true);
     return { jour: j, duree: this.duree(), finie: j != null && j > this.duree(), questionnaire: this.questionnaireFait(I) ? I.court_le : null,
              clics: cl.length, dernierClic: typeof der === "string" ? der : null, reserve: this.reserve(C) };
+  },
+  /* pastilles « Découverte J n/7 » (+ bilan) pour Mes clients : prospects seulement. l = une ligne de Clients.resumer */
+  pastilleCoach(l){
+    let r = null;
+    try { r = this.resume(l && l.p, l && l.ch, l && l.dc); } catch(e){ return `<span class="pastille attention" title="Données de la découverte illisibles">Découverte illisible</span>`; }
+    let h = r.jour == null ? `<span class="pastille">Découverte</span>`
+          : r.finie ? `<span class="pastille" title="Période découverte terminée">Découverte terminée</span>`
+          : `<span class="pastille" title="Jour ${r.jour} de sa période découverte">Découverte J${r.jour}/${r.duree}</span>`;
+    if (r.reserve) h += ` <span class="pastille ok" title="A coché « J'ai réservé mon bilan »">bilan réservé</span>`;
+    else if (r.clics) h += ` <span class="pastille accent" title="A cliqué « Réserver mon bilan » ${r.clics} fois">a cliqué Réserver</span>`;
+    return h;
   },
 
   /* la cle relue juste avant d'ecrire : un autre onglet n'efface pas un clic ou la case « J'ai réservé ».
