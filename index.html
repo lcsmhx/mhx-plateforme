@@ -10355,45 +10355,36 @@ const outilAccueil = {
     $$("a[target=_blank]", zone).forEach(a => { if (cal && a.getAttribute("href") === cal) a.addEventListener("click", () => Challenge.clic(C, e.termine ? Challenge.NB : e.nbFaits)); });
   },
 
-  /* v47 — bloc « Challenge 7 jours » de la fiche : ce que le prospect a fait et choisi, en lecture seule */
-  challengeFicheHTML(C){
-    if (!C) return "";
-    try { return this._challengeFicheHTML(C); }
-    catch(e){ console.warn("[MHX] bloc challenge illisible", e); return `<section class="panel" id="fiche-challenge"><h2>Challenge 7 jours</h2><div class="empty">Données du challenge illisibles — à vérifier.</div></section>`; }
+  /* bloc « Découverte » de la fiche d'un prospect : jour, questionnaire court, clics, bilan reserve (lecture seule) */
+  decouverteFicheHTML(p, C, I){
+    try { return this._decouverteFicheHTML(p, C, I); }
+    catch(e){ console.warn("[MHX] bloc découverte illisible", e); return `<section class="panel" id="fiche-decouverte"><h2>Découverte</h2><div class="empty">Données de la découverte illisibles — à vérifier.</div></section>`; }
   },
-  _challengeFicheHTML(C){
-    const r = Challenge.resume(C);
+  _decouverteFicheHTML(p, C, I){
+    I = (I && typeof I === "object") ? I : {};
+    const r = Decouverte.resume(p, C, I);
     /* tout ce qui vient du prospect passe par s() (chaine ou nombre, sinon rien) ou dt() (date en chaine, sinon —) */
-    const s = v => (typeof v === "string" || typeof v === "number") ? String(v) : "";
-    const dt = v => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v)) ? dateFr(v) : "—";
-    const def = n => Challenge.def(n) || {};
-    const e = n => Challenge.entree(C, n) || {};
-    const lab = (liste, id) => { id = s(id); const x = (liste || []).find(o => o && o.id === id); return x ? (x.titre || x.texte || "") : id; };   // les erreurs du jour 2 ont un titre court
-    const etapes = [];
-    for (let n = 1; n <= Challenge.NB; n++){
-      const x = Challenge.fait(C, n) ? Challenge.entree(C, n) : null, j = def(n);
-      const quand = x ? dt(typeof x.date === "string" ? x.date : x.fait) : "";
-      etapes.push(`<li><span class="ch-etape${x ? " fait" : " ferme"}" role="img" aria-label="${esc("Jour " + n + " : " + (x ? "validé le " + quand : "pas encore"))}" title="${esc("Jour " + n + (x ? " · validé le " + quand : " · pas encore"))}"><span class="num" aria-hidden="true">${x ? "✓" : n}</span><span class="lbl" aria-hidden="true">${esc(j.eyebrow || "")}</span></span></li>`);
-    }
-    const j2 = e(2), j3 = e(3), j4 = e(4), j5 = e(5), j6 = e(6);
-    const tours = (typeof j3.tours === "number" || typeof j3.tours === "string") && Number(j3.tours) > 0 ? Math.round(Number(j3.tours)) : 0;
+    const s = v => (typeof v === "string" || typeof v === "number") ? String(v).slice(0, 400) : "";
+    const dt = v => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v)) ? dateFr(Decouverte.dateLocale(v) || v.slice(0, 10)) : "—";
+    const jourTxt = r.jour == null ? "date d'inscription inconnue" : r.finie ? "terminée (" + r.jour + "e jour depuis l'inscription)" : "jour " + r.jour + " / " + r.duree;
     const lignes = [
-      ["Jours validés", r.nbFaits + " / 7" + (r.termine ? " · terminé le " + dt(C.termine) : r.prochain ? " · prochain : jour " + r.prochain : "")],
-      ["Commencé le", r.debut ? dt(r.debut) : ""],
-      ["Dernier jour validé le", r.dernier ? dt(r.dernier) : ""],
-      ["Erreur choisie (jour 2)", s(j2.erreur) ? lab(def(2).erreurs, j2.erreur) + (s(j2.ressenti) ? " · action jugée « " + lab(def(2).ressentis, j2.ressenti).toLowerCase() + " »" : "") : ""],
-      ["Séance (jour 3)", tours ? tours + " tour" + (tours > 1 ? "s" : "") + " · ressenti " + (s(j3.ressenti) || "—") + "/5" : ""],
-      ["Habitude (jour 4)", s(j4.habitude) ? lab(def(4).habitudes, j4.habitude) + ((s(j4.quand) || s(j4.ou)) ? " (" + [s(j4.quand), s(j4.ou)].filter(Boolean).join(", ") + ")" : "") : ""],
-      ["Ce qui lui parle (jour 5)", s(j5.interet) ? lab(def(5).interets, j5.interet) : ""],
-      ["« Où en es-tu ? » (jour 6)", s(j6.etat) ? lab(def(6).etats, j6.etat) : ""],
+      ["Découverte", jourTxt + (p && typeof p.cree_le === "string" ? " · inscrit le " + dt(p.cree_le) : "")],
+      ["Questionnaire court", r.questionnaire ? "rempli le " + dt(r.questionnaire) : "pas encore rempli"],
+      ["Objectif", s(I.objectif)],
+      ["Séances possibles", s(I.seances) ? s(I.seances) + " par semaine" : ""],
+      ["Motivation", s(I.motivation) ? s(I.motivation) + " / 10" : ""],
+      ["Déjà essayé", s(I.essaye)],
+      ["Obstacle principal", s(I.obstacle)],
+      ["Pourquoi maintenant", s(I.pourquoi)],
       ["Bouton « Réserver mon bilan »", r.clics ? r.clics + " clic" + (r.clics > 1 ? "s" : "") + (r.dernierClic ? ", le dernier le " + dt(r.dernierClic) : "") : "jamais cliqué"],
-      ["Case « J'ai réservé mon bilan »", r.reserve ? "cochée le " + dt(r.reserve) : ""]
+      ["Case « J'ai réservé mon bilan »", r.reserve ? "cochée le " + dt(r.reserve) : "pas cochée"]
     ];
     const ligne = (k, v) => v ? `<li><span>${esc(k)}</span><b>${esc(String(v))}</b></li>` : "";
-    return `<section class="panel" id="fiche-challenge"><div class="seance-c-tete"><h2>Challenge 7 jours</h2>${r.termine ? `<span class="pastille ok">terminé</span>` : `<span class="pastille">${r.nbFaits} / 7</span>`}${r.reserve ? ` <span class="pastille ok">appel réservé</span>` : r.clics ? ` <span class="pastille accent">a cliqué Réserver</span>` : ""}</div>
-      <ol class="ch-etapes ch-etapes-fiche">${etapes.join("")}</ol>
+    const pastilles = (r.finie ? `<span class="pastille">terminée</span>` : r.jour != null ? `<span class="pastille">J${r.jour}/${r.duree}</span>` : "")
+      + (r.reserve ? ` <span class="pastille ok">bilan réservé</span>` : r.clics ? ` <span class="pastille accent">a cliqué Réserver</span>` : "");
+    return `<section class="panel" id="fiche-decouverte"><div class="seance-c-tete"><h2>Découverte</h2>${pastilles}</div>
       <ul class="ingr fiche-l">${lignes.map(x => ligne(x[0], x[1])).join("")}</ul>
-      <p class="note" style="margin:10px 0 0">Ses réponses du jour 1 (âge, poids, objectif, « pourquoi ») sont dans son questionnaire, ci-dessous. Lecture seule : rien ne s'écrit d'ici.</p></section>`;
+      <p class="note" style="margin:10px 0 0">Ses autres réponses (âge, taille, poids) sont dans son questionnaire, ci-dessous. Lecture seule : rien ne s'écrit d'ici.</p></section>`;
   },
 
   /* ---------- FICHE CLIENT (v37, phase 18) ----------
@@ -10432,7 +10423,9 @@ const outilAccueil = {
     const nbCompl = ((d.complements || {}).liste || []).length;
     const histP = ((d.hist_programme || {}).liste || []).length, histR = ((d.hist_repas || {}).liste || []).length;
     const fo = d.formation ? outilFormation.compte(outilFormation.migrer(d.formation)) : null;
-    const CH = (d.challenge && Challenge.nbFaits(d.challenge)) ? d.challenge : null, rch = CH ? Challenge.resume(CH) : null;   // v47
+    /* la decouverte d'un prospect (jour depuis l'inscription, questionnaire court, clics, bilan reserve) */
+    const pDc = Object.assign({}, pr || {}, profil);
+    let rdc = null; try { rdc = profil.statut === "prospect" ? Decouverte.resume(pDc, d.challenge, I) : null; } catch(e){ rdc = null; }
     /* v49 : le suivi commercial d'un prospect (un client n'en a plus : son bloc disparait) */
     let SC = null;
     try { if (profil.statut === "prospect") SC = Commercial.analyse(Object.assign({}, pr || {}, profil), d.challenge, d.suivi_prospect, dernier); } catch(e){ SC = null; }
@@ -10443,7 +10436,7 @@ const outilAccueil = {
       <header class="masthead">
         <span class="eyebrow">${esc(trad("Fiche client"))} · ${esc(this.dateLongue())}</span>
         <h1>${esc(nomC)}${profil.statut === "prospect" ? ` <span class="pastille accent" title="Compte gratuit : pas encore accompagné">prospect</span>` : ""}${(d.prefs && d.prefs.langue === "en") ? ` <span class="pastille" title="Ce client utilise l'app en anglais">🇺🇸 anglais</span>` : ""}</h1>
-        <p class="lede">${profil.statut === "prospect" ? "Compte gratuit : pas de suivi à assurer tant qu'il n'est pas passé client." + (rch ? " Challenge 7 jours : " + (rch.termine ? "terminé." : rch.nbFaits + " / 7.") : " Challenge 7 jours : pas encore commencé.") : alertes.length ? `${alertes.length} point${alertes.length > 1 ? "s" : ""} à regarder.` : "Rien à signaler : tout est en ordre."}</p>
+        <p class="lede">${profil.statut === "prospect" ? "Compte gratuit : pas de suivi à assurer tant qu'il n'est pas passé client." + (rdc ? " Découverte : " + (rdc.jour == null ? "date d'inscription inconnue" : rdc.finie ? "terminée" : "jour " + rdc.jour + " / " + rdc.duree) + (rdc.questionnaire ? ", questionnaire rempli." : ", questionnaire pas encore rempli.") : "") : alertes.length ? `${alertes.length} point${alertes.length > 1 ? "s" : ""} à regarder.` : "Rien à signaler : tout est en ordre."}</p>
         ${alertes.length ? `<div class="attention-alertes" style="margin-top:4px">${alertes.map(a => `<a class="pastille ${a.niveau === "info" ? "accent" : a.niveau}" href="#/${esc(a.cible)}">${esc(a.texte)}</a>`).join("")}</div>` : ""}
       </header>
       <section class="panel">
@@ -10458,7 +10451,7 @@ const outilAccueil = {
         </div>
       </section>
       ${SC ? `<div id="fiche-commercial">${Commercial.ficheHTML(Object.assign({}, pr || {}, profil), SC, d.suivi_prospect)}</div>` : ""}
-      ${this.challengeFicheHTML(CH)}
+      ${profil.statut === "prospect" ? this.decouverteFicheHTML(pDc, d.challenge, I) : ""}
       ${NotesCoach.html()}
       <div class="fiche-grille">
       <section class="panel"><div class="seance-c-tete"><h2>Profil</h2>${I.complet ? `<span class="pastille ok">questionnaire complet</span>` : `<span class="pastille attention">questionnaire incomplet</span>`}</div>
