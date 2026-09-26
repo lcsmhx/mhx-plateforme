@@ -1022,7 +1022,7 @@ const CONFIG = {
     calendly_prerempli: true,
     /* la Speed Formation n'est pas dans la liste : elle est ouverte pendant la
        decouverte (CONFIG.decouverte.jours) puis verrouillee (estVerrouille) */
-    gratuit_ouverts: ["accueil", "decouverte", "challenge", "profil"],
+    gratuit_ouverts: ["accueil", "decouverte", "profil"],
     /* v50 — onglets verrouilles qu'un prospect voit quand meme (cadenas + ce qu'apporte l'accompagnement) :
        la vitrine de l'offre. Les autres onglets verrouilles sont caches de sa navigation (leur adresse
        montre toujours la page verrouillee). Pour tout remontrer comme avant : ajouter "mensurations",
@@ -2798,7 +2798,7 @@ I18N.en = {
 "Le questionnaire complet s'ouvrira au démarrage de ton accompagnement. Tes réponses du Challenge 7 jours sont déjà enregistrées et ton coach les verra.": "The full questionnaire opens when your coaching starts. Your 7-Day Challenge answers are already saved and your coach will see them.",
 "Revenir au challenge": "Back to the challenge", "Ton compte et tes réglages.": "Your account and settings.",
 "Bienvenue dans l'accompagnement !": "Welcome to your coaching!",
-"Tes réponses du challenge sont déjà là : complète le reste du questionnaire et enregistre.": "Your challenge answers are already here: complete the rest of the questionnaire and save.",
+"Tes premières réponses sont déjà là : complète le reste du questionnaire et enregistre.": "Your first answers are already here: complete the rest of the questionnaire and save.",
 "Heures de sommeil / nuit *": "Hours of sleep per night *", "Niveau d'énergie dans la journée *": "Energy level during the day *", "/ sem": "/ wk", "Jour {n} : {e}": "Day {n}: {e}", "fait": "done", "À partir de {n} ans.": "From {n} years old.", "La Speed Formation s'ouvre à la fin de ton Challenge 7 jours.": "The Speed Formation unlocks at the end of your 7-Day Challenge.", "Ouvrir mon challenge": "Open my challenge", "{a} à {b}": "{a} to {b}",
 /* v45 — jours 2 a 4 */
 "Démonstration de l'exercice": "Exercise demonstration", "Marche sur place": "March in place", "Marche sur place genoux hauts": "High-knee march in place", "Montées de genoux + squats": "High knees + squats", "Monter la température avant une séance intense ou un circuit.": "Raise your body temperature before an intense session or a circuit."
@@ -5432,12 +5432,12 @@ const outilProfil = {
   },
 
   html(){
-    /* v44 — prospect : pas de questionnaire complet (il s'ouvrira avec l'accompagnement,
-       pre-rempli par ses reponses du challenge) ; son compte et ses donnees seulement */
+    /* prospect : pas de questionnaire complet (il s'ouvrira avec l'accompagnement,
+       pre-rempli par ses reponses du questionnaire court) ; son compte et ses donnees seulement */
     if (Auth.estProspect() && !Store.idConsulte){
       return `<section class="panel"><h2>${esc(trad("Ton questionnaire"))}</h2>
-        <p class="note" style="margin:0">${esc(trad("Le questionnaire complet s'ouvrira au démarrage de ton accompagnement. Tes réponses du Challenge 7 jours sont déjà enregistrées et ton coach les verra."))}</p>
-        <div class="actions"><a class="btn ghost petit" href="#/challenge">${esc(trad("Revenir au challenge"))}</a></div></section>` + this.compteHTML();
+        <p class="note" style="margin:0">${esc(trad(DECOUVERTE.profil.texte))}</p>
+        <div class="actions"><a class="btn ghost petit" href="#/decouverte">${esc(trad(DECOUVERTE.profil.lien))}</a></div></section>` + this.compteHTML();
     }
     const D = Store.cache["intake"] || {};
     let corps = "", ouverte = false;
@@ -11365,6 +11365,7 @@ const Decouverte = {
    ------------------------------------------------------------------ */
 const outilChallenge = {
   id: "challenge",
+  masque_nav: true,      // remplace par la Decouverte : plus d'onglet, l'adresse #/challenge y mene
   cle: "challenge",
   nom: "Challenge 7 jours",
   court: "Challenge",
@@ -12577,11 +12578,15 @@ function routeDepuisAdresse(){
   if (!$("vue") || $("session-perdue")) return;   // v48 : session terminee (bandeau ou ecran de connexion) : rien a router
   let id = (location.hash || "").replace(/^#\/?/, "");
   if (id.indexOf("=") > -1 || id.indexOf("&") > -1) id = "";
-  /* v44 — mode test du challenge (Lucas) : #/challenge-libre debloque les jours sur cet
-     appareil, #/challenge-rythme remet le rythme normal ; puis on ouvre le challenge */
-  if (id === "challenge-libre" || id === "challenge-rythme"){
-    try { if (id === "challenge-libre") localStorage.setItem(Challenge.CLE_LIBRE, "1"); else localStorage.removeItem(Challenge.CLE_LIBRE); } catch(e){}
-    location.hash = "#/challenge"; return;
+  /* le Challenge 7 jours n'existe plus : ses anciennes adresses (liens partages, favoris) menent a la Decouverte */
+  if (/^challenge(-libre|-rythme)?(\/.*)?$/.test(id)){ try { history.replaceState(null, "", "#/decouverte"); } catch(e){} id = "decouverte"; }
+  /* mode test de la Decouverte (Lucas) : #/decouverte-jour/8 fait comme si on etait au jour 8 sur CET appareil,
+     #/decouverte-jour/0 revient au vrai jour ; rien n'est ecrit en base */
+  const jt = /^decouverte-jour\/(\d{1,3})$/.exec(id);
+  if (jt){
+    try { if (+jt[1] >= 1) localStorage.setItem(Decouverte.CLE_TEST, jt[1]); else localStorage.removeItem(Decouverte.CLE_TEST); } catch(e){}
+    construireNav();
+    location.hash = "#/decouverte"; return;
   }
   const parts = id.split("/"); id = parts[0]; sousRoute = parts.slice(1).join("/");
   if (ALIAS_ROUTES[id]) id = ALIAS_ROUTES[id];
@@ -12907,12 +12912,6 @@ let lienEmail = null, lienEmailType = "", lienEmailAdresse = "";   // v47 : "ok"
     }
   } catch(e){}
 
-  /* v44 — un prospect : l'etat de son challenge decide de la navigation (formation
-     apres le jour 7) et de sa page d'arrivee ; jamais le questionnaire complet */
-  if (Auth.estProspect()){
-    const C = await Store.lire(Challenge.cle, Challenge.vide());
-    if (!Challenge.nbFaits(C) && !(location.hash || "").replace(/^#\/?/, "")) history.replaceState(null, "", "#/challenge");   // sans evenement : un seul affichage
-  }
   construireNav();
   Contenus.charger();
   window.addEventListener("hashchange", routeDepuisAdresse);
@@ -12934,11 +12933,11 @@ let lienEmail = null, lienEmailType = "", lienEmailAdresse = "";   // v47 : "ok"
       const mot = document.createElement("div");
       mot.className = "bandeau";
       const dejaVenu = intake && Object.keys(intake).length > 3;
-      /* v44 : un ancien prospect passe client : ses reponses du challenge sont deja dans le questionnaire */
-      let duChallenge = false;
-      if (dejaVenu && !intake.nom){ try { const ch = (await Store.lireTout([Challenge.cle]))[Challenge.cle]; duChallenge = !!(ch && Challenge.nbFaits(ch)); } catch(e){} }
-      mot.innerHTML = duChallenge
-        ? `<strong>Bienvenue dans l'accompagnement !</strong><span class="note">Tes réponses du challenge sont déjà là : complète le reste du questionnaire et enregistre.</span>`
+      /* un ancien prospect passe client : ses reponses du questionnaire court (ou de l'ancien challenge) sont deja la */
+      let dejaProspect = dejaVenu && !intake.nom && Decouverte.questionnaireFait(intake);
+      if (dejaVenu && !intake.nom && !dejaProspect){ try { const ch = (await Store.lireTout([Decouverte.cle]))[Decouverte.cle]; const j1 = ch && ch.jours && typeof ch.jours === "object" ? ch.jours["1"] : null; dejaProspect = !!(j1 && typeof j1 === "object" && j1.fait); } catch(e){} }
+      mot.innerHTML = dejaProspect
+        ? `<strong>Bienvenue dans l'accompagnement !</strong><span class="note">Tes premières réponses sont déjà là : complète le reste du questionnaire et enregistre.</span>`
         : dejaVenu
         ? `<strong>Une réponse manque à ton profil.</strong><span class="note">Une question a été ajoutée depuis ton inscription. Complète-la et enregistre : ça prend dix secondes.</span>`
         : `<strong>Bienvenue !</strong><span class="note">Commence par remplir ton profil : c'est ce qui permet à ton coach de construire ton suivi.</span>`;
