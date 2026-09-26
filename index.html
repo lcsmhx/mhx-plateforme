@@ -252,6 +252,23 @@ summary:hover{color:var(--accent)}
 .pastille.ok,.pastille.bon{border-color:transparent;background:var(--good-soft);color:var(--good)}
 .pastille.attention,.pastille.manque{border-color:transparent;background:var(--warn-soft);color:var(--warn)}
 .pastille.mauvais{border-color:transparent;background:var(--bad-soft);color:var(--bad)}
+/* v49 — temperature d'un prospect */
+.pastille.chaud{border-color:transparent;background:var(--bad-soft);color:var(--bad);font-weight:600}
+.pastille.tiede{border-color:transparent;background:var(--warn-soft);color:var(--warn)}
+.pastille.froid{border-color:var(--line-strong);background:transparent;color:var(--s1)}
+.sc-liste{display:grid;gap:12px}
+@media (min-width:900px){.sc-liste{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.sc-carte{border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;background:var(--sunken);min-width:0}
+.sc-carte.urgent,.sc-fiche.urgent{border-color:var(--accent-line)}
+.sc-tete{display:flex;align-items:center;gap:10px}
+.sc-nom{flex:1;min-width:0;display:flex;flex-direction:column}
+.sc-nom b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sc-nom small{color:var(--ink-3);font-size:12px}
+.sc-action{margin:10px 0 6px;line-height:1.5}
+.sc-raisons{margin:0 0 10px;padding-left:18px;color:var(--ink-2);font-size:13.5px;line-height:1.5}
+.sc-boutons{display:flex;flex-wrap:wrap;gap:6px}
+.sc-filtres{max-width:none;width:100%;flex-wrap:wrap;margin:0 0 14px}
+.sc-filtres button{flex:1 1 auto}
 .pastille.accent,.pastille.role-coach,.pastille.fo-ok,.pastille.compl-prot{border-color:transparent;background:var(--accent-soft);color:var(--accent)}
 .point{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ink-3);vertical-align:middle}
 .point.ok{background:var(--good)} .point.attention{background:var(--warn)} .point.mauvais{background:var(--bad)}
@@ -977,7 +994,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-09-26 · 48",
+    version: "2026-09-26 · 49",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -1011,6 +1028,20 @@ const CONFIG = {
     /* bornes de saisie du jour 1 (min, max) : une taille en mètres ou un âge d'enfant ne passent pas.
        L'âge minimum (18) se change ici. */
     bornes: { age: [18, 90], taille: [120, 230], poids: [35, 250], poids_obj: [35, 250], sommeil_h: [1, 14], pas: [0, 40000] }
+  },
+
+  /* --- v49 : suivi commercial des prospects (page « Prospects » du coach). Les seuils en jours
+     qui decident de la temperature et de la prochaine action ; tout se change ici. --- */
+  suivi: {
+    clic_recent_jours: 3,            // un clic « Réserver mon appel » de moins de 3 jours rend le prospect CHAUD
+    inactif_jours: 4,                // 4 jours sans rien faire pendant le challenge : FROID
+    sans_debut_jours: 2,             // inscrit depuis 2 jours sans avoir fait le jour 1 : FROID
+    relance_attente_jours: 3,        // après une relance, on attend 3 jours avant d'en proposer une autre
+    perdu_relance_jours: 30,         // « Perdu » : relance proposée 30 jours après l'appel
+    pas_maintenant_relance_jours: 30, // « Pas maintenant » au jour 6 : relance proposée 30 jours après
+    relances_max: 3,                 // 3 relances sans réponse : on arrête de proposer de relancer (« classe-le Perdu ? »)
+    chaud_jours: 14,                 // « Je veux avancer » (jour 6) reste un signal CHAUD pendant 14 jours
+    appel_jours: 7                   // « J'ai réservé » il y a plus de 7 jours sans issue indiquée : « L'appel a-t-il eu lieu ? »
   },
 
   /* --- Connexion a la base Supabase (comptes + donnees) --- */
@@ -1270,6 +1301,7 @@ const CHALLENGE7 = {
       "Le Challenge 7 jours de MHX Coaching est un programme gratuit d'information et d'entraînement général, réservé aux adultes. Il ne remplace pas un avis médical : en cas de doute sur ta santé, parles-en à un professionnel avant de commencer.",
       "Données collectées : ton prénom, ton email, tes réponses au challenge (âge, taille, poids, objectif, habitudes) et ta progression.",
       "Usage : te faire suivre le challenge, adapter ce qui s'affiche à tes réponses et te proposer un appel avec le coach. Aucune revente, aucune publicité.",
+      "Suivi par le coach : il voit ta progression et note, pour son suivi, l'issue de ton appel et ses relances. Ces notes n'apparaissent pas dans l'app : tu peux en demander une copie ou la suppression en lui écrivant.",
       "Hébergement : Supabase, serveurs en Europe (Irlande).",
       "Tes droits : tu peux exporter ou supprimer ton compte et toutes tes données à tout moment depuis Profil, section « Mes données », ou en écrivant au coach.",
       "Conservation : tant que ton compte existe.",
@@ -1523,6 +1555,7 @@ const CHALLENGE7 = {
         "The MHX Coaching 7-Day Challenge is a free program of general information and training, for adults only. It is not medical advice: if you have any doubt about your health, talk to a professional before starting.",
         "Data collected: your first name, your email, your challenge answers (age, height, weight, goal, habits) and your progress.",
         "Use: to guide you through the challenge, adapt what you see to your answers and offer you a call with the coach. No resale, no advertising.",
+        "Coach follow-up: the coach sees your progress and records, for his follow-up, the outcome of your call and his follow-up messages. These notes don't appear in the app: you can ask him for a copy or their deletion by writing to him.",
         "Hosting: Supabase, servers in Europe (Ireland).",
         "Your rights: you can export or delete your account and all your data at any time from Profile, section \"My data\", or by writing to the coach.",
         "Retention: as long as your account exists.",
@@ -2640,6 +2673,7 @@ const ICONES = {
   catalogue:    '<svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>',
   calculateur:  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c1 4 5 5.5 5 10a5 5 0 0 1-10 0c0-2 1-3.2 2-4.2 0 2 1 3.2 2.2 3.2C10.5 9 11 6 12 3z"/></svg>',
   entrainement: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>',
+  prospects:    '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>',
   plus:         '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>'
 };
 
@@ -3126,7 +3160,7 @@ const Store = {
   /* v38 — cles rangees chez le client mais ecrites par le coach seul, par
      leur propre chemin (Feedback, NotesCoach) : jamais par ecrire(), envoyer()
      ni une restauration de sauvegarde. La base le refuse de toute facon. */
-  clesCoachSeul: ["feedbacks", "notes_coach"],
+  clesCoachSeul: ["feedbacks", "notes_coach", "suivi_prospect"],   // v49 : + suivi commercial (jamais ecrit par Store.ecrire)
   /* v42 — objet lu -> compte pour lequel il a ete lu. Une page perimee (lecture
      finie apres un changement de fiche) ne doit jamais ecrire chez le compte
      affiche ce qu'elle a lu pour un autre. */
@@ -7965,7 +7999,7 @@ const outilClients = {
 
     const feu = l => { const n = l.alertes.some(a => a.niveau === "mauvais") ? "mauvais" : l.alertes.some(a => a.niveau === "attention") ? "attention" : "ok"; return `<span class="point ${n}" title="${esc(l.alertes.map(a => a.texte).join(" · ") || "Rien à signaler")}"></span>`; };
     tb.innerHTML = lignes.map(l => `<tr>
-      <td data-l="Client">${feu(l)} <b>${esc(l.nom)}</b>${l.p.statut === "prospect" ? ` <span class="pastille accent" title="Compte gratuit : pas encore accompagné">prospect</span> ` + Challenge.pastilleCoach(l.ch) : ""}${l.ecarts.length ? ` <span class="pastille manque" title="Le calculateur ne correspond pas au questionnaire">chiffres à vérifier</span>` : ""}</td>
+      <td data-l="Client">${feu(l)} <b>${esc(l.nom)}</b>${l.p.statut === "prospect" ? ` <span class="pastille accent" title="Compte gratuit : pas encore accompagné">prospect</span> ` + Challenge.pastilleCoach(l.ch) + " " + Commercial.pastilleLigne(l) : ""}${l.ecarts.length ? ` <span class="pastille manque" title="Le calculateur ne correspond pas au questionnaire">chiffres à vérifier</span>` : ""}</td>
       <td data-l="Activité">${l.jours === null ? '<span class="pastille manque">jamais</span>'
             : l.jours >= 10 ? `<span class="pastille manque">${l.jours} j</span>`
             : `<span class="meta">${l.jours === 0 ? "aujourd'hui" : "il y a " + l.jours + " j"}</span>`}</td>
@@ -8271,7 +8305,7 @@ const Clients = {
     const parClient = {}, contenus = {};
     /* « Activite » = ce que le CLIENT a saisi. Ce que le coach ecrit dans
        sa fiche (programme, diete, calories, feedbacks, notes) ne dit rien de lui. */
-    const ecritParCoach = ["programme", "repas", "calc", "complements", "feedbacks", "notes_coach"];
+    const ecritParCoach = ["programme", "repas", "calc", "complements", "feedbacks", "notes_coach", "suivi_prospect"];
     (donnees || []).forEach(d => {
       if (ecritParCoach.indexOf(d.outil) === -1 && (!parClient[d.user_id] || d.maj_le > parClient[d.user_id])) parClient[d.user_id] = d.maj_le;
       (contenus[d.user_id] = contenus[d.user_id] || {})[d.outil] = Forme.cle(d.outil, d.contenu);   // v42
@@ -8295,7 +8329,9 @@ const Clients = {
       programme: !!(c.programme && (c.programme.seances||[]).length),
       diete: !!(c.repas && ((c.repas.jours || []).some(j => (j.repas || []).length) || (c.repas.repas || []).length)),
       sens: sens,
-      ch: (c.challenge && typeof c.challenge === "object") ? c.challenge : null   // v47 : pastille « Challenge n/7 » (prospects)
+      ch: (c.challenge && typeof c.challenge === "object") ? c.challenge : null,   // v47 : pastille « Challenge n/7 » (prospects)
+      suivi: (c.suivi_prospect && typeof c.suivi_prospect === "object") ? c.suivi_prospect : null,   // v49 : suivi commercial
+      activite: dernierMaj || null
     };
     /* regularite : la semaine passee (complete) sert au tri, celle en cours
        est donnee a titre indicatif. Rien tant qu'il n'a ni programme ni diete. */
@@ -8391,6 +8427,312 @@ const Clients = {
 };
 
 /* ------------------------------------------------------------------
+   SUIVI COMMERCIAL (v49). Pour chaque prospect : une temperature (CHAUD,
+   TIEDE, FROID) calculee a chaque affichage a partir de ce qu'il a fait
+   dans le funnel, les raisons en clair, la prochaine action, et l'issue
+   de l'appel indiquee par le coach (Signe, Perdu, Absent). Seules
+   l'issue et les relances sont enregistrees : cle coach-seul
+   « suivi_prospect » (jamais lisible par le prospect, regles de la base),
+   ecriture conditionnelle (CleCoach). Seuils : CONFIG.suivi.
+   ------------------------------------------------------------------ */
+const Commercial = {
+  cle: "suivi_prospect",
+  ISSUES: { signe: "Signé", perdu: "Perdu", absent: "Absent" },
+  ETATS: { chaud: "CHAUD", tiede: "TIÈDE", froid: "FROID", signe: "SIGNÉ", perdu: "PERDU", absent: "ABSENT" },
+  cfg(){ return Object.assign({ inactif_jours: 4, clic_recent_jours: 3, relance_attente_jours: 3, perdu_relance_jours: 30, pas_maintenant_relance_jours: 30, sans_debut_jours: 2, relances_max: 3, chaud_jours: 14, appel_jours: 7 }, CONFIG.suivi || {}); },
+  /* jours ecoules depuis une date ou un instant (calendrier local) ; null si illisible */
+  depuis(v){
+    if (typeof v !== "string" || !/^\d{4}-\d{2}-\d{2}/.test(v)) return null;
+    let j = v.slice(0, 10);
+    if (v.length > 10){ const d = new Date(v); if (isNaN(d)) return null; j = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+    const n = Challenge.joursEcoules(j);
+    return n == null ? null : Math.max(0, n);
+  },
+  quand(n){ return n == null ? "à une date inconnue" : n === 0 ? "aujourd'hui" : n === 1 ? "hier" : "il y a " + n + " jours"; },
+  suivi(S){ return (S && typeof S === "object" && !Array.isArray(S)) ? S : {}; },
+  /* p = profil (cree_le, statut), C = cle challenge, S = suivi_prospect, activite = derniere saisie du prospect */
+  analyse(p, C, S, activite){
+    const cfg = this.cfg(); S = this.suivi(S);
+    let r = null; try { r = C ? Challenge.resume(C) : null; } catch(e){ r = null; }
+    const nb = r ? r.nbFaits : 0, termine = !!(r && r.termine);
+    const j6 = C ? (Challenge.entree(C, 6) || {}) : {};
+    const etat6 = typeof j6.etat === "string" ? j6.etat : "";
+    const d6 = this.depuis(typeof j6.date === "string" ? j6.date : j6.fait);
+    const instant = v => { const x = typeof v === "string" ? Date.parse(v) : NaN; return isNaN(x) ? null : x; };
+    /* une activite datee de plus de 12 h dans le futur (horloge du prospect en avance) est traitee comme inconnue :
+       sinon il paraitrait actif a jamais et les relances ne compteraient jamais comme restees sans reponse */
+    const futur = instant(activite) != null && instant(activite) > Date.now() + 12 * 3600000;
+    const inscrit = this.depuis(p && p.cree_le), actif = futur ? null : this.depuis(activite);
+    const clic = r && r.dernierClic ? this.depuis(r.dernierClic) : null;
+    const relances = Array.isArray(S.relances) ? S.relances.filter(x => instant(x) != null) : [];
+    const relance = relances.length ? this.depuis(relances[relances.length - 1]) : null;
+    const tAct0 = futur ? null : instant(activite), tAct = tAct0 == null ? null : Math.min(tAct0, Date.now());   // quelques heures d'avance : ramenee a maintenant
+    /* relances restees sans reponse : faites apres la derniere activite du prospect */
+    const sansReponse = relances.filter(x => tAct == null || instant(x) > tAct).length;
+    let issue = (typeof S.issue === "string" && Object.prototype.hasOwnProperty.call(this.ISSUES, S.issue)) ? S.issue : null;   // une valeur piegee (objet) ne fait rien tomber
+    const tIssue = issue ? instant(S.issue_le) : null, issueDepuis = issue ? this.depuis(S.issue_le) : null;
+    /* « Signé » puis passé client, puis repassé prospect (fin d'accompagnement) : ce n'est plus un signé a traiter */
+    /* seulement si le passage en client est POSTERIEUR a la signature (un ancien client qui re-signe reste « Signé ») */
+    const tClient = instant(S.client_le);
+    const ancienClient = issue === "signe" && p && p.statut === "prospect" && tClient != null && tIssue != null && tClient > tIssue;
+    if (ancienClient) issue = null;
+    /* une case « J'ai réservé » d'AVANT son passage en client ne compte plus (c'etait l'appel qui l'a fait signer) */
+    if (ancienClient && r && r.reserve && !(instant(r.reserve) > tClient)) r = Object.assign({}, r, { reserve: null });
+    const relancesApresIssue = tIssue != null ? relances.filter(x => instant(x) > tIssue).length : 0;
+    /* « Perdu » ou « Absent », puis il reclique « Réserver » ou coche « J'ai réservé » : il revient dans la course */
+    const revenu = (issue === "perdu" || issue === "absent") && tIssue != null && !!r && ((!!r.dernierClic && instant(r.dernierClic) > tIssue && clic != null && clic <= cfg.clic_recent_jours) || (!!r.reserve && instant(r.reserve) > tIssue && this.depuis(r.reserve) != null && this.depuis(r.reserve) <= cfg.chaud_jours));
+    const inactif = nb > 0 && actif != null && actif >= cfg.inactif_jours;
+    const actifRecemment = actif != null && actif < cfg.sans_debut_jours;
+    const chaud = [], froid = [], tiede = [];
+    if (r && r.reserve) chaud.push("A coché « J'ai réservé mon appel » " + this.quand(this.depuis(r.reserve)) + ".");
+    if (etat6 === "avancer" && (d6 == null || d6 <= cfg.chaud_jours)) chaud.push("Jour 6 : « Je veux avancer avec un accompagnement ».");
+    if (clic != null && clic <= cfg.clic_recent_jours) chaud.push("A cliqué « Réserver mon appel » (" + r.clics + " fois), la dernière " + this.quand(clic) + ".");
+    if (etat6 === "pas_maintenant") froid.push("Jour 6 : « Pas maintenant ».");
+    if (inactif) froid.push(termine ? "Challenge terminé, plus d'activité depuis " + actif + " jours." : "Inactif depuis " + actif + " jours, arrêté au jour " + ((r && r.prochain) || nb) + ".");
+    if (!nb && inscrit != null && inscrit >= cfg.sans_debut_jours && !actifRecemment) froid.push("Inscrit " + this.quand(inscrit) + ", challenge pas commencé.");
+    if (etat6 === "hesite") tiede.push("Jour 6 : « J'hésite encore ».");
+    if (etat6 === "avancer" && d6 != null && d6 > cfg.chaud_jours) tiede.push("Jour 6 : « Je veux avancer » " + this.quand(d6) + ", sans suite depuis.");
+    if (clic != null && clic > cfg.clic_recent_jours) tiede.push("A cliqué « Réserver mon appel » " + this.quand(clic) + ", sans réserver.");
+    if (termine && !inactif) tiede.push("Challenge terminé" + (r.clics ? "." : ", sans avoir cliqué « Réserver mon appel »."));
+    else if (nb > 0 && !inactif) tiede.push("Avance : " + nb + "/7 jours, dernière activité " + this.quand(actif) + ".");
+    if (!nb && actifRecemment) tiede.push("A commencé son diagnostic (dernière activité " + this.quand(actif) + ").");
+    else if (!nb && !(inscrit != null && inscrit >= cfg.sans_debut_jours)) tiede.push("Vient de s'inscrire" + (inscrit != null ? " (" + this.quand(inscrit) + ")" : "") + ".");
+    if (sansReponse) (sansReponse >= cfg.relances_max ? froid : tiede).push("Relancé " + sansReponse + " fois sans réponse.");
+    if (issue && revenu) chaud.unshift("Revenu après l'issue « " + this.ISSUES[issue] + " » : a recliqué « Réserver » ou coché « J'ai réservé ».");
+    else if (issue) (issue === "signe" ? chaud : froid).unshift("Appel : « " + this.ISSUES[issue] + " » " + this.quand(issueDepuis) + (typeof S.note === "string" && S.note ? " — " + S.note : "") + ".");
+    if (ancienClient) tiede.unshift("Ancien client (« Signé » " + this.quand(this.depuis(S.issue_le)) + "), redevenu prospect.");
+    if (revenu) issue = null;   // la temperature reprend la main
+    const attendre = relance != null && relance < cfg.relance_attente_jours;
+    const epuise = sansReponse >= cfg.relances_max;
+    /* relances epuisees : un signal chaud (hors reservation) ne suffit plus */
+    const temperature = chaud.length && !(epuise && !(r && r.reserve)) ? "chaud" : froid.length ? "froid" : "tiede";
+    let action, urgent = false;
+    const siPasRelance = (texte) => {
+      if (attendre) return "Relancé " + this.quand(relance) + " : attends sa réponse.";
+      if (epuise) return "Sans réponse après " + sansReponse + " relances : classe-le « Perdu », ou attends qu'il revienne.";
+      urgent = true; return texte;
+    };
+    if (issue === "signe"){
+      if (!(p && p.statut === "prospect")) action = "C'est désormais un client.";
+      else if (issueDepuis != null && issueDepuis > 30) action = "« Signé » " + this.quand(issueDepuis) + " et toujours prospect : passe-le client, ou retire l'issue s'il a arrêté.";   // oublie : rappel garde, non urgent
+      else { action = "Passe-le client pour lui ouvrir son espace d'accompagnement."; urgent = true; }
+    }
+    else if (issue === "absent") action = relancesApresIssue >= cfg.relances_max ? "Absent, puis relancé " + relancesApresIssue + " fois sans suite : classe-le « Perdu » ?" : siPasRelance("Absent à l'appel : repropose-lui un créneau en DM.");
+    else if (issue === "perdu"){ const reste = cfg.perdu_relance_jours - (issueDepuis || 0); action = relancesApresIssue >= 1 ? "Relancé après l'appel : s'il ne répond pas, laisse-le." : reste <= 0 ? siPasRelance("Relance-le : l'appel date d'il y a " + issueDepuis + " jours.") : "Relance prévue dans " + reste + " jour" + (reste > 1 ? "s" : "") + "."; }
+    else if (r && r.reserve){ const dr = this.depuis(r.reserve); action = dr != null && dr > cfg.appel_jours ? "« J'ai réservé » " + this.quand(dr) + " : l'appel a-t-il eu lieu ? Indique Signé, Perdu ou Absent." : "Prépare l'appel : relis sa fiche (diagnostic, choix des jours 2 à 6). Après l'appel, indique Signé, Perdu ou Absent."; urgent = true; }
+    else if (temperature === "chaud") action = siPasRelance("Envoie-lui le lien de réservation en DM aujourd'hui.");
+    else if (ancienClient) action = "Ancien client redevenu prospect : reprends contact si tu veux lui proposer de reprendre.";
+    else if (etat6 === "pas_maintenant"){ const reste = cfg.pas_maintenant_relance_jours - (d6 || 0); action = reste <= 0 ? siPasRelance("Relance-le : « Pas maintenant » date d'il y a " + d6 + " jours.") : "Ne pas insister : relance dans " + reste + " jour" + (reste > 1 ? "s" : "") + "."; }
+    else if (temperature === "froid" && !nb) action = siPasRelance("DM de bienvenue : aide-le à faire son jour 1.");
+    else if (temperature === "froid" && termine) action = siPasRelance("Relance : propose-lui l'appel, il a terminé le challenge.");
+    else if (temperature === "froid") action = siPasRelance("Relance douce en DM : son jour " + ((r && r.prochain) || nb + 1) + " l'attend.");
+    else if (etat6 === "hesite") action = siPasRelance("DM : demande-lui ce qui le fait hésiter.");
+    else if (etat6 === "avancer") action = siPasRelance("DM : il voulait avancer " + this.quand(d6) + ", reprends contact.");
+    else if (termine) action = siPasRelance("DM : propose-lui l'appel, il a terminé le challenge.");
+    else if (!nb) action = actifRecemment && inscrit != null && inscrit >= cfg.sans_debut_jours ? "Rien à faire aujourd'hui : il a commencé son diagnostic." : "Rien à faire aujourd'hui : il vient de s'inscrire.";
+    else action = "Rien à faire aujourd'hui : il avance (" + nb + "/7).";
+    const etat = issue || temperature;
+    const rang = issue === "signe" ? (urgent ? 0 : 9) : issue === "absent" ? (urgent ? 3 : 7) : issue === "perdu" ? (urgent ? 4 : 9)
+               : temperature === "chaud" ? ((r && r.reserve) ? 1 : 2) : urgent ? (temperature === "tiede" ? 5 : 6) : 8;
+    /* recence : a rang egal, le plus recemment actif d'abord (on lui ecrit pendant qu'il est dans le coup) */
+    return { etat, temperature, issue, raisons: chaud.concat(froid, tiede), action, urgent, rang, recence: actif == null ? 9999 : actif, nb, relances: relances.length, derniereRelance: relance };
+  },
+  analyseLigne(l){ try { return this.analyse(l.p, l.ch, l.suivi, l.activite); } catch(e){ console.warn("[MHX] suivi commercial illisible", e); return null; } },
+  CLASSES: { chaud: "chaud", tiede: "tiede", froid: "froid", signe: "ok", perdu: "manque", absent: "attention" },
+  pastille(a){ return a ? `<span class="pastille ${this.CLASSES[a.etat] || ""}" title="${esc(a.raisons.join(" "))}">${esc(this.ETATS[a.etat] || "")}</span>` : ""; },
+  pastilleLigne(l){ return this.pastille(this.analyseLigne(l)); },
+  bouton(p, act, txt, cls){ return `<button type="button" class="btn petit${cls === "principal" ? "" : " ghost"}" data-sc="${act}" data-uid="${esc(p.id)}" data-nom="${esc(Clients.nom(p))}">${esc(txt)}</button>`; },
+  boutons(p, a, fiche){
+    const b = (act, txt, cls) => this.bouton(p, act, txt, cls);
+    return (fiche ? "" : b("fiche", "Ouvrir la fiche")) + (a.issue
+      ? (a.issue === "signe" && p.statut === "prospect" ? b("client", "Passer client", "principal") : "") + b("relance", "J'ai relancé") + b("annuler", "Annuler « " + this.ISSUES[a.issue] + " »")
+      : b("relance", "J'ai relancé") + b("signe", "Signé") + b("perdu", "Perdu") + b("absent", "Absent"));
+  },
+  sousTitre(p, a){
+    const i = this.depuis(p && p.cree_le);
+    return (a.nb ? "Challenge " + a.nb + "/7" : "Challenge pas commencé") + " · inscrit " + this.quand(i) + (a.relances ? " · " + a.relances + " relance" + (a.relances > 1 ? "s" : "") : "");
+  },
+  carteHTML(p, a){
+    const nom = Clients.nom(p);
+    return `<article class="sc-carte${a.urgent ? " urgent" : ""}" data-uid="${esc(p.id)}">
+      <div class="sc-tete">${Clients.avatar(nom)}<div class="sc-nom"><b>${esc(nom)}</b><small>${esc(this.sousTitre(p, a))}</small></div>${this.pastille(a)}</div>
+      <p class="sc-action"><b>Prochaine action :</b> ${esc(a.action)}</p>
+      <ul class="sc-raisons">${a.raisons.map(x => `<li>${esc(x)}</li>`).join("")}</ul>
+      <div class="sc-boutons">${this.boutons(p, a, false)}</div>
+      <span class="msg sc-msg" role="status" aria-live="polite"></span>
+    </article>`;
+  },
+  /* l'historique des actions du coach (relances, issues), du plus recent au plus ancien */
+  histoHTML(S){
+    const h = (Array.isArray(this.suivi(S).historique) ? this.suivi(S).historique : []).filter(e => e && typeof e === "object" && typeof e.le === "string").slice(-6).reverse();
+    if (!h.length) return "";
+    const lib = e => e.type === "relance" ? "Relance" : e.type === "annule" ? "Issue annulée" + (this.ISSUES[e.valeur] ? " (" + this.ISSUES[e.valeur] + ")" : "") : e.type === "issue" && this.ISSUES[e.valeur] ? "Appel : " + this.ISSUES[e.valeur] : "";
+    return `<p class="note" style="margin:10px 0 4px">Historique</p><ul class="sc-raisons sc-histo">${h.filter(lib).map(e => `<li>${esc(lib(e) + " — " + dateFr(e.le) + (typeof e.note === "string" && e.note ? " — " + e.note : ""))}</li>`).join("")}</ul>`;
+  },
+  ficheHTML(p, a, S){
+    return `<section class="panel sc-fiche${a.urgent ? " urgent" : ""}"><div class="seance-c-tete"><h2>Suivi commercial</h2>${this.pastille(a)}</div>
+      <p class="sc-action"><b>Prochaine action :</b> ${esc(a.action)}</p>
+      <ul class="sc-raisons">${a.raisons.map(x => `<li>${esc(x)}</li>`).join("")}</ul>
+      <div class="sc-boutons">${this.boutons(p, a, true)}</div>${this.histoHTML(S)}
+      <span class="msg sc-msg" role="status" aria-live="polite"></span>
+      <p class="note" style="margin:10px 0 0">La température se recalcule à chaque ouverture. Seuls l'issue de l'appel et tes relances sont enregistrés, jamais visibles par le prospect.</p></section>`;
+  },
+  /* ---- ecritures : cle coach-seul, ecriture conditionnelle (un conflit relit et rejoue, 3 fois au plus) ---- */
+  async modifier(uid, maj){
+    for (let essai = 1; essai <= 3; essai++){
+      const l = await CleCoach.ligne(uid, this.cle);
+      const avant = (l && l.contenu && typeof l.contenu === "object" && !Array.isArray(l.contenu)) ? l.contenu : {};
+      const apres = maj(JSON.parse(JSON.stringify(avant)));
+      apres.version = 1;
+      try { const r = await CleCoach.ecrireSi(uid, this.cle, apres, l ? { maj_le: l.maj_le } : null); return (r && r.contenu) || apres; }
+      catch(e){ if (!(e && e.conflit)) throw e; }
+    }
+    throw new Error("le suivi a changé ailleurs en même temps, réessaie");
+  },
+  noter(c, ev){ c.historique = (Array.isArray(c.historique) ? c.historique : []).concat(ev).slice(-30); return c; },
+  poserIssue(uid, issue, note){ const le = new Date().toISOString(); return this.modifier(uid, c => { c.issue = issue; c.issue_le = le; c.note = note || ""; return this.noter(c, { type: "issue", valeur: issue, le: le, note: note || "" }); }); },
+  annulerIssue(uid){ const le = new Date().toISOString(); return this.modifier(uid, c => { const avant = c.issue || null; c.issue = null; c.issue_le = null; c.note = ""; return this.noter(c, { type: "annule", valeur: avant, le: le }); }); },
+  relancer(uid){ const le = new Date().toISOString(); return this.modifier(uid, c => { c.relances = (Array.isArray(c.relances) ? c.relances.filter(x => typeof x === "string") : []).concat(le).slice(-20); return this.noter(c, { type: "relance", le: le }); }); },
+  async passerClient(uid){
+    const r = await Auth.appel("/rest/v1/profils?id=eq." + uid, { method: "PATCH", headers: { "Prefer": "return=representation" }, body: { statut: "client" } });
+    if (!Array.isArray(r) || !r[0] || r[0].statut !== "client") throw new Error("la base n'a pas confirmé le passage en client");
+  },
+  /* un message d'erreur clair ; sur une coupure reseau, on ne pretend pas savoir si l'ecriture est passee */
+  /* la cause en quelques mots (pour une phrase qui continue) */
+  cause(e){
+    if (e && (e.statut === 403 || e.statut === 409)) return "la base refuse cette écriture";
+    if (e && e.statut === 401) return "ta session a expiré, reconnecte-toi";
+    if (e && e.statut) return "erreur " + e.statut + " du serveur";
+    if (e && /n'a pas confirmé/.test(e.message || "")) return "la base n'a pas confirmé le changement, recharge la page pour vérifier";
+    return "connexion interrompue, recharge la page pour vérifier";
+  },
+  erreur(e){
+    if (e && /n'a pas confirmé/.test(e.message || "")) return "Non confirmé : " + e.message + ". Recharge la page pour vérifier.";
+    if (e && (e.statut === 403 || e.statut === 409)) return "Non enregistré : la base refuse cette écriture.";
+    if (e && e.statut === 401) return "Non enregistré : ta session a expiré. Reconnecte-toi, puis recommence.";
+    if (e && e.statut) return "Non enregistré (erreur " + e.statut + " du serveur). Réessaie dans un instant.";
+    if (e && /changé ailleurs/.test(e.message || "")) return "Non enregistré : " + e.message + ".";
+    return "Peut-être non enregistré (connexion interrompue) : recharge la page pour vérifier avant de recommencer.";
+  },
+  occupe: {},   // par prospect : une action a la fois (un double clic ou une carte redessinee ne relance pas une ecriture en cours)
+  /* branche les boutons d'une zone ; apres(uid, suivi, action) redessine */
+  brancher(zone, apres){
+    if (!zone) return;
+    $$("[data-sc]", zone).forEach(b => b.addEventListener("click", async () => {
+      const uid = b.dataset.uid, nom = b.dataset.nom, act = b.dataset.sc;
+      if (act === "fiche") return Clients.ouvrir(uid, nom, "accueil");
+      if (this.occupe[uid]){ UI.toast("Une action est en cours pour " + nom + ", un instant…", "attention"); return; }
+      this.occupe[uid] = true;
+      try { await this.agir(b, uid, nom, act, apres); } finally { delete this.occupe[uid]; }
+    }));
+  },
+  async agir(b, uid, nom, act, apres){
+    const carte = b.closest(".sc-carte, .sc-fiche"), msg = carte && carte.querySelector(".sc-msg");
+    const boutons = carte ? $$("[data-sc]", carte) : [b];
+    const attente = () => { boutons.forEach(x => { x.disabled = true; }); if (msg) msg.textContent = "Enregistrement…"; };
+    const relacher = () => { boutons.forEach(x => { x.disabled = false; }); if (msg) msg.textContent = ""; };
+    const client = async (S) => {
+      try { await this.passerClient(uid); }
+      catch(e){ UI.alerte((S ? "« Signé » est bien enregistré, mais le passage en client a échoué (" : "Le passage en client a échoué (") + this.cause(e) + "). Réessaie avec « Passer client »."); return false; }
+      /* la date du passage en client est notee (s'il redevient prospect un jour, il ne sera pas « Signé » a traiter) */
+      try { await this.modifier(uid, c => { c.client_le = new Date().toISOString(); return c; }); } catch(e){}
+      UI.toast(nom + " est maintenant client.", "ok"); apres && apres(uid, S, "client"); return true;
+    };
+    let S = null;
+    try {
+      if (act === "signe"){
+        if (!(await UI.confirmer("Marquer " + nom + " comme signé ?", { ok: "Signé" }))) return;
+        attente(); S = await this.poserIssue(uid, "signe");
+        apres && apres(uid, S, "signe");   // la carte montre « SIGNÉ » tout de suite
+        if (await UI.confirmer("Passer " + nom + " client maintenant ?\n\nIl aura accès à tout son espace d'accompagnement. Tu peux aussi le faire plus tard.", { ok: "Passer client", annuler: "Plus tard" })) await client(S);
+        else UI.toast("Suivi de " + nom + " enregistré.", "ok");
+        return;
+      }
+      if (act === "client"){
+        if (!(await UI.confirmer("Passer " + nom + " client ?\n\nIl aura accès à tout son espace d'accompagnement.", { ok: "Passer client" }))) return;
+        attente(); if (!(await client(null))) relacher();
+        return;
+      }
+      if (act === "perdu"){
+        const note = await UI.demander("Marquer " + nom + " comme perdu. La raison, en quelques mots (facultatif) : prix, timing, pas convaincu…", "", { ok: "Perdu", placeholder: "Facultatif" });
+        if (note === null) return;
+        attente(); S = await this.poserIssue(uid, "perdu", String(note).trim().slice(0, 200));
+      } else if (act === "absent"){
+        if (!(await UI.confirmer(nom + " ne s'est pas présenté à l'appel ?", { ok: "Absent" }))) return;
+        attente(); S = await this.poserIssue(uid, "absent");
+      } else if (act === "annuler"){
+        if (!(await UI.confirmer("Retirer l'issue indiquée pour " + nom + " ? Il redevient un prospect en cours.", { ok: "Retirer l'issue" }))) return;
+        attente(); S = await this.annulerIssue(uid);
+      } else if (act === "relance"){
+        attente(); S = await this.relancer(uid);
+      } else return;
+      UI.toast("Suivi de " + nom + " enregistré.", "ok");
+      apres && apres(uid, S, act);
+    } catch(e){
+      relacher();
+      UI.alerte(this.erreur(e));
+    }
+  }
+};
+
+/* ------------------------------------------------------------------
+   OUTIL COACH — Prospects (v49). Tous les comptes gratuits, du plus
+   chaud au plus froid : temperature, raisons, prochaine action, issue.
+   ------------------------------------------------------------------ */
+const outilProspects = {
+  id: "prospects",
+  cle: null,
+  nom: "Prospects",
+  icone: "🎯",
+  role: "coach",
+  sans_entete: true,
+  titre: "Prospects",
+  accroche: "",
+  filtre: "a_traiter",
+  donnees: null,
+  html(){ return `<div id="pr-vue"><header class="masthead"><h1>Prospects</h1></header><section class="panel"><div class="empty">Chargement…</div></section></div>`; },
+  async init(){
+    const zone = $("pr-vue"); if (!zone) return;
+    try { this.donnees = await Clients.charger(); }
+    catch(e){ zone.innerHTML = `<header class="masthead"><h1>Prospects</h1></header><section class="panel"><div class="empty">Impossible de charger les prospects pour le moment.</div></section>`; return; }
+    if (!zone.isConnected) return;
+    this.rendre(zone);
+  },
+  rendre(zone){
+    const { profils, parClient, contenus } = this.donnees;
+    const lignes = Clients.resumer(profils, parClient, contenus);
+    const tous = lignes.filter(l => l.p.statut === "prospect").map(l => ({ l, a: Commercial.analyseLigne(l) })).filter(x => x.a).sort((x, y) => x.a.rang - y.a.rang || x.a.recence - y.a.recence);
+    /* issues des 30 derniers jours, clients compris (un prospect signe puis passe client reste compte) */
+    const mois = lignes.map(l => Commercial.suivi(l.suivi)).filter(S => typeof S.issue === "string" && Commercial.depuis(S.issue_le) != null && Commercial.depuis(S.issue_le) <= 30);
+    const n = e => tous.filter(x => x.a.etat === e).length, avecIssue = tous.filter(x => x.a.issue).length;
+    const filtres = [["a_traiter", "À traiter", tous.filter(x => x.a.urgent).length], ["chaud", "Chauds", n("chaud")], ["tiede", "Tièdes", n("tiede")], ["froid", "Froids", n("froid")], ["issues", "Appel fait", avecIssue], ["tous", "Tous", tous.length]];
+    const garde = x => this.filtre === "tous" ? true : this.filtre === "a_traiter" ? x.a.urgent : this.filtre === "issues" ? !!x.a.issue : x.a.etat === this.filtre;
+    const liste = tous.filter(garde);
+    const cmpt = k => mois.filter(S => S.issue === k).length;
+    const pl = (k, sg, pl) => k > 1 ? pl : sg;
+    zone.innerHTML = `
+      <header class="masthead">
+        <span class="eyebrow">${esc(outilAccueil.dateLongue())}</span>
+        <h1>Prospects</h1>
+        <p class="lede">${tous.length ? `${tous.length} ${pl(tous.length, "compte gratuit", "comptes gratuits")} · ${n("chaud")} ${pl(n("chaud"), "chaud", "chauds")}, ${n("tiede")} ${pl(n("tiede"), "tiède", "tièdes")}, ${n("froid")} ${pl(n("froid"), "froid", "froids")}${avecIssue ? `, ${avecIssue} avec une issue d'appel` : ""}.` : "Aucun prospect pour le moment : ils apparaîtront ici dès leur inscription."}</p>
+      </header>
+      <section class="panel"><div class="tiles">
+        <div class="tile"><div class="t-lbl">À traiter</div><div class="t-val readout">${tous.filter(x => x.a.urgent).length}</div><div class="t-sub">une action à faire</div></div>
+        <div class="tile"><div class="t-lbl">Signés</div><div class="t-val readout pos">${cmpt("signe")}</div><div class="t-sub">30 derniers jours</div></div>
+        <div class="tile"><div class="t-lbl">Perdus</div><div class="t-val readout">${cmpt("perdu")}</div><div class="t-sub">30 derniers jours</div></div>
+        <div class="tile"><div class="t-lbl">Absents</div><div class="t-val readout">${cmpt("absent")}</div><div class="t-sub">30 derniers jours</div></div>
+      </div></section>
+      <section class="panel">
+        <div class="seg sc-filtres" role="group" aria-label="Filtrer les prospects">${filtres.map(f => `<button type="button" data-filtre="${f[0]}" aria-pressed="${this.filtre === f[0]}">${esc(f[1])} <span class="meta">${f[2]}</span></button>`).join("")}</div>
+        ${liste.length ? `<div class="sc-liste">${liste.map(x => Commercial.carteHTML(x.l.p, x.a)).join("")}</div>` : `<div class="empty">${this.filtre === "a_traiter" ? "Rien à faire aujourd'hui : aucun prospect n'attend d'action de ta part." : "Aucun prospect dans cette catégorie."}</div>`}
+        <p class="note" style="margin:12px 0 0">CHAUD : a réservé, veut avancer (depuis moins de ${Commercial.cfg().chaud_jours} jours) ou a cliqué « Réserver » ces ${Commercial.cfg().clic_recent_jours} derniers jours. FROID : « Pas maintenant », inactif depuis ${Commercial.cfg().inactif_jours} jours, challenge jamais commencé, ou ${Commercial.cfg().relances_max} relances sans réponse. TIÈDE : le reste. Ces seuils se changent en une ligne, sur demande.</p>
+      </section>`;
+    $$("[data-filtre]", zone).forEach(b => b.addEventListener("click", () => { this.filtre = b.dataset.filtre; this.rendre(zone); }));
+    Commercial.brancher(zone, () => { if (zone.isConnected) this.init(); });
+  }
+};
+
+/* ------------------------------------------------------------------
    OUTIL COACH — Tableau de bord (v37). La page d'arrivee du coach :
    « qui necessite mon attention aujourd'hui ? ». Ne fait que lire.
    ------------------------------------------------------------------ */
@@ -8415,6 +8757,9 @@ const outilTableau = {
     const lignes = Clients.resumer(profils, parClient, contenus);
     const prospects = profils.filter(p => p.role !== "coach" && p.statut === "prospect");
     const finis = lignes.filter(l => l.p.statut === "prospect" && l.ch && Challenge.termine(l.ch)).length;   // v47
+    /* v49 : les prospects a traiter (temperature, prochaine action) */
+    const aTraiterPr = lignes.filter(l => l.p.statut === "prospect").map(l => ({ l, a: Commercial.analyseLigne(l) })).filter(x => x.a).sort((x, y) => x.a.rang - y.a.rang || x.a.recence - y.a.recence);
+    const chauds = aTraiterPr.filter(x => x.a.etat === "chaud").length;
     const clients = lignes.filter(l => l.p.statut !== "prospect");
     const aTraiter = clients.filter(l => l.alertes.some(a => a.type === "bilan_recu")).length;
     const nonCompletes = clients.filter(l => l.alertes.some(a => a.type === "bilan_manque")).length;
@@ -8436,12 +8781,14 @@ const outilTableau = {
       <section class="panel">
         <div class="tiles tb-tiles">
           ${tuile("Clients actifs", clients.length, "accompagnement en cours")}
-          ${tuile("Prospects", prospects.length, finis ? `${finis} challenge${finis > 1 ? "s" : ""} terminé${finis > 1 ? "s" : ""}` : "comptes gratuits", finis ? "cle" : "")}
+          ${tuile("Prospects", prospects.length, chauds ? `${chauds} chaud${chauds > 1 ? "s" : ""}${finis ? ` · ${finis} challenge${finis > 1 ? "s" : ""} terminé${finis > 1 ? "s" : ""}` : ""}` : finis ? `${finis} challenge${finis > 1 ? "s" : ""} terminé${finis > 1 ? "s" : ""}` : "comptes gratuits", chauds || finis ? "cle" : "", "#/prospects")}
           ${tuile("Bilans à traiter", aTraiter, "reçus cette semaine", aTraiter ? "cle" : "")}
           ${tuile("Bilans non complétés", nonCompletes, "semaine passée", nonCompletes ? "attention" : "")}
           ${tuile("À surveiller", aSurveiller.length, "au moins une alerte", aSurveiller.length ? "attention" : "")}
         </div>
       </section>
+      ${aTraiterPr.some(x => x.a.urgent) ? `<section class="panel" id="tb-prospects"><div class="seance-c-tete"><h2>Prospects à traiter</h2><a class="link-a" href="#/prospects">Tous les prospects →</a></div>
+        <div class="sc-liste">${aTraiterPr.filter(x => x.a.urgent).slice(0, 4).map(x => Commercial.carteHTML(x.l.p, x.a, x.l.ch)).join("")}</div></section>` : ""}
       <section class="panel">
         <h2>Qui nécessite ton attention aujourd'hui ?</h2>
         ${aSurveiller.length ? `<div class="attention-l">${aSurveiller.map(carte).join("")}</div>` : `<div class="empty">Tout est en ordre : questionnaires remplis, programmes et diètes envoyés, bilans à jour, personne d'inactif.</div>`}
@@ -8457,6 +8804,7 @@ const outilTableau = {
         </div>
       </section>`;
     $$("[data-fiche]", zone).forEach(b => b.addEventListener("click", () => Clients.ouvrir(b.dataset.fiche, b.dataset.nom, b.dataset.cible)));
+    Commercial.brancher(zone, () => { if (zone.isConnected) this.init(); });   // v49
   }
 };
 
@@ -9767,7 +10115,7 @@ const outilAccueil = {
      avec un lien vers l'editeur de chaque bloc. Lecture seule ici. Les
      notes privees et les feedbacks arrivent avec les phases 10 et 18. */
   async fiche(zone){
-    const cles = ["intake", "programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "checkins", "complements", "calc", "formation", "hist_programme", "hist_repas", "prefs", "feedbacks", "challenge"];   // v47 : + challenge
+    const cles = ["intake", "programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "checkins", "complements", "calc", "formation", "hist_programme", "hist_repas", "prefs", "feedbacks", "challenge", "suivi_prospect"];   // v47 : + challenge ; v49 : + suivi commercial
     const uidFiche = Store.idConsulte;
     const [{ valeurs: d, dates }, pr] = await Promise.all([
       Store.lireTout(cles, { dates: true }),
@@ -9780,7 +10128,7 @@ const outilAccueil = {
     const nomC = Store.nomConsulte || "Client";
     const profil = { id: Store.idConsulte, prenom: nomC.split(" ")[0], nom: nomC.split(" ").slice(1).join(" "), role: "client" };
     if (pr && "statut" in pr) profil.statut = pr.statut;
-    const ecritParCoach = ["programme", "repas", "calc", "complements", "feedbacks", "notes_coach"];
+    const ecritParCoach = ["programme", "repas", "calc", "complements", "feedbacks", "notes_coach", "suivi_prospect"];
     const dernier = Object.keys(dates).filter(k => ecritParCoach.indexOf(k) === -1 && dates[k]).map(k => dates[k]).sort().pop() || null;
     const l = Clients.resumerUn(profil, d, dernier);
     const r = Regularite.calculer({ programme: P, journal: J, repas: R, repas_suivi: S, mens: M }, 0), prec = Regularite.calculer({ programme: P, journal: J, repas: R, repas_suivi: S, mens: M }, -1);
@@ -9799,6 +10147,9 @@ const outilAccueil = {
     const histP = ((d.hist_programme || {}).liste || []).length, histR = ((d.hist_repas || {}).liste || []).length;
     const fo = d.formation ? outilFormation.compte(outilFormation.migrer(d.formation)) : null;
     const CH = (d.challenge && Challenge.nbFaits(d.challenge)) ? d.challenge : null, rch = CH ? Challenge.resume(CH) : null;   // v47
+    /* v49 : le suivi commercial d'un prospect (un client n'en a plus : son bloc disparait) */
+    let SC = null;
+    try { if (profil.statut === "prospect") SC = Commercial.analyse(Object.assign({}, pr || {}, profil), d.challenge, d.suivi_prospect, dernier); } catch(e){ SC = null; }
     const lien = (id, txt) => `<a class="link-a" href="#/${id}">${esc(txt)} →</a>`;
     const ligne = (k, v) => v == null || v === "" ? "" : `<li><span>${esc(k)}</span><b>${esc(String(v))}</b></li>`;
     const alertes = l.alertes;
@@ -9820,6 +10171,7 @@ const outilAccueil = {
           <div class="tile"><div class="t-lbl">Bilan hebdo</div><div class="t-val readout${dernierCk ? " pos" : ""}">${dernierCk ? "✓" : "—"}</div><div class="t-sub">${dernierCk ? "dernier envoyé le " + esc(dateFr(dernierCk.envoye_le)) : "jamais envoyé"}</div></div>
         </div>
       </section>
+      ${SC ? `<div id="fiche-commercial">${Commercial.ficheHTML(Object.assign({}, pr || {}, profil), SC, d.suivi_prospect)}</div>` : ""}
       ${this.challengeFicheHTML(CH)}
       ${NotesCoach.html()}
       <div class="fiche-grille">
@@ -9846,6 +10198,18 @@ const outilAccueil = {
         <ul class="ingr fiche-l">${ligne("Compléments", nbCompl ? nbCompl + " prescrit" + (nbCompl > 1 ? "s" : "") : "aucun")}${ligne("Formation", fo ? fo.pct + " % (" + fo.faits + " / " + fo.tot + ")" : "pas commencée")}${ligne("Anciens programmes", histP || "0")}${ligne("Anciennes diètes", histR || "0")}</ul>
         <p class="note" style="margin:10px 0 0">${lien("complements", "Ses compléments")} · ${lien("formation", "Sa formation")}</p></section>
       </div>`;
+    /* v49 — suivi commercial : apres une action, seul le bloc est redessine (les notes privees ne bougent pas) ;
+       un passage en client redessine la page par le routeur (les notes en attente partent avant) */
+    if (SC){
+      const pSC = Object.assign({}, pr || {}, profil), boite = zone.querySelector("#fiche-commercial");
+      const rebrancher = () => Commercial.brancher(boite, (uid, S, act) => {
+        if (act === "client"){ afficher(courant); return; }
+        if (!boite.isConnected || Store.idConsulte !== uidFiche) return;
+        boite.innerHTML = Commercial.ficheHTML(pSC, Commercial.analyse(pSC, d.challenge, S, dernier), S);
+        rebrancher();
+      }, { fiche: true });
+      if (boite) rebrancher();
+    }
     /* v38 — notes privees : la fonction rendue enregistre ce qui attend quand on quitte la fiche */
     return NotesCoach.monter(Store.idConsulte);
   },
@@ -11151,7 +11515,7 @@ const outilChallenge = {
   },
 };
 
-const OUTILS = [outilAccueil, outilChallenge, outilProgramme, outilNutrition, outilMensurations, outilSuivi, outilBilan, outilFormation, outilComplements, outilProfil, outilTableau, outilClients, outilAtelier, outilBibliotheque, outilCatalogue, outilCalculateur, outilEntrainement];
+const OUTILS = [outilAccueil, outilChallenge, outilProgramme, outilNutrition, outilMensurations, outilSuivi, outilBilan, outilFormation, outilComplements, outilProfil, outilTableau, outilClients, outilProspects, outilAtelier, outilBibliotheque, outilCatalogue, outilCalculateur, outilEntrainement];
 
 /* Adresses d'hier et de demain : #/progression ouvre « Ma progression »,
    #/suivi ouvre le bilan (puis « Mon suivi » quand il existera). */

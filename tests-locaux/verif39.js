@@ -100,7 +100,9 @@ const ligneCompte = (page, nom) => page.locator("#liste-clients .client-l", { ha
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 1800);
     const tb = (await page.textContent("#tb-vue")).replace(/\s+/g, " ");
     ok("tableau : KPI Prospects = 1 et Clients actifs = 3", /Prospects\s*1/.test(tb) && /Clients actifs\s*3/.test(tb), tb.slice(0, 200));
-    ok("tableau : le prospect n'est pas dans « qui nécessite ton attention »", !tb.includes("Léa Démo"));
+    /* v49 : le tableau a une section « Prospects à traiter » (suivi commercial) ; la section des clients n'en montre aucun */
+    const attention = await page.evaluate(() => { const h = Array.from(document.querySelectorAll("#tb-vue h2")).find(x => x.textContent.indexOf("Qui nécessite ton attention") > -1); return h ? h.closest("section").innerText : null; });
+    ok("tableau : le prospect n'est pas dans « qui nécessite ton attention »", attention !== null && !attention.includes("Léa Démo"), String(attention).slice(0, 200));
     await aller(page, "#/clients", 1800);
     const ligne = await page.locator("#tb-clients tr", { hasText: "Léa Démo" }).textContent();
     ok("mes clients : pastille « prospect » sur la ligne de Léa", ligne.includes("prospect"));
