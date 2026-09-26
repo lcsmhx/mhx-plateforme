@@ -1,6 +1,22 @@
-/* v40 — phase 16 : mode gratuit (prospects), écrans verrouillés et Calendly.
-   Supabase simulé : la colonne statut existe (sauf option sansStatut), un compte
-   créé par la base naît « prospect », seul le coach change un statut.
+/* v40 — mode gratuit (prospects) : cadenas, pages verrouillées, Calendly, aucun prix.
+   Réécrite pour la Découverte (le Challenge 7 jours n'existe plus, branche test/abandon-challenge) :
+   - accueil du prospect = écran Découverte : « Découverte · Jour n/7 » (jour 1 = jour LOCAL de l'inscription,
+     profils.cree_le), questionnaire court tant que intake.court_le n'est pas posé (sans bouton Calendly, quel
+     que soit le jour), puis résultat avec « Réserver mon bilan » ;
+   - navigation : accueil, profil, Speed Formation (ouverte les 7 premiers jours) et la vitrine verrouillée
+     (programme, nutrition, suivi ; formation après le jour 7) ; mensurations, compléments, bilan cachés
+     mais verrouillés à leur adresse ; plus d'onglet Challenge, ses anciennes adresses mènent à #/decouverte ;
+   - pages verrouillées : cadenas, « Réserver mon bilan » vers Calendly (utm_content=verrou-<id>, prénom et
+     email pré-remplis), AUCUNE donnée lue ni affichée (la prospecte a des données témoins qu'elle ne doit
+     jamais voir), aucune écriture ; un clic est noté dans la clé « challenge » ;
+   - Speed Formation verrouillée au jour 8 (par la date, inscription ancienne, et mode test #/decouverte-jour/8) ;
+   - aucun prix, tarif ni abonnement nulle part (pages FR / EN, volets, inscription, textes de la Découverte,
+     avantages et tout le dictionnaire anglais) ;
+   - client, coach sur une fiche, base sans colonne statut : inchangés.
+   Supabase simulé : rien ne part vers la vraie base ; les écritures dans donnees sont appliquées en mémoire,
+   et TOUTE requête non-GET vers /rest/v1/* est relevée (méthode + adresse) pour les contrôles « aucune écriture ».
+   Chaque bloc est protégé : une exception (élément absent, délai dépassé) note un ✗ et la suite continue ;
+   les résultats sont toujours affichés.
    Usage : node verif40.js ../index.html                                         */
 const { chromium } = require("playwright"); const fs = require("fs"); const http = require("http"); const path = require("path");
 const F = require("./fixtures"); const HTML = path.resolve(process.argv[2] || "../index.html");
@@ -12,59 +28,99 @@ const server = http.createServer((req, res) => {
   if (inscriptionLibre) h = h.replace("inscription_libre: false", "inscription_libre: true");
   res.writeHead(200, { "Content-Type": "text/html" }); res.end(h);
 });
-const res = []; const ok = (n, c, d) => res.push((c ? "  ✓ " : "  ✗ ") + n + (c ? "" : "  — " + (d || "")));
-const PROSPECT = "00000000-0000-4000-8000-000000000c04", EQUIPE = "00000000-0000-4000-8000-0000000000e1", NOUVEAU = "00000000-0000-4000-8000-000000000c05";
+const res = []; const ok = (n, c, d) => res.push((c ? "  ✓ " : "  ✗ ") + n + (c ? "" : "  — " + String(d || "").replace(/\s+/g, " ").trim()));
+const PROSPECT = "00000000-0000-4000-8000-000000000c04", EQUIPE = "00000000-0000-4000-8000-0000000000e1";
+const CAL = "https://calendly.com/mhx-coaching/30min";
+/* le lien attendu pour la prospecte Léa (l@e.fr) : source de l'écran + prénom et email pré-remplis */
+const lienPre = src => CAL + "?utm_source=app-mhx&utm_medium=app&utm_content=" + src + "&name=L%C3%A9a&first_name=L%C3%A9a&email=l%40e.fr";
+/* inscription il y a n jours (10 h, heure locale) : la prospecte est au jour n + 1 de sa découverte */
+const inscritIlYA = n => { const d = new Date(); d.setHours(10, 0, 0, 0); d.setDate(d.getDate() - n); return d.toISOString(); };
+/* la date locale (AAAA-MM-JJ) d'il y a n jours */
+const jourLocal = n => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - n); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+/* inscription à hh h mm, heure locale d'un fuseau à décalage fixe (en heures), n jours avant la date du jour DANS ce fuseau */
+const inscritDansFuseau = (decalage, n, hh, mm) => { const l = new Date(Date.now() + decalage * 3600e3); return new Date(Date.UTC(l.getUTCFullYear(), l.getUTCMonth(), l.getUTCDate() - n, hh, mm) - decalage * 3600e3).toISOString(); };
+const norm = t => String(t || "").replace(/[  ]/g, " ");
+/* l'écran Découverte s'affiche dans #acc-vue (accueil du prospect) ou #dc-vue (adresse #/decouverte) */
+const DC_ZONE = ":is(#acc-vue, #dc-vue)", DC_ECRAN = "#vue :is(#dc-voir, #dc-resultat, [data-dc-cal])";
+const QUESTIONS_COURT = ["sexe", "age", "taille", "poids", "objectif", "seances", "essaye", "obstacle", "pourquoi", "motivation"];
+const intakeCourt = n => ({ sexe: "Femme", age: 27, taille: 168, poids: 64, objectif: "Perte de poids / sèche", seances: "3",
+  essaye: "Des régimes express.", obstacle: "Le manque de temps.", pourquoi: "Retrouver de l'énergie.", motivation: "7", court_le: inscritIlYA(n) });
+/* un ancien prospect du Challenge 7 jours : son questionnaire (sans court_le) et sa clé challenge, formes de verif44 */
+const INTAKE_CHALLENGE = { sexe: "Femme", age: "29", taille: "168", poids: "64", poids_obj: "60", objectif: "Perte de poids / sèche", niveau: "Débutant (0 à 6 mois)", seances: "3", lieu: "À la maison", nb_repas: "3 repas", sommeil_h: "6.5", energie: "4" };
+const jourFait = (n, quand) => ({ fait: quand + "T08:00:00.000Z", date: quand });
+const challengeAncien = debut => ({ version: 1, debut, jours: { "1": jourFait(1, debut) }, cta: { clics: [] }, termine: null });
+/* données témoins : ce qu'aurait un ancien client redevenu prospect. Une page verrouillée ne doit JAMAIS les lire */
+const TEMOIN = "TÉMOIN-LÉA";
+const CLES_TEMOINS = ["programme", "repas", "mens", "complements", "checkins", "journal", "formation"];
+/* aucun prix, tarif ni abonnement, en français comme en anglais. Les tournures figurées « at a price » (« Faster comes at
+   a price: hunger… », texte du Challenge de main) et « à tout prix » ne sont pas des prix : un vrai prix porte de toute
+   façon une devise ou « /mois » */
+const PRIX = /€|\$|£|\bEUR\b|\beuros?\b|\bdollars?\b|(?<!à tout )\bprix\b|tarif|abonnement|\/\s*mois|(?<!\bat a )\bprices?\b|pricing|subscription|\/\s*month/i;
+const prixTrouve = t => { const m = PRIX.exec(t); return m ? "« " + t.slice(Math.max(0, m.index - 60), m.index + 40).replace(/\s+/g, " ") + " »" : ""; };
+/* le volet des conditions est bien ouvert quand son paragraphe « Hébergement » est dans la page */
+const HEBERGEMENT = { fr: "Hébergement : Supabase", en: "Hosting: Supabase" };
 
 function base(opts) {
   opts = opts || {};
+  const jours = opts.ilYA == null ? 3 : opts.ilYA;
+  const cree = opts.cree || inscritIlYA(jours);
   const profils = JSON.parse(JSON.stringify(F.profils)).concat([
-    { id: PROSPECT, prenom: "Léa", nom: "Démo", role: "client", cree_le: "2026-09-24T10:00:00Z" },
+    { id: PROSPECT, prenom: "Léa", nom: "Démo", role: "client", cree_le: cree },
     { id: EQUIPE, prenom: "Équipe", nom: "Démo", role: "coach", cree_le: "2026-09-02T10:00:00Z" }
   ]);
   if (!opts.sansStatut) profils.forEach(p => { p.statut = p.id === PROSPECT ? "prospect" : "client"; });
   const donnees = JSON.parse(JSON.stringify(F.donnees));
-  /* Léa (prospect) a rempli son questionnaire : sinon l'app l'ouvre d'office à la connexion */
-  donnees.push({ user_id: PROSPECT, outil: "intake", contenu: { nom: "Léa Démo", age: 27, sexe: "Femme", taille: 168, poids: 64, objectif: "Perte de poids / sèche", complet: true }, maj_le: "2026-09-24T10:00:00+00:00" });
-  return { profils, donnees, patchs: [], fonctions: [], inscriptions: [] };
+  const maj = cree.slice(0, 10) + "T10:00:00+00:00";
+  /* intake : null = questionnaire court pas encore rempli (compte tout neuf) */
+  if (opts.intake !== null) donnees.push({ user_id: PROSPECT, outil: "intake", contenu: opts.intake || intakeCourt(jours), maj_le: maj });
+  if (opts.challenge) donnees.push({ user_id: PROSPECT, outil: "challenge", contenu: opts.challenge, maj_le: maj });
+  CLES_TEMOINS.forEach(o => {
+    const src = F.donnees.find(x => x.user_id === F.IDS.c1 && x.outil === o); if (!src) return;
+    const contenu = JSON.parse(JSON.stringify(src.contenu));
+    if (o === "programme") { contenu.nom = "Programme " + TEMOIN; contenu.seances[0].nom = "Séance " + TEMOIN; }
+    if (o === "repas" || o === "complements") contenu.note = "Note " + TEMOIN;
+    donnees.push({ user_id: PROSPECT, outil: o, contenu, maj_le: maj });
+  });
+  if (opts.prefs) donnees.push({ user_id: PROSPECT, outil: "prefs", contenu: opts.prefs, maj_le: maj });
+  /* requetes : toute requête non-GET vers /rest/v1/* (méthode + adresse), quelle que soit la table, avec ou sans corps */
+  return { profils, donnees, patchs: [], ecritures: [], requetes: [], inscriptions: [], calendly: [] };
 }
+const ouverts = [];
 async function contexte(b, who, db, opts) {
   opts = opts || {};
-  const c = await b.newContext({ viewport: opts.viewport || { width: 1280, height: 900 } });
+  const c = await b.newContext(Object.assign({ viewport: opts.viewport || { width: 1280, height: 900 } }, opts.fuseau ? { timezoneId: opts.fuseau } : {}));
+  ouverts.push(c);
+  c.setDefaultTimeout(6000);
   await c.route("**/*", async r => {
-    const req = r.request(); const u = req.url();
-    if (new URL(u).hostname === "localhost") return r.continue();
-    if (!new URL(u).hostname.endsWith(".supabase.co")) return r.abort();
+    const req = r.request(); const u = req.url(); const host = new URL(u).hostname;
+    if (host === "localhost") return r.continue();
+    /* Calendly : une page blanche (rien ne part sur Internet), l'adresse ouverte est notée */
+    if (host === "calendly.com") { db.calendly.push(u); return r.fulfill({ status: 200, contentType: "text/html", body: "<html><body></body></html>" }); }
+    if (!host.endsWith(".supabase.co")) return r.abort();
     const url = new URL(u); const p = url.pathname, q = url.searchParams, m = req.method();
     const json = (body, status) => r.fulfill({ status: status || 200, contentType: "application/json", body: body === null ? "" : JSON.stringify(body) });
+    if (p.startsWith("/rest/v1/") && !["GET", "HEAD", "OPTIONS"].includes(m)) db.requetes.push(m + " " + decodeURIComponent(p + url.search));
     if (p.startsWith("/auth/v1/signup")) {
       const corps = JSON.parse(req.postData() || "{}"); db.inscriptions.push(corps);
-      if (opts.inscriptionKo) return json({ msg: "Signups not allowed for this instance" }, 422);
-      const id = "00000000-0000-4000-8000-00000000abcd";
-      /* le declencheur de la base : profil avec prenom / nom, statut par defaut « prospect » */
-      db.profils.push(Object.assign({ id, prenom: corps.data.prenom, nom: corps.data.nom, role: "client", cree_le: new Date().toISOString() }, "statut" in db.profils[0] ? { statut: "prospect" } : {}));
-      return json(F.session(id, corps.email));
+      return json({ msg: "Signups not allowed for this instance" }, 422);   // aucune inscription dans cette suite
     }
     if (p.startsWith("/auth/v1/token")) return json(who ? F.session(who.id, who.email) : { error: "invalid" }, who ? 200 : 400);
     if (p.startsWith("/auth/v1/")) return json({});
-    if (p === "/functions/v1/creer-acces") {
-      const corps = JSON.parse(req.postData() || "{}"); db.fonctions.push(corps);
-      db.profils.push(Object.assign({ id: NOUVEAU, prenom: corps.prenom, nom: corps.nom, role: corps.role === "coach" ? "coach" : "client", cree_le: new Date().toISOString() }, "statut" in db.profils[0] ? { statut: "prospect" } : {}));
-      return json({ id: NOUVEAU, email: corps.email, role: corps.role });
-    }
     if (p === "/rest/v1/profils") {
-      if (m === "PATCH") {
-        const id = (q.get("id") || "").slice(3); const corps = JSON.parse(req.postData() || "{}"); db.patchs.push({ id, corps });
-        if (opts.patchKo) return json({ code: "P0001", message: "Seul un coach peut changer un rôle ou un statut." }, 400);
-        const cible = db.profils.find(x => x.id === id);
-        if (!cible) return json([], 200);
-        if ("statut" in corps && !("statut" in cible)) return json({ code: "PGRST204", message: "Could not find the 'statut' column" }, 400);
-        Object.assign(cible, corps);
-        return json((req.headers()["prefer"] || "").includes("return=representation") ? [cible] : null, 200);
-      }
+      if (m !== "GET") { db.patchs.push({ m, corps: req.postData() }); return json(null, 204); }
       const id = q.get("id"); return json(id ? db.profils.filter(x => x.id === id.slice(3)) : db.profils);
     }
     if (p === "/rest/v1/donnees") {
-      if (m !== "GET") return json(null, 201);
+      if (m !== "GET") {
+        let rows = []; try { rows = JSON.parse(req.postData() || "[]"); } catch (e) { }
+        (Array.isArray(rows) ? rows : [rows]).forEach(row => {
+          db.ecritures.push({ m, user_id: row.user_id, outil: row.outil, contenu: row.contenu });
+          const i = db.donnees.findIndex(x => x.user_id === row.user_id && x.outil === row.outil);
+          const ligne = { user_id: row.user_id, outil: row.outil, contenu: row.contenu, maj_le: new Date().toISOString() };
+          if (i > -1) db.donnees[i] = ligne; else db.donnees.push(ligne);
+        });
+        return json(null, 201);
+      }
       let l = db.donnees; const uid = q.get("user_id"), o = q.get("outil") || "";
       if (who && who.id !== F.IDS.coach) l = l.filter(x => x.user_id === who.id && x.outil !== "notes_coach");
       if (uid) l = l.filter(x => x.user_id === uid.slice(3));
@@ -81,119 +137,437 @@ async function contexte(b, who, db, opts) {
   await c.addInitScript(({ s, langue }) => { if (s) localStorage.setItem("mhx_session", JSON.stringify(s)); localStorage.setItem("mhx_installe", "1"); localStorage.setItem("mhx_visites", "3"); if (langue) localStorage.setItem("mhx_langue", langue); }, { s: who ? who.session : null, langue: opts.langue || "" });
   const page = await c.newPage();
   page.on("pageerror", e => res.push("  ✗ ERREUR JS " + String(e).slice(0, 300)));
-  page.lectures = [];
-  page.on("request", rq => { if (rq.url().includes("/rest/v1/donnees")) page.lectures.push(decodeURIComponent(rq.url())); });
+  /* toutes les requêtes vers la table donnees (lectures ET écritures), avec leur méthode */
+  page.donnees = [];
+  page.on("request", rq => { if (rq.url().includes("/rest/v1/donnees")) page.donnees.push(rq.method() + " " + decodeURIComponent(rq.url()).replace(/^https:\/\/[^/]+/, "")); });
   page.on("console", msg => { if (msg.type() === "error" && !/ERR_FAILED|status of 4\d\d/.test(msg.text())) res.push("  ✗ CONSOLE " + msg.text().slice(0, 200)); });
   page.on("dialog", d => { res.push("  ✗ DIALOGUE NATIF"); d.dismiss(); });
   return { c, page };
 }
+/* un bloc de vérifications : une exception (élément absent, délai dépassé) note un ✗ au lieu d'arrêter toute la suite */
+async function bloc(nom, fn) {
+  try { await fn(); }
+  catch (e) { ok(nom + " : bloc interrompu par une exception (les vérifications suivantes du bloc n'ont pas tourné)", false, String((e && e.message) || e).split("\n")[0].slice(0, 240)); }
+  finally { while (ouverts.length) await ouverts.pop().close().catch(() => {}); }
+}
 const coach = { id: F.IDS.coach, email: "c@e.fr", session: F.session(F.IDS.coach, "c@e.fr") };
+const lea = { id: PROSPECT, email: "l@e.fr", session: F.session(PROSPECT, "l@e.fr") };
+const thomas = { id: F.IDS.c1, email: "t@e.fr", session: F.session(F.IDS.c1, "t@e.fr") };
 const attendre = (page, ms) => page.waitForTimeout(ms);
 const aller = async (page, h, ms) => { await page.evaluate(x => { location.hash = x; }, h); await attendre(page, ms || 1400); };
-const ligneCompte = (page, nom) => page.locator("#liste-clients .client-l", { hasText: nom });
+const texte = async (page, sel) => norm(await page.textContent(sel || "#vue", { timeout: 3000 }).catch(() => ""));
+/* un clic qui ne plante jamais la suite : false si l'élément n'est pas là */
+const cliquer = (page, sel) => page.click(sel, { timeout: 3000 }).then(() => true, () => false);
+/* tout le texte de la page, y compris ce qui est replié ou masqué (détails, volets), sans les scripts */
+const toutLeTexte = page => page.evaluate(() => { const b = document.body.cloneNode(true); b.querySelectorAll("script, style, template, noscript").forEach(e => e.remove()); return document.body.innerText + "\n" + b.textContent; }).then(norm);
+/* le texte de #vue et les valeurs de ses champs (le coach modifie un programme dans des champs) */
+const valeursVue = page => page.evaluate(() => { const v = document.querySelector("#vue"); return v ? v.innerText + " " + [...v.querySelectorAll("input, textarea")].map(i => i.value).join(" ") : ""; }).then(norm);
+const navIds = page => page.$$eval("#nav a", l => l.map(a => a.dataset.id));
+const cadenasNav = page => page.$$eval("#nav a", l => l.filter(a => a.querySelector(".nav-cadenas")).map(a => a.dataset.id));
+const barreIds = page => page.$$eval("#barre-bas a", l => l.map(a => a.dataset.id));
+const calendlyVue = async page => (await page.$$("#vue a[href*='calendly']")).length;
+/* le contenu du verrou affiché dans #vue (null s'il n'y en a pas) */
+const verrou = page => page.$eval("#vue .verrou", el => {
+  const a = el.querySelector("a");
+  return { cadenas: !!el.querySelector(".cadenas svg"), titre: (el.querySelector("h2") || {}).textContent || "", texte: (el.querySelector("p") || {}).textContent || "",
+           lien: a ? { href: a.href, t: a.textContent.trim(), cible: a.target, rel: a.rel } : null };
+}).catch(() => null);
+const lienOk = (v, src, cta) => !!(v && v.lien && v.lien.href === lienPre(src) && v.lien.t === cta && v.lien.cible === "_blank" && /noopener/.test(v.lien.rel));
+/* les clés de données chargées dans l'appli (toutes les boîtes du cache) ; null si le cache n'est pas lisible */
+const clesChargees = page => page.evaluate(() => {
+  try { const bs = Store.boites ? Object.values(Store.boites) : [Store.cache]; return [...new Set(bs.flatMap(x => Object.keys(x || {})))]; } catch (e) { return null; }
+});
+/* clic sur le « Réserver mon bilan » d'une page verrouillée : l'adresse de l'onglet ouvert, ou null si le bouton manque */
+const cliquerVerrou = async (c, page) => {
+  if (!(await page.$("#vue .verrou a"))) return null;
+  const [pop] = await Promise.all([c.waitForEvent("page", { timeout: 4000 }).catch(() => null), cliquer(page, "#vue .verrou a")]);
+  await attendre(page, 2200);
+  const u = pop ? pop.url() : "";
+  if (pop) await pop.close().catch(() => {});
+  return u;
+};
 
 (async () => {
   await new Promise(r => server.listen(PORT, r));
   const b = await chromium.launch();
-  const lea = { id: PROSPECT, email: "l@e.fr", session: F.session(PROSPECT, "l@e.fr") };
-  const thomas = { id: F.IDS.c1, email: "t@e.fr", session: F.session(F.IDS.c1, "t@e.fr") };
-  const VERROUILLES = ["programme", "nutrition", "mensurations", "suivi", "complements", "bilan", "formation"];   // v44 : la formation attend la fin du challenge
-  const CAL = "https://calendly.com/mhx-coaching/30min";
+  const VERROUILLES = ["programme", "nutrition", "mensurations", "suivi", "complements", "bilan"];
+  const TEXTE_VERROU = "Cette fonctionnalité est disponible avec l'accompagnement MHX.";
+  const TEXTE_VERROU_EN = "This feature is available with MHX coaching.";
+  const TEXTE_FORMATION = "Ta période découverte est terminée : la Speed Formation fait partie de l'accompagnement.";
+  let textesFr = "", textesEn = "";
+  try {
 
-  /* ---------- A. Prospect ---------- */
-  {
-    const db = base();
-    const { c, page } = await contexte(b, lea, db);
+  /* ---------- A. Prospect tout neuf (jour 1) : questionnaire court, pas encore de Calendly ---------- */
+  await bloc("A. prospect jour 1", async () => {
+    const db = base({ ilYA: 0, intake: null });
+    const { page } = await contexte(b, lea, db);
     await page.goto(`http://localhost:${PORT}/#/accueil`); await attendre(page, 1800);
-    const acc = await page.textContent("#acc-vue");
-    ok("prospect : accueil = hub du Challenge 7 jours (v44 : Bonjour, Challenge 7 jours, Ton espace)", acc.includes("Bonjour") && acc.includes("Challenge 7 jours") && acc.includes("Ton espace"));
+    const t = await texte(page, "#acc-vue");
+    ok("prospect jour 1 : accueil = écran Découverte (« Découverte · Jour 1/7 », « Bonjour Léa »)", !!(await page.$(DC_ZONE + " #dc-voir")) && t.includes("Découverte · Jour 1/7") && t.includes("Bonjour Léa"), t.slice(0, 200));
+    const champs = await page.$$eval(DC_ZONE + " [id^='q-']", l => l.map(e => e.id)).catch(() => []);
+    ok("prospect jour 1 : questionnaire court de 10 questions (#q-sexe … #q-motivation) et bouton « Voir mon résultat »", QUESTIONS_COURT.every(q => champs.includes("q-" + q)) && champs.length === 10 && !!(await page.$("#dc-voir")), JSON.stringify(champs));
+    const voir = !!(await page.$(DC_ZONE + " #dc-voir")), nCal = await calendlyVue(page);
+    ok("prospect jour 1 : questionnaire court affiché (#dc-voir) et aucun bouton Calendly tant qu'il n'est pas rempli", voir && nCal === 0, (voir ? "" : "questionnaire court absent ; ") + nCal + " lien(s) Calendly");
+    textesFr += "\n" + await toutLeTexte(page);
+    await aller(page, "#/decouverte", 1500);
+    ok("prospect jour 1 : #/decouverte = le même écran (questionnaire, « Accueil » marqué dans la navigation)", !!(await page.$(DC_ZONE + " #dc-voir")) && !(await page.$("#vue .verrou")) && (await page.$eval('#nav a[aria-current="page"]', a => a.dataset.id).catch(() => "")) === "accueil");
+    ok("prospect jour 1 : rien n'est écrit à l'affichage (aucune requête non-GET vers /rest/v1/*)", db.requetes.length === 0, db.requetes.join(" ; "));
+    await page.screenshot({ path: path.join(OUT, "prospect-jour1-questionnaire.png"), fullPage: true });
+  });
+
+  /* ---------- A2. Questionnaire pas rempli après le jour 1 : toujours le questionnaire, jamais de Calendly ---------- */
+  await bloc("A2. questionnaire pas rempli après le jour 1", async () => {
+    {
+      /* ancien prospect du Challenge au jour 5 : son questionnaire du challenge n'a pas de court_le */
+      const db = base({ ilYA: 4, intake: INTAKE_CHALLENGE, challenge: challengeAncien(jourLocal(4)) });
+      const { c, page } = await contexte(b, lea, db);
+      await page.goto(`http://localhost:${PORT}/#/accueil`); await attendre(page, 2000);
+      const t = await texte(page, "#acc-vue");
+      const champs = await page.$$eval(DC_ZONE + " [id^='q-']", l => l.map(e => e.id)).catch(() => []);
+      const age = await page.$eval("#q-age", e => e.value).catch(() => ""), nCal = await calendlyVue(page);
+      ok("ancien prospect du Challenge au jour 5 (questionnaire sans court_le) : « Découverte · Jour 5/7 », questionnaire court de 10 questions (ses réponses reprises), pas de résultat, aucun bouton Calendly", t.includes("Découverte · Jour 5/7") && champs.length === 10 && !!(await page.$(DC_ZONE + " #dc-voir")) && age === "29" && !(await page.$("#dc-resultat")) && nCal === 0, t.slice(0, 160) + " | " + JSON.stringify(champs) + " | âge « " + age + " » | " + nCal + " lien(s) Calendly");
+      await aller(page, "#/challenge", 1500);
+      const h = await page.evaluate(() => location.hash), nCal2 = await calendlyVue(page);
+      ok("ancien prospect du Challenge au jour 5 : son ancienne adresse #/challenge mène au questionnaire (#/decouverte), sans bouton Calendly ; rien n'est écrit", h === "#/decouverte" && !!(await page.$(DC_ZONE + " #dc-voir")) && nCal2 === 0 && db.requetes.length === 0, h + " | " + nCal2 + " lien(s) Calendly | " + db.requetes.join(" ; "));
+      await c.close();
+    }
+    {
+      /* compte jamais rempli, découverte terminée (jour 21) */
+      const db = base({ ilYA: 20, intake: null });
+      const { page } = await contexte(b, lea, db);
+      await page.goto(`http://localhost:${PORT}/#/accueil`); await attendre(page, 2000);
+      const t = await texte(page, "#acc-vue"), nCal = await calendlyVue(page);
+      ok("prospect jour 21 sans questionnaire : « Découverte · terminée », questionnaire court, toujours aucun bouton Calendly sur l'écran Découverte", t.includes("Découverte · terminée") && !!(await page.$(DC_ZONE + " #dc-voir")) && nCal === 0, t.slice(0, 160) + " | " + nCal + " lien(s) Calendly");
+    }
+  });
+
+  /* ---------- B. Prospect au jour 4, questionnaire rempli : accueil, navigation, pages verrouillées ---------- */
+  await bloc("B. prospect jour 4", async () => {
+    const db = base({ ilYA: 3 });
+    const { c, page } = await contexte(b, lea, db);
+    await page.goto(`http://localhost:${PORT}/#/accueil`); await attendre(page, 2200);
+    const acc = await texte(page, "#acc-vue");
+    const blocs = await page.$$eval(DC_ZONE + " section[id^='dc-']", l => l.map(s => s.id)).catch(() => []);
+    ok("prospect jour 4 : accueil Découverte « Découverte · Jour 4/7 », « Bonjour Léa », résultat complet (résultat, calcul, séance, recettes, formation, accompagnement)", acc.includes("Découverte · Jour 4/7") && acc.includes("Bonjour Léa") && ["dc-resultat", "dc-calcul", "dc-seance", "dc-recettes", "dc-formation", "dc-accomp"].every(x => blocs.includes(x)), acc.slice(0, 160) + " | " + JSON.stringify(blocs));
+    const cals = await page.$$eval(DC_ZONE + " [data-dc-cal]", l => l.map(a => ({ src: a.dataset.dcCal, href: a.href, t: a.textContent.trim(), cible: a.target })));
+    ok("prospect jour 4 : « Réserver mon bilan » sur l'accueil (en-tête + accompagnement), Calendly pré-rempli, utm_content=decouverte / decouverte-accompagnement", cals.length === 2 && cals.every(x => x.href === lienPre(x.src) && x.t === "Réserver mon bilan" && x.cible === "_blank") && cals.map(x => x.src).join() === "decouverte,decouverte-accompagnement", JSON.stringify(cals));
+    ok("prospect jour 4 : bloc Speed Formation ouvert pendant la découverte (lien « Ouvrir la Speed Formation »)", !!(await page.$('#dc-formation a[href="#/formation"]')) && !(await texte(page, "#dc-formation")).includes(TEXTE_FORMATION));
     await page.screenshot({ path: path.join(OUT, "prospect-accueil.png"), fullPage: true });
-    ok("prospect : accueil sans « Réserver mon appel » avant le jour 5 (v44 : CTA progressifs)", !(await page.$(`#acc-vue a[href="${CAL}"]`)));
-    let textes = await page.evaluate(() => document.body.innerText);
-    const cadenas = await page.$$eval("#nav a", l => l.filter(a => a.querySelector(".nav-cadenas")).map(a => a.dataset.id));
-    ok("prospect : chaque onglet verrouillé est annoncé « (verrouillé) » aux lecteurs d'écran", await page.$$eval("#nav a", l => l.filter(a => a.querySelector(".nav-cadenas")).every(a => (a.querySelector(".sr-only") || {}).textContent === " (verrouillé)")));
-    const barre = await page.$$eval("#barre-bas a", l => l.map(a => a.dataset.id));
-    ok("prospect : barre du bas = accueil, challenge, profil, puis un onglet verrouillé (v44)", JSON.stringify(barre) === '["accueil","challenge","profil","programme"]', JSON.stringify(barre));
-    /* v50 : la navigation ne garde que la vitrine (programme, nutrition, formation) ; les autres onglets verrouilles sont caches, leur adresse reste verrouillee (boucle ci-dessous) */
-    ok("prospect : cadenas sur la vitrine (programme, nutrition, formation), onglets sans intérêt cachés, rien sur accueil / challenge / profil", ["programme", "nutrition", "formation"].every(x => cadenas.includes(x)) && !cadenas.some(x => ["mensurations", "suivi", "complements"].includes(x)) && !cadenas.some(x => ["accueil", "challenge", "profil"].includes(x)), JSON.stringify(cadenas));
+    textesFr += "\n" + await toutLeTexte(page);
+
+    /* navigation */
+    const ids = await navIds(page), cad = await cadenasNav(page);
+    ok("prospect jour 4 : navigation = accueil, programme, nutrition, suivi, formation, profil (plus d'onglet Challenge ni Découverte en double)", JSON.stringify(ids) === '["accueil","programme","nutrition","suivi","formation","profil"]', JSON.stringify(ids));
+    ok("prospect jour 4 : cadenas sur la vitrine (programme, nutrition, suivi) seulement — ni sur accueil, formation, profil", JSON.stringify(cad) === '["programme","nutrition","suivi"]', JSON.stringify(cad));
+    ok("prospect jour 4 : chaque onglet verrouillé est annoncé « (verrouillé) » aux lecteurs d'écran", cad.length > 0 && await page.$$eval("#nav a", l => l.filter(a => a.querySelector(".nav-cadenas")).every(a => (a.querySelector(".sr-only") || {}).textContent === " (verrouillé)")));
+    const barre = await barreIds(page);
+    ok("prospect jour 4 : barre du bas = accueil, formation, profil, puis programme (verrouillé) ; le reste derrière « Plus »", JSON.stringify(barre) === '["accueil","formation","profil","programme"]' && !!(await page.$("#barre-bas [data-plus]")) && (await page.$$eval("#barre-bas a.verrouille", l => l.map(a => a.dataset.id))).join() === "programme", JSON.stringify(barre));
+
+    /* pages verrouillées : on part d'une page ouverte, puis chaque adresse */
+    await aller(page, "#/profil", 1500);
     for (const r of VERROUILLES) {
-      page.lectures.length = 0;
-      await aller(page, "#/" + r, 1200);
-      const v = await page.$("#vue .verrou");
-      const lien = v ? await page.$eval("#vue .verrou a", a => a.href).catch(() => "") : "";
-      const lu = page.lectures.filter(u => u.includes("outil=eq.") || u.includes("outil=in.("));
-      /* v44 : la formation renvoie vers le challenge (elle s'ouvre a la fin), les autres vers Calendly */
-      ok(`prospect : #/${r} verrouillé (cadenas + ${r === "formation" ? "lien vers le challenge" : "Calendly"}), aucune donnée lue`, !!v && (r === "formation" ? /#\/challenge$/.test(lien) : lien === CAL) && lu.length === 0, lien + " | " + lu.join(" ; "));
-      textes += "\n" + await page.evaluate(() => document.body.innerText);
-    }
-    for (const r of ["challenge", "profil"]) {
+      page.donnees.length = 0;
       await aller(page, "#/" + r, 1300);
-      ok(`prospect : #/${r} ouvert`, !(await page.$("#vue .verrou")));
-      textes += "\n" + await page.evaluate(() => document.body.innerText);
+      const v = await verrou(page);
+      ok(`prospect : #/${r} verrouillé — cadenas, « ${TEXTE_VERROU} », « Réserver mon bilan » vers Calendly (utm_content=verrou-${r}, prénom et email pré-remplis)`, !!v && v.cadenas && v.texte === TEXTE_VERROU && lienOk(v, "verrou-" + r, "Réserver mon bilan"), JSON.stringify(v));
+      const html = await page.evaluate(() => document.body.innerHTML);
+      ok(`prospect : #/${r} verrouillé — aucune requête vers ses données (ni lecture ni écriture), rien de ses données affiché`, page.donnees.length === 0 && !html.includes(TEMOIN), page.donnees.join(" ; ") + (html.includes(TEMOIN) ? " | donnée témoin affichée" : ""));
+      textesFr += "\n" + await toutLeTexte(page);
     }
-    ok("prospect : aucun prix affiché sur aucune des pages visitées (€, prix, tarif)", !/€|\bprix\b|tarif/i.test(textes));
-    /* v44 : le prospect n'a plus le questionnaire complet dans Profil (il arrive avec l'accompagnement) */
-    await aller(page, "#/profil", 1300);
-    ok("prospect : profil allégé (v44) — pas de questionnaire complet, bloc « Mon compte »", !(await page.$("#p-save")) && (await page.textContent("#vue")).includes("Mon compte"));
-    await c.close();
-  }
-  {
-    /* mobile : barre du bas avec cadenas, pas de débordement */
-    const db = base();
-    const { c, page } = await contexte(b, lea, db, { viewport: { width: 390, height: 844 } });
-    await page.goto(`http://localhost:${PORT}/`); await attendre(page, 1800);
-    ok("prospect mobile : onglets verrouillés marqués dans la barre du bas", (await page.$$("#barre-bas a.verrouille")).length >= 1);
-    await aller(page, "#/programme", 1200);
-    ok("prospect mobile : page verrouillée sans défilement horizontal", await page.evaluate(() => document.documentElement.scrollWidth <= 390));
-    await page.screenshot({ path: path.join(OUT, "prospect-programme-mobile.png"), fullPage: true });
-    await c.close();
-  }
-  for (const largeur of [800, 1024]) {
-    /* tablette / petite fenetre : la barre du haut (avec « (verrouillé) » pour les lecteurs d'ecran) ne deborde pas */
-    const db = base();
-    const { c, page } = await contexte(b, lea, db, { viewport: { width: largeur, height: 800 } });
-    await page.goto(`http://localhost:${PORT}/`); await attendre(page, 1800);
-    const d = await page.evaluate(() => ({ s: document.documentElement.scrollWidth, c: document.documentElement.clientWidth }));
-    ok(`prospect ${largeur} px : aucun défilement horizontal (barre du haut avec cadenas)`, d.s <= d.c, JSON.stringify(d));
-    await c.close();
-  }
-  {
-    /* anglais */
-    const db = base();
-    db.donnees.push({ user_id: PROSPECT, outil: "prefs", contenu: { langue: "en" }, maj_le: "2026-09-24T10:00:00+00:00" });
-    const { c, page } = await contexte(b, lea, db, { langue: "en" });
+    /* le relevé du cache marche : prefs (langue, lue au démarrage de tout compte) doit y figurer */
+    const cles = await clesChargees(page);
+    ok("prospect : après toutes les pages verrouillées, aucune de ses données d'accompagnement n'est chargée dans l'appli (cache lisible : prefs y est)", Array.isArray(cles) && cles.includes("prefs") && !cles.some(k => ["programme", "repas", "mens", "complements", "checkins", "journal", "repas_suivi", "objectifs_faits", "feedbacks", "calc"].includes(k)), JSON.stringify(cles));
+    ok("prospect : mensurations, compléments, bilan cachés de la navigation (verrouillés à leur adresse)", !(await navIds(page)).some(x => ["mensurations", "complements", "bilan"].includes(x)));
+
+    /* formation : ouverte pendant les 7 jours */
+    page.donnees.length = 0;
+    await aller(page, "#/formation", 1600);
+    /* témoin du relevé des requêtes : une page ouverte, elle, lit bien ses données */
+    ok("prospect jour 4 : #/formation ouvert (la Speed Formation s'affiche, pas de cadenas, sa formation est lue)", !(await page.$("#vue .verrou")) && (await texte(page, "#vue h1")).includes("SpeedFormation") && page.donnees.some(u => /^GET .*outil=(eq\.formation|in\.\([^)]*formation)/.test(u)), (await texte(page, "#vue")).slice(0, 160) + " | " + page.donnees.join(" ; "));
+    textesFr += "\n" + await toutLeTexte(page);
+
+    /* anciennes adresses du challenge */
+    const redirs = [];
+    for (const h of ["#/challenge", "#/challenge/3", "#/challenge-libre", "#/challenge-rythme"]) {
+      await aller(page, h, 1300);
+      redirs.push(h + " → " + await page.evaluate(() => location.hash) + (await page.$(DC_ZONE + " #dc-resultat") ? " (Découverte)" : " (?)") + (await page.$("#vue .verrou") ? " VERROU" : ""));
+    }
+    ok("prospect : #/challenge, #/challenge/3, #/challenge-libre, #/challenge-rythme mènent à #/decouverte (son résultat)", redirs.every(x => / → #\/decouverte \(Découverte\)$/.test(x)), redirs.join(" ; "));
+
+    /* profil */
+    await aller(page, "#/profil", 1400);
+    const tp = await texte(page, "#vue");
+    ok("prospect : #/profil ouvert et allégé — « Tes réponses au questionnaire sont enregistrées… », lien « Voir mon résultat » (#/decouverte), bloc « Mon compte », pas de questionnaire complet", !(await page.$("#vue .verrou")) && !(await page.$("#p-save")) && tp.includes("Tes réponses au questionnaire sont enregistrées") && tp.includes("Mon compte") && (await page.$eval('#vue a[href="#/decouverte"]', a => a.textContent.trim()).catch(() => "")) === "Voir mon résultat", tp.slice(0, 200));
+    textesFr += "\n" + await toutLeTexte(page);
+    /* le volet des conditions (relisible depuis le profil) : il doit s'ouvrir, sinon son texte échapperait au contrôle des prix */
+    const okCond = await cliquer(page, "#mc-conditions"); await attendre(page, 500);
+    const tc = await toutLeTexte(page);
+    ok("prospect : le volet « Conditions d'utilisation et confidentialité » s'ouvre depuis le profil (texte capturé pour le contrôle des prix)", okCond && tc.includes(HEBERGEMENT.fr), okCond ? "« " + HEBERGEMENT.fr + " » introuvable" : "bouton #mc-conditions absent");
+    textesFr += "\n" + tc;
+    await page.keyboard.press("Escape"); await attendre(page, 300);
+    ok("prospect : aucune écriture pendant toute la visite (accueil, navigation, pages verrouillées, formation, profil, conditions) — aucune requête non-GET vers /rest/v1/*", db.requetes.length === 0 && db.ecritures.length === 0, db.requetes.join(" ; "));
+
+    /* un clic « Réserver mon bilan » sur une page verrouillée : Calendly s'ouvre, le clic est noté pour le coach */
+    await aller(page, "#/nutrition", 1300);
+    const popUrl = await cliquerVerrou(c, page);
+    const manque = popUrl === null ? "bouton « Réserver mon bilan » absent de #/nutrition | " : "";
+    const ec = db.ecritures.filter(e => e.user_id === PROSPECT);
+    const der = ec.length ? ec[ec.length - 1] : null;
+    const clics = der && der.contenu && der.contenu.cta && Array.isArray(der.contenu.cta.clics) ? der.contenu.cta.clics : [];
+    const clic = clics[clics.length - 1] || {};
+    ok("prospect : clic « Réserver mon bilan » sur #/nutrition verrouillé — Calendly s'ouvre dans un nouvel onglet avec le lien pré-rempli", popUrl === lienPre("verrou-nutrition") && db.calendly.length === 1 && db.calendly[0] === lienPre("verrou-nutrition"), manque + (popUrl || "aucun onglet") + " | " + db.calendly.join(" ; "));
+    ok("prospect : ce clic est noté dans la clé « challenge » (cta.clics : source verrou-nutrition, jour 4, date) et rien d'autre n'est écrit (une seule requête non-GET)", db.requetes.length === 1 && /^POST \/rest\/v1\/donnees/.test(db.requetes[0]) && ec.length === 1 && der.outil === "challenge" && clics.length === 1 && clic.source === "verrou-nutrition" && clic.jour === 4 && /^\d{4}-\d{2}-\d{2}T/.test(clic.date || ""), manque + db.requetes.join(" ; ") + " | " + JSON.stringify(ec.map(e => ({ outil: e.outil, cta: e.contenu && e.contenu.cta }))));
+    const suivi = await page.evaluate(() => { try { return JSON.parse(localStorage.getItem("mhx_tracking") || "[]").map(e => e.event); } catch (e) { return []; } });
+    ok("prospect : le clic est aussi compté dans le suivi local (call_cta_clicked)", suivi.includes("call_cta_clicked"), manque + JSON.stringify(suivi));
+  });
+
+  /* ---------- C. Jour 7, jour 8 par la date, puis mode test : la Speed Formation se verrouille au jour 8 ---------- */
+  await bloc("C. jour 7, jour 8 et mode test", async () => {
+    {
+      const db = base({ ilYA: 6 });
+      const { c, page } = await contexte(b, lea, db);
+      await page.goto(`http://localhost:${PORT}/#/accueil`); await attendre(page, 2000);
+      const t7 = await texte(page, "#vue");
+      await aller(page, "#/formation", 1500);
+      ok("prospect jour 7 : « Découverte · Jour 7/7 », Speed Formation encore ouverte (pas de cadenas)", t7.includes("Découverte · Jour 7/7") && !(await page.$("#vue .verrou")) && !(await cadenasNav(page)).includes("formation"), t7.slice(0, 120));
+      await aller(page, "#/decouverte-jour/8", 2000);
+      const t8 = await texte(page, "#vue");
+      const cle = await page.evaluate(() => localStorage.getItem("mhx_decouverte_jour")), h8 = await page.evaluate(() => location.hash);
+      ok("mode test #/decouverte-jour/8 : retour sur #/decouverte, « Découverte · terminée », cadenas sur la formation", h8 === "#/decouverte" && cle === "8" && t8.includes("Découverte · terminée") && (await cadenasNav(page)).includes("formation"), h8 + " | " + cle + " | " + t8.slice(0, 120));
+      page.donnees.length = 0;
+      await aller(page, "#/formation", 1400);
+      const v = await verrou(page);
+      ok(`mode test jour 8 : #/formation verrouillé — « ${TEXTE_FORMATION} », « Réserver mon bilan » (utm_content=verrou-formation), aucune requête vers ses données`, !!v && v.cadenas && v.texte === TEXTE_FORMATION && lienOk(v, "verrou-formation", "Réserver mon bilan") && page.donnees.length === 0, JSON.stringify(v) + " | " + page.donnees.join(" ; "));
+      await aller(page, "#/decouverte-jour/0", 2000);
+      const t0 = await texte(page, "#vue");
+      await aller(page, "#/formation", 1400);
+      ok("mode test #/decouverte-jour/0 : retour au vrai jour (Jour 7/7), Speed Formation rouverte", (await page.evaluate(() => localStorage.getItem("mhx_decouverte_jour"))) === null && t0.includes("Découverte · Jour 7/7") && !(await page.$("#vue .verrou")), t0.slice(0, 120));
+      ok("mode test : rien n'est écrit en base (aucune requête non-GET vers /rest/v1/*)", db.requetes.length === 0, db.requetes.join(" ; "));
+      await c.close();
+    }
+    {
+      /* la vraie bascule, par la date : inscription il y a 7 jours = jour 8, sans mode test */
+      const db = base({ ilYA: 7 });
+      const { page } = await contexte(b, lea, db);
+      await page.goto(`http://localhost:${PORT}/#/accueil`); await attendre(page, 2000);
+      const t = await texte(page, "#acc-vue"), cad = await cadenasNav(page);
+      page.donnees.length = 0;
+      await aller(page, "#/formation", 1400);
+      const v = await verrou(page);
+      ok("prospect inscrit il y a 7 jours (jour 8 par la date, sans mode test) : « Découverte · terminée », cadenas sur la formation, #/formation verrouillé (texte de fin, verrou-formation), aucune requête vers ses données", t.includes("Découverte · terminée") && cad.includes("formation") && !!v && v.cadenas && v.texte === TEXTE_FORMATION && lienOk(v, "verrou-formation", "Réserver mon bilan") && page.donnees.length === 0, t.slice(0, 100) + " | " + JSON.stringify(cad) + " | " + JSON.stringify(v) + " | " + page.donnees.join(" ; "));
+    }
+  });
+
+  /* ---------- C2. Le jour suit la date LOCALE de l'inscription, pas la date UTC ---------- */
+  await bloc("C2. date locale de l'inscription", async () => {
+    const cas = [
+      { fuseau: "Pacific/Kiritimati", cree: inscritDansFuseau(14, 0, 0, 30), jour: 1, lib: "aujourd'hui 0 h 30 à UTC+14 (la veille en UTC)" },
+      { fuseau: "Pacific/Honolulu", cree: inscritDansFuseau(-10, 1, 23, 30), jour: 2, lib: "hier 23 h 30 à UTC−10 (aujourd'hui en UTC)" }
+    ];
+    const vus = [];
+    for (const x of cas) {
+      const { c, page } = await contexte(b, lea, base({ cree: x.cree, intake: null }), { fuseau: x.fuseau });
+      await page.goto(`http://localhost:${PORT}/#/accueil`); await attendre(page, 1800);
+      const t = await texte(page, "#acc-vue");
+      vus.push({ lib: x.lib, cree: x.cree, attendu: x.jour, ok: t.includes("Découverte · Jour " + x.jour + "/7"), vu: (/Découverte · [^B]*/.exec(t) || [t.slice(0, 40)])[0].trim() });
+      await c.close();
+    }
+    ok("jour de découverte = date LOCALE de l'inscription, pas sa date UTC (inscrite à 0 h 30 à UTC+14 : jour 1 ; hier à 23 h 30 à UTC−10 : jour 2)", vus.every(v => v.ok), JSON.stringify(vus));
+  });
+
+  /* ---------- D. Inscription ancienne (jour 21) : découverte terminée, Speed Formation verrouillée ---------- */
+  await bloc("D. prospect jour 21", async () => {
+    const db = base({ ilYA: 20 });
+    const { c, page } = await contexte(b, lea, db);
+    await page.goto(`http://localhost:${PORT}/#/accueil`); await attendre(page, 2200);
+    const acc = await texte(page, "#acc-vue");
+    ok("prospect jour 21 : « Découverte · terminée », son résultat reste là (« Ta période découverte est terminée… »)", acc.includes("Découverte · terminée") && acc.includes("Ta période découverte est terminée") && !!(await page.$("#dc-resultat")), acc.slice(0, 200));
+    ok("prospect jour 21 : bloc Speed Formation de l'accueil fermé (texte de fin, plus de lien vers #/formation)", (await texte(page, "#dc-formation")).includes(TEXTE_FORMATION) && !(await page.$('#dc-formation a[href="#/formation"]')));
+    const cad = await cadenasNav(page), barre = await barreIds(page);
+    ok("prospect jour 21 : navigation — cadenas sur programme, nutrition, suivi ET formation ; barre du bas = accueil, profil, programme, nutrition", JSON.stringify(await navIds(page)) === '["accueil","programme","nutrition","suivi","formation","profil"]' && JSON.stringify(cad) === '["programme","nutrition","suivi","formation"]' && JSON.stringify(barre) === '["accueil","profil","programme","nutrition"]', JSON.stringify({ cad, barre }));
+    textesFr += "\n" + await toutLeTexte(page);
+    await aller(page, "#/profil", 1400);
+    page.donnees.length = 0;
+    await aller(page, "#/formation", 1400);
+    const v = await verrou(page);
+    ok(`prospect jour 21 : #/formation verrouillé — cadenas, « ${TEXTE_FORMATION} », « Réserver mon bilan » (utm_content=verrou-formation, pré-rempli)`, !!v && v.cadenas && v.texte === TEXTE_FORMATION && lienOk(v, "verrou-formation", "Réserver mon bilan"), JSON.stringify(v));
+    const html = await page.evaluate(() => document.body.innerHTML), cles = await clesChargees(page);
+    ok("prospect jour 21 : #/formation verrouillé — aucune requête vers ses données, sa formation n'est ni chargée ni affichée (cache lisible : prefs y est)", page.donnees.length === 0 && Array.isArray(cles) && cles.includes("prefs") && !cles.includes("formation") && !html.includes(TEMOIN), page.donnees.join(" ; ") + " | " + JSON.stringify(cles));
+    textesFr += "\n" + await toutLeTexte(page);
+    await aller(page, "#/programme", 1300);
+    ok("prospect jour 21 : le reste ne change pas — #/programme toujours verrouillé (utm_content=verrou-programme)", lienOk(await verrou(page), "verrou-programme", "Réserver mon bilan"));
+    await aller(page, "#/formation", 1300);
+    const popUrl = await cliquerVerrou(c, page);
+    const ec = db.ecritures.filter(e => e.outil === "challenge"), cl = ec.length ? ((ec[ec.length - 1].contenu.cta || {}).clics || []) : [];
+    ok("prospect jour 21 : clic sur la formation verrouillée noté (source verrou-formation, jour 21), une seule requête non-GET", db.requetes.length === 1 && /^POST \/rest\/v1\/donnees/.test(db.requetes[0]) && db.ecritures.length === 1 && cl.length === 1 && cl[0].source === "verrou-formation" && cl[0].jour === 21, (popUrl === null ? "bouton « Réserver mon bilan » absent de #/formation (la formation n'est pas verrouillée) | " : "") + db.requetes.join(" ; ") + " | " + JSON.stringify(db.ecritures.map(e => ({ outil: e.outil, cta: e.contenu && e.contenu.cta }))));
+    await page.screenshot({ path: path.join(OUT, "prospect-formation-jour21.png"), fullPage: true });
+  });
+
+  /* ---------- E. Téléphone et tablette : cadenas dans la barre du bas, volet « Plus », pas de débordement ---------- */
+  await bloc("E. téléphone et tablette", async () => {
+    {
+      const db = base({ ilYA: 3 });
+      const { c, page } = await contexte(b, lea, db, { viewport: { width: 390, height: 844 } });
+      await page.goto(`http://localhost:${PORT}/`); await attendre(page, 2200);
+      ok("prospect mobile : accueil Découverte sans défilement horizontal", !!(await page.$(DC_ZONE + " #dc-resultat")) && await page.evaluate(() => document.documentElement.scrollWidth <= 390));
+      ok("prospect mobile : onglet verrouillé marqué (cadenas) dans la barre du bas", (await page.$$("#barre-bas a.verrouille .nav-cadenas")).length >= 1);
+      const okPlus = await cliquer(page, "#barre-bas [data-plus]"); await attendre(page, 600);
+      const plus = await page.$$eval(".volet .menu-plus a", l => l.map(a => a.dataset.id + (a.querySelector(".nav-cadenas") ? "🔒" : ""))).catch(() => []);
+      ok("prospect mobile : « Plus » = nutrition et suivi (verrouillés) ; ni mensurations, ni compléments, ni bilan, ni challenge", okPlus && JSON.stringify(plus) === '["nutrition🔒","suivi🔒"]', (okPlus ? "" : "bouton « Plus » absent | ") + JSON.stringify(plus));
+      textesFr += "\n" + await toutLeTexte(page);
+      await page.keyboard.press("Escape"); await attendre(page, 300);
+      await aller(page, "#/programme", 1300);
+      ok("prospect mobile : page verrouillée sans défilement horizontal", !!(await page.$("#vue .verrou")) && await page.evaluate(() => document.documentElement.scrollWidth <= 390));
+      await page.screenshot({ path: path.join(OUT, "prospect-programme-mobile.png"), fullPage: true });
+      await c.close();
+    }
+    {
+      /* jour 21 : la formation verrouillée quitte la barre du bas pour le volet « Plus » */
+      const db = base({ ilYA: 20 });
+      const { c, page } = await contexte(b, lea, db, { viewport: { width: 390, height: 844 } });
+      await page.goto(`http://localhost:${PORT}/`); await attendre(page, 2200);
+      const barre = await barreIds(page);
+      const okPlus = await cliquer(page, "#barre-bas [data-plus]"); await attendre(page, 600);
+      const plus = await page.$$eval(".volet .menu-plus a", l => l.map(a => a.dataset.id + (a.querySelector(".nav-cadenas") ? "🔒" : ""))).catch(() => []);
+      ok("prospect mobile jour 21 : barre du bas = accueil, profil, programme, nutrition ; « Plus » = suivi et formation, tous deux verrouillés", okPlus && JSON.stringify(barre) === '["accueil","profil","programme","nutrition"]' && JSON.stringify(plus) === '["suivi🔒","formation🔒"]', (okPlus ? "" : "bouton « Plus » absent | ") + JSON.stringify({ barre, plus }));
+      textesFr += "\n" + await toutLeTexte(page);
+      await c.close();
+    }
+    for (const largeur of [800, 1024]) {
+      /* tablette / petite fenetre : la barre du haut (avec « (verrouillé) » pour les lecteurs d'ecran) ne deborde pas */
+      const db = base({ ilYA: 20 });
+      const { c, page } = await contexte(b, lea, db, { viewport: { width: largeur, height: 800 } });
+      await page.goto(`http://localhost:${PORT}/`); await attendre(page, 1800);
+      const d = await page.evaluate(() => ({ s: document.documentElement.scrollWidth, c: document.documentElement.clientWidth }));
+      ok(`prospect ${largeur} px : aucun défilement horizontal (barre du haut avec 4 cadenas)`, d.s <= d.c && (await cadenasNav(page)).length === 4, JSON.stringify(d));
+      await c.close();
+    }
+  });
+
+  /* ---------- F. Anglais : toutes les pages verrouillées, accueil, profil et ses conditions, formation au jour 8 ---------- */
+  await bloc("F. anglais", async () => {
+    const db = base({ ilYA: 3, prefs: { langue: "en" } });
+    const { page } = await contexte(b, lea, db, { langue: "en" });
     await page.goto(`http://localhost:${PORT}/#/programme`); await attendre(page, 2000);
-    const t = await page.textContent("#vue");
-    ok("prospect en anglais : « This feature is available with MHX coaching. » et « Book my call »", t.includes("This feature is available with MHX coaching.") && t.includes("Book my call"), t.slice(0, 200));
-    await aller(page, "#/accueil", 1500);
-    ok("prospect en anglais : accueil « 7-Day Challenge », « Your starting point » (v44)", (await page.textContent("#acc-vue")).includes("7-Day Challenge") && (await page.textContent("#acc-vue")).includes("Your starting point"));
-    await c.close();
+    const v = await verrou(page);
+    ok(`prospect en anglais : #/programme « ${TEXTE_VERROU_EN} » et « Book my assessment » (utm_content=verrou-programme)`, !!v && v.texte === TEXTE_VERROU_EN && lienOk(v, "verrou-programme", "Book my assessment"), JSON.stringify(v));
+    textesEn += "\n" + await toutLeTexte(page);
+    await aller(page, "#/accueil", 2000);
+    const acc = await texte(page, "#acc-vue");
+    const cals = await page.$$eval(DC_ZONE + " [data-dc-cal]", l => l.map(a => a.textContent.trim()));
+    ok("prospect en anglais : accueil « Discovery · Day 4/7 », boutons « Book my assessment »", acc.includes("Discovery · Day 4/7") && cals.length === 2 && cals.every(x => x === "Book my assessment"), acc.slice(0, 160) + " | " + JSON.stringify(cals));
+    textesEn += "\n" + await toutLeTexte(page);
+    /* les 5 autres pages verrouillées, cachées ou non (leurs avantages traduits passent au contrôle des prix) */
+    const fautes = [];
+    for (const r of VERROUILLES.filter(x => x !== "programme")) {
+      await aller(page, "#/" + r, 1300);
+      const vr = await verrou(page);
+      if (!(vr && vr.cadenas && vr.texte === TEXTE_VERROU_EN && lienOk(vr, "verrou-" + r, "Book my assessment"))) fautes.push(r + " " + JSON.stringify(vr));
+      textesEn += "\n" + await toutLeTexte(page);
+    }
+    ok(`prospect en anglais : #/nutrition, #/mensurations, #/suivi, #/complements, #/bilan verrouillés en anglais (« ${TEXTE_VERROU_EN} », « Book my assessment », utm_content=verrou-<id>)`, fautes.length === 0, fautes.join(" ; "));
+    await aller(page, "#/profil", 1300);
+    textesEn += "\n" + await toutLeTexte(page);
+    const okCond = await cliquer(page, "#mc-conditions"); await attendre(page, 500);
+    const tc = await toutLeTexte(page);
+    ok("prospect en anglais : le volet des conditions s'ouvre depuis le profil, en anglais (texte capturé pour le contrôle des prix)", okCond && tc.includes(HEBERGEMENT.en), okCond ? "« " + HEBERGEMENT.en + " » introuvable" : "bouton #mc-conditions absent");
+    textesEn += "\n" + tc;
+    await page.keyboard.press("Escape"); await attendre(page, 300);
+    await aller(page, "#/decouverte-jour/8", 1800);
+    textesEn += "\n" + await toutLeTexte(page);
+    await aller(page, "#/formation", 1400);
+    const vf = await verrou(page);
+    ok("prospect en anglais, jour 8 : #/formation « Your discovery period is over: the Speed Formation is part of the coaching. » et « Book my assessment »", !!vf && vf.texte === "Your discovery period is over: the Speed Formation is part of the coaching." && lienOk(vf, "verrou-formation", "Book my assessment"), JSON.stringify(vf));
+    textesEn += "\n" + await toutLeTexte(page);
+  });
+
+  /* ---------- G. Écran d'inscription (inscription libre allumée pour le test) et ses conditions ---------- */
+  for (const langue of ["", "en"]) {
+    await bloc("G. inscription" + (langue ? " (anglais)" : ""), async () => {
+      inscriptionLibre = true;
+      try {
+        const db = base();
+        const { page } = await contexte(b, null, db, { langue });
+        await page.goto(`http://localhost:${PORT}/#/inscription`); await attendre(page, 1500);
+        const t = await toutLeTexte(page);
+        const titre = (await texte(page, ".carte-co h2")).trim(), bouton = (await texte(page, "#c-go")).trim();
+        const [tA, bA] = langue ? ["Create your discovery access", "Create my access"] : ["Crée ton accès découverte", "Créer mon accès"];
+        ok(`inscription${langue ? " (anglais)" : ""} : écran « ${tA} », bouton « ${bA} », cases des conditions (#c-cgu) et des données de santé (#c-sante)`, titre === tA && bouton === bA && !!(await page.$("#c-cgu")) && !!(await page.$("#c-sante")), JSON.stringify({ titre, bouton }));
+        const okLien = await cliquer(page, "#c-cgu-lien"); await attendre(page, 500);
+        const tv = await toutLeTexte(page), heb = langue ? HEBERGEMENT.en : HEBERGEMENT.fr;
+        ok(`inscription${langue ? " (anglais)" : ""} : écran et volet des conditions (ouvert, « ${heb}… » capturé) sans aucun prix, tarif ni abonnement`, okLien && tv.includes(heb) && !prixTrouve(t + tv), prixTrouve(t + tv) || (okLien ? "volet des conditions pas capturé (« " + heb + " » introuvable)" : "lien #c-cgu-lien absent"));
+        if (langue) textesEn += "\n" + t + tv; else textesFr += "\n" + t + tv;
+      } finally { inscriptionLibre = false; }
+    });
   }
 
-  /* ---------- B. Client, coach, base sans statut : rien ne change ---------- */
-  {
-    const { c, page } = await contexte(b, thomas, base());
+  /* ---------- H. Aucun prix nulle part ---------- */
+  await bloc("H. aucun prix", async () => {
+    ok("prospect : aucun prix sur aucune des pages visitées en français (€, prix, tarif, abonnement, /mois)", textesFr.length > 5000 && !prixTrouve(textesFr), prixTrouve(textesFr) || "textes vides");
+    ok("prospect : aucun prix sur aucune des pages visitées en anglais ($, £, €, price, subscription, /month)", textesEn.length > 2000 && !prixTrouve(textesEn), prixTrouve(textesEn) || "textes vides");
+    /* les textes eux-mêmes, même ceux qu'aucun écran n'a montrés : la Découverte (FR + EN), les avantages
+       (FR + leur traduction), et tout le dictionnaire anglais (clés et valeurs), l'appli étant en anglais */
+    const { page } = await contexte(b, lea, base({ prefs: { langue: "en" } }), { langue: "en" });
+    await page.goto(`http://localhost:${PORT}/`); await attendre(page, 2000);
+    const r = await page.evaluate(() => {
+      const l = []; const tour = v => { if (typeof v === "string") l.push(v); else if (v && typeof v === "object") Object.values(v).forEach(tour); };
+      const out = { decouverte: null };
+      if (typeof DECOUVERTE !== "undefined") { tour(DECOUVERTE); out.decouverte = l.splice(0).join("\n"); }
+      const av = typeof AVANTAGES !== "undefined" ? AVANTAGES : null, dico = typeof I18N !== "undefined" && I18N.en ? I18N.en : null;
+      if (av) Object.values(av).forEach(s => l.push(s, trad(s)));
+      if (dico) Object.keys(dico).forEach(k => { l.push(k); tour(dico[k]); });
+      out.reste = l.join("\n");
+      out.langue = typeof I18N !== "undefined" ? I18N.langue : "";
+      out.nAv = av ? Object.keys(av).length : 0;
+      out.avEn = av ? Object.values(av).filter(s => trad(s) !== s).length : 0;
+      out.nDico = dico ? Object.keys(dico).length : 0;
+      return out;
+    });
+    ok("textes de la Découverte (DECOUVERTE, français + anglais) : aucun prix, tarif ni abonnement", !!r.decouverte && !prixTrouve(r.decouverte), r.decouverte ? prixTrouve(r.decouverte) : "DECOUVERTE absent");
+    ok("avantages de l'accompagnement (français + traduction anglaise de chacun) et tout le dictionnaire anglais I18N.en (clés et valeurs) : aucun prix, tarif ni abonnement", r.langue === "en" && r.nAv >= 6 && r.avEn === r.nAv && r.nDico > 500 && !prixTrouve(r.reste), prixTrouve(r.reste) || JSON.stringify({ langue: r.langue, avantages: r.nAv, traduits: r.avEn, dictionnaire: r.nDico }));
+  });
+
+  /* ---------- I. Client, coach, base sans statut : rien ne change ---------- */
+  await bloc("I. client", async () => {
+    const { page } = await contexte(b, thomas, base());
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 1800);
     ok("client : aucun cadenas dans la navigation", (await page.$$("#nav .nav-cadenas")).length === 0);
-    const barreC = await page.$$eval("#barre-bas a", l => l.map(a => a.dataset.id));
+    const barreC = await barreIds(page);
     ok("client : barre du bas inchangée (ses onglets principaux)", JSON.stringify(barreC) === '["accueil","programme","nutrition","mensurations"]', JSON.stringify(barreC));
+    ok("client : son accueil habituel (pas d'écran Découverte)", !!(await page.$("#acc-vue")) && !(await page.$(DC_ECRAN)));
     await aller(page, "#/programme", 1500);
-    ok("client : son programme s'affiche (pas de verrou)", !(await page.$("#vue .verrou")) && (await page.textContent("#vue")).includes("Séance"));
-    await c.close();
-  }
-  {
-    const { c, page } = await contexte(b, coach, base());
+    ok("client : son programme s'affiche (pas de verrou)", !(await page.$("#vue .verrou")) && (await texte(page, "#vue")).includes("Séance"));
+    await aller(page, "#/formation", 1500);
+    ok("client : Speed Formation ouverte (pas de verrou)", !(await page.$("#vue .verrou")) && (await texte(page, "#vue h1")).includes("SpeedFormation"));
+    await aller(page, "#/decouverte", 1500);
+    ok("client : #/decouverte ne lui ouvre rien de nouveau (retour à son accueil, pas d'écran Découverte)", !(await page.$(DC_ECRAN)) && !(await page.$("#vue .verrou")) && !!(await page.$("#acc-vue")));
+  });
+  await bloc("I. coach sur la fiche d'un prospect", async () => {
+    /* le coach consulte la fiche de Léa, prospecte dont la découverte est terminée */
+    const { page } = await contexte(b, coach, base({ ilYA: 20 }));
     await page.goto(`http://localhost:${PORT}/#/clients`); await attendre(page, 2000);
-    await page.click(`[data-ouvrir="${PROSPECT}"]`); await attendre(page, 1500);
+    const okFiche = await cliquer(page, `[data-ouvrir="${PROSPECT}"]`); await attendre(page, 1500);
     await aller(page, "#/programme", 1500);
-    ok("coach dans la fiche d'un prospect : rien n'est verrouillé", !(await page.$("#vue .verrou")) && (await page.$$("#nav .nav-cadenas")).length === 0);
-    await c.close();
-  }
-  {
-    const { c, page } = await contexte(b, lea, base({ sansStatut: true }));
+    const vu = await valeursVue(page);
+    ok("coach dans la fiche d'un prospect : rien n'est verrouillé, il voit son programme", okFiche && !(await page.$("#vue .verrou")) && (await page.$$("#nav .nav-cadenas")).length === 0 && vu.includes(TEMOIN), (okFiche ? "" : "fiche de Léa introuvable dans Mes clients | ") + vu.slice(0, 300));
+    await aller(page, "#/formation", 1500);
+    /* ouverte ET affichée : ni cadenas, ni page en erreur, ni « Chargement… » ; la progression est celle de Léa (10 étapes cochées) */
+    const fo = await page.evaluate(() => { const v = document.querySelector("#vue"); return { verrou: !!document.querySelector("#vue .verrou"), illisible: !!document.getElementById("page-illisible"), chargement: !!v && /Chargement…/.test(v.innerText), h1: ((document.querySelector("#vue h1") || {}).textContent || "").replace(/\s+/g, ""), progression: ((document.querySelector("#vue .prog-compteur .t-sub") || {}).textContent || "").trim(), modules: document.querySelectorAll("#vue .fo-mod").length }; });
+    ok("coach dans la fiche d'un prospect au jour 21 : Speed Formation ouverte et affichée (titre, modules, progression de Léa « 10 / … étapes ») — le verrou du jour 8 ne vaut que pour le prospect", okFiche && !fo.verrou && !fo.illisible && !fo.chargement && fo.h1.includes("SpeedFormation") && fo.modules > 0 && /^10 \//.test(fo.progression), JSON.stringify(fo));
+    const lien = await page.evaluate(() => { try { return lienCalendly("verrou-programme"); } catch (e) { return "ERREUR " + e.message; } });
+    ok("coach dans la fiche d'un prospect : lien Calendly brut (ni source, ni prénom, ni email)", okFiche && lien === CAL, lien);
+  });
+  await bloc("I. base sans colonne statut", async () => {
+    const db = base({ sansStatut: true, intake: Object.assign(intakeCourt(3), { nom: "Léa Démo", complet: true }) });
+    const { page } = await contexte(b, lea, db);
     await page.goto(`http://localhost:${PORT}/#/programme`); await attendre(page, 1800);
-    ok("base sans colonne statut : personne n'est prospect, rien n'est verrouillé", !(await page.$("#vue .verrou")) && (await page.$$("#nav .nav-cadenas")).length === 0);
-    await c.close();
+    ok("base sans colonne statut : personne n'est prospect, rien n'est verrouillé (Léa voit son programme)", !(await page.$("#vue .verrou")) && (await page.$$("#nav .nav-cadenas")).length === 0 && (await texte(page, "#vue")).includes(TEMOIN));
+  });
+
+  } catch (e) {
+    ok("suite interrompue par une exception", false, String((e && e.message) || e).split("\n")[0].slice(0, 240));
+  } finally {
+    while (ouverts.length) await ouverts.pop().close().catch(() => {});
+    await b.close().catch(() => {}); server.close(); console.log(res.join("\n"));
   }
-  await b.close(); server.close(); console.log(res.join("\n"));
 })();

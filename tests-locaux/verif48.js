@@ -405,8 +405,11 @@ const ecrituresIntake = (db, uid) => db.ecritures.filter(e => e.outil === "intak
     await page.goto(`http://localhost:${PORT}/#/challenge`); await attendre(page, 2400);
     await page.fill("#q-age", "15"); await page.fill("#q-poids", "64"); await page.fill("#q-taille", "168"); await attendre(page, 1500);
     ok("diagnostic : âge de 15 ans → aucune réponse ne part en brouillon", db.ecritures.length === 0);
+    /* Decouverte : l'age n'est juge qu'a la sortie du champ (« 185 » passe par « 18 ») */
     await page.fill("#q-age", "29"); await attendre(page, 1500);
-    ok("diagnostic : âge corrigé (29) → le brouillon part avec les réponses valides", ecrituresIntake(db, PROSPECT).some(x => String(x.contenu.age) === "29" && String(x.contenu.taille) === "168"));
+    ok("diagnostic : âge corrigé (29) mais champ pas encore quitté → toujours rien", db.ecritures.length === 0);
+    await page.press("#q-age", "Tab"); await attendre(page, 1500);
+    ok("diagnostic : âge corrigé (29) à la sortie du champ → le brouillon part avec les réponses valides", ecrituresIntake(db, PROSPECT).some(x => String(x.contenu.age) === "29" && String(x.contenu.taille) === "168"));
     await c.close();
   }
 

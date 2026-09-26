@@ -20,7 +20,10 @@ const server = http.createServer((req,res)=>{res.writeHead(200,{"Content-Type":"
   await page.goto("http://localhost:9666/"); await page.waitForTimeout(1500);
   const t = await page.textContent("#tb-vue");
   ok("tableau : KPI clients actifs = 3", /Clients actifs\s*3/.test(t.replace(/\s+/g," ")), t.slice(0,200));
-  ok("tableau : KPI prospects = 0", /Prospects\s*0/.test(t.replace(/\s+/g," ")));
+  /* tuile prospects : depuis la Decouverte, elle compte les prospects encore dans leurs 7 jours (aucun prospect dans les fixtures) */
+  const tuiles = await page.$$eval("#tb-vue .tb-tuile", l=>l.map(e=>({lbl:(e.querySelector(".t-lbl")||{}).textContent||"", val:((e.querySelector(".t-val")||{}).textContent||"").trim(), sub:((e.querySelector(".t-sub")||{}).textContent||"").trim(), href:e.getAttribute("href")})));
+  const tPr = tuiles.find(x=>x.lbl.trim()==="Prospects en découverte");
+  ok("tableau : tuile « Prospects en découverte » = 0 (0 prospect au total, lien #/prospects)", !!tPr && tPr.val==="0" && tPr.sub==="0 prospect au total" && tPr.href==="#/prospects", JSON.stringify(tuiles.map(x=>x.lbl+" = "+x.val+" ("+x.sub+")")));
   ok("tableau : Julien inactif signale", t.includes("Julien") && /Inactif depuis \d+ j/.test(t));
   ok("tableau : Sarah programme/diete a envoyer", t.includes("Programme à envoyer") && t.includes("Diète à envoyer"));
   ok("tableau : Thomas objectif non atteint", t.includes("Objectif non atteint"));

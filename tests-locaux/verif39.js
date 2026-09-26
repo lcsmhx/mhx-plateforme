@@ -1,6 +1,10 @@
 /* v39 — phase 15 : statut prospect / client (colonne profils.statut).
    Supabase simulé : la colonne statut existe (sauf option sansStatut), un compte
    créé par la base naît « prospect », seul le coach change un statut.
+   Découverte (remplace le Challenge 7 jours) : tuile « Prospects en découverte » (prospects
+   encore dans leurs 7 jours), inscription « Crée ton accès découverte » avec les deux cases
+   (conditions + données de santé), arrivée du nouveau compte sur l'écran Découverte sans aucune
+   écriture dans donnees (rien ne part avant un âge ≥ 18).
    Usage : node verif39.js ../index.html                                         */
 const { chromium } = require("playwright"); const fs = require("fs"); const http = require("http"); const path = require("path");
 const F = require("./fixtures"); const HTML = path.resolve(process.argv[2] || "../index.html");
@@ -13,15 +17,18 @@ const server = http.createServer((req, res) => {
 });
 const res = []; const ok = (n, c, d) => res.push((c ? "  ✓ " : "  ✗ ") + n + (c ? "" : "  — " + (d || "")));
 const PROSPECT = "00000000-0000-4000-8000-000000000c04", EQUIPE = "00000000-0000-4000-8000-0000000000e1", NOUVEAU = "00000000-0000-4000-8000-000000000c05";
+/* instant « il y a n jours » (midi, heure locale) : les dates d'inscription suivent le jour du test.
+   Léa s'est inscrite il y a 3 jours : jour 4/7 de sa Découverte, quel que soit le jour où la suite tourne. */
+const ilYAIso = n => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - n); return d.toISOString(); };
 
 function base(opts) {
   opts = opts || {};
   const profils = JSON.parse(JSON.stringify(F.profils)).concat([
-    { id: PROSPECT, prenom: "Léa", nom: "Démo", role: "client", cree_le: "2026-09-24T10:00:00Z" },
+    { id: PROSPECT, prenom: "Léa", nom: "Démo", role: "client", cree_le: ilYAIso(3) },
     { id: EQUIPE, prenom: "Équipe", nom: "Démo", role: "coach", cree_le: "2026-09-02T10:00:00Z" }
   ]);
   if (!opts.sansStatut) profils.forEach(p => { p.statut = p.id === PROSPECT ? "prospect" : "client"; });
-  return { profils, donnees: JSON.parse(JSON.stringify(F.donnees)), patchs: [], fonctions: [], inscriptions: [] };
+  return { profils, donnees: JSON.parse(JSON.stringify(F.donnees)), patchs: [], fonctions: [], inscriptions: [], ecritures: [] };
 }
 async function contexte(b, who, db, opts) {
   opts = opts || {};
@@ -63,7 +70,12 @@ async function contexte(b, who, db, opts) {
       return json(id ? db.profils.filter(x => x.id === id.slice(3)) : db.profils);
     }
     if (p === "/rest/v1/donnees") {
-      if (m !== "GET") return json(null, 201);
+      if (m !== "GET") {   /* toute écriture est notée (clé, compte), puis acceptée */
+        let rows = []; try { rows = JSON.parse(req.postData() || "[]"); } catch (e) { }
+        (Array.isArray(rows) ? rows : [rows]).forEach(row => db.ecritures.push({ table: "donnees", m, user_id: row && row.user_id, outil: row && row.outil }));
+        if (!rows || (Array.isArray(rows) && !rows.length)) db.ecritures.push({ table: "donnees", m, filtre: url.search });
+        return json(null, 201);
+      }
       let l = db.donnees; const uid = q.get("user_id"), o = q.get("outil") || "";
       if (who && who.id !== F.IDS.coach) l = l.filter(x => x.user_id === who.id && x.outil !== "notes_coach");
       if (uid) l = l.filter(x => x.user_id === uid.slice(3));
@@ -88,6 +100,11 @@ const coach = { id: F.IDS.coach, email: "c@e.fr", session: F.session(F.IDS.coach
 const attendre = (page, ms) => page.waitForTimeout(ms);
 const aller = async (page, h, ms) => { await page.evaluate(x => { location.hash = x; }, h); await attendre(page, ms || 1400); };
 const ligneCompte = (page, nom) => page.locator("#liste-clients .client-l", { hasText: nom });
+/* les tuiles du tableau de bord : libellé, valeur, sous-titre, lien */
+const lireTuiles = page => page.$$eval("#tb-vue .tb-tuile", l => l.map(t => {
+  const txt = sel => { const e = t.querySelector(sel); return e ? e.textContent.replace(/\s+/g, " ").trim() : ""; };
+  return { lbl: txt(".t-lbl"), val: txt(".t-val"), sub: txt(".t-sub"), href: t.getAttribute("href") };
+}));
 
 (async () => {
   await new Promise(r => server.listen(PORT, r));
@@ -98,8 +115,10 @@ const ligneCompte = (page, nom) => page.locator("#liste-clients .client-l", { ha
     const db = base();
     const { c, page } = await contexte(b, coach, db);
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 1800);
-    const tb = (await page.textContent("#tb-vue")).replace(/\s+/g, " ");
-    ok("tableau : KPI Prospects = 1 et Clients actifs = 3", /Prospects\s*1/.test(tb) && /Clients actifs\s*3/.test(tb), tb.slice(0, 200));
+    /* Découverte : la tuile des prospects s'appelle « Prospects en découverte » et compte ceux qui sont encore dans leurs 7 jours */
+    const tuiles = await lireTuiles(page);
+    const tPr = tuiles.find(x => x.lbl === "Prospects en découverte") || {}, tCl = tuiles.find(x => x.lbl === "Clients actifs") || {};
+    ok("tableau : tuile « Prospects en découverte » = 1 (Léa, jour 4/7), « 1 prospect au total », et Clients actifs = 3", tPr.val === "1" && tPr.sub === "1 prospect au total" && tCl.val === "3", JSON.stringify(tuiles.slice(0, 2)));
     /* v49 : le tableau a une section « Prospects à traiter » (suivi commercial) ; la section des clients n'en montre aucun */
     const attention = await page.evaluate(() => { const h = Array.from(document.querySelectorAll("#tb-vue h2")).find(x => x.textContent.indexOf("Qui nécessite ton attention") > -1); return h ? h.closest("section").innerText : null; });
     ok("tableau : le prospect n'est pas dans « qui nécessite ton attention »", attention !== null && !attention.includes("Léa Démo"), String(attention).slice(0, 200));
@@ -148,6 +167,25 @@ const ligneCompte = (page, nom) => page.locator("#liste-clients .client-l", { ha
     await c.close();
   }
   {
+    /* Découverte : un prospect dont les 7 jours sont passés n'est plus « en découverte » ; le sous-titre donne les chauds et le total.
+       Cas limites : le jour 7 compte encore, le jour 8 ne compte plus (une erreur d'un jour dans Decouverte.finie se verrait ici) */
+    const db = base();
+    const HUGO = "00000000-0000-4000-8000-000000000c06", INES = "00000000-0000-4000-8000-000000000c07", MARC = "00000000-0000-4000-8000-000000000c08";
+    db.profils.push({ id: HUGO, prenom: "Hugo", nom: "Démo", role: "client", statut: "prospect", cree_le: ilYAIso(10) });   // jour 11 : Découverte terminée
+    db.profils.push({ id: INES, prenom: "Inès", nom: "Démo", role: "client", statut: "prospect", cree_le: ilYAIso(6) });    // jour 7 : dernier jour, encore en découverte
+    db.profils.push({ id: MARC, prenom: "Marc", nom: "Démo", role: "client", statut: "prospect", cree_le: ilYAIso(7) });    // jour 8 : Découverte terminée
+    db.donnees.push({ user_id: PROSPECT, outil: "challenge", contenu: { version: 1, jours: {}, cta: { clics: [] }, reserve: ilYAIso(1) }, maj_le: ilYAIso(1) });   // Léa a coché « J'ai réservé mon bilan » : chaude
+    const { c, page } = await contexte(b, coach, db);
+    await page.goto(`http://localhost:${PORT}/`); await attendre(page, 1800);
+    const tPr = (await lireTuiles(page)).find(x => x.lbl === "Prospects en découverte") || {};
+    ok("tableau : jour 7 compté, jour 8 et jour 11 non comptés (2 sur 4), sous-titre « 1 chaud · 4 prospects au total », lien vers #/prospects", tPr.val === "2" && tPr.sub === "1 chaud · 4 prospects au total" && tPr.href === "#/prospects", JSON.stringify(tPr));
+    /* le mode test (jour forcé sur l'appareil, #/decouverte-jour/N) ne vaut que chez le prospect, jamais dans les écrans du coach */
+    await page.evaluate(() => localStorage.setItem("mhx_decouverte_jour", "9")); await page.reload(); await attendre(page, 1800);
+    const tPr2 = (await lireTuiles(page)).find(x => x.lbl === "Prospects en découverte") || {};
+    ok("tableau : le jour forcé du mode test sur l'appareil (9) ne change pas la tuile du coach (toujours 2, « 1 chaud · 4 prospects au total »)", tPr2.val === "2" && tPr2.sub === "1 chaud · 4 prospects au total", JSON.stringify(tPr2));
+    await c.close();
+  }
+  {
     /* le passage en client echoue : le coach le sait */
     const db = base();
     const { c, page } = await contexte(b, coach, db, { patchKo: true });
@@ -193,7 +231,9 @@ const ligneCompte = (page, nom) => page.locator("#liste-clients .client-l", { ha
     const db = base({ sansStatut: true });
     const { c, page } = await contexte(b, coach, db);
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 1800);
-    ok("sans colonne statut : KPI Prospects = 0", /Prospects\s*0/.test((await page.textContent("#tb-vue")).replace(/\s+/g, " ")));
+    /* comportement inchangé : sans statut, aucun prospect (la tuile est cherchée par le début de son libellé) */
+    const tSans = (await lireTuiles(page)).find(x => /^Prospects/.test(x.lbl)) || {};
+    ok("sans colonne statut : tuile des prospects = 0", tSans.val === "0", JSON.stringify(tSans));
     await aller(page, "#/clients", 1800);
     ok("sans colonne statut : ni pastille ni bouton de statut", !(await page.textContent("#liste-clients")).includes("Passer client") && !(await page.textContent("#liste-clients")).includes("Repasser prospect"));
     await page.fill("#n-prenom", "Nina"); await page.fill("#n-email", "nina@exemple.fr"); await page.fill("#n-mdp", "motdepasse1");
@@ -233,6 +273,10 @@ const ligneCompte = (page, nom) => page.locator("#liste-clients .client-l", { ha
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 1200);
     ok("inscription ouverte : bouton « Créer mon compte » sur la connexion", !!(await page.$('[data-mode="inscription"]')));
     await page.click('[data-mode="inscription"]'); await attendre(page, 400);
+    const ecran = await page.evaluate(() => { const q = s => { const e = document.querySelector(s); return e ? e.textContent.replace(/\s+/g, " ").trim() : ""; };
+      return { titre: q(".carte-co h2"), sous: q(".carte-co .co-sous"), bouton: q("#c-go"), cgu: !!document.getElementById("c-cgu"), sante: !!document.getElementById("c-sante"), challenge: document.body.textContent.includes("Challenge") }; });
+    ok("inscription : titre « Crée ton accès découverte », sous-titre des 7 jours de découverte, bouton « Créer mon accès », plus aucun « Challenge »", ecran.titre === "Crée ton accès découverte" && ecran.sous.includes("7 jours pour découvrir la méthode MHX") && ecran.bouton === "Créer mon accès" && !ecran.challenge, JSON.stringify(ecran));
+    ok("inscription : deux cases, conditions (#c-cgu) et données de santé (#c-sante)", ecran.cgu && ecran.sante, JSON.stringify(ecran));
     await page.fill("#c-email", "nouvelle@exemple.fr"); await page.fill("#c-mdp", "court");
     await page.click("#c-go"); await attendre(page, 300);
     ok("inscription : prénom obligatoire", (await page.textContent("#co-err")).includes("prénom"));
@@ -243,9 +287,22 @@ const ligneCompte = (page, nom) => page.locator("#liste-clients .client-l", { ha
     await page.click("#c-go"); await attendre(page, 300);
     ok("inscription : la case des conditions est obligatoire (v44)", (await page.textContent("#co-err")).includes("Coche la case") && db.inscriptions.length === 0);
     await page.check("#c-cgu");
+    await page.click("#c-go"); await attendre(page, 300);
+    ok("inscription : la case des données de santé est obligatoire (P0.5)", (await page.textContent("#co-err")).includes("données de santé") && db.inscriptions.length === 0, await page.textContent("#co-err"));
+    /* version des conditions attendue : celle de la page (CHALLENGE7 = nom de l'ancienne version, pour la comparaison avec main) */
+    const version = await page.evaluate(() => (typeof DECOUVERTE !== "undefined" ? DECOUVERTE : CHALLENGE7).confidentialite.version).catch(() => "");
+    await page.check("#c-sante");
     await page.click("#c-go"); await attendre(page, 2500);
-    ok("inscription : POST /auth/v1/signup avec le prénom seul, nom vide, consentement daté (v44)", db.inscriptions.length === 1 && db.inscriptions[0].data.prenom === "Zoé" && db.inscriptions[0].data.nom === "" && /^\d{4}-\d{2}-\d{2}T/.test(db.inscriptions[0].data.consentement || "") && db.inscriptions[0].email === "nouvelle@exemple.fr");
+    const ins = db.inscriptions[0] || {}, md = ins.data || {}, isoRe = /^\d{4}-\d{2}-\d{2}T/;
+    ok("inscription : POST /auth/v1/signup avec le prénom seul, nom vide, consentement daté, version des conditions, consentement santé daté (v44, P0.5)", db.inscriptions.length === 1 && md.prenom === "Zoé" && md.nom === "" && isoRe.test(md.consentement || "") && !!version && md.conditions_version === version && isoRe.test(md.consentement_sante || "") && ins.email === "nouvelle@exemple.fr", db.inscriptions.length + " " + JSON.stringify(md) + " attendu " + version);
     ok("inscription : connecté ensuite, et prospect", await page.evaluate(() => Auth.connecte() && Auth.estProspect()).catch(() => false));
+    /* le compte neuf arrive sur la Découverte au jour 1, questionnaire court à remplir, pas encore de bouton Calendly */
+    const arrivee = await page.evaluate(() => { const z = document.querySelector("#dc-vue, #acc-vue");
+      return { h: location.hash, t: z ? z.textContent.replace(/\s+/g, " ") : "", age: !!document.getElementById("q-age"), voir: !!document.getElementById("dc-voir"), cal: z ? z.querySelectorAll('a[href*="calendly"], [data-dc-cal]').length : -1 }; }).catch(e => ({ erreur: String(e) }));
+    ok("inscription : arrivée sur la Découverte « Jour 1/7 », questionnaire court (#q-age, #dc-voir), aucun bouton Calendly", /Découverte · Jour 1\/7/.test(arrivee.t || "") && arrivee.age && arrivee.voir && arrivee.cal === 0, JSON.stringify(arrivee).slice(0, 250));
+    /* rien ne part dans donnees avant la saisie d'un âge ≥ 18 : ni brouillon intake, ni clé challenge écrite au démarrage */
+    const ecrArrivee = db.ecritures.filter(e => e.table === "donnees");
+    ok("inscription : aucune écriture dans donnees à l'arrivée du compte neuf (ni brouillon intake, ni clé challenge)", ecrArrivee.length === 0, JSON.stringify(ecrArrivee).slice(0, 250));
     await c.close();
   }
   {
@@ -254,8 +311,11 @@ const ligneCompte = (page, nom) => page.locator("#liste-clients .client-l", { ha
     const { c, page } = await contexte(b, null, db, { inscriptionKo: true, langue: "en" });
     await page.goto(`http://localhost:${PORT}/#/inscription`); await attendre(page, 1200);
     const t = await page.textContent("body");
-    ok("inscription en anglais : « Join the 7-Day Challenge » (v44)", t.includes("Join the 7-Day Challenge") && t.includes("Your first name"));
+    ok("inscription en anglais : « Create your discovery access », sous-titre « 7 days to discover the MHX method », « Create my access », plus aucun « Challenge »", t.includes("Create your discovery access") && t.includes("7 days to discover the MHX method") && t.includes("Your first name") && t.includes("Create my access") && !t.includes("Challenge"), t.replace(/\s+/g, " ").slice(0, 250));
     await page.fill("#c-prenom", "Zoé"); await page.fill("#c-email", "z@exemple.fr"); await page.fill("#c-mdp", "motdepasse1"); await page.check("#c-cgu");
+    await page.click("#c-go"); await attendre(page, 300);
+    ok("inscription en anglais : case santé manquante → « Accept the processing of your health data »", (await page.textContent("#co-err")).includes("Accept the processing of your health data") && db.inscriptions.length === 0, await page.textContent("#co-err"));
+    await page.check("#c-sante");
     await page.click("#c-go"); await attendre(page, 800);
     ok("inscription refusée par Supabase : « Sign-ups are not open yet. »", (await page.textContent("#co-err")).includes("Sign-ups are not open yet"));
     await c.close();
