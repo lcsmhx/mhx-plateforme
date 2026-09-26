@@ -10729,17 +10729,41 @@ const outilDecouverte = {
     Tracking.enregistrer("diagnostic_started");
     /* une valeur hors bornes (taille en metres, age d'enfant) ne part jamais : la reponse precedente reste */
     const valide = (q, v) => { const b = B[q.id]; if (!b || String(v == null ? "" : v).trim() === "") return true; const x = num(v); return x >= b[0] && x <= b[1]; };
-    const qAge = qs.find(q => q.id === "age");
-    /* chaque reponse part pendant la saisie (cle intake) ; rien ne part tant que l'age n'est pas rempli
-       et d'au moins 18 ans : les reponses d'une personne mineure n'arrivent jamais en base */
+    const qAge = qs.find(q => q.id === "age"), ageMin = B.age ? B.age[0] : null;
+    /* Premier remplissage : chaque reponse part pendant la saisie (cle intake), mais seulement une fois
+       un age d'au moins 18 ans saisi. L'age n'est juge qu'a la sortie du champ (« 35 » passe par « 3 »,
+       « 185 » par « 18 »). Un age sous le minimum saisi ensuite remet ce que ce formulaire avait envoye
+       a son etat d'avant : les reponses d'une personne mineure ne restent jamais en base.
+       En « Modifier mes reponses », rien ne part avant « Voir mon resultat », qui valide sur une copie :
+       « Revenir a mon resultat » retrouve donc exactement les reponses d'avant. */
+    const enModification = Decouverte.questionnaireFait(I);
+    const ageSaisi = () => { if (!qAge) return true; const a = outilProfil.valeur(qAge); return String(a == null ? "" : a).trim() !== "" && valide(qAge, a); };
+    let ageOk = ageSaisi();
+    const avant = {};   // ce que ce formulaire a envoye : cle -> valeur d'avant
+    const retirer = () => {
+      const cles = Object.keys(avant); if (!cles.length) return;
+      cles.forEach(k => { if (avant[k] === undefined) delete I[k]; else I[k] = avant[k]; delete avant[k]; });
+      Store.ecrire("intake", I);
+    };
     const brouillon = () => {
-      if (qAge){ const a = outilProfil.valeur(qAge); if (!String(a == null ? "" : a).trim() || !valide(qAge, a)) return; }
+      if (enModification || !ageOk) return;
       let change = false;
-      qs.forEach(q => { if (!$("q-" + q.id)) return; const v = outilProfil.valeur(q); if (valide(q, v) && String(I[q.id] == null ? "" : I[q.id]) !== String(v)){ I[q.id] = v; change = true; } });
+      qs.forEach(q => {
+        if (!$("q-" + q.id)) return;
+        const v = outilProfil.valeur(q);
+        if (valide(q, v) && String(I[q.id] == null ? "" : I[q.id]) !== String(v)){ if (!(q.id in avant)) avant[q.id] = I[q.id]; I[q.id] = v; change = true; }
+      });
       if (change){ Tracking.enregistrer("diagnostic_question_answered"); Store.ecrire("intake", I); }
+    };
+    const surAge = () => {
+      const a = num(outilProfil.valeur(qAge));
+      ageOk = ageSaisi();
+      if (ageMin != null && a > 0 && a < ageMin) retirer();
+      brouillon();
     };
     qs.forEach(q => {
       const el = $("q-" + q.id); if (!el) return;
+      if (q === qAge){ el.addEventListener("change", surAge); return; }   // l'age : a la sortie du champ seulement
       el.addEventListener("change", brouillon);
       if (el.matches("textarea, input:not([type=checkbox]):not([type=radio])")) el.addEventListener("input", brouillon);
     });
@@ -10753,6 +10777,7 @@ const outilDecouverte = {
       const manquants = qs.filter(q => req.indexOf(q.id) > -1 && (q.type === "nombre" ? !(num(V[q.id]) > 0) : !V[q.id]));
       const hors = qs.filter(q => B[q.id] && String(V[q.id] || "").trim() !== "" && (num(V[q.id]) < B[q.id][0] || num(V[q.id]) > B[q.id][1]));
       const lib = q => trad(q.label);
+      if (ageMin != null && num(V.age) > 0 && num(V.age) < ageMin) retirer();   // age sous le minimum : rien de ce formulaire ne reste
       if (manquants.length || hors.length){
         const msg = manquants.length ? trad(L.manque, { l: manquants.map(lib).join(", ") })
                                      : trad(L.verifie, { l: hors.map(q => lib(q) + " (" + trad("{a} à {b}", { a: B[q.id][0], b: B[q.id][1] }) + ")").join(", ") });
@@ -10763,10 +10788,10 @@ const outilDecouverte = {
         manquants.concat(hors).forEach(q => { const el = $("q-" + q.id); if (el) el.classList.add("manque"); });
         return;
       }
-      const avant = I.court_le;
+      const courtAvant = I.court_le;
       Object.assign(I, V);
       if (!Decouverte.questionnaireFait(I)) I.court_le = new Date().toISOString();
-      if (Store.ecrire("intake", I) === false){ if (avant === undefined) delete I.court_le; else I.court_le = avant; return; }   // refusee (message deja affiche)
+      if (Store.ecrire("intake", I) === false){ if (courtAvant === undefined) delete I.court_le; else I.court_le = courtAvant; return; }   // refusee (message deja affiche)
       Tracking.enregistrer("diagnostic_completed");
       self._form = false;
       self.rendre(zone, I, C);
