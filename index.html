@@ -1051,6 +1051,7 @@ const CONFIG = {
     relance_attente_jours: 3,        // après une relance, on attend 3 jours avant d'en proposer une autre
     perdu_relance_jours: 30,         // « Perdu » : relance proposée 30 jours après l'appel
     relances_max: 3,                 // 3 relances sans réponse : on arrête de proposer de relancer (« classe-le Perdu ? »)
+    chaud_jours: 14,                 // « J'ai réservé » coché après un « Perdu » / « Absent » : il revient dans la course pendant 14 jours
     appel_jours: 7                   // « J'ai réservé » il y a plus de 7 jours sans issue indiquée : « L'appel a-t-il eu lieu ? »
   },
 
@@ -8274,7 +8275,7 @@ const Commercial = {
   cle: "suivi_prospect",
   ISSUES: { signe: "Signé", perdu: "Perdu", absent: "Absent" },
   ETATS: { chaud: "CHAUD", tiede: "TIÈDE", froid: "FROID", signe: "SIGNÉ", perdu: "PERDU", absent: "ABSENT" },
-  cfg(){ return Object.assign({ inactif_jours: 4, clic_recent_jours: 3, relance_attente_jours: 3, perdu_relance_jours: 30, sans_debut_jours: 3, motivation_forte: 8, relances_max: 3, appel_jours: 7 }, CONFIG.suivi || {}); },
+  cfg(){ return Object.assign({ inactif_jours: 4, clic_recent_jours: 3, relance_attente_jours: 3, perdu_relance_jours: 30, sans_debut_jours: 3, motivation_forte: 8, relances_max: 3, chaud_jours: 14, appel_jours: 7 }, CONFIG.suivi || {}); },
   /* jours ecoules depuis une date ou un instant (calendrier local) ; null si illisible */
   depuis(v){
     if (typeof v !== "string" || !/^\d{4}-\d{2}-\d{2}/.test(v)) return null;
