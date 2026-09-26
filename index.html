@@ -610,6 +610,8 @@ svg.chart{display:block;width:100%;height:260px;overflow:visible}
 .coches{display:flex;flex-wrap:wrap;gap:8px 14px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--sunken)}
 .coche{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--ink-2);cursor:pointer;margin:0;font-weight:500;text-transform:none;letter-spacing:normal;font-family:inherit}
 .coche input{width:16px;height:16px;accent-color:var(--accent);cursor:pointer;margin:0}
+.dc-recette{border-top:1px solid var(--line);padding:10px 0}.dc-recette:first-child{border-top:0}
+.dc-recette summary{cursor:pointer;list-style-position:outside}.dc-recette h4{margin:12px 0 6px;font-size:13px;color:var(--ink-2)}
 /* .tuile : meme composant que .tile (voir [B]) */
 .repas-c .repas-tete{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
 .repas-c .repas-tete .actions-b{display:flex;gap:8px;flex-wrap:wrap}
@@ -1018,9 +1020,9 @@ const CONFIG = {
        officiels name et email) : il n'a rien a retaper et sa reservation porte l'email de son compte.
        Allume le 26/09/2026 (decision de Lucas) ; la confidentialite mentionne Calendly et le pre-remplissage. */
     calendly_prerempli: true,
-    /* v44 : la Speed Formation n'est plus dans la liste : elle s'ouvre au
-       prospect une fois ses 7 jours faits (CONFIG.challenge.formation_apres_jour7) */
-    gratuit_ouverts: ["accueil", "challenge", "profil"],
+    /* la Speed Formation n'est pas dans la liste : elle est ouverte pendant la
+       decouverte (CONFIG.decouverte.jours) puis verrouillee (estVerrouille) */
+    gratuit_ouverts: ["accueil", "decouverte", "challenge", "profil"],
     /* v50 — onglets verrouilles qu'un prospect voit quand meme (cadenas + ce qu'apporte l'accompagnement) :
        la vitrine de l'offre. Les autres onglets verrouilles sont caches de sa navigation (leur adresse
        montre toujours la page verrouillee). Pour tout remontrer comme avant : ajouter "mensurations",
@@ -1810,6 +1812,7 @@ const DECOUVERTE = {
   lede_reste_1: "Dernier jour de ton accès découverte.",
   lede_reste: "Encore {n} jours d'accès découverte.",
   lede_fini: "Ta période découverte est terminée. Ton résultat, tes calories, ta séance et tes recettes restent ici.",
+  charge_rate: "Tes réponses n'ont pas pu être chargées. Recharge la page.",
   /* questions du questionnaire court qui ne sont pas dans le questionnaire complet (celui des clients ne change pas) */
   questions: [
     { id: "essaye", label: "Qu'as-tu déjà essayé pour atteindre cet objectif ?", type: "long" },
@@ -1911,6 +1914,7 @@ const DECOUVERTE = {
     lede_reste_1: "Last day of your discovery access.",
     lede_reste: "{n} more days of discovery access.",
     lede_fini: "Your discovery period is over. Your result, your calories, your workout and your recipes stay here.",
+    charge_rate: "Your answers could not be loaded. Reload the page.",
     questions: [
       { id: "essaye", label: "What have you already tried to reach this goal?", type: "long" },
       { id: "obstacle", label: "What is your main obstacle today?", type: "long" },
@@ -10304,7 +10308,8 @@ const outilAccueil = {
      La progression du challenge, le jour a faire, le compte. La Speed
      Formation n'apparait qu'une fois le challenge termine, l'accompagnement
      qu'a partir du jour 5 (CTA progressifs). Aucun prix. */
-  async gratuit(zone){
+  async gratuit(zone){ return outilDecouverte.afficher(zone); },   // l'accueil du prospect : l'ecran Decouverte
+  async ancienHubChallenge(zone){
     const prenom = (Auth.profil && Auth.profil.prenom) || "";
     const C = await Store.lire(Challenge.cle, Challenge.vide());
     if (!zone.isConnected) return;
@@ -11905,7 +11910,258 @@ const outilChallenge = {
   },
 };
 
-const OUTILS = [outilAccueil, outilChallenge, outilProgramme, outilNutrition, outilMensurations, outilSuivi, outilBilan, outilFormation, outilComplements, outilProfil, outilTableau, outilClients, outilProspects, outilAtelier, outilBibliotheque, outilCatalogue, outilCalculateur, outilEntrainement];
+/* ------------------------------------------------------------------
+   OUTIL — Découverte (prospects seulement). C'est l'accueil du prospect :
+   le questionnaire court, puis son résultat, ses calories et macros, une
+   séance, 3 recettes, la Speed Formation (ouverte les premiers jours) et
+   « Réserver mon bilan ». Formules du calculateur intouchées.
+   ------------------------------------------------------------------ */
+const outilDecouverte = {
+  id: "decouverte",
+  cle: "intake",
+  nom: "Découverte",
+  court: "Découverte",
+  icone: "🧭",
+  client_seul: true,
+  prospect_seul: true,
+  masque_nav: true,      // c'est l'accueil du prospect : pas d'onglet en double
+  sans_entete: true,
+  titre: "Découverte",
+  accroche: "",
+  _form: false,          // vrai pendant « Modifier mes réponses »
+
+  html(){ return `<div id="dc-vue"><section class="panel"><div class="empty">${esc(trad("Chargement…"))}</div></section></div>`; },
+  async init(){ const zone = $("dc-vue"); if (zone) return this.afficher(zone); },
+
+  async afficher(zone){
+    this._form = false;
+    const I = await Store.lire("intake", {});
+    const C = await Store.lire(Decouverte.cle, Decouverte.vide());
+    if (!zone.isConnected) return;
+    this.rendre(zone, I, C);
+  },
+  questions(){
+    const extra = DECOUVERTE.questions || [];
+    return (Decouverte.cfg().questions || []).map(id => QUESTIONS.find(q => q.id === id) || extra.find(q => q.id === id)).filter(Boolean);
+  },
+  bornes(){ return Decouverte.cfg().bornes || {}; },
+
+  rendre(zone, I, C){
+    const T = DECOUVERTE, p = Auth.profil || {};
+    if (Store.nonLus.has(I)){ zone.innerHTML = `<section class="panel"><div class="empty">${esc(trad(T.charge_rate))}</div></section>`; return; }
+    const j = Decouverte.jour(p), duree = Decouverte.duree(), finie = j != null && j > duree;
+    const fait = Decouverte.questionnaireFait(I), form = !fait || this._form, reste = j == null ? null : duree - j + 1;
+    const eyebrow = trad(T.nom) + (j == null ? "" : " · " + (finie ? trad(T.jour_fini) : trad(T.jour, { n: j, t: duree })));
+    const lede = !fait ? trad(T.lede_questionnaire) : finie ? trad(T.lede_fini) : reste === 1 ? trad(T.lede_reste_1) : reste != null ? trad(T.lede_reste, { n: reste }) : "";
+    /* « Réserver mon bilan » : visible des la fin du questionnaire */
+    const cal = fait ? lienCalendly("decouverte") : "";
+    zone.innerHTML = `<header class="masthead"><span class="eyebrow">${esc(eyebrow)}</span>
+        <h1>${esc(trad("Bonjour"))}${p.prenom ? " " + esc(p.prenom) : ""}</h1>${lede ? `<p class="lede">${esc(lede)}</p>` : ""}
+        ${cal ? `<div class="actions"><a class="btn" href="${esc(cal)}" target="_blank" rel="noopener" data-dc-cal="decouverte">${esc(trad("Réserver mon bilan"))}</a></div>` : ""}</header>`
+      + (form ? this.formulaireHTML(I) : this.resultatHTML(I) + this.calculHTML(I) + this.seanceHTML(I) + this.recettesHTML() + this.formationHTML() + this.accompHTML(C));
+    if (form) this.brancherFormulaire(zone, I, C);
+    else { Tracking.enregistrer("result_viewed"); this.brancherPage(zone, I, C); }
+  },
+
+  /* ---------- le questionnaire court ---------- */
+  formulaireHTML(I){
+    const L = DECOUVERTE.questionnaire, B = this.bornes(), req = Decouverte.cfg().requis || [];
+    const champs = this.questions().map(q => {
+      const large = (q.type === "long" || q.grand) ? ' style="grid-column:1/-1"' : "";
+      let aide = q.aide || "";
+      if (q.id === "age" && B.age) aide = trad(L.age_aide, { n: B.age[0] }) + (aide ? " " + aide : "");
+      return `<div${large}><label for="q-${q.id}">${esc(q.label)}${req.indexOf(q.id) > -1 ? " *" : ""}</label>${aide ? `<p class="note" style="margin:-2px 0 8px">${esc(aide)}</p>` : ""}${outilProfil.champ(q, I[q.id])}</div>`;
+    }).join("");
+    return `<section class="panel"><h2>${esc(trad(L.titre))}</h2><div class="grid g2">${champs}</div>
+      <div class="actions"><button class="btn" id="dc-voir" type="button">${esc(trad(L.bouton))}</button>${Decouverte.questionnaireFait(I) ? `<button class="btn ghost" id="dc-annuler" type="button">${esc(trad(L.annuler))}</button>` : ""}<span class="msg" id="dc-msg" role="status" aria-live="polite"></span></div>
+      <p class="note" style="margin-top:10px">${esc(trad(L.note))}</p></section>`;
+  },
+  brancherFormulaire(zone, I, C){
+    const self = this, L = DECOUVERTE.questionnaire, qs = this.questions(), B = this.bornes(), req = Decouverte.cfg().requis || [];
+    Tracking.enregistrer("diagnostic_started");
+    /* une valeur hors bornes (taille en metres, age d'enfant) ne part jamais : la reponse precedente reste */
+    const valide = (q, v) => { const b = B[q.id]; if (!b || String(v == null ? "" : v).trim() === "") return true; const x = num(v); return x >= b[0] && x <= b[1]; };
+    const qAge = qs.find(q => q.id === "age");
+    /* chaque reponse part pendant la saisie (cle intake) ; rien ne part tant que l'age n'est pas rempli
+       et d'au moins 18 ans : les reponses d'une personne mineure n'arrivent jamais en base */
+    const brouillon = () => {
+      if (qAge){ const a = outilProfil.valeur(qAge); if (!String(a == null ? "" : a).trim() || !valide(qAge, a)) return; }
+      let change = false;
+      qs.forEach(q => { if (!$("q-" + q.id)) return; const v = outilProfil.valeur(q); if (valide(q, v) && String(I[q.id] == null ? "" : I[q.id]) !== String(v)){ I[q.id] = v; change = true; } });
+      if (change){ Tracking.enregistrer("diagnostic_question_answered"); Store.ecrire("intake", I); }
+    };
+    qs.forEach(q => {
+      const el = $("q-" + q.id); if (!el) return;
+      el.addEventListener("change", brouillon);
+      if (el.matches("textarea, input:not([type=checkbox]):not([type=radio])")) el.addEventListener("input", brouillon);
+    });
+    const annuler = zone.querySelector("#dc-annuler");
+    if (annuler) annuler.addEventListener("click", () => { self._form = false; self.rendre(zone, I, C); window.scrollTo(0, 0); });
+    const voir = zone.querySelector("#dc-voir");
+    if (voir) voir.addEventListener("click", () => {
+      /* on verifie une COPIE : les reponses n'entrent dans le questionnaire que valides */
+      const V = Object.assign({}, I);
+      qs.forEach(q => { if ($("q-" + q.id)) V[q.id] = outilProfil.valeur(q); });
+      const manquants = qs.filter(q => req.indexOf(q.id) > -1 && (q.type === "nombre" ? !(num(V[q.id]) > 0) : !V[q.id]));
+      const hors = qs.filter(q => B[q.id] && String(V[q.id] || "").trim() !== "" && (num(V[q.id]) < B[q.id][0] || num(V[q.id]) > B[q.id][1]));
+      const lib = q => trad(q.label);
+      if (manquants.length || hors.length){
+        const msg = manquants.length ? trad(L.manque, { l: manquants.map(lib).join(", ") })
+                                     : trad(L.verifie, { l: hors.map(q => lib(q) + " (" + trad("{a} à {b}", { a: B[q.id][0], b: B[q.id][1] }) + ")").join(", ") });
+        flash("dc-msg", msg);
+        const premier = $("q-" + (manquants.length ? manquants[0] : hors[0]).id);
+        if (premier){ premier.scrollIntoView({ behavior: "smooth", block: "center" }); premier.focus(); }
+        $$(".manque", zone).forEach(el => el.classList.remove("manque"));
+        manquants.concat(hors).forEach(q => { const el = $("q-" + q.id); if (el) el.classList.add("manque"); });
+        return;
+      }
+      const avant = I.court_le;
+      Object.assign(I, V);
+      if (!Decouverte.questionnaireFait(I)) I.court_le = new Date().toISOString();
+      if (Store.ecrire("intake", I) === false){ if (avant === undefined) delete I.court_le; else I.court_le = avant; return; }   // refusee (message deja affiche)
+      Tracking.enregistrer("diagnostic_completed");
+      self._form = false;
+      self.rendre(zone, I, C);
+      window.scrollTo(0, 0);
+    });
+  },
+
+  /* ---------- le resultat (vraiment calcule a partir des reponses) ---------- */
+  chiffres(I){
+    const d = outilCalculateur.departDepuis(I);
+    if (!(num(I.pas) > 0)) d.pas = Decouverte.cfg().pas_defaut || 6000;
+    const c = CONFIG.calcul, poids = num(I.poids), obj = num(I.poids_obj), taille = num(I.taille);
+    const imc = kg => (taille > 0 && kg > 0) ? kg / Math.pow(taille / 100, 2) : null;
+    const sens = d.objectif;   // perte | prise | maintien
+    /* garde-fou sante : viser une perte sous un poids de forme habituel (IMC < 18,5) n'est pas l'affaire de l'app */
+    const veutPerdre = sens === "perte" || (poids > 0 && obj > 0 && obj < poids);
+    const imcBas = veutPerdre && ((imc(poids) != null && imc(poids) < 18.5) || (imc(obj) != null && imc(obj) < 18.5));
+    let T = null, cible = null, mac = null;
+    if (poids > 0 && taille > 0 && num(I.age) > 0){
+      T = outilCalculateur.metabolismeDeBase(d) * outilCalculateur.facteurActivite(d).total;
+      cible = imcBas ? T : sens === "perte" ? T * (1 - c.deficit_perte) : sens === "prise" ? T * (1 + c.surplus_prise) : T;
+      mac = outilCalculateur.macros(cible, poids);
+    }
+    const coherent = poids > 0 && obj > 0 && obj !== poids && ((sens === "perte" && obj < poids) || (sens === "prise" && obj > poids));
+    return { sens, imcBas, T, cible, mac, ecart: (coherent && !imcBas) ? obj - poids : null, seances: num(I.seances), motivation: Math.round(num(I.motivation)) || 0 };
+  },
+  /* la troisieme priorite vient de l'obstacle ecrit par la personne (mots-cles simples) */
+  prioriteObstacle(I, p){
+    const L = DECOUVERTE.resultat;
+    const o = String(typeof I.obstacle === "string" ? I.obstacle : "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    if (/temps|horaire|boulot|travail|agenda|enfant|fatigu|dispo/.test(o)) return L.p_temps;
+    if (/faim|grignot|sucre|fringale|craqu|manger|nourriture|alimentation|repas/.test(o)) return L.p_faim;
+    if (/motiv|regular|tenir|lach|abandon|constan|discipline|flemme/.test(o)) return L.p_regularite;
+    if (p.motivation > 0 && p.motivation <= 5) return L.p_regularite;
+    return L.p_defaut;
+  },
+  resultatHTML(I){
+    const L = DECOUVERTE.resultat, t = L.tuiles, p = this.chiffres(I), tuiles = [], phrases = [], prio = [];
+    const txt = v => typeof v === "string" && v.trim() ? v.trim() : "";
+    /* la reponse citee entre guillemets : 120 caracteres au plus, sans son point final (la phrase a le sien) */
+    const court = v => { const a = Array.from(txt(v)); return a.length > 120 ? a.slice(0, 120).join("") + "…" : a.join("").replace(/[\s.!…]+$/, ""); };
+    if (p.imcBas) phrases.push(trad(L.imc_bas));
+    else if (p.ecart != null) tuiles.push({ lbl: t.ecart, val: n1(Math.abs(p.ecart)), unite: "kg", sub: p.ecart < 0 ? t.ecart_perdre : t.ecart_prendre });
+    if (p.T != null) tuiles.push({ lbl: t.depense, val: fmt(p.T), unite: "kcal", sub: t.depense_sous });
+    if (p.seances > 0) tuiles.push({ lbl: t.seances, val: String(p.seances), unite: "/ sem", sub: t.seances_sous });
+    if (p.motivation > 0){
+      tuiles.push({ lbl: t.motivation, val: String(p.motivation), unite: "/10", sub: t.motivation_sous, neg: p.motivation <= 4 });
+      phrases.push(trad(p.motivation >= 8 ? L.motivation_haute : p.motivation >= 5 ? L.motivation_moyenne : L.motivation_basse, { x: p.motivation }));
+    }
+    if (txt(I.obstacle)) phrases.push(trad(L.obstacle, { o: court(I.obstacle) }));
+    if (txt(I.essaye)) phrases.push(trad(L.essaye, { e: court(I.essaye) }));
+    if (txt(I.pourquoi)) phrases.push(trad(L.pourquoi, { p: court(I.pourquoi) }));
+    if (p.imcBas) prio.push(trad(L.p_sante));
+    else if (p.cible != null) prio.push(trad(p.sens === "perte" ? L.p_perte : p.sens === "prise" ? L.p_prise : L.p_maintien, { c: fmt(p.cible), p: fmt(p.mac.prot) }));
+    if (p.seances >= 4) prio.push(trad(L.p_seances_4, { n: p.seances })); else if (p.seances === 3) prio.push(trad(L.p_seances_3)); else if (p.seances > 0) prio.push(trad(L.p_seances_2));
+    prio.push(trad(this.prioriteObstacle(I, p)));
+    const tuile = x => `<div class="tile"><div class="t-lbl">${esc(trad(x.lbl || ""))}</div><div class="t-val readout${x.neg ? " neg" : ""}">${esc(x.val)}<small>${esc(x.unite || "")}</small></div><div class="t-sub">${esc(trad(x.sub || ""))}</div></div>`;
+    return `<section class="panel" id="dc-resultat"><h2>${esc(trad(L.titre))}</h2>
+      ${tuiles.length ? `<div class="tiles">${tuiles.map(tuile).join("")}</div>` : ""}
+      <ul class="ch-lecture">${phrases.map(x => `<li>${esc(x)}</li>`).join("")}</ul>
+      <h3>${esc(trad(L.priorites_titre))}</h3><ol class="etapes">${prio.map(x => `<li>${esc(x)}</li>`).join("")}</ol>
+      <div class="actions"><button class="btn ghost" id="dc-modifier" type="button">${esc(trad(L.modifier))}</button></div></section>`;
+  },
+  calculHTML(I){
+    const L = DECOUVERTE.calcul, p = this.chiffres(I);
+    if (p.T == null) return `<section class="panel" id="dc-calcul"><h2>${esc(trad(L.titre))}</h2><p class="note" style="margin:0">${esc(trad(L.incomplet))}</p></section>`;
+    const tuile = (lbl, val, unite, sub) => `<div class="tile"><div class="t-lbl">${esc(trad(lbl))}</div><div class="t-val readout">${esc(val)}<small>${esc(unite)}</small></div><div class="t-sub">${esc(trad(sub))}</div></div>`;
+    return `<section class="panel" id="dc-calcul"><h2>${esc(trad(L.titre))}</h2><p class="note" style="margin:0 0 12px">${esc(trad(L.intro))}</p>
+      <div class="tiles">${tuile(L.maintien, fmt(p.T), "kcal", L.kcal_sous)}${p.imcBas ? "" : tuile(L.cible, fmt(p.cible), "kcal", L.kcal_sous)}${tuile(L.prot, fmt(p.mac.prot), "g", L.g_sous)}${tuile(L.gluc, fmt(p.mac.gluc), "g", L.g_sous)}${tuile(L.lip, fmt(p.mac.lip), "g", L.g_sous)}</div>
+      <p class="note" style="margin:12px 0 0">${esc(trad(L.note))}</p>${p.imcBas ? `<p class="flag" style="margin-top:12px">${esc(trad(DECOUVERTE.resultat.imc_bas))}</p>` : ""}</section>`;
+  },
+  seanceHTML(I){
+    const L = DECOUVERTE.seance, t = L.tours || {}, niv = String(I.niveau || "");
+    const ech = (typeof ECHAUFFEMENTS !== "undefined" ? ECHAUFFEMENTS : []).find(x => x.id === L.echauffement) || null;
+    const tp = /avanc/i.test(niv) ? { n: t.avance || 4, niv: trad("Avancé") } : /interm/i.test(niv) ? { n: t.intermediaire || 3, niv: trad("Intermédiaire") } : { n: t.debutant || 2, niv: trad("Débutant") };
+    const exos = `<ul class="ch-exos">${(L.exercices || []).map(x => `<li><b>${esc(trad(x.nom))}</b><span class="reps">${esc(trad(x.reps))}</span>${idVideo(x.video) ? `<button type="button" class="btn ghost petit" data-yt="${esc(x.video)}" aria-label="${esc(trad(L.demo) + " : " + trad(x.nom))}">${esc(trad(L.demo))}</button>` : ""}</li>`).join("")}</ul>`;
+    return `<section class="panel" id="dc-seance"><h2>${esc(trad(L.titre))}</h2><p class="note" style="margin:0 0 12px">${esc(trad(L.intro))}</p>
+      ${ech ? `<h3>${esc(trad(L.echauffement_titre))}</h3><ul class="ingr fiche-l">${(ech.exercices || []).map(x => `<li><span>${esc(trad(x.nom))}</span><b>${esc(x.series && x.series !== "1" ? x.series + " × " + x.reps : x.reps)}</b></li>`).join("")}</ul>` : ""}
+      <h3>${esc(trad(L.circuit_titre))}</h3><p class="note" style="margin:0 0 10px">${esc(trad(L.circuit_note, { n: tp.n, niv: tp.niv }))}</p>${exos}
+      <p class="flag" style="margin-top:14px">${esc(trad(L.securite))}</p></section>`;
+  },
+  recettesHTML(){
+    const L = DECOUVERTE.recettes;
+    return `<section class="panel" id="dc-recettes"><h2>${esc(trad(L.titre))}</h2><p class="note" style="margin:0 0 8px">${esc(trad(L.intro))}</p>
+      <div id="dc-recettes-l"><div class="empty">${esc(trad("Chargement…"))}</div></div></section>`;
+  },
+  async chargerRecettes(zone){
+    const boite = zone.querySelector("#dc-recettes-l"); if (!boite) return;
+    const L = DECOUVERTE.recettes;
+    try {
+      const [liste, idx] = await Promise.all([Catalogue.recettes(), Catalogue.indexAliments()]);
+      if (!boite.isConnected) return;
+      const rs = (Decouverte.cfg().recettes || []).map(id => (liste || []).find(r => r && r.id === id)).filter(Boolean);
+      if (!rs.length) throw new Error("recettes introuvables");
+      boite.innerHTML = rs.map(r => `<details class="dc-recette"><summary><b>${esc(trad(r.nom || ""))}</b>${r.temps_min ? ` <span class="note">· ${esc(trad(L.minutes, { n: r.temps_min }))}</span>` : ""}</summary>
+        <h4>${esc(trad(L.ingredients))}</h4><ul class="ingr fiche-l">${(r.ingredients || []).map(i => { const a = idx[i && i.aliment_id]; return `<li><span>${esc(trad(a ? a.nom : String((i && i.aliment_id) || "")))}</span><b>${esc(fmt(num(i && i.grammes)))} g</b></li>`; }).join("")}</ul>
+        ${(r.etapes || []).length ? `<h4>${esc(trad(L.preparation))}</h4><ol class="etapes">${r.etapes.map(e => `<li>${esc(trad(String(e)))}</li>`).join("")}</ol>` : ""}</details>`).join("");
+    } catch(e){ if (boite.isConnected) boite.innerHTML = `<p class="note" style="margin:0">${esc(trad(L.indispo))}</p>`; }
+  },
+  formationHTML(){
+    const L = DECOUVERTE.formation, ouverte = !estVerrouille(outilFormation);
+    return `<section class="panel" id="dc-formation"><h2>${esc(trad(L.titre))}</h2><p class="note" style="margin:0">${esc(trad(ouverte ? L.ouverte : L.fermee))}</p>
+      ${ouverte ? `<div class="actions"><a class="btn ghost" href="#/formation">${esc(trad(L.ouvrir))}</a></div>` : ""}</section>`;
+  },
+  accompHTML(C){
+    const L = DECOUVERTE.accomp, cal = lienCalendly("decouverte-accompagnement"), r = Decouverte.reserve(C);
+    return `<section class="panel" id="dc-accomp"><h2>${esc(trad(L.titre))}</h2>
+      <ul class="liste-debloque"><li>${esc(trad(AVANTAGES.programme))}</li><li>${esc(trad(AVANTAGES.nutrition))}</li><li>${esc(trad(AVANTAGES.mensurations))}</li><li>${esc(trad(AVANTAGES.suivi))}</li></ul>
+      ${cal ? `<div class="actions"><a class="btn" href="${esc(cal)}" target="_blank" rel="noopener" data-dc-cal="decouverte-accompagnement">${esc(trad("Réserver mon bilan"))}</a></div>` : ""}
+      <p class="note" style="margin:10px 0 0">${esc(trad(L.note))}</p>
+      <div id="dc-reserve" style="margin-top:14px">${r ? this.reserveHTML(r) : `<label class="coche"><input type="checkbox" id="dc-reserve-case"> ${esc(trad(L.reserve_case))}</label>`}</div></section>`;
+  },
+  reserveHTML(r){ return `<span class="pastille ok" id="dc-reserve-ok" tabindex="-1">${esc(trad(DECOUVERTE.accomp.reserve_ok, { d: dateFr(Decouverte.dateLocale(r) || "") }))}</span>`; },
+  brancherPage(zone, I, C){
+    const self = this;
+    const mod = zone.querySelector("#dc-modifier");
+    if (mod) mod.addEventListener("click", () => { self._form = true; self.rendre(zone, I, C); window.scrollTo(0, 0); });
+    /* chaque clic vers Calendly est note pour le coach, avec l'ecran d'origine */
+    $$("[data-dc-cal]", zone).forEach(a => a.addEventListener("click", () => Decouverte.clic(C, a.dataset.dcCal)));
+    $$("[data-yt]", zone).forEach(b => b.addEventListener("click", () => {
+      const id = idVideo(b.dataset.yt); if (!id) return;
+      /* une seule video a la fois : les autres lecteurs redeviennent des boutons */
+      $$(".video-cadre", zone).forEach(cd => { if (cd._bouton && cd.parentNode) cd.parentNode.replaceChild(cd._bouton, cd); });
+      const cadre = document.createElement("div"); cadre.className = "video-cadre"; cadre._bouton = b;
+      cadre.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${id}?rel=0&autoplay=1" title="${esc(trad("Démonstration de l'exercice"))}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+      b.parentNode.replaceChild(cadre, b);
+    }));
+    const cs = zone.querySelector("#dc-reserve-case");
+    if (cs) cs.addEventListener("change", async () => {
+      if (!cs.checked) return;
+      cs.disabled = true;
+      const F = await Decouverte.reserver(C);
+      if (!F){ cs.checked = false; cs.disabled = false; return; }   // ecriture refusee (message deja affiche)
+      C = F;
+      Tracking.enregistrer("call_booked");
+      const boite = zone.querySelector("#dc-reserve");
+      if (boite){ boite.innerHTML = self.reserveHTML(Decouverte.reserve(F)); const ok = boite.querySelector("#dc-reserve-ok"); if (ok) ok.focus(); }
+    });
+    this.chargerRecettes(zone);
+  }
+};
+
+const OUTILS = [outilAccueil, outilDecouverte, outilChallenge, outilProgramme, outilNutrition, outilMensurations, outilSuivi, outilBilan, outilFormation, outilComplements, outilProfil, outilTableau, outilClients, outilProspects, outilAtelier, outilBibliotheque, outilCatalogue, outilCalculateur, outilEntrainement];
 
 /* Adresses d'hier et de demain : #/progression ouvre « Ma progression »,
    #/suivi ouvre le bilan (puis « Mon suivi » quand il existera). */
@@ -11939,10 +12195,10 @@ function outilsVisibles(){
    qui consulte une fiche voit tout. */
 function estVerrouille(o){
   if (!o || o.role === "coach" || Store.idConsulte || !Auth.estProspect()) return false;
-  const ouverts = (CONFIG.marque && CONFIG.marque.gratuit_ouverts) || ["accueil", "challenge", "profil"];
+  const ouverts = (CONFIG.marque && CONFIG.marque.gratuit_ouverts) || ["accueil", "decouverte", "profil"];
   if (ouverts.indexOf(o.id) > -1) return false;
-  /* v44 : la Speed Formation s'ouvre une fois le Challenge 7 jours termine */
-  if (o.id === "formation" && (CONFIG.challenge || {}).formation_apres_jour7 !== false && Challenge.termine(Store.cache[Challenge.cle])) return false;
+  /* Decouverte : la Speed Formation est ouverte les CONFIG.decouverte.jours premiers jours apres l'inscription, puis verrouillee */
+  if (o.id === "formation") return Decouverte.finie(Auth.profil);
   return true;
 }
 /* v50 — un onglet verrouille hors de la vitrine (CONFIG.marque.gratuit_vitrine) n'encombre pas la navigation
@@ -11962,11 +12218,9 @@ const AVANTAGES = {
   complements: "Tes compléments conseillés, avec les doses et les moments."
 };
 function pageVerrouillee(o){
-  /* v44 : la Speed Formation s'ouvre a la fin du Challenge 7 jours, pas avec l'accompagnement */
-  if (o.id === "formation" && Auth.estProspect() && (CONFIG.challenge || {}).formation_apres_jour7 !== false){
-    return `<section class="panel"><div class="verrou"><div class="cadenas">${SVG.cadenas}</div>
-      <h2>${esc(trad(nomOnglet(o)))}</h2><p>${esc(trad("La Speed Formation s'ouvre à la fin de ton Challenge 7 jours."))}</p>
-      <div class="actions"><a class="btn" href="#/challenge">${esc(trad("Ouvrir mon challenge"))}</a></div></div></section>`;
+  /* Decouverte : la Speed Formation, ouverte pendant la decouverte, fait ensuite partie de l'accompagnement */
+  if (o.id === "formation" && Auth.estProspect()){
+    return `<section class="panel">${UI.verrou({ titre: trad(nomOnglet(o)), texte: trad(DECOUVERTE.formation.fermee), lien: lienCalendly("verrou-formation"), cta: trad("Réserver mon bilan") })}</section>`;
   }
   const plus = AVANTAGES[o.id];
   return `<section class="panel">${UI.verrou({ titre: trad(nomOnglet(o)), texte: trad("Cette fonctionnalité est disponible avec l'accompagnement MHX."), lien: lienCalendly("verrou-" + o.id), cta: trad("Réserver mon bilan") })}
