@@ -1039,6 +1039,17 @@ const CONFIG = {
     bornes: { age: [18, 90], taille: [120, 230], poids: [35, 250], poids_obj: [35, 250], sommeil_h: [1, 14], pas: [0, 40000] }
   },
 
+  /* --- Découverte (prospects) : les réglages ; les textes sont dans DECOUVERTE --- */
+  decouverte: {
+    jours: 7,                      // jours d'accès découverte à partir de l'inscription ; ensuite la Speed Formation se verrouille
+    /* le questionnaire court : identifiants de QUESTIONS ou de DECOUVERTE.questions (réponses dans la clé intake) */
+    questions: ["sexe", "age", "taille", "poids", "objectif", "seances", "essaye", "obstacle", "pourquoi", "motivation"],
+    requis: ["sexe", "age", "taille", "poids", "objectif", "seances", "motivation"],
+    bornes: { age: [18, 90], taille: [120, 230], poids: [35, 250] },   // l'âge minimum (18) se change ici
+    pas_defaut: 6000,              // pas par jour retenus pour la dépense estimée (le questionnaire court ne les demande pas)
+    recettes: ["flocons-avoine-banane-miel", "poulet-riz-brocoli", "omelette-epinards"]   // identifiants de donnees/recettes.json
+  },
+
   /* --- v49 : suivi commercial des prospects (page « Prospects » du coach). Les seuils en jours
      qui decident de la temperature et de la prochaine action ; tout se change ici. --- */
   suivi: {
@@ -1786,6 +1797,214 @@ const CHALLENGE7 = {
   }
 };
 
+/* ------------------------------------------------------------------
+   DÉCOUVERTE — les textes du parcours gratuit des prospects (remplace le
+   Challenge 7 jours). Modifiables sans toucher au code. La version anglaise
+   vit dans DECOUVERTE.en, avec la même forme. Aucun prix, nulle part.
+   ------------------------------------------------------------------ */
+const DECOUVERTE = {
+  nom: "Découverte",
+  jour: "Jour {n}/{t}",
+  jour_fini: "terminée",
+  lede_questionnaire: "Commence par ton questionnaire : 3 minutes, 10 questions. Ton résultat s'affiche tout de suite.",
+  lede_reste_1: "Dernier jour de ton accès découverte.",
+  lede_reste: "Encore {n} jours d'accès découverte.",
+  lede_fini: "Ta période découverte est terminée. Ton résultat, tes calories, ta séance et tes recettes restent ici.",
+  /* questions du questionnaire court qui ne sont pas dans le questionnaire complet (celui des clients ne change pas) */
+  questions: [
+    { id: "essaye", label: "Qu'as-tu déjà essayé pour atteindre cet objectif ?", type: "long" },
+    { id: "obstacle", label: "Quel est ton principal obstacle aujourd'hui ?", type: "long" },
+    { id: "motivation", label: "Ta motivation pour t'y mettre maintenant", type: "echelle", aide: "1 = très faible · 10 = à fond" }
+  ],
+  questionnaire: {
+    titre: "Ton questionnaire",
+    age_aide: "À partir de {n} ans.",
+    bouton: "Voir mon résultat",
+    annuler: "Revenir à mon résultat",
+    manque: "Il manque : {l}",
+    verifie: "Vérifie : {l}",
+    note: "Ce questionnaire ne remplace pas un avis médical. Si tu as un doute sur ta santé, parles-en à un professionnel."
+  },
+  resultat: {
+    titre: "Ton résultat",
+    priorites_titre: "Tes 3 priorités",
+    modifier: "Modifier mes réponses",
+    tuiles: {
+      ecart: "Ton écart", ecart_perdre: "à perdre, à ton rythme", ecart_prendre: "à prendre, en muscle",
+      depense: "Dépense estimée", depense_sous: "kcal par jour, estimation",
+      seances: "Tes séances", seances_sous: "par semaine, ton vrai rythme",
+      motivation: "Motivation", motivation_sous: "ton point de départ"
+    },
+    imc_bas: "Ton poids est en dessous d'un poids de forme habituel pour ta taille. Viser une perte n'est pas l'objectif ici : parles-en d'abord à un professionnel de santé.",
+    motivation_haute: "Motivation {x}/10 : c'est le bon moment. Ce qui fera la différence maintenant, c'est un plan que tu peux tenir.",
+    motivation_moyenne: "Motivation {x}/10 : c'est normal. On ne compte pas sur la motivation : on pose des habitudes qui tiennent sans elle.",
+    motivation_basse: "Motivation {x}/10 : commence petit. Une séance et des repas repères cette semaine valent mieux qu'un plan parfait abandonné.",
+    obstacle: "Ton obstacle principal : « {o} ». C'est le premier point à régler dans ton plan, pas un détail.",
+    essaye: "Tu as déjà essayé : « {e} ». On garde ce qui a marché, on corrige ce qui t'a fait lâcher.",
+    pourquoi: "Ton déclic : « {p} ». Garde-le en tête les jours où c'est dur.",
+    p_perte: "Viser environ {c} kcal par jour, avec {p} g de protéines : un déficit léger que tu peux tenir.",
+    p_prise: "Viser environ {c} kcal par jour, avec {p} g de protéines : un surplus léger, pour du muscle et pas du gras.",
+    p_maintien: "Rester autour de {c} kcal par jour, avec {p} g de protéines : la base de ta recomposition.",
+    p_sante: "Manger à ta faim, à heures régulières, sans chercher de déficit : parles-en d'abord à un professionnel de santé.",
+    p_seances_2: "2 séances corps entier par semaine, tenues chaque semaine : c'est la régularité qui compte.",
+    p_seances_3: "3 séances corps entier par semaine, avec des charges qui progressent petit à petit.",
+    p_seances_4: "{n} séances par semaine en alternant haut et bas du corps, pour récupérer entre deux.",
+    p_temps: "Des séances de 30 à 45 minutes, calées dans ton agenda comme un rendez-vous.",
+    p_faim: "Des repas repères riches en protéines, pour ne plus subir les fringales.",
+    p_regularite: "Un point chaque semaine : c'est la régularité, pas la perfection, qui donne le résultat.",
+    p_defaut: "Un plan simple, que tu peux tenir 12 semaines sans tout changer d'un coup."
+  },
+  calcul: {
+    titre: "Tes calories et tes macros",
+    intro: "Calculées à partir de tes réponses, avec les mêmes formules que ton coach.",
+    maintien: "Maintien", cible: "Ton objectif", kcal_sous: "kcal par jour",
+    prot: "Protéines", gluc: "Glucides", lip: "Lipides", g_sous: "g par jour",
+    note: "Une estimation, pas une vérité : la vraie mesure, c'est la balance sur deux semaines.",
+    incomplet: "Indique ton âge, ta taille et ton poids pour voir tes chiffres."
+  },
+  seance: {
+    titre: "Ta séance découverte",
+    intro: "15 à 20 minutes, chez toi, aucun matériel. Le but : faire, proprement.",
+    echauffement_titre: "Échauffement · 5 minutes", echauffement: "cardio",
+    circuit_titre: "Le circuit",
+    circuit_note: "{n} tours (ton niveau : {niv}), 45 à 60 secondes de repos entre les tours.",
+    tours: { debutant: 2, intermediaire: 3, avance: 4 },
+    exercices: [
+      { nom: "Squats", reps: "12 répétitions", video: "G9nGRJjQFXw" },
+      { nom: "Pompes", reps: "8 à 12 (contre un mur ou sur les genoux si besoin)", video: "jdM0CTRKTKU" },
+      { nom: "Fentes arrière", reps: "8 par jambe", video: "hYbhf31d49w" },
+      { nom: "Pont fessier", reps: "15 répétitions", video: "bnKpYIMmvtw" },
+      { nom: "Gainage", reps: "30 secondes", video: "R4FB7v-v6x0" }
+    ],
+    demo: "Démonstration",
+    securite: "Une gêne musculaire, c'est normal. Une douleur vive, non : arrête l'exercice."
+  },
+  recettes: {
+    titre: "3 recettes pour commencer",
+    intro: "Simples, rapides, riches en protéines.",
+    minutes: "{n} min",
+    ingredients: "Ingrédients", preparation: "Préparation",
+    indispo: "Les recettes n'ont pas pu être chargées. Recharge la page."
+  },
+  formation: {
+    titre: "Speed Formation",
+    ouverte: "Les bases de la nutrition et de l'entraînement, à ton rythme. Ouverte pendant ta découverte.",
+    ouvrir: "Ouvrir la Speed Formation",
+    fermee: "Ta période découverte est terminée : la Speed Formation fait partie de l'accompagnement."
+  },
+  accomp: {
+    titre: "Avec l'accompagnement MHX",
+    note: "Un bilan de 30 minutes avec ton coach, pour faire le point sur tes objectifs.",
+    reserve_case: "J'ai réservé mon bilan",
+    reserve_ok: "Bilan réservé le {d}. Ton coach te retrouve à l'heure prévue."
+  },
+  profil: {
+    texte: "Tes réponses au questionnaire sont enregistrées : ton coach les verra. Le questionnaire complet s'ouvrira au démarrage de ton accompagnement.",
+    lien: "Voir mon résultat"
+  },
+
+  en: {
+    nom: "Discovery",
+    jour: "Day {n}/{t}",
+    jour_fini: "over",
+    lede_questionnaire: "Start with your questionnaire: 3 minutes, 10 questions. Your result shows right away.",
+    lede_reste_1: "Last day of your discovery access.",
+    lede_reste: "{n} more days of discovery access.",
+    lede_fini: "Your discovery period is over. Your result, your calories, your workout and your recipes stay here.",
+    questions: [
+      { id: "essaye", label: "What have you already tried to reach this goal?", type: "long" },
+      { id: "obstacle", label: "What is your main obstacle today?", type: "long" },
+      { id: "motivation", label: "Your motivation to start now", type: "echelle", aide: "1 = very low · 10 = all in" }
+    ],
+    questionnaire: {
+      titre: "Your questionnaire",
+      age_aide: "From {n} years old.",
+      bouton: "See my result",
+      annuler: "Back to my result",
+      manque: "Missing: {l}",
+      verifie: "Check: {l}",
+      note: "This questionnaire is not medical advice. If you have any doubt about your health, talk to a professional."
+    },
+    resultat: {
+      titre: "Your result",
+      priorites_titre: "Your 3 priorities",
+      modifier: "Edit my answers",
+      tuiles: {
+        ecart: "Your gap", ecart_perdre: "to lose, at your pace", ecart_prendre: "to gain, as muscle",
+        depense: "Estimated expenditure", depense_sous: "kcal per day, estimate",
+        seances: "Your workouts", seances_sous: "per week, your real pace",
+        motivation: "Motivation", motivation_sous: "your starting point"
+      },
+      imc_bas: "Your weight is below a usual healthy weight for your height. Losing weight is not the goal here: talk to a health professional first.",
+      motivation_haute: "Motivation {x}/10: this is the right time. What makes the difference now is a plan you can stick to.",
+      motivation_moyenne: "Motivation {x}/10: that's normal. We don't rely on motivation: we build habits that hold without it.",
+      motivation_basse: "Motivation {x}/10: start small. One workout and a few anchor meals this week beat a perfect plan you drop.",
+      obstacle: "Your main obstacle: “{o}”. It's the first thing your plan must solve, not a detail.",
+      essaye: "You already tried: “{e}”. We keep what worked and fix what made you quit.",
+      pourquoi: "Your trigger: “{p}”. Keep it in mind on the hard days.",
+      p_perte: "Aim for about {c} kcal per day, with {p} g of protein: a small deficit you can keep.",
+      p_prise: "Aim for about {c} kcal per day, with {p} g of protein: a small surplus, for muscle rather than fat.",
+      p_maintien: "Stay around {c} kcal per day, with {p} g of protein: the base of your recomposition.",
+      p_sante: "Eat to your hunger, at regular times, without chasing a deficit: talk to a health professional first.",
+      p_seances_2: "2 full-body workouts per week, every week: consistency is what counts.",
+      p_seances_3: "3 full-body workouts per week, with loads that go up little by little.",
+      p_seances_4: "{n} workouts per week alternating upper and lower body, to recover in between.",
+      p_temps: "30 to 45-minute workouts, booked in your calendar like an appointment.",
+      p_faim: "Protein-rich anchor meals, so cravings stop running the show.",
+      p_regularite: "A check-in every week: consistency, not perfection, brings the result.",
+      p_defaut: "A simple plan you can keep for 12 weeks without changing everything at once."
+    },
+    calcul: {
+      titre: "Your calories and macros",
+      intro: "Calculated from your answers, with the same formulas as your coach.",
+      maintien: "Maintenance", cible: "Your target", kcal_sous: "kcal per day",
+      prot: "Protein", gluc: "Carbs", lip: "Fat", g_sous: "g per day",
+      note: "An estimate, not the truth: the real measure is the scale over two weeks.",
+      incomplet: "Enter your age, height and weight to see your numbers."
+    },
+    seance: {
+      titre: "Your discovery workout",
+      intro: "15 to 20 minutes, at home, no equipment. The goal: do it, and do it right.",
+      echauffement_titre: "Warm-up · 5 minutes", echauffement: "cardio",
+      circuit_titre: "The circuit",
+      circuit_note: "{n} rounds (your level: {niv}), 45 to 60 seconds of rest between rounds.",
+      tours: { debutant: 2, intermediaire: 3, avance: 4 },
+      exercices: [
+        { nom: "Squats", reps: "12 reps", video: "G9nGRJjQFXw" },
+        { nom: "Push-ups", reps: "8 to 12 (against a wall or on your knees if needed)", video: "jdM0CTRKTKU" },
+        { nom: "Reverse lunges", reps: "8 per leg", video: "hYbhf31d49w" },
+        { nom: "Glute bridge", reps: "15 reps", video: "bnKpYIMmvtw" },
+        { nom: "Plank", reps: "30 seconds", video: "R4FB7v-v6x0" }
+      ],
+      demo: "Demo",
+      securite: "Muscle discomfort is normal. Sharp pain is not: stop the exercise."
+    },
+    recettes: {
+      titre: "3 recipes to get started",
+      intro: "Simple, quick, high in protein.",
+      minutes: "{n} min",
+      ingredients: "Ingredients", preparation: "Method",
+      indispo: "The recipes could not be loaded. Reload the page."
+    },
+    formation: {
+      titre: "Speed Formation",
+      ouverte: "The basics of nutrition and training, at your pace. Open during your discovery.",
+      ouvrir: "Open the Speed Formation",
+      fermee: "Your discovery period is over: the Speed Formation is part of the coaching."
+    },
+    accomp: {
+      titre: "With MHX coaching",
+      note: "A 30-minute assessment with your coach, to review your goals.",
+      reserve_case: "I booked my assessment",
+      reserve_ok: "Assessment booked on {d}. Your coach will meet you at the scheduled time."
+    },
+    profil: {
+      texte: "Your questionnaire answers are saved: your coach will see them. The full questionnaire opens when your coaching starts.",
+      lien: "See my result"
+    }
+  }
+};
+
 /* ==================================================================
    [E] BOÎTE À OUTILS — helpers partagés par tous les outils
    ================================================================== */
@@ -1974,9 +2193,10 @@ const Contenus = {
      fois, des que la langue passe en anglais (au demarrage, ou depuis la preference rangee en base) */
   _challenge: false,
   challenge(){
-    if (this._challenge || I18N.langue !== "en" || typeof CHALLENGE7 === "undefined" || !CHALLENGE7.en) return;
+    if (this._challenge || I18N.langue !== "en") return;
     this._challenge = true;
-    this.zip(CHALLENGE7, CHALLENGE7.en);
+    if (typeof CHALLENGE7 !== "undefined" && CHALLENGE7.en) this.zip(CHALLENGE7, CHALLENGE7.en);
+    if (typeof DECOUVERTE !== "undefined" && DECOUVERTE.en) this.zip(DECOUVERTE, DECOUVERTE.en);
   },
   ajouter(fr, en){
     if (typeof fr !== "string" || typeof en !== "string" || !fr.trim() || !en.trim()) return;
@@ -5165,9 +5385,6 @@ const QUESTIONS = [
   { id:"famille",    label:"Situation familiale et contraintes horaires", type:"long",
     aide:"Enfants, vie de couple, horaires imposés…" },
   { id:"entourage",  label:"Ton entourage va-t-il soutenir ta démarche ou la compliquer ?", type:"long" },
-  { id:"essaye",     label:"Qu'as-tu déjà essayé pour atteindre cet objectif ?", type:"long" },
-  { id:"obstacle",   label:"Quel est ton principal obstacle à ce jour ?", type:"long" },
-  { id:"motivation", label:"Motivation pour cette démarche", type:"echelle", aide:"1 = très faible · 10 = vraiment motivé" },
   { id:"fume",       label:"Fumes-tu ?", type:"select", options:["Non","Occasionnellement","Oui, quotidiennement"] }
 ];
 
@@ -11020,6 +11237,113 @@ const Challenge = {
   testHTML(){
     if (!this.libre()) return "";
     return `<p class="note ch-test"><span class="pastille accent">${esc(trad(CHALLENGE7.hub.test))}</span><a class="link-a" href="#/challenge-rythme">${esc(trad(CHALLENGE7.hub.test_fin))}</a></p>`;
+  }
+};
+
+/* ------------------------------------------------------------------
+   DÉCOUVERTE — le parcours gratuit du prospect (remplace le Challenge 7 jours).
+   Jour 1 = le jour de l'inscription (profils.cree_le) ; les CONFIG.decouverte.jours
+   premiers jours, la Speed Formation est ouverte, ensuite elle se verrouille.
+   Le questionnaire court va dans la cle intake (court_le = instant de sa validation).
+   Les clics « Réserver mon bilan » et la case « J'ai réservé mon bilan » restent dans la
+   cle existante « challenge » (cta.clics, reserve) : aucune cle renommee, et l'historique
+   des anciens prospects du challenge reste lu.
+   ------------------------------------------------------------------ */
+const Decouverte = {
+  cle: "challenge",
+  CLE_TEST: "mhx_decouverte_jour",   // mode test (Lucas) : force le jour sur CET appareil, via #/decouverte-jour/N
+  cfg(){ return CONFIG.decouverte || {}; },
+  duree(){ const n = +this.cfg().jours; return n > 0 ? n : 7; },
+  vide(){ return { version: 1, jours: {}, cta: { clics: [] } }; },
+  /* date locale (AAAA-MM-JJ) d'une date ou d'un instant ; null si illisible */
+  dateLocale(v){
+    if (typeof v !== "string" || !/^\d{4}-\d{2}-\d{2}/.test(v)) return null;
+    if (v.length <= 10) return v.slice(0, 10);
+    const d = new Date(v); if (isNaN(d)) return null;
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  },
+  joursEcoules(debut){
+    if (typeof debut !== "string") return null;
+    const re = /^(\d{4})-(\d{2})-(\d{2})$/;
+    const m = re.exec(debut), a = re.exec(aujourdhui());
+    if (!m || !a) return null;
+    return Math.round((Date.UTC(+a[1], +a[2] - 1, +a[3]) - Date.UTC(+m[1], +m[2] - 1, +m[3])) / 86400000);
+  },
+  /* jour de decouverte (1 = jour de l'inscription) ; null si la date est illisible. Le mode test ne vaut que
+     sur l'appareil du prospect lui-meme, jamais dans les ecrans du coach (pourLeCoach) */
+  jour(p, pourLeCoach){
+    if (!pourLeCoach && !Store.idConsulte){ try { const t = parseInt(localStorage.getItem(this.CLE_TEST), 10); if (t >= 1) return t; } catch(e){} }
+    const n = this.joursEcoules(this.dateLocale(p && p.cree_le));
+    return n == null ? null : Math.max(1, n + 1);
+  },
+  finie(p, pourLeCoach){ const j = this.jour(p, pourLeCoach); return j != null && j > this.duree(); },
+  questionnaireFait(I){ return !!(I && typeof I.court_le === "string" && I.court_le); },
+  clics(C){
+    return (C && typeof C === "object" && C.cta && typeof C.cta === "object" && Array.isArray(C.cta.clics))
+      ? C.cta.clics.filter(x => x && typeof x === "object" && !Array.isArray(x)) : [];
+  },
+  /* la case « J'ai réservé » : C.reserve, ou celle du jour 7 d'un ancien prospect du challenge */
+  reserve(C){
+    if (!C || typeof C !== "object" || Array.isArray(C)) return null;
+    if (typeof C.reserve === "string" && C.reserve) return C.reserve;
+    const js = C.jours, j7 = js && typeof js === "object" && !Array.isArray(js) ? js["7"] : null;
+    return (j7 && typeof j7 === "object" && typeof j7.reserve === "string" && j7.reserve) ? j7.reserve : null;
+  },
+  /* resume pour le coach (lecture seule) : seules des chaines et des nombres sortent d'ici */
+  resume(p, C, I){
+    const cl = this.clics(C), der = cl.length ? cl[cl.length - 1].date : null, j = this.jour(p, true);
+    return { jour: j, duree: this.duree(), finie: j != null && j > this.duree(), questionnaire: this.questionnaireFait(I) ? I.court_le : null,
+             clics: cl.length, dernierClic: typeof der === "string" ? der : null, reserve: this.reserve(C) };
+  },
+
+  /* la cle relue juste avant d'ecrire : un autre onglet n'efface pas un clic ou la case « J'ai réservé ».
+     null si la relecture echoue (rien n'est ecrit) */
+  async fraiche(C){
+    const uid = Store.cible(); if (!uid) return null;
+    const k = uid + "|" + this.cle;
+    try { await Auth.assurer(); } catch(e){}
+    const enAttente = Store.valeursEnAttente[k];
+    if (Store.attente[k] && enAttente !== undefined){ clearTimeout(Store.attente[k]); delete Store.attente[k]; delete Store.valeursEnAttente[k]; try { await Store.envoyer(this.cle, enAttente, uid); } catch(e){} }
+    let F = null;
+    try { F = await Store.lire(this.cle, this.vide()); } catch(e){ F = null; }
+    if (!F || typeof F !== "object" || Store.nonLus.has(F)){
+      if (C && typeof C === "object") Store.boite(uid)[this.cle] = C;
+      Store.lectureRatee(k);
+      return null;
+    }
+    if (C && typeof C === "object" && C !== F){
+      if (!F.cta || typeof F.cta !== "object" || Array.isArray(F.cta)) F.cta = { clics: [] };
+      if (!Array.isArray(F.cta.clics)) F.cta.clics = [];
+      this.clics(C).forEach(x => { if (!F.cta.clics.some(y => y && y.date === x.date)) F.cta.clics.push(x); });
+      if (typeof C.reserve === "string" && C.reserve && !(typeof F.reserve === "string" && F.reserve)) F.reserve = C.reserve;
+    }
+    return F;
+  },
+  _file: Promise.resolve(),
+  enFile(fn){
+    const p = this._file.then(fn, fn);
+    this._file = Promise.race([p.then(() => {}, () => {}), new Promise(r => setTimeout(r, 15000))]);
+    return p;
+  },
+  /* un clic « Réserver mon bilan » : note pour le coach, jamais bloquant */
+  clic(C, source){ return this.enFile(() => this._clic(C, source)); },
+  async _clic(C, source){
+    try {
+      const F = await this.fraiche(C); if (!F) return;
+      if (!F.cta || typeof F.cta !== "object" || Array.isArray(F.cta)) F.cta = { clics: [] };
+      if (!Array.isArray(F.cta.clics)) F.cta.clics = [];
+      F.cta.clics.push({ jour: this.jour(Auth.profil), source: typeof source === "string" ? source : null, date: new Date().toISOString() });
+      if (F.cta.clics.length > 50) F.cta.clics = F.cta.clics.slice(-50);
+      Store.ecrire(this.cle, F);
+    } catch(e){}
+  },
+  /* « J'ai réservé mon bilan » : l'objet a jour, ou null si l'ecriture est refusee */
+  reserver(C){
+    return this.enFile(async () => {
+      const F = await this.fraiche(C); if (!F) return null;
+      if (!this.reserve(F)) F.reserve = new Date().toISOString();
+      return Store.ecrire(this.cle, F) ? F : null;
+    });
   }
 };
 
