@@ -1905,6 +1905,51 @@ const DECOUVERTE = {
     lien: "Voir mon résultat"
   },
 
+  /* --- écran d'inscription (portail) et retour du lien de confirmation --- */
+  inscription: {
+    titre: "Crée ton accès découverte",
+    sous: "7 jours pour découvrir la méthode MHX : ton résultat personnalisé, tes calories et tes macros, une séance et des recettes.",
+    bouton: "Créer mon accès",
+    mdp: "Mot de passe (8 caractères minimum)",
+    cgu_avant: "J'accepte les",
+    cgu_lien: "conditions d'utilisation et la politique de confidentialité",
+    cgu_manque: "Coche la case des conditions pour continuer.",
+    sante_avant: "J'accepte le traitement de mes données de santé conformément à la politique",
+    sante_manque: "Accepte le traitement de tes données de santé pour continuer.",
+    note: "L'app ne remplace pas un avis médical. Si tu as un doute sur ta santé, parles-en à un professionnel avant de commencer.",
+    verif_titre: "Vérifie ta boîte mail",
+    verif_texte: "On vient d'envoyer un lien à {e}. Ouvre-le pour confirmer ton compte : tu arriveras directement sur ton questionnaire.",
+    verif_note: "Rien reçu après quelques minutes ? Regarde dans les indésirables. Le lien ne sert qu'une fois. Déjà un compte avec cet email ? Connecte-toi directement.",
+    verif_retour: "Retour à la connexion",
+    lien_ok: "Ton email est confirmé{e}. Bienvenue !",
+    lien_entree: "Connexion réussie{e}.",
+    lien_rate: "Ce lien n'est plus valable (il ne sert qu'une fois). Connecte-toi avec ton email et ton mot de passe, ou redemande un lien depuis « Mot de passe oublié ».",
+    lien_rate_connecte: "Ce lien n'est plus valable ou n'a pas pu être vérifié, mais tu es déjà dans ton espace : rien à faire.",
+    lien_reseau: "Ton email est bien confirmé, mais l'entrée automatique a échoué (réseau). Connecte-toi avec ton email et ton mot de passe.",
+    lien_autre_compte: "Un autre compte est déjà connecté sur cet appareil : ce lien n'a pas été utilisé. Déconnecte-toi d'abord, puis connecte-toi avec le nouveau compte (son email est confirmé).",
+    non_confirme: "Ton email n'est pas encore confirmé : ouvre le lien reçu (regarde dans les indésirables).",
+    trop_demandes: "Trop de demandes d'un coup : réessaie dans une minute."
+  },
+
+  /* --- conditions et confidentialité (volet ouvert depuis l'inscription et le Profil du prospect).
+     Personne ne les a encore acceptées (inscription fermée) : à figer, et à changer de version, à l'ouverture --- */
+  confidentialite: {
+    version: "2026-09",
+    titre: "Conditions d'utilisation et confidentialité",
+    paragraphes: [
+      "L'accès découverte de MHX Coaching donne pendant 7 jours des informations et un entraînement généraux, réservés aux adultes. Il ne remplace pas un avis médical : en cas de doute sur ta santé, parles-en à un professionnel avant de commencer.",
+      "Données collectées : ton prénom, ton email, tes réponses au questionnaire (âge, taille, poids, objectif, séances, ce que tu as déjà essayé, ton obstacle, ta motivation) et ton activité dans l'app, dont tes clics sur « Réserver mon bilan ». Données de santé : poids, blessures, contre-indications médicales (voir case dédiée ci-dessous).",
+      "Usage : calculer ton résultat, adapter ce qui s'affiche à tes réponses et te proposer un bilan avec le coach. Aucune revente, aucune publicité.",
+      "Suivi par le coach : il voit tes réponses et ton activité, et note, pour son suivi, l'issue de ton bilan et ses relances. Ces notes n'apparaissent pas dans l'app : tu peux en demander une copie ou la suppression en lui écrivant.",
+      "Données de santé (RGPD article 9) : tu dois accepter explicitement le traitement de tes données concernant ta santé (poids, blessures, contre-indications). Tu peux les consulter ou les supprimer à tout moment. Ces données sont conservées tant que ton compte existe.",
+      "Hébergement : Supabase, serveurs en Europe (Irlande).",
+      "Prise de rendez-vous : ton bilan se réserve sur Calendly (société américaine), qui enregistre ta réservation pour le compte du coach ; ces données peuvent être traitées aux États-Unis (cadre de protection des données UE–États-Unis). Ton prénom et ton email y sont pré-remplis dès que tu ouvres la page de réservation, avec l'écran de l'app d'où tu viens.",
+      "Tes droits : tu peux exporter ou supprimer ton compte et toutes tes données à tout moment depuis Profil, section « Mes données », ou en écrivant au coach.",
+      "Conservation : tant que ton compte existe.",
+      "En cochant la case, tu acceptes ces conditions."
+    ]
+  },
+
   en: {
     nom: "Discovery",
     jour: "Day {n}/{t}",
@@ -2004,6 +2049,45 @@ const DECOUVERTE = {
     profil: {
       texte: "Your questionnaire answers are saved: your coach will see them. The full questionnaire opens when your coaching starts.",
       lien: "See my result"
+    },
+    inscription: {
+      titre: "Create your discovery access",
+      sous: "7 days to discover the MHX method: your personalized result, your calories and macros, a workout and recipes.",
+      bouton: "Create my access",
+      mdp: "Password (8 characters minimum)",
+      cgu_avant: "I accept the",
+      cgu_lien: "terms of use and privacy policy",
+      cgu_manque: "Tick the terms box to continue.",
+      sante_avant: "I accept the processing of my health data in accordance with the privacy policy",
+      sante_manque: "Accept the processing of your health data to continue.",
+      note: "The app is not medical advice. If you have any doubt about your health, talk to a professional before starting.",
+      verif_titre: "Check your inbox",
+      verif_texte: "We've just sent a link to {e}. Open it to confirm your account: you'll land straight on your questionnaire.",
+      verif_note: "Nothing after a few minutes? Check your spam folder. The link works only once. Already have an account with this email? Just sign in.",
+      verif_retour: "Back to sign in",
+      lien_ok: "Your email is confirmed{e}. Welcome!",
+      lien_entree: "Signed in{e}.",
+      lien_rate: "This link is no longer valid (it works only once). Sign in with your email and password, or request a new one from “Forgot password”.",
+      lien_rate_connecte: "This link is no longer valid or could not be checked, but you're already in your space: nothing to do.",
+      lien_reseau: "Your email is confirmed, but automatic sign-in failed (network). Sign in with your email and password.",
+      lien_autre_compte: "Another account is already signed in on this device: this link was not used. Sign out first, then sign in with the new account (its email is confirmed).",
+      non_confirme: "Your email isn't confirmed yet: open the link we sent you (check your spam folder).",
+      trop_demandes: "Too many requests at once: try again in a minute."
+    },
+    confidentialite: {
+      titre: "Terms of use and privacy",
+      paragraphes: [
+        "MHX Coaching's discovery access gives you general information and training for 7 days, for adults only. It is not medical advice: if you have any doubt about your health, talk to a professional before starting.",
+        "Data collected: your first name, your email, your questionnaire answers (age, height, weight, goal, workouts, what you already tried, your obstacle, your motivation) and your activity in the app, including your clicks on “Book my assessment”. Health data: weight, injuries, medical contraindications (see dedicated box below).",
+        "Use: to calculate your result, adapt what you see to your answers and offer you an assessment with the coach. No resale, no advertising.",
+        "Coach follow-up: the coach sees your answers and activity, and records, for their follow-up, the outcome of your assessment and their follow-up messages. These notes don't appear in the app: you can ask for a copy or their deletion by writing to the coach.",
+        "Health data (GDPR article 9): you must explicitly accept the processing of your health data (weight, injuries, medical contraindications). You can view or delete this data at any time. This data is kept as long as your account exists.",
+        "Hosting: Supabase, servers in Europe (Ireland).",
+        "Booking: your assessment is booked on Calendly (a US company), which records your booking on the coach's behalf; this data may be processed in the United States (EU–US Data Privacy Framework). Your first name and email are pre-filled as soon as you open the booking page, along with the app screen you came from.",
+        "Your rights: you can export or delete your account and all your data at any time from Profile, section \"My data\", or by writing to the coach.",
+        "Retention: as long as your account exists.",
+        "By ticking the box, you accept these terms."
+      ]
     }
   }
 };
@@ -5475,7 +5559,7 @@ const outilProfil = {
     if (Store.idConsulte) return "";
     const u = Auth.utilisateur();
     /* v50 : un prospect peut relire a tout moment les conditions acceptees a l'inscription */
-    const conditions = Auth.estProspect() ? `<p class="note" style="margin:0 0 14px"><button type="button" class="lien-bouton" id="mc-conditions">${esc(trad(CHALLENGE7.confidentialite.titre))}</button></p>` : "";
+    const conditions = Auth.estProspect() ? `<p class="note" style="margin:0 0 14px"><button type="button" class="lien-bouton" id="mc-conditions">${esc(trad(DECOUVERTE.confidentialite.titre))}</button></p>` : "";
     return `
     <section class="panel">${conditions}
       <h2>Mon compte</h2>
@@ -5560,7 +5644,7 @@ const outilProfil = {
 
   brancherCompte(){
     const bCond = $("mc-conditions");
-    if (bCond) bCond.addEventListener("click", () => UI.volet({ titre: trad(CHALLENGE7.confidentialite.titre), corps: (CHALLENGE7.confidentialite.paragraphes || []).map(p => `<p>${esc(trad(p))}</p>`).join("") }));
+    if (bCond) bCond.addEventListener("click", () => UI.volet({ titre: trad(DECOUVERTE.confidentialite.titre), corps: (DECOUVERTE.confidentialite.paragraphes || []).map(p => `<p>${esc(trad(p))}</p>`).join("") }));
     const bMdp = $("mc-mdp");
     if (bMdp) bMdp.addEventListener("click", async () => {
       const actuel = $("mc-actuel").value, nouveau = $("mc-nouveau").value, nouveau2 = $("mc-nouveau2").value;
@@ -11455,7 +11539,7 @@ const outilChallenge = {
     }).join("");
     return `<section class="panel"><h2>${esc(trad(def.questions_titre || ""))}</h2><div class="grid g2">${champs}</div>
       <div class="actions"><button class="btn" id="ch-voir" type="button">${esc(trad(def.bouton || ""))}</button><span class="msg" id="ch-msg" role="status" aria-live="polite"></span></div>
-      <p class="note" style="margin-top:10px">${esc(trad(CHALLENGE7.inscription.note))}</p></section>`;
+      <p class="note" style="margin-top:10px">${esc(trad(DECOUVERTE.inscription.note))}</p></section>`;
   },
 
   /* les tuiles et les phrases du point de depart, a partir du questionnaire (formules du calculateur, intouchees) */
@@ -12599,8 +12683,8 @@ function portail(mode){
   /* v39 : « inscription » n'existe que si l'inscription libre est ouverte */
   const libre = !!(CONFIG.marque && CONFIG.marque.inscription_libre);
   mode = (mode === "oubli") ? "oubli" : (mode === "inscription" && libre) ? "inscription" : "connexion";
-  const titre = mode === "oubli" ? "Mot de passe oublié" : mode === "inscription" ? CHALLENGE7.inscription.titre : "Connexion à ton espace";
-  const bouton = mode === "oubli" ? "Recevoir le lien" : mode === "inscription" ? CHALLENGE7.inscription.bouton : "Se connecter";
+  const titre = mode === "oubli" ? "Mot de passe oublié" : mode === "inscription" ? DECOUVERTE.inscription.titre : "Connexion à ton espace";
+  const bouton = mode === "oubli" ? "Recevoir le lien" : mode === "inscription" ? DECOUVERTE.inscription.bouton : "Se connecter";
   document.body.innerHTML = `
   <div class="portail">
     <div class="carte-co">
@@ -12610,19 +12694,19 @@ function portail(mode){
       <div class="logo">${esc(CONFIG.marque.nom)}</div>
       ${CONFIG.marque.programme ? `<div class="sous">${esc(CONFIG.marque.programme)}</div>` : ""}
       <h2>${esc(titre)}</h2>
-      ${mode === "inscription" ? `<p class="co-sous">${esc(CHALLENGE7.inscription.sous)}</p>` : ""}
+      ${mode === "inscription" ? `<p class="co-sous">${esc(DECOUVERTE.inscription.sous)}</p>` : ""}
       <div id="co-err"></div>
       ${mode === "inscription" ? `<div class="champ"><label for="c-prenom">Ton prénom</label><input id="c-prenom" type="text" autocomplete="given-name"></div>` : ""}
       <div class="champ"><label for="c-email">Email</label><input id="c-email" type="email" autocomplete="email"></div>
       ${mode === "inscription"
         /* v44 : prenom, email, mot de passe (un seul, avec « Afficher ») et la case des conditions */
-        ? `<div class="champ"><label for="c-mdp">${esc(CHALLENGE7.inscription.mdp)}</label><div class="co-mdp"><input id="c-mdp" type="password" autocomplete="new-password"><button type="button" class="voir" id="c-voir" aria-pressed="false" aria-label="Afficher le mot de passe">Afficher</button></div></div>
-      <label class="co-rester co-cgu"><input type="checkbox" id="c-cgu"><span>${esc(CHALLENGE7.inscription.cgu_avant)} <button type="button" class="lien" id="c-cgu-lien">${esc(CHALLENGE7.inscription.cgu_lien)}</button></span></label>
-      <label class="co-rester co-sante"><input type="checkbox" id="c-sante"><span>${esc(CHALLENGE7.inscription.sante_avant)}</span></label>`
+        ? `<div class="champ"><label for="c-mdp">${esc(DECOUVERTE.inscription.mdp)}</label><div class="co-mdp"><input id="c-mdp" type="password" autocomplete="new-password"><button type="button" class="voir" id="c-voir" aria-pressed="false" aria-label="Afficher le mot de passe">Afficher</button></div></div>
+      <label class="co-rester co-cgu"><input type="checkbox" id="c-cgu"><span>${esc(DECOUVERTE.inscription.cgu_avant)} <button type="button" class="lien" id="c-cgu-lien">${esc(DECOUVERTE.inscription.cgu_lien)}</button></span></label>
+      <label class="co-rester co-sante"><input type="checkbox" id="c-sante"><span>${esc(DECOUVERTE.inscription.sante_avant)}</span></label>`
         : mode !== "oubli" ? `<div class="champ"><label for="c-mdp">Mot de passe</label><input id="c-mdp" type="password" autocomplete="current-password"></div>` : ""}
       ${mode !== "oubli" ? `<label class="co-rester"><input type="checkbox" id="c-rester" checked><span>Rester connecté</span></label>` : ""}
       <button class="btn" id="c-go">${esc(bouton)}</button>
-      ${mode === "inscription" ? `<p class="co-note">${esc(CHALLENGE7.inscription.note)}</p>` : ""}
+      ${mode === "inscription" ? `<p class="co-note">${esc(DECOUVERTE.inscription.note)}</p>` : ""}
       ${CONFIG.marque.version ? `<p class="co-aide">v${esc(CONFIG.marque.version)}</p>` : ""}
       <div class="bascule">
         ${mode === "connexion"
@@ -12650,7 +12734,7 @@ function portail(mode){
   const cguLien = $("c-cgu-lien");
   if (cguLien) cguLien.addEventListener("click", ev => {
     ev.preventDefault();
-    UI.volet({ titre: trad(CHALLENGE7.confidentialite.titre), corps: (CHALLENGE7.confidentialite.paragraphes || []).map(p => `<p>${esc(trad(p))}</p>`).join("") });
+    UI.volet({ titre: trad(DECOUVERTE.confidentialite.titre), corps: (DECOUVERTE.confidentialite.paragraphes || []).map(p => `<p>${esc(trad(p))}</p>`).join("") });
   });
   $("co-langue").addEventListener("click", () => {
     const ok = I18N.choisir(I18N.langue === "en" ? "fr" : "en");
@@ -12672,19 +12756,19 @@ function portail(mode){
       if (!prenom){ err("Indique ton prénom."); return; }
       if (mdp.length < 8){ err("Le mot de passe doit faire au moins 8 caractères."); return; }
       const cgu = $("c-cgu");
-      if (!cgu || !cgu.checked){ err(trad(CHALLENGE7.inscription.cgu_manque)); return; }
+      if (!cgu || !cgu.checked){ err(trad(DECOUVERTE.inscription.cgu_manque)); return; }
       const sante = $("c-sante");
-      if (!sante || !sante.checked){ err(trad(CHALLENGE7.inscription.sante_manque)); return; }
+      if (!sante || !sante.checked){ err(trad(DECOUVERTE.inscription.sante_manque)); return; }
       b.disabled = true; b.textContent = "Un instant…";
       try {
         /* v44 : prenom seul (le nom viendra avec le questionnaire) ; l'acceptation des conditions est datee */
         /* P0.5 : consentement santé séparé, horodaté */
-        const connecte = await Auth.inscrire(email, mdp, prenom, "", { consentement: new Date().toISOString(), conditions_version: CHALLENGE7.confidentialite.version, consentement_sante: new Date().toISOString() });
+        const connecte = await Auth.inscrire(email, mdp, prenom, "", { consentement: new Date().toISOString(), conditions_version: DECOUVERTE.confidentialite.version, consentement_sante: new Date().toISOString() });
         if (connecte){ location.hash = ""; location.reload(); return; }
         ecranVerifieEmail(email); return;   // v47 : un ecran dedie, pas une ligne de message
       } catch(e){
         const m = (e.message || "").toLowerCase();
-        err(/rate limit|security purposes|after \d+ seconds/.test(m) ? trad(CHALLENGE7.inscription.trop_demandes)   // v47
+        err(/rate limit|security purposes|after \d+ seconds/.test(m) ? trad(DECOUVERTE.inscription.trop_demandes)   // v47
           : m.indexOf("already") > -1 || m.indexOf("registered") > -1 ? "Un compte existe déjà avec cet email : connecte-toi."
           : m.indexOf("disabled") > -1 || m.indexOf("not allowed") > -1 ? "Les inscriptions ne sont pas encore ouvertes."
           : e.message || "Une erreur est survenue.");
@@ -12704,8 +12788,8 @@ function portail(mode){
     } catch(e){
       const m = (e.message || "").toLowerCase();
       /* v47 : les messages de Supabase qui arrivent sur le parcours du funnel, en francais */
-      err(m.indexOf("not confirmed") > -1 ? trad(CHALLENGE7.inscription.non_confirme)
-        : /rate limit|security purposes|after \d+ seconds/.test(m) ? trad(CHALLENGE7.inscription.trop_demandes)
+      err(m.indexOf("not confirmed") > -1 ? trad(DECOUVERTE.inscription.non_confirme)
+        : /rate limit|security purposes|after \d+ seconds/.test(m) ? trad(DECOUVERTE.inscription.trop_demandes)
         : m.indexOf("invalid") > -1 ? "Email ou mot de passe incorrect."
         : m.indexOf("password") > -1 ? "Le mot de passe doit faire au moins 6 caractères."
         : e.message || "Une erreur est survenue.");
@@ -12747,7 +12831,7 @@ function lireAdresse(){
    devient « Verifie ta boite mail » (l'adresse, ou chercher, et un retour a la connexion) */
 function ecranVerifieEmail(email){
   const carte = document.querySelector(".portail .carte-co"); if (!carte) return;
-  const T = CHALLENGE7.inscription;
+  const T = DECOUVERTE.inscription;
   /* le formulaire n'existe plus : la touche Entree ne doit plus chercher a l'envoyer */
   if (portail._entree){ document.removeEventListener("keydown", portail._entree); portail._entree = null; }
   carte.innerHTML = `
@@ -12791,7 +12875,7 @@ async function entrerParLien(p){
     /* jeton refuse (4xx) : lien plus valable ; sinon (reseau, 5xx) l'email est confirme mais l'entree a echoue */
     const refuse = e && e.statut >= 400 && e.statut < 500 && e.statut !== 429;   // 429 = trop de demandes, pas un lien perime
     portail("connexion");
-    setTimeout(() => { const z = $("co-err"); if (z){ z.className = "erreur"; z.textContent = trad(CHALLENGE7.inscription[refuse || !(e && e.statut) && /sans utilisateur/.test(String(e && e.message)) ? "lien_rate" : "lien_reseau"]); } }, 60);
+    setTimeout(() => { const z = $("co-err"); if (z){ z.className = "erreur"; z.textContent = trad(DECOUVERTE.inscription[refuse || !(e && e.statut) && /sans utilisateur/.test(String(e && e.message)) ? "lien_rate" : "lien_reseau"]); } }, 60);
     return false;
   }
 }
@@ -12875,7 +12959,7 @@ let lienEmail = null, lienEmailType = "", lienEmailAdresse = "";   // v47 : "ok"
     if (Auth.connecte()) lienEmail = "rate_connecte";
     else {
       portail("connexion");
-      setTimeout(() => { const e = $("co-err"); if (e){ e.className = "erreur"; e.textContent = trad(CHALLENGE7.inscription.lien_rate); } }, 60);
+      setTimeout(() => { const e = $("co-err"); if (e){ e.className = "erreur"; e.textContent = trad(DECOUVERTE.inscription.lien_rate); } }, 60);
       return;
     }
   }
@@ -12895,7 +12979,7 @@ let lienEmail = null, lienEmailType = "", lienEmailAdresse = "";   // v47 : "ok"
   if (!ok){
     portail("connexion");
     /* v47 : on arrivait par un lien d'email et la session enregistree ne se renouvelle plus : le dire */
-    if (lienEmail) setTimeout(() => { const z = $("co-err"); if (z){ z.className = "erreur"; z.textContent = trad(CHALLENGE7.inscription.lien_rate); } }, 60);
+    if (lienEmail) setTimeout(() => { const z = $("co-err"); if (z){ z.className = "erreur"; z.textContent = trad(DECOUVERTE.inscription.lien_rate); } }, 60);
     return;
   }
   try { await Auth.chargerProfil(); } catch(e){}
@@ -12917,7 +13001,7 @@ let lienEmail = null, lienEmailType = "", lienEmailAdresse = "";   // v47 : "ok"
   window.addEventListener("hashchange", routeDepuisAdresse);
   /* v47 — un mot apres un lien d'email, une fois l'ecran construit */
   if (lienEmail) setTimeout(() => { try {
-    const T = CHALLENGE7.inscription;
+    const T = DECOUVERTE.inscription;
     const cle = lienEmail === "ok" ? (lienEmailType === "signup" && Auth.estProspect() ? "lien_ok" : "lien_entree") : lienEmail === "autre_compte" ? "lien_autre_compte" : "lien_rate_connecte";
     UI.toast(trad(T[cle], { e: lienEmailAdresse ? " (" + lienEmailAdresse + ")" : "" }), lienEmail === "ok" ? "ok" : "attention", 7000);
   } catch(e){} }, 600);
