@@ -4257,6 +4257,24 @@ const outilCalculateur = {
 };
 
 /* ------------------------------------------------------------------
+   TRACKING — Événements du diagnostic funnel (v48)
+   ------------------------------------------------------------------ */
+const Tracking = {
+  enregistrer(event_name){
+    const uid = Auth.utilisateur() ? Auth.utilisateur().id : "anonymous";
+    const timestamp = new Date().toISOString();
+    const evt = { event: event_name, uid, timestamp };
+    try {
+      const cle = "mhx_tracking";
+      const historique = JSON.parse(localStorage.getItem(cle) || "[]") || [];
+      historique.push(evt);
+      if (historique.length > 100) historique.shift();
+      localStorage.setItem(cle, JSON.stringify(historique));
+    } catch (e) { /* silent */ }
+  }
+};
+
+/* ------------------------------------------------------------------
    OUTIL 2 — Suivi des mensurations
    ------------------------------------------------------------------ */
 /* ------------------------------------------------------------------
@@ -11081,8 +11099,8 @@ const outilChallenge = {
   questionsJour1(def){ return (def.questions || []).map(id => QUESTIONS.find(q => q.id === id)).filter(Boolean); },
 
   jour1(C, I, def){
-    if (Challenge.fait(C, 1)) return this.apercuHTML(I, def, true) + this.bravoHTML(C, 1, def);
-    if (this._apercu) return this.apercuHTML(I, def, false);
+    if (Challenge.fait(C, 1)) { Tracking.enregistrer("result_viewed"); return this.apercuHTML(I, def, true) + this.bravoHTML(C, 1, def); }
+    if (this._apercu) { Tracking.enregistrer("result_viewed"); return this.apercuHTML(I, def, false); }
     return this.formulaireJour1(I, def);
   },
 
@@ -11164,6 +11182,7 @@ const outilChallenge = {
     if (voir){
       /* v48 : chaque reponse du diagnostic part pendant la saisie (meme cle intake) : fermer l'app au
          milieu ne perd rien, et la personne retrouve ses reponses en revenant */
+      Tracking.enregistrer("diagnostic_started");
       const qs0 = self.questionsJour1(def), B0 = self.bornes();
       /* une valeur hors bornes (taille en metres, age d'enfant) ne part jamais : la reponse precedente reste */
       const valide = (q, v) => { const b = B0[q.id]; if (!b || String(v == null ? "" : v).trim() === "") return true; const x = num(v); return x >= b[0] && x <= b[1]; };
@@ -11172,7 +11191,7 @@ const outilChallenge = {
         /* rien ne part tant que l'age n'est pas rempli et dans les bornes (18 ans et plus) : les reponses
            d'une personne mineure n'arrivent jamais en base */
         if (qAge){ const a = outilProfil.valeur(qAge); if (!String(a == null ? "" : a).trim() || !valide(qAge, a)) return; }
-        qs0.forEach(q => { const el = $("q-" + q.id); if (!el) return; const v = outilProfil.valeur(q); if (valide(q, v)) I[q.id] = v; });
+        qs0.forEach(q => { const el = $("q-" + q.id); if (!el) return; const v = outilProfil.valeur(q); if (valide(q, v)) { I[q.id] = v; Tracking.enregistrer("diagnostic_question_answered"); } });
         Store.ecrire("intake", I);
       };
       qs0.forEach(q => {
@@ -11205,6 +11224,7 @@ const outilChallenge = {
          et le questionnaire complet sera pre-rempli si la personne devient cliente */
       Object.assign(I, V);
       if (Store.ecrire("intake", I) === false) return;   // refusee (message deja affiche)
+      Tracking.enregistrer("diagnostic_completed");
       self._apercu = true;
       self.rendre(zone, C, I, n);
       window.scrollTo(0, 0);
@@ -12280,6 +12300,7 @@ let lienEmail = null, lienEmailType = "", lienEmailAdresse = "";   // v47 : "ok"
   window.addEventListener("online", () => Store.reprendre());
   window.addEventListener("pagehide", () => Store.toutEnvoyer());
   document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") Store.toutEnvoyer(); else Store.reprendre(); });
+  document.addEventListener("click", e => { if (e.target && e.target.href && e.target.href.includes("calendly")) Tracking.enregistrer("call_cta_clicked"); }, true);
   if (!ok){
     portail("connexion");
     /* v47 : on arrivait par un lien d'email et la session enregistree ne se renouvelle plus : le dire */
