@@ -9043,7 +9043,8 @@ const outilTableau = {
     catch(e){ zone.innerHTML = `<section class="panel"><div class="empty">Impossible de charger tes clients pour le moment.</div></section>`; return; }
     const lignes = Clients.resumer(profils, parClient, contenus);
     const prospects = profils.filter(p => p.role !== "coach" && p.statut === "prospect");
-    const finis = lignes.filter(l => l.p.statut === "prospect" && l.ch && Challenge.termine(l.ch)).length;   // v47
+    /* prospects encore dans leurs jours de decouverte (depuis l'inscription) */
+    const enDecouverte = lignes.filter(l => l.p.statut === "prospect" && !Decouverte.finie(l.p, true)).length;
     /* v49 : les prospects a traiter (temperature, prochaine action) */
     const aTraiterPr = lignes.filter(l => l.p.statut === "prospect").map(l => ({ l, a: Commercial.analyseLigne(l) })).filter(x => x.a).sort((x, y) => x.a.rang - y.a.rang || x.a.recence - y.a.recence);
     const chauds = aTraiterPr.filter(x => x.a.etat === "chaud").length;
@@ -9068,7 +9069,7 @@ const outilTableau = {
       <section class="panel">
         <div class="tiles tb-tiles">
           ${tuile("Clients actifs", clients.length, "accompagnement en cours")}
-          ${tuile("Prospects", prospects.length, chauds ? `${chauds} chaud${chauds > 1 ? "s" : ""}${finis ? ` · ${finis} challenge${finis > 1 ? "s" : ""} terminé${finis > 1 ? "s" : ""}` : ""}` : finis ? `${finis} challenge${finis > 1 ? "s" : ""} terminé${finis > 1 ? "s" : ""}` : "comptes gratuits", chauds || finis ? "cle" : "", "#/prospects")}
+          ${tuile("Prospects en découverte", enDecouverte, [chauds ? `${chauds} chaud${chauds > 1 ? "s" : ""}` : "", `${prospects.length} prospect${prospects.length > 1 ? "s" : ""} au total`].filter(Boolean).join(" · "), chauds ? "cle" : "", "#/prospects")}
           ${tuile("Bilans à traiter", aTraiter, "reçus cette semaine", aTraiter ? "cle" : "")}
           ${tuile("Bilans non complétés", nonCompletes, "semaine passée", nonCompletes ? "attention" : "")}
           ${tuile("À surveiller", aSurveiller.length, "au moins une alerte", aSurveiller.length ? "attention" : "")}
