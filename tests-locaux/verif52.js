@@ -29,7 +29,9 @@ const PORT = +process.env.VERIF52_PORT || 9682;
 const BLOCS = (process.env.VERIF52_BLOCS || "").split(",").map(x => x.trim()).filter(Boolean);
 const OUT = path.join(__dirname, "captures", "v52"); fs.mkdirSync(OUT, { recursive: true });
 /* référence pour « client inchangé » : la version de main (servie sur /?ref=main) */
-let REF = null; try { REF = require("child_process").execFileSync("git", ["show", "main:index.html"], { cwd: path.join(__dirname, ".."), maxBuffer: 64e6, stdio: ["ignore", "pipe", "ignore"] }).toString("utf8"); } catch (e) { REF = null; }
+/* v52 : référence de comparaison = VERIF52_REF (GitHub Actions : le commit publié juste avant), sinon main */
+const REF_NOM = process.env.VERIF52_REF || "main";
+let REF = null; try { REF = require("child_process").execFileSync("git", ["show", REF_NOM + ":index.html"], { cwd: path.join(__dirname, ".."), maxBuffer: 64e6, stdio: ["ignore", "pipe", "ignore"] }).toString("utf8"); } catch (e) { REF = null; }
 let inscriptionLibre = false;
 const server = http.createServer((req, res) => {
   let h = (req.url.indexOf("ref=main") > -1 && REF) ? REF : fs.readFileSync(HTML, "utf8");
@@ -955,7 +957,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     await aller(a.page, "#/prospects", 1800);
     ok("client Thomas tape #/prospects : rien du tableau de bord prospects", !(await a.page.$("#pr-vue, #pr-liste, .nv-panneau")));
     await a.c.close();
-    if (!REF) { ok("référence main (git show main:index.html) introuvable : comparaison impossible", false, "git show main:index.html a échoué"); return; }
+    if (!REF) { ok("référence " + REF_NOM + " (git show " + REF_NOM + ":index.html) introuvable : comparaison impossible", false, "git show a échoué"); return; }
     const acc = await vueDe(thomas, `http://localhost:${PORT}/#/accueil`), accM = await vueDe(thomas, `http://localhost:${PORT}/?ref=main#/accueil`);
     ok("client Thomas, accueil : texte identique à main", acc.t.length > 200 && acc.t === accM.t, acc.t.length + " / " + accM.t.length + " car. · premier écart : " + (() => { let i = 0; while (i < acc.t.length && acc.t[i] === accM.t[i]) i++; return JSON.stringify(acc.t.slice(Math.max(0, i - 40), i + 60)) + " ≠ " + JSON.stringify(accM.t.slice(Math.max(0, i - 40), i + 60)); })());
     await acc.c.close(); await accM.c.close();
@@ -964,7 +966,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     await pro.c.close(); await proM.c.close();
   });
   await bloc("J. fiche d'un client et Mes clients", async () => {
-    if (!REF) { ok("référence main (git show main:index.html) introuvable : comparaison impossible", false, "git show main:index.html a échoué"); return; }
+    if (!REF) { ok("référence " + REF_NOM + " (git show " + REF_NOM + ":index.html) introuvable : comparaison impossible", false, "git show a échoué"); return; }
     const ouvrir = async (page) => { await page.click(`[data-ouvrir="${F.IDS.c1}"]`); await attendre(page, 2600); };
     const f = await vueDe(coach, `http://localhost:${PORT}/#/clients`, ouvrir), fM = await vueDe(coach, `http://localhost:${PORT}/?ref=main#/clients`, ouvrir);
     ok("fiche de Thomas vue par le coach : texte et sections identiques à main (" + f.h2.join(", ") + ")", f.t.length > 300 && f.t === fM.t && JSON.stringify(f.h2) === JSON.stringify(fM.h2), f.t.length + " / " + fM.t.length + " · " + JSON.stringify(f.h2) + " vs " + JSON.stringify(fM.h2));

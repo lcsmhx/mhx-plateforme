@@ -1,20 +1,30 @@
 # Filet de sécurité de la plateforme MHX (étape 1 du plan V2).
-# À chaque push sur main : le banc tests-locaux tourne (Supabase simulé, vraie base inaccessible),
-# et le site n'est publié sur GitHub Pages que si tout est vert.
-# Publication identique à l'ancien mode « depuis la branche » : même construction Jekyll de GitHub
-# Pages, sur tout le dépôt (les dossiers commençant par un point, comme .github, ne sont pas publiés).
-# Gratuit : dépôt public, machines standard de GitHub.
+# À chaque push sur main : le banc tests-locaux tourne (Supabase simulé, vraie base inaccessible), puis le site est
+# publié sur GitHub Pages seulement si tout est vert — À CONDITION que la source de GitHub Pages soit « GitHub Actions »
+# (Settings → Pages). Tant qu'elle est « Deploy from a branch », GitHub publie lui-même chaque push en 1 à 2 minutes,
+# sans attendre ce banc : la publication ci-dessous ne fait alors rien (avertissement dans le journal).
+# Publication identique à l'ancien mode : même construction Jekyll de GitHub Pages, sur tout le dépôt (les dossiers
+# commençant par un point, comme .github, ne sont pas publiés).
+# Urgence (retour arrière) : Actions → « Tests puis publication » → Run workflow, case « urgence » cochée : publie main
+# tout de suite, sans attendre le banc (à utiliser seulement pour remettre en ligne une version déjà connue bonne).
+# Gratuit : dépôt public, machines standard de GitHub. Les journaux publiés en cas d'échec ne contiennent que des
+# données fictives (tests-locaux/fixtures.js).
 name: Tests puis publication
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      urgence:
+        description: "Urgence : publier main tout de suite, sans attendre le banc (retour arrière)"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
 
-# Une seule publication à la fois ; un push récent ne coupe pas une publication en cours.
+# Une seule exécution à la fois ; la plus récente en attente remplace les autres, une publication en cours n'est pas coupée.
 concurrency:
   group: pages
   cancel-in-progress: false
@@ -22,12 +32,13 @@ concurrency:
 jobs:
   banc:
     name: Banc de tests (Supabase simulé)
+    if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.urgence) }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # verif52 compare avec « git show main:index.html »
+          fetch-depth: 0   # verif52 compare les écrans d'un client avec le commit publié avant celui-ci
 
       - name: Couper l'accès à la vraie base et à Brevo
         run: |
@@ -35,10 +46,17 @@ jobs:
             echo "0.0.0.0 $h" | sudo tee -a /etc/hosts
             echo ":: $h" | sudo tee -a /etc/hosts
           done
-          if curl -s -m 10 -o /dev/null https://nzynbuczmogifuidcjed.supabase.co; then
-            echo "La vraie base répond encore : arrêt, aucun test ne tourne."; exit 1
-          fi
-          echo "Vraie base inaccessible depuis cette machine : les tests ne peuvent rien y écrire."
+          for h in nzynbuczmogifuidcjed.supabase.co api.brevo.com; do
+            adresses=$(getent ahosts "$h" | awk '{print $1}' | sort -u | tr '\n' ' ')
+            if [ "$adresses" != ":: 0.0.0.0 " ] && [ "$adresses" != "0.0.0.0 :: " ]; then
+              echo "$h se résout encore vers : $adresses — arrêt, aucun test ne tourne."; exit 1
+            fi
+            node -e "require('dns').lookup(process.argv[1], { all: true }, (e, a) => process.exit(!e && a.length && a.every(x => x.address === '0.0.0.0' || x.address === '::') ? 0 : 1))" "$h" \
+              || { echo "Node résout encore $h : arrêt."; exit 1; }
+            code=0; curl -s -m 10 -o /dev/null "https://$h" || code=$?
+            if [ "$code" -ne 7 ]; then echo "curl vers $h : code $code au lieu de 7 (connexion refusée) — arrêt."; exit 1; fi
+          done
+          echo "Vraie base et Brevo inaccessibles depuis cette machine : les tests ne peuvent rien y écrire ni rien envoyer."
 
       - uses: actions/setup-node@v4
         with:
@@ -50,12 +68,18 @@ jobs:
           npx playwright install --with-deps chromium
 
       - name: Banc complet
+        env:
+          AVANT: ${{ github.event.before }}
         run: |
           export NODE_PATH="$(npm root -g)"
+          # verif52 compare avec le commit publié juste avant (sinon il comparerait main avec lui-même)
+          if [ -n "$AVANT" ] && [ "$AVANT" != "0000000000000000000000000000000000000000" ]; then export VERIF52_REF="$AVANT";
+          else export VERIF52_REF="$(git rev-parse HEAD~1)"; fi
+          echo "Référence de comparaison de verif52 : $VERIF52_REF"
           bash tests-locaux/banc.sh "$RUNNER_TEMP/banc"
 
       - name: Journaux du banc (en cas d'échec)
-        if: failure()
+        if: failure() || cancelled()
         uses: actions/upload-artifact@v4
         with:
           name: journaux-banc
@@ -65,6 +89,7 @@ jobs:
   publication:
     name: Publication GitHub Pages
     needs: banc
+    if: ${{ !cancelled() && github.ref == 'refs/heads/main' && (needs.banc.result == 'success' || (github.event_name == 'workflow_dispatch' && inputs.urgence)) }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -74,8 +99,6 @@ jobs:
       name: github-pages
       url: ${{ steps.deploiement.outputs.page_url }}
     steps:
-      # Tant que la source de GitHub Pages est « Deploy from a branch », c'est GitHub qui publie
-      # lui-même : cette étape ne fait rien. Elle publie dès que la source est « GitHub Actions ».
       - name: Source de GitHub Pages
         id: source
         env:
@@ -84,6 +107,9 @@ jobs:
           type=$(gh api "repos/${GITHUB_REPOSITORY}/pages" --jq .build_type)
           echo "type=$type" >> "$GITHUB_OUTPUT"
           echo "Source actuelle : $type"
+          if [ "$type" != workflow ]; then
+            echo "::warning::Source GitHub Pages = $type : GitHub a publié ce commit lui-même, sans attendre le banc. Passer la source sur « GitHub Actions » (plan, étape 1 c)."
+          fi
 
       - uses: actions/checkout@v4
         if: steps.source.outputs.type == 'workflow'

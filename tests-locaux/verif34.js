@@ -15,7 +15,7 @@ const server = http.createServer((req,res)=>{res.writeHead(200,{"Content-Type":"
       else { const t=p.replace("/rest/v1/",""); if(F.catalogue[t]){ body=F.catalogue[t]; const rg=r.request().headers()["range"]; if(rg){const [a,z]=rg.split("-").map(Number); body=body.slice(a,z+1);} } }
       return r.fulfill({status:200,contentType:"application/json",body:JSON.stringify(body)}); });
     await c.addInitScript((s)=>{localStorage.setItem("mhx_session",JSON.stringify(s));localStorage.setItem("mhx_installe","1");localStorage.setItem("mhx_visites","3");},who.session);
-    const page = await c.newPage(); page.on("dialog", d=>{ res.push("  ✗ DIALOGUE NATIF "+d.message()); d.dismiss(); });
+    const page = await c.newPage(); page.on("pageerror", e=>res.push("  ✗ ERREUR JS "+e)); page.on("dialog", d=>{ res.push("  ✗ DIALOGUE NATIF "+d.message()); d.dismiss(); });
     return {c,page};
   }
   const client={id:F.IDS.c1,email:"t@e.fr",session:F.session(F.IDS.c1,"t@e.fr")}, coach={id:F.IDS.coach,email:"c@e.fr",session:F.session(F.IDS.coach,"c@e.fr")};
@@ -43,7 +43,7 @@ const server = http.createServer((req,res)=>{res.writeHead(200,{"Content-Type":"
     ok("coach en fiche : onglet Accueil visible", !!(await page.$('#nav a[data-id="accueil"]')));
     await page.evaluate(()=>{location.hash="#/accueil"}); await page.waitForTimeout(900);
     ok("coach en fiche : fiche de Thomas", (await page.textContent("#acc-vue h1")||"").includes("Thomas"));
-    ok("coach en fiche : lecture seule (pas de bouton Cocher mes objectifs actif)", true);
+    ok("coach en fiche : lecture seule (pas de bouton Cocher mes objectifs actif)", (await page.$$eval("#vue .obj-case", l => l.filter(e => !e.disabled).length)) === 0);   // v52 : vraie condition (était toujours vraie)
     await c.close(); }
   await b.close(); server.close(); console.log(res.join("\n"));
 })();

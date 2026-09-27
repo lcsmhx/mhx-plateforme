@@ -1,9 +1,10 @@
 const { chromium } = require("playwright"); const fs=require("fs"); const http=require("http"); const path=require("path");
 /* Horloge (v52) : l'envoi du bilan n'est testé que si le formulaire est proposé, c'est-à-dire du vendredi au dimanche
-   (Checkin.semaineVisee). Du lundi au jeudi, données fictives et navigateur sont décalés au samedi suivant, même heure :
+   (Checkin.semaineVisee). Tous les jours, données fictives, simulation et navigateur sont décalés au samedi 12 h de la semaine
+   (vendredi, dimanche compris : jamais de passage de minuit pendant la suite) :
    les 13 vérifications tournent tous les jours (avant : 8 du lundi au jeudi, les 5 de l'envoi sautées sans le dire). */
-const DECALAGE = (() => { const j = new Date().getDay(); return (j >= 1 && j <= 4 ? 6 - j : 0) * 86400000; })();
-if (DECALAGE) { const Vrai = Date; global.Date = class extends Vrai { constructor(...a) { super(...(a.length ? a : [Vrai.now() + DECALAGE])); } static now() { return Vrai.now() + DECALAGE; } }; }
+const DECALAGE = (() => { const n = new Date(), j = n.getDay(), c = new Date(n); c.setDate(n.getDate() + (j === 0 ? -1 : 6 - j)); c.setHours(12, 0, 0, 0); return c.getTime() - n.getTime(); })();
+{ const Vrai = Date; global.Date = class extends Vrai { constructor(...a) { super(...(a.length ? a : [Vrai.now() + DECALAGE])); } static now() { return Vrai.now() + DECALAGE; } }; }
 const F = require("./fixtures"); const HTML = path.resolve(process.argv[2]);
 const server = http.createServer((req,res)=>{res.writeHead(200,{"Content-Type":"text/html"});res.end(fs.readFileSync(HTML));});
 (async()=>{
@@ -11,7 +12,7 @@ const server = http.createServer((req,res)=>{res.writeHead(200,{"Content-Type":"
   const ok=(n,c,d)=>res.push((c?"  ✓ ":"  ✗ ")+n+(c?"":"  — "+(d||"")));
   async function ctx(who){
     const c = await b.newContext({ viewport:{width:390,height:844} });
-    if (DECALAGE) await c.clock.install({ time: Date.now() });   // horloge décalée qui continue de tourner
+    await c.clock.install({ time: Date.now() });   // horloge décalée qui continue de tourner (une seule page par contexte : un nouveau document repartirait de l'installation)
     await c.route("**/*", r => { const req=r.request(); const u=req.url(); if(new URL(u).hostname === "localhost") return r.continue(); if(!new URL(u).hostname.endsWith(".supabase.co")) return r.abort();
       const url=new URL(u); const p=url.pathname, q=url.searchParams, m=req.method();
       if (m!=="GET" && !p.startsWith("/auth/")){ ecr.push(m+" "+p+" "+(req.postData()||"").slice(0,4000)); return r.fulfill({status:201,contentType:"application/json",body:""}); }
