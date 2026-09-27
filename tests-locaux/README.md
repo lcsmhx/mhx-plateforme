@@ -2,6 +2,15 @@
 
 Tests automatisés de `index.html` avec Playwright + Chromium. **Supabase est simulé** : aucun appel ne part vers la vraie base, toute écriture est interceptée et journalisée. Les données sont **fictives** (`fixtures.js` : 1 coach « Coach Démo », 3 clients « Thomas / Sarah / Julien Démo ») ; le catalogue vient des fichiers `donnees/` du dépôt. Ce dossier ne contient aucune clé ni aucune donnée client.
 
+## Banc complet en une commande (v52)
+```
+bash tests-locaux/banc.sh [dossier des journaux]            # toutes les suites l'une après l'autre, puis rig.js et la fonction emails
+BANC_CHROME=1 bash tests-locaux/banc.sh                      # sur le Mac, avec le Google Chrome de la machine
+```
+Code de sortie 1 au moindre échec : une ligne ✗, un bloc interrompu, un code de sortie non nul, **moins de ✓ que le minimum attendu** (liste `attendu()` dans `banc.sh`, à relever quand une suite gagne des vérifications : une vérification sautée sans le dire devient un échec), une erreur ou une écriture pendant `rig.js`. Environ 35 minutes. **GitHub Actions** (`.github/workflows/pages.yml`) le rejoue à chaque push sur `main`, sur une machine où la vraie base Supabase est rendue injoignable (`/etc/hosts`), et ne publie le site que si tout est vert.
+
+**Horloge** : `verif36` et `verif38` supposent qu'on est entre vendredi et dimanche (formulaire du bilan proposé). Du lundi au jeudi, elles décalent tout — données fictives, simulation et navigateur (`clock.install`) — au samedi suivant, même heure. Avant la v52 : verif38 65/67 et verif36 8/13 (5 vérifications sautées) du lundi au jeudi.
+
 ## Installation
 ```
 npm install -g playwright            # une fois

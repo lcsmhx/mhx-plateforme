@@ -5,6 +5,12 @@
    (upsert), et « return=representation » renvoie la ligne comme PostgREST.
    Usage : node verif38.js ../index.html                                       */
 const { chromium } = require("playwright"); const fs = require("fs"); const http = require("http"); const path = require("path");
+/* Horloge (v52) : ce banc suppose qu'on est entre vendredi et dimanche (Checkin.semaineVisee : du vendredi au dimanche,
+   la semaine en cours ; du lundi au jeudi, la précédente, qui a déjà le bilan fictif de Thomas). Du lundi au jeudi, tout
+   le banc — données fictives, simulation et navigateur — est décalé au samedi suivant, même heure : le résultat ne
+   dépend plus du jour où il tourne (avant : 65/67 du lundi au jeudi). */
+const DECALAGE = (() => { const j = new Date().getDay(); return (j >= 1 && j <= 4 ? 6 - j : 0) * 86400000; })();
+if (DECALAGE) { const Vrai = Date; global.Date = class extends Vrai { constructor(...a) { super(...(a.length ? a : [Vrai.now() + DECALAGE])); } static now() { return Vrai.now() + DECALAGE; } }; }
 const F = require("./fixtures"); const HTML = path.resolve(process.argv[2] || "../index.html");
 const OUT = path.join(__dirname, "captures", "v38"); fs.mkdirSync(OUT, { recursive: true });
 const server = http.createServer((req, res) => { res.writeHead(200, { "Content-Type": "text/html" }); res.end(fs.readFileSync(HTML)); });
@@ -25,6 +31,7 @@ function base(extra) {
 async function contexte(b, who, opts) {
   opts = opts || {};
   const c = await b.newContext({ viewport: opts.viewport || { width: 1280, height: 900 } });
+  if (DECALAGE) await c.clock.install({ time: Date.now() });   // horloge décalée qui continue de tourner
   const db = opts.db;
   await c.route("**/*", async r => {
     const req = r.request(); const u = req.url();

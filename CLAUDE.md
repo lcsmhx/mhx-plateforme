@@ -21,7 +21,10 @@ Lis ce fichier en entier au début de chaque conversation. Il passe avant tout a
 5. **À la fin** : résumé en langage simple (ce qui change pour le client, le prospect, le coach), puis demande le « oui » pour la mise en ligne.
 
 ## Mise en ligne
-- **Rien n'est poussé sur GitHub sans le « oui » de Lucas.** Un seul push, à la fin du chantier.
+- **Push autorisé seulement si tout le banc de tests est vert** (`bash tests-locaux/banc.sh` en local ; GitHub Actions le rejoue et ne publie le site que si tout est vert). Une seule commande : `git push origin main`.
+- **Un push par chantier**, à la fin du chantier, après la relecture indépendante.
+- **Jamais de push pour ouvrir l'inscription** ni pour **passer un interrupteur de nouveauté sur « tous »** : c'est Lucas qui le fait.
+- Après chaque mise en ligne : ouvre le site en ligne en format téléphone (connexion, numéro de version, pages principales). Si quelque chose casse : retour arrière immédiat (`git revert` + push) et note dans `NOTESCLAUDE.md`.
 - **Tu n'ouvres jamais l'inscription publique** (`inscription_libre` reste `false`). C'est Lucas qui le fera lui-même.
 - Tu n'écris jamais « ✅ fait » pour une chose que tu n'as pas vérifiée toi-même.
 

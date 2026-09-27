@@ -1,0 +1,105 @@
+# Filet de sécurité de la plateforme MHX (étape 1 du plan V2).
+# À chaque push sur main : le banc tests-locaux tourne (Supabase simulé, vraie base inaccessible),
+# et le site n'est publié sur GitHub Pages que si tout est vert.
+# Publication identique à l'ancien mode « depuis la branche » : même construction Jekyll de GitHub
+# Pages, sur tout le dépôt (les dossiers commençant par un point, comme .github, ne sont pas publiés).
+# Gratuit : dépôt public, machines standard de GitHub.
+name: Tests puis publication
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Une seule publication à la fois ; un push récent ne coupe pas une publication en cours.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  banc:
+    name: Banc de tests (Supabase simulé)
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # verif52 compare avec « git show main:index.html »
+
+      - name: Couper l'accès à la vraie base et à Brevo
+        run: |
+          for h in nzynbuczmogifuidcjed.supabase.co api.brevo.com; do
+            echo "0.0.0.0 $h" | sudo tee -a /etc/hosts
+            echo ":: $h" | sudo tee -a /etc/hosts
+          done
+          if curl -s -m 10 -o /dev/null https://nzynbuczmogifuidcjed.supabase.co; then
+            echo "La vraie base répond encore : arrêt, aucun test ne tourne."; exit 1
+          fi
+          echo "Vraie base inaccessible depuis cette machine : les tests ne peuvent rien y écrire."
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Installer Playwright et Chromium
+        run: |
+          npm install -g playwright@1.63.0
+          npx playwright install --with-deps chromium
+
+      - name: Banc complet
+        run: |
+          export NODE_PATH="$(npm root -g)"
+          bash tests-locaux/banc.sh "$RUNNER_TEMP/banc"
+
+      - name: Journaux du banc (en cas d'échec)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: journaux-banc
+          path: ${{ runner.temp }}/banc/*.log
+          retention-days: 7
+
+  publication:
+    name: Publication GitHub Pages
+    needs: banc
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploiement.outputs.page_url }}
+    steps:
+      # Tant que la source de GitHub Pages est « Deploy from a branch », c'est GitHub qui publie
+      # lui-même : cette étape ne fait rien. Elle publie dès que la source est « GitHub Actions ».
+      - name: Source de GitHub Pages
+        id: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          type=$(gh api "repos/${GITHUB_REPOSITORY}/pages" --jq .build_type)
+          echo "type=$type" >> "$GITHUB_OUTPUT"
+          echo "Source actuelle : $type"
+
+      - uses: actions/checkout@v4
+        if: steps.source.outputs.type == 'workflow'
+
+      - uses: actions/configure-pages@v5
+        if: steps.source.outputs.type == 'workflow'
+
+      - uses: actions/jekyll-build-pages@v1
+        if: steps.source.outputs.type == 'workflow'
+        with:
+          source: ./
+          destination: ./_site
+
+      - uses: actions/upload-pages-artifact@v3
+        if: steps.source.outputs.type == 'workflow'
+
+      - id: deploiement
+        if: steps.source.outputs.type == 'workflow'
+        uses: actions/deploy-pages@v4
