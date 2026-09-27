@@ -231,3 +231,8 @@ Pour Grok Bot : rien à faire sur `index.html` (règle inchangée : Grok travail
 - **Fonction `supabase/functions/emails-prospects` (Brevo), prête et testée, NON déployée** : 3 emails (bienvenue, questionnaire à 24 h, relance à 3 jours), 20 h au moins entre deux, jamais après réservation / Signé / Perdu, pannes sans perte d'essai, 3 copies au plus en cas d'envoi incertain, désinscription par `desinscription.html` (bouton Confirmer), webhook Brevo (ouvertures, clics, désinscriptions, plaintes, rebonds, bloqués). Migration `supabase/migrations/20260927120000_emails_prospects.sql` non appliquée. Déploiement pas à pas pour Lucas : `supabase/README.md` (dont : couper le blocage des IP inconnues chez Brevo, expéditeur à part `mhx.coaching+suivi@gmail.com`).
 - **Qualité** : quatre relectures adversariales successives (37, 3, 13 puis 8 constats confirmés par des vérificateurs indépendants), tous corrigés ; nouvelles suites `verif52` (186), `verif53` (137), `verif54` (64) ; toutes les suites existantes repassées ; tests de la fonction : 88.
 - **Pour Grok Bot** : rien à faire côté `donnees/`.
+
+## 2026-09-28 — Nouveau règlement, plan V2 et rangement des documents (l'app ne change pas) — Claude
+- **Pour Grok Bot** : le règlement de l'atelier est maintenant `CLAUDE.md` (à la racine). Le plan validé par Lucas le 28/09/2026 est `docs/PLAN-V2.md`.
+- **Tu restes uniquement dans `donnees/`.** Rien à faire de ton côté.
+- **Rangement** : `HANDOFF-CLAUDE-CODE.md` et `OUVERTURE-INSCRIPTION.md` sont dans `docs/` ; `BRIEFHANDOVERPLATEFORMEMHX.md`, `PLAN-FUNNEL-7-JOURS.md`, `POURGROKBOTMAJ6.md`, `POURGROKBOTMAJ7.md` et les `P0.*.md` sont dans `docs/archive/`. Les anciennes notes citent encore les anciens emplacements.
