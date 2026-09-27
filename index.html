@@ -483,6 +483,14 @@ label.objectif{cursor:pointer;text-transform:none;letter-spacing:0;font-weight:4
 .verrou h2{margin-bottom:6px}
 /* v40 — onglets verrouilles (mode gratuit) */
 .nav-cadenas{display:inline-flex;margin-left:6px;opacity:.7;vertical-align:-1px}
+.nav-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;margin-left:6px;border-radius:9px;background:var(--accent);color:#111;font-size:11px;font-weight:700;line-height:1;vertical-align:1px}
+.barre-bas a .nav-badge{position:absolute;top:4px;left:calc(50% + 8px);margin:0}
+.nv-liste{list-style:none;margin:0;padding:0}
+.nv-liste li{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--line);font-size:13px;min-width:0}
+.nv-liste li:first-child{border-top:0}
+.nv-liste .nv-txt{flex:1;min-width:0;overflow-wrap:anywhere}
+.nv-liste time{color:var(--ink-3);font-size:12px;white-space:nowrap}
+.nv-types{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
 /* le texte « (verrouillé) » des lecteurs d'ecran (.sr-only, en absolu) reste dans son lien : sinon il deborde de la barre du haut */
 .nav a,.menu-plus a,.barre-bas a.verrouille{position:relative}
 .lecture-seule #photos-panel select{pointer-events:auto;opacity:1}
@@ -8569,6 +8577,92 @@ const Commercial = {
    OUTIL COACH — Prospects (v49). Tous les comptes gratuits, du plus
    chaud au plus froid : temperature, raisons, prochaine action, issue.
    ------------------------------------------------------------------ */
+/* ------------------------------------------------------------------
+   NOUVEAUTÉS (v51) — pour le coach : ce que ses prospects ont fait depuis sa dernière visite
+   (inscriptions, questionnaires remplis, clics « Réserver mon bilan », bilans réservés), calculé à partir
+   des données déjà chargées par le tableau de bord ou la page Prospects (aucune requête de plus). Seule la
+   date de dernière visite est rangée, dans la clé du coach « coach_notifs » = { vu: instant } (première
+   fois : les 7 derniers jours). Badge sur l'onglet Prospects. Pas de notification push ni d'email :
+   l'app n'a pas de serveur d'envoi.
+   ------------------------------------------------------------------ */
+const Nouveautes = {
+  cle: "coach_notifs",
+  JOURS_PAR_DEFAUT: 7,
+  n: 0, _vu: undefined, _lecture: null,
+  TYPES: { inscription: "inscription", questionnaire: "questionnaire rempli", clic: "clic « Réserver mon bilan »", reserve: "bilan réservé" },
+  COURTS: { inscription: ["inscription", "inscriptions"], questionnaire: ["questionnaire rempli", "questionnaires remplis"], clic: ["clic « Réserver »", "clics « Réserver »"], reserve: ["bilan réservé", "bilans réservés"] },
+  async vu(){
+    if (this._vu !== undefined) return this._vu;
+    if (!this._lecture) this._lecture = (async () => {
+      let d = null; try { d = await Store.lire(this.cle, {}); } catch(e){ d = null; }
+      this._vu = d && typeof d.vu === "string" && !isNaN(Date.parse(d.vu)) ? d.vu : null;
+      return this._vu;
+    })();
+    return this._lecture;
+  },
+  seuil(vu){ const t = typeof vu === "string" ? Date.parse(vu) : NaN; return isNaN(t) ? Date.now() - this.JOURS_PAR_DEFAUT * 86400000 : t; },
+  /* lignes = Clients.resumer ; seuls les prospects comptent ; une date dans le futur (horloge d'un appareil en avance) ne compte pas */
+  evenements(lignes, vu){
+    const t0 = this.seuil(vu), maxi = Date.now() + 5 * 60000, out = [];
+    const ajoute = (l, type, quand) => { if (typeof quand !== "string") return; const t = Date.parse(quand); if (!isNaN(t) && t > t0 && t <= maxi) out.push({ uid: l.p.id, nom: Clients.nom(l.p), type, t, quand }); };
+    (lignes || []).filter(l => l && l.p && l.p.statut === "prospect").forEach(l => {
+      ajoute(l, "inscription", l.p.cree_le);
+      if (l.dc) ajoute(l, "questionnaire", l.dc.court_le);
+      Decouverte.clics(l.ch).forEach(c => ajoute(l, "clic", c.date));
+      ajoute(l, "reserve", Decouverte.reserve(l.ch));
+    });
+    return out.sort((a, b) => b.t - a.t);
+  },
+  quand(v){ const d = new Date(v); return isNaN(d) ? "" : dateFr(Decouverte.dateLocale(v) || "") + " " + String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); },
+  html(ev, vu){
+    const depuis = vu ? "depuis ta dernière visite (" + this.quand(vu) + ")" : "ces " + this.JOURS_PAR_DEFAUT + " derniers jours";
+    if (!ev.length) return `<section class="panel nv-panneau"><div class="seance-c-tete"><h2>Nouveautés</h2></div><p class="note" style="margin:0">Rien de nouveau chez tes prospects ${esc(depuis)}.</p></section>`;
+    const par = t => ev.filter(e => e.type === t).length;
+    const types = Object.keys(this.TYPES).filter(t => par(t)).map(t => `<span class="pastille${t === "reserve" ? " ok" : t === "clic" ? " accent" : ""}">${par(t)} ${esc(this.COURTS[t][par(t) > 1 ? 1 : 0])}</span>`).join("");
+    const vus = ev.slice(0, 8);
+    return `<section class="panel nv-panneau"><div class="seance-c-tete"><h2>Nouveautés</h2><span class="pastille accent">${ev.length}</span></div>
+      <p class="note" style="margin:0 0 10px">${esc(depuis.charAt(0).toUpperCase() + depuis.slice(1))} :</p>
+      <div class="nv-types">${types}</div>
+      <ul class="nv-liste">${vus.map(e => `<li><span class="nv-txt"><b>${esc(e.nom)}</b> · ${esc(this.TYPES[e.type])}</span><time datetime="${esc(e.quand)}">${esc(this.quand(e.quand))}</time><button type="button" class="btn ghost petit" data-nv-ouvrir="${esc(e.uid)}" data-nom="${esc(e.nom)}">Ouvrir</button></li>`).join("")}</ul>
+      ${ev.length > vus.length ? `<p class="note" style="margin:8px 0 0">Et ${ev.length - vus.length} autre${ev.length - vus.length > 1 ? "s" : ""} : tout est dans la page Prospects.</p>` : ""}
+      <div class="actions"><button type="button" class="btn ghost petit" data-nv-vu>Tout marquer comme vu</button><span class="msg" role="status" aria-live="polite"></span></div></section>`;
+  },
+  async monter(boite, lignes){
+    if (!boite || !Auth.estCoach() || Store.idConsulte) return;
+    const vu = await this.vu();
+    if (!boite.isConnected || Store.idConsulte) return;
+    const ev = this.evenements(lignes, vu);
+    this.n = ev.length; this.badge();
+    boite.innerHTML = this.html(ev, vu);
+    $$("[data-nv-ouvrir]", boite).forEach(b => b.addEventListener("click", () => Clients.ouvrir(b.dataset.nvOuvrir, b.dataset.nom, "accueil")));
+    const bv = boite.querySelector("[data-nv-vu]");
+    if (bv) bv.addEventListener("click", () => {
+      if (!this.marquerVu()){ const m = boite.querySelector(".msg"); if (m) m.textContent = "Non enregistré : réessaie dans un instant."; return; }
+      boite.innerHTML = this.html([], this._vu);
+    });
+  },
+  /* la date de derniere visite = maintenant ; false si l'ecriture est refusee (rien ne change alors) */
+  marquerVu(){
+    const vu = new Date().toISOString(), avant = this._vu;
+    const d = Object.assign({}, (Store.cache[this.cle] && typeof Store.cache[this.cle] === "object") ? Store.cache[this.cle] : {}, { vu: vu });
+    if (Store.ecrire(this.cle, d) === false){ this._vu = avant; return false; }
+    this._vu = vu; this.n = 0; this.badge();
+    return true;
+  },
+  /* badge sur l'onglet Prospects (barre du haut, barre du bas, menu « Plus ») */
+  badge(){
+    const n = (Auth.estCoach() && !Store.idConsulte) ? this.n : 0;
+    $$('#nav a[data-id="prospects"], #barre-bas a[data-id="prospects"], .menu-plus a[data-id="prospects"]').forEach(a => {
+      let b = a.querySelector(".nav-badge");
+      if (n > 0){
+        if (!b){ b = document.createElement("span"); b.className = "nav-badge"; a.appendChild(b); }
+        b.textContent = n > 99 ? "99+" : String(n);
+        b.setAttribute("aria-label", n + " nouveauté" + (n > 1 ? "s" : "") + " chez tes prospects");
+      } else if (b) b.remove();
+    });
+  }
+};
+
 const outilProspects = {
   id: "prospects",
   cle: null,
@@ -8772,8 +8866,9 @@ const outilTableau = {
           ${tuile("À surveiller", aSurveiller.length, "au moins une alerte", aSurveiller.length ? "attention" : "")}
         </div>
       </section>
+      <div id="tb-nouveautes"></div>
       ${aTraiterPr.some(x => x.a.urgent) ? `<section class="panel" id="tb-prospects"><div class="seance-c-tete"><h2>Prospects à traiter</h2><a class="link-a" href="#/prospects">Tous les prospects →</a></div>
-        <div class="sc-liste">${aTraiterPr.filter(x => x.a.urgent).slice(0, 4).map(x => Commercial.carteHTML(x.l.p, x.a, x.l.ch)).join("")}</div></section>` : ""}
+        <div class="sc-liste">${aTraiterPr.filter(x => x.a.urgent).slice(0, 4).map(x => Commercial.carteHTML(x.l.p, x.a, { sc: Commercial.scoreLigne(x.l), dc: x.l.dc })).join("")}</div></section>` : ""}
       <section class="panel">
         <h2>Qui nécessite ton attention aujourd'hui ?</h2>
         ${aSurveiller.length ? `<div class="attention-l">${aSurveiller.map(carte).join("")}</div>` : `<div class="empty">Tout est en ordre : questionnaires remplis, programmes et diètes envoyés, bilans à jour, personne d'inactif.</div>`}
@@ -8790,6 +8885,7 @@ const outilTableau = {
       </section>`;
     $$("[data-fiche]", zone).forEach(b => b.addEventListener("click", () => Clients.ouvrir(b.dataset.fiche, b.dataset.nom, b.dataset.cible)));
     Commercial.brancher(zone, () => { if (zone.isConnected) this.init(); });   // v49
+    Nouveautes.monter(zone.querySelector("#tb-nouveautes"), lignes);   // v51
   }
 };
 
@@ -11376,6 +11472,7 @@ function construireNav(){
     `<a href="#/${o.id}" data-id="${o.id}">${iconeOutil(o)}${esc(nomOnglet(o))}${cadenasNav(o)}</a>`
   ).join("");
   construireBarreBas();
+  if (typeof Nouveautes !== "undefined") Nouveautes.badge();   // v51 : le badge survit a la reconstruction
   $("brand-name").textContent = CONFIG.marque.nom;
   const sub = $("brand-sub");
   sub.textContent = CONFIG.marque.programme || "";
@@ -11418,7 +11515,7 @@ function construireBarreBas(){
     UI.volet({ titre: trad("Tout mon espace"), corps: `<ul class="menu-plus">` + autres.map(o =>
       `<li><a href="#/${o.id}" data-id="${o.id}"${courant === o.id ? ' aria-current="page"' : ""}>${iconeOutil(o)}<span>${esc(nomOnglet(o))}${cadenasNav(o)}</span></a></li>`).join("") + `</ul>` });
     /* un clic sur un lien du volet le referme */
-    setTimeout(() => $$(".volet .menu-plus a").forEach(a => a.addEventListener("click", () => UI.fermer())), 0);
+    setTimeout(() => { $$(".volet .menu-plus a").forEach(a => a.addEventListener("click", () => UI.fermer())); if (typeof Nouveautes !== "undefined") Nouveautes.badge(); }, 0);
   });
   b.hidden = !Auth.connecte();
 }
