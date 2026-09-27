@@ -2928,7 +2928,8 @@ const Forme = {
     hist_programme: { liste: [{}] },
     hist_repas: { liste: [{}] },
     photos: { liste: [{ vues: {} }] },
-    challenge: { jours: {}, cta: { clics: [] } }   // cle lue par la Decouverte : cta.clics = liste (jours = ancien challenge, objet par numero)
+    challenge: { jours: {}, cta: { clics: [] } },   // cle lue par la Decouverte : cta.clics = liste (jours = ancien challenge, objet par numero)
+    activite: { jours: [], pages: {} }              // v51 : activite du prospect (jours, pages vues, temps)
   },
   objet(v){ return !!v && typeof v === "object" && !Array.isArray(v); },
   appliquer(m, v){
@@ -3204,10 +3205,12 @@ const Store = {
     Object.keys(this.charge).forEach(x => { if (x.indexOf(k + "|") === 0) delete this.charge[x]; });
   },
 
+  /* cles ecrites par la personne sans outil a elles (v51 : activite du prospect, choix des emails de suivi) */
+  clesSansOutil: ["activite", "emails"],
   /* Sauvegarde manuelle : toujours disponible, en plus de la base */
   exporter(){
     const out = {};
-    OUTILS.forEach(o => { if (o.cle && this.cache[o.cle]) out[o.cle] = this.cache[o.cle]; });
+    OUTILS.map(o => o.cle).concat(this.clesSansOutil).forEach(k => { if (k && this.cache[k]) out[k] = this.cache[k]; });
     return JSON.stringify({ plateforme:"mhx", version:2, donnees: out });
   },
 
@@ -3241,7 +3244,7 @@ const Store = {
     /* On ne restaure que des outils qui existent. Et un client ne peut pas
        ecraser ce que le coach a prepare pour lui (programme, repas,
        calories) avec une vieille copie : ca, c'est le coach qui le decide. */
-    const connues = OUTILS.map(o => o.cle).filter(Boolean);
+    const connues = OUTILS.map(o => o.cle).filter(Boolean).concat(this.clesSansOutil);
     const duCoach = ["programme", "repas", "calc"];
     let n = 0;
     for (const cle in d){
@@ -10580,6 +10583,16 @@ const Decouverte = {
   },
   finie(p, pourLeCoach){ const j = this.jour(p, pourLeCoach); return j != null && j > this.duree(); },
   questionnaireFait(I){ return !!(I && typeof I.court_le === "string" && I.court_le); },
+  /* nombre de reponses non vides au questionnaire court (progression) */
+  repondues(I){
+    if (!I || typeof I !== "object") return 0;
+    return (this.cfg().questions || []).filter(id => { const v = I[id]; return (typeof v === "string" && v.trim() !== "") || (typeof v === "number" && isFinite(v)); }).length;
+  },
+  /* l'email du compte connecte (prospect seulement), s'il a une forme d'email */
+  emailCompte(){
+    const u = Auth.utilisateur(), m = u && typeof u.email === "string" ? u.email.trim() : "";
+    return Auth.estProspect() && !Store.idConsulte && /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(m) && m.length <= 254 ? m : "";
+  },
   clics(C){
     return (C && typeof C === "object" && C.cta && typeof C.cta === "object" && Array.isArray(C.cta.clics))
       ? C.cta.clics.filter(x => x && typeof x === "object" && !Array.isArray(x)) : [];
@@ -10661,6 +10674,97 @@ const Decouverte = {
 };
 
 /* ------------------------------------------------------------------
+   ACTIVITÉ du prospect (v51) — cle prospect « activite » :
+   { version: 1, jours: ["AAAA-MM-JJ", …] (60 derniers jours d'activite), pages: { "decouverte-questionnaire": n,
+     "decouverte-resultat": n, formation: n, "verrou-programme": n, … }, temps_s (secondes page visible), derniere (instant) }.
+   Ecrite par le prospect seul, au plus une fois par minute et quand l'onglet passe en arriere-plan (relue et
+   fusionnee avant l'ecriture : deux onglets ne s'effacent pas). Le coach la lit (score, chronologie).
+   Rien pour un client ni pour le coach.
+   ------------------------------------------------------------------ */
+const Activite = {
+  cle: "activite",
+  DELAI: 60000,
+  _A: null, _lecture: null, _vu: null, _minuteur: null, _sale: false, _ecoute: false, _envoi: false,
+  vide(){ return { version: 1, jours: [], pages: {}, temps_s: 0, derniere: null }; },
+  suivi(){ return Auth.estProspect() && !Store.idConsulte; },
+  /* une valeur lue (le prospect ecrit ce qu'il veut dans sa cle) remise d'aplomb : jours = dates, pages = compteurs */
+  propre(A){
+    const o = (A && typeof A === "object" && !Array.isArray(A)) ? A : {};
+    const jours = Array.isArray(o.jours) ? o.jours.filter(j => typeof j === "string" && /^\d{4}-\d{2}-\d{2}$/.test(j)) : [];
+    const pages = {};
+    if (o.pages && typeof o.pages === "object" && !Array.isArray(o.pages)) Object.keys(o.pages).forEach(k => { const n = o.pages[k]; if (/^[a-z0-9-]{1,40}$/.test(k) && typeof n === "number" && n >= 0 && isFinite(n)) pages[k] = Math.floor(n); });
+    return { version: 1, jours: Array.from(new Set(jours)).sort().slice(-60), pages,
+             temps_s: typeof o.temps_s === "number" && o.temps_s >= 0 && isFinite(o.temps_s) ? Math.floor(o.temps_s) : 0,
+             derniere: typeof o.derniere === "string" && !isNaN(Date.parse(o.derniere)) ? o.derniere : null };
+  },
+  async charger(){
+    if (this._A) return this._A;
+    if (!this._lecture) this._lecture = (async () => {
+      let A = null; try { A = await Store.lire(this.cle, this.vide()); } catch(e){ A = null; }
+      if (!A || typeof A !== "object" || Store.nonLus.has(A)){ this._lecture = null; return null; }   // lecture ratee : rien n'est compte, rien n'est ecrase
+      Object.assign(A, this.propre(A));
+      this._A = A; this.ecouter();
+      return A;
+    })();
+    return this._lecture;
+  },
+  ecouter(){
+    if (this._ecoute) return; this._ecoute = true;
+    this._vu = document.visibilityState === "visible" ? Date.now() : null;
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") this._vu = Date.now();
+      else { this.compterTemps(); this.envoyer(true); }
+    });
+    window.addEventListener("pagehide", () => { this.compterTemps(); this.envoyer(true); });
+  },
+  compterTemps(){
+    if (!this._A || this._vu == null) return;
+    const s = Math.round((Date.now() - this._vu) / 1000);
+    this._vu = document.visibilityState === "visible" ? Date.now() : null;
+    if (s > 0){ this._A.temps_s += Math.min(s, 1800); this._sale = true; }   // un onglet oublie ouvert ne compte pas plus de 30 min d'affilee
+  },
+  /* une page vue (identifiant court : decouverte-resultat, formation, verrou-programme…) */
+  async page(id){
+    if (!this.suivi() || typeof id !== "string" || !/^[a-z0-9-]{1,40}$/.test(id)) return;
+    const uid = Store.cible();
+    const A = await this.charger();
+    if (!A || !this.suivi() || Store.cible() !== uid) return;
+    const j = aujourdhui();
+    if (A.jours.indexOf(j) === -1){ A.jours.push(j); if (A.jours.length > 60) A.jours = A.jours.slice(-60); }
+    A.pages[id] = (A.pages[id] || 0) + 1;
+    A.derniere = new Date().toISOString();
+    this._sale = true;
+    this.planifier();
+  },
+  planifier(){
+    if (this._minuteur) return;
+    this._minuteur = setTimeout(() => { this._minuteur = null; this.compterTemps(); this.envoyer(false); }, this.DELAI);
+  },
+  /* ce qu'un autre onglet a deja ecrit est garde : jours reunis, compteurs au plus haut */
+  fusionner(F){
+    const f = this.propre(F), A = this._A;
+    A.jours = Array.from(new Set(A.jours.concat(f.jours))).sort().slice(-60);
+    Object.keys(f.pages).forEach(k => { A.pages[k] = Math.max(A.pages[k] || 0, f.pages[k]); });
+    A.temps_s = Math.max(A.temps_s, f.temps_s);
+    if (f.derniere && (!A.derniere || f.derniere > A.derniere)) A.derniere = f.derniere;
+  },
+  /* maintenant : onglet qui passe en arriere-plan ou qui se ferme (pas le temps de relire la base) */
+  async envoyer(maintenant){
+    if (!this._A || !this._sale || this._envoi || !this.suivi()) return;
+    this._envoi = true; this._sale = false;
+    try {
+      if (!maintenant){
+        let F = null; try { F = await Store.lire(this.cle, this.vide()); } catch(e){ F = null; }
+        if (!this.suivi()) return;
+        if (F && typeof F === "object" && F !== this._A && !Store.nonLus.has(F)) this.fusionner(F);
+      }
+      Store.ecrire(this.cle, this._A);
+      if (maintenant) Store.toutEnvoyer();
+    } finally { this._envoi = false; }
+  }
+};
+
+/* ------------------------------------------------------------------
    OUTIL — Découverte (prospects seulement). C'est l'accueil du prospect :
    le questionnaire court, puis son résultat, ses calories et macros, une
    séance, 3 recettes, la Speed Formation (ouverte les premiers jours) et
@@ -10714,6 +10818,7 @@ const outilDecouverte = {
       + (form ? this.formulaireHTML(I) : this.resultatHTML(I) + this.calculHTML(I) + this.seanceHTML(I) + this.recettesHTML() + this.formationHTML() + this.accompHTML(C));
     /* chaque clic vers Calendly est note pour le coach, avec l'ecran d'origine (resultat comme « Modifier mes reponses ») */
     $$("[data-dc-cal]", zone).forEach(a => a.addEventListener("click", () => Decouverte.clic(C, a.dataset.dcCal)));
+    Activite.page(form ? "decouverte-questionnaire" : "decouverte-resultat");
     if (form) this.brancherFormulaire(zone, I, C);
     else { Tracking.enregistrer("result_viewed"); this.brancherPage(zone, I, C); }
   },
@@ -10762,7 +10867,14 @@ const outilDecouverte = {
         const v = outilProfil.valeur(q);
         if (valide(q, v) && String(I[q.id] == null ? "" : I[q.id]) !== String(v)){ if (!(q.id in avant)) avant[q.id] = I[q.id]; I[q.id] = v; change = true; }
       });
-      if (change){ Tracking.enregistrer("diagnostic_question_answered"); Store.ecrire("intake", I); }
+      if (change){
+        /* v51 : le debut du questionnaire et l'email du compte (pour le coach) partent avec la premiere reponse ;
+           comme elle, ils sont retires si un age mineur est saisi ensuite */
+        const mail = Decouverte.emailCompte();
+        if (!I.court_debut){ if (!("court_debut" in avant)) avant.court_debut = I.court_debut; I.court_debut = new Date().toISOString(); }
+        if (mail && !I.email){ if (!("email" in avant)) avant.email = I.email; I.email = mail; }
+        Tracking.enregistrer("diagnostic_question_answered"); Store.ecrire("intake", I);
+      }
     };
     const surAge = () => {
       const a = num(outilProfil.valeur(qAge));
@@ -10797,10 +10909,12 @@ const outilDecouverte = {
         manquants.concat(hors).forEach(q => { const el = $("q-" + q.id); if (el) el.classList.add("manque"); });
         return;
       }
-      const courtAvant = I.court_le;
+      const garde = { court_le: I.court_le, court_debut: I.court_debut, email: I.email };
       Object.assign(I, V);
       if (!Decouverte.questionnaireFait(I)) I.court_le = new Date().toISOString();
-      if (Store.ecrire("intake", I) === false){ if (courtAvant === undefined) delete I.court_le; else I.court_le = courtAvant; return; }   // refusee (message deja affiche)
+      if (!I.court_debut) I.court_debut = I.court_le;
+      const mail = Decouverte.emailCompte(); if (mail && !I.email) I.email = mail;
+      if (Store.ecrire("intake", I) === false){ Object.keys(garde).forEach(k => { if (garde[k] === undefined) delete I[k]; else I[k] = garde[k]; }); return; }   // refusee (message deja affiche)
       Tracking.enregistrer("diagnostic_completed");
       self._form = false;
       self.rendre(zone, I, C);
@@ -11196,6 +11310,8 @@ async function afficher(id, silencieux){
      qu'au bas du Profil : le repeter sous chaque page alourdissait tout. */
   const avecDonnees = outil.id === "profil" && !Store.idConsulte;
   const verrouille = estVerrouille(outil);   // v40 : mode gratuit
+  /* v51 : page vue par un prospect (la Decouverte compte elle-meme questionnaire et resultat) */
+  if (outil.id !== "accueil" && outil.id !== "decouverte") Activite.page(verrouille ? "verrou-" + outil.id : outil.id);
   $("vue").innerHTML = `
     ${bandeauConsultation()}
     ${outil.sans_entete ? "" : `<header class="masthead">
