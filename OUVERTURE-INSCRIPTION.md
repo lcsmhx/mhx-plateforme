@@ -124,5 +124,8 @@ Si l'email n'arrive pas : Supabase → **Logs → Auth** dit si l'envoi a échou
 - Les emails : compteur Brevo (300 par jour en gratuit), Supabase → Logs → Auth en cas de doute.
 - Tu peux te tester toi-même à tout moment avec un compte prospect. Pour voir le jour 8 (Speed Formation verrouillée) sans attendre : `#/decouverte-jour/8` sur ton appareil ; `#/decouverte-jour/0` pour revenir au vrai jour. Rien n'est écrit en base.
 
+## 9 bis. Les emails de suivi (facultatif, après l'ouverture)
+L'app sait déjà demander l'accord (case facultative à l'inscription, interrupteur « Emails de suivi » dans le Profil du prospect). L'envoi lui-même (bienvenue, rappel du questionnaire, relance, via Brevo) est une fonction Supabase prête et testée mais **pas déployée** : marche à suivre complète dans `supabase/README.md` (clé API Brevo, table du journal, fonction, secrets, webhook des ouvertures, planification horaire, test). Tant qu'elle n'est pas déployée, aucun email de suivi ne part, et le score des prospects affiche « email ouvert : pas encore mesuré ».
+
 ## 10. Pour refermer (si besoin)
 Dans l'ordre inverse : `inscription_libre: false` dans l'app, puis « Allow new users to sign up » désactivé dans Supabase. Les comptes déjà créés restent et continuent de fonctionner.

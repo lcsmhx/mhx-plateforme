@@ -8458,7 +8458,7 @@ const Commercial = {
      au prorata des reponses) ; clic « Réserver mon bilan » 30 ; bilan reserve 30. Bonus : revenu au moins 2 jours
      differents +5, 5 minutes ou plus dans l'app +5, email ouvert +5 (pas mesure tant que les emails ne sont pas
      branches). Plafonne a 100. D = questionnaire (au moins court_le, repondues), A = cle activite. */
-  score(p, C, D, A){
+  score(p, C, D, A, E){
     let r = null; try { r = Decouverte.resume(p, C, D); } catch(e){ r = null; }
     const total = (Decouverte.cfg().questions || []).length || 10;
     const rep = D && typeof D.repondues === "number" && isFinite(D.repondues) ? Math.max(0, Math.min(total, Math.floor(D.repondues))) : Decouverte.repondues(D);
@@ -8471,11 +8471,14 @@ const Commercial = {
       { cle: "reserve", lbl: "Bilan réservé", pts: r && r.reserve ? 30 : 0, max: 30 },
       { cle: "visites", lbl: "Revenu plusieurs jours (" + jours + " jour" + (jours > 1 ? "s" : "") + " d'activité)", pts: jours >= 2 ? 5 : 0, max: 5, bonus: true },
       { cle: "temps", lbl: "Temps passé dans l'app (" + min + " min)", pts: a.temps_s >= 300 ? 5 : 0, max: 5, bonus: true },
-      { cle: "emails", lbl: "Email ouvert (pas encore mesuré : emails non branchés)", pts: 0, max: 5, bonus: true, nonMesure: true }
+      Array.isArray(E)
+        ? (() => { const env = E.filter(x => x && x.statut === "envoye").length, ouv = E.some(x => x && typeof x.ouvert_le === "string");
+                   return { cle: "emails", lbl: "Email ouvert (" + env + " email" + (env > 1 ? "s" : "") + " de suivi envoyé" + (env > 1 ? "s" : "") + ")", pts: ouv ? 5 : 0, max: 5, bonus: true }; })()
+        : { cle: "emails", lbl: "Email ouvert (pas encore mesuré : emails non branchés)", pts: 0, max: 5, bonus: true, nonMesure: true }
     ];
     return { total: Math.min(100, lignes.reduce((s, x) => s + x.pts, 0)), lignes, repondues: rep, questions: total };
   },
-  scoreLigne(l){ try { return this.score(l.p, l.ch, l.dc, l.act); } catch(e){ return null; } },
+  scoreLigne(l){ try { return this.score(l.p, l.ch, l.dc, l.act, JournalEmails.pour(l.p.id)); } catch(e){ return null; } },
   pastilleScore(sc){ return sc ? `<span class="pastille${sc.total >= 70 ? " ok" : sc.total >= 40 ? " accent" : ""}" title="Score de qualification sur 100">${sc.total}/100</span>` : ""; },
   CLASSES: { nouveau: "accent", chaud: "chaud", tiede: "tiede", froid: "froid", signe: "ok", perdu: "manque", absent: "attention" },
   pastille(a){ return a ? `<span class="pastille ${this.CLASSES[a.etat] || ""}" title="${esc(a.raisons.join(" "))}">${esc(this.ETATS[a.etat] || "")}</span>` : ""; },
@@ -8623,6 +8626,30 @@ const Commercial = {
    chaud au plus froid : temperature, raisons, prochaine action, issue.
    ------------------------------------------------------------------ */
 /* ------------------------------------------------------------------
+   JOURNAL DES EMAILS (v51) — table emails_prospects, remplie par la fonction Supabase « emails-prospects »
+   (bienvenue, rappel du questionnaire, relance ; ouvertures et clics renvoyés par Brevo). Lue par le coach
+   seulement (score « email ouvert », chronologie de la fiche). Tant que la table n'existe pas (migration
+   pas appliquée, fonction pas déployée), la lecture échoue sans bruit : rien n'est affiché, le bonus du
+   score reste « pas encore mesuré ».
+   ------------------------------------------------------------------ */
+const JournalEmails = {
+  _parUser: null, _ok: false,
+  MODELES: { bienvenue: "bienvenue", questionnaire: "rappel du questionnaire", relance: "relance" },
+  async charger(){
+    if (!Auth.estCoach()) return null;
+    try {
+      const l = await Auth.appel("/rest/v1/emails_prospects?select=user_id,modele,statut,envoye_le,ouvert_le,clique_le&order=cree_le.asc");
+      const m = new Map();
+      (Array.isArray(l) ? l : []).forEach(x => { if (x && typeof x.user_id === "string"){ const t = m.get(x.user_id) || []; t.push(x); m.set(x.user_id, t); } });
+      this._parUser = m; this._ok = true;
+    } catch(e){ this._parUser = null; this._ok = false; }
+    return this._parUser;
+  },
+  /* la liste des emails d'un prospect ; null = journal indisponible (pas encore déployé) */
+  pour(uid){ return this._ok && this._parUser ? (this._parUser.get(uid) || []) : null; }
+};
+
+/* ------------------------------------------------------------------
    NOUVEAUTÉS (v51) — pour le coach : ce que ses prospects ont fait depuis sa dernière visite
    (inscriptions, questionnaires remplis, clics « Réserver mon bilan », bilans réservés), calculé à partir
    des données déjà chargées par le tableau de bord ou la page Prospects (aucune requête de plus). Seule la
@@ -8724,7 +8751,7 @@ const outilProspects = {
   html(){ return `<div id="pr-vue"><header class="masthead"><h1>Prospects</h1></header><section class="panel"><div class="empty">Chargement…</div></section></div>`; },
   async init(){
     const zone = $("pr-vue"); if (!zone) return;
-    try { this.donnees = await Clients.charger(); }
+    try { [this.donnees] = await Promise.all([Clients.charger(), JournalEmails.charger()]); }
     catch(e){ zone.innerHTML = `<header class="masthead"><h1>Prospects</h1></header><section class="panel"><div class="empty">Impossible de charger les prospects pour le moment.</div></section>`; return; }
     if (!zone.isConnected) return;
     this.limite = this.PAS;
@@ -8875,7 +8902,7 @@ const outilTableau = {
   async init(){
     const zone = $("tb-vue"); if (!zone) return;
     let profils, parClient, contenus;
-    try { ({ profils, parClient, contenus } = await Clients.charger()); }
+    try { [{ profils, parClient, contenus }] = await Promise.all([Clients.charger(), JournalEmails.charger()]); }
     catch(e){ zone.innerHTML = `<section class="panel"><div class="empty">Impossible de charger tes clients pour le moment.</div></section>`; return; }
     const lignes = Clients.resumer(profils, parClient, contenus);
     const prospects = profils.filter(p => p.role !== "coach" && p.statut === "prospect");
@@ -10185,7 +10212,8 @@ const outilAccueil = {
     const s = v => (typeof v === "string" || typeof v === "number") ? String(v).slice(0, 400) : "";
     const dt = v => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v)) ? dateFr(Decouverte.dateLocale(v) || v.slice(0, 10)) : "—";
     const heure = v => { if (typeof v !== "string" || v.length <= 10) return ""; const d = new Date(v); return isNaN(d) ? "" : " " + String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); };
-    const sc = Commercial.score(p, C, Object.assign({}, I, { repondues: Decouverte.repondues(I) }), A);
+    const E = JournalEmails.pour(p && p.id);
+    const sc = Commercial.score(p, C, Object.assign({}, I, { repondues: Decouverte.repondues(I) }), A, E);
     const scoreHTML = `<section class="panel" id="fiche-score"><div class="seance-c-tete"><h2>Score de qualification</h2>${Commercial.pastilleScore(sc)}</div>
       <ul class="ingr fiche-l dc-score">${sc.lignes.map(l => `<li><span>${esc(l.lbl)}${l.bonus ? " (bonus)" : ""}</span><b>${l.nonMesure ? "—" : l.pts + " / " + l.max}</b></li>`).join("")}</ul>
       <p class="note" style="margin:10px 0 0">Total plafonné à 100. Le score se recalcule à chaque ouverture.</p></section>`;
@@ -10208,6 +10236,13 @@ const outilAccueil = {
       if (!e || typeof e !== "object") return;
       const lib = e.type === "relance" ? "Tu l'as relancé" : e.type === "annule" ? "Issue annulée" : e.type === "issue" && Commercial.ISSUES[e.valeur] ? "Appel : « " + Commercial.ISSUES[e.valeur] + " »" + (typeof e.note === "string" && e.note ? " — " + e.note.slice(0, 200) : "") : "";
       if (lib) ajoute(e.le, lib);
+    });
+    (Array.isArray(E) ? E : []).forEach(m => {
+      if (!m || typeof m !== "object") return;
+      const nom = "Email de suivi « " + (JournalEmails.MODELES[m.modele] || "email") + " »";
+      ajoute(m.envoye_le, nom + " envoyé");
+      ajoute(m.ouvert_le, nom + " ouvert");
+      ajoute(m.clique_le, nom + " : lien cliqué");
     });
     const act = Activite.propre(A);
     ajoute(act.derniere, "Dernière activité dans l'app");
@@ -10237,8 +10272,10 @@ const outilAccueil = {
   async fiche(zone){
     const cles = ["intake", "programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "checkins", "complements", "calc", "formation", "hist_programme", "hist_repas", "prefs", "feedbacks", "challenge", "suivi_prospect", "activite"];   // v47 : + challenge ; v49 : + suivi commercial ; v51 : + activite
     const uidFiche = Store.idConsulte;
-    const [{ valeurs: d, dates }, pr] = await Promise.all([
+    const [{ valeurs: d, dates }, , pr] = await Promise.all([
       Store.lireTout(cles, { dates: true }),
+      /* v51 : journal des emails de suivi (score, chronologie) ; sans effet s'il n'existe pas encore */
+      JournalEmails.charger().then(() => null),
       /* v39 : prospect ou client ? (colonne absente ou lecture ratee : rien ne change) */
       Auth.appel("/rest/v1/profils?id=eq." + uidFiche + "&select=*").then(r => Array.isArray(r) ? r[0] || null : null).catch(() => null)
     ]);
