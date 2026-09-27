@@ -1063,6 +1063,14 @@ const CONFIG = {
     recettes: ["flocons-avoine-banane-miel", "poulet-riz-brocoli", "omelette-epinards"]   // identifiants de donnees/recettes.json
   },
 
+  /* --- v52 : interrupteurs des nouveautés qui REMPLACENT une habitude des clients (ex. le bilan du vendredi).
+     "off" : personne ; "test" : le coach et les comptes de test ci-dessous seulement ; "tous" : tout le monde.
+     C'est Lucas qui passe un interrupteur sur "tous". Comptes de test : identifiant Supabase, jamais l'email (dépôt public). --- */
+  nouveautes: {
+    feedback_dimanche: "test",
+    comptes_test: ["9df6bb84-5a09-4bb0-a77a-b2633d842ed9"]   // compte client de test de Lucas
+  },
+
   /* --- v49 : suivi commercial des prospects (page « Prospects » du coach). Les seuils en jours
      qui decident de la temperature et de la prochaine action ; tout se change ici. --- */
   suivi: {
@@ -1429,7 +1437,13 @@ const DECOUVERTE = {
     lien_reseau: "Ton email est bien confirmé, mais l'entrée automatique a échoué (réseau). Connecte-toi avec ton email et ton mot de passe.",
     lien_autre_compte: "Un autre compte est déjà connecté sur cet appareil : ce lien n'a pas été utilisé. Déconnecte-toi d'abord, puis connecte-toi avec le nouveau compte (son email est confirmé).",
     non_confirme: "Ton email n'est pas encore confirmé : ouvre le lien reçu (regarde dans les indésirables).",
-    trop_demandes: "Trop de demandes d'un coup : réessaie dans une minute."
+    trop_demandes: "Trop de demandes d'un coup : réessaie dans une minute.",
+    /* v52 : envoi d'email refusé par le serveur d'emails (SMTP), limite horaire du projet, changement d'adresse en deux liens */
+    envoi_rate: "L'email n'a pas pu partir (souci de notre côté). Réessaie dans un moment ; si ça continue, écris-moi sur Instagram ({p}).",
+    trop_emails: "Beaucoup d'inscriptions en ce moment : réessaie dans une heure.",
+    premier_lien: "Premier lien accepté : clique maintenant celui reçu sur ton autre adresse. Le changement d'email est fait au deuxième clic.",
+    email_change: "Ton adresse email est changée : utilise la nouvelle pour te connecter.",
+    trop_emails_compte: "Trop d'emails envoyés en peu de temps : réessaie dans une heure."
   },
 
   /* --- conditions et confidentialité (volet ouvert depuis l'inscription et le Profil du prospect).
@@ -1583,7 +1597,12 @@ const DECOUVERTE = {
       lien_reseau: "Your email is confirmed, but automatic sign-in failed (network). Sign in with your email and password.",
       lien_autre_compte: "Another account is already signed in on this device: this link was not used. Sign out first, then sign in with the new account (its email is confirmed).",
       non_confirme: "Your email isn't confirmed yet: open the link we sent you (check your spam folder).",
-      trop_demandes: "Too many requests at once: try again in a minute."
+      trop_demandes: "Too many requests at once: try again in a minute.",
+      envoi_rate: "The email could not be sent (a problem on our side). Try again in a moment; if it keeps happening, message me on Instagram ({p}).",
+      trop_emails: "Lots of sign-ups right now: try again in an hour.",
+      premier_lien: "First link accepted: now click the one sent to your other address. The email change is done on the second click.",
+      email_change: "Your email address has been changed: use the new one to sign in.",
+      trop_emails_compte: "Too many emails sent in a short time: try again in an hour."
     },
     confidentialite: {
       titre: "Terms of use and privacy",
@@ -1874,6 +1893,7 @@ I18N.en = {
 "Ce que tu prends": "What you take",
 "Ce que tu prends, à quelle dose et à quel moment. Rien d'obligatoire : un complément complète une alimentation, il ne la remplace pas.": "What you take, how much and when. Nothing is mandatory: a supplement complements your diet, it doesn't replace it.",
 "Centimètres perdus": "Centimeters lost",
+"Changement impossible.": "The change could not be made.",
 "Changer mon adresse": "Change my email",
 "Changer mon adresse email": "Change my email address",
 "Changer mon mot de passe": "Change my password",
@@ -2091,7 +2111,8 @@ I18N.en = {
 "Type, fréquence, depuis quand.": "Type, how often, since when.",
 "Télécharger toutes mes données": "Download all my data",
 "Un complément ne rattrape pas une alimentation qui ne va pas : commence toujours par tes repas. Si tu prends un traitement, si tu es enceinte ou si tu as une pathologie, demande à ton médecin avant d'en ajouter un — certains interagissent avec des médicaments. Ton coach n'est pas médecin.": "A supplement won't make up for a diet that isn't working: always start with your meals. If you take medication, are pregnant or have a health condition, ask your doctor before adding one — some interact with medications. Your coach is not a doctor.",
-"Un lien de confirmation part sur la nouvelle adresse. Tant que tu n'as pas cliqué dessus, tu continues de te connecter avec l'ancienne — c'est ce qui t'évite de perdre ton compte en cas de faute de frappe.": "A confirmation link is sent to the new email. Until you click it, you keep logging in with the old one — that's what keeps you from losing your account over a typo.",
+"Un lien de confirmation part sur la nouvelle adresse (et, par sécurité, un autre sur l'ancienne : clique les deux). Tant que ce n'est pas fait, tu continues de te connecter avec l'ancienne — c'est ce qui t'évite de perdre ton compte en cas de faute de frappe.": "A confirmation link is sent to the new address (and, for security, another one to the old address: click both). Until then, you keep signing in with the old one — that keeps you from losing your account because of a typo.",
+"Un lien de confirmation part sur {e}, et par sécurité un autre sur ton adresse actuelle : clique les deux. Le changement est fait au dernier clic.": "A confirmation link is on its way to {e}, and for security another one to your current address: click both. The change is done on the last click.",
 "Une question ?": "Questions?",
 "Vacances, mariage, compétition, shooting.": "Vacation, wedding, competition, photo shoot.",
 "Variation de poids": "Weight change",
@@ -2406,6 +2427,13 @@ I18N.en = {
 "Ton compte et tes réglages.": "Your account and settings.",
 "Bienvenue dans l'accompagnement !": "Welcome to your coaching!",
 "Tes premières réponses sont déjà là : complète le reste du questionnaire et enregistre.": "Your first answers are already here: complete the rest of the questionnaire and save.",
+/* v52 — encadré de première connexion d'un client : les variantes qui n'avaient pas d'anglais */
+"Une réponse manque à ton profil.": "One answer is missing from your profile.",
+"Complète-la et enregistre : ça prend dix secondes.": "Fill it in and save: it takes ten seconds.",
+"Deux réponses manquent à ton profil.": "Two answers are missing from your profile.",
+"Complète-les et enregistre : ça prend quelques secondes.": "Fill them in and save: it takes a few seconds.",
+"Reprends ton profil là où tu t'es arrêté.": "Pick up your profile where you left off.",
+"Tes premières réponses sont enregistrées : complète le reste et enregistre.": "Your first answers are saved: complete the rest and save.",
 "Heures de sommeil / nuit *": "Hours of sleep per night *", "Niveau d'énergie dans la journée *": "Energy level during the day *", "/ sem": "/ wk", "Jour {n} : {e}": "Day {n}: {e}", "fait": "done", "À partir de {n} ans.": "From {n} years old.", "{a} à {b}": "{a} to {b}",
 /* v45 — jours 2 a 4 */
 "Démonstration de l'exercice": "Exercise demonstration", "Marche sur place": "March in place", "Marche sur place genoux hauts": "High-knee march in place", "Montées de genoux + squats": "High knees + squats", "Monter la température avant une séance intense ou un circuit.": "Raise your body temperature before an intense session or a circuit."
@@ -2962,6 +2990,35 @@ const Auth = {
       body: { email: email, password: motdepasse, data: Object.assign({ prenom: prenom, nom: nom || "" }, extra || {}) }
     });
     if (s && s.access_token){ this.memoriser(s); return true; }
+    return false;
+  }
+};
+
+/* --- v52 : INTERRUPTEURS des nouveautés (CONFIG.nouveautes) -------------
+   Une nouveauté qui remplace une habitude des clients se demande ici avant de s'afficher :
+   Interrupteurs.visible("feedback_dimanche") pour la personne connectée, pourCompte(nom, uid) pour un
+   compte donné (fiche du coach, par ex.). Toute valeur inconnue vaut "off" : une faute de frappe dans
+   CONFIG ne montre jamais une nouveauté à tout le monde. (À ne pas confondre avec l'objet Nouveautes :
+   les notifications du coach, clé coach_notifs.) ---------------------------- */
+const Interrupteurs = {
+  etat(nom){
+    const v = (CONFIG.nouveautes || {})[nom];
+    return v === "tous" || v === "test" ? v : "off";
+  },
+  estTest(uid){
+    const l = (CONFIG.nouveautes || {}).comptes_test;
+    return !!uid && Array.isArray(l) && l.indexOf(String(uid)) > -1;
+  },
+  pourCompte(nom, uid){
+    const e = this.etat(nom);
+    return e === "tous" || (e === "test" && this.estTest(uid));
+  },
+  visible(nom){
+    const u = Auth.utilisateur();
+    if (!u) return false;
+    const e = this.etat(nom);
+    if (e === "tous") return true;
+    if (e === "test") return Auth.estCoach() || this.estTest(u.id);
     return false;
   }
 };
@@ -5136,7 +5193,7 @@ const outilProfil = {
         <div><label for="mc-email">Nouvelle adresse</label><input id="mc-email" type="email" autocomplete="email"></div>
       </div>
       <div class="actions"><button class="btn ghost" id="mc-maj-email">Changer mon adresse</button><span class="msg" id="mc-email-msg"></span></div>
-      <p class="note" style="margin-top:10px">Un lien de confirmation part sur la nouvelle adresse. Tant que tu n'as pas cliqué dessus, tu continues de te connecter avec l'ancienne — c'est ce qui t'évite de perdre ton compte en cas de faute de frappe.</p>
+      <p class="note" style="margin-top:10px">Un lien de confirmation part sur la nouvelle adresse (et, par sécurité, un autre sur l'ancienne : clique les deux). Tant que ce n'est pas fait, tu continues de te connecter avec l'ancienne — c'est ce qui t'évite de perdre ton compte en cas de faute de frappe.</p>
     </section>`;
   },
 
@@ -5248,8 +5305,16 @@ const outilProfil = {
       bMail.disabled = true; flash("mc-email-msg", "Un instant…");
       try {
         await Auth.changerEmail(nouveau);
-        flash("mc-email-msg", "Un lien de confirmation part sur " + nouveau + ". Clique dessus pour valider.");
-      } catch(e){ flash("mc-email-msg", e.message || "Changement impossible."); }
+        /* v52 : avec « Secure email change » (Supabase), un lien part aussi sur l'adresse actuelle : il faut cliquer les deux */
+        flash("mc-email-msg", trad("Un lien de confirmation part sur {e}, et par sécurité un autre sur ton adresse actuelle : clique les deux. Le changement est fait au dernier clic.", { e: nouveau }));
+      } catch(e){
+        /* v52 : erreurs d'envoi et de limite en francais, comme a l'inscription et pour le mot de passe oublie */
+        const m = String((e && e.message) || "").toLowerCase(), T = DECOUVERTE.inscription;
+        flash("mc-email-msg", /email rate limit/.test(m) ? trad(T.trop_emails_compte)
+          : /error sending|sending .*email|smtp/.test(m) ? trad(T.envoi_rate, { p: CONFIG.marque.pseudo || "" })
+          : /rate limit|security purposes|after \d+ seconds/.test(m) ? trad(T.trop_demandes)
+          : (e && e.message) || trad("Changement impossible."));
+      }
       bMail.disabled = false;
     });
   }
@@ -12099,7 +12164,16 @@ function routeDepuisAdresse(){
   }
   const parts = id.split("/"); id = parts[0]; sousRoute = parts.slice(1).join("/");
   if (ALIAS_ROUTES[id]) id = ALIAS_ROUTES[id];
-  afficher(outilsVisibles().some(o => o.id === id) ? id : outilParDefaut());
+  /* v52 : une page qui n'est pas pour cette personne (client sur #/calculateur, coach hors fiche sur #/accueil…)
+     affiche la page d'arrivee ET l'adresse le dit. replaceState ne declenche pas hashchange : pas de boucle.
+     Sans ce correctif, un « Ouvrir » du coach qui pose #/accueil (deja dans l'adresse) ne faisait rien.
+     Adresse vide (page d'arrivee) : rien a reecrire. */
+  const cible = outilsVisibles().some(o => o.id === id) ? id : outilParDefaut();
+  if (id && cible !== id){
+    sousRoute = "";
+    try { history.replaceState(null, "", "#/" + cible); } catch(e){}
+  }
+  afficher(cible);
 }
 
 /* ---------------------- ÉCRAN DE CONNEXION ---------------------- */
@@ -12196,7 +12270,9 @@ function portail(mode){
         ecranVerifieEmail(email); return;   // v47 : un ecran dedie, pas une ligne de message
       } catch(e){
         const m = (e.message || "").toLowerCase();
-        err(/rate limit|security purposes|after \d+ seconds/.test(m) ? trad(DECOUVERTE.inscription.trop_demandes)   // v47
+        err(/email rate limit/.test(m) ? trad(DECOUVERTE.inscription.trop_emails)   // v52 : limite horaire d'emails du projet
+          : /error sending|sending .*email|smtp/.test(m) ? trad(DECOUVERTE.inscription.envoi_rate, { p: CONFIG.marque.pseudo || "" })   // v52 : le serveur d'emails a refusé
+          : /rate limit|security purposes|after \d+ seconds/.test(m) ? trad(DECOUVERTE.inscription.trop_demandes)   // v47
           : m.indexOf("already") > -1 || m.indexOf("registered") > -1 ? "Un compte existe déjà avec cet email : connecte-toi."
           : m.indexOf("disabled") > -1 || m.indexOf("not allowed") > -1 ? "Les inscriptions ne sont pas encore ouvertes."
           : e.message || "Une erreur est survenue.");
@@ -12217,6 +12293,8 @@ function portail(mode){
       const m = (e.message || "").toLowerCase();
       /* v47 : les messages de Supabase qui arrivent sur le parcours du funnel, en francais */
       err(m.indexOf("not confirmed") > -1 ? trad(DECOUVERTE.inscription.non_confirme)
+        : /email rate limit/.test(m) ? trad(DECOUVERTE.inscription.trop_emails_compte)   // v52 : limite horaire d'emails du projet (pas forcement des inscriptions)
+        : /error sending|sending .*email|smtp/.test(m) ? trad(DECOUVERTE.inscription.envoi_rate, { p: CONFIG.marque.pseudo || "" })   // v52 : « Error sending recovery email »
         : /rate limit|security purposes|after \d+ seconds/.test(m) ? trad(DECOUVERTE.inscription.trop_demandes)
         : m.indexOf("invalid") > -1 ? "Email ou mot de passe incorrect."
         : m.indexOf("password") > -1 ? "Le mot de passe doit faire au moins 6 caractères."
@@ -12364,10 +12442,15 @@ function sessionPerdue(){
 let lienEmail = null, lienEmailType = "", lienEmailAdresse = "";   // v47 : "ok" | "autre_compte" | "rate_connecte" apres un lien d'email (mot affiche une fois l'ecran construit)
 
 (async function demarrer(){
+  /* v52 : l'app gere seule le defilement (afficher remonte en haut). Sans cela, apres « Se connecter » (rechargement),
+     le navigateur remettait la page a la hauteur de l'ecran de connexion, et seulement a la fin du chargement (polices) :
+     sur telephone, le Profil s'ouvrait deja defile, l'encadre « Bienvenue ! » cache sous l'en-tete. */
+  try { if ("scrollRestoration" in history) history.scrollRestoration = "manual"; } catch(e){}
   I18N.charger();   // en anglais, les textes de la Decouverte rejoignent le dictionnaire ici (Contenus.decouverte)
   Traduction.demarrer();
   ancrerManifeste();
   const p = lireAdresse();
+  let premierLien = false, emailChange = false;   // v52 : changement d'adresse (premier lien / dernier lien)
 
   /* lien de reinitialisation recu par email */
   if (p.type === "recovery" && p.access_token){ ecranNouveauMotDePasse(p.access_token); return; }
@@ -12376,11 +12459,19 @@ let lienEmail = null, lienEmailType = "", lienEmailAdresse = "";   // v47 : "ok"
     if (!(await entrerParLien(p))) return;
   } else if (p.access_token){
     try { history.replaceState(null, "", location.pathname + location.search); } catch(e){}   // autre lien (changement d'email…) : les jetons ne restent pas dans l'adresse
+    /* v52 : dernier lien d'un changement d'adresse : le changement est fait, on le dit */
+    if (p.type === "email_change") emailChange = true;
   }
   /* v47 — lien perime ou deja utilise : Supabase revient SANS jeton, avec #error=…&error_code=otp_expired&error_description=…
      (deuxieme clic sur l'email de confirmation, lien de plus de 24 h, lien « visite » par un filtre anti-spam).
      L'adresse est nettoyee d'abord (sinon chaque rechargement relit l'erreur : boucle), le texte anglais brut n'est
      jamais affiche, et une session deja ouverte sur l'appareil n'est pas touchee. */
+  /* v52 — changement d'adresse avec « Secure email change » : le PREMIER des deux liens revient sans jeton, avec
+     #message=Confirmation link accepted… : adresse nettoyee, et le mot en francais (le changement se fait au 2e clic) */
+  if (p.message && !p.access_token && !p.error && !p.error_code){
+    try { history.replaceState(null, "", location.pathname + location.search); } catch(e){}
+    premierLien = true;
+  }
   if (p.error || p.error_code || p.error_description){
     try { history.replaceState(null, "", location.pathname + location.search); } catch(e){}
     Auth.charger();
@@ -12396,7 +12487,11 @@ let lienEmail = null, lienEmailType = "", lienEmailAdresse = "";   // v47 : "ok"
   /* Les comptes sont crees par le coach. L'inscription libre (v39) n'existe que
      si CONFIG.marque.inscription_libre vaut true : #/inscription ouvre alors la
      creation de compte ; sinon, l'ecran de connexion comme n'importe quelle autre adresse. */
-  if (!Auth.connecte()){ portail(/inscription/.test(location.hash) ? "inscription" : "connexion"); return; }
+  if (!Auth.connecte()){
+    portail(/inscription/.test(location.hash) ? "inscription" : "connexion");
+    if (premierLien || emailChange) setTimeout(() => { const z = $("co-err"); if (z){ z.className = "erreur ok"; z.textContent = trad(DECOUVERTE.inscription[emailChange ? "email_change" : "premier_lien"]); } }, 60);
+    return;
+  }
   const ok = await Auth.assurer();
   /* v48 : sessions partagees entre onglets, modifications gardees sur l'appareil */
   window.addEventListener("storage", e => Auth.depuisAutreOnglet(e));
@@ -12408,8 +12503,12 @@ let lienEmail = null, lienEmailType = "", lienEmailAdresse = "";   // v47 : "ok"
     portail("connexion");
     /* v47 : on arrivait par un lien d'email et la session enregistree ne se renouvelle plus : le dire */
     if (lienEmail) setTimeout(() => { const z = $("co-err"); if (z){ z.className = "erreur"; z.textContent = trad(DECOUVERTE.inscription.lien_rate); } }, 60);
+    else if (premierLien || emailChange) setTimeout(() => { const z = $("co-err"); if (z){ z.className = "erreur ok"; z.textContent = trad(DECOUVERTE.inscription[emailChange ? "email_change" : "premier_lien"]); } }, 60);
     return;
   }
+  /* v52 : adresse changee (dernier lien) : la session de l'appareil est renouvelee tout de suite, pour que le Profil,
+     le changement de mot de passe et l'email du prospect utilisent la nouvelle adresse */
+  if (emailChange){ try { await Auth.rafraichir(); } catch(e){} }
   try { await Auth.chargerProfil(); } catch(e){}
   /* v48 : ce qui n'etait pas arrive au serveur la derniere fois repart avant le premier affichage (4 s au plus) */
   try { await Promise.race([Store.reprendre(true), new Promise(r => setTimeout(r, 4000))]); } catch(e){}
@@ -12428,6 +12527,7 @@ let lienEmail = null, lienEmailType = "", lienEmailAdresse = "";   // v47 : "ok"
   Contenus.charger();
   window.addEventListener("hashchange", routeDepuisAdresse);
   /* v47 — un mot apres un lien d'email, une fois l'ecran construit */
+  if ((premierLien || emailChange) && !lienEmail) setTimeout(() => { try { UI.toast(trad(DECOUVERTE.inscription[emailChange ? "email_change" : "premier_lien"]), "ok", 9000); } catch(e){} }, 600);
   if (lienEmail) setTimeout(() => { try {
     const T = DECOUVERTE.inscription;
     const cle = lienEmail === "ok" ? (lienEmailType === "signup" && Auth.estProspect() ? "lien_ok" : "lien_entree") : lienEmail === "autre_compte" ? "lien_autre_compte" : "lien_rate_connecte";
@@ -12439,7 +12539,9 @@ let lienEmail = null, lienEmailType = "", lienEmailAdresse = "";   // v47 : "ok"
     const intake = await Store.lire("intake", {});
     if (!intake || !intake.complet){
       premiereFois = true;
-      location.hash = "#/profil";
+      /* v52 : replaceState et non location.hash : l'ecouteur hashchange est deja pose, un changement d'ancre relancait
+         un second affichage du Profil pendant le premier (intake lu 3 fois, champs branches deux fois, encadre perdu) */
+      try { history.replaceState(null, "", "#/profil"); } catch(e){}
       await afficher("profil");
       const v = $("vue");
       const mot = document.createElement("div");
@@ -12462,6 +12564,7 @@ let lienEmail = null, lienEmailType = "", lienEmailAdresse = "";   // v47 : "ok"
         ? `<strong>Reprends ton profil là où tu t'es arrêté.</strong><span class="note">Tes premières réponses sont enregistrées : complète le reste et enregistre.</span>`
         : `<strong>Bienvenue !</strong><span class="note">Commence par remplir ton profil : c'est ce qui permet à ton coach de construire ton suivi.</span>`;
       v.insertBefore(mot, v.firstChild);
+      window.scrollTo(0, 0);   // v52 : l'encadre, insere apres le rendu, est en haut de l'ecran, sous l'en-tete
       appPrete = true;
       return;
     }

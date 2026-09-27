@@ -962,7 +962,14 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     ok("client Thomas, accueil : texte identique à main", acc.t.length > 200 && acc.t === accM.t, acc.t.length + " / " + accM.t.length + " car. · premier écart : " + (() => { let i = 0; while (i < acc.t.length && acc.t[i] === accM.t[i]) i++; return JSON.stringify(acc.t.slice(Math.max(0, i - 40), i + 60)) + " ≠ " + JSON.stringify(accM.t.slice(Math.max(0, i - 40), i + 60)); })());
     await acc.c.close(); await accM.c.close();
     const pro = await vueDe(thomas, `http://localhost:${PORT}/#/profil`), proM = await vueDe(thomas, `http://localhost:${PORT}/?ref=main#/profil`);
-    ok("client Thomas, Profil : texte identique à main", pro.t.length > 200 && pro.t === proM.t, pro.t.length + " / " + proM.t.length);
+    /* v52 (chantier 1, lot A) : seule différence VOULUE du Profil de Thomas avec main (v51) : la note du changement
+       d'adresse (avec « Secure email change », un lien part aussi sur l'ancienne adresse : corrections de la nuit du
+       28/09). Elle est remplacée par un repère dans les deux textes : tout le reste doit rester identique. Une fois la
+       v52 sur main, les deux textes portent la nouvelle note et la comparaison redevient stricte d'elle-même. */
+    const NOTE_V51 = "Un lien de confirmation part sur la nouvelle adresse. Tant que tu n'as pas cliqué dessus, tu continues de te connecter avec l'ancienne — c'est ce qui t'évite de perdre ton compte en cas de faute de frappe.";
+    const NOTE_V52 = "Un lien de confirmation part sur la nouvelle adresse (et, par sécurité, un autre sur l'ancienne : clique les deux). Tant que ce n'est pas fait, tu continues de te connecter avec l'ancienne — c'est ce qui t'évite de perdre ton compte en cas de faute de frappe.";
+    const sansNote = t => t.split(NOTE_V52).join("[note du changement d'adresse]").split(NOTE_V51).join("[note du changement d'adresse]");
+    ok("client Thomas, Profil : texte identique à main (hors note du changement d'adresse, v52)", pro.t.length > 200 && pro.t.includes(NOTE_V52) && sansNote(pro.t) === sansNote(proM.t), pro.t.length + " / " + proM.t.length + " · nouvelle note : " + pro.t.includes(NOTE_V52));
     await pro.c.close(); await proM.c.close();
   });
   await bloc("J. fiche d'un client et Mes clients", async () => {

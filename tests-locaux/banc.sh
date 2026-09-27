@@ -27,7 +27,7 @@ etat_disque() { git -C .. status --porcelain --untracked-files=no 2>/dev/null; }
 DISQUE_DEBUT=$(etat_disque)
 
 # Suites du banc, et suites volontairement hors banc (verif44 à verif47 testent le Challenge 7 jours supprimé).
-SUITES="flux verif34 verif35 verif36 verif37 verif38 verif-xss verif39 verif40 verif41 verif42 verif43 verif48 verif49 verif50 verif51 verif52 verif53 verif54"
+SUITES="flux verif34 verif35 verif36 verif37 verif38 verif-xss verif39 verif40 verif41 verif42 verif43 verif48 verif49 verif50 verif51 verif52 verif53 verif54 verif55"
 HORS_BANC="verif44 verif45 verif46 verif47"
 
 # Nombre EXACT de ✓ attendus par suite (et de pages pour rig, de vérifications pour la fonction emails).
@@ -35,9 +35,9 @@ HORS_BANC="verif44 verif45 verif46 verif47"
 attendu() {
   case "$1" in
     flux) echo 19;; verif34) echo 13;; verif35) echo 14;; verif36) echo 13;; verif37) echo 15;; verif38) echo 67;;
-    verif-xss) echo 5;; verif39) echo 43;; verif40) echo 81;; verif41) echo 25;; verif42) echo 20;; verif43) echo 34;;
+    verif-xss) echo 5;; verif39) echo 50;; verif40) echo 81;; verif41) echo 25;; verif42) echo 20;; verif43) echo 34;;
     verif48) echo 41;; verif49) echo 130;; verif50) echo 60;; verif51) echo 123;; verif52) echo 186;; verif53) echo 137;;
-    verif54) echo 64;; rig) echo 78;; fonction) echo 88;; *) echo "";;
+    verif54) echo 64;; verif55) echo 73;; rig) echo 78;; fonction) echo 88;; *) echo "";;
   esac
 }
 # Partie de chaque suite pour les jobs parallèles de GitHub Actions (10 parties, durées équilibrées, 4 à 5 minutes chacune).

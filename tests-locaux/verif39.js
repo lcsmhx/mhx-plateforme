@@ -5,6 +5,10 @@
    encore dans leurs 7 jours), inscription « Crée ton accès découverte » avec les deux cases
    (conditions + données de santé), arrivée du nouveau compte sur l'écran Découverte sans aucune
    écriture dans donnees (rien ne part avant un âge ≥ 18).
+   v52 (chantier 1, lot A) : 7 vérifications reprises de la branche attente/nuit-28-09 (index.html les reprend aussi) :
+   erreurs d'envoi d'email en français, jamais le texte brut de Supabase (inscription : serveur d'emails en panne,
+   limite horaire, limite par adresse ; mot de passe oublié : panne, limite horaire), liens du changement d'adresse
+   en deux temps (premier lien, dernier lien). Détails et variantes (anglais, connecté, Profil) : verif55 bloc B.
    Usage : node verif39.js ../index.html                                         */
 const { chromium } = require("playwright"); const fs = require("fs"); const http = require("http"); const path = require("path");
 const F = require("./fixtures"); const HTML = path.resolve(process.argv[2] || "../index.html");
@@ -42,11 +46,13 @@ async function contexte(b, who, db, opts) {
     if (p.startsWith("/auth/v1/signup")) {
       const corps = JSON.parse(req.postData() || "{}"); db.inscriptions.push(corps);
       if (opts.inscriptionKo) return json({ msg: "Signups not allowed for this instance" }, 422);
+      if (opts.inscriptionErreur) return json({ msg: opts.inscriptionErreur.msg }, opts.inscriptionErreur.status);   // v52 : SMTP en panne, limites
       const id = "00000000-0000-4000-8000-00000000abcd";
       /* le declencheur de la base : profil avec prenom / nom, statut par defaut « prospect » */
       db.profils.push(Object.assign({ id, prenom: corps.data.prenom, nom: corps.data.nom, role: "client", cree_le: new Date().toISOString() }, "statut" in db.profils[0] ? { statut: "prospect" } : {}));
       return json(F.session(id, corps.email));
     }
+    if (p.startsWith("/auth/v1/recover") && opts.recoverErreur) { db.oublis = (db.oublis || 0) + 1; return json({ msg: opts.recoverErreur.msg }, opts.recoverErreur.status); }
     if (p.startsWith("/auth/v1/token")) return json(who ? F.session(who.id, who.email) : { error: "invalid" }, who ? 200 : 400);
     if (p.startsWith("/auth/v1/")) return json({});
     if (p === "/functions/v1/creer-acces") {
@@ -92,7 +98,9 @@ async function contexte(b, who, db, opts) {
   await c.addInitScript(({ s, langue }) => { if (s) localStorage.setItem("mhx_session", JSON.stringify(s)); localStorage.setItem("mhx_installe", "1"); localStorage.setItem("mhx_visites", "3"); if (langue) localStorage.setItem("mhx_langue", langue); }, { s: who ? who.session : null, langue: opts.langue || "" });
   const page = await c.newPage();
   page.on("pageerror", e => res.push("  ✗ ERREUR JS " + String(e).slice(0, 300)));
-  page.on("console", msg => { if (msg.type() === "error" && !/ERR_FAILED|status of 4\d\d/.test(msg.text())) res.push("  ✗ CONSOLE " + msg.text().slice(0, 200)); });
+  /* un 500 simulé exprès (serveur d'emails en panne) fait écrire au navigateur « status of 500 » : attendu dans ces cas-là */
+  const attendu500 = !!(opts && ((opts.inscriptionErreur && opts.inscriptionErreur.status >= 500) || (opts.recoverErreur && opts.recoverErreur.status >= 500)));
+  page.on("console", msg => { if (msg.type() === "error" && !/ERR_FAILED|status of 4\d\d/.test(msg.text()) && !(attendu500 && /status of 5\d\d/.test(msg.text()))) res.push("  ✗ CONSOLE " + msg.text().slice(0, 200)); });
   page.on("dialog", d => { res.push("  ✗ DIALOGUE NATIF"); d.dismiss(); });
   return { c, page };
 }
@@ -320,6 +328,59 @@ const lireTuiles = page => page.$$eval("#tb-vue .tb-tuile", l => l.map(t => {
     ok("inscription refusée par Supabase : « Sign-ups are not open yet. »", (await page.textContent("#co-err")).includes("Sign-ups are not open yet"));
     await c.close();
   }
+  /* v52 (reprise de la nuit du 28/09) : erreurs d'envoi d'email (SMTP Brevo en panne, limite horaire du projet) : jamais l'anglais brut */
+  for (const [quoi, err, attendu] of [
+    ["serveur d'emails en panne", { status: 500, msg: "Error sending confirmation email" }, "L'email n'a pas pu partir (souci de notre côté). Réessaie dans un moment ; si ça continue, écris-moi sur Instagram (@lucasmhxcoaching)."],
+    ["limite horaire d'emails du projet", { status: 429, msg: "email rate limit exceeded" }, "Beaucoup d'inscriptions en ce moment : réessaie dans une heure."],
+    ["limite par adresse (inchangée)", { status: 429, msg: "For security purposes, you can only request this after 42 seconds." }, "Trop de demandes d'un coup : réessaie dans une minute."]]) {
+    inscriptionLibre = true;
+    const db = base();
+    const { c, page } = await contexte(b, null, db, { inscriptionErreur: err });
+    await page.goto(`http://localhost:${PORT}/#/inscription`); await attendre(page, 1200);
+    await page.fill("#c-prenom", "Zoé"); await page.fill("#c-email", "z@exemple.fr"); await page.fill("#c-mdp", "motdepasse1"); await page.check("#c-cgu"); await page.check("#c-sante");
+    await page.click("#c-go"); await attendre(page, 800);
+    const t = await page.textContent("#co-err");
+    ok("inscription, " + quoi + " (« " + err.msg + " ») : message en français, jamais le texte anglais brut", t.includes(attendu) && !t.includes(err.msg), t);
+    await c.close();
+  }
   inscriptionLibre = false;
+  {
+    const db = base();
+    const { c, page } = await contexte(b, null, db, { recoverErreur: { status: 500, msg: "Error sending recovery email" } });
+    await page.goto(`http://localhost:${PORT}/`); await attendre(page, 1000);
+    await page.click('[data-mode="oubli"]'); await attendre(page, 300);
+    await page.fill("#c-email", "client@exemple.fr"); await page.click("#c-go"); await attendre(page, 800);
+    const t = await page.textContent("#co-err");
+    ok("mot de passe oublié, serveur d'emails en panne (« Error sending recovery email ») : message en français", db.oublis === 1 && t.includes("L'email n'a pas pu partir (souci de notre côté).") && !/Error sending/.test(t), t);
+    await c.close();
+  }
+  {
+    const db = base();
+    const { c, page } = await contexte(b, null, db, { recoverErreur: { status: 429, msg: "email rate limit exceeded" } });
+    await page.goto(`http://localhost:${PORT}/`); await attendre(page, 1000);
+    await page.click('[data-mode="oubli"]'); await attendre(page, 300);
+    await page.fill("#c-email", "client@exemple.fr"); await page.click("#c-go"); await attendre(page, 800);
+    const t = await page.textContent("#co-err");
+    ok("mot de passe oublié, limite horaire d'emails du projet : message neutre « Trop d'emails envoyés en peu de temps : réessaie dans une heure. » (pas « Beaucoup d'inscriptions »)", t.includes("Trop d'emails envoyés en peu de temps : réessaie dans une heure.") && !/inscriptions|rate limit/i.test(t), t);
+    await c.close();
+  }
+  {
+    /* changement d'adresse : le DERNIER lien revient avec #access_token=…&type=email_change — le changement est fait */
+    const db = base();
+    const { c, page } = await contexte(b, null, db);
+    await page.goto(`http://localhost:${PORT}/#access_token=abc.def.ghi&expires_in=3600&refresh_token=xyz&token_type=bearer&type=email_change`); await attendre(page, 1200);
+    const t = await page.textContent("#co-err").catch(() => "");
+    ok("changement d'adresse, dernier lien cliqué (déconnecté) : « Ton adresse email est changée : utilise la nouvelle pour te connecter. », jetons retirés de l'adresse", t.includes("Ton adresse email est changée : utilise la nouvelle pour te connecter.") && !/access_token/.test(page.url()), t + " · " + page.url());
+    await c.close();
+  }
+  {
+    /* changement d'adresse (« Secure email change ») : le PREMIER des deux liens revient sans jeton, avec #message=… */
+    const db = base();
+    const { c, page } = await contexte(b, null, db);
+    await page.goto(`http://localhost:${PORT}/#message=Confirmation+link+accepted.++Please+proceed+to+confirm+link+sent+to+the+other+email`); await attendre(page, 1200);
+    const t = await page.textContent("#co-err").catch(() => "");
+    ok("changement d'adresse, premier lien cliqué (déconnecté) : « Premier lien accepté : clique maintenant celui reçu sur ton autre adresse… », adresse nettoyée, jamais l'anglais", t.includes("Premier lien accepté : clique maintenant celui reçu sur ton autre adresse.") && !/Confirmation link accepted/.test(await page.textContent("body")) && !/message=/.test(page.url()), t + " · " + page.url());
+    await c.close();
+  }
   await b.close(); server.close(); console.log(res.join("\n"));
 })();
