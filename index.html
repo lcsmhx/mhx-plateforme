@@ -366,6 +366,9 @@ footer a{color:var(--accent)}
 .fiche-grille .panel + .panel{margin-top:0}
 ul.fiche-l li{font-size:13.5px}
 ul.fiche-l li b{font-family:"IBM Plex Sans",sans-serif;text-align:right}
+/* v51 : un email ou une reponse sans espace ne fait jamais defiler la page a l'horizontale */
+ul.fiche-l li b{min-width:0;overflow-wrap:anywhere}
+.dc-chrono li span{min-width:0;overflow-wrap:anywhere} .sc-carte,.sc-fiche,.sc-raisons{overflow-wrap:anywhere}
 a.pastille{text-decoration:none;cursor:pointer}
 
 /* --- tableau de bord coach --- */
@@ -1014,7 +1017,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-09-26 · 50",
+    version: "2026-09-27 · 51",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -1396,7 +1399,7 @@ const DECOUVERTE = {
   emails: {
     titre: "Emails de suivi",
     libelle: "Recevoir par email des rappels et conseils liés à ma découverte (3 au plus)",
-    note: "Tu peux changer d'avis à tout moment. L'email de confirmation de ton compte n'en fait pas partie.",
+    note: "Tu peux changer d'avis à tout moment. L'email de confirmation de ton compte n'en fait pas partie. Si tu t'es désabonné depuis ta messagerie, demande aussi à ton coach de te réinscrire.",
     oui: "C'est noté : tu recevras les emails de suivi.",
     non: "C'est noté : plus aucun email de suivi.",
     refuse: "Non enregistré : réessaie dans un instant."
@@ -1442,7 +1445,7 @@ const DECOUVERTE = {
       "Données de santé (RGPD article 9) : tu dois accepter explicitement le traitement de tes données concernant ta santé (poids, blessures, contre-indications). Tu peux les consulter ou les supprimer à tout moment. Ces données sont conservées tant que ton compte existe.",
       "Hébergement : Supabase, serveurs en Europe (Irlande).",
       "Prise de rendez-vous : ton bilan se réserve sur Calendly (société américaine), qui enregistre ta réservation pour le compte du coach ; ces données peuvent être traitées aux États-Unis (cadre de protection des données UE–États-Unis). Ton prénom et ton email y sont pré-remplis dès que tu ouvres la page de réservation, avec l'écran de l'app d'où tu viens.",
-      "Emails de suivi (facultatif) : si tu coches la case, tu reçois au plus 3 emails liés à ta découverte (bienvenue, rappel du questionnaire, relance), envoyés par Brevo (société française, données hébergées dans l'Union européenne) pour le compte du coach. Désinscription en un clic dans chaque email ou depuis ton Profil. L'email de confirmation de ton compte est envoyé dans tous les cas.",
+      "Emails de suivi (facultatif) : si tu coches la case, tu reçois au plus 3 emails liés à ta découverte (bienvenue, rappel du questionnaire, relance), envoyés par Brevo (société française, données hébergées dans l'Union européenne) pour le compte du coach. Brevo indique au coach si chaque email a été ouvert et si un lien a été cliqué : cela compte dans le suivi de ta découverte. Désinscription en un clic dans chaque email ou depuis ton Profil. L'email de confirmation de ton compte est envoyé dans tous les cas.",
       "Tes droits : tu peux exporter ou supprimer ton compte et toutes tes données à tout moment depuis Profil, section « Mes données », ou en écrivant au coach.",
       "Conservation : tant que ton compte existe.",
       "En cochant la case, tu acceptes ces conditions."
@@ -1552,7 +1555,7 @@ const DECOUVERTE = {
     emails: {
       titre: "Follow-up emails",
       libelle: "Receive email reminders and tips about my discovery (3 at most)",
-      note: "You can change your mind at any time. Your account confirmation email is not part of these.",
+      note: "You can change your mind at any time. Your account confirmation email is not part of these. If you unsubscribed from your mailbox, also ask your coach to re-subscribe you.",
       oui: "Noted: you will receive the follow-up emails.",
       non: "Noted: no more follow-up emails.",
       refuse: "Not saved: try again in a moment."
@@ -1592,7 +1595,7 @@ const DECOUVERTE = {
         "Health data (GDPR article 9): you must explicitly accept the processing of your health data (weight, injuries, medical contraindications). You can view or delete this data at any time. This data is kept as long as your account exists.",
         "Hosting: Supabase, servers in Europe (Ireland).",
         "Booking: your assessment is booked on Calendly (a US company), which records your booking on the coach's behalf; this data may be processed in the United States (EU–US Data Privacy Framework). Your first name and email are pre-filled as soon as you open the booking page, along with the app screen you came from.",
-        "Follow-up emails (optional): if you tick the box, you receive at most 3 emails about your discovery (welcome, questionnaire reminder, follow-up), sent by Brevo (a French company, data hosted in the European Union) on the coach's behalf. One-click unsubscribe in every email or from your Profile. The account confirmation email is sent in every case.",
+        "Follow-up emails (optional): if you tick the box, you receive at most 3 emails about your discovery (welcome, questionnaire reminder, follow-up), sent by Brevo (a French company, data hosted in the European Union) on the coach's behalf. Brevo tells the coach whether each email was opened and whether a link was clicked: this counts in the follow-up of your discovery. One-click unsubscribe in every email or from your Profile. The account confirmation email is sent in every case.",
         "Your rights: you can export or delete your account and all your data at any time from Profile, section \"My data\", or by writing to the coach.",
         "Retention: as long as your account exists.",
         "By ticking the box, you accept these terms."
@@ -2910,8 +2913,16 @@ const Auth = {
                       { method: "POST", avecJeton: false, body: { email } });
   },
   async deconnecter(){
+    /* v51 : un double clic ne lance pas deux deconnexions (la 2e effacerait tout pendant que la 1re envoie encore) */
+    if (this._deconnexion) return;
+    this._deconnexion = true;
+    try { await this.deconnecterUneFois(); } finally { this._deconnexion = false; }
+  },
+  async deconnecterUneFois(){
     /* v48 : ce qui attend part d'abord, avec le jeton ; s'il reste des modifications non envoyees (hors ligne),
        on le dit avant de tout effacer de l'appareil */
+    /* v51 : l'activite du prospect part d'abord (sa copie locale est effacee avec le reste) */
+    try { if (typeof Activite !== "undefined") await Promise.race([Activite.vider(), new Promise(r => setTimeout(r, 3000))]); } catch(e){}
     try { await Promise.race([Store.toutEnvoyer(false), new Promise(r => setTimeout(r, 4000))]); } catch(e){}
     const moi = this.utilisateur();
     const nonEnvoyees = moi ? Object.values(Store.attenteLire()).filter(e => e && e.a === moi.id).length : 0;
@@ -3168,6 +3179,15 @@ const Store = {
   },
   /* l'onglet se cache ou se ferme (vite : keepalive, sans renouvellement) ou la personne se deconnecte
      (vite === false : avec le jeton, on attend les reponses) : ce qui attendait ses 700 ms part tout de suite */
+  /* v51 : envoie tout de suite la valeur en attente d'une cle (sans attendre les 700 ms) et attend la reponse */
+  envoyerCle(cle){
+    const uid = this.cible(); if (!uid) return Promise.resolve();
+    const k = uid + "|" + cle, v = this.valeursEnAttente[k];
+    if (v === undefined || !this.attente[k]) return Promise.resolve();
+    const t = this.tEnAttente[k];
+    clearTimeout(this.attente[k]); delete this.attente[k]; delete this.valeursEnAttente[k]; delete this.tEnAttente[k];
+    return Promise.resolve(this.envoyer(cle, v, uid, t, false)).catch(() => {});
+  },
   toutEnvoyer(vite){
     const envois = [];
     Object.keys(this.attente).forEach(k => {
@@ -3208,14 +3228,21 @@ const Store = {
           const ms = m ? new Date(m).getTime() : NaN, ts = new Date(e.t).getTime();
           /* meme instant : la copie etait deja arrivee (envoi a la fermeture de l'onglet) → retiree sans rien dire ;
              serveur strictement plus recent : on ne l'ecrase pas, et on le dit */
-          if (m && !(ms < ts)){ this.lacher(uid, cle, e.t); if (ms > ts) ecartees.push({ cle: cle, t: e.t, autre: uid !== u.id }); continue; }
+          if (m && !(ms < ts)){
+            /* v51 : l'activite du prospect n'est pas une saisie : sans message, la copie reste sur l'appareil et Activite
+               la fusionne (maximum) au prochain envoi, qui la remplace ; elle n'est retiree que s'il n'y a plus de suivi */
+            if (cle === "activite" && ms > ts && typeof Activite !== "undefined" && Activite.suivi() && uid === u.id){ Activite.rattraper(e.v, uid); continue; }
+            this.lacher(uid, cle, e.t);
+            if (cle === "activite") continue;
+            if (ms > ts) ecartees.push({ cle: cle, t: e.t, autre: uid !== u.id }); continue;
+          }
           await this.envoyer(cle, e.v, uid, e.t, false, true);
           if (this.attenteLire()[k]) reste = true;
         } catch(err){ reste = true; }
       }
     } finally { this._reprend = false; }
     if (ecartees.length){
-      const nom = c => { const x = (typeof OUTILS !== "undefined" ? OUTILS : []).find(y => y.cle === c); return x ? trad(nomOnglet(x)) : c; };
+      const nom = c => { const x = (typeof OUTILS !== "undefined" ? OUTILS : []).find(y => y.cle === c); return x ? trad(nomOnglet(x)) : c === "emails" ? trad("Emails de suivi") : c; };
       const jourLocal = t => { const d = new Date(t); return isNaN(d) ? "" : d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
       try { UI.toast(trad("Une modification faite hors ligne n'a pas été envoyée ({o}, {d}) : une version plus récente existe déjà.", { o: ecartees.map(x => nom(x.cle) + (x.autre ? " · " + trad("fiche d'un client") : "")).join(", "), d: dateFr(jourLocal(ecartees[0].t)) }), "attention", 9000); } catch(e){}
     }
@@ -3306,6 +3333,9 @@ const Store = {
       if (this.clesCoachSeul.indexOf(cle) > -1) continue;
       if (connues.indexOf(cle) === -1) continue;
       if (!Auth.estCoach() && duCoach.indexOf(cle) > -1) continue;
+      /* v51 : une vieille sauvegarde ne rallume pas les emails de suivi apres une desinscription, et ne remplace pas
+         la mesure d'activite (elles restent dans l'export, droit d'acces) */
+      if (cle === "emails" || cle === "activite") continue;
       if (!d[cle] || typeof d[cle] !== "object") continue;
       this.cache[cle] = d[cle]; await this.envoyer(cle, d[cle]); n++;
     }
@@ -8221,8 +8251,12 @@ const Clients = {
     /* « Activite » = ce que le CLIENT a saisi. Ce que le coach ecrit dans
        sa fiche (programme, diete, calories, feedbacks, notes) ne dit rien de lui. */
     const ecritParCoach = ["programme", "repas", "calc", "complements", "feedbacks", "notes_coach", "suivi_prospect"];
+    /* v51 : ni le choix des emails de suivi, ni la date « vu » des Nouveautes ne sont une saisie ; les pages vues
+       (activite) ne comptent que pour un prospect (un client inactif garde son alerte « Inactif depuis N j ») */
+    const pasSaisie = ["emails", "coach_notifs"], prospects = new Set((profils || []).filter(p => p && p.statut === "prospect").map(p => p.id));
     (donnees || []).forEach(d => {
-      if (ecritParCoach.indexOf(d.outil) === -1 && (!parClient[d.user_id] || d.maj_le > parClient[d.user_id])) parClient[d.user_id] = d.maj_le;
+      const saisie = ecritParCoach.indexOf(d.outil) === -1 && pasSaisie.indexOf(d.outil) === -1 && (d.outil !== "activite" || prospects.has(d.user_id));
+      if (saisie && (!parClient[d.user_id] || d.maj_le > parClient[d.user_id])) parClient[d.user_id] = d.maj_le;
       (contenus[d.user_id] = contenus[d.user_id] || {})[d.outil] = Forme.cle(d.outil, d.contenu);   // v42
     });
     return { profils: profils || [], parClient, contenus };
@@ -8248,7 +8282,7 @@ const Clients = {
       /* questionnaire court du prospect (Decouverte) : seulement ce que le suivi commercial lit */
       dc: (c.intake && typeof c.intake === "object") ? { court_le: c.intake.court_le, motivation: c.intake.motivation, repondues: Decouverte.repondues(c.intake),
             court_debut: typeof c.intake.court_debut === "string" ? c.intake.court_debut : null, objectif: typeof c.intake.objectif === "string" ? c.intake.objectif.slice(0, 120) : "",
-            email: typeof c.intake.email === "string" ? c.intake.email.slice(0, 254) : "" } : null,
+            email: typeof c.intake.email_compte === "string" && c.intake.email_compte ? c.intake.email_compte.slice(0, 254) : typeof c.intake.email === "string" ? c.intake.email.slice(0, 254) : "" } : null,
       act: (c.activite && typeof c.activite === "object") ? c.activite : null,   // v51 : activite du prospect (score, chronologie)
       suivi: (c.suivi_prospect && typeof c.suivi_prospect === "object") ? c.suivi_prospect : null,   // v49 : suivi commercial
       activite: dernierMaj || null
@@ -8669,16 +8703,22 @@ const JournalEmails = {
 const Nouveautes = {
   cle: "coach_notifs",
   JOURS_PAR_DEFAUT: 7,
-  n: 0, _vu: undefined, _lecture: null,
+  n: 0, _vu: undefined, _lecture: null, erreur: false, _deplie: false, _tCharge: null,
   TYPES: { inscription: "inscription", questionnaire: "questionnaire rempli", clic: "clic « Réserver mon bilan »", reserve: "bilan réservé" },
   COURTS: { inscription: ["inscription", "inscriptions"], questionnaire: ["questionnaire rempli", "questionnaires remplis"], clic: ["clic « Réserver »", "clics « Réserver »"], reserve: ["bilan réservé", "bilans réservés"] },
+  /* date de la derniere visite, relue a chaque affichage (un autre appareil a pu tout marquer comme vu).
+     Une date qui n'est pas au format ISO (valeur piegee) compte comme absente. Lecture ratee : erreur = true,
+     on garde la derniere valeur connue (sinon les 7 derniers jours) et on le dit dans le panneau. */
+  iso(v){ return typeof v === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(v) && !isNaN(Date.parse(v)); },
   async vu(){
-    if (this._vu !== undefined) return this._vu;
     if (!this._lecture) this._lecture = (async () => {
       let d = null; try { d = await Store.lire(this.cle, {}); } catch(e){ d = null; }
-      this._vu = d && typeof d.vu === "string" && !isNaN(Date.parse(d.vu)) ? d.vu : null;
-      return this._vu;
-    })();
+      const uid = Store.cible();
+      this.erreur = !uid || Store.charge[uid + "|" + this.cle] === false;
+      /* la date ne recule jamais : juste apres « Tout marquer comme vu », l'ecriture (700 ms) peut ne pas etre arrivee */
+      if (!this.erreur){ const lu = d && this.iso(d.vu) ? d.vu : null; this._vu = this._vu && (!lu || Date.parse(this._vu) > Date.parse(lu)) ? this._vu : lu; }
+      return this._vu === undefined ? null : this._vu;
+    })().finally(() => { this._lecture = null; });
     return this._lecture;
   },
   seuil(vu){ const t = typeof vu === "string" ? Date.parse(vu) : NaN; return isNaN(t) ? Date.now() - this.JOURS_PAR_DEFAUT * 86400000 : t; },
@@ -8695,36 +8735,57 @@ const Nouveautes = {
     return out.sort((a, b) => b.t - a.t);
   },
   quand(v){ const d = new Date(v); return isNaN(d) ? "" : dateFr(Decouverte.dateLocale(v) || "") + " " + String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); },
-  html(ev, vu){
+  /* complet = page Prospects : les evenements au-dela des 8 premiers se deplient sur place ;
+     ailleurs (tableau de bord), un lien mene a la page Prospects */
+  html(ev, vu, complet){
     const depuis = vu ? "depuis ta dernière visite (" + this.quand(vu) + ")" : "ces " + this.JOURS_PAR_DEFAUT + " derniers jours";
-    if (!ev.length) return `<section class="panel nv-panneau"><div class="seance-c-tete"><h2>Nouveautés</h2></div><p class="note" style="margin:0">Rien de nouveau chez tes prospects ${esc(depuis)}.</p></section>`;
+    const avert = this.erreur ? `<p class="note" style="margin:0 0 8px;color:var(--bad)">Ta dernière visite n'a pas pu être lue (réseau) : ${vu ? "dernière date connue" : "nouveautés des " + this.JOURS_PAR_DEFAUT + " derniers jours"}.</p>` : "";
+    if (!ev.length) return `<section class="panel nv-panneau"><div class="seance-c-tete"><h2>Nouveautés</h2></div>${avert}<p class="note" style="margin:0">Rien de nouveau chez tes prospects ${esc(depuis)}.</p></section>`;
     const par = t => ev.filter(e => e.type === t).length;
     const types = Object.keys(this.TYPES).filter(t => par(t)).map(t => `<span class="pastille${t === "reserve" ? " ok" : t === "clic" ? " accent" : ""}">${par(t)} ${esc(this.COURTS[t][par(t) > 1 ? 1 : 0])}</span>`).join("");
-    const vus = ev.slice(0, 8);
+    const PREMIERS = 8, MAXI = 300;
+    const li = e => `<li><span class="nv-txt"><b>${esc(e.nom)}</b> · ${esc(this.TYPES[e.type])}</span><time datetime="${esc(e.quand)}">${esc(this.quand(e.quand))}</time><button type="button" class="btn ghost petit" data-nv-ouvrir="${esc(e.uid)}" data-nom="${esc(e.nom)}">Ouvrir</button></li>`;
+    const reste = ev.length - PREMIERS, pl = n => n > 1 ? "s" : "";
+    const suite = reste <= 0 ? ""
+      : complet ? `<ul class="nv-liste nv-suite"${this._deplie ? "" : " hidden"}>${ev.slice(PREMIERS, MAXI).map(li).join("")}</ul>${ev.length > MAXI ? `<p class="note nv-suite"${this._deplie ? "" : " hidden"} style="margin:8px 0 0">Les ${ev.length - MAXI} plus anciennes ne sont pas listées : filtre la liste ci-dessous par date d'inscription.</p>` : ""}${this._deplie ? "" : `<p style="margin:8px 0 0"><button type="button" class="btn ghost petit" data-nv-plus aria-expanded="false">${Math.min(reste, MAXI - PREMIERS) > 1 ? "Voir les " + Math.min(reste, MAXI - PREMIERS) + " suivantes" : "Voir la suivante"}</button></p>`}`
+      : `<p class="note" style="margin:8px 0 0">Et ${reste} autre${pl(reste)} : <a class="link-a" href="#/prospects">tout voir dans la page Prospects →</a></p>`;
     return `<section class="panel nv-panneau"><div class="seance-c-tete"><h2>Nouveautés</h2><span class="pastille accent">${ev.length}</span></div>
-      <p class="note" style="margin:0 0 10px">${esc(depuis.charAt(0).toUpperCase() + depuis.slice(1))} :</p>
+      ${avert}<p class="note" style="margin:0 0 10px">${esc(depuis.charAt(0).toUpperCase() + depuis.slice(1))} :</p>
       <div class="nv-types">${types}</div>
-      <ul class="nv-liste">${vus.map(e => `<li><span class="nv-txt"><b>${esc(e.nom)}</b> · ${esc(this.TYPES[e.type])}</span><time datetime="${esc(e.quand)}">${esc(this.quand(e.quand))}</time><button type="button" class="btn ghost petit" data-nv-ouvrir="${esc(e.uid)}" data-nom="${esc(e.nom)}">Ouvrir</button></li>`).join("")}</ul>
-      ${ev.length > vus.length ? `<p class="note" style="margin:8px 0 0">Et ${ev.length - vus.length} autre${ev.length - vus.length > 1 ? "s" : ""} : tout est dans la page Prospects.</p>` : ""}
+      <ul class="nv-liste">${ev.slice(0, PREMIERS).map(li).join("")}</ul>
+      ${suite}
       <div class="actions"><button type="button" class="btn ghost petit" data-nv-vu>Tout marquer comme vu</button><span class="msg" role="status" aria-live="polite"></span></div></section>`;
   },
-  async monter(boite, lignes){
+  /* tCharge : l'instant ou les lignes affichees ont ete lues — « Tout marquer comme vu » ne marque rien de plus recent */
+  async monter(boite, lignes, complet, tCharge){
     if (!boite || !Auth.estCoach() || Store.idConsulte) return;
+    this._tCharge = typeof tCharge === "string" ? tCharge : new Date().toISOString();
     const vu = await this.vu();
     if (!boite.isConnected || Store.idConsulte) return;
     const ev = this.evenements(lignes, vu);
     this.n = ev.length; this.badge();
-    boite.innerHTML = this.html(ev, vu);
+    boite.innerHTML = this.html(ev, vu, complet);
     $$("[data-nv-ouvrir]", boite).forEach(b => b.addEventListener("click", () => Clients.ouvrir(b.dataset.nvOuvrir, b.dataset.nom, "accueil")));
+    const plus = boite.querySelector("[data-nv-plus]");
+    if (plus) plus.addEventListener("click", () => { this._deplie = true; $$(".nv-suite", boite).forEach(x => { x.hidden = false; }); plus.parentNode.remove(); });
     const bv = boite.querySelector("[data-nv-vu]");
-    if (bv) bv.addEventListener("click", () => {
-      if (!this.marquerVu()){ const m = boite.querySelector(".msg"); if (m) m.textContent = "Non enregistré : réessaie dans un instant."; return; }
-      boite.innerHTML = this.html([], this._vu);
+    if (bv) bv.addEventListener("click", async () => {
+      bv.disabled = true;
+      const ok = await this.marquerVu();
+      if (!boite.isConnected) return;
+      if (!ok){ bv.disabled = false; const m = boite.querySelector(".msg"); if (m) m.textContent = "Non enregistré : vérifie ta connexion et réessaie."; return; }
+      this.erreur = false;
+      boite.innerHTML = this.html([], this._vu, complet);
     });
   },
-  /* la date de derniere visite = maintenant ; false si l'ecriture est refusee (rien ne change alors) */
-  marquerVu(){
-    const vu = new Date().toISOString(), avant = this._vu;
+  /* la date de derniere visite = maintenant ; false si l'ecriture est refusee (rien ne change alors).
+     Si la lecture avait rate, on relit d'abord : sans lecture reussie, le Store refuse d'ecrire (a raison). */
+  async marquerVu(){
+    const uid = Store.cible(); if (!uid) return false;
+    /* relue juste avant : un autre appareil a pu marquer vu plus tard (la date en base ne recule jamais) */
+    await this.vu(); if (Store.charge[uid + "|" + this.cle] !== true) return false;
+    const t = Date.parse(this._tCharge), charge = !isNaN(t) && t <= Date.now() ? t : Date.now(), avant = this._vu;
+    const vu = new Date(Math.max(charge, this.iso(avant) ? Date.parse(avant) : 0)).toISOString();
     const d = Object.assign({}, (Store.cache[this.cle] && typeof Store.cache[this.cle] === "object") ? Store.cache[this.cle] : {}, { vu: vu });
     if (Store.ecrire(this.cle, d) === false){ this._vu = avant; return false; }
     this._vu = vu; this.n = 0; this.badge();
@@ -8761,10 +8822,13 @@ const outilProspects = {
   /* garder = rechargement apres une action sur une carte : le coach garde sa place (nombre de prospects affiches) */
   async init(garder){
     const zone = $("pr-vue"); if (!zone) return;
+    if (!garder && typeof Nouveautes !== "undefined") Nouveautes._deplie = false;
+    const t0 = new Date().toISOString();
     try { [this.donnees] = await Promise.all([Clients.charger(), JournalEmails.charger()]); }
     catch(e){ zone.innerHTML = `<header class="masthead"><h1>Prospects</h1></header><section class="panel"><div class="empty">Impossible de charger les prospects pour le moment.</div></section>`; return; }
     if (!zone.isConnected) return;
     if (!garder) this.limite = this.PAS;
+    this.tCharge = t0;
     this.rendre(zone);
   },
   /* chaque prospect : sa ligne (Clients.resumer), son analyse (statut, action) et son score */
@@ -8853,7 +8917,7 @@ const outilProspects = {
       UI.toast(liste.length + " prospect" + (liste.length > 1 ? "s" : "") + " exporté" + (liste.length > 1 ? "s" : "") + ".", "ok");
     });
     this.majListe(zone);
-    if (typeof Nouveautes !== "undefined") Nouveautes.monter(zone.querySelector("#pr-nouveautes"), this.lignes);
+    if (typeof Nouveautes !== "undefined") Nouveautes.monter(zone.querySelector("#pr-nouveautes"), this.lignes, true, this.tCharge);
   },
   /* la liste seule (les filtres ne redessinent pas la recherche : le curseur y reste) */
   majListe(zone){
@@ -8912,6 +8976,7 @@ const outilTableau = {
   async init(){
     const zone = $("tb-vue"); if (!zone) return;
     let profils, parClient, contenus;
+    const t0 = new Date().toISOString();   // v51 : instant de lecture (Nouveautés)
     try { [{ profils, parClient, contenus }] = await Promise.all([Clients.charger(), JournalEmails.charger()]); }
     catch(e){ zone.innerHTML = `<section class="panel"><div class="empty">Impossible de charger tes clients pour le moment.</div></section>`; return; }
     const lignes = Clients.resumer(profils, parClient, contenus);
@@ -8967,7 +9032,7 @@ const outilTableau = {
       </section>`;
     $$("[data-fiche]", zone).forEach(b => b.addEventListener("click", () => Clients.ouvrir(b.dataset.fiche, b.dataset.nom, b.dataset.cible)));
     Commercial.brancher(zone, () => { if (zone.isConnected) this.init(); });   // v49
-    Nouveautes.monter(zone.querySelector("#tb-nouveautes"), lignes);   // v51
+    Nouveautes.monter(zone.querySelector("#tb-nouveautes"), lignes, false, t0);   // v51
   }
 };
 
@@ -10228,7 +10293,8 @@ const outilAccueil = {
       <ul class="ingr fiche-l dc-score">${sc.lignes.map(l => `<li><span>${esc(l.lbl)}${l.bonus ? " (bonus)" : ""}</span><b>${l.nonMesure ? "—" : l.pts + " / " + l.max}</b></li>`).join("")}</ul>
       <p class="note" style="margin:10px 0 0">Total plafonné à 100. Le score se recalcule à chaque ouverture.</p></section>`;
     const qs = (Decouverte.cfg().questions || []).map(id => QUESTIONS.find(q => q.id === id) || (DECOUVERTE.questions || []).find(q => q.id === id)).filter(Boolean);
-    const email = s(I.email).trim();
+    /* email_compte : l'email du compte, copie par l'app (v51) ; a defaut, le champ « Email » du questionnaire complet */
+    const email = s(I.email_compte).trim() || s(I.email).trim();
     const rep = [["Email", email]].concat(qs.map(q => [q.label, s(I[q.id]) ? s(I[q.id]) + (q.type === "echelle" ? " / 10" : "") : ""]));
     const repHTML = `<section class="panel" id="fiche-reponses"><h2>Réponses au questionnaire court</h2>
       <p class="note" style="margin:0 0 8px">${sc.repondues} / ${sc.questions} réponses${Decouverte.questionnaireFait(I) ? ", validé le " + esc(dt(I.court_le)) : ", pas encore validé"}.</p>
@@ -10251,7 +10317,7 @@ const outilAccueil = {
     (Array.isArray(E) ? E : []).forEach(m => {
       if (!m || typeof m !== "object") return;
       const nom = "Email de suivi « " + (JournalEmails.MODELES[m.modele] || "email") + " »";
-      ajoute(m.envoye_le, nom + " envoyé");
+      ajoute(m.envoye_le, nom + (m.statut === "abandon" ? " non délivré (adresse bloquée ou invalide)" : " envoyé"));
       ajoute(m.ouvert_le, nom + " ouvert");
       ajoute(m.clique_le, nom + " : lien cliqué");
     });
@@ -10297,7 +10363,8 @@ const outilAccueil = {
     const profil = { id: Store.idConsulte, prenom: nomC.split(" ")[0], nom: nomC.split(" ").slice(1).join(" "), role: "client" };
     if (pr && "statut" in pr) profil.statut = pr.statut;
     const ecritParCoach = ["programme", "repas", "calc", "complements", "feedbacks", "notes_coach", "suivi_prospect"];
-    const dernier = Object.keys(dates).filter(k => ecritParCoach.indexOf(k) === -1 && dates[k]).map(k => dates[k]).sort().pop() || null;
+    /* v51 : les pages vues (activite) ne sont une activite que pour un prospect, comme dans Mes clients */
+    const dernier = Object.keys(dates).filter(k => ecritParCoach.indexOf(k) === -1 && dates[k] && (k !== "activite" || profil.statut === "prospect")).map(k => dates[k]).sort().pop() || null;
     const l = Clients.resumerUn(profil, d, dernier);
     const r = Regularite.calculer({ programme: P, journal: J, repas: R, repas_suivi: S, mens: M }, 0), prec = Regularite.calculer({ programme: P, journal: J, repas: R, repas_suivi: S, mens: M }, -1);
     const b = outilBilan.calculer({ programme: P, journal: J, repas: R, repas_suivi: S, mens: M, objectifs_faits: d.objectifs_faits || {} });
@@ -11087,7 +11154,15 @@ const Activite = {
   /* _base : la derniere valeur connue de la base ; _delta : ce qui s'est passe depuis la derniere ecriture.
      Rien n'est lu a l'affichage d'une page (une page verrouillee ne lit aucune donnee) : la base est relue
      juste avant d'ecrire, et le delta s'y ajoute (deux onglets s'additionnent, ils ne s'effacent pas). */
-  _base: null, _delta: null, _uid: null, _vu: null, _minuteur: null, _ecoute: false, _envoi: false,
+  /* _enVol : le delta en cours d'envoi tant qu'il n'est pas confie au Store (onglet ferme pendant la relecture :
+     il part dans la copie locale) ; _extra : une copie hors ligne ecartee par Store.reprendre, a fusionner.
+     Copie locale « mhx_activite_attente|<uid> » : ce qu'un onglet ferme n'a pas pu envoyer, repris a la visite suivante. */
+  _base: null, _delta: null, _uid: null, _vu: null, _minuteur: null, _ecoute: false, _envoi: false, _enVol: null, _extra: null, _dernier: 0, _ferme: false,
+  LOCAL: "mhx_activite_attente|", _envoiP: null,
+  /* la copie locale reste dans localStorage, meme sans « Rester connecte » : sessionStorage est efface avec l'onglet
+     (la derniere visite serait perdue) et copie dans un onglet duplique (comptee deux fois). Ce ne sont que des
+     compteurs de visite, effaces a la deconnexion. */
+  magasin(){ return localStorage; },
   vide(){ return { version: 1, jours: [], pages: {}, temps_s: 0, derniere: null }; },
   suivi(){ return Auth.estProspect() && !Store.idConsulte; },
   /* une valeur lue (le prospect ecrit ce qu'il veut dans sa cle) remise d'aplomb : jours = dates, pages = compteurs */
@@ -11110,17 +11185,96 @@ const Activite = {
     if (d.derniere && (!A.derniere || d.derniere > A.derniere)) A.derniere = d.derniere;
     return A;
   },
+  /* deux valeurs completes (base connue, base relue, copie ecartee) : jours reunis, et pour chaque compteur le plus
+     grand. Jamais d'addition ici : une meme visite presente des deux cotes n'est pas comptee deux fois */
+  fusion(a, b){
+    const A = this.propre(a); if (!b) return A;
+    const B = this.propre(b);
+    A.jours = Array.from(new Set(A.jours.concat(B.jours))).sort().slice(-60);
+    Object.keys(B.pages).forEach(k => { A.pages[k] = Math.max(A.pages[k] || 0, B.pages[k]); });
+    A.temps_s = Math.max(A.temps_s, B.temps_s);
+    if (B.derniere && (!A.derniere || B.derniere > A.derniere)) A.derniere = B.derniere;
+    return A;
+  },
   /* un delta qui n'a pas pu partir revient dans le delta courant (rien n'est perdu, rien n'est compte deux fois) */
   remettre(d){ this._delta = this._delta ? this.combiner(d, this._delta) : d; this._delta.version = 1; },
+  /* onglet ferme : ce qui n'est pas parti va dans la copie locale (additionnee a celle d'un autre onglet ferme) */
+  garderLocal(){
+    const uid = this._uid, u = Auth.utilisateur();
+    if (!uid || !u || u.id !== uid) return;
+    let d = this._delta; if (this._enVol) d = d ? this.combiner(this._enVol, d) : this._enVol;
+    if (!d || (!d.jours.length && !Object.keys(d.pages).length && !d.temps_s)) return;
+    try {
+      const m = this.magasin();
+      let x = null; try { x = JSON.parse(m.getItem(this.LOCAL + uid) || "null"); } catch(e){ x = null; }
+      const tot = (x && typeof x === "object") ? this.combiner(x, d) : this.combiner(this.vide(), d);
+      tot.jours = tot.jours.slice(-60);
+      m.setItem(this.LOCAL + uid, JSON.stringify(tot));
+      this._delta = null; this._enVol = null;
+    } catch(e){}
+  },
+  /* lecture de la copie locale (onglets fermes) SANS la retirer : elle reste sur l'appareil tant que le Store n'a pas
+     pris l'ecriture qui la contient (une app tuee sans pagehide ne perd rien) ; { brut, d } ou null */
+  lireLocal(uid){
+    let brut = null, x = null;
+    try { brut = this.magasin().getItem(this.LOCAL + uid); x = JSON.parse(brut || "null"); } catch(e){ x = null; }
+    if (!x || typeof x !== "object") return null;
+    const d = this.propre(x); d.derniere = typeof x.derniere === "string" && !isNaN(Date.parse(x.derniere)) && Date.parse(x.derniere) <= Date.now() + 300000 ? x.derniere : null;
+    return (d.jours.length || Object.keys(d.pages).length || d.temps_s) ? { brut, d } : null;
+  },
+  /* la copie lue a ete confiee au Store : retiree ; si un onglet ferme entre-temps y a ajoute des visites, seul ce
+     qui a ete envoye en est retire (les compteurs ne font que grossir entre deux lectures) */
+  retirerLocal(uid, L){
+    try {
+      const m = this.magasin(), cur = m.getItem(this.LOCAL + uid);
+      if (!cur) return;
+      if (cur === L.brut){ m.removeItem(this.LOCAL + uid); return; }
+      const x = this.propre(JSON.parse(cur)), r = this.vide();
+      Object.keys(x.pages).forEach(k => { const n = x.pages[k] - (L.d.pages[k] || 0); if (n > 0) r.pages[k] = n; });
+      r.temps_s = Math.max(0, x.temps_s - L.d.temps_s);
+      r.jours = x.jours.filter(j => L.d.jours.indexOf(j) === -1);
+      r.derniere = x.derniere && (!L.d.derniere || x.derniere > L.d.derniere) ? x.derniere : null;
+      if (r.jours.length || Object.keys(r.pages).length || r.temps_s) m.setItem(this.LOCAL + uid, JSON.stringify(r)); else m.removeItem(this.LOCAL + uid);
+    } catch(e){}
+  },
+  /* copie hors ligne ecartee par Store.reprendre (le serveur a plus recent) : fusionnee au prochain envoi, sans message */
+  rattraper(v, uid){
+    if (!this.suivi() || !uid || Store.cible() !== uid) return;
+    if (this._uid && this._uid !== uid){ this._base = null; this._delta = null; this._extra = null; }
+    this._uid = uid;
+    this._extra = this.fusion(v, this._extra);
+    this.planifier();
+  },
+  /* onglet repris sans changer de page : le jour et la derniere activite comptent (au plus une fois par 10 min) */
+  reprise(){
+    if (!this.suivi() || !this._uid || Store.cible() !== this._uid || Date.now() - this._dernier < 600000) return;
+    if (!this._delta) this._delta = this.vide();
+    const j = aujourdhui();
+    if (this._delta.jours.indexOf(j) === -1) this._delta.jours.push(j);
+    this._delta.derniere = new Date().toISOString(); this._dernier = Date.now();
+    this.planifier();
+  },
+  /* avant la deconnexion (la copie locale est effacee avec le reste) : attend l'envoi en cours, puis envoie le reste */
+  async vider(){
+    this.compterTemps();
+    if (this._envoiP){ try { await this._envoiP; } catch(e){} }
+    await this.envoyer();
+  },
   ecouter(){
     if (this._ecoute) return; this._ecoute = true;
     this._vu = document.visibilityState === "visible" ? Date.now() : null;
     document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible"){ this._vu = Date.now(); return; }
-      this.compterTemps(); this.envoyer(false);
+      if (document.visibilityState === "visible"){ this._ferme = false; this._vu = Date.now(); this.reprise(); return; }
+      this.compterTemps();
+      /* la page se ferme (Chrome : pagehide passe AVANT « masque ») : rien d'asynchrone, tout reste dans la copie locale */
+      if (this._ferme){ this.garderLocal(); return; }
+      this.envoyer();
     });
-    /* fermeture de l'onglet : pas le temps de relire la base ; on n'ecrit que si elle est deja connue */
-    window.addEventListener("pagehide", () => { this.compterTemps(); this.envoyer(true); });
+    /* fermeture de l'onglet : pas le temps de relire la base, et une base connue peut etre perimee (autre onglet,
+       autre appareil) : rien n'est ecrit, le delta part dans la copie locale, reprise au prochain envoi */
+    window.addEventListener("pagehide", () => { this._ferme = true; this.compterTemps(); this.garderLocal(); });
+    /* page revenue du cache du navigateur : elle vit de nouveau */
+    window.addEventListener("pageshow", e => { if (e && e.persisted) this._ferme = false; });
   },
   compterTemps(){
     if (this._vu == null || !this.suivi()) return;
@@ -11131,42 +11285,73 @@ const Activite = {
   /* une page vue (identifiant court : decouverte-resultat, formation, verrou-programme…) — aucune lecture ici */
   page(id){
     if (!this.suivi() || typeof id !== "string" || !/^[a-z0-9-]{1,40}$/.test(id)) return;
-    const uid = Store.cible();
-    if (this._uid && this._uid !== uid){ this._base = null; this._delta = null; }   // autre compte sur l'appareil
+    const uid = Store.cible(); if (!uid) return;
+    if (this._uid && this._uid !== uid){ this._base = null; this._delta = null; this._extra = null; }   // autre compte sur l'appareil
     this._uid = uid;
     this.ecouter();
     if (!this._delta) this._delta = this.vide();
     const j = aujourdhui();
     if (this._delta.jours.indexOf(j) === -1) this._delta.jours.push(j);
     this._delta.pages[id] = (this._delta.pages[id] || 0) + 1;
-    this._delta.derniere = new Date().toISOString();
+    this._delta.derniere = new Date().toISOString(); this._dernier = Date.now();
     this.planifier();
   },
   planifier(){
     if (this._minuteur) return;
     this._minuteur = setTimeout(() => { this._minuteur = null; this.compterTemps(); this.envoyer(false); }, this.DELAI);
   },
-  /* immediat : fermeture de l'onglet (pas de relecture possible) */
-  async envoyer(immediat){
-    if (this._envoi || this.deltaVide() || !this.suivi() || Store.cible() !== this._uid) return;
+  /* la base est toujours relue juste avant d'ecrire, puis fusionnee avec la derniere valeur ecrite par cet onglet
+     (une ecriture encore en attente ou ratee hors ligne n'est pas perdue) et avec une copie ecartee (_extra) */
+  /* deux onglets du meme prospect ne relisent-ecrivent jamais en meme temps : verrou du navigateur (navigator.locks),
+     et l'ecriture part tout de suite, avant de rendre le verrou — l'onglet suivant relit donc une base a jour.
+     Sans navigator.locks (vieux navigateur) : comme avant, sans verrou. */
+  envoyer(){
+    if (this._envoiP) return this._envoiP;
+    const uid = this._uid;
+    const verrou = uid && typeof navigator !== "undefined" && navigator.locks && typeof navigator.locks.request === "function";
+    let p;
+    try { p = verrou ? navigator.locks.request("mhx-activite|" + uid, () => this.envoyerUneFois(true)) : this.envoyerUneFois(false); }
+    catch(e){ p = this.envoyerUneFois(false); }
+    p = Promise.resolve(p).catch(e => { console.warn("[MHX] activite non envoyee", e); });
+    this._envoiP = p;
+    return p.finally(() => { if (this._envoiP === p) this._envoiP = null; });
+  },
+  async envoyerUneFois(verrouille){
+    if (this._envoi || this._ferme || !this.suivi() || !this._uid || Store.cible() !== this._uid) return;
+    const uid = this._uid;
+    /* ce qu'un onglet ferme (ou celui-ci, revenu du cache du navigateur) n'a pas envoye : lu ici seulement pour savoir
+       s'il y a quelque chose a envoyer (relu apres la lecture reseau) */
+    const L = this.lireLocal(uid);
+    if (this.deltaVide() && !this._extra && !L) return;
     this._envoi = true;
-    const d = this._delta; this._delta = null;
+    const extra = this._extra; let d = this._delta || this.vide(); this._delta = null; this._extra = null; this._enVol = d;
+    const rendre = () => { const aMoi = this._enVol === d; this._enVol = null; if (this._uid === uid){ if (aMoi) this.remettre(d); if (extra) this._extra = this.fusion(extra, this._extra); } };
     try {
-      let base = this._base;
-      if (!immediat){
-        let F = null; try { F = await Store.lire(this.cle, this.vide()); } catch(e){ F = null; }
-        if (!this.suivi() || Store.cible() !== this._uid){ return; }
-        if (!F || typeof F !== "object" || Store.nonLus.has(F)){ this.remettre(d); return; }   // lecture ratee : on reessaiera
-        base = this.propre(F);
-      }
-      if (!base){ this.remettre(d); return; }   // base jamais lue : on n'ecrase pas le vrai compte par un compte partiel
-      const A = this.combiner(base, d);
-      if (Store.ecrire(this.cle, A) === false){ this.remettre(d); return; }
+      let F = null; try { F = await Store.lire(this.cle, this.vide()); } catch(e){ F = null; }
+      if (!this.suivi() || Store.cible() !== uid){ rendre(); return; }
+      if (!F || typeof F !== "object" || Store.nonLus.has(F)){ rendre(); return; }   // lecture ratee : on reessaiera
+      /* onglet masque puis repris pendant la relecture : le delta memoire est deja dans la copie locale, il n'est pas
+         ecrit deux fois (la copie locale, elle, a pu changer : elle est relue) */
+      /* la copie locale est TOUJOURS relue ici (apres la lecture reseau, puis tout est synchrone jusqu'a Store.ecrire) :
+         un autre onglet a pu l'envoyer et la retirer entre-temps (elle arrive alors par sa copie Store, au maximum),
+         ou un onglet ferme a pu y ajouter des visites */
+      const L2 = this.lireLocal(uid);
+      if (this._enVol !== d) d = this.vide();
+      /* la base relue, fusionnee (maximum) avec la derniere valeur ecrite par cet onglet, une copie ecartee et la copie
+         du Store restee sur l'appareil (visite precedente pas encore arrivee) : rien de tout cela n'est perdu */
+      let base = this.fusion(this.fusion(F, this._base), extra);
+      const copie = Store.attenteLire()[uid + "|" + this.cle];
+      if (copie && copie.a === uid && copie.v && typeof copie.v === "object") base = this.fusion(base, copie.v);
+      const A = this.combiner(L2 ? this.combiner(base, L2.d) : base, d);
+      if (Store.ecrire(this.cle, A) === false){ rendre(); return; }
+      this._enVol = null;   // confie au Store : sa copie gardee prend le relais (fermeture, hors ligne)
+      if (L2) this.retirerLocal(uid, L2);
       this._base = A;
-      if (immediat) Store.toutEnvoyer();
+      /* sous verrou : l'ecriture part maintenant et on attend la reponse (5 s au plus) avant de rendre le verrou */
+      if (verrouille) await Promise.race([Store.envoyerCle(this.cle), new Promise(r => setTimeout(r, 5000))]);
     } finally {
       this._envoi = false;
-      if (!this.deltaVide()) this.planifier();
+      if (!this.deltaVide() || this._extra) this.planifier();
     }
   }
 };
@@ -11202,7 +11387,16 @@ const outilDecouverte = {
     const I = await Store.lire("intake", {});
     const C = await Store.lire(Decouverte.cle, Decouverte.vide());
     if (!zone.isConnected) return;
+    this.majEmail(I);
     this.rendre(zone, I, C);
+  },
+  /* v51 : l'email du compte suit le compte (adresse changee dans le Profil) : recopie seulement si un email est deja
+     enregistre et qu'il differe. Une simple visite n'ecrit rien d'autre : sans email enregistre (questionnaire
+     d'avant la v51), il part avec la prochaine reponse ou la prochaine validation. */
+  majEmail(I){
+    if (!I || typeof I !== "object" || Store.nonLus.has(I) || typeof I.email_compte !== "string" || !I.email_compte) return;
+    const mail = Decouverte.emailCompte();
+    if (mail && I.email_compte !== mail){ const avant = I.email_compte; I.email_compte = mail; if (Store.ecrire("intake", I) === false){ if (avant === undefined) delete I.email_compte; else I.email_compte = avant; } }
   },
   questions(){
     const extra = DECOUVERTE.questions || [];
@@ -11266,6 +11460,17 @@ const outilDecouverte = {
       cles.forEach(k => { if (avant[k] === undefined) delete I[k]; else I[k] = avant[k]; delete avant[k]; });
       Store.ecrire("intake", I);
     };
+    /* v51 : apres un rechargement de la page, « avant » est vide : au premier remplissage, un age mineur retire
+       aussi ce qu'une visite precedente avait envoye (reponses du questionnaire court, debut, email du compte) */
+    /* jamais sur le questionnaire complet d'un ancien client repasse prospect (nom ou « complet » : ses donnees restent
+       intactes, comme le promet « Repasser prospect ») : seul ce que ce formulaire a envoye est retire (retirer) */
+    const purger = () => {
+      if (enModification || I.nom || I.complet) return;
+      const presents = qs.map(q => q.id).concat(["court_debut", "email_compte"]).filter(k => Object.prototype.hasOwnProperty.call(I, k));
+      if (!presents.length) return;
+      presents.forEach(k => { delete I[k]; delete avant[k]; });
+      Store.ecrire("intake", I);
+    };
     const brouillon = () => {
       if (enModification || !ageOk) return;
       let change = false;
@@ -11279,14 +11484,14 @@ const outilDecouverte = {
            comme elle, ils sont retires si un age mineur est saisi ensuite */
         const mail = Decouverte.emailCompte();
         if (!I.court_debut){ if (!("court_debut" in avant)) avant.court_debut = I.court_debut; I.court_debut = new Date().toISOString(); }
-        if (mail && !I.email){ if (!("email" in avant)) avant.email = I.email; I.email = mail; }
+        if (mail && I.email_compte !== mail){ if (!("email_compte" in avant)) avant.email_compte = I.email_compte; I.email_compte = mail; }
         Tracking.enregistrer("diagnostic_question_answered"); Store.ecrire("intake", I);
       }
     };
     const surAge = () => {
       const a = num(outilProfil.valeur(qAge));
       ageOk = ageSaisi();
-      if (ageMin != null && a > 0 && a < ageMin) retirer();
+      if (ageMin != null && a > 0 && a < ageMin){ retirer(); purger(); }
       brouillon();
     };
     qs.forEach(q => {
@@ -11305,7 +11510,7 @@ const outilDecouverte = {
       const manquants = qs.filter(q => req.indexOf(q.id) > -1 && (q.type === "nombre" ? !(num(V[q.id]) > 0) : !V[q.id]));
       const hors = qs.filter(q => B[q.id] && String(V[q.id] || "").trim() !== "" && (num(V[q.id]) < B[q.id][0] || num(V[q.id]) > B[q.id][1]));
       const lib = q => trad(q.label);
-      if (ageMin != null && num(V.age) > 0 && num(V.age) < ageMin) retirer();   // age sous le minimum : rien de ce formulaire ne reste
+      if (ageMin != null && num(V.age) > 0 && num(V.age) < ageMin){ retirer(); purger(); }   // age sous le minimum : rien de ce formulaire ne reste
       if (manquants.length || hors.length){
         const msg = manquants.length ? trad(L.manque, { l: manquants.map(lib).join(", ") })
                                      : trad(L.verifie, { l: hors.map(q => lib(q) + " (" + trad("{a} à {b}", { a: B[q.id][0], b: B[q.id][1] }) + ")").join(", ") });
@@ -11316,11 +11521,11 @@ const outilDecouverte = {
         manquants.concat(hors).forEach(q => { const el = $("q-" + q.id); if (el) el.classList.add("manque"); });
         return;
       }
-      const garde = { court_le: I.court_le, court_debut: I.court_debut, email: I.email };
+      const garde = { court_le: I.court_le, court_debut: I.court_debut, email_compte: I.email_compte };
       Object.assign(I, V);
       if (!Decouverte.questionnaireFait(I)) I.court_le = new Date().toISOString();
       if (!I.court_debut) I.court_debut = I.court_le;
-      const mail = Decouverte.emailCompte(); if (mail && !I.email) I.email = mail;
+      const mail = Decouverte.emailCompte(); if (mail) I.email_compte = mail;
       if (Store.ecrire("intake", I) === false){ Object.keys(garde).forEach(k => { if (garde[k] === undefined) delete I[k]; else I[k] = garde[k]; }); return; }   // refusee (message deja affiche)
       Tracking.enregistrer("diagnostic_completed");
       self._form = false;
@@ -12239,14 +12444,22 @@ let lienEmail = null, lienEmailType = "", lienEmailAdresse = "";   // v47 : "ok"
       const v = $("vue");
       const mot = document.createElement("div");
       mot.className = "bandeau";
-      const dejaVenu = intake && Object.keys(intake).length > 3;
-      /* un ancien prospect passe client : ses reponses du questionnaire court (ou de l'ancien challenge) sont deja la */
-      let dejaProspect = dejaVenu && !intake.nom && Decouverte.questionnaireFait(intake);
+      /* les dates et l'email copies par l'app (v51) ne sont pas des reponses */
+      const repondu = k => { const v = intake[k]; return v != null && v !== false && !(typeof v === "string" && v.trim() === "") && !(Array.isArray(v) && !v.length); };
+      const dejaVenu = intake && Object.keys(intake).filter(k => ["court_debut", "court_le", "email_compte", "complet"].indexOf(k) === -1 && repondu(k)).length > 3;
+      /* « une question a ete ajoutee » seulement s'il ne manque qu'une ou deux reponses obligatoires ; sinon il reprend
+         simplement son profil commence (enregistre pendant la frappe depuis la v48) */
+      const manquantes = QUESTIONS.filter(q => q.requis && !repondu(q.id)).length;
+      /* un ancien prospect passe client : ses reponses du questionnaire court (ou de l'ancien challenge) sont deja la,
+         meme s'il ne l'avait pas valide */
+      let dejaProspect = !!intake && !intake.nom && (Decouverte.questionnaireFait(intake) || (typeof intake.court_debut === "string" && Decouverte.repondues(intake) > 0));
       if (dejaVenu && !intake.nom && !dejaProspect){ try { const ch = (await Store.lireTout([Decouverte.cle]))[Decouverte.cle]; const j1 = ch && ch.jours && typeof ch.jours === "object" ? ch.jours["1"] : null; dejaProspect = !!(j1 && typeof j1 === "object" && j1.fait); } catch(e){} }
       mot.innerHTML = dejaProspect
         ? `<strong>Bienvenue dans l'accompagnement !</strong><span class="note">Tes premières réponses sont déjà là : complète le reste du questionnaire et enregistre.</span>`
+        : dejaVenu && manquantes <= 2
+        ? (manquantes <= 1 ? `<strong>Une réponse manque à ton profil.</strong><span class="note">Complète-la et enregistre : ça prend dix secondes.</span>` : `<strong>Deux réponses manquent à ton profil.</strong><span class="note">Complète-les et enregistre : ça prend quelques secondes.</span>`)
         : dejaVenu
-        ? `<strong>Une réponse manque à ton profil.</strong><span class="note">Une question a été ajoutée depuis ton inscription. Complète-la et enregistre : ça prend dix secondes.</span>`
+        ? `<strong>Reprends ton profil là où tu t'es arrêté.</strong><span class="note">Tes premières réponses sont enregistrées : complète le reste et enregistre.</span>`
         : `<strong>Bienvenue !</strong><span class="note">Commence par remplir ton profil : c'est ce qui permet à ton coach de construire ton suivi.</span>`;
       v.insertBefore(mot, v.firstChild);
       appPrete = true;
