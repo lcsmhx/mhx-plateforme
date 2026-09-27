@@ -1045,9 +1045,9 @@ const CONFIG = {
   /* --- v49 : suivi commercial des prospects (page « Prospects » du coach). Les seuils en jours
      qui decident de la temperature et de la prochaine action ; tout se change ici. --- */
   suivi: {
-    clic_recent_jours: 3,            // un clic « Réserver mon bilan » de moins de 3 jours rend le prospect CHAUD
-    inactif_jours: 4,                // questionnaire rempli puis 4 jours sans rien faire : FROID
-    sans_debut_jours: 3,             // inscrit depuis 3 jours sans avoir rempli le questionnaire : FROID
+    nouveau_heures: 24,              // v51 : inscrit depuis moins de 24 h sans rien faire : NOUVEAU (ensuite, sans questionnaire : FROID)
+    inactif_jours: 3,                // v51 : plus aucune action depuis 3 jours (sans bilan réservé) : FROID
+    clic_recent_jours: 3,            // après un « Perdu » / « Absent », un clic « Réserver » de moins de 3 jours le fait revenir
     motivation_forte: 8,             // motivation de 8/10 ou plus au questionnaire : proposer le bilan en DM
     relance_attente_jours: 3,        // après une relance, on attend 3 jours avant d'en proposer une autre
     perdu_relance_jours: 30,         // « Perdu » : relance proposée 30 jours après l'appel
@@ -8169,7 +8169,10 @@ const Clients = {
       sens: sens,
       ch: (c.challenge && typeof c.challenge === "object") ? c.challenge : null,   // clics « Réserver mon bilan » et case « J'ai réservé » (prospects)
       /* questionnaire court du prospect (Decouverte) : seulement ce que le suivi commercial lit */
-      dc: (c.intake && typeof c.intake === "object") ? { court_le: c.intake.court_le, motivation: c.intake.motivation } : null,
+      dc: (c.intake && typeof c.intake === "object") ? { court_le: c.intake.court_le, motivation: c.intake.motivation, repondues: Decouverte.repondues(c.intake),
+            court_debut: typeof c.intake.court_debut === "string" ? c.intake.court_debut : null, objectif: typeof c.intake.objectif === "string" ? c.intake.objectif.slice(0, 120) : "",
+            email: typeof c.intake.email === "string" ? c.intake.email.slice(0, 254) : "" } : null,
+      act: (c.activite && typeof c.activite === "object") ? c.activite : null,   // v51 : activite du prospect (score, chronologie)
       suivi: (c.suivi_prospect && typeof c.suivi_prospect === "object") ? c.suivi_prospect : null,   // v49 : suivi commercial
       activite: dernierMaj || null
     };
@@ -8278,8 +8281,8 @@ const Clients = {
 const Commercial = {
   cle: "suivi_prospect",
   ISSUES: { signe: "Signé", perdu: "Perdu", absent: "Absent" },
-  ETATS: { chaud: "CHAUD", tiede: "TIÈDE", froid: "FROID", signe: "SIGNÉ", perdu: "PERDU", absent: "ABSENT" },
-  cfg(){ return Object.assign({ inactif_jours: 4, clic_recent_jours: 3, relance_attente_jours: 3, perdu_relance_jours: 30, sans_debut_jours: 3, motivation_forte: 8, relances_max: 3, chaud_jours: 14, appel_jours: 7 }, CONFIG.suivi || {}); },
+  ETATS: { nouveau: "NOUVEAU", chaud: "CHAUD", tiede: "TIÈDE", froid: "FROID", signe: "SIGNÉ", perdu: "PERDU", absent: "ABSENT" },
+  cfg(){ return Object.assign({ nouveau_heures: 24, inactif_jours: 3, clic_recent_jours: 3, relance_attente_jours: 3, perdu_relance_jours: 30, motivation_forte: 8, relances_max: 3, chaud_jours: 14, appel_jours: 7 }, CONFIG.suivi || {}); },
   /* jours ecoules depuis une date ou un instant (calendrier local) ; null si illisible */
   depuis(v){
     if (typeof v !== "string" || !/^\d{4}-\d{2}-\d{2}/.test(v)) return null;
@@ -8320,27 +8323,31 @@ const Commercial = {
     const relancesApresIssue = tIssue != null ? relances.filter(x => instant(x) > tIssue).length : 0;
     /* « Perdu » ou « Absent », puis il reclique « Réserver » ou coche « J'ai réservé » : il revient dans la course */
     const revenu = (issue === "perdu" || issue === "absent") && tIssue != null && !!r && ((!!r.dernierClic && instant(r.dernierClic) > tIssue && clic != null && clic <= cfg.clic_recent_jours) || (!!r.reserve && instant(r.reserve) > tIssue && this.depuis(r.reserve) != null && this.depuis(r.reserve) <= cfg.chaud_jours));
-    const inactif = fait && actif != null && actif >= cfg.inactif_jours;
-    const actifRecemment = actif != null && actif < cfg.sans_debut_jours;
-    const chaud = [], froid = [], tiede = [];
+    /* v51 — statuts calcules (brief de Lucas du 27/09) :
+       NOUVEAU = inscrit depuis moins de 24 h, rien fait (ni questionnaire, ni clic, ni reservation) ;
+       CHAUD   = bilan reserve (case « J'ai réservé mon bilan »), meme sans questionnaire : c'est l'appel qui compte ;
+       TIÈDE   = questionnaire rempli, pas de reservation (avec ou sans clic « Réserver ») ;
+       FROID   = questionnaire pas rempli passe 24 h, ou plus aucune action depuis 3 jours, ou relances epuisees. */
+    const tInscrit = instant(p && p.cree_le), heures = tInscrit == null ? null : Math.max(0, (Date.now() - tInscrit) / 3600000);
+    const reserve = !!(r && r.reserve), clics = r ? r.clics : 0;
+    const nouveau = !fait && !clics && !reserve && heures != null && heures < cfg.nouveau_heures;
+    const inactif = !reserve && !nouveau && actif != null && actif >= cfg.inactif_jours;
+    const chaud = [], froid = [], tiede = [], neuf = [];
     const etape = jour == null ? "" : finie ? "découverte terminée" : "découverte jour " + jour + "/" + r.duree;
-    if (r && r.reserve) chaud.push("A coché « J'ai réservé mon bilan » " + this.quand(this.depuis(r.reserve)) + ".");
-    if (clic != null && clic <= cfg.clic_recent_jours) chaud.push("A cliqué « Réserver mon bilan » (" + r.clics + " fois), la dernière " + this.quand(clic) + ".");
-    if (inactif) froid.push("Questionnaire rempli, plus d'activité depuis " + actif + " jours" + (etape ? " (" + etape + ")" : "") + ".");
-    if (!fait && inscrit != null && inscrit >= cfg.sans_debut_jours && !actifRecemment) froid.push("Inscrit " + this.quand(inscrit) + ", questionnaire pas rempli.");
-    if (clic != null && clic > cfg.clic_recent_jours) tiede.push("A cliqué « Réserver mon bilan » " + this.quand(clic) + ", sans réserver.");
-    if (fait && !inactif) tiede.push("Questionnaire rempli " + this.quand(this.depuis(r.questionnaire)) + (motiv ? ", motivation " + motiv + "/10" : "") + (etape ? ", " + etape : "") + ".");
-    if (!fait && actifRecemment) tiede.push("Actif (dernière activité " + this.quand(actif) + "), questionnaire pas encore rempli.");
-    else if (!fait && !(inscrit != null && inscrit >= cfg.sans_debut_jours)) tiede.push("Vient de s'inscrire" + (inscrit != null ? " (" + this.quand(inscrit) + ")" : "") + ".");
+    if (reserve) chaud.push("A coché « J'ai réservé mon bilan » " + this.quand(this.depuis(r.reserve)) + ".");
+    if (nouveau) neuf.push("Inscrit " + (heures < 1 ? "il y a moins d'une heure" : "il y a " + Math.floor(heures) + " h") + ", rien fait pour l'instant.");
+    else if (!fait) froid.push("Inscrit " + this.quand(inscrit) + ", questionnaire pas rempli.");
+    if (inactif) froid.push("Aucune action depuis " + actif + " jours" + (etape ? " (" + etape + ")" : "") + ".");
+    if (fait) tiede.push("Questionnaire rempli " + this.quand(this.depuis(r.questionnaire)) + (motiv ? ", motivation " + motiv + "/10" : "") + (etape ? ", " + etape : "") + ".");
+    if (clics && !reserve) tiede.push("A cliqué « Réserver mon bilan » (" + clics + " fois), la dernière " + this.quand(clic) + ", sans réserver.");
     if (sansReponse) (sansReponse >= cfg.relances_max ? froid : tiede).push("Relancé " + sansReponse + " fois sans réponse.");
-    if (issue && revenu) chaud.unshift("Revenu après l'issue « " + this.ISSUES[issue] + " » : a recliqué « Réserver » ou coché « J'ai réservé ».");
+    if (issue && revenu) (reserve ? chaud : tiede).unshift("Revenu après l'issue « " + this.ISSUES[issue] + " » : a recliqué « Réserver » ou coché « J'ai réservé ».");
     else if (issue) (issue === "signe" ? chaud : froid).unshift("Appel : « " + this.ISSUES[issue] + " » " + this.quand(issueDepuis) + (typeof S.note === "string" && S.note ? " — " + S.note : "") + ".");
     if (ancienClient) tiede.unshift("Ancien client (« Signé » " + this.quand(this.depuis(S.issue_le)) + "), redevenu prospect.");
     if (revenu) issue = null;   // la temperature reprend la main
     const attendre = relance != null && relance < cfg.relance_attente_jours;
     const epuise = sansReponse >= cfg.relances_max;
-    /* relances epuisees : un signal chaud (hors reservation) ne suffit plus */
-    const temperature = chaud.length && !(epuise && !(r && r.reserve)) ? "chaud" : froid.length ? "froid" : "tiede";
+    const temperature = reserve ? "chaud" : epuise ? "froid" : nouveau ? "nouveau" : (inactif || !fait) ? "froid" : "tiede";
     let action, urgent = false;
     const siPasRelance = (texte) => {
       if (attendre) return "Relancé " + this.quand(relance) + " : attends sa réponse.";
@@ -8354,25 +8361,46 @@ const Commercial = {
     }
     else if (issue === "absent") action = relancesApresIssue >= cfg.relances_max ? "Absent, puis relancé " + relancesApresIssue + " fois sans suite : classe-le « Perdu » ?" : siPasRelance("Absent à l'appel : repropose-lui un créneau en DM.");
     else if (issue === "perdu"){ const reste = cfg.perdu_relance_jours - (issueDepuis || 0); action = relancesApresIssue >= 1 ? "Relancé après l'appel : s'il ne répond pas, laisse-le." : reste <= 0 ? siPasRelance("Relance-le : l'appel date d'il y a " + issueDepuis + " jours.") : "Relance prévue dans " + reste + " jour" + (reste > 1 ? "s" : "") + "."; }
-    else if (r && r.reserve){ const dr = this.depuis(r.reserve); action = dr != null && dr > cfg.appel_jours ? "« J'ai réservé » " + this.quand(dr) + " : l'appel a-t-il eu lieu ? Indique Signé, Perdu ou Absent." : "Prépare le bilan : relis sa fiche (questionnaire, obstacle, motivation). Après l'appel, indique Signé, Perdu ou Absent."; urgent = true; }
-    else if (temperature === "chaud") action = siPasRelance("Envoie-lui le lien de réservation en DM aujourd'hui.");
+    else if (reserve){ const dr = this.depuis(r.reserve); action = dr != null && dr > cfg.appel_jours ? "« J'ai réservé » " + this.quand(dr) + " : l'appel a-t-il eu lieu ? Indique Signé, Perdu ou Absent." : "Prépare le bilan : relis sa fiche (questionnaire, obstacle, motivation). Après l'appel, indique Signé, Perdu ou Absent."; urgent = true; }
     else if (ancienClient) action = "Ancien client redevenu prospect : reprends contact si tu veux lui proposer de reprendre.";
+    else if (temperature === "nouveau") action = "Rien à faire aujourd'hui : il vient de s'inscrire.";
     else if (temperature === "froid" && !fait) action = siPasRelance(finie ? "Relance : sa découverte est finie sans questionnaire, propose-lui directement le bilan." : "DM de bienvenue : aide-le à remplir son questionnaire (3 minutes).");
-    else if (temperature === "froid" && finie) action = siPasRelance("Relance : sa découverte est terminée, propose-lui le bilan.");
-    else if (temperature === "froid") action = siPasRelance("Relance douce en DM : demande-lui où il en est.");
-    else if (fait && motiv >= cfg.motivation_forte) action = siPasRelance("DM : il se dit motivé à " + motiv + "/10, propose-lui le bilan.");
-    else if (clic != null) action = siPasRelance("DM : il a cliqué sans réserver, demande-lui ce qui le retient.");
-    else if (fait && finie) action = siPasRelance("DM : sa découverte est terminée, propose-lui le bilan.");
-    else if (!fait) action = actifRecemment ? "Rien à faire aujourd'hui : il est actif, questionnaire pas encore rempli." : "Rien à faire aujourd'hui : il vient de s'inscrire.";
+    else if (temperature === "froid") action = siPasRelance(finie ? "Relance : sa découverte est terminée, propose-lui le bilan." : "Relance douce en DM : demande-lui où il en est.");
+    else if (clics) action = siPasRelance("DM : il a cliqué sans réserver, demande-lui ce qui le retient.");
+    else if (motiv >= cfg.motivation_forte) action = siPasRelance("DM : il se dit motivé à " + motiv + "/10, propose-lui le bilan.");
+    else if (finie) action = siPasRelance("DM : sa découverte est terminée, propose-lui le bilan.");
     else action = "Rien à faire aujourd'hui : il découvre" + (jour != null ? " (jour " + jour + "/" + r.duree + ")" : "") + ".";
     const etat = issue || temperature;
     const rang = issue === "signe" ? (urgent ? 0 : 9) : issue === "absent" ? (urgent ? 3 : 7) : issue === "perdu" ? (urgent ? 4 : 9)
-               : temperature === "chaud" ? ((r && r.reserve) ? 1 : 2) : urgent ? (temperature === "tiede" ? 5 : 6) : 8;
+               : temperature === "chaud" ? 1 : urgent ? (temperature === "tiede" ? 5 : 6) : 8;
     /* recence : a rang egal, le plus recemment actif d'abord (on lui ecrit pendant qu'il est dans le coup) */
-    return { etat, temperature, issue, raisons: chaud.concat(froid, tiede), action, urgent, rang, recence: actif == null ? 9999 : actif, jour, duree: r ? r.duree : Decouverte.duree(), finie, questionnaire: fait, relances: relances.length, derniereRelance: relance };
+    return { etat, temperature, issue, raisons: chaud.concat(neuf, froid, tiede), action, urgent, rang, recence: actif == null ? 9999 : actif, jour, duree: r ? r.duree : Decouverte.duree(), finie, questionnaire: fait, nouveau, reserve, clics, relances: relances.length, derniereRelance: relance, inscritHeures: heures };
   },
   analyseLigne(l){ try { return this.analyse(l.p, l.ch, l.suivi, l.activite, l.dc); } catch(e){ console.warn("[MHX] suivi commercial illisible", e); return null; } },
-  CLASSES: { chaud: "chaud", tiede: "tiede", froid: "froid", signe: "ok", perdu: "manque", absent: "attention" },
+  /* v51 — score de qualification sur 100 : inscription 10 ; questionnaire 30 (jusqu'a 20 tant qu'il n'est pas valide,
+     au prorata des reponses) ; clic « Réserver mon bilan » 30 ; bilan reserve 30. Bonus : revenu au moins 2 jours
+     differents +5, 5 minutes ou plus dans l'app +5, email ouvert +5 (pas mesure tant que les emails ne sont pas
+     branches). Plafonne a 100. D = questionnaire (au moins court_le, repondues), A = cle activite. */
+  score(p, C, D, A){
+    let r = null; try { r = Decouverte.resume(p, C, D); } catch(e){ r = null; }
+    const total = (Decouverte.cfg().questions || []).length || 10;
+    const rep = D && typeof D.repondues === "number" && isFinite(D.repondues) ? Math.max(0, Math.min(total, Math.floor(D.repondues))) : Decouverte.repondues(D);
+    const fait = !!(r && r.questionnaire), clics = r ? r.clics : 0;
+    const a = Activite.propre(A), jours = a.jours.length, min = Math.floor(a.temps_s / 60);
+    const lignes = [
+      { cle: "inscription", lbl: "Inscription", pts: 10, max: 10 },
+      { cle: "questionnaire", lbl: fait ? "Questionnaire rempli" : "Questionnaire en cours (" + rep + "/" + total + " réponses)", pts: fait ? 30 : Math.round(20 * rep / total), max: 30 },
+      { cle: "clic", lbl: "Clic « Réserver mon bilan »" + (clics ? " (" + clics + " fois)" : ""), pts: clics ? 30 : 0, max: 30 },
+      { cle: "reserve", lbl: "Bilan réservé", pts: r && r.reserve ? 30 : 0, max: 30 },
+      { cle: "visites", lbl: "Revenu plusieurs jours (" + jours + " jour" + (jours > 1 ? "s" : "") + " d'activité)", pts: jours >= 2 ? 5 : 0, max: 5, bonus: true },
+      { cle: "temps", lbl: "Temps passé dans l'app (" + min + " min)", pts: a.temps_s >= 300 ? 5 : 0, max: 5, bonus: true },
+      { cle: "emails", lbl: "Email ouvert (pas encore mesuré : emails non branchés)", pts: 0, max: 5, bonus: true, nonMesure: true }
+    ];
+    return { total: Math.min(100, lignes.reduce((s, x) => s + x.pts, 0)), lignes, repondues: rep, questions: total };
+  },
+  scoreLigne(l){ try { return this.score(l.p, l.ch, l.dc, l.act); } catch(e){ return null; } },
+  pastilleScore(sc){ return sc ? `<span class="pastille${sc.total >= 70 ? " ok" : sc.total >= 40 ? " accent" : ""}" title="Score de qualification sur 100">${sc.total}/100</span>` : ""; },
+  CLASSES: { nouveau: "accent", chaud: "chaud", tiede: "tiede", froid: "froid", signe: "ok", perdu: "manque", absent: "attention" },
   pastille(a){ return a ? `<span class="pastille ${this.CLASSES[a.etat] || ""}" title="${esc(a.raisons.join(" "))}">${esc(this.ETATS[a.etat] || "")}</span>` : ""; },
   pastilleLigne(l){ return this.pastille(this.analyseLigne(l)); },
   bouton(p, act, txt, cls){ return `<button type="button" class="btn petit${cls === "principal" ? "" : " ghost"}" data-sc="${act}" data-uid="${esc(p.id)}" data-nom="${esc(Clients.nom(p))}">${esc(txt)}</button>`; },
@@ -8384,7 +8412,7 @@ const Commercial = {
   },
   sousTitre(p, a){
     const i = this.depuis(p && p.cree_le);
-    return (a.jour == null ? "Découverte" : a.finie ? "Découverte terminée" : "Découverte J" + a.jour + "/" + a.duree) + (a.questionnaire ? " · questionnaire rempli" : " · questionnaire à remplir") + " · inscrit " + this.quand(i) + (a.relances ? " · " + a.relances + " relance" + (a.relances > 1 ? "s" : "") : "");
+    return (a.jour == null ? "Découverte" : a.finie ? "Découverte terminée" : "Découverte J" + a.jour + "/" + a.duree) + (a.questionnaire ? " · questionnaire rempli" : " · questionnaire à remplir") + " · inscrit " + (a.inscritHeures != null && a.inscritHeures < 24 ? (a.inscritHeures < 1 ? "il y a moins d'une heure" : "il y a " + Math.floor(a.inscritHeures) + " h") : this.quand(i)) + (a.relances ? " · " + a.relances + " relance" + (a.relances > 1 ? "s" : "") : "");
   },
   carteHTML(p, a){
     const nom = Clients.nom(p);
