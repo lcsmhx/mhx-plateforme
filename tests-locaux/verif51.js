@@ -8,8 +8,11 @@
    « J'ai réservé » (une seule date, même en double clic), jour 8 (Speed Formation verrouillée, le reste
    visible), anciennes adresses #/challenge…, mode test #/decouverte-jour/8 puis /0, Profil du prospect,
    ancien prospect du challenge, données piégées, anglais, mobile 390 px, coach (Mes clients, fiche, tableau
-   de bord, pastille « bilan réservé », mode test posé sur l'appareil du coach) et client Thomas qui ne voit
-   rien de la Découverte. Jour 1 vérifié dans deux fuseaux (UTC+8, UTC−5) avec une horloge fixée.
+   de bord, statuts v51 TIÈDE / FROID / CHAUD sur la tuile — mise en avant seulement s'il y a un chaud — et
+   sur la page Prospects, pastille « bilan réservé », mode test posé sur l'appareil du coach ; dernière
+   activité du prospect datée par rapport à maintenant, donc résultat indépendant du jour où la suite
+   tourne) et client Thomas qui ne voit rien de la Découverte. Jour 1 vérifié dans deux fuseaux (UTC+8,
+   UTC−5) avec une horloge fixée.
    Supabase simulé : rien ne part vers la vraie base ; les écritures sont appliquées en mémoire, et toute
    autre requête d'écriture vers la base (bibliothèque, Storage, fonctions, compte) est notée aussi.
    Chaque bloc tourne à part : une action impossible (sur l'ancienne version, par exemple) n'arrête que son
@@ -63,6 +66,11 @@ function base(opts){
   if (opts.challenge) donnees.push({ user_id: PROSPECT, outil: "challenge", contenu: opts.challenge, maj_le: "2026-09-25T08:00:00+00:00" });
   return { profils, donnees, ecritures: [], lectures: [], catalogueVide: !!opts.catalogueVide };
 }
+/* la derniere activite d'un prospect, pour le coach, est le maj_le le plus recent de ses lignes (Clients.charger).
+   Dans l'appli, un clic « Réserver » ou la case « J'ai réservé » reecrit la cle challenge : sa ligne prend la date
+   de cette action. Sans cela, le maj_le fixe de base() vieillirait avec le calendrier et ferait passer le prospect
+   en FROID (3 jours sans action) des le 28/09/2026 : la verification dependrait du jour ou la suite tourne */
+const dateAction = (db, outil, quand) => db.donnees.forEach(x => { if (x.user_id === PROSPECT && x.outil === outil) x.maj_le = quand; });
 async function contexte(b, who, db, opts){
   opts = opts || {};
   const c = await b.newContext(Object.assign({ viewport: opts.viewport || { width: 1280, height: 900 } }, opts.fuseau ? { timezoneId: opts.fuseau } : {}));
@@ -156,6 +164,10 @@ const tuiles = (page, sel) => page.$$eval(sel + " .tile", l => l.map(t => ({ lbl
 const tuile = (ts, lbl) => (ts.find(t => t.lbl === lbl) || {}).val;
 const priorites = page => page.$$eval("#dc-resultat ol.etapes li", l => l.map(e => e.textContent.replace(/[  ]/g, " ").trim())).catch(() => []);
 const ligneDe = (page, id) => page.$eval(`[data-ouvrir="${id}"]`, b => b.closest("tr").textContent).then(norm).catch(() => "");
+/* tableau de bord : la tuile « Prospects en découverte » porte-t-elle la classe cle (mise en avant) ? null si absente */
+const tuileMiseEnAvant = page => page.$$eval("#vue .tb-tuile", l => { const e = l.find(x => x.textContent.includes("Prospects en découverte")); return e ? e.classList.contains("cle") : null; }).catch(() => null);
+/* page Prospects : les pastilles d'en-tête (statut, score) de la carte d'un prospect */
+const etatProspect = (page, uid) => page.$eval(`#pr-liste article.sc-carte[data-uid="${uid}"]`, a => Array.from(a.querySelectorAll(".sc-tete .pastille")).map(x => x.textContent.trim())).catch(() => []);
 const deborde = page => page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
 /* les formules du calculateur, refaites ici (Mifflin-St Jeor × facteur d'activite ; pas par defaut de la Decouverte) */
 const milliers = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
@@ -277,7 +289,7 @@ function attendu(R, K, pas){
     await c.close();
   });
   await bloc("B. garde 18 ans « 25 → 15 »", async () => {
-    /* garde 18 ans : « 25 » envoie, puis « 15 » remet ce que ce formulaire avait envoye a son etat d'avant */
+    /* garde 18 ans : « 25 » envoie, puis « 15 » retire tout ce que le questionnaire court a envoye (cette visite et les precedentes) */
     const db = base({ intake: { objectif: "Prise de muscle" } });
     const { c, page } = await contexte(b, lea, db);
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 2200);
@@ -286,7 +298,9 @@ function attendu(R, K, pas){
     ok("garde 18 ans : « 25 » → brouillon envoyé (âge 25, poids 64, objectif changé)", I1.age === "25" && I1.poids === "64" && I1.objectif === A.objectif, JSON.stringify(I1));
     await taperAge(page, "15"); await page.fill("#q-taille", "170"); await attendre(page, 1600);
     const I2 = contenu(db, "intake") || {};
-    ok("garde 18 ans : « 25 → 15 » → en base, les champs envoyés reviennent à leur état d'avant (âge et poids retirés, objectif « Prise de muscle »), la taille tapée ensuite ne part pas", JSON.stringify(I2) === JSON.stringify({ objectif: "Prise de muscle" }), JSON.stringify(I2));
+    /* v51 : au premier remplissage, un âge mineur retire aussi les réponses d'une visite précédente (ici l'objectif
+       « Prise de muscle » déjà en base) : aucune réponse d'une personne qui se déclare mineure ne reste */
+    ok("garde 18 ans : « 25 → 15 » → en base, plus aucune réponse du questionnaire court (âge, poids et objectif retirés, y compris l'objectif d'avant), la taille tapée ensuite ne part pas", JSON.stringify(I2) === "{}", JSON.stringify(I2));
     const n = db.ecritures.length;
     await page.fill("#q-pourquoi", "Pour moi"); await attendre(page, 1300);
     ok("… tant que l'âge reste 15 : plus rien ne part", db.ecritures.length === n, "écritures " + db.ecritures.length + " / " + n);
@@ -611,18 +625,27 @@ function attendu(R, K, pas){
   await bloc("I. coach", async () => {
     const ch = { version: 1, jours: {}, cta: { clics: [{ jour: 3, source: "decouverte", date: new Date().toISOString() }] } };
     const db = base({ intake: avecCourt(A), challenge: ch, marc: true });
+    dateAction(db, "challenge", ch.cta.clics[0].date);   // le clic d'aujourd'hui a reecrit challenge : Léa est active
     const { c, page } = await contexte(b, coach, db);
     await page.goto(`http://localhost:${PORT}/#/tableau`); await attendre(page, 2600);
     const t = await page.$$eval("#vue .tb-tuile", l => l.map(e => e.textContent.replace(/[  ]/g, " ").replace(/\s+/g, " ").trim())).catch(() => []);
     const tp = t.find(x => x.startsWith("Prospects en découverte")) || "";
-    ok("tableau de bord : « Prospects en découverte » = 1 (Marc a fini ses 7 jours), « 1 chaud · 2 prospects au total »", /^Prospects en découverte ?1 ?1 chaud · 2 prospects au total$/.test(tp), tp || JSON.stringify(t));
+    const tpCle = await tuileMiseEnAvant(page);
+    /* v51 (brief du 27/09) : questionnaire rempli + clic « Réserver » sans réservation = TIÈDE (en v49/v50 : CHAUD) ;
+       Marc (J10, rien fait) = FROID. Aucun « chaud » : la tuile ne l'annonce plus et n'est plus mise en avant. */
+    ok("tableau de bord : « Prospects en découverte » = 1 (Marc a fini ses 7 jours), « 2 prospects au total » sans « chaud » (v51 : Léa, questionnaire + clic sans réservation, est TIÈDE), tuile pas mise en avant", /^Prospects en découverte ?1 ?2 prospects au total$/.test(tp) && tpCle === false, (tp || JSON.stringify(t)) + " · mise en avant : " + tpCle);
+    /* l'absence de « chaud » doit venir du nouveau statut, pas d'une analyse qui aurait planté : la page Prospects le montre */
+    await aller(page, "#/prospects", 2400);
+    await page.click('[data-filtre="tous"]').catch(() => {}); await attendre(page, 500);
+    const eLea = await etatProspect(page, PROSPECT), eMarc = await etatProspect(page, MARC);
+    ok("page Prospects (filtre « Tous ») : Léa « TIÈDE » (questionnaire rempli, cliqué aujourd'hui sans réserver), Marc « FROID » (découverte finie sans questionnaire)", eLea.includes("TIÈDE") && !eLea.includes("CHAUD") && eMarc.includes("FROID"), JSON.stringify(eLea) + " | " + JSON.stringify(eMarc));
     await aller(page, "#/clients", 2200);
     const lLea = await ligneDe(page, PROSPECT), lMarc = await ligneDe(page, MARC);
     ok("Mes clients : Léa « Découverte J3/7 » + « a cliqué Réserver » ; Marc « Découverte terminée »", lLea.includes("Découverte J3/7") && lLea.includes("a cliqué Réserver") && lMarc.includes("Découverte terminée"), lLea + " | " + lMarc);
     await page.click(`[data-ouvrir="${PROSPECT}"]`).catch(() => {}); await attendre(page, 2200);
     const f = await texte(page, "#fiche-decouverte");
     ok("fiche de Léa : bloc « Découverte » (jour 3 / 7, questionnaire rempli, objectif, motivation 8 / 10, 1 clic, case pas cochée)", f.includes("jour 3 / 7") && f.includes("rempli le") && f.includes("Perte de poids / sèche") && f.includes("8 / 10") && f.includes("1 clic") && f.includes("pas cochée"), f.slice(0, 300));
-    ok("fiche de Léa : lienCalendly() rend l'adresse brute pour le coach, aucune écriture", (await page.evaluate(() => typeof lienCalendly === "function" ? lienCalendly("decouverte") : null)) === CAL && db.ecritures.length === 0);
+    ok("fiche de Léa : lienCalendly() rend l'adresse brute pour le coach, aucune écriture (tableau de bord, page Prospects, Mes clients, fiche)", (await page.evaluate(() => typeof lienCalendly === "function" ? lienCalendly("decouverte") : null)) === CAL && db.ecritures.length === 0);
     await c.close();
   });
   await bloc("I. coach, bilan réservé et mode test", async () => {
@@ -630,17 +653,24 @@ function attendu(R, K, pas){
        il ne vaut que sur l'appareil du prospect, les ecrans du coach n'en tiennent pas compte */
     const ch = { version: 1, jours: {}, cta: { clics: [{ jour: 2, source: "decouverte", date: creeIlYA(1) }] }, reserve: new Date().toISOString() };
     const db = base({ intake: avecCourt(A), challenge: ch, marc: true });
+    dateAction(db, "challenge", ch.reserve);   // la case cochée aujourd'hui a reecrit challenge
     const { c, page } = await contexte(b, coach, db, { stockage: { mhx_decouverte_jour: "8" } });
     await page.goto(`http://localhost:${PORT}/#/tableau`); await attendre(page, 2600);
     const t = (await page.$$eval("#vue .tb-tuile", l => l.map(e => e.textContent)).catch(() => [])).map(norm);
     const tp = t.find(x => x.startsWith("Prospects en découverte")) || "";
-    ok("appareil du coach en mode test (mhx_decouverte_jour = 8) : la tuile ne bouge pas — « Prospects en découverte » = 1, « 1 chaud · 2 prospects au total »", (await page.evaluate(() => localStorage.getItem("mhx_decouverte_jour"))) === "8" && /^Prospects en découverte ?1 ?1 chaud · 2 prospects au total$/.test(tp), tp || JSON.stringify(t));
+    const tpCle = await tuileMiseEnAvant(page);
+    ok("appareil du coach en mode test (mhx_decouverte_jour = 8) : la tuile ne bouge pas — « Prospects en découverte » = 1, « 1 chaud · 2 prospects au total », tuile mise en avant (un chaud)", (await page.evaluate(() => localStorage.getItem("mhx_decouverte_jour"))) === "8" && /^Prospects en découverte ?1 ?1 chaud · 2 prospects au total$/.test(tp) && tpCle === true, (tp || JSON.stringify(t)) + " · mise en avant : " + tpCle);
+    /* le meme statut sur la page Prospects : Léa CHAUD (bilan réservé), Marc toujours FROID */
+    await aller(page, "#/prospects", 2400);
+    await page.click('[data-filtre="tous"]').catch(() => {}); await attendre(page, 500);
+    const eLea = await etatProspect(page, PROSPECT), eMarc = await etatProspect(page, MARC);
+    ok("page Prospects (filtre « Tous », même mode test) : Léa « CHAUD » (bilan réservé, et pas « TIÈDE »), Marc « FROID »", eLea.includes("CHAUD") && !eLea.includes("TIÈDE") && eMarc.includes("FROID"), JSON.stringify(eLea) + " | " + JSON.stringify(eMarc));
     await aller(page, "#/clients", 2200);
     const lLea = await ligneDe(page, PROSPECT), lMarc = await ligneDe(page, MARC);
     ok("Mes clients (même mode test) : Léa « Découverte J3/7 » + « bilan réservé » (et pas « a cliqué Réserver ») ; Marc « Découverte terminée »", lLea.includes("Découverte J3/7") && lLea.includes("bilan réservé") && !lLea.includes("a cliqué Réserver") && lMarc.includes("Découverte terminée"), lLea + " | " + lMarc);
     await page.click(`[data-ouvrir="${PROSPECT}"]`).catch(() => {}); await attendre(page, 2200);
     const f = await texte(page, "#fiche-decouverte");
-    ok("fiche de Léa (même mode test) : « jour 3 / 7 », case « cochée le … », pastille « bilan réservé » ; aucune écriture", f.includes("jour 3 / 7") && f.includes("cochée le") && f.includes("bilan réservé") && db.ecritures.length === 0, f.slice(0, 300));
+    ok("fiche de Léa (même mode test) : « jour 3 / 7 », case « cochée le … », pastille « bilan réservé » ; aucune écriture (tableau de bord, page Prospects, Mes clients, fiche)", f.includes("jour 3 / 7") && f.includes("cochée le") && f.includes("bilan réservé") && db.ecritures.length === 0, f.slice(0, 300));
     await c.close();
   });
 
