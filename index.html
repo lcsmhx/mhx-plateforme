@@ -8408,11 +8408,16 @@ const Commercial = {
     const tInscrit = instant(p && p.cree_le), heures = tInscrit == null ? null : Math.max(0, (Date.now() - tInscrit) / 3600000);
     const reserve = !!(r && r.reserve), clics = r ? r.clics : 0;
     const nouveau = !fait && !clics && !reserve && heures != null && heures < cfg.nouveau_heures;
+    /* inscrit depuis moins de 24 h : jamais FROID (sauf relances epuisees) — un clic « Réserver » sans questionnaire le rend TIÈDE */
+    const jeune = heures != null && heures < cfg.nouveau_heures;
+    const commence = D && typeof D.repondues === "number" && isFinite(D.repondues) ? Math.floor(D.repondues) : Decouverte.repondues(D);
     const inactif = !reserve && !nouveau && actif != null && actif >= cfg.inactif_jours;
     const chaud = [], froid = [], tiede = [], neuf = [];
     const etape = jour == null ? "" : finie ? "découverte terminée" : "découverte jour " + jour + "/" + r.duree;
     if (reserve) chaud.push("A coché « J'ai réservé mon bilan » " + this.quand(this.depuis(r.reserve)) + ".");
-    if (nouveau) neuf.push("Inscrit " + (heures < 1 ? "il y a moins d'une heure" : "il y a " + Math.floor(heures) + " h") + ", rien fait pour l'instant.");
+    const depuisH = heures == null ? "" : heures < 1 ? "il y a moins d'une heure" : "il y a " + Math.floor(heures) + " h";
+    if (nouveau) neuf.push("Inscrit " + depuisH + (commence > 0 ? ", questionnaire commencé (" + commence + "/" + ((Decouverte.cfg().questions || []).length || 10) + " réponses)." : ", rien fait pour l'instant."));
+    else if (!fait && jeune) tiede.push("Inscrit " + depuisH + ", questionnaire pas encore rempli.");
     else if (!fait) froid.push("Inscrit " + this.quand(inscrit) + ", questionnaire pas rempli.");
     if (inactif) froid.push("Aucune action depuis " + actif + " jours" + (etape ? " (" + etape + ")" : "") + ".");
     if (fait) tiede.push("Questionnaire rempli " + this.quand(this.depuis(r.questionnaire)) + (motiv ? ", motivation " + motiv + "/10" : "") + (etape ? ", " + etape : "") + ".");
@@ -8424,7 +8429,7 @@ const Commercial = {
     if (revenu) issue = null;   // la temperature reprend la main
     const attendre = relance != null && relance < cfg.relance_attente_jours;
     const epuise = sansReponse >= cfg.relances_max;
-    const temperature = reserve ? "chaud" : epuise ? "froid" : nouveau ? "nouveau" : (inactif || !fait) ? "froid" : "tiede";
+    const temperature = reserve ? "chaud" : epuise ? "froid" : nouveau ? "nouveau" : (inactif || (!fait && !jeune)) ? "froid" : "tiede";
     let action, urgent = false;
     const siPasRelance = (texte) => {
       if (attendre) return "Relancé " + this.quand(relance) + " : attends sa réponse.";
@@ -8458,8 +8463,11 @@ const Commercial = {
      au prorata des reponses) ; clic « Réserver mon bilan » 30 ; bilan reserve 30. Bonus : revenu au moins 2 jours
      differents +5, 5 minutes ou plus dans l'app +5, email ouvert +5 (pas mesure tant que les emails ne sont pas
      branches). Plafonne a 100. D = questionnaire (au moins court_le, repondues), A = cle activite. */
-  score(p, C, D, A, E){
+  /* ana (facultatif) : l'analyse du meme prospect ; ses reservation et clics font foi (l'ancienne case d'un ancien
+     client redevenu prospect ne compte pas, exactement comme dans son statut) */
+  score(p, C, D, A, E, ana){
     let r = null; try { r = Decouverte.resume(p, C, D); } catch(e){ r = null; }
+    if (r && ana && typeof ana === "object"){ r = Object.assign({}, r, { reserve: ana.reserve ? r.reserve : null, clics: typeof ana.clics === "number" ? ana.clics : r.clics }); }
     const total = (Decouverte.cfg().questions || []).length || 10;
     const rep = D && typeof D.repondues === "number" && isFinite(D.repondues) ? Math.max(0, Math.min(total, Math.floor(D.repondues))) : Decouverte.repondues(D);
     const fait = !!(r && r.questionnaire), clics = r ? r.clics : 0;
@@ -8478,7 +8486,7 @@ const Commercial = {
     ];
     return { total: Math.min(100, lignes.reduce((s, x) => s + x.pts, 0)), lignes, repondues: rep, questions: total };
   },
-  scoreLigne(l){ try { return this.score(l.p, l.ch, l.dc, l.act, JournalEmails.pour(l.p.id)); } catch(e){ return null; } },
+  scoreLigne(l, ana){ try { return this.score(l.p, l.ch, l.dc, l.act, JournalEmails.pour(l.p.id), ana); } catch(e){ return null; } },
   pastilleScore(sc){ return sc ? `<span class="pastille${sc.total >= 70 ? " ok" : sc.total >= 40 ? " accent" : ""}" title="Score de qualification sur 100">${sc.total}/100</span>` : ""; },
   CLASSES: { nouveau: "accent", chaud: "chaud", tiede: "tiede", froid: "froid", signe: "ok", perdu: "manque", absent: "attention" },
   pastille(a){ return a ? `<span class="pastille ${this.CLASSES[a.etat] || ""}" title="${esc(a.raisons.join(" "))}">${esc(this.ETATS[a.etat] || "")}</span>` : ""; },
@@ -8638,7 +8646,8 @@ const JournalEmails = {
   async charger(){
     if (!Auth.estCoach()) return null;
     try {
-      const l = await Auth.appel("/rest/v1/emails_prospects?select=user_id,modele,statut,envoye_le,ouvert_le,clique_le&order=cree_le.asc");
+      /* par pages de 1 000 (Supabase coupe au-dela sans prevenir), dans un ordre stable */
+      const l = await Clients.pages("/rest/v1/emails_prospects?select=id,user_id,modele,statut,envoye_le,ouvert_le,clique_le&order=id.asc", x => String(x && x.user_id) + "|" + String(x && x.modele));
       const m = new Map();
       (Array.isArray(l) ? l : []).forEach(x => { if (x && typeof x.user_id === "string"){ const t = m.get(x.user_id) || []; t.push(x); m.set(x.user_id, t); } });
       this._parUser = m; this._ok = true;
@@ -8676,7 +8685,7 @@ const Nouveautes = {
   /* lignes = Clients.resumer ; seuls les prospects comptent ; une date dans le futur (horloge d'un appareil en avance) ne compte pas */
   evenements(lignes, vu){
     const t0 = this.seuil(vu), maxi = Date.now() + 5 * 60000, out = [];
-    const ajoute = (l, type, quand) => { if (typeof quand !== "string") return; const t = Date.parse(quand); if (!isNaN(t) && t > t0 && t <= maxi) out.push({ uid: l.p.id, nom: Clients.nom(l.p), type, t, quand }); };
+    const ajoute = (l, type, quand) => { if (typeof quand !== "string" || !/^\d{4}-\d{2}-\d{2}/.test(quand)) return; const t = Date.parse(quand); if (!isNaN(t) && t > t0 && t <= maxi) out.push({ uid: l.p.id, nom: Clients.nom(l.p), type, t, quand }); };
     (lignes || []).filter(l => l && l.p && l.p.statut === "prospect").forEach(l => {
       ajoute(l, "inscription", l.p.cree_le);
       if (l.dc) ajoute(l, "questionnaire", l.dc.court_le);
@@ -8749,19 +8758,20 @@ const outilProspects = {
   PAS: 50, limite: 50,
   donnees: null, lignes: [], tous: [],
   html(){ return `<div id="pr-vue"><header class="masthead"><h1>Prospects</h1></header><section class="panel"><div class="empty">Chargement…</div></section></div>`; },
-  async init(){
+  /* garder = rechargement apres une action sur une carte : le coach garde sa place (nombre de prospects affiches) */
+  async init(garder){
     const zone = $("pr-vue"); if (!zone) return;
     try { [this.donnees] = await Promise.all([Clients.charger(), JournalEmails.charger()]); }
     catch(e){ zone.innerHTML = `<header class="masthead"><h1>Prospects</h1></header><section class="panel"><div class="empty">Impossible de charger les prospects pour le moment.</div></section>`; return; }
     if (!zone.isConnected) return;
-    this.limite = this.PAS;
+    if (!garder) this.limite = this.PAS;
     this.rendre(zone);
   },
   /* chaque prospect : sa ligne (Clients.resumer), son analyse (statut, action) et son score */
   preparer(){
     const { profils, parClient, contenus } = this.donnees;
     this.lignes = Clients.resumer(profils, parClient, contenus);
-    this.tous = this.lignes.filter(l => l.p.statut === "prospect").map(l => ({ l, a: Commercial.analyseLigne(l), sc: Commercial.scoreLigne(l) })).filter(x => x.a);
+    this.tous = this.lignes.filter(l => l.p.statut === "prospect").map(l => { const a = Commercial.analyseLigne(l); return { l, a, sc: a ? Commercial.scoreLigne(l, a) : null }; }).filter(x => x.a);
   },
   norm(s){ return String(s == null ? "" : s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\s+/g, " ").trim(); },
   statutOk(x, f){ return f === "tous" ? true : f === "a_traiter" ? x.a.urgent : f === "issues" ? !!x.a.issue : x.a.etat === f; },
@@ -8823,7 +8833,7 @@ const outilProspects = {
         </div>
         <p class="note" id="pr-compte" role="status" aria-live="polite" style="margin:4px 0 10px"></p>
         <div id="pr-liste"></div>
-        <p class="note" style="margin:12px 0 0">NOUVEAU : inscrit depuis moins de ${cfg.nouveau_heures} h, rien fait. CHAUD : bilan réservé. TIÈDE : questionnaire rempli, pas encore de réservation. FROID : questionnaire pas rempli passé ${cfg.nouveau_heures} h, aucune action depuis ${cfg.inactif_jours} jours, ou ${cfg.relances_max} relances sans réponse. Score sur 100 : inscription 10, questionnaire 30, clic « Réserver mon bilan » 30, bilan réservé 30, bonus visites et temps passé. Ces seuils se changent en une ligne, sur demande.</p>
+        <p class="note" style="margin:12px 0 0">NOUVEAU : inscrit depuis moins de ${cfg.nouveau_heures} h, ni questionnaire rempli, ni clic, ni réservation. CHAUD : bilan réservé. TIÈDE : questionnaire rempli (ou clic « Réserver » dans ses premières ${cfg.nouveau_heures} h), pas encore de réservation. FROID : questionnaire pas rempli passé ${cfg.nouveau_heures} h, aucune action depuis ${cfg.inactif_jours} jours, ou ${cfg.relances_max} relances sans réponse. Score sur 100 : inscription 10, questionnaire 30, clic « Réserver mon bilan » 30, bilan réservé 30, bonus visites, temps passé et email ouvert. Ces seuils se changent en une ligne, sur demande.</p>
       </section>`;
     $$("[data-filtre]", zone).forEach(b => b.addEventListener("click", () => {
       this.filtre = b.dataset.filtre; this.limite = this.PAS;
@@ -8857,7 +8867,7 @@ const outilProspects = {
       : `<div class="empty">${this.filtre === "a_traiter" && !this.recherche && this.periode === "tout" && this.progression === "tout" ? "Rien à faire aujourd'hui : aucun prospect n'attend d'action de ta part." : "Aucun prospect ne correspond à ces filtres."}</div>`;
     const plus = boite.querySelector("#pr-plus");
     if (plus) plus.addEventListener("click", () => { this.limite += this.PAS; this.majListe(zone); });
-    Commercial.brancher(boite, () => { if (zone.isConnected) this.init(); });
+    Commercial.brancher(boite, async () => { if (!zone.isConnected) return; const y = window.scrollY; await this.init(true); if (zone.isConnected) window.scrollTo(0, y); });
   },
   /* export CSV (point-virgule, UTF-8 avec BOM : s'ouvre tel quel dans Excel en français). Une cellule qui commence
      par = + - @ est neutralisee (apostrophe) : un prenom piege ne devient jamais une formule dans le tableur. */
@@ -8940,7 +8950,7 @@ const outilTableau = {
       </section>
       <div id="tb-nouveautes"></div>
       ${aTraiterPr.some(x => x.a.urgent) ? `<section class="panel" id="tb-prospects"><div class="seance-c-tete"><h2>Prospects à traiter</h2><a class="link-a" href="#/prospects">Tous les prospects →</a></div>
-        <div class="sc-liste">${aTraiterPr.filter(x => x.a.urgent).slice(0, 4).map(x => Commercial.carteHTML(x.l.p, x.a, { sc: Commercial.scoreLigne(x.l), dc: x.l.dc })).join("")}</div></section>` : ""}
+        <div class="sc-liste">${aTraiterPr.filter(x => x.a.urgent).slice(0, 4).map(x => Commercial.carteHTML(x.l.p, x.a, { sc: Commercial.scoreLigne(x.l, x.a), dc: x.l.dc })).join("")}</div></section>` : ""}
       <section class="panel">
         <h2>Qui nécessite ton attention aujourd'hui ?</h2>
         ${aSurveiller.length ? `<div class="attention-l">${aSurveiller.map(carte).join("")}</div>` : `<div class="empty">Tout est en ordre : questionnaires remplis, programmes et diètes envoyés, bilans à jour, personne d'inactif.</div>`}
@@ -10175,8 +10185,8 @@ const outilAccueil = {
   /* ---------- ACCUEIL DU MODE GRATUIT : l'ecran Decouverte (questionnaire court, resultat, bilan). Aucun prix. */
   async gratuit(zone){ return outilDecouverte.afficher(zone); },
   /* bloc « Découverte » de la fiche d'un prospect : jour, questionnaire court, clics, bilan reserve (lecture seule) */
-  decouverteFicheHTML(p, C, I, S, A){
-    try { return this._decouverteFicheHTML(p, C, I) + this.prospectDetailHTML(p, C, (I && typeof I === "object") ? I : {}, S, A); }
+  decouverteFicheHTML(p, C, I, S, A, ana){
+    try { return this._decouverteFicheHTML(p, C, I) + this.prospectDetailHTML(p, C, (I && typeof I === "object") ? I : {}, S, A, ana); }
     catch(e){ console.warn("[MHX] bloc découverte illisible", e); return `<section class="panel" id="fiche-decouverte"><h2>Découverte</h2><div class="empty">Données de la découverte illisibles — à vérifier.</div></section>`; }
   },
   _decouverteFicheHTML(p, C, I){
@@ -10208,12 +10218,12 @@ const outilAccueil = {
 
   /* v51 — detail d'un prospect pour le coach : score detaille, reponses, chronologie, lien de reservation, email.
      Lecture seule : tout ce qui vient du prospect passe par s() / dt() et esc(). */
-  prospectDetailHTML(p, C, I, S, A){
+  prospectDetailHTML(p, C, I, S, A, ana){
     const s = v => (typeof v === "string" || typeof v === "number") ? String(v).slice(0, 400) : "";
     const dt = v => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v)) ? dateFr(Decouverte.dateLocale(v) || v.slice(0, 10)) : "—";
     const heure = v => { if (typeof v !== "string" || v.length <= 10) return ""; const d = new Date(v); return isNaN(d) ? "" : " " + String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); };
     const E = JournalEmails.pour(p && p.id);
-    const sc = Commercial.score(p, C, Object.assign({}, I, { repondues: Decouverte.repondues(I) }), A, E);
+    const sc = Commercial.score(p, C, Object.assign({}, I, { repondues: Decouverte.repondues(I) }), A, E, ana);
     const scoreHTML = `<section class="panel" id="fiche-score"><div class="seance-c-tete"><h2>Score de qualification</h2>${Commercial.pastilleScore(sc)}</div>
       <ul class="ingr fiche-l dc-score">${sc.lignes.map(l => `<li><span>${esc(l.lbl)}${l.bonus ? " (bonus)" : ""}</span><b>${l.nonMesure ? "—" : l.pts + " / " + l.max}</b></li>`).join("")}</ul>
       <p class="note" style="margin:10px 0 0">Total plafonné à 100. Le score se recalcule à chaque ouverture.</p></section>`;
@@ -10224,7 +10234,8 @@ const outilAccueil = {
       <p class="note" style="margin:0 0 8px">${sc.repondues} / ${sc.questions} réponses${Decouverte.questionnaireFait(I) ? ", validé le " + esc(dt(I.court_le)) : ", pas encore validé"}.</p>
       <ul class="ingr fiche-l">${rep.map(([k, v]) => `<li><span>${esc(k)}</span><b>${v ? esc(v) : "—"}</b></li>`).join("")}</ul></section>`;
     const ev = [];
-    const ajoute = (quand, texte) => { if (typeof quand === "string" && /^\d{4}-\d{2}-\d{2}/.test(quand) && !isNaN(Date.parse(quand))) ev.push({ t: Date.parse(quand), quand, texte }); };
+    const futur = Date.now() + 5 * 60000;
+    const ajoute = (quand, texte) => { if (typeof quand === "string" && /^\d{4}-\d{2}-\d{2}/.test(quand) && !isNaN(Date.parse(quand)) && Date.parse(quand) <= futur) ev.push({ t: Date.parse(quand), quand, texte }); };
     ajoute(p && p.cree_le, "Inscription");
     ajoute(I.court_debut, "Questionnaire commencé");
     ajoute(I.court_le, "Questionnaire rempli");
@@ -10234,7 +10245,7 @@ const outilAccueil = {
     const hist = S && typeof S === "object" && Array.isArray(S.historique) ? S.historique : [];
     hist.forEach(e => {
       if (!e || typeof e !== "object") return;
-      const lib = e.type === "relance" ? "Tu l'as relancé" : e.type === "annule" ? "Issue annulée" : e.type === "issue" && Commercial.ISSUES[e.valeur] ? "Appel : « " + Commercial.ISSUES[e.valeur] + " »" + (typeof e.note === "string" && e.note ? " — " + e.note.slice(0, 200) : "") : "";
+      const lib = e.type === "relance" ? "Tu l'as relancé" : e.type === "annule" ? "Issue annulée" : e.type === "issue" && typeof e.valeur === "string" && Object.prototype.hasOwnProperty.call(Commercial.ISSUES, e.valeur) ? "Appel : « " + Commercial.ISSUES[e.valeur] + " »" + (typeof e.note === "string" && e.note ? " — " + e.note.slice(0, 200) : "") : "";
       if (lib) ajoute(e.le, lib);
     });
     (Array.isArray(E) ? E : []).forEach(m => {
@@ -10304,11 +10315,11 @@ const outilAccueil = {
     const histP = ((d.hist_programme || {}).liste || []).length, histR = ((d.hist_repas || {}).liste || []).length;
     const fo = d.formation ? outilFormation.compte(outilFormation.migrer(d.formation)) : null;
     /* la decouverte d'un prospect (jour depuis l'inscription, questionnaire court, clics, bilan reserve) */
-    const pDc = Object.assign({}, pr || {}, profil);
+    const pDc = Object.assign({}, profil, pr || {});
     let rdc = null; try { rdc = profil.statut === "prospect" ? Decouverte.resume(pDc, d.challenge, I) : null; } catch(e){ rdc = null; }
     /* v49 : le suivi commercial d'un prospect (un client n'en a plus : son bloc disparait) */
     let SC = null;
-    try { if (profil.statut === "prospect") SC = Commercial.analyse(Object.assign({}, pr || {}, profil), d.challenge, d.suivi_prospect, dernier, I); } catch(e){ SC = null; }
+    try { if (profil.statut === "prospect") SC = Commercial.analyse(pDc, d.challenge, d.suivi_prospect, dernier, I); } catch(e){ SC = null; }
     const lien = (id, txt) => `<a class="link-a" href="#/${id}">${esc(txt)} →</a>`;
     const ligne = (k, v) => v == null || v === "" ? "" : `<li><span>${esc(k)}</span><b>${esc(String(v))}</b></li>`;
     const alertes = l.alertes;
@@ -10331,7 +10342,7 @@ const outilAccueil = {
         </div>
       </section>
       ${SC ? `<div id="fiche-commercial">${Commercial.ficheHTML(Object.assign({}, pr || {}, profil), SC, d.suivi_prospect)}</div>` : ""}
-      ${profil.statut === "prospect" ? this.decouverteFicheHTML(pDc, d.challenge, I, d.suivi_prospect, d.activite) : ""}
+      ${profil.statut === "prospect" ? this.decouverteFicheHTML(pDc, d.challenge, I, d.suivi_prospect, d.activite, SC) : ""}
       ${NotesCoach.html()}
       <div class="fiche-grille">
       <section class="panel"><div class="seance-c-tete"><h2>Profil</h2>${I.complet ? `<span class="pastille ok">questionnaire complet</span>` : `<span class="pastille attention">questionnaire incomplet</span>`}</div>
