@@ -9,17 +9,17 @@ Trois emails en français, sans aucun prix, **uniquement aux prospects qui ont c
 
 | Email | Quand | Objet |
 |---|---|---|
-| Bienvenue | dès que l'email du compte est confirmé | « Léa, ta découverte MHX Coaching commence » |
-| Rappel du questionnaire | 24 h après l'inscription, questionnaire pas rempli | « Léa, ton résultat personnalisé t'attend » |
+| Bienvenue | dès que l'email du compte est confirmé | « Léa, ta découverte MHX Coaching commence » (« commence par ton questionnaire », ou « ton résultat est prêt » s'il est déjà rempli) |
+| Ton résultat | questionnaire rempli après la bienvenue (dans les 48 h) : le prochain passage, au plus une heure après | « Léa, ton résultat est prêt » (aucun chiffre de santé dans l'email : tout reste dans l'app) |
 | Relance | 3 jours après l'inscription, aucune action depuis 3 jours | « Léa, tu as oublié de regarder ton résultat ? » (ou « …ton questionnaire t'attend toujours ») |
 
-- Chaque email part **une seule fois** par prospect (journal `emails_prospects`), au plus un par passage, et **jamais deux à moins de 20 h d'écart** (même pour un compte de quelques jours qui accepte tard).
+- Chaque email part **une seule fois** par prospect (journal `emails_prospects`), au plus un par passage, et **jamais deux à moins de 20 h d'écart** (même pour un compte de quelques jours qui accepte tard), sauf « Ton résultat », qui répond à ce que le prospect vient de faire.
 - Jamais après un bilan réservé, une issue « Signé » ou « Perdu », ni aux comptes créés plus de 8 jours avant (rien ne part aux anciens comptes le jour du déploiement).
 - Un email refusé pour le prospect (adresse invalide…) est retenté au passage suivant, 3 fois au plus. Un refus de Brevo qui prouve que rien n'est parti (clé ou IP refusée, **crédits épuisés**, trop de requêtes, service indisponible, expéditeur non validé) ne compte pas : le passage s'arrête et tout repart au suivant, sans rien perdre. Un envoi **incertain** (Brevo ne répond pas à temps : il a pu prendre l'email) compte comme un essai et arrête le passage : jamais plus de 3 copies d'un même email, même pendant un incident chez Brevo. Au plus 50 emails par passage et **150 par jour** (le quota gratuit de Brevo, 300 par jour, est partagé avec les emails de confirmation de compte).
 - Chaque email contient un lien « Ne plus recevoir ces emails » : il ouvre la page `desinscription.html` de l'app, où le prospect **confirme** d'un bouton (un antivirus qui visite les liens ne désinscrit personne). Le bouton « Se désabonner » que Gmail / Outlook affichent en haut de l'email est celui de **Brevo** (Brevo l'ajoute lui-même à tous les emails) : Brevo prévient la fonction (webhook « Désinscrit », étape 5), qui coupe aussi les emails de suivi dans l'app.
 - Brevo renvoie les **ouvertures et les clics** : ils apparaissent dans la fiche du prospect (chronologie) et comptent dans son score (+5 « email ouvert »). Une désinscription faite chez Brevo, une plainte (spam) ou une adresse qui n'existe pas coupent les emails de suivi du prospect, comme le lien.
 
-Tests (sans réseau) : `node supabase/functions/emails-prospects/test.mjs` → 85 vérifications.
+Tests (sans réseau) : `node supabase/functions/emails-prospects/test.mjs` → 88 vérifications.
 
 ## Fichiers
 - `functions/emails-prospects/index.ts` — le point d'entrée (Deno).
@@ -89,7 +89,7 @@ $$);
 ### 7. Le test
 1. Avec une adresse de test, inscris-toi en **cochant la case des emails de suivi**, confirme l'email.
 2. Lance un passage tout de suite (au lieu d'attendre l'heure) : SQL Editor → la partie `select net.http_post(…)` seule.
-3. L'email « Bienvenue » arrive (regarde aussi dans les indésirables). Contrôle : `select modele, statut, envoye_le, derniere_erreur from emails_prospects;` → `bienvenue · envoye`.
+3. L'email « Bienvenue » arrive (regarde aussi dans les indésirables). Contrôle : `select modele, statut, envoye_le, derniere_erreur from emails_prospects;` → `bienvenue · envoye`. Remplis ensuite le questionnaire, relance un passage : l'email « Ton résultat est prêt » arrive (`resultat · envoye`).
 4. Ouvre l'email puis, dans l'app (coach), la fiche du compte de test : la chronologie montre « Email de suivi « bienvenue » envoyé » puis « ouvert ».
 5. Clique « Ne plus recevoir ces emails » : la page de l'app s'ouvre ; clique **Confirmer** → « C'est noté ». Dans le Profil du compte de test, l'interrupteur « Emails de suivi » est coupé. (Si la page dit « Pas de connexion » : la fonction n'est pas déployée, ou « Enforce JWT verification » est resté activé.)
 6. Dans Gmail, sur l'email reçu : **⋮ → Afficher l'original** → regarde la ligne `From:`. Brevo remplace souvent une adresse `@gmail.com` par une adresse de son domaine (du type `…@…brevosend.com`) : vérifie seulement que la partie avant le `@` commence par `mhx.coaching+suivi` (celle des emails de connexion est `mhx.coaching`).

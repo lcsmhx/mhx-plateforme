@@ -1445,7 +1445,7 @@ const DECOUVERTE = {
       "Données de santé (RGPD article 9) : tu dois accepter explicitement le traitement de tes données concernant ta santé (poids, blessures, contre-indications). Tu peux les consulter ou les supprimer à tout moment. Ces données sont conservées tant que ton compte existe.",
       "Hébergement : Supabase, serveurs en Europe (Irlande).",
       "Prise de rendez-vous : ton bilan se réserve sur Calendly (société américaine), qui enregistre ta réservation pour le compte du coach ; ces données peuvent être traitées aux États-Unis (cadre de protection des données UE–États-Unis). Ton prénom et ton email y sont pré-remplis dès que tu ouvres la page de réservation, avec l'écran de l'app d'où tu viens.",
-      "Emails de suivi (facultatif) : si tu coches la case, tu reçois au plus 3 emails liés à ta découverte (bienvenue, rappel du questionnaire, relance), envoyés par Brevo (société française, données hébergées dans l'Union européenne) pour le compte du coach. Brevo indique au coach si chaque email a été ouvert et si un lien a été cliqué : cela compte dans le suivi de ta découverte. Désinscription en un clic dans chaque email ou depuis ton Profil. L'email de confirmation de ton compte est envoyé dans tous les cas.",
+      "Emails de suivi (facultatif) : si tu coches la case, tu reçois au plus 3 emails liés à ta découverte (bienvenue, ton résultat une fois le questionnaire rempli, relance), envoyés par Brevo (société française, données hébergées dans l'Union européenne) pour le compte du coach. Brevo indique au coach si chaque email a été ouvert et si un lien a été cliqué : cela compte dans le suivi de ta découverte. Désinscription en un clic dans chaque email ou depuis ton Profil. L'email de confirmation de ton compte est envoyé dans tous les cas.",
       "Tes droits : tu peux exporter ou supprimer ton compte et toutes tes données à tout moment depuis Profil, section « Mes données », ou en écrivant au coach.",
       "Conservation : tant que ton compte existe.",
       "En cochant la case, tu acceptes ces conditions."
@@ -1595,7 +1595,7 @@ const DECOUVERTE = {
         "Health data (GDPR article 9): you must explicitly accept the processing of your health data (weight, injuries, medical contraindications). You can view or delete this data at any time. This data is kept as long as your account exists.",
         "Hosting: Supabase, servers in Europe (Ireland).",
         "Booking: your assessment is booked on Calendly (a US company), which records your booking on the coach's behalf; this data may be processed in the United States (EU–US Data Privacy Framework). Your first name and email are pre-filled as soon as you open the booking page, along with the app screen you came from.",
-        "Follow-up emails (optional): if you tick the box, you receive at most 3 emails about your discovery (welcome, questionnaire reminder, follow-up), sent by Brevo (a French company, data hosted in the European Union) on the coach's behalf. Brevo tells the coach whether each email was opened and whether a link was clicked: this counts in the follow-up of your discovery. One-click unsubscribe in every email or from your Profile. The account confirmation email is sent in every case.",
+        "Follow-up emails (optional): if you tick the box, you receive at most 3 emails about your discovery (welcome, your result once the questionnaire is done, follow-up), sent by Brevo (a French company, data hosted in the European Union) on the coach's behalf. Brevo tells the coach whether each email was opened and whether a link was clicked: this counts in the follow-up of your discovery. One-click unsubscribe in every email or from your Profile. The account confirmation email is sent in every case.",
         "Your rights: you can export or delete your account and all your data at any time from Profile, section \"My data\", or by writing to the coach.",
         "Retention: as long as your account exists.",
         "By ticking the box, you accept these terms."
@@ -8669,14 +8669,14 @@ const Commercial = {
    ------------------------------------------------------------------ */
 /* ------------------------------------------------------------------
    JOURNAL DES EMAILS (v51) — table emails_prospects, remplie par la fonction Supabase « emails-prospects »
-   (bienvenue, rappel du questionnaire, relance ; ouvertures et clics renvoyés par Brevo). Lue par le coach
+   (bienvenue, resultat, relance ; ouvertures et clics renvoyés par Brevo). Lue par le coach
    seulement (score « email ouvert », chronologie de la fiche). Tant que la table n'existe pas (migration
    pas appliquée, fonction pas déployée), la lecture échoue sans bruit : rien n'est affiché, le bonus du
    score reste « pas encore mesuré ».
    ------------------------------------------------------------------ */
 const JournalEmails = {
   _parUser: null, _ok: false,
-  MODELES: { bienvenue: "bienvenue", questionnaire: "rappel du questionnaire", relance: "relance" },
+  MODELES: { bienvenue: "bienvenue", resultat: "ton résultat", relance: "relance", questionnaire: "rappel du questionnaire" },   // « questionnaire » : ancien nom, gardé pour l'affichage
   async charger(){
     if (!Auth.estCoach()) return null;
     try {

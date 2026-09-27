@@ -3,6 +3,7 @@
 Tout est prêt côté application : inscription simplifiée, écran « Découverte » (questionnaire court, résultat personnalisé, calories et macros, séance, recettes, Speed Formation pendant 7 jours, « Réserver mon bilan »), retour du lien de confirmation d'email (la personne arrive directement sur son questionnaire), écran « Vérifie ta boîte mail », suivi des prospects dans ta fiche coach (bloc « Découverte », pastilles, CHAUD / TIÈDE / FROID). Il reste **les réglages qui n'appartiennent qu'à toi** (Supabase, email) et un interrupteur dans l'app. Compte une à deux heures, **dans l'ordre ci-dessous** : l'ordre compte, parce que dès que Supabase autorise les inscriptions, le premier email envoyé doit déjà être le bon. Rien n'est irréversible : chaque étape se désactive de la même façon (§10).
 
 ## 0. Avant de commencer
+- **La v51 est en ligne** : tu as poussé `main` (`git -C /Users/lucasmahaux/MHX-Code/mhx-plateforme push origin main`) et le pied de page de l'app affiche « 2026-09-27 · 51 ». L'inscription y est encore fermée.
 - Tu as la main sur le projet Supabase `nzynbuczmogifuidcjed` (tableau de bord → Authentication) et sur la boîte `mhx.coaching@gmail.com`.
 - Prévois **deux adresses email de test** que tu contrôles et qui n'ont pas de compte MHX : un alias Gmail (`mhx.coaching+test1@gmail.com`) et, si tu peux, une adresse Outlook / Hotmail ou iCloud (les filtres anti-spam y sont différents).
 - Ne touche à rien d'autre dans Supabase (base, règles, fonctions) : ce guide ne concerne que **Authentication**.
@@ -36,27 +37,15 @@ Supabase → **Authentication → URL Configuration** :
 - Save.
 
 ## 3. Les modèles d'email (en français, à ton nom)
-Supabase → **Authentication → Emails → Templates**.
+Supabase → **Authentication → Emails → Templates**. Pour chacun des trois modèles ci-dessous : mets l'objet, puis, dans le corps (onglet **Source** / HTML), **efface tout et colle le contenu complet du fichier** indiqué (sur GitHub : ouvre le fichier → bouton **Raw** → tout sélectionner → copier). Les `{{ .ConfirmationURL }}`, `{{ .Email }}` et `{{ .NewEmail }}` sont remplis par Supabase : ne les modifie pas. **Save** après chacun.
 
-**Confirm signup** — objet : `Confirme ton accès découverte MHX` ; corps (le `{{ .ConfirmationURL }}` est obligatoire, ne le modifie pas) :
+| Modèle Supabase | Objet | Fichier à coller |
+|---|---|---|
+| **Confirm signup** (inscription) | `Confirme ton accès découverte MHX` | `supabase/templates/confirmation.html` |
+| **Reset password** (mot de passe oublié, déjà utilisé par tes clients) | `Ton nouveau mot de passe MHX Coaching` | `supabase/templates/mot-de-passe.html` |
+| **Change email address** (changement d'adresse depuis le Profil) | `Confirme ta nouvelle adresse MHX Coaching` | `supabase/templates/changement-email.html` |
 
-```html
-<h2>Bienvenue chez MHX Coaching</h2>
-<p>Un clic et tu arrives directement sur ton questionnaire (3 minutes) :</p>
-<p><a href="{{ .ConfirmationURL }}">Confirmer mon inscription</a></p>
-<p>Ce lien ne sert qu'une fois. Si tu n'es pas à l'origine de cette inscription, ignore simplement cet email.</p>
-<p>À tout de suite,<br>Lucas — MHX Coaching</p>
-```
-
-**Reset password** (mot de passe oublié, déjà utilisé par tes clients) — objet : `Ton nouveau mot de passe MHX Coaching` ; corps :
-
-```html
-<h2>Nouveau mot de passe</h2>
-<p>Tu as demandé à changer ton mot de passe. Clique ici pour en choisir un nouveau :</p>
-<p><a href="{{ .ConfirmationURL }}">Choisir mon nouveau mot de passe</a></p>
-<p>Si tu n'as rien demandé, ignore cet email : ton mot de passe reste le même.</p>
-<p>Lucas — MHX Coaching</p>
-```
+Les trois ont la présentation des emails de suivi (fond clair, bouton doré, « MHX Coaching »), aucun prix, et l'adresse du lien en clair sous le bouton (pour les messageries qui bloquent les boutons). Supabase affiche un aperçu à droite : vérifie que le bouton apparaît.
 
 Durée de validité du lien : **Authentication → Sign In / Providers → Email → « Email OTP Expiration »** (c'est là, pas dans Emails) : mets `86400` secondes (24 h) plutôt que l'heure par défaut, pour les gens qui ouvrent leur boîte mail le soir. Un lien ne sert qu'une fois : un deuxième clic affiche « Ce lien n'est plus valable » et propose de se connecter (c'est normal).
 
@@ -79,21 +68,19 @@ Contrôle juste après : dans l'app, **Comptes → Créer le compte** avec ta de
 
 ## 5. Ouvrir l'inscription dans l'application (en dernier)
 
-Juste avant : relis le texte des conditions (volet « Conditions d'utilisation et confidentialité » de l'écran d'inscription, `DECOUVERTE.confidentialite` dans `index.html`). Personne ne l'a encore accepté : c'est le moment de le faire relire si tu as un doute, puis de changer sa version (`DECOUVERTE.confidentialite.version`, aujourd'hui `"2026-09"`) pour dater la version acceptée par les premiers inscrits.
+**C'est déjà prêt** : la branche `ouverture-inscription` contient un seul commit par-dessus la v51 : `inscription_libre: true` (dans `CONFIG.marque`) et la version des conditions datée (`DECOUVERTE.confidentialite.version = "2026-09-27"`, enregistrée avec chaque inscription). Le banc a été rejoué dessus.
 
-Dans `index.html`, une seule ligne, dans `CONFIG.marque` (vers la ligne 990) :
+Juste avant : relis une dernière fois le texte des conditions (écran d'inscription → « Conditions d'utilisation et confidentialité »). Personne ne l'a encore accepté.
 
-```js
-inscription_libre: false,
-```
-devient
-```js
-inscription_libre: true,
+Puis, **seulement quand les étapes 1 à 4 sont faites et vérifiées**, une seule commande :
+
+```bash
+git -C /Users/lucasmahaux/MHX-Code/mhx-plateforme push origin ouverture-inscription:main
 ```
 
-Deux façons : (a) tu me le demandes (commit dédié « ouverture », avec le banc rejoué) — recommandé ; (b) tu le fais toi-même sur GitHub (fichier `index.html` → crayon → modifier la ligne → Commit changes). GitHub Pages met la nouvelle version en ligne en une à deux minutes (le pied de page de l'app affiche la version).
+GitHub Pages met la nouvelle version en ligne en une à deux minutes. Tant que ce commit n'est pas poussé, l'écran « Créer mon compte » n'existe pas.
 
-Tant que cette ligne vaut `false`, l'écran « Créer mon compte » n'existe pas.
+Autre façon, sans le terminal : sur GitHub, fichier `index.html` → crayon → `inscription_libre: false,` devient `inscription_libre: true,` → Commit changes.
 
 ## 6. Le test de bout en bout (avec l'adresse de test)
 1. Sur ton téléphone, **déconnecté de l'app** (ou en navigation privée, mais le lien de l'email s'ouvrira dans le navigateur normal : déconnecte-toi aussi là) : `https://lcsmhx.github.io/mhx-plateforme/#/inscription` → prénom, adresse de test, mot de passe, case des conditions et case des données de santé → « Créer mon accès ».
@@ -125,7 +112,7 @@ Si l'email n'arrive pas : Supabase → **Logs → Auth** dit si l'envoi a échou
 - Tu peux te tester toi-même à tout moment avec un compte prospect. Pour voir le jour 8 (Speed Formation verrouillée) sans attendre : `#/decouverte-jour/8` sur ton appareil ; `#/decouverte-jour/0` pour revenir au vrai jour. Rien n'est écrit en base.
 
 ## 9 bis. Les emails de suivi (facultatif, après l'ouverture)
-L'app sait déjà demander l'accord (case facultative à l'inscription, interrupteur « Emails de suivi » dans le Profil du prospect). L'envoi lui-même (bienvenue, rappel du questionnaire, relance, via Brevo) est une fonction Supabase prête et testée mais **pas déployée** : marche à suivre complète dans `supabase/README.md` (clé API Brevo **et blocage des IP inconnues à désactiver chez Brevo**, table du journal, fonction, secrets, webhook des ouvertures, clics et désinscriptions, planification horaire, test). La page « Ne plus recevoir ces emails » (`desinscription.html`) est en ligne dès ton push, avec l'app. Tant qu'elle n'est pas déployée, aucun email de suivi ne part, et le score des prospects affiche « email ouvert : pas encore mesuré ».
+L'app sait déjà demander l'accord (case facultative à l'inscription, interrupteur « Emails de suivi » dans le Profil du prospect). L'envoi lui-même (bienvenue, ton résultat après le questionnaire, relance à J3, via Brevo) est une fonction Supabase prête et testée mais **pas déployée** : marche à suivre complète dans `supabase/README.md` (clé API Brevo **et blocage des IP inconnues à désactiver chez Brevo**, table du journal, fonction, secrets, webhook des ouvertures, clics et désinscriptions, planification horaire, test). La page « Ne plus recevoir ces emails » (`desinscription.html`) est en ligne dès ton push, avec l'app. Tant qu'elle n'est pas déployée, aucun email de suivi ne part, et le score des prospects affiche « email ouvert : pas encore mesuré ».
 
 ## 10. Pour refermer (si besoin)
-Dans l'ordre inverse : `inscription_libre: false` dans l'app, puis « Allow new users to sign up » désactivé dans Supabase. Les comptes déjà créés restent et continuent de fonctionner.
+Dans l'ordre inverse : `inscription_libre: false` dans l'app (GitHub → `index.html` → crayon, ou demande-le-moi), puis « Allow new users to sign up » désactivé dans Supabase. Les comptes déjà créés restent et continuent de fonctionner.

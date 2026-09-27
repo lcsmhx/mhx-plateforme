@@ -118,38 +118,58 @@ const passe = (w, maintenant, regles) => L.executer({ fetch: w.fetch, env: ENV, 
   ok("deuxième passage juste après : rien de plus (un email n'est envoyé qu'une fois)", b2.envoyes === 0 && db.brevo.length === 2, b2);
 }
 
-/* ---------- 2. l'enchaînement bienvenue → questionnaire → relance ---------- */
+/* ---------- 2. le parcours du brief : bienvenue → ton résultat (questionnaire rempli) → relance J3 ---------- */
+const plus = ms => new Date(MAINTENANT.getTime() + ms);
+const remplir = (db, id, quand) => { const iso = quand.toISOString(); const x = db.donnees.find(d => d.user_id === id && d.outil === "intake"); if (x) Object.assign(x.contenu, { court_le: iso, court_debut: iso }); else db.donnees.push({ user_id: id, outil: "intake", contenu: { court_le: iso, court_debut: iso } }); };
 {
   const w = monde(); const db = w.db;
   prospect(db, "p1", { inscritIl: 2 * H });
-  await passe(w, new Date(MAINTENANT.getTime()));
   const m = () => db.brevo.filter(x => x.to[0].email === "p1@exemple.fr").map(x => x.tags[1]);
-  ok("J0 : bienvenue", JSON.stringify(m()) === '["mhx-bienvenue"]', m());
-  await passe(w, new Date(MAINTENANT.getTime() + 20 * H));
-  ok("J0 + 22 h : rien (le rappel attend 24 h)", m().length === 1, m());
-  await passe(w, new Date(MAINTENANT.getTime() + 23 * H));
-  ok("J1 sans questionnaire : rappel du questionnaire", JSON.stringify(m()) === '["mhx-bienvenue","mhx-questionnaire"]', m());
-  await passe(w, new Date(MAINTENANT.getTime() + 2 * J));
-  ok("J2 : rien", m().length === 2, m());
-  await passe(w, new Date(MAINTENANT.getTime() + 3 * J));
-  ok("J3 sans aucune action depuis 3 jours : relance (variante questionnaire)", m()[2] === "mhx-relance" && /questionnaire t'attend/.test(db.brevo[2].subject), db.brevo.map(x => x.subject));
-  await passe(w, new Date(MAINTENANT.getTime() + 4 * J));
+  await passe(w, plus(0));
+  ok("J0, email confirmé, questionnaire pas encore rempli : bienvenue « commence par ton questionnaire »", JSON.stringify(m()) === '["mhx-bienvenue"]' && /Commence par ton questionnaire/.test(db.brevo[0].textContent) && /Commencer mon questionnaire/.test(db.brevo[0].htmlContent), m());
+  remplir(db, "p1", plus(30 * 60000));
+  await passe(w, plus(H));
+  ok("questionnaire rempli 30 min après : « ton résultat est prêt » au passage suivant (1 h après la bienvenue : l'écart de 20 h ne vaut pas pour une réponse à son action)", JSON.stringify(m()) === '["mhx-bienvenue","mhx-resultat"]' && db.brevo[1].subject === "Léa, ton résultat est prêt", db.brevo.map(x => x.subject));
+  ok("email « ton résultat » : aucun chiffre de santé (ni kcal, ni kg, ni poids), renvoie vers l'app", !/kcal|\bkg\b|poids|\d{3,4} ?cal/i.test(db.brevo[1].textContent + db.brevo[1].htmlContent) && db.brevo[1].htmlContent.includes(ENV.APP_URL), db.brevo[1].textContent);
+  await passe(w, plus(2 * H));
+  await passe(w, plus(2 * J));
+  ok("ensuite, tant qu'il n'est pas inactif depuis 3 jours : rien", m().length === 2, m());
+  await passe(w, plus(3 * J + 2 * H));
+  ok("3 jours sans action après le questionnaire : relance « tu as oublié de regarder ton résultat ? »", m()[2] === "mhx-relance" && /regarder ton résultat/.test(db.brevo[2].subject), db.brevo.map(x => x.subject));
+  await passe(w, plus(6 * J));
   ok("ensuite plus rien : 3 emails au plus", m().length === 3, m());
 }
 {
   const w = monde(); const db = w.db;
-  prospect(db, "q1", { inscritIl: 30 * H, intake: { court_le: il(29 * H), court_debut: il(29 * H) } });
-  db.journal.push({ id: 900, user_id: "q1", modele: "bienvenue", statut: "envoye", tentatives: 1, envoye_le: il(29 * H), maj_le: il(29 * H) });
+  prospect(db, "n1", { inscritIl: 2 * H });
+  const m = () => db.brevo.filter(x => x.to[0].email === "n1@exemple.fr").map(x => x.tags[1]);
+  await passe(w, plus(0));
+  await passe(w, plus(23 * H)); await passe(w, plus(2 * J));
+  ok("questionnaire jamais rempli : rien entre la bienvenue et J3 (pas de rappel à part : la relance s'en charge)", JSON.stringify(m()) === '["mhx-bienvenue"]', m());
+  await passe(w, plus(3 * J));
+  ok("J3 sans aucune action : relance « ton questionnaire t'attend toujours »", m()[1] === "mhx-relance" && /questionnaire t'attend toujours/.test(db.brevo[1].subject), db.brevo.map(x => x.subject));
+  await passe(w, plus(5 * J));
+  ok("ensuite plus rien (2 emails pour lui)", m().length === 2, m());
+}
+{
+  const w = monde(); const db = w.db;
+  prospect(db, "q1", { inscritIl: 3 * H, intake: { court_le: il(2 * H), court_debut: il(2 * H) } });
+  await passe(w, plus(0));
+  ok("questionnaire rempli AVANT la bienvenue : bienvenue « ton résultat t'attend » (bouton « Voir mon résultat »)", db.brevo.length === 1 && db.brevo[0].tags[1] === "mhx-bienvenue" && /Ton questionnaire est rempli/.test(db.brevo[0].textContent) && /Voir mon résultat/.test(db.brevo[0].htmlContent), db.brevo.map(x => x.textContent.slice(0, 120)));
+  await passe(w, plus(H)); await passe(w, plus(5 * H));
+  ok("… et pas d'email « ton résultat » en plus (la bienvenue l'a déjà dit)", db.brevo.length === 1, db.brevo.map(x => x.subject));
+}
+{
+  const w = monde(); const db = w.db;
+  prospect(db, "v1", { inscritIl: 5 * J, intake: { court_le: il(3 * J), court_debut: il(3 * J) } });
+  db.journal.push({ id: 905, user_id: "v1", modele: "bienvenue", statut: "envoye", tentatives: 1, envoye_le: il(5 * J), maj_le: il(5 * J) });
   await passe(w);
-  ok("questionnaire déjà rempli : pas de rappel du questionnaire", db.brevo.length === 0, db.brevo.map(x => x.subject));
-  await passe(w, new Date(MAINTENANT.getTime() + 2 * J));
-  ok("J3, questionnaire rempli, inactif depuis 3 jours : relance « tu as oublié de regarder ton résultat ? »", db.brevo.length === 1 && /regarder ton résultat/.test(db.brevo[0].subject), db.brevo.map(x => x.subject));
+  ok("questionnaire rempli il y a 3 jours (plus de 48 h, par exemple au déploiement) : pas d'email « ton résultat » périmé ; la relance à la place", db.brevo.length === 1 && db.brevo[0].tags[1] === "mhx-relance", db.brevo.map(x => x.tags[1]));
 }
 {
   const w = monde(); const db = w.db;
   prospect(db, "r1", { inscritIl: 4 * J, activite: { derniere: il(H) } });
   db.journal.push({ id: 901, user_id: "r1", modele: "bienvenue", statut: "envoye", tentatives: 1, envoye_le: il(4 * J), maj_le: il(4 * J) });
-  db.journal.push({ id: 902, user_id: "r1", modele: "questionnaire", statut: "envoye", tentatives: 1, envoye_le: il(3 * J), maj_le: il(3 * J) });
   await passe(w);
   ok("actif il y a 1 h (activité dans l'app) : pas de relance", db.brevo.length === 0);
 }
@@ -161,17 +181,15 @@ const passe = (w, maintenant, regles) => L.executer({ fetch: w.fetch, env: ENV, 
   const m = () => db.brevo.filter(x => x.to[0].email === "g1@exemple.fr").map(x => x.tags[1]);
   await passe(w);
   ok("inscrit depuis 4 jours : bienvenue seulement", JSON.stringify(m()) === '["mhx-bienvenue"]', m());
-  await passe(w, new Date(MAINTENANT.getTime() + H));
-  await passe(w, new Date(MAINTENANT.getTime() + 2 * H));
-  ok("1 h et 2 h plus tard : rien (20 h au moins entre deux emails)", m().length === 1, m());
-  await passe(w, new Date(MAINTENANT.getTime() + 19 * H));
+  await passe(w, plus(H));
+  await passe(w, plus(2 * H));
+  ok("1 h et 2 h plus tard : rien (20 h au moins entre deux emails, même si la relance est déjà due)", m().length === 1, m());
+  await passe(w, plus(19 * H));
   ok("19 h plus tard : toujours rien", m().length === 1, m());
-  await passe(w, new Date(MAINTENANT.getTime() + 20 * H));
-  ok("20 h plus tard : le rappel du questionnaire", JSON.stringify(m()) === '["mhx-bienvenue","mhx-questionnaire"]', m());
-  await passe(w, new Date(MAINTENANT.getTime() + 21 * H));
-  ok("21 h : rien (la relance attend 20 h de plus)", m().length === 2, m());
-  await passe(w, new Date(MAINTENANT.getTime() + 40 * H));
-  ok("40 h : la relance ; 3 emails étalés sur 40 h au lieu de 3 en 3 h", JSON.stringify(m()) === '["mhx-bienvenue","mhx-questionnaire","mhx-relance"]', m());
+  await passe(w, plus(20 * H));
+  ok("20 h plus tard : la relance ; 2 emails étalés sur 20 h au lieu de 2 en 1 h", JSON.stringify(m()) === '["mhx-bienvenue","mhx-relance"]', m());
+  await passe(w, plus(3 * J));
+  ok("ensuite plus rien", m().length === 2, m());
 }
 
 /* ---------- 3. échecs, reprises, abandon ---------- */
@@ -316,11 +334,11 @@ for (const [nom, env, attendu] of [["BREVO_API_KEY absente", { BREVO_API_KEY: ""
 {
   const p = { prenom: "Léa", questionnaire: false };
   const cfg = { marque: "MHX Coaching", contact: "mhx.coaching@gmail.com", signataire: "Lucas", lienApp: ENV.APP_URL, lienDesinscription: "https://x/?d" };
-  const tous = [L.contenu("bienvenue", p, cfg), L.contenu("questionnaire", p, cfg), L.contenu("relance", p, cfg), L.contenu("relance", { prenom: "", questionnaire: true }, cfg)];
+  const tous = [L.contenu("bienvenue", p, cfg), L.contenu("resultat", p, cfg), L.contenu("relance", p, cfg), L.contenu("relance", { prenom: "", questionnaire: true }, cfg), L.contenu("bienvenue", { prenom: "Léa", questionnaire: true }, cfg)];
   const texte = tous.map(m => m.sujet + " " + m.html + " " + m.texte).join(" ");
-  ok("aucun prix, tarif, abonnement ni montant dans les 4 emails", !/€|\beuros?\b|tarif|abonnement|prix|\/mois|paiement/i.test(texte));
+  ok("aucun prix, tarif, abonnement ni montant dans les 5 emails (dont les 2 variantes de la bienvenue)", !/€|\beuros?\b|tarif|abonnement|prix|\/mois|paiement/i.test(texte));
   ok("aucune mention du Challenge ni de Notion (abandonnés)", !/challenge|notion/i.test(texte));
-  ok("sujets attendus", tous[0].sujet === "Léa, ta découverte MHX Coaching commence" && tous[1].sujet === "Léa, ton résultat personnalisé t'attend" && tous[2].sujet === "Léa, ton questionnaire t'attend toujours" && tous[3].sujet === "Bonjour, tu as oublié de regarder ton résultat ?", tous.map(m => m.sujet));
+  ok("sujets attendus", tous[0].sujet === "Léa, ta découverte MHX Coaching commence" && tous[1].sujet === "Léa, ton résultat est prêt" && tous[2].sujet === "Léa, ton questionnaire t'attend toujours" && tous[3].sujet === "Bonjour, tu as oublié de regarder ton résultat ?", tous.map(m => m.sujet));
 }
 
 /* ---------- 6. désinscription ---------- */

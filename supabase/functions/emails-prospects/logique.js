@@ -3,19 +3,22 @@
    (node supabase/functions/emails-prospects/test.mjs). Rien ici ne lit une variable
    d'environnement ni le réseau directement : tout arrive par les paramètres (fetch, env).
 
-   Trois emails, au plus un par prospect et par passage (et 20 h au moins entre deux), chacun une seule fois :
-   - bienvenue      : dès que l'email du compte est confirmé ;
-   - questionnaire  : 24 h après l'inscription, si le questionnaire court n'est pas rempli ;
-   - relance        : 3 jours après l'inscription, si plus aucune action depuis 3 jours.
+   Trois emails, au plus un par prospect et par passage, chacun une seule fois (parcours du brief de Lucas) :
+   - bienvenue : dès que l'email du compte est confirmé (« commence par ton questionnaire », ou « ton résultat est
+                 prêt » s'il l'a déjà rempli) ;
+   - resultat  : questionnaire rempli après la bienvenue (dans les 48 h) : « ton résultat est prêt » — aucun chiffre
+                 de santé dans l'email, tout reste dans l'app ;
+   - relance   : 3 jours après l'inscription, si plus aucune action depuis 3 jours.
+   20 h au moins entre deux emails, sauf pour « resultat », qui répond à une action du prospect.
    Seulement aux prospects qui l'ont accepté (case de l'inscription, ou interrupteur du Profil),
    jamais après une réservation de bilan, une issue « Signé » ou « Perdu », ni aux comptes
    créés plus de 8 jours avant le passage (rien n'est envoyé aux anciens comptes au déploiement).
    Aucun prix, aucun tarif dans les emails. */
 
-export const MODELES = ["bienvenue", "questionnaire", "relance"];
+export const MODELES = ["bienvenue", "resultat", "relance"];
 
 export const REGLES = {
-  questionnaire_apres_h: 24,   // rappel du questionnaire
+  resultat_max_h: 48,          // « ton résultat » : seulement pour un questionnaire rempli depuis moins de 48 h
   relance_apres_jours: 3,      // relance : inscrit depuis 3 jours…
   inactif_jours: 3,            // … et plus aucune action depuis 3 jours
   fenetre_jours: 8,            // au-delà, plus aucun email de suivi
@@ -55,7 +58,7 @@ export function etatProspect(src, maintenant) {
   const clics = Array.isArray(objet(ch.cta).clics) ? ch.cta.clics.filter(c => c && typeof c === "object" && instant(c.date) != null) : [];
   const j7 = objet(objet(ch.jours)["7"]);
   const reserve = instant(ch.reserve) != null || instant(j7.reserve) != null;
-  const questionnaire = instant(intake.court_le) != null;
+  const questionnaireLe = instant(intake.court_le), questionnaire = questionnaireLe != null;
   /* derniere action connue : questionnaire, clic, activite dans l'app, inscription */
   const dates = [cree, instant(intake.court_le), instant(intake.court_debut), instant(act.derniere)].concat(clics.map(c => instant(c.date))).filter(t => t != null && t <= now + 5 * 60000);
   const email = chaine(u.email, 254);
@@ -67,6 +70,7 @@ export function etatProspect(src, maintenant) {
     confirme: instant(u.email_confirmed_at) != null,
     heures: cree == null ? null : (now - cree) / 3600000,
     questionnaire,
+    questionnaireLe: questionnaire && questionnaireLe <= now + 5 * 60000 ? questionnaireLe : null,
     clics: clics.length,
     reserve,
     issue: typeof suivi.issue === "string" ? suivi.issue : null,
@@ -89,15 +93,19 @@ export function emailsDus(prospects, envoyes, maintenant, regles) {
     if (!p.id || !p.email || !p.confirme || !p.accord || p.statut !== "prospect") continue;
     if (p.reserve || p.issue === "signe" || p.issue === "perdu") continue;
     if (p.heures == null || p.heures > R.fenetre_jours * 24) continue;
-    const dernier = dernierEnvoi(p);
-    if (dernier != null && now - dernier < R.ecart_min_h * 3600000) continue;
     const inactifJours = p.derniereAction == null ? Infinity : (now - p.derniereAction) / JOUR;
     const b = lu(p, "bienvenue");
+    const bLe = b && b.statut === "envoye" ? instant(b.envoye_le) : null;
     let modele = null;
     if (!fini(b)) modele = "bienvenue";
-    else if (b.statut === "envoye" && !p.questionnaire && p.heures >= R.questionnaire_apres_h && !fini(lu(p, "questionnaire"))) modele = "questionnaire";
-    else if (b.statut === "envoye" && p.heures >= R.relance_apres_jours * 24 && inactifJours >= R.inactif_jours && !fini(lu(p, "relance"))) modele = "relance";
-    if (modele) out.push({ user_id: p.id, modele, prospect: p, existant: lu(p, modele) });
+    /* questionnaire rempli APRÈS la bienvenue (sinon la bienvenue l'a déjà dit), il y a moins de 48 h */
+    else if (bLe != null && p.questionnaireLe != null && p.questionnaireLe > bLe && now - p.questionnaireLe < R.resultat_max_h * 3600000 && !fini(lu(p, "resultat"))) modele = "resultat";
+    else if (bLe != null && p.heures >= R.relance_apres_jours * 24 && inactifJours >= R.inactif_jours && !fini(lu(p, "relance"))) modele = "relance";
+    if (!modele) continue;
+    /* 20 h au moins depuis le dernier email, sauf « resultat » (réponse à ce que le prospect vient de faire) */
+    const dernier = dernierEnvoi(p);
+    if (modele !== "resultat" && dernier != null && now - dernier < R.ecart_min_h * 3600000) continue;
+    out.push({ user_id: p.id, modele, prospect: p, existant: lu(p, modele) });
   }
   return out;
 }
@@ -127,20 +135,23 @@ export function contenu(modele, p, cfg) {
   if (modele === "bienvenue") return gabarit(Object.assign(base, {
     sujet: (prenom ? prenom + ", ta" : "Ta") + " découverte " + cfg.marque + " commence",
     titre: "Bienvenue" + (prenom ? " " + prenom : "") + " !",
-    paragraphes: [
+    paragraphes: p.questionnaire ? [
+      "Ton accès découverte est ouvert pendant 7 jours.",
+      "Ton questionnaire est rempli : ton résultat personnalisé t'attend dans ton espace, avec tes calories et tes macros, une séance à faire chez toi et 3 recettes pour démarrer."
+    ] : [
       "Ton accès découverte est ouvert pendant 7 jours.",
       "Commence par ton questionnaire : 3 minutes, 10 questions. Tu obtiens tout de suite ton résultat personnalisé, tes calories et tes macros, une séance à faire chez toi et 3 recettes pour démarrer."
     ],
-    cta: "Commencer mon questionnaire", lien: cfg.lienApp
+    cta: p.questionnaire ? "Voir mon résultat" : "Commencer mon questionnaire", lien: cfg.lienApp
   }));
-  if (modele === "questionnaire") return gabarit(Object.assign(base, {
-    sujet: salut + ", ton résultat personnalisé t'attend",
-    titre: "Ton résultat personnalisé t'attend",
+  if (modele === "resultat") return gabarit(Object.assign(base, {
+    sujet: salut + ", ton résultat est prêt",
+    titre: "Ton résultat est prêt",
     paragraphes: [
-      "Il te manque une étape pour voir ton résultat : ton questionnaire (3 minutes).",
-      "À partir de tes réponses, l'app calcule ton point de départ, tes priorités, tes calories et tes macros."
+      "Merci d'avoir rempli ton questionnaire. Ton point de départ, tes priorités, tes calories et tes macros t'attendent dans ton espace découverte, avec une séance à faire chez toi et 3 recettes.",
+      "Si tu veux un plan construit pour toi, tu peux réserver un bilan de 30 minutes avec ton coach depuis ton espace."
     ],
-    cta: "Remplir mon questionnaire", lien: cfg.lienApp
+    cta: "Voir mon résultat", lien: cfg.lienApp
   }));
   /* relance : deux variantes selon que le questionnaire est rempli ou non */
   if (p.questionnaire) return gabarit(Object.assign(base, {

@@ -6,7 +6,7 @@
 create table if not exists public.emails_prospects (
   id              bigint generated always as identity primary key,
   user_id         uuid not null references auth.users(id) on delete cascade,  -- compte supprimé : son journal part avec
-  modele          text not null check (modele in ('bienvenue', 'questionnaire', 'relance')),
+  modele          text not null check (modele in ('bienvenue', 'resultat', 'relance')),
   statut          text not null default 'en_cours' check (statut in ('en_cours', 'envoye', 'echec', 'abandon')),
   tentatives      integer not null default 0 check (tentatives >= 0),
   message_id      text,           -- identifiant Brevo (relie les ouvertures et les clics)
@@ -32,7 +32,7 @@ create policy "emails_prospects : lecture par le coach"
   using (public.est_coach());
 
 comment on table public.emails_prospects is
-  'MHX v51 — emails de suivi des prospects (bienvenue, questionnaire, relance) : un envoi par prospect et par modèle. Écrit par la fonction emails-prospects (clé de service), lu par le coach.';
+  'MHX v51 — emails de suivi des prospects (bienvenue, resultat, relance) : un envoi par prospect et par modèle. Écrit par la fonction emails-prospects (clé de service), lu par le coach.';
 
 -- Vérification après application (doit renvoyer 1 règle, en lecture, pour authenticated) :
 --   select policyname, cmd, roles from pg_policies where tablename = 'emails_prospects';
