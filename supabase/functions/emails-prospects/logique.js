@@ -3,7 +3,7 @@
    (node supabase/functions/emails-prospects/test.mjs). Rien ici ne lit une variable
    d'environnement ni le réseau directement : tout arrive par les paramètres (fetch, env).
 
-   Trois emails, au plus un par prospect et par passage, chacun une seule fois :
+   Trois emails, au plus un par prospect et par passage (et 20 h au moins entre deux), chacun une seule fois :
    - bienvenue      : dès que l'email du compte est confirmé ;
    - questionnaire  : 24 h après l'inscription, si le questionnaire court n'est pas rempli ;
    - relance        : 3 jours après l'inscription, si plus aucune action depuis 3 jours.
@@ -19,7 +19,10 @@ export const REGLES = {
   relance_apres_jours: 3,      // relance : inscrit depuis 3 jours…
   inactif_jours: 3,            // … et plus aucune action depuis 3 jours
   fenetre_jours: 8,            // au-delà, plus aucun email de suivi
-  tentatives_max: 3,           // un envoi qui échoue est retenté au passage suivant, 3 fois au plus
+  ecart_min_h: 20,             // jamais deux emails de suivi à moins de 20 h d'écart (déploiement, accord tardif)
+  tentatives_max: 3,           // un envoi refusé ou incertain est retenté au passage suivant, 3 fois au plus ;
+                               // un refus qui prouve que rien n'est parti (clé, IP, crédits, trop de requêtes,
+                               // service indisponible) ne compte pas : le passage s'arrête, rien n'est perdu
   en_cours_max_min: 60,        // un envoi resté « en cours » plus d'une heure (fonction interrompue) est repris
   max_par_passage: 50,         // au plus 50 emails par passage (temps d'exécution de la fonction)
   quota_jour: 150              // au plus 150 emails de suivi par jour : le quota gratuit de Brevo (300 / jour)
@@ -72,11 +75,13 @@ export function etatProspect(src, maintenant) {
   };
 }
 
-/* Les emails dus à ce passage. envoyes : Map « user_id|modele » -> { statut, tentatives, maj_le }. */
+/* Les emails dus à ce passage. envoyes : Map « user_id|modele » -> { statut, tentatives, maj_le, envoye_le }. */
 export function emailsDus(prospects, envoyes, maintenant, regles) {
   const R = Object.assign({}, REGLES, regles || {});
   const now = maintenant.getTime(), out = [];
   const lu = (p, m) => envoyes.get(p.id + "|" + m) || null;
+  /* dernier email parti vers ce prospect (tous modèles confondus) */
+  const dernierEnvoi = p => { let t = null; for (const m of MODELES) { const e = lu(p, m), x = e && e.statut === "envoye" ? instant(e.envoye_le) : null; if (x != null && (t == null || x > t)) t = x; } return t; };
   /* « en cours » depuis plus d'une heure : la fonction s'est arrêtée pendant l'envoi, on reprend (comme un échec) */
   const bloque = e => !!e && e.statut === "en_cours" && !(instant(e.maj_le) != null && now - instant(e.maj_le) < R.en_cours_max_min * 60000);
   const fini = e => !!e && (e.statut === "envoye" || e.statut === "abandon" || (e.statut === "en_cours" && !bloque(e)) || ((e.statut === "echec" || bloque(e)) && e.tentatives >= R.tentatives_max));
@@ -84,6 +89,8 @@ export function emailsDus(prospects, envoyes, maintenant, regles) {
     if (!p.id || !p.email || !p.confirme || !p.accord || p.statut !== "prospect") continue;
     if (p.reserve || p.issue === "signe" || p.issue === "perdu") continue;
     if (p.heures == null || p.heures > R.fenetre_jours * 24) continue;
+    const dernier = dernierEnvoi(p);
+    if (dernier != null && now - dernier < R.ecart_min_h * 3600000) continue;
     const inactifJours = p.derniereAction == null ? Infinity : (now - p.derniereAction) / JOUR;
     const b = lu(p, "bienvenue");
     let modele = null;
@@ -184,8 +191,10 @@ function api(fetchFn, env) {
     if (!r.ok) { const err = new Error("Supabase " + r.status + " sur " + chemin.split("?")[0] + " : " + (data && (data.message || data.msg) || t).toString().slice(0, 200)); err.statut = r.status; throw err; }
     return data;
   };
-  /* lecture paginée (1 000 lignes par page) */
+  /* lecture paginée (1 000 lignes par page). Le chemin porte toujours un order=… sur une clé unique :
+     sans ordre stable, deux pages peuvent se recouvrir et une ligne (une désinscription) manquer */
   const tout = async (chemin) => {
+    if (!/[?&]order=/.test(chemin)) throw new Error("lecture paginée sans ordre : " + chemin.split("?")[0]);
     const out = [];
     for (let debut = 0; debut < 200000; debut += 1000) {
       const lot = await appel(chemin, { headers: { "Range-Unit": "items", Range: debut + "-" + (debut + 999) } });
@@ -211,49 +220,60 @@ async function utilisateurs(fetchFn, env, api_) {
 
 const delai = ms => (typeof AbortSignal !== "undefined" && AbortSignal.timeout) ? AbortSignal.timeout(ms) : undefined;
 
+/* Pas d'en-tête List-Unsubscribe ici : l'API Brevo n'accepte pas les en-têtes standard et ajoute elle-même le sien
+   (le bouton « Se désabonner » de Gmail / Outlook passe par Brevo, qui prévient la fonction par le webhook
+   « unsubscribed »). Pas de clé d'idempotence non plus : Brevo la veut au format UUID et ne la garde que 30 minutes,
+   moins que l'écart entre deux passages ; un envoi incertain compte donc comme un essai (3 au plus). */
 export async function envoyerBrevo(fetchFn, env, destinataire, message, tag) {
-  if (!env.BREVO_API_KEY) throw new Error("BREVO_API_KEY manquant");
+  if (!env.BREVO_API_KEY) throw Object.assign(new Error("BREVO_API_KEY manquant"), { avantEnvoi: true });
   const corps = {
     sender: { name: env.EXPEDITEUR_NOM || "MHX Coaching", email: env.EXPEDITEUR_EMAIL },
     to: [{ email: destinataire.email, name: destinataire.prenom || undefined }],
     subject: message.sujet, htmlContent: message.html, textContent: message.texte,
-    tags: ["mhx-suivi", "mhx-" + tag],
-    headers: message.desinscription ? { "List-Unsubscribe": "<" + message.desinscription + ">", "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" } : undefined
+    tags: ["mhx-suivi", "mhx-" + tag]
   };
   if (env.REPONSE_EMAIL) corps.replyTo = { email: env.REPONSE_EMAIL };
   const r = await fetchFn("https://api.brevo.com/v3/smtp/email", { method: "POST", headers: { "api-key": env.BREVO_API_KEY, "Content-Type": "application/json", accept: "application/json" }, body: JSON.stringify(corps), signal: delai(15000) });
   const t = await r.text(); let data = null; try { data = t ? JSON.parse(t) : null; } catch (e) { data = null; }
-  if (!r.ok) { const err = new Error("Brevo " + r.status + " : " + ((data && (data.message || data.code)) || t).toString().slice(0, 200)); err.statut = r.status; throw err; }
+  /* brevo : la réponse d'erreur vient bien de Brevo (JSON avec code ou message), pas d'un intermédiaire */
+  if (!r.ok) { const err = new Error("Brevo " + r.status + " : " + ((data && (data.message || data.code)) || t).toString().slice(0, 200)); err.statut = r.status; err.brevo = !!(data && typeof data === "object" && (data.code || data.message)); throw err; }
   return (data && data.messageId) || null;
 }
 
 /* ---------- un passage complet ---------- */
 export async function executer({ fetch: fetchFn, env, maintenant, regles }) {
   const now = maintenant || new Date();
-  for (const k of ["EXPEDITEUR_EMAIL", "APP_URL", "DESINSCRIPTION_SECRET", "FONCTION_URL"]) if (!env[k]) throw new Error(k + " manquant");
+  /* réglages vérifiés avant toute réservation : un secret oublié n'use les essais de personne */
+  for (const k of ["BREVO_API_KEY", "EXPEDITEUR_EMAIL", "APP_URL", "DESINSCRIPTION_SECRET", "FONCTION_URL"]) if (!env[k]) throw new Error(k + " manquant");
+  if (String(env.DESINSCRIPTION_SECRET).length < 16) throw new Error("DESINSCRIPTION_SECRET trop court (16 caractères au moins, 40 conseillés)");
   const A = api(fetchFn, env);
   const [profils, users, donnees, suivis, journal] = await Promise.all([
-    A.tout("/rest/v1/profils?statut=eq.prospect&select=id,prenom,cree_le,statut"),
+    A.tout("/rest/v1/profils?statut=eq.prospect&select=id,prenom,cree_le,statut&order=id.asc"),
     utilisateurs(fetchFn, env, A),
-    A.tout("/rest/v1/donnees?outil=in.(intake,challenge,emails,activite)&select=user_id,outil,contenu"),
-    A.tout("/rest/v1/donnees?outil=eq.suivi_prospect&select=user_id,contenu"),
-    A.tout("/rest/v1/emails_prospects?select=user_id,modele,statut,tentatives,maj_le,envoye_le")
+    A.tout("/rest/v1/donnees?outil=in.(intake,challenge,emails,activite)&select=user_id,outil,contenu&order=user_id.asc,outil.asc"),
+    A.tout("/rest/v1/donnees?outil=eq.suivi_prospect&select=user_id,contenu&order=user_id.asc"),
+    A.tout("/rest/v1/emails_prospects?select=id,user_id,modele,statut,tentatives,maj_le,envoye_le&order=id.asc")
   ]);
   const parUser = new Map(users.map(u => [u.id, u]));
   const dParUser = new Map();
   for (const l of donnees) { if (!l || !l.user_id) continue; const o = dParUser.get(l.user_id) || {}; o[l.outil] = l.contenu; dParUser.set(l.user_id, o); }
   const sParUser = new Map(suivis.map(l => [l.user_id, l.contenu]));
-  const envoyes = new Map(journal.map(l => [l.user_id + "|" + l.modele, { statut: l.statut, tentatives: l.tentatives || 0, maj_le: l.maj_le || null }]));
+  const envoyes = new Map(journal.map(l => [l.user_id + "|" + l.modele, { statut: l.statut, tentatives: l.tentatives || 0, maj_le: l.maj_le || null, envoye_le: l.envoye_le || null }]));
   const prospects = profils.map(pr => etatProspect({ profil: pr, user: parUser.get(pr.id), donnees: dParUser.get(pr.id), suivi: sParUser.get(pr.id) }, now));
   const R = Object.assign({}, REGLES, regles || {});
   const tous = emailsDus(prospects, envoyes, now, R);
   /* quota du jour (depuis minuit UTC) et plafond par passage */
   const minuit = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-  const deja = journal.filter(l => l && l.statut === "envoye" && instant(l.envoye_le) != null && instant(l.envoye_le) >= minuit).length;
+  /* compte aussi les essais ratés du jour : un envoi incertain (délai dépassé) a pu partir chez Brevo */
+  const deja = journal.filter(l => l && ((l.statut === "envoye" && instant(l.envoye_le) != null && instant(l.envoye_le) >= minuit) || ((l.statut === "echec" || l.statut === "abandon") && (l.tentatives || 0) > 0 && instant(l.maj_le) != null && instant(l.maj_le) >= minuit))).length;
   const place = Math.max(0, Math.min(R.max_par_passage, R.quota_jour - deja));
-  const dus = tous.slice(0, place);
-  const bilan = { prospects: prospects.length, dus: tous.length, reportes: tous.length - dus.length, envoyes: 0, echecs: 0, abandons: 0, ignores: 0, details: [] };
-  for (const e of dus) {
+  /* d'abord les emails jamais essayés, puis les nouveaux essais (les moins essayés d'abord) : un prospect dont
+     l'envoi rate ne reste pas en tête de file à chaque passage */
+  const essais = e => e.existant ? (e.existant.tentatives || 0) + 1 : 0;
+  const dus = tous.map((e, i) => ({ e, i })).sort((a, b) => essais(a.e) - essais(b.e) || a.i - b.i).map(x => x.e).slice(0, place);
+  const bilan = { prospects: prospects.length, dus: tous.length, reportes: tous.length - dus.length, envoyes: 0, echecs: 0, abandons: 0, ignores: 0, arret: null, details: [] };
+  for (let i = 0; i < dus.length; i++) {
+    const e = dus[i];
     const cle = { user_id: e.user_id, modele: e.modele };
     const filtre = "?user_id=eq." + encodeURIComponent(e.user_id) + "&modele=eq." + e.modele;
     /* reservation de la ligne : une seule execution envoie, meme si deux passages tournent en meme temps.
@@ -266,21 +286,69 @@ export async function executer({ fetch: fetchFn, env, maintenant, regles }) {
       : await A.appel("/rest/v1/emails_prospects?on_conflict=user_id,modele", { method: "POST", headers: { Prefer: "resolution=ignore-duplicates,return=representation" }, body: [ligne] });
     if (!Array.isArray(reserve) || !reserve.length){ bilan.ignores++; continue; }
     const jeton = await signer(e.user_id, env.DESINSCRIPTION_SECRET);
-    const lienDesinscription = String(env.FONCTION_URL).replace(/\/$/, "") + "?action=desinscription&u=" + encodeURIComponent(e.user_id) + "&t=" + jeton;
-    const message = contenu(e.modele, e.prospect, { marque: env.MARQUE || "MHX Coaching", contact: env.CONTACT || env.REPONSE_EMAIL || "", signataire: env.SIGNATAIRE || "", lienApp: env.APP_URL, lienDesinscription });
-    message.desinscription = lienDesinscription;
+    /* lien du corps de l'email : une page de confirmation (un antivirus qui visite les liens ne désinscrit personne) */
+    const lienPage = lienPageDesinscription(env.APP_URL, e.user_id, jeton);
+    const message = contenu(e.modele, e.prospect, { marque: env.MARQUE || "MHX Coaching", contact: env.CONTACT || env.REPONSE_EMAIL || "", signataire: env.SIGNATAIRE || "", lienApp: env.APP_URL, lienDesinscription: lienPage });
+    let id;
     try {
-      const id = await envoyerBrevo(fetchFn, env, e.prospect, message, e.modele);
-      await A.appel("/rest/v1/emails_prospects" + filtre, { method: "PATCH", body: { statut: "envoye", message_id: id, envoye_le: now.toISOString(), derniere_erreur: null, maj_le: now.toISOString() } });
-      bilan.envoyes++; bilan.details.push({ user_id: e.user_id, modele: e.modele, statut: "envoye" });
+      id = await envoyerBrevo(fetchFn, env, e.prospect, message, e.modele);
     } catch (err) {
+      const texte = String(err.message || err).slice(0, 300), nature = natureErreur(err);
+      if (nature === "reglage") {
+        /* refus qui prouve que rien n'est parti (clé ou IP refusée, crédits épuisés, trop de requêtes, service
+           indisponible, expéditeur non validé) : l'essai ne compte pas, la ligne retrouve son nombre d'essais d'avant,
+           et le passage s'arrête (les suivants seraient refusés pareil) */
+        await retenter(() => A.appel("/rest/v1/emails_prospects" + filtre, { method: "PATCH", body: { statut: "echec", tentatives: avant ? avant.tentatives : 0, derniere_erreur: texte, maj_le: now.toISOString() } })).catch(() => {});
+        bilan.echecs++; bilan.arret = texte.slice(0, 160); bilan.reportes += dus.length - i - 1;
+        bilan.details.push({ user_id: e.user_id, modele: e.modele, statut: "echec", erreur: texte.slice(0, 120) });
+        break;
+      }
+      /* refus propre à ce prospect (adresse…) ou envoi incertain (délai dépassé, coupure, 5xx : Brevo a pu le prendre) :
+         l'essai compte (3 au plus, jamais d'envoi sans fin) ; un envoi incertain arrête aussi le passage */
       const abandon = tentatives >= R.tentatives_max;
-      await A.appel("/rest/v1/emails_prospects" + filtre, { method: "PATCH", body: { statut: abandon ? "abandon" : "echec", derniere_erreur: String(err.message || err).slice(0, 300), maj_le: now.toISOString() } }).catch(() => {});
+      await retenter(() => A.appel("/rest/v1/emails_prospects" + filtre, { method: "PATCH", body: { statut: abandon ? "abandon" : "echec", derniere_erreur: (nature === "incertain" ? "[incertain] " : "") + texte, maj_le: now.toISOString() } })).catch(() => {});
       if (abandon) bilan.abandons++; else bilan.echecs++;
-      bilan.details.push({ user_id: e.user_id, modele: e.modele, statut: abandon ? "abandon" : "echec", erreur: String(err.message || err).slice(0, 120) });
+      bilan.details.push({ user_id: e.user_id, modele: e.modele, statut: abandon ? "abandon" : "echec", erreur: texte.slice(0, 120) });
+      if (nature === "incertain") { bilan.arret = "[incertain] " + texte.slice(0, 150); bilan.reportes += dus.length - i - 1; break; }
+      continue;
     }
+    /* parti : noté « envoye », avec de nouveaux essais si la base ne répond pas (sinon la ligne resterait « en cours »
+       et l'email repartirait une heure plus tard) */
+    try {
+      await retenter(() => A.appel("/rest/v1/emails_prospects" + filtre, { method: "PATCH", body: { statut: "envoye", message_id: id, envoye_le: now.toISOString(), derniere_erreur: null, maj_le: now.toISOString() } }));
+    } catch (err) { bilan.details.push({ user_id: e.user_id, modele: e.modele, statut: "envoye", erreur: "journal non mis à jour : " + String(err.message || err).slice(0, 100) }); }
+    bilan.envoyes++; bilan.details.push({ user_id: e.user_id, modele: e.modele, statut: "envoye" });
   }
   return bilan;
+}
+
+/* nature d'une erreur d'envoi :
+   - « reglage »   : rien n'est parti, pour une raison qui ne tient pas au prospect — erreur avant l'appel (clé absente),
+                     401 / 403 (clé, IP inconnue, compte pas activé), 402 (crédits épuisés), 429 (trop de requêtes),
+                     503 renvoyé par Brevo lui-même (service indisponible), 400 « sender » (expéditeur non validé) :
+                     ne compte pas, arrête le passage ;
+   - « incertain » : pas de réponse (délai dépassé, coupure), 408, 500, 502, 504… : Brevo a pu prendre l'email —
+                     compte comme un essai, arrête le passage ;
+   - « refus »     : autre refus 4xx, propre à ce prospect (adresse invalide…) : compte, le passage continue. */
+export function natureErreur(err) {
+  const s = err && err.statut;
+  if (err && err.avantEnvoi) return "reglage";
+  if (s === 401 || s === 402 || s === 403 || s === 429 || (s === 503 && err.brevo) || (s === 400 && /sender/i.test(String(err.message || "")))) return "reglage";
+  if (!s || s === 408 || s >= 500) return "incertain";
+  return "refus";
+}
+/* quelques essais rapprochés (0,3 s puis 1 s) pour une écriture importante */
+async function retenter(fn, essais) {
+  let derniere;
+  for (let k = 0; k < (essais || 3); k++) {
+    try { return await fn(); } catch (e) { derniere = e; if (k < (essais || 3) - 1) await new Promise(r => setTimeout(r, k === 0 ? 300 : 1000)); }
+  }
+  throw derniere;
+}
+/* la page statique de confirmation (desinscription.html, à la racine de l'app, servie par GitHub Pages) */
+export function lienPageDesinscription(appUrl, uid, jeton) {
+  const base = String(appUrl || "").replace(/\/?$/, "/");
+  return base + "desinscription.html?u=" + encodeURIComponent(uid) + "&t=" + encodeURIComponent(jeton);
 }
 
 /* ---------- lien « Ne plus recevoir ces emails » ---------- */
@@ -292,29 +360,41 @@ export async function desinscrire({ fetch: fetchFn, env, uid, jeton, maintenant 
   return { ok: true };
 }
 
-export function pageDesinscription(ok, marque, lienApp) {
-  const titre = ok ? "C'est noté" : "Lien non valable";
-  const texte = ok ? "Tu ne recevras plus les emails de suivi. Tu peux changer d'avis à tout moment depuis ton Profil." : "Ce lien de désinscription n'est pas valable. Tu peux couper les emails de suivi depuis ton Profil, dans l'app.";
-  return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(titre)} — ${esc(marque)}</title></head>
-<body style="margin:0;background:#f4f2ee;font-family:Helvetica,Arial,sans-serif;color:#1c1c1c"><div style="max-width:520px;margin:0 auto;padding:48px 20px">
-<p style="font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#8a7a52">${esc(marque)}</p><h1 style="font-size:22px">${esc(titre)}</h1><p style="font-size:16px;line-height:1.55">${esc(texte)}</p>
-${lienApp ? `<p><a href="${esc(lienApp)}" style="color:#8a6a1c">Ouvrir l'app</a></p>` : ""}</div></body></html>`;
-}
-
-/* ---------- ouvertures et clics renvoyés par Brevo (webhook transactionnel) ---------- */
+/* ---------- événements renvoyés par Brevo (webhook transactionnel) ----------
+   ouverture, clic : première fois seulement (le clic sur « Ne plus recevoir ces emails » ne compte pas) ;
+   désinscription, plainte (spam), adresse invalide ou bloquée, rebond définitif : les emails de suivi sont coupés
+   (clé « emails » = { suivi: false }, comme le lien de désinscription). L'heure vient de ts_epoch / ts_event
+   (UTC) : le champ « date » de Brevo est à l'heure du compte, sans fuseau. */
+const COUPE = /unsubscri|spam|complaint|hard.?bounce|invalid|blocked/;
 export async function evenementBrevo({ fetch: fetchFn, env, corps, maintenant }) {
   const liste = Array.isArray(corps) ? corps : [corps];
   const A = api(fetchFn, env);
-  let n = 0;
-  for (const ev of liste) {
-    const e = objet(ev), id = chaine(e["message-id"] || e.messageId || e["message_id"], 200), type = chaine(e.event, 40).toLowerCase();
+  let n = 0, coupes = 0;
+  for (const ev of liste.slice(0, 500)) {
+    const e = objet(ev), id = chaine(e["message-id"] || e.messageId || e["message_id"], 200), type = chaine(e.event, 40).toLowerCase().replace(/\s+/g, "_");
     if (!id) continue;
+    const num = v => typeof v === "number" && isFinite(v) && v > 0 ? v : typeof v === "string" && /^\d{9,13}$/.test(v) ? Number(v) : null;
+    const ms = num(e.ts_epoch) != null ? num(e.ts_epoch) : num(e.ts_event) != null ? num(e.ts_event) * 1000 : num(e.ts) != null ? num(e.ts) * 1000 : null;
+    const t = ms != null && ms > Date.UTC(2020, 0, 1) && ms < (maintenant || new Date()).getTime() + 86400000 ? ms : (maintenant || new Date()).getTime();
+    const quand = new Date(t).toISOString();
+    if (COUPE.test(type)) {
+      const l = await A.appel("/rest/v1/emails_prospects?message_id=eq." + encodeURIComponent(id) + "&select=user_id&limit=1");
+      const uid = Array.isArray(l) && l[0] && typeof l[0].user_id === "string" ? l[0].user_id : null;
+      if (uid) {
+        await A.appel("/rest/v1/donnees?on_conflict=user_id,outil", { method: "POST", headers: { Prefer: "resolution=merge-duplicates" }, body: [{ user_id: uid, outil: "emails", contenu: { suivi: false, maj: quand, source: "brevo-" + type.slice(0, 30) }, maj_le: new Date((maintenant || new Date()).getTime()).toISOString() }] });
+        /* bloqué, adresse invalide, rebond définitif : cet email n'est jamais arrivé — le journal le dit (fiche du coach :
+           « non délivré ») au lieu de le laisser « envoye » */
+        if (/blocked|invalid|hard.?bounce/.test(type)) await A.appel("/rest/v1/emails_prospects?message_id=eq." + encodeURIComponent(id) + "&statut=eq.envoye", { method: "PATCH", body: { statut: "abandon", derniere_erreur: "Non délivré : " + type.slice(0, 30) + " (Brevo)", maj_le: new Date((maintenant || new Date()).getTime()).toISOString() } });
+        coupes++;
+      }
+      n++; continue;
+    }
     const champ = /open/.test(type) ? "ouvert_le" : /click/.test(type) ? "clique_le" : null;
     if (!champ) continue;
-    const quand = instant(e.date) != null ? new Date(instant(e.date)).toISOString() : (maintenant || new Date()).toISOString();
+    if (champ === "clique_le" && /desinscription/i.test(chaine(e.link || e.url, 2000))) continue;
     /* seulement la premiere ouverture / le premier clic */
     await A.appel("/rest/v1/emails_prospects?message_id=eq." + encodeURIComponent(id) + "&" + champ + "=is.null", { method: "PATCH", body: { [champ]: quand } });
     n++;
   }
-  return { traites: n };
+  return { traites: n, coupes };
 }
