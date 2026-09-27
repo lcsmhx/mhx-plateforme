@@ -264,6 +264,16 @@ summary:hover{color:var(--accent)}
 .sc-nom{flex:1;min-width:0;display:flex;flex-direction:column}
 .sc-nom b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sc-nom small{color:var(--ink-3);font-size:12px}
+.sc-infos{margin:6px 0 0;font-size:12px;color:var(--ink-3);overflow-wrap:anywhere}
+.pr-outils{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0 4px}
+.pr-outils input[type=search]{flex:1 1 220px;min-width:0}
+.pr-outils select{flex:0 1 auto;max-width:100%}
+.pr-plus{margin-top:12px}
+.dc-chrono{list-style:none;margin:0;padding:0}
+.dc-chrono li{display:flex;gap:10px;padding:6px 0;border-top:1px solid var(--line);font-size:13px}
+.dc-chrono li:first-child{border-top:0}
+.dc-chrono time{flex:0 0 92px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.dc-score li b{font-variant-numeric:tabular-nums}
 .sc-action{margin:10px 0 6px;line-height:1.5}
 .sc-raisons{margin:0 0 10px;padding-left:18px;color:var(--ink-2);font-size:13.5px;line-height:1.5}
 .sc-boutons{display:flex;flex-wrap:wrap;gap:6px}
@@ -1614,6 +1624,20 @@ function lienCalendly(source){
     const i = base.indexOf("#"), avant = i > -1 ? base.slice(0, i) : base, apres = i > -1 ? base.slice(i) : "";   // les parametres avant un eventuel #
     return avant + (avant.indexOf("?") > -1 ? "&" : "?") + params.join("&") + apres;
   } catch(e){ return base; }   // un caractere mal forme ne doit jamais empecher la page de s'afficher
+}
+/* v51 — le lien de reservation d'un prospect, construit pour le coach (fiche) : prenom et email du prospect,
+   source « fiche-coach ». Rend "" si Calendly n'est pas configure. */
+function lienCalendlyPour(prenom, email, source){
+  const base = lienSur(CONFIG.marque && CONFIG.marque.calendly); if (!base) return "";
+  try {
+    const params = ["utm_source=app-mhx", "utm_medium=coach"];
+    if (typeof source === "string" && /^[a-z0-9-]{1,40}$/.test(source)) params.push("utm_content=" + source);
+    const pr = typeof prenom === "string" ? prenom.trim().slice(0, 80) : "", em = typeof email === "string" ? email.trim() : "";
+    if (pr) params.push("name=" + encodeURIComponent(pr), "first_name=" + encodeURIComponent(pr));
+    if (/^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(em) && em.length <= 254) params.push("email=" + encodeURIComponent(em));
+    const i = base.indexOf("#"), avant = i > -1 ? base.slice(0, i) : base, apres = i > -1 ? base.slice(i) : "";
+    return avant + (avant.indexOf("?") > -1 ? "&" : "?") + params.join("&") + apres;
+  } catch(e){ return base; }
 }
 /* Un ecran vide doit toujours proposer quoi faire. Sans bouton, le client
    se dit que l'app ne marche pas et ne revient plus. Rien en consultation
@@ -8414,10 +8438,14 @@ const Commercial = {
     const i = this.depuis(p && p.cree_le);
     return (a.jour == null ? "Découverte" : a.finie ? "Découverte terminée" : "Découverte J" + a.jour + "/" + a.duree) + (a.questionnaire ? " · questionnaire rempli" : " · questionnaire à remplir") + " · inscrit " + (a.inscritHeures != null && a.inscritHeures < 24 ? (a.inscritHeures < 1 ? "il y a moins d'une heure" : "il y a " + Math.floor(a.inscritHeures) + " h") : this.quand(i)) + (a.relances ? " · " + a.relances + " relance" + (a.relances > 1 ? "s" : "") : "");
   },
-  carteHTML(p, a){
+  carteHTML(p, a, x){
     const nom = Clients.nom(p);
+    /* v51 : x = { sc (score), dc (questionnaire resume) } — page Prospects */
+    const dc = x && x.dc ? x.dc : null;
+    const infos = dc ? [dc.email, p && typeof p.cree_le === "string" ? "inscrit le " + dateFr(Decouverte.dateLocale(p.cree_le) || "") : "", dc.objectif].filter(Boolean) : [];
     return `<article class="sc-carte${a.urgent ? " urgent" : ""}" data-uid="${esc(p.id)}">
-      <div class="sc-tete">${Clients.avatar(nom)}<div class="sc-nom"><b>${esc(nom)}</b><small>${esc(this.sousTitre(p, a))}</small></div>${this.pastille(a)}</div>
+      <div class="sc-tete">${Clients.avatar(nom)}<div class="sc-nom"><b>${esc(nom)}</b><small>${esc(this.sousTitre(p, a))}</small></div>${x && x.sc ? this.pastilleScore(x.sc) + " " : ""}${this.pastille(a)}</div>
+      ${infos.length ? `<p class="sc-infos">${esc(infos.join(" · "))}</p>` : ""}
       <p class="sc-action"><b>Prochaine action :</b> ${esc(a.action)}</p>
       <ul class="sc-raisons">${a.raisons.map(x => `<li>${esc(x)}</li>`).join("")}</ul>
       <div class="sc-boutons">${this.boutons(p, a, false)}</div>
@@ -8550,47 +8578,141 @@ const outilProspects = {
   sans_entete: true,
   titre: "Prospects",
   accroche: "",
-  filtre: "a_traiter",
-  donnees: null,
+  /* v51 : filtres (gardes le temps de la session), recherche, tri, pagination par 50, export CSV */
+  filtre: "a_traiter", periode: "tout", progression: "tout", tri: "priorite", recherche: "",
+  PAS: 50, limite: 50,
+  donnees: null, lignes: [], tous: [],
   html(){ return `<div id="pr-vue"><header class="masthead"><h1>Prospects</h1></header><section class="panel"><div class="empty">Chargement…</div></section></div>`; },
   async init(){
     const zone = $("pr-vue"); if (!zone) return;
     try { this.donnees = await Clients.charger(); }
     catch(e){ zone.innerHTML = `<header class="masthead"><h1>Prospects</h1></header><section class="panel"><div class="empty">Impossible de charger les prospects pour le moment.</div></section>`; return; }
     if (!zone.isConnected) return;
+    this.limite = this.PAS;
     this.rendre(zone);
   },
-  rendre(zone){
+  /* chaque prospect : sa ligne (Clients.resumer), son analyse (statut, action) et son score */
+  preparer(){
     const { profils, parClient, contenus } = this.donnees;
-    const lignes = Clients.resumer(profils, parClient, contenus);
-    const tous = lignes.filter(l => l.p.statut === "prospect").map(l => ({ l, a: Commercial.analyseLigne(l) })).filter(x => x.a).sort((x, y) => x.a.rang - y.a.rang || x.a.recence - y.a.recence);
+    this.lignes = Clients.resumer(profils, parClient, contenus);
+    this.tous = this.lignes.filter(l => l.p.statut === "prospect").map(l => ({ l, a: Commercial.analyseLigne(l), sc: Commercial.scoreLigne(l) })).filter(x => x.a);
+  },
+  norm(s){ return String(s == null ? "" : s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\s+/g, " ").trim(); },
+  statutOk(x, f){ return f === "tous" ? true : f === "a_traiter" ? x.a.urgent : f === "issues" ? !!x.a.issue : x.a.etat === f; },
+  passe(x){
+    if (!this.statutOk(x, this.filtre)) return false;
+    const h = x.a.inscritHeures;
+    if (this.periode !== "tout"){ const lim = { "24h": 24, "7j": 168, "30j": 720 }[this.periode]; if (!(h != null && h < lim)) return false; }
+    if (this.progression === "sans_q" && x.a.questionnaire) return false;
+    if (this.progression === "q_fait" && !x.a.questionnaire) return false;
+    if (this.progression === "clic" && !x.a.clics) return false;
+    if (this.progression === "reserve" && !x.a.reserve) return false;
+    const q = this.norm(this.recherche);
+    if (q){ const dc = x.l.dc || {}; if ((this.norm(Clients.nom(x.l.p)) + " " + this.norm(dc.email)).indexOf(q) === -1) return false; }
+    return true;
+  },
+  trier(liste){
+    const t = v => { const x = typeof v === "string" ? Date.parse(v) : NaN; return isNaN(x) ? 0 : x; };
+    const cmp = this.tri === "score" ? (x, y) => ((y.sc ? y.sc.total : 0) - (x.sc ? x.sc.total : 0)) || x.a.rang - y.a.rang
+              : this.tri === "inscription" ? (x, y) => t(y.l.p.cree_le) - t(x.l.p.cree_le)
+              : this.tri === "activite" ? (x, y) => x.a.recence - y.a.recence || x.a.rang - y.a.rang
+              : (x, y) => x.a.rang - y.a.rang || x.a.recence - y.a.recence;
+    return liste.slice().sort(cmp);
+  },
+  rendre(zone){
+    this.preparer();
+    const tous = this.tous;
     /* issues des 30 derniers jours, clients compris (un prospect signe puis passe client reste compte) */
-    const mois = lignes.map(l => Commercial.suivi(l.suivi)).filter(S => typeof S.issue === "string" && Commercial.depuis(S.issue_le) != null && Commercial.depuis(S.issue_le) <= 30);
-    const n = e => tous.filter(x => x.a.etat === e).length, avecIssue = tous.filter(x => x.a.issue).length;
-    const filtres = [["a_traiter", "À traiter", tous.filter(x => x.a.urgent).length], ["chaud", "Chauds", n("chaud")], ["tiede", "Tièdes", n("tiede")], ["froid", "Froids", n("froid")], ["issues", "Appel fait", avecIssue], ["tous", "Tous", tous.length]];
-    const garde = x => this.filtre === "tous" ? true : this.filtre === "a_traiter" ? x.a.urgent : this.filtre === "issues" ? !!x.a.issue : x.a.etat === this.filtre;
-    const liste = tous.filter(garde);
-    const cmpt = k => mois.filter(S => S.issue === k).length;
-    const pl = (k, sg, pl) => k > 1 ? pl : sg;
+    const mois = this.lignes.map(l => Commercial.suivi(l.suivi)).filter(S => typeof S.issue === "string" && Commercial.depuis(S.issue_le) != null && Commercial.depuis(S.issue_le) <= 30);
+    const n = e => tous.filter(x => x.a.etat === e).length, cmpt = k => mois.filter(S => S.issue === k).length;
+    const pl = (k, sg, p) => k > 1 ? p : sg;
+    const moy = tous.length ? Math.round(tous.reduce((s, x) => s + (x.sc ? x.sc.total : 0), 0) / tous.length) : 0;
+    const tuile = (lbl, val, sub, cls) => `<div class="tile"><div class="t-lbl">${lbl}</div><div class="t-val readout${cls ? " " + cls : ""}">${val}</div><div class="t-sub">${sub}</div></div>`;
+    const opt = (v, t, cur) => `<option value="${v}"${v === cur ? " selected" : ""}>${esc(t)}</option>`;
+    const cfg = Commercial.cfg();
     zone.innerHTML = `
       <header class="masthead">
         <span class="eyebrow">${esc(outilAccueil.dateLongue())}</span>
         <h1>Prospects</h1>
-        <p class="lede">${tous.length ? `${tous.length} ${pl(tous.length, "compte gratuit", "comptes gratuits")} · ${n("chaud")} ${pl(n("chaud"), "chaud", "chauds")}, ${n("tiede")} ${pl(n("tiede"), "tiède", "tièdes")}, ${n("froid")} ${pl(n("froid"), "froid", "froids")}${avecIssue ? `, ${avecIssue} avec une issue d'appel` : ""}.` : "Aucun prospect pour le moment : ils apparaîtront ici dès leur inscription."}</p>
+        <p class="lede">${tous.length ? `${tous.length} ${pl(tous.length, "compte gratuit", "comptes gratuits")} · ${n("nouveau")} ${pl(n("nouveau"), "nouveau", "nouveaux")}, ${n("chaud")} ${pl(n("chaud"), "chaud", "chauds")}, ${n("tiede")} ${pl(n("tiede"), "tiède", "tièdes")}, ${n("froid")} ${pl(n("froid"), "froid", "froids")} · score moyen ${moy}/100` : "Aucun prospect pour l'instant."}</p>
       </header>
+      <div id="pr-nouveautes"></div>
       <section class="panel"><div class="tiles">
-        <div class="tile"><div class="t-lbl">À traiter</div><div class="t-val readout">${tous.filter(x => x.a.urgent).length}</div><div class="t-sub">une action à faire</div></div>
-        <div class="tile"><div class="t-lbl">Signés</div><div class="t-val readout pos">${cmpt("signe")}</div><div class="t-sub">30 derniers jours</div></div>
-        <div class="tile"><div class="t-lbl">Perdus</div><div class="t-val readout">${cmpt("perdu")}</div><div class="t-sub">30 derniers jours</div></div>
-        <div class="tile"><div class="t-lbl">Absents</div><div class="t-val readout">${cmpt("absent")}</div><div class="t-sub">30 derniers jours</div></div>
+        ${tuile("À traiter", tous.filter(x => x.a.urgent).length, "une action à faire")}
+        ${tuile("Nouveaux", n("nouveau"), "moins de 24 h")}
+        ${tuile("Chauds", n("chaud"), "bilan réservé", n("chaud") ? "pos" : "")}
+        ${tuile("Score moyen", moy + "<small>/100</small>", "qualification")}
+        ${tuile("Signés", cmpt("signe"), "30 derniers jours", "pos")}
+        ${tuile("Perdus", cmpt("perdu"), "30 derniers jours")}
+        ${tuile("Absents", cmpt("absent"), "30 derniers jours")}
       </div></section>
       <section class="panel">
-        <div class="seg sc-filtres" role="group" aria-label="Filtrer les prospects">${filtres.map(f => `<button type="button" data-filtre="${f[0]}" aria-pressed="${this.filtre === f[0]}">${esc(f[1])} <span class="meta">${f[2]}</span></button>`).join("")}</div>
-        ${liste.length ? `<div class="sc-liste">${liste.map(x => Commercial.carteHTML(x.l.p, x.a)).join("")}</div>` : `<div class="empty">${this.filtre === "a_traiter" ? "Rien à faire aujourd'hui : aucun prospect n'attend d'action de ta part." : "Aucun prospect dans cette catégorie."}</div>`}
-        <p class="note" style="margin:12px 0 0">CHAUD : a coché « J'ai réservé mon bilan » ou a cliqué « Réserver mon bilan » ces ${Commercial.cfg().clic_recent_jours} derniers jours. FROID : questionnaire pas rempli ${Commercial.cfg().sans_debut_jours} jours après l'inscription, plus d'activité ${Commercial.cfg().inactif_jours} jours après le questionnaire, ou ${Commercial.cfg().relances_max} relances sans réponse. TIÈDE : le reste (questionnaire rempli, pas encore de réservation). Ces seuils se changent en une ligne, sur demande.</p>
+        <div class="seg sc-filtres" role="group" aria-label="Filtrer par statut">${[["a_traiter", "À traiter"], ["nouveau", "Nouveaux"], ["chaud", "Chauds"], ["tiede", "Tièdes"], ["froid", "Froids"], ["issues", "Appel fait"], ["tous", "Tous"]].map(f => `<button type="button" data-filtre="${f[0]}" aria-pressed="${this.filtre === f[0]}">${esc(f[1])} <span class="meta">${tous.filter(x => this.statutOk(x, f[0])).length}</span></button>`).join("")}</div>
+        <div class="pr-outils">
+          <input type="search" id="pr-q" placeholder="Rechercher un nom ou un email" aria-label="Rechercher un prospect par nom ou email" value="${esc(this.recherche)}" autocomplete="off">
+          <select id="pr-periode" aria-label="Date d'inscription">${opt("tout", "Inscrits : tous", this.periode)}${opt("24h", "Inscrits : 24 dernières heures", this.periode)}${opt("7j", "Inscrits : 7 derniers jours", this.periode)}${opt("30j", "Inscrits : 30 derniers jours", this.periode)}</select>
+          <select id="pr-prog" aria-label="Progression">${opt("tout", "Progression : toutes", this.progression)}${opt("sans_q", "Questionnaire à remplir", this.progression)}${opt("q_fait", "Questionnaire rempli", this.progression)}${opt("clic", "A cliqué « Réserver »", this.progression)}${opt("reserve", "Bilan réservé", this.progression)}</select>
+          <select id="pr-tri" aria-label="Trier">${opt("priorite", "Tri : priorité", this.tri)}${opt("score", "Tri : score", this.tri)}${opt("inscription", "Tri : inscription récente", this.tri)}${opt("activite", "Tri : activité récente", this.tri)}</select>
+          <button type="button" class="btn ghost petit" id="pr-csv">Exporter (CSV)</button>
+        </div>
+        <p class="note" id="pr-compte" role="status" aria-live="polite" style="margin:4px 0 10px"></p>
+        <div id="pr-liste"></div>
+        <p class="note" style="margin:12px 0 0">NOUVEAU : inscrit depuis moins de ${cfg.nouveau_heures} h, rien fait. CHAUD : bilan réservé. TIÈDE : questionnaire rempli, pas encore de réservation. FROID : questionnaire pas rempli passé ${cfg.nouveau_heures} h, aucune action depuis ${cfg.inactif_jours} jours, ou ${cfg.relances_max} relances sans réponse. Score sur 100 : inscription 10, questionnaire 30, clic « Réserver mon bilan » 30, bilan réservé 30, bonus visites et temps passé. Ces seuils se changent en une ligne, sur demande.</p>
       </section>`;
-    $$("[data-filtre]", zone).forEach(b => b.addEventListener("click", () => { this.filtre = b.dataset.filtre; this.rendre(zone); }));
-    Commercial.brancher(zone, () => { if (zone.isConnected) this.init(); });
+    $$("[data-filtre]", zone).forEach(b => b.addEventListener("click", () => {
+      this.filtre = b.dataset.filtre; this.limite = this.PAS;
+      $$("[data-filtre]", zone).forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+      this.majListe(zone);
+    }));
+    const q = zone.querySelector("#pr-q"); let minuteur = null;
+    if (q) q.addEventListener("input", () => { clearTimeout(minuteur); minuteur = setTimeout(() => { this.recherche = q.value.slice(0, 120); this.limite = this.PAS; this.majListe(zone); }, 200); });
+    [["#pr-periode", "periode"], ["#pr-prog", "progression"], ["#pr-tri", "tri"]].forEach(([sel, k]) => {
+      const el = zone.querySelector(sel); if (el) el.addEventListener("change", () => { this[k] = el.value; this.limite = this.PAS; this.majListe(zone); });
+    });
+    const csv = zone.querySelector("#pr-csv");
+    if (csv) csv.addEventListener("click", () => {
+      const liste = this.trier(this.tous.filter(x => this.passe(x)));
+      if (!liste.length){ UI.toast("Aucun prospect à exporter avec ces filtres.", "attention"); return; }
+      this.telecharger(this.csv(liste), "prospects-" + aujourdhui() + ".csv");
+      UI.toast(liste.length + " prospect" + (liste.length > 1 ? "s" : "") + " exporté" + (liste.length > 1 ? "s" : "") + ".", "ok");
+    });
+    this.majListe(zone);
+    if (typeof Nouveautes !== "undefined") Nouveautes.monter(zone.querySelector("#pr-nouveautes"), this.lignes);
+  },
+  /* la liste seule (les filtres ne redessinent pas la recherche : le curseur y reste) */
+  majListe(zone){
+    const boite = zone.querySelector("#pr-liste"), compte = zone.querySelector("#pr-compte"); if (!boite) return;
+    const liste = this.trier(this.tous.filter(x => this.passe(x)));
+    const vus = liste.slice(0, this.limite);
+    if (compte) compte.textContent = liste.length === this.tous.length ? liste.length + " prospect" + (liste.length > 1 ? "s" : "") : liste.length + " sur " + this.tous.length + " prospect" + (this.tous.length > 1 ? "s" : "");
+    boite.innerHTML = vus.length
+      ? `<div class="sc-liste">${vus.map(x => Commercial.carteHTML(x.l.p, x.a, { sc: x.sc, dc: x.l.dc })).join("")}</div>`
+        + (liste.length > vus.length ? `<div class="actions pr-plus"><button type="button" class="btn ghost" id="pr-plus">Afficher ${Math.min(this.PAS, liste.length - vus.length)} de plus (${liste.length - vus.length} restant${liste.length - vus.length > 1 ? "s" : ""})</button></div>` : "")
+      : `<div class="empty">${this.filtre === "a_traiter" && !this.recherche && this.periode === "tout" && this.progression === "tout" ? "Rien à faire aujourd'hui : aucun prospect n'attend d'action de ta part." : "Aucun prospect ne correspond à ces filtres."}</div>`;
+    const plus = boite.querySelector("#pr-plus");
+    if (plus) plus.addEventListener("click", () => { this.limite += this.PAS; this.majListe(zone); });
+    Commercial.brancher(boite, () => { if (zone.isConnected) this.init(); });
+  },
+  /* export CSV (point-virgule, UTF-8 avec BOM : s'ouvre tel quel dans Excel en français). Une cellule qui commence
+     par = + - @ est neutralisee (apostrophe) : un prenom piege ne devient jamais une formule dans le tableur. */
+  csv(liste){
+    const cell = v => { let s = v == null ? "" : String(v); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; return '"' + s.replace(/"/g, '""') + '"'; };
+    const dt = v => typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v) ? dateFr(Decouverte.dateLocale(v) || v.slice(0, 10)) : "";
+    const tete = ["Nom", "Email", "Inscrit le", "Découverte", "Objectif", "Statut", "Score /100", "Questionnaire", "Motivation /10", "Clics « Réserver mon bilan »", "Dernier clic", "Bilan réservé le", "Relances", "Dernière activité", "Prochaine action"];
+    const lignes = liste.map(({ l, a, sc }) => {
+      const dc = l.dc || {}; let r = null; try { r = Decouverte.resume(l.p, l.ch, dc); } catch(e){ r = null; }
+      const motiv = (typeof dc.motivation === "string" || typeof dc.motivation === "number") ? String(dc.motivation).slice(0, 3) : "";
+      return [Clients.nom(l.p), dc.email || "", dt(l.p.cree_le), a.jour == null ? "" : a.finie ? "terminée" : "jour " + a.jour + "/" + a.duree, dc.objectif || "",
+              Commercial.ETATS[a.etat] || String(a.etat), sc ? sc.total : "", a.questionnaire ? "rempli le " + dt(dc.court_le) : (sc ? sc.repondues + "/" + sc.questions + " réponses" : ""),
+              motiv, r ? r.clics : 0, r ? dt(r.dernierClic) : "", r ? dt(r.reserve) : "", a.relances, dt(l.activite), a.action];
+    });
+    return "﻿" + [tete].concat(lignes).map(ligne => ligne.map(cell).join(";")).join("\r\n") + "\r\n";
+  },
+  telecharger(texte, nom){
+    const url = URL.createObjectURL(new Blob([texte], { type: "text/csv;charset=utf-8" }));
+    const a = document.createElement("a"); a.href = url; a.download = nom; a.style.display = "none";
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1500);
   }
 };
 
@@ -9885,8 +10007,8 @@ const outilAccueil = {
   /* ---------- ACCUEIL DU MODE GRATUIT : l'ecran Decouverte (questionnaire court, resultat, bilan). Aucun prix. */
   async gratuit(zone){ return outilDecouverte.afficher(zone); },
   /* bloc « Découverte » de la fiche d'un prospect : jour, questionnaire court, clics, bilan reserve (lecture seule) */
-  decouverteFicheHTML(p, C, I){
-    try { return this._decouverteFicheHTML(p, C, I); }
+  decouverteFicheHTML(p, C, I, S, A){
+    try { return this._decouverteFicheHTML(p, C, I) + this.prospectDetailHTML(p, C, (I && typeof I === "object") ? I : {}, S, A); }
     catch(e){ console.warn("[MHX] bloc découverte illisible", e); return `<section class="panel" id="fiche-decouverte"><h2>Découverte</h2><div class="empty">Données de la découverte illisibles — à vérifier.</div></section>`; }
   },
   _decouverteFicheHTML(p, C, I){
@@ -9916,12 +10038,63 @@ const outilAccueil = {
       <p class="note" style="margin:10px 0 0">Ses autres réponses (âge, taille, poids) sont dans son questionnaire, ci-dessous. Lecture seule : rien ne s'écrit d'ici.</p></section>`;
   },
 
+  /* v51 — detail d'un prospect pour le coach : score detaille, reponses, chronologie, lien de reservation, email.
+     Lecture seule : tout ce qui vient du prospect passe par s() / dt() et esc(). */
+  prospectDetailHTML(p, C, I, S, A){
+    const s = v => (typeof v === "string" || typeof v === "number") ? String(v).slice(0, 400) : "";
+    const dt = v => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v)) ? dateFr(Decouverte.dateLocale(v) || v.slice(0, 10)) : "—";
+    const heure = v => { if (typeof v !== "string" || v.length <= 10) return ""; const d = new Date(v); return isNaN(d) ? "" : " " + String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); };
+    const sc = Commercial.score(p, C, Object.assign({}, I, { repondues: Decouverte.repondues(I) }), A);
+    const scoreHTML = `<section class="panel" id="fiche-score"><div class="seance-c-tete"><h2>Score de qualification</h2>${Commercial.pastilleScore(sc)}</div>
+      <ul class="ingr fiche-l dc-score">${sc.lignes.map(l => `<li><span>${esc(l.lbl)}${l.bonus ? " (bonus)" : ""}</span><b>${l.nonMesure ? "—" : l.pts + " / " + l.max}</b></li>`).join("")}</ul>
+      <p class="note" style="margin:10px 0 0">Total plafonné à 100. Le score se recalcule à chaque ouverture.</p></section>`;
+    const qs = (Decouverte.cfg().questions || []).map(id => QUESTIONS.find(q => q.id === id) || (DECOUVERTE.questions || []).find(q => q.id === id)).filter(Boolean);
+    const email = s(I.email).trim();
+    const rep = [["Email", email]].concat(qs.map(q => [q.label, s(I[q.id]) ? s(I[q.id]) + (q.type === "echelle" ? " / 10" : "") : ""]));
+    const repHTML = `<section class="panel" id="fiche-reponses"><h2>Réponses au questionnaire court</h2>
+      <p class="note" style="margin:0 0 8px">${sc.repondues} / ${sc.questions} réponses${Decouverte.questionnaireFait(I) ? ", validé le " + esc(dt(I.court_le)) : ", pas encore validé"}.</p>
+      <ul class="ingr fiche-l">${rep.map(([k, v]) => `<li><span>${esc(k)}</span><b>${v ? esc(v) : "—"}</b></li>`).join("")}</ul></section>`;
+    const ev = [];
+    const ajoute = (quand, texte) => { if (typeof quand === "string" && /^\d{4}-\d{2}-\d{2}/.test(quand) && !isNaN(Date.parse(quand))) ev.push({ t: Date.parse(quand), quand, texte }); };
+    ajoute(p && p.cree_le, "Inscription");
+    ajoute(I.court_debut, "Questionnaire commencé");
+    ajoute(I.court_le, "Questionnaire rempli");
+    const src = v => typeof v !== "string" ? "" : v === "decouverte" ? "en haut de sa Découverte" : v === "decouverte-accompagnement" ? "bloc accompagnement" : /^verrou-[a-z]+$/.test(v) ? "page verrouillée « " + v.slice(7) + " »" : "";
+    Decouverte.clics(C).forEach(c => ajoute(c.date, "Clic « Réserver mon bilan »" + (src(c.source) ? " (" + src(c.source) + ")" : "")));
+    ajoute(Decouverte.reserve(C), "Bilan réservé (case « J'ai réservé » cochée)");
+    const hist = S && typeof S === "object" && Array.isArray(S.historique) ? S.historique : [];
+    hist.forEach(e => {
+      if (!e || typeof e !== "object") return;
+      const lib = e.type === "relance" ? "Tu l'as relancé" : e.type === "annule" ? "Issue annulée" : e.type === "issue" && Commercial.ISSUES[e.valeur] ? "Appel : « " + Commercial.ISSUES[e.valeur] + " »" + (typeof e.note === "string" && e.note ? " — " + e.note.slice(0, 200) : "") : "";
+      if (lib) ajoute(e.le, lib);
+    });
+    const act = Activite.propre(A);
+    ajoute(act.derniere, "Dernière activité dans l'app");
+    ev.sort((x, y) => y.t - x.t);
+    const pages = Object.keys(act.pages).sort((x, y) => act.pages[y] - act.pages[x]).slice(0, 8).map(k => k + " (" + act.pages[k] + ")").join(", ");
+    const chronoHTML = `<section class="panel" id="fiche-chrono"><h2>Chronologie</h2>
+      ${ev.length ? `<ol class="dc-chrono">${ev.slice(0, 40).map(e => `<li><time datetime="${esc(e.quand)}">${esc(dt(e.quand) + heure(e.quand))}</time><span>${esc(e.texte)}</span></li>`).join("")}</ol>` : `<div class="empty">Rien pour l'instant.</div>`}
+      <p class="note" style="margin:10px 0 0">${act.jours.length} jour${act.jours.length > 1 ? "s" : ""} d'activité, ${Math.floor(act.temps_s / 60)} min dans l'app${pages ? " · pages vues : " + esc(pages) : ""}.</p></section>`;
+    const prenom = s(p && p.prenom).trim();
+    const emailOk = /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(email) && email.length <= 254;
+    const lien = lienCalendlyPour(prenom, emailOk ? email : "", "fiche-coach");
+    const coach = (Auth.profil && typeof Auth.profil.prenom === "string" && Auth.profil.prenom) || "";
+    const marque = CONFIG.marque.nom || "MHX Coaching";
+    const corps = "Bonjour" + (prenom ? " " + prenom : "") + ",\n\nMerci d'avoir fait ta découverte " + marque + ". Je te propose un bilan de 30 minutes pour faire le point sur ton objectif et voir comment je peux t'aider :\n" + lien + "\n\nÀ très vite,\n" + (coach ? coach + " — " : "") + marque;
+    const mailto = emailOk && lien ? "mailto:" + encodeURIComponent(email) + "?subject=" + encodeURIComponent("Ton bilan " + marque) + "&body=" + encodeURIComponent(corps) : "";
+    const actionsHTML = `<section class="panel" id="fiche-actions"><h2>Contacter</h2>
+      ${lien ? `<p class="note" style="margin:0 0 8px">Son lien de réservation (prénom${emailOk ? " et email" : ""} déjà remplis) :</p><input type="text" id="dc-lien" readonly value="${esc(lien)}" aria-label="Lien de réservation du prospect" style="width:100%">` : ""}
+      <div class="actions">${lien ? `<button type="button" class="btn ghost petit" id="dc-copier">Copier le lien</button>` : ""}${mailto ? `<a class="btn petit" id="dc-mail" href="${esc(mailto)}">Lui écrire un email</a>` : `<span class="note">Email inconnu : il apparaît quand le prospect a commencé son questionnaire.</span>`}<span class="msg" id="dc-copie-msg" role="status" aria-live="polite"></span></div>
+      <p class="note" style="margin:10px 0 0">« Lui écrire un email » ouvre ta messagerie avec un message prêt, que tu relis avant d'envoyer. Rien n'est envoyé par l'app.</p></section>`;
+    return scoreHTML + repHTML + chronoHTML + actionsHTML;
+  },
+
   /* ---------- FICHE CLIENT (v37, phase 18) ----------
      Ce que le coach voit en ouvrant un client : tout l'etat en une page,
      avec un lien vers l'editeur de chaque bloc. Lecture seule ici. Les
      notes privees et les feedbacks arrivent avec les phases 10 et 18. */
   async fiche(zone){
-    const cles = ["intake", "programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "checkins", "complements", "calc", "formation", "hist_programme", "hist_repas", "prefs", "feedbacks", "challenge", "suivi_prospect"];   // v47 : + challenge ; v49 : + suivi commercial
+    const cles = ["intake", "programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "checkins", "complements", "calc", "formation", "hist_programme", "hist_repas", "prefs", "feedbacks", "challenge", "suivi_prospect", "activite"];   // v47 : + challenge ; v49 : + suivi commercial ; v51 : + activite
     const uidFiche = Store.idConsulte;
     const [{ valeurs: d, dates }, pr] = await Promise.all([
       Store.lireTout(cles, { dates: true }),
@@ -9980,7 +10153,7 @@ const outilAccueil = {
         </div>
       </section>
       ${SC ? `<div id="fiche-commercial">${Commercial.ficheHTML(Object.assign({}, pr || {}, profil), SC, d.suivi_prospect)}</div>` : ""}
-      ${profil.statut === "prospect" ? this.decouverteFicheHTML(pDc, d.challenge, I) : ""}
+      ${profil.statut === "prospect" ? this.decouverteFicheHTML(pDc, d.challenge, I, d.suivi_prospect, d.activite) : ""}
       ${NotesCoach.html()}
       <div class="fiche-grille">
       <section class="panel"><div class="seance-c-tete"><h2>Profil</h2>${I.complet ? `<span class="pastille ok">questionnaire complet</span>` : `<span class="pastille attention">questionnaire incomplet</span>`}</div>
@@ -10006,6 +10179,16 @@ const outilAccueil = {
         <ul class="ingr fiche-l">${ligne("Compléments", nbCompl ? nbCompl + " prescrit" + (nbCompl > 1 ? "s" : "") : "aucun")}${ligne("Formation", fo ? fo.pct + " % (" + fo.faits + " / " + fo.tot + ")" : "pas commencée")}${ligne("Anciens programmes", histP || "0")}${ligne("Anciennes diètes", histR || "0")}</ul>
         <p class="note" style="margin:10px 0 0">${lien("complements", "Ses compléments")} · ${lien("formation", "Sa formation")}</p></section>
       </div>`;
+    /* v51 — copier le lien de reservation du prospect (presse-papiers, sinon selection a copier a la main) */
+    const copier = zone.querySelector("#dc-copier");
+    if (copier) copier.addEventListener("click", async () => {
+      const champ = zone.querySelector("#dc-lien"), msg = zone.querySelector("#dc-copie-msg");
+      let ok = false;
+      try { await navigator.clipboard.writeText(champ.value); ok = true; }
+      catch(e){ try { champ.focus(); champ.select(); ok = document.execCommand("copy"); } catch(e2){ ok = false; } }
+      if (msg) msg.textContent = ok ? "Lien copié." : "Copie impossible : le lien est sélectionné, copie-le à la main.";
+      if (!ok && champ){ champ.focus(); champ.select(); }
+    });
     /* v49 — suivi commercial : apres une action, seul le bloc est redessine (les notes privees ne bougent pas) ;
        un passage en client redessine la page par le routeur (les notes en attente partent avant) */
     if (SC){
