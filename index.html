@@ -1392,6 +1392,15 @@ const DECOUVERTE = {
     texte: "Tes réponses au questionnaire sont enregistrées : ton coach les verra. Le questionnaire complet s'ouvrira au démarrage de ton accompagnement.",
     lien: "Voir mon résultat"
   },
+  /* v51 : choix des emails de suivi, dans le Profil du prospect */
+  emails: {
+    titre: "Emails de suivi",
+    libelle: "Recevoir par email des rappels et conseils liés à ma découverte (3 au plus)",
+    note: "Tu peux changer d'avis à tout moment. L'email de confirmation de ton compte n'en fait pas partie.",
+    oui: "C'est noté : tu recevras les emails de suivi.",
+    non: "C'est noté : plus aucun email de suivi.",
+    refuse: "Non enregistré : réessaie dans un instant."
+  },
 
   /* --- écran d'inscription (portail) et retour du lien de confirmation --- */
   inscription: {
@@ -1404,6 +1413,7 @@ const DECOUVERTE = {
     cgu_manque: "Coche la case des conditions pour continuer.",
     sante_avant: "J'accepte le traitement de mes données de santé conformément à la politique",
     sante_manque: "Accepte le traitement de tes données de santé pour continuer.",
+    emails_avant: "J'accepte de recevoir par email des rappels et conseils liés à ma découverte (3 au plus, désinscription en un clic). Facultatif.",
     note: "L'app ne remplace pas un avis médical. Si tu as un doute sur ta santé, parles-en à un professionnel avant de commencer.",
     verif_titre: "Vérifie ta boîte mail",
     verif_texte: "On vient d'envoyer un lien à {e}. Ouvre-le pour confirmer ton compte : tu arriveras directement sur ton questionnaire.",
@@ -1432,6 +1442,7 @@ const DECOUVERTE = {
       "Données de santé (RGPD article 9) : tu dois accepter explicitement le traitement de tes données concernant ta santé (poids, blessures, contre-indications). Tu peux les consulter ou les supprimer à tout moment. Ces données sont conservées tant que ton compte existe.",
       "Hébergement : Supabase, serveurs en Europe (Irlande).",
       "Prise de rendez-vous : ton bilan se réserve sur Calendly (société américaine), qui enregistre ta réservation pour le compte du coach ; ces données peuvent être traitées aux États-Unis (cadre de protection des données UE–États-Unis). Ton prénom et ton email y sont pré-remplis dès que tu ouvres la page de réservation, avec l'écran de l'app d'où tu viens.",
+      "Emails de suivi (facultatif) : si tu coches la case, tu reçois au plus 3 emails liés à ta découverte (bienvenue, rappel du questionnaire, relance), envoyés par Brevo (société française, données hébergées dans l'Union européenne) pour le compte du coach. Désinscription en un clic dans chaque email ou depuis ton Profil. L'email de confirmation de ton compte est envoyé dans tous les cas.",
       "Tes droits : tu peux exporter ou supprimer ton compte et toutes tes données à tout moment depuis Profil, section « Mes données », ou en écrivant au coach.",
       "Conservation : tant que ton compte existe.",
       "En cochant la case, tu acceptes ces conditions."
@@ -1538,6 +1549,14 @@ const DECOUVERTE = {
       texte: "Your questionnaire answers are saved: your coach will see them. The full questionnaire opens when your coaching starts.",
       lien: "See my result"
     },
+    emails: {
+      titre: "Follow-up emails",
+      libelle: "Receive email reminders and tips about my discovery (3 at most)",
+      note: "You can change your mind at any time. Your account confirmation email is not part of these.",
+      oui: "Noted: you will receive the follow-up emails.",
+      non: "Noted: no more follow-up emails.",
+      refuse: "Not saved: try again in a moment."
+    },
     inscription: {
       titre: "Create your discovery access",
       sous: "7 days to discover the MHX method: your personalized result, your calories and macros, a workout and recipes.",
@@ -1548,6 +1567,7 @@ const DECOUVERTE = {
       cgu_manque: "Tick the terms box to continue.",
       sante_avant: "I accept the processing of my health data in accordance with the privacy policy",
       sante_manque: "Accept the processing of your health data to continue.",
+      emails_avant: "I agree to receive email reminders and tips about my discovery (3 at most, one-click unsubscribe). Optional.",
       note: "The app is not medical advice. If you have any doubt about your health, talk to a professional before starting.",
       verif_titre: "Check your inbox",
       verif_texte: "We've just sent a link to {e}. Open it to confirm your account: you'll land straight on your questionnaire.",
@@ -1572,6 +1592,7 @@ const DECOUVERTE = {
         "Health data (GDPR article 9): you must explicitly accept the processing of your health data (weight, injuries, medical contraindications). You can view or delete this data at any time. This data is kept as long as your account exists.",
         "Hosting: Supabase, servers in Europe (Ireland).",
         "Booking: your assessment is booked on Calendly (a US company), which records your booking on the coach's behalf; this data may be processed in the United States (EU–US Data Privacy Framework). Your first name and email are pre-filled as soon as you open the booking page, along with the app screen you came from.",
+        "Follow-up emails (optional): if you tick the box, you receive at most 3 emails about your discovery (welcome, questionnaire reminder, follow-up), sent by Brevo (a French company, data hosted in the European Union) on the coach's behalf. One-click unsubscribe in every email or from your Profile. The account confirmation email is sent in every case.",
         "Your rights: you can export or delete your account and all your data at any time from Profile, section \"My data\", or by writing to the coach.",
         "Retention: as long as your account exists.",
         "By ticking the box, you accept these terms."
@@ -5062,7 +5083,12 @@ const outilProfil = {
     const u = Auth.utilisateur();
     /* v50 : un prospect peut relire a tout moment les conditions acceptees a l'inscription */
     const conditions = Auth.estProspect() ? `<p class="note" style="margin:0 0 14px"><button type="button" class="lien-bouton" id="mc-conditions">${esc(trad(DECOUVERTE.confidentialite.titre))}</button></p>` : "";
-    return `
+    /* v51 : emails de suivi (prospect) ; l'etat reel est lu dans brancherCompte (cle « emails », sinon l'accord de l'inscription) */
+    const E = DECOUVERTE.emails;
+    const emails = Auth.estProspect() ? `<section class="panel" id="mc-emails-bloc"><h2>${esc(trad(E.titre))}</h2>
+        <label class="switch"><input type="checkbox" id="mc-emails" disabled><span class="piste" aria-hidden="true"></span><span>${esc(trad(E.libelle))}</span></label>
+        <p class="note" style="margin:10px 0 0">${esc(trad(E.note))}</p><span class="msg" id="mc-emails-msg" role="status" aria-live="polite"></span></section>` : "";
+    return `${emails}
     <section class="panel">${conditions}
       <h2>Mon compte</h2>
       <p class="note" style="margin:0 0 18px">Adresse actuelle : <b>${esc((u && u.email) || "—")}</b>. C'est à cette adresse qu'arrive le lien si tu oublies ton mot de passe — garde-la à jour.</p>
@@ -5144,7 +5170,26 @@ const outilProfil = {
     this.brancherCompte();
   },
 
+  /* v51 : l'accord pour les emails de suivi — la cle « emails » ({ suivi, maj }) l'emporte sur la case de l'inscription */
+  async brancherEmails(){
+    const c = $("mc-emails"); if (!c || !Auth.estProspect() || Store.idConsulte) return;
+    const E = DECOUVERTE.emails, msg = $("mc-emails-msg");
+    let d = null; try { d = await Store.lire("emails", {}); } catch(e){ d = null; }
+    if (!c.isConnected) return;
+    if (!d || Store.nonLus.has(d)){ if (msg) msg.textContent = trad(E.refuse); return; }   // lecture ratee : l'interrupteur reste ferme
+    const u = Auth.utilisateur(), meta = u && u.user_metadata && typeof u.user_metadata === "object" ? u.user_metadata : {};
+    c.checked = typeof d.suivi === "boolean" ? d.suivi : !!(typeof meta.emails_suivi === "string" && meta.emails_suivi);
+    c.disabled = false;
+    c.addEventListener("change", () => {
+      const suivi = c.checked;
+      const ok = Store.ecrire("emails", Object.assign({}, d, { suivi: suivi, maj: new Date().toISOString() }));
+      if (ok === false){ c.checked = !suivi; if (msg) msg.textContent = trad(E.refuse); return; }
+      d.suivi = suivi;
+      if (msg) msg.textContent = trad(suivi ? E.oui : E.non);
+    });
+  },
   brancherCompte(){
+    this.brancherEmails();
     const bCond = $("mc-conditions");
     if (bCond) bCond.addEventListener("click", () => UI.volet({ titre: trad(DECOUVERTE.confidentialite.titre), corps: (DECOUVERTE.confidentialite.paragraphes || []).map(p => `<p>${esc(trad(p))}</p>`).join("") }));
     const bMdp = $("mc-mdp");
@@ -11822,7 +11867,8 @@ function portail(mode){
         /* v44 : prenom, email, mot de passe (un seul, avec « Afficher ») et la case des conditions */
         ? `<div class="champ"><label for="c-mdp">${esc(DECOUVERTE.inscription.mdp)}</label><div class="co-mdp"><input id="c-mdp" type="password" autocomplete="new-password"><button type="button" class="voir" id="c-voir" aria-pressed="false" aria-label="Afficher le mot de passe">Afficher</button></div></div>
       <label class="co-rester co-cgu"><input type="checkbox" id="c-cgu"><span>${esc(DECOUVERTE.inscription.cgu_avant)} <button type="button" class="lien" id="c-cgu-lien">${esc(DECOUVERTE.inscription.cgu_lien)}</button></span></label>
-      <label class="co-rester co-sante"><input type="checkbox" id="c-sante"><span>${esc(DECOUVERTE.inscription.sante_avant)}</span></label>`
+      <label class="co-rester co-sante"><input type="checkbox" id="c-sante"><span>${esc(DECOUVERTE.inscription.sante_avant)}</span></label>
+      <label class="co-rester co-emails"><input type="checkbox" id="c-emails"><span>${esc(DECOUVERTE.inscription.emails_avant)}</span></label>`
         : mode !== "oubli" ? `<div class="champ"><label for="c-mdp">Mot de passe</label><input id="c-mdp" type="password" autocomplete="current-password"></div>` : ""}
       ${mode !== "oubli" ? `<label class="co-rester"><input type="checkbox" id="c-rester" checked><span>Rester connecté</span></label>` : ""}
       <button class="btn" id="c-go">${esc(bouton)}</button>
@@ -11883,7 +11929,9 @@ function portail(mode){
       try {
         /* v44 : prenom seul (le nom viendra avec le questionnaire) ; l'acceptation des conditions est datee */
         /* P0.5 : consentement santé séparé, horodaté */
-        const connecte = await Auth.inscrire(email, mdp, prenom, "", { consentement: new Date().toISOString(), conditions_version: DECOUVERTE.confidentialite.version, consentement_sante: new Date().toISOString() });
+        /* v51 : accord facultatif pour les emails de suivi, date (lu par la fonction d'envoi ; le Profil peut le changer) */
+        const ok_emails = !!($("c-emails") && $("c-emails").checked);
+        const connecte = await Auth.inscrire(email, mdp, prenom, "", { consentement: new Date().toISOString(), conditions_version: DECOUVERTE.confidentialite.version, consentement_sante: new Date().toISOString(), emails_suivi: ok_emails ? new Date().toISOString() : null });
         if (connecte){ location.hash = ""; location.reload(); return; }
         ecranVerifieEmail(email); return;   // v47 : un ecran dedie, pas une ligne de message
       } catch(e){
