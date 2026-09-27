@@ -11073,7 +11073,10 @@ const Decouverte = {
 const Activite = {
   cle: "activite",
   DELAI: 60000,
-  _A: null, _lecture: null, _vu: null, _minuteur: null, _sale: false, _ecoute: false, _envoi: false,
+  /* _base : la derniere valeur connue de la base ; _delta : ce qui s'est passe depuis la derniere ecriture.
+     Rien n'est lu a l'affichage d'une page (une page verrouillee ne lit aucune donnee) : la base est relue
+     juste avant d'ecrire, et le delta s'y ajoute (deux onglets s'additionnent, ils ne s'effacent pas). */
+  _base: null, _delta: null, _uid: null, _vu: null, _minuteur: null, _ecoute: false, _envoi: false,
   vide(){ return { version: 1, jours: [], pages: {}, temps_s: 0, derniere: null }; },
   suivi(){ return Auth.estProspect() && !Store.idConsulte; },
   /* une valeur lue (le prospect ecrit ce qu'il veut dans sa cle) remise d'aplomb : jours = dates, pages = compteurs */
@@ -11086,70 +11089,74 @@ const Activite = {
              temps_s: typeof o.temps_s === "number" && o.temps_s >= 0 && isFinite(o.temps_s) ? Math.floor(o.temps_s) : 0,
              derniere: typeof o.derniere === "string" && !isNaN(Date.parse(o.derniere)) ? o.derniere : null };
   },
-  async charger(){
-    if (this._A) return this._A;
-    if (!this._lecture) this._lecture = (async () => {
-      let A = null; try { A = await Store.lire(this.cle, this.vide()); } catch(e){ A = null; }
-      if (!A || typeof A !== "object" || Store.nonLus.has(A)){ this._lecture = null; return null; }   // lecture ratee : rien n'est compte, rien n'est ecrase
-      Object.assign(A, this.propre(A));
-      this._A = A; this.ecouter();
-      return A;
-    })();
-    return this._lecture;
+  deltaVide(){ const d = this._delta; return !d || (!d.jours.length && !Object.keys(d.pages).length && !d.temps_s); },
+  /* base + delta : jours reunis, compteurs et temps additionnes, derniere activite la plus recente */
+  combiner(base, d){
+    const A = this.propre(base);
+    A.jours = Array.from(new Set(A.jours.concat(d.jours))).sort().slice(-60);
+    Object.keys(d.pages).forEach(k => { A.pages[k] = (A.pages[k] || 0) + d.pages[k]; });
+    A.temps_s += d.temps_s;
+    if (d.derniere && (!A.derniere || d.derniere > A.derniere)) A.derniere = d.derniere;
+    return A;
   },
+  /* un delta qui n'a pas pu partir revient dans le delta courant (rien n'est perdu, rien n'est compte deux fois) */
+  remettre(d){ this._delta = this._delta ? this.combiner(d, this._delta) : d; this._delta.version = 1; },
   ecouter(){
     if (this._ecoute) return; this._ecoute = true;
     this._vu = document.visibilityState === "visible" ? Date.now() : null;
     document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible") this._vu = Date.now();
-      else { this.compterTemps(); this.envoyer(true); }
+      if (document.visibilityState === "visible"){ this._vu = Date.now(); return; }
+      this.compterTemps(); this.envoyer(false);
     });
+    /* fermeture de l'onglet : pas le temps de relire la base ; on n'ecrit que si elle est deja connue */
     window.addEventListener("pagehide", () => { this.compterTemps(); this.envoyer(true); });
   },
   compterTemps(){
-    if (!this._A || this._vu == null) return;
+    if (this._vu == null || !this.suivi()) return;
     const s = Math.round((Date.now() - this._vu) / 1000);
     this._vu = document.visibilityState === "visible" ? Date.now() : null;
-    if (s > 0){ this._A.temps_s += Math.min(s, 1800); this._sale = true; }   // un onglet oublie ouvert ne compte pas plus de 30 min d'affilee
+    if (s > 0){ if (!this._delta) this._delta = this.vide(); this._delta.temps_s += Math.min(s, 1800); }   // un onglet oublie ouvert ne compte pas plus de 30 min d'affilee
   },
-  /* une page vue (identifiant court : decouverte-resultat, formation, verrou-programme…) */
-  async page(id){
+  /* une page vue (identifiant court : decouverte-resultat, formation, verrou-programme…) — aucune lecture ici */
+  page(id){
     if (!this.suivi() || typeof id !== "string" || !/^[a-z0-9-]{1,40}$/.test(id)) return;
     const uid = Store.cible();
-    const A = await this.charger();
-    if (!A || !this.suivi() || Store.cible() !== uid) return;
+    if (this._uid && this._uid !== uid){ this._base = null; this._delta = null; }   // autre compte sur l'appareil
+    this._uid = uid;
+    this.ecouter();
+    if (!this._delta) this._delta = this.vide();
     const j = aujourdhui();
-    if (A.jours.indexOf(j) === -1){ A.jours.push(j); if (A.jours.length > 60) A.jours = A.jours.slice(-60); }
-    A.pages[id] = (A.pages[id] || 0) + 1;
-    A.derniere = new Date().toISOString();
-    this._sale = true;
+    if (this._delta.jours.indexOf(j) === -1) this._delta.jours.push(j);
+    this._delta.pages[id] = (this._delta.pages[id] || 0) + 1;
+    this._delta.derniere = new Date().toISOString();
     this.planifier();
   },
   planifier(){
     if (this._minuteur) return;
     this._minuteur = setTimeout(() => { this._minuteur = null; this.compterTemps(); this.envoyer(false); }, this.DELAI);
   },
-  /* ce qu'un autre onglet a deja ecrit est garde : jours reunis, compteurs au plus haut */
-  fusionner(F){
-    const f = this.propre(F), A = this._A;
-    A.jours = Array.from(new Set(A.jours.concat(f.jours))).sort().slice(-60);
-    Object.keys(f.pages).forEach(k => { A.pages[k] = Math.max(A.pages[k] || 0, f.pages[k]); });
-    A.temps_s = Math.max(A.temps_s, f.temps_s);
-    if (f.derniere && (!A.derniere || f.derniere > A.derniere)) A.derniere = f.derniere;
-  },
-  /* maintenant : onglet qui passe en arriere-plan ou qui se ferme (pas le temps de relire la base) */
-  async envoyer(maintenant){
-    if (!this._A || !this._sale || this._envoi || !this.suivi()) return;
-    this._envoi = true; this._sale = false;
+  /* immediat : fermeture de l'onglet (pas de relecture possible) */
+  async envoyer(immediat){
+    if (this._envoi || this.deltaVide() || !this.suivi() || Store.cible() !== this._uid) return;
+    this._envoi = true;
+    const d = this._delta; this._delta = null;
     try {
-      if (!maintenant){
+      let base = this._base;
+      if (!immediat){
         let F = null; try { F = await Store.lire(this.cle, this.vide()); } catch(e){ F = null; }
-        if (!this.suivi()) return;
-        if (F && typeof F === "object" && F !== this._A && !Store.nonLus.has(F)) this.fusionner(F);
+        if (!this.suivi() || Store.cible() !== this._uid){ return; }
+        if (!F || typeof F !== "object" || Store.nonLus.has(F)){ this.remettre(d); return; }   // lecture ratee : on reessaiera
+        base = this.propre(F);
       }
-      Store.ecrire(this.cle, this._A);
-      if (maintenant) Store.toutEnvoyer();
-    } finally { this._envoi = false; }
+      if (!base){ this.remettre(d); return; }   // base jamais lue : on n'ecrase pas le vrai compte par un compte partiel
+      const A = this.combiner(base, d);
+      if (Store.ecrire(this.cle, A) === false){ this.remettre(d); return; }
+      this._base = A;
+      if (immediat) Store.toutEnvoyer();
+    } finally {
+      this._envoi = false;
+      if (!this.deltaVide()) this.planifier();
+    }
   }
 };
 
