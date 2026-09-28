@@ -82,6 +82,7 @@ const CONFIG = {
      C'est Lucas qui passe un interrupteur sur "tous". Comptes de test : identifiant Supabase, jamais l'email (dépôt public). --- */
   nouveautes: {
     feedback_dimanche: "test",
+    suivi_visites_clients: "test",   // v53 (chantier 4) : suivi des visites des CLIENTS (dernière visite, jours actifs) ; « tous » quand Lucas les aura prévenus
     comptes_test: ["9df6bb84-5a09-4bb0-a77a-b2633d842ed9"]   // compte client de test de Lucas
   },
 
