@@ -174,7 +174,9 @@ const outilAccueil = {
     const av = outilProgramme.avancement(P);
     const seances = (P.seances || []).filter(sc => (sc.exercices || []).some(e => e.nom));
     const derniereSeance = J.seances.length ? J.seances[J.seances.length - 1] : null;
-    const e = Checkin.etat(CK);
+    const e = Checkin.etat(CK, uidFiche);
+    /* v53 (chantier 3) : la regle de ce client ; feedback du dimanche : « reçu », ou « non fait » des le lundi */
+    const dim = e.semaine.regle === "dimanche";
     const dernierCk = (CK.liste || []).length ? CK.liste[CK.liste.length - 1] : null;
     const fbCk = dernierCk ? Feedback.repond(d.feedbacks, dernierCk) : null;
     const fbAvant = (dernierCk && !fbCk) ? Feedback.pour(d.feedbacks, dernierCk.semaine) : null;
@@ -208,7 +210,7 @@ const outilAccueil = {
           <div class="tile"><div class="t-lbl">Séances</div><div class="t-val readout">${r.parts.seances ? r.parts.seances.faites : "—"}<small>${r.parts.seances ? "/ " + r.parts.seances.cible : ""}</small></div><div class="t-sub">notées cette semaine</div></div>
           <div class="tile"><div class="t-lbl">Repas respectés</div><div class="t-val readout">${b.repas != null ? b.repas : "—"}<small>${b.repas != null ? "%" : ""}</small></div><div class="t-sub">sur 28 jours</div></div>
           <div class="tile"><div class="t-lbl">Activité</div><div class="t-val readout${l.jours != null && l.jours >= 10 ? " neg" : ""}">${l.jours == null ? "—" : l.jours === 0 ? "auj." : l.jours + "<small>j</small>"}</div><div class="t-sub">${l.jours == null ? "jamais rien saisi" : "depuis sa dernière saisie"}</div></div>
-          <div class="tile"><div class="t-lbl">Bilan hebdo</div><div class="t-val readout${dernierCk ? " pos" : ""}">${dernierCk ? "✓" : "—"}</div><div class="t-sub">${dernierCk ? "dernier envoyé le " + esc(dateFr(dernierCk.envoye_le)) : "jamais envoyé"}</div></div>
+          <div class="tile"><div class="t-lbl">${dim ? "Feedback du dimanche" : "Bilan hebdo"}</div><div class="t-val readout${dernierCk ? " pos" : ""}">${dernierCk ? "✓" : "—"}</div><div class="t-sub">${dernierCk ? "dernier envoyé le " + esc(dateFr(dernierCk.envoye_le)) : "jamais envoyé"}</div></div>
         </div>
       </section>
       ${SC ? `<div id="fiche-commercial">${Commercial.ficheHTML(Object.assign({}, pr || {}, profil), SC, d.suivi_prospect)}</div>` : ""}
@@ -230,8 +232,8 @@ const outilAccueil = {
       <section class="panel"><h2>Poids et mensurations</h2>
         <ul class="ingr fiche-l">${ligne("Poids actuel", l.ev ? n1(l.ev.actuel) + " kg" : "")}${ligne("Départ", l.ev ? n1(l.ev.depart) + " kg" : "")}${ligne("Depuis le début", l.ev ? (l.ev.total > 0 ? "+" : "") + n1(l.ev.total) + " kg" : "")}${ligne("4 dernières semaines", l.ev && l.ev.mois != null ? (l.ev.mois > 0 ? "+" : "") + n1(l.ev.mois) + " kg" : "")}${ligne("Mesures", (M.mesures || []).length || "")}${ligne("Dernière mesure", l.ev && l.ev.date ? dateFr(l.ev.date) : "")}${b.zones.map(z => ligne(z.nom, n1(z.de) + " → " + n1(z.a) + " cm")).join("")}</ul>
         <p class="note" style="margin:10px 0 0">${lien("mensurations", "Ses courbes")}</p></section>
-      <section class="panel"><div class="seance-c-tete"><h2>Bilan hebdomadaire</h2>${e.fait ? `<span class="pastille ok">reçu cette semaine</span>` : dernierCk ? `<span class="pastille">${esc(trad("dernier : {d}", { d: dateFr(dernierCk.envoye_le) }))}</span>` : `<span class="pastille attention">aucun</span>`}</div>
-        ${dernierCk ? `<p class="note" style="margin:0 0 8px">${esc(Checkin.periode(dernierCk))}</p>${Checkin.reponsesHTML(dernierCk)}` : `<div class="empty">Aucun bilan hebdomadaire envoyé pour le moment.</div>`}
+      <section class="panel"><div class="seance-c-tete"><h2>${dim ? "Feedback du dimanche" : "Bilan hebdomadaire"}</h2>${e.fait ? `<span class="pastille ok">${dim ? "reçu" : "reçu cette semaine"}</span>` : dim && e.semaine.etat !== "ouvert" ? `<span class="pastille attention">non fait</span>` : dernierCk ? `<span class="pastille">${esc(trad("dernier : {d}", { d: dateFr(dernierCk.envoye_le) }))}</span>` : `<span class="pastille attention">aucun</span>`}</div>
+        ${dernierCk ? `<p class="note" style="margin:0 0 8px">${esc(Checkin.periode(dernierCk))}</p>${Checkin.reponsesHTML(dernierCk)}${Checkin.avisCoachHTML(CK, dernierCk.semaine, d.feedbacks)}` : `<div class="empty">${dim ? "Aucun feedback du dimanche envoyé pour le moment." : "Aucun bilan hebdomadaire envoyé pour le moment."}</div>`}
         ${dernierCk ? `<p class="note" style="margin:10px 0 0">Ton feedback sur ce bilan : ${fbCk ? "envoyé le " + esc(dateFr(fbCk.date)) : fbAvant ? "<b>écrit avant ce bilan, à relire</b>" : "<b>à écrire</b>"}</p>` : ""}
         <p class="note" style="margin:10px 0 0">${lien("bilan", "Préparer le call")} · ${lien("suivi", "Son suivi")}</p></section>
       <section class="panel"><h2>Le reste</h2>
@@ -272,6 +274,11 @@ const outilAccueil = {
     const d = await Store.lireTout(["intake", "programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "checkins", "feedbacks"]);
     const I = d.intake || {}, P = d.programme || {}, J = d.journal || { seances: [] }, R = d.repas || {}, S = d.repas_suivi || {}, M = d.mens || {}, OF = d.objectifs_faits || {}, CK = d.checkins || { liste: [] };
     const fbR = Feedback.recent(d.feedbacks);   // v38 : un feedback du coach de moins de 7 jours
+    /* v53 (chantier 3) — feedback du dimanche (compte en test) : le rappel du dimanche en haut, « Ton coach a
+       répondu » (et le badge de la navigation) quand une réponse est plus récente que la dernière vue. Lecture seule. */
+    const moi = Store.cible(), dim = Checkin.regle(moi) === "dimanche";
+    const nonVus = dim ? Checkin.nonVus(CK, d.feedbacks) : [];
+    if (dim) Checkin.majBadge(moi, nonVus.length);
     if (!Array.isArray(J.seances)) J.seances = [];
     const c = { programme: P, journal: J, repas: R, repas_suivi: S, mens: M };
     const r = Regularite.calculer(c, 0), prec = Regularite.calculer(c, -1);
@@ -341,12 +348,14 @@ const outilAccueil = {
         <h1>${consult ? esc(trad("Vue d'ensemble")) + (prenom ? " — " + esc(prenom) : "") : esc(trad("Bonjour")) + (prenom ? " " + esc(prenom) : "")}</h1>
         <p class="lede">${esc(resume)}</p>
       </header>
+      ${dim ? Checkin.bandeauHTML(CK, moi) : ""}
       <section class="panel">
         <h2>${esc(trad("Cette semaine"))}</h2>
         <div class="tiles">${tuiles}</div>
         <p class="note" style="margin:12px 0 0">${esc(trad("La régularité mesure ce que tu fais — séances, repas, mesure — pas ce que dit la balance."))}</p>
       </section>
-      ${(aProgramme || aDiete || fbR) ? `<section class="panel"><h2>${esc(trad("Bilan hebdomadaire"))}</h2><div class="acces-l">${fbR ? Feedback.accesHTML(fbR) : ""}${(aProgramme || aDiete) ? Checkin.statutHTML(CK, { lien: "#/suivi" }) : ""}</div></section>` : ""}
+      ${dim ? `<section class="panel" id="acc-fbd"><h2>${esc(trad("Feedback de la semaine"))}</h2><div class="acces-l">${nonVus.length ? Checkin.accesReponseHTML(nonVus[0]) : ""}${Checkin.statutHTML(CK, { lien: "#/suivi", uid: moi })}</div></section>`
+        : (aProgramme || aDiete || fbR) ? `<section class="panel"><h2>${esc(trad("Bilan hebdomadaire"))}</h2><div class="acces-l">${fbR ? Feedback.accesHTML(fbR) : ""}${(aProgramme || aDiete) ? Checkin.statutHTML(CK, { lien: "#/suivi", uid: moi }) : ""}</div></section>` : ""}
       ${acces.length ? `<section class="panel"><h2>${esc(trad("Aujourd'hui"))}</h2><div class="acces-l">${acces.map(ligne).join("")}</div></section>` : ""}
       ${obj ? `<section class="panel"><h2>${esc(trad("Tes objectifs du mois"))}</h2>
         ${obj.liste.map((t, i) => { if (!t) return ""; const st = Regularite.statutObjectif(P, OF, i); return `<div class="objectif${st === "atteint" ? " atteint" : ""}${st === "non_atteint" ? " rate" : ""}"><span class="num">0${i + 1}</span><span class="texte" data-notr>${esc(t)}</span><span class="pastille ${Regularite.classeStatut(st)}">${esc(Regularite.libelleStatut(st))}</span></div>`; }).join("")}

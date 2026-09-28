@@ -9,20 +9,63 @@
 const Checkin = {
   cle: "checkins",
   max: 60,
+  maxAvis: 200,
   vide(){ return { liste: [] }; },
   questions(){ return (CONFIG.bilan && CONFIG.bilan.questions) || []; },
+  /* v53 — les trois cases du feedback du dimanche (CONFIG.bilan.dimanche) */
+  questionsDimanche(){ const d = CONFIG.bilan && CONFIG.bilan.dimanche; return (d && Array.isArray(d.questions)) ? d.questions : []; },
+  bornesNote(){ const n = (CONFIG.bilan && CONFIG.bilan.dimanche && CONFIG.bilan.dimanche.note) || {}; return { min: Number.isInteger(n.min) ? n.min : 1, max: Number.isInteger(n.max) ? n.max : 10 }; },
+  /* v53 — le smiley que le client pose sur la réponse du coach (checkins.avis) */
+  SMILEYS: [{ id: "triste", emo: "😞", lbl: "Pas vraiment" }, { id: "neutre", emo: "😐", lbl: "Moyen" }, { id: "content", emo: "😊", lbl: "Oui" }],
 
-  /* La semaine visee : des le jour d'ouverture (vendredi par defaut), la
-     semaine en cours ; avant, la semaine passee, encore ouverte. */
-  semaineVisee(){
-    const jour = (new Date().getDay() + 6) % 7 + 1;
-    const ouverture = (CONFIG.bilan && CONFIG.bilan.jour_ouverture) || 5;
-    const b = Regularite.bornes(jour >= ouverture ? 0 : -1);
-    return { debut: b.debut, fin: b.fin };
+  /* ------------------------------------------------------------------
+     v53 (chantier 3) — LA RÈGLE DE LA SEMAINE, par compte.
+     « dimanche » : le compte a le feedback du dimanche (interrupteur CONFIG.nouveautes.feedback_dimanche :
+     Interrupteurs.visible pour la personne connectée — en « test », le coach et le compte de test ; pourCompte
+     pour le client dont le coach ouvre la fiche). Sinon « vendredi » : le bilan du vendredi, comme avant.
+     ------------------------------------------------------------------ */
+  regle(uid){
+    const u = Auth.utilisateur(), moi = u && u.id;
+    const id = uid || Store.idConsulte || moi;
+    if (id && id === moi) return Interrupteurs.visible("feedback_dimanche") ? "dimanche" : "vendredi";
+    return Interrupteurs.pourCompte("feedback_dimanche", id) ? "dimanche" : "vendredi";
   },
-  entree(C, debut){ return ((C && C.liste) || []).find(x => x.semaine === debut) || null; },
-  etat(C){ const v = this.semaineVisee(); const e = this.entree(C, v.debut); return { semaine: v, entree: e, fait: !!e }; },
+  jour(){ return (new Date().getDay() + 6) % 7 + 1; },   // 1 = lundi … 7 = dimanche, horloge de l'appareil qui affiche
+  decaler(iso, n){ const d = new Date(iso + "T12:00:00"); d.setDate(d.getDate() + n); return Regularite.iso(d); },
+  /* le jour d'ouverture du bilan du vendredi (1 = lundi … 7 = dimanche) ; 0 est une valeur permise (v53 : « || 5 »
+     la remplaçait par 5) — 0 ou 1 : toujours la semaine en cours */
+  ouverture(){ const v = CONFIG.bilan && CONFIG.bilan.jour_ouverture; return (typeof v === "number" && isFinite(v) && v >= 0 && v <= 7) ? Math.floor(v) : 5; },
+  /* les entrées lisibles (verif42 : une liste piégée n'arrête rien) */
+  liste(C){ return (C && Array.isArray(C.liste)) ? C.liste.filter(x => x && typeof x === "object") : []; },
+  nomJour(iso){ try { const d = new Date(iso + "T12:00:00"); return isNaN(d) ? "" : d.toLocaleDateString(locale(), { weekday: "long" }); } catch(e){ return ""; } },
+
+  /* La semaine visée et l'état de sa fenêtre. Tous les textes du bilan et du feedback en découlent.
+     → { debut, fin (lundi et dimanche ISO), etat: "ouvert" | "en_retard" | "ferme", limite (dernier jour où cette
+         semaine peut encore être envoyée), regle: "vendredi" | "dimanche", prochain (règle du dimanche : le dimanche
+         du prochain feedback) }
+     Règle du dimanche : le dimanche, la semaine en cours (ouvert) ; le lundi, la semaine passée, « en retard »
+       seulement si elle n'a pas été faite (sinon fermé) ; du mardi au samedi, la semaine passée, fermé.
+     Règle du vendredi : du jour d'ouverture au dimanche, la semaine en cours (ouvert) ; avant, la semaine passée,
+       « en retard » tant qu'elle n'est pas faite (jusqu'à la veille du jour d'ouverture : le jeudi soir).
+     C : le document checkins (pour savoir si la semaine passée est faite) ; uid : le compte concerné. */
+  semaineVisee(C, uid){
+    const regle = this.regle(uid), jour = this.jour();
+    const cette = Regularite.bornes(0), passee = Regularite.bornes(-1);
+    const faitePassee = !!this.entree(C, passee.debut);
+    if (regle === "dimanche"){
+      if (jour === 7) return { debut: cette.debut, fin: cette.fin, etat: "ouvert", limite: this.decaler(cette.fin, 1), regle, prochain: cette.fin };
+      return { debut: passee.debut, fin: passee.fin, etat: (jour === 1 && !faitePassee) ? "en_retard" : "ferme", limite: this.decaler(passee.fin, 1), regle, prochain: cette.fin };
+    }
+    const o = this.ouverture();
+    if (jour >= o) return { debut: cette.debut, fin: cette.fin, etat: "ouvert", limite: cette.fin, regle };
+    return { debut: passee.debut, fin: passee.fin, etat: faitePassee ? "ouvert" : "en_retard", limite: this.decaler(passee.fin, o - 1), regle };
+  },
+  entree(C, debut){ return this.liste(C).find(x => x.semaine === debut) || null; },
+  etat(C, uid){ const v = this.semaineVisee(C, uid); const e = this.entree(C, v.debut); return { semaine: v, entree: e, fait: !!e }; },
   periode(x){ return trad("Semaine du {a} au {b}", { a: dateFr(x.semaine), b: dateFr(x.fin || x.semaine) }); },
+  /* v53 — la note sur 10 d'une entrée, relue avec prudence : un entier de 1 à 10, sinon rien */
+  noteValide(n){ const b = this.bornesNote(); return typeof n === "number" && Number.isInteger(n) && n >= b.min && n <= b.max; },
+  note(x){ const n = x && x.reponses && typeof x.reponses === "object" ? x.reponses.note : null; return this.noteValide(n) ? n : null; },
 
   champ(q, v){
     const val = v == null ? "" : v;
@@ -32,9 +75,11 @@ const Checkin = {
     return `<textarea rows="2" data-q="${esc(q.id)}">${esc(val)}</textarea>`;
   },
 
-  formulaire(C, entree){
+  /* v53 : la semaine affichée (v) est gardée dans le formulaire : c'est elle qui est enregistrée, pas une semaine
+     recalculée au clic (un formulaire ouvert le jeudi à 23 h 59 et envoyé à minuit reste sur sa semaine) */
+  formulaire(C, entree, v){
     const r = (entree && entree.reponses) || {};
-    return `<form class="checkin-form" data-checkin>
+    return `<form class="checkin-form" data-checkin data-semaine="${esc(v.debut)}" data-fin="${esc(v.fin)}">
       ${this.questions().map(q => `<div class="checkin-q${q.type === "echelle5" ? " echelle" : ""}">
         <label>${esc(q.label)}</label>
         ${q.aide ? `<p class="note" style="margin:-2px 0 8px">${esc(q.aide)}</p>` : ""}
@@ -54,6 +99,24 @@ const Checkin = {
     return rep;
   },
 
+  /* v53 — la seule écriture d'une entrée de checkins (bilan du vendredi et feedback du dimanche). L'entrée de la
+     semaine est complétée, jamais reconstruite : ses champs en plus (et ceux du document : avis, fb_vu…) sont
+     gardés, ses réponses d'un autre format aussi (seul « format » suit le formulaire envoyé). Renvoie l'entrée
+     enregistrée, ou null si l'écriture est refusée (message déjà affiché). */
+  enregistrerEntree(C, semaine, fin, rep, format){
+    if (!Array.isArray(C.liste)) C.liste = [];
+    const ancienne = C.liste.find(x => x && typeof x === "object" && x.semaine === semaine) || null;
+    const anc = (ancienne && ancienne.reponses && typeof ancienne.reponses === "object" && !Array.isArray(ancienne.reponses)) ? ancienne.reponses : {};
+    const entree = Object.assign({}, ancienne || {}, { semaine: semaine, fin: fin, envoye_le: aujourdhui(), envoye_a: new Date().toISOString(), reponses: Object.assign({}, anc, rep) });
+    if (format) entree.format = format; else delete entree.format;
+    C.liste = C.liste.filter(x => !(x && x.semaine === semaine));
+    C.liste.push(entree);
+    C.liste.sort((a, b) => String(a && a.semaine) < String(b && b.semaine) ? -1 : 1);
+    if (C.liste.length > this.max) C.liste = C.liste.slice(-this.max);
+    if (Store.ecrire(this.cle, C) === false) return null;   // refusee (message deja affiche)
+    return entree;
+  },
+
   /* branche un formulaire deja rendu ; apres(entree) est appele une fois enregistre */
   brancher(zone, C, apres){
     const form = zone.querySelector("[data-checkin]"); if (!form) return;
@@ -69,59 +132,84 @@ const Checkin = {
       const echelles = this.questions().filter(q => q.type === "echelle5");
       const manque = echelles.filter(q => rep[q.id] == null);
       if (manque.length){ const m = form.querySelector("[data-checkin-msg]"); if (m){ m.textContent = trad("Il manque : {l}", { l: manque.map(q => q.label).join(", ") }); setTimeout(() => { m.textContent = ""; }, 3200); } return; }
-      const v = this.semaineVisee();
-      if (!Array.isArray(C.liste)) C.liste = [];
-      C.liste = C.liste.filter(x => x.semaine !== v.debut);
-      const entree = { semaine: v.debut, fin: v.fin, envoye_le: aujourdhui(), envoye_a: new Date().toISOString(), reponses: rep };
-      C.liste.push(entree);
-      C.liste.sort((a, b) => a.semaine < b.semaine ? -1 : 1);
-      if (C.liste.length > this.max) C.liste = C.liste.slice(-this.max);
-      if (Store.ecrire(this.cle, C) === false) return;   // refusee (message deja affiche)
+      const v = form.dataset.semaine ? { debut: form.dataset.semaine, fin: form.dataset.fin } : this.semaineVisee(C);
+      const entree = this.enregistrerEntree(C, v.debut, v.fin, rep, null);
+      if (!entree) return;
       UI.toast(trad("Bilan envoyé. Ton coach le lira avant votre prochain échange."), "ok");
       if (typeof apres === "function") apres(entree);
     });
   },
 
-  /* les reponses d'une entree, en lecture */
+  /* les reponses d'une entree, en lecture (v53 : selon son format ; sans format = bilan du vendredi, 11 questions) */
   reponsesHTML(x){
-    const r = x.reponses || {};
+    if (x && x.format === "dimanche") return this.reponsesDimancheHTML(x);
+    const r = (x && x.reponses && typeof x.reponses === "object") ? x.reponses : {};
     const echelles = this.questions().filter(q => q.type === "echelle5" && r[q.id] != null);
     const textes = this.questions().filter(q => q.type !== "echelle5" && r[q.id] != null && r[q.id] !== "");
     return `${echelles.length ? `<div class="checkin-echelles">${echelles.map(q => `<span class="pastille"><span data-notr>${esc(q.label)}</span> <b>${esc(r[q.id])}</b>/5</span>`).join("")}</div>` : ""}
       ${textes.map(q => `<p class="checkin-rep"><span class="lbl">${esc(q.label)}</span>${esc(String(r[q.id]))}</p>`).join("")}`;
   },
+  /* v53 — une entrée du feedback du dimanche : la note, puis les cases remplies (textes du client : data-notr) */
+  reponsesDimancheHTML(x){
+    const r = (x.reponses && typeof x.reponses === "object") ? x.reponses : {};
+    const n = this.note(x);
+    const textes = this.questionsDimanche().filter(q => typeof r[q.id] === "string" && r[q.id].trim());
+    return `${n != null ? `<div class="checkin-echelles"><span class="pastille fbd-note"><span>${esc(trad("Note de la semaine"))}</span> <b>${n}</b>/10</span></div>` : ""}
+      ${textes.map(q => `<p class="checkin-rep"><span class="lbl">${esc(trad(q.label))}</span><span data-notr>${esc(r[q.id])}</span></p>`).join("")}
+      ${n == null && !textes.length ? `<p class="note" style="margin:0">${esc(trad("Aucune réponse lisible."))}</p>` : ""}`;
+  },
 
-  /* le bloc « statut » : disponible / envoye, pour Mon suivi et l'accueil */
+  /* le bloc « statut » : disponible / envoye, pour Mon suivi et l'accueil (v53 : opts.uid, le compte concerne ;
+     textes tires de l'etat de la semaine : plus de « avant dimanche soir » du lundi au jeudi) */
   statutHTML(C, opts){
     opts = opts || {};
-    const e = this.etat(C);
+    const e = this.etat(C, opts.uid);
+    if (e.semaine.regle === "dimanche") return this.statutDimancheHTML(e, opts);
     if (e.fait){
       return `<div class="acces fait${opts.lien ? "" : " statique"}"${opts.lien ? ` href="${opts.lien}"` : ""}><span class="ico">${ICONES.bilan}</span><span class="txt"><b>${esc(trad("Bilan de la semaine envoyé"))}</b><small>${esc(trad("le {d} — merci, ton coach le lit avant votre prochain échange", { d: dateFr(e.entree.envoye_le) }))}</small></span>${opts.lien ? `<span class="fleche">›</span>` : ""}</div>`;
     }
-    return `<a class="acces attention" href="${opts.lien || "#/suivi"}"><span class="ico">${ICONES.bilan}</span><span class="txt"><b>${esc(trad("Ton bilan de la semaine est disponible"))}</b><small>${esc(trad("5 minutes, avant dimanche soir : c'est ce qui permet à ton coach d'ajuster"))}</small></span><span class="fleche">›</span></a>`;
+    const sous = e.semaine.etat === "en_retard"
+      ? trad("Ton bilan de la semaine du {a} au {b} n'est pas encore fait : tu as jusqu'à {j} soir.", { a: dateFr(e.semaine.debut), b: dateFr(e.semaine.fin), j: this.nomJour(e.semaine.limite) })
+      : trad("5 minutes, avant dimanche soir : c'est ce qui permet à ton coach d'ajuster");
+    return `<a class="acces attention" href="${opts.lien || "#/suivi"}"><span class="ico">${ICONES.bilan}</span><span class="txt"><b>${esc(trad("Ton bilan de la semaine est disponible"))}</b><small>${esc(sous)}</small></span><span class="fleche">›</span></a>`;
+  },
+  /* v53 — la carte de la règle du dimanche (accueil) : toujours un lien vers Mon suivi */
+  statutDimancheHTML(e, opts){
+    const v = e.semaine, lien = opts.lien || "#/suivi", per = { a: dateFr(v.debut), b: dateFr(v.fin) };
+    const carte = (cls, t, s) => `<a class="acces${cls}" href="${esc(lien)}" data-fbd-statut="${esc(v.etat)}"><span class="ico">${ICONES.bilan}</span><span class="txt"><b>${esc(t)}</b><small>${esc(s)}</small></span><span class="fleche">›</span></a>`;
+    if (v.etat === "ouvert" && !e.fait) return carte(" attention", trad("C'est dimanche : ton feedback de la semaine t'attend (2 minutes)"), trad("Semaine du {a} au {b}", per));
+    if (v.etat === "en_retard") return carte(" attention", trad("Ton feedback de la semaine du {a} au {b} n'a pas été fait.", per), trad("Tu peux encore le faire aujourd'hui."));
+    if (v.etat === "ouvert") return carte(" fait", trad("Feedback de la semaine envoyé"), trad("le {d} — ton coach te répond au même endroit, dans Mon suivi", { d: dateFr(e.entree.envoye_le) }));
+    return carte("", trad("Prochain feedback : dimanche {d}", { d: dateFr(v.prochain) }), trad("Une note sur 10 et trois lignes : ton coach te répond au même endroit."));
+  },
+  /* v53 — le rappel du dimanche en haut de l'accueil, tant que le feedback de la semaine n'est pas fait */
+  bandeauHTML(C, uid){
+    const e = this.etat(C, uid);
+    if (e.semaine.regle !== "dimanche" || e.semaine.etat !== "ouvert" || e.fait) return "";
+    return `<a class="bandeau fbd-bandeau" href="#/suivi" data-fbd-bandeau><span class="fbd-bandeau-txt"><strong>${esc(trad("C'est dimanche : ton feedback de la semaine t'attend (2 minutes)"))}</strong><span class="note">${esc(trad("Une note sur 10 et trois lignes : ton coach te répond au même endroit."))}</span></span><span class="fleche" aria-hidden="true">›</span></a>`;
   },
 
   /* l'historique, du plus recent au plus ancien */
   historiqueHTML(C, sauf){
-    const l = ((C && C.liste) || []).filter(x => x.semaine !== sauf).slice().reverse();
+    const l = this.liste(C).filter(x => x.semaine !== sauf).slice().reverse();
     if (!l.length) return "";
     return `<h3 style="margin-top:20px">${esc(trad("Mes bilans précédents"))}</h3>` + l.map(x => `<details class="hist-entree"><summary><b>${esc(this.periode(x))}</b> <span class="hist-dates">${esc(trad("envoyé le {d}", { d: dateFr(x.envoye_le) }))}</span></summary>${this.reponsesHTML(x)}</details>`).join("");
   },
 
-  /* Mon suivi : le panneau complet (client : formulaire ; coach : lecture) */
+  /* Mon suivi : le panneau complet (client : formulaire ; coach : lecture) — bilan du vendredi */
   monter(idZone, C){
     const z = $(idZone); if (!z) return;
-    const consult = !!Store.idConsulte;
+    const consult = !!Store.idConsulte, uid = Store.cible();
     const dessiner = (ouvert) => {
-      const e = this.etat(C);
+      const e = this.etat(C, uid);
       let corps = "";
       if (consult){
         corps = e.fait ? `<p class="note" style="margin:0 0 10px">${esc(this.periode(e.entree))} · ${esc(trad("envoyé le {d}", { d: dateFr(e.entree.envoye_le) }))}</p>${this.reponsesHTML(e.entree)}`
                        : `<div class="empty">${esc(trad("Pas encore de bilan pour cette semaine."))}</div>`;
       } else if (ouvert || !e.fait){
-        corps = `<p class="note" style="margin:0 0 14px">${esc(trad("Semaine du {a} au {b}", { a: dateFr(e.semaine.debut), b: dateFr(e.semaine.fin) }))} · ${esc(trad("Réponds simplement, avec tes mots. Rien n'est noté : ça sert à ajuster ton suivi."))}</p>` + this.formulaire(C, e.entree);
+        corps = `<p class="note" style="margin:0 0 14px">${esc(trad("Semaine du {a} au {b}", { a: dateFr(e.semaine.debut), b: dateFr(e.semaine.fin) }))} · ${esc(trad("Réponds simplement, avec tes mots. Rien n'est noté : ça sert à ajuster ton suivi."))}</p>` + this.formulaire(C, e.entree, e.semaine);
       } else {
-        corps = this.statutHTML(C, {}) + `<div style="margin-top:12px">${this.reponsesHTML(e.entree)}</div><div class="actions"><button type="button" class="btn ghost petit" data-checkin-modifier>${esc(trad("Modifier mon bilan"))}</button></div>`;
+        corps = this.statutHTML(C, { uid }) + `<div style="margin-top:12px">${this.reponsesHTML(e.entree)}</div><div class="actions"><button type="button" class="btn ghost petit" data-checkin-modifier>${esc(trad("Modifier mon bilan"))}</button></div>`;
       }
       z.innerHTML = `<section class="panel"><div class="seance-c-tete"><h2>${esc(trad("Bilan hebdomadaire"))}</h2>${e.fait ? `<span class="pastille ok">✓ ${esc(trad("envoyé"))}</span>` : `<span class="pastille attention">${esc(trad("disponible"))}</span>`}</div>
         ${corps}${this.historiqueHTML(C, e.entree ? e.entree.semaine : null)}</section>`;
@@ -129,6 +217,253 @@ const Checkin = {
       this.brancher(z, C, () => dessiner(false));
     };
     dessiner(false);
+  },
+
+  /* ==================================================================
+     v53 (chantier 3) — FEEDBACK DU DIMANCHE (règle « dimanche » seulement)
+     Le client écrit dans checkins (sa clé) : l'entrée de la semaine (format « dimanche » : note 1-10 + trois
+     cases), ses smileys (checkins.avis = [{ semaine, fb, smiley, le, deplu?, ameliorer? }], un par réponse du
+     coach notée) et checkins.fb_vu (la dernière réponse du coach qu'il a vue : le badge). Il n'écrit JAMAIS
+     feedbacks (la base le refuse) ; le coach n'écrit JAMAIS checkins. La réponse du coach vient de feedbacks
+     (même semaine) et s'affiche sous le feedback de la semaine, au même endroit.
+     ================================================================== */
+  /* l'instant d'une réponse du coach : ecrit_a (v53), sinon son jour */
+  marque(f){ return (f && typeof f.ecrit_a === "string" && f.ecrit_a) || (f && typeof f.date === "string" && f.date) || ""; },
+  avisListe(C){
+    const ids = this.SMILEYS.map(s => s.id);
+    return (C && Array.isArray(C.avis) ? C.avis : []).filter(a => a && typeof a === "object" && typeof a.semaine === "string" && ids.indexOf(a.smiley) > -1);
+  },
+  avisPour(C, semaine, fb){ return this.avisListe(C).find(a => a.semaine === semaine && a.fb === fb) || null; },
+  dernierAvis(C, semaine){ return this.avisListe(C).filter(a => a.semaine === semaine).sort((a, b) => String(a.le || "") < String(b.le || "") ? 1 : -1)[0] || null; },
+  /* un 😞 est « traité » quand le coach a répondu à cette semaine APRÈS lui (ecrit_a plus récent) */
+  avisTraite(a, F){ const f = a ? Feedback.pour(F, a.semaine) : null; return !!(f && typeof f.ecrit_a === "string" && typeof a.le === "string" && f.ecrit_a > a.le); },
+  /* les 😞 non traités (le dernier avis de chaque semaine), du plus récent au plus ancien */
+  avisTristes(C, F){
+    const par = {};
+    this.avisListe(C).forEach(a => { if (!par[a.semaine] || String(a.le || "") > String(par[a.semaine].le || "")) par[a.semaine] = a; });
+    return Object.keys(par).map(k => par[k]).filter(a => a.smiley === "triste" && !this.avisTraite(a, F)).sort((a, b) => a.semaine < b.semaine ? 1 : -1);
+  },
+  /* v53 — note en chute (précision de Lucas) : sur le dernier feedback noté de la semaine passée ou en cours,
+     une note de 5 ou moins, ou 2 points de moins que la note précédente. → { note, avant } ou null */
+  noteEnChute(C){
+    const l = this.liste(C).filter(x => x.format === "dimanche" && this.note(x) != null && typeof x.semaine === "string").sort((a, b) => a.semaine < b.semaine ? -1 : 1);
+    const der = l[l.length - 1];
+    if (!der || der.semaine < Regularite.bornes(-1).debut) return null;
+    const n = this.note(der), p = l.length > 1 ? this.note(l[l.length - 2]) : null;
+    return (n <= 5 || (p != null && p - n >= 2)) ? { note: n, avant: p, semaine: der.semaine } : null;
+  },
+  vu(C){ return (C && typeof C.fb_vu === "string") ? C.fb_vu : ""; },
+  /* le dernier fb_vu écrit par cet onglet (la base peut ne pas l'avoir encore : écriture dans 700 ms) */
+  _vuEcrit: null,
+  /* les réponses du coach plus récentes que la dernière vue (écrites dans les 14 derniers jours : pas de badge
+     pour une vieille réponse le jour où le feedback du dimanche s'allume), la plus récente d'abord */
+  nonVus(C, F){
+    const u = Auth.utilisateur(), local = (!Store.idConsulte && u && this._vuEcrit && this._vuEcrit.uid === u.id) ? this._vuEcrit.v : "";
+    const vu = [this.vu(C), local].sort().pop(), d = new Date(); d.setDate(d.getDate() - 14);
+    const il14 = Regularite.iso(d);
+    return Feedback.liste(F).filter(f => this.marque(f) > vu && typeof f.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(f.date) && f.date >= il14).sort((a, b) => this.marque(a) < this.marque(b) ? 1 : -1);
+  },
+  /* les semaines à montrer : celles d'une entrée ou d'une réponse du coach, de la plus récente à la plus ancienne */
+  semaines(C, F){
+    const s = new Set(), ok = v => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v);
+    this.liste(C).forEach(x => { if (ok(x.semaine)) s.add(x.semaine); });
+    Feedback.liste(F).forEach(f => { if (ok(f.semaine)) s.add(f.semaine); });
+    return Array.from(s).sort().reverse();
+  },
+
+  /* le formulaire du dimanche (v : la semaine affichée, enregistrée telle quelle) */
+  formulaireDimanche(entree, v){
+    const r = (entree && entree.reponses && typeof entree.reponses === "object") ? entree.reponses : {};
+    const n = this.note(entree), b = this.bornesNote(), notes = [];
+    for (let k = b.min; k <= b.max; k++) notes.push(k);
+    return `<form class="checkin-form fbd-form" data-fbd data-semaine="${esc(v.debut)}" data-fin="${esc(v.fin)}" novalidate>
+      <div class="checkin-q">
+        <label id="fbd-note-lbl">${esc(trad("Selon toi, comment as-tu travaillé cette semaine ?"))}</label>
+        <p class="note" style="margin:-2px 0 8px">${esc(trad("1 = très mal · 10 = parfaitement"))}</p>
+        <div class="seg note10" role="group" aria-labelledby="fbd-note-lbl">${notes.map(k => `<button type="button" data-v="${k}" aria-pressed="${n === k}" aria-label="${esc(trad("{n} sur 10", { n: k }))}">${k}</button>`).join("")}</div>
+      </div>
+      ${this.questionsDimanche().map(q => `<div class="checkin-q"><label for="fbd-${esc(q.id)}">${esc(trad(q.label))}</label><textarea id="fbd-${esc(q.id)}" rows="2" maxlength="2000" data-q="${esc(q.id)}" placeholder="${esc(trad(q.aide || ""))}">${esc(typeof r[q.id] === "string" ? r[q.id] : "")}</textarea></div>`).join("")}
+      <p class="note" style="margin:0 0 4px">${esc(trad("La note est obligatoire ; les trois cases sont facultatives."))}</p>
+      <div class="actions"><button type="submit" class="btn">${esc(entree ? trad("Mettre à jour mon feedback") : trad("Envoyer mon feedback"))}</button>${entree ? `<button type="button" class="btn ghost" data-fbd-annuler>${esc(trad("Annuler"))}</button>` : ""}<span class="msg" data-fbd-msg role="status" aria-live="polite"></span></div>
+    </form>`;
+  },
+  brancherDimanche(zone, C, apres){
+    const form = zone.querySelector("[data-fbd]"); if (!form) return;
+    $$(".note10 button", form).forEach(b => b.addEventListener("click", () => {
+      $$(".note10 button", form).forEach(x => x.setAttribute("aria-pressed", "false"));
+      b.setAttribute("aria-pressed", "true");
+    }));
+    const annuler = form.querySelector("[data-fbd-annuler]");
+    if (annuler) annuler.addEventListener("click", () => { if (typeof apres === "function") apres(null); });
+    form.addEventListener("submit", ev => {
+      ev.preventDefault();
+      const b = form.querySelector('.note10 [aria-pressed="true"]');
+      const note = b ? parseInt(b.dataset.v, 10) : null;
+      const m = form.querySelector("[data-fbd-msg]");
+      if (!this.noteValide(note)){ if (m){ m.textContent = trad("Choisis ta note, de 1 à 10."); setTimeout(() => { if (m.textContent === trad("Choisis ta note, de 1 à 10.")) m.textContent = ""; }, 3200); } return; }
+      const rep = { note: note };
+      this.questionsDimanche().forEach(q => { const el = form.querySelector(`[data-q="${q.id}"]`); rep[q.id] = el ? el.value.trim().slice(0, 2000) : ""; });
+      const entree = this.enregistrerEntree(C, form.dataset.semaine, form.dataset.fin, rep, "dimanche");
+      if (!entree) return;
+      UI.toast(trad("Feedback envoyé. Ton coach te répond ici, juste en dessous."), "ok");
+      if (typeof apres === "function") apres(entree);
+    });
+  },
+
+  /* la réponse du coach à une semaine, juste sous le feedback ; le client y pose son smiley (le coach, en
+     consultation, voit l'avis du client) */
+  reponseHTML(C, F, semaine, idx, consult){
+    const f = Feedback.pour(F, semaine);
+    if (!f) return `<div class="fbd-reponse fbd-attente"><p class="note" style="margin:0">${esc(trad("Ton coach n'a pas encore répondu."))}</p></div>`;
+    return `<div class="fb-entree fbd-reponse" data-fbd-reponse="${esc(semaine)}"><div class="fb-tete"><b>${esc(trad("Réponse de ton coach"))}</b> <span class="hist-dates">${esc(trad("écrit le {d}", { d: dateFr(f.date) }))}</span></div><p class="fb-texte" data-notr>${esc(f.texte)}</p>${consult ? this.avisCoachHTML(C, semaine, F) : this.avisHTML(C, semaine, f, idx)}</div>`;
+  },
+  /* les trois smileys (facultatif, un clic), et si 😞 les deux questions */
+  avisHTML(C, semaine, f, idx){
+    const fb = this.marque(f), a = this.avisPour(C, semaine, fb), id = "fbd-av-" + idx;
+    const txt = k => esc(a && typeof a[k] === "string" ? a[k] : "");
+    return `<div class="fbd-avis" data-avis-semaine="${esc(semaine)}" data-avis-fb="${esc(fb)}">
+      <p class="fbd-avis-q" id="${id}">${esc(trad("Cette réponse t'a aidé ?"))}</p>
+      <div class="fbd-smileys" role="group" aria-labelledby="${id}">${this.SMILEYS.map(s => `<button type="button" data-smiley="${s.id}" aria-pressed="${!!a && a.smiley === s.id}"><span class="emo" aria-hidden="true">${s.emo}</span><span>${esc(trad(s.lbl))}</span></button>`).join("")}</div>
+      <div class="fbd-triste"${a && a.smiley === "triste" ? "" : " hidden"}>
+        <label for="${id}-d">${esc(trad("Qu'est-ce qui ne t'a pas plu ?"))}</label><textarea id="${id}-d" rows="2" maxlength="2000" data-avis-q="deplu">${txt("deplu")}</textarea>
+        <label for="${id}-a">${esc(trad("Qu'est-ce que je peux améliorer pour toi ?"))}</label><textarea id="${id}-a" rows="2" maxlength="2000" data-avis-q="ameliorer">${txt("ameliorer")}</textarea>
+        <div class="actions"><button type="button" class="btn petit" data-avis-envoyer>${esc(trad("Envoyer"))}</button></div>
+      </div>
+      <span class="msg" data-avis-msg role="status" aria-live="polite"></span>
+    </div>`;
+  },
+  /* un avis par (semaine, réponse notée) : le client peut le changer ; les entrées de la liste (et envoye_a) ne
+     sont jamais touchées. Renvoie true si l'écriture part. */
+  donnerAvis(C, semaine, fb, champs){
+    if (!Array.isArray(C.avis)) C.avis = [];
+    const i = C.avis.findIndex(a => a && typeof a === "object" && a.semaine === semaine && a.fb === fb);
+    const a = Object.assign({}, i > -1 ? C.avis[i] : {}, champs, { semaine: semaine, fb: fb, le: new Date().toISOString() });
+    if (i > -1) C.avis[i] = a; else C.avis.push(a);
+    if (C.avis.length > this.maxAvis) C.avis = C.avis.slice(-this.maxAvis);
+    return Store.ecrire(this.cle, C) !== false;
+  },
+  brancherAvis(zone, C){
+    $$("[data-avis-semaine]", zone).forEach(bloc => {
+      const semaine = bloc.dataset.avisSemaine, fb = bloc.dataset.avisFb;
+      const msg = bloc.querySelector("[data-avis-msg]"), triste = bloc.querySelector(".fbd-triste");
+      $$("[data-smiley]", bloc).forEach(btn => btn.addEventListener("click", () => {
+        const s = btn.dataset.smiley;
+        if (!this.donnerAvis(C, semaine, fb, { smiley: s })) return;
+        $$("[data-smiley]", bloc).forEach(x => x.setAttribute("aria-pressed", String(x === btn)));
+        if (triste) triste.hidden = s !== "triste";
+        if (msg) msg.textContent = trad("Merci, c'est noté.");
+      }));
+      const env = bloc.querySelector("[data-avis-envoyer]");
+      if (env) env.addEventListener("click", () => {
+        const champs = { smiley: "triste" };
+        $$("[data-avis-q]", bloc).forEach(t => { champs[t.dataset.avisQ] = t.value.trim().slice(0, 2000); });
+        if (this.donnerAvis(C, semaine, fb, champs) && msg) msg.textContent = trad("Merci, ton coach le verra.");
+      });
+    });
+  },
+  /* l'avis du client, vu par le coach (Préparer le call, fiche, Son suivi) : un 😞 en évidence avec ses deux
+     réponses, tant qu'il n'est pas traité */
+  avisCoachHTML(C, semaine, F){
+    const a = this.dernierAvis(C, semaine); if (!a) return "";
+    const s = this.SMILEYS.find(x => x.id === a.smiley) || this.SMILEYS[1];
+    const t = typeof a.le === "string" ? new Date(a.le) : null;
+    const quand = t && !isNaN(t) ? " (le " + dateFr(Regularite.iso(t)) + ")" : "";
+    if (a.smiley !== "triste") return `<p class="note fbd-avis-coach" style="margin:10px 0 0">Son avis sur ta réponse : ${s.emo} ${esc(s.lbl)}${esc(quand)}</p>`;
+    const traite = this.avisTraite(a, F);
+    const rep = (k, lbl) => typeof a[k] === "string" && a[k].trim() ? `<p class="checkin-rep"><span class="lbl">${esc(lbl)}</span><span data-notr>${esc(a[k])}</span></p>` : "";
+    return `<div class="flag${traite ? "" : " grave"} fbd-avis-coach" data-avis-triste="${traite ? "traite" : "a-traiter"}"><b>😞 ${traite ? "Ta réponse ne l'a pas aidé — tu lui as répondu depuis" : "Ta réponse ne l'a pas aidé — à traiter en priorité"}</b>${esc(quand)}${rep("deplu", "Ce qui ne lui a pas plu")}${rep("ameliorer", "Ce que tu peux améliorer pour lui")}</div>`;
+  },
+
+  /* Mon suivi, règle du dimanche : la semaine (formulaire, ou son feedback), la réponse du coach juste en dessous
+     (avec le smiley), puis l'historique. En consultation (Son suivi du coach) : la même chose en lecture seule. */
+  monterDimanche(idZone, C, F){
+    const z = $(idZone); if (!z) return;
+    const consult = !!Store.idConsulte, uid = Store.cible();
+    const vuAvant = this.vu(C);
+    const dessiner = (modifier) => {
+      const e = this.etat(C, uid), v = e.semaine;
+      const ouvert = v.etat === "ouvert" || v.etat === "en_retard";
+      const semaines = this.semaines(C, F);
+      const principale = ouvert ? v.debut : (semaines[0] || v.debut);
+      const x = this.entree(C, principale);
+      const per = { a: dateFr(v.debut), b: dateFr(v.fin) };
+      let corps;
+      if (!ouvert) corps = `<p class="note" style="margin:0 0 12px">${esc(trad("Prochain feedback : dimanche {d}", { d: dateFr(v.prochain) }))}</p>`;
+      else if (v.etat === "en_retard") corps = `<p class="note" style="margin:0 0 14px">${esc(trad("Ton feedback de la semaine du {a} au {b} n'a pas été fait.", per) + " " + trad("Tu peux encore le faire aujourd'hui."))}</p>`;
+      else corps = `<p class="note" style="margin:0 0 14px">${esc(trad("Semaine du {a} au {b}", per))}${x || consult ? "" : " · " + esc(trad("Réponds simplement, avec tes mots : ton coach te répond juste en dessous."))}</p>`;
+      if (ouvert && !consult && (modifier || !x)) corps += this.formulaireDimanche(x, v);
+      else if (x) corps += `<div class="fbd-semaine"><p class="note" style="margin:0 0 8px"><b>${esc(this.periode(x))}</b> · ${esc(trad("envoyé le {d}", { d: dateFr(x.envoye_le) }))}</p>${this.reponsesHTML(x)}${ouvert && !consult ? `<div class="actions"><button type="button" class="btn ghost petit" data-fbd-modifier>${esc(trad("Modifier mon feedback"))}</button></div>` : ""}</div>`;
+      else if (ouvert) corps += `<div class="empty">${esc(trad("Pas encore de feedback pour cette semaine."))}</div>`;
+      else if (!semaines.length) corps += `<div class="empty">${esc(trad("Ton premier feedback arrive dimanche : une note sur 10 et trois lignes."))}</div>`;
+      if (x || Feedback.pour(F, principale)) corps += this.reponseHTML(C, F, principale, "p", consult);
+      const pastille = e.fait ? `<span class="pastille ok">✓ ${esc(trad("envoyé"))}</span>` : v.etat === "ouvert" ? `<span class="pastille attention">${esc(trad("à faire"))}</span>` : v.etat === "en_retard" ? `<span class="pastille attention">${esc(trad("en retard"))}</span>` : "";
+      z.innerHTML = `<section class="panel fbd" data-fbd-etat="${esc(v.etat)}"><div class="seance-c-tete"><h2>${esc(trad("Feedback de la semaine"))}</h2>${pastille}</div>
+        ${corps}${this.historiqueDimancheHTML(C, F, principale, consult, vuAvant)}</section>`;
+      const mod = z.querySelector("[data-fbd-modifier]"); if (mod) mod.addEventListener("click", () => dessiner(true));
+      this.brancherDimanche(z, C, () => dessiner(false));
+      if (!consult) this.brancherAvis(z, C);
+    };
+    dessiner(false);
+  },
+  /* l'historique de la règle du dimanche : chaque semaine (nouveau format ou ancien bilan) avec la réponse du coach ;
+     une semaine dont la réponse n'a pas encore été vue est ouverte */
+  historiqueDimancheHTML(C, F, sauf, consult, vuAvant){
+    const l = this.semaines(C, F).filter(s => s !== sauf);
+    if (!l.length) return "";
+    return `<h3 style="margin-top:20px">${esc(trad("Mes feedbacks précédents"))}</h3>` + l.map((s, i) => {
+      const x = this.entree(C, s), f = Feedback.pour(F, s), n = x ? this.note(x) : null;
+      const bouts = [x ? (n != null ? trad("note {n}/10", { n: n }) : trad("envoyé le {d}", { d: dateFr(x.envoye_le) })) : trad("pas de feedback envoyé")];
+      if (f) bouts.push(trad("réponse du coach"));
+      const nouveau = !consult && !!f && this.nonVus({ fb_vu: vuAvant }, { liste: [f] }).length > 0;
+      const per = this.periode(x || { semaine: s, fin: (f && f.fin) || Feedback.finDe(s) });
+      return `<details class="hist-entree"${nouveau ? " open" : ""}><summary><b>${esc(per)}</b> <span class="hist-dates">${esc(bouts.join(" · "))}</span>${nouveau ? ` <span class="pastille accent">${esc(trad("nouveau"))}</span>` : ""}</summary>${x ? this.reponsesHTML(x) : ""}${this.reponseHTML(C, F, s, "h" + i, consult)}</details>`;
+    }).join("");
+  },
+
+  /* À l'ouverture de Mon suivi (client, règle du dimanche) : une réponse du coach plus récente que fb_vu est
+     maintenant affichée → fb_vu = la plus récente, UNE écriture (rien s'il n'y a rien de nouveau). */
+  marquerVu(C, F){
+    const u = Auth.utilisateur(), uid = u && u.id;
+    if (Store.idConsulte || !uid) return false;
+    if (!this.nonVus(C, F).length){ this.majBadge(uid, 0); return false; }
+    C.fb_vu = Feedback.liste(F).map(f => this.marque(f)).sort().pop();
+    const ok = Store.ecrire(this.cle, C) !== false;
+    if (ok) this._vuEcrit = { uid: uid, v: C.fb_vu };   // revenir sur Mon suivi avant l'envoi ne réécrit pas
+    this.majBadge(uid, 0);
+    return ok;
+  },
+  /* la carte de l'accueil « Ton coach a répondu » */
+  accesReponseHTML(f){
+    return `<a class="acces fbd-repondu" href="#/suivi"><span class="ico">${ICONES.suivi || ICONES.bilan}</span><span class="txt"><b>${esc(trad("Ton coach a répondu"))}</b><small>${esc(trad("Semaine du {a} au {b} : sa réponse t'attend dans Mon suivi.", { a: dateFr(f.semaine), b: dateFr(f.fin || Feedback.finDe(f.semaine)) }))}</small></span><span class="fleche">›</span></a>`;
+  },
+  /* le badge « ton coach a répondu » : sur « Mon suivi » (barre du haut, barre du bas, volet « Plus ») et sur le
+     bouton « Plus » du téléphone quand Mon suivi est derrière lui. Posé à chaque construction de la navigation. */
+  _badge: null,          // { uid, n } : le dernier calcul (accueil, Mon suivi, ou lecture au démarrage)
+  _badgeLecture: null,   // le compte pour lequel la lecture du démarrage est partie (une fois)
+  majBadge(uid, n){ this._badge = { uid: uid, n: n || 0 }; this.badge(); },
+  badge(){
+    const u = Auth.utilisateur(), uid = u && u.id;
+    const eligible = !!uid && Auth.connecte() && !Store.idConsulte && !Auth.estProspect() && this.regle(uid) === "dimanche";
+    let n = 0;
+    if (eligible && this._badge && this._badge.uid === uid) n = this._badge.n;
+    else if (eligible && !Auth.estCoach() && this._badgeLecture !== uid){
+      /* arrivée sur une autre page que l'accueil : une lecture (jamais d'écriture) pour savoir s'il y a du nouveau */
+      this._badgeLecture = uid;
+      Store.lireTout([this.cle, Feedback.cle]).then(d => {
+        if (this._badge && this._badge.uid === uid) return;
+        const moi = Auth.utilisateur();
+        if (moi && moi.id === uid) this.majBadge(uid, this.nonVus(d[this.cle], d[Feedback.cle]).length);
+      }).catch(() => {});
+    }
+    const surBarre = !!document.querySelector('#barre-bas a[data-id="suivi"]');
+    $$('#nav a[data-id="suivi"], #barre-bas a[data-id="suivi"], .menu-plus a[data-id="suivi"]' + (surBarre ? "" : ", #barre-bas [data-plus]")).forEach(a => {
+      let b = a.querySelector(".fbd-badge");
+      if (n > 0){
+        if (!b){ b = document.createElement("span"); b.className = "nav-badge fbd-badge"; a.appendChild(b); }
+        b.textContent = n > 9 ? "9+" : String(n);
+        b.setAttribute("aria-label", trad("Ton coach a répondu"));
+      } else if (b) b.remove();
+    });
   }
 };
 
@@ -203,7 +538,7 @@ const Feedback = {
   cle: "feedbacks",
   max: 60,
   file: Promise.resolve(),   // les envois partent l'un apres l'autre
-  liste(F){ return ((F && F.liste) || []).filter(x => x && x.semaine && x.texte); },
+  liste(F){ return ((F && Array.isArray(F.liste)) ? F.liste : []).filter(x => x && x.semaine && x.texte); },   // v53 : liste piegee (pas un tableau) = vide
   pour(F, semaine){ return this.liste(F).find(x => x.semaine === semaine) || null; },
   /* le feedback qui REPOND a ce bilan : ecrit sous ce bilan-la, pour cette
      date d'envoi. Un mot ecrit avant que le bilan arrive (ou avant qu'il soit
@@ -224,6 +559,8 @@ const Feedback = {
     return l[0] || null;
   },
   finDe(semaine){ const d = new Date(semaine + "T12:00:00"); d.setDate(d.getDate() + 6); return Regularite.iso(d); },
+  /* v53 : les champs qu'enregistrer() ecrit lui-meme ; tout autre champ d'une entree existante est recopie */
+  connus: ["semaine", "fin", "date", "texte", "bilan", "ecrit_a"],
   empreinte(x){ return x ? JSON.stringify([x.date || "", x.texte || "", x.bilan || ""]) : ""; },
 
   /* texte vide = retirer le feedback de cette semaine. La base est relue juste
@@ -243,9 +580,14 @@ const Feedback = {
       /* l'entree a change depuis l'affichage, et ce n'est pas notre propre tentative : conflit */
       if (this.empreinte(cour) !== this.empreinte(base) && !(dejas || []).some(x => meme(cour, x))) throw Object.assign(new Error("conflit"), { conflit: true });
       const l = brute.filter(x => !(x && x.semaine === semaine));
+      /* v53 : l'entree n'est plus reconstruite a vide : ses champs inconnus (ajoutes plus tard) sont recopies ;
+         ecrit_a = l'instant de cet enregistrement (le badge du client et le « traite » d'un 😞 en dependent) */
+      const precedente = brute.find(x => x && typeof x === "object" && x.semaine === semaine) || null;
       let entree = null;
       if (t){
-        entree = { semaine: semaine, fin: fin || this.finDe(semaine), date: aujourdhui(), texte: t };
+        entree = {};
+        if (precedente) Object.keys(precedente).forEach(k => { if (this.connus.indexOf(k) === -1) entree[k] = precedente[k]; });
+        Object.assign(entree, { semaine: semaine, fin: fin || this.finDe(semaine), date: aujourdhui(), texte: t, ecrit_a: new Date().toISOString() });
         if (bilan) entree.bilan = bilan;
         l.push(entree);
       }
@@ -436,11 +778,18 @@ const outilSuivi = {
        pour que l'ecriture soit autorisee (drapeau de lecture) */
     const C = await Store.lire(Checkin.cle, Checkin.vide());
     if (!Array.isArray(C.liste)) C.liste = [];
-    Checkin.monter("suivi-checkin", C);
-    /* v38 — le feedback du coach : en tete s'il date de la semaine, sinon sous le bilan */
-    const fb = Feedback.panneauHTML(d.feedbacks);
-    const zf = $(Feedback.recent(d.feedbacks) ? "suivi-fb-haut" : "suivi-fb-bas");
-    if (zf && fb) zf.innerHTML = fb;
+    if (Checkin.regle(Store.cible()) === "dimanche"){
+      /* v53 (chantier 3) — feedback du dimanche : la reponse du coach s'affiche sous chaque semaine (pas de
+         panneau a part) ; une reponse pas encore vue l'est maintenant : fb_vu (une ecriture, client seulement) */
+      Checkin.monterDimanche("suivi-checkin", C, d.feedbacks);
+      if (!Store.idConsulte) Checkin.marquerVu(C, d.feedbacks);
+    } else {
+      Checkin.monter("suivi-checkin", C);
+      /* v38 — le feedback du coach : en tete s'il date de la semaine, sinon sous le bilan */
+      const fb = Feedback.panneauHTML(d.feedbacks);
+      const zf = $(Feedback.recent(d.feedbacks) ? "suivi-fb-haut" : "suivi-fb-bas");
+      if (zf && fb) zf.innerHTML = fb;
+    }
     await Regularite.monterClient("suivi-reg", P, J, d);
     const zb = $("suivi-bilan"); if (!zb) return;
     const b = outilBilan.calculer({ programme: P, journal: J, repas: d.repas || {}, repas_suivi: d.repas_suivi || {}, mens: d.mens || {}, objectifs_faits: d.objectifs_faits || {} });

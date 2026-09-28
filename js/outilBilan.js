@@ -183,14 +183,24 @@ const outilBilan = {
       let F = null, lu = true;
       try { F = await CleCoach.lire(uid, Feedback.cle); } catch(e){ lu = false; }
       if (!zone.isConnected || Store.idConsulte !== uid) return;   // on a change de page entre-temps
-      const l = ((checkins && checkins.liste) || []).slice(-4).reverse();
-      const v = Checkin.semaineVisee();
-      const sansBilan = !l.some(x => x.semaine === v.debut);
-      zone.insertAdjacentHTML("beforeend", `<section class="panel"><h2>Ses bilans hebdomadaires et ton feedback</h2>
+      /* v53 (chantier 3) : la regle de CE client (bilan du vendredi, ou feedback du dimanche) ; les entrees se lisent
+         selon leur format (Checkin.reponsesHTML), les smileys du client sous chacune, un 😞 non traite en evidence
+         (et remonte meme s'il n'est plus dans les 4 derniers) ; le coach repond juste en dessous, au meme endroit */
+      const l = Checkin.liste(checkins).slice(-4).reverse();
+      const v = Checkin.semaineVisee(checkins, uid), dim = v.regle === "dimanche";
+      const tristes = Checkin.avisTristes(checkins, F).map(a => a.semaine);
+      const enPlus = tristes.filter((s, i) => tristes.indexOf(s) === i && !l.some(x => x.semaine === s));
+      const sansBilan = !l.some(x => x.semaine === v.debut) && enPlus.indexOf(v.debut) === -1;
+      const resume = x => {
+        const n = Checkin.note(x);
+        return (n != null ? " · note " + n + "/10" : "") + (tristes.indexOf(x.semaine) > -1 ? " · 😞 à traiter" : "");
+      };
+      zone.insertAdjacentHTML("beforeend", `<section class="panel"><h2>${dim ? "Ses feedbacks du dimanche et ta réponse" : "Ses bilans hebdomadaires et ton feedback"}</h2>
         ${lu ? "" : `<p class="msg ko">Ses feedbacks n'ont pas pu être lus : recharge la page pour écrire. Rien n'a été modifié.</p>`}
-        ${l.map((x, i) => `<details class="hist-entree"${i === 0 ? " open" : ""}><summary><b>${esc(Checkin.periode(x))}</b> <span class="hist-dates">envoyé le ${esc(dateFr(x.envoye_le))}${Feedback.repond(F, x) ? " · feedback envoyé" : Feedback.pour(F, x.semaine) ? " · feedback à relire" : ""}</span></summary>${Checkin.reponsesHTML(x)}${Feedback.editeurHTML(x.semaine, x.fin, F, x, !lu)}</details>`).join("")}
-        ${l.length ? "" : `<div class="empty">Aucun bilan hebdomadaire envoyé pour le moment.</div>`}
-        ${sansBilan ? `<div class="hist-entree"><p class="note" style="margin:0"><b>${esc(Checkin.periode({ semaine: v.debut, fin: v.fin }))}</b> · pas encore de bilan pour cette semaine. Tu peux quand même lui écrire.</p>${Feedback.editeurHTML(v.debut, v.fin, F, null, !lu)}</div>` : ""}
+        ${enPlus.map(s => { const x = Checkin.entree(checkins, s); return `<details class="hist-entree" open><summary><b>${esc(Checkin.periode(x || { semaine: s, fin: Feedback.finDe(s) }))}</b> <span class="hist-dates">${x ? "envoyé le " + esc(dateFr(x.envoye_le)) : "sans feedback"} · 😞 à traiter</span></summary>${x ? Checkin.reponsesHTML(x) : ""}${Checkin.avisCoachHTML(checkins, s, F)}${Feedback.editeurHTML(s, x ? x.fin : Feedback.finDe(s), F, x, !lu)}</details>`; }).join("")}
+        ${l.map((x, i) => `<details class="hist-entree"${i === 0 || tristes.indexOf(x.semaine) > -1 ? " open" : ""}><summary><b>${esc(Checkin.periode(x))}</b> <span class="hist-dates">envoyé le ${esc(dateFr(x.envoye_le))}${esc(resume(x))}${Feedback.repond(F, x) ? " · feedback envoyé" : Feedback.pour(F, x.semaine) ? " · feedback à relire" : ""}</span></summary>${Checkin.reponsesHTML(x)}${Checkin.avisCoachHTML(checkins, x.semaine, F)}${Feedback.editeurHTML(x.semaine, x.fin, F, x, !lu)}</details>`).join("")}
+        ${l.length ? "" : `<div class="empty">${dim ? "Aucun feedback du dimanche envoyé pour le moment." : "Aucun bilan hebdomadaire envoyé pour le moment."}</div>`}
+        ${sansBilan ? `<div class="hist-entree"><p class="note" style="margin:0"><b>${esc(Checkin.periode({ semaine: v.debut, fin: v.fin }))}</b> · ${dim ? "pas de feedback du dimanche pour cette semaine" : "pas encore de bilan pour cette semaine"}. Tu peux quand même lui écrire.</p>${Checkin.avisCoachHTML(checkins, v.debut, F)}${Feedback.editeurHTML(v.debut, v.fin, F, null, !lu)}</div>` : ""}
       </section>`);
       Feedback.brancher(zone, uid, F);
     }
