@@ -283,11 +283,24 @@ const CONFIG = {
   /* --- Bilan hebdomadaire (v36) --- le questionnaire que le client remplit
      chaque semaine. Ajoute, retire ou reformule une question ici : l'écran
      suit. Types : echelle5 (1 → 5), nombre, long (texte libre), select.
-     Le bilan de la semaine s'ouvre le jour indiqué (1 = lundi … 7 = dimanche)
-     et reste ouvert jusqu'au dimanche de la semaine suivante. Il n'est jamais
-     bloquant : seulement fortement recommandé. */
+     v53 : ne retire aucune de ces 11 questions : elles servent aussi à relire les anciens bilans.
+     Le bilan de la semaine s'ouvre le jour indiqué (1 = lundi … 7 = dimanche ; 0 ou 1 : toujours la semaine en cours)
+     et reste ouvert jusqu'à la veille de ce jour la semaine suivante (vendredi : jusqu'au jeudi soir, sur la
+     semaine passée : Checkin.semaineVisee). Il n'est jamais bloquant : seulement fortement recommandé.
+     v53 (chantier 3) : les comptes du feedback du dimanche (CONFIG.nouveautes.feedback_dimanche) suivent la règle
+     du dimanche (voir « dimanche » ci-dessous) ; tous les autres gardent ce bilan du vendredi. */
   bilan: {
     jour_ouverture: 5,
+    /* v53 — feedback du dimanche : une note de 1 à 10 (obligatoire) et trois cases facultatives. Ouvert le dimanche
+       sur la semaine en cours ; le lundi, encore possible s'il n'a pas été fait ; fermé du mardi au samedi. */
+    dimanche: {
+      note: { min: 1, max: 10 },
+      questions: [
+        { id: "training",     label: "Training",     aide: "Tes séances, ta forme, tes charges…" },
+        { id: "alimentation", label: "Alimentation", aide: "Tes repas, tes écarts, ta faim…" },
+        { id: "autre",        label: "Autre",        aide: "Sommeil, stress, moral, une question…" }
+      ]
+    },
     questions: [
       { id:"semaine",      label:"Comment s'est passée ta semaine ?", type:"long" },
       { id:"energie",      label:"Énergie",    type:"echelle5" },

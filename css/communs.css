@@ -327,6 +327,30 @@ a.tb-tuile:hover{border-color:var(--accent-line)}
 .fb-editeur{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)}
 .fb-editeur .fb-etat{text-transform:none;letter-spacing:0;color:var(--ink-3)}
 .fb-editeur .actions{margin-top:10px}
+/* v53 (chantier 3) — feedback du dimanche : note sur 10 (deux rangées de 5 sur téléphone), réponse du coach sous la
+   semaine, smileys (boutons tactiles avec un libellé), rappel du dimanche, badge « ton coach a répondu » */
+.seg.note10{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));max-width:560px}
+@media (max-width:520px){.seg.note10{grid-template-columns:repeat(5,minmax(0,1fr))}}
+.seg.note10 button{min-height:44px;padding:8px 0;font-family:"IBM Plex Mono",monospace;font-weight:600}
+.fbd-semaine{margin-bottom:4px}
+.fbd-reponse{margin-top:14px}
+.fbd-attente{padding:10px 14px;border:1px dashed var(--line);border-radius:var(--r)}
+.fbd-avis{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line)}
+.fbd-avis-q{margin:0 0 8px;font-size:14px}
+.fbd-smileys{display:flex;flex-wrap:wrap;gap:8px}
+.fbd-smileys button{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:8px 14px;border:1px solid var(--line-strong);border-radius:999px;background:var(--surface);color:var(--ink);font:inherit;font-size:14px;cursor:pointer}
+.fbd-smileys button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);font-weight:600}
+.fbd-smileys .emo{font-size:20px;line-height:1}
+.fbd-triste{margin-top:10px}
+.fbd-triste label{display:block;margin:8px 0 4px}
+.fbd-triste textarea{width:100%;box-sizing:border-box}
+.fbd-avis .msg{display:block;margin-top:6px}
+.fbd-avis-coach .checkin-rep{margin:6px 0 0}
+a.bandeau.fbd-bandeau{color:var(--ink);text-decoration:none;flex-wrap:nowrap}
+.fbd-bandeau-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.fbd-bandeau .fleche{color:var(--ink-3);font-size:20px;line-height:1}
+.barre-bas [data-plus]{position:relative}
+.barre-bas [data-plus] .nav-badge{position:absolute;top:4px;left:calc(50% + 8px);margin:0}
 .notes-coach textarea{min-height:120px;resize:vertical}
 .msg.ko,.note.ko{color:var(--bad)}
 .acces.attention .ico{background:var(--warn-soft);color:var(--warn)}

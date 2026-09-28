@@ -503,17 +503,26 @@ const Clients = {
     if (!l.programme) out.push({ type: "manque", niveau: "attention", cible: "programme", texte: "Programme à envoyer" });
     if (!l.diete) out.push({ type: "manque", niveau: "attention", cible: "nutrition", texte: "Diète à envoyer" });
     if (l.reg != null && l.reg < seuils.moyen) out.push({ type: "regularite", niveau: "mauvais", cible: "suivi", texte: `Régularité faible : ${l.reg}/100` });
-    /* bilan hebdomadaire : recu (a lire) ou manquant */
-    if (l.programme || l.diete){
-      const ck = c.checkins || { liste: [] }, e = Checkin.etat(ck);
+    /* bilan hebdomadaire : recu (a lire) ou manquant.
+       v53 (chantier 3) : la regle de CE client — bilan du vendredi (comme avant), ou feedback du dimanche : « reçu —
+       à lire » meme sans programme, « non fait » des le lundi (semaine passee sans feedback, fenetre fermee ou en retard) */
+    const ck = c.checkins || { liste: [] }, e = Checkin.etat(ck, l.p && l.p.id), dim = e.semaine.regle === "dimanche";
+    if (l.programme || l.diete || dim){
       const il7 = (() => { const d = new Date(); d.setDate(d.getDate() - 7); return Regularite.iso(d); })();
       /* recu : un bilan envoye dans les sept derniers jours, quelle que soit sa
          semaine, et auquel le coach n'a pas encore repondu (v38 : un feedback
          ecrit sous CE bilan ; un mot ecrit avant son arrivee ne compte pas) */
-      const recent = (ck.liste || []).filter(x => x.envoye_le && x.envoye_le >= il7 && !Feedback.repond(c.feedbacks, x));
-      if (recent.length) out.push({ type: "bilan_recu", niveau: "info", cible: "bilan", texte: "Bilan hebdo reçu — à lire" });
-      else if (!e.fait && e.semaine.fin < auj) out.push({ type: "bilan_manque", niveau: "attention", cible: "suivi", texte: "Bilan hebdo non complété" });
+      const recent = Checkin.liste(ck).filter(x => x.envoye_le && x.envoye_le >= il7 && !Feedback.repond(c.feedbacks, x));
+      if (recent.length) out.push({ type: "bilan_recu", niveau: "info", cible: "bilan", texte: recent.some(x => x.format === "dimanche") ? "Feedback du dimanche reçu — à lire" : "Bilan hebdo reçu — à lire" });
+      else if (dim ? ((l.programme || l.diete) && !e.fait && e.semaine.etat !== "ouvert") : (!e.fait && e.semaine.fin < auj)) out.push({ type: "bilan_manque", niveau: "attention", cible: "suivi", texte: dim ? "Feedback du dimanche non fait" : "Bilan hebdo non complété" });
     }
+    /* v53 — ce que le client a dit du feedback (calcule a l'affichage, rien n'est stocke) : un 😞 sur la reponse du
+       coach, tant qu'il n'y a pas repondu depuis ; une note en chute (5 ou moins, ou 2 points de moins que la
+       precedente). Niveau « mauvais », et en tete des alertes « mauvais » (plan V2 : les 😞 et les notes en chute en haut). */
+    const prio = [];
+    if (Checkin.avisTristes(ck, c.feedbacks).length) prio.push({ type: "avis_triste", niveau: "mauvais", cible: "bilan", texte: "😞 sur ta réponse — à traiter" });
+    const chute = Checkin.noteEnChute(ck);
+    if (chute) prio.push({ type: "note_chute", niveau: "mauvais", cible: "bilan", texte: chute.avant != null && chute.avant - chute.note >= 2 ? `Note en chute : ${chute.avant} → ${chute.note}/10` : `Note en chute : ${chute.note}/10` });
     /* objectif du mois non atteint (statut pose par le coach) */
     const o = c.programme && c.programme.objectifs;
     if (o && o.mois === auj.slice(0, 7)) (o.statuts || []).forEach((st, i) => { if (st === "non_atteint" && (o.liste || [])[i]) out.push({ type: "objectif", niveau: "attention", cible: "suivi", texte: `Objectif non atteint : ${(o.liste || [])[i]}` }); });
@@ -527,7 +536,7 @@ const Clients = {
       }
     }
     const rang = { mauvais: 0, attention: 1, info: 2 };
-    return out.sort((a, b) => rang[a.niveau] - rang[b.niveau]);
+    return prio.concat(out).sort((a, b) => rang[a.niveau] - rang[b.niveau]);
   },
 
   /* ouvre la fiche d'un client sur un onglet */

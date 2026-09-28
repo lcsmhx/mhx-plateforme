@@ -212,6 +212,7 @@ function construireNav(){
   ).join("");
   construireBarreBas();
   if (typeof Nouveautes !== "undefined") Nouveautes.badge();   // v51 : le badge survit a la reconstruction
+  if (typeof Checkin !== "undefined") Checkin.badge();         // v53 : « ton coach a répondu » (feedback du dimanche)
   $("brand-name").textContent = CONFIG.marque.nom;
   const sub = $("brand-sub");
   sub.textContent = CONFIG.marque.programme || "";
@@ -255,6 +256,7 @@ function construireBarreBas(){
       `<li><a href="#/${o.id}" data-id="${o.id}"${courant === o.id ? ' aria-current="page"' : ""}>${iconeOutil(o)}<span>${esc(nomOnglet(o))}${cadenasNav(o)}</span></a></li>`).join("") + `</ul>` });
     /* un clic sur un lien du volet le referme */
     setTimeout(() => { $$(".volet .menu-plus a").forEach(a => a.addEventListener("click", () => UI.fermer())); if (typeof Nouveautes !== "undefined") Nouveautes.badge(); }, 0);
+    if (typeof Checkin !== "undefined") setTimeout(() => Checkin.badge(), 0);   // v53 : le badge sur « Mon suivi » du volet
   });
   b.hidden = !Auth.connecte();
 }
