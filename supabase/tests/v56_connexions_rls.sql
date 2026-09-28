@@ -6,7 +6,9 @@
 -- Comptes utilisés : le coach (lu dans profils), le compte client de TEST 9df6bb84… (jamais un vrai client) et un prospect
 -- FICTIF créé dans la transaction (annulé avec elle). Les vrais clients ne sont jamais touchés : les tests ne lisent et
 -- n'écrivent que les lignes de ces trois comptes.
--- Résultat : une ligne par test (n, test, ok, detail), puis le total ; tout doit être ok = true.
+-- Résultat : le fichier finit TOUJOURS par une erreur voulue, « v56 : N / 23 tests ok … annulation forcée » : rien ne peut
+-- être gardé, même lancé seul sans begin / rollback (sinon le prospect fictif resterait dans auth.users). Le message
+-- donne le total et, s'il y en a, les tests qui ne passent pas (un test sans réponse, NULL, compte comme raté).
 
 create temp table t_res (n int, test text, ok boolean, detail text);
 grant all on t_res to anon, authenticated;
@@ -172,5 +174,9 @@ insert into t_res select 51, 'aucune autre ligne créée ou modifiée par ces te
   not exists (select 1 from public.connexions where (premiere = now() or derniere = now())
                 and user_id not in (current_setting('t.client')::uuid, current_setting('t.prospect')::uuid)), null;
 
-select n, test, ok, detail from t_res order by n;
-select count(*) filter (where ok) || ' / ' || count(*) as total, bool_and(ok) as tout_ok from t_res;
+-- le résultat, puis l'annulation forcée de tout ce qui précède (voir en tête)
+do $$ declare total int; bons int; rates text; begin
+  select count(*), count(*) filter (where ok is true), string_agg(n || ' ' || test || coalesce(' [' || detail || ']', ''), ' | ' order by n) filter (where ok is not true)
+    into total, bons, rates from t_res;
+  raise exception 'v56 : % / % tests ok (attendu : 23 / 23)%. Annulation forcée : rien n''est gardé.', bons, total, coalesce(' — RATÉS : ' || rates, '');
+end $$;

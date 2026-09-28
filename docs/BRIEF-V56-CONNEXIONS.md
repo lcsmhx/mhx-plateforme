@@ -33,28 +33,28 @@ Supabase, rien n'est poussé sur `main`** tant que Lucas n'a pas dit « oui ».
 `premiere`, `derniere`, `dernier_jour`) et une fonction **nouvelle** `noter_connexion()`.
 - La fonction ne prend **aucun paramètre** : elle note la connexion du compte du jeton, jamais celle d'un autre.
 - Même jour : la dernière connexion avance, le nombre ne bouge pas. Nouveau jour (Paris) : +1.
-- Lecture de la table : **le coach seul**. Écriture directe : **personne** (ni client, ni prospect, ni coach).
+- Lecture de la table : **le coach seul**. Écriture directe : **aucun compte** (ni client, ni prospect, ni coach) ; seule la clé de service (fonctions serveur, jamais dans l'app) garde tous les droits, comme sur toutes les tables.
 - L'anonyme n'a accès à rien.
 - Compte supprimé : sa ligne part avec lui, la suppression n'est jamais bloquée.
 
 **App (version 56)** :
 - `Connexions` (`js/outilDecouverte.js`, à côté du suivi des visites) : l'appel en arrière-plan.
 - `demarrer()` : l'appel à l'ouverture.
-- `Clients.charger` : lecture de la table, en même temps que le reste.
+- `Clients.charger` : lecture de la table, en même temps que le reste (8 s au plus, sinon « — ») ; pas pour le tableau de bord, qui ne l'affiche pas.
 - Les deux colonnes de « Mes clients » et les deux lignes des cartes « Prospects ».
 
 **Tests** :
-- `tests-locaux/verif61.js` : 47 vérifications, dont démarrage, reprise, base sans migration, retour arrière, réseau coupé, coach, téléphone, interrupteur et données piégées. Elle échoue sur la v55 (13/46).
+- `tests-locaux/verif61.js` : 48 vérifications, dont démarrage, reprise, jeton expiré au retour, base sans migration, retour arrière, réseau coupé, coach, téléphone, interrupteur et données piégées. Elle échoue sur la v55 (13/47).
 - Simulations de verif40, 51 à 58 et 60 : l'appel est mis à part, car ce n'est pas une écriture de l'app dans les données.
 - `verif52` : la comparaison de « Mes clients » avec `main` ignore les 2 nouvelles colonnes.
-- `supabase/tests/v56_connexions_rls.sql` : 23 tests des règles (coach, client de test, prospect fictif, anonyme, tentatives croisées), dans une transaction annulée.
+- `supabase/tests/v56_connexions_rls.sql` : 23 tests des règles (coach, client de test, prospect fictif, anonyme, tentatives croisées). Le fichier finit toujours par une erreur voulue (« v56 : 23 / 23 tests ok… Annulation forcée ») : rien ne peut être gardé, même lancé sans `begin` / `rollback`.
 
 ## Fichiers
 - `supabase/migrations/20260928220000_v56_compteur_connexions.sql` : la migration.
 - `supabase/v56_retour.sql` : le retour arrière.
 - `supabase/tests/v56_connexions_rls.sql` : les tests des règles.
 - `supabase/README.md`.
-- `js/outilDecouverte.js`, `js/demarrage.js`, `js/outilClients.js`, `js/outilProspects.js`.
+- `js/outilDecouverte.js`, `js/demarrage.js`, `js/outilClients.js`, `js/outilProspects.js`, `js/outilTableau.js`.
 - `js/config.js` et `index.html` : version 56.
 - `tests-locaux/verif61.js` (nouveau), `verif40.js`, `verif51.js` à `verif58.js`, `verif60.js`, `banc.sh`, `README.md`.
 - Ce brief.
@@ -69,10 +69,13 @@ Supabase, rien n'est poussé sur `main`** tant que Lucas n'a pas dit « oui ».
 ## Risques
 1. **Tes clients** : ce qu'ils voient ne change pas, mais leurs ouvertures seraient enregistrées. Le code suit la même règle que les visites (Q4) : prospects toujours, clients seulement quand tu passes `suivi_visites_clients` sur « tous » (aujourd'hui : ton compte de test seulement). **À trancher** (question en bas).
 2. Un compte peut appeler la fonction à la main : au plus +1 par jour sur **son propre** compteur, jamais sur celui d'un autre.
-3. « Un jour » = le calendrier de Paris. Pour un client très loin (Bali), le jour change à 6 h du matin chez lui.
+3. « Un jour » = le calendrier de Paris. Pour un client très loin (Bali), le jour change à 6 h du matin chez lui (7 h après le passage à l'heure d'hiver, le 25/10).
 4. Si l'app part en ligne avant la migration : rien ne casse. Le coach voit « — », et chaque ouverture fait une demande refusée, invisible, qui n'est plus répétée. Ordre prévu : migration d'abord.
 5. Gratuit : une ligne par compte et une petite requête par ouverture. Rien de payant.
-6. Relevés avant / après : un vrai client peut écrire pendant la migration (inscription ouverte, clients actifs). Un écart sur `donnees` ou `profils` se vérifie ligne par ligne. Seule une ligne dont `maj_le` est postérieure au relevé « avant » (modifiée par son propriétaire) est acceptée. Tout autre écart = STOP.
+6. Si le profil ne se charge pas au démarrage (réseau coupé à ce moment-là), cette ouverture n'est pas comptée : la suivante le sera.
+7. Le « Security Advisor » de Supabase signalera `noter_connexion` (fonction SECURITY DEFINER appelable par les comptes connectés) : c'est voulu, comme pour `est_coach`.
+8. La migration pose un court verrou sur la table des comptes : au-delà de 5 s d'attente, elle abandonne sans rien appliquer (on réessaie), pour ne jamais bloquer les connexions.
+9. Relevés avant / après : un vrai client peut écrire pendant la migration (inscription ouverte, clients actifs). Un écart sur `donnees` ou `profils` se vérifie ligne par ligne. Seule une ligne dont `maj_le` est postérieure au relevé « avant » (modifiée par son propriétaire) est acceptée. Tout autre écart = STOP.
 
 ## Sauvegarde (avant la migration, par Claude, lecture seule)
 Dossier `~/MHX-Code/sauvegardes/2026-09-XX-avant-v56/`, hors dépôt (droits 600), comme pour la v49 :
@@ -83,7 +86,7 @@ select md5(contenu::text), user_id, outil, maj_le from public.donnees order by 2
 select tablename, policyname, cmd, roles, qual, with_check from pg_policies where schemaname = 'public' order by 1, 2;
 select proname, pg_get_functiondef(oid) from pg_proc where pronamespace = 'public'::regnamespace order by 1;
 ```
-Contrôle : chaque ligne relue a le même md5 que la base, et les 7 clients y sont.
+Contrôle : chaque ligne relue a le même md5 que la base, et les 16 comptes (profils) y sont avec toutes leurs lignes.
 
 ## Comptage avant / après
 - Les empreintes de `~/MHX-Code/sauvegardes/empreintes.sql` : nombre de lignes et md5 de chaque table, `auth.users`, Storage, rôles.
@@ -96,9 +99,9 @@ Attendu après la migration :
 
 ## Ordre après le « oui »
 1. Sauvegarde et relevé « avant ».
-2. Répétition : `begin;` puis la migration, puis les 23 tests, puis `rollback;`. Attendu : 23/23, et une base inchangée (empreintes).
+2. Répétition : `begin;` puis la migration, puis les 23 tests (qui créent un prospect fictif dans la table des comptes, annulé avec tout le reste). Attendu : « 23 / 23 tests ok… Annulation forcée », et une base inchangée (empreintes, aucune table `connexions`).
 3. Migration réelle (`apply_migration`, nom `v56_compteur_connexions`).
-4. Les 23 tests de nouveau (transaction annulée), puis le relevé « après ». Un écart = STOP et retour arrière.
+4. Les 23 tests de nouveau (annulés de la même façon), puis le relevé « après ». Un écart = STOP et retour arrière.
 5. Relecture indépendante, puis `git push origin main` (v56). GitHub rejoue le banc et publie s'il est vert.
 6. Vérification en ligne : pied de page « · 56 », « Mes clients » et « Prospects » sur téléphone. Tu vérifies ensuite avec ton compte de test : ouvre l'app avec, puis regarde sa ligne dans « Mes clients ».
 

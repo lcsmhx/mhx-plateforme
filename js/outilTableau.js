@@ -42,7 +42,7 @@ const outilTableau = {
   async init(){
     const zone = $("tb-vue"); if (!zone) return;
     let profils, parClient, contenus;
-    try { ({ profils, parClient, contenus } = await Clients.charger()); }
+    try { ({ profils, parClient, contenus } = await Clients.charger({ connexions: false })); }   // v56 : le compteur de connexions n'est pas affiche ici
     catch(e){ zone.innerHTML = `<section class="panel"><div class="empty">Impossible de charger tes clients pour le moment.</div></section>`; return; }
     if (!zone.isConnected) return;
     const lignes = Clients.resumer(profils, parClient, contenus);

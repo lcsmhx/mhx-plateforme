@@ -11,9 +11,15 @@
 --     compte est lu dans son jeton, auth.uid() ; la fonction ne prend aucun paramètre) ; elle ne peut ni lire la table, ni
 --     y écrire directement (aucun droit INSERT / UPDATE / DELETE / TRUNCATE, aucune règle d'écriture) ;
 --   * le coach (est_coach()) : lire toute la table ; il n'y écrit pas directement non plus ;
+--   * la clé de service (fonctions serveur, jamais dans l'app) garde tous les droits, comme sur toutes les tables ;
 --   * l'anonyme (clé publique, sans session) : rien, ni la table, ni la fonction.
 -- Suppression d'un compte (fonction supprimer-acces) : sa ligne part avec lui (clé étrangère ON DELETE CASCADE, comme
 -- donnees et profils) : la suppression d'un compte n'est jamais bloquée par cette table.
+
+-- La clé étrangère vers auth.users pose un court verrou sur auth.users jusqu'à la fin de la transaction : si une autre
+-- transaction le tient, on abandonne au bout de 5 s (rien n'est appliqué, on réessaie) au lieu de faire attendre les
+-- connexions et les inscriptions derrière nous.
+set local lock_timeout = '5s';
 
 create table public.connexions (
   user_id uuid primary key references auth.users (id) on delete cascade,

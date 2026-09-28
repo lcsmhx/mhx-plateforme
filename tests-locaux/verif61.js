@@ -90,8 +90,9 @@ function base(opts){
   const donnees = clone(F.donnees);
   donnees.forEach(d => { if (d.user_id === F.IDS.c3) d.maj_le = avant(12 * J + 3 * H); });   // Julien : 12 j entiers pendant toute la suite
   /* verif61 : cx = la table connexions (par compte), notees = chaque appel de noter_connexion, cxLectures = chaque accès à la table ;
-     cxAbsente (base sans la migration : 404), cxRefusee (retour arrière : 403), cxPanne (réseau coupé), cxRetard (ms) */
-  const db = { profils, donnees, cx: {}, notees: [], cxLectures: [], cxAbsente: false, cxRefusee: false, cxPanne: false, cxRetard: 0, emails_prospects: [], sansJournal: false, ecritures: [], refus: [], lectures: [], journal: [], chemins: [],
+     cxAbsente (base sans la migration : 404), cxRefusee (retour arrière : 403), cxPanne (réseau coupé), cxRetard (ms),
+     cx401 (jeton expiré : n refus 401 avant d'accepter) ; les instants sont rendus comme PostgREST (…123456+00:00) */
+  const db = { profils, donnees, cx: {}, notees: [], cxLectures: [], cxAbsente: false, cxRefusee: false, cxPanne: false, cxRetard: 0, cx401: 0, emails_prospects: [], sansJournal: false, ecritures: [], refus: [], lectures: [], journal: [], chemins: [],
     fonctions: [], inscriptions: [], emails: {}, connexions: {}, inscription: {}, lectureKo: opts.lectureKo || [], retardLecture: {}, retard: {},
     reponseFonction: { status: 200, body: { ok: true } },
     /* v52 (lot A) : mot de passe oublié et changement d'adresse (erreurs simulées), renouvellements de session, polices lentes */
@@ -180,9 +181,10 @@ async function repondre(r, who, db){
     if (db.cxPanne) return r.abort().catch(() => {});
     if (db.cxAbsente) return json({ code: "PGRST202", message: "Could not find the function public.noter_connexion without parameters in the schema cache" }, 404);
     if (db.cxRefusee) return json({ code: "42501", message: "permission denied for function noter_connexion" }, 403);
+    if (db.cx401 > 0) { db.cx401--; return json({ code: "PGRST303", message: "JWT expired" }, 401); }
     const par = appelant(req);
     if (m !== "POST" || !par) return json({ code: "42501", message: "permission denied for function noter_connexion" }, 401);
-    const jour = jourParis(Date.now()), maint = new Date().toISOString(), l = db.cx[par];
+    const jour = jourParis(Date.now()), maint = pgInstant(new Date().toISOString()), l = db.cx[par];
     if (!l) db.cx[par] = { user_id: par, nombre: 1, premiere: maint, derniere: maint, dernier_jour: jour };
     else { if (jour > l.dernier_jour) { l.nombre++; l.dernier_jour = jour; } if (maint > l.derniere) l.derniere = maint; }
     return json(null, 204);
@@ -452,6 +454,8 @@ const filtre = async (page, f) => { await page.click(`[data-filtre="${f}"]`); aw
 const toasts = page => page.evaluate(() => (window.__toasts || []).slice()).catch(() => []);
 /* ---------- aides du compteur ---------- */
 const jourParis = t => { const P = {}; new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date(t)).forEach(x => { P[x.type] = x.value; }); return P.year + "-" + P.month + "-" + P.day; };
+/* un instant tel que PostgREST le rend (timestamptz) : microsecondes et « +00:00 » */
+const pgInstant = iso => String(iso).replace(/\.(\d{3})Z$/, ".$1456+00:00");
 const FUSEAU = "Asia/Makassar";   // l'appareil du coach (Bali) : la date et l'heure s'affichent à son heure
 /* la date et l'heure attendues (jj/mm/aaaa hh:mm à l'heure de l'appareil du coach), calculées sans l'app */
 const quandCoach = v => { const P = {}; new Intl.DateTimeFormat("en-GB", { timeZone: FUSEAU, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date(v)).forEach(x => { P[x.type] = x.value; }); return P.day + "/" + P.month + "/" + P.year + " " + P.hour + ":" + P.minute; };
@@ -463,7 +467,7 @@ const TEXTE_CX = /Connexions|Dernière connexion|connexions? (notée|comptée)/i
 const CX_TEST = { nombre: 12, derniere: avant(3 * H), premiere: avant(20 * J) };
 const CX_LEA = { nombre: 3, derniere: avant(26 * H), premiere: avant(3 * J) };
 function avecLignes(db){
-  const l = (uid, o) => { db.cx[uid] = Object.assign({ user_id: uid, dernier_jour: jourParis(Date.parse(o.derniere)) }, o); };
+  const l = (uid, o) => { db.cx[uid] = Object.assign({ user_id: uid, dernier_jour: jourParis(Date.parse(o.derniere)) }, o, { derniere: pgInstant(o.derniere), premiere: pgInstant(o.premiere) }); };
   l(TESTEUR.id, CX_TEST); l(F.IDS.c1, { nombre: 5, derniere: avant(H), premiere: avant(10 * J) }); l(LEA, CX_LEA);
   return db;
 }
@@ -549,6 +553,18 @@ const titre = (page, uid, col) => page.$eval(`#tb-clients [data-ouvrir="${uid}"]
     await pt.goto(URL0); await pret(pt, "#acc-vue h1");
     await cacher(pt); await pt.clock.fastForward(11 * MIN); await montrer(pt); await attendre(pt, 800);
     ok("B : Thomas (non suivi) : 11 min en arrière-plan puis revenue : toujours rien", notees(dbt).length === 0, JSON.stringify(notees(dbt)));
+  });
+
+  await bloc("B. jeton expiré au retour", async () => {
+    /* le cas le plus courant sur téléphone : l'app revient après plus d'une heure, le jeton a expiré (401) : l'app renouvelle
+       la session et réessaie une fois, sans bandeau « session perdue » */
+    const db = decor();
+    const { page } = await contexte(b, qui(LEA, "lea@exemple.fr"), db, { horloge: true });
+    await page.goto(URL0); await pret(page, "#vue"); await attendre(page, 600);
+    const d1 = db.cx[LEA] && db.cx[LEA].derniere;
+    db.cx401 = 1;
+    await cacher(page); await page.clock.fastForward(70 * MIN); await montrer(page); await attendre(page, 1500);
+    ok("B : revenue après 70 min, jeton refusé (401) : session renouvelée, la connexion est notée au 2e essai, sans bandeau « session perdue »", notees(db, LEA).length === 3 && db.tokens.includes("refresh_token") && db.cx[LEA].nombre === 1 && db.cx[LEA].derniere > d1 && !(await page.$("#session-perdue")), notees(db, LEA).length + " " + JSON.stringify(db.tokens) + " " + JSON.stringify(db.cx[LEA]));
   });
 
   /* =================== C. base sans la migration, retour arrière, réseau coupé =================== */

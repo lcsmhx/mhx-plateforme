@@ -431,8 +431,11 @@ const Clients = {
       return m;
     } catch(e){ return null; }
   },
-  async charger(){
-    const cx = this.lireConnexions();   // v56 : en meme temps que le reste (elle ne rejette jamais)
+  /* v56 : opts.connexions === false : sans le compteur (tableau de bord, qui ne l'affiche pas) */
+  async charger(opts){
+    /* v56 : en meme temps que le reste ; elle ne rejette jamais et ne retarde jamais la liste de plus de 8 s (« — » alors) */
+    const cx = opts && opts.connexions === false ? Promise.resolve(null)
+      : Promise.race([this.lireConnexions(), new Promise(r => setTimeout(() => r(null), 8000))]);
     const profils = await this.pages("/rest/v1/profils?select=*&order=cree_le.desc,id.asc", l => String(l && l.id));
     /* les historiques (jusqu'a 24 plans par client) ne servent pas ici :
        on ne les telecharge pas */

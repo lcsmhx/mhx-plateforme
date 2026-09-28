@@ -67,7 +67,7 @@ HORS_BANC="verif44 verif45 verif46 verif47 verif49"
 # case santé en version 2026-09-28b pour les nouvelles inscriptions (verif39, verif55 adaptées) ; verif39 47 → 48 (les deux
 # liens de la connexion centrés à 320 / 375 / 390 px) ; verif52 136 → 137 (inscription_libre: true n'est accepté que si le
 # commit qui l'a passé à true contient « ouverture de l'inscription » dans son message ; false passe toujours).
-# v56 (compteur de connexions côté coach) : verif61 47 (nouvelle suite, partie 6) ; l'appel noter_connexion (au démarrage d'un
+# v56 (compteur de connexions côté coach) : verif61 48 (nouvelle suite, partie 6) ; l'appel noter_connexion (au démarrage d'un
 # prospect ou d'un compte suivi) n'est pas une écriture de l'app dans les données : les simulations de verif40, 51 à 58 et 60
 # le mettent à part (il est testé dans verif61) ; verif52 compare Mes clients à main sans les 2 nouvelles colonnes ;
 # nombres inchangés.
@@ -76,7 +76,7 @@ attendu() {
     flux) echo 19;; verif34) echo 13;; verif35) echo 14;; verif36) echo 13;; verif37) echo 12;; verif38) echo 66;;
     verif-xss) echo 5;; verif39) echo 48;; verif40) echo 64;; verif41) echo 25;; verif42) echo 20;; verif43) echo 27;;
     verif48) echo 42;; verif50) echo 57;; verif51) echo 89;; verif52) echo 137;; verif53) echo 114;;
-    verif54) echo 60;; verif55) echo 164;; verif56) echo 247;; verif57) echo 152;; verif58) echo 126;; verif60) echo 60;; verif61) echo 47;; rig) echo 90;; *) echo "";;
+    verif54) echo 60;; verif55) echo 164;; verif56) echo 247;; verif57) echo 152;; verif58) echo 126;; verif60) echo 60;; verif61) echo 48;; rig) echo 90;; *) echo "";;
   esac
 }
 # Partie de chaque suite pour les jobs parallèles de GitHub Actions (10 parties, durées équilibrées, 4 à 5 minutes chacune).
