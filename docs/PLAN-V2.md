@@ -101,19 +101,19 @@ Démarre derrière l'interrupteur en « test » (Étape 1 d) : les autres client
 
 ## Chantier 2 — Ouverture de l'inscription
 Partie code seulement dans la mission autonome : rien n'est activé, rien n'est déployé, aucun email ne part.
-- [ ] Emails d'inscription (confirmation, mot de passe oublié) : via le SMTP de Gmail depuis mhx.coaching@gmail.com, avec un mot de passe d'application (à vérifier). Newsletter : Brevo en plan gratuit. Pas de nom de domaine pour l'instant. Pas de SMS.
-- [ ] Deux flux séparés : « service » (tous les inscrits, aucune promotion, aucun lien vers le bilan) et « newsletter » (seulement ceux qui ont coché). Arrêt des emails de vente dès qu'un bilan est réservé. 2 emails par semaine maximum.
-   - [ ] Précision : préparer les deux flux dans la fonction existante, sans la déployer ; arrêt des emails de vente dès qu'un bilan est coché « réservé ».
-- [ ] Pas de pixel de suivi d'ouverture sur la newsletter. Lien de désinscription dans chaque email.
+**Simplifié par Lucas le 28/09** : ni newsletter construite, ni relances par email (J3 et suivantes), ni exemples de newsletter : Lucas gérera l'envoi lui-même plus tard. La fonction `supabase/functions/emails-prospects` (jamais déployée) n'est plus développée.
+- [ ] Emails d'inscription (confirmation, mot de passe oublié) : via le SMTP de Gmail depuis mhx.coaching@gmail.com, avec un mot de passe d'application (à vérifier). Pas de nom de domaine pour l'instant. Pas de SMS.
+- [ ] Case newsletter à l'inscription (texte validé, facultative, décochée), avec la date et la version du texte enregistrées. *(fait au chantier 1, lot B)*
+- [ ] Retrait de cet accord possible dans le Profil (date et version enregistrées). *(chantier 1, lot B)*
+- [ ] Espace coach : la liste des personnes qui ont coché la case, exportable en CSV (prénom, nom, email, date de l'accord).
 - [ ] Précision : accords — enregistrer la date et la version du texte pour la case santé et pour la case newsletter.
 - [ ] Q6 : écran unique d'acceptation (conditions + données de santé) à la prochaine connexion des clients sans accord enregistré, derrière l'interrupteur en « test ».
-- [ ] Politique de confidentialité et mentions légales à jour (suivi d'activité, newsletter, Supabase, Brevo, Calendly).
-   - [ ] Précision : rédiger les brouillons (suivi d'activité, newsletter, Supabase, Brevo, Calendly, Gmail) avec des champs à compléter par Lucas. Droit de suppression : sur simple demande par email.
-- [ ] Compteur simple : inscrits → 3 questions remplies → bilans réservés → clients (côté coach).
-- [ ] Mettre à jour `docs/OUVERTURE-INSCRIPTION.md` : marche à suivre pas à pas pour Lucas (mot de passe d'application Gmail et SMTP dans Supabase, compte Brevo gratuit, test prospect complet par Grok, puis ouverture), avec les liens à cliquer.
+- [ ] Politique de confidentialité et mentions légales : brouillons avec des champs à compléter par Lucas (suivi d'activité, newsletter — outil d'envoi à préciser —, Supabase, Calendly, Gmail). Droit de suppression : sur simple demande par email.
+- [ ] Compteur simple côté coach : inscrits → 3 questions remplies → bilans réservés → clients.
+- [ ] Mettre à jour `docs/OUVERTURE-INSCRIPTION.md` : marche à suivre pas à pas pour Lucas (mot de passe d'application Gmail et SMTP dans Supabase, test prospect complet par Grok, puis ouverture), avec les liens à cliquer.
 - [ ] Vrai test prospect complet (par Grok, compte jetable) sur la nouvelle version. *(Lucas, après la mission)*
 - [ ] Ensuite seulement, Lucas ouvre l'inscription lui-même. *(Lucas)*
-- [ ] Fin de la partie code : banc à jour et vert, téléphone + ordi, relecture indépendante, version suivante, note Grok (5 à 10 tests), « État actuel », commit, push, vérification en ligne.
+- [ ] Fin de la partie code : banc à jour et vert, téléphone + ordi, vérificateur indépendant sur ce qui est risqué, version suivante, note Grok (5 à 10 tests), « État actuel », commit, push, vérification en ligne.
 
 ## Fin de mission
 - [ ] Résumé final unique pour Lucas (voir « Résumé final » plus haut).
@@ -128,6 +128,7 @@ Partie code seulement dans la mission autonome : rien n'est activé, rien n'est 
 - **Q5** emails : (a) la relance J3 va dans le flux newsletter ; (b) **les relances de vente (J3 et suivantes) s'arrêtent dès qu'un bilan est coché « réservé »** ; la newsletter hebdomadaire continue pour les prospects qui n'ont pas signé et s'arrête quand la personne devient cliente ; (c) lien de désinscription aussi dans les emails de service ; (d) page de désinscription en anglais aussi ; (e) Brevo ne permet pas de retirer le pixel : dans la marche à suivre, activer le **suivi anonyme** ; nouveau texte de la case newsletter (nouvelle version) : « Je veux recevoir par email les conseils, témoignages et offres de coaching de MHX Coaching (1 à 2 emails par semaine maximum) et j'accepte la mesure de leur ouverture. Désinscription en 1 clic dans chaque email. »
 - **Q6** accords des clients existants : **à coder dans cette mission** : un écran unique d'acceptation (conditions + données de santé) à la prochaine connexion des clients qui n'ont aucun accord enregistré, derrière l'interrupteur en « test » (Lucas l'activera quand la politique de confidentialité sera finale et ses clients prévenus) ; l'annoncer dans le message WhatsApp.
 - **Q7** âge : garde-fou 18 ans dans le calculateur, et l'âge intégré à la case des conditions, sans case en plus : « J'ai 18 ans ou plus et j'accepte les conditions d'utilisation et la politique de confidentialité. »
+- **Chantier 2 simplifié (28/09, plus tard dans la journée)** : ni newsletter, ni relances par email, ni exemples de newsletter (Lucas gérera l'envoi plus tard). On garde la case newsletter (texte validé, date et version), le retrait dans le Profil, et côté coach la liste des personnes qui ont coché la case, exportable en CSV (prénom, nom, email, date de l'accord). Les emails d'inscription restent prévus via le SMTP de Gmail. Les réponses Q5 a, b, c, d ne s'appliquent plus ; Q5 e (texte de la case avec « j'accepte la mesure de leur ouverture ») reste.
 - **Décisions prises seules par Claude jusqu'au 28/09** (liste donnée à Lucas) : toutes validées. Tableau de bord : liste « À traiter maintenant » sous les 2 tuiles, 5 lignes au plus, affichée seulement quand elle n'est pas vide.
 
 ## Questions pour Lucas
