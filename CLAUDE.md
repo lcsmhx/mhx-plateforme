@@ -27,7 +27,7 @@ Lis ce fichier en entier au début de chaque conversation. Il passe avant tout a
 - Après chaque mise en ligne : attends que « Tests puis publication » soit vert (https://github.com/lcsmhx/mhx-plateforme/actions, ou sans connexion `curl -s 'https://api.github.com/repos/lcsmhx/mhx-plateforme/actions/runs?branch=main&per_page=1'`), vérifie que le pied de page affiche la nouvelle version, puis ouvre le site en format téléphone (connexion, pages principales). Si quelque chose casse : `git revert` + push tout de suite et note dans `NOTESCLAUDE.md` ; en urgence, Lucas lance « Tests puis publication » à la main avec la case « urgence » (publie `main` sans attendre le banc).
 - **La publication d'urgence sert uniquement à revenir en arrière** (remettre en ligne une version déjà testée, après un `git revert`), **jamais à publier du nouveau code sans tests.**
 - Tu n'attends pas la fin des tests en ligne pour avancer : pousse, enchaîne sur la suite, puis vérifie le résultat (retour arrière si c'est rouge).
-- **Tu n'ouvres jamais l'inscription publique** (`inscription_libre` reste `false`). C'est Lucas qui le fera lui-même.
+- **Tu n'ouvres jamais l'inscription publique** (`inscription_libre`, ouverte par Lucas en v54 ; la refermer ou la rouvrir reste sa décision). C'est Lucas qui pousse ce changement lui-même.
 - Tu n'écris jamais « ✅ fait » pour une chose que tu n'as pas vérifiée toi-même.
 
 ## Données : zéro perte
@@ -53,6 +53,7 @@ Lis ce fichier en entier au début de chaque conversation. Il passe avant tout a
 - Mets à jour la section « État actuel » ci-dessous en 2 ou 3 lignes.
 
 ## État actuel
-- En ligne : **v53** (28/09/2026, `8372a97`, vérifiée) : feedback du dimanche et suivi des visites des clients derrière leurs interrupteurs (« test » : compte de test et coach seulement ; Lucas les passe sur « tous ») ; côté coach simplifié (2 tuiles, sans score ni température, « Bilan réservé », liste newsletter en CSV, compteur) ; « Mon journal » et calculateur pour les clients. Inscription publique **fermée** (`inscription_libre: false`, Lucas l'ouvre avec `docs/OUVERTURE-INSCRIPTION.md`). Aucun email envoyé par l'app.
+- En ligne : **v53** (28/09/2026, `8372a97`, vérifiée) : feedback du dimanche et suivi des visites des clients derrière leurs interrupteurs (« test » : compte de test et coach seulement ; Lucas les passe sur « tous ») ; côté coach simplifié (2 tuiles, sans score ni température, « Bilan réservé », liste newsletter en CSV, compteur) ; « Mon journal » et calculateur pour les clients. Aucun email envoyé par l'app.
+- **v54** (28/09/2026) : inscription publique **ouverte** (`inscription_libre: true` dans `js/config.js`, décision de Lucas, Supabase réglé par lui : « Confirm email » désactivé, « Allow new users to sign up » activé). Pour refermer : `false`, ou « Allow new users to sign up » désactivé dans Supabase. Les tests forcent la valeur dans les deux sens.
 - Fichiers : `index.html` (HTML) + `css/` + `js/` depuis la 52.1. GitHub Actions : banc en 10 parties sur `main` et `v2/*`, publication seulement si tout est vert.
-- Suite : actions de Lucas (interrupteurs, ouverture de l'inscription, brouillons légaux) ; reportés après l'ouverture : les 3 cartes (lot F), l'écran d'acceptation (Q6). Plan : `docs/PLAN-V2.md`.
+- Suite : actions de Lucas (interrupteurs, brouillons légaux) ; reportés après l'ouverture : les 3 cartes (lot F), l'écran d'acceptation (Q6). Plan : `docs/PLAN-V2.md`.

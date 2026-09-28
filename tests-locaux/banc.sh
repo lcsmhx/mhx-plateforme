@@ -57,6 +57,10 @@ HORS_BANC="verif44 verif45 verif46 verif47 verif49"
 # (tuiles d'avant, cartes « Qui nécessite ton attention », score, température, journal des emails, panneau des Nouveautés
 # du tableau de bord) : verif37 15 → 12, verif38 67 → 66, verif39 50 → 47, verif43 34 → 27, verif51 92 → 89,
 # verif52 186 → 136, verif53 126 → 114, verif54 64 → 60, verif55 165 → 164 ; verif42, verif56, verif57 inchangées (adaptées).
+# v54 (ouverture de l'inscription, décision de Lucas : inscription_libre: true dans js/config.js) : verif39, 40, 50, 52, 53
+# et rig forcent la valeur voulue dans les deux sens (fermée par défaut, comme avant) ; verif55 ouvre depuis la valeur du
+# fichier ; verif52 vérifie une seule valeur (true ou false) au lieu de « false » : le banc reste vert si Lucas la referme.
+# Aucune vérification ajoutée ni retirée : nombres inchangés.
 attendu() {
   case "$1" in
     flux) echo 19;; verif34) echo 13;; verif35) echo 14;; verif36) echo 13;; verif37) echo 12;; verif38) echo 66;;

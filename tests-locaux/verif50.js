@@ -29,7 +29,8 @@ const OUT = path.join(__dirname, "captures", "v50"); fs.mkdirSync(OUT, { recursi
 /* reglages du HTML servi : inscription ouverte, pre-remplissage eteint (le depot garde false / true) */
 let inscriptionLibre = false, prerempliEteint = false;
 /* 52.1 : les retouches valent pour la page et pour ses fichiers (ces réglages sont dans js/config.js) */
-const retouche = h => { if (inscriptionLibre) h = h.replace("inscription_libre: false", "inscription_libre: true");
+/* v54 : l'inscription est ouverte dans le fichier ; la retouche force la valeur voulue (fermée par défaut), dans les deux sens */
+const retouche = h => { h = h.replace(/inscription_libre: (?:true|false)/, "inscription_libre: " + inscriptionLibre);
   if (prerempliEteint) h = h.replace("calendly_prerempli: true", "calendly_prerempli: false"); return h; };
 const { servirFichier } = require("./fichiers");   // 52.1 : la page charge css/ et js/, servis depuis son dossier (fichiers.js)
 const server = http.createServer((req, res) => {

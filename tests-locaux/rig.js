@@ -27,7 +27,8 @@ let inscriptionLibre = false;   // v44 : l'ecran d'inscription n'existe que si C
 /* 52.1 : la page charge css/ et js/ (servis depuis son dossier, fichiers.js) ; la retouche vaut aussi pour ces fichiers
    (inscription_libre est dans js/config.js) */
 const { servirFichier } = require("./fichiers");
-const retouche = h => inscriptionLibre ? h.replace("inscription_libre: false", "inscription_libre: true") : h;
+/* v54 : l'inscription est ouverte dans le fichier ; la retouche force la valeur voulue (fermée par défaut), dans les deux sens */
+const retouche = h => h.replace(/inscription_libre: (?:true|false)/, "inscription_libre: " + inscriptionLibre);
 const server = http.createServer((req, res) => {
   if (servirFichier(req, res, HTML, retouche)) return;
   if (req.url.split("?")[0] === "/" || req.url.startsWith("/index.html")) {

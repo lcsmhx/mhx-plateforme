@@ -37,7 +37,9 @@ let inscriptionLibre = false;
    est dans js/config.js). Les fichiers d'une page de référence (/?ref=main, reconnue à l'en-tête Referer de ses requêtes)
    viennent de la même révision git que sa page. */
 const { servirFichier, source } = require("./fichiers");
-const retouche = h => { if (inscriptionLibre) h = h.replace("inscription_libre: false", "inscription_libre: true"); return h; };
+/* v54 : l'inscription est ouverte dans le fichier (inscription_libre: true) ; la retouche FORCE la valeur voulue
+   (inscriptionLibre, fermée par défaut comme avant), dans les deux sens : la suite reste valable si Lucas la referme */
+const retouche = h => h.replace(/inscription_libre: (?:true|false)/, "inscription_libre: " + inscriptionLibre);
 const deRef = {};
 const lireRef = f => deRef[f] || (deRef[f] = require("child_process").execFileSync("git", ["show", REF_NOM + ":" + f], { cwd: path.join(__dirname, ".."), maxBuffer: 64e6, stdio: ["ignore", "pipe", "ignore"] }).toString("utf8"));
 const server = http.createServer((req, res) => {
@@ -626,7 +628,8 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
   const NEWS = "Je veux recevoir par email les conseils, témoignages et offres de coaching de MHX Coaching (1 à 2 emails par semaine maximum). Désinscription en 1 clic dans chaque email.";
   const V_NEWS = "2026-09-28c";   // version du texte de la case newsletter (DECOUVERTE.accords.newsletter)
   await bloc("F. case de l'inscription", async () => {
-    ok("le fichier testé garde inscription_libre: false (l'inscription n'est ouverte ici que dans la page servie par le banc)", source(HTML).includes("inscription_libre: false"));
+    /* v54 : l'inscription est ouverte (true) ; le banc doit rester vert si Lucas la referme (false) : une seule valeur, true ou false */
+    ok("le fichier testé porte une seule valeur inscription_libre (true ou false), que le banc sait retoucher", (source(HTML).match(/inscription_libre: (?:true|false)\b/g) || []).length === 1);
     inscriptionLibre = true;
     try {
       for (const coche of [true, false]) {

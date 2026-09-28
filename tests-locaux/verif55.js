@@ -69,6 +69,9 @@ async function avec(liste, fn){
   retouches = liste;
   try { await fn(); } finally { retouches = []; }
 }
+/* v54 : l'inscription est ouverte dans le fichier (inscription_libre: true) ; les blocs d'inscription l'ouvrent quand même,
+   depuis la valeur du fichier : ils restent valables si Lucas la referme (false) */
+const LIBRE_FICHIER = /inscription_libre: true/.test(source(HTML)) ? "inscription_libre: true" : "inscription_libre: false";
 
 /* ---------- résultats ---------- */
 const res = [];
@@ -524,7 +527,7 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
   /* =================== B. corrections de la nuit : emails du compte =================== */
   await bloc("B. emails du compte", async () => {
     /* inscription (page servie avec inscription_libre: true) : erreurs d'envoi et limites */
-    await avec([["inscription_libre: false", "inscription_libre: true"]], async () => {
+    await avec([[LIBRE_FICHIER, "inscription_libre: true"]], async () => {
       for (const [quoi, err, attendu, langue] of [
         ["serveur d'emails en panne", { status: 500, msg: "Error sending confirmation email" }, TX.envoi_rate, ""],
         ["limite horaire d'emails du projet", { status: 429, msg: "email rate limit exceeded" }, TX.trop_emails, ""],
@@ -722,7 +725,7 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
 
   /* =================== E. inscription : nom, trois cases, accords datés et versionnés, copie « emails » =================== */
   await bloc("E. inscription : écran", async () => {
-    await avec([["inscription_libre: false", "inscription_libre: true"]], async () => {
+    await avec([[LIBRE_FICHIER, "inscription_libre: true"]], async () => {
       for (const langue of ["", "en"]) {
         const T = k => TXB[k + (langue ? "_en" : "")], L = langue ? " (anglais)" : "";
         const db = base();
@@ -749,7 +752,7 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
   });
 
   await bloc("E. inscription : accords et copie", async () => {
-    await avec([["inscription_libre: false", "inscription_libre: true"]], async () => {
+    await avec([[LIBRE_FICHIER, "inscription_libre: true"]], async () => {
       for (const news of [false, true]) {
         const ZID = PID(40 + (news ? 1 : 0)), mail = "zoe" + (news ? 1 : 0) + "@exemple.fr", Q = news ? "AVEC la newsletter" : "sans la newsletter";
         const db = base(); db.inscription.id = ZID;
@@ -783,7 +786,7 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
   });
 
   await bloc("E. inscription : anglais, longueur, lien de confirmation", async () => {
-    await avec([["inscription_libre: false", "inscription_libre: true"]], async () => {
+    await avec([[LIBRE_FICHIER, "inscription_libre: true"]], async () => {
       /* anglais + noms trop longs (valeurs posées par script : maxlength ne s'applique pas) */
       {
         const ZID = PID(42), db = base(); db.inscription.id = ZID;
@@ -981,7 +984,7 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
       && /for adults only/.test(d.en[0]) && /not medical advice/.test(d.en[0]), JSON.stringify([d.en[i1], d.en[i6], d.en[i7]]).slice(0, 400));
     await c.close();
     /* le volet des conditions depuis l'inscription, en français puis en anglais : tous les paragraphes, dans la bonne langue */
-    await avec([["inscription_libre: false", "inscription_libre: true"]], async () => {
+    await avec([[LIBRE_FICHIER, "inscription_libre: true"]], async () => {
       for (const langue of ["", "en"]) {
         const db2 = base();
         const x = await contexte(b, null, db2, { langue });

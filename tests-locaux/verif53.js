@@ -43,7 +43,9 @@ const BLOCS = (process.env.VERIF53_BLOCS || "").split(",").map(x => x.trim()).fi
 const OUT = path.join(__dirname, "captures", "v53"); fs.mkdirSync(OUT, { recursive: true });
 let inscriptionLibre = false;
 /* 52.1 : la retouche vaut pour la page et pour ses fichiers (inscription_libre est dans js/config.js) */
-const retouche = h => { if (inscriptionLibre) h = h.replace("inscription_libre: false", "inscription_libre: true"); return h; };
+/* v54 : l'inscription est ouverte dans le fichier (inscription_libre: true) ; la retouche FORCE la valeur voulue
+   (inscriptionLibre, fermée par défaut comme avant), dans les deux sens : la suite reste valable si Lucas la referme */
+const retouche = h => h.replace(/inscription_libre: (?:true|false)/, "inscription_libre: " + inscriptionLibre);
 const { servirFichier, source } = require("./fichiers");   // 52.1 : la page charge css/ et js/, servis depuis son dossier (fichiers.js)
 const server = http.createServer((req, res) => {
   if (servirFichier(req, res, HTML, retouche)) return;

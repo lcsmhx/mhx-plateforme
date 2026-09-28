@@ -16,7 +16,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-09-28 · 53",
+    version: "2026-09-28 · 54",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -29,8 +29,9 @@ const CONFIG = {
     /* v39 — Inscription libre : « Créer mon compte » sur l'écran de connexion.
        Laisse false tant que l'inscription publique est coupée dans Supabase
        (Authentication → Sign In / Providers → Email). Un compte créé ainsi
-       naît « prospect » (compte gratuit) : c'est la base qui le décide. */
-    inscription_libre: false,
+       naît « prospect » (compte gratuit) : c'est la base qui le décide.
+       v54 : ouverte le 28/09/2026 (décision de Lucas, Supabase réglé par lui). Pour refermer : false. */
+    inscription_libre: true,
 
     /* v40 — Mode gratuit (prospects). Le lien de l'appel découverte, et les
        SEULS onglets ouverts à un prospect : tous les autres affichent un
