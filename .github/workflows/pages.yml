@@ -8,13 +8,15 @@
 # Urgence (RETOUR ARRIÈRE SEULEMENT) : Actions → « Tests puis publication » → Run workflow, case « urgence » cochée : publie
 # main tout de suite, sans attendre le banc. Seulement pour remettre en ligne une version déjà testée (après un git revert),
 # JAMAIS pour publier du nouveau code sans tests (règle de Lucas, CLAUDE.md).
+# Branches de travail v2/* : le même banc (mêmes tests, même coupure de la vraie base), JAMAIS de publication, dans une
+# file d'attente séparée qui ne retarde jamais la publication de main (le banc de GitHub fait foi, décision de Lucas).
 # Gratuit : dépôt public, machines standard de GitHub. Les journaux publiés en cas d'échec ne contiennent que des
 # données fictives (tests-locaux/fixtures.js).
 name: Tests puis publication
 
 on:
   push:
-    branches: [main]
+    branches: [main, "v2/**"]
   workflow_dispatch:
     inputs:
       urgence:
@@ -25,25 +27,26 @@ on:
 permissions:
   contents: read
 
-# Une seule exécution à la fois ; la plus récente en attente remplace les autres, une publication en cours n'est pas coupée.
+# main : une seule exécution à la fois, la plus récente en attente remplace les autres, une publication en cours n'est
+# pas coupée. Branches v2/* : leur propre file (une par branche), un nouveau push annule le banc en cours de la branche.
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  group: ${{ github.ref == 'refs/heads/main' && 'pages' || format('banc-{0}', github.ref) }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   banc:
-    # Le banc est découpé en 4 parties qui tournent en même temps (tests-locaux/banc.sh, partie()) : environ 10 à 15 minutes
-    # au lieu de 40. Mêmes tests, même exigence : la publication attend que les 4 parties soient vertes.
-    name: Banc de tests ${{ matrix.partie }}/4 (Supabase simulé)
+    # Le banc est découpé en 10 parties qui tournent en même temps (tests-locaux/banc.sh, partie()) : environ 8 minutes.
+    # Mêmes tests, même exigence : la publication attend que les 10 parties soient vertes.
+    name: Banc de tests ${{ matrix.partie }}/10 (Supabase simulé)
     if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.urgence) }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04   # figé (ubuntu-latest passe à Ubuntu 26 le 19/10/2026)
     timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
-        partie: [1, 2, 3, 4]
+        partie: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0   # verif52 compare les écrans d'un client avec le commit publié avant celui-ci
 
@@ -65,7 +68,7 @@ jobs:
           done
           echo "Vraie base et Brevo inaccessibles depuis cette machine : les tests ne peuvent rien y écrire ni rien envoyer."
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
 
@@ -79,15 +82,17 @@ jobs:
           AVANT: ${{ github.event.before }}
         run: |
           export NODE_PATH="$(npm root -g)"
-          # verif52 compare avec le commit publié juste avant (sinon il comparerait main avec lui-même)
-          if [ -n "$AVANT" ] && [ "$AVANT" != "0000000000000000000000000000000000000000" ]; then export VERIF52_REF="$AVANT";
+          # verif52 compare les écrans d'un client : sur main, avec le commit publié juste avant (sinon il comparerait main
+          # avec lui-même) ; sur une branche de travail, avec la version en ligne (origin/main)
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then export VERIF52_REF="origin/main";
+          elif [ -n "$AVANT" ] && [ "$AVANT" != "0000000000000000000000000000000000000000" ]; then export VERIF52_REF="$AVANT";
           else export VERIF52_REF="$(git rev-parse HEAD~1)"; fi
           echo "Référence de comparaison de verif52 : $VERIF52_REF"
-          BANC_PARTIE=${{ matrix.partie }} bash tests-locaux/banc.sh "$RUNNER_TEMP/banc"
+          BANC_PARTIES=10 BANC_PARTIE=${{ matrix.partie }} bash tests-locaux/banc.sh "$RUNNER_TEMP/banc"
 
       - name: Journaux du banc (en cas d'échec)
         if: failure() || cancelled()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: journaux-banc-${{ matrix.partie }}
           path: ${{ runner.temp }}/banc/*.log
@@ -97,7 +102,7 @@ jobs:
     name: Publication GitHub Pages
     needs: banc
     if: ${{ !cancelled() && github.ref == 'refs/heads/main' && (needs.banc.result == 'success' || (github.event_name == 'workflow_dispatch' && inputs.urgence)) }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04   # figé (ubuntu-latest passe à Ubuntu 26 le 19/10/2026)
     permissions:
       contents: read
       pages: write
@@ -118,10 +123,10 @@ jobs:
             echo "::warning::Source GitHub Pages = $type : GitHub a publié ce commit lui-même, sans attendre le banc. Passer la source sur « GitHub Actions » (plan, étape 1 c)."
           fi
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         if: steps.source.outputs.type == 'workflow'
 
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
         if: steps.source.outputs.type == 'workflow'
 
       - uses: actions/jekyll-build-pages@v1
@@ -130,9 +135,9 @@ jobs:
           source: ./
           destination: ./_site
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         if: steps.source.outputs.type == 'workflow'
 
       - id: deploiement
         if: steps.source.outputs.type == 'workflow'
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

@@ -18,6 +18,7 @@ Une nouvelle conversation reprend en lisant seulement `CLAUDE.md` et ce fichier.
 6. Dès que B et C sont finis : D, E et G en parallèle.
 7. En v53, on garde « Mon journal », les alertes du feedback et « À traiter ».
 8. Retirer les vérifications obsolètes de verif49 et ce qui devient inutile (fonction emails v51 et sa lecture côté coach, tuile « Prospects en découverte », mode test « jour 8 »), sans toucher aux données.
+**Mise à jour (Lucas, avant la v52)** : banc sur GitHub seulement (branches `v2/*` poussées pour tests, 10 parties, runner `ubuntu-24.04`) ; suites de fonctions supprimées en HORS_BANC au lieu de les réécrire (garder ce qui protège les clients) ; preuve « échoue sur l'ancienne version » seulement pour données et accès ; une seule relecture, corrections bloquantes seulement (le reste en liste) ; nettoyage en v53 sauf s'il bloque la v52 ; notes Grok / HANDOFF / NOTESCLAUDE seulement à la v52 et à la fin de la v53.
 Quand la v52 est en ligne : envoyer à Lucas la marche à suivre pour ouvrir l'inscription (une étape à la fois, avec les liens), puis enchaîner directement sur la v53.
 
 ## Mission autonome (Lucas, 28/09/2026) — règles qui complètent CLAUDE.md
@@ -87,7 +88,7 @@ En cas de doute, ces règles passent avant `CLAUDE.md` (et la ligne directrice c
 - [ ] 10. Garder le garde-fou 18 ans et la mention « pas un avis médical » existants. (Q7 : garde-fou au calculateur ; case des conditions « J'ai 18 ans ou plus et j'accepte… »)
 - [ ] 11. Bug mineur : un client qui ouvre une page coach (par exemple `#/calculateur`) voit l'Accueil, mais l'adresse ne change pas.
 - [ ] 12. Branche `attente/nuit-28-09` : reprendre les corrections utiles (messages d'erreur en français, session après changement d'adresse, erreurs du Profil). Laisser ce qui concerne l'envoi des emails (aucun email pour l'instant).
-- [ ] 13. GitHub Actions (demande de Lucas du 28/09, à faire à la fin du chantier, sans interrompre les lots) : dans `.github/workflows`, figer le runner sur `ubuntu-24.04` au lieu de `ubuntu-latest` (passage à Ubuntu 26 le 19 octobre) et mettre à jour les actions qui tournent encore sous Node.js 20 ; vérifier que le banc reste vert sur GitHub.
+- [x] 13. *(fait avant la v52 : `ubuntu-24.04`, checkout v7, setup-node v7, upload-artifact v7, configure-pages v6, upload-pages-artifact v5, deploy-pages v5)* GitHub Actions (demande de Lucas du 28/09, à faire à la fin du chantier, sans interrompre les lots) : dans `.github/workflows`, figer le runner sur `ubuntu-24.04` au lieu de `ubuntu-latest` (passage à Ubuntu 26 le 19 octobre) et mettre à jour les actions qui tournent encore sous Node.js 20 ; vérifier que le banc reste vert sur GitHub.
 - [ ] 14. Nettoyage (ligne directrice, point 8) : retirer le mode test « jour 8 » et la tuile « Prospects en découverte » (lot D) ; retirer la fonction d'emails v51 (`supabase/functions/emails-prospects`, sa migration jamais appliquée, `desinscription.html`, son test dans le banc), sans toucher aux données. **v52** — la lecture côté coach (journal des emails, bonus du score) part avec le score en **v53**.
 - [ ] Fin de la v52 : banc à jour et vert, téléphone + ordi, relecture indépendante, version 52, note Grok (5 à 10 tests), « État actuel », commit, push, vérification en ligne, puis marche à suivre d'ouverture envoyée à Lucas (une étape à la fois, avec les liens).
 

@@ -4,7 +4,7 @@ Lis ce fichier en entier au début de chaque conversation. Il passe avant tout a
 
 ## L'app en bref
 - Plateforme MHX Coaching : un seul fichier `index.html` (environ 1 Mo), sans framework.
-- Hébergée sur GitHub Pages : https://lcsmhx.github.io/mhx-plateforme/ — **un push sur `main` part en ligne** : en 1 à 2 minutes et sans attendre les tests tant que la source de Pages est « Deploy from a branch » ; une fois la source passée sur « GitHub Actions » (plan V2, étape 1 c), environ 15 minutes après le push (banc découpé en 4 parties parallèles), et seulement si le banc de tests est vert.
+- Hébergée sur GitHub Pages : https://lcsmhx.github.io/mhx-plateforme/ — **un push sur `main` part en ligne** : en 1 à 2 minutes et sans attendre les tests tant que la source de Pages est « Deploy from a branch » ; la source est « GitHub Actions » depuis le 28/09 : environ 10 minutes après le push (banc découpé en 10 parties parallèles), et seulement si le banc de tests est vert.
 - Backend Supabase. **7 clients réels + 1 coach : ce sont des données de production.**
 - Grok Bot (autre agent) travaille uniquement dans `donnees/`. **Tu ne touches jamais `donnees/`.**
 
@@ -21,7 +21,7 @@ Lis ce fichier en entier au début de chaque conversation. Il passe avant tout a
 5. **À la fin** : résumé en langage simple (ce qui change pour le client, le prospect, le coach), puis demande le « oui » pour la mise en ligne.
 
 ## Mise en ligne
-- **Push autorisé seulement si tout le banc de tests est vert** sur le commit exact que tu pousses (`bash tests-locaux/banc.sh`, arbre propre). Une seule commande : `git push origin main`. Une fois la source de Pages passée sur « GitHub Actions » (étape 1 c), GitHub rejoue le banc et ne publie que s'il est vert ; avant, tout push est publié tel quel.
+- **Le banc de GitHub fait foi** (10 parties en parallèle, environ 8 minutes). Pour tester une branche de travail : `git push origin v2/<nom>` (tests seulement, jamais de publication). Pour mettre en ligne : `git push origin main` ; GitHub rejoue le banc et ne publie que s'il est vert. En local, seulement la suite que tu écris.
 - **Un push par chantier**, à la fin du chantier, après la relecture indépendante.
 - **Jamais de push pour ouvrir l'inscription** ni pour **passer un interrupteur de nouveauté sur « tous »** : c'est Lucas qui le fait.
 - Après chaque mise en ligne : attends que « Tests puis publication » soit vert (https://github.com/lcsmhx/mhx-plateforme/actions, ou sans connexion `curl -s 'https://api.github.com/repos/lcsmhx/mhx-plateforme/actions/runs?branch=main&per_page=1'`), vérifie que le pied de page affiche la nouvelle version, puis ouvre le site en format téléphone (connexion, pages principales). Si quelque chose casse : `git revert` + push tout de suite et note dans `NOTESCLAUDE.md` ; en urgence, Lucas lance « Tests puis publication » à la main avec la case « urgence » (publie `main` sans attendre le banc).

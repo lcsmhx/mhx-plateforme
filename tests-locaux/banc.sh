@@ -9,7 +9,7 @@
 # une erreur de console, une écriture ou une page manquante pendant rig.js, un test de la fonction emails raté.
 # Le banc teste index.html tel qu'il est sur le disque : il ne conclut « vert » que si ce disque est exactement un commit
 # (aucun fichier suivi modifié) du début à la fin. Pour un essai sur des modifications non commitées : BANC_LIBRE=1.
-# Découpage (GitHub Actions, jobs en parallèle) : BANC_PARTIE=1 … 4 ne lance que les suites de cette partie (voir partie()) ;
+# Découpage (GitHub Actions, jobs en parallèle) : BANC_PARTIE=1 … 10 ne lance que les suites de cette partie (voir partie()) ;
 # toute suite doit appartenir à une partie. Sans BANC_PARTIE : tout le banc.
 # Deux bancs en même temps sur une machine (copies du dépôt différentes) : BANC_VERROUS=<dossier> empêche la même suite
 # de tourner deux fois à la fois (chaque suite a son propre port) ; deux suites différentes peuvent tourner ensemble.
@@ -40,13 +40,19 @@ attendu() {
     verif54) echo 64;; rig) echo 78;; fonction) echo 88;; *) echo "";;
   esac
 }
-# Partie de chaque suite pour les jobs parallèles de GitHub Actions (durées équilibrées, environ 8 à 9 minutes chacune).
+# Partie de chaque suite pour les jobs parallèles de GitHub Actions (10 parties, durées équilibrées, 4 à 5 minutes chacune).
 partie() {
   case "$1" in
-    verif52|verif49|verif39|verif43|flux) echo 1;;
-    verif53|verif48|verif54) echo 2;;
-    verif51|verif42|verif40|verif35|verif34|verif55|fonction) echo 3;;
-    verif38|verif50|rig|verif-xss|verif41|verif37|verif36|verif56) echo 4;;
+    verif52) echo 1;;
+    verif53) echo 2;;
+    verif51|verif34|verif35) echo 3;;
+    verif38|verif36|verif37) echo 4;;
+    verif48|verif43|flux) echo 5;;
+    verif49|verif41) echo 6;;
+    verif42|verif50) echo 7;;
+    verif40|verif54) echo 8;;
+    verif55|verif39|fonction) echo 9;;
+    verif56|rig|verif-xss) echo 10;;
     *) echo "";;
   esac
 }
@@ -72,7 +78,7 @@ done
 for s in $SUITES rig fonction; do
   if [ -z "$(partie "$s")" ]; then echec "$s : aucune partie dans partie() (banc.sh)"; fi
 done
-case "${BANC_PARTIE:-}" in ''|1|2|3|4) ;; *) echec "BANC_PARTIE=${BANC_PARTIE} : partie inconnue";; esac
+case "${BANC_PARTIE:-}" in ''|[1-9]|10) ;; *) echec "BANC_PARTIE=${BANC_PARTIE} : partie inconnue";; esac
 
 for s in $SUITES; do
   dans_partie "$s" || continue
@@ -139,7 +145,7 @@ if [ "${BANC_LIBRE:-}" != 1 ]; then
 fi
 
 echo
-echo "===== Bilan du banc — commit $TETE${BANC_PARTIE:+ — partie $BANC_PARTIE/4} ====="
+echo "===== Bilan du banc — commit $TETE${BANC_PARTIE:+ — partie $BANC_PARTIE/${BANC_PARTIES:-10}} ====="
 printf "%s" "$resume"
 if [ "$echecs" -gt 0 ]; then echo "$echecs échec(s) : rien ne doit être publié."; exit 1; fi
 echo "Tout est vert (commit $TETE)."
