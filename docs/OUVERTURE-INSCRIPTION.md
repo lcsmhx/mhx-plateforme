@@ -1,118 +1,243 @@
-# Ouvrir l'inscription publique (accès Découverte 7 jours) — marche à suivre (mise à jour le 27/09/2026)
+# Ouvrir l'inscription publique — marche à suivre pour Lucas (V2, mise à jour le 28/09/2026)
 
-Tout est prêt côté application : inscription simplifiée, écran « Découverte » (questionnaire court, résultat personnalisé, calories et macros, séance, recettes, Speed Formation pendant 7 jours, « Réserver mon bilan »), retour du lien de confirmation d'email (la personne arrive directement sur son questionnaire), écran « Vérifie ta boîte mail », suivi des prospects dans ta fiche coach (bloc « Découverte », pastilles, CHAUD / TIÈDE / FROID). Il reste **les réglages qui n'appartiennent qu'à toi** (Supabase, email) et un interrupteur dans l'app. Compte une à deux heures, **dans l'ordre ci-dessous** : l'ordre compte, parce que dès que Supabase autorise les inscriptions, le premier email envoyé doit déjà être le bon. Rien n'est irréversible : chaque étape se désactive de la même façon (§10).
+**Ce que ça change.** N'importe qui pourra créer son espace gratuit depuis ton lien Instagram. Il recevra un email de confirmation, répondra aux 3 questions, verra la proposition de bilan, puis son espace (calculateur, suivi du poids et des mensurations, Speed Formation).
 
-## 0. Avant de commencer
-- **La v51 est en ligne** : tu as poussé `main` (`git -C /Users/lucasmahaux/MHX-Code/mhx-plateforme push origin main`) et le pied de page de l'app affiche « 2026-09-27 · 51 ». L'inscription y est encore fermée.
-- Tu as la main sur le projet Supabase `nzynbuczmogifuidcjed` (tableau de bord → Authentication) et sur la boîte `mhx.coaching@gmail.com`.
-- Prévois **deux adresses email de test** que tu contrôles et qui n'ont pas de compte MHX : un alias Gmail (`mhx.coaching+test1@gmail.com`) et, si tu peux, une adresse Outlook / Hotmail ou iCloud (les filtres anti-spam y sont différents).
-- Ne touche à rien d'autre dans Supabase (base, règles, fonctions) : ce guide ne concerne que **Authentication**.
-- À savoir pour tes tests : le lien de l'email s'ouvre dans ton navigateur habituel. **Si un autre compte y est déjà connecté (le tien, coach), l'app ne bascule pas** : elle te le dit (« Un autre compte est déjà connecté sur cet appareil… »), l'email du compte de test est quand même confirmé, et il te suffit de te déconnecter puis de te connecter avec le compte de test. C'est voulu : un lien envoyé par un inconnu ne doit jamais faire entrer quelqu'un dans un autre compte.
+**Les emails.** Seuls les emails du compte partent automatiquement : confirmation d'inscription, mot de passe oublié, changement d'adresse. Ils partent de **mhx.coaching@gmail.com, par Gmail**. Il n'y a aucun autre email automatique : pas de relance. La newsletter, c'est toi qui l'enverras plus tard, avec l'outil de ton choix (voir §7).
 
-## 1. Un service d'envoi d'emails (SMTP externe, gratuit) — à faire en premier
-Pourquoi : le service d'email intégré de Supabase **n'envoie qu'aux adresses de l'équipe du projet** (toi). Sans SMTP externe, aucun prospect ne recevrait jamais son lien de confirmation. Une offre gratuite suffit largement.
+**Combien de temps.** Compte **une à deux heures**, dans l'ordre ci-dessous. L'ordre compte : dès que Supabase accepte les inscriptions, le premier email envoyé doit déjà être le bon. Rien n'est irréversible : tout se referme en deux clics (§8).
 
-**Brevo** (ex-Sendinblue, offre gratuite : 300 emails par jour, sans carte bancaire) est le plus simple quand on envoie depuis une adresse Gmail. Resend est très bien aussi mais demande un nom de domaine à toi (pas une adresse Gmail).
+**Les liens Supabase.** Ils ouvrent directement la bonne page du projet `nzynbuczmogifuidcjed`. S'il te demande de te connecter, connecte-toi, puis rouvre le lien. S'il n'arrive pas au bon endroit, suis le chemin indiqué entre parenthèses (menu de gauche).
 
-1. Crée un compte sur brevo.com avec `mhx.coaching@gmail.com`. Confirme ton email, remplis le profil (nom : MHX Coaching, adresse postale demandée par la loi anti-spam).
-2. Dans Brevo : **Expéditeurs et IP → Expéditeurs → Ajouter un expéditeur** : nom « MHX Coaching », email `mhx.coaching@gmail.com`. Brevo t'envoie un email de validation : clique le lien.
-   - Limite à connaître : un expéditeur `@gmail.com` envoyé par Brevo n'est pas « aligné » avec Gmail, donc **une partie des emails peut partir en indésirables** (surtout chez Outlook / Hotmail). D'où le test de réception du §6 sur plusieurs boîtes, et la mention « regarde dans les indésirables » déjà dans l'app. La solution durable, quand tu voudras : un nom de domaine à toi (par exemple `mhx-coaching.fr`, quelques euros par an) comme adresse d'envoi.
-3. Dans Brevo : **SMTP et API → SMTP** : note les quatre valeurs affichées sur cette page :
-   - serveur : `smtp-relay.brevo.com`
-   - port : `587`
-   - **identifiant : celui affiché sur la page** (souvent de la forme `xxxxx@smtp-brevo.com` ; ce n'est pas forcément l'email de ton compte Brevo, et avec le mauvais rien ne part)
-   - mot de passe : la **clé SMTP** (bouton « Générer une nouvelle clé SMTP » ; copie-la tout de suite, elle n'est montrée qu'une fois ; ne la colle jamais dans l'app ni dans le dépôt).
-4. Dans Supabase : **Authentication → Emails → SMTP Settings** (ou *Project Settings → Authentication → SMTP*, selon la version du tableau de bord) : active **Enable Custom SMTP** puis :
-   - Sender email : `mhx.coaching@gmail.com`
-   - Sender name : `MHX Coaching`
-   - Host : `smtp-relay.brevo.com` · Port : `587`
-   - Username : l'identifiant de l'étape 3 · Password : la clé SMTP
-   - Save.
-5. Toujours dans Supabase, **Authentication → Rate Limits** : « Rate limit for sending emails » → **100 par heure** (possible dès qu'un SMTP externe est actif ; une story Instagram peut amener beaucoup d'inscriptions d'un coup, et au-delà de la limite l'inscription est refusée avec le message « Trop de demandes d'un coup : réessaie dans une minute »). Brevo gratuit = 300 par jour : surveille le compteur Brevo les premiers jours.
+---
 
-## 2. Les adresses de retour (le lien de l'email doit revenir dans l'app)
-Supabase → **Authentication → URL Configuration** :
-- **Site URL** : `https://lcsmhx.github.io/mhx-plateforme/`
-- **Redirect URLs** : ajoute `https://lcsmhx.github.io/mhx-plateforme/**` (les deux étoiles comptent) si ce n'est pas déjà là. L'app envoie elle-même son adresse exacte à chaque inscription ; Supabase n'accepte que les adresses de cette liste.
-- Save.
+## 0. Avant de commencer (prérequis)
+
+- [ ] **La V2 est en ligne** : le pied de page de l'app (https://lcsmhx.github.io/mhx-plateforme/) affiche une version **52 ou plus**. Il faut au moins la version qui termine la partie code du chantier 2 : Claude te dira laquelle. L'inscription y est encore fermée.
+- [ ] **Les tests sont verts** : sur https://github.com/lcsmhx/mhx-plateforme/actions, la dernière ligne « Tests puis publication » a une coche verte.
+- [ ] **Les textes légaux sont prêts** : `docs/CONFIDENTIALITE-BROUILLON.md` et `docs/MENTIONS-LEGALES-BROUILLON.md` sont complétés et relus. Leur version finale est publiée dans l'app, et le texte court de l'app dit la même chose (nouvelle version datée). Tant que ce n'est pas fait, n'ouvre pas.
+- [ ] Tu as accès au **projet Supabase**, à la **boîte Gmail mhx.coaching@gmail.com** et au **téléphone** qui sert à la validation en 2 étapes de Google.
+- [ ] Tu as **deux adresses email de test** que tu peux lire et qui n'ont pas de compte MHX. **Pas mhx.coaching@gmail.com**, puisque c'est elle qui envoie. Par exemple : un alias « +grok1 » de ton autre boîte Gmail, et si possible une adresse Outlook, Hotmail ou iCloud (leurs filtres anti-spam sont différents).
+- [ ] Dans Supabase, tu ne touches qu'à **Authentication**. Rien d'autre : base, règles, fonctions.
+
+---
+
+## 1. Google : validation en 2 étapes, puis mot de passe d'application
+
+Pourquoi : Supabase va envoyer les emails du compte **par ta boîte Gmail**. Pour ça, Google demande un « mot de passe d'application » : un code de 16 lettres réservé à Supabase. Ce n'est pas ton vrai mot de passe. Et Google ne le donne que si la validation en 2 étapes est active.
+
+1. Connecte-toi à Google avec **mhx.coaching@gmail.com**. Vérifie en haut à droite que c'est bien ce compte, pas un compte personnel.
+2. **Validation en 2 étapes** : https://myaccount.google.com/signinoptions/two-step-verification → « Activer », puis suis les étapes (ton téléphone). Si elle est déjà active, passe à la suite.
+3. **Mot de passe d'application** : https://myaccount.google.com/apppasswords → nom : `Supabase MHX` → « Créer ».
+   - Google affiche **16 lettres** en 4 groupes. Copie-les **sans les espaces**.
+   - Elles ne s'affichent **qu'une fois**. Garde-les dans ton gestionnaire de mots de passe le temps de l'étape 2.
+   - Ne les colle **nulle part ailleurs que dans Supabase** : ni dans l'app, ni dans le dépôt, ni dans un message (WhatsApp, Claude, Grok).
+   - Si Google dit que ce réglage « n'est pas disponible pour votre compte » : la validation en 2 étapes n'est pas encore active (refais le point 2), ou ton compte n'utilise que des clés de sécurité.
+
+À savoir : **si tu changes un jour le mot de passe de ce compte Google, les mots de passe d'application sont supprimés**. Les emails du compte ne partent plus. Il faut alors refaire le point 3, puis l'étape 2.
+
+---
+
+## 2. Supabase : envoyer les emails par Gmail (SMTP personnalisé)
+
+Pourquoi : sans ce réglage, Supabase n'envoie des emails qu'aux membres de l'équipe du projet (toi). Aucun prospect ne recevrait son lien de confirmation.
+
+1. Ouvre https://supabase.com/dashboard/project/nzynbuczmogifuidcjed/auth/smtp (Authentication → Emails → SMTP Settings).
+2. Active **Enable Custom SMTP**, puis remplis :
+
+   | Champ | Valeur |
+   |---|---|
+   | Sender email | `mhx.coaching@gmail.com` |
+   | Sender name | `MHX Coaching` |
+   | Host | `smtp.gmail.com` |
+   | Port number | `465` |
+   | Username | `mhx.coaching@gmail.com` |
+   | Password | les 16 lettres de l'étape 1 (sans espaces) |
+
+   Laisse les autres champs comme ils sont, puis **Save**.
+3. **Limite d'envoi** : https://supabase.com/dashboard/project/nzynbuczmogifuidcjed/auth/rate-limits (Authentication → Rate Limits) → « Rate limit for sending emails » → **20 par heure** → Save.
+   - Pourquoi 20 : un compte Gmail personnel peut écrire à **environ 500 destinataires par jour**. C'est à vérifier sur https://support.google.com/mail/answer/22839. Tes propres emails comptent dans ces 500. Avec 20 par heure, on reste en dessous (480 par jour au plus).
+   - Au-delà de la limite, la personne voit dans l'app « Trop de demandes d'un coup : réessaie dans une minute ». C'est bien moins grave qu'un Gmail bloqué 24 heures, qui empêcherait aussi tes clients de recevoir « mot de passe oublié ».
+
+---
 
 ## 3. Les modèles d'email (en français, à ton nom)
-Supabase → **Authentication → Emails → Templates**. Pour chacun des trois modèles ci-dessous : mets l'objet, puis, dans le corps (onglet **Source** / HTML), **efface tout et colle le contenu complet du fichier** indiqué (sur GitHub : ouvre le fichier → bouton **Raw** → tout sélectionner → copier). Les `{{ .ConfirmationURL }}`, `{{ .Email }}` et `{{ .NewEmail }}` sont remplis par Supabase : ne les modifie pas. **Save** après chacun.
 
-| Modèle Supabase | Objet | Fichier à coller |
-|---|---|---|
-| **Confirm signup** (inscription) | `Confirme ton accès découverte MHX` | `supabase/templates/confirmation.html` |
-| **Reset password** (mot de passe oublié, déjà utilisé par tes clients) | `Ton nouveau mot de passe MHX Coaching` | `supabase/templates/mot-de-passe.html` |
-| **Change email address** (changement d'adresse depuis le Profil) | `Confirme ta nouvelle adresse MHX Coaching` | `supabase/templates/changement-email.html` |
+1. Ouvre https://supabase.com/dashboard/project/nzynbuczmogifuidcjed/auth/templates (Authentication → Emails → Templates).
+2. Pour chacun des trois modèles ci-dessous :
+   - mets l'**objet** (Subject) ;
+   - ouvre le lien du fichier (texte brut sur GitHub), sélectionne tout (Cmd+A) et copie (Cmd+C) ;
+   - dans Supabase, dans le corps du modèle (onglet **Source** ou HTML), sélectionne tout, efface, colle ;
+   - **Save**.
 
-Les trois ont la présentation des emails de suivi (fond clair, bouton doré, « MHX Coaching »), aucun prix, et l'adresse du lien en clair sous le bouton (pour les messageries qui bloquent les boutons). Supabase affiche un aperçu à droite : vérifie que le bouton apparaît.
+   | Modèle Supabase | Objet | Fichier à coller |
+   |---|---|---|
+   | **Confirm signup** (inscription) | `Confirme ton inscription MHX Coaching` | https://raw.githubusercontent.com/lcsmhx/mhx-plateforme/main/supabase/templates/confirmation.html |
+   | **Reset Password** (mot de passe oublié, déjà utilisé par tes clients) | `Ton nouveau mot de passe MHX Coaching` | https://raw.githubusercontent.com/lcsmhx/mhx-plateforme/main/supabase/templates/mot-de-passe.html |
+   | **Change Email Address** (changement d'adresse depuis le Profil) | `Confirme ta nouvelle adresse MHX Coaching` | https://raw.githubusercontent.com/lcsmhx/mhx-plateforme/main/supabase/templates/changement-email.html |
 
-Durée de validité du lien : **Authentication → Sign In / Providers → Email → « Email OTP Expiration »** (c'est là, pas dans Emails) : mets `86400` secondes (24 h) plutôt que l'heure par défaut, pour les gens qui ouvrent leur boîte mail le soir. Un lien ne sert qu'une fois : un deuxième clic affiche « Ce lien n'est plus valable » et propose de se connecter (c'est normal).
+   - Les morceaux entre doubles accolades, comme `{{ .ConfirmationURL }}`, sont remplis par Supabase : **ne les modifie pas**.
+   - Avant de coller, lis le texte : il ne doit parler ni de « 7 jours » ni d'« accès découverte ». Sinon, demande d'abord à Claude de mettre le fichier à jour.
+   - L'aperçu à droite doit montrer le bouton doré.
+   - Les autres modèles (Magic Link, Invite user, Reauthentication) ne servent pas : laisse-les.
+3. **Durée de validité du lien** : https://supabase.com/dashboard/project/nzynbuczmogifuidcjed/auth/providers (Authentication → Sign In / Providers) → panneau **Email** → « Email OTP Expiration » → `86400` (24 heures, pour ceux qui ouvrent leurs emails le soir) → Save.
+4. **Premier essai d'envoi** : sur l'écran de connexion de l'app, « Mot de passe oublié » avec l'adresse du compte client de test. L'email doit arriver en moins de 5 minutes, de « MHX Coaching », avec le bon objet. Tu n'es pas obligé de changer le mot de passe.
+   - S'il n'arrive pas : https://supabase.com/dashboard/project/nzynbuczmogifuidcjed/logs/auth-logs (Logs → Auth). Un message avec « smtp » ou « authentication » veut dire que le mot de passe d'application est faux, ou qu'il a gardé des espaces : refais l'étape 1.3 puis l'étape 2.
+
+---
 
 ## 4. Autoriser les inscriptions et exiger la confirmation d'email
-Avant d'activer, une vérification dans **SQL Editor** :
 
-```sql
-select count(*) from auth.users where email_confirmed_at is null;
-```
-Le résultat doit être `0` (tous les comptes existants sont déjà confirmés ; sinon, dis-le-moi avant de continuer : ce compte-là ne pourrait plus se connecter).
+1. **Vérification avant** : https://supabase.com/dashboard/project/nzynbuczmogifuidcjed/sql/new (SQL Editor) → colle, puis **Run** :
+   ```sql
+   select count(*) from auth.users where email_confirmed_at is null;
+   ```
+   Le résultat doit être `0`. Sinon, arrête-toi et dis-le à Claude : ce compte-là ne pourrait plus se connecter.
+2. **Adresses de retour** : https://supabase.com/dashboard/project/nzynbuczmogifuidcjed/auth/url-configuration (Authentication → URL Configuration) :
+   - **Site URL** : `https://lcsmhx.github.io/mhx-plateforme/`
+   - **Redirect URLs** : `https://lcsmhx.github.io/mhx-plateforme/**`, s'il n'y est pas déjà. Les deux étoiles comptent : Supabase n'accepte de renvoyer le lien de l'email que vers les adresses de cette liste.
+   - Save.
+3. **Inscriptions** : https://supabase.com/dashboard/project/nzynbuczmogifuidcjed/auth/providers (Authentication → Sign In / Providers) :
+   - en haut, **Allow new users to sign up** : **activé** (il est désactivé aujourd'hui : c'est ce qui ferme l'inscription) ;
+   - panneau **Email** : **Confirm email** : **activé** (sans ça, une adresse inventée créerait un compte) ; **Secure email change** : laisse-le activé ;
+   - Save.
+4. **Contrôle côté coach** : dans l'app, Comptes → « Créer le compte » avec ta deuxième adresse de test. Ce compte doit pouvoir se connecter tout de suite, sans email de confirmation (la fonction qui crée les comptes de tes clients confirme l'email elle-même). Supprime ensuite ce compte depuis Comptes.
 
-Puis Supabase → **Authentication → Sign In / Providers** :
-- en haut, section **User Signups** : **Allow new users to sign up** : activé (aujourd'hui désactivé : c'est ce qui ferme l'inscription) ;
-- plus bas, panneau **Email** : **Confirm email** : activé (sans ça, n'importe quelle adresse fausse créerait un compte) ; **Secure email change** : laisse activé ;
-- Save.
+À partir d'ici, une inscription est techniquement possible par Supabase, même si l'écran de l'app est encore caché. Enchaîne les étapes 5 et 6 dans la même journée.
 
-Contrôle juste après : dans l'app, **Comptes → Créer le compte** avec ta deuxième adresse de test → ce compte doit pouvoir se connecter tout de suite, sans email de confirmation (la fonction serveur `creer-acces` marque l'email comme confirmé : vérifié le 26/09/2026 dans son code, côté Supabase ; ce contrôle le reteste de toute façon). Supprime ensuite ce compte de test depuis Comptes.
+---
 
-À partir de cette étape, l'inscription est techniquement possible par l'API Supabase même si l'écran de l'app n'existe pas encore : c'est pour ça que les étapes 1 à 3 viennent avant.
+## 5. Le test prospect complet (par Grok, avec un compte jetable)
 
-## 5. Ouvrir l'inscription dans l'application (en dernier)
+Tant que l'étape 6 n'est pas faite, l'écran « Créer mon compte » n'existe pas sur le site en ligne. Deux façons de tester avant :
 
-**C'est déjà prêt** : la branche `ouverture-inscription` contient un seul commit par-dessus la v51 : `inscription_libre: true` (dans `CONFIG.marque`) et la version des conditions datée (`DECOUVERTE.confidentialite.version = "2026-09-27"`, enregistrée avec chaque inscription). Le banc a été rejoué dessus.
+- **Méthode A (conseillée, rien n'est publié)** : demande à Claude d'ouvrir sur ton Mac une copie de la version en ligne, avec l'inscription ouverte. Elle utilise la vraie base, et seul ton Mac la voit. Claude te donne son adresse (du type `http://localhost:…`). Ajoute temporairement cette adresse suivie de `/**` dans **Redirect URLs** (étape 4.2), et **retire-la après le test**. Si Grok ne peut pas ouvrir cette adresse, fais le test toi-même avec la liste ci-dessous.
+- **Méthode B (ouverture discrète)** : fais l'étape 6 sans partager le lien, lance le test dans l'heure, et ne mets le lien sur Instagram que si tout est bon. Sinon, passe à l'étape 8.
 
-Juste avant : relis une dernière fois le texte des conditions (écran d'inscription → « Conditions d'utilisation et confidentialité »). Personne ne l'a encore accepté.
+Donne à Grok une adresse de test qu'il peut lire. Sur téléphone, **déconnecté de l'app**. Le lien de l'email s'ouvre dans le navigateur habituel : si un autre compte y est connecté, l'app le dit et ne bascule pas. Il suffit alors de se déconnecter, puis de se connecter avec le compte de test.
 
-Puis, **seulement quand les étapes 1 à 4 sont faites et vérifiées**, une seule commande :
+**Inscription**
+- [ ] L'écran « Crée ton espace gratuit » : prénom, nom, email, mot de passe. Aucun « 7 jours », aucun prix.
+- [ ] 3 cases, **aucune cochée d'avance** :
+  - « J'ai 18 ans ou plus et j'accepte les conditions d'utilisation et la politique de confidentialité » (obligatoire) ;
+  - données de santé (obligatoire) ;
+  - newsletter (facultative ; son texte finit par « … et j'accepte la mesure de leur ouverture. Désinscription en 1 clic dans chaque email. »).
+- [ ] Sans la case des conditions, ou sans la case santé : un message clair, pas de compte. Sans la case newsletter : l'inscription passe.
+- [ ] Le lien des conditions ouvre le texte. Il parle de Gmail pour les emails du compte, du suivi d'activité et de la newsletter.
+- [ ] Après « Créer mon accès » : « Vérifie ta boîte mail », avec la bonne adresse.
+- [ ] Connexion avant d'ouvrir l'email : « Ton email n'est pas encore confirmé… ».
 
-```bash
-git -C /Users/lucasmahaux/MHX-Code/mhx-plateforme push origin ouverture-inscription:main
-```
+**L'email**
+- [ ] Il arrive en moins de 5 minutes. Noter dans quelle boîte : principale, promotions, indésirables. Tester Gmail et Outlook, Hotmail ou iCloud.
+- [ ] Expéditeur « MHX Coaching » (mhx.coaching@gmail.com), objet « Confirme ton inscription MHX Coaching ».
+- [ ] Texte en français, bouton visible, adresse du lien écrite en clair sous le bouton.
 
-GitHub Pages met la nouvelle version en ligne en une à deux minutes. Tant que ce commit n'est pas poussé, l'écran « Créer mon compte » n'existe pas.
+**Le lien**
+- [ ] Un clic : l'app s'ouvre avec « Ton email est confirmé… Bienvenue ! », directement sur les 3 questions.
+- [ ] Deuxième clic sur le même lien : « Ce lien n'est plus valable… » (ou « …tu es déjà dans ton espace »). Pas de boucle, pas de déconnexion.
 
-Autre façon, sans le terminal : sur GitHub, fichier `index.html` → crayon → `inscription_libre: false,` devient `inscription_libre: true,` → Commit changes.
+**Les 3 questions**
+- [ ] Objectif (perdre du gras, prendre du muscle, me remettre en forme), ce qui t'a bloqué, dans 3 mois. Les trois sont obligatoires.
+- [ ] Recharger la page pendant la saisie : ce qui était écrit est toujours là.
 
-## 6. Le test de bout en bout (avec l'adresse de test)
-1. Sur ton téléphone, **déconnecté de l'app** (ou en navigation privée, mais le lien de l'email s'ouvrira dans le navigateur normal : déconnecte-toi aussi là) : `https://lcsmhx.github.io/mhx-plateforme/#/inscription` → prénom, adresse de test, mot de passe, case des conditions et case des données de santé → « Créer mon accès ».
-2. Tu dois voir **« Vérifie ta boîte mail »** avec l'adresse.
-3. Avant d'ouvrir l'email, essaie de te connecter avec ce compte : l'app doit dire « Ton email n'est pas encore confirmé : ouvre le lien reçu ».
-4. Ouvre l'email (regarde dans les indésirables la première fois ; note dans quelle boîte il est arrivé, et où) → clique « Confirmer mon inscription » → l'app s'ouvre **directement sur « Découverte · Jour 1/7 »** avec le questionnaire et le mot « Ton email est confirmé (…). Bienvenue ! ». Remplis le questionnaire : ton résultat s'affiche, avec « Réserver mon bilan » (le lien Calendly doit contenir ton prénom et ton email).
-5. Reclique le même lien dans l'email : « Ce lien n'est plus valable… » si tu es déconnecté, ou « …tu es déjà dans ton espace : rien à faire » si tu es connecté. Dans les deux cas, pas de boucle, pas de déconnexion.
-6. Côté coach : Mes clients montre la nouvelle ligne avec « prospect » et « Découverte J1/7 » ; le tableau de bord compte 1 « Prospect en découverte » ; sa fiche montre le bloc « Découverte » (questionnaire rempli, réponses, clics « Réserver mon bilan »).
-7. Contrôle en base (SQL Editor) : `select role, statut, count(*) from profils group by 1, 2;` → une ligne `client · prospect · 1` de plus, rien d'autre ne bouge.
-8. Refais les étapes 1 à 4 avec l'adresse Outlook / Hotmail ou iCloud pour vérifier la réception (indésirables ?).
-9. Supprime ensuite les comptes de test depuis **Comptes** dans l'app (jamais un vrai client).
+**La page du bilan**
+- [ ] Elle reprend la réponse « Dans 3 mois », avec le texte du bilan offert de 30 minutes, jusqu'à « Tu es libre de dire non ».
+- [ ] Deux boutons de même taille : « Réserver mon bilan » et « Pas maintenant, découvrir mon espace ».
 
-Si l'email n'arrive pas : Supabase → **Logs → Auth** dit si l'envoi a échoué (identifiant SMTP faux, expéditeur non validé chez Brevo, limite atteinte) ; Brevo → **Statistiques** dit s'il est parti.
+**Calendly**
+- [ ] « Réserver mon bilan » ouvre Calendly dans un nouvel onglet, avec **prénom, nom et email déjà remplis**.
+- [ ] Ne pas réserver de vrai créneau (ou réserver, puis annuler aussitôt en te prévenant).
 
-## 7. Ce qu'il ne faut PAS faire
-- **CAPTCHA** : ne l'active jamais seul dans Supabase (Attack Protection → Captcha). L'app ne le gère pas encore : il bloquerait la connexion de tes clients. Si des comptes indésirables apparaissent, on ajoute d'abord le code (inscription + connexion + mot de passe oublié), puis on l'active.
-- Ne désactive pas « Confirm email » après coup « pour aller plus vite » : c'est ce qui filtre les fausses adresses.
-- Ne touche pas aux Row Level Security, aux fonctions ni à la table `profils`.
-- Facultatif, si ton offre Supabase le permet (offre Pro) : **Authentication → Sign In / Providers → Email → « Prevent use of leaked passwords »** (refuse les mots de passe déjà apparus dans des fuites connues). Le conseiller de sécurité de Supabase le recommande ; rien ne change pour les comptes existants.
+**Accueil, calculateur, pesée**
+- [ ] Une seule action mise en avant : « Calcule tes calories (2 min) ».
+- [ ] Calculateur : avec un âge de 17 ans, un message clair et rien d'enregistré. Avec un âge adulte : le résultat, et la mention « pas un avis médical ».
+- [ ] Ensuite, l'accueil propose « Enregistre ta pesée de départ ». La pesée est toujours là après rechargement de la page.
+- [ ] Speed Formation ouverte.
 
-## 8. Le lien à mettre sur Instagram
-`https://lcsmhx.github.io/mhx-plateforme/#/inscription` (bio, story, réponse automatique en DM). Le lien direct vers la connexion reste `https://lcsmhx.github.io/mhx-plateforme/`.
+**Pages verrouillées**
+- [ ] Programme, Nutrition, Journal, Suivi : chacune montre un **exemple** marqué « Exemple », la phrase « Tu veux un programme construit pour toi, qui évolue chaque semaine ? Réserve ton bilan. » et le bouton « Réserver mon bilan ». Aucun prix nulle part.
 
-## 9. Et après l'ouverture : ce que tu regardes chaque jour
-- **Mes clients** : les prospects portent « Découverte J n/7 » ou « Découverte terminée », « a cliqué Réserver », « bilan réservé ». Le tableau de bord compte les « Prospects en découverte ». La page **Prospects** les classe CHAUD / TIÈDE / FROID avec la prochaine action. (La liste est lue par pages de 1 000 lignes : elle reste complète même avec des centaines de prospects.)
-- **La fiche d'un prospect** : bloc « Découverte » (jour, questionnaire court, ce qu'il a déjà essayé, son obstacle, sa motivation, ses clics, la case « J'ai réservé mon bilan »).
-- Après le bilan, si la personne s'engage : **« Passer client »** dans Comptes → elle retrouve l'app complète, et ses premières réponses sont déjà dans son questionnaire.
-- Les emails : compteur Brevo (300 par jour en gratuit), Supabase → Logs → Auth en cas de doute.
-- Tu peux te tester toi-même à tout moment avec un compte prospect. Pour voir le jour 8 (Speed Formation verrouillée) sans attendre : `#/decouverte-jour/8` sur ton appareil ; `#/decouverte-jour/0` pour revenir au vrai jour. Rien n'est écrit en base.
+**Langue et écran**
+- [ ] L'app passée en anglais : tout est traduit.
+- [ ] Sur téléphone, rien ne dépasse de l'écran. Sur ordinateur, tout est lisible.
 
-## 9 bis. Les emails de suivi (facultatif, après l'ouverture)
-L'app sait déjà demander l'accord (case facultative à l'inscription, interrupteur « Emails de suivi » dans le Profil du prospect). L'envoi lui-même (bienvenue, ton résultat après le questionnaire, relance à J3, via Brevo) est une fonction Supabase prête et testée mais **pas déployée** : marche à suivre complète dans `supabase/README.md` (clé API Brevo **et blocage des IP inconnues à désactiver chez Brevo**, table du journal, fonction, secrets, webhook des ouvertures, clics et désinscriptions, planification horaire, test). La page « Ne plus recevoir ces emails » (`desinscription.html`) est en ligne dès ton push, avec l'app. Tant qu'elle n'est pas déployée, aucun email de suivi ne part, et le score des prospects affiche « email ouvert : pas encore mesuré ».
+**Côté coach** (toi)
+- [ ] Page Prospects : la nouvelle personne, avec sa date d'inscription, ses 3 réponses, newsletter oui ou non, dernière visite et jours actifs. Le compteur « inscrits → 3 questions → bilans réservés → clients » a bougé.
+- [ ] Sa fiche : le bouton « Bilan réservé » se coche, puis s'annule.
+- [ ] Contrôle en base (SQL Editor) : `select role, statut, count(*) from profils group by 1, 2;` → une ligne `client · prospect` avec 1 de plus. Rien d'autre ne bouge.
 
-## 10. Pour refermer (si besoin)
-Dans l'ordre inverse : `inscription_libre: false` dans l'app (GitHub → `index.html` → crayon, ou demande-le-moi), puis « Allow new users to sign up » désactivé dans Supabase. Les comptes déjà créés restent et continuent de fonctionner.
+**Newsletter : se désinscrire**
+- [ ] Profil → couper l'interrupteur de la newsletter : un message le confirme. Côté coach : newsletter « non ». La personne ne figure plus dans l'export de la liste (§7). Le rallumer : de nouveau « oui ».
+
+**Mot de passe oublié**
+- [ ] « Mot de passe oublié » avec le compte de test : l'email arrive, le lien permet de choisir un nouveau mot de passe, et la connexion marche avec lui.
+
+**Mes données et suppression**
+- [ ] Profil → « Mes données » → « Télécharger toutes mes données » : un fichier se télécharge.
+- [ ] « Supprimer mon compte » → taper `SUPPRIMER` → « Ton compte est supprimé ». La reconnexion est impossible. Le compte a disparu côté coach et dans https://supabase.com/dashboard/project/nzynbuczmogifuidcjed/auth/users (Authentication → Users).
+
+Refais au moins l'inscription et la réception de l'email avec la deuxième adresse (Outlook, Hotmail ou iCloud). Supprime ensuite tous les comptes de test (jamais un vrai client). Méthode A : retire l'adresse locale des Redirect URLs.
+
+Si quelque chose ne va pas : note ce que tu vois (capture d'écran), n'ouvre pas, et donne-le à Claude.
+
+---
+
+## 6. Ouvrir l'inscription (c'est toi qui le fais)
+
+Seulement quand les étapes 0 à 5 sont faites et bonnes. Il s'agit de passer `inscription_libre: false` à `inscription_libre: true` dans `index.html`. Deux façons :
+
+- **Conseillée** : demande à Claude « prépare le commit d'ouverture de l'inscription ». Il change cette seule ligne, relance les tests, et **ne pousse pas**. Tu le pousses toi-même avec la commande qu'il te donne (`git -C /Users/lucasmahaux/MHX-Code/mhx-plateforme push origin main`).
+- **Sans le terminal** : https://github.com/lcsmhx/mhx-plateforme/edit/main/index.html → cherche `inscription_libre: false` (Cmd+F) → remplace `false` par `true` → « Commit changes » (message : « ouverture de l'inscription »). Si GitHub dit que le fichier est trop gros pour être modifié en ligne, utilise la première façon.
+
+Ensuite :
+- GitHub relance les tests, puis publie **en 15 minutes environ**, et seulement si tout est vert : https://github.com/lcsmhx/mhx-plateforme/actions.
+- Contrôle : sur l'écran de connexion de l'app, « Créer mon compte » apparaît, et https://lcsmhx.github.io/mhx-plateforme/#/inscription ouvre l'inscription.
+- **Ne pousse jamais l'ancienne branche `ouverture-inscription`** : elle date de la v51 et effacerait la V2.
+
+**Le lien à mettre sur Instagram** (bio, story, réponse automatique en message privé) : `https://lcsmhx.github.io/mhx-plateforme/#/inscription`
+
+---
+
+## 7. Après l'ouverture : ce que tu surveilles
+
+**Chaque jour, la première semaine**
+- **Page Prospects** : les nouveaux inscrits, leurs 3 réponses, le compteur « inscrits → 3 questions → bilans réservés → clients ».
+- **Calendly** : à chaque bilan réservé, coche « Bilan réservé » dans la fiche du prospect. Après le bilan, si la personne s'engage : **« Passer client »** dans Comptes. Elle retrouve alors l'app complète.
+- **Les emails** :
+  - https://supabase.com/dashboard/project/nzynbuczmogifuidcjed/logs/auth-logs : cherche « error sending » ou « smtp ».
+  - Dans Gmail : le dossier « Envoyés » se remplit des emails de confirmation (c'est normal ; supprime-les tous les 3 mois, comme le prévoit la politique de confidentialité).
+  - Un email « Mail Delivery Subsystem » veut dire qu'une adresse n'existe pas.
+  - Surveille aussi les alertes de sécurité de Google.
+- **Le volume** : au-delà de 20 emails par heure (§2.3), certaines inscriptions sont refusées pour une minute. Si ça arrive souvent, dis-le à Claude avant de monter la limite : Gmail personnel reste plafonné à environ 500 destinataires par jour.
+- **Les faux comptes** (noms étranges, rafales) : n'active pas le CAPTCHA seul (voir plus bas). Dis-le à Claude.
+
+**La newsletter**
+- Rien ne part automatiquement. La liste des personnes qui ont coché la newsletter **s'exporte en CSV depuis l'espace coach** (prénom, nom, email, date de l'accord), pour l'outil d'envoi que tu choisiras.
+- Avant chaque envoi, refais un export neuf : une personne qui s'est désinscrite dans l'app n'y est plus. Supprime le fichier de ton ordinateur une fois importé.
+- Tant que l'outil n'est pas choisi, la politique de confidentialité le laisse « [À PRÉCISER] ». Complète-la avant le premier envoi.
+
+**Les demandes des personnes**
+- « Supprime mes données », « envoie-moi mes données » par email : réponds **dans le mois**. Pour supprimer : Comptes → supprimer le compte. Supprime aussi la réservation Calendly et le contact dans l'outil de la newsletter.
+
+**Ce qu'il ne faut PAS faire**
+- **CAPTCHA** : ne l'active jamais seul dans Supabase (Attack Protection → Captcha). L'app ne le gère pas encore : il bloquerait la connexion de tes clients. Si des faux comptes arrivent, Claude ajoute d'abord le code, puis tu l'actives.
+- Ne désactive pas « Confirm email » pour aller plus vite : c'est lui qui filtre les fausses adresses.
+- Ne désactive pas « Enable Custom SMTP » : tes clients ne recevraient plus « mot de passe oublié ».
+- Ne touche pas aux règles de sécurité de la base (Row Level Security), aux fonctions ni à la table `profils`.
+- Ne change pas le mot de passe du compte Google sans refaire les étapes 1.3 et 2 juste après.
+
+---
+
+## 8. Refermer en urgence
+
+1. **Tout de suite, effet immédiat** : https://supabase.com/dashboard/project/nzynbuczmogifuidcjed/auth/providers → **Allow new users to sign up** : **désactivé** → Save. Plus personne ne peut créer de compte. Les comptes déjà créés (prospects et clients) continuent de marcher.
+2. **Ensuite, dans l'app** : `inscription_libre: true` redevient `false`. Soit Claude prépare le commit (tu le pousses), soit tu le fais sur GitHub comme à l'étape 6. Le bouton « Créer mon compte » disparaît une fois la publication faite (15 minutes environ). Pas besoin de la publication d'urgence : l'étape 1 a déjà tout arrêté.
+3. **Si le problème vient des emails** (Gmail bloqué, mot de passe d'application refusé) : fais l'étape 1, puis regarde les journaux (§7). Tant que Gmail bloque, tes clients ne reçoivent pas non plus « mot de passe oublié » : préviens-les s'ils en ont besoin. Un blocage Gmail dure en général 24 heures.
+
+Pour rouvrir : refais l'étape 4.3, puis l'étape 6.
+
+---
+
+## Historique (court)
+
+- **27/09/2026 (v51)** : cette marche à suivre faisait passer les emails du compte par le SMTP de Brevo, et parlait d'un accès découverte de 7 jours, d'emails de suivi automatiques et d'un classement CHAUD / TIÈDE / FROID. Tout cela est abandonné en V2.
+- **28/09/2026 (V2)** : emails du compte par Gmail, espace gratuit sans limite de durée, 3 questions et page de bilan. Aucun email automatique en dehors des emails du compte ; la newsletter est envoyée par Lucas lui-même, avec l'outil qu'il choisira, à partir de l'export CSV. La branche `ouverture-inscription` (v51) est obsolète : ne jamais la pousser.
