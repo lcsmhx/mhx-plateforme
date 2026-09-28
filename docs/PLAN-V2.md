@@ -6,19 +6,31 @@ Une nouvelle conversation reprend en lisant seulement `CLAUDE.md` et ce fichier.
 - **Où en est le travail** : la dernière case cochée ci-dessous. La ligne « En cours » dit sur quoi on travaillait, sur quelle branche, et ce qu'il restait à vérifier.
 - **Branches** : chaque étape se fait sur une branche locale `v2/…`, fusionnée dans `main` (avance rapide) quand tout est vert. `attente/nuit-28-09` = travail de la nuit du 28/09 mis de côté, jamais poussé (on y reprend les corrections utiles, voir Chantier 1).
 - **Avant de reprendre** : `git status`, `git log --oneline -10 --all`, relire la ligne « En cours », relancer le banc (`tests-locaux/README.md`) sur la branche en cours.
-- **En cours** : Étape 1 en ligne (`9429e43`, GitHub Actions actif). Chantier 1 sur `v2/chantier-1` (lot A fait ; lots B et C en cours, B dans une copie `v2/c1-lotB` ; puis D, E, F, G). Documents du chantier 2 faits (brouillons légaux, marche à suivre). Branche de ligne principale en attente de push : `v2/etape-0-1` (plan + documents).
+- **En cours** : Étape 1 en ligne (`9429e43`). **v52** en préparation sur `v2/chantier-1` : lots A et C faits ; B (copie `v2/c1-lotB`) et D (partie prospect) en cours ; puis E et G en parallèle ; nettoyage (point 14) ; relecture ; banc complet ; push ; marche à suivre d'ouverture. Ensuite **v53**.
+
+## Ligne directrice (Lucas, 28/09/2026 au soir) — remplace ses messages de décision précédents
+**Simple, efficace, opérationnel.** Travail en continu : tout s'enchaîne sans s'arrêter ni attendre Lucas entre les lots, les chantiers ou les versions. Une question se pose : prendre l'option la plus prudente, la noter ici (« Questions pour Lucas ») et continuer. S'arrêter seulement pour un vrai risque sur les données des clients. Ne rien retirer aux tests ni aux relectures.
+1. **Emails : rien pour l'instant.** Pas de vérification d'email, pas de SMTP, aucun email envoyé par l'app (Lucas s'en occupera plus tard). « Mot de passe oublié » affiche : « Écris-nous à mhx.coaching@gmail.com, on te débloque rapidement. » Aucun réglage changé dans Supabase par Claude.
+2. **Bouton bilan : aucune connexion à Calendly.** Un simple bouton « Réserver mon bilan » vers le lien que Lucas règle lui-même (sans nouvelle table si possible) ; pré-remplissage du nom gardé s'il est déjà fait.
+3. **Newsletter : aucun envoi.** La case (décochée) et son retrait dans le Profil arrivent ensemble en v52 (réutiliser la v51).
+4. **Reporté après l'ouverture** : les 3 cartes (lot F) et l'écran d'acceptation Q6.
+5. **Deux versions seulement** : **v52** = chantier 1 (lots A à E + G), sans la partie clients et coach du lot D — c'est elle qui permet d'ouvrir l'inscription ; **v53** = partie clients et coach du lot D (calculateur client, « Mon journal », « Ses séances ») + chantiers 3 et 4 + liste newsletter en CSV + compteur.
+6. Dès que B et C sont finis : D, E et G en parallèle.
+7. En v53, on garde « Mon journal », les alertes du feedback et « À traiter ».
+8. Retirer les vérifications obsolètes de verif49 et ce qui devient inutile (fonction emails v51 et sa lecture côté coach, tuile « Prospects en découverte », mode test « jour 8 »), sans toucher aux données.
+Quand la v52 est en ligne : envoyer à Lucas la marche à suivre pour ouvrir l'inscription (une étape à la fois, avec les liens), puis enchaîner directement sur la v53.
 
 ## Mission autonome (Lucas, 28/09/2026) — règles qui complètent CLAUDE.md
-En cas de doute, ces règles passent avant `CLAUDE.md`.
+En cas de doute, ces règles passent avant `CLAUDE.md` (et la ligne directrice ci-dessus passe avant elles).
 
 **Ne doit JAMAIS arriver**
 - Un client réel perd une donnée ou voit son app cassée.
-- Un email part vers un vrai client ou prospect. Aucun envoi réel dans ce projet : la fonction d'emails reste non déployée.
+- Un email part vers un vrai client ou prospect. Aucun envoi par l'app (ligne directrice, point 1).
 - L'inscription publique s'ouvre (`inscription_libre` reste `false` : Lucas l'ouvrira lui-même).
 - Une nouveauté qui remplace une habitude des clients (le bilan) leur apparaît avant que Lucas l'active. Les petits ajouts (un onglet en plus, une correction de bug) peuvent partir directement.
 - Un service ou une option payante.
 
-**Ordre** : Étape 0 → Étape 1 → Chantier 1 → Chantier 3 → Chantier 4 → partie code du Chantier 2 (le 3 passe avant le 4 : le tableau de bord coach a besoin des données du feedback).
+**Ordre** : Étape 0 → Étape 1 → **v52** (chantier 1 : lots A à E + G, partie prospect du lot D) → **v53** (partie clients et coach du lot D, chantier 3 puis chantier 4, liste newsletter en CSV, compteur). Le 3 passe avant le 4 : le tableau de bord coach a besoin des données du feedback.
 
 **Règles de travail**
 - Simple avant tout : réutiliser l'existant (Store, UI, Regularite, Journal, Historique, questionnaire, générateur de diète, séance découverte, recettes). Pas de nouvelle bibliothèque, pas de nouveau fichier sans nécessité.
@@ -53,7 +65,8 @@ En cas de doute, ces règles passent avant `CLAUDE.md`.
 - [x] e. *(fait pour `9429e43` : écran de connexion en format téléphone, version « 2026-09-27 · 51 », aucune erreur de console, `#/inscription` reste fermé)* Après chaque mise en ligne : ouvrir le site en ligne en format téléphone et vérifier la connexion, le numéro de version et les pages principales. Si quelque chose casse : retour arrière immédiat (`git revert` + push) et note.
 
 ## Chantier 1 — Parcours prospect
-- [ ] 1. Inscription : prénom, NOM (nouveau champ), email, mot de passe, avec vérification de l'email (garder le code existant).
+- [ ] 1. Inscription : prénom, NOM (nouveau champ), email, mot de passe. *(28/09 soir : sans vérification d'email pour l'instant, aucun email envoyé ; le code qui gère la vérification reste en place pour plus tard.)* **v52**
+   - [ ] « Mot de passe oublié » : « Écris-nous à mhx.coaching@gmail.com, on te débloque rapidement. » (aucun email) ; changement d'adresse email dans le Profil : même principe. **v52**
 - [ ] 2. Cases séparées à l'inscription :
    - [ ] CGU + politique de confidentialité (obligatoire).
    - [ ] Données de santé : garder la case séparée existante ; enregistrer la date et la version du texte.
@@ -63,58 +76,57 @@ En cas de doute, ces règles passent avant `CLAUDE.md`.
    - Obstacle : « Qu'est-ce qui t'a bloqué jusqu'ici ? »
    - Projection : « Dans 3 mois, qu'est-ce qui aurait changé pour toi ? »
    - [ ] Précision : les 3 questions sont posées juste après la vérification d'email. Leurs réponses alimentent la page bilan et la fiche coach du prospect.
-- [ ] 4. Page de proposition de bilan : reprend sa réponse « projection ». Texte : « Ton bilan offert de 30 minutes avec un coach MHX. On fait le point sur ton objectif, ce qui te bloque et ce que tu as déjà essayé. Tu repars avec 2 ou 3 actions concrètes. Si l'accompagnement personnalisé te correspond, on te le présente à la fin de l'appel. Tu es libre de dire non. » Boutons : « Réserver mon bilan » (Calendly pré-rempli : prénom, nom, email) et « Pas maintenant, découvrir mon espace ».
-   - [ ] Précision : vérifier que le pré-remplissage Calendly est actif (prénom, nom, email).
+- [ ] 4. Page de proposition de bilan : reprend sa réponse « projection ». Texte : « Ton bilan offert de 30 minutes avec un coach MHX. On fait le point sur ton objectif, ce qui te bloque et ce que tu as déjà essayé. Tu repars avec 2 ou 3 actions concrètes. Si l'accompagnement personnalisé te correspond, on te le présente à la fin de l'appel. Tu es libre de dire non. » Boutons : « Réserver mon bilan » et « Pas maintenant, découvrir mon espace ». **v52**
+   - [ ] Bouton « Réserver mon bilan » : un simple lien, sans connexion à Calendly ; le lien est réglé par Lucas en un seul endroit : `CONFIG.marque.calendly`, en haut de `index.html` (seul endroit lisible par un prospect sans nouvelle table : voir Q9) ; pré-remplissage prénom, nom, email gardé (paramètres du lien, sans effet si le lien n'est pas Calendly).
 - [ ] 5. Accueil prospect : une seule action mise en avant au départ, « Calcule tes calories (2 min) », puis « Enregistre ta pesée de départ ».
 - [ ] 6. Gratuit pour toujours : calculateur (onglet ouvert au prospect), suivi poids et mensurations, Speed Formation. Supprimer la limite de 7 jours partout, textes compris (« Crée ton accès découverte — 7 jours… »).
-   - [ ] Précision : un client voit au moins tout ce que voit un prospect : le calculateur et le journal d'entraînement doivent lui être accessibles. Vérifier d'abord pourquoi ils sont cachés aujourd'hui.
+   - [ ] Précision : un client voit au moins tout ce que voit un prospect : le calculateur et le journal d'entraînement doivent lui être accessibles. *(Cause : le calculateur est le réglage du coach ; le journal des clients est dans « Mon programme », l'onglet « Journal d'entraînement » est l'outil du coach.)* **v53** (partie clients et coach du lot D : calculateur client avec sa propre clé, onglet « Mon journal », lien coach « Ses séances » vers ce journal).
 - [ ] 7. Pages verrouillées (programme, nutrition, journal, suivi) : un échantillon générique, puis « Tu veux un programme construit pour toi, qui évolue chaque semaine ? Réserve ton bilan. » Programme : la séance découverte existante. Nutrition : une journée type d'exemple (réutiliser le générateur ou les recettes existantes).
-- [ ] 8. Cartes dans l'app (pas d'emails) : poids stable (± 0,3 kg) sur 14 jours → carte « Ton poids stagne… » + bilan ; 3e visite d'une page verrouillée → rappel de sa réponse « problème » + bilan ; Speed Formation terminée → proposition de bilan.
+- [ ] 8. **Reporté après l'ouverture (ligne directrice, point 4).** Cartes dans l'app (pas d'emails) : poids stable (± 0,3 kg) sur 14 jours → carte « Ton poids stagne… » + bilan ; 3e visite d'une page verrouillée → rappel de sa réponse « problème » + bilan ; Speed Formation terminée → proposition de bilan.
 - [ ] 9. Bug : sur téléphone, après connexion, le Profil s'ouvre déjà défilé et l'encadré « Bienvenue ! » est coupé sous l'en-tête.
 - [ ] 10. Garder le garde-fou 18 ans et la mention « pas un avis médical » existants. (Q7 : garde-fou au calculateur ; case des conditions « J'ai 18 ans ou plus et j'accepte… »)
 - [ ] 11. Bug mineur : un client qui ouvre une page coach (par exemple `#/calculateur`) voit l'Accueil, mais l'adresse ne change pas.
-- [ ] 12. Branche `attente/nuit-28-09` : reprendre les corrections utiles (messages d'erreur en français, session après changement d'adresse, erreurs du Profil). Laisser ce qui concerne l'envoi des emails d'inscription par Brevo (on passe par Gmail).
+- [ ] 12. Branche `attente/nuit-28-09` : reprendre les corrections utiles (messages d'erreur en français, session après changement d'adresse, erreurs du Profil). Laisser ce qui concerne l'envoi des emails (aucun email pour l'instant).
 - [ ] 13. GitHub Actions (demande de Lucas du 28/09, à faire à la fin du chantier, sans interrompre les lots) : dans `.github/workflows`, figer le runner sur `ubuntu-24.04` au lieu de `ubuntu-latest` (passage à Ubuntu 26 le 19 octobre) et mettre à jour les actions qui tournent encore sous Node.js 20 ; vérifier que le banc reste vert sur GitHub.
-- [ ] Fin du chantier : banc à jour et vert, téléphone + ordi, relecture indépendante, version 52, note Grok (5 à 10 tests), « État actuel », commit, push, vérification en ligne.
+- [ ] 14. Nettoyage (ligne directrice, point 8) : retirer le mode test « jour 8 » et la tuile « Prospects en découverte » (lot D) ; retirer la fonction d'emails v51 (`supabase/functions/emails-prospects`, sa migration jamais appliquée, `desinscription.html`, son test dans le banc), sans toucher aux données. **v52** — la lecture côté coach (journal des emails, bonus du score) part avec le score en **v53**.
+- [ ] Fin de la v52 : banc à jour et vert, téléphone + ordi, relecture indépendante, version 52, note Grok (5 à 10 tests), « État actuel », commit, push, vérification en ligne, puis marche à suivre d'ouverture envoyée à Lucas (une étape à la fois, avec les liens).
 
-## Chantier 3 — Feedback du dimanche (remplace le bilan du vendredi)
+## Chantier 3 — Feedback du dimanche (remplace le bilan du vendredi) — **v53**
 Démarre derrière l'interrupteur en « test » (Étape 1 d) : les autres clients gardent le bilan du vendredi tant que Lucas ne passe pas l'interrupteur sur « tous ».
 - [ ] Le dimanche : « Selon toi, comment as-tu travaillé cette semaine ? » (note sur 10), puis 3 cases : Training, Alimentation, Autre.
 - [ ] Réponse du coach juste en dessous, au même endroit.
 - [ ] Smiley 😞 😐 😊 sur la réponse du coach (facultatif, 1 clic). Si 😞 : « Qu'est-ce qui ne t'a pas plu ? » et « Qu'est-ce que je peux améliorer pour toi ? », qui remontent en priorité chez le coach.
 - [ ] Historique visible. Rappel le dimanche. Alerte au client quand le coach a répondu.
-   - [ ] Précision : rappels et alertes d'abord dans l'app : un bandeau le dimanche, un badge quand le coach a répondu. Les emails viendront au chantier 2.
+   - [ ] Précision : rappels et alertes dans l'app seulement : un bandeau le dimanche, un badge quand le coach a répondu (aucun email).
 - [ ] Les anciens bilans restent lisibles, rien n'est supprimé.
 - [ ] Bug : le lundi, le bilan porte encore sur la semaine passée et dit « avant dimanche soir ».
 - [ ] À vérifier : où les clients notent leurs séances (le journal d'entraînement semble caché aux clients).
 - [ ] Précision : note en chute = note de 5 ou moins, ou 2 points de moins que la semaine précédente.
-- [ ] Préparer un court message WhatsApp que Lucas enverra à ses clients pour expliquer le nouveau feedback du dimanche. Il annonce aussi le suivi des visites (Q4) et l'écran d'acceptation des conditions (Q6).
-- [ ] Fin du chantier : banc à jour et vert, téléphone + ordi, relecture indépendante, version suivante, note Grok (5 à 10 tests), « État actuel », commit, push, vérification en ligne.
+- [ ] Préparer un court message WhatsApp que Lucas enverra à ses clients pour expliquer le nouveau feedback du dimanche. Il annonce aussi le suivi des visites (Q4). (L'écran d'acceptation Q6 est reporté après l'ouverture.)
 
-## Chantier 4 — Côté coach
+## Chantier 4 — Côté coach — **v53**
 - [ ] Tableau de bord : 2 tuiles seulement, Clients et Prospects, avec les urgences en badge.
 - [ ] Clients : retour du dimanche (à traiter / fait), note, dernier smiley, dernière visite, jours actifs sur 30 jours. Les 😞 et les notes en chute en haut. Alerte si la note chute.
 - [ ] Prospects : date d'inscription, 3 réponses, bilan réservé ou pas, newsletter oui / non, dernière visite, jours actifs. Retirer le score sur 100 et la température CHAUD / TIÈDE / FROID.
 - [ ] Bilan réservé : le coach le coche lui-même en un clic dans la fiche du prospect. Pas de liaison automatique avec Calendly (payante).
 - [ ] Précision : jour actif = un jour où la personne a ouvert l'app, pas une connexion. Suivi des visites (dernière visite, jours actifs sur 30 jours) aussi pour les clients.
 - [ ] Précision : garder le bouton « Passer client » : c'est lui qui donne l'accès complet après la vente.
-- [ ] Fin du chantier : banc à jour et vert, téléphone + ordi, relecture indépendante, version suivante, note Grok (5 à 10 tests), « État actuel », commit, push, vérification en ligne.
+- [ ] Liste « À traiter maintenant » sous les 2 tuiles (5 lignes au plus, seulement quand elle n'est pas vide).
+- [ ] Retirer le score, la température, la lecture du journal des emails (bonus « email ouvert ») et les vérifications devenues obsolètes de verif49, sans toucher aux données.
+- [ ] Fin de la v53 (partie clients et coach du lot D + chantiers 3 et 4 + liste newsletter + compteur) : banc à jour et vert, téléphone + ordi, relecture indépendante, version 53, note Grok (5 à 10 tests), « État actuel », message WhatsApp, commit, push, vérification en ligne.
 
 ## Chantier 2 — Ouverture de l'inscription
-Partie code seulement dans la mission autonome : rien n'est activé, rien n'est déployé, aucun email ne part.
-**Simplifié par Lucas le 28/09** : ni newsletter construite, ni relances par email (J3 et suivantes), ni exemples de newsletter : Lucas gérera l'envoi lui-même plus tard. La fonction `supabase/functions/emails-prospects` (jamais déployée) n'est plus développée.
-- [ ] Emails d'inscription (confirmation, mot de passe oublié) : via le SMTP de Gmail depuis mhx.coaching@gmail.com, avec un mot de passe d'application (à vérifier). Pas de nom de domaine pour l'instant. Pas de SMS.
-- [ ] Case newsletter à l'inscription (texte validé, facultative, décochée), avec la date et la version du texte enregistrées. *(fait au chantier 1, lot B)*
-- [ ] Retrait de cet accord possible dans le Profil (date et version enregistrées). *(chantier 1, lot B)*
-- [ ] Espace coach : la liste des personnes qui ont coché la case, exportable en CSV (prénom, nom, email, date de l'accord).
-- [ ] Précision : accords — enregistrer la date et la version du texte pour la case santé et pour la case newsletter.
-- [ ] Q6 : écran unique d'acceptation (conditions + données de santé) à la prochaine connexion des clients sans accord enregistré, derrière l'interrupteur en « test ».
-- [ ] Politique de confidentialité et mentions légales : brouillons avec des champs à compléter par Lucas (suivi d'activité, newsletter — outil d'envoi à préciser —, Supabase, Calendly, Gmail). Droit de suppression : sur simple demande par email.
-- [ ] Compteur simple côté coach : inscrits → 3 questions remplies → bilans réservés → clients.
-- [ ] Mettre à jour `docs/OUVERTURE-INSCRIPTION.md` : marche à suivre pas à pas pour Lucas (mot de passe d'application Gmail et SMTP dans Supabase, test prospect complet par Grok, puis ouverture), avec les liens à cliquer.
-- [ ] Vrai test prospect complet (par Grok, compte jetable) sur la nouvelle version. *(Lucas, après la mission)*
+Rien n'est activé ni déployé par Claude, **aucun email n'est envoyé** (ligne directrice, point 1). Lucas gérera les emails (SMTP, newsletter) plus tard.
+- [ ] Case newsletter à l'inscription (texte validé, facultative, décochée), avec la date et la version du texte enregistrées. **v52** (lot B)
+- [ ] Retrait de cet accord dans le Profil (date et version enregistrées). **v52** (lot B)
+- [ ] Précision : accords — date et version du texte pour la case santé et pour la case newsletter. **v52** (lot B)
+- [ ] Espace coach : la liste des personnes qui ont coché la case, exportable en CSV (prénom, nom, email, date de l'accord). **v53**
+- [ ] Compteur simple côté coach : inscrits → 3 questions remplies → bilans réservés → clients. **v53**
+- [x] Politique de confidentialité et mentions légales : brouillons avec des champs à compléter par Lucas (`docs/CONFIDENTIALITE-BROUILLON.md`, `docs/MENTIONS-LEGALES-BROUILLON.md`). *(à retoucher : plus aucun email envoyé par l'app pour l'instant)*
+- [ ] `docs/OUVERTURE-INSCRIPTION.md` : marche à suivre pas à pas, **sans SMTP ni vérification d'email** (réglages que Lucas fait lui-même dans Supabase, test prospect complet par Grok, puis ouverture), avec les liens. **v52**
+- [ ] Reporté après l'ouverture : écran unique d'acceptation Q6 (conditions + données de santé des clients existants).
+- [ ] Vrai test prospect complet (par Grok, compte jetable) sur la nouvelle version. *(Lucas)*
 - [ ] Ensuite seulement, Lucas ouvre l'inscription lui-même. *(Lucas)*
-- [ ] Fin de la partie code : banc à jour et vert, téléphone + ordi, vérificateur indépendant sur ce qui est risqué, version suivante, note Grok (5 à 10 tests), « État actuel », commit, push, vérification en ligne.
 
 ## Fin de mission
 - [ ] Résumé final unique pour Lucas (voir « Résumé final » plus haut).
@@ -131,6 +143,7 @@ Partie code seulement dans la mission autonome : rien n'est activé, rien n'est 
 - **Q7** âge : garde-fou 18 ans dans le calculateur, et l'âge intégré à la case des conditions, sans case en plus : « J'ai 18 ans ou plus et j'accepte les conditions d'utilisation et la politique de confidentialité. »
 - **Chantier 2 simplifié (28/09, plus tard dans la journée)** : ni newsletter, ni relances par email, ni exemples de newsletter (Lucas gérera l'envoi plus tard). On garde la case newsletter (texte validé, date et version), le retrait dans le Profil, et côté coach la liste des personnes qui ont coché la case, exportable en CSV (prénom, nom, email, date de l'accord). Les emails d'inscription restent prévus via le SMTP de Gmail. Les réponses Q5 a, b, c, d ne s'appliquent plus.
 - **Brevo et mesure d'ouverture (28/09, précision)** : la fonction d'envoi v51 reste non déployée et rien dans l'app ne l'appelle ; Brevo est retiré des brouillons légaux ; **plus de mesure d'ouverture** : case newsletter « Je veux recevoir par email les conseils, témoignages et offres de coaching de MHX Coaching (1 à 2 emails par semaine maximum). Désinscription en 1 clic dans chaque email. », nouvelle version du texte (`2026-09-28c`) enregistrée avec la date. Les exemples des pages verrouillées du chantier 1 (séance découverte, journée type nutrition…) restent : seuls les exemples de newsletter sont abandonnés.
+- **Ligne directrice du 28/09 au soir** : voir en haut de ce fichier (elle remplace les décisions précédentes quand elles se contredisent : emails, Calendly, versions, reports).
 - **Décisions prises seules par Claude jusqu'au 28/09** (liste donnée à Lucas) : toutes validées. Tableau de bord : liste « À traiter maintenant » sous les 2 tuiles, 5 lignes au plus, affichée seulement quand elle n'est pas vide.
 
 ## Questions pour Lucas
@@ -154,3 +167,4 @@ Partie code seulement dans la mission autonome : rien n'est activé, rien n'est 
 - [x] **Q6 — Tes 7 clients et les accords.** Leurs comptes ont été créés par toi : ils n'ont jamais coché la case santé ni les conditions dans l'app. Veux-tu qu'ils les acceptent à leur prochaine connexion ? (non codé)
 - [x] **Q7 — Âge minimum.** Les 3 nouvelles questions ne demandent plus l'âge : le garde-fou 18 ans passe au calculateur (rien n'est enregistré sous 18 ans). Veux-tu en plus une case « J'ai 18 ans ou plus » à l'inscription ? (non codé)
 - [ ] **Q8 — Brouillons légaux (non bloquant, à faire par Lucas).** Dans `docs/CONFIDENTIALITE-BROUILLON.md` et `docs/MENTIONS-LEGALES-BROUILLON.md` : compléter les « [À COMPLÉTER] » (identité, statut, adresse, numéro d'entreprise, directeur de la publication) et trancher les points listés en bas de la politique (outil d'envoi de la newsletter, durées de conservation, base légale du suivi d'activité, Gmail personnel sans contrat de sous-traitance, contrats Supabase / Calendly, polices Google chargées depuis Google, CGU complètes ou non). Le test prospect par Grok (marche à suivre, étape 5) demande de choisir entre une copie locale lancée par Claude et une ouverture discrète.
+- [ ] **Q9 — Où tu colles le lien du bouton « Réserver mon bilan ».** Option prudente choisie : une seule ligne en haut de `index.html` (`CONFIG.marque.calendly`, commentée « colle ici le lien de ton bilan »). Raison : un prospect ne peut lire aucune donnée du coach dans la base (règles d'accès), donc un réglage « dans l'espace coach » demanderait une petite table nouvelle, lisible par tous les comptes (migration, que je ne peux pas appliquer moi-même). Pour changer le lien : me le donner (un commit, tests, publication) ou modifier cette ligne sur GitHub. Si tu veux le réglage dans l'app, dis-le : je prépare la migration pour que tu l'appliques.
