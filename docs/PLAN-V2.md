@@ -162,6 +162,15 @@ Rien n'est activé ni déployé par Claude, **aucun email n'est envoyé** (ligne
 - **Ligne directrice du 28/09 au soir** : voir en haut de ce fichier (elle remplace les décisions précédentes quand elles se contredisent : emails, Calendly, versions, reports).
 - **Décisions prises seules par Claude jusqu'au 28/09** (liste donnée à Lucas) : toutes validées. Tableau de bord : liste « À traiter maintenant » sous les 2 tuiles, 5 lignes au plus, affichée seulement quand elle n'est pas vide.
 
+## À faire plus tard (relecture de la v52, rien de bloquant)
+- Accueil du prospect : l'étape suivante (pesée) peut apparaître avec un écran de retard juste après l'enregistrement du calcul (lecture du serveur, écriture encore en attente).
+- Anglais incomplet dans le contenu de la Speed Formation (descriptions des modules) et le catalogue (noms de recettes) ; case santé FR « … conformément à la politique » (compléter « de confidentialité »).
+- Coach : le suivi commercial parle encore de « découverte jour n/7 » / « terminée » (retiré avec le score en v53) ; « Ses calories » d'un prospect montre `calc`, pas son `calc_perso`.
+- Conditions : citer les chargements Google (polices, vignettes YouTube) ; un « 7 jours » reste dans le contenu de la Speed Formation (cours, pas une limite).
+- Sauvegarde manuelle : un âge mineur tapé (jamais enregistré) peut se retrouver dans le fichier exporté par « Copier ma sauvegarde » ; à nettoyer.
+- Base : seul le code empêche un client d'écrire `calc` (policy du propriétaire) ; à envisager : retirer les clés du coach des policies du propriétaire (migration, décision de Lucas).
+- Navigation du coach : le calculateur a changé de place (après Ma progression) ; retour en haut de page à chaque rechargement (`scrollRestoration`) ; titre « Changer mon adresse email » au-dessus d'une simple phrase (« Mon adresse email » ?) ; code des emails gardé mais plus appelé (à retirer en v53).
+
 ## Questions pour Lucas
 *(notées pendant la mission autonome ; on continue sur le reste en attendant)*
 - [x] **Q1 — Autoriser le push (Étape 1 b).** Dans `.claude/settings.local.json`, une seule modification : dans `"deny"`, remplacer la ligne `"Bash(git push*)",` par les 8 lignes ci-dessous, et dans `"allow"`, ajouter `"Bash(git push origin main)",`. Les interdictions l'emportent toujours sur les autorisations : ces 8 lignes bloquent toutes les autres formes (forcer, supprimer, pousser une autre branche sur `main`, options, `git -C`), sans bloquer `git push origin main`.

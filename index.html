@@ -11691,15 +11691,19 @@ const Decouverte = {
     const q = QUESTIONS.find(x => x.id === "objectif");
     return o && q && Array.isArray(q.options) && q.options.indexOf(o) > -1 ? o : "";
   },
-  /* v52 : pose I.objectif depuis la reponse « problème » quand il est vide — ou quand il venait de cette table pour la
-     reponse d'avant (precedent) : jamais par-dessus un objectif choisi dans le questionnaire complet. Rend vrai si I change. */
-  poserObjectif(I, precedent){
+  /* v52 : pose I.objectif depuis la reponse « problème » quand il est vide, ou quand c'est l'app elle-meme qui l'avait pose
+     (marqueur I.objectif_auto = la valeur posee) : jamais par-dessus un objectif choisi par la personne. Ancien client
+     (I.nom ou I.complet, par exemple repasse prospect par le coach) : seulement s'il est vide — ses donnees restent intactes
+     (correction apres relecture : l'ancienne regle « venait de la table pour la reponse d'avant » pouvait remplacer un objectif
+     choisi dans le questionnaire complet). Rend vrai si I change. */
+  poserObjectif(I){
     if (!I || typeof I !== "object") return false;
     const o = this.objectifDepuis(I.probleme); if (!o || I.objectif === o) return false;
     const vide = !(typeof I.objectif === "string" && I.objectif.trim());
-    const venaitDeLaTable = typeof I.objectif === "string" && precedent !== I.probleme && !!this.objectifDepuis(precedent) && I.objectif === this.objectifDepuis(precedent);
-    if (!vide && !venaitDeLaTable) return false;
-    I.objectif = o; return true;
+    const ancienClient = !!(I.nom || I.complet);
+    const poseParLApp = typeof I.objectif_auto === "string" && I.objectif === I.objectif_auto;
+    if (!vide && (ancienClient || !poseParLApp)) return false;
+    I.objectif = o; I.objectif_auto = o; return true;
   },
   /* v52 : le choix fait sur la page de proposition de bilan ({ choix: "reserver" | "plus_tard", le }), ou null */
   bilanPropose(I){
@@ -12236,7 +12240,7 @@ const outilDecouverte = {
         if (valide(q, v) && String(I[q.id] == null ? "" : I[q.id]) !== String(v)){ if (!(q.id in avant)) avant[q.id] = I[q.id]; I[q.id] = v; change = true; }
       });
       /* v52 : la reponse « problème » pose l'objectif du questionnaire complet s'il est vide (table CONFIG) */
-      if (change && I.probleme !== probleme){ const o = I.objectif; if (Decouverte.poserObjectif(I, probleme) && !("objectif" in avant)) avant.objectif = o; }
+      if (change && I.probleme !== probleme){ const o = I.objectif, oa = I.objectif_auto; if (Decouverte.poserObjectif(I) && !("objectif" in avant)){ avant.objectif = o; avant.objectif_auto = oa; } }
       if (change){
         /* v51 : le debut du questionnaire et l'email du compte (pour le coach) partent avec la premiere reponse ;
            comme elle, ils sont retires si un age mineur est saisi ensuite */
@@ -12280,10 +12284,10 @@ const outilDecouverte = {
         manquants.concat(hors).forEach(q => { const el = $("q-" + q.id); if (el) el.classList.add("manque"); });
         return;
       }
-      const garde = { court_le: I.court_le, court_debut: I.court_debut, email_compte: I.email_compte, objectif: I.objectif };
+      const garde = { court_le: I.court_le, court_debut: I.court_debut, email_compte: I.email_compte, objectif: I.objectif, objectif_auto: I.objectif_auto };
       const probleme = I.probleme;
       Object.assign(I, V);
-      Decouverte.poserObjectif(I, probleme);   // v52 : l'objectif du questionnaire complet depuis la reponse « problème »
+      Decouverte.poserObjectif(I);   // v52 : l'objectif du questionnaire complet depuis la reponse « problème » (jamais par-dessus celui de la personne)
       if (!Decouverte.questionnaireFait(I)) I.court_le = new Date().toISOString();
       if (!I.court_debut) I.court_debut = I.court_le;
       const mail = Decouverte.emailCompte(); if (mail) I.email_compte = mail;

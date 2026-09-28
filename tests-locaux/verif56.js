@@ -366,7 +366,7 @@ const memes = (a, b) => { const t = o => JSON.stringify(Object.keys(o || {}).sor
 const OBJ = { "Perdre du gras": "Perte de poids / sèche", "Prendre du muscle": "Prise de muscle", "Me remettre en forme": "Santé & énergie au quotidien" };
 /* un nouveau prospect qui a validé les 3 questions */
 const NOUVEAU = (extra) => Object.assign({ probleme: "Perdre du gras", obstacle: "Le manque de temps avec le travail", projection: "Courir 10 km sans m'arrêter",
-  objectif: "Perte de poids / sèche", court_debut: avant(2 * H), court_le: avant(H) }, extra || {});
+  objectif: "Perte de poids / sèche", objectif_auto: "Perte de poids / sèche", court_debut: avant(2 * H), court_le: avant(H) }, extra || {});   // v52 : objectif posé par l'app (marqueur)
 /* un ancien prospect (v51) : les 10 réponses de l'ancien questionnaire court, validé, pas de choix sur la page bilan */
 const ANCIEN = { sexe: "Femme", age: "30", taille: "165", poids: "70", objectif: "Perte de poids / sèche", seances: "3", essaye: "Des régimes trop stricts.",
   obstacle: "Je manque de temps avec le travail", pourquoi: "Me sentir mieux cet été", motivation: "8", court_debut: avant(3 * J), court_le: avant(3 * J - H), email_compte: "ancienne@exemple.fr" };
@@ -438,8 +438,8 @@ function lienOk(href, base, attendu){
       const out = {
         vide: t({ probleme: "Perdre du gras" }), videChaine: t({ probleme: "Prendre du muscle", objectif: "  " }),
         choisi: t({ probleme: "Perdre du gras", objectif: "Recomposition (perdre du gras + prendre du muscle)" }),
-        suivi: t({ probleme: "Prendre du muscle", objectif: "Perte de poids / sèche" }, "Perdre du gras"),
-        pasSuiviSiChoisi: t({ probleme: "Prendre du muscle", objectif: "Perte de poids / sèche" }, "Me remettre en forme"),
+        suivi: t({ probleme: "Prendre du muscle", objectif: "Perte de poids / sèche", objectif_auto: "Perte de poids / sèche" }),   // v52 : posé par l'app (marqueur objectif_auto) → il suit
+        pasSuiviSiChoisi: t({ probleme: "Prendre du muscle", objectif: "Perte de poids / sèche" }),   // sans marqueur : choisi par la personne → jamais remplacé
         sansProbleme: t({ objectif: "" }), inconnu: t({ probleme: "<b>x</b>" })
       };
       /* une cible qui n'est plus une option du questionnaire complet : jamais posée */
@@ -1421,6 +1421,49 @@ function lienOk(href, base, attendu){
       ok("coach dans la fiche du prospect : #/programme, #/nutrition, #/suivi sans exemple ni verrou (Echantillons.html rend « » en consultation), aucune écriture", vc.every(x => x[1] === ID3 && !x[2]) && videC === "" && db3.ecritures.length === 0, JSON.stringify(vc) + " · " + resume(db3));
     });
   }
+
+  /* =================== P. objectif d'un ancien client (correction après la relecture de la v52) ===================
+     Un vrai client repassé prospect par le coach (intake.complet, objectif choisi dans son questionnaire) répond aux 3
+     questions : son objectif ne doit jamais être remplacé par celui déduit de la réponse « problème ». Et pour un nouveau
+     prospect, l'objectif posé par l'app suit sa réponse (marqueur intake.objectif_auto). Sur 13954f8 : P1 et P2 échouent. */
+  await bloc("P1. ex-client repassé prospect, brouillon", async () => {
+    const k = 91, ID = PID(k), I0 = clone(INTAKE_THOMAS);
+    const db = base({ comptes: [compte(k, "Thomas", "Démo", [["intake", I0]], { cree: avant(90 * J) })] });
+    const { c, page } = await ouvrir(b, db, k, "#/decouverte", "#q-probleme");
+    await page.selectOption("#q-probleme", "Perdre du gras"); await attendre(page, 1500);
+    const I1 = clone(intakeDe(db, ID)) || {};
+    await page.selectOption("#q-probleme", "Prendre du muscle"); await attendre(page, 1500);
+    const I2 = clone(intakeDe(db, ID)) || {};
+    ok("P1 : objectif de l'ex-client (" + I0.objectif + ") gardé après le 1er choix", I1.objectif === I0.objectif, JSON.stringify({ o1: I1.objectif }));
+    ok("P1 : objectif de l'ex-client gardé après un changement de la réponse « problème »", I2.objectif === I0.objectif, JSON.stringify({ o2: I2.objectif, probleme: I2.probleme }));
+    await c.close();
+  });
+  await bloc("P2. ex-client repassé prospect, validation puis modification", async () => {
+    const k = 92, ID = PID(k), I0 = Object.assign(clone(INTAKE_THOMAS), { objectif: "Prise de muscle" });
+    const db = base({ comptes: [compte(k, "Thomas", "Démo", [["intake", I0]], { cree: avant(90 * J) })] });
+    const { c, page } = await ouvrir(b, db, k, "#/decouverte", "#q-probleme");
+    await page.selectOption("#q-probleme", "Prendre du muscle"); await page.fill("#q-obstacle", "Le temps"); await page.fill("#q-projection", "Etre en forme");
+    await page.click("#dc-voir"); await attendre(page, 1600);
+    const I1 = clone(intakeDe(db, ID)) || {};
+    await aller(page, "#/decouverte/reponses", 1500);
+    await page.selectOption("#q-probleme", "Perdre du gras"); await page.click("#dc-voir"); await attendre(page, 1600);
+    const I2 = clone(intakeDe(db, ID)) || {};
+    ok("P2 : après validation, objectif de l'ex-client gardé", I1.objectif === I0.objectif, I1.objectif);
+    ok("P2 : après modification de « problème », objectif de l'ex-client gardé", I2.objectif === I0.objectif, JSON.stringify({ o2: I2.objectif, complet: I2.complet }));
+    await c.close();
+  });
+  await bloc("P3. nouveau prospect : l'objectif posé par l'app suit sa réponse", async () => {
+    const k = 93, ID = PID(k);
+    const db = base({ comptes: [compte(k, "Léa", "Martin", [], { cree: avant(2 * J) })] });
+    const { c, page } = await ouvrir(b, db, k, "#/decouverte", "#q-probleme");
+    await page.selectOption("#q-probleme", "Perdre du gras"); await attendre(page, 1500);
+    const I1 = clone(intakeDe(db, ID)) || {};
+    await page.selectOption("#q-probleme", "Prendre du muscle"); await attendre(page, 1500);
+    const I2 = clone(intakeDe(db, ID)) || {};
+    ok("P3 : objectif posé depuis « Perdre du gras », avec le marqueur objectif_auto", I1.objectif === "Perte de poids / sèche" && I1.objectif_auto === I1.objectif, JSON.stringify({ o: I1.objectif, a: I1.objectif_auto }));
+    ok("P3 : l'objectif posé par l'app suit le changement de réponse (« Prise de muscle »)", I2.objectif === "Prise de muscle" && I2.objectif_auto === "Prise de muscle", JSON.stringify({ o: I2.objectif, a: I2.objectif_auto }));
+    await c.close();
+  });
 
   /* =================== Z. rien vers l'extérieur =================== */
   await bloc("Z. hôtes externes", async () => {
