@@ -4,8 +4,9 @@
       seulement, « tous » = tout le monde, « off » ou valeur inconnue = personne ; comptes de test = identifiants, jamais
       d'email ; l'objet Nouveautes (notifications du coach) est toujours là, à part ;
    B. corrections de la nuit du 28/09 : erreurs d'envoi d'email en français (et en anglais), jamais le texte brut de
-      Supabase (inscription, mot de passe oublié, changement d'adresse dans le Profil) ; changement d'adresse en deux
-      liens (premier lien, dernier lien, connecté ou non, session renouvelée après le dernier lien) ;
+      Supabase (inscription) ; changement d'adresse en deux liens (premier lien, dernier lien, connecté ou non, session
+      renouvelée après le dernier lien). v52, lot B (décision de Lucas : aucun email envoyé par l'app) : « Mot de passe
+      oublié » et le changement d'adresse du Profil donnent seulement l'adresse du coach, sans aucun appel ;
    C. adresse réécrite quand la page demandée n'est pas pour la personne (client, prospect, coach), sans boucle ; le
       coach sur #/accueil hors fiche : « Ouvrir » du tableau de bord ouvre bien la fiche ;
    D. première connexion d'un client sur téléphone : le Profil s'ouvre en haut (écran de connexion défilé, polices
@@ -21,9 +22,9 @@
       pendant l'envoi (insertion simple : rien d'écrasé) ;
    F. Profil du prospect : interrupteur « Newsletter » (FR / EN) → emails { newsletter, maj, version, source: "profil" },
       un « non » coupe aussi l'ancien suivi ; l'ancien accord ne coche jamais la newsletter ; lecture ratée ;
-   G. conditions FR / EN (version 2026-09-28, DECOUVERTE.accords, newsletter 2026-09-28c) : plus de 7 jours, nom,
-      3 questions, newsletter (1 à 2 par semaine, désinscription en 1 clic, retrait dans le Profil), emails du compte par
-      Gmail, ni mesure d'ouverture, ni prestataire nommé, ni relance (décisions de Lucas), Calendly avec le nom ; mêmes
+   G. conditions FR / EN (version 2026-09-28b, DECOUVERTE.accords, newsletter 2026-09-28c) : plus de 7 jours, nom,
+      3 questions, newsletter (1 à 2 par semaine, désinscription en 1 clic, retrait dans le Profil), ni mesure d'ouverture,
+      ni prestataire nommé, ni relance, ni email du compte promis (décisions de Lucas), Calendly avec le nom ; mêmes
       paragraphes aux mêmes places ;
    H. Calendly : name = prénom + nom, first_name, last_name, email (prospect, page verrouillée, fiche du coach,
       lienCalendlyPour à 3 ou 4 paramètres), pré-remplissage éteint, caractères piégés ;
@@ -330,13 +331,20 @@ const TX = {
   profil_ok: e => "Un lien de confirmation part sur " + e + ", et par sécurité un autre sur ton adresse actuelle : clique les deux. Le changement est fait au dernier clic.",
   profil_ok_en: e => "A confirmation link is on its way to " + e + ", and for security another one to your current address: click both. The change is done on the last click.",
   profil_note: "Un lien de confirmation part sur la nouvelle adresse (et, par sécurité, un autre sur l'ancienne : clique les deux).",
-  profil_note_en: "A confirmation link is sent to the new address (and, for security, another one to the old address: click both)."
+  profil_note_en: "A confirmation link is sent to the new address (and, for security, another one to the old address: click both).",
+  /* v52 (décision de Lucas) : aucun email envoyé par l'app : mot de passe oublié et changement d'adresse passent par un email au coach */
+  oubli: "Écris-nous à mhx.coaching@gmail.com, on te débloque rapidement.",
+  oubli_en: "Write to us at mhx.coaching@gmail.com, we'll get you back in quickly.",
+  profil_mail: "Pour changer ton adresse email, écris-nous à mhx.coaching@gmail.com, on s'en occupe rapidement.",
+  profil_mail_en: "To change your email address, write to us at mhx.coaching@gmail.com, we'll take care of it quickly.",
+  adresse: ". C'est avec elle que tu te connectes.", adresse_en: ". It's the address you sign in with."
 };
 const LIEN_DERNIER = "#access_token=abc.def.ghi&expires_in=3600&refresh_token=xyz&token_type=bearer&type=email_change";
 const LIEN_PREMIER = "#message=Confirmation+link+accepted.++Please+proceed+to+confirm+link+sent+to+the+other+email";
 
 /* ---------- lot B : inscription (nom, cases, accords), newsletter, conditions, Calendly ---------- */
-const V52 = "2026-09-28";   // version des conditions et de la case santé (DECOUVERTE.accords)
+const V52 = "2026-09-28";   // version de la case santé (DECOUVERTE.accords)
+const V_COND = "2026-09-28b";   // version des conditions (confidentialite.version : aucun email du compte, décision de Lucas)
 const V_NEWS = "2026-09-28c";   // version du texte de la case newsletter (texte final de Lucas du 28/09, sans mesure d'ouverture)
 const TXB = {
   titre: "Crée ton espace gratuit", titre_en: "Create your free space",
@@ -523,18 +531,25 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
         await c.close();
       }
     });
-    /* mot de passe oublié */
-    for (const [quoi, err, attendu, interdit, langue] of [
-      ["serveur d'emails en panne (« Error sending recovery email »)", { status: 500, msg: "Error sending recovery email" }, TX.envoi_rate, /Error sending/, ""],
-      ["limite horaire d'emails du projet : message neutre (pas « Beaucoup d'inscriptions »)", { status: 429, msg: "email rate limit exceeded" }, TX.trop_emails_compte, /inscriptions|rate limit/i, ""],
-      ["limite horaire d'emails, en anglais", { status: 429, msg: "email rate limit exceeded" }, TX.trop_emails_compte_en, /sign-ups|rate limit/i, "en"]]) {
-      const db = base(); db.recover.erreur = err;
+    /* mot de passe oublié — v52 (décision de Lucas) : l'app n'envoie plus aucun email : l'écran donne seulement l'adresse
+       du coach (lien mailto), sans champ ni bouton d'envoi, et rien ne part vers /auth/v1/recover (même avec Entrée) */
+    for (const langue of ["", "en"]) {
+      const db = base();
       const { c, page } = await contexte(b, null, db, { langue });
       await page.goto(URL0); await page.waitForSelector("#c-go"); await attendre(page, 300);
-      await page.click('[data-mode="oubli"]'); await attendre(page, 300);
-      await page.fill("#c-email", "client@exemple.fr"); await page.click("#c-go"); await attendre(page, 900);
-      const t = norm(await page.textContent("#co-err").catch(() => ""));
-      ok("mot de passe oublié, " + quoi + " : message traduit", db.oublis.length === 1 && t.includes(attendu) && !interdit.test(t), t);
+      await page.click('[data-mode="oubli"]'); await attendre(page, 400);
+      const e = await page.evaluate(() => { const p = document.getElementById("co-oubli"), a = p && p.querySelector("a");
+        return { t: p ? p.textContent.replace(/\s+/g, " ").trim() : null, href: a ? a.getAttribute("href") : null, email: !!document.getElementById("c-email"), go: !!document.getElementById("c-go") }; });
+      const att = langue ? TX.oubli_en : TX.oubli;
+      ok(`mot de passe oublié${langue ? " (anglais)" : ""} : seulement « ${att} » (lien mailto:mhx.coaching@gmail.com), ni champ email ni bouton d'envoi`, e.t === att && e.href === "mailto:mhx.coaching@gmail.com" && !e.email && !e.go, JSON.stringify(e));
+      if (!langue) {
+        /* un champ email encore là (ancienne version) est rempli : Entrée enverrait alors vraiment la demande */
+        if (await page.$("#c-email")) { await page.fill("#c-email", "client@exemple.fr"); await page.focus("#c-email"); }
+        await page.keyboard.press("Enter"); await attendre(page, 800);
+        const envoi = db.oublis.length || db.chemins.filter(x => /\/auth\/v1\/(recover|otp|magiclink)/.test(x)).length;
+        await page.click('[data-mode="connexion"]'); await attendre(page, 400);
+        ok("mot de passe oublié : Entrée n'envoie rien (aucun appel /auth/v1/recover), « Retour à la connexion » ramène l'écran de connexion", envoi === 0 && !!(await page.$("#c-go")) && !!(await page.$("#c-email")), JSON.stringify(db.chemins));
+      }
       await c.close();
     }
     /* liens de changement d'adresse, déconnecté */
@@ -569,27 +584,19 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
       ok("premier lien, connecté : « Premier lien accepté… », adresse nettoyée, pas de renouvellement de session", toasts.some(x => norm(x).includes(TX.premier_lien)) && !/message=/.test(page.url()) && !db.tokens.includes("refresh_token"), JSON.stringify(toasts) + " · " + page.url() + " · " + JSON.stringify(db.tokens));
       await c.close();
     }
-    /* Profil : changement d'adresse en deux liens (texte, réussite, erreurs), FR puis EN */
+    /* Profil : changement d'adresse — v52 (décision de Lucas) : plus aucun envoi (ni PUT /auth/v1/user avec email) ; le Profil
+       dit d'écrire au coach (lien mailto), le reste du compte ne change pas (mot de passe) ; FR puis EN */
     for (const langue of ["", "en"]) {
       const db = base(); if (langue) avecEn(db, F.IDS.c1);
       const { c, page } = await contexte(b, THOMAS, db, { langue });
-      await page.goto(URL0 + "#/profil"); await pret(page, "#mc-maj-email");
-      const note = await texte(page, "#vue");
-      ok(`Profil${langue ? " (anglais)" : ""} : la note dit qu'un lien part aussi sur l'ancienne adresse (cliquer les deux)`, note.includes(langue ? TX.profil_note_en : TX.profil_note), note.slice(note.indexOf(langue ? "A confirmation" : "Un lien de confirmation"), 200));
-      await page.fill("#mc-email", "thomas.b@exemple.fr"); await page.click("#mc-maj-email"); await attendre(page, 700);
-      const t1 = await texte(page, "#mc-email-msg");
-      ok(`Profil${langue ? " (anglais)" : ""}, changement d'adresse demandé : « ${(langue ? TX.profil_ok_en : TX.profil_ok)("thomas.b@exemple.fr").slice(0, 70)}… »`, db.majUsers.length === 1 && db.majUsers[0].email === "thomas.b@exemple.fr" && t1 === (langue ? TX.profil_ok_en : TX.profil_ok)("thomas.b@exemple.fr"), t1 + " · " + JSON.stringify(db.majUsers));
-      const cas = langue ? [["limite horaire d'emails", { status: 429, msg: "email rate limit exceeded" }, TX.trop_emails_compte_en]]
-        : [["limite horaire d'emails", { status: 429, msg: "email rate limit exceeded" }, TX.trop_emails_compte],
-           ["serveur d'emails en panne", { status: 500, msg: "Error sending email change email" }, TX.envoi_rate],
-           ["limite par adresse", { status: 429, msg: "For security purposes, you can only request this after 37 seconds." }, TX.trop_demandes]];
-      for (const [quoi, err, attendu] of cas) {
-        db.majUser.erreur = err; await attendre(page, 3400);   // le mot précédent s'efface au bout de 3,2 s
-        await page.click("#mc-maj-email"); await attendre(page, 700);
-        const t = await texte(page, "#mc-email-msg");
-        ok(`Profil${langue ? " (anglais)" : ""}, changement d'adresse, ${quoi} (« ${err.msg} ») : « ${attendu.slice(0, 55)}… », jamais le texte brut`, t === attendu && !t.includes(err.msg), t);
-      }
-      ok(`Profil${langue ? " (anglais)" : ""} : aucune écriture de données`, ecrDonnees(db).length === 0, resume(db));
+      await page.goto(URL0 + "#/profil"); await pret(page, "#mc-email-aide");
+      const e = await page.evaluate(() => { const p = document.getElementById("mc-email-aide"), a = p && p.querySelector("a");
+        return { t: p ? p.textContent.replace(/\s+/g, " ").trim() : null, href: a ? a.getAttribute("href") : null, champ: !!document.getElementById("mc-email"), bouton: !!document.getElementById("mc-maj-email"), mdp: !!document.getElementById("mc-mdp") && !!document.getElementById("mc-actuel") }; });
+      const vue = await texte(page, "#vue");
+      ok(`Profil${langue ? " (anglais)" : ""}, changement d'adresse : seulement « ${langue ? TX.profil_mail_en : TX.profil_mail} » (lien mailto), plus de champ ni de bouton ; « ${langue ? TX.adresse_en : TX.adresse} » ; changement du mot de passe toujours là`,
+        e.t === (langue ? TX.profil_mail_en : TX.profil_mail) && e.href === "mailto:mhx.coaching@gmail.com" && !e.champ && !e.bouton && e.mdp && vue.includes("thomas@exemple.fr" + (langue ? TX.adresse_en : TX.adresse)), JSON.stringify(e));
+      await attendre(page, 600);
+      ok(`Profil${langue ? " (anglais)" : ""} : aucun changement d'email envoyé (PUT /auth/v1/user), aucune écriture de données, aucune promesse de lien par email`, db.majUsers.length === 0 && !db.chemins.some(x => /^PUT \/auth\/v1\/user/.test(x)) && ecrDonnees(db).length === 0 && !/lien de confirmation|confirmation link|reset link|qu'arrive le lien/i.test(vue), resume(db) + " · " + JSON.stringify(db.chemins.filter(x => /auth/.test(x))));
       await c.close();
     }
   });
@@ -709,7 +716,7 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
         const { c, page } = await contexte(b, null, db, { viewport: MOBILE, langue });
         await page.goto(URL0 + "#/inscription"); await page.waitForSelector("#c-go"); await attendre(page, 400);
         const e = await ecranInscription(page);
-        ok(`inscription${L} : « ${T("titre")} », « ${T("sous").slice(0, 45)}… », aucun « 7 jours » / « 7 days » à l'écran`, e.titre === T("titre") && e.sous === T("sous") && !SEPT.test(e.texte), JSON.stringify({ titre: e.titre, sous: e.sous, sept: (SEPT.exec(e.texte) || [""])[0] }));
+        ok(`inscription${L} : « ${T("titre")} », « ${T("sous").slice(0, 45)}… », aucun « 7 jours » / « 7 days » ni email de confirmation promis à l'écran`, e.titre === T("titre") && e.sous === T("sous") && !SEPT.test(e.texte) && !/email de confirmation|lien de confirmation|confirmation (email|link)/i.test(e.texte), JSON.stringify({ titre: e.titre, sous: e.sous, sept: (SEPT.exec(e.texte) || [""])[0] }));
         ok(`inscription${L} : champ « ${T("nom")} » (#c-nom) juste après le prénom, type text, autocomplete="family-name", maxlength="60" (prénom : maxlength="60" aussi)`,
           e.ordre[e.ordre.indexOf("c-prenom") + 1] === "c-nom" && e.labelNom === T("nom") && e.nomType === "text" && e.nomAuto === "family-name" && e.nomMax === "60" && e.prenomMax === "60", JSON.stringify(e.ordre) + " " + JSON.stringify([e.labelNom, e.nomType, e.nomAuto, e.nomMax, e.prenomMax]));
         ok(`inscription${L} : trois cases séparées (conditions, santé, newsletter), chacune seule dans son libellé, aucune cochée d'avance ; plus de case « emails de suivi »`,
@@ -743,8 +750,8 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
         const md = (db.inscriptions[0] || {}).data || {}, cles = Object.keys(md).sort().join(",");
         const date = x => typeof x === "string" && /^\d{4}-\d{2}-\d{2}T/.test(x) && Math.abs(Date.parse(x) - t0) < 10000;
         ok(`inscription ${Q} : métadonnées exactement ${CLES_META} (plus d'emails_suivi)`, db.inscriptions.length === 1 && cles === CLES_META, db.inscriptions.length + " · " + cles);
-        ok(`… prénom « Zoé », nom « Martin » (espaces retirés) ; conditions et santé datées de l'inscription ; versions ${V52} (conditions = confidentialite.version = accords.conditions, sante_version = accords.sante)`,
-          md.prenom === "Zoé" && md.nom === "Martin" && date(md.consentement) && date(md.consentement_sante) && md.conditions_version === V52 && versions.c === V52 && !!versions.a && versions.a.conditions === V52 && md.sante_version === V52 && versions.a.sante === V52,
+        ok(`… prénom « Zoé », nom « Martin » (espaces retirés) ; conditions et santé datées de l'inscription ; versions ${V_COND} (conditions = confidentialite.version = accords.conditions), ${V52} (sante_version = accords.sante)`,
+          md.prenom === "Zoé" && md.nom === "Martin" && date(md.consentement) && date(md.consentement_sante) && md.conditions_version === V_COND && versions.c === V_COND && !!versions.a && versions.a.conditions === V_COND && md.sante_version === V52 && versions.a.sante === V52,
           JSON.stringify(md) + " · " + JSON.stringify(versions));
         if (news) ok(`… newsletter cochée : newsletter = l'instant de l'inscription, newsletter_version = accords.newsletter (${V_NEWS})`, date(md.newsletter) && md.newsletter === md.consentement && md.newsletter_version === V_NEWS && versions.a.newsletter === V_NEWS, JSON.stringify(md));
         else ok(`… newsletter laissée décochée : l'inscription passe quand même, newsletter = null, newsletter_version = ${V_NEWS} (le texte montré)`, "newsletter" in md && md.newsletter === null && md.newsletter_version === V_NEWS, JSON.stringify(md));
@@ -774,7 +781,7 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
         await Promise.all([page.waitForNavigation({ waitUntil: "load", timeout: 15000 }), page.click("#c-go")]);
         await pret(page); await attendre(page, 2000);
         const md = (db.inscriptions[0] || {}).data || {};
-        ok("inscription en anglais, newsletter cochée : mêmes métadonnées (versions " + V52 + ", newsletter datée) ; prénom et nom coupés à 60 caractères", Object.keys(md).sort().join(",") === CLES_META && md.prenom === "P".repeat(60) && md.nom === "N".repeat(60) && typeof md.newsletter === "string" && md.newsletter_version === V_NEWS && md.sante_version === V52 && md.conditions_version === V52, JSON.stringify(md).slice(0, 300));
+        ok("inscription en anglais, newsletter cochée : mêmes métadonnées (versions " + V52 + ", newsletter datée) ; prénom et nom coupés à 60 caractères", Object.keys(md).sort().join(",") === CLES_META && md.prenom === "P".repeat(60) && md.nom === "N".repeat(60) && typeof md.newsletter === "string" && md.newsletter_version === V_NEWS && md.sante_version === V52 && md.conditions_version === V_COND, JSON.stringify(md).slice(0, 300));
         ok("… copie emails { newsletter: true } à la première ouverture", ecr(db, "emails", ZID).length === 1 && (ecr(db, "emails", ZID)[0].contenu || {}).newsletter === true, resume(db));
         await c.close();
       }
@@ -944,20 +951,20 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
     const d = await page.evaluate(() => ({ v: DECOUVERTE.confidentialite.version, a: JSON.parse(JSON.stringify(DECOUVERTE.accords || null)), fr: DECOUVERTE.confidentialite.paragraphes, en: DECOUVERTE.en.confidentialite.paragraphes,
       ins: JSON.stringify([DECOUVERTE.inscription, DECOUVERTE.en.inscription, DECOUVERTE.emails, DECOUVERTE.en.emails]), vieille: "emails_avant" in DECOUVERTE.inscription || "emails_avant" in DECOUVERTE.en.inscription }));
     const fr = (d.fr || []).join("\n"), en = (d.en || []).join("\n");
-    ok(`conditions : version ${V52}, DECOUVERTE.accords = { conditions: ${V52} (= confidentialite.version), sante: ${V52}, newsletter: ${V_NEWS} }`, d.v === V52 && JSON.stringify(d.a) === JSON.stringify({ conditions: V52, sante: V52, newsletter: V_NEWS }), JSON.stringify([d.v, d.a]));
+    ok(`conditions : version ${V_COND}, DECOUVERTE.accords = { conditions: ${V_COND} (= confidentialite.version), sante: ${V52}, newsletter: ${V_NEWS} }`, d.v === V_COND && JSON.stringify(d.a) === JSON.stringify({ conditions: V_COND, sante: V52, newsletter: V_NEWS }), JSON.stringify([d.v, d.a]));
     ok("conditions FR et EN : même nombre de paragraphes (traduction par position), aucun « 7 jours » / « 7 days », ni dans les textes de l'inscription et du Profil ; plus d'ancienne case", d.fr.length === d.en.length && d.fr.length >= 10 && !SEPT.test(fr) && !SEPT.test(en) && !SEPT.test(d.ins) && !d.vieille, JSON.stringify([d.fr.length, d.en.length, (SEPT.exec(fr + en + d.ins) || [""])[0], d.vieille]));
     const i1 = d.fr.findIndex(p => p.startsWith("Données collectées")), i6 = d.fr.findIndex(p => p.startsWith("Prise de rendez-vous")), i7 = d.fr.findIndex(p => p.startsWith("Newsletter"));
     ok("FR : données collectées = prénom, nom, email, réponses aux 3 questions, données de santé saisies (poids, mensurations, calculateur)", i1 > -1 && ["ton prénom, ton nom, ton email", "3 questions", "poids", "mensurations", "calculateur de calories"].every(x => d.fr[i1].includes(x)), d.fr[i1]);
     ok("FR : Calendly « Ton prénom, ton nom et ton email y sont pré-remplis »", i6 > -1 && d.fr[i6].includes("Ton prénom, ton nom et ton email y sont pré-remplis"), d.fr[i6]);
     /* décisions de Lucas du 28/09 : plus aucune mention de mesure d'ouverture ; aucun prestataire d'emails nommé ; plus de
        relances ni d'emails de suivi automatiques ; emails du compte envoyés par Gmail (Google) */
-    ok("FR : paragraphe Newsletter à la place des « Emails de suivi » : 1 à 2 emails par semaine au plus, désinscription en 1 clic, retrait dans le Profil, emails du compte par Gmail ; ni mesure d'ouverture, ni Brevo, ni relance, ni « 3 emails »",
-      i7 > -1 && ["1 à 2 emails par semaine au plus", "Désinscription en 1 clic dans chaque email", "retrait de ton accord possible à tout moment dans ton Profil", "par Gmail (Google) pour le compte du coach"].every(x => d.fr[i7].includes(x))
+    ok("FR : paragraphe Newsletter à la place des « Emails de suivi » : 1 à 2 emails par semaine au plus, désinscription en 1 clic, retrait dans le Profil ; ni mesure d'ouverture, ni Brevo, ni relance, ni « 3 emails » ; aucun email du compte promis (confirmation, mot de passe, Gmail)",
+      i7 > -1 && ["1 à 2 emails par semaine au plus", "Désinscription en 1 clic dans chaque email", "retrait de ton accord possible à tout moment dans ton Profil"].every(x => d.fr[i7].includes(x)) && !/Gmail|Google|email de confirmation|confirmation de ton email|mot de passe oublié/i.test(fr)
       && !/relance|3 emails|emails de suivi|réserv|ouvert|cliqu|mesur/i.test(d.fr[i7]) && !/Brevo|emails de suivi|au plus 3 emails|a été ouvert|mesure d'ouverture/i.test(fr), d.fr[i7]);
     ok("FR : toujours « réservés aux adultes » et « ne remplace pas un avis médical »", /réservés aux adultes/.test(d.fr[0]) && /ne remplace pas un avis médical/.test(d.fr[0]), d.fr[0]);
-    ok("EN à la même place : last name, 3 questions, measurements ; « Your first name, last name and email are pre-filled » ; Newsletter (1 to 2 emails per week, one-click unsubscribe, withdrawal in the Profile, Gmail ; no open tracking, no Brevo, no follow-up) ; adults only, not medical advice",
+    ok("EN à la même place : last name, 3 questions, measurements ; « Your first name, last name and email are pre-filled » ; Newsletter (1 to 2 emails per week, one-click unsubscribe, withdrawal in the Profile ; no open tracking, no Brevo, no follow-up, no account email) ; adults only, not medical advice",
       /^Data collected: /.test(d.en[i1]) && ["your last name", "3 starting questions", "measurements", "calorie calculator"].every(x => d.en[i1].includes(x)) && /^Booking: /.test(d.en[i6]) && d.en[i6].includes("Your first name, last name and email are pre-filled")
-      && /^Newsletter \(optional\): /.test(d.en[i7]) && ["1 to 2 emails per week at most", "One-click unsubscribe in every email", "withdraw your consent at any time in your Profile", "by Gmail (Google) on the coach's behalf"].every(x => d.en[i7].includes(x)) && !/follow-up|3 emails|booked|opened|opening|clicked|track|measur/i.test(d.en[i7]) && !/Brevo|follow-up emails|at most 3 emails|was opened|open tracking/i.test(en)
+      && /^Newsletter \(optional\): /.test(d.en[i7]) && ["1 to 2 emails per week at most", "One-click unsubscribe in every email", "withdraw your consent at any time in your Profile"].every(x => d.en[i7].includes(x)) && !/Gmail|Google|confirmation email|email confirmation|forgotten password/i.test(en) && !/follow-up|3 emails|booked|opened|opening|clicked|track|measur/i.test(d.en[i7]) && !/Brevo|follow-up emails|at most 3 emails|was opened|open tracking/i.test(en)
       && /for adults only/.test(d.en[0]) && /not medical advice/.test(d.en[0]), JSON.stringify([d.en[i1], d.en[i6], d.en[i7]]).slice(0, 400));
     await c.close();
     /* le volet des conditions depuis l'inscription, en français puis en anglais : tous les paragraphes, dans la bonne langue */

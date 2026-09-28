@@ -1455,7 +1455,7 @@ const DECOUVERTE = {
   emails: {
     titre: "Newsletter",
     libelle: "Recevoir par email les conseils, témoignages et offres de coaching de MHX Coaching (1 à 2 emails par semaine maximum)",
-    note: "Tu peux changer d'avis à tout moment ; chaque email a aussi son lien de désinscription en 1 clic. L'email de confirmation de ton compte n'en fait pas partie. Si tu t'es désabonné depuis ta messagerie, demande aussi à ton coach de te réinscrire.",
+    note: "Tu peux changer d'avis à tout moment ; chaque email a aussi son lien de désinscription en 1 clic. Si tu t'es désabonné depuis ta messagerie, demande aussi à ton coach de te réinscrire.",
     oui: "C'est noté : tu recevras la newsletter.",
     non: "C'est noté : plus aucune newsletter.",
     refuse: "Non enregistré : réessaie dans un instant."
@@ -1495,7 +1495,9 @@ const DECOUVERTE = {
     trop_emails: "Beaucoup d'inscriptions en ce moment : réessaie dans une heure.",
     premier_lien: "Premier lien accepté : clique maintenant celui reçu sur ton autre adresse. Le changement d'email est fait au deuxième clic.",
     email_change: "Ton adresse email est changée : utilise la nouvelle pour te connecter.",
-    trop_emails_compte: "Trop d'emails envoyés en peu de temps : réessaie dans une heure."
+    trop_emails_compte: "Trop d'emails envoyés en peu de temps : réessaie dans une heure.",
+    /* v52 (décision de Lucas) : l'app n'envoie aucun email pour l'instant : « Mot de passe oublié ? » donne l'adresse du coach */
+    oubli: "Écris-nous à {e}, on te débloque rapidement."
   },
 
   /* --- v52 : versions des textes acceptés à l'inscription, envoyées avec chaque accord (métadonnées du compte :
@@ -1508,10 +1510,11 @@ const DECOUVERTE = {
   },
 
   /* --- conditions et confidentialité (volet ouvert depuis l'inscription et le Profil du prospect).
-     v52 : version 2026-09-28 (plus de limite de 7 jours, nom, 3 questions, newsletter). Le texte change = la version
+     v52 : version 2026-09-28b (plus de limite de 7 jours, nom, 3 questions, newsletter ; aucun email du compte envoyé par
+     l'app pour l'instant, décision de Lucas). Le texte change = la version
      change ; FR et EN gardent le même nombre de paragraphes, dans le même ordre (traduction par position) --- */
   confidentialite: {
-    version: "2026-09-28",
+    version: "2026-09-28b",
     titre: "Conditions d'utilisation et confidentialité",
     paragraphes: [
       "L'espace gratuit de MHX Coaching donne des informations et un entraînement généraux, réservés aux adultes. Il ne remplace pas un avis médical : en cas de doute sur ta santé, parles-en à un professionnel avant de commencer.",
@@ -1521,7 +1524,7 @@ const DECOUVERTE = {
       "Données de santé (RGPD article 9) : tu dois accepter explicitement le traitement de tes données concernant ta santé (poids, mensurations, données du calculateur de calories). Tu peux les consulter ou les supprimer à tout moment. Ces données sont conservées tant que ton compte existe.",
       "Hébergement : Supabase, serveurs en Europe (Irlande).",
       "Prise de rendez-vous : ton bilan se réserve sur Calendly (société américaine), qui enregistre ta réservation pour le compte du coach ; ces données peuvent être traitées aux États-Unis (cadre de protection des données UE–États-Unis). Ton prénom, ton nom et ton email y sont pré-remplis dès que tu ouvres la page de réservation, avec l'écran de l'app d'où tu viens.",
-      "Newsletter (facultative) : si tu coches la case, tu reçois par email les conseils, témoignages et offres de coaching de MHX Coaching, 1 à 2 emails par semaine au plus. Désinscription en 1 clic dans chaque email, et retrait de ton accord possible à tout moment dans ton Profil. Les emails de ton compte (confirmation de ton email, mot de passe oublié) sont envoyés dans tous les cas, par Gmail (Google) pour le compte du coach.",
+      "Newsletter (facultative) : si tu coches la case, tu reçois par email les conseils, témoignages et offres de coaching de MHX Coaching, 1 à 2 emails par semaine au plus. Désinscription en 1 clic dans chaque email, et retrait de ton accord possible à tout moment dans ton Profil.",
       "Tes droits : tu peux exporter ou supprimer ton compte et toutes tes données à tout moment depuis Profil, section « Mes données », ou en écrivant au coach.",
       "Conservation : tant que ton compte existe.",
       "En cochant la case, tu acceptes ces conditions."
@@ -1643,7 +1646,7 @@ const DECOUVERTE = {
     emails: {
       titre: "Newsletter",
       libelle: "Receive MHX Coaching's tips, testimonials and coaching offers by email (1 to 2 emails per week maximum)",
-      note: "You can change your mind at any time; every email also has its one-click unsubscribe link. Your account confirmation email is not part of these. If you unsubscribed from your mailbox, also ask your coach to re-subscribe you.",
+      note: "You can change your mind at any time; every email also has its one-click unsubscribe link. If you unsubscribed from your mailbox, also ask your coach to re-subscribe you.",
       oui: "Noted: you will receive the newsletter.",
       non: "Noted: no more newsletters.",
       refuse: "Not saved: try again in a moment."
@@ -1677,7 +1680,8 @@ const DECOUVERTE = {
       trop_emails: "Lots of sign-ups right now: try again in an hour.",
       premier_lien: "First link accepted: now click the one sent to your other address. The email change is done on the second click.",
       email_change: "Your email address has been changed: use the new one to sign in.",
-      trop_emails_compte: "Too many emails sent in a short time: try again in an hour."
+      trop_emails_compte: "Too many emails sent in a short time: try again in an hour.",
+      oubli: "Write to us at {e}, we'll get you back in quickly."
     },
     confidentialite: {
       titre: "Terms of use and privacy",
@@ -1689,7 +1693,7 @@ const DECOUVERTE = {
         "Health data (GDPR article 9): you must explicitly accept the processing of your health data (weight, measurements, calorie calculator data). You can view or delete this data at any time. This data is kept as long as your account exists.",
         "Hosting: Supabase, servers in Europe (Ireland).",
         "Booking: your assessment is booked on Calendly (a US company), which records your booking on the coach's behalf; this data may be processed in the United States (EU–US Data Privacy Framework). Your first name, last name and email are pre-filled as soon as you open the booking page, along with the app screen you came from.",
-        "Newsletter (optional): if you tick the box, you receive MHX Coaching's tips, testimonials and coaching offers by email, 1 to 2 emails per week at most. One-click unsubscribe in every email, and you can withdraw your consent at any time in your Profile. Your account emails (email confirmation, forgotten password) are sent in every case, by Gmail (Google) on the coach's behalf.",
+        "Newsletter (optional): if you tick the box, you receive MHX Coaching's tips, testimonials and coaching offers by email, 1 to 2 emails per week at most. One-click unsubscribe in every email, and you can withdraw your consent at any time in your Profile.",
         "Your rights: you can export or delete your account and all your data at any time from Profile, section \"My data\", or by writing to the coach.",
         "Retention: as long as your account exists.",
         "By ticking the box, you accept these terms."
@@ -1773,6 +1777,14 @@ function lienCalendlyPour(prenom, email, source, nom){
     const i = base.indexOf("#"), avant = i > -1 ? base.slice(0, i) : base, apres = i > -1 ? base.slice(i) : "";
     return avant + (avant.indexOf("?") > -1 ? "&" : "?") + params.join("&") + apres;
   } catch(e){ return base; }
+}
+/* v52 — « écris-nous » : une phrase (clé française, traduite par trad) dont {e} devient l'adresse email du coach, en lien
+   mailto (CONFIG.marque.email). Sert tant que l'app n'envoie aucun email (mot de passe oublié, changement d'adresse). */
+function ecrisNous(phrase, id, classe){
+  const t = trad(phrase), mail = String((CONFIG.marque && CONFIG.marque.email) || "").trim();
+  const i = t.indexOf("{e}"), avant = i > -1 ? t.slice(0, i) : t, apres = i > -1 ? t.slice(i + 3) : "";
+  const lien = /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(mail) ? `<a href="mailto:${esc(mail)}">${esc(mail)}</a>` : "";
+  return `<p class="${esc(classe || "note")}" id="${esc(id || "")}" data-notr>${esc(avant)}${lien}${esc(apres)}</p>`;
 }
 /* Un ecran vide doit toujours proposer quoi faire. Sans bouton, le client
    se dit que l'app ne marche pas et ne revient plus. Rien en consultation
@@ -1946,6 +1958,7 @@ const Contenus = {
 /* Dictionnaire anglais (US) — genere depuis i18n/en_data.py. Cle = texte francais exact. */
 I18N.en = {
 ". C'est à cette adresse qu'arrive le lien si tu oublies ton mot de passe — garde-la à jour.": ". This is where the reset link goes if you forget your password — keep it up to date.",
+". C'est avec elle que tu te connectes.": ". It's the address you sign in with.",   /* v52 : aucun email envoyé par l'app */
 "<span class=\"ico\" aria-hidden=\"true\">🎓</span>Ma formation": "<span class=\"ico\" aria-hidden=\"true\">🎓</span>My course",
 "<span class=\"ico\" aria-hidden=\"true\">💊</span>Mes compléments": "<span class=\"ico\" aria-hidden=\"true\">💊</span>My supplements",
 "<span class=\"ico\" aria-hidden=\"true\">📋</span>Mon programme": "<span class=\"ico\" aria-hidden=\"true\">📋</span>My program",
@@ -2197,6 +2210,7 @@ I18N.en = {
 "Un complément ne rattrape pas une alimentation qui ne va pas : commence toujours par tes repas. Si tu prends un traitement, si tu es enceinte ou si tu as une pathologie, demande à ton médecin avant d'en ajouter un — certains interagissent avec des médicaments. Ton coach n'est pas médecin.": "A supplement won't make up for a diet that isn't working: always start with your meals. If you take medication, are pregnant or have a health condition, ask your doctor before adding one — some interact with medications. Your coach is not a doctor.",
 "Un lien de confirmation part sur la nouvelle adresse (et, par sécurité, un autre sur l'ancienne : clique les deux). Tant que ce n'est pas fait, tu continues de te connecter avec l'ancienne — c'est ce qui t'évite de perdre ton compte en cas de faute de frappe.": "A confirmation link is sent to the new address (and, for security, another one to the old address: click both). Until then, you keep signing in with the old one — that keeps you from losing your account because of a typo.",
 "Un lien de confirmation part sur {e}, et par sécurité un autre sur ton adresse actuelle : clique les deux. Le changement est fait au dernier clic.": "A confirmation link is on its way to {e}, and for security another one to your current address: click both. The change is done on the last click.",
+"Pour changer ton adresse email, écris-nous à {e}, on s'en occupe rapidement.": "To change your email address, write to us at {e}, we'll take care of it quickly.",   /* v52 : aucun email envoyé par l'app */
 "Une question ?": "Questions?",
 "Vacances, mariage, compétition, shooting.": "Vacation, wedding, competition, photo shoot.",
 "Variation de poids": "Weight change",
@@ -5533,7 +5547,7 @@ const outilProfil = {
     return `${emails}
     <section class="panel">${conditions}
       <h2>Mon compte</h2>
-      <p class="note" style="margin:0 0 18px">Adresse actuelle : <b>${esc((u && u.email) || "—")}</b>. C'est à cette adresse qu'arrive le lien si tu oublies ton mot de passe — garde-la à jour.</p>
+      <p class="note" style="margin:0 0 18px">Adresse actuelle : <b>${esc((u && u.email) || "—")}</b>. C'est avec elle que tu te connectes.</p>
 
       <h3 style="font-family:Oswald,sans-serif;text-transform:uppercase;letter-spacing:.05em;font-size:14px;font-weight:500;color:var(--ink-2);margin:0 0 12px">Changer mon mot de passe</h3>
       <div class="grid g2">
@@ -5544,11 +5558,7 @@ const outilProfil = {
       <div class="actions"><button class="btn ghost" id="mc-mdp">Changer mon mot de passe</button><span class="msg" id="mc-mdp-msg"></span></div>
 
       <h3 style="font-family:Oswald,sans-serif;text-transform:uppercase;letter-spacing:.05em;font-size:14px;font-weight:500;color:var(--ink-2);margin:26px 0 12px">Changer mon adresse email</h3>
-      <div class="grid g2">
-        <div><label for="mc-email">Nouvelle adresse</label><input id="mc-email" type="email" autocomplete="email"></div>
-      </div>
-      <div class="actions"><button class="btn ghost" id="mc-maj-email">Changer mon adresse</button><span class="msg" id="mc-email-msg"></span></div>
-      <p class="note" style="margin-top:10px">Un lien de confirmation part sur la nouvelle adresse (et, par sécurité, un autre sur l'ancienne : clique les deux). Tant que ce n'est pas fait, tu continues de te connecter avec l'ancienne — c'est ce qui t'évite de perdre ton compte en cas de faute de frappe.</p>
+      ${ecrisNous("Pour changer ton adresse email, écris-nous à {e}, on s'en occupe rapidement.", "mc-email-aide", "note")}
     </section>`;
   },
 
@@ -5666,6 +5676,9 @@ const outilProfil = {
       bMdp.disabled = false;
     });
 
+    /* v52 (décision de Lucas) : l'app n'envoie aucun email pour l'instant : le changement d'adresse passe par un email au
+       coach (compteHTML) ; ce branchement ne sert plus tant que #mc-maj-email n'est pas affiché (gardé pour le jour où
+       les emails du compte reviendront) */
     const bMail = $("mc-maj-email");
     if (bMail) bMail.addEventListener("click", async () => {
       const nouveau = ($("mc-email").value || "").trim();
@@ -12784,7 +12797,11 @@ function portail(mode){
       <div id="co-err"></div>
       ${mode === "inscription" ? `<div class="champ"><label for="c-prenom">Ton prénom</label><input id="c-prenom" type="text" autocomplete="given-name" maxlength="60"></div>
       <div class="champ"><label for="c-nom">Ton nom</label><input id="c-nom" type="text" autocomplete="family-name" maxlength="60"></div>` : ""}
-      <div class="champ"><label for="c-email">Email</label><input id="c-email" type="email" autocomplete="email"></div>
+      ${mode === "oubli"
+        /* v52 (décision de Lucas) : l'app n'envoie aucun email pour l'instant (ni lien de mot de passe, ni vérification) :
+           « Mot de passe oublié ? » donne seulement l'adresse du coach, aucun appel à /auth/v1/recover */
+        ? ecrisNous(DECOUVERTE.inscription.oubli, "co-oubli", "co-sous")
+        : `<div class="champ"><label for="c-email">Email</label><input id="c-email" type="email" autocomplete="email"></div>`}
       ${mode === "inscription"
         /* v44 : prenom, email, mot de passe (un seul, avec « Afficher ») et la case des conditions.
            v52 : + le nom ; trois cases SEPAREES, aucune cochee d'avance : conditions (obligatoire), donnees de sante
@@ -12795,7 +12812,7 @@ function portail(mode){
       <label class="co-rester co-newsletter"><input type="checkbox" id="c-newsletter"><span>${esc(DECOUVERTE.inscription.newsletter)}</span></label>`
         : mode !== "oubli" ? `<div class="champ"><label for="c-mdp">Mot de passe</label><input id="c-mdp" type="password" autocomplete="current-password"></div>` : ""}
       ${mode !== "oubli" ? `<label class="co-rester"><input type="checkbox" id="c-rester" checked><span>Rester connecté</span></label>` : ""}
-      <button class="btn" id="c-go">${esc(bouton)}</button>
+      ${mode !== "oubli" ? `<button class="btn" id="c-go">${esc(bouton)}</button>` : ""}
       ${mode === "inscription" ? `<p class="co-note">${esc(DECOUVERTE.inscription.note)}</p>` : ""}
       ${CONFIG.marque.version ? `<p class="co-aide">v${esc(CONFIG.marque.version)}</p>` : ""}
       <div class="bascule">
@@ -12832,6 +12849,7 @@ function portail(mode){
   });
 
   const valider = async () => {
+    if (mode === "oubli" || !$("c-go") || !$("c-email")) return;   // v52 : « Mot de passe oublié » n'envoie plus rien
     if ($("c-go") && $("c-go").disabled) return;   // v44 : un envoi est deja en cours
     const email = ($("c-email").value || "").trim();
     const mdp = $("c-mdp") ? $("c-mdp").value : "";
@@ -12903,7 +12921,7 @@ function portail(mode){
     b.textContent = bouton;
   };
 
-  $("c-go").addEventListener("click", valider);
+  if ($("c-go")) $("c-go").addEventListener("click", valider);
   /* Un seul ecouteur a la fois. Avant, chaque aller-retour « mot de passe
      oublie » en ajoutait un : Entree envoyait alors un email de
      reinitialisation EN PLUS de la connexion. */

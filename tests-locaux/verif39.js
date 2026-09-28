@@ -14,6 +14,7 @@
    newsletter facultative), métadonnées exactes (nom saisi, versions des accords, newsletter au lieu d'emails_suivi) ; le
    faux Supabase rend la session avec ses métadonnées, comme la vraie base : à l'arrivée, seule la copie de la newsletter
    (clé emails) est écrite. Détails : verif55 blocs E à H.
+   v52 (lot B, décision de Lucas) : aucun email envoyé par l'app : « Mot de passe oublié » donne l'adresse du coach, sans appel.
    Usage : node verif39.js ../index.html                                         */
 const { chromium } = require("playwright"); const fs = require("fs"); const http = require("http"); const path = require("path");
 const F = require("./fixtures"); const HTML = path.resolve(process.argv[2] || "../index.html");
@@ -60,6 +61,7 @@ async function contexte(b, who, db, opts) {
       return json(sess);
     }
     if (p.startsWith("/auth/v1/recover") && opts.recoverErreur) { db.oublis = (db.oublis || 0) + 1; return json({ msg: opts.recoverErreur.msg }, opts.recoverErreur.status); }
+    if (p.startsWith("/auth/v1/recover")) { db.recover = (db.recover || 0) + 1; return json({}); }   // v52 : ne doit plus jamais être appelé
     if (p.startsWith("/auth/v1/token")) return json(who ? F.session(who.id, who.email) : { error: "invalid" }, who ? 200 : 400);
     if (p.startsWith("/auth/v1/")) return json({});
     if (p === "/functions/v1/creer-acces") {
@@ -366,24 +368,19 @@ const lireTuiles = page => page.$$eval("#tb-vue .tb-tuile", l => l.map(t => {
     await c.close();
   }
   inscriptionLibre = false;
-  {
+  /* v52 (chantier 1, lot B — décision de Lucas : l'app n'envoie aucun email pour l'instant) : « Mot de passe oublié » ne
+     demande plus de lien ; il donne l'adresse du coach (mailto), sans appel à /auth/v1/recover. Les deux vérifications
+     des erreurs d'envoi du mot de passe oublié (panne, limite horaire) sont remplacées par celles-ci. */
+  for (const langue of ["", "en"]) {
     const db = base();
-    const { c, page } = await contexte(b, null, db, { recoverErreur: { status: 500, msg: "Error sending recovery email" } });
+    const { c, page } = await contexte(b, null, db, { langue });
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 1000);
-    await page.click('[data-mode="oubli"]'); await attendre(page, 300);
-    await page.fill("#c-email", "client@exemple.fr"); await page.click("#c-go"); await attendre(page, 800);
-    const t = await page.textContent("#co-err");
-    ok("mot de passe oublié, serveur d'emails en panne (« Error sending recovery email ») : message en français", db.oublis === 1 && t.includes("L'email n'a pas pu partir (souci de notre côté).") && !/Error sending/.test(t), t);
-    await c.close();
-  }
-  {
-    const db = base();
-    const { c, page } = await contexte(b, null, db, { recoverErreur: { status: 429, msg: "email rate limit exceeded" } });
-    await page.goto(`http://localhost:${PORT}/`); await attendre(page, 1000);
-    await page.click('[data-mode="oubli"]'); await attendre(page, 300);
-    await page.fill("#c-email", "client@exemple.fr"); await page.click("#c-go"); await attendre(page, 800);
-    const t = await page.textContent("#co-err");
-    ok("mot de passe oublié, limite horaire d'emails du projet : message neutre « Trop d'emails envoyés en peu de temps : réessaie dans une heure. » (pas « Beaucoup d'inscriptions »)", t.includes("Trop d'emails envoyés en peu de temps : réessaie dans une heure.") && !/inscriptions|rate limit/i.test(t), t);
+    await page.click('[data-mode="oubli"]'); await attendre(page, 400);
+    await page.keyboard.press("Enter"); await attendre(page, 800);
+    const t = (await page.textContent("#co-oubli").catch(() => "")).replace(/\s+/g, " ").trim();
+    const href = await page.getAttribute("#co-oubli a", "href").catch(() => "");
+    const att = langue ? "Write to us at mhx.coaching@gmail.com, we'll get you back in quickly." : "Écris-nous à mhx.coaching@gmail.com, on te débloque rapidement.";
+    ok(`mot de passe oublié${langue ? " (anglais)" : ""} : « ${att} » (mailto), ni champ ni bouton d'envoi, aucun appel à /auth/v1/recover (même avec Entrée)`, t === att && href === "mailto:mhx.coaching@gmail.com" && !(await page.$("#c-email")) && !(await page.$("#c-go")) && !db.recover, t + " · " + href + " · appels recover " + (db.recover || 0));
     await c.close();
   }
   {

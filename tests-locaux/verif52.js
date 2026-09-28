@@ -983,8 +983,18 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
        v52 sur main, les deux textes portent la nouvelle note et la comparaison redevient stricte d'elle-même. */
     const NOTE_V51 = "Un lien de confirmation part sur la nouvelle adresse. Tant que tu n'as pas cliqué dessus, tu continues de te connecter avec l'ancienne — c'est ce qui t'évite de perdre ton compte en cas de faute de frappe.";
     const NOTE_V52 = "Un lien de confirmation part sur la nouvelle adresse (et, par sécurité, un autre sur l'ancienne : clique les deux). Tant que ce n'est pas fait, tu continues de te connecter avec l'ancienne — c'est ce qui t'évite de perdre ton compte en cas de faute de frappe.";
-    const sansNote = t => t.split(NOTE_V52).join("[note du changement d'adresse]").split(NOTE_V51).join("[note du changement d'adresse]");
-    ok("client Thomas, Profil : texte identique à main (hors note du changement d'adresse, v52)", pro.t.length > 200 && pro.t.includes(NOTE_V52) && sansNote(pro.t) === sansNote(proM.t), pro.t.length + " / " + proM.t.length + " · nouvelle note : " + pro.t.includes(NOTE_V52));
+    /* v52 (chantier 1, lot B — décision de Lucas : l'app n'envoie aucun email pour l'instant) : autre différence VOULUE, le
+       bloc « Mon compte » : la phrase sous l'adresse actuelle (plus de « lien si tu oublies ton mot de passe ») et le
+       changement d'adresse (plus de champ ni de bouton : « écris-nous à … »). Les deux sont remplacés par un repère. */
+    const ADR_V51 = ". C'est à cette adresse qu'arrive le lien si tu oublies ton mot de passe — garde-la à jour.", ADR_V52 = ". C'est avec elle que tu te connectes.";
+    const MAIL_V52 = "Pour changer ton adresse email, écris-nous à mhx.coaching@gmail.com, on s'en occupe rapidement.";
+    const sansNote = t => {
+      let x = t.split(NOTE_V52).join("[note du changement d'adresse]").split(NOTE_V51).join("[note du changement d'adresse]").split(ADR_V51).join("[adresse]").split(ADR_V52).join("[adresse]");
+      const i = x.indexOf("Changer mon adresse email"); if (i < 0) return x;
+      const fins = ["[note du changement d'adresse]", MAIL_V52].map(n => { const j = x.indexOf(n, i); return j < 0 ? -1 : j + n.length; }).filter(j => j > 0);
+      return fins.length ? x.slice(0, i) + "[changement d'adresse]" + x.slice(Math.min(...fins)) : x;
+    };
+    ok("client Thomas, Profil : texte identique à main (hors bloc « Mon compte » voulu en v52 : adresse et changement d'adresse sans email)", pro.t.length > 200 && pro.t.includes(MAIL_V52) && sansNote(pro.t) === sansNote(proM.t), pro.t.length + " / " + proM.t.length + " · nouveau texte : " + pro.t.includes(MAIL_V52) + " · " + (() => { const x = sansNote(pro.t), y = sansNote(proM.t); let k = 0; while (k < x.length && x[k] === y[k]) k++; return JSON.stringify(x.slice(Math.max(0, k - 40), k + 60)) + " ≠ " + JSON.stringify(y.slice(Math.max(0, k - 40), k + 60)); })());
     await pro.c.close(); await proM.c.close();
   });
   await bloc("J. fiche d'un client et Mes clients", async () => {

@@ -42,7 +42,7 @@ attendu() {
     flux) echo 19;; verif34) echo 13;; verif35) echo 14;; verif36) echo 13;; verif37) echo 15;; verif38) echo 67;;
     verif-xss) echo 5;; verif39) echo 51;; verif40) echo 64;; verif41) echo 25;; verif42) echo 20;; verif43) echo 34;;
     verif48) echo 42;; verif49) echo 130;; verif50) echo 57;; verif51) echo 91;; verif52) echo 186;; verif53) echo 132;;
-    verif54) echo 64;; verif55) echo 149;; verif56) echo 187;; rig) echo 84;; fonction) echo 88;; *) echo "";;
+    verif54) echo 64;; verif55) echo 143;; verif56) echo 187;; rig) echo 84;; fonction) echo 88;; *) echo "";;
   esac
 }
 # Partie de chaque suite pour les jobs parallèles de GitHub Actions (10 parties, durées équilibrées, 4 à 5 minutes chacune).
