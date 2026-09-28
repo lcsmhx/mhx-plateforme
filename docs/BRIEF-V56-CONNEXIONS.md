@@ -47,7 +47,7 @@ en ligne, sans message, notification ni mention pour eux (couvert par leur contr
 - Les deux colonnes de « Mes clients » et les deux lignes des cartes « Prospects ».
 
 **Tests** :
-- `tests-locaux/verif61.js` : 50 vérifications, dont démarrage, reprise (profil illisible au démarrage, app quittée pendant le chargement), jeton expiré au retour, base sans migration, retour arrière, réseau coupé, coach, téléphone, interrupteur et données piégées. Elle échoue sur la v55 (13/47).
+- `tests-locaux/verif61.js` : 50 vérifications, dont démarrage, reprise (profil illisible au démarrage, app quittée pendant le chargement), jeton expiré au retour, base sans migration, retour arrière, réseau coupé, coach, téléphone, interrupteur et données piégées. Elle échoue sur la v55 (11/49 : mesuré le 28/09 sur `46348fe`).
 - Simulations de flux, rig, verif-xss, verif35 à 43, 48, 50 à 58 et 60 : l'appel est mis à part, car ce n'est pas une écriture de l'app dans les données.
 - `verif52` : la comparaison de « Mes clients » avec `main` ignore les 2 nouvelles colonnes.
 - `supabase/tests/v56_connexions_rls.sql` : 23 tests des règles (coach, client de test, prospect fictif, anonyme, tentatives croisées). Le fichier finit toujours par une erreur voulue (« v56 : 23 / 23 tests ok… Annulation forcée ») : rien ne peut être gardé, même lancé sans `begin` / `rollback`.

@@ -94,8 +94,9 @@ function base(opts){
   /* verif61 : cx = la table connexions (par compte), notees = chaque appel de noter_connexion, cxLectures = chaque accès à la table ;
      cxAbsente (base sans la migration : 404), cxRefusee (retour arrière : 403), cxPanne (réseau coupé), cxRetard (ms),
      cx401 (jeton expiré : n refus 401 avant d'accepter) ; les instants sont rendus comme PostgREST (…123456+00:00) ;
-     profilRate (n premières lectures de SON profil coupées : réseau coupé au démarrage), profilRetard (ms, lecture lente) */
-  const db = { profils, donnees, cx: {}, notees: [], cxLectures: [], cxAbsente: false, cxRefusee: false, cxPanne: false, cxRetard: 0, cx401: 0, profilRate: 0, profilRetard: 0, emails_prospects: [], sansJournal: false, ecritures: [], refus: [], lectures: [], journal: [], chemins: [],
+     profilRate (n premières lectures de SON profil coupées : réseau coupé au démarrage), profilRetard (ms, lecture lente),
+     profilRelus (relectures de son rôle au retour au premier plan : select=id,role) */
+  const db = { profils, donnees, cx: {}, notees: [], cxLectures: [], cxAbsente: false, cxRefusee: false, cxPanne: false, cxRetard: 0, cx401: 0, profilRate: 0, profilRetard: 0, profilRelus: 0, emails_prospects: [], sansJournal: false, ecritures: [], refus: [], lectures: [], journal: [], chemins: [],
     fonctions: [], inscriptions: [], emails: {}, connexions: {}, inscription: {}, lectureKo: opts.lectureKo || [], retardLecture: {}, retard: {},
     reponseFonction: { status: 200, body: { ok: true } },
     /* v52 (lot A) : mot de passe oublié et changement d'adresse (erreurs simulées), renouvellements de session, polices lentes */
@@ -225,6 +226,7 @@ async function repondre(r, who, db){
     const id = (q.get("id") || "").replace(/^eq\./, "");
     if ((m === "GET" || m === "HEAD") && id && id === moi && db.profilRate > 0) { db.profilRate--; return r.abort().catch(() => {}); }   // v56
     if ((m === "GET" || m === "HEAD") && id && id === moi && db.profilRetard) await new Promise(z => setTimeout(z, db.profilRetard));   // v56
+    if ((m === "GET" || m === "HEAD") && id && id === moi && q.get("select") === "id,role") db.profilRelus++;   // v56
     if (m === "GET" || m === "HEAD") { let l = db.profils.filter(x => coach || x.id === moi); if (id) l = l.filter(x => x.id === id); return json(colonnes(plage(l), q)); }
     const c = corps() || {}, cible = db.profils.find(x => x.id === id);
     db.ecritures.push({ table: "profils", m, id, corps: clone(c) });
@@ -583,12 +585,12 @@ const titre = (page, uid, col) => page.$eval(`#tb-clients [data-ouvrir="${uid}"]
     await page.goto(URL0); await pret(page, "#vue"); await attendre(page, 800);
     const n0 = notees(db).length;
     await cacher(page); await page.clock.fastForward(11 * MIN); await montrer(page); await attendre(page, 1200);
-    ok("B : Thomas, profil illisible au démarrage : rien de noté à l'ouverture ; revenu après 11 min : profil relu, UNE connexion notée", n0 === 0 && notees(db, F.IDS.c1).length === 1 && notees(db).length === 1, n0 + " puis " + JSON.stringify(notees(db)));
+    ok("B : Thomas, profil illisible au démarrage : rien de noté à l'ouverture ; revenu après 11 min : profil relu, UNE connexion notée", n0 === 0 && db.profilRelus === 1 && notees(db, F.IDS.c1).length === 1 && notees(db).length === 1, n0 + " puis " + JSON.stringify(notees(db)) + " · relectures " + db.profilRelus);
     const dbc = decor(); dbc.profilRate = 1;
     const { page: pc } = await contexte(b, COACH, dbc, { horloge: true });
     await pc.goto(URL0); await pret(pc, "#vue"); await attendre(pc, 800);
     await cacher(pc); await pc.clock.fastForward(11 * MIN); await montrer(pc); await attendre(pc, 1200);
-    ok("B : le coach, même cas : son profil relu dit « coach » : aucune connexion notée", notees(dbc).length === 0, JSON.stringify(notees(dbc)));
+    ok("B : le coach, même cas : son profil est relu (une fois) et dit « coach » : aucune connexion notée", dbc.profilRelus === 1 && notees(dbc).length === 0, JSON.stringify(notees(dbc)) + " · relectures " + dbc.profilRelus);
     const dbl = decor(); dbl.profilRetard = 3000;
     const { page: pl } = await contexte(b, qui(LEA, "lea@exemple.fr"), dbl, { horloge: true });
     await pl.goto(URL0); await cacher(pl);   // elle passe à une autre app pendant le chargement (profil lent : 3 s)
