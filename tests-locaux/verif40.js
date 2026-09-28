@@ -3,6 +3,9 @@
    - accueil du prospect = écran Découverte : « Découverte · Jour n/7 » (jour 1 = jour LOCAL de l'inscription,
      profils.cree_le), questionnaire court tant que intake.court_le n'est pas posé (sans bouton Calendly, quel
      que soit le jour), puis résultat avec « Réserver mon bilan » ;
+     v52 (28/09/2026, Chantier 1 lot C) : le questionnaire court a 3 questions (probleme, obstacle, projection), sans âge ;
+     une fois validé, la page de proposition de bilan (vérifiée par verif56), puis l'accueil (Speed Formation,
+     « Réserver mon bilan ») : l'ancien écran « résultat » n'est plus affiché ;
    - navigation : accueil, profil, Speed Formation (ouverte les 7 premiers jours) et la vitrine verrouillée
      (programme, nutrition, suivi ; formation après le jour 7) ; mensurations, compléments, bilan cachés
      mais verrouillés à leur adresse ; plus d'onglet Challenge, ses anciennes adresses mènent à #/decouverte ;
@@ -42,9 +45,12 @@ const inscritDansFuseau = (decalage, n, hh, mm) => { const l = new Date(Date.now
 const norm = t => String(t || "").replace(/[  ]/g, " ");
 /* l'écran Découverte s'affiche dans #acc-vue (accueil du prospect) ou #dc-vue (adresse #/decouverte) */
 const DC_ZONE = ":is(#acc-vue, #dc-vue)", DC_ECRAN = "#vue :is(#dc-voir, #dc-resultat, [data-dc-cal])";
-const QUESTIONS_COURT = ["sexe", "age", "taille", "poids", "objectif", "seances", "essaye", "obstacle", "pourquoi", "motivation"];
-const intakeCourt = n => ({ sexe: "Femme", age: 27, taille: 168, poids: 64, objectif: "Perte de poids / sèche", seances: "3",
-  essaye: "Des régimes express.", obstacle: "Le manque de temps.", pourquoi: "Retrouver de l'énergie.", motivation: "7", court_le: inscritIlYA(n) });
+/* v52 : les 3 questions du questionnaire court (avant : 10, dont l'âge) */
+const QUESTIONS_COURT = ["probleme", "obstacle", "projection"];
+/* v52 : un questionnaire validé (3 réponses) dont la page de proposition de bilan est passée (« Pas maintenant ») :
+   l'accueil du prospect s'affiche (avant la v52 : le résultat, directement) */
+const intakeCourt = n => ({ probleme: "Perdre du gras", obstacle: "Le manque de temps.", projection: "Retrouver de l'énergie.", objectif: "Perte de poids / sèche",
+  court_le: inscritIlYA(n), bilan_propose: { choix: "plus_tard", le: inscritIlYA(n) } });
 /* un ancien prospect du Challenge 7 jours : son questionnaire (sans court_le) et sa clé challenge, formes de verif44 */
 const INTAKE_CHALLENGE = { sexe: "Femme", age: "29", taille: "168", poids: "64", poids_obj: "60", objectif: "Perte de poids / sèche", niveau: "Débutant (0 à 6 mois)", seances: "3", lieu: "À la maison", nb_repas: "3 repas", sommeil_h: "6.5", energie: "4" };
 const jourFait = (n, quand) => ({ fait: quand + "T08:00:00.000Z", date: quand });
@@ -205,7 +211,8 @@ const cliquerVerrou = async (c, page) => {
     const t = await texte(page, "#acc-vue");
     ok("prospect jour 1 : accueil = écran Découverte (« Découverte · Jour 1/7 », « Bonjour Léa »)", !!(await page.$(DC_ZONE + " #dc-voir")) && t.includes("Découverte · Jour 1/7") && t.includes("Bonjour Léa"), t.slice(0, 200));
     const champs = await page.$$eval(DC_ZONE + " [id^='q-']", l => l.map(e => e.id)).catch(() => []);
-    ok("prospect jour 1 : questionnaire court de 10 questions (#q-sexe … #q-motivation) et bouton « Voir mon résultat »", QUESTIONS_COURT.every(q => champs.includes("q-" + q)) && champs.length === 10 && !!(await page.$("#dc-voir")), JSON.stringify(champs));
+    /* v52 : 3 questions (avant : 10, #q-sexe … #q-motivation, « Voir mon résultat ») */
+    ok("prospect jour 1 : questionnaire court de 3 questions (#q-probleme, #q-obstacle, #q-projection), sans âge, et bouton « Valider mes réponses »", QUESTIONS_COURT.every(q => champs.includes("q-" + q)) && champs.length === 3 && !champs.includes("q-age") && (await texte(page, "#dc-voir")) === "Valider mes réponses", JSON.stringify(champs));
     const voir = !!(await page.$(DC_ZONE + " #dc-voir")), nCal = await calendlyVue(page);
     ok("prospect jour 1 : questionnaire court affiché (#dc-voir) et aucun bouton Calendly tant qu'il n'est pas rempli", voir && nCal === 0, (voir ? "" : "questionnaire court absent ; ") + nCal + " lien(s) Calendly");
     textesFr += "\n" + await toutLeTexte(page);
@@ -224,8 +231,10 @@ const cliquerVerrou = async (c, page) => {
       await page.goto(`http://localhost:${PORT}/#/accueil`); await attendre(page, 2000);
       const t = await texte(page, "#acc-vue");
       const champs = await page.$$eval(DC_ZONE + " [id^='q-']", l => l.map(e => e.id)).catch(() => []);
-      const age = await page.$eval("#q-age", e => e.value).catch(() => ""), nCal = await calendlyVue(page);
-      ok("ancien prospect du Challenge au jour 5 (questionnaire sans court_le) : « Découverte · Jour 5/7 », questionnaire court de 10 questions (ses réponses reprises), pas de résultat, aucun bouton Calendly", t.includes("Découverte · Jour 5/7") && champs.length === 10 && !!(await page.$(DC_ZONE + " #dc-voir")) && age === "29" && !(await page.$("#dc-resultat")) && nCal === 0, t.slice(0, 160) + " | " + JSON.stringify(champs) + " | âge « " + age + " » | " + nCal + " lien(s) Calendly");
+      const age = await page.$("#q-age"), nCal = await calendlyVue(page);
+      /* v52 : les 3 nouvelles questions (avant : les 10, pré-remplies par ses réponses, âge 29) ; ses anciennes réponses
+         restent en base, lisibles dans son Profil et la fiche du coach (verif56) */
+      ok("ancien prospect du Challenge au jour 5 (questionnaire sans court_le) : « Découverte · Jour 5/7 », les 3 questions du questionnaire court (plus d'âge), pas de résultat, aucun bouton Calendly", t.includes("Découverte · Jour 5/7") && champs.length === 3 && !!(await page.$(DC_ZONE + " #dc-voir")) && !age && !(await page.$("#dc-resultat, #dc-bilan")) && nCal === 0, t.slice(0, 160) + " | " + JSON.stringify(champs) + " | " + nCal + " lien(s) Calendly");
       await aller(page, "#/challenge", 1500);
       const h = await page.evaluate(() => location.hash), nCal2 = await calendlyVue(page);
       ok("ancien prospect du Challenge au jour 5 : son ancienne adresse #/challenge mène au questionnaire (#/decouverte), sans bouton Calendly ; rien n'est écrit", h === "#/decouverte" && !!(await page.$(DC_ZONE + " #dc-voir")) && nCal2 === 0 && db.requetes.length === 0, h + " | " + nCal2 + " lien(s) Calendly | " + db.requetes.join(" ; "));
@@ -248,7 +257,8 @@ const cliquerVerrou = async (c, page) => {
     await page.goto(`http://localhost:${PORT}/#/accueil`); await attendre(page, 2200);
     const acc = await texte(page, "#acc-vue");
     const blocs = await page.$$eval(DC_ZONE + " section[id^='dc-']", l => l.map(s => s.id)).catch(() => []);
-    ok("prospect jour 4 : accueil Découverte « Découverte · Jour 4/7 », « Bonjour Léa », résultat complet (résultat, calcul, séance, recettes, formation, accompagnement)", acc.includes("Découverte · Jour 4/7") && acc.includes("Bonjour Léa") && ["dc-resultat", "dc-calcul", "dc-seance", "dc-recettes", "dc-formation", "dc-accomp"].every(x => blocs.includes(x)), acc.slice(0, 160) + " | " + JSON.stringify(blocs));
+    /* v52 : l'accueil après la page bilan = Speed Formation + accompagnement (avant : résultat, calcul, séance, recettes en plus) */
+    ok("prospect jour 4 : accueil Découverte « Découverte · Jour 4/7 », « Bonjour Léa », Speed Formation et accompagnement (plus d'ancien écran « résultat »)", acc.includes("Découverte · Jour 4/7") && acc.includes("Bonjour Léa") && JSON.stringify(blocs) === '["dc-formation","dc-accomp"]', acc.slice(0, 160) + " | " + JSON.stringify(blocs));
     const cals = await page.$$eval(DC_ZONE + " [data-dc-cal]", l => l.map(a => ({ src: a.dataset.dcCal, href: a.href, t: a.textContent.trim(), cible: a.target })));
     ok("prospect jour 4 : « Réserver mon bilan » sur l'accueil (en-tête + accompagnement), Calendly pré-rempli, utm_content=decouverte / decouverte-accompagnement", cals.length === 2 && cals.every(x => x.href === lienPre(x.src) && x.t === "Réserver mon bilan" && x.cible === "_blank") && cals.map(x => x.src).join() === "decouverte,decouverte-accompagnement", JSON.stringify(cals));
     ok("prospect jour 4 : bloc Speed Formation ouvert pendant la découverte (lien « Ouvrir la Speed Formation »)", !!(await page.$('#dc-formation a[href="#/formation"]')) && !(await texte(page, "#dc-formation")).includes(TEXTE_FORMATION));
@@ -290,14 +300,16 @@ const cliquerVerrou = async (c, page) => {
     const redirs = [];
     for (const h of ["#/challenge", "#/challenge/3", "#/challenge-libre", "#/challenge-rythme"]) {
       await aller(page, h, 1300);
-      redirs.push(h + " → " + await page.evaluate(() => location.hash) + (await page.$(DC_ZONE + " #dc-resultat") ? " (Découverte)" : " (?)") + (await page.$("#vue .verrou") ? " VERROU" : ""));
+      redirs.push(h + " → " + await page.evaluate(() => location.hash) + (await page.$(DC_ZONE + " #dc-accomp") ? " (Découverte)" : " (?)") + (await page.$("#vue .verrou") ? " VERROU" : ""));
     }
-    ok("prospect : #/challenge, #/challenge/3, #/challenge-libre, #/challenge-rythme mènent à #/decouverte (son résultat)", redirs.every(x => / → #\/decouverte \(Découverte\)$/.test(x)), redirs.join(" ; "));
+    /* v52 : son accueil (avant : son résultat, #dc-resultat) */
+    ok("prospect : #/challenge, #/challenge/3, #/challenge-libre, #/challenge-rythme mènent à #/decouverte (son accueil)", redirs.every(x => / → #\/decouverte \(Découverte\)$/.test(x)), redirs.join(" ; "));
 
     /* profil */
     await aller(page, "#/profil", 1400);
     const tp = await texte(page, "#vue");
-    ok("prospect : #/profil ouvert et allégé — « Tes réponses au questionnaire sont enregistrées… », lien « Voir mon résultat » (#/decouverte), bloc « Mon compte », pas de questionnaire complet", !(await page.$("#vue .verrou")) && !(await page.$("#p-save")) && tp.includes("Tes réponses au questionnaire sont enregistrées") && tp.includes("Mon compte") && (await page.$eval('#vue a[href="#/decouverte"]', a => a.textContent.trim()).catch(() => "")) === "Voir mon résultat", tp.slice(0, 200));
+    /* v52 : ses réponses et « Modifier mes réponses » (#/decouverte/reponses) ; avant : « Voir mon résultat » (#/decouverte) */
+    ok("prospect : #/profil ouvert et allégé — « Tes réponses au questionnaire sont enregistrées… », ses réponses, lien « Modifier mes réponses » (#/decouverte/reponses), bloc « Mon compte », pas de questionnaire complet", !(await page.$("#vue .verrou")) && !(await page.$("#p-save")) && tp.includes("Tes réponses au questionnaire sont enregistrées") && tp.includes("Perdre du gras") && tp.includes("Mon compte") && (await page.$eval('#vue a[href="#/decouverte/reponses"]', a => a.textContent.trim()).catch(() => "")) === "Modifier mes réponses", tp.slice(0, 200));
     textesFr += "\n" + await toutLeTexte(page);
     /* le volet des conditions (relisible depuis le profil) : il doit s'ouvrir, sinon son texte échapperait au contrôle des prix */
     const okCond = await cliquer(page, "#mc-conditions"); await attendre(page, 500);
@@ -381,7 +393,8 @@ const cliquerVerrou = async (c, page) => {
     const { c, page } = await contexte(b, lea, db);
     await page.goto(`http://localhost:${PORT}/#/accueil`); await attendre(page, 2200);
     const acc = await texte(page, "#acc-vue");
-    ok("prospect jour 21 : « Découverte · terminée », son résultat reste là (« Ta période découverte est terminée… »)", acc.includes("Découverte · terminée") && acc.includes("Ta période découverte est terminée") && !!(await page.$("#dc-resultat")), acc.slice(0, 200));
+    /* v52 : son accueil (avant : son résultat, #dc-resultat) */
+    ok("prospect jour 21 : « Découverte · terminée », son accueil reste là (« Ta période découverte est terminée. »)", acc.includes("Découverte · terminée") && acc.includes("Ta période découverte est terminée.") && !!(await page.$("#dc-accomp")), acc.slice(0, 200));
     ok("prospect jour 21 : bloc Speed Formation de l'accueil fermé (texte de fin, plus de lien vers #/formation)", (await texte(page, "#dc-formation")).includes(TEXTE_FORMATION) && !(await page.$('#dc-formation a[href="#/formation"]')));
     const cad = await cadenasNav(page), barre = await barreIds(page);
     ok("prospect jour 21 : navigation — cadenas sur programme, nutrition, suivi ET formation ; barre du bas = accueil, profil, programme, nutrition", JSON.stringify(await navIds(page)) === '["accueil","programme","nutrition","suivi","formation","profil"]' && JSON.stringify(cad) === '["programme","nutrition","suivi","formation"]' && JSON.stringify(barre) === '["accueil","profil","programme","nutrition"]', JSON.stringify({ cad, barre }));
@@ -409,7 +422,8 @@ const cliquerVerrou = async (c, page) => {
       const db = base({ ilYA: 3 });
       const { c, page } = await contexte(b, lea, db, { viewport: { width: 390, height: 844 } });
       await page.goto(`http://localhost:${PORT}/`); await attendre(page, 2200);
-      ok("prospect mobile : accueil Découverte sans défilement horizontal", !!(await page.$(DC_ZONE + " #dc-resultat")) && await page.evaluate(() => document.documentElement.scrollWidth <= 390));
+      /* v52 : l'accueil (#dc-accomp) remplace l'ancien résultat (#dc-resultat) */
+      ok("prospect mobile : accueil Découverte sans défilement horizontal", !!(await page.$(DC_ZONE + " #dc-accomp")) && await page.evaluate(() => document.documentElement.scrollWidth <= 390));
       ok("prospect mobile : onglet verrouillé marqué (cadenas) dans la barre du bas", (await page.$$("#barre-bas a.verrouille .nav-cadenas")).length >= 1);
       const okPlus = await cliquer(page, "#barre-bas [data-plus]"); await attendre(page, 600);
       const plus = await page.$$eval(".volet .menu-plus a", l => l.map(a => a.dataset.id + (a.querySelector(".nav-cadenas") ? "🔒" : ""))).catch(() => []);

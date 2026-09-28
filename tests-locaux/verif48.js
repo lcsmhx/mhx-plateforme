@@ -387,29 +387,32 @@ const ecrituresIntake = (db, uid) => db.ecritures.filter(e => e.outil === "intak
     await c.close();
   }
   {
-    /* diagnostic du jour 1 (prospect) : les reponses partent pendant la saisie et reviennent au retour */
+    /* diagnostic du jour 1 (prospect) : les reponses partent pendant la saisie et reviennent au retour.
+       v52 (28/09/2026, Chantier 1 lot C) : les 3 questions (probleme, obstacle, projection) remplacent les 10 ; avant :
+       l'âge et le poids (#q-age, #q-poids) */
     const db = base();
     const { c, page } = await contexte(b, lea, db);
     await page.goto(`http://localhost:${PORT}/#/challenge`); await attendre(page, 2400);
-    await page.fill("#q-age", "29"); await page.fill("#q-poids", "64"); await attendre(page, 1500);
+    await page.fill("#q-obstacle", "Le manque de temps"); await page.fill("#q-projection", "Courir 10 km"); await attendre(page, 1500);
     const w = ecrituresIntake(db, PROSPECT);
-    ok("diagnostic : l'âge et le poids partent pendant la saisie (brouillon), le jour 1 n'est pas validé", w.length >= 1 && String(w[w.length - 1].contenu.age) === "29" && String(w[w.length - 1].contenu.poids) === "64" && !db.ecritures.some(e => e.outil === "challenge"), "écritures " + w.length);
+    ok("diagnostic : l'obstacle et la projection partent pendant la saisie (brouillon), le questionnaire n'est pas validé", w.length >= 1 && w[w.length - 1].contenu.obstacle === "Le manque de temps" && w[w.length - 1].contenu.projection === "Courir 10 km" && !w[w.length - 1].contenu.court_le && !db.ecritures.some(e => e.outil === "challenge"), "écritures " + w.length);
     await page.reload(); await attendre(page, 2400);
-    ok("diagnostic : en revenant, les réponses sont déjà là", (await page.$eval("#q-age", e => e.value).catch(() => "")) === "29" && (await page.$eval("#q-poids", e => e.value).catch(() => "")) === "64");
+    ok("diagnostic : en revenant, les réponses sont déjà là", (await page.$eval("#q-obstacle", e => e.value).catch(() => "")) === "Le manque de temps" && (await page.$eval("#q-projection", e => e.value).catch(() => "")) === "Courir 10 km");
     await c.close();
   }
   {
-    /* diagnostic : un age de 15 ans → aucun brouillon, meme si d'autres reponses sont remplies */
+    /* v52 : plus d'âge dans le questionnaire court, donc plus de garde 15 / 18 ans ici (elle passe au calculateur, lot D) :
+       avant, 4 vérifications (15 ans → aucun brouillon ; âge corrigé mais champ pas quitté → rien ; à la sortie du champ →
+       le brouillon part). Maintenant : aucune question d'âge, et la première réponse part tout de suite, sans attendre d'âge. */
     const db = base();
     const { c, page } = await contexte(b, lea, db);
     await page.goto(`http://localhost:${PORT}/#/challenge`); await attendre(page, 2400);
-    await page.fill("#q-age", "15"); await page.fill("#q-poids", "64"); await page.fill("#q-taille", "168"); await attendre(page, 1500);
-    ok("diagnostic : âge de 15 ans → aucune réponse ne part en brouillon", db.ecritures.length === 0);
-    /* Decouverte : l'age n'est juge qu'a la sortie du champ (« 185 » passe par « 18 ») */
-    await page.fill("#q-age", "29"); await attendre(page, 1500);
-    ok("diagnostic : âge corrigé (29) mais champ pas encore quitté → toujours rien", db.ecritures.length === 0);
-    await page.press("#q-age", "Tab"); await attendre(page, 1500);
-    ok("diagnostic : âge corrigé (29) à la sortie du champ → le brouillon part avec les réponses valides", ecrituresIntake(db, PROSPECT).some(x => String(x.contenu.age) === "29" && String(x.contenu.taille) === "168"));
+    ok("diagnostic : aucune question d'âge dans le questionnaire court (le garde-fou 18 ans passe au calculateur)", !(await page.$("#q-age")) && !!(await page.$("#q-probleme")));
+    ok("diagnostic : rien ne part tant que rien n'est répondu", db.ecritures.length === 0);
+    await page.selectOption("#q-probleme", "Prendre du muscle"); await attendre(page, 1500);
+    const w = ecrituresIntake(db, PROSPECT), d = w.length ? w[w.length - 1].contenu : {};
+    ok("diagnostic : la première réponse (objectif « Prendre du muscle ») part aussitôt en brouillon, sans attendre d'âge", w.length === 1 && d.probleme === "Prendre du muscle" && !("age" in d));
+    ok("diagnostic : … avec l'objectif du questionnaire complet posé depuis cette réponse (« Prise de muscle »)", d.objectif === "Prise de muscle", JSON.stringify(d));
     await c.close();
   }
 

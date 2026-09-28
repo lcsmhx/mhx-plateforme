@@ -633,6 +633,12 @@ svg.chart{display:block;width:100%;height:260px;overflow:visible}
 .coche input{width:16px;height:16px;accent-color:var(--accent);cursor:pointer;margin:0}
 .dc-recette{border-top:1px solid var(--line);padding:10px 0}.dc-recette:first-child{border-top:0}
 .dc-recette summary{cursor:pointer;list-style-position:outside}.dc-recette h4{margin:12px 0 6px;font-size:13px;color:var(--ink-2)}
+/* v52 : page de proposition de bilan — sa reponse « projection », puis deux choix de meme taille et de meme poids
+   (deux colonnes egales ; une seule sur telephone, lignes de meme hauteur) */
+.dc-projection{margin:0 0 12px;font-size:16px;line-height:1.55;color:var(--ink);overflow-wrap:anywhere}
+.dc-choix{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:1fr;gap:10px;margin-top:18px}
+.dc-choix .btn{width:100%;min-width:0;margin:0;text-align:center;line-height:1.35;white-space:normal;overflow-wrap:anywhere}
+@media (max-width:560px){ .dc-choix{grid-template-columns:1fr} }
 /* .tuile : meme composant que .tile (voir [B]) */
 .repas-c .repas-tete{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
 .repas-c .repas-tete .actions-b{display:flex;gap:8px;flex-wrap:wrap}
@@ -1055,10 +1061,21 @@ const CONFIG = {
   /* --- Découverte (prospects) : les réglages ; les textes sont dans DECOUVERTE --- */
   decouverte: {
     jours: 7,                      // jours d'accès découverte à partir de l'inscription ; ensuite la Speed Formation se verrouille
-    /* le questionnaire court : identifiants de QUESTIONS ou de DECOUVERTE.questions (réponses dans la clé intake) */
-    questions: ["sexe", "age", "taille", "poids", "objectif", "seances", "essaye", "obstacle", "pourquoi", "motivation"],
-    requis: ["sexe", "age", "taille", "poids", "objectif", "seances", "motivation"],
-    bornes: { age: [18, 90], taille: [120, 230], poids: [35, 250] },   // l'âge minimum (18) se change ici
+    /* le questionnaire court : identifiants de QUESTIONS ou de DECOUVERTE.questions (réponses dans la clé intake).
+       v52 : 3 questions (problème, obstacle, projection), posées juste après la vérification d'email. L'âge n'y est
+       plus demandé : le garde-fou 18 ans passe au calculateur (Chantier 1, lot D). */
+    questions: ["probleme", "obstacle", "projection"],
+    requis: ["probleme", "obstacle", "projection"],
+    /* v52 : l'ancien questionnaire court (10 questions, jusqu'à la v51), pour l'AFFICHAGE seulement : les réponses déjà
+       enregistrées restent lisibles (Profil du prospect, fiche du coach) et comptées sur 10. Jamais reposé. */
+    questions_avant: ["sexe", "age", "taille", "poids", "objectif", "seances", "essaye", "obstacle", "pourquoi", "motivation"],
+    /* v52 : réponse « problème » → option EXACTE de la question « objectif » du questionnaire complet (QUESTIONS), posée
+       quand l'objectif est vide : le calcul des calories et le questionnaire complet (passage client) en profitent.
+       Une valeur qui n'est pas une option de QUESTIONS n'est jamais posée. */
+    objectif_depuis: { "Perdre du gras": "Perte de poids / sèche", "Prendre du muscle": "Prise de muscle", "Me remettre en forme": "Santé & énergie au quotidien" },
+    /* bornes de saisie d'une question du questionnaire court (aucune des 3 questions n'en a) ; l'âge minimum (18) se
+       change ici, repris par le calculateur (lot D) */
+    bornes: { age: [18, 90], taille: [120, 230], poids: [35, 250] },
     pas_defaut: 6000,              // pas par jour retenus pour la dépense estimée (le questionnaire court ne les demande pas)
     recettes: ["flocons-avoine-banane-miel", "poulet-riz-brocoli", "omelette-epinards"]   // identifiants de donnees/recettes.json
   },
@@ -1306,13 +1323,22 @@ const DECOUVERTE = {
   nom: "Découverte",
   jour: "Jour {n}/{t}",
   jour_fini: "terminée",
-  lede_questionnaire: "Commence par ton questionnaire : 3 minutes, 10 questions. Ton résultat s'affiche tout de suite.",
+  lede_questionnaire: "3 questions, 1 minute : dis-nous où tu en es.",
   lede_reste_1: "Dernier jour de ton accès découverte.",
   lede_reste: "Encore {n} jours d'accès découverte.",
-  lede_fini: "Ta période découverte est terminée. Ton résultat, tes calories, ta séance et tes recettes restent ici.",
+  lede_fini: "Ta période découverte est terminée.",
   charge_rate: "Tes réponses n'ont pas pu être chargées. Recharge la page.",
-  /* questions du questionnaire court qui ne sont pas dans le questionnaire complet (celui des clients ne change pas) */
+  /* questions du questionnaire court qui ne sont pas dans le questionnaire complet (celui des clients ne change pas).
+     v52 : les 3 questions (même ordre en anglais). « probleme » a son propre identifiant (pas « objectif », dont les
+     options sont celles du questionnaire complet) ; « obstacle » garde le sien : les anciennes réponses restent lues. */
   questions: [
+    { id: "probleme", label: "Quel est ton objectif principal ?", type: "select", options: ["Perdre du gras", "Prendre du muscle", "Me remettre en forme"] },
+    { id: "obstacle", label: "Qu'est-ce qui t'a bloqué jusqu'ici ?", type: "long" },
+    { id: "projection", label: "Dans 3 mois, qu'est-ce qui aurait changé pour toi ?", type: "long" }
+  ],
+  /* v52 : les définitions de l'ancien questionnaire court (CONFIG.decouverte.questions_avant) absentes de QUESTIONS, pour
+     l'affichage seulement (anciennes réponses : Profil du prospect, fiche du coach) */
+  questions_avant: [
     { id: "essaye", label: "Qu'as-tu déjà essayé pour atteindre cet objectif ?", type: "long" },
     { id: "obstacle", label: "Quel est ton principal obstacle aujourd'hui ?", type: "long" },
     { id: "motivation", label: "Ta motivation pour t'y mettre maintenant", type: "echelle", aide: "1 = très faible · 10 = à fond" }
@@ -1320,11 +1346,20 @@ const DECOUVERTE = {
   questionnaire: {
     titre: "Ton questionnaire",
     age_aide: "À partir de {n} ans.",
-    bouton: "Voir mon résultat",
-    annuler: "Revenir à mon résultat",
+    bouton: "Valider mes réponses",
+    annuler: "Annuler les modifications",
     manque: "Il manque : {l}",
     verifie: "Vérifie : {l}",
     note: "Ce questionnaire ne remplace pas un avis médical. Si tu as un doute sur ta santé, parles-en à un professionnel."
+  },
+  /* v52 : la page de proposition de bilan, juste après les 3 questions (tant que le prospect n'a pas choisi) */
+  bilan: {
+    titre: "Ta prochaine étape",
+    projection: "Dans 3 mois, pour toi : « {p} »",
+    sans_projection: "Faisons le point ensemble sur ton objectif.",
+    texte: "Ton bilan offert de 30 minutes avec un coach MHX. On fait le point sur ton objectif, ce qui te bloque et ce que tu as déjà essayé. Tu repars avec 2 ou 3 actions concrètes. Si l'accompagnement personnalisé te correspond, on te le présente à la fin de l'appel. Tu es libre de dire non.",
+    reserver: "Réserver mon bilan",
+    plus_tard: "Pas maintenant, découvrir mon espace"
   },
   resultat: {
     titre: "Ton résultat",
@@ -1401,7 +1436,7 @@ const DECOUVERTE = {
   },
   profil: {
     texte: "Tes réponses au questionnaire sont enregistrées : ton coach les verra. Le questionnaire complet s'ouvrira au démarrage de ton accompagnement.",
-    lien: "Voir mon résultat"
+    lien: "Répondre aux 3 questions"
   },
   /* v51 : choix des emails de suivi, dans le Profil du prospect */
   emails: {
@@ -1470,12 +1505,17 @@ const DECOUVERTE = {
     nom: "Discovery",
     jour: "Day {n}/{t}",
     jour_fini: "over",
-    lede_questionnaire: "Start with your questionnaire: 3 minutes, 10 questions. Your result shows right away.",
+    lede_questionnaire: "3 questions, 1 minute: tell us where you stand.",
     lede_reste_1: "Last day of your discovery access.",
     lede_reste: "{n} more days of discovery access.",
-    lede_fini: "Your discovery period is over. Your result, your calories, your workout and your recipes stay here.",
+    lede_fini: "Your discovery period is over.",
     charge_rate: "Your answers could not be loaded. Reload the page.",
     questions: [
+      { id: "probleme", label: "What's your main goal?", type: "select", options: ["Lose fat", "Build muscle", "Get back in shape"] },
+      { id: "obstacle", label: "What has held you back so far?", type: "long" },
+      { id: "projection", label: "In 3 months, what would have changed for you?", type: "long" }
+    ],
+    questions_avant: [
       { id: "essaye", label: "What have you already tried to reach this goal?", type: "long" },
       { id: "obstacle", label: "What is your main obstacle today?", type: "long" },
       { id: "motivation", label: "Your motivation to start now", type: "echelle", aide: "1 = very low · 10 = all in" }
@@ -1483,11 +1523,19 @@ const DECOUVERTE = {
     questionnaire: {
       titre: "Your questionnaire",
       age_aide: "From {n} years old.",
-      bouton: "See my result",
-      annuler: "Back to my result",
+      bouton: "Submit my answers",
+      annuler: "Discard changes",
       manque: "Missing: {l}",
       verifie: "Check: {l}",
       note: "This questionnaire is not medical advice. If you have any doubt about your health, talk to a professional."
+    },
+    bilan: {
+      titre: "Your next step",
+      projection: "In 3 months, for you: “{p}”",
+      sans_projection: "Let's review your goal together.",
+      texte: "Your free 30-minute assessment with an MHX coach. We review your goal, what's holding you back and what you've already tried. You leave with 2 or 3 concrete actions. If personal coaching suits you, we'll present it at the end of the call. You're free to say no.",
+      reserver: "Book my assessment",
+      plus_tard: "Not now, explore my space"
     },
     resultat: {
       titre: "Your result",
@@ -1564,7 +1612,7 @@ const DECOUVERTE = {
     },
     profil: {
       texte: "Your questionnaire answers are saved: your coach will see them. The full questionnaire opens when your coaching starts.",
-      lien: "See my result"
+      lien: "Answer the 3 questions"
     },
     emails: {
       titre: "Follow-up emails",
@@ -5128,9 +5176,11 @@ const outilProfil = {
     /* prospect : pas de questionnaire complet (il s'ouvrira avec l'accompagnement,
        pre-rempli par ses reponses du questionnaire court) ; son compte et ses donnees seulement */
     if (Auth.estProspect() && !Store.idConsulte){
-      return `<section class="panel"><h2>${esc(trad("Ton questionnaire"))}</h2>
+      /* v52 : ses reponses (les 3 questions, puis celles de l'ancien questionnaire qui ont une valeur) : brancherReponses */
+      return `<section class="panel" id="mc-questionnaire"><h2>${esc(trad("Ton questionnaire"))}</h2>
         <p class="note" style="margin:0">${esc(trad(DECOUVERTE.profil.texte))}</p>
-        <div class="actions"><a class="btn ghost petit" href="#/decouverte">${esc(trad(DECOUVERTE.profil.lien))}</a></div></section>` + this.compteHTML();
+        <div id="mc-reponses"></div>
+        <div class="actions" id="mc-reponses-lien"><a class="btn ghost petit" href="#/decouverte">${esc(trad(DECOUVERTE.profil.lien))}</a></div></section>` + this.compteHTML();
     }
     const D = Store.cache["intake"] || {};
     let corps = "", ouverte = false;
@@ -5213,9 +5263,20 @@ const outilProfil = {
     if (el.value !== v) el.value = v;
   },
 
+  /* v52 : le prospect relit ses reponses au questionnaire court (lecture seule ; lecture ratee : rien d'affiche, le lien
+     reste) et, une fois valide, « Modifier mes réponses » (#/decouverte/reponses) */
+  async brancherReponses(){
+    const boite = $("mc-reponses"), lien = $("mc-reponses-lien"); if (!boite) return;
+    let I = null; try { I = await Store.lire("intake", {}); } catch(e){ I = null; }
+    if (!boite.isConnected || !I || typeof I !== "object" || Store.nonLus.has(I)) return;
+    const rep = Decouverte.reponses(I);
+    boite.innerHTML = rep.length ? `<ul class="ingr fiche-l" style="margin-top:12px">${rep.map(x => `<li><span>${esc(trad(x.q.label))}</span><b>${esc(x.v)}</b></li>`).join("")}</ul>` : "";
+    if (lien && Decouverte.questionnaireFait(I)) lien.innerHTML = `<a class="btn ghost petit" href="#/decouverte/reponses">${esc(trad(DECOUVERTE.resultat.modifier))}</a>`;
+  },
+
   async init(){
     /* v44 — prospect : seul le bloc « Mon compte » est a brancher */
-    if (Auth.estProspect() && !Store.idConsulte){ this.brancherCompte(); return; }
+    if (Auth.estProspect() && !Store.idConsulte){ this.brancherReponses(); this.brancherCompte(); return; }
     const D = await Store.lire(this.cle, {});
     /* Une question ajoutee apres coup laisse les anciens profils incomplets
        sans que personne ne s'en apercoive : on remet le drapeau a jour. */
@@ -8345,7 +8406,8 @@ const Clients = {
       sens: sens,
       ch: (c.challenge && typeof c.challenge === "object") ? c.challenge : null,   // clics « Réserver mon bilan » et case « J'ai réservé » (prospects)
       /* questionnaire court du prospect (Decouverte) : seulement ce que le suivi commercial lit */
-      dc: (c.intake && typeof c.intake === "object") ? { court_le: c.intake.court_le, motivation: c.intake.motivation, repondues: Decouverte.repondues(c.intake),
+      /* v52 : repondues / nb_questions comptes sur le questionnaire de ce prospect (3 questions, ou 10 pour un ancien prospect) */
+      dc: (c.intake && typeof c.intake === "object") ? { court_le: c.intake.court_le, motivation: c.intake.motivation, repondues: Decouverte.repondues(c.intake), nb_questions: Decouverte.liste(c.intake).length,
             court_debut: typeof c.intake.court_debut === "string" ? c.intake.court_debut : null, objectif: typeof c.intake.objectif === "string" ? c.intake.objectif.slice(0, 120) : "",
             email: typeof c.intake.email_compte === "string" && c.intake.email_compte ? c.intake.email_compte.slice(0, 254) : typeof c.intake.email === "string" ? c.intake.email.slice(0, 254) : "" } : null,
       act: (c.activite && typeof c.activite === "object") ? c.activite : null,   // v51 : activite du prospect (score, chronologie)
@@ -8515,7 +8577,7 @@ const Commercial = {
     const etape = jour == null ? "" : finie ? "découverte terminée" : "découverte jour " + jour + "/" + r.duree;
     if (reserve) chaud.push("A coché « J'ai réservé mon bilan » " + this.quand(this.depuis(r.reserve)) + ".");
     const depuisH = heures == null ? "" : heures < 1 ? "il y a moins d'une heure" : "il y a " + Math.floor(heures) + " h";
-    if (nouveau) neuf.push("Inscrit " + depuisH + (commence > 0 ? ", questionnaire commencé (" + commence + "/" + ((Decouverte.cfg().questions || []).length || 10) + " réponses)." : ", rien fait pour l'instant."));
+    if (nouveau) neuf.push("Inscrit " + depuisH + (commence > 0 ? ", questionnaire commencé (" + commence + "/" + ((D && typeof D.nb_questions === "number" && D.nb_questions > 0 ? Math.floor(D.nb_questions) : Decouverte.liste(D).length) || 10) + " réponses)." : ", rien fait pour l'instant."));
     else if (!fait && jeune) tiede.push("Inscrit " + depuisH + ", questionnaire pas encore rempli.");
     else if (!fait) froid.push("Inscrit " + this.quand(inscrit) + ", questionnaire pas rempli.");
     if (inactif) froid.push("Aucune action depuis " + actif + " jours" + (etape ? " (" + etape + ")" : "") + ".");
@@ -8567,7 +8629,8 @@ const Commercial = {
   score(p, C, D, A, E, ana){
     let r = null; try { r = Decouverte.resume(p, C, D); } catch(e){ r = null; }
     if (r && ana && typeof ana === "object"){ r = Object.assign({}, r, { reserve: ana.reserve ? r.reserve : null, clics: typeof ana.clics === "number" ? ana.clics : r.clics }); }
-    const total = (Decouverte.cfg().questions || []).length || 10;
+    /* v52 : sur le questionnaire de ce prospect (3 questions, ou 10 pour un ancien prospect) ; nb_questions donne par Mes clients */
+    const total = (D && typeof D.nb_questions === "number" && D.nb_questions > 0 ? Math.floor(D.nb_questions) : Decouverte.liste(D).length) || 10;
     const rep = D && typeof D.repondues === "number" && isFinite(D.repondues) ? Math.max(0, Math.min(total, Math.floor(D.repondues))) : Decouverte.repondues(D);
     const fait = !!(r && r.questionnaire), clics = r ? r.clics : 0;
     const a = Activite.propre(A), jours = a.jours.length, min = Math.floor(a.temps_s / 60);
@@ -10357,10 +10420,12 @@ const outilAccueil = {
     const scoreHTML = `<section class="panel" id="fiche-score"><div class="seance-c-tete"><h2>Score de qualification</h2>${Commercial.pastilleScore(sc)}</div>
       <ul class="ingr fiche-l dc-score">${sc.lignes.map(l => `<li><span>${esc(l.lbl)}${l.bonus ? " (bonus)" : ""}</span><b>${l.nonMesure ? "—" : l.pts + " / " + l.max}</b></li>`).join("")}</ul>
       <p class="note" style="margin:10px 0 0">Total plafonné à 100. Le score se recalcule à chaque ouverture.</p></section>`;
-    const qs = (Decouverte.cfg().questions || []).map(id => QUESTIONS.find(q => q.id === id) || (DECOUVERTE.questions || []).find(q => q.id === id)).filter(Boolean);
+    /* v52 : les questions de SON questionnaire court (les 3 nouvelles, ou les 10 d'un ancien prospect), puis celles de
+       l'autre qui ont une valeur : les anciennes reponses restent lisibles */
+    const qs = Decouverte.reponses(I, true);
     /* email_compte : l'email du compte, copie par l'app (v51) ; a defaut, le champ « Email » du questionnaire complet */
     const email = s(I.email_compte).trim() || s(I.email).trim();
-    const rep = [["Email", email]].concat(qs.map(q => [q.label, s(I[q.id]) ? s(I[q.id]) + (q.type === "echelle" ? " / 10" : "") : ""]));
+    const rep = [["Email", email]].concat(qs.map(x => [x.q.label, x.v]));
     const repHTML = `<section class="panel" id="fiche-reponses"><h2>Réponses au questionnaire court</h2>
       <p class="note" style="margin:0 0 8px">${sc.repondues} / ${sc.questions} réponses${Decouverte.questionnaireFait(I) ? ", validé le " + esc(dt(I.court_le)) : ", pas encore validé"}.</p>
       <ul class="ingr fiche-l">${rep.map(([k, v]) => `<li><span>${esc(k)}</span><b>${v ? esc(v) : "—"}</b></li>`).join("")}</ul></section>`;
@@ -10370,7 +10435,7 @@ const outilAccueil = {
     ajoute(p && p.cree_le, "Inscription");
     ajoute(I.court_debut, "Questionnaire commencé");
     ajoute(I.court_le, "Questionnaire rempli");
-    const src = v => typeof v !== "string" ? "" : v === "decouverte" ? "en haut de sa Découverte" : v === "decouverte-accompagnement" ? "bloc accompagnement" : /^verrou-[a-z]+$/.test(v) ? "page verrouillée « " + v.slice(7) + " »" : "";
+    const src = v => typeof v !== "string" ? "" : v === "decouverte" ? "en haut de sa Découverte" : v === "decouverte-accompagnement" ? "bloc accompagnement" : v === "bilan-propose" ? "page de proposition du bilan" : /^verrou-[a-z]+$/.test(v) ? "page verrouillée « " + v.slice(7) + " »" : "";
     Decouverte.clics(C).forEach(c => ajoute(c.date, "Clic « Réserver mon bilan »" + (src(c.source) ? " (" + src(c.source) + ")" : "")));
     ajoute(Decouverte.reserve(C), "Bilan réservé (case « J'ai réservé » cochée)");
     const hist = S && typeof S === "object" && Array.isArray(S.historique) ? S.historique : [];
@@ -11115,10 +11180,75 @@ const Decouverte = {
   },
   finie(p, pourLeCoach){ const j = this.jour(p, pourLeCoach); return j != null && j > this.duree(); },
   questionnaireFait(I){ return !!(I && typeof I.court_le === "string" && I.court_le); },
-  /* nombre de reponses non vides au questionnaire court (progression) */
+  /* une reponse non vide (chaine ou nombre) */
+  repondu(I, id){ const v = I && typeof I === "object" ? I[id] : undefined; return (typeof v === "string" && v.trim() !== "") || (typeof v === "number" && isFinite(v)); },
+  /* v52 : l'ancien questionnaire court (10 questions, affichage seulement) */
+  avant(){ const a = this.cfg().questions_avant; return Array.isArray(a) ? a : []; },
+  /* v52 : les reponses de ce prospect appartiennent-elles a l'ANCIEN questionnaire court ? Oui s'il n'a repondu a aucune
+     question propre au nouveau (probleme, projection) mais a au moins une question propre a l'ancien (sexe, age, poids,
+     motivation…). Un compte sans reponse est sur le nouveau. Sert aux compteurs « n / N réponses » et a l'affichage. */
+  ancien(I){
+    if (!I || typeof I !== "object") return false;
+    const nv = this.cfg().questions || [], av = this.avant();
+    if (nv.some(id => av.indexOf(id) === -1 && this.repondu(I, id))) return false;
+    return av.some(id => nv.indexOf(id) === -1 && this.repondu(I, id));
+  },
+  /* v52 : les identifiants du questionnaire de ce prospect (le nouveau, ou l'ancien) */
+  liste(I){ return this.ancien(I) ? this.avant() : (this.cfg().questions || []); },
+  /* nombre de reponses non vides au questionnaire court (progression) — v52 : sur le questionnaire de ce prospect */
   repondues(I){
     if (!I || typeof I !== "object") return 0;
-    return (this.cfg().questions || []).filter(id => { const v = I[id]; return (typeof v === "string" && v.trim() !== "") || (typeof v === "number" && isFinite(v)); }).length;
+    return this.liste(I).filter(id => this.repondu(I, id)).length;
+  },
+  /* v52 : definitions des questions (QUESTIONS d'abord, puis DECOUVERTE.questions ; avant : les anciennes definitions) */
+  definitions(ids, avant){
+    const extra = (avant ? DECOUVERTE.questions_avant : DECOUVERTE.questions) || [], autre = (avant ? DECOUVERTE.questions : DECOUVERTE.questions_avant) || [];
+    return (ids || []).map(id => QUESTIONS.find(q => q.id === id) || extra.find(q => q.id === id) || autre.find(q => q.id === id)).filter(Boolean);
+  },
+  /* v52 : les reponses a afficher (Profil du prospect, fiche du coach) : les questions de SON questionnaire (le nouveau, ou
+     l'ancien), puis celles de l'autre qui ont une valeur — sauf l'objectif pose par l'app depuis la reponse « problème ».
+     tous : aussi les questions sans reponse de son questionnaire (valeur ""). Rend [{ q, v }], v chaine (400 car. au plus). */
+  reponses(I, tous){
+    I = I && typeof I === "object" ? I : {};
+    const ancien = this.ancien(I), nv = this.cfg().questions || [], av = this.avant();
+    const siens = ancien ? av : nv, autres = (ancien ? nv : av).filter(id => siens.indexOf(id) === -1);
+    const val = q => this.repondu(I, q.id) ? String(I[q.id]).trim().slice(0, 400) + (q.type === "echelle" ? " / 10" : "") : "";
+    const pose = this.objectifDepuis(I.probleme);
+    const out = this.definitions(siens, ancien).map(q => ({ q, v: val(q) })).filter(x => tous || x.v);
+    this.definitions(autres, !ancien).forEach(q => { const v = val(q); if (v && !(q.id === "objectif" && !ancien && pose && v === pose)) out.push({ q, v }); });
+    return out;
+  },
+  /* v52 : la reponse « problème » traduite en option EXACTE de la question « objectif » (CONFIG.decouverte.objectif_depuis) ;
+     "" si la reponse n'est pas dans la table ou si l'option n'existe pas (ou plus) dans QUESTIONS */
+  objectifDepuis(v){
+    const t = this.cfg().objectif_depuis || {};
+    const o = typeof v === "string" && Object.prototype.hasOwnProperty.call(t, v) ? t[v] : "";
+    const q = QUESTIONS.find(x => x.id === "objectif");
+    return o && q && Array.isArray(q.options) && q.options.indexOf(o) > -1 ? o : "";
+  },
+  /* v52 : pose I.objectif depuis la reponse « problème » quand il est vide — ou quand il venait de cette table pour la
+     reponse d'avant (precedent) : jamais par-dessus un objectif choisi dans le questionnaire complet. Rend vrai si I change. */
+  poserObjectif(I, precedent){
+    if (!I || typeof I !== "object") return false;
+    const o = this.objectifDepuis(I.probleme); if (!o || I.objectif === o) return false;
+    const vide = !(typeof I.objectif === "string" && I.objectif.trim());
+    const venaitDeLaTable = typeof I.objectif === "string" && precedent !== I.probleme && !!this.objectifDepuis(precedent) && I.objectif === this.objectifDepuis(precedent);
+    if (!vide && !venaitDeLaTable) return false;
+    I.objectif = o; return true;
+  },
+  /* v52 : le choix fait sur la page de proposition de bilan ({ choix: "reserver" | "plus_tard", le }), ou null */
+  bilanPropose(I){
+    const b = I && typeof I === "object" ? I.bilan_propose : null;
+    return b && typeof b === "object" && !Array.isArray(b) && (b.choix === "reserver" || b.choix === "plus_tard") ? b : null;
+  },
+  /* v52 : une reponse citee, tronquee proprement : n caracteres au plus (emojis entiers), coupee a un espace, « … » */
+  extrait(v, n){
+    if (typeof v !== "string" && !(typeof v === "number" && isFinite(v))) return "";
+    const a = Array.from(String(v).replace(/\s+/g, " ").trim()), max = n || 160;
+    if (a.length <= max) return a.join("");
+    let s = a.slice(0, max).join(""); const i = s.lastIndexOf(" ");
+    if (i > s.length * 0.6) s = s.slice(0, i);
+    return s.replace(/[\s,;:.!?…'’-]+$/, "") + "…";
   },
   /* l'email du compte connecte (prospect seulement), s'il a une forme d'email */
   emailCompte(){
@@ -11423,9 +11553,15 @@ const Activite = {
 
 /* ------------------------------------------------------------------
    OUTIL — Découverte (prospects seulement). C'est l'accueil du prospect :
-   le questionnaire court, puis son résultat, ses calories et macros, une
-   séance, 3 recettes, la Speed Formation (ouverte les premiers jours) et
-   « Réserver mon bilan ». Formules du calculateur intouchées.
+   v52 : les 3 questions (problème, obstacle, projection), puis la page de
+   proposition de bilan (tant qu'il n'a pas choisi : « Réserver mon bilan » ou
+   « Pas maintenant »), puis son accueil (Speed Formation, « Réserver mon
+   bilan »). L'ancien écran « résultat » (calories calculées depuis le
+   questionnaire, priorités, séance, recettes) n'est plus affiché : son code
+   reste, repris par le calculateur, l'échantillon du programme et la journée
+   type de la nutrition (lots D et E). Formules du calculateur intouchées.
+   Adresses : #/decouverte/bilan (la page de proposition, à tout moment),
+   #/decouverte/reponses (« Modifier mes réponses », depuis le Profil).
    ------------------------------------------------------------------ */
 const outilDecouverte = {
   id: "decouverte",
@@ -11443,12 +11579,18 @@ const outilDecouverte = {
   titre: "Découverte",
   accroche: "",
   _form: false,          // vrai pendant « Modifier mes réponses »
+  _bilan: false,         // v52 : la page de proposition de bilan demandée par son adresse (#/decouverte/bilan)
+  _choixFait: false,     // v52 : un choix a été fait sur la page bilan pendant cette visite
+  _choisit: false,       // v52 : un choix est en cours d'enregistrement (double clic)
 
   html(){ return `<div id="dc-vue"><section class="panel"><div class="empty">${esc(trad("Chargement…"))}</div></section></div>`; },
   async init(){ const zone = $("dc-vue"); if (zone) return this.afficher(zone); },
 
   async afficher(zone){
-    this._form = false;
+    /* v52 : #/decouverte/reponses ouvre « Modifier mes réponses », #/decouverte/bilan la page de proposition de bilan */
+    const sous = courant === "decouverte" ? sousRoute : "";
+    this._form = sous === "reponses";
+    this._bilan = sous === "bilan";
     const I = await Store.lire("intake", {});
     const C = await Store.lire(Decouverte.cle, Decouverte.vide());
     if (!zone.isConnected) return;
@@ -11463,10 +11605,7 @@ const outilDecouverte = {
     const mail = Decouverte.emailCompte();
     if (mail && I.email_compte !== mail){ const avant = I.email_compte; I.email_compte = mail; if (Store.ecrire("intake", I) === false){ if (avant === undefined) delete I.email_compte; else I.email_compte = avant; } }
   },
-  questions(){
-    const extra = DECOUVERTE.questions || [];
-    return (Decouverte.cfg().questions || []).map(id => QUESTIONS.find(q => q.id === id) || extra.find(q => q.id === id)).filter(Boolean);
-  },
+  questions(){ return Decouverte.definitions(Decouverte.cfg().questions || []); },
   bornes(){ return Decouverte.cfg().bornes || {}; },
 
   rendre(zone, I, C){
@@ -11474,20 +11613,77 @@ const outilDecouverte = {
     if (Store.nonLus.has(I)){ zone.innerHTML = `<section class="panel"><div class="empty">${esc(trad(T.charge_rate))}</div></section>`; return; }
     const j = Decouverte.jour(p), duree = Decouverte.duree(), finie = j != null && j > duree;
     const fait = Decouverte.questionnaireFait(I), form = !fait || this._form, reste = j == null ? null : duree - j + 1;
+    /* v52 : questionnaire valide et pas encore de choix (ou page demandee par son adresse) : la proposition de bilan */
+    const bilan = !form && (this._bilan || (!Decouverte.bilanPropose(I) && !this._choixFait));
     const eyebrow = trad(T.nom) + (j == null ? "" : " · " + (finie ? trad(T.jour_fini) : trad(T.jour, { n: j, t: duree })));
-    const lede = !fait ? trad(T.lede_questionnaire) : finie ? trad(T.lede_fini) : reste === 1 ? trad(T.lede_reste_1) : reste != null ? trad(T.lede_reste, { n: reste }) : "";
-    /* « Réserver mon bilan » : visible des la fin du questionnaire */
-    const cal = fait ? lienCalendly("decouverte") : "";
+    /* sur la page bilan, ni jours restants ni second bouton : rien qui presse, deux choix de meme poids */
+    const lede = !fait ? trad(T.lede_questionnaire) : bilan ? "" : finie ? trad(T.lede_fini) : reste === 1 ? trad(T.lede_reste_1) : reste != null ? trad(T.lede_reste, { n: reste }) : "";
+    /* « Réserver mon bilan » : visible des la fin du questionnaire (accueil, « Modifier mes réponses ») */
+    const cal = fait && !bilan ? lienCalendly("decouverte") : "";
     zone.innerHTML = `<header class="masthead"><span class="eyebrow">${esc(eyebrow)}</span>
         <h1>${esc(trad("Bonjour"))}${p.prenom ? " " + esc(p.prenom) : ""}</h1>${lede ? `<p class="lede">${esc(lede)}</p>` : ""}
         ${cal ? `<div class="actions"><a class="btn" href="${esc(cal)}" target="_blank" rel="noopener" data-dc-cal="decouverte">${esc(trad("Réserver mon bilan"))}</a></div>` : ""}</header>`
-      + (form ? this.formulaireHTML(I) : this.resultatHTML(I) + this.calculHTML(I) + this.seanceHTML(I) + this.recettesHTML() + this.formationHTML() + this.accompHTML(C));
-    /* chaque clic vers Calendly est note pour le coach, avec l'ecran d'origine (resultat comme « Modifier mes reponses ») */
+      + (form ? this.formulaireHTML(I) : bilan ? this.bilanHTML(I) : this.accueilHTML(I, C));
+    /* chaque clic vers Calendly est note pour le coach, avec l'ecran d'origine (accueil, page bilan, « Modifier mes reponses ») */
     $$("[data-dc-cal]", zone).forEach(a => a.addEventListener("click", () => Decouverte.clic(C, a.dataset.dcCal)));
-    Activite.page(form ? "decouverte-questionnaire" : "decouverte-resultat");
+    Activite.page(form ? "decouverte-questionnaire" : bilan ? "decouverte-bilan" : "decouverte-accueil");
     if (form) this.brancherFormulaire(zone, I, C);
-    else { Tracking.enregistrer("result_viewed"); this.brancherPage(zone, I, C); }
+    else if (bilan){ Tracking.enregistrer("bilan_viewed"); this.brancherBilan(zone, I, C); }
+    else this.brancherPage(zone, I, C);
   },
+  /* v52 : l'adresse d'une sous-page (#/decouverte/bilan, #/decouverte/reponses) quittee : retour a #/decouverte, sans
+     hashchange (un rechargement ne rouvre pas la sous-page) */
+  quitterSousPage(){
+    this._form = false; this._bilan = false;
+    if (courant === "decouverte" && sousRoute){ sousRoute = ""; try { history.replaceState(null, "", "#/decouverte"); } catch(e){} }
+  },
+
+  /* ---------- v52 : la page de proposition de bilan ---------- */
+  bilanHTML(I){
+    const L = DECOUVERTE.bilan, cal = lienCalendly("bilan-propose"), pr = Decouverte.extrait(I && I.projection, 160);
+    /* sa reponse « projection », echappee et tronquee ; une phrase neutre si elle est vide (ancien prospect) */
+    return `<section class="panel" id="dc-bilan"><h2>${esc(trad(L.titre))}</h2>
+      <p class="dc-projection" id="dc-projection">${esc(pr ? trad(L.projection, { p: pr }) : trad(L.sans_projection))}</p>
+      <p id="dc-bilan-texte">${esc(trad(L.texte))}</p>
+      <div class="dc-choix">${cal ? `<a class="btn" id="dc-bilan-reserver" href="${esc(cal)}" target="_blank" rel="noopener" data-dc-cal="bilan-propose">${esc(trad(L.reserver))}</a>` : ""}<button class="btn" type="button" id="dc-bilan-plus-tard">${esc(trad(L.plus_tard))}</button></div></section>`;
+  },
+  brancherBilan(zone, I, C){
+    const self = this;
+    const res = zone.querySelector("#dc-bilan-reserver"), tard = zone.querySelector("#dc-bilan-plus-tard");
+    /* le lien s'ouvre dans un nouvel onglet (Calendly) ; ici, le choix est note puis l'accueil s'affiche */
+    if (res) res.addEventListener("click", () => self.choisirBilan(zone, I, C, "reserver"));
+    if (tard) tard.addEventListener("click", () => self.choisirBilan(zone, I, C, "plus_tard"));
+  },
+  /* le choix est memorise UNE fois (intake.bilan_propose = { choix, le }), apres relecture d'intake si le cache n'est
+     pas charge ; une page rouverte par son adresse n'ecrit plus rien. Ensuite, l'accueil. */
+  async choisirBilan(zone, I, C, choix){
+    if (this._choisit) return;
+    this._choisit = true;
+    this._choixFait = true;   // meme si l'ecriture n'a pas pu partir : il n'est pas renvoye sur cette page pendant la visite
+    try {
+      let J = I;
+      const uid = Store.cible();
+      if (!J || typeof J !== "object" || Store.nonLus.has(J) || !uid || Store.charge[uid + "|intake"] !== true){
+        try { J = await Store.lire("intake", {}); } catch(e){ J = null; }
+      }
+      if (J && typeof J === "object" && !Store.nonLus.has(J) && !Decouverte.bilanPropose(J)){
+        const avant = J.bilan_propose;
+        J.bilan_propose = { choix: choix === "reserver" ? "reserver" : "plus_tard", le: new Date().toISOString() };
+        if (Store.ecrire("intake", J) === false){ if (avant === undefined) delete J.bilan_propose; else J.bilan_propose = avant; }   // refusee (message deja affiche)
+      }
+      if (J && typeof J === "object" && !Store.nonLus.has(J)) I = J;
+    } finally { this._choisit = false; }
+    /* apres la tache du clic : le lien vers Calendly (nouvel onglet) part avant que la page ne soit redessinee */
+    setTimeout(() => {
+      if (!zone.isConnected) return;
+      this.quitterSousPage();
+      this.rendre(zone, I, C);
+      window.scrollTo(0, 0);
+    }, 0);
+  },
+
+  /* ---------- v52 : l'accueil du prospect apres la page bilan (le lot D le complete : calculateur, pesee, cartes) ---------- */
+  accueilHTML(I, C){ return this.formationHTML() + this.accompHTML(C); },
 
   /* ---------- le questionnaire court ---------- */
   formulaireHTML(I){
@@ -11514,8 +11710,11 @@ const outilDecouverte = {
        un age d'au moins 18 ans saisi. L'age n'est juge qu'a la sortie du champ (« 35 » passe par « 3 »,
        « 185 » par « 18 »). Un age sous le minimum saisi ensuite remet ce que ce formulaire avait envoye
        a son etat d'avant : les reponses d'une personne mineure ne restent jamais en base.
-       En « Modifier mes reponses », rien ne part avant « Voir mon resultat », qui valide sur une copie :
-       « Revenir a mon resultat » retrouve donc exactement les reponses d'avant. */
+       v52 : les 3 questions ne demandent plus l'age (qAge absent : le brouillon part des la premiere reponse) ;
+       cette garde reste, inerte, pour une liste de questions qui contiendrait « age ». Le garde-fou 18 ans des
+       prospects passe au calculateur (lot D).
+       En « Modifier mes reponses », rien ne part avant « Valider mes réponses », qui valide sur une copie :
+       « Annuler les modifications » retrouve donc exactement les reponses d'avant. */
     const enModification = Decouverte.questionnaireFait(I);
     const ageSaisi = () => { if (!qAge) return true; const a = outilProfil.valeur(qAge); return String(a == null ? "" : a).trim() !== "" && valide(qAge, a); };
     let ageOk = ageSaisi();
@@ -11531,7 +11730,9 @@ const outilDecouverte = {
        intactes, comme le promet « Repasser prospect ») : seul ce que ce formulaire a envoye est retire (retirer) */
     const purger = () => {
       if (enModification || I.nom || I.complet) return;
-      const presents = qs.map(q => q.id).concat(["court_debut", "email_compte"]).filter(k => Object.prototype.hasOwnProperty.call(I, k));
+      /* v52 : l'objectif pose par l'app depuis la reponse « problème » part avec elle */
+      const pose = Decouverte.objectifDepuis(I.probleme) && I.objectif === Decouverte.objectifDepuis(I.probleme) ? ["objectif"] : [];
+      const presents = qs.map(q => q.id).concat(["court_debut", "email_compte"], pose).filter(k => Object.prototype.hasOwnProperty.call(I, k));
       if (!presents.length) return;
       presents.forEach(k => { delete I[k]; delete avant[k]; });
       Store.ecrire("intake", I);
@@ -11539,11 +11740,14 @@ const outilDecouverte = {
     const brouillon = () => {
       if (enModification || !ageOk) return;
       let change = false;
+      const probleme = I.probleme;
       qs.forEach(q => {
         if (!$("q-" + q.id)) return;
         const v = outilProfil.valeur(q);
         if (valide(q, v) && String(I[q.id] == null ? "" : I[q.id]) !== String(v)){ if (!(q.id in avant)) avant[q.id] = I[q.id]; I[q.id] = v; change = true; }
       });
+      /* v52 : la reponse « problème » pose l'objectif du questionnaire complet s'il est vide (table CONFIG) */
+      if (change && I.probleme !== probleme){ const o = I.objectif; if (Decouverte.poserObjectif(I, probleme) && !("objectif" in avant)) avant.objectif = o; }
       if (change){
         /* v51 : le debut du questionnaire et l'email du compte (pour le coach) partent avec la premiere reponse ;
            comme elle, ils sont retires si un age mineur est saisi ensuite */
@@ -11566,13 +11770,14 @@ const outilDecouverte = {
       if (el.matches("textarea, input:not([type=checkbox]):not([type=radio])")) el.addEventListener("input", brouillon);
     });
     const annuler = zone.querySelector("#dc-annuler");
-    if (annuler) annuler.addEventListener("click", () => { self._form = false; self.rendre(zone, I, C); window.scrollTo(0, 0); });
+    if (annuler) annuler.addEventListener("click", () => { self.quitterSousPage(); self.rendre(zone, I, C); window.scrollTo(0, 0); });
     const voir = zone.querySelector("#dc-voir");
     if (voir) voir.addEventListener("click", () => {
       /* on verifie une COPIE : les reponses n'entrent dans le questionnaire que valides */
       const V = Object.assign({}, I);
       qs.forEach(q => { if ($("q-" + q.id)) V[q.id] = outilProfil.valeur(q); });
-      const manquants = qs.filter(q => req.indexOf(q.id) > -1 && (q.type === "nombre" ? !(num(V[q.id]) > 0) : !V[q.id]));
+      /* v52 : une reponse faite d'espaces seulement ne compte pas */
+      const manquants = qs.filter(q => req.indexOf(q.id) > -1 && (q.type === "nombre" ? !(num(V[q.id]) > 0) : !String(V[q.id] == null ? "" : V[q.id]).trim()));
       const hors = qs.filter(q => B[q.id] && String(V[q.id] || "").trim() !== "" && (num(V[q.id]) < B[q.id][0] || num(V[q.id]) > B[q.id][1]));
       const lib = q => trad(q.label);
       if (ageMin != null && num(V.age) > 0 && num(V.age) < ageMin){ retirer(); purger(); }   // age sous le minimum : rien de ce formulaire ne reste
@@ -11586,20 +11791,26 @@ const outilDecouverte = {
         manquants.concat(hors).forEach(q => { const el = $("q-" + q.id); if (el) el.classList.add("manque"); });
         return;
       }
-      const garde = { court_le: I.court_le, court_debut: I.court_debut, email_compte: I.email_compte };
+      const garde = { court_le: I.court_le, court_debut: I.court_debut, email_compte: I.email_compte, objectif: I.objectif };
+      const probleme = I.probleme;
       Object.assign(I, V);
+      Decouverte.poserObjectif(I, probleme);   // v52 : l'objectif du questionnaire complet depuis la reponse « problème »
       if (!Decouverte.questionnaireFait(I)) I.court_le = new Date().toISOString();
       if (!I.court_debut) I.court_debut = I.court_le;
       const mail = Decouverte.emailCompte(); if (mail) I.email_compte = mail;
       if (Store.ecrire("intake", I) === false){ Object.keys(garde).forEach(k => { if (garde[k] === undefined) delete I[k]; else I[k] = garde[k]; }); return; }   // refusee (message deja affiche)
       Tracking.enregistrer("diagnostic_completed");
-      self._form = false;
-      self.rendre(zone, I, C);
+      self.quitterSousPage();
+      self.rendre(zone, I, C);   // v52 : la page de proposition de bilan (tant qu'il n'a pas choisi), sinon son accueil
       window.scrollTo(0, 0);
     });
   },
 
-  /* ---------- le resultat (vraiment calcule a partir des reponses) ---------- */
+  /* ---------- le resultat (vraiment calcule a partir des reponses) ----------
+     v52 : cet ecran n'est plus affiche (les 3 questions ne donnent ni age, ni taille, ni poids). Le code reste : le
+     garde-fou IMC de chiffres() passe au calculateur (lot D), seanceHTML devient l'echantillon du programme verrouille
+     et les recettes la journee type de la nutrition verrouillee (lot E) ; calculHTML / resultatHTML peuvent partir
+     quand plus rien ne s'en sert. */
   chiffres(I){
     const d = outilCalculateur.departDepuis(I);
     if (!(num(I.pas) > 0)) d.pas = Decouverte.cfg().pas_defaut || 6000;

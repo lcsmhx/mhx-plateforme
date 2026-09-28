@@ -484,7 +484,9 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     const pg = L[2] || [];
     ok("ligne piégée : nom « '=1+1 <img …> » et email « '@piege.fr » neutralisés (apostrophe), objectif « Perdre \"vite\"; bien » relu intact, FROID, 16, « 3/10 réponses »", pg[0] === "'=1+1 " + XSS && pg[1] === "'@piege.fr" && pg[4] === 'Perdre "vite"; bien' && pg[5] === "FROID" && pg[6] === "16" && pg[7] === "3/10 réponses" && pg[9] === "0" && pg[12] === "0", JSON.stringify(pg));
     const zo = L[3] || [], ka = L[4] || [], pa = L[5] || [];
-    ok("Zoé « 5/10 réponses », score 25 ; Karim objectif « +5 kg de muscle » neutralisé (« '+5 kg… »), découverte terminée ; Paul « 0/10 réponses », « Relance : sa découverte est finie sans questionnaire… »", zo[7] === "5/10 réponses" && zo[6] === "25" && ka[4] === "'+5 kg de muscle" && ka[3] === "terminée" && ka[14] === "Relance : sa découverte est terminée, propose-lui le bilan." && pa[7] === "0/10 réponses" && pa[13] === "" && pa[14] === "Relance : sa découverte est finie sans questionnaire, propose-lui directement le bilan.", JSON.stringify([zo[6], zo[7], ka[3], ka[4], pa[7], pa[14]]));
+    /* v52 (28/09/2026, Chantier 1 lot C) : Paul, qui n'a rien répondu, est compté sur les 3 questions du nouveau questionnaire
+       (« 0/3 » ; avant « 0/10 ») ; Zoé, qui a commencé l'ancien, reste comptée sur 10 */
+    ok("Zoé « 5/10 réponses », score 25 ; Karim objectif « +5 kg de muscle » neutralisé (« '+5 kg… »), découverte terminée ; Paul « 0/3 réponses », « Relance : sa découverte est finie sans questionnaire… »", zo[7] === "5/10 réponses" && zo[6] === "25" && ka[4] === "'+5 kg de muscle" && ka[3] === "terminée" && ka[14] === "Relance : sa découverte est terminée, propose-lui le bilan." && pa[7] === "0/3 réponses" && pa[13] === "" && pa[14] === "Relance : sa découverte est finie sans questionnaire, propose-lui directement le bilan.", JSON.stringify([zo[6], zo[7], ka[3], ka[4], pa[7], pa[14]]));
     ok("export : toast « 6 prospects exportés. », aucune écriture", (await toasts(page)).includes("6 prospects exportés.") && db.ecritures.length === 0, JSON.stringify(await toasts(page)));
     /* un autre filtre : l'export suit l'écran */
     await filtre(page, "tous"); await choisir(page, "#pr-prog", "q_fait");
@@ -543,7 +545,8 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     await page.goto(`http://localhost:${PORT}/#/prospects`); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 }); await attendre(page, 400);
     await ouvrirFiche(page, LEA);
     const lienL = await page.$eval("#dc-lien", e => e.value).catch(() => "");
-    ok("Léa (rien fait) : score 10/100, « Questionnaire en cours (0/10 réponses) » 0 / 30, chronologie « Inscription » seule", (await texte(page, "#fiche-score .seance-c-tete .pastille")) === "10/100" && (await lignesLi(page, "#fiche-score")).some(([k, v]) => k === "Questionnaire en cours (0/10 réponses)" && v === "0 / 30") && JSON.stringify((await chrono(page)).map(x => x.t)) === '["Inscription"]', JSON.stringify(await lignesLi(page, "#fiche-score")));
+    /* v52 : rien répondu = nouveau questionnaire court, 3 questions (avant : « 0/10 réponses ») */
+    ok("Léa (rien fait) : score 10/100, « Questionnaire en cours (0/3 réponses) » 0 / 30, chronologie « Inscription » seule", (await texte(page, "#fiche-score .seance-c-tete .pastille")) === "10/100" && (await lignesLi(page, "#fiche-score")).some(([k, v]) => k === "Questionnaire en cours (0/3 réponses)" && v === "0 / 30") && JSON.stringify((await chrono(page)).map(x => x.t)) === '["Inscription"]', JSON.stringify(await lignesLi(page, "#fiche-score")));
     ok("Léa sans email : lien avec le prénom seul (" + lienPour("Léa", "") + "), pas de mailto, « Email inconnu : il apparaît quand le prospect a commencé son questionnaire. »", lienL === lienPour("Léa", "") && !(await page.$("#dc-mail")) && (await texte(page, "#fiche-actions")).includes("Email inconnu : il apparaît quand le prospect a commencé son questionnaire."), lienL);
     await aller(page, "#/prospects", 2000);
     await ouvrirFiche(page, ZOE);
@@ -798,7 +801,8 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     const maintenant = () => page.evaluate(() => Date.now());
     const jusqua = async t => { const d = Math.round(t - (await maintenant())); if (d > 0) await page.clock.fastForward(d); };
     const tAvant = Date.now();   // la première page vue (decouverte-questionnaire) est comptée après cet instant…
-    await page.goto(`http://localhost:${PORT}/`); await page.waitForSelector("#q-age", { timeout: 8000 });
+    /* v52 : la Découverte est prête quand ses 3 questions sont là (#q-probleme ; avant : #q-age) */
+    await page.goto(`http://localhost:${PORT}/`); await page.waitForSelector("#q-probleme", { timeout: 8000 });
     const tRendu = await maintenant();   // … et avant celui-ci
     await attendre(page, 800);
     await aller(page, "#/formation", 1400);
@@ -833,33 +837,34 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     const A = contenu(db, "activite", ACT) || {};
     ok("panne finie : relue puis écrite une seule fois ; rien de perdu ni compté deux fois (formation 5 → 6, decouverte-questionnaire 1, verrou-programme 1, temps ajouté)", lu(db, "activite") === 3 && ecr(db, "activite").length === 1 && memes(A.pages, { formation: 6, "decouverte-questionnaire": 1, "verrou-programme": 1 }) && A.temps_s > 100 && JSON.stringify(A.jours) === JSON.stringify([ilYA(1), ajd()]), JSON.stringify(A));
   });
+  /* v52 (28/09/2026, Chantier 1 lot C) : les 3 questions (probleme, obstacle, projection) remplacent les 10 et l'âge n'est
+     plus demandé : le premier brouillon part avec la première réponse (avant : seulement après un âge d'au moins 18 ans,
+     avec 2 vérifications « âge 15 → tout retiré » / « âge 30 → tout repart », remplacées ici par l'objectif posé depuis la
+     réponse « problème » et l'absence de question d'âge) ; après la validation, la page de proposition de bilan
+     (page vue « decouverte-bilan » au lieu de « decouverte-resultat »). */
   await bloc("G. email et début du questionnaire", async () => {
     const db = base({ prospects: seule() });
     const { page } = await contexte(b, leaAct, db);
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 2400);
-    await page.fill("#q-poids", "64"); await attendre(page, 1300);
-    ok("poids saisi avant l'âge : rien ne part (ni réponse, ni email, ni court_debut)", ecr(db, "intake").length === 0);
+    ok("questionnaire affiché, rien encore répondu : rien ne part (ni réponse, ni email, ni court_debut) ; aucune question d'âge", ecr(db, "intake").length === 0 && !!(await page.$("#q-probleme")) && !(await page.$("#q-age")));
     const t0 = Date.now();
-    await page.fill("#q-age", "30"); await page.press("#q-age", "Tab"); await attendre(page, 1500);
+    await page.selectOption("#q-probleme", "Perdre du gras"); await attendre(page, 1500);
     const I1 = contenu(db, "intake", ACT) || {};
-    ok("âge 30 : le premier brouillon part avec l'email du compte (email_compte = lea.martin@exemple.fr, jamais le champ « email » du questionnaire client) et court_debut (maintenant)", I1.age === "30" && I1.poids === "64" && I1.email_compte === "lea.martin@exemple.fr" && !("email" in I1) && typeof I1.court_debut === "string" && Math.abs(Date.parse(I1.court_debut) - t0) < 10000 && !I1.court_le, JSON.stringify(I1));
+    ok("première réponse : le premier brouillon part avec l'email du compte (email_compte = lea.martin@exemple.fr, jamais le champ « email » du questionnaire client) et court_debut (maintenant)", I1.probleme === "Perdre du gras" && I1.email_compte === "lea.martin@exemple.fr" && !("email" in I1) && typeof I1.court_debut === "string" && Math.abs(Date.parse(I1.court_debut) - t0) < 10000 && !I1.court_le, JSON.stringify(I1));
     const debut1 = I1.court_debut;
-    await page.fill("#q-taille", "168"); await attendre(page, 1300);
-    ok("brouillon suivant : court_debut et email inchangés", (contenu(db, "intake", ACT) || {}).court_debut === debut1 && (contenu(db, "intake", ACT) || {}).taille === "168");
-    await page.fill("#q-age", "15"); await page.press("#q-age", "Tab"); await attendre(page, 1500);
-    const I2 = contenu(db, "intake", ACT);
-    ok("âge 15 ensuite : tout ce que ce formulaire avait envoyé est retiré, email et court_debut compris (intake = {})", JSON.stringify(I2) === "{}", JSON.stringify(I2));
-    await page.fill("#q-age", "30"); await page.press("#q-age", "Tab"); await attendre(page, 1500);
+    await page.fill("#q-obstacle", "Le temps"); await attendre(page, 1300);
+    ok("brouillon suivant : court_debut et email inchangés", (contenu(db, "intake", ACT) || {}).court_debut === debut1 && (contenu(db, "intake", ACT) || {}).obstacle === "Le temps");
+    ok("la réponse « problème » a posé l'objectif du questionnaire complet (« Perte de poids / sèche »)", (contenu(db, "intake", ACT) || {}).objectif === "Perte de poids / sèche", JSON.stringify(contenu(db, "intake", ACT)));
+    await page.fill("#q-projection", "Courir 10 km"); await attendre(page, 1300);
     const I3 = contenu(db, "intake", ACT) || {};
-    ok("âge 30 à nouveau : email et court_debut repartent avec les réponses", I3.email_compte === "lea.martin@exemple.fr" && typeof I3.court_debut === "string" && I3.poids === "64" && I3.taille === "168", JSON.stringify(I3));
-    await page.selectOption("#q-sexe", "Femme"); await page.selectOption("#q-objectif", "Perte de poids / sèche"); await page.selectOption("#q-seances", "3"); await page.selectOption("#q-motivation", "8");
+    ok("toutes les réponses partent en brouillon, email et court_debut avec elles, sans court_le", I3.email_compte === "lea.martin@exemple.fr" && I3.court_debut === debut1 && I3.projection === "Courir 10 km" && !I3.court_le, JSON.stringify(I3));
     await page.click("#dc-voir"); await attendre(page, 1600);
     const I4 = contenu(db, "intake", ACT) || {};
     ok("validation : court_le posé, court_debut du brouillon gardé (antérieur), email gardé", typeof I4.court_le === "string" && I4.court_debut === I3.court_debut && Date.parse(I4.court_debut) <= Date.parse(I4.court_le) && I4.email_compte === "lea.martin@exemple.fr" && !("email" in I4), JSON.stringify(I4));
-    ok("questionnaire et résultat : l'activité n'est toujours ni lue ni écrite (rien avant l'envoi)", lu(db, "activite") === 0 && ecr(db, "activite").length === 0);
+    ok("questionnaire et page bilan : l'activité n'est toujours ni lue ni écrite (rien avant l'envoi)", lu(db, "activite") === 0 && ecr(db, "activite").length === 0);
     await cacher(page); await attendre(page, 1800); await montrer(page);
     const A = contenu(db, "activite", ACT) || {};
-    ok("envoi (arrière-plan) après « Voir mon résultat » : relue puis écrite, pages decouverte-questionnaire 1 et decouverte-resultat 1", lu(db, "activite") === 1 && ecr(db, "activite").length === 1 && memes(A.pages, { "decouverte-questionnaire": 1, "decouverte-resultat": 1 }), JSON.stringify(A.pages));
+    ok("envoi (arrière-plan) après « Valider mes réponses » : relue puis écrite, pages decouverte-questionnaire 1 et decouverte-bilan 1", lu(db, "activite") === 1 && ecr(db, "activite").length === 1 && memes(A.pages, { "decouverte-questionnaire": 1, "decouverte-bilan": 1 }), JSON.stringify(A.pages));
   });
 
   /* ---------- H. 1 000 prospects ---------- */

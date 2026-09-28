@@ -306,8 +306,9 @@ const lireTuiles = page => page.$$eval("#tb-vue .tb-tuile", l => l.map(t => {
     ok("inscription : connecté ensuite, et prospect", await page.evaluate(() => Auth.connecte() && Auth.estProspect()).catch(() => false));
     /* le compte neuf arrive sur la Découverte au jour 1, questionnaire court à remplir, pas encore de bouton Calendly */
     const arrivee = await page.evaluate(() => { const z = document.querySelector("#dc-vue, #acc-vue");
-      return { h: location.hash, t: z ? z.textContent.replace(/\s+/g, " ") : "", age: !!document.getElementById("q-age"), voir: !!document.getElementById("dc-voir"), cal: z ? z.querySelectorAll('a[href*="calendly"], [data-dc-cal]').length : -1 }; }).catch(e => ({ erreur: String(e) }));
-    ok("inscription : arrivée sur la Découverte « Jour 1/7 », questionnaire court (#q-age, #dc-voir), aucun bouton Calendly", /Découverte · Jour 1\/7/.test(arrivee.t || "") && arrivee.age && arrivee.voir && arrivee.cal === 0, JSON.stringify(arrivee).slice(0, 250));
+      return { h: location.hash, t: z ? z.textContent.replace(/\s+/g, " ") : "", age: !!document.getElementById("q-probleme"), voir: !!document.getElementById("dc-voir"), cal: z ? z.querySelectorAll('a[href*="calendly"], [data-dc-cal]').length : -1 }; }).catch(e => ({ erreur: String(e) }));
+    /* v52 (Chantier 1 lot C) : les 3 questions, sans âge (#q-probleme ; avant : #q-age) */
+    ok("inscription : arrivée sur la Découverte « Jour 1/7 », questionnaire court (#q-probleme, #dc-voir), aucun bouton Calendly", /Découverte · Jour 1\/7/.test(arrivee.t || "") && arrivee.age && arrivee.voir && arrivee.cal === 0, JSON.stringify(arrivee).slice(0, 250));
     /* rien ne part dans donnees avant la saisie d'un âge ≥ 18 : ni brouillon intake, ni clé challenge écrite au démarrage */
     const ecrArrivee = db.ecritures.filter(e => e.table === "donnees");
     ok("inscription : aucune écriture dans donnees à l'arrivée du compte neuf (ni brouillon intake, ni clé challenge)", ecrArrivee.length === 0, JSON.stringify(ecrArrivee).slice(0, 250));

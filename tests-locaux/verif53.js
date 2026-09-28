@@ -11,7 +11,8 @@
    C. email du compte (email_compte) : premier brouillon, réponse « email » d'un questionnaire jamais écrasée, adresse
       du compte changée (une seule écriture à l'affichage), aucune écriture sinon ; côté coach (carte, recherche, CSV,
       fiche, mailto) email_compte, à défaut l'ancien intake.email ;
-   D. purge au premier remplissage : un âge mineur retire aussi ce qu'une visite précédente avait envoyé ;
+   D. purge au premier remplissage : un âge mineur retire aussi ce qu'une visite précédente avait envoyé (v52 : bloc
+      retiré, plus d'âge dans le questionnaire court ; garde-fou 18 ans au calculateur, lot D) ;
    E. bandeau de première connexion d'un ancien prospect passé client ;
    F. Nouveautés : date « vu » non ISO ignorée, lecture ratée dite dans le panneau puis « Tout marquer comme vu »
       une fois le réseau revenu, « vu » relu à chaque affichage, page Prospects ouverte aussitôt après « Tout marquer
@@ -297,11 +298,11 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     const db = base({ comptes: seule([["activite", F0, avant(J)]]) });
     const { page } = await contexte(b, leaAct, db);
     const t0 = Date.now();
-    await page.goto(`http://localhost:${PORT}/`); await page.waitForSelector("#q-age", { timeout: 8000 }); await attendre(page, 800);
+    await page.goto(`http://localhost:${PORT}/`); await page.waitForSelector("#q-probleme", { timeout: 8000 }); await attendre(page, 800);
     await aller(page, "#/programme", 1400);
     const avantFermeture = { l: lu(db, "activite"), e: db.ecritures.length };
     /* vrai rechargement (page.goto : la page se ferme, vrai pagehide), puis la visite suivante commence */
-    await page.goto(`http://localhost:${PORT}/`); await page.waitForSelector("#q-age", { timeout: 8000 }); await attendre(page, 1200);
+    await page.goto(`http://localhost:${PORT}/`); await page.waitForSelector("#q-probleme", { timeout: 8000 }); await attendre(page, 1200);
     const t1 = Date.now();
     const snap = await page.evaluate(() => window.__auChargement).catch(() => null);
     let copie = null; try { copie = JSON.parse(snap[CLE_LOCALE]); } catch (e) { copie = null; }
@@ -327,7 +328,7 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     const F0 = { version: 1, jours: [ilYA(1)], pages: { formation: 1 }, temps_s: 50, derniere: avant(J) };
     const db = base({ comptes: seule([["activite", F0, avant(J)]]) });
     const { page } = await contexte(b, leaAct, db);
-    await page.goto(`http://localhost:${PORT}/`); await page.waitForSelector("#q-age", { timeout: 8000 }); await attendre(page, 800);
+    await page.goto(`http://localhost:${PORT}/`); await page.waitForSelector("#q-probleme", { timeout: 8000 }); await attendre(page, 800);
     await aller(page, "#/formation", 1400);
     const ev = (type, persisted) => page.evaluate(([t, p]) => { window.dispatchEvent(new PageTransitionEvent(t, { persisted: p })); }, [type, persisted]);
     const journalAct = () => JSON.stringify(db.journal.filter(x => x.endsWith(" activite")));
@@ -359,9 +360,9 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     const F0 = { version: 1, jours: [ilYA(2)], pages: { formation: 1 }, temps_s: 60, derniere: avant(2 * J) };
     const db = base({ comptes: seule([["activite", F0, avant(2 * J)]]) });
     const { c, page: p1 } = await contexte(b, leaAct, db);
-    await p1.goto(`http://localhost:${PORT}/`); await p1.waitForSelector("#q-age", { timeout: 8000 }); await attendre(p1, 600);
+    await p1.goto(`http://localhost:${PORT}/`); await p1.waitForSelector("#q-probleme", { timeout: 8000 }); await attendre(p1, 600);
     const p2 = await nouvellePage(c);
-    await p2.goto(`http://localhost:${PORT}/`); await p2.waitForSelector("#q-age", { timeout: 8000 }); await attendre(p2, 600);
+    await p2.goto(`http://localhost:${PORT}/`); await p2.waitForSelector("#q-probleme", { timeout: 8000 }); await attendre(p2, 600);
     await aller(p1, "#/formation", 1400); await aller(p2, "#/programme", 1400);
     await cacher(p1); await attendre(p1, 1800);
     const W1 = clone(contenu(db, "activite", ACT)) || {};
@@ -390,7 +391,7 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     const db = base({ comptes: seule() });
     const { page } = await contexte(b, qui(ACT, EMAIL_ACT, debut.getTime() + 3 * J), db, { horloge: debut.getTime() });
     const maintenant = () => page.evaluate(() => Date.now());
-    await page.goto(`http://localhost:${PORT}/`); await page.waitForSelector("#q-age", { timeout: 8000 }); await attendre(page, 800);
+    await page.goto(`http://localhost:${PORT}/`); await page.waitForSelector("#q-probleme", { timeout: 8000 }); await attendre(page, 800);
     await cacher(page); await attendre(page, 1800);
     const W1 = clone(contenu(db, "activite", ACT)) || {};
     ok("23:50, première page puis arrière-plan : écrite (jour " + D0 + ", dernière activité 23:50)", ecr(db, "activite").length === 1 && JSON.stringify(W1.jours) === JSON.stringify([D0]) && Math.abs(Date.parse(W1.derniere) - debut.getTime()) < 15000, JSON.stringify(W1));
@@ -417,7 +418,7 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     const db = base({ comptes: seule([["activite", FS, avant(20 * H)]]) });
     const { c, page } = await contexte(b, leaAct, db, { stockage: stock });
     const t0 = Date.now();
-    await page.goto(`http://localhost:${PORT}/`); await page.waitForSelector("#q-age", { timeout: 8000 }); await attendre(page, 1500);
+    await page.goto(`http://localhost:${PORT}/`); await page.waitForSelector("#q-probleme", { timeout: 8000 }); await attendre(page, 1500);
     const garde = await lireLocal(page, CLE_STORE);
     ok("au démarrage, copie hors ligne de la clé activite plus ancienne que la base : rien d'écrit tout de suite (ni la copie brute, ni rien d'autre), copie gardée sur l'appareil jusqu'au prochain envoi (qui la fusionne)", ecr(db, "activite").length === 0 && !!garde && !!garde.v && memes(garde.v.pages, copieV.pages), "écritures " + JSON.stringify(ecr(db, "activite").map(e => e.contenu)) + " · copie " + JSON.stringify(garde));
     await cacher(page); await attendre(page, 1800); await montrer(page); await attendre(page, 600);
@@ -432,7 +433,7 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     const stock2 = { [CLE_STORE]: JSON.stringify({ a: ACT, t: avant(30 * H), v: copieV }), ["mhx_attente|" + ACT + "|emails"]: JSON.stringify({ a: ACT, t: avant(5 * H), v: { suivi: true, maj: avant(5 * H) } }) };
     const db2 = base({ comptes: seule([["activite", FS, avant(20 * H)], ["emails", { suivi: false, maj: avant(H) }, avant(H)]]) });
     const { page: p2 } = await contexte(b, leaAct, db2, { stockage: stock2 });
-    await p2.goto(`http://localhost:${PORT}/`); await p2.waitForSelector("#q-age", { timeout: 8000 }); await attendre(p2, 1800);
+    await p2.goto(`http://localhost:${PORT}/`); await p2.waitForSelector("#q-probleme", { timeout: 8000 }); await attendre(p2, 1800);
     const ts2 = await tousLesToasts(p2);
     const attendu = "Une modification faite hors ligne n'a pas été envoyée (Emails de suivi, " + fr(avant(5 * H)) + ") : une version plus récente existe déjà.";
     ok("copies hors ligne activite + emails plus anciennes que la base : un seul toast, « " + attendu + " » (nom lisible, l'activité n'y figure pas)", ts2.length === 1 && ts2[0] === attendu, JSON.stringify(ts2));
@@ -443,7 +444,7 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     const F0 = { version: 1, jours: [ilYA(1)], pages: { formation: 4 }, temps_s: 200, derniere: avant(J) };
     const db = base({ comptes: seule([["activite", F0, avant(J)]]) });
     const { page } = await contexte(b, leaAct, db);
-    await page.goto(`http://localhost:${PORT}/`); await page.waitForSelector("#q-age", { timeout: 8000 }); await attendre(page, 800);
+    await page.goto(`http://localhost:${PORT}/`); await page.waitForSelector("#q-probleme", { timeout: 8000 }); await attendre(page, 800);
     await aller(page, "#/formation", 1400);
     ok("avant la déconnexion (moins d'une minute, onglet visible) : rien de lu ni d'écrit", lu(db, "activite") === 0 && db.ecritures.length === 0);
     /* un autre onglet fermé entre-temps a laissé sa copie locale */
@@ -462,7 +463,7 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     const F0 = { version: 1, jours: [ilYA(1)], pages: { formation: 4 }, temps_s: 200, derniere: avant(J) };
     const db = base({ comptes: seule([["activite", F0, avant(J)]]) });
     const { page } = await contexte(b, leaAct, db);
-    await page.goto(`http://localhost:${PORT}/`); await page.waitForSelector("#q-age", { timeout: 8000 }); await attendre(page, 800);
+    await page.goto(`http://localhost:${PORT}/`); await page.waitForSelector("#q-probleme", { timeout: 8000 }); await attendre(page, 800);
     await aller(page, "#/formation", 1400);
     db.retardLecture = { activite: 1500 };   // réseau lent : la relecture de la base met 1,5 s
     await cacher(page); await attendre(page, 150); await montrer(page); await attendre(page, 150);   // un envoi commence (relecture en cours)
@@ -527,28 +528,30 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
 
   /* =================== C. email du compte (email_compte) =================== */
   const NEWP = PID(21), PERSO = "perso@exemple.fr";
+  /* v52 (28/09/2026, Chantier 1 lot C) : les 3 questions (probleme, obstacle, projection) remplacent les 10 ; le premier
+     brouillon part avec la première réponse (avant : avec l'âge, #q-age, seulement à partir de 18 ans) */
   await bloc("C. premier brouillon et réponse « email » d'un questionnaire", async () => {
     const db = base({ comptes: [{ id: NEWP, prenom: "Léa", nom: "", cree: avant(2 * J) }] });
     const { c, page } = await contexte(b, qui(NEWP, EMAIL_ACT), db);
-    await page.goto(`http://localhost:${PORT}/`); await page.waitForSelector("#q-age", { timeout: 8000 }); await attendre(page, 800);
+    await page.goto(`http://localhost:${PORT}/`); await page.waitForSelector("#q-probleme", { timeout: 8000 }); await attendre(page, 800);
     ok("affichage du questionnaire (pas commencé) : rien d'écrit", ecr(db, "intake").length === 0);
-    await page.fill("#q-age", "30"); await page.press("#q-age", "Tab"); await attendre(page, 1500);
+    await page.selectOption("#q-probleme", "Perdre du gras"); await attendre(page, 1500);
     const I1 = contenu(db, "intake", NEWP) || {};
-    ok("premier brouillon (âge 30) : email_compte = l'email du compte, jamais de clé « email » (question « email » du questionnaire client)", ecr(db, "intake").length === 1 && I1.email_compte === EMAIL_ACT && !("email" in I1) && typeof I1.court_debut === "string", JSON.stringify(I1));
+    ok("premier brouillon (objectif « Perdre du gras ») : email_compte = l'email du compte, jamais de clé « email » (question « email » du questionnaire client)", ecr(db, "intake").length === 1 && I1.email_compte === EMAIL_ACT && !("email" in I1) && typeof I1.court_debut === "string", JSON.stringify(I1));
     await c.close();
     /* intake qui porte déjà une réponse « email » (questionnaire client) : elle n'est jamais remplacée */
     const db2 = base({ comptes: [{ id: NEWP, prenom: "Léa", nom: "", cree: avant(2 * J), donnees: [["intake", { email: PERSO }, avant(J)]] }] });
     const { page: p2 } = await contexte(b, qui(NEWP, EMAIL_ACT), db2);
-    await p2.goto(`http://localhost:${PORT}/`); await p2.waitForSelector("#q-age", { timeout: 8000 }); await attendre(p2, 800);
+    await p2.goto(`http://localhost:${PORT}/`); await p2.waitForSelector("#q-probleme", { timeout: 8000 }); await attendre(p2, 800);
     ok("intake avec une réponse « email » mais questionnaire pas commencé : rien d'écrit à l'affichage", ecr(db2, "intake").length === 0);
-    await p2.fill("#q-age", "30"); await p2.press("#q-age", "Tab"); await attendre(p2, 1500);
+    await p2.selectOption("#q-probleme", "Perdre du gras"); await attendre(p2, 1500);
     const I2 = contenu(db2, "intake", NEWP) || {};
-    ok("premier brouillon : la réponse « email » (" + PERSO + ") reste intacte, l'email du compte va dans email_compte", I2.email === PERSO && I2.email_compte === EMAIL_ACT && I2.age === "30", JSON.stringify(I2));
-    await p2.fill("#q-taille", "168"); await p2.fill("#q-poids", "64"); await p2.selectOption("#q-sexe", "Femme"); await p2.selectOption("#q-objectif", "Perte de poids / sèche"); await p2.selectOption("#q-seances", "3"); await p2.selectOption("#q-motivation", "8");
+    ok("premier brouillon : la réponse « email » (" + PERSO + ") reste intacte, l'email du compte va dans email_compte", I2.email === PERSO && I2.email_compte === EMAIL_ACT && I2.probleme === "Perdre du gras", JSON.stringify(I2));
+    await p2.fill("#q-obstacle", "Le temps"); await p2.fill("#q-projection", "Courir 10 km");
     await attendre(p2, 1200);
     await p2.click("#dc-voir"); await attendre(p2, 1600);
     const I3 = contenu(db2, "intake", NEWP) || {};
-    ok("validation (« Voir mon résultat ») : court_le posé, email toujours " + PERSO + ", email_compte = email du compte", typeof I3.court_le === "string" && I3.email === PERSO && I3.email_compte === EMAIL_ACT, JSON.stringify(I3));
+    ok("validation (« Valider mes réponses ») : court_le posé, email toujours " + PERSO + ", email_compte = email du compte", typeof I3.court_le === "string" && I3.email === PERSO && I3.email_compte === EMAIL_ACT, JSON.stringify(I3));
     ok("aucune écriture intake ne touche la réponse « email »", ecr(db2, "intake").every(e => e.contenu.email === PERSO), JSON.stringify(ecr(db2, "intake").map(e => e.contenu.email)));
   });
 
@@ -557,10 +560,11 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
       const I0 = Object.assign({ sexe: "Femme", age: "30", taille: "168", poids: "64", court_debut: avant(J), email_compte: "ancien@exemple.fr", email: PERSO }, fait ? { objectif: "Prise de muscle", seances: "3", motivation: "8", court_le: avant(J - H) } : {});
       const db = base({ comptes: [{ id: NEWP, prenom: "Léa", nom: "", cree: avant(2 * J), donnees: [["intake", I0, avant(J)]] }] });
       const { c, page } = await contexte(b, qui(NEWP, "nouveau@exemple.fr"), db);
-      await page.goto(`http://localhost:${PORT}/`); await page.waitForSelector(fait ? "#dc-modifier" : "#q-age", { timeout: 8000 }); await attendre(page, 1500);
+      /* v52 : validé sans choix → la page de proposition de bilan (avant : le résultat, #dc-modifier) ; commencé → les 3 questions */
+      await page.goto(`http://localhost:${PORT}/`); await page.waitForSelector(fait ? "#dc-bilan" : "#q-probleme", { timeout: 8000 }); await attendre(page, 1500);
       const I1 = contenu(db, "intake", NEWP) || {};
       const attI = Object.assign({}, I0, { email_compte: "nouveau@exemple.fr" });
-      ok(`adresse du compte changée (${fait ? "questionnaire validé, page résultat" : "questionnaire commencé"}) : une seule écriture à l'affichage, email_compte = nouveau@exemple.fr, tout le reste identique (réponse « email » comprise)`, ecr(db, "intake").length === 1 && memes(I1, attI), JSON.stringify(I1));
+      ok(`adresse du compte changée (${fait ? "questionnaire validé, page bilan" : "questionnaire commencé"}) : une seule écriture à l'affichage, email_compte = nouveau@exemple.fr, tout le reste identique (réponse « email » comprise)`, ecr(db, "intake").length === 1 && memes(I1, attI), JSON.stringify(I1));
       await aller(page, "#/formation", 1400); await aller(page, "#/decouverte", 1800);
       ok(`… page quittée puis rouverte : plus aucune écriture (l'adresse est à jour)`, ecr(db, "intake").length === 1 && db.ecritures.filter(e => e.outil !== "activite").length === 1, JSON.stringify(db.ecritures.map(e => e.outil || e.table)));
       await c.close();
@@ -576,7 +580,7 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     for (const [quoi, I0] of cas) {
       const db = base({ comptes: [{ id: NEWP, prenom: "Léa", nom: "", cree: avant(2 * J), donnees: [["intake", I0, avant(J)]] }] });
       const { c, page } = await contexte(b, qui(NEWP, EMAIL_ACT), db);
-      await page.goto(`http://localhost:${PORT}/`); await page.waitForSelector("#q-age", { timeout: 8000 }); await attendre(page, 1300);
+      await page.goto(`http://localhost:${PORT}/`); await page.waitForSelector("#q-probleme", { timeout: 8000 }); await attendre(page, 1300);
       await aller(page, "#/formation", 1200); await aller(page, "#/decouverte", 1600);
       ok(`${quoi} : affichages de la Découverte sans aucune écriture`, db.ecritures.length === 0 && memes(contenu(db, "intake", NEWP), I0), JSON.stringify(db.ecritures.map(e => e.outil || e.table)));
       await c.close();
@@ -613,38 +617,11 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
   });
 
   /* =================== D. purge au premier remplissage =================== */
-  await bloc("D. âge mineur après une visite précédente", async () => {
-    const I0 = { sexe: "Femme", age: "30", taille: "168", poids: "64", objectif: "Prise de muscle", essaye: "Des applis", court_debut: avant(2 * H), email_compte: EMAIL_ACT };
-    const db = base({ comptes: seule([["intake", I0, avant(2 * H)]]) });
-    const { c, page } = await contexte(b, leaAct, db);
-    await page.goto(`http://localhost:${PORT}/`); await page.waitForSelector("#q-age", { timeout: 8000 }); await attendre(page, 800);
-    await page.reload(); await page.waitForSelector("#q-age", { timeout: 8000 }); await attendre(page, 800);
-    ok("réponses d'une visite précédente, page rechargée : questionnaire pré-rempli, rien d'écrit", (await page.$eval("#q-taille", e => e.value).catch(() => "")) === "168" && ecr(db, "intake").length === 0);
-    await page.fill("#q-age", "15"); await page.press("#q-age", "Tab"); await attendre(page, 1500);
-    const I1 = contenu(db, "intake", ACT) || {};
-    const restes = QS.concat(["court_debut", "email_compte"]).filter(k => k in I1);
-    ok("âge 15 saisi, champ quitté : plus aucune réponse du questionnaire court, ni court_debut, ni email_compte en base (une écriture)", ecr(db, "intake").length === 1 && restes.length === 0, "restent " + JSON.stringify(restes) + " · " + JSON.stringify(I1));
-    await page.fill("#q-age", "30"); await page.press("#q-age", "Tab"); await attendre(page, 1500);
-    const I2 = contenu(db, "intake", ACT) || {};
-    ok("âge 30 ensuite : les réponses encore à l'écran repartent, avec un nouveau court_debut et email_compte", I2.age === "30" && I2.taille === "168" && I2.poids === "64" && I2.sexe === "Femme" && I2.email_compte === EMAIL_ACT && typeof I2.court_debut === "string" && I2.court_debut > I0.court_debut, JSON.stringify(I2));
-    await c.close();
-    /* même chose en cliquant « Voir mon résultat » avec l'âge 15 */
-    const db2 = base({ comptes: seule([["intake", I0, avant(2 * H)]]) });
-    const { c: c2, page: p2 } = await contexte(b, leaAct, db2);
-    await p2.goto(`http://localhost:${PORT}/`); await p2.waitForSelector("#q-age", { timeout: 8000 }); await attendre(p2, 800);
-    await p2.fill("#q-age", "15"); await p2.click("#dc-voir"); await attendre(p2, 1500);
-    const I3 = contenu(db2, "intake", ACT) || {};
-    ok("âge 15 puis « Voir mon résultat » : même purge (rien du questionnaire court, ni court_debut, ni email_compte), pas de résultat", QS.concat(["court_debut", "email_compte"]).every(k => !(k in I3)) && !I3.court_le && !!(await p2.$("#q-age")), JSON.stringify(I3));
-    await c2.close();
-    /* questionnaire déjà validé, « Modifier mes réponses » : la purge ne vaut qu'au premier remplissage */
-    const I4 = complet({ sexe: "Femme", court_debut: avant(3 * H), court_le: avant(2 * H), email_compte: EMAIL_ACT });
-    const db3 = base({ comptes: seule([["intake", I4, avant(2 * H)]]) });
-    const { page: p3 } = await contexte(b, leaAct, db3);
-    await p3.goto(`http://localhost:${PORT}/`); await p3.waitForSelector("#dc-modifier", { timeout: 8000 }); await attendre(p3, 600);
-    await p3.click("#dc-modifier"); await attendre(p3, 600);
-    await p3.fill("#q-age", "15"); await p3.press("#q-age", "Tab"); await attendre(p3, 1500);
-    ok("questionnaire déjà validé, « Modifier mes réponses », âge 15 : rien n'est retiré ni écrit (la purge ne vaut qu'au premier remplissage)", ecr(db3, "intake").length === 0 && memes(contenu(db3, "intake", ACT), I4), JSON.stringify(ecr(db3, "intake").map(e => e.contenu)));
-  });
+  /* v52 (28/09/2026, Chantier 1 lot C) : le questionnaire court ne demande plus l'âge (3 questions : probleme, obstacle,
+     projection) ; il n'y a donc plus d'âge mineur à purger ici. Les 6 vérifications de ce bloc (âge 15 après une visite
+     précédente, à la sortie du champ et à « Voir mon résultat », âge corrigé, purge limitée au premier remplissage) sont
+     retirées : le garde-fou 18 ans passe au calculateur (lot D). La garde reste dans le code du formulaire, inerte sans
+     question « age » : verif56 (bloc H) la vérifie en remettant une question d'âge dans la page servie. */
 
   /* =================== E. bandeau de première connexion =================== */
   await bloc("E. ancien prospect passé client", async () => {

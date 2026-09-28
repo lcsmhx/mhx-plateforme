@@ -36,7 +36,10 @@ const PRE = "&name=L%C3%A9a&first_name=L%C3%A9a&email=l%40e.fr";
 const lienAttendu = (source, sansPre) => CAL + "?utm_source=app-mhx&utm_medium=app" + (source ? "&utm_content=" + source : "") + (sansPre ? "" : PRE);
 /* instant d'inscription : midi (heure locale) il y a n jours → jour de découverte n + 1 */
 const creeLe = n => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - n); return d.toISOString(); };
-const INTAKE = { sexe: "Femme", age: "29", taille: "168", poids: "64", objectif: "Perte de poids / sèche", seances: "3", essaye: "Des régimes stricts.", obstacle: "Le manque de temps.", pourquoi: "Retrouver de l'énergie.", motivation: "8", court_le: creeLe(1) };
+/* v52 (28/09/2026, Chantier 1 lot C) : + bilan_propose — la page de proposition de bilan est passée (« Pas maintenant ») :
+   la Découverte affiche l'accueil et ses boutons « Réserver mon bilan » (en-tête, accompagnement) ; sans ce choix, la page
+   de proposition s'affiche d'abord (vérifiée par verif56) */
+const INTAKE = { sexe: "Femme", age: "29", taille: "168", poids: "64", objectif: "Perte de poids / sèche", seances: "3", essaye: "Des régimes stricts.", obstacle: "Le manque de temps.", pourquoi: "Retrouver de l'énergie.", motivation: "8", court_le: creeLe(1), bilan_propose: { choix: "plus_tard", le: creeLe(1) } };
 const FORMATION_M6 = { coches: {}, ouvert: "m6", lecon: "", challenge: "", defis: {}, diete: {}, semaine: 1, jour: 0, priorites: { semaine: [], demain: [] }, notes: [], objectifs: [] };
 const norm = t => String(t || "").replace(/[  ]/g, " ");
 
@@ -234,7 +237,8 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     ok("confidentialité en anglais : le paragraphe « Booking: » à la même place (Calendly, a US company, on the coach's behalf, pre-filled, app screen)",
       !!d && d.nFr === d.nEn && /^Booking: /.test(d.en) && ["Calendly (a US company)", "on the coach's behalf", "United States", "pre-filled as soon as you open the booking page", "the app screen you came from"].every(x => d.en.includes(x)), JSON.stringify(d && d.en));
     const vue = await texte(page);
-    ok("Profil du prospect : « Tes réponses au questionnaire sont enregistrées… » et le lien « Voir mon résultat » (#/decouverte)", vue.includes("Tes réponses au questionnaire sont enregistrées") && (await texte(page, '#vue a[href="#/decouverte"]')).trim() === "Voir mon résultat");
+    /* v52 : questionnaire validé → « Modifier mes réponses » (#/decouverte/reponses) ; avant : « Voir mon résultat » (#/decouverte) */
+    ok("Profil du prospect : « Tes réponses au questionnaire sont enregistrées… » et le lien « Modifier mes réponses » (#/decouverte/reponses)", vue.includes("Tes réponses au questionnaire sont enregistrées") && (await texte(page, '#vue a[href="#/decouverte/reponses"]')).trim() === "Modifier mes réponses");
     const bouton = await texte(page, "#mc-conditions");
     await page.click("#mc-conditions").catch(() => {}); await attendre(page, 500);
     const v = await texte(page, ".volet");

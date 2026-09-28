@@ -243,7 +243,8 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
   const CLE_LOCALE = "mhx_activite_attente|" + ACT, CLE_STORE = "mhx_attente|" + ACT + "|activite";
   const F0 = { version: 1, jours: [ilYA(2)], pages: { formation: 1 }, temps_s: 60, derniere: avant(2 * J) };
   const COPIE = { version: 1, jours: [ilYA(1)], pages: { "verrou-suivi": 5 }, temps_s: 300, derniere: avant(H) };
-  const ouvrir = async (page) => { await page.goto(URL0); await page.waitForSelector("#q-age", { timeout: 8000 }); };
+  /* v52 (Chantier 1, lot C) : la Découverte est prête quand ses 3 questions sont là (#q-probleme ; avant : #q-age) */
+  const ouvrir = async (page) => { await page.goto(URL0); await page.waitForSelector("#q-probleme", { timeout: 8000 }); };
 
   /* deux onglets du même navigateur (localStorage partagé), la copie d'un onglet fermé, relectures de 800 ms :
      onglet 1 masqué, puis onglet 2 « ecart » ms plus tard */
@@ -334,7 +335,7 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     const s0 = await etatSession(page);
     ok("« Rester connecté » décoché : Auth.persistant false, session seulement dans sessionStorage", nonPersistante(s0), JSON.stringify(s0));
     await aller(page, "#/programme", 1400);
-    await page.goto(URL0); await page.waitForSelector("#q-age", { timeout: 8000 }); await attendre(page, 1200);
+    await page.goto(URL0); await page.waitForSelector("#q-probleme", { timeout: 8000 }); await attendre(page, 1200);
     const snap = await page.evaluate(() => ({ l: window.__auChargement, s: window.__auChargementSession })).catch(() => ({}));
     let copie = null; try { copie = JSON.parse(snap.l[CLE_LOCALE]); } catch (e) { copie = null; }
     ok("vrai rechargement : rien lu ni écrit ; au chargement suivant, la visite est dans localStorage (decouverte-questionnaire 1, verrou-programme 1), rien dans sessionStorage", lu(db, "activite") === 0 && db.ecritures.length === 0 && !!copie && memes(copie.pages, { "decouverte-questionnaire": 1, "verrou-programme": 1 }) && !!snap.s && Object.keys(snap.s).length === 0, JSON.stringify(snap));
@@ -374,10 +375,10 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
       const { c, page } = await contexte(b, leaAct, db, { persistant: false });
       await ouvrir(page); await attendre(page, 800);
       await aller(page, "#/programme", 1400);
-      await page.goto(URL0); await page.waitForSelector("#q-age", { timeout: 8000 }); await attendre(page, 1000);
+      await page.goto(URL0); await page.waitForSelector("#q-probleme", { timeout: 8000 }); await attendre(page, 1000);
       const [pB] = await Promise.all([c.waitForEvent("page"), page.evaluate(() => { window.open(location.href); })]);
       surveiller(pB);
-      await pB.waitForSelector("#q-age", { timeout: 8000 }); await attendre(pB, 800);
+      await pB.waitForSelector("#q-probleme", { timeout: 8000 }); await attendre(pB, 800);
       const sB = await etatSession(pB);
       /* ce que l'onglet dupliqué voit avant tout envoi (le script d'initialisation ne tourne pas dans une fenêtre ouverte par window.open) */
       const snapB = await pB.evaluate(k => { const copies = m => Object.keys(m).filter(x => /^mhx_(activite_)?attente\|/.test(x)); return { l: localStorage.getItem(k), s: copies(sessionStorage) }; }, CLE_LOCALE).catch(() => ({}));
