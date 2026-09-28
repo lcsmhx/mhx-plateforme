@@ -92,8 +92,10 @@ async function contexte(b, who, erreurs, opts) {
   return { c, page };
 }
 const attendre = (page, ms) => page.waitForTimeout(ms);
-const PAGES_CLIENT = ["accueil", "programme", "nutrition", "mensurations", "suivi", "bilan", "formation", "complements", "profil"];
-const PAGES_FICHE = ["accueil", "bilan", "suivi", "profil", "programme", "nutrition", "calculateur", "mensurations", "entrainement"];
+/* v53 (lot D-clients) : + le calculateur (clé calc_perso, départ depuis un calc piégé) et « Mon journal » (clé journal piégée)
+   du client ; + « Son journal » dans la fiche (« Ses séances ») : mêmes vérifications, mêmes nombres de ✓ */
+const PAGES_CLIENT = ["accueil", "programme", "journal", "nutrition", "mensurations", "calculateur", "suivi", "bilan", "formation", "complements", "profil"];
+const PAGES_FICHE = ["accueil", "bilan", "suivi", "profil", "programme", "journal", "nutrition", "calculateur", "mensurations", "entrainement"];
 
 (async () => {
   await new Promise(r => server.listen(PORT, r));
@@ -118,7 +120,7 @@ const PAGES_FICHE = ["accueil", "bilan", "suivi", "profil", "programme", "nutrit
         await page.evaluate(() => { location.hash = "#/clients"; }); await attendre(page, 250);
       }
     }
-    ok("coach : aucune erreur JS sur le tableau, Mes clients et les 27 pages des fiches piégées", E.js.length === 0, E.js.length + " erreur(s) : " + E.js.slice(0, 12).join(" | "));
+    ok("coach : aucune erreur JS sur le tableau, Mes clients et les 30 pages des fiches piégées", E.js.length === 0, E.js.length + " erreur(s) : " + E.js.slice(0, 12).join(" | "));
     ok("coach : aucune écriture en parcourant les fiches", E.ecritures.length === 0, E.ecritures.slice(0, 5).join(" | "));
     await c.close();
   }
@@ -131,7 +133,7 @@ const PAGES_FICHE = ["accueil", "bilan", "suivi", "profil", "programme", "nutrit
     E.ici = nom + " / accueil"; await page.goto(`http://localhost:${PORT}/#/accueil`); await attendre(page, 2000);
     for (const pg of PAGES_CLIENT) { E.ici = nom + " / " + pg; await page.evaluate(x => { location.hash = "#/" + x; }, pg); await attendre(page, 1300); }
     const vue = await page.textContent("#vue");
-    ok(nom + " : ses 9 pages s'ouvrent sans erreur JS", E.js.length === 0, E.js.length + " erreur(s) : " + E.js.slice(0, 12).join(" | "));
+    ok(nom + " : ses 11 pages s'ouvrent sans erreur JS", E.js.length === 0, E.js.length + " erreur(s) : " + E.js.slice(0, 12).join(" | "));
     ok(nom + " : la dernière page (Profil) est bien affichée", vue.length > 50);
     await c.close();
   }

@@ -32,8 +32,8 @@
    K. garde-fou 18 ans (âge 17 : message, rien d'écrit ; mineur ensuite : calc_perso retiré ; écriture en attente
       annulée ; calc_perso mineur en base retiré ; restauration refusée ; anglais) ;
    L. garde-fou IMC (< 18,5 : pas d'objectif de perte, phrase de prudence, maintien enregistré) ;
-   M. client Thomas (calculateur et journal toujours cachés, navigation d'avant) et coach (calc comme avant, son compte et
-      la fiche de Thomas ; « Ses séances » inchangé) ;
+   M. client Thomas (v53 : calculateur et journal ouverts, sa barre du bas inchangée ; détail dans verif60) et coach (calc
+      comme avant, son compte et la fiche de Thomas ; v53 : « Ses séances » → son journal) ;
    N. navigation du prospect (barre du bas, « Plus », ordre des onglets, #/journal verrouillé et compté, Speed Formation
       ouverte au 30e jour), Ma progression sans photos, plus aucun « 7 jours » (FR et EN) ;
    O. coach : « inscrit depuis n j » (pastilles, fiche, suivi, cartes, CSV).
@@ -1008,16 +1008,19 @@ function lienOk(href, base, attendu){
     await c.close();
   });
 
-  /* =================== M. client Thomas et coach : rien ne change =================== */
-  await bloc("M. client Thomas : calculateur et journal toujours cachés", async () => {
+  /* =================== M. client Thomas et coach =================== */
+  /* v53 (lot D-clients) : changement VOULU — le calculateur (sa clé calc_perso) et « Mon journal » (clé journal) sont
+     ouverts au client : ils entrent dans sa navigation, leurs adresses ouvrent ses pages (et non plus son accueil), et
+     l'ouverture du calculateur lit calc_perso. Sa barre du bas (téléphone) ne change pas. Détail : verif60 (A à L). */
+  await bloc("M. client Thomas : calculateur et journal ouverts (v53)", async () => {
     const db = base();
     const { c, page } = await contexte(b, THOMAS, db);
     await page.goto(URL0); await pret(page, "#acc-vue");
-    ok("client : sa navigation est celle d'avant (ni calculateur, ni journal)", JSON.stringify(await page.$$eval("#nav a", l => l.map(a => a.dataset.id))) === JSON.stringify(["accueil", "programme", "nutrition", "mensurations", "suivi", "formation", "complements", "profil"]), JSON.stringify(await page.$$eval("#nav a", l => l.map(a => a.dataset.id))));
+    ok("client : sa navigation d'avant, plus le journal (après le programme) et le calculateur (après Ma progression) — v53", JSON.stringify(await page.$$eval("#nav a", l => l.map(a => a.dataset.id))) === JSON.stringify(["accueil", "programme", "journal", "nutrition", "mensurations", "calculateur", "suivi", "formation", "complements", "profil"]), JSON.stringify(await page.$$eval("#nav a", l => l.map(a => a.dataset.id))));
     const vus = [];
     for (const h of ["#/calculateur", "#/journal"]) { await aller(page, h, 1300); vus.push([h, await ou(page)]); }
-    ok("client : #/calculateur et #/journal → son accueil (#/accueil)", vus.every(([, d]) => d.courant === "accueil" && d.hash === "#/accueil"), JSON.stringify(vus));
-    ok("client : aucune lecture de calc_perso, aucune écriture", lu(db, "calc_perso") === 0 && db.ecritures.length === 0, resume(db));
+    ok("client : #/calculateur et #/journal ouvrent ses pages, l'adresse gardée — v53", vus.every(([h, d]) => "#/" + d.courant === h && d.hash === h), JSON.stringify(vus));
+    ok("client : à l'ouverture, aucune écriture (ni calc_perso, ni calc)", db.ecritures.length === 0, resume(db));
     await c.close();
     const m = await contexte(b, THOMAS, db, { viewport: MOBILE });
     await m.page.goto(URL0); await pret(m.page, "#acc-vue");
@@ -1036,7 +1039,9 @@ function lienOk(href, base, attendu){
     await aller(page, "#/clients", 2200);
     await page.click(`[data-ouvrir="${F.IDS.c1}"]`); await page.waitForSelector("#vue .bandeau", { timeout: 8000 }); await attendre(page, 800);
     const actions = await page.$$eval("#vue .bandeau-actions a", l => l.map(a => [a.textContent.trim(), a.getAttribute("href")]));
-    ok("fiche de Thomas : « Ses calories » → #/calculateur et « Ses séances » → #/entrainement, comme avant ; pas de journal dans sa navigation", actions.some(([t, h]) => t === "Ses calories" && h === "#/calculateur") && actions.some(([t, h]) => t === "Ses séances" && h === "#/entrainement") && !(await page.$('#nav a[data-id="journal"]')), JSON.stringify(actions));
+    /* v53 (lot D-clients) : changement VOULU — « Ses séances » mène au journal du client (#/journal, lecture seule) au lieu
+       de #/entrainement (sa clé perf, vide) ; « Son journal » entre dans la navigation de sa fiche (détail : verif60 G) */
+    ok("fiche de Thomas : « Ses calories » → #/calculateur comme avant ; v53 : « Ses séances » → #/journal, « Son journal » dans sa navigation", actions.some(([t, h]) => t === "Ses calories" && h === "#/calculateur") && actions.some(([t, h]) => t === "Ses séances" && h === "#/journal") && !!(await page.$('#nav a[data-id="journal"]')), JSON.stringify(actions));
     await aller(page, "#/calculateur", 1800);
     ok("fiche de Thomas, Ses calories : son calc (celui du coach) en départ", (await valeurDe(page, "#age")) === String(CALC_T.age) && (await valeurDe(page, "#poids")) === String(CALC_T.poids), (await valeurDe(page, "#age")) + " / " + JSON.stringify(CALC_T));
     const n0 = ecr(db, "calc", F.IDS.c1).length;
@@ -1305,9 +1310,10 @@ function lienOk(href, base, attendu){
         const k = viewport === ORDI ? 44 : 45, ID = PID(k), w = viewport.width + " px";
         const db = base({ comptes: [prospectE(k)] });
         const { c, page } = await ouvrir(b, db, k, "#/profil", "#vue .masthead", { viewport });
-        /* v52 : lots D + E — c'est le vrai onglet du lot D (outilJournal : prospect_seul, sans clé, juste après le programme
-           dans la navigation), pas un outil ajouté par le test */
-        const nav = await page.evaluate(() => { const a = document.querySelector('#nav a[data-id="journal"]'); const o = OUTILS.find(x => x.id === "journal"); return a ? { cadenas: !!a.querySelector(".nav-cadenas"), sr: (a.querySelector(".sr-only") || {}).textContent || "", vrai: typeof outilJournal !== "undefined" && o === outilJournal && o.prospect_seul === true && o.cle === null, ordre: [...document.querySelectorAll("#nav a")].map(x => x.dataset.id).join(",") } : null; });
+        /* v52 : lots D + E — c'est le vrai onglet du lot D (outilJournal, sans clé, juste après le programme dans la
+           navigation), pas un outil ajouté par le test. v53 (lot D-clients) : il n'est plus prospect_seul mais client_seul
+           (l'onglet « Mon journal » du client, et le coach dans une fiche) ; pour le prospect, toujours la page verrouillée */
+        const nav = await page.evaluate(() => { const a = document.querySelector('#nav a[data-id="journal"]'); const o = OUTILS.find(x => x.id === "journal"); return a ? { cadenas: !!a.querySelector(".nav-cadenas"), sr: (a.querySelector(".sr-only") || {}).textContent || "", vrai: typeof outilJournal !== "undefined" && o === outilJournal && o.client_seul === true && !o.prospect_seul && o.cle === null, ordre: [...document.querySelectorAll("#nav a")].map(x => x.dataset.id).join(",") } : null; });
         if (viewport === ORDI) ok("l'onglet journal (vitrine) apparaît dans la navigation du prospect, avec son cadenas (« (verrouillé) ») : le vrai onglet du lot D (outilJournal), juste après le programme", !!nav && nav.cadenas && nav.sr === " (verrouillé)" && nav.vrai && nav.ordre === "accueil,programme,journal,nutrition,mensurations,calculateur,suivi,formation,profil", JSON.stringify(nav));
         const n0 = db.lectures.length;
         await aller(page, "#/journal", 1600);

@@ -83,7 +83,7 @@ const compter = (page) => page.evaluate(() => ({ exec: window.__xss || 0, balise
   const pages = [
     [F.IDS.c1, ["accueil", "bilan", "suivi", "nutrition"]],
     [F.IDS.c2, ["accueil", "suivi", "mensurations", "bilan"]],
-    [F.IDS.c3, ["accueil", "programme", "entrainement", "suivi"]]
+    [F.IDS.c3, ["accueil", "programme", "entrainement", "suivi", "journal"]]   // v53 : + « Mon journal » / « Ses séances » (journal piégé)
   ];
   let total = { exec: 0, balises: 0 }; const touches = [];
   {

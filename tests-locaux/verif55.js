@@ -623,17 +623,19 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
       ok("client, adresse vide : son accueil, l'adresse n'est pas réécrite", d0.courant === "accueil" && d0.hash === "", JSON.stringify(d0));
       await page.evaluate(() => { window.__hc = 0; window.__hl = history.length; addEventListener("hashchange", () => { window.__hc++; }); });
       const vus = [];
-      for (const h of ["#/calculateur", "#/tableau", "#/clients", "#/decouverte", "#/inconnu"]) { await aller(page, h, 1200); vus.push([h, await ou(page)]); }
+      /* v53 (lot D-clients) : le calculateur est ouvert au client (sa clé calc_perso, verif60) : la page coach qui reste
+         fermée au client est désormais #/entrainement (l'outil du coach, clé perf) ; même vérification, mêmes nombres */
+      for (const h of ["#/entrainement", "#/tableau", "#/clients", "#/decouverte", "#/inconnu"]) { await aller(page, h, 1200); vus.push([h, await ou(page)]); }
       const boucle = await page.evaluate(() => ({ hc: window.__hc, entrees: history.length - window.__hl }));
-      ok("client : #/calculateur, #/tableau, #/clients, #/decouverte, #/inconnu → son accueil ET l'adresse #/accueil", vus.every(([, d]) => d.courant === "accueil" && d.hash === "#/accueil"), JSON.stringify(vus));
+      ok("client : #/entrainement, #/tableau, #/clients, #/decouverte, #/inconnu → son accueil ET l'adresse #/accueil", vus.every(([, d]) => d.courant === "accueil" && d.hash === "#/accueil"), JSON.stringify(vus));
       ok("… sans boucle : un seul hashchange par adresse tapée, une seule entrée d'historique", boucle.hc === 5 && boucle.entrees === 5, JSON.stringify(boucle));
       await aller(page, "#/progression", 1400); const dp = await ou(page);
       await aller(page, "#/programme", 1400); const dg = await ou(page);
       ok("client : une page à lui garde son adresse (#/programme), un alias aussi (#/progression → Ma progression)", dp.courant === "mensurations" && dp.hash === "#/progression" && dg.courant === "programme" && dg.hash === "#/programme", JSON.stringify([dp, dg]));
       const p2 = await nouvellePage(c);
-      await p2.goto(URL0 + "#/calculateur"); await pret(p2, "#acc-vue");
+      await p2.goto(URL0 + "#/entrainement"); await pret(p2, "#acc-vue");   // v53 : #/calculateur est ouvert au client
       const d2 = await ou(p2);
-      ok("client, ouverture directe sur #/calculateur : accueil, adresse #/accueil", d2.courant === "accueil" && d2.hash === "#/accueil", JSON.stringify(d2));
+      ok("client, ouverture directe sur #/entrainement (page du coach) : accueil, adresse #/accueil", d2.courant === "accueil" && d2.hash === "#/accueil", JSON.stringify(d2));
       ok("client : aucune écriture", db.ecritures.length === 0, resume(db));
       await c.close();
     }
