@@ -63,7 +63,7 @@ function base(opts){
   const profils = clone(F.profils); profils.forEach(p => { p.statut = "client"; });
   const donnees = clone(F.donnees);
   donnees.forEach(d => { if (d.user_id === F.IDS.c3) d.maj_le = avant(12 * J + 3 * H); });
-  const db = { profils, donnees, emails_prospects: [], ecritures: [], lectures: [], journal: [], chemins: [], fonction: [], lectureKo: opts.lectureKo || [], reponseFonction: { status: 200, body: { ok: true } } };
+  const db = { profils, donnees, emails_prospects: [], ecritures: [], lectures: [], journal: [], chemins: [], lectureKo: opts.lectureKo || [] };
   (opts.comptes || []).forEach(x => {
     profils.push({ id: x.id, prenom: x.prenom, nom: x.nom, role: "client", statut: x.statut || "prospect", cree_le: x.cree });
     (x.donnees || []).forEach(([outil, contenu, maj]) => donnees.push({ user_id: x.id, outil, contenu: clone(contenu), maj_le: maj }));
@@ -88,13 +88,7 @@ async function repondre(r, who, db){
   const plage = l => { l = ordonner(l, q.get("order")); const rg = req.headers()["range"]; if (rg) { const [a, z] = rg.split("-").map(Number); l = l.slice(a, z + 1); } return l.slice(0, MAX_LIGNES); };
   const estCoach = !!who && who.id === F.IDS.coach;
   db.chemins.push(m + " " + p);
-  if (p.startsWith("/functions/v1/emails-prospects")) {
-    if (m === "OPTIONS") return r.fulfill({ status: 204, headers: { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "POST, GET, OPTIONS", "Access-Control-Allow-Headers": "*" }, body: "" });
-    db.fonction.push({ m, action: q.get("action"), u: q.get("u"), t: q.get("t") });
-    const rf = db.reponseFonction || { status: 200, body: { ok: true } };
-    if (rf.abort) return r.abort();
-    return json(rf.body, rf.status);
-  }
+  /* v53 : fonction supprimée — plus de fausse fonction « emails-prospects » (reprise de verif53, jamais appelée ici) */
   if (p.startsWith("/auth/v1/token")) return json(who ? who.session : { error: "invalid" }, who ? 200 : 400);
   if (p.startsWith("/auth/v1/logout")) { db.journal.push("LOGOUT"); db.ecritures.push({ table: p, m }); return json({}); }
   if (!["GET", "HEAD", "OPTIONS"].includes(m) && p !== "/rest/v1/donnees" && p !== "/rest/v1/profils") db.ecritures.push({ table: p, m });

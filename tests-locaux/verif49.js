@@ -10,8 +10,8 @@
    (« inscrit il y a N h » avant 24 h), bloc « Score de qualification » de la fiche.
    Inchangés depuis la v49 et toujours vérifiés : raisons et prochaine action, issue de l'appel (Signé / Perdu /
    Absent) et relances dans la clé coach-seul « suivi_prospect » (écriture conditionnelle, conflit rejoué, 409, 504,
-   verrou par prospect), issues qui vieillissent, Mes clients, fiche, tableau de bord, mode test de la découverte
-   sans effet côté coach, anciens choix du jour 6 du Challenge ignorés, données piégées, prospect et client.
+   verrou par prospect), issues qui vieillissent, Mes clients, fiche, tableau de bord, anciens choix du jour 6 du
+   Challenge ignorés, données piégées, prospect et client (v53 : le mode test de la découverte, retiré, n'est plus vérifié).
    Aussi : une visite enregistrée dans la clé « activite » compte comme action du prospect (bloc A') ; un journal
    emails_prospects de plus de 1 000 lignes est lu en entier (le faux PostgREST coupe chaque réponse à 1 000 lignes,
    comme Supabase, et respecte Range, limit / offset, order et les filtres simples).
@@ -758,22 +758,9 @@ const ligneClient = (page, k) => page.$eval(`[data-ouvrir="${k}"]`, x => x.close
     ok("page Prospects mobile : chaque carte porte ses deux pastilles (score et statut)", (await pastilles(page)).length > 0 && (await pastilles(page)).every(x => x.score && x.etat));
     await page.screenshot({ path: path.join(OUT, "coach-prospects-mobile.png"), fullPage: true });
   });
-  await bloc("C. mode test de l'appareil", async () => {
-    /* mode test de la découverte resté sur l'appareil du coach (#/decouverte-jour/9) : il ne vaut que pour un prospect
-       sur son propre appareil ; les écrans du coach gardent le vrai jour de chaque prospect */
-    const db = base();
-    const { page } = await contexte(b, coach, db, { local: { mhx_decouverte_jour: "9" } });
-    await page.goto(`http://localhost:${PORT}/#/prospects`); await attendre(page, 2400);
-    await filtre(page, "tous");
-    const s1 = await sousTitre(page, 1), s9 = await sousTitre(page, 9), j9 = jourDe(creeDe(db, 9));
-    /* v52 (lot D) : le sous-titre des cartes ne donne plus le jour (« Découverte · questionnaire … · inscrit … ») */
-    ok("mode test de l'appareil (mhx_decouverte_jour = 9) ignoré côté coach : page Prospects, sous-titres « Découverte · … » sans « J n/7 » ni « terminée »", s1.startsWith("Découverte · ") && s9.startsWith("Découverte · ") && !/J\d+\/7|terminée/.test(s1 + s9), s1 + " | " + s9);
-    await aller(page, "#/clients", 2200);
-    const l1 = await ligneClient(page, PID(1)), l9 = await ligneClient(page, PID(9));
-    await aller(page, "#/tableau", 2400);
-    const val = norm(await page.$eval('#tb-vue a.tile[href="#/prospects"] .t-val', e => e.textContent).catch(() => "")).trim();
-    ok("… Mes clients : Chloé « Découverte · inscrit depuis 5 j », Paul « … " + (j9 - 1) + " j » (le vrai jour, pas celui du mode test) ; tableau de bord : « Prospects en découverte » toujours 12 ; rien d'écrit", l1.includes("Découverte · inscrit depuis 5 j") && l9.includes("Découverte · inscrit depuis " + (j9 - 1) + " j") && !/J\d+\/7|terminée/.test(l1 + l9) && val === "12" && db.tentatives.length === 0, [l1, l9].join(" | ").slice(0, 400) + " | tuile " + val);
-  });
+  /* v53 : fonction supprimée — bloc « C. mode test de l'appareil » (2 vérifications : un drapeau mhx_decouverte_jour = 9
+     resté sur l'appareil du coach ne change ni la page Prospects, ni Mes clients, ni la tuile du tableau de bord). Le mode
+     test « jour n » (#/decouverte-jour/N) n'existe plus ; son ancien drapeau est effacé au démarrage (verif51, blocs F et I). */
 
   /* ---------- D. Robustesse, prospect, client ---------- */
   await bloc("D. données piégées", async () => {

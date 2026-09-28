@@ -14,7 +14,6 @@
    ------------------------------------------------------------------ */
 const Decouverte = {
   cle: "challenge",
-  CLE_TEST: "mhx_decouverte_jour",   // mode test (Lucas) : force le jour sur CET appareil, via #/decouverte-jour/N
   cfg(){ return CONFIG.decouverte || {}; },
   duree(){ const n = +this.cfg().jours; return n > 0 ? n : 7; },
   vide(){ return { version: 1, jours: {}, cta: { clics: [] } }; },
@@ -32,16 +31,16 @@ const Decouverte = {
     if (!m || !a) return null;
     return Math.round((Date.UTC(+a[1], +a[2] - 1, +a[3]) - Date.UTC(+m[1], +m[2] - 1, +m[3])) / 86400000);
   },
-  /* jour de decouverte (1 = jour de l'inscription) ; null si la date est illisible. Le mode test ne vaut que
-     sur l'appareil du prospect lui-meme, jamais dans les ecrans du coach (pourLeCoach).
+  /* jour de decouverte (1 = jour de l'inscription) ; null si la date est illisible.
      v52 : plus rien n'est verrouille ni affiche au prospect selon ce jour (gratuit pour toujours) ; il sert au coach
-     (« inscrit depuis n j », suivi commercial). Le mode test et la tuile du coach partent en v53. */
-  jour(p, pourLeCoach){
-    if (!pourLeCoach && !Store.idConsulte){ try { const t = parseInt(localStorage.getItem(this.CLE_TEST), 10); if (t >= 1) return t; } catch(e){} }
+     (« inscrit depuis n j », suivi commercial) et date les clics « Réserver mon bilan ».
+     v53 : le mode test « jour n » (#/decouverte-jour/N, drapeau mhx_decouverte_jour sur l'appareil) est retire : c'est
+     toujours le vrai jour, partout (un second argument encore passe par un appelant est sans effet). */
+  jour(p){
     const n = this.joursEcoules(this.dateLocale(p && p.cree_le));
     return n == null ? null : Math.max(1, n + 1);
   },
-  finie(p, pourLeCoach){ const j = this.jour(p, pourLeCoach); return j != null && j > this.duree(); },
+  finie(p){ const j = this.jour(p); return j != null && j > this.duree(); },
   /* v52 : « inscrit aujourd'hui » / « inscrit depuis n j » (coach : pastilles, fiche, CSV, suivi) a partir du jour ;
      "" si la date d'inscription est illisible */
   depuisTexte(jour){ return typeof jour !== "number" || !isFinite(jour) ? "" : jour <= 1 ? "inscrit aujourd'hui" : "inscrit depuis " + (Math.floor(jour) - 1) + " j"; },
@@ -152,7 +151,7 @@ const Decouverte = {
   },
   /* resume pour le coach (lecture seule) : seules des chaines et des nombres sortent d'ici */
   resume(p, C, I){
-    const cl = this.clics(C), der = cl.length ? cl[cl.length - 1].date : null, j = this.jour(p, true);
+    const cl = this.clics(C), der = cl.length ? cl[cl.length - 1].date : null, j = this.jour(p);
     return { jour: j, duree: this.duree(), finie: j != null && j > this.duree(), questionnaire: this.questionnaireFait(I) ? I.court_le : null,
              clics: cl.length, dernierClic: typeof der === "string" ? der : null, reserve: this.reserve(C) };
   },

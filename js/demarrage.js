@@ -23,6 +23,9 @@ let lienEmail = null, lienEmailType = "", lienEmailAdresse = "";   // v47 : "ok"
      le navigateur remettait la page a la hauteur de l'ecran de connexion, et seulement a la fin du chargement (polices) :
      sur telephone, le Profil s'ouvrait deja defile, l'encadre « Bienvenue ! » cache sous l'en-tete. */
   try { if ("scrollRestoration" in history) history.scrollRestoration = "manual"; } catch(e){}
+  /* v53 : le mode test « jour n » de la Decouverte est retire : son ancien drapeau, s'il est reste sur cet appareil, est
+     ignore et efface */
+  try { localStorage.removeItem("mhx_decouverte_jour"); } catch(e){}
   I18N.charger();   // en anglais, les textes de la Decouverte rejoignent le dictionnaire ici (Contenus.decouverte)
   Traduction.demarrer();
   ancrerManifeste();
