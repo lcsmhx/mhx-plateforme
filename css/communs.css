@@ -218,6 +218,8 @@ footer a{color:var(--accent)}
 .carte-co button.btn{width:100%;padding:12px;min-height:46px}
 .bascule{text-align:center;margin-top:16px;font-size:13px;color:var(--ink-3)}
 .bascule button{background:none;border:0;color:var(--accent);cursor:pointer;font-size:13px;font-family:inherit;text-decoration:underline;padding:0}
+/* v54 : inscription ouverte, « Mot de passe oublié ? » et « Créer mon compte » côte à côte : un espace entre les deux liens */
+.bascule button + button{margin-left:18px}
 .erreur{background:var(--bad-soft);border-left:3px solid var(--bad);color:var(--ink-2);font-size:13px;padding:10px 12px;border-radius:0 var(--r-sm) var(--r-sm) 0;margin-bottom:14px}
 .erreur:empty{display:none}
 .erreur.ok{border-left-color:var(--good);background:var(--good-soft)}
