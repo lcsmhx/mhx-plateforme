@@ -42,10 +42,13 @@ const PORT = +process.env.VERIF53_PORT || 9690;
 const BLOCS = (process.env.VERIF53_BLOCS || "").split(",").map(x => x.trim()).filter(Boolean);
 const OUT = path.join(__dirname, "captures", "v53"); fs.mkdirSync(OUT, { recursive: true });
 let inscriptionLibre = false;
+/* 52.1 : la retouche vaut pour la page et pour ses fichiers (inscription_libre est dans js/config.js) */
+const retouche = h => { if (inscriptionLibre) h = h.replace("inscription_libre: false", "inscription_libre: true"); return h; };
+const { servirFichier, source } = require("./fichiers");   // 52.1 : la page charge css/ et js/, servis depuis son dossier (fichiers.js)
 const server = http.createServer((req, res) => {
   if (req.url.split("?")[0] === "/desinscription.html") { res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); return res.end(fs.readFileSync(DESINSCRIPTION, "utf8")); }
-  let h = fs.readFileSync(HTML, "utf8");
-  if (inscriptionLibre) h = h.replace("inscription_libre: false", "inscription_libre: true");
+  if (servirFichier(req, res, HTML, retouche)) return;
+  let h = retouche(fs.readFileSync(HTML, "utf8"));
   res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); res.end(h);
 });
 const res = []; const ok = (n, c, d) => res.push((c ? "  ✓ " : "  ✗ ") + n + (c ? "" : "  — " + (d || "")));
@@ -827,7 +830,7 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
       const td = await visible();
       ok(`Profil et Découverte du prospect${langue ? " (anglais)" : ""} : aucun prix sur la page`, tp.length > 200 && td.length > 200 && !prixTrouve(tp) && !prixTrouve(td), prixTrouve(tp) || prixTrouve(td) || (tp.length + " / " + td.length));
       /* v52 : la version attendue est celle du fichier testé (CONFIG.marque.version), plus un texte en dur à chaque livraison */
-      const VERSION = (fs.readFileSync(HTML, "utf8").match(/\n    version: "([^"]+)",/) || [])[1];
+      const VERSION = (source(HTML).match(/\n    version: "([^"]+)",/) || [])[1];
       if (!langue) ok("version affichée en pied de page : « v" + VERSION + " » (CONFIG.marque.version)", !!VERSION && norm(await page.textContent("#foot-right .version").catch(() => "")) === "v" + VERSION, await page.textContent("#foot-right .version").catch(() => "?"));
       await c.close();
     }

@@ -8,7 +8,8 @@
    doit signaler des injections : c'est ce qui prouve qu'il teste vraiment). */
 const { chromium } = require("playwright"); const fs = require("fs"); const http = require("http"); const path = require("path");
 const F = require("./fixtures"); const HTML = path.resolve(process.argv[2] || "../index.html");
-const server = http.createServer((req, res) => { res.writeHead(200, { "Content-Type": "text/html" }); res.end(fs.readFileSync(HTML)); });
+const { servirFichier } = require("./fichiers");   // 52.1 : la page charge css/ et js/, servis depuis son dossier (fichiers.js)
+const server = http.createServer((req, res) => { if (servirFichier(req, res, HTML)) return; res.writeHead(200, { "Content-Type": "text/html" }); res.end(fs.readFileSync(HTML)); });
 const PORT = 9669;
 const res = []; const ok = (n, c, d) => res.push((c ? "  ✓ " : "  ✗ ") + n + (c ? "" : "  — " + (d || "")));
 const PIEGE = '<img src="x" data-xss="1" onerror="window.__xss=(window.__xss||0)+1">';

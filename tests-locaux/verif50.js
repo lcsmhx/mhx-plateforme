@@ -28,10 +28,13 @@ const PORT = 9680;
 const OUT = path.join(__dirname, "captures", "v50"); fs.mkdirSync(OUT, { recursive: true });
 /* reglages du HTML servi : inscription ouverte, pre-remplissage eteint (le depot garde false / true) */
 let inscriptionLibre = false, prerempliEteint = false;
+/* 52.1 : les retouches valent pour la page et pour ses fichiers (ces réglages sont dans js/config.js) */
+const retouche = h => { if (inscriptionLibre) h = h.replace("inscription_libre: false", "inscription_libre: true");
+  if (prerempliEteint) h = h.replace("calendly_prerempli: true", "calendly_prerempli: false"); return h; };
+const { servirFichier } = require("./fichiers");   // 52.1 : la page charge css/ et js/, servis depuis son dossier (fichiers.js)
 const server = http.createServer((req, res) => {
-  let h = fs.readFileSync(HTML, "utf8");
-  if (inscriptionLibre) h = h.replace("inscription_libre: false", "inscription_libre: true");
-  if (prerempliEteint) h = h.replace("calendly_prerempli: true", "calendly_prerempli: false");
+  if (servirFichier(req, res, HTML, retouche)) return;
+  let h = retouche(fs.readFileSync(HTML, "utf8"));
   res.writeHead(200, { "Content-Type": "text/html" }); res.end(h);
 });
 const res = []; const ok = (n, c, d) => res.push((c ? "  ✓ " : "  ✗ ") + n + (c ? "" : "  — " + (d || "")));

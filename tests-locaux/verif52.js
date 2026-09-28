@@ -33,9 +33,16 @@ const OUT = path.join(__dirname, "captures", "v52"); fs.mkdirSync(OUT, { recursi
 const REF_NOM = process.env.VERIF52_REF || "main";
 let REF = null; try { REF = require("child_process").execFileSync("git", ["show", REF_NOM + ":index.html"], { cwd: path.join(__dirname, ".."), maxBuffer: 64e6, stdio: ["ignore", "pipe", "ignore"] }).toString("utf8"); } catch (e) { REF = null; }
 let inscriptionLibre = false;
+/* 52.1 : la page charge css/ et js/ (fichiers.js) ; la retouche vaut pour la page et pour ses fichiers (inscription_libre
+   est dans js/config.js). Les fichiers d'une page de référence (/?ref=main, reconnue à l'en-tête Referer de ses requêtes)
+   viennent de la même révision git que sa page. */
+const { servirFichier, source } = require("./fichiers");
+const retouche = h => { if (inscriptionLibre) h = h.replace("inscription_libre: false", "inscription_libre: true"); return h; };
+const deRef = {};
+const lireRef = f => deRef[f] || (deRef[f] = require("child_process").execFileSync("git", ["show", REF_NOM + ":" + f], { cwd: path.join(__dirname, ".."), maxBuffer: 64e6, stdio: ["ignore", "pipe", "ignore"] }).toString("utf8"));
 const server = http.createServer((req, res) => {
-  let h = (req.url.indexOf("ref=main") > -1 && REF) ? REF : fs.readFileSync(HTML, "utf8");
-  if (inscriptionLibre) h = h.replace("inscription_libre: false", "inscription_libre: true");
+  if (servirFichier(req, res, HTML, retouche, (String(req.headers.referer || "").indexOf("ref=main") > -1 && REF) ? lireRef : null)) return;
+  let h = retouche((req.url.indexOf("ref=main") > -1 && REF) ? REF : fs.readFileSync(HTML, "utf8"));
   res.writeHead(200, { "Content-Type": "text/html" }); res.end(h);
 });
 const res = []; const ok = (n, c, d) => res.push((c ? "  ✓ " : "  ✗ ") + n + (c ? "" : "  — " + (d || "")));
@@ -683,7 +690,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
   const NEWS = "Je veux recevoir par email les conseils, témoignages et offres de coaching de MHX Coaching (1 à 2 emails par semaine maximum). Désinscription en 1 clic dans chaque email.";
   const V_NEWS = "2026-09-28c";   // version du texte de la case newsletter (DECOUVERTE.accords.newsletter)
   await bloc("F. case de l'inscription", async () => {
-    ok("le fichier testé garde inscription_libre: false (l'inscription n'est ouverte ici que dans la page servie par le banc)", fs.readFileSync(HTML, "utf8").includes("inscription_libre: false"));
+    ok("le fichier testé garde inscription_libre: false (l'inscription n'est ouverte ici que dans la page servie par le banc)", source(HTML).includes("inscription_libre: false"));
     inscriptionLibre = true;
     try {
       for (const coche of [true, false]) {

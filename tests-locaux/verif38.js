@@ -13,7 +13,8 @@ const DECALAGE = (() => { const n = new Date(), j = n.getDay(), c = new Date(n);
 { const Vrai = Date; global.Date = class extends Vrai { constructor(...a) { super(...(a.length ? a : [Vrai.now() + DECALAGE])); } static now() { return Vrai.now() + DECALAGE; } }; }
 const F = require("./fixtures"); const HTML = path.resolve(process.argv[2] || "../index.html");
 const OUT = path.join(__dirname, "captures", "v38"); fs.mkdirSync(OUT, { recursive: true });
-const server = http.createServer((req, res) => { res.writeHead(200, { "Content-Type": "text/html" }); res.end(fs.readFileSync(HTML)); });
+const { servirFichier } = require("./fichiers");   // 52.1 : la page charge css/ et js/, servis depuis son dossier (fichiers.js)
+const server = http.createServer((req, res) => { if (servirFichier(req, res, HTML)) return; res.writeHead(200, { "Content-Type": "text/html" }); res.end(fs.readFileSync(HTML)); });
 const PORT = 9667;
 const res = []; const ok = (n, c, d) => res.push((c ? "  ✓ " : "  ✗ ") + n + (c ? "" : "  — " + (d || "")));
 const iso = (d) => d.toISOString().slice(0, 10);

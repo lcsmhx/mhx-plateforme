@@ -3,7 +3,7 @@
 Lis ce fichier en entier au début de chaque conversation. Il passe avant tout autre fichier du dépôt.
 
 ## L'app en bref
-- Plateforme MHX Coaching : un seul fichier `index.html` (environ 1 Mo), sans framework.
+- Plateforme MHX Coaching, sans framework ni outil de construction. Depuis la 52.1 : `index.html` garde le HTML ; le CSS est dans `css/` (3 fichiers) et le JavaScript dans `js/` (un fichier par outil, ex. `js/outilNutrition.js`, les blocs communs à part, `js/demarrage.js` en dernier). Ordre de chargement et numéro `?v=` : `MHX_CSS`, `MHX_JS` et `MHX_FICHIERS` en tête d'`index.html` (à monter à chaque version, avec `CONFIG.marque.version` dans `js/config.js`). Carte : `docs/HANDOFF-CLAUDE-CODE.md` §2.1.
 - Hébergée sur GitHub Pages : https://lcsmhx.github.io/mhx-plateforme/ — **un push sur `main` part en ligne** : en 1 à 2 minutes et sans attendre les tests tant que la source de Pages est « Deploy from a branch » ; la source est « GitHub Actions » depuis le 28/09 : environ 10 minutes après le push (banc découpé en 10 parties parallèles), et seulement si le banc de tests est vert.
 - Backend Supabase. **7 clients réels + 1 coach : ce sont des données de production.**
 - Grok Bot (autre agent) travaille uniquement dans `donnees/`. **Tu ne touches jamais `donnees/`.**

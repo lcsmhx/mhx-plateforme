@@ -24,16 +24,24 @@ fs.mkdirSync(OUT, { recursive: true });
 
 /* --- serveur statique minimal --- */
 let inscriptionLibre = false;   // v44 : l'ecran d'inscription n'existe que si CONFIG.marque.inscription_libre vaut true
+/* 52.1 : la page charge css/ et js/ (servis depuis son dossier, fichiers.js) ; la retouche vaut aussi pour ces fichiers
+   (inscription_libre est dans js/config.js) */
+const { servirFichier } = require("./fichiers");
+const retouche = h => inscriptionLibre ? h.replace("inscription_libre: false", "inscription_libre: true") : h;
 const server = http.createServer((req, res) => {
+  if (servirFichier(req, res, HTML, retouche)) return;
   if (req.url.split("?")[0] === "/" || req.url.startsWith("/index.html")) {
     res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-    let h = fs.readFileSync(HTML, "utf8");
-    if (inscriptionLibre) h = h.replace("inscription_libre: false", "inscription_libre: true");
-    res.end(h);
+    res.end(retouche(fs.readFileSync(HTML, "utf8")));
   } else { res.writeHead(404); res.end(); }
 });
+/* 52.1 : les fichiers css/ et js/ du dossier de la page ; chaque page capturée doit les avoir TOUS chargés, une seule fois
+   chacun (relevé du navigateur, performance.getEntriesByType), par des liens qui portent tous ?v=<MHX_FICHIERS>, et
+   CONFIG.marque.version doit finir par ce numéro */
+const SUR_DISQUE = ["css", "js"].flatMap(d => { try { return fs.readdirSync(path.join(path.dirname(HTML), d)).filter(f => f.endsWith("." + d)).map(f => d + "/" + f); } catch (e) { return []; } }).sort();
+const fichiersVerifies = { pages: 0, version: null, css: 0, js: 0 };
 
-const journal = { appels: [], ecritures: [], erreurs: [], externes: [] };
+const journal = { appels: [], ecritures: [], erreurs: [], externes: [], console: [] };
 let persona = null;
 
 /* v44 — prospecte (compte gratuit) « Léa Démo » avec son Challenge 7 jours en cours : jour 1 fait hier */
@@ -119,6 +127,12 @@ async function main() {
     const page = await ctx.newPage();
     page.on("console", msg => { if (msg.type() === "error" && msg.text().indexOf("ERR_FAILED") === -1) journal.erreurs.push("[console] " + page.url().split("#")[1] + " : " + msg.text().slice(0, 200)); });
     page.on("pageerror", e => journal.erreurs.push("[pageerror] " + page.url().split("#")[1] + " : " + String(e.stack || e).slice(0, 600)));
+    /* 52.1 : relevé brut de la console (erreurs et avertissements, ERR_FAILED compris), pour comparer deux versions */
+    page.on("console", msg => { if (["error", "warning"].includes(msg.type())) journal.console.push(msg.type() + " " + (page.url().split("#")[1] || "") + " : " + msg.text().slice(0, 300)); });
+    page.on("pageerror", e => journal.console.push("pageerror " + (page.url().split("#")[1] || "") + " : " + String(e).slice(0, 300)));
+    /* 52.1 : un fichier de la page (css/, js/) absent ou en erreur */
+    page.on("response", r => { const u = new URL(r.url()); if (["localhost", "127.0.0.1"].includes(u.hostname) && r.status() >= 400) journal.erreurs.push("[fichiers] " + r.status() + " " + u.pathname + u.search); });
+    page.on("requestfailed", r => { const u = new URL(r.url()); if (["localhost", "127.0.0.1"].includes(u.hostname)) journal.erreurs.push("[fichiers] échec " + u.pathname + u.search + " : " + ((r.failure() || {}).errorText || "")); });
     return { ctx, page };
   };
 
@@ -129,6 +143,31 @@ async function main() {
     await page.screenshot({ path: f, fullPage: true });
     const h = await page.evaluate(() => document.body.scrollHeight);
     rapport.push({ nom, hauteur: h });
+    await verifierFichiers(page, nom);
+  };
+  const verifierFichiers = async (page, nom) => {
+    const d = await page.evaluate(() => ({
+      v: typeof MHX_FICHIERS === "undefined" ? null : MHX_FICHIERS,
+      version: typeof CONFIG === "undefined" ? null : CONFIG.marque.version,
+      /* ce que la page a réellement chargé (l'écran de connexion remplace le corps de la page, balises <script> comprises) */
+      liens: performance.getEntriesByType("resource").map(e => new URL(e.name)).filter(u => u.origin === location.origin && /^\/(css|js)\//.test(u.pathname)).map(u => u.pathname.slice(1) + u.search)
+    }));
+    const pb = [];
+    if (d.v === null) { if (SUR_DISQUE.length || d.liens.length) pb.push("MHX_FICHIERS absent alors que la page a des fichiers css/ ou js/"); }
+    else {
+      const mauvais = d.liens.filter(x => !new RegExp("^(css|js)/[A-Za-z0-9._-]+\\?v=" + d.v.replace(/\./g, "\\.") + "$").test(x));
+      if (mauvais.length) pb.push("liens sans ?v=" + d.v + " : " + mauvais.join(", "));
+      const charges = d.liens.map(x => x.split("?")[0]);
+      const doubles = charges.filter((x, i) => charges.indexOf(x) !== i);
+      if (doubles.length) pb.push("chargés deux fois : " + doubles.join(", "));
+      const oublies = SUR_DISQUE.filter(x => !charges.includes(x)), inconnus = charges.filter(x => !SUR_DISQUE.includes(x));
+      if (oublies.length) pb.push("jamais chargés : " + oublies.join(", "));
+      if (inconnus.length) pb.push("chargés mais absents du dossier : " + inconnus.join(", "));
+      if (!(typeof d.version === "string" && d.version.endsWith(" · " + d.v))) pb.push("CONFIG.marque.version (" + d.version + ") ne finit pas par « · " + d.v + " »");
+      fichiersVerifies.version = d.v; fichiersVerifies.css = charges.filter(x => x.startsWith("css/")).length; fichiersVerifies.js = charges.filter(x => x.startsWith("js/")).length;
+    }
+    fichiersVerifies.pages++;
+    pb.forEach(x => journal.erreurs.push("[fichiers] " + nom + " : " + x));
   };
   const aller = async (page, hash) => {
     await page.evaluate(h => { location.hash = h; }, hash);
@@ -212,7 +251,9 @@ async function main() {
     appels_supabase_simules: journal.appels.length,
     ecritures_simulees: journal.ecritures,
     hotes_externes_bloques: Array.from(new Set(journal.externes)),
-    erreurs: Array.from(new Set(journal.erreurs))
+    erreurs: Array.from(new Set(journal.erreurs)),
+    fichiers: Object.assign({ sur_disque: SUR_DISQUE.length }, fichiersVerifies),
+    console: journal.console
   };
   fs.writeFileSync(path.join(OUT, "_rapport.json"), JSON.stringify(Object.assign({ pages: rapport }, resume), null, 2));
   console.log(JSON.stringify(resume, null, 2));

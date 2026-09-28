@@ -6,7 +6,8 @@
 # En local sans le Chromium de Playwright : BANC_CHROME=1 bash tests-locaux/banc.sh   (Google Chrome de la machine)
 # Code de sortie 1 au moindre échec : code de sortie non nul, une ligne ✗, un bloc interrompu, un nombre de ✓ différent
 # du nombre attendu (une vérification sautée sans le dire, ou ajoutée sans relever le compte), une suite inconnue ou oubliée,
-# une erreur de console, une écriture ou une page manquante pendant rig.js, un test de la fonction emails raté.
+# une erreur de console, une écriture ou une page manquante pendant rig.js, un test de la fonction emails raté,
+# un fichier js/ qui utilise au chargement un nom d'un fichier chargé plus tard (niveau-haut.js, 52.1).
 # Le banc teste index.html tel qu'il est sur le disque : il ne conclut « vert » que si ce disque est exactement un commit
 # (aucun fichier suivi modifié) du début à la fin. Pour un essai sur des modifications non commitées : BANC_LIBRE=1.
 # Découpage (GitHub Actions, jobs en parallèle) : BANC_PARTIE=1 … 10 ne lance que les suites de cette partie (voir partie()) ;
@@ -61,7 +62,7 @@ partie() {
     verif42|verif50) echo 7;;
     verif40|verif54) echo 8;;
     verif55|verif39|fonction) echo 9;;
-    verif56|rig|verif-xss) echo 10;;
+    verif56|rig|verif-xss|niveau) echo 10;;
     *) echo "";;
   esac
 }
@@ -84,7 +85,7 @@ for f in verif*.js; do
   case " $SUITES $HORS_BANC " in *" $s "*) ;; *) echec "$s : suite ni au banc ni dans HORS_BANC (banc.sh)";; esac
 done
 
-for s in $SUITES rig fonction; do
+for s in $SUITES rig fonction niveau; do
   if [ -z "$(partie "$s")" ]; then echec "$s : aucune partie dans partie() (banc.sh)"; fi
 done
 case "${BANC_PARTIE:-}" in ''|[1-9]|10) ;; *) echec "BANC_PARTIE=${BANC_PARTIE} : partie inconnue";; esac
@@ -130,6 +131,17 @@ duree=$(( $(date +%s) - debut ))
 if [ "$rc" -ne 0 ] || [ "${bilan:0:2}" != OK ]; then echec "rig : code $rc, ${duree} s — $bilan"
 else note "ok     rig : ${bilan:3}, ${duree} s"; fi
 rendre rig
+fi
+
+# 52.1 : ordre de chargement des fichiers js/ (sans navigateur) : aucun code exécuté au chargement d'un fichier n'utilise
+# un nom déclaré dans un fichier chargé plus tard, chaque fichier se compile seul (voir niveau-haut.js).
+if dans_partie niveau; then
+debut=$(date +%s)
+node niveau-haut.js ../index.html > "$OUT/niveau-haut.log" 2>&1
+rc=$?
+duree=$(( $(date +%s) - debut ))
+if [ "$rc" -ne 0 ]; then echec "niveau-haut : code $rc, ${duree} s"; grep -E 'PROBLÈME|Error' "$OUT/niveau-haut.log" | head -20
+else note "ok     niveau-haut : $(tail -1 "$OUT/niveau-haut.log"), ${duree} s"; fi
 fi
 
 # Fonction des emails de suivi (sans réseau, jamais déployée par ce banc) : la dernière ligne doit être « N/N vérifications ».

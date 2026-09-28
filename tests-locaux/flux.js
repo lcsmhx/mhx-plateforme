@@ -7,7 +7,8 @@ const HTML = path.resolve(process.argv[2] || "../index.html");
 const OUT = path.resolve(process.argv[3] || "captures/flux");
 fs.mkdirSync(OUT, { recursive: true });
 const PORT = 9100 + Math.floor(Math.random() * 100);
-const server = http.createServer((req, res) => { res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); res.end(fs.readFileSync(HTML)); });
+const { servirFichier } = require("./fichiers");   // 52.1 : la page charge css/ et js/, servis depuis son dossier (fichiers.js)
+const server = http.createServer((req, res) => { if (servirFichier(req, res, HTML)) return; res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); res.end(fs.readFileSync(HTML)); });
 
 const resultats = [];
 const ok = (nom, cond, detail) => { resultats.push({ test: nom, ok: !!cond, detail: detail || "" }); };

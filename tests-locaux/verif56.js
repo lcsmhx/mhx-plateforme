@@ -59,14 +59,17 @@ const MOBILE = { width: 390, height: 844 }, ORDI = { width: 1280, height: 900 };
 
 /* ---------- la page servie : le fichier testé, retouché le temps d'un bloc (avec) ---------- */
 let retouches = [];
+/* 52.1 : les retouches valent pour la page et pour ses fichiers css/ et js/ (CONFIG est dans js/config.js) */
+const retouche = h => { for (const [de, vers] of retouches) h = h.split(de).join(vers); return h; };
+const { servirFichier, source } = require("./fichiers");   // 52.1 : la page charge css/ et js/, servis depuis son dossier (fichiers.js)
 const server = http.createServer((req, res) => {
-  let h = fs.readFileSync(HTML, "utf8");
-  for (const [de, vers] of retouches) h = h.split(de).join(vers);
+  if (servirFichier(req, res, HTML, retouche)) return;
+  let h = retouche(fs.readFileSync(HTML, "utf8"));
   res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); res.end(h);
 });
 /* une retouche dont le texte a disparu du fichier ne passe jamais en silence : le bloc s'interrompt */
 async function avec(liste, fn){
-  const h = fs.readFileSync(HTML, "utf8");
+  const h = source(HTML);   // 52.1 : la page et tous ses fichiers
   for (const [de] of liste) if (!h.includes(de)) throw new Error("retouche impossible, texte absent du fichier : " + de);
   retouches = liste;
   try { await fn(); } finally { retouches = []; }

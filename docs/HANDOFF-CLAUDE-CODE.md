@@ -7,7 +7,7 @@ Objet : passer la main à Claude Code sur `index.html` sans rien casser. Lis ce 
 
 ## 0. En une minute
 
-- **Application** : un seul fichier `index.html` (≈ 9 000 lignes), sans framework ni build, hébergé sur GitHub Pages : https://lcsmhx.github.io/mhx-plateforme/ — déploiement = fichier poussé sur `main`.
+- **Application** : `index.html` (le HTML) + `css/` + `js/` (un fichier par outil, depuis la 52.1, §2.1), sans framework ni build, hébergé sur GitHub Pages : https://lcsmhx.github.io/mhx-plateforme/ — déploiement = fichier poussé sur `main`.
 - **Backend** : Supabase (ref `nzynbuczmogifuidcjed`, plan gratuit), appelé par `fetch` direct (client maison `Auth.appel`). **7 clients réels + 1 coach. Données de production.**
 - **État en ligne** : **v52** (28/09/2026) — plan V2, chantier 1 : parcours prospect (3 questions, page bilan, accueil calories / pesée, gratuit pour toujours, pages verrouillées avec exemple), inscription avec nom et 3 cases, aucun email envoyé par l'app, calculateur du prospect (`calc_perso`), clé `emails` (newsletter). Détail des lots et des choix : `docs/PLAN-V2.md` et `NOTESCLAUDE.md` (note du 28/09). Inscription publique fermée.
 - **Dans `main`, pas encore en ligne (27/09/2026)** : le **Challenge 7 jours est abandonné** (décision de Lucas du 26/09) et remplacé par le **funnel « Découverte »** (§5.G) : inscription → questionnaire court → 7 jours d'accès découverte depuis l'inscription → « Réserver mon bilan ». Branche `test/abandon-challenge` fusionnée dans `main` après relecture adversariale et banc complet ; **à pousser par Lucas** (Claude n'a pas le droit de pousser : `.claude/settings.local.json`). `inscription_libre` reste `false` tant que Lucas n'a pas suivi `OUVERTURE-INSCRIPTION.md`. **Aucun prix, tarif ni abonnement dans l'app** (règle de Lucas). **Puis v51 (27/09/2026, dans `main` après fusion locale, à pousser par Lucas)** : tableau de bord des prospects (page `#/prospects` : statuts NOUVEAU / CHAUD / TIÈDE / FROID, score sur 100, filtres, recherche, CSV, fiche détaillée, Nouveautés) et emails de suivi facultatifs (fonction Supabase `emails-prospects` + Brevo, **prête et testée, pas déployée** : `supabase/README.md`) — §5.H.
@@ -39,8 +39,36 @@ MHX Coaching = coaching sportif et alimentaire en ligne (perte de poids, recompo
 
 ## 2. Architecture technique
 
-### 2.1 `index.html` — ordre du fichier
-`[A]` jetons de design · `[B]` styles communs / composants · `[C]` styles des outils · `[D]` `CONFIG` (marque, Supabase, calcul, mensurations, nutrition, régularité, bilan, entraînement) · `[E]` boîte à outils (helpers, `SVG`, `ICONES`, `Theme`, `UI`, `I18N`/`Traduction`/`Contenus`, `Auth`, `Store`, `Catalogue`, `Normaliser`, `Import`, `Graphique`, `ECHAUFFEMENTS`) · `[F]` outils (un objet par écran) · `[G]` navigation, connexion, démarrage.
+### 2.1 Les fichiers de l'app (depuis la 52.1) et l'ordre de chargement
+Depuis la **52.1** (chantier 1 bis, 28/09/2026), l'ancien fichier unique est découpé **sans une ligne de logique changée** (la concaténation des morceaux, dans l'ordre, redonne l'ancien `<style>` et l'ancien `<script>` octet pour octet, version affichée mise à part). `index.html` garde le HTML (métadonnées, icônes, manifeste, barre du haut, `#vue`, pied de page) et, en tête, un petit script qui définit **`MHX_FICHIERS`** (le numéro ajouté en `?v=` à chaque lien, écrit à ce seul endroit), **`MHX_CSS`** et **`MHX_JS`** (l'ordre de chargement), puis écrit les balises avec `document.write` : scripts classiques (pas de modules), chargés un par un dans l'ordre, le démarrage en dernier, comme l'ancien script unique. **À chaque version** : monter `MHX_FICHIERS` et `CONFIG.marque.version` (`js/config.js`), qui doit finir par « · <MHX_FICHIERS> » (`rig.js` le vérifie, ainsi que : chaque fichier de `css/` et `js/` chargé une fois, tous les liens avec le bon `?v=`, aucun fichier en 404). **Un nouveau fichier** : l'ajouter à sa liste, à la bonne place. **Règle du niveau haut** : le code exécuté au chargement d'un fichier (hors corps de fonctions) ne doit utiliser que ce qui est déclaré dans ce fichier ou avant (une `const` d'un fichier suivant n'existe pas encore) ; aujourd'hui seuls `Theme.charger()` (`js/interface.js`), trois écouteurs de `js/navigation.js` et `demarrer()` (`js/demarrage.js`) s'exécutent au chargement. Le banc le vérifie sans navigateur (`tests-locaux/niveau-haut.js`).
+
+| Fichier | Contenu (section d'origine) |
+|---|---|
+| `css/jetons.css` · `css/communs.css` · `css/outils.css` | `[A]` jetons de design · `[B]` styles communs / composants · `[C]` styles des outils |
+| `js/config.js` | `[D]` `CONFIG` (marque et **version**, Supabase, interrupteurs, calcul, mensurations, nutrition, régularité, bilan, entraînement), `DECOUVERTE` (textes du parcours prospect) |
+| `js/boite-a-outils.js` | `[E]` `$`, `$$`, `esc`, nombres, `aujourdhui`, `lienSur`, liens Calendly (`lienCalendly`, `lienCalendlyPour`), `ecrisNous`, `ctaVide` |
+| `js/i18n.js` | `I18N` (+ `I18N.en`, motifs), `trad`, `Traduction`, `basculerLangue`, `Contenus` |
+| `js/interface.js` | `dateFr`, `flash`, `SVG`, `ICONES`, `Theme` (appliqué au chargement), `UI` (fenêtres, volet, toasts) |
+| `js/auth-store.js` | `Auth`, `Interrupteurs`, `Accords`, `Forme`, `Store`, `Catalogue`, `Normaliser`, `Import`, sauvegarde (`blocSauvegarde`, `initSauvegarde`) |
+| `js/graphique.js` · `js/echauffements.js` | `Graphique` · `ECHAUFFEMENTS` |
+| `js/outilCalculateur.js` · `js/tracking.js` | `[F]` `outilCalculateur` · `Tracking` |
+| `js/outilMensurations.js` | `Photos`, `outilMensurations` (« Ma progression ») |
+| `js/outilEntrainement.js` · `js/outilProfil.js` | `outilEntrainement` · `QUESTIONS`, `outilProfil` |
+| `js/outilProgramme.js` | `Historique`, `Journal`, `Regularite`, `outilProgramme` |
+| `js/outilNutrition.js` · `js/outilBilan.js` · `js/outilBibliotheque.js` · `js/outilCatalogue.js` | un outil chacun |
+| `js/outilClients.js` | `outilClients`, `Clients` |
+| `js/outilProspects.js` | `Commercial`, `JournalEmails`, `Nouveautes`, `outilProspects` |
+| `js/outilTableau.js` | `outilTableau` |
+| `js/outilFormation.js` | `FORMATION`, `LECONS`, `JOURS_SEM`, `REPAS_SEM`, `outilFormation` |
+| `js/outilComplements.js` · `js/outilAtelier.js` · `js/outilAccueil.js` | un outil chacun |
+| `js/outilSuivi.js` | `Checkin`, `CleCoach`, `Feedback`, `NotesCoach`, `outilSuivi` |
+| `js/outilDecouverte.js` | `Decouverte`, `Activite`, `outilDecouverte` |
+| `js/outilJournal.js` · `js/liste-outils.js` | `outilJournal` · `OUTILS` (l'ordre = la navigation), `ALIAS_ROUTES` |
+| `js/navigation.js` | `[G]` `courant`, `outilsVisibles`, verrous et exemples (`estVerrouille`, `pageVerrouillee`, `Echantillons`), nav et barre du bas, `bandeauConsultation`, `afficher` |
+| `js/installation.js` · `js/connexion.js` | ajout à l'écran d'accueil · `routeDepuisAdresse`, `portail`, liens d'email (`entrerParLien`, nouveau mot de passe) |
+| `js/demarrage.js` | **en dernier** : `appPrete`, `sessionPerdue`, `demarrer()` |
+
+Ordre des sections (inchangé) : `[A]` jetons de design · `[B]` styles communs / composants · `[C]` styles des outils · `[D]` `CONFIG` (marque, Supabase, calcul, mensurations, nutrition, régularité, bilan, entraînement) · `[E]` boîte à outils (helpers, `SVG`, `ICONES`, `Theme`, `UI`, `I18N`/`Traduction`/`Contenus`, `Auth`, `Store`, `Catalogue`, `Normaliser`, `Import`, `Graphique`, `ECHAUFFEMENTS`) · `[F]` outils (un objet par écran) · `[G]` navigation, connexion, démarrage.
 
 Un **outil** = `{ id, cle, nom, icone, titre, accroche, html(), init(), role?, masque_client?, client_seul?, masque_nav?, principal?, principal_coach?, sans_entete? }`, listé dans `OUTILS` (l'ordre = la navigation). `afficher(id)` rend `html()` dans `#vue` puis `init()` (qui peut renvoyer une fonction de nettoyage). Routage par ancre `#/<id>` ; `ALIAS_ROUTES` (`progression` → `mensurations`, `repas` → `nutrition`, `home` → `accueil`). `outilParDefaut()` : coach → `tableau`, client → `accueil`.
 
@@ -99,7 +127,7 @@ Exception v38 (et v49 pour `suivi_prospect`) : `feedbacks`, `notes_coach` et `su
 - PostgREST renvoie 1 000 lignes max : `Catalogue.lire` pagine avec l'en-tête `Range`.
 
 ### 2.4 Déploiement et versions
-- `CONFIG.marque.version` (ex. `"2026-09-25 · 37"`) s'affiche en pied de page et sur l'écran de connexion : **incrémenter à chaque livraison**, c'est le seul moyen de savoir ce qui est en ligne. `<meta http-equiv="Cache-Control" content="no-cache">` : les clients rechargent la dernière version.
+- `CONFIG.marque.version` (ex. `"2026-09-25 · 37"`) s'affiche en pied de page et sur l'écran de connexion : **incrémenter à chaque livraison**, c'est le seul moyen de savoir ce qui est en ligne. Depuis la 52.1, monter aussi `MHX_FICHIERS` en tête d'`index.html` (le `?v=` des fichiers `css/` et `js/`) : `CONFIG.marque.version` doit finir par ce numéro. `<meta http-equiv="Cache-Control" content="no-cache">` : les clients rechargent la dernière version.
 - Livraison = `index.html` (+ `NOTESCLAUDE.md` mis à jour) → commit et push sur `main` par Claude Code (depuis le 25/09/2026, sous les garde-fous de la règle n° 2 ; jusqu'à la v37, Lucas glissait les fichiers sur GitHub) → GitHub Pages met ~1 minute. Vérifier ensuite la version sur le site.
 - Historique récent sur `main` : `3576aec` v32 (avant refonte) · `30b44b7` v33 · `7be60e1` v34 · `c910296` v35 · `03531c5` v36 · `8dcbe7d` v37 · `4b35c81` 37.1 (correctif de sécurité, Claude Code) · `4277f6a` v38 · puis v39 (Claude Code, `git log` pour les suivants). Le détail de chaque version se relit avec `git diff 3576aec..30b44b7` (v33), `30b44b7..7be60e1` (v34), etc.
 
@@ -290,15 +318,17 @@ node verif50.js ../index.html              # interface prospect de la Découvert
 node verif51.js ../index.html              # funnel Découverte complet : Jour n/7, questionnaire court (garde 18 ans), résultat calculé, recettes, séance, Modifier / Revenir, clics et case, jour 8, mode test, ancien prospect, données piégées, anglais, mobile, coach, client inchangé (121)
 ```
 Sur le Mac de Lucas (pas de Chromium Playwright) : Node 22 est installé dans `~/.local/node` (`export PATH="$HOME/.local/node/bin:$PATH"`), Playwright en global sans navigateur, et le banc tourne avec le Chrome du système : `NODE_OPTIONS="--require ./chrome-systeme.js" node rig.js …`. Attendu v44 : 78 pages (64 + prospecte « Léa » 6 pages et écran d'inscription, par format), 0 erreur, 0 écriture ; 19 + 13 + 14 + 13 + 15 + 67 vérifications, verif-xss 5/5, verif39 35/35, verif40 26/26, verif41 25/25, verif42 20/20, verif43 34/34, verif44 81/81, verif45 54/54, verif46 74/74, verif47 46/46, verif48 40/40, verif49 50/50 ; `rig.js --lang en` et `--theme light` : 78 pages, 0 erreur chacun. **Règle des simulations** : router les requêtes par nom d'hôte (`new URL(u).hostname`), jamais par sous-chaîne — une URL Supabase contient `localhost` dans `redirect_to`.
-Contrôles rapides sans navigateur :
+Depuis la 52.1, chaque suite sert la page **et** ses fichiers `css/` et `js/` depuis le dossier de la page testée, avec les mêmes retouches (`tests-locaux/fichiers.js` : `servirFichier`, et `source()` pour chercher un texte dans la page et tous ses fichiers) ; `rig.js` vérifie en plus, sur chaque page capturée, que chaque fichier de `css/` et `js/` est chargé une fois avec `?v=<MHX_FICHIERS>` (rapport : `fichiers`, et `console` = relevé brut des erreurs et avertissements, pour comparer deux versions).
+Contrôles rapides sans navigateur (52.1, depuis la racine du dépôt) :
 ```
-node -e "const s=require('fs').readFileSync('index.html','utf8');const js=s.slice(s.indexOf('<script>')+8,s.lastIndexOf('</script>'));new Function(js);console.log('JS OK');
-const css=s.slice(s.indexOf('<style>')+7,s.indexOf('</style>'));console.log('CSS',(css.match(/{/g)||[]).length,(css.match(/}/g)||[]).length);
-const m=js.match(/I18N\.en = \{([\s\S]*?)\n\};/);const k=[...m[1].matchAll(/\"((?:[^\"\\\\]|\\\\.)*)\":/g)].map(x=>x[1]);console.log('clés I18N dupliquées:',k.filter((x,i)=>k.indexOf(x)!==i));"
+node -e "const fs=require('fs'),vm=require('vm'),{listes}=require('./tests-locaux/fichiers');const l=listes(fs.readFileSync('index.html','utf8'));
+l.filter(f=>f.endsWith('.js')).forEach(f=>new vm.Script(fs.readFileSync(f,'utf8'),{filename:f}));console.log('JS OK',l.length,'fichiers');
+const css=l.filter(f=>f.endsWith('.css')).map(f=>fs.readFileSync(f,'utf8')).join('');console.log('CSS',(css.match(/{/g)||[]).length,(css.match(/}/g)||[]).length);
+const m=fs.readFileSync('js/i18n.js','utf8').match(/I18N\.en = \{([\s\S]*?)\n\};/);const k=[...m[1].matchAll(/\"((?:[^\"\\\\]|\\\\.)*)\":/g)].map(x=>x[1]);console.log('clés I18N dupliquées:',k.filter((x,i)=>k.indexOf(x)!==i));"
 ```
 Comparer les appels API entre deux versions (ils doivent rester identiques hors ajout voulu) :
 ```
-grep -o '"/rest/v1/[^"]*"\|"/auth/v1/[^"]*"\|"/functions/v1/[^"]*"' index.html | sort | uniq -c
+grep -oh '"/rest/v1/[^"]*"\|"/auth/v1/[^"]*"\|"/functions/v1/[^"]*"' js/*.js | sort | uniq -c
 ```
 Comptages « avant / après » pour une migration (SQL, lecture seule) :
 ```sql

@@ -14,6 +14,8 @@ Environ 35 minutes. Code de sortie 1 au moindre échec : une ligne ✗, un bloc 
 
 **Horloge** : `verif36` et `verif38` supposent qu'on est entre vendredi et dimanche (formulaire du bilan proposé). Tous les jours, elles décalent tout — données fictives, simulation et navigateur (`clock.install`) — au samedi 12 h de la semaine, ce qui évite aussi tout passage de minuit pendant la suite. Avant la v52 : verif38 65/67 et verif36 8/13 (5 vérifications sautées) du lundi au jeudi.
 
+**Fichiers de la page (52.1)** : `index.html` charge `css/` et `js/` (listes `MHX_CSS` / `MHX_JS`, numéro `MHX_FICHIERS` en `?v=`). Chaque suite sert la page **et** ces fichiers depuis le dossier de la page testée, avec les mêmes retouches (`fichiers.js` : `servirFichier(req, res, HTML, retouche)` au début du serveur ; `source(HTML)` pour chercher un texte dans la page et tous ses fichiers, ex. la version ou `CONFIG`). Une nouvelle suite fait de même. `rig.js` vérifie sur chaque page capturée que chaque fichier de `css/` et `js/` est chargé une seule fois avec `?v=<MHX_FICHIERS>`, sans 404, et que `CONFIG.marque.version` finit par ce numéro (sinon erreur `[fichiers]`, banc rouge) ; son rapport garde aussi le relevé brut de la console (`console`) pour comparer deux versions. `niveau-haut.js ../index.html` (sans navigateur, au banc, partie 10) vérifie l'ordre de chargement : chaque fichier `js/` se compile seul, aucun nom déclaré deux fois, et aucun code exécuté au chargement d'un fichier n'utilise un nom d'un fichier chargé plus tard (code de sortie 1 sinon).
+
 ## Installation
 ```
 npm install -g playwright            # une fois

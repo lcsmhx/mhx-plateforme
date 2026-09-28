@@ -7,7 +7,8 @@
 const { chromium } = require("playwright"); const fs = require("fs"); const http = require("http"); const path = require("path");
 const F = require("./fixtures"); const HTML = path.resolve(process.argv[2] || "../index.html");
 const PORT = 9674;
-const server = http.createServer((req, res) => { res.writeHead(200, { "Content-Type": "text/html" }); res.end(fs.readFileSync(HTML)); });
+const { servirFichier } = require("./fichiers");   // 52.1 : la page charge css/ et js/, servis depuis son dossier (fichiers.js)
+const server = http.createServer((req, res) => { if (servirFichier(req, res, HTML)) return; res.writeHead(200, { "Content-Type": "text/html" }); res.end(fs.readFileSync(HTML)); });
 const res = []; const ok = (n, c, d) => res.push((c ? "  ✓ " : "  ✗ ") + n + (c ? "" : "  — " + (d || "")));
 const G1 = "00000000-0000-4000-8000-000000000d01", G2 = "00000000-0000-4000-8000-000000000d02", G3 = "00000000-0000-4000-8000-000000000d03";
 const MAJ = "2026-09-24T10:00:00Z";

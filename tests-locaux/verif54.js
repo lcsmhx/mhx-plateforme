@@ -27,7 +27,9 @@ const { chromium } = require("playwright"); const fs = require("fs"); const http
 const F = require("./fixtures"); const HTML = path.resolve(process.argv[2] || "../index.html");
 const PORT = +process.env.VERIF54_PORT || 9696;
 const BLOCS = (process.env.VERIF54_BLOCS || "").split(",").map(x => x.trim()).filter(Boolean);
+const { servirFichier } = require("./fichiers");   // 52.1 : la page charge css/ et js/, servis depuis son dossier (fichiers.js)
 const server = http.createServer((req, res) => {
+  if (servirFichier(req, res, HTML)) return;
   res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); res.end(fs.readFileSync(HTML, "utf8"));
 });
 const res = []; const ok = (n, c, d) => res.push((c ? "  ✓ " : "  ✗ ") + n + (c ? "" : "  — " + (d || "")));

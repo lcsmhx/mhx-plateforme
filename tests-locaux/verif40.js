@@ -28,9 +28,12 @@ const F = require("./fixtures"); const HTML = path.resolve(process.argv[2] || ".
 const PORT = 9671;
 const OUT = path.join(__dirname, "captures", "v40"); fs.mkdirSync(OUT, { recursive: true });
 let inscriptionLibre = false;
+/* 52.1 : la retouche vaut pour la page et pour ses fichiers (inscription_libre est dans js/config.js) */
+const retouche = h => { if (inscriptionLibre) h = h.replace("inscription_libre: false", "inscription_libre: true"); return h; };
+const { servirFichier } = require("./fichiers");   // 52.1 : la page charge css/ et js/, servis depuis son dossier (fichiers.js)
 const server = http.createServer((req, res) => {
-  let h = fs.readFileSync(HTML, "utf8");
-  if (inscriptionLibre) h = h.replace("inscription_libre: false", "inscription_libre: true");
+  if (servirFichier(req, res, HTML, retouche)) return;
+  let h = retouche(fs.readFileSync(HTML, "utf8"));
   res.writeHead(200, { "Content-Type": "text/html" }); res.end(h);
 });
 const res = []; const ok = (n, c, d) => res.push((c ? "  ✓ " : "  ✗ ") + n + (c ? "" : "  — " + String(d || "").replace(/\s+/g, " ").trim()));

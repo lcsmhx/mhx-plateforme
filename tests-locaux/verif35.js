@@ -1,6 +1,7 @@
 const { chromium } = require("playwright"); const fs=require("fs"); const http=require("http"); const path=require("path");
 const F = require("./fixtures"); const HTML = path.resolve(process.argv[2]);
-const server = http.createServer((req,res)=>{res.writeHead(200,{"Content-Type":"text/html"});res.end(fs.readFileSync(HTML));});
+const { servirFichier } = require("./fichiers");   // 52.1 : la page charge css/ et js/, servis depuis son dossier (fichiers.js)
+const server = http.createServer((req,res)=>{if(servirFichier(req,res,HTML))return;res.writeHead(200,{"Content-Type":"text/html"});res.end(fs.readFileSync(HTML));});
 (async()=>{
   await new Promise(r=>server.listen(9444,r)); const b = await chromium.launch(); const res=[]; const ecr=[];
   const ok=(n,c,d)=>res.push((c?"  ✓ ":"  ✗ ")+n+(c?"":"  — "+(d||"")));

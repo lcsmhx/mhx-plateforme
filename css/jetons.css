@@ -1,0 +1,40 @@
+/* ==================================================================
+   [A] JETONS DE DESIGN (v33 — design system MHX)
+   Change une couleur ici et tout le site suit.
+   Le SOMBRE est le theme de l'application. Le clair reste disponible
+   (bouton dans la barre du haut) et se range sur l'appareil, cle
+   « mhx_theme ». Le dore est un ACCENT : boutons principaux, etats
+   actifs, chiffres cles — jamais une couleur de fond.
+   ================================================================== */
+*,*::before,*::after{box-sizing:border-box}
+:root{
+  color-scheme:dark;
+  --ground:#07090d; --surface:#0e1218; --sunken:#0a0d12; --raised:#141a23;
+  --ink:#eef1f5; --ink-2:#a3abb8; --ink-3:#6c7482;
+  --line:#1b212b; --line-strong:#2a3340;
+  --accent:#d4a844; --accent-ink:#0a0d13; --accent-soft:rgba(212,168,68,.10); --accent-line:rgba(212,168,68,.38);
+  --good:#3fc27b; --good-soft:rgba(63,194,123,.12);
+  --warn:#e6a53c; --warn-soft:rgba(230,165,60,.12);
+  --bad:#e5645e;  --bad-soft:rgba(229,100,94,.12);
+  --s1:#4a8fe8; --s2:#e0673a; --s3:#22b07c; --s4:#d4a844;
+  --grid:#1d232d; --axis:#313a46;
+  --nav-bg:rgba(7,9,13,.86);
+  --shadow:0 1px 2px rgba(0,0,0,.35),0 10px 30px -18px rgba(0,0,0,.7);
+  --r-sm:6px; --r:10px; --r-lg:14px;
+  --vite:.16s; --doux:.32s;
+}
+:root[data-theme="light"]{
+  color-scheme:light;
+  --ground:#f1f2f4; --surface:#ffffff; --sunken:#f5f6f8; --raised:#ffffff;
+  --ink:#0d1117; --ink-2:#4b5260; --ink-3:#737b89;
+  --line:#e1e4e9; --line-strong:#c8cdd6;
+  --accent:#9a7420; --accent-ink:#ffffff; --accent-soft:rgba(154,116,32,.10); --accent-line:rgba(154,116,32,.35);
+  --good:#1a8a4a; --good-soft:rgba(26,138,74,.10);
+  --warn:#a56a12; --warn-soft:rgba(165,106,18,.10);
+  --bad:#c2403b;  --bad-soft:rgba(194,64,59,.10);
+  --s1:#2a78d6; --s2:#d95926; --s3:#159a6a; --s4:#b8891a;
+  --grid:#e6e9ee; --axis:#c3c7cf;
+  --nav-bg:rgba(241,242,244,.9);
+  --shadow:0 1px 2px rgba(10,13,19,.05),0 8px 24px -14px rgba(10,13,19,.16);
+}
+

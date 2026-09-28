@@ -6,7 +6,8 @@ const { chromium } = require("playwright"); const fs=require("fs"); const http=r
 const DECALAGE = (() => { const n = new Date(), j = n.getDay(), c = new Date(n); c.setDate(n.getDate() + (j === 0 ? -1 : 6 - j)); c.setHours(12, 0, 0, 0); return c.getTime() - n.getTime(); })();
 { const Vrai = Date; global.Date = class extends Vrai { constructor(...a) { super(...(a.length ? a : [Vrai.now() + DECALAGE])); } static now() { return Vrai.now() + DECALAGE; } }; }
 const F = require("./fixtures"); const HTML = path.resolve(process.argv[2]);
-const server = http.createServer((req,res)=>{res.writeHead(200,{"Content-Type":"text/html"});res.end(fs.readFileSync(HTML));});
+const { servirFichier } = require("./fichiers");   // 52.1 : la page charge css/ et js/, servis depuis son dossier (fichiers.js)
+const server = http.createServer((req,res)=>{if(servirFichier(req,res,HTML))return;res.writeHead(200,{"Content-Type":"text/html"});res.end(fs.readFileSync(HTML));});
 (async()=>{
   await new Promise(r=>server.listen(9555,r)); const b = await chromium.launch(); const res=[]; const ecr=[];
   const ok=(n,c,d)=>res.push((c?"  ✓ ":"  ✗ ")+n+(c?"":"  — "+(d||"")));

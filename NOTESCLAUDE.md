@@ -11,7 +11,7 @@ Ce dépôt est le terrain commun. Lucas ne relaie plus les fichiers à la main.
 - **Messages courts et datés.** Une ligne par point. On ne raconte pas, on liste.
 
 ## Règles de travail sur ce dépôt
-1. **Un seul fichier applicatif : `index.html`.** Pas de découpage en plusieurs fichiers, pas de build, pas de `npm install`. Lucas doit pouvoir l'ouvrir et le modifier lui-même.
+1. **L'app : `index.html` (le HTML) + `css/` + `js/`** (découpage validé par Lucas le 28/09/2026, version 52.1 ; carte : `docs/HANDOFF-CLAUDE-CODE.md` §2.1). Pas de build, pas de `npm install`, pas de modules : de simples fichiers que Lucas peut ouvrir et modifier lui-même.
 2. **Commits petits et décrits en français.** Un commit = un changement compréhensible. Pas de commit fourre-tout de 400 lignes.
 3. **Ne jamais commiter de secret.** La clé Supabase présente dans le fichier est la clé *publishable*, publique par nature. La clé `service_role` ne doit jamais entrer dans ce dépôt, sous aucune forme.
 4. **Ne pas toucher aux formules de calcul** (BMR, facteur d'activité, macros) sans accord écrit de Lucas dans ce fichier.
@@ -252,3 +252,13 @@ Pour Grok Bot : rien à faire sur `index.html` (règle inchangée : Grok travail
   8. Profil : décocher la newsletter ; « Mot de passe oublié » et « Changer mon adresse » affichent le message « Écris-nous… ».
   9. Côté coach : la fiche du prospect montre le nom, les 3 réponses, « Newsletter : non » après le retrait.
   10. Supprimer le compte depuis « Mes données ».
+
+## 2026-09-28 — 52.1 : index.html découpé en fichiers (chantier 1 bis), aucune nouveauté — Claude
+- **Ce qui change** : rien pour les clients, les prospects et le coach (mêmes écrans, même comportement) ; seule la version affichée passe à « 2026-09-28 · 52.1 ».
+- **Fichiers** : `index.html` garde le HTML ; le CSS est dans `css/` (3 fichiers), le JavaScript dans `js/` (un fichier par outil, ex. `js/outilNutrition.js`, les blocs communs à part, `js/demarrage.js` en dernier). Ordre et numéro de version des liens (`?v=`) : en tête d'`index.html` (`MHX_CSS`, `MHX_JS`, `MHX_FICHIERS`). Rien n'a été réécrit : les morceaux mis bout à bout redonnent exactement l'ancien fichier.
+- **Pour Grok Bot** : rien à faire côté `donnees/` (les fichiers `donnees/*.json` sont lus comme avant). Tests à faire une fois la 52.1 en ligne (téléphone et ordinateur) :
+  1. Le pied de page affiche « 2026-09-28 · 52.1 ».
+  2. Outils de développement du navigateur, onglet Réseau, recharger : aucun fichier `css/` ou `js/` en erreur (404), tous avec `?v=52.1`.
+  3. Connexion avec le compte de test : accueil, Programme, Nutrition, Ma progression, Mon suivi, Profil s'affichent comme avant.
+  4. Thème clair / sombre et passage en anglais : comme avant.
+  5. Écran de connexion (déconnecté) et « Mot de passe oublié » : comme avant.
