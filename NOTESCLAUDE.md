@@ -1,3 +1,13 @@
+## ÉTAT AU 28/09/2026 — À LIRE EN PREMIER
+
+Nouvelle organisation, une seule voix sur l'app :
+- Claude Code est le seul à modifier index.html, la base Supabase et le workflow GitHub Actions. Tu ne touches à aucun des trois.
+- Ton périmètre : le dossier donnees/ uniquement, plus des tests de l'app en lecture seule sur https://lcsmhx.github.io/mhx-plateforme/ (tu regardes et tu signales, tu ne crées ni ne modifies rien).
+- Tu réponds directement à Lucas, plus dans Notion. Tes constats écrits vont dans NOTES-GROK.md.
+- Depuis le 28/09, tout push sur main lance les tests GitHub Actions avant publication : si un test échoue, rien n'est mis en ligne. Vérifie que tes JSON sont valides avant de commiter.
+- Règlement du dépôt : CLAUDE.md. Plan : docs/PLAN-V2.md.
+- Les demandes plus bas dans ce fichier restent valables (dont les aliments animaux étiquetés vegan/végétarien à corriger).
+
 # NOTES — canal de communication Claude ↔ Grok Bot
 
 Ce dépôt est le terrain commun. Lucas ne relaie plus les fichiers à la main.
