@@ -6,7 +6,7 @@ Une nouvelle conversation reprend en lisant seulement `CLAUDE.md` et ce fichier.
 - **Où en est le travail** : la dernière case cochée ci-dessous. La ligne « En cours » dit sur quoi on travaillait, sur quelle branche, et ce qu'il restait à vérifier.
 - **Branches** : chaque étape se fait sur une branche locale `v2/…`, fusionnée dans `main` (avance rapide) quand tout est vert. `attente/nuit-28-09` = travail de la nuit du 28/09 mis de côté, jamais poussé (on y reprend les corrections utiles, voir Chantier 1).
 - **Avant de reprendre** : `git status`, `git log --oneline -10 --all`, relire la ligne « En cours », relancer le banc (`tests-locaux/README.md`) sur la branche en cours.
-- **En cours** : v52 en ligne (`b937eb1`). **Chantier 1 bis** (découpage d'`index.html`, 52.1) sur la branche `v2/decoupage`, limite 3 h (début : 28/09 vers 12 h 10, heure de Bali). Ensuite v53.
+- **En cours** : v52 en ligne (`b937eb1`). **Chantier 1 bis** (découpage d'`index.html`, 52.1) **fait et vert sur la branche `v2/decoupage`** (banc GitHub vert sur `0d98147`, passage 36377727430, en 25 min environ) ; reste à le publier seul (fusion dans `main`, vérification en ligne : aucun fichier `css/` ou `js/` en 404). Ensuite v53.
 
 ## Ligne directrice (Lucas, 28/09/2026 au soir) — remplace ses messages de décision précédents
 **Simple, efficace, opérationnel.** Travail en continu : tout s'enchaîne sans s'arrêter ni attendre Lucas entre les lots, les chantiers ou les versions. Une question se pose : prendre l'option la plus prudente, la noter ici (« Questions pour Lucas ») et continuer. S'arrêter seulement pour un vrai risque sur les données des clients. Ne rien retirer aux tests ni aux relectures.
@@ -94,14 +94,14 @@ En cas de doute, ces règles passent avant `CLAUDE.md` (et la ligne directrice c
 
 ## Chantier 1 bis — Découpage d'index.html (validé par Lucas le 28/09) — version **52.1**, sans aucune nouveauté
 Commence dès que la v52 est en ligne ; on enchaîne ensuite sur la v53 sans attendre Lucas.
-- [ ] Déplacer, jamais réécrire : zéro changement de logique, même ordre de chargement, scripts classiques (pas de modules), démarrage de l'app en dernier.
-- [ ] Aujourd'hui tout est dans un seul `<script>` : toutes les fonctions existent dès le chargement. Une fois découpé, ce n'est plus vrai : vérifier qu'aucun code exécuté au chargement n'utilise une fonction ou une variable d'un fichier chargé plus tard. Même mode (strict ou non) dans chaque fichier.
-- [ ] `index.html` garde le HTML ; le CSS va dans `css/`, chaque outil dans `js/` (ex. `js/outilNutrition.js`), avec `?v=<version>` sur chaque lien ; le numéro vient d'un seul endroit, et le banc vérifie que tous les liens l'ont.
-- [ ] Banc adapté à la nouvelle structure (serveurs de `rig.js` et `flux.js`, suites qui lisent `index.html`).
-- [ ] Preuve : banc complet vert, écrans identiques à la v52 (verif52 + captures de `rig.js`), aucune erreur de console en plus de celles de la v52.
+- [x] Déplacer, jamais réécrire : zéro changement de logique, même ordre de chargement, scripts classiques (pas de modules), démarrage de l'app en dernier. (28/09 : concaténation des 3 fichiers `css/` = ancien `<style>` et des 32 fichiers `js/` = ancien `<script>`, octet pour octet, hors la ligne de version.)
+- [x] Aujourd'hui tout est dans un seul `<script>` : toutes les fonctions existent dès le chargement. Une fois découpé, ce n'est plus vrai : vérifier qu'aucun code exécuté au chargement n'utilise une fonction ou une variable d'un fichier chargé plus tard. Même mode (strict ou non) dans chaque fichier. (28/09 : `tests-locaux/niveau-haut.js`, au banc : aucun problème ; non strict partout, comme avant.)
+- [x] `index.html` garde le HTML ; le CSS va dans `css/`, chaque outil dans `js/` (ex. `js/outilNutrition.js`), avec `?v=<version>` sur chaque lien ; le numéro vient d'un seul endroit, et le banc vérifie que tous les liens l'ont. (28/09 : `MHX_FICHIERS` en tête d'`index.html` ; `rig.js` vérifie chaque page.)
+- [x] Banc adapté à la nouvelle structure (serveurs de `rig.js` et `flux.js`, suites qui lisent `index.html`). (28/09 : `tests-locaux/fichiers.js`, tous les nombres attendus inchangés.)
+- [x] Preuve : banc complet vert, écrans identiques à la v52 (verif52 + captures de `rig.js`), aucune erreur de console en plus de celles de la v52. (28/09 : 75 captures sur 81 identiques à l'octet près à un passage de la v52, les 6 autres à moins de 700 pixels et 25/255, moins que l'écart entre deux passages de la v52 ; console : les mêmes 6 messages.)
 - [ ] Limite : 3 h. Si ce n'est pas vert et identique après correction, ou au bout de 3 h : abandonner le découpage, garder la v52 et passer à la v53 (le noter ici).
 - [ ] Publier seul (version 52.1, aucune nouveauté) ; vérification en ligne : aucun fichier `css/` ou `js/` en erreur 404.
-- [ ] Mettre à jour `CLAUDE.md` et `docs/HANDOFF-CLAUDE-CODE.md` (carte des fichiers), et une note pour Grok dans `NOTESCLAUDE.md`.
+- [x] Mettre à jour `CLAUDE.md` et `docs/HANDOFF-CLAUDE-CODE.md` (carte des fichiers), et une note pour Grok dans `NOTESCLAUDE.md`.
 - [ ] Après le découpage : paralléliser davantage la v53 (un agent par fichier).
 
 ## Chantier 3 — Feedback du dimanche (remplace le bilan du vendredi) — **v53**

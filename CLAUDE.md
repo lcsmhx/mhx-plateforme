@@ -55,4 +55,5 @@ Lis ce fichier en entier au début de chaque conversation. Il passe avant tout a
 ## État actuel
 - En ligne : **v52** (28/09/2026) : parcours prospect du plan V2 ; inscription publique **fermée** (`inscription_libre: false`, Lucas l'ouvre avec `docs/OUVERTURE-INSCRIPTION.md`). Aucun email envoyé par l'app.
 - GitHub Actions : banc en 10 parties sur `main` et `v2/*`, publication seulement si tout est vert.
-- Suite : chantier 1 bis (découpage d'`index.html`, 52.1), puis v53 (clients et coach du lot D, chantiers 3 et 4, liste newsletter en CSV, compteur). Plan : `docs/PLAN-V2.md`.
+- Chantier 1 bis (52.1, découpage d'`index.html` en `css/` et `js/`, aucune nouveauté) : fait et vert sur la branche `v2/decoupage`, pas encore publié.
+- Suite : publier la 52.1 seule, puis v53 (clients et coach du lot D, chantiers 3 et 4, liste newsletter en CSV, compteur). Plan : `docs/PLAN-V2.md`.
