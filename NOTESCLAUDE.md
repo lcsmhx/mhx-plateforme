@@ -236,3 +236,19 @@ Pour Grok Bot : rien à faire sur `index.html` (règle inchangée : Grok travail
 - **Pour Grok Bot** : le règlement de l'atelier est maintenant `CLAUDE.md` (à la racine). Le plan validé par Lucas le 28/09/2026 est `docs/PLAN-V2.md`.
 - **Tu restes uniquement dans `donnees/`.** Rien à faire de ton côté.
 - **Rangement** : `HANDOFF-CLAUDE-CODE.md` et `OUVERTURE-INSCRIPTION.md` sont dans `docs/` ; `BRIEFHANDOVERPLATEFORMEMHX.md`, `PLAN-FUNNEL-7-JOURS.md`, `POURGROKBOTMAJ6.md`, `POURGROKBOTMAJ7.md` et les `P0.*.md` sont dans `docs/archive/`. Les anciennes notes citent encore les anciens emplacements.
+
+## 2026-09-28 — v52 : nouveau parcours prospect (chantier 1 du plan V2), inscription toujours fermée — Claude
+- **Ce qui change pour un prospect** : inscription avec prénom + NOM, 3 cases séparées (« J'ai 18 ans ou plus et j'accepte les conditions… », données de santé, newsletter facultative décochée) ; 3 questions (objectif, ce qui a bloqué, dans 3 mois) ; page « Ton bilan offert de 30 minutes » (Réserver / Pas maintenant) ; accueil : « Calcule tes calories (2 min) » puis « Enregistre ta pesée de départ » ; gratuit pour toujours : calculateur (garde-fou 18 ans et IMC), Ma progression (sans photos), Speed Formation ; pages verrouillées avec un exemple (programme, nutrition, journal, suivi). Aucun email envoyé par l'app : « Mot de passe oublié » et changement d'adresse → « Écris-nous à mhx.coaching@gmail.com ».
+- **Clients et coach** : rien ne change pour les 7 clients (hors messages d'erreur en français et Profil qui s'ouvre en haut sur téléphone). Coach : fiche prospect avec nom, 3 réponses, newsletter oui/non ; CSV avec Problème, Dans 3 mois, Newsletter.
+- **Données** : aucune migration. Nouvelles clés `calc_perso` (calcul du prospect ; le `calc` du coach n'est jamais écrit par un client ou un prospect), `emails` { newsletter, maj, version, source } ; `intake.bilan_propose`, `intake.probleme` / `projection` ; accords datés et versionnés dans les métadonnées du compte.
+- **Pour Grok Bot** : rien à faire côté `donnees/`. Tests à faire quand Lucas ouvrira l'inscription (compte jetable, voir `docs/OUVERTURE-INSCRIPTION.md` étape 6) :
+  1. S'inscrire avec prénom, nom, email, mot de passe et les 3 cases (newsletter cochée) : on entre sans email de confirmation.
+  2. Répondre aux 3 questions ; la page bilan reprend la réponse « Dans 3 mois ».
+  3. « Réserver mon bilan » ouvre Calendly avec prénom, nom et email pré-remplis ; « Pas maintenant » mène à l'accueil.
+  4. Accueil : « Calcule tes calories » ; saisir 17 ans → refus, rien d'enregistré ; puis un âge adulte → calcul enregistré.
+  5. « Enregistre ta pesée de départ » dans Ma progression ; l'accueil passe à l'étape suivante.
+  6. Ouvrir Programme, Nutrition, Mon journal, Suivi : un exemple « Exemple » puis « Réserve ton bilan ».
+  7. Speed Formation ouverte ; aucun « 7 jours » nulle part (FR et EN).
+  8. Profil : décocher la newsletter ; « Mot de passe oublié » et « Changer mon adresse » affichent le message « Écris-nous… ».
+  9. Côté coach : la fiche du prospect montre le nom, les 3 réponses, « Newsletter : non » après le retrait.
+  10. Supprimer le compte depuis « Mes données ».

@@ -826,7 +826,9 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
       await aller(page, "#/decouverte", 1600);
       const td = await visible();
       ok(`Profil et Découverte du prospect${langue ? " (anglais)" : ""} : aucun prix sur la page`, tp.length > 200 && td.length > 200 && !prixTrouve(tp) && !prixTrouve(td), prixTrouve(tp) || prixTrouve(td) || (tp.length + " / " + td.length));
-      if (!langue) ok("version affichée en pied de page : « v2026-09-27 · 51 »", norm(await page.textContent("#foot-right .version").catch(() => "")) === "v2026-09-27 · 51", await page.textContent("#foot-right .version").catch(() => "?"));
+      /* v52 : la version attendue est celle du fichier testé (CONFIG.marque.version), plus un texte en dur à chaque livraison */
+      const VERSION = (fs.readFileSync(HTML, "utf8").match(/\n    version: "([^"]+)",/) || [])[1];
+      if (!langue) ok("version affichée en pied de page : « v" + VERSION + " » (CONFIG.marque.version)", !!VERSION && norm(await page.textContent("#foot-right .version").catch(() => "")) === "v" + VERSION, await page.textContent("#foot-right .version").catch(() => "?"));
       await c.close();
     }
     inscriptionLibre = true;

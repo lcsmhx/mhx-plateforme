@@ -53,6 +53,6 @@ Lis ce fichier en entier au début de chaque conversation. Il passe avant tout a
 - Mets à jour la section « État actuel » ci-dessous en 2 ou 3 lignes.
 
 ## État actuel
-- En ligne : v51 (27/09/2026). Inscription publique fermée.
-- Emails de relance automatiques (Brevo) : codés, **pas déployés**.
-- **Plan validé par Lucas le 28/09/2026 : `docs/PLAN-V2.md`.** 4 chantiers, dans l'ordre : 1 parcours prospect, 2 ouverture, 3 feedback du dimanche, 4 côté coach. Tu ne commences un chantier que quand Lucas te le demande.
+- En ligne : **v52** (28/09/2026) : parcours prospect du plan V2 ; inscription publique **fermée** (`inscription_libre: false`, Lucas l'ouvre avec `docs/OUVERTURE-INSCRIPTION.md`). Aucun email envoyé par l'app.
+- GitHub Actions : banc en 10 parties sur `main` et `v2/*`, publication seulement si tout est vert.
+- Suite : chantier 1 bis (découpage d'`index.html`, 52.1), puis v53 (clients et coach du lot D, chantiers 3 et 4, liste newsletter en CSV, compteur). Plan : `docs/PLAN-V2.md`.
