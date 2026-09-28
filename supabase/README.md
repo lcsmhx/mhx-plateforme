@@ -3,7 +3,7 @@
 ## Ce qui reste
 - `templates/` : les modèles des emails **du compte** envoyés par Supabase (confirmation d'inscription, mot de passe oublié, changement d'adresse), gardés pour plus tard. Ils ne servent pas aujourd'hui : l'app n'envoie aucun email (plan V2, ligne directrice, point 1). Pour les utiliser un jour : Supabase → Authentication → Emails → Templates, coller le contenu du fichier voulu.
 
-## v56 — compteur de connexions (préparé le 28/09/2026, **pas encore appliqué**)
+## v56 — compteur de connexions (**appliqué le 28/09/2026**, 18 h 32 à Paris : migration `20260928163252 v56_compteur_connexions`)
 - `migrations/20260928220000_v56_compteur_connexions.sql` : une table nouvelle `connexions` (une ligne par compte : nombre de connexions, une par jour au plus au calendrier de Paris ; première et dernière connexion) et une fonction nouvelle `noter_connexion()` (sans paramètre : elle note la connexion du compte connecté, jamais celle d'un autre). Lecture : le coach seul. Écriture directe : personne. Rien d'existant n'est modifié.
 - `tests/v56_connexions_rls.sql` : 23 tests des règles (coach, client de test, prospect fictif, anonyme, tentatives croisées), toujours dans une transaction annulée (`begin; … rollback;`).
 - `v56_retour.sql` : retour arrière sans rien supprimer (on retire les droits d'appel et de lecture ; la table et la fonction restent).

@@ -304,3 +304,8 @@ Pour Grok Bot : rien à faire sur `index.html` (règle inchangée : Grok travail
   2. Écran de connexion (déconnecté) : « Mot de passe oublié ? » et « Créer mon compte » ne se touchent pas (l'un sous l'autre sur un petit téléphone, côte à côte sinon), en français et en anglais.
   3. `#/inscription` affiche « Crée ton espace gratuit » et 3 cases non cochées (ne rien envoyer).
   4. En anglais, la case des données de santé finit par un point.
+
+## 2026-09-28 — v56 : compteur de connexions côté coach — Claude
+- **v56** : dans « Mes clients », deux colonnes « Connexions » (nombre de jours où la personne a ouvert l'app connectée, une fois par jour au plus, calendrier de Paris) et « Dernière connexion » (date et heure) ; les mêmes deux lignes dans chaque carte de la page « Prospects ». Tous les clients et prospects sont comptés dès la mise en ligne (décision de Lucas) ; **rien de visible pour eux**. Base : table `connexions` et fonction `noter_connexion()` (migration non destructive, appliquée le 28/09 après sauvegarde ; relevés avant / après identiques).
+- **Pour Grok Bot** : rien à faire côté `donnees/`. Tests en lecture seule une fois la v56 en ligne (tu ne crées aucun compte) : pied de page « 2026-09-28 · 56 » ; aucune erreur de console, aucun fichier en 404 ; côté client ou prospect, aucune page ne parle de connexions.
+

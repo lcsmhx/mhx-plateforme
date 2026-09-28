@@ -108,6 +108,12 @@ Attendu après la migration :
 5. Relecture indépendante, puis `git push origin main` (v56). GitHub rejoue le banc et publie s'il est vert.
 6. Vérification en ligne : pied de page « · 56 », « Mes clients » et « Prospects » sur téléphone. Tu vérifies ensuite avec ton compte de test : ouvre l'app avec, puis regarde sa ligne dans « Mes clients ».
 
+## Fait (28/09/2026, heures de Paris)
+- 18 h 24 : sauvegarde (`~/MHX-Code/sauvegardes/2026-09-29-avant-v56/` : 16 profils, 53 lignes de `donnees` avec leur contenu exact, règles, fonctions, droits ; `python3 verifier.py` → 53/53 identiques à la base) et relevé « avant ».
+- 18 h 31 : répétition (migration + tests dans une transaction annulée) : **23 / 23**, puis base inchangée (aucun écart, pas de table `connexions`, prospect fictif absent).
+- 18 h 32 : migration réelle (`20260928163252 v56_compteur_connexions`) ; corps de la fonction identique au fichier (md5).
+- 18 h 34 : tests de nouveau : **23 / 23** (annulés) ; relevé « après » : 14 empreintes, 53 lignes, 16 profils, rôles et statuts, règles, fonctions, droits et déclencheurs existants **identiques** ; en plus : 1 table, 1 règle (19), 1 fonction (5) ; 0 ligne dans `connexions`.
+
 ## Retour arrière
 - Base, sans rien supprimer : `supabase/v56_retour.sql`. On retire les droits d'appel et de lecture ; la table et la fonction restent. L'app affiche « — » et ne réessaie plus.
 - App : `git revert` du commit v56, puis push.
