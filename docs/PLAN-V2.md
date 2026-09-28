@@ -6,7 +6,7 @@ Une nouvelle conversation reprend en lisant seulement `CLAUDE.md` et ce fichier.
 - **Où en est le travail** : la dernière case cochée ci-dessous. La ligne « En cours » dit sur quoi on travaillait, sur quelle branche, et ce qu'il restait à vérifier.
 - **Branches** : chaque étape se fait sur une branche locale `v2/…`, fusionnée dans `main` (avance rapide) quand tout est vert. `attente/nuit-28-09` = travail de la nuit du 28/09 mis de côté, jamais poussé (on y reprend les corrections utiles, voir Chantier 1).
 - **Avant de reprendre** : `git status`, `git log --oneline -10 --all`, relire la ligne « En cours », relancer le banc (`tests-locaux/README.md`) sur la branche en cours.
-- **En cours** : v52 en ligne (`b937eb1`). **Chantier 1 bis** (découpage d'`index.html`, 52.1) **fait et vert sur la branche `v2/decoupage`** (banc GitHub vert sur `0d98147`, passage 36377727430, en 25 min environ) ; reste à le publier seul (fusion dans `main`, vérification en ligne : aucun fichier `css/` ou `js/` en 404). Ensuite v53.
+- **En cours** : 52.1 en ligne (`72c8932`, découpage vérifié : 35 fichiers css/js servis, aucune erreur 404 ni de console). **v53** sur `v2/v53` : lots D-clients (`v2/v53-dclients`), chantier 3 (`v2/v53-c3`) et nettoyage (`v2/v53-nettoyage`) en parallèle ; puis chantier 4 (+ liste newsletter, compteur) ; relecture unique ; banc GitHub ; push.
 
 ## Ligne directrice (Lucas, 28/09/2026 au soir) — remplace ses messages de décision précédents
 **Simple, efficace, opérationnel.** Travail en continu : tout s'enchaîne sans s'arrêter ni attendre Lucas entre les lots, les chantiers ou les versions. Une question se pose : prendre l'option la plus prudente, la noter ici (« Questions pour Lucas ») et continuer. S'arrêter seulement pour un vrai risque sur les données des clients. Ne rien retirer aux tests ni aux relectures.
@@ -99,10 +99,10 @@ Commence dès que la v52 est en ligne ; on enchaîne ensuite sur la v53 sans att
 - [x] `index.html` garde le HTML ; le CSS va dans `css/`, chaque outil dans `js/` (ex. `js/outilNutrition.js`), avec `?v=<version>` sur chaque lien ; le numéro vient d'un seul endroit, et le banc vérifie que tous les liens l'ont. (28/09 : `MHX_FICHIERS` en tête d'`index.html` ; `rig.js` vérifie chaque page.)
 - [x] Banc adapté à la nouvelle structure (serveurs de `rig.js` et `flux.js`, suites qui lisent `index.html`). (28/09 : `tests-locaux/fichiers.js`, tous les nombres attendus inchangés.)
 - [x] Preuve : banc complet vert, écrans identiques à la v52 (verif52 + captures de `rig.js`), aucune erreur de console en plus de celles de la v52. (28/09 : 75 captures sur 81 identiques à l'octet près à un passage de la v52, les 6 autres à moins de 700 pixels et 25/255, moins que l'écart entre deux passages de la v52 ; console : les mêmes 6 messages.)
-- [ ] Limite : 3 h. Si ce n'est pas vert et identique après correction, ou au bout de 3 h : abandonner le découpage, garder la v52 et passer à la v53 (le noter ici).
-- [ ] Publier seul (version 52.1, aucune nouveauté) ; vérification en ligne : aucun fichier `css/` ou `js/` en erreur 404.
+- [x] *(fait en 35 min, vert et identique)* Limite : 3 h. Si ce n'est pas vert et identique après correction, ou au bout de 3 h : abandonner le découpage, garder la v52 et passer à la v53 (le noter ici).
+- [x] *(en ligne le 28/09 : `72c8932` ; 35 fichiers css/js servis avec `?v=52.1`, statut 200, aucune erreur de console, version 52.1 affichée)* Publier seul (version 52.1, aucune nouveauté) ; vérification en ligne : aucun fichier `css/` ou `js/` en erreur 404.
 - [x] Mettre à jour `CLAUDE.md` et `docs/HANDOFF-CLAUDE-CODE.md` (carte des fichiers), et une note pour Grok dans `NOTESCLAUDE.md`.
-- [ ] Après le découpage : paralléliser davantage la v53 (un agent par fichier).
+- [x] *(v53 : 3 lots en parallèle, chacun sur ses fichiers)* Après le découpage : paralléliser davantage la v53 (un agent par fichier).
 
 ## Chantier 3 — Feedback du dimanche (remplace le bilan du vendredi) — **v53**
 Démarre derrière l'interrupteur en « test » (Étape 1 d) : les autres clients gardent le bilan du vendredi tant que Lucas ne passe pas l'interrupteur sur « tous ».
