@@ -220,8 +220,6 @@ const aller = async (page, h, ms) => { await page.evaluate(x => { location.hash 
 const texte = async (page, sel) => norm(await page.textContent(sel || "#vue").catch(() => ""));
 const uids = page => page.$$eval("#pr-liste .sc-carte", l => l.map(e => e.dataset.uid)).catch(() => []);
 const carte = (page, uid) => page.$eval(`#pr-liste .sc-carte[data-uid="${uid}"]`, e => e.textContent).then(norm).catch(() => "");
-const raisons = (page, uid) => page.$$eval(`#pr-liste .sc-carte[data-uid="${uid}"] .sc-raisons li`, l => l.map(e => e.textContent.replace(/\s+/g, " ").trim())).catch(() => []);
-const pastilleEtat = (page, uid) => page.$eval(`#pr-liste .sc-carte[data-uid="${uid}"] .sc-tete .pastille:last-child`, e => e.textContent.trim()).catch(() => "");
 const filtre = async (page, f) => { await page.click(`[data-filtre="${f}"]`); await attendre(page, 350); };
 const chercher = async (page, v) => { await page.fill("#pr-q", v); await attendre(page, 550); };
 const badge = page => page.$$eval('#nav a[data-id="prospects"] .nav-badge, #barre-bas a[data-id="prospects"] .nav-badge', l => l.map(e => e.textContent.trim())).catch(() => []);
@@ -273,7 +271,7 @@ async function ouvrirFiche(page, uid){
   await page.waitForSelector("#pr-liste", { timeout: 8000 });
   await filtre(page, "tous");
   await page.click(`#pr-liste .sc-carte[data-uid="${uid}"] [data-sc="fiche"]`);
-  await page.waitForSelector("#fiche-score", { timeout: 6000 }); await attendre(page, 500);
+  await page.waitForSelector("#fiche-reponses", { timeout: 6000 }); await attendre(page, 500);   // v53 (chantier 4) : #fiche-score n'existe plus
 }
 const lignesLi = (page, sel) => page.$$eval(sel + " li", l => l.map(li => [li.querySelector("span") ? li.querySelector("span").textContent.replace(/\s+/g, " ").trim() : "", li.querySelector("b") ? li.querySelector("b").textContent.replace(/\s+/g, " ").trim() : ""])).catch(() => []);
 const nvVisibles = (page, sel) => page.$$eval(sel + " .nv-liste li", l => l.filter(li => !li.closest("[hidden]")).map(li => li.querySelector(".nv-txt").textContent.replace(/\s+/g, " ").trim())).catch(() => []);
@@ -511,15 +509,12 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
       await page.click("#sortir-fiche").catch(() => {}); await attendre(page, 800);
     }
     await aller(page, "#/tableau", 2600);
-    const cj = await page.$$eval("#tb-vue .attention-c", l => l.map(e => e.textContent.replace(/\s+/g, " ").trim()).filter(t => t.includes("Julien Démo"))).catch(() => []);
-    ok("tableau de bord, « Qui nécessite ton attention » : Julien « dernière saisie il y a 12 j », « Inactif depuis 12 j »", cj.length === 1 && cj[0].includes("dernière saisie il y a 12 j") && cj[0].includes("Inactif depuis 12 j"), JSON.stringify(cj));
-    await aller(page, "#/prospects", 2400); await filtre(page, "tous");
-    const rp = await raisons(page, PIA), rr = await raisons(page, REMI), re = await raisons(page, EVA);
-    ok("page Prospects : Pia (activité il y a 1 h) TIÈDE, sans « Aucune action depuis »", (await pastilleEtat(page, PIA)) === "TIÈDE" && !rp.some(x => x.startsWith("Aucune action depuis")), (await pastilleEtat(page, PIA)) + " " + JSON.stringify(rp));
-    ok("page Prospects : Rémi (rien depuis 8 jours) FROID « Aucune action depuis 8 jours (découverte terminée). » ; Eva aussi (un changement d'avis sur les emails n'est pas une action)", (await pastilleEtat(page, REMI)) === "FROID" && rr.includes("Aucune action depuis 8 jours (découverte terminée).") && (await pastilleEtat(page, EVA)) === "FROID" && re.includes("Aucune action depuis 8 jours (découverte terminée)."), JSON.stringify({ rr, re }));
-    await page.click(`#pr-liste .sc-carte[data-uid="${PIA}"] [data-sc="fiche"]`); await page.waitForSelector("#fiche-score", { timeout: 6000 }); await attendre(page, 500);
-    const sc = await page.$eval("#vue .sc-fiche .seance-c-tete .pastille", e => e.textContent.trim()).catch(() => "");
-    ok("fiche de Pia : suivi commercial TIÈDE (son activité compte, c'est une prospecte)", sc === "TIÈDE", sc);
+    /* v53 (chantier 4) : plus de cartes « Qui nécessite ton attention » : Julien est dans « À traiter maintenant » */
+    const cj = await page.$$eval("#tb-a-traiter .tb-liste li", l => l.map(e => e.textContent.replace(/\s+/g, " ").trim()).filter(t => t.includes("Julien Démo"))).catch(() => []);
+    ok("tableau de bord, « À traiter maintenant » : Julien « Inactif depuis 12 j »", cj.length === 1 && cj[0].includes("Inactif depuis 12 j"), JSON.stringify(cj));
+    /* v53 (chantier 4) : plus de température ni de raison « Aucune action depuis N jours » : les vérifications de la page
+       Prospects (Pia TIÈDE ; Rémi et Eva FROID) et de la fiche de Pia (TIÈDE) sont retirées (3) ; l'activité de Pia compte
+       toujours (« aujourd'hui » dans Mes clients, ci-dessus) */
     ok("affichages : aucune écriture", db.ecritures.length === 0, JSON.stringify(db.ecritures.map(e => e.outil || e.table)));
   });
 
@@ -646,12 +641,12 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
   await bloc("F. date « vu » non ISO", async () => {
     const db = base({ comptes: NV, cles: [[F.IDS.coach, "coach_notifs", { vu: "<img src=x>2026-09-20" }, avant(H)]] });
     const { page } = await contexte(b, coach, db);
-    await page.goto(`http://localhost:${PORT}/#/tableau`); await page.waitForSelector("#tb-nouveautes .nv-panneau", { timeout: 8000 }); await attendre(page, 500);
-    const pan = await texte(page, "#tb-nouveautes");
-    ok("coach_notifs.vu « <img src=x>2026-09-20 » ignoré : « Ces 7 derniers jours : », 12 nouveautés (le prospect de 9 jours absent), aucune injection", pan.includes("Ces 7 derniers jours :") && (await texte(page, "#tb-nouveautes .seance-c-tete .pastille")) === "12" && !pan.includes("Vieux") && !(await xss(page)), pan.slice(0, 160));
-    ok("tableau de bord : les 8 plus récentes, puis « Et 4 autres : tout voir dans la page Prospects → » (lien vers #/prospects)", JSON.stringify(await nvVisibles(page, "#tb-nouveautes")) === JSON.stringify(NOMS_NV.slice(0, 8)) && pan.includes("Et 4 autres : tout voir dans la page Prospects →") && (await page.getAttribute("#tb-nouveautes a.link-a", "href").catch(() => "")) === "#/prospects" && !(await page.$("#tb-nouveautes [data-nv-plus]")), JSON.stringify(await nvVisibles(page, "#tb-nouveautes")));
-    await page.click("#tb-nouveautes a.link-a"); await page.waitForSelector("#pr-nouveautes .nv-panneau", { timeout: 8000 }); await attendre(page, 500);
-    ok("le lien mène à la page Prospects", /#\/prospects$/.test(page.url()) && !!(await page.$("#pr-liste")), page.url());
+    /* v53 (chantier 4) : le panneau des Nouveautés n'est plus sur le tableau de bord (seulement son badge) : il est lu sur la
+       page Prospects ; les vérifications du panneau réduit du tableau de bord (« Et 4 autres : tout voir… », son lien) sont
+       retirées (2) */
+    await page.goto(`http://localhost:${PORT}/#/prospects`); await page.waitForSelector("#pr-nouveautes .nv-panneau", { timeout: 8000 }); await attendre(page, 500);
+    const pan = await texte(page, "#pr-nouveautes");
+    ok("coach_notifs.vu « <img src=x>2026-09-20 » ignoré : « Ces 7 derniers jours : », 12 nouveautés (le prospect de 9 jours absent), aucune injection", pan.includes("Ces 7 derniers jours :") && (await texte(page, "#pr-nouveautes .seance-c-tete .pastille")) === "12" && !pan.includes("Vieux") && !(await xss(page)), pan.slice(0, 160));
     const bt = await texte(page, "#pr-nouveautes [data-nv-plus]");
     ok("page Prospects : 8 nouveautés affichées, les 4 autres repliées, bouton « Voir les 4 suivantes »", JSON.stringify(await nvVisibles(page, "#pr-nouveautes")) === JSON.stringify(NOMS_NV.slice(0, 8)) && bt === "Voir les 4 suivantes" && (await page.$$("#pr-nouveautes .nv-liste li")).length === 12, bt + " · " + (await nvVisibles(page, "#pr-nouveautes")).length);
     await page.click("#pr-nouveautes [data-nv-plus]"); await attendre(page, 300);
@@ -661,27 +656,28 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
   await bloc("F. lecture de la dernière visite ratée", async () => {
     const db = base({ comptes: NV, lectureKo: ["coach_notifs"] });
     const { page } = await contexte(b, coach, db);
-    await page.goto(`http://localhost:${PORT}/#/tableau`); await page.waitForSelector("#tb-nouveautes .nv-panneau", { timeout: 8000 }); await attendre(page, 500);
-    const pan = await texte(page, "#tb-nouveautes");
-    ok("lecture de coach_notifs ratée (500) : le panneau le dit (« Ta dernière visite n'a pas pu être lue (réseau) : nouveautés des 7 derniers jours. »), 12 nouveautés des 7 derniers jours", pan.includes("Ta dernière visite n'a pas pu être lue (réseau) : nouveautés des 7 derniers jours.") && pan.includes("Ces 7 derniers jours :") && (await texte(page, "#tb-nouveautes .seance-c-tete .pastille")) === "12", pan.slice(0, 200));
+    await page.goto(`http://localhost:${PORT}/#/prospects`); await page.waitForSelector("#pr-nouveautes .nv-panneau", { timeout: 8000 }); await attendre(page, 500);   // v53 : le panneau est sur la page Prospects
+    const pan = await texte(page, "#pr-nouveautes");
+    ok("lecture de coach_notifs ratée (500) : le panneau le dit (« Ta dernière visite n'a pas pu être lue (réseau) : nouveautés des 7 derniers jours. »), 12 nouveautés des 7 derniers jours", pan.includes("Ta dernière visite n'a pas pu être lue (réseau) : nouveautés des 7 derniers jours.") && pan.includes("Ces 7 derniers jours :") && (await texte(page, "#pr-nouveautes .seance-c-tete .pastille")) === "12", pan.slice(0, 200));
     const n0 = lu(db, "coach_notifs");
-    await page.click("#tb-nouveautes [data-nv-vu]"); await attendre(page, 1500);
-    ok("« Tout marquer comme vu » toujours en panne : relu d'abord, rien d'écrit, « Non enregistré : vérifie ta connexion et réessaie. », bouton de nouveau actif", lu(db, "coach_notifs") === n0 + 1 && ecr(db, "coach_notifs").length === 0 && (await texte(page, "#tb-nouveautes .msg")) === "Non enregistré : vérifie ta connexion et réessaie." && (await page.$eval("#tb-nouveautes [data-nv-vu]", e => !e.disabled).catch(() => false)), (await texte(page, "#tb-nouveautes .msg")) + " · lectures " + (lu(db, "coach_notifs") - n0));
+    await page.click("#pr-nouveautes [data-nv-vu]"); await attendre(page, 1500);
+    ok("« Tout marquer comme vu » toujours en panne : relu d'abord, rien d'écrit, « Non enregistré : vérifie ta connexion et réessaie. », bouton de nouveau actif", lu(db, "coach_notifs") === n0 + 1 && ecr(db, "coach_notifs").length === 0 && (await texte(page, "#pr-nouveautes .msg")) === "Non enregistré : vérifie ta connexion et réessaie." && (await page.$eval("#pr-nouveautes [data-nv-vu]", e => !e.disabled).catch(() => false)), (await texte(page, "#pr-nouveautes .msg")) + " · lectures " + (lu(db, "coach_notifs") - n0));
     db.lectureKo = [];
     const t0 = Date.now();
-    await page.click("#tb-nouveautes [data-nv-vu]"); await attendre(page, 1800);
+    await page.click("#pr-nouveautes [data-nv-vu]"); await attendre(page, 1800);
     const N = contenu(db, "coach_notifs", F.IDS.coach) || {};
     ok("réseau revenu, nouveau clic : relu puis écrit une fois, coach_notifs.vu = maintenant au format ISO", ecr(db, "coach_notifs").length === 1 && typeof N.vu === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/.test(N.vu) && Math.abs(Date.parse(N.vu) - t0) < 10000 && lu(db, "coach_notifs") === n0 + 2, JSON.stringify(N));
-    const pan2 = await texte(page, "#tb-nouveautes");
+    const pan2 = await texte(page, "#pr-nouveautes");
     ok("… panneau « Rien de nouveau chez tes prospects depuis ta dernière visite (" + fr(N.vu || 0) + " " + hm(N.vu || 0) + "). », avertissement retiré, badge disparu", pan2.includes("Rien de nouveau chez tes prospects depuis ta dernière visite (" + fr(N.vu || 0) + " " + hm(N.vu || 0) + ").") && !pan2.includes("n'a pas pu être lue") && (await badge(page)).length === 0, pan2 + " · " + JSON.stringify(await badge(page)));
     ok("seule écriture : coach_notifs", db.ecritures.length === 1, JSON.stringify(db.ecritures.map(e => e.outil || e.table)));
   });
   await bloc("F. dernière visite relue à chaque affichage", async () => {
     const db = base({ comptes: NV });
     const { page } = await contexte(b, coach, db);
-    await page.goto(`http://localhost:${PORT}/#/tableau`); await page.waitForSelector("#tb-nouveautes .nv-panneau", { timeout: 8000 }); await attendre(page, 500);
+    /* v53 (chantier 4) : le tableau de bord n'a plus le panneau, mais calcule toujours le badge (même lecture de coach_notifs) */
+    await page.goto(`http://localhost:${PORT}/#/tableau`); await page.waitForSelector("#tb-vue .tb-tiles", { timeout: 8000 }); await page.waitForFunction(() => document.querySelector('#nav a[data-id="prospects"] .nav-badge'), null, { timeout: 8000 }); await attendre(page, 500);
     const n1 = luDirect(db, "coach_notifs");
-    ok("tableau de bord : 12 nouveautés, badge « 12 », coach_notifs lu une fois", (await texte(page, "#tb-nouveautes .seance-c-tete .pastille")) === "12" && JSON.stringify(await badge(page)) === '["12"]' && n1 === 1, "lectures " + n1 + " · " + JSON.stringify(await badge(page)));
+    ok("tableau de bord : 12 nouveautés, badge « 12 », coach_notifs lu une fois", JSON.stringify(await badge(page)) === '["12"]' && n1 === 1, "lectures " + n1 + " · " + JSON.stringify(await badge(page)));
     /* un autre appareil du coach marque tout comme vu */
     const vu = new Date().toISOString();
     db.donnees.push({ user_id: F.IDS.coach, outil: "coach_notifs", contenu: { vu }, maj_le: vu });
@@ -693,29 +689,30 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
   await bloc("F. « Tout marquer comme vu » puis page Prospects avant l'arrivée de l'écriture", async () => {
     const db = base({ comptes: NV }); db.retard = { coach_notifs: 2500 };   // l'écriture met 2,5 s à arriver
     const { page } = await contexte(b, coach, db);
-    await page.goto(`http://localhost:${PORT}/#/tableau`); await page.waitForSelector("#tb-nouveautes [data-nv-vu]", { timeout: 8000 }); await attendre(page, 500);
-    ok("avant : 12 nouveautés, badge « 12 »", (await texte(page, "#tb-nouveautes .seance-c-tete .pastille")) === "12" && JSON.stringify(await badge(page)) === '["12"]', JSON.stringify(await badge(page)));
+    /* v53 (chantier 4) : « Tout marquer comme vu » est sur la page Prospects ; on part aussitôt sur le tableau de bord (qui relit
+       la date pour son badge), puis on revient */
+    await page.goto(`http://localhost:${PORT}/#/prospects`); await page.waitForSelector("#pr-nouveautes [data-nv-vu]", { timeout: 8000 }); await attendre(page, 500);
+    ok("avant : 12 nouveautés, badge « 12 »", (await texte(page, "#pr-nouveautes .seance-c-tete .pastille")) === "12" && JSON.stringify(await badge(page)) === '["12"]', JSON.stringify(await badge(page)));
     const n0 = luDirect(db, "coach_notifs"), t0 = Date.now();
-    await page.click("#tb-nouveautes [data-nv-vu]");
-    await page.evaluate(() => { location.hash = "#/prospects"; });   // aussitôt, pendant le délai d'écriture (700 ms) puis son envoi
-    await page.waitForSelector("#pr-nouveautes .nv-panneau", { timeout: 8000 }); await attendre(page, 200);
-    const pan = await texte(page, "#pr-nouveautes"), bd = await badge(page), dejaEcrit = contenu(db, "coach_notifs", F.IDS.coach), vis = await nvVisibles(page, "#pr-nouveautes");
-    ok("#/prospects ouvert aussitôt après « Tout marquer comme vu » (date relue avant l'écriture puis par la page, la base ne l'a pas encore) : « Rien de nouveau chez tes prospects depuis ta dernière visite (" + fr(t0) + " …) », aucune ancienne nouveauté, pas de badge", dejaEcrit === undefined && luDirect(db, "coach_notifs") === n0 + 2 && pan.includes("Rien de nouveau chez tes prospects depuis ta dernière visite (" + fr(t0) + " ") && vis.length === 0 && !(await page.$("#pr-nouveautes [data-nv-plus]")) && bd.length === 0, JSON.stringify({ dejaEcrit, lectures: luDirect(db, "coach_notifs") - n0, bd, vis: vis.length }) + " · " + pan.slice(0, 200));
+    await page.click("#pr-nouveautes [data-nv-vu]");
+    await page.evaluate(() => { location.hash = "#/tableau"; });   // aussitôt, pendant le délai d'écriture (700 ms) puis son envoi
+    await page.waitForSelector("#tb-vue .tb-tiles", { timeout: 8000 }); await attendre(page, 400);
+    const bd = await badge(page), dejaEcrit = contenu(db, "coach_notifs", F.IDS.coach);
+    ok("#/tableau ouvert aussitôt après « Tout marquer comme vu » (date relue avant l'écriture puis par le tableau de bord, la base ne l'a pas encore) : aucune ancienne nouveauté comptée, pas de badge", dejaEcrit === undefined && luDirect(db, "coach_notifs") === n0 + 2 && bd.length === 0 && (await page.evaluate(() => Nouveautes.n)) === 0, JSON.stringify({ dejaEcrit, lectures: luDirect(db, "coach_notifs") - n0, bd }));
     await attendre(page, 3500);
     const N = contenu(db, "coach_notifs", F.IDS.coach) || {};
     ok("… l'écriture arrive ensuite (après la relecture de la page Prospects) : une seule, coach_notifs.vu = l'instant où la page a été lue (juste avant le clic), au format ISO", ecr(db, "coach_notifs").length === 1 && typeof N.vu === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/.test(N.vu) && Math.abs(Date.parse(N.vu) - t0) < 5000 && db.journal.lastIndexOf("L coach_notifs") < db.journal.indexOf("E coach_notifs"), JSON.stringify(N) + " · " + JSON.stringify(db.journal.filter(x => /coach_notifs/.test(x))));
-    await aller(page, "#/tableau", 2400);
-    const pan2 = await texte(page, "#tb-nouveautes");
-    ok("retour au tableau de bord : « Rien de nouveau … (" + fr(N.vu || 0) + " " + hm(N.vu || 0) + ") », pas de badge", pan2.includes("Rien de nouveau chez tes prospects depuis ta dernière visite (" + fr(N.vu || 0) + " " + hm(N.vu || 0) + ").") && (await badge(page)).length === 0, pan2.slice(0, 200) + " · " + JSON.stringify(await badge(page)));
+    await aller(page, "#/prospects", 2400);
+    const pan2 = await texte(page, "#pr-nouveautes");
+    ok("retour à la page Prospects : « Rien de nouveau … (" + fr(N.vu || 0) + " " + hm(N.vu || 0) + ") », pas de badge", pan2.includes("Rien de nouveau chez tes prospects depuis ta dernière visite (" + fr(N.vu || 0) + " " + hm(N.vu || 0) + ").") && (await badge(page)).length === 0, pan2.slice(0, 200) + " · " + JSON.stringify(await badge(page)));
     ok("seule écriture : coach_notifs", db.ecritures.length === 1, JSON.stringify(db.ecritures.map(e => e.outil || e.table)));
   });
   await bloc("F. plus de 300 nouveautés", async () => {
     const beaucoup = Array.from({ length: 310 }, (_, i) => ({ id: GEN(i), prenom: "Masse", nom: "M" + p4(i), cree: avant((i + 1) * 30 * MIN) }));
     const db = base({ comptes: beaucoup });
     const { page } = await contexte(b, coach, db);
-    await page.goto(`http://localhost:${PORT}/#/tableau`); await page.waitForSelector("#tb-nouveautes .nv-panneau", { timeout: 12000 }); await attendre(page, 500);
-    ok("tableau de bord, 310 nouveautés : 8 affichées, « Et 302 autres : tout voir dans la page Prospects → »", (await nvVisibles(page, "#tb-nouveautes")).length === 8 && (await texte(page, "#tb-nouveautes")).includes("Et 302 autres : tout voir dans la page Prospects →"), (await texte(page, "#tb-nouveautes")).slice(-200));
-    await aller(page, "#/prospects", 3000); await page.waitForSelector("#pr-nouveautes .nv-panneau", { timeout: 12000 });
+    /* v53 (chantier 4) : plus de panneau réduit sur le tableau de bord (« Et 302 autres ») : vérification retirée (1) */
+    await page.goto(`http://localhost:${PORT}/#/prospects`); await page.waitForSelector("#pr-nouveautes .nv-panneau", { timeout: 12000 }); await attendre(page, 500);
     ok("page Prospects : bouton « Voir les 292 suivantes » (300 au plus sont listées)", (await texte(page, "#pr-nouveautes [data-nv-plus]")) === "Voir les 292 suivantes", await texte(page, "#pr-nouveautes [data-nv-plus]"));
     await page.click("#pr-nouveautes [data-nv-plus]"); await attendre(page, 400);
     const vis = await nvVisibles(page, "#pr-nouveautes");
@@ -778,7 +775,9 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     const liste = Array.from({ length: 150 }, (_, i) => ({ id: GEN(i), prenom: "Prospect", nom: "N" + p4(i), cree: avant((2 + i % 20) * J + i * MIN) }));
     const db = base({ comptes: liste, cles: [[F.IDS.coach, "coach_notifs", { vu: new Date(T0).toISOString() }, new Date(T0).toISOString()]] });
     const { page } = await contexte(b, coach, db);
-    await page.goto(`http://localhost:${PORT}/#/prospects`); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 10000 }); await attendre(page, 600);
+    /* v53 (chantier 4) : ces prospects (inscrits il y a 2 à 21 jours, sans clic) ne sont pas « à traiter » : la liste par
+       défaut est vide, on attend la page puis on passe sur « Tous » */
+    await page.goto(`http://localhost:${PORT}/#/prospects`); await page.waitForSelector("#pr-liste", { timeout: 10000 }); await attendre(page, 600);
     await filtre(page, "tous");
     await page.click("#pr-plus"); await attendre(page, 400);
     const l0 = await uids(page);
@@ -797,8 +796,8 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     await page.$eval(`#pr-liste .sc-carte[data-uid="${second}"]`, e => e.scrollIntoView({ block: "center" })); await attendre(page, 300);
     await page.click(`#pr-liste .sc-carte[data-uid="${second}"] [data-sc="relance"]`); await attendre(page, 2800);
     ok("seconde action sur la 100e carte : toujours 100 cartes, seules les 2 relances écrites", (await uids(page)).length >= 100 && db.ecritures.length === 2 && ecr(db, "suivi_prospect").length === 2, (await uids(page)).length + " · " + JSON.stringify(db.ecritures.map(e => e.outil)));
-    await filtre(page, "froid");
-    ok("changer de filtre revient bien à 50 cartes", (await uids(page)).length === 50);
+    await page.selectOption("#pr-tri", "inscription"); await attendre(page, 400);   // v53 : plus de filtre « Froids » ; changer le tri remet aussi à 50
+    ok("changer de filtre (ici le tri) revient bien à 50 cartes", (await uids(page)).length === 50);
   });
 
   /* =================== J. conditions : mesure des emails, aucun prix =================== */
@@ -843,33 +842,9 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
   });
 
   /* =================== K. statuts =================== */
-  await bloc("K. statuts des premières heures", async () => {
-    const TIA = PID(30), THEO = PID(31), NOUR = PID(32), NINO = PID(33);
-    const creeT = T0 - 2 * H, creeTh = T0 - 30 * H, creeN = T0 - 3 * H, clic = avant(H);
-    const db = base({ comptes: [
-      { id: TIA, prenom: "Tia", nom: "Clic", cree: new Date(creeT).toISOString(), donnees: [["challenge", { version: 1, jours: {}, cta: { clics: [{ jour: 1, source: "decouverte", date: clic }] } }, clic]] },
-      { id: THEO, prenom: "Théo", nom: "Clic", cree: new Date(creeTh).toISOString(), donnees: [["challenge", { version: 1, jours: {}, cta: { clics: [{ jour: 1, source: "verrou-programme", date: clic }] } }, clic]] },
-      { id: NOUR, prenom: "Nour", nom: "Commence", cree: new Date(creeN).toISOString(), donnees: [["intake", { sexe: "Femme", age: "28", taille: "165", poids: "60", court_debut: avant(2.5 * H), email_compte: "nour@exemple.fr" }, avant(2.5 * H)]] },
-      { id: NINO, prenom: "Nino", nom: "Rien", cree: new Date(creeN).toISOString() }
-    ] });
-    const { page } = await contexte(b, coach, db);
-    await page.goto(`http://localhost:${PORT}/#/prospects`); await page.waitForSelector("#pr-liste", { timeout: 8000 }); await attendre(page, 600);
-    await filtre(page, "tous");
-    const h = t => Math.floor((Date.now() - t) / H);
-    const rClic = "A cliqué « Réserver mon bilan » (1 fois), la dernière " + quand(joursCal(clic)) + ", sans réserver.";
-    const rt = await raisons(page, TIA), attT = ["Inscrit il y a " + h(creeT) + " h, questionnaire pas encore rempli.", rClic];
-    ok("inscrit il y a 2 h, clic « Réserver » sans questionnaire : TIÈDE, raisons « " + attT.join(" ") + " »", (await pastilleEtat(page, TIA)) === "TIÈDE" && JSON.stringify(rt) === JSON.stringify(attT), (await pastilleEtat(page, TIA)) + " " + JSON.stringify(rt));
-    const rh = await raisons(page, THEO), attH = ["Inscrit " + quand(joursCal(creeTh)) + ", questionnaire pas rempli.", rClic];
-    ok("inscrit il y a 30 h, même clic sans questionnaire : FROID, raisons « " + attH.join(" ") + " », « DM de bienvenue » à faire", (await pastilleEtat(page, THEO)) === "FROID" && JSON.stringify(rh) === JSON.stringify(attH) && (await carte(page, THEO)).includes("Prochaine action : DM de bienvenue : aide-le à remplir son questionnaire (3 minutes)."), (await pastilleEtat(page, THEO)) + " " + JSON.stringify(rh));
-    const rn = await raisons(page, NOUR), attN = ["Inscrit il y a " + h(creeN) + " h, questionnaire commencé (4/10 réponses)."];
-    ok("inscrit il y a 3 h, 4 réponses sur 10 : NOUVEAU, raison « " + attN[0] + " », score 18/100", (await pastilleEtat(page, NOUR)) === "NOUVEAU" && JSON.stringify(rn) === JSON.stringify(attN) && (await carte(page, NOUR)).includes("18/100"), (await pastilleEtat(page, NOUR)) + " " + JSON.stringify(rn));
-    const ri = await raisons(page, NINO);
-    ok("témoin, inscrit il y a 3 h sans rien : NOUVEAU « Inscrit il y a " + h(creeN) + " h, rien fait pour l'instant. »", (await pastilleEtat(page, NINO)) === "NOUVEAU" && JSON.stringify(ri) === JSON.stringify(["Inscrit il y a " + h(creeN) + " h, rien fait pour l'instant."]), JSON.stringify(ri));
-    await ouvrirFiche(page, TIA);
-    const sc = await page.$eval("#vue .sc-fiche .seance-c-tete .pastille", e => e.textContent.trim()).catch(() => "");
-    ok("fiche de Tia : suivi commercial TIÈDE aussi", sc === "TIÈDE", sc);
-    ok("statuts : aucune écriture", db.ecritures.length === 0);
-  });
+  /* v53 (chantier 4) : bloc retiré (6 vérifications) — il vérifiait les statuts NOUVEAU / TIÈDE / FROID des premières heures,
+     leurs raisons, le score « 18/100 » et la pastille TIÈDE de la fiche : plus de température ni de score. Ce qui est
+     « à traiter » pendant les 48 premières heures est vérifié par verif58 (bloc F, Commercial.analyse). */
 
   /* =================== L. client Thomas : rien de la v51 =================== */
   await bloc("L. client Thomas : ni activite, ni emails, ni coach_notifs", async () => {

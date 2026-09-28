@@ -87,17 +87,16 @@ const CONFIG = {
   },
 
   /* --- v49 : suivi commercial des prospects (page « Prospects » du coach). Les seuils en jours
-     qui decident de la temperature et de la prochaine action ; tout se change ici. --- */
+     qui decident de la prochaine action et de ce qui est « à traiter » ; tout se change ici.
+     v53 (chantier 4) : plus de temperature ni de score (seuils nouveau_heures, inactif_jours, motivation_forte retires). --- */
   suivi: {
-    nouveau_heures: 24,              // v51 : inscrit depuis moins de 24 h sans rien faire : NOUVEAU (ensuite, sans questionnaire : FROID)
-    inactif_jours: 3,                // v51 : plus aucune action depuis 3 jours (sans bilan réservé) : FROID
+    urgence_heures: 48,              // v53 : inscrit depuis moins de 48 h, sans bilan coché ni relance : à traiter (DM de bienvenue)
     clic_recent_jours: 3,            // après un « Perdu » / « Absent », un clic « Réserver » de moins de 3 jours le fait revenir
-    motivation_forte: 8,             // motivation de 8/10 ou plus au questionnaire : proposer le bilan en DM
     relance_attente_jours: 3,        // après une relance, on attend 3 jours avant d'en proposer une autre
     perdu_relance_jours: 30,         // « Perdu » : relance proposée 30 jours après l'appel
     relances_max: 3,                 // 3 relances sans réponse : on arrête de proposer de relancer (« classe-le Perdu ? »)
-    chaud_jours: 14,                 // « J'ai réservé » coché après un « Perdu » / « Absent » : il revient dans la course pendant 14 jours
-    appel_jours: 7                   // « J'ai réservé » il y a plus de 7 jours sans issue indiquée : « L'appel a-t-il eu lieu ? »
+    retour_jours: 14,                // « J'ai réservé » coché après un « Perdu » / « Absent » : il revient dans la course pendant 14 jours
+    appel_jours: 7                   // bilan réservé il y a plus de 7 jours sans issue indiquée : « L'appel a-t-il eu lieu ? »
   },
 
   /* --- Connexion a la base Supabase (comptes + donnees) --- */

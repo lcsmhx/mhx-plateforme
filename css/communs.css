@@ -162,10 +162,15 @@ summary:hover{color:var(--accent)}
 .pastille.ok,.pastille.bon{border-color:transparent;background:var(--good-soft);color:var(--good)}
 .pastille.attention,.pastille.manque{border-color:transparent;background:var(--warn-soft);color:var(--warn)}
 .pastille.mauvais{border-color:transparent;background:var(--bad-soft);color:var(--bad)}
-/* v49 — temperature d'un prospect */
-.pastille.chaud{border-color:transparent;background:var(--bad-soft);color:var(--bad);font-weight:600}
-.pastille.tiede{border-color:transparent;background:var(--warn-soft);color:var(--warn)}
-.pastille.froid{border-color:var(--line-strong);background:transparent;color:var(--s1)}
+/* v53 (chantier 4) — carte d'un prospect : ses 3 réponses, ses faits (bilan, newsletter, visites), ce qui est à traiter */
+.sc-reponses{list-style:none;margin:8px 0 0;padding:0;font-size:13px;color:var(--ink-2);line-height:1.45}
+.sc-reponses li{overflow-wrap:anywhere}
+.sc-reponses li span,.sc-faits li span{color:var(--ink-3);font-size:12px}
+.sc-faits{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px}
+.sc-faits li{min-width:0;overflow-wrap:anywhere}
+.sc-motif{margin:10px 0 0;font-size:13px;display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.pr-compteur{margin:6px 0 0}
+.pr-compteur b{color:var(--ink);font-variant-numeric:tabular-nums}
 .sc-liste{display:grid;gap:12px}
 @media (min-width:900px){.sc-liste{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .sc-carte{border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;background:var(--sunken);min-width:0}
@@ -183,7 +188,6 @@ summary:hover{color:var(--accent)}
 .dc-chrono li{display:flex;gap:10px;padding:6px 0;border-top:1px solid var(--line);font-size:13px}
 .dc-chrono li:first-child{border-top:0}
 .dc-chrono time{flex:0 0 92px;color:var(--ink-3);font-variant-numeric:tabular-nums}
-.dc-score li b{font-variant-numeric:tabular-nums}
 .sc-action{margin:10px 0 6px;line-height:1.5}
 .sc-raisons{margin:0 0 10px;padding-left:18px;color:var(--ink-2);font-size:13.5px;line-height:1.5}
 .sc-boutons{display:flex;flex-wrap:wrap;gap:6px}
@@ -286,6 +290,15 @@ a.pastille{text-decoration:none;cursor:pointer}
 a.tb-tuile{text-decoration:none;color:inherit;transition:border-color var(--vite)}
 a.tb-tuile:hover{border-color:var(--accent-line)}
 .tb-tuile.attention .t-val{color:var(--warn)}
+/* v53 (chantier 4) — les 2 tuiles : le badge d'urgences (couleur seulement s'il y en a), « À traiter maintenant » */
+.tb-tuile-tete{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.tb-badge{font-size:11px}
+.tb-liste{list-style:none;margin:0;padding:0}
+.tb-liste li{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line);min-width:0}
+.tb-liste li:first-child{border-top:0}
+.tb-quoi{flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;overflow-wrap:anywhere}
+.tb-quoi small{flex-basis:100%;color:var(--ink-2);font-size:13px}
+.fbd-smiley-l{font-size:17px;line-height:1}
 .attention-l{display:flex;flex-direction:column;gap:10px}
 .attention-c{background:var(--sunken);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
 .attention-tete{display:flex;align-items:center;gap:12px}

@@ -105,7 +105,8 @@ const PAGES_FICHE = ["accueil", "bilan", "suivi", "profil", "programme", "nutrit
     const { c, page } = await contexte(b, coach, E);
     E.ici = "coach tableau"; await page.goto(`http://localhost:${PORT}/#/tableau`); await attendre(page, 2200);
     const tb = await page.textContent("#vue");
-    ok("coach : le tableau de bord s'affiche et montre les clients sains (Thomas, Julien)", tb.includes("Clients actifs") && /Thomas|Julien/.test(tb), tb.slice(0, 160));
+    /* v53 (chantier 4) : 2 tuiles (Clients, Prospects) ; Thomas (bilan à lire) et Julien (inactif) sont dans « À traiter maintenant » */
+    ok("coach : le tableau de bord s'affiche et montre les clients sains (Thomas, Julien)", !!(await page.$("#tb-t-clients")) && /Thomas|Julien/.test(tb), tb.slice(0, 160));
     E.ici = "coach mes clients"; await page.evaluate(() => { location.hash = "#/clients"; }); await attendre(page, 2200);
     const lignes = await page.$$eval("#tb-clients tr", l => l.map(x => x.textContent));
     ok("coach : « Mes clients » liste les 3 clients sains ET les 3 piégés", ["Thomas", "Sarah", "Julien", "Types", "Contenus", "Listes"].every(n => lignes.some(t => t.includes(n))), lignes.length + " lignes");

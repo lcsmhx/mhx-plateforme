@@ -686,8 +686,8 @@ function lienOk(href, base, attendu){
     const { c: c2, page: p2 } = await contexte(b, COACH, db);
     await p2.goto(URL0 + "#/clients"); await pret(p2, `[data-ouvrir="${ID}"]`);
     await p2.click(`[data-ouvrir="${ID}"]`); await p2.waitForSelector("#fiche-reponses", { timeout: 8000 }); await attendre(p2, 500);
-    const sc = await lignes(p2, "#fiche-score");
-    ok("coach : « 4 / 10 réponses, pas encore validé. », score « Questionnaire en cours (4/10 réponses) » (compté sur l'ancien questionnaire)", (await texte(p2, "#fiche-reponses p.note")) === "4 / 10 réponses, pas encore validé." && sc.some(([x, y]) => x === "Questionnaire en cours (4/10 réponses)" && y === "8 / 30"), (await texte(p2, "#fiche-reponses p.note")) + " · " + JSON.stringify(sc));
+    /* v53 (chantier 4) : plus de score (« Questionnaire en cours (4/10 réponses) ») : la note des réponses suffit */
+    ok("coach : « 4 / 10 réponses, pas encore validé. » (compté sur l'ancien questionnaire)", (await texte(p2, "#fiche-reponses p.note")) === "4 / 10 réponses, pas encore validé." && !(await p2.$("#fiche-score")), await texte(p2, "#fiche-reponses p.note"));
     await c2.close();
   });
 
@@ -1135,12 +1135,13 @@ function lienOk(href, base, attendu){
     await aller(page, "#/prospects", 2400);
     await page.click('[data-filtre="tous"]').catch(() => {}); await attendre(page, 600);
     const st = await page.$$eval("#vue .sc-carte .sc-nom small", l => l.map(x => x.textContent.replace(/\s+/g, " ").trim())).catch(() => []);
-    ok("page Prospects : sous-titre des cartes « Découverte · questionnaire … · inscrit … », sans « J n/7 » ni « terminée »", st.length >= 3 && st.every(x => /^Découverte · questionnaire/.test(x) && !/J\d+\/7|terminée/.test(x)), JSON.stringify(st));
+    /* v53 (chantier 4) : le sous-titre des cartes devient « inscrit le jj/mm/aaaa · il y a N jours » */
+    ok("page Prospects : sous-titre des cartes « inscrit le … », sans « J n/7 » ni « terminée »", st.length >= 3 && st.every(x => /^inscrit le \d{2}\/\d{2}\/\d{4} · /.test(x) && !/J\d+\/7|terminée/.test(x)), JSON.stringify(st));
     const [dl] = await Promise.all([page.waitForEvent("download", { timeout: 5000 }), page.click("#pr-csv")]);
     const t = fs.readFileSync(await dl.path(), "utf8");
-    /* la colonne « Découverte » (4e) ; « Prochaine action » garde les textes du suivi commercial (chantier 4) */
-    const col = t.replace(/^\uFEFF/, "").split("\r\n").filter(Boolean).map(l => (l.split(";")[3] || "").replace(/^"|"$/g, ""));
-    ok("export CSV : colonne Découverte « inscrit depuis 30 j » / « inscrit depuis 3 j » / « inscrit aujourd'hui », plus de « jour n/7 » ni de « terminée »", col[0] === "Découverte" && ["inscrit depuis 30 j", "inscrit depuis 3 j", "inscrit aujourd'hui"].every(x => col.includes(x)) && col.length === 4 && !col.some(x => /jour \d+\/7|terminée/.test(x)), JSON.stringify(col));
+    /* v53 (chantier 4) : plus de colonne « Découverte » (colonnes à jour, verif58) : on vérifie tout le fichier */
+    const lignesCsv = t.replace(/^\uFEFF/, "").split("\r\n").filter(Boolean);
+    ok("export CSV : 3 prospects, nulle part « jour n/7 » ni « terminée »", lignesCsv.length === 4 && !/jour \d+\/7|J\d+\/7|terminée/.test(t), JSON.stringify(lignesCsv.map(l => l.slice(0, 80))));
     ok("coach : aucune écriture", db.ecritures.length === 0, resume(db));
     await c.close();
   });

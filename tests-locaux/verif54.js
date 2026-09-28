@@ -222,7 +222,7 @@ async function ouvrirFiche(page, uid){
   await page.waitForSelector("#pr-liste", { timeout: 8000 });
   await filtre(page, "tous");
   await page.click(`#pr-liste .sc-carte[data-uid="${uid}"] [data-sc="fiche"]`);
-  await page.waitForSelector("#fiche-score", { timeout: 6000 }); await attendre(page, 500);
+  await page.waitForSelector("#fiche-reponses", { timeout: 6000 }); await attendre(page, 500);   // v53 (chantier 4) : #fiche-score n'existe plus
 }
 const nvVisibles = (page, sel) => page.$$eval(sel + " .nv-liste li", l => l.filter(li => !li.closest("[hidden]")).map(li => li.querySelector(".nv-txt").textContent.replace(/\s+/g, " ").trim())).catch(() => []);
 const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", poids: "82", objectif: "Perte de poids / sèche", seances: "3", essaye: "Rien de sérieux", obstacle: "Le temps", pourquoi: "Pour ma santé", motivation: "7" }, o);
@@ -397,23 +397,25 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
   }
 
   /* =================== C. Nouveautés, « Tout marquer comme vu » =================== */
+  /* v53 (chantier 4) : le panneau des Nouveautés n'est plus sur le tableau de bord (qui garde le badge) : il est lu sur la
+     page Prospects (#pr-nouveautes), la même fonction ; « vu » = l'instant du chargement de cette page */
   const NV1 = PID(40), NV2 = PID(41), NOUVEAU = PID(42);
   await bloc("C. « Tout marquer comme vu » après un autre appareil", async () => {
     const vu0 = avant(3 * H);
     const db = base({ comptes: [{ id: NV1, prenom: "Nina", nom: "Avant", cree: avant(2 * H) }, { id: NV2, prenom: "Noé", nom: "Avant", cree: avant(H) }], cles: [[F.IDS.coach, "coach_notifs", { vu: vu0 }, vu0]] });
     const { page } = await contexte(b, coach, db, { horloge: true });
-    await page.goto(URL0 + "#/tableau"); await page.waitForSelector("#tb-nouveautes [data-nv-vu]", { timeout: 8000 }); await attendre(page, 500);
+    await page.goto(URL0 + "#/prospects"); await page.waitForSelector("#pr-nouveautes [data-nv-vu]", { timeout: 8000 }); await attendre(page, 500);
     const tCharge = await page.evaluate(() => Date.now());
-    ok("tableau de bord chargé (vu il y a 3 h) : 2 nouveautés, badge « 2 »", (await texte(page, "#tb-nouveautes .seance-c-tete .pastille")) === "2" && JSON.stringify(await badge(page)) === '["2"]', JSON.stringify(await badge(page)));
+    ok("page Prospects chargée (vu il y a 3 h) : 2 nouveautés, badge « 2 »", (await texte(page, "#pr-nouveautes .seance-c-tete .pastille")) === "2" && JSON.stringify(await badge(page)) === '["2"]', JSON.stringify(await badge(page)));
     await page.clock.fastForward(12 * MIN);
     /* un autre appareil du coach marque tout comme vu 10 minutes après ce chargement */
     const vuAutre = new Date(tCharge + 10 * MIN).toISOString();
     const row = db.donnees.find(x => x.user_id === F.IDS.coach && x.outil === "coach_notifs"); row.contenu = { vu: vuAutre }; row.maj_le = vuAutre;
     const n0 = luDirect(db, "coach_notifs");
-    await page.click("#tb-nouveautes [data-nv-vu]"); await attendre(page, 1800);
+    await page.click("#pr-nouveautes [data-nv-vu]"); await attendre(page, 1800);
     const N = contenu(db, "coach_notifs", F.IDS.coach) || {}, E = ecr(db, "coach_notifs");
     ok("« Tout marquer comme vu » sur la page chargée 12 min plus tôt : relu d'abord, puis une écriture, vu ≥ la date de l'autre appareil (" + hm(vuAutre) + ") — jamais l'instant du chargement (" + hm(tCharge) + ")", luDirect(db, "coach_notifs") === n0 + 1 && E.length === 1 && typeof N.vu === "string" && Date.parse(N.vu) >= Date.parse(vuAutre) && db.journal.lastIndexOf("L coach_notifs") < db.journal.indexOf("E coach_notifs"), JSON.stringify(N) + " · autre appareil " + vuAutre + " · chargement " + new Date(tCharge).toISOString());
-    const pan = await texte(page, "#tb-nouveautes");
+    const pan = await texte(page, "#pr-nouveautes");
     ok("… panneau « Rien de nouveau … depuis ta dernière visite (" + fr(N.vu || 0) + " " + hm(N.vu || 0) + ") », badge retiré", pan.includes("Rien de nouveau chez tes prospects depuis ta dernière visite (" + fr(N.vu || 0) + " " + hm(N.vu || 0) + ").") && (await badge(page)).length === 0, pan.slice(0, 200));
     ok("seule écriture : coach_notifs", db.ecritures.length === 1, JSON.stringify(db.ecritures.map(e => e.outil || e.table)));
   });
@@ -423,23 +425,23 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     const db = base({ comptes: [{ id: NV1, prenom: "Nina", nom: "Avant", cree: avant(H) }], cles: [[F.IDS.coach, "coach_notifs", { vu: vu0 }, vu0]] });
     const { page } = await contexte(b, coach, db, { horloge: true });
     const tAvant = await page.evaluate(() => Date.now()).catch(() => Date.now());
-    await page.goto(URL0 + "#/tableau"); await page.waitForSelector("#tb-nouveautes [data-nv-vu]", { timeout: 8000 }); await attendre(page, 500);
+    await page.goto(URL0 + "#/prospects"); await page.waitForSelector("#pr-nouveautes [data-nv-vu]", { timeout: 8000 }); await attendre(page, 500);
     const tCharge = await page.evaluate(() => Date.now());
-    ok("tableau de bord chargé : 1 nouveauté (Nina Avant)", JSON.stringify(await nvVisibles(page, "#tb-nouveautes")) === JSON.stringify(["Nina Avant · inscription"]), JSON.stringify(await nvVisibles(page, "#tb-nouveautes")));
+    ok("page Prospects chargée : 1 nouveauté (Nina Avant)", JSON.stringify(await nvVisibles(page, "#pr-nouveautes")) === JSON.stringify(["Nina Avant · inscription"]), JSON.stringify(await nvVisibles(page, "#pr-nouveautes")));
     await page.clock.fastForward(5 * MIN);
     /* un prospect s'inscrit 4 minutes après l'affichage, avant le clic */
     const creeNouveau = new Date(tCharge + 4 * MIN).toISOString();
     db.profils.push({ id: NOUVEAU, prenom: "Zoé", nom: "Entre-deux", role: "client", statut: "prospect", cree_le: creeNouveau });
     await page.clock.fastForward(3 * MIN);
     const tClic = await page.evaluate(() => Date.now());
-    await page.click("#tb-nouveautes [data-nv-vu]"); await attendre(page, 1800);
+    await page.click("#pr-nouveautes [data-nv-vu]"); await attendre(page, 1800);
     const N = contenu(db, "coach_notifs", F.IDS.coach) || {};
-    ok("vu écrit = l'instant du chargement du tableau de bord (" + hm(tCharge) + "), pas celui du clic (" + hm(tClic) + ") : avant l'inscription de Zoé (" + hm(creeNouveau) + ")", ecr(db, "coach_notifs").length === 1 && typeof N.vu === "string" && Date.parse(N.vu) >= tAvant - 1000 && Date.parse(N.vu) <= tCharge && Date.parse(N.vu) < Date.parse(creeNouveau), JSON.stringify(N) + " · chargement " + new Date(tCharge).toISOString() + " · clic " + new Date(tClic).toISOString());
-    await aller(page, "#/prospects", 2400); await page.waitForSelector("#pr-nouveautes .nv-panneau", { timeout: 8000 });
+    ok("vu écrit = l'instant du chargement de la page (" + hm(tCharge) + "), pas celui du clic (" + hm(tClic) + ") : avant l'inscription de Zoé (" + hm(creeNouveau) + ")", ecr(db, "coach_notifs").length === 1 && typeof N.vu === "string" && Date.parse(N.vu) >= tAvant - 1000 && Date.parse(N.vu) <= tCharge && Date.parse(N.vu) < Date.parse(creeNouveau), JSON.stringify(N) + " · chargement " + new Date(tCharge).toISOString() + " · clic " + new Date(tClic).toISOString());
+    await aller(page, "#/tableau", 1500); await aller(page, "#/prospects", 2400); await page.waitForSelector("#pr-nouveautes .nv-panneau", { timeout: 8000 });
     const vis = await nvVisibles(page, "#pr-nouveautes");
     ok("visite suivante (page Prospects) : Zoé, inscrite entre l'affichage et le clic, est toujours une nouveauté (et elle seule), badge « 1 »", JSON.stringify(vis) === JSON.stringify(["Zoé Entre-deux · inscription"]) && JSON.stringify(await badge(page)) === '["1"]' && (await texte(page, "#pr-nouveautes")).includes("Depuis ta dernière visite (" + fr(N.vu || 0) + " " + hm(N.vu || 0) + ")"), JSON.stringify(vis) + " · " + JSON.stringify(await badge(page)) + " · " + (await texte(page, "#pr-nouveautes")).slice(0, 160));
-    await page.goto(URL0 + "#/tableau"); await page.waitForSelector("#tb-nouveautes .nv-panneau", { timeout: 8000 }); await attendre(page, 500);
-    ok("vrai rechargement (tableau de bord) : Zoé toujours en nouveauté, badge « 1 »", JSON.stringify(await nvVisibles(page, "#tb-nouveautes")) === JSON.stringify(["Zoé Entre-deux · inscription"]) && JSON.stringify(await badge(page)) === '["1"]', JSON.stringify(await nvVisibles(page, "#tb-nouveautes")));
+    await page.goto(URL0 + "#/prospects"); await page.waitForSelector("#pr-nouveautes .nv-panneau", { timeout: 8000 }); await attendre(page, 500);
+    ok("vrai rechargement (page Prospects) : Zoé toujours en nouveauté, badge « 1 »", JSON.stringify(await nvVisibles(page, "#pr-nouveautes")) === JSON.stringify(["Zoé Entre-deux · inscription"]) && JSON.stringify(await badge(page)) === '["1"]', JSON.stringify(await nvVisibles(page, "#pr-nouveautes")));
     ok("seule écriture : coach_notifs (une fois)", db.ecritures.length === 1 && ecr(db, "coach_notifs").length === 1, JSON.stringify(db.ecritures.map(e => e.outil || e.table)));
   });
 
@@ -470,29 +472,8 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
   });
 
   /* =================== E. fiche coach : chronologie des emails de suivi =================== */
-  await bloc("E. chronologie : email non délivré", async () => {
-    const P = PID(60), Q = PID(61);
-    const I = { sexe: "Femme", age: "29", taille: "166", poids: "61", court_debut: avant(3 * J - H), email_compte: "ines@exemple.fr" };
-    const db = base({ comptes: [
-      { id: P, prenom: "Inès", nom: "Bloquée", cree: avant(3 * J), donnees: [["intake", I, avant(3 * J - H)]] },
-      { id: Q, prenom: "Paul", nom: "Témoin", cree: avant(3 * J), donnees: [["intake", Object.assign({}, I, { email_compte: "paul@exemple.fr" }), avant(3 * J - H)]] }
-    ] });
-    db.emails_prospects = [
-      { id: 1, user_id: P, modele: "bienvenue", statut: "abandon", envoye_le: avant(3 * J - 2 * H), ouvert_le: null, clique_le: null },
-      { id: 2, user_id: P, modele: "questionnaire", statut: "envoye", envoye_le: avant(2 * J), ouvert_le: null, clique_le: null },
-      { id: 3, user_id: Q, modele: "bienvenue", statut: "envoye", envoye_le: avant(3 * J - 2 * H), ouvert_le: avant(2 * J), clique_le: null }
-    ];
-    const { page } = await contexte(b, coach, db);
-    await page.goto(URL0 + "#/prospects"); await page.waitForSelector("#pr-liste", { timeout: 8000 }); await attendre(page, 600);
-    await ouvrirFiche(page, P);
-    const ch = await texte(page, "#fiche-chrono");
-    ok("fiche d'Inès, email « bienvenue » au statut abandon (envoye_le renseigné) : « Email de suivi « bienvenue » non délivré (adresse bloquée ou invalide) », jamais « … envoyé » pour lui", ch.includes("Email de suivi « bienvenue » non délivré (adresse bloquée ou invalide)") && !ch.includes("Email de suivi « bienvenue » envoyé"), ch.slice(0, 400));
-    ok("… son email « questionnaire » au statut envoye : « Email de suivi « rappel du questionnaire » envoyé »", ch.includes("Email de suivi « rappel du questionnaire » envoyé") && !ch.includes("« rappel du questionnaire » non délivré"), ch.slice(0, 400));
-    await aller(page, "#/prospects", 2200); await ouvrirFiche(page, Q);
-    const cq = await texte(page, "#fiche-chrono");
-    ok("témoin (Paul, « bienvenue » envoyé puis ouvert) : « … envoyé » et « … ouvert », rien de « non délivré »", cq.includes("Email de suivi « bienvenue » envoyé") && cq.includes("Email de suivi « bienvenue » ouvert") && !cq.includes("non délivré"), cq.slice(0, 400));
-    ok("fiches : aucune écriture", db.ecritures.length === 0, JSON.stringify(db.ecritures.map(e => e.outil || e.table)));
-  });
+  /* v53 (chantier 4) : bloc retiré (4 vérifications) — la lecture du journal des emails (table emails_prospects, jamais
+     créée ; fonction d'envoi v51 retirée) n'existe plus : la chronologie de la fiche n'a plus d'emails. */
 
   /* =================== F. Profil du prospect : « Emails de suivi » =================== */
   /* v52 (chantier 1, lot B) : le bloc pilote désormais la newsletter : son titre devient « Newsletter » (FR et EN) ;

@@ -1087,6 +1087,9 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
       return { dec: await lignesFiche(page, "#fiche-decouverte"), rep: await lignesFiche(page, "#fiche-reponses"), vue: await texte(page, "#vue") };
     }
     const sans = (l, k) => l.filter(x => x[0] !== k);   // la ligne « Découverte » (jour, date d'inscription) n'est pas du lot G
+    /* v53 (chantier 4) : après le bouton « Réserver mon bilan », « Bilan réservé » (la coche du coach), la case du prospect
+       (« Le prospect a coché « J'ai réservé » le … » quand elle est cochée), la dernière visite et les jours actifs */
+    const FIN_V53 = [["Bouton « Réserver mon bilan »", "jamais cliqué"], ["Bilan réservé", "non"], ["Case « J'ai réservé mon bilan »", "pas cochée"], ["Dernière visite", "aucune"], ["Jours actifs (30 j)", "0"]];
     const coachSur = async db => { const x = await contexte(b, COACH, db); await x.page.goto(URL0 + "#/clients"); await pret(x.page, "#vue"); return x; };
 
     await bloc("G1. fiche : les 3 réponses, le nom, la newsletter", async () => {
@@ -1094,16 +1097,16 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
       const { page } = await coachSur(db);
       const f = await ficheDe(page, LEA);
       ok("fiche de Léa Martin (bloc « Découverte ») : Nom « Martin », Newsletter « oui (depuis le " + frDe(NEWS_LE) + ") », questionnaire rempli, puis Problème, Ce qui l'a bloqué, Dans 3 mois ; l'objectif posé par l'app n'est pas répété",
-        JSON.stringify(sans(f.dec, "Découverte")) === JSON.stringify([["Nom", "Martin"], ["Newsletter", "oui (depuis le " + frDe(NEWS_LE) + ")"], ["Questionnaire court", "rempli le " + frDe(avant(3 * J))], ["Problème", "Perdre du gras"], ["Ce qui l'a bloqué", "Le manque de temps"], ["Dans 3 mois", "Rentrer dans mon jean d'avant"], ["Bouton « Réserver mon bilan »", "jamais cliqué"], ["Case « J'ai réservé mon bilan »", "pas cochée"]]), JSON.stringify(f.dec));
+        JSON.stringify(sans(f.dec, "Découverte")) === JSON.stringify([["Nom", "Martin"], ["Newsletter", "oui (depuis le " + frDe(NEWS_LE) + ")"], ["Questionnaire court", "rempli le " + frDe(avant(3 * J))], ["Problème", "Perdre du gras"], ["Ce qui l'a bloqué", "Le manque de temps"], ["Dans 3 mois", "Rentrer dans mon jean d'avant"]].concat(FIN_V53)), JSON.stringify(f.dec));
       ok("… « Réponses au questionnaire court » : Email, Problème, Ce qui l'a bloqué, Dans 3 mois (libellés courts du coach)", JSON.stringify(f.rep) === JSON.stringify([["Email", "lea.martin@exemple.fr"], ["Problème", "Perdre du gras"], ["Ce qui l'a bloqué", "Le manque de temps"], ["Dans 3 mois", "Rentrer dans mon jean d'avant"]]), JSON.stringify(f.rep));
       const m = await ficheDe(page, MARC);
       const ATT_M = [["Sexe", "Homme"], ["Âge", "40"], ["Taille (cm)", "180"], ["Poids actuel (kg)", "90"], ["Objectif", "Prise de muscle"], ["Séances par semaine", "3"], ["Déjà essayé", "La salle, seul"], ["Obstacle principal", "Je lâche au bout de 2 semaines"], ["Pourquoi maintenant", "Mon mariage en juin"], ["Motivation", "8 / 10"]];
       ok("ancien prospect Marc (nom vide, ancien accord « emails de suivi » seul) : Nom « pas renseigné », Newsletter « non », ses 10 anciennes réponses (obstacle d'avant « Obstacle principal », motivation « 8 / 10 »), pas de Problème",
-        JSON.stringify(sans(m.dec, "Découverte")) === JSON.stringify([["Nom", "pas renseigné"], ["Newsletter", "non"], ["Questionnaire court", "rempli le " + frDe(avant(20 * J))]].concat(ATT_M, [["Bouton « Réserver mon bilan »", "jamais cliqué"], ["Case « J'ai réservé mon bilan »", "pas cochée"]])), JSON.stringify(m.dec));
+        JSON.stringify(sans(m.dec, "Découverte")) === JSON.stringify([["Nom", "pas renseigné"], ["Newsletter", "non"], ["Questionnaire court", "rempli le " + frDe(avant(20 * J))]].concat(ATT_M, FIN_V53)), JSON.stringify(m.dec));
       ok("… ses réponses (bloc du bas) : Email puis les mêmes libellés", JSON.stringify(m.rep) === JSON.stringify([["Email", "marc@exemple.fr"]].concat(ATT_M)), JSON.stringify(m.rep));
       const z = await ficheDe(page, ZOE), n = await ficheDe(page, NINA);
       ok("Zoé (rien répondu, pas de clé emails) : Nom « Durand », Newsletter « non », questionnaire pas encore rempli, aucune réponse inventée ; ses 3 questions « — »",
-        JSON.stringify(sans(z.dec, "Découverte")) === JSON.stringify([["Nom", "Durand"], ["Newsletter", "non"], ["Questionnaire court", "pas encore rempli"], ["Bouton « Réserver mon bilan »", "jamais cliqué"], ["Case « J'ai réservé mon bilan »", "pas cochée"]]) && JSON.stringify(z.rep) === JSON.stringify([["Email", "—"], ["Problème", "—"], ["Ce qui l'a bloqué", "—"], ["Dans 3 mois", "—"]]), JSON.stringify([z.dec, z.rep]));
+        JSON.stringify(sans(z.dec, "Découverte")) === JSON.stringify([["Nom", "Durand"], ["Newsletter", "non"], ["Questionnaire court", "pas encore rempli"]].concat(FIN_V53)) && JSON.stringify(z.rep) === JSON.stringify([["Email", "—"], ["Problème", "—"], ["Ce qui l'a bloqué", "—"], ["Dans 3 mois", "—"]]), JSON.stringify([z.dec, z.rep]));
       ok("Nina (newsletter décochée dans son Profil) : Newsletter « non » ; sa réponse « Dans 3 mois » entière", (n.dec.find(x => x[0] === "Newsletter") || [])[1] === "non" && (n.dec.find(x => x[0] === "Dans 3 mois") || [])[1] === LONGUE, JSON.stringify(n.dec));
       ok("fiches de Léa, Marc, Zoé et Nina : ni « undefined », ni « null », ni « NaN », ni « [object »", [f, m, z, n].every(x => !RIEN_DE_BRUT.test(x.vue)), [f, m, z, n].map(x => (x.vue.match(RIEN_DE_BRUT) || [""])[0]).join("|"));
       ok("coach : aucune écriture en affichant ces fiches", ecrDonnees(db).length === 0, resume(db));
@@ -1126,27 +1129,30 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
       const { page } = await coachSur(db);
       await aller(page, "#/prospects", 300); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 });
       await page.click('[data-filtre="tous"]'); await attendre(page, 500);
-      const carte = uid => page.$eval(`#pr-liste .sc-carte[data-uid="${uid}"]`, e => ({ t: e.textContent.replace(/\s+/g, " ").trim(), infos: Array.from(e.querySelectorAll(".sc-infos")).map(x => x.textContent.replace(/\s+/g, " ").trim()) })).catch(() => ({ t: "", infos: [] }));
+      /* v53 (chantier 4) : la carte liste les 3 réponses (Problème, Ce qui l'a bloqué, Dans 3 mois : .sc-reponses li) */
+      const carte = uid => page.$eval(`#pr-liste .sc-carte[data-uid="${uid}"]`, e => ({ t: e.textContent.replace(/\s+/g, " ").trim(), infos: Array.from(e.querySelectorAll(".sc-infos")).map(x => x.textContent.replace(/\s+/g, " ").trim()), rep: Array.from(e.querySelectorAll(".sc-reponses li")).map(x => x.textContent.replace(/\s+/g, " ").trim()) })).catch(() => ({ t: "", infos: [], rep: [] }));
       const cl = await carte(LEA), cm = await carte(MARC), cz = await carte(ZOE), cn = await carte(NINA), cp = await carte(PIEGE);
-      ok("carte de Léa : « Problème : Perdre du gras · Dans 3 mois : « Rentrer dans mon jean d'avant » » ; l'objectif posé par l'app (Perte de poids / sèche) n'est pas répété", cl.infos.length === 2 && cl.infos[1] === "Problème : Perdre du gras · Dans 3 mois : « Rentrer dans mon jean d'avant »" && !cl.t.includes("Perte de poids / sèche"), JSON.stringify(cl.infos));
-      const ext = (cn.infos[1] || "").replace(/^Problème : Me remettre en forme · Dans 3 mois : « /, "").replace(/ »$/, "");
-      ok("carte de Nina : sa réponse « Dans 3 mois » tronquée proprement (100 caractères au plus, « … »), début identique", ext.endsWith("…") && Array.from(ext).length <= 101 && LONGUE.startsWith(ext.slice(0, -1)), cn.infos[1]);
-      ok("cartes de Marc (ancien, objectif « Prise de muscle » gardé) et Zoé (rien répondu) : pas de ligne de réponses ; aucune carte avec « undefined » ou « null »", cm.infos.length === 1 && cm.infos[0].includes("Prise de muscle") && !cm.t.includes("Problème") && !cz.t.includes("Problème") && !RIEN_DE_BRUT.test(await texte(page, "#pr-liste")), JSON.stringify([cm.infos, cz.infos]));
-      ok("carte piégée : réponses en texte, aucune balise injectée", (cp.infos[1] || "").startsWith("Problème : " + XSS) && !(await injecte(page)), JSON.stringify(cp.infos));
+      ok("carte de Léa : « Problème Perdre du gras », « Ce qui l'a bloqué « Le manque de temps » », « Dans 3 mois « Rentrer dans mon jean d'avant » » ; l'objectif posé par l'app (Perte de poids / sèche) n'est pas répété", JSON.stringify(cl.rep) === JSON.stringify(["Problème Perdre du gras", "Ce qui l'a bloqué « Le manque de temps »", "Dans 3 mois « Rentrer dans mon jean d'avant »"]) && !cl.t.includes("Perte de poids / sèche"), JSON.stringify(cl.rep));
+      const ext = (cn.rep[2] || "").replace(/^Dans 3 mois « /, "").replace(/ »$/, "");
+      ok("carte de Nina : sa réponse « Dans 3 mois » tronquée proprement (100 caractères au plus, « … »), début identique", ext.endsWith("…") && Array.from(ext).length <= 101 && LONGUE.startsWith(ext.slice(0, -1)), cn.rep[2]);
+      ok("cartes de Marc (ancien : « Anciennes réponses : dans sa fiche. ») et Zoé (rien répondu) : pas de réponses sur la carte ; aucune carte avec « undefined » ou « null »", !cm.rep.length && cm.t.includes("Anciennes réponses : dans sa fiche.") && !cm.t.includes("Problème") && !cz.rep.length && !cz.t.includes("Problème") && !RIEN_DE_BRUT.test(await texte(page, "#pr-liste")), JSON.stringify([cm.infos, cz.infos]));
+      ok("carte piégée : réponses en texte, aucune balise injectée", (cp.rep[0] || "").startsWith("Problème " + XSS) && !(await injecte(page)), JSON.stringify(cp.rep));
       const [dl] = await Promise.all([page.waitForEvent("download", { timeout: 5000 }), page.click("#pr-csv")]);
       const t = fs.readFileSync(await dl.path(), "utf8").replace(/^﻿/, "");
       const L = [], lire = s => { let ligne = [], champ = "", dans = false; for (let i = 0; i < s.length; i++) { const ch = s[i];
         if (dans) { if (ch === '"') { if (s[i + 1] === '"') { champ += '"'; i++; } else dans = false; } else champ += ch; continue; }
         if (ch === '"') dans = true; else if (ch === ";") { ligne.push(champ); champ = ""; } else if (ch === "\r" && s[i + 1] === "\n") { ligne.push(champ); L.push(ligne); ligne = []; champ = ""; i++; } else champ += ch; } };
       lire(t);
-      const AVANT = ["Nom", "Email", "Inscrit le", "Découverte", "Objectif", "Statut", "Score /100", "Questionnaire", "Motivation /10", "Clics « Réserver mon bilan »", "Dernier clic", "Bilan réservé le", "Relances", "Dernière activité", "Prochaine action"];
-      ok("export CSV : les 15 colonnes d'avant inchangées et dans le même ordre (statut, score…), puis « Problème », « Dans 3 mois », « Newsletter » ; 18 cellules par ligne", JSON.stringify(L[0]) === JSON.stringify(AVANT.concat(["Problème", "Dans 3 mois", "Newsletter"])) && L.length === 8 && L.every(l => l.length === 18), JSON.stringify(L[0]) + " · " + L.length + " lignes");
-      const ligne = nom => (L.find(l => l[0] === nom) || []).slice(15);
+      /* v53 (chantier 4) : colonnes à jour (sans statut ni score) : la vérification « les 15 colonnes d'avant inchangées » est
+         retirée (1) ; les colonnes du lot G (Problème, Dans 3 mois, Newsletter) sont lues par leur en-tête (verif58, bloc D :
+         toutes les colonnes) */
+      const col = k => L[0].indexOf(k), K3 = [col("Problème"), col("Dans 3 mois"), col("Newsletter")];
+      const ligne = nom => { const l = L.find(x => x[0] === nom) || []; return K3.map(i => l[i]); };
       ok("CSV : Léa « Perdre du gras » / « Rentrer dans mon jean d'avant » / oui ; Marc (ancien accord seul) vide / vide / non ; Zoé vide / vide / non ; Nina, réponse entière / non ; Tom (clé liste) et Chloé (« true » en texte) non",
         JSON.stringify(ligne("Léa Martin")) === JSON.stringify(["Perdre du gras", "Rentrer dans mon jean d'avant", "oui"]) && JSON.stringify(ligne("Marc")) === '["","","non"]' && JSON.stringify(ligne("Zoé Durand")) === '["","","non"]' && JSON.stringify(ligne("Nina Petit")) === JSON.stringify(["Me remettre en forme", LONGUE, "non"]) && JSON.stringify(ligne("Tom Liste")) === '["","","non"]' && JSON.stringify(ligne("Chloé Texte")) === '["","","non"]',
         JSON.stringify(["Léa Martin", "Marc", "Zoé Durand", "Nina Petit", "Tom Liste", "Chloé Texte"].map(ligne)));
       const lp = L.find(l => l[1] === "piege@exemple.fr") || [];
-      ok("CSV piégé : « Dans 3 mois » qui commence par « = » neutralisé (apostrophe), newsletter « oui » (vrai booléen)", lp[16] === "'=HYPERLINK(\"http://x\") " + XSS && lp[15] === XSS && lp[17] === "oui", JSON.stringify(lp.slice(15)));
+      ok("CSV piégé : « Dans 3 mois » qui commence par « = » neutralisé (apostrophe), newsletter « oui » (vrai booléen)", lp[K3[1]] === "'=HYPERLINK(\"http://x\") " + XSS && lp[K3[0]] === XSS && lp[K3[2]] === "oui" && L.length === 8 && L.every(l => l.length === L[0].length), JSON.stringify(K3.map(i => lp[i])));
       ok("page Prospects et export : aucune écriture", ecrDonnees(db).length === 0, resume(db));
     });
 
