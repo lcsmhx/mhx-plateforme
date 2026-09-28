@@ -183,6 +183,9 @@ async function repondre(r, who, db){
   }
   /* toute autre écriture vers la base (compte, fonctions, Storage, bibliothèque, catalogue…) est notée ;
      donnees et profils le sont plus bas, avec leur contenu */
+  /* v56 : la connexion notée par la base (fonction noter_connexion, au démarrage d'un prospect ou d'un compte suivi) n'est
+     pas une écriture de l'app dans les données : elle est testée à part (verif61) */
+  if (p === "/rest/v1/rpc/noter_connexion") return json(null, 204);
   if (!["GET", "HEAD"].includes(m) && p !== "/rest/v1/donnees" && p !== "/rest/v1/profils") db.ecritures.push({ table: p, m, corps: corps() });
   if (p.startsWith("/auth/v1/logout")) { db.journal.push("LOGOUT"); return json({}); }
   if (p.startsWith("/auth/v1/recover")) {   // mot de passe oublié (erreur simulée : db.recover.erreur)

@@ -90,6 +90,9 @@ let lienEmail = null, lienEmailType = "", lienEmailAdresse = "";   // v47 : "ok"
      le changement de mot de passe et l'email du prospect utilisent la nouvelle adresse */
   if (emailChange){ try { await Auth.rafraichir(); } catch(e){} }
   try { await Auth.chargerProfil(); } catch(e){}
+  /* v56 : une ouverture de l'app avec une session valide (connexion automatique comprise) est notee pour le coach, en
+     arriere-plan : rien n'attend, rien ne s'affiche (Connexions) */
+  try { Connexions.noter(); } catch(e){}
   /* v48 : ce qui n'etait pas arrive au serveur la derniere fois repart avant le premier affichage (4 s au plus) */
   try { await Promise.race([Store.reprendre(true), new Promise(r => setTimeout(r, 4000))]); } catch(e){}
   /* v52 : prospect — le choix de la newsletter fait a l'inscription est recopie dans la cle « emails » (lue par le

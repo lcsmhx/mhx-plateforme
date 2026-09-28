@@ -82,18 +82,18 @@ const outilClients = {
     } catch(e){ return null; }
   },
 
-  tableau(profils, parClient, contenus){
+  tableau(profils, parClient, contenus, connexions){
     const tb = $("tb-clients"), zoneA = $("alertes-clients");
     if (!tb) return;
     const clients = (profils || []).filter(p => p.role !== "coach");
     if (!clients.length){
-      tb.innerHTML = '<tr><td colspan="15">Aucun client pour le moment.</td></tr>';
+      tb.innerHTML = '<tr><td colspan="17">Aucun client pour le moment.</td></tr>';
       if (zoneA) zoneA.innerHTML = "";
       return;
     }
     /* v37 — le resume de chaque client et son tri par urgence vivent dans
        Clients.resumer : le tableau de bord et la fiche s'en servent aussi */
-    const lignes = Clients.resumer(profils, parClient, contenus);
+    const lignes = Clients.resumer(profils, parClient, contenus, connexions);
 
     const pastille = (ok, txtOk, txtNon) =>
       `<span class="pastille${ok ? "" : " manque"}">${ok ? txtOk : txtNon}</span>`;
@@ -114,6 +114,8 @@ const outilClients = {
     const note = l => l.note == null ? '<span class="meta">—</span>' : `<b${l.alertes.some(a => a.type === "note_chute") ? ' class="neg"' : ""}>${l.note}</b><span class="meta">/10</span>`;
     const smiley = l => l.smiley ? `<span class="fbd-smiley-l" title="${esc(l.smiley.lbl)}${l.alertes.some(a => a.type === "avis_triste") ? " — à traiter" : ""}">${l.smiley.emo}</span>` : '<span class="meta">—</span>';
     const visite = l => { const t = Activite.texteVisite(l.visites); return t === "—" ? '<span class="meta" title="Visites non suivies pour ce compte">—</span>' : `<span class="meta">${esc(t)}</span>`; };
+    /* v56 : nombre de connexions et dernière connexion (date et heure) ; l'info-bulle dit depuis quand elles sont comptées */
+    const cxCase = (l, t) => `<span class="meta" title="${esc(Connexions.aide(l.connexions))}">${esc(t)}</span>`;
     tb.innerHTML = lignes.map(l => `<tr>
       <td data-l="Client">${feu(l)} <b>${esc(l.nom)}</b>${l.p.statut === "prospect" ? ` <span class="pastille accent" title="Compte gratuit : pas encore accompagné">prospect</span> ` + Decouverte.pastilleCoach(l) + " " + Commercial.pastilleLigne(l) : ""}${l.ecarts.length ? ` <span class="pastille manque" title="Le calculateur ne correspond pas au questionnaire">chiffres à vérifier</span>` : ""}</td>
       <td data-l="Retour de la semaine">${retour(l)}</td>
@@ -121,6 +123,8 @@ const outilClients = {
       <td data-l="Dernier smiley">${smiley(l)}</td>
       <td data-l="Dernière visite">${visite(l)}</td>
       <td data-l="Jours actifs (30 j)">${Activite.texteJours(l.visites) === "—" ? '<span class="meta">—</span>' : `<span class="meta">${esc(Activite.texteJours(l.visites))}</span>`}</td>
+      <td data-l="Connexions">${cxCase(l, Connexions.texteNombre(l.connexions))}</td>
+      <td data-l="Dernière connexion">${cxCase(l, Connexions.texteDerniere(l.connexions))}</td>
       <td data-l="Activité">${l.jours === null ? '<span class="pastille manque">jamais</span>'
             : l.jours >= 10 ? `<span class="pastille manque">${l.jours} j</span>`
             : `<span class="meta">${l.jours === 0 ? "aujourd'hui" : "il y a " + l.jours + " j"}</span>`}</td>
@@ -183,10 +187,10 @@ const outilClients = {
       <h2>Suivi de mes clients</h2>
       <div id="alertes-clients"></div>
       <div class="scroll" style="margin-top:14px"><table class="tb-clients-table"><thead><tr>
-        <th>Client</th><th>Retour</th><th>Note</th><th>Smiley</th><th>Visite</th><th>Jours actifs</th><th>Activité</th><th>Régularité</th><th>Poids</th><th>Depuis le début</th><th>4 dernières sem.</th>
+        <th>Client</th><th>Retour</th><th>Note</th><th>Smiley</th><th>Visite</th><th>Jours actifs</th><th>Connexions</th><th>Dernière connexion</th><th>Activité</th><th>Régularité</th><th>Poids</th><th>Depuis le début</th><th>4 dernières sem.</th>
         <th>Questionnaire</th><th>Programme</th><th>Diète</th><th></th>
-      </tr></thead><tbody id="tb-clients"><tr><td colspan="15">Chargement…</td></tr></tbody></table></div>
-      <p class="note" style="margin-top:12px">En haut : les 😞 non traités et les notes en chute, puis les retours de la semaine à lire. « Retour » : le feedback du dimanche ou le bilan du vendredi, selon ce que voit le client (à traiter / fait / non fait). « Note » et « Smiley » : son dernier feedback du dimanche. « Visite » et « Jours actifs » (sur 30 jours) : les jours où il a ouvert l'app — « — » quand ses visites ne sont pas suivies. « Activité » compte les jours depuis la dernière saisie du client, quelle qu'elle soit (une visite ne compte pas). Une variation de poids se lit sur quatre semaines : en dessous, c'est du bruit.</p>
+      </tr></thead><tbody id="tb-clients"><tr><td colspan="17">Chargement…</td></tr></tbody></table></div>
+      <p class="note" style="margin-top:12px">En haut : les 😞 non traités et les notes en chute, puis les retours de la semaine à lire. « Retour » : le feedback du dimanche ou le bilan du vendredi, selon ce que voit le client (à traiter / fait / non fait). « Note » et « Smiley » : son dernier feedback du dimanche. « Visite » et « Jours actifs » (sur 30 jours) : les jours où il a ouvert l'app — « — » quand ses visites ne sont pas suivies. « Connexions » : le nombre de jours où il a ouvert l'app connecté (une fois par jour au plus, depuis la mise en place du compteur) ; « Dernière connexion » : la date et l'heure de sa dernière ouverture — « — » quand ses connexions ne sont pas suivies. « Activité » compte les jours depuis la dernière saisie du client, quelle qu'elle soit (une visite ne compte pas). Une variation de poids se lit sur quatre semaines : en dessous, c'est du bruit.</p>
     </section>
 
     <section class="panel">
@@ -225,8 +229,8 @@ const outilClients = {
     const charger = async () => {
       const box = $("liste-clients");
       try {
-        const { profils, parClient, contenus } = await Clients.charger();
-        self.tableau(profils, parClient, contenus);
+        const { profils, parClient, contenus, connexions } = await Clients.charger();
+        self.tableau(profils, parClient, contenus, connexions);
         /* Tous les comptes, coachs compris : c'est ici qu'on donne l'acces
            complet a quelqu'un de l'equipe, et qu'on le retire. */
         const moi = Auth.utilisateur() && Auth.utilisateur().id;
@@ -324,7 +328,7 @@ const outilClients = {
         });
       } catch(e){
         box.innerHTML = '<div class="empty">Impossible de charger la liste.</div>';
-        const tb = $("tb-clients"); if (tb) tb.innerHTML = '<tr><td colspan="15">Impossible de charger le suivi.</td></tr>';
+        const tb = $("tb-clients"); if (tb) tb.innerHTML = '<tr><td colspan="17">Impossible de charger le suivi.</td></tr>';
       }
     };
 
@@ -417,7 +421,18 @@ const Clients = {
     }
     return tout;
   },
+  /* v56 — le nombre de connexions et la derniere connexion de chaque compte (table connexions, lisible par le coach seul :
+     regles de la base) : { uid: ligne }, ou null si la table n'a pas pu etre lue (base sans la migration, panne) : les
+     colonnes disent alors « — » et tout le reste se charge comme avant */
+  async lireConnexions(){
+    try {
+      const l = await this.pages("/rest/v1/connexions?select=user_id,nombre,derniere,premiere&order=user_id.asc", x => String(x && x.user_id));
+      const m = {}; l.forEach(x => { if (x && typeof x.user_id === "string") m[x.user_id] = x; });
+      return m;
+    } catch(e){ return null; }
+  },
   async charger(){
+    const cx = this.lireConnexions();   // v56 : en meme temps que le reste (elle ne rejette jamais)
     const profils = await this.pages("/rest/v1/profils?select=*&order=cree_le.desc,id.asc", l => String(l && l.id));
     /* les historiques (jusqu'a 24 plans par client) ne servent pas ici :
        on ne les telecharge pas */
@@ -435,11 +450,11 @@ const Clients = {
       if (saisie && (!parClient[d.user_id] || d.maj_le > parClient[d.user_id])) parClient[d.user_id] = d.maj_le;
       (contenus[d.user_id] = contenus[d.user_id] || {})[d.outil] = Forme.cle(d.outil, d.contenu);   // v42
     });
-    return { profils: profils || [], parClient, contenus };
+    return { profils: profils || [], parClient, contenus, connexions: await cx };
   },
 
-  /* le resume d'un client (memes calculs qu'avant dans Mes clients) */
-  resumerUn(p, c, dernierMaj){
+  /* le resume d'un client (memes calculs qu'avant dans Mes clients) ; v56 : cx = { lue, ligne } (Clients.resumer) */
+  resumerUn(p, c, dernierMaj, cx){
     const K = outilClients;
     const ev = K.evolution(c.mens);
     const j = K.jours(dernierMaj);
@@ -471,6 +486,9 @@ const Clients = {
       /* v53 (chantier 4) : dernière visite et jours actifs sur 30 jours ; un compte non suivi (client hors interrupteur
          suivi_visites_clients) : rien (« — »), même s'il a une ancienne clé activite de quand il était prospect */
       visites: Activite.lecture(c.activite, Activite.suiviPour(p)),
+      /* v56 : nombre de connexions et derniere connexion (table connexions) ; « — » pour un compte non suivi, ou si la
+         table n'a pas pu etre lue */
+      connexions: Connexions.lecture(cx && cx.ligne, Connexions.suiviPour(p), !!(cx && cx.lue)),
       suivi: (c.suivi_prospect && typeof c.suivi_prospect === "object") ? c.suivi_prospect : null,   // v49 : suivi commercial
       activite: dernierMaj || null
     };
@@ -507,14 +525,16 @@ const Clients = {
      alerte de niveau « mauvais » (dont 😞 non traité, note en chute, inactivité), ou un retour de la semaine reçu à lire */
   urgent(l){ return !!(l && l.p && l.p.statut !== "prospect" && (l.alertes || []).some(a => a.niveau === "mauvais" || a.type === "bilan_recu")); },
 
-  resumer(profils, parClient, contenus){
+  /* v56 : connexions = celles de Clients.charger ({ uid: ligne }, ou null si la table n'a pas pu etre lue ; absent : « — ») */
+  resumer(profils, parClient, contenus, connexions){
+    const cx = p => ({ lue: !!connexions && typeof connexions === "object", ligne: connexions && typeof connexions === "object" ? connexions[p.id] : null });
     /* v42 : les donnees illisibles d'UN client ne font jamais tomber le
        tableau de bord pour tous : sa ligne reste, avec une alerte. */
     const lignes = (profils || []).filter(p => p && p.id && p.role !== "coach").map(p => {
-      try { return this.resumerUn(p, contenus[p.id] || {}, parClient[p.id]); }
+      try { return this.resumerUn(p, contenus[p.id] || {}, parClient[p.id], cx(p)); }
       catch(e){
         console.warn("[MHX] résumé impossible pour un client", e);
-        const l = this.resumerUn(p, {}, parClient[p.id]);
+        const l = this.resumerUn(p, {}, parClient[p.id], cx(p));
         l.illisible = true;
         l.alertes = [{ type: "illisible", niveau: "attention", cible: "accueil", texte: "Données illisibles — à vérifier" }];
         return l;

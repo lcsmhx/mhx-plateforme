@@ -206,6 +206,9 @@ async function contexte(b, who, db, opts){
     }
     if (p.startsWith("/auth/v1/token")) return json(who ? who.session : { error: "invalid" }, who ? 200 : 400);
     /* toute autre écriture vers la base (compte, fonctions, Storage…) est notée */
+    /* v56 : la connexion notée par la base (fonction noter_connexion, au démarrage d'un prospect ou d'un compte suivi) n'est
+       pas une écriture de l'app dans les données : elle est testée à part (verif61) */
+    if (p === "/rest/v1/rpc/noter_connexion") return json(null, 204);
     if (!["GET", "HEAD", "OPTIONS"].includes(m) && p !== "/rest/v1/donnees" && p !== "/rest/v1/profils") db.ecritures.push({ table: p, m });
     if (p.startsWith("/auth/v1/")) return json({});
     if (p === "/rest/v1/emails_prospects") {
@@ -980,7 +983,8 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     await f.c.close(); await fM.c.close();
     /* v53 (chantier 4) : Mes clients gagne 5 colonnes (retour de la semaine, note, smiley, dernière visite, jours actifs) :
        changement voulu ; la comparaison avec la version en ligne porte sur les colonnes d'avant, qui ne doivent pas bouger */
-    const NOUVELLES = ["Retour de la semaine", "Dernière note", "Dernier smiley", "Dernière visite", "Jours actifs (30 j)"];
+    /* v56 : + 2 colonnes (nombre de connexions, dernière connexion), changement voulu, elles aussi hors comparaison */
+    const NOUVELLES = ["Retour de la semaine", "Dernière note", "Dernier smiley", "Dernière visite", "Jours actifs (30 j)", "Connexions", "Dernière connexion"];
     const ligne = async (page) => page.$eval(`[data-ouvrir="${F.IDS.c1}"]`, (bt, nv) => Array.from(bt.closest("tr").querySelectorAll("td")).filter(td => nv.indexOf(td.dataset.l) === -1).map(td => td.textContent).join(" "), NOUVELLES).then(norm).catch(() => "");
     const m1 = await vueDe(coach, `http://localhost:${PORT}/#/clients`), m2 = await vueDe(coach, `http://localhost:${PORT}/?ref=main#/clients`);
     const l1 = await ligne(m1.page), l2 = await ligne(m2.page);

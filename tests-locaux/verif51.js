@@ -103,6 +103,9 @@ async function contexte(b, who, db, opts){
     if (p.startsWith("/auth/v1/token")) return json(who ? F.session(who.id, who.email) : { error: "invalid" }, who ? 200 : 400);
     /* toute autre ecriture vers la base (compte, bibliotheque, catalogue, Storage, fonctions) est notee aussi : les
        verifications « aucune écriture » la verraient. donnees et profils sont notees plus bas, avec leur contenu */
+    /* v56 : la connexion notée par la base (fonction noter_connexion, au démarrage d'un prospect ou d'un compte suivi) n'est
+       pas une écriture de l'app dans les données : elle est testée à part (verif61) */
+    if (p === "/rest/v1/rpc/noter_connexion") return json(null, 204);
     if (!["GET", "HEAD", "OPTIONS"].includes(m) && p !== "/rest/v1/donnees" && p !== "/rest/v1/profils") db.ecritures.push({ table: p, m });
     if (p.startsWith("/auth/v1/")) return json({});
     if (p === "/rest/v1/profils") { if (m !== "GET") { db.ecritures.push({ table: "profils", m }); return json(null, 204); } const id = q.get("id"); return json(id ? db.profils.filter(x => x.id === id.slice(3)) : db.profils); }

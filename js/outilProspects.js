@@ -172,13 +172,15 @@ const Commercial = {
   },
   /* v53 (chantier 4) — la carte d'un prospect (page Prospects) : l = sa ligne (Clients.resumer), a = son analyse.
      Date d'inscription, email, ses 3 réponses (Problème / Ce qui l'a bloqué / Dans 3 mois ; anciennes réponses : dans sa
-     fiche), bilan réservé ou pas, newsletter oui / non, dernière visite, jours actifs (30 j), prochaine action, boutons. */
+     fiche), bilan réservé ou pas, newsletter oui / non, dernière visite, jours actifs (30 j), prochaine action, boutons.
+     v56 : + nombre de connexions et dernière connexion (date et heure). */
   carteHTML(l, a){
     const p = l.p, nom = Clients.nom(p), dc = l.dc || {}, B = a.bilan || {};
     const dt = v => { const d = Decouverte.dateLocale(v); return d ? dateFr(d) : ""; };
     const reponses = [["Problème", dc.probleme || ""], ["Ce qui l'a bloqué", !dc.ancien && dc.obstacle ? "« " + Decouverte.extrait(dc.obstacle, 90) + " »" : ""], ["Dans 3 mois", dc.projection ? "« " + Decouverte.extrait(dc.projection, 100) + " »" : ""]].filter(x => x[1]);
     const faits = [["Bilan", B.coach ? "réservé le " + dt(B.coach) : B.source === "prospect" ? "à vérifier (case cochée le " + dt(B.case) + ")" : "pas réservé"],
-      ["Newsletter", l.newsletter && l.newsletter.oui ? "oui" : "non"], ["Dernière visite", Activite.texteVisite(l.visites)], ["Jours actifs (30 j)", Activite.texteJours(l.visites)]];
+      ["Newsletter", l.newsletter && l.newsletter.oui ? "oui" : "non"], ["Dernière visite", Activite.texteVisite(l.visites)], ["Jours actifs (30 j)", Activite.texteJours(l.visites)],
+      ["Connexions", Connexions.texteNombre(l.connexions)], ["Dernière connexion", Connexions.texteDerniere(l.connexions)]];   // v56
     return `<article class="sc-carte${a.urgent ? " urgent" : ""}" data-uid="${esc(p.id)}">
       <div class="sc-tete">${Clients.avatar(nom)}<div class="sc-nom"><b>${esc(nom)}</b><small>${esc(this.sousTitre(p, a))}</small></div>${this.pastille(a)}${this.pastilleBilan(B)}</div>
       ${dc.email ? `<p class="sc-infos">${esc(dc.email)}</p>` : ""}
@@ -474,8 +476,8 @@ const outilProspects = {
   },
   /* chaque prospect : sa ligne (Clients.resumer) et son analyse (issue, prochaine action, à traiter) */
   preparer(){
-    const { profils, parClient, contenus } = this.donnees;
-    this.lignes = Clients.resumer(profils, parClient, contenus);
+    const { profils, parClient, contenus, connexions } = this.donnees;
+    this.lignes = Clients.resumer(profils, parClient, contenus, connexions);
     this.tous = this.lignes.filter(l => l.p.statut === "prospect").map(l => ({ l, a: Commercial.analyseLigne(l) })).filter(x => x.a);
   },
   norm(s){ return String(s == null ? "" : s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\s+/g, " ").trim(); },
@@ -537,7 +539,7 @@ const outilProspects = {
         </div>
         <p class="note" id="pr-compte" role="status" aria-live="polite" style="margin:4px 0 10px"></p>
         <div id="pr-liste"></div>
-        <p class="note" style="margin:12px 0 0">${esc(Commercial.AIDE)} « Bilan réservé » : ta coche, dans sa fiche (sans coche de ta part, la case « J'ai réservé » du prospect compte, à vérifier). « Dernière visite » et « Jours actifs » : les jours où il a ouvert l'app.</p>
+        <p class="note" style="margin:12px 0 0">${esc(Commercial.AIDE)} « Bilan réservé » : ta coche, dans sa fiche (sans coche de ta part, la case « J'ai réservé » du prospect compte, à vérifier). « Dernière visite » et « Jours actifs » : les jours où il a ouvert l'app. « Connexions » : le nombre de jours où il a ouvert l'app connecté (une fois par jour au plus, depuis la mise en place du compteur) ; « Dernière connexion » : la date et l'heure de sa dernière ouverture.</p>
       </section>
       <div id="pr-newsletter"></div>`;
     $$("[data-filtre]", zone).forEach(b => b.addEventListener("click", () => {

@@ -464,6 +464,60 @@ const Activite = {
 };
 
 /* ------------------------------------------------------------------
+   CONNEXIONS (v56) — pour le coach (Mes clients, page Prospects) : le nombre de connexions et la dernière connexion.
+   Une connexion = une ouverture de l'app avec une session valide (connexion automatique comprise, ou l'app revenue au
+   premier plan après 10 min ou plus en arrière-plan), comptée au plus une fois par jour (calendrier de Paris, décidé
+   par la base) ; la dernière connexion = l'instant de la dernière ouverture. Tout est tenu par la base (migration v56 :
+   table connexions, fonction noter_connexion) : la personne connectée note SA connexion (la fonction lit son compte dans
+   son jeton, elle ne prend aucun paramètre), sans pouvoir ni la lire ni la modifier ; seul le coach lit la table.
+   Mêmes comptes que les visites (Activite.suivi) : les prospects, et les clients selon l'interrupteur
+   suivi_visites_clients ; jamais le coach, jamais une fiche consultée. Rien n'est affiché à la personne, rien n'attend
+   la réponse. Base sans la migration (fonction absente ou refusée) : rien n'est noté, sans message, et plus d'essai
+   avant le prochain chargement de l'app.
+   ------------------------------------------------------------------ */
+const Connexions = {
+  REPRISE: 600000,   // l'app revenue au premier plan apres 10 min ou plus en arriere-plan : une nouvelle ouverture
+  _masquee: null, _ecoute: false, _coupee: false, _envoi: null,
+  /* les comptes suivis : ceux des visites (un seul endroit a changer si Lucas en decide autrement) */
+  suivi(){ return Activite.suivi(); },
+  suiviPour(p){ return Activite.suiviPour(p); },
+  noter(){
+    if (this._envoi) return this._envoi;
+    if (this._coupee || !Auth.connecte() || !this.suivi()) return Promise.resolve();
+    this.ecouter();
+    const p = Auth.appel("/rest/v1/rpc/noter_connexion", { method: "POST", body: {} })
+      .catch(e => { if (e && (e.statut === 403 || e.statut === 404)) this._coupee = true; })   // hors ligne, panne : nouvel essai a la prochaine ouverture
+      .finally(() => { if (this._envoi === p) this._envoi = null; });
+    this._envoi = p;
+    return p;
+  },
+  ecouter(){
+    if (this._ecoute) return; this._ecoute = true;
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState !== "visible"){ if (this._masquee == null) this._masquee = Date.now(); return; }
+      const t = this._masquee; this._masquee = null;
+      if (t != null && Date.now() - t >= this.REPRISE) this.noter();
+    });
+  },
+  /* ce que le coach lit pour un compte (ligne de la table, ou rien s'il ne s'est pas connecte depuis la mise en place) :
+     suivi = compte suivi ; lue = table lue (fausse : base sans la migration ou panne). Valeurs remises d'aplomb. */
+  lecture(ligne, suivi, lue){
+    if (!suivi || !lue) return { suivi: !!suivi, lue: false, nombre: null, derniere: null, depuis: null };
+    const o = ligne && typeof ligne === "object" && !Array.isArray(ligne) ? ligne : {};
+    const instant = v => typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v) && !isNaN(Date.parse(v)) ? v : null;
+    const n = typeof o.nombre === "number" && isFinite(o.nombre) && o.nombre > 0 ? Math.floor(o.nombre) : 0;
+    return { suivi: true, lue: true, nombre: n, derniere: instant(o.derniere), depuis: instant(o.premiere) };
+  },
+  texteNombre(c){ return !c || !c.lue ? "—" : String(c.nombre); },
+  texteDerniere(c){ return !c || !c.lue ? "—" : (c.derniere && Nouveautes.quand(c.derniere)) || "aucune"; },
+  aide(c){
+    if (!c || !c.suivi) return "Connexions non suivies pour ce compte";
+    if (!c.lue) return "Connexions indisponibles pour le moment";
+    return c.depuis ? "Une connexion par jour au plus, comptées depuis le " + dateFr(Decouverte.dateLocale(c.depuis)) : "Aucune connexion notée depuis la mise en place du compteur";
+  }
+};
+
+/* ------------------------------------------------------------------
    OUTIL — Découverte (prospects seulement). C'est l'accueil du prospect :
    v52 : les 3 questions (problème, obstacle, projection), puis la page de
    proposition de bilan (tant qu'il n'a pas choisi : « Réserver mon bilan » ou

@@ -125,6 +125,9 @@ async function repondre(r, who, db){
   /* v53 : fonction supprimée — plus de fausse fonction « emails-prospects » (elle ne servait qu'à la page de désinscription) */
   if (p.startsWith("/auth/v1/token")) return json(who ? who.session : { error: "invalid" }, who ? 200 : 400);
   if (p.startsWith("/auth/v1/logout")) { db.journal.push("LOGOUT"); db.ecritures.push({ table: p, m }); return json({}); }
+  /* v56 : la connexion notée par la base (fonction noter_connexion, au démarrage d'un prospect ou d'un compte suivi) n'est
+     pas une écriture de l'app dans les données : elle est testée à part (verif61) */
+  if (p === "/rest/v1/rpc/noter_connexion") return json(null, 204);
   if (!["GET", "HEAD", "OPTIONS"].includes(m) && p !== "/rest/v1/donnees" && p !== "/rest/v1/profils") db.ecritures.push({ table: p, m });
   if (p.startsWith("/auth/v1/")) return json({});
   if (p === "/rest/v1/emails_prospects") {
