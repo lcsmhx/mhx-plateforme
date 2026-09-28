@@ -513,7 +513,7 @@ const DECOUVERTE = {
     cgu_lien: "conditions d'utilisation et la politique de confidentialité",
     cgu_apres: ".",
     cgu_manque: "Coche la case des conditions pour continuer.",
-    sante_avant: "J'accepte le traitement de mes données de santé conformément à la politique",
+    sante_avant: "J'accepte le traitement de mes données de santé conformément à la politique de confidentialité.",
     sante_manque: "Accepte le traitement de tes données de santé pour continuer.",
     /* v52 : case facultative, décochée, qui remplace les « emails de suivi » (texte validé par Lucas : ne pas le reformuler sans changer accords.newsletter) */
     newsletter: "Je veux recevoir par email les conseils, témoignages et offres de coaching de MHX Coaching (1 à 2 emails par semaine maximum). Désinscription en 1 clic dans chaque email.",
