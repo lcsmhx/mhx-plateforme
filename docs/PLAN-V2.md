@@ -7,10 +7,10 @@ Une nouvelle conversation reprend en lisant seulement `CLAUDE.md` et ce fichier.
 - **Branches** : chaque lot se fait sur une branche `v2/…` (copie `git worktree` dans le scratchpad de la session), poussée sur GitHub pour le banc (tests seulement, jamais de publication), puis intégrée par `cherry-pick` dans la branche de version ; `main` avance (avance rapide) quand le banc GitHub est vert et la relecture faite. `attente/nuit-28-09` = travail de la nuit du 28/09 mis de côté, jamais poussé (ses corrections utiles sont dans la v52).
 - **Avant de reprendre** : `git status`, `git log --oneline -10 --all`, `git worktree list`, relire « État exact ». Banc : pousser la branche (`git push origin v2/<nom>`) et lire le résultat sur https://github.com/lcsmhx/mhx-plateforme/actions ; en local, seulement la suite qu'on écrit (`tests-locaux/README.md`).
 - **État exact (28/09/2026, fin d'après-midi, heure de Bali)** :
-  - **v53** (`v2/v53` → `main`) : banc GitHub vert sur `9acd868` (10 parties), relecture unique faite (3 relecteurs : données et accès, clients existants, coach) : **aucun bloquant** ; remarques dans « À faire plus tard ». Version « 2026-09-28 · 53 » et `MHX_FICHIERS = "53"` ; poussée sur `main` (publication si le banc est vert), vérification en ligne à faire juste après.
+  - **v53** (`v2/v53` → `main`) : banc GitHub vert sur `9acd868` (10 parties), relecture unique faite (3 relecteurs : données et accès, clients existants, coach) : **aucun bloquant** ; remarques dans « À faire plus tard ». Version « 2026-09-28 · 53 » et `MHX_FICHIERS = "53"`. **En ligne** (`8372a97`, banc 10/10 vert puis publication) **et vérifiée** : les 149 adresses du site relevées, chaque fichier servi = celui du commit (seuls changements : 3 suites de tests en plus ; fonction d'emails, sa migration et `desinscription.html` retirées) ; téléphone : « 2026-09-28 · 53 » affiché, 35 fichiers `css/` et `js/` en `?v=53`, tous en 200, aucune erreur de console, `#/inscription` reste fermé.
   - Contenu : `f9e6b07` emplacements réservés + interrupteur `suivi_visites_clients: "test"` ; `23bf096` nettoyage ; `63d3a6d` chantier 3 (feedback du dimanche, `feedback_dimanche: "test"`) ; `10bb6ac` lot D-clients ; `9acd868` chantier 4 (agent arrêté pendant ses tests locaux à la demande de Lucas, travail commité tel quel sur `v2/v53-c4` = `fb13c23`, vert sur GitHub, puis intégré).
   - Avant : **52.1** (`72c8932`) en ligne. Inscription fermée (`inscription_libre: false`). Aucun email envoyé par l'app.
-- **Prochaines étapes** : 1) vérification en ligne de la v53 (téléphone, version, console, aucun 404) ; 2) résumé final unique à Lucas (voir « Résumé final »), avec le message WhatsApp ci-dessous et les commandes de retour arrière ; 3) ensuite, seulement sur demande de Lucas : Q13, puis les reports (lot F, Q6) après l'ouverture.
+- **Prochaines étapes** : mission terminée (résumé final donné à Lucas le 28/09). Ensuite, seulement sur demande de Lucas : Q13 (avant `feedback_dimanche` sur « tous »), puis les reports (lot F, Q6) après l'ouverture.
 - **Message WhatsApp pour les clients** (à envoyer par Lucas quand il passera `feedback_dimanche` et `suivi_visites_clients` sur « tous ») : « Salut ! Petite nouveauté dans l'app. À partir de dimanche, ton bilan de la semaine devient le feedback du dimanche, directement dans l'app (« Mon suivi », tu auras un rappel sur l'accueil) : – une note sur 10 : selon toi, comment tu as bossé cette semaine ? – 3 cases rapides : Training, Alimentation, Autre. 2 minutes max. Si tu oublies, tu peux encore le faire le lundi. Je te réponds juste en dessous, au même endroit, et une pastille te prévient quand c'est fait. Sous ma réponse, un smiley 😞 😐 😊 pour me dire si elle t'a aidé. Si c'est 😞, dis-moi ce que je peux améliorer. Autre chose : l'app note maintenant les jours où tu l'ouvres (ta dernière visite et tes jours actifs). Ça me permet de suivre ta régularité et de te relancer au bon moment. Une question ? Écris-moi ici. »
 
 ## Ligne directrice (Lucas, 28/09/2026 au soir) — remplace ses messages de décision précédents
@@ -131,7 +131,7 @@ Démarre derrière l'interrupteur en « test » (Étape 1 d) : les autres client
 - [x] Précision : garder le bouton « Passer client » : c'est lui qui donne l'accès complet après la vente.
 - [x] Liste « À traiter maintenant » sous les 2 tuiles (5 lignes au plus, seulement quand elle n'est pas vide).
 - [x] Retirer le score, la température, la lecture du journal des emails (bonus « email ouvert ») et les vérifications devenues obsolètes de verif49, sans toucher aux données.
-- [ ] Fin de la v53 (partie clients et coach du lot D + chantiers 3 et 4 + liste newsletter + compteur) : banc à jour et vert, téléphone + ordi, relecture indépendante, version 53, note Grok (5 à 10 tests), « État actuel », message WhatsApp, commit, push, vérification en ligne.
+- [x] *(en ligne le 28/09 : `8372a97`, vérifiée)* Fin de la v53 (partie clients et coach du lot D + chantiers 3 et 4 + liste newsletter + compteur) : banc à jour et vert, téléphone + ordi, relecture indépendante, version 53, note Grok (5 à 10 tests), « État actuel », message WhatsApp, commit, push, vérification en ligne.
 
 ## Chantier 2 — Ouverture de l'inscription
 Rien n'est activé ni déployé par Claude, **aucun email n'est envoyé** (ligne directrice, point 1). Lucas gérera les emails (SMTP, newsletter) plus tard.
@@ -147,7 +147,7 @@ Rien n'est activé ni déployé par Claude, **aucun email n'est envoyé** (ligne
 - [ ] Ensuite seulement, Lucas ouvre l'inscription lui-même. *(Lucas)*
 
 ## Fin de mission
-- [ ] Résumé final unique pour Lucas (voir « Résumé final » plus haut).
+- [x] *(28/09)* Résumé final unique pour Lucas (voir « Résumé final » plus haut).
 
 ## Décisions encore ouvertes
 

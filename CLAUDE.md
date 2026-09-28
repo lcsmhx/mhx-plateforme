@@ -53,6 +53,6 @@ Lis ce fichier en entier au début de chaque conversation. Il passe avant tout a
 - Mets à jour la section « État actuel » ci-dessous en 2 ou 3 lignes.
 
 ## État actuel
-- En ligne : **v53** (28/09/2026) : feedback du dimanche et suivi des visites des clients derrière leurs interrupteurs (« test » : compte de test et coach seulement ; Lucas les passe sur « tous ») ; côté coach simplifié (2 tuiles, sans score ni température, « Bilan réservé », liste newsletter en CSV, compteur) ; « Mon journal » et calculateur pour les clients. Inscription publique **fermée** (`inscription_libre: false`, Lucas l'ouvre avec `docs/OUVERTURE-INSCRIPTION.md`). Aucun email envoyé par l'app.
+- En ligne : **v53** (28/09/2026, `8372a97`, vérifiée) : feedback du dimanche et suivi des visites des clients derrière leurs interrupteurs (« test » : compte de test et coach seulement ; Lucas les passe sur « tous ») ; côté coach simplifié (2 tuiles, sans score ni température, « Bilan réservé », liste newsletter en CSV, compteur) ; « Mon journal » et calculateur pour les clients. Inscription publique **fermée** (`inscription_libre: false`, Lucas l'ouvre avec `docs/OUVERTURE-INSCRIPTION.md`). Aucun email envoyé par l'app.
 - Fichiers : `index.html` (HTML) + `css/` + `js/` depuis la 52.1. GitHub Actions : banc en 10 parties sur `main` et `v2/*`, publication seulement si tout est vert.
 - Suite : actions de Lucas (interrupteurs, ouverture de l'inscription, brouillons légaux) ; reportés après l'ouverture : les 3 cartes (lot F), l'écran d'acceptation (Q6). Plan : `docs/PLAN-V2.md`.
