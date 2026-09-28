@@ -328,7 +328,9 @@ async function exporter(page){
   const [dl] = await Promise.all([page.waitForEvent("download", { timeout: 5000 }), page.click("#pr-csv")]);
   return { nom: dl.suggestedFilename(), t: fs.readFileSync(await dl.path(), "utf8") };
 }
-const ENTETES = ["Nom", "Email", "Inscrit le", "Découverte", "Objectif", "Statut", "Score /100", "Questionnaire", "Motivation /10", "Clics « Réserver mon bilan »", "Dernier clic", "Bilan réservé le", "Relances", "Dernière activité", "Prochaine action"];
+/* v52 (28/09/2026, Chantier 1 lot G) : 3 colonnes de plus en fin de ligne (Problème, Dans 3 mois, Newsletter) : les 15
+   d'avant ne bougent pas (verif55 G3 vérifie les nouvelles) */
+const ENTETES = ["Nom", "Email", "Inscrit le", "Découverte", "Objectif", "Statut", "Score /100", "Questionnaire", "Motivation /10", "Clics « Réserver mon bilan »", "Dernier clic", "Bilan réservé le", "Relances", "Dernière activité", "Prochaine action", "Problème", "Dans 3 mois", "Newsletter"];
 /* v52 (lot B) : le nom du prospect (profils.nom) est pré-rempli aussi : name = « prénom nom », first_name, last_name */
 const lienPour = (prenom, nom, email) => CAL + "?utm_source=app-mhx&utm_medium=coach&utm_content=fiche-coach&name=" + encodeURIComponent([prenom, nom].filter(Boolean).join(" ")) + "&first_name=" + encodeURIComponent(prenom) + (nom ? "&last_name=" + encodeURIComponent(nom) : "") + (email ? "&email=" + encodeURIComponent(email) : "");
 /* la fiche d'un prospect, ouverte depuis sa carte (filtre « Tous ») */
@@ -473,14 +475,14 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     const { nom, t } = await exporter(page); await attendre(page, 300);
     const csv = lireCSV(t.replace(/^﻿/, ""));
     ok("export : fichier « prospects-AAAA-MM-JJ.csv » (date du jour), commence par le BOM UTF-8", nom === "prospects-" + iso(new Date()) + ".csv" && t.charCodeAt(0) === 0xFEFF, nom + " · " + t.charCodeAt(0).toString(16));
-    ok("export : 15 en-têtes (Nom, Email, Inscrit le, Découverte, Objectif, Statut, Score /100, Questionnaire, Motivation /10, Clics, Dernier clic, Bilan réservé le, Relances, Dernière activité, Prochaine action)", JSON.stringify(csv.lignes[0]) === JSON.stringify(ENTETES), JSON.stringify(csv.lignes[0]));
+    ok("export : 18 en-têtes (Nom, Email, Inscrit le, Découverte, Objectif, Statut, Score /100, Questionnaire, Motivation /10, Clics, Dernier clic, Bilan réservé le, Relances, Dernière activité, Prochaine action, Problème, Dans 3 mois, Newsletter)", JSON.stringify(csv.lignes[0]) === JSON.stringify(ENTETES), JSON.stringify(csv.lignes[0]));
     const L = csv.lignes.slice(1);
-    ok("export du filtre « À traiter » : 6 lignes, dans l'ordre de l'écran (Inès, Émilie, Piège, Zoé, Karim, Paul), 15 cellules chacune, fins de ligne CRLF", L.length === 6 && L.every(l => l.length === 15) && JSON.stringify(L.map(l => l[0])) === JSON.stringify(["Inès Dupré", "Émilie Rousseau", "'=1+1 " + XSS, "Zoé Bernard", "Karim Benali", "Paul Durand"]) && !csv.brut && !csv.ouvert, JSON.stringify(L.map(l => l[0])) + " brut " + csv.brut);
+    ok("export du filtre « À traiter » : 6 lignes, dans l'ordre de l'écran (Inès, Émilie, Piège, Zoé, Karim, Paul), 18 cellules chacune, fins de ligne CRLF", L.length === 6 && L.every(l => l.length === 18) && JSON.stringify(L.map(l => l[0])) === JSON.stringify(["Inès Dupré", "Émilie Rousseau", "'=1+1 " + XSS, "Zoé Bernard", "Karim Benali", "Paul Durand"]) && !csv.brut && !csv.ouvert, JSON.stringify(L.map(l => l[0])) + " brut " + csv.brut);
     ok("export : chaque cellule est entre guillemets (point-virgule et guillemets du contenu sans danger)", csv.cites.every(l => l.every(Boolean)), JSON.stringify(csv.cites.map(l => l.filter(x => !x).length)));
     const ines = L[0] || [];
     /* v52 (Chantier 1, lot D) : colonne Découverte « inscrit depuis n j » (avant : « jour n/7 » / « terminée ») */
     const depuis = j => j <= 1 ? "inscrit aujourd'hui" : "inscrit depuis " + (j - 1) + " j";
-    const attI = ["Inès Dupré", "ines.dupre@exemple.fr", fr(avant(26 * H)), depuis(jourDe(avant(26 * H))), "Perte de poids / sèche", "CHAUD", "100", "rempli le " + fr(avant(25 * H)), "9", "1", fr(avant(24 * H)), fr(avant(23 * H)), "1", fr(avant(60000)), "Prépare le bilan : relis sa fiche (questionnaire, obstacle, motivation). Après l'appel, indique Signé, Perdu ou Absent."];
+    const attI = ["Inès Dupré", "ines.dupre@exemple.fr", fr(avant(26 * H)), depuis(jourDe(avant(26 * H))), "Perte de poids / sèche", "CHAUD", "100", "rempli le " + fr(avant(25 * H)), "9", "1", fr(avant(24 * H)), fr(avant(23 * H)), "1", fr(avant(60000)), "Prépare le bilan : relis sa fiche (questionnaire, obstacle, motivation). Après l'appel, indique Signé, Perdu ou Absent.", "", "", "non"];   // v52 (lot G) : ancien questionnaire, pas de clé emails
     ok("ligne d'Inès : toutes les valeurs (dates locales, jour de découverte, CHAUD, 100, motivation 9, 1 clic, bilan réservé, 1 relance, dernière activité, action)", JSON.stringify(ines) === JSON.stringify(attI), JSON.stringify(ines) + " attendu " + JSON.stringify(attI));
     const emi = L[1] || [];
     ok("ligne d'Émilie : TIÈDE, 70, 2 clics, dernier clic, pas de bilan réservé, « DM : il a cliqué sans réserver… »", emi[5] === "TIÈDE" && emi[6] === "70" && emi[9] === "2" && emi[10] === fr(avant(10 * H)) && emi[11] === "" && emi[14] === "DM : il a cliqué sans réserver, demande-lui ce qui le retient.", JSON.stringify(emi));
@@ -902,7 +904,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     await chercher(page, "");
     const { t } = await exporter(page);
     const L = lireCSV(t.replace(/^﻿/, "")).lignes;
-    ok("export des 1 008 prospects : 1 008 lignes + en-têtes, 15 cellules chacune", L.length === 1009 && L.every(l => l.length === 15), L.length + " lignes");
+    ok("export des 1 008 prospects : 1 008 lignes + en-têtes, 18 cellules chacune (v52, lot G : + Problème, Dans 3 mois, Newsletter)", L.length === 1009 && L.every(l => l.length === 18), L.length + " lignes");
     await chercher(page, "Prospect N01");
     ok("recherche « Prospect N01 » : 100 résultats, 50 cartes puis « Afficher 50 de plus (50 restants) »", (await page.$$("#pr-liste .sc-carte")).length === 50 && (await texte(page, "#pr-plus")) === "Afficher 50 de plus (50 restants)", await texte(page, "#pr-plus"));
     await page.click("#pr-plus"); await attendre(page, 400);

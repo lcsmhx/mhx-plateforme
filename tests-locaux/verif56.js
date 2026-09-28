@@ -667,7 +667,9 @@ function lienOk(href, base, attendu){
     await p2.goto(URL0 + "#/clients"); await pret(p2, `[data-ouvrir="${ID}"]`);
     await p2.click(`[data-ouvrir="${ID}"]`); await p2.waitForSelector("#fiche-reponses", { timeout: 8000 }); await attendre(p2, 500);
     const note = await texte(p2, "#fiche-reponses p.note"), rf = await lignes(p2, "#fiche-reponses");
-    ok("coach, fiche de l'ancien prospect : « 10 / 10 réponses, validé le … », ses 10 réponses avec les anciens libellés (+ email)", note.startsWith("10 / 10 réponses, validé le ") && rf.length === 11 && JSON.stringify(rf.slice(1)) === JSON.stringify(att) && rf[0][1] === "ancienne@exemple.fr", note + " · " + JSON.stringify(rf));
+    /* v52 (lot G) : côté coach, des libellés courts (l'obstacle d'avant : « Obstacle principal ») ; mêmes valeurs, même ordre */
+    const attCoach = [["Sexe", "Femme"], ["Âge", "30"], ["Taille (cm)", "165"], ["Poids actuel (kg)", "70"], ["Objectif", "Perte de poids / sèche"], ["Séances par semaine", "3"], ["Déjà essayé", "Des régimes trop stricts."], ["Obstacle principal", "Je manque de temps avec le travail"], ["Pourquoi maintenant", "Me sentir mieux cet été"], ["Motivation", "8 / 10"]];
+    ok("coach, fiche de l'ancien prospect : « 10 / 10 réponses, validé le … », ses 10 réponses (libellés courts du coach, lot G) (+ email)", note.startsWith("10 / 10 réponses, validé le ") && rf.length === 11 && JSON.stringify(rf.slice(1)) === JSON.stringify(attCoach) && rf[0][1] === "ancienne@exemple.fr", note + " · " + JSON.stringify(rf));
     ok("coach : aucune écriture", saisies(db).filter(e => e.user_id !== ID || e.outil !== "intake").length === 0, resume(db));
     await c2.close();
   });
@@ -738,7 +740,7 @@ function lienOk(href, base, attendu){
     await page.click(`[data-ouvrir="${ID}"]`); await page.waitForSelector("#fiche-reponses", { timeout: 8000 }); await attendre(page, 600);
     const note = await texte(page, "#fiche-reponses p.note"), rf = await lignes(page, "#fiche-reponses");
     ok("fiche : « 3 / 3 réponses, validé le … »", note.startsWith("3 / 3 réponses, validé le "), note);
-    ok("fiche : email, puis les 3 réponses (problème, ce qui l'a bloqué, dans 3 mois), puis les anciennes qui ont une valeur (sexe, poids) — pas l'objectif posé par l'app", JSON.stringify(rf) === JSON.stringify([["Email", "p70@exemple.fr"], [TX.labels[0], "Perdre du gras"], [TX.labels[1], I0.obstacle], [TX.labels[2], "Tenir " + XSS], ["Sexe", "Femme"], ["Poids actuel (kg)", "64"]]), JSON.stringify(rf));
+    ok("fiche : email, puis les 3 réponses (v52, lot G : libellés courts Problème, Ce qui l'a bloqué, Dans 3 mois), puis les anciennes qui ont une valeur (sexe, poids) — pas l'objectif posé par l'app", JSON.stringify(rf) === JSON.stringify([["Email", "p70@exemple.fr"], ["Problème", "Perdre du gras"], ["Ce qui l'a bloqué", I0.obstacle], ["Dans 3 mois", "Tenir " + XSS], ["Sexe", "Femme"], ["Poids actuel (kg)", "64"]]), JSON.stringify(rf));
     const chrono = await texte(page, "#fiche-chrono");
     ok("chronologie : « Clic « Réserver mon bilan » (page de proposition du bilan) »", chrono.includes("Clic « Réserver mon bilan » (page de proposition du bilan)"), chrono.slice(0, 300));
     ok("fiche : sa réponse piégée reste du texte (aucune injection), aucune écriture", !(await page.evaluate(() => window.__xss)) && !(await page.$("#vue img[src='x']")) && db.ecritures.length === 0, resume(db));

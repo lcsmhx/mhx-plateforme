@@ -3286,6 +3286,14 @@ const Accords = {
         body: [{ user_id: u.id, outil: "emails", contenu: contenu, maj_le: new Date().toISOString() }] });
       return true;
     } catch(e){ return false; }
+  },
+  /* v52 (lot G) : la newsletter vue par le coach, d'après la clé emails (fiche, export CSV). « oui » seulement si
+     emails.newsletter vaut true ; clé absente ou illisible, ou ancien accord « emails de suivi » seul (suivi) : « non ».
+     depuis : l'instant du dernier choix (maj), s'il est lisible. Lecture seule. */
+  newsletterCoach(E){
+    const oui = !!E && typeof E === "object" && !Array.isArray(E) && E.newsletter === true;
+    const depuis = oui && typeof E.maj === "string" && /^\d{4}-\d{2}-\d{2}/.test(E.maj) && !isNaN(Date.parse(E.maj)) ? E.maj : null;
+    return { oui, depuis };
   }
 };
 
@@ -8831,7 +8839,11 @@ const Clients = {
       /* v52 : repondues / nb_questions comptes sur le questionnaire de ce prospect (3 questions, ou 10 pour un ancien prospect) */
       dc: (c.intake && typeof c.intake === "object") ? { court_le: c.intake.court_le, motivation: c.intake.motivation, repondues: Decouverte.repondues(c.intake), nb_questions: Decouverte.liste(c.intake).length,
             court_debut: typeof c.intake.court_debut === "string" ? c.intake.court_debut : null, objectif: typeof c.intake.objectif === "string" ? c.intake.objectif.slice(0, 120) : "",
-            email: typeof c.intake.email_compte === "string" && c.intake.email_compte ? c.intake.email_compte.slice(0, 254) : typeof c.intake.email === "string" ? c.intake.email.slice(0, 254) : "" } : null,
+            email: typeof c.intake.email_compte === "string" && c.intake.email_compte ? c.intake.email_compte.slice(0, 254) : typeof c.intake.email === "string" ? c.intake.email.slice(0, 254) : "",
+            /* v52 (lot G) : 2 des 3 réponses (page Prospects, CSV) ; "" si absente ou illisible */
+            probleme: typeof c.intake.probleme === "string" ? c.intake.probleme.trim().slice(0, 120) : "",
+            projection: typeof c.intake.projection === "string" ? c.intake.projection.trim().slice(0, 1000) : "" } : null,
+      newsletter: Accords.newsletterCoach(c.emails),   // v52 (lot G) : { oui, depuis } d'après la clé emails (CSV)
       act: (c.activite && typeof c.activite === "object") ? c.activite : null,   // v51 : activite du prospect (score, chronologie)
       suivi: (c.suivi_prospect && typeof c.suivi_prospect === "object") ? c.suivi_prospect : null,   // v49 : suivi commercial
       activite: dernierMaj || null
@@ -9091,10 +9103,15 @@ const Commercial = {
     const nom = Clients.nom(p);
     /* v51 : x = { sc (score), dc (questionnaire resume) } — page Prospects */
     const dc = x && x.dc ? x.dc : null;
-    const infos = dc ? [dc.email, p && typeof p.cree_le === "string" ? "inscrit le " + dateFr(Decouverte.dateLocale(p.cree_le) || "") : "", dc.objectif].filter(Boolean) : [];
+    /* v52 (lot G) : l'objectif posé par l'app depuis sa réponse « problème » n'est pas répété ; ses réponses « problème »
+       et « dans 3 mois » (tronquée) sur une ligne à part */
+    const objectif = dc && !(dc.probleme && dc.objectif === Decouverte.objectifDepuis(dc.probleme)) ? dc.objectif : "";
+    const infos = dc ? [dc.email, p && typeof p.cree_le === "string" ? "inscrit le " + dateFr(Decouverte.dateLocale(p.cree_le) || "") : "", objectif].filter(Boolean) : [];
+    const reponses = dc ? [dc.probleme ? "Problème : " + dc.probleme : "", dc.projection ? "Dans 3 mois : « " + Decouverte.extrait(dc.projection, 100) + " »" : ""].filter(Boolean) : [];
     return `<article class="sc-carte${a.urgent ? " urgent" : ""}" data-uid="${esc(p.id)}">
       <div class="sc-tete">${Clients.avatar(nom)}<div class="sc-nom"><b>${esc(nom)}</b><small>${esc(this.sousTitre(p, a))}</small></div>${x && x.sc ? this.pastilleScore(x.sc) + " " : ""}${this.pastille(a)}</div>
       ${infos.length ? `<p class="sc-infos">${esc(infos.join(" · "))}</p>` : ""}
+      ${reponses.length ? `<p class="sc-infos sc-reponses">${esc(reponses.join(" · "))}</p>` : ""}
       <p class="sc-action"><b>Prochaine action :</b> ${esc(a.action)}</p>
       <ul class="sc-raisons">${a.raisons.map(x => `<li>${esc(x)}</li>`).join("")}</ul>
       <div class="sc-boutons">${this.boutons(p, a, false)}</div>
@@ -9490,12 +9507,14 @@ const outilProspects = {
     const cell = v => { let s = v == null ? "" : String(v); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; return '"' + s.replace(/"/g, '""') + '"'; };
     const dt = v => typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v) ? dateFr(Decouverte.dateLocale(v) || v.slice(0, 10)) : "";
     const tete = ["Nom", "Email", "Inscrit le", "Découverte", "Objectif", "Statut", "Score /100", "Questionnaire", "Motivation /10", "Clics « Réserver mon bilan »", "Dernier clic", "Bilan réservé le", "Relances", "Dernière activité", "Prochaine action"];
+    tete.push("Problème", "Dans 3 mois", "Newsletter");   // v52 (lot G) : 2 des 3 réponses et la newsletter (oui / non), en fin de ligne
     const lignes = liste.map(({ l, a, sc }) => {
       const dc = l.dc || {}; let r = null; try { r = Decouverte.resume(l.p, l.ch, dc); } catch(e){ r = null; }
       const motiv = (typeof dc.motivation === "string" || typeof dc.motivation === "number") ? String(dc.motivation).slice(0, 3) : "";
       return [Clients.nom(l.p), dc.email || "", dt(l.p.cree_le), a.jour == null ? "" : Decouverte.depuisTexte(a.jour), dc.objectif || "",
               Commercial.ETATS[a.etat] || String(a.etat), sc ? sc.total : "", a.questionnaire ? "rempli le " + dt(dc.court_le) : (sc ? sc.repondues + "/" + sc.questions + " réponses" : ""),
-              motiv, r ? r.clics : 0, r ? dt(r.dernierClic) : "", r ? dt(r.reserve) : "", a.relances, dt(l.activite), a.action];
+              motiv, r ? r.clics : 0, r ? dt(r.dernierClic) : "", r ? dt(r.reserve) : "", a.relances, dt(l.activite), a.action]
+             .concat([dc.probleme || "", dc.projection || "", l.newsletter && l.newsletter.oui ? "oui" : "non"]);
     });
     return "﻿" + [tete].concat(lignes).map(ligne => ligne.map(cell).join(";")).join("\r\n") + "\r\n";
   },
@@ -10801,11 +10820,11 @@ const outilAccueil = {
   /* ---------- ACCUEIL DU MODE GRATUIT : l'ecran Decouverte (questionnaire court, resultat, bilan). Aucun prix. */
   async gratuit(zone){ return outilDecouverte.afficher(zone); },
   /* bloc « Découverte » de la fiche d'un prospect : jour, questionnaire court, clics, bilan reserve (lecture seule) */
-  decouverteFicheHTML(p, C, I, S, A, ana){
-    try { return this._decouverteFicheHTML(p, C, I) + this.prospectDetailHTML(p, C, (I && typeof I === "object") ? I : {}, S, A, ana); }
+  decouverteFicheHTML(p, C, I, S, A, ana, EM){
+    try { return this._decouverteFicheHTML(p, C, I, EM) + this.prospectDetailHTML(p, C, (I && typeof I === "object") ? I : {}, S, A, ana); }
     catch(e){ console.warn("[MHX] bloc découverte illisible", e); return `<section class="panel" id="fiche-decouverte"><h2>Découverte</h2><div class="empty">Données de la découverte illisibles — à vérifier.</div></section>`; }
   },
-  _decouverteFicheHTML(p, C, I){
+  _decouverteFicheHTML(p, C, I, EM){
     I = (I && typeof I === "object") ? I : {};
     const r = Decouverte.resume(p, C, I);
     /* tout ce qui vient du prospect passe par s() (chaine ou nombre, sinon rien) ou dt() (date en chaine, sinon —) */
@@ -10813,24 +10832,24 @@ const outilAccueil = {
     const dt = v => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v)) ? dateFr(Decouverte.dateLocale(v) || v.slice(0, 10)) : "—";
     /* v52 : plus de « jour n / 7 » ni de « terminée » : le nombre de jours depuis son inscription */
     const jourTxt = r.jour == null ? "date d'inscription inconnue" : Decouverte.depuisTexte(r.jour);
+    /* v52 (lot G) : son nom (profils.nom, demandé à l'inscription), la newsletter (clé emails), puis ses réponses qui ont
+       une valeur : les 3 questions d'abord, puis les anciennes (Decouverte.reponsesCoach) */
+    const nl = Accords.newsletterCoach(EM);
     const lignes = [
       ["Découverte", jourTxt + (p && typeof p.cree_le === "string" ? " · inscrit le " + dt(p.cree_le) : "")],
-      ["Questionnaire court", r.questionnaire ? "rempli le " + dt(r.questionnaire) : "pas encore rempli"],
-      ["Objectif", s(I.objectif)],
-      ["Séances possibles", s(I.seances) ? s(I.seances) + " par semaine" : ""],
-      ["Motivation", s(I.motivation) ? s(I.motivation) + " / 10" : ""],
-      ["Déjà essayé", s(I.essaye)],
-      ["Obstacle principal", s(I.obstacle)],
-      ["Pourquoi maintenant", s(I.pourquoi)],
+      ["Nom", s(p && p.nom).trim() || "pas renseigné"],
+      ["Newsletter", nl.oui ? "oui" + (nl.depuis ? " (depuis le " + dt(nl.depuis) + ")" : "") : "non"],
+      ["Questionnaire court", r.questionnaire ? "rempli le " + dt(r.questionnaire) : "pas encore rempli"]
+    ].concat(Decouverte.reponsesCoach(I), [
       ["Bouton « Réserver mon bilan »", r.clics ? r.clics + " clic" + (r.clics > 1 ? "s" : "") + (r.dernierClic ? ", le dernier le " + dt(r.dernierClic) : "") : "jamais cliqué"],
       ["Case « J'ai réservé mon bilan »", r.reserve ? "cochée le " + dt(r.reserve) : "pas cochée"]
-    ];
+    ]);
     const ligne = (k, v) => v ? `<li><span>${esc(k)}</span><b>${esc(String(v))}</b></li>` : "";
     const pastilles = (r.jour != null ? `<span class="pastille">${Decouverte.depuisTexte(r.jour)}</span>` : "")
       + (r.reserve ? ` <span class="pastille ok">bilan réservé</span>` : r.clics ? ` <span class="pastille accent">a cliqué Réserver</span>` : "");
     return `<section class="panel" id="fiche-decouverte"><div class="seance-c-tete"><h2>Découverte</h2>${pastilles}</div>
       <ul class="ingr fiche-l">${lignes.map(x => ligne(x[0], x[1])).join("")}</ul>
-      <p class="note" style="margin:10px 0 0">Ses autres réponses (âge, taille, poids) sont dans son questionnaire, ci-dessous. Lecture seule : rien ne s'écrit d'ici.</p></section>`;
+      <p class="note" style="margin:10px 0 0">Lecture seule : rien ne s'écrit d'ici.</p></section>`;
   },
 
   /* v51 — detail d'un prospect pour le coach : score detaille, reponses, chronologie, lien de reservation, email.
@@ -10845,11 +10864,11 @@ const outilAccueil = {
       <ul class="ingr fiche-l dc-score">${sc.lignes.map(l => `<li><span>${esc(l.lbl)}${l.bonus ? " (bonus)" : ""}</span><b>${l.nonMesure ? "—" : l.pts + " / " + l.max}</b></li>`).join("")}</ul>
       <p class="note" style="margin:10px 0 0">Total plafonné à 100. Le score se recalcule à chaque ouverture.</p></section>`;
     /* v52 : les questions de SON questionnaire court (les 3 nouvelles, ou les 10 d'un ancien prospect), puis celles de
-       l'autre qui ont une valeur : les anciennes reponses restent lisibles */
-    const qs = Decouverte.reponses(I, true);
+       l'autre qui ont une valeur : les anciennes reponses restent lisibles. Lot G : libelles courts du coach (Problème…) */
+    const qs = Decouverte.reponsesCoach(I, true);
     /* email_compte : l'email du compte, copie par l'app (v51) ; a defaut, le champ « Email » du questionnaire complet */
     const email = s(I.email_compte).trim() || s(I.email).trim();
-    const rep = [["Email", email]].concat(qs.map(x => [x.q.label, x.v]));
+    const rep = [["Email", email]].concat(qs);
     const repHTML = `<section class="panel" id="fiche-reponses"><h2>Réponses au questionnaire court</h2>
       <p class="note" style="margin:0 0 8px">${sc.repondues} / ${sc.questions} réponses${Decouverte.questionnaireFait(I) ? ", validé le " + esc(dt(I.court_le)) : ", pas encore validé"}.</p>
       <ul class="ingr fiche-l">${rep.map(([k, v]) => `<li><span>${esc(k)}</span><b>${v ? esc(v) : "—"}</b></li>`).join("")}</ul></section>`;
@@ -10903,7 +10922,7 @@ const outilAccueil = {
      avec un lien vers l'editeur de chaque bloc. Lecture seule ici. Les
      notes privees et les feedbacks arrivent avec les phases 10 et 18. */
   async fiche(zone){
-    const cles = ["intake", "programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "checkins", "complements", "calc", "formation", "hist_programme", "hist_repas", "prefs", "feedbacks", "challenge", "suivi_prospect", "activite"];   // v47 : + challenge ; v49 : + suivi commercial ; v51 : + activite
+    const cles = ["intake", "programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "checkins", "complements", "calc", "formation", "hist_programme", "hist_repas", "prefs", "feedbacks", "challenge", "suivi_prospect", "activite", "emails"];   // v47 : + challenge ; v49 : + suivi commercial ; v51 : + activite ; v52 : + emails (newsletter d'un prospect)
     const uidFiche = Store.idConsulte;
     const [{ valeurs: d, dates }, , pr] = await Promise.all([
       Store.lireTout(cles, { dates: true }),
@@ -10919,8 +10938,9 @@ const outilAccueil = {
     const profil = { id: Store.idConsulte, prenom: nomC.split(" ")[0], nom: nomC.split(" ").slice(1).join(" "), role: "client" };
     if (pr && "statut" in pr) profil.statut = pr.statut;
     const ecritParCoach = ["programme", "repas", "calc", "complements", "feedbacks", "notes_coach", "suivi_prospect"];
-    /* v51 : les pages vues (activite) ne sont une activite que pour un prospect, comme dans Mes clients */
-    const dernier = Object.keys(dates).filter(k => ecritParCoach.indexOf(k) === -1 && dates[k] && (k !== "activite" || profil.statut === "prospect")).map(k => dates[k]).sort().pop() || null;
+    /* v51 : les pages vues (activite) ne sont une activite que pour un prospect, comme dans Mes clients ;
+       v52 : le choix de la newsletter (emails) n'est pas une saisie, comme dans Mes clients (pasSaisie) */
+    const dernier = Object.keys(dates).filter(k => ecritParCoach.indexOf(k) === -1 && k !== "emails" && dates[k] && (k !== "activite" || profil.statut === "prospect")).map(k => dates[k]).sort().pop() || null;
     const l = Clients.resumerUn(profil, d, dernier);
     const r = Regularite.calculer({ programme: P, journal: J, repas: R, repas_suivi: S, mens: M }, 0), prec = Regularite.calculer({ programme: P, journal: J, repas: R, repas_suivi: S, mens: M }, -1);
     const b = outilBilan.calculer({ programme: P, journal: J, repas: R, repas_suivi: S, mens: M, objectifs_faits: d.objectifs_faits || {} });
@@ -10965,7 +10985,7 @@ const outilAccueil = {
         </div>
       </section>
       ${SC ? `<div id="fiche-commercial">${Commercial.ficheHTML(Object.assign({}, pr || {}, profil), SC, d.suivi_prospect)}</div>` : ""}
-      ${profil.statut === "prospect" ? this.decouverteFicheHTML(pDc, d.challenge, I, d.suivi_prospect, d.activite, SC) : ""}
+      ${profil.statut === "prospect" ? this.decouverteFicheHTML(pDc, d.challenge, I, d.suivi_prospect, d.activite, SC, d.emails) : ""}
       ${NotesCoach.html()}
       <div class="fiche-grille">
       <section class="panel"><div class="seance-c-tete"><h2>Profil</h2>${I.complet ? `<span class="pastille ok">questionnaire complet</span>` : `<span class="pastille attention">questionnaire incomplet</span>`}</div>
@@ -11654,6 +11674,14 @@ const Decouverte = {
     const out = this.definitions(siens, ancien).map(q => ({ q, v: val(q) })).filter(x => tous || x.v);
     this.definitions(autres, !ancien).forEach(q => { const v = val(q); if (v && !(q.id === "objectif" && !ancien && pose && v === pose)) out.push({ q, v }); });
     return out;
+  },
+  /* v52 (lot G) : les memes reponses pour le coach (fiche), avec des libelles courts : Problème, Ce qui l'a bloqué, Dans
+     3 mois, puis les anciennes (l'obstacle d'un ancien prospect repondait a une autre question : « Obstacle principal »).
+     Les autres gardent le libelle de la question (Sexe, Âge…). Ecrans du coach : francais seulement. Rend [[libelle, v]]. */
+  LIBELLES_COACH: { probleme: "Problème", obstacle: "Ce qui l'a bloqué", projection: "Dans 3 mois", objectif: "Objectif", seances: "Séances par semaine", essaye: "Déjà essayé", pourquoi: "Pourquoi maintenant", motivation: "Motivation" },
+  reponsesCoach(I, tous){
+    const ancien = this.ancien(I);
+    return this.reponses(I, tous).map(x => [x.q.id === "obstacle" && ancien ? "Obstacle principal" : this.LIBELLES_COACH[x.q.id] || x.q.label, x.v]);
   },
   /* v52 : la reponse « problème » traduite en option EXACTE de la question « objectif » (CONFIG.decouverte.objectif_depuis) ;
      "" si la reponse n'est pas dans la table ou si l'option n'existe pas (ou plus) dans QUESTIONS */

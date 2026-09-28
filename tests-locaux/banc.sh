@@ -40,12 +40,13 @@ HORS_BANC="verif44 verif45 verif46 verif47"
 # v52 (lot E, pages verrouillées avec un exemple) : verif56 + 54 (blocs E1) ; verif40, 50, 51 inchangées (textes des pages
 # verrouillées adaptés, aucune vérification ajoutée ni retirée). v52 : lots D + E : verif56 187 → 241 ; verif40 64, verif50 57,
 # verif51 91 (journal du lot D : son exemple et l'appel, sans vérification de plus).
+# v52 (lot G, côté coach) : verif55 143 → 165 (blocs G1 à G4 : fiche, page Prospects, CSV).
 attendu() {
   case "$1" in
     flux) echo 19;; verif34) echo 13;; verif35) echo 14;; verif36) echo 13;; verif37) echo 15;; verif38) echo 67;;
     verif-xss) echo 5;; verif39) echo 51;; verif40) echo 64;; verif41) echo 25;; verif42) echo 20;; verif43) echo 34;;
     verif48) echo 42;; verif49) echo 130;; verif50) echo 57;; verif51) echo 91;; verif52) echo 186;; verif53) echo 132;;
-    verif54) echo 64;; verif55) echo 143;; verif56) echo 241;; rig) echo 84;; fonction) echo 88;; *) echo "";;
+    verif54) echo 64;; verif55) echo 165;; verif56) echo 241;; rig) echo 84;; fonction) echo 88;; *) echo "";;
   esac
 }
 # Partie de chaque suite pour les jobs parallèles de GitHub Actions (10 parties, durées équilibrées, 4 à 5 minutes chacune).

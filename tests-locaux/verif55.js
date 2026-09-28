@@ -28,6 +28,14 @@
       paragraphes aux mêmes places ;
    H. Calendly : name = prénom + nom, first_name, last_name, email (prospect, page verrouillée, fiche du coach,
       lienCalendlyPour à 3 ou 4 paramètres), pré-remplissage éteint, caractères piégés ;
+   Lot G (côté coach) :
+   G1. fiche d'un prospect : son nom (profils.nom, « pas renseigné » s'il manque), « Newsletter : oui (depuis le …) / non »
+       d'après la clé emails (absente ou ancien accord « emails de suivi » seul : non), ses 3 réponses avec des libellés
+       courts (Problème, Ce qui l'a bloqué, Dans 3 mois) puis les anciennes qui ont une valeur, jamais « undefined » ;
+   G2. données piégées (nom, réponses, date) : du texte, rien d'injecté ; clé emails illisible : non ;
+   G3. page Prospects (Problème et Dans 3 mois sur la carte) et export CSV (3 colonnes de plus en fin de ligne, les 15
+       d'avant inchangées, cellule « = » neutralisée) ; aucune écriture côté coach ;
+   G4. téléphone 390 px : fiche et page Prospects sans défilement horizontal ;
    Z. aucun appel vers l'extérieur.
    Supabase simulé (gabarit de tests-locaux, carte 6 §15) : rien ne part vers la vraie base (routage par NOM D'HÔTE,
    jamais par sous-chaîne : README, « Règle d'or ») ; règles de la base reproduites (HANDOFF §2.3, v49) ; appelant
@@ -1041,6 +1049,115 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
       ok("coach : aucune écriture", ecrDonnees(db3).length === 0, resume(db3));
     }
   });
+
+  /* =================== G1… lot G : le coach lit les 3 réponses, le nom et la newsletter =================== */
+  {
+    const XSS = "<img src=x onerror=\"window.__xss=1\">";
+    const LEA = PID(80), MARC = PID(81), ZOE = PID(82), NINA = PID(83), PIEGE = PID(84), TAB = PID(85), CHAINE = PID(86);
+    const LONGUE = "Je voudrais enfin me sentir bien dans mon corps, courir 10 km sans m'arrêter, dormir mieux et ne plus grignoter le soir devant la télé après une longue journée de travail, bref retrouver de l'énergie pour mes enfants et pour moi.";
+    const NEWS_LE = avant(2 * J);
+    const frDe = iso => { const d = new Date(iso); return String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0") + "/" + d.getFullYear(); };
+    const ANCIEN = { sexe: "Homme", age: "40", taille: "180", poids: "90", objectif: "Prise de muscle", seances: "3", essaye: "La salle, seul", obstacle: "Je lâche au bout de 2 semaines", pourquoi: "Mon mariage en juin", motivation: "8", court_debut: avant(20 * J), court_le: avant(20 * J), email_compte: "marc@exemple.fr" };
+    const comptes = () => [
+      { id: LEA, prenom: "Léa", nom: "Martin", cree: avant(3 * J), donnees: [
+        ["intake", { probleme: "Perdre du gras", obstacle: "Le manque de temps", projection: "Rentrer dans mon jean d'avant", objectif: "Perte de poids / sèche", court_debut: avant(3 * J), court_le: avant(3 * J), email_compte: "lea.martin@exemple.fr" }, avant(3 * J)],
+        ["emails", { newsletter: true, maj: NEWS_LE, version: "2026-09-28c", source: "inscription" }, NEWS_LE]] },
+      { id: MARC, prenom: "Marc", nom: "", cree: avant(25 * J), donnees: [["intake", ANCIEN, avant(20 * J)], ["emails", { suivi: true, maj: avant(20 * J) }, avant(20 * J)]] },
+      { id: ZOE, prenom: "Zoé", nom: "Durand", cree: avant(5 * H) },
+      { id: NINA, prenom: "Nina", nom: "Petit", cree: avant(4 * J), donnees: [
+        ["intake", { probleme: "Me remettre en forme", obstacle: "Mes horaires", projection: LONGUE, court_le: avant(4 * J), email_compte: "nina@exemple.fr" }, avant(4 * J)],
+        ["emails", { newsletter: false, maj: avant(J), version: "2026-09-28c", source: "profil", suivi: false }, avant(J)]] },
+      { id: PIEGE, prenom: XSS, nom: XSS, cree: avant(2 * J), donnees: [
+        ["intake", { probleme: XSS, obstacle: XSS, projection: "=HYPERLINK(\"http://x\") " + XSS, court_le: avant(2 * J), email_compte: "piege@exemple.fr" }, avant(2 * J)],
+        ["emails", { newsletter: true, maj: XSS }, avant(J)]] },
+      { id: TAB, prenom: "Tom", nom: "Liste", cree: avant(2 * J), donnees: [["emails", ["newsletter"], avant(J)]] },
+      { id: CHAINE, prenom: "Chloé", nom: "Texte", cree: avant(2 * J), donnees: [["emails", { newsletter: "true", maj: avant(J) }, avant(J)]] }
+    ];
+    const RIEN_DE_BRUT = /\bundefined\b|\bnull\b|\bNaN\b|\[object /;
+    const lignesFiche = (page, sel) => page.$$eval(sel + " ul.fiche-l > li", l => l.map(li => [li.querySelector("span") ? li.querySelector("span").textContent.replace(/\s+/g, " ").trim() : "", li.querySelector("b") ? li.querySelector("b").textContent.replace(/\s+/g, " ").trim() : ""])).catch(() => []);
+    const injecte = page => page.evaluate(() => !!window.__xss || !!document.querySelector("#vue img[src='x']")).catch(() => true);
+    async function ficheDe(page, uid){
+      await aller(page, "#/clients", 300);
+      await page.waitForSelector(`[data-ouvrir="${uid}"]`, { timeout: 8000 });
+      await page.click(`[data-ouvrir="${uid}"]`);
+      await page.waitForSelector("#fiche-reponses", { timeout: 8000 }); await attendre(page, 400);
+      return { dec: await lignesFiche(page, "#fiche-decouverte"), rep: await lignesFiche(page, "#fiche-reponses"), vue: await texte(page, "#vue") };
+    }
+    const sans = (l, k) => l.filter(x => x[0] !== k);   // la ligne « Découverte » (jour, date d'inscription) n'est pas du lot G
+    const coachSur = async db => { const x = await contexte(b, COACH, db); await x.page.goto(URL0 + "#/clients"); await pret(x.page, "#vue"); return x; };
+
+    await bloc("G1. fiche : les 3 réponses, le nom, la newsletter", async () => {
+      const db = base({ comptes: comptes() });
+      const { page } = await coachSur(db);
+      const f = await ficheDe(page, LEA);
+      ok("fiche de Léa Martin (bloc « Découverte ») : Nom « Martin », Newsletter « oui (depuis le " + frDe(NEWS_LE) + ") », questionnaire rempli, puis Problème, Ce qui l'a bloqué, Dans 3 mois ; l'objectif posé par l'app n'est pas répété",
+        JSON.stringify(sans(f.dec, "Découverte")) === JSON.stringify([["Nom", "Martin"], ["Newsletter", "oui (depuis le " + frDe(NEWS_LE) + ")"], ["Questionnaire court", "rempli le " + frDe(avant(3 * J))], ["Problème", "Perdre du gras"], ["Ce qui l'a bloqué", "Le manque de temps"], ["Dans 3 mois", "Rentrer dans mon jean d'avant"], ["Bouton « Réserver mon bilan »", "jamais cliqué"], ["Case « J'ai réservé mon bilan »", "pas cochée"]]), JSON.stringify(f.dec));
+      ok("… « Réponses au questionnaire court » : Email, Problème, Ce qui l'a bloqué, Dans 3 mois (libellés courts du coach)", JSON.stringify(f.rep) === JSON.stringify([["Email", "lea.martin@exemple.fr"], ["Problème", "Perdre du gras"], ["Ce qui l'a bloqué", "Le manque de temps"], ["Dans 3 mois", "Rentrer dans mon jean d'avant"]]), JSON.stringify(f.rep));
+      const m = await ficheDe(page, MARC);
+      const ATT_M = [["Sexe", "Homme"], ["Âge", "40"], ["Taille (cm)", "180"], ["Poids actuel (kg)", "90"], ["Objectif", "Prise de muscle"], ["Séances par semaine", "3"], ["Déjà essayé", "La salle, seul"], ["Obstacle principal", "Je lâche au bout de 2 semaines"], ["Pourquoi maintenant", "Mon mariage en juin"], ["Motivation", "8 / 10"]];
+      ok("ancien prospect Marc (nom vide, ancien accord « emails de suivi » seul) : Nom « pas renseigné », Newsletter « non », ses 10 anciennes réponses (obstacle d'avant « Obstacle principal », motivation « 8 / 10 »), pas de Problème",
+        JSON.stringify(sans(m.dec, "Découverte")) === JSON.stringify([["Nom", "pas renseigné"], ["Newsletter", "non"], ["Questionnaire court", "rempli le " + frDe(avant(20 * J))]].concat(ATT_M, [["Bouton « Réserver mon bilan »", "jamais cliqué"], ["Case « J'ai réservé mon bilan »", "pas cochée"]])), JSON.stringify(m.dec));
+      ok("… ses réponses (bloc du bas) : Email puis les mêmes libellés", JSON.stringify(m.rep) === JSON.stringify([["Email", "marc@exemple.fr"]].concat(ATT_M)), JSON.stringify(m.rep));
+      const z = await ficheDe(page, ZOE), n = await ficheDe(page, NINA);
+      ok("Zoé (rien répondu, pas de clé emails) : Nom « Durand », Newsletter « non », questionnaire pas encore rempli, aucune réponse inventée ; ses 3 questions « — »",
+        JSON.stringify(sans(z.dec, "Découverte")) === JSON.stringify([["Nom", "Durand"], ["Newsletter", "non"], ["Questionnaire court", "pas encore rempli"], ["Bouton « Réserver mon bilan »", "jamais cliqué"], ["Case « J'ai réservé mon bilan »", "pas cochée"]]) && JSON.stringify(z.rep) === JSON.stringify([["Email", "—"], ["Problème", "—"], ["Ce qui l'a bloqué", "—"], ["Dans 3 mois", "—"]]), JSON.stringify([z.dec, z.rep]));
+      ok("Nina (newsletter décochée dans son Profil) : Newsletter « non » ; sa réponse « Dans 3 mois » entière", (n.dec.find(x => x[0] === "Newsletter") || [])[1] === "non" && (n.dec.find(x => x[0] === "Dans 3 mois") || [])[1] === LONGUE, JSON.stringify(n.dec));
+      ok("fiches de Léa, Marc, Zoé et Nina : ni « undefined », ni « null », ni « NaN », ni « [object »", [f, m, z, n].every(x => !RIEN_DE_BRUT.test(x.vue)), [f, m, z, n].map(x => (x.vue.match(RIEN_DE_BRUT) || [""])[0]).join("|"));
+      ok("coach : aucune écriture en affichant ces fiches", ecrDonnees(db).length === 0, resume(db));
+    });
+
+    await bloc("G2. fiche : données piégées, newsletter illisible", async () => {
+      const db = base({ comptes: comptes() });
+      const { page } = await coachSur(db);
+      const p = await ficheDe(page, PIEGE);
+      const v = k => (p.dec.find(x => x[0] === k) || [])[1];
+      ok("prospect piégé : nom, problème, obstacle et « Dans 3 mois » affichés tels quels (texte), Newsletter « oui » sans date (date illisible)", v("Nom") === XSS && v("Problème") === XSS && v("Ce qui l'a bloqué") === XSS && v("Dans 3 mois") === "=HYPERLINK(\"http://x\") " + XSS && v("Newsletter") === "oui", JSON.stringify(p.dec));
+      ok("… aucune balise injectée (fiche), ni « undefined » ni « null »", !(await injecte(page)) && !RIEN_DE_BRUT.test(p.vue), (p.vue.match(RIEN_DE_BRUT) || [""])[0]);
+      const t = await ficheDe(page, TAB), c = await ficheDe(page, CHAINE);
+      ok("clé emails qui n'est pas un objet (liste) : « non » ; newsletter écrite « true » en texte : « non » (seul le vrai booléen vaut oui)", (t.dec.find(x => x[0] === "Newsletter") || [])[1] === "non" && (c.dec.find(x => x[0] === "Newsletter") || [])[1] === "non", JSON.stringify([t.dec, c.dec]));
+      ok("coach : aucune écriture (fiches piégées)", ecrDonnees(db).length === 0, resume(db));
+    });
+
+    await bloc("G3. page Prospects et export CSV", async () => {
+      const db = base({ comptes: comptes() });
+      const { page } = await coachSur(db);
+      await aller(page, "#/prospects", 300); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 });
+      await page.click('[data-filtre="tous"]'); await attendre(page, 500);
+      const carte = uid => page.$eval(`#pr-liste .sc-carte[data-uid="${uid}"]`, e => ({ t: e.textContent.replace(/\s+/g, " ").trim(), infos: Array.from(e.querySelectorAll(".sc-infos")).map(x => x.textContent.replace(/\s+/g, " ").trim()) })).catch(() => ({ t: "", infos: [] }));
+      const cl = await carte(LEA), cm = await carte(MARC), cz = await carte(ZOE), cn = await carte(NINA), cp = await carte(PIEGE);
+      ok("carte de Léa : « Problème : Perdre du gras · Dans 3 mois : « Rentrer dans mon jean d'avant » » ; l'objectif posé par l'app (Perte de poids / sèche) n'est pas répété", cl.infos.length === 2 && cl.infos[1] === "Problème : Perdre du gras · Dans 3 mois : « Rentrer dans mon jean d'avant »" && !cl.t.includes("Perte de poids / sèche"), JSON.stringify(cl.infos));
+      const ext = (cn.infos[1] || "").replace(/^Problème : Me remettre en forme · Dans 3 mois : « /, "").replace(/ »$/, "");
+      ok("carte de Nina : sa réponse « Dans 3 mois » tronquée proprement (100 caractères au plus, « … »), début identique", ext.endsWith("…") && Array.from(ext).length <= 101 && LONGUE.startsWith(ext.slice(0, -1)), cn.infos[1]);
+      ok("cartes de Marc (ancien, objectif « Prise de muscle » gardé) et Zoé (rien répondu) : pas de ligne de réponses ; aucune carte avec « undefined » ou « null »", cm.infos.length === 1 && cm.infos[0].includes("Prise de muscle") && !cm.t.includes("Problème") && !cz.t.includes("Problème") && !RIEN_DE_BRUT.test(await texte(page, "#pr-liste")), JSON.stringify([cm.infos, cz.infos]));
+      ok("carte piégée : réponses en texte, aucune balise injectée", (cp.infos[1] || "").startsWith("Problème : " + XSS) && !(await injecte(page)), JSON.stringify(cp.infos));
+      const [dl] = await Promise.all([page.waitForEvent("download", { timeout: 5000 }), page.click("#pr-csv")]);
+      const t = fs.readFileSync(await dl.path(), "utf8").replace(/^﻿/, "");
+      const L = [], lire = s => { let ligne = [], champ = "", dans = false; for (let i = 0; i < s.length; i++) { const ch = s[i];
+        if (dans) { if (ch === '"') { if (s[i + 1] === '"') { champ += '"'; i++; } else dans = false; } else champ += ch; continue; }
+        if (ch === '"') dans = true; else if (ch === ";") { ligne.push(champ); champ = ""; } else if (ch === "\r" && s[i + 1] === "\n") { ligne.push(champ); L.push(ligne); ligne = []; champ = ""; i++; } else champ += ch; } };
+      lire(t);
+      const AVANT = ["Nom", "Email", "Inscrit le", "Découverte", "Objectif", "Statut", "Score /100", "Questionnaire", "Motivation /10", "Clics « Réserver mon bilan »", "Dernier clic", "Bilan réservé le", "Relances", "Dernière activité", "Prochaine action"];
+      ok("export CSV : les 15 colonnes d'avant inchangées et dans le même ordre (statut, score…), puis « Problème », « Dans 3 mois », « Newsletter » ; 18 cellules par ligne", JSON.stringify(L[0]) === JSON.stringify(AVANT.concat(["Problème", "Dans 3 mois", "Newsletter"])) && L.length === 8 && L.every(l => l.length === 18), JSON.stringify(L[0]) + " · " + L.length + " lignes");
+      const ligne = nom => (L.find(l => l[0] === nom) || []).slice(15);
+      ok("CSV : Léa « Perdre du gras » / « Rentrer dans mon jean d'avant » / oui ; Marc (ancien accord seul) vide / vide / non ; Zoé vide / vide / non ; Nina, réponse entière / non ; Tom (clé liste) et Chloé (« true » en texte) non",
+        JSON.stringify(ligne("Léa Martin")) === JSON.stringify(["Perdre du gras", "Rentrer dans mon jean d'avant", "oui"]) && JSON.stringify(ligne("Marc")) === '["","","non"]' && JSON.stringify(ligne("Zoé Durand")) === '["","","non"]' && JSON.stringify(ligne("Nina Petit")) === JSON.stringify(["Me remettre en forme", LONGUE, "non"]) && JSON.stringify(ligne("Tom Liste")) === '["","","non"]' && JSON.stringify(ligne("Chloé Texte")) === '["","","non"]',
+        JSON.stringify(["Léa Martin", "Marc", "Zoé Durand", "Nina Petit", "Tom Liste", "Chloé Texte"].map(ligne)));
+      const lp = L.find(l => l[1] === "piege@exemple.fr") || [];
+      ok("CSV piégé : « Dans 3 mois » qui commence par « = » neutralisé (apostrophe), newsletter « oui » (vrai booléen)", lp[16] === "'=HYPERLINK(\"http://x\") " + XSS && lp[15] === XSS && lp[17] === "oui", JSON.stringify(lp.slice(15)));
+      ok("page Prospects et export : aucune écriture", ecrDonnees(db).length === 0, resume(db));
+    });
+
+    await bloc("G4. téléphone 390 px", async () => {
+      const db = base({ comptes: comptes() });
+      const x = await contexte(b, COACH, db, { viewport: MOBILE });
+      await x.page.goto(URL0 + "#/clients"); await pret(x.page, "#vue");
+      await ficheDe(x.page, NINA);
+      ok("téléphone : fiche de Nina (longue réponse « Dans 3 mois ») sans défilement horizontal", !(await deborde(x.page)), await largeur(x.page));
+      await aller(x.page, "#/prospects", 300); await x.page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 });
+      await x.page.click('[data-filtre="tous"]'); await attendre(x.page, 500);
+      ok("téléphone : page Prospects (cartes avec les réponses, prospect piégé) sans défilement horizontal, aucune écriture", !(await deborde(x.page)) && ecrDonnees(db).length === 0, await largeur(x.page));
+    });
+  }
 
   /* =================== Z. rien vers l'extérieur =================== */
   await bloc("Z. hôtes externes", async () => {
