@@ -477,15 +477,21 @@ const Activite = {
    ------------------------------------------------------------------ */
 const Connexions = {
   REPRISE: 600000,   // l'app revenue au premier plan apres 10 min ou plus en arriere-plan : une nouvelle ouverture
-  _masquee: null, _ecoute: false, _coupee: false, _envoi: null,
+  _masquee: null, _ecoute: false, _coupee: false, _envoi: null, _profil: null,
   /* les comptes suivis : tous les clients et les prospects (pas l'interrupteur des visites) ; jamais le coach, jamais une
-     fiche consultee (le coach dans la fiche d'un client). Profil pas encore charge : on ne sait pas si c'est le coach, rien. */
-  suivi(){ const u = Auth.utilisateur(); return !!(u && Auth.profil && !Store.idConsulte && !Auth.estCoach()); },
+     fiche consultee (le coach dans la fiche d'un client). Profil pas encore connu : on ne sait pas si c'est le coach, rien.
+     _profil : le role relu au retour au premier plan quand le profil n'avait pas pu etre charge au demarrage (Auth.profil,
+     les menus et l'accueil deja affiches n'en sont pas changes). */
+  suivi(){
+    const u = Auth.utilisateur(), pr = Auth.profil || (this._profil && u && this._profil.id === u.id ? this._profil : null);
+    return !!(u && pr && !Store.idConsulte && pr.role !== "coach");
+  },
   suiviPour(p){ return !!(p && p.id && p.role !== "coach"); },
   noter(){
     if (this._envoi) return this._envoi;
-    if (this._coupee || !Auth.connecte() || !this.suivi()) return Promise.resolve();
-    this.ecouter();
+    if (this._coupee || !Auth.connecte()) return Promise.resolve();
+    this.ecouter();   // meme sans profil (lecture ratee au demarrage) : le prochain retour au premier plan reessaie
+    if (!this.suivi()) return Promise.resolve();
     const p = Auth.appel("/rest/v1/rpc/noter_connexion", { method: "POST", body: {} })
       .catch(e => { if (e && (e.statut === 403 || e.statut === 404)) this._coupee = true; })   // hors ligne, panne : nouvel essai a la prochaine ouverture
       .finally(() => { if (this._envoi === p) this._envoi = null; });
@@ -494,11 +500,23 @@ const Connexions = {
   },
   ecouter(){
     if (this._ecoute) return; this._ecoute = true;
+    /* page deja masquee quand l'ecoute commence (app quittee pendant le chargement, onglet ouvert en arriere-plan) : le
+       masquage compte depuis maintenant */
+    if (document.visibilityState !== "visible" && this._masquee == null) this._masquee = Date.now();
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState !== "visible"){ if (this._masquee == null) this._masquee = Date.now(); return; }
       const t = this._masquee; this._masquee = null;
-      if (t != null && Date.now() - t >= this.REPRISE) this.noter();
+      if (t != null && Date.now() - t >= this.REPRISE) this.reprendre();
     });
+  },
+  /* retour au premier plan : si le profil n'a pas pu etre lu au demarrage, son role est relu d'abord (rate encore : rien,
+     nouvel essai au prochain retour), puis la connexion est notee (noter reverifie le compte : jamais le coach) */
+  async reprendre(){
+    const u = Auth.utilisateur();
+    if (u && !Auth.profil && !(this._profil && this._profil.id === u.id)){
+      try { const r = await Auth.appel("/rest/v1/profils?id=eq." + u.id + "&select=id,role"); this._profil = (r && r[0]) || null; } catch(e){}
+    }
+    return this.noter();
   },
   /* ce que le coach lit pour un compte (ligne de la table, ou rien s'il ne s'est pas connecte depuis la mise en place) :
      suivi = compte suivi ; lue = table lue (fausse : base sans la migration ou panne). Valeurs remises d'aplomb. */

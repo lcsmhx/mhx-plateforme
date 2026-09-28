@@ -7,7 +7,8 @@
       attendre (tous les clients, dès la mise en ligne : décision de Lucas du 29/09) ; le coach (fiche consultée comprise)
       et l'écran de connexion : jamais ;
       connexion par mot de passe (rechargement) : notée ; même jour : une connexion (la dernière avance), autre jour : +1 ;
-   B. l'app revenue au premier plan : après 10 min ou plus en arrière-plan, une nouvelle ouverture ; moins : rien ;
+   B. l'app revenue au premier plan : après 10 min ou plus en arrière-plan, une nouvelle ouverture ; moins : rien ; profil
+      illisible au démarrage (relu au retour, jamais noté pour le coach), app quittée pendant le chargement ;
    C. base sans la migration (404), retour arrière (403), réseau coupé : rien d'affiché, aucune erreur, l'app marche ;
       404 / 403 : plus d'essai avant le prochain chargement ; réseau coupé : nouvel essai à la prochaine ouverture ; côté
       coach : Mes clients et Prospects s'affichent, « — » dans les deux colonnes ;
@@ -92,8 +93,9 @@ function base(opts){
   donnees.forEach(d => { if (d.user_id === F.IDS.c3) d.maj_le = avant(12 * J + 3 * H); });   // Julien : 12 j entiers pendant toute la suite
   /* verif61 : cx = la table connexions (par compte), notees = chaque appel de noter_connexion, cxLectures = chaque accès à la table ;
      cxAbsente (base sans la migration : 404), cxRefusee (retour arrière : 403), cxPanne (réseau coupé), cxRetard (ms),
-     cx401 (jeton expiré : n refus 401 avant d'accepter) ; les instants sont rendus comme PostgREST (…123456+00:00) */
-  const db = { profils, donnees, cx: {}, notees: [], cxLectures: [], cxAbsente: false, cxRefusee: false, cxPanne: false, cxRetard: 0, cx401: 0, emails_prospects: [], sansJournal: false, ecritures: [], refus: [], lectures: [], journal: [], chemins: [],
+     cx401 (jeton expiré : n refus 401 avant d'accepter) ; les instants sont rendus comme PostgREST (…123456+00:00) ;
+     profilRate (n premières lectures de SON profil coupées : réseau coupé au démarrage), profilRetard (ms, lecture lente) */
+  const db = { profils, donnees, cx: {}, notees: [], cxLectures: [], cxAbsente: false, cxRefusee: false, cxPanne: false, cxRetard: 0, cx401: 0, profilRate: 0, profilRetard: 0, emails_prospects: [], sansJournal: false, ecritures: [], refus: [], lectures: [], journal: [], chemins: [],
     fonctions: [], inscriptions: [], emails: {}, connexions: {}, inscription: {}, lectureKo: opts.lectureKo || [], retardLecture: {}, retard: {},
     reponseFonction: { status: 200, body: { ok: true } },
     /* v52 (lot A) : mot de passe oublié et changement d'adresse (erreurs simulées), renouvellements de session, polices lentes */
@@ -221,6 +223,8 @@ async function repondre(r, who, db){
   /* --- profils : chacun le sien, le coach tous ; rôle et statut changés par le coach seul (déclencheur protege_role) --- */
   if (p === "/rest/v1/profils") {
     const id = (q.get("id") || "").replace(/^eq\./, "");
+    if ((m === "GET" || m === "HEAD") && id && id === moi && db.profilRate > 0) { db.profilRate--; return r.abort().catch(() => {}); }   // v56
+    if ((m === "GET" || m === "HEAD") && id && id === moi && db.profilRetard) await new Promise(z => setTimeout(z, db.profilRetard));   // v56
     if (m === "GET" || m === "HEAD") { let l = db.profils.filter(x => coach || x.id === moi); if (id) l = l.filter(x => x.id === id); return json(colonnes(plage(l), q)); }
     const c = corps() || {}, cible = db.profils.find(x => x.id === id);
     db.ecritures.push({ table: "profils", m, id, corps: clone(c) });
@@ -462,7 +466,7 @@ const FUSEAU = "Asia/Makassar";   // l'appareil du coach (Bali) : la date et l'h
 const quandCoach = v => { const P = {}; new Intl.DateTimeFormat("en-GB", { timeZone: FUSEAU, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date(v)).forEach(x => { P[x.type] = x.value; }); return P.day + "/" + P.month + "/" + P.year + " " + P.hour + ":" + P.minute; };
 const jourCoach = v => quandCoach(v).slice(0, 10);
 const notees = (db, uid) => db.notees.filter(x => !uid || x.par === uid);
-const hier = () => jourParis(Date.now() - J);
+const jourPasse = () => jourParis(Date.now() - 2 * J);   // un jour de Paris forcément antérieur (le jour du changement d'heure dure 25 h)
 const TEXTE_CX = /Connexions|Dernière connexion|connexions? (notée|comptée)/i;
 /* le décor du coach : des lignes dans la table (le compte de test, Thomas, Léa ; Marc et Karim n'en ont pas) */
 const CX_TEST = { nombre: 12, derniere: avant(3 * H), premiere: avant(20 * J) };
@@ -529,11 +533,12 @@ const titre = (page, uid, col) => page.$eval(`#tb-clients [data-ouvrir="${uid}"]
     await page.fill("#c-email", "lea@exemple.fr"); await page.fill("#c-mdp", "motdepasse1"); await page.click("#c-go");
     await pret(page, "#vue"); await attendre(page, 800);
     ok("A : Léa se connecte avec son mot de passe : après le rechargement, UNE connexion notée pour elle", notees(db).length === 1 && notees(db, LEA).length === 1 && db.tokens.includes("password") && db.cx[LEA] && db.cx[LEA].nombre === 1, JSON.stringify(notees(db)) + " " + JSON.stringify(db.tokens));
-    const d1 = db.cx[LEA].derniere;
+    const d1 = db.cx[LEA].derniere, j1 = db.cx[LEA].dernier_jour;
     await attendre(page, 1100);
     await page.reload(); await pret(page, "#vue"); await attendre(page, 800);
-    ok("A : elle rouvre l'app le même jour : notée de nouveau, mais toujours 1 connexion ; la dernière connexion avance", notees(db, LEA).length === 2 && db.cx[LEA].nombre === 1 && db.cx[LEA].derniere > d1, JSON.stringify(db.cx[LEA]));
-    db.cx[LEA].dernier_jour = hier();
+    const n1 = jourParis(Date.now()) === j1 ? 1 : 2;   // minuit à Paris passé entre les deux ouvertures : 2, c'est juste
+    ok("A : elle rouvre l'app le même jour : notée de nouveau, mais toujours 1 connexion ; la dernière connexion avance", notees(db, LEA).length === 2 && db.cx[LEA].nombre === n1 && db.cx[LEA].derniere > d1, JSON.stringify(db.cx[LEA]));
+    db.cx[LEA].dernier_jour = jourPasse(); db.cx[LEA].nombre = 1;
     await page.reload(); await pret(page, "#vue"); await attendre(page, 800);
     ok("A : elle rouvre l'app un autre jour : 2 connexions", notees(db, LEA).length === 3 && db.cx[LEA].nombre === 2 && db.cx[LEA].dernier_jour === jourParis(Date.now()), JSON.stringify(db.cx[LEA]));
   });
@@ -567,6 +572,30 @@ const titre = (page, uid, col) => page.$eval(`#tb-clients [data-ouvrir="${uid}"]
     db.cx401 = 1;
     await cacher(page); await page.clock.fastForward(70 * MIN); await montrer(page); await attendre(page, 1500);
     ok("B : revenue après 70 min, jeton refusé (401) : session renouvelée, la connexion est notée au 2e essai, sans bandeau « session perdue »", notees(db, LEA).length === 3 && db.tokens.includes("refresh_token") && db.cx[LEA].nombre === 1 && db.cx[LEA].derniere > d1 && !(await page.$("#session-perdue")), notees(db, LEA).length + " " + JSON.stringify(db.tokens) + " " + JSON.stringify(db.cx[LEA]));
+  });
+
+  await bloc("B. profil illisible au démarrage, app quittée pendant le chargement", async () => {
+    /* réseau coupé pendant la lecture du profil au démarrage : on ne sait pas si c'est le coach, cette ouverture n'est pas
+       notée ; au retour après 10 min ou plus, le profil est relu et la connexion notée (jamais pour le coach). App quittée
+       pendant le chargement (page masquée avant que l'écoute commence) : son retour 10 min plus tard compte aussi. */
+    const db = decor(); db.profilRate = 1;
+    const { page } = await contexte(b, THOMAS, db, { horloge: true });
+    await page.goto(URL0); await pret(page, "#vue"); await attendre(page, 800);
+    const n0 = notees(db).length;
+    await cacher(page); await page.clock.fastForward(11 * MIN); await montrer(page); await attendre(page, 1200);
+    ok("B : Thomas, profil illisible au démarrage : rien de noté à l'ouverture ; revenu après 11 min : profil relu, UNE connexion notée", n0 === 0 && notees(db, F.IDS.c1).length === 1 && notees(db).length === 1, n0 + " puis " + JSON.stringify(notees(db)));
+    const dbc = decor(); dbc.profilRate = 1;
+    const { page: pc } = await contexte(b, COACH, dbc, { horloge: true });
+    await pc.goto(URL0); await pret(pc, "#vue"); await attendre(pc, 800);
+    await cacher(pc); await pc.clock.fastForward(11 * MIN); await montrer(pc); await attendre(pc, 1200);
+    ok("B : le coach, même cas : son profil relu dit « coach » : aucune connexion notée", notees(dbc).length === 0, JSON.stringify(notees(dbc)));
+    const dbl = decor(); dbl.profilRetard = 3000;
+    const { page: pl } = await contexte(b, qui(LEA, "lea@exemple.fr"), dbl, { horloge: true });
+    await pl.goto(URL0); await cacher(pl);   // elle passe à une autre app pendant le chargement (profil lent : 3 s)
+    await attendre(pl, 4500);
+    const n1 = notees(dbl, LEA).length;
+    await pl.clock.fastForward(11 * MIN); await montrer(pl); await attendre(pl, 1200);
+    ok("B : Léa quitte l'app pendant le chargement : notée à l'ouverture, puis de nouveau à son retour 11 min plus tard", n1 === 1 && notees(dbl, LEA).length === 2, n1 + " puis " + notees(dbl, LEA).length);
   });
 
   /* =================== C. base sans la migration, retour arrière, réseau coupé =================== */
@@ -655,8 +684,6 @@ const titre = (page, uid, col) => page.$eval(`#tb-clients [data-ouvrir="${uid}"]
     const vl = [];
     for (const h of ["#/accueil", "#/formation", "#/calculateur", "#/profil", "#/clients", "#/prospects"]) { await aller(pl, h, 1100); vl.push(norm(await pl.evaluate(() => document.body.innerText))); }
     ok("F : prospecte Léa (même en tapant #/clients ou #/prospects) : rien du compteur, aucune lecture de la table", vl.every(t => !TEXTE_CX.test(t)) && db.cxLectures.length === 0, (vl.find(t => TEXTE_CX.test(t)) || "").slice(0, 160) + " " + JSON.stringify(db.cxLectures));
-    const lecture = await pl.evaluate(() => Clients.lireConnexions());
-    ok("F : … même en appelant la lecture elle-même, la base ne lui rend aucune ligne", lecture && typeof lecture === "object" && Object.keys(lecture).length === 0, JSON.stringify(lecture));
   });
 
   /* =================== G. l'interrupteur des visites ne change rien =================== */

@@ -32,7 +32,7 @@ en ligne, sans message, notification ni mention pour eux (couvert par leur contr
   passe, pas les connexions automatiques, et l'app ne peut pas la lire).
 
 ## Modifié (branche `v2/compteur-connexions`)
-**Base (migration écrite, pas appliquée)** : une table **nouvelle** `connexions` (une ligne par compte : `nombre`,
+**Base (migration appliquée le 28/09, 18 h 32 à Paris)** : une table **nouvelle** `connexions` (une ligne par compte : `nombre`,
 `premiere`, `derniere`, `dernier_jour`) et une fonction **nouvelle** `noter_connexion()`.
 - La fonction ne prend **aucun paramètre** : elle note la connexion du compte du jeton, jamais celle d'un autre.
 - Même jour : la dernière connexion avance, le nombre ne bouge pas. Nouveau jour (Paris) : +1.
@@ -47,8 +47,8 @@ en ligne, sans message, notification ni mention pour eux (couvert par leur contr
 - Les deux colonnes de « Mes clients » et les deux lignes des cartes « Prospects ».
 
 **Tests** :
-- `tests-locaux/verif61.js` : 48 vérifications, dont démarrage, reprise, jeton expiré au retour, base sans migration, retour arrière, réseau coupé, coach, téléphone, interrupteur et données piégées. Elle échoue sur la v55 (13/47).
-- Simulations de verif40, 51 à 58 et 60 : l'appel est mis à part, car ce n'est pas une écriture de l'app dans les données.
+- `tests-locaux/verif61.js` : 50 vérifications, dont démarrage, reprise (profil illisible au démarrage, app quittée pendant le chargement), jeton expiré au retour, base sans migration, retour arrière, réseau coupé, coach, téléphone, interrupteur et données piégées. Elle échoue sur la v55 (13/47).
+- Simulations de flux, rig, verif-xss, verif35 à 43, 48, 50 à 58 et 60 : l'appel est mis à part, car ce n'est pas une écriture de l'app dans les données.
 - `verif52` : la comparaison de « Mes clients » avec `main` ignore les 2 nouvelles colonnes.
 - `supabase/tests/v56_connexions_rls.sql` : 23 tests des règles (coach, client de test, prospect fictif, anonyme, tentatives croisées). Le fichier finit toujours par une erreur voulue (« v56 : 23 / 23 tests ok… Annulation forcée ») : rien ne peut être gardé, même lancé sans `begin` / `rollback`.
 
@@ -59,7 +59,7 @@ en ligne, sans message, notification ni mention pour eux (couvert par leur contr
 - `supabase/README.md`.
 - `js/outilDecouverte.js`, `js/demarrage.js`, `js/outilClients.js`, `js/outilProspects.js`, `js/outilTableau.js`.
 - `js/config.js` et `index.html` : version 56.
-- `tests-locaux/verif61.js` (nouveau), `verif40.js`, `verif51.js` à `verif58.js`, `verif60.js`, `banc.sh`, `README.md`.
+- `tests-locaux/verif61.js` (nouveau), `flux.js`, `rig.js`, `verif-xss.js`, `verif35.js` à `verif43.js`, `verif48.js`, `verif50.js` à `verif58.js`, `verif60.js`, `banc.sh`, `README.md`.
 - Ce brief.
 
 ## Conservé
@@ -75,13 +75,13 @@ en ligne, sans message, notification ni mention pour eux (couvert par leur contr
 3. « Un jour » = le calendrier de Paris. Pour un client très loin (Bali), le jour change à 6 h du matin chez lui (7 h après le passage à l'heure d'hiver, le 25/10).
 4. Si l'app part en ligne avant la migration : rien ne casse. Le coach voit « — », et chaque ouverture fait une demande refusée, invisible, qui n'est plus répétée. Ordre prévu : migration d'abord.
 5. Gratuit : une ligne par compte et une petite requête par ouverture. Rien de payant.
-6. Si le profil ne se charge pas au démarrage (réseau coupé à ce moment-là), cette ouverture n'est pas comptée : la suivante le sera.
+6. Si le profil ne se charge pas au démarrage (réseau coupé à ce moment-là), cette ouverture n'est pas comptée ; au prochain retour au premier plan après 10 min ou plus, le profil est relu et la connexion comptée (jamais pour le coach).
 7. Le « Security Advisor » de Supabase signalera `noter_connexion` (fonction SECURITY DEFINER appelable par les comptes connectés) : c'est voulu, comme pour `est_coach`.
 8. La migration pose un court verrou sur la table des comptes : au-delà de 5 s d'attente, elle abandonne sans rien appliquer (on réessaie), pour ne jamais bloquer les connexions.
 9. Relevés avant / après : un vrai client peut écrire pendant la migration (inscription ouverte, clients actifs). Un écart sur `donnees` ou `profils` se vérifie ligne par ligne. Seule une ligne dont `maj_le` est postérieure au relevé « avant » (modifiée par son propriétaire) est acceptée. Tout autre écart = STOP.
 
 ## Sauvegarde (avant la migration, par Claude, lecture seule)
-Dossier `~/MHX-Code/sauvegardes/2026-09-XX-avant-v56/`, hors dépôt (droits 600), comme pour la v49 :
+Dossier `~/MHX-Code/sauvegardes/2026-09-29-avant-v56/`, hors dépôt (droits 600), comme pour la v49 :
 ```sql
 select json_agg(p order by p.id) from public.profils p;                                   -- profils.json
 select json_agg(d order by d.user_id, d.outil) from public.donnees d;                     -- donnees.json (avec contenu)
