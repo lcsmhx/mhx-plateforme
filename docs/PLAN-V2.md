@@ -29,6 +29,8 @@ En cas de doute, ces règles passent avant `CLAUDE.md`.
 - Ne toucher ni au dossier `donnees/`, ni aux tâches Cowork, ni à Notion.
 - Tant que le push n'est pas autorisé : commits locaux, et push dès que possible.
 
+**Organisation du temps (Lucas, 28/09)** : pendant le développement, seulement les suites touchées ; le banc complet une seule fois par chantier, juste avant la fusion dans `main`. GitHub Actions : banc découpé en 4 jobs parallèles (même exigence : la publication attend les 4). Ne pas attendre la fin des tests en ligne pour avancer : pousser, enchaîner, puis vérifier (retour arrière si rouge). Au plus 2 bancs en même temps sur le Mac, isolés (copie du dépôt, ports différents). Vérificateurs indépendants seulement pour ce qui est risqué (données, accès, ce que voient les clients), un seul par sujet, aucun pour les documents. Partie documents du chantier 2 en parallèle du chantier 3.
+
 **Quand s'arrêter** : seulement si une donnée réelle risque d'être perdue, si un comptage ne tombe pas juste, ou si un test reste rouge après correction. Pour tout autre besoin de Lucas (un clic, un identifiant, un choix) : noter la question en bas de ce fichier et continuer.
 
 **Résumé final (un seul, en langage simple)** : ce qui change pour le prospect, le client et le coach ; ce qui est en ligne et ce qui attend derrière l'interrupteur ; ce que Lucas doit faire, dans l'ordre, avec les liens (réglages, test sur son téléphone, activation du feedback pour tous, étapes du chantier 2) ; le message WhatsApp pour ses clients ; les commandes de retour arrière ; les idées non codées.
@@ -69,7 +71,7 @@ En cas de doute, ces règles passent avant `CLAUDE.md`.
 - [ ] 7. Pages verrouillées (programme, nutrition, journal, suivi) : un échantillon générique, puis « Tu veux un programme construit pour toi, qui évolue chaque semaine ? Réserve ton bilan. » Programme : la séance découverte existante. Nutrition : une journée type d'exemple (réutiliser le générateur ou les recettes existantes).
 - [ ] 8. Cartes dans l'app (pas d'emails) : poids stable (± 0,3 kg) sur 14 jours → carte « Ton poids stagne… » + bilan ; 3e visite d'une page verrouillée → rappel de sa réponse « problème » + bilan ; Speed Formation terminée → proposition de bilan.
 - [ ] 9. Bug : sur téléphone, après connexion, le Profil s'ouvre déjà défilé et l'encadré « Bienvenue ! » est coupé sous l'en-tête.
-- [ ] 10. Garder le garde-fou 18 ans et la mention « pas un avis médical » existants.
+- [ ] 10. Garder le garde-fou 18 ans et la mention « pas un avis médical » existants. (Q7 : garde-fou au calculateur ; case des conditions « J'ai 18 ans ou plus et j'accepte… »)
 - [ ] 11. Bug mineur : un client qui ouvre une page coach (par exemple `#/calculateur`) voit l'Accueil, mais l'adresse ne change pas.
 - [ ] 12. Branche `attente/nuit-28-09` : reprendre les corrections utiles (messages d'erreur en français, session après changement d'adresse, erreurs du Profil). Laisser ce qui concerne l'envoi des emails d'inscription par Brevo (on passe par Gmail).
 - [ ] Fin du chantier : banc à jour et vert, téléphone + ordi, relecture indépendante, version 52, note Grok (5 à 10 tests), « État actuel », commit, push, vérification en ligne.
@@ -85,7 +87,7 @@ Démarre derrière l'interrupteur en « test » (Étape 1 d) : les autres client
 - [ ] Bug : le lundi, le bilan porte encore sur la semaine passée et dit « avant dimanche soir ».
 - [ ] À vérifier : où les clients notent leurs séances (le journal d'entraînement semble caché aux clients).
 - [ ] Précision : note en chute = note de 5 ou moins, ou 2 points de moins que la semaine précédente.
-- [ ] Préparer un court message WhatsApp que Lucas enverra à ses clients pour expliquer le nouveau feedback du dimanche.
+- [ ] Préparer un court message WhatsApp que Lucas enverra à ses clients pour expliquer le nouveau feedback du dimanche. Il annonce aussi le suivi des visites (Q4) et l'écran d'acceptation des conditions (Q6).
 - [ ] Fin du chantier : banc à jour et vert, téléphone + ordi, relecture indépendante, version suivante, note Grok (5 à 10 tests), « État actuel », commit, push, vérification en ligne.
 
 ## Chantier 4 — Côté coach
@@ -104,6 +106,7 @@ Partie code seulement dans la mission autonome : rien n'est activé, rien n'est 
    - [ ] Précision : préparer les deux flux dans la fonction existante, sans la déployer ; arrêt des emails de vente dès qu'un bilan est coché « réservé ».
 - [ ] Pas de pixel de suivi d'ouverture sur la newsletter. Lien de désinscription dans chaque email.
 - [ ] Précision : accords — enregistrer la date et la version du texte pour la case santé et pour la case newsletter.
+- [ ] Q6 : écran unique d'acceptation (conditions + données de santé) à la prochaine connexion des clients sans accord enregistré, derrière l'interrupteur en « test ».
 - [ ] Politique de confidentialité et mentions légales à jour (suivi d'activité, newsletter, Supabase, Brevo, Calendly).
    - [ ] Précision : rédiger les brouillons (suivi d'activité, newsletter, Supabase, Brevo, Calendly, Gmail) avec des champs à compléter par Lucas. Droit de suppression : sur simple demande par email.
 - [ ] Compteur simple : inscrits → 3 questions remplies → bilans réservés → clients (côté coach).
@@ -117,9 +120,19 @@ Partie code seulement dans la mission autonome : rien n'est activé, rien n'est 
 
 ## Décisions encore ouvertes
 
+## Réponses de Lucas (28/09/2026) — décisions à appliquer
+- **Q1** push : validé (autorisation « git push origin main » posée dans `.claude/settings.local.json`).
+- **Q2** compte de test : `9df6bb84-5a09-4bb0-a77a-b2633d842ed9` confirmé (lucasmahauxpro+test@gmail.com). Ne jamais utiliser `6cbdf770`.
+- **Q3** source Pages : oui, Lucas la passe sur GitHub Actions dès qu'on le lui demande. **La publication d'urgence sert uniquement à revenir en arrière, jamais à publier du nouveau code sans tests** (écrit dans `CLAUDE.md`).
+- **Q4** suivi des visites des clients : oui, derrière l'interrupteur en « test » ; l'annoncer dans le message WhatsApp.
+- **Q5** emails : (a) la relance J3 va dans le flux newsletter ; (b) **les relances de vente (J3 et suivantes) s'arrêtent dès qu'un bilan est coché « réservé »** ; la newsletter hebdomadaire continue pour les prospects qui n'ont pas signé et s'arrête quand la personne devient cliente ; (c) lien de désinscription aussi dans les emails de service ; (d) page de désinscription en anglais aussi ; (e) Brevo ne permet pas de retirer le pixel : dans la marche à suivre, activer le **suivi anonyme** ; nouveau texte de la case newsletter (nouvelle version) : « Je veux recevoir par email les conseils, témoignages et offres de coaching de MHX Coaching (1 à 2 emails par semaine maximum) et j'accepte la mesure de leur ouverture. Désinscription en 1 clic dans chaque email. »
+- **Q6** accords des clients existants : **à coder dans cette mission** : un écran unique d'acceptation (conditions + données de santé) à la prochaine connexion des clients qui n'ont aucun accord enregistré, derrière l'interrupteur en « test » (Lucas l'activera quand la politique de confidentialité sera finale et ses clients prévenus) ; l'annoncer dans le message WhatsApp.
+- **Q7** âge : garde-fou 18 ans dans le calculateur, et l'âge intégré à la case des conditions, sans case en plus : « J'ai 18 ans ou plus et j'accepte les conditions d'utilisation et la politique de confidentialité. »
+- **Décisions prises seules par Claude jusqu'au 28/09** (liste donnée à Lucas) : toutes validées. Tableau de bord : liste « À traiter maintenant » sous les 2 tuiles, 5 lignes au plus, affichée seulement quand elle n'est pas vide.
+
 ## Questions pour Lucas
 *(notées pendant la mission autonome ; on continue sur le reste en attendant)*
-- [ ] **Q1 — Autoriser le push (Étape 1 b).** Dans `.claude/settings.local.json`, une seule modification : dans `"deny"`, remplacer la ligne `"Bash(git push*)",` par les 8 lignes ci-dessous, et dans `"allow"`, ajouter `"Bash(git push origin main)",`. Les interdictions l'emportent toujours sur les autorisations : ces 8 lignes bloquent toutes les autres formes (forcer, supprimer, pousser une autre branche sur `main`, options, `git -C`), sans bloquer `git push origin main`.
+- [x] **Q1 — Autoriser le push (Étape 1 b).** Dans `.claude/settings.local.json`, une seule modification : dans `"deny"`, remplacer la ligne `"Bash(git push*)",` par les 8 lignes ci-dessous, et dans `"allow"`, ajouter `"Bash(git push origin main)",`. Les interdictions l'emportent toujours sur les autorisations : ces 8 lignes bloquent toutes les autres formes (forcer, supprimer, pousser une autre branche sur `main`, options, `git -C`), sans bloquer `git push origin main`.
   ```
   "Bash(git push)",
   "Bash(git push -*)",
@@ -131,9 +144,9 @@ Partie code seulement dans la mission autonome : rien n'est activé, rien n'est 
   "Bash(git -c *)",
   ```
   Limite connue : `git push origin <autre-branche>` n'est pas bloqué par ces lignes (il créerait une branche sur GitHub, sans rien publier : seul `main` est publié). La règle de `CLAUDE.md` l'interdit.
-- [ ] **Q2 — Compte client de test.** L'interrupteur « test » utilise l'identifiant `9df6bb84-5a09-4bb0-a77a-b2633d842ed9` (compte client sans prénom, créé le 25/09 ; c'est celui que les anciennes sessions utilisaient comme « compte test »). À confirmer : Supabase → Authentication → Users → cherche `lucasmahauxpro+test@gmail.com` → « User UID » doit commencer par `9df6bb84`. Sinon, donne-moi le bon (un autre compte « lucas m. », `6cbdf770…`, existe aussi).
-- [ ] **Q3 — Source de GitHub Pages (Étape 1 c), après le premier push du workflow.** https://github.com/lcsmhx/mhx-plateforme/settings/pages → « Build and deployment » → Source : **GitHub Actions**. Ensuite, chaque push n'est publié que si le banc est vert (environ 40 minutes après le push). Retour arrière en urgence : onglet Actions → « Tests puis publication » → « Run workflow » → cocher « urgence ».
-- [ ] **Q4 — Suivi des visites des clients (Chantier 4).** Tes 7 clients n'ont accepté aucun texte sur le suivi d'activité (dernière visite, jours actifs). Je le code derrière un interrupteur en « test » (compte de test seulement) : à passer sur « tous » quand tu les auras prévenus (le message WhatsApp du chantier 3 peut le dire) et que la politique de confidentialité le mentionnera (Chantier 2).
-- [ ] **Q5 — Emails (Chantier 2, pour la suite ; je code l'option la plus prudente en attendant).** (a) La relance « J3 » d'un prospect : email de service, de newsletter, ou supprimée ? (je la passe en newsletter) ; (b) la newsletter s'arrête-t-elle entièrement dès qu'un bilan est coché réservé ou que la personne devient cliente ? (oui, tout s'arrête) ; (c) un lien de désinscription aussi dans les emails de service ? (oui) ; (d) la page de désinscription en anglais aussi ? (oui) ; (e) Brevo gratuit : peux-tu désactiver le suivi des ouvertures (Paramètres → Suivi) ? Sans ça, la promesse « pas de pixel » ne tient pas.
-- [ ] **Q6 — Tes 7 clients et les accords.** Leurs comptes ont été créés par toi : ils n'ont jamais coché la case santé ni les conditions dans l'app. Veux-tu qu'ils les acceptent à leur prochaine connexion ? (non codé)
-- [ ] **Q7 — Âge minimum.** Les 3 nouvelles questions ne demandent plus l'âge : le garde-fou 18 ans passe au calculateur (rien n'est enregistré sous 18 ans). Veux-tu en plus une case « J'ai 18 ans ou plus » à l'inscription ? (non codé)
+- [x] **Q2 — Compte client de test.** L'interrupteur « test » utilise l'identifiant `9df6bb84-5a09-4bb0-a77a-b2633d842ed9` (compte client sans prénom, créé le 25/09 ; c'est celui que les anciennes sessions utilisaient comme « compte test »). À confirmer : Supabase → Authentication → Users → cherche `lucasmahauxpro+test@gmail.com` → « User UID » doit commencer par `9df6bb84`. Sinon, donne-moi le bon (un autre compte « lucas m. », `6cbdf770…`, existe aussi).
+- [x] **Q3 — Source de GitHub Pages (Étape 1 c), après le premier push du workflow.** https://github.com/lcsmhx/mhx-plateforme/settings/pages → « Build and deployment » → Source : **GitHub Actions**. Ensuite, chaque push n'est publié que si le banc est vert (environ 40 minutes après le push). Retour arrière en urgence : onglet Actions → « Tests puis publication » → « Run workflow » → cocher « urgence ».
+- [x] **Q4 — Suivi des visites des clients (Chantier 4).** Tes 7 clients n'ont accepté aucun texte sur le suivi d'activité (dernière visite, jours actifs). Je le code derrière un interrupteur en « test » (compte de test seulement) : à passer sur « tous » quand tu les auras prévenus (le message WhatsApp du chantier 3 peut le dire) et que la politique de confidentialité le mentionnera (Chantier 2).
+- [x] **Q5 — Emails (Chantier 2, pour la suite ; je code l'option la plus prudente en attendant).** (a) La relance « J3 » d'un prospect : email de service, de newsletter, ou supprimée ? (je la passe en newsletter) ; (b) la newsletter s'arrête-t-elle entièrement dès qu'un bilan est coché réservé ou que la personne devient cliente ? (oui, tout s'arrête) ; (c) un lien de désinscription aussi dans les emails de service ? (oui) ; (d) la page de désinscription en anglais aussi ? (oui) ; (e) Brevo gratuit : peux-tu désactiver le suivi des ouvertures (Paramètres → Suivi) ? Sans ça, la promesse « pas de pixel » ne tient pas.
+- [x] **Q6 — Tes 7 clients et les accords.** Leurs comptes ont été créés par toi : ils n'ont jamais coché la case santé ni les conditions dans l'app. Veux-tu qu'ils les acceptent à leur prochaine connexion ? (non codé)
+- [x] **Q7 — Âge minimum.** Les 3 nouvelles questions ne demandent plus l'âge : le garde-fou 18 ans passe au calculateur (rien n'est enregistré sous 18 ans). Veux-tu en plus une case « J'ai 18 ans ou plus » à l'inscription ? (non codé)

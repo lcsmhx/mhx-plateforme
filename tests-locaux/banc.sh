@@ -9,6 +9,10 @@
 # une erreur de console, une écriture ou une page manquante pendant rig.js, un test de la fonction emails raté.
 # Le banc teste index.html tel qu'il est sur le disque : il ne conclut « vert » que si ce disque est exactement un commit
 # (aucun fichier suivi modifié) du début à la fin. Pour un essai sur des modifications non commitées : BANC_LIBRE=1.
+# Découpage (GitHub Actions, jobs en parallèle) : BANC_PARTIE=1 … 4 ne lance que les suites de cette partie (voir partie()) ;
+# toute suite doit appartenir à une partie. Sans BANC_PARTIE : tout le banc.
+# Deux bancs en même temps sur une machine (copies du dépôt différentes) : BANC_VERROUS=<dossier> empêche la même suite
+# de tourner deux fois à la fois (chaque suite a son propre port) ; deux suites différentes peuvent tourner ensemble.
 set -u
 APPEL="$PWD"
 cd "$(dirname "$0")" || exit 1
@@ -36,6 +40,22 @@ attendu() {
     verif54) echo 64;; rig) echo 78;; fonction) echo 88;; *) echo "";;
   esac
 }
+# Partie de chaque suite pour les jobs parallèles de GitHub Actions (durées équilibrées, environ 8 à 9 minutes chacune).
+partie() {
+  case "$1" in
+    verif52|verif49|verif39|verif43|flux) echo 1;;
+    verif53|verif48|verif54) echo 2;;
+    verif51|verif42|verif40|verif35|verif34|verif55|fonction) echo 3;;
+    verif38|verif50|rig|verif-xss|verif41|verif37|verif36|verif56) echo 4;;
+    *) echo "";;
+  esac
+}
+dans_partie() { [ -z "${BANC_PARTIE:-}" ] || [ "$(partie "$1")" = "$BANC_PARTIE" ]; }
+TENU=""   # verrou de suite tenu par CE banc (on ne rend jamais celui d'un autre)
+prendre() { [ -z "${BANC_VERROUS:-}" ] && return 0; mkdir -p "$BANC_VERROUS"; until mkdir "$BANC_VERROUS/$1" 2>/dev/null; do sleep 3; done; TENU="$1"; }
+rendre() { [ -n "${BANC_VERROUS:-}" ] && [ "$TENU" = "$1" ] && rmdir "$BANC_VERROUS/$1" 2>/dev/null; TENU=""; return 0; }
+trap '[ -n "$TENU" ] && rendre "$TENU"' EXIT
+
 nombre() { case "$1" in ''|*[!0-9]*) return 1;; esac; return 0; }
 
 echecs=0
@@ -49,10 +69,17 @@ for f in verif*.js; do
   case " $SUITES $HORS_BANC " in *" $s "*) ;; *) echec "$s : suite ni au banc ni dans HORS_BANC (banc.sh)";; esac
 done
 
+for s in $SUITES rig fonction; do
+  if [ -z "$(partie "$s")" ]; then echec "$s : aucune partie dans partie() (banc.sh)"; fi
+done
+case "${BANC_PARTIE:-}" in ''|1|2|3|4) ;; *) echec "BANC_PARTIE=${BANC_PARTIE} : partie inconnue";; esac
+
 for s in $SUITES; do
-  debut=$(date +%s)
+  dans_partie "$s" || continue
   min=$(attendu "$s")
   if ! nombre "$min"; then echec "$s : aucun nombre attendu dans attendu() (banc.sh)"; continue; fi
+  prendre "$s"
+  debut=$(date +%s)
   if [ "$s" = flux ]; then node flux.js ../index.html "$OUT/captures-flux" > "$OUT/$s.log" 2>&1
   else node "$s.js" ../index.html > "$OUT/$s.log" 2>&1; fi
   rc=$?
@@ -67,9 +94,12 @@ for s in $SUITES; do
   else
     note "ok     $s : $ok ✓, ${duree} s"
   fi
+  rendre "$s"
 done
 
 # Parcours de toutes les pages (client, coach, fiche, connexion ; téléphone et ordi) : 0 erreur, 0 écriture, toutes les pages.
+if dans_partie rig; then
+prendre rig
 debut=$(date +%s)
 rm -f "$OUT/captures-rig/_rapport.json"
 node rig.js --html ../index.html --out "$OUT/captures-rig" > "$OUT/rig.log" 2>&1
@@ -84,8 +114,11 @@ bilan=$(node -e '
 duree=$(( $(date +%s) - debut ))
 if [ "$rc" -ne 0 ] || [ "${bilan:0:2}" != OK ]; then echec "rig : code $rc, ${duree} s — $bilan"
 else note "ok     rig : ${bilan:3}, ${duree} s"; fi
+rendre rig
+fi
 
 # Fonction des emails de suivi (sans réseau, jamais déployée par ce banc) : la dernière ligne doit être « N/N vérifications ».
+if dans_partie fonction; then
 debut=$(date +%s)
 node ../supabase/functions/emails-prospects/test.mjs > "$OUT/fonction-emails.log" 2>&1
 rc=$?
@@ -95,6 +128,7 @@ att=$(attendu fonction)
 if [ "$rc" -ne 0 ] || [ "$fin" != "$att/$att vérifications" ]; then
   echec "fonction emails : code $rc, « $fin » ($att/$att attendues), ${duree} s"; tail -20 "$OUT/fonction-emails.log"
 else note "ok     fonction emails : $fin, ${duree} s"; fi
+fi
 
 # Le disque doit être resté exactement le commit testé.
 DISQUE_FIN=$(etat_disque)
@@ -105,7 +139,7 @@ if [ "${BANC_LIBRE:-}" != 1 ]; then
 fi
 
 echo
-echo "===== Bilan du banc — commit $TETE ====="
+echo "===== Bilan du banc — commit $TETE${BANC_PARTIE:+ — partie $BANC_PARTIE/4} ====="
 printf "%s" "$resume"
 if [ "$echecs" -gt 0 ]; then echo "$echecs échec(s) : rien ne doit être publié."; exit 1; fi
 echo "Tout est vert (commit $TETE)."

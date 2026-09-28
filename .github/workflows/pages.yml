@@ -5,8 +5,9 @@
 # sans attendre ce banc : la publication ci-dessous ne fait alors rien (avertissement dans le journal).
 # Publication identique à l'ancien mode : même construction Jekyll de GitHub Pages, sur tout le dépôt (les dossiers
 # commençant par un point, comme .github, ne sont pas publiés).
-# Urgence (retour arrière) : Actions → « Tests puis publication » → Run workflow, case « urgence » cochée : publie main
-# tout de suite, sans attendre le banc (à utiliser seulement pour remettre en ligne une version déjà connue bonne).
+# Urgence (RETOUR ARRIÈRE SEULEMENT) : Actions → « Tests puis publication » → Run workflow, case « urgence » cochée : publie
+# main tout de suite, sans attendre le banc. Seulement pour remettre en ligne une version déjà testée (après un git revert),
+# JAMAIS pour publier du nouveau code sans tests (règle de Lucas, CLAUDE.md).
 # Gratuit : dépôt public, machines standard de GitHub. Les journaux publiés en cas d'échec ne contiennent que des
 # données fictives (tests-locaux/fixtures.js).
 name: Tests puis publication
@@ -31,10 +32,16 @@ concurrency:
 
 jobs:
   banc:
-    name: Banc de tests (Supabase simulé)
+    # Le banc est découpé en 4 parties qui tournent en même temps (tests-locaux/banc.sh, partie()) : environ 10 à 15 minutes
+    # au lieu de 40. Mêmes tests, même exigence : la publication attend que les 4 parties soient vertes.
+    name: Banc de tests ${{ matrix.partie }}/4 (Supabase simulé)
     if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.urgence) }}
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        partie: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -76,13 +83,13 @@ jobs:
           if [ -n "$AVANT" ] && [ "$AVANT" != "0000000000000000000000000000000000000000" ]; then export VERIF52_REF="$AVANT";
           else export VERIF52_REF="$(git rev-parse HEAD~1)"; fi
           echo "Référence de comparaison de verif52 : $VERIF52_REF"
-          bash tests-locaux/banc.sh "$RUNNER_TEMP/banc"
+          BANC_PARTIE=${{ matrix.partie }} bash tests-locaux/banc.sh "$RUNNER_TEMP/banc"
 
       - name: Journaux du banc (en cas d'échec)
         if: failure() || cancelled()
         uses: actions/upload-artifact@v4
         with:
-          name: journaux-banc
+          name: journaux-banc-${{ matrix.partie }}
           path: ${{ runner.temp }}/banc/*.log
           retention-days: 7
 
