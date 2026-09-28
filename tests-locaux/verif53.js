@@ -27,7 +27,8 @@
       commencé (4/10 réponses) » ;
    L. client Thomas : ni lecture ni écriture d'activite, emails ou coach_notifs en naviguant, en arrière-plan, au bout de
       11 minutes (horloge contrôlée), à la fermeture ni à la réouverture ;
-   M. page de désinscription (desinscription.html) : rien à l'ouverture, « Confirmer » envoie la demande signée.
+   M. page de désinscription (desinscription.html) : v53, fonction supprimée (la fonction des emails de suivi v51, jamais
+      déployée, et sa page de désinscription sont retirées) : bloc retiré (6 vérifications).
    Supabase simulé : rien ne part vers la vraie base ; chaque écriture est appliquée en mémoire et notée, chaque lecture
    de « donnees » aussi ; réponses coupées à 1 000 lignes, en-tête Range et tri order= respectés. Dates relatives au
    lancement (la suite passe quel que soit le jour ou l'heure). Chaque bloc tourne à part (« ✗ BLOC INTERROMPU ») ;
@@ -37,7 +38,6 @@
            VERIF53_BLOCS="A.,F." node verif53.js …              (seulement les blocs dont le nom commence ainsi) */
 const { chromium } = require("playwright"); const fs = require("fs"); const http = require("http"); const path = require("path");
 const F = require("./fixtures"); const HTML = path.resolve(process.argv[2] || "../index.html");
-const DESINSCRIPTION = path.join(__dirname, "..", "desinscription.html");
 const PORT = +process.env.VERIF53_PORT || 9690;
 const BLOCS = (process.env.VERIF53_BLOCS || "").split(",").map(x => x.trim()).filter(Boolean);
 const OUT = path.join(__dirname, "captures", "v53"); fs.mkdirSync(OUT, { recursive: true });
@@ -46,7 +46,6 @@ let inscriptionLibre = false;
 const retouche = h => { if (inscriptionLibre) h = h.replace("inscription_libre: false", "inscription_libre: true"); return h; };
 const { servirFichier, source } = require("./fichiers");   // 52.1 : la page charge css/ et js/, servis depuis son dossier (fichiers.js)
 const server = http.createServer((req, res) => {
-  if (req.url.split("?")[0] === "/desinscription.html") { res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); return res.end(fs.readFileSync(DESINSCRIPTION, "utf8")); }
   if (servirFichier(req, res, HTML, retouche)) return;
   let h = retouche(fs.readFileSync(HTML, "utf8"));
   res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); res.end(h);
@@ -93,7 +92,7 @@ function base(opts){
   const donnees = clone(F.donnees);
   /* Julien : dernière saisie il y a 12 jours et 3 heures (nombre de jours entiers stable pendant toute la suite) */
   donnees.forEach(d => { if (d.user_id === F.IDS.c3) d.maj_le = avant(12 * J + 3 * H); });
-  const db = { profils, donnees, emails_prospects: [], ecritures: [], lectures: [], journal: [], chemins: [], fonction: [], lectureKo: opts.lectureKo || [], reponseFonction: { status: 200, body: { ok: true } } };
+  const db = { profils, donnees, emails_prospects: [], ecritures: [], lectures: [], journal: [], chemins: [], lectureKo: opts.lectureKo || [] };
   (opts.comptes || []).forEach(x => {
     profils.push({ id: x.id, prenom: x.prenom, nom: x.nom, role: "client", statut: x.statut || "prospect", cree_le: x.cree });
     (x.donnees || []).forEach(([outil, contenu, maj]) => donnees.push({ user_id: x.id, outil, contenu: clone(contenu), maj_le: maj }));
@@ -119,13 +118,7 @@ async function repondre(r, who, db){
   const plage = l => { l = ordonner(l, q.get("order")); const rg = req.headers()["range"]; if (rg) { const [a, z] = rg.split("-").map(Number); l = l.slice(a, z + 1); } return l.slice(0, MAX_LIGNES); };
   const estCoach = !!who && who.id === F.IDS.coach;
   db.chemins.push(m + " " + p);
-  if (p.startsWith("/functions/v1/emails-prospects")) {
-    if (m === "OPTIONS") return r.fulfill({ status: 204, headers: { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "POST, GET, OPTIONS", "Access-Control-Allow-Headers": "*" }, body: "" });
-    db.fonction.push({ m, action: q.get("action"), u: q.get("u"), t: q.get("t") });
-    const rf = db.reponseFonction || { status: 200, body: { ok: true } };
-    if (rf.abort) return r.abort();
-    return json(rf.body, rf.status);
-  }
+  /* v53 : fonction supprimée — plus de fausse fonction « emails-prospects » (elle ne servait qu'à la page de désinscription) */
   if (p.startsWith("/auth/v1/token")) return json(who ? who.session : { error: "invalid" }, who ? 200 : 400);
   if (p.startsWith("/auth/v1/logout")) { db.journal.push("LOGOUT"); db.ecritures.push({ table: p, m }); return json({}); }
   if (!["GET", "HEAD", "OPTIONS"].includes(m) && p !== "/rest/v1/donnees" && p !== "/rest/v1/profils") db.ecritures.push({ table: p, m });
@@ -903,30 +896,9 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
   });
 
   /* =================== M. page de désinscription =================== */
-  await bloc("M. page de désinscription", async () => {
-    const U = PID(34), T = "0123456789abcdef".repeat(4);
-    const db = base();
-    const { c, page } = await contexte(b, null, db);
-    await page.goto(`http://localhost:${PORT}/desinscription.html?u=${U}&t=${T}`); await attendre(page, 800);
-    ok("lien valable : « Ne plus recevoir les emails de suivi », bouton « Confirmer », rien n'est envoyé à l'ouverture (un aperçu de lien ne désinscrit personne)", (await texte(page, "#titre")) === "Ne plus recevoir les emails de suivi" && (await page.isVisible("#confirmer")) && db.fonction.length === 0, (await texte(page, "#titre")) + " · " + JSON.stringify(db.fonction));
-    await page.click("#confirmer"); await attendre(page, 1200);
-    ok("« Confirmer » : une demande POST à la fonction (action=desinscription, u et t exacts), puis « C'est noté », bouton retiré", db.fonction.length === 1 && db.fonction[0].m === "POST" && db.fonction[0].action === "desinscription" && db.fonction[0].u === U && db.fonction[0].t === T && (await texte(page, "#titre")) === "C'est noté" && !(await page.isVisible("#confirmer")), JSON.stringify(db.fonction) + " · " + (await texte(page, "#titre")));
-    await c.close();
-    const db2 = base();
-    const { c: c2, page: p2 } = await contexte(b, null, db2);
-    await p2.goto(`http://localhost:${PORT}/desinscription.html?u=abc&t=123`); await attendre(p2, 600);
-    ok("lien incomplet : « Lien non valable », pas de bouton, rien d'envoyé", (await texte(p2, "#titre")) === "Lien non valable" && !(await p2.isVisible("#confirmer")) && db2.fonction.length === 0, await texte(p2, "#titre"));
-    await c2.close();
-    const db3 = base(); db3.reponseFonction = { status: 500, body: { ok: false } };
-    const { page: p3 } = await contexte(b, null, db3, { viewport: { width: 390, height: 844 } });
-    await p3.goto(`http://localhost:${PORT}/desinscription.html?u=${U}&t=${T}`); await attendre(p3, 600);
-    ok("mobile 390 px : page sans défilement horizontal", !(await deborde(p3)), await largeur(p3));
-    await p3.click("#confirmer"); await attendre(p3, 1000);
-    ok("erreur 500 : « Ça n'a pas marché… », bouton de nouveau actif (on peut réessayer)", (await texte(p3, "#msg")).startsWith("Ça n'a pas marché.") && (await p3.$eval("#confirmer", e => !e.disabled && !e.hidden).catch(() => false)), await texte(p3, "#msg"));
-    db3.reponseFonction = { status: 400, body: { ok: false } };
-    await p3.click("#confirmer"); await attendre(p3, 1000);
-    ok("refus 400 : « Ce lien n'est pas valable. Coupe les emails de suivi depuis ton Profil, dans l'app. »", (await texte(p3, "#msg")) === "Ce lien n'est pas valable. Coupe les emails de suivi depuis ton Profil, dans l'app." && db3.fonction.length === 2, await texte(p3, "#msg"));
-  });
+  /* v53 : fonction supprimée — la page desinscription.html et la fonction des emails de suivi v51 (jamais déployée) sont
+     retirées du dépôt : bloc retiré (6 vérifications : lien valable sans envoi à l'ouverture, « Confirmer », lien
+     incomplet, mobile 390 px, erreur 500, refus 400) */
 
   await b.close(); server.close();
   bilan();

@@ -6,7 +6,10 @@
    Lot D (v52, gratuit pour toujours) : plus de « Jour n/7 » ni de jours restants, plus de verrou de la Speed Formation au
    jour 8 : ces vérifications sont retirées (fonction supprimée) ; côté coach, « inscrit depuis n j » remplace « J n/7 » et
    « terminée » (pastilles, fiche) ; calculateur, Ma progression et Speed Formation ouverts, « Mon journal » en vitrine.
-   Chaque attente changée est expliquée par un commentaire « v52 » dans le bloc concerné. Texte d'origine (v51) :
+   Chaque attente changée est expliquée par un commentaire « v52 » dans le bloc concerné.
+   v53 (nettoyage) : le mode test « jour n » (#/decouverte-jour/N) est retiré (fonction supprimée) : son ancienne adresse
+   mène à #/decouverte (bloc F), son ancien drapeau mhx_decouverte_jour resté sur un appareil est effacé au démarrage et
+   ne change rien (clic daté du vrai jour, bloc F ; écrans du coach, bloc I) ; commentaires « v53 ». Texte d'origine (v51) :
    v51 — funnel « Découverte » (remplace le Challenge 7 jours) : démarrage du prospect (Jour n/7 depuis
    profils.cree_le, date locale), questionnaire court (manquants, bornes, brouillon pendant la frappe, garde
    18 ans jugée à la sortie du champ âge : « 185 » et « 25 → 15 » ne laissent rien en base, « 30 » envoie),
@@ -361,7 +364,8 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
   /* v52 (lot D) : fonction supprimée — « F. jour 8 » (Speed Formation verrouillée, « Découverte · terminée ») */
   await bloc("F. adresses, verrous, mode test, profil", async () => {
     const db = base({ intake: avecChoix(N) });
-    const { c, page } = await contexte(b, lea, db);
+    /* v53 : un ancien drapeau du mode test (jour 8) est resté sur l'appareil de Léa : il est effacé au démarrage */
+    const { c, page } = await contexte(b, lea, db, { stockage: { mhx_decouverte_jour: "8" } });
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 2400);
     await aller(page, "#/formation", 1800);
     ok("pendant la découverte : #/formation s'ouvre (pas de verrou)", !(await page.$("#vue .verrou")) && !(await cadenas(page)).includes("formation"));
@@ -385,8 +389,14 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
     }
     await cliquerCal(page, "#vue .verrou a[target=_blank]"); await attendre(page, 2000);
     const cl = ((contenu(db, "challenge") || {}).cta || {}).clics || [];
-    ok("clic depuis une page verrouillée (#/bilan) : noté avec la source verrou-bilan", cl.length === 1 && cl[0].source === "verrou-bilan", JSON.stringify(cl));
+    /* v53 : … daté du vrai jour de la découverte (Léa inscrite il y a 2 jours : jour 3), pas du jour 8 de l'ancien drapeau */
+    ok("clic depuis une page verrouillée (#/bilan) : noté avec la source verrou-bilan, au vrai jour (3, pas le 8 de l'ancien drapeau du mode test)", cl.length === 1 && cl[0].source === "verrou-bilan" && cl[0].jour === 3, JSON.stringify(cl));
     /* v52 (lot D) : fonction supprimée — mode test #/decouverte-jour/8 (Speed Formation verrouillée, « terminée ») et /0 */
+    /* v53 : fonction supprimée — le mode test lui-même ; son ancienne adresse mène simplement à la Découverte */
+    await aller(page, "#/profil", 900);
+    const nJ = db.ecritures.length;
+    await aller(page, "#/decouverte-jour/8", 1500);
+    ok("v53 : ancienne adresse #/decouverte-jour/8 → #/decouverte (écran Découverte) ; l'ancien drapeau mhx_decouverte_jour de l'appareil est effacé et pas reposé ; rien d'écrit", (await page.evaluate(() => location.hash)) === "#/decouverte" && !!(await page.$("#dc-vue #dc-accomp")) && (await page.evaluate(() => localStorage.getItem("mhx_decouverte_jour"))) === null && db.ecritures.length === nJ, (await page.evaluate(() => location.hash + " | " + localStorage.getItem("mhx_decouverte_jour"))) + " | " + JSON.stringify(db.ecritures.slice(nJ).map(e => e.outil || e.table)));
     /* profil — v52 : ses réponses et « Modifier mes réponses » (#/decouverte/reponses) ; avant : « Voir mon résultat » (#/decouverte) */
     await aller(page, "#/profil", 1800);
     const pr = await texte(page, "#vue");
@@ -548,7 +558,9 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
   });
   await bloc("I. coach, bilan réservé et mode test", async () => {
     /* Léa a coché « J'ai réservé mon bilan » ; le mode test du prospect (jour 8) est pose sur l'appareil du coach :
-       il ne vaut que sur l'appareil du prospect, les ecrans du coach n'en tiennent pas compte */
+       il ne vaut que sur l'appareil du prospect, les ecrans du coach n'en tiennent pas compte
+       v53 : fonction supprimée — le mode test n'existe plus ; l'ancien drapeau resté sur l'appareil du coach est efface
+       au demarrage, et les ecrans du coach sont inchanges */
     const ch = { version: 1, jours: {}, cta: { clics: [{ jour: 2, source: "decouverte", date: creeIlYA(1) }] }, reserve: new Date().toISOString() };
     const db = base({ intake: avecCourt(A), challenge: ch, marc: true });
     dateAction(db, "challenge", ch.reserve);   // la case cochée aujourd'hui a reecrit challenge
@@ -557,18 +569,18 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
     const t = (await page.$$eval("#vue .tb-tuile", l => l.map(e => e.textContent)).catch(() => [])).map(norm);
     const tp = t.find(x => x.startsWith("Prospects en découverte")) || "";
     const tpCle = await tuileMiseEnAvant(page);
-    ok("appareil du coach en mode test (mhx_decouverte_jour = 8) : la tuile ne bouge pas — « Prospects en découverte » = 1, « 1 chaud · 2 prospects au total », tuile mise en avant (un chaud)", (await page.evaluate(() => localStorage.getItem("mhx_decouverte_jour"))) === "8" && /^Prospects en découverte ?1 ?1 chaud · 2 prospects au total$/.test(tp) && tpCle === true, (tp || JSON.stringify(t)) + " · mise en avant : " + tpCle);
+    ok("v53 : ancien drapeau du mode test (mhx_decouverte_jour = 8) sur l'appareil du coach : effacé au démarrage ; la tuile ne bouge pas — « Prospects en découverte » = 1, « 1 chaud · 2 prospects au total », tuile mise en avant (un chaud)", (await page.evaluate(() => localStorage.getItem("mhx_decouverte_jour"))) === null && /^Prospects en découverte ?1 ?1 chaud · 2 prospects au total$/.test(tp) && tpCle === true, (tp || JSON.stringify(t)) + " · mise en avant : " + tpCle);
     /* le meme statut sur la page Prospects : Léa CHAUD (bilan réservé), Marc toujours FROID */
     await aller(page, "#/prospects", 2400);
     await page.click('[data-filtre="tous"]').catch(() => {}); await attendre(page, 500);
     const eLea = await etatProspect(page, PROSPECT), eMarc = await etatProspect(page, MARC);
-    ok("page Prospects (filtre « Tous », même mode test) : Léa « CHAUD » (bilan réservé, et pas « TIÈDE »), Marc « FROID »", eLea.includes("CHAUD") && !eLea.includes("TIÈDE") && eMarc.includes("FROID"), JSON.stringify(eLea) + " | " + JSON.stringify(eMarc));
+    ok("page Prospects (filtre « Tous », même appareil) : Léa « CHAUD » (bilan réservé, et pas « TIÈDE »), Marc « FROID »", eLea.includes("CHAUD") && !eLea.includes("TIÈDE") && eMarc.includes("FROID"), JSON.stringify(eLea) + " | " + JSON.stringify(eMarc));
     await aller(page, "#/clients", 2200);
     const lLea = await ligneDe(page, PROSPECT), lMarc = await ligneDe(page, MARC);
-    ok("Mes clients (même mode test) : Léa « Découverte · inscrit depuis 2 j » + « bilan réservé » (et pas « a cliqué Réserver ») ; Marc « Découverte · inscrit depuis 10 j » (v52)", lLea.includes("Découverte · inscrit depuis 2 j") && lLea.includes("bilan réservé") && !lLea.includes("a cliqué Réserver") && lMarc.includes("Découverte · inscrit depuis 10 j"), lLea + " | " + lMarc);
+    ok("Mes clients (même appareil) : Léa « Découverte · inscrit depuis 2 j » + « bilan réservé » (et pas « a cliqué Réserver ») ; Marc « Découverte · inscrit depuis 10 j » (v52)", lLea.includes("Découverte · inscrit depuis 2 j") && lLea.includes("bilan réservé") && !lLea.includes("a cliqué Réserver") && lMarc.includes("Découverte · inscrit depuis 10 j"), lLea + " | " + lMarc);
     await page.click(`[data-ouvrir="${PROSPECT}"]`).catch(() => {}); await attendre(page, 2200);
     const f = await texte(page, "#fiche-decouverte");
-    ok("fiche de Léa (même mode test) : « inscrit depuis 2 j » (v52 ; avant : « jour 3 / 7 »), case « cochée le … », pastille « bilan réservé » ; aucune écriture (tableau de bord, page Prospects, Mes clients, fiche)", f.includes("inscrit depuis 2 j") && f.includes("cochée le") && f.includes("bilan réservé") && db.ecritures.length === 0, f.slice(0, 300));
+    ok("fiche de Léa (même appareil) : « inscrit depuis 2 j » (v52 ; avant : « jour 3 / 7 »), case « cochée le … », pastille « bilan réservé » ; aucune écriture (tableau de bord, page Prospects, Mes clients, fiche)", f.includes("inscrit depuis 2 j") && f.includes("cochée le") && f.includes("bilan réservé") && db.ecritures.length === 0, f.slice(0, 300));
     await c.close();
   });
 
@@ -581,8 +593,9 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
     ok("client Thomas : son accueil habituel, rien de la Découverte, aucun cadenas", !!(await page.$("#acc-vue")) && (await rien()) && (await cadenas(page)).length === 0 && !(await navIds(page)).includes("decouverte"));
     await aller(page, "#/decouverte", 1800);
     ok("client Thomas tape #/decouverte : il reste sur son accueil, rien de la Découverte", !!(await page.$("#acc-vue")) && (await rien()));
+    /* v53 : #/decouverte-jour/8 = l'ancienne adresse du mode test (supprimé) : comme #/decouverte, son accueil */
     await aller(page, "#/decouverte-jour/8", 2000);
-    ok("client Thomas tape #/decouverte-jour/8 : rien de la Découverte, aucun cadenas", (await rien()) && (await cadenas(page)).length === 0);
+    ok("client Thomas tape #/decouverte-jour/8 (ancienne adresse du mode test) : son accueil, rien de la Découverte, aucun cadenas", !!(await page.$("#acc-vue")) && (await rien()) && (await cadenas(page)).length === 0);
     await aller(page, "#/formation", 1800);
     ok("client Thomas (après #/decouverte-jour/8) : Speed Formation ouverte, pas de verrou", !(await page.$("#vue .verrou")) && (await texte(page, "#vue")).length > 50);
     await aller(page, "#/challenge", 1800);

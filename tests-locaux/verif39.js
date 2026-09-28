@@ -199,10 +199,8 @@ const lireTuiles = page => page.$$eval("#tb-vue .tb-tuile", l => l.map(t => {
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 1800);
     const tPr = (await lireTuiles(page)).find(x => x.lbl === "Prospects en découverte") || {};
     ok("tableau : jour 7 compté, jour 8 et jour 11 non comptés (2 sur 4), sous-titre « 1 chaud · 4 prospects au total », lien vers #/prospects", tPr.val === "2" && tPr.sub === "1 chaud · 4 prospects au total" && tPr.href === "#/prospects", JSON.stringify(tPr));
-    /* le mode test (jour forcé sur l'appareil, #/decouverte-jour/N) ne vaut que chez le prospect, jamais dans les écrans du coach */
-    await page.evaluate(() => localStorage.setItem("mhx_decouverte_jour", "9")); await page.reload(); await attendre(page, 1800);
-    const tPr2 = (await lireTuiles(page)).find(x => x.lbl === "Prospects en découverte") || {};
-    ok("tableau : le jour forcé du mode test sur l'appareil (9) ne change pas la tuile du coach (toujours 2, « 1 chaud · 4 prospects au total »)", tPr2.val === "2" && tPr2.sub === "1 chaud · 4 prospects au total", JSON.stringify(tPr2));
+    /* v53 : fonction supprimée — « tableau : le jour forcé du mode test sur l'appareil (9) ne change pas la tuile du coach »
+       (le mode test « jour n », #/decouverte-jour/N, n'existe plus ; son ancien drapeau est effacé au démarrage : verif51) */
     await c.close();
   }
   {

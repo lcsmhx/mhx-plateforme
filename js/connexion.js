@@ -4,15 +4,9 @@ function routeDepuisAdresse(){
   if (id.indexOf("=") > -1 || id.indexOf("&") > -1) id = "";
   /* le Challenge 7 jours n'existe plus : ses anciennes adresses (liens partages, favoris) menent a la Decouverte */
   if (/^challenge(-libre|-rythme)?(\/.*)?$/.test(id)){ try { history.replaceState(null, "", "#/decouverte"); } catch(e){} id = "decouverte"; }
-  /* mode test de la Decouverte (Lucas) : #/decouverte-jour/8 fait comme si on etait au jour 8 sur CET appareil,
-     #/decouverte-jour/0 revient au vrai jour ; rien n'est ecrit en base (v52 : sans effet visible pour le prospect,
-     plus rien ne depend du jour ; retire en v53) */
-  const jt = /^decouverte-jour\/(\d{1,3})$/.exec(id);
-  if (jt){
-    try { if (+jt[1] >= 1) localStorage.setItem(Decouverte.CLE_TEST, jt[1]); else localStorage.removeItem(Decouverte.CLE_TEST); } catch(e){}
-    construireNav();
-    location.hash = "#/decouverte"; return;
-  }
+  /* v53 : le mode test « jour n » de la Decouverte n'existe plus : ses anciennes adresses (#/decouverte-jour/N) menent
+     simplement a la Decouverte (un client ou le coach arrivent ensuite sur leur page d'arrivee, comme pour #/decouverte) */
+  if (/^decouverte-jour(\/.*)?$/.test(id)){ try { history.replaceState(null, "", "#/decouverte"); } catch(e){} id = "decouverte"; }
   const parts = id.split("/"); id = parts[0]; sousRoute = parts.slice(1).join("/");
   if (ALIAS_ROUTES[id]) id = ALIAS_ROUTES[id];
   /* v52 : une page qui n'est pas pour cette personne (client sur #/calculateur, coach hors fiche sur #/accueil…)

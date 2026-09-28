@@ -354,7 +354,7 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     ok("formation : ouverte, et ses liens internes ne mènent à aucun onglet caché (#/complements, #/bilan)",
       !(await page.$("#vue .verrou")) && !!(await page.$("#fo-vue")) && liens.includes("#/nutrition") && !liens.some(x => ["#/complements", "#/bilan"].includes(x)), JSON.stringify(liens));
     /* v52 (lot D) : fonction supprimée — « le mode test #/decouverte-jour/8 verrouille la formation » (plus de verrou au jour 8) */
-    ok("aucune écriture pendant la navigation du prospect (pages verrouillées de la vitrine et cachées, anciennes adresses du Challenge, formation, mode test)", db.ecritures.length === 0, JSON.stringify(db.ecritures.map(e => [e.table, e.user_id, e.outil])));
+    ok("aucune écriture pendant la navigation du prospect (pages verrouillées de la vitrine et cachées, anciennes adresses du Challenge, formation)", db.ecritures.length === 0, JSON.stringify(db.ecritures.map(e => [e.table, e.user_id, e.outil])));
     await c.close();
   }
   /* v52 (lot D) : fonction supprimée — « prospect (jour 8) : formation verrouillée » */

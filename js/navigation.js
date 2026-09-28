@@ -4,7 +4,7 @@
    #/entrainement. Le coach voit en plus #/clients.
    ================================================================== */
 let courant = OUTILS[0].id;
-let sousRoute = "";   // ce qui suit l'identifiant dans l'adresse (#/decouverte-jour/8 -> "8")
+let sousRoute = "";   // ce qui suit l'identifiant dans l'adresse (#/decouverte/reponses -> "reponses")
 let nettoyage = null;
 let affichage = 0;   // numero du dernier affichage demande
 

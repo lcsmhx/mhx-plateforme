@@ -6,7 +6,7 @@
 # En local sans le Chromium de Playwright : BANC_CHROME=1 bash tests-locaux/banc.sh   (Google Chrome de la machine)
 # Code de sortie 1 au moindre échec : code de sortie non nul, une ligne ✗, un bloc interrompu, un nombre de ✓ différent
 # du nombre attendu (une vérification sautée sans le dire, ou ajoutée sans relever le compte), une suite inconnue ou oubliée,
-# une erreur de console, une écriture ou une page manquante pendant rig.js, un test de la fonction emails raté,
+# une erreur de console, une écriture ou une page manquante pendant rig.js,
 # un fichier js/ qui utilise au chargement un nom d'un fichier chargé plus tard (niveau-haut.js, 52.1).
 # Le banc teste index.html tel qu'il est sur le disque : il ne conclut « vert » que si ce disque est exactement un commit
 # (aucun fichier suivi modifié) du début à la fin. Pour un essai sur des modifications non commitées : BANC_LIBRE=1.
@@ -31,7 +31,7 @@ DISQUE_DEBUT=$(etat_disque)
 SUITES="flux verif34 verif35 verif36 verif37 verif38 verif-xss verif39 verif40 verif41 verif42 verif43 verif48 verif49 verif50 verif51 verif52 verif53 verif54 verif55 verif56"
 HORS_BANC="verif44 verif45 verif46 verif47"
 
-# Nombre EXACT de ✓ attendus par suite (et de pages pour rig, de vérifications pour la fonction emails).
+# Nombre EXACT de ✓ attendus par suite (et de pages pour rig).
 # À relever dans le même commit que la suite qui gagne ou perd des vérifications.
 # v52 (lot C, 3 questions et page bilan) : verif48 41 → 42, verif51 123 → 102 (ancien écran « résultat », garde 18 ans et
 # bornes du questionnaire retirés), verif53 137 → 132 (purge d'un âge mineur retirée), verif56 105 (nouvelle suite).
@@ -42,12 +42,16 @@ HORS_BANC="verif44 verif45 verif46 verif47"
 # verrouillées adaptés, aucune vérification ajoutée ni retirée). v52 : lots D + E : verif56 187 → 241 ; verif40 64, verif50 57,
 # verif51 91 (journal du lot D : son exemple et l'appel, sans vérification de plus).
 # v52 (lot G, côté coach) : verif55 143 → 165 (blocs G1 à G4 : fiche, page Prospects, CSV).
+# v53 (nettoyage) : fonction des emails de suivi v51 retirée (dossier supabase/functions/emails-prospects, sa migration,
+# desinscription.html) : l'étape « fonction » du banc est supprimée, verif53 132 → 126 (bloc M, page de désinscription).
+# Mode test « jour n » de la Découverte retiré : verif39 51 → 50, verif49 130 → 128 (bloc « C. mode test de l'appareil »),
+# verif51 91 → 92 (+1 : l'ancienne adresse #/decouverte-jour/8 mène à #/decouverte, l'ancien drapeau est effacé).
 attendu() {
   case "$1" in
     flux) echo 19;; verif34) echo 13;; verif35) echo 14;; verif36) echo 13;; verif37) echo 15;; verif38) echo 67;;
-    verif-xss) echo 5;; verif39) echo 51;; verif40) echo 64;; verif41) echo 25;; verif42) echo 20;; verif43) echo 34;;
-    verif48) echo 42;; verif49) echo 130;; verif50) echo 57;; verif51) echo 91;; verif52) echo 186;; verif53) echo 132;;
-    verif54) echo 64;; verif55) echo 165;; verif56) echo 247;; rig) echo 84;; fonction) echo 88;; *) echo "";;
+    verif-xss) echo 5;; verif39) echo 50;; verif40) echo 64;; verif41) echo 25;; verif42) echo 20;; verif43) echo 34;;
+    verif48) echo 42;; verif49) echo 128;; verif50) echo 57;; verif51) echo 92;; verif52) echo 186;; verif53) echo 126;;
+    verif54) echo 64;; verif55) echo 165;; verif56) echo 247;; rig) echo 84;; *) echo "";;
   esac
 }
 # Partie de chaque suite pour les jobs parallèles de GitHub Actions (10 parties, durées équilibrées, 4 à 5 minutes chacune).
@@ -61,7 +65,7 @@ partie() {
     verif49|verif41) echo 6;;
     verif42|verif50) echo 7;;
     verif40|verif54) echo 8;;
-    verif55|verif39|fonction) echo 9;;
+    verif55|verif39) echo 9;;
     verif56|rig|verif-xss|niveau) echo 10;;
     *) echo "";;
   esac
@@ -85,7 +89,7 @@ for f in verif*.js; do
   case " $SUITES $HORS_BANC " in *" $s "*) ;; *) echec "$s : suite ni au banc ni dans HORS_BANC (banc.sh)";; esac
 done
 
-for s in $SUITES rig fonction niveau; do
+for s in $SUITES rig niveau; do
   if [ -z "$(partie "$s")" ]; then echec "$s : aucune partie dans partie() (banc.sh)"; fi
 done
 case "${BANC_PARTIE:-}" in ''|[1-9]|10) ;; *) echec "BANC_PARTIE=${BANC_PARTIE} : partie inconnue";; esac
@@ -142,19 +146,6 @@ rc=$?
 duree=$(( $(date +%s) - debut ))
 if [ "$rc" -ne 0 ]; then echec "niveau-haut : code $rc, ${duree} s"; grep -E 'PROBLÈME|Error' "$OUT/niveau-haut.log" | head -20
 else note "ok     niveau-haut : $(tail -1 "$OUT/niveau-haut.log"), ${duree} s"; fi
-fi
-
-# Fonction des emails de suivi (sans réseau, jamais déployée par ce banc) : la dernière ligne doit être « N/N vérifications ».
-if dans_partie fonction; then
-debut=$(date +%s)
-node ../supabase/functions/emails-prospects/test.mjs > "$OUT/fonction-emails.log" 2>&1
-rc=$?
-fin=$(tail -1 "$OUT/fonction-emails.log")
-duree=$(( $(date +%s) - debut ))
-att=$(attendu fonction)
-if [ "$rc" -ne 0 ] || [ "$fin" != "$att/$att vérifications" ]; then
-  echec "fonction emails : code $rc, « $fin » ($att/$att attendues), ${duree} s"; tail -20 "$OUT/fonction-emails.log"
-else note "ok     fonction emails : $fin, ${duree} s"; fi
 fi
 
 # Le disque doit être resté exactement le commit testé.
