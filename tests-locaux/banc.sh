@@ -28,8 +28,10 @@ etat_disque() { git -C .. status --porcelain --untracked-files=no 2>/dev/null; }
 DISQUE_DEBUT=$(etat_disque)
 
 # Suites du banc, et suites volontairement hors banc (verif44 à verif47 testent le Challenge 7 jours supprimé).
-SUITES="flux verif34 verif35 verif36 verif37 verif38 verif-xss verif39 verif40 verif41 verif42 verif43 verif48 verif49 verif50 verif51 verif52 verif53 verif54 verif55 verif56 verif57 verif60"
-HORS_BANC="verif44 verif45 verif46 verif47"
+SUITES="flux verif34 verif35 verif36 verif37 verif38 verif-xss verif39 verif40 verif41 verif42 verif43 verif48 verif50 verif51 verif52 verif53 verif54 verif55 verif56 verif57 verif58 verif60"
+# v53 (chantier 4) : verif49 (score sur 100 et température NOUVEAU / CHAUD / TIÈDE / FROID, journal des emails) sort du banc ;
+# ses blocs relances, issues, conflits, verrou et passage client sont repris dans verif58 (bloc F).
+HORS_BANC="verif44 verif45 verif46 verif47 verif49"
 
 # Nombre EXACT de ✓ attendus par suite (et de pages pour rig).
 # À relever dans le même commit que la suite qui gagne ou perd des vérifications.
@@ -50,12 +52,17 @@ HORS_BANC="verif44 verif45 verif46 verif47"
 # v53 (lot D-clients : calculateur et « Mon journal » du client, « Ses séances » du coach) : verif60 60 (nouvelle suite),
 # rig 84 → 90 pages (calculateur et journal du client, journal dans la fiche ; téléphone et ordi) ; verif42, verif55,
 # verif56 et verif-xss adaptées sans vérification ajoutée ni retirée.
+# v53 (chantier 4, côté coach sans score ni température, « Bilan réservé » coché par le coach, visites des clients, liste
+# newsletter, compteur) : verif58 (nouvelle suite, partie 5) ; verif49 hors banc ; vérifications devenues fausses retirées
+# (tuiles d'avant, cartes « Qui nécessite ton attention », score, température, journal des emails, panneau des Nouveautés
+# du tableau de bord) : verif37 15 → 12, verif38 67 → 66, verif39 50 → 47, verif43 34 → 27, verif51 92 → 89,
+# verif52 186 → 136, verif53 126 → 114, verif54 64 → 60, verif55 165 → 164 ; verif42, verif56, verif57 inchangées (adaptées).
 attendu() {
   case "$1" in
-    flux) echo 19;; verif34) echo 13;; verif35) echo 14;; verif36) echo 13;; verif37) echo 15;; verif38) echo 67;;
-    verif-xss) echo 5;; verif39) echo 50;; verif40) echo 64;; verif41) echo 25;; verif42) echo 20;; verif43) echo 34;;
-    verif48) echo 42;; verif49) echo 128;; verif50) echo 57;; verif51) echo 92;; verif52) echo 186;; verif53) echo 126;;
-    verif54) echo 64;; verif55) echo 165;; verif56) echo 247;; verif57) echo 152;; verif60) echo 60;; rig) echo 90;; *) echo "";;
+    flux) echo 19;; verif34) echo 13;; verif35) echo 14;; verif36) echo 13;; verif37) echo 12;; verif38) echo 66;;
+    verif-xss) echo 5;; verif39) echo 47;; verif40) echo 64;; verif41) echo 25;; verif42) echo 20;; verif43) echo 27;;
+    verif48) echo 42;; verif50) echo 57;; verif51) echo 89;; verif52) echo 136;; verif53) echo 114;;
+    verif54) echo 60;; verif55) echo 164;; verif56) echo 247;; verif57) echo 152;; verif58) echo 126;; verif60) echo 60;; rig) echo 90;; *) echo "";;
   esac
 }
 # Partie de chaque suite pour les jobs parallèles de GitHub Actions (10 parties, durées équilibrées, 4 à 5 minutes chacune).
@@ -65,8 +72,8 @@ partie() {
     verif53) echo 2;;
     verif51|verif34|verif35) echo 3;;
     verif38|verif36|verif37) echo 4;;
-    verif48|verif43|flux) echo 5;;
-    verif49|verif41|verif57) echo 6;;
+    verif48|verif43|flux|verif58) echo 5;;
+    verif41|verif57) echo 6;;
     verif42|verif50) echo 7;;
     verif40|verif54) echo 8;;
     verif55|verif39) echo 9;;

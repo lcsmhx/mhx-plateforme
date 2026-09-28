@@ -171,7 +171,8 @@ const ecr = (db, outil) => db.ecritures.filter(e => e.outil === outil && !e.refu
     await aller(page, "#/tableau", 1800);
     const tb = (await page.textContent("#tb-vue")).replace(/\s+/g, " ");
     ok("tableau : le bilan de Thomas n'est plus « à lire » une fois le feedback écrit", !tb.includes("Bilan hebdo reçu"), tb.slice(0, 300));
-    ok("tableau : KPI Bilans à traiter = 0", /Bilans à traiter\s*0/.test(tb));
+    /* v53 (chantier 4) : la tuile « Bilans à traiter » n'existe plus (2 tuiles, Clients et Prospects) : vérification retirée ;
+       le bilan lu sort de « À traiter maintenant » (ci-dessus), la tuile Clients est vérifiée par verif58 */
     await ouvrirFiche(page, F.IDS.c3);
     await page.fill("#nc-texte", "Relancer Julien par message."); await attendre(page, 1800);
     ok("notes chez Julien enregistrées", ecr(db, "notes_coach").some(e => e.user_id === F.IDS.c3));

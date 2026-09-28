@@ -46,14 +46,16 @@ const outilAccueil = {
 
   /* ---------- ACCUEIL DU MODE GRATUIT : l'ecran Decouverte (questionnaire court, resultat, bilan). Aucun prix. */
   async gratuit(zone){ return outilDecouverte.afficher(zone); },
-  /* bloc « Découverte » de la fiche d'un prospect : jour, questionnaire court, clics, bilan reserve (lecture seule) */
-  decouverteFicheHTML(p, C, I, S, A, ana, EM){
-    try { return this._decouverteFicheHTML(p, C, I, EM) + this.prospectDetailHTML(p, C, (I && typeof I === "object") ? I : {}, S, A, ana); }
+  /* bloc « Découverte » de la fiche d'un prospect : jour, questionnaire court, clics, bilan reserve (lecture seule)
+     v53 (chantier 4) : plus de score ; « Bilan réservé » suit la coche du coach (Commercial.bilan), la case du prospect
+     reste lisible comme info ; dernière visite et jours actifs sur 30 jours */
+  decouverteFicheHTML(p, C, I, S, A, EM){
+    try { return this._decouverteFicheHTML(p, C, I, EM, S, A) + this.prospectDetailHTML(p, C, (I && typeof I === "object") ? I : {}, S, A); }
     catch(e){ console.warn("[MHX] bloc découverte illisible", e); return `<section class="panel" id="fiche-decouverte"><h2>Découverte</h2><div class="empty">Données de la découverte illisibles — à vérifier.</div></section>`; }
   },
-  _decouverteFicheHTML(p, C, I, EM){
+  _decouverteFicheHTML(p, C, I, EM, S, A){
     I = (I && typeof I === "object") ? I : {};
-    const r = Decouverte.resume(p, C, I);
+    const r = Decouverte.resume(p, C, I), B = Commercial.bilan(S, C, p), V = Activite.lecture(A, true);
     /* tout ce qui vient du prospect passe par s() (chaine ou nombre, sinon rien) ou dt() (date en chaine, sinon —) */
     const s = v => (typeof v === "string" || typeof v === "number") ? String(v).slice(0, 400) : "";
     const dt = v => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v)) ? dateFr(Decouverte.dateLocale(v) || v.slice(0, 10)) : "—";
@@ -69,27 +71,26 @@ const outilAccueil = {
       ["Questionnaire court", r.questionnaire ? "rempli le " + dt(r.questionnaire) : "pas encore rempli"]
     ].concat(Decouverte.reponsesCoach(I), [
       ["Bouton « Réserver mon bilan »", r.clics ? r.clics + " clic" + (r.clics > 1 ? "s" : "") + (r.dernierClic ? ", le dernier le " + dt(r.dernierClic) : "") : "jamais cliqué"],
-      ["Case « J'ai réservé mon bilan »", r.reserve ? "cochée le " + dt(r.reserve) : "pas cochée"]
+      ["Bilan réservé", B.coach ? "oui, coché par toi le " + dt(B.coach) : B.source === "prospect" ? "à vérifier : le prospect a coché sa case" : B.retire ? "non (tu l'as retiré le " + dt(B.retire) + ")" : "non"],
+      ["Case « J'ai réservé mon bilan »", r.reserve ? "Le prospect a coché « J'ai réservé » le " + dt(r.reserve) : "pas cochée"],
+      ["Dernière visite", Activite.texteVisite(V) + (V.derniere ? " (le " + dt(V.derniere) + ")" : "")],
+      ["Jours actifs (30 j)", Activite.texteJours(V)]
     ]);
     const ligne = (k, v) => v ? `<li><span>${esc(k)}</span><b>${esc(String(v))}</b></li>` : "";
     const pastilles = (r.jour != null ? `<span class="pastille">${Decouverte.depuisTexte(r.jour)}</span>` : "")
-      + (r.reserve ? ` <span class="pastille ok">bilan réservé</span>` : r.clics ? ` <span class="pastille accent">a cliqué Réserver</span>` : "");
+      + (B.reserve ? " " + Commercial.pastilleBilan(B) : r.clics ? ` <span class="pastille accent">a cliqué Réserver</span>` : "");
     return `<section class="panel" id="fiche-decouverte"><div class="seance-c-tete"><h2>Découverte</h2>${pastilles}</div>
       <ul class="ingr fiche-l">${lignes.map(x => ligne(x[0], x[1])).join("")}</ul>
       <p class="note" style="margin:10px 0 0">Lecture seule : rien ne s'écrit d'ici.</p></section>`;
   },
 
-  /* v51 — detail d'un prospect pour le coach : score detaille, reponses, chronologie, lien de reservation, email.
-     Lecture seule : tout ce qui vient du prospect passe par s() / dt() et esc(). */
-  prospectDetailHTML(p, C, I, S, A, ana){
+  /* v51 — detail d'un prospect pour le coach : reponses, chronologie, lien de reservation, email (v53 : plus de score
+     ni de journal des emails). Lecture seule : tout ce qui vient du prospect passe par s() / dt() et esc(). */
+  prospectDetailHTML(p, C, I, S, A){
     const s = v => (typeof v === "string" || typeof v === "number") ? String(v).slice(0, 400) : "";
     const dt = v => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v)) ? dateFr(Decouverte.dateLocale(v) || v.slice(0, 10)) : "—";
     const heure = v => { if (typeof v !== "string" || v.length <= 10) return ""; const d = new Date(v); return isNaN(d) ? "" : " " + String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); };
-    const E = JournalEmails.pour(p && p.id);
-    const sc = Commercial.score(p, C, Object.assign({}, I, { repondues: Decouverte.repondues(I) }), A, E, ana);
-    const scoreHTML = `<section class="panel" id="fiche-score"><div class="seance-c-tete"><h2>Score de qualification</h2>${Commercial.pastilleScore(sc)}</div>
-      <ul class="ingr fiche-l dc-score">${sc.lignes.map(l => `<li><span>${esc(l.lbl)}${l.bonus ? " (bonus)" : ""}</span><b>${l.nonMesure ? "—" : l.pts + " / " + l.max}</b></li>`).join("")}</ul>
-      <p class="note" style="margin:10px 0 0">Total plafonné à 100. Le score se recalcule à chaque ouverture.</p></section>`;
+    const nbQ = Decouverte.liste(I).length || (CONFIG.decouverte.questions || []).length;
     /* v52 : les questions de SON questionnaire court (les 3 nouvelles, ou les 10 d'un ancien prospect), puis celles de
        l'autre qui ont une valeur : les anciennes reponses restent lisibles. Lot G : libelles courts du coach (Problème…) */
     const qs = Decouverte.reponsesCoach(I, true);
@@ -97,7 +98,7 @@ const outilAccueil = {
     const email = s(I.email_compte).trim() || s(I.email).trim();
     const rep = [["Email", email]].concat(qs);
     const repHTML = `<section class="panel" id="fiche-reponses"><h2>Réponses au questionnaire court</h2>
-      <p class="note" style="margin:0 0 8px">${sc.repondues} / ${sc.questions} réponses${Decouverte.questionnaireFait(I) ? ", validé le " + esc(dt(I.court_le)) : ", pas encore validé"}.</p>
+      <p class="note" style="margin:0 0 8px">${Decouverte.repondues(I)} / ${nbQ} réponses${Decouverte.questionnaireFait(I) ? ", validé le " + esc(dt(I.court_le)) : ", pas encore validé"}.</p>
       <ul class="ingr fiche-l">${rep.map(([k, v]) => `<li><span>${esc(k)}</span><b>${v ? esc(v) : "—"}</b></li>`).join("")}</ul></section>`;
     const ev = [];
     const futur = Date.now() + 5 * 60000;
@@ -107,22 +108,16 @@ const outilAccueil = {
     ajoute(I.court_le, "Questionnaire rempli");
     const src = v => typeof v !== "string" ? "" : v === "decouverte" ? "en haut de sa Découverte" : v === "decouverte-accompagnement" ? "bloc accompagnement" : v === "bilan-propose" ? "page de proposition du bilan" : /^verrou-[a-z]+$/.test(v) ? "page verrouillée « " + v.slice(7) + " »" : "";
     Decouverte.clics(C).forEach(c => ajoute(c.date, "Clic « Réserver mon bilan »" + (src(c.source) ? " (" + src(c.source) + ")" : "")));
-    ajoute(Decouverte.reserve(C), "Bilan réservé (case « J'ai réservé » cochée)");
+    ajoute(Decouverte.reserve(C), "Le prospect a coché « J'ai réservé »");
     const hist = S && typeof S === "object" && Array.isArray(S.historique) ? S.historique : [];
     hist.forEach(e => {
       if (!e || typeof e !== "object") return;
-      const lib = e.type === "relance" ? "Tu l'as relancé" : e.type === "annule" ? "Issue annulée" : e.type === "issue" && typeof e.valeur === "string" && Object.prototype.hasOwnProperty.call(Commercial.ISSUES, e.valeur) ? "Appel : « " + Commercial.ISSUES[e.valeur] + " »" + (typeof e.note === "string" && e.note ? " — " + e.note.slice(0, 200) : "") : "";
+      const lib = e.type === "relance" ? "Tu l'as relancé" : e.type === "annule" ? "Issue annulée" : e.type === "issue" && typeof e.valeur === "string" && Object.prototype.hasOwnProperty.call(Commercial.ISSUES, e.valeur) ? "Appel : « " + Commercial.ISSUES[e.valeur] + " »" + (typeof e.note === "string" && e.note ? " — " + e.note.slice(0, 200) : "")
+        : e.type === "bilan" && e.valeur === "reserve" ? "Tu as coché « Bilan réservé »" : e.type === "bilan" && e.valeur === "annule" ? "Tu as retiré « Bilan réservé »" : "";
       if (lib) ajoute(e.le, lib);
     });
-    (Array.isArray(E) ? E : []).forEach(m => {
-      if (!m || typeof m !== "object") return;
-      const nom = "Email de suivi « " + (JournalEmails.MODELES[m.modele] || "email") + " »";
-      ajoute(m.envoye_le, nom + (m.statut === "abandon" ? " non délivré (adresse bloquée ou invalide)" : " envoyé"));
-      ajoute(m.ouvert_le, nom + " ouvert");
-      ajoute(m.clique_le, nom + " : lien cliqué");
-    });
     const act = Activite.propre(A);
-    ajoute(act.derniere, "Dernière activité dans l'app");
+    ajoute(act.derniere, "Dernière visite dans l'app");
     ev.sort((x, y) => y.t - x.t);
     const pages = Object.keys(act.pages).sort((x, y) => act.pages[y] - act.pages[x]).slice(0, 8).map(k => k + " (" + act.pages[k] + ")").join(", ");
     const chronoHTML = `<section class="panel" id="fiche-chrono"><h2>Chronologie</h2>
@@ -141,7 +136,7 @@ const outilAccueil = {
       ${lien ? `<p class="note" style="margin:0 0 8px">Son lien de réservation${esc(remplisTxt)} :</p><input type="text" id="dc-lien" readonly value="${esc(lien)}" aria-label="Lien de réservation du prospect" style="width:100%">` : ""}
       <div class="actions">${lien ? `<button type="button" class="btn ghost petit" id="dc-copier">Copier le lien</button>` : ""}${mailto ? `<a class="btn petit" id="dc-mail" href="${esc(mailto)}">Lui écrire un email</a>` : `<span class="note">Email inconnu : il apparaît quand le prospect a commencé son questionnaire.</span>`}<span class="msg" id="dc-copie-msg" role="status" aria-live="polite"></span></div>
       <p class="note" style="margin:10px 0 0">« Lui écrire un email » ouvre ta messagerie avec un message prêt, que tu relis avant d'envoyer. Rien n'est envoyé par l'app.</p></section>`;
-    return scoreHTML + repHTML + chronoHTML + actionsHTML;
+    return repHTML + chronoHTML + actionsHTML;
   },
 
   /* ---------- FICHE CLIENT (v37, phase 18) ----------
@@ -151,10 +146,8 @@ const outilAccueil = {
   async fiche(zone){
     const cles = ["intake", "programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "checkins", "complements", "calc", "formation", "hist_programme", "hist_repas", "prefs", "feedbacks", "challenge", "suivi_prospect", "activite", "emails"];   // v47 : + challenge ; v49 : + suivi commercial ; v51 : + activite ; v52 : + emails (newsletter d'un prospect)
     const uidFiche = Store.idConsulte;
-    const [{ valeurs: d, dates }, , pr] = await Promise.all([
+    const [{ valeurs: d, dates }, pr] = await Promise.all([
       Store.lireTout(cles, { dates: true }),
-      /* v51 : journal des emails de suivi (score, chronologie) ; sans effet s'il n'existe pas encore */
-      JournalEmails.charger().then(() => null),
       /* v39 : prospect ou client ? (colonne absente ou lecture ratee : rien ne change) */
       Auth.appel("/rest/v1/profils?id=eq." + uidFiche + "&select=*").then(r => Array.isArray(r) ? r[0] || null : null).catch(() => null)
     ]);
@@ -214,7 +207,7 @@ const outilAccueil = {
         </div>
       </section>
       ${SC ? `<div id="fiche-commercial">${Commercial.ficheHTML(Object.assign({}, pr || {}, profil), SC, d.suivi_prospect)}</div>` : ""}
-      ${profil.statut === "prospect" ? this.decouverteFicheHTML(pDc, d.challenge, I, d.suivi_prospect, d.activite, SC, d.emails) : ""}
+      ${profil.statut === "prospect" ? `<div id="fiche-prospect">${this.decouverteFicheHTML(pDc, d.challenge, I, d.suivi_prospect, d.activite, d.emails)}</div>` : ""}
       ${NotesCoach.html()}
       <div class="fiche-grille">
       <section class="panel"><div class="seance-c-tete"><h2>Profil</h2>${I.complet ? `<span class="pastille ok">questionnaire complet</span>` : `<span class="pastille attention">questionnaire incomplet</span>`}</div>
@@ -241,25 +234,32 @@ const outilAccueil = {
         <p class="note" style="margin:10px 0 0">${lien("complements", "Ses compléments")} · ${lien("formation", "Sa formation")}</p></section>
       </div>`;
     /* v51 — copier le lien de reservation du prospect (presse-papiers, sinon selection a copier a la main) */
-    const copier = zone.querySelector("#dc-copier");
-    if (copier) copier.addEventListener("click", async () => {
-      const champ = zone.querySelector("#dc-lien"), msg = zone.querySelector("#dc-copie-msg");
-      let ok = false;
-      try { await navigator.clipboard.writeText(champ.value); ok = true; }
-      catch(e){ try { champ.focus(); champ.select(); ok = document.execCommand("copy"); } catch(e2){ ok = false; } }
-      if (msg) msg.textContent = ok ? "Lien copié." : "Copie impossible : le lien est sélectionné, copie-le à la main.";
-      if (!ok && champ){ champ.focus(); champ.select(); }
-    });
-    /* v49 — suivi commercial : apres une action, seul le bloc est redessine (les notes privees ne bougent pas) ;
-       un passage en client redessine la page par le routeur (les notes en attente partent avant) */
+    const brancherCopie = () => {
+      const copier = zone.querySelector("#dc-copier");
+      if (copier) copier.addEventListener("click", async () => {
+        const champ = zone.querySelector("#dc-lien"), msg = zone.querySelector("#dc-copie-msg");
+        let ok = false;
+        try { await navigator.clipboard.writeText(champ.value); ok = true; }
+        catch(e){ try { champ.focus(); champ.select(); ok = document.execCommand("copy"); } catch(e2){ ok = false; } }
+        if (msg) msg.textContent = ok ? "Lien copié." : "Copie impossible : le lien est sélectionné, copie-le à la main.";
+        if (!ok && champ){ champ.focus(); champ.select(); }
+      });
+    };
+    brancherCopie();
+    /* v49 — suivi commercial : apres une action, seuls ses blocs sont redessines (les notes privees ne bougent pas) ;
+       un passage en client redessine la page par le routeur (les notes en attente partent avant).
+       v53 (chantier 4) : le bloc « Découverte » et la chronologie aussi (« Bilan réservé », historique) */
     if (SC){
       const pSC = Object.assign({}, pr || {}, profil), boite = zone.querySelector("#fiche-commercial");
       const rebrancher = () => Commercial.brancher(boite, (uid, S, act) => {
         if (act === "client"){ afficher(courant); return; }
         if (!boite.isConnected || Store.idConsulte !== uidFiche) return;
+        d.suivi_prospect = S;
         boite.innerHTML = Commercial.ficheHTML(pSC, Commercial.analyse(pSC, d.challenge, S, dernier, I), S);
+        const bp = zone.querySelector("#fiche-prospect");
+        if (bp){ bp.innerHTML = this.decouverteFicheHTML(pDc, d.challenge, I, S, d.activite, d.emails); brancherCopie(); }
         rebrancher();
-      }, { fiche: true });
+      });
       if (boite) rebrancher();
     }
     /* v38 — notes privees : la fonction rendue enregistre ce qui attend quand on quitte la fiche */
@@ -271,6 +271,9 @@ const outilAccueil = {
     const consult = !!Store.idConsulte;
     if (consult) return this.fiche(zone);
     if (Auth.estProspect()) return this.gratuit(zone);   // v40 : l'accueil du mode gratuit
+    /* v53 (chantier 4) : l'accueil d'un client compte comme une visite (afficher() compte les autres pages) ; sans effet
+       si ses visites ne sont pas suivies (interrupteur suivi_visites_clients), pour le coach et pour une fiche consultée */
+    Activite.page("accueil");
     const d = await Store.lireTout(["intake", "programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "checkins", "feedbacks"]);
     const I = d.intake || {}, P = d.programme || {}, J = d.journal || { seances: [] }, R = d.repas || {}, S = d.repas_suivi || {}, M = d.mens || {}, OF = d.objectifs_faits || {}, CK = d.checkins || { liste: [] };
     const fbR = Feedback.recent(d.feedbacks);   // v38 : un feedback du coach de moins de 7 jours

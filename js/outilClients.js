@@ -87,7 +87,7 @@ const outilClients = {
     if (!tb) return;
     const clients = (profils || []).filter(p => p.role !== "coach");
     if (!clients.length){
-      tb.innerHTML = '<tr><td colspan="10">Aucun client pour le moment.</td></tr>';
+      tb.innerHTML = '<tr><td colspan="15">Aucun client pour le moment.</td></tr>';
       if (zoneA) zoneA.innerHTML = "";
       return;
     }
@@ -105,8 +105,22 @@ const outilClients = {
     };
 
     const feu = l => { const n = l.alertes.some(a => a.niveau === "mauvais") ? "mauvais" : l.alertes.some(a => a.niveau === "attention") ? "attention" : "ok"; return `<span class="point ${n}" title="${esc(l.alertes.map(a => a.texte).join(" · ") || "Rien à signaler")}"></span>`; };
+    /* v53 (chantier 4) : le retour de la semaine selon la règle de CE client (feedback du dimanche, ou bilan du vendredi),
+       sa dernière note et son dernier smiley (feedback du dimanche), sa dernière visite et ses jours actifs sur 30 jours
+       (« — » pour un compte dont les visites ne sont pas suivies) ; 😞 non traité et note en chute en tête (Clients.resumer) */
+    const retour = l => { const r = l.retour; if (!r || !r.etat) return '<span class="meta">—</span>';
+      const cls = r.etat === "a_traiter" ? "mauvais" : r.etat === "fait" ? "ok" : r.etat === "non_fait" ? "attention" : "";
+      return `<span class="pastille${cls ? " " + cls : ""}" title="${esc(r.nom)}">${esc(r.texte)}</span>`; };
+    const note = l => l.note == null ? '<span class="meta">—</span>' : `<b${l.alertes.some(a => a.type === "note_chute") ? ' class="neg"' : ""}>${l.note}</b><span class="meta">/10</span>`;
+    const smiley = l => l.smiley ? `<span class="fbd-smiley-l" title="${esc(l.smiley.lbl)}${l.alertes.some(a => a.type === "avis_triste") ? " — à traiter" : ""}">${l.smiley.emo}</span>` : '<span class="meta">—</span>';
+    const visite = l => { const t = Activite.texteVisite(l.visites); return t === "—" ? '<span class="meta" title="Visites non suivies pour ce compte">—</span>' : `<span class="meta">${esc(t)}</span>`; };
     tb.innerHTML = lignes.map(l => `<tr>
       <td data-l="Client">${feu(l)} <b>${esc(l.nom)}</b>${l.p.statut === "prospect" ? ` <span class="pastille accent" title="Compte gratuit : pas encore accompagné">prospect</span> ` + Decouverte.pastilleCoach(l) + " " + Commercial.pastilleLigne(l) : ""}${l.ecarts.length ? ` <span class="pastille manque" title="Le calculateur ne correspond pas au questionnaire">chiffres à vérifier</span>` : ""}</td>
+      <td data-l="Retour de la semaine">${retour(l)}</td>
+      <td data-l="Dernière note">${note(l)}</td>
+      <td data-l="Dernier smiley">${smiley(l)}</td>
+      <td data-l="Dernière visite">${visite(l)}</td>
+      <td data-l="Jours actifs (30 j)">${Activite.texteJours(l.visites) === "—" ? '<span class="meta">—</span>' : `<span class="meta">${esc(Activite.texteJours(l.visites))}</span>`}</td>
       <td data-l="Activité">${l.jours === null ? '<span class="pastille manque">jamais</span>'
             : l.jours >= 10 ? `<span class="pastille manque">${l.jours} j</span>`
             : `<span class="meta">${l.jours === 0 ? "aujourd'hui" : "il y a " + l.jours + " j"}</span>`}</td>
@@ -169,10 +183,10 @@ const outilClients = {
       <h2>Suivi de mes clients</h2>
       <div id="alertes-clients"></div>
       <div class="scroll" style="margin-top:14px"><table class="tb-clients-table"><thead><tr>
-        <th>Client</th><th>Activité</th><th>Régularité</th><th>Poids</th><th>Depuis le début</th><th>4 dernières sem.</th>
+        <th>Client</th><th>Retour</th><th>Note</th><th>Smiley</th><th>Visite</th><th>Jours actifs</th><th>Activité</th><th>Régularité</th><th>Poids</th><th>Depuis le début</th><th>4 dernières sem.</th>
         <th>Questionnaire</th><th>Programme</th><th>Diète</th><th></th>
-      </tr></thead><tbody id="tb-clients"><tr><td colspan="10">Chargement…</td></tr></tbody></table></div>
-      <p class="note" style="margin-top:12px">« Activité » compte les jours depuis la dernière saisie du client, quelle qu'elle soit. Une variation de poids se lit sur quatre semaines : en dessous, c'est du bruit.</p>
+      </tr></thead><tbody id="tb-clients"><tr><td colspan="15">Chargement…</td></tr></tbody></table></div>
+      <p class="note" style="margin-top:12px">En haut : les 😞 non traités et les notes en chute, puis les retours de la semaine à lire. « Retour » : le feedback du dimanche ou le bilan du vendredi, selon ce que voit le client (à traiter / fait / non fait). « Note » et « Smiley » : son dernier feedback du dimanche. « Visite » et « Jours actifs » (sur 30 jours) : les jours où il a ouvert l'app — « — » quand ses visites ne sont pas suivies. « Activité » compte les jours depuis la dernière saisie du client, quelle qu'elle soit (une visite ne compte pas). Une variation de poids se lit sur quatre semaines : en dessous, c'est du bruit.</p>
     </section>
 
     <section class="panel">
@@ -310,7 +324,7 @@ const outilClients = {
         });
       } catch(e){
         box.innerHTML = '<div class="empty">Impossible de charger la liste.</div>';
-        const tb = $("tb-clients"); if (tb) tb.innerHTML = '<tr><td colspan="10">Impossible de charger le suivi.</td></tr>';
+        const tb = $("tb-clients"); if (tb) tb.innerHTML = '<tr><td colspan="15">Impossible de charger le suivi.</td></tr>';
       }
     };
 
@@ -446,11 +460,17 @@ const Clients = {
       dc: (c.intake && typeof c.intake === "object") ? { court_le: c.intake.court_le, motivation: c.intake.motivation, repondues: Decouverte.repondues(c.intake), nb_questions: Decouverte.liste(c.intake).length,
             court_debut: typeof c.intake.court_debut === "string" ? c.intake.court_debut : null, objectif: typeof c.intake.objectif === "string" ? c.intake.objectif.slice(0, 120) : "",
             email: typeof c.intake.email_compte === "string" && c.intake.email_compte ? c.intake.email_compte.slice(0, 254) : typeof c.intake.email === "string" ? c.intake.email.slice(0, 254) : "",
-            /* v52 (lot G) : 2 des 3 réponses (page Prospects, CSV) ; "" si absente ou illisible */
+            /* v52 (lot G) : les réponses (page Prospects, CSV) ; "" si absente ou illisible. v53 : + obstacle (« Ce qui l'a
+               bloqué »), ancien = ses réponses sont celles de l'ancien questionnaire (l'obstacle y répondait à une autre question) */
             probleme: typeof c.intake.probleme === "string" ? c.intake.probleme.trim().slice(0, 120) : "",
-            projection: typeof c.intake.projection === "string" ? c.intake.projection.trim().slice(0, 1000) : "" } : null,
+            obstacle: typeof c.intake.obstacle === "string" ? c.intake.obstacle.trim().slice(0, 1000) : "",
+            projection: typeof c.intake.projection === "string" ? c.intake.projection.trim().slice(0, 1000) : "",
+            ancien: Decouverte.ancien(c.intake) } : null,
       newsletter: Accords.newsletterCoach(c.emails),   // v52 (lot G) : { oui, depuis } d'après la clé emails (CSV)
-      act: (c.activite && typeof c.activite === "object") ? c.activite : null,   // v51 : activite du prospect (score, chronologie)
+      act: (c.activite && typeof c.activite === "object") ? c.activite : null,   // v51 : activite (chronologie de la fiche)
+      /* v53 (chantier 4) : dernière visite et jours actifs sur 30 jours ; un compte non suivi (client hors interrupteur
+         suivi_visites_clients) : rien (« — »), même s'il a une ancienne clé activite de quand il était prospect */
+      visites: Activite.lecture(c.activite, Activite.suiviPour(p)),
       suivi: (c.suivi_prospect && typeof c.suivi_prospect === "object") ? c.suivi_prospect : null,   // v49 : suivi commercial
       activite: dernierMaj || null
     };
@@ -459,8 +479,33 @@ const Clients = {
     if (!l.programme && !l.diete){ l.reg = null; l.regEnCours = null; }
     else { l.reg = Regularite.calculer(c, -1).score; l.regEnCours = Regularite.calculer(c, 0).score; }
     l.alertes = this.alertes(l, c);
+    /* v53 (chantier 4) : Mes clients — retour de la semaine, dernière note, dernier smiley (clients seulement) */
+    if (!(p && p.statut === "prospect")){
+      const ck = c.checkins || { liste: [] };
+      l.retour = this.retour(l, c);
+      const notes = Checkin.liste(ck).filter(x => x.format === "dimanche" && Checkin.note(x) != null && typeof x.semaine === "string").sort((a, b) => a.semaine < b.semaine ? -1 : 1);
+      l.note = notes.length ? Checkin.note(notes[notes.length - 1]) : null;
+      const av = Checkin.avisListe(ck).slice().sort((a, b) => String(a.le || "") < String(b.le || "") ? -1 : 1).pop();
+      l.smiley = av ? (Checkin.SMILEYS.find(x => x.id === av.smiley) || null) : null;
+    } else { l.retour = null; l.note = null; l.smiley = null; }
     return l;
   },
+  /* v53 (chantier 4) — le retour de la semaine d'un client, selon SA règle (Checkin : feedback du dimanche pour les comptes
+     de l'interrupteur, sinon bilan du vendredi) : « à traiter » / « à lire » (reçu dans les 7 derniers jours, sans réponse
+     du coach : l'alerte bilan_recu), « fait » (la dernière entrée des deux dernières semaines a sa réponse), « non fait »
+     / « non complété » (l'alerte bilan_manque), sinon rien. */
+  retour(l, c){
+    const ck = c.checkins || { liste: [] }, e = Checkin.etat(ck, l.p && l.p.id), dim = e.semaine.regle === "dimanche";
+    const nom = dim ? "Feedback du dimanche" : "Bilan du vendredi";
+    if (l.alertes.some(a => a.type === "bilan_recu")) return { regle: e.semaine.regle, nom, etat: "a_traiter", texte: dim ? "à traiter" : "à lire" };
+    const der = Checkin.liste(ck).filter(x => x.envoye_le && typeof x.semaine === "string").sort((a, b) => a.semaine < b.semaine ? -1 : 1).pop();
+    if (der && der.semaine >= Regularite.bornes(-1).debut && Feedback.repond(c.feedbacks, der)) return { regle: e.semaine.regle, nom, etat: "fait", texte: "fait" };
+    if (l.alertes.some(a => a.type === "bilan_manque")) return { regle: e.semaine.regle, nom, etat: "non_fait", texte: dim ? "non fait" : "non complété" };
+    return { regle: e.semaine.regle, nom, etat: null, texte: "" };
+  },
+  /* v53 (chantier 4) — une urgence pour le tableau de bord (badge de la tuile Clients, « À traiter maintenant ») : une
+     alerte de niveau « mauvais » (dont 😞 non traité, note en chute, inactivité), ou un retour de la semaine reçu à lire */
+  urgent(l){ return !!(l && l.p && l.p.statut !== "prospect" && (l.alertes || []).some(a => a.niveau === "mauvais" || a.type === "bilan_recu")); },
 
   resumer(profils, parClient, contenus){
     /* v42 : les donnees illisibles d'UN client ne font jamais tomber le
@@ -482,7 +527,10 @@ const Clients = {
                            (!l.intake ? 50 : 0) + (!l.programme ? 20 : 0) + (!l.diete ? 10 : 0) +
                            (l.reg == null ? 0 : l.reg < seuils.moyen ? 60 : l.reg < seuils.bon ? 25 : 0) +
                            l.alertes.reduce((n, a) => n + (a.niveau === "mauvais" ? 30 : a.niveau === "attention" ? 12 : 3), 0);
-    lignes.sort((a,b) => urgence(b) - urgence(a) || (b.jours||0) - (a.jours||0));
+    /* v53 (chantier 4) : d'abord les 😞 non traités et les notes en chute, puis les retours de la semaine à lire, puis le
+       reste (dans chaque groupe, le tri d'avant) */
+    const groupe = l => l.alertes.some(a => a.type === "avis_triste" || a.type === "note_chute") ? 0 : l.alertes.some(a => a.type === "bilan_recu") ? 1 : 2;
+    lignes.sort((a,b) => groupe(a) - groupe(b) || urgence(b) - urgence(a) || (b.jours||0) - (a.jours||0));
     return lignes;
   },
 

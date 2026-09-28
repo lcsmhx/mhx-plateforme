@@ -1,17 +1,16 @@
 /* ------------------------------------------------------------------
-   SUIVI COMMERCIAL (v49). Pour chaque prospect : une temperature (CHAUD,
-   TIEDE, FROID) calculee a chaque affichage a partir de ce qu'il a fait
-   dans le funnel, les raisons en clair, la prochaine action, et l'issue
-   de l'appel indiquee par le coach (Signe, Perdu, Absent). Seules
-   l'issue et les relances sont enregistrees : cle coach-seul
-   « suivi_prospect » (jamais lisible par le prospect, regles de la base),
-   ecriture conditionnelle (CleCoach). Seuils : CONFIG.suivi.
+   SUIVI COMMERCIAL (v49 ; v53 chantier 4 : sans température ni score). Pour chaque prospect : ce qu'il a fait dans
+   l'app (inscription, ses 3 réponses, clics « Réserver mon bilan », case « J'ai réservé »), la prochaine action, ce
+   qui est « à traiter » (définition simple, la même que le badge du tableau de bord : voir analyse), et ce que le
+   coach enregistre : « Bilan réservé » (sa coche, un clic dans la fiche), l'issue de l'appel (Signé, Perdu, Absent)
+   et ses relances. Clé coach-seul « suivi_prospect » (jamais lisible par le prospect, règles de la base), écriture
+   conditionnelle (CleCoach). Rien n'est calculé à l'avance ni stocké en plus. Seuils : CONFIG.suivi.
    ------------------------------------------------------------------ */
 const Commercial = {
   cle: "suivi_prospect",
   ISSUES: { signe: "Signé", perdu: "Perdu", absent: "Absent" },
-  ETATS: { nouveau: "NOUVEAU", chaud: "CHAUD", tiede: "TIÈDE", froid: "FROID", signe: "SIGNÉ", perdu: "PERDU", absent: "ABSENT" },
-  cfg(){ return Object.assign({ nouveau_heures: 24, inactif_jours: 3, clic_recent_jours: 3, relance_attente_jours: 3, perdu_relance_jours: 30, motivation_forte: 8, relances_max: 3, chaud_jours: 14, appel_jours: 7 }, CONFIG.suivi || {}); },
+  ETATS: { signe: "SIGNÉ", perdu: "PERDU", absent: "ABSENT" },   // v53 : les pastilles d'issue seulement
+  cfg(){ return Object.assign({ urgence_heures: 48, clic_recent_jours: 3, relance_attente_jours: 3, perdu_relance_jours: 30, relances_max: 3, retour_jours: 14, appel_jours: 7 }, CONFIG.suivi || {}); },
   /* jours ecoules depuis une date ou un instant (calendrier local) ; null si illisible */
   depuis(v){
     if (typeof v !== "string" || !/^\d{4}-\d{2}-\d{2}/.test(v)) return null;
@@ -22,19 +21,50 @@ const Commercial = {
   },
   quand(n){ return n == null ? "à une date inconnue" : n === 0 ? "aujourd'hui" : n === 1 ? "hier" : "il y a " + n + " jours"; },
   suivi(S){ return (S && typeof S === "object" && !Array.isArray(S)) ? S : {}; },
+  instant(v){ const x = typeof v === "string" ? Date.parse(v) : NaN; return isNaN(x) ? null : x; },
+  /* v53 (chantier 4) — « Bilan réservé ». La coche du coach (suivi_prospect.bilan_le = instant ou null, et un événement
+     historique { type: "bilan", valeur: "reserve" | "annule", le } à chaque coche ou retrait) fait foi dès qu'il a
+     décidé : cochée → réservé ; retirée → pas réservé, même si le prospect a coché sa case. Tant que le coach n'a jamais
+     décidé, la case « J'ai réservé mon bilan » du prospect (challenge.reserve) compte encore (source « prospect » : à
+     vérifier) ; elle reste toujours lisible comme info. Tous les lecteurs de « réservé » passent par ici (page Prospects,
+     filtres, CSV, fiche, Mes clients, Nouveautés, compteur, prochaine action).
+     Ancien client redevenu prospect (client_le) : une coche ou une case d'avant son passage en client ne compte plus.
+     → { reserve, le (instant retenu), coach (instant de la coche ou null), decide, retire (dernier retrait, s'il n'est
+         pas recoché), case (case du prospect retenue), source: "coach" | "prospect" | null } */
+  bilan(S, C, p){
+    S = this.suivi(S);
+    const t = v => this.instant(v);
+    const tClient = p && p.statut === "prospect" ? t(S.client_le) : null;
+    const garde = v => typeof v === "string" && t(v) != null && (tClient == null || t(v) > tClient);
+    const hist = (Array.isArray(S.historique) ? S.historique : []).filter(e => e && typeof e === "object" && e.type === "bilan" && garde(e.le));
+    const coche = garde(S.bilan_le) ? S.bilan_le : null;
+    const decide = !!coche || hist.length > 0 || (tClient == null && Object.prototype.hasOwnProperty.call(S, "bilan_le"));
+    const retire = coche ? null : (hist.filter(e => e.valeur === "annule").map(e => e.le).sort().pop() || null);
+    const cs = Decouverte.reserve(C), caseP = garde(cs) ? cs : null;
+    const parCase = !decide && !!caseP;
+    return { reserve: !!coche || parCase, le: coche || (parCase ? caseP : null), coach: coche, decide, retire, case: caseP, source: coche ? "coach" : parCase ? "prospect" : null };
+  },
+  bilanLigne(l){ try { return this.bilan(l && l.suivi, l && l.ch, l && l.p); } catch(e){ return { reserve: false, le: null, coach: null, decide: false, retire: null, case: null, source: null }; } },
+  /* ce qui le rend « à traiter » (texte court : tableau de bord, cartes) */
+  MOTIFS: { signe: "Signé : à passer client", case: "A coché « J'ai réservé » : à vérifier", clic: "A cliqué « Réserver mon bilan », pas de bilan coché", nouveau: "Vient de s'inscrire" },
+  AIDE: "À traiter : les prospects inscrits depuis moins de 48 h, et ceux qui ont cliqué « Réserver mon bilan » ou coché « J'ai réservé », tant que tu n'as ni coché « Bilan réservé », ni indiqué l'issue de l'appel, ni relancé depuis ; et les « Signé » à passer client.",
   /* p = profil (cree_le, statut), C = cle « challenge » (clics « Réserver mon bilan », case « J'ai réservé »),
-     S = suivi_prospect, activite = derniere saisie du prospect, D = son questionnaire (court_le, motivation) */
+     S = suivi_prospect, activite = derniere saisie du prospect (une visite, cle activite, compte), D = son questionnaire.
+     → { etat (issue ou "en_cours"), issue, raisons[], action, urgent, motif (signe | case | clic | nouveau), rang, recence,
+         jour, questionnaire, reserve, bilan (Commercial.bilan), clics, relances, derniereRelance, inscritHeures }
+     « À traiter » (urgent), sans température : « Signé » et toujours prospect (30 jours au plus) ; sinon, sans issue et
+     sans bilan coché par le coach : la case « J'ai réservé » du prospect (à vérifier), un clic « Réserver mon bilan »
+     sans relance depuis, ou une inscription de moins de CONFIG.suivi.urgence_heures (48 h) sans relance. */
   analyse(p, C, S, activite, D){
     const cfg = this.cfg(); S = this.suivi(S);
     let r = null; try { r = Decouverte.resume(p, C, D); } catch(e){ r = null; }
-    const fait = !!(r && r.questionnaire), finie = !!(r && r.finie), jour = r ? r.jour : null;
-    const motiv = D && (typeof D.motivation === "string" || typeof D.motivation === "number") ? (Math.round(Number(D.motivation)) || 0) : 0;
-    const instant = v => { const x = typeof v === "string" ? Date.parse(v) : NaN; return isNaN(x) ? null : x; };
+    const fait = !!(r && r.questionnaire), jour = r ? r.jour : null;
+    const instant = v => this.instant(v);
     /* une activite datee de plus de 12 h dans le futur (horloge du prospect en avance) est traitee comme inconnue :
        sinon il paraitrait actif a jamais et les relances ne compteraient jamais comme restees sans reponse */
     const futur = instant(activite) != null && instant(activite) > Date.now() + 12 * 3600000;
-    const inscrit = this.depuis(p && p.cree_le), actif = futur ? null : this.depuis(activite);
-    const clic = r && r.dernierClic ? this.depuis(r.dernierClic) : null;
+    const actif = futur ? null : this.depuis(activite);
+    const clics = r ? r.clics : 0, clic = r && r.dernierClic ? this.depuis(r.dernierClic) : null;
     const relances = Array.isArray(S.relances) ? S.relances.filter(x => instant(x) != null) : [];
     const relance = relances.length ? this.depuis(relances[relances.length - 1]) : null;
     const tAct0 = futur ? null : instant(activite), tAct = tAct0 == null ? null : Math.min(tAct0, Date.now());   // quelques heures d'avance : ramenee a maintenant
@@ -42,153 +72,140 @@ const Commercial = {
     const sansReponse = relances.filter(x => tAct == null || instant(x) > tAct).length;
     let issue = (typeof S.issue === "string" && Object.prototype.hasOwnProperty.call(this.ISSUES, S.issue)) ? S.issue : null;   // une valeur piegee (objet) ne fait rien tomber
     const tIssue = issue ? instant(S.issue_le) : null, issueDepuis = issue ? this.depuis(S.issue_le) : null;
-    /* « Signé » puis passé client, puis repassé prospect (fin d'accompagnement) : ce n'est plus un signé a traiter */
-    /* seulement si le passage en client est POSTERIEUR a la signature (un ancien client qui re-signe reste « Signé ») */
+    /* « Signé » puis passé client, puis repassé prospect (fin d'accompagnement) : ce n'est plus un signé a traiter
+       (seulement si le passage en client est POSTERIEUR a la signature : un ancien client qui re-signe reste « Signé ») */
     const tClient = instant(S.client_le);
     const ancienClient = issue === "signe" && p && p.statut === "prospect" && tClient != null && tIssue != null && tClient > tIssue;
     if (ancienClient) issue = null;
-    /* une case « J'ai réservé » d'AVANT son passage en client ne compte plus (c'etait l'appel qui l'a fait signer) */
-    if (ancienClient && r && r.reserve && !(instant(r.reserve) > tClient)) r = Object.assign({}, r, { reserve: null });
+    const B = this.bilan(S, C, p), reserve = B.reserve;
     const relancesApresIssue = tIssue != null ? relances.filter(x => instant(x) > tIssue).length : 0;
-    /* « Perdu » ou « Absent », puis il reclique « Réserver » ou coche « J'ai réservé » : il revient dans la course */
-    const revenu = (issue === "perdu" || issue === "absent") && tIssue != null && !!r && ((!!r.dernierClic && instant(r.dernierClic) > tIssue && clic != null && clic <= cfg.clic_recent_jours) || (!!r.reserve && instant(r.reserve) > tIssue && this.depuis(r.reserve) != null && this.depuis(r.reserve) <= cfg.chaud_jours));
-    /* v51 — statuts calcules (brief de Lucas du 27/09) :
-       NOUVEAU = inscrit depuis moins de 24 h, rien fait (ni questionnaire, ni clic, ni reservation) ;
-       CHAUD   = bilan reserve (case « J'ai réservé mon bilan »), meme sans questionnaire : c'est l'appel qui compte ;
-       TIÈDE   = questionnaire rempli, pas de reservation (avec ou sans clic « Réserver ») ;
-       FROID   = questionnaire pas rempli passe 24 h, ou plus aucune action depuis 3 jours, ou relances epuisees. */
+    /* « Perdu » ou « Absent », puis il reclique « Réserver » ou son bilan redevient réservé : il revient dans la course */
+    const revenu = (issue === "perdu" || issue === "absent") && tIssue != null && ((!!r && !!r.dernierClic && instant(r.dernierClic) > tIssue && clic != null && clic <= cfg.clic_recent_jours) || (reserve && instant(B.le) > tIssue && this.depuis(B.le) != null && this.depuis(B.le) <= cfg.retour_jours));
     const tInscrit = instant(p && p.cree_le), heures = tInscrit == null ? null : Math.max(0, (Date.now() - tInscrit) / 3600000);
-    const reserve = !!(r && r.reserve), clics = r ? r.clics : 0;
-    const nouveau = !fait && !clics && !reserve && heures != null && heures < cfg.nouveau_heures;
-    /* inscrit depuis moins de 24 h : jamais FROID (sauf relances epuisees) — un clic « Réserver » sans questionnaire le rend TIÈDE */
-    const jeune = heures != null && heures < cfg.nouveau_heures;
     const commence = D && typeof D.repondues === "number" && isFinite(D.repondues) ? Math.floor(D.repondues) : Decouverte.repondues(D);
-    const inactif = !reserve && !nouveau && actif != null && actif >= cfg.inactif_jours;
-    const chaud = [], froid = [], tiede = [], neuf = [];
-    const etape = jour == null ? "" : finie ? "découverte terminée" : "découverte jour " + jour + "/" + r.duree;
-    if (reserve) chaud.push("A coché « J'ai réservé mon bilan » " + this.quand(this.depuis(r.reserve)) + ".");
+    const total = (D && typeof D.nb_questions === "number" && D.nb_questions > 0 ? Math.floor(D.nb_questions) : Decouverte.liste(D).length) || 3;
     const depuisH = heures == null ? "" : heures < 1 ? "il y a moins d'une heure" : "il y a " + Math.floor(heures) + " h";
-    if (nouveau) neuf.push("Inscrit " + depuisH + (commence > 0 ? ", questionnaire commencé (" + commence + "/" + ((D && typeof D.nb_questions === "number" && D.nb_questions > 0 ? Math.floor(D.nb_questions) : Decouverte.liste(D).length) || 10) + " réponses)." : ", rien fait pour l'instant."));
-    else if (!fait && jeune) tiede.push("Inscrit " + depuisH + ", questionnaire pas encore rempli.");
-    else if (!fait) froid.push("Inscrit " + this.quand(inscrit) + ", questionnaire pas rempli.");
-    if (inactif) froid.push("Aucune action depuis " + actif + " jours" + (etape ? " (" + etape + ")" : "") + ".");
-    if (fait) tiede.push("Questionnaire rempli " + this.quand(this.depuis(r.questionnaire)) + (motiv ? ", motivation " + motiv + "/10" : "") + (etape ? ", " + etape : "") + ".");
-    if (clics && !reserve) tiede.push("A cliqué « Réserver mon bilan » (" + clics + " fois), la dernière " + this.quand(clic) + ", sans réserver.");
-    if (sansReponse) (sansReponse >= cfg.relances_max ? froid : tiede).push("Relancé " + sansReponse + " fois sans réponse.");
-    if (issue && revenu) (reserve ? chaud : tiede).unshift("Revenu après l'issue « " + this.ISSUES[issue] + " » : a recliqué « Réserver » ou coché « J'ai réservé ».");
-    else if (issue) (issue === "signe" ? chaud : froid).unshift("Appel : « " + this.ISSUES[issue] + " » " + this.quand(issueDepuis) + (typeof S.note === "string" && S.note ? " — " + S.note : "") + ".");
-    if (ancienClient) tiede.unshift("Ancien client (« Signé » " + this.quand(this.depuis(S.issue_le)) + "), redevenu prospect.");
-    if (revenu) issue = null;   // la temperature reprend la main
+    /* les faits, en clair (fiche : « Suivi commercial ») */
+    const raisons = [];
+    if (issue && revenu) raisons.push("Revenu après l'issue « " + this.ISSUES[issue] + " » : a recliqué « Réserver » ou son bilan est de nouveau réservé.");
+    else if (issue) raisons.push("Appel : « " + this.ISSUES[issue] + " » " + this.quand(issueDepuis) + (typeof S.note === "string" && S.note ? " — " + S.note : "") + ".");
+    if (ancienClient) raisons.push("Ancien client (« Signé » " + this.quand(this.depuis(S.issue_le)) + "), redevenu prospect.");
+    if (B.coach) raisons.push("Bilan réservé : coché par toi " + this.quand(this.depuis(B.coach)) + ".");
+    else if (B.source === "prospect") raisons.push("A coché « J'ai réservé mon bilan » " + this.quand(this.depuis(B.case)) + " : pas encore vérifié par toi.");
+    else if (B.retire) raisons.push("« Bilan réservé » retiré par toi " + this.quand(this.depuis(B.retire)) + ".");
+    raisons.push("Inscrit " + (heures != null && heures < 24 ? depuisH : this.quand(this.depuis(p && p.cree_le))) + (fait ? ", questionnaire rempli " + this.quand(this.depuis(r.questionnaire)) : commence > 0 ? ", questionnaire commencé (" + commence + "/" + total + " réponses)" : ", questionnaire pas encore rempli") + ".");
+    if (clics) raisons.push("A cliqué « Réserver mon bilan » (" + clics + " fois), la dernière " + this.quand(clic) + ".");
+    if (sansReponse) raisons.push("Relancé " + sansReponse + " fois sans réponse.");
+    if (revenu) issue = null;   // il est de nouveau « en cours »
+    /* à traiter : la définition simple (voir plus haut) */
+    const relanceApres = t0 => t0 != null && relances.some(x => instant(x) > t0);
+    const tClic = r && r.dernierClic ? instant(r.dernierClic) : null;
+    const clicAtraiter = clics > 0 && tClic != null && !(p && p.statut === "prospect" && tClient != null && tClic <= tClient) && !relanceApres(tClic);
+    let motif = null;
+    if (issue === "signe"){ if (p && p.statut === "prospect" && !(issueDepuis != null && issueDepuis > 30)) motif = "signe"; }
+    else if (!issue && !B.coach){
+      if (B.source === "prospect") motif = "case";
+      else if (clicAtraiter) motif = "clic";
+      else if (heures != null && heures < cfg.urgence_heures && !relances.length) motif = "nouveau";
+    }
     const attendre = relance != null && relance < cfg.relance_attente_jours;
     const epuise = sansReponse >= cfg.relances_max;
-    const temperature = reserve ? "chaud" : epuise ? "froid" : nouveau ? "nouveau" : (inactif || (!fait && !jeune)) ? "froid" : "tiede";
-    let action, urgent = false;
-    const siPasRelance = (texte) => {
-      if (attendre) return "Relancé " + this.quand(relance) + " : attends sa réponse.";
-      if (epuise) return "Sans réponse après " + sansReponse + " relances : classe-le « Perdu », ou attends qu'il revienne.";
-      urgent = true; return texte;
-    };
+    const siPasRelance = texte => attendre ? "Relancé " + this.quand(relance) + " : attends sa réponse."
+      : epuise ? "Sans réponse après " + sansReponse + " relances : classe-le « Perdu », ou attends qu'il revienne." : texte;
+    let action;
     if (issue === "signe"){
       if (!(p && p.statut === "prospect")) action = "C'est désormais un client.";
       else if (issueDepuis != null && issueDepuis > 30) action = "« Signé » " + this.quand(issueDepuis) + " et toujours prospect : passe-le client, ou retire l'issue s'il a arrêté.";   // oublie : rappel garde, non urgent
-      else { action = "Passe-le client pour lui ouvrir son espace d'accompagnement."; urgent = true; }
+      else action = "Passe-le client pour lui ouvrir son espace d'accompagnement.";
     }
     else if (issue === "absent") action = relancesApresIssue >= cfg.relances_max ? "Absent, puis relancé " + relancesApresIssue + " fois sans suite : classe-le « Perdu » ?" : siPasRelance("Absent à l'appel : repropose-lui un créneau en DM.");
     else if (issue === "perdu"){ const reste = cfg.perdu_relance_jours - (issueDepuis || 0); action = relancesApresIssue >= 1 ? "Relancé après l'appel : s'il ne répond pas, laisse-le." : reste <= 0 ? siPasRelance("Relance-le : l'appel date d'il y a " + issueDepuis + " jours.") : "Relance prévue dans " + reste + " jour" + (reste > 1 ? "s" : "") + "."; }
-    else if (reserve){ const dr = this.depuis(r.reserve); action = dr != null && dr > cfg.appel_jours ? "« J'ai réservé » " + this.quand(dr) + " : l'appel a-t-il eu lieu ? Indique Signé, Perdu ou Absent." : "Prépare le bilan : relis sa fiche (questionnaire, obstacle, motivation). Après l'appel, indique Signé, Perdu ou Absent."; urgent = true; }
+    else if (B.coach){ const dr = this.depuis(B.coach); action = dr != null && dr > cfg.appel_jours ? "Bilan réservé " + this.quand(dr) + " : l'appel a-t-il eu lieu ? Indique Signé, Perdu ou Absent." : "Prépare le bilan : relis sa fiche (ses 3 réponses). Après l'appel, indique Signé, Perdu ou Absent."; }
+    else if (B.source === "prospect") action = "Il a coché « J'ai réservé » " + this.quand(this.depuis(B.case)) + " : vérifie ton agenda, puis coche « Bilan réservé » dans sa fiche (ou retire-le).";
     else if (ancienClient) action = "Ancien client redevenu prospect : reprends contact si tu veux lui proposer de reprendre.";
-    else if (temperature === "nouveau") action = "Rien à faire aujourd'hui : il vient de s'inscrire.";
-    else if (temperature === "froid" && !fait) action = siPasRelance(finie ? "Relance : sa découverte est finie sans questionnaire, propose-lui directement le bilan." : "DM de bienvenue : aide-le à remplir son questionnaire (3 minutes).");
-    else if (temperature === "froid") action = siPasRelance(finie ? "Relance : sa découverte est terminée, propose-lui le bilan." : "Relance douce en DM : demande-lui où il en est.");
-    else if (clics) action = siPasRelance("DM : il a cliqué sans réserver, demande-lui ce qui le retient.");
-    else if (motiv >= cfg.motivation_forte) action = siPasRelance("DM : il se dit motivé à " + motiv + "/10, propose-lui le bilan.");
-    else if (finie) action = siPasRelance("DM : sa découverte est terminée, propose-lui le bilan.");
-    else action = "Rien à faire aujourd'hui : il découvre" + (jour != null ? " (jour " + jour + "/" + r.duree + ")" : "") + ".";
-    const etat = issue || temperature;
-    const rang = issue === "signe" ? (urgent ? 0 : 9) : issue === "absent" ? (urgent ? 3 : 7) : issue === "perdu" ? (urgent ? 4 : 9)
-               : temperature === "chaud" ? 1 : urgent ? (temperature === "tiede" ? 5 : 6) : 8;
+    else if (clics) action = siPasRelance("DM : il a cliqué « Réserver mon bilan » sans réserver, demande-lui ce qui le retient.");
+    else if (heures != null && heures < cfg.urgence_heures) action = siPasRelance("Il vient de s'inscrire : envoie-lui un DM de bienvenue.");
+    else if (!fait) action = siPasRelance("DM : aide-le à répondre à ses 3 questions (1 minute).");
+    else action = siPasRelance("Propose-lui le bilan en DM quand tu le sens prêt.");
+    const RANG = { signe: 0, case: 1, clic: 2, nouveau: 3 };
+    const rang = motif ? RANG[motif] : B.coach ? 4 : issue === "absent" ? 5 : issue === "perdu" ? 6 : issue === "signe" ? 8 : 7;
     /* recence : a rang egal, le plus recemment actif d'abord (on lui ecrit pendant qu'il est dans le coup) */
-    return { etat, temperature, issue, raisons: chaud.concat(neuf, froid, tiede), action, urgent, rang, recence: actif == null ? 9999 : actif, jour, duree: r ? r.duree : Decouverte.duree(), finie, questionnaire: fait, nouveau, reserve, clics, relances: relances.length, derniereRelance: relance, inscritHeures: heures };
+    return { etat: issue || "en_cours", issue, raisons, action, urgent: !!motif, motif, rang, recence: actif == null ? 9999 : actif, jour, questionnaire: fait, reserve, bilan: B, clics, relances: relances.length, derniereRelance: relance, inscritHeures: heures };
   },
   analyseLigne(l){ try { return this.analyse(l.p, l.ch, l.suivi, l.activite, l.dc); } catch(e){ console.warn("[MHX] suivi commercial illisible", e); return null; } },
-  /* v51 — score de qualification sur 100 : inscription 10 ; questionnaire 30 (jusqu'a 20 tant qu'il n'est pas valide,
-     au prorata des reponses) ; clic « Réserver mon bilan » 30 ; bilan reserve 30. Bonus : revenu au moins 2 jours
-     differents +5, 5 minutes ou plus dans l'app +5, email ouvert +5 (pas mesure tant que les emails ne sont pas
-     branches). Plafonne a 100. D = questionnaire (au moins court_le, repondues), A = cle activite. */
-  /* ana (facultatif) : l'analyse du meme prospect ; ses reservation et clics font foi (l'ancienne case d'un ancien
-     client redevenu prospect ne compte pas, exactement comme dans son statut) */
-  score(p, C, D, A, E, ana){
-    let r = null; try { r = Decouverte.resume(p, C, D); } catch(e){ r = null; }
-    if (r && ana && typeof ana === "object"){ r = Object.assign({}, r, { reserve: ana.reserve ? r.reserve : null, clics: typeof ana.clics === "number" ? ana.clics : r.clics }); }
-    /* v52 : sur le questionnaire de ce prospect (3 questions, ou 10 pour un ancien prospect) ; nb_questions donne par Mes clients */
-    const total = (D && typeof D.nb_questions === "number" && D.nb_questions > 0 ? Math.floor(D.nb_questions) : Decouverte.liste(D).length) || 10;
-    const rep = D && typeof D.repondues === "number" && isFinite(D.repondues) ? Math.max(0, Math.min(total, Math.floor(D.repondues))) : Decouverte.repondues(D);
-    const fait = !!(r && r.questionnaire), clics = r ? r.clics : 0;
-    const a = Activite.propre(A), jours = a.jours.length, min = Math.floor(a.temps_s / 60);
-    const lignes = [
-      { cle: "inscription", lbl: "Inscription", pts: 10, max: 10 },
-      { cle: "questionnaire", lbl: fait ? "Questionnaire rempli" : "Questionnaire en cours (" + rep + "/" + total + " réponses)", pts: fait ? 30 : Math.round(20 * rep / total), max: 30 },
-      { cle: "clic", lbl: "Clic « Réserver mon bilan »" + (clics ? " (" + clics + " fois)" : ""), pts: clics ? 30 : 0, max: 30 },
-      { cle: "reserve", lbl: "Bilan réservé", pts: r && r.reserve ? 30 : 0, max: 30 },
-      { cle: "visites", lbl: "Revenu plusieurs jours (" + jours + " jour" + (jours > 1 ? "s" : "") + " d'activité)", pts: jours >= 2 ? 5 : 0, max: 5, bonus: true },
-      { cle: "temps", lbl: "Temps passé dans l'app (" + min + " min)", pts: a.temps_s >= 300 ? 5 : 0, max: 5, bonus: true },
-      Array.isArray(E)
-        ? (() => { const env = E.filter(x => x && x.statut === "envoye").length, ouv = E.some(x => x && typeof x.ouvert_le === "string");
-                   return { cle: "emails", lbl: "Email ouvert (" + env + " email" + (env > 1 ? "s" : "") + " de suivi envoyé" + (env > 1 ? "s" : "") + ")", pts: ouv ? 5 : 0, max: 5, bonus: true }; })()
-        : { cle: "emails", lbl: "Email ouvert (pas encore mesuré : emails non branchés)", pts: 0, max: 5, bonus: true, nonMesure: true }
-    ];
-    return { total: Math.min(100, lignes.reduce((s, x) => s + x.pts, 0)), lignes, repondues: rep, questions: total };
+  /* le motif « à traiter » en clair (tableau de bord) */
+  motifTexte(a){
+    if (!a || !a.motif) return "";
+    if (a.motif === "nouveau") return "Inscrit " + (a.inscritHeures < 1 ? "il y a moins d'une heure" : "il y a " + Math.floor(a.inscritHeures) + " h") + " : DM de bienvenue";
+    return this.MOTIFS[a.motif] || "";
   },
-  scoreLigne(l, ana){ try { return this.score(l.p, l.ch, l.dc, l.act, JournalEmails.pour(l.p.id), ana); } catch(e){ return null; } },
-  pastilleScore(sc){ return sc ? `<span class="pastille${sc.total >= 70 ? " ok" : sc.total >= 40 ? " accent" : ""}" title="Score de qualification sur 100">${sc.total}/100</span>` : ""; },
-  CLASSES: { nouveau: "accent", chaud: "chaud", tiede: "tiede", froid: "froid", signe: "ok", perdu: "manque", absent: "attention" },
-  pastille(a){ return a ? `<span class="pastille ${this.CLASSES[a.etat] || ""}" title="${esc(a.raisons.join(" "))}">${esc(this.ETATS[a.etat] || "")}</span>` : ""; },
+  /* v53 (chantier 4) — le compteur : inscrits → 3 questions remplies → bilans réservés (coche du coach, sinon case du
+     prospect) → clients. Inscrits = les prospects, et les clients passés par l'inscription gratuite (une trace du parcours
+     gratuit : questionnaire court, clé challenge, ou suivi commercial) ; les comptes créés directement par le coach ne
+     comptent pas. Calculé à l'affichage (lignes de Clients.resumer), rien n'est stocké. */
+  compteur(lignes){
+    const passe = l => l.p.statut === "prospect" || !!l.ch || !!(l.dc && (l.dc.court_le || l.dc.court_debut)) || !!(l.suivi && (l.suivi.client_le || l.suivi.issue));
+    const L = (lignes || []).filter(l => l && l.p && l.p.role !== "coach" && passe(l));
+    return { inscrits: L.length, questions: L.filter(l => Decouverte.questionnaireFait(l.dc)).length,
+             bilans: L.filter(l => this.bilanLigne(l).reserve).length, clients: L.filter(l => l.p.statut !== "prospect").length };
+  },
+  CLASSES: { signe: "ok", perdu: "manque", absent: "attention" },
+  /* la pastille de l'issue de l'appel (SIGNÉ / PERDU / ABSENT) ; rien tant qu'il n'y a pas d'issue */
+  pastille(a){ return a && a.issue && this.ETATS[a.issue] ? `<span class="pastille ${this.CLASSES[a.issue] || ""}" title="${esc(a.raisons.join(" "))}">${esc(this.ETATS[a.issue])}</span>` : ""; },
   pastilleLigne(l){ return this.pastille(this.analyseLigne(l)); },
+  pastilleBilan(B){ return B && B.reserve ? `<span class="pastille ok" title="${B.coach ? "Bilan réservé : coché par toi" : "A coché « J'ai réservé mon bilan » : à vérifier"}">bilan réservé</span>` : ""; },
   bouton(p, act, txt, cls){ return `<button type="button" class="btn petit${cls === "principal" ? "" : " ghost"}" data-sc="${act}" data-uid="${esc(p.id)}" data-nom="${esc(Clients.nom(p))}">${esc(txt)}</button>`; },
+  /* fiche = boutons du panneau « Suivi commercial » de la fiche : + « Bilan réservé » / « Retirer « Bilan réservé » »
+     (v53, un clic, sans fenêtre de confirmation, annulable), tant qu'aucune issue n'est indiquée */
   boutons(p, a, fiche){
-    const b = (act, txt, cls) => this.bouton(p, act, txt, cls);
-    return (fiche ? "" : b("fiche", "Ouvrir la fiche")) + (a.issue
+    const b = (act, txt, cls) => this.bouton(p, act, txt, cls), B = a.bilan || {};
+    const bilan = !fiche || a.issue ? "" : B.coach ? b("bilan_non", "Retirer « Bilan réservé »")
+      : b("bilan", "Bilan réservé", "principal") + (B.source === "prospect" ? b("bilan_non", "Retirer « Bilan réservé »") : "");
+    return (fiche ? "" : b("fiche", "Ouvrir la fiche")) + bilan + (a.issue
       ? (a.issue === "signe" && p.statut === "prospect" ? b("client", "Passer client", "principal") : "") + b("relance", "J'ai relancé") + b("annuler", "Annuler « " + this.ISSUES[a.issue] + " »")
       : b("relance", "J'ai relancé") + b("signe", "Signé") + b("perdu", "Perdu") + b("absent", "Absent"));
   },
   sousTitre(p, a){
-    const i = this.depuis(p && p.cree_le);
-    /* v52 : plus de « J n/7 » ni de « terminée » (la suite dit deja depuis quand il est inscrit) */
-    return "Découverte" + (a.questionnaire ? " · questionnaire rempli" : " · questionnaire à remplir") + " · inscrit " + (a.inscritHeures != null && a.inscritHeures < 24 ? (a.inscritHeures < 1 ? "il y a moins d'une heure" : "il y a " + Math.floor(a.inscritHeures) + " h") : this.quand(i)) + (a.relances ? " · " + a.relances + " relance" + (a.relances > 1 ? "s" : "") : "");
+    const i = this.depuis(p && p.cree_le), d = p && typeof p.cree_le === "string" ? Decouverte.dateLocale(p.cree_le) : null;
+    /* v53 : la date d'inscription, puis depuis quand ; les relances */
+    return (d ? "inscrit le " + dateFr(d) + " · " : "") + (a.inscritHeures != null && a.inscritHeures < 24 ? (a.inscritHeures < 1 ? "il y a moins d'une heure" : "il y a " + Math.floor(a.inscritHeures) + " h") : this.quand(i)) + (a.relances ? " · " + a.relances + " relance" + (a.relances > 1 ? "s" : "") : "");
   },
-  carteHTML(p, a, x){
-    const nom = Clients.nom(p);
-    /* v51 : x = { sc (score), dc (questionnaire resume) } — page Prospects */
-    const dc = x && x.dc ? x.dc : null;
-    /* v52 (lot G) : l'objectif posé par l'app depuis sa réponse « problème » n'est pas répété ; ses réponses « problème »
-       et « dans 3 mois » (tronquée) sur une ligne à part */
-    const objectif = dc && !(dc.probleme && dc.objectif === Decouverte.objectifDepuis(dc.probleme)) ? dc.objectif : "";
-    const infos = dc ? [dc.email, p && typeof p.cree_le === "string" ? "inscrit le " + dateFr(Decouverte.dateLocale(p.cree_le) || "") : "", objectif].filter(Boolean) : [];
-    const reponses = dc ? [dc.probleme ? "Problème : " + dc.probleme : "", dc.projection ? "Dans 3 mois : « " + Decouverte.extrait(dc.projection, 100) + " »" : ""].filter(Boolean) : [];
+  /* v53 (chantier 4) — la carte d'un prospect (page Prospects) : l = sa ligne (Clients.resumer), a = son analyse.
+     Date d'inscription, email, ses 3 réponses (Problème / Ce qui l'a bloqué / Dans 3 mois ; anciennes réponses : dans sa
+     fiche), bilan réservé ou pas, newsletter oui / non, dernière visite, jours actifs (30 j), prochaine action, boutons. */
+  carteHTML(l, a){
+    const p = l.p, nom = Clients.nom(p), dc = l.dc || {}, B = a.bilan || {};
+    const dt = v => { const d = Decouverte.dateLocale(v); return d ? dateFr(d) : ""; };
+    const reponses = [["Problème", dc.probleme || ""], ["Ce qui l'a bloqué", !dc.ancien && dc.obstacle ? "« " + Decouverte.extrait(dc.obstacle, 90) + " »" : ""], ["Dans 3 mois", dc.projection ? "« " + Decouverte.extrait(dc.projection, 100) + " »" : ""]].filter(x => x[1]);
+    const faits = [["Bilan", B.coach ? "réservé le " + dt(B.coach) : B.source === "prospect" ? "à vérifier (case cochée le " + dt(B.case) + ")" : "pas réservé"],
+      ["Newsletter", l.newsletter && l.newsletter.oui ? "oui" : "non"], ["Dernière visite", Activite.texteVisite(l.visites)], ["Jours actifs (30 j)", Activite.texteJours(l.visites)]];
     return `<article class="sc-carte${a.urgent ? " urgent" : ""}" data-uid="${esc(p.id)}">
-      <div class="sc-tete">${Clients.avatar(nom)}<div class="sc-nom"><b>${esc(nom)}</b><small>${esc(this.sousTitre(p, a))}</small></div>${x && x.sc ? this.pastilleScore(x.sc) + " " : ""}${this.pastille(a)}</div>
-      ${infos.length ? `<p class="sc-infos">${esc(infos.join(" · "))}</p>` : ""}
-      ${reponses.length ? `<p class="sc-infos sc-reponses">${esc(reponses.join(" · "))}</p>` : ""}
+      <div class="sc-tete">${Clients.avatar(nom)}<div class="sc-nom"><b>${esc(nom)}</b><small>${esc(this.sousTitre(p, a))}</small></div>${this.pastille(a)}${this.pastilleBilan(B)}</div>
+      ${dc.email ? `<p class="sc-infos">${esc(dc.email)}</p>` : ""}
+      ${reponses.length ? `<ul class="sc-reponses">${reponses.map(([k, v]) => `<li><span>${esc(k)}</span> ${esc(v)}</li>`).join("")}</ul>` : `<p class="sc-infos sc-sans">${dc.ancien ? "Anciennes réponses : dans sa fiche." : "Pas encore de réponse à ses 3 questions."}</p>`}
+      <ul class="sc-faits">${faits.map(([k, v]) => `<li><span>${esc(k)}</span> <b>${esc(v)}</b></li>`).join("")}</ul>
+      ${a.urgent ? `<p class="sc-motif"><span class="pastille mauvais">à traiter</span> ${esc(this.motifTexte(a))}</p>` : ""}
       <p class="sc-action"><b>Prochaine action :</b> ${esc(a.action)}</p>
-      <ul class="sc-raisons">${a.raisons.map(x => `<li>${esc(x)}</li>`).join("")}</ul>
       <div class="sc-boutons">${this.boutons(p, a, false)}</div>
       <span class="msg sc-msg" role="status" aria-live="polite"></span>
     </article>`;
   },
-  /* l'historique des actions du coach (relances, issues), du plus recent au plus ancien */
+  /* l'historique des actions du coach (bilan réservé, relances, issues), du plus recent au plus ancien */
   histoHTML(S){
     const h = (Array.isArray(this.suivi(S).historique) ? this.suivi(S).historique : []).filter(e => e && typeof e === "object" && typeof e.le === "string").slice(-6).reverse();
     if (!h.length) return "";
-    const lib = e => e.type === "relance" ? "Relance" : e.type === "annule" ? "Issue annulée" + (this.ISSUES[e.valeur] ? " (" + this.ISSUES[e.valeur] + ")" : "") : e.type === "issue" && this.ISSUES[e.valeur] ? "Appel : " + this.ISSUES[e.valeur] : "";
+    const lib = e => e.type === "relance" ? "Relance" : e.type === "annule" ? "Issue annulée" + (this.ISSUES[e.valeur] ? " (" + this.ISSUES[e.valeur] + ")" : "") : e.type === "issue" && this.ISSUES[e.valeur] ? "Appel : " + this.ISSUES[e.valeur]
+      : e.type === "bilan" ? (e.valeur === "reserve" ? "Bilan réservé coché" : e.valeur === "annule" ? "« Bilan réservé » retiré" : "") : "";
     return `<p class="note" style="margin:10px 0 4px">Historique</p><ul class="sc-raisons sc-histo">${h.filter(lib).map(e => `<li>${esc(lib(e) + " — " + dateFr(e.le) + (typeof e.note === "string" && e.note ? " — " + e.note : ""))}</li>`).join("")}</ul>`;
   },
   ficheHTML(p, a, S){
-    return `<section class="panel sc-fiche${a.urgent ? " urgent" : ""}"><div class="seance-c-tete"><h2>Suivi commercial</h2>${this.pastille(a)}</div>
+    return `<section class="panel sc-fiche${a.urgent ? " urgent" : ""}"><div class="seance-c-tete"><h2>Suivi commercial</h2>${this.pastille(a)}${this.pastilleBilan(a.bilan)}</div>
+      ${a.urgent ? `<p class="sc-motif"><span class="pastille mauvais">à traiter</span> ${esc(this.motifTexte(a))}</p>` : ""}
       <p class="sc-action"><b>Prochaine action :</b> ${esc(a.action)}</p>
       <ul class="sc-raisons">${a.raisons.map(x => `<li>${esc(x)}</li>`).join("")}</ul>
       <div class="sc-boutons">${this.boutons(p, a, true)}</div>${this.histoHTML(S)}
       <span class="msg sc-msg" role="status" aria-live="polite"></span>
-      <p class="note" style="margin:10px 0 0">La température se recalcule à chaque ouverture. Seuls l'issue de l'appel et tes relances sont enregistrés, jamais visibles par le prospect.</p></section>`;
+      <p class="note" style="margin:10px 0 0">« Bilan réservé » : coche-le quand le bilan est dans ton agenda (un clic, annulable). Seuls cette coche, l'issue de l'appel et tes relances sont enregistrés, jamais visibles par le prospect.</p></section>`;
   },
   /* ---- ecritures : cle coach-seul, ecriture conditionnelle (un conflit relit et rejoue, 3 fois au plus) ---- */
   async modifier(uid, maj){
@@ -206,6 +223,9 @@ const Commercial = {
   poserIssue(uid, issue, note){ const le = new Date().toISOString(); return this.modifier(uid, c => { c.issue = issue; c.issue_le = le; c.note = note || ""; return this.noter(c, { type: "issue", valeur: issue, le: le, note: note || "" }); }); },
   annulerIssue(uid){ const le = new Date().toISOString(); return this.modifier(uid, c => { const avant = c.issue || null; c.issue = null; c.issue_le = null; c.note = ""; return this.noter(c, { type: "annule", valeur: avant, le: le }); }); },
   relancer(uid){ const le = new Date().toISOString(); return this.modifier(uid, c => { c.relances = (Array.isArray(c.relances) ? c.relances.filter(x => typeof x === "string") : []).concat(le).slice(-20); return this.noter(c, { type: "relance", le: le }); }); },
+  /* v53 (chantier 4) : « Bilan réservé » coché (bilan_le = maintenant) ou retiré (bilan_le = null), un événement « bilan »
+     dans l'historique ; le reste du suivi est gardé tel quel (écriture conditionnelle) */
+  poserBilan(uid, oui){ const le = new Date().toISOString(); return this.modifier(uid, c => { c.bilan_le = oui ? le : null; return this.noter(c, { type: "bilan", valeur: oui ? "reserve" : "annule", le: le }); }); },
   async passerClient(uid){
     const r = await Auth.appel("/rest/v1/profils?id=eq." + uid, { method: "PATCH", headers: { "Prefer": "return=representation" }, body: { statut: "client" } });
     if (!Array.isArray(r) || !r[0] || r[0].statut !== "client") throw new Error("la base n'a pas confirmé le passage en client");
@@ -266,6 +286,13 @@ const Commercial = {
         attente(); if (!(await client(null))) relacher();
         return;
       }
+      /* v53 (chantier 4) : « Bilan réservé » en un clic, sans fenêtre (annulable par « Retirer « Bilan réservé » ») */
+      if (act === "bilan" || act === "bilan_non"){
+        attente(); S = await this.poserBilan(uid, act === "bilan");
+        UI.toast(act === "bilan" ? "Bilan réservé noté pour " + nom + "." : "« Bilan réservé » retiré pour " + nom + ".", "ok");
+        apres && apres(uid, S, act);
+        return;
+      }
       if (act === "perdu"){
         const note = await UI.demander("Marquer " + nom + " comme perdu. La raison, en quelques mots (facultatif) : prix, timing, pas convaincu…", "", { ok: "Perdu", placeholder: "Facultatif" });
         if (note === null) return;
@@ -289,37 +316,8 @@ const Commercial = {
 };
 
 /* ------------------------------------------------------------------
-   OUTIL COACH — Prospects (v49). Tous les comptes gratuits, du plus
-   chaud au plus froid : temperature, raisons, prochaine action, issue.
-   ------------------------------------------------------------------ */
-/* ------------------------------------------------------------------
-   JOURNAL DES EMAILS (v51) — table emails_prospects, remplie par la fonction Supabase « emails-prospects »
-   (bienvenue, resultat, relance ; ouvertures et clics renvoyés par Brevo). Lue par le coach
-   seulement (score « email ouvert », chronologie de la fiche). Tant que la table n'existe pas (migration
-   pas appliquée, fonction pas déployée), la lecture échoue sans bruit : rien n'est affiché, le bonus du
-   score reste « pas encore mesuré ».
-   ------------------------------------------------------------------ */
-const JournalEmails = {
-  _parUser: null, _ok: false,
-  MODELES: { bienvenue: "bienvenue", resultat: "ton résultat", relance: "relance", questionnaire: "rappel du questionnaire" },   // « questionnaire » : ancien nom, gardé pour l'affichage
-  async charger(){
-    if (!Auth.estCoach()) return null;
-    try {
-      /* par pages de 1 000 (Supabase coupe au-dela sans prevenir), dans un ordre stable */
-      const l = await Clients.pages("/rest/v1/emails_prospects?select=id,user_id,modele,statut,envoye_le,ouvert_le,clique_le&order=id.asc", x => String(x && x.user_id) + "|" + String(x && x.modele));
-      const m = new Map();
-      (Array.isArray(l) ? l : []).forEach(x => { if (x && typeof x.user_id === "string"){ const t = m.get(x.user_id) || []; t.push(x); m.set(x.user_id, t); } });
-      this._parUser = m; this._ok = true;
-    } catch(e){ this._parUser = null; this._ok = false; }
-    return this._parUser;
-  },
-  /* la liste des emails d'un prospect ; null = journal indisponible (pas encore déployé) */
-  pour(uid){ return this._ok && this._parUser ? (this._parUser.get(uid) || []) : null; }
-};
-
-/* ------------------------------------------------------------------
    NOUVEAUTÉS (v51) — pour le coach : ce que ses prospects ont fait depuis sa dernière visite
-   (inscriptions, questionnaires remplis, clics « Réserver mon bilan », bilans réservés), calculé à partir
+   (inscriptions, questionnaires remplis, clics « Réserver mon bilan », cases « J'ai réservé »), calculé à partir
    des données déjà chargées par le tableau de bord ou la page Prospects (aucune requête de plus). Seule la
    date de dernière visite est rangée, dans la clé du coach « coach_notifs » = { vu: instant } (première
    fois : les 7 derniers jours). Badge sur l'onglet Prospects. Pas de notification push ni d'email :
@@ -329,8 +327,10 @@ const Nouveautes = {
   cle: "coach_notifs",
   JOURS_PAR_DEFAUT: 7,
   n: 0, _vu: undefined, _lecture: null, erreur: false, _deplie: false, _tCharge: null,
-  TYPES: { inscription: "inscription", questionnaire: "questionnaire rempli", clic: "clic « Réserver mon bilan »", reserve: "bilan réservé" },
-  COURTS: { inscription: ["inscription", "inscriptions"], questionnaire: ["questionnaire rempli", "questionnaires remplis"], clic: ["clic « Réserver »", "clics « Réserver »"], reserve: ["bilan réservé", "bilans réservés"] },
+  /* v53 (chantier 4) : « reserve » = la case « J'ai réservé » cochée par le prospect (une action du prospect, à vérifier) ;
+     elle ne compte plus dès que le coach a décidé du bilan (coché ou retiré : Commercial.bilan) */
+  TYPES: { inscription: "inscription", questionnaire: "questionnaire rempli", clic: "clic « Réserver mon bilan »", reserve: "a coché « J'ai réservé »" },
+  COURTS: { inscription: ["inscription", "inscriptions"], questionnaire: ["questionnaire rempli", "questionnaires remplis"], clic: ["clic « Réserver »", "clics « Réserver »"], reserve: ["case « J'ai réservé »", "cases « J'ai réservé »"] },
   /* date de la derniere visite, relue a chaque affichage (un autre appareil a pu tout marquer comme vu).
      Une date qui n'est pas au format ISO (valeur piegee) compte comme absente. Lecture ratee : erreur = true,
      on garde la derniere valeur connue (sinon les 7 derniers jours) et on le dit dans le panneau. */
@@ -355,7 +355,8 @@ const Nouveautes = {
       ajoute(l, "inscription", l.p.cree_le);
       if (l.dc) ajoute(l, "questionnaire", l.dc.court_le);
       Decouverte.clics(l.ch).forEach(c => ajoute(l, "clic", c.date));
-      ajoute(l, "reserve", Decouverte.reserve(l.ch));
+      const B = Commercial.bilanLigne(l);
+      if (B.case && !B.decide) ajoute(l, "reserve", B.case);
     });
     return out.sort((a, b) => b.t - a.t);
   },
@@ -380,6 +381,14 @@ const Nouveautes = {
       <ul class="nv-liste">${ev.slice(0, PREMIERS).map(li).join("")}</ul>
       ${suite}
       <div class="actions"><button type="button" class="btn ghost petit" data-nv-vu>Tout marquer comme vu</button><span class="msg" role="status" aria-live="polite"></span></div></section>`;
+  },
+  /* v53 (chantier 4) : le tableau de bord n'affiche plus le panneau (il est sur la page Prospects) mais calcule toujours
+     le nombre de nouveautés et le badge de l'onglet Prospects */
+  async compter(lignes){
+    if (!Auth.estCoach() || Store.idConsulte) return;
+    const vu = await this.vu();
+    if (Store.idConsulte) return;
+    this.n = this.evenements(lignes, vu).length; this.badge();
   },
   /* tCharge : l'instant ou les lignes affichees ont ete lues — « Tout marquer comme vu » ne marque rien de plus recent */
   async monter(boite, lignes, complet, tCharge){
@@ -430,6 +439,12 @@ const Nouveautes = {
   }
 };
 
+/* ------------------------------------------------------------------
+   OUTIL COACH — Prospects (v49 ; v53 chantier 4 : sans température ni score). Tous les comptes gratuits : date
+   d'inscription, 3 réponses, bilan réservé, newsletter, dernière visite, jours actifs ; « À traiter » (même définition
+   que le badge du tableau de bord), issues, relances, recherche, filtres, tri, export CSV, Nouveautés, compteur
+   (inscrits → 3 questions → bilans réservés → clients) et la liste newsletter (export CSV).
+   ------------------------------------------------------------------ */
 const outilProspects = {
   id: "prospects",
   cle: null,
@@ -439,48 +454,50 @@ const outilProspects = {
   sans_entete: true,
   titre: "Prospects",
   accroche: "",
-  /* v51 : filtres (gardes le temps de la session), recherche, tri, pagination par 50, export CSV */
-  filtre: "a_traiter", periode: "tout", progression: "tout", tri: "priorite", recherche: "",
-  PAS: 50, limite: 50,
-  donnees: null, lignes: [], tous: [],
+  /* filtres (gardes le temps de la session), recherche, tri, pagination par 50, export CSV */
+  filtre: "a_traiter", periode: "tout", bilanF: "tout", newsF: "tout", tri: "priorite", recherche: "",
+  PAS: 50, limite: 50, NL_PREMIERS: 10,
+  donnees: null, lignes: [], tous: [], _nlDeplie: false,
   html(){ return `<div id="pr-vue"><header class="masthead"><h1>Prospects</h1></header><section class="panel"><div class="empty">Chargement…</div></section></div>`; },
   /* garder = rechargement apres une action sur une carte : le coach garde sa place (nombre de prospects affiches) */
   async init(garder){
     const zone = $("pr-vue"); if (!zone) return;
     if (!garder && typeof Nouveautes !== "undefined") Nouveautes._deplie = false;
+    if (!garder) this._nlDeplie = false;
     const t0 = new Date().toISOString();
-    try { [this.donnees] = await Promise.all([Clients.charger(), JournalEmails.charger()]); }
+    try { this.donnees = await Clients.charger(); }
     catch(e){ zone.innerHTML = `<header class="masthead"><h1>Prospects</h1></header><section class="panel"><div class="empty">Impossible de charger les prospects pour le moment.</div></section>`; return; }
     if (!zone.isConnected) return;
     if (!garder) this.limite = this.PAS;
     this.tCharge = t0;
     this.rendre(zone);
   },
-  /* chaque prospect : sa ligne (Clients.resumer), son analyse (statut, action) et son score */
+  /* chaque prospect : sa ligne (Clients.resumer) et son analyse (issue, prochaine action, à traiter) */
   preparer(){
     const { profils, parClient, contenus } = this.donnees;
     this.lignes = Clients.resumer(profils, parClient, contenus);
-    this.tous = this.lignes.filter(l => l.p.statut === "prospect").map(l => { const a = Commercial.analyseLigne(l); return { l, a, sc: a ? Commercial.scoreLigne(l, a) : null }; }).filter(x => x.a);
+    this.tous = this.lignes.filter(l => l.p.statut === "prospect").map(l => ({ l, a: Commercial.analyseLigne(l) })).filter(x => x.a);
   },
   norm(s){ return String(s == null ? "" : s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\s+/g, " ").trim(); },
-  statutOk(x, f){ return f === "tous" ? true : f === "a_traiter" ? x.a.urgent : f === "issues" ? !!x.a.issue : x.a.etat === f; },
+  statutOk(x, f){ return f === "tous" ? true : f === "a_traiter" ? x.a.urgent : f === "issues" ? !!x.a.issue : true; },
   passe(x){
     if (!this.statutOk(x, this.filtre)) return false;
     const h = x.a.inscritHeures;
     if (this.periode !== "tout"){ const lim = { "24h": 24, "7j": 168, "30j": 720 }[this.periode]; if (!(h != null && h < lim)) return false; }
-    if (this.progression === "sans_q" && x.a.questionnaire) return false;
-    if (this.progression === "q_fait" && !x.a.questionnaire) return false;
-    if (this.progression === "clic" && !x.a.clics) return false;
-    if (this.progression === "reserve" && !x.a.reserve) return false;
+    if (this.bilanF === "oui" && !x.a.reserve) return false;
+    if (this.bilanF === "non" && x.a.reserve) return false;
+    const nl = !!(x.l.newsletter && x.l.newsletter.oui);
+    if (this.newsF === "oui" && !nl) return false;
+    if (this.newsF === "non" && nl) return false;
     const q = this.norm(this.recherche);
     if (q){ const dc = x.l.dc || {}; if ((this.norm(Clients.nom(x.l.p)) + " " + this.norm(dc.email)).indexOf(q) === -1) return false; }
     return true;
   },
   trier(liste){
     const t = v => { const x = typeof v === "string" ? Date.parse(v) : NaN; return isNaN(x) ? 0 : x; };
-    const cmp = this.tri === "score" ? (x, y) => ((y.sc ? y.sc.total : 0) - (x.sc ? x.sc.total : 0)) || x.a.rang - y.a.rang
-              : this.tri === "inscription" ? (x, y) => t(y.l.p.cree_le) - t(x.l.p.cree_le)
-              : this.tri === "activite" ? (x, y) => x.a.recence - y.a.recence || x.a.rang - y.a.rang
+    const visite = x => { const v = x.l.visites; return v && v.derniere ? t(v.derniere) : 0; };
+    const cmp = this.tri === "inscription" ? (x, y) => t(y.l.p.cree_le) - t(x.l.p.cree_le)
+              : this.tri === "visite" ? (x, y) => visite(y) - visite(x) || x.a.rang - y.a.rang
               : (x, y) => x.a.rang - y.a.rang || x.a.recence - y.a.recence;
     return liste.slice().sort(cmp);
   },
@@ -489,41 +506,40 @@ const outilProspects = {
     const tous = this.tous;
     /* issues des 30 derniers jours, clients compris (un prospect signe puis passe client reste compte) */
     const mois = this.lignes.map(l => Commercial.suivi(l.suivi)).filter(S => typeof S.issue === "string" && Commercial.depuis(S.issue_le) != null && Commercial.depuis(S.issue_le) <= 30);
-    const n = e => tous.filter(x => x.a.etat === e).length, cmpt = k => mois.filter(S => S.issue === k).length;
-    const pl = (k, sg, p) => k > 1 ? p : sg;
-    const moy = tous.length ? Math.round(tous.reduce((s, x) => s + (x.sc ? x.sc.total : 0), 0) / tous.length) : 0;
+    const cmpt = k => mois.filter(S => S.issue === k).length, pl = (k, sg, p) => k > 1 ? p : sg;
+    const K = Commercial.compteur(this.lignes);
     const tuile = (lbl, val, sub, cls) => `<div class="tile"><div class="t-lbl">${lbl}</div><div class="t-val readout${cls ? " " + cls : ""}">${val}</div><div class="t-sub">${sub}</div></div>`;
     const opt = (v, t, cur) => `<option value="${v}"${v === cur ? " selected" : ""}>${esc(t)}</option>`;
-    const cfg = Commercial.cfg();
+    const aTraiter = tous.filter(x => x.a.urgent).length;
     zone.innerHTML = `
       <header class="masthead">
         <span class="eyebrow">${esc(outilAccueil.dateLongue())}</span>
         <h1>Prospects</h1>
-        <p class="lede">${tous.length ? `${tous.length} ${pl(tous.length, "compte gratuit", "comptes gratuits")} · ${n("nouveau")} ${pl(n("nouveau"), "nouveau", "nouveaux")}, ${n("chaud")} ${pl(n("chaud"), "chaud", "chauds")}, ${n("tiede")} ${pl(n("tiede"), "tiède", "tièdes")}, ${n("froid")} ${pl(n("froid"), "froid", "froids")} · score moyen ${moy}/100` : "Aucun prospect pour l'instant."}</p>
+        <p class="lede">${tous.length ? `${tous.length} ${pl(tous.length, "compte gratuit", "comptes gratuits")} · ${aTraiter} à traiter` : "Aucun prospect pour l'instant."}</p>
+        <p class="note pr-compteur" id="pr-compteur" title="Inscrits : les prospects et les clients passés par l'inscription gratuite. Bilans réservés : ta coche « Bilan réservé », sinon la case « J'ai réservé » du prospect.">Inscrits <b>${K.inscrits}</b> → 3 questions remplies <b>${K.questions}</b> → bilans réservés <b>${K.bilans}</b> → clients <b>${K.clients}</b></p>
       </header>
       <div id="pr-nouveautes"></div>
       <section class="panel"><div class="tiles">
-        ${tuile("À traiter", tous.filter(x => x.a.urgent).length, "une action à faire")}
-        ${tuile("Nouveaux", n("nouveau"), "moins de 24 h")}
-        ${tuile("Chauds", n("chaud"), "bilan réservé", n("chaud") ? "pos" : "")}
-        ${tuile("Score moyen", moy + "<small>/100</small>", "qualification")}
+        ${tuile("À traiter", aTraiter, "une action à faire", aTraiter ? "neg" : "")}
         ${tuile("Signés", cmpt("signe"), "30 derniers jours", "pos")}
         ${tuile("Perdus", cmpt("perdu"), "30 derniers jours")}
         ${tuile("Absents", cmpt("absent"), "30 derniers jours")}
       </div></section>
       <section class="panel">
-        <div class="seg sc-filtres" role="group" aria-label="Filtrer par statut">${[["a_traiter", "À traiter"], ["nouveau", "Nouveaux"], ["chaud", "Chauds"], ["tiede", "Tièdes"], ["froid", "Froids"], ["issues", "Appel fait"], ["tous", "Tous"]].map(f => `<button type="button" data-filtre="${f[0]}" aria-pressed="${this.filtre === f[0]}">${esc(f[1])} <span class="meta">${tous.filter(x => this.statutOk(x, f[0])).length}</span></button>`).join("")}</div>
+        <div class="seg sc-filtres" role="group" aria-label="Filtrer">${[["a_traiter", "À traiter"], ["issues", "Appel fait"], ["tous", "Tous"]].map(f => `<button type="button" data-filtre="${f[0]}" aria-pressed="${this.filtre === f[0]}">${esc(f[1])} <span class="meta">${tous.filter(x => this.statutOk(x, f[0])).length}</span></button>`).join("")}</div>
         <div class="pr-outils">
           <input type="search" id="pr-q" placeholder="Rechercher un nom ou un email" aria-label="Rechercher un prospect par nom ou email" value="${esc(this.recherche)}" autocomplete="off">
           <select id="pr-periode" aria-label="Date d'inscription">${opt("tout", "Inscrits : tous", this.periode)}${opt("24h", "Inscrits : 24 dernières heures", this.periode)}${opt("7j", "Inscrits : 7 derniers jours", this.periode)}${opt("30j", "Inscrits : 30 derniers jours", this.periode)}</select>
-          <select id="pr-prog" aria-label="Progression">${opt("tout", "Progression : toutes", this.progression)}${opt("sans_q", "Questionnaire à remplir", this.progression)}${opt("q_fait", "Questionnaire rempli", this.progression)}${opt("clic", "A cliqué « Réserver »", this.progression)}${opt("reserve", "Bilan réservé", this.progression)}</select>
-          <select id="pr-tri" aria-label="Trier">${opt("priorite", "Tri : priorité", this.tri)}${opt("score", "Tri : score", this.tri)}${opt("inscription", "Tri : inscription récente", this.tri)}${opt("activite", "Tri : activité récente", this.tri)}</select>
+          <select id="pr-bilan" aria-label="Bilan réservé">${opt("tout", "Bilan : tous", this.bilanF)}${opt("oui", "Bilan réservé", this.bilanF)}${opt("non", "Bilan pas réservé", this.bilanF)}</select>
+          <select id="pr-news" aria-label="Newsletter">${opt("tout", "Newsletter : tous", this.newsF)}${opt("oui", "Newsletter : oui", this.newsF)}${opt("non", "Newsletter : non", this.newsF)}</select>
+          <select id="pr-tri" aria-label="Trier">${opt("priorite", "Tri : priorité", this.tri)}${opt("inscription", "Tri : inscription récente", this.tri)}${opt("visite", "Tri : dernière visite", this.tri)}</select>
           <button type="button" class="btn ghost petit" id="pr-csv">Exporter (CSV)</button>
         </div>
         <p class="note" id="pr-compte" role="status" aria-live="polite" style="margin:4px 0 10px"></p>
         <div id="pr-liste"></div>
-        <p class="note" style="margin:12px 0 0">NOUVEAU : inscrit depuis moins de ${cfg.nouveau_heures} h, ni questionnaire rempli, ni clic, ni réservation. CHAUD : bilan réservé. TIÈDE : questionnaire rempli (ou clic « Réserver » dans ses premières ${cfg.nouveau_heures} h), pas encore de réservation. FROID : questionnaire pas rempli passé ${cfg.nouveau_heures} h, aucune action depuis ${cfg.inactif_jours} jours, ou ${cfg.relances_max} relances sans réponse. Score sur 100 : inscription 10, questionnaire 30, clic « Réserver mon bilan » 30, bilan réservé 30, bonus visites, temps passé et email ouvert. Ces seuils se changent en une ligne, sur demande.</p>
-      </section>`;
+        <p class="note" style="margin:12px 0 0">${esc(Commercial.AIDE)} « Bilan réservé » : ta coche, dans sa fiche (sans coche de ta part, la case « J'ai réservé » du prospect compte, à vérifier). « Dernière visite » et « Jours actifs » : les jours où il a ouvert l'app.</p>
+      </section>
+      <div id="pr-newsletter"></div>`;
     $$("[data-filtre]", zone).forEach(b => b.addEventListener("click", () => {
       this.filtre = b.dataset.filtre; this.limite = this.PAS;
       $$("[data-filtre]", zone).forEach(x => x.setAttribute("aria-pressed", String(x === b)));
@@ -531,7 +547,7 @@ const outilProspects = {
     }));
     const q = zone.querySelector("#pr-q"); let minuteur = null;
     if (q) q.addEventListener("input", () => { clearTimeout(minuteur); minuteur = setTimeout(() => { this.recherche = q.value.slice(0, 120); this.limite = this.PAS; this.majListe(zone); }, 200); });
-    [["#pr-periode", "periode"], ["#pr-prog", "progression"], ["#pr-tri", "tri"]].forEach(([sel, k]) => {
+    [["#pr-periode", "periode"], ["#pr-bilan", "bilanF"], ["#pr-news", "newsF"], ["#pr-tri", "tri"]].forEach(([sel, k]) => {
       const el = zone.querySelector(sel); if (el) el.addEventListener("change", () => { this[k] = el.value; this.limite = this.PAS; this.majListe(zone); });
     });
     const csv = zone.querySelector("#pr-csv");
@@ -542,6 +558,7 @@ const outilProspects = {
       UI.toast(liste.length + " prospect" + (liste.length > 1 ? "s" : "") + " exporté" + (liste.length > 1 ? "s" : "") + ".", "ok");
     });
     this.majListe(zone);
+    this.monterNewsletter(zone.querySelector("#pr-newsletter"));
     if (typeof Nouveautes !== "undefined") Nouveautes.monter(zone.querySelector("#pr-nouveautes"), this.lignes, true, this.tCharge);
   },
   /* la liste seule (les filtres ne redessinent pas la recherche : le curseur y reste) */
@@ -551,29 +568,65 @@ const outilProspects = {
     const vus = liste.slice(0, this.limite);
     if (compte) compte.textContent = liste.length === this.tous.length ? liste.length + " prospect" + (liste.length > 1 ? "s" : "") : liste.length + " sur " + this.tous.length + " prospect" + (this.tous.length > 1 ? "s" : "");
     boite.innerHTML = vus.length
-      ? `<div class="sc-liste">${vus.map(x => Commercial.carteHTML(x.l.p, x.a, { sc: x.sc, dc: x.l.dc })).join("")}</div>`
+      ? `<div class="sc-liste">${vus.map(x => Commercial.carteHTML(x.l, x.a)).join("")}</div>`
         + (liste.length > vus.length ? `<div class="actions pr-plus"><button type="button" class="btn ghost" id="pr-plus">Afficher ${Math.min(this.PAS, liste.length - vus.length)} de plus (${liste.length - vus.length} restant${liste.length - vus.length > 1 ? "s" : ""})</button></div>` : "")
-      : `<div class="empty">${this.filtre === "a_traiter" && !this.recherche && this.periode === "tout" && this.progression === "tout" ? "Rien à faire aujourd'hui : aucun prospect n'attend d'action de ta part." : "Aucun prospect ne correspond à ces filtres."}</div>`;
+      : `<div class="empty">${this.filtre === "a_traiter" && !this.recherche && this.periode === "tout" && this.bilanF === "tout" && this.newsF === "tout" ? "Rien à faire aujourd'hui : aucun prospect n'attend d'action de ta part." : "Aucun prospect ne correspond à ces filtres."}</div>`;
     const plus = boite.querySelector("#pr-plus");
     if (plus) plus.addEventListener("click", () => { this.limite += this.PAS; this.majListe(zone); });
     Commercial.brancher(boite, async () => { if (!zone.isConnected) return; const y = window.scrollY; await this.init(true); if (zone.isConnected) window.scrollTo(0, y); });
   },
-  /* export CSV (point-virgule, UTF-8 avec BOM : s'ouvre tel quel dans Excel en français). Une cellule qui commence
-     par = + - @ est neutralisee (apostrophe) : un prenom piege ne devient jamais une formule dans le tableur. */
-  csv(liste){
+  /* une cellule CSV : point-virgule, UTF-8 avec BOM (s'ouvre tel quel dans Excel en français). Une cellule qui commence
+     par = + - @ (ou une tabulation, un retour) est neutralisée (apostrophe) : un prénom piégé ne devient jamais une
+     formule dans le tableur. Le même format pour les deux exports (prospects, newsletter). */
+  csvDe(tete, lignes){
     const cell = v => { let s = v == null ? "" : String(v); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; return '"' + s.replace(/"/g, '""') + '"'; };
-    const dt = v => typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v) ? dateFr(Decouverte.dateLocale(v) || v.slice(0, 10)) : "";
-    const tete = ["Nom", "Email", "Inscrit le", "Découverte", "Objectif", "Statut", "Score /100", "Questionnaire", "Motivation /10", "Clics « Réserver mon bilan »", "Dernier clic", "Bilan réservé le", "Relances", "Dernière activité", "Prochaine action"];
-    tete.push("Problème", "Dans 3 mois", "Newsletter");   // v52 (lot G) : 2 des 3 réponses et la newsletter (oui / non), en fin de ligne
-    const lignes = liste.map(({ l, a, sc }) => {
-      const dc = l.dc || {}; let r = null; try { r = Decouverte.resume(l.p, l.ch, dc); } catch(e){ r = null; }
-      const motiv = (typeof dc.motivation === "string" || typeof dc.motivation === "number") ? String(dc.motivation).slice(0, 3) : "";
-      return [Clients.nom(l.p), dc.email || "", dt(l.p.cree_le), a.jour == null ? "" : Decouverte.depuisTexte(a.jour), dc.objectif || "",
-              Commercial.ETATS[a.etat] || String(a.etat), sc ? sc.total : "", a.questionnaire ? "rempli le " + dt(dc.court_le) : (sc ? sc.repondues + "/" + sc.questions + " réponses" : ""),
-              motiv, r ? r.clics : 0, r ? dt(r.dernierClic) : "", r ? dt(r.reserve) : "", a.relances, dt(l.activite), a.action]
-             .concat([dc.probleme || "", dc.projection || "", l.newsletter && l.newsletter.oui ? "oui" : "non"]);
-    });
     return "﻿" + [tete].concat(lignes).map(ligne => ligne.map(cell).join(";")).join("\r\n") + "\r\n";
+  },
+  dateCsv(v){ return typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v) ? dateFr(Decouverte.dateLocale(v) || v.slice(0, 10)) : ""; },
+  /* export CSV des prospects filtrés (v53 : colonnes à jour, sans statut ni score) */
+  TETE_CSV: ["Nom", "Email", "Inscrit le", "Problème", "Ce qui l'a bloqué", "Dans 3 mois", "Questionnaire", "Bilan réservé", "Bilan réservé le", "Case « J'ai réservé » (prospect)", "Newsletter", "Dernière visite", "Jours actifs (30 j)", "Clics « Réserver mon bilan »", "Dernier clic", "Issue", "Relances", "Prochaine action"],
+  csv(liste){
+    const dt = v => this.dateCsv(v);
+    const lignes = liste.map(({ l, a }) => {
+      const dc = l.dc || {}, B = a.bilan || {}, v = l.visites; let r = null; try { r = Decouverte.resume(l.p, l.ch, dc); } catch(e){ r = null; }
+      const q = a.questionnaire ? "rempli le " + dt(dc.court_le) : (dc.repondues || 0) + "/" + (dc.nb_questions || (CONFIG.decouverte.questions || []).length) + " réponses";
+      return [Clients.nom(l.p), dc.email || "", dt(l.p.cree_le), dc.probleme || "", dc.ancien ? "" : (dc.obstacle || ""), dc.projection || "", q,
+              B.reserve ? (B.coach ? "oui" : "à vérifier (case du prospect)") : "non", B.le ? dt(B.le) : "", B.case ? dt(B.case) : "",
+              l.newsletter && l.newsletter.oui ? "oui" : "non", v && v.suivi ? (v.derniere ? dt(v.derniere) : "aucune") : "", v && v.suivi ? v.jours30 : "",
+              r ? r.clics : 0, r ? dt(r.dernierClic) : "", a.issue ? Commercial.ISSUES[a.issue] : "", a.relances, a.action];
+    });
+    return this.csvDe(this.TETE_CSV, lignes);
+  },
+  /* v53 (chantier 2, §2) — LA LISTE NEWSLETTER : toutes les personnes (prospects et clients) dont l'accord newsletter est
+     actif (clé emails.newsletter === true, Accords.newsletterCoach ; un retrait dans le Profil l'enlève ; l'ancien accord
+     « emails de suivi » ne compte jamais), avec prénom, nom, email (email du compte copié par l'app, sinon celui du
+     questionnaire) et date de l'accord ; les plus récents d'abord. Lecture seule. */
+  newsletter(lignes){
+    const t = v => { const x = typeof v === "string" ? Date.parse(v) : NaN; return isNaN(x) ? 0 : x; };
+    return (lignes || []).filter(l => l && l.p && l.newsletter && l.newsletter.oui)
+      .map(l => ({ uid: l.p.id, prenom: String(l.p.prenom || "").trim(), nom: String(l.p.nom || "").trim(), email: (l.dc && l.dc.email) || "", depuis: l.newsletter.depuis || "", statut: l.p.statut === "prospect" ? "prospect" : "client" }))
+      .sort((a, b) => t(b.depuis) - t(a.depuis) || (a.prenom + a.nom).localeCompare(b.prenom + b.nom, "fr"));
+  },
+  csvNewsletter(liste){ return this.csvDe(["Prénom", "Nom", "Email", "Date de l'accord"], liste.map(x => [x.prenom, x.nom, x.email, this.dateCsv(x.depuis)])); },
+  monterNewsletter(boite){
+    if (!boite) return;
+    const liste = this.newsletter(this.lignes), n = liste.length;
+    const li = x => `<li data-nl="${esc(x.uid)}"><span class="nv-txt"><b>${esc(((x.prenom + " " + x.nom).trim()) || Clients.SANS_NOM)}</b>${x.email ? " · " + esc(x.email) : " · email inconnu"}${x.statut === "client" ? ` <span class="pastille">client</span>` : ""}</span> <time${x.depuis ? ` datetime="${esc(x.depuis)}"` : ""}>${x.depuis ? "depuis le " + esc(this.dateCsv(x.depuis)) : "date inconnue"}</time></li>`;
+    const reste = n - this.NL_PREMIERS;
+    boite.innerHTML = `<section class="panel" id="pr-nl"><div class="seance-c-tete"><h2>Newsletter</h2><span class="pastille" id="pr-nl-n">${n}</span></div>
+      <p class="note" style="margin:0 0 10px">${n ? `${n} personne${n > 1 ? "s ont" : " a"} accepté la newsletter (prospects et clients). Une personne qui retire son accord dans son Profil disparaît de la liste. L'app n'envoie aucun email : exporte la liste pour ton outil d'envoi.` : "Personne n'a encore accepté la newsletter."}</p>
+      ${n ? `<ul class="nv-liste" id="pr-nl-liste">${liste.slice(0, this.NL_PREMIERS).map(li).join("")}</ul>
+        ${reste > 0 ? `<ul class="nv-liste nl-suite"${this._nlDeplie ? "" : " hidden"}>${liste.slice(this.NL_PREMIERS).map(li).join("")}</ul>${this._nlDeplie ? "" : `<p style="margin:8px 0 0"><button type="button" class="btn ghost petit" id="pr-nl-plus">Voir ${reste > 1 ? "les " + reste + " autres" : "l'autre"}</button></p>`}` : ""}
+        <div class="actions"><button type="button" class="btn ghost petit" id="pr-nl-csv">Exporter la liste (CSV)</button></div>` : ""}</section>`;
+    const plus = boite.querySelector("#pr-nl-plus");
+    if (plus) plus.addEventListener("click", () => { this._nlDeplie = true; $$(".nl-suite", boite).forEach(x => { x.hidden = false; }); plus.parentNode.remove(); });
+    const bc = boite.querySelector("#pr-nl-csv");
+    if (bc) bc.addEventListener("click", () => {
+      const l = this.newsletter(this.lignes);
+      if (!l.length){ UI.toast("Personne à exporter.", "attention"); return; }
+      this.telecharger(this.csvNewsletter(l), "newsletter-" + aujourdhui() + ".csv");
+      UI.toast(l.length + " personne" + (l.length > 1 ? "s" : "") + " exportée" + (l.length > 1 ? "s" : "") + ".", "ok");
+    });
   },
   telecharger(texte, nom){
     const url = URL.createObjectURL(new Blob([texte], { type: "text/csv;charset=utf-8" }));

@@ -81,19 +81,13 @@ const flagsDe = (page) => page.$$eval("#alertes-clients .flag", l => l.map(x => 
     /* --- tableau de bord --- */
     E.ici = "tableau de bord"; await page.goto(`http://localhost:${PORT}/#/tableau`); await attendre(page, 2200);
     const tb = await texte(page, "#tb-vue");
-    ok("tableau de bord : le compte sans prénom ni nom s'affiche « Sans nom »", tb.includes("Sans nom"), tb.slice(0, 200));
+    /* v53 (chantier 4) : le tableau de bord n'a plus de cartes « Qui nécessite ton attention » (2 tuiles et « À traiter
+       maintenant », qui ne liste que les urgences : « Jamais rien saisi » n'en est pas une). Retirées (7) : « Sans nom » sur
+       le tableau de bord, sa carte, ses avatars (dont Julien « JD » et, plus bas, Sarah « SD »), « jamais rien saisi » sur sa
+       carte, le nom du bouton « Ouvrir ». « Sans nom » reste vérifié dans Mes clients (ci-dessous) et, sur « À traiter
+       maintenant », par verif58 (bloc A). */
     ok("tableau de bord : son identifiant n'apparaît nulle part", !tb.includes(MARQUE));
-    ok("tableau de bord : 5 clients actifs (les deux comptes ajoutés comptent)", /Clients actifs\s*5/.test(tb), tb.slice(0, 120));
-    const carte = await page.$(`.attention-c:has([data-fiche="${N1}"])`);
-    ok("tableau de bord : le compte sans nom a sa carte dans « Qui nécessite ton attention »", !!carte);
-    const av = carte ? await carte.$eval(".avatar", e => ({ cls: e.className, txt: e.textContent.trim() })) : null;
-    ok("tableau de bord : avatar neutre « ? » (classe neutre), pas l'initiale de l'identifiant", !!av && av.cls.split(/\s+/).includes("neutre") && av.txt === "?", JSON.stringify(av));
-    const avJ = await page.$eval(`.attention-c:has([data-fiche="${F.IDS.c3}"]) .avatar`, e => ({ cls: e.className, txt: e.textContent.trim() })).catch(() => null);
-    ok("tableau de bord : Julien Démo garde ses initiales « JD », avatar normal", !!avJ && avJ.txt === "JD" && !avJ.cls.includes("neutre"), JSON.stringify(avJ));
-    const carteT = carte ? (await carte.textContent()).replace(/\s+/g, " ") : "";
-    ok("tableau de bord : sa carte dit « jamais rien saisi », jamais « Inactif depuis »", carteT.includes("jamais rien saisi") && carteT.includes("Jamais rien saisi") && !/Inactif depuis/.test(carteT), carteT.slice(0, 200));
-    const nomBtn = carte ? await carte.$eval('[data-cible="accueil"]', e => e.dataset.nom) : null;
-    ok("tableau de bord : le bouton « Ouvrir » porte le nom « Sans nom »", nomBtn === "Sans nom", nomBtn);
+    ok("tableau de bord : 5 clients (les deux comptes ajoutés comptent)", (await texte(page, "#tb-t-clients .t-val")) === "5", tb.slice(0, 120));
 
     /* --- Mes clients --- */
     E.ici = "Mes clients"; await page.evaluate(() => { location.hash = "#/clients"; }); await attendre(page, 2200);
@@ -180,8 +174,6 @@ const flagsDe = (page) => page.$$eval("#alertes-clients .flag", l => l.map(x => 
     const tbT = await page.$$eval("#tb-clients tr", l => l.map(x => x.textContent.replace(/\s+/g, " ")));
     ok("témoin : Thomas, Sarah et Julien s'affichent avec leur nom", ["Thomas Démo", "Sarah Démo", "Julien Démo"].every(n => tbT.some(t => t.includes(n))), tbT.join(" | ").slice(0, 200));
     await page.evaluate(() => { location.hash = "#/tableau"; }); await attendre(page, 2000);
-    const avT = await page.$eval(`.attention-c:has([data-fiche="${F.IDS.c2}"]) .avatar`, e => e.textContent.trim()).catch(() => null);
-    ok("témoin : Sarah Démo a ses initiales « SD » sur le tableau de bord", avT === "SD", avT);
     ok("témoin : aucune erreur JS, aucune écriture", E.js.length === 0 && E.ecritures.length === 0, E.js.concat(E.ecritures).join(" | "));
     await c.close();
   }

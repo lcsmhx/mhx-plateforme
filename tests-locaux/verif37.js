@@ -20,19 +20,18 @@ const server = http.createServer((req,res)=>{if(servirFichier(req,res,HTML))retu
   const page = await c.newPage(); page.on("pageerror",e=>res.push("  ✗ ERREUR JS "+e)); page.on("dialog",d=>{res.push("  ✗ DIALOGUE NATIF"); d.dismiss();});
   await page.goto("http://localhost:9666/"); await page.waitForTimeout(1500);
   const t = await page.textContent("#tb-vue");
-  ok("tableau : KPI clients actifs = 3", /Clients actifs\s*3/.test(t.replace(/\s+/g," ")), t.slice(0,200));
-  /* tuile prospects : depuis la Decouverte, elle compte les prospects encore dans leurs 7 jours (aucun prospect dans les fixtures) */
-  const tuiles = await page.$$eval("#tb-vue .tb-tuile", l=>l.map(e=>({lbl:(e.querySelector(".t-lbl")||{}).textContent||"", val:((e.querySelector(".t-val")||{}).textContent||"").trim(), sub:((e.querySelector(".t-sub")||{}).textContent||"").trim(), href:e.getAttribute("href")})));
-  const tPr = tuiles.find(x=>x.lbl.trim()==="Prospects en découverte");
-  ok("tableau : tuile « Prospects en découverte » = 0 (0 prospect au total, lien #/prospects)", !!tPr && tPr.val==="0" && tPr.sub==="0 prospect au total" && tPr.href==="#/prospects", JSON.stringify(tuiles.map(x=>x.lbl+" = "+x.val+" ("+x.sub+")")));
+  /* v53 (chantier 4) : 2 tuiles (Clients, Prospects) et « À traiter maintenant » (les urgences seulement) : retirées (3) les
+     vérifications « Clients actifs = 3 », tuile « Prospects en découverte » et clic sur une pastille d'alerte des cartes
+     « Qui nécessite ton attention » (vérifiées autrement par verif58, bloc A). Les alertes « attention » (programme, diète,
+     objectif) ne sont plus sur le tableau de bord : lues dans Mes clients et dans la fiche (plus bas). */
   ok("tableau : Julien inactif signale", t.includes("Julien") && /Inactif depuis \d+ j/.test(t));
-  ok("tableau : Sarah programme/diete a envoyer", t.includes("Programme à envoyer") && t.includes("Diète à envoyer"));
-  ok("tableau : Thomas objectif non atteint", t.includes("Objectif non atteint"));
   ok("tableau : Thomas bilan hebdo recu (a lire)", t.includes("Bilan hebdo reçu"));
   ok("tableau : aucune ecriture", ecr.length===0, ecr.join(" | "));
-  /* clic sur une alerte -> fiche sur le bon onglet */
-  await page.click('.attention-alertes [data-cible="programme"]'); await page.waitForTimeout(1200);
-  ok("alerte -> ouvre la fiche sur Son programme", location=null || (await page.evaluate(()=>location.hash))==="#/programme" && !!(await page.$(".bandeau")));
+  await page.evaluate(()=>{location.hash="#/clients"}); await page.waitForTimeout(1500);
+  const mc = (await page.textContent("#alertes-clients")).replace(/\s+/g," ");
+  ok("mes clients : Sarah programme/diete a envoyer", mc.includes("Il manque quelque chose pour") && mc.includes("Sarah Démo (programme, diète)"), mc.slice(0,300));
+  /* la fiche de Sarah (v53 : ouverte depuis Mes clients) */
+  await page.evaluate(id=>Clients.ouvrir(id, "Sarah Démo", "programme"), F.IDS.c2); await page.waitForTimeout(1200);
   await page.evaluate(()=>{location.hash="#/accueil"}); await page.waitForTimeout(1500);
   const f = await page.textContent("#acc-vue");
   const h1 = await page.textContent("#acc-vue h1"); ok("fiche : en-tete au nom du client ouvert", /Sarah|Julien|Thomas/.test(h1), h1);
@@ -40,9 +39,11 @@ const server = http.createServer((req,res)=>{if(servirFichier(req,res,HTML))retu
   ok("fiche : questionnaire complet et programme a faire (Sarah)", f.includes("questionnaire complet") && f.includes("à faire"));
   /* fiche de Thomas : alertes + bilan recu */
   await page.evaluate(()=>{location.hash="#/tableau"}); await page.waitForTimeout(1200);
-  await page.click(`[data-fiche="${F.IDS.c1}"][data-cible="accueil"]`); await page.waitForTimeout(1500);
+  await page.click(`#tb-a-traiter [data-fiche="${F.IDS.c1}"]`); await page.waitForTimeout(1200);   // v53 : « À traiter maintenant » → Préparer le call
+  await page.evaluate(()=>{location.hash="#/accueil"}); await page.waitForTimeout(1500);
   const f2 = await page.textContent("#acc-vue");
   ok("fiche Thomas : bilan hebdo recu avec reponses", f2.includes("4 séances tenues"));
+  ok("fiche Thomas : objectif non atteint (alertes de la fiche)", f2.includes("Objectif non atteint"));
   ok("fiche Thomas : cycle affiche", /Cycle 01/.test(f2));
   /* mes clients en mobile : cartes */
   await c.close();

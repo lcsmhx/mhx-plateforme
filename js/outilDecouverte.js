@@ -156,13 +156,14 @@ const Decouverte = {
              clics: cl.length, dernierClic: typeof der === "string" ? der : null, reserve: this.reserve(C) };
   },
   /* pastilles « Découverte · inscrit depuis n j » (+ bilan) pour Mes clients : prospects seulement. l = une ligne de
-     Clients.resumer. v52 : plus de « J n/7 » ni de « terminée » (gratuit pour toujours) */
+     Clients.resumer. v52 : plus de « J n/7 » ni de « terminée » (gratuit pour toujours).
+     v53 (chantier 4) : « bilan réservé » suit la coche du coach (Commercial.bilan : sa coche, sinon la case du prospect) */
   pastilleCoach(l){
-    let r = null;
-    try { r = this.resume(l && l.p, l && l.ch, l && l.dc); } catch(e){ return `<span class="pastille attention" title="Données de la découverte illisibles">Découverte illisible</span>`; }
+    let r = null, B = null;
+    try { r = this.resume(l && l.p, l && l.ch, l && l.dc); B = Commercial.bilan(l && l.suivi, l && l.ch, l && l.p); } catch(e){ return `<span class="pastille attention" title="Données de la découverte illisibles">Découverte illisible</span>`; }
     let h = r.jour == null ? `<span class="pastille">Découverte</span>`
           : `<span class="pastille" title="Jours depuis son inscription">Découverte · ${this.depuisTexte(r.jour)}</span>`;
-    if (r.reserve) h += ` <span class="pastille ok" title="A coché « J'ai réservé mon bilan »">bilan réservé</span>`;
+    if (B.reserve) h += ` <span class="pastille ok" title="${B.coach ? "Bilan réservé : coché par toi" : "A coché « J'ai réservé mon bilan » (à vérifier, puis coche « Bilan réservé » dans sa fiche)"}">bilan réservé</span>`;
     else if (r.clics) h += ` <span class="pastille accent" title="A cliqué « Réserver mon bilan » ${r.clics} fois">a cliqué Réserver</span>`;
     return h;
   },
@@ -222,9 +223,12 @@ const Decouverte = {
    ACTIVITÉ du prospect (v51) — cle prospect « activite » :
    { version: 1, jours: ["AAAA-MM-JJ", …] (60 derniers jours d'activite), pages: { "decouverte-questionnaire": n,
      "decouverte-resultat": n, formation: n, "verrou-programme": n, … }, temps_s (secondes page visible), derniere (instant) }.
-   Ecrite par le prospect seul, au plus une fois par minute et quand l'onglet passe en arriere-plan (relue et
-   fusionnee avant l'ecriture : deux onglets ne s'effacent pas). Le coach la lit (score, chronologie).
-   Rien pour un client ni pour le coach.
+   Ecrite par la personne seule, au plus une fois par minute et quand l'onglet passe en arriere-plan (relue et
+   fusionnee avant l'ecriture : deux onglets ne s'effacent pas). Le coach la lit (derniere visite, jours actifs,
+   chronologie). Jamais pour le coach, jamais pour une fiche consultee.
+   v53 (chantier 4) : aussi pour un CLIENT, derriere l'interrupteur CONFIG.nouveautes.suivi_visites_clients (« test » :
+   le compte de test seulement ; « tous » quand Lucas aura prevenu ses clients). Un jour actif = un jour ou la personne
+   a ouvert l'app (une page affichee, ou l'onglet repris apres 10 min), pas une connexion.
    ------------------------------------------------------------------ */
 const Activite = {
   cle: "activite",
@@ -242,7 +246,32 @@ const Activite = {
      compteurs de visite, effaces a la deconnexion. */
   magasin(){ return localStorage; },
   vide(){ return { version: 1, jours: [], pages: {}, temps_s: 0, derniere: null }; },
-  suivi(){ return Auth.estProspect() && !Store.idConsulte; },
+  /* v53 (chantier 4) : le prospect, et le client si l'interrupteur le permet pour SON compte (pourCompte, jamais
+     visible() : en « test », visible() est vrai pour le coach, qui n'est jamais suivi) */
+  suivi(){
+    const u = Auth.utilisateur();
+    if (Store.idConsulte || !u || !Auth.profil || Auth.estCoach()) return false;
+    return Auth.estProspect() || Interrupteurs.pourCompte("suivi_visites_clients", u.id);
+  },
+  /* v53 (chantier 4) — suivi pour ce compte (lecture du coach) : un prospect toujours, un client selon l'interrupteur */
+  suiviPour(p){ return !!(p && p.id && p.role !== "coach" && (p.statut === "prospect" || Interrupteurs.pourCompte("suivi_visites_clients", p.id))); },
+  /* v53 (chantier 4) — ce que le coach lit : la derniere visite (derniere) et les jours actifs sur 30 jours (les jours de
+     « jours » d'aujourd'hui a il y a 29 jours, calendrier local ; un jour dans le futur ne compte pas). Compte non suivi
+     (client hors interrupteur) : rien, affiche « — » (jamais « 0 jour »), et jamais une alerte. */
+  lecture(A, suivi){
+    if (!suivi) return { suivi: false, derniere: null, jours30: null };
+    const a = this.propre(A);
+    const n = a.jours.filter(j => { const x = Decouverte.joursEcoules(j); return x != null && x >= 0 && x < 30; }).length;
+    return { suivi: true, derniere: a.derniere, jours30: n };
+  },
+  /* la derniere visite en clair : « — » (non suivi), « aucune », « aujourd'hui », « hier », « il y a N j » */
+  texteVisite(v){
+    if (!v || !v.suivi) return "—";
+    if (!v.derniere) return "aucune";
+    const n = Decouverte.joursEcoules(Decouverte.dateLocale(v.derniere));
+    return n == null ? "aucune" : n <= 0 ? "aujourd'hui" : n === 1 ? "hier" : "il y a " + n + " j";
+  },
+  texteJours(v){ return !v || !v.suivi ? "—" : String(v.jours30); },
   /* une valeur lue (le prospect ecrit ce qu'il veut dans sa cle) remise d'aplomb : jours = dates, pages = compteurs */
   propre(A){
     const o = (A && typeof A === "object" && !Array.isArray(A)) ? A : {};

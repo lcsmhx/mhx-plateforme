@@ -135,13 +135,10 @@ const lireTuiles = page => page.$$eval("#tb-vue .tb-tuile", l => l.map(t => {
     const db = base();
     const { c, page } = await contexte(b, coach, db);
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 1800);
-    /* Découverte : la tuile des prospects s'appelle « Prospects en découverte » et compte ceux qui sont encore dans leurs 7 jours */
-    const tuiles = await lireTuiles(page);
-    const tPr = tuiles.find(x => x.lbl === "Prospects en découverte") || {}, tCl = tuiles.find(x => x.lbl === "Clients actifs") || {};
-    ok("tableau : tuile « Prospects en découverte » = 1 (Léa, jour 4/7), « 1 prospect au total », et Clients actifs = 3", tPr.val === "1" && tPr.sub === "1 prospect au total" && tCl.val === "3", JSON.stringify(tuiles.slice(0, 2)));
-    /* v49 : le tableau a une section « Prospects à traiter » (suivi commercial) ; la section des clients n'en montre aucun */
-    const attention = await page.evaluate(() => { const h = Array.from(document.querySelectorAll("#tb-vue h2")).find(x => x.textContent.indexOf("Qui nécessite ton attention") > -1); return h ? h.closest("section").innerText : null; });
-    ok("tableau : le prospect n'est pas dans « qui nécessite ton attention »", attention !== null && !attention.includes("Léa Démo"), String(attention).slice(0, 200));
+    /* v53 (chantier 4) : le tableau de bord n'a plus que 2 tuiles (Clients, Prospects) et « À traiter maintenant » : les
+       vérifications de la tuile « Prospects en découverte » et de la section « Qui nécessite ton attention » sont retirées
+       (2) ; les nouvelles tuiles et leurs urgences sont vérifiées par verif58 (bloc A). Le prospect reste sans alerte de
+       suivi dans Mes clients (ci-dessous). */
     await aller(page, "#/clients", 1800);
     const ligne = await page.locator("#tb-clients tr", { hasText: "Léa Démo" }).textContent();
     ok("mes clients : pastille « prospect » sur la ligne de Léa", ligne.includes("prospect"));
@@ -186,23 +183,8 @@ const lireTuiles = page => page.$$eval("#tb-vue .tb-tuile", l => l.map(t => {
     ok("créer un accès : message « Compte créé »", (await page.textContent("#n-msg")).includes("Compte créé"));
     await c.close();
   }
-  {
-    /* Découverte : un prospect dont les 7 jours sont passés n'est plus « en découverte » ; le sous-titre donne les chauds et le total.
-       Cas limites : le jour 7 compte encore, le jour 8 ne compte plus (une erreur d'un jour dans Decouverte.finie se verrait ici) */
-    const db = base();
-    const HUGO = "00000000-0000-4000-8000-000000000c06", INES = "00000000-0000-4000-8000-000000000c07", MARC = "00000000-0000-4000-8000-000000000c08";
-    db.profils.push({ id: HUGO, prenom: "Hugo", nom: "Démo", role: "client", statut: "prospect", cree_le: ilYAIso(10) });   // jour 11 : Découverte terminée
-    db.profils.push({ id: INES, prenom: "Inès", nom: "Démo", role: "client", statut: "prospect", cree_le: ilYAIso(6) });    // jour 7 : dernier jour, encore en découverte
-    db.profils.push({ id: MARC, prenom: "Marc", nom: "Démo", role: "client", statut: "prospect", cree_le: ilYAIso(7) });    // jour 8 : Découverte terminée
-    db.donnees.push({ user_id: PROSPECT, outil: "challenge", contenu: { version: 1, jours: {}, cta: { clics: [] }, reserve: ilYAIso(1) }, maj_le: ilYAIso(1) });   // Léa a coché « J'ai réservé mon bilan » : chaude
-    const { c, page } = await contexte(b, coach, db);
-    await page.goto(`http://localhost:${PORT}/`); await attendre(page, 1800);
-    const tPr = (await lireTuiles(page)).find(x => x.lbl === "Prospects en découverte") || {};
-    ok("tableau : jour 7 compté, jour 8 et jour 11 non comptés (2 sur 4), sous-titre « 1 chaud · 4 prospects au total », lien vers #/prospects", tPr.val === "2" && tPr.sub === "1 chaud · 4 prospects au total" && tPr.href === "#/prospects", JSON.stringify(tPr));
-    /* v53 : fonction supprimée — « tableau : le jour forcé du mode test sur l'appareil (9) ne change pas la tuile du coach »
-       (le mode test « jour n », #/decouverte-jour/N, n'existe plus ; son ancien drapeau est effacé au démarrage : verif51) */
-    await c.close();
-  }
+  /* v53 (chantier 4) : tuile « Prospects en découverte » retirée (plus de limite de 7 jours, 2 tuiles Clients et Prospects) :
+     le bloc qui en vérifiait les jours 7 / 8 / 11 et le sous-titre « 1 chaud · 4 prospects au total » est retiré (1). */
   {
     /* le passage en client echoue : le coach le sait */
     const db = base();
