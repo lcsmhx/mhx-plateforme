@@ -26,13 +26,16 @@ const { chromium } = require("playwright"); const fs = require("fs"); const http
 const F = require("./fixtures"); const HTML = path.resolve(process.argv[2] || "../index.html");
 const PORT = 9680;
 const OUT = path.join(__dirname, "captures", "v50"); fs.mkdirSync(OUT, { recursive: true });
-/* reglages du HTML servi : inscription ouverte, pre-remplissage eteint (le depot garde false / true) */
+/* reglages du HTML servi : inscription ouverte ou fermée, pre-remplissage eteint. v55 : le depot garde inscription_libre: true
+   (ouverte par Lucas en v54) et calendly_prerempli: true ; la suite ferme l'inscription par défaut (inscriptionLibre) */
 let inscriptionLibre = false, prerempliEteint = false;
+const { servirFichier, forcerInscription } = require("./fichiers");   // 52.1 : la page charge css/ et js/, servis depuis son dossier (fichiers.js)
 /* 52.1 : les retouches valent pour la page et pour ses fichiers (ces réglages sont dans js/config.js) */
-/* v54 : l'inscription est ouverte dans le fichier ; la retouche force la valeur voulue (fermée par défaut), dans les deux sens */
-const retouche = h => { h = h.replace(/inscription_libre: (?:true|false)/, "inscription_libre: " + inscriptionLibre);
+/* v54 : l'inscription est ouverte dans le fichier ; la retouche force la valeur voulue (fermée par défaut), dans les deux sens.
+   v55 : par forcerInscription (fichiers.js), comme toutes les suites qui testent l'inscription (les autres servent la valeur
+   du fichier) */
+const retouche = h => { h = forcerInscription(h, inscriptionLibre);
   if (prerempliEteint) h = h.replace("calendly_prerempli: true", "calendly_prerempli: false"); return h; };
-const { servirFichier } = require("./fichiers");   // 52.1 : la page charge css/ et js/, servis depuis son dossier (fichiers.js)
 const server = http.createServer((req, res) => {
   if (servirFichier(req, res, HTML, retouche)) return;
   let h = retouche(fs.readFileSync(HTML, "utf8"));

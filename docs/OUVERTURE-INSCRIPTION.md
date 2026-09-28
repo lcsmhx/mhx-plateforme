@@ -1,8 +1,10 @@
 # Ouvrir l'inscription publique — marche à suivre pour Lucas
 
-*V2, version sans email. Mise à jour le 28/09/2026 au soir.*
+*V2, version sans email. Mise à jour le 28/09/2026 (v55).*
 
 Fais les étapes **une à la fois, dans l'ordre**. Chacune dit quoi ouvrir, quoi vérifier et quoi faire si ce n'est pas bon. Compte environ une heure, test compris. Tout se referme en un clic (étape 8).
+
+**Où on en est** : l'inscription est **ouverte depuis la v54** (28/09/2026) : tu as fait les étapes 1 et 2 dans Supabase, et `inscription_libre` vaut `true` dans `js/config.js`. Pour la refermer : étape 8. Pour la rouvrir plus tard : étape 2, puis étape 5.
 
 **Ce que la version sans email implique** (à savoir avant d'ouvrir)
 - L'app n'envoie **aucun email** : ni confirmation d'inscription, ni lien « mot de passe oublié », ni newsletter.
@@ -42,7 +44,7 @@ Tes clients ne sont pas touchés : leurs comptes sont déjà confirmés.
 1. Même page : https://supabase.com/dashboard/project/nzynbuczmogifuidcjed/auth/providers
 2. **Allow new users to sign up** : **activé**, puis **Save**.
 
-Il est désactivé aujourd'hui : c'est lui qui ferme l'inscription. À partir de maintenant, une inscription est possible même si l'écran de l'app est encore caché : enchaîne les étapes 3 à 6 le même jour.
+Il est désactivé tant que l'inscription est fermée (après l'étape 8) : c'est lui qui ferme l'inscription. À partir de maintenant, une inscription est possible même si l'écran de l'app est encore caché : enchaîne les étapes 3 à 6 le même jour.
 
 ---
 
@@ -62,7 +64,7 @@ C'est bon : ne touche à rien. C'est différent : ne change rien et dis-le à Cl
 
 C'est bon : rien à faire. Ce n'est pas le bon lien :
 - **le plus simple** : donne le bon lien à Claude. Il le met dans `CONFIG.marque.calendly`, relance les tests et publie ;
-- **ou toi-même** : https://github.com/lcsmhx/mhx-plateforme/edit/main/index.html → Cmd+F `calendly:` → remplace le lien entre les guillemets (garde les guillemets) → « Commit changes ». Si GitHub refuse de modifier ce gros fichier en ligne, passe par Claude.
+- **ou toi-même** : https://github.com/lcsmhx/mhx-plateforme/edit/main/js/config.js → Cmd+F `calendly:` → remplace le lien entre les guillemets (garde les guillemets) → « Commit changes ». Si GitHub refuse de modifier ce fichier en ligne, passe par Claude.
 
 Attends ensuite la coche verte (https://github.com/lcsmhx/mhx-plateforme/actions).
 
@@ -70,11 +72,15 @@ Attends ensuite la coche verte (https://github.com/lcsmhx/mhx-plateforme/actions
 
 ---
 
-## Étape 5 — Ouvrir l'app (c'est toi qui le fais)
+## Étape 5 — Ouvrir ou rouvrir l'app (c'est toi qui le fais)
 
-Il faut passer `inscription_libre: false` à `inscription_libre: true` dans `index.html`. Deux façons :
-- **Conseillée** : demande à Claude « prépare le commit d'ouverture de l'inscription (`inscription_libre: true`) ». Il change cette seule ligne, relance les tests et **ne pousse pas**. Tu pousses toi-même avec la commande qu'il te donne (`git -C /Users/lucasmahaux/MHX-Code/mhx-plateforme push origin main`).
-- **Sans le terminal** : https://github.com/lcsmhx/mhx-plateforme/edit/main/index.html → Cmd+F `inscription_libre: false` → remplace `false` par `true` → « Commit changes » (message : « ouverture de l'inscription »).
+Il faut passer `inscription_libre: false` à `inscription_libre: true` dans `js/config.js` (fait en v54 : cette étape ne sert plus qu'à rouvrir après une fermeture).
+
+**Le message du commit qui passe la valeur à `true` doit contenir « ouverture de l'inscription »** : sans ces mots, le banc de tests est rouge et rien n'est publié (c'est une sécurité contre une ouverture par erreur). Fermer (`false`) passe toujours, avec n'importe quel message. Deux façons :
+- **Conseillée** : demande à Claude « prépare le commit d'ouverture de l'inscription (`inscription_libre: true`) ». Il change cette seule ligne, met « ouverture de l'inscription » dans le message, relance les tests et **ne pousse pas**. Tu pousses toi-même avec la commande qu'il te donne (`git -C /Users/lucasmahaux/MHX-Code/mhx-plateforme push origin main`).
+- **Sans le terminal** : https://github.com/lcsmhx/mhx-plateforme/edit/main/js/config.js → Cmd+F `inscription_libre: false` → remplace `false` par `true` → « Commit changes » (message : « ouverture de l'inscription », obligatoire).
+
+**Message oublié** (banc rouge, rien n'est publié) : remets `inscription_libre: false` (n'importe quel message), puis de nouveau `true` dans un commit dont le message contient « ouverture de l'inscription ». Ne rouvre jamais en annulant la fermeture (`git revert`) ni par une fusion de branches : le banc les refuse toujours.
 
 Ensuite :
 1. Attends la coche verte « Tests puis publication » (une quinzaine de minutes) : https://github.com/lcsmhx/mhx-plateforme/actions
@@ -156,10 +162,10 @@ Tout est bon : mets le lien sur Instagram (bio, story, réponse automatique) : `
 ## Étape 8 — Refermer en urgence
 
 1. **Effet immédiat** : https://supabase.com/dashboard/project/nzynbuczmogifuidcjed/auth/providers → **Allow new users to sign up** : **désactivé** → **Save**. Plus personne ne peut créer de compte. Les comptes existants (prospects et clients) continuent de marcher.
-2. **Ensuite** : demande à Claude le commit `inscription_libre: false` (tu le pousses), ou fais-le sur GitHub comme à l'étape 5. Le bouton « Créer mon compte » disparaît après la publication. Pas besoin de la publication d'urgence : le point 1 a déjà tout arrêté.
+2. **Ensuite** : passe `inscription_libre: true` à `inscription_libre: false` dans `js/config.js`. Demande le commit à Claude (tu le pousses), ou fais-le toi-même : https://github.com/lcsmhx/mhx-plateforme/edit/main/js/config.js → Cmd+F `inscription_libre: true` → remplace `true` par `false` → « Commit changes ». N'importe quel message convient : le banc ne bloque jamais une fermeture. Le bouton « Créer mon compte » disparaît après la publication. Pas besoin de la publication d'urgence : le point 1 a déjà tout arrêté.
 3. Retire le lien d'Instagram.
 
-Pour rouvrir : étape 2, puis étape 5.
+Pour rouvrir : étape 2, puis étape 5 (message « ouverture de l'inscription »).
 
 ---
 

@@ -26,6 +26,7 @@ Réponds en français. Écris un résumé honnête de la séance pour que la pro
 Fichier : `.claude/session-notes/derniere-session.md` (dossier local, ignoré par git).
 
 - S'il existe : **lis-le d'abord**, puis remplace **uniquement** ce qui se trouve entre `<!-- RESUME-MANUEL:DEBUT -->` et `<!-- RESUME-MANUEL:FIN -->`. Ne touche jamais au bloc `RESUME-AUTO` : il est tenu par les hooks.
+- Écris avec l'outil Edit ou Write (pas avec Bash) : c'est ce qui permet au bloc automatique d'afficher « Résumé manuel : mis à jour dans cette session ».
 - S'il n'existe pas : crée-le avec seulement le bloc manuel ci-dessous ; les hooks ajouteront le bloc automatique à la fin de ta réponse.
 
 ```markdown
@@ -52,7 +53,7 @@ Règles :
 - « Ce qui n'a pas marché » est la rubrique la plus utile : sans elle, la session suivante retente les mêmes impasses.
 - N'écris « vérifié » que pour ce que tu as vérifié toi-même (règle de CLAUDE.md).
 - Aucun secret, mot de passe ni jeton ; aucune donnée personnelle d'un vrai client (compte de test : son identifiant Supabase seulement).
-- Un seul fichier, réécrit à chaque fois ; ses notes sont copiées automatiquement dans `precedente-session.md` quand une autre session démarre.
+- Un seul fichier, réécrit à chaque fois ; ses notes sont copiées automatiquement dans `precedente-session.md` quand une autre session démarre. Les hooks ne touchent jamais au résumé manuel : il reste en place jusqu'au prochain `/save-session`, même s'il date d'une autre session. La ligne « Résumé manuel » du bloc automatique dit s'il a été mis à jour dans la session en cours : relance `/save-session` à chaque fin de séance.
 
 ## Étape 3 — Montrer
 

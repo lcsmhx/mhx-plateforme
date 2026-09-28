@@ -5,6 +5,7 @@ Nouvelle organisation, une seule voix sur l'app :
 - Ton périmètre : le dossier donnees/ uniquement, plus des tests de l'app en lecture seule sur https://lcsmhx.github.io/mhx-plateforme/ (tu regardes et tu signales, tu ne crées ni ne modifies rien).
 - Tu réponds directement à Lucas, plus dans Notion. Tes constats écrits vont dans NOTES-GROK.md.
 - Depuis le 28/09, tout push sur main lance les tests GitHub Actions avant publication : si un test échoue, rien n'est mis en ligne. Vérifie que tes JSON sont valides avant de commiter.
+- Depuis la v54 (28/09), l'inscription publique est ouverte (décision de Lucas) : le bouton « Créer mon compte » en ligne est voulu (ce n'est pas un défaut à signaler).
 - Règlement du dépôt : CLAUDE.md. Plan : docs/PLAN-V2.md.
 - Les demandes plus bas dans ce fichier restent valables (dont les aliments animaux étiquetés vegan/végétarien à corriger).
 
@@ -294,3 +295,12 @@ Pour Grok Bot : rien à faire sur `index.html` (règle inchangée : Grok travail
 - Ajouté : dossier `.claude/` — agents `code-reviewer`, `database-reviewer`, `e2e-runner` ; commandes `/save-session`, `/resume-session` ; skills `e2e-testing`, `strategic-compact`, `context-budget` ; hooks de notes de session (Node seul, sans dépendance) déclarés dans `.claude/settings.json`. Plus un `.gitignore` et une section « Outils disponibles » dans `CLAUDE.md`.
 - Source : dépôt officiel https://github.com/affaan-m/ECC (v2.2.2, licence MIT : `.claude/LICENCE-ECC.txt`), fichiers relus, traduits et adaptés au projet ; les hooks sont une version simplifiée.
 - **Pour Grok Bot** : rien ne change pour toi. `donnees/`, `index.html`, `css/`, `js/`, Supabase et le workflow GitHub Actions ne sont pas touchés. Le dossier `.claude/` ne sert qu'à Claude Code : n'y touche pas. `.claude/session-notes/` reste sur le Mac (jamais commité).
+
+## 2026-09-28 — v54 puis v55 : inscription publique ouverte (décision de Lucas), corrections après relecture — Claude
+- **v54 (mise en ligne le 28/09, `a41b04e`, vérifiée)** : inscription publique **ouverte** par Lucas (`inscription_libre: true` dans `js/config.js` ; Supabase réglé par lui : « Confirm email » désactivé, « Allow new users to sign up » activé ; pas de CAPTCHA) ; texte de la case santé complété (« …conformément à la politique de confidentialité. ») ; un espace entre « Mot de passe oublié ? » et « Créer mon compte ».
+- **v55 (28/09/2026, poussée par Lucas, en ligne quand « Tests puis publication » est vert : pied de page « · 55 »)** : écran de connexion, les deux liens passent l'un sous l'autre, centrés, sur petit téléphone (320 à 360 px) et restent côte à côte au-delà ; case santé : nouvelle version du texte (« 2026-09-28b ») pour le point final ajouté en anglais (français inchangé) ; tests : les suites de l'inscription forcent la valeur voulue (fermée par défaut) ; nouveau garde-fou du banc : `inscription_libre: true` n'est accepté que si le commit qui l'a passé à `true` contient « ouverture de l'inscription » dans son message ; `false` (fermer) passe toujours, n'importe quel message. Aucune migration, aucune donnée touchée.
+- **Pour Grok Bot** : rien à faire côté `donnees/`. Le bouton « Créer mon compte » en ligne est voulu (ce n'est pas un défaut à signaler). Tests à faire une fois la v55 en ligne (téléphone et ordi) :
+  1. Pied de page : « 2026-09-28 · 55 » ; aucune erreur de console, aucun fichier en 404.
+  2. Écran de connexion (déconnecté) : « Mot de passe oublié ? » et « Créer mon compte » ne se touchent pas (l'un sous l'autre sur un petit téléphone, côte à côte sinon), en français et en anglais.
+  3. `#/inscription` affiche « Crée ton espace gratuit » et 3 cases non cochées (ne rien envoyer).
+  4. En anglais, la case des données de santé finit par un point.

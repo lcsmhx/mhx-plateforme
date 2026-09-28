@@ -15,16 +15,20 @@
    faux Supabase rend la session avec ses métadonnées, comme la vraie base : à l'arrivée, seule la copie de la newsletter
    (clé emails) est écrite. Détails : verif55 blocs E à H.
    v52 (lot B, décision de Lucas) : aucun email envoyé par l'app : « Mot de passe oublié » donne l'adresse du coach, sans appel.
+   v55 : sante_version « 2026-09-28b » à l'inscription ; connexion, inscription ouverte : « Mot de passe oublié ? » et
+   « Créer mon compte » centrés à 320, 375 et 390 px (côte à côte ou sur deux lignes), 1 vérification de plus (48).
    Usage : node verif39.js ../index.html                                         */
 const { chromium } = require("playwright"); const fs = require("fs"); const http = require("http"); const path = require("path");
 const F = require("./fixtures"); const HTML = path.resolve(process.argv[2] || "../index.html");
 const PORT = 9670;
 let inscriptionLibre = false;
 /* 52.1 : la retouche vaut pour la page et pour ses fichiers (inscription_libre est dans js/config.js) */
+const { servirFichier, forcerInscription } = require("./fichiers");   // 52.1 : la page charge css/ et js/, servis depuis son dossier (fichiers.js)
 /* v54 : l'inscription est ouverte dans le fichier (inscription_libre: true) ; la retouche FORCE la valeur voulue
-   (inscriptionLibre, fermée par défaut comme avant), dans les deux sens : la suite reste valable si Lucas la referme */
-const retouche = h => h.replace(/inscription_libre: (?:true|false)/, "inscription_libre: " + inscriptionLibre);
-const { servirFichier } = require("./fichiers");   // 52.1 : la page charge css/ et js/, servis depuis son dossier (fichiers.js)
+   (inscriptionLibre, fermée par défaut comme avant), dans les deux sens : la suite reste valable si Lucas la referme.
+   v55 : par forcerInscription (fichiers.js), comme toutes les suites qui testent l'inscription (les autres servent la valeur
+   du fichier) */
+const retouche = h => forcerInscription(h, inscriptionLibre);
 const server = http.createServer((req, res) => {
   if (servirFichier(req, res, HTML, retouche)) return;
   let h = retouche(fs.readFileSync(HTML, "utf8"));
@@ -303,9 +307,10 @@ const lireTuiles = page => page.$$eval("#tb-vue .tb-tuile", l => l.map(t => {
     await page.check("#c-sante");
     await page.click("#c-go"); await attendre(page, 2500);
     const ins = db.inscriptions[0] || {}, md = ins.data || {}, isoRe = /^\d{4}-\d{2}-\d{2}T/;
-    /* v52 (lot B) : le nom saisi (plus « » vide), chaque accord daté ET versionné, newsletter (null si la case est vide) au lieu d'emails_suivi */
+    /* v52 (lot B) : le nom saisi (plus « » vide), chaque accord daté ET versionné, newsletter (null si la case est vide) au lieu d'emails_suivi.
+       v55 : sante_version « 2026-09-28b » (DECOUVERTE.accords.sante : l'anglais de la case santé a pris son point final) */
     ok("inscription : POST /auth/v1/signup avec prénom et nom, consentement daté + version des conditions, consentement santé daté + version, newsletter null (case vide) + version, plus d'emails_suivi (v44, P0.5, v52)",
-      db.inscriptions.length === 1 && md.prenom === "Zoé" && md.nom === "Martin" && isoRe.test(md.consentement || "") && !!version && md.conditions_version === version && isoRe.test(md.consentement_sante || "") && md.sante_version === "2026-09-28"
+      db.inscriptions.length === 1 && md.prenom === "Zoé" && md.nom === "Martin" && isoRe.test(md.consentement || "") && !!version && md.conditions_version === version && isoRe.test(md.consentement_sante || "") && md.sante_version === "2026-09-28b"
       && md.newsletter === null && md.newsletter_version === "2026-09-28c" && Object.keys(md).sort().join(",") === "conditions_version,consentement,consentement_sante,newsletter,newsletter_version,nom,prenom,sante_version" && ins.email === "nouvelle@exemple.fr",
       db.inscriptions.length + " " + JSON.stringify(md) + " attendu " + version);
     ok("inscription : connecté ensuite, et prospect", await page.evaluate(() => Auth.connecte() && Auth.estProspect()).catch(() => false));
@@ -352,6 +357,40 @@ const lireTuiles = page => page.$$eval("#tb-vue .tb-tuile", l => l.map(t => {
     ok("inscription, " + quoi + " (« " + err.msg + " ») : message en français, jamais le texte anglais brut", t.includes(attendu) && !t.includes(err.msg), t);
     await c.close();
   }
+  /* v55 : écran de connexion, inscription ouverte : « Mot de passe oublié ? » et « Créer mon compte » bien placés sur
+     téléphone. La v54 avait mis un margin-left de 18 px sur le second lien : côte à côte, un espace ; mais à 320 px, où les
+     deux liens passent sur deux lignes, le second restait décalé de 9 px vers la droite, à 4 px sous le premier. v55
+     (css/communs.css) : une marge égale autour de chaque lien. Vérifié sans dépendre de la police (celle de GitHub peut
+     différer, les liens peuvent donc tenir ou non sur une ligne) : côte à côte (hauts à moins de 3 px l'un de l'autre) →
+     12 à 24 px entre les deux et la paire centrée dans .bascule à 3 px près ; sur deux lignes (le second commence au moins
+     6 px sous le bas du premier) → chacun centré à 3 px près. Une seule vérification pour les trois largeurs. */
+  inscriptionLibre = true;
+  try {
+    const mesures = [];
+    try {
+      for (const largeur of [320, 375, 390]) {
+        const { c, page } = await contexte(b, null, base(), { viewport: { width: largeur, height: 800 } });
+        try {
+          await page.goto(`http://localhost:${PORT}/`); await page.waitForSelector('.bascule [data-mode="inscription"]', { timeout: 8000 }); await attendre(page, 600);
+          mesures.push(await page.evaluate(() => {
+            const bas = document.querySelector(".bascule"), bs = bas ? Array.from(bas.querySelectorAll("button")) : [];
+            if (bs.length !== 2) return { largeur: innerWidth, erreur: bs.length + " lien(s) dans .bascule", bon: false };
+            const B = bas.getBoundingClientRect(), [a, z] = bs.map(e => e.getBoundingClientRect());
+            const centre = r => (r.left + r.right) / 2, cB = centre(B), arr = x => Math.round(x * 10) / 10;
+            const liens = bs.map(e => e.textContent.trim());
+            const ligne = Math.abs(a.top - z.top) < 3, deuxLignes = z.top >= a.bottom + 6;
+            const ecart = z.left - a.right, decalPaire = (a.left + z.right) / 2 - cB, decal = [centre(a) - cB, centre(z) - cB];
+            const place = ligne ? ecart >= 12 && ecart <= 24 && Math.abs(decalPaire) <= 3 : deuxLignes && decal.every(d => Math.abs(d) <= 3);
+            return { largeur: innerWidth, liens, disposition: ligne ? "côte à côte" : deuxLignes ? "deux lignes" : "ni l'un ni l'autre",
+              ecart: arr(ecart), dessous: arr(z.top - a.bottom), decalPaire: arr(decalPaire), decal: decal.map(arr),
+              bon: liens[0] === "Mot de passe oublié ?" && liens[1] === "Créer mon compte" && place };
+          }));
+        } finally { await c.close(); }
+      }
+    } catch (e) { mesures.push({ erreur: String((e && e.message) || e).split("\n")[0].slice(0, 160), bon: false }); }
+    ok("connexion, inscription ouverte, téléphone 320 / 375 / 390 px : « Mot de passe oublié ? » et « Créer mon compte » côte à côte (12 à 24 px entre les deux, paire centrée à 3 px près) ou sur deux lignes (au moins 6 px entre les deux, chacun centré à 3 px près)",
+      mesures.length === 3 && mesures.every(m => m.bon), JSON.stringify(mesures));
+  } finally { inscriptionLibre = false; }
   inscriptionLibre = false;
   /* v52 (chantier 1, lot B — décision de Lucas : l'app n'envoie aucun email pour l'instant) : « Mot de passe oublié » ne
      demande plus de lien ; il donne l'adresse du coach (mailto), sans appel à /auth/v1/recover. Les deux vérifications

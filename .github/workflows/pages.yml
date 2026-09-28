@@ -48,7 +48,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          fetch-depth: 0   # verif52 compare les écrans d'un client avec le commit publié avant celui-ci
+          fetch-depth: 0   # tout l'historique, ne jamais réduire : verif52 compare les écrans d'un client avec la tête précédente de main,
+                           # et sa garde d'ouverture (bloc F) cherche le commit qui a passé inscription_libre à true
 
       - name: Couper l'accès à la vraie base et à Brevo
         run: |
@@ -82,8 +83,8 @@ jobs:
           AVANT: ${{ github.event.before }}
         run: |
           export NODE_PATH="$(npm root -g)"
-          # verif52 compare les écrans d'un client : sur main, avec le commit publié juste avant (sinon il comparerait main
-          # avec lui-même) ; sur une branche de travail, avec la version en ligne (origin/main)
+          # verif52 compare les écrans d'un client : sur main, avec la tête précédente de main (github.event.before, pas
+          # forcément publiée ; sinon il comparerait main avec lui-même) ; sur une branche de travail, avec la version en ligne (origin/main)
           if [ "$GITHUB_REF" != "refs/heads/main" ]; then export VERIF52_REF="origin/main";
           elif [ -n "$AVANT" ] && [ "$AVANT" != "0000000000000000000000000000000000000000" ]; then export VERIF52_REF="$AVANT";
           else export VERIF52_REF="$(git rev-parse HEAD~1)"; fi

@@ -20,7 +20,7 @@ Argument facultatif : $ARGUMENTS
 
 ## Étape 2 — Lire en entier
 
-Le résumé manuel (`/save-session`) et le résumé automatique (hooks, réécrit après chaque réponse). Compare la date du résumé manuel à celle du dernier commit (`git log -1 --format=%ci`) : s'il y a des commits plus récents que lui, il peut être dépassé ; dis-le.
+Le résumé manuel (`/save-session`) et le résumé automatique (hooks, réécrit après chaque réponse). Les hooks ne touchent jamais au résumé manuel : il peut venir d'une session plus ancienne ou d'une autre fenêtre. La ligne « Résumé manuel » du bloc automatique dit s'il a été écrit pendant la session notée juste au-dessus (ligne « Session ») : si elle dit « pas modifié » ou « remplacé ailleurs », dis à Lucas que le résumé manuel peut dater d'une autre session. Compare aussi la date du résumé manuel à celle du résumé automatique et du dernier commit (`git log -1 --format=%ci`) : s'il y a des commits plus récents que lui, il peut être dépassé ; dis-le.
 
 ## Étape 3 — Comparer avec l'état réel
 

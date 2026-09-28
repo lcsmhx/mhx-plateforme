@@ -110,6 +110,26 @@ function lireJournal(chemin) {
   }
 }
 
+// v55 : texte collé dans la conversation (balises pasted_content), qui peut contenir des consignes que Lucas n'a pas
+// écrites. Une seule zone, de la première balise ouvrante à la dernière fermante (jusqu'à la fin du message s'il n'y en
+// a pas après la dernière ouvrante) : un texte collé qui contient lui-même « </pasted_content> … <pasted_content> » ne
+// peut donc rien faire passer pour du texte de Lucas (ce qui se trouve entre deux collages est marqué aussi).
+// Renvoie { avant, colle, apres } ; colle vaut null s'il n'y a pas de texte collé.
+function separerColle(texte) {
+  const egaree = t => t.replace(/<\/pasted_content[^>]*>/g, ' '); // balise fermante sans ouvrante avant elle
+  const debut = texte.search(/<pasted_content[^>]*>/);
+  if (debut < 0) return { avant: egaree(texte), colle: null, apres: '' };
+  let apresFermante = -1; // fin de la dernière balise fermante
+  const fermante = /<\/pasted_content[^>]*>/g;
+  for (let m; (m = fermante.exec(texte));) apresFermante = m.index + m[0].length;
+  const fin = apresFermante > debut && !/<pasted_content[^>]*>/.test(texte.slice(apresFermante)) ? apresFermante : texte.length;
+  return {
+    avant: egaree(texte.slice(0, debut)),
+    colle: texte.slice(debut, fin).replace(/<\/?pasted_content[^>]*>/g, ' '),
+    apres: texte.slice(fin)
+  };
+}
+
 // Texte d'une demande de Lucas, ou '' pour tout le reste (résultats d'outils, messages de service, résumé de compaction).
 function texteDemande(ligne) {
   if (!ligne || ligne.type !== 'user' || ligne.isSidechain || ligne.isCompactSummary || ligne.isVisibleInTranscriptOnly) return '';
@@ -126,16 +146,34 @@ function texteDemande(ligne) {
     if (contenu.some(b => b && b.type === 'tool_result')) return '';
     texte = contenu.filter(b => b && b.type === 'text' && typeof b.text === 'string').map(b => b.text).join(' ');
   }
-  texte = texte.trim();
-  const commande = texte.match(/<command-name>\s*([^<]+?)\s*<\/command-name>/);
+  // v55 : le texte collé reste lisible mais marqué [texte collé : …], crochets du collage changés en parenthèses (un « ] »
+  // collé ne peut pas fermer la marque) ; commande (/nom arguments) et messages de service ne sont cherchés que dans le
+  // reste, et seulement au début : une commande écrite dans un texte collé ne devient jamais une demande de Lucas.
+  const { avant, colle, apres } = separerColle(texte);
+  const reste = (avant + ' ' + apres).trim();
+  const marque = colle === null ? '' : '[texte collé : ' + neutre(colle).replace(/\[/g, '(').replace(/\]/g, ')') + ' ]';
+  let morceaux;
+  const commande = /^<command-(name|message)>/.test(reste) && reste.match(/<command-name>\s*([^<]+?)\s*<\/command-name>/);
   if (commande) {
-    const args = texte.match(/<command-args>([\s\S]*?)<\/command-args>/);
-    texte = commande[1] + (args && args[1].trim() ? ' ' + args[1].trim() : '');
-  } else if (BRUIT.test(texte) || /^This session is being continued/.test(texte)) {
+    const args = reste.match(/<command-args>([\s\S]*?)<\/command-args>/);
+    morceaux = [commande[1] + (args && args[1].trim() ? ' ' + args[1].trim() : ''), marque];
+  } else if (BRUIT.test(reste) || /^This session is being continued/.test(reste)) {
     return '';
+  } else {
+    morceaux = [avant, marque, apres];
   }
-  texte = neutre(texte.replace(/<\/?pasted_content[^>]*>/g, ' ')).replace(/\s+/g, ' ').trim();
-  return texte.length > 160 ? couper(texte, 159) + '…' : texte;
+  texte = neutre(morceaux.join(' ')).replace(/\s+/g, ' ').trim();
+  if (texte.length <= 160) return texte;
+  const court = couper(texte, 159);
+  const ouverte = court.lastIndexOf('[texte collé : ');
+  // coupé au milieu du texte collé : la marque est refermée
+  return ouverte >= 0 && court.indexOf(']', ouverte) < 0 ? couper(court, 156).trimEnd() + '… ]' : court + '…';
+}
+
+// Même fichier : chemins identiques, ou identiques une fois les liens symboliques suivis (ex. /tmp et /private/tmp).
+function memeFichier(a, b) {
+  if (path.resolve(a) === path.resolve(b)) return true;
+  try { return fs.realpathSync(a) === fs.realpathSync(b); } catch (e) { return false; }
 }
 
 // Chemin relatif au projet, ou '' pour un fichier hors du projet.
@@ -144,11 +182,19 @@ function cheminDansProjet(fichier, projet) {
   return relatif && !relatif.startsWith('..') && !path.isAbsolute(relatif) ? relatif : '';
 }
 
+// Texte écrit par un Edit / Write / MultiEdit, pour vérifier ensuite qu'il est toujours dans le fichier.
+function texteEcrit(nom, input) {
+  if (nom === 'Write') return [String(input.content || '')];
+  if (nom === 'Edit') return [String(input.new_string || '')];
+  if (nom === 'MultiEdit' && Array.isArray(input.edits)) return input.edits.map(e => String((e && e.new_string) || ''));
+  return [];
+}
+
 function analyserJournal(cheminJournal) {
   const texte = cheminJournal ? lireJournal(cheminJournal) : null;
   if (!texte) return null;
   const demandes = [];
-  const fichiers = new Map(); // dans l'ordre de la dernière modification
+  const fichiers = new Map(); // dans l'ordre de la dernière modification ; valeur : le texte écrit la dernière fois
   const outils = new Map();
   for (const brut of texte.split('\n')) {
     if (!brut || (brut.indexOf('"user"') < 0 && brut.indexOf('tool_use') < 0)) continue;
@@ -163,11 +209,33 @@ function analyserJournal(cheminJournal) {
       const fichier = bloc.input && (bloc.input.file_path || bloc.input.notebook_path);
       if (fichier && OUTILS_ECRITURE.includes(bloc.name)) {
         fichiers.delete(fichier);
-        fichiers.set(fichier, true);
+        fichiers.set(fichier, texteEcrit(bloc.name, bloc.input));
       }
     }
   }
-  return { demandes, fichiers: [...fichiers.keys()], outils };
+  return { demandes, fichiers: [...fichiers.keys()], ecrits: fichiers, outils };
+}
+
+// Le texte écrit est-il toujours dans les notes ? Pour un Write du fichier entier, seul le bloc manuel compte.
+function encorePresent(ecrit, contenu) {
+  return ecrit.every(t => {
+    const debut = t.indexOf(MANUEL_DEBUT);
+    const fin = debut >= 0 ? t.indexOf(MANUEL_FIN, debut) : -1;
+    const morceau = (fin >= 0 ? t.slice(debut, fin + MANUEL_FIN.length) : t).trim();
+    return !morceau || contenu.indexOf(morceau) >= 0;
+  });
+}
+
+// v55 : les hooks ne touchent jamais au résumé manuel. Cette ligne du bloc automatique dit seulement s'il a été écrit dans
+// cette session (Edit / Write / MultiEdit sur le fichier de notes, texte toujours en place), pour qu'un résumé d'une
+// session précédente ou d'une autre fenêtre ne passe pas pour celui de cette session. Le fichier n'est que lu ici.
+function etatResumeManuel(analyse, projet) {
+  const notes = cheminNotes(projet);
+  const surNotes = analyse.fichiers.filter(f => memeFichier(path.resolve(projet, f), notes));
+  if (!surNotes.length) return 'pas modifié dans cette session (Edit/Write) : il peut dater d\'une session précédente, vérifier sa date';
+  return encorePresent(analyse.ecrits.get(surNotes[surNotes.length - 1]), lireFichier(notes) || '')
+    ? 'mis à jour dans cette session (Edit/Write sur ce fichier)'
+    : 'modifié dans cette session, puis remplacé ailleurs (autre fenêtre ?) : vérifier sa date';
 }
 
 function blocAuto(entree, projet, evenement) {
@@ -175,7 +243,9 @@ function blocAuto(entree, projet, evenement) {
   if (!analyse || analyse.demandes.length === 0) return null; // rien de neuf : les notes existantes restent telles quelles
   const l = [AUTO_DEBUT, '## Résumé automatique (hooks, ne pas modifier à la main)'];
   l.push('- Mis à jour : ' + horodatage() + ' — ' + neutre(evenement));
-  if (entree.session_id) l.push('- Session : ' + neutre(String(entree.session_id).slice(0, 8)));
+  const session = sessionCourte(entree);
+  if (session) l.push('- Session : ' + session);
+  l.push('- Résumé manuel : ' + etatResumeManuel(analyse, projet));
   const branche = neutre(git(projet, ['rev-parse', '--abbrev-ref', 'HEAD']));
   if (branche) l.push('- Branche : ' + branche + ' — dernier commit : ' + couper(neutre(git(projet, ['log', '-1', '--format=%h %s'])), 110));
   l.push('', '### Dernières demandes (' + analyse.demandes.length + ' au total)');
@@ -208,7 +278,30 @@ function modele(projet) {
     MANUEL_DEBUT + '\n_Aucun résumé manuel pour l\'instant : lancer /save-session en fin de séance._\n' + MANUEL_FIN + '\n';
 }
 
+// Identifiant court de la session (8 premiers caractères), tel qu'écrit dans le bloc automatique ; '' s'il est inconnu.
+function sessionCourte(entree) {
+  const id = entree && entree.session_id;
+  return typeof id === 'string' ? neutre(id.slice(0, 8)) : '';
+}
+
+// Position du bloc automatique (le dernier du fichier), ou null s'il n'y en a pas encore.
+function zoneAuto(contenu) {
+  const fin = contenu.lastIndexOf(AUTO_FIN);
+  const debut = fin >= 0 ? contenu.lastIndexOf(AUTO_DEBUT, fin) : -1;
+  return debut >= 0 ? { debut, fin: fin + AUTO_FIN.length } : null;
+}
+
+// v55 : session qui a écrit les notes, lue dans le bloc automatique seulement (une ligne « - Session : » du résumé
+// manuel ne compte pas) ; '' s'il n'y a pas encore de bloc automatique.
+function sessionDesNotes(contenu) {
+  const zone = zoneAuto(contenu);
+  const ligne = zone && contenu.slice(zone.debut, zone.fin).match(/^- Session : (\S+)/m);
+  return ligne ? ligne[1] : '';
+}
+
 // Remplace le bloc automatique (ou l'ajoute à la fin) sans toucher au reste du fichier, dont le résumé manuel.
+// Le fichier est relu juste avant d'écrire (après le journal et git) : un résumé manuel écrit entre-temps par une autre
+// fenêtre n'est pas écrasé par une copie plus ancienne.
 function ecrireResumeAuto(entree, evenement) {
   const projet = dossierProjet(entree);
   const bloc = blocAuto(entree, projet, evenement);
@@ -216,9 +309,8 @@ function ecrireResumeAuto(entree, evenement) {
   const fichier = cheminNotes(projet);
   let contenu = lireFichier(fichier);
   if (!contenu || !contenu.trim()) contenu = modele(projet);
-  const fin = contenu.lastIndexOf(AUTO_FIN);
-  const debut = fin >= 0 ? contenu.lastIndexOf(AUTO_DEBUT, fin) : -1;
-  if (debut >= 0) contenu = contenu.slice(0, debut) + bloc + contenu.slice(fin + AUTO_FIN.length);
+  const zone = zoneAuto(contenu);
+  if (zone) contenu = contenu.slice(0, zone.debut) + bloc + contenu.slice(zone.fin);
   else contenu = contenu.replace(/\s*$/, '\n\n') + bloc + '\n';
   ecrireFichier(fichier, contenu);
   return true;
@@ -227,11 +319,10 @@ function ecrireResumeAuto(entree, evenement) {
 // Au démarrage d'une AUTRE session que celle des notes (nouvelle, reprise, bifurcation, /clear), copie des notes dans
 // precedente-session.md avant qu'elles soient remplacées (filet de sécurité). Jamais après une compaction.
 function archiverSiNouvelleSession(entree, projet) {
-  if (!entree.session_id || entree.source === 'compact') return;
+  if (!sessionCourte(entree) || entree.source === 'compact') return;
   const contenu = lireFichier(cheminNotes(projet));
   if (!contenu || !contenu.trim()) return;
-  const session = contenu.match(/^- Session : (\S+)/m);
-  if (session && session[1] === String(entree.session_id).slice(0, 8)) return;
+  if (sessionDesNotes(contenu) === sessionCourte(entree)) return;
   ecrireFichier(cheminNotes(projet, 'precedente-session.md'), contenu);
 }
 

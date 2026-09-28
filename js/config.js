@@ -16,7 +16,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-09-28 · 54",
+    version: "2026-09-28 · 55",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -546,7 +546,10 @@ const DECOUVERTE = {
      (même une virgule) = sa version change ici. « conditions » suit toujours confidentialite.version (plus bas). --- */
   accords: {
     get conditions(){ return DECOUVERTE.confidentialite.version; },
-    sante: "2026-09-28",        // case « données de santé » (inscription.sante_avant)
+    /* sante : « 2026-09-28 » = texte coupé « …conformément à la politique » (v52-v53, inscription fermée : comptes de test
+       seulement), puis complété « …de confidentialité. » (v54 ; anglais sans point final) ; « 2026-09-28b » (v55) : même
+       texte français, anglais avec son point final. */
+    sante: "2026-09-28b",       // case « données de santé » (inscription.sante_avant)
     newsletter: "2026-09-28c"   // case newsletter (inscription.newsletter) et interrupteur du Profil (emails.libelle) ; « c » : texte final de Lucas du 28/09 (distinct des brouillons « 2026-09-28 » et « 2026-09-28b », jamais publiés)
   },
 
@@ -738,7 +741,7 @@ const DECOUVERTE = {
       cgu_lien: "terms of use and the privacy policy",
       cgu_apres: ".",
       cgu_manque: "Tick the terms box to continue.",
-      sante_avant: "I accept the processing of my health data in accordance with the privacy policy",
+      sante_avant: "I accept the processing of my health data in accordance with the privacy policy.",
       sante_manque: "Accept the processing of your health data to continue.",
       newsletter: "I want to receive MHX Coaching's tips, testimonials and coaching offers by email (1 to 2 emails per week maximum). One-click unsubscribe in every email.",
       note: "The app is not medical advice. If you have any doubt about your health, talk to a professional before starting.",

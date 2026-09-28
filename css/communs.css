@@ -216,10 +216,12 @@ footer a{color:var(--accent)}
 .carte-co h2{text-align:center;font-size:17px;margin:18px 0 20px}
 .carte-co .champ{margin-bottom:14px}
 .carte-co button.btn{width:100%;padding:12px;min-height:46px}
-.bascule{text-align:center;margin-top:16px;font-size:13px;color:var(--ink-3)}
-.bascule button{background:none;border:0;color:var(--accent);cursor:pointer;font-size:13px;font-family:inherit;text-decoration:underline;padding:0}
-/* v54 : inscription ouverte, « Mot de passe oublié ? » et « Créer mon compte » côte à côte : un espace entre les deux liens */
-.bascule button + button{margin-left:18px}
+/* v55 : marges égales autour de chaque lien (au lieu d'un margin-left sur le second, v54) : 16 px entre « Mot de passe
+   oublié ? » et « Créer mon compte » côte à côte ; sur un petit écran où ils passent sur deux lignes, chacun reste
+   centré, 8 px au-dessus de l'autre. Le -8 px du conteneur rend la place des marges extérieures (même largeur utile
+   qu'avant : côte à côte dès 375 px) ; 12 px + 4 px = les 16 px d'avant au-dessus des liens. */
+.bascule{text-align:center;margin:12px -8px 0;font-size:13px;color:var(--ink-3)}
+.bascule button{background:none;border:0;color:var(--accent);cursor:pointer;font-size:13px;font-family:inherit;text-decoration:underline;padding:0;margin:4px 8px}
 .erreur{background:var(--bad-soft);border-left:3px solid var(--bad);color:var(--ink-2);font-size:13px;padding:10px 12px;border-radius:0 var(--r-sm) var(--r-sm) 0;margin-bottom:14px}
 .erreur:empty{display:none}
 .erreur.ok{border-left-color:var(--good);background:var(--good-soft)}

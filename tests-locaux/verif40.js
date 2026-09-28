@@ -29,10 +29,12 @@ const PORT = 9671;
 const OUT = path.join(__dirname, "captures", "v40"); fs.mkdirSync(OUT, { recursive: true });
 let inscriptionLibre = false;
 /* 52.1 : la retouche vaut pour la page et pour ses fichiers (inscription_libre est dans js/config.js) */
+const { servirFichier, forcerInscription } = require("./fichiers");   // 52.1 : la page charge css/ et js/, servis depuis son dossier (fichiers.js)
 /* v54 : l'inscription est ouverte dans le fichier (inscription_libre: true) ; la retouche FORCE la valeur voulue
-   (inscriptionLibre, fermée par défaut comme avant), dans les deux sens : la suite reste valable si Lucas la referme */
-const retouche = h => h.replace(/inscription_libre: (?:true|false)/, "inscription_libre: " + inscriptionLibre);
-const { servirFichier } = require("./fichiers");   // 52.1 : la page charge css/ et js/, servis depuis son dossier (fichiers.js)
+   (inscriptionLibre, fermée par défaut comme avant), dans les deux sens : la suite reste valable si Lucas la referme.
+   v55 : par forcerInscription (fichiers.js), comme toutes les suites qui testent l'inscription (les autres servent la valeur
+   du fichier) */
+const retouche = h => forcerInscription(h, inscriptionLibre);
 const server = http.createServer((req, res) => {
   if (servirFichier(req, res, HTML, retouche)) return;
   let h = retouche(fs.readFileSync(HTML, "utf8"));

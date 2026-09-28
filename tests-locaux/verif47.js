@@ -12,9 +12,15 @@ const F = require("./fixtures"); const HTML = path.resolve(process.argv[2] || ".
 const PORT = 9677;
 const OUT = path.join(__dirname, "captures", "v47"); fs.mkdirSync(OUT, { recursive: true });
 let inscriptionLibre = false;
+/* v55 : depuis la 52.1, inscription_libre est dans js/config.js et la page charge css/ et js/ : ces fichiers sont servis
+   depuis le dossier de la page (fichiers.js) avec la même retouche que la page ; depuis la v54 (ouverte dans le fichier),
+   la retouche FORCE la valeur voulue dans les deux sens (fermée par défaut), comme les suites du banc qui testent
+   l'inscription : l'ancien remplacement « false » → « true » de la page seule ne faisait plus rien. Suite hors banc (Challenge 7 jours supprimé). */
+const { servirFichier, forcerInscription } = require("./fichiers");
+const retouche = h => forcerInscription(h, inscriptionLibre);
 const server = http.createServer((req, res) => {
-  let h = fs.readFileSync(HTML, "utf8");
-  if (inscriptionLibre) h = h.replace("inscription_libre: false", "inscription_libre: true");
+  if (servirFichier(req, res, HTML, retouche)) return;
+  let h = retouche(fs.readFileSync(HTML, "utf8"));
   res.writeHead(200, { "Content-Type": "text/html" }); res.end(h);
 });
 const res = []; const ok = (n, c, d) => res.push((c ? "  ✓ " : "  ✗ ") + n + (c ? "" : "  — " + (d || "")));

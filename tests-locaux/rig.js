@@ -26,9 +26,11 @@ fs.mkdirSync(OUT, { recursive: true });
 let inscriptionLibre = false;   // v44 : l'ecran d'inscription n'existe que si CONFIG.marque.inscription_libre vaut true
 /* 52.1 : la page charge css/ et js/ (servis depuis son dossier, fichiers.js) ; la retouche vaut aussi pour ces fichiers
    (inscription_libre est dans js/config.js) */
-const { servirFichier } = require("./fichiers");
-/* v54 : l'inscription est ouverte dans le fichier ; la retouche force la valeur voulue (fermée par défaut), dans les deux sens */
-const retouche = h => h.replace(/inscription_libre: (?:true|false)/, "inscription_libre: " + inscriptionLibre);
+const { servirFichier, forcerInscription } = require("./fichiers");
+/* v54 : l'inscription est ouverte dans le fichier ; la retouche force la valeur voulue (fermée par défaut), dans les deux sens.
+   v55 : par forcerInscription (fichiers.js), comme toutes les suites qui testent l'inscription (les autres servent la valeur
+   du fichier) */
+const retouche = h => forcerInscription(h, inscriptionLibre);
 const server = http.createServer((req, res) => {
   if (servirFichier(req, res, HTML, retouche)) return;
   if (req.url.split("?")[0] === "/" || req.url.startsWith("/index.html")) {

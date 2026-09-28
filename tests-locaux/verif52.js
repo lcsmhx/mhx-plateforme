@@ -36,10 +36,12 @@ let inscriptionLibre = false;
 /* 52.1 : la page charge css/ et js/ (fichiers.js) ; la retouche vaut pour la page et pour ses fichiers (inscription_libre
    est dans js/config.js). Les fichiers d'une page de référence (/?ref=main, reconnue à l'en-tête Referer de ses requêtes)
    viennent de la même révision git que sa page. */
-const { servirFichier, source } = require("./fichiers");
+const { servirFichier, source, listes, forcerInscription, valeursInscription } = require("./fichiers");
 /* v54 : l'inscription est ouverte dans le fichier (inscription_libre: true) ; la retouche FORCE la valeur voulue
-   (inscriptionLibre, fermée par défaut comme avant), dans les deux sens : la suite reste valable si Lucas la referme */
-const retouche = h => h.replace(/inscription_libre: (?:true|false)/, "inscription_libre: " + inscriptionLibre);
+   (inscriptionLibre, fermée par défaut comme avant), dans les deux sens : la suite reste valable si Lucas la referme.
+   v55 : par forcerInscription (fichiers.js), comme toutes les suites qui testent l'inscription (les autres servent la valeur
+   du fichier) */
+const retouche = h => forcerInscription(h, inscriptionLibre);
 const deRef = {};
 const lireRef = f => deRef[f] || (deRef[f] = require("child_process").execFileSync("git", ["show", REF_NOM + ":" + f], { cwd: path.join(__dirname, ".."), maxBuffer: 64e6, stdio: ["ignore", "pipe", "ignore"] }).toString("utf8"));
 const server = http.createServer((req, res) => {
@@ -629,7 +631,42 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
   const V_NEWS = "2026-09-28c";   // version du texte de la case newsletter (DECOUVERTE.accords.newsletter)
   await bloc("F. case de l'inscription", async () => {
     /* v54 : l'inscription est ouverte (true) ; le banc doit rester vert si Lucas la referme (false) : une seule valeur, true ou false */
-    ok("le fichier testé porte une seule valeur inscription_libre (true ou false), que le banc sait retoucher", (source(HTML).match(/inscription_libre: (?:true|false)\b/g) || []).length === 1);
+    ok("le fichier testé porte une seule valeur inscription_libre (true ou false), que le banc sait retoucher", valeursInscription(source(HTML)).length === 1);
+    /* v55 : garde contre une OUVERTURE par accident. Avant la v54, la vérification « garde inscription_libre: false » était la
+       seule protection automatique contre une ouverture involontaire (incident du commit dc13403, « ouverture: inscription
+       live », poussé sans vérification puis annulé par 0806052) ; la v54 l'a remplacée par « une seule valeur » ci-dessus.
+       La règle ne dépend d'aucune référence : sur main, VERIF52_REF est github.event.before, la tête PRÉCÉDENTE de main et
+       non le dernier commit publié ; une garde « false dans la référence → true dans le fichier » refusait bien une ouverture
+       par accident, mais le push suivant (n'importe lequel) avait pour référence ce commit refusé, déjà à true : plus de
+       changement, banc vert, inscription publiée.
+       Règle : false passe toujours (refermer n'est jamais bloqué, urgence comprise). true n'est accepté que si le dernier
+       commit (HEAD) porte aussi true (sinon : ouverte sur le disque sans commit) et si le dernier commit qui a changé le
+       nombre de « inscription_libre: true » dans les fichiers de l'app (index.html et ceux de MHX_CSS / MHX_JS à HEAD ; pas
+       tests-locaux/ ni docs/, qui citent ce texte) contient « ouverture de l'inscription » dans son message (le message
+       prévu pour Lucas, docs/OUVERTURE-INSCRIPTION.md). « Une seule valeur » garantit une seule occurrence dans ces
+       fichiers : ce commit est celui de l'ouverture (ou d'un déplacement de la valeur d'un fichier à l'autre, qui doit alors
+       porter la phrase lui aussi). Un git revert (message « Revert "… » / « Reapply "… » ou « This reverts commit … ») n'est
+       jamais accepté, même s'il recopie la phrase du commit annulé. Historique suivi par le premier parent
+       (--first-parent --diff-merges=first-parent) : une fusion qui remet true est le commit examiné (son message « Merge … »
+       est refusé) ; une ouverture est donc toujours un commit direct. Commit introuvable, clone superficiel ou git en échec :
+       refusé aussi (le banc de GitHub prend tout l'historique, fetch-depth: 0). */
+    const gardeOuverture = (() => {
+      if (valeursInscription(source(HTML))[0] !== "true") return { passe: true };
+      const refaire = " Si l'ouverture est voulue (décision de Lucas) : remettre inscription_libre: false, puis true dans un commit dont le message contient « ouverture de l'inscription » (jamais par un git revert) ; sinon, remettre false.";
+      try {
+        const git = a => require("child_process").execFileSync("git", a, { cwd: path.join(__dirname, ".."), maxBuffer: 64e6, stdio: ["ignore", "pipe", "ignore"] }).toString("utf8");
+        const lireHead = f => git(["show", "HEAD:" + f]);
+        if (valeursInscription(source(HTML, lireHead))[0] !== "true") return { passe: false, detail: "inscription_libre: true dans le fichier testé mais pas dans le dernier commit (HEAD) : ouverture non commitée." + refaire };
+        if (git(["rev-parse", "--is-shallow-repository"]).trim() === "true") return { passe: false, detail: "historique git incomplet (clone superficiel) : impossible de savoir quel commit a passé inscription_libre à true ; le banc a besoin de tout l'historique (fetch-depth: 0)." };
+        const sortie = git(["log", "--first-parent", "--diff-merges=first-parent", "-Sinscription_libre: true", "-1", "--format=%H%x00%B", "HEAD", "--", "index.html"].concat(listes(lireHead("index.html"))));
+        if (!sortie.trim()) return { passe: false, detail: "aucun commit de l'historique n'a passé inscription_libre à true dans les fichiers de l'app (historique incomplet ?)." + refaire };
+        const [commit, message] = sortie.split("\0");
+        const annulation = /^(Revert|Reapply) "/.test(message) || /This reverts commit [0-9a-f]{7,}/.test(message);
+        if (!annulation && /ouverture de l['’]inscription/i.test(message)) return { passe: true };
+        return { passe: false, detail: "le commit " + commit.slice(0, 7) + " qui a passé inscription_libre à true (« " + String(message).trim().split("\n")[0] + " ») " + (annulation ? "est un git revert (ou une réapplication) : une ouverture n'est jamais acceptée par ce biais, même si le message cite la phrase." : "ne contient pas « ouverture de l'inscription » dans son message.") + refaire };
+      } catch (e) { return { passe: false, detail: "git a échoué (git show HEAD / git log -S) : impossible de savoir quel commit a passé inscription_libre à true (le banc doit tourner dans le dépôt, avec tout l'historique)." }; }
+    })();
+    ok("inscription_libre: true n'est accepté que si le commit qui l'a passé à true contient « ouverture de l'inscription » dans son message ; false passe toujours", gardeOuverture.passe, gardeOuverture.detail);
     inscriptionLibre = true;
     try {
       for (const coche of [true, false]) {

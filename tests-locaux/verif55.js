@@ -54,9 +54,14 @@ const MOBILE = { width: 390, height: 844 }, ORDI = { width: 1280, height: 900 };
 
 /* ---------- la page servie : le fichier testé, retouché le temps d'un bloc (avec) ---------- */
 let retouches = [];
+/* v55 : l'inscription est FERMÉE par défaut, comme dans les autres suites qui testent l'inscription (les autres suites
+   servent la valeur du fichier ; le fichier la porte ouverte depuis la v54 ; en v54, hors de ses blocs d'inscription, la
+   suite servait la valeur du fichier) ; inscriptionOuverte(fn) l'ouvre le temps d'un bloc. Valeur forcée dans les deux
+   sens (forcerInscription, fichiers.js), avant les retouches de texte d'avec. */
+let inscriptionLibre = false;
+const { servirFichier, source, forcerInscription, valeursInscription } = require("./fichiers");   // 52.1 : la page charge css/ et js/, servis depuis son dossier (fichiers.js)
 /* 52.1 : les retouches valent pour la page et pour ses fichiers css/ et js/ (CONFIG est dans js/config.js) */
-const retouche = h => { for (const [de, vers] of retouches) h = h.split(de).join(vers); return h; };
-const { servirFichier, source } = require("./fichiers");   // 52.1 : la page charge css/ et js/, servis depuis son dossier (fichiers.js)
+const retouche = h => { h = forcerInscription(h, inscriptionLibre); for (const [de, vers] of retouches) h = h.split(de).join(vers); return h; };
 const server = http.createServer((req, res) => {
   if (servirFichier(req, res, HTML, retouche)) return;
   let h = retouche(fs.readFileSync(HTML, "utf8"));
@@ -69,9 +74,14 @@ async function avec(liste, fn){
   retouches = liste;
   try { await fn(); } finally { retouches = []; }
 }
-/* v54 : l'inscription est ouverte dans le fichier (inscription_libre: true) ; les blocs d'inscription l'ouvrent quand même,
-   depuis la valeur du fichier : ils restent valables si Lucas la referme (false) */
-const LIBRE_FICHIER = /inscription_libre: true/.test(source(HTML)) ? "inscription_libre: true" : "inscription_libre: false";
+/* v55 : les blocs d'inscription ouvrent l'inscription le temps de fn (en v54 : une retouche avec() depuis la valeur du
+   fichier) ; valables que Lucas la laisse ouverte ou la referme. Comme avec, jamais en silence :
+   le fichier doit porter une seule valeur inscription_libre (true ou false), sinon le bloc s'interrompt. */
+async function inscriptionOuverte(fn){
+  if (valeursInscription(source(HTML)).length !== 1) throw new Error("retouche impossible : le fichier doit porter une seule valeur inscription_libre (true ou false)");
+  inscriptionLibre = true;
+  try { await fn(); } finally { inscriptionLibre = false; }
+}
 
 /* ---------- résultats ---------- */
 const res = [];
@@ -357,7 +367,10 @@ const LIEN_DERNIER = "#access_token=abc.def.ghi&expires_in=3600&refresh_token=xy
 const LIEN_PREMIER = "#message=Confirmation+link+accepted.++Please+proceed+to+confirm+link+sent+to+the+other+email";
 
 /* ---------- lot B : inscription (nom, cases, accords), newsletter, conditions, Calendly ---------- */
-const V52 = "2026-09-28";   // version de la case santé (DECOUVERTE.accords)
+const V52 = "2026-09-28";   // version de la case santé des comptes créés avant la v55 (métadonnées des décors, et conditions_version de ces décors)
+/* v55 : DECOUVERTE.accords.sante passe à « 2026-09-28b » (anglais de la case santé avec son point final) : c'est la version
+   attendue d'une NOUVELLE inscription et dans DECOUVERTE.accords ; les décors des comptes d'avant gardent V52 */
+const V_SANTE = "2026-09-28b";
 const V_COND = "2026-09-28b";   // version des conditions (confidentialite.version : aucun email du compte, décision de Lucas)
 const V_NEWS = "2026-09-28c";   // version du texte de la case newsletter (texte final de Lucas du 28/09, sans mesure d'ouverture)
 const TXB = {
@@ -527,7 +540,7 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
   /* =================== B. corrections de la nuit : emails du compte =================== */
   await bloc("B. emails du compte", async () => {
     /* inscription (page servie avec inscription_libre: true) : erreurs d'envoi et limites */
-    await avec([[LIBRE_FICHIER, "inscription_libre: true"]], async () => {
+    await inscriptionOuverte(async () => {
       for (const [quoi, err, attendu, langue] of [
         ["serveur d'emails en panne", { status: 500, msg: "Error sending confirmation email" }, TX.envoi_rate, ""],
         ["limite horaire d'emails du projet", { status: 429, msg: "email rate limit exceeded" }, TX.trop_emails, ""],
@@ -725,7 +738,7 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
 
   /* =================== E. inscription : nom, trois cases, accords datés et versionnés, copie « emails » =================== */
   await bloc("E. inscription : écran", async () => {
-    await avec([[LIBRE_FICHIER, "inscription_libre: true"]], async () => {
+    await inscriptionOuverte(async () => {
       for (const langue of ["", "en"]) {
         const T = k => TXB[k + (langue ? "_en" : "")], L = langue ? " (anglais)" : "";
         const db = base();
@@ -752,7 +765,7 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
   });
 
   await bloc("E. inscription : accords et copie", async () => {
-    await avec([[LIBRE_FICHIER, "inscription_libre: true"]], async () => {
+    await inscriptionOuverte(async () => {
       for (const news of [false, true]) {
         const ZID = PID(40 + (news ? 1 : 0)), mail = "zoe" + (news ? 1 : 0) + "@exemple.fr", Q = news ? "AVEC la newsletter" : "sans la newsletter";
         const db = base(); db.inscription.id = ZID;
@@ -766,8 +779,8 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
         const md = (db.inscriptions[0] || {}).data || {}, cles = Object.keys(md).sort().join(",");
         const date = x => typeof x === "string" && /^\d{4}-\d{2}-\d{2}T/.test(x) && Math.abs(Date.parse(x) - t0) < 10000;
         ok(`inscription ${Q} : métadonnées exactement ${CLES_META} (plus d'emails_suivi)`, db.inscriptions.length === 1 && cles === CLES_META, db.inscriptions.length + " · " + cles);
-        ok(`… prénom « Zoé », nom « Martin » (espaces retirés) ; conditions et santé datées de l'inscription ; versions ${V_COND} (conditions = confidentialite.version = accords.conditions), ${V52} (sante_version = accords.sante)`,
-          md.prenom === "Zoé" && md.nom === "Martin" && date(md.consentement) && date(md.consentement_sante) && md.conditions_version === V_COND && versions.c === V_COND && !!versions.a && versions.a.conditions === V_COND && md.sante_version === V52 && versions.a.sante === V52,
+        ok(`… prénom « Zoé », nom « Martin » (espaces retirés) ; conditions et santé datées de l'inscription ; versions ${V_COND} (conditions = confidentialite.version = accords.conditions), ${V_SANTE} (sante_version = accords.sante)`,
+          md.prenom === "Zoé" && md.nom === "Martin" && date(md.consentement) && date(md.consentement_sante) && md.conditions_version === V_COND && versions.c === V_COND && !!versions.a && versions.a.conditions === V_COND && md.sante_version === V_SANTE && versions.a.sante === V_SANTE,
           JSON.stringify(md) + " · " + JSON.stringify(versions));
         if (news) ok(`… newsletter cochée : newsletter = l'instant de l'inscription, newsletter_version = accords.newsletter (${V_NEWS})`, date(md.newsletter) && md.newsletter === md.consentement && md.newsletter_version === V_NEWS && versions.a.newsletter === V_NEWS, JSON.stringify(md));
         else ok(`… newsletter laissée décochée : l'inscription passe quand même, newsletter = null, newsletter_version = ${V_NEWS} (le texte montré)`, "newsletter" in md && md.newsletter === null && md.newsletter_version === V_NEWS, JSON.stringify(md));
@@ -786,7 +799,7 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
   });
 
   await bloc("E. inscription : anglais, longueur, lien de confirmation", async () => {
-    await avec([[LIBRE_FICHIER, "inscription_libre: true"]], async () => {
+    await inscriptionOuverte(async () => {
       /* anglais + noms trop longs (valeurs posées par script : maxlength ne s'applique pas) */
       {
         const ZID = PID(42), db = base(); db.inscription.id = ZID;
@@ -797,7 +810,7 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
         await Promise.all([page.waitForNavigation({ waitUntil: "load", timeout: 15000 }), page.click("#c-go")]);
         await pret(page); await attendre(page, 2000);
         const md = (db.inscriptions[0] || {}).data || {};
-        ok("inscription en anglais, newsletter cochée : mêmes métadonnées (versions " + V52 + ", newsletter datée) ; prénom et nom coupés à 60 caractères", Object.keys(md).sort().join(",") === CLES_META && md.prenom === "P".repeat(60) && md.nom === "N".repeat(60) && typeof md.newsletter === "string" && md.newsletter_version === V_NEWS && md.sante_version === V52 && md.conditions_version === V_COND, JSON.stringify(md).slice(0, 300));
+        ok("inscription en anglais, newsletter cochée : mêmes métadonnées (versions " + V_SANTE + ", newsletter datée) ; prénom et nom coupés à 60 caractères", Object.keys(md).sort().join(",") === CLES_META && md.prenom === "P".repeat(60) && md.nom === "N".repeat(60) && typeof md.newsletter === "string" && md.newsletter_version === V_NEWS && md.sante_version === V_SANTE && md.conditions_version === V_COND, JSON.stringify(md).slice(0, 300));
         ok("… copie emails { newsletter: true } à la première ouverture", ecr(db, "emails", ZID).length === 1 && (ecr(db, "emails", ZID)[0].contenu || {}).newsletter === true, resume(db));
         await c.close();
       }
@@ -967,7 +980,7 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
     const d = await page.evaluate(() => ({ v: DECOUVERTE.confidentialite.version, a: JSON.parse(JSON.stringify(DECOUVERTE.accords || null)), fr: DECOUVERTE.confidentialite.paragraphes, en: DECOUVERTE.en.confidentialite.paragraphes,
       ins: JSON.stringify([DECOUVERTE.inscription, DECOUVERTE.en.inscription, DECOUVERTE.emails, DECOUVERTE.en.emails]), vieille: "emails_avant" in DECOUVERTE.inscription || "emails_avant" in DECOUVERTE.en.inscription }));
     const fr = (d.fr || []).join("\n"), en = (d.en || []).join("\n");
-    ok(`conditions : version ${V_COND}, DECOUVERTE.accords = { conditions: ${V_COND} (= confidentialite.version), sante: ${V52}, newsletter: ${V_NEWS} }`, d.v === V_COND && JSON.stringify(d.a) === JSON.stringify({ conditions: V_COND, sante: V52, newsletter: V_NEWS }), JSON.stringify([d.v, d.a]));
+    ok(`conditions : version ${V_COND}, DECOUVERTE.accords = { conditions: ${V_COND} (= confidentialite.version), sante: ${V_SANTE}, newsletter: ${V_NEWS} }`, d.v === V_COND && JSON.stringify(d.a) === JSON.stringify({ conditions: V_COND, sante: V_SANTE, newsletter: V_NEWS }), JSON.stringify([d.v, d.a]));
     ok("conditions FR et EN : même nombre de paragraphes (traduction par position), aucun « 7 jours » / « 7 days », ni dans les textes de l'inscription et du Profil ; plus d'ancienne case", d.fr.length === d.en.length && d.fr.length >= 10 && !SEPT.test(fr) && !SEPT.test(en) && !SEPT.test(d.ins) && !d.vieille, JSON.stringify([d.fr.length, d.en.length, (SEPT.exec(fr + en + d.ins) || [""])[0], d.vieille]));
     const i1 = d.fr.findIndex(p => p.startsWith("Données collectées")), i6 = d.fr.findIndex(p => p.startsWith("Prise de rendez-vous")), i7 = d.fr.findIndex(p => p.startsWith("Newsletter"));
     ok("FR : données collectées = prénom, nom, email, réponses aux 3 questions, données de santé saisies (poids, mensurations, calculateur)", i1 > -1 && ["ton prénom, ton nom, ton email", "3 questions", "poids", "mensurations", "calculateur de calories"].every(x => d.fr[i1].includes(x)), d.fr[i1]);
@@ -984,7 +997,7 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
       && /for adults only/.test(d.en[0]) && /not medical advice/.test(d.en[0]), JSON.stringify([d.en[i1], d.en[i6], d.en[i7]]).slice(0, 400));
     await c.close();
     /* le volet des conditions depuis l'inscription, en français puis en anglais : tous les paragraphes, dans la bonne langue */
-    await avec([[LIBRE_FICHIER, "inscription_libre: true"]], async () => {
+    await inscriptionOuverte(async () => {
       for (const langue of ["", "en"]) {
         const db2 = base();
         const x = await contexte(b, null, db2, { langue });

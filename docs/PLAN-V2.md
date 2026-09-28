@@ -7,6 +7,7 @@ Une nouvelle conversation reprend en lisant seulement `CLAUDE.md` et ce fichier.
 - **Branches** : chaque lot se fait sur une branche `v2/…` (copie `git worktree` dans le scratchpad de la session), poussée sur GitHub pour le banc (tests seulement, jamais de publication), puis intégrée par `cherry-pick` dans la branche de version ; `main` avance (avance rapide) quand le banc GitHub est vert et la relecture faite. `attente/nuit-28-09` = travail de la nuit du 28/09 mis de côté, jamais poussé (ses corrections utiles sont dans la v52).
 - **Avant de reprendre** : `git status`, `git log --oneline -10 --all`, `git worktree list`, relire « État exact ». Banc : pousser la branche (`git push origin v2/<nom>`) et lire le résultat sur https://github.com/lcsmhx/mhx-plateforme/actions ; en local, seulement la suite qu'on écrit (`tests-locaux/README.md`).
 - **État exact (28/09/2026, fin d'après-midi, heure de Bali)** :
+  - **28/09/2026 (plus tard)** : **v54** (`a41b04e`, mise en ligne et vérifiée) : inscription publique ouverte par Lucas (`inscription_libre: true` dans `js/config.js` ; Supabase réglé par lui : « Confirm email » désactivé, « Allow new users to sign up » activé ; sans CAPTCHA), texte de la case santé complété, espace entre les deux liens de l'écran de connexion. **v55** (28/09/2026 : corrections après la relecture de la v54 : liens de l'écran de connexion sur petit téléphone, version « 2026-09-28b » de la case santé, tests de l'inscription, garde-fou « ouverture de l'inscription » dans `verif52`) — poussée par Lucas (`git -C /Users/lucasmahaux/MHX-Code/mhx-plateforme push origin v2/relecture-v54:main`), en ligne quand « Tests puis publication » est vert (pied de page « · 55 »).
   - **v53** (`v2/v53` → `main`) : banc GitHub vert sur `9acd868` (10 parties), relecture unique faite (3 relecteurs : données et accès, clients existants, coach) : **aucun bloquant** ; remarques dans « À faire plus tard ». Version « 2026-09-28 · 53 » et `MHX_FICHIERS = "53"`. **En ligne** (`8372a97`, banc 10/10 vert puis publication) **et vérifiée** : les 149 adresses du site relevées, chaque fichier servi = celui du commit (seuls changements : 3 suites de tests en plus ; fonction d'emails, sa migration et `desinscription.html` retirées) ; téléphone : « 2026-09-28 · 53 » affiché, 35 fichiers `css/` et `js/` en `?v=53`, tous en 200, aucune erreur de console, `#/inscription` reste fermé.
   - Contenu : `f9e6b07` emplacements réservés + interrupteur `suivi_visites_clients: "test"` ; `23bf096` nettoyage ; `63d3a6d` chantier 3 (feedback du dimanche, `feedback_dimanche: "test"`) ; `10bb6ac` lot D-clients ; `9acd868` chantier 4 (agent arrêté pendant ses tests locaux à la demande de Lucas, travail commité tel quel sur `v2/v53-c4` = `fb13c23`, vert sur GitHub, puis intégré).
   - Avant : **52.1** (`72c8932`) en ligne. Inscription fermée (`inscription_libre: false`). Aucun email envoyé par l'app.
@@ -32,7 +33,7 @@ En cas de doute, ces règles passent avant `CLAUDE.md` (et la ligne directrice c
 **Ne doit JAMAIS arriver**
 - Un client réel perd une donnée ou voit son app cassée.
 - Un email part vers un vrai client ou prospect. Aucun envoi par l'app (ligne directrice, point 1).
-- L'inscription publique s'ouvre (`inscription_libre` reste `false` : Lucas l'ouvrira lui-même).
+- L'inscription publique change d'état (ouverte ↔ fermée) sans décision de Lucas (ouverte par lui en v54).
 - Une nouveauté qui remplace une habitude des clients (le bilan) leur apparaît avant que Lucas l'active. Les petits ajouts (un onglet en plus, une correction de bug) peuvent partir directement.
 - Un service ou une option payante.
 
@@ -144,7 +145,7 @@ Rien n'est activé ni déployé par Claude, **aucun email n'est envoyé** (ligne
 - [x] *(v52)* `docs/OUVERTURE-INSCRIPTION.md` : marche à suivre pas à pas, **sans SMTP ni vérification d'email** (réglages que Lucas fait lui-même dans Supabase, test prospect complet par Grok, puis ouverture), avec les liens. **v52**
 - [ ] Reporté après l'ouverture : écran unique d'acceptation Q6 (conditions + données de santé des clients existants).
 - [ ] Vrai test prospect complet (par Grok, compte jetable) sur la nouvelle version. *(Lucas)*
-- [ ] Ensuite seulement, Lucas ouvre l'inscription lui-même. *(Lucas)*
+- [x] Ensuite seulement, Lucas ouvre l'inscription lui-même. *(v54, 28/09 : fait par Lucas)*
 
 ## Fin de mission
 - [x] *(28/09)* Résumé final unique pour Lucas (voir « Résumé final » plus haut).
