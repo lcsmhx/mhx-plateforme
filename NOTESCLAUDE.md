@@ -262,3 +262,20 @@ Pour Grok Bot : rien à faire sur `index.html` (règle inchangée : Grok travail
   3. Connexion avec le compte de test : accueil, Programme, Nutrition, Ma progression, Mon suivi, Profil s'affichent comme avant.
   4. Thème clair / sombre et passage en anglais : comme avant.
   5. Écran de connexion (déconnecté) et « Mot de passe oublié » : comme avant.
+
+## 2026-09-28 — v53 : feedback du dimanche (en test), côté coach simplifié, calculateur et « Mon journal » pour les clients — Claude
+- **Pour les clients (tous)** : onglet « Mon journal » (noter ses séances, historique) ; calculateur ouvert (leur propre calcul `calc_perso`, départ = le calcul du coach, jamais modifié) ; le lundi, le bilan du vendredi parle de la bonne semaine (« tu as jusqu'à jeudi soir »). Rien d'autre ne change.
+- **Derrière un interrupteur, seulement le compte de test (9df6bb84) et le coach** : `feedback_dimanche` (le dimanche : note sur 10 + Training / Alimentation / Autre ; réponse du coach juste en dessous ; smiley 😞 😐 😊 ; rappel sur l'accueil et badge dans l'app, aucun email) ; `suivi_visites_clients` (dernière visite et jours actifs sur 30 jours). Les autres clients gardent le bilan du vendredi et ne sont pas suivis. Lucas passe les deux sur « tous » dans `js/config.js` quand il a prévenu ses clients (message WhatsApp dans `docs/PLAN-V2.md`).
+- **Coach** : tableau de bord à 2 tuiles (Clients, Prospects) avec les urgences en badge et « À traiter maintenant » (5 lignes au plus, seulement s'il y a quelque chose) ; Mes clients : retour de la semaine, note, smiley, dernière visite, jours actifs ; Prospects sans score ni température ; « Bilan réservé » coché par le coach dans la fiche du prospect ; liste newsletter (accord actif) exportable en CSV ; compteur inscrits → 3 questions → bilans réservés → clients ; « Ses séances » ouvre le journal du client.
+- **Données** : aucune migration. Nouveaux champs dans des clés existantes : `checkins` (format « dimanche », `avis`, `fb_vu`), `feedbacks.ecrit_a`, `suivi_prospect.bilan_le` + historique ; `activite` aussi pour le compte de test. Retirés : la fonction d'emails v51 (jamais déployée), sa migration (jamais appliquée), `desinscription.html`, le mode test « jour n ». Anciens bilans et anciennes réponses toujours lisibles.
+- **Pour Grok Bot** : rien à faire côté `donnees/`. Tests à faire en ligne (téléphone et ordi) :
+  1. Pied de page : « 2026-09-28 · 53 » ; aucune erreur de console, aucun fichier en 404.
+  2. Compte de test, un dimanche (ou le lundi, « en retard ») : « Mon suivi » propose le feedback du dimanche (note obligatoire, 3 cases) ; l'accueil affiche le rappel.
+  3. Côté coach : la fiche du compte de test montre le feedback ; répondre ; côté client, badge « Ton coach a répondu » et réponse juste sous le feedback.
+  4. Compte de test : choisir 😞 et remplir les deux questions ; côté coach, le client passe en tête de Mes clients et dans « À traiter maintenant ».
+  5. Coach, fiche d'un vrai client (sans rien enregistrer) : toujours le bilan du vendredi, dernière visite « — » (pas suivi).
+  6. Compte de test : onglet « Mon journal », noter une séance ; côté coach, « Ses séances » l'affiche.
+  7. Coach : tableau de bord à 2 tuiles ; nulle part « CHAUD », « TIÈDE », « FROID » ni « /100 ».
+  8. Coach, fiche d'un prospect : « Bilan réservé » puis le retirer ; le compteur suit.
+  9. Coach : liste newsletter et export CSV (ouvert dans un tableur : colonnes prénom, nom, email, date).
+  10. Compte de test : calculateur, 17 ans → refus, rien d'enregistré ; puis un âge adulte → calcul enregistré (le calcul du coach ne change pas).
