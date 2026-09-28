@@ -74,6 +74,7 @@ En cas de doute, ces règles passent avant `CLAUDE.md`.
 - [ ] 10. Garder le garde-fou 18 ans et la mention « pas un avis médical » existants. (Q7 : garde-fou au calculateur ; case des conditions « J'ai 18 ans ou plus et j'accepte… »)
 - [ ] 11. Bug mineur : un client qui ouvre une page coach (par exemple `#/calculateur`) voit l'Accueil, mais l'adresse ne change pas.
 - [ ] 12. Branche `attente/nuit-28-09` : reprendre les corrections utiles (messages d'erreur en français, session après changement d'adresse, erreurs du Profil). Laisser ce qui concerne l'envoi des emails d'inscription par Brevo (on passe par Gmail).
+- [ ] 13. GitHub Actions (demande de Lucas du 28/09, à faire à la fin du chantier, sans interrompre les lots) : dans `.github/workflows`, figer le runner sur `ubuntu-24.04` au lieu de `ubuntu-latest` (passage à Ubuntu 26 le 19 octobre) et mettre à jour les actions qui tournent encore sous Node.js 20 ; vérifier que le banc reste vert sur GitHub.
 - [ ] Fin du chantier : banc à jour et vert, téléphone + ordi, relecture indépendante, version 52, note Grok (5 à 10 tests), « État actuel », commit, push, vérification en ligne.
 
 ## Chantier 3 — Feedback du dimanche (remplace le bilan du vendredi)
