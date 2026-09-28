@@ -12,7 +12,9 @@
    - pages verrouillées : cadenas, « Réserver mon bilan » vers Calendly (utm_content=verrou-<id>, prénom et
      email pré-remplis), AUCUNE donnée lue ni affichée (la prospecte a des données témoins qu'elle ne doit
      jamais voir), aucune écriture ; un clic est noté dans la clé « challenge » ;
-   - Speed Formation verrouillée au jour 8 (par la date, inscription ancienne, et mode test #/decouverte-jour/8) ;
+   - v52 (lot D, gratuit pour toujours) : plus de « Jour n/7 », plus de verrou de la Speed Formation au jour 8 ; calculateur,
+     Ma progression et Speed Formation ouverts, « Mon journal » dans la vitrine (programme, nutrition, journal, suivi) ;
+     les vérifications du jour 8, du mode test et de la date locale du « Jour n » sont retirées (fonction supprimée) ;
    - aucun prix, tarif ni abonnement nulle part (pages FR / EN, volets, inscription, textes de la Découverte,
      avantages et tout le dictionnaire anglais) ;
    - client, coach sur une fiche, base sans colonne statut : inchangés.
@@ -196,7 +198,8 @@ const cliquerVerrou = async (c, page) => {
 (async () => {
   await new Promise(r => server.listen(PORT, r));
   const b = await chromium.launch();
-  const VERROUILLES = ["programme", "nutrition", "mensurations", "suivi", "complements", "bilan"];
+  /* v52 (lot D) : Ma progression est ouverte au prospect ; « Mon journal » est verrouillé */
+  const VERROUILLES = ["programme", "nutrition", "journal", "suivi", "complements", "bilan"];
   const TEXTE_VERROU = "Cette fonctionnalité est disponible avec l'accompagnement MHX.";
   const TEXTE_VERROU_EN = "This feature is available with MHX coaching.";
   const TEXTE_FORMATION = "Ta période découverte est terminée : la Speed Formation fait partie de l'accompagnement.";
@@ -209,7 +212,8 @@ const cliquerVerrou = async (c, page) => {
     const { page } = await contexte(b, lea, db);
     await page.goto(`http://localhost:${PORT}/#/accueil`); await attendre(page, 1800);
     const t = await texte(page, "#acc-vue");
-    ok("prospect jour 1 : accueil = écran Découverte (« Découverte · Jour 1/7 », « Bonjour Léa »)", !!(await page.$(DC_ZONE + " #dc-voir")) && t.includes("Découverte · Jour 1/7") && t.includes("Bonjour Léa"), t.slice(0, 200));
+    /* v52 (lot D) : « Découverte », sans « Jour n/7 » (avant : « Découverte · Jour 1/7 ») */
+    ok("prospect jour 1 : accueil = écran Découverte (« Découverte » sans « Jour n/7 », « Bonjour Léa »)", !!(await page.$(DC_ZONE + " #dc-voir")) && /^\s*Découverte\s+Bonjour Léa/.test(t) && !/Jour \d/.test(t), t.slice(0, 200));
     const champs = await page.$$eval(DC_ZONE + " [id^='q-']", l => l.map(e => e.id)).catch(() => []);
     /* v52 : 3 questions (avant : 10, #q-sexe … #q-motivation, « Voir mon résultat ») */
     ok("prospect jour 1 : questionnaire court de 3 questions (#q-probleme, #q-obstacle, #q-projection), sans âge, et bouton « Valider mes réponses »", QUESTIONS_COURT.every(q => champs.includes("q-" + q)) && champs.length === 3 && !champs.includes("q-age") && (await texte(page, "#dc-voir")) === "Valider mes réponses", JSON.stringify(champs));
@@ -234,7 +238,7 @@ const cliquerVerrou = async (c, page) => {
       const age = await page.$("#q-age"), nCal = await calendlyVue(page);
       /* v52 : les 3 nouvelles questions (avant : les 10, pré-remplies par ses réponses, âge 29) ; ses anciennes réponses
          restent en base, lisibles dans son Profil et la fiche du coach (verif56) */
-      ok("ancien prospect du Challenge au jour 5 (questionnaire sans court_le) : « Découverte · Jour 5/7 », les 3 questions du questionnaire court (plus d'âge), pas de résultat, aucun bouton Calendly", t.includes("Découverte · Jour 5/7") && champs.length === 3 && !!(await page.$(DC_ZONE + " #dc-voir")) && !age && !(await page.$("#dc-resultat, #dc-bilan")) && nCal === 0, t.slice(0, 160) + " | " + JSON.stringify(champs) + " | " + nCal + " lien(s) Calendly");
+      ok("ancien prospect du Challenge au jour 5 (questionnaire sans court_le) : « Découverte » (v52 : sans « Jour n/7 »), les 3 questions du questionnaire court (plus d'âge), pas de résultat, aucun bouton Calendly", /^\s*Découverte\s+Bonjour/.test(t) && !/Jour \d/.test(t) && champs.length === 3 && !!(await page.$(DC_ZONE + " #dc-voir")) && !age && !(await page.$("#dc-resultat, #dc-bilan")) && nCal === 0, t.slice(0, 160) + " | " + JSON.stringify(champs) + " | " + nCal + " lien(s) Calendly");
       await aller(page, "#/challenge", 1500);
       const h = await page.evaluate(() => location.hash), nCal2 = await calendlyVue(page);
       ok("ancien prospect du Challenge au jour 5 : son ancienne adresse #/challenge mène au questionnaire (#/decouverte), sans bouton Calendly ; rien n'est écrit", h === "#/decouverte" && !!(await page.$(DC_ZONE + " #dc-voir")) && nCal2 === 0 && db.requetes.length === 0, h + " | " + nCal2 + " lien(s) Calendly | " + db.requetes.join(" ; "));
@@ -246,7 +250,7 @@ const cliquerVerrou = async (c, page) => {
       const { page } = await contexte(b, lea, db);
       await page.goto(`http://localhost:${PORT}/#/accueil`); await attendre(page, 2000);
       const t = await texte(page, "#acc-vue"), nCal = await calendlyVue(page);
-      ok("prospect jour 21 sans questionnaire : « Découverte · terminée », questionnaire court, toujours aucun bouton Calendly sur l'écran Découverte", t.includes("Découverte · terminée") && !!(await page.$(DC_ZONE + " #dc-voir")) && nCal === 0, t.slice(0, 160) + " | " + nCal + " lien(s) Calendly");
+      ok("prospect jour 21 sans questionnaire : « Découverte » (v52 : jamais « terminée »), questionnaire court, toujours aucun bouton Calendly sur l'écran Découverte", /^\s*Découverte\s+Bonjour/.test(t) && !/terminée/.test(t) && !!(await page.$(DC_ZONE + " #dc-voir")) && nCal === 0, t.slice(0, 160) + " | " + nCal + " lien(s) Calendly");
     }
   });
 
@@ -257,8 +261,9 @@ const cliquerVerrou = async (c, page) => {
     await page.goto(`http://localhost:${PORT}/#/accueil`); await attendre(page, 2200);
     const acc = await texte(page, "#acc-vue");
     const blocs = await page.$$eval(DC_ZONE + " section[id^='dc-']", l => l.map(s => s.id)).catch(() => []);
-    /* v52 : l'accueil après la page bilan = Speed Formation + accompagnement (avant : résultat, calcul, séance, recettes en plus) */
-    ok("prospect jour 4 : accueil Découverte « Découverte · Jour 4/7 », « Bonjour Léa », Speed Formation et accompagnement (plus d'ancien écran « résultat »)", acc.includes("Découverte · Jour 4/7") && acc.includes("Bonjour Léa") && JSON.stringify(blocs) === '["dc-formation","dc-accomp"]', acc.slice(0, 160) + " | " + JSON.stringify(blocs));
+    /* v52 : l'accueil après la page bilan = Speed Formation + accompagnement (avant : résultat, calcul, séance, recettes en plus) ;
+       lot D : l'action mise en avant en tête (dc-etape, « Calcule tes calories »), plus de « Jour n/7 » */
+    ok("prospect jour 4 : accueil Découverte « Découverte » (sans « Jour n/7 »), « Bonjour Léa », son étape, Speed Formation et accompagnement (plus d'ancien écran « résultat »)", /^\s*Découverte\s+Bonjour Léa/.test(acc) && !/Jour \d/.test(acc) && JSON.stringify(blocs) === '["dc-etape","dc-formation","dc-accomp"]', acc.slice(0, 160) + " | " + JSON.stringify(blocs));
     const cals = await page.$$eval(DC_ZONE + " [data-dc-cal]", l => l.map(a => ({ src: a.dataset.dcCal, href: a.href, t: a.textContent.trim(), cible: a.target })));
     ok("prospect jour 4 : « Réserver mon bilan » sur l'accueil (en-tête + accompagnement), Calendly pré-rempli, utm_content=decouverte / decouverte-accompagnement", cals.length === 2 && cals.every(x => x.href === lienPre(x.src) && x.t === "Réserver mon bilan" && x.cible === "_blank") && cals.map(x => x.src).join() === "decouverte,decouverte-accompagnement", JSON.stringify(cals));
     ok("prospect jour 4 : bloc Speed Formation ouvert pendant la découverte (lien « Ouvrir la Speed Formation »)", !!(await page.$('#dc-formation a[href="#/formation"]')) && !(await texte(page, "#dc-formation")).includes(TEXTE_FORMATION));
@@ -267,11 +272,13 @@ const cliquerVerrou = async (c, page) => {
 
     /* navigation */
     const ids = await navIds(page), cad = await cadenasNav(page);
-    ok("prospect jour 4 : navigation = accueil, programme, nutrition, suivi, formation, profil (plus d'onglet Challenge ni Découverte en double)", JSON.stringify(ids) === '["accueil","programme","nutrition","suivi","formation","profil"]', JSON.stringify(ids));
-    ok("prospect jour 4 : cadenas sur la vitrine (programme, nutrition, suivi) seulement — ni sur accueil, formation, profil", JSON.stringify(cad) === '["programme","nutrition","suivi"]', JSON.stringify(cad));
+    /* v52 (lot D) : + journal (vitrine), mensurations et calculateur (ouverts) */
+    ok("prospect jour 4 : navigation = accueil, programme, journal, nutrition, mensurations, calculateur, suivi, formation, profil (plus d'onglet Challenge ni Découverte en double)", JSON.stringify(ids) === '["accueil","programme","journal","nutrition","mensurations","calculateur","suivi","formation","profil"]', JSON.stringify(ids));
+    ok("prospect jour 4 : cadenas sur la vitrine (programme, journal, nutrition, suivi) seulement — ni sur accueil, progression, calculateur, formation, profil", JSON.stringify(cad) === '["programme","journal","nutrition","suivi"]', JSON.stringify(cad));
     ok("prospect jour 4 : chaque onglet verrouillé est annoncé « (verrouillé) » aux lecteurs d'écran", cad.length > 0 && await page.$$eval("#nav a", l => l.filter(a => a.querySelector(".nav-cadenas")).every(a => (a.querySelector(".sr-only") || {}).textContent === " (verrouillé)")));
     const barre = await barreIds(page);
-    ok("prospect jour 4 : barre du bas = accueil, formation, profil, puis programme (verrouillé) ; le reste derrière « Plus »", JSON.stringify(barre) === '["accueil","formation","profil","programme"]' && !!(await page.$("#barre-bas [data-plus]")) && (await page.$$eval("#barre-bas a.verrouille", l => l.map(a => a.dataset.id))).join() === "programme", JSON.stringify(barre));
+    /* v52 (lot D) : accueil, calculateur, progression, Speed Formation (avant : accueil, formation, profil, programme verrouillé) */
+    ok("prospect jour 4 : barre du bas = accueil, calculateur, progression, Speed Formation (aucun onglet verrouillé) ; le reste derrière « Plus »", JSON.stringify(barre) === '["accueil","calculateur","mensurations","formation"]' && !!(await page.$("#barre-bas [data-plus]")) && (await page.$$eval("#barre-bas a.verrouille", l => l.map(a => a.dataset.id))).join() === "", JSON.stringify(barre));
 
     /* pages verrouillées : on part d'une page ouverte, puis chaque adresse */
     await aller(page, "#/profil", 1500);
@@ -287,7 +294,7 @@ const cliquerVerrou = async (c, page) => {
     /* le relevé du cache marche : prefs (langue, lue au démarrage de tout compte) doit y figurer */
     const cles = await clesChargees(page);
     ok("prospect : après toutes les pages verrouillées, aucune de ses données d'accompagnement n'est chargée dans l'appli (cache lisible : prefs y est)", Array.isArray(cles) && cles.includes("prefs") && !cles.some(k => ["programme", "repas", "mens", "complements", "checkins", "journal", "repas_suivi", "objectifs_faits", "feedbacks", "calc"].includes(k)), JSON.stringify(cles));
-    ok("prospect : mensurations, compléments, bilan cachés de la navigation (verrouillés à leur adresse)", !(await navIds(page)).some(x => ["mensurations", "complements", "bilan"].includes(x)));
+    ok("prospect : compléments et bilan cachés de la navigation (verrouillés à leur adresse)", !(await navIds(page)).some(x => ["complements", "bilan"].includes(x)));
 
     /* formation : ouverte pendant les 7 jours */
     page.donnees.length = 0;
@@ -333,88 +340,9 @@ const cliquerVerrou = async (c, page) => {
     ok("prospect : le clic est aussi compté dans le suivi local (call_cta_clicked)", suivi.includes("call_cta_clicked"), manque + JSON.stringify(suivi));
   });
 
-  /* ---------- C. Jour 7, jour 8 par la date, puis mode test : la Speed Formation se verrouille au jour 8 ---------- */
-  await bloc("C. jour 7, jour 8 et mode test", async () => {
-    {
-      const db = base({ ilYA: 6 });
-      const { c, page } = await contexte(b, lea, db);
-      await page.goto(`http://localhost:${PORT}/#/accueil`); await attendre(page, 2000);
-      const t7 = await texte(page, "#vue");
-      await aller(page, "#/formation", 1500);
-      ok("prospect jour 7 : « Découverte · Jour 7/7 », Speed Formation encore ouverte (pas de cadenas)", t7.includes("Découverte · Jour 7/7") && !(await page.$("#vue .verrou")) && !(await cadenasNav(page)).includes("formation"), t7.slice(0, 120));
-      await aller(page, "#/decouverte-jour/8", 2000);
-      const t8 = await texte(page, "#vue");
-      const cle = await page.evaluate(() => localStorage.getItem("mhx_decouverte_jour")), h8 = await page.evaluate(() => location.hash);
-      ok("mode test #/decouverte-jour/8 : retour sur #/decouverte, « Découverte · terminée », cadenas sur la formation", h8 === "#/decouverte" && cle === "8" && t8.includes("Découverte · terminée") && (await cadenasNav(page)).includes("formation"), h8 + " | " + cle + " | " + t8.slice(0, 120));
-      page.donnees.length = 0;
-      await aller(page, "#/formation", 1400);
-      const v = await verrou(page);
-      ok(`mode test jour 8 : #/formation verrouillé — « ${TEXTE_FORMATION} », « Réserver mon bilan » (utm_content=verrou-formation), aucune requête vers ses données`, !!v && v.cadenas && v.texte === TEXTE_FORMATION && lienOk(v, "verrou-formation", "Réserver mon bilan") && page.donnees.length === 0, JSON.stringify(v) + " | " + page.donnees.join(" ; "));
-      await aller(page, "#/decouverte-jour/0", 2000);
-      const t0 = await texte(page, "#vue");
-      await aller(page, "#/formation", 1400);
-      ok("mode test #/decouverte-jour/0 : retour au vrai jour (Jour 7/7), Speed Formation rouverte", (await page.evaluate(() => localStorage.getItem("mhx_decouverte_jour"))) === null && t0.includes("Découverte · Jour 7/7") && !(await page.$("#vue .verrou")), t0.slice(0, 120));
-      ok("mode test : rien n'est écrit en base (aucune requête non-GET vers /rest/v1/*)", db.requetes.length === 0, db.requetes.join(" ; "));
-      await c.close();
-    }
-    {
-      /* la vraie bascule, par la date : inscription il y a 7 jours = jour 8, sans mode test */
-      const db = base({ ilYA: 7 });
-      const { page } = await contexte(b, lea, db);
-      await page.goto(`http://localhost:${PORT}/#/accueil`); await attendre(page, 2000);
-      const t = await texte(page, "#acc-vue"), cad = await cadenasNav(page);
-      page.donnees.length = 0;
-      await aller(page, "#/formation", 1400);
-      const v = await verrou(page);
-      ok("prospect inscrit il y a 7 jours (jour 8 par la date, sans mode test) : « Découverte · terminée », cadenas sur la formation, #/formation verrouillé (texte de fin, verrou-formation), aucune requête vers ses données", t.includes("Découverte · terminée") && cad.includes("formation") && !!v && v.cadenas && v.texte === TEXTE_FORMATION && lienOk(v, "verrou-formation", "Réserver mon bilan") && page.donnees.length === 0, t.slice(0, 100) + " | " + JSON.stringify(cad) + " | " + JSON.stringify(v) + " | " + page.donnees.join(" ; "));
-    }
-  });
-
-  /* ---------- C2. Le jour suit la date LOCALE de l'inscription, pas la date UTC ---------- */
-  await bloc("C2. date locale de l'inscription", async () => {
-    const cas = [
-      { fuseau: "Pacific/Kiritimati", cree: inscritDansFuseau(14, 0, 0, 30), jour: 1, lib: "aujourd'hui 0 h 30 à UTC+14 (la veille en UTC)" },
-      { fuseau: "Pacific/Honolulu", cree: inscritDansFuseau(-10, 1, 23, 30), jour: 2, lib: "hier 23 h 30 à UTC−10 (aujourd'hui en UTC)" }
-    ];
-    const vus = [];
-    for (const x of cas) {
-      const { c, page } = await contexte(b, lea, base({ cree: x.cree, intake: null }), { fuseau: x.fuseau });
-      await page.goto(`http://localhost:${PORT}/#/accueil`); await attendre(page, 1800);
-      const t = await texte(page, "#acc-vue");
-      vus.push({ lib: x.lib, cree: x.cree, attendu: x.jour, ok: t.includes("Découverte · Jour " + x.jour + "/7"), vu: (/Découverte · [^B]*/.exec(t) || [t.slice(0, 40)])[0].trim() });
-      await c.close();
-    }
-    ok("jour de découverte = date LOCALE de l'inscription, pas sa date UTC (inscrite à 0 h 30 à UTC+14 : jour 1 ; hier à 23 h 30 à UTC−10 : jour 2)", vus.every(v => v.ok), JSON.stringify(vus));
-  });
-
-  /* ---------- D. Inscription ancienne (jour 21) : découverte terminée, Speed Formation verrouillée ---------- */
-  await bloc("D. prospect jour 21", async () => {
-    const db = base({ ilYA: 20 });
-    const { c, page } = await contexte(b, lea, db);
-    await page.goto(`http://localhost:${PORT}/#/accueil`); await attendre(page, 2200);
-    const acc = await texte(page, "#acc-vue");
-    /* v52 : son accueil (avant : son résultat, #dc-resultat) */
-    ok("prospect jour 21 : « Découverte · terminée », son accueil reste là (« Ta période découverte est terminée. »)", acc.includes("Découverte · terminée") && acc.includes("Ta période découverte est terminée.") && !!(await page.$("#dc-accomp")), acc.slice(0, 200));
-    ok("prospect jour 21 : bloc Speed Formation de l'accueil fermé (texte de fin, plus de lien vers #/formation)", (await texte(page, "#dc-formation")).includes(TEXTE_FORMATION) && !(await page.$('#dc-formation a[href="#/formation"]')));
-    const cad = await cadenasNav(page), barre = await barreIds(page);
-    ok("prospect jour 21 : navigation — cadenas sur programme, nutrition, suivi ET formation ; barre du bas = accueil, profil, programme, nutrition", JSON.stringify(await navIds(page)) === '["accueil","programme","nutrition","suivi","formation","profil"]' && JSON.stringify(cad) === '["programme","nutrition","suivi","formation"]' && JSON.stringify(barre) === '["accueil","profil","programme","nutrition"]', JSON.stringify({ cad, barre }));
-    textesFr += "\n" + await toutLeTexte(page);
-    await aller(page, "#/profil", 1400);
-    page.donnees.length = 0;
-    await aller(page, "#/formation", 1400);
-    const v = await verrou(page);
-    ok(`prospect jour 21 : #/formation verrouillé — cadenas, « ${TEXTE_FORMATION} », « Réserver mon bilan » (utm_content=verrou-formation, pré-rempli)`, !!v && v.cadenas && v.texte === TEXTE_FORMATION && lienOk(v, "verrou-formation", "Réserver mon bilan"), JSON.stringify(v));
-    const html = await page.evaluate(() => document.body.innerHTML), cles = await clesChargees(page);
-    ok("prospect jour 21 : #/formation verrouillé — aucune requête vers ses données, sa formation n'est ni chargée ni affichée (cache lisible : prefs y est)", page.donnees.length === 0 && Array.isArray(cles) && cles.includes("prefs") && !cles.includes("formation") && !html.includes(TEMOIN), page.donnees.join(" ; ") + " | " + JSON.stringify(cles));
-    textesFr += "\n" + await toutLeTexte(page);
-    await aller(page, "#/programme", 1300);
-    ok("prospect jour 21 : le reste ne change pas — #/programme toujours verrouillé (utm_content=verrou-programme)", lienOk(await verrou(page), "verrou-programme", "Réserver mon bilan"));
-    await aller(page, "#/formation", 1300);
-    const popUrl = await cliquerVerrou(c, page);
-    const ec = db.ecritures.filter(e => e.outil === "challenge"), cl = ec.length ? ((ec[ec.length - 1].contenu.cta || {}).clics || []) : [];
-    ok("prospect jour 21 : clic sur la formation verrouillée noté (source verrou-formation, jour 21), une seule requête non-GET", db.requetes.length === 1 && /^POST \/rest\/v1\/donnees/.test(db.requetes[0]) && db.ecritures.length === 1 && cl.length === 1 && cl[0].source === "verrou-formation" && cl[0].jour === 21, (popUrl === null ? "bouton « Réserver mon bilan » absent de #/formation (la formation n'est pas verrouillée) | " : "") + db.requetes.join(" ; ") + " | " + JSON.stringify(db.ecritures.map(e => ({ outil: e.outil, cta: e.contenu && e.contenu.cta }))));
-    await page.screenshot({ path: path.join(OUT, "prospect-formation-jour21.png"), fullPage: true });
-  });
+  /* ---------- C, C2, D. v52 (lot D) : fonction supprimée — plus de « Jour n/7 » ni de verrou de la Speed Formation au jour 8
+     (par la date, inscription ancienne ou mode test) : ces blocs sont retirés. La Speed Formation ouverte au 30e jour et
+     « plus aucun 7 jours » côté prospect sont vérifiés par verif56 (bloc N). ---------- */
 
   /* ---------- E. Téléphone et tablette : cadenas dans la barre du bas, volet « Plus », pas de débordement ---------- */
   await bloc("E. téléphone et tablette", async () => {
@@ -424,10 +352,11 @@ const cliquerVerrou = async (c, page) => {
       await page.goto(`http://localhost:${PORT}/`); await attendre(page, 2200);
       /* v52 : l'accueil (#dc-accomp) remplace l'ancien résultat (#dc-resultat) */
       ok("prospect mobile : accueil Découverte sans défilement horizontal", !!(await page.$(DC_ZONE + " #dc-accomp")) && await page.evaluate(() => document.documentElement.scrollWidth <= 390));
-      ok("prospect mobile : onglet verrouillé marqué (cadenas) dans la barre du bas", (await page.$$("#barre-bas a.verrouille .nav-cadenas")).length >= 1);
+      /* v52 (lot D) : la barre du bas n'a plus d'onglet verrouillé (accueil, calculateur, progression, Speed Formation) ;
+         la vitrine verrouillée est dans « Plus », avec ses cadenas */
       const okPlus = await cliquer(page, "#barre-bas [data-plus]"); await attendre(page, 600);
       const plus = await page.$$eval(".volet .menu-plus a", l => l.map(a => a.dataset.id + (a.querySelector(".nav-cadenas") ? "🔒" : ""))).catch(() => []);
-      ok("prospect mobile : « Plus » = nutrition et suivi (verrouillés) ; ni mensurations, ni compléments, ni bilan, ni challenge", okPlus && JSON.stringify(plus) === '["nutrition🔒","suivi🔒"]', (okPlus ? "" : "bouton « Plus » absent | ") + JSON.stringify(plus));
+      ok("prospect mobile : « Plus » = programme, journal, nutrition, suivi (verrouillés, avec cadenas) et profil ; ni compléments, ni bilan, ni challenge", okPlus && JSON.stringify(plus) === '["programme🔒","journal🔒","nutrition🔒","suivi🔒","profil"]', (okPlus ? "" : "bouton « Plus » absent | ") + JSON.stringify(plus));
       textesFr += "\n" + await toutLeTexte(page);
       await page.keyboard.press("Escape"); await attendre(page, 300);
       await aller(page, "#/programme", 1300);
@@ -435,18 +364,7 @@ const cliquerVerrou = async (c, page) => {
       await page.screenshot({ path: path.join(OUT, "prospect-programme-mobile.png"), fullPage: true });
       await c.close();
     }
-    {
-      /* jour 21 : la formation verrouillée quitte la barre du bas pour le volet « Plus » */
-      const db = base({ ilYA: 20 });
-      const { c, page } = await contexte(b, lea, db, { viewport: { width: 390, height: 844 } });
-      await page.goto(`http://localhost:${PORT}/`); await attendre(page, 2200);
-      const barre = await barreIds(page);
-      const okPlus = await cliquer(page, "#barre-bas [data-plus]"); await attendre(page, 600);
-      const plus = await page.$$eval(".volet .menu-plus a", l => l.map(a => a.dataset.id + (a.querySelector(".nav-cadenas") ? "🔒" : ""))).catch(() => []);
-      ok("prospect mobile jour 21 : barre du bas = accueil, profil, programme, nutrition ; « Plus » = suivi et formation, tous deux verrouillés", okPlus && JSON.stringify(barre) === '["accueil","profil","programme","nutrition"]' && JSON.stringify(plus) === '["suivi🔒","formation🔒"]', (okPlus ? "" : "bouton « Plus » absent | ") + JSON.stringify({ barre, plus }));
-      textesFr += "\n" + await toutLeTexte(page);
-      await c.close();
-    }
+    /* v52 (lot D) : fonction supprimée — « jour 21 : la formation verrouillée passe dans « Plus » » (plus de verrou au jour 8) */
     for (const largeur of [800, 1024]) {
       /* tablette / petite fenetre : la barre du haut (avec « (verrouillé) » pour les lecteurs d'ecran) ne deborde pas */
       const db = base({ ilYA: 20 });
@@ -469,7 +387,7 @@ const cliquerVerrou = async (c, page) => {
     await aller(page, "#/accueil", 2000);
     const acc = await texte(page, "#acc-vue");
     const cals = await page.$$eval(DC_ZONE + " [data-dc-cal]", l => l.map(a => a.textContent.trim()));
-    ok("prospect en anglais : accueil « Discovery · Day 4/7 », boutons « Book my assessment »", acc.includes("Discovery · Day 4/7") && cals.length === 2 && cals.every(x => x === "Book my assessment"), acc.slice(0, 160) + " | " + JSON.stringify(cals));
+    ok("prospect en anglais : accueil « Discovery » (v52 : sans « Day n/7 »), boutons « Book my assessment »", /^\s*Discovery\s+Hello/.test(acc) && !/Day \d/.test(acc) && cals.length === 2 && cals.every(x => x === "Book my assessment"), acc.slice(0, 160) + " | " + JSON.stringify(cals));
     textesEn += "\n" + await toutLeTexte(page);
     /* les 5 autres pages verrouillées, cachées ou non (leurs avantages traduits passent au contrôle des prix) */
     const fautes = [];
@@ -479,7 +397,7 @@ const cliquerVerrou = async (c, page) => {
       if (!(vr && vr.cadenas && vr.texte === TEXTE_VERROU_EN && lienOk(vr, "verrou-" + r, "Book my assessment"))) fautes.push(r + " " + JSON.stringify(vr));
       textesEn += "\n" + await toutLeTexte(page);
     }
-    ok(`prospect en anglais : #/nutrition, #/mensurations, #/suivi, #/complements, #/bilan verrouillés en anglais (« ${TEXTE_VERROU_EN} », « Book my assessment », utm_content=verrou-<id>)`, fautes.length === 0, fautes.join(" ; "));
+    ok(`prospect en anglais : #/nutrition, #/journal, #/suivi, #/complements, #/bilan verrouillés en anglais (« ${TEXTE_VERROU_EN} », « Book my assessment », utm_content=verrou-<id>)`, fautes.length === 0, fautes.join(" ; "));
     await aller(page, "#/profil", 1300);
     textesEn += "\n" + await toutLeTexte(page);
     const okCond = await cliquer(page, "#mc-conditions"); await attendre(page, 500);
@@ -487,11 +405,9 @@ const cliquerVerrou = async (c, page) => {
     ok("prospect en anglais : le volet des conditions s'ouvre depuis le profil, en anglais (texte capturé pour le contrôle des prix)", okCond && tc.includes(HEBERGEMENT.en), okCond ? "« " + HEBERGEMENT.en + " » introuvable" : "bouton #mc-conditions absent");
     textesEn += "\n" + tc;
     await page.keyboard.press("Escape"); await attendre(page, 300);
-    await aller(page, "#/decouverte-jour/8", 1800);
-    textesEn += "\n" + await toutLeTexte(page);
-    await aller(page, "#/formation", 1400);
-    const vf = await verrou(page);
-    ok("prospect en anglais, jour 8 : #/formation « Your discovery period is over: the Speed Formation is part of the coaching. » et « Book my assessment »", !!vf && vf.texte === "Your discovery period is over: the Speed Formation is part of the coaching." && lienOk(vf, "verrou-formation", "Book my assessment"), JSON.stringify(vf));
+    /* v52 (lot D) : fonction supprimée — « jour 8 : #/formation verrouillée en anglais » (plus de verrou au jour 8) ; la
+       Speed Formation ouverte passe quand même au contrôle des prix */
+    await aller(page, "#/formation", 1600);
     textesEn += "\n" + await toutLeTexte(page);
   });
 

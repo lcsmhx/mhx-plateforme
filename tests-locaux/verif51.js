@@ -3,6 +3,9 @@
    (Speed Formation, « Réserver mon bilan », case « J'ai réservé »). L'ancien écran « résultat » n'est plus affiché : ses
    vérifications (calories, priorités, recettes, séance) sont retirées, comme celles de la garde 18 ans et des bornes du
    questionnaire (plus d'âge demandé ; garde-fou 18 ans au calculateur, lot D). « Modifier mes réponses » part du Profil.
+   Lot D (v52, gratuit pour toujours) : plus de « Jour n/7 » ni de jours restants, plus de verrou de la Speed Formation au
+   jour 8 : ces vérifications sont retirées (fonction supprimée) ; côté coach, « inscrit depuis n j » remplace « J n/7 » et
+   « terminée » (pastilles, fiche) ; calculateur, Ma progression et Speed Formation ouverts, « Mon journal » en vitrine.
    Chaque attente changée est expliquée par un commentaire « v52 » dans le bloc concerné. Texte d'origine (v51) :
    v51 — funnel « Découverte » (remplace le Challenge 7 jours) : démarrage du prospect (Jour n/7 depuis
    profils.cree_le, date locale), questionnaire court (manquants, bornes, brouillon pendant la frappe, garde
@@ -181,7 +184,8 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
     const db = base({ cree: 0 });
     const { c, page } = await contexte(b, lea, db);
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 2400);
-    ok("prospect inscrit aujourd'hui : l'accueil est l'écran Découverte, « Découverte · Jour 1/7 »", !!(await page.$("#acc-vue, #dc-vue")) && (await eyebrow(page)) === "Découverte · Jour 1/7", await eyebrow(page));
+    /* v52 (lot D) : « Découverte », sans « Jour n/7 » */
+    ok("prospect inscrit aujourd'hui : l'accueil est l'écran Découverte, « Découverte » (sans « Jour n/7 »)", !!(await page.$("#acc-vue, #dc-vue")) && (await eyebrow(page)) === "Découverte", await eyebrow(page));
     const champs = await page.$$eval("#vue [id^='q-']", l => l.map(e => e.id)).catch(() => []);
     /* v52 : les 3 questions (avant : les 10, sexe … motivation, et « Voir mon résultat ») */
     ok("questionnaire court : les 3 questions (objectif principal, ce qui a bloqué, dans 3 mois), sans âge, et « Valider mes réponses »", JSON.stringify(champs) === JSON.stringify(QIDS.map(k => "q-" + k)) && (await texte(page, "#dc-voir")) === "Valider mes réponses", JSON.stringify(champs));
@@ -190,23 +194,13 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
     ok("démarrage : aucune écriture, aucun événement « page bilan vue »", db.ecritures.length === 0 && !(await suivi(page)).some(x => /^(result_viewed|bilan_viewed)/.test(x)));
     ok("démarrage : événement « diagnostic_started » noté (mhx_tracking) pour ce compte", (await suivi(page)).includes("diagnostic_started|" + PROSPECT), JSON.stringify(await suivi(page)));
     const ids = await navIds(page);
-    ok("navigation : accueil, formation, profil ouverts ; programme, nutrition, suivi en vitrine avec cadenas ; ni challenge, ni mensurations, compléments, bilan", ["accueil", "formation", "profil", "programme", "nutrition", "suivi"].every(x => ids.includes(x)) && !["challenge", "decouverte", "mensurations", "complements", "bilan"].some(x => ids.includes(x)) && JSON.stringify(await cadenas(page)) === '["nutrition","programme","suivi"]', JSON.stringify(ids) + " cadenas " + JSON.stringify(await cadenas(page)));
+    /* v52 (lot D) : + Ma progression et calculateur ouverts, journal en vitrine */
+    ok("navigation : accueil, progression, calculateur, formation, profil ouverts ; programme, journal, nutrition, suivi en vitrine avec cadenas ; ni challenge, ni compléments, bilan", ["accueil", "mensurations", "calculateur", "formation", "profil", "programme", "journal", "nutrition", "suivi"].every(x => ids.includes(x)) && !["challenge", "decouverte", "complements", "bilan"].some(x => ids.includes(x)) && JSON.stringify(await cadenas(page)) === '["journal","nutrition","programme","suivi"]', JSON.stringify(ids) + " cadenas " + JSON.stringify(await cadenas(page)));
     await aller(page, "#/decouverte", 1500);
     ok("#/decouverte : même écran (zone #dc-vue), « Accueil » reste marqué dans la navigation", !!(await page.$("#dc-vue #q-probleme")) && (await page.$eval('#nav a[data-id="accueil"]', a => a.getAttribute("aria-current")).catch(() => null)) === "page");
     await c.close();
   });
-  await bloc("A. jour selon l'inscription", async () => {
-    /* le jour suit la date d'inscription (date locale). v52 : questionnaire fait ET page bilan passée (avecChoix) : l'accueil
-       et ses jours restants (la page bilan, elle, n'affiche pas de jours restants) */
-    const cas = [[3, null, "Découverte · Jour 4/7", "3 questions, 1 minute"], [2, avecChoix(N), "Découverte · Jour 3/7", "Encore 5 jours d'accès découverte."], [6, avecChoix(N), "Découverte · Jour 7/7", "Dernier jour de ton accès découverte."], [7, avecChoix(N), "Découverte · terminée", "Ta période découverte est terminée."]];
-    for (const [n, intake, eb, ld] of cas) {
-      const db = base({ cree: n, intake });
-      const { c, page } = await contexte(b, lea, db);
-      await page.goto(`http://localhost:${PORT}/#/accueil`); await attendre(page, 2200);
-      ok(`inscrit il y a ${n} jour${n > 1 ? "s" : ""}${intake ? ", questionnaire fait" : ""} : « ${eb} », « ${ld.slice(0, 40)}… »`, (await eyebrow(page)) === eb && (await lede(page)).startsWith(ld), (await eyebrow(page)) + " / " + (await lede(page)));
-      await c.close();
-    }
-  });
+  /* v52 (lot D) : fonction supprimée — « A. jour selon l'inscription » (Jour n/7 et jours restants de l'accueil) */
   await bloc("A. fuseaux horaires", async () => {
     /* le jour 1 est la date LOCALE de l'inscription. Chaque cas fixe le fuseau du navigateur ET son horloge (10 h,
        heure locale, aujourd'hui) : une version qui compterait en UTC, ou qui lirait les 10 premiers caracteres de
@@ -215,8 +209,9 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
     const dateDans = fuseau => new Intl.DateTimeFormat("en-CA", { timeZone: fuseau }).format(new Date());
     const veille = j => new Date(Date.parse(j + "T12:00:00Z") - 86400000).toISOString().slice(0, 10);
     const cas = [
-      ["Asia/Makassar", "+08:00", j => j + "T00:30:00", "Découverte · Jour 1/7", "UTC+8, inscrit aujourd'hui à 00 h 30", "la veille en UTC"],
-      ["America/Bogota", "-05:00", j => veille(j) + "T23:30:00", "Découverte · Jour 2/7", "UTC−5, inscrit hier à 23 h 30", "aujourd'hui en UTC"]
+      /* v52 (lot D) : le jour n'est plus affiché au prospect ; il reste compté (coach : « inscrit depuis n j ») : lu dans la page */
+      ["Asia/Makassar", "+08:00", j => j + "T00:30:00", 1, "UTC+8, inscrit aujourd'hui à 00 h 30", "la veille en UTC"],
+      ["America/Bogota", "-05:00", j => veille(j) + "T23:30:00", 2, "UTC−5, inscrit hier à 23 h 30", "aujourd'hui en UTC"]
     ];
     for (const [fuseau, dec, inscription, eb, quoi, utc] of cas) {
       const j = dateDans(fuseau), cree = new Date(inscription(j) + dec).toISOString();
@@ -224,7 +219,8 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
       const { c, page } = await contexte(b, lea, db, { fuseau, horloge: new Date(j + "T10:00:00" + dec) });
       await page.goto(`http://localhost:${PORT}/`); await attendre(page, 2200);
       const reglage = await page.evaluate(() => [Intl.DateTimeFormat().resolvedOptions().timeZone, new Date().getHours()]).catch(() => []);
-      ok(`${quoi} (cree_le ${cree.slice(0, 16)}Z, ${utc}), il est 10 h : « ${eb} » — la date locale compte, pas la date UTC`, reglage[0] === fuseau && reglage[1] === 10 && (await eyebrow(page)) === eb, (await eyebrow(page)) + " · navigateur " + JSON.stringify(reglage));
+      const jr = await page.evaluate(() => [Decouverte.jour(Auth.profil, true), Decouverte.depuisTexte(Decouverte.jour(Auth.profil, true))]).catch(() => []);
+      ok(`${quoi} (cree_le ${cree.slice(0, 16)}Z, ${utc}), il est 10 h : jour ${eb} (« ${eb === 1 ? "inscrit aujourd'hui" : "inscrit depuis 1 j"} ») — la date locale compte, pas la date UTC`, reglage[0] === fuseau && reglage[1] === 10 && jr[0] === eb && jr[1] === (eb === 1 ? "inscrit aujourd'hui" : "inscrit depuis 1 j") && (await eyebrow(page)) === "Découverte", JSON.stringify(jr) + " · navigateur " + JSON.stringify(reglage));
       await c.close();
     }
   });
@@ -361,21 +357,7 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
   });
 
   /* ---------- F. Jour 8, anciennes adresses, mode test ---------- */
-  await bloc("F. jour 8", async () => {
-    const db = base({ cree: 7, intake: avecChoix(N) });
-    const { c, page } = await contexte(b, lea, db);
-    await page.goto(`http://localhost:${PORT}/`); await attendre(page, 2400);
-    /* v52 : son accueil (avant : résultat, calories, séance et recettes) */
-    ok("jour 8 : « Découverte · terminée », son accueil (Speed Formation, accompagnement) et « Réserver mon bilan » restent visibles", (await eyebrow(page)) === "Découverte · terminée" && (await page.$$("#dc-formation, #dc-accomp")).length === 2 && !!(await page.$("#vue .masthead a[data-dc-cal]")));
-    ok("jour 8 : bloc Speed Formation « Ta période découverte est terminée… », sans lien pour l'ouvrir", (await texte(page, "#dc-formation")).includes("Ta période découverte est terminée : la Speed Formation fait partie de l'accompagnement.") && !(await page.$('#dc-formation a[href="#/formation"]')));
-    ok("jour 8 : l'onglet Speed Formation reste visible, avec cadenas", (await navIds(page)).includes("formation") && (await cadenas(page)).includes("formation"), JSON.stringify(await cadenas(page)));
-    const n0 = db.lectures.length;
-    await aller(page, "#/formation", 1500);
-    const hv = await page.$eval("#vue .verrou a[target=_blank]", a => a.getAttribute("href") + "|" + a.textContent.trim()).catch(() => "");
-    ok("jour 8 : #/formation verrouillée — texte de fin de découverte + « Réserver mon bilan » (utm_content=verrou-formation)", (await texte(page, "#vue .verrou")).includes("Ta période découverte est terminée : la Speed Formation fait partie de l'accompagnement.") && hv === lienAttendu("verrou-formation") + "|Réserver mon bilan", hv);
-    ok("page verrouillée : aucune donnée lue", db.lectures.length === n0, JSON.stringify(db.lectures.slice(n0)));
-    await c.close();
-  });
+  /* v52 (lot D) : fonction supprimée — « F. jour 8 » (Speed Formation verrouillée, « Découverte · terminée ») */
   await bloc("F. adresses, verrous, mode test, profil", async () => {
     const db = base({ intake: avecChoix(N) });
     const { c, page } = await contexte(b, lea, db);
@@ -387,7 +369,8 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
       /* v52 : l'écran Découverte = son accueil (#dc-accomp ; avant : #dc-resultat) */
       ok(`${h} → #/decouverte (écran Découverte)`, (await page.evaluate(() => location.hash)) === "#/decouverte" && !!(await page.$("#dc-vue #dc-accomp")), await page.evaluate(() => location.hash));
     }
-    for (const [h, id] of [["#/programme", "programme"], ["#/mensurations", "mensurations"], ["#/complements", "complements"], ["#/bilan", "bilan"]]) {
+    /* v52 (lot D) : Ma progression est ouverte au prospect ; « Mon journal » est verrouillé */
+    for (const [h, id] of [["#/programme", "programme"], ["#/journal", "journal"], ["#/complements", "complements"], ["#/bilan", "bilan"]]) {
       const n0 = db.lectures.length;
       await aller(page, h, 1400);
       const hv = await page.$eval("#vue .verrou a[target=_blank]", a => a.getAttribute("href") + "|" + a.textContent.trim()).catch(() => "");
@@ -396,12 +379,7 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
     await cliquerCal(page, "#vue .verrou a[target=_blank]"); await attendre(page, 2000);
     const cl = ((contenu(db, "challenge") || {}).cta || {}).clics || [];
     ok("clic depuis une page verrouillée (#/bilan) : noté avec la source verrou-bilan", cl.length === 1 && cl[0].source === "verrou-bilan", JSON.stringify(cl));
-    /* mode test */
-    const w0 = db.ecritures.length;
-    await aller(page, "#/decouverte-jour/8", 1800);
-    ok("mode test #/decouverte-jour/8 : retour sur #/decouverte, « Découverte · terminée », Speed Formation verrouillée, rien d'écrit", (await page.evaluate(() => location.hash)) === "#/decouverte" && (await page.evaluate(() => localStorage.getItem("mhx_decouverte_jour"))) === "8" && (await eyebrow(page)) === "Découverte · terminée" && (await cadenas(page)).includes("formation") && !(await page.$('#dc-formation a[href="#/formation"]')) && db.ecritures.length === w0, (await eyebrow(page)) + " " + JSON.stringify(await cadenas(page)));
-    await aller(page, "#/decouverte-jour/0", 1800);
-    ok("mode test #/decouverte-jour/0 : retour au vrai jour (Jour 3/7), Speed Formation rouverte, réglage effacé", (await eyebrow(page)) === "Découverte · Jour 3/7" && !(await cadenas(page)).includes("formation") && (await page.evaluate(() => localStorage.getItem("mhx_decouverte_jour"))) === null && db.ecritures.length === w0, await eyebrow(page));
+    /* v52 (lot D) : fonction supprimée — mode test #/decouverte-jour/8 (Speed Formation verrouillée, « terminée ») et /0 */
     /* profil — v52 : ses réponses et « Modifier mes réponses » (#/decouverte/reponses) ; avant : « Voir mon résultat » (#/decouverte) */
     await aller(page, "#/profil", 1800);
     const pr = await texte(page, "#vue");
@@ -417,7 +395,7 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
     const { c, page } = await contexte(b, lea, db);
     await page.goto(`http://localhost:${PORT}/#/challenge/7`); await attendre(page, 2600);
     /* v52 : les 3 nouvelles questions (avant : le questionnaire court de 10 pré-rempli, 29 ans, 64 kg) */
-    ok("ancien prospect du challenge (#/challenge/7) : Découverte terminée, les 3 questions (pas d'âge ni de poids redemandés), rien d'écrit", (await page.evaluate(() => location.hash)) === "#/decouverte" && (await eyebrow(page)) === "Découverte · terminée" && !!(await page.$("#q-probleme")) && !(await page.$("#q-age, #q-poids")) && db.ecritures.length === 0, await eyebrow(page));
+    ok("ancien prospect du challenge (#/challenge/7) : « Découverte » (v52 : jamais « terminée »), les 3 questions (pas d'âge ni de poids redemandés), rien d'écrit", (await page.evaluate(() => location.hash)) === "#/decouverte" && (await eyebrow(page)) === "Découverte" && !!(await page.$("#q-probleme")) && !(await page.$("#q-age, #q-poids")) && db.ecritures.length === 0, await eyebrow(page));
     await page.click("#dc-voir"); await attendre(page, 300);
     ok("… il manque les 3 réponses", (await texte(page, "#dc-msg")) === "Il manque : Quel est ton objectif principal ?, Qu'est-ce qui t'a bloqué jusqu'ici ?, Dans 3 mois, qu'est-ce qui aurait changé pour toi ?", await texte(page, "#dc-msg"));
     await remplir(page, N); await page.click("#dc-voir"); await attendre(page, 1600);
@@ -474,7 +452,7 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
     await p2.goto(`http://localhost:${PORT}/#/clients`); await attendre(p2, 2400);
     const l = await ligneDe(p2, PROSPECT);
     await p2.click(`[data-ouvrir="${PROSPECT}"]`).catch(() => {}); await attendre(p2, 2200);
-    ok("coach : prospect aux données piégées — pastille « Découverte J3/7 », bloc « Découverte » de la fiche lisible, aucune injection", l.includes("Découverte J3/7") && !!(await p2.$("#fiche-decouverte")) && (await texte(p2, "#fiche-decouverte")).includes("Obstacle principal") && !(await p2.evaluate(() => window.__xss)) && !(await p2.$("#vue img[src='x']")) && db2.ecritures.length === 0, l);
+    ok("coach : prospect aux données piégées — pastille « Découverte · inscrit depuis 2 j » (v52 ; avant : « J3/7 »), bloc « Découverte » de la fiche lisible, aucune injection", l.includes("Découverte · inscrit depuis 2 j") && !!(await p2.$("#fiche-decouverte")) && (await texte(p2, "#fiche-decouverte")).includes("Obstacle principal") && !(await p2.evaluate(() => window.__xss)) && !(await p2.$("#vue img[src='x']")) && db2.ecritures.length === 0, l);
     await c2.close();
   });
 
@@ -484,7 +462,7 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
     const { c, page } = await contexte(b, lea, db, { langue: "en" });
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 2400);
     /* v52 : « Submit my answers » (avant : « See my result ») */
-    ok("anglais : « Discovery · Day 3/7 », « Your questionnaire », « Submit my answers »", (await eyebrow(page)) === "Discovery · Day 3/7" && (await texte(page, "#vue")).includes("Your questionnaire") && (await texte(page, "#dc-voir")) === "Submit my answers", await eyebrow(page));
+    ok("anglais : « Discovery » (v52 : sans « Day n/7 »), « Your questionnaire », « Submit my answers »", (await eyebrow(page)) === "Discovery" && (await texte(page, "#vue")).includes("Your questionnaire") && (await texte(page, "#dc-voir")) === "Submit my answers", await eyebrow(page));
     await page.click("#dc-voir"); await attendre(page, 300);
     ok("anglais : « Missing: … » si rien n'est rempli", (await texte(page, "#dc-msg")).startsWith("Missing: "), await texte(page, "#dc-msg"));
     await c.close();
@@ -514,7 +492,8 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
     await page.click("#dc-voir"); await attendre(page, 400);
     ok("mobile 390 px : message « Il manque » affiché, toujours sans débordement", (await texte(page, "#dc-msg")).startsWith("Il manque") && !(await deborde(page)));
     const barre = await page.$$eval("#barre-bas a", l => l.map(a => a.dataset.id)).catch(() => []);
-    ok("mobile : barre du bas avec Accueil et Profil, sans Challenge", barre.includes("accueil") && barre.includes("profil") && !barre.includes("challenge"), JSON.stringify(barre));
+    /* v52 (lot D) : la barre du bas du prospect est Accueil, Calculateur, Progression, Speed Formation (le Profil passe dans « Plus ») */
+    ok("mobile : barre du bas Accueil, Calculateur, Progression, Speed Formation, sans Challenge", JSON.stringify(barre) === '["accueil","calculateur","mensurations","formation"]' && !barre.includes("challenge"), JSON.stringify(barre));
     await page.screenshot({ path: path.join(OUT, "questionnaire-mobile.png"), fullPage: true });
     await c.close();
   });
@@ -551,10 +530,11 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
     ok("page Prospects (filtre « Tous ») : Léa « TIÈDE » (questionnaire rempli, cliqué aujourd'hui sans réserver), Marc « FROID » (découverte finie sans questionnaire)", eLea.includes("TIÈDE") && !eLea.includes("CHAUD") && eMarc.includes("FROID"), JSON.stringify(eLea) + " | " + JSON.stringify(eMarc));
     await aller(page, "#/clients", 2200);
     const lLea = await ligneDe(page, PROSPECT), lMarc = await ligneDe(page, MARC);
-    ok("Mes clients : Léa « Découverte J3/7 » + « a cliqué Réserver » ; Marc « Découverte terminée »", lLea.includes("Découverte J3/7") && lLea.includes("a cliqué Réserver") && lMarc.includes("Découverte terminée"), lLea + " | " + lMarc);
+    /* v52 (lot D) : « inscrit depuis n j » (avant : « Découverte J3/7 » / « Découverte terminée ») */
+    ok("Mes clients : Léa « Découverte · inscrit depuis 2 j » + « a cliqué Réserver » ; Marc « Découverte · inscrit depuis 10 j »", lLea.includes("Découverte · inscrit depuis 2 j") && lLea.includes("a cliqué Réserver") && lMarc.includes("Découverte · inscrit depuis 10 j") && !/J\d+\/7|terminée/.test(lLea + lMarc), lLea + " | " + lMarc);
     await page.click(`[data-ouvrir="${PROSPECT}"]`).catch(() => {}); await attendre(page, 2200);
     const f = await texte(page, "#fiche-decouverte");
-    ok("fiche de Léa : bloc « Découverte » (jour 3 / 7, questionnaire rempli, objectif, motivation 8 / 10, 1 clic, case pas cochée)", f.includes("jour 3 / 7") && f.includes("rempli le") && f.includes("Perte de poids / sèche") && f.includes("8 / 10") && f.includes("1 clic") && f.includes("pas cochée"), f.slice(0, 300));
+    ok("fiche de Léa : bloc « Découverte » (inscrit depuis 2 j — v52 ; avant : jour 3 / 7 —, questionnaire rempli, objectif, motivation 8 / 10, 1 clic, case pas cochée)", f.includes("inscrit depuis 2 j") && !f.includes("/ 7") && f.includes("rempli le") && f.includes("Perte de poids / sèche") && f.includes("8 / 10") && f.includes("1 clic") && f.includes("pas cochée"), f.slice(0, 300));
     ok("fiche de Léa : lienCalendly() rend l'adresse brute pour le coach, aucune écriture (tableau de bord, page Prospects, Mes clients, fiche)", (await page.evaluate(() => typeof lienCalendly === "function" ? lienCalendly("decouverte") : null)) === CAL && db.ecritures.length === 0);
     await c.close();
   });
@@ -577,10 +557,10 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
     ok("page Prospects (filtre « Tous », même mode test) : Léa « CHAUD » (bilan réservé, et pas « TIÈDE »), Marc « FROID »", eLea.includes("CHAUD") && !eLea.includes("TIÈDE") && eMarc.includes("FROID"), JSON.stringify(eLea) + " | " + JSON.stringify(eMarc));
     await aller(page, "#/clients", 2200);
     const lLea = await ligneDe(page, PROSPECT), lMarc = await ligneDe(page, MARC);
-    ok("Mes clients (même mode test) : Léa « Découverte J3/7 » + « bilan réservé » (et pas « a cliqué Réserver ») ; Marc « Découverte terminée »", lLea.includes("Découverte J3/7") && lLea.includes("bilan réservé") && !lLea.includes("a cliqué Réserver") && lMarc.includes("Découverte terminée"), lLea + " | " + lMarc);
+    ok("Mes clients (même mode test) : Léa « Découverte · inscrit depuis 2 j » + « bilan réservé » (et pas « a cliqué Réserver ») ; Marc « Découverte · inscrit depuis 10 j » (v52)", lLea.includes("Découverte · inscrit depuis 2 j") && lLea.includes("bilan réservé") && !lLea.includes("a cliqué Réserver") && lMarc.includes("Découverte · inscrit depuis 10 j"), lLea + " | " + lMarc);
     await page.click(`[data-ouvrir="${PROSPECT}"]`).catch(() => {}); await attendre(page, 2200);
     const f = await texte(page, "#fiche-decouverte");
-    ok("fiche de Léa (même mode test) : « jour 3 / 7 », case « cochée le … », pastille « bilan réservé » ; aucune écriture (tableau de bord, page Prospects, Mes clients, fiche)", f.includes("jour 3 / 7") && f.includes("cochée le") && f.includes("bilan réservé") && db.ecritures.length === 0, f.slice(0, 300));
+    ok("fiche de Léa (même mode test) : « inscrit depuis 2 j » (v52 ; avant : « jour 3 / 7 »), case « cochée le … », pastille « bilan réservé » ; aucune écriture (tableau de bord, page Prospects, Mes clients, fiche)", f.includes("inscrit depuis 2 j") && f.includes("cochée le") && f.includes("bilan réservé") && db.ecritures.length === 0, f.slice(0, 300));
     await c.close();
   });
 

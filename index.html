@@ -639,6 +639,13 @@ svg.chart{display:block;width:100%;height:260px;overflow:visible}
 .dc-choix{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:1fr;gap:10px;margin-top:18px}
 .dc-choix .btn{width:100%;min-width:0;margin:0;text-align:center;line-height:1.35;white-space:normal;overflow-wrap:anywhere}
 @media (max-width:560px){ .dc-choix{grid-template-columns:1fr} }
+/* v52 : l'action mise en avant de l'accueil du prospect (son calcul, puis sa pesee de depart) */
+.dc-etape{border-color:var(--accent-line)}
+.dc-etape .btn{min-height:44px}
+/* v52 : calculateur du prospect — un bouton cache (hidden) le reste, meme avec la classe .btn */
+#calc-ok[hidden],#objs .obj[hidden]{display:none}
+#dc-accomp .liste-debloque a{color:var(--accent);font-weight:600;text-decoration:none}
+#dc-accomp .liste-debloque a:hover{text-decoration:underline}
 /* .tuile : meme composant que .tile (voir [B]) */
 .repas-c .repas-tete{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
 .repas-c .repas-tete .actions-b{display:flex;gap:8px;flex-wrap:wrap}
@@ -1047,20 +1054,24 @@ const CONFIG = {
        officiels name et email) : il n'a rien a retaper et sa reservation porte l'email de son compte.
        Allume le 26/09/2026 (decision de Lucas) ; la confidentialite mentionne Calendly et le pre-remplissage. */
     calendly_prerempli: true,
-    /* la Speed Formation n'est pas dans la liste : elle est ouverte pendant la
-       decouverte (CONFIG.decouverte.jours) puis verrouillee (estVerrouille) */
-    gratuit_ouverts: ["accueil", "decouverte", "profil"],
+    /* v52 — gratuit pour toujours : le calculateur (sa cle a lui, calc_perso), Ma progression (sans les
+       photos) et la Speed Formation sont ouverts au prospect, sans limite de duree */
+    gratuit_ouverts: ["accueil", "decouverte", "profil", "calculateur", "mensurations", "formation"],
     /* v50 — onglets verrouilles qu'un prospect voit quand meme (cadenas + ce qu'apporte l'accompagnement) :
        la vitrine de l'offre. Les autres onglets verrouilles sont caches de sa navigation (leur adresse
-       montre toujours la page verrouillee). Decouverte : programme, nutrition, suivi (bilan hebdo compris)
-       visibles mais verrouilles, formation apres la decouverte. Pour tout remontrer : ajouter "mensurations",
-       "complements". */
-    gratuit_vitrine: ["programme", "nutrition", "suivi", "formation"]
+       montre toujours la page verrouillee). v52 : programme, nutrition, journal d'entrainement et suivi
+       (bilan hebdo compris) ; la formation n'est plus verrouillee. Pour tout remontrer : ajouter
+       "complements", "bilan". */
+    gratuit_vitrine: ["programme", "nutrition", "journal", "suivi"],
+    /* v52 — la barre du bas (telephone) du prospect, dans cet ordre ; le reste est derriere « Plus » */
+    gratuit_barre: ["accueil", "calculateur", "mensurations", "formation"]
   },
 
   /* --- Découverte (prospects) : les réglages ; les textes sont dans DECOUVERTE --- */
   decouverte: {
-    jours: 7,                      // jours d'accès découverte à partir de l'inscription ; ensuite la Speed Formation se verrouille
+    /* v52 : plus aucune limite de durée pour le prospect (gratuit pour toujours). Ce nombre ne sert plus qu'au suivi
+       commercial du coach (actions proposées après une semaine, chantier 4) */
+    jours: 7,
     /* le questionnaire court : identifiants de QUESTIONS ou de DECOUVERTE.questions (réponses dans la clé intake).
        v52 : 3 questions (problème, obstacle, projection), posées juste après la vérification d'email. L'âge n'y est
        plus demandé : le garde-fou 18 ans passe au calculateur (Chantier 1, lot D). */
@@ -1321,13 +1332,15 @@ const CONFIG = {
    ------------------------------------------------------------------ */
 const DECOUVERTE = {
   nom: "Découverte",
-  jour: "Jour {n}/{t}",
-  jour_fini: "terminée",
+  /* v52 : gratuit pour toujours — plus de « Jour n/7 » ni de fin de découverte côté prospect */
   lede_questionnaire: "3 questions, 1 minute : dis-nous où tu en es.",
-  lede_reste_1: "Dernier jour de ton accès découverte.",
-  lede_reste: "Encore {n} jours d'accès découverte.",
-  lede_fini: "Ta période découverte est terminée.",
+  lede_accueil: "Ton espace gratuit, sans limite de temps : calculateur de calories, suivi de ton poids et Speed Formation.",
   charge_rate: "Tes réponses n'ont pas pu être chargées. Recharge la page.",
+  /* v52 : l'action mise en avant sur l'accueil du prospect, une à la fois (d'abord le calcul, puis la pesée) */
+  etapes: {
+    calories: { titre: "Ta première étape", texte: "Ta maintenance et tes macros, calculées sur ta morphologie et ton activité réelle.", bouton: "Calcule tes calories (2 min)" },
+    pesee: { titre: "Ta prochaine étape", texte: "Note ton poids d'aujourd'hui : c'est ton point de départ, et la base de ta courbe.", bouton: "Enregistre ta pesée de départ" }
+  },
   /* questions du questionnaire court qui ne sont pas dans le questionnaire complet (celui des clients ne change pas).
      v52 : les 3 questions (même ordre en anglais). « probleme » a son propre identifiant (pas « objectif », dont les
      options sont celles du questionnaire complet) ; « obstacle » garde le sien : les anciennes réponses restent lues. */
@@ -1424,9 +1437,8 @@ const DECOUVERTE = {
   },
   formation: {
     titre: "Speed Formation",
-    ouverte: "Les bases de la nutrition et de l'entraînement, à ton rythme. Ouverte pendant ta découverte.",
-    ouvrir: "Ouvrir la Speed Formation",
-    fermee: "Ta période découverte est terminée : la Speed Formation fait partie de l'accompagnement."
+    ouverte: "Les bases de la nutrition et de l'entraînement, à ton rythme.",   // v52 : ouverte pour toujours
+    ouvrir: "Ouvrir la Speed Formation"
   },
   accomp: {
     titre: "Avec l'accompagnement MHX",
@@ -1503,13 +1515,13 @@ const DECOUVERTE = {
 
   en: {
     nom: "Discovery",
-    jour: "Day {n}/{t}",
-    jour_fini: "over",
     lede_questionnaire: "3 questions, 1 minute: tell us where you stand.",
-    lede_reste_1: "Last day of your discovery access.",
-    lede_reste: "{n} more days of discovery access.",
-    lede_fini: "Your discovery period is over.",
+    lede_accueil: "Your free space, with no time limit: calorie calculator, weight tracking and Speed Formation.",
     charge_rate: "Your answers could not be loaded. Reload the page.",
+    etapes: {
+      calories: { titre: "Your first step", texte: "Your maintenance calories and macros, calculated from your body and your real activity.", bouton: "Calculate your calories (2 min)" },
+      pesee: { titre: "Your next step", texte: "Log today's weight: it's your starting point, and the base of your curve.", bouton: "Log your starting weight" }
+    },
     questions: [
       { id: "probleme", label: "What's your main goal?", type: "select", options: ["Lose fat", "Build muscle", "Get back in shape"] },
       { id: "obstacle", label: "What has held you back so far?", type: "long" },
@@ -1600,9 +1612,8 @@ const DECOUVERTE = {
     },
     formation: {
       titre: "Speed Formation",
-      ouverte: "The basics of nutrition and training, at your pace. Open during your discovery.",
-      ouvrir: "Open the Speed Formation",
-      fermee: "Your discovery period is over: the Speed Formation is part of the coaching."
+      ouverte: "The basics of nutrition and training, at your pace.",
+      ouvrir: "Open the Speed Formation"
     },
     accomp: {
       titre: "With MHX coaching",
@@ -2576,6 +2587,33 @@ Object.assign(I18N.en, {
   "Pas encore assez de données. Le bilan se remplit au fil des séances notées, des repas cochés et des mesures.": "Not enough data yet. Your review fills up as you log workouts, check meals and add measurements."
 });
 
+/* v52 — le calculateur (ouvert au prospect : tous ses textes), « Mon journal » (vitrine du prospect) */
+Object.assign(I18N.en, {
+  "Calculateur": "Calculator", "Calculateur métabolique": "Metabolic calculator",
+  "Tes calories de maintenance et tes macros, calculées sur ta morphologie et ton niveau d'activité réel. Tout se met à jour en direct.": "Your maintenance calories and macros, calculated from your body and your real activity level. Everything updates live.",
+  "Tes données": "Your details", "Sexe": "Sex", "Âge (ans)": "Age (years)", "Taille (cm)": "Height (cm)",
+  "Pas par jour": "Steps per day", "Entraînement (h / semaine)": "Training (h / week)",
+  "Ta maintenance": "Your maintenance", "kcal / jour": "Cal / day",
+  "C'est ce que ton corps dépense sur une journée type. Manger ça, c'est rester au même poids.": "This is what your body burns on a typical day. Eating this much keeps your weight stable.",
+  "Choisis ton objectif": "Choose your goal", "Perte de poids −10%": "Weight loss −10%", "Maintien": "Maintenance", "Prise de masse +10%": "Muscle gain +10%",
+  "Tes macros": "Your macros", "perte de poids": "weight loss", "maintien": "maintenance", "prise de masse": "muscle gain",
+  "Grammes par jour. Protéines fixées à {p} g par kg de poids de corps, lipides à {l} g par kg, les glucides complètent le total de calories de ton objectif.": "Grams per day. Protein set at {p} g per kg of body weight, fat at {l} g per kg, carbs make up the rest of your target calories.",
+  "Comment ces chiffres sont calculés": "How these numbers are calculated",
+  "1. Métabolisme de base": "1. Basal metabolic rate", "— formule de Mifflin-St Jeor, la référence actuelle :": "— Mifflin-St Jeor formula, the current reference:",
+  "2. Facteur d'activité": "2. Activity factor", "— on part d'une base sédentaire de {b}, puis on ajoute ton activité réelle :": "— we start from a sedentary base of {b}, then add your real activity:",
+  "= métabolisme de base × facteur d'activité =": "= basal metabolic rate × activity factor =",
+  "Ces formules donnent une estimation solide, pas une vérité absolue. La vraie mesure, c'est la balance : garde le même apport pendant 2 semaines, et si ton poids ne bouge pas dans le sens voulu, ajuste de 150 à 200 kcal.": "These formulas give a solid estimate, not an absolute truth. The real measure is the scale: keep the same intake for 2 weeks, and if your weight doesn't move the way you want, adjust by 150 to 200 Cal.",
+  "À ce niveau de calories, il ne reste presque plus de place pour les glucides. Baisse les protéines à 2 g/kg ou revois ton objectif à la hausse — s'entraîner dur sans glucides ne tient pas dans la durée.": "At this calorie level, there's almost no room left for carbs. Lower protein to 2 g/kg or raise your target — training hard without carbs doesn't last.",
+  "(pas)": "(steps)", "(entraînement)": "(training)",
+  "Le calculateur est réservé aux adultes ({n} ans et plus) : rien n'est enregistré.": "The calculator is for adults only ({n} and over): nothing is saved.",
+  "Ce que tu avais enregistré ici a été retiré.": "What you had saved here has been removed.",
+  "Enregistrer mes chiffres": "Save my numbers", "Tes chiffres sont enregistrés.": "Your numbers are saved.",
+  "Ces chiffres sont une estimation générale, pas un avis médical. Si tu as un doute sur ta santé, parles-en à un professionnel.": "These numbers are a general estimate, not medical advice. If you have any doubt about your health, talk to a professional.",
+  "Mon journal": "My training log", "Ton journal d'entraînement": "Your training log",
+  "Tes séances notées, tes charges et tes progrès, séance après séance.": "Your logged workouts, your weights and your progress, session after session.",
+  "Ton journal d'entraînement : chaque séance notée, tes charges et tes progrès, semaine après semaine.": "Your training log: every workout logged, your weights and your progress, week after week."
+});
+
 
 /* Les dates sont stockees au format ISO (2026-08-29) parce que c'est le seul
    qui se trie correctement. On les affiche a la francaise. */
@@ -2618,6 +2656,7 @@ const ICONES = {
   catalogue:    '<svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>',
   calculateur:  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c1 4 5 5.5 5 10a5 5 0 0 1-10 0c0-2 1-3.2 2-4.2 0 2 1 3.2 2.2 3.2C10.5 9 11 6 12 3z"/></svg>',
   entrainement: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>',
+  journal:      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h11a2 2 0 0 1 2 2v16H7a2 2 0 0 1-2-2V4a1 1 0 0 1 1-1z"/><path d="M5 17a2 2 0 0 1 2-2h12"/><path d="M9 7h6M9 10.5h4"/></svg>',
   prospects:    '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>',
   plus:         '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>'
 };
@@ -3284,6 +3323,15 @@ const Store = {
   },
   /* l'onglet se cache ou se ferme (vite : keepalive, sans renouvellement) ou la personne se deconnecte
      (vite === false : avec le jeton, on attend les reponses) : ce qui attendait ses 700 ms part tout de suite */
+  /* v52 : annule l'ecriture en attente (700 ms) d'une cle et retire sa copie de l'appareil : elle ne partira pas
+     (garde-fou 18 ans du calculateur : rien de ce qu'une personne mineure a saisi ne doit rester) */
+  annuler(cle){
+    const uid = this.cible(); if (!uid) return;
+    const k = uid + "|" + cle;
+    if (this.attente[k]) clearTimeout(this.attente[k]);
+    delete this.attente[k]; delete this.valeursEnAttente[k]; delete this.tEnAttente[k];
+    try { Auth.magasin().removeItem(this.PREFIXE_ATTENTE + uid + "|" + cle); } catch(e){}
+  },
   /* v51 : envoie tout de suite la valeur en attente d'une cle (sans attendre les 700 ms) et attend la reponse */
   envoyerCle(cle){
     const uid = this.cible(); if (!uid) return Promise.resolve();
@@ -3390,8 +3438,9 @@ const Store = {
     Object.keys(this.charge).forEach(x => { if (x.indexOf(k + "|") === 0) delete this.charge[x]; });
   },
 
-  /* cles ecrites par la personne sans outil a elles (v51 : activite du prospect, choix des emails de suivi) */
-  clesSansOutil: ["activite", "emails"],
+  /* cles ecrites par la personne sans outil a elles (v51 : activite du prospect, choix des emails de suivi ;
+     v52 : calc_perso, le calcul du prospect lui-meme — le calculateur garde « calc », la cle du coach) */
+  clesSansOutil: ["activite", "emails", "calc_perso"],
   /* Sauvegarde manuelle : toujours disponible, en plus de la base */
   exporter(){
     const out = {};
@@ -3442,6 +3491,8 @@ const Store = {
          la mesure d'activite (elles restent dans l'export, droit d'acces) */
       if (cle === "emails" || cle === "activite") continue;
       if (!d[cle] || typeof d[cle] !== "object") continue;
+      /* v52 : garde-fou 18 ans du calculateur — un calcul fait avec un age sous le minimum n'est jamais restaure */
+      if (cle === "calc_perso" && outilCalculateur.mineur(d[cle])) continue;
       this.cache[cle] = d[cle]; await this.envoyer(cle, d[cle]); n++;
     }
     if (!n) throw new Error("vide");
@@ -4061,59 +4112,74 @@ const outilCalculateur = {
   id: "calculateur",
   cle: "calc",
   masque_client: true,     // c'est le coach qui regle les calories, pas le client
+  /* v52 : ouvert au prospect (gratuit pour toujours), qui travaille sur une cle A LUI (calc_perso, meme forme que calc) :
+     il ne lit ni n'ecrit jamais calc. Le coach (son compte et la fiche d'un client) lit et ecrit calc exactement comme
+     avant. Le client, lui, ne le voit toujours pas (v53). */
+  ouvert_prospect: true,
+  cle_perso: "calc_perso",
   nom: "Calculateur",
   icone: "🔥",
   titre: "Calculateur métabolique",
   accroche: "Tes calories de maintenance et tes macros, calculées sur ta morphologie et ton niveau d'activité réel. Tout se met à jour en direct.",
 
+  /* v52 : le calcul de la personne elle-meme (tout compte qui n'est pas le coach), sur calc_perso, avec les garde-fous
+     (18 ans, IMC) et la mention « pas un avis medical » ; le coach garde son calculateur tel quel, sur calc */
+  perso(){ return !Auth.estCoach(); },
+
   html(){
+    const perso = this.perso(), c = CONFIG.calcul;
+    const loc = v => perso ? Number(v).toLocaleString(locale()) : String(v).replace(".", ",");
     return `
     <section class="panel">
-      <h2>Tes données</h2>
+      <h2>${esc(trad("Tes données"))}</h2>
       <div class="grid g2">
         <div>
-          <label for="sexe">Sexe</label>
-          <div class="seg" id="sexe" role="group" aria-label="Sexe">
-            <button type="button" data-v="H">Homme</button>
-            <button type="button" data-v="F">Femme</button>
+          <label for="sexe">${esc(trad("Sexe"))}</label>
+          <div class="seg" id="sexe" role="group" aria-label="${esc(trad("Sexe"))}">
+            <button type="button" data-v="H">${esc(trad("Homme"))}</button>
+            <button type="button" data-v="F">${esc(trad("Femme"))}</button>
           </div>
         </div>
-        <div><label for="age">Âge (ans)</label><input id="age" type="number" min="14" max="90" step="1"></div>
-        <div><label for="taille">Taille (cm)</label><input id="taille" type="number" min="130" max="220" step="1"></div>
-        <div><label for="poids">Poids (kg)</label><input id="poids" type="number" min="35" max="250" step="0.1"></div>
-        <div><label for="pas">Pas par jour</label><input id="pas" type="number" min="0" max="30000" step="500"></div>
-        <div><label for="heures">Entraînement (h / semaine)</label><input id="heures" type="number" min="0" max="25" step="0.5"></div>
+        <div><label for="age">${esc(trad("Âge (ans)"))}</label><input id="age" type="number" min="${perso ? this.bornes().age[0] : 14}" max="90" step="1"${perso ? ' inputmode="numeric"' : ""}></div>
+        <div><label for="taille">${esc(trad("Taille (cm)"))}</label><input id="taille" type="number" min="130" max="220" step="1"${perso ? ' inputmode="numeric"' : ""}></div>
+        <div><label for="poids">${esc(trad("Poids (kg)"))}</label><input id="poids" type="number" min="35" max="250" step="0.1"${perso ? ' inputmode="decimal"' : ""}></div>
+        <div><label for="pas">${esc(trad("Pas par jour"))}</label><input id="pas" type="number" min="0" max="30000" step="500"${perso ? ' inputmode="numeric"' : ""}></div>
+        <div><label for="heures">${esc(trad("Entraînement (h / semaine)"))}</label><input id="heures" type="number" min="0" max="25" step="0.5"${perso ? ' inputmode="decimal"' : ""}></div>
       </div>
+      ${perso ? `<p class="flag" id="calc-etat" role="status" aria-live="polite" hidden></p>
+      <div class="actions"><button class="btn" type="button" id="calc-ok" hidden>${esc(trad("Enregistrer mes chiffres"))}</button><span class="msg" id="calc-msg" role="status" aria-live="polite"></span></div>` : ""}
     </section>
 
     <section class="panel">
-      <h2>Ta maintenance</h2>
-      <div class="hero"><span class="readout hero-num" id="tdee">—</span><span class="unit">kcal / jour</span></div>
-      <p class="note" style="margin:10px 0 20px">C'est ce que ton corps dépense sur une journée type. Manger ça, c'est rester au même poids.</p>
-      <h3>Choisis ton objectif</h3>
+      <h2>${esc(trad("Ta maintenance"))}</h2>
+      <div class="hero"><span class="readout hero-num" id="tdee">—</span><span class="unit">${esc(trad("kcal / jour"))}</span></div>
+      <p class="note" style="margin:10px 0 20px">${esc(trad("C'est ce que ton corps dépense sur une journée type. Manger ça, c'est rester au même poids."))}</p>
+      <h3>${esc(trad("Choisis ton objectif"))}</h3>
       <div class="obj-grid" id="objs">
-        <button class="obj" type="button" data-k="perte"><span class="lbl">Perte de poids −10%</span><span class="val readout" id="v-perte">—</span></button>
-        <button class="obj" type="button" data-k="maintien"><span class="lbl">Maintien</span><span class="val readout" id="v-maintien">—</span></button>
-        <button class="obj" type="button" data-k="prise"><span class="lbl">Prise de masse +10%</span><span class="val readout" id="v-prise">—</span></button>
+        <button class="obj" type="button" data-k="perte"><span class="lbl">${esc(trad("Perte de poids −10%"))}</span><span class="val readout" id="v-perte">—</span></button>
+        <button class="obj" type="button" data-k="maintien"><span class="lbl">${esc(trad("Maintien"))}</span><span class="val readout" id="v-maintien">—</span></button>
+        <button class="obj" type="button" data-k="prise"><span class="lbl">${esc(trad("Prise de masse +10%"))}</span><span class="val readout" id="v-prise">—</span></button>
       </div>
+      ${perso ? `<p class="flag" id="calc-imc" hidden></p>` : ""}
     </section>
 
     <section class="panel">
-      <h2>Tes macros — <span id="obj-name">maintien</span></h2>
+      <h2>${esc(trad("Tes macros"))} — <span id="obj-name">${esc(trad("maintien"))}</span></h2>
       <div class="grid g3">
-        <div class="macro"><div class="m-top"><span class="m-name">Protéines</span><span class="m-g readout" id="g-prot">—</span></div><div class="bar"><i id="b-prot" style="background:var(--s1)"></i></div><span class="m-sub" id="s-prot"></span></div>
-        <div class="macro"><div class="m-top"><span class="m-name">Lipides</span><span class="m-g readout" id="g-lip">—</span></div><div class="bar"><i id="b-lip" style="background:var(--s2)"></i></div><span class="m-sub" id="s-lip"></span></div>
-        <div class="macro"><div class="m-top"><span class="m-name">Glucides</span><span class="m-g readout" id="g-gluc">—</span></div><div class="bar"><i id="b-gluc" style="background:var(--s3)"></i></div><span class="m-sub" id="s-gluc"></span></div>
+        <div class="macro"><div class="m-top"><span class="m-name">${esc(trad("Protéines"))}</span><span class="m-g readout" id="g-prot">—</span></div><div class="bar"><i id="b-prot" style="background:var(--s1)"></i></div><span class="m-sub" id="s-prot"></span></div>
+        <div class="macro"><div class="m-top"><span class="m-name">${esc(trad("Lipides"))}</span><span class="m-g readout" id="g-lip">—</span></div><div class="bar"><i id="b-lip" style="background:var(--s2)"></i></div><span class="m-sub" id="s-lip"></span></div>
+        <div class="macro"><div class="m-top"><span class="m-name">${esc(trad("Glucides"))}</span><span class="m-g readout" id="g-gluc">—</span></div><div class="bar"><i id="b-gluc" style="background:var(--s3)"></i></div><span class="m-sub" id="s-gluc"></span></div>
       </div>
-      <p class="note" style="margin-top:14px">Grammes par jour. Protéines fixées à ${CONFIG.calcul.proteines_g_par_kg} g par kg de poids de corps, lipides à ${CONFIG.calcul.lipides_g_par_kg} g par kg, les glucides complètent le total de calories de ton objectif.</p>
+      <p class="note" style="margin-top:14px">${esc(trad("Grammes par jour. Protéines fixées à {p} g par kg de poids de corps, lipides à {l} g par kg, les glucides complètent le total de calories de ton objectif.", { p: perso ? loc(c.proteines_g_par_kg) : c.proteines_g_par_kg, l: perso ? loc(c.lipides_g_par_kg) : c.lipides_g_par_kg }))}</p>
       <div id="flag" class="flag" hidden></div>
       <details>
-        <summary>Comment ces chiffres sont calculés</summary>
-        <p class="note" style="margin-top:12px"><strong>1. Métabolisme de base</strong> — formule de Mifflin-St Jeor, la référence actuelle :<br><span class="readout" id="f-bmr"></span></p>
-        <p class="note"><strong>2. Facteur d'activité</strong> — on part d'une base sédentaire de ${String(CONFIG.calcul.facteur_base).replace(".",",")}, puis on ajoute ton activité réelle :<br><span class="readout" id="f-fact"></span></p>
-        <p class="note"><strong>3. Maintenance</strong> = métabolisme de base × facteur d'activité = <span class="readout" id="f-tdee"></span></p>
-        <p class="note">Ces formules donnent une estimation solide, pas une vérité absolue. La vraie mesure, c'est la balance : garde le même apport pendant 2 semaines, et si ton poids ne bouge pas dans le sens voulu, ajuste de 150 à 200 kcal.</p>
+        <summary>${esc(trad("Comment ces chiffres sont calculés"))}</summary>
+        <p class="note" style="margin-top:12px"><strong>${esc(trad("1. Métabolisme de base"))}</strong> ${esc(trad("— formule de Mifflin-St Jeor, la référence actuelle :"))}<br><span class="readout" id="f-bmr"></span></p>
+        <p class="note"><strong>${esc(trad("2. Facteur d'activité"))}</strong> ${esc(trad("— on part d'une base sédentaire de {b}, puis on ajoute ton activité réelle :", { b: loc(c.facteur_base) }))}<br><span class="readout" id="f-fact"></span></p>
+        <p class="note"><strong>${esc(trad("3. Maintenance"))}</strong> ${esc(trad("= métabolisme de base × facteur d'activité ="))} <span class="readout" id="f-tdee"></span></p>
+        <p class="note">${esc(trad("Ces formules donnent une estimation solide, pas une vérité absolue. La vraie mesure, c'est la balance : garde le même apport pendant 2 semaines, et si ton poids ne bouge pas dans le sens voulu, ajuste de 150 à 200 kcal."))}</p>
       </details>
+      ${perso ? `<p class="note" id="calc-avis" style="margin:14px 0 0">${esc(trad("Ces chiffres sont une estimation générale, pas un avis médical. Si tu as un doute sur ta santé, parles-en à un professionnel."))}</p>` : ""}
     </section>`;
   },
 
@@ -4153,7 +4219,177 @@ const outilCalculateur = {
     return { prot, lip, gluc: Math.max(gluc, 0), glucBrut: gluc };
   },
 
+  /* ---------- v52 : le calcul de la personne elle-meme (prospect) : cle calc_perso ----------
+     bornes de saisie : celles du questionnaire court (CONFIG.decouverte.bornes : l'age minimum, 18, se change la) */
+  bornes(){
+    const B = (CONFIG.decouverte && CONFIG.decouverte.bornes) || {};
+    const b = (x, d) => Array.isArray(x) && x.length === 2 && isFinite(x[0]) && isFinite(x[1]) ? x : d;
+    return { age: b(B.age, [18, 90]), taille: b(B.taille, [120, 230]), poids: b(B.poids, [35, 250]), pas: [0, 30000], heures: [0, 25] };
+  },
+  CHAMPS: ["sexe", "age", "taille", "poids", "pas", "heures", "objectif"],
+  LIBELLES: { sexe: "Sexe", age: "Âge (ans)", taille: "Taille (cm)", poids: "Poids (kg)", pas: "Pas par jour", heures: "Entraînement (h / semaine)" },
+  /* un nombre lisible, sinon null (jamais NaN, jamais une chaine) */
+  nombre(v){ const n = typeof v === "number" ? v : (typeof v === "string" && v.trim() !== "" ? Number(v.replace(",", ".")) : NaN); return isFinite(n) ? n : null; },
+  /* un calcul enregistre d'aplomb (sert aussi a l'accueil du prospect : « son calcul est enregistre ») */
+  valide(D){
+    if (!D || typeof D !== "object" || Array.isArray(D)) return false;
+    const B = this.bornes(), dans = (k) => { const n = this.nombre(D[k]); return n != null && n >= B[k][0] && n <= B[k][1]; };
+    return (D.sexe === "H" || D.sexe === "F") && ["age", "taille", "poids", "pas", "heures"].every(dans) && ["perte", "maintien", "prise"].indexOf(D.objectif) > -1;
+  },
+  /* un age saisi sous le minimum (garde-fou 18 ans) */
+  mineur(D){ const a = D && typeof D === "object" ? this.nombre(D.age) : null; return a != null && a > 0 && a < this.bornes().age[0]; },
+  /* IMC sous 18,5 : aucun objectif de perte n'est propose (garde-fou sante repris de outilDecouverte.chiffres) */
+  imcBas(D){ const p = this.nombre(D && D.poids), t = this.nombre(D && D.taille); return p > 0 && t > 0 && p / Math.pow(t / 100, 2) < 18.5; },
+  /* valeur de depart : le calc du coach s'il en a prepare un, sinon le questionnaire. Contrairement au coach, rien n'est
+     invente : sexe, age, taille, poids et heures d'entrainement restent vides tant qu'ils ne sont pas connus (c'est la
+     personne qui les donne, l'age compris : c'est lui que juge le garde-fou) ; pas par jour : ceux de la Decouverte. */
+  departPerso(intake, calcCoach){
+    intake = intake && typeof intake === "object" ? intake : {};
+    const d = this.departDepuis(intake);
+    if (!(num(intake.age) > 0)) d.age = null;
+    if (!(num(intake.taille) > 0)) d.taille = null;
+    if (!(num(intake.poids) > 0)) d.poids = null;
+    if (!intake.sexe) d.sexe = null;
+    if (!(num(intake.seances) > 0)) d.heures = null;
+    if (!(num(intake.pas) > 0)) d.pas = (CONFIG.decouverte && CONFIG.decouverte.pas_defaut) || d.pas;
+    if (calcCoach && typeof calcCoach === "object" && !Array.isArray(calcCoach)) this.CHAMPS.forEach(k => { if (calcCoach[k] != null && calcCoach[k] !== "") d[k] = calcCoach[k]; });
+    return d;
+  },
+
+  /* Le prospect : lit et ecrit calc_perso, jamais calc. Rien n'est enregistre avant une vraie saisie, ni tant que ses
+     donnees ne sont pas completes et dans les bornes. Garde-fou 18 ans : un age sous le minimum (juge a la sortie du
+     champ, ou des qu'il a deux chiffres) affiche un message, n'enregistre rien, annule l'ecriture en attente, et retire
+     ce que ce formulaire avait deja enregistre (calc_perso vide). Un calc_perso enregistre avec un age mineur (ecrit hors
+     de l'application) est retire de la meme facon a l'ouverture. */
+  async initPerso(){
+    const c = CONFIG.calcul, self = this, cle = this.cle_perso, B = this.bornes();
+    const intake = Store.cache["intake"] || await Store.lire("intake", {});
+    /* lecture seule du calc du coach (valeur de depart) et du calc_perso tel qu'il est en base (savoir s'il y a quelque
+       chose a retirer) : ni le cache, ni les drapeaux de lecture ne bougent */
+    const brut = await Store.lireTout(["calc", cle]);
+    const D = await Store.lire(cle, this.departPerso(intake, brut.calc));
+    if (!$("tdee")) return;   // page quittee pendant la lecture
+    const R = brut[cle];
+    /* aRetirer : ce formulaire a peut-etre quelque chose en base (lu a l'ouverture, ou saisie programmee depuis) */
+    let aRetirer = !!(R && typeof R === "object" && this.CHAMPS.some(k => k in R));
+    let touche = false, retire = false, ageJuge = true;
+    /* la forme comparable d'un calcul (le dernier enregistre, celui a l'ecran) : le bouton « Enregistrer mes chiffres »
+       ne se montre que si l'ecran differe de ce qui est enregistre */
+    const forme = X => JSON.stringify(self.CHAMPS.map(k => (k === "sexe" || k === "objectif") ? (X && X[k]) || null : self.nombre(X && X[k])));
+    let dernier = R && this.valide(R) && !this.mineur(R) ? forme(R) : "";
+    /* champs remis d'aplomb (une valeur ecrite hors de l'application ne fait rien tomber) */
+    ["age", "taille", "poids", "pas", "heures"].forEach(k => { D[k] = self.nombre(D[k]); });
+    if (D.sexe !== "H" && D.sexe !== "F") D.sexe = null;
+    if (["perte", "maintien", "prise"].indexOf(D.objectif) === -1) D.objectif = "maintien";
+
+    /* garde-fou 18 ans : la saisie en attente ne part pas, et ce qui a pu partir est remplace par un calcul vide (une
+       seule fois : l'ecriture du vide, en attente, n'est jamais annulee par un nouvel appel) */
+    const retirer = () => {
+      if (retire) return;
+      Store.annuler(cle);
+      if (aRetirer && Store.ecrire(cle, {}) !== false){ aRetirer = false; retire = true; dernier = ""; }
+    };
+    const sauver = (force) => {
+      if (!(touche || force) || !self.valide(D) || self.mineur(D)) return;
+      const v = {}; self.CHAMPS.forEach(k => { v[k] = D[k]; });
+      if (Store.ecrire(cle, v) !== false){ aRetirer = true; retire = false; dernier = forme(v); flash("calc-msg", trad("Tes chiffres sont enregistrés.")); }
+    };
+    const vider = () => {
+      ["tdee", "v-perte", "v-maintien", "v-prise", "g-prot", "g-lip", "g-gluc"].forEach(id => { $(id).textContent = "—"; });
+      ["s-prot", "s-lip", "s-gluc", "f-bmr", "f-fact", "f-tdee"].forEach(id => { $(id).textContent = ""; });
+      ["b-prot", "b-lip", "b-gluc"].forEach(id => { $(id).style.width = "0%"; });
+      $("flag").hidden = true;
+      $("calc-ok").hidden = true;
+    };
+    const dire = (t) => { const e = $("calc-etat"); if (!e) return; e.hidden = !t; e.textContent = t || ""; };
+    const lib = k => trad(self.LIBELLES[k]);
+
+    const rendre = () => {
+      if (!$("tdee")) return;
+      /* garde-fou IMC : sous 18,5, pas d'objectif de perte (maintien) et la phrase de prudence */
+      const imcBas = self.imcBas(D);
+      const bp = $("objs").querySelector('[data-k="perte"]');
+      if (bp){ bp.hidden = imcBas; bp.disabled = imcBas; }
+      if (imcBas && D.objectif === "perte") D.objectif = "maintien";
+      const fi = $("calc-imc"); if (fi){ fi.hidden = !imcBas; fi.textContent = imcBas ? trad(DECOUVERTE.resultat.imc_bas) : ""; }
+      $$("#objs button").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.k === D.objectif)));
+      $("obj-name").textContent = trad({ perte:"perte de poids", maintien:"maintien", prise:"prise de masse" }[D.objectif]);
+
+      /* garde-fou 18 ans */
+      if (ageJuge && self.mineur(D)){
+        retirer(); vider();
+        dire(trad("Le calculateur est réservé aux adultes ({n} ans et plus) : rien n'est enregistré.", { n: B.age[0] }) + (retire ? " " + trad("Ce que tu avais enregistré ici a été retiré.") : ""));
+        return;
+      }
+      const manque = ["sexe", "age", "taille", "poids", "pas", "heures"].filter(k => k === "sexe" ? !D.sexe : D[k] == null || (k === "age" && self.mineur(D)));
+      if (manque.length){ vider(); dire(trad(DECOUVERTE.questionnaire.manque, { l: manque.map(lib).join(", ") })); return; }
+      const hors = ["age", "taille", "poids", "pas", "heures"].filter(k => D[k] < B[k][0] || D[k] > B[k][1]);
+      if (hors.length){ vider(); dire(trad(DECOUVERTE.questionnaire.verifie, { l: hors.map(k => lib(k) + " (" + trad("{a} à {b}", { a: fmt(B[k][0]), b: fmt(B[k][1]) }) + ")").join(", ") })); return; }
+      dire("");
+
+      const Bm = self.metabolismeDeBase(D);
+      const F = self.facteurActivite(D);
+      const T = Bm * F.total;
+      const cibles = { perte: T*(1-c.deficit_perte), maintien: T, prise: T*(1+c.surplus_prise) };
+      $("tdee").textContent = fmt(T);
+      $("v-perte").textContent = imcBas ? "—" : fmt(cibles.perte);
+      $("v-maintien").textContent = fmt(cibles.maintien);
+      $("v-prise").textContent = fmt(cibles.prise);
+      const m = self.macros(cibles[D.objectif], D.poids);
+      const flag = $("flag");
+      if (m.glucBrut < c.seuil_alerte_glucides){
+        flag.hidden = false;
+        flag.textContent = trad("À ce niveau de calories, il ne reste presque plus de place pour les glucides. Baisse les protéines à 2 g/kg ou revois ton objectif à la hausse — s'entraîner dur sans glucides ne tient pas dans la durée.");
+      } else flag.hidden = true;
+      const kp = m.prot*4, kl = m.lip*9, kg = m.gluc*4, tot = kp+kl+kg || 1, kc = trad("kcal");
+      $("g-prot").textContent = fmt(m.prot);  $("g-lip").textContent = fmt(m.lip);  $("g-gluc").textContent = fmt(m.gluc);
+      $("s-prot").textContent = `${fmt(kp)} ${kc} · ${Math.round(kp/tot*100)}%`;
+      $("s-lip").textContent  = `${fmt(kl)} ${kc} · ${Math.round(kl/tot*100)}%`;
+      $("s-gluc").textContent = `${fmt(kg)} ${kc} · ${Math.round(kg/tot*100)}%`;
+      $("b-prot").style.width = (kp/tot*100)+"%";
+      $("b-lip").style.width  = (kl/tot*100)+"%";
+      $("b-gluc").style.width = (kg/tot*100)+"%";
+      const d2 = v => v.toLocaleString(locale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }), d1 = v => Number(v).toLocaleString(locale());
+      const signe = D.sexe === "H" ? "+ 5" : "− 161";
+      $("f-bmr").textContent  = `(10 × ${d1(D.poids)}) + (${d1(6.25)} × ${d1(D.taille)}) − (5 × ${d1(D.age)}) ${signe} = ${fmt(Bm)} ${kc}`;
+      $("f-fact").textContent = `${d1(c.facteur_base)} + ${d2(F.parPas)} ${trad("(pas)")} + ${d2(F.parHeures)} ${trad("(entraînement)")} = ${d2(F.total)}`;
+      $("f-tdee").textContent = `${fmt(Bm)} × ${d2(F.total)} = ${fmt(T)} ${trad("kcal / jour")}`;
+      sauver();
+      $("calc-ok").hidden = forme(D) === dernier;
+    };
+
+    ["age","taille","poids","pas","heures"].forEach(k => {
+      const e = $(k); e.value = D[k] == null ? "" : D[k];
+      e.addEventListener("input", () => {
+        D[k] = self.nombre(e.value); touche = true;
+        /* l'age est juge a la sortie du champ, ou des qu'il a deux chiffres (« 35 » passe par « 3 ») */
+        if (k === "age") ageJuge = String(e.value).replace(/\D/g, "").length >= 2;
+        rendre();
+      });
+      if (k === "age") e.addEventListener("change", () => { ageJuge = true; rendre(); });
+    });
+    $$("#sexe button").forEach(b => {
+      b.setAttribute("aria-pressed", String(b.dataset.v === D.sexe));
+      b.addEventListener("click", () => {
+        D.sexe = b.dataset.v; touche = true;
+        $$("#sexe button").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.v === D.sexe)));
+        rendre();
+      });
+    });
+    $$("#objs button").forEach(b => {
+      b.addEventListener("click", () => {
+        if (b.disabled) return;
+        D.objectif = b.dataset.k; touche = true;
+        rendre();
+      });
+    });
+    /* des chiffres deja connus (questionnaire, calcul du coach) : rien ne part avant qu'il les confirme */
+    $("calc-ok").addEventListener("click", () => { touche = true; rendre(); });
+    rendre();
+  },
+
   async init(){
+    if (this.perso()) return this.initPerso();   // v52 : le prospect, sur calc_perso (le coach : plus bas, inchange)
     const c = CONFIG.calcul;
     /* Le calculateur partait sur 80 kg / 25 ans / 178 cm et enregistrait ces
        valeurs des l'ouverture. La diete d'un client de 72 kg etait alors
@@ -4466,6 +4702,9 @@ const outilMensurations = {
      reglages (point de depart, noms des zones) passent en bas. Tous les
      identifiants sont ceux d'avant : la logique n'a pas bouge. */
   html(){
+    /* v52 : Ma progression est ouverte au prospect, sans les photos (le depot est reserve aux comptes client en base) ;
+       sans leur panneau, Photos.monter ne lit rien */
+    const photos = Auth.estProspect() && !Store.idConsulte ? "" : Photos.html();
     return `
     <section class="panel">
       <div class="seance-c-tete"><h2>${esc(trad("Poids"))}</h2>
@@ -4515,7 +4754,7 @@ const outilMensurations = {
       <p class="note" style="margin-top:10px">Mesures de balance à impédancemètre : fie-toi à la tendance, pas au chiffre d'un jour.</p>
     </section>
 
-    ${Photos.html()}
+    ${photos}
 
     <section class="panel">
       <h2>Toutes tes mesures</h2>
@@ -8662,7 +8901,8 @@ const Commercial = {
   },
   sousTitre(p, a){
     const i = this.depuis(p && p.cree_le);
-    return (a.jour == null ? "Découverte" : a.finie ? "Découverte terminée" : "Découverte J" + a.jour + "/" + a.duree) + (a.questionnaire ? " · questionnaire rempli" : " · questionnaire à remplir") + " · inscrit " + (a.inscritHeures != null && a.inscritHeures < 24 ? (a.inscritHeures < 1 ? "il y a moins d'une heure" : "il y a " + Math.floor(a.inscritHeures) + " h") : this.quand(i)) + (a.relances ? " · " + a.relances + " relance" + (a.relances > 1 ? "s" : "") : "");
+    /* v52 : plus de « J n/7 » ni de « terminée » (la suite dit deja depuis quand il est inscrit) */
+    return "Découverte" + (a.questionnaire ? " · questionnaire rempli" : " · questionnaire à remplir") + " · inscrit " + (a.inscritHeures != null && a.inscritHeures < 24 ? (a.inscritHeures < 1 ? "il y a moins d'une heure" : "il y a " + Math.floor(a.inscritHeures) + " h") : this.quand(i)) + (a.relances ? " · " + a.relances + " relance" + (a.relances > 1 ? "s" : "") : "");
   },
   carteHTML(p, a, x){
     const nom = Clients.nom(p);
@@ -9070,7 +9310,7 @@ const outilProspects = {
     const lignes = liste.map(({ l, a, sc }) => {
       const dc = l.dc || {}; let r = null; try { r = Decouverte.resume(l.p, l.ch, dc); } catch(e){ r = null; }
       const motiv = (typeof dc.motivation === "string" || typeof dc.motivation === "number") ? String(dc.motivation).slice(0, 3) : "";
-      return [Clients.nom(l.p), dc.email || "", dt(l.p.cree_le), a.jour == null ? "" : a.finie ? "terminée" : "jour " + a.jour + "/" + a.duree, dc.objectif || "",
+      return [Clients.nom(l.p), dc.email || "", dt(l.p.cree_le), a.jour == null ? "" : Decouverte.depuisTexte(a.jour), dc.objectif || "",
               Commercial.ETATS[a.etat] || String(a.etat), sc ? sc.total : "", a.questionnaire ? "rempli le " + dt(dc.court_le) : (sc ? sc.repondues + "/" + sc.questions + " réponses" : ""),
               motiv, r ? r.clics : 0, r ? dt(r.dernierClic) : "", r ? dt(r.reserve) : "", a.relances, dt(l.activite), a.action];
     });
@@ -9109,7 +9349,7 @@ const outilTableau = {
     catch(e){ zone.innerHTML = `<section class="panel"><div class="empty">Impossible de charger tes clients pour le moment.</div></section>`; return; }
     const lignes = Clients.resumer(profils, parClient, contenus);
     const prospects = profils.filter(p => p.role !== "coach" && p.statut === "prospect");
-    /* prospects encore dans leurs jours de decouverte (depuis l'inscription) */
+    /* prospects encore dans leurs jours de decouverte (depuis l'inscription) — v52 : tuile gardee telle quelle (v53) */
     const enDecouverte = lignes.filter(l => l.p.statut === "prospect" && !Decouverte.finie(l.p, true)).length;
     /* v49 : les prospects a traiter (temperature, prochaine action) */
     const aTraiterPr = lignes.filter(l => l.p.statut === "prospect").map(l => ({ l, a: Commercial.analyseLigne(l) })).filter(x => x.a).sort((x, y) => x.a.rang - y.a.rang || x.a.recence - y.a.recence);
@@ -10388,7 +10628,8 @@ const outilAccueil = {
     /* tout ce qui vient du prospect passe par s() (chaine ou nombre, sinon rien) ou dt() (date en chaine, sinon —) */
     const s = v => (typeof v === "string" || typeof v === "number") ? String(v).slice(0, 400) : "";
     const dt = v => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v)) ? dateFr(Decouverte.dateLocale(v) || v.slice(0, 10)) : "—";
-    const jourTxt = r.jour == null ? "date d'inscription inconnue" : r.finie ? "terminée (" + r.jour + "e jour depuis l'inscription)" : "jour " + r.jour + " / " + r.duree;
+    /* v52 : plus de « jour n / 7 » ni de « terminée » : le nombre de jours depuis son inscription */
+    const jourTxt = r.jour == null ? "date d'inscription inconnue" : Decouverte.depuisTexte(r.jour);
     const lignes = [
       ["Découverte", jourTxt + (p && typeof p.cree_le === "string" ? " · inscrit le " + dt(p.cree_le) : "")],
       ["Questionnaire court", r.questionnaire ? "rempli le " + dt(r.questionnaire) : "pas encore rempli"],
@@ -10402,7 +10643,7 @@ const outilAccueil = {
       ["Case « J'ai réservé mon bilan »", r.reserve ? "cochée le " + dt(r.reserve) : "pas cochée"]
     ];
     const ligne = (k, v) => v ? `<li><span>${esc(k)}</span><b>${esc(String(v))}</b></li>` : "";
-    const pastilles = (r.finie ? `<span class="pastille">terminée</span>` : r.jour != null ? `<span class="pastille">J${r.jour}/${r.duree}</span>` : "")
+    const pastilles = (r.jour != null ? `<span class="pastille">${Decouverte.depuisTexte(r.jour)}</span>` : "")
       + (r.reserve ? ` <span class="pastille ok">bilan réservé</span>` : r.clics ? ` <span class="pastille accent">a cliqué Réserver</span>` : "");
     return `<section class="panel" id="fiche-decouverte"><div class="seance-c-tete"><h2>Découverte</h2>${pastilles}</div>
       <ul class="ingr fiche-l">${lignes.map(x => ligne(x[0], x[1])).join("")}</ul>
@@ -10524,7 +10765,7 @@ const outilAccueil = {
       <header class="masthead">
         <span class="eyebrow">${esc(trad("Fiche client"))} · ${esc(this.dateLongue())}</span>
         <h1>${esc(nomC)}${profil.statut === "prospect" ? ` <span class="pastille accent" title="Compte gratuit : pas encore accompagné">prospect</span>` : ""}${(d.prefs && d.prefs.langue === "en") ? ` <span class="pastille" title="Ce client utilise l'app en anglais">🇺🇸 anglais</span>` : ""}</h1>
-        <p class="lede">${profil.statut === "prospect" ? "Compte gratuit : pas de suivi à assurer tant qu'il n'est pas passé client." + (rdc ? " Découverte : " + (rdc.jour == null ? "date d'inscription inconnue" : rdc.finie ? "terminée" : "jour " + rdc.jour + " / " + rdc.duree) + (rdc.questionnaire ? ", questionnaire rempli." : ", questionnaire pas encore rempli.") : "") : alertes.length ? `${alertes.length} point${alertes.length > 1 ? "s" : ""} à regarder.` : "Rien à signaler : tout est en ordre."}</p>
+        <p class="lede">${profil.statut === "prospect" ? "Compte gratuit : pas de suivi à assurer tant qu'il n'est pas passé client." + (rdc ? " Découverte : " + (rdc.jour == null ? "date d'inscription inconnue" : Decouverte.depuisTexte(rdc.jour)) + (rdc.questionnaire ? ", questionnaire rempli." : ", questionnaire pas encore rempli.") : "") : alertes.length ? `${alertes.length} point${alertes.length > 1 ? "s" : ""} à regarder.` : "Rien à signaler : tout est en ordre."}</p>
         ${alertes.length ? `<div class="attention-alertes" style="margin-top:4px">${alertes.map(a => `<a class="pastille ${a.niveau === "info" ? "accent" : a.niveau}" href="#/${esc(a.cible)}">${esc(a.texte)}</a>`).join("")}</div>` : ""}
       </header>
       <section class="panel">
@@ -11172,13 +11413,24 @@ const Decouverte = {
     return Math.round((Date.UTC(+a[1], +a[2] - 1, +a[3]) - Date.UTC(+m[1], +m[2] - 1, +m[3])) / 86400000);
   },
   /* jour de decouverte (1 = jour de l'inscription) ; null si la date est illisible. Le mode test ne vaut que
-     sur l'appareil du prospect lui-meme, jamais dans les ecrans du coach (pourLeCoach) */
+     sur l'appareil du prospect lui-meme, jamais dans les ecrans du coach (pourLeCoach).
+     v52 : plus rien n'est verrouille ni affiche au prospect selon ce jour (gratuit pour toujours) ; il sert au coach
+     (« inscrit depuis n j », suivi commercial). Le mode test et la tuile du coach partent en v53. */
   jour(p, pourLeCoach){
     if (!pourLeCoach && !Store.idConsulte){ try { const t = parseInt(localStorage.getItem(this.CLE_TEST), 10); if (t >= 1) return t; } catch(e){} }
     const n = this.joursEcoules(this.dateLocale(p && p.cree_le));
     return n == null ? null : Math.max(1, n + 1);
   },
   finie(p, pourLeCoach){ const j = this.jour(p, pourLeCoach); return j != null && j > this.duree(); },
+  /* v52 : « inscrit aujourd'hui » / « inscrit depuis n j » (coach : pastilles, fiche, CSV, suivi) a partir du jour ;
+     "" si la date d'inscription est illisible */
+  depuisTexte(jour){ return typeof jour !== "number" || !isFinite(jour) ? "" : jour <= 1 ? "inscrit aujourd'hui" : "inscrit depuis " + (Math.floor(jour) - 1) + " j"; },
+  /* v52 : une pesee existe dans Ma progression (une mesure avec un poids, ou un poids de depart) */
+  peseeFaite(M){
+    if (!M || typeof M !== "object" || Array.isArray(M)) return false;
+    const n = v => { const x = typeof v === "number" ? v : typeof v === "string" && v.trim() ? Number(v) : NaN; return isFinite(x) && x > 0; };
+    return n(M.pstart) || (Array.isArray(M.mesures) && M.mesures.some(m => m && typeof m === "object" && n(m.poids)));
+  },
   questionnaireFait(I){ return !!(I && typeof I.court_le === "string" && I.court_le); },
   /* une reponse non vide (chaine ou nombre) */
   repondu(I, id){ const v = I && typeof I === "object" ? I[id] : undefined; return (typeof v === "string" && v.trim() !== "") || (typeof v === "number" && isFinite(v)); },
@@ -11272,13 +11524,13 @@ const Decouverte = {
     return { jour: j, duree: this.duree(), finie: j != null && j > this.duree(), questionnaire: this.questionnaireFait(I) ? I.court_le : null,
              clics: cl.length, dernierClic: typeof der === "string" ? der : null, reserve: this.reserve(C) };
   },
-  /* pastilles « Découverte J n/7 » (+ bilan) pour Mes clients : prospects seulement. l = une ligne de Clients.resumer */
+  /* pastilles « Découverte · inscrit depuis n j » (+ bilan) pour Mes clients : prospects seulement. l = une ligne de
+     Clients.resumer. v52 : plus de « J n/7 » ni de « terminée » (gratuit pour toujours) */
   pastilleCoach(l){
     let r = null;
     try { r = this.resume(l && l.p, l && l.ch, l && l.dc); } catch(e){ return `<span class="pastille attention" title="Données de la découverte illisibles">Découverte illisible</span>`; }
     let h = r.jour == null ? `<span class="pastille">Découverte</span>`
-          : r.finie ? `<span class="pastille" title="Période découverte terminée">Découverte terminée</span>`
-          : `<span class="pastille" title="Jour ${r.jour} de sa période découverte">Découverte J${r.jour}/${r.duree}</span>`;
+          : `<span class="pastille" title="Jours depuis son inscription">Découverte · ${this.depuisTexte(r.jour)}</span>`;
     if (r.reserve) h += ` <span class="pastille ok" title="A coché « J'ai réservé mon bilan »">bilan réservé</span>`;
     else if (r.clics) h += ` <span class="pastille accent" title="A cliqué « Réserver mon bilan » ${r.clics} fois">a cliqué Réserver</span>`;
     return h;
@@ -11555,8 +11807,11 @@ const Activite = {
    OUTIL — Découverte (prospects seulement). C'est l'accueil du prospect :
    v52 : les 3 questions (problème, obstacle, projection), puis la page de
    proposition de bilan (tant qu'il n'a pas choisi : « Réserver mon bilan » ou
-   « Pas maintenant »), puis son accueil (Speed Formation, « Réserver mon
-   bilan »). L'ancien écran « résultat » (calories calculées depuis le
+   « Pas maintenant »), puis son accueil : une seule action mise en avant
+   (« Calcule tes calories (2 min) », puis « Enregistre ta pesée de départ »),
+   la Speed Formation, les pages de l'accompagnement et « Réserver mon bilan »,
+   discret. Gratuit pour toujours : aucune limite de durée. L'ancien écran
+   « résultat » (calories calculées depuis le
    questionnaire, priorités, séance, recettes) n'est plus affiché : son code
    reste, repris par le calculateur, l'échantillon du programme et la journée
    type de la nutrition (lots D et E). Formules du calculateur intouchées.
@@ -11593,6 +11848,9 @@ const outilDecouverte = {
     this._bilan = sous === "bilan";
     const I = await Store.lire("intake", {});
     const C = await Store.lire(Decouverte.cle, Decouverte.vide());
+    /* v52 : l'action mise en avant sur son accueil (son calcul, puis sa pesee de depart) : lecture seule, sans toucher
+       au cache, et seulement une fois le questionnaire valide (avant, l'accueil ne s'affiche pas) */
+    this._reperes = Decouverte.questionnaireFait(I) ? await Store.lireTout([outilCalculateur.cle_perso, "mens"]) : null;
     if (!zone.isConnected) return;
     this.majEmail(I);
     this.rendre(zone, I, C);
@@ -11611,18 +11869,19 @@ const outilDecouverte = {
   rendre(zone, I, C){
     const T = DECOUVERTE, p = Auth.profil || {};
     if (Store.nonLus.has(I)){ zone.innerHTML = `<section class="panel"><div class="empty">${esc(trad(T.charge_rate))}</div></section>`; return; }
-    const j = Decouverte.jour(p), duree = Decouverte.duree(), finie = j != null && j > duree;
-    const fait = Decouverte.questionnaireFait(I), form = !fait || this._form, reste = j == null ? null : duree - j + 1;
+    const fait = Decouverte.questionnaireFait(I), form = !fait || this._form;
     /* v52 : questionnaire valide et pas encore de choix (ou page demandee par son adresse) : la proposition de bilan */
     const bilan = !form && (this._bilan || (!Decouverte.bilanPropose(I) && !this._choixFait));
-    const eyebrow = trad(T.nom) + (j == null ? "" : " · " + (finie ? trad(T.jour_fini) : trad(T.jour, { n: j, t: duree })));
-    /* sur la page bilan, ni jours restants ni second bouton : rien qui presse, deux choix de meme poids */
-    const lede = !fait ? trad(T.lede_questionnaire) : bilan ? "" : finie ? trad(T.lede_fini) : reste === 1 ? trad(T.lede_reste_1) : reste != null ? trad(T.lede_reste, { n: reste }) : "";
-    /* « Réserver mon bilan » : visible des la fin du questionnaire (accueil, « Modifier mes réponses ») */
+    /* v52 : gratuit pour toujours — ni « Jour n/7 », ni jours restants, ni fin de decouverte */
+    const eyebrow = trad(T.nom);
+    /* sur la page bilan, rien d'autre : rien qui presse, deux choix de meme poids */
+    const lede = !fait ? trad(T.lede_questionnaire) : (bilan || form) ? "" : trad(T.lede_accueil);
+    /* « Réserver mon bilan » : visible des la fin du questionnaire (accueil, « Modifier mes réponses ») ; v52 : discret,
+       l'action mise en avant de l'accueil est son etape (calcul, puis pesee) */
     const cal = fait && !bilan ? lienCalendly("decouverte") : "";
     zone.innerHTML = `<header class="masthead"><span class="eyebrow">${esc(eyebrow)}</span>
         <h1>${esc(trad("Bonjour"))}${p.prenom ? " " + esc(p.prenom) : ""}</h1>${lede ? `<p class="lede">${esc(lede)}</p>` : ""}
-        ${cal ? `<div class="actions"><a class="btn" href="${esc(cal)}" target="_blank" rel="noopener" data-dc-cal="decouverte">${esc(trad("Réserver mon bilan"))}</a></div>` : ""}</header>`
+        ${cal ? `<div class="actions"><a class="btn ghost petit" href="${esc(cal)}" target="_blank" rel="noopener" data-dc-cal="decouverte">${esc(trad("Réserver mon bilan"))}</a></div>` : ""}</header>`
       + (form ? this.formulaireHTML(I) : bilan ? this.bilanHTML(I) : this.accueilHTML(I, C));
     /* chaque clic vers Calendly est note pour le coach, avec l'ecran d'origine (accueil, page bilan, « Modifier mes reponses ») */
     $$("[data-dc-cal]", zone).forEach(a => a.addEventListener("click", () => Decouverte.clic(C, a.dataset.dcCal)));
@@ -11682,8 +11941,25 @@ const outilDecouverte = {
     }, 0);
   },
 
-  /* ---------- v52 : l'accueil du prospect apres la page bilan (le lot D le complete : calculateur, pesee, cartes) ---------- */
-  accueilHTML(I, C){ return this.formationHTML() + this.accompHTML(C); },
+  /* ---------- v52 : l'accueil du prospect apres la page bilan ----------
+     Une seule action mise en avant : « Calcule tes calories (2 min) » tant que son calcul n'est pas enregistre
+     (calc_perso), puis « Enregistre ta pesée de départ » tant qu'il n'a aucune pesee (mens), puis l'accueil normal
+     (Speed Formation, pages de l'accompagnement, « Réserver mon bilan » discret). Decide sur une lecture seule
+     (afficher : Store.lireTout), aucune ecriture a l'affichage. */
+  accueilHTML(I, C){ return this.etapeHTML() + this.formationHTML() + this.accompHTML(C); },
+  etape(){
+    const R = this._reperes || {};
+    if (!outilCalculateur.valide(R[outilCalculateur.cle_perso]) || outilCalculateur.mineur(R[outilCalculateur.cle_perso])) return "calories";
+    if (!Decouverte.peseeFaite(R.mens)) return "pesee";
+    return "";
+  },
+  etapeHTML(){
+    const e = this.etape(), L = e && DECOUVERTE.etapes ? DECOUVERTE.etapes[e] : null;
+    if (!L) return "";
+    return `<section class="panel dc-etape" id="dc-etape" data-etape="${e}"><h2>${esc(trad(L.titre))}</h2>
+      <p class="note" style="margin:0 0 14px">${esc(trad(L.texte))}</p>
+      <div class="actions"><a class="btn" id="dc-etape-go" href="${e === "calories" ? "#/calculateur" : "#/mensurations"}">${esc(trad(L.bouton))}</a></div></section>`;
+  },
 
   /* ---------- le questionnaire court ---------- */
   formulaireHTML(I){
@@ -11902,16 +12178,20 @@ const outilDecouverte = {
         ${(r.etapes || []).length ? `<h4>${esc(trad(L.preparation))}</h4><ol class="etapes">${r.etapes.map(e => `<li>${esc(trad(String(e)))}</li>`).join("")}</ol>` : ""}</details>`).join("");
     } catch(e){ if (boite.isConnected) boite.innerHTML = `<p class="note" style="margin:0">${esc(trad(L.indispo))}</p>`; }
   },
+  /* v52 : la Speed Formation est ouverte pour toujours */
   formationHTML(){
-    const L = DECOUVERTE.formation, ouverte = !estVerrouille(outilFormation);
-    return `<section class="panel" id="dc-formation"><h2>${esc(trad(L.titre))}</h2><p class="note" style="margin:0">${esc(trad(ouverte ? L.ouverte : L.fermee))}</p>
-      ${ouverte ? `<div class="actions"><a class="btn ghost" href="#/formation">${esc(trad(L.ouvrir))}</a></div>` : ""}</section>`;
+    const L = DECOUVERTE.formation;
+    return `<section class="panel" id="dc-formation"><h2>${esc(trad(L.titre))}</h2><p class="note" style="margin:0">${esc(trad(L.ouverte))}</p>
+      <div class="actions"><a class="btn ghost" href="#/formation">${esc(trad(L.ouvrir))}</a></div></section>`;
   },
+  /* v52 : ce qu'apporte l'accompagnement = les pages verrouillees de sa vitrine (CONFIG.marque.gratuit_vitrine), chacune
+     avec son lien ; « Réserver mon bilan » discret */
   accompHTML(C){
     const L = DECOUVERTE.accomp, cal = lienCalendly("decouverte-accompagnement"), r = Decouverte.reserve(C);
+    const vitrine = ((CONFIG.marque && CONFIG.marque.gratuit_vitrine) || []).map(id => OUTILS.find(o => o.id === id)).filter(o => o && AVANTAGES[o.id]);
     return `<section class="panel" id="dc-accomp"><h2>${esc(trad(L.titre))}</h2>
-      <ul class="liste-debloque"><li>${esc(trad(AVANTAGES.programme))}</li><li>${esc(trad(AVANTAGES.nutrition))}</li><li>${esc(trad(AVANTAGES.mensurations))}</li><li>${esc(trad(AVANTAGES.suivi))}</li></ul>
-      ${cal ? `<div class="actions"><a class="btn" href="${esc(cal)}" target="_blank" rel="noopener" data-dc-cal="decouverte-accompagnement">${esc(trad("Réserver mon bilan"))}</a></div>` : ""}
+      <ul class="liste-debloque">${vitrine.map(o => `<li><a href="#/${esc(o.id)}" data-dc-vitrine="${esc(o.id)}">${esc(trad(o.nom))}</a> — ${esc(trad(AVANTAGES[o.id]))}</li>`).join("")}</ul>
+      ${cal ? `<div class="actions"><a class="btn ghost" href="${esc(cal)}" target="_blank" rel="noopener" data-dc-cal="decouverte-accompagnement">${esc(trad("Réserver mon bilan"))}</a></div>` : ""}
       <p class="note" style="margin:10px 0 0">${esc(trad(L.note))}</p>
       <div id="dc-reserve" style="margin-top:14px">${r ? this.reserveHTML(r) : `<label class="coche"><input type="checkbox" id="dc-reserve-case"> ${esc(trad(L.reserve_case))}</label>`}</div></section>`;
   },
@@ -11943,7 +12223,27 @@ const outilDecouverte = {
   }
 };
 
-const OUTILS = [outilAccueil, outilDecouverte, outilProgramme, outilNutrition, outilMensurations, outilSuivi, outilBilan, outilFormation, outilComplements, outilProfil, outilTableau, outilClients, outilProspects, outilAtelier, outilBibliotheque, outilCatalogue, outilCalculateur, outilEntrainement];
+/* ------------------------------------------------------------------
+   v52 — « Mon journal » : en v52, une page VERROUILLEE de la vitrine du prospect
+   seulement (CONFIG.marque.gratuit_vitrine ; l'exemple d'une seance notee
+   viendra avec les pages verrouillees). Ni le client ni le coach ne le voient
+   (prospect_seul) : l'onglet du client (cle journal, objet Journal) est prevu
+   pour la v53. Aucune cle : une page verrouillee ne lit ni n'ecrit rien.
+   ------------------------------------------------------------------ */
+const outilJournal = {
+  id: "journal",
+  cle: null,
+  nom: "Mon journal",
+  icone: "📓",
+  prospect_seul: true,
+  titre: "Ton journal d'entraînement",
+  accroche: "Tes séances notées, tes charges et tes progrès, séance après séance.",
+  html(){ return ""; },   // jamais affichee : toujours verrouillee pour le prospect (estVerrouille)
+  async init(){}
+};
+
+/* v52 : le calculateur juste apres Ma progression ; le journal d'entrainement (vitrine du prospect) apres le programme */
+const OUTILS = [outilAccueil, outilDecouverte, outilProgramme, outilJournal, outilNutrition, outilMensurations, outilCalculateur, outilSuivi, outilBilan, outilFormation, outilComplements, outilProfil, outilTableau, outilClients, outilProspects, outilAtelier, outilBibliotheque, outilCatalogue, outilEntrainement];
 
 /* Adresses d'hier et de demain : #/progression ouvre « Ma progression »,
    #/suivi ouvre le bilan (puis « Mon suivi » quand il existera). */
@@ -11964,8 +12264,10 @@ function outilsVisibles(){
      masque_client: true -> outil du coach, mais qui reste dans la fiche du client
      client_seul: true   -> outil du client ; le coach ne le voit qu'en consultant une fiche */
   /* prospect_seul: true -> outil du compte gratuit (la Decouverte) ; ni client accompagne, ni coach */
+  /* v52 — ouvert_prospect: true -> un outil masque_client ouvert quand meme au prospect (le calculateur, sur sa cle
+     a lui) ; le client ne le voit toujours pas */
   return OUTILS.filter(o => (!o.role || (o.role === "coach" && Auth.estCoach()))
-                         && (!o.masque_client || Auth.estCoach())
+                         && (!o.masque_client || Auth.estCoach() || (o.ouvert_prospect && Auth.estProspect()))
                          && (!o.client_seul || !Auth.estCoach() || Store.idConsulte)
                          && (!o.prospect_seul || Auth.estProspect()));
 }
@@ -11978,10 +12280,8 @@ function outilsVisibles(){
 function estVerrouille(o){
   if (!o || o.role === "coach" || Store.idConsulte || !Auth.estProspect()) return false;
   const ouverts = (CONFIG.marque && CONFIG.marque.gratuit_ouverts) || ["accueil", "decouverte", "profil"];
-  if (ouverts.indexOf(o.id) > -1) return false;
-  /* Decouverte : la Speed Formation est ouverte les CONFIG.decouverte.jours premiers jours apres l'inscription, puis verrouillee */
-  if (o.id === "formation") return Decouverte.finie(Auth.profil);
-  return true;
+  /* v52 : gratuit pour toujours — plus de verrou de la Speed Formation au 8e jour (elle est dans gratuit_ouverts) */
+  return ouverts.indexOf(o.id) === -1;
 }
 /* v50 — un onglet verrouille hors de la vitrine (CONFIG.marque.gratuit_vitrine) n'encombre pas la navigation
    du prospect ; son adresse reste valable (page verrouillee). Rien ne change pour un client ni pour le coach. */
@@ -11997,13 +12297,11 @@ const AVANTAGES = {
   mensurations: "Ton poids, tes mensurations et ta composition corporelle, semaine après semaine.",
   suivi: "Ta régularité, tes objectifs du mois, ton bilan de la semaine et les retours de ton coach.",
   bilan: "Ton bilan du mois, préparé avec ton coach.",
-  complements: "Tes compléments conseillés, avec les doses et les moments."
+  complements: "Tes compléments conseillés, avec les doses et les moments.",
+  journal: "Ton journal d'entraînement : chaque séance notée, tes charges et tes progrès, semaine après semaine."   // v52
 };
 function pageVerrouillee(o){
-  /* Decouverte : la Speed Formation, ouverte pendant la decouverte, fait ensuite partie de l'accompagnement */
-  if (o.id === "formation" && Auth.estProspect()){
-    return `<section class="panel">${UI.verrou({ titre: trad(nomOnglet(o)), texte: trad(DECOUVERTE.formation.fermee), lien: lienCalendly("verrou-formation"), cta: trad("Réserver mon bilan") })}</section>`;
-  }
+  /* v52 : plus de page spéciale pour la Speed Formation (ouverte pour toujours) */
   const plus = AVANTAGES[o.id];
   return `<section class="panel">${UI.verrou({ titre: trad(nomOnglet(o)), texte: trad("Cette fonctionnalité est disponible avec l'accompagnement MHX."), lien: lienCalendly("verrou-" + o.id), cta: trad("Réserver mon bilan") })}
     ${plus ? `<p class="note verrou-plus">${esc(trad(plus))}</p>` : ""}</section>`;
@@ -12022,8 +12320,12 @@ function outilsPrincipaux(){
   const v = outilsVisibles();
   const coach = Auth.estCoach() && !Store.idConsulte;
   /* v40 : un prospect voit d'abord ce qui lui est ouvert (accueil, formation,
-     profil), puis un onglet verrouille ; le reste derriere « Plus » */
+     profil), puis un onglet verrouille ; le reste derriere « Plus ».
+     v52 : l'ordre est celui de CONFIG.marque.gratuit_barre (accueil, calculateur, progression, Speed Formation) */
   if (!coach && v.some(o => estVerrouille(o))){
+    const barre = CONFIG.marque && CONFIG.marque.gratuit_barre;
+    const choisis = Array.isArray(barre) ? barre.map(id => v.find(o => o.id === id && !o.masque_nav && !estVerrouille(o))).filter(Boolean) : [];
+    if (choisis.length) return choisis.slice(0, 4);
     return v.filter(o => !o.masque_nav && !estVerrouille(o)).concat(v.filter(o => o.principal && estVerrouille(o) && !horsVitrine(o))).slice(0, 4);
   }
   return v.filter(o => coach ? o.principal_coach : o.principal).slice(0, 4);
@@ -12366,7 +12668,8 @@ function routeDepuisAdresse(){
   /* le Challenge 7 jours n'existe plus : ses anciennes adresses (liens partages, favoris) menent a la Decouverte */
   if (/^challenge(-libre|-rythme)?(\/.*)?$/.test(id)){ try { history.replaceState(null, "", "#/decouverte"); } catch(e){} id = "decouverte"; }
   /* mode test de la Decouverte (Lucas) : #/decouverte-jour/8 fait comme si on etait au jour 8 sur CET appareil,
-     #/decouverte-jour/0 revient au vrai jour ; rien n'est ecrit en base */
+     #/decouverte-jour/0 revient au vrai jour ; rien n'est ecrit en base (v52 : sans effet visible pour le prospect,
+     plus rien ne depend du jour ; retire en v53) */
   const jt = /^decouverte-jour\/(\d{1,3})$/.exec(id);
   if (jt){
     try { if (+jt[1] >= 1) localStorage.setItem(Decouverte.CLE_TEST, jt[1]); else localStorage.removeItem(Decouverte.CLE_TEST); } catch(e){}

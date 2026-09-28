@@ -160,7 +160,8 @@ async function main() {
       const { ctx, page } = await ouvrir(vp, personas.prospect);
       await page.goto(`http://localhost:${PORT}/index.html#/accueil`);
       await capture(page, `prospect-accueil-${vn}`);
-      for (const r of ["challenge", "challenge/1", "profil", "formation", "programme"]) {
+      /* v52 (lot D) : + le calculateur (sa clé calc_perso), Ma progression (sans photos) et « Mon journal » (verrouillé) */
+      for (const r of ["challenge", "challenge/1", "profil", "formation", "programme", "calculateur", "mensurations", "journal"]) {
         await aller(page, "#/" + r); await capture(page, `prospect-${r.replace("/", "-")}-${vn}`);
       }
       await ctx.close();

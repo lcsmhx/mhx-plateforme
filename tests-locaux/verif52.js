@@ -477,7 +477,9 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     ok("export du filtre « À traiter » : 6 lignes, dans l'ordre de l'écran (Inès, Émilie, Piège, Zoé, Karim, Paul), 15 cellules chacune, fins de ligne CRLF", L.length === 6 && L.every(l => l.length === 15) && JSON.stringify(L.map(l => l[0])) === JSON.stringify(["Inès Dupré", "Émilie Rousseau", "'=1+1 " + XSS, "Zoé Bernard", "Karim Benali", "Paul Durand"]) && !csv.brut && !csv.ouvert, JSON.stringify(L.map(l => l[0])) + " brut " + csv.brut);
     ok("export : chaque cellule est entre guillemets (point-virgule et guillemets du contenu sans danger)", csv.cites.every(l => l.every(Boolean)), JSON.stringify(csv.cites.map(l => l.filter(x => !x).length)));
     const ines = L[0] || [];
-    const attI = ["Inès Dupré", "ines.dupre@exemple.fr", fr(avant(26 * H)), "jour " + jourDe(avant(26 * H)) + "/7", "Perte de poids / sèche", "CHAUD", "100", "rempli le " + fr(avant(25 * H)), "9", "1", fr(avant(24 * H)), fr(avant(23 * H)), "1", fr(avant(60000)), "Prépare le bilan : relis sa fiche (questionnaire, obstacle, motivation). Après l'appel, indique Signé, Perdu ou Absent."];
+    /* v52 (Chantier 1, lot D) : colonne Découverte « inscrit depuis n j » (avant : « jour n/7 » / « terminée ») */
+    const depuis = j => j <= 1 ? "inscrit aujourd'hui" : "inscrit depuis " + (j - 1) + " j";
+    const attI = ["Inès Dupré", "ines.dupre@exemple.fr", fr(avant(26 * H)), depuis(jourDe(avant(26 * H))), "Perte de poids / sèche", "CHAUD", "100", "rempli le " + fr(avant(25 * H)), "9", "1", fr(avant(24 * H)), fr(avant(23 * H)), "1", fr(avant(60000)), "Prépare le bilan : relis sa fiche (questionnaire, obstacle, motivation). Après l'appel, indique Signé, Perdu ou Absent."];
     ok("ligne d'Inès : toutes les valeurs (dates locales, jour de découverte, CHAUD, 100, motivation 9, 1 clic, bilan réservé, 1 relance, dernière activité, action)", JSON.stringify(ines) === JSON.stringify(attI), JSON.stringify(ines) + " attendu " + JSON.stringify(attI));
     const emi = L[1] || [];
     ok("ligne d'Émilie : TIÈDE, 70, 2 clics, dernier clic, pas de bilan réservé, « DM : il a cliqué sans réserver… »", emi[5] === "TIÈDE" && emi[6] === "70" && emi[9] === "2" && emi[10] === fr(avant(10 * H)) && emi[11] === "" && emi[14] === "DM : il a cliqué sans réserver, demande-lui ce qui le retient.", JSON.stringify(emi));
@@ -486,7 +488,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     const zo = L[3] || [], ka = L[4] || [], pa = L[5] || [];
     /* v52 (28/09/2026, Chantier 1 lot C) : Paul, qui n'a rien répondu, est compté sur les 3 questions du nouveau questionnaire
        (« 0/3 » ; avant « 0/10 ») ; Zoé, qui a commencé l'ancien, reste comptée sur 10 */
-    ok("Zoé « 5/10 réponses », score 25 ; Karim objectif « +5 kg de muscle » neutralisé (« '+5 kg… »), découverte terminée ; Paul « 0/3 réponses », « Relance : sa découverte est finie sans questionnaire… »", zo[7] === "5/10 réponses" && zo[6] === "25" && ka[4] === "'+5 kg de muscle" && ka[3] === "terminée" && ka[14] === "Relance : sa découverte est terminée, propose-lui le bilan." && pa[7] === "0/3 réponses" && pa[13] === "" && pa[14] === "Relance : sa découverte est finie sans questionnaire, propose-lui directement le bilan.", JSON.stringify([zo[6], zo[7], ka[3], ka[4], pa[7], pa[14]]));
+    ok("Zoé « 5/10 réponses », score 25 ; Karim objectif « +5 kg de muscle » neutralisé (« '+5 kg… »), « inscrit depuis n j » (v52 ; avant : « terminée ») ; Paul « 0/3 réponses », « Relance : sa découverte est finie sans questionnaire… »", zo[7] === "5/10 réponses" && zo[6] === "25" && ka[4] === "'+5 kg de muscle" && /^inscrit depuis \d+ j$/.test(ka[3]) && ka[14] === "Relance : sa découverte est terminée, propose-lui le bilan." && pa[7] === "0/3 réponses" && pa[13] === "" && pa[14] === "Relance : sa découverte est finie sans questionnaire, propose-lui directement le bilan.", JSON.stringify([zo[6], zo[7], ka[3], ka[4], pa[7], pa[14]]));
     ok("export : toast « 6 prospects exportés. », aucune écriture", (await toasts(page)).includes("6 prospects exportés.") && db.ecritures.length === 0, JSON.stringify(await toasts(page)));
     /* un autre filtre : l'export suit l'écran */
     await filtre(page, "tous"); await choisir(page, "#pr-prog", "q_fait");
@@ -747,15 +749,15 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     const n0 = db.lectures.length;
     await aller(page, "#/programme", 1400);
     const v1 = !!(await page.$("#vue .verrou"));
-    await aller(page, "#/mensurations", 1400);
-    ok("pages verrouillées #/programme et #/mensurations : aucune donnée lue (ni activite, ni autre)", v1 && !!(await page.$("#vue .verrou")) && db.lectures.length === n0, JSON.stringify(db.lectures.slice(n0)));
+    await aller(page, "#/journal", 1400);   // v52 (lot D) : Ma progression est ouverte au prospect ; page verrouillée : « Mon journal »
+    ok("pages verrouillées #/programme et #/journal : aucune donnée lue (ni activite, ni autre)", v1 && !!(await page.$("#vue .verrou")) && db.lectures.length === n0, JSON.stringify(db.lectures.slice(n0)));
     await aller(page, "#/formation", 1600);
     ok("navigation (4 pages) : rien d'écrit tant que l'envoi n'a pas lieu (au plus une fois par minute)", db.ecritures.length === 0, JSON.stringify(db.ecritures.map(e => e.outil)));
     await cacher(page); await attendre(page, 1800); await montrer(page);
     const A1 = contenu(db, "activite", ACT) || {};
     const secondes = (Date.now() - t0) / 1000;
     ok("onglet en arrière-plan : la base est relue (1 lecture d'activite) PUIS écrite (1 écriture), dans cet ordre", lu(db, "activite") === 1 && ecr(db, "activite").length === 1 && db.journal.indexOf("L activite") > -1 && db.journal.indexOf("L activite") < db.journal.indexOf("E activite"), JSON.stringify(db.journal.filter(x => x.endsWith("activite"))));
-    ok("le delta s'ajoute à la base : formation 2 → 3, decouverte-questionnaire 1 → 2, verrou-programme 1, verrou-mensurations 1", memes(A1.pages, { formation: 3, "decouverte-questionnaire": 2, "verrou-programme": 1, "verrou-mensurations": 1 }), JSON.stringify(A1.pages));
+    ok("le delta s'ajoute à la base : formation 2 → 3, decouverte-questionnaire 1 → 2, verrou-programme 1, verrou-journal 1", memes(A1.pages, { formation: 3, "decouverte-questionnaire": 2, "verrou-programme": 1, "verrou-journal": 1 }), JSON.stringify(A1.pages));
     ok("jours réunis (hier + aujourd'hui), temps additionné (100 s + le temps visible), dernière activité à l'instant, version 1", JSON.stringify(A1.jours) === JSON.stringify([ilYA(1), ajd()]) && A1.temps_s >= 101 && A1.temps_s <= 100 + Math.ceil(secondes) + 1 && Math.abs(Date.parse(A1.derniere) - Date.now()) < 15000 && A1.version === 1, JSON.stringify(A1));
     /* un autre onglet a écrit entre-temps : ses pages ne sont pas effacées */
     const row = db.donnees.find(x => x.user_id === ACT && x.outil === "activite");

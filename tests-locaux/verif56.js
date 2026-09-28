@@ -1,4 +1,5 @@
-/* verif56 — Chantier 1 (v52), lot C : les 3 questions et la page de proposition de bilan, vérifiées de bout en bout
+/* verif56 — Chantier 1 (v52), lots C et D : les 3 questions, la page de proposition de bilan, puis l'accueil du prospect,
+   le calculateur (calc_perso) et « gratuit pour toujours », vérifiés de bout en bout
    dans un vrai navigateur.
    A. réglages et définitions : 3 questions (probleme, obstacle, projection) requises, mêmes définitions en français et
       en anglais (même ordre), anciennes définitions gardées pour l'affichage, table problème → objectif vers des options
@@ -22,6 +23,20 @@
       son code est gardé ; client Thomas : rien de tout cela ;
    H. la garde d'âge du formulaire, inerte sans question « age », marche toujours si une question d'âge revient (page
       servie retouchée) ;
+   Lot D (v52) :
+   I. accueil du prospect : une seule action mise en avant (« Calcule tes calories (2 min) » → #/calculateur, puis
+      « Enregistre ta pesée de départ » → #/mensurations, puis l'accueil normal), décidée en lecture seule, sans écriture,
+      « Réserver mon bilan » discret, Speed Formation ouverte, vitrine (programme, nutrition, journal, suivi) ; anglais ;
+   J. calculateur du prospect : sa clé calc_perso (jamais calc), rien d'inventé, rien d'écrit avant une saisie complète,
+      mêmes formules, « pas un avis médical », départ depuis le calc du coach ou l'ancien questionnaire, calc_perso piégé ;
+   K. garde-fou 18 ans (âge 17 : message, rien d'écrit ; mineur ensuite : calc_perso retiré ; écriture en attente
+      annulée ; calc_perso mineur en base retiré ; restauration refusée ; anglais) ;
+   L. garde-fou IMC (< 18,5 : pas d'objectif de perte, phrase de prudence, maintien enregistré) ;
+   M. client Thomas (calculateur et journal toujours cachés, navigation d'avant) et coach (calc comme avant, son compte et
+      la fiche de Thomas ; « Ses séances » inchangé) ;
+   N. navigation du prospect (barre du bas, « Plus », ordre des onglets, #/journal verrouillé et compté, Speed Formation
+      ouverte au 30e jour), Ma progression sans photos, plus aucun « 7 jours » (FR et EN) ;
+   O. coach : « inscrit depuis n j » (pastilles, fiche, suivi, cartes, CSV).
    Z. aucun appel vers l'extérieur.
    Le garde-fou 18 ans n'est plus dans le questionnaire court (plus d'âge demandé) : il passe au calculateur (lot D).
    Supabase simulé (gabarit de verif55, carte 6 §15) : rien ne part vers la vraie base (routage par NOM D'HÔTE, jamais
@@ -329,6 +344,21 @@ const TX = {
   modifier: "Modifier mes réponses", modifier_en: "Edit my answers",
   annuler: "Annuler les modifications"
 };
+/* v52 (lot D) : les textes attendus de l'accueil du prospect et du calculateur */
+const TXD = {
+  calories: "Calcule tes calories (2 min)", pesee: "Enregistre ta pesée de départ",
+  lede: "Ton espace gratuit, sans limite de temps : calculateur de calories, suivi de ton poids et Speed Formation.",
+  lede_en: "Your free space, with no time limit: calorie calculator, weight tracking and Speed Formation.",
+  avis: "Ces chiffres sont une estimation générale, pas un avis médical. Si tu as un doute sur ta santé, parles-en à un professionnel.",
+  mineur: "Le calculateur est réservé aux adultes (18 ans et plus) : rien n'est enregistré.",
+  retire: "Ce que tu avais enregistré ici a été retiré.",
+  imc: "Ton poids est en dessous d'un poids de forme habituel pour ta taille. Viser une perte n'est pas l'objectif ici : parles-en d'abord à un professionnel de santé.",
+  av_journal: "Ton journal d'entraînement : chaque séance notée, tes charges et tes progrès, semaine après semaine."
+};
+/* v52 (lot D) : ce qui ne doit plus jamais apparaître côté prospect (limite de 7 jours, jour n/7, fin de découverte) */
+const SEPT = /\b7 (jours|days)\b|\b(Jour|Day) \d+ ?\/ ?\d+\b|\bJ\d+\/\d+\b|découverte (est )?terminée|discovery (period )?is over|période découverte|discovery period|accès découverte|discovery access|Encore \d+ jours|more days of|Dernier jour de|Last day of/i;
+/* deux objets égaux, quel que soit l'ordre de leurs clés */
+const memes = (a, b) => { const t = o => JSON.stringify(Object.keys(o || {}).sort().map(k => [k, o[k]])); return !!a && t(a) === t(b); };
 const OBJ = { "Perdre du gras": "Perte de poids / sèche", "Prendre du muscle": "Prise de muscle", "Me remettre en forme": "Santé & énergie au quotidien" };
 /* un nouveau prospect qui a validé les 3 questions */
 const NOUVEAU = (extra) => Object.assign({ probleme: "Perdre du gras", obstacle: "Le manque de temps avec le travail", projection: "Courir 10 km sans m'arrêter",
@@ -719,7 +749,9 @@ function lienOk(href, base, attendu){
     await attendre(page, 800);
     const v = await texte(page, "#vue");
     ok("accueil d'un nouveau prospect (même avec âge, taille, poids) : ni résultat, ni calories, ni séance, ni recettes", !(await page.$("#dc-resultat, #dc-calcul, #dc-seance, #dc-recettes, #dc-modifier")) && !/Ton résultat|Tes 3 priorités|Tes calories et tes macros|Ta séance découverte|3 recettes pour commencer/.test(v), v.slice(0, 300));
-    ok("… aucune lecture du catalogue (recettes, aliments) ni d'autre clé que intake, challenge et prefs (langue)", !db.chemins.some(x => /\/rest\/v1\/(recettes|aliments)/.test(x)) && db.lectures.every(l => ["eq.intake", "eq.challenge", "eq.prefs"].includes(l.outil)), JSON.stringify(db.lectures.map(l => l.outil)));
+    /* v52 (lot D) : l'accueil lit aussi, en lecture seule, son calcul (calc_perso) et ses pesées (mens) pour choisir
+       l'action mise en avant */
+    ok("… aucune lecture du catalogue (recettes, aliments) ni d'autre clé que intake, challenge, prefs (langue), calc_perso et mens (étape de l'accueil)", !db.chemins.some(x => /\/rest\/v1\/(recettes|aliments)/.test(x)) && db.lectures.every(l => ["eq.intake", "eq.challenge", "eq.prefs", "in.(calc_perso,mens)"].includes(l.outil)), JSON.stringify(db.lectures.map(l => l.outil)));
     ok("… « Réserver mon bilan » en haut (source decouverte) et dans le bloc accompagnement, case « J'ai réservé mon bilan »", !!(await page.$('#vue .masthead a[data-dc-cal="decouverte"]')) && !!(await page.$('#dc-accomp a[data-dc-cal="decouverte-accompagnement"]')) && !!(await page.$("#dc-reserve-case")), "");
     const code = await page.evaluate(() => ["chiffres", "calculHTML", "seanceHTML", "recettesHTML", "chargerRecettes", "resultatHTML", "prioriteObstacle", "formationHTML", "accompHTML"].filter(f => typeof outilDecouverte[f] !== "function"));
     ok("le code encore utile est gardé (garde-fou IMC, séance découverte, recettes : lots D et E)", code.length === 0, JSON.stringify(code));
@@ -759,10 +791,355 @@ function lienOk(href, base, attendu){
     });
   });
 
+  /* ======================================================================================================
+     LOT D (v52) — accueil du prospect, gratuit pour toujours, calculateur du prospect (calc_perso), garde-fous
+     ====================================================================================================== */
+
+  /* =================== I. accueil du prospect : une seule action mise en avant =================== */
+  await bloc("I. accueil : calcule tes calories", async () => {
+    const k = 2, ID = PID(k);
+    const db = base({ comptes: [compte(k, "Léa", "Martin", [["intake", NOUVEAU({ bilan_propose: { choix: "plus_tard", le: avant(MIN) } })]])] });
+    const { c, page } = await ouvrir(b, db, k, "", "#dc-accomp");
+    await attendre(page, 1200);
+    const e = await page.$eval("#dc-etape", x => ({ etape: x.dataset.etape, h2: x.querySelector("h2").textContent.trim(), a: x.querySelector("a.btn").textContent.trim(), href: x.querySelector("a.btn").getAttribute("href"), ghost: x.querySelector("a.btn").classList.contains("ghost") })).catch(() => null);
+    ok("accueil d'un nouveau prospect : l'action mise en avant est « Calcule tes calories (2 min) » → #/calculateur", !!e && e.etape === "calories" && e.a === TXD.calories && e.href === "#/calculateur" && !e.ghost, JSON.stringify(e));
+    const forts = await page.$$eval("#vue a.btn:not(.ghost), #vue button.btn:not(.ghost)", l => l.map(x => x.id || x.textContent.trim()));
+    ok("… une seule action mise en avant : tous les autres boutons de l'accueil sont discrets (« Réserver mon bilan » compris)", forts.length === 1 && forts[0] === "dc-etape-go", JSON.stringify(forts));
+    ok("… « Réserver mon bilan » reste là, discret (en-tête et bloc accompagnement, sources decouverte / decouverte-accompagnement)", !!(await page.$('#vue .masthead a.btn.ghost[data-dc-cal="decouverte"]')) && !!(await page.$('#dc-accomp a.btn.ghost[data-dc-cal="decouverte-accompagnement"]')), "");
+    const v = await texte(page, "#vue");
+    ok("… en-tête « Découverte », phrase « gratuit, sans limite de temps », aucun « Jour n/7 » ni jours restants", (await texte(page, "#vue .masthead .eyebrow")) === "Découverte" && v.includes(TXD.lede) && !SEPT.test(v), v.slice(0, 260));
+    const vit = await page.$$eval("#dc-accomp .liste-debloque a", l => l.map(a => a.getAttribute("href")));
+    ok("… le bloc accompagnement mène aux pages de la vitrine (programme, nutrition, journal, suivi) ; plus « Ma progression » (ouverte)", JSON.stringify(vit) === JSON.stringify(["#/programme", "#/nutrition", "#/journal", "#/suivi"]), JSON.stringify(vit));
+    ok("… Speed Formation ouverte (« Ouvrir la Speed Formation », sans « pendant ta découverte »)", !!(await page.$('#dc-formation a[href="#/formation"]')) && (await texte(page, "#dc-formation")).includes("Les bases de la nutrition et de l'entraînement, à ton rythme.") && !/découverte/i.test(await texte(page, "#dc-formation p")), await texte(page, "#dc-formation"));
+    ok("… décidé en lecture seule (calc_perso et mens lus d'un coup, sans cache) : aucune écriture à l'affichage", db.lectures.some(l => l.outil === "in.(calc_perso,mens)") && saisies(db).length === 0, resume(db) + " " + JSON.stringify(db.lectures.map(l => l.outil)));
+    await page.click("#dc-etape-go"); await attendre(page, 1800);
+    ok("clic : le calculateur s'ouvre (#/calculateur)", (await ou(page)).courant === "calculateur" && (await ou(page)).hash === "#/calculateur" && !!(await page.$("#tdee")) && !(await page.$("#vue .verrou")), JSON.stringify(await ou(page)));
+    await c.close();
+  });
+
+  await bloc("I. accueil : pesée puis accueil normal", async () => {
+    const CP = { sexe: "F", age: 30, taille: 165, poids: 60, pas: 6000, heures: 3, objectif: "perte" };
+    const I0 = NOUVEAU({ bilan_propose: { choix: "plus_tard", le: avant(MIN) } });
+    const db = base({ comptes: [
+      compte(3, "Léa", "Martin", [["intake", I0], ["calc_perso", CP]]),
+      compte(4, "Zoé", "Bernard", [["intake", I0], ["calc_perso", CP], ["mens", { mesures: [{ sem: 1, date: "2026-09-20", poids: 60.2, vals: {} }] }]]),
+      compte(5, "Inès", "Dupré", [["intake", I0], ["calc_perso", Object.assign({}, CP, { age: 16 })]]),
+      compte(6, "Paul", "Durand", [["intake", I0], ["calc_perso", {}], ["mens", { pstart: 80, mesures: [] }]]),
+      compte(7, "Karim", "Benali", [["intake", I0], ["calc_perso", CP], ["mens", { pstart: 80, mesures: [] }]])
+    ] });
+    let { c, page } = await ouvrir(b, db, 3, "", "#dc-accomp"); await attendre(page, 1000);
+    const e = await page.$eval("#dc-etape", x => [x.dataset.etape, x.querySelector("a.btn").textContent.trim(), x.querySelector("a.btn").getAttribute("href")]).catch(() => null);
+    ok("son calcul enregistré (calc_perso) : l'action mise en avant devient « Enregistre ta pesée de départ » → #/mensurations", JSON.stringify(e) === JSON.stringify(["pesee", TXD.pesee, "#/mensurations"]), JSON.stringify(e));
+    await page.click("#dc-etape-go"); await attendre(page, 1800);
+    ok("clic : Ma progression s'ouvre (#/mensurations), la saisie de sa première mesure dépliée", (await ou(page)).courant === "mensurations" && !(await page.$("#vue .verrou")) && await page.isVisible("#e-poids"), JSON.stringify(await ou(page)));
+    await c.close();
+    ({ c, page } = await ouvrir(b, db, 4, "", "#dc-accomp")); await attendre(page, 1000);
+    const forts = await page.$$eval("#vue a.btn:not(.ghost), #vue button.btn:not(.ghost)", l => l.length);
+    ok("calcul et pesée faits : l'accueil normal (plus d'étape, aucun bouton mis en avant) : Speed Formation, pages de l'accompagnement, « Réserver mon bilan » discret", !(await page.$("#dc-etape")) && forts === 0 && !!(await page.$("#dc-formation")) && !!(await page.$("#dc-accomp .liste-debloque a")) && !!(await page.$('#dc-accomp a.btn.ghost[data-dc-cal]')), "forts " + forts);
+    await c.close();
+    ({ c, page } = await ouvrir(b, db, 7, "", "#dc-accomp")); await attendre(page, 1000);
+    ok("un poids de départ (réglages de Ma progression) compte comme une pesée : accueil normal", !(await page.$("#dc-etape")), "");
+    await c.close();
+    ({ c, page } = await ouvrir(b, db, 5, "", "#dc-accomp")); await attendre(page, 1000);
+    ok("un calc_perso fait avec un âge mineur ne compte pas : « Calcule tes calories (2 min) »", (await page.$eval("#dc-etape", x => x.dataset.etape).catch(() => "")) === "calories", "");
+    await c.close();
+    ({ c, page } = await ouvrir(b, db, 6, "", "#dc-accomp")); await attendre(page, 1000);
+    ok("un calc_perso vide (retiré) ne compte pas, même avec une pesée : « Calcule tes calories (2 min) »", (await page.$eval("#dc-etape", x => x.dataset.etape).catch(() => "")) === "calories", "");
+    ok("aucune écriture à l'affichage de ces accueils", saisies(db).length === 0, resume(db));
+    await c.close();
+  });
+
+  await bloc("I. accueil en anglais", async () => {
+    const k = 8, ID = PID(k);
+    const db = base({ comptes: [compte(k, "Léa", "Martin", [["intake", NOUVEAU({ bilan_propose: { choix: "plus_tard", le: avant(MIN) } })], ["calc_perso", { sexe: "F", age: 30, taille: 165, poids: 60, pas: 6000, heures: 3, objectif: "perte" }]])] });
+    avecEn(db, ID);
+    const { c, page } = await ouvrir(b, db, k, "", "#dc-accomp", { langue: "en" }); await attendre(page, 1200);
+    const v = await texte(page, "#vue");
+    ok("anglais : « Log your starting weight », « Your next step », phrase d'accueil traduite, bloc Speed Formation traduit", (await texte(page, "#dc-etape-go")) === "Log your starting weight" && (await texte(page, "#dc-etape h2")) === "Your next step" && v.includes(TXD.lede_en) && (await texte(page, "#dc-formation p")) === "The basics of nutrition and training, at your pace.", v.slice(0, 300));
+    ok("anglais : liens de la vitrine traduits (My program, Nutrition, My training log, My follow-up), aucun « 7 days » ni « Day n/7 »", JSON.stringify(await page.$$eval("#dc-accomp .liste-debloque a", l => l.map(a => a.textContent.trim()))) === JSON.stringify(["My program", "Nutrition", "My training log", "My follow-up"]) && !SEPT.test(v), JSON.stringify(await page.$$eval("#dc-accomp .liste-debloque a", l => l.map(a => a.textContent.trim()))));
+    const db2 = base({ comptes: [compte(9, "Léa", "Martin", [["intake", NOUVEAU({ bilan_propose: { choix: "plus_tard", le: avant(MIN) } })]])] }); avecEn(db2, PID(9));
+    const x = await ouvrir(b, db2, 9, "", "#dc-accomp", { langue: "en" }); await attendre(x.page, 1000);
+    ok("anglais : « Calculate your calories (2 min) », « Your first step »", (await texte(x.page, "#dc-etape-go")) === "Calculate your calories (2 min)" && (await texte(x.page, "#dc-etape h2")) === "Your first step", await texte(x.page, "#dc-etape"));
+    await c.close(); await x.c.close();
+  });
+
+  /* =================== J. calculateur du prospect : sa clé calc_perso, jamais calc =================== */
+  await bloc("J. calculateur du prospect", async () => {
+    const k = 13, ID = PID(k);
+    const db = base({ comptes: [compte(k, "Léa", "Martin", [["intake", NOUVEAU({ bilan_propose: { choix: "plus_tard", le: avant(MIN) } })]])] });
+    const { c, page } = await ouvrir(b, db, k, "#/calculateur", "#tdee"); await attendre(page, 1500);
+    const champs = await page.evaluate(() => ["age", "taille", "poids", "pas", "heures"].map(i => document.getElementById(i).value));
+    ok("ouvert au prospect : rien n'est inventé (âge, taille, poids, heures vides ; pas par jour : 6 000) ; aucun sexe choisi", JSON.stringify(champs) === '["","","","6000",""]' && (await page.$$eval('#sexe button[aria-pressed="true"]', l => l.length)) === 0, JSON.stringify(champs));
+    ok("… « Il manque : Sexe, Âge (ans), Taille (cm), Poids (kg), Entraînement (h / semaine) », aucun chiffre", (await texte(page, "#calc-etat")) === "Il manque : Sexe, Âge (ans), Taille (cm), Poids (kg), Entraînement (h / semaine)" && (await texte(page, "#tdee")) === "—", await texte(page, "#calc-etat"));
+    ok("… « pas un avis médical » sous le calcul", (await texte(page, "#calc-avis")) === TXD.avis, await texte(page, "#calc-avis"));
+    ok("… à l'ouverture : aucune écriture (ni calc_perso, ni calc)", saisies(db).length === 0 && ecr(db, "calc").length === 0, resume(db));
+    await page.click('#sexe [data-v="F"]'); await page.fill("#age", "30"); await page.fill("#taille", "165"); await page.fill("#poids", "60");
+    await attendre(page, 1300);
+    ok("tant qu'il manque une donnée (heures d'entraînement) : toujours rien d'enregistré", ecr(db, "calc_perso", ID).length === 0 && (await texte(page, "#calc-etat")) === "Il manque : Entraînement (h / semaine)", await texte(page, "#calc-etat"));
+    await page.fill("#heures", "3"); await attendre(page, 1500);
+    const CP = (db.donnees.find(d => d.user_id === ID && d.outil === "calc_perso") || {}).contenu;
+    ok("données complètes : calc_perso enregistré, de la même forme que calc (objectif « perte » depuis sa réponse « Perdre du gras »)", memes(CP, { sexe: "F", age: 30, taille: 165, poids: 60, pas: 6000, heures: 3, objectif: "perte" }), JSON.stringify(CP));
+    ok("… jamais « calc » (la clé du coach), ni chez lui ni chez personne", ecr(db, "calc").length === 0 && ecr(db, "calc_perso").every(e => e.user_id === ID), resume(db));
+    const att = await page.evaluate(() => { const d = { sexe: "F", age: 30, taille: 165, poids: 60, pas: 6000, heures: 3 }; const T = outilCalculateur.metabolismeDeBase(d) * outilCalculateur.facteurActivite(d).total; return [Math.round(T), Math.round(T * 0.9)]; });
+    const tdee = (await texte(page, "#tdee")).replace(/\D/g, ""), perte = (await texte(page, "#v-perte")).replace(/\D/g, "");
+    ok("… mêmes formules que le coach : maintenance " + att[0] + " kcal, perte " + att[1] + " kcal", tdee === String(att[0]) && perte === String(att[1]) && att[0] === 1822, tdee + " / " + perte);
+    ok("… « Tes chiffres sont enregistrés. », plus de message d'erreur", (await texte(page, "#calc-msg")) === "Tes chiffres sont enregistrés." && !(await page.isVisible("#calc-etat")) && !(await page.isVisible("#calc-ok")), await texte(page, "#calc-msg"));
+    const n0 = ecr(db, "calc_perso", ID).length;
+    await page.reload(); await pret(page, "#tdee"); await attendre(page, 1500);
+    const champs2 = await page.evaluate(() => ["age", "taille", "poids", "pas", "heures"].map(i => document.getElementById(i).value));
+    ok("rechargé : ses chiffres reviennent (calc_perso), rien de réécrit, bouton « Enregistrer mes chiffres » caché", JSON.stringify(champs2) === '["30","165","60","6000","3"]' && ecr(db, "calc_perso", ID).length === n0 && !(await page.isVisible("#calc-ok")), JSON.stringify(champs2) + " " + n0 + "/" + ecr(db, "calc_perso", ID).length);
+    await page.click('#objs [data-k="prise"]'); await attendre(page, 1300);
+    ok("objectif « prise de masse » : enregistré dans calc_perso", ((db.donnees.find(d => d.user_id === ID && d.outil === "calc_perso") || {}).contenu || {}).objectif === "prise" && (await texte(page, "#obj-name")) === "prise de masse", "");
+    await aller(page, "#/accueil", 1800);
+    ok("retour à l'accueil : l'action mise en avant devient « Enregistre ta pesée de départ »", (await page.$eval("#dc-etape", x => x.dataset.etape).catch(() => "")) === "pesee", "");
+    ok("tout le bloc : aucune écriture de calc", ecr(db, "calc").length === 0, resume(db));
+    await c.close();
+  });
+
+  await bloc("J. calculateur : départ depuis le calcul du coach ou l'ancien questionnaire", async () => {
+    const CC = { sexe: "H", age: 41, taille: 181, poids: 88, pas: 9000, heures: 4, objectif: "maintien" };
+    const db = base({ comptes: [
+      compte(14, "Marc", "Essai", [["intake", NOUVEAU({ bilan_propose: { choix: "plus_tard", le: avant(MIN) } })], ["calc", CC]]),
+      compte(15, "Ana", "Ancienne", [["intake", Object.assign({}, ANCIEN, { bilan_propose: { choix: "plus_tard", le: avant(MIN) } })]])
+    ] });
+    let { c, page } = await ouvrir(b, db, 14, "#/calculateur", "#tdee"); await attendre(page, 1500);
+    const v1 = await page.evaluate(() => ["age", "taille", "poids", "pas", "heures"].map(i => document.getElementById(i).value).concat([(document.querySelector('#sexe [aria-pressed="true"]') || {}).dataset ? document.querySelector('#sexe [aria-pressed="true"]').dataset.v : ""]));
+    ok("un calcul préparé par le coach (calc) sert de départ, lu sans être écrit", JSON.stringify(v1) === '["41","181","88","9000","4","H"]' && saisies(db).length === 0, JSON.stringify(v1));
+    ok("… bouton « Enregistrer mes chiffres » (des chiffres connus ne partent pas sans son accord)", await page.isVisible("#calc-ok"), "");
+    await page.click("#calc-ok"); await attendre(page, 1400);
+    ok("… « Enregistrer mes chiffres » : calc_perso écrit, calc du coach intact", memes((db.donnees.find(d => d.user_id === PID(14) && d.outil === "calc_perso") || {}).contenu, CC) && ecr(db, "calc").length === 0 && memes((db.donnees.find(d => d.user_id === PID(14) && d.outil === "calc") || {}).contenu, CC), resume(db));
+    await c.close();
+    ({ c, page } = await ouvrir(b, db, 15, "#/calculateur", "#tdee")); await attendre(page, 1500);
+    const v2 = await page.evaluate(() => ["age", "taille", "poids", "pas", "heures"].map(i => document.getElementById(i).value));
+    ok("un ancien prospect (10 réponses) : son âge, sa taille, son poids et ses séances servent de départ (pas : 6 000)", JSON.stringify(v2) === '["30","165","70","6000","3.75"]', JSON.stringify(v2));
+    ok("… et rien n'est écrit sans son accord", ecr(db, "calc_perso", PID(15)).length === 0, resume(db));
+    await c.close();
+  });
+
+  await bloc("J. calculateur : calc_perso piégé", async () => {
+    const XSS = "<img src=x onerror=\"window.__xss=1\">";
+    const db = base({ comptes: [compte(33, "Léa", "Martin", [["intake", NOUVEAU({ bilan_propose: { choix: "plus_tard", le: avant(MIN) } })], ["calc_perso", { sexe: XSS, age: XSS, taille: { a: 1 }, poids: [80], pas: "x", heures: null, objectif: "<script>" }]])] });
+    const { c, page } = await ouvrir(b, db, 33, "#/calculateur", "#tdee"); await attendre(page, 1500);
+    const champs = await page.evaluate(() => ["age", "taille", "poids", "pas", "heures"].map(i => document.getElementById(i).value));
+    ok("calc_perso écrit hors de l'app avec des valeurs piégées : la page s'affiche (champs vides, « Il manque : … »), aucune injection, rien d'écrit", JSON.stringify(champs) === '["","","","",""]' && (await texte(page, "#calc-etat")).startsWith("Il manque : Sexe, Âge (ans)") && !(await page.evaluate(() => window.__xss)) && !(await page.$("#vue img[src='x']")) && saisies(db).length === 0, JSON.stringify(champs) + " " + resume(db));
+    await aller(page, "#/accueil", 1600);
+    ok("… et l'accueil propose toujours « Calcule tes calories (2 min) »", (await page.$eval("#dc-etape", x => x.dataset.etape).catch(() => "")) === "calories", "");
+    await c.close();
+  });
+
+  /* =================== K. garde-fou 18 ans =================== */
+  await bloc("K. garde-fou 18 ans", async () => {
+    const k = 16, ID = PID(k);
+    const db = base({ comptes: [compte(k, "Léa", "Martin", [["intake", NOUVEAU({ bilan_propose: { choix: "plus_tard", le: avant(MIN) } })]])] });
+    const { c, page } = await ouvrir(b, db, k, "#/calculateur", "#tdee"); await attendre(page, 1200);
+    await page.click('#sexe [data-v="F"]'); await page.fill("#taille", "165"); await page.fill("#poids", "60"); await page.fill("#heures", "3");
+    await page.fill("#age", "17"); await page.press("#age", "Tab"); await attendre(page, 1600);
+    ok("âge 17 : message clair « réservé aux adultes (18 ans et plus) : rien n'est enregistré », aucun chiffre", (await texte(page, "#calc-etat")) === TXD.mineur && (await texte(page, "#tdee")) === "—" && (await texte(page, "#g-prot")) === "—", await texte(page, "#calc-etat"));
+    ok("… rien n'est écrit (ni calc_perso, ni calc), aucune copie laissée sur l'appareil", ecr(db, "calc_perso").length === 0 && ecr(db, "calc").length === 0 && !(await page.evaluate(id => Object.keys(localStorage).some(x => x.indexOf("mhx_attente|" + id + "|calc_perso") === 0), ID)), resume(db));
+    await page.fill("#age", "30"); await attendre(page, 1500);
+    ok("âge 30 ensuite : enregistré", ((db.donnees.find(d => d.user_id === ID && d.outil === "calc_perso") || {}).contenu || {}).age === 30, resume(db));
+    await page.fill("#age", "16"); await page.press("#age", "Tab"); await attendre(page, 1600);
+    const CP = (db.donnees.find(d => d.user_id === ID && d.outil === "calc_perso") || {}).contenu;
+    ok("âge 16 ensuite : ce que ce formulaire avait enregistré est retiré (calc_perso vide) et il le dit", JSON.stringify(CP) === "{}" && (await texte(page, "#calc-etat")) === TXD.mineur + " " + TXD.retire, JSON.stringify(CP) + " " + await texte(page, "#calc-etat"));
+    ok("… aucune écriture n'a jamais porté un âge sous 18 ans", ecr(db, "calc_perso").every(e => !(e.contenu && typeof e.contenu.age === "number" && e.contenu.age < 18)), resume(db));
+    await page.fill("#age", "95"); await page.press("#age", "Tab"); await attendre(page, 1500);
+    ok("âge 95 : « Vérifie : Âge (ans) (18 à 90) », rien d'écrit", (await texte(page, "#calc-etat")) === "Vérifie : Âge (ans) (18 à 90)" && JSON.stringify((db.donnees.find(d => d.user_id === ID && d.outil === "calc_perso") || {}).contenu) === "{}", await texte(page, "#calc-etat"));
+    await page.fill("#age", "3"); await attendre(page, 900);
+    ok("« 3 » en cours de frappe (vers « 35 ») : pas encore jugé mineur (« Il manque : Âge (ans) »), rien d'écrit", (await texte(page, "#calc-etat")) === "Il manque : Âge (ans)" && JSON.stringify((db.donnees.find(d => d.user_id === ID && d.outil === "calc_perso") || {}).contenu) === "{}", await texte(page, "#calc-etat"));
+    await c.close();
+  });
+
+  await bloc("K. garde-fou 18 ans : écriture en attente", async () => {
+    const k = 17, ID = PID(k);
+    const db = base({ comptes: [compte(k, "Léa", "Martin", [["intake", NOUVEAU({ bilan_propose: { choix: "plus_tard", le: avant(MIN) } })]])] });
+    const { c, page } = await ouvrir(b, db, k, "#/calculateur", "#tdee"); await attendre(page, 1200);
+    await page.click('#sexe [data-v="H"]'); await page.fill("#taille", "178"); await page.fill("#poids", "70"); await page.fill("#heures", "2");
+    await page.fill("#age", "30"); await page.fill("#age", "15"); await page.press("#age", "Tab");   // en moins de 700 ms
+    await attendre(page, 1800);
+    ok("âge 30 puis 15 avant l'envoi : l'écriture en attente ne part pas, aucun âge ni aucune donnée ne reste en base", ecr(db, "calc_perso").every(e => JSON.stringify(e.contenu) === "{}") && !["age", "poids", "taille"].some(x => x in (((db.donnees.find(d => d.user_id === ID && d.outil === "calc_perso") || {}).contenu) || {})), resume(db) + " " + JSON.stringify(ecr(db, "calc_perso").map(e => e.contenu)));
+    ok("… aucune copie en attente sur l'appareil", !(await page.evaluate(id => Object.keys(localStorage).concat(Object.keys(sessionStorage)).some(x => x.indexOf("mhx_attente|" + id + "|calc_perso") === 0), ID)), "");
+    await c.close();
+  });
+
+  await bloc("K. garde-fou 18 ans : calc_perso mineur en base, restauration, anglais", async () => {
+    const MIN_CP = { sexe: "F", age: 16, taille: 160, poids: 52, pas: 6000, heures: 2, objectif: "maintien" };
+    const db = base({ comptes: [compte(18, "Léa", "Martin", [["intake", NOUVEAU({ bilan_propose: { choix: "plus_tard", le: avant(MIN) } })], ["calc_perso", MIN_CP]]),
+      compte(19, "Zoé", "Bernard", [["intake", NOUVEAU({ bilan_propose: { choix: "plus_tard", le: avant(MIN) } })]])] });
+    let { c, page } = await ouvrir(b, db, 18, "#/calculateur", "#tdee"); await attendre(page, 1800);
+    ok("un calc_perso enregistré avec un âge mineur (hors de l'app) est retiré à l'ouverture du calculateur, message clair", JSON.stringify((db.donnees.find(d => d.user_id === PID(18) && d.outil === "calc_perso") || {}).contenu) === "{}" && (await texte(page, "#calc-etat")) === TXD.mineur + " " + TXD.retire, await texte(page, "#calc-etat"));
+    await c.close();
+    ({ c, page } = await ouvrir(b, db, 19, "#/profil", "#vue .masthead")); await attendre(page, 800);
+    const r = await page.evaluate(async () => {
+      const essai = async d => { try { await Store.importer(JSON.stringify({ plateforme: "mhx", version: 2, donnees: d })); return "ok"; } catch (e) { return String(e && e.message); } };
+      return [await essai({ calc_perso: { sexe: "F", age: 15, taille: 160, poids: 50, pas: 6000, heures: 2, objectif: "maintien" } }),
+              await essai({ calc_perso: { sexe: "F", age: 28, taille: 160, poids: 55, pas: 6000, heures: 2, objectif: "maintien" } })];
+    });
+    await attendre(page, 800);
+    ok("restauration d'une sauvegarde : un calc_perso fait avec un âge mineur n'est jamais restauré ; un calc_perso adulte l'est (sa clé à lui)", r[0] === "vide" && r[1] === "ok" && ecr(db, "calc_perso", PID(19)).length === 1 && ecr(db, "calc_perso", PID(19))[0].contenu.age === 28 && ecr(db, "calc").length === 0, JSON.stringify(r) + " " + resume(db));
+    await c.close();
+    const db2 = base({ comptes: [compte(20, "Léa", "Martin", [["intake", NOUVEAU({ bilan_propose: { choix: "plus_tard", le: avant(MIN) } })]])] }); avecEn(db2, PID(20));
+    ({ c, page } = await ouvrir(b, db2, 20, "#/calculateur", "#tdee", { langue: "en" })); await attendre(page, 1200);
+    await page.fill("#age", "14"); await page.press("#age", "Tab"); await attendre(page, 800);
+    ok("anglais : « The calculator is for adults only (18 and over): nothing is saved. »", (await texte(page, "#calc-etat")) === "The calculator is for adults only (18 and over): nothing is saved." && ecr(db2, "calc_perso").length === 0, await texte(page, "#calc-etat"));
+    await c.close();
+  });
+
+  /* =================== L. garde-fou IMC =================== */
+  await bloc("L. garde-fou IMC", async () => {
+    const k = 21, ID = PID(k);
+    const db = base({ comptes: [compte(k, "Léa", "Martin", [["intake", NOUVEAU({ bilan_propose: { choix: "plus_tard", le: avant(MIN) } })]])] });
+    const { c, page } = await ouvrir(b, db, k, "#/calculateur", "#tdee"); await attendre(page, 1200);
+    await page.click('#sexe [data-v="F"]'); await page.fill("#age", "25"); await page.fill("#taille", "175"); await page.fill("#heures", "2");
+    await page.fill("#poids", "68"); await attendre(page, 1400);
+    ok("IMC normal : l'objectif « Perte de poids −10% » est proposé (et choisi : sa réponse « Perdre du gras »)", await page.isVisible('#objs [data-k="perte"]') && await page.$eval('#objs [data-k="perte"]', x => !x.disabled && x.getAttribute("aria-pressed") === "true") && !(await page.isVisible("#calc-imc")), "");
+    await page.fill("#poids", "50"); await attendre(page, 1500);   // IMC 16,3
+    ok("IMC 16,3 (< 18,5) : pas d'objectif de perte proposé, maintien", !(await page.isVisible('#objs [data-k="perte"]')) && await page.$eval('#objs [data-k="perte"]', x => x.disabled) && await page.$eval('#objs [data-k="maintien"]', x => x.getAttribute("aria-pressed") === "true") && (await texte(page, "#obj-name")) === "maintien", "");
+    ok("… la phrase de prudence existante s'affiche", (await texte(page, "#calc-imc")) === TXD.imc && await page.isVisible("#calc-imc"), await texte(page, "#calc-imc"));
+    ok("… enregistré en maintien (jamais en perte)", ((db.donnees.find(d => d.user_id === ID && d.outil === "calc_perso") || {}).contenu || {}).objectif === "maintien", resume(db));
+    await c.close();
+  });
+
+  /* =================== M. client Thomas et coach : rien ne change =================== */
+  await bloc("M. client Thomas : calculateur et journal toujours cachés", async () => {
+    const db = base();
+    const { c, page } = await contexte(b, THOMAS, db);
+    await page.goto(URL0); await pret(page, "#acc-vue");
+    ok("client : sa navigation est celle d'avant (ni calculateur, ni journal)", JSON.stringify(await page.$$eval("#nav a", l => l.map(a => a.dataset.id))) === JSON.stringify(["accueil", "programme", "nutrition", "mensurations", "suivi", "formation", "complements", "profil"]), JSON.stringify(await page.$$eval("#nav a", l => l.map(a => a.dataset.id))));
+    const vus = [];
+    for (const h of ["#/calculateur", "#/journal"]) { await aller(page, h, 1300); vus.push([h, await ou(page)]); }
+    ok("client : #/calculateur et #/journal → son accueil (#/accueil)", vus.every(([, d]) => d.courant === "accueil" && d.hash === "#/accueil"), JSON.stringify(vus));
+    ok("client : aucune lecture de calc_perso, aucune écriture", lu(db, "calc_perso") === 0 && db.ecritures.length === 0, resume(db));
+    await c.close();
+    const m = await contexte(b, THOMAS, db, { viewport: MOBILE });
+    await m.page.goto(URL0); await pret(m.page, "#acc-vue");
+    ok("client (téléphone) : barre du bas inchangée (Accueil, Programme, Nutrition, Progression, Plus)", JSON.stringify(await m.page.$$eval("#barre-bas a[data-id]", l => l.map(a => a.dataset.id))) === '["accueil","programme","nutrition","mensurations"]' && !!(await m.page.$("#barre-bas [data-plus]")), "");
+    await m.c.close();
+  });
+
+  await bloc("M. coach : calc comme avant", async () => {
+    const db = base();
+    const CALC_T = clone((F.donnees.find(d => d.user_id === F.IDS.c1 && d.outil === "calc") || {}).contenu);
+    const { c, page } = await contexte(b, COACH, db);
+    await page.goto(URL0 + "#/calculateur"); await pret(page, "#tdee"); await attendre(page, 1000);
+    ok("coach, son compte : son calculateur d'avant (âge dès 14 ans, pas de garde-fou ni de mention ajoutés)", await page.$eval("#age", x => x.min === "14") && !(await page.$("#calc-etat, #calc-avis, #calc-imc, #calc-ok")), "");
+    await page.fill("#poids", "81"); await attendre(page, 1400);
+    ok("coach, son compte : il écrit calc chez lui, jamais calc_perso", ecr(db, "calc", F.IDS.coach).length >= 1 && ecr(db, "calc_perso").length === 0, resume(db));
+    await aller(page, "#/clients", 2200);
+    await page.click(`[data-ouvrir="${F.IDS.c1}"]`); await page.waitForSelector("#vue .bandeau", { timeout: 8000 }); await attendre(page, 800);
+    const actions = await page.$$eval("#vue .bandeau-actions a", l => l.map(a => [a.textContent.trim(), a.getAttribute("href")]));
+    ok("fiche de Thomas : « Ses calories » → #/calculateur et « Ses séances » → #/entrainement, comme avant ; pas de journal dans sa navigation", actions.some(([t, h]) => t === "Ses calories" && h === "#/calculateur") && actions.some(([t, h]) => t === "Ses séances" && h === "#/entrainement") && !(await page.$('#nav a[data-id="journal"]')), JSON.stringify(actions));
+    await aller(page, "#/calculateur", 1800);
+    ok("fiche de Thomas, Ses calories : son calc (celui du coach) en départ", (await valeurDe(page, "#age")) === String(CALC_T.age) && (await valeurDe(page, "#poids")) === String(CALC_T.poids), (await valeurDe(page, "#age")) + " / " + JSON.stringify(CALC_T));
+    const n0 = ecr(db, "calc", F.IDS.c1).length;
+    await page.fill("#heures", "6"); await attendre(page, 1400);
+    ok("fiche de Thomas : le coach écrit calc chez Thomas (comme avant), jamais calc_perso", ecr(db, "calc", F.IDS.c1).length === n0 + 1 && ecr(db, "calc_perso").length === 0 && ecr(db, "calc", F.IDS.c1).slice(-1)[0].contenu.heures === 6, resume(db));
+    await c.close();
+  });
+
+  /* =================== N. navigation et pages du prospect =================== */
+  await bloc("N. navigation du prospect", async () => {
+    const k = 26, ID = PID(k);
+    const db = base({ comptes: [compte(k, "Léa", "Martin", [["intake", NOUVEAU({ bilan_propose: { choix: "plus_tard", le: avant(MIN) } })]], { cree: avant(30 * J) })] });
+    let { c, page } = await ouvrir(b, db, k, "", "#dc-accomp", { viewport: MOBILE }); await attendre(page, 800);
+    ok("téléphone : barre du bas Accueil, Calculateur, Progression, Speed Formation (+ Plus)", JSON.stringify(await page.$$eval("#barre-bas a[data-id]", l => l.map(a => a.dataset.id))) === '["accueil","calculateur","mensurations","formation"]' && JSON.stringify(await page.$$eval("#barre-bas a[data-id] .lbl", l => l.map(a => a.textContent.trim()))) === '["Accueil","Calculateur","Progression","Speed Formation"]' && !!(await page.$("#barre-bas [data-plus]")), JSON.stringify(await page.$$eval("#barre-bas a[data-id] .lbl", l => l.map(a => a.textContent.trim()))));
+    await page.click("#barre-bas [data-plus]"); await attendre(page, 500);
+    const plus = await page.$$eval(".menu-plus a", l => l.map(a => a.dataset.id + (a.querySelector(".nav-cadenas") ? "🔒" : "")));
+    ok("« Plus » : la vitrine verrouillée (programme, journal, nutrition, suivi) et le Profil", JSON.stringify(plus) === JSON.stringify(["programme🔒", "journal🔒", "nutrition🔒", "suivi🔒", "profil"]), JSON.stringify(plus));
+    ok("téléphone : accueil sans débordement horizontal", !(await deborde(page)), await largeur(page));
+    await c.close();
+    ({ c, page } = await ouvrir(b, db, k, "", "#dc-accomp")); await attendre(page, 800);
+    const nav = await page.$$eval("#nav a", l => l.map(a => a.dataset.id + (a.querySelector(".nav-cadenas") ? "🔒" : "")));
+    ok("ordinateur : calculateur juste après Ma progression, ouverts avec la Speed Formation ; journal dans la vitrine ; compléments et bilan cachés", JSON.stringify(nav) === JSON.stringify(["accueil", "programme🔒", "journal🔒", "nutrition🔒", "mensurations", "calculateur", "suivi🔒", "formation", "profil"]), JSON.stringify(nav));
+    const L0 = db.lectures.length;
+    await aller(page, "#/journal", 1500);
+    ok("#/journal : page verrouillée « Mon journal » (cadenas, ce que l'accompagnement apporte, « Réserver mon bilan »), rien de ses données n'est lu", !!(await page.$("#vue .verrou")) && (await texte(page, "#vue")).includes(TXD.av_journal) && db.lectures.slice(L0).filter(l => l.outil !== "eq.challenge").length === 0, JSON.stringify(db.lectures.slice(L0).map(l => l.outil)));
+    await cliquerSansOuvrir(page, "#vue .verrou a[target=_blank]"); await attendre(page, 1800);
+    const cl = (((db.donnees.find(d => d.user_id === ID && d.outil === "challenge") || {}).contenu || {}).cta || {}).clics || [];
+    ok("… son « Réserver mon bilan » est compté (source verrou-journal)", cl.length === 1 && cl[0].source === "verrou-journal", JSON.stringify(cl));
+    await aller(page, "#/formation", 2200);
+    ok("inscrit il y a 30 jours : la Speed Formation est ouverte (plus de verrou au 8e jour)", !(await page.$("#vue .verrou")) && !!(await page.$("#fo-vue")) && (await ou(page)).courant === "formation", JSON.stringify(await ou(page)));
+    await c.close();
+  });
+
+  await bloc("N. Ma progression du prospect", async () => {
+    const k = 27, ID = PID(k);
+    const db = base({ comptes: [compte(k, "Léa", "Martin", [["intake", NOUVEAU({ bilan_propose: { choix: "plus_tard", le: avant(MIN) } })]])] });
+    const { c, page } = await ouvrir(b, db, k, "#/mensurations", "#k-poids"); await attendre(page, 1500);
+    ok("Ma progression ouverte au prospect, sans la section photos (aucune lecture de photos, aucun appel au stockage)", !(await page.$("#vue .verrou")) && !(await page.$("#photos-panel, #ph-envoi")) && lu(db, "photos") === 0 && !db.chemins.some(x => x.includes("/storage/")), JSON.stringify(db.chemins.filter(x => /photos|storage/.test(x))));
+    ok("… rien d'écrit à l'ouverture", saisies(db).length === 0, resume(db));
+    await page.fill("#e-poids", "72.4"); await page.click("#add"); await attendre(page, 1500);
+    const M = (db.donnees.find(d => d.user_id === ID && d.outil === "mens") || {}).contenu || {};
+    ok("pesée de départ : mens écrit comme pour un client (semaine 1, poids 72,4)", Array.isArray(M.mesures) && M.mesures.length === 1 && M.mesures[0].poids === 72.4 && M.mesures[0].sem === 1, JSON.stringify(M.mesures));
+    await aller(page, "#/accueil", 1800);
+    ok("retour à l'accueil : toujours « Calcule tes calories (2 min) » (son calcul d'abord)", (await page.$eval("#dc-etape", x => x.dataset.etape).catch(() => "")) === "calories", "");
+    await c.close();
+  });
+
+  await bloc("N. plus aucun « 7 jours » côté prospect", async () => {
+    const k = 28, ID = PID(k);
+    const db = base({ comptes: [compte(k, "Léa", "Martin", [["intake", NOUVEAU({ bilan_propose: { choix: "plus_tard", le: avant(MIN) } })]], { cree: avant(9 * J) })] });
+    const vus = [];
+    for (const langue of ["fr", "en"]) {
+      const d = clone(db); d.ecritures = []; d.lectures = []; d.chemins = []; d.journal = [];
+      if (langue === "en") avecEn(d, ID);
+      const { c, page } = await ouvrir(b, d, k, "", "#dc-accomp", langue === "en" ? { langue: "en" } : {});
+      for (const h of ["#/accueil", "#/decouverte/bilan", "#/calculateur", "#/mensurations", "#/profil", "#/programme", "#/nutrition", "#/journal", "#/suivi"]) {
+        await aller(page, h, 1500);
+        const t = norm(await page.evaluate(() => document.body.innerText));
+        if (SEPT.test(t)) vus.push(langue + " " + h + " : " + (t.match(SEPT) || [""])[0]);
+      }
+      await aller(page, "#/formation", 1800);
+      const tf = norm(await page.evaluate(() => document.body.innerText));
+      if (/\b(Jour|Day) \d+ ?\/ ?7\b|découverte (est )?terminée|discovery period is over|période découverte/i.test(tf)) vus.push(langue + " #/formation");
+      await c.close();
+    }
+    ok("écrans du prospect (FR et EN) : aucun « 7 jours », « Jour n/7 », « découverte terminée », « accès découverte »", vus.length === 0, JSON.stringify(vus));
+    const k2 = await (async () => {
+      const { c, page } = await ouvrir(b, db, k, "", "#dc-accomp");
+      const r = await page.evaluate(() => { const T = DECOUVERTE, E = DECOUVERTE.en; return ["jour", "jour_fini", "lede_reste_1", "lede_reste", "lede_fini"].filter(x => x in T || x in E).concat(("fermee" in T.formation || "fermee" in E.formation) ? ["formation.fermee"] : []); });
+      await c.close(); return r;
+    })();
+    ok("textes « Jour {n}/{t} », « terminée », « Encore {n} jours… », « Ta période découverte est terminée… » retirés (FR et EN)", k2.length === 0, JSON.stringify(k2));
+  });
+
+  /* =================== O. coach : « inscrit depuis n j » (la tuile « Prospects en découverte » et le mode test « jour n »
+     restent en v52 : retirés en v53) =================== */
+  await bloc("O. coach : inscrit depuis n j", async () => {
+    const I1 = NOUVEAU({ email_compte: "p30@exemple.fr", bilan_propose: { choix: "plus_tard", le: avant(3 * J) }, court_debut: avant(30 * J), court_le: avant(30 * J - H) });
+    const db = base({ comptes: [
+      compte(30, "Léa", "Ancienne", [["intake", I1]], { cree: avant(30 * J) }),
+      compte(31, "Zoé", "Récente", [], { cree: avant(3 * J) }),
+      compte(32, "Paul", "Dujour", [], { cree: avant(2 * MIN) })
+    ] });
+    const { c, page } = await contexte(b, COACH, db);
+    await page.goto(URL0 + "#/clients"); await pret(page, `[data-ouvrir="${PID(30)}"]`); await attendre(page, 600);
+    const ligneDe = async id => norm(await page.$eval(`#vue [data-ouvrir="${id}"]`, a => (a.closest("tr") || a.closest(".sc-carte") || a.parentElement).textContent).catch(() => ""));
+    const l150 = await ligneDe(PID(30)), l151 = await ligneDe(PID(31)), l152 = await ligneDe(PID(32));
+    ok("Mes clients : pastilles « Découverte · inscrit depuis 30 j », « … 3 j », « … inscrit aujourd'hui »", l150.includes("Découverte · inscrit depuis 30 j") && l151.includes("Découverte · inscrit depuis 3 j") && l152.includes("Découverte · inscrit aujourd'hui"), [l150, l151, l152].map(x => x.slice(0, 160)).join(" | "));
+    const vc = await texte(page, "#vue");
+    ok("Mes clients : plus aucun « J n/7 » ni « Découverte terminée »", !/J\d+\/7|Découverte terminée|terminée/.test(vc), (vc.match(/J\d+\/7|terminée/) || [""])[0]);
+    await page.click(`[data-ouvrir="${PID(30)}"]`); await page.waitForSelector("#fiche-decouverte", { timeout: 8000 }); await attendre(page, 800);
+    /* le bloc « Suivi commercial » (raisons, action : « découverte terminée ») part avec le score et la température (chantier 4) */
+    const fd = await texte(page, "#fiche-decouverte"), lede = await texte(page, "#vue .masthead .lede");
+    ok("fiche : « inscrit depuis 30 j » (pastille et ligne du bloc Découverte, en-tête), plus de « jour n / 7 » ni de « terminée »", fd.includes("inscrit depuis 30 j") && lede.includes("Découverte : inscrit depuis 30 j, questionnaire rempli.") && !/jour \d+ ?\/ ?7|J\d+\/7|terminée/i.test(fd + " " + lede), fd.slice(0, 200) + " · " + lede);
+    await aller(page, "#/prospects", 2400);
+    await page.click('[data-filtre="tous"]').catch(() => {}); await attendre(page, 600);
+    const st = await page.$$eval("#vue .sc-carte .sc-nom small", l => l.map(x => x.textContent.replace(/\s+/g, " ").trim())).catch(() => []);
+    ok("page Prospects : sous-titre des cartes « Découverte · questionnaire … · inscrit … », sans « J n/7 » ni « terminée »", st.length >= 3 && st.every(x => /^Découverte · questionnaire/.test(x) && !/J\d+\/7|terminée/.test(x)), JSON.stringify(st));
+    const [dl] = await Promise.all([page.waitForEvent("download", { timeout: 5000 }), page.click("#pr-csv")]);
+    const t = fs.readFileSync(await dl.path(), "utf8");
+    /* la colonne « Découverte » (4e) ; « Prochaine action » garde les textes du suivi commercial (chantier 4) */
+    const col = t.replace(/^\uFEFF/, "").split("\r\n").filter(Boolean).map(l => (l.split(";")[3] || "").replace(/^"|"$/g, ""));
+    ok("export CSV : colonne Découverte « inscrit depuis 30 j » / « inscrit depuis 3 j » / « inscrit aujourd'hui », plus de « jour n/7 » ni de « terminée »", col[0] === "Découverte" && ["inscrit depuis 30 j", "inscrit depuis 3 j", "inscrit aujourd'hui"].every(x => col.includes(x)) && col.length === 4 && !col.some(x => /jour \d+\/7|terminée/.test(x)), JSON.stringify(col));
+    ok("coach : aucune écriture", db.ecritures.length === 0, resume(db));
+    await c.close();
+  });
+
   /* =================== Z. rien vers l'extérieur =================== */
   await bloc("Z. hôtes externes", async () => {
-    const autres = Array.from(externes).filter(h => !/^fonts\.(googleapis|gstatic)\.com$/.test(h));
-    ok("aucune requête vers un autre hôte que la page, le faux Supabase et les polices (bloquées)", autres.length === 0, JSON.stringify(autres));
+    /* v52 (lot D) : la Speed Formation, ouverte au prospect, montre les vignettes de ses vidéos (img.youtube.com, bloquées ici) */
+    const autres = Array.from(externes).filter(h => !/^(fonts\.(googleapis|gstatic)\.com|img\.youtube\.com)$/.test(h));
+    ok("aucune requête vers un autre hôte que la page, le faux Supabase, les polices et les vignettes des vidéos de la Speed Formation (bloquées)", autres.length === 0, JSON.stringify(autres));
   });
 
   await b.close(); server.close();

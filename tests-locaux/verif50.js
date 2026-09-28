@@ -8,7 +8,10 @@
    - Confidentialité : paragraphe « Prise de rendez-vous » de DECOUVERTE.confidentialite (FR et EN, même place :
      Calendly, pour le compte du coach, États-Unis, pré-remplissage, écran d'origine), relisible depuis le Profil
      du prospect (et l'inscription).
-   - Navigation du prospect : onglets ouverts accueil, formation (7 jours), profil ; vitrine verrouillée visible
+   - v52 (lot D) : onglets ouverts accueil, Ma progression, calculateur, Speed Formation (sans limite), profil ; vitrine
+     programme, journal, nutrition, suivi ; barre du bas accueil, calculateur, progression, Speed Formation ; les
+     vérifications du jour 8 (formation verrouillée) sont retirées (fonction supprimée).
+   - Navigation du prospect (avant la v52) : onglets ouverts accueil, formation (7 jours), profil ; vitrine verrouillée visible
      (programme, nutrition, suivi ; formation après le jour 7) ; plus d'onglet Challenge (ses adresses mènent à
      #/decouverte) ; mensurations, compléments, bilan cachés mais verrouillés à leur adresse (« Réserver mon
      bilan », aucune donnée lue). Clics des pages verrouillées notés dans challenge.cta.clics avec leur source.
@@ -300,15 +303,16 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     const { c, page } = await contexte(b, lea, db);
     await page.goto(`http://localhost:${PORT}/#/decouverte`); await attendre(page, 2600);
     const ids = await navIds(page);
-    ok("prospect (jour 2) : navigation = accueil, programme, nutrition, suivi, formation, profil", JSON.stringify(ids) === '["accueil","programme","nutrition","suivi","formation","profil"]', JSON.stringify(ids));
-    ok("prospect : plus d'onglet Challenge, pas de Découverte en double, ni progression, compléments ou bilan", !["challenge", "decouverte", "mensurations", "complements", "bilan"].some(x => ids.includes(x)), JSON.stringify(ids));
-    ok("prospect (jour 2) : cadenas sur la vitrine programme, nutrition, suivi ; formation ouverte", (await cadenasIds(page)) === "nutrition,programme,suivi", await cadenasIds(page));
-    for (const r of ["programme", "nutrition", "suivi"]) {
+    /* v52 (lot D) : + journal (vitrine), Ma progression et calculateur (ouverts) */
+    ok("prospect (jour 2) : navigation = accueil, programme, journal, nutrition, progression, calculateur, suivi, formation, profil", JSON.stringify(ids) === '["accueil","programme","journal","nutrition","mensurations","calculateur","suivi","formation","profil"]', JSON.stringify(ids));
+    ok("prospect : plus d'onglet Challenge, pas de Découverte en double, ni compléments ou bilan", !["challenge", "decouverte", "complements", "bilan"].some(x => ids.includes(x)), JSON.stringify(ids));
+    ok("prospect (jour 2) : cadenas sur la vitrine programme, journal, nutrition, suivi ; progression, calculateur, formation ouverts", (await cadenasIds(page)) === "journal,nutrition,programme,suivi", await cadenasIds(page));
+    for (const r of ["programme", "journal", "nutrition", "suivi"]) {
       await aller(page, "#/" + r, 1300);
       const t = await texte(page, "#vue .verrou");
       ok(`#/${r} (vitrine) : page verrouillée, « Réserver mon bilan » (utm_content=verrou-${r})`, t.includes(TXT_VERROU) && t.includes("Réserver mon bilan") && (await href(page, "#vue .verrou a[target=_blank]")) === lienAttendu("verrou-" + r), t.slice(0, 160));
     }
-    for (const r of ["mensurations", "complements", "bilan"]) {
+    for (const r of ["complements", "bilan"]) {   // v52 : Ma progression n'est plus verrouillée
       const avant = db.lectures.length;
       await aller(page, "#/" + r, 1300);
       const t = await texte(page, "#vue .verrou");
@@ -325,27 +329,13 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     ok("anciennes adresses du Challenge (#/challenge, #/challenge/3, #/challenge-libre, #/challenge-rythme) → #/decouverte", redir.every(x => x[1] === "#/decouverte" && x[2]), JSON.stringify(redir));
     await aller(page, "#/formation", 2200);
     const liens = await page.$$eval("#vue a[href^='#/']", l => l.map(a => a.getAttribute("href"))).catch(() => []);
-    ok("formation (pendant la découverte) : ouverte, et ses liens internes ne mènent à aucun onglet caché (#/mensurations, #/complements)",
-      !(await page.$("#vue .verrou")) && !!(await page.$("#fo-vue")) && liens.includes("#/nutrition") && !liens.some(x => ["#/mensurations", "#/complements", "#/bilan"].includes(x)), JSON.stringify(liens));
-    await aller(page, "#/decouverte-jour/8", 1500);
-    const c8 = await cadenasIds(page);
-    await aller(page, "#/decouverte-jour/0", 1500);
-    const c0 = await cadenasIds(page);
-    ok("mode test : #/decouverte-jour/8 verrouille la formation dans la navigation, #/decouverte-jour/0 la rouvre", c8 === "formation,nutrition,programme,suivi" && c0 === "nutrition,programme,suivi", c8 + " | " + c0);
+    ok("formation : ouverte, et ses liens internes ne mènent à aucun onglet caché (#/complements, #/bilan)",
+      !(await page.$("#vue .verrou")) && !!(await page.$("#fo-vue")) && liens.includes("#/nutrition") && !liens.some(x => ["#/complements", "#/bilan"].includes(x)), JSON.stringify(liens));
+    /* v52 (lot D) : fonction supprimée — « le mode test #/decouverte-jour/8 verrouille la formation » (plus de verrou au jour 8) */
     ok("aucune écriture pendant la navigation du prospect (pages verrouillées de la vitrine et cachées, anciennes adresses du Challenge, formation, mode test)", db.ecritures.length === 0, JSON.stringify(db.ecritures.map(e => [e.table, e.user_id, e.outil])));
     await c.close();
   }
-  {
-    const db = base({ jour: 8 });
-    const { c, page } = await contexte(b, lea, db);
-    await page.goto(`http://localhost:${PORT}/#/decouverte`); await attendre(page, 2600);
-    const ids = await navIds(page);
-    ok("prospect (jour 8) : la formation reste dans la navigation, avec cadenas (programme, nutrition, suivi, formation)", JSON.stringify(ids) === '["accueil","programme","nutrition","suivi","formation","profil"]' && (await cadenasIds(page)) === "formation,nutrition,programme,suivi", JSON.stringify(ids) + " | " + (await cadenasIds(page)));
-    await aller(page, "#/formation", 1500);
-    const t = await texte(page, "#vue .verrou");
-    ok("formation verrouillée (jour 8) : « Ta période découverte est terminée… » et « Réserver mon bilan » (utm_content=verrou-formation)", t.includes(TXT_FORMATION_FERMEE) && t.includes("Réserver mon bilan") && (await href(page, "#vue .verrou a[target=_blank]")) === lienAttendu("verrou-formation"), t.slice(0, 200));
-    await c.close();
-  }
+  /* v52 (lot D) : fonction supprimée — « prospect (jour 8) : formation verrouillée » */
   {
     /* reglage de la vitrine absent, en texte ou vide : sans erreur */
     const db = base();
@@ -353,7 +343,7 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     await page.goto(`http://localhost:${PORT}/#/decouverte`); await attendre(page, 2400);
     const ids = await page.evaluate(() => { const out = {}; const v0 = CONFIG.marque.gratuit_vitrine; for (const v of [undefined, "programme", []]) { CONFIG.marque.gratuit_vitrine = v; construireNav(); out[JSON.stringify(v === undefined ? "absent" : v)] = Array.from(document.querySelectorAll("#nav a")).map(a => a.dataset.id); } CONFIG.marque.gratuit_vitrine = v0; construireNav(); return out; }).catch(e => ({ err: String(e) }));
     ok("vitrine absente ou en texte : tous les onglets verrouillés redeviennent visibles (progression, compléments avec cadenas)", ["\"absent\"", "\"programme\""].every(k => Array.isArray(ids[k]) && ["mensurations", "suivi", "complements"].every(x => ids[k].includes(x))), JSON.stringify(ids));
-    ok("vitrine vide ([]) : seuls les onglets ouverts restent (accueil, formation, profil)", JSON.stringify(ids["[]"]) === '["accueil","formation","profil"]', JSON.stringify(ids["[]"]));
+    ok("vitrine vide ([]) : seuls les onglets ouverts restent (accueil, progression, calculateur, formation, profil)", JSON.stringify(ids["[]"]) === '["accueil","mensurations","calculateur","formation","profil"]', JSON.stringify(ids["[]"]));
     await c.close();
   }
   {
@@ -395,10 +385,11 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     ok("clic « Réserver mon bilan » sur #/programme : noté dans challenge.cta.clics { jour: 2, source: \"verrou-programme\", date }",
       cl.length === 2 && der.jour === 2 && der.source === "verrou-programme" && typeof der.date === "string" && Math.abs(Date.parse(der.date) - t0) < 60000, JSON.stringify(C.cta));
     ok("le clic s'ajoute sans rien perdre (ancien clic et anciens jours gardés)", cl.length === 2 && cl[0].source === "decouverte" && !!(C.jours && C.jours["1"]), JSON.stringify(C));
-    await aller(page, "#/mensurations", 1400);
+    /* v52 (lot D) : Ma progression est ouverte au prospect ; la page cachée essayée est #/complements */
+    await aller(page, "#/complements", 1400);
     await cliquerSansOuvrir(page, "#vue .verrou a[target=_blank]"); await attendre(page, 1800);
     C = cleChallenge(db); cl = (C.cta && C.cta.clics) || [];
-    ok("clic depuis une page cachée (#/mensurations) : noté avec source \"verrou-mensurations\"", cl.length === 3 && (cl[2] || {}).source === "verrou-mensurations", JSON.stringify(C.cta));
+    ok("clic depuis une page cachée (#/complements) : noté avec source \"verrou-complements\"", cl.length === 3 && (cl[2] || {}).source === "verrou-complements", JSON.stringify(C.cta));
     ok("aucune autre écriture que la clé challenge de la prospecte", db.ecritures.length > 0 && db.ecritures.every(e => e.table === "donnees" && e.user_id === PROSPECT && e.outil === "challenge"), JSON.stringify(db.ecritures.map(e => [e.table, e.user_id, e.outil])));
     const tr = await page.evaluate(() => { try { return JSON.parse(localStorage.getItem("mhx_tracking") || "[]"); } catch(e){ return []; } });
     ok("événement « call_cta_clicked » noté dans mhx_tracking pour chaque clic", tr.filter(x => x.event === "call_cta_clicked" && x.uid === PROSPECT).length === 2, JSON.stringify(tr.map(x => x.event)));
@@ -414,15 +405,7 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     ok("premier clic sans clé challenge (#/suivi) : la clé naît avec ce clic (source \"verrou-suivi\")", cl.length === 1 && cl[0].source === "verrou-suivi" && cl[0].jour === 2, JSON.stringify(C));
     await c.close();
   }
-  {
-    const db = base({ jour: 8, challenge: { version: 1, jours: {}, cta: { clics: [] } } });
-    const { c, page } = await contexte(b, lea, db);
-    await page.goto(`http://localhost:${PORT}/#/formation`); await attendre(page, 2400);
-    await cliquerSansOuvrir(page, "#vue .verrou a[target=_blank]"); await attendre(page, 1800);
-    const C = cleChallenge(db), cl = (C.cta && C.cta.clics) || [];
-    ok("clic depuis la formation verrouillée (jour 8) : { jour: 8, source: \"verrou-formation\" }", cl.length === 1 && cl[0].source === "verrou-formation" && cl[0].jour === 8, JSON.stringify(C.cta));
-    await c.close();
-  }
+  /* v52 (lot D) : fonction supprimée — « clic depuis la formation verrouillée (jour 8) » */
 
   /* ---------- E. Téléphone : barre du bas et menu « Plus » ---------- */
   {
@@ -430,32 +413,24 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     const { c, page } = await contexte(b, lea, db, { viewport: { width: 390, height: 844 } });
     await page.goto(`http://localhost:${PORT}/#/decouverte`); await attendre(page, 2400);
     const barre = await page.$$eval("#barre-bas a", l => l.map(a => a.dataset.id)).catch(() => []);
-    ok("prospect mobile (jour 2) : barre du bas = accueil, formation, profil, programme", JSON.stringify(barre) === '["accueil","formation","profil","programme"]', JSON.stringify(barre));
+    /* v52 (lot D) : accueil, calculateur, progression, Speed Formation */
+    ok("prospect mobile (jour 2) : barre du bas = accueil, calculateur, progression, Speed Formation", JSON.stringify(barre) === '["accueil","calculateur","mensurations","formation"]', JSON.stringify(barre));
     ok("sur la Découverte (#/decouverte), « Accueil » est surligné (pas « Plus »)", !!(await page.$("#vue #dc-vue")) && (await page.$eval('#barre-bas a[data-id="accueil"]', a => a.getAttribute("aria-current")).catch(() => "")) === "page" && !(await page.$eval("#barre-bas [data-plus]", e => e.classList.contains("ici")).catch(() => true)));
     await page.click("#barre-bas [data-plus]").catch(() => {}); await attendre(page, 500);
     const plus = await page.$$eval(".menu-plus a", l => l.map(a => a.dataset.id)).catch(() => []);
     const plusCad = await page.$$eval(".menu-plus a .nav-cadenas", l => l.length).catch(() => 0);
-    ok("prospect mobile : « Plus » = nutrition et suivi, avec cadenas (rien de caché, pas de Challenge)", JSON.stringify(plus) === '["nutrition","suivi"]' && plusCad === 2, JSON.stringify(plus) + " cadenas " + plusCad);
+    ok("prospect mobile : « Plus » = programme, journal, nutrition, suivi (avec cadenas) et profil (rien de caché, pas de Challenge)", JSON.stringify(plus) === '["programme","journal","nutrition","suivi","profil"]' && plusCad === 4, JSON.stringify(plus) + " cadenas " + plusCad);
     await page.screenshot({ path: path.join(OUT, "prospect-plus-mobile.png") });
     await page.click('.menu-plus a[data-id="suivi"]').catch(() => {}); await attendre(page, 1400);
     ok("un lien du menu « Plus » ferme le volet et ouvre la page (#/suivi verrouillée, « Plus » surligné)", !(await page.$(".volet")) && (await page.evaluate(() => location.hash)) === "#/suivi" && !!(await page.$("#vue .verrou")) && (await page.$eval("#barre-bas [data-plus]", e => e.classList.contains("ici")).catch(() => false)));
-    await aller(page, "#/mensurations", 1400);
+    await aller(page, "#/complements", 1400);   // v52 : Ma progression est ouverte ; page cachée : compléments
     const deb = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-    ok("page cachée (#/mensurations) sur mobile : verrouillée, « Plus » ne s'allume pas, aucun débordement horizontal", !!(await page.$("#vue .verrou")) && !(await page.$eval("#barre-bas [data-plus]", e => e.classList.contains("ici")).catch(() => true)) && deb <= 0, "débordement " + deb);
+    ok("page cachée (#/complements) sur mobile : verrouillée, « Plus » ne s'allume pas, aucun débordement horizontal", !!(await page.$("#vue .verrou")) && !(await page.$eval("#barre-bas [data-plus]", e => e.classList.contains("ici")).catch(() => true)) && deb <= 0, "débordement " + deb);
     await page.screenshot({ path: path.join(OUT, "prospect-verrou-mobile.png") });
     ok("aucune écriture pendant la navigation mobile du prospect (barre du bas, menu « Plus », pages verrouillées)", db.ecritures.length === 0, JSON.stringify(db.ecritures.map(e => [e.table, e.user_id, e.outil])));
     await c.close();
   }
-  {
-    const db = base({ jour: 8 });
-    const { c, page } = await contexte(b, lea, db, { viewport: { width: 390, height: 844 } });
-    await page.goto(`http://localhost:${PORT}/#/decouverte`); await attendre(page, 2400);
-    const barre = await page.$$eval("#barre-bas a", l => l.map(a => a.dataset.id)).catch(() => []);
-    await page.click("#barre-bas [data-plus]").catch(() => {}); await attendre(page, 500);
-    const plus = await page.$$eval(".menu-plus a", l => l.map(a => a.dataset.id)).catch(() => []);
-    ok("prospect mobile (jour 8) : barre = accueil, profil, programme, nutrition ; « Plus » = suivi, formation", JSON.stringify(barre) === '["accueil","profil","programme","nutrition"]' && JSON.stringify(plus) === '["suivi","formation"]', JSON.stringify(barre) + " | " + JSON.stringify(plus));
-    await c.close();
-  }
+  /* v52 (lot D) : fonction supprimée — « prospect mobile (jour 8) : formation dans « Plus » » */
   {
     const db = base();
     const { c, page } = await contexte(b, thomas, db, { viewport: { width: 390, height: 844 } });
