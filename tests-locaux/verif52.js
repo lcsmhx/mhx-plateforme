@@ -6,8 +6,8 @@
    d'un prospect (score détaillé, réponses, chronologie dans l'ordre, lien de réservation exact, mailto, Copier),
    Nouveautés (panneau du tableau de bord et de la page Prospects, 7 jours par défaut, « Tout marquer comme vu »
    qui écrit coach_notifs, badge qui disparaît, nouvel événement après la visite), journal des emails présent ou
-   absent (404), accord pour les emails de suivi (case de l'inscription → emails_suivi daté ; interrupteur du
-   Profil → clé emails), activité du prospect (pages comptées en mémoire, aucune lecture à l'affichage d'une page
+   absent (404), accord pour les emails (v52 : case newsletter de l'inscription → newsletter daté et versionné ;
+   interrupteur du Profil → clé emails { newsletter, maj, version, source }), activité du prospect (pages comptées en mémoire, aucune lecture à l'affichage d'une page
    verrouillée, écriture après relecture de la base — le delta s'ajoute —, pagehide : rien d'écrit, delta gardé
    sur l'appareil et repris au prochain envoi ou à la visite suivante, une minute), email du compte (email_compte)
    et début du questionnaire dans le premier brouillon (jamais avant 18 ans, retirés
@@ -329,7 +329,8 @@ async function exporter(page){
   return { nom: dl.suggestedFilename(), t: fs.readFileSync(await dl.path(), "utf8") };
 }
 const ENTETES = ["Nom", "Email", "Inscrit le", "Découverte", "Objectif", "Statut", "Score /100", "Questionnaire", "Motivation /10", "Clics « Réserver mon bilan »", "Dernier clic", "Bilan réservé le", "Relances", "Dernière activité", "Prochaine action"];
-const lienPour = (prenom, email) => CAL + "?utm_source=app-mhx&utm_medium=coach&utm_content=fiche-coach&name=" + encodeURIComponent(prenom) + "&first_name=" + encodeURIComponent(prenom) + (email ? "&email=" + encodeURIComponent(email) : "");
+/* v52 (lot B) : le nom du prospect (profils.nom) est pré-rempli aussi : name = « prénom nom », first_name, last_name */
+const lienPour = (prenom, nom, email) => CAL + "?utm_source=app-mhx&utm_medium=coach&utm_content=fiche-coach&name=" + encodeURIComponent([prenom, nom].filter(Boolean).join(" ")) + "&first_name=" + encodeURIComponent(prenom) + (nom ? "&last_name=" + encodeURIComponent(nom) : "") + (email ? "&email=" + encodeURIComponent(email) : "");
 /* la fiche d'un prospect, ouverte depuis sa carte (filtre « Tous ») */
 async function ouvrirFiche(page, uid){
   if (!(await page.$("#pr-vue"))) { await aller(page, "#/prospects", 2200); }
@@ -519,7 +520,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     ok("chronologie : chaque ligne datée « jj/mm/aaaa hh:mm » en heure locale (inscription : " + fr(avant(26 * H)) + " " + hm(avant(26 * H)) + ")", ch.length === 9 && ch.every(x => /^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/.test(x.aff)) && ch[8].aff === fr(avant(26 * H)) + " " + hm(avant(26 * H)), JSON.stringify(ch.map(x => x.aff)));
     ok("chronologie : « 2 jours d'activité, 12 min dans l'app · pages vues : decouverte-resultat (4), formation (2), verrou-programme (1). »", (await texte(page, "#fiche-chrono p.note")) === "2 jours d'activité, 12 min dans l'app · pages vues : decouverte-resultat (4), formation (2), verrou-programme (1).", await texte(page, "#fiche-chrono p.note"));
     const lien = await page.$eval("#dc-lien", e => e.value).catch(() => "");
-    const lienAtt = lienPour("Inès", "ines.dupre@exemple.fr");
+    const lienAtt = lienPour("Inès", "Dupré", "ines.dupre@exemple.fr");
     ok("lien de réservation exact : " + lienAtt, lien === lienAtt, lien);
     const href = await page.getAttribute("#dc-mail", "href").catch(() => "");
     const mt = (() => { try { const [a, qs] = href.slice(7).split("?"); const P = new URLSearchParams(qs.replace(/\+/g, "%2B")); return { a: decodeURIComponent(a), s: P.get("subject"), c: P.get("body") }; } catch (e) { return {}; } })();
@@ -549,7 +550,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     const lienL = await page.$eval("#dc-lien", e => e.value).catch(() => "");
     /* v52 : rien répondu = nouveau questionnaire court, 3 questions (avant : « 0/10 réponses ») */
     ok("Léa (rien fait) : score 10/100, « Questionnaire en cours (0/3 réponses) » 0 / 30, chronologie « Inscription » seule", (await texte(page, "#fiche-score .seance-c-tete .pastille")) === "10/100" && (await lignesLi(page, "#fiche-score")).some(([k, v]) => k === "Questionnaire en cours (0/3 réponses)" && v === "0 / 30") && JSON.stringify((await chrono(page)).map(x => x.t)) === '["Inscription"]', JSON.stringify(await lignesLi(page, "#fiche-score")));
-    ok("Léa sans email : lien avec le prénom seul (" + lienPour("Léa", "") + "), pas de mailto, « Email inconnu : il apparaît quand le prospect a commencé son questionnaire. »", lienL === lienPour("Léa", "") && !(await page.$("#dc-mail")) && (await texte(page, "#fiche-actions")).includes("Email inconnu : il apparaît quand le prospect a commencé son questionnaire."), lienL);
+    ok("Léa sans email : lien avec son prénom et son nom, sans email (" + lienPour("Léa", "Martin", "") + "), pas de mailto, « Email inconnu : il apparaît quand le prospect a commencé son questionnaire. »", lienL === lienPour("Léa", "Martin", "") && !(await page.$("#dc-mail")) && (await texte(page, "#fiche-actions")).includes("Email inconnu : il apparaît quand le prospect a commencé son questionnaire."), lienL);
     await aller(page, "#/prospects", 2000);
     await ouvrirFiche(page, ZOE);
     const sz = await lignesLi(page, "#fiche-score");
@@ -562,7 +563,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     const sp = await lignesLi(page, "#fiche-score"), cp = (await chrono(page)).map(x => x.t);
     const lienP = await page.$eval("#dc-lien", e => e.value).catch(() => "");
     ok("prospect piégé : fiche affichée, score 16/100 (3/10 réponses, email non ouvert), chronologie « Inscription » seule (dates piégées ignorées)", (await texte(page, "#fiche-score .seance-c-tete .pastille")) === "16/100" && sp.some(([k, v]) => k === "Questionnaire en cours (3/10 réponses)" && v === "6 / 30") && JSON.stringify(cp) === '["Inscription"]', JSON.stringify(sp) + " " + JSON.stringify(cp));
-    ok("prospect piégé : « 0 jour d'activité, 0 min dans l'app. » (pages piégées écartées), lien sans email (« @piege.fr » invalide), pas de mailto", (await texte(page, "#fiche-chrono p.note")) === "0 jour d'activité, 0 min dans l'app." && lienP === lienPour("=1+1", "") && !(await page.$("#dc-mail")), (await texte(page, "#fiche-chrono p.note")) + " · " + lienP);
+    ok("prospect piégé : « 0 jour d'activité, 0 min dans l'app. » (pages piégées écartées), lien sans email (« @piege.fr » invalide), pas de mailto", (await texte(page, "#fiche-chrono p.note")) === "0 jour d'activité, 0 min dans l'app." && lienP === lienPour("=1+1", XSS, "") && !(await page.$("#dc-mail")), (await texte(page, "#fiche-chrono p.note")) + " · " + lienP);
     ok("prospect piégé : aucune injection (nom, obstacle, modèle d'email), aucune écriture", !(await xss(page)) && (await texte(page, "#vue .masthead h1")).startsWith("=1+1 " + XSS) && db.ecritures.length === 0, await texte(page, "#vue .masthead h1"));
   });
 
@@ -672,7 +673,13 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     ok("dates non ISO : aucune injection, aucune écriture", !(await xss(page)) && db.ecritures.length === 0);
   });
 
-  /* ---------- F. Accord pour les emails de suivi ---------- */
+  /* ---------- F. Accord pour les emails : la newsletter ----------
+     v52 (chantier 1, lot B) : la case « emails de suivi » est remplacée par la case NEWSLETTER (facultative, décochée) :
+     métadonnée newsletter (instant ou null) + newsletter_version, plus d'emails_suivi ; l'interrupteur du Profil pilote
+     emails.newsletter (date, version, source « profil ») ; l'ancien accord (emails_suivi, emails.suivi) ne vaut pas
+     newsletter. Détails (copie à la première ouverture, anglais, cas limites) : verif55 blocs E et F. */
+  const NEWS = "Je veux recevoir par email les conseils, témoignages et offres de coaching de MHX Coaching (1 à 2 emails par semaine maximum). Désinscription en 1 clic dans chaque email.";
+  const V_NEWS = "2026-09-28c";   // version du texte de la case newsletter (DECOUVERTE.accords.newsletter)
   await bloc("F. case de l'inscription", async () => {
     ok("le fichier testé garde inscription_libre: false (l'inscription n'est ouverte ici que dans la page servie par le banc)", fs.readFileSync(HTML, "utf8").includes("inscription_libre: false"));
     inscriptionLibre = true;
@@ -682,51 +689,52 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
         const { c, page } = await contexte(b, null, db);
         await page.goto(`http://localhost:${PORT}/`); await attendre(page, 1200);
         await page.click('[data-mode="inscription"]'); await attendre(page, 400);
-        const lib = await texte(page, "label.co-emails");
-        if (coche) ok("inscription : case facultative « J'accepte de recevoir par email des rappels et conseils liés à ma découverte (3 au plus, désinscription en un clic). Facultatif. », décochée par défaut", lib === "J'accepte de recevoir par email des rappels et conseils liés à ma découverte (3 au plus, désinscription en un clic). Facultatif." && (await page.$eval("#c-emails", e => e.checked).catch(() => null)) === false, lib);
+        const lib = await texte(page, "label.co-newsletter");
+        if (coche) ok("inscription : case facultative « " + NEWS.slice(0, 60) + "… » (texte exact), décochée par défaut ; plus de case « emails de suivi »", lib === NEWS && (await page.$eval("#c-newsletter", e => e.checked).catch(() => null)) === false && !(await page.$("#c-emails")), lib);
         if (coche) {
           await page.click("#c-cgu-lien"); await attendre(page, 500);
-          ok("conditions (volet) : paragraphe « Emails de suivi (facultatif) : … au plus 3 emails … Brevo … Désinscription en un clic … »", (await texte(page, "body")).includes("Emails de suivi (facultatif) : si tu coches la case, tu reçois au plus 3 emails liés à ta découverte") && (await texte(page, "body")).includes("Désinscription en un clic"));
+          const vt = await texte(page, "body");
+          ok("conditions (volet) : paragraphe « Newsletter (facultative) : … 1 à 2 emails par semaine au plus. Désinscription en 1 clic … », plus « Emails de suivi » ni « au plus 3 emails »", vt.includes("Newsletter (facultative) : si tu coches la case, tu reçois par email les conseils, témoignages et offres de coaching de MHX Coaching, 1 à 2 emails par semaine au plus.") && vt.includes("Désinscription en 1 clic dans chaque email, et retrait de ton accord possible à tout moment dans ton Profil.") && !vt.includes("Emails de suivi (facultatif)") && !vt.includes("au plus 3 emails"));
           await page.keyboard.press("Escape"); await attendre(page, 300);
           await page.evaluate(() => { const f = document.querySelector("[data-ui-fermer]"); if (f) f.click(); }).catch(() => {}); await attendre(page, 300);
         }
-        await page.fill("#c-prenom", "Zoé"); await page.fill("#c-email", "nouvelle@exemple.fr"); await page.fill("#c-mdp", "motdepasse1");
-        await page.check("#c-cgu"); await page.check("#c-sante"); if (coche) await page.check("#c-emails");
+        await page.fill("#c-prenom", "Zoé"); await page.fill("#c-nom", "Martin"); await page.fill("#c-email", "nouvelle@exemple.fr"); await page.fill("#c-mdp", "motdepasse1");
+        await page.check("#c-cgu"); await page.check("#c-sante"); if (coche) await page.check("#c-newsletter");
         const t0 = Date.now();
         await page.click("#c-go"); await attendre(page, 2500);
         const md = (db.inscriptions[0] || {}).data || {};
-        if (coche) ok("case cochée : l'inscription porte emails_suivi = l'instant de l'inscription (métadonnée du compte)", db.inscriptions.length === 1 && typeof md.emails_suivi === "string" && Math.abs(Date.parse(md.emails_suivi) - t0) < 10000, JSON.stringify(md));
-        else ok("case laissée vide : l'inscription passe quand même, emails_suivi = null", db.inscriptions.length === 1 && "emails_suivi" in md && md.emails_suivi === null && typeof md.consentement_sante === "string", JSON.stringify(md));
+        if (coche) ok("case cochée : l'inscription porte newsletter = l'instant de l'inscription et newsletter_version (métadonnées du compte), plus d'emails_suivi", db.inscriptions.length === 1 && typeof md.newsletter === "string" && Math.abs(Date.parse(md.newsletter) - t0) < 10000 && md.newsletter_version === V_NEWS && !("emails_suivi" in md), JSON.stringify(md));
+        else ok("case laissée vide : l'inscription passe quand même, newsletter = null, plus d'emails_suivi", db.inscriptions.length === 1 && "newsletter" in md && md.newsletter === null && !("emails_suivi" in md) && typeof md.consentement_sante === "string", JSON.stringify(md));
         await c.close();
       }
     } finally { inscriptionLibre = false; }
   });
   await bloc("F. interrupteur du Profil", async () => {
-    const leaMeta = qui(LEA, "lea.martin@exemple.fr", { prenom: "Léa", emails_suivi: avant(2 * H) });
-    const db = base();
+    const leaMeta = qui(LEA, "lea.martin@exemple.fr", { prenom: "Léa", nom: "Martin", newsletter: avant(2 * H), newsletter_version: V_NEWS });
+    const db = base({ cles: [[LEA, "emails", { newsletter: true, maj: avant(2 * H), version: V_NEWS, source: "inscription" }, avant(2 * H)]] });
     const { page } = await contexte(b, leaMeta, db);
     await page.goto(`http://localhost:${PORT}/#/profil`); await attendre(page, 2600);
     const etat = () => page.$eval("#mc-emails", e => ({ c: e.checked, d: e.disabled })).catch(() => null);
-    ok("Profil du prospect : bloc « Emails de suivi », interrupteur coché d'après la case de l'inscription (pas encore de clé emails), actif", (await texte(page, "#mc-emails-bloc h2")) === "Emails de suivi" && JSON.stringify(await etat()) === '{"c":true,"d":false}' && lu(db, "emails") === 1, JSON.stringify(await etat()) + " lectures emails " + lu(db, "emails"));
+    ok("Profil du prospect : bloc « Newsletter », interrupteur coché d'après la clé emails (copie de la case de l'inscription), actif", (await texte(page, "#mc-emails-bloc h2")) === "Newsletter" && JSON.stringify(await etat()) === '{"c":true,"d":false}' && lu(db, "emails") >= 1, JSON.stringify(await etat()) + " lectures emails " + lu(db, "emails"));
     await page.click("#mc-emails-bloc label.switch"); await attendre(page, 1400);
     const E1 = contenu(db, "emails", LEA) || {};
-    ok("décoché : clé emails = { suivi: false, maj } écrite, « C'est noté : plus aucun email de suivi. »", E1.suivi === false && typeof E1.maj === "string" && !isNaN(Date.parse(E1.maj)) && ecr(db, "emails", LEA).length === 1 && (await texte(page, "#mc-emails-msg")) === "C'est noté : plus aucun email de suivi.", JSON.stringify(E1) + " · " + (await texte(page, "#mc-emails-msg")));
+    ok("décoché : clé emails = { newsletter: false, maj, version, source: « profil » } écrite, « C'est noté : plus aucune newsletter. »", E1.newsletter === false && E1.version === V_NEWS && E1.source === "profil" && typeof E1.maj === "string" && !isNaN(Date.parse(E1.maj)) && ecr(db, "emails", LEA).length === 1 && (await texte(page, "#mc-emails-msg")) === "C'est noté : plus aucune newsletter.", JSON.stringify(E1) + " · " + (await texte(page, "#mc-emails-msg")));
     await page.click("#mc-emails-bloc label.switch"); await attendre(page, 1400);
     const E2 = contenu(db, "emails", LEA) || {};
-    ok("recoché : { suivi: true, maj }, « C'est noté : tu recevras les emails de suivi. »", E2.suivi === true && ecr(db, "emails", LEA).length === 2 && (await texte(page, "#mc-emails-msg")) === "C'est noté : tu recevras les emails de suivi.", JSON.stringify(E2));
+    ok("recoché : { newsletter: true, maj, version }, « C'est noté : tu recevras la newsletter. »", E2.newsletter === true && E2.version === V_NEWS && ecr(db, "emails", LEA).length === 2 && (await texte(page, "#mc-emails-msg")) === "C'est noté : tu recevras la newsletter.", JSON.stringify(E2));
     ok("interrupteur : seule la clé emails est écrite (ni intake, ni profil, ni compte, ni activite : pas de minute écoulée, pas d'arrière-plan)", db.ecritures.every(e => e.outil === "emails") && ecr(db, "activite").length === 0, JSON.stringify(db.ecritures.map(e => e.table + ":" + e.outil)));
   });
   await bloc("F. la clé emails l'emporte ; lecture ratée", async () => {
-    const leaMeta = qui(LEA, "lea.martin@exemple.fr", { prenom: "Léa", emails_suivi: avant(2 * H) });
-    const db = base({ cles: [[LEA, "emails", { suivi: false, maj: avant(H) }, avant(H)]] });
+    const leaMeta = qui(LEA, "lea.martin@exemple.fr", { prenom: "Léa", nom: "Martin", newsletter: avant(2 * H), newsletter_version: V_NEWS });
+    const db = base({ cles: [[LEA, "emails", { newsletter: false, maj: avant(H), version: V_NEWS, source: "profil" }, avant(H)]] });
     const { c, page } = await contexte(b, leaMeta, db);
     await page.goto(`http://localhost:${PORT}/#/profil`); await attendre(page, 2600);
-    ok("case cochée à l'inscription mais clé emails { suivi: false } : interrupteur décoché (la clé l'emporte)", (await page.$eval("#mc-emails", e => e.checked).catch(() => null)) === false);
+    ok("case cochée à l'inscription mais clé emails { newsletter: false } : interrupteur décoché (la clé l'emporte), rien d'écrit", (await page.$eval("#mc-emails", e => e.checked).catch(() => null)) === false && ecr(db, "emails").length === 0);
     await c.close();
     const db2 = base();
-    const { c: c2, page: p2 } = await contexte(b, qui(LEA, "lea.martin@exemple.fr"), db2);
+    const { c: c2, page: p2 } = await contexte(b, qui(LEA, "lea.martin@exemple.fr", { prenom: "Léa", emails_suivi: avant(2 * H) }), db2);
     await p2.goto(`http://localhost:${PORT}/#/profil`); await attendre(p2, 2600);
-    ok("sans case à l'inscription ni clé : interrupteur décoché", (await p2.$eval("#mc-emails", e => e.checked + "|" + e.disabled).catch(() => null)) === "false|false");
+    ok("ancien accord « emails de suivi » seulement (emails_suivi), ni case newsletter ni clé : interrupteur décoché, actif", (await p2.$eval("#mc-emails", e => e.checked + "|" + e.disabled).catch(() => null)) === "false|false");
     await c2.close();
     const db3 = base({ lectureKo: ["emails"] });
     const { page: p3 } = await contexte(b, leaMeta, db3);

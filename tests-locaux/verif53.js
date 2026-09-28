@@ -21,7 +21,7 @@
    G. mobile 390 px : email de 120 caractères sans tiret, réponses et notes sans espace, aucun défilement horizontal ;
    H. restauration d'une sauvegarde (Profil, « Restaurer une sauvegarde ») : ni emails ni activite ne sont réécrits ;
    I. page Prospects : après une action sur une carte, la liste garde sa longueur (100 après « Afficher plus ») et sa place ;
-   J. conditions (FR / EN, Profil et inscription) : mesure des ouvertures et des clics par Brevo, aucun prix (conditions,
+   J. conditions (FR / EN, Profil et inscription) : v52, newsletter sans mesure d'ouverture ni prestataire nommé (avant : chaque ouverture et chaque clic indiqués au coach par Brevo), aucun prix (conditions,
       Profil, Découverte, inscription), version « 2026-09-27 · 51 » en pied de page ;
    K. statuts : clic « Réserver » sans questionnaire à 2 h = TIÈDE, à 30 h = FROID, NOUVEAU avec « questionnaire
       commencé (4/10 réponses) » ;
@@ -435,7 +435,8 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     const { page: p2 } = await contexte(b, leaAct, db2, { stockage: stock2 });
     await p2.goto(`http://localhost:${PORT}/`); await p2.waitForSelector("#q-probleme", { timeout: 8000 }); await attendre(p2, 1800);
     const ts2 = await tousLesToasts(p2);
-    const attendu = "Une modification faite hors ligne n'a pas été envoyée (Emails de suivi, " + fr(avant(5 * H)) + ") : une version plus récente existe déjà.";
+    /* v52 (lot B) : la clé emails porte la newsletter : son nom lisible devient « Newsletter » (DECOUVERTE.emails.titre) */
+    const attendu = "Une modification faite hors ligne n'a pas été envoyée (Newsletter, " + fr(avant(5 * H)) + ") : une version plus récente existe déjà.";
     ok("copies hors ligne activite + emails plus anciennes que la base : un seul toast, « " + attendu + " » (nom lisible, l'activité n'y figure pas)", ts2.length === 1 && ts2[0] === attendu, JSON.stringify(ts2));
     ok("… la clé emails de la base n'est pas écrasée (suivi: false gardé), ni la copie emails ni la copie activite n'est écrite telle quelle", ecr(db2, "emails").length === 0 && (contenu(db2, "emails", ACT) || {}).suivi === false && ecr(db2, "activite").length === 0, JSON.stringify(db2.ecritures.map(e => e.outil)));
   });
@@ -805,8 +806,11 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
   });
 
   /* =================== J. conditions : mesure des emails, aucun prix =================== */
-  const PHRASE_FR = "Brevo indique au coach si chaque email a été ouvert et si un lien a été cliqué : cela compte dans le suivi de ta découverte.";
-  const PHRASE_EN = "Brevo tells the coach whether each email was opened and whether a link was clicked: this counts in the follow-up of your discovery.";
+  /* v52 (chantier 1, lot B) : les « emails de suivi » (Brevo indiquait au coach chaque ouverture et chaque clic) sont
+     remplacés par la newsletter (décisions de Lucas du 28/09 : aucune mesure d'ouverture, aucun prestataire nommé ;
+     désinscription en 1 clic et retrait dans le Profil) : la phrase attendue change, plus rien sur l'ouverture ni Brevo */
+  const PHRASE_FR = "Désinscription en 1 clic dans chaque email, et retrait de ton accord possible à tout moment dans ton Profil.";
+  const PHRASE_EN = "One-click unsubscribe in every email, and you can withdraw your consent at any time in your Profile.";
   await bloc("J. conditions (Profil, FR et EN ; inscription)", async () => {
     for (const langue of ["", "en"]) {
       const db = base({ comptes: seule() });
@@ -814,8 +818,8 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
       await page.goto(`http://localhost:${PORT}/#/profil`); await page.waitForSelector("#mc-conditions", { timeout: 8000 }); await attendre(page, 800);
       await page.click("#mc-conditions"); await page.waitForSelector(".volet", { timeout: 5000 }); await attendre(page, 300);
       const tv = norm(await page.textContent(".volet").catch(() => ""));
-      if (!langue) ok("Profil du prospect, conditions en français : « " + PHRASE_FR + " » (ouvert et cliqué), aucun prix", tv.includes(PHRASE_FR) && tv.includes("ouvert") && tv.includes("cliqué") && !prixTrouve(tv), prixTrouve(tv) || tv.slice(0, 200));
-      else ok("Profil du prospect, conditions en anglais : « " + PHRASE_EN + " » (opened / clicked), aucun prix", tv.includes(PHRASE_EN) && tv.includes("opened") && tv.includes("clicked") && !prixTrouve(tv), prixTrouve(tv) || tv.slice(0, 300));
+      if (!langue) ok("Profil du prospect, conditions en français : « " + PHRASE_FR + " » (plus rien sur l'ouverture des emails, plus de Brevo), aucun prix", tv.includes(PHRASE_FR) && !tv.includes("Brevo") && !/a été ouvert|a été cliqué|mesure d'ouverture/.test(tv) && !prixTrouve(tv), prixTrouve(tv) || tv.slice(0, 200));
+      else ok("Profil du prospect, conditions en anglais : « " + PHRASE_EN + " » (nothing about opens any more, no Brevo), aucun prix", tv.includes(PHRASE_EN) && !tv.includes("Brevo") && !/was opened|was clicked|open tracking/.test(tv) && !prixTrouve(tv), prixTrouve(tv) || tv.slice(0, 300));
       await page.keyboard.press("Escape").catch(() => {}); await attendre(page, 300);
       const visible = () => page.evaluate(() => document.body.innerText).then(norm).catch(() => "");   // texte affiché (pas le code de la page)
       const tp = await visible();

@@ -36,8 +36,9 @@ const server = http.createServer((req, res) => {
 const res = []; const ok = (n, c, d) => res.push((c ? "  ✓ " : "  ✗ ") + n + (c ? "" : "  — " + String(d || "").replace(/\s+/g, " ").trim()));
 const PROSPECT = "00000000-0000-4000-8000-000000000c04", EQUIPE = "00000000-0000-4000-8000-0000000000e1";
 const CAL = "https://calendly.com/mhx-coaching/30min";
-/* le lien attendu pour la prospecte Léa (l@e.fr) : source de l'écran + prénom et email pré-remplis */
-const lienPre = src => CAL + "?utm_source=app-mhx&utm_medium=app&utm_content=" + src + "&name=L%C3%A9a&first_name=L%C3%A9a&email=l%40e.fr";
+/* le lien attendu pour la prospecte Léa Démo (l@e.fr) : source de l'écran + prénom et email pré-remplis.
+   v52 (lot B) : son nom aussi (profils.nom « Démo ») : name = « Léa Démo », first_name, last_name */
+const lienPre = src => CAL + "?utm_source=app-mhx&utm_medium=app&utm_content=" + src + "&name=L%C3%A9a%20D%C3%A9mo&first_name=L%C3%A9a&last_name=D%C3%A9mo&email=l%40e.fr";
 /* inscription il y a n jours (10 h, heure locale) : la prospecte est au jour n + 1 de sa découverte */
 const inscritIlYA = n => { const d = new Date(); d.setHours(10, 0, 0, 0); d.setDate(d.getDate() - n); return d.toISOString(); };
 /* la date locale (AAAA-MM-JJ) d'il y a n jours */
@@ -421,8 +422,9 @@ const cliquerVerrou = async (c, page) => {
         await page.goto(`http://localhost:${PORT}/#/inscription`); await attendre(page, 1500);
         const t = await toutLeTexte(page);
         const titre = (await texte(page, ".carte-co h2")).trim(), bouton = (await texte(page, "#c-go")).trim();
-        const [tA, bA] = langue ? ["Create your discovery access", "Create my access"] : ["Crée ton accès découverte", "Créer mon accès"];
-        ok(`inscription${langue ? " (anglais)" : ""} : écran « ${tA} », bouton « ${bA} », cases des conditions (#c-cgu) et des données de santé (#c-sante)`, titre === tA && bouton === bA && !!(await page.$("#c-cgu")) && !!(await page.$("#c-sante")), JSON.stringify({ titre, bouton }));
+        /* v52 (lot B) : « espace gratuit » (plus d'accès découverte de 7 jours) ; + la case newsletter (facultative) */
+        const [tA, bA] = langue ? ["Create your free space", "Create my access"] : ["Crée ton espace gratuit", "Créer mon accès"];
+        ok(`inscription${langue ? " (anglais)" : ""} : écran « ${tA} », bouton « ${bA} », cases des conditions (#c-cgu), des données de santé (#c-sante) et de la newsletter (#c-newsletter)`, titre === tA && bouton === bA && !!(await page.$("#c-cgu")) && !!(await page.$("#c-sante")) && !!(await page.$("#c-newsletter")), JSON.stringify({ titre, bouton }));
         const okLien = await cliquer(page, "#c-cgu-lien"); await attendre(page, 500);
         const tv = await toutLeTexte(page), heb = langue ? HEBERGEMENT.en : HEBERGEMENT.fr;
         ok(`inscription${langue ? " (anglais)" : ""} : écran et volet des conditions (ouvert, « ${heb}… » capturé) sans aucun prix, tarif ni abonnement`, okLien && tv.includes(heb) && !prixTrouve(t + tv), prixTrouve(t + tv) || (okLien ? "volet des conditions pas capturé (« " + heb + " » introuvable)" : "lien #c-cgu-lien absent"));

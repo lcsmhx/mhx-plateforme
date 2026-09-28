@@ -9,6 +9,11 @@
    erreurs d'envoi d'email en français, jamais le texte brut de Supabase (inscription : serveur d'emails en panne,
    limite horaire, limite par adresse ; mot de passe oublié : panne, limite horaire), liens du changement d'adresse
    en deux temps (premier lien, dernier lien). Détails et variantes (anglais, connecté, Profil) : verif55 bloc B.
+   v52 (chantier 1, lot B) : l'écran d'inscription change volontairement : « Crée ton espace gratuit » / « Gratuit pour
+   toujours… » (plus de 7 jours), champ Nom obligatoire (« Indique ton nom. »), trois cases séparées (conditions, santé,
+   newsletter facultative), métadonnées exactes (nom saisi, versions des accords, newsletter au lieu d'emails_suivi) ; le
+   faux Supabase rend la session avec ses métadonnées, comme la vraie base : à l'arrivée, seule la copie de la newsletter
+   (clé emails) est écrite. Détails : verif55 blocs E à H.
    Usage : node verif39.js ../index.html                                         */
 const { chromium } = require("playwright"); const fs = require("fs"); const http = require("http"); const path = require("path");
 const F = require("./fixtures"); const HTML = path.resolve(process.argv[2] || "../index.html");
@@ -50,7 +55,9 @@ async function contexte(b, who, db, opts) {
       const id = "00000000-0000-4000-8000-00000000abcd";
       /* le declencheur de la base : profil avec prenom / nom, statut par defaut « prospect » */
       db.profils.push(Object.assign({ id, prenom: corps.data.prenom, nom: corps.data.nom, role: "client", cree_le: new Date().toISOString() }, "statut" in db.profils[0] ? { statut: "prospect" } : {}));
-      return json(F.session(id, corps.email));
+      /* v52 : comme la vraie base, la session rendue porte les métadonnées de l'inscription (user_metadata) */
+      const sess = F.session(id, corps.email); sess.user.user_metadata = corps.data || {};
+      return json(sess);
     }
     if (p.startsWith("/auth/v1/recover") && opts.recoverErreur) { db.oublis = (db.oublis || 0) + 1; return json({ msg: opts.recoverErreur.msg }, opts.recoverErreur.status); }
     if (p.startsWith("/auth/v1/token")) return json(who ? F.session(who.id, who.email) : { error: "invalid" }, who ? 200 : 400);
@@ -282,13 +289,20 @@ const lireTuiles = page => page.$$eval("#tb-vue .tb-tuile", l => l.map(t => {
     ok("inscription ouverte : bouton « Créer mon compte » sur la connexion", !!(await page.$('[data-mode="inscription"]')));
     await page.click('[data-mode="inscription"]'); await attendre(page, 400);
     const ecran = await page.evaluate(() => { const q = s => { const e = document.querySelector(s); return e ? e.textContent.replace(/\s+/g, " ").trim() : ""; };
-      return { titre: q(".carte-co h2"), sous: q(".carte-co .co-sous"), bouton: q("#c-go"), cgu: !!document.getElementById("c-cgu"), sante: !!document.getElementById("c-sante"), challenge: document.body.textContent.includes("Challenge") }; });
-    ok("inscription : titre « Crée ton accès découverte », sous-titre des 7 jours de découverte, bouton « Créer mon accès », plus aucun « Challenge »", ecran.titre === "Crée ton accès découverte" && ecran.sous.includes("7 jours pour découvrir la méthode MHX") && ecran.bouton === "Créer mon accès" && !ecran.challenge, JSON.stringify(ecran));
-    ok("inscription : deux cases, conditions (#c-cgu) et données de santé (#c-sante)", ecran.cgu && ecran.sante, JSON.stringify(ecran));
+      const cas = id => { const e = document.getElementById(id); return e ? (e.checked ? "cochée" : "vide") : "absente"; };
+      return { titre: q(".carte-co h2"), sous: q(".carte-co .co-sous"), bouton: q("#c-go"), cases: ["c-cgu", "c-sante", "c-newsletter"].map(cas), nom: !!document.getElementById("c-nom"), challenge: document.body.textContent.includes("Challenge") }; });
+    /* v52 (lot B) : plus de « 7 jours » ; titre et sous-titre de l'espace gratuit */
+    ok("inscription : titre « Crée ton espace gratuit », sous-titre « Gratuit pour toujours : … », bouton « Créer mon accès », plus aucun « Challenge » ni « 7 jours »", ecran.titre === "Crée ton espace gratuit" && ecran.sous === "Gratuit pour toujours : calculateur de calories, suivi de ton poids et de tes mensurations, Speed Formation." && ecran.bouton === "Créer mon accès" && !ecran.challenge && !/7 jours/.test(ecran.sous), JSON.stringify(ecran));
+    /* v52 (lot B) : trois cases séparées, aucune cochée d'avance, et le champ Nom */
+    ok("inscription : trois cases séparées, conditions (#c-cgu), données de santé (#c-sante), newsletter (#c-newsletter), toutes vides ; champ Nom (#c-nom)", JSON.stringify(ecran.cases) === '["vide","vide","vide"]' && ecran.nom, JSON.stringify(ecran));
     await page.fill("#c-email", "nouvelle@exemple.fr"); await page.fill("#c-mdp", "court");
     await page.click("#c-go"); await attendre(page, 300);
     ok("inscription : prénom obligatoire", (await page.textContent("#co-err")).includes("prénom"));
     await page.fill("#c-prenom", "Zoé");
+    await page.click("#c-go"); await attendre(page, 300);
+    /* v52 (lot B) : le nom est obligatoire */
+    ok("inscription : nom obligatoire (« Indique ton nom. »)", (await page.textContent("#co-err")).includes("Indique ton nom.") && db.inscriptions.length === 0, await page.textContent("#co-err"));
+    await page.fill("#c-nom", "Martin");
     await page.click("#c-go"); await attendre(page, 300);
     ok("inscription : 8 caractères minimum", (await page.textContent("#co-err")).includes("8 caractères"));
     await page.fill("#c-mdp", "motdepasse1");
@@ -302,7 +316,11 @@ const lireTuiles = page => page.$$eval("#tb-vue .tb-tuile", l => l.map(t => {
     await page.check("#c-sante");
     await page.click("#c-go"); await attendre(page, 2500);
     const ins = db.inscriptions[0] || {}, md = ins.data || {}, isoRe = /^\d{4}-\d{2}-\d{2}T/;
-    ok("inscription : POST /auth/v1/signup avec le prénom seul, nom vide, consentement daté, version des conditions, consentement santé daté (v44, P0.5)", db.inscriptions.length === 1 && md.prenom === "Zoé" && md.nom === "" && isoRe.test(md.consentement || "") && !!version && md.conditions_version === version && isoRe.test(md.consentement_sante || "") && ins.email === "nouvelle@exemple.fr", db.inscriptions.length + " " + JSON.stringify(md) + " attendu " + version);
+    /* v52 (lot B) : le nom saisi (plus « » vide), chaque accord daté ET versionné, newsletter (null si la case est vide) au lieu d'emails_suivi */
+    ok("inscription : POST /auth/v1/signup avec prénom et nom, consentement daté + version des conditions, consentement santé daté + version, newsletter null (case vide) + version, plus d'emails_suivi (v44, P0.5, v52)",
+      db.inscriptions.length === 1 && md.prenom === "Zoé" && md.nom === "Martin" && isoRe.test(md.consentement || "") && !!version && md.conditions_version === version && isoRe.test(md.consentement_sante || "") && md.sante_version === "2026-09-28"
+      && md.newsletter === null && md.newsletter_version === "2026-09-28c" && Object.keys(md).sort().join(",") === "conditions_version,consentement,consentement_sante,newsletter,newsletter_version,nom,prenom,sante_version" && ins.email === "nouvelle@exemple.fr",
+      db.inscriptions.length + " " + JSON.stringify(md) + " attendu " + version);
     ok("inscription : connecté ensuite, et prospect", await page.evaluate(() => Auth.connecte() && Auth.estProspect()).catch(() => false));
     /* le compte neuf arrive sur la Découverte au jour 1, questionnaire court à remplir, pas encore de bouton Calendly */
     const arrivee = await page.evaluate(() => { const z = document.querySelector("#dc-vue, #acc-vue");
@@ -310,9 +328,10 @@ const lireTuiles = page => page.$$eval("#tb-vue .tb-tuile", l => l.map(t => {
     /* v52 (Chantier 1 lot C) : les 3 questions, sans âge (#q-probleme ; avant : #q-age) */
     /* v52 (lot D) : « Découverte » sans « Jour n/7 » (gratuit pour toujours) */
     ok("inscription : arrivée sur la Découverte (sans « Jour n/7 »), questionnaire court (#q-probleme, #dc-voir), aucun bouton Calendly", /^ ?Découverte Bonjour/.test(arrivee.t || "") && !/Jour \d/.test(arrivee.t || "") && arrivee.age && arrivee.voir && arrivee.cal === 0, JSON.stringify(arrivee).slice(0, 250));
-    /* rien ne part dans donnees avant la saisie d'un âge ≥ 18 : ni brouillon intake, ni clé challenge écrite au démarrage */
+    /* rien ne part dans donnees avant la saisie d'un âge ≥ 18 : ni brouillon intake, ni clé challenge écrite au démarrage.
+       v52 (lot B) : la seule écriture est la copie du choix de la newsletter dans la clé emails (première ouverture) */
     const ecrArrivee = db.ecritures.filter(e => e.table === "donnees");
-    ok("inscription : aucune écriture dans donnees à l'arrivée du compte neuf (ni brouillon intake, ni clé challenge)", ecrArrivee.length === 0, JSON.stringify(ecrArrivee).slice(0, 250));
+    ok("inscription : à l'arrivée du compte neuf, une seule écriture dans donnees, la copie de la newsletter (clé emails) ; ni brouillon intake, ni clé challenge", ecrArrivee.length === 1 && ecrArrivee[0].outil === "emails", JSON.stringify(ecrArrivee).slice(0, 250));
     await c.close();
   }
   {
@@ -321,8 +340,9 @@ const lireTuiles = page => page.$$eval("#tb-vue .tb-tuile", l => l.map(t => {
     const { c, page } = await contexte(b, null, db, { inscriptionKo: true, langue: "en" });
     await page.goto(`http://localhost:${PORT}/#/inscription`); await attendre(page, 1200);
     const t = await page.textContent("body");
-    ok("inscription en anglais : « Create your discovery access », sous-titre « 7 days to discover the MHX method », « Create my access », plus aucun « Challenge »", t.includes("Create your discovery access") && t.includes("7 days to discover the MHX method") && t.includes("Your first name") && t.includes("Create my access") && !t.includes("Challenge"), t.replace(/\s+/g, " ").slice(0, 250));
-    await page.fill("#c-prenom", "Zoé"); await page.fill("#c-email", "z@exemple.fr"); await page.fill("#c-mdp", "motdepasse1"); await page.check("#c-cgu");
+    /* v52 (lot B) : espace gratuit, plus de 7 jours ; champ « Your last name » */
+    ok("inscription en anglais : « Create your free space », sous-titre « Free forever: … », « Your first name », « Your last name », « Create my access », plus aucun « Challenge » ni « 7 days »", t.includes("Create your free space") && t.includes("Free forever: calorie calculator, weight and measurements tracking, Speed Formation.") && !t.includes("7 days") && t.includes("Your first name") && t.includes("Your last name") && t.includes("Create my access") && !t.includes("Challenge"), t.replace(/\s+/g, " ").slice(0, 250));
+    await page.fill("#c-prenom", "Zoé"); await page.fill("#c-nom", "Martin"); await page.fill("#c-email", "z@exemple.fr"); await page.fill("#c-mdp", "motdepasse1"); await page.check("#c-cgu");
     await page.click("#c-go"); await attendre(page, 300);
     ok("inscription en anglais : case santé manquante → « Accept the processing of your health data »", (await page.textContent("#co-err")).includes("Accept the processing of your health data") && db.inscriptions.length === 0, await page.textContent("#co-err"));
     await page.check("#c-sante");
@@ -339,7 +359,7 @@ const lireTuiles = page => page.$$eval("#tb-vue .tb-tuile", l => l.map(t => {
     const db = base();
     const { c, page } = await contexte(b, null, db, { inscriptionErreur: err });
     await page.goto(`http://localhost:${PORT}/#/inscription`); await attendre(page, 1200);
-    await page.fill("#c-prenom", "Zoé"); await page.fill("#c-email", "z@exemple.fr"); await page.fill("#c-mdp", "motdepasse1"); await page.check("#c-cgu"); await page.check("#c-sante");
+    await page.fill("#c-prenom", "Zoé"); await page.fill("#c-nom", "Martin"); await page.fill("#c-email", "z@exemple.fr"); await page.fill("#c-mdp", "motdepasse1"); await page.check("#c-cgu"); await page.check("#c-sante");
     await page.click("#c-go"); await attendre(page, 800);
     const t = await page.textContent("#co-err");
     ok("inscription, " + quoi + " (« " + err.msg + " ») : message en français, jamais le texte anglais brut", t.includes(attendu) && !t.includes(err.msg), t);

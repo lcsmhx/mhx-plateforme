@@ -14,7 +14,7 @@
       été ajoutée » ; ancien prospect (court_debut ou questionnaire validé) et témoin sans court_debut ;
    E. fiche coach, chronologie : email de suivi « abandon » → « non délivré (adresse bloquée ou invalide) », « envoye »
       → « envoyé » ;
-   F. Profil du prospect, « Emails de suivi » : phrase sur la désinscription depuis la messagerie (FR / EN) ;
+   F. Profil du prospect, « Emails de suivi » (v52 : « Newsletter ») : phrase sur la désinscription depuis la messagerie (FR / EN) ;
    G. déconnexion, double clic pendant un envoi d'activité (relecture lente) : une seule déconnexion, l'activité est
       écrite avant l'effacement de l'appareil.
    Supabase simulé (celui de verif53) : rien ne part vers la vraie base ; chaque écriture est appliquée en mémoire et
@@ -499,8 +499,10 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
   });
 
   /* =================== F. Profil du prospect : « Emails de suivi » =================== */
+  /* v52 (chantier 1, lot B) : le bloc pilote désormais la newsletter : son titre devient « Newsletter » (FR et EN) ;
+     la phrase sur la désinscription depuis la messagerie reste */
   await bloc("F. Profil : note des emails de suivi (FR / EN)", async () => {
-    const attendus = [["", "Emails de suivi", "Si tu t'es désabonné depuis ta messagerie, demande aussi à ton coach de te réinscrire."], ["en", "Follow-up emails", "If you unsubscribed from your mailbox, also ask your coach to re-subscribe you."]];
+    const attendus = [["", "Newsletter", "Si tu t'es désabonné depuis ta messagerie, demande aussi à ton coach de te réinscrire."], ["en", "Newsletter", "If you unsubscribed from your mailbox, also ask your coach to re-subscribe you."]];
     for (const [langue, titre, phrase] of attendus) {
       const db = base({ comptes: seule([["emails", { suivi: true, maj: avant(J) }, avant(J)]]) });
       const { c, page } = await contexte(b, leaAct, db, { langue });

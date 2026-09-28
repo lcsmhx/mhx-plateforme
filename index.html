@@ -972,7 +972,7 @@ a.ch-etape:hover .num{border-color:var(--accent-line)}
 .ch-test{margin:0 0 12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .ch-attente{text-align:center;padding:26px 16px;border:1px dashed var(--line-strong);border-radius:var(--r-lg);background:var(--sunken)}
 .ch-attente h2{margin-bottom:6px}
-.co-cgu span{line-height:1.45}
+.co-cgu span,.co-sante span,.co-newsletter span{line-height:1.45}
 .co-cgu .lien{background:none;border:0;padding:0;color:var(--accent);text-decoration:underline;cursor:pointer;font:inherit;min-height:0;width:auto;display:inline}
 .co-mdp{position:relative}
 .co-mdp input{padding-right:78px}
@@ -1450,28 +1450,33 @@ const DECOUVERTE = {
     texte: "Tes réponses au questionnaire sont enregistrées : ton coach les verra. Le questionnaire complet s'ouvrira au démarrage de ton accompagnement.",
     lien: "Répondre aux 3 questions"
   },
-  /* v51 : choix des emails de suivi, dans le Profil du prospect */
+  /* v51 : choix des emails, dans le Profil du prospect. v52 : c'est l'interrupteur de la NEWSLETTER (clé « emails » :
+     newsletter, maj, version, source) ; l'ancien accord « emails de suivi » ne vaut pas accord newsletter */
   emails: {
-    titre: "Emails de suivi",
-    libelle: "Recevoir par email des rappels et conseils liés à ma découverte (3 au plus)",
-    note: "Tu peux changer d'avis à tout moment. L'email de confirmation de ton compte n'en fait pas partie. Si tu t'es désabonné depuis ta messagerie, demande aussi à ton coach de te réinscrire.",
-    oui: "C'est noté : tu recevras les emails de suivi.",
-    non: "C'est noté : plus aucun email de suivi.",
+    titre: "Newsletter",
+    libelle: "Recevoir par email les conseils, témoignages et offres de coaching de MHX Coaching (1 à 2 emails par semaine maximum)",
+    note: "Tu peux changer d'avis à tout moment ; chaque email a aussi son lien de désinscription en 1 clic. L'email de confirmation de ton compte n'en fait pas partie. Si tu t'es désabonné depuis ta messagerie, demande aussi à ton coach de te réinscrire.",
+    oui: "C'est noté : tu recevras la newsletter.",
+    non: "C'est noté : plus aucune newsletter.",
     refuse: "Non enregistré : réessaie dans un instant."
   },
 
   /* --- écran d'inscription (portail) et retour du lien de confirmation --- */
   inscription: {
-    titre: "Crée ton accès découverte",
-    sous: "7 jours pour découvrir la méthode MHX : ton résultat personnalisé, tes calories et tes macros, une séance et des recettes.",
+    titre: "Crée ton espace gratuit",
+    sous: "Gratuit pour toujours : calculateur de calories, suivi de ton poids et de tes mensurations, Speed Formation.",
     bouton: "Créer mon accès",
     mdp: "Mot de passe (8 caractères minimum)",
-    cgu_avant: "J'accepte les",
+    /* v52 (décision de Lucas) : l'âge est dans la case des conditions : « J'ai 18 ans ou plus et j'accepte les conditions
+       d'utilisation et la politique de confidentialité. » (le lien ouvre le volet des conditions) */
+    cgu_avant: "J'ai 18 ans ou plus et j'accepte les",
     cgu_lien: "conditions d'utilisation et la politique de confidentialité",
+    cgu_apres: ".",
     cgu_manque: "Coche la case des conditions pour continuer.",
     sante_avant: "J'accepte le traitement de mes données de santé conformément à la politique",
     sante_manque: "Accepte le traitement de tes données de santé pour continuer.",
-    emails_avant: "J'accepte de recevoir par email des rappels et conseils liés à ma découverte (3 au plus, désinscription en un clic). Facultatif.",
+    /* v52 : case facultative, décochée, qui remplace les « emails de suivi » (texte validé par Lucas : ne pas le reformuler sans changer accords.newsletter) */
+    newsletter: "Je veux recevoir par email les conseils, témoignages et offres de coaching de MHX Coaching (1 à 2 emails par semaine maximum). Désinscription en 1 clic dans chaque email.",
     note: "L'app ne remplace pas un avis médical. Si tu as un doute sur ta santé, parles-en à un professionnel avant de commencer.",
     verif_titre: "Vérifie ta boîte mail",
     verif_texte: "On vient d'envoyer un lien à {e}. Ouvre-le pour confirmer ton compte : tu arriveras directement sur ton questionnaire.",
@@ -1493,20 +1498,30 @@ const DECOUVERTE = {
     trop_emails_compte: "Trop d'emails envoyés en peu de temps : réessaie dans une heure."
   },
 
+  /* --- v52 : versions des textes acceptés à l'inscription, envoyées avec chaque accord (métadonnées du compte :
+     conditions_version, sante_version, newsletter_version ; copie « version » de la clé emails). Un texte change
+     (même une virgule) = sa version change ici. « conditions » suit toujours confidentialite.version (plus bas). --- */
+  accords: {
+    get conditions(){ return DECOUVERTE.confidentialite.version; },
+    sante: "2026-09-28",        // case « données de santé » (inscription.sante_avant)
+    newsletter: "2026-09-28c"   // case newsletter (inscription.newsletter) et interrupteur du Profil (emails.libelle) ; « c » : texte final de Lucas du 28/09 (distinct des brouillons « 2026-09-28 » et « 2026-09-28b », jamais publiés)
+  },
+
   /* --- conditions et confidentialité (volet ouvert depuis l'inscription et le Profil du prospect).
-     Personne ne les a encore acceptées (inscription fermée) : à figer, et à changer de version, à l'ouverture --- */
+     v52 : version 2026-09-28 (plus de limite de 7 jours, nom, 3 questions, newsletter). Le texte change = la version
+     change ; FR et EN gardent le même nombre de paragraphes, dans le même ordre (traduction par position) --- */
   confidentialite: {
-    version: "2026-09",
+    version: "2026-09-28",
     titre: "Conditions d'utilisation et confidentialité",
     paragraphes: [
-      "L'accès découverte de MHX Coaching donne pendant 7 jours des informations et un entraînement généraux, réservés aux adultes. Il ne remplace pas un avis médical : en cas de doute sur ta santé, parles-en à un professionnel avant de commencer.",
-      "Données collectées : ton prénom, ton email, tes réponses au questionnaire (âge, taille, poids, objectif, séances, ce que tu as déjà essayé, ton obstacle, ta motivation) et ton activité dans l'app, dont tes clics sur « Réserver mon bilan ». Données de santé : poids, blessures, contre-indications médicales (voir case dédiée ci-dessous).",
-      "Usage : calculer ton résultat, adapter ce qui s'affiche à tes réponses et te proposer un bilan avec le coach. Aucune revente, aucune publicité.",
+      "L'espace gratuit de MHX Coaching donne des informations et un entraînement généraux, réservés aux adultes. Il ne remplace pas un avis médical : en cas de doute sur ta santé, parles-en à un professionnel avant de commencer.",
+      "Données collectées : ton prénom, ton nom, ton email, tes réponses aux 3 questions de départ et ton activité dans l'app, dont tes clics sur « Réserver mon bilan ». Données de santé : celles que tu saisis (poids, mensurations, âge, taille et activité dans le calculateur de calories), avec ton accord (case dédiée).",
+      "Usage : adapter ce qui s'affiche à tes réponses, calculer tes calories, suivre ta progression et te proposer un bilan avec le coach. Aucune revente, aucune publicité.",
       "Suivi par le coach : il voit tes réponses et ton activité, et note, pour son suivi, l'issue de ton bilan et ses relances. Ces notes n'apparaissent pas dans l'app : tu peux en demander une copie ou la suppression en lui écrivant.",
-      "Données de santé (RGPD article 9) : tu dois accepter explicitement le traitement de tes données concernant ta santé (poids, blessures, contre-indications). Tu peux les consulter ou les supprimer à tout moment. Ces données sont conservées tant que ton compte existe.",
+      "Données de santé (RGPD article 9) : tu dois accepter explicitement le traitement de tes données concernant ta santé (poids, mensurations, données du calculateur de calories). Tu peux les consulter ou les supprimer à tout moment. Ces données sont conservées tant que ton compte existe.",
       "Hébergement : Supabase, serveurs en Europe (Irlande).",
-      "Prise de rendez-vous : ton bilan se réserve sur Calendly (société américaine), qui enregistre ta réservation pour le compte du coach ; ces données peuvent être traitées aux États-Unis (cadre de protection des données UE–États-Unis). Ton prénom et ton email y sont pré-remplis dès que tu ouvres la page de réservation, avec l'écran de l'app d'où tu viens.",
-      "Emails de suivi (facultatif) : si tu coches la case, tu reçois au plus 3 emails liés à ta découverte (bienvenue, ton résultat une fois le questionnaire rempli, relance), envoyés par Brevo (société française, données hébergées dans l'Union européenne) pour le compte du coach. Brevo indique au coach si chaque email a été ouvert et si un lien a été cliqué : cela compte dans le suivi de ta découverte. Désinscription en un clic dans chaque email ou depuis ton Profil. L'email de confirmation de ton compte est envoyé dans tous les cas.",
+      "Prise de rendez-vous : ton bilan se réserve sur Calendly (société américaine), qui enregistre ta réservation pour le compte du coach ; ces données peuvent être traitées aux États-Unis (cadre de protection des données UE–États-Unis). Ton prénom, ton nom et ton email y sont pré-remplis dès que tu ouvres la page de réservation, avec l'écran de l'app d'où tu viens.",
+      "Newsletter (facultative) : si tu coches la case, tu reçois par email les conseils, témoignages et offres de coaching de MHX Coaching, 1 à 2 emails par semaine au plus. Désinscription en 1 clic dans chaque email, et retrait de ton accord possible à tout moment dans ton Profil. Les emails de ton compte (confirmation de ton email, mot de passe oublié) sont envoyés dans tous les cas, par Gmail (Google) pour le compte du coach.",
       "Tes droits : tu peux exporter ou supprimer ton compte et toutes tes données à tout moment depuis Profil, section « Mes données », ou en écrivant au coach.",
       "Conservation : tant que ton compte existe.",
       "En cochant la case, tu acceptes ces conditions."
@@ -1626,24 +1641,25 @@ const DECOUVERTE = {
       lien: "Answer the 3 questions"
     },
     emails: {
-      titre: "Follow-up emails",
-      libelle: "Receive email reminders and tips about my discovery (3 at most)",
-      note: "You can change your mind at any time. Your account confirmation email is not part of these. If you unsubscribed from your mailbox, also ask your coach to re-subscribe you.",
-      oui: "Noted: you will receive the follow-up emails.",
-      non: "Noted: no more follow-up emails.",
+      titre: "Newsletter",
+      libelle: "Receive MHX Coaching's tips, testimonials and coaching offers by email (1 to 2 emails per week maximum)",
+      note: "You can change your mind at any time; every email also has its one-click unsubscribe link. Your account confirmation email is not part of these. If you unsubscribed from your mailbox, also ask your coach to re-subscribe you.",
+      oui: "Noted: you will receive the newsletter.",
+      non: "Noted: no more newsletters.",
       refuse: "Not saved: try again in a moment."
     },
     inscription: {
-      titre: "Create your discovery access",
-      sous: "7 days to discover the MHX method: your personalized result, your calories and macros, a workout and recipes.",
+      titre: "Create your free space",
+      sous: "Free forever: calorie calculator, weight and measurements tracking, Speed Formation.",
       bouton: "Create my access",
       mdp: "Password (8 characters minimum)",
-      cgu_avant: "I accept the",
-      cgu_lien: "terms of use and privacy policy",
+      cgu_avant: "I am 18 or older and I accept the",
+      cgu_lien: "terms of use and the privacy policy",
+      cgu_apres: ".",
       cgu_manque: "Tick the terms box to continue.",
       sante_avant: "I accept the processing of my health data in accordance with the privacy policy",
       sante_manque: "Accept the processing of your health data to continue.",
-      emails_avant: "I agree to receive email reminders and tips about my discovery (3 at most, one-click unsubscribe). Optional.",
+      newsletter: "I want to receive MHX Coaching's tips, testimonials and coaching offers by email (1 to 2 emails per week maximum). One-click unsubscribe in every email.",
       note: "The app is not medical advice. If you have any doubt about your health, talk to a professional before starting.",
       verif_titre: "Check your inbox",
       verif_texte: "We've just sent a link to {e}. Open it to confirm your account: you'll land straight on your questionnaire.",
@@ -1666,14 +1682,14 @@ const DECOUVERTE = {
     confidentialite: {
       titre: "Terms of use and privacy",
       paragraphes: [
-        "MHX Coaching's discovery access gives you general information and training for 7 days, for adults only. It is not medical advice: if you have any doubt about your health, talk to a professional before starting.",
-        "Data collected: your first name, your email, your questionnaire answers (age, height, weight, goal, workouts, what you already tried, your obstacle, your motivation) and your activity in the app, including your clicks on “Book my assessment”. Health data: weight, injuries, medical contraindications (see dedicated box below).",
-        "Use: to calculate your result, adapt what you see to your answers and offer you an assessment with the coach. No resale, no advertising.",
+        "MHX Coaching's free space gives you general information and training, for adults only. It is not medical advice: if you have any doubt about your health, talk to a professional before starting.",
+        "Data collected: your first name, your last name, your email, your answers to the 3 starting questions and your activity in the app, including your clicks on “Book my assessment”. Health data: what you enter (weight, measurements, age, height and activity in the calorie calculator), with your consent (dedicated box).",
+        "Use: to adapt what you see to your answers, calculate your calories, track your progress and offer you an assessment with the coach. No resale, no advertising.",
         "Coach follow-up: the coach sees your answers and activity, and records, for their follow-up, the outcome of your assessment and their follow-up messages. These notes don't appear in the app: you can ask for a copy or their deletion by writing to the coach.",
-        "Health data (GDPR article 9): you must explicitly accept the processing of your health data (weight, injuries, medical contraindications). You can view or delete this data at any time. This data is kept as long as your account exists.",
+        "Health data (GDPR article 9): you must explicitly accept the processing of your health data (weight, measurements, calorie calculator data). You can view or delete this data at any time. This data is kept as long as your account exists.",
         "Hosting: Supabase, servers in Europe (Ireland).",
-        "Booking: your assessment is booked on Calendly (a US company), which records your booking on the coach's behalf; this data may be processed in the United States (EU–US Data Privacy Framework). Your first name and email are pre-filled as soon as you open the booking page, along with the app screen you came from.",
-        "Follow-up emails (optional): if you tick the box, you receive at most 3 emails about your discovery (welcome, your result once the questionnaire is done, follow-up), sent by Brevo (a French company, data hosted in the European Union) on the coach's behalf. Brevo tells the coach whether each email was opened and whether a link was clicked: this counts in the follow-up of your discovery. One-click unsubscribe in every email or from your Profile. The account confirmation email is sent in every case.",
+        "Booking: your assessment is booked on Calendly (a US company), which records your booking on the coach's behalf; this data may be processed in the United States (EU–US Data Privacy Framework). Your first name, last name and email are pre-filled as soon as you open the booking page, along with the app screen you came from.",
+        "Newsletter (optional): if you tick the box, you receive MHX Coaching's tips, testimonials and coaching offers by email, 1 to 2 emails per week at most. One-click unsubscribe in every email, and you can withdraw your consent at any time in your Profile. Your account emails (email confirmation, forgotten password) are sent in every case, by Gmail (Google) on the coach's behalf.",
         "Your rights: you can export or delete your account and all your data at any time from Profile, section \"My data\", or by writing to the coach.",
         "Retention: as long as your account exists.",
         "By ticking the box, you accept these terms."
@@ -1713,10 +1729,21 @@ const lienSur = (u) => {
   if (/^www\./i.test(s)) return "https://" + s;
   return "";
 };
-/* v50 — le lien de reservation, le meme partout. Pre-remplissage (prenom + email du prospect connecte)
+/* v50 — le lien de reservation, le meme partout. Pre-remplissage (prenom, nom et email du prospect connecte)
    seulement si CONFIG.marque.calendly_prerempli vaut true ; jamais pour le coach qui consulte une fiche. */
 /* source : l'ecran d'ou part le clic (decouverte, verrou-programme…), transmis a Calendly en utm_content
    (aucune donnee personnelle) : le coach voit dans Calendly d'ou vient chaque reservation */
+/* v52 — prenom et nom pre-remplis : name = « prenom nom » (champ « Nom » unique de Calendly ; le nom seul s'il
+   manque le prenom, et inversement), first_name / last_name (evenement qui demande prenom et nom separement :
+   Calendly prend ceux qui existent). Chaque valeur encodee ; aucun parametre vide. */
+function paramsNomCalendly(prenom, nom){
+  const pr = typeof prenom === "string" ? prenom.trim().slice(0, 80) : "", nm = typeof nom === "string" ? nom.trim().slice(0, 80) : "";
+  const out = [], complet = [pr, nm].filter(Boolean).join(" ");
+  if (complet) out.push("name=" + encodeURIComponent(complet));
+  if (pr) out.push("first_name=" + encodeURIComponent(pr));
+  if (nm) out.push("last_name=" + encodeURIComponent(nm));
+  return out;
+}
 function lienCalendly(source){
   const base = lienSur(CONFIG.marque && CONFIG.marque.calendly); if (!base) return "";
   try {
@@ -1725,25 +1752,23 @@ function lienCalendly(source){
     if (typeof source === "string" && /^[a-z0-9-]{1,40}$/.test(source)) params.push("utm_content=" + source);
     if (CONFIG.marque && CONFIG.marque.calendly_prerempli === true){
       const u = Auth.utilisateur(), p = Auth.profil || {};
-      const prenom = typeof p.prenom === "string" ? p.prenom.trim() : "";
       const email = u && typeof u.email === "string" ? u.email.trim() : "";
-      /* name : champ « Nom » ; first_name : si l'evenement demande prenom et nom separement (Calendly prend celui qui existe) */
-      if (prenom) params.push("name=" + encodeURIComponent(prenom), "first_name=" + encodeURIComponent(prenom));
+      params.push(...paramsNomCalendly(p.prenom, p.nom));   // v52 : + le nom (profils.nom, saisi a l'inscription)
       if (email) params.push("email=" + encodeURIComponent(email));
     }
     const i = base.indexOf("#"), avant = i > -1 ? base.slice(0, i) : base, apres = i > -1 ? base.slice(i) : "";   // les parametres avant un eventuel #
     return avant + (avant.indexOf("?") > -1 ? "&" : "?") + params.join("&") + apres;
   } catch(e){ return base; }   // un caractere mal forme ne doit jamais empecher la page de s'afficher
 }
-/* v51 — le lien de reservation d'un prospect, construit pour le coach (fiche) : prenom et email du prospect,
-   source « fiche-coach ». Rend "" si Calendly n'est pas configure. */
-function lienCalendlyPour(prenom, email, source){
+/* v51 — le lien de reservation d'un prospect, construit pour le coach (fiche) : prenom, nom (v52, 4e parametre :
+   les appels a 3 parametres restent justes) et email du prospect, source « fiche-coach ». Rend "" si Calendly n'est pas configure. */
+function lienCalendlyPour(prenom, email, source, nom){
   const base = lienSur(CONFIG.marque && CONFIG.marque.calendly); if (!base) return "";
   try {
     const params = ["utm_source=app-mhx", "utm_medium=coach"];
     if (typeof source === "string" && /^[a-z0-9-]{1,40}$/.test(source)) params.push("utm_content=" + source);
-    const pr = typeof prenom === "string" ? prenom.trim().slice(0, 80) : "", em = typeof email === "string" ? email.trim() : "";
-    if (pr) params.push("name=" + encodeURIComponent(pr), "first_name=" + encodeURIComponent(pr));
+    const em = typeof email === "string" ? email.trim() : "";
+    params.push(...paramsNomCalendly(prenom, nom));
     if (/^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(em) && em.length <= 254) params.push("email=" + encodeURIComponent(em));
     const i = base.indexOf("#"), avant = i > -1 ? base.slice(0, i) : base, apres = i > -1 ? base.slice(i) : "";
     return avant + (avant.indexOf("?") > -1 ? "&" : "?") + params.join("&") + apres;
@@ -2455,7 +2480,7 @@ I18N.en = {
 /* v39 — inscription libre */
 "Crée ton compte": "Create your account", "Créer mon compte": "Create my account", "J'ai déjà un compte": "I already have an account",
 "Ton prénom": "Your first name", "Ton nom": "Your last name", "Confirme ton mot de passe": "Confirm your password",
-"Indique ton prénom.": "Enter your first name.",
+"Indique ton prénom.": "Enter your first name.", "Indique ton nom.": "Enter your last name.",   /* v52 : nom obligatoire a l'inscription */
 "Compte créé. Ouvre le lien reçu par email pour le confirmer, puis connecte-toi.": "Account created. Open the link we emailed you to confirm it, then sign in.",
 "Un compte existe déjà avec cet email : connecte-toi.": "An account already exists with this email: sign in.",
 "Les inscriptions ne sont pas encore ouvertes.": "Sign-ups are not open yet.",
@@ -3071,7 +3096,8 @@ const Auth = {
      lui a ete envoye. */
   async inscrire(email, motdepasse, prenom, nom, extra){
     /* v44 : extra (date d'acceptation des conditions, version) reste dans les
-       metadonnees du compte (raw_user_meta_data) : preuve horodatee, sans migration */
+       metadonnees du compte (raw_user_meta_data) : preuve horodatee, sans migration.
+       v52 : le nom saisi a l'inscription part ici (le declencheur creer_profil le range dans profils.nom) */
     const s = await this.appel("/auth/v1/signup?redirect_to=" + encodeURIComponent(this.retour()), {
       method: "POST", avecJeton: false,
       body: { email: email, password: motdepasse, data: Object.assign({ prenom: prenom, nom: nom || "" }, extra || {}) }
@@ -3107,6 +3133,46 @@ const Interrupteurs = {
     if (e === "tous") return true;
     if (e === "test") return Auth.estCoach() || this.estTest(u.id);
     return false;
+  }
+};
+
+/* --- v52 : ACCORDS donnés à l'inscription ---------------------------------
+   Posés une fois dans les métadonnées du compte (Auth.inscrire → user_metadata) : consentement +
+   conditions_version, consentement_sante + sante_version, newsletter (instant ou null) + newsletter_version
+   (versions : DECOUVERTE.accords). Le coach ne lit pas ces métadonnées : à la première ouverture connectée
+   d'un prospect, le choix de la newsletter est recopié dans la clé « emails » (table donnees), qu'il lit.
+   L'ancien accord « emails de suivi » (emails_suivi, emails.suivi) ne vaut jamais accord newsletter. ------ */
+const Accords = {
+  meta(){
+    const u = Auth.utilisateur(), m = u && u.user_metadata;
+    return m && typeof m === "object" && !Array.isArray(m) ? m : {};
+  },
+  /* le choix de la case newsletter à l'inscription : true / false ; null si le compte ne l'a jamais vue
+     (inscrit avant la v52, compte créé par le coach) */
+  newsletterInscription(meta){
+    meta = meta || this.meta();
+    if (!Object.prototype.hasOwnProperty.call(meta, "newsletter")) return null;
+    return typeof meta.newsletter === "string" && meta.newsletter.trim() !== "";
+  },
+  /* première ouverture d'un prospect : écrit la clé emails { newsletter, maj, version, source: "inscription" }
+     SEULEMENT si elle n'existe pas encore. Lecture ratée → rien. Insertion simple (sans fusion) : si la clé est
+     apparue entre-temps (autre onglet, Profil), la base refuse (409) et rien n'est écrasé. Jamais bloquant. */
+  async copierEmails(){
+    try {
+      if (!Auth.estProspect() || Store.idConsulte) return false;
+      const u = Auth.utilisateur(); if (!u || !u.id) return false;
+      const meta = this.meta(), choix = this.newsletterInscription(meta);
+      if (choix === null) return false;
+      if (Store.aUneCopie(u.id, "emails")) return false;   // un choix fait sur cet appareil attend son envoi : c'est lui qui compte
+      const r = await Auth.appel("/rest/v1/donnees?user_id=eq." + u.id + "&outil=eq.emails&select=outil");
+      if (!Array.isArray(r) || r.length) return false;      // déjà là (ou réponse inattendue) : rien à faire
+      const iso = v => typeof v === "string" && !isNaN(Date.parse(v)) ? v : "";
+      const contenu = { newsletter: choix, maj: (choix && iso(meta.newsletter)) || iso(meta.consentement) || new Date().toISOString(),
+        version: typeof meta.newsletter_version === "string" ? meta.newsletter_version : null, source: "inscription" };
+      await Auth.appel("/rest/v1/donnees", { method: "POST", headers: { "Prefer": "return=minimal" },
+        body: [{ user_id: u.id, outil: "emails", contenu: contenu, maj_le: new Date().toISOString() }] });
+      return true;
+    } catch(e){ return false; }
   }
 };
 
@@ -3395,7 +3461,7 @@ const Store = {
       }
     } finally { this._reprend = false; }
     if (ecartees.length){
-      const nom = c => { const x = (typeof OUTILS !== "undefined" ? OUTILS : []).find(y => y.cle === c); return x ? trad(nomOnglet(x)) : c === "emails" ? trad("Emails de suivi") : c; };
+      const nom = c => { const x = (typeof OUTILS !== "undefined" ? OUTILS : []).find(y => y.cle === c); return x ? trad(nomOnglet(x)) : c === "emails" ? trad(DECOUVERTE.emails.titre) : c; };   // v52 : « Newsletter »
       const jourLocal = t => { const d = new Date(t); return isNaN(d) ? "" : d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
       try { UI.toast(trad("Une modification faite hors ligne n'a pas été envoyée ({o}, {d}) : une version plus récente existe déjà.", { o: ecartees.map(x => nom(x.cle) + (x.autre ? " · " + trad("fiche d'un client") : "")).join(", "), d: dateFr(jourLocal(ecartees[0].t)) }), "attention", 9000); } catch(e){}
     }
@@ -5459,7 +5525,7 @@ const outilProfil = {
     const u = Auth.utilisateur();
     /* v50 : un prospect peut relire a tout moment les conditions acceptees a l'inscription */
     const conditions = Auth.estProspect() ? `<p class="note" style="margin:0 0 14px"><button type="button" class="lien-bouton" id="mc-conditions">${esc(trad(DECOUVERTE.confidentialite.titre))}</button></p>` : "";
-    /* v51 : emails de suivi (prospect) ; l'etat reel est lu dans brancherCompte (cle « emails », sinon l'accord de l'inscription) */
+    /* v51 : emails (prospect) ; l'etat reel est lu dans brancherCompte (cle « emails », sinon l'accord de l'inscription). v52 : la newsletter */
     const E = DECOUVERTE.emails;
     const emails = Auth.estProspect() ? `<section class="panel" id="mc-emails-bloc"><h2>${esc(trad(E.titre))}</h2>
         <label class="switch"><input type="checkbox" id="mc-emails" disabled><span class="piste" aria-hidden="true"></span><span>${esc(trad(E.libelle))}</span></label>
@@ -5557,22 +5623,27 @@ const outilProfil = {
     this.brancherCompte();
   },
 
-  /* v51 : l'accord pour les emails de suivi — la cle « emails » ({ suivi, maj }) l'emporte sur la case de l'inscription */
+  /* v51 : l'accord pour les emails — la cle « emails » l'emporte sur la case de l'inscription.
+     v52 : l'interrupteur pilote la NEWSLETTER : emails.newsletter (booleen) sinon la case de l'inscription
+     (user_metadata.newsletter) ; l'ancien accord « emails de suivi » (emails.suivi, emails_suivi) ne coche jamais la
+     newsletter. Chaque changement ecrit { newsletter, maj, version, source: "profil" } (les autres champs sont gardes) ;
+     un « non » met aussi suivi a false (l'ancienne fonction d'envoi lit encore ce champ : un refus vaut pour tout). */
   async brancherEmails(){
     const c = $("mc-emails"); if (!c || !Auth.estProspect() || Store.idConsulte) return;
     const E = DECOUVERTE.emails, msg = $("mc-emails-msg");
     let d = null; try { d = await Store.lire("emails", {}); } catch(e){ d = null; }
     if (!c.isConnected) return;
     if (!d || Store.nonLus.has(d)){ if (msg) msg.textContent = trad(E.refuse); return; }   // lecture ratee : l'interrupteur reste ferme
-    const u = Auth.utilisateur(), meta = u && u.user_metadata && typeof u.user_metadata === "object" ? u.user_metadata : {};
-    c.checked = typeof d.suivi === "boolean" ? d.suivi : !!(typeof meta.emails_suivi === "string" && meta.emails_suivi);
+    c.checked = typeof d.newsletter === "boolean" ? d.newsletter : Accords.newsletterInscription() === true;
     c.disabled = false;
     c.addEventListener("change", () => {
-      const suivi = c.checked;
-      const ok = Store.ecrire("emails", Object.assign({}, d, { suivi: suivi, maj: new Date().toISOString() }));
-      if (ok === false){ c.checked = !suivi; if (msg) msg.textContent = trad(E.refuse); return; }
-      d.suivi = suivi;
-      if (msg) msg.textContent = trad(suivi ? E.oui : E.non);
+      const oui = c.checked;
+      const choix = { newsletter: oui, maj: new Date().toISOString(), version: DECOUVERTE.accords.newsletter, source: "profil" };
+      if (!oui) choix.suivi = false;
+      const ok = Store.ecrire("emails", Object.assign({}, d, choix));
+      if (ok === false){ c.checked = !oui; if (msg) msg.textContent = trad(E.refuse); return; }
+      Object.assign(d, choix);
+      if (msg) msg.textContent = trad(oui ? E.oui : E.non);
     });
   },
   brancherCompte(){
@@ -10699,15 +10770,17 @@ const outilAccueil = {
     const chronoHTML = `<section class="panel" id="fiche-chrono"><h2>Chronologie</h2>
       ${ev.length ? `<ol class="dc-chrono">${ev.slice(0, 40).map(e => `<li><time datetime="${esc(e.quand)}">${esc(dt(e.quand) + heure(e.quand))}</time><span>${esc(e.texte)}</span></li>`).join("")}</ol>` : `<div class="empty">Rien pour l'instant.</div>`}
       <p class="note" style="margin:10px 0 0">${act.jours.length} jour${act.jours.length > 1 ? "s" : ""} d'activité, ${Math.floor(act.temps_s / 60)} min dans l'app${pages ? " · pages vues : " + esc(pages) : ""}.</p></section>`;
-    const prenom = s(p && p.prenom).trim();
+    const prenom = s(p && p.prenom).trim(), nomP = s(p && p.nom).trim();
     const emailOk = /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(email) && email.length <= 254;
-    const lien = lienCalendlyPour(prenom, emailOk ? email : "", "fiche-coach");
+    const lien = lienCalendlyPour(prenom, emailOk ? email : "", "fiche-coach", nomP);   // v52 : + son nom (inscription)
+    const remplis = [prenom && "prénom", nomP && "nom", emailOk && "email"].filter(Boolean);
+    const remplisTxt = remplis.length ? " (" + (remplis.length > 1 ? remplis.slice(0, -1).join(", ") + " et " + remplis[remplis.length - 1] : remplis[0]) + " déjà rempli" + (remplis.length > 1 ? "s" : "") + ")" : "";
     const coach = (Auth.profil && typeof Auth.profil.prenom === "string" && Auth.profil.prenom) || "";
     const marque = CONFIG.marque.nom || "MHX Coaching";
     const corps = "Bonjour" + (prenom ? " " + prenom : "") + ",\n\nMerci d'avoir fait ta découverte " + marque + ". Je te propose un bilan de 30 minutes pour faire le point sur ton objectif et voir comment je peux t'aider :\n" + lien + "\n\nÀ très vite,\n" + (coach ? coach + " — " : "") + marque;
     const mailto = emailOk && lien ? "mailto:" + encodeURIComponent(email) + "?subject=" + encodeURIComponent("Ton bilan " + marque) + "&body=" + encodeURIComponent(corps) : "";
     const actionsHTML = `<section class="panel" id="fiche-actions"><h2>Contacter</h2>
-      ${lien ? `<p class="note" style="margin:0 0 8px">Son lien de réservation (prénom${emailOk ? " et email" : ""} déjà remplis) :</p><input type="text" id="dc-lien" readonly value="${esc(lien)}" aria-label="Lien de réservation du prospect" style="width:100%">` : ""}
+      ${lien ? `<p class="note" style="margin:0 0 8px">Son lien de réservation${esc(remplisTxt)} :</p><input type="text" id="dc-lien" readonly value="${esc(lien)}" aria-label="Lien de réservation du prospect" style="width:100%">` : ""}
       <div class="actions">${lien ? `<button type="button" class="btn ghost petit" id="dc-copier">Copier le lien</button>` : ""}${mailto ? `<a class="btn petit" id="dc-mail" href="${esc(mailto)}">Lui écrire un email</a>` : `<span class="note">Email inconnu : il apparaît quand le prospect a commencé son questionnaire.</span>`}<span class="msg" id="dc-copie-msg" role="status" aria-live="polite"></span></div>
       <p class="note" style="margin:10px 0 0">« Lui écrire un email » ouvre ta messagerie avec un message prêt, que tu relis avant d'envoyer. Rien n'est envoyé par l'app.</p></section>`;
     return scoreHTML + repHTML + chronoHTML + actionsHTML;
@@ -12709,14 +12782,17 @@ function portail(mode){
       <h2>${esc(titre)}</h2>
       ${mode === "inscription" ? `<p class="co-sous">${esc(DECOUVERTE.inscription.sous)}</p>` : ""}
       <div id="co-err"></div>
-      ${mode === "inscription" ? `<div class="champ"><label for="c-prenom">Ton prénom</label><input id="c-prenom" type="text" autocomplete="given-name"></div>` : ""}
+      ${mode === "inscription" ? `<div class="champ"><label for="c-prenom">Ton prénom</label><input id="c-prenom" type="text" autocomplete="given-name" maxlength="60"></div>
+      <div class="champ"><label for="c-nom">Ton nom</label><input id="c-nom" type="text" autocomplete="family-name" maxlength="60"></div>` : ""}
       <div class="champ"><label for="c-email">Email</label><input id="c-email" type="email" autocomplete="email"></div>
       ${mode === "inscription"
-        /* v44 : prenom, email, mot de passe (un seul, avec « Afficher ») et la case des conditions */
+        /* v44 : prenom, email, mot de passe (un seul, avec « Afficher ») et la case des conditions.
+           v52 : + le nom ; trois cases SEPAREES, aucune cochee d'avance : conditions (obligatoire), donnees de sante
+           (obligatoire), newsletter (facultative) */
         ? `<div class="champ"><label for="c-mdp">${esc(DECOUVERTE.inscription.mdp)}</label><div class="co-mdp"><input id="c-mdp" type="password" autocomplete="new-password"><button type="button" class="voir" id="c-voir" aria-pressed="false" aria-label="Afficher le mot de passe">Afficher</button></div></div>
-      <label class="co-rester co-cgu"><input type="checkbox" id="c-cgu"><span>${esc(DECOUVERTE.inscription.cgu_avant)} <button type="button" class="lien" id="c-cgu-lien">${esc(DECOUVERTE.inscription.cgu_lien)}</button></span></label>
+      <label class="co-rester co-cgu"><input type="checkbox" id="c-cgu"><span>${esc(DECOUVERTE.inscription.cgu_avant)} <button type="button" class="lien" id="c-cgu-lien">${esc(DECOUVERTE.inscription.cgu_lien)}</button>${esc(DECOUVERTE.inscription.cgu_apres || "")}</span></label>
       <label class="co-rester co-sante"><input type="checkbox" id="c-sante"><span>${esc(DECOUVERTE.inscription.sante_avant)}</span></label>
-      <label class="co-rester co-emails"><input type="checkbox" id="c-emails"><span>${esc(DECOUVERTE.inscription.emails_avant)}</span></label>`
+      <label class="co-rester co-newsletter"><input type="checkbox" id="c-newsletter"><span>${esc(DECOUVERTE.inscription.newsletter)}</span></label>`
         : mode !== "oubli" ? `<div class="champ"><label for="c-mdp">Mot de passe</label><input id="c-mdp" type="password" autocomplete="current-password"></div>` : ""}
       ${mode !== "oubli" ? `<label class="co-rester"><input type="checkbox" id="c-rester" checked><span>Rester connecté</span></label>` : ""}
       <button class="btn" id="c-go">${esc(bouton)}</button>
@@ -12766,8 +12842,11 @@ function portail(mode){
     Auth.persistant = rester ? rester.checked : true;
     const b = $("c-go");
     if (mode === "inscription"){
-      const prenom = ($("c-prenom").value || "").trim();
+      const prenom = ($("c-prenom").value || "").trim().slice(0, 60);
       if (!prenom){ err("Indique ton prénom."); return; }
+      /* v52 : nom obligatoire (→ profils.nom par le declencheur de la base ; jamais dans intake.nom) */
+      const nom = (($("c-nom") && $("c-nom").value) || "").trim().slice(0, 60);
+      if (!nom){ err("Indique ton nom."); return; }
       if (mdp.length < 8){ err("Le mot de passe doit faire au moins 8 caractères."); return; }
       const cgu = $("c-cgu");
       if (!cgu || !cgu.checked){ err(trad(DECOUVERTE.inscription.cgu_manque)); return; }
@@ -12775,11 +12854,17 @@ function portail(mode){
       if (!sante || !sante.checked){ err(trad(DECOUVERTE.inscription.sante_manque)); return; }
       b.disabled = true; b.textContent = "Un instant…";
       try {
-        /* v44 : prenom seul (le nom viendra avec le questionnaire) ; l'acceptation des conditions est datee */
-        /* P0.5 : consentement santé séparé, horodaté */
-        /* v51 : accord facultatif pour les emails de suivi, date (lu par la fonction d'envoi ; le Profil peut le changer) */
-        const ok_emails = !!($("c-emails") && $("c-emails").checked);
-        const connecte = await Auth.inscrire(email, mdp, prenom, "", { consentement: new Date().toISOString(), conditions_version: DECOUVERTE.confidentialite.version, consentement_sante: new Date().toISOString(), emails_suivi: ok_emails ? new Date().toISOString() : null });
+        /* v44 : l'acceptation des conditions est datee ; P0.5 : consentement sante separe, horodate.
+           v52 : prenom ET nom ; chaque accord porte sa date et la version de son texte (DECOUVERTE.accords) ;
+           la newsletter (facultative) remplace les « emails de suivi » : emails_suivi n'est plus envoye (il reste lu
+           pour les comptes d'avant). Le choix de la newsletter est recopie dans la cle « emails » a la premiere
+           ouverture (Accords.copierEmails), pour que le coach le voie. */
+        const A = DECOUVERTE.accords, maintenant = new Date().toISOString();
+        const ok_news = !!($("c-newsletter") && $("c-newsletter").checked);
+        const connecte = await Auth.inscrire(email, mdp, prenom, nom, {
+          consentement: maintenant, conditions_version: A.conditions,
+          consentement_sante: maintenant, sante_version: A.sante,
+          newsletter: ok_news ? maintenant : null, newsletter_version: A.newsletter });
         if (connecte){ location.hash = ""; location.reload(); return; }
         ecranVerifieEmail(email); return;   // v47 : un ecran dedie, pas une ligne de message
       } catch(e){
@@ -13026,6 +13111,10 @@ let lienEmail = null, lienEmailType = "", lienEmailAdresse = "";   // v47 : "ok"
   try { await Auth.chargerProfil(); } catch(e){}
   /* v48 : ce qui n'etait pas arrive au serveur la derniere fois repart avant le premier affichage (4 s au plus) */
   try { await Promise.race([Store.reprendre(true), new Promise(r => setTimeout(r, 4000))]); } catch(e){}
+  /* v52 : prospect — le choix de la newsletter fait a l'inscription est recopie dans la cle « emails » (lue par le
+     coach) si elle n'existe pas encore ; en arriere-plan, sans retarder l'affichage (lecture ratee : rien d'ecrit,
+     nouvel essai a la prochaine ouverture) */
+  if (Auth.estProspect()) Accords.copierEmails();
 
   /* la langue choisie sur un autre appareil l'emporte */
   try {

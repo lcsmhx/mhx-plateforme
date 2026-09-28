@@ -17,6 +17,9 @@
      bilan », aucune donnée lue). Clics des pages verrouillées notés dans challenge.cta.clics avec leur source.
      Barre du bas et menu « Plus » sur téléphone. Naviguer n'écrit rien en base (seul le clic écrit, dans « challenge »).
      Client et coach (fiche) inchangés ; chaque vérification « dans la fiche » s'assure que la fiche est bien ouverte.
+   v52 (chantier 1, lot B) : le nom du prospect (profils.nom) est pré-rempli aussi : name = « prénom nom »,
+     first_name, last_name ; Léa n'a pas de nom ici (nom ""), donc PRE ne change pas (aucun paramètre vide ajouté) ;
+     le paragraphe Calendly des conditions dit « Ton prénom, ton nom et ton email y sont pré-remplis ».
    Reprend le simulateur de verif47 : Supabase simulé en mémoire, rien ne part vers la vraie base.
    Usage : node verif50.js ../index.html                                          */
 const { chromium } = require("playwright"); const fs = require("fs"); const http = require("http"); const path = require("path");
@@ -154,6 +157,11 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
       Auth.profil.prenom = "L" + String.fromCharCode(0xD800) + "a"; try { out.malforme = lienCalendly("decouverte"); } catch(e){ out.err = String(e); }
       Auth.profil.prenom = ""; out.sansPrenom = lienCalendly("decouverte");
       Auth.profil.prenom = "Anne-Marie & Co"; out.special = lienCalendly("decouverte");
+      /* v52 (lot B) : avec un nom */
+      const n0 = Auth.profil.nom;
+      Auth.profil.prenom = p0; Auth.profil.nom = "Dupré-Martin"; out.avecNom = lienCalendly("decouverte");
+      Auth.profil.prenom = ""; out.nomSeul = lienCalendly("decouverte");
+      Auth.profil.nom = n0;
       Auth.profil.prenom = p0;
       return out;
     }).catch(e => ({ err: String(e) }));
@@ -165,6 +173,8 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     ok("prénom avec un caractère mal formé : aucune erreur, adresse Calendly intacte (sans aucun paramètre)", !r.err && r.malforme === CAL, JSON.stringify({ l: r.malforme, err: r.err }));
     ok("prospect sans prénom : ni name ni first_name, l'email reste pré-rempli", r.sansPrenom === CAL + "?utm_source=app-mhx&utm_medium=app&utm_content=decouverte&email=l%40e.fr", r.sansPrenom);
     ok("prénom avec espace et « & » : encodé, aucun paramètre injecté", r.special === CAL + "?utm_source=app-mhx&utm_medium=app&utm_content=decouverte&name=Anne-Marie%20%26%20Co&first_name=Anne-Marie%20%26%20Co&email=l%40e.fr", r.special);
+    ok("v52 : prospect avec un nom : name = « Léa Dupré-Martin », first_name = Léa, last_name = Dupré-Martin, puis l'email", r.avecNom === CAL + "?utm_source=app-mhx&utm_medium=app&utm_content=decouverte&name=L%C3%A9a%20Dupr%C3%A9-Martin&first_name=L%C3%A9a&last_name=Dupr%C3%A9-Martin&email=l%40e.fr", r.avecNom);
+    ok("v52 : nom sans prénom : name = le nom, last_name, pas de first_name", r.nomSeul === CAL + "?utm_source=app-mhx&utm_medium=app&utm_content=decouverte&name=Dupr%C3%A9-Martin&last_name=Dupr%C3%A9-Martin&email=l%40e.fr", r.nomSeul);
     await aller(page, "#/accueil", 2200);
     ok("#/accueil du prospect : le même écran Découverte, le même lien (utm_content=decouverte)", (await href(page, '#acc-vue a[data-dc-cal="decouverte"]')) === lienAttendu("decouverte"), await href(page, '#acc-vue a[data-dc-cal="decouverte"]'));
     await aller(page, "#/programme", 1400);
@@ -236,9 +246,9 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
       return { i, fr: fr[i] || "", en: en[i] || "", nFr: fr.length, nEn: en.length };
     }).catch(() => null);
     ok("DECOUVERTE.confidentialite : un paragraphe « Prise de rendez-vous » (Calendly, société américaine, pour le compte du coach, États-Unis, pré-remplissage à l'ouverture, écran d'origine)",
-      !!d && d.i > -1 && ["ton bilan se réserve sur Calendly (société américaine)", "pour le compte du coach", "États-Unis", "pré-remplis dès que tu ouvres la page de réservation", "l'écran de l'app d'où tu viens"].every(x => d.fr.includes(x)), JSON.stringify(d));
+      !!d && d.i > -1 && ["ton bilan se réserve sur Calendly (société américaine)", "pour le compte du coach", "États-Unis", "pré-remplis dès que tu ouvres la page de réservation", "l'écran de l'app d'où tu viens", "Ton prénom, ton nom et ton email"].every(x => d.fr.includes(x)), JSON.stringify(d));
     ok("confidentialité en anglais : le paragraphe « Booking: » à la même place (Calendly, a US company, on the coach's behalf, pre-filled, app screen)",
-      !!d && d.nFr === d.nEn && /^Booking: /.test(d.en) && ["Calendly (a US company)", "on the coach's behalf", "United States", "pre-filled as soon as you open the booking page", "the app screen you came from"].every(x => d.en.includes(x)), JSON.stringify(d && d.en));
+      !!d && d.nFr === d.nEn && /^Booking: /.test(d.en) && ["Calendly (a US company)", "on the coach's behalf", "United States", "pre-filled as soon as you open the booking page", "the app screen you came from", "Your first name, last name and email"].every(x => d.en.includes(x)), JSON.stringify(d && d.en));
     const vue = await texte(page);
     /* v52 : questionnaire validé → « Modifier mes réponses » (#/decouverte/reponses) ; avant : « Voir mon résultat » (#/decouverte) */
     ok("Profil du prospect : « Tes réponses au questionnaire sont enregistrées… » et le lien « Modifier mes réponses » (#/decouverte/reponses)", vue.includes("Tes réponses au questionnaire sont enregistrées") && (await texte(page, '#vue a[href="#/decouverte/reponses"]')).trim() === "Modifier mes réponses");

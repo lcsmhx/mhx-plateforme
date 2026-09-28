@@ -10,6 +10,23 @@
       coach sur #/accueil hors fiche : « Ouvrir » du tableau de bord ouvre bien la fiche ;
    D. première connexion d'un client sur téléphone : le Profil s'ouvre en haut (écran de connexion défilé, polices
       lentes), l'encadré « Bienvenue ! » sous l'en-tête, un seul affichage (intake lu 2 fois) ; l'encadré en anglais ;
+   Lot B :
+   E. inscription : écran « Crée ton espace gratuit » sans « 7 jours » (FR / EN), champ Nom obligatoire (#c-nom,
+      family-name, 60 caractères, « Indique ton nom. »), trois cases séparées jamais cochées d'avance (conditions avec
+      « J'ai 18 ans ou plus », santé, newsletter, textes exacts) ; métadonnées exactes (prénom, nom, consentement + conditions_version, consentement_sante
+      + sante_version, newsletter instant ou null + newsletter_version, plus d'emails_suivi), profils.nom, jamais
+      intake.nom ; copie { newsletter, maj, version, source: "inscription" } dans la clé emails à la première ouverture,
+      une seule fois (aussi par le lien de confirmation) ; rien d'écrit pour un ancien compte, un client, le coach, une clé
+      déjà là, une lecture ratée (écrite à l'ouverture suivante), une copie en attente sur l'appareil, une clé apparue
+      pendant l'envoi (insertion simple : rien d'écrasé) ;
+   F. Profil du prospect : interrupteur « Newsletter » (FR / EN) → emails { newsletter, maj, version, source: "profil" },
+      un « non » coupe aussi l'ancien suivi ; l'ancien accord ne coche jamais la newsletter ; lecture ratée ;
+   G. conditions FR / EN (version 2026-09-28, DECOUVERTE.accords, newsletter 2026-09-28c) : plus de 7 jours, nom,
+      3 questions, newsletter (1 à 2 par semaine, désinscription en 1 clic, retrait dans le Profil), emails du compte par
+      Gmail, ni mesure d'ouverture, ni prestataire nommé, ni relance (décisions de Lucas), Calendly avec le nom ; mêmes
+      paragraphes aux mêmes places ;
+   H. Calendly : name = prénom + nom, first_name, last_name, email (prospect, page verrouillée, fiche du coach,
+      lienCalendlyPour à 3 ou 4 paramètres), pré-remplissage éteint, caractères piégés ;
    Z. aucun appel vers l'extérieur.
    Supabase simulé (gabarit de tests-locaux, carte 6 §15) : rien ne part vers la vraie base (routage par NOM D'HÔTE,
    jamais par sous-chaîne : README, « Règle d'or ») ; règles de la base reproduites (HANDOFF §2.3, v49) ; appelant
@@ -86,7 +103,9 @@ function base(opts){
     fonctions: [], inscriptions: [], emails: {}, connexions: {}, inscription: {}, lectureKo: opts.lectureKo || [], retardLecture: {}, retard: {},
     reponseFonction: { status: 200, body: { ok: true } },
     /* v52 (lot A) : mot de passe oublié et changement d'adresse (erreurs simulées), renouvellements de session, polices lentes */
-    oublis: [], recover: {}, majUsers: [], majUser: {}, tokens: [], polices: null };
+    oublis: [], recover: {}, majUsers: [], majUser: {}, tokens: [], polices: null,
+    /* v52 (lot B) : métadonnées des comptes (user_metadata), rendues par /auth/v1/user et le renouvellement */
+    meta: {} };
   for (const x of opts.comptes || []) {
     profils.push({ id: x.id, prenom: x.prenom, nom: x.nom || "", role: "client", statut: x.statut || "prospect", cree_le: x.cree || avant(J) });
     if (x.email) db.emails[x.id] = x.email;
@@ -144,7 +163,7 @@ async function repondre(r, who, db){
   if (p.startsWith("/auth/v1/signup")) {
     const c = corps() || {}, data = c.data || {}; db.inscriptions.push(clone(c));
     if (db.inscription.erreur) return json({ msg: db.inscription.erreur.msg }, db.inscription.erreur.status);
-    const id = db.inscription.id || PID(99); db.emails[id] = c.email;
+    const id = db.inscription.id || PID(99); db.emails[id] = c.email; db.meta[id] = clone(data);
     db.profils.push({ id, prenom: data.prenom || "", nom: data.nom || "", role: "client", statut: "prospect", cree_le: new Date().toISOString() });   // déclencheur creer_profil
     if (db.inscription.confirmation) return json({ id, email: c.email, user_metadata: data });   // « Confirm email » : pas de session
     return json(session(id, c.email, data));
@@ -155,7 +174,7 @@ async function repondre(r, who, db){
     const id = (r1 && r1[1]) || (c.email && db.connexions[c.email]) || (who && who.id);
     if (!id) return json({ error: "invalid_grant", error_description: "Invalid login credentials" }, 400);
     /* renouvellement : la session porte l'adresse que la base connaît à cet instant (db.emails, ex. après un changement d'adresse) */
-    return json(who && id === who.id && !db.emails[id] ? who.session : session(id, db.emails[id] || (who && id === who.id ? who.email : "") || c.email || ""));
+    return json(who && id === who.id && !db.emails[id] ? who.session : session(id, db.emails[id] || (who && id === who.id ? who.email : "") || c.email || "", db.meta[id]));
   }
   /* toute autre écriture vers la base (compte, fonctions, Storage, bibliothèque, catalogue…) est notée ;
      donnees et profils le sont plus bas, avec leur contenu */
@@ -171,7 +190,7 @@ async function repondre(r, who, db){
     if (db.majUser.erreur) return json({ msg: db.majUser.erreur.msg }, db.majUser.erreur.status);
     return json({ id: moi, email: db.emails[moi] || (who && who.id === moi ? who.email : ""), new_email: c.email || undefined, role: "authenticated" });
   }
-  if (p.startsWith("/auth/v1/user")) return moi ? json({ id: moi, email: db.emails[moi] || (who && who.id === moi ? who.email : ""), role: "authenticated" }) : json({ msg: "invalid JWT" }, 401);
+  if (p.startsWith("/auth/v1/user")) return moi ? json(Object.assign({ id: moi, email: db.emails[moi] || (who && who.id === moi ? who.email : ""), role: "authenticated" }, db.meta[moi] ? { user_metadata: clone(db.meta[moi]) } : {})) : json({ msg: "invalid JWT" }, 401);
   if (p.startsWith("/auth/v1/")) return json({});
   /* --- fonctions serveur et Storage : jamais appelés pour de vrai --- */
   if (p.startsWith("/functions/v1/")) { db.fonctions.push({ nom: p.slice(14), m, action: q.get("action"), corps: corps() }); const rf = db.reponseFonction; return rf.abort ? r.abort() : json(rf.body, rf.status); }
@@ -315,6 +334,49 @@ const TX = {
 };
 const LIEN_DERNIER = "#access_token=abc.def.ghi&expires_in=3600&refresh_token=xyz&token_type=bearer&type=email_change";
 const LIEN_PREMIER = "#message=Confirmation+link+accepted.++Please+proceed+to+confirm+link+sent+to+the+other+email";
+
+/* ---------- lot B : inscription (nom, cases, accords), newsletter, conditions, Calendly ---------- */
+const V52 = "2026-09-28";   // version des conditions et de la case santé (DECOUVERTE.accords)
+const V_NEWS = "2026-09-28c";   // version du texte de la case newsletter (texte final de Lucas du 28/09, sans mesure d'ouverture)
+const TXB = {
+  titre: "Crée ton espace gratuit", titre_en: "Create your free space",
+  sous: "Gratuit pour toujours : calculateur de calories, suivi de ton poids et de tes mensurations, Speed Formation.",
+  sous_en: "Free forever: calorie calculator, weight and measurements tracking, Speed Formation.",
+  /* décisions de Lucas du 28/09 : newsletter sans mesure d'ouverture ; l'âge est dans la case des conditions */
+  news: "Je veux recevoir par email les conseils, témoignages et offres de coaching de MHX Coaching (1 à 2 emails par semaine maximum). Désinscription en 1 clic dans chaque email.",
+  news_en: "I want to receive MHX Coaching's tips, testimonials and coaching offers by email (1 to 2 emails per week maximum). One-click unsubscribe in every email.",
+  cgu: "J'ai 18 ans ou plus et j'accepte les conditions d'utilisation et la politique de confidentialité.",
+  cgu_en: "I am 18 or older and I accept the terms of use and the privacy policy.",
+  nom: "Ton nom", nom_en: "Your last name", nom_manque: "Indique ton nom.", nom_manque_en: "Enter your last name.",
+  libelle: "Recevoir par email les conseils, témoignages et offres de coaching de MHX Coaching (1 à 2 emails par semaine maximum)",
+  libelle_en: "Receive MHX Coaching's tips, testimonials and coaching offers by email (1 to 2 emails per week maximum)",
+  oui: "C'est noté : tu recevras la newsletter.", non: "C'est noté : plus aucune newsletter.",
+  oui_en: "Noted: you will receive the newsletter.", non_en: "Noted: no more newsletters.",
+  refuse: "Non enregistré : réessaie dans un instant."
+};
+const SEPT = /7 jours|7 days|7-day|jour \d+ ?\/ ?7|day \d+ ?\/ ?7/i;
+const CLES_META = "conditions_version,consentement,consentement_sante,newsletter,newsletter_version,nom,prenom,sante_version";
+const CAL = "https://calendly.com/mhx-coaching/30min";
+/* remplit le formulaire d'inscription (page sur #/inscription) */
+async function remplir(page, f){
+  await page.fill("#c-prenom", f.prenom); await page.fill("#c-nom", f.nom); await page.fill("#c-email", f.email); await page.fill("#c-mdp", f.mdp || "motdepasse1");
+  if (f.cgu !== false) await page.check("#c-cgu");
+  if (f.sante !== false) await page.check("#c-sante");
+  if (f.news) await page.check("#c-newsletter");
+}
+/* l'écran d'inscription tel qu'affiché */
+const ecranInscription = page => page.evaluate(() => {
+  const t = s => { const x = document.querySelector(s); return x ? x.textContent.replace(/\s+/g, " ").trim() : null; };
+  const at = (id, a) => { const x = document.getElementById(id); return x ? x.getAttribute(a) : null; };
+  const cases = ["c-cgu", "c-sante", "c-newsletter"].map(id => { const x = document.getElementById(id), l = x && x.closest("label");
+    return x ? { id, type: x.type, coche: x.checked, attr: x.hasAttribute("checked"), label: l ? l.textContent.replace(/\s+/g, " ").trim() : null, seul: l ? l.querySelectorAll("input").length : 0 } : null; });
+  return { titre: t(".carte-co h2"), sous: t(".carte-co .co-sous"), ordre: Array.from(document.querySelectorAll(".carte-co input")).map(i => i.id),
+    labelNom: t('label[for="c-nom"]'), lienCgu: !!document.querySelector("label.co-cgu #c-cgu-lien"), nomType: at("c-nom", "type"), nomAuto: at("c-nom", "autocomplete"), nomMax: at("c-nom", "maxlength"), prenomMax: at("c-prenom", "maxlength"),
+    cases, anciennes: !!document.getElementById("c-emails"), texte: document.body.innerText.replace(/\s+/g, " ") };
+});
+const lienLea = (params, source) => CAL + "?utm_source=app-mhx&utm_medium=app&utm_content=" + (source || "decouverte") + params;
+/* la clé emails d'un compte, telle qu'elle est en base (faux Supabase) */
+const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil === "emails") || {}).contenu || {};
 
 (async () => {
   await new Promise((r, k) => { server.once("error", e => k(new Error(e && e.code === "EADDRINUSE" ? "port " + PORT + " déjà pris (une autre suite tourne ?) : VERIF55_PORT=9711 node verif55.js ../index.html" : String(e)))); server.listen(PORT, r); });
@@ -635,6 +697,341 @@ const LIEN_PREMIER = "#message=Confirmation+link+accepted.++Please+proceed+to+co
       const tb = await texte(page, "#vue .bandeau strong"), tn = await texte(page, "#vue .bandeau .note");
       ok(`encadré de première connexion en anglais, ${quoi} : « ${titre} » + « ${note} »`, tb === titre && tn === note, tb + " · " + tn);
       await c.close();
+    }
+  });
+
+  /* =================== E. inscription : nom, trois cases, accords datés et versionnés, copie « emails » =================== */
+  await bloc("E. inscription : écran", async () => {
+    await avec([["inscription_libre: false", "inscription_libre: true"]], async () => {
+      for (const langue of ["", "en"]) {
+        const T = k => TXB[k + (langue ? "_en" : "")], L = langue ? " (anglais)" : "";
+        const db = base();
+        const { c, page } = await contexte(b, null, db, { viewport: MOBILE, langue });
+        await page.goto(URL0 + "#/inscription"); await page.waitForSelector("#c-go"); await attendre(page, 400);
+        const e = await ecranInscription(page);
+        ok(`inscription${L} : « ${T("titre")} », « ${T("sous").slice(0, 45)}… », aucun « 7 jours » / « 7 days » à l'écran`, e.titre === T("titre") && e.sous === T("sous") && !SEPT.test(e.texte), JSON.stringify({ titre: e.titre, sous: e.sous, sept: (SEPT.exec(e.texte) || [""])[0] }));
+        ok(`inscription${L} : champ « ${T("nom")} » (#c-nom) juste après le prénom, type text, autocomplete="family-name", maxlength="60" (prénom : maxlength="60" aussi)`,
+          e.ordre[e.ordre.indexOf("c-prenom") + 1] === "c-nom" && e.labelNom === T("nom") && e.nomType === "text" && e.nomAuto === "family-name" && e.nomMax === "60" && e.prenomMax === "60", JSON.stringify(e.ordre) + " " + JSON.stringify([e.labelNom, e.nomType, e.nomAuto, e.nomMax, e.prenomMax]));
+        ok(`inscription${L} : trois cases séparées (conditions, santé, newsletter), chacune seule dans son libellé, aucune cochée d'avance ; plus de case « emails de suivi »`,
+          e.cases.every(x => x && x.type === "checkbox" && !x.coche && !x.attr && x.seul === 1) && !e.anciennes, JSON.stringify(e.cases));
+        ok(`inscription${L} : case newsletter, texte exact « ${T("news").slice(0, 55)}… »`, !!e.cases[2] && e.cases[2].label === T("news"), e.cases[2] && e.cases[2].label);
+        ok(`inscription${L} : case des conditions, texte exact « ${T("cgu")} » (l'âge y est), son lien ouvre le volet des conditions`, !!e.cases[0] && e.cases[0].label === T("cgu") && e.lienCgu, e.cases[0] && e.cases[0].label);
+        ok(`inscription${L}, téléphone 390 px : aucun défilement horizontal`, !(await deborde(page)), await largeur(page));
+        await page.fill("#c-prenom", "Zoé"); await page.fill("#c-email", "zoe@exemple.fr"); await page.fill("#c-mdp", "motdepasse1"); await page.check("#c-cgu"); await page.check("#c-sante");
+        await page.click("#c-go"); await attendre(page, 300);
+        const m1 = norm(await page.textContent("#co-err").catch(() => ""));
+        await page.fill("#c-nom", "   "); await page.click("#c-go"); await attendre(page, 300);
+        const m2 = norm(await page.textContent("#co-err").catch(() => ""));
+        ok(`inscription${L} : nom vide ou fait d'espaces → « ${T("nom_manque")} », rien n'est envoyé`, m1 === T("nom_manque") && m2 === T("nom_manque") && db.inscriptions.length === 0, m1 + " · " + m2 + " · " + db.inscriptions.length);
+        await c.close();
+      }
+    });
+  });
+
+  await bloc("E. inscription : accords et copie", async () => {
+    await avec([["inscription_libre: false", "inscription_libre: true"]], async () => {
+      for (const news of [false, true]) {
+        const ZID = PID(40 + (news ? 1 : 0)), mail = "zoe" + (news ? 1 : 0) + "@exemple.fr", Q = news ? "AVEC la newsletter" : "sans la newsletter";
+        const db = base(); db.inscription.id = ZID;
+        const { c, page } = await contexte(b, null, db, { viewport: MOBILE });
+        await page.goto(URL0 + "#/inscription"); await page.waitForSelector("#c-go"); await attendre(page, 300);
+        const versions = await page.evaluate(() => ({ c: DECOUVERTE.confidentialite.version, a: JSON.parse(JSON.stringify(DECOUVERTE.accords || null)) }));
+        await remplir(page, { prenom: "Zoé", nom: "  Martin ", email: mail, news });
+        const t0 = Date.now();
+        await Promise.all([page.waitForNavigation({ waitUntil: "load", timeout: 15000 }), page.click("#c-go")]);
+        await pret(page); await attendre(page, 2200);
+        const md = (db.inscriptions[0] || {}).data || {}, cles = Object.keys(md).sort().join(",");
+        const date = x => typeof x === "string" && /^\d{4}-\d{2}-\d{2}T/.test(x) && Math.abs(Date.parse(x) - t0) < 10000;
+        ok(`inscription ${Q} : métadonnées exactement ${CLES_META} (plus d'emails_suivi)`, db.inscriptions.length === 1 && cles === CLES_META, db.inscriptions.length + " · " + cles);
+        ok(`… prénom « Zoé », nom « Martin » (espaces retirés) ; conditions et santé datées de l'inscription ; versions ${V52} (conditions = confidentialite.version = accords.conditions, sante_version = accords.sante)`,
+          md.prenom === "Zoé" && md.nom === "Martin" && date(md.consentement) && date(md.consentement_sante) && md.conditions_version === V52 && versions.c === V52 && !!versions.a && versions.a.conditions === V52 && md.sante_version === V52 && versions.a.sante === V52,
+          JSON.stringify(md) + " · " + JSON.stringify(versions));
+        if (news) ok(`… newsletter cochée : newsletter = l'instant de l'inscription, newsletter_version = accords.newsletter (${V_NEWS})`, date(md.newsletter) && md.newsletter === md.consentement && md.newsletter_version === V_NEWS && versions.a.newsletter === V_NEWS, JSON.stringify(md));
+        else ok(`… newsletter laissée décochée : l'inscription passe quand même, newsletter = null, newsletter_version = ${V_NEWS} (le texte montré)`, "newsletter" in md && md.newsletter === null && md.newsletter_version === V_NEWS, JSON.stringify(md));
+        const prof = db.profils.find(x => x.id === ZID) || {};
+        const apres = await page.evaluate(() => ({ prospect: Auth.estProspect(), nom: (Auth.profil || {}).nom })).catch(() => ({}));
+        ok(`… profil créé avec le nom (déclencheur creer_profil → profils.nom), lu par l'app ; jamais rangé dans intake.nom`,
+          prof.nom === "Martin" && apres.prospect === true && apres.nom === "Martin" && ecr(db, "intake").every(x => !(x.contenu && typeof x.contenu === "object" && "nom" in x.contenu)), JSON.stringify(prof) + " · " + JSON.stringify(apres) + " · " + resume(db));
+        const E1 = ecr(db, "emails", ZID), att = { newsletter: news, maj: news ? md.newsletter : md.consentement, version: V_NEWS, source: "inscription" };
+        ok(`… première ouverture : clé emails écrite une fois, exactement ${JSON.stringify(Object.assign({}, att, { maj: "<date de l'accord>" }))} ; rien d'autre d'écrit`,
+          E1.length === 1 && JSON.stringify(E1[0].contenu) === JSON.stringify(att) && ecrDonnees(db).every(x => x.outil === "emails"), JSON.stringify(E1.map(x => x.contenu)) + " · " + resume(db));
+        await page.reload(); await pret(page); await attendre(page, 2000);
+        ok(`… rechargement (deuxième ouverture) : la clé existe, rien n'est réécrit`, ecr(db, "emails", ZID).length === 1, resume(db));
+        await c.close();
+      }
+    });
+  });
+
+  await bloc("E. inscription : anglais, longueur, lien de confirmation", async () => {
+    await avec([["inscription_libre: false", "inscription_libre: true"]], async () => {
+      /* anglais + noms trop longs (valeurs posées par script : maxlength ne s'applique pas) */
+      {
+        const ZID = PID(42), db = base(); db.inscription.id = ZID;
+        const { c, page } = await contexte(b, null, db, { langue: "en" });
+        await page.goto(URL0 + "#/inscription"); await page.waitForSelector("#c-go"); await attendre(page, 300);
+        await remplir(page, { prenom: "Zoé", nom: "Martin", email: "zoe2@exemple.fr", news: true });
+        await page.evaluate(() => { document.getElementById("c-prenom").value = " " + "P".repeat(70); document.getElementById("c-nom").value = "N".repeat(70) + " "; });
+        await Promise.all([page.waitForNavigation({ waitUntil: "load", timeout: 15000 }), page.click("#c-go")]);
+        await pret(page); await attendre(page, 2000);
+        const md = (db.inscriptions[0] || {}).data || {};
+        ok("inscription en anglais, newsletter cochée : mêmes métadonnées (versions " + V52 + ", newsletter datée) ; prénom et nom coupés à 60 caractères", Object.keys(md).sort().join(",") === CLES_META && md.prenom === "P".repeat(60) && md.nom === "N".repeat(60) && typeof md.newsletter === "string" && md.newsletter_version === V_NEWS && md.sante_version === V52 && md.conditions_version === V52, JSON.stringify(md).slice(0, 300));
+        ok("… copie emails { newsletter: true } à la première ouverture", ecr(db, "emails", ZID).length === 1 && (ecr(db, "emails", ZID)[0].contenu || {}).newsletter === true, resume(db));
+        await c.close();
+      }
+      /* « Confirm email » activé : pas de session à l'inscription ; la copie se fait à l'ouverture par le lien */
+      {
+        const ZID = PID(43), db = base(); db.inscription.id = ZID; db.inscription.confirmation = true;
+        const { c, page } = await contexte(b, null, db);
+        await page.goto(URL0 + "#/inscription"); await page.waitForSelector("#c-go"); await attendre(page, 300);
+        await remplir(page, { prenom: "Zoé", nom: "Martin", email: "zoe3@exemple.fr", news: true });
+        await page.click("#c-go"); await attendre(page, 1500);
+        const h2 = norm(await page.textContent(".carte-co h2").catch(() => ""));
+        ok("« Confirm email » activé : écran « Vérifie ta boîte mail », rien d'écrit (personne n'est encore connecté)", h2 === "Vérifie ta boîte mail" && db.inscriptions.length === 1 && ecrDonnees(db).length === 0, h2 + " · " + resume(db));
+        await page.close();
+        const p2 = await nouvellePage(c);
+        await p2.goto(URL0 + "#access_token=lien." + ZID + ".x&expires_in=3600&refresh_token=renouvellement-" + ZID + "&token_type=bearer&type=signup");
+        await pret(p2); await attendre(p2, 2200);
+        const E1 = ecr(db, "emails", ZID), md = db.meta[ZID] || {};
+        ok("… clic sur le lien de l'email : prospecte connectée, la newsletter de ses métadonnées (lues par /auth/v1/user) est recopiée une fois : { newsletter: true, maj = date de la case, version, source: \"inscription\" }",
+          (await p2.evaluate(() => Auth.estProspect()).catch(() => false)) && E1.length === 1 && JSON.stringify(E1[0].contenu) === JSON.stringify({ newsletter: true, maj: md.newsletter, version: V_NEWS, source: "inscription" }) && !/access_token/.test(p2.url()), JSON.stringify(E1.map(x => x.contenu)) + " · " + p2.url());
+        await c.close();
+      }
+    });
+  });
+
+  await bloc("E. copie emails : les cas où rien n'est écrit", async () => {
+    const meta = (o) => Object.assign({ prenom: "Léa", nom: "Martin", consentement: avant(2 * H), conditions_version: V52, consentement_sante: avant(2 * H), sante_version: V52, newsletter_version: V_NEWS }, o);
+    const ouvrir = async (who, db, opts) => { const x = await contexte(b, who, db, opts); await x.page.goto(URL0); await pret(x.page); await attendre(x.page, 2200); return x; };
+    const L1 = PID(50);
+    const compte = (o) => [Object.assign({ id: L1, prenom: "Léa", nom: "Martin", cree: avant(2 * H), email: "lea@exemple.fr" }, o || {})];
+    /* compte d'avant la v52 : seulement l'ancien accord des emails de suivi */
+    {
+      const db = base({ comptes: compte() });
+      await ouvrir(qui(L1, "lea@exemple.fr", { prenom: "Léa", nom: "", consentement: avant(J), conditions_version: "2026-09", consentement_sante: avant(J), emails_suivi: avant(J) }), db);
+      ok("compte d'avant la v52 (emails_suivi seulement, pas de case newsletter) : aucune copie, rien d'écrit (l'ancien accord ne vaut pas newsletter)", ecrDonnees(db).length === 0 && lu(db, "emails") === 0, resume(db));
+    }
+    /* compte sans aucune métadonnée (créé par le coach, ou fausse session des autres suites) */
+    {
+      const db = base({ comptes: compte() });
+      await ouvrir(qui(L1, "lea@exemple.fr"), db);
+      ok("prospect sans métadonnées : aucune copie, aucune lecture de la clé emails, rien d'écrit", ecrDonnees(db).length === 0 && lu(db, "emails") === 0, resume(db));
+    }
+    /* client et coach avec une case newsletter dans leurs métadonnées : jamais de copie (prospect seulement) */
+    {
+      const db = base();
+      await ouvrir(qui(F.IDS.c1, "thomas@exemple.fr", meta({ prenom: "Thomas", newsletter: avant(H) })), db);
+      await ouvrir(qui(F.IDS.coach, "coach@exemple.fr", meta({ prenom: "Coach", newsletter: avant(H) })), db, {});
+      ok("client Thomas et coach avec newsletter dans leurs métadonnées : aucune copie, rien d'écrit", ecrDonnees(db).length === 0 && ecr(db, "emails").length === 0, resume(db));
+    }
+    /* la clé existe déjà (choix changé dans le Profil) : jamais écrasée */
+    {
+      const deja = { newsletter: false, maj: avant(H), version: V_NEWS, source: "profil", suivi: false };
+      const db = base({ comptes: compte({ donnees: [["emails", deja, avant(H)]] }) });
+      await ouvrir(qui(L1, "lea@exemple.fr", meta({ newsletter: avant(2 * H) })), db);
+      ok("clé emails déjà là (newsletter: false depuis le Profil) alors que la case était cochée : rien d'écrit, la clé est intacte", ecrDonnees(db).length === 0 && JSON.stringify((db.donnees.find(d => d.user_id === L1 && d.outil === "emails") || {}).contenu) === JSON.stringify(deja), resume(db));
+    }
+    /* lecture ratée : rien ; la fois suivante (réseau revenu) : la copie part, une fois */
+    {
+      const db = base({ comptes: compte(), lectureKo: ["emails"] });
+      const m = meta({ newsletter: avant(2 * H) });
+      const x = await ouvrir(qui(L1, "lea@exemple.fr", m), db);
+      ok("lecture de la clé emails ratée (500) : rien n'est écrit", lu(db, "emails") >= 1 && ecrDonnees(db).length === 0, resume(db) + " · lectures emails " + lu(db, "emails"));
+      db.lectureKo = [];
+      await x.page.reload(); await pret(x.page); await attendre(x.page, 2200);
+      ok("… ouverture suivante, réseau revenu : la copie part, une seule fois ({ newsletter: true, maj = date de la case })", ecr(db, "emails", L1).length === 1 && JSON.stringify(ecr(db, "emails", L1)[0].contenu) === JSON.stringify({ newsletter: true, maj: m.newsletter, version: V_NEWS, source: "inscription" }), resume(db));
+    }
+    /* un choix fait sur cet appareil attend son envoi (copie « mhx_attente|… ») : c'est lui qui part, pas la copie de l'inscription */
+    {
+      const choix = { newsletter: false, maj: avant(30 * MIN), version: V_NEWS, source: "profil", suivi: false };
+      const db = base({ comptes: compte() });
+      await ouvrir(qui(L1, "lea@exemple.fr", meta({ newsletter: avant(2 * H) })), db, { stockage: { ["mhx_attente|" + L1 + "|emails"]: JSON.stringify({ a: L1, t: avant(30 * MIN), v: choix }) } });
+      const E1 = ecr(db, "emails", L1);
+      ok("choix du Profil resté sur l'appareil (hors ligne) : il est envoyé tel quel, une seule écriture, la case de l'inscription ne l'écrase pas", E1.length === 1 && JSON.stringify(E1[0].contenu) === JSON.stringify(choix), JSON.stringify(E1.map(x => x.contenu)));
+    }
+    /* la clé apparaît entre la lecture et l'écriture (autre onglet, Profil) : insertion simple, la base refuse (409), rien d'écrasé */
+    {
+      const autre = { newsletter: false, maj: avant(MIN), version: V_NEWS, source: "profil", suivi: false };
+      const db = base({ comptes: compte() }); db.retard.emails = 1500;
+      const x = await contexte(b, qui(L1, "lea@exemple.fr", meta({ newsletter: avant(2 * H) })), db);
+      await x.page.goto(URL0);
+      const t = Date.now(); while (!db.journal.includes("P emails") && Date.now() - t < 10000) await new Promise(z => setTimeout(z, 50));
+      const vu = db.journal.includes("P emails");
+      db.donnees.push({ user_id: L1, outil: "emails", contenu: clone(autre), maj_le: new Date().toISOString() });
+      await attendre(x.page, 2500);
+      const lignes = db.donnees.filter(d => d.user_id === L1 && d.outil === "emails");
+      ok("clé emails apparue pendant l'envoi de la copie : pas de fusion (insertion simple refusée), la clé de l'autre écriture est intacte, une seule ligne", vu && ecr(db, "emails").length === 0 && lignes.length === 1 && JSON.stringify(lignes[0].contenu) === JSON.stringify(autre), "envoi vu " + vu + " · " + resume(db) + " · " + JSON.stringify(lignes.map(l => l.contenu)));
+    }
+  });
+
+  /* =================== F. Profil du prospect : l'interrupteur de la newsletter =================== */
+  await bloc("F. Profil : newsletter", async () => {
+    const L2 = PID(60);
+    const compte = (donnees) => [{ id: L2, prenom: "Léa", nom: "Martin", cree: avant(3 * H), email: "lea@exemple.fr", donnees: donnees || [] }];
+    const meta = (o) => Object.assign({ prenom: "Léa", nom: "Martin", consentement: avant(3 * H), conditions_version: V52, consentement_sante: avant(3 * H), sante_version: V52, newsletter_version: V_NEWS }, o);
+    const etat = page => page.$eval("#mc-emails", e => ({ c: e.checked, d: e.disabled })).catch(() => null);
+    const cliquer = async page => { await page.click("#mc-emails-bloc label.switch"); await attendre(page, 1400); };
+    for (const langue of ["", "en"]) {
+      const T = k => TXB[k + (langue ? "_en" : "")], L = langue ? " (anglais)" : "";
+      const copie = { newsletter: true, maj: avant(3 * H), version: V_NEWS, source: "inscription" };
+      const db = base({ comptes: compte([["emails", copie, avant(3 * H)]]) });
+      if (langue) avecEn(db, L2);
+      const { c, page } = await contexte(b, qui(L2, "lea@exemple.fr", meta({ newsletter: avant(3 * H) })), db, { langue, viewport: MOBILE });
+      await page.goto(URL0 + "#/profil"); await pret(page, "#mc-emails-bloc"); await attendre(page, 800);
+      const h2 = await texte(page, "#mc-emails-bloc h2"), lib = await texte(page, "#mc-emails-bloc label.switch"), note = await texte(page, "#mc-emails-bloc .note");
+      ok(`Profil${L} : bloc « Newsletter », libellé « ${T("libelle").slice(0, 50)}… », interrupteur coché d'après la clé emails, actif`, h2 === "Newsletter" && lib === T("libelle") && JSON.stringify(await etat(page)) === '{"c":true,"d":false}', JSON.stringify([h2, lib, await etat(page)]));
+      ok(`Profil${L} : la note parle de la désinscription en 1 clic`, langue ? note.includes("one-click unsubscribe link") : note.includes("lien de désinscription en 1 clic"), note);
+      if (!langue) ok("Profil, téléphone 390 px : aucun défilement horizontal", !(await deborde(page)), await largeur(page));
+      const n0 = db.ecritures.length;
+      await cliquer(page);
+      const E1 = contenu0(db, L2), m1 = await texte(page, "#mc-emails-msg");
+      ok(`Profil${L}, décoché : emails = { newsletter: false, maj, version ${V_NEWS}, source: "profil", suivi: false }, « ${T("non")} »`,
+        E1.newsletter === false && E1.suivi === false && E1.version === V_NEWS && E1.source === "profil" && typeof E1.maj === "string" && Math.abs(Date.parse(E1.maj) - Date.now()) < 20000 && ecr(db, "emails", L2).length === 1 && m1 === T("non"), JSON.stringify(E1) + " · " + m1);
+      await cliquer(page);
+      const E2 = contenu0(db, L2), m2 = await texte(page, "#mc-emails-msg");
+      ok(`Profil${L}, recoché : { newsletter: true, version, source: "profil" } (suivi reste false : la newsletter ne rallume pas l'ancien accord), « ${T("oui")} »`,
+        E2.newsletter === true && E2.suivi === false && E2.version === V_NEWS && E2.source === "profil" && ecr(db, "emails", L2).length === 2 && m2 === T("oui"), JSON.stringify(E2) + " · " + m2);
+      ok(`Profil${L} : seule la clé emails est écrite`, db.ecritures.slice(n0).every(x => x.outil === "emails") && ecrDonnees(db).every(x => x.outil === "emails"), resume(db));
+      await c.close();
+    }
+  });
+
+  await bloc("F. Profil : état de départ, ancien accord, lecture ratée", async () => {
+    const L3 = PID(61);
+    const compte = (donnees) => [{ id: L3, prenom: "Léa", nom: "Martin", cree: avant(3 * H), email: "lea@exemple.fr", donnees: donnees || [] }];
+    const etat = page => page.$eval("#mc-emails", e => ({ c: e.checked, d: e.disabled })).catch(() => null);
+    const profil = async (who, db) => { const x = await contexte(b, who, db); await x.page.goto(URL0 + "#/profil"); await pret(x.page, "#mc-emails-bloc"); await attendre(x.page, 1500); return x; };
+    /* ancien prospect : emails_suivi, pas de clé → décoché ; ancienne clé { suivi: true } → décoché */
+    {
+      const db = base({ comptes: compte() });
+      const { page } = await profil(qui(L3, "lea@exemple.fr", { prenom: "Léa", emails_suivi: avant(J) }), db);
+      ok("ancien prospect (emails_suivi coché à l'inscription, pas de clé) : interrupteur décoché (l'ancien accord ne vaut pas newsletter), actif, rien d'écrit", JSON.stringify(await etat(page)) === '{"c":false,"d":false}' && ecrDonnees(db).length === 0, JSON.stringify(await etat(page)) + " · " + resume(db));
+    }
+    {
+      const ancienne = { suivi: true, maj: avant(J) };
+      const db = base({ comptes: compte([["emails", ancienne, avant(J)]]) });
+      const { page } = await profil(qui(L3, "lea@exemple.fr", { prenom: "Léa", emails_suivi: avant(2 * J) }), db);
+      ok("ancienne clé { suivi: true } : interrupteur décoché", JSON.stringify(await etat(page)) === '{"c":false,"d":false}', JSON.stringify(await etat(page)));
+      await page.click("#mc-emails-bloc label.switch"); await attendre(page, 1400);
+      const E1 = contenu0(db, L3);
+      ok("… coché : l'ancienne clé est complétée, pas remplacée ({ suivi: true, maj, newsletter: true, version, source: \"profil\" })", E1.suivi === true && E1.newsletter === true && E1.version === V_NEWS && E1.source === "profil" && E1.maj !== ancienne.maj && ecr(db, "emails", L3).length === 1, JSON.stringify(E1));
+    }
+    /* case newsletter laissée vide à l'inscription : la copie { newsletter: false } part, interrupteur décoché */
+    {
+      const db = base({ comptes: compte() });
+      const { page } = await profil(qui(L3, "lea@exemple.fr", { prenom: "Léa", nom: "Martin", consentement: avant(H), conditions_version: V52, consentement_sante: avant(H), sante_version: V52, newsletter: null, newsletter_version: V_NEWS }), db);
+      ok("case newsletter vide à l'inscription : interrupteur décoché, la copie { newsletter: false } est écrite une fois", JSON.stringify(await etat(page)) === '{"c":false,"d":false}' && ecr(db, "emails", L3).length === 1 && (contenu0(db, L3)).newsletter === false, JSON.stringify(await etat(page)) + " · " + resume(db));
+    }
+    /* lecture ratée : interrupteur désactivé, message, rien d'écrit (ni par le Profil ni par la copie) */
+    {
+      const db = base({ comptes: compte(), lectureKo: ["emails"] });
+      const { page } = await profil(qui(L3, "lea@exemple.fr", { prenom: "Léa", newsletter: avant(H), newsletter_version: V_NEWS }), db);
+      await page.click("#mc-emails-bloc label.switch").catch(() => {}); await attendre(page, 1200);
+      ok("lecture de la clé emails ratée : interrupteur désactivé, « " + TXB.refuse + " », rien d'écrit", JSON.stringify(await etat(page)) === '{"c":false,"d":true}' && (await texte(page, "#mc-emails-msg")) === TXB.refuse && ecrDonnees(db).length === 0, JSON.stringify(await etat(page)) + " · " + resume(db));
+    }
+    /* client Thomas : pas de bloc newsletter */
+    {
+      const db = base();
+      const x = await contexte(b, THOMAS, db); await x.page.goto(URL0 + "#/profil"); await pret(x.page, "#vue"); await attendre(x.page, 800);
+      ok("client Thomas : pas de bloc newsletter dans son Profil", !(await x.page.$("#mc-emails-bloc, #mc-emails")), "");
+    }
+  });
+
+  /* =================== G. conditions (FR et EN) : sans « 7 jours », nom, 3 questions, newsletter =================== */
+  await bloc("G. conditions", async () => {
+    const db = base();
+    const { c, page } = await contexte(b, COACH, db);
+    await page.goto(URL0); await pret(page, "#tb-vue");
+    const d = await page.evaluate(() => ({ v: DECOUVERTE.confidentialite.version, a: JSON.parse(JSON.stringify(DECOUVERTE.accords || null)), fr: DECOUVERTE.confidentialite.paragraphes, en: DECOUVERTE.en.confidentialite.paragraphes,
+      ins: JSON.stringify([DECOUVERTE.inscription, DECOUVERTE.en.inscription, DECOUVERTE.emails, DECOUVERTE.en.emails]), vieille: "emails_avant" in DECOUVERTE.inscription || "emails_avant" in DECOUVERTE.en.inscription }));
+    const fr = (d.fr || []).join("\n"), en = (d.en || []).join("\n");
+    ok(`conditions : version ${V52}, DECOUVERTE.accords = { conditions: ${V52} (= confidentialite.version), sante: ${V52}, newsletter: ${V_NEWS} }`, d.v === V52 && JSON.stringify(d.a) === JSON.stringify({ conditions: V52, sante: V52, newsletter: V_NEWS }), JSON.stringify([d.v, d.a]));
+    ok("conditions FR et EN : même nombre de paragraphes (traduction par position), aucun « 7 jours » / « 7 days », ni dans les textes de l'inscription et du Profil ; plus d'ancienne case", d.fr.length === d.en.length && d.fr.length >= 10 && !SEPT.test(fr) && !SEPT.test(en) && !SEPT.test(d.ins) && !d.vieille, JSON.stringify([d.fr.length, d.en.length, (SEPT.exec(fr + en + d.ins) || [""])[0], d.vieille]));
+    const i1 = d.fr.findIndex(p => p.startsWith("Données collectées")), i6 = d.fr.findIndex(p => p.startsWith("Prise de rendez-vous")), i7 = d.fr.findIndex(p => p.startsWith("Newsletter"));
+    ok("FR : données collectées = prénom, nom, email, réponses aux 3 questions, données de santé saisies (poids, mensurations, calculateur)", i1 > -1 && ["ton prénom, ton nom, ton email", "3 questions", "poids", "mensurations", "calculateur de calories"].every(x => d.fr[i1].includes(x)), d.fr[i1]);
+    ok("FR : Calendly « Ton prénom, ton nom et ton email y sont pré-remplis »", i6 > -1 && d.fr[i6].includes("Ton prénom, ton nom et ton email y sont pré-remplis"), d.fr[i6]);
+    /* décisions de Lucas du 28/09 : plus aucune mention de mesure d'ouverture ; aucun prestataire d'emails nommé ; plus de
+       relances ni d'emails de suivi automatiques ; emails du compte envoyés par Gmail (Google) */
+    ok("FR : paragraphe Newsletter à la place des « Emails de suivi » : 1 à 2 emails par semaine au plus, désinscription en 1 clic, retrait dans le Profil, emails du compte par Gmail ; ni mesure d'ouverture, ni Brevo, ni relance, ni « 3 emails »",
+      i7 > -1 && ["1 à 2 emails par semaine au plus", "Désinscription en 1 clic dans chaque email", "retrait de ton accord possible à tout moment dans ton Profil", "par Gmail (Google) pour le compte du coach"].every(x => d.fr[i7].includes(x))
+      && !/relance|3 emails|emails de suivi|réserv|ouvert|cliqu|mesur/i.test(d.fr[i7]) && !/Brevo|emails de suivi|au plus 3 emails|a été ouvert|mesure d'ouverture/i.test(fr), d.fr[i7]);
+    ok("FR : toujours « réservés aux adultes » et « ne remplace pas un avis médical »", /réservés aux adultes/.test(d.fr[0]) && /ne remplace pas un avis médical/.test(d.fr[0]), d.fr[0]);
+    ok("EN à la même place : last name, 3 questions, measurements ; « Your first name, last name and email are pre-filled » ; Newsletter (1 to 2 emails per week, one-click unsubscribe, withdrawal in the Profile, Gmail ; no open tracking, no Brevo, no follow-up) ; adults only, not medical advice",
+      /^Data collected: /.test(d.en[i1]) && ["your last name", "3 starting questions", "measurements", "calorie calculator"].every(x => d.en[i1].includes(x)) && /^Booking: /.test(d.en[i6]) && d.en[i6].includes("Your first name, last name and email are pre-filled")
+      && /^Newsletter \(optional\): /.test(d.en[i7]) && ["1 to 2 emails per week at most", "One-click unsubscribe in every email", "withdraw your consent at any time in your Profile", "by Gmail (Google) on the coach's behalf"].every(x => d.en[i7].includes(x)) && !/follow-up|3 emails|booked|opened|opening|clicked|track|measur/i.test(d.en[i7]) && !/Brevo|follow-up emails|at most 3 emails|was opened|open tracking/i.test(en)
+      && /for adults only/.test(d.en[0]) && /not medical advice/.test(d.en[0]), JSON.stringify([d.en[i1], d.en[i6], d.en[i7]]).slice(0, 400));
+    await c.close();
+    /* le volet des conditions depuis l'inscription, en français puis en anglais : tous les paragraphes, dans la bonne langue */
+    await avec([["inscription_libre: false", "inscription_libre: true"]], async () => {
+      for (const langue of ["", "en"]) {
+        const db2 = base();
+        const x = await contexte(b, null, db2, { langue });
+        await x.page.goto(URL0 + "#/inscription"); await x.page.waitForSelector("#c-cgu-lien"); await attendre(x.page, 300);
+        await x.page.click("#c-cgu-lien"); await x.page.waitForSelector(".volet"); await attendre(x.page, 300);
+        const tv = norm(await x.page.textContent(".volet").catch(() => ""));
+        const P = langue ? d.en : d.fr, autres = langue ? d.fr : d.en;
+        const manquants = P.filter(p => !tv.includes(norm(p))).map(p => p.slice(0, 30)), restes = autres.map(p => norm(p).slice(0, 25)).filter(p => tv.includes(p));
+        ok(`inscription${langue ? " (anglais)" : ""} : le volet des conditions montre les ${P.length} paragraphes ${langue ? "anglais" : "français"}, aucun dans l'autre langue ; la case des conditions reste décochée`,
+          manquants.length === 0 && restes.length === 0 && (await x.page.$eval("#c-cgu", e => e.checked).catch(() => null)) === false, JSON.stringify({ manquants, restes }));
+      }
+    });
+  });
+
+  /* =================== H. Calendly : prénom + nom + email =================== */
+  await bloc("H. Calendly avec le nom", async () => {
+    const L4 = PID(70);
+    const db = base({ comptes: [{ id: L4, prenom: "Léa", nom: "Martin", cree: avant(2 * J), email: "lea@exemple.fr", donnees: [["intake", { email_compte: "lea@exemple.fr" }, avant(J)]] }] });
+    const { c, page } = await contexte(b, qui(L4, "lea@exemple.fr"), db);
+    await page.goto(URL0); await pret(page); await attendre(page, 600);
+    const NOMS = "&name=L%C3%A9a%20Martin&first_name=L%C3%A9a&last_name=Martin&email=lea%40exemple.fr";
+    const r = await page.evaluate(() => {
+      const out = {}, p = Auth.profil, p0 = p.prenom, n0 = p.nom;
+      out.base = lienCalendly("decouverte");
+      p.prenom = ""; out.nomSeul = lienCalendly("decouverte");
+      p.prenom = p0; p.nom = ""; out.prenomSeul = lienCalendly("decouverte");
+      p.nom = "  D'Arc & Fils "; out.special = lienCalendly("decouverte");
+      p.nom = "M" + String.fromCharCode(0xD800) + "n"; try { out.malforme = lienCalendly("decouverte"); } catch(e){ out.err = String(e); }
+      p.nom = null; out.nomNull = lienCalendly("decouverte");
+      p.prenom = p0; p.nom = n0;
+      return out;
+    });
+    ok("prospecte Léa Martin : lienCalendly → name = « Léa Martin », first_name = Léa, last_name = Martin, email (encodés)", r.base === lienLea(NOMS), r.base);
+    ok("nom seul (prénom vide) : name = nom, last_name, pas de first_name", r.nomSeul === lienLea("&name=Martin&last_name=Martin&email=lea%40exemple.fr"), r.nomSeul);
+    ok("prénom seul (nom vide ou absent) : comme avant (name et first_name = prénom, pas de last_name)", r.prenomSeul === lienLea("&name=L%C3%A9a&first_name=L%C3%A9a&email=lea%40exemple.fr") && r.nomNull === r.prenomSeul, JSON.stringify([r.prenomSeul, r.nomNull]));
+    ok("nom avec espaces, apostrophe et « & » : espaces retirés, tout encodé, aucun paramètre injecté", r.special === lienLea("&name=L%C3%A9a%20D'Arc%20%26%20Fils&first_name=L%C3%A9a&last_name=D'Arc%20%26%20Fils&email=lea%40exemple.fr"), r.special);
+    ok("nom avec un caractère mal formé : aucune erreur, adresse Calendly nue", !r.err && r.malforme === CAL, JSON.stringify(r));
+    await aller(page, "#/programme", 1500);
+    const hv = await page.$eval("#vue .verrou a[target=_blank]", a => a.getAttribute("href")).catch(() => "");
+    ok("page verrouillée (#/programme) : le bouton « Réserver mon bilan » porte prénom, nom et email", hv === lienLea(NOMS, "verrou-programme"), hv);
+    ok("prospecte : aucune écriture en calculant ses liens", ecrDonnees(db).length === 0, resume(db));
+    await c.close();
+    /* pré-remplissage éteint : ni prénom, ni nom, ni email */
+    await avec([["calendly_prerempli: true", "calendly_prerempli: false"]], async () => {
+      const db2 = base({ comptes: [{ id: L4, prenom: "Léa", nom: "Martin", cree: avant(2 * J), email: "lea@exemple.fr" }] });
+      const x = await contexte(b, qui(L4, "lea@exemple.fr"), db2);
+      await x.page.goto(URL0); await pret(x.page);
+      const l = await x.page.evaluate(() => lienCalendly("decouverte"));
+      ok("calendly_prerempli à false : utm seulement (ni name, ni first_name, ni last_name, ni email)", l === lienLea(""), l);
+    });
+    /* client Thomas : lien nu */
+    {
+      const x = await contexte(b, THOMAS, base());
+      await x.page.goto(URL0); await pret(x.page, "#acc-vue");
+      ok("client Thomas : lienCalendly rend l'adresse nue", (await x.page.evaluate(() => lienCalendly("decouverte"))) === CAL);
+    }
+    /* coach : fiche de la prospecte (lien à copier, mailto) et lienCalendlyPour */
+    {
+      const db3 = base({ comptes: [{ id: L4, prenom: "Léa", nom: "Martin", cree: avant(2 * J), email: "lea@exemple.fr", donnees: [["intake", { email_compte: "lea@exemple.fr" }, avant(J)]] }] });
+      const x = await contexte(b, COACH, db3);
+      await x.page.goto(URL0 + "#/clients"); await pret(x.page, "#tb-vue, #vue"); await attendre(x.page, 1500);
+      await x.page.click(`[data-ouvrir="${L4}"]`).catch(() => {});
+      await x.page.waitForSelector("#dc-lien", { timeout: 8000 }).catch(() => {}); await attendre(x.page, 500);
+      const lien = await x.page.$eval("#dc-lien", e => e.value).catch(() => ""), note = await texte(x.page, "#fiche-actions p.note");
+      const COACHL = CAL + "?utm_source=app-mhx&utm_medium=coach&utm_content=fiche-coach";
+      ok("coach, fiche de Léa Martin : lien de réservation avec name = « Léa Martin », first_name, last_name, email ; « Son lien de réservation (prénom, nom et email déjà remplis) : »",
+        lien === COACHL + NOMS && note === "Son lien de réservation (prénom, nom et email déjà remplis) :", lien + " · " + note);
+      const l3 = await x.page.evaluate(() => [lienCalendlyPour("Léa", "lea@exemple.fr", "fiche-coach"), lienCalendlyPour("Léa", "", "fiche-coach", "Martin"), lienCalendly("decouverte")]);
+      ok("lienCalendlyPour : un appel à 3 paramètres (sans nom) reste juste ; nom en 4e paramètre ; le coach reçoit lienCalendly nu", l3[0] === COACHL + "&name=L%C3%A9a&first_name=L%C3%A9a&email=lea%40exemple.fr" && l3[1] === COACHL + "&name=L%C3%A9a%20Martin&first_name=L%C3%A9a&last_name=Martin" && l3[2] === CAL, JSON.stringify(l3));
+      ok("coach : aucune écriture", ecrDonnees(db3).length === 0, resume(db3));
     }
   });
 
