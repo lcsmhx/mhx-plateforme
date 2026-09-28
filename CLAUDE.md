@@ -48,6 +48,15 @@ Lis ce fichier en entier au début de chaque conversation. Il passe avant tout a
 - **La qualité passe avant l'économie de crédits.** Lis tout ce qu'il faut pour travailler sans risque. Ne saute jamais un test ou une vérification pour aller plus vite.
 - La documentation technique détaillée est dans `docs/HANDOFF-CLAUDE-CODE.md`. Consulte la section utile dès que ta tâche touche une partie de l'app que tu ne connais pas.
 
+## Outils disponibles
+Dans `.claude/` (sélection adaptée d'ECC). **Actifs seulement si Claude Code est ouvert directement sur le dossier `mhx-plateforme`** (pas sur `MHX-Code`). Ils ne remplacent aucune règle de ce fichier : en cas de doute, CLAUDE.md prime.
+- **Avant chaque mise en ligne** : agent `code-reviewer` sur le diff (la relecture indépendante).
+- **Avant toute migration Supabase** : agent `database-reviewer` (SQL, sauvegarde, comptages, retour arrière).
+- **Tests** : agent `e2e-runner` (suites de `tests-locaux/`, une à la fois ; le banc complet tourne sur GitHub).
+- **En fin de séance** : `/save-session` (résumé dans `.claude/session-notes/derniere-session.md`, jamais commité).
+- **Au démarrage** : `/resume-session` (le hook de démarrage en injecte déjà un extrait, 3 000 caractères au plus).
+- Au besoin : `/context-budget` (ce qui remplit le contexte), skills `e2e-testing` et `strategic-compact`.
+
 ## Fin de chantier
 - Ajoute une note courte pour Grok Bot dans `NOTESCLAUDE.md`.
 - Mets à jour la section « État actuel » ci-dessous en 2 ou 3 lignes.
@@ -56,4 +65,5 @@ Lis ce fichier en entier au début de chaque conversation. Il passe avant tout a
 - En ligne : **v53** (28/09/2026, `8372a97`, vérifiée) : feedback du dimanche et suivi des visites des clients derrière leurs interrupteurs (« test » : compte de test et coach seulement ; Lucas les passe sur « tous ») ; côté coach simplifié (2 tuiles, sans score ni température, « Bilan réservé », liste newsletter en CSV, compteur) ; « Mon journal » et calculateur pour les clients. Aucun email envoyé par l'app.
 - **v54** (28/09/2026) : inscription publique **ouverte** (`inscription_libre: true` dans `js/config.js`, décision de Lucas, Supabase réglé par lui : « Confirm email » désactivé, « Allow new users to sign up » activé). Pour refermer : `false`, ou « Allow new users to sign up » désactivé dans Supabase. Les tests forcent la valeur dans les deux sens.
 - Fichiers : `index.html` (HTML) + `css/` + `js/` depuis la 52.1. GitHub Actions : banc en 10 parties sur `main` et `v2/*`, publication seulement si tout est vert.
+- Outils de travail de Claude Code (28/09/2026) : sélection d'ECC dans `.claude/` (voir « Outils disponibles ») ; l'app ne change pas.
 - Suite : actions de Lucas (interrupteurs, brouillons légaux) ; reportés après l'ouverture : les 3 cartes (lot F), l'écran d'acceptation (Q6). Plan : `docs/PLAN-V2.md`.

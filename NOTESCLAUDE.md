@@ -289,3 +289,8 @@ Pour Grok Bot : rien à faire sur `index.html` (règle inchangée : Grok travail
   8. Coach, fiche d'un prospect : « Bilan réservé » puis le retirer ; le compteur suit.
   9. Coach : liste newsletter et export CSV (ouvert dans un tableur : colonnes prénom, nom, email, date).
   10. Compte de test : calculateur, 17 ans → refus, rien d'enregistré ; puis un âge adulte → calcul enregistré (le calcul du coach ne change pas).
+
+## 2026-09-28 — Outils de travail de Claude Code dans `.claude/` (sélection minimale d'ECC), l'app ne change pas — Claude
+- Ajouté : dossier `.claude/` — agents `code-reviewer`, `database-reviewer`, `e2e-runner` ; commandes `/save-session`, `/resume-session` ; skills `e2e-testing`, `strategic-compact`, `context-budget` ; hooks de notes de session (Node seul, sans dépendance) déclarés dans `.claude/settings.json`. Plus un `.gitignore` et une section « Outils disponibles » dans `CLAUDE.md`.
+- Source : dépôt officiel https://github.com/affaan-m/ECC (v2.2.2, licence MIT : `.claude/LICENCE-ECC.txt`), fichiers relus, traduits et adaptés au projet ; les hooks sont une version simplifiée.
+- **Pour Grok Bot** : rien ne change pour toi. `donnees/`, `index.html`, `css/`, `js/`, Supabase et le workflow GitHub Actions ne sont pas touchés. Le dossier `.claude/` ne sert qu'à Claude Code : n'y touche pas. `.claude/session-notes/` reste sur le Mac (jamais commité).
