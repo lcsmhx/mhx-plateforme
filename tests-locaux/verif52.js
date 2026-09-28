@@ -962,7 +962,12 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     ok("mobile : Profil du prospect avec l'interrupteur des emails, sans débordement", !!(await page.$("#mc-emails")) && !(await deborde(page)));
   });
 
-  /* ---------- J. Client Thomas et fiche d'un client : identiques à main ---------- */
+  /* ---------- J. Client Thomas et fiche d'un client : identiques à main ----------
+     v53 (lot D-clients) : changement VOULU de la navigation de Thomas — « Mon journal » et le calculateur (sa clé
+     calc_perso) entrent dans sa navigation (dans « Plus » sur téléphone), et « Ses séances » de sa fiche mène à son
+     journal (#/journal) au lieu de #/entrainement. Ces comparaisons portent sur le TEXTE de la page (#vue : accueil,
+     Profil, fiche, ligne de Mes clients), où rien ne change (le libellé « Ses séances » reste le même) ; la
+     navigation et le lien ne sont donc pas comparés ici : ils sont vérifiés dans verif60 (A, G, J) et verif56 (M). */
   const vueDe = async (who, url, action) => {
     const db = base();
     const { c, page } = await contexte(b, who, db);

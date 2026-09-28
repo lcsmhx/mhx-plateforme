@@ -211,7 +211,8 @@ async function main() {
       await page.goto(`http://localhost:${PORT}/index.html`);
       await capture(page, `client-accueil-${vn}`);
       rapport.push({ nom: "client-defaut", hash: await page.evaluate(() => location.hash) });
-      for (const r of ["programme", "profil", "formation", "nutrition", "complements", "mensurations", "suivi", "bilan"]) {
+      /* v53 (lot D-clients) : + le calculateur (sa clé calc_perso) et « Mon journal » (clé journal) du client */
+      for (const r of ["programme", "profil", "formation", "nutrition", "complements", "mensurations", "suivi", "bilan", "calculateur", "journal"]) {
         await aller(page, "#/" + r); await capture(page, `client-${r}-${vn}`);
       }
       if (vn === "mobile"){ const plus = await page.$("#barre-bas [data-plus]"); if (plus){ await plus.click(); await page.waitForTimeout(400); await page.screenshot({ path: path.join(OUT, `client-menu-plus-${vn}.png`) }); await page.keyboard.press("Escape"); await page.waitForTimeout(300); } else journal.erreurs.push("[rig] barre du bas absente sur mobile"); }
@@ -236,7 +237,8 @@ async function main() {
       if (ouvrirBtn) {
         await ouvrirBtn.click();
         await capture(page, `fiche-profil-${vn}`);
-        for (const r of ["accueil", "programme", "nutrition", "calculateur", "mensurations", "suivi", "bilan", "complements", "formation"]) {
+        /* v53 (lot D-clients) : + « Son journal » (« Ses séances » de la fiche, lecture seule) */
+        for (const r of ["accueil", "programme", "nutrition", "calculateur", "mensurations", "suivi", "bilan", "complements", "formation", "journal"]) {
           await aller(page, "#/" + r); await capture(page, `fiche-${r}-${vn}`);
         }
       } else journal.erreurs.push("[rig] bouton Ouvrir introuvable pour le client c1");

@@ -158,6 +158,12 @@ const Contenus = {
 /* Dictionnaire anglais (US) — genere depuis i18n/en_data.py. Cle = texte francais exact. */
 I18N.en = {
 /* v53 — lot D-clients (calculateur du client, « Mon journal ») : ses traductions ici */
+"Mes séances du programme": "My program workouts",
+"Choisis la séance que tu viens de faire et note tes répétitions et tes charges, série par série.": "Pick the workout you just did and log your reps and weights, set by set.",
+"Mes séances notées": "My logged workouts",
+"Les plus récentes d'abord.": "Most recent first.",
+"Afficher les séances plus anciennes": "Show older workouts",
+"Ton coach n'a pas encore déposé ton programme : dès qu'il sera prêt, tu pourras noter tes séances ici.": "Your coach hasn't added your program yet: once it's ready, you'll be able to log your workouts here.",
 ". C'est à cette adresse qu'arrive le lien si tu oublies ton mot de passe — garde-la à jour.": ". This is where the reset link goes if you forget your password — keep it up to date.",
 ". C'est avec elle que tu te connectes.": ". It's the address you sign in with.",   /* v52 : aucun email envoyé par l'app */
 "<span class=\"ico\" aria-hidden=\"true\">🎓</span>Ma formation": "<span class=\"ico\" aria-hidden=\"true\">🎓</span>My course",

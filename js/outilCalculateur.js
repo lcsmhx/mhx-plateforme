@@ -18,19 +18,21 @@
 const outilCalculateur = {
   id: "calculateur",
   cle: "calc",
-  masque_client: true,     // c'est le coach qui regle les calories, pas le client
   /* v52 : ouvert au prospect (gratuit pour toujours), qui travaille sur une cle A LUI (calc_perso, meme forme que calc) :
      il ne lit ni n'ecrit jamais calc. Le coach (son compte et la fiche d'un client) lit et ecrit calc exactement comme
-     avant. Le client, lui, ne le voit toujours pas (v53). */
-  ouvert_prospect: true,
+     avant. v53 (lot D, partie clients) : ouvert aussi au CLIENT (plus de masque_client), de la meme facon : sa cle
+     calc_perso ; le calc prepare par son coach n'est que LU, comme valeur de depart (Store.lireTout) ; il n'ecrit
+     jamais calc (le generateur de diete du coach et l'alerte d'ecart lisent calc : inchanges). Sur le telephone du
+     client, il est dans « Plus » (ses 4 onglets principaux ne changent pas). */
   cle_perso: "calc_perso",
   nom: "Calculateur",
   icone: "🔥",
   titre: "Calculateur métabolique",
   accroche: "Tes calories de maintenance et tes macros, calculées sur ta morphologie et ton niveau d'activité réel. Tout se met à jour en direct.",
 
-  /* v52 : le calcul de la personne elle-meme (tout compte qui n'est pas le coach), sur calc_perso, avec les garde-fous
-     (18 ans, IMC) et la mention « pas un avis medical » ; le coach garde son calculateur tel quel, sur calc */
+  /* v52 : le calcul de la personne elle-meme (tout compte qui n'est pas le coach : prospect, et client en v53), sur
+     calc_perso, avec les garde-fous (18 ans, IMC) et la mention « pas un avis medical » ; le coach garde son
+     calculateur tel quel, sur calc (son compte et, en consultation, la fiche d'un client) */
   perso(){ return !Auth.estCoach(); },
 
   html(){
@@ -126,7 +128,7 @@ const outilCalculateur = {
     return { prot, lip, gluc: Math.max(gluc, 0), glucBrut: gluc };
   },
 
-  /* ---------- v52 : le calcul de la personne elle-meme (prospect) : cle calc_perso ----------
+  /* ---------- v52 : le calcul de la personne elle-meme (prospect ; client en v53) : cle calc_perso ----------
      bornes de saisie : celles du questionnaire court (CONFIG.decouverte.bornes : l'age minimum, 18, se change la) */
   bornes(){
     const B = (CONFIG.decouverte && CONFIG.decouverte.bornes) || {};
@@ -163,7 +165,7 @@ const outilCalculateur = {
     return d;
   },
 
-  /* Le prospect : lit et ecrit calc_perso, jamais calc. Rien n'est enregistre avant une vraie saisie, ni tant que ses
+  /* Le prospect (et le client, v53) : lit et ecrit calc_perso, jamais calc. Rien n'est enregistre avant une vraie saisie, ni tant que ses
      donnees ne sont pas completes et dans les bornes. Garde-fou 18 ans : un age sous le minimum (juge a la sortie du
      champ, ou des qu'il a deux chiffres) affiche un message, n'enregistre rien, annule l'ecriture en attente, et retire
      ce que ce formulaire avait deja enregistre (calc_perso vide). Un calc_perso enregistre avec un age mineur (ecrit hors
@@ -296,7 +298,7 @@ const outilCalculateur = {
   },
 
   async init(){
-    if (this.perso()) return this.initPerso();   // v52 : le prospect, sur calc_perso (le coach : plus bas, inchange)
+    if (this.perso()) return this.initPerso();   // v52 : le prospect (v53 : et le client), sur calc_perso (le coach : plus bas, inchange)
     const c = CONFIG.calcul;
     /* Le calculateur partait sur 80 kg / 25 ans / 178 cm et enregistrait ces
        valeurs des l'ouverture. La diete d'un client de 72 kg etait alors

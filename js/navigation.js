@@ -13,8 +13,8 @@ function outilsVisibles(){
      masque_client: true -> outil du coach, mais qui reste dans la fiche du client
      client_seul: true   -> outil du client ; le coach ne le voit qu'en consultant une fiche */
   /* prospect_seul: true -> outil du compte gratuit (la Decouverte) ; ni client accompagne, ni coach */
-  /* v52 — ouvert_prospect: true -> un outil masque_client ouvert quand meme au prospect (le calculateur, sur sa cle
-     a lui) ; le client ne le voit toujours pas */
+  /* v52 — ouvert_prospect: true -> un outil masque_client ouvert quand meme au prospect ; v53 : plus aucun outil ne
+     le porte (le calculateur n'est plus masque_client : ouvert a tous, chacun sur sa cle, voir outilCalculateur) */
   return OUTILS.filter(o => (!o.role || (o.role === "coach" && Auth.estCoach()))
                          && (!o.masque_client || Auth.estCoach() || (o.ouvert_prospect && Auth.estProspect()))
                          && (!o.client_seul || !Auth.estCoach() || Store.idConsulte)
@@ -310,7 +310,9 @@ function bandeauConsultation(){
     { id:"nutrition",    nom:"Ses repas",      fort:true },
     { id:"calculateur",  nom:"Ses calories", fort:true },
     { id:"mensurations", nom:"Ses courbes" },
-    { id:"entrainement", nom:"Ses séances" }
+    /* v53 : le journal du client (cle journal, #/journal en lecture seule), et non plus #/entrainement (sa cle perf,
+       l'outil du coach : toujours vide chez un client, le coach croyait qu'il n'avait rien note) */
+    { id:"journal",      nom:"Ses séances" }
   ];
   return `<div class="bandeau">
     <div class="bandeau-tete">

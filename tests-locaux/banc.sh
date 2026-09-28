@@ -28,7 +28,7 @@ etat_disque() { git -C .. status --porcelain --untracked-files=no 2>/dev/null; }
 DISQUE_DEBUT=$(etat_disque)
 
 # Suites du banc, et suites volontairement hors banc (verif44 à verif47 testent le Challenge 7 jours supprimé).
-SUITES="flux verif34 verif35 verif36 verif37 verif38 verif-xss verif39 verif40 verif41 verif42 verif43 verif48 verif49 verif50 verif51 verif52 verif53 verif54 verif55 verif56 verif57"
+SUITES="flux verif34 verif35 verif36 verif37 verif38 verif-xss verif39 verif40 verif41 verif42 verif43 verif48 verif49 verif50 verif51 verif52 verif53 verif54 verif55 verif56 verif57 verif60"
 HORS_BANC="verif44 verif45 verif46 verif47"
 
 # Nombre EXACT de ✓ attendus par suite (et de pages pour rig).
@@ -47,12 +47,15 @@ HORS_BANC="verif44 verif45 verif46 verif47"
 # Mode test « jour n » de la Découverte retiré : verif39 51 → 50, verif49 130 → 128 (bloc « C. mode test de l'appareil »),
 # verif51 91 → 92 (+1 : l'ancienne adresse #/decouverte-jour/8 mène à #/decouverte, l'ancien drapeau est effacé).
 # v53 (chantier 3, feedback du dimanche) : verif57 152 (nouvelle suite) ; verif36 et verif38 inchangées (samedi : texte d'avant).
+# v53 (lot D-clients : calculateur et « Mon journal » du client, « Ses séances » du coach) : verif60 60 (nouvelle suite),
+# rig 84 → 90 pages (calculateur et journal du client, journal dans la fiche ; téléphone et ordi) ; verif42, verif55,
+# verif56 et verif-xss adaptées sans vérification ajoutée ni retirée.
 attendu() {
   case "$1" in
     flux) echo 19;; verif34) echo 13;; verif35) echo 14;; verif36) echo 13;; verif37) echo 15;; verif38) echo 67;;
     verif-xss) echo 5;; verif39) echo 50;; verif40) echo 64;; verif41) echo 25;; verif42) echo 20;; verif43) echo 34;;
     verif48) echo 42;; verif49) echo 128;; verif50) echo 57;; verif51) echo 92;; verif52) echo 186;; verif53) echo 126;;
-    verif54) echo 64;; verif55) echo 165;; verif56) echo 247;; verif57) echo 152;; rig) echo 84;; *) echo "";;
+    verif54) echo 64;; verif55) echo 165;; verif56) echo 247;; verif57) echo 152;; verif60) echo 60;; rig) echo 90;; *) echo "";;
   esac
 }
 # Partie de chaque suite pour les jobs parallèles de GitHub Actions (10 parties, durées équilibrées, 4 à 5 minutes chacune).
@@ -67,7 +70,7 @@ partie() {
     verif42|verif50) echo 7;;
     verif40|verif54) echo 8;;
     verif55|verif39) echo 9;;
-    verif56|rig|verif-xss|niveau) echo 10;;
+    verif56|rig|verif-xss|niveau|verif60) echo 10;;
     *) echo "";;
   esac
 }
