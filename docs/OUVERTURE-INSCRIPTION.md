@@ -85,48 +85,15 @@ Il faut passer `inscription_libre: false` à `inscription_libre: true` dans `js/
 Ensuite :
 1. Attends la coche verte « Tests puis publication » (une quinzaine de minutes) : https://github.com/lcsmhx/mhx-plateforme/actions
 2. Ouvre https://lcsmhx.github.io/mhx-plateforme/#/inscription : tu dois voir l'écran **« Crée ton espace gratuit »**. Si tu vois encore la connexion, recharge la page (le téléphone garde parfois l'ancienne version quelques minutes).
-3. **Ne mets pas encore le lien sur Instagram** : d'abord le test de l'étape 6.
+3. **Ne mets pas encore le lien sur Instagram** : d'abord le test d'inscription de l'étape 6.
 
 Ne pousse jamais l'ancienne branche `ouverture-inscription` (v51) : elle effacerait la V2.
 
 ---
 
-## Étape 6 — Le test prospect complet (par Grok)
+## Étape 6 — Le test d'inscription
 
-Donne à Grok :
-- le lien https://lcsmhx.github.io/mhx-plateforme/#/inscription ;
-- une **adresse jetable à toi**, sans compte MHX : par exemple ton adresse Gmail avec `+grok1` juste avant le @. Jamais l'adresse de quelqu'un d'autre. Aucun email n'arrivera : c'est normal ;
-- la liste ci-dessous, à faire sur téléphone, sans être connecté à un autre compte MHX. Il coche la case newsletter à l'inscription.
-
-**Inscription**
-- [ ] « Crée ton espace gratuit » : prénom, nom, email, mot de passe. Aucun « 7 jours », aucun prix.
-- [ ] 3 cases, **aucune cochée d'avance** : « J'ai 18 ans ou plus et j'accepte les conditions d'utilisation et la politique de confidentialité » (obligatoire) ; données de santé (obligatoire) ; newsletter (facultative, finit par « Désinscription en 1 clic dans chaque email. »).
-- [ ] Sans la case des conditions ou sans la case santé : un message clair, pas de compte.
-- [ ] Le lien des conditions ouvre le texte : il ne parle ni de « 7 jours », ni d'emails de confirmation envoyés par Gmail.
-- [ ] Après la création : directement les 3 questions, **sans « Vérifie ta boîte mail »** (sinon : revoir l'étape 1).
-
-**Les 3 questions et la page du bilan**
-- [ ] Objectif (perdre du gras / prendre du muscle / me remettre en forme), ce qui t'a bloqué, dans 3 mois.
-- [ ] La page du bilan reprend la réponse « dans 3 mois ». Deux boutons de même taille : « Réserver mon bilan » et « Pas maintenant, découvrir mon espace ».
-- [ ] « Réserver mon bilan » ouvre la page de réservation avec **prénom, nom et email déjà remplis**. Ne pas réserver de vrai créneau (ou annuler aussitôt).
-
-**L'espace gratuit**
-- [ ] Accueil : une seule action mise en avant, « Calcule tes calories (2 min) ».
-- [ ] Calculateur : avec 17 ans, un message clair et rien d'enregistré ; avec un âge adulte, le résultat et la mention « pas un avis médical ».
-- [ ] Ensuite : « Enregistre ta pesée de départ ». La pesée est toujours là après rechargement de la page.
-- [ ] Speed Formation ouverte.
-- [ ] Programme, Nutrition, Journal, Suivi : chacune montre un **exemple**, la phrase « … Réserve ton bilan. » et le bouton « Réserver mon bilan ». Aucun prix.
-
-**Profil**
-- [ ] Newsletter coupée dans le Profil : un message le confirme.
-- [ ] Changer d'adresse email : le message « Écris-nous à mhx.coaching@gmail.com, on te débloque rapidement. »
-- [ ] Déconnexion → « Mot de passe oublié ? » : le même message, aucun email. Reconnexion avec le mot de passe : ça marche.
-
-**Côté coach (toi, avant la suppression du compte)**
-- [ ] https://lcsmhx.github.io/mhx-plateforme/#/prospects → sa fiche : son **nom**, ses **3 réponses**, **newsletter** « oui » avant le retrait dans le Profil, « non » après.
-
-**Suppression (en dernier)**
-- [ ] Profil → « Mes données » → « Supprimer mon compte » → taper `SUPPRIMER` → « Ton compte est supprimé ». Reconnexion impossible. Le compte a disparu de Prospects et de https://supabase.com/dashboard/project/nzynbuczmogifuidcjed/auth/users.
+Le test d'inscription est fait par Lucas ou par le banc Playwright local. Grok ne crée aucun compte (décision de Lucas du 28/09/2026).
 
 Quelque chose ne va pas : capture d'écran, ne partage pas le lien, donne-la à Claude. Si c'est grave (un client voit une erreur, une donnée manque) : referme tout de suite (étape 8).
 
