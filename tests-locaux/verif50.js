@@ -127,6 +127,12 @@ const idConsulte = page => page.evaluate(() => (typeof Store !== "undefined" && 
 /* ouvre la fiche depuis Mes clients et rend la fiche reellement ouverte (a verifier : le clic peut echouer) */
 const ouvrirFiche = async (page, id) => { await page.goto(`http://localhost:${PORT}/#/clients`); await attendre(page, 2200); await page.click(`[data-ouvrir="${id}"]`).catch(() => {}); await attendre(page, 1800); return idConsulte(page); };
 const TXT_VERROU = "Cette fonctionnalité est disponible avec l'accompagnement MHX.";
+/* v52 (28/09/2026, Chantier 1 lot E) : programme, nutrition, suivi (vitrine) montrent d'abord un exemple générique marqué
+   « Exemple » (#ech-<id>, détaillé dans verif56, blocs E1), puis cet appel à la place du texte du verrou ; les pages cachées
+   (compléments, bilan) gardent TXT_VERROU. Même lien, même comptage des clics, aucune donnée lue.
+   v52 : lots D + E — journal (vitrine du lot D) a lui aussi son exemple ; Ma progression est ouverte (lot D). */
+const TXT_APPEL = "Tu veux un programme construit pour toi, qui évolue chaque semaine ? Réserve ton bilan.";
+const TXT_APPEL_EN = "Want a program built for you that evolves every week? Book your assessment.";
 const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed Formation fait partie de l'accompagnement.";
 
 (async () => {
@@ -230,7 +236,7 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     await aller(page, "#/programme", 1400);
     const tV = await texte(page, "#vue .verrou");
     const hV = await href(page, "#vue .verrou a[target=_blank]");
-    ok("anglais : « Book my assessment » sur la Découverte et la page verrouillée (« This feature is available with MHX coaching. »), même lien", tTete.trim() === "Book my assessment" && tV.includes("Book my assessment") && tV.includes("This feature is available with MHX coaching.") && hV === lienAttendu("verrou-programme"), tTete + " | " + tV.slice(0, 160) + " | " + hV);
+    ok("anglais : « Book my assessment » sur la Découverte et la page verrouillée (#/programme : « " + TXT_APPEL_EN + " »), même lien", tTete.trim() === "Book my assessment" && tV.includes("Book my assessment") && tV.includes(TXT_APPEL_EN) && hV === lienAttendu("verrou-programme"), tTete + " | " + tV.slice(0, 160) + " | " + hV);
     await c.close();
   }
 
@@ -317,10 +323,13 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     ok("prospect (jour 2) : navigation = accueil, programme, journal, nutrition, progression, calculateur, suivi, formation, profil", JSON.stringify(ids) === '["accueil","programme","journal","nutrition","mensurations","calculateur","suivi","formation","profil"]', JSON.stringify(ids));
     ok("prospect : plus d'onglet Challenge, pas de Découverte en double, ni compléments ou bilan", !["challenge", "decouverte", "complements", "bilan"].some(x => ids.includes(x)), JSON.stringify(ids));
     ok("prospect (jour 2) : cadenas sur la vitrine programme, journal, nutrition, suivi ; progression, calculateur, formation ouverts", (await cadenasIds(page)) === "journal,nutrition,programme,suivi", await cadenasIds(page));
+    /* v52 : lots D + E — les quatre pages de la vitrine (journal compris) : l'exemple, puis l'appel, aucune donnée lue */
     for (const r of ["programme", "journal", "nutrition", "suivi"]) {
+      const avant = db.lectures.length;
       await aller(page, "#/" + r, 1300);
-      const t = await texte(page, "#vue .verrou");
-      ok(`#/${r} (vitrine) : page verrouillée, « Réserver mon bilan » (utm_content=verrou-${r})`, t.includes(TXT_VERROU) && t.includes("Réserver mon bilan") && (await href(page, "#vue .verrou a[target=_blank]")) === lienAttendu("verrou-" + r), t.slice(0, 160));
+      const t = await texte(page, "#vue .verrou"), lu = db.lectures.slice(avant);
+      /* v52 (lot E) : aucune clé de la table donnees lue (la journée type de #/nutrition lit le catalogue public : permis) */
+      ok(`#/${r} (vitrine) : page verrouillée (l'exemple, puis l'appel), « Réserver mon bilan » (utm_content=verrou-${r}), aucune de ses données lue`, t.includes(TXT_APPEL) && !!(await page.$("#vue #ech-" + r + ".echantillon")) && t.includes("Réserver mon bilan") && (await href(page, "#vue .verrou a[target=_blank]")) === lienAttendu("verrou-" + r) && lu.length === 0, t.slice(0, 160) + " | lectures " + JSON.stringify(lu));
     }
     for (const r of ["complements", "bilan"]) {   // v52 : Ma progression n'est plus verrouillée
       const avant = db.lectures.length;

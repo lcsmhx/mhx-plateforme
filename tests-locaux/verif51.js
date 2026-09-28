@@ -370,11 +370,17 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
       ok(`${h} → #/decouverte (écran Découverte)`, (await page.evaluate(() => location.hash)) === "#/decouverte" && !!(await page.$("#dc-vue #dc-accomp")), await page.evaluate(() => location.hash));
     }
     /* v52 (lot D) : Ma progression est ouverte au prospect ; « Mon journal » est verrouillé */
+    /* v52 (28/09/2026, Chantier 1 lot E) : #/programme montre d'abord un exemple générique (#ech-programme, « Exemple »),
+       puis l'appel « Tu veux un programme construit pour toi… » à la place du texte du verrou (détails : verif56, blocs E1) */
+    /* v52 : lots D + E — #/journal (vitrine du lot D) a lui aussi son exemple et l'appel ; compléments et bilan : le verrou */
+    const APPEL = "Tu veux un programme construit pour toi, qui évolue chaque semaine ? Réserve ton bilan.", VERROU = "Cette fonctionnalité est disponible avec l'accompagnement MHX.";
+    const AVEC_EXEMPLE = ["programme", "journal"];
     for (const [h, id] of [["#/programme", "programme"], ["#/journal", "journal"], ["#/complements", "complements"], ["#/bilan", "bilan"]]) {
       const n0 = db.lectures.length;
       await aller(page, h, 1400);
       const hv = await page.$eval("#vue .verrou a[target=_blank]", a => a.getAttribute("href") + "|" + a.textContent.trim()).catch(() => "");
-      ok(`${h} : verrouillée (« Cette fonctionnalité est disponible avec l'accompagnement MHX. » + « Réserver mon bilan », utm_content=verrou-${id}), aucune donnée lue`, (await texte(page, "#vue .verrou")).includes("Cette fonctionnalité est disponible avec l'accompagnement MHX.") && hv === lienAttendu("verrou-" + id) + "|Réserver mon bilan" && db.lectures.length === n0, hv + " · lectures " + JSON.stringify(db.lectures.slice(n0)));
+      const avecEx = AVEC_EXEMPLE.includes(id), tx = avecEx ? APPEL : VERROU, ex = avecEx === !!(await page.$("#vue #ech-" + id + ".echantillon")) && avecEx === !!(await page.$("#vue .echantillon"));
+      ok(`${h} : verrouillée (${avecEx ? "l'exemple, puis " : ""}« ${tx} » + « Réserver mon bilan », utm_content=verrou-${id}), aucune donnée lue`, (await texte(page, "#vue .verrou")).includes(tx) && ex && hv === lienAttendu("verrou-" + id) + "|Réserver mon bilan" && db.lectures.length === n0, hv + " · lectures " + JSON.stringify(db.lectures.slice(n0)));
     }
     await cliquerCal(page, "#vue .verrou a[target=_blank]"); await attendre(page, 2000);
     const cl = ((contenu(db, "challenge") || {}).cta || {}).clics || [];
@@ -481,7 +487,8 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
     await aller(page, "#/decouverte/reponses", 1500);
     ok("anglais : « Modifier mes réponses » → « Submit my answers » et « Discard changes »", (await texte(page, "#dc-voir")) === "Submit my answers" && (await texte(page, "#dc-annuler")) === "Discard changes");
     await aller(page, "#/programme", 1400);
-    ok("anglais : page verrouillée « This feature is available with MHX coaching. » + « Book my assessment »", (await texte(page, "#vue .verrou")).includes("This feature is available with MHX coaching.") && (await texte(page, "#vue .verrou a[target=_blank]")) === "Book my assessment");
+    /* v52 (lot E) : #/programme a son exemple, puis l'appel en anglais à la place de « This feature is available… » */
+    ok("anglais : page verrouillée « Want a program built for you that evolves every week? Book your assessment. » + « Book my assessment »", (await texte(page, "#vue .verrou")).includes("Want a program built for you that evolves every week? Book your assessment.") && (await texte(page, "#vue .verrou a[target=_blank]")) === "Book my assessment");
     await c.close();
   });
   await bloc("H. mobile, questionnaire", async () => {

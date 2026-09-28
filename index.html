@@ -513,6 +513,27 @@ label.objectif{cursor:pointer;text-transform:none;letter-spacing:0;font-weight:4
 @media (max-width:560px){ .photos-vues{grid-template-columns:1fr 1fr} .photos-vues .ph-vue:last-child{grid-column:1 / -1;max-width:50%} }
 .verrou p{margin:0 auto;max-width:44ch;color:var(--ink-2);font-size:14px;line-height:1.6}
 .verrou .actions{justify-content:center}
+/* v52 (lot E) : l'exemple generique d'une page verrouillee du prospect (marque « Exemple », lecture seule), puis l'appel */
+.echantillon{margin:0 0 16px;min-width:0}
+.echantillon .ech-marque{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:0 0 10px;font-size:13px;color:var(--ink-3);line-height:1.5}
+.echantillon .ech-marque .pastille{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+.echantillon .panel{border-style:dashed}
+.ech-appel .verrou .btn{min-height:46px;padding:11px 22px}
+.ech-repas summary{padding:2px 0}
+.ech-repas .ech-moment{display:block;font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:600}
+.ech-repas summary b{overflow-wrap:anywhere}
+.ech-repas .ech-macros{display:block;margin-top:2px;font-size:12.5px;color:var(--ink-3);font-family:"IBM Plex Mono",monospace}
+.ech-exo{padding:14px;margin-bottom:12px}
+.ech-exo:last-of-type{margin-bottom:0}
+.ech-sets{list-style:none;margin:10px 0 0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.ech-sets .set{padding:8px 6px;text-align:center;min-width:0}
+.ech-sets .set .s-lbl{margin-bottom:4px}
+.ech-sets .v{display:block;font-family:"IBM Plex Mono",monospace;font-size:15px;font-weight:600;color:var(--ink);line-height:1.3}
+.ech-sets .c{display:block;font-size:12px;color:var(--ink-3);line-height:1.3;overflow-wrap:anywhere}
+.ech-courbe{margin:16px 0 0}
+.ech-courbe h3{margin:0 0 6px}
+.ech-courbe svg{display:block;width:100%;height:auto;max-height:190px}
+.ech-message{margin-top:16px}
 
 /* --- interrupteur --- */
 .switch{position:relative;display:inline-flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;color:var(--ink-2);text-transform:none;letter-spacing:0;font-weight:400;margin:0}
@@ -1428,6 +1449,47 @@ const DECOUVERTE = {
     demo: "Démonstration",
     securite: "Une gêne musculaire, c'est normal. Une douleur vive, non : arrête l'exercice."
   },
+  /* v52 (Chantier 1, lot E) : les exemples des pages verrouillées du prospect (objet Echantillons). Génériques, en
+     lecture seule, marqués « Exemple » : jamais ses données. Même forme et même ordre dans DECOUVERTE.en.echantillons. */
+  echantillons: {
+    marque: "Exemple",
+    note: "Un aperçu de cette page avec l'accompagnement : ce ne sont pas tes données.",
+    appel: "Tu veux un programme construit pour toi, qui évolue chaque semaine ? Réserve ton bilan.",
+    nutrition: {
+      titre: "Une journée type",
+      intro: "Trois repas simples et riches en protéines, tirés du catalogue de recettes. Avec l'accompagnement, tes repas et leurs quantités sont calculés pour ton objectif.",
+      moments: { petit_dejeuner: "Petit-déjeuner", dejeuner: "Déjeuner", collation: "Collation", diner: "Dîner" },
+      macros: "{k} kcal · {p} g de protéines"
+    },
+    journal: {
+      titre: "Séance A — Corps entier",
+      notee: "Séance notée",
+      intro: "Chaque série notée : répétitions et charge. À la séance suivante, l'app te propose la charge à viser.",
+      resume: "{e} exercices · {s} séries",
+      serie: "Série {n}", reps: "{r} reps", kg: "{c} kg", pdc: "poids du corps",
+      /* séries : [répétitions, charge en kg] (0 = poids du corps) ; cible = répétitions visées (conseil de Journal.conseil) */
+      exercices: [
+        { nom: "Squat goblet", series: [[12, 16], [12, 16], [10, 16]] },
+        { nom: "Pompes", series: [[10, 0], [9, 0], [8, 0]] },
+        { nom: "Rowing haltère", series: [[12, 14], [11, 14], [10, 14]] },
+        { nom: "Hip thrust", series: [[12, 40], [12, 40], [12, 40]], cible: "10-12" }
+      ]
+    },
+    suivi: {
+      titre: "Ton suivi de la semaine",
+      semaine: "Semaine {n}",
+      intro: "Chaque semaine : ta régularité, ta courbe de poids et un message de ton coach.",
+      regularite: "Régularité", seances: "Séances notées", poids: "Poids",
+      cette_semaine: "cette semaine", depuis: "depuis la semaine dernière",
+      courbe: "Ta courbe de poids",
+      courbe_alt: "Poids sur {n} semaines : de {a} kg à {b} kg.",
+      court: "S{n}",
+      /* le poids de chaque semaine (kg), la régularité sur 100, les séances notées et prévues de la dernière semaine */
+      pesees: [82.0, 81.6, 81.5, 80.8, 80.4], score: 86, faites: 3, prevues: 3,
+      message_titre: "Feedback de ton coach",
+      message: "Belle semaine : 3 séances sur 3 et 400 g de moins sur la balance. On garde le même plan. Cette semaine, ajoute 10 minutes de marche après le dîner."
+    }
+  },
   recettes: {
     titre: "3 recettes pour commencer",
     intro: "Simples, rapides, riches en protéines.",
@@ -1620,6 +1682,43 @@ const DECOUVERTE = {
       ],
       demo: "Demo",
       securite: "Muscle discomfort is normal. Sharp pain is not: stop the exercise."
+    },
+    echantillons: {
+      marque: "Example",
+      note: "A preview of this page with coaching: this isn't your data.",
+      appel: "Want a program built for you that evolves every week? Book your assessment.",
+      nutrition: {
+        titre: "A sample day of eating",
+        intro: "Three simple, high-protein meals from the recipe catalog. With coaching, your meals and portions are calculated for your goal.",
+        moments: { petit_dejeuner: "Breakfast", dejeuner: "Lunch", collation: "Snack", diner: "Dinner" },
+        macros: "{k} Cal · {p} g protein"
+      },
+      journal: {
+        titre: "Workout A — Full body",
+        notee: "Workout logged",
+        intro: "Every set logged: reps and weight. At the next workout, the app suggests the weight to aim for.",
+        resume: "{e} exercises · {s} sets",
+        serie: "Set {n}", reps: "{r} reps", kg: "{c} kg", pdc: "bodyweight",
+        exercices: [
+          { nom: "Goblet squat", series: [[12, 16], [12, 16], [10, 16]] },
+          { nom: "Push-ups", series: [[10, 0], [9, 0], [8, 0]] },
+          { nom: "Dumbbell row", series: [[12, 14], [11, 14], [10, 14]] },
+          { nom: "Hip thrust", series: [[12, 40], [12, 40], [12, 40]], cible: "10-12" }
+        ]
+      },
+      suivi: {
+        titre: "Your weekly follow-up",
+        semaine: "Week {n}",
+        intro: "Every week: your consistency, your weight curve and a message from your coach.",
+        regularite: "Consistency", seances: "Workouts logged", poids: "Weight",
+        cette_semaine: "this week", depuis: "since last week",
+        courbe: "Your weight curve",
+        courbe_alt: "Weight over {n} weeks: from {a} kg to {b} kg.",
+        court: "W{n}",
+        pesees: [82.0, 81.6, 81.5, 80.8, 80.4], score: 86, faites: 3, prevues: 3,
+        message_titre: "Your coach's feedback",
+        message: "Great week: 3 workouts out of 3 and 400 g down on the scale. We keep the same plan. This week, add a 10-minute walk after dinner."
+      }
     },
     recettes: {
       titre: "3 recipes to get started",
@@ -12311,8 +12410,8 @@ const outilDecouverte = {
 
 /* ------------------------------------------------------------------
    v52 — « Mon journal » : en v52, une page VERROUILLEE de la vitrine du prospect
-   seulement (CONFIG.marque.gratuit_vitrine ; l'exemple d'une seance notee
-   viendra avec les pages verrouillees). Ni le client ni le coach ne le voient
+   seulement (CONFIG.marque.gratuit_vitrine ; l'exemple d'une seance notee :
+   Echantillons.journal, lot E). Ni le client ni le coach ne le voient
    (prospect_seul) : l'onglet du client (cle journal, objet Journal) est prevu
    pour la v53. Aucune cle : une page verrouillee ne lit ni n'ecrit rien.
    ------------------------------------------------------------------ */
@@ -12389,9 +12488,116 @@ const AVANTAGES = {
 function pageVerrouillee(o){
   /* v52 : plus de page spéciale pour la Speed Formation (ouverte pour toujours) */
   const plus = AVANTAGES[o.id];
+  /* v52 (lot E) : pour un prospect, d'abord un exemple generique de la page (Echantillons : marque « Exemple », aucune de
+     ses donnees), puis « Tu veux un programme construit pour toi… » et « Réserver mon bilan » — toujours un lien
+     .verrou a[target=_blank] : afficher() compte le clic (source verrou-<id>). Les autres pages verrouillees : inchangees. */
+  const ech = Echantillons.html(o.id);
+  if (ech) return `${ech}<section class="panel ech-appel">${UI.verrou({ titre: trad(nomOnglet(o)), texte: trad(DECOUVERTE.echantillons.appel), lien: lienCalendly("verrou-" + o.id), cta: trad("Réserver mon bilan") })}
+    ${plus ? `<p class="note verrou-plus">${esc(trad(plus))}</p>` : ""}</section>`;
   return `<section class="panel">${UI.verrou({ titre: trad(nomOnglet(o)), texte: trad("Cette fonctionnalité est disponible avec l'accompagnement MHX."), lien: lienCalendly("verrou-" + o.id), cta: trad("Réserver mon bilan") })}
     ${plus ? `<p class="note verrou-plus">${esc(trad(plus))}</p>` : ""}</section>`;
 }
+
+/* v52 (Chantier 1, lot E) — ECHANTILLONS : l'exemple GENERIQUE qu'un prospect voit sur une page verrouillee, avant
+   « Réserver mon bilan ». Lecture seule, marque « Exemple », sans aucune de ses donnees : une page verrouillee ne lit
+   toujours aucune cle « donnees » (pas d'init()). programme : la seance decouverte (outilDecouverte.seanceHTML, sans
+   reponse, donc niveau debutant) ; nutrition : une journee type faite des recettes du catalogue PUBLIC
+   (CONFIG.decouverte.recettes, lues comme outilDecouverte.chargerRecettes) ; journal : une seance notee ; suivi : un suivi
+   de la semaine (les deux derniers ecrits en dur). Textes : DECOUVERTE.echantillons (FR) et DECOUVERTE.en.echantillons. */
+const Echantillons = {
+  ids: ["programme", "nutrition", "journal", "suivi"],
+  L(){ return (typeof DECOUVERTE !== "undefined" && DECOUVERTE.echantillons) || {}; },
+  /* le bloc complet (marque « Exemple » + exemple) ; "" : pas d'exemple pour cette page, ou pas un prospect */
+  html(id){
+    if (this.ids.indexOf(id) === -1 || !Auth.estProspect() || Store.idConsulte) return "";
+    let corps = "";
+    try { corps = this[id](); } catch(e){ console.warn("[MHX] exemple illisible (" + id + ")", e); return ""; }
+    if (!corps) return "";
+    const L = this.L();
+    return `<div class="echantillon" id="ech-${id}" role="region" aria-labelledby="ech-${id}-m">
+      <p class="ech-marque" id="ech-${id}-m"><span class="pastille accent">${esc(trad(L.marque || "Exemple"))}</span> <span>${esc(trad(L.note || ""))}</span></p>
+      ${corps}</div>`;
+  },
+  programme(){ return outilDecouverte.seanceHTML({}); },
+  nutrition(){
+    const L = this.L().nutrition || {};
+    return `<section class="panel"><h2>${esc(trad(L.titre || ""))}</h2><p class="note" style="margin:0 0 8px">${esc(trad(L.intro || ""))}</p>
+      <div id="ech-repas"><div class="empty">${esc(trad("Chargement…"))}</div></div></section>`;
+  },
+  journal(){
+    const L = this.L().journal || {}, ex = (Array.isArray(L.exercices) ? L.exercices : []).filter(e => e && e.nom);
+    const nbS = ex.reduce((n, e) => n + (Array.isArray(e.series) ? e.series.length : 0), 0);
+    const bloc = e => {
+      const series = (Array.isArray(e.series) ? e.series : []).map(s => ({ r: num(s && s[0]), c: num(s && s[1]) }));
+      /* le conseil de la seance suivante, calcule comme dans le vrai journal */
+      const cs = e.cible ? Journal.conseil({ reps: e.cible }, { e: { series } }) : null;
+      return `<div class="exo ech-exo"><b>${esc(trad(e.nom))}</b>
+        <ul class="ech-sets">${series.map((s, j) => `<li class="set"><span class="s-lbl">${esc(trad(L.serie, { n: j + 1 }))}</span><span class="v">${esc(trad(L.reps, { r: s.r }))}</span><span class="c">${esc(s.c > 0 ? trad(L.kg, { c: Journal.kg(s.c) }) : trad(L.pdc))}</span></li>`).join("")}</ul>
+        ${cs && cs.texte ? `<p class="note" style="margin:8px 0 0"><b class="${cs.monte ? "pos" : ""}">${esc(cs.texte)}</b></p>` : ""}</div>`;
+    };
+    return `<section class="panel"><div class="seance-c-tete"><h2>${esc(trad(L.titre || ""))}</h2><span class="pastille ok">${esc(trad(L.notee || ""))}</span></div>
+      <p class="note" style="margin:-6px 0 4px">${esc(trad(L.resume || "", { e: ex.length, s: nbS }))}</p>
+      <p class="note" style="margin:0 0 14px">${esc(trad(L.intro || ""))}</p>${ex.map(bloc).join("")}</section>`;
+  },
+  suivi(){
+    const L = this.L().suivi || {}, P = (Array.isArray(L.pesees) ? L.pesees : []).map(num).filter(v => v > 0), n = P.length;
+    const signe = v => (v < 0 ? "−" : v > 0 ? "+" : "") + n1(Math.abs(v));
+    const tuile = (lbl, val, unite, sous) => `<div class="tile"><div class="t-lbl">${esc(trad(lbl || ""))}</div><div class="t-val readout">${esc(val)}<small>${esc(unite)}</small></div><div class="t-sub">${esc(trad(sous || ""))}</div></div>`;
+    return `<section class="panel"><div class="seance-c-tete"><h2>${esc(trad(L.titre || ""))}</h2>${n ? `<span class="pastille">${esc(trad(L.semaine || "", { n }))}</span>` : ""}</div>
+      <p class="note" style="margin:-6px 0 14px">${esc(trad(L.intro || ""))}</p>
+      <div class="tiles">${tuile(L.regularite, fmt(L.score), "/ 100", L.cette_semaine)}${tuile(L.seances, fmt(L.faites), "/ " + fmt(L.prevues), L.cette_semaine)}${n > 1 ? tuile(L.poids, signe(P[n - 1] - P[n - 2]), "kg", L.depuis) : ""}</div>
+      ${n > 1 ? `<div class="ech-courbe"><h3>${esc(trad(L.courbe || ""))}</h3>${this.courbe(P, L)}</div>` : ""}
+      <div class="fb-entree ech-message"><div class="fb-tete"><b>${esc(trad(L.message_titre || ""))}</b></div><p class="fb-texte">${esc(trad(L.message || ""))}</p></div></section>`;
+  },
+  /* la courbe de poids de l'exemple : un petit SVG fixe (role img, decrit en une phrase pour les lecteurs d'ecran) */
+  courbe(P, L){
+    const W = 320, H = 150, g = 26, d = 26, h = 24, b = 28;   // marges gauche, droite, haut, bas
+    const min = Math.min(...P), max = Math.max(...P), ecart = (max - min) || 1;
+    const X = i => (g + i * (W - g - d) / Math.max(1, P.length - 1)).toFixed(1);
+    const Y = v => (h + (max - v) / ecart * (H - h - b)).toFixed(1);
+    const alt = trad(L.courbe_alt || "", { n: P.length, a: n1(P[0]), b: n1(P[P.length - 1]) });
+    const txt = (x, y, t, fort) => `<text x="${x}" y="${y}" text-anchor="middle" font-size="11" font-family="IBM Plex Mono, monospace" fill="${fort ? "var(--ink)" : "var(--ink-3)"}">${esc(t)}</text>`;
+    return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(alt)}" focusable="false">
+      <line x1="${g - 12}" x2="${W - d + 12}" y1="${H - b + 8}" y2="${H - b + 8}" stroke="var(--axis)" stroke-width="1"/>
+      <polyline points="${P.map((v, i) => X(i) + "," + Y(v)).join(" ")}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+      ${P.map((v, i) => `<circle cx="${X(i)}" cy="${Y(v)}" r="4" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>${txt(X(i), (+Y(v) - 10).toFixed(1), n1(v), i === P.length - 1)}${txt(X(i), H - 4, trad(L.court || "", { n: i + 1 }))}`).join("")}
+    </svg>`;
+  },
+  /* apres l'affichage (afficher) : la journee type lit le catalogue PUBLIC (recettes, aliments) ; les demonstrations de
+     la seance s'ouvrent comme dans la Decouverte. Rien d'autre n'est lu, rien n'est ecrit. */
+  brancher(zone, id){
+    const bloc = zone && this.ids.indexOf(id) > -1 ? zone.querySelector("#ech-" + id) : null;
+    if (!bloc) return;
+    if (id === "nutrition") this.chargerJournee(bloc);
+    $$("[data-yt]", bloc).forEach(bt => bt.addEventListener("click", () => {
+      const v = idVideo(bt.dataset.yt); if (!v) return;
+      $$(".video-cadre", bloc).forEach(cd => { if (cd._bouton && cd.parentNode) cd.parentNode.replaceChild(cd._bouton, cd); });   // une video a la fois
+      const cadre = document.createElement("div"); cadre.className = "video-cadre"; cadre._bouton = bt;
+      cadre.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${v}?rel=0&autoplay=1" title="${esc(trad("Démonstration de l'exercice"))}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+      bt.parentNode.replaceChild(cadre, bt);
+    }));
+  },
+  async chargerJournee(bloc){
+    const boite = bloc.querySelector("#ech-repas"); if (!boite) return;
+    const L = this.L().nutrition || {}, R = DECOUVERTE.recettes || {}, moments = L.moments || {};
+    try {
+      const [liste, idx] = await Promise.all([Catalogue.recettes(), Catalogue.indexAliments()]);
+      if (!boite.isConnected) return;
+      const rs = (Decouverte.cfg().recettes || []).map(id => (liste || []).find(r => r && r.id === id)).filter(Boolean);
+      if (!rs.length) throw new Error("recettes introuvables");
+      const mac = await Promise.all(rs.map(r => Catalogue.macros(r)));
+      if (!boite.isConnected) return;
+      boite.innerHTML = rs.map((r, i) => {
+        const m = mac[i] || {}, info = [];
+        if (r.temps_min) info.push(trad(R.minutes || "{n} min", { n: r.temps_min }));
+        if (!m.manquants && m.kcal > 0) info.push(trad(L.macros || "", { k: fmt(m.kcal), p: fmt(m.proteines) }));   // macros justes seulement
+        return `<details class="dc-recette ech-repas"><summary>${moments[r.moment] ? `<span class="ech-moment">${esc(trad(moments[r.moment]))}</span>` : ""}<b>${esc(trad(r.nom || ""))}</b>${info.length ? `<span class="ech-macros">${esc(info.join(" · "))}</span>` : ""}</summary>
+          <h4>${esc(trad(R.ingredients || ""))}</h4><ul class="ingr fiche-l">${(r.ingredients || []).map(x => { const a = idx[x && x.aliment_id]; return `<li><span>${esc(trad(a ? a.nom : String((x && x.aliment_id) || "")))}</span><b>${esc(fmt(num(x && x.grammes)))} g</b></li>`; }).join("")}</ul>
+          ${(r.etapes || []).length ? `<h4>${esc(trad(R.preparation || ""))}</h4><ol class="etapes">${r.etapes.map(e => `<li>${esc(trad(String(e)))}</li>`).join("")}</ol>` : ""}</details>`;
+      }).join("");
+    } catch(e){ if (boite.isConnected) boite.innerHTML = `<p class="note" style="margin:0">${esc(trad(R.indispo || ""))}</p>`; }
+  }
+};
 
 /* La page d'arrivee : le coach tombe sur ses clients, le client sur son accueil. */
 function outilParDefaut(){
@@ -12613,6 +12819,8 @@ async function afficher(id, silencieux){
   let fin = null;
   /* v50 : un clic « Réserver mon bilan » depuis une page verrouillee compte (suivi commercial du coach) */
   if (verrouille && Auth.estProspect() && !Store.idConsulte) $$("#vue .verrou a[target=_blank]").forEach(a => a.addEventListener("click", () => { try { Decouverte.clic(Store.cache[Decouverte.cle] || Decouverte.vide(), "verrou-" + outil.id); } catch(e){} }));
+  /* v52 (lot E) : l'exemple de la page verrouillee (journee type lue dans le catalogue public, demonstrations) */
+  if (verrouille) Echantillons.brancher($("vue"), outil.id);
   if (!verrouille){
     try { fin = (await outil.init()) || null; }
     catch(e){

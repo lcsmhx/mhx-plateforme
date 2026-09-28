@@ -203,6 +203,15 @@ const cliquerVerrou = async (c, page) => {
   const VERROUILLES = ["programme", "nutrition", "journal", "suivi", "complements", "bilan"];
   const TEXTE_VERROU = "Cette fonctionnalité est disponible avec l'accompagnement MHX.";
   const TEXTE_VERROU_EN = "This feature is available with MHX coaching.";
+  /* v52 (28/09/2026, Chantier 1 lot E) : programme, nutrition, suivi (et journal, lot D) montrent d'abord un exemple
+     générique marqué « Exemple » (#ech-<id>, vérifié en détail par verif56, blocs E1), puis cet appel à la place du texte
+     du verrou ; les autres pages verrouillées gardent « Cette fonctionnalité… ». Le contrat ne change pas : une page
+     verrouillée ne fait aucune requête vers ses données (la journée type lit le catalogue public, pas la table donnees). */
+  const AVEC_EXEMPLE = ["programme", "nutrition", "journal", "suivi"];
+  const TEXTE_APPEL = "Tu veux un programme construit pour toi, qui évolue chaque semaine ? Réserve ton bilan.";
+  const TEXTE_APPEL_EN = "Want a program built for you that evolves every week? Book your assessment.";
+  const texteVerrou = (r, en) => AVEC_EXEMPLE.includes(r) ? (en ? TEXTE_APPEL_EN : TEXTE_APPEL) : (en ? TEXTE_VERROU_EN : TEXTE_VERROU);
+  const exempleOk = async (page, r) => AVEC_EXEMPLE.includes(r) === !!(await page.$("#vue #ech-" + r + ".echantillon"));
   const TEXTE_FORMATION = "Ta période découverte est terminée : la Speed Formation fait partie de l'accompagnement.";
   let textesFr = "", textesEn = "";
   try {
@@ -287,7 +296,7 @@ const cliquerVerrou = async (c, page) => {
       page.donnees.length = 0;
       await aller(page, "#/" + r, 1300);
       const v = await verrou(page);
-      ok(`prospect : #/${r} verrouillé — cadenas, « ${TEXTE_VERROU} », « Réserver mon bilan » vers Calendly (utm_content=verrou-${r}, prénom et email pré-remplis)`, !!v && v.cadenas && v.texte === TEXTE_VERROU && lienOk(v, "verrou-" + r, "Réserver mon bilan"), JSON.stringify(v));
+      ok(`prospect : #/${r} verrouillé — ${AVEC_EXEMPLE.includes(r) ? "l'exemple, puis " : ""}cadenas, « ${texteVerrou(r)} », « Réserver mon bilan » vers Calendly (utm_content=verrou-${r}, prénom et email pré-remplis)`, !!v && v.cadenas && v.texte === texteVerrou(r) && await exempleOk(page, r) && lienOk(v, "verrou-" + r, "Réserver mon bilan"), JSON.stringify(v));
       const html = await page.evaluate(() => document.body.innerHTML);
       ok(`prospect : #/${r} verrouillé — aucune requête vers ses données (ni lecture ni écriture), rien de ses données affiché`, page.donnees.length === 0 && !html.includes(TEMOIN), page.donnees.join(" ; ") + (html.includes(TEMOIN) ? " | donnée témoin affichée" : ""));
       textesFr += "\n" + await toutLeTexte(page);
@@ -383,7 +392,7 @@ const cliquerVerrou = async (c, page) => {
     const { page } = await contexte(b, lea, db, { langue: "en" });
     await page.goto(`http://localhost:${PORT}/#/programme`); await attendre(page, 2000);
     const v = await verrou(page);
-    ok(`prospect en anglais : #/programme « ${TEXTE_VERROU_EN} » et « Book my assessment » (utm_content=verrou-programme)`, !!v && v.texte === TEXTE_VERROU_EN && lienOk(v, "verrou-programme", "Book my assessment"), JSON.stringify(v));
+    ok(`prospect en anglais : #/programme (l'exemple, puis) « ${TEXTE_APPEL_EN} » et « Book my assessment » (utm_content=verrou-programme)`, !!v && v.texte === TEXTE_APPEL_EN && await exempleOk(page, "programme") && lienOk(v, "verrou-programme", "Book my assessment"), JSON.stringify(v));
     textesEn += "\n" + await toutLeTexte(page);
     await aller(page, "#/accueil", 2000);
     const acc = await texte(page, "#acc-vue");
@@ -395,10 +404,11 @@ const cliquerVerrou = async (c, page) => {
     for (const r of VERROUILLES.filter(x => x !== "programme")) {
       await aller(page, "#/" + r, 1300);
       const vr = await verrou(page);
-      if (!(vr && vr.cadenas && vr.texte === TEXTE_VERROU_EN && lienOk(vr, "verrou-" + r, "Book my assessment"))) fautes.push(r + " " + JSON.stringify(vr));
+      if (!(vr && vr.cadenas && vr.texte === texteVerrou(r, true) && await exempleOk(page, r) && lienOk(vr, "verrou-" + r, "Book my assessment"))) fautes.push(r + " " + JSON.stringify(vr));
       textesEn += "\n" + await toutLeTexte(page);
     }
-    ok(`prospect en anglais : #/nutrition, #/journal, #/suivi, #/complements, #/bilan verrouillés en anglais (« ${TEXTE_VERROU_EN} », « Book my assessment », utm_content=verrou-<id>)`, fautes.length === 0, fautes.join(" ; "));
+    /* v52 : lots D + E — journal (lot D) remplace mensurations (ouverte) ; nutrition, journal et suivi ont leur exemple (lot E) */
+    ok(`prospect en anglais : #/nutrition, #/journal, #/suivi, #/complements, #/bilan verrouillés en anglais (nutrition, journal et suivi : l'exemple puis « ${TEXTE_APPEL_EN} » ; les autres : « ${TEXTE_VERROU_EN} » ; « Book my assessment », utm_content=verrou-<id>)`, fautes.length === 0, fautes.join(" ; "));
     await aller(page, "#/profil", 1300);
     textesEn += "\n" + await toutLeTexte(page);
     const okCond = await cliquer(page, "#mc-conditions"); await attendre(page, 500);
