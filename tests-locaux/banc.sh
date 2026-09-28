@@ -67,10 +67,10 @@ HORS_BANC="verif44 verif45 verif46 verif47 verif49"
 # case santé en version 2026-09-28b pour les nouvelles inscriptions (verif39, verif55 adaptées) ; verif39 47 → 48 (les deux
 # liens de la connexion centrés à 320 / 375 / 390 px) ; verif52 136 → 137 (inscription_libre: true n'est accepté que si le
 # commit qui l'a passé à true contient « ouverture de l'inscription » dans son message ; false passe toujours).
-# v56 (compteur de connexions côté coach) : verif61 48 (nouvelle suite, partie 6) ; l'appel noter_connexion (au démarrage d'un
-# prospect ou d'un compte suivi) n'est pas une écriture de l'app dans les données : les simulations de verif40, 51 à 58 et 60
-# le mettent à part (il est testé dans verif61) ; verif52 compare Mes clients à main sans les 2 nouvelles colonnes ;
-# nombres inchangés.
+# v56 (compteur de connexions côté coach) : verif61 48 (nouvelle suite, partie 6) ; l'appel noter_connexion (au démarrage de
+# chaque client et prospect, décision de Lucas du 29/09) n'est pas une écriture de l'app dans les données : les simulations
+# de flux, verif35 à 43, verif-xss, 48, 50 à 58, 60 et rig le mettent à part (il est testé dans verif61) ; verif52 compare
+# Mes clients à main sans les 2 nouvelles colonnes ; nombres inchangés.
 attendu() {
   case "$1" in
     flux) echo 19;; verif34) echo 13;; verif35) echo 14;; verif36) echo 13;; verif37) echo 12;; verif38) echo 66;;

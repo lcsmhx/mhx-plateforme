@@ -2,21 +2,22 @@
    navigateur, avec un faux Supabase qui reproduit la migration v56 (supabase/migrations/20260928220000_v56_compteur_connexions.sql) :
    la fonction noter_connexion() note la connexion du compte du JETON (sans paramètre), une par jour au plus (calendrier de
    Paris), et avance la dernière connexion ; la table connexions est lue par le coach seul et jamais écrite directement.
-   A. démarrage avec une session enregistrée (connexion automatique) : le compte de test (client, interrupteur « test ») et un
-      prospect sont notés UNE fois, par un POST sans paramètre (« {} ») portant leur propre jeton, sans rien écrire d'autre ni
-      rien attendre ; un client hors interrupteur, le coach (fiche consultée comprise) et l'écran de connexion : jamais ;
+   A. démarrage avec une session enregistrée (connexion automatique) : le compte de test, un autre client et un prospect
+      sont notés UNE fois, par un POST sans paramètre (« {} ») portant leur propre jeton, sans rien écrire d'autre ni rien
+      attendre (tous les clients, dès la mise en ligne : décision de Lucas du 29/09) ; le coach (fiche consultée comprise)
+      et l'écran de connexion : jamais ;
       connexion par mot de passe (rechargement) : notée ; même jour : une connexion (la dernière avance), autre jour : +1 ;
    B. l'app revenue au premier plan : après 10 min ou plus en arrière-plan, une nouvelle ouverture ; moins : rien ;
    C. base sans la migration (404), retour arrière (403), réseau coupé : rien d'affiché, aucune erreur, l'app marche ;
       404 / 403 : plus d'essai avant le prochain chargement ; réseau coupé : nouvel essai à la prochaine ouverture ; côté
       coach : Mes clients et Prospects s'affichent, « — » dans les deux colonnes ;
    D. Mes clients : colonnes « Connexions » et « Dernière connexion » (après « Jours actifs »), nombre, date et heure (heure
-      de l'appareil du coach), « 0 » / « aucune » pour un compte suivi jamais connecté, « — » pour un compte non suivi même
-      s'il a une ligne, info-bulle « comptées depuis le … », téléphone 390 px ;
+      de l'appareil du coach), « 0 » / « aucune » pour un client ou un prospect jamais connecté depuis, info-bulle « comptées
+      depuis le … », téléphone 390 px ;
    E. page Prospects : les deux lignes dans chaque carte, la phrase d'aide ;
    F. rien côté client ni prospect : aucun texte du compteur, aucune lecture de la table ;
-   G. interrupteur suivi_visites_clients « tous » (Thomas noté et affiché) et « off » (compte de test ni noté ni affiché,
-      prospects toujours) ;
+   G. l'interrupteur des visites (suivi_visites_clients) ne change rien au compteur : « tous » et « off », clients et
+      prospects notés et affichés ;
    H. données piégées dans la table (types faux, dates illisibles, balises) : rien ne tombe, rien n'est injecté ;
    Z. aucun appel vers l'extérieur.
    Infrastructure (serveur, faux Supabase, personnes, décor) reprise de verif58. Dates relatives au lancement. Chaque bloc
@@ -463,12 +464,13 @@ const jourCoach = v => quandCoach(v).slice(0, 10);
 const notees = (db, uid) => db.notees.filter(x => !uid || x.par === uid);
 const hier = () => jourParis(Date.now() - J);
 const TEXTE_CX = /Connexions|Dernière connexion|connexions? (notée|comptée)/i;
-/* le décor du coach : des lignes dans la table (le compte de test, Thomas — non suivi —, Léa ; Marc n'en a pas) */
+/* le décor du coach : des lignes dans la table (le compte de test, Thomas, Léa ; Marc et Karim n'en ont pas) */
 const CX_TEST = { nombre: 12, derniere: avant(3 * H), premiere: avant(20 * J) };
+const CX_THOMAS = { nombre: 5, derniere: avant(H), premiere: avant(10 * J) };
 const CX_LEA = { nombre: 3, derniere: avant(26 * H), premiere: avant(3 * J) };
 function avecLignes(db){
   const l = (uid, o) => { db.cx[uid] = Object.assign({ user_id: uid, dernier_jour: jourParis(Date.parse(o.derniere)) }, o, { derniere: pgInstant(o.derniere), premiere: pgInstant(o.premiere) }); };
-  l(TESTEUR.id, CX_TEST); l(F.IDS.c1, { nombre: 5, derniere: avant(H), premiere: avant(10 * J) }); l(LEA, CX_LEA);
+  l(TESTEUR.id, CX_TEST); l(F.IDS.c1, CX_THOMAS); l(LEA, CX_LEA);
   return db;
 }
 /* les faits d'une carte de la page Prospects : { libellé : valeur } */
@@ -500,12 +502,12 @@ const titre = (page, uid, col) => page.$eval(`#tb-clients [data-ouvrir="${uid}"]
     ok("A : prospecte Léa, session enregistrée : UNE connexion notée, avec son jeton ; rien d'autre écrit", notees(db2).length === 1 && notees(db2, LEA).length === 1 && db2.cx[LEA] && db2.cx[LEA].nombre === 1 && db2.ecritures.length === 0, JSON.stringify(notees(db2)) + " " + resume(db2));
   });
 
-  await bloc("A. démarrage : jamais pour Thomas, le coach, l'écran de connexion", async () => {
+  await bloc("A. démarrage : Thomas oui ; jamais le coach ni l'écran de connexion", async () => {
     const db = decor();
     const { page } = await contexte(b, THOMAS, db);
     await page.goto(URL0); await pret(page, "#acc-vue h1");
     for (const h of ["#/programme", "#/suivi", "#/accueil"]) await aller(page, h, 900);
-    ok("A : Thomas (client hors interrupteur) : aucune connexion notée", notees(db).length === 0, JSON.stringify(notees(db)));
+    ok("A : Thomas (un autre client, hors de l'interrupteur des visites) : UNE connexion notée, avec son jeton, malgré 3 pages ouvertes ; rien d'autre écrit", notees(db).length === 1 && notees(db, F.IDS.c1).length === 1 && notees(db)[0].jeton === "Bearer jeton-" + F.IDS.c1 && db.ecritures.length === 0, JSON.stringify(notees(db)) + " " + resume(db));
     const dbc = decor();
     const { page: pc } = await coachSur(b, dbc, "#/tableau", "#tb-vue");
     for (const h of ["#/clients", "#/prospects"]) await aller(pc, h, 1200);
@@ -552,7 +554,7 @@ const titre = (page, uid, col) => page.$eval(`#tb-clients [data-ouvrir="${uid}"]
     const { page: pt } = await contexte(b, THOMAS, dbt, { horloge: true });
     await pt.goto(URL0); await pret(pt, "#acc-vue h1");
     await cacher(pt); await pt.clock.fastForward(11 * MIN); await montrer(pt); await attendre(pt, 800);
-    ok("B : Thomas (non suivi) : 11 min en arrière-plan puis revenue : toujours rien", notees(dbt).length === 0, JSON.stringify(notees(dbt)));
+    ok("B : Thomas (client) : noté à l'ouverture, puis de nouveau après 11 min en arrière-plan", notees(dbt, F.IDS.c1).length === 2 && notees(dbt).length === 2, JSON.stringify(notees(dbt)));
   });
 
   await bloc("B. jeton expiré au retour", async () => {
@@ -611,10 +613,10 @@ const titre = (page, uid, col) => page.$eval(`#tb-clients [data-ouvrir="${uid}"]
     ok("D : compte de test : « 12 » et la date et l'heure de sa dernière connexion (" + quandCoach(CX_TEST.derniere) + ", heure de l'appareil du coach)", T["Connexions"] === "12" && T["Dernière connexion"] === quandCoach(CX_TEST.derniere), JSON.stringify([T["Connexions"], T["Dernière connexion"]]));
     ok("D : … info-bulle « comptées depuis le " + jourCoach(CX_TEST.premiere) + " »", (await titre(page, TESTEUR.id, "Connexions")) === "Une connexion par jour au plus, comptées depuis le " + jourCoach(CX_TEST.premiere), await titre(page, TESTEUR.id, "Connexions"));
     const Th = await ligneClient(page, F.IDS.c1);
-    ok("D : Thomas (non suivi) : « — » dans les deux colonnes, même avec une ligne dans la table ; info-bulle « non suivies »", Th["Connexions"] === "—" && Th["Dernière connexion"] === "—" && /non suivies/.test(await titre(page, F.IDS.c1, "Connexions")), JSON.stringify([Th["Connexions"], Th["Dernière connexion"]]));
+    ok("D : Thomas (client hors de l'interrupteur des visites) : « 5 » et " + quandCoach(CX_THOMAS.derniere) + ", info-bulle « comptées depuis le " + jourCoach(CX_THOMAS.premiere) + " »", Th["Connexions"] === "5" && Th["Dernière connexion"] === quandCoach(CX_THOMAS.derniere) && (await titre(page, F.IDS.c1, "Connexions")) === "Une connexion par jour au plus, comptées depuis le " + jourCoach(CX_THOMAS.premiere), JSON.stringify([Th["Connexions"], Th["Dernière connexion"]]) + " " + (await titre(page, F.IDS.c1, "Connexions")));
     const Le = await ligneClient(page, LEA), Ma = await ligneClient(page, MARC), Ka = await ligneClient(page, KARIM);
     ok("D : prospecte Léa : « 3 » et " + quandCoach(CX_LEA.derniere) + " ; Marc (prospect, jamais connecté depuis) : « 0 » et « aucune »", Le["Connexions"] === "3" && Le["Dernière connexion"] === quandCoach(CX_LEA.derniere) && Ma["Connexions"] === "0" && Ma["Dernière connexion"] === "aucune" && /Aucune connexion notée/.test(await titre(page, MARC, "Connexions")), JSON.stringify([Le["Connexions"], Le["Dernière connexion"], Ma["Connexions"], Ma["Dernière connexion"]]));
-    ok("D : Karim (client hors interrupteur, sans ligne) : « — »", Ka["Connexions"] === "—" && Ka["Dernière connexion"] === "—", JSON.stringify([Ka["Connexions"], Ka["Dernière connexion"]]));
+    ok("D : Karim (client, jamais connecté depuis, sans ligne) : « 0 » et « aucune »", Ka["Connexions"] === "0" && Ka["Dernière connexion"] === "aucune", JSON.stringify([Ka["Connexions"], Ka["Dernière connexion"]]));
     ok("D : la phrase sous le tableau explique les deux colonnes", /« Connexions » : le nombre de jours où il a ouvert l'app connecté/.test(await texte(page, "#vue")) && /« Dernière connexion » : la date et l'heure/.test(await texte(page, "#vue")), "");
     ok("D : la table est lue une fois par le coach, sans écriture", db.cxLectures.length === 1 && db.cxLectures[0].par === COACH.id && db.cxLectures[0].m === "GET" && db.ecritures.length === 0, JSON.stringify(db.cxLectures) + " " + resume(db));
     ok("D : aucune connexion notée pour le coach", notees(db).length === 0, JSON.stringify(notees(db)));
@@ -657,16 +659,16 @@ const titre = (page, uid, col) => page.$eval(`#tb-clients [data-ouvrir="${uid}"]
     ok("F : … même en appelant la lecture elle-même, la base ne lui rend aucune ligne", lecture && typeof lecture === "object" && Object.keys(lecture).length === 0, JSON.stringify(lecture));
   });
 
-  /* =================== G. interrupteur suivi_visites_clients =================== */
-  await bloc("G. interrupteur « tous » et « off »", async () => {
+  /* =================== G. l'interrupteur des visites ne change rien =================== */
+  await bloc("G. interrupteur des visites « tous » et « off »", async () => {
     await avec([['suivi_visites_clients: "test"', 'suivi_visites_clients: "tous"']], async () => {
       const db = avecLignes(decor());
       const { page } = await contexte(b, THOMAS, db);
       await page.goto(URL0); await pret(page, "#acc-vue h1"); await attendre(page, 600);
-      ok("G : « tous » : Thomas est noté à l'ouverture", notees(db, F.IDS.c1).length === 1, JSON.stringify(notees(db)));
+      ok("G : « tous » : Thomas est noté à l'ouverture, une fois", notees(db, F.IDS.c1).length === 1, JSON.stringify(notees(db)));
       const { page: pc } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]", { fuseau: FUSEAU });
       const Th = await ligneClient(pc, F.IDS.c1);
-      ok("G : « tous » : Mes clients montre ses connexions (5)", Th["Connexions"] === "5" && /^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/.test(Th["Dernière connexion"] || ""), JSON.stringify([Th["Connexions"], Th["Dernière connexion"]]));
+      ok("G : « tous » : Mes clients montre ses connexions (" + db.cx[F.IDS.c1].nombre + " : ses 5, plus son ouverture d'aujourd'hui si c'est un autre jour)", Th["Connexions"] === String(db.cx[F.IDS.c1].nombre) && db.cx[F.IDS.c1].nombre >= 5 && /^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/.test(Th["Dernière connexion"] || ""), JSON.stringify([Th["Connexions"], Th["Dernière connexion"]]));
     });
     await avec([['suivi_visites_clients: "test"', 'suivi_visites_clients: "off"']], async () => {
       const db = avecLignes(decor());
@@ -674,10 +676,10 @@ const titre = (page, uid, col) => page.$eval(`#tb-clients [data-ouvrir="${uid}"]
       await page.goto(URL0 + "#/accueil"); await pret(page, "#acc-vue h1"); await attendre(page, 600);
       const { page: pl } = await contexte(b, qui(LEA, "lea@exemple.fr"), db);
       await pl.goto(URL0); await pret(pl, "#vue"); await attendre(pl, 600);
-      ok("G : « off » : le compte de test n'est pas noté ; la prospecte Léa, si", notees(db, TESTEUR.id).length === 0 && notees(db, LEA).length === 1, JSON.stringify(notees(db)));
+      ok("G : « off » : le compte de test est noté quand même, la prospecte Léa aussi", notees(db, TESTEUR.id).length === 1 && notees(db, LEA).length === 1, JSON.stringify(notees(db)));
       const { page: pc } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]");
       const T = await ligneClient(pc, TESTEUR.id), Le = await ligneClient(pc, LEA);
-      ok("G : « off » : Mes clients montre « — » pour le compte de test ; Léa : 4 (ses 3, plus son ouverture d'aujourd'hui)", T["Connexions"] === "—" && Le["Connexions"] === "4", JSON.stringify([T["Connexions"], Le["Connexions"]]));
+      ok("G : « off » : Mes clients montre les connexions du compte de test (" + db.cx[TESTEUR.id].nombre + ") ; Léa : 4 (ses 3, plus son ouverture d'aujourd'hui)", T["Connexions"] === String(db.cx[TESTEUR.id].nombre) && db.cx[TESTEUR.id].nombre >= 12 && Le["Connexions"] === "4", JSON.stringify([T["Connexions"], Le["Connexions"]]));
     });
   });
 

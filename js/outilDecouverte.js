@@ -470,17 +470,18 @@ const Activite = {
    par la base) ; la dernière connexion = l'instant de la dernière ouverture. Tout est tenu par la base (migration v56 :
    table connexions, fonction noter_connexion) : la personne connectée note SA connexion (la fonction lit son compte dans
    son jeton, elle ne prend aucun paramètre), sans pouvoir ni la lire ni la modifier ; seul le coach lit la table.
-   Mêmes comptes que les visites (Activite.suivi) : les prospects, et les clients selon l'interrupteur
-   suivi_visites_clients ; jamais le coach, jamais une fiche consultée. Rien n'est affiché à la personne, rien n'attend
-   la réponse. Base sans la migration (fonction absente ou refusée) : rien n'est noté, sans message, et plus d'essai
+   Tous les comptes clients et prospects, dès la mise en ligne (décision de Lucas du 29/09 : couvert par leur contrat ;
+   pas d'interrupteur, contrairement aux visites) ; jamais le coach, jamais une fiche consultée. Rien n'est affiché à la
+   personne, rien n'attend la réponse. Base sans la migration (fonction absente ou refusée) : rien n'est noté, sans message, et plus d'essai
    avant le prochain chargement de l'app.
    ------------------------------------------------------------------ */
 const Connexions = {
   REPRISE: 600000,   // l'app revenue au premier plan apres 10 min ou plus en arriere-plan : une nouvelle ouverture
   _masquee: null, _ecoute: false, _coupee: false, _envoi: null,
-  /* les comptes suivis : ceux des visites (un seul endroit a changer si Lucas en decide autrement) */
-  suivi(){ return Activite.suivi(); },
-  suiviPour(p){ return Activite.suiviPour(p); },
+  /* les comptes suivis : tous les clients et les prospects (pas l'interrupteur des visites) ; jamais le coach, jamais une
+     fiche consultee (le coach dans la fiche d'un client). Profil pas encore charge : on ne sait pas si c'est le coach, rien. */
+  suivi(){ const u = Auth.utilisateur(); return !!(u && Auth.profil && !Store.idConsulte && !Auth.estCoach()); },
+  suiviPour(p){ return !!(p && p.id && p.role !== "coach"); },
   noter(){
     if (this._envoi) return this._envoi;
     if (this._coupee || !Auth.connecte() || !this.suivi()) return Promise.resolve();

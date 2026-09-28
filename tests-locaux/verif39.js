@@ -58,6 +58,9 @@ async function contexte(b, who, db, opts) {
     if (!new URL(u).hostname.endsWith(".supabase.co")) return r.abort();
     const url = new URL(u); const p = url.pathname, q = url.searchParams, m = req.method();
     const json = (body, status) => r.fulfill({ status: status || 200, contentType: "application/json", body: body === null ? "" : JSON.stringify(body) });
+    /* v56 : la connexion notée par la base (fonction noter_connexion, au démarrage de chaque compte client ou prospect) n'est
+       pas une écriture de l'app dans les données : elle est testée à part (verif61) */
+    if (p === "/rest/v1/rpc/noter_connexion") return json(null, 204);
     if (p.startsWith("/auth/v1/signup")) {
       const corps = JSON.parse(req.postData() || "{}"); db.inscriptions.push(corps);
       if (opts.inscriptionKo) return json({ msg: "Signups not allowed for this instance" }, 422);

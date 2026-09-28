@@ -78,6 +78,9 @@ async function contexte(b, who, db, opts){
     if (!host.endsWith(".supabase.co")) return r.abort();
     const url = new URL(u); const p = url.pathname, q = url.searchParams, m = req.method();
     const json = (body, status) => r.fulfill({ status: status || 200, contentType: "application/json", body: body === null ? "" : JSON.stringify(body) });
+    /* v56 : la connexion notée par la base (fonction noter_connexion, au démarrage de chaque compte client ou prospect) n'est
+       pas une écriture de l'app dans les données : elle est testée à part (verif61) */
+    if (p === "/rest/v1/rpc/noter_connexion") return json(null, 204);
     if (p.startsWith("/auth/v1/signup")) { db.inscriptions.push(JSON.parse(req.postData() || "{}")); return json({ code: 400, msg: "inscription non simulée ici" }, 400); }
     if (p === "/auth/v1/user" && m === "GET") return json(who ? { id: who.id, aud: "authenticated", role: "authenticated", email: who.email } : { code: 401, msg: "invalid JWT" }, who ? 200 : 401);
     if (p.startsWith("/auth/v1/token")) return json(who ? F.session(who.id, who.email) : { error: "invalid" }, who ? 200 : 400);

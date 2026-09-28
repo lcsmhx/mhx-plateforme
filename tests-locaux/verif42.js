@@ -63,6 +63,9 @@ async function contexte(b, who, erreurs, opts) {
     if (!url.hostname.endsWith(".supabase.co")) return r.abort();
     const p = url.pathname, q = url.searchParams, m = req.method();
     const json = (body, status) => r.fulfill({ status: status || 200, contentType: "application/json", body: body === null ? "" : JSON.stringify(body) });
+    /* v56 : la connexion notée par la base (fonction noter_connexion, au démarrage de chaque compte client ou prospect) n'est
+       pas une écriture de l'app dans les données : elle est testée à part (verif61) */
+    if (p === "/rest/v1/rpc/noter_connexion") return json(null, 204);
     if (p.startsWith("/auth/v1/token")) return json(F.session(who.id, who.email));
     if (p.startsWith("/auth/v1/")) return json({});
     if (p.startsWith("/storage/v1/")) return json({ statusCode: "404", error: "not_found", message: "Object not found" }, 400);

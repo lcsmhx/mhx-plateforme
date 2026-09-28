@@ -190,7 +190,7 @@ const outilClients = {
         <th>Client</th><th>Retour</th><th>Note</th><th>Smiley</th><th>Visite</th><th>Jours actifs</th><th>Connexions</th><th>Dernière connexion</th><th>Activité</th><th>Régularité</th><th>Poids</th><th>Depuis le début</th><th>4 dernières sem.</th>
         <th>Questionnaire</th><th>Programme</th><th>Diète</th><th></th>
       </tr></thead><tbody id="tb-clients"><tr><td colspan="17">Chargement…</td></tr></tbody></table></div>
-      <p class="note" style="margin-top:12px">En haut : les 😞 non traités et les notes en chute, puis les retours de la semaine à lire. « Retour » : le feedback du dimanche ou le bilan du vendredi, selon ce que voit le client (à traiter / fait / non fait). « Note » et « Smiley » : son dernier feedback du dimanche. « Visite » et « Jours actifs » (sur 30 jours) : les jours où il a ouvert l'app — « — » quand ses visites ne sont pas suivies. « Connexions » : le nombre de jours où il a ouvert l'app connecté (une fois par jour au plus, depuis la mise en place du compteur) ; « Dernière connexion » : la date et l'heure de sa dernière ouverture — « — » quand ses connexions ne sont pas suivies. « Activité » compte les jours depuis la dernière saisie du client, quelle qu'elle soit (une visite ne compte pas). Une variation de poids se lit sur quatre semaines : en dessous, c'est du bruit.</p>
+      <p class="note" style="margin-top:12px">En haut : les 😞 non traités et les notes en chute, puis les retours de la semaine à lire. « Retour » : le feedback du dimanche ou le bilan du vendredi, selon ce que voit le client (à traiter / fait / non fait). « Note » et « Smiley » : son dernier feedback du dimanche. « Visite » et « Jours actifs » (sur 30 jours) : les jours où il a ouvert l'app — « — » quand ses visites ne sont pas suivies. « Connexions » : le nombre de jours où il a ouvert l'app connecté (une fois par jour au plus, depuis la mise en place du compteur) ; « Dernière connexion » : la date et l'heure de sa dernière ouverture — « — » si le compteur n'a pas pu être lu. « Activité » compte les jours depuis la dernière saisie du client, quelle qu'elle soit (une visite ne compte pas). Une variation de poids se lit sur quatre semaines : en dessous, c'est du bruit.</p>
     </section>
 
     <section class="panel">
@@ -489,7 +489,7 @@ const Clients = {
       /* v53 (chantier 4) : dernière visite et jours actifs sur 30 jours ; un compte non suivi (client hors interrupteur
          suivi_visites_clients) : rien (« — »), même s'il a une ancienne clé activite de quand il était prospect */
       visites: Activite.lecture(c.activite, Activite.suiviPour(p)),
-      /* v56 : nombre de connexions et derniere connexion (table connexions) ; « — » pour un compte non suivi, ou si la
+      /* v56 : nombre de connexions et derniere connexion (table connexions), pour chaque client et prospect ; « — » si la
          table n'a pas pu etre lue */
       connexions: Connexions.lecture(cx && cx.ligne, Connexions.suiviPour(p), !!(cx && cx.lue)),
       suivi: (c.suivi_prospect && typeof c.suivi_prospect === "object") ? c.suivi_prospect : null,   // v49 : suivi commercial

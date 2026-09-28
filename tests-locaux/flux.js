@@ -22,6 +22,9 @@ async function contexte(browser, who, viewport, langue) {
     if (!new URL(u).hostname.endsWith(".supabase.co")) return route.abort();
     const url = new URL(u); const p = url.pathname, q = url.searchParams, m = req.method();
     const json = (b, st) => route.fulfill({ status: st || 200, contentType: "application/json", body: b === null ? "" : JSON.stringify(b) });
+    /* v56 : la connexion notée par la base (fonction noter_connexion, au démarrage de chaque compte client ou prospect) n'est
+       pas une écriture de l'app dans les données : elle est testée à part (verif61) */
+    if (p === "/rest/v1/rpc/noter_connexion") return json(null, 204);
     if (m !== "GET" && !p.startsWith("/auth/")) { ecritures.push(m + " " + p + url.search); return json(null, m === "DELETE" ? 204 : 201); }
     if (p.startsWith("/auth/v1/token")) return json(F.session(who.id, who.email));
     if (p === "/rest/v1/profils") { const id = q.get("id"); return json(id ? F.profils.filter(x => x.id === id.slice(3)) : F.profils); }

@@ -61,6 +61,9 @@ function supabase(route) {
   const p = url.pathname, q = url.searchParams, m = req.method();
   journal.appels.push(m + " " + p + url.search);
   const json = (body, status) => route.fulfill({ status: status || 200, contentType: "application/json", body: body === null ? "" : JSON.stringify(body) });
+  /* v56 : la connexion notée par la base (fonction noter_connexion, au démarrage de chaque compte client ou prospect) n'est
+     pas une écriture de l'app dans les données : elle est testée à part (verif61) */
+  if (p === "/rest/v1/rpc/noter_connexion") return json(null, 204);
   if (p.startsWith("/auth/v1/token")) return json(persona ? F.session(persona.id, persona.email) : { error: "invalid" }, persona ? 200 : 400);
   if (p.startsWith("/auth/v1/logout")) return json(null, 204);
   if (p.startsWith("/auth/v1/")) return json({});

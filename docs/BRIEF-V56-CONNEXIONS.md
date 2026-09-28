@@ -1,8 +1,9 @@
 # Brief v56 — compteur de connexions côté coach (préparé le 28/09/2026)
 
 Demande de Lucas : dans le tableau de bord coach, voir pour chaque client et chaque prospect le nombre de connexions et la
-date de la dernière connexion. Étape 1 : tout est prêt sur la branche `v2/compteur-connexions`. **Rien n'est appliqué dans
-Supabase, rien n'est poussé sur `main`** tant que Lucas n'a pas dit « oui ».
+date de la dernière connexion. Préparé sur la branche `v2/compteur-connexions` le 28/09 ; **« oui » de Lucas le 29/09**
+(« oui, dès la mise en ligne, clients et prospects comptés tout de suite ») : clients et prospects comptés dès la mise
+en ligne, sans message, notification ni mention pour eux (couvert par leur contrat).
 
 ## Ce que ça fait
 - **Une connexion** = une ouverture de l'app avec une session valide : connexion automatique (session enregistrée),
@@ -11,6 +12,8 @@ Supabase, rien n'est poussé sur `main`** tant que Lucas n'a pas dit « oui ».
 - **Dernière connexion** = la date et l'heure de la dernière ouverture, affichées à l'heure de l'appareil du coach.
 - **Coach** : deux colonnes de plus dans « Mes clients » (« Connexions », « Dernière connexion »), deux lignes de plus
   dans chaque carte de la page « Prospects ». Pas de nouvelle page.
+- **Qui est compté** : tous les clients et tous les prospects, dès la mise en ligne (décision de Lucas du 29/09) ; pas
+  l'interrupteur des visites. Jamais le coach, jamais une fiche consultée par le coach.
 - **Client et prospect** : rien de visible, rien n'attend la réponse de la base.
 - Le comptage commence à la migration : avant, rien n'était enregistré (« 0 » et « aucune » pour quelqu'un qui n'a pas
   rouvert l'app depuis ; l'info-bulle dit depuis quand ses connexions sont comptées).
@@ -67,7 +70,7 @@ Supabase, rien n'est poussé sur `main`** tant que Lucas n'a pas dit « oui ».
 - Côté client et prospect, aucun écran ne change.
 
 ## Risques
-1. **Tes clients** : ce qu'ils voient ne change pas, mais leurs ouvertures seraient enregistrées. Le code suit la même règle que les visites (Q4) : prospects toujours, clients seulement quand tu passes `suivi_visites_clients` sur « tous » (aujourd'hui : ton compte de test seulement). **À trancher** (question en bas).
+1. **Tes clients** : ce qu'ils voient ne change pas, mais leurs ouvertures sont enregistrées dès la mise en ligne. **Tranché par Lucas le 29/09** : oui, clients et prospects comptés tout de suite, sans message ni mention (couvert par leur contrat) ; l'interrupteur `suivi_visites_clients` ne concerne que les visites et reste sur « test ».
 2. Un compte peut appeler la fonction à la main : au plus +1 par jour sur **son propre** compteur, jamais sur celui d'un autre.
 3. « Un jour » = le calendrier de Paris. Pour un client très loin (Bali), le jour change à 6 h du matin chez lui (7 h après le passage à l'heure d'hiver, le 25/10).
 4. Si l'app part en ligne avant la migration : rien ne casse. Le coach voit « — », et chaque ouverture fait une demande refusée, invisible, qui n'est plus répétée. Ordre prévu : migration d'abord.
@@ -97,7 +100,7 @@ Attendu après la migration :
 - Tout est identique, avec 1 table, 1 règle et 1 fonction de plus.
 - `select count(*) from public.connexions` = 0, tant que l'app v56 n'est pas en ligne.
 
-## Ordre après le « oui »
+## Ordre après le « oui » (29/09 : Claude enchaîne seul, un seul rapport à la fin)
 1. Sauvegarde et relevé « avant ».
 2. Répétition : `begin;` puis la migration, puis les 23 tests (qui créent un prospect fictif dans la table des comptes, annulé avec tout le reste). Attendu : « 23 / 23 tests ok… Annulation forcée », et une base inchangée (empreintes, aucune table `connexions`).
 3. Migration réelle (`apply_migration`, nom `v56_compteur_connexions`).
@@ -109,8 +112,8 @@ Attendu après la migration :
 - Base, sans rien supprimer : `supabase/v56_retour.sql`. On retire les droits d'appel et de lecture ; la table et la fonction restent. L'app affiche « — » et ne réessaie plus.
 - App : `git revert` du commit v56, puis push.
 
-## Question pour Lucas
-Tes clients (12 comptes « client » dans la base au 28/09, ton compte de test compris) : les compter **dès la mise en ligne**, ou **comme les visites**, c'est-à-dire seulement
-quand tu passeras `suivi_visites_clients` sur « tous » ?
-- Codé par prudence : « comme les visites ». Les prospects sont toujours comptés.
-- Pour les compter tout de suite : une seule ligne à changer (`Connexions.suivi` / `suiviPour`), sans toucher à l'interrupteur.
+## Décision de Lucas (29/09)
+« Oui, dès la mise en ligne, clients et prospects comptés tout de suite. » Aucun message, notification ni mention ajoutée
+pour les clients. Fait dans `Connexions.suivi` / `suiviPour` (`js/outilDecouverte.js`) : tous les comptes sauf le coach
+et une fiche consultée ; l'interrupteur `suivi_visites_clients` n'est pas touché (il reste sur « test », pour les
+visites seulement). `verif61` vérifie un client hors de cet interrupteur (Thomas) : noté et affiché.

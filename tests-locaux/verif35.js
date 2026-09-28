@@ -8,6 +8,8 @@ const server = http.createServer((req,res)=>{if(servirFichier(req,res,HTML))retu
   const c = await b.newContext({ viewport:{width:390,height:844} }); const who={id:F.IDS.c1,email:"t@e.fr",session:F.session(F.IDS.c1,"t@e.fr")};
   await c.route("**/*", r => { const req=r.request(); const u=req.url(); if(new URL(u).hostname === "localhost") return r.continue(); if(!new URL(u).hostname.endsWith(".supabase.co")) return r.abort();
     const url=new URL(u); const p=url.pathname, q=url.searchParams, m=req.method();
+    // v56 : la connexion notée par la base (noter_connexion, au démarrage) n'est pas une écriture de l'app : testée à part (verif61)
+    if (p==="/rest/v1/rpc/noter_connexion") return r.fulfill({status:204,contentType:"application/json",body:""});
     if (m!=="GET" && !p.startsWith("/auth/")){ ecr.push(m+" "+p+url.search+" "+(req.postData()||"").slice(0,80)); return r.fulfill({status:201,contentType:"application/json",body:""}); }
     let body=[];
     if(p.startsWith("/auth/v1/token")) body=F.session(who.id,who.email);
