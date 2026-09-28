@@ -70,7 +70,6 @@ Dans ce texte, « nous » et « le coach » désignent ce responsable. « Tu » 
 
 **La newsletter** (si tu as coché la case)
 - Ton prénom, ton nom, ton email et la date de ton accord, transmis à l'outil d'envoi de la newsletter (voir §9).
-- Selon cet outil : une mesure de l'ouverture des emails, que tu acceptes en cochant la case (voir §9).
 
 **Ta réservation de bilan** (si tu réserves)
 - Sur Calendly : ton prénom, ton nom, ton email, le créneau choisi et tes réponses éventuelles au formulaire de réservation.
@@ -105,7 +104,7 @@ Le RGPD demande une « base légale » pour chaque usage. En clair : ce qui nous
 | Ton accompagnement si tu deviens client | tout le §2 | **Contrat** de coaching, et ton **consentement explicite** pour la santé (art. 9.2.a) |
 | Adapter l'app à tes réponses et te proposer un bilan (page du bilan, cartes du type « ton poids stagne ») | 3 questions, pesées, activité | **Intérêt légitime** : te montrer ce qui t'est utile (à valider). Tu peux t'y opposer. |
 | Suivi d'activité : suivre ta régularité, mieux t'accompagner, améliorer l'app | activité | **Intérêt légitime** (à valider). Tu peux t'y opposer (§8). |
-| Newsletter (conseils, témoignages, offres de coaching) et mesure de son ouverture | prénom, nom, email, accord | **Consentement** : la case facultative de l'inscription (art. 6.1.a) |
+| Newsletter (conseils, témoignages, offres de coaching) | prénom, nom, email, accord | **Consentement** : la case facultative de l'inscription (art. 6.1.a) |
 | Suivi commercial par le coach (notes, bilan réservé, issue du bilan) | notes, 3 réponses, activité | **Intérêt légitime** : organiser son travail |
 | Prise de rendez-vous sur Calendly, avec tes informations pré-remplies | prénom, nom, email | **Mesures prises à ta demande** avant un éventuel contrat (art. 6.1.b) : tu cliques toi-même sur le bouton |
 | Prouver tes accords, sécuriser l'app, empêcher les abus | accords, données techniques | **Obligation légale** (prouver un consentement, art. 7.1) et **intérêt légitime** (sécurité) |
@@ -141,7 +140,7 @@ Le RGPD protège particulièrement les données de santé (article 9). Nous les 
 | **Google** (Gmail, adresse mhx.coaching@gmail.com) | Envoi des **emails du compte** (confirmation d'inscription, mot de passe oublié, changement d'adresse) ; réception de tes emails | email, prénom éventuel, contenu de l'email | Serveurs de Google, **États-Unis** compris | Cadre de protection des données UE–États-Unis (Data Privacy Framework) [À VÉRIFIER] |
 | **Calendly** (Calendly LLC, société américaine) | Prise de rendez-vous pour le bilan. Ton prénom, ton nom et ton email y sont **pré-remplis**, avec la page de l'app d'où tu viens | prénom, nom, email, créneau, réponses au formulaire | **États-Unis** | Data Privacy Framework [À VÉRIFIER] |
 | **GitHub** (GitHub, Inc., société américaine) — GitHub Pages | Hébergement des pages du site (le programme de l'app, pas tes données) | adresse IP (journaux de sécurité) | **États-Unis** | Data Privacy Framework [À VÉRIFIER] |
-| **[À PRÉCISER : outil d'envoi de la newsletter]** | Envoi de la newsletter, seulement aux personnes qui ont coché la case | prénom, nom, email, date de l'accord, statistiques d'ouverture selon l'outil | [À PRÉCISER] | [À PRÉCISER : contrat de sous-traitance de l'outil] |
+| **[À PRÉCISER : outil d'envoi de la newsletter]** | Envoi de la newsletter, seulement aux personnes qui ont coché la case | prénom, nom, email, date de l'accord | [À PRÉCISER] | [À PRÉCISER : contrat de sous-traitance de l'outil] |
 | **Google Fonts et YouTube** (Google) | Polices d'écriture ; vignettes et vidéos de démonstration des exercices | adresse IP, type de navigateur | **États-Unis** compris | Data Privacy Framework [À VÉRIFIER] |
 | [À COMPLÉTER : autres outils où tu ranges ou traites des données de clients ou de prospects : WhatsApp ou Instagram pour les échanges, Notion ou un tableur, moyen de paiement du coaching, outils d'intelligence artificielle (Claude, Grok…) s'ils lisent la vraie base] | | | | |
 
@@ -214,13 +213,13 @@ Tu as le droit :
 Nous envoyons deux sortes d'emails :
 
 1. **Les emails du compte** (tout le monde) : confirmation d'inscription, mot de passe oublié, changement d'adresse. Ils sont indispensables au fonctionnement de ton compte. Ils partent de mhx.coaching@gmail.com, par Gmail (Google). Ils ne contiennent aucune publicité.
-2. **La newsletter** (seulement si tu as coché la case à l'inscription, jamais cochée d'avance). Le texte de la case : « Je veux recevoir par email les conseils, témoignages et offres de coaching de MHX Coaching (1 à 2 emails par semaine maximum) et j'accepte la mesure de leur ouverture. Désinscription en 1 clic dans chaque email. »
+2. **La newsletter** (seulement si tu as coché la case à l'inscription, jamais cochée d'avance). Le texte de la case : « Je veux recevoir par email les conseils, témoignages et offres de coaching de MHX Coaching (1 à 2 emails par semaine maximum). Désinscription en 1 clic dans chaque email. »
    - Nous enregistrons la **date** de ton accord et la **version** du texte que tu as accepté.
    - **1 à 2 emails par semaine au plus.**
    - **Désinscription en 1 clic** dans chaque email.
    - **Tu peux retirer ton accord à tout moment** : dans ton Profil ou par email à mhx.coaching@gmail.com.
    - Elle est envoyée par le coach avec **[À PRÉCISER : outil d'envoi de la newsletter]**. Pour cela, il exporte depuis son espace la liste des personnes qui ont coché la case (prénom, nom, email, date de l'accord) et la transmet à cet outil. Il n'y met personne d'autre.
-   - **Mesure de l'ouverture** : les outils de newsletter placent en général dans chaque email une petite image invisible qui permet de savoir s'il a été ouvert. Tu l'acceptes en cochant la case. [À PRÉCISER selon l'outil : mesure anonyme si l'outil le permet, et ce qui est enregistré exactement.] Cette mesure sert seulement à savoir si la newsletter est lue : elle ne sert jamais à te noter.
+   - [À PRÉCISER selon l'outil : l'outil choisi ne doit pas mesurer l'ouverture des emails (ou le faire de façon anonyme), puisque la case ne le demande pas. Sinon, changer le texte de la case et sa version.]
    - (à valider) La newsletter s'adresse aux prospects : elle s'arrête quand tu deviens client.
 
 Il n'y a **aucun email automatique de relance**. Le coach peut t'écrire personnellement, par exemple pour répondre à une question.
@@ -285,7 +284,7 @@ Pour toute question sur tes données : **mhx.coaching@gmail.com**.
 
 1. **Identité** : nom ou raison sociale, statut, adresse, numéro d'entreprise (§1). Selon le pays où ton entreprise est enregistrée : faut-il un représentant dans l'Union européenne (article 27) ? La loi indonésienne sur les données personnelles s'applique-t-elle aussi ? À voir avec un professionnel.
 2. **Qui a un accès « coach »** : toi seul, ou d'autres personnes (§5) ? Le texte de la page du bilan parle d'« un coach MHX ».
-3. **Outil de la newsletter** (§5, §6, §9) : à choisir. Le plus simple à défendre : un outil gratuit, qui garde les données dans l'Union européenne, propose un contrat de sous-traitance, met le lien de désinscription en 1 clic dans chaque email et, si possible, une mesure anonyme de l'ouverture. Ensuite, compléter tous les passages « [À PRÉCISER] ».
+3. **Outil de la newsletter** (§5, §6, §9) : à choisir. Le plus simple à défendre : un outil gratuit, qui garde les données dans l'Union européenne, propose un contrat de sous-traitance, met le lien de désinscription en 1 clic dans chaque email et qui ne mesure pas l'ouverture des emails (la case ne le demande pas). Ensuite, compléter tous les passages « [À PRÉCISER] ».
 4. **Fichier exporté de la liste newsletter** (prénom, nom, email, date de l'accord) : il contient des données personnelles. Le supprimer de ton ordinateur après l'import, ne jamais l'envoyer par WhatsApp ni le laisser dans un dossier partagé. Et avant chaque envoi, repartir d'un export récent : sinon quelqu'un qui s'est désinscrit dans l'app pourrait encore recevoir la newsletter.
 5. **Suivi d'activité** : l'intérêt légitime est proposé, mais il se discute pour un suivi personne par personne, surtout avec la copie gardée dans le navigateur. Plus prudent : le dire clairement à l'inscription (déjà prévu dans le texte court), et pour les clients, l'annoncer avant de l'activer (message WhatsApp prévu).
 6. **Gmail personnel** : un compte Gmail gratuit n'offre pas de contrat de sous-traitance (Google en propose un seulement avec Google Workspace, qui est payant). C'est un risque faible à cette taille, mais il faut le savoir.
@@ -293,7 +292,7 @@ Pour toute question sur tes données : **mhx.coaching@gmail.com**.
 8. **Durées de conservation** (§7) : les valider, décider qui fait les suppressions et à quel rythme (rien n'est automatique aujourd'hui), et le délai pour supprimer dans l'outil de la newsletter, chez Calendly et dans Gmail après une demande.
 9. **Autres outils** qui contiennent des données de clients (§5, dernière ligne) : WhatsApp, Instagram, Notion, tableur, paiement, outils d'IA. Pour les outils d'IA, le plus simple : ne jamais leur faire lire la vraie base, seulement le compte de test.
 10. **Google Fonts** : les polices chargées depuis Google envoient l'adresse IP de chaque visiteur à Google (une décision de justice allemande de 2022 l'a sanctionné). Option : héberger les polices avec l'app (petit changement de code, gratuit).
-11. **Cohérence avec l'app** : le texte court de l'app et la case newsletter doivent dire la même chose que ce brouillon (emails du compte par Gmail, suivi d'activité, mesure de l'ouverture de la newsletter, plus aucun email de suivi automatique), puis porter une nouvelle version. Il faut aussi publier la version finale à un endroit où on peut la lire.
+11. **Cohérence avec l'app** : le texte court de l'app et la case newsletter doivent dire la même chose que ce brouillon (emails du compte par Gmail, suivi d'activité, newsletter sans mesure d'ouverture, plus aucun email de suivi automatique), puis porter une nouvelle version. Il faut aussi publier la version finale à un endroit où on peut la lire.
 12. **Conditions d'utilisation** : la case dit « j'accepte les conditions d'utilisation ». Aujourd'hui, elles n'existent qu'en version courte dans l'app. Faut-il un document complet ? Les conditions de vente du coaching (payant, en dehors de l'app) sont un autre document.
 13. **Export « Mes données »** : il ne contient pas encore les photos (seulement leur liste), tes accords ni les notes du coach. D'où le « sur demande par email » du §8. On pourra l'ajouter plus tard si besoin.
 14. **Newsletter et clients** : faut-il l'arrêter quand un prospect devient client (proposé au §9, à valider) ? Si oui, retirer les clients de l'outil d'envoi à ce moment-là.
