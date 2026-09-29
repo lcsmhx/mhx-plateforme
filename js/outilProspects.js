@@ -255,10 +255,13 @@ const Commercial = {
      d'avant l'appel (« …, avant l'appel »). */
   /* v62 (brief V2, L) : « 3 (dernier : page verrouillée Nutrition) », « 0 » */
   clicsTexte(C){
-    const cl = Decouverte.clics(C);
-    if (!cl.length) return "0";
-    const der = cl.reduce((x, y) => (Date.parse(y.date) || 0) >= (Date.parse(x.date) || 0) ? y : x), nom = Decouverte.nomOrigine(der.source);
-    return cl.length + (nom ? " (dernier : " + nom + ")" : "");
+    try {
+      const cl = Decouverte.clics(C);
+      if (!cl.length) return "0";
+      const t = c => typeof c.date === "string" ? (Date.parse(c.date) || 0) : 0;   // une date piegee (objet…) ne fait rien tomber
+      const der = cl.reduce((x, y) => t(y) >= t(x) ? y : x);
+      return cl.length + " (dernier : " + (Decouverte.nomOrigine(der.source) || "origine inconnue (avant la v50)") + ")";
+    } catch(e){ return "—"; }
   },
   carteHTML(l, a){
     const p = l.p, nom = Clients.nom(p), dc = l.dc || {}, B = a.bilan || {};
@@ -567,17 +570,17 @@ const Mesure = {
     return (lignes || []).filter(l => l && l.p && l.p.role !== "coach" && passe(l) && (this.avecTest || !this.estTest(l)));
   },
   calcul(lignes){
-    const t0 = this.debut(), L = this.comptes(lignes), ecrans = {}, cliqueurs = new Set();
+    const t0 = this.debut(), L = this.comptes(lignes), ecrans = Object.create(null), cliqueurs = new Set();   // sans prototype : un code piege ne touche rien d'autre
     const ecran = k => ecrans[k] || (ecrans[k] = { clics: 0, tard: 0 });
     let clics = 0;
     L.forEach(l => {
-      Decouverte.clics(l.ch).forEach(c => { if (!this.dans(c.date, t0)) return; clics++; cliqueurs.add(l.p.id); ecran(Decouverte.origine(c.source) || "inconnue").clics++; });
+      Decouverte.clics(l.ch).forEach(c => { if (!this.dans(c.date, t0)) return; clics++; cliqueurs.add(l.p.id); ecran(Decouverte.origine(c.source) || "?").clics++; });
       const pt = Decouverte.plusTardDe(l.ch);
-      pt.forEach(c => { if (this.dans(c.date, t0)) ecran(Decouverte.origine(c.source) || "inconnue").tard++; });
+      pt.forEach(c => { if (this.dans(c.date, t0)) ecran(Decouverte.origine(c.source) || "?").tard++; });
       const b = l.dc && l.dc.bilan;
       if (b && b.choix === "plus_tard" && this.dans(b.le, t0) && !pt.some(c => Decouverte.origine(c.source) === "apres_questionnaire")) ecran("apres_questionnaire").tard++;
     });
-    const table = Object.keys(ecrans).map(k => ({ k, nom: k === "inconnue" ? "origine inconnue (avant la v50)" : Decouverte.nomOrigine(k) || k, clics: ecrans[k].clics, tard: ecrans[k].tard }))
+    const table = Object.keys(ecrans).map(k => ({ k, nom: k === "?" ? "origine inconnue (avant la v50)" : Decouverte.nomOrigine(k) || k, clics: ecrans[k].clics, tard: ecrans[k].tard }))
       .sort((a, b) => b.clics - a.clics || b.tard - a.tard || a.nom.localeCompare(b.nom, "fr"));
     return { inscrits: L.filter(l => this.dans(l.p.cree_le, t0)).length, questionnaires: L.filter(l => l.dc && this.dans(l.dc.court_le, t0)).length,
              cliqueurs: cliqueurs.size, clics, cases: L.filter(l => this.dans(Decouverte.reserve(l.ch), t0)).length, table,
@@ -596,7 +599,7 @@ const Mesure = {
   },
   monter(boite, lignes){
     if (!boite) return;
-    boite.innerHTML = this.html(lignes);
+    try { boite.innerHTML = this.html(lignes); } catch(e){ console.warn("[MHX] mesure illisible", e); boite.innerHTML = `<h2>Mesure</h2><p class="note">Mesure indisponible pour le moment.</p>`; return; }
     const p = boite.querySelector("#pr-mesure-periode"), t = boite.querySelector("#pr-mesure-test");
     if (p) p.addEventListener("change", () => { this.periode = p.value; this.monter(boite, lignes); });
     if (t) t.addEventListener("change", () => { this.avecTest = t.checked; this.monter(boite, lignes); });

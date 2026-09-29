@@ -804,7 +804,7 @@ const outilFormation = {
        redessinee (une case cochee redessine tout) ; « Plus tard » les retire pour de bon */
     const montrees = {};
     const ancres = { declic_mindset: () => { const b = zone.querySelector('[data-mod="m1"]'); return b && b.closest("section"); }, formation_commence_ici: () => zone.querySelector("#fo-depart") };
-    const poser = code => carte => { const a = ancres[code](); if (!a) return false; a.after(carte); montrees[code] = carte; return true; };
+    const poser = code => carte => { const a = ancres[code](); if (!a || !zone.isConnected) return false; a.after(carte); montrees[code] = carte; return true; };
     const reposer = () => Object.keys(montrees).forEach(k => { const c = montrees[k]; if (c && !c.isConnected && c.dataset.ferme !== "1") poser(k)(c); });
     const mindsetFini = () => { const m = FORMATION.modules.find(x => x.id === "m1"), cm = m ? self.compteModule(D, m) : null; return !!(cm && cm.tot && cm.faits === cm.tot); };
     const departLance = () => { if (depart && self.departFini(depart)) Invitations.declencher("formation_commence_ici", poser("formation_commence_ici")); };
@@ -812,9 +812,11 @@ const outilFormation = {
     const videoLancee = () => {
       if (!depart || depart.video) return;
       if (!D.depart || typeof D.depart !== "object" || Array.isArray(D.depart)) D.depart = {};
+      const avant = D.depart.video;
       if (!D.depart.video) D.depart.video = new Date().toISOString();
+      if (sauver() === false){ if (avant === undefined) delete D.depart.video; return; }   // refusee (message deja affiche) : rien de coche
       depart.video = true;
-      sauver(); majDepart(); departLance();
+      majDepart(); departLance();
     };
     function brancherDepart(){
       const a = zone.querySelector('[data-depart="video"]');

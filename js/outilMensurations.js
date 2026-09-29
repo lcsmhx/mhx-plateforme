@@ -480,9 +480,10 @@ const outilMensurations = {
     $("dstart").value = D.dstart || "";
     $("pstart").value = D.pstart == null ? "" : D.pstart;
     $("dstart").addEventListener("input", function(){ D.dstart = this.value; sauver(); });
-    let avaitDepart = Decouverte.peseeFaite(D);   // v62 (H) : le poids de depart saisi ici compte aussi comme premiere pesee
-    $("pstart").addEventListener("input", function(){ const v = parseFloat(this.value); D.pstart = (isFinite(v) && v >= 30 && v <= 300) ? v : null; sauver(); tout(); });
-    $("pstart").addEventListener("change", function(){ const avait = avaitDepart; avaitDepart = Decouverte.peseeFaite(D); premierePesee(avait, () => this.closest(".panel")); });
+    let avaitDepart = Decouverte.peseeFaite(D), departOk = true;   // v62 (H) : le poids de depart saisi ici compte aussi comme premiere pesee
+    $("pstart").addEventListener("input", function(){ const v = parseFloat(this.value); D.pstart = (isFinite(v) && v >= 30 && v <= 300) ? v : null; departOk = sauver() !== false; tout(); });
+    /* seulement si l'ecriture est partie (une lecture ratee ou un refus : pas d'invitation, rien n'est enregistre) */
+    $("pstart").addEventListener("change", function(){ const avait = avaitDepart; avaitDepart = Decouverte.peseeFaite(D); if (departOk && !Store.nonLus.has(D)) premierePesee(avait, () => this.closest(".panel")); });
 
     /* v62 (brief V2, H) : la toute premiere pesee du prospect (aucune avant) : l'invitation, sous ce qui vient d'etre
        enregistre (une seule fois) */
