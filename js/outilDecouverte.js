@@ -338,12 +338,14 @@ const Invitations = {
   CODES: ["declic_calculateur", "declic_premiere_pesee", "declic_mindset", "formation_commence_ici"],
   CLE: "mhx_invitations|",
   JOURS_APRES_CLIC: 7,
-  _enCours: {},
+  _enCours: {}, _memo: {}, _ctx: null,
   actif(){ const u = Auth.utilisateur(); return !!(u && u.id && Auth.estProspect() && !Store.idConsulte); },
   vide(){ return { vues: {}, fermees: {}, attente: [], jour: "", clic: "", reserve: "" }; },
+  /* la memoire du compte : l'appareil, sinon (stockage bloque ou plein) la copie gardee pendant la visite (_memo) */
   lire(){
     const u = Auth.utilisateur(), m = this.vide(); if (!u || !u.id) return m;
     let x = null; try { x = JSON.parse(localStorage.getItem(this.CLE + u.id) || "null"); } catch(e){ x = null; }
+    if (!x && this._memo[u.id]) x = this._memo[u.id];
     if (!x || typeof x !== "object" || Array.isArray(x)) return m;
     const dict = o => { const r = {}; if (o && typeof o === "object" && !Array.isArray(o)) Object.keys(o).forEach(k => { if (this.CODES.indexOf(k) > -1 && typeof o[k] === "string") r[k] = o[k]; }); return r; };
     m.vues = dict(x.vues); m.fermees = dict(x.fermees);
@@ -351,38 +353,57 @@ const Invitations = {
     ["jour", "clic", "reserve"].forEach(k => { if (typeof x[k] === "string") m[k] = x[k].slice(0, 40); });
     return m;
   },
-  ecrire(m){ const u = Auth.utilisateur(); if (!u || !u.id) return; try { localStorage.setItem(this.CLE + u.id, JSON.stringify(m)); } catch(e){} },
+  ecrire(m){ const u = Auth.utilisateur(); if (!u || !u.id) return; this._memo[u.id] = JSON.parse(JSON.stringify(m)); try { localStorage.setItem(this.CLE + u.id, JSON.stringify(m)); } catch(e){} },
   /* un clic sur un bouton du plan d'action, ou la case cochee, sur cet appareil */
   noter(quoi){ if (!this.actif()) return; const m = this.lire(); m[quoi === "reserve" ? "reserve" : "clic"] = new Date().toISOString(); this.ecrire(m); },
   /* la case cochee (base ou appareil) : plus jamais d'invitation */
   reservee(C, m){ return !!(Decouverte.reserve(C) || (m && m.reserve)); },
+  /* l'instant le plus recent d'une liste de dates (les 50 dernieres, comme ce que l'app ecrit) ; 0 si aucune */
+  dernier(dates){ return dates.slice(-50).map(d => typeof d === "string" ? Date.parse(d) : NaN).reduce((a, t) => !isNaN(t) && t > a ? t : a, 0); },
   /* un clic « Récupérer mon plan d'action » (base ou appareil) depuis moins de 7 jours */
   clicRecent(C, m){
-    const t = Decouverte.clics(C).map(c => c.date).concat(m && m.clic ? [m.clic] : []).map(d => typeof d === "string" ? Date.parse(d) : NaN).filter(x => !isNaN(x));
-    return t.length > 0 && Date.now() - Math.max(...t) < this.JOURS_APRES_CLIC * 86400000;
+    const t = Math.max(this.dernier(Decouverte.clics(C).map(c => c.date)), this.dernier(m && m.clic ? [m.clic] : []));
+    return t > 0 && Date.now() - t < this.JOURS_APRES_CLIC * 86400000;
   },
-  /* sa reponse « projection » et la cle challenge : deja en memoire, sinon une lecture groupee (ni cache ni ecriture) */
+  /* la base garde aussi la trace d'une invitation deja traitee : son « Plus tard » ou un clic sur son bouton (utile apres
+     « Se déconnecter », qui efface la memoire de l'appareil) */
+  traitee(C, code){ return Decouverte.plusTardDe(C).concat(Decouverte.clics(C)).some(x => Decouverte.origine(x.source) === code); },
+  /* sa reponse « projection » et la cle challenge : deja en memoire, sinon UNE lecture groupee (ni cache ni ecriture),
+     gardee pour la visite ; null si la lecture a echoue (on ne decide jamais sur des donnees manquantes) */
   async contexte(){
     const cache = Store.cache || {}, ok = v => v && typeof v === "object" && !Store.nonLus.has(v);
     let I = ok(cache.intake) ? cache.intake : null, C = ok(cache[Decouverte.cle]) ? cache[Decouverte.cle] : null;
-    if (!I || !C){ const R = await Store.lireTout(["intake", Decouverte.cle]); I = I || R.intake || {}; C = C || R[Decouverte.cle] || Decouverte.vide(); }
-    return { I, C };
+    if (I && C) return { I, C };
+    const uid = Store.cible();
+    if (this._ctx && this._ctx.uid === uid && Date.now() - this._ctx.t < 60000) return { I: I || this._ctx.I, C: C || this._ctx.C };
+    try {
+      const r = await Auth.appel("/rest/v1/donnees?user_id=eq." + uid + "&outil=in.(intake," + Decouverte.cle + ")&select=outil,contenu,maj_le");
+      const R = {}; (Array.isArray(r) ? r : []).forEach(l => { if (l && (l.outil === "intake" || l.outil === Decouverte.cle)) R[l.outil] = Forme.cle(l.outil, l.contenu); });
+      this._ctx = { uid, t: Date.now(), I: R.intake || {}, C: R[Decouverte.cle] || Decouverte.vide() };
+      return { I: I || this._ctx.I, C: C || this._ctx.C };
+    } catch(e){ return null; }
   },
-  /* un declencheur : la carte tout de suite (placer(carte) la pose dans la page et rend vrai), ou en attente pour un autre
-     jour (une deja montree aujourd'hui, ou un clic depuis moins de 7 jours) ; rien si deja vue ou fermee, ou case cochee */
+  enAttenteAjouter(m, code){ if (!m.attente.some(a => a.code === code)) m.attente.push({ code, le: new Date().toISOString() }); this.ecrire(m); },
+  /* un declencheur : la carte tout de suite (placer(carte) la pose dans la page encore affichee et rend vrai), ou en attente
+     pour un autre jour (une deja montree aujourd'hui, un clic depuis moins de 7 jours, une page qui n'est plus la,
+     une lecture ratee) ; rien si deja vue, fermee ou traitee, ou si la case est cochee */
   async declencher(code, placer){
     if (!this.actif() || this.CODES.indexOf(code) === -1 || this._enCours[code]) return false;
-    let m = this.lire(); if (m.vues[code] || m.fermees[code]) return false;
+    let m = this.lire();
+    if (m.vues[code] || m.fermees[code] || m.reserve || m.attente.some(a => a.code === code)) return false;
+    /* deja une aujourd'hui, ou un clic sur cet appareil depuis moins de 7 jours : en attente, sans rien lire (l'accueil
+       verifiera la case et les clics en base le jour ou il la montre) */
+    if (m.jour === aujourdhui() || this.clicRecent(null, m)){ this.enAttenteAjouter(m, code); return false; }
     this._enCours[code] = true;
     try {
-      const { I, C } = await this.contexte();
+      const ctx = await this.contexte();
       if (!this.actif()) return false;
-      m = this.lire(); if (m.vues[code] || m.fermees[code] || this.reservee(C, m)) return false;
-      if (m.jour === aujourdhui() || this.clicRecent(C, m)){
-        if (!m.attente.some(a => a.code === code)) m.attente.push({ code, le: new Date().toISOString() });
-        this.ecrire(m); return false;
-      }
-      return this.montrer(code, I, C, placer);
+      m = this.lire();
+      if (!ctx){ this.enAttenteAjouter(m, code); return false; }   // lecture ratee : on ne decide pas a l'aveugle
+      const { I, C } = ctx;
+      if (m.vues[code] || m.fermees[code] || this.reservee(C, m) || this.traitee(C, code)) return false;
+      if (m.jour === aujourdhui() || this.clicRecent(C, m)){ this.enAttenteAjouter(m, code); return false; }
+      return this.montrer(code, I, C, placer) || (this.enAttenteAjouter(this.lire(), code), false);
     } finally { delete this._enCours[code]; }
   },
   /* la carte (texte brut : sa projection est echappee, coupee a 140 caracteres ; rien si elle est vide) */
@@ -396,13 +417,19 @@ const Invitations = {
       <div class="dc-cta">${cal ? `<a class="btn" href="${esc(cal)}" target="_blank" rel="noopener" data-inv-cal="${esc(code)}">${t(K.bouton)}</a><p class="dc-cta-sous">${t(K.sous)}</p>` : ""}
         <button type="button" class="lien-discret" data-inv-tard="${esc(code)}">${t(T.plus_tard)}</button></div></section>`;
   },
-  /* la montrer : posee par placer, notee vue (et « montree aujourd'hui »), retiree de l'attente */
+  /* la montrer : posee par placer (dans la page affichee), notee vue (et « montree aujourd'hui »), retiree de l'attente.
+     Page quittee dans la seconde et demie (champ quitte en touchant un onglet) : jamais vue, elle repart en attente. */
   montrer(code, I, C, placer){
     const b = document.createElement("div"); b.innerHTML = this.html(code, Decouverte.extrait(Decouverte.projection(I), 140));
     const carte = b.firstElementChild;
-    if (!carte || !placer(carte)) return false;
-    const m = this.lire(); m.vues[code] = new Date().toISOString(); m.jour = aujourdhui(); m.attente = m.attente.filter(a => a.code !== code); this.ecrire(m);
+    if (!carte || !placer(carte) || !carte.isConnected){ if (carte) carte.remove(); return false; }
+    const m = this.lire(), avant = m.jour;
+    m.vues[code] = new Date().toISOString(); m.jour = aujourdhui(); m.attente = m.attente.filter(a => a.code !== code); this.ecrire(m);
     this.brancher(carte, C);
+    setTimeout(() => {
+      if (carte.isConnected || carte.dataset.ferme === "1") return;
+      const n = this.lire(); delete n.vues[code]; if (n.jour === aujourdhui()) n.jour = avant; this.enAttenteAjouter(n, code);
+    }, 1500);
     return carte;
   },
   brancher(carte, C){
@@ -415,12 +442,13 @@ const Invitations = {
       carte.dataset.ferme = "1"; carte.remove();   // une page redessinee ne la remet pas
     });
   },
-  /* l'accueil, un autre jour : la plus recente en attente (une seule), si rien n'a ete montre aujourd'hui */
+  /* l'accueil, un autre jour : la plus recente en attente (une seule), si rien n'a ete montre aujourd'hui et si la cle
+     challenge a bien ete lue */
   enAttente(C){
-    if (!this.actif()) return "";
+    if (!this.actif() || !C || Store.nonLus.has(C)) return "";
     const m = this.lire();
     if (m.jour === aujourdhui() || this.reservee(C, m) || this.clicRecent(C, m)) return "";
-    const a = m.attente.filter(x => !m.vues[x.code] && !m.fermees[x.code]).sort((x, y) => (Date.parse(y.le) || 0) - (Date.parse(x.le) || 0));
+    const a = m.attente.filter(x => !m.vues[x.code] && !m.fermees[x.code] && !this.traitee(C, x.code)).sort((x, y) => (Date.parse(y.le) || 0) - (Date.parse(x.le) || 0));
     return a.length ? a[0].code : "";
   }
 };
