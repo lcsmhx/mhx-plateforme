@@ -59,8 +59,8 @@ C'est bon : ne touche à rien. C'est différent : ne change rien et dis-le à Cl
 
 ## Étape 4 — Le lien du bilan
 
-1. Le bouton « Réserver mon bilan » mène aujourd'hui à https://calendly.com/mhx-coaching/30min : ouvre-le.
-2. Tu dois voir **ta page de bilan offert de 30 minutes**, avec des créneaux libres.
+1. Le bouton « Récupérer mon plan d'action » (v61) mène à https://calendly.com/mhx-coaching/ton-plan-d-action-offert-15-min-avec-lucas : ouvre-le.
+2. Tu dois voir **ta page « Ton plan d'action offert » de 15 minutes**, avec des créneaux libres.
 
 C'est bon : rien à faire. Ce n'est pas le bon lien :
 - **le plus simple** : donne le bon lien à Claude. Il le met dans `CONFIG.marque.calendly`, relance les tests et publie ;

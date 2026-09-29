@@ -180,6 +180,43 @@ const Decouverte = {
     return (C && typeof C === "object" && C.cta && typeof C.cta === "object" && Array.isArray(C.cta.clics))
       ? C.cta.clics.filter(x => x && typeof x === "object" && !Array.isArray(x)) : [];
   },
+  /* v61 (brief V2, F et L) — les codes d'origine des boutons « Récupérer mon plan d'action » : envoyes a Calendly
+     (utm_content) et notes avec chaque clic (cta.clics[].source). Nom d'ecran en clair pour le coach (francais seulement).
+     Les clics deja en base gardent leur ancien code : il est lu comme le nouveau (ANCIENS), rien n'est reecrit. */
+  ORIGINES: {
+    apres_questionnaire: "page « Ton plan d'action » (après les 3 questions)",
+    accueil_haut: "accueil, bouton du haut",
+    accueil_accompagnement: "accueil, carte « Ce que l'accompagnement ajoute »",
+    reponses_haut: "« Modifier mes réponses », bouton du haut",
+    verrou_programme: "page verrouillée Mon programme",
+    verrou_journal: "page verrouillée Mon journal",
+    verrou_nutrition: "page verrouillée Nutrition",
+    verrou_suivi: "page verrouillée Mon suivi",
+    verrou_bilan: "page verrouillée Préparer le call",
+    verrou_complements: "page verrouillée Mes compléments",
+    declic_calculateur: "invitation après le calculateur",
+    declic_premiere_pesee: "invitation après la première pesée",
+    declic_mindset: "invitation après le module Mindset",
+    formation_commence_ici: "invitation après « Commence ici »",
+    fiche_coach: "lien envoyé par le coach"
+  },
+  ANCIENS: { "bilan-propose": "apres_questionnaire", "decouverte": "accueil_haut", "decouverte-accompagnement": "accueil_accompagnement", "fiche-coach": "fiche_coach" },
+  /* le code d'une page verrouillee (verrou_programme…) ; l'ancien « verrou-<id> » se lit pareil */
+  codeVerrou(id){ return "verrou_" + String(id || "").replace(/[^a-z0-9]/g, ""); },
+  /* le code d'origine d'un clic, ancien ou nouveau ; "" si absent ou illisible */
+  origine(src){
+    if (typeof src !== "string" || !src) return "";
+    if (Object.prototype.hasOwnProperty.call(this.ANCIENS, src)) return this.ANCIENS[src];
+    const v = /^verrou-([a-z0-9]{1,30})$/.exec(src); if (v) return this.codeVerrou(v[1]);
+    return /^[a-z0-9_]{1,40}$/.test(src) ? src : "";
+  },
+  /* le nom d'ecran en clair (coach) ; un code inconnu mais propre reste lisible tel quel */
+  nomOrigine(src){
+    const o = this.origine(src);
+    if (!o) return "";
+    if (Object.prototype.hasOwnProperty.call(this.ORIGINES, o)) return this.ORIGINES[o];
+    return /^verrou_[a-z0-9]+$/.test(o) ? "page verrouillée « " + o.slice(7) + " »" : o;
+  },
   /* la case « J'ai réservé » : C.reserve, ou celle du jour 7 d'un ancien prospect du challenge */
   reserve(C){
     if (!C || typeof C !== "object" || Array.isArray(C)) return null;
@@ -682,10 +719,13 @@ const outilDecouverte = {
     const lede = !fait ? typoFr(trad(T.lede_questionnaire)) : (bilan || form) ? "" : trad(T.lede_accueil);
     /* « Réserver mon bilan » : visible des la fin du questionnaire (accueil, « Modifier mes réponses ») ; v52 : discret,
        l'action mise en avant de l'accueil est son etape (calcul, puis pesee) */
-    const cal = fait && !bilan ? lienCalendly("decouverte") : "";
+    /* v61 (brief V2, E1 et F) : « Récupérer mon plan d'action », en contour, et sa ligne « 15 min avec Lucas · offert » ;
+       origine accueil_haut (sur « Modifier mes réponses » : reponses_haut) */
+    const haut = form ? "reponses_haut" : "accueil_haut", K = T.cta || {};
+    const cal = fait && !bilan ? lienCalendly(haut) : "";
     zone.innerHTML = `<header class="masthead"><span class="eyebrow">${esc(eyebrow)}</span>
         <h1>${esc(trad("Bonjour"))}${p.prenom ? " " + esc(p.prenom) : ""}</h1>${lede ? `<p class="lede">${esc(lede)}</p>` : ""}
-        ${cal ? `<div class="actions"><a class="btn ghost petit" href="${esc(cal)}" target="_blank" rel="noopener" data-dc-cal="decouverte">${esc(trad("Réserver mon bilan"))}</a></div>` : ""}</header>`
+        ${cal ? `<div class="actions"><a class="btn ghost petit" href="${esc(cal)}" target="_blank" rel="noopener" data-dc-cal="${haut}">${esc(trad(K.bouton))}</a></div><p class="dc-cta-sous dc-haut-sous">${esc(typoFr(trad(K.sous)))}</p>` : ""}</header>`
       + (form ? this.formulaireHTML(I) : bilan ? this.bilanHTML(I) : this.accueilHTML(I, C));
     /* chaque clic vers Calendly est note pour le coach, avec l'ecran d'origine (accueil, page bilan, « Modifier mes reponses ») */
     $$("[data-dc-cal]", zone).forEach(a => a.addEventListener("click", () => Decouverte.clic(C, a.dataset.dcCal)));
@@ -703,13 +743,19 @@ const outilDecouverte = {
 
   /* ---------- v52 : la page de proposition de bilan ---------- */
   bilanHTML(I){
-    const L = DECOUVERTE.bilan, cal = lienCalendly("bilan-propose"), pr = Decouverte.extrait(Decouverte.projection(I), 140);
+    const L = DECOUVERTE.bilan, cal = lienCalendly("apres_questionnaire"), pr = Decouverte.extrait(Decouverte.projection(I), 140);
     /* sa reponse « projection », echappee et tronquee ; une phrase neutre si elle est vide (ancien prospect)
-       v60 (brief V2, C) : {projection} = sa precision libre, sinon le libelle choisi (traduit) ; 140 caracteres au plus */
-    return `<section class="panel" id="dc-bilan"><h2>${esc(trad(L.titre))}</h2>
-      <p class="dc-projection" id="dc-projection">${esc(pr ? trad(L.projection, { p: pr }) : trad(L.sans_projection))}</p>
-      <p id="dc-bilan-texte">${esc(trad(L.texte))}</p>
-      <div class="dc-choix">${cal ? `<a class="btn" id="dc-bilan-reserver" href="${esc(cal)}" target="_blank" rel="noopener" data-dc-cal="bilan-propose">${esc(trad(L.reserver))}</a>` : ""}<button class="btn" type="button" id="dc-bilan-plus-tard">${esc(trad(L.plus_tard))}</button></div></section>`;
+       v60 (brief V2, C) : {projection} = sa precision libre, sinon le libelle choisi (traduit) ; 140 caracteres au plus
+       v61 (brief V2, D) : le plan d'action offert — étiquette « Offert », un seul bouton doré (origine apres_questionnaire)
+       et sa ligne, « Plus tard » en simple lien gris (meme effet qu'avant : l'accueil) */
+    const t = x => esc(typoFr(trad(x)));
+    return `<section class="panel dc-plan" id="dc-bilan"><span class="eyebrow dc-offert" id="dc-offert">${t(L.offert)}</span><h2>${t(L.titre)}</h2>
+      <p class="dc-projection" id="dc-projection">${esc(typoFr(pr ? trad(L.projection, { p: pr }) : trad(L.sans_projection)))}</p>
+      <p id="dc-bilan-texte">${t(L.texte)}</p>
+      <p id="dc-bilan-garde">${t(L.garde)}</p>
+      <p class="note" id="dc-bilan-libre">${t(L.libre)}</p>
+      <div class="dc-cta">${cal ? `<a class="btn" id="dc-bilan-reserver" href="${esc(cal)}" target="_blank" rel="noopener" data-dc-cal="apres_questionnaire">${t(L.reserver)}</a><p class="dc-cta-sous" id="dc-bilan-sous">${t(L.sous)}</p>` : ""}
+        <button class="lien-discret" type="button" id="dc-bilan-plus-tard">${t(L.plus_tard)}</button></div></section>`;
   },
   brancherBilan(zone, I, C){
     const self = this;
@@ -1047,11 +1093,13 @@ const outilDecouverte = {
   /* v52 : ce qu'apporte l'accompagnement = les pages verrouillees de sa vitrine (CONFIG.marque.gratuit_vitrine), chacune
      avec son lien ; « Réserver mon bilan » discret */
   accompHTML(C){
-    const L = DECOUVERTE.accomp, cal = lienCalendly("decouverte-accompagnement"), r = Decouverte.reserve(C);
+    /* v61 (brief V2, E2) : « Ce que l'accompagnement ajoute », « Récupérer mon plan d'action » (origine accueil_accompagnement),
+       « 15 min avec Lucas pour faire le point… », case « J'ai déjà choisi mon créneau » (meme case, meme cle) */
+    const L = DECOUVERTE.accomp, cal = lienCalendly("accueil_accompagnement"), r = Decouverte.reserve(C), K = DECOUVERTE.cta || {};
     const vitrine = ((CONFIG.marque && CONFIG.marque.gratuit_vitrine) || []).map(id => OUTILS.find(o => o.id === id)).filter(o => o && AVANTAGES[o.id]);
     return `<section class="panel" id="dc-accomp"><h2>${esc(trad(L.titre))}</h2>
       <ul class="liste-debloque">${vitrine.map(o => `<li><a href="#/${esc(o.id)}" data-dc-vitrine="${esc(o.id)}">${esc(trad(o.nom))}</a> — ${esc(trad(AVANTAGES[o.id]))}</li>`).join("")}</ul>
-      ${cal ? `<div class="actions"><a class="btn ghost" href="${esc(cal)}" target="_blank" rel="noopener" data-dc-cal="decouverte-accompagnement">${esc(trad("Réserver mon bilan"))}</a></div>` : ""}
+      ${cal ? `<div class="actions"><a class="btn ghost" href="${esc(cal)}" target="_blank" rel="noopener" data-dc-cal="accueil_accompagnement">${esc(trad(K.bouton))}</a></div>` : ""}
       <p class="note" style="margin:10px 0 0">${esc(trad(L.note))}</p>
       <div id="dc-reserve" style="margin-top:14px">${r ? this.reserveHTML(r) : `<label class="coche"><input type="checkbox" id="dc-reserve-case"> ${esc(trad(L.reserve_case))}</label>`}</div></section>`;
   },

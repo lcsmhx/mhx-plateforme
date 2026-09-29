@@ -108,7 +108,9 @@ const outilAccueil = {
     ajoute(p && p.cree_le, "Inscription");
     ajoute(I.court_debut, "Questionnaire commencé");
     ajoute(I.court_le, "Questionnaire rempli");
-    const src = v => typeof v !== "string" ? "" : v === "decouverte" ? "en haut de sa Découverte" : v === "decouverte-accompagnement" ? "bloc accompagnement" : v === "bilan-propose" ? "page de proposition du bilan" : /^verrou-[a-z]+$/.test(v) ? "page verrouillée « " + v.slice(7) + " »" : "";
+    /* v61 : un ancien code garde son libelle d'avant (clics deja en base) ; un nouveau code, le nom de son ecran
+       (Decouverte.nomOrigine) */
+    const src = v => typeof v !== "string" ? "" : v === "decouverte" ? "en haut de sa Découverte" : v === "decouverte-accompagnement" ? "bloc accompagnement" : v === "bilan-propose" ? "page de proposition du bilan" : /^verrou-[a-z]+$/.test(v) ? "page verrouillée « " + v.slice(7) + " »" : Decouverte.nomOrigine(v);
     Decouverte.clics(C).forEach(c => ajoute(c.date, "Clic « Réserver mon bilan »" + (src(c.source) ? " (" + src(c.source) + ")" : "")));
     ajoute(Decouverte.reserve(C), "Le prospect a coché « J'ai réservé »");
     const hist = S && typeof S === "object" && Array.isArray(S.historique) ? S.historique : [];
@@ -127,12 +129,12 @@ const outilAccueil = {
       <p class="note" style="margin:10px 0 0">${act.jours.length} jour${act.jours.length > 1 ? "s" : ""} d'activité, ${Math.floor(act.temps_s / 60)} min dans l'app${pages ? " · pages vues : " + esc(pages) : ""}.</p></section>`;
     const prenom = s(p && p.prenom).trim(), nomP = s(p && p.nom).trim();
     const emailOk = /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(email) && email.length <= 254;
-    const lien = lienCalendlyPour(prenom, emailOk ? email : "", "fiche-coach", nomP);   // v52 : + son nom (inscription)
+    const lien = lienCalendlyPour(prenom, emailOk ? email : "", "fiche_coach", nomP);   // v52 : + son nom (inscription)
     const remplis = [prenom && "prénom", nomP && "nom", emailOk && "email"].filter(Boolean);
     const remplisTxt = remplis.length ? " (" + (remplis.length > 1 ? remplis.slice(0, -1).join(", ") + " et " + remplis[remplis.length - 1] : remplis[0]) + " déjà rempli" + (remplis.length > 1 ? "s" : "") + ")" : "";
     const coach = (Auth.profil && typeof Auth.profil.prenom === "string" && Auth.profil.prenom) || "";
     const marque = CONFIG.marque.nom || "MHX Coaching";
-    const corps = "Bonjour" + (prenom ? " " + prenom : "") + ",\n\nMerci d'avoir fait ta découverte " + marque + ". Je te propose un bilan de 30 minutes pour faire le point sur ton objectif et voir comment je peux t'aider :\n" + lien + "\n\nÀ très vite,\n" + (coach ? coach + " — " : "") + marque;
+    const corps = "Bonjour" + (prenom ? " " + prenom : "") + ",\n\nMerci d'avoir fait ta découverte " + marque + ". Je te propose un bilan de 15 minutes pour faire le point sur ton objectif et voir comment je peux t'aider :\n" + lien + "\n\nÀ très vite,\n" + (coach ? coach + " — " : "") + marque;
     const mailto = emailOk && lien ? "mailto:" + encodeURIComponent(email) + "?subject=" + encodeURIComponent("Ton bilan " + marque) + "&body=" + encodeURIComponent(corps) : "";
     const actionsHTML = `<section class="panel" id="fiche-actions"><h2>Contacter</h2>
       ${lien ? `<p class="note" style="margin:0 0 8px">Son lien de réservation${esc(remplisTxt)} :</p><input type="text" id="dc-lien" readonly value="${esc(lien)}" aria-label="Lien de réservation du prospect" style="width:100%">` : ""}

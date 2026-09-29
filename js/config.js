@@ -16,7 +16,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-09-30 · 60",
+    version: "2026-09-30 · 61",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -36,7 +36,9 @@ const CONFIG = {
     /* v40 — Mode gratuit (prospects). Le lien de l'appel découverte, et les
        SEULS onglets ouverts à un prospect : tous les autres affichent un
        cadenas et « Réserver mon bilan ». Aucun prix dans l'application. */
-    calendly: "https://calendly.com/mhx-coaching/30min",
+    /* v61 (brief V2, F) : l'evenement de 15 min « Ton plan d'action offert », regle par Lucas dans Calendly (il remplace
+       l'ancien événement du bilan). Chaque bouton ajoute utm_source=app, utm_medium=bouton et son code d'origine en utm_content. */
+    calendly: "https://calendly.com/mhx-coaching/ton-plan-d-action-offert-15-min-avec-lucas",
     /* v50 — true : le prenom et l'email du prospect connecte sont pre-remplis dans Calendly (parametres
        officiels name et email) : il n'a rien a retaper et sa reservation porte l'email de son compte.
        Allume le 26/09/2026 (decision de Lucas) ; la confidentialite mentionne Calendly et le pre-remplissage. */
@@ -380,15 +382,22 @@ const DECOUVERTE = {
     verifie: "Vérifie : {l}",
     note: "Ce questionnaire ne remplace pas un avis médical. Si tu as un doute sur ta santé, parles-en à un professionnel."
   },
-  /* v52 : la page de proposition de bilan, juste après les 3 questions (tant que le prospect n'a pas choisi) */
+  /* v52 : la page de proposition de bilan, juste après les 3 questions (tant que le prospect n'a pas choisi).
+     v61 (brief V2, D) : le plan d'action offert — une seule action dorée, « Plus tard » en lien discret */
   bilan: {
-    titre: "Ta prochaine étape",
-    projection: "Dans 3 mois, pour toi : « {p} »",
+    offert: "Offert",
+    titre: "Ton plan d'action personnalisé",
+    projection: "Ton objectif dans 3 mois : « {p} »",
     sans_projection: "Faisons le point ensemble sur ton objectif.",
-    texte: "Ton bilan offert de 30 minutes avec un coach MHX. On fait le point sur ton objectif, ce qui te bloque et ce que tu as déjà essayé. Tu repars avec 2 ou 3 actions concrètes. Si l'accompagnement personnalisé te correspond, on te le présente à la fin de l'appel. Tu es libre de dire non.",
-    reserver: "Réserver mon bilan",
-    plus_tard: "Pas maintenant, découvrir mon espace"
+    texte: "En 15 minutes au téléphone avec Lucas, on transforme cet objectif en plan concret : ce qui te freine vraiment, par quoi commencer, et les 3 actions à mettre en place en priorité.",
+    garde: "Ton plan est à toi, quelle que soit la suite.",
+    libre: "Si l'accompagnement te correspond, Lucas te le présente à la fin, seulement si tu le veux. Tu es libre de dire non.",
+    reserver: "Récupérer mon plan d'action",
+    sous: "15 min · par téléphone · offert",
+    plus_tard: "Plus tard, je découvre mon espace"
   },
+  /* v61 (brief V2, vocabulaire) : le bouton unique partout où le bilan est proposé au prospect, et sa petite ligne */
+  cta: { bouton: "Récupérer mon plan d'action", sous: "15 min avec Lucas · offert" },
   resultat: {
     titre: "Ton résultat",
     priorites_titre: "Tes 3 priorités",
@@ -448,7 +457,13 @@ const DECOUVERTE = {
   echantillons: {
     marque: "Exemple",
     note: "Un aperçu de cette page avec l'accompagnement : ce ne sont pas tes données.",
-    appel: "Tu veux un programme construit pour toi, qui évolue chaque semaine ? Réserve ton bilan.",
+    /* v61 (brief V2, G) : un texte par page verrouillée, qui prolonge l'exemple affiché juste au-dessus */
+    appels: {
+      programme: "Cette séance découverte est la même pour tout le monde. Ton programme, lui, part de ton niveau, de ton matériel et de ton emploi du temps, puis évolue avec tes progrès.",
+      journal: "Avec l'accompagnement, chaque séance est notée et l'app te propose la charge à viser la fois suivante : tu sais toujours quoi faire pour progresser.",
+      nutrition: "Avec l'accompagnement, tes repas sont calculés sur tes calories et tes macros, en tenant compte de ton régime et de tes allergies, avec ta liste de courses.",
+      suivi: "Avec l'accompagnement, ton coach lit ton bilan chaque semaine et te répond avec la suite du plan : tu sais toujours où tu en es et quoi faire ensuite."
+    },
     nutrition: {
       titre: "Une journée type",
       intro: "Trois repas simples et riches en protéines, tirés du catalogue de recettes. Avec l'accompagnement, tes repas et leurs quantités sont calculés pour ton objectif.",
@@ -497,9 +512,9 @@ const DECOUVERTE = {
     ouvrir: "Ouvrir la Speed Formation"
   },
   accomp: {
-    titre: "Avec l'accompagnement MHX",
-    note: "Un bilan de 30 minutes avec ton coach, pour faire le point sur tes objectifs.",
-    reserve_case: "J'ai réservé mon bilan",
+    titre: "Ce que l'accompagnement ajoute",   // v61 (brief V2, E2)
+    note: "15 min avec Lucas pour faire le point sur ton objectif. Offert.",
+    reserve_case: "J'ai déjà choisi mon créneau",
     reserve_ok: "Bilan réservé le {d}. Ton coach te retrouve à l'heure prévue."
   },
   profil: {
@@ -573,14 +588,16 @@ const DECOUVERTE = {
      l'app pour l'instant, décision de Lucas). v59 : version 2026-09-29, paragraphe « Contenus chargés depuis Google »
      (polices, images d'aperçu des vidéos ; vidéo au clic seulement) juste après « Hébergement ». Les comptes déjà
      inscrits gardent la version acceptée dans leurs métadonnées : rien ne la compare, personne n'est redemandé.
+     v61 : version 2026-09-30 (décision de Lucas du 30/09) : « Réserver mon bilan » devient « Récupérer mon plan d'action » ;
+     aucune durée de bilan dans ce texte ; rien d'autre ne change.
      Le texte change = la version change ; FR et EN gardent le même nombre de paragraphes, dans le même ordre
      (traduction par position) --- */
   confidentialite: {
-    version: "2026-09-29",
+    version: "2026-09-30",
     titre: "Conditions d'utilisation et confidentialité",
     paragraphes: [
       "L'espace gratuit de MHX Coaching donne des informations et un entraînement généraux, réservés aux adultes. Il ne remplace pas un avis médical : en cas de doute sur ta santé, parles-en à un professionnel avant de commencer.",
-      "Données collectées : ton prénom, ton nom, ton email, tes réponses aux 3 questions de départ et ton activité dans l'app, dont tes clics sur « Réserver mon bilan ». Données de santé : celles que tu saisis (poids, mensurations, âge, taille et activité dans le calculateur de calories), avec ton accord (case dédiée).",
+      "Données collectées : ton prénom, ton nom, ton email, tes réponses aux 3 questions de départ et ton activité dans l'app, dont tes clics sur « Récupérer mon plan d'action ». Données de santé : celles que tu saisis (poids, mensurations, âge, taille et activité dans le calculateur de calories), avec ton accord (case dédiée).",
       "Usage : adapter ce qui s'affiche à tes réponses, calculer tes calories, suivre ta progression et te proposer un bilan avec le coach. Aucune revente, aucune publicité.",
       "Suivi par le coach : il voit tes réponses et ton activité, et note, pour son suivi, l'issue de ton bilan et ses relances. Ces notes n'apparaissent pas dans l'app : tu peux en demander une copie ou la suppression en lui écrivant.",
       "Données de santé (RGPD article 9) : tu dois accepter explicitement le traitement de tes données concernant ta santé (poids, mensurations, données du calculateur de calories). Tu peux les consulter ou les supprimer à tout moment. Ces données sont conservées tant que ton compte existe.",
@@ -632,13 +649,18 @@ const DECOUVERTE = {
       note: "This questionnaire is not medical advice. If you have any doubt about your health, talk to a professional."
     },
     bilan: {
-      titre: "Your next step",
-      projection: "In 3 months, for you: “{p}”",
+      offert: "Free",
+      titre: "Your personalized action plan",
+      projection: "Your goal in 3 months: “{p}”",
       sans_projection: "Let's review your goal together.",
-      texte: "Your free 30-minute assessment with an MHX coach. We review your goal, what's holding you back and what you've already tried. You leave with 2 or 3 concrete actions. If personal coaching suits you, we'll present it at the end of the call. You're free to say no.",
-      reserver: "Book my assessment",
-      plus_tard: "Not now, explore my space"
+      texte: "In a 15-minute call with Lucas, we turn this goal into a concrete plan: what's really holding you back, where to start, and the 3 actions to put in place first.",
+      garde: "The plan is yours to keep, whatever you decide next.",
+      libre: "If coaching is a good fit, Lucas will tell you about it at the end, only if you want. You're free to say no.",
+      reserver: "Get my action plan",
+      sous: "15 min · phone call · free",
+      plus_tard: "Later, let me explore my space"
     },
+    cta: { bouton: "Get my action plan", sous: "15 min with Lucas · free" },
     resultat: {
       titre: "Your result",
       priorites_titre: "Your 3 priorities",
@@ -696,7 +718,12 @@ const DECOUVERTE = {
     echantillons: {
       marque: "Example",
       note: "A preview of this page with coaching: this isn't your data.",
-      appel: "Want a program built for you that evolves every week? Book your assessment.",
+      appels: {
+        programme: "This starter workout is the same for everyone. Your program starts from your level, your equipment and your schedule, then evolves as you progress.",
+        journal: "With coaching, every workout is logged and the app suggests the weight to aim for next time: you always know what to do to progress.",
+        nutrition: "With coaching, your meals are calculated from your calories and macros, taking your diet and allergies into account, with your shopping list.",
+        suivi: "With coaching, your coach reads your weekly check-in and replies with the next step: you always know where you stand and what to do next."
+      },
       nutrition: {
         titre: "A sample day of eating",
         intro: "Three simple, high-protein meals from the recipe catalog. With coaching, your meals and portions are calculated for your goal.",
@@ -743,9 +770,9 @@ const DECOUVERTE = {
       ouvrir: "Open the Speed Formation"
     },
     accomp: {
-      titre: "With MHX coaching",
-      note: "A 30-minute assessment with your coach, to review your goals.",
-      reserve_case: "I booked my assessment",
+      titre: "What coaching adds",
+      note: "15 min with Lucas to go over your goal. Free.",
+      reserve_case: "I've already booked my slot",
       reserve_ok: "Assessment booked on {d}. Your coach will meet you at the scheduled time."
     },
     profil: {
@@ -796,7 +823,7 @@ const DECOUVERTE = {
       titre: "Terms of use and privacy",
       paragraphes: [
         "MHX Coaching's free space gives you general information and training, for adults only. It is not medical advice: if you have any doubt about your health, talk to a professional before starting.",
-        "Data collected: your first name, your last name, your email, your answers to the 3 starting questions and your activity in the app, including your clicks on “Book my assessment”. Health data: what you enter (weight, measurements, age, height and activity in the calorie calculator), with your consent (dedicated box).",
+        "Data collected: your first name, your last name, your email, your answers to the 3 starting questions and your activity in the app, including your clicks on “Get my action plan”. Health data: what you enter (weight, measurements, age, height and activity in the calorie calculator), with your consent (dedicated box).",
         "Use: to adapt what you see to your answers, calculate your calories, track your progress and offer you an assessment with the coach. No resale, no advertising.",
         "Coach follow-up: the coach sees your answers and activity, and records, for their follow-up, the outcome of your assessment and their follow-up messages. These notes don't appear in the app: you can ask for a copy or their deletion by writing to the coach.",
         "Health data (GDPR article 9): you must explicitly accept the processing of your health data (weight, measurements, calorie calculator data). You can view or delete this data at any time. This data is kept as long as your account exists.",

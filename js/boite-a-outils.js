@@ -36,7 +36,9 @@ const lienSur = (u) => {
 /* v50 — le lien de reservation, le meme partout. Pre-remplissage (prenom, nom et email du prospect connecte)
    seulement si CONFIG.marque.calendly_prerempli vaut true ; jamais pour le coach qui consulte une fiche. */
 /* source : l'ecran d'ou part le clic (decouverte, verrou-programme…), transmis a Calendly en utm_content
-   (aucune donnee personnelle) : le coach voit dans Calendly d'ou vient chaque reservation */
+   (aucune donnee personnelle) : le coach voit dans Calendly d'ou vient chaque reservation
+   v61 (brief V2, F) : utm_source=app, utm_medium=bouton (coach : medium coach) ; codes d'origine avec « _ »
+   (apres_questionnaire, verrou_programme… : Decouverte.ORIGINES) */
 /* v52 — prenom et nom pre-remplis : name = « prenom nom » (champ « Nom » unique de Calendly ; le nom seul s'il
    manque le prenom, et inversement), first_name / last_name (evenement qui demande prenom et nom separement :
    Calendly prend ceux qui existent). Chaque valeur encodee ; aucun parametre vide. */
@@ -52,8 +54,8 @@ function lienCalendly(source){
   const base = lienSur(CONFIG.marque && CONFIG.marque.calendly); if (!base) return "";
   try {
     if (!Auth.estProspect() || Store.idConsulte) return base;
-    const params = ["utm_source=app-mhx", "utm_medium=app"];
-    if (typeof source === "string" && /^[a-z0-9-]{1,40}$/.test(source)) params.push("utm_content=" + source);
+    const params = ["utm_source=app", "utm_medium=bouton"];
+    if (typeof source === "string" && /^[a-z0-9_-]{1,40}$/.test(source)) params.push("utm_content=" + source);
     if (CONFIG.marque && CONFIG.marque.calendly_prerempli === true){
       const u = Auth.utilisateur(), p = Auth.profil || {};
       const email = u && typeof u.email === "string" ? u.email.trim() : "";
@@ -65,12 +67,12 @@ function lienCalendly(source){
   } catch(e){ return base; }   // un caractere mal forme ne doit jamais empecher la page de s'afficher
 }
 /* v51 — le lien de reservation d'un prospect, construit pour le coach (fiche) : prenom, nom (v52, 4e parametre :
-   les appels a 3 parametres restent justes) et email du prospect, source « fiche-coach ». Rend "" si Calendly n'est pas configure. */
+   les appels a 3 parametres restent justes) et email du prospect, source « fiche-coach » (v61 : « fiche_coach »). Rend "" si Calendly n'est pas configure. */
 function lienCalendlyPour(prenom, email, source, nom){
   const base = lienSur(CONFIG.marque && CONFIG.marque.calendly); if (!base) return "";
   try {
-    const params = ["utm_source=app-mhx", "utm_medium=coach"];
-    if (typeof source === "string" && /^[a-z0-9-]{1,40}$/.test(source)) params.push("utm_content=" + source);
+    const params = ["utm_source=app", "utm_medium=coach"];
+    if (typeof source === "string" && /^[a-z0-9_-]{1,40}$/.test(source)) params.push("utm_content=" + source);
     const em = typeof email === "string" ? email.trim() : "";
     params.push(...paramsNomCalendly(prenom, nom));
     if (/^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(em) && em.length <= 254) params.push("email=" + encodeURIComponent(em));

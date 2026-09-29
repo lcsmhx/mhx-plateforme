@@ -180,7 +180,7 @@ const UI = {
   verrou(o){
     return `<div class="verrou"><div class="cadenas">${SVG.cadenas}</div>
       <h2>${esc(o.titre || "")}</h2><p>${esc(o.texte || "")}</p>
-      ${o.lien ? `<div class="actions"><a class="btn" href="${esc(lienSur(o.lien))}" target="_blank" rel="noopener">${esc(o.cta || "")}</a></div>` : ""}
+      ${o.lien ? `<div class="actions"><a class="btn" href="${esc(lienSur(o.lien))}" target="_blank" rel="noopener">${esc(o.cta || "")}</a></div>` : ""}${o.lien && o.sous ? `<p class="verrou-sous">${esc(o.sous)}</p>` : ""}
     </div>`;
   }
 };

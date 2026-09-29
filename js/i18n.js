@@ -837,16 +837,17 @@ I18N.en = {
 "Un compte existe déjà avec cet email : connecte-toi.": "An account already exists with this email: sign in.",
 "Les inscriptions ne sont pas encore ouvertes.": "Sign-ups are not open yet.",
 /* v40 — mode gratuit */
-"Ton programme d'entraînement sur mesure, construit et ajusté par ton coach.": "Your tailored training program, built and adjusted by your coach.",
-"Ta diète personnalisée, tes repas du jour et ta liste de courses.": "Your personalized meal plan, your meals of the day and your shopping list.",
+/* v61 (brief V2, E2) : ce que l'accompagnement ajoute (accueil du prospect et pages verrouillées) */
+"Tes séances construites pour toi et ajustées par ton coach selon tes progrès.": "Workouts built for you and adjusted by your coach as you progress.",
+"Tes repas calculés pour ton objectif, avec ta liste de courses.": "Meals calculated for your goal, with your shopping list.",
 "Ton poids, tes mensurations et ta composition corporelle, semaine après semaine.": "Your weight, measurements and body composition, week after week.",
-"Ta régularité, tes objectifs du mois, ton bilan de la semaine et les retours de ton coach.": "Your consistency, your monthly goals, your weekly check-in and your coach's feedback.",
+"Ta régularité, ta courbe et le retour de ton coach chaque semaine.": "Your consistency, your progress curve and your coach's feedback every week.",
 "Ton bilan du mois, préparé avec ton coach.": "Your monthly review, prepared with your coach.",
 "Tes compléments conseillés, avec les doses et les moments.": "Your recommended supplements, with doses and timing.",
 "Bienvenue": "Welcome", "Ton espace gratuit MHX : commence par la Speed Formation, à ton rythme.": "Your free MHX space: start with the Speed Formation, at your own pace.",
-"Ton espace gratuit": "Your free space", "Avec l'accompagnement MHX": "With MHX coaching",
+"Ton espace gratuit": "Your free space", "Ce que l'accompagnement ajoute": "What coaching adds",
 "Ton questionnaire et tes réglages": "Your questionnaire and settings",
-"Un bilan de 30 minutes avec ton coach, pour faire le point sur tes objectifs.": "A 30-minute assessment with your coach to review your goals.",
+"15 min avec Lucas pour faire le point sur ton objectif. Offert.": "15 min with Lucas to go over your goal. Free.",
 /* v41 — photos de progression */
 "Photos de progression": "Progress photos", "privées": "private",
 "Visibles par toi et ton coach seulement. Même lumière, même tenue, même position : c'est ce qui rend la comparaison utile.": "Visible only to you and your coach. Same light, same outfit, same pose: that's what makes the comparison useful.",
@@ -989,7 +990,7 @@ Object.assign(I18N.en, {
   "Ces chiffres sont une estimation générale, pas un avis médical. Si tu as un doute sur ta santé, parles-en à un professionnel.": "These numbers are a general estimate, not medical advice. If you have any doubt about your health, talk to a professional.",
   "Mon journal": "My training log", "Ton journal d'entraînement": "Your training log",
   "Tes séances notées, tes charges et tes progrès, séance après séance.": "Your logged workouts, your weights and your progress, session after session.",
-  "Ton journal d'entraînement : chaque séance notée, tes charges et tes progrès, semaine après semaine.": "Your training log: every workout logged, your weights and your progress, week after week."
+  "Chaque séance notée, et la charge à viser la fois suivante.": "Every workout logged, with the weight to aim for next time."   // v61 (brief V2, E2)
 });
 
 

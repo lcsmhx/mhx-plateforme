@@ -40,14 +40,16 @@ function horsVitrine(o){
   return Array.isArray(v) && v.indexOf(o.id) === -1;
 }
 function cadenasNav(o){ return estVerrouille(o) ? `<span class="nav-cadenas" aria-hidden="true">${SVG.cadenas}</span><span class="sr-only"> (${esc(trad("verrouillé"))})</span>` : ""; }
+/* v61 (brief V2, E2) : ce que l'accompagnement ajoute — accueil du prospect (carte) et pages verrouillées (note) ; jamais
+   un ecran client */
 const AVANTAGES = {
-  programme: "Ton programme d'entraînement sur mesure, construit et ajusté par ton coach.",
-  nutrition: "Ta diète personnalisée, tes repas du jour et ta liste de courses.",
+  programme: "Tes séances construites pour toi et ajustées par ton coach selon tes progrès.",
+  nutrition: "Tes repas calculés pour ton objectif, avec ta liste de courses.",
   mensurations: "Ton poids, tes mensurations et ta composition corporelle, semaine après semaine.",
-  suivi: "Ta régularité, tes objectifs du mois, ton bilan de la semaine et les retours de ton coach.",
+  suivi: "Ta régularité, ta courbe et le retour de ton coach chaque semaine.",
   bilan: "Ton bilan du mois, préparé avec ton coach.",
   complements: "Tes compléments conseillés, avec les doses et les moments.",
-  journal: "Ton journal d'entraînement : chaque séance notée, tes charges et tes progrès, semaine après semaine."   // v52
+  journal: "Chaque séance notée, et la charge à viser la fois suivante."   // v52 ; v61 (brief V2, E2)
 };
 function pageVerrouillee(o){
   /* v52 : plus de page spéciale pour la Speed Formation (ouverte pour toujours) */
@@ -55,10 +57,13 @@ function pageVerrouillee(o){
   /* v52 (lot E) : pour un prospect, d'abord un exemple generique de la page (Echantillons : marque « Exemple », aucune de
      ses donnees), puis « Tu veux un programme construit pour toi… » et « Réserver mon bilan » — toujours un lien
      .verrou a[target=_blank] : afficher() compte le clic (source verrou-<id>). Les autres pages verrouillees : inchangees. */
-  const ech = Echantillons.html(o.id);
-  if (ech) return `${ech}<section class="panel ech-appel">${UI.verrou({ titre: trad(nomOnglet(o)), texte: trad(DECOUVERTE.echantillons.appel), lien: lienCalendly("verrou-" + o.id), cta: trad("Réserver mon bilan") })}
-    ${plus ? `<p class="note verrou-plus">${esc(trad(plus))}</p>` : ""}</section>`;
-  return `<section class="panel">${UI.verrou({ titre: trad(nomOnglet(o)), texte: trad("Cette fonctionnalité est disponible avec l'accompagnement MHX."), lien: lienCalendly("verrou-" + o.id), cta: trad("Réserver mon bilan") })}
+  /* v61 (brief V2, G et F) : un texte par page (DECOUVERTE.echantillons.appels), « Récupérer mon plan d'action », la ligne
+     « 15 min avec Lucas · offert », et l'origine verrou_<id> (lien Calendly et clic compte par afficher) */
+  const ech = Echantillons.html(o.id), cta = DECOUVERTE.cta || {}, appels = DECOUVERTE.echantillons.appels || {};
+  const bouton = { lien: lienCalendly(Decouverte.codeVerrou(o.id)), cta: trad(cta.bouton), sous: typoFr(trad(cta.sous)) };
+  if (ech) return `${ech}<section class="panel ech-appel">${UI.verrou(Object.assign({ titre: trad(nomOnglet(o)), texte: typoFr(trad(appels[o.id] || "")) }, bouton))}
+    ${plus ? `<p class="note verrou-plus">${esc(typoFr(trad(plus)))}</p>` : ""}</section>`;
+  return `<section class="panel">${UI.verrou(Object.assign({ titre: trad(nomOnglet(o)), texte: trad("Cette fonctionnalité est disponible avec l'accompagnement MHX.") }, bouton))}
     ${plus ? `<p class="note verrou-plus">${esc(trad(plus))}</p>` : ""}</section>`;
 }
 
@@ -386,7 +391,7 @@ async function afficher(id, silencieux){
 
   let fin = null;
   /* v50 : un clic « Réserver mon bilan » depuis une page verrouillee compte (suivi commercial du coach) */
-  if (verrouille && Auth.estProspect() && !Store.idConsulte) $$("#vue .verrou a[target=_blank]").forEach(a => a.addEventListener("click", () => { try { Decouverte.clic(Store.cache[Decouverte.cle] || Decouverte.vide(), "verrou-" + outil.id); } catch(e){} }));
+  if (verrouille && Auth.estProspect() && !Store.idConsulte) $$("#vue .verrou a[target=_blank]").forEach(a => a.addEventListener("click", () => { try { Decouverte.clic(Store.cache[Decouverte.cle] || Decouverte.vide(), Decouverte.codeVerrou(outil.id)); } catch(e){} }));
   /* v52 (lot E) : l'exemple de la page verrouillee (journee type lue dans le catalogue public, demonstrations) */
   if (verrouille) Echantillons.brancher($("vue"), outil.id);
   if (!verrouille){
