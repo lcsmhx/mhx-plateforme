@@ -192,7 +192,7 @@ const Decouverte = {
     verrou_journal: "page verrouillée Mon journal",
     verrou_nutrition: "page verrouillée Nutrition",
     verrou_suivi: "page verrouillée Mon suivi",
-    verrou_bilan: "page verrouillée Préparer le call",
+    verrou_bilan: "page verrouillée Mon bilan",   // le nom que le prospect voit (outilBilan.nom)
     verrou_complements: "page verrouillée Mes compléments",
     declic_calculateur: "invitation après le calculateur",
     declic_premiere_pesee: "invitation après la première pesée",
@@ -203,9 +203,10 @@ const Decouverte = {
   ANCIENS: { "bilan-propose": "apres_questionnaire", "decouverte": "accueil_haut", "decouverte-accompagnement": "accueil_accompagnement", "fiche-coach": "fiche_coach" },
   /* le code d'une page verrouillee (verrou_programme…) ; l'ancien « verrou-<id> » se lit pareil */
   codeVerrou(id){ return "verrou_" + String(id || "").replace(/[^a-z0-9]/g, ""); },
-  /* le code d'origine d'un clic, ancien ou nouveau ; "" si absent ou illisible */
+  /* le code d'origine d'un clic, ancien ou nouveau ; "" si absent ou illisible (un prospect ecrit ce qu'il veut dans sa
+     cle : les noms reserves des objets JavaScript sont refuses, ils ne servent jamais de cle de dictionnaire) */
   origine(src){
-    if (typeof src !== "string" || !src) return "";
+    if (typeof src !== "string" || !src || /^(__proto__|constructor|prototype|hasownproperty|tostring|valueof)$/i.test(src)) return "";
     if (Object.prototype.hasOwnProperty.call(this.ANCIENS, src)) return this.ANCIENS[src];
     const v = /^verrou-([a-z0-9]{1,30})$/.exec(src); if (v) return this.codeVerrou(v[1]);
     return /^[a-z0-9_]{1,40}$/.test(src) ? src : "";
