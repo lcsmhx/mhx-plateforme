@@ -5,8 +5,11 @@
       en anglais (même ordre), anciennes définitions gardées pour l'affichage, table problème → objectif vers des options
       EXACTES du questionnaire complet (/perte|s[èe]che/, /prise|masse/, santé), jamais par-dessus un objectif choisi ;
    B. arrivée juste après la vérification d'email (faux lien de confirmation) sur les 3 questions : plus d'âge, « 3
-      questions, 1 minute », « pas un avis médical » sous le formulaire, réponses requises (espaces seuls = vide),
+      questions, 30 secondes », « pas un avis médical » sous le formulaire, réponses requises (espaces seuls = vide),
       brouillon pendant la frappe (court_debut, email_compte, objectif), rechargement, validation (court_le) ;
+      v60 (brief V2, C) : des réponses à toucher (cartes, pastilles, « 2 réponses max », précisions libres), bouton
+      « Voir ma prochaine étape » inactif tant qu'il manque une réponse (« Il manque une réponse »), intake : texte
+      français lisible + clés stables + précision ;
    C. page de proposition de bilan : sa réponse « projection » reprise (échappée, tronquée proprement), texte exact,
       deux boutons de même taille et de même poids, lien Calendly exact (prénom, nom, email ; source bilan-propose),
       clic compté, intake.bilan_propose écrit UNE fois (« reserver » / « plus_tard »), relu avant si le cache n'est pas
@@ -338,15 +341,30 @@ const ou = page => page.evaluate(() => ({ courant: typeof courant !== "undefined
 const avecEn = (db, uid) => { const pr = db.donnees.find(d => d.user_id === uid && d.outil === "prefs"); if (pr) pr.contenu = Object.assign({}, pr.contenu, { langue: "en" }); else db.donnees.push({ user_id: uid, outil: "prefs", contenu: { langue: "en" }, maj_le: avant(J) }); };
 
 /* ---------- les textes attendus (FR et EN) : cahier des charges du lot C ---------- */
+/* v60 (brief V2, C) : les 3 questions à toucher — probleme (cartes, un choix, valeur = option française EXACTE, sous-texte),
+   obstacle (pastilles, 2 choix au plus, clés stables) et projection (pastilles, un choix), précisions libres facultatives ;
+   « Il manque une réponse », « 2 réponses max ». Les textes FR sont affichés avec typoFr (espace insécable avant « ? »…) :
+   comparés après normalisation des espaces (norm, \s+). */
 const TX = {
-  labels: ["Quel est ton objectif principal ?", "Qu'est-ce qui t'a bloqué jusqu'ici ?", "Dans 3 mois, qu'est-ce qui aurait changé pour toi ?"],
-  labels_en: ["What's your main goal?", "What has held you back so far?", "In 3 months, what would have changed for you?"],
+  labels: ["Ton objectif numéro 1 ?", "Jusqu'ici, qu'est-ce qui a coincé ?", "Dans 3 mois, qu'est-ce qui changerait tout pour toi ?"],
+  labels_en: ["Your #1 goal?", "What's held you back so far?", "In 3 months, what would change everything for you?"],
   options: ["Perdre du gras", "Prendre du muscle", "Me remettre en forme"],
   options_en: ["Lose fat", "Build muscle", "Get back in shape"],
-  lede: "3 questions, 1 minute : dis-nous où tu en es.",
-  lede_en: "3 questions, 1 minute: tell us where you stand.",
+  sous: ["Affiner ma silhouette", "Me dessiner et gagner en force", "Retrouver de l'énergie et une routine"],
+  sous_en: ["Get leaner", "Get toned and stronger", "Get my energy and routine back"],
+  obstacle: [["temps", "Le manque de temps"], ["craquages", "Je craque sur la nourriture"], ["quoi_faire", "Je ne sais pas quoi faire exactement"], ["motivation", "La motivation retombe vite"], ["tout_essaye", "J'ai déjà tout essayé, rien ne dure"], ["suivi", "Personne pour me suivre et me recadrer"]],
+  obstacle_en: [["temps", "Not enough time"], ["craquages", "I give in to cravings"], ["quoi_faire", "I don't know exactly what to do"], ["motivation", "My motivation fades fast"], ["tout_essaye", "I've tried everything, nothing lasts"], ["suivi", "No one to keep me on track"]],
+  projections: [["vetements", "Rentrer à nouveau dans mes vêtements préférés"], ["photos", "M'aimer sur les photos"], ["energie", "Avoir de l'énergie toute la journée"], ["routine", "Tenir une routine sans me forcer"], ["confiance", "Retrouver confiance en moi"]],
+  projections_en: [["vetements", "Fitting into my favorite clothes again"], ["photos", "Loving how I look in photos"], ["energie", "Having energy all day long"], ["routine", "Sticking to a routine without forcing it"], ["confiance", "Feeling confident again"]],
+  aide: "Jusqu'à 2 réponses.", aide_en: "Pick up to 2.",
+  precisions: ["Autre chose ? Avec tes mots (facultatif, sans détail de santé)", "Ou dis-le avec tes mots (facultatif)"],
+  precisions_en: ["Anything else? In your own words (optional, no health details)", "Or say it in your own words (optional)"],
+  manque: "Il manque une réponse", manque_en: "One answer is missing",
+  max: "2 réponses max", max_en: "2 answers max",
+  lede: "3 questions, 30 secondes : dis-nous où tu en es.",
+  lede_en: "3 questions, 30 seconds: tell us where you're at.",
   note: "Ce questionnaire ne remplace pas un avis médical. Si tu as un doute sur ta santé, parles-en à un professionnel.",
-  bouton: "Valider mes réponses", bouton_en: "Submit my answers",
+  bouton: "Voir ma prochaine étape", bouton_en: "See my next step",
   titre: "Ta prochaine étape", titre_en: "Your next step",
   bilan: "Ton bilan offert de 30 minutes avec un coach MHX. On fait le point sur ton objectif, ce qui te bloque et ce que tu as déjà essayé. Tu repars avec 2 ou 3 actions concrètes. Si l'accompagnement personnalisé te correspond, on te le présente à la fin de l'appel. Tu es libre de dire non.",
   bilan_en: "Your free 30-minute assessment with an MHX coach. We review your goal, what's holding you back and what you've already tried. You leave with 2 or 3 concrete actions. If personal coaching suits you, we'll present it at the end of the call. You're free to say no.",
@@ -377,6 +395,20 @@ const OBJ = { "Perdre du gras": "Perte de poids / sèche", "Prendre du muscle": 
 /* un nouveau prospect qui a validé les 3 questions */
 const NOUVEAU = (extra) => Object.assign({ probleme: "Perdre du gras", obstacle: "Le manque de temps avec le travail", projection: "Courir 10 km sans m'arrêter",
   objectif: "Perte de poids / sèche", objectif_auto: "Perte de poids / sèche", court_debut: avant(2 * H), court_le: avant(H) }, extra || {});   // v52 : objectif posé par l'app (marqueur)
+/* v60 (brief V2, C) : NOUVEAU garde les réponses libres d'avant la v60 (lues telles quelles) ; NOUVEAU60, un prospect qui a
+   répondu aux questions à toucher : texte français lisible + clés stables (+ précision) */
+const NOUVEAU60 = (extra) => NOUVEAU(Object.assign({ obstacle: "Le manque de temps · Je craque sur la nourriture — le soir", obstacle_choix: ["temps", "craquages"],
+  obstacle_precision: "le soir", projection: "Avoir de l'énergie toute la journée", projection_choix: ["energie"] }, extra || {}));
+/* choisir une réponse à toucher : un clic sur la carte / la pastille (le label ; la case elle-même est invisible) */
+const choisir = (page, id, v) => page.click(`#q-${id} label.dc-opt:has(input[value="${v}"])`);
+/* l'état du formulaire à toucher : les valeurs cochées de chaque question, les précisions, le bouton */
+const etatForm = page => page.evaluate(() => {
+  const coches = id => Array.from(document.querySelectorAll(`#q-${id} input:checked`)).map(i => i.value);
+  const val = id => { const e = document.getElementById(id); return e ? e.value : null; };
+  const b = document.getElementById("dc-voir");
+  return { probleme: coches("probleme"), obstacle: coches("obstacle"), projection: coches("projection"), po: val("q-obstacle-precision"), pp: val("q-projection-precision"),
+    inactif: b ? b.getAttribute("aria-disabled") + "|" + b.classList.contains("inactif") : null };
+}).catch(e => ({ erreur: String(e) }));
 /* un ancien prospect (v51) : les 10 réponses de l'ancien questionnaire court, validé, pas de choix sur la page bilan */
 const ANCIEN = { sexe: "Femme", age: "30", taille: "165", poids: "70", objectif: "Perte de poids / sèche", seances: "3", essaye: "Des régimes trop stricts.",
   obstacle: "Je manque de temps avec le travail", pourquoi: "Me sentir mieux cet été", motivation: "8", court_debut: avant(3 * J), court_le: avant(3 * J - H), email_compte: "ancienne@exemple.fr" };
@@ -427,7 +459,9 @@ function lienOk(href, base, attendu){
       const obj = QUESTIONS.find(q => q.id === "objectif");
       return {
         questions: D.questions, requis: D.requis, avant: D.questions_avant,
-        fr: fr.map(q => [q.id, q.type, q.label, q.options || null]), en: en.map(q => [q.id, q.type, q.label, q.options || null]),
+        /* v60 : [id, type, libellé, options, sous-textes, max, aide, choix [clé, libellé], précision] */
+        fr: fr.map(q => [q.id, q.type, q.label, q.options || null, q.sous || null, q.max || null, q.aide || null, q.choix || null, q.precision || null]),
+        en: en.map(q => [q.id, q.type, q.label, q.options || null, q.sous || null, q.max || null, q.aide || null, q.choix || null, q.precision || null]),
         avantFr: (DECOUVERTE.questions_avant || []).map(q => [q.id, q.type, q.label]), avantEn: ((DECOUVERTE.en || {}).questions_avant || []).map(q => [q.id, q.type, q.label]),
         pasDansQuestions: ["probleme", "projection"].every(id => !QUESTIONS.some(q => q.id === id)),
         table: D.objectif_depuis, options: obj ? obj.options : [],
@@ -436,8 +470,11 @@ function lienOk(href, base, attendu){
       };
     });
     ok("CONFIG : questions = requis = probleme, obstacle, projection ; l'ancienne liste de 10 gardée (questions_avant)", JSON.stringify(r.questions) === '["probleme","obstacle","projection"]' && JSON.stringify(r.requis) === '["probleme","obstacle","projection"]' && JSON.stringify(r.avant) === '["sexe","age","taille","poids","objectif","seances","essaye","obstacle","pourquoi","motivation"]', JSON.stringify(r));
-    ok("DECOUVERTE.questions : probleme (liste « Perdre du gras / Prendre du muscle / Me remettre en forme »), obstacle et projection (texte libre), libellés exacts", JSON.stringify(r.fr) === JSON.stringify([["probleme", "select", TX.labels[0], TX.options], ["obstacle", "long", TX.labels[1], null], ["projection", "long", TX.labels[2], null]]), JSON.stringify(r.fr));
-    ok("DECOUVERTE.en.questions : mêmes identifiants, même ordre, mêmes types, en anglais", JSON.stringify(r.en) === JSON.stringify([["probleme", "select", TX.labels_en[0], TX.options_en], ["obstacle", "long", TX.labels_en[1], null], ["projection", "long", TX.labels_en[2], null]]), JSON.stringify(r.en));
+    /* v60 (brief V2, C) : des réponses à toucher — probleme en cartes (valeurs = les options françaises EXACTES d'avant, avec
+       leur petit texte), obstacle en pastilles (2 choix au plus, clés stables), projection en pastilles (un choix) ; précisions
+       libres facultatives pour les deux dernières */
+    ok("DECOUVERTE.questions : probleme (cartes « Perdre du gras / Prendre du muscle / Me remettre en forme », sous-textes), obstacle (pastilles, 2 au plus, 6 clés stables), projection (pastilles, 1 choix, 5 clés), précisions libres, libellés exacts", JSON.stringify(r.fr) === JSON.stringify([["probleme", "cartes", TX.labels[0], TX.options, TX.sous, null, null, null, null], ["obstacle", "choix", TX.labels[1], null, null, 2, TX.aide, TX.obstacle, TX.precisions[0]], ["projection", "choix", TX.labels[2], null, null, 1, null, TX.projections, TX.precisions[1]]]), JSON.stringify(r.fr));
+    ok("DECOUVERTE.en.questions : mêmes identifiants, même ordre, mêmes types, mêmes maximums et mêmes clés, en anglais", JSON.stringify(r.en) === JSON.stringify([["probleme", "cartes", TX.labels_en[0], TX.options_en, TX.sous_en, null, null, null, null], ["obstacle", "choix", TX.labels_en[1], null, null, 2, TX.aide_en, TX.obstacle_en, TX.precisions_en[0]], ["projection", "choix", TX.labels_en[2], null, null, 1, null, TX.projections_en, TX.precisions_en[1]]]), JSON.stringify(r.en));
     ok("« probleme » et « projection » sont de nouveaux identifiants (absents du questionnaire complet : aucune option d'« objectif » réutilisée)", r.pasDansQuestions, "");
     ok("anciennes définitions gardées pour l'affichage (essaye, obstacle avec son ancien libellé, motivation), en français et en anglais, même ordre", JSON.stringify(r.avantFr) === JSON.stringify([["essaye", "long", "Qu'as-tu déjà essayé pour atteindre cet objectif ?"], ["obstacle", "long", "Quel est ton principal obstacle aujourd'hui ?"], ["motivation", "echelle", "Ta motivation pour t'y mettre maintenant"]]) && JSON.stringify(r.avantEn.map(x => x[0])) === '["essaye","obstacle","motivation"]' && r.avantEn[1][2] === "What is your main obstacle today?", JSON.stringify([r.avantFr, r.avantEn]));
     ok("table problème → objectif : chaque cible est une option EXACTE du questionnaire complet", JSON.stringify(r.table) === JSON.stringify(OBJ) && Object.values(r.table).every(o => r.options.includes(o)), JSON.stringify([r.table, r.options]));
@@ -479,36 +516,53 @@ function lienOk(href, base, attendu){
     await page.goto(URL0 + LIEN(ID)); await pret(page, "#q-probleme");
     const d = await ou(page), v = await texte(page, "#vue");
     ok("clic dans l'email de confirmation : connecté, adresse nettoyée, l'accueil est le questionnaire court", d.courant === "accueil" && !/access_token/.test(page.url()) && !!(await page.$("#vue #q-probleme")), JSON.stringify(d) + " · " + page.url());
-    const champs = await page.$$eval("#vue [id^='q-']", l => l.map(e => e.id + ":" + e.tagName)).catch(() => []);
-    ok("exactement 3 questions : #q-probleme (liste), #q-obstacle et #q-projection (texte libre) ; plus aucune question d'âge", JSON.stringify(champs) === '["q-probleme:SELECT","q-obstacle:TEXTAREA","q-projection:TEXTAREA"]' && !(await page.$("#q-age")) && !v.includes("À partir de"), JSON.stringify(champs));
-    const opts = await page.$$eval("#q-probleme option", l => l.map(o => o.value)).catch(() => []);
-    ok("« Quel est ton objectif principal ? » : Perdre du gras / Prendre du muscle / Me remettre en forme", JSON.stringify(opts) === JSON.stringify([""].concat(TX.options)), JSON.stringify(opts));
-    const libs = await page.$$eval("#vue label[for^='q-']", l => l.map(e => e.textContent.replace(/\s+/g, " ").trim())).catch(() => []);
-    ok("libellés exacts, les 3 marqués requis (« * »)", JSON.stringify(libs) === JSON.stringify(TX.labels.map(x => x + " *")), JSON.stringify(libs));
-    ok("en-tête « 3 questions, 1 minute » (plus de « 10 questions »), « Valider mes réponses », « pas un avis médical » sous le formulaire, aucun bouton Calendly", (await texte(page, "#vue .masthead .lede")) === TX.lede && !/10 questions/.test(v) && (await texte(page, "#dc-voir")) === TX.bouton && (await texte(page, "#vue .panel .note:last-child")) === TX.note && !(await page.$("#vue a[href*='calendly']")), (await texte(page, "#vue .masthead .lede")) + " · " + (await texte(page, "#vue .panel .note:last-child")));
+    /* v60 (brief V2, C) : 3 questions à toucher (fieldset) ; plus aucune liste (select) ni texte libre à la place des questions */
+    const champs = await page.$$eval("#vue [id^='q-']", l => l.map(e => e.id + ":" + e.tagName + (e.dataset.type ? ":" + e.dataset.type : "") + (e.dataset.max ? ":" + e.dataset.max : ""))).catch(() => []);
+    ok("exactement 3 questions à toucher : #q-probleme (cartes), #q-obstacle (pastilles, 2 au plus, message « max ») et #q-projection (pastilles), une précision libre sous les deux dernières ; plus aucune liste ; plus aucune question d'âge", JSON.stringify(champs) === '["q-probleme:FIELDSET:cartes","q-obstacle:FIELDSET:choix:2","q-obstacle-max:P","q-obstacle-precision:TEXTAREA","q-projection:FIELDSET:choix","q-projection-precision:TEXTAREA"]' && !(await page.$("#vue select")) && !(await page.$("#q-age")) && !v.includes("À partir de"), JSON.stringify(champs));
+    const opts = await page.$$eval("#vue fieldset.dc-q", l => l.map(f => Array.from(f.querySelectorAll("label.dc-opt")).map(lb => {
+      const i = lb.querySelector("input"), t = s => { const e = lb.querySelector(s); return e ? e.textContent.replace(/\s+/g, " ").trim() : ""; };
+      return [i.type, i.name, i.value, t(".dc-opt-l"), t(".dc-opt-s"), lb.getBoundingClientRect().height >= 44];
+    }))).catch(() => []);
+    const attOpts = [TX.options.map((o, i) => ["radio", "q-probleme", o, o, TX.sous[i], true]), TX.obstacle.map(([k, l]) => ["checkbox", "q-obstacle", k, l, "", true]), TX.projections.map(([k, l]) => ["radio", "q-projection", k, l, "", true])];
+    ok("« Ton objectif numéro 1 ? » : 3 cartes (un choix) Perdre du gras / Prendre du muscle / Me remettre en forme, valeurs inchangées, avec leur petit texte ; obstacle : 6 pastilles (cases, clés stables) ; projection : 5 pastilles (un choix) ; zones de tap d'au moins 44 px", JSON.stringify(opts) === JSON.stringify(attOpts), JSON.stringify(opts));
+    const libs = await page.$$eval("#vue fieldset.dc-q > legend", l => l.map(e => e.textContent)).catch(() => []);
+    const prec = await page.$$eval("#vue label.dc-precision", l => l.map(e => e.getAttribute("for") + "|" + e.textContent.replace(/\s+/g, " ").trim())).catch(() => []);
+    const aide = await texte(page, "#q-obstacle .dc-aide");
+    ok("libellés exacts des 3 questions (typographie française : espace insécable avant « ? »), « Jusqu'à 2 réponses. », précisions libres « Autre chose ? … » et « Ou dis-le avec tes mots (facultatif) » reliées à leur champ", JSON.stringify(libs.map(norm)) === JSON.stringify(TX.labels) && libs.every(x => / \?$/.test(x)) && aide === TX.aide && JSON.stringify(prec) === JSON.stringify(["q-obstacle-precision|" + TX.precisions[0], "q-projection-precision|" + TX.precisions[1]]), JSON.stringify([libs, aide, prec]));
+    ok("en-tête « 3 questions, 30 secondes » (plus de « 10 questions » ni « 1 minute »), « Voir ma prochaine étape », « pas un avis médical » sous le formulaire, aucun bouton Calendly", (await texte(page, "#vue .masthead .lede")) === TX.lede && !/10 questions|1 minute/.test(v) && (await texte(page, "#dc-voir")) === TX.bouton && (await texte(page, "#vue .panel .note:last-child")) === TX.note && !(await page.$("#vue a[href*='calendly']")), (await texte(page, "#vue .masthead .lede")) + " · " + (await texte(page, "#dc-voir")) + " · " + (await texte(page, "#vue .panel .note:last-child")));
     ok("arrivée : aucune écriture de données", saisies(db).length === 0, resume(db));
-    /* réponses requises */
-    await page.click("#dc-voir"); await attendre(page, 300);
-    const msg = await texte(page, "#dc-msg"), manque = await page.$$eval("#vue .manque", l => l.map(e => e.id)).catch(() => []);
+    /* réponses requises : le bouton a l'air inactif (aria-disabled, pas disabled) mais répond quand on le touche */
+    const b0 = (await etatForm(page)).inactif;
+    await page.click("#dc-voir", { force: true }); await attendre(page, 300);
+    const msg = await texte(page, "#dc-msg"), ko = await page.$eval("#dc-msg", e => e.classList.contains("msg") && e.classList.contains("ko")).catch(() => false);
+    const manque = await page.$$eval("#vue .manque", l => l.map(e => e.id)).catch(() => []);
     await attendre(page, 1000);
-    ok("« Valider » sans rien remplir : « Il manque : » les 3 questions, les 3 signalées, rien d'écrit", msg === "Il manque : " + TX.labels.join(", ") && JSON.stringify(manque) === '["q-probleme","q-obstacle","q-projection"]' && saisies(db).length === 0, msg + " · " + JSON.stringify(manque));
-    /* brouillon pendant la frappe */
-    await page.selectOption("#q-probleme", "Perdre du gras"); await attendre(page, 1300);
+    ok("« Voir ma prochaine étape » sans rien remplir : bouton l'air inactif (aria-disabled, « inactif ») mais touché : « Il manque une réponse », les 3 questions signalées, rien d'écrit", b0 === "true|true" && msg === TX.manque && ko && JSON.stringify(manque) === '["q-probleme","q-obstacle","q-projection"]' && saisies(db).length === 0, b0 + " · " + msg + " · " + JSON.stringify(manque));
+    /* brouillon pendant la saisie */
+    await choisir(page, "probleme", "Perdre du gras"); await attendre(page, 1300);
     const I1 = clone(intakeDe(db, ID)) || {};
-    ok("brouillon : la réponse « problème » part tout de suite, avec court_debut, email_compte et l'objectif posé (« Perte de poids / sèche »), sans court_le", I1.probleme === "Perdre du gras" && I1.objectif === OBJ["Perdre du gras"] && typeof I1.court_debut === "string" && !isNaN(Date.parse(I1.court_debut)) && I1.email_compte === mail && !I1.court_le, JSON.stringify(I1));
-    await page.click("#q-obstacle"); await page.keyboard.type("Le manque de temps", { delay: 25 }); await attendre(page, 1300);
+    ok("brouillon : la réponse « problème » (carte touchée) part tout de suite, avec court_debut, email_compte et l'objectif posé (« Perte de poids / sèche »), sans court_le", I1.probleme === "Perdre du gras" && I1.objectif === OBJ["Perdre du gras"] && typeof I1.court_debut === "string" && !isNaN(Date.parse(I1.court_debut)) && I1.email_compte === mail && !I1.court_le, JSON.stringify(I1));
+    /* obstacle : 2 pastilles, la 3e refusée (« 2 réponses max »), puis la précision tapée */
+    await choisir(page, "obstacle", "temps"); await choisir(page, "obstacle", "craquages"); await attendre(page, 200);
+    await choisir(page, "obstacle", "quoi_faire"); await attendre(page, 200);
+    const max = await texte(page, "#q-obstacle-max"), e3 = await etatForm(page);
+    await page.click("#q-obstacle-precision"); await page.keyboard.type("le soir", { delay: 25 }); await attendre(page, 1300);
     const I2 = clone(intakeDe(db, ID)) || {}, focus = await page.evaluate(() => document.activeElement && document.activeElement.id);
-    ok("brouillon : l'obstacle tapé part pendant la frappe, sans quitter le champ ; court_debut inchangé", I2.obstacle === "Le manque de temps" && focus === "q-obstacle" && I2.court_debut === I1.court_debut && !I2.court_le, JSON.stringify(I2) + " · " + focus);
+    const jamais3 = ecr(db, "intake", ID).every(e => !((e.contenu || {}).obstacle_choix || []).includes("quoi_faire"));
+    ok("obstacle : 2 pastilles prises, la 3e refusée (« 2 réponses max », case pas prise, jamais écrite) ; brouillon : la précision tapée part pendant la frappe, sans quitter le champ (« Le manque de temps · Je craque sur la nourriture — le soir », clés, précision) ; court_debut inchangé", max === TX.max && JSON.stringify(e3.obstacle) === '["temps","craquages"]' && jamais3 && I2.obstacle === "Le manque de temps · Je craque sur la nourriture — le soir" && JSON.stringify(I2.obstacle_choix) === '["temps","craquages"]' && I2.obstacle_precision === "le soir" && focus === "q-obstacle-precision" && I2.court_debut === I1.court_debut && !I2.court_le, max + " · " + JSON.stringify(e3) + " · " + JSON.stringify(I2) + " · " + focus);
     await page.reload(); await pret(page, "#q-probleme");
-    ok("après rechargement : les réponses sont là, le questionnaire reste ouvert", (await valeurDe(page, "#q-probleme")) === "Perdre du gras" && (await valeurDe(page, "#q-obstacle")) === "Le manque de temps" && !(await page.$("#dc-bilan")), "");
-    await page.fill("#q-projection", "    "); await page.click("#dc-voir"); await attendre(page, 300);
-    const msg2 = await texte(page, "#dc-msg"); await attendre(page, 1000);
-    ok("une réponse faite d'espaces seulement : « Il manque : Dans 3 mois… », pas de court_le", msg2 === "Il manque : " + TX.labels[2] && !(intakeDe(db, ID) || {}).court_le, msg2);
-    await page.fill("#q-projection", "Courir 10 km sans m'arrêter");
+    const e4 = await etatForm(page);
+    ok("après rechargement : les réponses sont là (carte et pastilles cochées, précision), le questionnaire reste ouvert, bouton toujours inactif (il manque la projection)", JSON.stringify(e4.probleme) === '["Perdre du gras"]' && JSON.stringify(e4.obstacle) === '["temps","craquages"]' && e4.po === "le soir" && e4.projection.length === 0 && e4.pp === "" && e4.inactif === "true|true" && !(await page.$("#dc-bilan")), JSON.stringify(e4));
+    await page.fill("#q-projection-precision", "    "); await page.click("#dc-voir", { force: true }); await attendre(page, 300);
+    const msg2 = await texte(page, "#dc-msg"), manque2 = await page.$$eval("#vue .manque", l => l.map(e => e.id)).catch(() => []), e5 = await etatForm(page); await attendre(page, 1000);
+    ok("une précision faite d'espaces seulement ne compte pas : bouton toujours inactif, « Il manque une réponse », seule « Dans 3 mois… » signalée, pas de court_le", msg2 === TX.manque && JSON.stringify(manque2) === '["q-projection"]' && e5.inactif === "true|true" && !(intakeDe(db, ID) || {}).court_le, msg2 + " · " + JSON.stringify(manque2) + " · " + e5.inactif);
+    /* projection : un seul choix (toucher une autre pastille remplace la première), puis sa précision */
+    await choisir(page, "projection", "photos"); await choisir(page, "projection", "energie"); await page.fill("#q-projection-precision", "Courir 10 km sans m'arrêter"); await attendre(page, 200);
+    const e6 = await etatForm(page);
     const t0 = Date.now(); await page.click("#dc-voir"); await attendre(page, 1600);
     const I3 = clone(intakeDe(db, ID)) || {}, fin = ecr(db, "intake", ID).filter(e => e.contenu && e.contenu.court_le);
-    ok("validation : court_le (maintenant), les 3 réponses, l'objectif, court_debut du premier brouillon, email du compte ; une seule date de validation", typeof I3.court_le === "string" && Math.abs(Date.parse(I3.court_le) - t0) < 10000 && I3.probleme === "Perdre du gras" && I3.obstacle === "Le manque de temps" && I3.projection === "Courir 10 km sans m'arrêter" && I3.objectif === OBJ["Perdre du gras"] && I3.court_debut === I1.court_debut && I3.email_compte === mail && new Set(fin.map(e => e.contenu.court_le)).size === 1, JSON.stringify(I3));
-    ok("… puis la page de proposition de bilan s'affiche (plus le questionnaire)", !!(await page.$("#dc-bilan")) && !(await page.$("#q-probleme")), await texte(page, "#vue"));
+    ok("validation (bouton actif, une seule pastille « Dans 3 mois » : la dernière touchée) : court_le (maintenant), les 3 réponses (texte français lisible, clés, précisions), l'objectif, court_debut du premier brouillon, email du compte ; une seule date de validation", e6.inactif === "false|false" && JSON.stringify(e6.projection) === '["energie"]' && typeof I3.court_le === "string" && Math.abs(Date.parse(I3.court_le) - t0) < 10000 && I3.probleme === "Perdre du gras" && I3.obstacle === "Le manque de temps · Je craque sur la nourriture — le soir" && JSON.stringify(I3.obstacle_choix) === '["temps","craquages"]' && I3.obstacle_precision === "le soir" && I3.projection === "Avoir de l'énergie toute la journée — Courir 10 km sans m'arrêter" && JSON.stringify(I3.projection_choix) === '["energie"]' && I3.projection_precision === "Courir 10 km sans m'arrêter" && I3.objectif === OBJ["Perdre du gras"] && I3.court_debut === I1.court_debut && I3.email_compte === mail && new Set(fin.map(e => e.contenu.court_le)).size === 1, JSON.stringify(e6) + " · " + JSON.stringify(I3));
+    ok("… puis la page de proposition de bilan s'affiche (plus le questionnaire), {projection} = sa précision libre", !!(await page.$("#dc-bilan")) && !(await page.$("#q-probleme")) && (await texte(page, "#dc-projection")) === TX.projection("Courir 10 km sans m'arrêter"), await texte(page, "#vue"));
     ok("… aucune autre clé écrite que intake (pas de challenge, pas de profil)", saisies(db).every(e => e.table === "donnees" && e.outil === "intake" && e.user_id === ID), resume(db));
     await c.close();
   });
@@ -516,13 +570,19 @@ function lienOk(href, base, attendu){
     const db = base({ comptes: [compte(11, "Léa", "Martin")] });
     const { c, page } = await ouvrir(b, db, 11, "", "#q-probleme", { langue: "en" });
     await attendre(page, 400);
-    const libs = await page.$$eval("#vue label[for^='q-']", l => l.map(e => e.textContent.replace(/\s+/g, " ").trim())).catch(() => []);
-    const opts = await page.$$eval("#q-probleme option", l => l.slice(1).map(o => o.textContent.trim() + "=" + o.value)).catch(() => []);
-    ok("anglais : libellés traduits (« What's your main goal? * »…), choix affichés en anglais, valeurs gardées en français", JSON.stringify(libs) === JSON.stringify(TX.labels_en.map(x => x + " *")) && JSON.stringify(opts) === JSON.stringify(TX.options_en.map((x, i) => x + "=" + TX.options[i])), JSON.stringify([libs, opts]));
+    const libs = await page.$$eval("#vue fieldset.dc-q > legend", l => l.map(e => e.textContent)).catch(() => []);
+    const opts = await page.$$eval("#vue label.dc-opt", l => l.map(lb => { const t = s => { const e = lb.querySelector(s); return e ? e.textContent.replace(/\s+/g, " ").trim() : ""; }; return t(".dc-opt-l") + (t(".dc-opt-s") ? " — " + t(".dc-opt-s") : "") + "=" + lb.querySelector("input").value; })).catch(() => []);
+    const autres = [await texte(page, "#q-obstacle .dc-aide")].concat(await page.$$eval("#vue label.dc-precision", l => l.map(e => e.textContent.replace(/\s+/g, " ").trim())).catch(() => []));
+    const attEn = TX.options_en.map((x, i) => x + " — " + TX.sous_en[i] + "=" + TX.options[i]).concat(TX.obstacle_en.map(([k, l]) => l + "=" + k), TX.projections_en.map(([k, l]) => l + "=" + k));
+    ok("anglais : libellés traduits (« Your #1 goal? »…, sans espace insécable), cartes et pastilles affichées en anglais (« Lose fat — Get leaner »…), valeurs gardées (options françaises, clés), « Pick up to 2. » et précisions en anglais", JSON.stringify(libs) === JSON.stringify(TX.labels_en) && !libs.some(x => / /.test(x)) && JSON.stringify(opts) === JSON.stringify(attEn) && JSON.stringify(autres) === JSON.stringify([TX.aide_en].concat(TX.precisions_en)), JSON.stringify([libs, opts, autres]));
     const v = await texte(page, "#vue");
-    ok("anglais : « 3 questions, 1 minute: tell us where you stand. », « Submit my answers », note médicale en anglais, aucun texte français du questionnaire", (await texte(page, "#vue .masthead .lede")) === TX.lede_en && (await texte(page, "#dc-voir")) === TX.bouton_en && v.includes("This questionnaire is not medical advice.") && !v.includes("Valider mes réponses") && !v.includes("Il manque") && !TX.labels.some(x => v.includes(x)), v.slice(0, 300));
-    await page.click("#dc-voir"); await attendre(page, 300);
-    ok("anglais : « Missing: » + les 3 questions en anglais", (await texte(page, "#dc-msg")) === "Missing: " + TX.labels_en.join(", "), await texte(page, "#dc-msg"));
+    const fr = TX.labels.concat(TX.options, TX.sous, TX.obstacle.map(x => x[1]), TX.projections.map(x => x[1]), TX.precisions, [TX.aide, TX.bouton, TX.lede]);
+    ok("anglais : « 3 questions, 30 seconds: tell us where you're at. », « See my next step », note médicale en anglais, aucun texte français du questionnaire", (await texte(page, "#vue .masthead .lede")) === TX.lede_en && (await texte(page, "#dc-voir")) === TX.bouton_en && v.includes("This questionnaire is not medical advice.") && !v.includes("Il manque") && !fr.some(x => v.includes(x)), v.slice(0, 300));
+    await page.click("#dc-voir", { force: true }); await attendre(page, 300);
+    const m1 = await texte(page, "#dc-msg");
+    await choisir(page, "obstacle", "temps"); await choisir(page, "obstacle", "suivi"); await choisir(page, "obstacle", "motivation"); await attendre(page, 200);
+    const m2 = await texte(page, "#q-obstacle-max"), e = await etatForm(page);
+    ok("anglais : « One answer is missing » (bouton touché trop tôt), puis « 2 answers max » (3e pastille refusée)", m1 === TX.manque_en && m2 === TX.max_en && JSON.stringify(e.obstacle) === '["temps","suivi"]', m1 + " · " + m2 + " · " + JSON.stringify(e.obstacle));
     await c.close();
   });
 
@@ -630,7 +690,9 @@ function lienOk(href, base, attendu){
       if (attendu) ok(`page bilan, ${quoi} : « ${attendu.length > 70 ? attendu.slice(0, 70) + "…" : attendu} », affichée comme du texte, aucune injection, jamais « undefined » / « [object Object] »`, t === attendu && sain && !/undefined|\[object|null/.test(v), t);
       else {
         const x = t.replace(/^Dans 3 mois, pour toi : « /, "").replace(/ »$/, "");
-        ok(`page bilan, ${quoi} : tronquée proprement (160 caractères au plus, coupée à un espace, « … »)`, t.startsWith("Dans 3 mois, pour toi : « Je veux enfin courir") && Array.from(x).length <= 161 && x.endsWith("…") && projection.startsWith(x.slice(0, -1)) && /[\s,]/.test(projection.charAt(x.length - 1)) && sain, t);
+        /* v60 (brief V2, C) : {projection} coupée vers 140 caractères (avant : 160) ; relecture : aussi la borne basse — le
+           texte exact (136 caractères, coupé au dernier espace avant 140) : une coupe trop courte (20) ou à 160 échoue */
+        ok(`page bilan, ${quoi} : tronquée proprement (140 caractères au plus, coupée au dernier espace avant, « … » ; texte exact de 136 caractères)`, t.startsWith("Dans 3 mois, pour toi : « Je veux enfin courir") && Array.from(x).length <= 141 && x.endsWith("…") && projection.startsWith(x.slice(0, -1)) && /[\s,]/.test(projection.charAt(x.length - 1)) && x === "Je veux enfin courir mon premier semi-marathon en moins de deux heures et me sentir fier de moi chaque matin devant la glace, avec plus…" && Array.from(x).length === 136 && sain, t);
       }
       await c.close();
     }
@@ -705,31 +767,44 @@ function lienOk(href, base, attendu){
     const { c, page } = await ouvrir(b, db, k, "#/profil", "#mc-questionnaire");
     await page.waitForSelector("#mc-reponses li", { timeout: 6000 }).catch(() => {});
     const rp = await lignes(page, "#mc-reponses");
-    ok("Profil : ses 3 réponses, libellés exacts (pas l'objectif posé par l'app en doublon)", JSON.stringify(rp) === JSON.stringify([[TX.labels[0], "Perdre du gras"], [TX.labels[1], I0.obstacle], [TX.labels[2], I0.projection]]), JSON.stringify(rp));
+    /* v60 (brief V2, C) : I0 = des réponses libres d'avant la v60 (sans <id>_choix) : lues telles quelles, et en « Modifier
+       mes réponses » elles pré-remplissent la précision libre (rien n'est perdu) */
+    ok("Profil : ses 3 réponses (anciennes réponses libres telles quelles), libellés exacts (pas l'objectif posé par l'app en doublon)", JSON.stringify(rp) === JSON.stringify([[TX.labels[0], "Perdre du gras"], [TX.labels[1], I0.obstacle], [TX.labels[2], I0.projection]]), JSON.stringify(rp));
     ok("Profil : « Modifier mes réponses » → #/decouverte/reponses ; aucune écriture", (await page.$eval("#mc-reponses-lien a", a => a.getAttribute("href") + "|" + a.textContent.trim()).catch(() => "")) === "#/decouverte/reponses|" + TX.modifier && saisies(db).length === 0, resume(db));
     await page.click("#mc-reponses-lien a"); await page.waitForSelector("#q-probleme", { timeout: 6000 }); await attendre(page, 500);
-    ok("« Modifier mes réponses » : le questionnaire pré-rempli, « Annuler les modifications »", (await valeurDe(page, "#q-probleme")) === "Perdre du gras" && (await valeurDe(page, "#q-projection")) === I0.projection && (await texte(page, "#dc-annuler")) === TX.annuler, "");
-    await page.selectOption("#q-probleme", "Prendre du muscle"); await page.fill("#q-obstacle", "Autre chose"); await attendre(page, 1500);
+    const e1 = await etatForm(page);
+    ok("« Modifier mes réponses » : le questionnaire pré-rempli (carte « Perdre du gras » cochée ; ses anciennes réponses libres dans les précisions, aucune pastille inventée ; bouton actif), « Annuler les modifications »", JSON.stringify(e1.probleme) === '["Perdre du gras"]' && !e1.obstacle.length && e1.po === I0.obstacle && !e1.projection.length && e1.pp === I0.projection && e1.inactif === "false|false" && (await texte(page, "#dc-annuler")) === TX.annuler, JSON.stringify(e1));
+    await choisir(page, "probleme", "Prendre du muscle"); await choisir(page, "obstacle", "temps"); await page.fill("#q-obstacle-precision", "Autre chose"); await attendre(page, 1500);
     ok("en modification : rien ne part pendant la saisie", saisies(db).length === 0, resume(db));
     await page.click("#dc-annuler"); await attendre(page, 1300);
     const d1 = await ou(page);
     ok("« Annuler les modifications » : son accueil, adresse #/decouverte, rien d'écrit", !!(await page.$("#dc-accomp")) && d1.hash === "#/decouverte" && saisies(db).length === 0, JSON.stringify(d1));
     await aller(page, "#/decouverte/reponses", 1500);
-    ok("… rouvert : les réponses d'avant (pas celles abandonnées)", (await valeurDe(page, "#q-probleme")) === "Perdre du gras" && (await valeurDe(page, "#q-obstacle")) === I0.obstacle, "");
-    await page.selectOption("#q-probleme", "Prendre du muscle"); await page.fill("#q-projection", "Prendre 4 kg de muscle");
+    const e2 = await etatForm(page);
+    ok("… rouvert : les réponses d'avant (pas celles abandonnées)", JSON.stringify(e2.probleme) === '["Perdre du gras"]' && !e2.obstacle.length && e2.po === I0.obstacle, JSON.stringify(e2));
+    await choisir(page, "probleme", "Prendre du muscle"); await choisir(page, "projection", "confiance"); await page.fill("#q-projection-precision", "");
     await page.click("#dc-voir"); await attendre(page, 1600);
     const I = clone(intakeDe(db, ID)) || {}, d2 = await ou(page);
-    ok("« Valider mes réponses » : une écriture, réponses changées, court_le et bilan_propose inchangés", ecr(db, "intake", ID).length === 1 && I.probleme === "Prendre du muscle" && I.projection === "Prendre 4 kg de muscle" && I.obstacle === I0.obstacle && I.court_le === I0.court_le && JSON.stringify(I.bilan_propose) === JSON.stringify(I0.bilan_propose), JSON.stringify(I));
+    ok("« Voir ma prochaine étape » : une écriture, réponses changées (projection : la pastille « Retrouver confiance en moi », clé confiance), l'obstacle libre d'avant gardé, aucun champ vide créé (ni obstacle_choix vide, ni projection_precision vide), court_le et bilan_propose inchangés", ecr(db, "intake", ID).length === 1 && I.probleme === "Prendre du muscle" && I.projection === "Retrouver confiance en moi" && JSON.stringify(I.projection_choix) === '["confiance"]' && I.obstacle === I0.obstacle && !("obstacle_choix" in I) && !("projection_precision" in I) && I.court_le === I0.court_le && JSON.stringify(I.bilan_propose) === JSON.stringify(I0.bilan_propose), JSON.stringify(I));
     ok("… l'objectif posé par l'app suit la nouvelle réponse (« Prise de muscle »)", I.objectif === OBJ["Prendre du muscle"], I.objectif);
     ok("… puis son accueil (choix déjà fait), adresse #/decouverte", !!(await page.$("#dc-accomp")) && !(await page.$("#dc-bilan")) && d2.hash === "#/decouverte", JSON.stringify(d2));
     await c.close();
-    /* Profil en anglais */
-    const db2 = base({ comptes: [compte(61, "Léa", "Martin", [["intake", I0]])] });
+    /* Profil en anglais — v60 : des réponses à toucher (NOUVEAU60), relues dans sa langue */
+    const db2 = base({ comptes: [compte(61, "Léa", "Martin", [["intake", NOUVEAU60({ bilan_propose: { choix: "plus_tard", le: avant(30 * MIN) }, email_compte: "p61@exemple.fr" })]])] });
     const o2 = await ouvrir(b, db2, 61, "#/profil", "#mc-questionnaire", { langue: "en" });
     await o2.page.waitForSelector("#mc-reponses li", { timeout: 6000 }).catch(() => {}); await attendre(o2.page, 400);
     const re = await lignes(o2.page, "#mc-reponses");
-    ok("Profil en anglais : « Your questionnaire », libellés et choix traduits (« Lose fat »), « Edit my answers »", (await texte(o2.page, "#mc-questionnaire h2")) === "Your questionnaire" && re.length === 3 && re[0][0] === TX.labels_en[0] && re[0][1] === "Lose fat" && re[2][0] === TX.labels_en[2] && (await texte(o2.page, "#mc-reponses-lien a")) === TX.modifier_en, JSON.stringify(re));
+    const h2En = await texte(o2.page, "#mc-questionnaire h2"), lienEn = await texte(o2.page, "#mc-reponses-lien a");
     await o2.c.close();
+    /* relecture : et un Profil en anglais aux ANCIENNES réponses libres (I0, sans <id>_choix) : l'objectif traduit, ses
+       réponses libres telles quelles (aucune autre suite ne couvre ce cas en anglais) ; aucune écriture */
+    const I3 = Object.assign(clone(I0), { email_compte: "p63@exemple.fr" });
+    const db4 = base({ comptes: [compte(63, "Léa", "Martin", [["intake", I3]])] });
+    const o4 = await ouvrir(b, db4, 63, "#/profil", "#mc-questionnaire", { langue: "en" });
+    await o4.page.waitForSelector("#mc-reponses li", { timeout: 6000 }).catch(() => {}); await attendre(o4.page, 400);
+    const reLibre = await lignes(o4.page, "#mc-reponses");
+    await o4.c.close();
+    ok("Profil en anglais : « Your questionnaire », libellés et choix traduits (« Lose fat », « Not enough time · I give in to cravings — le soir », « Having energy all day long »), « Edit my answers » ; avec d'anciennes réponses libres : « Lose fat », puis ses réponses telles quelles, aucune écriture", h2En === "Your questionnaire" && JSON.stringify(re) === JSON.stringify([[TX.labels_en[0], "Lose fat"], [TX.labels_en[1], "Not enough time · I give in to cravings — le soir"], [TX.labels_en[2], "Having energy all day long"]]) && lienEn === TX.modifier_en && JSON.stringify(reLibre) === JSON.stringify([[TX.labels_en[0], "Lose fat"], [TX.labels_en[1], I0.obstacle], [TX.labels_en[2], I0.projection]]) && saisies(db4).length === 0, JSON.stringify([h2En, re, lienEn, reLibre, resume(db4)]));
     /* questionnaire pas encore validé : pas de liste, le lien mène aux 3 questions */
     const db3 = base({ comptes: [compte(62, "Léa", "Martin")] });
     const o3 = await ouvrir(b, db3, 62, "#/profil", "#mc-questionnaire", { viewport: MOBILE });
@@ -794,7 +869,8 @@ function lienOk(href, base, attendu){
       const k = 90, ID = PID(k);
       const db = base({ comptes: [compte(k, "Léa", "Martin")] });
       const { c, page } = await ouvrir(b, db, k, "", "#q-age");
-      await page.selectOption("#q-probleme", "Perdre du gras"); await page.fill("#q-obstacle", "Le temps"); await attendre(page, 1300);
+      /* v60 : la carte touchée, l'obstacle dit avec ses mots (précision seule : obstacle = la précision, comme avant) */
+      await choisir(page, "probleme", "Perdre du gras"); await page.fill("#q-obstacle-precision", "Le temps"); await attendre(page, 1300);
       ok("page retouchée (question « age » remise) : « À partir de 18 ans. », et rien ne part tant que l'âge n'est pas saisi", (await texte(page, "#vue")).includes("À partir de 18 ans.") && ecr(db, "intake", ID).length === 0, resume(db));
       await page.fill("#q-age", "15"); await page.press("#q-age", "Tab"); await attendre(page, 1300);
       ok("… âge 15 à la sortie du champ : toujours rien", ecr(db, "intake", ID).length === 0, resume(db));
@@ -1544,9 +1620,9 @@ function lienOk(href, base, attendu){
     const k = 91, ID = PID(k), I0 = clone(INTAKE_THOMAS);
     const db = base({ comptes: [compte(k, "Thomas", "Démo", [["intake", I0]], { cree: avant(90 * J) })] });
     const { c, page } = await ouvrir(b, db, k, "#/decouverte", "#q-probleme");
-    await page.selectOption("#q-probleme", "Perdre du gras"); await attendre(page, 1500);
+    await choisir(page, "probleme", "Perdre du gras"); await attendre(page, 1500);
     const I1 = clone(intakeDe(db, ID)) || {};
-    await page.selectOption("#q-probleme", "Prendre du muscle"); await attendre(page, 1500);
+    await choisir(page, "probleme", "Prendre du muscle"); await attendre(page, 1500);
     const I2 = clone(intakeDe(db, ID)) || {};
     ok("P1 : objectif de l'ex-client (" + I0.objectif + ") gardé après le 1er choix", I1.objectif === I0.objectif, JSON.stringify({ o1: I1.objectif }));
     ok("P1 : objectif de l'ex-client gardé après un changement de la réponse « problème »", I2.objectif === I0.objectif, JSON.stringify({ o2: I2.objectif, probleme: I2.probleme }));
@@ -1556,11 +1632,11 @@ function lienOk(href, base, attendu){
     const k = 92, ID = PID(k), I0 = Object.assign(clone(INTAKE_THOMAS), { objectif: "Prise de muscle" });
     const db = base({ comptes: [compte(k, "Thomas", "Démo", [["intake", I0]], { cree: avant(90 * J) })] });
     const { c, page } = await ouvrir(b, db, k, "#/decouverte", "#q-probleme");
-    await page.selectOption("#q-probleme", "Prendre du muscle"); await page.fill("#q-obstacle", "Le temps"); await page.fill("#q-projection", "Etre en forme");
+    await choisir(page, "probleme", "Prendre du muscle"); await page.fill("#q-obstacle-precision", "Le temps"); await choisir(page, "projection", "routine");
     await page.click("#dc-voir"); await attendre(page, 1600);
     const I1 = clone(intakeDe(db, ID)) || {};
     await aller(page, "#/decouverte/reponses", 1500);
-    await page.selectOption("#q-probleme", "Perdre du gras"); await page.click("#dc-voir"); await attendre(page, 1600);
+    await choisir(page, "probleme", "Perdre du gras"); await page.click("#dc-voir"); await attendre(page, 1600);
     const I2 = clone(intakeDe(db, ID)) || {};
     ok("P2 : après validation, objectif de l'ex-client gardé", I1.objectif === I0.objectif, I1.objectif);
     ok("P2 : après modification de « problème », objectif de l'ex-client gardé", I2.objectif === I0.objectif, JSON.stringify({ o2: I2.objectif, complet: I2.complet }));
@@ -1570,9 +1646,9 @@ function lienOk(href, base, attendu){
     const k = 93, ID = PID(k);
     const db = base({ comptes: [compte(k, "Léa", "Martin", [], { cree: avant(2 * J) })] });
     const { c, page } = await ouvrir(b, db, k, "#/decouverte", "#q-probleme");
-    await page.selectOption("#q-probleme", "Perdre du gras"); await attendre(page, 1500);
+    await choisir(page, "probleme", "Perdre du gras"); await attendre(page, 1500);
     const I1 = clone(intakeDe(db, ID)) || {};
-    await page.selectOption("#q-probleme", "Prendre du muscle"); await attendre(page, 1500);
+    await choisir(page, "probleme", "Prendre du muscle"); await attendre(page, 1500);
     const I2 = clone(intakeDe(db, ID)) || {};
     ok("P3 : objectif posé depuis « Perdre du gras », avec le marqueur objectif_auto", I1.objectif === "Perte de poids / sèche" && I1.objectif_auto === I1.objectif, JSON.stringify({ o: I1.objectif, a: I1.objectif_auto }));
     ok("P3 : l'objectif posé par l'app suit le changement de réponse (« Prise de muscle »)", I2.objectif === "Prise de muscle" && I2.objectif_auto === "Prise de muscle", JSON.stringify({ o: I2.objectif, a: I2.objectif_auto }));
