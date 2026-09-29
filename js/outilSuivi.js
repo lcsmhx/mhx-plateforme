@@ -150,18 +150,29 @@ const Checkin = {
     return this.avecCopie(uid, this.fusion(F, C));
   },
   /* v59 (remarque 1) : la copie de l'appareil (« mhx_attente|compte|checkins ») d'une saisie pas encore arrivée — faite hors
-     ligne lors d'une ouverture précédente de l'app et jamais renvoyée, ou celle de cet onglet — est RÉUNIE (fusion) à ce qui
-     va être écrit ou gardé, jamais remplacée ; seulement la copie du même compte. Celle de cet onglet est déjà dans C : rien
-     ne change. X est complété et renvoyé. */
+     ligne lors d'une ouverture précédente de l'app et jamais renvoyée — est RÉUNIE (fusion) à ce qui va être écrit ou gardé,
+     jamais remplacée ; seulement la copie du même compte. X est complété et renvoyé.
+     v59 (contre-relecture) : quand la copie est celle que CET onglet a faite pour ses saisies en attente (garderSaisies), on
+     réunit la base qu'elle avait SANS ces saisies (this._base) : ses entrées, plus récentes (envoye_a = l'instant du clic),
+     remplaçaient l'entrée relue en base, et l'entrée de la semaine était reconstruite depuis l'écran de l'ouverture (les
+     réponses de l'autre format, écrites entre-temps par un autre appareil, étaient perdues) ; les saisies, elles, sont
+     appliquées sur la base relue (appliquer). */
   avecCopie(uid, X){
     const e = uid ? Store.attenteLire()[uid + "|" + this.cle] : null;
-    if (X && typeof X === "object" && e && e.a === uid && e.v && typeof e.v === "object"){ if (!Array.isArray(X.liste)) X.liste = []; this.fusion(X, e.v); }
+    if (!(X && typeof X === "object" && e && e.a === uid && e.v && typeof e.v === "object")) return X;
+    const b = this._base, v = (b && b.uid === uid && b.t === e.t) ? b.v : e.v;
+    if (!Array.isArray(X.liste)) X.liste = [];
+    this.fusion(X, JSON.parse(JSON.stringify(v)), true);
     return X;
   },
   /* rien de ce que l'un ou l'autre a de plus n'est perdu : les entrées par semaine (la plus récemment envoyée :
      envoye_a, sinon envoye_le ; à égalité, la base), les avis par (semaine, réponse) (le plus récent, « le »), fb_vu
-     (le plus récent). F (la base relue) est complété et renvoyé ; les entrées et les avis sont gardés tels quels. */
-  fusion(F, C){
+     (le plus récent). F (la base relue) est complété et renvoyé ; les entrées et les avis sont gardés tels quels.
+     v59 (contre-relecture) : copie = C est une copie de l'appareil (avecCopie) : une semaine présente des deux côtés garde
+     l'entrée la plus récente COMPLÉTÉE par ce que l'autre a de plus (completerEntree) — la copie d'une saisie faite sur un
+     écran ancien ne contient pas ce qu'un autre appareil a écrit depuis dans la même semaine (l'autre format), et
+     inversement. */
+  fusion(F, C, copie){
     if (!C || typeof C !== "object" || C === F) return F;
     const s = v => typeof v === "string" ? v : "", quand = x => s(x && x.envoye_a) || s(x && x.envoye_le);
     let ajout = false;
@@ -169,6 +180,7 @@ const Checkin = {
       if (typeof x.semaine !== "string") return;
       const i = F.liste.findIndex(y => y && typeof y === "object" && y.semaine === x.semaine);
       if (i === -1){ F.liste.push(x); ajout = true; }
+      else if (copie) F.liste[i] = quand(x) > quand(F.liste[i]) ? this.completerEntree(x, F.liste[i]) : this.completerEntree(F.liste[i], x);
       else if (quand(x) > quand(F.liste[i])) F.liste[i] = x;
     });
     if (ajout){ F.liste.sort((a, b) => String(a && a.semaine) < String(b && b.semaine) ? -1 : 1); if (F.liste.length > this.max) F.liste = F.liste.slice(-this.max); }
@@ -183,6 +195,21 @@ const Checkin = {
     }
     const vu = this.vu(C); if (vu && vu > this.vu(F)) F.fb_vu = vu;
     return F;
+  },
+  /* v59 (contre-relecture) : l'entrée neuf (la plus récente), complétée par les champs et les réponses de vieux qu'elle n'a
+     pas (celles de l'autre format : remarque v53 c1) ; « format » suit neuf, comme à l'enregistrement. Une entrée nouvelle,
+     les champs dans l'ordre de neuf : identique à neuf quand vieux n'a rien de plus. */
+  completerEntree(neuf, vieux){
+    const obj = v => !!v && typeof v === "object" && !Array.isArray(v);
+    if (!obj(neuf) || !obj(vieux)) return neuf;
+    const e = Object.assign({}, neuf);
+    Object.keys(vieux).forEach(k => { if (!(k in e) && k !== "format") e[k] = vieux[k]; });
+    if (obj(neuf.reponses) && obj(vieux.reponses)){
+      const r = Object.assign({}, neuf.reponses);
+      Object.keys(vieux.reponses).forEach(k => { if (!(k in r)) r[k] = vieux.reponses[k]; });
+      e.reponses = r;
+    }
+    return e;
   },
   /* toute écriture de checkins : appliquer(D) modifie la version fraîche (false = rien à écrire). Renvoie (Promise)
      true si c'est écrit (ou s'il n'y avait rien à écrire), false sinon. C prend la version écrite (même objet :
@@ -250,11 +277,18 @@ const Checkin = {
     this.ecouterFermeture();
     return s;
   },
+  /* v59 (contre-relecture) : this._base = { uid, t, v } — la copie écrite ici (instant t) et sa base SANS les saisies (v :
+     base + la copie d'avant de l'appareil), que avecCopie réunit à la place de la copie. Seulement si la copie a bien été
+     écrite (sans session, ou stockage plein : rien ne l'est, la copie restée sur l'appareil est une autre) */
+  _base: null,
   garderSaisies(uid, base){
     const l = this._saisies.filter(x => x.uid === uid); if (!l.length) return;
-    const X = this.avecCopie(uid, JSON.parse(JSON.stringify(base)));   // v59 (remarque 1) : la copie d'avant de l'appareil est réunie, pas remplacée
+    const B = this.avecCopie(uid, JSON.parse(JSON.stringify(base)));   // v59 (remarque 1) : la copie d'avant de l'appareil est réunie, pas remplacée
+    const X = JSON.parse(JSON.stringify(B));
     l.forEach(x => { x.appliquer(X); });
-    this._tSaisies = Store.garder(uid, this.cle, X);
+    const t = this._tSaisies = Store.garder(uid, this.cle, X);
+    const e = Store.attenteLire()[uid + "|" + this.cle];
+    if (e && e.t === t) this._base = { uid: uid, t: t, v: B };
   },
   /* v59 (remarque 3) : l'app se ferme (pagehide) pendant la relecture : la copie des saisies retenues part tout de suite,
      avec keepalive (Store.envoyerRetenues), comme la v58 envoyait à la fermeture ce qui attendait ses 700 ms. Pas au
@@ -275,10 +309,24 @@ const Checkin = {
     this._saisies.splice(i, 1);
     if (this._saisies.some(x => x.uid === s.uid)){ this.garderSaisies(s.uid, base); return; }
     Store.retenues.delete(s.uid + "|" + this.cle);
+    this._base = null;   // v59 (contre-relecture) : plus aucune saisie en attente : une copie restée sur l'appareil (session perdue) est réunie en entier
     const moi = Auth.utilisateur();
     if (!ecrit && moi && moi.id === s.uid) Store.lacher(s.uid, this.cle, this._tSaisies);
   },
   remplacer(C, D){ Object.keys(C).forEach(x => { delete C[x]; }); Object.assign(C, D); },
+  /* v59 (contre-relecture, remarque 2) : Store.reprendre trouve la copie d'une saisie jamais envoyée alors que la base a été
+     écrite depuis — souvent sans rapport : fb_vu posé à l'ouverture de Mon suivi sur un autre appareil, un smiley. Elle n'est
+     plus écartée (le bilan ou le feedback était perdu, avec un simple message) : par la file, la base est relue, la copie de
+     l'appareil y est réunie (avecCopie : par semaine, l'entrée la plus récente complétée par l'autre ; avis ; fb_vu), tout
+     est écrit puis envoyé ; la copie prend la version écrite et elle est retirée à l'arrivée. Sans message. Relecture
+     ratée : rien n'est écrit, la copie reste (nouvel essai de Store.reprendre) ; plus de copie : rien à écrire. Renvoie
+     (Promise) true si c'est écrit (ou s'il n'y avait rien à écrire), une fois l'envoi fini. */
+  async rattraper(){
+    const uid = Store.cible();
+    const ok = await this.modifier({ liste: [] }, () => (uid && Store.aUneCopie(uid, this.cle)) ? undefined : false, { silence: true });
+    try { await Promise.race([this._file, new Promise(r => setTimeout(r, this.FILE_MAX))]); } catch(e){}
+    return ok;
+  },
 
   /* v53 — la seule écriture d'une entrée de checkins (bilan du vendredi et feedback du dimanche). L'entrée de la
      semaine est complétée, jamais reconstruite : ses champs en plus (et ceux du document : avis, fb_vu…) sont

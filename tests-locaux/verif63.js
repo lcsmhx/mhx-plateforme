@@ -13,6 +13,10 @@
    B. deux appareils, bilan du vendredi : le formulaire « en retard » resté ouvert depuis jeudi sur l'ordinateur, le bilan
       de la semaine envoyé vendredi depuis le téléphone, puis l'ordinateur envoie le sien : rien n'est perdu, l'écran de
       l'ordinateur prend la version écrite ;
+   B2. (contre-relecture v59) l'ordinateur, ouvert vendredi, envoie son bilan du vendredi après le feedback du dimanche de la
+      même semaine envoyé du téléphone : l'entrée relue en base est complétée (les deux formats restent), pas reconstruite
+      depuis la copie de l'onglet ; B3. … après une modification, sur le téléphone, du feedback déjà à l'écran : l'ancienne
+      version de l'écran ne revient pas ;
    C. deux appareils, « réponse vue » (fb_vu) : le coach complète sa réponse, le téléphone la voit (fb_vu), puis
       l'ordinateur resté ouvert envoie son feedback : fb_vu reste, la pastille ne revient pas ;
    D. fb_vu dans la fenêtre d'envoi : un autre appareil (simulé en base) écrit pendant l'ouverture de Mon suivi : gardé ;
@@ -35,8 +39,11 @@
    Suites de la relecture v59 (remarques 0, 1, 2, 3, 4, 11, 12, 17, 18) :
    L. session perdue pendant la relecture (jeton refusé : lecture en 401, renouvellement en 400) — second essai (L) ou repli
       hors ligne (L2) : la copie du bilan reste sur l'appareil, pas de « Bilan envoyé », puis il arrive après la reconnexion ;
+      (contre-relecture) « Se déconnecter » sous le bandeau : l'alerte « non envoyées », « Annuler » garde la copie ;
    M. la copie « mhx_attente|compte|checkins » d'une saisie jamais envoyée (reprise du démarrage ratée) est réunie, pas
       remplacée : bilan envoyé en ligne (M), hors ligne puis retour du réseau (M2), fb_vu écrit à l'ouverture (M3) ;
+      (contre-relecture) reprise réussie mais base écrite depuis (fb_vu d'un autre appareil) : réunie, sans message (M4) ;
+      la même semaine en base dans l'autre format : l'entrée la plus récente, complétée par l'autre (M5) ;
    N. les deux textes du 😞 envoyés hors ligne : gardés sur l'appareil, renvoyés au retour du réseau ;
    O. pendant l'envoi (relecture lente) : « Annuler » grisé et sans effet, « Envoi de ton bilan… » / « Envoi de ton
       feedback… » à côté du bouton grisé ;
@@ -476,6 +483,59 @@ const blocSemaine = (page, s) => page.evaluate(x => { const ed = document.queryS
     ok("B : message « Bilan envoyé. Ton coach le lira avant votre prochain échange. »", (await toasts(po)).some(x => x.includes("Bilan envoyé. Ton coach le lira avant votre prochain échange.")), JSON.stringify(await toasts(po)));
   });
 
+  /* =================== B2. l'entrée de la semaine complétée sur la base relue (contre-relecture v59) =================== */
+  /* l'ordinateur : Mon suivi ouvert vendredi matin (règle du vendredi, sans entrée de la semaine 14) ; dimanche, le téléphone
+     (règle du dimanche) envoie le feedback de la semaine 14 ; puis l'ordinateur, resté ouvert, envoie son bilan du vendredi
+     de la même semaine : la copie de l'onglet (l'écran de vendredi + le bilan, envoye_a = l'instant du clic) ne remplace pas
+     l'entrée relue en base, qui est complétée */
+  await bloc("B2. deux appareils : bilan du vendredi envoyé après le feedback du dimanche de la même semaine", async () => {
+    const e7 = entreeVen(7);
+    const db = base({ comptes: [compteTest({ liste: [e7] }, null)] });
+    const { page: po } = await sur(b, TESTEUR, db, 18, 10, 0, "", "#acc-vue h1");
+    await vendredi(po); await aller(po, "#/suivi", 1500);
+    const s0 = await po.$eval("[data-checkin]", f => f.dataset.semaine).catch(() => null);
+    const { page: pt } = await sur(b, TESTEUR, db, 20, 10, 0, "#/suivi", "#suivi-checkin [data-fbd]", { viewport: MOBILE });
+    await pt.click('.note10 [data-v="8"]'); await pt.fill("#fbd-training", "Écrit dimanche sur le téléphone");
+    await pt.click("[data-fbd] button[type=submit]"); await attendre(pt, 1500);
+    const p14 = clone((ckDe(db).liste || []).find(x => x && x.semaine === isoJ(14)) || null);
+    ok(`B2 : vendredi, l'ordinateur ouvre le bilan de la semaine du ${fr(isoJ(14))} ; dimanche, le téléphone envoie le feedback de cette semaine (note 8, format du dimanche)`,
+      s0 === isoJ(14) && ecr(db, "checkins").length === 1 && !!p14 && p14.format === "dimanche" && p14.reponses.note === 8, s0 + " " + resume(db) + " " + JSON.stringify(p14));
+    await heure(po, a(20, 10, 5));
+    for (const g of await po.$$("[data-checkin] .echelle5")) { const bt = await g.$$("button"); await bt[2].click(); }
+    await po.fill('[data-checkin] textarea[data-q="semaine"]', "Bilan du vendredi, envoyé de l'ordinateur");
+    await po.click("[data-checkin] button[type=submit]"); await attendre(po, 1800);
+    const CK = ckDe(db), n = (CK.liste || []).find(x => x && x.semaine === isoJ(14)) || {}, r = n.reponses || {};
+    ok("B2 : puis l'ordinateur envoie son bilan du vendredi de la même semaine : l'entrée relue en base est complétée, pas reconstruite — la note et le texte du téléphone restent, avec les réponses du vendredi (une écriture de plus, semaines 7 et 14, sans « format »)",
+      ecr(db, "checkins").length === 2 && egal(semainesDe(CK), [isoJ(7), isoJ(14)]) && egal(CK.liste[0], e7) && r.note === 8 && r.training === "Écrit dimanche sur le téléphone" && r.semaine === "Bilan du vendredi, envoyé de l'ordinateur" && r.energie === 3 && !("format" in n) && (await copie(po, TESTEUR.id, "checkins")) === null,
+      resume(db) + " " + JSON.stringify(n).slice(0, 500));
+    const t = await texte(po, "#suivi-checkin");
+    ok("B2 : … l'écran de l'ordinateur prend la version écrite : son bilan et, dessous, la note et le texte du téléphone", t.includes("Bilan du vendredi, envoyé de l'ordinateur") && t.includes("Note de la semaine 8/10") && t.includes("Écrit dimanche sur le téléphone"), t.slice(0, 500));
+  });
+
+  /* B3. même chose, mais l'entrée était déjà à l'écran de l'ordinateur (feedback du dimanche, version 1) et le téléphone l'a
+     modifiée depuis (version 2) : les réponses de l'écran, plus anciennes, ne reviennent pas (la copie de l'onglet ne les
+     porte pas au-dessus de la base relue) */
+  await bloc("B3. deux appareils : bilan du vendredi envoyé après une modification du feedback du dimanche", async () => {
+    const e7 = entreeVen(7), v1 = entreeDim(14, 8, { training: "Version 1 du téléphone" }, { envoye_le: isoJ(20), envoye_a: isoA(20, 9) });
+    const db = base({ comptes: [compteTest({ liste: [e7, v1] }, null)] });
+    const { page: po } = await sur(b, TESTEUR, db, 20, 10, 0, "", "#acc-vue h1");
+    await vendredi(po); await aller(po, "#/suivi", 1500);
+    const t0 = await texte(po, "#suivi-checkin");
+    const { page: pt } = await sur(b, TESTEUR, db, 20, 10, 2, "#/suivi", "#suivi-checkin [data-fbd-modifier]", { viewport: MOBILE });
+    await pt.click("[data-fbd-modifier]"); await attendre(pt, 300);
+    await pt.click('.note10 [data-v="9"]'); await pt.fill("#fbd-training", "Version 2 du téléphone");
+    await pt.click("[data-fbd] button[type=submit]"); await attendre(pt, 1500);
+    const v2 = clone((ckDe(db).liste || []).find(x => x && x.semaine === isoJ(14)) || null);
+    ok("B3 : l'ordinateur affiche la version 1 (note 8) ; le téléphone la modifie : version 2 en base (note 9)", t0.includes("Version 1 du téléphone") && ecr(db, "checkins").length === 1 && !!v2 && v2.reponses.note === 9 && v2.reponses.training === "Version 2 du téléphone", t0.slice(0, 200) + " " + resume(db));
+    await heure(po, a(20, 10, 5));
+    await po.click("[data-checkin-modifier]"); await attendre(po, 300);
+    for (const g of await po.$$("[data-checkin] .echelle5")) { const bt = await g.$$("button"); await bt[1].click(); }
+    await po.click("[data-checkin] button[type=submit]"); await attendre(po, 1800);
+    const n = (ckDe(db).liste || []).find(x => x && x.semaine === isoJ(14)) || {}, r = n.reponses || {};
+    ok("B3 : puis l'ordinateur envoie son bilan du vendredi : la version 2 du téléphone reste (note 9, « Version 2 du téléphone »), jamais la version 1 de son écran, avec ses réponses du vendredi (énergie 2)",
+      ecr(db, "checkins").length === 2 && r.note === 9 && r.training === "Version 2 du téléphone" && r.energie === 2 && egal(semainesDe(ckDe(db)), [isoJ(7), isoJ(14)]), resume(db) + " " + JSON.stringify(n).slice(0, 500));
+  });
+
   /* =================== C. deux appareils : fb_vu =================== */
   await bloc("C. deux appareils : « réponse vue » (fb_vu) gardée", async () => {
     const e7 = entreeDim(7, 8), f7 = fbk(7, "Première réponse.", { bilan: e7.envoye_a });
@@ -804,6 +864,16 @@ const blocSemaine = (page, s) => page.evaluate(x => { const ed = document.queryS
     ok("L : " + nom + " : la relecture répond 401 et le renouvellement est refusé : la session est perdue (bandeau), rien en base, pas de « Bilan envoyé », et la copie du bilan RESTE sur l'appareil (semaines 0 et 14, son texte)",
       bandeau && !(await stockSession(page)) && ecr(db, "checkins").length === 0 && !ts.some(x => x.includes("Bilan envoyé")) && egal(l.map(x => x.semaine), [isoJ(0), isoJ(14)]) && egal(l[0], e0) && n.reponses && n.reponses.semaine === T && cp.a === TESTEUR.id && rel === 1,
       "bandeau " + bandeau + " · relectures " + rel + " · " + JSON.stringify(cp).slice(0, 200) + " " + resume(db) + " " + JSON.stringify(ts));
+    if (!lent) {
+      /* v59 (contre-relecture) : « Se déconnecter » (barre du haut) au lieu de « Me reconnecter » : sans session, la copie
+         compte — l'alerte « non envoyées » s'affiche ; « Annuler » : rien n'est effacé */
+      await page.click("#deco"); await attendre(page, 1500);
+      const dlg = await texte(page, ".modale");
+      await page.click('.modale [data-ui-b="0"]').catch(() => {}); await attendre(page, 400);
+      const cp2 = await copie(page, TESTEUR.id, "checkins");
+      ok("L : " + nom + " : « Se déconnecter » pendant que le bandeau est affiché : l'alerte « n'ont pas encore pu être envoyées » ; « Annuler » : la copie du bilan est toujours sur l'appareil, pas de déconnexion",
+        dlg.includes("n'ont pas encore pu être envoyées") && !!cp2 && egal(cp2, cp) && !db.chemins.includes("POST /auth/v1/logout") && !!(await page.$("#session-perdue")), "dialogue « " + dlg.slice(0, 120) + " » · " + JSON.stringify(cp2).slice(0, 120));
+    }
     /* « Me reconnecter » : la connexion range une session neuve puis recharge la page (connexion.js) */
     db.lecture401 = []; db.renouvKo = false; db.retardLecture = {};
     await page.evaluate(s => { localStorage.setItem("mhx_session", JSON.stringify(Object.assign({}, s, { expire_le: Date.now() + 3600000 }))); }, TESTEUR.session);
@@ -864,6 +934,39 @@ const blocSemaine = (page, s) => page.evaluate(x => { const ed = document.queryS
     const CK = ckDe(db);
     ok("M3 : Mon suivi ouvert (réponse du coach pas encore vue) : fb_vu est écrit avec le feedback modifié hors ligne réuni (une écriture ; la semaine 14 telle que la copie l'avait, fb_vu = la réponse)",
       ecr(db, "checkins").length === 1 && egal(CK.liste, [e14b]) && CK.fb_vu === f14.ecrit_a && (await copie(page, TESTEUR.id, "checkins")) === null, resume(db) + " " + JSON.stringify(CK).slice(0, 400));
+  });
+
+  /* v59 (contre-relecture, remarque 2) : la reprise du démarrage RÉUSSIT, mais la base a été écrite après la copie (fb_vu
+     posé lundi matin par l'ordinateur) : la copie n'est plus écartée, elle est réunie */
+  await bloc("M4. copie d'avant réunie : la base écrite depuis (fb_vu d'un autre appareil)", async () => {
+    const e7 = entreeDim(7, 8), f7 = fbk(7, "Réponse de la semaine 7.", { bilan: e7.envoye_a });
+    const e14p = entreeDim(14, 6, { training: "Envoyé hors ligne dimanche soir" }, { envoye_le: isoJ(20), envoye_a: isoA(20, 20) });
+    /* la base : fb_vu posé lundi 8:00 par l'ordinateur (plus récent que la copie du téléphone, dimanche 20:00) */
+    const db = base({ comptes: [compteTest({ liste: [e7], fb_vu: f7.ecrit_a }, { liste: [f7] })] });
+    db.donnees.forEach(d => { if (d.user_id === TESTEUR.id) d.maj_le = isoA(21, 8); });
+    const { page } = await surAvecCopie(b, TESTEUR, db, 21, 12, 0, "#/suivi", "#suivi-checkin .fbd", { a: TESTEUR.id, t: isoA(20, 20), v: { liste: [clone(e7), clone(e14p)] } }, { viewport: MOBILE });
+    await attendre(page, 1500);
+    const CK = ckDe(db), ts = await toasts(page), t = await texte(page, "#suivi-checkin");
+    ok("M4 : lundi, le téléphone s'ouvre : le feedback du dimanche resté sur l'appareil arrive en base, réuni (une écriture ; semaines 7 et 14, la 14 telle que la copie l'avait ; fb_vu de l'ordinateur gardé), la copie est retirée",
+      ecr(db, "checkins").length === 1 && egal(CK.liste, [e7, e14p]) && CK.fb_vu === f7.ecrit_a && (await copie(page, TESTEUR.id, "checkins")) === null, resume(db) + " " + JSON.stringify(CK).slice(0, 400));
+    ok("M4 : … aucun message « une version plus récente existe déjà », Mon suivi montre le feedback (note 6, son texte), pas de formulaire « en retard »",
+      !ts.some(x => x.includes("plus récente existe déjà")) && t.includes("Note de la semaine 6/10") && t.includes("Envoyé hors ligne dimanche soir") && !(await page.$("[data-fbd]")), JSON.stringify(ts) + " " + t.slice(0, 300));
+  });
+
+  /* … la même semaine est en base dans l'autre format (bilan du vendredi envoyé de l'ordinateur), la copie du téléphone (le
+     feedback du dimanche, fait sur un écran qui ne l'avait pas) est plus récente : l'entrée de la copie, complétée */
+  await bloc("M5. copie d'avant réunie : la même semaine en base dans l'autre format, les deux restent", async () => {
+    const e7 = entreeDim(7, 8), f7 = fbk(7, "Réponse de la semaine 7.", { bilan: e7.envoye_a });
+    const v14 = entreeVen(14, { envoye_le: isoJ(18), envoye_a: isoA(18, 10) });
+    const d14 = entreeDim(14, 6, { training: "Feedback du dimanche, fait hors ligne" }, { envoye_le: isoJ(20), envoye_a: isoA(20, 20) });
+    const db = base({ comptes: [compteTest({ liste: [e7, v14], fb_vu: f7.ecrit_a }, { liste: [f7] })] });
+    db.donnees.forEach(d => { if (d.user_id === TESTEUR.id) d.maj_le = isoA(21, 8); });
+    const { page } = await surAvecCopie(b, TESTEUR, db, 21, 12, 0, "#/suivi", "#suivi-checkin .fbd", { a: TESTEUR.id, t: isoA(20, 20), v: { liste: [clone(e7), clone(d14)] } }, { viewport: MOBILE });
+    await attendre(page, 1500);
+    const CK = ckDe(db), n = (CK.liste || []).find(x => x && x.semaine === isoJ(14)) || {}, r = n.reponses || {};
+    ok("M5 : l'entrée de la semaine 14 en base : le feedback du dimanche de la copie (note 6, son texte, format du dimanche, envoyé dimanche) ET les réponses du vendredi déjà en base (énergie 4, « 4 séances tenues », « Le sommeil ») ; une écriture, la copie retirée, aucun message",
+      ecr(db, "checkins").length === 1 && egal(semainesDe(CK), [isoJ(7), isoJ(14)]) && n.format === "dimanche" && n.envoye_a === d14.envoye_a && r.note === 6 && r.training === "Feedback du dimanche, fait hors ligne" && r.energie === 4 && r.reussite === "4 séances tenues" && r.difficulte === "Le sommeil" && (await copie(page, TESTEUR.id, "checkins")) === null && !(await toasts(page)).some(x => x.includes("plus récente existe déjà")),
+      resume(db) + " " + JSON.stringify(n).slice(0, 500) + " " + JSON.stringify(await toasts(page)));
   });
 
   /* =================== N. les deux textes du 😞 hors ligne (remarque 11) =================== */

@@ -241,7 +241,9 @@ const Auth = {
     try { if (typeof Checkin !== "undefined" && Checkin._file) await Promise.race([Checkin._file, new Promise(r => setTimeout(r, 8000))]); } catch(e){}
     try { await Promise.race([Store.toutEnvoyer(false), new Promise(r => setTimeout(r, 4000))]); } catch(e){}
     const moi = this.utilisateur();
-    const nonEnvoyees = moi ? Object.values(Store.attenteLire()).filter(e => e && e.a === moi.id).length : 0;
+    /* v59 (contre-relecture) : session déjà perdue (bandeau « Ta session a pris fin… », qui promet que la saisie repartira) :
+       toutes les copies de l'appareil comptent — elles étaient effacées sans un mot */
+    const nonEnvoyees = Object.values(Store.attenteLire()).filter(e => e && (!moi || e.a === moi.id)).length;
     if (nonEnvoyees && !(await UI.confirmer(trad("Des modifications n'ont pas encore pu être envoyées (hors ligne). Si tu te déconnectes maintenant, elles seront perdues."), { ok: trad("Me déconnecter quand même"), danger: true }))) return;
     try { await this.appel("/auth/v1/logout", { method: "POST" }); } catch(e){}
     this.oublier();
@@ -650,6 +652,10 @@ const Store = {
             /* v51 : l'activite du prospect n'est pas une saisie : sans message, la copie reste sur l'appareil et Activite
                la fusionne (maximum) au prochain envoi, qui la remplace ; elle n'est retiree que s'il n'y a plus de suivi */
             if (cle === "activite" && ms > ts && typeof Activite !== "undefined" && Activite.suivi() && uid === u.id){ Activite.rattraper(e.v, uid); continue; }
+            /* v59 (contre-relecture, remarque 2) : checkins du compte connecté — la base a souvent été écrite pour autre chose
+               (fb_vu, un smiley) : la copie (bilan, feedback) n'est pas écartée, elle est réunie à la base relue, écrite puis
+               envoyée, sans message (Checkin.rattraper) ; pas écrite (relecture ratée) : elle reste, nouvel essai plus tard */
+            if (typeof Checkin !== "undefined" && cle === Checkin.cle && ms > ts && uid === u.id){ await Checkin.rattraper(); if (this.attenteLire()[k]) reste = true; continue; }
             this.lacher(uid, cle, e.t);
             if (cle === "activite") continue;
             if (ms > ts) ecartees.push({ cle: cle, t: e.t, autre: uid !== u.id }); continue;
