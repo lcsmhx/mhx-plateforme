@@ -111,6 +111,12 @@ resume=""
 note() { resume="$resume$1"$'\n'; echo "$1"; }
 echec() { echecs=$((echecs + 1)); note "ÉCHEC  $1"; }
 
+# v59 : interrupteurs des nouveautés simulés (preuve du vert avec « tous » ou « off » sans jamais pousser ces valeurs) :
+# BANC_SIMULER_NOUVEAUTES, sinon d'après la branche (GITHUB_REF : v2/simu-tous-* → « tous », v2/simu-off-* → « off »).
+# Une seule règle, lue dans fichiers.js (simulation()) ; jamais sur main (refus, et fichiers.js refuse aussi de se charger).
+SIMULE=$(node -e 'try { process.stdout.write(require("./fichiers.js").simulation()); } catch (e) { process.stdout.write("REFUS " + e.message); }' 2>/dev/null)
+case "$SIMULE" in "REFUS "*) echec "${SIMULE#REFUS }"; echo "$echecs échec(s) : rien ne doit être publié."; exit 1;; esac
+
 # Toute suite verif*.js du dossier est soit au banc, soit explicitement hors banc.
 for f in verif*.js; do
   s="${f%.js}"
@@ -185,7 +191,7 @@ if [ "${BANC_LIBRE:-}" != 1 ]; then
 fi
 
 echo
-echo "===== Bilan du banc — commit $TETE${BANC_PARTIE:+ — partie $BANC_PARTIE/${BANC_PARTIES:-10}} ====="
+echo "===== Bilan du banc — commit $TETE${BANC_PARTIE:+ — partie $BANC_PARTIE/${BANC_PARTIES:-10}}${SIMULE:+ — fichier simulé : interrupteurs sur « $SIMULE »} ====="
 printf "%s" "$resume"
 if [ "$echecs" -gt 0 ]; then echo "$echecs échec(s) : rien ne doit être publié."; exit 1; fi
 echo "Tout est vert (commit $TETE)."

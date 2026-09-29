@@ -1,5 +1,10 @@
 /* verif55 — Chantier 1 (v52) : le parcours prospect et ses corrections, vérifiés de bout en bout dans un vrai navigateur.
    Lot A :
+   A0. v59 : interrupteurs forcés par le banc (tests-locaux/fichiers.js à côté de la page testée) : chaque fichier css/ et
+      js/ servi identique octet pour octet que le fichier dise « test », « tous », « off » ou « Tous » (sur « test »,
+      exactement le fichier) ; fichier simulé sur « tous » (BANC_SIMULER_NOUVEAUTES, le temps du bloc) : lu « tous »,
+      servi « test », Thomas garde le bilan du vendredi et n'est pas suivi ; la règle de la simulation (branches
+      v2/simu-tous-* et v2/simu-off-*, refusée sur main) ;
    A. interrupteurs des nouveautés (CONFIG.nouveautes, objet Interrupteurs) : « test » = le coach et les comptes de test
       seulement, « tous » = tout le monde, « off » ou valeur inconnue = personne ; comptes de test = identifiants, jamais
       d'email ; l'objet Nouveautes (notifications du coach) est toujours là, à part ;
@@ -59,7 +64,7 @@ let retouches = [];
    suite servait la valeur du fichier) ; inscriptionOuverte(fn) l'ouvre le temps d'un bloc. Valeur forcée dans les deux
    sens (forcerInscription, fichiers.js), avant les retouches de texte d'avec. */
 let inscriptionLibre = false;
-const { servirFichier, source, forcerInscription, valeursInscription } = require("./fichiers");   // 52.1 : la page charge css/ et js/, servis depuis son dossier (fichiers.js)
+const { servirFichier, source, sourceServie, listes, forcerInscription, valeursInscription, valeursNouveaute } = require("./fichiers");   // 52.1 : la page charge css/ et js/, servis depuis son dossier (fichiers.js)
 /* 52.1 : les retouches valent pour la page et pour ses fichiers css/ et js/ (CONFIG est dans js/config.js) */
 const retouche = h => { h = forcerInscription(h, inscriptionLibre); for (const [de, vers] of retouches) h = h.split(de).join(vers); return h; };
 const server = http.createServer((req, res) => {
@@ -69,8 +74,8 @@ const server = http.createServer((req, res) => {
 });
 /* une retouche dont le texte a disparu du fichier ne passe jamais en silence : le bloc s'interrompt */
 async function avec(liste, fn){
-  const h = source(HTML);   // 52.1 : la page et tous ses fichiers
-  for (const [de] of liste) if (!h.includes(de)) throw new Error("retouche impossible, texte absent du fichier : " + de);
+  const h = sourceServie(HTML);   // v59 : ce que la suite sert (interrupteurs forcés sur « test », fichiers.js), pas le disque
+  for (const [de] of liste) if (!h.includes(de)) throw new Error("retouche impossible, texte absent du fichier servi : " + de);
   retouches = liste;
   try { await fn(); } finally { retouches = []; }
 }
@@ -421,6 +426,47 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
   const b = await chromium.launch();
   const URL0 = `http://localhost:${PORT}/`;
 
+  /* =================== A0. v59 : interrupteurs forcés par le banc =================== */
+  await bloc("A0. interrupteurs forcés par le banc", async () => {
+    /* le banc de la page testée (tests-locaux/fichiers.js à côté d'elle ; au banc, celui de cette suite) : c'est lui qui
+       sert les interrupteurs sur « test », quelle que soit la valeur écrite dans le fichier (Lucas peut passer « tous ») */
+    const FT = require(path.join(path.dirname(HTML), "tests-locaux", "fichiers.js"));
+    const NOMS = ["feedback_dimanche", "suivi_visites_clients"], V = ["test", "tous", "off", "Tous"];
+    /* le fichier du disque avec la valeur v écrite dans chaque interrupteur (remplacement fait ici, sans fichiers.js) */
+    const ecrire = (t, v) => t.replace(/\b(feedback_dimanche|suivi_visites_clients): "[^"\n]*"/g, (x, n) => n + ': "' + v + '"');
+    /* ce que servirFichier (du banc testé) sert pour ce texte, sans retouche de suite */
+    const servi = (f, t) => { let corps = null; FT.servirFichier({ url: "/" + f + "?v=1" }, { writeHead(){}, end(x){ corps = String(x); } }, HTML, null, () => t); return corps; };
+    const index = fs.readFileSync(HTML, "utf8"), fichiers = listes(index), ecarts = [];
+    for (const f of fichiers) {
+      const t = fs.readFileSync(path.join(path.dirname(HTML), f), "utf8"), s = V.map(v => servi(f, ecrire(t, v)));
+      if (s.some(x => x !== s[0]) || s[0] !== ecrire(t, "test")) ecarts.push(f);
+    }
+    const conf = servi("js/config.js", ecrire(fs.readFileSync(path.join(path.dirname(HTML), "js", "config.js"), "utf8"), "tous")) || "";
+    const surTest = NOMS.every(n => JSON.stringify(valeursNouveaute(conf, n)) === '["test"]'), pageSans = NOMS.every(n => !valeursNouveaute(index, n).length);
+    ok("A0 : le banc sert les interrupteurs sur « test » : chaque fichier css/ et js/ servi identique octet pour octet que le fichier dise « test », « tous », « off » ou « Tous » (sur « test » : exactement le fichier) ; la page, servie sans retouche, n'en porte aucun",
+      fichiers.includes("js/config.js") && !ecarts.length && surTest && pageSans, JSON.stringify({ ecarts, surTest, pageSans }));
+
+    /* fichier simulé sur « tous » le temps du bloc (comme une branche v2/simu-tous-*), puis remis comme avant */
+    const avant = process.env.BANC_SIMULER_NOUVEAUTES;
+    process.env.BANC_SIMULER_NOUVEAUTES = "tous";
+    try {
+      const lus = FT.source(HTML), servie = typeof FT.sourceServie === "function" ? FT.sourceServie(HTML) : "";
+      const db = base();
+      const { c, page } = await contexte(b, THOMAS, db);
+      await page.goto(URL0); await pret(page, "#acc-vue");
+      const r = await page.evaluate(() => [Interrupteurs.etat("feedback_dimanche"), Interrupteurs.etat("suivi_visites_clients"), Checkin.regle(), Activite.suivi()]);
+      const regle = typeof FT.simulation === "function" && typeof FT.refusSimulation === "function"
+        && FT.simulation({ GITHUB_REF: "refs/heads/v2/simu-tous-x" }) === "tous" && FT.simulation({ GITHUB_REF: "refs/heads/v2/simu-off-x" }) === "off"
+        && FT.simulation({ GITHUB_REF: "refs/heads/v2/x" }) === "" && FT.simulation({ GITHUB_REF: "refs/heads/main" }) === ""
+        && !!FT.refusSimulation({ GITHUB_REF: "refs/heads/main", BANC_SIMULER_NOUVEAUTES: "tous" }) && !!FT.refusSimulation({ GITHUB_REF: "refs/heads/main", BANC_SIMULER_NOUVEAUTES: "off" })
+        && FT.refusSimulation({ GITHUB_REF: "refs/heads/v2/simu-tous-x" }) === "";
+      const d = { lus: NOMS.map(n => valeursNouveaute(lus, n)), servie: NOMS.map(n => valeursNouveaute(servie, n)), r, regle };
+      ok("A0 : fichier simulé sur « tous » (BANC_SIMULER_NOUVEAUTES ; branches v2/simu-tous-* et v2/simu-off-*, refusée sur main) : le banc lit « tous » dans le fichier, sert « test » (avec() l'y retrouve) ; Thomas (hors test) : bilan du vendredi, visites non suivies",
+        JSON.stringify(d.lus) === '[["tous"],["tous"]]' && JSON.stringify(d.servie) === '[["test"],["test"]]' && JSON.stringify(r) === '["test","test","vendredi",false]' && regle, JSON.stringify(d));
+      await c.close();
+    } finally { if (avant === undefined) delete process.env.BANC_SIMULER_NOUVEAUTES; else process.env.BANC_SIMULER_NOUVEAUTES = avant; }
+  });
+
   /* =================== A. interrupteurs des nouveautés =================== */
   await bloc("A. interrupteurs", async () => {
     /* le compte de test est lu dans le fichier servi (dépôt public : jamais recopié ici, jamais d'email) */
@@ -429,8 +475,11 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
     const tab = (/comptes_test:\s*\[([^\]]*)\]/.exec(conf) || [, ""])[1];
     const ids = (tab.match(/"[^"]*"/g) || []).map(x => JSON.parse(x));
     const TEST = ids[0] || null;
-    ok("CONFIG.nouveautes dans le fichier : feedback_dimanche sur « test », au moins un compte de test, que des identifiants Supabase (aucun « @ »)",
-      /feedback_dimanche:\s*"test"/.test(conf) && ids.length >= 1 && ids.every(x => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(x)) && tab.indexOf("@") === -1, JSON.stringify(conf.slice(0, 300)));
+    /* v59 : le banc sert toujours « test » (fichiers.js) ; dans le fichier, Lucas peut écrire off, test ou tous — une seule
+       valeur par interrupteur, que le banc sait retoucher ; une faute de frappe (« Tous ») rend le banc rouge */
+    const connue = n => { const v = valeursNouveaute(src, n); return v.length === 1 && ["off", "test", "tous"].includes(v[0]); };
+    ok("CONFIG.nouveautes dans le fichier : feedback_dimanche et suivi_visites_clients, une seule valeur chacun, connue (off, test ou tous), que le banc sait retoucher ; au moins un compte de test, que des identifiants Supabase (aucun « @ »)",
+      connue("feedback_dimanche") && connue("suivi_visites_clients") && ids.length >= 1 && ids.every(x => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(x)) && tab.indexOf("@") === -1, JSON.stringify({ feedback_dimanche: valeursNouveaute(src, "feedback_dimanche"), suivi_visites_clients: valeursNouveaute(src, "suivi_visites_clients") }) + " " + JSON.stringify(conf.slice(0, 300)));
 
     /* coach */
     {

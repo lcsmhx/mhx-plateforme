@@ -51,7 +51,7 @@ const MOBILE = { width: 390, height: 844 }, ORDI = { width: 1280, height: 900 };
 let retouches = [];
 /* 52.1 : les retouches valent pour la page et pour ses fichiers css/ et js/ (CONFIG est dans js/config.js) */
 const retouche = h => { for (const [de, vers] of retouches) h = h.split(de).join(vers); return h; };
-const { servirFichier, source } = require("./fichiers");   // 52.1 : la page charge css/ et js/, servis depuis son dossier (fichiers.js)
+const { servirFichier, source, sourceServie, valeursNouveaute } = require("./fichiers");   // 52.1 : la page charge css/ et js/, servis depuis son dossier (fichiers.js)
 const server = http.createServer((req, res) => {
   if (servirFichier(req, res, HTML, retouche)) return;
   let h = retouche(fs.readFileSync(HTML, "utf8"));
@@ -59,8 +59,8 @@ const server = http.createServer((req, res) => {
 });
 /* une retouche dont le texte a disparu du fichier ne passe jamais en silence : le bloc s'interrompt */
 async function avec(liste, fn){
-  const h = source(HTML);   // 52.1 : la page et tous ses fichiers
-  for (const [de] of liste) if (!h.includes(de)) throw new Error("retouche impossible, texte absent du fichier : " + de);
+  const h = sourceServie(HTML);   // v59 : ce que la suite sert (interrupteurs forcés sur « test », fichiers.js), pas le disque
+  for (const [de] of liste) if (!h.includes(de)) throw new Error("retouche impossible, texte absent du fichier servi : " + de);
   retouches = liste;
   try { await fn(); } finally { retouches = []; }
 }
@@ -395,7 +395,9 @@ const NOUVEAUX = ["Ton bilan de la semaine du {a} au {b} n'est pas encore fait :
 
   /* =================== A. la règle de la semaine =================== */
   await bloc("A. règle de la semaine", async () => {
-    ok("A : le compte de test est lu dans le fichier servi (un identifiant, aucun « @ » dans comptes_test) et l'interrupteur vaut « test »", !!TEST_ID && !/comptes_test:[^\]]*@/.test(SRC) && /feedback_dimanche: "test"/.test(SRC), String(TEST_ID));
+    /* v59 : dans le fichier, une seule valeur connue (off, test ou tous : Lucas peut passer « tous ») ; le banc la sert sur « test » (fichiers.js) */
+    const fb = valeursNouveaute(SRC, "feedback_dimanche");
+    ok("A : le compte de test est lu dans le fichier servi (un identifiant, aucun « @ » dans comptes_test) ; l'interrupteur a une seule valeur connue dans le fichier (off, test ou tous) et il est servi sur « test »", !!TEST_ID && !/comptes_test:[^\]]*@/.test(SRC) && fb.length === 1 && ["off", "test", "tous"].includes(fb[0]) && JSON.stringify(valeursNouveaute(sourceServie(HTML), "feedback_dimanche")) === '["test"]', String(TEST_ID) + " " + JSON.stringify(fb));
     const db = base({ comptes: [compteTest({ liste: [] }, null)] });
     const { page } = await sur(b, TESTEUR, db, 14, 10, 0, "", "#acc-vue h1");
     const R = async (t, uid, C) => { await heure(page, t); return page.evaluate(([C, uid]) => { const v = Checkin.semaineVisee(C, uid); return { debut: v.debut, fin: v.fin, etat: v.etat, limite: v.limite, regle: v.regle, prochain: v.prochain }; }, [C, uid]); };
