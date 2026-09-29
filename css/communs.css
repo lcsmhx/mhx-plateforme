@@ -236,7 +236,7 @@ footer a{color:var(--accent)}
 .etat{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-3);white-space:nowrap}
 .etat.erreur{color:var(--warn);background:none;border:0;padding:0}
 /* v59 : barre du haut sur téléphone. La ligne du compte ne fait plus défiler la page de côté : seuls le nom et le témoin
-   d'enregistrement rétrécissent (terminés par « … ») ; ☀, EN et « Se déconnecter » gardent leur libellé entier, sur une
+   d'enregistrement rétrécissent (terminés par « … » ; une alerte du témoin a sa propre ligne, règle suivante) ; ☀, EN et « Se déconnecter » gardent leur libellé entier, sur une
    ligne. Quand tout tient, rien ne rétrécit : la barre est la même qu'avant. Avant, dès que la ligne ne tenait pas, les
    boutons passaient sur deux lignes (« Se déconnecter », « 🇺🇸 EN » : barre plus haute, jusqu'à 390 px pour le coach), puis
    la page débordait (345 px de large à 320 px pour le coach) ; un nom long ou le témoin « Hors ligne… » la faisaient
@@ -245,6 +245,19 @@ footer a{color:var(--accent)}
   .compte{min-width:0}
   .compte > *{flex-shrink:0}
   .compte .qui,.compte .etat{flex-shrink:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+}
+/* v59 : une alerte du témoin (« Hors ligne — … », « Non enregistré — … ») ne se raccourcit pas : raccourcies, « Hors ligne —
+   gardé sur cet appareil… » (la modification sera renvoyée) et « Hors ligne — modification non enregistrée » (elle est perdue)
+   se liraient toutes deux « Hors ligne… ». Le temps qu'elle dure, elle a sa ligne à elle, en entier, au-dessus du nom et des
+   boutons (qui restent comme sans témoin, collés à droite ; le nom part de 0 px pour ne jamais faire passer un bouton à la
+   ligne) ; la marge du bas prise à .erreur est retirée. Navigateur sans :has (avant iOS 15.4) : l'alerte se raccourcit avec
+   « … », comme le reste. */
+@media (max-width:720px){
+  @supports selector(:has(*)){
+    .compte:has(> .etat.erreur),.compte:has(> .etat.perdu),.compte:has(> .etat.refuse){flex-wrap:wrap;justify-content:flex-end}
+    .compte > .etat.erreur,.compte > .etat.perdu,.compte > .etat.refuse{flex:0 0 100%;white-space:normal;overflow:visible;margin:0}
+    .compte > .etat.erreur ~ .qui,.compte > .etat.perdu ~ .qui,.compte > .etat.refuse ~ .qui{flex:1 1 0;max-width:max-content}
+  }
 }
 /* v59 : sous 360 px (iPhone SE de 1re génération, petits Android, affichage agrandi) : écarts de 6 px, témoin vide retiré
    (il comptait un écart), boutons un peu moins larges (toujours 32 px de haut) ; ☀ garde sa taille (.icone passe devant). */
