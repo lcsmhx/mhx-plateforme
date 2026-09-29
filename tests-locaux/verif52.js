@@ -36,12 +36,22 @@ let inscriptionLibre = false;
 /* 52.1 : la page charge css/ et js/ (fichiers.js) ; la retouche vaut pour la page et pour ses fichiers (inscription_libre
    est dans js/config.js). Les fichiers d'une page de référence (/?ref=main, reconnue à l'en-tête Referer de ses requêtes)
    viennent de la même révision git que sa page. */
-const { servirFichier, source, listes, forcerInscription, valeursInscription } = require("./fichiers");
+const { servirFichier, source, listes, forcerInscription, valeursInscription, NOUVEAUTES, forcerNouveautes, valeursNouveaute } = require("./fichiers");
 /* v54 : l'inscription est ouverte dans le fichier (inscription_libre: true) ; la retouche FORCE la valeur voulue
    (inscriptionLibre, fermée par défaut comme avant), dans les deux sens : la suite reste valable si Lucas la referme.
    v55 : par forcerInscription (fichiers.js), comme toutes les suites qui testent l'inscription (les autres servent la valeur
    du fichier) */
-const retouche = h => forcerInscription(h, inscriptionLibre);
+/* v59 (relecture) : fichiers.js sert les interrupteurs des nouveautés sur « test » à toutes les suites, pour la page testée
+   comme pour la référence. Les comparaisons « identique à main » du bloc J (accueil et Profil de Thomas, sa fiche, sa ligne
+   de Mes clients) servent au contraire LES DEUX pages avec les valeurs écrites dans le fichier testé (source(HTML) : le
+   disque, vu à travers la simulation) : elles comparent les écrans que les clients verront vraiment (après la bascule de
+   Lucas sur « tous » : la règle du dimanche, visites suivies), le même code des deux côtés sur le commit de la bascule.
+   Posées le temps de ces comparaisons seulement (nouveautesJ) ; tout le reste de la suite reste sur « test ». */
+const NOUVEAUTES_FICHIER = (() => { const src = source(HTML); return Object.fromEntries(NOUVEAUTES.map(n => [n, valeursNouveaute(src, n)[0]])); })();
+let nouveautesJ = null;
+const retouche = h => { const t = forcerInscription(h, inscriptionLibre); return nouveautesJ ? forcerNouveautes(t, nouveautesJ) : t; };
+/* fn() avec les interrupteurs du fichier testé (voir plus haut), puis de nouveau « test », même si fn échoue */
+const avecNouveautesFichier = async fn => { nouveautesJ = NOUVEAUTES_FICHIER; try { return await fn(); } finally { nouveautesJ = null; } };
 const deRef = {};
 const lireRef = f => deRef[f] || (deRef[f] = require("child_process").execFileSync("git", ["show", REF_NOM + ":" + f], { cwd: path.join(__dirname, ".."), maxBuffer: 64e6, stdio: ["ignore", "pipe", "ignore"] }).toString("utf8"));
 const server = http.createServer((req, res) => {
@@ -930,7 +940,10 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
      calc_perso) entrent dans sa navigation (dans « Plus » sur téléphone), et « Ses séances » de sa fiche mène à son
      journal (#/journal) au lieu de #/entrainement. Ces comparaisons portent sur le TEXTE de la page (#vue : accueil,
      Profil, fiche, ligne de Mes clients), où rien ne change (le libellé « Ses séances » reste le même) ; la
-     navigation et le lien ne sont donc pas comparés ici : ils sont vérifiés dans verif60 (A, G, J) et verif56 (M). */
+     navigation et le lien ne sont donc pas comparés ici : ils sont vérifiés dans verif60 (A, G, J) et verif56 (M).
+     v59 (relecture) : ces comparaisons servent la page testée ET la référence avec les interrupteurs des nouveautés écrits
+     dans le fichier testé (avecNouveautesFichier) ; le premier contrôle de Thomas (aucune écriture, aucune lecture
+     d'activite) et « J. coach : aucune activité suivie » restent sur « test ». */
   const vueDe = async (who, url, action) => {
     const db = base();
     const { c, page } = await contexte(b, who, db);
@@ -950,10 +963,11 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     ok("client Thomas tape #/prospects : rien du tableau de bord prospects", !(await a.page.$("#pr-vue, #pr-liste, .nv-panneau")));
     await a.c.close();
     if (!REF) { ok("référence " + REF_NOM + " (git show " + REF_NOM + ":index.html) introuvable : comparaison impossible", false, "git show a échoué"); return; }
-    const acc = await vueDe(thomas, `http://localhost:${PORT}/#/accueil`), accM = await vueDe(thomas, `http://localhost:${PORT}/?ref=main#/accueil`);
+    /* v59 (relecture) : avec les interrupteurs du fichier testé, des deux côtés (voir avecNouveautesFichier) */
+    const [acc, accM] = await avecNouveautesFichier(async () => [await vueDe(thomas, `http://localhost:${PORT}/#/accueil`), await vueDe(thomas, `http://localhost:${PORT}/?ref=main#/accueil`)]);
     ok("client Thomas, accueil : texte identique à main", acc.t.length > 200 && acc.t === accM.t, acc.t.length + " / " + accM.t.length + " car. · premier écart : " + (() => { let i = 0; while (i < acc.t.length && acc.t[i] === accM.t[i]) i++; return JSON.stringify(acc.t.slice(Math.max(0, i - 40), i + 60)) + " ≠ " + JSON.stringify(accM.t.slice(Math.max(0, i - 40), i + 60)); })());
     await acc.c.close(); await accM.c.close();
-    const pro = await vueDe(thomas, `http://localhost:${PORT}/#/profil`), proM = await vueDe(thomas, `http://localhost:${PORT}/?ref=main#/profil`);
+    const [pro, proM] = await avecNouveautesFichier(async () => [await vueDe(thomas, `http://localhost:${PORT}/#/profil`), await vueDe(thomas, `http://localhost:${PORT}/?ref=main#/profil`)]);
     /* v52 (chantier 1, lot A) : seule différence VOULUE du Profil de Thomas avec main (v51) : la note du changement
        d'adresse (avec « Secure email change », un lien part aussi sur l'ancienne adresse : corrections de la nuit du
        28/09). Elle est remplacée par un repère dans les deux textes : tout le reste doit rester identique. Une fois la
@@ -977,7 +991,8 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
   await bloc("J. fiche d'un client et Mes clients", async () => {
     if (!REF) { ok("référence " + REF_NOM + " (git show " + REF_NOM + ":index.html) introuvable : comparaison impossible", false, "git show a échoué"); return; }
     const ouvrir = async (page) => { await page.click(`[data-ouvrir="${F.IDS.c1}"]`); await attendre(page, 2600); };
-    const f = await vueDe(coach, `http://localhost:${PORT}/#/clients`, ouvrir), fM = await vueDe(coach, `http://localhost:${PORT}/?ref=main#/clients`, ouvrir);
+    /* v59 (relecture) : avec les interrupteurs du fichier testé, des deux côtés (voir avecNouveautesFichier) */
+    const [f, fM] = await avecNouveautesFichier(async () => [await vueDe(coach, `http://localhost:${PORT}/#/clients`, ouvrir), await vueDe(coach, `http://localhost:${PORT}/?ref=main#/clients`, ouvrir)]);
     ok("fiche de Thomas vue par le coach : texte et sections identiques à main (" + f.h2.join(", ") + ")", f.t.length > 300 && f.t === fM.t && JSON.stringify(f.h2) === JSON.stringify(fM.h2), f.t.length + " / " + fM.t.length + " · " + JSON.stringify(f.h2) + " vs " + JSON.stringify(fM.h2));
     ok("fiche de Thomas : ni score, ni réponses du questionnaire court, ni chronologie, ni lien de réservation, aucune écriture", !(await f.page.$("#fiche-score, #fiche-reponses, #fiche-chrono, #fiche-actions, #fiche-decouverte, #fiche-prospect, #dc-lien")) && f.db.ecritures.length === 0);
     await f.c.close(); await fM.c.close();
@@ -986,7 +1001,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     /* v56 : + 2 colonnes (nombre de connexions, dernière connexion), changement voulu, elles aussi hors comparaison */
     const NOUVELLES = ["Retour de la semaine", "Dernière note", "Dernier smiley", "Dernière visite", "Jours actifs (30 j)", "Connexions", "Dernière connexion"];
     const ligne = async (page) => page.$eval(`[data-ouvrir="${F.IDS.c1}"]`, (bt, nv) => Array.from(bt.closest("tr").querySelectorAll("td")).filter(td => nv.indexOf(td.dataset.l) === -1).map(td => td.textContent).join(" "), NOUVELLES).then(norm).catch(() => "");
-    const m1 = await vueDe(coach, `http://localhost:${PORT}/#/clients`), m2 = await vueDe(coach, `http://localhost:${PORT}/?ref=main#/clients`);
+    const [m1, m2] = await avecNouveautesFichier(async () => [await vueDe(coach, `http://localhost:${PORT}/#/clients`), await vueDe(coach, `http://localhost:${PORT}/?ref=main#/clients`)]);
     const l1 = await ligne(m1.page), l2 = await ligne(m2.page);
     ok("Mes clients : ligne de Thomas identique à main (colonnes d'avant)", l1.length > 10 && l1 === l2, l1 + " | " + l2);
   });

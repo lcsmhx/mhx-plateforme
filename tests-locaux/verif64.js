@@ -9,7 +9,9 @@
       nouveau en cours, sans limite de durée (retirée : de nouveau Absent / Perdu) ; une issue sans date lisible : pas de
       « nouveau créneau » ; la case du prospect cochée APRÈS la dernière décision du coach compte de nouveau (pas une case
       datée dans le futur) ; l'ordre : signé, case, absent, clic, nouveau, appel, perdu, puis tout ce qui n'est pas à traiter
-      (un « Signé » oublié le dernier, même coché avant l'appel) ; le texte d'aide ;
+      (un « Signé » oublié le dernier, même coché avant l'appel) ; le texte d'aide ; v59 (relecture) : Nouveautés et
+      l'info-bulle de Mes clients suivent la case à vérifier de l'analyse ; un Absent dont la case d'après l'appel reste à
+      vérifier au-delà de 14 jours : « Retirer « Bilan réservé » » dans la fiche ;
    B. page Prospects : les 3 motifs dans « À traiter » (ordre, tuile, filtre, en-tête, cartes avec le motif et la prochaine
       action, aide), les autres issues hors de la liste ; « J'ai relancé » (Absent, Perdu) et « Perdu » (bilan à conclure) :
       chacun sort de la liste, une seule écriture de suivi_prospect chacun (PATCH conditionnel, contenu exact) ;
@@ -20,19 +22,24 @@
       EXACTE (issue et historique gardés), de nouveau en cours (« Prépare le bilan ») ; la tuile des Absents le garde ;
       « Retirer » le remet Absent ; un Signé n'a pas ce bouton ; un Perdu : le même bouton, la même écriture exacte ;
    E. la case « J'ai réservé » cochée par le prospect après le retrait du coach : à vérifier (À traiter, Nouveautés, filtre,
-      compteur, fiche) ; une case d'avant le retrait reste une info ; « Retirer » de nouveau la fait tomber ;
+      compteur, fiche) ; une case d'avant le retrait reste une info ; « Retirer » de nouveau la fait tomber ; v59 (relecture) :
+      un Absent dont la case d'après l'appel est restée à vérifier (16 jours) : « Retirer » dans la fiche, une écriture
+      exacte, le « à vérifier » tombe, l'Absent reste ;
    F. export CSV (prospects et newsletter) : une cellule qui commence par des espaces puis = + - @ est neutralisée
       (apostrophe) ; espaces seuls, nombres et dates inchangés ;
    G. une analyse qui lève une erreur ne fait plus disparaître le prospect : carte « données illisibles » (seul bouton :
       « Ouvrir la fiche »), en-tête, filtres, CSV et tableau de bord le comptent, sans urgence, au rang le plus bas (10) ;
    H. la coche ou la case d'avant l'appel, et la case à vérifier après l'appel : la ligne « Bilan » de la carte, l'info-bulle
       « bilan réservé », les colonnes « Bilan réservé » du CSV et le bloc « Découverte » de la fiche suivent l'analyse (plus
-      « réservé le … » ni « à vérifier » contraires au motif) ; sans issue : inchangés ;
+      « réservé le … » ni « à vérifier » contraires au motif) ; sans issue : inchangés ; v59 (relecture) : de même
+      Nouveautés, le badge de l'onglet Prospects et l'info-bulle « bilan réservé » de Mes clients ;
    Z. aucun appel vers l'extérieur.
    Infrastructure (serveur, faux Supabase, personnes, décor) reprise de verif58 : rien ne part vers la vraie base (routage
    par NOM D'HÔTE) ; règles de la base reproduites ; chaque écriture appliquée en mémoire et notée, avec sa condition maj_le.
    La page et ses fichiers sont servis tels quels (aucune retouche : la suite ne dépend d'aucun interrupteur). Dates
-   relatives au lancement (seuils en jours : à midi, heure locale). Chaque bloc tourne à part (« ✗ BLOC INTERROMPU ») ;
+   relatives au lancement ; v59 (relecture) : l'horloge de chaque navigateur part de midi (heure locale) du jour du
+   lancement (T0) et tourne : aucun minuit n'est franchi pendant la suite, quelle que soit l'heure réelle (les « depuis N j »
+   restent ceux du décor). Chaque bloc tourne à part (« ✗ BLOC INTERROMPU ») ;
    code de sortie 1 dès qu'un ✗ apparaît.
    Usage : node verif64.js ../index.html
            VERIF64_PORT=9801 node verif64.js ../index.html     (autre port, si 9800 est pris)
@@ -67,8 +74,10 @@ async function bloc(nom, fn){
   finally { while (ouverts.length) await ouverts.pop().close().catch(() => {}); }
 }
 
-/* ---------- dates : toujours relatives au lancement ---------- */
-const T0 = Date.now(), MIN = 60000, H = 3600000, J = 86400000;
+/* ---------- dates : toujours relatives au lancement ----------
+   v59 (relecture) : T0 = midi (heure locale) du jour du lancement, et l'horloge de chaque navigateur part de T0 (contexte) :
+   une suite lancée à 23:59 ne voit plus ses « depuis N j » prendre un jour de plus en route */
+const T0 = (() => { const d = new Date(); d.setHours(12, 0, 0, 0); return d.getTime(); })(), MIN = 60000, H = 3600000, J = 86400000;
 const avant = ms => new Date(T0 - ms).toISOString();
 const clone = x => x === undefined ? undefined : JSON.parse(JSON.stringify(x));
 const norm = t => String(t || "").replace(/[  ]/g, " ").replace(/\s+/g, " ").trim();
@@ -225,6 +234,7 @@ async function contexte(b, who, db, opts){
       localStorage.setItem("mhx_installe", "1"); localStorage.setItem("mhx_visites", "3");
     }
   }, { s: who ? who.session : null });
+  await c.clock.install({ time: T0 });   // v59 (relecture) : midi du jour du lancement, puis l'horloge tourne (comme verif58, 61, 62, 63)
   const page = await c.newPage();
   page.on("pageerror", e => res.push("  ✗ ERREUR JS " + String(e).slice(0, 300)));
   page.on("console", msg => { if (msg.type() === "error" && !/ERR_FAILED|status of [45]\d\d/.test(msg.text())) res.push("  ✗ CONSOLE " + msg.text().slice(0, 200)); });
@@ -292,7 +302,7 @@ function prospect(k, prenom, nom, o){
 }
 const REP = { probleme: "Perdre du gras", obstacle: "Le manque de temps", projection: "Courir 5 km" };
 const ev = (type, valeur, le, note) => Object.assign({ type }, valeur != null ? { valeur } : {}, { le }, note != null ? { note } : {});
-const ALICE = PID(1), MARC = PID(2), BRUNO = PID(3), VICTOR = PID(4), OMAR = PID(5), HUGO = PID(6), PAUL = PID(7), ZOE = PID(8), INES = PID(9), LEA = PID(10), NADIA = PID(11), ROSE = PID(12), SARA = PID(13), TINA = PID(14);
+const ALICE = PID(1), MARC = PID(2), BRUNO = PID(3), VICTOR = PID(4), OMAR = PID(5), HUGO = PID(6), PAUL = PID(7), ZOE = PID(8), INES = PID(9), LEA = PID(10), NADIA = PID(11), ROSE = PID(12), SARA = PID(13), TINA = PID(14), YANN = PID(15);
 const P = {
   /* Absente il y a 2 jours ; « Bilan réservé » coché AVANT l'appel (il y a 5 jours) ; jamais relancée */
   alice: () => prospect(1, "Alice", "Absente", { cree: 9 * J, q: 9 * J, rep: REP, email: "alice@exemple.fr",
@@ -323,19 +333,24 @@ const P = {
   lea: () => prospect(10, "Léa", "Clic", { cree: 3 * J, q: 3 * J, rep: REP, email: "lea@exemple.fr", clics: [J],
     act: { version: 1, jours: [ilYA(0), ilYA(1)], pages: { formation: 2 }, temps_s: 600, derniere: avant(5 * H) } }),
   /* v59 point C : bilan coché il y a 10 jours puis retiré il y a 5 jours ; la case « J'ai réservé » cochée il y a 2 jours
-     (APRÈS le retrait) compte de nouveau ; Rose l'a cochée il y a 6 jours (AVANT le retrait) : une info seulement */
+     (APRÈS le retrait) compte de nouveau ; Rose l'a cochée il y a 6 jours (AVANT le retrait) : une info seulement.
+     Première coche du prospect, après la décision (la case ne se coche qu'une fois : l'app ne peut pas la « recocher ») */
   nadia: () => prospect(11, "Nadia", "Recoche", { cree: 20 * J, q: 20 * J, rep: REP, email: "nadia@exemple.fr", caseP: 2 * J,
     suivi: { version: 1, bilan_le: null, historique: [ev("bilan", "reserve", MIDI(10)), ev("bilan", "annule", MIDI(5))] }, suiviLe: MIDI(5) }),
   rose: () => prospect(12, "Rose", "Avant", { cree: 20 * J, q: 20 * J, rep: REP, email: "rose@exemple.fr", caseP: 6 * J,
     suivi: { version: 1, bilan_le: null, historique: [ev("bilan", "reserve", MIDI(10)), ev("bilan", "annule", MIDI(5))] }, suiviLe: MIDI(5) }),
   /* bloc H : « Bilan réservé » coché il y a 8 jours, Absente il y a 5 jours, puis sa case « J'ai réservé » cochée il y a 20 h
-     (après l'appel : à vérifier) ; Tina : case cochée il y a 6 jours, Absente il y a 4 jours, puis un clic il y a 20 h */
+     (après l'appel : à vérifier ; sa première coche, après la décision) ; Tina : case cochée il y a 6 jours, Absente il y a 4 jours, puis un clic il y a 20 h */
   sara: () => prospect(13, "Sara", "Recase", { cree: 20 * J, q: 20 * J, rep: REP, email: "sara@exemple.fr", caseP: 20 * H,
     suivi: { version: 1, bilan_le: MIDI(8), issue: "absent", issue_le: MIDI(5), note: "", historique: [ev("bilan", "reserve", MIDI(8)), ev("issue", "absent", MIDI(5), "")] }, suiviLe: MIDI(5) }),
   tina: () => prospect(14, "Tina", "Reclic", { cree: 20 * J, q: 20 * J, rep: REP, email: "tina@exemple.fr", caseP: 6 * J, clics: [20 * H],
-    suivi: { version: 1, issue: "absent", issue_le: MIDI(4), note: "", historique: [ev("issue", "absent", MIDI(4), "")] }, suiviLe: MIDI(4) })
+    suivi: { version: 1, issue: "absent", issue_le: MIDI(4), note: "", historique: [ev("issue", "absent", MIDI(4), "")] }, suiviLe: MIDI(4) }),
+  /* v59 (relecture) : Absent il y a 20 jours, puis sa case « J'ai réservé » cochée il y a 16 jours (sa première coche, après
+     l'appel ; au-delà de retour_jours : l'issue reste) : à vérifier, « Retirer « Bilan réservé » » dans la fiche */
+  yann: () => prospect(15, "Yann", "Vieux", { cree: 30 * J, q: 30 * J, rep: REP, email: "yann@exemple.fr", caseP: 16 * J,
+    suivi: { version: 1, issue: "absent", issue_le: MIDI(20), note: "", historique: [ev("issue", "absent", MIDI(20), "")] }, suiviLe: MIDI(20) })
 };
-const NOM = { [ALICE]: "Alice", [MARC]: "Marc", [BRUNO]: "Bruno", [VICTOR]: "Victor", [OMAR]: "Omar", [HUGO]: "Hugo", [PAUL]: "Paul", [ZOE]: "Zoé", [INES]: "Inès", [LEA]: "Léa", [NADIA]: "Nadia", [ROSE]: "Rose", [SARA]: "Sara", [TINA]: "Tina" };
+const NOM = { [ALICE]: "Alice", [MARC]: "Marc", [BRUNO]: "Bruno", [VICTOR]: "Victor", [OMAR]: "Omar", [HUGO]: "Hugo", [PAUL]: "Paul", [ZOE]: "Zoé", [INES]: "Inès", [LEA]: "Léa", [NADIA]: "Nadia", [ROSE]: "Rose", [SARA]: "Sara", [TINA]: "Tina", [YANN]: "Yann" };
 const noms = l => (l || []).map(u => NOM[u] || (u === TESTEUR.id ? "compte de test" : u === F.IDS.c3 ? "Julien" : String(u).slice(-4))).join(", ");
 /* le décor : fixtures (Thomas, Sarah, Julien) + compte de test (opts.test !== false) + les prospects du bloc ; opts.sans : comptes retirés */
 function decor(opts){
@@ -356,6 +371,8 @@ const uids = page => page.$$eval("#pr-liste .sc-carte", l => l.map(e => e.datase
 const carte = (page, uid) => page.$eval(`#pr-liste .sc-carte[data-uid="${uid}"]`, e => e.textContent.replace(/[  ]/g, " ").replace(/\s+/g, " ").trim()).catch(() => "");
 const motifCarte = (page, uid) => page.$eval(`#pr-liste .sc-carte[data-uid="${uid}"] .sc-motif`, e => e.textContent.replace(/[  ]/g, " ").replace(/\s+/g, " ").trim()).catch(() => "");
 const titreBilan = (page, uid) => page.$$eval(`#pr-liste .sc-carte[data-uid="${uid}"] .sc-tete .pastille.ok`, l => { const e = l.find(x => x.textContent.trim() === "bilan réservé"); return e ? e.getAttribute("title") : null; }).catch(() => null);
+/* v59 (relecture) : l'info-bulle de la pastille « bilan réservé » d'un prospect dans Mes clients (Decouverte.pastilleCoach) */
+const titreClients = (page, uid) => page.$eval(`#tb-clients [data-ouvrir="${uid}"]`, bt => { const e = Array.from(bt.closest("tr").querySelectorAll('td[data-l="Client"] .pastille.ok')).find(x => x.textContent.trim() === "bilan réservé"); return e ? e.getAttribute("title") : null; }).catch(() => null);
 const boutonsCarte = (page, uid) => page.$$eval(`#pr-liste .sc-carte[data-uid="${uid}"] [data-sc]`, l => l.map(e => e.dataset.sc)).catch(() => []);
 const boutonsFiche = page => page.$$eval("#fiche-commercial [data-sc]", l => l.map(e => e.dataset.sc + "=" + e.textContent.trim())).catch(() => []);
 const filtre = async (page, f) => { await page.click(`[data-filtre="${f}"]`); await attendre(page, 400); };
@@ -446,8 +463,26 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
         /* une case datée dans 48 h (téléphone du prospect en avance) après ton retrait : ne compte pas ; sans décision : compte (comme avant) */
         caseFuture: bl(S({ bilan_le: null, historique: [bil("reserve", M(10)), bil("annule", M(5))] }), C({ reserve: H(-48) })),
         caseFutureSansDecision: bl(S({}), C({ reserve: H(-48) })),
+        /* première coche du prospect (hier), après la décision (coche il y a 8 jours, Absent il y a 5 jours) */
         absentCocheCase: a(p(30), C({ reserve: H(20) }), S({ bilan_le: M(8), issue: "absent", issue_le: M(5), historique: [bil("reserve", M(8)), iss("absent", M(5))] }), H(20), Q(30)),
         caseAvantAbsentClic: a(p(30), C({ reserve: M(6), clics: [H(20)] }), S({ issue: "absent", issue_le: M(4) }), H(20), Q(30)),
+        /* v59 (relecture) : Nouveautés et l'info-bulle de Mes clients (Decouverte.pastilleCoach) suivent l'analyse
+           (caseAVerifier) : les deux cas ci-dessus, en lignes de Clients.resumer */
+        nouv: [["nc", "Nora", C({ reserve: H(20) }), S({ bilan_le: M(8), issue: "absent", issue_le: M(5), historique: [bil("reserve", M(8)), iss("absent", M(5))] })],
+               ["na", "Nils", C({ reserve: M(6), clics: [H(20)] }), S({ issue: "absent", issue_le: M(4) })]].map(([id, prenom, Cc, Su]) => {
+          const l = { p: { id, prenom, nom: "Test", statut: "prospect", cree_le: M(30) }, ch: Cc, suivi: Su, activite: H(20), dc: Q(30) };
+          const t = /class="pastille ok" title="([^"]*)">bilan réservé</.exec(Decouverte.pastilleCoach(l));
+          return { ev: Nouveautes.evenements([l], null).map(e => e.type + (e.quand === Cc.reserve ? "=case" : "")), titre: t ? t[1] : null };
+        }),
+        /* v59 (relecture) : « Absent » il y a 20 jours, case cochée il y a 16 jours (après l'appel, au-delà de retour_jours :
+           l'issue reste) : à vérifier, « Retirer « Bilan réservé » » dans la fiche ; retirée maintenant : plus à vérifier, toujours Absent */
+        absentCaseVieille: (() => {
+          const P = p(40), Cc = C({ reserve: M(16) }), D = Q(40), h0 = [iss("absent", M(20))], px = { id: "x", prenom: "X", nom: "Y", statut: "prospect" };
+          const bt = z => (Commercial.boutons(px, z, true).match(/data-sc="[a-z_]+"/g) || []).map(x => x.slice(9, -1));
+          const z1 = Commercial.analyse(P, Cc, S({ issue: "absent", issue_le: M(20), historique: h0 }), null, D);
+          const z2 = Commercial.analyse(P, Cc, S({ issue: "absent", issue_le: M(20), bilan_le: null, historique: h0.concat([bil("annule", new Date().toISOString())]) }), null, D);
+          return [z1, z2].map(z => ({ etat: z.etat, motif: z.motif, aVerifier: !!z.caseAVerifier, boutons: bt(z) }));
+        })(),
         /* l'ordre : les 7 motifs, puis ce qui n'est pas à traiter */
         rangs: [
           a(p(20), null, S({ issue: "signe", issue_le: H(1) }), null, Q(20)),
@@ -508,6 +543,16 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
       r.absentCocheCase.etat === "en_cours" && r.absentCocheCase.motif === "case" && r.absentCocheCase.action.includes("vérifie ton agenda"), JSON.stringify(r.absentCocheCase));
     ok("A : « Absent », case cochée AVANT l'appel, clic hier : en cours pour son clic (la case d'avant l'appel n'est plus « à vérifier »)",
       r.caseAvantAbsentClic.etat === "en_cours" && r.caseAvantAbsentClic.motif === "clic", JSON.stringify(r.caseAvantAbsentClic));
+    const [nc, na] = r.nouv;
+    ok("A : Nouveautés : la case « J'ai réservé » cochée hier, après l'appel, face à la coche d'AVANT l'appel (cas ci-dessus) : 1 nouveauté « case » (comme « À traiter ») ; info-bulle de Mes clients « à vérifier » (plus « coché par toi »)",
+      egal(nc.ev, ["reserve=case"]) && nc.titre === "A coché « J'ai réservé mon bilan » (à vérifier, puis coche « Bilan réservé » dans sa fiche)", JSON.stringify(nc));
+    ok("A : … la case cochée AVANT l'appel (« Absent », puis un clic hier) : plus de nouveauté « case », son clic oui ; info-bulle « A coché « J'ai réservé mon bilan », avant l'appel »",
+      egal(na.ev, ["clic"]) && na.titre === "A coché « J'ai réservé mon bilan », avant l'appel", JSON.stringify(na));
+    const [av1, av2] = r.absentCaseVieille;
+    ok("A : « Absent » il y a 20 jours, case cochée il y a 16 jours (au-delà de 14 jours) : toujours Absent à traiter, case à vérifier, fiche : « Bilan réservé (nouveau créneau) » ET « Retirer « Bilan réservé » »",
+      av1.etat === "absent" && av1.motif === "absent" && av1.aVerifier && av1.boutons.includes("bilan") && av1.boutons.includes("bilan_non"), JSON.stringify(av1));
+    ok("A : … « Retirer » (ta décision, datée après sa case) : plus à vérifier, toujours Absent à traiter, plus de « Retirer », « nouveau créneau » reste",
+      av2.etat === "absent" && av2.motif === "absent" && !av2.aVerifier && av2.boutons.includes("bilan") && !av2.boutons.includes("bilan_non"), JSON.stringify(av2));
     const R = r.rangs, urg = R.slice(0, 7), autres = R.slice(7);
     ok("A : ordre : signé, case, absent, clic, nouveau, appel, perdu (rangs croissants), puis tout ce qui n'est pas à traiter (bilan coché, absent relancé, perdu récent, le reste, signé ancien)",
       egal(urg.map(x => x[0]), ["signe", "case", "absent", "clic", "nouveau", "appel", "perdu"]) && urg.every(x => x[1]) && urg.every((x, i) => i === 0 || x[2] > urg[i - 1][2])
@@ -695,6 +740,33 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
       !(await uids(page)).includes(NADIA) && ecrSuivi(db, NADIA).length === 1 && ecr(db, "challenge").length === 0 && db.ecritures.length === 1, noms(await uids(page)) + " " + resume(db));
   });
 
+  /* v59 (relecture) : « Absent » dont la case « J'ai réservé » (cochée après l'appel) est restée à vérifier au-delà de
+     retour_jours : « Retirer « Bilan réservé » » dans la fiche fait tomber le « à vérifier », l'Absent reste */
+  await bloc("E. Absent, case d'après l'appel restée à vérifier : « Retirer »", async () => {
+    const db = decor({ test: false, comptes: [P.yann()] });
+    const { page } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]");
+    await ficheDe(page, YANN, "Yann Vieux", "#fiche-commercial");
+    const b0 = await boutonsFiche(page), f0 = await texte(page, "#fiche-commercial");
+    ok("E : fiche de Yann (Absent il y a 20 jours, case cochée il y a 16 jours) : ABSENT, « pas encore vérifié par toi », boutons « Bilan réservé (nouveau créneau) » et « Retirer « Bilan réservé » »",
+      (await texte(page, "#fiche-commercial .seance-c-tete")).includes("ABSENT") && f0.includes("il y a 16 jours : pas encore vérifié par toi") && b0.includes("bilan=Bilan réservé (nouveau créneau)") && b0.includes("bilan_non=Retirer « Bilan réservé »"),
+      JSON.stringify(b0) + " " + f0.slice(0, 400));
+    const avantY = clone(SUIVI(db, YANN)), luY = majLe(db, "suivi_prospect", YANN), n0 = db.ecritures.length;
+    await cliquer(page, '#fiche-commercial [data-sc="bilan_non"]'); await attendre(page, 1500);
+    const SY = SUIVI(db, YANN) || {}, leY = ((SY.historique || []).slice(-1)[0] || {}).le;
+    ok("E : « Retirer » : UNE écriture (PATCH maj_le=eq.<lu>), contenu EXACT : le suivi d'avant + bilan_le null + l'événement « retiré » ; l'issue « absent » et sa date gardées ; jamais la clé challenge",
+      db.ecritures.length === n0 + 1 && ecrSuivi(db, YANN).length === 1 && egal(conds(db, YANN), ["eq." + luY]) && /^\d{4}-\d{2}-\d{2}T/.test(leY || "")
+      && egal(SY, Object.assign({}, avantY, { bilan_le: null, historique: avantY.historique.concat([{ type: "bilan", valeur: "annule", le: leY }]) })) && SY.issue === "absent" && SY.issue_le === avantY.issue_le && ecr(db, "challenge").length === 0,
+      JSON.stringify(SY) + " " + resume(db));
+    const b1 = await boutonsFiche(page), f1 = await texte(page, "#fiche-commercial");
+    ok("E : la fiche se redessine : toujours ABSENT et à traiter, plus « pas encore vérifié par toi » ni « Retirer », « Bilan réservé (nouveau créneau) » reste",
+      (await texte(page, "#fiche-commercial .seance-c-tete")).includes("ABSENT") && !!(await page.$("#fiche-commercial .sc-motif")) && !f1.includes("pas encore vérifié par toi") && !b1.some(x => x.startsWith("bilan_non=")) && b1.includes("bilan=Bilan réservé (nouveau créneau)"),
+      JSON.stringify(b1) + " " + f1.slice(0, 400));
+    await aller(page, "#/prospects", 300); await page.waitForSelector("#pr-liste", { timeout: 8000 }); await attendre(page, 500);
+    const cy = await carte(page, YANN);
+    ok("E : page Prospects, carte de Yann : « à traiter Absent à l'appel : repropose-lui un créneau », « Bilan pas réservé » (plus « à vérifier »)",
+      (await motifCarte(page, YANN)) === "à traiter Absent à l'appel : repropose-lui un créneau" && cy.includes("Bilan pas réservé") && !cy.includes("à vérifier"), cy);
+  });
+
   /* =================== F. export CSV : espaces puis = + - @ =================== */
   await bloc("F. export CSV : cellules précédées d'espaces", async () => {
     const pieges = [
@@ -766,6 +838,12 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
       ct + " | " + await titreBilan(page, TINA));
     ok("H : Hugo (coché hier, sans issue) : inchangé, « Bilan réservé le " + frL(MIDI(1)) + " », info-bulle « Bilan réservé : coché par toi »",
       ch.includes("Bilan réservé le " + frL(MIDI(1))) && (await titreBilan(page, HUGO)) === "Bilan réservé : coché par toi", ch + " | " + await titreBilan(page, HUGO));
+    /* v59 (relecture) : Nouveautés et le badge de l'onglet Prospects suivent l'analyse (caseAVerifier), comme « À traiter » */
+    const nvH = await page.$$eval("#pr-nouveautes .nv-liste li .nv-txt", l => l.map(e => e.textContent.replace(/\s+/g, " ").trim())).catch(() => []);
+    const bgH = await page.$$eval('#nav a[data-id="prospects"] .nav-badge', l => l.map(e => e.textContent.trim())).catch(() => []);
+    ok("H : Nouveautés : « Sara Recase · a coché « J'ai réservé » » (sa case d'après l'appel, face à ta coche d'avant) ; pas la case de Tina (d'avant l'appel), son clic oui ; badge de l'onglet Prospects « 2 »",
+      nvH.includes("Sara Recase · a coché « J'ai réservé »") && !nvH.some(x => x.startsWith("Tina Reclic · a coché")) && nvH.includes("Tina Reclic · clic « Réserver mon bilan »") && nvH.length === 2 && egal(bgH, ["2"]),
+      JSON.stringify([nvH, bgH]));
     const { t } = await exporter(page);
     const L = lireCSV(t.replace(/^\uFEFF/, "")), ligne = n => L.find(l => l[0] === n) || [], iB = L[0].indexOf("Bilan réservé"), iL = L[0].indexOf("Bilan réservé le"), iC = L[0].indexOf("Case « J'ai réservé » (prospect)");
     const cols = n => [ligne(n)[iB], ligne(n)[iL], ligne(n)[iC]];
@@ -773,6 +851,12 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
       egal(cols("Alice Absente"), ["oui, avant l'appel", frL(MIDI(5)), ""]) && egal(cols("Sara Recase"), ["à vérifier (case du prospect)", frL(avant(20 * H)), frL(avant(20 * H))]) && egal(cols("Tina Reclic"), ["case du prospect, avant l'appel", frL(avant(6 * J)), frL(avant(6 * J))]),
       JSON.stringify([cols("Alice Absente"), cols("Sara Recase"), cols("Tina Reclic")]));
     ok("H : … Hugo inchangé (« oui », " + frL(MIDI(1)) + ")", egal(cols("Hugo Réservé"), ["oui", frL(MIDI(1)), ""]), JSON.stringify(cols("Hugo Réservé")));
+    /* v59 (relecture) : Mes clients, l'info-bulle « bilan réservé » (Decouverte.pastilleCoach) suit l'analyse, comme la carte */
+    await aller(page, "#/clients", 300); await page.waitForSelector("#tb-clients [data-ouvrir]", { timeout: 8000 }); await attendre(page, 500);
+    const tmc = {}; for (const [k, u] of [["Alice", ALICE], ["Sara", SARA], ["Tina", TINA], ["Hugo", HUGO]]) tmc[k] = await titreClients(page, u);
+    ok("H : Mes clients, info-bulle « bilan réservé » : Sara « à vérifier, puis coche « Bilan réservé » dans sa fiche » (plus « coché par toi »), Alice « coché par toi, avant l'appel », Tina « …, avant l'appel », Hugo inchangé (« coché par toi »)",
+      tmc.Sara === "A coché « J'ai réservé mon bilan » (à vérifier, puis coche « Bilan réservé » dans sa fiche)" && tmc.Alice === "Bilan réservé : coché par toi, avant l'appel" && tmc.Tina === "A coché « J'ai réservé mon bilan », avant l'appel" && tmc.Hugo === "Bilan réservé : coché par toi",
+      JSON.stringify(tmc));
     await ficheDe(page, ALICE, "Alice Absente", "#fiche-decouverte");
     const da = await valeurFiche(page, "#fiche-decouverte", "Bilan réservé");
     await ficheDe(page, TINA, "Tina Reclic", "#fiche-decouverte");

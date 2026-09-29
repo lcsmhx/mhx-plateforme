@@ -96,7 +96,7 @@ const CONFIG = {
     relance_attente_jours: 3,        // après une relance, on attend 3 jours avant d'en proposer une autre
     perdu_relance_jours: 30,         // « Perdu » : relance proposée 30 jours après l'appel
     relances_max: 3,                 // 3 relances sans réponse : on arrête de proposer de relancer (« classe-le Perdu ? »)
-    retour_jours: 14,                // « J'ai réservé » coché après un « Perdu » / « Absent » : il revient dans la course pendant 14 jours
+    retour_jours: 14,                // « J'ai réservé » coché après un « Perdu » / « Absent » : il revient dans la course pendant 14 jours (v59 : première coche seulement, la case ne se coche qu'une fois)
     appel_jours: 7                   // bilan réservé il y a plus de 7 jours sans issue indiquée : « L'appel a-t-il eu lieu ? »
   },
 

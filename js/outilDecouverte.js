@@ -157,13 +157,18 @@ const Decouverte = {
   },
   /* pastilles « Découverte · inscrit depuis n j » (+ bilan) pour Mes clients : prospects seulement. l = une ligne de
      Clients.resumer. v52 : plus de « J n/7 » ni de « terminée » (gratuit pour toujours).
-     v53 (chantier 4) : « bilan réservé » suit la coche du coach (Commercial.bilan : sa coche, sinon la case du prospect) */
+     v53 (chantier 4) : « bilan réservé » suit la coche du coach (Commercial.bilan : sa coche, sinon la case du prospect)
+     v59 : son info-bulle suit l'analyse (Commercial.analyseLigne, comme « À traiter », la carte et Nouveautés) : la case
+     à vérifier (même face à ta coche d'avant l'appel), ta coche, ou la coche / la case d'avant l'appel (« …, avant
+     l'appel », comme Commercial.pastilleBilan) ; sans analyse : comme avant */
   pastilleCoach(l){
     let r = null, B = null;
     try { r = this.resume(l && l.p, l && l.ch, l && l.dc); B = Commercial.bilan(l && l.suivi, l && l.ch, l && l.p); } catch(e){ return `<span class="pastille attention" title="Données de la découverte illisibles">Découverte illisible</span>`; }
     let h = r.jour == null ? `<span class="pastille">Découverte</span>`
           : `<span class="pastille" title="Jours depuis son inscription">Découverte · ${this.depuisTexte(r.jour)}</span>`;
-    if (B.reserve) h += ` <span class="pastille ok" title="${B.coach ? "Bilan réservé : coché par toi" : "A coché « J'ai réservé mon bilan » (à vérifier, puis coche « Bilan réservé » dans sa fiche)"}">bilan réservé</span>`;
+    const a = B.reserve ? Commercial.analyseLigne(l) : null, avant = !!a && !a.coche && !a.caseAVerifier;
+    if (B.reserve) h += ` <span class="pastille ok" title="${(a ? a.caseAVerifier : !B.coach) ? "A coché « J'ai réservé mon bilan » (à vérifier, puis coche « Bilan réservé » dans sa fiche)"
+      : B.coach ? "Bilan réservé : coché par toi" + (avant ? ", avant l'appel" : "") : "A coché « J'ai réservé mon bilan », avant l'appel"}">bilan réservé</span>`;
     else if (r.clics) h += ` <span class="pastille accent" title="A cliqué « Réserver mon bilan » ${r.clics} fois">a cliqué Réserver</span>`;
     return h;
   },

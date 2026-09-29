@@ -30,7 +30,10 @@ const Commercial = {
      filtres, CSV, fiche, Mes clients, Nouveautés, compteur, prochaine action).
      Ancien client redevenu prospect (client_le) : une coche ou une case d'avant son passage en client ne compte plus.
      v59 : la case cochée par le prospect APRÈS ta dernière décision datée (coche ou retrait) compte de nouveau (à vérifier) :
-     il a repris un créneau après que tu as décidé ; une case d'avant reste une info. Décision sans date (clé bilan_le posée
+     il a repris un créneau après que tu as décidé ; une case d'avant reste une info. La case n'a qu'une date, posée à sa
+     PREMIÈRE coche (Decouverte.reserver : elle ne se coche qu'une fois, puis disparaît de son écran) : cela ne vaut que pour
+     un prospect qui la coche pour la première fois après ta décision ; celui qui l'avait déjà cochée revient par son clic
+     « Réserver » (clic_recent_jours) ou par ta coche « Bilan réservé (nouveau créneau) ». Décision sans date (clé bilan_le posée
      sans historique) : la case ne compte plus, comme avant. Une case datée dans le futur (horloge du prospect en avance,
      plus de 5 min, comme les Nouveautés) ne passe pas devant ta décision : sinon « Retirer » ne la ferait jamais tomber.
      → { reserve, le (instant retenu), coach (instant de la coche ou null), decide, retire (dernier retrait, s'il n'est
@@ -107,9 +110,11 @@ const Commercial = {
     const avantAppel = v => this.avantIssue(S, v);
     const coche = B.coach && !avantAppel(B.coach) ? B.coach : null, dCoche = coche ? this.depuis(coche) : null;
     const caseAv = B.caseCompte && !coche && B.case && !avantAppel(B.case) ? B.case : null;
-    /* « Perdu » ou « Absent », puis il reclique « Réserver » ou recoche « J'ai réservé » (retour_jours) : il revient dans la
-       course ; v59 : ou tu coches « Bilan réservé (nouveau créneau) » après l'appel : de nouveau en cours, sans limite de
-       durée, jusqu'à la prochaine issue (l'issue d'avant reste en base : tuiles des 30 jours, historique) */
+    /* « Perdu » ou « Absent », puis il reclique « Réserver » ou coche « J'ai réservé » (retour_jours) : il revient dans la
+       course (v59 : la case ne se coche qu'une fois, voir bilan : seulement une première coche, après l'appel ; celui qui
+       l'avait déjà cochée revient par son clic « Réserver » ou par ta coche « nouveau créneau ») ; v59 : ou tu coches
+       « Bilan réservé (nouveau créneau) » après l'appel : de nouveau en cours, sans limite de durée, jusqu'à la prochaine
+       issue (l'issue d'avant reste en base : tuiles des 30 jours, historique) */
     const revenu = (issue === "perdu" || issue === "absent") && tIssue != null && (!!coche
       || (!!r && !!r.dernierClic && instant(r.dernierClic) > tIssue && clic != null && clic <= cfg.clic_recent_jours)
       || (!!caseAv && this.depuis(caseAv) != null && this.depuis(caseAv) <= cfg.retour_jours));
@@ -224,10 +229,13 @@ const Commercial = {
      v59 : après « Absent » ou « Perdu », il a repris un créneau : « Bilan réservé (nouveau créneau) », même écriture (l'issue
      et l'historique gardés), il redevient en cours jusqu'à la prochaine issue ; la coche d'avant l'appel ne compte plus
      (« Bilan réservé » de nouveau). « Signé » : rien. Une issue sans date lisible (ancienne donnée) : pas de nouveau
-     créneau (la coche ne saurait pas la suivre) ; « Annuler » reste. */
+     créneau (la coche ne saurait pas la suivre) ; « Annuler » reste.
+     v59 : Absent ou Perdu avec une case « J'ai réservé » encore à vérifier (caseAVerifier : cochée après l'appel, il y a
+     plus de retour_jours, l'issue est restée) : + « Retirer « Bilan réservé » » (ta décision, datée après sa case : le « à
+     vérifier » tombe, l'issue et sa date restent). */
   boutons(p, a, fiche){
     const b = (act, txt, cls) => this.bouton(p, act, txt, cls), B = a.bilan || {};
-    const bilan = !fiche || a.issue === "signe" ? "" : a.issue ? (a.issueDatee ? b("bilan", "Bilan réservé (nouveau créneau)", "principal") : "")
+    const bilan = !fiche || a.issue === "signe" ? "" : a.issue ? (a.issueDatee ? b("bilan", "Bilan réservé (nouveau créneau)", "principal") : "") + (a.caseAVerifier ? b("bilan_non", "Retirer « Bilan réservé »") : "")
       : a.coche ? b("bilan_non", "Retirer « Bilan réservé »")
       : b("bilan", "Bilan réservé", "principal") + (B.source === "prospect" || a.caseAVerifier ? b("bilan_non", "Retirer « Bilan réservé »") : "");
     return (fiche ? "" : b("fiche", "Ouvrir la fiche")) + bilan + (a.issue
@@ -403,7 +411,8 @@ const Nouveautes = {
   n: 0, _vu: undefined, _lecture: null, erreur: false, _deplie: false, _tCharge: null,
   /* v53 (chantier 4) : « reserve » = la case « J'ai réservé » cochée par le prospect (une action du prospect, à vérifier) ;
      elle ne compte plus dès que le coach a décidé du bilan (coché ou retiré : Commercial.bilan) ; v59 : sauf une case
-     cochée APRÈS sa dernière décision (sans coche en cours) */
+     cochée APRÈS sa dernière décision ; elle suit l'analyse (caseAVerifier) : ni une coche en cours, ni l'appel qui a suivi
+     la case (Absent, Perdu) */
   TYPES: { inscription: "inscription", questionnaire: "questionnaire rempli", clic: "clic « Réserver mon bilan »", reserve: "a coché « J'ai réservé »" },
   COURTS: { inscription: ["inscription", "inscriptions"], questionnaire: ["questionnaire rempli", "questionnaires remplis"], clic: ["clic « Réserver »", "clics « Réserver »"], reserve: ["case « J'ai réservé »", "cases « J'ai réservé »"] },
   /* date de la derniere visite, relue a chaque affichage (un autre appareil a pu tout marquer comme vu).
@@ -430,8 +439,10 @@ const Nouveautes = {
       ajoute(l, "inscription", l.p.cree_le);
       if (l.dc) ajoute(l, "questionnaire", l.dc.court_le);
       Decouverte.clics(l.ch).forEach(c => ajoute(l, "clic", c.date));
-      const B = Commercial.bilanLigne(l);
-      if (B.source === "prospect") ajoute(l, "reserve", B.case);   // v59 : aussi une case cochée après ta dernière décision
+      /* v59 : la case à vérifier de l'analyse (caseAVerifier, comme « À traiter », la carte et la fiche) : aussi une case
+         cochée après ta dernière décision, même face à ta coche d'avant l'appel ; plus une case d'avant l'appel */
+      const a = Commercial.analyseLigne(l);
+      if (a && a.caseAVerifier) ajoute(l, "reserve", a.caseAVerifier);
     });
     return out.sort((a, b) => b.t - a.t);
   },
