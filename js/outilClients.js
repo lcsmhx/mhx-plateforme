@@ -99,7 +99,7 @@ const outilClients = {
       `<span class="pastille${ok ? "" : " manque"}">${ok ? txtOk : txtNon}</span>`;
     const variation = (v, sens) => {
       if (v === null || v === undefined) return '<span class="meta">—</span>';
-      const t = (v > 0 ? "+" : "") + n1(v) + " kg";
+      const t = (v > 0 ? "+" : "") + n1(v) + "\u00a0kg";   // v58 : insécable, « kg » ne part jamais seul à la ligne
       const bon = sens === 0 ? null : (sens < 0 ? v < -0.2 : v > 0.2);
       return `<b style="color:${bon === null ? "var(--ink)" : bon ? "var(--good)" : (Math.abs(v) < 0.3 ? "var(--ink-3)" : "var(--warn)")}">${t}</b>`;
     };
@@ -133,10 +133,10 @@ const outilClients = {
             : l.jours >= 10 ? `<span class="pastille manque">${l.jours} j</span>`
             : `<span class="meta">${l.jours === 0 ? "aujourd'hui" : "il y a " + l.jours + " j"}</span>`}</td>
       <td data-l="Régularité">${l.reg == null ? '<span class="meta">—</span>'
-            : bloc(`<b class="${Regularite.niveau(l.reg)}">${l.reg}</b><span class="meta">/100</span>${l.regEnCours != null ? ` <span class="meta">(en cours : ${l.regEnCours})</span>` : ""}`)}</td>
-      <td data-l="Poids">${l.ev ? bloc(`${n1(l.ev.actuel)} kg <span class="meta">(départ ${n1(l.ev.depart)})</span>`) : '<span class="meta">aucune mesure</span>'}</td>
+            : bloc(`<b class="${Regularite.niveau(l.reg)}">${l.reg}</b><span class="meta">/100</span>${l.regEnCours != null ? ` <span class="meta">(en cours&nbsp;:&nbsp;${l.regEnCours})</span>` : ""}`)}</td>
+      <td data-l="Poids">${l.ev ? bloc(`${n1(l.ev.actuel)}&nbsp;kg <span class="meta">(départ&nbsp;${n1(l.ev.depart)})</span>`) : '<span class="meta">aucune mesure</span>'}</td>
       <td data-l="Depuis le début">${l.ev ? variation(l.ev.total, l.sens) : '<span class="meta">—</span>'}</td>
-      <td data-l="4 dernières sem.">${l.ev && l.ev.mois !== null ? bloc(variation(l.ev.mois, l.sens) + (l.ev.jours_fenetre !== 28 ? ` <span class="meta">sur ${l.ev.jours_fenetre} j</span>` : "")) : '<span class="meta">pas assez de recul</span>'}</td>
+      <td data-l="4 dernières sem.">${l.ev && l.ev.mois !== null ? bloc(variation(l.ev.mois, l.sens) + (l.ev.jours_fenetre !== 28 ? ` <span class="meta">sur ${l.ev.jours_fenetre}&nbsp;j</span>` : "")) : '<span class="meta">pas assez de recul</span>'}</td>
       <td data-l="Questionnaire">${pastille(l.intake, "rempli", "à remplir")}</td>
       <td data-l="Programme">${pastille(l.programme, "envoyé", "à faire")}</td>
       <td data-l="Diète">${pastille(l.diete, "envoyée", "à faire")}</td>

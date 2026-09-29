@@ -8,7 +8,8 @@
       restent à gauche, par-dessus les autres cellules, et la dernière colonne reste utilisable ;
    C. Mes clients sur téléphone (375 px) : les cartes (rien de fixe), les lignes dans le nouvel ordre, la date courte, la page
       ne déborde pas ; v58 : une valeur en plusieurs morceaux (« 7/10 », « 0/100 (en cours : 0) », « 83 kg (départ …) »)
-      reste d'un seul tenant, collée à droite (avant : chaque morceau poussé à un bout de la ligne) ;
+      reste d'un seul tenant, collée à droite (avant : les morceaux étalés sur toute la ligne) ; aucune carte ne déborde (le nom et
+      les pastilles d'un prospect passent à la ligne), à 375 et à 320 px ;
    D. la connexion ouvre la page d'arrivée : un client, un prospect et le coach dont l'adresse gardait une page (#/formation,
       #/prospects : dernière page ouverte sur l'appareil quand la session a pris fin sans « Se déconnecter ») arrivent sur
       leur page d'arrivée ; « Me reconnecter » (session perdue en cours d'utilisation) ramène sur la page ouverte ;
@@ -597,6 +598,15 @@ const TRANSPARENT = /^(transparent|rgba\(0, 0, 0, 0\))$/;
     const M = (nom, l) => morceaux.find(m => m.nom === nom && m.l === l) || {};
     const tNote = M("Sans nom", "Dernière note"), tReg = M("Sans nom", "Régularité");
     ok("C : v58 : compte de test : « 7/10 » et « 0/100 (en cours : 0) » d'un seul tenant", tNote.t === "7/10" && tNote.ecart <= 1 && /^\d+\/100 \(en cours : \d+\)$/.test(tReg.t) && tReg.ecart <= 8, JSON.stringify([tNote, tReg]));
+    /* v58 : rien ne dépasse d'une carte (le cadre du tableau ne défile pas de côté, aucune cellule plus large que sa place) */
+    const cartes = pg => pg.evaluate(() => { const sc = document.querySelector(".tb-clients-table").closest(".scroll"); const trop = Array.from(document.querySelectorAll("#tb-clients td")).filter(td => td.scrollWidth > td.clientWidth + 1).map(td => ((td.closest("tr").querySelector("td b") || {}).textContent || "?") + " / " + (td.dataset.l || "Client") + " : " + td.scrollWidth + " pour " + td.clientWidth); return { cadre: sc.scrollWidth + "/" + sc.clientWidth, defile: sc.scrollWidth > sc.clientWidth + 1, trop }; });
+    const k375 = await cartes(page);
+    ok("C : v58 : 375 px : aucune carte ne déborde (nom et pastilles des prospects repliés dans la carte), le tableau ne défile pas de côté", !k375.defile && k375.trop.length === 0, JSON.stringify(k375).slice(0, 400));
+    const x320 = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]", { viewport: { width: 320, height: 700 }, fuseau: FUSEAU });
+    const k320 = await cartes(x320.page);
+    await x320.page.$eval(`#tb-clients [data-ouvrir="${LEA}"]`, bt => bt.closest("tr").scrollIntoView({ block: "start" })); await capture(x320.page, "C-320-lea");
+    /* la page elle-même déborde à 320 px à cause de la barre du haut du coach (nom, EN, « Se déconnecter ») : défaut antérieur, hors des cartes */
+    ok("C : v58 : 320 px : aucune carte ne déborde (pastille la plus longue repliée), le tableau ne défile pas de côté", !k320.defile && k320.trop.length === 0, JSON.stringify(k320).slice(0, 400));
     const thP = M("Thomas Démo", "Poids"), th4 = M("Thomas Démo", "4 dernières sem.");
     ok("C : v58 : Thomas : poids « " + thP.t + " » et « 4 dernières sem. » « " + th4.t + " » d'un seul tenant", /^\d+(,\d)? kg \(départ \d+(,\d)?\)$/.test(thP.t || "") && thP.ecart <= 8 && / kg/.test(th4.t || "") && th4.ecart <= 8, JSON.stringify([thP, th4]));
   });

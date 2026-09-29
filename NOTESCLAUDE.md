@@ -315,5 +315,5 @@ Pour Grok Bot : rien à faire sur `index.html` (règle inchangée : Grok travail
 - **Pour Grok Bot** : rien à faire côté `donnees/`, aucune base touchée. Tests en lecture seule une fois en ligne (tu ne crées aucun compte) : pied de page « 2026-09-29 · 57 » ; aucune erreur de console, aucun fichier en 404.
 
 ## 2026-09-29 — v58 : cartes « Mes clients » sur téléphone — Claude
-- Une valeur en plusieurs morceaux reste d'un seul tenant, collée à droite : « 7/10 », « 0/100 (en cours : 0) », « 82,4 kg (départ 84,0) », « -1,0 kg sur 21 j » (avant : chaque morceau poussé à un bout de la ligne). Rien d'autre ne change, rien côté base.
+- Une valeur en plusieurs morceaux reste d'un seul tenant, collée à droite : « 7/10 », « 0/100 (en cours : 0) », « 82,4 kg (départ 84,0) », « -1,0 kg sur 21 j » (avant : les morceaux étalés sur toute la ligne) ; les pastilles d'un prospect (« a cliqué Réserver », « bilan réservé »…) passent à la ligne au lieu de sortir de la carte. Rien d'autre ne change, rien côté base.
 - **Pour Grok Bot** : rien à faire côté `donnees/`. Tests en lecture seule une fois en ligne (tu ne crées aucun compte) : pied de page « 2026-09-29 · 58 » ; aucune erreur de console, aucun fichier en 404.
