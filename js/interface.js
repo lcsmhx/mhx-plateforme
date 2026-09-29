@@ -10,7 +10,9 @@ const dateFr = (iso) => {
 function flash(id, texte){
   const e = $(id); if(!e) return;
   e.textContent = texte;
-  setTimeout(() => { if (e.textContent === texte) e.textContent = ""; }, 3200);
+  /* v60 : le meme message redit avant la fin reste ses 3,2 s (l'ancienne minuterie l'effacait trop tot) */
+  clearTimeout(e._flash);
+  e._flash = setTimeout(() => { if (e.textContent === texte) e.textContent = ""; }, 3200);
 }
 
 /* --- ICONES (v33) -----------------------------------------------------------

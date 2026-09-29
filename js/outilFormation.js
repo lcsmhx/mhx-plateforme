@@ -589,7 +589,7 @@ const outilFormation = {
         </button>`;
       if (ouvert){
         h += `<div class="fo-corps">
-          <p class="fo-obj"><b>Objectif :</b> ${esc(typoFr(m.objectif))}</p>
+          <p class="fo-obj"><b>${esc(typoFr("Objectif :"))}</b> ${esc(typoFr(m.objectif))}</p>
           ${(m.contenu || []).length ? `<ul class="fo-contenu">${m.contenu.map(x => `<li>${esc(typoFr(x))}</li>`).join("")}</ul>` : ""}
           ${this.video(m.video)}
           ${(m.taches || []).length ? `<h3>Ta to-do list</h3><ul class="fo-liste">${m.taches.map(t => this.caseHTML(t[0], t[1], D.coches[t[0]])).join("")}</ul>` : ""}`;
@@ -754,7 +754,7 @@ const outilFormation = {
         </button>
         <div class="fo-chal-corps">${c.axes.map(a => `<div class="fo-axe">
           <b>${esc(a.nom)}</b>
-          <p class="note" style="margin:2px 0 0"><i${traduit(a.objectif) ? "" : " data-notr"}>Objectif :</i> ${esc(typoFr(a.objectif))}</p>
+          <p class="note" style="margin:2px 0 0"><i${traduit(a.objectif) ? "" : " data-notr"}>${esc(typoFr("Objectif :"))}</i> ${esc(typoFr(a.objectif))}</p>
           <p style="margin:4px 0 0">${esc(typoFr(a.defi))}</p>
         </div>`).join("")}</div>
       </div>`;

@@ -830,7 +830,8 @@ const outilDecouverte = {
     const vide = v => v == null || v === "" || (Array.isArray(v) && !v.length);
     const egal = (a, b) => (Array.isArray(a) || Array.isArray(b)) ? (vide(a) && vide(b)) || JSON.stringify(a) === JSON.stringify(b)
       : String(a == null ? "" : a) === String(b == null ? "" : b);
-    const lireTout = () => { const V = Object.assign({}, I); qs.forEach(q => { if ($("q-" + q.id)) Object.assign(V, champsDe(q)); }); return V; };
+    /* un champ vide qui n'existait pas n'est pas cree (pas de « projection_choix: [] » pour rien) */
+    const lireTout = () => { const V = Object.assign({}, I); qs.forEach(q => { if (!$("q-" + q.id)) return; const f = champsDe(q); Object.keys(f).forEach(k => { if (!(vide(f[k]) && !(k in I))) V[k] = f[k]; }); }); return V; };
     /* v52 : une reponse faite d'espaces seulement ne compte pas ; v60 : une question a choix est repondue par un choix OU
        sa precision (son texte francais n'est alors pas vide) */
     const manquantsDe = V => qs.filter(q => req.indexOf(q.id) > -1 && (q.type === "nombre" ? !(num(V[q.id]) > 0) : !String(V[q.id] == null ? "" : V[q.id]).trim()));
