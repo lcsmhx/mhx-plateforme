@@ -849,21 +849,24 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
      plus demandé : le premier brouillon part avec la première réponse (avant : seulement après un âge d'au moins 18 ans,
      avec 2 vérifications « âge 15 → tout retiré » / « âge 30 → tout repart », remplacées ici par l'objectif posé depuis la
      réponse « problème » et l'absence de question d'âge) ; après la validation, la page de proposition de bilan
-     (page vue « decouverte-bilan » au lieu de « decouverte-resultat »). */
+     (page vue « decouverte-bilan » au lieu de « decouverte-resultat »).
+     v60 (lot 1, brief V2 C) : les questions se remplissent en touchant (plus de select ni de textarea #q-…) : « problème »
+     par un clic sur sa carte, « obstacle » et « projection » par leur précision libre seule (#q-…-precision), dont le texte
+     devient la réponse, comme avant (obstacle === "Le temps", projection === "Courir 10 km"). */
   await bloc("G. email et début du questionnaire", async () => {
     const db = base({ prospects: seule() });
     const { page } = await contexte(b, leaAct, db);
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 2400);
     ok("questionnaire affiché, rien encore répondu : rien ne part (ni réponse, ni email, ni court_debut) ; aucune question d'âge", ecr(db, "intake").length === 0 && !!(await page.$("#q-probleme")) && !(await page.$("#q-age")));
     const t0 = Date.now();
-    await page.selectOption("#q-probleme", "Perdre du gras"); await attendre(page, 1500);
+    await page.click('#q-probleme label.dc-opt:has(input[value="Perdre du gras"])'); await attendre(page, 1500);
     const I1 = contenu(db, "intake", ACT) || {};
     ok("première réponse : le premier brouillon part avec l'email du compte (email_compte = lea.martin@exemple.fr, jamais le champ « email » du questionnaire client) et court_debut (maintenant)", I1.probleme === "Perdre du gras" && I1.email_compte === "lea.martin@exemple.fr" && !("email" in I1) && typeof I1.court_debut === "string" && Math.abs(Date.parse(I1.court_debut) - t0) < 10000 && !I1.court_le, JSON.stringify(I1));
     const debut1 = I1.court_debut;
-    await page.fill("#q-obstacle", "Le temps"); await attendre(page, 1300);
+    await page.fill("#q-obstacle-precision", "Le temps"); await attendre(page, 1300);
     ok("brouillon suivant : court_debut et email inchangés", (contenu(db, "intake", ACT) || {}).court_debut === debut1 && (contenu(db, "intake", ACT) || {}).obstacle === "Le temps");
     ok("la réponse « problème » a posé l'objectif du questionnaire complet (« Perte de poids / sèche »)", (contenu(db, "intake", ACT) || {}).objectif === "Perte de poids / sèche", JSON.stringify(contenu(db, "intake", ACT)));
-    await page.fill("#q-projection", "Courir 10 km"); await attendre(page, 1300);
+    await page.fill("#q-projection-precision", "Courir 10 km"); await attendre(page, 1300);
     const I3 = contenu(db, "intake", ACT) || {};
     ok("toutes les réponses partent en brouillon, email et court_debut avec elles, sans court_le", I3.email_compte === "lea.martin@exemple.fr" && I3.court_debut === debut1 && I3.projection === "Courir 10 km" && !I3.court_le, JSON.stringify(I3));
     await page.click("#dc-voir"); await attendre(page, 1600);
@@ -872,7 +875,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     ok("questionnaire et page bilan : l'activité n'est toujours ni lue ni écrite (rien avant l'envoi)", lu(db, "activite") === 0 && ecr(db, "activite").length === 0);
     await cacher(page); await attendre(page, 1800); await montrer(page);
     const A = contenu(db, "activite", ACT) || {};
-    ok("envoi (arrière-plan) après « Valider mes réponses » : relue puis écrite, pages decouverte-questionnaire 1 et decouverte-bilan 1", lu(db, "activite") === 1 && ecr(db, "activite").length === 1 && memes(A.pages, { "decouverte-questionnaire": 1, "decouverte-bilan": 1 }), JSON.stringify(A.pages));
+    ok("envoi (arrière-plan) après « Voir ma prochaine étape » (v60 ; avant : « Valider mes réponses ») : relue puis écrite, pages decouverte-questionnaire 1 et decouverte-bilan 1", lu(db, "activite") === 1 && ecr(db, "activite").length === 1 && memes(A.pages, { "decouverte-questionnaire": 1, "decouverte-bilan": 1 }), JSON.stringify(A.pages));
   });
 
   /* ---------- H. 1 000 prospects ---------- */

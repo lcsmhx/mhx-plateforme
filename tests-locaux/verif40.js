@@ -57,6 +57,19 @@ const norm = t => String(t || "").replace(/[  ]/g, " ");
 const DC_ZONE = ":is(#acc-vue, #dc-vue)", DC_ECRAN = "#vue :is(#dc-voir, #dc-resultat, [data-dc-cal])";
 /* v52 : les 3 questions du questionnaire court (avant : 10, dont l'âge) */
 const QUESTIONS_COURT = ["probleme", "obstacle", "projection"];
+/* v60 (lot 1, brief V2 C) : les 3 questions sont des cadres à toucher (fieldset.dc-q#q-<id> : cartes pour probleme, pastilles
+   pour obstacle et projection), plus aucun select ni textarea #q-<id>. Dans l'écran, les seuls [id^='q-'] sont ces 3 cadres
+   et ce qu'ils contiennent : le message « 2 réponses max » (#q-obstacle-max) et les 2 précisions libres facultatives
+   (#q-obstacle-precision, #q-projection-precision). Avant : exactement 3 champs #q-probleme, #q-obstacle, #q-projection. */
+const IDS_COURT = ["q-probleme", "q-obstacle", "q-obstacle-max", "q-obstacle-precision", "q-projection", "q-projection-precision"];
+const BOUTON_COURT = "Voir ma prochaine étape";   // v60 (avant : « Valider mes réponses »)
+/* tous les [id^='q-'] de l'écran Découverte, et les cadres de question (fieldset.dc-q) */
+const champsCourt = async page => ({ ids: await page.$$eval(DC_ZONE + " [id^='q-']", l => l.map(e => e.id)).catch(() => []), questions: await page.$$eval(DC_ZONE + " fieldset.dc-q", l => l.map(e => e.id)).catch(() => []),
+  /* les réponses à toucher de chaque cadre : r = radio, c = case (3 cartes, 6 pastilles à 2 choix, 5 pastilles à 1 choix) */
+  opts: await page.$$eval(DC_ZONE + " fieldset.dc-q", l => l.map(f => f.id + ":" + [...f.querySelectorAll("label.dc-opt input")].map(i => i.type[0]).join(""))).catch(() => []) });
+/* exactement les 3 questions du questionnaire court (dans l'ordre) et leurs éléments, rien d'autre (donc pas d'âge) */
+const courtOk = ch => JSON.stringify(ch.ids) === JSON.stringify(IDS_COURT) && JSON.stringify(ch.questions) === JSON.stringify(QUESTIONS_COURT.map(q => "q-" + q)) && !ch.ids.includes("q-age")
+  && JSON.stringify(ch.opts) === '["q-probleme:rrr","q-obstacle:cccccc","q-projection:rrrrr"]';
 /* v52 : un questionnaire validé (3 réponses) dont la page de proposition de bilan est passée (« Pas maintenant ») :
    l'accueil du prospect s'affiche (avant la v52 : le résultat, directement) */
 const intakeCourt = n => ({ probleme: "Perdre du gras", obstacle: "Le manque de temps.", projection: "Retrouver de l'énergie.", objectif: "Perte de poids / sèche",
@@ -234,9 +247,12 @@ const cliquerVerrou = async (c, page) => {
     const t = await texte(page, "#acc-vue");
     /* v52 (lot D) : « Découverte », sans « Jour n/7 » (avant : « Découverte · Jour 1/7 ») */
     ok("prospect jour 1 : accueil = écran Découverte (« Découverte » sans « Jour n/7 », « Bonjour Léa »)", !!(await page.$(DC_ZONE + " #dc-voir")) && /^\s*Découverte\s+Bonjour Léa/.test(t) && !/Jour \d/.test(t), t.slice(0, 200));
-    const champs = await page.$$eval(DC_ZONE + " [id^='q-']", l => l.map(e => e.id)).catch(() => []);
-    /* v52 : 3 questions (avant : 10, #q-sexe … #q-motivation, « Voir mon résultat ») */
-    ok("prospect jour 1 : questionnaire court de 3 questions (#q-probleme, #q-obstacle, #q-projection), sans âge, et bouton « Valider mes réponses »", QUESTIONS_COURT.every(q => champs.includes("q-" + q)) && champs.length === 3 && !champs.includes("q-age") && (await texte(page, "#dc-voir")) === "Valider mes réponses", JSON.stringify(champs));
+    const champs = await champsCourt(page);
+    /* v52 : 3 questions (avant : 10, #q-sexe … #q-motivation, « Voir mon résultat ») ;
+       v60 (lot 1) : 3 cadres à toucher (+ leurs précisions et le message « 2 réponses max »), bouton « Voir ma prochaine
+       étape » (avant : « Valider mes réponses »), l'air inactif tant qu'il manque une réponse (aria-disabled="true") */
+    const voirInactif = await page.$eval("#dc-voir", e => e.getAttribute("aria-disabled")).catch(() => null);
+    ok(`prospect jour 1 : questionnaire court de 3 questions à toucher (#q-probleme, #q-obstacle, #q-projection), sans âge, et bouton « ${BOUTON_COURT} » (inactif, rien de répondu)`, courtOk(champs) && (await texte(page, "#dc-voir")) === BOUTON_COURT && voirInactif === "true", JSON.stringify(champs) + " | aria-disabled " + voirInactif);
     const voir = !!(await page.$(DC_ZONE + " #dc-voir")), nCal = await calendlyVue(page);
     ok("prospect jour 1 : questionnaire court affiché (#dc-voir) et aucun bouton Calendly tant qu'il n'est pas rempli", voir && nCal === 0, (voir ? "" : "questionnaire court absent ; ") + nCal + " lien(s) Calendly");
     textesFr += "\n" + await toutLeTexte(page);
@@ -254,11 +270,12 @@ const cliquerVerrou = async (c, page) => {
       const { c, page } = await contexte(b, lea, db);
       await page.goto(`http://localhost:${PORT}/#/accueil`); await attendre(page, 2000);
       const t = await texte(page, "#acc-vue");
-      const champs = await page.$$eval(DC_ZONE + " [id^='q-']", l => l.map(e => e.id)).catch(() => []);
+      const champs = await champsCourt(page);
       const age = await page.$("#q-age"), nCal = await calendlyVue(page);
       /* v52 : les 3 nouvelles questions (avant : les 10, pré-remplies par ses réponses, âge 29) ; ses anciennes réponses
-         restent en base, lisibles dans son Profil et la fiche du coach (verif56) */
-      ok("ancien prospect du Challenge au jour 5 (questionnaire sans court_le) : « Découverte » (v52 : sans « Jour n/7 »), les 3 questions du questionnaire court (plus d'âge), pas de résultat, aucun bouton Calendly", /^\s*Découverte\s+Bonjour/.test(t) && !/Jour \d/.test(t) && champs.length === 3 && !!(await page.$(DC_ZONE + " #dc-voir")) && !age && !(await page.$("#dc-resultat, #dc-bilan")) && nCal === 0, t.slice(0, 160) + " | " + JSON.stringify(champs) + " | " + nCal + " lien(s) Calendly");
+         restent en base, lisibles dans son Profil et la fiche du coach (verif56) ;
+         v60 (lot 1) : les 3 cadres à toucher et leurs éléments (avant : exactement 3 champs [id^='q-']) */
+      ok("ancien prospect du Challenge au jour 5 (questionnaire sans court_le) : « Découverte » (v52 : sans « Jour n/7 »), les 3 questions du questionnaire court (plus d'âge), pas de résultat, aucun bouton Calendly", /^\s*Découverte\s+Bonjour/.test(t) && !/Jour \d/.test(t) && courtOk(champs) && !!(await page.$(DC_ZONE + " #dc-voir")) && !age && !(await page.$("#dc-resultat, #dc-bilan")) && nCal === 0, t.slice(0, 160) + " | " + JSON.stringify(champs) + " | " + nCal + " lien(s) Calendly");
       await aller(page, "#/challenge", 1500);
       const h = await page.evaluate(() => location.hash), nCal2 = await calendlyVue(page);
       ok("ancien prospect du Challenge au jour 5 : son ancienne adresse #/challenge mène au questionnaire (#/decouverte), sans bouton Calendly ; rien n'est écrit", h === "#/decouverte" && !!(await page.$(DC_ZONE + " #dc-voir")) && nCal2 === 0 && db.requetes.length === 0, h + " | " + nCal2 + " lien(s) Calendly | " + db.requetes.join(" ; "));
@@ -319,8 +336,11 @@ const cliquerVerrou = async (c, page) => {
     /* formation : ouverte pendant les 7 jours */
     page.donnees.length = 0;
     await aller(page, "#/formation", 1600);
-    /* témoin du relevé des requêtes : une page ouverte, elle, lit bien ses données */
-    ok("prospect jour 4 : #/formation ouvert (la Speed Formation s'affiche, pas de cadenas, sa formation est lue)", !(await page.$("#vue .verrou")) && (await texte(page, "#vue h1")).includes("SpeedFormation") && page.donnees.some(u => /^GET .*outil=(eq\.formation|in\.\([^)]*formation)/.test(u)), (await texte(page, "#vue")).slice(0, 160) + " | " + page.donnees.join(" ; "));
+    /* témoin du relevé des requêtes : une page ouverte, elle, lit bien ses données.
+       v60 (lot 1, brief V2 I) : pour le prospect, la carte « Commence ici » (#fo-depart, dessinée après la lecture groupée de
+       son calcul et de sa pesée) est là : le contrôle « aucune écriture pendant toute la visite » ci-dessous couvre donc
+       aussi ce nouveau chemin (une simple visite n'écrit rien) */
+    ok("prospect jour 4 : #/formation ouvert (la Speed Formation s'affiche, pas de cadenas, sa formation est lue, v60 : carte « Commence ici » dessinée)", !(await page.$("#vue .verrou")) && (await texte(page, "#vue h1")).includes("SpeedFormation") && page.donnees.some(u => /^GET .*outil=(eq\.formation|in\.\([^)]*formation)/.test(u)) && !!(await page.$("#fo-vue #fo-depart")), (await texte(page, "#vue")).slice(0, 160) + " | " + page.donnees.join(" ; "));
     textesFr += "\n" + await toutLeTexte(page);
 
     /* anciennes adresses du challenge */

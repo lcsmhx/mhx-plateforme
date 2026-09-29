@@ -398,11 +398,18 @@ const ecrituresIntake = (db, uid) => db.ecritures.filter(e => e.outil === "intak
     const db = base();
     const { c, page } = await contexte(b, lea, db);
     await page.goto(`http://localhost:${PORT}/#/challenge`); await attendre(page, 2400);
-    await page.fill("#q-obstacle", "Le manque de temps"); await page.fill("#q-projection", "Courir 10 km"); await attendre(page, 1500);
-    const w = ecrituresIntake(db, PROSPECT);
-    ok("diagnostic : l'obstacle et la projection partent pendant la saisie (brouillon), le questionnaire n'est pas validé", w.length >= 1 && w[w.length - 1].contenu.obstacle === "Le manque de temps" && w[w.length - 1].contenu.projection === "Courir 10 km" && !w[w.length - 1].contenu.court_le && !db.ecritures.some(e => e.outil === "challenge"), "écritures " + w.length);
+    /* v60 (lot 1, brief V2 C) : les réponses se touchent (pastilles) avec une précision libre facultative ; avant : deux
+       champs texte #q-obstacle et #q-projection remplis. Obstacle : la pastille « Le manque de temps » touchée, puis la
+       précision « le soir » tapée ; projection : la précision seule « Courir 10 km » (une précision seule est le texte
+       enregistré, comme l'ancienne réponse libre). Dans intake : le texte français lisible, les clés et la précision */
+    await page.click('#q-obstacle label.dc-opt:has(input[value="temps"])');
+    await page.fill("#q-obstacle-precision", "le soir"); await page.fill("#q-projection-precision", "Courir 10 km"); await attendre(page, 1500);
+    const w = ecrituresIntake(db, PROSPECT), dern = w.length ? w[w.length - 1].contenu : {};
+    ok("diagnostic : l'obstacle et la projection partent pendant la saisie (brouillon), le questionnaire n'est pas validé", w.length >= 1 && dern.obstacle === "Le manque de temps — le soir" && JSON.stringify(dern.obstacle_choix) === '["temps"]' && dern.obstacle_precision === "le soir" && dern.projection === "Courir 10 km" && dern.projection_precision === "Courir 10 km" && !("projection_choix" in dern) && !dern.court_le && !db.ecritures.some(e => e.outil === "challenge"), "écritures " + w.length + " | " + JSON.stringify(dern));
     await page.reload(); await attendre(page, 2400);
-    ok("diagnostic : en revenant, les réponses sont déjà là", (await page.$eval("#q-obstacle", e => e.value).catch(() => "")) === "Le manque de temps" && (await page.$eval("#q-projection", e => e.value).catch(() => "")) === "Courir 10 km");
+    /* v60 : la pastille touchée est cochée, les précisions sont pré-remplies, aucune projection cochée (avant : les deux champs texte) */
+    const retour = await page.evaluate(() => ({ obstacle: [...document.querySelectorAll('#q-obstacle input[name="q-obstacle"]:checked')].map(e => e.value), obstaclePrecision: (document.getElementById("q-obstacle-precision") || {}).value, projection: [...document.querySelectorAll('#q-projection input[name="q-projection"]:checked')].map(e => e.value), projectionPrecision: (document.getElementById("q-projection-precision") || {}).value })).catch(e => ({ erreur: String(e) }));
+    ok("diagnostic : en revenant, les réponses sont déjà là", JSON.stringify(retour.obstacle) === '["temps"]' && retour.obstaclePrecision === "le soir" && JSON.stringify(retour.projection) === "[]" && retour.projectionPrecision === "Courir 10 km", JSON.stringify(retour));
     await c.close();
   }
   {
@@ -414,7 +421,9 @@ const ecrituresIntake = (db, uid) => db.ecritures.filter(e => e.outil === "intak
     await page.goto(`http://localhost:${PORT}/#/challenge`); await attendre(page, 2400);
     ok("diagnostic : aucune question d'âge dans le questionnaire court (le garde-fou 18 ans passe au calculateur)", !(await page.$("#q-age")) && !!(await page.$("#q-probleme")));
     ok("diagnostic : rien ne part tant que rien n'est répondu", db.ecritures.length === 0);
-    await page.selectOption("#q-probleme", "Prendre du muscle"); await attendre(page, 1500);
+    /* v60 (lot 1) : la carte « Prendre du muscle » touchée (avant : choisie dans la liste #q-probleme) ; la valeur reste
+       l'option française exacte */
+    await page.click('#q-probleme label.dc-opt:has(input[value="Prendre du muscle"])'); await attendre(page, 1500);
     const w = ecrituresIntake(db, PROSPECT), d = w.length ? w[w.length - 1].contenu : {};
     ok("diagnostic : la première réponse (objectif « Prendre du muscle ») part aussitôt en brouillon, sans attendre d'âge", w.length === 1 && d.probleme === "Prendre du muscle" && !("age" in d));
     ok("diagnostic : … avec l'objectif du questionnaire complet posé depuis cette réponse (« Prise de muscle »)", d.objectif === "Prise de muscle", JSON.stringify(d));

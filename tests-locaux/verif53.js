@@ -528,13 +528,15 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
   /* =================== C. email du compte (email_compte) =================== */
   const NEWP = PID(21), PERSO = "perso@exemple.fr";
   /* v52 (28/09/2026, Chantier 1 lot C) : les 3 questions (probleme, obstacle, projection) remplacent les 10 ; le premier
-     brouillon part avec la première réponse (avant : avec l'âge, #q-age, seulement à partir de 18 ans) */
+     brouillon part avec la première réponse (avant : avec l'âge, #q-age, seulement à partir de 18 ans)
+     v60 (lot 1, brief V2 C) : les questions se remplissent en touchant (plus de select ni de textarea #q-…) : « problème »
+     par un clic sur sa carte, « obstacle » et « projection » par leur précision libre seule (#q-…-precision) */
   await bloc("C. premier brouillon et réponse « email » d'un questionnaire", async () => {
     const db = base({ comptes: [{ id: NEWP, prenom: "Léa", nom: "", cree: avant(2 * J) }] });
     const { c, page } = await contexte(b, qui(NEWP, EMAIL_ACT), db);
     await page.goto(`http://localhost:${PORT}/`); await page.waitForSelector("#q-probleme", { timeout: 8000 }); await attendre(page, 800);
     ok("affichage du questionnaire (pas commencé) : rien d'écrit", ecr(db, "intake").length === 0);
-    await page.selectOption("#q-probleme", "Perdre du gras"); await attendre(page, 1500);
+    await page.click('#q-probleme label.dc-opt:has(input[value="Perdre du gras"])'); await attendre(page, 1500);
     const I1 = contenu(db, "intake", NEWP) || {};
     ok("premier brouillon (objectif « Perdre du gras ») : email_compte = l'email du compte, jamais de clé « email » (question « email » du questionnaire client)", ecr(db, "intake").length === 1 && I1.email_compte === EMAIL_ACT && !("email" in I1) && typeof I1.court_debut === "string", JSON.stringify(I1));
     await c.close();
@@ -543,14 +545,14 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     const { page: p2 } = await contexte(b, qui(NEWP, EMAIL_ACT), db2);
     await p2.goto(`http://localhost:${PORT}/`); await p2.waitForSelector("#q-probleme", { timeout: 8000 }); await attendre(p2, 800);
     ok("intake avec une réponse « email » mais questionnaire pas commencé : rien d'écrit à l'affichage", ecr(db2, "intake").length === 0);
-    await p2.selectOption("#q-probleme", "Perdre du gras"); await attendre(p2, 1500);
+    await p2.click('#q-probleme label.dc-opt:has(input[value="Perdre du gras"])'); await attendre(p2, 1500);
     const I2 = contenu(db2, "intake", NEWP) || {};
     ok("premier brouillon : la réponse « email » (" + PERSO + ") reste intacte, l'email du compte va dans email_compte", I2.email === PERSO && I2.email_compte === EMAIL_ACT && I2.probleme === "Perdre du gras", JSON.stringify(I2));
-    await p2.fill("#q-obstacle", "Le temps"); await p2.fill("#q-projection", "Courir 10 km");
+    await p2.fill("#q-obstacle-precision", "Le temps"); await p2.fill("#q-projection-precision", "Courir 10 km");
     await attendre(p2, 1200);
     await p2.click("#dc-voir"); await attendre(p2, 1600);
     const I3 = contenu(db2, "intake", NEWP) || {};
-    ok("validation (« Valider mes réponses ») : court_le posé, email toujours " + PERSO + ", email_compte = email du compte", typeof I3.court_le === "string" && I3.email === PERSO && I3.email_compte === EMAIL_ACT, JSON.stringify(I3));
+    ok("validation (« Voir ma prochaine étape », v60 ; avant : « Valider mes réponses ») : court_le posé, email toujours " + PERSO + ", email_compte = email du compte", typeof I3.court_le === "string" && I3.email === PERSO && I3.email_compte === EMAIL_ACT, JSON.stringify(I3));
     ok("aucune écriture intake ne touche la réponse « email »", ecr(db2, "intake").every(e => e.contenu.email === PERSO), JSON.stringify(ecr(db2, "intake").map(e => e.contenu.email)));
   });
 

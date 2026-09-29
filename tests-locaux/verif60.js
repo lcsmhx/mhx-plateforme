@@ -27,7 +27,9 @@
    J. téléphone 390 px (barre du bas du client inchangée, « Plus », pas de débordement, bouton tactile) ;
    K. anglais ; v59 : Speed Formation (titres courts, objectifs et contenu des modules, « Goal: », « Your to-do list »,
       bouton de la vidéo, note du module 3 ; les challenges du module 5, pas encore traduits, restent en français, leur
-      « Objectif : » compris) ;
+      « Objectif : » compris) ; v60 (brief V2, J3 et J5) : objectif du module 1 réécrit (« Build the mindset that makes a
+      transformation last. ») ; les 5 axes des challenges remplacés ont leur anglais (« Goal: » + objectif et défi
+      anglais), les 10 autres restent entièrement en français (« Objectif : » compris) ;
    L. données piégées (journal et programme écrits hors de l'app) : aucune injection, aucune erreur, aucune écriture ;
    Z. aucun appel vers l'extérieur.
    Supabase simulé (gabarit de verif56, carte 6 §15) : rien ne part vers la vraie base (routage par NOM D'HÔTE, jamais
@@ -646,7 +648,8 @@ const NOUVEAU = { probleme: "Perdre du gras", obstacle: "Le manque de temps avec
     /* v59 (lot E, remarque b de la relecture v52) : la Speed Formation en anglais — titres courts (la carte retire
        « Module n — »), objectifs, contenu des modules, note du module 3, « Goal: », « Your to-do list », bouton de la vidéo.
        Traductions du cours écrites par Claude (I18N.en, bloc « v59 — Speed Formation ») ; tâches, défis et leçons : plus tard */
-    const CARTES_EN = [["m0", "Introduction", "Lay the foundations and set expectations."], ["m1", "Mindset", "Work on your mindset so your transformation lasts."],
+    /* v60 (brief V2, J3) : objectif du module 1 réécrit (« …pour garantir une transformation durable » retiré) */
+    const CARTES_EN = [["m0", "Introduction", "Lay the foundations and set expectations."], ["m1", "Mindset", "Build the mindset that makes a transformation last."],
       ["m2", "Nutrition", "Keep nutrition simple to get results without frustration."], ["m3", "Training", "Get training that fits you, whatever your level."],
       ["m4", "Organization", "Organize your days to make the most progress."], ["m5", "Challenges", "Push past your limits to progress faster."], ["m6", "Boosters and resources", "Extra resources to boost your results."]];
     ({ c, page } = await contexte(b, THOMAS, db, { langue: "en" }));
@@ -659,7 +662,7 @@ const NOUVEAU = { probleme: "Perdre du gras", obstacle: "Le manque de temps avec
       mods.push(await page.$eval(".fo-mod.ouvert", s => { const n = x => x ? x.textContent.replace(/\s+/g, " ").trim() : null, corps = s.querySelector(".fo-corps");
         return { id: s.querySelector(".fo-tete").dataset.mod, obj: n(corps.querySelector(".fo-obj")), contenu: Array.from(corps.querySelectorAll(".fo-contenu li")).map(n), h3: Array.from(corps.querySelectorAll("h3")).map(n),
           video: n(corps.querySelector(":scope > .video-boite .jouer")), note: n(corps.querySelector(":scope > p.note:last-child")),
-          axes: Array.from(corps.querySelectorAll(".fo-axe")).map(x => [n(x.querySelector("i")), n(x.querySelector("p.note"))]) }; }).catch(() => ({ id: m })));
+          axes: Array.from(corps.querySelectorAll(".fo-axe")).map(x => [n(x.querySelector("i")), n(x.querySelector("p.note")), n(x.querySelector("p:not(.note)"))]) }; }).catch(() => ({ id: m })));
     }
     const attendu = await page.evaluate(() => FORMATION.modules.map(m => ({ id: m.id, obj: I18N.en[m.objectif] || null, contenu: m.contenu.map(t => I18N.en[t] || null), fr: [m.objectif].concat(m.contenu, m.note ? [m.note] : []) })));
     const FR = attendu.reduce((a, x) => a.concat(x.fr), []);
@@ -674,10 +677,19 @@ const NOUVEAU = { probleme: "Perdre du gras", obstacle: "Le manque de temps avec
       mods.every(x => (x.obj || "").startsWith("Goal: ") && (x.h3 || []).includes("Your to-do list") && !(x.h3 || []).includes("Ta to-do list")) && mods.filter(x => x.id !== "m6").every(x => x.video === "▶ Watch the video") && top === "▶ Watch the course intro",
       JSON.stringify(mods.map(x => [x.id, x.h3 && x.h3[0], x.video])) + " " + top);
     /* v59 (suite de la relecture) : les challenges du module 5 ne sont pas encore traduits : leur étiquette « Objectif : »
-       reste en français (pas de ligne moitié anglais « Goal: » + objectif en français) */
-    const axes = (mods.find(x => x.id === "m5") || {}).axes || [], CH = await page.evaluate(() => FORMATION.challenges.reduce((a, c) => a.concat(c.axes.map(x => String(x.objectif).replace(/\s+/g, " ").trim())), []));
-    ok("… module 5 : les challenges, pas encore traduits, restent entièrement en français, étiquette « Objectif : » comprise (jamais « Goal: » devant un objectif en français)",
-      axes.length > 0 && axes.length === CH.length && axes.every((x, i) => x[0] === "Objectif :" && x[1] === "Objectif : " + CH[i]), JSON.stringify(axes.slice(0, 3)));
+       reste en français (pas de ligne moitié anglais « Goal: » + objectif en français)
+       v60 (brief V2, J5) : les 5 axes remplacés ont leur anglais (I18N.en) : « Goal: » + objectif anglais, puis le défi
+       anglais ; les 10 autres restent entièrement en français (« Objectif : », objectif et défi). Attendu calculé depuis
+       FORMATION et I18N.en ; les 5 axes traduits sont exactement ceux du brief. */
+    const axes = (mods.find(x => x.id === "m5") || {}).axes || [], CH = await page.evaluate(() => FORMATION.challenges.reduce((a, c) => a.concat(c.axes.map(x => {
+      const n = t => String(t).replace(/\s+/g, " ").trim(), en = t => Object.prototype.hasOwnProperty.call(I18N.en, n(t)) ? I18N.en[n(t)] : null;
+      return { cle: c.id + "|" + x.nom, obj: n(x.objectif), defi: n(x.defi), objEn: en(x.objectif), defiEn: en(x.defi) }; })), []));
+    const TRAD5 = ["c1|Discipline", "c2|Perte de gras", "c3|Perte de gras", "c4|Perte de gras", "c4|Séances de sport"];
+    const attenduAxe = x => x.objEn ? ["Goal:", "Goal: " + x.objEn, x.defiEn] : ["Objectif :", "Objectif : " + x.obj, x.defi];
+    const ecartsAxes = axes.map((x, i) => [x, attenduAxe(CH[i] || {})]).filter(([x, y]) => JSON.stringify(x) !== JSON.stringify(y));
+    ok("… module 5 : les 5 axes remplacés (brief J5) en anglais, « Goal: » + objectif anglais puis défi anglais ; les 10 autres, pas encore traduits, restent entièrement en français, étiquette « Objectif : » comprise (jamais « Goal: » devant un objectif en français)",
+      axes.length === 15 && axes.length === CH.length && JSON.stringify(CH.filter(x => x.objEn).map(x => x.cle)) === JSON.stringify(TRAD5) && CH.every(x => !x.objEn === !x.defiEn)
+      && ecartsAxes.length === 0, axes.length + " axes · traduits : " + JSON.stringify(CH.filter(x => x.objEn).map(x => x.cle)) + " · écarts : " + JSON.stringify(ecartsAxes.slice(0, 3)));
     await c.close();
   });
 

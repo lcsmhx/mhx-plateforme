@@ -9,7 +9,15 @@
    Chaque attente changée est expliquée par un commentaire « v52 » dans le bloc concerné.
    v53 (nettoyage) : le mode test « jour n » (#/decouverte-jour/N) est retiré (fonction supprimée) : son ancienne adresse
    mène à #/decouverte (bloc F), son ancien drapeau mhx_decouverte_jour resté sur un appareil est effacé au démarrage et
-   ne change rien (clic daté du vrai jour, bloc F ; écrans du coach, bloc I) ; commentaires « v53 ». Texte d'origine (v51) :
+   ne change rien (clic daté du vrai jour, bloc F ; écrans du coach, bloc I) ; commentaires « v53 ».
+   v60 (lot 1, brief V2 C) : les 3 questions se répondent en touchant des cartes / pastilles (fieldset.dc-q #q-probleme,
+   #q-obstacle — 2 choix au plus —, #q-projection), avec une précision libre facultative (#q-obstacle-precision,
+   #q-projection-precision) ; bouton « Voir ma prochaine étape » (EN « See my next step »), inactif (aria-disabled)
+   tant qu'il manque une réponse ; touché trop tôt : « Il manque une réponse » (EN « One answer is missing ») et les
+   questions sans réponse signalées (.manque) ; intro « 3 questions, 30 secondes ». Dans intake : <id> = le texte
+   français lisible, <id>_choix = les clés, <id>_precision = la précision. remplir() touche les cartes (clic sur le
+   label) et tape les précisions ; N a la forme nouvelle. Aucune vérification ajoutée ni retirée (89) : chaque attente
+   changée est expliquée par un commentaire « v60 ». Texte d'origine (v51) :
    v51 — funnel « Découverte » (remplace le Challenge 7 jours) : démarrage du prospect (Jour n/7 depuis
    profils.cree_le, date locale), questionnaire court (manquants, bornes, brouillon pendant la frappe, garde
    18 ans jugée à la sortie du champ âge : « 185 » et « 25 → 15 » ne laissent rien en base, « 30 » envoie),
@@ -59,7 +67,13 @@ const COURT = "2026-09-25T08:00:00.000Z";
 const avecCourt = R => Object.assign({}, R, { court_le: COURT });
 /* v52 : les 3 réponses du nouveau questionnaire court ; avecChoix : validé ET page de proposition de bilan passée
    (« Pas maintenant ») — l'accueil du prospect s'affiche */
-const N = { probleme: "Perdre du gras", obstacle: "Je manque de temps avec le travail", projection: "Me sentir mieux cet été" };
+/* v60 : N a la forme nouvelle (avant : { probleme, obstacle: "Je manque de temps avec le travail", projection } en texte
+   libre) — « ce qui a coincé » : 2 pastilles (temps, craquages) + une précision ; « dans 3 mois » : la précision seule
+   (même texte qu'avant : la page bilan et l'accueil ne changent pas). obstacle = libellés français joints par « · »,
+   puis « — » + la précision (contrat du lot 1, C) ; projection = la précision seule */
+const N = { probleme: "Perdre du gras",
+  obstacle: "Le manque de temps · Je craque sur la nourriture — le soir", obstacle_choix: ["temps", "craquages"], obstacle_precision: "le soir",
+  projection: "Me sentir mieux cet été", projection_precision: "Me sentir mieux cet été" };
 const avecChoix = R => Object.assign(avecCourt(R), { bilan_propose: { choix: "plus_tard", le: COURT } });
 /* un ancien prospect du challenge : cle challenge avec jours (case du jour 7 cochee), intake sans court_le */
 const jourFait = (n, quand, extra) => Object.assign({ fait: quand + "T08:00:00.000Z", date: quand }, extra || {});
@@ -169,10 +183,32 @@ const contenu = (db, outil, uid) => (db.donnees.find(x => x.user_id === (uid || 
 const suivi = page => page.evaluate(() => { try { return JSON.parse(localStorage.getItem("mhx_tracking") || "[]").map(x => x.event + "|" + x.uid); } catch (e) { return ["illisible"]; } });
 /* v52 : les 3 questions (avant : les 10, sexe … motivation, l'âge tapé puis jugé à la sortie du champ) */
 const QIDS = ["probleme", "obstacle", "projection"];
-const SELECTS = ["probleme"];
+/* v60 : des réponses à toucher (avant : une liste pour probleme, du texte libre pour obstacle et projection). Le bouton
+   radio / la case est invisible : on touche sa carte (le label). R a la forme de N : probleme (valeur française exacte),
+   <id>_choix (les clés, touchées dans l'ordre), <id>_precision (tapée si elle est donnée) */
+const carte = (id, v) => `#q-${id} label.dc-opt:has(input[value="${v}"])`;
 async function remplir(page, R){
-  for (const k of QIDS) { if (SELECTS.includes(k)) await page.selectOption("#q-" + k, R[k]); else await page.fill("#q-" + k, R[k]); }
+  if (R.probleme) await page.click(carte("probleme", R.probleme));
+  for (const k of ["obstacle", "projection"]) {
+    for (const v of R[k + "_choix"] || []) await page.click(carte(k, v));
+    if (R[k + "_precision"] != null) await page.fill(`#q-${k}-precision`, R[k + "_precision"]);
+  }
 }
+/* v60 : ce qui est coché dans une question (valeurs des boutons radio / cases), et les questions signalées « manque » */
+const coches = (page, id) => page.$$eval(`#q-${id} input:checked`, l => l.map(e => e.value)).catch(() => null);
+const manques = page => page.$$eval("#vue .manque", l => l.map(e => e.id).sort()).catch(() => []);
+/* v60 : l'état du bouton « Voir ma prochaine étape » : aria-disabled + classe inactif */
+const inactif = page => page.$eval("#dc-voir", b => b.getAttribute("aria-disabled") + "|" + b.classList.contains("inactif")).catch(() => "");
+/* v60 : le bouton touché alors qu'il manque une réponse. Playwright tient un bouton aria-disabled="true" pour désactivé et
+   attendrait qu'il s'active ; pour une personne, il reste touchable (c'est voulu : il dit ce qui manque). Le clic est donc
+   forcé : un vrai clic de souris au centre du bouton, sans cette attente. Quand les réponses sont complètes, page.click
+   ordinaire (qui attend un bouton actif) */
+const toucherTropTot = page => page.click("#dc-voir", { force: true });
+/* v60 : les clés que le questionnaire écrit dans intake ; exactement les mêmes (un champ vide n'est jamais créé : une clé
+   absente de la référence doit être absente de l'intake) */
+const CLES = ["probleme", "obstacle", "obstacle_choix", "obstacle_precision", "projection", "projection_choix", "projection_precision"];
+const vide = v => v == null || v === "" || (Array.isArray(v) && !v.length);
+const memes = (I, R) => CLES.every(k => JSON.stringify(I[k]) === JSON.stringify(R[k]));
 /* un clic « Réserver mon bilan » sans ouvrir Calendly */
 const cliquerCal = (page, sel) => page.evaluate(s => { const a = document.querySelector(s); if (!a) return false; a.addEventListener("click", e => e.preventDefault(), { once: true }); a.click(); return true; }, sel).catch(() => false);
 const ligneDe = (page, id) => page.$eval(`[data-ouvrir="${id}"]`, b => b.closest("tr").textContent).then(norm).catch(() => "");
@@ -189,11 +225,16 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 2400);
     /* v52 (lot D) : « Découverte », sans « Jour n/7 » */
     ok("prospect inscrit aujourd'hui : l'accueil est l'écran Découverte, « Découverte » (sans « Jour n/7 »)", !!(await page.$("#acc-vue, #dc-vue")) && (await eyebrow(page)) === "Découverte", await eyebrow(page));
-    const champs = await page.$$eval("#vue [id^='q-']", l => l.map(e => e.id)).catch(() => []);
+    /* v60 : chaque élément « q-… » avec sa balise, et les réponses à toucher de chaque question (avant : les 3 champs
+       q-probleme, q-obstacle, q-projection — une liste et deux textes libres —, et « Valider mes réponses ») */
+    const champs = await page.$$eval("#vue [id^='q-']", l => l.map(e => e.tagName.toLowerCase() + "#" + e.id + (e.dataset.type ? "[" + e.dataset.type + "]" : ""))).catch(() => []);
+    const touches = await page.$$eval("#vue fieldset.dc-q", l => l.map(f => f.id + ":" + [...f.querySelectorAll("label.dc-opt input")].map(i => i.type).join(","))).catch(() => []);
+    const CHAMPS = ["fieldset#q-probleme[cartes]", "fieldset#q-obstacle[choix]", "p#q-obstacle-max", "textarea#q-obstacle-precision", "fieldset#q-projection[choix]", "textarea#q-projection-precision"];
+    const TOUCHES = ["q-probleme:" + Array(3).fill("radio"), "q-obstacle:" + Array(6).fill("checkbox"), "q-projection:" + Array(5).fill("radio")];
     /* v52 : les 3 questions (avant : les 10, sexe … motivation, et « Voir mon résultat ») */
-    ok("questionnaire court : les 3 questions (objectif principal, ce qui a bloqué, dans 3 mois), sans âge, et « Valider mes réponses »", JSON.stringify(champs) === JSON.stringify(QIDS.map(k => "q-" + k)) && (await texte(page, "#dc-voir")) === "Valider mes réponses", JSON.stringify(champs));
-    /* v52 : « 3 questions, 1 minute » (avant : « Commence par ton questionnaire : 3 minutes, 10 questions… ») */
-    ok("avant le questionnaire : pas de bouton Calendly, « 3 questions, 1 minute »", !(await page.$("#vue a[href*='calendly']")) && (await lede(page)) === "3 questions, 1 minute : dis-nous où tu en es.", await lede(page));
+    ok("questionnaire court : les 3 questions à toucher (objectif numéro 1 : 3 cartes ; ce qui a coincé : 6 pastilles + précision ; dans 3 mois : 5 pastilles + précision), sans âge, et « Voir ma prochaine étape »", JSON.stringify(champs) === JSON.stringify(CHAMPS) && JSON.stringify(touches) === JSON.stringify(TOUCHES) && (await texte(page, "#dc-voir")) === "Voir ma prochaine étape", JSON.stringify(champs) + " " + JSON.stringify(touches) + " " + (await texte(page, "#dc-voir")));
+    /* v52 : « 3 questions, 1 minute » (avant : « Commence par ton questionnaire : 3 minutes, 10 questions… ») ; v60 : « 30 secondes » */
+    ok("avant le questionnaire : pas de bouton Calendly, « 3 questions, 30 secondes »", !(await page.$("#vue a[href*='calendly']")) && (await lede(page)) === "3 questions, 30 secondes : dis-nous où tu en es.", await lede(page));
     ok("démarrage : aucune écriture, aucun événement « page bilan vue »", db.ecritures.length === 0 && !(await suivi(page)).some(x => /^(result_viewed|bilan_viewed)/.test(x)));
     ok("démarrage : événement « diagnostic_started » noté (mhx_tracking) pour ce compte", (await suivi(page)).includes("diagnostic_started|" + PROSPECT), JSON.stringify(await suivi(page)));
     const ids = await navIds(page);
@@ -237,18 +278,30 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
     const db = base();
     const { c, page } = await contexte(b, lea, db);
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 2200);
-    await page.click("#dc-voir"); await attendre(page, 300);   // le message s'efface apres 3,2 s : lu tout de suite
+    /* v60 : le bouton a l'air inactif tant qu'il manque une réponse, mais reste cliquable */
+    const etat0 = await inactif(page);
+    await toucherTropTot(page); await attendre(page, 300);   // le message s'efface apres 3,2 s : lu tout de suite
     const msg = await texte(page, "#dc-msg");
-    ok("« Valider mes réponses » sans rien remplir : « Il manque : » les 3 questions (toutes requises)", msg === "Il manque : Quel est ton objectif principal ?, Qu'est-ce qui t'a bloqué jusqu'ici ?, Dans 3 mois, qu'est-ce qui aurait changé pour toi ?", msg);
+    /* v60 : « Il manque une réponse » (avant : « Il manque : » suivi des 3 questions) ; le bouton est inactif (aria-disabled,
+       classe inactif) avant le clic. Les 3 questions sans réponse restent nommées par la vérification suivante (.manque) */
+    ok("« Voir ma prochaine étape » (inactif : aria-disabled) touché sans rien remplir : « Il manque une réponse »", msg === "Il manque une réponse" && etat0 === "true|true", msg + " · bouton " + etat0);
     await attendre(page, 900);   // 1,2 s apres le clic : une ecriture qu'il aurait declenchee (envoi a 700 ms) serait deja la
-    const manque = await page.$$eval("#vue .manque", l => l.map(e => e.id).sort()).catch(() => []);
-    ok("… les 3 champs sont signalés, rien n'est écrit", manque.length === 3 && db.ecritures.length === 0, JSON.stringify(manque));
-    await remplir(page, Object.assign({}, N, { projection: "   " })); await attendre(page, 1500);
-    await page.click("#dc-voir"); await attendre(page, 400);
-    const msg2 = await texte(page, "#dc-msg"); await attendre(page, 800);
+    const manque = await manques(page);
+    /* v60 : les 3 questions (fieldset) nommément (avant : 3 champs, comptés) */
+    ok("… les 3 questions sont signalées, rien n'est écrit", JSON.stringify(manque) === '["q-obstacle","q-probleme","q-projection"]' && db.ecritures.length === 0, JSON.stringify(manque));
+    /* v60 : « dans 3 mois » sans pastille, sa précision faite d'espaces (avant : la réponse libre faite d'espaces) */
+    await remplir(page, Object.assign({}, N, { projection_precision: "   " })); await attendre(page, 1500);
+    /* v60 : le 1er message et le 2e sont le même texte : le 2e clic attend que le 1er se soit effacé (flash, 3,2 s), sinon
+       la minuterie du 1er effacerait le 2e */
+    const efface = await page.waitForFunction(() => !(document.getElementById("dc-msg") || {}).textContent, null, { timeout: 5000 }).then(() => true, () => false);
+    const etat1 = await inactif(page);
+    await toucherTropTot(page); await attendre(page, 400);
+    const msg2 = await texte(page, "#dc-msg"), manque2 = await manques(page); await attendre(page, 800);
     const I2 = contenu(db, "intake") || {};
-    ok("réponse « projection » faite d'espaces seulement : « Il manque : Dans 3 mois… », pas de court_le", msg2 === "Il manque : Dans 3 mois, qu'est-ce qui aurait changé pour toi ?" && !I2.court_le && !(await page.$("#dc-bilan")), msg2 + " · " + JSON.stringify(I2));
-    ok("… les autres réponses sont déjà parties en brouillon (objectif principal, ce qui a bloqué)", I2.probleme === N.probleme && I2.obstacle === N.obstacle, JSON.stringify(I2));
+    /* v60 : « Il manque une réponse » et seule « dans 3 mois » signalée (avant : « Il manque : Dans 3 mois… ») */
+    ok("réponse « dans 3 mois » : aucune pastille et une précision faite d'espaces seulement : « Il manque une réponse », seule cette question signalée, bouton toujours inactif, pas de court_le", msg2 === "Il manque une réponse" && JSON.stringify(manque2) === '["q-projection"]' && etat1 === "true|true" && efface && !I2.court_le && !(await page.$("#dc-bilan")), msg2 + " · " + JSON.stringify(manque2) + " · bouton " + etat1 + " · " + JSON.stringify(I2));
+    /* v60 : le brouillon garde les clés et le texte français lisible ; la précision d'espaces n'écrit rien */
+    ok("… les autres réponses sont déjà parties en brouillon (objectif numéro 1, ce qui a coincé : pastilles, précision et texte français lisible), rien pour « dans 3 mois »", I2.probleme === N.probleme && I2.obstacle === N.obstacle && JSON.stringify(I2.obstacle_choix) === JSON.stringify(N.obstacle_choix) && I2.obstacle_precision === N.obstacle_precision && ["projection", "projection_choix", "projection_precision"].every(k => !(k in I2)), JSON.stringify(I2));
     ok("plus aucune question d'âge, de taille ni de poids (aucune borne à vérifier)", !(await page.$("#q-age, #q-taille, #q-poids")), "");
     await c.close();
   });
@@ -257,12 +310,14 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
     const db = base();
     const { c, page } = await contexte(b, lea, db);
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 2200);
-    await page.click("#q-obstacle"); await page.keyboard.type("Le temps", { delay: 30 }); await attendre(page, 1500);
+    /* v60 : la précision libre de « ce qui a coincé » (avant : la réponse libre #q-obstacle) ; précision seule, sans
+       pastille : obstacle === la précision, comme avant (contrat du lot 1, C) */
+    await page.click("#q-obstacle-precision"); await page.keyboard.type("Le temps", { delay: 30 }); await attendre(page, 1500);
     const w = ecr(db, "intake"), I = contenu(db, "intake") || {};
-    ok("brouillon : la réponse tapée part pendant la saisie, sans quitter le champ, sans court_le", w.length >= 1 && I.obstacle === "Le temps" && !I.court_le && (await page.evaluate(() => document.activeElement && document.activeElement.id)) === "q-obstacle", "écritures " + w.length + " " + JSON.stringify(I));
+    ok("brouillon : la précision tapée part pendant la saisie, sans quitter le champ, sans court_le (obstacle = la précision, aucune pastille)", w.length >= 1 && I.obstacle === "Le temps" && I.obstacle_precision === "Le temps" && !("obstacle_choix" in I) && !I.court_le && (await page.evaluate(() => document.activeElement && document.activeElement.id)) === "q-obstacle-precision", "écritures " + w.length + " " + JSON.stringify(I));
     ok("brouillon : événement « diagnostic_question_answered » noté", (await suivi(page)).includes("diagnostic_question_answered|" + PROSPECT));
     await page.reload(); await attendre(page, 2400);
-    ok("brouillon : après rechargement, les réponses sont là et le questionnaire reste ouvert", (await valeur(page, "#q-obstacle")) === "Le temps" && !(await page.$("#dc-bilan")));
+    ok("brouillon : après rechargement, les réponses sont là (la précision, aucune pastille cochée) et le questionnaire reste ouvert", (await valeur(page, "#q-obstacle-precision")) === "Le temps" && JSON.stringify(await coches(page, "obstacle")) === "[]" && !(await page.$("#dc-bilan")));
     await c.close();
   });
 
@@ -276,10 +331,13 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
     const { c, page } = await contexte(b, lea, db);
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 2200);
     await remplir(page, N); await attendre(page, 300);
+    const etat = await inactif(page);   // v60 : les 3 réponses données : le bouton n'a plus l'air inactif
     const t0 = Date.now();
     await page.click("#dc-voir"); await attendre(page, 1600);
     const I = contenu(db, "intake") || {};
-    ok("validation : court_le (instant ISO de la validation) et les 3 réponses dans la clé intake (+ l'objectif du questionnaire complet)", typeof I.court_le === "string" && !isNaN(Date.parse(I.court_le)) && Math.abs(Date.parse(I.court_le) - t0) < 10000 && QIDS.every(k => I[k] === N[k]) && I.objectif === "Perte de poids / sèche", JSON.stringify(I));
+    /* v60 : les 3 réponses = le texte français lisible, les clés et les précisions (memes : toutes les clés de N ; avant :
+       probleme, obstacle, projection en texte libre) ; le bouton actif juste avant */
+    ok("validation : court_le (instant ISO de la validation) et les 3 réponses dans la clé intake (texte français lisible, pastilles, précisions ; + l'objectif du questionnaire complet), bouton actif", typeof I.court_le === "string" && !isNaN(Date.parse(I.court_le)) && Math.abs(Date.parse(I.court_le) - t0) < 10000 && memes(I, N) && I.objectif === "Perte de poids / sèche" && etat === "false|false", "bouton " + etat + " " + JSON.stringify(I));
     ok("validation : la page de proposition de bilan s'affiche (ni questionnaire, ni ancien résultat)", !!(await page.$("#dc-bilan")) && !(await page.$("#q-probleme, #dc-resultat, #dc-calcul, #dc-seance, #dc-recettes")));
     const ev = await suivi(page);
     ok("événements : diagnostic_started, diagnostic_question_answered, diagnostic_completed, bilan_viewed (dans cet ordre)", ["diagnostic_started", "diagnostic_question_answered", "diagnostic_completed", "bilan_viewed"].every(e => ev.includes(e + "|" + PROSPECT)) && ev.indexOf("diagnostic_completed|" + PROSPECT) < ev.indexOf("bilan_viewed|" + PROSPECT) && ev.indexOf("diagnostic_started|" + PROSPECT) < ev.indexOf("diagnostic_question_answered|" + PROSPECT), JSON.stringify(ev));
@@ -300,7 +358,7 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
   /* ---------- D. Modifier mes réponses ----------
      v52 : depuis le Profil (« Modifier mes réponses », #/decouverte/reponses), plus depuis l'écran résultat ; après la
      validation, retour à l'accueil (avant : le résultat recalculé). La vérification « âge 16 puis Voir » devient « réponse
-     effacée puis Valider ». */
+     effacée puis Valider ». v60 : des cartes et pastilles à toucher, des précisions ; « Voir ma prochaine étape ». */
   await bloc("D. Modifier mes réponses", async () => {
     const db = base({ intake: avecChoix(N) });
     const { c, page } = await contexte(b, lea, db);
@@ -308,18 +366,25 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
     ok("questionnaire déjà fait et page bilan passée : l'accueil s'affiche d'emblée, aucune écriture au chargement", !!(await page.$("#dc-accomp")) && !(await page.$("#dc-bilan, #q-probleme")) && db.ecritures.length === 0);
     await aller(page, "#/profil", 1800);
     await page.click('#vue a[href="#/decouverte/reponses"]').catch(() => {}); await attendre(page, 1500);
-    ok("« Modifier mes réponses » (Profil) : le questionnaire revient pré-rempli, avec « Annuler les modifications »", (await valeur(page, "#q-probleme")) === N.probleme && (await valeur(page, "#q-obstacle")) === N.obstacle && (await texte(page, "#dc-annuler")) === "Annuler les modifications");
-    await page.selectOption("#q-probleme", "Prendre du muscle"); await page.fill("#q-obstacle", "Autre chose"); await attendre(page, 1500);
-    ok("en modification : rien ne part pendant la saisie", db.ecritures.length === 0, "écritures " + db.ecritures.length);
+    /* v60 : pré-rempli = la carte et les pastilles cochées, la précision tapée (avant : la liste et le texte libre) */
+    const avantObstacle = async () => JSON.stringify(await coches(page, "obstacle")) === JSON.stringify(N.obstacle_choix) && (await valeur(page, "#q-obstacle-precision")) === N.obstacle_precision;
+    ok("« Modifier mes réponses » (Profil) : le questionnaire revient pré-rempli, avec « Annuler les modifications »", JSON.stringify(await coches(page, "probleme")) === JSON.stringify([N.probleme]) && (await avantObstacle()) && (await texte(page, "#dc-annuler")) === "Annuler les modifications", JSON.stringify(await coches(page, "probleme")) + " " + JSON.stringify(await coches(page, "obstacle")) + " " + (await valeur(page, "#q-obstacle-precision")));
+    /* v60 : une autre carte, une pastille décochée et une autre précision (avant : la liste et le texte libre changés) */
+    await page.click(carte("probleme", "Prendre du muscle")); await page.click(carte("obstacle", "craquages")); await page.fill("#q-obstacle-precision", "Autre chose"); await attendre(page, 1500);
+    ok("en modification : rien ne part pendant la saisie (les touchers ont bien pris : autre carte, pastille décochée, précision)", db.ecritures.length === 0
+      && JSON.stringify(await coches(page, "probleme")) === '["Prendre du muscle"]' && JSON.stringify(await coches(page, "obstacle")) === '["temps"]' && (await valeur(page, "#q-obstacle-precision")) === "Autre chose", "écritures " + db.ecritures.length);
     await page.click("#dc-annuler"); await attendre(page, 1200);   // plus que le delai d'envoi (700 ms)
     ok("« Annuler les modifications » : l'accueil, aucune écriture", !!(await page.$("#dc-accomp")) && db.ecritures.length === 0);
     await aller(page, "#/decouverte/reponses", 1500);
-    ok("… en rouvrant : les réponses d'avant (« Perdre du gras », obstacle d'avant), pas celles abandonnées", (await valeur(page, "#q-probleme")) === N.probleme && (await valeur(page, "#q-obstacle")) === N.obstacle);
-    await page.fill("#q-projection", ""); await page.click("#dc-voir"); await attendre(page, 1200);
-    ok("en modification, réponse effacée puis « Valider » : « Il manque : Dans 3 mois… », aucune écriture", (await texte(page, "#dc-msg")) === "Il manque : Dans 3 mois, qu'est-ce qui aurait changé pour toi ?" && db.ecritures.length === 0, await texte(page, "#dc-msg"));
-    await page.fill("#q-projection", "Prendre 4 kg de muscle"); await page.selectOption("#q-probleme", "Prendre du muscle"); await page.click("#dc-voir"); await attendre(page, 1600);
+    ok("… en rouvrant : les réponses d'avant (« Perdre du gras », pastilles et précision d'avant), pas celles abandonnées", JSON.stringify(await coches(page, "probleme")) === JSON.stringify([N.probleme]) && (await avantObstacle()), JSON.stringify(await coches(page, "probleme")) + " " + JSON.stringify(await coches(page, "obstacle")) + " " + (await valeur(page, "#q-obstacle-precision")));
+    /* v60 : « dans 3 mois » n'a que sa précision (N) : l'effacer laisse la question sans réponse ; « Il manque une
+       réponse », seule cette question signalée (avant : « Il manque : Dans 3 mois… ») */
+    await page.fill("#q-projection-precision", ""); await toucherTropTot(page); await attendre(page, 1200);
+    ok("en modification, réponse effacée puis « Voir ma prochaine étape » : « Il manque une réponse » (« dans 3 mois » signalée), aucune écriture", (await texte(page, "#dc-msg")) === "Il manque une réponse" && JSON.stringify(await manques(page)) === '["q-projection"]' && db.ecritures.length === 0, (await texte(page, "#dc-msg")) + " · " + JSON.stringify(await manques(page)));
+    /* v60 : une pastille + une précision pour « dans 3 mois » (avant : le texte libre « Prendre 4 kg de muscle ») */
+    await page.click(carte("projection", "confiance")); await page.fill("#q-projection-precision", "Prendre 4 kg de muscle"); await page.click(carte("probleme", "Prendre du muscle")); await page.click("#dc-voir"); await attendre(page, 1600);
     const w = ecr(db, "intake"), I = contenu(db, "intake") || {};
-    ok("« Modifier » + « Valider mes réponses » : une écriture, court_le inchangé ; la réponse abandonnée avant « Annuler » (obstacle « Autre chose ») n'est pas entrée", w.length === 1 && I.probleme === "Prendre du muscle" && I.projection === "Prendre 4 kg de muscle" && I.court_le === COURT && I.obstacle === N.obstacle, "écritures " + w.length + " " + JSON.stringify(I));
+    ok("« Modifier » + « Voir ma prochaine étape » : une écriture, court_le inchangé ; la réponse abandonnée avant « Annuler » (pastille décochée, précision « Autre chose ») n'est pas entrée", w.length === 1 && I.probleme === "Prendre du muscle" && I.projection === "Retrouver confiance en moi — Prendre 4 kg de muscle" && JSON.stringify(I.projection_choix) === '["confiance"]' && I.projection_precision === "Prendre 4 kg de muscle" && I.court_le === COURT && I.obstacle === N.obstacle && JSON.stringify(I.obstacle_choix) === JSON.stringify(N.obstacle_choix) && I.obstacle_precision === N.obstacle_precision, "écritures " + w.length + " " + JSON.stringify(I));
     ok("… l'objectif posé depuis la réponse « problème » suit (« Prise de muscle »), retour à l'accueil", I.objectif === "Prise de muscle" && !!(await page.$("#dc-accomp")), JSON.stringify(I));
     await c.close();
   });
@@ -401,7 +466,8 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
     const pr = await texte(page, "#vue");
     ok("Profil du prospect : « Tes réponses au questionnaire sont enregistrées… », ses 3 réponses, « Modifier mes réponses » (#/decouverte/reponses), pas de questionnaire complet", pr.includes("Tes réponses au questionnaire sont enregistrées") && pr.includes(N.obstacle) && pr.includes(N.projection) && (await texte(page, '#vue a[href="#/decouverte/reponses"]')) === "Modifier mes réponses" && !(await page.$("#q-nom")));
     await page.click('#vue a[href="#/decouverte/reponses"]').catch(() => {}); await attendre(page, 1500);
-    ok("… « Modifier mes réponses » ouvre ses 3 réponses en modification", !!(await page.$("#dc-vue #q-probleme")) && !!(await page.$("#dc-annuler")) && (await valeur(page, "#q-projection")) === N.projection);
+    /* v60 : « dans 3 mois » revient dans sa précision (avant : le texte libre #q-projection) */
+    ok("… « Modifier mes réponses » ouvre ses 3 réponses en modification", !!(await page.$("#dc-vue #q-probleme")) && !!(await page.$("#dc-annuler")) && (await valeur(page, "#q-projection-precision")) === N.projection_precision, await valeur(page, "#q-projection-precision"));
     await c.close();
   });
 
@@ -412,8 +478,9 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
     await page.goto(`http://localhost:${PORT}/#/challenge/7`); await attendre(page, 2600);
     /* v52 : les 3 nouvelles questions (avant : le questionnaire court de 10 pré-rempli, 29 ans, 64 kg) */
     ok("ancien prospect du challenge (#/challenge/7) : « Découverte » (v52 : jamais « terminée »), les 3 questions (pas d'âge ni de poids redemandés), rien d'écrit", (await page.evaluate(() => location.hash)) === "#/decouverte" && (await eyebrow(page)) === "Découverte" && !!(await page.$("#q-probleme")) && !(await page.$("#q-age, #q-poids")) && db.ecritures.length === 0, await eyebrow(page));
-    await page.click("#dc-voir"); await attendre(page, 300);
-    ok("… il manque les 3 réponses", (await texte(page, "#dc-msg")) === "Il manque : Quel est ton objectif principal ?, Qu'est-ce qui t'a bloqué jusqu'ici ?, Dans 3 mois, qu'est-ce qui aurait changé pour toi ?", await texte(page, "#dc-msg"));
+    await toucherTropTot(page); await attendre(page, 300);
+    /* v60 : « Il manque une réponse » et les 3 questions signalées (avant : « Il manque : » suivi des 3 questions) */
+    ok("… il manque les 3 réponses", (await texte(page, "#dc-msg")) === "Il manque une réponse" && JSON.stringify(await manques(page)) === '["q-obstacle","q-probleme","q-projection"]', (await texte(page, "#dc-msg")) + " · " + JSON.stringify(await manques(page)));
     await remplir(page, N); await page.click("#dc-voir"); await attendre(page, 1600);
     const I = contenu(db, "intake") || {};
     ok("… validé : court_le posé, ses anciennes réponses gardées (niveau, lieu, poids objectif, âge 29, objectif d'avant)", typeof I.court_le === "string" && I.niveau === ANCIEN_INTAKE.niveau && I.lieu === ANCIEN_INTAKE.lieu && I.poids_obj === "60" && I.age === "29" && I.objectif === ANCIEN_INTAKE.objectif && I.projection === N.projection, JSON.stringify(I));
@@ -429,7 +496,7 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
     const db = base({ intake: { court_le: 12345, probleme: { x: 1 }, age: { x: 1 }, sexe: ["Homme"], taille: "<b>x</b>", poids: null, obstacle: "<img src=x onerror=\"window.__xss=1\">", projection: "<script>window.__xss=1</script>", motivation: "<script>window.__xss=1</script>" }, challenge: { cta: "n'importe quoi", jours: [1, 2], reserve: 42 } });
     const { c, page } = await contexte(b, lea, db);
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 2400);
-    ok("données piégées (court_le nombre, problème objet, HTML) : le questionnaire s'affiche, aucune injection, aucune écriture", !!(await page.$("#q-probleme")) && !(await page.evaluate(() => window.__xss)) && !(await page.$("#vue img[src='x'], #vue script")) && (await valeur(page, "#q-obstacle")) === "<img src=x onerror=\"window.__xss=1\">" && db.ecritures.length === 0);
+    ok("données piégées (court_le nombre, problème objet, HTML) : le questionnaire s'affiche, aucune injection, aucune écriture", !!(await page.$("#q-probleme")) && !(await page.evaluate(() => window.__xss)) && !(await page.$("#vue img[src='x'], #vue script")) && (await valeur(page, "#q-obstacle-precision")) === "<img src=x onerror=\"window.__xss=1\">" && db.ecritures.length === 0);
     await c.close();
   });
   await bloc("G. données piégées (premier niveau)", async () => {
@@ -477,10 +544,13 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
     const db = base();
     const { c, page } = await contexte(b, lea, db, { langue: "en" });
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 2400);
-    /* v52 : « Submit my answers » (avant : « See my result ») */
-    ok("anglais : « Discovery » (v52 : sans « Day n/7 »), « Your questionnaire », « Submit my answers »", (await eyebrow(page)) === "Discovery" && (await texte(page, "#vue")).includes("Your questionnaire") && (await texte(page, "#dc-voir")) === "Submit my answers", await eyebrow(page));
-    await page.click("#dc-voir"); await attendre(page, 300);
-    ok("anglais : « Missing: … » si rien n'est rempli", (await texte(page, "#dc-msg")).startsWith("Missing: "), await texte(page, "#dc-msg"));
+    /* v52 : « Submit my answers » (avant : « See my result ») ; v60 : « See my next step » */
+    /* v60 : + l'intro anglaise et la 1re carte traduite (« Lose fat — Get leaner »), sa valeur restant l'option française */
+    const carte1 = await page.$eval("#q-probleme label.dc-opt", l => l.querySelector("input").value + "|" + l.querySelector(".dc-opt-l").textContent.trim() + "|" + l.querySelector(".dc-opt-s").textContent.trim()).catch(() => "");
+    ok("anglais : « Discovery » (v52 : sans « Day n/7 »), « 3 questions, 30 seconds », « Your questionnaire », cartes traduites, « See my next step »", (await eyebrow(page)) === "Discovery" && (await lede(page)) === "3 questions, 30 seconds: tell us where you're at." && (await texte(page, "#vue")).includes("Your questionnaire") && carte1 === "Perdre du gras|Lose fat|Get leaner" && (await texte(page, "#dc-voir")) === "See my next step", (await eyebrow(page)) + " · " + (await lede(page)) + " · " + carte1 + " · " + (await texte(page, "#dc-voir")));
+    await toucherTropTot(page); await attendre(page, 300);
+    /* v60 : « One answer is missing » (avant : « Missing: … ») */
+    ok("anglais : « One answer is missing » si rien n'est rempli", (await texte(page, "#dc-msg")) === "One answer is missing", await texte(page, "#dc-msg"));
     await c.close();
   });
   await bloc("H. anglais, page bilan et accueil", async () => {
@@ -495,7 +565,8 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
     ok("anglais : accueil (« With MHX coaching », « I booked my assessment », Speed Formation)", ["With MHX coaching", "I booked my assessment", "Speed Formation"].every(x => v.includes(x)), v.slice(0, 300));
     ok("anglais : « Book my assessment » (en-tête et accompagnement), aucun « Réserver mon bilan »", (await texte(page, "#vue .masthead a[data-dc-cal]")) === "Book my assessment" && (await texte(page, "#dc-accomp a[data-dc-cal]")) === "Book my assessment" && !v.includes("Réserver mon bilan") && !v.includes("Avec l'accompagnement MHX"));
     await aller(page, "#/decouverte/reponses", 1500);
-    ok("anglais : « Modifier mes réponses » → « Submit my answers » et « Discard changes »", (await texte(page, "#dc-voir")) === "Submit my answers" && (await texte(page, "#dc-annuler")) === "Discard changes");
+    /* v60 : « See my next step » (avant : « Submit my answers ») */
+    ok("anglais : « Modifier mes réponses » → « See my next step » et « Discard changes »", (await texte(page, "#dc-voir")) === "See my next step" && (await texte(page, "#dc-annuler")) === "Discard changes", (await texte(page, "#dc-voir")) + " · " + (await texte(page, "#dc-annuler")));
     await aller(page, "#/programme", 1400);
     /* v52 (lot E) : #/programme a son exemple, puis l'appel en anglais à la place de « This feature is available… » */
     ok("anglais : page verrouillée « Want a program built for you that evolves every week? Book your assessment. » + « Book my assessment »", (await texte(page, "#vue .verrou")).includes("Want a program built for you that evolves every week? Book your assessment.") && (await texte(page, "#vue .verrou a[target=_blank]")) === "Book my assessment");
@@ -506,8 +577,9 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
     const { c, page } = await contexte(b, lea, db, { viewport: { width: 390, height: 844 } });
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 2400);
     ok("mobile 390 px : questionnaire sans débordement horizontal", !!(await page.$("#q-probleme")) && !(await deborde(page)), String(await page.evaluate(() => document.documentElement.scrollWidth)));
-    await page.click("#dc-voir"); await attendre(page, 400);
-    ok("mobile 390 px : message « Il manque » affiché, toujours sans débordement", (await texte(page, "#dc-msg")).startsWith("Il manque") && !(await deborde(page)));
+    await toucherTropTot(page); await attendre(page, 400);
+    /* v60 : « Il manque une réponse » (avant : un message commençant par « Il manque ») */
+    ok("mobile 390 px : message « Il manque une réponse » affiché, toujours sans débordement", (await texte(page, "#dc-msg")) === "Il manque une réponse" && !(await deborde(page)), await texte(page, "#dc-msg"));
     const barre = await page.$$eval("#barre-bas a", l => l.map(a => a.dataset.id)).catch(() => []);
     /* v52 (lot D) : la barre du bas du prospect est Accueil, Calculateur, Progression, Speed Formation (le Profil passe dans « Plus ») */
     ok("mobile : barre du bas Accueil, Calculateur, Progression, Speed Formation, sans Challenge", JSON.stringify(barre) === '["accueil","calculateur","mensurations","formation"]' && !barre.includes("challenge"), JSON.stringify(barre));
@@ -516,7 +588,8 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
   });
   await bloc("H. mobile, page bilan et accueil", async () => {
     /* v52 : réponse « projection » très longue sur la page bilan, puis l'accueil (avant : le résultat, vidéo ouverte) */
-    const db = base({ intake: avecCourt(Object.assign({}, N, { projection: "Une projection très longue ".repeat(12) })) });
+    const LONGUE = "Une projection très longue ".repeat(12);   // v60 : précision et texte français cohérents (la page montre la précision)
+    const db = base({ intake: avecCourt(Object.assign({}, N, { projection: LONGUE, projection_precision: LONGUE })) });
     const { c, page } = await contexte(b, lea, db, { viewport: { width: 390, height: 844 } });
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 2600);
     const bilanOk = !!(await page.$("#dc-bilan")) && !(await deborde(page));
