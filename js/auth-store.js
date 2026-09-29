@@ -524,6 +524,7 @@ const Store = {
   PREFIXE_ATTENTE: "mhx_attente|",
   tEnAttente: {},
   dernierT: {},   // « compte|cle » → instant de la saisie la plus recente deja partie de cet onglet
+  retenues: new Set(),   // v59 : « compte|cle » dont la copie attend une ecriture en cours dans cet onglet (Checkin : relecture avant d'ecrire)
   attenteLire(){
     const out = {}, P = this.PREFIXE_ATTENTE;
     try {
@@ -615,7 +616,7 @@ const Store = {
     try {
       for (const k of cles){
         const e = o[k], i = k.indexOf("|"), uid = k.slice(0, i), cle = k.slice(i + 1);
-        if (this.attente[k]) continue;   // une saisie en cours : son propre envoi part dans la seconde
+        if (this.attente[k] || this.retenues.has(k)) continue;   // une saisie en cours : son propre envoi part dans la seconde (v59 : ou apres sa relecture)
         if (!e || typeof e.t !== "string" || !uid || !cle || this.clesCoachSeul.indexOf(cle) > -1){ this.lacher(uid, cle); continue; }
         /* ecrite par un autre compte sur cet appareil : jamais envoyee ; retiree seulement au demarrage */
         if (e.a !== u.id){ if (auDemarrage) this.lacher(uid, cle); continue; }

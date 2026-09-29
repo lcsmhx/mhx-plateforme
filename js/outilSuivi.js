@@ -106,6 +106,9 @@ const Checkin = {
      plus y est réuni (fusion), la modification est appliquée sur ce résultat, écrite puis envoyée tout de suite ; C
      prend la version écrite. Une copie lue à l'ouverture de Mon suivi n'efface plus ce qu'un autre appareil (ou un
      autre onglet) a écrit entre-temps.
+     Une saisie (bilan, feedback) est gardée sur l'appareil dès l'envoi, comme en v48 (Store.ecrire en faisait la copie
+     tout de suite) : fermer l'app pendant la relecture ne la perd pas. La relecture a un délai maximum (fetch n'en a
+     pas) ; un refus passager du serveur a droit à un second essai avant le repli hors ligne.
      ------------------------------------------------------------------ */
   _file: Promise.resolve(),
   enFile(fn){
@@ -114,16 +117,31 @@ const Checkin = {
     return p;
   },
   _relus: new WeakSet(),   // les copies affichées qui ont pris une version relue (même si leur lecture d'ouverture avait échoué)
+  RELECTURE_MAX: 6000,     // au-delà (réseau qui ne répond plus), la relecture est tenue pour ratée : repli hors ligne
   /* la base relue juste avant d'écrire, complétée par C. null : relecture ratée (rien n'est écrit sur la base relue) ;
      false : la fiche a changé (message déjà affiché), ou consultation du coach (il n'écrit jamais checkins) */
   async fraiche(C){
     const uid = Store.cible(); if (!uid || Store.idConsulte) return false;
     const o = (C && typeof C === "object") ? Store.origines.get(C) : undefined;
     if (o && o !== uid){ Store.ficheChangee(); return false; }
-    await Store.envoyerCle(this.cle);   // l'écriture en attente de cet onglet (700 ms) part d'abord : la base relue la contient
-    const k = uid + "|" + this.cle, avant = Store.charge[k];
-    const F = await Store.lire(this.cle, this.vide());
-    if (!F || typeof F !== "object" || Store.nonLus.has(F)){ Store.charge[k] = avant; return null; }   // une relecture ratée ne change pas ce qui était permis (Q13-6)
+    const k = uid + "|" + this.cle, avant = Store.charge[k], fin = Date.now() + this.RELECTURE_MAX;
+    const rate = F => !F || typeof F !== "object" || Store.nonLus.has(F);
+    /* un essai : l'écriture en attente de cet onglet (700 ms) part d'abord (la base relue la contient), puis la lecture ;
+       borné par « fin » ; une réponse arrivée trop tard ne change pas ce qui était permis */
+    const essai = () => {
+      let tard = false;
+      const p = (async () => { await Store.envoyerCle(this.cle); return tard ? null : Store.lire(this.cle, this.vide()); })();
+      p.then(F => { if (tard && F && Store.nonLus.has(F) && Store.charge[k] === false) Store.charge[k] = avant; }, () => {});
+      return Promise.race([p, new Promise(r => setTimeout(() => { tard = true; r(null); }, Math.max(0, fin - Date.now())))]);
+    };
+    let F = await essai();
+    /* refus passager (serveur 5xx, 429…) alors que le réseau est là : un second essai 1,5 s plus tard, s'il reste le temps */
+    if (rate(F) && !(typeof navigator !== "undefined" && navigator.onLine === false) && fin - Date.now() > 2500){
+      Store.charge[k] = avant;
+      await new Promise(r => setTimeout(r, 1500));
+      F = await essai();
+    }
+    if (rate(F)){ Store.charge[k] = avant; return null; }   // une relecture ratée ne change pas ce qui était permis (Q13-6)
     if (Store.cible() !== uid) return false;
     if (!Array.isArray(F.liste)) F.liste = [];
     return this.fusion(F, C);
@@ -156,35 +174,77 @@ const Checkin = {
   },
   /* toute écriture de checkins : appliquer(D) modifie la version fraîche (false = rien à écrire). Renvoie (Promise)
      true si c'est écrit (ou s'il n'y avait rien à écrire), false sinon. C prend la version écrite (même objet :
-     l'affichage et les écritures suivantes partent d'elle).
+     l'affichage et les écritures suivantes partent d'elle). « Écrit » : accepté par Store.ecrire (sur l'appareil),
+     l'envoi est parti ; la suivante de la file attend son arrivée (les envois partent dans l'ordre).
      Relecture impossible (hors ligne, Q13-6, choix b) : opts.horsLigne (une vraie saisie : bilan, feedback) — comme
      en v48, la saisie est écrite sur la copie affichée, gardée sur l'appareil et renvoyée d'elle-même (si la lecture
      de l'ouverture avait échoué : le refus d'avant, avec son message) ; opts.silence (fb_vu) : rien, sans message ;
      sinon (smiley) : refus, avec le message de lecture ratée. */
   modifier(C, appliquer, opts){
-    return this.enFile(() => this._modifier(C, appliquer, opts || {}).catch(e => { console.warn("[MHX] checkins : écriture impossible", e); return false; }));
+    opts = opts || {};
+    const s = opts.horsLigne ? this.retenir(C, appliquer) : null;   // la saisie est sur l'appareil dès l'envoi
+    let rendre = null;
+    const r = new Promise(x => { rendre = x; });
+    this.enFile(async () => {
+      let x = { ok: false, envoi: null };
+      try { x = await this._modifier(C, appliquer, opts, s); }
+      catch(e){ console.warn("[MHX] checkins : écriture impossible", e); this.finSaisie(s, false, C); }
+      rendre(x.ok);
+      if (x.envoi) await x.envoi;
+    });
+    return r;
   },
-  async _modifier(C, appliquer, opts){
+  async _modifier(C, appliquer, opts, s){
+    const uid = Store.cible(), k = uid + "|" + this.cle;
     const D = await this.fraiche(C);
-    if (D === false) return false;
-    const k = Store.cible() + "|" + this.cle;
+    if (D === false){ this.finSaisie(s, false, C); return { ok: false }; }
     if (D === null){
       if (opts.horsLigne){
-        if (Store.nonLus.has(C) && !this._relus.has(C)){ Store.lectureRatee(k); return false; }
+        if (Store.nonLus.has(C) && !this._relus.has(C)){ this.finSaisie(s, false, C); Store.lectureRatee(k); return { ok: false }; }
         const X = JSON.parse(JSON.stringify(C));
-        if (appliquer(X) === false) return true;
-        if (Store.ecrire(this.cle, X) === false) return false;   // refusée (message déjà affiché)
-        this.remplacer(C, X);
-        return true;
+        if (appliquer(X) === false){ this.finSaisie(s, false, C); return { ok: true }; }
+        if (Store.ecrire(this.cle, X) === false){ this.finSaisie(s, false, C); return { ok: false }; }   // refusée (message déjà affiché)
+        this.remplacer(C, X); this.finSaisie(s, true, C);
+        return { ok: true };
       }
       if (!opts.silence) Store.lectureRatee(k);
-      return false;
+      return { ok: false };
     }
     const rien = appliquer(D) === false;
-    if (!rien && Store.ecrire(this.cle, D) === false) return false;
+    if (!rien && Store.ecrire(this.cle, D) === false){ this.finSaisie(s, false, C); return { ok: false }; }
     this.remplacer(C, D); this._relus.add(C);
-    if (!rien) await Store.envoyerCle(this.cle);   // part tout de suite : la fenêtre qui reste se réduit au trajet réseau
-    return true;
+    if (s) this.finSaisie(s, !rien, C); else if (!rien) this.garderSaisies(uid, C);
+    return { ok: true, envoi: rien ? null : Store.envoyerCle(this.cle) };   // part tout de suite : la fenêtre qui reste se réduit au trajet réseau
+  },
+  /* les saisies pas encore écrites : leur copie sur l'appareil (« mhx_attente|compte|checkins », celle de Store.ecrire)
+     est faite dès l'envoi, sur C, et refaite après chaque écriture de la file tant qu'elles attendent ; Store.reprendre
+     ne l'envoie pas pendant ce temps (Store.retenues). Jamais sur une copie dont la lecture a échoué : renvoyée plus
+     tard, elle écraserait la vraie fiche. */
+  _saisies: [],
+  retenir(C, appliquer){
+    const uid = Store.cible();
+    if (!uid || Store.idConsulte || !C || typeof C !== "object") return null;
+    const o = Store.origines.get(C);
+    if ((o && o !== uid) || (Store.nonLus.has(C) && !this._relus.has(C))) return null;
+    const s = { uid: uid, appliquer: appliquer };
+    this._saisies.push(s); Store.retenues.add(uid + "|" + this.cle);
+    this.garderSaisies(uid, C);
+    return s;
+  },
+  garderSaisies(uid, base){
+    const l = this._saisies.filter(x => x.uid === uid); if (!l.length) return;
+    const X = JSON.parse(JSON.stringify(base));
+    l.forEach(x => { x.appliquer(X); });
+    this._tSaisies = Store.garder(uid, this.cle, X);
+  },
+  /* la saisie s est écrite (ecrit : la copie de Store.ecrire la contient) ou abandonnée (sa copie est retirée) ;
+     base : C à jour, pour la copie des saisies qui attendent encore */
+  finSaisie(s, ecrit, base){
+    const i = s ? this._saisies.indexOf(s) : -1; if (i === -1) return;
+    this._saisies.splice(i, 1);
+    if (this._saisies.some(x => x.uid === s.uid)){ this.garderSaisies(s.uid, base); return; }
+    Store.retenues.delete(s.uid + "|" + this.cle);
+    if (!ecrit) Store.lacher(s.uid, this.cle, this._tSaisies);
   },
   remplacer(C, D){ Object.keys(C).forEach(x => { delete C[x]; }); Object.assign(C, D); },
 
@@ -556,6 +616,7 @@ const Checkin = {
     const u = Auth.utilisateur(), uid = u && u.id;
     if (Store.idConsulte || !uid) return false;
     if (Store.nonLus.has(C) || Store.charge[uid + "|" + this.cle] === false) return false;   // lecture d'ouverture ratée : Mon suivi a l'air vide, on n'écrit rien
+    if (F == null) return false;   // les réponses n'ont pas pu être lues (ou il n'y en a aucune) : la pastille n'est pas touchée
     if (!this.nonVus(C, F).length){ this.majBadge(uid, 0); return false; }
     const v = Feedback.liste(F).map(f => this.marque(f)).sort().pop();
     this.modifier(C, D => { if (this.vu(D) >= v) return false; D.fb_vu = v; }, { silence: true }).then(ok => {
