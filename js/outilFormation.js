@@ -686,6 +686,8 @@ const outilFormation = {
   },
 
   /* --- Les challenges --- */
+  /* v59 : les challenges ne sont pas encore traduits : leur etiquette « Objectif : » reste en francais (data-notr), sinon
+     l'anglais affichait « Goal: » devant un objectif en francais (la cle sert a l'objectif de chaque module) */
   wChallenges(D){
     let h = `<div class="fo-outil"><h3>Choisis ton challenge</h3>
       <p class="note" style="margin:0 0 12px">Un challenge par semaine, sur trois axes. Choisis-en un et tiens-le sept jours.</p>`;
@@ -697,7 +699,7 @@ const outilFormation = {
         </button>
         <div class="fo-chal-corps">${c.axes.map(a => `<div class="fo-axe">
           <b>${esc(a.nom)}</b>
-          <p class="note" style="margin:2px 0 0"><i>Objectif :</i> ${esc(a.objectif)}</p>
+          <p class="note" style="margin:2px 0 0"><i data-notr>Objectif :</i> ${esc(a.objectif)}</p>
           <p style="margin:4px 0 0">${esc(a.defi)}</p>
         </div>`).join("")}</div>
       </div>`;

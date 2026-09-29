@@ -26,7 +26,8 @@
       barre du bas) ;
    J. téléphone 390 px (barre du bas du client inchangée, « Plus », pas de débordement, bouton tactile) ;
    K. anglais ; v59 : Speed Formation (titres courts, objectifs et contenu des modules, « Goal: », « Your to-do list »,
-      bouton de la vidéo, note du module 3) ;
+      bouton de la vidéo, note du module 3 ; les challenges du module 5, pas encore traduits, restent en français, leur
+      « Objectif : » compris) ;
    L. données piégées (journal et programme écrits hors de l'app) : aucune injection, aucune erreur, aucune écriture ;
    Z. aucun appel vers l'extérieur.
    Supabase simulé (gabarit de verif56, carte 6 §15) : rien ne part vers la vraie base (routage par NOM D'HÔTE, jamais
@@ -657,7 +658,8 @@ const NOUVEAU = { probleme: "Perdre du gras", obstacle: "Le manque de temps avec
       if (!(await page.$(`.fo-mod.ouvert .fo-tete[data-mod="${m}"]`))) { await page.click(`.fo-tete[data-mod="${m}"]`); await attendre(page, 500); }
       mods.push(await page.$eval(".fo-mod.ouvert", s => { const n = x => x ? x.textContent.replace(/\s+/g, " ").trim() : null, corps = s.querySelector(".fo-corps");
         return { id: s.querySelector(".fo-tete").dataset.mod, obj: n(corps.querySelector(".fo-obj")), contenu: Array.from(corps.querySelectorAll(".fo-contenu li")).map(n), h3: Array.from(corps.querySelectorAll("h3")).map(n),
-          video: n(corps.querySelector(":scope > .video-boite .jouer")), note: n(corps.querySelector(":scope > p.note:last-child")) }; }).catch(() => ({ id: m })));
+          video: n(corps.querySelector(":scope > .video-boite .jouer")), note: n(corps.querySelector(":scope > p.note:last-child")),
+          axes: Array.from(corps.querySelectorAll(".fo-axe")).map(x => [n(x.querySelector("i")), n(x.querySelector("p.note"))]) }; }).catch(() => ({ id: m })));
     }
     const attendu = await page.evaluate(() => FORMATION.modules.map(m => ({ id: m.id, obj: I18N.en[m.objectif] || null, contenu: m.contenu.map(t => I18N.en[t] || null), fr: [m.objectif].concat(m.contenu, m.note ? [m.note] : []) })));
     const FR = attendu.reduce((a, x) => a.concat(x.fr), []);
@@ -671,6 +673,11 @@ const NOUVEAU = { probleme: "Perdre du gras", obstacle: "Le manque de temps avec
     ok("… « Goal: », « Your to-do list » (au-dessus des tâches) et « ▶ Watch the video » dans chaque module qui en a ; en tête, « ▶ Watch the course intro »",
       mods.every(x => (x.obj || "").startsWith("Goal: ") && (x.h3 || []).includes("Your to-do list") && !(x.h3 || []).includes("Ta to-do list")) && mods.filter(x => x.id !== "m6").every(x => x.video === "▶ Watch the video") && top === "▶ Watch the course intro",
       JSON.stringify(mods.map(x => [x.id, x.h3 && x.h3[0], x.video])) + " " + top);
+    /* v59 (suite de la relecture) : les challenges du module 5 ne sont pas encore traduits : leur étiquette « Objectif : »
+       reste en français (pas de ligne moitié anglais « Goal: » + objectif en français) */
+    const axes = (mods.find(x => x.id === "m5") || {}).axes || [], CH = await page.evaluate(() => FORMATION.challenges.reduce((a, c) => a.concat(c.axes.map(x => String(x.objectif).replace(/\s+/g, " ").trim())), []));
+    ok("… module 5 : les challenges, pas encore traduits, restent entièrement en français, étiquette « Objectif : » comprise (jamais « Goal: » devant un objectif en français)",
+      axes.length > 0 && axes.length === CH.length && axes.every((x, i) => x[0] === "Objectif :" && x[1] === "Objectif : " + CH[i]), JSON.stringify(axes.slice(0, 3)));
     await c.close();
   });
 

@@ -27,7 +27,9 @@
    I. accueil du prospect : une seule action mise en avant (« Calcule tes calories (2 min) » → #/calculateur, puis
       « Enregistre ta pesée de départ » → #/mensurations, puis l'accueil normal), décidée en lecture seule, sans écriture,
       « Réserver mon bilan » discret, Speed Formation ouverte, vitrine (programme, nutrition, journal, suivi) ; anglais ;
-      v59 : juste après un enregistrement (calcul, pesée) pas encore arrivé au serveur, l'étape en tient compte ;
+      v59 : juste après un enregistrement (calcul, pesée) pas encore arrivé au serveur — valeur qui attend ses 700 ms, puis
+      envoi en vol (copie gardée sur l'appareil) —, l'étape en tient compte ; copie plus ancienne que le serveur ou
+      écrite par un autre compte : ignorée ;
    J. calculateur du prospect : sa clé calc_perso (jamais calc), rien d'inventé, rien d'écrit avant une saisie complète,
       mêmes formules, « pas un avis médical », départ depuis le calc du coach ou l'ancien questionnaire, calc_perso piégé ;
    K. garde-fou 18 ans (âge 17 : message, rien d'écrit ; mineur ensuite : calc_perso retiré ; écriture en attente
@@ -895,6 +897,57 @@ function lienOk(href, base, attendu){
     ok("pesée enregistrée, retour immédiat à l'accueil (envoi pas encore arrivé) : plus d'étape mise en avant, l'accueil normal", !!(await page.$("#dc-accomp")) && !(await page.$("#dc-etape")) && ecr(db, "mens", ID).length === 0, (await page.$eval("#dc-etape", x => x.dataset.etape).catch(() => "aucune étape")) + " " + resume(db));
     await attendre(page, 4800);
     ok("… une fois arrivés : une écriture de calc_perso et une de mens (les deux saisies), rien d'autre, rien à l'affichage de l'accueil", ecr(db, "calc_perso", ID).length === 1 && ecr(db, "mens", ID).length === 1 && saisies(db).length === 2, resume(db));
+    await c.close();
+  });
+
+  /* v59 (suite de la relecture) : même parcours, mais l'accueil s'ouvre 1 s après chaque saisie : les 700 ms sont passées,
+     l'envoi est parti et reste en vol (db.retard : téléphone lent) ; seule la copie gardée sur l'appareil (Store.garder)
+     dit alors ce que l'onglet vient d'enregistrer */
+  await bloc("I. accueil pendant l'envoi", async () => {
+    const k = 39, ID = PID(k);
+    const db = base({ comptes: [compte(k, "Léa", "Martin", [["intake", NOUVEAU({ bilan_propose: { choix: "plus_tard", le: avant(MIN) } })]])] });
+    db.retard = { calc_perso: 4000, mens: 4000 };
+    const { c, page } = await ouvrir(b, db, k, "#/calculateur", "#tdee"); await attendre(page, 1200);
+    const enVol = cle => page.evaluate(([id, x]) => ({ attente: Store.valeursEnAttente[id + "|" + x] !== undefined, copie: !!Auth.magasin().getItem("mhx_attente|" + id + "|" + x) }), [ID, cle]);
+    const etape = async () => { await aller(page, "#/accueil", 300); await page.waitForSelector("#dc-accomp", { timeout: 3000 }).catch(() => {}); await attendre(page, 300); return page.$eval("#dc-etape", x => x.dataset.etape).catch(() => ""); };
+    await page.click('#sexe [data-v="F"]'); await page.fill("#age", "30"); await page.fill("#taille", "165"); await page.fill("#poids", "60"); await page.fill("#heures", "3");
+    await attendre(page, 1000);
+    const v1 = await enVol("calc_perso"), e1 = await etape();
+    ok("calcul enregistré, accueil ouvert 1 s après (envoi parti, pas encore arrivé : seule la copie gardée sur l'appareil le dit) : l'action mise en avant est déjà « Enregistre ta pesée de départ »",
+      !v1.attente && v1.copie && db.journal.includes("P calc_perso") && e1 === "pesee" && ecr(db, "calc_perso", ID).length === 0, JSON.stringify(v1) + " " + e1 + " " + resume(db));
+    await aller(page, "#/mensurations", 300); await page.waitForSelector("#e-poids", { state: "visible", timeout: 3000 }).catch(() => {});
+    await page.fill("#e-poids", "72.4"); await page.click("#add");
+    await attendre(page, 1000);
+    const v2 = await enVol("mens"), e2 = await etape();
+    ok("pesée enregistrée, accueil ouvert 1 s après (envoi en vol) : plus d'étape mise en avant, l'accueil normal",
+      !v2.attente && v2.copie && db.journal.includes("P mens") && !!(await page.$("#dc-accomp")) && e2 === "" && ecr(db, "mens", ID).length === 0, JSON.stringify(v2) + " " + (e2 || "aucune étape") + " " + resume(db));
+    await attendre(page, 4800);
+    ok("… une fois arrivés : une écriture de calc_perso et une de mens, rien d'autre, copies retirées par leur arrivée (pas par l'accueil)",
+      ecr(db, "calc_perso", ID).length === 1 && ecr(db, "mens", ID).length === 1 && saisies(db).length === 2 && !(await enVol("calc_perso")).copie && !(await enVol("mens")).copie, resume(db));
+    await c.close();
+  });
+
+  /* v59 (suite de la relecture) : la règle de date de la copie gardée sur l'appareil (celle de Store.reprendre) — une copie
+     plus ancienne que le serveur (calcul retiré depuis : calc_perso vide en base) ne passe pas devant ; plus récente, si ;
+     écrite par un autre compte sur cet appareil, jamais. Copie posée page ouverte (au démarrage, Store.reprendre l'aurait
+     déjà traitée) ; rien d'écrit ni de retiré à l'affichage */
+  await bloc("I. accueil : copie sur l'appareil et date du serveur", async () => {
+    const k = 41, ID = PID(k), CP = { sexe: "F", age: 30, taille: 165, poids: 60, pas: 6000, heures: 3, objectif: "perte" };
+    const db = base({ comptes: [compte(k, "Léa", "Martin", [["intake", NOUVEAU({ bilan_propose: { choix: "plus_tard", le: avant(MIN) } })], ["calc_perso", {}, avant(10 * MIN)]])] });
+    const { c, page } = await ouvrir(b, db, k, "#/profil"); await attendre(page, 1000);
+    const poser = (t, a) => page.evaluate(([id, t, a, v]) => { Auth.magasin().setItem("mhx_attente|" + id + "|calc_perso", JSON.stringify({ a: a || id, t, v })); }, [ID, t, a || null, CP]);
+    const copie = () => page.evaluate(id => Auth.magasin().getItem("mhx_attente|" + id + "|calc_perso"), ID);
+    const etape = async () => { await aller(page, "#/accueil", 300); await page.waitForSelector("#dc-accomp", { timeout: 3000 }).catch(() => {}); await attendre(page, 300); const e = await page.$eval("#dc-etape", x => x.dataset.etape).catch(() => ""); await aller(page, "#/profil", 600); return e; };
+    await poser(avant(H));
+    const e1 = await etape(), c1 = await copie();
+    ok("copie d'un calcul adulte PLUS ANCIENNE que le serveur (calc_perso vide en base, plus récent) : elle ne passe pas devant, « Calcule tes calories (2 min) » ; copie laissée telle quelle", e1 === "calories" && !!c1 && JSON.parse(c1).t === avant(H), e1 + " " + c1);
+    await poser(avant(MIN));
+    const e2 = await etape(), c2 = await copie();
+    ok("… la même copie PLUS RÉCENTE que le serveur (pas encore arrivée) passe devant : « Enregistre ta pesée de départ »", e2 === "pesee" && !!c2 && JSON.parse(c2).t === avant(MIN), e2 + " " + c2);
+    await poser(avant(MIN), COACH.id);
+    const e3 = await etape();
+    ok("… une copie posée sur cet appareil par un autre compte ne compte jamais : « Calcule tes calories (2 min) »", e3 === "calories", e3);
+    ok("… aucune écriture à l'affichage de ces accueils (ni calc_perso ni rien d'autre)", saisies(db).length === 0 && ecr(db, "calc_perso").length === 0, resume(db));
     await c.close();
   });
 

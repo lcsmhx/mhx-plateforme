@@ -159,7 +159,8 @@ const Contenus = {
 I18N.en = {
 /* v59 — Speed Formation : titres courts des modules (la carte retire « Module n — »), objectifs, contenu, note du module 3,
    libellés « Objectif : », « Ta to-do list » et bouton de la vidéo (« ▶ » compris : un seul texte). « Introduction » et
-   « Mindset » restent tels quels (même mot en anglais). Tâches, défis, challenges et les 2 leçons : pas encore traduits. */
+   « Mindset » restent tels quels (même mot en anglais). Tâches, défis, challenges et les 2 leçons : pas encore traduits
+   (l'étiquette « Objectif : » des challenges reste donc en français : data-notr dans outilFormation.wChallenges). */
 "L'alimentation": "Nutrition",
 "L'entraînement": "Training",
 "L'organisation": "Organization",
