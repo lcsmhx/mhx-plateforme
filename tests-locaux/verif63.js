@@ -17,25 +17,39 @@
       l'ordinateur resté ouvert envoie son feedback : fb_vu reste, la pastille ne revient pas ;
    D. fb_vu dans la fenêtre d'envoi : un autre appareil (simulé en base) écrit pendant l'ouverture de Mon suivi : gardé ;
    E. lecture de checkins ratée (à l'ouverture, ou à la relecture) : fb_vu n'écrit rien, aucun message, la pastille
-      « Ton coach a répondu » reste ; smiley : refusé avec le message de lecture ratée ; puis tout repart ;
+      « Ton coach a répondu » reste ; smiley : refusé, message « Hors ligne — modification non enregistrée » (v59,
+      remarque 18 : jamais « Recharge la page » quand Mon suivi était lu) ; puis tout repart ;
    E4. refus passager du serveur à la relecture (une fois) : un second essai, le feedback est écrit sur la base relue ;
    E5. les réponses du coach n'ont pas pu être lues (lecture groupée ratée) : la pastille « Ton coach a répondu » reste ;
    F. hors ligne (Q13-6, choix b) : un feedback envoyé hors ligne est gardé sur l'appareil puis renvoyé au retour du
-      réseau (comme en v48) ; un smiley est refusé (message) ; fb_vu se tait ;
-   F3. relecture qui ne répond pas (réseau bloqué) : le bilan du vendredi est sur l'appareil dès l'envoi ; l'app
-      rouverte, il repart et arrive ; F4. … au bout du délai maximum, il part quand même (comme en v48) ;
+      réseau (comme en v48) ; un smiley est refusé (message « Hors ligne — … ») ; fb_vu se tait ;
+   F3. relecture qui ne répond pas (réseau bloqué) : le bilan du vendredi est sur l'appareil dès l'envoi ; l'app fermée
+      puis rouverte, il arrive une seule fois ; F4. … au bout du délai maximum, il part quand même (comme en v48) ;
    G. inactivité (Q13-4) : un smiley ou fb_vu récents ne font pas disparaître « Inactif depuis N j » (Mes clients, fiche,
       tableau de bord, Comptes) ; ancienne entrée sans envoye_a ; entrées à dates piégées (jamais « NaN ») ; de bout en
       bout (le compte de test ouvre Mon suivi, le coach voit toujours « 12 j ») ;
    H. remarque v53 c1 : les réponses de l'autre format d'une entrée (vendredi ↔ dimanche) restent affichées, client et
       coach, « Alimentation » une seule fois ; une entrée sans réponse de l'autre format : affichage d'avant ;
    I. le coach en consultation (Son suivi) : ni lecture en plus, ni écriture de checkins ;
-   J. double clic (feedback, smileys) ; K. le seul message possible est traduit ; Z. aucun appel vers l'extérieur.
+   J. double clic (feedback, smileys) ;
+   Suites de la relecture v59 (remarques 0, 1, 2, 3, 4, 11, 12, 17, 18) :
+   L. session perdue pendant la relecture (jeton refusé : lecture en 401, renouvellement en 400) — second essai (L) ou repli
+      hors ligne (L2) : la copie du bilan reste sur l'appareil, pas de « Bilan envoyé », puis il arrive après la reconnexion ;
+   M. la copie « mhx_attente|compte|checkins » d'une saisie jamais envoyée (reprise du démarrage ratée) est réunie, pas
+      remplacée : bilan envoyé en ligne (M), hors ligne puis retour du réseau (M2), fb_vu écrit à l'ouverture (M3) ;
+   N. les deux textes du 😞 envoyés hors ligne : gardés sur l'appareil, renvoyés au retour du réseau ;
+   O. pendant l'envoi (relecture lente) : « Annuler » grisé et sans effet, « Envoi de ton bilan… » / « Envoi de ton
+      feedback… » à côté du bouton grisé ;
+   P. l'app passe en arrière-plan pendant la relecture : rien n'est envoyé ; elle se ferme (pagehide) : le bilan part ;
+   Q. « Se déconnecter » juste après « Envoyer mon bilan » : l'envoi finit d'abord, aucune alerte « non envoyées » ;
+   R. la file de checkins : le délai (15 s) part au démarrage de l'opération, pas à sa mise en file ;
+   K. les messages possibles sont traduits ; Z. aucun appel vers l'extérieur.
    Supabase simulé (repris de verif57) : rien ne part vers la vraie base (routage par NOM D'HÔTE) ; règles de la base
    reproduites ; chaque écriture est appliquée en mémoire et notée, chaque lecture de « donnees » aussi (db.journal :
    « L checkins » / « E checkins » dans l'ordre). Pannes : db.lectureKo (lecture outil=eq. en 500), db.koFois (les N
    prochaines lectures outil=eq. en 503), db.toutKo (lectures groupées outil=in. en 500), db.retardLecture (réponse lente), db.panne (réseau coupé : requêtes
-   abandonnées). Calendrier de verif57 (LUNDI0, jour k). Chaque bloc
+   abandonnées), db.lecture401 (lecture outil=eq. en 401 : jeton expiré), db.renouvKo (renouvellement du jeton refusé, 400),
+   db.majLeKo (lecture de maj_le en 500 : la reprise de Store.reprendre échoue). Calendrier de verif57 (LUNDI0, jour k). Chaque bloc
    tourne à part (« ✗ BLOC INTERROMPU ») ; code de sortie 1 dès qu'un ✗ apparaît.
    Usage : node verif63.js ../index.html
            VERIF63_PORT=9791 node verif63.js ../index.html     (autre port, si 9790 est pris)
@@ -98,7 +112,8 @@ function base(opts){
   const profils = clone(F.profils); profils.forEach(p => { p.statut = "client"; });
   const donnees = clone(F.donnees);
   donnees.forEach(d => { if (d.user_id === F.IDS.c3) d.maj_le = avant(12 * J + 3 * H); });   // Julien : 12 j entiers pendant toute la suite
-  const db = { profils, donnees, ecritures: [], refus: [], lectures: [], journal: [], chemins: [], emails: {}, lectureKo: opts.lectureKo || [], koFois: {}, toutKo: false, retardLecture: {}, panne: false };
+  const db = { profils, donnees, ecritures: [], refus: [], lectures: [], journal: [], chemins: [], emails: {}, lectureKo: opts.lectureKo || [], koFois: {}, toutKo: false, retardLecture: {}, panne: false,
+    lecture401: [], renouvKo: false, majLeKo: false };
   for (const x of opts.comptes || []) {
     profils.push({ id: x.id, prenom: x.prenom, nom: x.nom || "", role: "client", statut: x.statut || "prospect", cree_le: x.cree || avant(J) });
     if (x.email) db.emails[x.id] = x.email;
@@ -148,6 +163,8 @@ async function repondre(r, who, db){
   if (db.panne && !lecture) { db.chemins.push("PANNE " + m + " " + p); return r.abort().catch(() => {}); }
   db.chemins.push(m + " " + p);
   if (p.startsWith("/auth/v1/token")) {
+    /* v59 (remarque 0) : jeton de renouvellement révoqué (déconnexion depuis un autre appareil) */
+    if (db.renouvKo && q.get("grant_type") === "refresh_token") return json({ error: "invalid_grant", error_description: "Invalid Refresh Token: Refresh Token Not Found" }, 400);
     const c = corps() || {}, r1 = /^renouvellement-(.+)$/.exec(String(c.refresh_token || ""));
     const id = (r1 && r1[1]) || (who && who.id);
     if (!id) return json({ error: "invalid_grant", error_description: "Invalid login credentials" }, 400);
@@ -173,6 +190,8 @@ async function repondre(r, who, db){
       if (cleEq && db.retardLecture[cleEq]) await new Promise(z => setTimeout(z, db.retardLecture[cleEq]));   // réponse lente
       if (db.panne) return r.abort().catch(() => {});
       if (cleEq && db.lectureKo.includes(cleEq)) return json({ message: "panne simulée" }, 500);
+      if (cleEq && db.lecture401.includes(cleEq)) return json({ code: "PGRST303", message: "JWT expired" }, 401);   // v59 : jeton expiré
+      if (db.majLeKo && q.get("select") === "maj_le") return json({ message: "panne simulée" }, 500);   // v59 : la reprise (Store.reprendre) échoue
       if (cleEq && db.koFois[cleEq] > 0) { db.koFois[cleEq]--; return json({ message: "service indisponible" }, 503); }   // refus passager
       if (db.toutKo && o.startsWith("in.")) return json({ message: "panne simulée" }, 500);
       let l = db.donnees.filter(x => coach || (x.user_id === moi && !ILLISIBLES_PROPRIO.includes(x.outil)));
@@ -253,6 +272,7 @@ const couvre = (o, k) => { o = String(o || ""); if (!o) return true; if (o.start
 const lu = (db, outil, depuis) => db.lectures.slice(depuis || 0).filter(x => couvre(x.outil, outil) && x.select !== "maj_le").length;   // lectures du CONTENU de la clé
 const toasts = page => page.evaluate(() => (window.__toasts || []).slice()).catch(() => []);
 const LECTURE_RATEE = "Non enregistré : tes données n'ont pas pu être chargées. Recharge la page.";
+const HORS_LIGNE = "Hors ligne — modification non enregistrée";   // v59 (remarque 18) : smiley refusé, Mon suivi lu (la phrase du témoin)
 const badgeSuivi = page => page.evaluate(() => { const x = document.querySelector('#nav a[data-id="suivi"] .fbd-badge'); return x ? x.textContent : null; }).catch(() => null);
 /* la copie gardée sur l'appareil (v48 : « mhx_attente|compte|clé »), où qu'elle soit rangée */
 const copie = (page, uid, cle) => page.evaluate(k => { for (const m of [localStorage, sessionStorage]) { const v = m.getItem(k); if (v) { try { return JSON.parse(v); } catch (e) { return "illisible"; } } } return null; }, "mhx_attente|" + uid + "|" + cle).catch(() => null);
@@ -261,6 +281,10 @@ const ecrits = page => page.evaluate(() => window.__ecrits || []).catch(() => []
 const journalCk = (db, depuis) => db.journal.slice(depuis || 0).filter(x => x === "L checkins" || x === "E checkins");
 /* la règle du vendredi dans CE navigateur, quelle que soit la valeur du fichier (le fichier servi n'est pas retouché) */
 const vendredi = page => page.evaluate(() => { CONFIG.nouveautes.feedback_dimanche = "off"; });
+/* v59 : l'app passe en arrière-plan / revient (visibilitychange, comme verif53) */
+const cacher = page => page.evaluate(() => { Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "hidden" }); document.dispatchEvent(new Event("visibilitychange")); });
+const montrer = page => page.evaluate(() => { Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "visible" }); document.dispatchEvent(new Event("visibilitychange")); });
+const stockSession = page => page.evaluate(() => localStorage.getItem("mhx_session")).catch(() => "?");
 
 /* ---------- le décor ---------- */
 const SRC = source(HTML);
@@ -294,6 +318,14 @@ let URL0 = "";
 /* un appareil réglé sur le jour k à h:m (fuseau UTC) */
 async function sur(b, who, db, k, h, m, hash, sel, opts){
   const { c, page } = await contexte(b, who, db, Object.assign({ horloge: a(k, h, m), fuseau: "UTC" }, opts || {}));
+  await page.goto(URL0 + (hash || "")); await pret(page, sel);
+  return { c, page };
+}
+/* v59 (remarque 1) : un appareil où l'app a gardé, lors d'une ouverture précédente, la copie « mhx_attente|compte|checkins »
+   d'une saisie jamais envoyée (cp : { a, t, v }) — posée avant le premier chargement */
+async function surAvecCopie(b, who, db, k, h, m, hash, sel, cp, opts){
+  const { c, page } = await contexte(b, who, db, Object.assign({ horloge: a(k, h, m), fuseau: "UTC" }, opts || {}));
+  await c.addInitScript(({ cle, v }) => { if (!/^https?:$/.test(location.protocol)) return; if (!localStorage.getItem("__copie")) { localStorage.setItem("__copie", "1"); localStorage.setItem(cle, v); } }, { cle: "mhx_attente|" + who.id + "|checkins", v: JSON.stringify(cp) });
   await page.goto(URL0 + (hash || "")); await pret(page, sel);
   return { c, page };
 }
@@ -517,7 +549,8 @@ const blocSemaine = (page, s) => page.evaluate(x => { const ed = document.queryS
     db.lectureKo = ["checkins"];
     await page.click('.fbd-reponse [data-smiley="content"]'); await attendre(page, 3000);   // la relecture et son second essai
     const st = await page.evaluate(() => ({ p: document.querySelector('.fbd-reponse [data-smiley="content"]').getAttribute("aria-pressed"), m: document.querySelector(".fbd-reponse [data-avis-msg]").textContent }));
-    ok("E3 : smiley quand la relecture échoue : rien n'est écrit, le bouton n'est pas choisi, message « " + LECTURE_RATEE + " »", ecr(db, "checkins").length === 0 && st.p === "false" && st.m === "" && (await toasts(page)).some(x => x.includes(LECTURE_RATEE)), resume(db) + " " + JSON.stringify(st) + " " + JSON.stringify(await toasts(page)));
+    const tE3 = await toasts(page);
+    ok("E3 : smiley quand la relecture échoue (Mon suivi lu) : rien n'est écrit, le bouton n'est pas choisi, message « " + HORS_LIGNE + " », jamais « Recharge la page »", ecr(db, "checkins").length === 0 && st.p === "false" && st.m === "" && tE3.some(x => x.includes(HORS_LIGNE)) && !tE3.some(x => x.includes("Recharge la page")), resume(db) + " " + JSON.stringify(st) + " " + JSON.stringify(tE3));
     db.lectureKo = [];
     const n0 = ecr(db, "checkins").length;
     await page.click('.fbd-reponse [data-smiley="content"]'); await attendre(page, 1300);
@@ -574,7 +607,8 @@ const blocSemaine = (page, s) => page.evaluate(x => { const ed = document.queryS
     db.panne = true;
     await page.click('.fbd-reponse [data-smiley="content"]'); await attendre(page, 3000);
     const p = await page.$eval('.fbd-reponse [data-smiley="content"]', x => x.getAttribute("aria-pressed"));
-    ok("F2 : smiley hors ligne : refusé (bouton pas choisi, rien gardé sur l'appareil, rien en base), message « " + LECTURE_RATEE + " »", p === "false" && (await copie(page, TESTEUR.id, "checkins")) === null && ecr(db, "checkins").length === 0 && (await toasts(page)).some(x => x.includes(LECTURE_RATEE)), p + " " + JSON.stringify(await toasts(page)));
+    const tF2 = await toasts(page);
+    ok("F2 : smiley hors ligne : refusé (bouton pas choisi, rien gardé sur l'appareil, rien en base), message « " + HORS_LIGNE + " », jamais « Recharge la page » (hors ligne, la page ne se rouvre pas)", p === "false" && (await copie(page, TESTEUR.id, "checkins")) === null && ecr(db, "checkins").length === 0 && tF2.some(x => x.includes(HORS_LIGNE)) && !tF2.some(x => x.includes("Recharge la page")), p + " " + JSON.stringify(tF2));
     const db2 = base({ comptes: [compteTest({ liste: [e14] }, { liste: [f14] })] });
     const { page: p2 } = await sur(b, TESTEUR, db2, 23, 10, 0, "#/programme", null);
     await attendre(p2, 1200);
@@ -610,7 +644,7 @@ const blocSemaine = (page, s) => page.evaluate(x => { const ed = document.queryS
     db.retardLecture = {};
     await page.reload(); await pret(page, null); await attendre(page, 2500);
     const CK = ckDe(db), m = (CK.liste || []).find(x => x && x.semaine === isoJ(14)) || {};
-    ok("F3 : l'app rouverte : le bilan repart de lui-même et arrive (une écriture, semaines 0 et 14, son texte), la copie est retirée",
+    ok("F3 : l'app fermée puis rouverte : le bilan arrive, une seule fois (v59 : parti à la fermeture, pagehide, ou repris à la réouverture ; une écriture, semaines 0 et 14, son texte), la copie est retirée",
       ecr(db, "checkins").length === 1 && egal(semainesDe(CK), [isoJ(0), isoJ(14)]) && m.reponses && m.reponses.semaine === T && (await copie(page, TESTEUR.id, "checkins")) === null, resume(db) + " " + JSON.stringify(CK).slice(0, 300));
   });
   await bloc("F4. relecture bloquée : au bout du délai maximum, le bilan part quand même", async () => {
@@ -747,13 +781,208 @@ const blocSemaine = (page, s) => page.evaluate(x => { const ed = document.queryS
     ok("J : deux smileys cliqués coup sur coup : un seul avis, le dernier (😊), au plus deux écritures, l'écran le montre", av.length === 1 && av[0].smiley === "content" && ecr(db2, "checkins").length >= 1 && ecr(db2, "checkins").length <= 2 && pr === "false,false,true" && egal(ckDe(db2).liste, [e14]), JSON.stringify(av) + " " + pr + " " + resume(db2));
   });
 
+  /* =================== L. session perdue pendant la relecture (remarque 0, bloquant) =================== */
+  /* le jeton a expiré et son renouvellement est refusé (déconnexion depuis un autre appareil) : la lecture de checkins
+     répond 401, le renouvellement 400, la session est oubliée, le bandeau s'affiche. La copie du bilan reste sur l'appareil
+     et repart après la reconnexion, comme en v58. lent : la première relecture dépasse 3,5 s (repli hors ligne) */
+  const sessionPerdueEnRoute = async (nom, lent) => {
+    const T = "Bilan du vendredi, session perdue (" + nom + ")";
+    const e0 = entreeVen(0);
+    const db = base({ comptes: [compteTest({ liste: [e0] }, null)] });
+    db.donnees.forEach(d => { if (d.user_id === TESTEUR.id) d.maj_le = isoA(17, 10); });   // la base date d'avant l'horloge de l'appareil (jour 18)
+    const { page } = await sur(b, TESTEUR, db, 18, 10, 0, "", "#acc-vue h1");
+    await vendredi(page); await aller(page, "#/suivi", 1500);
+    db.lecture401 = ["checkins"]; db.renouvKo = true;
+    if (lent) db.retardLecture.checkins = 2600;
+    for (const g of await page.$$("[data-checkin] .echelle5")) { const bt = await g.$$("button"); await bt[3].click(); }
+    await page.fill('[data-checkin] textarea[data-q="semaine"]', T);
+    const j0 = db.journal.length;
+    await page.click("[data-checkin] button[type=submit]"); await attendre(page, lent ? 6500 : 5500);
+    const cp = await copie(page, TESTEUR.id, "checkins"), l = (cp && cp.v && Array.isArray(cp.v.liste)) ? cp.v.liste : [];
+    const n = l.find(x => x && x.semaine === isoJ(14)) || {}, ts = await toasts(page);
+    const bandeau = !!(await page.$("#session-perdue")), rel = journalCk(db, j0).filter(x => x === "L checkins").length;
+    ok("L : " + nom + " : la relecture répond 401 et le renouvellement est refusé : la session est perdue (bandeau), rien en base, pas de « Bilan envoyé », et la copie du bilan RESTE sur l'appareil (semaines 0 et 14, son texte)",
+      bandeau && !(await stockSession(page)) && ecr(db, "checkins").length === 0 && !ts.some(x => x.includes("Bilan envoyé")) && egal(l.map(x => x.semaine), [isoJ(0), isoJ(14)]) && egal(l[0], e0) && n.reponses && n.reponses.semaine === T && cp.a === TESTEUR.id && rel === 1,
+      "bandeau " + bandeau + " · relectures " + rel + " · " + JSON.stringify(cp).slice(0, 200) + " " + resume(db) + " " + JSON.stringify(ts));
+    /* « Me reconnecter » : la connexion range une session neuve puis recharge la page (connexion.js) */
+    db.lecture401 = []; db.renouvKo = false; db.retardLecture = {};
+    await page.evaluate(s => { localStorage.setItem("mhx_session", JSON.stringify(Object.assign({}, s, { expire_le: Date.now() + 3600000 }))); }, TESTEUR.session);
+    await page.reload(); await pret(page, null); await attendre(page, 2500);
+    const CK = ckDe(db), m = (CK.liste || []).find(x => x && x.semaine === isoJ(14)) || {};
+    ok("L : " + nom + " : après la reconnexion, le bilan repart de lui-même et arrive (une écriture, semaines 0 et 14, son texte), la copie est retirée",
+      ecr(db, "checkins").length === 1 && egal(semainesDe(CK), [isoJ(0), isoJ(14)]) && m.reponses && m.reponses.semaine === T && (await copie(page, TESTEUR.id, "checkins")) === null, resume(db) + " " + JSON.stringify(CK).slice(0, 300));
+  };
+  await bloc("L. session perdue pendant la relecture : second essai", async () => { await sessionPerdueEnRoute("second essai", false); });
+  await bloc("L2. session perdue pendant la relecture : repli hors ligne", async () => { await sessionPerdueEnRoute("repli hors ligne", true); });
+
+  /* =================== M. la copie d'une saisie jamais envoyée est réunie, pas remplacée (remarque 1) =================== */
+  /* jeudi soir, hors ligne : le bilan en retard de la semaine 7 est resté sur l'appareil (copie t = jeudi 21:00) ; vendredi,
+     la reprise du démarrage échoue (la lecture de maj_le est refusée) : Mon suivi s'ouvre sans lui */
+  const e7j = entreeVen(7, { envoye_le: isoJ(17), envoye_a: isoA(17, 21), reponses: Object.assign(clone(REP_VEN), { semaine: "Bilan de jeudi, resté sur l'appareil" }) });
+  const copieJeudi = e0 => ({ a: TESTEUR.id, t: isoA(17, 21), v: { liste: [clone(e0), clone(e7j)] } });
+  const vendrediAvecCopie = async () => {
+    const e0 = entreeVen(0);
+    const db = base({ comptes: [compteTest({ liste: [e0] }, null)] });
+    db.donnees.forEach(d => { if (d.user_id === TESTEUR.id) d.maj_le = isoA(17, 10); });
+    db.majLeKo = true;
+    const { page } = await surAvecCopie(b, TESTEUR, db, 18, 10, 0, "", "#acc-vue h1", copieJeudi(e0));
+    await vendredi(page); await aller(page, "#/suivi", 1500);
+    const t0 = await texte(page, "#suivi-checkin");
+    for (const g of await page.$$("[data-checkin] .echelle5")) { const bt = await g.$$("button"); await bt[3].click(); }
+    await page.fill('[data-checkin] textarea[data-q="semaine"]', "Bilan de vendredi");
+    return { db, page, e0, t0 };
+  };
+  await bloc("M. copie d'avant réunie : bilan envoyé en ligne", async () => {
+    const { db, page, e0, t0 } = await vendrediAvecCopie();
+    ok("M : la reprise du démarrage a échoué : rien en base, Mon suivi s'ouvre sans le bilan de jeudi, sa copie est toujours sur l'appareil", ecr(db, "checkins").length === 0 && !t0.includes("resté sur l'appareil") && !!(await copie(page, TESTEUR.id, "checkins")), resume(db) + " " + t0.slice(0, 200));
+    await page.click("[data-checkin] button[type=submit]"); await attendre(page, 1800);
+    const CK = ckDe(db), e14 = (CK.liste || []).find(x => x && x.semaine === isoJ(14)) || {};
+    ok("M : le bilan de vendredi envoyé : le bilan de jeudi (la copie de l'appareil) est réuni, pas remplacé — en base, une écriture : semaines 0, 7 (à l'identique) et 14",
+      ecr(db, "checkins").length === 1 && egal(semainesDe(CK), [isoJ(0), isoJ(7), isoJ(14)]) && egal(CK.liste[0], e0) && egal(CK.liste[1], e7j) && e14.reponses && e14.reponses.semaine === "Bilan de vendredi", resume(db) + " " + JSON.stringify(CK).slice(0, 500));
+    ok("M : … l'écran montre le bilan de jeudi dans l'historique, la copie de l'appareil est retirée", (await texte(page, "#suivi-checkin")).includes(`Semaine du ${fr(isoJ(7))}`) && (await copie(page, TESTEUR.id, "checkins")) === null, (await texte(page, "#suivi-checkin")).slice(0, 300));
+  });
+  await bloc("M2. copie d'avant réunie : bilan envoyé hors ligne", async () => {
+    const { db, page, e0 } = await vendrediAvecCopie();
+    db.panne = true;
+    await page.click("[data-checkin] button[type=submit]"); await attendre(page, 3500);   // la relecture et son second essai, puis le repli hors ligne
+    const cp = await copie(page, TESTEUR.id, "checkins"), l = (cp && cp.v && Array.isArray(cp.v.liste)) ? cp.v.liste : [];
+    ok("M2 : hors ligne : la copie de l'appareil garde le bilan de jeudi ET celui de vendredi (semaines 0, 7 à l'identique, 14), rien en base",
+      egal(l.map(x => x && x.semaine), [isoJ(0), isoJ(7), isoJ(14)]) && egal(l[1], e7j) && ecr(db, "checkins").length === 0, JSON.stringify(cp).slice(0, 400) + " " + resume(db));
+    db.panne = false; db.majLeKo = false;
+    await page.evaluate(() => window.dispatchEvent(new Event("online"))); await attendre(page, 2500);
+    const CK = ckDe(db);
+    ok("M2 : retour du réseau : les deux bilans arrivent (une écriture, semaines 0, 7 et 14), la copie est retirée", ecr(db, "checkins").length === 1 && egal(semainesDe(CK), [isoJ(0), isoJ(7), isoJ(14)]) && egal(CK.liste[1], e7j) && (await copie(page, TESTEUR.id, "checkins")) === null, resume(db) + " " + JSON.stringify(CK).slice(0, 400));
+  });
+  await bloc("M3. copie d'avant réunie : « réponse vue » (fb_vu) écrite à l'ouverture", async () => {
+    /* le feedback de la semaine 14, modifié hors ligne lundi soir (plus récent que la base), est resté sur l'appareil */
+    const e14b = entreeDim(14, 9, { training: "Modifié hors ligne" }, { envoye_le: isoJ(21), envoye_a: isoA(21, 20) });
+    const db = base({ comptes: [compteTest({ liste: [e14] }, { liste: [f14] })] });
+    db.donnees.forEach(d => { if (d.user_id === TESTEUR.id) d.maj_le = isoA(21, 10); });
+    db.majLeKo = true;
+    const { page } = await surAvecCopie(b, TESTEUR, db, 23, 10, 0, "#/suivi", "#suivi-checkin .fbd", { a: TESTEUR.id, t: isoA(21, 20), v: { liste: [e14b] } });
+    await attendre(page, 1500);
+    const CK = ckDe(db);
+    ok("M3 : Mon suivi ouvert (réponse du coach pas encore vue) : fb_vu est écrit avec le feedback modifié hors ligne réuni (une écriture ; la semaine 14 telle que la copie l'avait, fb_vu = la réponse)",
+      ecr(db, "checkins").length === 1 && egal(CK.liste, [e14b]) && CK.fb_vu === f14.ecrit_a && (await copie(page, TESTEUR.id, "checkins")) === null, resume(db) + " " + JSON.stringify(CK).slice(0, 400));
+  });
+
+  /* =================== N. les deux textes du 😞 hors ligne (remarque 11) =================== */
+  await bloc("N. 😞 : ses deux textes gardés sur l'appareil hors ligne, renvoyés au retour du réseau", async () => {
+    const av0 = { semaine: isoJ(14), fb: f14.ecrit_a, smiley: "triste", le: isoA(22, 9, 30) };
+    const db = base({ comptes: [compteTest({ liste: [e14], fb_vu: f14.ecrit_a, avis: [av0] }, { liste: [f14] })] });
+    db.donnees.forEach(d => { if (d.user_id === TESTEUR.id) d.maj_le = isoA(21, 10); });
+    const { page } = await sur(b, TESTEUR, db, 22, 10, 0, "#/suivi", '.fbd-reponse [data-avis-q="deplu"]');
+    db.panne = true;
+    await page.fill('.fbd-reponse [data-avis-q="deplu"]', "Trop court"); await page.fill('.fbd-reponse [data-avis-q="ameliorer"]', "Plus d'exemples");
+    await page.click(".fbd-reponse [data-avis-envoyer]"); await attendre(page, 3500);
+    const cp = await copie(page, TESTEUR.id, "checkins"), a0 = (cp && cp.v && Array.isArray(cp.v.avis)) ? cp.v.avis.find(x => x && x.semaine === isoJ(14)) || {} : {};
+    const msg = await texte(page, ".fbd-reponse [data-avis-msg]");
+    ok("N : hors ligne, « Envoyer » sous le 😞 : ses deux textes sont gardés sur l'appareil (et la liste avec), rien en base, « Merci, ton coach le verra. », « gardé sur cet appareil »",
+      a0.smiley === "triste" && a0.deplu === "Trop court" && a0.ameliorer === "Plus d'exemples" && egal(cp.v.liste, [e14]) && ecr(db, "checkins").length === 0 && msg === "Merci, ton coach le verra." && (await texte(page, "#etat")).includes("gardé sur cet appareil") && !(await toasts(page)).some(x => x.includes("Recharge la page")),
+      JSON.stringify(cp).slice(0, 300) + " · " + msg + " · " + (await texte(page, "#etat")) + " " + JSON.stringify(await toasts(page)));
+    db.panne = false;
+    await page.evaluate(() => window.dispatchEvent(new Event("online"))); await attendre(page, 2500);
+    const CK = ckDe(db), av = Array.isArray(CK.avis) ? CK.avis : [];
+    ok("N : retour du réseau : l'avis arrive avec ses deux textes (une écriture, un seul avis, la liste intacte), la copie est retirée",
+      ecr(db, "checkins").length === 1 && av.length === 1 && av[0].smiley === "triste" && av[0].deplu === "Trop court" && av[0].ameliorer === "Plus d'exemples" && egal(CK.liste, [e14]) && (await copie(page, TESTEUR.id, "checkins")) === null, resume(db) + " " + JSON.stringify(CK).slice(0, 400));
+  });
+
+  /* =================== O. pendant l'envoi : « Annuler » bloqué, un mot d'attente (remarques 2 et 12) =================== */
+  await bloc("O. bilan du vendredi : pendant l'envoi", async () => {
+    const e0 = entreeVen(0), e14v = entreeVen(14, { envoye_le: isoJ(18), envoye_a: isoA(18, 8) });
+    const db = base({ comptes: [compteTest({ liste: [e0, e14v] }, null)] });
+    const { page } = await sur(b, TESTEUR, db, 18, 10, 0, "", "#acc-vue h1");
+    await vendredi(page); await aller(page, "#/suivi", 1500);
+    await page.click("[data-checkin-modifier]"); await attendre(page, 300);
+    await page.click('[data-checkin] [data-q="energie"] [data-v="2"]');
+    db.retardLecture.checkins = 2200;   // réseau lent : la relecture prend 2,2 s
+    await page.click("[data-checkin] button[type=submit]"); await attendre(page, 500);
+    const st = await page.evaluate(() => { const f = document.querySelector("[data-checkin]"), q = s => f && f.querySelector(s); return f ? { env: q('button[type="submit"]').disabled, ann: q("[data-checkin-annuler]").disabled, msg: q("[data-checkin-msg]").textContent } : null; });
+    ok("O : pendant l'envoi (relecture lente) : « Mettre à jour mon bilan » et « Annuler » grisés, « Envoi de ton bilan… » à côté", !!st && st.env === true && st.ann === true && st.msg === "Envoi de ton bilan…", JSON.stringify(st));
+    await page.evaluate(() => { const x = document.querySelector("[data-checkin-annuler]"); if (x) x.click(); }); await attendre(page, 300);
+    const encore = !!(await page.$("[data-checkin]"));
+    await attendre(page, 2800);
+    const CK = ckDe(db), m = (CK.liste || []).find(x => x && x.semaine === isoJ(14)) || {}, t = await texte(page, "#suivi-checkin");
+    ok("O : « Annuler » touché pendant l'envoi : rien ne change (le formulaire reste) ; puis le bilan arrive (énergie 2, une écriture), « Bilan envoyé. … », l'écran montre le bilan envoyé",
+      encore && ecr(db, "checkins").length === 1 && m.reponses && m.reponses.energie === 2 && (await toasts(page)).some(x => x.includes("Bilan envoyé.")) && t.includes("Bilan de la semaine envoyé") && !t.includes("Envoi de ton bilan") && !(await page.$("[data-checkin]")), "formulaire resté " + encore + " · " + resume(db) + " " + t.slice(0, 200));
+  });
+  await bloc("O2. feedback du dimanche : pendant l'envoi", async () => {
+    const e14d = entreeDim(14, 6, {}, { envoye_le: isoJ(20), envoye_a: isoA(20, 8) });
+    const db = base({ comptes: [compteTest({ liste: [entreeDim(7, 8), e14d] }, null)] });
+    const { page } = await sur(b, TESTEUR, db, 20, 10, 0, "#/suivi", "#suivi-checkin [data-fbd-modifier]");
+    await page.click("[data-fbd-modifier]"); await attendre(page, 300);
+    await page.click('.note10 [data-v="9"]');
+    db.retardLecture.checkins = 2200;
+    await page.click("[data-fbd] button[type=submit]"); await attendre(page, 500);
+    const st = await page.evaluate(() => { const f = document.querySelector("[data-fbd]"), q = s => f && f.querySelector(s); return f ? { env: q('button[type="submit"]').disabled, ann: q("[data-fbd-annuler]").disabled, msg: q("[data-fbd-msg]").textContent } : null; });
+    ok("O2 : pendant l'envoi : « Mettre à jour mon feedback » et « Annuler » grisés, « Envoi de ton feedback… »", !!st && st.env === true && st.ann === true && st.msg === "Envoi de ton feedback…", JSON.stringify(st));
+    await page.evaluate(() => { const x = document.querySelector("[data-fbd-annuler]"); if (x) x.click(); }); await attendre(page, 300);
+    const encore = !!(await page.$("[data-fbd]"));
+    await attendre(page, 2800);
+    const n14 = (ckDe(db).liste || []).find(x => x && x.semaine === isoJ(14)) || {};
+    ok("O2 : « Annuler » sans effet pendant l'envoi ; puis le feedback arrive (note 9, une écriture), « Feedback envoyé. … »", encore && ecr(db, "checkins").length === 1 && n14.reponses && n14.reponses.note === 9 && (await toasts(page)).some(x => x.includes("Feedback envoyé.")) && !(await page.$("[data-fbd]")), "formulaire resté " + encore + " · " + resume(db));
+  });
+
+  /* =================== P. l'app se ferme pendant la relecture (remarque 3) =================== */
+  await bloc("P. fermeture pendant la relecture : le bilan part (pagehide), pas au simple passage en arrière-plan", async () => {
+    const T = "Envoyé puis app fermée";
+    const { db, page, e0 } = await bilanBloque(T);
+    await attendre(page, 500);
+    await cacher(page); await attendre(page, 1200);
+    const rien = ecr(db, "checkins").length === 0 && !!(await copie(page, TESTEUR.id, "checkins"));
+    ok("P : l'app passe en arrière-plan pendant la relecture (« hidden ») : rien n'est envoyé (la page vit : la relecture finira et écrira la version réunie), la copie reste sur l'appareil", rien, resume(db));
+    await montrer(page);
+    await page.evaluate(() => window.dispatchEvent(new PageTransitionEvent("pagehide", { persisted: false }))); await attendre(page, 1200);
+    const CK = ckDe(db), m = (CK.liste || []).find(x => x && x.semaine === isoJ(14)) || {};
+    ok("P : l'app se ferme pendant la relecture (pagehide) : le bilan part tout de suite, comme en v58 (une écriture, semaines 0 et 14, son texte)",
+      ecr(db, "checkins").length === 1 && egal(semainesDe(CK), [isoJ(0), isoJ(14)]) && egal(CK.liste[0], e0) && m.reponses && m.reponses.semaine === T, resume(db) + " " + JSON.stringify(CK).slice(0, 300));
+  });
+
+  /* =================== Q. « Se déconnecter » juste après l'envoi (remarque 17) =================== */
+  await bloc("Q. déconnexion juste après l'envoi du bilan", async () => {
+    const e0 = entreeVen(0);
+    const db = base({ comptes: [compteTest({ liste: [e0] }, null)] });
+    const { page } = await sur(b, TESTEUR, db, 18, 10, 0, "", "#acc-vue h1");
+    await vendredi(page); await aller(page, "#/suivi", 1500);
+    db.retardLecture.checkins = 1500;   // réseau normal mais lent : la relecture prend 1,5 s
+    for (const g of await page.$$("[data-checkin] .echelle5")) { const bt = await g.$$("button"); await bt[3].click(); }
+    await page.fill('[data-checkin] textarea[data-q="semaine"]', "Envoyé juste avant la déconnexion");
+    await page.click("[data-checkin] button[type=submit]"); await page.click("#deco");
+    await attendre(page, 5000);
+    const dialogue = await texte(page, ".modale"), CK = ckDe(db), m = (CK.liste || []).find(x => x && x.semaine === isoJ(14)) || {};
+    ok("Q : « Envoyer mon bilan » puis « Se déconnecter » tout de suite : l'envoi finit d'abord — aucune alerte « non envoyées (hors ligne) », le bilan en base (une écriture), puis déconnecté",
+      !dialogue.includes("n'ont pas encore pu être envoyées") && ecr(db, "checkins").length === 1 && egal(semainesDe(CK), [isoJ(0), isoJ(14)]) && m.reponses && m.reponses.semaine === "Envoyé juste avant la déconnexion" && db.chemins.includes("POST /auth/v1/logout") && !(await stockSession(page)),
+      "dialogue « " + dialogue.slice(0, 120) + " » · " + resume(db));
+  });
+
+  /* =================== R. la file : le délai part au départ de l'opération (remarque 4) =================== */
+  await bloc("R. la file de checkins : le délai part au démarrage de l'opération", async () => {
+    const db = base({ comptes: [compteTest({ liste: [entreeDim(7, 8)] }, null)] });
+    const { page } = await sur(b, TESTEUR, db, 20, 10, 0, "#/programme", null);
+    const log = await page.evaluate(async () => {
+      const l = [], m0 = Checkin.FILE_MAX, f0 = Checkin._file;
+      Checkin.FILE_MAX = 500; Checkin._file = Promise.resolve();   // le délai de 15 s ramené à 500 ms pour la mesure
+      Checkin.enFile(() => new Promise(() => {}));   // A : un envoi pendu, qui ne finit jamais
+      Checkin.enFile(() => new Promise(r => { l.push("B+"); setTimeout(() => { l.push("B-"); r(); }, 300); }));   // B : 300 ms (moins que le délai)
+      Checkin.enFile(async () => { l.push("C+"); });
+      await new Promise(r => setTimeout(r, 1500));
+      Checkin.FILE_MAX = m0; Checkin._file = f0;
+      return l;
+    });
+    ok("R : derrière un envoi pendu, la 2e opération démarre au bout du délai, et la 3e attend qu'elle finisse (délai compté depuis le départ de la 2e, pas depuis sa mise en file)", egal(log, ["B+", "B-", "C+"]), JSON.stringify(log));
+  });
+
   /* =================== K. traduction =================== */
   await bloc("K. le seul message possible est traduit", async () => {
     const db = base();
     const { page } = await contexte(b, qui(F.IDS.c1, "thomas@exemple.fr"), db);
     await page.goto(URL0); await pret(page, null);
     const en = await page.evaluate(k => (typeof I18N !== "undefined" && I18N.en) ? I18N.en[k] || null : null, LECTURE_RATEE);
-    ok("K : « " + LECTURE_RATEE + " » a son anglais dans I18N.en (aucune phrase nouvelle côté client)", en === "Not saved: your data couldn't be loaded. Reload the page.", String(en));
+    ok("K : « " + LECTURE_RATEE + " » a son anglais dans I18N.en", en === "Not saved: your data couldn't be loaded. Reload the page.", String(en));
+    /* v59 (remarques 12 et 18) : le mot pendant l'envoi (bilan, feedback) et le refus du smiley */
+    const attendus = { "Envoi de ton bilan…": "Sending your check-in…", "Envoi de ton feedback…": "Sending your feedback…", [HORS_LIGNE]: "Offline — change not saved" };
+    const ens = await page.evaluate(l => l.map(k => (typeof I18N !== "undefined" && I18N.en) ? I18N.en[k] || null : null), Object.keys(attendus));
+    ok("K : « Envoi de ton bilan… », « Envoi de ton feedback… » et « " + HORS_LIGNE + " » ont leur anglais dans I18N.en", egal(ens, Object.values(attendus)), JSON.stringify(ens));
   });
 
   /* =================== Z. rien vers l'extérieur =================== */

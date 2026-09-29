@@ -111,9 +111,12 @@ const Checkin = {
      pas) ; un refus passager du serveur a droit à un second essai avant le repli hors ligne.
      ------------------------------------------------------------------ */
   _file: Promise.resolve(),
+  FILE_MAX: 15000,         // une opération de la file attend la précédente au plus 15 s (envoi pendu), comptées depuis son départ
+  /* v59 (remarque 4) : le délai part quand l'opération DÉMARRE (avant : à sa mise en file — derrière un envoi pendu, la
+     suivante démarrait pendant la relecture de celle d'avant : deux écritures en même temps) */
   enFile(fn){
     const p = this._file.then(fn, fn);
-    this._file = Promise.race([p.then(() => {}, () => {}), new Promise(r => setTimeout(r, 15000))]);
+    this._file = this._file.then(() => Promise.race([p.then(() => {}, () => {}), new Promise(r => setTimeout(r, this.FILE_MAX))]));
     return p;
   },
   _relus: new WeakSet(),   // les copies affichées qui ont pris une version relue (même si leur lecture d'ouverture avait échoué)
@@ -144,7 +147,16 @@ const Checkin = {
     if (rate(F)){ Store.charge[k] = avant; return null; }   // une relecture ratée ne change pas ce qui était permis (Q13-6)
     if (Store.cible() !== uid) return false;
     if (!Array.isArray(F.liste)) F.liste = [];
-    return this.fusion(F, C);
+    return this.avecCopie(uid, this.fusion(F, C));
+  },
+  /* v59 (remarque 1) : la copie de l'appareil (« mhx_attente|compte|checkins ») d'une saisie pas encore arrivée — faite hors
+     ligne lors d'une ouverture précédente de l'app et jamais renvoyée, ou celle de cet onglet — est RÉUNIE (fusion) à ce qui
+     va être écrit ou gardé, jamais remplacée ; seulement la copie du même compte. Celle de cet onglet est déjà dans C : rien
+     ne change. X est complété et renvoyé. */
+  avecCopie(uid, X){
+    const e = uid ? Store.attenteLire()[uid + "|" + this.cle] : null;
+    if (X && typeof X === "object" && e && e.a === uid && e.v && typeof e.v === "object"){ if (!Array.isArray(X.liste)) X.liste = []; this.fusion(X, e.v); }
+    return X;
   },
   /* rien de ce que l'un ou l'autre a de plus n'est perdu : les entrées par semaine (la plus récemment envoyée :
      envoye_a, sinon envoye_le ; à égalité, la base), les avis par (semaine, réponse) (le plus récent, « le »), fb_vu
@@ -176,10 +188,11 @@ const Checkin = {
      true si c'est écrit (ou s'il n'y avait rien à écrire), false sinon. C prend la version écrite (même objet :
      l'affichage et les écritures suivantes partent d'elle). « Écrit » : accepté par Store.ecrire (sur l'appareil),
      l'envoi est parti ; la suivante de la file attend son arrivée (les envois partent dans l'ordre).
-     Relecture impossible (hors ligne, Q13-6, choix b) : opts.horsLigne (une vraie saisie : bilan, feedback) — comme
-     en v48, la saisie est écrite sur la copie affichée, gardée sur l'appareil et renvoyée d'elle-même (si la lecture
-     de l'ouverture avait échoué : le refus d'avant, avec son message) ; opts.silence (fb_vu) : rien, sans message ;
-     sinon (smiley) : refus, avec le message de lecture ratée. */
+     Relecture impossible (hors ligne, Q13-6, choix b) : opts.horsLigne (une vraie saisie : bilan, feedback, v59 : les
+     deux textes du 😞) — comme en v48, la saisie est écrite sur la copie affichée, gardée sur l'appareil et renvoyée
+     d'elle-même (si la lecture de l'ouverture avait échoué : le refus d'avant, avec son message) ; opts.silence (fb_vu) :
+     rien, sans message ; sinon (smiley seul) : refus, avec un message (v59, remarque 18 : « Hors ligne — modification non
+     enregistrée » ; celui de la lecture ratée, « Recharge la page », seulement si la lecture de l'ouverture avait échoué). */
   modifier(C, appliquer, opts){
     opts = opts || {};
     const s = opts.horsLigne ? this.retenir(C, appliquer) : null;   // la saisie est sur l'appareil dès l'envoi
@@ -201,13 +214,18 @@ const Checkin = {
     if (D === null){
       if (opts.horsLigne){
         if (Store.nonLus.has(C) && !this._relus.has(C)){ this.finSaisie(s, false, C); Store.lectureRatee(k); return { ok: false }; }
-        const X = JSON.parse(JSON.stringify(C));
+        const X = this.avecCopie(uid, JSON.parse(JSON.stringify(C)));   // v59 (remarque 1) : la copie d'avant de l'appareil est réunie
         if (appliquer(X) === false){ this.finSaisie(s, false, C); return { ok: true }; }
         if (Store.ecrire(this.cle, X) === false){ this.finSaisie(s, false, C); return { ok: false }; }   // refusée (message déjà affiché)
         this.remplacer(C, X); this.finSaisie(s, true, C);
         return { ok: true };
       }
-      if (!opts.silence) Store.lectureRatee(k);
+      /* v59 (remarque 18) : Mon suivi était lu, seule la relecture a échoué : « Recharge la page » serait faux (et hors
+         ligne, la page ne se rouvre pas) */
+      if (!opts.silence){
+        if (Store.nonLus.has(C) && !this._relus.has(C)) Store.lectureRatee(k);
+        else { try { UI.toast(trad("Hors ligne — modification non enregistrée"), "attention"); } catch(e){} }
+      }
       return { ok: false };
     }
     const rien = appliquer(D) === false;
@@ -229,22 +247,36 @@ const Checkin = {
     const s = { uid: uid, appliquer: appliquer };
     this._saisies.push(s); Store.retenues.add(uid + "|" + this.cle);
     this.garderSaisies(uid, C);
+    this.ecouterFermeture();
     return s;
   },
   garderSaisies(uid, base){
     const l = this._saisies.filter(x => x.uid === uid); if (!l.length) return;
-    const X = JSON.parse(JSON.stringify(base));
+    const X = this.avecCopie(uid, JSON.parse(JSON.stringify(base)));   // v59 (remarque 1) : la copie d'avant de l'appareil est réunie, pas remplacée
     l.forEach(x => { x.appliquer(X); });
     this._tSaisies = Store.garder(uid, this.cle, X);
   },
+  /* v59 (remarque 3) : l'app se ferme (pagehide) pendant la relecture : la copie des saisies retenues part tout de suite,
+     avec keepalive (Store.envoyerRetenues), comme la v58 envoyait à la fermeture ce qui attendait ses 700 ms. Pas au
+     simple passage en arrière-plan (« hidden » : changer d'app, verrouiller le téléphone) : la page vit encore, la relecture
+     finit et écrit la version réunie ; envoyer la copie à ce moment effacerait ce qu'un autre appareil a écrit depuis
+     l'ouverture de Mon suivi (Q13). App tuée sans pagehide : la copie reste sur l'appareil et repart à l'ouverture suivante. */
+  ecouterFermeture(){
+    if (this._fermeture) return; this._fermeture = true;
+    window.addEventListener("pagehide", () => { try { Store.envoyerRetenues(); } catch(e){} });
+  },
   /* la saisie s est écrite (ecrit : la copie de Store.ecrire la contient) ou abandonnée (sa copie est retirée) ;
-     base : C à jour, pour la copie des saisies qui attendent encore */
+     base : C à jour, pour la copie des saisies qui attendent encore.
+     v59 (remarque 0) : la copie n'est retirée que si c'est le compte ENCORE CONNECTÉ qui abandonne la saisie. Session
+     perdue en route (jeton refusé, déconnexion depuis un autre appareil) ou autre compte : elle reste sur l'appareil et
+     repart après la reconnexion (Store.reprendre), comme en v58 — le bandeau le promet. */
   finSaisie(s, ecrit, base){
     const i = s ? this._saisies.indexOf(s) : -1; if (i === -1) return;
     this._saisies.splice(i, 1);
     if (this._saisies.some(x => x.uid === s.uid)){ this.garderSaisies(s.uid, base); return; }
     Store.retenues.delete(s.uid + "|" + this.cle);
-    if (!ecrit) Store.lacher(s.uid, this.cle, this._tSaisies);
+    const moi = Auth.utilisateur();
+    if (!ecrit && moi && moi.id === s.uid) Store.lacher(s.uid, this.cle, this._tSaisies);
   },
   remplacer(C, D){ Object.keys(C).forEach(x => { delete C[x]; }); Object.assign(C, D); },
 
@@ -279,20 +311,25 @@ const Checkin = {
       b.setAttribute("aria-pressed", "true");
     }));
     const annuler = form.querySelector("[data-checkin-annuler]");
-    if (annuler) annuler.addEventListener("click", () => { if (typeof apres === "function") apres(null); });
     let envoi = false;   // v59 : un envoi à la fois (relecture puis écriture ; double clic)
+    /* v59 (remarque 2) : « Annuler » attend la fin de l'envoi (il réaffichait l'ancienne entrée, puis l'envoi arrivé
+       remplaçait le formulaire rouvert entre-temps) */
+    if (annuler) annuler.addEventListener("click", () => { if (envoi) return; if (typeof apres === "function") apres(null); });
     form.addEventListener("submit", async ev => {
       ev.preventDefault();
       if (envoi) return;
-      const rep = this.lire(form);
+      const rep = this.lire(form), m = form.querySelector("[data-checkin-msg]");
       const echelles = this.questions().filter(q => q.type === "echelle5");
       const manque = echelles.filter(q => rep[q.id] == null);
-      if (manque.length){ const m = form.querySelector("[data-checkin-msg]"); if (m){ m.textContent = trad("Il manque : {l}", { l: manque.map(q => q.label).join(", ") }); setTimeout(() => { m.textContent = ""; }, 3200); } return; }
+      if (manque.length){ if (m){ const t = trad("Il manque : {l}", { l: manque.map(q => q.label).join(", ") }); m.textContent = t; setTimeout(() => { if (m.textContent === t) m.textContent = ""; }, 3200); } return; }
       const v = form.dataset.semaine ? { debut: form.dataset.semaine, fin: form.dataset.fin } : this.semaineVisee(C);
       const bt = form.querySelector('button[type="submit"]');
-      envoi = true; if (bt) bt.disabled = true;
+      /* v59 (remarque 12) : pendant l'envoi (la relecture peut prendre quelques secondes sur un réseau lent), un mot à côté
+         du bouton grisé */
+      const attente = trad("Envoi de ton bilan…");
+      envoi = true; if (bt) bt.disabled = true; if (annuler) annuler.disabled = true; if (m) m.textContent = attente;
       const entree = await this.enregistrerEntree(C, v.debut, v.fin, rep, null);
-      envoi = false; if (bt) bt.disabled = false;
+      envoi = false; if (bt) bt.disabled = false; if (annuler) annuler.disabled = false; if (m && m.textContent === attente) m.textContent = "";
       if (!entree) return;   // refusée : le texte reste dans le formulaire
       UI.toast(trad("Bilan envoyé. Ton coach le lira avant votre prochain échange."), "ok");
       if (typeof apres === "function") apres(entree);
@@ -473,8 +510,8 @@ const Checkin = {
       b.setAttribute("aria-pressed", "true");
     }));
     const annuler = form.querySelector("[data-fbd-annuler]");
-    if (annuler) annuler.addEventListener("click", () => { if (typeof apres === "function") apres(null); });
     let envoi = false;   // v59 : un envoi à la fois (relecture puis écriture ; double clic)
+    if (annuler) annuler.addEventListener("click", () => { if (envoi) return; if (typeof apres === "function") apres(null); });   // v59 (remarque 2) : pas pendant l'envoi
     form.addEventListener("submit", async ev => {
       ev.preventDefault();
       if (envoi) return;
@@ -485,9 +522,10 @@ const Checkin = {
       const rep = { note: note };
       this.questionsDimanche().forEach(q => { const el = form.querySelector(`[data-q="${q.id}"]`); rep[q.id] = el ? el.value.trim().slice(0, 2000) : ""; });
       const bt = form.querySelector('button[type="submit"]');
-      envoi = true; if (bt) bt.disabled = true;
+      const attente = trad("Envoi de ton feedback…");   // v59 (remarque 12) : un mot pendant l'envoi
+      envoi = true; if (bt) bt.disabled = true; if (annuler) annuler.disabled = true; if (m) m.textContent = attente;
       const entree = await this.enregistrerEntree(C, form.dataset.semaine, form.dataset.fin, rep, "dimanche");
-      envoi = false; if (bt) bt.disabled = false;
+      envoi = false; if (bt) bt.disabled = false; if (annuler) annuler.disabled = false; if (m && m.textContent === attente) m.textContent = "";
       if (!entree) return;   // refusée : le texte reste dans le formulaire
       UI.toast(trad("Feedback envoyé. Ton coach te répond ici, juste en dessous."), "ok");
       if (typeof apres === "function") apres(entree);
@@ -519,15 +557,17 @@ const Checkin = {
   /* un avis par (semaine, réponse notée) : le client peut le changer ; les entrées de la liste (et envoye_a) ne
      sont jamais touchées. Renvoie true si l'écriture part.
      v59 (Q13) : par la file (modifier), sur la base relue juste avant ; renvoie une Promise (relecture ratée : refus,
-     avec le message de lecture ratée). Deux clics rapides s'enchaînent : le dernier gagne. */
-  donnerAvis(C, semaine, fb, champs){
+     avec un message). Deux clics rapides s'enchaînent : le dernier gagne.
+     v59 (remarque 11) : opts passé à modifier — les deux textes du 😞 sont une vraie saisie ({ horsLigne: true } :
+     gardés sur l'appareil dès l'envoi, repli hors ligne comme le feedback) ; le smiley seul reste refusé hors ligne. */
+  donnerAvis(C, semaine, fb, champs, opts){
     return this.modifier(C, D => {
       if (!Array.isArray(D.avis)) D.avis = [];
       const i = D.avis.findIndex(a => a && typeof a === "object" && a.semaine === semaine && a.fb === fb);
       const a = Object.assign({}, i > -1 ? D.avis[i] : {}, champs, { semaine: semaine, fb: fb, le: new Date().toISOString() });
       if (i > -1) D.avis[i] = a; else D.avis.push(a);
       if (D.avis.length > this.maxAvis) D.avis = D.avis.slice(-this.maxAvis);
-    });
+    }, opts);
   },
   brancherAvis(zone, C){
     $$("[data-avis-semaine]", zone).forEach(bloc => {
@@ -544,7 +584,7 @@ const Checkin = {
       if (env) env.addEventListener("click", async () => {
         const champs = { smiley: "triste" };
         $$("[data-avis-q]", bloc).forEach(t => { champs[t.dataset.avisQ] = t.value.trim().slice(0, 2000); });
-        if ((await this.donnerAvis(C, semaine, fb, champs)) && msg) msg.textContent = trad("Merci, ton coach le verra.");
+        if ((await this.donnerAvis(C, semaine, fb, champs, { horsLigne: true })) && msg) msg.textContent = trad("Merci, ton coach le verra.");
       });
     });
   },

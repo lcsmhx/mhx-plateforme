@@ -522,6 +522,8 @@ I18N.en = {
 "Modifier mon feedback": "Edit my feedback",
 "Choisis ta note, de 1 à 10.": "Pick your score, from 1 to 10.",
 "Feedback envoyé. Ton coach te répond ici, juste en dessous.": "Feedback sent. Your coach replies here, right below.",
+/* v59 — le mot affiché pendant l'envoi du feedback (celui du bilan du vendredi : avec ses textes ; pas « Envoi… », c'est celui des photos) */
+"Envoi de ton feedback…": "Sending your feedback…",
 "Réponds simplement, avec tes mots : ton coach te répond juste en dessous.": "Answer simply, in your own words: your coach replies right below.",
 "Note de la semaine": "Score for the week",
 "Aucune réponse lisible.": "No readable answer.",
@@ -776,6 +778,8 @@ I18N.en = {
 "Réponds simplement, avec tes mots. Rien n'est noté : ça sert à ajuster ton suivi.": "Answer simply, in your own words. Nothing is graded: it's there to adjust your follow-up.",
 "Envoyer mon bilan": "Send my check-in", "Mettre à jour mon bilan": "Update my check-in", "Modifier mon bilan": "Edit my check-in",
 "Il manque : {l}": "Missing: {l}", "Bilan envoyé. Ton coach le lira avant votre prochain échange.": "Check-in sent. Your coach will read it before your next exchange.",
+/* v59 — le mot affiché pendant l'envoi du bilan */
+"Envoi de ton bilan…": "Sending your check-in…",
 "Mes bilans précédents": "My previous check-ins", "Pas encore de bilan pour cette semaine.": "No check-in for this week yet.",
 "Comment s'est passée ta semaine ?": "How did your week go?", "Énergie": "Energy", "Motivation": "Motivation", "Sommeil": "Sleep", "Stress": "Stress",
 "1 = très calme · 5 = très stressé": "1 = very calm · 5 = very stressed",

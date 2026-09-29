@@ -236,6 +236,9 @@ const Auth = {
        on le dit avant de tout effacer de l'appareil */
     /* v51 : l'activite du prospect part d'abord (sa copie locale est effacee avec le reste) */
     try { if (typeof Activite !== "undefined") await Promise.race([Activite.vider(), new Promise(r => setTimeout(r, 3000))]); } catch(e){}
+    /* v59 (remarque 17) : l'écriture de checkins en cours (la file de Checkin : relecture, écriture, envoi) finit d'abord,
+       8 s au plus — sinon sa copie sur l'appareil était comptée « non envoyée » alors que rien n'est hors ligne */
+    try { if (typeof Checkin !== "undefined" && Checkin._file) await Promise.race([Checkin._file, new Promise(r => setTimeout(r, 8000))]); } catch(e){}
     try { await Promise.race([Store.toutEnvoyer(false), new Promise(r => setTimeout(r, 4000))]); } catch(e){}
     const moi = this.utilisateur();
     const nonEnvoyees = moi ? Object.values(Store.attenteLire()).filter(e => e && e.a === moi.id).length : 0;
@@ -597,6 +600,20 @@ const Store = {
       clearTimeout(this.attente[k]); delete this.attente[k]; delete this.valeursEnAttente[k]; delete this.tEnAttente[k];
       const i = k.indexOf("|");
       envois.push(this.envoyer(k.slice(i + 1), v, k.slice(0, i), t, vite !== false));
+    });
+    return Promise.all(envois);
+  },
+  /* v59 (remarque 3) : la page se ferme (pagehide, écouté par Checkin) pendant une relecture : la copie des saisies
+     retenues (Store.retenues : la copie affichée et les saisies qui attendent, à l'instant de la saisie) part tout de suite,
+     avec keepalive — ce que la v58 envoyait à la fermeture ; seulement celle du compte connecté */
+  envoyerRetenues(){
+    const u = Auth.utilisateur(), envois = [];
+    if (!u || !u.id || !this.retenues.size) return Promise.resolve();
+    const o = this.attenteLire();
+    this.retenues.forEach(k => {
+      const e = o[k], i = k.indexOf("|"), uid = k.slice(0, i);
+      if (!e || e.a !== u.id || uid !== u.id || typeof e.t !== "string") return;
+      envois.push(this.envoyer(k.slice(i + 1), e.v, uid, e.t, true));
     });
     return Promise.all(envois);
   },
