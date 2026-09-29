@@ -716,10 +716,10 @@ const outilDecouverte = {
     const bilan = !form && (this._bilan || (!Decouverte.bilanPropose(I) && !this._choixFait));
     /* v52 : gratuit pour toujours — ni « Jour n/7 », ni jours restants, ni fin de decouverte */
     const eyebrow = trad(T.nom);
-    /* sur la page bilan, rien d'autre : rien qui presse, deux choix de meme poids */
+    /* sur la page du plan d'action, rien d'autre : rien qui presse (v61 : un seul bouton dore, « Plus tard » en lien discret) */
     const lede = !fait ? typoFr(trad(T.lede_questionnaire)) : (bilan || form) ? "" : trad(T.lede_accueil);
-    /* « Réserver mon bilan » : visible des la fin du questionnaire (accueil, « Modifier mes réponses ») ; v52 : discret,
-       l'action mise en avant de l'accueil est son etape (calcul, puis pesee) */
+    /* le bouton du bilan (v61 : « Récupérer mon plan d'action ») : visible des la fin du questionnaire (accueil, « Modifier
+       mes réponses ») ; v52 : discret, l'action mise en avant de l'accueil est son etape (calcul, puis pesee) */
     /* v61 (brief V2, E1 et F) : « Récupérer mon plan d'action », en contour, et sa ligne « 15 min avec Lucas · offert » ;
        origine accueil_haut (sur « Modifier mes réponses » : reponses_haut) */
     const haut = form ? "reponses_haut" : "accueil_haut", K = T.cta || {};

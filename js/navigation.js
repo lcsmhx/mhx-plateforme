@@ -64,7 +64,7 @@ function pageVerrouillee(o){
   if (ech) return `${ech}<section class="panel ech-appel">${UI.verrou(Object.assign({ titre: trad(nomOnglet(o)), texte: typoFr(trad(appels[o.id] || "")) }, bouton))}
     ${plus ? `<p class="note verrou-plus">${esc(typoFr(trad(plus)))}</p>` : ""}</section>`;
   return `<section class="panel">${UI.verrou(Object.assign({ titre: trad(nomOnglet(o)), texte: trad("Cette fonctionnalité est disponible avec l'accompagnement MHX.") }, bouton))}
-    ${plus ? `<p class="note verrou-plus">${esc(trad(plus))}</p>` : ""}</section>`;
+    ${plus ? `<p class="note verrou-plus">${esc(typoFr(trad(plus)))}</p>` : ""}</section>`;
 }
 
 /* v52 (Chantier 1, lot E) — ECHANTILLONS : l'exemple GENERIQUE qu'un prospect voit sur une page verrouillee, avant
