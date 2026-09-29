@@ -25,18 +25,22 @@ const outilTableau = {
   html(){ return `<div id="tb-vue"><header class="masthead"><h1>Tableau de bord</h1></header><section class="panel"><div class="empty">Chargement…</div></section></div>`; },
 
   /* les lignes « À traiter maintenant » : une par personne (sa raison la plus urgente), des plus urgentes aux autres.
-     rang : 😞 0, note en chute 1, retour à lire 2, prospect signé 3, case « J'ai réservé » 4, clic 5, nouvel inscrit 6,
-     autre urgence d'un client 7 */
+     rang : 😞 0, note en chute 1, retour à lire 2, prospect signé 3, case « J'ai réservé » 4, absent à l'appel 5, clic 6,
+     nouvel inscrit 7, autre urgence d'un client 8, bilan à conclure (coché depuis plus de 7 j) 9, « Perdu » à relancer 10.
+     v59 : une table (plus un décalage du rang de la page Prospects, qui se déréglait avec les nouveaux motifs) ; les rappels
+     de gestion (bilan à conclure, « Perdu » à relancer) passent après les urgences des clients ; à rang égal, un prospect
+     le plus récemment actif d'abord (comme la page Prospects) */
+  RANG_PROSPECTS: { signe: 3, case: 4, absent: 5, clic: 6, nouveau: 7, appel: 9, perdu: 10 },
   aTraiter(clients, prospects){
     const out = [];
     clients.forEach(l => {
       const al = l.alertes.filter(a => a.niveau === "mauvais" || a.type === "bilan_recu"); if (!al.length) return;
-      const r = a => a.type === "avis_triste" ? 0 : a.type === "note_chute" ? 1 : a.type === "bilan_recu" ? 2 : 7;
+      const r = a => a.type === "avis_triste" ? 0 : a.type === "note_chute" ? 1 : a.type === "bilan_recu" ? 2 : 8;
       const a = al.slice().sort((x, y) => r(x) - r(y))[0];
       out.push({ rang: r(a), uid: l.p.id, nom: l.nom, texte: a.texte, cible: a.cible || "accueil", jours: l.jours || 0 });
     });
-    prospects.forEach(x => { if (x.a.urgent) out.push({ rang: 3 + x.a.rang, uid: x.l.p.id, nom: x.l.nom, texte: Commercial.motifTexte(x.a), cible: "accueil", prospect: true, jours: 0 }); });
-    return out.sort((a, b) => a.rang - b.rang || b.jours - a.jours);
+    prospects.forEach(x => { if (x.a.urgent) out.push({ rang: this.RANG_PROSPECTS[x.a.motif] != null ? this.RANG_PROSPECTS[x.a.motif] : 8, uid: x.l.p.id, nom: x.l.nom, texte: Commercial.motifTexte(x.a), cible: "accueil", prospect: true, jours: 0, recence: x.a.recence }); });
+    return out.sort((a, b) => a.rang - b.rang || b.jours - a.jours || (a.recence || 0) - (b.recence || 0));
   },
 
   async init(){
