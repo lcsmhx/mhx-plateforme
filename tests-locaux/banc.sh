@@ -28,7 +28,7 @@ etat_disque() { git -C .. status --porcelain --untracked-files=no 2>/dev/null; }
 DISQUE_DEBUT=$(etat_disque)
 
 # Suites du banc, et suites volontairement hors banc (verif44 à verif47 testent le Challenge 7 jours supprimé).
-SUITES="flux verif34 verif35 verif36 verif37 verif38 verif-xss verif39 verif40 verif41 verif42 verif43 verif48 verif50 verif51 verif52 verif53 verif54 verif55 verif56 verif57 verif58 verif60 verif61"
+SUITES="flux verif34 verif35 verif36 verif37 verif38 verif-xss verif39 verif40 verif41 verif42 verif43 verif48 verif50 verif51 verif52 verif53 verif54 verif55 verif56 verif57 verif58 verif60 verif61 verif62"
 # v53 (chantier 4) : verif49 (score sur 100 et température NOUVEAU / CHAUD / TIÈDE / FROID, journal des emails) sort du banc ;
 # ses blocs relances, issues, conflits, verrou et passage client sont repris dans verif58 (bloc F).
 HORS_BANC="verif44 verif45 verif46 verif47 verif49"
@@ -71,12 +71,14 @@ HORS_BANC="verif44 verif45 verif46 verif47 verif49"
 # chaque client et prospect, décision de Lucas du 29/09) n'est pas une écriture de l'app dans les données : les simulations
 # de flux, verif35 à 43, verif-xss, 48, 50 à 58, 60 et rig le mettent à part (il est testé dans verif61) ; verif52 compare
 # Mes clients à main sans les 2 nouvelles colonnes ; nombres inchangés.
+# v57 (retouches de Lucas du 29/09 : colonne du nom fixe, Connexions après Visite, date courte, page d'arrivée après la
+# connexion) : verif62 32 (nouvelle suite, partie 8) ; verif61 adaptée (ordre des colonnes, date courte), nombre inchangé.
 attendu() {
   case "$1" in
     flux) echo 19;; verif34) echo 13;; verif35) echo 14;; verif36) echo 13;; verif37) echo 12;; verif38) echo 66;;
     verif-xss) echo 5;; verif39) echo 48;; verif40) echo 64;; verif41) echo 25;; verif42) echo 20;; verif43) echo 27;;
     verif48) echo 42;; verif50) echo 57;; verif51) echo 89;; verif52) echo 137;; verif53) echo 114;;
-    verif54) echo 60;; verif55) echo 164;; verif56) echo 247;; verif57) echo 152;; verif58) echo 126;; verif60) echo 60;; verif61) echo 50;; rig) echo 90;; *) echo "";;
+    verif54) echo 60;; verif55) echo 164;; verif56) echo 247;; verif57) echo 152;; verif58) echo 126;; verif60) echo 60;; verif61) echo 50;; verif62) echo 32;; rig) echo 90;; *) echo "";;
   esac
 }
 # Partie de chaque suite pour les jobs parallèles de GitHub Actions (10 parties, durées équilibrées, 4 à 5 minutes chacune).
@@ -89,7 +91,7 @@ partie() {
     verif48|verif43|flux|verif58) echo 5;;
     verif41|verif57|verif61) echo 6;;
     verif42|verif50) echo 7;;
-    verif40|verif54) echo 8;;
+    verif40|verif54|verif62) echo 8;;
     verif55|verif39) echo 9;;
     verif56|rig|verif-xss|niveau|verif60) echo 10;;
     *) echo "";;

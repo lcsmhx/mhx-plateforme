@@ -114,7 +114,8 @@ const outilClients = {
     const note = l => l.note == null ? '<span class="meta">—</span>' : `<b${l.alertes.some(a => a.type === "note_chute") ? ' class="neg"' : ""}>${l.note}</b><span class="meta">/10</span>`;
     const smiley = l => l.smiley ? `<span class="fbd-smiley-l" title="${esc(l.smiley.lbl)}${l.alertes.some(a => a.type === "avis_triste") ? " — à traiter" : ""}">${l.smiley.emo}</span>` : '<span class="meta">—</span>';
     const visite = l => { const t = Activite.texteVisite(l.visites); return t === "—" ? '<span class="meta" title="Visites non suivies pour ce compte">—</span>' : `<span class="meta">${esc(t)}</span>`; };
-    /* v56 : nombre de connexions et dernière connexion (date et heure) ; l'info-bulle dit depuis quand elles sont comptées */
+    /* v56 : nombre de connexions et dernière connexion (date et heure) ; l'info-bulle dit depuis quand elles sont comptées.
+       v57 : juste après la dernière visite, date courte (29/09 10:53) ; la colonne du nom reste à l'écran (css, .tb-clients-table) */
     const cxCase = (l, t) => `<span class="meta" title="${esc(Connexions.aide(l.connexions))}">${esc(t)}</span>`;
     tb.innerHTML = lignes.map(l => `<tr>
       <td data-l="Client">${feu(l)} <b>${esc(l.nom)}</b>${l.p.statut === "prospect" ? ` <span class="pastille accent" title="Compte gratuit : pas encore accompagné">prospect</span> ` + Decouverte.pastilleCoach(l) + " " + Commercial.pastilleLigne(l) : ""}${l.ecarts.length ? ` <span class="pastille manque" title="Le calculateur ne correspond pas au questionnaire">chiffres à vérifier</span>` : ""}</td>
@@ -122,9 +123,9 @@ const outilClients = {
       <td data-l="Dernière note">${note(l)}</td>
       <td data-l="Dernier smiley">${smiley(l)}</td>
       <td data-l="Dernière visite">${visite(l)}</td>
-      <td data-l="Jours actifs (30 j)">${Activite.texteJours(l.visites) === "—" ? '<span class="meta">—</span>' : `<span class="meta">${esc(Activite.texteJours(l.visites))}</span>`}</td>
       <td data-l="Connexions">${cxCase(l, Connexions.texteNombre(l.connexions))}</td>
-      <td data-l="Dernière connexion">${cxCase(l, Connexions.texteDerniere(l.connexions))}</td>
+      <td data-l="Dernière connexion">${cxCase(l, Connexions.texteDerniere(l.connexions, true))}</td>
+      <td data-l="Jours actifs (30 j)">${Activite.texteJours(l.visites) === "—" ? '<span class="meta">—</span>' : `<span class="meta">${esc(Activite.texteJours(l.visites))}</span>`}</td>
       <td data-l="Activité">${l.jours === null ? '<span class="pastille manque">jamais</span>'
             : l.jours >= 10 ? `<span class="pastille manque">${l.jours} j</span>`
             : `<span class="meta">${l.jours === 0 ? "aujourd'hui" : "il y a " + l.jours + " j"}</span>`}</td>
@@ -187,7 +188,7 @@ const outilClients = {
       <h2>Suivi de mes clients</h2>
       <div id="alertes-clients"></div>
       <div class="scroll" style="margin-top:14px"><table class="tb-clients-table"><thead><tr>
-        <th>Client</th><th>Retour</th><th>Note</th><th>Smiley</th><th>Visite</th><th>Jours actifs</th><th>Connexions</th><th>Dernière connexion</th><th>Activité</th><th>Régularité</th><th>Poids</th><th>Depuis le début</th><th>4 dernières sem.</th>
+        <th>Client</th><th>Retour</th><th>Note</th><th>Smiley</th><th>Visite</th><th>Connexions</th><th>Dernière connexion</th><th>Jours actifs</th><th>Activité</th><th>Régularité</th><th>Poids</th><th>Depuis le début</th><th>4 dernières sem.</th>
         <th>Questionnaire</th><th>Programme</th><th>Diète</th><th></th>
       </tr></thead><tbody id="tb-clients"><tr><td colspan="17">Chargement…</td></tr></tbody></table></div>
       <p class="note" style="margin-top:12px">En haut : les 😞 non traités et les notes en chute, puis les retours de la semaine à lire. « Retour » : le feedback du dimanche ou le bilan du vendredi, selon ce que voit le client (à traiter / fait / non fait). « Note » et « Smiley » : son dernier feedback du dimanche. « Visite » et « Jours actifs » (sur 30 jours) : les jours où il a ouvert l'app — « — » quand ses visites ne sont pas suivies. « Connexions » : le nombre de jours où il a ouvert l'app connecté (une fois par jour au plus, depuis la mise en place du compteur) ; « Dernière connexion » : la date et l'heure de sa dernière ouverture — « — » si le compteur n'a pas pu être lu. « Activité » compte les jours depuis la dernière saisie du client, quelle qu'elle soit (une visite ne compte pas). Une variation de poids se lit sur quatre semaines : en dessous, c'est du bruit.</p>

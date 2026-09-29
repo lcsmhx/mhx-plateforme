@@ -1,36 +1,29 @@
-/* verif61 — v56 : le compteur de connexions côté coach (Mes clients, page Prospects), vérifié de bout en bout dans un vrai
-   navigateur, avec un faux Supabase qui reproduit la migration v56 (supabase/migrations/20260928220000_v56_compteur_connexions.sql) :
-   la fonction noter_connexion() note la connexion du compte du JETON (sans paramètre), une par jour au plus (calendrier de
-   Paris), et avance la dernière connexion ; la table connexions est lue par le coach seul et jamais écrite directement.
-   A. démarrage avec une session enregistrée (connexion automatique) : le compte de test, un autre client et un prospect
-      sont notés UNE fois, par un POST sans paramètre (« {} ») portant leur propre jeton, sans rien écrire d'autre ni rien
-      attendre (tous les clients, dès la mise en ligne : décision de Lucas du 29/09) ; le coach (fiche consultée comprise)
-      et l'écran de connexion : jamais ;
-      connexion par mot de passe (rechargement) : notée ; même jour : une connexion (la dernière avance), autre jour : +1 ;
-   B. l'app revenue au premier plan : après 10 min ou plus en arrière-plan, une nouvelle ouverture ; moins : rien ; profil
-      illisible au démarrage (relu au retour, jamais noté pour le coach), app quittée pendant le chargement ;
-   C. base sans la migration (404), retour arrière (403), réseau coupé : rien d'affiché, aucune erreur, l'app marche ;
-      404 / 403 : plus d'essai avant le prochain chargement ; réseau coupé : nouvel essai à la prochaine ouverture ; côté
-      coach : Mes clients et Prospects s'affichent, « — » dans les deux colonnes ;
-   D. Mes clients : colonnes « Connexions » et « Dernière connexion » (v57 : juste après « Visite », date courte « 29/09 10:53 » ;
-      verif62), nombre, date et heure (heure de l'appareil du coach), « 0 » / « aucune » pour un client ou un prospect jamais connecté depuis, info-bulle « comptées
-      depuis le … », téléphone 390 px ;
-   E. page Prospects : les deux lignes dans chaque carte, la phrase d'aide ;
-   F. rien côté client ni prospect : aucun texte du compteur, aucune lecture de la table ;
-   G. l'interrupteur des visites (suivi_visites_clients) ne change rien au compteur : « tous » et « off », clients et
-      prospects notés et affichés ;
-   H. données piégées dans la table (types faux, dates illisibles, balises) : rien ne tombe, rien n'est injecté ;
+/* verif62 — v57 : deux retouches après la vérification en ligne de la v56 par Lucas (29/09), vérifiées dans un vrai navigateur
+   avec le faux Supabase de verif61 (migration v56 comprise) :
+   A. Mes clients sur ordinateur (1280 px, thème sombre de l'app et thème clair) : « Connexions » et « Dernière connexion »
+      juste après « Visite » (dernière visite), avant « Jours actifs » ; date courte « 29/09 10:53 » (l'année seulement si ce
+      n'est pas l'année en cours), à l'heure de l'appareil du coach ; les deux colonnes visibles sans défiler ; la colonne du
+      nom fixe (sticky), de la couleur du panneau, et grisée avec la ligne survolée ; la page Prospects garde la date longue ;
+   B. Mes clients sur tablette (820 px) : le tableau défile de côté ; défilé jusqu'au bout, les noms et l'en-tête « Client »
+      restent à gauche, par-dessus les autres cellules, et la dernière colonne reste utilisable ;
+   C. Mes clients sur téléphone (375 px) : les cartes (rien de fixe), les lignes dans le nouvel ordre, la date courte, la page
+      ne déborde pas ;
+   D. la connexion ouvre la page d'arrivée : un client, un prospect et le coach dont l'adresse gardait une page (#/formation,
+      #/prospects : dernière page ouverte sur l'appareil quand la session a pris fin sans « Se déconnecter ») arrivent sur
+      leur page d'arrivée ; « Me reconnecter » (session perdue en cours d'utilisation) ramène sur la page ouverte ;
+      « Se déconnecter » puis connexion : l'accueil (comme avant) ; la connexion par mot de passe est toujours notée ;
    Z. aucun appel vers l'extérieur.
-   Infrastructure (serveur, faux Supabase, personnes, décor) reprise de verif58. Dates relatives au lancement. Chaque bloc
+   Infrastructure (serveur, faux Supabase, personnes, décor) reprise de verif61. Dates relatives au lancement. Chaque bloc
    tourne à part (« ✗ BLOC INTERROMPU ») ; code de sortie 1 dès qu'un ✗ apparaît.
-   Usage : node verif61.js ../index.html
-           VERIF61_PORT=9771 node verif61.js ../index.html     (autre port, si 9770 est pris)
-           VERIF61_BLOCS="A.,D." node verif61.js …              (seulement les blocs dont le nom commence ainsi) */
+   Usage : node verif62.js ../index.html
+           VERIF62_PORT=9781 node verif62.js ../index.html     (autre port, si 9780 est pris)
+           VERIF62_BLOCS="A.,D." node verif62.js …              (seulement les blocs dont le nom commence ainsi)
+           VERIF62_CAPTURES=<dossier> node verif62.js …         (captures d'écran des tableaux, pour les regarder) */
 const { chromium } = require("playwright"); const fs = require("fs"); const http = require("http"); const path = require("path");
 const F = require("./fixtures");
 const HTML = path.resolve(process.argv[2] || path.join(__dirname, "..", "index.html"));
-const PORT = +process.env.VERIF61_PORT || 9770;
-const BLOCS = (process.env.VERIF61_BLOCS || "").split(",").map(x => x.trim()).filter(Boolean);
+const PORT = +process.env.VERIF62_PORT || 9780;
+const BLOCS = (process.env.VERIF62_BLOCS || "").split(",").map(x => x.trim()).filter(Boolean);
 const MOBILE = { width: 390, height: 844 }, ORDI = { width: 1280, height: 900 };
 
 /* ---------- la page servie : le fichier testé, retouché le temps d'un bloc (avec) ---------- */
@@ -467,8 +460,6 @@ const FUSEAU = "Asia/Makassar";   // l'appareil du coach (Bali) : la date et l'h
 /* la date et l'heure attendues (jj/mm/aaaa hh:mm à l'heure de l'appareil du coach), calculées sans l'app */
 const quandCoach = v => { const P = {}; new Intl.DateTimeFormat("en-GB", { timeZone: FUSEAU, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date(v)).forEach(x => { P[x.type] = x.value; }); return P.day + "/" + P.month + "/" + P.year + " " + P.hour + ":" + P.minute; };
 const jourCoach = v => quandCoach(v).slice(0, 10);
-/* v57 : dans Mes clients, la date courte (jj/mm hh:mm ; l'année seulement si ce n'est pas l'année en cours) */
-const quandCourt = v => { const q = quandCoach(v), an = quandCoach(new Date().toISOString()).slice(6, 10); return q.slice(6, 10) === an ? q.slice(0, 5) + q.slice(10) : q; };
 const notees = (db, uid) => db.notees.filter(x => !uid || x.par === uid);
 const jourPasse = () => jourParis(Date.now() - 2 * J);   // un jour de Paris forcément antérieur (le jour du changement d'heure dure 25 h)
 const TEXTE_CX = /Connexions|Dernière connexion|connexions? (notée|comptée)/i;
@@ -485,248 +476,150 @@ function avecLignes(db){
 const faits = (page, uid) => page.$eval(`#pr-liste .sc-carte[data-uid="${uid}"]`, e => { const o = {}, k = []; e.querySelectorAll(".sc-faits li").forEach(li => { const a = (li.querySelector("span") || {}).textContent || "", v = (li.querySelector("b") || {}).textContent || ""; o[a.trim()] = v.trim(); k.push(a.trim()); }); o._ordre = k; return o; }).catch(() => ({}));
 const titre = (page, uid, col) => page.$eval(`#tb-clients [data-ouvrir="${uid}"]`, (bt, c) => { const td = bt.closest("tr").querySelector(`td[data-l="${c}"] [title]`); return td ? td.getAttribute("title") : ""; }, col).catch(() => "");
 
+/* ---------- aides de la v57 ---------- */
+const TABLETTE = { width: 820, height: 1180 }, TEL = { width: 375, height: 812 };
+const CAPT = process.env.VERIF62_CAPTURES ? path.resolve(process.env.VERIF62_CAPTURES) : null;
+const capture = async (page, nom) => { if (CAPT) { fs.mkdirSync(CAPT, { recursive: true }); await page.screenshot({ path: path.join(CAPT, nom + ".png") }).catch(() => {}); } };
+/* la date courte attendue (jj/mm hh:mm, jj/mm/aaaa hh:mm si ce n'est pas l'année en cours), à l'heure de l'appareil du coach */
+const quandCourt = v => { const q = quandCoach(v), an = quandCoach(new Date().toISOString()).slice(6, 10); return q.slice(6, 10) === an ? q.slice(0, 5) + q.slice(10) : q; };
+const COURT = /^\d{2}\/\d{2}(\/\d{4})? \d{2}:\d{2}$/;
+const ORDRE_TH = ["Client", "Retour", "Note", "Smiley", "Visite", "Connexions", "Dernière connexion", "Jours actifs", "Activité"];
+const ORDRE_TD = ["Client", "Retour de la semaine", "Dernière note", "Dernier smiley", "Dernière visite", "Connexions", "Dernière connexion", "Jours actifs (30 j)", "Activité"];
+const ordreTd = (page, uid) => page.$eval(`#tb-clients [data-ouvrir="${uid}"]`, bt => Array.from(bt.closest("tr").querySelectorAll("td")).map(td => td.dataset.l)).catch(() => []);
+/* le tableau défilé de côté (scrollLeft) : pour chaque nom, sa place dans le cadre qui défile, s'il est par-dessus les autres
+   cellules (elementFromPoint), sa position CSS et son fond ; l'en-tête « Client » ; la colonne « Dernière connexion » */
+async function geo(page, uids, gauche){
+  return page.evaluate(({ ids, gauche }) => {
+    const sc = document.querySelector(".tb-clients-table").closest(".scroll");
+    if (gauche === "fin") sc.scrollLeft = sc.scrollWidth; else if (typeof gauche === "number") sc.scrollLeft = gauche;
+    const r0 = sc.getBoundingClientRect();
+    const place = e => { const r = e.getBoundingClientRect(); window.scrollTo(0, window.scrollY + r.top - window.innerHeight / 2); return e.getBoundingClientRect(); };
+    const nom = id => {
+      const bt = document.querySelector(`#tb-clients [data-ouvrir="${id}"]`); if (!bt) return null;
+      const td = bt.closest("tr").querySelector("td"), r = place(td), cs = getComputedStyle(td);
+      const x = r.left + Math.min(30, r.width / 2), y = r.top + r.height / 2, e = document.elementFromPoint(x, y);
+      const o = bt.getBoundingClientRect(), eo = document.elementFromPoint(o.left + o.width / 2, o.top + o.height / 2);
+      return { gauche: Math.round(r.left - r0.left), dessus: !!(e && td.contains(e)), pos: cs.position, fond: cs.backgroundColor, nom: ((td.querySelector("b") || {}).textContent || "").trim(), ouvrir: eo === bt };
+    };
+    const th = document.querySelector(".tb-clients-table thead th"), rt = th.getBoundingClientRect();
+    const hc = Array.from(document.querySelectorAll(".tb-clients-table thead th")).find(e => e.textContent.trim() === "Dernière connexion"), rc = hc.getBoundingClientRect();
+    return { deborde: sc.scrollWidth > sc.clientWidth + 1, defile: Math.round(sc.scrollLeft), noms: ids.map(nom),
+      th: { gauche: Math.round(rt.left - r0.left), pos: getComputedStyle(th).position, fond: getComputedStyle(th).backgroundColor },
+      panneau: getComputedStyle(sc.closest(".panel")).backgroundColor, cx: { droite: Math.round(rc.right - r0.left), cadre: sc.clientWidth } };
+  }, { ids: uids, gauche });
+}
+const TRANSPARENT = /^(transparent|rgba\(0, 0, 0, 0\))$/;
+
 (async () => {
-  await new Promise((r, k) => { server.once("error", e => k(new Error(e && e.code === "EADDRINUSE" ? "port " + PORT + " déjà pris (une autre suite tourne ?) : VERIF61_PORT=9771 node verif61.js ../index.html" : String(e)))); server.listen(PORT, r); });
+  await new Promise((r, k) => { server.once("error", e => k(new Error(e && e.code === "EADDRINUSE" ? "port " + PORT + " déjà pris (une autre suite tourne ?) : VERIF62_PORT=9781 node verif62.js ../index.html" : String(e)))); server.listen(PORT, r); });
   const b = await chromium.launch();
   URL0 = `http://localhost:${PORT}/`;
 
-  /* =================== A. démarrage =================== */
-  await bloc("A. démarrage : compte de test et prospect", async () => {
-    const db = decor();
-    db.cxRetard = 4000;   // la base répond lentement : l'app ne l'attend pas
-    const { page } = await contexte(b, TESTEUR, db);
-    const t0 = Date.now();
-    await page.goto(URL0 + "#/accueil"); await pret(page, "#acc-vue h1");
-    const duree = Date.now() - t0;
-    await attendre(page, 4500);
-    const N = notees(db);
-    ok("A : compte de test (client, « test »), session enregistrée : UNE connexion notée, par un POST sans paramètre (« {} ») avec SON jeton", N.length === 1 && N[0].par === TESTEUR.id && N[0].m === "POST" && N[0].corps === "{}" && N[0].jeton === "Bearer jeton-" + TESTEUR.id, JSON.stringify(N));
-    ok("A : … l'accueil s'affiche sans attendre la réponse (base lente : 4 s)", duree < 3800, duree + " ms");
-    ok("A : … la base range 1 connexion, le jour de Paris, la dernière connexion", db.cx[TESTEUR.id] && db.cx[TESTEUR.id].nombre === 1 && db.cx[TESTEUR.id].dernier_jour === jourParis(Date.now()) && /^\d{4}-\d{2}-\d{2}T/.test(db.cx[TESTEUR.id].derniere), JSON.stringify(db.cx));
-    ok("A : … rien d'autre n'est écrit, et il ne lit jamais la table", db.ecritures.length === 0 && db.cxLectures.length === 0, resume(db) + " " + JSON.stringify(db.cxLectures));
-    const db2 = decor();
-    const { page: p2 } = await contexte(b, qui(LEA, "lea@exemple.fr"), db2);
-    await p2.goto(URL0); await pret(p2, "#vue"); await attendre(p2, 800);
-    ok("A : prospecte Léa, session enregistrée : UNE connexion notée, avec son jeton ; rien d'autre écrit", notees(db2).length === 1 && notees(db2, LEA).length === 1 && db2.cx[LEA] && db2.cx[LEA].nombre === 1 && db2.ecritures.length === 0, JSON.stringify(notees(db2)) + " " + resume(db2));
-  });
-
-  await bloc("A. démarrage : Thomas oui ; jamais le coach ni l'écran de connexion", async () => {
-    const db = decor();
-    const { page } = await contexte(b, THOMAS, db);
-    await page.goto(URL0); await pret(page, "#acc-vue h1");
-    for (const h of ["#/programme", "#/suivi", "#/accueil"]) await aller(page, h, 900);
-    ok("A : Thomas (un autre client, hors de l'interrupteur des visites) : UNE connexion notée, avec son jeton, malgré 3 pages ouvertes ; rien d'autre écrit", notees(db).length === 1 && notees(db, F.IDS.c1).length === 1 && notees(db)[0].jeton === "Bearer jeton-" + F.IDS.c1 && db.ecritures.length === 0, JSON.stringify(notees(db)) + " " + resume(db));
-    const dbc = decor();
-    const { page: pc } = await coachSur(b, dbc, "#/tableau", "#tb-vue");
-    for (const h of ["#/clients", "#/prospects"]) await aller(pc, h, 1200);
-    await pc.evaluate(id => Clients.ouvrir(id, "Sans nom", "accueil"), TESTEUR.id); await attendre(pc, 1500);
-    await aller(pc, "#/programme", 1000);
-    await pc.reload(); await pret(pc, "#vue");
-    ok("A : le coach (ses pages, la fiche du compte de test consultée, un rechargement) : aucune connexion notée", notees(dbc).length === 0, JSON.stringify(notees(dbc)));
-    const dbn = decor();
-    const { page: pn } = await contexte(b, null, dbn);
-    await pn.goto(URL0); await pn.waitForSelector("#c-email"); await attendre(pn, 800);
-    ok("A : écran de connexion (aucune session) : rien n'est noté", notees(dbn).length === 0, JSON.stringify(notees(dbn)));
-  });
-
-  await bloc("A. connexion par mot de passe, même jour, autre jour", async () => {
-    const db = decor();
-    db.connexions["lea@exemple.fr"] = LEA;
-    const { page } = await contexte(b, null, db);
-    await page.goto(URL0); await page.waitForSelector("#c-email");
-    await page.fill("#c-email", "lea@exemple.fr"); await page.fill("#c-mdp", "motdepasse1"); await page.click("#c-go");
-    await pret(page, "#vue"); await attendre(page, 800);
-    ok("A : Léa se connecte avec son mot de passe : après le rechargement, UNE connexion notée pour elle", notees(db).length === 1 && notees(db, LEA).length === 1 && db.tokens.includes("password") && db.cx[LEA] && db.cx[LEA].nombre === 1, JSON.stringify(notees(db)) + " " + JSON.stringify(db.tokens));
-    const d1 = db.cx[LEA].derniere, j1 = db.cx[LEA].dernier_jour;
-    await attendre(page, 1100);
-    await page.reload(); await pret(page, "#vue"); await attendre(page, 800);
-    const n1 = jourParis(Date.now()) === j1 ? 1 : 2;   // minuit à Paris passé entre les deux ouvertures : 2, c'est juste
-    ok("A : elle rouvre l'app le même jour : notée de nouveau, mais toujours 1 connexion ; la dernière connexion avance", notees(db, LEA).length === 2 && db.cx[LEA].nombre === n1 && db.cx[LEA].derniere > d1, JSON.stringify(db.cx[LEA]));
-    db.cx[LEA].dernier_jour = jourPasse(); db.cx[LEA].nombre = 1;
-    await page.reload(); await pret(page, "#vue"); await attendre(page, 800);
-    ok("A : elle rouvre l'app un autre jour : 2 connexions", notees(db, LEA).length === 3 && db.cx[LEA].nombre === 2 && db.cx[LEA].dernier_jour === jourParis(Date.now()), JSON.stringify(db.cx[LEA]));
-  });
-
-  /* =================== B. l'app revenue au premier plan =================== */
-  await bloc("B. premier plan après 10 min", async () => {
-    const db = decor();
-    const { page } = await contexte(b, qui(LEA, "lea@exemple.fr"), db, { horloge: true });
-    await page.goto(URL0); await pret(page, "#vue"); await attendre(page, 600);
-    const n0 = notees(db, LEA).length;
-    await cacher(page); await page.clock.fastForward(5 * MIN); await montrer(page); await attendre(page, 800);
-    ok("B : l'app 5 min en arrière-plan puis revenue : rien de plus", n0 === 1 && notees(db, LEA).length === 1, n0 + " puis " + notees(db, LEA).length);
-    await cacher(page); await page.clock.fastForward(4 * MIN); await cacher(page); await page.clock.fastForward(7 * MIN); await montrer(page); await attendre(page, 800);
-    ok("B : 11 min en arrière-plan (deux « masquée » de suite comptent depuis la première) puis revenue : une nouvelle ouverture notée", notees(db, LEA).length === 2, String(notees(db, LEA).length));
-    await montrer(page); await attendre(page, 500);
-    ok("B : « visible » une deuxième fois sans être passée en arrière-plan : rien de plus", notees(db, LEA).length === 2, String(notees(db, LEA).length));
-    const dbt = decor();
-    const { page: pt } = await contexte(b, THOMAS, dbt, { horloge: true });
-    await pt.goto(URL0); await pret(pt, "#acc-vue h1");
-    await cacher(pt); await pt.clock.fastForward(11 * MIN); await montrer(pt); await attendre(pt, 800);
-    ok("B : Thomas (client) : noté à l'ouverture, puis de nouveau après 11 min en arrière-plan", notees(dbt, F.IDS.c1).length === 2 && notees(dbt).length === 2, JSON.stringify(notees(dbt)));
-  });
-
-  await bloc("B. jeton expiré au retour", async () => {
-    /* le cas le plus courant sur téléphone : l'app revient après plus d'une heure, le jeton a expiré (401) : l'app renouvelle
-       la session et réessaie une fois, sans bandeau « session perdue » */
-    const db = decor();
-    const { page } = await contexte(b, qui(LEA, "lea@exemple.fr"), db, { horloge: true });
-    await page.goto(URL0); await pret(page, "#vue"); await attendre(page, 600);
-    const d1 = db.cx[LEA] && db.cx[LEA].derniere;
-    db.cx401 = 1;
-    await cacher(page); await page.clock.fastForward(70 * MIN); await montrer(page); await attendre(page, 1500);
-    ok("B : revenue après 70 min, jeton refusé (401) : session renouvelée, la connexion est notée au 2e essai, sans bandeau « session perdue »", notees(db, LEA).length === 3 && db.tokens.includes("refresh_token") && db.cx[LEA].nombre === 1 && db.cx[LEA].derniere > d1 && !(await page.$("#session-perdue")), notees(db, LEA).length + " " + JSON.stringify(db.tokens) + " " + JSON.stringify(db.cx[LEA]));
-  });
-
-  await bloc("B. profil illisible au démarrage, app quittée pendant le chargement", async () => {
-    /* réseau coupé pendant la lecture du profil au démarrage : on ne sait pas si c'est le coach, cette ouverture n'est pas
-       notée ; au retour après 10 min ou plus, le profil est relu et la connexion notée (jamais pour le coach). App quittée
-       pendant le chargement (page masquée avant que l'écoute commence) : son retour 10 min plus tard compte aussi. */
-    const db = decor(); db.profilRate = 1;
-    const { page } = await contexte(b, THOMAS, db, { horloge: true });
-    await page.goto(URL0); await pret(page, "#vue"); await attendre(page, 800);
-    const n0 = notees(db).length;
-    await cacher(page); await page.clock.fastForward(11 * MIN); await montrer(page); await attendre(page, 1200);
-    ok("B : Thomas, profil illisible au démarrage : rien de noté à l'ouverture ; revenu après 11 min : profil relu, UNE connexion notée", n0 === 0 && db.profilRelus === 1 && notees(db, F.IDS.c1).length === 1 && notees(db).length === 1, n0 + " puis " + JSON.stringify(notees(db)) + " · relectures " + db.profilRelus);
-    const dbc = decor(); dbc.profilRate = 1;
-    const { page: pc } = await contexte(b, COACH, dbc, { horloge: true });
-    await pc.goto(URL0); await pret(pc, "#vue"); await attendre(pc, 800);
-    await cacher(pc); await pc.clock.fastForward(11 * MIN); await montrer(pc); await attendre(pc, 1200);
-    ok("B : le coach, même cas : son profil est relu (une fois) et dit « coach » : aucune connexion notée", dbc.profilRelus === 1 && notees(dbc).length === 0, JSON.stringify(notees(dbc)) + " · relectures " + dbc.profilRelus);
-    const dbl = decor(); dbl.profilRetard = 3000;
-    const { page: pl } = await contexte(b, qui(LEA, "lea@exemple.fr"), dbl, { horloge: true });
-    await pl.goto(URL0); await cacher(pl);   // elle passe à une autre app pendant le chargement (profil lent : 3 s)
-    await attendre(pl, 4500);
-    const n1 = notees(dbl, LEA).length;
-    await pl.clock.fastForward(11 * MIN); await montrer(pl); await attendre(pl, 1200);
-    ok("B : Léa quitte l'app pendant le chargement : notée à l'ouverture, puis de nouveau à son retour 11 min plus tard", n1 === 1 && notees(dbl, LEA).length === 2, n1 + " puis " + notees(dbl, LEA).length);
-  });
-
-  /* =================== C. base sans la migration, retour arrière, réseau coupé =================== */
-  await bloc("C. base sans la migration (404)", async () => {
-    const db = decor(); db.cxAbsente = true;
-    const { page } = await contexte(b, qui(LEA, "lea@exemple.fr"), db, { horloge: true });
-    await page.goto(URL0); await pret(page, "#vue"); await attendre(page, 800);
-    const vu = norm(await page.evaluate(() => document.body.innerText));
-    ok("C : fonction absente (404) : un seul essai, son accueil s'affiche, aucun message", notees(db).length === 1 && !!(await page.$("#dc-vue, #acc-vue")) && !/erreur|indisponible|connexion/i.test(vu) && (await toasts(page)).length === 0, notees(db).length + " | " + vu.slice(0, 200) + " | " + JSON.stringify(await toasts(page)));
-    await cacher(page); await page.clock.fastForward(11 * MIN); await montrer(page); await attendre(page, 800);
-    ok("C : … revenue après 11 min : plus d'essai avant le prochain chargement", notees(db).length === 1, String(notees(db).length));
-    const { page: pc } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]");
-    const T = await ligneClient(pc, TESTEUR.id), Le = await ligneClient(pc, LEA);
-    ok("C : coach, table absente : Mes clients s'affiche, « — » dans les deux colonnes (compte de test et Léa), info-bulle « indisponibles »", T["Connexions"] === "—" && T["Dernière connexion"] === "—" && Le["Connexions"] === "—" && Le["Dernière connexion"] === "—" && /indisponibles/.test(await titre(pc, LEA, "Connexions")), JSON.stringify([T["Connexions"], T["Dernière connexion"], Le["Connexions"]]) + " " + (await titre(pc, LEA, "Connexions")));
-    await aller(pc, "#/prospects", 1800);
-    const fm = await faits(pc, MARC);
-    ok("C : … la page Prospects s'affiche, cartes avec « Connexions — » et « Dernière connexion — »", (await pc.$$("#pr-liste .sc-carte")).length > 0 && fm["Connexions"] === "—" && fm["Dernière connexion"] === "—", JSON.stringify(fm));
-  });
-
-  await bloc("C. retour arrière (403) et réseau coupé", async () => {
-    const db = decor(); db.cxRefusee = true;
-    const { page } = await contexte(b, TESTEUR, db, { horloge: true });
-    await page.goto(URL0 + "#/accueil"); await pret(page, "#acc-vue h1"); await attendre(page, 600);
-    await cacher(page); await page.clock.fastForward(11 * MIN); await montrer(page); await attendre(page, 800);
-    ok("C : fonction refusée (403, retour arrière) : un seul essai, l'accueil s'affiche, pas d'autre essai au retour", notees(db).length === 1 && !!(await page.$("#acc-vue h1")) && (await toasts(page)).length === 0, notees(db).length + " " + JSON.stringify(await toasts(page)));
-    const { page: pc } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]");
-    const T = await ligneClient(pc, TESTEUR.id);
-    ok("C : … coach, lecture refusée : « — » dans les deux colonnes", T["Connexions"] === "—" && T["Dernière connexion"] === "—", JSON.stringify(T));
-    const dbp = decor(); dbp.cxPanne = true;
-    const { page: pp } = await contexte(b, qui(LEA, "lea@exemple.fr"), dbp, { horloge: true });
-    await pp.goto(URL0); await pret(pp, "#vue"); await attendre(pp, 600);
-    await cacher(pp); await pp.clock.fastForward(11 * MIN); await montrer(pp); await attendre(pp, 800);
-    ok("C : réseau coupé pendant l'envoi : rien d'affiché, et nouvel essai à l'ouverture suivante (2 essais)", notees(dbp).length === 2 && (await toasts(pp)).length === 0, notees(dbp).length + " " + JSON.stringify(await toasts(pp)));
-  });
-
-  /* =================== D. Mes clients =================== */
-  await bloc("D. Mes clients", async () => {
+  /* =================== A. Mes clients sur ordinateur =================== */
+  for (const theme of ["sombre", "clair"]) await bloc("A. Mes clients sur ordinateur (thème " + theme + ")", async () => {
     const db = avecLignes(decor());
-    const { page } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]", { fuseau: FUSEAU });
-    const th = await page.$$eval(".tb-clients-table thead th", l => l.map(e => e.textContent.trim()));
-    const i = th.indexOf("Connexions");
-    ok("D : en-têtes « Connexions » puis « Dernière connexion », juste après « Visite », avant « Jours actifs » (v57)", i > 0 && th[i - 1] === "Visite" && th[i + 1] === "Dernière connexion" && th[i + 2] === "Jours actifs", JSON.stringify(th));
-    const T = await ligneClient(page, TESTEUR.id);
-    ok("D : compte de test : « 12 » et la date et l'heure de sa dernière connexion (" + quandCourt(CX_TEST.derniere) + ", heure de l'appareil du coach)", T["Connexions"] === "12" && T["Dernière connexion"] === quandCourt(CX_TEST.derniere), JSON.stringify([T["Connexions"], T["Dernière connexion"]]));
-    ok("D : … info-bulle « comptées depuis le " + jourCoach(CX_TEST.premiere) + " »", (await titre(page, TESTEUR.id, "Connexions")) === "Une connexion par jour au plus, comptées depuis le " + jourCoach(CX_TEST.premiere), await titre(page, TESTEUR.id, "Connexions"));
-    const Th = await ligneClient(page, F.IDS.c1);
-    ok("D : Thomas (client hors de l'interrupteur des visites) : « 5 » et " + quandCourt(CX_THOMAS.derniere) + ", info-bulle « comptées depuis le " + jourCoach(CX_THOMAS.premiere) + " »", Th["Connexions"] === "5" && Th["Dernière connexion"] === quandCourt(CX_THOMAS.derniere) && (await titre(page, F.IDS.c1, "Connexions")) === "Une connexion par jour au plus, comptées depuis le " + jourCoach(CX_THOMAS.premiere), JSON.stringify([Th["Connexions"], Th["Dernière connexion"]]) + " " + (await titre(page, F.IDS.c1, "Connexions")));
-    const Le = await ligneClient(page, LEA), Ma = await ligneClient(page, MARC), Ka = await ligneClient(page, KARIM);
-    ok("D : prospecte Léa : « 3 » et " + quandCourt(CX_LEA.derniere) + " ; Marc (prospect, jamais connecté depuis) : « 0 » et « aucune »", Le["Connexions"] === "3" && Le["Dernière connexion"] === quandCourt(CX_LEA.derniere) && Ma["Connexions"] === "0" && Ma["Dernière connexion"] === "aucune" && /Aucune connexion notée/.test(await titre(page, MARC, "Connexions")), JSON.stringify([Le["Connexions"], Le["Dernière connexion"], Ma["Connexions"], Ma["Dernière connexion"]]));
-    ok("D : Karim (client, jamais connecté depuis, sans ligne) : « 0 » et « aucune »", Ka["Connexions"] === "0" && Ka["Dernière connexion"] === "aucune", JSON.stringify([Ka["Connexions"], Ka["Dernière connexion"]]));
-    ok("D : la phrase sous le tableau explique les deux colonnes", /« Connexions » : le nombre de jours où il a ouvert l'app connecté/.test(await texte(page, "#vue")) && /« Dernière connexion » : la date et l'heure/.test(await texte(page, "#vue")), "");
-    ok("D : la table est lue une fois par le coach, sans écriture", db.cxLectures.length === 1 && db.cxLectures[0].par === COACH.id && db.cxLectures[0].m === "GET" && db.ecritures.length === 0, JSON.stringify(db.cxLectures) + " " + resume(db));
-    ok("D : aucune connexion notée pour le coach", notees(db).length === 0, JSON.stringify(notees(db)));
+    const { page } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]", Object.assign({ fuseau: FUSEAU }, theme === "clair" ? { stockage: { mhx_theme: "light" } } : {}));
+    const t = " (" + theme + ")";
+    if (theme === "sombre") {
+      const th = await page.$$eval(".tb-clients-table thead th", l => l.map(e => e.textContent.trim()));
+      ok("A : en-têtes : Client, Retour, Note, Smiley, Visite, puis « Connexions » et « Dernière connexion », puis « Jours actifs » et « Activité »", egal(th.slice(0, ORDRE_TH.length), ORDRE_TH) && th.length === 17, JSON.stringify(th));
+      const o = await ordreTd(page, TESTEUR.id), o2 = await ordreTd(page, LEA);
+      ok("A : les cellules d'une ligne suivent le même ordre (compte de test, prospecte Léa)", egal(o.slice(0, ORDRE_TD.length), ORDRE_TD) && egal(o2, o), JSON.stringify(o));
+      const T = await ligneClient(page, TESTEUR.id), Th = await ligneClient(page, F.IDS.c1), Le = await ligneClient(page, LEA), Ma = await ligneClient(page, MARC);
+      ok("A : date courte à l'heure du coach : compte de test « " + quandCourt(CX_TEST.derniere) + " », Thomas « " + quandCourt(CX_THOMAS.derniere) + " », Léa « " + quandCourt(CX_LEA.derniere) + " »",
+        T["Dernière connexion"] === quandCourt(CX_TEST.derniere) && Th["Dernière connexion"] === quandCourt(CX_THOMAS.derniere) && Le["Dernière connexion"] === quandCourt(CX_LEA.derniere) && COURT.test(T["Dernière connexion"]), JSON.stringify([T["Dernière connexion"], Th["Dernière connexion"], Le["Dernière connexion"]]));
+      ok("A : nombres et « aucune » inchangés (12, 5, 3 ; Marc « 0 » et « aucune »), info-bulle inchangée", T["Connexions"] === "12" && Th["Connexions"] === "5" && Le["Connexions"] === "3" && Ma["Connexions"] === "0" && Ma["Dernière connexion"] === "aucune" && (await titre(page, TESTEUR.id, "Connexions")) === "Une connexion par jour au plus, comptées depuis le " + jourCoach(CX_TEST.premiere), JSON.stringify([T["Connexions"], Th["Connexions"], Le["Connexions"], Ma]));
+    }
+    const g0 = await geo(page, [TESTEUR.id, F.IDS.c1], 0);
+    await capture(page, "A-1280-" + theme + "-debut");
+    ok("A : 1280 px : « Connexions » et « Dernière connexion » visibles sans défiler" + t, g0.cx.droite <= g0.cx.cadre, JSON.stringify(g0.cx));
+    ok("A : la colonne du nom et l'en-tête « Client » sont fixes (sticky), du fond du panneau" + t, g0.noms.every(n => n && n.pos === "sticky" && n.fond === g0.panneau) && g0.th.pos === "sticky" && g0.th.fond === g0.panneau && !TRANSPARENT.test(g0.panneau), JSON.stringify([g0.noms, g0.th, g0.panneau]));
+    const g1 = await geo(page, [TESTEUR.id, F.IDS.c1], "fin");
+    await capture(page, "A-1280-" + theme + "-fin");
+    ok("A : tableau défilé jusqu'au bout : les noms restent à gauche, par-dessus les autres colonnes" + t, (!g1.deborde || g1.defile > 0) && g1.noms.every(n => n && Math.abs(n.gauche) <= 1 && n.dessus) && Math.abs(g1.th.gauche) <= 1 && g1.noms[1].nom === "Thomas Démo", JSON.stringify(g1));
+    /* la ligne survolée : la cellule du nom prend le même fond que les autres cellules de la ligne */
+    const survol = await page.evaluate(id => { const tr = document.querySelector(`#tb-clients [data-ouvrir="${id}"]`).closest("tr"); const td = tr.querySelectorAll("td"); const r = td[td.length - 2].getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; }, F.IDS.c1);
+    await page.mouse.move(survol.x, survol.y); await attendre(page, 250);
+    const fonds = await page.evaluate(id => { const td = document.querySelector(`#tb-clients [data-ouvrir="${id}"]`).closest("tr").querySelectorAll("td"); return [getComputedStyle(td[0]).backgroundColor, getComputedStyle(td[td.length - 2]).backgroundColor]; }, F.IDS.c1);
+    ok("A : ligne survolée : la cellule du nom a le fond des autres cellules, opaque" + t, fonds[0] === fonds[1] && !TRANSPARENT.test(fonds[0]) && fonds[0] !== g0.panneau, JSON.stringify(fonds));
+    await page.mouse.move(1, 1);
+    ok("A : la page ne déborde pas en largeur" + t, !(await deborde(page)), await largeur(page));
+    if (theme === "sombre") {
+      await aller(page, "#/prospects", 1800); await filtre(page, "tous");
+      const fl = await faits(page, LEA);
+      ok("A : page Prospects : la carte de Léa garde la date longue (" + quandCoach(CX_LEA.derniere) + ")", fl["Dernière connexion"] === quandCoach(CX_LEA.derniere), JSON.stringify(fl));
+      ok("A : aucune écriture, aucune connexion notée pour le coach", db.ecritures.length === 0 && notees(db).length === 0, resume(db));
+    }
   });
 
-  await bloc("D. Mes clients sur téléphone", async () => {
+  /* =================== B. Mes clients sur tablette =================== */
+  await bloc("B. Mes clients sur tablette", async () => {
     const db = avecLignes(decor());
-    const { page } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]", { viewport: MOBILE, fuseau: FUSEAU });
-    const lbl = await page.$eval(`#tb-clients [data-ouvrir="${TESTEUR.id}"]`, bt => { const tr = bt.closest("tr"); const g = l => { const td = tr.querySelector(`td[data-l="${l}"]`); return td ? { t: td.textContent.trim(), avant: getComputedStyle(td, "::before").content, vis: td.getBoundingClientRect().width > 0 } : null; }; return [g("Connexions"), g("Dernière connexion")]; });
-    ok("D : téléphone 390 px : les deux lignes de la carte portent leur libellé et leur valeur", lbl[0] && lbl[1] && lbl[0].vis && lbl[1].vis && /Connexions/.test(lbl[0].avant) && /Dernière connexion/.test(lbl[1].avant) && lbl[0].t === "12", JSON.stringify(lbl));
-    ok("D : … la page ne déborde pas en largeur", !(await deborde(page)), await largeur(page));
+    const { page } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]", { viewport: TABLETTE, fuseau: FUSEAU });
+    const ids = [TESTEUR.id, F.IDS.c1, LEA];
+    const g0 = await geo(page, ids, 0);
+    await capture(page, "B-820-debut");
+    ok("B : 820 px : le tableau est plus large que l'écran (il défile de côté)", g0.deborde, JSON.stringify(g0));
+    const g1 = await geo(page, ids, 300);
+    await capture(page, "B-820-milieu");
+    ok("B : défilé de 300 px : les noms (compte de test, Thomas, Léa) et « Client » restent à gauche, par-dessus", g1.defile > 0 && g1.noms.every(n => n && Math.abs(n.gauche) <= 1 && n.dessus) && Math.abs(g1.th.gauche) <= 1 && g1.noms[2].nom === "Léa Martin", JSON.stringify(g1));
+    const g2 = await geo(page, ids, "fin");
+    await capture(page, "B-820-fin");
+    ok("B : défilé jusqu'au bout : les noms restent lisibles, et « Ouvrir » (dernière colonne) reste cliquable", g2.defile > g1.defile && g2.noms.every(n => n && Math.abs(n.gauche) <= 1 && n.dessus && n.ouvrir), JSON.stringify(g2));
+    ok("B : la page ne déborde pas en largeur", !(await deborde(page)), await largeur(page));
   });
 
-  /* =================== E. page Prospects =================== */
-  await bloc("E. page Prospects", async () => {
+  /* =================== C. Mes clients sur téléphone =================== */
+  await bloc("C. Mes clients sur téléphone", async () => {
     const db = avecLignes(decor());
-    const { page } = await coachSur(b, db, "#/prospects", "#pr-liste", { fuseau: FUSEAU });
-    await filtre(page, "tous");
-    const fl = await faits(page, LEA), fm = await faits(page, MARC), o = fl._ordre || [];
-    ok("E : carte de Léa : « Connexions 3 » et « Dernière connexion " + quandCoach(CX_LEA.derniere) + " », juste après les jours actifs", fl["Connexions"] === "3" && fl["Dernière connexion"] === quandCoach(CX_LEA.derniere) && o.indexOf("Connexions") === o.indexOf("Jours actifs (30 j)") + 1 && o.indexOf("Dernière connexion") === o.indexOf("Connexions") + 1, JSON.stringify(fl));
-    ok("E : carte de Marc (jamais connecté depuis) : « Connexions 0 » et « Dernière connexion aucune »", fm["Connexions"] === "0" && fm["Dernière connexion"] === "aucune", JSON.stringify(fm));
-    ok("E : la phrase d'aide explique les deux lignes", /« Connexions » : le nombre de jours où il a ouvert l'app connecté/.test(await texte(page, "#vue")), "");
-    ok("E : aucune écriture, aucune connexion notée pour le coach", db.ecritures.length === 0 && notees(db).length === 0, resume(db));
+    const { page } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]", { viewport: TEL, fuseau: FUSEAU });
+    await page.$eval(`#tb-clients [data-ouvrir="${TESTEUR.id}"]`, bt => bt.closest("tr").scrollIntoView({ block: "center" }));
+    await capture(page, "C-375");
+    const c = await page.$eval(`#tb-clients [data-ouvrir="${TESTEUR.id}"]`, bt => { const tr = bt.closest("tr"); return { l: Array.from(tr.querySelectorAll("td")).filter(td => td.getBoundingClientRect().height > 0).map(td => ({ l: td.dataset.l, avant: getComputedStyle(td, "::before").content, t: td.textContent.trim() })), pos: getComputedStyle(tr.querySelector("td")).position }; });
+    const L = c.l.map(x => x.l), i = L.indexOf("Dernière visite");
+    ok("C : 375 px : carte du compte de test : « Dernière visite », « Connexions », « Dernière connexion », « Jours actifs (30 j) », à la suite, avec leur libellé", i > 0 && egal(L.slice(i, i + 4), ORDRE_TD.slice(4, 8)) && c.l.slice(i, i + 4).every(x => x.avant.includes(x.l)), JSON.stringify(c.l.slice(i, i + 4)));
+    ok("C : … « 12 » et la date courte « " + quandCourt(CX_TEST.derniere) + " » ; rien de fixe dans les cartes", c.l[i + 1].t === "12" && c.l[i + 2].t === quandCourt(CX_TEST.derniere) && c.pos === "static", JSON.stringify([c.l[i + 1], c.l[i + 2], c.pos]));
+    ok("C : la page ne déborde pas en largeur", !(await deborde(page)), await largeur(page));
   });
 
-  /* =================== F. rien côté client ni prospect =================== */
-  await bloc("F. rien côté client ni prospect", async () => {
-    const db = avecLignes(decor());
-    const { page } = await contexte(b, TESTEUR, db);
-    await page.goto(URL0 + "#/accueil"); await pret(page, "#acc-vue h1");
-    const vus = [];
-    for (const h of ["#/accueil", "#/programme", "#/suivi", "#/mensurations", "#/profil"]) { await aller(page, h, 1100); vus.push(norm(await page.evaluate(() => document.body.innerText))); }
-    ok("F : compte de test (client) : aucune de ses pages ne parle du compteur ; il ne lit jamais la table", vus.every(t => !TEXTE_CX.test(t)) && db.cxLectures.length === 0, (vus.find(t => TEXTE_CX.test(t)) || "").slice(0, 160) + " " + JSON.stringify(db.cxLectures));
-    const { page: pl } = await contexte(b, qui(LEA, "lea@exemple.fr"), db);
-    await pl.goto(URL0); await pret(pl, "#vue");
-    const vl = [];
-    for (const h of ["#/accueil", "#/formation", "#/calculateur", "#/profil", "#/clients", "#/prospects"]) { await aller(pl, h, 1100); vl.push(norm(await pl.evaluate(() => document.body.innerText))); }
-    ok("F : prospecte Léa (même en tapant #/clients ou #/prospects) : rien du compteur, aucune lecture de la table", vl.every(t => !TEXTE_CX.test(t)) && db.cxLectures.length === 0, (vl.find(t => TEXTE_CX.test(t)) || "").slice(0, 160) + " " + JSON.stringify(db.cxLectures));
-  });
-
-  /* =================== G. l'interrupteur des visites ne change rien =================== */
-  await bloc("G. interrupteur des visites « tous » et « off »", async () => {
-    await avec([['suivi_visites_clients: "test"', 'suivi_visites_clients: "tous"']], async () => {
-      const db = avecLignes(decor());
-      const { page } = await contexte(b, THOMAS, db);
-      await page.goto(URL0); await pret(page, "#acc-vue h1"); await attendre(page, 600);
-      ok("G : « tous » : Thomas est noté à l'ouverture, une fois", notees(db, F.IDS.c1).length === 1, JSON.stringify(notees(db)));
-      const { page: pc } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]", { fuseau: FUSEAU });
-      const Th = await ligneClient(pc, F.IDS.c1);
-      ok("G : « tous » : Mes clients montre ses connexions (" + db.cx[F.IDS.c1].nombre + " : ses 5, plus son ouverture d'aujourd'hui si c'est un autre jour)", Th["Connexions"] === String(db.cx[F.IDS.c1].nombre) && db.cx[F.IDS.c1].nombre >= 5 && /^\d{2}\/\d{2}(\/\d{4})? \d{2}:\d{2}$/.test(Th["Dernière connexion"] || ""), JSON.stringify([Th["Connexions"], Th["Dernière connexion"]]));
-    });
-    await avec([['suivi_visites_clients: "test"', 'suivi_visites_clients: "off"']], async () => {
-      const db = avecLignes(decor());
-      const { page } = await contexte(b, TESTEUR, db);
-      await page.goto(URL0 + "#/accueil"); await pret(page, "#acc-vue h1"); await attendre(page, 600);
-      const { page: pl } = await contexte(b, qui(LEA, "lea@exemple.fr"), db);
-      await pl.goto(URL0); await pret(pl, "#vue"); await attendre(pl, 600);
-      ok("G : « off » : le compte de test est noté quand même, la prospecte Léa aussi", notees(db, TESTEUR.id).length === 1 && notees(db, LEA).length === 1, JSON.stringify(notees(db)));
-      const { page: pc } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]");
-      const T = await ligneClient(pc, TESTEUR.id), Le = await ligneClient(pc, LEA);
-      ok("G : « off » : Mes clients montre les connexions du compte de test (" + db.cx[TESTEUR.id].nombre + ") ; Léa : 4 (ses 3, plus son ouverture d'aujourd'hui)", T["Connexions"] === String(db.cx[TESTEUR.id].nombre) && db.cx[TESTEUR.id].nombre >= 12 && Le["Connexions"] === "4", JSON.stringify([T["Connexions"], Le["Connexions"]]));
-    });
-  });
-
-  /* =================== H. données piégées =================== */
-  await bloc("H. données piégées", async () => {
+  /* =================== D. la connexion ouvre la page d'arrivée =================== */
+  const connecter = async (page, email) => { await page.waitForSelector("#c-email"); await page.fill("#c-email", email); await page.fill("#c-mdp", "motdepasse1"); await page.click("#c-go"); await pret(page, "#vue"); await attendre(page, 800); };
+  await bloc("D. connexion : page d'arrivée", async () => {
     const db = decor();
-    db.cx[TESTEUR.id] = { user_id: TESTEUR.id, nombre: "12" + PIEGE, derniere: PIEGE, premiere: "pas une date" };
-    db.cx[LEA] = { user_id: LEA, nombre: -4, derniere: 1234, premiere: null };
-    db.cx[MARC] = { user_id: MARC, nombre: 2.7, derniere: { a: 1 }, premiere: [PIEGE] };
-    db.cx["pas-un-compte"] = { user_id: "pas-un-compte", nombre: 99, derniere: avant(H), premiere: avant(J) };
-    const { page } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]", { fuseau: FUSEAU });
-    const T = await ligneClient(page, TESTEUR.id), Le = await ligneClient(page, LEA), Ma = await ligneClient(page, MARC);
-    const tout = norm(await page.evaluate(() => document.body.innerText));
-    ok("H : nombre et dates piégés : « 0 » / « aucune » (nombre décimal : arrondi à 2), rien de brut, rien d'injecté", T["Connexions"] === "0" && T["Dernière connexion"] === "aucune" && Le["Connexions"] === "0" && Le["Dernière connexion"] === "aucune" && Ma["Connexions"] === "2" && Ma["Dernière connexion"] === "aucune" && !RIEN_DE_BRUT.test(tout) && !(await injecte(page)), JSON.stringify([T["Connexions"], T["Dernière connexion"], Le["Connexions"], Ma["Connexions"], Ma["Dernière connexion"]]));
-    await aller(page, "#/prospects", 1800); await filtre(page, "tous");
-    ok("H : … la page Prospects s'affiche aussi, sans injection", (await page.$$("#pr-liste .sc-carte")).length > 0 && !(await injecte(page)) && !RIEN_DE_BRUT.test(norm(await page.evaluate(() => document.body.innerText))), "");
+    db.connexions["test@exemple.fr"] = TESTEUR.id; db.connexions["lea@exemple.fr"] = LEA; db.connexions["coach@exemple.fr"] = COACH.id;
+    /* le compte de test (client) : l'appareil n'a plus de session, l'adresse garde la Speed Formation (dernière page ouverte) */
+    const x1 = await contexte(b, null, db);
+    await x1.page.goto(URL0 + "#/formation"); await x1.page.waitForSelector("#c-email");
+    ok("D : appareil sans session, adresse #/formation : l'écran de connexion", !!(await x1.page.$("#c-go")) && (await x1.page.evaluate(() => location.hash)) === "#/formation", await x1.page.evaluate(() => location.href));
+    await connecter(x1.page, "test@exemple.fr");
+    const d1 = await ou(x1.page);
+    ok("D : client connecté par mot de passe : son accueil, pas la Speed Formation", d1.courant === "accueil" && ["", "#/accueil"].includes(d1.hash) && !!(await x1.page.$("#acc-vue")), JSON.stringify(d1));
+    ok("D : … la connexion est notée pour lui (une fois)", notees(db, TESTEUR.id).length === 1 && db.tokens.includes("password"), JSON.stringify(notees(db)));
+    /* « Se déconnecter » depuis la Speed Formation, puis connexion : l'accueil (comme avant la v57) */
+    await aller(x1.page, "#/formation", 1500);
+    const f1 = await ou(x1.page);
+    await x1.page.click("#deco"); await x1.page.waitForSelector("#c-email"); await attendre(x1.page, 300);
+    await connecter(x1.page, "test@exemple.fr");
+    const d2 = await ou(x1.page);
+    ok("D : « Se déconnecter » depuis la Speed Formation, puis connexion : l'accueil", f1.courant === "formation" && d2.courant === "accueil", JSON.stringify([f1, d2]));
+    /* « Me reconnecter » : session perdue en cours d'utilisation, sur la Speed Formation */
+    await aller(x1.page, "#/formation", 1500);
+    await x1.page.evaluate(() => sessionPerdue()); await x1.page.waitForSelector("#session-perdue button");
+    await x1.page.click("#session-perdue button"); await x1.page.waitForSelector("#c-email"); await attendre(x1.page, 300);
+    await connecter(x1.page, "test@exemple.fr");
+    const d3 = await ou(x1.page);
+    ok("D : « Me reconnecter » (session perdue sur la Speed Formation) : retour sur la Speed Formation", d3.courant === "formation" && d3.hash === "#/formation", JSON.stringify(d3));
+    /* un prospect : sa page d'arrivée (jamais la Speed Formation gardée dans l'adresse) */
+    const x2 = await contexte(b, null, db);
+    await x2.page.goto(URL0 + "#/formation"); await connecter(x2.page, "lea@exemple.fr");
+    const d4 = await ou(x2.page), dp = await x2.page.evaluate(() => outilParDefaut()).catch(() => "?");
+    ok("D : prospecte, adresse #/formation : sa page d'arrivée (" + dp + ")", d4.courant === dp && d4.courant !== "formation" && !String(d4.hash).includes("formation"), JSON.stringify([d4, dp]));
+    /* le coach : adresse #/prospects gardée : son tableau de bord */
+    const x3 = await contexte(b, null, db);
+    await x3.page.goto(URL0 + "#/prospects"); await connecter(x3.page, "coach@exemple.fr");
+    const d5 = await ou(x3.page);
+    ok("D : coach, adresse #/prospects : son tableau de bord", d5.courant === "tableau" && !!(await x3.page.$("#tb-vue")), JSON.stringify(d5));
+    ok("D : aucune écriture dans les données pendant ces connexions (hors activité du prospect)", ecrDonnees(db).filter(e => e.outil !== "activite").length === 0, resume(db));
   });
 
   /* =================== Z. rien vers l'extérieur =================== */

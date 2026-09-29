@@ -1,6 +1,7 @@
 /* ---------------------- DÉMARRAGE ---------------------- */
 let premiereFois = false;
 let appPrete = false;   // v48 : demarrage termine (une session refusee ensuite renvoie a la connexion, avec un mot)
+let reconnexion = false;   // v57 : « Me reconnecter » (session perdue en cours d'utilisation) : la connexion garde la page ouverte
 function sessionPerdue(){
   /* la page n'est PAS remplacee : un texte en cours (feedback, notes privees) reste a l'ecran et peut etre copie ;
      un bandeau propose de se reconnecter. Les saisies gardees sur l'appareil repartiront apres reconnexion. */
@@ -10,7 +11,7 @@ function sessionPerdue(){
   d.innerHTML = `<span>${esc(trad("Ta session a pris fin (déconnexion depuis un autre appareil ?). Ce qui est à l'écran reste là : copie ton texte si besoin, puis reconnecte-toi. Ce que tu avais saisi avant est gardé sur cet appareil et repartira ; ce que tu saisis maintenant n'est plus enregistré."))}</span><button type="button" class="btn">${esc(trad("Me reconnecter"))}</button>`;
   document.body.appendChild(d);
   d.querySelector("button").addEventListener("click", () => {
-    appPrete = false;
+    appPrete = false; reconnexion = true;
     window.removeEventListener("hashchange", routeDepuisAdresse);
     portail("connexion");
     setTimeout(() => { const z = $("co-err"); if (z){ z.className = "erreur"; z.textContent = trad("Reconnecte-toi : ce que tu avais saisi est gardé sur cet appareil et repartira."); } }, 60);

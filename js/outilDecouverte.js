@@ -528,7 +528,13 @@ const Connexions = {
     return { suivi: true, lue: true, nombre: n, derniere: instant(o.derniere), depuis: instant(o.premiere) };
   },
   texteNombre(c){ return !c || !c.lue ? "—" : String(c.nombre); },
-  texteDerniere(c){ return !c || !c.lue ? "—" : (c.derniere && Nouveautes.quand(c.derniere)) || "aucune"; },
+  /* court (v57, colonne de Mes clients) : « 29/09 10:53 », l'annee seulement si ce n'est pas l'annee en cours */
+  texteDerniere(c, court){ return !c || !c.lue ? "—" : (c.derniere && (court ? this.quandCourt(c.derniere) : Nouveautes.quand(c.derniere))) || "aucune"; },
+  quandCourt(v){
+    const d = new Date(v), j = Decouverte.dateLocale(v); if (isNaN(d) || !j) return "";
+    const date = j.slice(0, 4) === String(new Date().getFullYear()) ? dateFr(j).replace(/\/\d{4}$/, "") : dateFr(j);
+    return date + " " + String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+  },
   aide(c){
     if (!c || !c.suivi) return "Connexions non suivies pour ce compte";
     if (!c.lue) return "Connexions indisponibles pour le moment";

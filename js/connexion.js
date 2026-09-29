@@ -149,6 +149,11 @@ function portail(mode){
         err("Si un compte existe pour cet email, tu vas recevoir un lien.", true);
       } else {
         await Auth.connecter(email, mdp);
+        /* v57 : une connexion ouvre la page d'arrivee (accueil ; tableau de bord du coach), comme apres « Se deconnecter ».
+           L'adresse gardait la derniere page ouverte sur l'appareil quand la session avait pris fin sans deconnexion
+           (session expiree, « Rester connecte » decoche, navigateur ferme) : on arrivait sur la Speed Formation.
+           Sauf « Me reconnecter » (session perdue en cours d'utilisation) : retour sur la page qu'on avait sous les yeux. */
+        if (!reconnexion){ try { history.replaceState(null, "", location.pathname + location.search); } catch(e){} }
         location.reload();
       }
     } catch(e){

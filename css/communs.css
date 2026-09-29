@@ -325,6 +325,13 @@ a.tb-tuile:hover{border-color:var(--accent-line)}
   .tb-clients-table{display:block}
   .tb-clients-table thead{display:none}
 }
+/* v57 : sur un ecran plus large, le tableau defile de cote : la colonne du nom reste a l'ecran. En « separate » : avec
+   « collapse », les bordures d'une cellule collee restent en arriere pendant le defilement */
+@media (min-width:721px){
+  .tb-clients-table{border-collapse:separate;border-spacing:0}
+  .tb-clients-table th:first-child,#tb-clients td:first-child{position:sticky;left:0;z-index:1;background:var(--surface);box-shadow:inset -1px 0 0 var(--line)}
+  #tb-clients tr:hover td:first-child{background:var(--sunken)}
+}
 
 /* --- bilan hebdomadaire --- */
 .checkin-q{margin-bottom:16px}
