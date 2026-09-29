@@ -104,7 +104,7 @@ Tout est bon : mets le lien sur Instagram (bio, story, réponse automatique) : `
 ## Étape 7 — Après l'ouverture : ce que tu surveilles
 
 **Chaque jour, la première semaine**
-- **Prospects** (https://lcsmhx.github.io/mhx-plateforme/#/prospects) : les nouveaux inscrits et leurs 3 réponses. **Mes clients** (https://lcsmhx.github.io/mhx-plateforme/#/clients) : rien ne change pour tes clients.
+- **Prospects** (https://lcsmhx.github.io/mhx-plateforme/#/prospects) : les nouveaux inscrits et leurs 3 réponses. **Mes clients** (https://lcsmhx.github.io/mhx-plateforme/#/clients) : rien ne change pour tes clients. Si l'écran de connexion s'affiche d'abord (session terminée), tu arrives ensuite sur le tableau de bord : ouvre alors Prospects ou Mes clients dans le menu.
 - **À chaque réservation** reçue sur Calendly : coche « Bilan réservé » dans la fiche du prospect. Après le bilan, si la personne s'engage : **« Passer client »** (Mes clients → Comptes).
 - **Ta boîte mhx.coaching@gmail.com** : les demandes de déblocage (réponds vite) et les demandes sur les données (réponds dans le mois au plus).
 - **Faux comptes** (noms étranges, rafales) ou adresse de quelqu'un d'autre : supprime ce compte de prospect (Mes clients → Comptes), jamais un client. S'il y en a beaucoup : referme (étape 8) et dis-le à Claude. N'active pas le CAPTCHA seul dans Supabase : il bloquerait la connexion de tes clients.

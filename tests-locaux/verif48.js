@@ -299,7 +299,8 @@ const ecrituresIntake = (db, uid) => db.ecritures.filter(e => e.outil === "intak
     await attendre(page, 600);
     db.refreshMode = "ok";
     await page.fill("#c-email", "t@e.fr"); await page.fill("#c-mdp", "motdepasse1"); await page.click("#c-go"); await attendre(page, 3500);
-    ok("… après reconnexion, la saisie repart et arrive (stress 2), rien ne reste", String(intakeDe(db, F.IDS.c1).stress) === "2" && (await aucuneCopie(page)), JSON.stringify(intakeDe(db, F.IDS.c1).stress));
+    const ici = await page.evaluate(() => ({ courant: typeof courant !== "undefined" ? courant : null, hash: location.hash })).catch(() => ({}));
+    ok("… après reconnexion, retour sur la page ouverte (Profil, v57 : « Me reconnecter » garde la page), la saisie repart et arrive (stress 2), rien ne reste", ici.courant === "profil" && ici.hash === "#/profil" && String(intakeDe(db, F.IDS.c1).stress) === "2" && (await aucuneCopie(page)), JSON.stringify([ici, intakeDe(db, F.IDS.c1).stress]));
     await c.close();
   }
   {
