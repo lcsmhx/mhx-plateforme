@@ -253,6 +253,13 @@ const Commercial = {
      v56 : + nombre de connexions et dernière connexion (date et heure).
      v59 : « Bilan » suit l'analyse (comme le motif) : ta coche en cours, la case à vérifier, sinon la coche ou la case
      d'avant l'appel (« …, avant l'appel »). */
+  /* v62 (brief V2, L) : « 3 (dernier : page verrouillée Nutrition) », « 0 » */
+  clicsTexte(C){
+    const cl = Decouverte.clics(C);
+    if (!cl.length) return "0";
+    const der = cl.reduce((x, y) => (Date.parse(y.date) || 0) >= (Date.parse(x.date) || 0) ? y : x), nom = Decouverte.nomOrigine(der.source);
+    return cl.length + (nom ? " (dernier : " + nom + ")" : "");
+  },
   carteHTML(l, a){
     const p = l.p, nom = Clients.nom(p), dc = l.dc || {}, B = a.bilan || {};
     const dt = v => { const d = Decouverte.dateLocale(v); return d ? dateFr(d) : ""; };
@@ -260,7 +267,8 @@ const Commercial = {
     const faits = [["Bilan", a.coche ? "réservé le " + dt(a.coche) : a.caseAVerifier ? "à vérifier (case cochée le " + dt(a.caseAVerifier) + ")"
         : B.coach ? "coché le " + dt(B.coach) + ", avant l'appel" : B.source === "prospect" ? "case cochée le " + dt(B.case) + ", avant l'appel" : "pas réservé"],
       ["Newsletter", l.newsletter && l.newsletter.oui ? "oui" : "non"], ["Dernière visite", Activite.texteVisite(l.visites)], ["Jours actifs (30 j)", Activite.texteJours(l.visites)],
-      ["Connexions", Connexions.texteNombre(l.connexions)], ["Dernière connexion", Connexions.texteDerniere(l.connexions)]];   // v56
+      ["Connexions", Connexions.texteNombre(l.connexions)], ["Dernière connexion", Connexions.texteDerniere(l.connexions)],   // v56
+      ["Clics plan d'action", this.clicsTexte(l.ch)]];   // v62 (brief V2, L) : nombre de clics et dernière origine
     return `<article class="sc-carte${a.urgent ? " urgent" : ""}" data-uid="${esc(p.id)}">
       <div class="sc-tete">${Clients.avatar(nom)}<div class="sc-nom"><b>${esc(nom)}</b><small>${esc(this.sousTitre(p, a))}</small></div>${this.pastille(a)}${this.pastilleBilan(B, a)}${a.illisible ? '<span class="pastille attention">données illisibles</span>' : ""}</div>
       ${dc.email ? `<p class="sc-infos">${esc(dc.email)}</p>` : ""}
@@ -531,6 +539,70 @@ const Nouveautes = {
    que le badge du tableau de bord), issues, relances, recherche, filtres, tri, export CSV, Nouveautés, compteur
    (inscrits → 3 questions → bilans réservés → clients) et la liste newsletter (export CSV).
    ------------------------------------------------------------------ */
+/* ------------------------------------------------------------------
+   v62 (brief V2, L) — MESURE : les clics sur les boutons « Récupérer mon plan d'action », écran par écran (page Prospects ;
+   simple, sans score ni classement). Calculé à l'affichage depuis les lignes déjà chargées (Clients.resumer : profils,
+   clés intake et challenge) : rien n'est lu en plus, rien n'est écrit. Anciens codes d'origine lus comme les nouveaux
+   (Decouverte.origine). « Plus tard » : cta.plus_tard (depuis la v62), et le choix « plus_tard » de la page du plan
+   d'action enregistré avant (intake.bilan_propose), compté une seule fois. Exclus des chiffres : le compte du coach, les
+   comptes de test de CONFIG.nouveautes.comptes_test et les comptes dont l'email contient « +test » (email connu dès sa
+   première réponse au questionnaire) ; la case « Inclure les comptes de test » (décochée) les remet. Aucune donnée de santé.
+   ------------------------------------------------------------------ */
+const Mesure = {
+  periode: "7", avecTest: false,
+  DEBUT: "2026-09-28",
+  PERIODES: [["7", "7 derniers jours"], ["30", "30 derniers jours"], ["tout", "Depuis le 28/09/2026"]],
+  estTest(l){
+    const e = l && l.dc && typeof l.dc.email === "string" ? l.dc.email.toLowerCase() : "", ids = (CONFIG.nouveautes && CONFIG.nouveautes.comptes_test) || [];
+    return e.indexOf("+test") > -1 || !!(l && l.p && ids.indexOf(l.p.id) > -1);
+  },
+  debut(){
+    if (this.periode === "tout") return new Date(this.DEBUT + "T00:00:00").getTime();
+    const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - (Math.max(1, +this.periode || 7) - 1)); return d.getTime();
+  },
+  dans(v, t0){ const t = typeof v === "string" ? Date.parse(v) : NaN; return !isNaN(t) && t >= t0 && t <= Date.now() + 5 * 60000; },
+  /* les comptes passés par l'inscription gratuite (comme le compteur), hors coach, hors comptes de test (sauf la case) */
+  comptes(lignes){
+    const passe = l => l.p.statut === "prospect" || !!l.ch || !!(l.dc && (l.dc.court_le || l.dc.court_debut)) || !!(l.suivi && (l.suivi.client_le || l.suivi.issue));
+    return (lignes || []).filter(l => l && l.p && l.p.role !== "coach" && passe(l) && (this.avecTest || !this.estTest(l)));
+  },
+  calcul(lignes){
+    const t0 = this.debut(), L = this.comptes(lignes), ecrans = {}, cliqueurs = new Set();
+    const ecran = k => ecrans[k] || (ecrans[k] = { clics: 0, tard: 0 });
+    let clics = 0;
+    L.forEach(l => {
+      Decouverte.clics(l.ch).forEach(c => { if (!this.dans(c.date, t0)) return; clics++; cliqueurs.add(l.p.id); ecran(Decouverte.origine(c.source) || "inconnue").clics++; });
+      const pt = Decouverte.plusTardDe(l.ch);
+      pt.forEach(c => { if (this.dans(c.date, t0)) ecran(Decouverte.origine(c.source) || "inconnue").tard++; });
+      const b = l.dc && l.dc.bilan;
+      if (b && b.choix === "plus_tard" && this.dans(b.le, t0) && !pt.some(c => Decouverte.origine(c.source) === "apres_questionnaire")) ecran("apres_questionnaire").tard++;
+    });
+    const table = Object.keys(ecrans).map(k => ({ k, nom: k === "inconnue" ? "origine inconnue (avant la v50)" : Decouverte.nomOrigine(k) || k, clics: ecrans[k].clics, tard: ecrans[k].tard }))
+      .sort((a, b) => b.clics - a.clics || b.tard - a.tard || a.nom.localeCompare(b.nom, "fr"));
+    return { inscrits: L.filter(l => this.dans(l.p.cree_le, t0)).length, questionnaires: L.filter(l => l.dc && this.dans(l.dc.court_le, t0)).length,
+             cliqueurs: cliqueurs.size, clics, cases: L.filter(l => this.dans(Decouverte.reserve(l.ch), t0)).length, table,
+             exclus: (lignes || []).filter(l => l && l.p && l.p.role !== "coach" && this.estTest(l)).length };
+  },
+  html(lignes){
+    const M = this.calcul(lignes), n = v => String(v);
+    const tuile = (lbl, val) => `<div class="tile"><div class="t-lbl">${esc(lbl)}</div><div class="t-val readout">${esc(n(val))}</div></div>`;
+    return `<div class="seance-c-tete"><h2>Mesure</h2><select id="pr-mesure-periode" aria-label="Période de la mesure">${this.PERIODES.map(p => `<option value="${p[0]}"${p[0] === this.periode ? " selected" : ""}>${esc(p[1])}</option>`).join("")}</select></div>
+      <div class="tiles" id="pr-mesure-chiffres">${tuile("Nouveaux inscrits", M.inscrits)}${tuile("Questionnaires terminés", M.questionnaires)}${tuile("Ont cliqué au moins une fois", M.cliqueurs)}${tuile("Clics", M.clics)}${tuile("« J'ai déjà choisi mon créneau »", M.cases)}</div>
+      <h3>Clics par écran</h3>
+      ${M.table.length ? `<table class="pr-mesure-t" id="pr-mesure-table"><thead><tr><th>Écran</th><th>Clics</th><th>Plus tard</th></tr></thead><tbody>${M.table.map(r => `<tr data-origine="${esc(r.k)}"><td>${esc(r.nom)}</td><td>${esc(n(r.clics))}</td><td>${esc(n(r.tard))}</td></tr>`).join("")}</tbody></table>`
+        : `<p class="note" id="pr-mesure-vide">Aucun clic ni « Plus tard » sur cette période.</p>`}
+      <label class="coche" style="margin-top:12px"><input type="checkbox" id="pr-mesure-test"${this.avecTest ? " checked" : ""}> Inclure les comptes de test</label>
+      <p class="note" style="margin:8px 0 0">${this.avecTest ? "Comptes de test inclus" : "Exclus : ton compte et " + M.exclus + " compte" + (M.exclus > 1 ? "s" : "") + " de test (email avec « +test », ou compte de test de l'app)"}. Un inscrit qui n'a pas encore répondu au questionnaire n'a pas d'email connu ici. Les réservations par écran se lisent dans Calendly (origine « utm_content »).</p>`;
+  },
+  monter(boite, lignes){
+    if (!boite) return;
+    boite.innerHTML = this.html(lignes);
+    const p = boite.querySelector("#pr-mesure-periode"), t = boite.querySelector("#pr-mesure-test");
+    if (p) p.addEventListener("change", () => { this.periode = p.value; this.monter(boite, lignes); });
+    if (t) t.addEventListener("change", () => { this.avecTest = t.checked; this.monter(boite, lignes); });
+  }
+};
+
 const outilProspects = {
   id: "prospects",
   cle: null,
@@ -611,6 +683,7 @@ const outilProspects = {
         ${tuile("Perdus", cmpt("perdu"), "30 derniers jours")}
         ${tuile("Absents", cmpt("absent"), "30 derniers jours")}
       </div></section>
+      <section class="panel" id="pr-mesure"></section>
       <section class="panel">
         <div class="seg sc-filtres" role="group" aria-label="Filtrer">${[["a_traiter", "À traiter"], ["issues", "Appel fait"], ["tous", "Tous"]].map(f => `<button type="button" data-filtre="${f[0]}" aria-pressed="${this.filtre === f[0]}">${esc(f[1])} <span class="meta">${tous.filter(x => this.statutOk(x, f[0])).length}</span></button>`).join("")}</div>
         <div class="pr-outils">
@@ -644,6 +717,7 @@ const outilProspects = {
       UI.toast(liste.length + " prospect" + (liste.length > 1 ? "s" : "") + " exporté" + (liste.length > 1 ? "s" : "") + ".", "ok");
     });
     this.majListe(zone);
+    Mesure.monter(zone.querySelector("#pr-mesure"), this.lignes);   // v62 (brief V2, L)
     this.monterNewsletter(zone.querySelector("#pr-newsletter"));
     if (typeof Nouveautes !== "undefined") Nouveautes.monter(zone.querySelector("#pr-nouveautes"), this.lignes, true, this.tCharge);
   },

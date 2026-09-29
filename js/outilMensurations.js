@@ -480,9 +480,18 @@ const outilMensurations = {
     $("dstart").value = D.dstart || "";
     $("pstart").value = D.pstart == null ? "" : D.pstart;
     $("dstart").addEventListener("input", function(){ D.dstart = this.value; sauver(); });
+    let avaitDepart = Decouverte.peseeFaite(D);   // v62 (H) : le poids de depart saisi ici compte aussi comme premiere pesee
     $("pstart").addEventListener("input", function(){ const v = parseFloat(this.value); D.pstart = (isFinite(v) && v >= 30 && v <= 300) ? v : null; sauver(); tout(); });
+    $("pstart").addEventListener("change", function(){ const avait = avaitDepart; avaitDepart = Decouverte.peseeFaite(D); premierePesee(avait, () => this.closest(".panel")); });
 
+    /* v62 (brief V2, H) : la toute premiere pesee du prospect (aucune avant) : l'invitation, sous ce qui vient d'etre
+       enregistre (une seule fois) */
+    const premierePesee = (avait, ancre) => {
+      if (avait || !Decouverte.peseeFaite(D) || !Auth.estProspect() || Store.idConsulte) return;
+      Invitations.declencher("declic_premiere_pesee", carte => { const a = ancre(); if (!a) return false; a.after(carte); return true; });
+    };
     $("add").addEventListener("click", async () => {
+      const avait = Decouverte.peseeFaite(D);
       const sem = parseInt($("e-sem").value, 10);
       const poids = parseFloat($("e-poids").value);
       if (!isFinite(sem)){ flash("msg","Indique un numéro de semaine."); return; }
@@ -511,6 +520,7 @@ const outilMensurations = {
       if (sauver() === false) return;   // refusee (message deja affiche) : la saisie reste dans le formulaire
       viderFormulaire(); dessinerTable(); tout();
       flash("msg", `Semaine ${sem} enregistrée.`);
+      premierePesee(avait, () => $("mens-saisie"));
     });
 
     construireZones(); construireSaisie(); construireChips(); dessinerTable(); viderFormulaire(); tout();

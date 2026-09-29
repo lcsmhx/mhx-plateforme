@@ -119,6 +119,12 @@ label.dc-opt{position:relative;display:block;margin:0;cursor:pointer;text-transf
 label.dc-precision{margin:12px 0 6px;text-transform:none;letter-spacing:normal;font-size:13px;color:var(--ink-2)}
 .dc-q.manque legend{color:var(--bad)}
 #dc-voir.inactif{opacity:.55}
+/* v62 (brief V2, H) : les invitations au bon moment — carte a bordure doree (comme l'etape de l'accueil), integree a la
+   page sous ce qui l'a declenchee ; meme bouton, meme petite ligne et meme « Plus tard » que la page du plan d'action */
+.invitation{border-color:var(--accent-line)}
+.invitation h2{margin-top:0}
+.inv-objectif{font-weight:600;margin:0 0 8px;overflow-wrap:anywhere}
+.inv-texte{margin:0}
 /* v52 : l'action mise en avant de l'accueil du prospect (son calcul, puis sa pesee de depart) */
 .dc-etape{border-color:var(--accent-line)}
 .dc-etape .btn{min-height:44px}

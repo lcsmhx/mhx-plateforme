@@ -566,3 +566,7 @@ label.objectif{cursor:pointer;text-transform:none;letter-spacing:0;font-weight:4
 .toast.sortie{opacity:0;transform:translateY(8px);transition:opacity var(--doux),transform var(--doux)}
 body.figee{overflow:hidden}
 
+/* v62 (brief V2, L) : bloc « Mesure » de la page Prospects (coach) — clics par écran, tableau simple qui tient à 320 px */
+#pr-mesure select{width:auto;max-width:100%}
+.pr-mesure-t th,.pr-mesure-t td{padding:8px 6px;text-align:left;overflow-wrap:anywhere}
+.pr-mesure-t th:not(:first-child),.pr-mesure-t td:not(:first-child){text-align:right;white-space:nowrap;width:1%}
