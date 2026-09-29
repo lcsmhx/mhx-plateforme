@@ -31,7 +31,8 @@ const Commercial = {
      Ancien client redevenu prospect (client_le) : une coche ou une case d'avant son passage en client ne compte plus.
      v59 : la case cochée par le prospect APRÈS ta dernière décision datée (coche ou retrait) compte de nouveau (à vérifier) :
      il a repris un créneau après que tu as décidé ; une case d'avant reste une info. Décision sans date (clé bilan_le posée
-     sans historique) : la case ne compte plus, comme avant.
+     sans historique) : la case ne compte plus, comme avant. Une case datée dans le futur (horloge du prospect en avance,
+     plus de 5 min, comme les Nouveautés) ne passe pas devant ta décision : sinon « Retirer » ne la ferait jamais tomber.
      → { reserve, le (instant retenu), coach (instant de la coche ou null), decide, retire (dernier retrait, s'il n'est
          pas recoché), case (case du prospect retenue), caseCompte (v59 : la case compte, même face à une coche), source:
          "coach" | "prospect" | null } */
@@ -47,15 +48,19 @@ const Commercial = {
     const cs = Decouverte.reserve(C), caseP = garde(cs) ? cs : null;
     /* v59 : la date de ta dernière décision, sur les valeurs gardées seulement (comme coche et hist) */
     const tDecision = [coche].concat(hist.map(e => e.le)).map(t).filter(x => x != null).reduce((m, x) => Math.max(m, x), -Infinity);
-    const caseCompte = !!caseP && (!decide || (isFinite(tDecision) && t(caseP) > tDecision));
+    const tCase = caseP ? t(caseP) : null, caseFutur = tCase != null && tCase > Date.now() + 5 * 60000;
+    const caseCompte = !!caseP && (!decide || (!caseFutur && isFinite(tDecision) && tCase > tDecision));
     const parCase = !coche && caseCompte;
     return { reserve: !!coche || parCase, le: coche || (parCase ? caseP : null), coach: coche, decide, retire, case: caseP, caseCompte, source: coche ? "coach" : parCase ? "prospect" : null };
   },
   bilanLigne(l){ try { return this.bilan(l && l.suivi, l && l.ch, l && l.p); } catch(e){ return { reserve: false, le: null, coach: null, decide: false, retire: null, case: null, caseCompte: false, source: null }; } },
+  /* v59 : une date (ta coche, sa case) d'avant l'issue « Absent » / « Perdu » en cours : elle a servi à cet appel (analyse,
+     et le bloc « Découverte » de la fiche) */
+  avantIssue(S, v){ S = this.suivi(S); const tI = S.issue === "perdu" || S.issue === "absent" ? this.instant(S.issue_le) : null, tv = this.instant(v); return tI != null && tv != null && tv <= tI; },
   /* ce qui le rend « à traiter » (texte court : tableau de bord, cartes) */
   MOTIFS: { signe: "Signé : à passer client", case: "A coché « J'ai réservé » : à vérifier", absent: "Absent à l'appel : repropose-lui un créneau", clic: "A cliqué « Réserver mon bilan », pas de bilan coché", nouveau: "Vient de s'inscrire",
     perdu: "Perdu : relance-le", appel: "Bilan réservé : l'appel a-t-il eu lieu ?" },   // v59 : + absent, perdu, appel (perdu et appel : avec depuis quand, motifTexte)
-  AIDE: "À traiter : les prospects inscrits depuis moins de 48 h, et ceux qui ont cliqué « Réserver mon bilan » ou coché « J'ai réservé », tant que tu n'as ni coché « Bilan réservé », ni indiqué l'issue de l'appel, ni relancé depuis ; les « Signé » à passer client ; les « Absent » et les « Perdu » depuis 30 jours, tant que tu ne les as pas relancés depuis l'appel ; les bilans cochés depuis plus de 7 jours sans issue.",
+  AIDE: "À traiter : les prospects inscrits depuis moins de 48 h, et ceux qui ont cliqué « Réserver mon bilan » ou coché « J'ai réservé », tant que tu n'as ni coché « Bilan réservé », ni indiqué l'issue de l'appel, ni relancé depuis ; les « Signé » à passer client ; les « Absent » (sans limite de durée) et les « Perdu » depuis 30 jours ou plus, tant que tu ne les as pas relancés depuis l'appel ; les bilans cochés depuis plus de 7 jours sans issue.",
   /* v59 : l'ordre de « À traiter » (page Prospects ; le tableau de bord a sa table, outilTableau.RANG_PROSPECTS) ; sans
      urgence ensuite : bilan coché 7, absent 8, perdu 9, le reste 10 (et une analyse de secours), signé 11 */
   RANG: { signe: 0, case: 1, absent: 2, clic: 3, nouveau: 4, appel: 5, perdu: 6 },
@@ -63,8 +68,8 @@ const Commercial = {
      S = suivi_prospect, activite = derniere saisie du prospect (une visite, cle activite, compte), D = son questionnaire.
      → { etat (issue ou "en_cours"), issue, raisons[], action, urgent, motif (signe | case | absent | clic | nouveau | appel |
          perdu), rang, recence, jour, questionnaire, reserve, bilan (Commercial.bilan), coche (v59 : ta coche qui attend un
-         appel, ou null), caseAVerifier (v59 : la case du prospect à vérifier, ou null), issueDepuis, clics, relances,
-         derniereRelance, inscritHeures }
+         appel, ou null), caseAVerifier (v59 : la case du prospect à vérifier, ou null), issueDepuis, issueDatee (v59 : l'issue
+         a une date lisible), clics, relances, derniereRelance, inscritHeures }
      « À traiter » (urgent), sans température : « Signé » et toujours prospect (30 jours au plus) ; sinon, sans issue et
      sans bilan coché par le coach : la case « J'ai réservé » du prospect (à vérifier), un clic « Réserver mon bilan »
      sans relance depuis, ou une inscription de moins de CONFIG.suivi.urgence_heures (48 h) sans relance.
@@ -99,7 +104,7 @@ const Commercial = {
     /* v59 : ta coche « Bilan réservé » et la case « J'ai réservé » d'AVANT l'issue « Absent » / « Perdu » ont servi à cet
        appel : elles ne font plus attendre d'appel (ni « Prépare le bilan », ni « l'appel a-t-il eu lieu ? ») ni vérifier de
        réservation, même s'il revient en cours après un clic. La case compte si elle suit ta dernière décision (caseCompte). */
-    const avantAppel = v => (issue === "perdu" || issue === "absent") && tIssue != null && instant(v) != null && instant(v) <= tIssue;
+    const avantAppel = v => this.avantIssue(S, v);
     const coche = B.coach && !avantAppel(B.coach) ? B.coach : null, dCoche = coche ? this.depuis(coche) : null;
     const caseAv = B.caseCompte && !coche && B.case && !avantAppel(B.case) ? B.case : null;
     /* « Perdu » ou « Absent », puis il reclique « Réserver » ou recoche « J'ai réservé » (retour_jours) : il revient dans la
@@ -161,21 +166,22 @@ const Commercial = {
     else if (heures != null && heures < cfg.urgence_heures) action = siPasRelance("Il vient de s'inscrire : envoie-lui un DM de bienvenue.");
     else if (!fait) action = siPasRelance("DM : aide-le à répondre à ses 3 questions (1 minute).");
     else action = siPasRelance("Propose-lui le bilan en DM quand tu le sens prêt.");
-    /* v59 : table RANG (signé, case, absent, clic, nouveau, appel, perdu), puis les autres (voir RANG) */
-    const rang = motif ? this.RANG[motif] : coche ? 7 : issue === "absent" ? 8 : issue === "perdu" ? 9 : issue === "signe" ? 11 : 10;
+    /* v59 : table RANG (signé, case, absent, clic, nouveau, appel, perdu), puis les autres (voir RANG) ; un « Signé » oublié
+       reste le dernier, même avec sa coche d'avant l'appel */
+    const rang = motif ? this.RANG[motif] : issue === "signe" ? 11 : coche ? 7 : issue === "absent" ? 8 : issue === "perdu" ? 9 : 10;
     /* recence : a rang egal, le plus recemment actif d'abord (on lui ecrit pendant qu'il est dans le coup) */
     return { etat: issue || "en_cours", issue, raisons, action, urgent: !!motif, motif, rang, recence: actif == null ? 9999 : actif, jour, questionnaire: fait, reserve, bilan: B,
-             coche, caseAVerifier: caseAv, issueDepuis: issue ? issueDepuis : null, clics, relances: relances.length, derniereRelance: relance, inscritHeures: heures };
+             coche, caseAVerifier: caseAv, issueDepuis: issue ? issueDepuis : null, issueDatee: !!issue && tIssue != null, clics, relances: relances.length, derniereRelance: relance, inscritHeures: heures };
   },
   /* v59 : une analyse impossible (erreur imprévue) ne fait plus disparaître le prospect de la page Prospects (liste,
      en-tête, filtres, CSV) ni du tableau de bord : une analyse de secours, sans urgence, « données illisibles : ouvre sa
      fiche », au rang le plus bas des prospects en cours (10) ; sa carte n'a que « Ouvrir la fiche » (aucune écriture sur un
-     suivi qu'on n'a pas su lire) */
+     suivi qu'on n'a pas su lire) ; son bilan s'affiche comme Commercial.bilan le lit (coche, sinon case à vérifier) */
   secours(l){
     const p = (l && l.p) || {}, t = this.instant(p.cree_le), B = this.bilanLigne(l);
     let fait = false; try { fait = Decouverte.questionnaireFait(l && l.dc); } catch(e){ fait = false; }
     return { etat: "en_cours", issue: null, raisons: ["Suivi commercial illisible : ouvre sa fiche pour vérifier."], action: "Données illisibles : ouvre sa fiche pour vérifier.",
-             urgent: false, motif: null, rang: 10, recence: 9999, jour: null, questionnaire: fait, reserve: !!B.reserve, bilan: B, coche: null, caseAVerifier: null, issueDepuis: null,
+             urgent: false, motif: null, rang: 10, recence: 9999, jour: null, questionnaire: fait, reserve: !!B.reserve, bilan: B, coche: B.coach || null, caseAVerifier: B.source === "prospect" ? B.case : null, issueDepuis: null, issueDatee: false,
              clics: 0, relances: 0, derniereRelance: null, inscritHeures: t == null ? null : Math.max(0, (Date.now() - t) / 3600000), illisible: true };
   },
   analyseLigne(l){ try { return this.analyse(l.p, l.ch, l.suivi, l.activite, l.dc); } catch(e){ console.warn("[MHX] suivi commercial illisible", e); try { return this.secours(l); } catch(e2){ return null; } } },
@@ -203,16 +209,25 @@ const Commercial = {
   /* la pastille de l'issue de l'appel (SIGNÉ / PERDU / ABSENT) ; rien tant qu'il n'y a pas d'issue */
   pastille(a){ return a && a.issue && this.ETATS[a.issue] ? `<span class="pastille ${this.CLASSES[a.issue] || ""}" title="${esc(a.raisons.join(" "))}">${esc(this.ETATS[a.issue])}</span>` : ""; },
   pastilleLigne(l){ return this.pastille(this.analyseLigne(l)); },
-  pastilleBilan(B){ return B && B.reserve ? `<span class="pastille ok" title="${B.coach ? "Bilan réservé : coché par toi" : "A coché « J'ai réservé mon bilan » : à vérifier"}">bilan réservé</span>` : ""; },
+  /* v59 : avec l'analyse (a : carte, fiche), l'info-bulle suit ce qui compte : la case à vérifier, ou la coche / la case
+     d'avant l'appel ; sans analyse (bloc « Découverte »), comme avant */
+  pastilleBilan(B, a){
+    if (!(B && B.reserve)) return "";
+    const avant = !!a && !a.coche && !a.caseAVerifier;
+    const titre = a && a.caseAVerifier ? "A coché « J'ai réservé mon bilan » : à vérifier" : B.coach ? "Bilan réservé : coché par toi" + (avant ? ", avant l'appel" : "")
+      : avant ? "A coché « J'ai réservé mon bilan », avant l'appel" : "A coché « J'ai réservé mon bilan » : à vérifier";
+    return `<span class="pastille ok" title="${titre}">bilan réservé</span>`;
+  },
   bouton(p, act, txt, cls){ return `<button type="button" class="btn petit${cls === "principal" ? "" : " ghost"}" data-sc="${act}" data-uid="${esc(p.id)}" data-nom="${esc(Clients.nom(p))}">${esc(txt)}</button>`; },
   /* fiche = boutons du panneau « Suivi commercial » de la fiche : + « Bilan réservé » / « Retirer « Bilan réservé » »
      (v53, un clic, sans fenêtre de confirmation, annulable), tant qu'aucune issue n'est indiquée.
      v59 : après « Absent » ou « Perdu », il a repris un créneau : « Bilan réservé (nouveau créneau) », même écriture (l'issue
      et l'historique gardés), il redevient en cours jusqu'à la prochaine issue ; la coche d'avant l'appel ne compte plus
-     (« Bilan réservé » de nouveau). « Signé » : rien. */
+     (« Bilan réservé » de nouveau). « Signé » : rien. Une issue sans date lisible (ancienne donnée) : pas de nouveau
+     créneau (la coche ne saurait pas la suivre) ; « Annuler » reste. */
   boutons(p, a, fiche){
     const b = (act, txt, cls) => this.bouton(p, act, txt, cls), B = a.bilan || {};
-    const bilan = !fiche || a.issue === "signe" ? "" : a.issue ? b("bilan", "Bilan réservé (nouveau créneau)", "principal")
+    const bilan = !fiche || a.issue === "signe" ? "" : a.issue ? (a.issueDatee ? b("bilan", "Bilan réservé (nouveau créneau)", "principal") : "")
       : a.coche ? b("bilan_non", "Retirer « Bilan réservé »")
       : b("bilan", "Bilan réservé", "principal") + (B.source === "prospect" || a.caseAVerifier ? b("bilan_non", "Retirer « Bilan réservé »") : "");
     return (fiche ? "" : b("fiche", "Ouvrir la fiche")) + bilan + (a.issue
@@ -227,16 +242,19 @@ const Commercial = {
   /* v53 (chantier 4) — la carte d'un prospect (page Prospects) : l = sa ligne (Clients.resumer), a = son analyse.
      Date d'inscription, email, ses 3 réponses (Problème / Ce qui l'a bloqué / Dans 3 mois ; anciennes réponses : dans sa
      fiche), bilan réservé ou pas, newsletter oui / non, dernière visite, jours actifs (30 j), prochaine action, boutons.
-     v56 : + nombre de connexions et dernière connexion (date et heure). */
+     v56 : + nombre de connexions et dernière connexion (date et heure).
+     v59 : « Bilan » suit l'analyse (comme le motif) : ta coche en cours, la case à vérifier, sinon la coche ou la case
+     d'avant l'appel (« …, avant l'appel »). */
   carteHTML(l, a){
     const p = l.p, nom = Clients.nom(p), dc = l.dc || {}, B = a.bilan || {};
     const dt = v => { const d = Decouverte.dateLocale(v); return d ? dateFr(d) : ""; };
     const reponses = [["Problème", dc.probleme || ""], ["Ce qui l'a bloqué", !dc.ancien && dc.obstacle ? "« " + Decouverte.extrait(dc.obstacle, 90) + " »" : ""], ["Dans 3 mois", dc.projection ? "« " + Decouverte.extrait(dc.projection, 100) + " »" : ""]].filter(x => x[1]);
-    const faits = [["Bilan", B.coach ? "réservé le " + dt(B.coach) : B.source === "prospect" ? "à vérifier (case cochée le " + dt(B.case) + ")" : "pas réservé"],
+    const faits = [["Bilan", a.coche ? "réservé le " + dt(a.coche) : a.caseAVerifier ? "à vérifier (case cochée le " + dt(a.caseAVerifier) + ")"
+        : B.coach ? "coché le " + dt(B.coach) + ", avant l'appel" : B.source === "prospect" ? "case cochée le " + dt(B.case) + ", avant l'appel" : "pas réservé"],
       ["Newsletter", l.newsletter && l.newsletter.oui ? "oui" : "non"], ["Dernière visite", Activite.texteVisite(l.visites)], ["Jours actifs (30 j)", Activite.texteJours(l.visites)],
       ["Connexions", Connexions.texteNombre(l.connexions)], ["Dernière connexion", Connexions.texteDerniere(l.connexions)]];   // v56
     return `<article class="sc-carte${a.urgent ? " urgent" : ""}" data-uid="${esc(p.id)}">
-      <div class="sc-tete">${Clients.avatar(nom)}<div class="sc-nom"><b>${esc(nom)}</b><small>${esc(this.sousTitre(p, a))}</small></div>${this.pastille(a)}${this.pastilleBilan(B)}${a.illisible ? '<span class="pastille attention">données illisibles</span>' : ""}</div>
+      <div class="sc-tete">${Clients.avatar(nom)}<div class="sc-nom"><b>${esc(nom)}</b><small>${esc(this.sousTitre(p, a))}</small></div>${this.pastille(a)}${this.pastilleBilan(B, a)}${a.illisible ? '<span class="pastille attention">données illisibles</span>' : ""}</div>
       ${dc.email ? `<p class="sc-infos">${esc(dc.email)}</p>` : ""}
       ${reponses.length ? `<ul class="sc-reponses">${reponses.map(([k, v]) => `<li><span>${esc(k)}</span> ${esc(v)}</li>`).join("")}</ul>` : `<p class="sc-infos sc-sans">${dc.ancien ? "Anciennes réponses : dans sa fiche." : "Pas encore de réponse à ses 3 questions."}</p>`}
       <ul class="sc-faits">${faits.map(([k, v]) => `<li><span>${esc(k)}</span> <b>${esc(v)}</b></li>`).join("")}</ul>
@@ -255,7 +273,7 @@ const Commercial = {
     return `<p class="note" style="margin:10px 0 4px">Historique</p><ul class="sc-raisons sc-histo">${h.filter(lib).map(e => `<li>${esc(lib(e) + " — " + dateFr(e.le) + (typeof e.note === "string" && e.note ? " — " + e.note : ""))}</li>`).join("")}</ul>`;
   },
   ficheHTML(p, a, S){
-    return `<section class="panel sc-fiche${a.urgent ? " urgent" : ""}"><div class="seance-c-tete"><h2>Suivi commercial</h2>${this.pastille(a)}${this.pastilleBilan(a.bilan)}</div>
+    return `<section class="panel sc-fiche${a.urgent ? " urgent" : ""}"><div class="seance-c-tete"><h2>Suivi commercial</h2>${this.pastille(a)}${this.pastilleBilan(a.bilan, a)}</div>
       ${a.urgent ? `<p class="sc-motif"><span class="pastille mauvais">à traiter</span> ${esc(this.motifTexte(a))}</p>` : ""}
       <p class="sc-action"><b>Prochaine action :</b> ${esc(a.action)}</p>
       <ul class="sc-raisons">${a.raisons.map(x => `<li>${esc(x)}</li>`).join("")}</ul>
@@ -641,7 +659,9 @@ const outilProspects = {
     return "﻿" + [tete].concat(lignes).map(ligne => ligne.map(cell).join(";")).join("\r\n") + "\r\n";
   },
   dateCsv(v){ return typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v) ? dateFr(Decouverte.dateLocale(v) || v.slice(0, 10)) : ""; },
-  /* export CSV des prospects filtrés (v53 : colonnes à jour, sans statut ni score) */
+  /* export CSV des prospects filtrés (v53 : colonnes à jour, sans statut ni score ; v59 : « Bilan réservé » et sa date
+     suivent l'analyse, comme la carte : « oui », « à vérifier (case du prospect) », sinon « oui, avant l'appel » ou « case du
+     prospect, avant l'appel ») */
   TETE_CSV: ["Nom", "Email", "Inscrit le", "Problème", "Ce qui l'a bloqué", "Dans 3 mois", "Questionnaire", "Bilan réservé", "Bilan réservé le", "Case « J'ai réservé » (prospect)", "Newsletter", "Dernière visite", "Jours actifs (30 j)", "Clics « Réserver mon bilan »", "Dernier clic", "Issue", "Relances", "Prochaine action"],
   csv(liste){
     const dt = v => this.dateCsv(v);
@@ -649,7 +669,8 @@ const outilProspects = {
       const dc = l.dc || {}, B = a.bilan || {}, v = l.visites; let r = null; try { r = Decouverte.resume(l.p, l.ch, dc); } catch(e){ r = null; }
       const q = a.questionnaire ? "rempli le " + dt(dc.court_le) : (dc.repondues || 0) + "/" + (dc.nb_questions || (CONFIG.decouverte.questions || []).length) + " réponses";
       return [Clients.nom(l.p), dc.email || "", dt(l.p.cree_le), dc.probleme || "", dc.ancien ? "" : (dc.obstacle || ""), dc.projection || "", q,
-              B.reserve ? (B.coach ? "oui" : "à vérifier (case du prospect)") : "non", B.le ? dt(B.le) : "", B.case ? dt(B.case) : "",
+              a.coche ? "oui" : a.caseAVerifier ? "à vérifier (case du prospect)" : B.coach ? "oui, avant l'appel" : B.source === "prospect" ? "case du prospect, avant l'appel" : "non",
+              dt(a.coche || a.caseAVerifier || B.le || ""), B.case ? dt(B.case) : "",
               l.newsletter && l.newsletter.oui ? "oui" : "non", v && v.suivi ? (v.derniere ? dt(v.derniere) : "aucune") : "", v && v.suivi ? v.jours30 : "",
               r ? r.clics : 0, r ? dt(r.dernierClic) : "", a.issue ? Commercial.ISSUES[a.issue] : "", a.relances, a.action];
     });

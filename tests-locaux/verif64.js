@@ -5,9 +5,11 @@
       relancé depuis l'appel (sans limite de durée), « Perdu » depuis 30 jours ou plus sans relance depuis l'appel, bilan
       coché depuis plus de 7 jours sans issue (« l'appel a-t-il eu lieu ? ») —, toujours prospect ; ce qui les fait sortir
       (relance après l'issue ; Signé, Perdu ou Absent pour le bilan à conclure) ; une relance faite AVANT l'appel ne fait
-      plus « attendre » ; la coche et la case d'avant l'issue ne comptent plus ; coche après l'issue : de nouveau en cours,
-      sans limite de durée (retirée : de nouveau Absent) ; la case du prospect cochée APRÈS la dernière décision du coach
-      compte de nouveau ; l'ordre : signé, case, absent, clic, nouveau, appel, perdu, puis tout ce qui n'est pas à traiter ;
+      plus « attendre » ; la coche et la case d'avant l'issue ne comptent plus ; coche après l'issue (Absent ou Perdu) : de
+      nouveau en cours, sans limite de durée (retirée : de nouveau Absent / Perdu) ; une issue sans date lisible : pas de
+      « nouveau créneau » ; la case du prospect cochée APRÈS la dernière décision du coach compte de nouveau (pas une case
+      datée dans le futur) ; l'ordre : signé, case, absent, clic, nouveau, appel, perdu, puis tout ce qui n'est pas à traiter
+      (un « Signé » oublié le dernier, même coché avant l'appel) ; le texte d'aide ;
    B. page Prospects : les 3 motifs dans « À traiter » (ordre, tuile, filtre, en-tête, cartes avec le motif et la prochaine
       action, aide), les autres issues hors de la liste ; « J'ai relancé » (Absent, Perdu) et « Perdu » (bilan à conclure) :
       chacun sort de la liste, une seule écriture de suivi_prospect chacun (PATCH conditionnel, contenu exact) ;
@@ -16,13 +18,16 @@
       la liste de la page Prospects (même définition) ; « Ouvrir » sur un bilan à conclure : sa fiche, Signé / Perdu / Absent ;
    D. fiche d'un Absent qui reprend un créneau : « Bilan réservé (nouveau créneau) » en un clic, sans fenêtre, une écriture
       EXACTE (issue et historique gardés), de nouveau en cours (« Prépare le bilan ») ; la tuile des Absents le garde ;
-      « Retirer » le remet Absent ; un Signé n'a pas ce bouton ;
+      « Retirer » le remet Absent ; un Signé n'a pas ce bouton ; un Perdu : le même bouton, la même écriture exacte ;
    E. la case « J'ai réservé » cochée par le prospect après le retrait du coach : à vérifier (À traiter, Nouveautés, filtre,
       compteur, fiche) ; une case d'avant le retrait reste une info ; « Retirer » de nouveau la fait tomber ;
    F. export CSV (prospects et newsletter) : une cellule qui commence par des espaces puis = + - @ est neutralisée
       (apostrophe) ; espaces seuls, nombres et dates inchangés ;
    G. une analyse qui lève une erreur ne fait plus disparaître le prospect : carte « données illisibles » (seul bouton :
       « Ouvrir la fiche »), en-tête, filtres, CSV et tableau de bord le comptent, sans urgence, au rang le plus bas (10) ;
+   H. la coche ou la case d'avant l'appel, et la case à vérifier après l'appel : la ligne « Bilan » de la carte, l'info-bulle
+      « bilan réservé », les colonnes « Bilan réservé » du CSV et le bloc « Découverte » de la fiche suivent l'analyse (plus
+      « réservé le … » ni « à vérifier » contraires au motif) ; sans issue : inchangés ;
    Z. aucun appel vers l'extérieur.
    Infrastructure (serveur, faux Supabase, personnes, décor) reprise de verif58 : rien ne part vers la vraie base (routage
    par NOM D'HÔTE) ; règles de la base reproduites ; chaque écriture appliquée en mémoire et notée, avec sa condition maj_le.
@@ -287,7 +292,7 @@ function prospect(k, prenom, nom, o){
 }
 const REP = { probleme: "Perdre du gras", obstacle: "Le manque de temps", projection: "Courir 5 km" };
 const ev = (type, valeur, le, note) => Object.assign({ type }, valeur != null ? { valeur } : {}, { le }, note != null ? { note } : {});
-const ALICE = PID(1), MARC = PID(2), BRUNO = PID(3), VICTOR = PID(4), OMAR = PID(5), HUGO = PID(6), PAUL = PID(7), ZOE = PID(8), INES = PID(9), LEA = PID(10), NADIA = PID(11), ROSE = PID(12);
+const ALICE = PID(1), MARC = PID(2), BRUNO = PID(3), VICTOR = PID(4), OMAR = PID(5), HUGO = PID(6), PAUL = PID(7), ZOE = PID(8), INES = PID(9), LEA = PID(10), NADIA = PID(11), ROSE = PID(12), SARA = PID(13), TINA = PID(14);
 const P = {
   /* Absente il y a 2 jours ; « Bilan réservé » coché AVANT l'appel (il y a 5 jours) ; jamais relancée */
   alice: () => prospect(1, "Alice", "Absente", { cree: 9 * J, q: 9 * J, rep: REP, email: "alice@exemple.fr",
@@ -322,9 +327,15 @@ const P = {
   nadia: () => prospect(11, "Nadia", "Recoche", { cree: 20 * J, q: 20 * J, rep: REP, email: "nadia@exemple.fr", caseP: 2 * J,
     suivi: { version: 1, bilan_le: null, historique: [ev("bilan", "reserve", MIDI(10)), ev("bilan", "annule", MIDI(5))] }, suiviLe: MIDI(5) }),
   rose: () => prospect(12, "Rose", "Avant", { cree: 20 * J, q: 20 * J, rep: REP, email: "rose@exemple.fr", caseP: 6 * J,
-    suivi: { version: 1, bilan_le: null, historique: [ev("bilan", "reserve", MIDI(10)), ev("bilan", "annule", MIDI(5))] }, suiviLe: MIDI(5) })
+    suivi: { version: 1, bilan_le: null, historique: [ev("bilan", "reserve", MIDI(10)), ev("bilan", "annule", MIDI(5))] }, suiviLe: MIDI(5) }),
+  /* bloc H : « Bilan réservé » coché il y a 8 jours, Absente il y a 5 jours, puis sa case « J'ai réservé » cochée il y a 20 h
+     (après l'appel : à vérifier) ; Tina : case cochée il y a 6 jours, Absente il y a 4 jours, puis un clic il y a 20 h */
+  sara: () => prospect(13, "Sara", "Recase", { cree: 20 * J, q: 20 * J, rep: REP, email: "sara@exemple.fr", caseP: 20 * H,
+    suivi: { version: 1, bilan_le: MIDI(8), issue: "absent", issue_le: MIDI(5), note: "", historique: [ev("bilan", "reserve", MIDI(8)), ev("issue", "absent", MIDI(5), "")] }, suiviLe: MIDI(5) }),
+  tina: () => prospect(14, "Tina", "Reclic", { cree: 20 * J, q: 20 * J, rep: REP, email: "tina@exemple.fr", caseP: 6 * J, clics: [20 * H],
+    suivi: { version: 1, issue: "absent", issue_le: MIDI(4), note: "", historique: [ev("issue", "absent", MIDI(4), "")] }, suiviLe: MIDI(4) })
 };
-const NOM = { [ALICE]: "Alice", [MARC]: "Marc", [BRUNO]: "Bruno", [VICTOR]: "Victor", [OMAR]: "Omar", [HUGO]: "Hugo", [PAUL]: "Paul", [ZOE]: "Zoé", [INES]: "Inès", [LEA]: "Léa", [NADIA]: "Nadia", [ROSE]: "Rose" };
+const NOM = { [ALICE]: "Alice", [MARC]: "Marc", [BRUNO]: "Bruno", [VICTOR]: "Victor", [OMAR]: "Omar", [HUGO]: "Hugo", [PAUL]: "Paul", [ZOE]: "Zoé", [INES]: "Inès", [LEA]: "Léa", [NADIA]: "Nadia", [ROSE]: "Rose", [SARA]: "Sara", [TINA]: "Tina" };
 const noms = l => (l || []).map(u => NOM[u] || (u === TESTEUR.id ? "compte de test" : u === F.IDS.c3 ? "Julien" : String(u).slice(-4))).join(", ");
 /* le décor : fixtures (Thomas, Sarah, Julien) + compte de test (opts.test !== false) + les prospects du bloc ; opts.sans : comptes retirés */
 function decor(opts){
@@ -344,6 +355,7 @@ async function coachSur(b, db, hash, sel, opts){
 const uids = page => page.$$eval("#pr-liste .sc-carte", l => l.map(e => e.dataset.uid)).catch(() => []);
 const carte = (page, uid) => page.$eval(`#pr-liste .sc-carte[data-uid="${uid}"]`, e => e.textContent.replace(/[  ]/g, " ").replace(/\s+/g, " ").trim()).catch(() => "");
 const motifCarte = (page, uid) => page.$eval(`#pr-liste .sc-carte[data-uid="${uid}"] .sc-motif`, e => e.textContent.replace(/[  ]/g, " ").replace(/\s+/g, " ").trim()).catch(() => "");
+const titreBilan = (page, uid) => page.$$eval(`#pr-liste .sc-carte[data-uid="${uid}"] .sc-tete .pastille.ok`, l => { const e = l.find(x => x.textContent.trim() === "bilan réservé"); return e ? e.getAttribute("title") : null; }).catch(() => null);
 const boutonsCarte = (page, uid) => page.$$eval(`#pr-liste .sc-carte[data-uid="${uid}"] [data-sc]`, l => l.map(e => e.dataset.sc)).catch(() => []);
 const boutonsFiche = page => page.$$eval("#fiche-commercial [data-sc]", l => l.map(e => e.dataset.sc + "=" + e.textContent.trim())).catch(() => []);
 const filtre = async (page, f) => { await page.click(`[data-filtre="${f}"]`); await attendre(page, 400); };
@@ -420,12 +432,20 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
         cocheApres: a(p(40), null, S({ bilan_le: M(20), issue: "absent", issue_le: M(25), historique: [iss("absent", M(25)), bil("reserve", M(20))] }), null, Q(40)),
         cocheApresRetiree: a(p(40), null, S({ bilan_le: null, issue: "absent", issue_le: M(25), historique: [iss("absent", M(25)), bil("reserve", M(20)), bil("annule", M(18))] }), null, Q(40)),
         cocheApresRecente: a(p(40), null, S({ bilan_le: H(2), issue: "absent", issue_le: M(3), historique: [iss("absent", M(3)), bil("reserve", H(2))] }), null, Q(40)),
+        /* … de même après « Perdu » (il y a 35 jours) : coche il y a 20 jours, en cours ; retirée : de nouveau PERDU à relancer */
+        cochePerdu: a(p(60), null, S({ bilan_le: M(20), issue: "perdu", issue_le: M(35), historique: [iss("perdu", M(35)), bil("reserve", M(20))] }), null, Q(60)),
+        cochePerduRetiree: a(p(60), null, S({ bilan_le: null, issue: "perdu", issue_le: M(35), historique: [iss("perdu", M(35)), bil("reserve", M(20)), bil("annule", M(18))] }), null, Q(60)),
+        /* une issue sans date lisible (ancienne donnée) : pas de « nouveau créneau » (la coche ne saurait pas la suivre), « Annuler » reste */
+        boutonsSansDate: (() => { try { return Commercial.boutons({ id: "x", prenom: "X", nom: "Y", statut: "prospect" }, Commercial.analyse(p(20), null, S({ issue: "absent", issue_le: "x" }), null, Q(20)), true); } catch (e) { return "ERREUR " + e.message; } })(),
         /* point C */
         caseApresRetrait: bl(S({ bilan_le: null, historique: [bil("reserve", M(10)), bil("annule", M(5))] }), C({ reserve: M(2) })),
         caseAvantRetrait: bl(S({ bilan_le: null, historique: [bil("reserve", M(10)), bil("annule", M(5))] }), C({ reserve: M(6) })),
         caseApresCoche: bl(S({ bilan_le: M(10), historique: [bil("reserve", M(10))] }), C({ reserve: M(2) })),
         caseSansDate: bl(S({ bilan_le: null }), C({ reserve: M(2) })),
         caseAncienClient: bl(S({ issue: "signe", issue_le: M(60), client_le: M(59), bilan_le: null, historique: [bil("reserve", M(61)), bil("annule", M(58))] }), C({ reserve: M(3) })),
+        /* une case datée dans 48 h (téléphone du prospect en avance) après ton retrait : ne compte pas ; sans décision : compte (comme avant) */
+        caseFuture: bl(S({ bilan_le: null, historique: [bil("reserve", M(10)), bil("annule", M(5))] }), C({ reserve: H(-48) })),
+        caseFutureSansDecision: bl(S({}), C({ reserve: H(-48) })),
         absentCocheCase: a(p(30), C({ reserve: H(20) }), S({ bilan_le: M(8), issue: "absent", issue_le: M(5), historique: [bil("reserve", M(8)), iss("absent", M(5))] }), H(20), Q(30)),
         caseAvantAbsentClic: a(p(30), C({ reserve: M(6), clics: [H(20)] }), S({ issue: "absent", issue_le: M(4) }), H(20), Q(30)),
         /* l'ordre : les 7 motifs, puis ce qui n'est pas à traiter */
@@ -443,6 +463,8 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
           a(p(20), null, {}, null, Q(20)),
           a(p(80), null, S({ issue: "signe", issue_le: M(40) }), null, Q(80))
         ].map(x => [x.motif, x.urgent, x.rang]),
+        /* un « Signé » oublié (il y a 40 jours), coché avant l'appel (il y a 45 jours), toujours prospect : le dernier */
+        signeCoche: a(p(80), null, S({ bilan_le: M(45), issue: "signe", issue_le: M(40), historique: [bil("reserve", M(45)), iss("signe", M(40))] }), null, Q(80)),
         aide: Commercial.AIDE
       };
     });
@@ -471,10 +493,17 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
       r.cocheApres.etat === "en_cours" && r.cocheApres.motif === "appel" && r.cocheApres.action.includes("l'appel a-t-il eu lieu ?") && r.cocheApres.raisons.includes("Revenu après l'issue « Absent »") && r.cocheApresRecente.etat === "en_cours" && !r.cocheApresRecente.urgent && r.cocheApresRecente.action.startsWith("Prépare le bilan"), JSON.stringify([r.cocheApres, r.cocheApresRecente]));
     ok("A : … la même coche retirée : de nouveau ABSENT et à traiter (repropose un créneau)",
       r.cocheApresRetiree.etat === "absent" && r.cocheApresRetiree.motif === "absent", JSON.stringify(r.cocheApresRetiree));
+    ok("A : « Perdu » il y a 35 jours, « Bilan réservé » coché APRÈS (il y a 20 jours) : en cours (« Revenu après l'issue « Perdu » »), « l'appel a-t-il eu lieu ? » ; retirée : de nouveau PERDU, à relancer",
+      r.cochePerdu.etat === "en_cours" && r.cochePerdu.motif === "appel" && r.cochePerdu.raisons.includes("Revenu après l'issue « Perdu »") && r.cochePerduRetiree.etat === "perdu" && r.cochePerduRetiree.motif === "perdu",
+      JSON.stringify([r.cochePerdu, r.cochePerduRetiree]));
+    ok("A : « Absent » dont la date est illisible : ni « Bilan réservé (nouveau créneau) » ni « Bilan réservé » dans la fiche ; « J'ai relancé » et « Annuler « Absent » » restent",
+      !/data-sc="bilan"/.test(r.boutonsSansDate) && /data-sc="relance"/.test(r.boutonsSansDate) && /data-sc="annuler"[^>]*>Annuler « Absent »</.test(r.boutonsSansDate), r.boutonsSansDate);
     ok("A : Commercial.bilan : case « J'ai réservé » cochée APRÈS le retrait du coach → réservé, à vérifier (source prospect) ; cochée AVANT le retrait → non",
       egal(r.caseApresRetrait, [true, "prospect"]) && egal(r.caseAvantRetrait, [false, null]), JSON.stringify([r.caseApresRetrait, r.caseAvantRetrait]));
     ok("A : … face à une coche en cours : la coche (source coach) ; clé bilan_le posée sans historique (décision sans date) : non ; ancien client : décisions d'avant son passage en client ignorées, la case d'après compte",
       egal(r.caseApresCoche, [true, "coach"]) && egal(r.caseSansDate, [false, null]) && egal(r.caseAncienClient, [true, "prospect"]), JSON.stringify([r.caseApresCoche, r.caseSansDate, r.caseAncienClient]));
+    ok("A : … case datée dans 48 h (horloge du prospect en avance) après ton retrait : ne compte pas (« Retirer » la fait tomber) ; sans aucune décision : elle compte, comme avant",
+      egal(r.caseFuture, [false, null]) && egal(r.caseFutureSansDecision, [true, "prospect"]), JSON.stringify([r.caseFuture, r.caseFutureSansDecision]));
     ok("A : « Absent » il y a 5 jours, coche d'AVANT l'appel, case « J'ai réservé » cochée hier (après sa décision) : de nouveau en cours, à vérifier (« vérifie ton agenda »)",
       r.absentCocheCase.etat === "en_cours" && r.absentCocheCase.motif === "case" && r.absentCocheCase.action.includes("vérifie ton agenda"), JSON.stringify(r.absentCocheCase));
     ok("A : « Absent », case cochée AVANT l'appel, clic hier : en cours pour son clic (la case d'avant l'appel n'est plus « à vérifier »)",
@@ -483,8 +512,10 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
     ok("A : ordre : signé, case, absent, clic, nouveau, appel, perdu (rangs croissants), puis tout ce qui n'est pas à traiter (bilan coché, absent relancé, perdu récent, le reste, signé ancien)",
       egal(urg.map(x => x[0]), ["signe", "case", "absent", "clic", "nouveau", "appel", "perdu"]) && urg.every(x => x[1]) && urg.every((x, i) => i === 0 || x[2] > urg[i - 1][2])
       && autres.every(x => !x[1]) && autres.every(x => x[2] > urg[6][2]) && autres.every((x, i) => i === 0 || x[2] > autres[i - 1][2]), JSON.stringify(R));
-    ok("A : l'aide « À traiter » cite les nouveaux cas (« Absent », « Perdu » depuis 30 jours, bilans cochés depuis plus de 7 jours) et garde les anciens (48 h, « Réserver mon bilan », « Signé »)",
-      /« Absent »/.test(r.aide) && /« Perdu » depuis 30 jours/.test(r.aide) && /plus de 7 jours/.test(r.aide) && /48 h/.test(r.aide) && /Réserver mon bilan/.test(r.aide) && /« Signé »/.test(r.aide), r.aide);
+    ok("A : un « Signé » d'il y a 40 jours, coché avant l'appel (il y a 45 jours), toujours prospect : pas à traiter, au dernier rang (celui d'un signé ancien, après bilan coché, absent relancé, perdu récent et le reste)",
+      !r.signeCoche.urgent && r.signeCoche.rang === R[R.length - 1][2] && autres.slice(0, -1).every(x => x[2] < r.signeCoche.rang), JSON.stringify([r.signeCoche.rang, R]));
+    ok("A : l'aide « À traiter » cite les nouveaux cas (« Absent » sans limite de durée, « Perdu » depuis 30 jours ou plus, bilans cochés depuis plus de 7 jours) et garde les anciens (48 h, « Réserver mon bilan », « Signé »)",
+      /« Absent » \(sans limite de durée\)/.test(r.aide) && /« Perdu » depuis 30 jours ou plus/.test(r.aide) && /plus de 7 jours/.test(r.aide) && /48 h/.test(r.aide) && /Réserver mon bilan/.test(r.aide) && /« Signé »/.test(r.aide), r.aide);
     ok("A : aucune écriture", db.ecritures.length === 0, resume(db));
   });
 
@@ -501,13 +532,15 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
     const ca = await carte(page, ALICE), cb = await carte(page, BRUNO), cv = await carte(page, VICTOR);
     ok("B : carte d'Alice : ABSENT, « à traiter Absent à l'appel : repropose-lui un créneau », « Prochaine action : Absent à l'appel : repropose-lui un créneau en DM. »",
       ca.includes("ABSENT") && (await motifCarte(page, ALICE)) === "à traiter Absent à l'appel : repropose-lui un créneau" && ca.includes("Prochaine action : Absent à l'appel : repropose-lui un créneau en DM."), ca);
+    ok("B : … sa coche d'avant l'appel : « Bilan coché le " + frL(MIDI(5)) + ", avant l'appel » (plus « réservé le … »)",
+      ca.includes("Bilan coché le " + frL(MIDI(5)) + ", avant l'appel") && !ca.includes("Bilan réservé le"), ca);
     ok("B : carte de Bruno : « à traiter Bilan réservé depuis 9 j : l'appel a-t-il eu lieu ? », « Prochaine action : Bilan réservé il y a 9 jours : l'appel a-t-il eu lieu ? Indique Signé, Perdu ou Absent. »",
       (await motifCarte(page, BRUNO)) === "à traiter Bilan réservé depuis 9 j : l'appel a-t-il eu lieu ?" && cb.includes("Prochaine action : Bilan réservé il y a 9 jours : l'appel a-t-il eu lieu ? Indique Signé, Perdu ou Absent."), cb);
     ok("B : carte de Victor : PERDU, « à traiter Perdu depuis 31 j : relance-le », « Prochaine action : Relance-le : l'appel date d'il y a 31 jours. »",
       cv.includes("PERDU") && (await motifCarte(page, VICTOR)) === "à traiter Perdu depuis 31 j : relance-le" && cv.includes("Prochaine action : Relance-le : l'appel date d'il y a 31 jours."), cv);
     const note = await texte(page, "#pr-vue");
-    ok("B : l'aide en bas de page cite « Absent », « Perdu » depuis 30 jours et les bilans cochés depuis plus de 7 jours",
-      note.includes("les « Absent » et les « Perdu » depuis 30 jours, tant que tu ne les as pas relancés depuis l'appel ; les bilans cochés depuis plus de 7 jours sans issue."), note.slice(-700));
+    ok("B : l'aide en bas de page cite « Absent » (sans limite de durée), « Perdu » depuis 30 jours ou plus et les bilans cochés depuis plus de 7 jours",
+      note.includes("les « Absent » (sans limite de durée) et les « Perdu » depuis 30 jours ou plus, tant que tu ne les as pas relancés depuis l'appel ; les bilans cochés depuis plus de 7 jours sans issue."), note.slice(-700));
     await filtre(page, "tous");
     ok("B : pas à traiter : Omar (« Perdu » il y a 5 jours, « Relance prévue dans 25 jours. »), Hugo (coché hier, « Prépare le bilan »), Paul (Absent relancé après l'appel)",
       !(await motifCarte(page, OMAR)) && (await carte(page, OMAR)).includes("Relance prévue dans 25 jours.") && !(await motifCarte(page, HUGO)) && (await carte(page, HUGO)).includes("Prépare le bilan") && !(await motifCarte(page, PAUL)) && (await carte(page, PAUL)).includes("ABSENT"),
@@ -552,8 +585,8 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
     ok("C : textes : « Absent à l'appel : repropose-lui un créneau », « Inscrit il y a 10 h : DM de bienvenue », « Bilan réservé depuis 9 j : l'appel a-t-il eu lieu ? », « Perdu depuis 31 j : relance-le » ; pas de « Et … autres »",
       L.length === 5 && L[0].t.includes("Absent à l'appel : repropose-lui un créneau") && L[1].t.includes("Inscrit il y a 10 h : DM de bienvenue") && L[3].t.includes("Bilan réservé depuis 9 j : l'appel a-t-il eu lieu ?") && L[4].t.includes("Perdu depuis 31 j : relance-le") && !(await texte(page, "#tb-a-traiter")).includes("Et "),
       JSON.stringify(L.map(x => x.t)));
-    ok("C : info-bulle de la tuile Prospects : la même aide que la page (Absent, Perdu depuis 30 jours, 7 jours ; 48 h, « Réserver mon bilan »)",
-      /« Absent »/.test(tp.titre) && /« Perdu » depuis 30 jours/.test(tp.titre) && /plus de 7 jours/.test(tp.titre) && /48 h/.test(tp.titre) && /Réserver mon bilan/.test(tp.titre), tp.titre);
+    ok("C : info-bulle de la tuile Prospects : la même aide que la page (Absent sans limite de durée, Perdu depuis 30 jours ou plus, 7 jours ; 48 h, « Réserver mon bilan »)",
+      /« Absent » \(sans limite de durée\)/.test(tp.titre) && /« Perdu » depuis 30 jours ou plus/.test(tp.titre) && /plus de 7 jours/.test(tp.titre) && /48 h/.test(tp.titre) && /Réserver mon bilan/.test(tp.titre), tp.titre);
     await cliquer(page, `#tb-a-traiter [data-fiche="${BRUNO}"]`); await page.waitForSelector("#fiche-commercial", { timeout: 8000 }).catch(() => {}); await attendre(page, 600);
     const bf = await boutonsFiche(page);
     ok("C : « Ouvrir » sur Bruno : sa fiche, « à traiter » avec le même motif, boutons Signé, Perdu, Absent et « Retirer « Bilan réservé » »",
@@ -579,9 +612,9 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
     ok("C : aucune écriture", db.ecritures.length === 0, resume(db));
   });
 
-  /* =================== D. « Bilan réservé (nouveau créneau) » après « Absent » =================== */
+  /* =================== D. « Bilan réservé (nouveau créneau) » après « Absent » ou « Perdu » =================== */
   await bloc("D. Absent qui reprend un créneau", async () => {
-    const db = decor({ test: false, comptes: [P.alice(), P.zoe(), P.paul()] });
+    const db = decor({ test: false, comptes: [P.alice(), P.zoe(), P.paul(), P.victor()] });
     const { page } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]");
     await ficheDe(page, ALICE, "Alice Absente", "#fiche-commercial");
     const b0 = await boutonsFiche(page);
@@ -618,7 +651,22 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
     await ficheDe(page, ZOE, "Zoé Signée", "#fiche-commercial");
     const bz = await boutonsFiche(page);
     ok("D : fiche de Zoé (Signé) : ni « Bilan réservé » ni « Retirer » ; « Passer client »", !bz.some(x => /^bilan/.test(x)) && bz.includes("client=Passer client"), JSON.stringify(bz));
-    ok("D : seules les 2 écritures de suivi_prospect d'Alice", db.ecritures.length === 2 && db.ecritures.every(e => e.table === "donnees" && e.outil === "suivi_prospect" && e.user_id === ALICE), resume(db));
+    /* « Perdu » (Victor, il y a 31 jours) qui reprend un créneau : le même bouton, la même écriture */
+    await ficheDe(page, VICTOR, "Victor Perdu", "#fiche-commercial");
+    const bv = await boutonsFiche(page);
+    ok("D : fiche de Victor (Perdu il y a 31 jours) : PERDU, bouton « Bilan réservé (nouveau créneau) », pas de « Retirer »",
+      (await texte(page, "#fiche-commercial .seance-c-tete")).includes("PERDU") && bv.includes("bilan=Bilan réservé (nouveau créneau)") && !bv.some(x => x.startsWith("bilan_non=")), JSON.stringify(bv));
+    const avantV = clone(SUIVI(db, VICTOR)), luV = majLe(db, "suivi_prospect", VICTOR), nV = db.ecritures.length;
+    await cliquer(page, '#fiche-commercial [data-sc="bilan"]'); await attendre(page, 150);
+    const modaleV = !!(await page.$(".modale"));
+    await attendre(page, 1500);
+    const SV = SUIVI(db, VICTOR) || {}, fv = await texte(page, "#fiche-commercial");
+    ok("D : un clic, sans fenêtre : UNE écriture (PATCH maj_le=eq.<lu>), contenu EXACT (issue « perdu », sa date et sa note gardées) ; en cours : plus « PERDU », « Revenu après l'issue « Perdu » », « Prépare le bilan »",
+      !modaleV && db.ecritures.length === nV + 1 && ecrSuivi(db, VICTOR).length === 1 && egal(conds(db, VICTOR), ["eq." + luV]) && /^\d{4}-\d{2}-\d{2}T/.test(SV.bilan_le || "")
+      && egal(SV, Object.assign({}, avantV, { bilan_le: SV.bilan_le, historique: avantV.historique.concat([{ type: "bilan", valeur: "reserve", le: SV.bilan_le }]) })) && SV.issue === "perdu" && SV.issue_le === avantV.issue_le && SV.note === "timing"
+      && !(await texte(page, "#fiche-commercial .seance-c-tete")).includes("PERDU") && fv.includes("Revenu après l'issue « Perdu »") && fv.includes("Prochaine action : Prépare le bilan"),
+      JSON.stringify([modaleV, SV]) + " " + fv.slice(0, 300));
+    ok("D : seules les 3 écritures de suivi_prospect (Alice 2, Victor 1)", db.ecritures.length === 3 && db.ecritures.every(e => e.table === "donnees" && e.outil === "suivi_prospect") && ecrSuivi(db, ALICE).length === 2 && ecrSuivi(db, VICTOR).length === 1, resume(db));
   });
 
   /* =================== E. la case « J'ai réservé » cochée après la décision du coach =================== */
@@ -700,6 +748,40 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
     const tp = await tuileTb(page, "tb-t-prospects");
     ok("G : tableau de bord (même erreur) : tuile Prospects 4 (Omar compté), badge « 2 urgences »", tp && tp.val === "4" && tp.badge === "2 urgences", JSON.stringify(tp));
     ok("G : aucune écriture", db.ecritures.length === 0, resume(db));
+  });
+
+  /* =================== H. le bilan d'avant l'appel, à l'écran et dans le CSV =================== */
+  await bloc("H. bilan d'avant l'appel : carte, fiche, CSV", async () => {
+    const db = decor({ test: false, comptes: [P.alice(), P.sara(), P.tina(), P.hugo()] });
+    const { page } = await coachSur(b, db, "#/prospects", "#pr-liste");
+    await filtre(page, "tous");
+    const ca = await carte(page, ALICE), cs = await carte(page, SARA), ct = await carte(page, TINA), ch = await carte(page, HUGO);
+    ok("H : Alice (coche d'avant son « Absent ») : « Bilan coché le " + frL(MIDI(5)) + ", avant l'appel », info-bulle « Bilan réservé : coché par toi, avant l'appel »",
+      ca.includes("Bilan coché le " + frL(MIDI(5)) + ", avant l'appel") && (await titreBilan(page, ALICE)) === "Bilan réservé : coché par toi, avant l'appel", ca + " | " + await titreBilan(page, ALICE));
+    ok("H : Sara (coche d'avant l'appel, case cochée après) : motif « A coché « J'ai réservé » : à vérifier », « Bilan à vérifier (case cochée le " + frL(avant(20 * H)) + ") », pas « réservé le », info-bulle « à vérifier »",
+      (await motifCarte(page, SARA)) === "à traiter A coché « J'ai réservé » : à vérifier" && cs.includes("Bilan à vérifier (case cochée le " + frL(avant(20 * H)) + ")") && !cs.includes("Bilan réservé le") && (await titreBilan(page, SARA)) === "A coché « J'ai réservé mon bilan » : à vérifier",
+      cs + " | " + await titreBilan(page, SARA));
+    ok("H : Tina (case d'avant l'appel, puis un clic) : motif « clic », « Bilan case cochée le " + frL(avant(6 * J)) + ", avant l'appel », pas « à vérifier », info-bulle « avant l'appel »",
+      (await motifCarte(page, TINA)) === "à traiter A cliqué « Réserver mon bilan », pas de bilan coché" && ct.includes("Bilan case cochée le " + frL(avant(6 * J)) + ", avant l'appel") && !ct.includes("à vérifier") && (await titreBilan(page, TINA)) === "A coché « J'ai réservé mon bilan », avant l'appel",
+      ct + " | " + await titreBilan(page, TINA));
+    ok("H : Hugo (coché hier, sans issue) : inchangé, « Bilan réservé le " + frL(MIDI(1)) + " », info-bulle « Bilan réservé : coché par toi »",
+      ch.includes("Bilan réservé le " + frL(MIDI(1))) && (await titreBilan(page, HUGO)) === "Bilan réservé : coché par toi", ch + " | " + await titreBilan(page, HUGO));
+    const { t } = await exporter(page);
+    const L = lireCSV(t.replace(/^\uFEFF/, "")), ligne = n => L.find(l => l[0] === n) || [], iB = L[0].indexOf("Bilan réservé"), iL = L[0].indexOf("Bilan réservé le"), iC = L[0].indexOf("Case « J'ai réservé » (prospect)");
+    const cols = n => [ligne(n)[iB], ligne(n)[iL], ligne(n)[iC]];
+    ok("H : CSV, « Bilan réservé » / « Bilan réservé le » / case : Alice « oui, avant l'appel », Sara « à vérifier (case du prospect) » et la date de sa case, Tina « case du prospect, avant l'appel »",
+      egal(cols("Alice Absente"), ["oui, avant l'appel", frL(MIDI(5)), ""]) && egal(cols("Sara Recase"), ["à vérifier (case du prospect)", frL(avant(20 * H)), frL(avant(20 * H))]) && egal(cols("Tina Reclic"), ["case du prospect, avant l'appel", frL(avant(6 * J)), frL(avant(6 * J))]),
+      JSON.stringify([cols("Alice Absente"), cols("Sara Recase"), cols("Tina Reclic")]));
+    ok("H : … Hugo inchangé (« oui », " + frL(MIDI(1)) + ")", egal(cols("Hugo Réservé"), ["oui", frL(MIDI(1)), ""]), JSON.stringify(cols("Hugo Réservé")));
+    await ficheDe(page, ALICE, "Alice Absente", "#fiche-decouverte");
+    const da = await valeurFiche(page, "#fiche-decouverte", "Bilan réservé");
+    await ficheDe(page, TINA, "Tina Reclic", "#fiche-decouverte");
+    const dtn = await valeurFiche(page, "#fiche-decouverte", "Bilan réservé");
+    await ficheDe(page, HUGO, "Hugo Réservé", "#fiche-decouverte");
+    const dh = await valeurFiche(page, "#fiche-decouverte", "Bilan réservé");
+    ok("H : fiche, bloc « Découverte » : Alice « oui, coché par toi le " + frL(MIDI(5)) + ", avant l'appel », Tina « case cochée par le prospect avant l'appel », Hugo inchangé (« oui, coché par toi le " + frL(MIDI(1)) + " »)",
+      da === "oui, coché par toi le " + frL(MIDI(5)) + ", avant l'appel" && dtn === "case cochée par le prospect avant l'appel" && dh === "oui, coché par toi le " + frL(MIDI(1)), JSON.stringify([da, dtn, dh]));
+    ok("H : aucune écriture", db.ecritures.length === 0, resume(db));
   });
 
   /* =================== Z. rien vers l'extérieur =================== */

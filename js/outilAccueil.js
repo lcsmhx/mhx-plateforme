@@ -71,7 +71,9 @@ const outilAccueil = {
       ["Questionnaire court", r.questionnaire ? "rempli le " + dt(r.questionnaire) : "pas encore rempli"]
     ].concat(Decouverte.reponsesCoach(I), [
       ["Bouton « Réserver mon bilan »", r.clics ? r.clics + " clic" + (r.clics > 1 ? "s" : "") + (r.dernierClic ? ", le dernier le " + dt(r.dernierClic) : "") : "jamais cliqué"],
-      ["Bilan réservé", B.coach ? "oui, coché par toi le " + dt(B.coach) : B.source === "prospect" ? "à vérifier : le prospect a coché sa case" : B.retire ? "non (tu l'as retiré le " + dt(B.retire) + ")" : "non"],
+      /* v59 : une coche ou une case d'avant l'issue « Absent » / « Perdu » le dit (elle a servi à cet appel) */
+      ["Bilan réservé", B.coach ? "oui, coché par toi le " + dt(B.coach) + (Commercial.avantIssue(S, B.coach) ? ", avant l'appel" : "")
+        : B.source === "prospect" ? (Commercial.avantIssue(S, B.case) ? "case cochée par le prospect avant l'appel" : "à vérifier : le prospect a coché sa case") : B.retire ? "non (tu l'as retiré le " + dt(B.retire) + ")" : "non"],
       ["Case « J'ai réservé mon bilan »", r.reserve ? "Le prospect a coché « J'ai réservé » le " + dt(r.reserve) : "pas cochée"],
       ["Dernière visite", Activite.texteVisite(V) + (V.derniere ? " (le " + dt(V.derniere) + ")" : "")],
       ["Jours actifs (30 j)", Activite.texteJours(V)]
