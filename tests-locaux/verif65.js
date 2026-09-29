@@ -1,5 +1,8 @@
 /* verif65 — v60 (brief V2, section C) : les 3 questions « en 1 tap » du prospect, vérifiées de bout en bout dans un vrai
    navigateur, pour un NOUVEAU prospect, en français et en anglais, sur téléphone (390 px), en thème sombre et en thème clair.
+   v61 (lot 2, brief V2, D) : la page qui suit le questionnaire est désormais « Ton plan d'action personnalisé » (EN « Your
+   personalized action plan »), sa projection « Ton objectif dans 3 mois : « … » » (EN « Your goal in 3 months: “…” ») ;
+   {projection} garde les règles du lot 1 (précision sinon libellé, 140 caractères, texte brut).
    A. questionnaire en français, 390 px, thème sombre : textes EXACTS (intro « 30 secondes », légendes, cartes et leurs
       sous-textes, pastilles, aide « Jusqu'à 2 réponses. », précisions, « Voir ma prochaine étape », mention médicale
       inchangée), structure (3 fieldset, radios / cases, plus aucun select ni textarea de réponse), typographie française
@@ -14,14 +17,14 @@
       le détecteur de clavier utilisé en C, E et F note bien la zone de texte) ;
    E. réponse complète en taps seulement (le clavier ne s'ouvre jamais), pastilles touchées à rebours (craquages puis temps :
       enregistrées dans l'ordre de la question), validation : intake EXACT (probleme, obstacle_choix, obstacle « A · B »,
-      projection…, aucun champ vide créé), court_le, page « Ta prochaine étape » avec le libellé choisi ; puis « Modifier mes
+      projection…, aucun champ vide créé), court_le, page « Ton plan d'action personnalisé » avec le libellé choisi ; puis « Modifier mes
       réponses » (pré-coché), précision de la projection ajoutée : la page s'affiche d'elle-même et la reprend ; Profil ;
    F. le même parcours en anglais (390 px, thème clair) : « One answer is missing », « 2 answers max », bordure dorée du
       thème clair, valeurs enregistrées en français, page et Profil avec les libellés anglais ;
-   G. {projection} coupée proprement à 140 caractères (« … ») ; 140 caractères tout juste : entière ;
+   G. {projection} coupée proprement à 140 caractères (« … ») sur la page du plan ; 140 caractères tout juste : entière ;
    H. sécurité : une précision « <b>test</b> » et une précision piégée (<img src=x onerror=…>) restent du texte brut, sans
-      créer d'élément, chez le prospect (page bilan, Profil) et chez le coach (fiche du prospect, carte de la page Prospects) ;
-   I. ancien prospect (réponses libres v52, sans *_choix) : Profil, page bilan et fiche du coach les montrent telles quelles ;
+      créer d'élément, chez le prospect (page du plan, Profil) et chez le coach (fiche du prospect, carte de la page Prospects) ;
+   I. ancien prospect (réponses libres v52, sans *_choix) : Profil, page du plan et fiche du coach les montrent telles quelles ;
       « Modifier mes réponses » pré-remplit les précisions avec l'ancien texte ; valider sans rien toucher ne perd rien ;
    J. Profil du prospect en anglais : ses réponses à choix avec les libellés anglais (« Not enough time · I give in to
       cravings — le soir ») ; « Edit my answers » pré-coché ; le coach lit le texte français ;
@@ -312,8 +315,10 @@ const TX = {
   max: "2 réponses max", max_en: "2 answers max", manque: "Il manque une réponse", manque_en: "One answer is missing",
   note: "Ce questionnaire ne remplace pas un avis médical. Si tu as un doute sur ta santé, parles-en à un professionnel.",
   note_en: "This questionnaire is not medical advice. If you have any doubt about your health, talk to a professional.",
-  titre: "Ton questionnaire", titre_en: "Your questionnaire", etape: "Ta prochaine étape", etape_en: "Your next step",
-  projection_page: p => "Dans 3 mois, pour toi : « " + p + " »", projection_page_en: p => "In 3 months, for you: “" + p + "”",
+  titre: "Ton questionnaire", titre_en: "Your questionnaire",
+  /* v61 (lot 2, brief V2, D) : la page qui suit le questionnaire (#dc-bilan), son titre et sa projection */
+  plan: "Ton plan d'action personnalisé", plan_en: "Your personalized action plan",
+  projection_page: p => "Ton objectif dans 3 mois : « " + p + " »", projection_page_en: p => "Your goal in 3 months: “" + p + "”",
   modifier: "Modifier mes réponses", modifier_en: "Edit my answers"
 };
 /* l'objectif du questionnaire complet posé par l'app depuis la réponse « problème » (table CONFIG.decouverte.objectif_depuis) */
@@ -455,7 +460,7 @@ const structure = page => page.evaluate(() => {
     ok("validation : obstacle « Le temps » et projection « Courir 10 km sans m'arrêter » (le texte seul, comme avant), leurs précisions, court_le ; aucun choix vide créé (ni obstacle_choix, ni projection_choix)",
       I.probleme === "Me remettre en forme" && I.obstacle === "Le temps" && I.obstacle_precision === "Le temps" && I.projection === "Courir 10 km sans m'arrêter" && I.projection_precision === "Courir 10 km sans m'arrêter" && typeof I.court_le === "string" && Math.abs(Date.parse(I.court_le) - t0) < 10000 && !videsDe(I).length,
       "vides : " + JSON.stringify(videsDe(I)) + " · " + JSON.stringify(I));
-    ok("page « Ta prochaine étape » : « Dans 3 mois, pour toi : « Courir 10 km sans m'arrêter » »", !!(await page.$("#dc-bilan")) && (await texte(page, "#dc-projection")) === TX.projection_page("Courir 10 km sans m'arrêter"), await texte(page, "#dc-projection"));
+    ok("page « Ton plan d'action personnalisé » : « Ton objectif dans 3 mois : « Courir 10 km sans m'arrêter » »", !!(await page.$("#dc-bilan")) && (await texte(page, "#dc-projection")) === TX.projection_page("Courir 10 km sans m'arrêter"), await texte(page, "#dc-projection"));
   });
 
   /* =================== E. réponse complète en taps seulement, validation, modification =================== */
@@ -480,8 +485,8 @@ const structure = page => page.evaluate(() => {
     ok("court_le posé (maintenant), une seule date de validation, court_debut du premier brouillon ; seule la clé intake est écrite",
       typeof I.court_le === "string" && Math.abs(Date.parse(I.court_le) - t0) < 10000 && new Set(fin.map(e => e.contenu.court_le)).size === 1 && typeof I.court_debut === "string" && Date.parse(I.court_debut) <= Date.parse(I.court_le) && saisies(db).every(e => e.table === "donnees" && e.outil === "intake"), resume(db));
     const v = await texte(page, "#vue");
-    ok("page « Ta prochaine étape » : « Dans 3 mois, pour toi : « Avoir de l'énergie toute la journée » » (le libellé choisi) ; plus le questionnaire ; 390 px sans débordement ; aucun prix ni « undefined »",
-      (await texte(page, "#dc-bilan h2")) === TX.etape && (await texte(page, "#dc-projection")) === TX.projection_page("Avoir de l'énergie toute la journée") && !(await page.$("#q-probleme")) && !(await deborde(page)) && propre(v), await texte(page, "#dc-projection"));
+    ok("page « Ton plan d'action personnalisé » : « Ton objectif dans 3 mois : « Avoir de l'énergie toute la journée » » (le libellé choisi) ; plus le questionnaire ; 390 px sans débordement ; aucun prix ni « undefined »",
+      (await texte(page, "#dc-bilan h2")) === TX.plan && (await texte(page, "#dc-projection")) === TX.projection_page("Avoir de l'énergie toute la journée") && !(await page.$("#q-probleme")) && !(await deborde(page)) && propre(v), await texte(page, "#dc-projection"));
     /* « Modifier mes réponses » : pré-coché, puis la précision de la projection */
     await aller(page, "#/decouverte/reponses", 1500);
     const [p1, o1, r1] = [await etat(page, "probleme"), await etat(page, "obstacle"), await etat(page, "projection")], S = await structure(page), b2 = await bouton(page);
@@ -497,8 +502,8 @@ const structure = page => page.evaluate(() => {
       ecr(db, "intake", ID).length === n0 + 1 && I2.projection_precision === "Courir 10 km sans m'arrêter" && I2.projection === "Avoir de l'énergie toute la journée — Courir 10 km sans m'arrêter" && JSON.stringify(I2.projection_choix) === '["energie"]' && I2.court_le === I.court_le && I2.obstacle === I.obstacle && !videsDe(I2).length,
       "vides : " + JSON.stringify(videsDe(I2)) + " · " + JSON.stringify(I2));
     /* pas encore de choix sur la page de bilan : la validation en modification la ré-affiche d'elle-même (aucun détour par l'adresse) */
-    ok("page « Ta prochaine étape » affichée tout de suite après la validation ; la précision remplie prend la place du libellé (« Dans 3 mois, pour toi : « Courir 10 km sans m'arrêter » »)",
-      !!(await page.$("#dc-bilan")) && (await texte(page, "#dc-bilan h2")) === TX.etape && !(await page.$("#q-probleme")) && (await texte(page, "#dc-projection")) === TX.projection_page("Courir 10 km sans m'arrêter"),
+    ok("page « Ton plan d'action personnalisé » affichée tout de suite après la validation ; la précision remplie prend la place du libellé (« Ton objectif dans 3 mois : « Courir 10 km sans m'arrêter » »)",
+      !!(await page.$("#dc-bilan")) && (await texte(page, "#dc-bilan h2")) === TX.plan && !(await page.$("#q-probleme")) && (await texte(page, "#dc-projection")) === TX.projection_page("Courir 10 km sans m'arrêter"),
       JSON.stringify([!!(await page.$("#dc-bilan")), await texte(page, "#dc-projection")]));
     await aller(page, "#/profil", 1800); await page.waitForSelector("#mc-reponses li", { timeout: 6000 }).catch(() => {});
     const rp = await lignes(page, "#mc-reponses");
@@ -528,8 +533,8 @@ const structure = page => page.evaluate(() => {
       sansClavier(cl) && I.probleme === "Perdre du gras" && I.obstacle === "Le manque de temps · Je craque sur la nourriture" && JSON.stringify(I.obstacle_choix) === '["temps","craquages"]' && I.projection === "Avoir de l'énergie toute la journée" && JSON.stringify(I.projection_choix) === '["energie"]' && typeof I.court_le === "string" && !videsDe(I).length,
       "vides : " + JSON.stringify(videsDe(I)) + " · " + JSON.stringify([cl, I]));
     const v = await texte(page, "#vue");
-    ok("anglais : « Your next step », « In 3 months, for you: “Having energy all day long” » (le libellé anglais, pas le français)",
-      (await texte(page, "#dc-bilan h2")) === TX.etape_en && (await texte(page, "#dc-projection")) === TX.projection_page_en("Having energy all day long") && !v.includes("Avoir de l'énergie") && propre(v), await texte(page, "#dc-projection"));
+    ok("anglais : « Your personalized action plan », « Your goal in 3 months: “Having energy all day long” » (le libellé anglais, pas le français)",
+      (await texte(page, "#dc-bilan h2")) === TX.plan_en && (await texte(page, "#dc-projection")) === TX.projection_page_en("Having energy all day long") && !v.includes("Avoir de l'énergie") && propre(v), await texte(page, "#dc-projection"));
     await aller(page, "#/profil", 1800); await page.waitForSelector("#mc-reponses li", { timeout: 6000 }).catch(() => {}); await attendre(page, 300);
     const rp = await lignes(page, "#mc-reponses");
     ok("anglais, Profil : « Your #1 goal? Lose fat », « Not enough time · I give in to cravings », « Having energy all day long »",
@@ -543,17 +548,17 @@ const structure = page => page.evaluate(() => {
     const { page } = await ouvrir(b, db, k, "", "#q-probleme", { viewport: MOBILE, toucher: true });
     await toucher(page, "probleme", "Perdre du gras"); await toucher(page, "obstacle", "temps"); await toucher(page, "projection", "photos");
     await page.fill("#q-projection-precision", LONGUE); await page.tap("#dc-voir"); await attendre(page, 1600);
-    const t = await texte(page, "#dc-projection"), x = t.replace(/^Dans 3 mois, pour toi : « /, "").replace(/ »$/, ""), I = intakeDe(db, ID) || {};
+    const t = await texte(page, "#dc-projection"), x = t.replace(/^Ton objectif dans 3 mois : « /, "").replace(/ »$/, ""), I = intakeDe(db, ID) || {};
     /* attendu : les 140 premiers caractères, coupés au dernier espace (« …tenir toute la »), puis « … » : 136 caractères */
     const COUPEE = LONGUE.slice(0, LONGUE.slice(0, 140).lastIndexOf(" ")) + "…";
-    ok(`précision de ${Array.from(LONGUE).length} caractères (entière sous l'ancienne limite de 160) : coupée à 140 au plus, au dernier espace, « … » (exactement « …tenir toute la… », 136 caractères) ; la précision enregistrée reste entière`,
+    ok(`page du plan, précision de ${Array.from(LONGUE).length} caractères (entière sous l'ancienne limite de 160) : coupée à 140 au plus, au dernier espace, « … » (exactement « …tenir toute la… », 136 caractères) ; la précision enregistrée reste entière`,
       Array.from(LONGUE).length > 141 && Array.from(LONGUE).length <= 160 && Array.from(COUPEE).length === 136 && COUPEE.endsWith(" tenir toute la…") && x === COUPEE && t === TX.projection_page(COUPEE)
       && Array.from(x).length <= 141 && LONGUE.startsWith(x.slice(0, -1)) && /[\s,]/.test(LONGUE.charAt(x.length - 1)) && I.projection_precision === LONGUE,
       Array.from(x).length + " · " + t);
     const P140 = LONGUE.slice(0, 140).replace(/\s+$/, "") + "x".repeat(140 - LONGUE.slice(0, 140).replace(/\s+$/, "").length);
     const db2 = base({ comptes: [compte(8, "Léa", "Martin", [["intake", AVEC_CHOIX({ projection_precision: P140, projection: "M'aimer sur les photos — " + P140 })]])] });
     const o2 = await ouvrir(b, db2, 8, "", "#dc-bilan", { viewport: MOBILE });
-    ok("précision de 140 caractères tout juste : affichée entière, sans « … »", Array.from(P140).length === 140 && (await texte(o2.page, "#dc-projection")) === TX.projection_page(P140), await texte(o2.page, "#dc-projection"));
+    ok("page du plan, précision de 140 caractères tout juste : affichée entière, sans « … »", Array.from(P140).length === 140 && (await texte(o2.page, "#dc-projection")) === TX.projection_page(P140), await texte(o2.page, "#dc-projection"));
   });
 
   /* =================== H. sécurité : réponses piégées, chez le prospect et chez le coach =================== */
@@ -567,7 +572,7 @@ const structure = page => page.evaluate(() => {
     const I = clone(intakeDe(db, ID)) || {};
     ok("précisions piégées enregistrées telles quelles (texte) : obstacle « Le manque de temps — <b>test</b> », projection « <img src=x onerror=…> » ; aucun champ vide créé (pas de projection_choix [])",
       I.obstacle === "Le manque de temps — " + B && I.obstacle_precision === B && I.projection === PIEGE && I.projection_precision === PIEGE && typeof I.court_le === "string" && !videsDe(I).length, "vides : " + JSON.stringify(videsDe(I)) + " · " + JSON.stringify(I));
-    ok("page « Ta prochaine étape » : la précision piégée affichée comme du texte, aucune balise créée, aucun script lancé", (await texte(page, "#dc-projection")) === TX.projection_page(PIEGE) && !(await injecte(page)), await texte(page, "#dc-projection"));
+    ok("page « Ton plan d'action personnalisé » : la précision piégée affichée comme du texte, aucune balise créée, aucun script lancé", (await texte(page, "#dc-projection")) === TX.projection_page(PIEGE) && !(await injecte(page)), await texte(page, "#dc-projection"));
     await aller(page, "#/profil", 1800); await page.waitForSelector("#mc-reponses li", { timeout: 6000 }).catch(() => {});
     const rp = await lignes(page, "#mc-reponses");
     ok("Profil du prospect : « Le manque de temps — <b>test</b> » et la précision piégée en texte brut, aucune balise créée",
@@ -606,7 +611,7 @@ const structure = page => page.evaluate(() => {
     const rp = await lignes(page, "#mc-reponses");
     ok("Profil de l'ancien prospect : ses 3 réponses libres telles quelles", JSON.stringify(rp) === JSON.stringify(attProfil), JSON.stringify(rp));
     await aller(page, "#/decouverte/bilan", 1500);
-    ok("page « Ta prochaine étape » (#/decouverte/bilan) : son ancienne réponse reprise telle quelle", (await texte(page, "#dc-projection")) === TX.projection_page(ANCIEN_V52.projection), await texte(page, "#dc-projection"));
+    ok("page « Ton plan d'action personnalisé » (#/decouverte/bilan) : son ancienne réponse reprise telle quelle (« Ton objectif dans 3 mois : « Courir 10 km sans m'arrêter » »)", (await texte(page, "#dc-projection")) === TX.projection_page(ANCIEN_V52.projection), await texte(page, "#dc-projection"));
     await aller(page, "#/decouverte/reponses", 1500);
     const [p1, o1, r1] = [await etat(page, "probleme"), await etat(page, "obstacle"), await etat(page, "projection")], S = await structure(page), bt = await bouton(page);
     ok("« Modifier mes réponses » : « Perdre du gras » pré-cochée ; aucune pastille ni projection cochée ; les précisions pré-remplies avec ses anciens textes ; bouton actif",
@@ -671,7 +676,7 @@ const structure = page => page.evaluate(() => {
     const n4 = await tabJusqua("#dc-voir", 5), bt = await bouton(page);
     await page.keyboard.press("Enter"); await attendre(page, 1600);
     const I = clone(intakeDe(db, ID)) || {};
-    ok("Tab jusqu'à la question 3, Espace, Tab jusqu'au bouton (actif), Entrée : validé (court_le), page « Ta prochaine étape » ; probleme « Prendre du muscle », obstacle_choix temps + craquages, projection « Rentrer à nouveau dans mes vêtements préférés », aucun champ vide créé",
+    ok("Tab jusqu'à la question 3, Espace, Tab jusqu'au bouton (actif), Entrée : validé (court_le), page « Ton plan d'action personnalisé » (« Ton objectif dans 3 mois : « Rentrer à nouveau dans mes vêtements préférés » ») ; probleme « Prendre du muscle », obstacle_choix temps + craquages, projection « Rentrer à nouveau dans mes vêtements préférés », aucun champ vide créé",
       n3 > 0 && n4 > 0 && bt.aria === "false" && typeof I.court_le === "string" && I.probleme === "Prendre du muscle" && JSON.stringify(I.obstacle_choix) === '["temps","craquages"]' && JSON.stringify(I.projection_choix) === '["vetements"]' && I.projection === "Rentrer à nouveau dans mes vêtements préférés" && !videsDe(I).length && (await texte(page, "#dc-projection")) === TX.projection_page("Rentrer à nouveau dans mes vêtements préférés"),
       "vides : " + JSON.stringify(videsDe(I)) + " · " + JSON.stringify([n3, n4, bt, I]));
   });

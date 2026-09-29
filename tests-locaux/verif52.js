@@ -62,7 +62,8 @@ const server = http.createServer((req, res) => {
 const res = []; const ok = (n, c, d) => res.push((c ? "  ✓ " : "  ✗ ") + n + (c ? "" : "  — " + (d || "")));
 /* défaut connu de l'app, hors brief : compté s'il est corrigé, sinon signalé à part (ni ✓ ni ✗) */
 const connu = (n, c, d) => res.push(c ? "  ✓ " + n : "  ⚠ DÉFAUT CONNU (hors brief, voir README) " + n + "  — " + (d || ""));
-const CAL = "https://calendly.com/mhx-coaching/30min";
+/* v61 (lot 2, F) : l'événement de 15 min « Ton plan d'action offert » (remplace …/30min) */
+const CAL = "https://calendly.com/mhx-coaching/ton-plan-d-action-offert-15-min-avec-lucas";
 const COACH_SEUL = ["notes_coach", "suivi_prospect", "feedbacks"];
 const norm = t => String(t || "").replace(/[  ]/g, " ").replace(/\s+/g, " ").trim();
 const iso = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
@@ -356,7 +357,8 @@ async function exporter(page){
    d'avant ne bougent pas (verif55 G3 vérifie les nouvelles) */
 const ENTETES = ["Nom", "Email", "Inscrit le", "Découverte", "Objectif", "Statut", "Score /100", "Questionnaire", "Motivation /10", "Clics « Réserver mon bilan »", "Dernier clic", "Bilan réservé le", "Relances", "Dernière activité", "Prochaine action", "Problème", "Dans 3 mois", "Newsletter"];
 /* v52 (lot B) : le nom du prospect (profils.nom) est pré-rempli aussi : name = « prénom nom », first_name, last_name */
-const lienPour = (prenom, nom, email) => CAL + "?utm_source=app-mhx&utm_medium=coach&utm_content=fiche-coach&name=" + encodeURIComponent([prenom, nom].filter(Boolean).join(" ")) + "&first_name=" + encodeURIComponent(prenom) + (nom ? "&last_name=" + encodeURIComponent(nom) : "") + (email ? "&email=" + encodeURIComponent(email) : "");
+/* v61 (lot 2, F) : utm_source=app, utm_medium=coach, code d'origine fiche_coach (avant : app-mhx, fiche-coach) */
+const lienPour = (prenom, nom, email) => CAL + "?utm_source=app&utm_medium=coach&utm_content=fiche_coach&name=" + encodeURIComponent([prenom, nom].filter(Boolean).join(" ")) + "&first_name=" + encodeURIComponent(prenom) + (nom ? "&last_name=" + encodeURIComponent(nom) : "") + (email ? "&email=" + encodeURIComponent(email) : "");
 /* la fiche d'un prospect, ouverte depuis sa carte (filtre « Tous ») */
 async function ouvrirFiche(page, uid){
   if (!(await page.$("#pr-vue"))) { await aller(page, "#/prospects", 2200); }
@@ -480,7 +482,11 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
 
   /* ---------- C. Fiche d'un prospect ---------- */
   await bloc("C. fiche d'Inès", async () => {
-    const db = base();
+    /* v61 (lot 2, F) : pour ce bloc seulement, Inès a aussi un clic au NOUVEAU code « apres_questionnaire » (24,5 h, entre le
+       questionnaire rempli et son ancien clic « decouverte ») ; les autres blocs gardent un seul clic (compteurs des Nouveautés) */
+    const CLIC_NOUVEAU = avant(24.5 * H);
+    const PROSPECTS_C = PROSPECTS.map(x => x.id !== INES ? x : Object.assign({}, x, { donnees: x.donnees.map(([o, c, m]) => o !== "challenge" ? [o, c, m] : [o, Object.assign({}, c, { cta: { clics: c.cta.clics.concat([{ jour: 1, source: "apres_questionnaire", date: CLIC_NOUVEAU }]) } }), m]) }));
+    const db = base({ prospects: PROSPECTS_C, journal: JOURNAL });
     const { page } = await contexte(b, coach, db);
     await page.goto(`http://localhost:${PORT}/#/prospects`); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 }); await attendre(page, 400);
     await ouvrirFiche(page, INES);
@@ -490,17 +496,22 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     const ch = await chrono(page);
     /* v53 (chantier 4) : plus d'emails de suivi dans la chronologie (journal retiré) ; « Dernière visite dans l'app » ; la case
        du prospect se lit « Le prospect a coché « J'ai réservé » » (le coach coche « Bilan réservé » lui-même) */
-    const attC = ["Dernière visite dans l'app", "Tu l'as relancé", "Le prospect a coché « J'ai réservé »", "Clic « Réserver mon bilan » (en haut de sa Découverte)", "Questionnaire rempli", "Questionnaire commencé", "Inscription"];
+    /* v61 (lot 2, F) : l'ANCIEN code « decouverte » garde exactement son libellé d'avant ; le NOUVEAU code
+       « apres_questionnaire » affiche le nom de son écran (Decouverte.ORIGINES), texte exact du contrat */
+    const NOM_APQ = "page « Ton plan d'action » (après les 3 questions)";
+    const nomApq = await page.evaluate(() => Decouverte.ORIGINES.apres_questionnaire).catch(() => null);
+    const attC = ["Dernière visite dans l'app", "Tu l'as relancé", "Le prospect a coché « J'ai réservé »", "Clic « Réserver mon bilan » (en haut de sa Découverte)", "Clic « Réserver mon bilan » (" + NOM_APQ + ")", "Questionnaire rempli", "Questionnaire commencé", "Inscription"];
     const dates = ch.map(x => Date.parse(x.dt));
-    ok("chronologie dans l'ordre (la plus récente d'abord) : visite, relance, case « J'ai réservé », clic, questionnaire rempli, commencé, inscription", JSON.stringify(ch.map(x => x.t)) === JSON.stringify(attC) && dates.every((d, i) => i === 0 || dates[i - 1] >= d), JSON.stringify(ch.map(x => x.t)));
-    ok("chronologie : chaque ligne datée « jj/mm/aaaa hh:mm » en heure locale (inscription : " + fr(avant(26 * H)) + " " + hm(avant(26 * H)) + ")", ch.length === 7 && ch.every(x => /^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/.test(x.aff)) && ch[6].aff === fr(avant(26 * H)) + " " + hm(avant(26 * H)), JSON.stringify(ch.map(x => x.aff)));
+    ok("chronologie dans l'ordre (la plus récente d'abord) : visite, relance, case « J'ai réservé », ancien clic « (en haut de sa Découverte) », nouveau clic « (" + NOM_APQ + ") » (= Decouverte.ORIGINES.apres_questionnaire), questionnaire rempli, commencé, inscription", JSON.stringify(ch.map(x => x.t)) === JSON.stringify(attC) && nomApq === NOM_APQ && dates.every((d, i) => i === 0 || dates[i - 1] >= d), JSON.stringify(ch.map(x => x.t)) + " · ORIGINES : " + nomApq);
+    ok("chronologie : chaque ligne datée « jj/mm/aaaa hh:mm » en heure locale (nouveau clic : " + fr(CLIC_NOUVEAU) + " " + hm(CLIC_NOUVEAU) + " ; inscription : " + fr(avant(26 * H)) + " " + hm(avant(26 * H)) + ")", ch.length === 8 && ch.every(x => /^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/.test(x.aff)) && ch[4].aff === fr(CLIC_NOUVEAU) + " " + hm(CLIC_NOUVEAU) && ch[4].dt === CLIC_NOUVEAU && ch[7].aff === fr(avant(26 * H)) + " " + hm(avant(26 * H)), JSON.stringify(ch.map(x => x.aff)));
     ok("chronologie : « 2 jours d'activité, 12 min dans l'app · pages vues : decouverte-resultat (4), formation (2), verrou-programme (1). »", (await texte(page, "#fiche-chrono p.note")) === "2 jours d'activité, 12 min dans l'app · pages vues : decouverte-resultat (4), formation (2), verrou-programme (1).", await texte(page, "#fiche-chrono p.note"));
     const lien = await page.$eval("#dc-lien", e => e.value).catch(() => "");
     const lienAtt = lienPour("Inès", "Dupré", "ines.dupre@exemple.fr");
     ok("lien de réservation exact : " + lienAtt, lien === lienAtt, lien);
     const href = await page.getAttribute("#dc-mail", "href").catch(() => "");
     const mt = (() => { try { const [a, qs] = href.slice(7).split("?"); const P = new URLSearchParams(qs.replace(/\+/g, "%2B")); return { a: decodeURIComponent(a), s: P.get("subject"), c: P.get("body") }; } catch (e) { return {}; } })();
-    ok("« Lui écrire un email » : mailto:ines.dupre@exemple.fr, objet « Ton bilan MHX Coaching », message « Bonjour Inès, … » avec le lien exact et la signature du coach", href.startsWith("mailto:") && mt.a === "ines.dupre@exemple.fr" && mt.s === "Ton bilan MHX Coaching" && (mt.c || "").startsWith("Bonjour Inès,\n\n") && (mt.c || "").includes("\n" + lienAtt + "\n") && (mt.c || "").endsWith("Coach — MHX Coaching"), JSON.stringify(mt).slice(0, 300));
+    /* v61 (lot 2, F) : le message préparé propose un bilan de 15 minutes (avant : 30), texte exact de la phrase */
+    ok("« Lui écrire un email » : mailto:ines.dupre@exemple.fr, objet « Ton bilan MHX Coaching », message « Bonjour Inès, … Je te propose un bilan de 15 minutes pour faire le point sur ton objectif et voir comment je peux t'aider : » avec le lien exact et la signature du coach, plus aucun « 30 minutes »", href.startsWith("mailto:") && mt.a === "ines.dupre@exemple.fr" && mt.s === "Ton bilan MHX Coaching" && (mt.c || "").startsWith("Bonjour Inès,\n\n") && (mt.c || "").includes("Je te propose un bilan de 15 minutes pour faire le point sur ton objectif et voir comment je peux t'aider :\n" + lienAtt + "\n") && !/30 minutes|30 min\b/.test(mt.c || "") && (mt.c || "").endsWith("Coach — MHX Coaching"), JSON.stringify(mt).slice(0, 400));
     /* Copier : presse-papiers intercepté */
     await page.evaluate(() => { window.__copie = null; Object.defineProperty(navigator.clipboard, "writeText", { configurable: true, value: t => { window.__copie = t; return Promise.resolve(); } }); });
     await page.click("#dc-copier"); await attendre(page, 300);

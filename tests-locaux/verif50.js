@@ -1,7 +1,8 @@
 /* v50 (Découverte) — lien Calendly central, confidentialité, navigation du prospect allégée.
    Contrat actuel (funnel « Découverte », qui remplace le Challenge 7 jours) :
-   - lienCalendly(source) : le même lien partout. Pour le prospect connecté : paramètres utm_source=app-mhx,
-     utm_medium=app, utm_content=<source> (decouverte, decouverte-accompagnement, verrou-<outil>), puis name,
+   - lienCalendly(source) : le même lien partout. Pour le prospect connecté : paramètres utm_source=app,
+     utm_medium=bouton, utm_content=<source> (v61 : accueil_haut, reponses_haut, accueil_accompagnement, verrou_<outil> ;
+     avant : utm_source=app-mhx, utm_medium=app, decouverte, decouverte-accompagnement, verrou-<outil>), puis name,
      first_name et email pré-remplis (CONFIG.marque.calendly_prerempli, allumé) ; paramètres placés avant un
      éventuel « # » ; caractère mal formé → adresse intacte ; source hors format → pas d'utm_content ; jamais
      pour le coach dans une fiche ni pour un client (adresse brute).
@@ -20,6 +21,15 @@
    v52 (chantier 1, lot B) : le nom du prospect (profils.nom) est pré-rempli aussi : name = « prénom nom »,
      first_name, last_name ; Léa n'a pas de nom ici (nom ""), donc PRE ne change pas (aucun paramètre vide ajouté) ;
      le paragraphe Calendly des conditions dit « Ton prénom, ton nom et ton email y sont pré-remplis ».
+   v61 (lot 2, brief V2 E, F, G, décision 4) : adresse de l'événement de 15 min (…/ton-plan-d-action-offert-15-min-avec-lucas ;
+     avant …/30min), utm_source=app, utm_medium=bouton (avant : app-mhx / app), codes d'origine avec « _ » (accueil_haut,
+     reponses_haut, accueil_accompagnement, verrou_<page> ; avant : decouverte, decouverte-accompagnement, verrou-<page>),
+     acceptés par lienCalendly (/^[a-z0-9_-]{1,40}$/) ; clics notés avec ces codes (les anciens clics gardent le leur) ;
+     « Récupérer mon plan d'action » / « Get my action plan » (avant : « Réserver mon bilan » / « Book my assessment ») et la
+     ligne « 15 min avec Lucas · offert » / « 15 min with Lucas · free » sous les boutons ; un texte propre à chaque page
+     verrouillée de la vitrine ; texte court des conditions : « dont tes clics sur « Récupérer mon plan d'action » », version
+     2026-09-30. Les adresses Calendly fictives des essais « ? » / « # » ont un chemin neutre (avant : …/x/30min).
+     Nombre de vérifications inchangé (57).
    Reprend le simulateur de verif47 : Supabase simulé en mémoire, rien ne part vers la vraie base.
    Usage : node verif50.js ../index.html                                          */
 const { chromium } = require("playwright"); const fs = require("fs"); const http = require("http"); const path = require("path");
@@ -43,10 +53,19 @@ const server = http.createServer((req, res) => {
 });
 const res = []; const ok = (n, c, d) => res.push((c ? "  ✓ " : "  ✗ ") + n + (c ? "" : "  — " + (d || "")));
 const PROSPECT = "00000000-0000-4000-8000-000000000c04";
-const CAL = "https://calendly.com/mhx-coaching/30min";
+/* v61 (lot 2, F) : l'événement de 15 min « Ton plan d'action offert » (avant : …/mhx-coaching/30min) */
+const CAL = "https://calendly.com/mhx-coaching/ton-plan-d-action-offert-15-min-avec-lucas";
 const PRE = "&name=L%C3%A9a&first_name=L%C3%A9a&email=l%40e.fr";
+/* v61 : utm_source=app, utm_medium=bouton (avant : app-mhx / app) ; même ordre des paramètres */
+const UTM = "utm_source=app&utm_medium=bouton";
 /* le lien attendu pour la prospecte Léa (l@e.fr) : utm, puis prénom et email */
-const lienAttendu = (source, sansPre) => CAL + "?utm_source=app-mhx&utm_medium=app" + (source ? "&utm_content=" + source : "") + (sansPre ? "" : PRE);
+const lienAttendu = (source, sansPre) => CAL + "?" + UTM + (source ? "&utm_content=" + source : "") + (sansPre ? "" : PRE);
+/* v61 (lot 2, vocabulaire commun) : le bouton unique et sa ligne dessous (avant : « Réserver mon bilan », sans ligne) */
+const CTA = "Récupérer mon plan d'action", CTA_EN = "Get my action plan";
+const SOUS = "15 min avec Lucas · offert", SOUS_EN = "15 min with Lucas · free";
+/* v61 : les textes français passent par typoFr (espaces insécables U+00A0 / U+202F) : comparés après les avoir remplacés par des
+   espaces simples (norm, plus bas, ne le fait pas : sa classe ne contient que des espaces simples) */
+const plat = t => String(t || "").replace(/[\u00a0\u202f]/g, " ");
 /* instant d'inscription : midi (heure locale) il y a n jours → jour de découverte n + 1 */
 const creeLe = n => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - n); return d.toISOString(); };
 /* v52 (28/09/2026, Chantier 1 lot C) : + bilan_propose — la page de proposition de bilan est passée (« Pas maintenant ») :
@@ -129,7 +148,8 @@ const texte = async (page, sel) => norm(await page.textContent(sel || "#vue").ca
 const href = (page, sel) => page.$eval(sel, a => a.getAttribute("href")).catch(() => "");
 const navIds = page => page.$$eval("#nav a", l => l.map(a => a.dataset.id));
 const cadenasIds = page => page.$$eval("#nav a .nav-cadenas", l => l.map(e => e.closest("a").dataset.id).sort().join(","));
-/* clic « Réserver mon bilan » sans ouvrir Calendly (la navigation est annulee, les ecouteurs de l'app passent) */
+/* clic sur le bouton de réservation (v61 : « Récupérer mon plan d'action ») sans ouvrir Calendly (la navigation est annulee,
+   les ecouteurs de l'app passent) */
 const cliquerSansOuvrir = (page, sel) => page.evaluate(s => { const a = document.querySelector(s); if (!a) return false; a.addEventListener("click", e => e.preventDefault(), { once: true }); a.click(); return true; }, sel).catch(() => false);
 const cleChallenge = db => (db.donnees.find(x => x.user_id === PROSPECT && x.outil === "challenge") || {}).contenu || {};
 /* fiche consultee par le coach (Store.idConsulte), null hors fiche */
@@ -141,8 +161,19 @@ const TXT_VERROU = "Cette fonctionnalité est disponible avec l'accompagnement M
    « Exemple » (#ech-<id>, détaillé dans verif56, blocs E1), puis cet appel à la place du texte du verrou ; les pages cachées
    (compléments, bilan) gardent TXT_VERROU. Même lien, même comptage des clics, aucune donnée lue.
    v52 : lots D + E — journal (vitrine du lot D) a lui aussi son exemple ; Ma progression est ouverte (lot D). */
-const TXT_APPEL = "Tu veux un programme construit pour toi, qui évolue chaque semaine ? Réserve ton bilan.";
-const TXT_APPEL_EN = "Want a program built for you that evolves every week? Book your assessment.";
+/* v61 (lot 2, brief V2 G) : un texte propre à chaque page de la vitrine (avant : le même appel partout, « Tu veux un programme
+   construit pour toi, qui évolue chaque semaine ? Réserve ton bilan. » / « Want a program built for you that evolves every
+   week? Book your assessment. ») */
+const TXT_APPELS = {
+  programme: "Cette séance découverte est la même pour tout le monde. Ton programme, lui, part de ton niveau, de ton matériel et de ton emploi du temps, puis évolue avec tes progrès.",
+  journal: "Avec l'accompagnement, chaque séance est notée et l'app te propose la charge à viser la fois suivante : tu sais toujours quoi faire pour progresser.",
+  nutrition: "Avec l'accompagnement, tes repas sont calculés sur tes calories et tes macros, en tenant compte de ton régime et de tes allergies, avec ta liste de courses.",
+  suivi: "Avec l'accompagnement, ton coach lit ton bilan chaque semaine et te répond avec la suite du plan : tu sais toujours où tu en es et quoi faire ensuite."
+};
+const TXT_APPEL_EN = "This starter workout is the same for everyone. Your program starts from your level, your equipment and your schedule, then evolves as you progress.";   // #/programme
+/* le bouton du verrou (seul lien du verrou) et la ligne juste après son bloc : { n, t, sous } */
+const boutonVerrou = page => page.evaluate(() => { const v = document.querySelector("#vue .verrou"); if (!v) return null; const a = v.querySelector(".actions a[target=_blank]"), s = v.querySelector(".actions + p.verrou-sous");
+  return { n: v.querySelectorAll("a").length, t: a ? a.textContent.trim() : null, sous: s ? s.textContent.trim() : null }; }).catch(() => null);
 const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed Formation fait partie de l'accompagnement.";
 
 (async () => {
@@ -154,48 +185,64 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     const db = base();
     const { c, page } = await contexte(b, lea, db);
     await page.goto(`http://localhost:${PORT}/#/decouverte`); await attendre(page, 2600);
-    const hTete = await href(page, '#dc-vue a[data-dc-cal="decouverte"]');
-    const tTete = await texte(page, '#dc-vue a[data-dc-cal="decouverte"]');
-    ok("Découverte : « Réserver mon bilan » de l'en-tête → Calendly avec utm_source=app-mhx, utm_medium=app, utm_content=decouverte, puis name, first_name, email", hTete === lienAttendu("decouverte") && tTete.trim() === "Réserver mon bilan", hTete + " | " + tTete);
-    const hAcc = await href(page, '#dc-accomp a[data-dc-cal="decouverte-accompagnement"]');
-    ok("Découverte : le bouton du bloc accompagnement porte utm_content=decouverte-accompagnement", hAcc === lienAttendu("decouverte-accompagnement"), hAcc);
+    /* v61 (lot 2, E1 et F) : « Récupérer mon plan d'action » (avant : « Réserver mon bilan »), code accueil_haut (avant :
+       decouverte), utm_source=app, utm_medium=bouton, puis la ligne « 15 min avec Lucas · offert » juste après son bloc */
+    const hTete = await href(page, '#dc-vue a[data-dc-cal="accueil_haut"]');
+    const tTete = await texte(page, '#dc-vue a[data-dc-cal="accueil_haut"]');
+    const sTete = plat(await texte(page, "#dc-vue header.masthead .actions + p.dc-cta-sous.dc-haut-sous")).trim();
+    ok("Découverte : « Récupérer mon plan d'action » de l'en-tête → Calendly avec utm_source=app, utm_medium=bouton, utm_content=accueil_haut, puis name, first_name, email ; « 15 min avec Lucas · offert » dessous", hTete === lienAttendu("accueil_haut") && tTete.trim() === CTA && sTete === SOUS, hTete + " | " + tTete + " | " + sTete);
+    /* v61 (E2) : code accueil_accompagnement (avant : decouverte-accompagnement) ; + le texte du bouton */
+    const hAcc = await href(page, '#dc-accomp a[data-dc-cal="accueil_accompagnement"]');
+    const tAcc = await texte(page, '#dc-accomp a[data-dc-cal="accueil_accompagnement"]');
+    ok("Découverte : le bouton de la carte « Ce que l'accompagnement ajoute » (« Récupérer mon plan d'action ») porte utm_content=accueil_accompagnement", hAcc === lienAttendu("accueil_accompagnement") && tAcc.trim() === CTA, hAcc + " | " + tAcc);
     const r = await page.evaluate(() => {
       if (typeof lienCalendly !== "function") return { err: "lienCalendly absent" };
       const out = {};
       out.sans = lienCalendly();
-      out.hors = ["Verrou Programme", "decouverte&email=pirate%40x.fr", "x".repeat(41), 42, null, "verrou-programme#x"].map(s => lienCalendly(s));
+      /* v61 : + des sources avec « _ » hors format (majuscules, « & », 41 caractères) ; « _ » est accepté (40 caractères au plus) */
+      out.hors = ["Verrou Programme", "decouverte&email=pirate%40x.fr", "x".repeat(41), 42, null, "verrou-programme#x", "Verrou_Programme", "accueil_haut&utm_source=pirate", "a_".repeat(20) + "x"].map(s => lienCalendly(s));
+      out.souligne = lienCalendly("a_".repeat(20));
+      /* v61 : adresses fictives au chemin neutre (avant : https://calendly.com/x/30min…) */
       const avant = CONFIG.marque.calendly, p0 = Auth.profil.prenom;
-      CONFIG.marque.calendly = "https://calendly.com/x/30min?month=2026-10#haut"; out.diese = lienCalendly("decouverte");
-      CONFIG.marque.calendly = "https://calendly.com/x/30min#haut"; out.diese2 = lienCalendly("decouverte");
-      CONFIG.marque.calendly = "javascript:alert(1)"; out.piege = lienCalendly("decouverte");
-      CONFIG.marque.calendly = ""; out.vide = lienCalendly("decouverte");
+      CONFIG.marque.calendly = "https://calendly.com/exemple/rendez-vous?month=2026-10#haut"; out.diese = lienCalendly("apres_questionnaire");
+      CONFIG.marque.calendly = "https://calendly.com/exemple/rendez-vous#haut"; out.diese2 = lienCalendly("verrou_programme");
+      CONFIG.marque.calendly = "javascript:alert(1)"; out.piege = lienCalendly("accueil_haut");
+      CONFIG.marque.calendly = ""; out.vide = lienCalendly("accueil_haut");
       CONFIG.marque.calendly = avant;
-      Auth.profil.prenom = "L" + String.fromCharCode(0xD800) + "a"; try { out.malforme = lienCalendly("decouverte"); } catch(e){ out.err = String(e); }
-      Auth.profil.prenom = ""; out.sansPrenom = lienCalendly("decouverte");
-      Auth.profil.prenom = "Anne-Marie & Co"; out.special = lienCalendly("decouverte");
+      Auth.profil.prenom = "L" + String.fromCharCode(0xD800) + "a"; try { out.malforme = lienCalendly("accueil_haut"); } catch(e){ out.err = String(e); }
+      Auth.profil.prenom = ""; out.sansPrenom = lienCalendly("accueil_haut");
+      Auth.profil.prenom = "Anne-Marie & Co"; out.special = lienCalendly("accueil_haut");
       /* v52 (lot B) : avec un nom */
       const n0 = Auth.profil.nom;
-      Auth.profil.prenom = p0; Auth.profil.nom = "Dupré-Martin"; out.avecNom = lienCalendly("decouverte");
-      Auth.profil.prenom = ""; out.nomSeul = lienCalendly("decouverte");
+      Auth.profil.prenom = p0; Auth.profil.nom = "Dupré-Martin"; out.avecNom = lienCalendly("accueil_haut");
+      Auth.profil.prenom = ""; out.nomSeul = lienCalendly("accueil_haut");
       Auth.profil.nom = n0;
       Auth.profil.prenom = p0;
       return out;
     }).catch(e => ({ err: String(e) }));
     ok("lienCalendly() sans source : utm_source et utm_medium, pas d'utm_content, prénom et email pré-remplis", r.sans === lienAttendu(""), r.sans || r.err);
-    ok("source hors format (majuscules, espace, « & », plus de 40 caractères, nombre, null, « # ») : aucun utm_content, rien d'injecté", Array.isArray(r.hors) && r.hors.every(x => x === lienAttendu("")), JSON.stringify(r.hors || r.err));
-    ok("adresse Calendly avec « ? » et « # » : paramètres ajoutés avec « & », avant le « # »", r.diese === "https://calendly.com/x/30min?month=2026-10&utm_source=app-mhx&utm_medium=app&utm_content=decouverte" + PRE + "#haut", r.diese);
-    ok("adresse Calendly avec « # » seulement : « ? » ajouté avant le « # »", r.diese2 === "https://calendly.com/x/30min?utm_source=app-mhx&utm_medium=app&utm_content=decouverte" + PRE + "#haut", r.diese2);
+    ok("source hors format (majuscules, espace, « & », plus de 40 caractères, nombre, null, « # », v61 : aussi avec « _ ») : aucun utm_content, rien d'injecté ; v61 : « _ » accepté (40 caractères : utm_content)", Array.isArray(r.hors) && r.hors.length === 9 && r.hors.every(x => x === lienAttendu("")) && r.souligne === lienAttendu("a_".repeat(20)), JSON.stringify(r.hors || r.err) + " | " + r.souligne);
+    ok("adresse Calendly avec « ? » et « # » : paramètres ajoutés avec « & », avant le « # »", r.diese === "https://calendly.com/exemple/rendez-vous?month=2026-10&" + UTM + "&utm_content=apres_questionnaire" + PRE + "#haut", r.diese);
+    ok("adresse Calendly avec « # » seulement : « ? » ajouté avant le « # »", r.diese2 === "https://calendly.com/exemple/rendez-vous?" + UTM + "&utm_content=verrou_programme" + PRE + "#haut", r.diese2);
     ok("adresse Calendly piégée (javascript:) ou vide : aucun lien", r.piege === "" && r.vide === "", JSON.stringify([r.piege, r.vide]));
     ok("prénom avec un caractère mal formé : aucune erreur, adresse Calendly intacte (sans aucun paramètre)", !r.err && r.malforme === CAL, JSON.stringify({ l: r.malforme, err: r.err }));
-    ok("prospect sans prénom : ni name ni first_name, l'email reste pré-rempli", r.sansPrenom === CAL + "?utm_source=app-mhx&utm_medium=app&utm_content=decouverte&email=l%40e.fr", r.sansPrenom);
-    ok("prénom avec espace et « & » : encodé, aucun paramètre injecté", r.special === CAL + "?utm_source=app-mhx&utm_medium=app&utm_content=decouverte&name=Anne-Marie%20%26%20Co&first_name=Anne-Marie%20%26%20Co&email=l%40e.fr", r.special);
-    ok("v52 : prospect avec un nom : name = « Léa Dupré-Martin », first_name = Léa, last_name = Dupré-Martin, puis l'email", r.avecNom === CAL + "?utm_source=app-mhx&utm_medium=app&utm_content=decouverte&name=L%C3%A9a%20Dupr%C3%A9-Martin&first_name=L%C3%A9a&last_name=Dupr%C3%A9-Martin&email=l%40e.fr", r.avecNom);
-    ok("v52 : nom sans prénom : name = le nom, last_name, pas de first_name", r.nomSeul === CAL + "?utm_source=app-mhx&utm_medium=app&utm_content=decouverte&name=Dupr%C3%A9-Martin&last_name=Dupr%C3%A9-Martin&email=l%40e.fr", r.nomSeul);
+    ok("prospect sans prénom : ni name ni first_name, l'email reste pré-rempli", r.sansPrenom === CAL + "?" + UTM + "&utm_content=accueil_haut&email=l%40e.fr", r.sansPrenom);
+    ok("prénom avec espace et « & » : encodé, aucun paramètre injecté", r.special === CAL + "?" + UTM + "&utm_content=accueil_haut&name=Anne-Marie%20%26%20Co&first_name=Anne-Marie%20%26%20Co&email=l%40e.fr", r.special);
+    ok("v52 : prospect avec un nom : name = « Léa Dupré-Martin », first_name = Léa, last_name = Dupré-Martin, puis l'email", r.avecNom === CAL + "?" + UTM + "&utm_content=accueil_haut&name=L%C3%A9a%20Dupr%C3%A9-Martin&first_name=L%C3%A9a&last_name=Dupr%C3%A9-Martin&email=l%40e.fr", r.avecNom);
+    ok("v52 : nom sans prénom : name = le nom, last_name, pas de first_name", r.nomSeul === CAL + "?" + UTM + "&utm_content=accueil_haut&name=Dupr%C3%A9-Martin&last_name=Dupr%C3%A9-Martin&email=l%40e.fr", r.nomSeul);
     await aller(page, "#/accueil", 2200);
-    ok("#/accueil du prospect : le même écran Découverte, le même lien (utm_content=decouverte)", (await href(page, '#acc-vue a[data-dc-cal="decouverte"]')) === lienAttendu("decouverte"), await href(page, '#acc-vue a[data-dc-cal="decouverte"]'));
+    const hAccueil = await href(page, '#acc-vue a[data-dc-cal="accueil_haut"]');
+    /* v61 (F) : sur « Modifier mes réponses », le même bouton porte le code reponses_haut (avant : decouverte aussi), avec la
+       même ligne dessous */
+    await aller(page, "#/decouverte/reponses", 2000);
+    const hRep = await href(page, '#dc-vue a[data-dc-cal="reponses_haut"]'), nRep = (await page.$$("#dc-vue [data-dc-cal]")).length;
+    const sRep = plat(await texte(page, "#dc-vue header.masthead .actions + p.dc-cta-sous.dc-haut-sous")).trim();
+    ok("#/accueil du prospect : le même écran Découverte, le même lien (utm_content=accueil_haut) ; v61 : « Modifier mes réponses » : un seul bouton, utm_content=reponses_haut, « 15 min avec Lucas · offert » dessous", hAccueil === lienAttendu("accueil_haut") && hRep === lienAttendu("reponses_haut") && nRep === 1 && sRep === SOUS, hAccueil + " | " + hRep + " (" + nRep + " bouton(s)) | " + sRep);
     await aller(page, "#/programme", 1400);
-    const hV = await href(page, "#vue .verrou a[target=_blank]");
-    ok("page verrouillée (#/programme) : « Réserver mon bilan » → utm_content=verrou-programme, prénom et email", hV === lienAttendu("verrou-programme") && (await texte(page, "#vue .verrou a[target=_blank]")).trim() === "Réserver mon bilan", hV);
+    /* v61 (G et F) : « Récupérer mon plan d'action » (avant : « Réserver mon bilan »), code verrou_programme (avant :
+       verrou-programme), seul lien du verrou, puis « 15 min avec Lucas · offert » */
+    const hV = await href(page, "#vue .verrou a[target=_blank]"), bV = await boutonVerrou(page);
+    ok("page verrouillée (#/programme) : « Récupérer mon plan d'action » → utm_content=verrou_programme, prénom et email ; « 15 min avec Lucas · offert » dessous", hV === lienAttendu("verrou_programme") && !!bV && bV.n === 1 && bV.t === CTA && plat(bV.sous) === SOUS, hV + " | " + JSON.stringify(bV));
     ok("prospect (Découverte, #/accueil, page verrouillée, liens calculés) : aucune écriture en base", db.ecritures.length === 0, JSON.stringify(db.ecritures.map(e => [e.table, e.user_id, e.outil])));
     await c.close();
   }
@@ -212,10 +259,11 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     const db = base();
     const { c, page } = await contexte(b, lea, db);
     await page.goto(`http://localhost:${PORT}/#/decouverte`); await attendre(page, 2600);
-    const h1 = await href(page, '#dc-vue a[data-dc-cal="decouverte"]');
+    /* v61 : codes accueil_haut et verrou_nutrition (avant : decouverte, verrou-nutrition) */
+    const h1 = await href(page, '#dc-vue a[data-dc-cal="accueil_haut"]');
     await aller(page, "#/nutrition", 1400);
     const h2 = await href(page, "#vue .verrou a[target=_blank]");
-    ok("interrupteur calendly_prerempli à false : utm seulement, ni prénom ni email (Découverte et page verrouillée)", h1 === lienAttendu("decouverte", true) && h2 === lienAttendu("verrou-nutrition", true), h1 + " | " + h2);
+    ok("interrupteur calendly_prerempli à false : utm seulement, ni prénom ni email (Découverte et page verrouillée)", h1 === lienAttendu("accueil_haut", true) && h2 === lienAttendu("verrou_nutrition", true), h1 + " | " + h2);
     await c.close();
     prerempliEteint = false;
   }
@@ -224,9 +272,10 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     const { c, page } = await contexte(b, coach, db);
     await page.goto(`http://localhost:${PORT}/#/tableau`); await attendre(page, 2200);
     const hors = await idConsulte(page);
-    const lc = await page.evaluate(() => typeof lienCalendly === "function" ? lienCalendly("decouverte") : null).catch(() => null);
+    /* v61 : avec un nouveau code (accueil_haut, verrou_programme) comme avec un ancien (decouverte) : la base seule */
+    const lc = await page.evaluate(() => typeof lienCalendly === "function" ? lienCalendly("accueil_haut") : null).catch(() => null);
     const fiche = await ouvrirFiche(page, PROSPECT);
-    const lf = await page.evaluate(() => typeof lienCalendly === "function" ? [lienCalendly("decouverte"), lienCalendly()] : null).catch(() => null);
+    const lf = await page.evaluate(() => typeof lienCalendly === "function" ? [lienCalendly("accueil_haut"), lienCalendly("verrou_programme"), lienCalendly("decouverte"), lienCalendly()] : null).catch(() => null);
     ok("coach (hors fiche, puis dans la fiche du prospect bien ouverte) : lienCalendly() rend l'adresse brute, sans utm ni pré-remplissage", hors === null && fiche === PROSPECT && lc === CAL && Array.isArray(lf) && lf.every(x => x === CAL), JSON.stringify({ hors, fiche, lc, lf }));
     await c.close();
   }
@@ -234,7 +283,7 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     const db = base();
     const { c, page } = await contexte(b, thomas, db);
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 2200);
-    const l = await page.evaluate(() => typeof lienCalendly === "function" ? lienCalendly("decouverte") : null).catch(() => null);
+    const l = await page.evaluate(() => typeof lienCalendly === "function" ? lienCalendly("accueil_haut") : null).catch(() => null);   // v61 : nouveau code (avant : decouverte)
     ok("client accompagné : lienCalendly() rend l'adresse brute (inchangé)", l === CAL, String(l));
     await c.close();
   }
@@ -242,11 +291,14 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     const db = base();
     const { c, page } = await contexte(b, lea, db, { langue: "en" });
     await page.goto(`http://localhost:${PORT}/#/decouverte`); await attendre(page, 2600);
-    const tTete = await texte(page, '#dc-vue a[data-dc-cal="decouverte"]');
+    /* v61 (lot 2) : « Get my action plan » (avant : « Book my assessment ») et « 15 min with Lucas · free » dessous ; #/programme :
+       son texte anglais propre (avant : l'appel commun) ; codes accueil_haut / verrou_programme */
+    const tTete = await texte(page, '#dc-vue a[data-dc-cal="accueil_haut"]');
+    const sTete = (await texte(page, "#dc-vue header.masthead .actions + p.dc-cta-sous.dc-haut-sous")).trim();
     await aller(page, "#/programme", 1400);
     const tV = await texte(page, "#vue .verrou");
-    const hV = await href(page, "#vue .verrou a[target=_blank]");
-    ok("anglais : « Book my assessment » sur la Découverte et la page verrouillée (#/programme : « " + TXT_APPEL_EN + " »), même lien", tTete.trim() === "Book my assessment" && tV.includes("Book my assessment") && tV.includes(TXT_APPEL_EN) && hV === lienAttendu("verrou-programme"), tTete + " | " + tV.slice(0, 160) + " | " + hV);
+    const hV = await href(page, "#vue .verrou a[target=_blank]"), bV = await boutonVerrou(page);
+    ok("anglais : « Get my action plan » et « 15 min with Lucas · free » sur la Découverte et la page verrouillée (#/programme : « " + TXT_APPEL_EN + " »), même lien", tTete.trim() === CTA_EN && sTete === SOUS_EN && !!bV && bV.n === 1 && bV.t === CTA_EN && bV.sous === SOUS_EN && tV.includes(TXT_APPEL_EN) && !tV.includes("Book my assessment") && hV === lienAttendu("verrou_programme"), tTete + " | " + sTete + " | " + JSON.stringify(bV) + " | " + tV.slice(0, 160) + " | " + hV);
     await c.close();
   }
 
@@ -259,20 +311,29 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
       if (typeof DECOUVERTE === "undefined" || !DECOUVERTE.confidentialite || !DECOUVERTE.en) return null;
       const fr = DECOUVERTE.confidentialite.paragraphes || [], en = (DECOUVERTE.en.confidentialite || {}).paragraphes || [];
       const i = fr.findIndex(p => /^Prise de rendez-vous/.test(p));
-      return { i, fr: fr[i] || "", en: en[i] || "", nFr: fr.length, nEn: en.length };
+      /* v61 (décision 4) : le paragraphe « Données collectées » (2e) et les versions du texte */
+      const j = fr.findIndex(p => /^Données collectées/.test(p));
+      return { i, fr: fr[i] || "", en: en[i] || "", nFr: fr.length, nEn: en.length, j, frD: fr[j] || "", enD: en[j] || "",
+        version: DECOUVERTE.confidentialite.version, conditions: DECOUVERTE.accords ? DECOUVERTE.accords.conditions : null };
     }).catch(() => null);
-    ok("DECOUVERTE.confidentialite : un paragraphe « Prise de rendez-vous » (Calendly, société américaine, pour le compte du coach, États-Unis, pré-remplissage à l'ouverture, écran d'origine)",
-      !!d && d.i > -1 && ["ton bilan se réserve sur Calendly (société américaine)", "pour le compte du coach", "États-Unis", "pré-remplis dès que tu ouvres la page de réservation", "l'écran de l'app d'où tu viens", "Ton prénom, ton nom et ton email"].every(x => d.fr.includes(x)), JSON.stringify(d));
-    ok("confidentialité en anglais : le paragraphe « Booking: » à la même place (Calendly, a US company, on the coach's behalf, pre-filled, app screen)",
-      !!d && d.nFr === d.nEn && /^Booking: /.test(d.en) && ["Calendly (a US company)", "on the coach's behalf", "United States", "pre-filled as soon as you open the booking page", "the app screen you came from", "Your first name, last name and email"].every(x => d.en.includes(x)), JSON.stringify(d && d.en));
+    /* v61 (lot 2, décision 4) : texte court version 2026-09-30 (avant : 2026-09-29), repris par accords.conditions (nouvelles
+       inscriptions) ; 2e paragraphe « … dont tes clics sur « Récupérer mon plan d'action » » (avant : « Réserver mon bilan ») */
+    ok("DECOUVERTE.confidentialite : un paragraphe « Prise de rendez-vous » (Calendly, société américaine, pour le compte du coach, États-Unis, pré-remplissage à l'ouverture, écran d'origine) ; v61 : 2e paragraphe « Données collectées : … dont tes clics sur « Récupérer mon plan d'action » », version 2026-09-30 (accords.conditions aussi)",
+      !!d && d.i > -1 && ["ton bilan se réserve sur Calendly (société américaine)", "pour le compte du coach", "États-Unis", "pré-remplis dès que tu ouvres la page de réservation", "l'écran de l'app d'où tu viens", "Ton prénom, ton nom et ton email"].every(x => d.fr.includes(x))
+      && d.j === 1 && d.frD.includes("dont tes clics sur « " + CTA + " ».") && !d.frD.includes("Réserver mon bilan") && d.version === "2026-09-30" && d.conditions === "2026-09-30", JSON.stringify(d));
+    ok("confidentialité en anglais : le paragraphe « Booking: » à la même place (Calendly, a US company, on the coach's behalf, pre-filled, app screen) ; v61 : « Data collected: … including your clicks on “Get my action plan” » à la même place que le français",
+      !!d && d.nFr === d.nEn && /^Booking: /.test(d.en) && ["Calendly (a US company)", "on the coach's behalf", "United States", "pre-filled as soon as you open the booking page", "the app screen you came from", "Your first name, last name and email"].every(x => d.en.includes(x))
+      && /^Data collected: /.test(d.enD) && d.enD.includes("including your clicks on “" + CTA_EN + "”.") && !d.enD.includes("Book my assessment"), JSON.stringify(d && [d.en, d.enD]));
     const vue = await texte(page);
     /* v52 : questionnaire validé → « Modifier mes réponses » (#/decouverte/reponses) ; avant : « Voir mon résultat » (#/decouverte) */
     ok("Profil du prospect : « Tes réponses au questionnaire sont enregistrées… » et le lien « Modifier mes réponses » (#/decouverte/reponses)", vue.includes("Tes réponses au questionnaire sont enregistrées") && (await texte(page, '#vue a[href="#/decouverte/reponses"]')).trim() === "Modifier mes réponses");
     const bouton = await texte(page, "#mc-conditions");
     await page.click("#mc-conditions").catch(() => {}); await attendre(page, 500);
     const v = await texte(page, ".volet");
-    ok("Profil du prospect : « Conditions d'utilisation et confidentialité » s'ouvre sur le texte complet, « Prise de rendez-vous » compris",
-      bouton.trim() === "Conditions d'utilisation et confidentialité" && v.includes("Prise de rendez-vous : ton bilan se réserve sur Calendly (société américaine)") && v.includes("l'écran de l'app d'où tu viens") && v.includes("Hébergement : Supabase"), bouton + " | " + v.slice(0, 200));
+    /* v61 (décision 4) : le volet affiche le nouveau 2e paragraphe (« Récupérer mon plan d'action »), plus « Réserver mon bilan » */
+    ok("Profil du prospect : « Conditions d'utilisation et confidentialité » s'ouvre sur le texte complet, « Prise de rendez-vous » compris ; v61 : « dont tes clics sur « Récupérer mon plan d'action » », plus de « Réserver mon bilan »",
+      bouton.trim() === "Conditions d'utilisation et confidentialité" && v.includes("Prise de rendez-vous : ton bilan se réserve sur Calendly (société américaine)") && v.includes("l'écran de l'app d'où tu viens") && v.includes("Hébergement : Supabase")
+      && plat(v).includes("dont tes clics sur « " + CTA + " »") && !plat(v).includes("Réserver mon bilan"), bouton + " | " + v.slice(0, 200) + " | " + (/dont tes clics sur[^.]*/.exec(plat(v)) || [""])[0]);
     await page.keyboard.press("Escape"); await attendre(page, 400);
     ok("relire les conditions ferme proprement (Échap) et n'écrit rien", !(await page.$(".volet")) && db.ecritures.length === 0, JSON.stringify(db.ecritures.map(e => e.outil)));
     await c.close();
@@ -288,8 +349,10 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     /* chaque paragraphe anglais en entier ; aucun debut de paragraphe francais (un paragraphe oublie resterait en francais) */
     const manquantsEn = P ? P.en.filter(x => !v.includes(norm(x))).map(x => x.slice(0, 30)) : ["DECOUVERTE absent"];
     const restesFr = P ? P.fr.map(x => norm(x).slice(0, 20)).concat(["Conditions d'utilisation", "Hébergement :", "Données collectées", "Prise de rendez-vous"]).filter(x => v.includes(x)) : [];
-    ok("Profil du prospect en anglais : « Terms of use and privacy » → tous les paragraphes anglais (dont « Booking: your assessment is booked on Calendly (a US company)… »), aucun paragraphe français",
-      bouton.trim() === "Terms of use and privacy" && !!P && P.fr.length > 0 && P.en.length === P.fr.length && manquantsEn.length === 0 && restesFr.length === 0 && v.includes("Booking: your assessment is booked on Calendly (a US company)") && v.includes("on the coach's behalf") && v.includes("the app screen you came from"),
+    /* v61 (décision 4) : dont « including your clicks on “Get my action plan” » (avant : “Book my assessment”) */
+    ok("Profil du prospect en anglais : « Terms of use and privacy » → tous les paragraphes anglais (dont « Booking: your assessment is booked on Calendly (a US company)… » et, v61, « including your clicks on “Get my action plan” »), aucun paragraphe français",
+      bouton.trim() === "Terms of use and privacy" && !!P && P.fr.length > 0 && P.en.length === P.fr.length && manquantsEn.length === 0 && restesFr.length === 0 && v.includes("Booking: your assessment is booked on Calendly (a US company)") && v.includes("on the coach's behalf") && v.includes("the app screen you came from")
+      && v.includes("including your clicks on “" + CTA_EN + "”") && !v.includes("Book my assessment"),
       bouton + " | anglais manquants " + JSON.stringify(manquantsEn) + " | restes français " + JSON.stringify(restesFr) + " | " + v.slice(0, 160));
     await c.close();
   }
@@ -317,8 +380,9 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     await page.goto(`http://localhost:${PORT}/#/inscription`); await attendre(page, 1400);
     await page.click("#c-cgu-lien").catch(() => {}); await attendre(page, 500);
     const v = await texte(page, ".volet");
-    ok("inscription : le même texte « Prise de rendez-vous » (Calendly, pré-remplissage, écran d'origine) ; cases conditions et santé présentes",
-      v.includes("Prise de rendez-vous : ton bilan se réserve sur Calendly (société américaine)") && v.includes("dès que tu ouvres la page de réservation") && !!(await page.$("#c-cgu")) && !!(await page.$("#c-sante")), v.slice(0, 200));
+    /* v61 (décision 4) : le même texte court à l'inscription (« Récupérer mon plan d'action ») */
+    ok("inscription : le même texte « Prise de rendez-vous » (Calendly, pré-remplissage, écran d'origine) ; v61 : « dont tes clics sur « Récupérer mon plan d'action » » ; cases conditions et santé présentes",
+      v.includes("Prise de rendez-vous : ton bilan se réserve sur Calendly (société américaine)") && v.includes("dès que tu ouvres la page de réservation") && plat(v).includes("dont tes clics sur « " + CTA + " »") && !plat(v).includes("Réserver mon bilan") && !!(await page.$("#c-cgu")) && !!(await page.$("#c-sante")), v.slice(0, 200));
     await c.close();
     inscriptionLibre = false;
   }
@@ -337,17 +401,21 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     for (const r of ["programme", "journal", "nutrition", "suivi"]) {
       const avant = db.lectures.length;
       await aller(page, "#/" + r, 1300);
-      const t = await texte(page, "#vue .verrou"), lu = db.lectures.slice(avant);
-      /* v52 (lot E) : aucune clé de la table donnees lue (la journée type de #/nutrition lit le catalogue public : permis) */
-      ok(`#/${r} (vitrine) : page verrouillée (l'exemple, puis l'appel), « Réserver mon bilan » (utm_content=verrou-${r}), aucune de ses données lue`, t.includes(TXT_APPEL) && !!(await page.$("#vue #ech-" + r + ".echantillon")) && t.includes("Réserver mon bilan") && (await href(page, "#vue .verrou a[target=_blank]")) === lienAttendu("verrou-" + r) && lu.length === 0, t.slice(0, 160) + " | lectures " + JSON.stringify(lu));
+      const t = plat(await texte(page, "#vue .verrou")), lu = db.lectures.slice(avant), bV = await boutonVerrou(page);
+      /* v52 (lot E) : aucune clé de la table donnees lue (la journée type de #/nutrition lit le catalogue public : permis)
+         v61 (lot 2, G et F) : le texte propre à la page (avant : l'appel commun), « Récupérer mon plan d'action » (avant :
+         « Réserver mon bilan »), seul lien du verrou, utm_content=verrou_<page> (avant : verrou-<page>), « 15 min avec Lucas ·
+         offert » dessous */
+      ok(`#/${r} (vitrine) : page verrouillée (l'exemple, puis son texte), « Récupérer mon plan d'action » (utm_content=verrou_${r}) et « 15 min avec Lucas · offert », aucune de ses données lue`, t.includes(TXT_APPELS[r]) && !!(await page.$("#vue #ech-" + r + ".echantillon")) && !!bV && bV.n === 1 && bV.t === CTA && plat(bV.sous) === SOUS && !t.includes("Réserver mon bilan") && (await href(page, "#vue .verrou a[target=_blank]")) === lienAttendu("verrou_" + r) && lu.length === 0, t.slice(0, 160) + " | " + JSON.stringify(bV) + " | lectures " + JSON.stringify(lu));
     }
     for (const r of ["complements", "bilan"]) {   // v52 : Ma progression n'est plus verrouillée
       const avant = db.lectures.length;
       await aller(page, "#/" + r, 1300);
-      const t = await texte(page, "#vue .verrou");
+      const t = plat(await texte(page, "#vue .verrou")), bV = await boutonVerrou(page);
       const lu = db.lectures.slice(avant);
-      /* avant > 0 : le compteur de lectures marche (l'accueil a bien lu ses donnees) */
-      ok(`#/${r} (caché) : verrouillé à son adresse, « Réserver mon bilan » (utm_content=verrou-${r}), aucune donnée lue`, t.includes(TXT_VERROU) && t.includes("Réserver mon bilan") && (await href(page, "#vue .verrou a[target=_blank]")) === lienAttendu("verrou-" + r) && avant > 0 && lu.length === 0, t.slice(0, 120) + " | lectures " + JSON.stringify(lu) + " (avant : " + avant + ")");
+      /* avant > 0 : le compteur de lectures marche (l'accueil a bien lu ses donnees)
+         v61 (lot 2) : même bouton et même ligne que la vitrine, code verrou_<page> (avant : « Réserver mon bilan », verrou-<page>) */
+      ok(`#/${r} (caché) : verrouillé à son adresse, « Récupérer mon plan d'action » (utm_content=verrou_${r}) et « 15 min avec Lucas · offert », aucune donnée lue`, t.includes(TXT_VERROU) && !!bV && bV.n === 1 && bV.t === CTA && plat(bV.sous) === SOUS && !t.includes("Réserver mon bilan") && (await href(page, "#vue .verrou a[target=_blank]")) === lienAttendu("verrou_" + r) && avant > 0 && lu.length === 0, t.slice(0, 120) + " | " + JSON.stringify(bV) + " | lectures " + JSON.stringify(lu) + " (avant : " + avant + ")");
     }
     const redir = [];
     for (const h of ["#/challenge", "#/challenge/3", "#/challenge-libre", "#/challenge-rythme"]) {
@@ -401,7 +469,9 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     await c.close();
   }
 
-  /* ---------- D. Clics « Réserver mon bilan » des pages verrouillées ---------- */
+  /* ---------- D. Clics « Récupérer mon plan d'action » (v61 ; avant : « Réserver mon bilan ») des pages verrouillées ----------
+     v61 (lot 2, F) : chaque clic est noté avec le code verrou_<page> (avant : verrou-<page>) ; un ancien clic en base garde son
+     ancien code (« decouverte ») : rien n'est réécrit */
   {
     const ancien = { version: 1, jours: { "1": { fait: creeLe(1), date: "x" } }, cta: { clics: [{ jour: 1, source: "decouverte", date: creeLe(1) }] } };
     const db = base({ challenge: ancien });
@@ -411,14 +481,14 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     await cliquerSansOuvrir(page, "#vue .verrou a[target=_blank]"); await attendre(page, 1800);
     let C = cleChallenge(db), cl = (C.cta && C.cta.clics) || [];
     const der = cl[cl.length - 1] || {};
-    ok("clic « Réserver mon bilan » sur #/programme : noté dans challenge.cta.clics { jour: 2, source: \"verrou-programme\", date }",
-      cl.length === 2 && der.jour === 2 && der.source === "verrou-programme" && typeof der.date === "string" && Math.abs(Date.parse(der.date) - t0) < 60000, JSON.stringify(C.cta));
+    ok("clic « Récupérer mon plan d'action » sur #/programme : noté dans challenge.cta.clics { jour: 2, source: \"verrou_programme\", date }",
+      cl.length === 2 && der.jour === 2 && der.source === "verrou_programme" && typeof der.date === "string" && Math.abs(Date.parse(der.date) - t0) < 60000, JSON.stringify(C.cta));
     ok("le clic s'ajoute sans rien perdre (ancien clic et anciens jours gardés)", cl.length === 2 && cl[0].source === "decouverte" && !!(C.jours && C.jours["1"]), JSON.stringify(C));
     /* v52 (lot D) : Ma progression est ouverte au prospect ; la page cachée essayée est #/complements */
     await aller(page, "#/complements", 1400);
     await cliquerSansOuvrir(page, "#vue .verrou a[target=_blank]"); await attendre(page, 1800);
     C = cleChallenge(db); cl = (C.cta && C.cta.clics) || [];
-    ok("clic depuis une page cachée (#/complements) : noté avec source \"verrou-complements\"", cl.length === 3 && (cl[2] || {}).source === "verrou-complements", JSON.stringify(C.cta));
+    ok("clic depuis une page cachée (#/complements) : noté avec source \"verrou_complements\"", cl.length === 3 && (cl[2] || {}).source === "verrou_complements", JSON.stringify(C.cta));
     ok("aucune autre écriture que la clé challenge de la prospecte", db.ecritures.length > 0 && db.ecritures.every(e => e.table === "donnees" && e.user_id === PROSPECT && e.outil === "challenge"), JSON.stringify(db.ecritures.map(e => [e.table, e.user_id, e.outil])));
     const tr = await page.evaluate(() => { try { return JSON.parse(localStorage.getItem("mhx_tracking") || "[]"); } catch(e){ return []; } });
     ok("événement « call_cta_clicked » noté dans mhx_tracking pour chaque clic", tr.filter(x => x.event === "call_cta_clicked" && x.uid === PROSPECT).length === 2, JSON.stringify(tr.map(x => x.event)));
@@ -431,7 +501,7 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     await page.goto(`http://localhost:${PORT}/#/suivi`); await attendre(page, 2400);
     await cliquerSansOuvrir(page, "#vue .verrou a[target=_blank]"); await attendre(page, 1800);
     const C = cleChallenge(db), cl = (C.cta && C.cta.clics) || [];
-    ok("premier clic sans clé challenge (#/suivi) : la clé naît avec ce clic (source \"verrou-suivi\")", cl.length === 1 && cl[0].source === "verrou-suivi" && cl[0].jour === 2, JSON.stringify(C));
+    ok("premier clic sans clé challenge (#/suivi) : la clé naît avec ce clic (source \"verrou_suivi\")", cl.length === 1 && cl[0].source === "verrou_suivi" && cl[0].jour === 2, JSON.stringify(C));
     await c.close();
   }
   /* v52 (lot D) : fonction supprimée — « clic depuis la formation verrouillée (jour 8) » */

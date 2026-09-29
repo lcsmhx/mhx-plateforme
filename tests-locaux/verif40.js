@@ -18,6 +18,12 @@
    - aucun prix, tarif ni abonnement nulle part (pages FR / EN, volets, inscription, textes de la Découverte,
      avantages et tout le dictionnaire anglais) ;
    - client, coach sur une fiche, base sans colonne statut : inchangés.
+   - v61 (lot 2, brief V2 E, F, G, décision 4) : partout « Récupérer mon plan d'action » / « Get my action plan » (avant :
+     « Réserver mon bilan » / « Book my assessment ») suivi de « 15 min avec Lucas · offert » / « 15 min with Lucas · free »
+     (accueil : sous le bouton du haut ; carte : sa note « 15 min avec Lucas pour faire le point… ») ; lien Calendly de
+     l'événement de 15 min avec utm_source=app, utm_medium=bouton, utm_content = accueil_haut, accueil_accompagnement,
+     verrou_<page> (clic noté avec la même source) ; un texte propre à chaque page verrouillée de la vitrine ; texte court des
+     conditions : « dont tes clics sur « Récupérer mon plan d'action » ». Nombre de vérifications inchangé (64).
    Supabase simulé : rien ne part vers la vraie base ; les écritures dans donnees sont appliquées en mémoire,
    et TOUTE requête non-GET vers /rest/v1/* est relevée (méthode + adresse) pour les contrôles « aucune écriture ».
    Chaque bloc est protégé : une exception (élément absent, délai dépassé) note un ✗ et la suite continue ;
@@ -42,10 +48,23 @@ const server = http.createServer((req, res) => {
 });
 const res = []; const ok = (n, c, d) => res.push((c ? "  ✓ " : "  ✗ ") + n + (c ? "" : "  — " + String(d || "").replace(/\s+/g, " ").trim()));
 const PROSPECT = "00000000-0000-4000-8000-000000000c04", EQUIPE = "00000000-0000-4000-8000-0000000000e1";
-const CAL = "https://calendly.com/mhx-coaching/30min";
+/* v61 (lot 2, brief V2 F) : l'événement de 15 min « Ton plan d'action offert » (avant : …/mhx-coaching/30min) */
+const CAL = "https://calendly.com/mhx-coaching/ton-plan-d-action-offert-15-min-avec-lucas";
 /* le lien attendu pour la prospecte Léa Démo (l@e.fr) : source de l'écran + prénom et email pré-remplis.
-   v52 (lot B) : son nom aussi (profils.nom « Démo ») : name = « Léa Démo », first_name, last_name */
-const lienPre = src => CAL + "?utm_source=app-mhx&utm_medium=app&utm_content=" + src + "&name=L%C3%A9a%20D%C3%A9mo&first_name=L%C3%A9a&last_name=D%C3%A9mo&email=l%40e.fr";
+   v52 (lot B) : son nom aussi (profils.nom « Démo ») : name = « Léa Démo », first_name, last_name
+   v61 (lot 2, F) : utm_source=app, utm_medium=bouton (avant : app-mhx / app), codes d'origine avec « _ » (accueil_haut,
+   accueil_accompagnement, verrou_<page> ; avant : decouverte, decouverte-accompagnement, verrou-<page>) ; même ordre */
+const lienPre = src => CAL + "?utm_source=app&utm_medium=bouton&utm_content=" + src + "&name=L%C3%A9a%20D%C3%A9mo&first_name=L%C3%A9a&last_name=D%C3%A9mo&email=l%40e.fr";
+/* v61 (lot 2, vocabulaire commun) : le bouton unique partout où le bilan est proposé au prospect (avant : « Réserver mon
+   bilan » / « Book my assessment ») et sa petite ligne dessous (nouvelle) */
+const CTA = { fr: "Récupérer mon plan d'action", en: "Get my action plan" };
+const SOUS = { fr: "15 min avec Lucas · offert", en: "15 min with Lucas · free" };
+/* la note de la carte « Ce que l'accompagnement ajoute », sous son bouton (avant : « Un bilan de 30 minutes… ») */
+const NOTE_ACCOMP = { fr: "15 min avec Lucas pour faire le point sur ton objectif. Offert.", en: "15 min with Lucas to go over your goal. Free." };
+/* v61 : les textes français passent par typoFr (espace insécable avant « : ; ? ! » et dans « ») : comparés après
+   remplacement des espaces insécables (U+00A0, U+202F) par des espaces simples. (norm, plus haut, ne le fait pas : sa
+   classe ne contient que des espaces simples.) */
+const plat = t => String(t || "").replace(/[\u00a0\u202f]/g, " ");
 /* inscription il y a n jours (10 h, heure locale) : la prospecte est au jour n + 1 de sa découverte */
 const inscritIlYA = n => { const d = new Date(); d.setHours(10, 0, 0, 0); d.setDate(d.getDate() - n); return d.toISOString(); };
 /* la date locale (AAAA-MM-JJ) d'il y a n jours */
@@ -201,15 +220,22 @@ const calendlyVue = async page => (await page.$$("#vue a[href*='calendly']")).le
 /* le contenu du verrou affiché dans #vue (null s'il n'y en a pas) */
 const verrou = page => page.$eval("#vue .verrou", el => {
   const a = el.querySelector("a");
+  /* v61 : + la ligne sous le bouton (p.verrou-sous, juste après le bloc du bouton) et le nombre de liens du verrou */
+  const sous = el.querySelector(".actions + p.verrou-sous");
   return { cadenas: !!el.querySelector(".cadenas svg"), titre: (el.querySelector("h2") || {}).textContent || "", texte: (el.querySelector("p") || {}).textContent || "",
-           lien: a ? { href: a.href, t: a.textContent.trim(), cible: a.target, rel: a.rel } : null };
+           lien: a ? { href: a.href, t: a.textContent.trim(), cible: a.target, rel: a.rel } : null,
+           sous: sous ? sous.textContent.trim() : null, nLiens: el.querySelectorAll("a").length };
 }).catch(() => null);
-const lienOk = (v, src, cta) => !!(v && v.lien && v.lien.href === lienPre(src) && v.lien.t === cta && v.lien.cible === "_blank" && /noopener/.test(v.lien.rel));
+/* v61 (lot 2) : un seul lien, « Récupérer mon plan d'action » / « Get my action plan » (lang = "en" en anglais), vers le
+   lien pré-rempli de son code d'origine, puis la ligne « 15 min avec Lucas · offert » / « 15 min with Lucas · free »
+   (avant : « Réserver mon bilan », sans ligne dessous) */
+const lienOk = (v, src, lang) => !!(v && v.lien && v.nLiens === 1 && v.lien.href === lienPre(src) && v.lien.t === CTA[lang || "fr"] && v.lien.cible === "_blank" && /noopener/.test(v.lien.rel) && plat(v.sous) === SOUS[lang || "fr"]);
 /* les clés de données chargées dans l'appli (toutes les boîtes du cache) ; null si le cache n'est pas lisible */
 const clesChargees = page => page.evaluate(() => {
   try { const bs = Store.boites ? Object.values(Store.boites) : [Store.cache]; return [...new Set(bs.flatMap(x => Object.keys(x || {})))]; } catch (e) { return null; }
 });
-/* clic sur le « Réserver mon bilan » d'une page verrouillée : l'adresse de l'onglet ouvert, ou null si le bouton manque */
+/* clic sur le « Récupérer mon plan d'action » (v61 ; avant : « Réserver mon bilan ») d'une page verrouillée : l'adresse de
+   l'onglet ouvert, ou null si le bouton manque */
 const cliquerVerrou = async (c, page) => {
   if (!(await page.$("#vue .verrou a"))) return null;
   const [pop] = await Promise.all([c.waitForEvent("page", { timeout: 4000 }).catch(() => null), cliquer(page, "#vue .verrou a")]);
@@ -231,9 +257,22 @@ const cliquerVerrou = async (c, page) => {
      du verrou ; les autres pages verrouillées gardent « Cette fonctionnalité… ». Le contrat ne change pas : une page
      verrouillée ne fait aucune requête vers ses données (la journée type lit le catalogue public, pas la table donnees). */
   const AVEC_EXEMPLE = ["programme", "nutrition", "journal", "suivi"];
-  const TEXTE_APPEL = "Tu veux un programme construit pour toi, qui évolue chaque semaine ? Réserve ton bilan.";
-  const TEXTE_APPEL_EN = "Want a program built for you that evolves every week? Book your assessment.";
-  const texteVerrou = (r, en) => AVEC_EXEMPLE.includes(r) ? (en ? TEXTE_APPEL_EN : TEXTE_APPEL) : (en ? TEXTE_VERROU_EN : TEXTE_VERROU);
+  /* v61 (lot 2, brief V2 G) : un texte propre à chaque page de la vitrine, qui prolonge son exemple (avant : le même appel
+     partout, « Tu veux un programme construit pour toi, qui évolue chaque semaine ? Réserve ton bilan. » / « Want a program
+     built for you that evolves every week? Book your assessment. ») ; les pages cachées gardent « Cette fonctionnalité… » */
+  const APPELS = {
+    programme: "Cette séance découverte est la même pour tout le monde. Ton programme, lui, part de ton niveau, de ton matériel et de ton emploi du temps, puis évolue avec tes progrès.",
+    journal: "Avec l'accompagnement, chaque séance est notée et l'app te propose la charge à viser la fois suivante : tu sais toujours quoi faire pour progresser.",
+    nutrition: "Avec l'accompagnement, tes repas sont calculés sur tes calories et tes macros, en tenant compte de ton régime et de tes allergies, avec ta liste de courses.",
+    suivi: "Avec l'accompagnement, ton coach lit ton bilan chaque semaine et te répond avec la suite du plan : tu sais toujours où tu en es et quoi faire ensuite."
+  };
+  const APPELS_EN = {
+    programme: "This starter workout is the same for everyone. Your program starts from your level, your equipment and your schedule, then evolves as you progress.",
+    journal: "With coaching, every workout is logged and the app suggests the weight to aim for next time: you always know what to do to progress.",
+    nutrition: "With coaching, your meals are calculated from your calories and macros, taking your diet and allergies into account, with your shopping list.",
+    suivi: "With coaching, your coach reads your weekly check-in and replies with the next step: you always know where you stand and what to do next."
+  };
+  const texteVerrou = (r, en) => AVEC_EXEMPLE.includes(r) ? (en ? APPELS_EN[r] : APPELS[r]) : (en ? TEXTE_VERROU_EN : TEXTE_VERROU);
   const exempleOk = async (page, r) => AVEC_EXEMPLE.includes(r) === !!(await page.$("#vue #ech-" + r + ".echantillon"));
   const TEXTE_FORMATION = "Ta période découverte est terminée : la Speed Formation fait partie de l'accompagnement.";
   let textesFr = "", textesEn = "";
@@ -302,7 +341,15 @@ const cliquerVerrou = async (c, page) => {
        lot D : l'action mise en avant en tête (dc-etape, « Calcule tes calories »), plus de « Jour n/7 » */
     ok("prospect jour 4 : accueil Découverte « Découverte » (sans « Jour n/7 »), « Bonjour Léa », son étape, Speed Formation et accompagnement (plus d'ancien écran « résultat »)", /^\s*Découverte\s+Bonjour Léa/.test(acc) && !/Jour \d/.test(acc) && JSON.stringify(blocs) === '["dc-etape","dc-formation","dc-accomp"]', acc.slice(0, 160) + " | " + JSON.stringify(blocs));
     const cals = await page.$$eval(DC_ZONE + " [data-dc-cal]", l => l.map(a => ({ src: a.dataset.dcCal, href: a.href, t: a.textContent.trim(), cible: a.target })));
-    ok("prospect jour 4 : « Réserver mon bilan » sur l'accueil (en-tête + accompagnement), Calendly pré-rempli, utm_content=decouverte / decouverte-accompagnement", cals.length === 2 && cals.every(x => x.href === lienPre(x.src) && x.t === "Réserver mon bilan" && x.cible === "_blank") && cals.map(x => x.src).join() === "decouverte,decouverte-accompagnement", JSON.stringify(cals));
+    /* v61 (lot 2, brief V2 E et F) : « Récupérer mon plan d'action » (avant : « Réserver mon bilan »), codes accueil_haut /
+       accueil_accompagnement (avant : decouverte / decouverte-accompagnement) ; sous le bouton du haut, la ligne « 15 min avec
+       Lucas · offert » ; sous celui de la carte, sa note « 15 min avec Lucas pour faire le point… » ; plus aucun « Réserver mon
+       bilan » ni « 30 minutes » sur l'accueil */
+    const sousAcc = await page.evaluate(z => ({ haut: (document.querySelector(z + " header.masthead .actions + p.dc-cta-sous.dc-haut-sous") || {}).textContent || null,
+      note: (document.querySelector("#dc-accomp .actions + p.note") || {}).textContent || null }), DC_ZONE).catch(() => ({}));
+    ok("prospect jour 4 : « Récupérer mon plan d'action » sur l'accueil (en-tête + carte « Ce que l'accompagnement ajoute »), Calendly pré-rempli, utm_content=accueil_haut / accueil_accompagnement, « 15 min avec Lucas · offert » sous le bouton du haut et « 15 min avec Lucas pour faire le point sur ton objectif. Offert. » sous celui de la carte ; plus de « Réserver mon bilan » ni de « 30 minutes »",
+      cals.length === 2 && cals.every(x => x.href === lienPre(x.src) && x.t === CTA.fr && x.cible === "_blank") && cals.map(x => x.src).join() === "accueil_haut,accueil_accompagnement"
+      && plat(sousAcc.haut).trim() === SOUS.fr && plat(sousAcc.note).trim() === NOTE_ACCOMP.fr && !/Réserver mon bilan|30 minutes/.test(plat(acc)), JSON.stringify(cals) + " | " + JSON.stringify(sousAcc));
     ok("prospect jour 4 : bloc Speed Formation ouvert pendant la découverte (lien « Ouvrir la Speed Formation »)", !!(await page.$('#dc-formation a[href="#/formation"]')) && !(await texte(page, "#dc-formation")).includes(TEXTE_FORMATION));
     await page.screenshot({ path: path.join(OUT, "prospect-accueil.png"), fullPage: true });
     textesFr += "\n" + await toutLeTexte(page);
@@ -323,7 +370,10 @@ const cliquerVerrou = async (c, page) => {
       page.donnees.length = 0;
       await aller(page, "#/" + r, 1300);
       const v = await verrou(page);
-      ok(`prospect : #/${r} verrouillé — ${AVEC_EXEMPLE.includes(r) ? "l'exemple, puis " : ""}cadenas, « ${texteVerrou(r)} », « Réserver mon bilan » vers Calendly (utm_content=verrou-${r}, prénom et email pré-remplis)`, !!v && v.cadenas && v.texte === texteVerrou(r) && await exempleOk(page, r) && lienOk(v, "verrou-" + r, "Réserver mon bilan"), JSON.stringify(v));
+      /* v61 (lot 2) : le texte propre à la page (typographie française : comparé sans les espaces insécables), « Récupérer
+         mon plan d'action » (utm_content=verrou_<page>) et la ligne « 15 min avec Lucas · offert » (avant : l'appel commun,
+         « Réserver mon bilan », verrou-<page>) */
+      ok(`prospect : #/${r} verrouillé — ${AVEC_EXEMPLE.includes(r) ? "l'exemple, puis " : ""}cadenas, « ${texteVerrou(r)} », « ${CTA.fr} » vers Calendly (utm_content=verrou_${r}, prénom et email pré-remplis), « ${SOUS.fr} » dessous`, !!v && v.cadenas && plat(v.texte) === texteVerrou(r) && await exempleOk(page, r) && lienOk(v, "verrou_" + r), JSON.stringify(v));
       const html = await page.evaluate(() => document.body.innerHTML);
       ok(`prospect : #/${r} verrouillé — aucune requête vers ses données (ni lecture ni écriture), rien de ses données affiché`, page.donnees.length === 0 && !html.includes(TEMOIN), page.donnees.join(" ; ") + (html.includes(TEMOIN) ? " | donnée témoin affichée" : ""));
       textesFr += "\n" + await toutLeTexte(page);
@@ -361,21 +411,24 @@ const cliquerVerrou = async (c, page) => {
     /* le volet des conditions (relisible depuis le profil) : il doit s'ouvrir, sinon son texte échapperait au contrôle des prix */
     const okCond = await cliquer(page, "#mc-conditions"); await attendre(page, 500);
     const tc = await toutLeTexte(page);
-    ok("prospect : le volet « Conditions d'utilisation et confidentialité » s'ouvre depuis le profil (texte capturé pour le contrôle des prix)", okCond && tc.includes(HEBERGEMENT.fr), okCond ? "« " + HEBERGEMENT.fr + " » introuvable" : "bouton #mc-conditions absent");
+    /* v61 (lot 2, décision 4) : le texte court dit « dont tes clics sur « Récupérer mon plan d'action » » (avant : « Réserver
+       mon bilan ») */
+    ok("prospect : le volet « Conditions d'utilisation et confidentialité » s'ouvre depuis le profil (texte capturé pour le contrôle des prix) ; v61 : « dont tes clics sur « Récupérer mon plan d'action » », plus de « Réserver mon bilan »", okCond && tc.includes(HEBERGEMENT.fr) && plat(tc).includes("dont tes clics sur « " + CTA.fr + " »") && !plat(tc).includes("Réserver mon bilan"), okCond ? (tc.includes(HEBERGEMENT.fr) ? "clics : " + (/dont tes clics sur[^.]*/.exec(plat(tc)) || ["introuvable"])[0] : "« " + HEBERGEMENT.fr + " » introuvable") : "bouton #mc-conditions absent");
     textesFr += "\n" + tc;
     await page.keyboard.press("Escape"); await attendre(page, 300);
     ok("prospect : aucune écriture pendant toute la visite (accueil, navigation, pages verrouillées, formation, profil, conditions) — aucune requête non-GET vers /rest/v1/*", db.requetes.length === 0 && db.ecritures.length === 0, db.requetes.join(" ; "));
 
-    /* un clic « Réserver mon bilan » sur une page verrouillée : Calendly s'ouvre, le clic est noté pour le coach */
+    /* un clic « Récupérer mon plan d'action » (v61 ; avant : « Réserver mon bilan ») sur une page verrouillée : Calendly
+       s'ouvre, le clic est noté pour le coach avec son code d'origine verrou_nutrition (avant : verrou-nutrition) */
     await aller(page, "#/nutrition", 1300);
     const popUrl = await cliquerVerrou(c, page);
-    const manque = popUrl === null ? "bouton « Réserver mon bilan » absent de #/nutrition | " : "";
+    const manque = popUrl === null ? "bouton « " + CTA.fr + " » absent de #/nutrition | " : "";
     const ec = db.ecritures.filter(e => e.user_id === PROSPECT);
     const der = ec.length ? ec[ec.length - 1] : null;
     const clics = der && der.contenu && der.contenu.cta && Array.isArray(der.contenu.cta.clics) ? der.contenu.cta.clics : [];
     const clic = clics[clics.length - 1] || {};
-    ok("prospect : clic « Réserver mon bilan » sur #/nutrition verrouillé — Calendly s'ouvre dans un nouvel onglet avec le lien pré-rempli", popUrl === lienPre("verrou-nutrition") && db.calendly.length === 1 && db.calendly[0] === lienPre("verrou-nutrition"), manque + (popUrl || "aucun onglet") + " | " + db.calendly.join(" ; "));
-    ok("prospect : ce clic est noté dans la clé « challenge » (cta.clics : source verrou-nutrition, jour 4, date) et rien d'autre n'est écrit (une seule requête non-GET)", db.requetes.length === 1 && /^POST \/rest\/v1\/donnees/.test(db.requetes[0]) && ec.length === 1 && der.outil === "challenge" && clics.length === 1 && clic.source === "verrou-nutrition" && clic.jour === 4 && /^\d{4}-\d{2}-\d{2}T/.test(clic.date || ""), manque + db.requetes.join(" ; ") + " | " + JSON.stringify(ec.map(e => ({ outil: e.outil, cta: e.contenu && e.contenu.cta }))));
+    ok("prospect : clic « Récupérer mon plan d'action » sur #/nutrition verrouillé — Calendly s'ouvre dans un nouvel onglet avec le lien pré-rempli (utm_content=verrou_nutrition)", popUrl === lienPre("verrou_nutrition") && db.calendly.length === 1 && db.calendly[0] === lienPre("verrou_nutrition"), manque + (popUrl || "aucun onglet") + " | " + db.calendly.join(" ; "));
+    ok("prospect : ce clic est noté dans la clé « challenge » (cta.clics : source verrou_nutrition, jour 4, date) et rien d'autre n'est écrit (une seule requête non-GET)", db.requetes.length === 1 && /^POST \/rest\/v1\/donnees/.test(db.requetes[0]) && ec.length === 1 && der.outil === "challenge" && clics.length === 1 && clic.source === "verrou_nutrition" && clic.jour === 4 && /^\d{4}-\d{2}-\d{2}T/.test(clic.date || ""), manque + db.requetes.join(" ; ") + " | " + JSON.stringify(ec.map(e => ({ outil: e.outil, cta: e.contenu && e.contenu.cta }))));
     const suivi = await page.evaluate(() => { try { return JSON.parse(localStorage.getItem("mhx_tracking") || "[]").map(e => e.event); } catch (e) { return []; } });
     ok("prospect : le clic est aussi compté dans le suivi local (call_cta_clicked)", suivi.includes("call_cta_clicked"), manque + JSON.stringify(suivi));
   });
@@ -422,28 +475,38 @@ const cliquerVerrou = async (c, page) => {
     const { page } = await contexte(b, lea, db, { langue: "en" });
     await page.goto(`http://localhost:${PORT}/#/programme`); await attendre(page, 2000);
     const v = await verrou(page);
-    ok(`prospect en anglais : #/programme (l'exemple, puis) « ${TEXTE_APPEL_EN} » et « Book my assessment » (utm_content=verrou-programme)`, !!v && v.texte === TEXTE_APPEL_EN && await exempleOk(page, "programme") && lienOk(v, "verrou-programme", "Book my assessment"), JSON.stringify(v));
+    /* v61 (lot 2) : le texte anglais propre à la page, « Get my action plan » (utm_content=verrou_programme) et « 15 min with
+       Lucas · free » (avant : l'appel commun, « Book my assessment », verrou-programme) */
+    ok(`prospect en anglais : #/programme (l'exemple, puis) « ${APPELS_EN.programme} », « ${CTA.en} » (utm_content=verrou_programme) et « ${SOUS.en} »`, !!v && v.texte === APPELS_EN.programme && await exempleOk(page, "programme") && lienOk(v, "verrou_programme", "en"), JSON.stringify(v));
     textesEn += "\n" + await toutLeTexte(page);
     await aller(page, "#/accueil", 2000);
     const acc = await texte(page, "#acc-vue");
     const cals = await page.$$eval(DC_ZONE + " [data-dc-cal]", l => l.map(a => a.textContent.trim()));
-    ok("prospect en anglais : accueil « Discovery » (v52 : sans « Day n/7 »), boutons « Book my assessment »", /^\s*Discovery\s+Hello/.test(acc) && !/Day \d/.test(acc) && cals.length === 2 && cals.every(x => x === "Book my assessment"), acc.slice(0, 160) + " | " + JSON.stringify(cals));
+    /* v61 (lot 2) : « Get my action plan » (avant : « Book my assessment »), « 15 min with Lucas · free » sous le bouton du haut,
+       « 15 min with Lucas to go over your goal. Free. » sous celui de la carte ; plus de « Book my assessment » ni de « 30-minute » */
+    const sousAcc = await page.evaluate(z => ({ haut: (document.querySelector(z + " header.masthead .actions + p.dc-cta-sous.dc-haut-sous") || {}).textContent || null,
+      note: (document.querySelector("#dc-accomp .actions + p.note") || {}).textContent || null }), DC_ZONE).catch(() => ({}));
+    ok("prospect en anglais : accueil « Discovery » (v52 : sans « Day n/7 »), boutons « Get my action plan », « 15 min with Lucas · free » sous celui du haut, « 15 min with Lucas to go over your goal. Free. » sous celui de la carte ; plus de « Book my assessment » ni de « 30-minute »", /^\s*Discovery\s+Hello/.test(acc) && !/Day \d/.test(acc) && cals.length === 2 && cals.every(x => x === CTA.en)
+      && (sousAcc.haut || "").trim() === SOUS.en && (sousAcc.note || "").trim() === NOTE_ACCOMP.en && !/Book my assessment|30-minute|30 minutes/.test(acc), acc.slice(0, 160) + " | " + JSON.stringify(cals) + " | " + JSON.stringify(sousAcc));
     textesEn += "\n" + await toutLeTexte(page);
     /* les 5 autres pages verrouillées, cachées ou non (leurs avantages traduits passent au contrôle des prix) */
     const fautes = [];
     for (const r of VERROUILLES.filter(x => x !== "programme")) {
       await aller(page, "#/" + r, 1300);
       const vr = await verrou(page);
-      if (!(vr && vr.cadenas && vr.texte === texteVerrou(r, true) && await exempleOk(page, r) && lienOk(vr, "verrou-" + r, "Book my assessment"))) fautes.push(r + " " + JSON.stringify(vr));
+      if (!(vr && vr.cadenas && vr.texte === texteVerrou(r, true) && await exempleOk(page, r) && lienOk(vr, "verrou_" + r, "en"))) fautes.push(r + " " + JSON.stringify(vr));
       textesEn += "\n" + await toutLeTexte(page);
     }
     /* v52 : lots D + E — journal (lot D) remplace mensurations (ouverte) ; nutrition, journal et suivi ont leur exemple (lot E) */
-    ok(`prospect en anglais : #/nutrition, #/journal, #/suivi, #/complements, #/bilan verrouillés en anglais (nutrition, journal et suivi : l'exemple puis « ${TEXTE_APPEL_EN} » ; les autres : « ${TEXTE_VERROU_EN} » ; « Book my assessment », utm_content=verrou-<id>)`, fautes.length === 0, fautes.join(" ; "));
+    /* v61 (lot 2) : chaque page de la vitrine a son texte anglais ; « Get my action plan », utm_content=verrou_<id>, « 15 min with
+       Lucas · free » (avant : l'appel commun, « Book my assessment », verrou-<id>) */
+    ok(`prospect en anglais : #/nutrition, #/journal, #/suivi, #/complements, #/bilan verrouillés en anglais (nutrition, journal et suivi : l'exemple puis le texte anglais propre à la page ; les autres : « ${TEXTE_VERROU_EN} » ; « ${CTA.en} », utm_content=verrou_<id>, « ${SOUS.en} »)`, fautes.length === 0, fautes.join(" ; "));
     await aller(page, "#/profil", 1300);
     textesEn += "\n" + await toutLeTexte(page);
     const okCond = await cliquer(page, "#mc-conditions"); await attendre(page, 500);
     const tc = await toutLeTexte(page);
-    ok("prospect en anglais : le volet des conditions s'ouvre depuis le profil, en anglais (texte capturé pour le contrôle des prix)", okCond && tc.includes(HEBERGEMENT.en), okCond ? "« " + HEBERGEMENT.en + " » introuvable" : "bouton #mc-conditions absent");
+    /* v61 (lot 2, décision 4) : « including your clicks on “Get my action plan” » (avant : “Book my assessment”) */
+    ok("prospect en anglais : le volet des conditions s'ouvre depuis le profil, en anglais (texte capturé pour le contrôle des prix) ; v61 : « including your clicks on “Get my action plan” », plus de « Book my assessment »", okCond && tc.includes(HEBERGEMENT.en) && tc.includes("including your clicks on “" + CTA.en + "”") && !tc.includes("Book my assessment"), okCond ? (tc.includes(HEBERGEMENT.en) ? "clics : " + (/including your clicks on[^.]*/.exec(tc) || ["introuvable"])[0] : "« " + HEBERGEMENT.en + " » introuvable") : "bouton #mc-conditions absent");
     textesEn += "\n" + tc;
     await page.keyboard.press("Escape"); await attendre(page, 300);
     /* v52 (lot D) : fonction supprimée — « jour 8 : #/formation verrouillée en anglais » (plus de verrou au jour 8) ; la
@@ -526,8 +589,9 @@ const cliquerVerrou = async (c, page) => {
     /* ouverte ET affichée : ni cadenas, ni page en erreur, ni « Chargement… » ; la progression est celle de Léa (10 étapes cochées) */
     const fo = await page.evaluate(() => { const v = document.querySelector("#vue"); return { verrou: !!document.querySelector("#vue .verrou"), illisible: !!document.getElementById("page-illisible"), chargement: !!v && /Chargement…/.test(v.innerText), h1: ((document.querySelector("#vue h1") || {}).textContent || "").replace(/\s+/g, ""), progression: ((document.querySelector("#vue .prog-compteur .t-sub") || {}).textContent || "").trim(), modules: document.querySelectorAll("#vue .fo-mod").length }; });
     ok("coach dans la fiche d'un prospect au jour 21 : Speed Formation ouverte et affichée (titre, modules, progression de Léa « 10 / … étapes ») — le verrou du jour 8 ne vaut que pour le prospect", okFiche && !fo.verrou && !fo.illisible && !fo.chargement && fo.h1.includes("SpeedFormation") && fo.modules > 0 && /^10 \//.test(fo.progression), JSON.stringify(fo));
-    const lien = await page.evaluate(() => { try { return lienCalendly("verrou-programme"); } catch (e) { return "ERREUR " + e.message; } });
-    ok("coach dans la fiche d'un prospect : lien Calendly brut (ni source, ni prénom, ni email)", okFiche && lien === CAL, lien);
+    /* v61 (lot 2) : le nouveau code (verrou_programme) comme l'ancien (verrou-programme) : la base seule (nouvelle adresse) */
+    const lien = await page.evaluate(() => { try { return [lienCalendly("verrou_programme"), lienCalendly("verrou-programme")]; } catch (e) { return ["ERREUR " + e.message]; } });
+    ok("coach dans la fiche d'un prospect : lien Calendly brut (ni source, ni prénom, ni email ; v61 : l'adresse de l'événement de 15 min, nouveau et ancien code)", okFiche && lien.length === 2 && lien.every(x => x === CAL), JSON.stringify(lien));
   });
   await bloc("I. base sans colonne statut", async () => {
     const db = base({ sansStatut: true, intake: Object.assign(intakeCourt(3), { nom: "Léa Démo", complet: true }) });

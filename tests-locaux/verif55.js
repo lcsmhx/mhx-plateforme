@@ -27,13 +27,16 @@
       pendant l'envoi (insertion simple : rien d'écrasé) ;
    F. Profil du prospect : interrupteur « Newsletter » (FR / EN) → emails { newsletter, maj, version, source: "profil" },
       un « non » coupe aussi l'ancien suivi ; l'ancien accord ne coche jamais la newsletter ; lecture ratée ;
-   G. conditions FR / EN (version 2026-09-29 depuis la v59, DECOUVERTE.accords, newsletter 2026-09-28c) : plus de 7 jours,
+   G. conditions FR / EN (version 2026-09-30 depuis la v61, 2026-09-29 depuis la v59 ; DECOUVERTE.accords, newsletter
+      2026-09-28c) : paragraphe 2 « dont tes clics sur « Récupérer mon plan d'action » » (v61), plus de 7 jours,
       nom, 3 questions, newsletter (1 à 2 par semaine, désinscription en 1 clic, retrait dans le Profil), ni mesure
       d'ouverture, ni prestataire d'emails nommé, ni relance, ni email du compte promis (décisions de Lucas), Calendly avec
       le nom ; v59 : « Contenus chargés depuis Google » (polices, aperçus des vidéos, adresse IP, vidéo au clic seulement)
       juste après « Hébergement » ; mêmes paragraphes aux mêmes places ;
    H. Calendly : name = prénom + nom, first_name, last_name, email (prospect, page verrouillée, fiche du coach,
-      lienCalendlyPour à 3 ou 4 paramètres), pré-remplissage éteint, caractères piégés ;
+      lienCalendlyPour à 3 ou 4 paramètres), pré-remplissage éteint, caractères piégés ; v61 : événement de 15 min,
+      utm_source=app, utm_medium=bouton (fiche du coach : coach), codes d'origine avec « _ » (accueil_haut, verrou_programme,
+      fiche_coach) ;
    Lot G (côté coach) :
    G1. fiche d'un prospect : son nom (profils.nom, « pas renseigné » s'il manque), « Newsletter : oui (depuis le …) / non »
        d'après la clé emails (absente ou ancien accord « emails de suivi » seul : non), ses 3 réponses avec des libellés
@@ -382,7 +385,9 @@ const V52 = "2026-09-28";   // version de la case santé des comptes créés ava
 const V_SANTE = "2026-09-28b";
 /* v59 : « 2026-09-29 » = paragraphe « Contenus chargés depuis Google » ajouté (lot E, remarque d de la relecture v52) ; les
    comptes déjà inscrits gardent leur version dans leurs métadonnées (rien ne la compare : personne n'est redemandé) */
-const V_COND = "2026-09-29";   // version des conditions (confidentialite.version ; v55 à v58 : 2026-09-28b)
+/* v61 (décision 4 de Lucas du 30/09) : « 2026-09-30 » = « Réserver mon bilan » devient « Récupérer mon plan d'action » dans le
+   paragraphe 2 (données collectées) ; rien d'autre ne change */
+const V_COND = "2026-09-30";   // version des conditions (confidentialite.version ; v55 à v58 : 2026-09-28b ; v59, v60 : 2026-09-29)
 const V_NEWS = "2026-09-28c";   // version du texte de la case newsletter (texte final de Lucas du 28/09, sans mesure d'ouverture)
 const TXB = {
   titre: "Crée ton espace gratuit", titre_en: "Create your free space",
@@ -402,7 +407,8 @@ const TXB = {
 };
 const SEPT = /7 jours|7 days|7-day|jour \d+ ?\/ ?7|day \d+ ?\/ ?7/i;
 const CLES_META = "conditions_version,consentement,consentement_sante,newsletter,newsletter_version,nom,prenom,sante_version";
-const CAL = "https://calendly.com/mhx-coaching/30min";
+/* v61 (lot 2, F) : l'événement de 15 min « Ton plan d'action offert » (remplace …/30min) */
+const CAL = "https://calendly.com/mhx-coaching/ton-plan-d-action-offert-15-min-avec-lucas";
 /* remplit le formulaire d'inscription (page sur #/inscription) */
 async function remplir(page, f){
   await page.fill("#c-prenom", f.prenom); await page.fill("#c-nom", f.nom); await page.fill("#c-email", f.email); await page.fill("#c-mdp", f.mdp || "motdepasse1");
@@ -420,7 +426,9 @@ const ecranInscription = page => page.evaluate(() => {
     labelNom: t('label[for="c-nom"]'), lienCgu: !!document.querySelector("label.co-cgu #c-cgu-lien"), nomType: at("c-nom", "type"), nomAuto: at("c-nom", "autocomplete"), nomMax: at("c-nom", "maxlength"), prenomMax: at("c-prenom", "maxlength"),
     cases, anciennes: !!document.getElementById("c-emails"), texte: document.body.innerText.replace(/\s+/g, " ") };
 });
-const lienLea = (params, source) => CAL + "?utm_source=app-mhx&utm_medium=app&utm_content=" + (source || "decouverte") + params;
+/* v61 (lot 2, F) : utm_source=app, utm_medium=bouton (avant : app-mhx, app) ; code d'origine par défaut : le bouton du haut
+   de l'accueil, accueil_haut (avant : decouverte) — le « _ » est accepté */
+const lienLea = (params, source) => CAL + "?utm_source=app&utm_medium=bouton&utm_content=" + (source || "accueil_haut") + params;
 /* la clé emails d'un compte, telle qu'elle est en base (faux Supabase) */
 const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil === "emails") || {}).contenu || {};
 
@@ -1038,7 +1046,9 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
     ok(`conditions : version ${V_COND}, DECOUVERTE.accords = { conditions: ${V_COND} (= confidentialite.version), sante: ${V_SANTE}, newsletter: ${V_NEWS} }`, d.v === V_COND && JSON.stringify(d.a) === JSON.stringify({ conditions: V_COND, sante: V_SANTE, newsletter: V_NEWS }), JSON.stringify([d.v, d.a]));
     ok("conditions FR et EN : même nombre de paragraphes (traduction par position), aucun « 7 jours » / « 7 days », ni dans les textes de l'inscription et du Profil ; plus d'ancienne case", d.fr.length === d.en.length && d.fr.length >= 10 && !SEPT.test(fr) && !SEPT.test(en) && !SEPT.test(d.ins) && !d.vieille, JSON.stringify([d.fr.length, d.en.length, (SEPT.exec(fr + en + d.ins) || [""])[0], d.vieille]));
     const i1 = d.fr.findIndex(p => p.startsWith("Données collectées")), i6 = d.fr.findIndex(p => p.startsWith("Prise de rendez-vous")), i7 = d.fr.findIndex(p => p.startsWith("Newsletter"));
-    ok("FR : données collectées = prénom, nom, email, réponses aux 3 questions, données de santé saisies (poids, mensurations, calculateur)", i1 > -1 && ["ton prénom, ton nom, ton email", "3 questions", "poids", "mensurations", "calculateur de calories"].every(x => d.fr[i1].includes(x)), d.fr[i1]);
+    /* v61 (décision 4) : le paragraphe 2 (données collectées) nomme le bouton « Récupérer mon plan d'action » (avant : « Réserver
+       mon bilan »), plus aucun « Réserver mon bilan » dans le texte ; c'est bien le 2e paragraphe */
+    ok("FR : données collectées (2e paragraphe) = prénom, nom, email, réponses aux 3 questions, « dont tes clics sur « Récupérer mon plan d'action » », données de santé saisies (poids, mensurations, calculateur) ; plus de « Réserver mon bilan »", i1 === 1 && ["ton prénom, ton nom, ton email", "3 questions", "ton activité dans l'app, dont tes clics sur « Récupérer mon plan d'action ». Données de santé", "poids", "mensurations", "calculateur de calories"].every(x => d.fr[i1].includes(x)) && !/Réserver mon bilan/.test(fr), d.fr[i1]);
     ok("FR : Calendly « Ton prénom, ton nom et ton email y sont pré-remplis »", i6 > -1 && d.fr[i6].includes("Ton prénom, ton nom et ton email y sont pré-remplis"), d.fr[i6]);
     /* décisions de Lucas du 28/09 : plus aucune mention de mesure d'ouverture ; aucun prestataire d'emails nommé ; plus de
        relances ni d'emails de suivi automatiques ; emails du compte envoyés par Gmail (Google). v59 : « Google » est nommé
@@ -1047,8 +1057,8 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
       i7 > -1 && ["1 à 2 emails par semaine au plus", "Désinscription en 1 clic dans chaque email", "retrait de ton accord possible à tout moment dans ton Profil"].every(x => d.fr[i7].includes(x)) && !/Gmail|email de confirmation|confirmation de ton email|mot de passe oublié/i.test(fr)
       && !/relance|3 emails|emails de suivi|réserv|ouvert|cliqu|mesur/i.test(d.fr[i7]) && !/Brevo|emails de suivi|au plus 3 emails|a été ouvert|mesure d'ouverture/i.test(fr), d.fr[i7]);
     ok("FR : toujours « réservés aux adultes » et « ne remplace pas un avis médical »", /réservés aux adultes/.test(d.fr[0]) && /ne remplace pas un avis médical/.test(d.fr[0]), d.fr[0]);
-    ok("EN à la même place : last name, 3 questions, measurements ; « Your first name, last name and email are pre-filled » ; Newsletter (1 to 2 emails per week, one-click unsubscribe, withdrawal in the Profile ; no open tracking, no Brevo, no follow-up, no account email) ; adults only, not medical advice",
-      /^Data collected: /.test(d.en[i1]) && ["your last name", "3 starting questions", "measurements", "calorie calculator"].every(x => d.en[i1].includes(x)) && /^Booking: /.test(d.en[i6]) && d.en[i6].includes("Your first name, last name and email are pre-filled")
+    ok("EN à la même place : last name, 3 questions, « including your clicks on “Get my action plan” » (plus de « Book my assessment »), measurements ; « Your first name, last name and email are pre-filled » ; Newsletter (1 to 2 emails per week, one-click unsubscribe, withdrawal in the Profile ; no open tracking, no Brevo, no follow-up, no account email) ; adults only, not medical advice",
+      /^Data collected: /.test(d.en[i1]) && ["your last name", "3 starting questions", "your activity in the app, including your clicks on “Get my action plan”. Health data", "measurements", "calorie calculator"].every(x => d.en[i1].includes(x)) && !/Book my assessment/.test(en) && /^Booking: /.test(d.en[i6]) && d.en[i6].includes("Your first name, last name and email are pre-filled")
       && /^Newsletter \(optional\): /.test(d.en[i7]) && ["1 to 2 emails per week at most", "One-click unsubscribe in every email", "withdraw your consent at any time in your Profile"].every(x => d.en[i7].includes(x)) && !/Gmail|confirmation email|email confirmation|forgotten password/i.test(en) && !/follow-up|3 emails|booked|opened|opening|clicked|track|measur/i.test(d.en[i7]) && !/Brevo|follow-up emails|at most 3 emails|was opened|open tracking/i.test(en)
       && /for adults only/.test(d.en[0]) && /not medical advice/.test(d.en[0]), JSON.stringify([d.en[i1], d.en[i6], d.en[i7]]).slice(0, 400));
     /* v59 : ce que l'app charge vraiment depuis Google, sans action de la personne (index.html : Google Fonts ; outilFormation
@@ -1084,12 +1094,13 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
     const NOMS = "&name=L%C3%A9a%20Martin&first_name=L%C3%A9a&last_name=Martin&email=lea%40exemple.fr";
     const r = await page.evaluate(() => {
       const out = {}, p = Auth.profil, p0 = p.prenom, n0 = p.nom;
-      out.base = lienCalendly("decouverte");
-      p.prenom = ""; out.nomSeul = lienCalendly("decouverte");
-      p.prenom = p0; p.nom = ""; out.prenomSeul = lienCalendly("decouverte");
-      p.nom = "  D'Arc & Fils "; out.special = lienCalendly("decouverte");
-      p.nom = "M" + String.fromCharCode(0xD800) + "n"; try { out.malforme = lienCalendly("decouverte"); } catch(e){ out.err = String(e); }
-      p.nom = null; out.nomNull = lienCalendly("decouverte");
+      /* v61 : le code d'origine du bouton du haut de l'accueil (accueil_haut, avant : decouverte) */
+      out.base = lienCalendly("accueil_haut");
+      p.prenom = ""; out.nomSeul = lienCalendly("accueil_haut");
+      p.prenom = p0; p.nom = ""; out.prenomSeul = lienCalendly("accueil_haut");
+      p.nom = "  D'Arc & Fils "; out.special = lienCalendly("accueil_haut");
+      p.nom = "M" + String.fromCharCode(0xD800) + "n"; try { out.malforme = lienCalendly("accueil_haut"); } catch(e){ out.err = String(e); }
+      p.nom = null; out.nomNull = lienCalendly("accueil_haut");
       p.prenom = p0; p.nom = n0;
       return out;
     });
@@ -1099,8 +1110,10 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
     ok("nom avec espaces, apostrophe et « & » : espaces retirés, tout encodé, aucun paramètre injecté", r.special === lienLea("&name=L%C3%A9a%20D'Arc%20%26%20Fils&first_name=L%C3%A9a&last_name=D'Arc%20%26%20Fils&email=lea%40exemple.fr"), r.special);
     ok("nom avec un caractère mal formé : aucune erreur, adresse Calendly nue", !r.err && r.malforme === CAL, JSON.stringify(r));
     await aller(page, "#/programme", 1500);
+    /* v61 (lot 2, F et G) : le bouton s'appelle « Récupérer mon plan d'action » ; code d'origine verrou_programme (avant : verrou-programme) */
     const hv = await page.$eval("#vue .verrou a[target=_blank]", a => a.getAttribute("href")).catch(() => "");
-    ok("page verrouillée (#/programme) : le bouton « Réserver mon bilan » porte prénom, nom et email", hv === lienLea(NOMS, "verrou-programme"), hv);
+    const tv = await texte(page, "#vue .verrou a[target=_blank]");
+    ok("page verrouillée (#/programme) : le bouton « Récupérer mon plan d'action » porte le code verrou_programme, prénom, nom et email", hv === lienLea(NOMS, "verrou_programme") && tv === "Récupérer mon plan d'action", hv + " · " + tv);
     ok("prospecte : aucune écriture en calculant ses liens", ecrDonnees(db).length === 0, resume(db));
     await c.close();
     /* pré-remplissage éteint : ni prénom, ni nom, ni email */
@@ -1108,14 +1121,14 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
       const db2 = base({ comptes: [{ id: L4, prenom: "Léa", nom: "Martin", cree: avant(2 * J), email: "lea@exemple.fr" }] });
       const x = await contexte(b, qui(L4, "lea@exemple.fr"), db2);
       await x.page.goto(URL0); await pret(x.page);
-      const l = await x.page.evaluate(() => lienCalendly("decouverte"));
+      const l = await x.page.evaluate(() => lienCalendly("accueil_haut"));
       ok("calendly_prerempli à false : utm seulement (ni name, ni first_name, ni last_name, ni email)", l === lienLea(""), l);
     });
     /* client Thomas : lien nu */
     {
       const x = await contexte(b, THOMAS, base());
       await x.page.goto(URL0); await pret(x.page, "#acc-vue");
-      ok("client Thomas : lienCalendly rend l'adresse nue", (await x.page.evaluate(() => lienCalendly("decouverte"))) === CAL);
+      ok("client Thomas : lienCalendly rend l'adresse nue", (await x.page.evaluate(() => lienCalendly("accueil_haut"))) === CAL);
     }
     /* coach : fiche de la prospecte (lien à copier, mailto) et lienCalendlyPour */
     {
@@ -1125,10 +1138,11 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
       await x.page.click(`[data-ouvrir="${L4}"]`).catch(() => {});
       await x.page.waitForSelector("#dc-lien", { timeout: 8000 }).catch(() => {}); await attendre(x.page, 500);
       const lien = await x.page.$eval("#dc-lien", e => e.value).catch(() => ""), note = await texte(x.page, "#fiche-actions p.note");
-      const COACHL = CAL + "?utm_source=app-mhx&utm_medium=coach&utm_content=fiche-coach";
+      /* v61 (lot 2, F) : utm_source=app (avant : app-mhx), code d'origine fiche_coach (avant : fiche-coach) */
+      const COACHL = CAL + "?utm_source=app&utm_medium=coach&utm_content=fiche_coach";
       ok("coach, fiche de Léa Martin : lien de réservation avec name = « Léa Martin », first_name, last_name, email ; « Son lien de réservation (prénom, nom et email déjà remplis) : »",
         lien === COACHL + NOMS && note === "Son lien de réservation (prénom, nom et email déjà remplis) :", lien + " · " + note);
-      const l3 = await x.page.evaluate(() => [lienCalendlyPour("Léa", "lea@exemple.fr", "fiche-coach"), lienCalendlyPour("Léa", "", "fiche-coach", "Martin"), lienCalendly("decouverte")]);
+      const l3 = await x.page.evaluate(() => [lienCalendlyPour("Léa", "lea@exemple.fr", "fiche_coach"), lienCalendlyPour("Léa", "", "fiche_coach", "Martin"), lienCalendly("accueil_haut")]);
       ok("lienCalendlyPour : un appel à 3 paramètres (sans nom) reste juste ; nom en 4e paramètre ; le coach reçoit lienCalendly nu", l3[0] === COACHL + "&name=L%C3%A9a&first_name=L%C3%A9a&email=lea%40exemple.fr" && l3[1] === COACHL + "&name=L%C3%A9a%20Martin&first_name=L%C3%A9a&last_name=Martin" && l3[2] === CAL, JSON.stringify(l3));
       ok("coach : aucune écriture", ecrDonnees(db3).length === 0, resume(db3));
     }
