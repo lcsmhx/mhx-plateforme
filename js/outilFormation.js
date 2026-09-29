@@ -792,6 +792,7 @@ const outilFormation = {
     const dessiner = () => {
       zone.innerHTML = self.vue(D, visibles, depart);
       brancher();
+      reposer();
     };
     /* v60 : la carte « Commence ici » seule redessinee (la video qui vient de demarrer reste a l'ecran) */
     const majDepart = () => {
@@ -799,13 +800,21 @@ const outilFormation = {
       const t = document.createElement("div"); t.innerHTML = self.departHTML(depart);
       const n = t.firstElementChild; if (n){ c.replaceWith(n); brancherDepart(); }
     };
+    /* v62 (brief V2, H) : les invitations montrees pendant cette visite restent sous leur declencheur quand la page est
+       redessinee (une case cochee redessine tout) ; « Plus tard » les retire pour de bon */
+    const montrees = {};
+    const ancres = { declic_mindset: () => { const b = zone.querySelector('[data-mod="m1"]'); return b && b.closest("section"); }, formation_commence_ici: () => zone.querySelector("#fo-depart") };
+    const poser = code => carte => { const a = ancres[code](); if (!a) return false; a.after(carte); montrees[code] = carte; return true; };
+    const reposer = () => Object.keys(montrees).forEach(k => { const c = montrees[k]; if (c && !c.isConnected && c.dataset.ferme !== "1") poser(k)(c); });
+    const mindsetFini = () => { const m = FORMATION.modules.find(x => x.id === "m1"), cm = m ? self.compteModule(D, m) : null; return !!(cm && cm.tot && cm.faits === cm.tot); };
+    const departLance = () => { if (depart && self.departFini(depart)) Invitations.declencher("formation_commence_ici", poser("formation_commence_ici")); };
     /* la video de bienvenue lancee (prospect) : notee une fois dans sa cle formation, au clic */
     const videoLancee = () => {
       if (!depart || depart.video) return;
       if (!D.depart || typeof D.depart !== "object" || Array.isArray(D.depart)) D.depart = {};
       if (!D.depart.video) D.depart.video = new Date().toISOString();
       depart.video = true;
-      sauver(); majDepart();
+      sauver(); majDepart(); departLance();
     };
     function brancherDepart(){
       const a = zone.querySelector('[data-depart="video"]');
@@ -844,9 +853,12 @@ const outilFormation = {
 
       /* cases a cocher du parcours */
       $$("[data-coche]", zone).forEach(c => c.addEventListener("change", () => {
+        const avant = mindsetFini();
         D.coches[c.dataset.coche] = c.checked;
         if (!c.checked) delete D.coches[c.dataset.coche];
         sauver(); dessiner();
+        /* v62 (H) : les 7 cases du module 01 Mindset viennent d'etre cochees (prospect) */
+        if (!avant && mindsetFini() && self.pourProspect()) Invitations.declencher("declic_mindset", poser("declic_mindset"));
       }));
 
       /* --- diete --- */
@@ -944,6 +956,7 @@ const outilFormation = {
     }
 
     dessiner();
+    departLance();   // v62 (H) : les 3 actions faites (dont 2 ailleurs) : l'invitation, une seule fois
   }
 };
 

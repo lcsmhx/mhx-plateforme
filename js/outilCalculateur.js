@@ -202,7 +202,11 @@ const outilCalculateur = {
     const sauver = (force) => {
       if (!(touche || force) || !self.valide(D) || self.mineur(D)) return;
       const v = {}; self.CHAMPS.forEach(k => { v[k] = D[k]; });
-      if (Store.ecrire(cle, v) !== false){ aRetirer = true; retire = false; dernier = forme(v); flash("calc-msg", trad("Tes chiffres sont enregistrés.")); }
+      if (Store.ecrire(cle, v) !== false){
+        aRetirer = true; retire = false; dernier = forme(v); flash("calc-msg", trad("Tes chiffres sont enregistrés."));
+        /* v62 (brief V2, H) : un resultat enregistre par le prospect : l'invitation, sous ses macros (une seule fois) */
+        if (Auth.estProspect() && !Store.idConsulte) Invitations.declencher("declic_calculateur", carte => { const g = $("g-prot"), sec = g && g.closest(".panel"); if (!sec) return false; sec.after(carte); return true; });
+      }
     };
     const vider = () => {
       ["tdee", "v-perte", "v-maintien", "v-prise", "g-prot", "g-lip", "g-gluc"].forEach(id => { $(id).textContent = "—"; });

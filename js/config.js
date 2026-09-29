@@ -16,7 +16,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-09-30 · 61",
+    version: "2026-09-30 · 62",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -398,6 +398,16 @@ const DECOUVERTE = {
   },
   /* v61 (brief V2, vocabulaire) : le bouton unique partout où le bilan est proposé au prospect, et sa petite ligne */
   cta: { bouton: "Récupérer mon plan d'action", sous: "15 min avec Lucas · offert" },
+  /* v62 (brief V2, H) : les invitations au bon moment (prospect seulement), une par déclencheur ; l'objet porte le code
+     d'origine du bouton (Decouverte.ORIGINES). Aucune valeur saisie (poids, mesures, calories) dans ces textes. */
+  invitations: {
+    objectif: "Ton objectif : « {p} »",
+    plus_tard: "Plus tard",
+    declic_calculateur: { titre: "Tu as ton chiffre. Maintenant, le plan.", texte: "Savoir combien manger, c'est la base. Le tenir avec ton rythme, tes envies et tes semaines chargées, c'est là que tout se joue. En 15 min, Lucas t'aide à en faire un plan qui tient." },
+    declic_premiere_pesee: { titre: "Ton point de départ est posé.", texte: "C'est à partir d'aujourd'hui qu'on mesure tes progrès. Pour que ta courbe aille dans le bon sens, il te faut un plan qui colle à ta vie : c'est ce que Lucas te prépare en 15 min." },
+    declic_mindset: { titre: "Ton pourquoi est clair.", texte: "Reste le comment. En 15 min, Lucas t'aide à transformer ta motivation en plan concret pour tes prochaines semaines." },
+    formation_commence_ici: { titre: "Bien joué, ton départ est lancé.", texte: "Prochaine étape : ton plan d'action personnalisé, offert, en 15 min avec Lucas." }
+  },
   resultat: {
     titre: "Ton résultat",
     priorites_titre: "Tes 3 priorités",
@@ -661,6 +671,14 @@ const DECOUVERTE = {
       plus_tard: "Later, let me explore my space"
     },
     cta: { bouton: "Get my action plan", sous: "15 min with Lucas · free" },
+    invitations: {
+      objectif: "Your goal: “{p}”",
+      plus_tard: "Later",
+      declic_calculateur: { titre: "You've got your number. Now, the plan.", texte: "Knowing how much to eat is the foundation. Sticking to it with your schedule, your cravings and your busy weeks is where it all happens. In 15 min, Lucas helps you turn it into a plan that sticks." },
+      declic_premiere_pesee: { titre: "Your starting point is set.", texte: "From today, we measure your progress. To move your curve in the right direction, you need a plan that fits your life: that's what Lucas builds with you in 15 min." },
+      declic_mindset: { titre: "Your why is clear.", texte: "Now for the how. In 15 min, Lucas helps you turn your motivation into a concrete plan for the weeks ahead." },
+      formation_commence_ici: { titre: "Nice work, you're off to a start.", texte: "Next step: your personalized action plan, free, in 15 min with Lucas." }
+    },
     resultat: {
       titre: "Your result",
       priorites_titre: "Your 3 priorities",

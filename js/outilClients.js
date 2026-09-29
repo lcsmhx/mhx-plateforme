@@ -508,7 +508,8 @@ const Clients = {
             probleme: typeof c.intake.probleme === "string" ? c.intake.probleme.trim().slice(0, 120) : "",
             obstacle: typeof c.intake.obstacle === "string" ? c.intake.obstacle.trim().slice(0, 1000) : "",
             projection: typeof c.intake.projection === "string" ? c.intake.projection.trim().slice(0, 1000) : "",
-            ancien: Decouverte.ancien(c.intake) } : null,
+            ancien: Decouverte.ancien(c.intake),
+            bilan: Decouverte.bilanPropose(c.intake) } : null,   // v62 (L) : son choix sur la page « Ton plan d'action » (« Plus tard » d'avant la v62)
       newsletter: Accords.newsletterCoach(c.emails),   // v52 (lot G) : { oui, depuis } d'après la clé emails (CSV)
       act: (c.activite && typeof c.activite === "object") ? c.activite : null,   // v51 : activite (chronologie de la fiche)
       /* v53 (chantier 4) : dernière visite et jours actifs sur 30 jours ; un compte non suivi (client hors interrupteur

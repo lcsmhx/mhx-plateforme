@@ -268,6 +268,9 @@ const Decouverte = {
       if (!F.cta || typeof F.cta !== "object" || Array.isArray(F.cta)) F.cta = { clics: [] };
       if (!Array.isArray(F.cta.clics)) F.cta.clics = [];
       this.clics(C).forEach(x => { if (!F.cta.clics.some(y => y && y.date === x.date)) F.cta.clics.push(x); });
+      /* v62 : les « Plus tard » notes ici et pas encore en base */
+      const pt = this.plusTardDe(C);
+      if (pt.length){ if (!Array.isArray(F.cta.plus_tard)) F.cta.plus_tard = []; pt.forEach(x => { if (!F.cta.plus_tard.some(y => y && y.date === x.date)) F.cta.plus_tard.push(x); }); }
       if (typeof C.reserve === "string" && C.reserve && !(typeof F.reserve === "string" && F.reserve)) F.reserve = C.reserve;
     }
     return F;
@@ -278,8 +281,24 @@ const Decouverte = {
     this._file = Promise.race([p.then(() => {}, () => {}), new Promise(r => setTimeout(r, 15000))]);
     return p;
   },
-  /* un clic « Réserver mon bilan » : note pour le coach, jamais bloquant */
-  clic(C, source){ return this.enFile(() => this._clic(C, source)); },
+  /* un clic « Réserver mon bilan » : note pour le coach, jamais bloquant
+     v62 (brief V2, H) : aussi garde sur l'appareil (plus aucune invitation pendant 7 jours, meme avant l'ecriture) */
+  clic(C, source){ try { Invitations.noter("clic"); } catch(e){} return this.enFile(() => this._clic(C, source)); },
+  /* v62 (brief V2, L) : un « Plus tard » (page « Ton plan d'action », invitations), note avec son origine dans la meme cle
+     (cta.plus_tard : [{ source, date }], 50 au plus) — champ ajoute au JSON, aucune structure de base changee */
+  plusTardDe(C){ return (C && typeof C === "object" && C.cta && typeof C.cta === "object" && Array.isArray(C.cta.plus_tard)) ? C.cta.plus_tard.filter(x => x && typeof x === "object" && !Array.isArray(x)) : []; },
+  plusTard(C, source){
+    return this.enFile(async () => {
+      try {
+        const F = await this.fraiche(C); if (!F) return;
+        if (!F.cta || typeof F.cta !== "object" || Array.isArray(F.cta)) F.cta = { clics: [] };
+        if (!Array.isArray(F.cta.plus_tard)) F.cta.plus_tard = [];
+        F.cta.plus_tard.push({ source: typeof source === "string" ? source : null, date: new Date().toISOString() });
+        if (F.cta.plus_tard.length > 50) F.cta.plus_tard = F.cta.plus_tard.slice(-50);
+        Store.ecrire(this.cle, F);
+      } catch(e){}
+    });
+  },
   async _clic(C, source){
     try {
       const F = await this.fraiche(C); if (!F) return;
@@ -295,8 +314,114 @@ const Decouverte = {
     return this.enFile(async () => {
       const F = await this.fraiche(C); if (!F) return null;
       if (!this.reserve(F)) F.reserve = new Date().toISOString();
-      return Store.ecrire(this.cle, F) ? F : null;
+      const ok = Store.ecrire(this.cle, F) ? F : null;
+      if (ok){ try { Invitations.noter("reserve"); } catch(e){} }   // v62 (H) : plus aucune invitation
+      return ok;
     });
+  }
+};
+
+/* ------------------------------------------------------------------
+   v62 (brief V2, H) — INVITATIONS AU BON MOMENT (prospect seulement ; jamais un client, jamais le coach, jamais une fiche
+   consultee). 4 declencheurs : un calcul enregistre (declic_calculateur), la toute premiere pesee (declic_premiere_pesee),
+   les 7 cases du module 01 Mindset (declic_mindset), les 3 actions de « Commence ici » (formation_commence_ici).
+   Regles : jamais si « J'ai déjà choisi mon créneau » est cochee ; plus aucune pendant 7 jours apres un clic sur un bouton
+   « Récupérer mon plan d'action » ; chacune une seule fois (« Plus tard » la ferme pour de bon) ; une par jour au plus
+   (la page « Ton plan d'action » ne compte pas) : une invitation qui ne peut pas s'afficher le jour meme attend et
+   s'affiche en haut de l'accueil un autre jour, une a la fois, la plus recente d'abord. Carte integree a la page sous ce
+   qui l'a declenchee, jamais de fenetre, jamais de blocage ; aucune valeur saisie dans son texte.
+   Memoire SUR L'APPAREIL (localStorage « mhx_invitations|<id du compte> » : vues, fermees, en attente, jour de la
+   derniere, dernier clic, case cochee) : rien de nouveau en base (le clic et le « Plus tard » y sont notes comme les
+   autres, cle challenge). Une memoire illisible ou indisponible : on repart de zero, rien ne casse.
+   ------------------------------------------------------------------ */
+const Invitations = {
+  CODES: ["declic_calculateur", "declic_premiere_pesee", "declic_mindset", "formation_commence_ici"],
+  CLE: "mhx_invitations|",
+  JOURS_APRES_CLIC: 7,
+  _enCours: {},
+  actif(){ const u = Auth.utilisateur(); return !!(u && u.id && Auth.estProspect() && !Store.idConsulte); },
+  vide(){ return { vues: {}, fermees: {}, attente: [], jour: "", clic: "", reserve: "" }; },
+  lire(){
+    const u = Auth.utilisateur(), m = this.vide(); if (!u || !u.id) return m;
+    let x = null; try { x = JSON.parse(localStorage.getItem(this.CLE + u.id) || "null"); } catch(e){ x = null; }
+    if (!x || typeof x !== "object" || Array.isArray(x)) return m;
+    const dict = o => { const r = {}; if (o && typeof o === "object" && !Array.isArray(o)) Object.keys(o).forEach(k => { if (this.CODES.indexOf(k) > -1 && typeof o[k] === "string") r[k] = o[k]; }); return r; };
+    m.vues = dict(x.vues); m.fermees = dict(x.fermees);
+    m.attente = Array.isArray(x.attente) ? x.attente.filter(a => a && this.CODES.indexOf(a.code) > -1 && typeof a.le === "string").slice(-8) : [];
+    ["jour", "clic", "reserve"].forEach(k => { if (typeof x[k] === "string") m[k] = x[k].slice(0, 40); });
+    return m;
+  },
+  ecrire(m){ const u = Auth.utilisateur(); if (!u || !u.id) return; try { localStorage.setItem(this.CLE + u.id, JSON.stringify(m)); } catch(e){} },
+  /* un clic sur un bouton du plan d'action, ou la case cochee, sur cet appareil */
+  noter(quoi){ if (!this.actif()) return; const m = this.lire(); m[quoi === "reserve" ? "reserve" : "clic"] = new Date().toISOString(); this.ecrire(m); },
+  /* la case cochee (base ou appareil) : plus jamais d'invitation */
+  reservee(C, m){ return !!(Decouverte.reserve(C) || (m && m.reserve)); },
+  /* un clic « Récupérer mon plan d'action » (base ou appareil) depuis moins de 7 jours */
+  clicRecent(C, m){
+    const t = Decouverte.clics(C).map(c => c.date).concat(m && m.clic ? [m.clic] : []).map(d => typeof d === "string" ? Date.parse(d) : NaN).filter(x => !isNaN(x));
+    return t.length > 0 && Date.now() - Math.max(...t) < this.JOURS_APRES_CLIC * 86400000;
+  },
+  /* sa reponse « projection » et la cle challenge : deja en memoire, sinon une lecture groupee (ni cache ni ecriture) */
+  async contexte(){
+    const cache = Store.cache || {}, ok = v => v && typeof v === "object" && !Store.nonLus.has(v);
+    let I = ok(cache.intake) ? cache.intake : null, C = ok(cache[Decouverte.cle]) ? cache[Decouverte.cle] : null;
+    if (!I || !C){ const R = await Store.lireTout(["intake", Decouverte.cle]); I = I || R.intake || {}; C = C || R[Decouverte.cle] || Decouverte.vide(); }
+    return { I, C };
+  },
+  /* un declencheur : la carte tout de suite (placer(carte) la pose dans la page et rend vrai), ou en attente pour un autre
+     jour (une deja montree aujourd'hui, ou un clic depuis moins de 7 jours) ; rien si deja vue ou fermee, ou case cochee */
+  async declencher(code, placer){
+    if (!this.actif() || this.CODES.indexOf(code) === -1 || this._enCours[code]) return false;
+    let m = this.lire(); if (m.vues[code] || m.fermees[code]) return false;
+    this._enCours[code] = true;
+    try {
+      const { I, C } = await this.contexte();
+      if (!this.actif()) return false;
+      m = this.lire(); if (m.vues[code] || m.fermees[code] || this.reservee(C, m)) return false;
+      if (m.jour === aujourdhui() || this.clicRecent(C, m)){
+        if (!m.attente.some(a => a.code === code)) m.attente.push({ code, le: new Date().toISOString() });
+        this.ecrire(m); return false;
+      }
+      return this.montrer(code, I, C, placer);
+    } finally { delete this._enCours[code]; }
+  },
+  /* la carte (texte brut : sa projection est echappee, coupee a 140 caracteres ; rien si elle est vide) */
+  html(code, projection){
+    const T = DECOUVERTE.invitations || {}, L = T[code] || {}, K = DECOUVERTE.cta || {}, cal = lienCalendly(code);
+    const t = x => esc(typoFr(trad(x || "")));
+    return `<section class="panel invitation" id="invitation-${esc(code)}" data-invitation="${esc(code)}">
+      <h2>${t(L.titre)}</h2>
+      ${projection ? `<p class="inv-objectif">${esc(typoFr(trad(T.objectif, { p: projection })))}</p>` : ""}
+      <p class="inv-texte">${t(L.texte)}</p>
+      <div class="dc-cta">${cal ? `<a class="btn" href="${esc(cal)}" target="_blank" rel="noopener" data-inv-cal="${esc(code)}">${t(K.bouton)}</a><p class="dc-cta-sous">${t(K.sous)}</p>` : ""}
+        <button type="button" class="lien-discret" data-inv-tard="${esc(code)}">${t(T.plus_tard)}</button></div></section>`;
+  },
+  /* la montrer : posee par placer, notee vue (et « montree aujourd'hui »), retiree de l'attente */
+  montrer(code, I, C, placer){
+    const b = document.createElement("div"); b.innerHTML = this.html(code, Decouverte.extrait(Decouverte.projection(I), 140));
+    const carte = b.firstElementChild;
+    if (!carte || !placer(carte)) return false;
+    const m = this.lire(); m.vues[code] = new Date().toISOString(); m.jour = aujourdhui(); m.attente = m.attente.filter(a => a.code !== code); this.ecrire(m);
+    this.brancher(carte, C);
+    return carte;
+  },
+  brancher(carte, C){
+    const a = carte.querySelector("[data-inv-cal]");
+    if (a) a.addEventListener("click", () => Decouverte.clic(C, a.dataset.invCal));
+    const t = carte.querySelector("[data-inv-tard]");
+    if (t) t.addEventListener("click", () => {
+      const m = this.lire(); m.fermees[t.dataset.invTard] = new Date().toISOString(); this.ecrire(m);
+      Decouverte.plusTard(C, t.dataset.invTard);
+      carte.dataset.ferme = "1"; carte.remove();   // une page redessinee ne la remet pas
+    });
+  },
+  /* l'accueil, un autre jour : la plus recente en attente (une seule), si rien n'a ete montre aujourd'hui */
+  enAttente(C){
+    if (!this.actif()) return "";
+    const m = this.lire();
+    if (m.jour === aujourdhui() || this.reservee(C, m) || this.clicRecent(C, m)) return "";
+    const a = m.attente.filter(x => !m.vues[x.code] && !m.fermees[x.code]).sort((x, y) => (Date.parse(y.le) || 0) - (Date.parse(x.le) || 0));
+    return a.length ? a[0].code : "";
   }
 };
 
@@ -668,6 +793,7 @@ const outilDecouverte = {
     this._bilan = sous === "bilan";
     const I = await Store.lire("intake", {});
     const C = await Store.lire(Decouverte.cle, Decouverte.vide());
+    this._inv = null; this._invCarte = null;   // v62 (H) : l'invitation en attente, choisie une fois par visite
     /* v52 : l'action mise en avant sur son accueil (son calcul, puis sa pesee de depart) : lecture seule, sans toucher
        au cache, et seulement une fois le questionnaire valide (avant, l'accueil ne s'affiche pas) */
     /* v59 : ce que cet onglet vient d'enregistrer (calcul, pesee) et qui n'est pas encore arrive au serveur (700 ms, envoi
@@ -733,7 +859,15 @@ const outilDecouverte = {
     Activite.page(form ? "decouverte-questionnaire" : bilan ? "decouverte-bilan" : "decouverte-accueil");
     if (form) this.brancherFormulaire(zone, I, C);
     else if (bilan){ Tracking.enregistrer("bilan_viewed"); this.brancherBilan(zone, I, C); }
-    else this.brancherPage(zone, I, C);
+    else { this.brancherPage(zone, I, C); this.invitationAccueil(zone, I, C); }
+  },
+  /* v62 (brief V2, H) : sur l'accueil, un autre jour, l'invitation en attente la plus recente, en haut (sous l'en-tete) ;
+     choisie une fois par visite, gardee a l'ecran si l'accueil est redessine */
+  invitationAccueil(zone, I, C){
+    if (!Decouverte.questionnaireFait(I)) return;
+    const placer = carte => { const h = zone.querySelector(".masthead"); if (!h) return false; h.after(carte); return true; };
+    if (this._inv === null){ this._inv = ""; const code = Invitations.enAttente(C); if (code){ this._inv = code; this._invCarte = Invitations.montrer(code, I, C, placer) || null; } }
+    else if (this._invCarte && !this._invCarte.isConnected && this._invCarte.dataset.ferme !== "1") placer(this._invCarte);
   },
   /* v52 : l'adresse d'une sous-page (#/decouverte/bilan, #/decouverte/reponses) quittee : retour a #/decouverte, sans
      hashchange (un rechargement ne rouvre pas la sous-page) */
@@ -763,7 +897,8 @@ const outilDecouverte = {
     const res = zone.querySelector("#dc-bilan-reserver"), tard = zone.querySelector("#dc-bilan-plus-tard");
     /* le lien s'ouvre dans un nouvel onglet (Calendly) ; ici, le choix est note puis l'accueil s'affiche */
     if (res) res.addEventListener("click", () => self.choisirBilan(zone, I, C, "reserver"));
-    if (tard) tard.addEventListener("click", () => self.choisirBilan(zone, I, C, "plus_tard"));
+    /* v62 (brief V2, L) : le « Plus tard » est aussi note avec son origine (cle challenge, cta.plus_tard) */
+    if (tard) tard.addEventListener("click", () => { if (!self._choisit) Decouverte.plusTard(C, "apres_questionnaire"); self.choisirBilan(zone, I, C, "plus_tard"); });
   },
   /* le choix est memorise UNE fois (intake.bilan_propose = { choix, le }), apres relecture d'intake si le cache n'est
      pas charge ; une page rouverte par son adresse n'ecrit plus rien. Ensuite, l'accueil. */
