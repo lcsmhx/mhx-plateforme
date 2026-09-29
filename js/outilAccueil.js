@@ -159,8 +159,9 @@ const outilAccueil = {
     if (pr && "statut" in pr) profil.statut = pr.statut;
     const ecritParCoach = ["programme", "repas", "calc", "complements", "feedbacks", "notes_coach", "suivi_prospect"];
     /* v51 : les pages vues (activite) ne sont une activite que pour un prospect, comme dans Mes clients ;
-       v52 : le choix de la newsletter (emails) n'est pas une saisie, comme dans Mes clients (pasSaisie) */
-    const dernier = Object.keys(dates).filter(k => ecritParCoach.indexOf(k) === -1 && k !== "emails" && dates[k] && (k !== "activite" || profil.statut === "prospect")).map(k => dates[k]).sort().pop() || null;
+       v52 : le choix de la newsletter (emails) n'est pas une saisie, comme dans Mes clients (pasSaisie) ;
+       v59 (Q13-4) : checkins compte par ses vraies saisies (Clients.dateSaisie : ni smiley, ni « réponse vue »), comme dans Mes clients */
+    const dernier = Object.keys(dates).filter(k => ecritParCoach.indexOf(k) === -1 && k !== "emails" && dates[k] && (k !== "activite" || profil.statut === "prospect")).map(k => Clients.dateSaisie(k, dates[k], d[k])).filter(Boolean).sort().pop() || null;
     const l = Clients.resumerUn(profil, d, dernier);
     const r = Regularite.calculer({ programme: P, journal: J, repas: R, repas_suivi: S, mens: M }, 0), prec = Regularite.calculer({ programme: P, journal: J, repas: R, repas_suivi: S, mens: M }, -1);
     const b = outilBilan.calculer({ programme: P, journal: J, repas: R, repas_suivi: S, mens: M, objectifs_faits: d.objectifs_faits || {} });

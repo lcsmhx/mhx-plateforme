@@ -194,7 +194,7 @@ const outilClients = {
         <th>Client</th><th>Retour</th><th>Note</th><th>Smiley</th><th>Visite</th><th>Connexions</th><th>Dernière connexion</th><th>Jours actifs</th><th>Activité</th><th>Régularité</th><th>Poids</th><th>Depuis le début</th><th>4 dernières sem.</th>
         <th>Questionnaire</th><th>Programme</th><th>Diète</th><th></th>
       </tr></thead><tbody id="tb-clients"><tr><td colspan="17">Chargement…</td></tr></tbody></table></div>
-      <p class="note" style="margin-top:12px">En haut : les 😞 non traités et les notes en chute, puis les retours de la semaine à lire. « Retour » : le feedback du dimanche ou le bilan du vendredi, selon ce que voit le client (à traiter / fait / non fait). « Note » et « Smiley » : son dernier feedback du dimanche. « Visite » et « Jours actifs » (sur 30 jours) : les jours où il a ouvert l'app — « — » quand ses visites ne sont pas suivies. « Connexions » : le nombre de jours où il a ouvert l'app connecté (une fois par jour au plus, depuis la mise en place du compteur) ; « Dernière connexion » : la date et l'heure de sa dernière ouverture — « — » si le compteur n'a pas pu être lu. « Activité » compte les jours depuis la dernière saisie du client, quelle qu'elle soit (une visite ne compte pas). Une variation de poids se lit sur quatre semaines : en dessous, c'est du bruit.</p>
+      <p class="note" style="margin-top:12px">En haut : les 😞 non traités et les notes en chute, puis les retours de la semaine à lire. « Retour » : le feedback du dimanche ou le bilan du vendredi, selon ce que voit le client (à traiter / fait / non fait). « Note » et « Smiley » : son dernier feedback du dimanche. « Visite » et « Jours actifs » (sur 30 jours) : les jours où il a ouvert l'app — « — » quand ses visites ne sont pas suivies. « Connexions » : le nombre de jours où il a ouvert l'app connecté (une fois par jour au plus, depuis la mise en place du compteur) ; « Dernière connexion » : la date et l'heure de sa dernière ouverture — « — » si le compteur n'a pas pu être lu. « Activité » compte les jours depuis la dernière saisie du client, quelle qu'elle soit (une visite, un smiley ou une réponse lue ne comptent pas). Une variation de poids se lit sur quatre semaines : en dessous, c'est du bruit.</p>
     </section>
 
     <section class="panel">
@@ -454,10 +454,31 @@ const Clients = {
     const pasSaisie = ["emails", "coach_notifs"], prospects = new Set((profils || []).filter(p => p && p.statut === "prospect").map(p => p.id));
     (donnees || []).forEach(d => {
       const saisie = ecritParCoach.indexOf(d.outil) === -1 && pasSaisie.indexOf(d.outil) === -1 && (d.outil !== "activite" || prospects.has(d.user_id));
-      if (saisie && (!parClient[d.user_id] || d.maj_le > parClient[d.user_id])) parClient[d.user_id] = d.maj_le;
-      (contenus[d.user_id] = contenus[d.user_id] || {})[d.outil] = Forme.cle(d.outil, d.contenu);   // v42
+      const c = Forme.cle(d.outil, d.contenu);   // v42
+      /* v59 (Q13-4) : checkins compte par ses vraies saisies (ses entrées), pas par la date de sa ligne */
+      const quand = saisie ? this.dateSaisie(d.outil, d.maj_le, c) : null;
+      if (quand && (!parClient[d.user_id] || quand > parClient[d.user_id])) parClient[d.user_id] = quand;
+      (contenus[d.user_id] = contenus[d.user_id] || {})[d.outil] = c;
     });
     return { profils: profils || [], parClient, contenus, connexions: await cx };
+  },
+  /* v59 (Q13-4) — l'instant de la dernière VRAIE saisie que représente une ligne de donnees (maj_le : sa date), ou null.
+     Hors checkins : maj_le. checkins : l'envoi le plus récent d'un bilan ou d'un feedback — envoye_a (l'instant) ;
+     sinon envoye_le (un jour sans heure, celui de l'appareil qui l'a envoyé : compté du début de ce jour, heure locale ;
+     le jour même de la ligne, l'heure de la ligne) ; jamais après la ligne. Un smiley (avis) ou « réponse vue »
+     (fb_vu) réécrivent la ligne sans être une saisie : ils ne comptent pas. Une date illisible (données piégées) ne
+     compte pas : jamais « NaN j ». Même règle dans Mes clients, la fiche, le tableau de bord et Comptes. */
+  dateSaisie(outil, maj, contenu){
+    if (outil !== "checkins") return maj || null;
+    const tMaj = typeof maj === "string" ? Date.parse(maj) : NaN, jourMaj = isNaN(tMaj) ? "" : Regularite.iso(new Date(tMaj));
+    let t = NaN;
+    Checkin.liste(contenu).forEach(x => {
+      let u = typeof x.envoye_a === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(x.envoye_a) ? Date.parse(x.envoye_a) : NaN;
+      if (isNaN(u) && typeof x.envoye_le === "string" && /^\d{4}-\d{2}-\d{2}$/.test(x.envoye_le)) u = x.envoye_le === jourMaj ? tMaj : new Date(x.envoye_le + "T00:00:00").getTime();
+      if (!isNaN(u) && (isNaN(t) || u > t)) t = u;
+    });
+    if (isNaN(t)) return null;
+    return !isNaN(tMaj) && t >= tMaj ? maj : new Date(t).toISOString();
   },
 
   /* le resume d'un client (memes calculs qu'avant dans Mes clients) ; v56 : cx = { lue, ligne } (Clients.resumer) */

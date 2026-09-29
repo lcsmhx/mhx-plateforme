@@ -99,22 +99,116 @@ const Checkin = {
     return rep;
   },
 
+  /* ------------------------------------------------------------------
+     v59 (Q13) — TOUTE écriture de checkins (l'entrée de la semaine : bilan du vendredi et feedback du dimanche ; le
+     smiley ; « réponse vue », fb_vu) passe par une file, sur le modèle de Decouverte.fraiche / enFile. Juste avant
+     d'écrire : l'écriture en attente de cet onglet part d'abord, la base est relue, ce que la copie affichée (C) a de
+     plus y est réuni (fusion), la modification est appliquée sur ce résultat, écrite puis envoyée tout de suite ; C
+     prend la version écrite. Une copie lue à l'ouverture de Mon suivi n'efface plus ce qu'un autre appareil (ou un
+     autre onglet) a écrit entre-temps.
+     ------------------------------------------------------------------ */
+  _file: Promise.resolve(),
+  enFile(fn){
+    const p = this._file.then(fn, fn);
+    this._file = Promise.race([p.then(() => {}, () => {}), new Promise(r => setTimeout(r, 15000))]);
+    return p;
+  },
+  _relus: new WeakSet(),   // les copies affichées qui ont pris une version relue (même si leur lecture d'ouverture avait échoué)
+  /* la base relue juste avant d'écrire, complétée par C. null : relecture ratée (rien n'est écrit sur la base relue) ;
+     false : la fiche a changé (message déjà affiché), ou consultation du coach (il n'écrit jamais checkins) */
+  async fraiche(C){
+    const uid = Store.cible(); if (!uid || Store.idConsulte) return false;
+    const o = (C && typeof C === "object") ? Store.origines.get(C) : undefined;
+    if (o && o !== uid){ Store.ficheChangee(); return false; }
+    await Store.envoyerCle(this.cle);   // l'écriture en attente de cet onglet (700 ms) part d'abord : la base relue la contient
+    const k = uid + "|" + this.cle, avant = Store.charge[k];
+    const F = await Store.lire(this.cle, this.vide());
+    if (!F || typeof F !== "object" || Store.nonLus.has(F)){ Store.charge[k] = avant; return null; }   // une relecture ratée ne change pas ce qui était permis (Q13-6)
+    if (Store.cible() !== uid) return false;
+    if (!Array.isArray(F.liste)) F.liste = [];
+    return this.fusion(F, C);
+  },
+  /* rien de ce que l'un ou l'autre a de plus n'est perdu : les entrées par semaine (la plus récemment envoyée :
+     envoye_a, sinon envoye_le ; à égalité, la base), les avis par (semaine, réponse) (le plus récent, « le »), fb_vu
+     (le plus récent). F (la base relue) est complété et renvoyé ; les entrées et les avis sont gardés tels quels. */
+  fusion(F, C){
+    if (!C || typeof C !== "object" || C === F) return F;
+    const s = v => typeof v === "string" ? v : "", quand = x => s(x && x.envoye_a) || s(x && x.envoye_le);
+    let ajout = false;
+    this.liste(C).forEach(x => {
+      if (typeof x.semaine !== "string") return;
+      const i = F.liste.findIndex(y => y && typeof y === "object" && y.semaine === x.semaine);
+      if (i === -1){ F.liste.push(x); ajout = true; }
+      else if (quand(x) > quand(F.liste[i])) F.liste[i] = x;
+    });
+    if (ajout){ F.liste.sort((a, b) => String(a && a.semaine) < String(b && b.semaine) ? -1 : 1); if (F.liste.length > this.max) F.liste = F.liste.slice(-this.max); }
+    if (Array.isArray(C.avis) && C.avis.length){
+      if (!Array.isArray(F.avis)) F.avis = [];
+      C.avis.forEach(a => {
+        if (!a || typeof a !== "object") return;
+        const i = F.avis.findIndex(y => y && typeof y === "object" && y.semaine === a.semaine && y.fb === a.fb);
+        if (i === -1) F.avis.push(a); else if (s(a.le) > s(F.avis[i].le)) F.avis[i] = a;
+      });
+      if (F.avis.length > this.maxAvis) F.avis = F.avis.slice(-this.maxAvis);
+    }
+    const vu = this.vu(C); if (vu && vu > this.vu(F)) F.fb_vu = vu;
+    return F;
+  },
+  /* toute écriture de checkins : appliquer(D) modifie la version fraîche (false = rien à écrire). Renvoie (Promise)
+     true si c'est écrit (ou s'il n'y avait rien à écrire), false sinon. C prend la version écrite (même objet :
+     l'affichage et les écritures suivantes partent d'elle).
+     Relecture impossible (hors ligne, Q13-6, choix b) : opts.horsLigne (une vraie saisie : bilan, feedback) — comme
+     en v48, la saisie est écrite sur la copie affichée, gardée sur l'appareil et renvoyée d'elle-même (si la lecture
+     de l'ouverture avait échoué : le refus d'avant, avec son message) ; opts.silence (fb_vu) : rien, sans message ;
+     sinon (smiley) : refus, avec le message de lecture ratée. */
+  modifier(C, appliquer, opts){
+    return this.enFile(() => this._modifier(C, appliquer, opts || {}).catch(e => { console.warn("[MHX] checkins : écriture impossible", e); return false; }));
+  },
+  async _modifier(C, appliquer, opts){
+    const D = await this.fraiche(C);
+    if (D === false) return false;
+    const k = Store.cible() + "|" + this.cle;
+    if (D === null){
+      if (opts.horsLigne){
+        if (Store.nonLus.has(C) && !this._relus.has(C)){ Store.lectureRatee(k); return false; }
+        const X = JSON.parse(JSON.stringify(C));
+        if (appliquer(X) === false) return true;
+        if (Store.ecrire(this.cle, X) === false) return false;   // refusée (message déjà affiché)
+        this.remplacer(C, X);
+        return true;
+      }
+      if (!opts.silence) Store.lectureRatee(k);
+      return false;
+    }
+    const rien = appliquer(D) === false;
+    if (!rien && Store.ecrire(this.cle, D) === false) return false;
+    this.remplacer(C, D); this._relus.add(C);
+    if (!rien) await Store.envoyerCle(this.cle);   // part tout de suite : la fenêtre qui reste se réduit au trajet réseau
+    return true;
+  },
+  remplacer(C, D){ Object.keys(C).forEach(x => { delete C[x]; }); Object.assign(C, D); },
+
   /* v53 — la seule écriture d'une entrée de checkins (bilan du vendredi et feedback du dimanche). L'entrée de la
      semaine est complétée, jamais reconstruite : ses champs en plus (et ceux du document : avis, fb_vu…) sont
      gardés, ses réponses d'un autre format aussi (seul « format » suit le formulaire envoyé). Renvoie l'entrée
-     enregistrée, ou null si l'écriture est refusée (message déjà affiché). */
-  enregistrerEntree(C, semaine, fin, rep, format){
-    if (!Array.isArray(C.liste)) C.liste = [];
-    const ancienne = C.liste.find(x => x && typeof x === "object" && x.semaine === semaine) || null;
-    const anc = (ancienne && ancienne.reponses && typeof ancienne.reponses === "object" && !Array.isArray(ancienne.reponses)) ? ancienne.reponses : {};
-    const entree = Object.assign({}, ancienne || {}, { semaine: semaine, fin: fin, envoye_le: aujourdhui(), envoye_a: new Date().toISOString(), reponses: Object.assign({}, anc, rep) });
-    if (format) entree.format = format; else delete entree.format;
-    C.liste = C.liste.filter(x => !(x && x.semaine === semaine));
-    C.liste.push(entree);
-    C.liste.sort((a, b) => String(a && a.semaine) < String(b && b.semaine) ? -1 : 1);
-    if (C.liste.length > this.max) C.liste = C.liste.slice(-this.max);
-    if (Store.ecrire(this.cle, C) === false) return null;   // refusee (message deja affiche)
-    return entree;
+     enregistrée, ou null si l'écriture est refusée (message déjà affiché).
+     v59 (Q13) : par la file (modifier) — l'entrée est complétée sur la base relue juste avant, pas sur la copie de
+     l'ouverture ; renvoie une Promise. */
+  async enregistrerEntree(C, semaine, fin, rep, format){
+    let entree = null;
+    const ok = await this.modifier(C, D => {
+      if (!Array.isArray(D.liste)) D.liste = [];
+      const ancienne = D.liste.find(x => x && typeof x === "object" && x.semaine === semaine) || null;
+      const anc = (ancienne && ancienne.reponses && typeof ancienne.reponses === "object" && !Array.isArray(ancienne.reponses)) ? ancienne.reponses : {};
+      const e = Object.assign({}, ancienne || {}, { semaine: semaine, fin: fin, envoye_le: aujourdhui(), envoye_a: new Date().toISOString(), reponses: Object.assign({}, anc, rep) });
+      if (format) e.format = format; else delete e.format;
+      D.liste = D.liste.filter(x => !(x && x.semaine === semaine));
+      D.liste.push(e);
+      D.liste.sort((a, b) => String(a && a.semaine) < String(b && b.semaine) ? -1 : 1);
+      if (D.liste.length > this.max) D.liste = D.liste.slice(-this.max);
+      entree = e;
+    }, { horsLigne: true });
+    return ok ? entree : null;
   },
 
   /* branche un formulaire deja rendu ; apres(entree) est appele une fois enregistre */
@@ -126,37 +220,61 @@ const Checkin = {
     }));
     const annuler = form.querySelector("[data-checkin-annuler]");
     if (annuler) annuler.addEventListener("click", () => { if (typeof apres === "function") apres(null); });
-    form.addEventListener("submit", ev => {
+    let envoi = false;   // v59 : un envoi à la fois (relecture puis écriture ; double clic)
+    form.addEventListener("submit", async ev => {
       ev.preventDefault();
+      if (envoi) return;
       const rep = this.lire(form);
       const echelles = this.questions().filter(q => q.type === "echelle5");
       const manque = echelles.filter(q => rep[q.id] == null);
       if (manque.length){ const m = form.querySelector("[data-checkin-msg]"); if (m){ m.textContent = trad("Il manque : {l}", { l: manque.map(q => q.label).join(", ") }); setTimeout(() => { m.textContent = ""; }, 3200); } return; }
       const v = form.dataset.semaine ? { debut: form.dataset.semaine, fin: form.dataset.fin } : this.semaineVisee(C);
-      const entree = this.enregistrerEntree(C, v.debut, v.fin, rep, null);
-      if (!entree) return;
+      const bt = form.querySelector('button[type="submit"]');
+      envoi = true; if (bt) bt.disabled = true;
+      const entree = await this.enregistrerEntree(C, v.debut, v.fin, rep, null);
+      envoi = false; if (bt) bt.disabled = false;
+      if (!entree) return;   // refusée : le texte reste dans le formulaire
       UI.toast(trad("Bilan envoyé. Ton coach le lira avant votre prochain échange."), "ok");
       if (typeof apres === "function") apres(entree);
     });
   },
 
-  /* les reponses d'une entree, en lecture (v53 : selon son format ; sans format = bilan du vendredi, 11 questions) */
+  /* les reponses d'une entree, en lecture (v53 : selon son format ; sans format = bilan du vendredi, 11 questions).
+     v59 (remarque v53 c1) : les réponses de l'AUTRE format restent affichées quand elles existent (un bilan du vendredi
+     complété par le formulaire du dimanche, ou l'inverse : enregistrerEntree les garde toutes) ; affichage seul.
+     « alimentation », identifiant commun aux deux formats, ne s'affiche qu'une fois (dans le format de l'entrée). Une
+     entrée sans réponse de l'autre format s'affiche exactement comme avant. */
   reponsesHTML(x){
-    if (x && x.format === "dimanche") return this.reponsesDimancheHTML(x);
     const r = (x && x.reponses && typeof x.reponses === "object") ? x.reponses : {};
-    const echelles = this.questions().filter(q => q.type === "echelle5" && r[q.id] != null);
-    const textes = this.questions().filter(q => q.type !== "echelle5" && r[q.id] != null && r[q.id] !== "");
-    return `${echelles.length ? `<div class="checkin-echelles">${echelles.map(q => `<span class="pastille"><span data-notr>${esc(q.label)}</span> <b>${esc(r[q.id])}</b>/5</span>`).join("")}</div>` : ""}
-      ${textes.map(q => `<p class="checkin-rep"><span class="lbl">${esc(q.label)}</span>${esc(String(r[q.id]))}</p>`).join("")}`;
+    const ven = this.questions().map(q => q.id), communs = this.questionsDimanche().map(q => q.id).filter(id => ven.indexOf(id) > -1);
+    if (x && x.format === "dimanche"){
+      const v = this.repVendredi(r, communs, true), plus = v.echelles.length + v.textes.length > 0;
+      return this.reponsesDimancheHTML(x, { suite: plus }) + (plus ? this.reponsesVendrediHTML(r, v) : "");
+    }
+    const h = this.reponsesVendrediHTML(r, this.repVendredi(r, []));
+    const dim = this.note(x) != null || this.questionsDimanche().some(q => communs.indexOf(q.id) === -1 && typeof r[q.id] === "string" && r[q.id].trim());
+    return dim ? h + this.reponsesDimancheHTML(x, { sauf: communs, suite: true }) : h;
   },
-  /* v53 — une entrée du feedback du dimanche : la note, puis les cases remplies (textes du client : data-notr) */
-  reponsesDimancheHTML(x){
+  /* v59 — les questions du bilan du vendredi qui ont une réponse (sauf les identifiants de « sauf ») ; stricte (les
+     réponses de l'autre format, sous un feedback du dimanche) : seulement un texte non vide ou un nombre */
+  repVendredi(r, sauf, stricte){
+    const q = this.questions().filter(q => sauf.indexOf(q.id) === -1 && r[q.id] != null && (!stricte || (typeof r[q.id] === "string" && r[q.id].trim()) || (typeof r[q.id] === "number" && isFinite(r[q.id]))));
+    return { echelles: q.filter(q => q.type === "echelle5"), textes: q.filter(q => q.type !== "echelle5" && r[q.id] !== "") };
+  },
+  reponsesVendrediHTML(r, v){
+    return `${v.echelles.length ? `<div class="checkin-echelles">${v.echelles.map(q => `<span class="pastille"><span data-notr>${esc(q.label)}</span> <b>${esc(r[q.id])}</b>/5</span>`).join("")}</div>` : ""}
+      ${v.textes.map(q => `<p class="checkin-rep"><span class="lbl">${esc(q.label)}</span>${esc(String(r[q.id]))}</p>`).join("")}`;
+  },
+  /* v53 — une entrée du feedback du dimanche : la note, puis les cases remplies (textes du client : data-notr).
+     v59 : o.sauf, les cases à ne pas répéter ; o.suite, d'autres réponses suivent (pas de « Aucune réponse lisible. ») */
+  reponsesDimancheHTML(x, o){
+    o = o || {};
     const r = (x.reponses && typeof x.reponses === "object") ? x.reponses : {};
     const n = this.note(x);
-    const textes = this.questionsDimanche().filter(q => typeof r[q.id] === "string" && r[q.id].trim());
+    const textes = this.questionsDimanche().filter(q => !(o.sauf && o.sauf.indexOf(q.id) > -1) && typeof r[q.id] === "string" && r[q.id].trim());
     return `${n != null ? `<div class="checkin-echelles"><span class="pastille fbd-note"><span>${esc(trad("Note de la semaine"))}</span> <b>${n}</b>/10</span></div>` : ""}
       ${textes.map(q => `<p class="checkin-rep"><span class="lbl">${esc(trad(q.label))}</span><span data-notr>${esc(r[q.id])}</span></p>`).join("")}
-      ${n == null && !textes.length ? `<p class="note" style="margin:0">${esc(trad("Aucune réponse lisible."))}</p>` : ""}`;
+      ${n == null && !textes.length && !o.suite ? `<p class="note" style="margin:0">${esc(trad("Aucune réponse lisible."))}</p>` : ""}`;
   },
 
   /* le bloc « statut » : disponible / envoye, pour Mon suivi et l'accueil (v53 : opts.uid, le compte concerne ;
@@ -253,7 +371,8 @@ const Checkin = {
     return (n <= 5 || (p != null && p - n >= 2)) ? { note: n, avant: p, semaine: der.semaine } : null;
   },
   vu(C){ return (C && typeof C.fb_vu === "string") ? C.fb_vu : ""; },
-  /* le dernier fb_vu écrit par cet onglet (la base peut ne pas l'avoir encore : écriture dans 700 ms) */
+  /* le dernier fb_vu écrit par cet onglet (la base peut ne pas l'avoir encore : écriture dans 700 ms ; v59 : posé une fois
+     l'écriture acceptée, envoyée tout de suite ; si l'envoi échoue, elle attend sur l'appareil) */
   _vuEcrit: null,
   /* les réponses du coach plus récentes que la dernière vue (écrites dans les 14 derniers jours : pas de badge
      pour une vieille réponse le jour où le feedback du dimanche s'allume), la plus récente d'abord */
@@ -295,16 +414,21 @@ const Checkin = {
     }));
     const annuler = form.querySelector("[data-fbd-annuler]");
     if (annuler) annuler.addEventListener("click", () => { if (typeof apres === "function") apres(null); });
-    form.addEventListener("submit", ev => {
+    let envoi = false;   // v59 : un envoi à la fois (relecture puis écriture ; double clic)
+    form.addEventListener("submit", async ev => {
       ev.preventDefault();
+      if (envoi) return;
       const b = form.querySelector('.note10 [aria-pressed="true"]');
       const note = b ? parseInt(b.dataset.v, 10) : null;
       const m = form.querySelector("[data-fbd-msg]");
       if (!this.noteValide(note)){ if (m){ m.textContent = trad("Choisis ta note, de 1 à 10."); setTimeout(() => { if (m.textContent === trad("Choisis ta note, de 1 à 10.")) m.textContent = ""; }, 3200); } return; }
       const rep = { note: note };
       this.questionsDimanche().forEach(q => { const el = form.querySelector(`[data-q="${q.id}"]`); rep[q.id] = el ? el.value.trim().slice(0, 2000) : ""; });
-      const entree = this.enregistrerEntree(C, form.dataset.semaine, form.dataset.fin, rep, "dimanche");
-      if (!entree) return;
+      const bt = form.querySelector('button[type="submit"]');
+      envoi = true; if (bt) bt.disabled = true;
+      const entree = await this.enregistrerEntree(C, form.dataset.semaine, form.dataset.fin, rep, "dimanche");
+      envoi = false; if (bt) bt.disabled = false;
+      if (!entree) return;   // refusée : le texte reste dans le formulaire
       UI.toast(trad("Feedback envoyé. Ton coach te répond ici, juste en dessous."), "ok");
       if (typeof apres === "function") apres(entree);
     });
@@ -333,31 +457,34 @@ const Checkin = {
     </div>`;
   },
   /* un avis par (semaine, réponse notée) : le client peut le changer ; les entrées de la liste (et envoye_a) ne
-     sont jamais touchées. Renvoie true si l'écriture part. */
+     sont jamais touchées. Renvoie true si l'écriture part.
+     v59 (Q13) : par la file (modifier), sur la base relue juste avant ; renvoie une Promise (relecture ratée : refus,
+     avec le message de lecture ratée). Deux clics rapides s'enchaînent : le dernier gagne. */
   donnerAvis(C, semaine, fb, champs){
-    if (!Array.isArray(C.avis)) C.avis = [];
-    const i = C.avis.findIndex(a => a && typeof a === "object" && a.semaine === semaine && a.fb === fb);
-    const a = Object.assign({}, i > -1 ? C.avis[i] : {}, champs, { semaine: semaine, fb: fb, le: new Date().toISOString() });
-    if (i > -1) C.avis[i] = a; else C.avis.push(a);
-    if (C.avis.length > this.maxAvis) C.avis = C.avis.slice(-this.maxAvis);
-    return Store.ecrire(this.cle, C) !== false;
+    return this.modifier(C, D => {
+      if (!Array.isArray(D.avis)) D.avis = [];
+      const i = D.avis.findIndex(a => a && typeof a === "object" && a.semaine === semaine && a.fb === fb);
+      const a = Object.assign({}, i > -1 ? D.avis[i] : {}, champs, { semaine: semaine, fb: fb, le: new Date().toISOString() });
+      if (i > -1) D.avis[i] = a; else D.avis.push(a);
+      if (D.avis.length > this.maxAvis) D.avis = D.avis.slice(-this.maxAvis);
+    });
   },
   brancherAvis(zone, C){
     $$("[data-avis-semaine]", zone).forEach(bloc => {
       const semaine = bloc.dataset.avisSemaine, fb = bloc.dataset.avisFb;
       const msg = bloc.querySelector("[data-avis-msg]"), triste = bloc.querySelector(".fbd-triste");
-      $$("[data-smiley]", bloc).forEach(btn => btn.addEventListener("click", () => {
+      $$("[data-smiley]", bloc).forEach(btn => btn.addEventListener("click", async () => {
         const s = btn.dataset.smiley;
-        if (!this.donnerAvis(C, semaine, fb, { smiley: s })) return;
+        if (!(await this.donnerAvis(C, semaine, fb, { smiley: s }))) return;
         $$("[data-smiley]", bloc).forEach(x => x.setAttribute("aria-pressed", String(x === btn)));
         if (triste) triste.hidden = s !== "triste";
         if (msg) msg.textContent = trad("Merci, c'est noté.");
       }));
       const env = bloc.querySelector("[data-avis-envoyer]");
-      if (env) env.addEventListener("click", () => {
+      if (env) env.addEventListener("click", async () => {
         const champs = { smiley: "triste" };
         $$("[data-avis-q]", bloc).forEach(t => { champs[t.dataset.avisQ] = t.value.trim().slice(0, 2000); });
-        if (this.donnerAvis(C, semaine, fb, champs) && msg) msg.textContent = trad("Merci, ton coach le verra.");
+        if ((await this.donnerAvis(C, semaine, fb, champs)) && msg) msg.textContent = trad("Merci, ton coach le verra.");
       });
     });
   },
@@ -421,16 +548,22 @@ const Checkin = {
   },
 
   /* À l'ouverture de Mon suivi (client, règle du dimanche) : une réponse du coach plus récente que fb_vu est
-     maintenant affichée → fb_vu = la plus récente, UNE écriture (rien s'il n'y a rien de nouveau). */
+     maintenant affichée → fb_vu = la plus récente, UNE écriture (rien s'il n'y a rien de nouveau).
+     v59 (Q13-1, Q13-3 et remarque v53 c2) : par la file (modifier, sans message), sur la base relue juste avant.
+     Lecture de checkins ratée (à l'ouverture ou à la relecture) : rien n'est écrit, aucun message, et la pastille
+     « Ton coach a répondu » reste ; elle ne s'éteint que quand fb_vu est écrit (sinon elle est rallumée). */
   marquerVu(C, F){
     const u = Auth.utilisateur(), uid = u && u.id;
     if (Store.idConsulte || !uid) return false;
+    if (Store.nonLus.has(C) || Store.charge[uid + "|" + this.cle] === false) return false;   // lecture d'ouverture ratée : Mon suivi a l'air vide, on n'écrit rien
     if (!this.nonVus(C, F).length){ this.majBadge(uid, 0); return false; }
-    C.fb_vu = Feedback.liste(F).map(f => this.marque(f)).sort().pop();
-    const ok = Store.ecrire(this.cle, C) !== false;
-    if (ok) this._vuEcrit = { uid: uid, v: C.fb_vu };   // revenir sur Mon suivi avant l'envoi ne réécrit pas
-    this.majBadge(uid, 0);
-    return ok;
+    const v = Feedback.liste(F).map(f => this.marque(f)).sort().pop();
+    this.modifier(C, D => { if (this.vu(D) >= v) return false; D.fb_vu = v; }, { silence: true }).then(ok => {
+      const moi = Auth.utilisateur(); if (!moi || moi.id !== uid) return;
+      if (ok){ if (!(this._vuEcrit && this._vuEcrit.uid === uid && this._vuEcrit.v > v)) this._vuEcrit = { uid: uid, v: v }; this.majBadge(uid, 0); }   // revenir sur Mon suivi ne réécrit pas
+      else this.majBadge(uid, this.nonVus(C, F).length);   // pas écrit : la pastille reste (ou revient)
+    });
+    return true;
   },
   /* la carte de l'accueil « Ton coach a répondu » */
   accesReponseHTML(f){
