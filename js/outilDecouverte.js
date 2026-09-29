@@ -797,7 +797,7 @@ const outilDecouverte = {
       <legend>${esc(typoFr(trad(q.label)))}</legend>${q.aide ? `<p class="note dc-aide">${esc(typoFr(trad(q.aide)))}</p>` : ""}
       <div class="dc-opts${q.type === "cartes" ? " dc-cartes" : ""}">${opts.map(o => `<label class="dc-opt"><input type="${type}" name="q-${esc(q.id)}" value="${esc(o.v)}"${o.on ? " checked" : ""}><span class="dc-opt-c"><span class="dc-opt-l">${esc(typoFr(trad(o.l)))}</span>${o.s ? `<span class="dc-opt-s">${esc(typoFr(trad(o.s)))}</span>` : ""}</span></label>`).join("")}</div>
       ${plusieurs ? `<p class="msg ko dc-max" id="q-${esc(q.id)}-max" role="status" aria-live="polite"></p>` : ""}
-      ${pr != null ? `<label class="dc-precision" for="q-${esc(q.id)}-precision">${esc(typoFr(trad(q.precision)))}</label><textarea id="q-${esc(q.id)}-precision" rows="2" maxlength="500">${esc(pr)}</textarea>` : ""}</fieldset>`;
+      ${pr != null ? `<label class="dc-precision" for="q-${esc(q.id)}-precision">${esc(typoFr(trad(q.precision)))}</label><textarea id="q-${esc(q.id)}-precision" rows="2" maxlength="${Math.max(500, pr.length)}">${esc(pr)}</textarea>` : ""}</fieldset>`;   // une ancienne reponse plus longue n'est jamais coupee
   },
   brancherFormulaire(zone, I, C){
     const self = this, L = DECOUVERTE.questionnaire, qs = this.questions(), B = this.bornes(), req = Decouverte.cfg().requis || [];
@@ -818,11 +818,14 @@ const outilDecouverte = {
     /* v60 (brief V2, C) : ce qu'une question donne a ecrire, { cle: valeur } — une question a choix donne son texte
        francais lisible, ses cles et sa precision (Decouverte.texteFr) ; les autres, leur champ (outilProfil.valeur) */
     const aToucher = q => q.type === "cartes" || Decouverte.aChoix(q);
+    /* une ancienne reponse libre (sans <id>_choix) n'est jamais raccourcie : au-dela de 500 caracteres, sa limite est sa
+       propre longueur (zero perte) ; le nouveau format : 500 */
+    const limite = q => Math.max(500, !Decouverte.choixDe(I, q.id) && Decouverte.repondu(I, q.id) ? String(I[q.id]).trim().length : 0);
     const champsDe = q => {
       if (q.type === "cartes"){ const c = zone.querySelector(`input[name="q-${q.id}"]:checked`); return { [q.id]: c ? c.value : "" }; }
       if (Decouverte.aChoix(q)){
         const ch = $$(`input[name="q-${q.id}"]:checked`, zone).map(c => c.value).filter(k => q.choix.some(x => x[0] === k)).slice(0, q.max || 1);
-        const pe = zone.querySelector("#q-" + q.id + "-precision"), p = pe ? pe.value.trim().slice(0, 500) : "";
+        const pe = zone.querySelector("#q-" + q.id + "-precision"), p = pe ? pe.value.trim().slice(0, limite(q)) : "";
         return { [q.id]: Decouverte.texteFr(q, ch, p), [q.id + "_choix"]: ch, [q.id + "_precision"]: p };
       }
       return { [q.id]: outilProfil.valeur(q) };
