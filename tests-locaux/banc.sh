@@ -28,7 +28,7 @@ etat_disque() { git -C .. status --porcelain --untracked-files=no 2>/dev/null; }
 DISQUE_DEBUT=$(etat_disque)
 
 # Suites du banc, et suites volontairement hors banc (verif44 à verif47 testent le Challenge 7 jours supprimé).
-SUITES="flux verif34 verif35 verif36 verif37 verif38 verif-xss verif39 verif40 verif41 verif42 verif43 verif48 verif50 verif51 verif52 verif53 verif54 verif55 verif56 verif57 verif58 verif60 verif61 verif62"
+SUITES="flux verif34 verif35 verif36 verif37 verif38 verif-xss verif39 verif40 verif41 verif42 verif43 verif48 verif50 verif51 verif52 verif53 verif54 verif55 verif56 verif57 verif58 verif60 verif61 verif62 verif63 verif64"
 # v53 (chantier 4) : verif49 (score sur 100 et température NOUVEAU / CHAUD / TIÈDE / FROID, journal des emails) sort du banc ;
 # ses blocs relances, issues, conflits, verrou et passage client sont repris dans verif58 (bloc F).
 HORS_BANC="verif44 verif45 verif46 verif47 verif49"
@@ -74,27 +74,33 @@ HORS_BANC="verif44 verif45 verif46 verif47 verif49"
 # v57 (retouches de Lucas du 29/09 : colonne du nom fixe, Connexions après Visite, date courte, page d'arrivée après la
 # connexion) : verif62 32 (nouvelle suite, partie 8) ; verif61 adaptée (ordre des colonnes, date courte), nombre inchangé.
 # v58 (cartes de Mes clients sur téléphone : « 7/10 » d'un seul tenant, pastilles des prospects dans la carte) : verif62 32 → 37.
+# v59 (interrupteurs forcés sur « test » pour toutes les suites par fichiers.js, simulation « tous » / « off » sur les branches
+# v2/simu-tous-* et v2/simu-off-*) : verif55 164 → 167 (bloc A0 + 1 vérification des conditions : contenus chargés depuis
+# Google) ; verif57, 58, 61 : garde « une valeur connue » au lieu de « test », nombres inchangés. Q13 (checkins relu avant
+# chaque écriture, vraies saisies) : verif63 66 (nouvelle suite, partie 3). « À traiter » complet : verif64 82 (nouvelle
+# suite, partie 2). Barre du haut à 320 px : verif62 37 → 50. Remarques de la v52 : verif56 247 → 259, verif60 60 → 71
+# (verif60 passe de la partie 10 à la partie 9).
 attendu() {
   case "$1" in
     flux) echo 19;; verif34) echo 13;; verif35) echo 14;; verif36) echo 13;; verif37) echo 12;; verif38) echo 66;;
     verif-xss) echo 5;; verif39) echo 48;; verif40) echo 64;; verif41) echo 25;; verif42) echo 20;; verif43) echo 27;;
     verif48) echo 42;; verif50) echo 57;; verif51) echo 89;; verif52) echo 137;; verif53) echo 114;;
-    verif54) echo 60;; verif55) echo 164;; verif56) echo 247;; verif57) echo 152;; verif58) echo 126;; verif60) echo 60;; verif61) echo 50;; verif62) echo 37;; rig) echo 90;; *) echo "";;
+    verif54) echo 60;; verif55) echo 167;; verif56) echo 259;; verif57) echo 152;; verif58) echo 126;; verif60) echo 71;; verif61) echo 50;; verif62) echo 50;; verif63) echo 66;; verif64) echo 82;; rig) echo 90;; *) echo "";;
   esac
 }
 # Partie de chaque suite pour les jobs parallèles de GitHub Actions (10 parties, durées équilibrées, 4 à 5 minutes chacune).
 partie() {
   case "$1" in
     verif52) echo 1;;
-    verif53) echo 2;;
-    verif51|verif34|verif35) echo 3;;
+    verif53|verif64) echo 2;;
+    verif51|verif34|verif35|verif63) echo 3;;
     verif38|verif36|verif37) echo 4;;
     verif48|verif43|flux|verif58) echo 5;;
     verif41|verif57|verif61) echo 6;;
     verif42|verif50) echo 7;;
     verif40|verif54|verif62) echo 8;;
-    verif55|verif39) echo 9;;
-    verif56|rig|verif-xss|niveau|verif60) echo 10;;
+    verif55|verif39|verif60) echo 9;;
+    verif56|rig|verif-xss|niveau) echo 10;;
     *) echo "";;
   esac
 }
