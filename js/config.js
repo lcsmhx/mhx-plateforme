@@ -16,7 +16,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-09-29 · 59",
+    version: "2026-09-30 · 60",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -333,7 +333,8 @@ const CONFIG = {
 const DECOUVERTE = {
   nom: "Découverte",
   /* v52 : gratuit pour toujours — plus de « Jour n/7 » ni de fin de découverte côté prospect */
-  lede_questionnaire: "3 questions, 1 minute : dis-nous où tu en es.",
+  /* v60 (brief V2, C) : 30 secondes, des réponses à toucher */
+  lede_questionnaire: "3 questions, 30 secondes : dis-nous où tu en es.",
   lede_accueil: "Ton espace gratuit, sans limite de temps : calculateur de calories, suivi de ton poids et Speed Formation.",
   charge_rate: "Tes réponses n'ont pas pu être chargées. Recharge la page.",
   /* v52 : l'action mise en avant sur l'accueil du prospect, une à la fois (d'abord le calcul, puis la pesée) */
@@ -343,11 +344,23 @@ const DECOUVERTE = {
   },
   /* questions du questionnaire court qui ne sont pas dans le questionnaire complet (celui des clients ne change pas).
      v52 : les 3 questions (même ordre en anglais). « probleme » a son propre identifiant (pas « objectif », dont les
-     options sont celles du questionnaire complet) ; « obstacle » garde le sien : les anciennes réponses restent lues. */
+     options sont celles du questionnaire complet) ; « obstacle » garde le sien : les anciennes réponses restent lues.
+     v60 (brief V2, C) : des réponses à toucher. « cartes » : un seul choix, la valeur enregistrée est l'option française
+     EXACTE (inchangée : « Perdre du gras »…), sous = petit texte de chaque carte. « choix » : des clés stables
+     ([clé, libellé], même clé en anglais), max = nombre de choix, precision = la précision libre facultative ; dans
+     intake : <id>_choix (les clés), <id>_precision (le texte) et <id> = le texte français lisible (libellés puis
+     précision) que lisent le coach, le CSV et les anciens écrans. Une ancienne réponse en texte libre reste lue telle quelle. */
   questions: [
-    { id: "probleme", label: "Quel est ton objectif principal ?", type: "select", options: ["Perdre du gras", "Prendre du muscle", "Me remettre en forme"] },
-    { id: "obstacle", label: "Qu'est-ce qui t'a bloqué jusqu'ici ?", type: "long" },
-    { id: "projection", label: "Dans 3 mois, qu'est-ce qui aurait changé pour toi ?", type: "long" }
+    { id: "probleme", label: "Ton objectif numéro 1 ?", type: "cartes", options: ["Perdre du gras", "Prendre du muscle", "Me remettre en forme"],
+      sous: ["Affiner ma silhouette", "Me dessiner et gagner en force", "Retrouver de l'énergie et une routine"] },
+    { id: "obstacle", label: "Jusqu'ici, qu'est-ce qui a coincé ?", type: "choix", max: 2, aide: "Jusqu'à 2 réponses.",
+      choix: [["temps", "Le manque de temps"], ["craquages", "Je craque sur la nourriture"], ["quoi_faire", "Je ne sais pas quoi faire exactement"],
+              ["motivation", "La motivation retombe vite"], ["tout_essaye", "J'ai déjà tout essayé, rien ne dure"], ["suivi", "Personne pour me suivre et me recadrer"]],
+      precision: "Autre chose ? Avec tes mots (facultatif, sans détail de santé)" },
+    { id: "projection", label: "Dans 3 mois, qu'est-ce qui changerait tout pour toi ?", type: "choix", max: 1,
+      choix: [["vetements", "Rentrer à nouveau dans mes vêtements préférés"], ["photos", "M'aimer sur les photos"], ["energie", "Avoir de l'énergie toute la journée"],
+              ["routine", "Tenir une routine sans me forcer"], ["confiance", "Retrouver confiance en moi"]],
+      precision: "Ou dis-le avec tes mots (facultatif)" }
   ],
   /* v52 : les définitions de l'ancien questionnaire court (CONFIG.decouverte.questions_avant) absentes de QUESTIONS, pour
      l'affichage seulement (anciennes réponses : Profil du prospect, fiche du coach) */
@@ -359,8 +372,10 @@ const DECOUVERTE = {
   questionnaire: {
     titre: "Ton questionnaire",
     age_aide: "À partir de {n} ans.",
-    bouton: "Valider mes réponses",
+    bouton: "Voir ma prochaine étape",   // v60 (brief V2, C)
     annuler: "Annuler les modifications",
+    manque_une: "Il manque une réponse",  // v60 : le bouton touché avant que les 3 questions aient leur réponse
+    max: "{n} réponses max",              // v60 : un choix de trop (question à plusieurs choix)
     manque: "Il manque : {l}",
     verifie: "Vérifie : {l}",
     note: "Ce questionnaire ne remplace pas un avis médical. Si tu as un doute sur ta santé, parles-en à un professionnel."
@@ -581,7 +596,7 @@ const DECOUVERTE = {
 
   en: {
     nom: "Discovery",
-    lede_questionnaire: "3 questions, 1 minute: tell us where you stand.",
+    lede_questionnaire: "3 questions, 30 seconds: tell us where you're at.",
     lede_accueil: "Your free space, with no time limit: calorie calculator, weight tracking and Speed Formation.",
     charge_rate: "Your answers could not be loaded. Reload the page.",
     etapes: {
@@ -589,9 +604,16 @@ const DECOUVERTE = {
       pesee: { titre: "Your next step", texte: "Log today's weight: it's your starting point, and the base of your curve.", bouton: "Log your starting weight" }
     },
     questions: [
-      { id: "probleme", label: "What's your main goal?", type: "select", options: ["Lose fat", "Build muscle", "Get back in shape"] },
-      { id: "obstacle", label: "What has held you back so far?", type: "long" },
-      { id: "projection", label: "In 3 months, what would have changed for you?", type: "long" }
+      { id: "probleme", label: "Your #1 goal?", type: "cartes", options: ["Lose fat", "Build muscle", "Get back in shape"],
+        sous: ["Get leaner", "Get toned and stronger", "Get my energy and routine back"] },
+      { id: "obstacle", label: "What's held you back so far?", type: "choix", max: 2, aide: "Pick up to 2.",
+        choix: [["temps", "Not enough time"], ["craquages", "I give in to cravings"], ["quoi_faire", "I don't know exactly what to do"],
+                ["motivation", "My motivation fades fast"], ["tout_essaye", "I've tried everything, nothing lasts"], ["suivi", "No one to keep me on track"]],
+        precision: "Anything else? In your own words (optional, no health details)" },
+      { id: "projection", label: "In 3 months, what would change everything for you?", type: "choix", max: 1,
+        choix: [["vetements", "Fitting into my favorite clothes again"], ["photos", "Loving how I look in photos"], ["energie", "Having energy all day long"],
+                ["routine", "Sticking to a routine without forcing it"], ["confiance", "Feeling confident again"]],
+        precision: "Or say it in your own words (optional)" }
     ],
     questions_avant: [
       { id: "essaye", label: "What have you already tried to reach this goal?", type: "long" },
@@ -601,8 +623,10 @@ const DECOUVERTE = {
     questionnaire: {
       titre: "Your questionnaire",
       age_aide: "From {n} years old.",
-      bouton: "Submit my answers",
+      bouton: "See my next step",
       annuler: "Discard changes",
+      manque_une: "One answer is missing",
+      max: "{n} answers max",
       manque: "Missing: {l}",
       verifie: "Check: {l}",
       note: "This questionnaire is not medical advice. If you have any doubt about your health, talk to a professional."

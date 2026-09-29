@@ -12,6 +12,10 @@ const num = (v) => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
 const locale = () => (window.__langue === "en" ? "en-US" : "fr-FR");
 const fmt = (n) => isFinite(Number(n)) ? Math.round(Number(n)).toLocaleString(locale()) : "—";
 const n1  = (n) => isFinite(Number(n)) ? (Math.round(Number(n)*10)/10).toLocaleString(locale(),{minimumFractionDigits:1,maximumFractionDigits:1}) : "—";
+/* v60 (brief V2) — typographie francaise des nouveaux textes, a l'affichage : espace insecable avant « : ; ? ! » et a
+   l'interieur des guillemets « ». En francais seulement ; les sources et le dictionnaire anglais gardent des espaces
+   simples (Traduction.norm ramene toute espace a une espace simple). A appliquer au texte, avant esc(). */
+const typoFr = (s) => typeof s !== "string" || window.__langue === "en" ? s : s.replace(/ ([:;?!»])/g, " $1").replace(/« /g, "« ");
 /* La date du jour est celle de la montre de la personne, pas celle de
    Londres. Avant, toISOString() donnait la date UTC : a Bali, avant 8 h du
    matin, on etait encore « hier » — mesures mal datees et cases « mangé »

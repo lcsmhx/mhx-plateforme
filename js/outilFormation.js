@@ -7,7 +7,23 @@
 const FORMATION = {
   titre: "SpeedFormation 1.0",
   video: "Bsinn0muMF4",
-  intro: "Une méthode simple et efficace pour perdre tes premiers kilos en 14 jours, sans programme complexe ni séance interminable. Conçue pour les personnes occupées : le plan s'intègre dans ta routine, entre le travail et la famille.",
+  /* v60 (brief V2, I1) : duree de la video de bienvenue, en minutes. Vide : l'etiquette « Commence ici » s'affiche sans
+     duree ; sinon « Commence ici · X min » avec X = 2 + 1 + cette duree (calcul 2 min, pesee 1 min). */
+  video_minutes: 0,
+  /* v60 (brief V2, I) : les deux cartes du haut, pour un PROSPECT seulement (anglais : I18N.en) */
+  depart: {
+    etiquette: "Commence ici", etiquette_min: "Commence ici · {x} min",
+    titre: "3 actions pour bien démarrer aujourd'hui",
+    video: "Regarde la vidéo de bienvenue", calcul: "Calcule tes calories (2 min)", pesee: "Note ton poids de départ (1 min)",
+    fait: "fait", fini: "Départ lancé ✓"
+  },
+  apercu: {
+    titre: "Ce qui t'attend dans ta formation",
+    modules: "modules", videos: "vidéos avec Lucas", documents: "guides et documents à télécharger", defis: "défis",
+    dont: "Dont 3 programmes d'entraînement (12 semaines femme, 12 semaines homme, full body maison) et 3 plans alimentaires (sans restriction, sans gluten, vegan).",
+    outils: "Plus tes outils : organisation de la diète, priorités, notes et objectifs. Gratuit, sans limite de temps."
+  },
+  intro:"Une méthode simple pour poser les bases en 14 jours : ton alimentation, ton entraînement et tes habitudes, sans programme complexe ni séance interminable. Conçue pour les personnes occupées : le plan s'intègre dans ta routine, entre le travail et la famille.",
 
   /* --- le processus, coche par coche --- */
   processus: [
@@ -50,7 +66,7 @@ const FORMATION = {
     { id:"m0", titre:"Module 0 — Introduction", icone:"🚀",
       objectif:"Poser les bases et définir les attentes.",
       contenu:[
-        "Des objectifs réalistes : perdre tes premiers kilos en 14 jours.",
+        "Des objectifs réalistes : ce qu'on peut viser en 14 jours, et ce qui demande plus de temps.",
         "La structure de la formation et les résultats attendus.",
         "L'évaluation initiale : mesurer ton point de départ."
       ],
@@ -65,7 +81,7 @@ const FORMATION = {
 
     /* ---------------- Module 1 ---------------- */
     { id:"m1", titre:"Module 1 — Mindset", icone:"🧠",
-      objectif:"Travailler l'état d'esprit pour garantir une transformation durable.",
+      objectif:"Travailler l'état d'esprit qui fait tenir une transformation dans la durée.",
       contenu:[
         "L'importance du mindset dans la réussite de tes objectifs.",
         "Rester motivé, même pendant les moments difficiles.",
@@ -204,33 +220,33 @@ const FORMATION = {
       { nom:"Perte de gras", objectif:"Introduire un déficit calorique léger.",
         defi:"Suivre un plan alimentaire basique : réduire les portions de sucre, augmenter les légumes dans chaque repas." },
       { nom:"Discipline", objectif:"Développer une routine matinale.",
-        defi:"Se lever 30 minutes plus tôt pour un rituel simple : hydratation, 5 minutes de méditation, relire ses notes." },
+        defi:"Un rituel de 10 minutes chaque matin, sans te lever plus tôt : un grand verre d'eau, 5 minutes de respiration, relire ton objectif." },
       { nom:"Séances de sport", objectif:"Augmenter la fréquence d'entraînement.",
         defi:"Ajouter une séance légère dans la semaine : marche rapide ou 15 minutes de cardio léger." }
     ]},
     { id:"c2", titre:"Semaine 2 — Intensification", axes:[
-      { nom:"Perte de gras", objectif:"Augmenter le rythme de perte de gras.",
-        defi:"Introduire une séance de HIIT de 15 minutes (30 s d'effort / 30 s de repos, 10 fois) et réduire les glucides après 17 h." },
+      { nom:"Perte de gras", objectif:"Garder la faim sous contrôle.",
+        defi:"Une source de protéines à chaque repas (œufs, poisson, viande, laitages, tofu ou légumineuses) et la moitié de l'assiette en légumes, le midi et le soir." },
       { nom:"Discipline", objectif:"Renforcer la gestion du temps.",
         defi:"Planifier la journée la veille au soir, repas et entraînements compris." },
       { nom:"Séances de sport", objectif:"Augmenter le volume d'entraînement.",
         defi:"Ajouter une deuxième séance : un circuit rapide au poids de corps." }
     ]},
     { id:"c3", titre:"Semaine 3 — Structuration et progression", axes:[
-      { nom:"Perte de gras", objectif:"Maximiser la combustion des graisses.",
-        defi:"Introduire un jour de jeûne intermittent (16 h sans manger, 8 h de prise alimentaire) et des légumes verts à chaque repas." },
+      { nom:"Perte de gras", objectif:"Profiter sans tout dérégler.",
+        defi:"Prévoir à l'avance ton repas plaisir de la semaine et le savourer, sans compenser le lendemain : pas de repas sauté, pas de séance punition." },
       { nom:"Discipline", objectif:"Suivre une routine stricte.",
         defi:"Réduire une mauvaise habitude : limiter les distractions numériques pendant les repas ou le travail." },
       { nom:"Séances de sport", objectif:"Ajouter de la diversité.",
         defi:"Intégrer une séance de renforcement sur un groupe musculaire précis : jambes, dos…" }
     ]},
     { id:"c4", titre:"Semaine 4 — Finale intensification", axes:[
-      { nom:"Perte de gras", objectif:"Réduction plus intense des graisses.",
-        defi:"Appliquer une journée pauvre en glucides, en maintenant les protéines et les légumes hauts." },
+      { nom:"Perte de gras", objectif:"Bouger plus au quotidien.",
+        defi:"Ajouter 2\u00a0000 pas par jour à ta moyenne habituelle : escaliers, trajets à pied, marche après le repas." },
       { nom:"Discipline", objectif:"Rehausser la résilience mentale.",
         defi:"Se fixer un mini-objectif quotidien : méditer 10 minutes, lire 10 pages d'un livre de développement personnel." },
-      { nom:"Séances de sport", objectif:"Passer à la double séance.",
-        defi:"Introduire une double séance un jour par semaine : cardio le matin, renforcement le soir." }
+      { nom:"Séances de sport", objectif:"Tenir le rythme de 3 séances.",
+        defi:"Faire 3 séances dans la semaine (20 minutes suffisent), avec au moins un jour de repos entre deux séances intenses." }
     ]},
     { id:"c5", titre:"Semaine 5 — Évaluation et ajustement", axes:[
       { nom:"Perte de gras", objectif:"Évaluer les progrès.",
@@ -244,15 +260,15 @@ const FORMATION = {
 
   /* --- les 10 defis sur une semaine --- */
   defis: [
-    ["d1","7 jours sans sucres ajoutés","Éliminer les sucres ajoutés dans les boissons, desserts et en-cas industriels. Prioriser les sucres naturels (fruits) en quantité limitée."],
-    ["d2","1,5 litre d'eau par jour","Boire au minimum 1,5 litre d'eau par jour pour favoriser l'élimination et réduire les envies."],
+    ["d1","7 jours sans sucres ajoutés","Éliminer les sucres ajoutés dans les boissons, desserts et en-cas industriels. Les fruits restent au menu."],
+    ["d2","1,5 litre d'eau par jour","Garder une bouteille à portée de main et boire au moins 1,5 litre d'eau par jour."],
     ["d3","5 séances de circuit abdos","Réaliser un circuit abdos 5 fois dans la semaine : 3 à 5 exercices (crunch, gainage, relevés de jambes, obliques), 3 séries de 15 répétitions."],
     ["d4","Une portion de légumes à chaque repas","Inclure des légumes, crus ou cuits, dans chacun de tes repas."],
-    ["d5","30 minutes de cardio à jeun, 3 fois","Marche rapide, vélo ou corde à sauter le matin avant le petit-déjeuner."],
-    ["d6","3 jours sans grignotage","Choisir trois jours de la semaine sans aucune collation entre les repas principaux, pour réguler l'appétit."],
-    ["d7","20 minutes de méditation ou de respiration par jour","Réduire le stress : c'est ce qui soutient la discipline et limite le stockage."],
+    ["d5","30 minutes de marche rapide, 3 fois","Marche rapide ou vélo, au moment de la journée qui te va le mieux."],
+    ["d6","Des collations prévues, pas subies","Pendant 3 jours, prévoir tes collations à l'avance (un fruit, un yaourt, une poignée d'oléagineux) au lieu de grignoter au hasard."],
+    ["d7","10 minutes de respiration ou de méditation par jour","Réduire le stress aide à tenir tes bonnes habitudes."],
     ["d8","Aucune boisson calorique de la semaine","Éviter jus de fruits, sodas, alcool et café sucré : les calories liquides sont les plus souvent oubliées."],
-    ["d9","30 minutes de sommeil en plus chaque nuit","Se coucher 30 minutes plus tôt : la récupération est essentielle à la perte de gras et à l'équilibre hormonal."],
+    ["d9","30 minutes de sommeil en plus chaque nuit","Se coucher 30 minutes plus tôt : bien dormir aide à récupérer et à mieux gérer la faim."],
     ["d10","Écrire ses objectifs chaque matin","Quelques minutes chaque matin pour écrire ou relire tes objectifs, et rester concentré toute la journée."]
   ]
 };
@@ -463,9 +479,9 @@ const outilFormation = {
   },
 
   /* ---------- petites briques d'affichage ---------- */
-  video(id, legende){
+  video(id, legende, ancre){   // v60 : ancre = id de la boite (la video de bienvenue du prospect, « Commence ici »)
     if (!idVideo(id)) return "";
-    return `<div class="video-boite">
+    return `<div class="video-boite"${ancre ? ` id="${esc(ancre)}"` : ""}>
       <button type="button" class="video-vignette" data-yt="${esc(id)}" aria-label="Lire la vidéo">
         <img src="https://img.youtube.com/vi/${esc(id)}/hqdefault.jpg" alt="" loading="lazy">
         <span class="jouer">▶ ${esc(legende || "Regarder la vidéo")}</span>
@@ -490,10 +506,47 @@ const outilFormation = {
     return { tot: t.length, faits: t.filter(x => D.coches[x[0]]).length };
   },
 
+  /* ---------- v60 (brief V2, I) : les deux cartes du haut, prospect seulement ----------
+     « Commence ici » : 3 actions qui se cochent toutes seules — la video de bienvenue lancee (D.depart.video, un instant,
+     ecrit au clic seulement : une visite n'ecrit rien), un calcul enregistre (calc_perso valide, pas mineur), une pesee
+     (mens) — lus par init() en lecture seule. Elles ne comptent pas dans les 49 etapes. Les 3 faites : une seule ligne.
+     « Ce qui t'attend dans ta formation » : chiffres comptes dans FORMATION et LECONS, jamais ecrits en dur. */
+  pourProspect(){ return Auth.estProspect() && !Store.idConsulte; },
+  departEtat(D, R){
+    const dep = D && D.depart && typeof D.depart === "object" && !Array.isArray(D.depart) ? D.depart : {}, P = R && R[outilCalculateur.cle_perso];
+    return { video: typeof dep.video === "string" && !!dep.video, calcul: !!(outilCalculateur.valide(P) && !outilCalculateur.mineur(P)), pesee: Decouverte.peseeFaite(R && R.mens) };
+  },
+  departFini(e){ return !!(e && e.video && e.calcul && e.pesee); },
+  departHTML(e){
+    const L = FORMATION.depart;
+    if (this.departFini(e)) return `<section class="panel fo-depart fo-depart-fini" id="fo-depart"><p class="fo-depart-ligne">${esc(trad(L.fini))}</p></section>`;
+    const min = +FORMATION.video_minutes > 0 ? 3 + Math.round(+FORMATION.video_minutes) : 0;
+    const act = [["video", "#fo-presentation", L.video], ["calcul", "#/calculateur", L.calcul], ["pesee", "#/mensurations", L.pesee]];
+    return `<section class="panel fo-depart" id="fo-depart"><span class="eyebrow">${esc(min ? trad(L.etiquette_min, { x: min }) : trad(L.etiquette))}</span>
+      <h2>${esc(typoFr(trad(L.titre)))}</h2>
+      <ol class="fo-depart-l">${act.map(a => { const f = !!e[a[0]]; return `<li${f ? ' class="fait"' : ""}><a href="${a[1]}" data-depart="${a[0]}"><span class="fo-depart-c" aria-hidden="true">${f ? "✓" : ""}</span><span class="fo-depart-t">${esc(trad(a[2]))}</span>${f ? `<span class="sr-only"> (${esc(trad(L.fait))})</span>` : ""}</a></li>`; }).join("")}</ol></section>`;
+  },
+  chiffres(){
+    const F = FORMATION, mods = F.modules || [];
+    return { modules: mods.length,
+      videos: [F.video].concat(mods.map(m => m.video)).filter(v => idVideo(v)).length,
+      documents: mods.reduce((n, m) => n + (m.ressources || []).length + (m.lecons || []).filter(k => LECONS[k]).length, 0),
+      defis: (F.challenges || []).reduce((n, c) => n + (c.axes || []).length, 0) + (F.defis || []).length };
+  },
+  apercuHTML(){
+    const L = FORMATION.apercu, n = this.chiffres();
+    const tuile = (v, l) => `<div class="tile"><div class="t-val readout">${esc(String(v))}</div><div class="t-sub">${esc(trad(l))}</div></div>`;
+    return `<section class="panel fo-apercu" id="fo-apercu"><h2>${esc(typoFr(trad(L.titre)))}</h2>
+      <div class="tiles">${tuile(n.modules, L.modules)}${tuile(n.videos, L.videos)}${tuile(n.documents, L.documents)}${tuile(n.defis, L.defis)}</div>
+      <p style="margin:14px 0 0">${esc(typoFr(trad(L.dont)))}</p><p class="note" style="margin:8px 0 0">${esc(typoFr(trad(L.outils)))}</p></section>`;
+  },
+
   /* ---------- la page ---------- */
-  vue(D, visibles){
+  vue(D, visibles, depart){
     const c = this.compte(D);
     let h = "";
+    /* v60 (brief V2, I) : sous l'en-tete, au-dessus de « Ton parcours », pour un prospect seulement */
+    if (depart && this.pourProspect()) h += this.departHTML(depart) + this.apercuHTML();
 
     /* en-tete : progression + video de presentation (v36 : bibliotheque) */
     const nbModules = FORMATION.modules.length, modulesFinis = FORMATION.modules.filter(m => { const cm = this.compteModule(D, m); return cm.tot && cm.faits === cm.tot; }).length;
@@ -502,13 +555,13 @@ const outilFormation = {
         <div>
           <span class="eyebrow">${esc(trad("Bibliothèque"))} · ${nbModules} ${esc(trad("modules"))}</span>
           <h2 style="margin:4px 0 8px">Ton parcours</h2>
-          <p style="margin:0">${esc(FORMATION.intro)}</p>
+          <p style="margin:0">${esc(typoFr(FORMATION.intro))}</p>
         </div>
         <div class="tile prog-compteur"><div class="t-lbl">Progression</div><div class="t-val readout${c.pct >= 100 ? " pos" : ""}">${c.pct}<small>%</small></div><div class="t-sub">${c.faits} / ${c.tot} ${esc(trad("étapes"))}</div></div>
       </div>
       <div class="fo-jauge" style="margin-top:14px"><div class="fo-jauge-in" style="width:${c.pct}%"></div></div>
       <p class="note" style="margin:8px 0 16px">${modulesFinis} ${esc(trad(modulesFinis > 1 ? "modules terminés" : "module terminé"))} ${esc(trad("sur"))} ${nbModules}</p>
-      ${this.video(FORMATION.video, "Voir la présentation de la formation")}
+      ${this.video(FORMATION.video, "Voir la présentation de la formation", depart && this.pourProspect() ? "fo-presentation" : "")}
     </section>`;
 
     /* le processus */
@@ -529,15 +582,15 @@ const outilFormation = {
       h += `<section class="panel fo-mod${ouvert ? " ouvert" : ""}${cm.tot && cm.faits === cm.tot ? " fini" : ""}">
         <button type="button" class="fo-tete" data-mod="${esc(m.id)}" aria-expanded="${ouvert}">
           <span class="fo-num" aria-hidden="true">${String(idx).padStart(2, "0")}</span>
-          <span class="fo-corps-tete"><span class="fo-nom">${esc(titre)}</span><span class="fo-obj-court">${esc(m.objectif || "")}</span>
+          <span class="fo-corps-tete"><span class="fo-nom">${esc(titre)}</span><span class="fo-obj-court">${esc(typoFr(m.objectif || ""))}</span>
             ${cm.tot ? `<span class="fo-jauge fo-jauge-mod"><span class="fo-jauge-in" style="width:${pct}%"></span></span>` : ""}</span>
           ${cm.tot ? `<span class="pastille${cm.faits === cm.tot ? " fo-ok" : ""}">${cm.faits}/${cm.tot}</span>` : ""}
           <span class="fo-fleche">${ouvert ? "▾" : "▸"}</span>
         </button>`;
       if (ouvert){
         h += `<div class="fo-corps">
-          <p class="fo-obj"><b>Objectif :</b> ${esc(m.objectif)}</p>
-          ${(m.contenu || []).length ? `<ul class="fo-contenu">${m.contenu.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
+          <p class="fo-obj"><b>Objectif :</b> ${esc(typoFr(m.objectif))}</p>
+          ${(m.contenu || []).length ? `<ul class="fo-contenu">${m.contenu.map(x => `<li>${esc(typoFr(x))}</li>`).join("")}</ul>` : ""}
           ${this.video(m.video)}
           ${(m.taches || []).length ? `<h3>Ta to-do list</h3><ul class="fo-liste">${m.taches.map(t => this.caseHTML(t[0], t[1], D.coches[t[0]])).join("")}</ul>` : ""}`;
 
@@ -687,8 +740,10 @@ const outilFormation = {
 
   /* --- Les challenges --- */
   /* v59 : les challenges ne sont pas encore traduits : leur etiquette « Objectif : » reste en francais (data-notr), sinon
-     l'anglais affichait « Goal: » devant un objectif en francais (la cle sert a l'objectif de chaque module) */
+     l'anglais affichait « Goal: » devant un objectif en francais (la cle sert a l'objectif de chaque module)
+     v60 (brief V2, J5) : un objectif qui a sa traduction (defis remplaces) garde l'etiquette traduisible (« Goal: ») */
   wChallenges(D){
+    const traduit = t => Object.prototype.hasOwnProperty.call(I18N.en, Traduction.norm(t));
     let h = `<div class="fo-outil"><h3>Choisis ton challenge</h3>
       <p class="note" style="margin:0 0 12px">Un challenge par semaine, sur trois axes. Choisis-en un et tiens-le sept jours.</p>`;
     FORMATION.challenges.forEach(c => {
@@ -699,8 +754,8 @@ const outilFormation = {
         </button>
         <div class="fo-chal-corps">${c.axes.map(a => `<div class="fo-axe">
           <b>${esc(a.nom)}</b>
-          <p class="note" style="margin:2px 0 0"><i data-notr>Objectif :</i> ${esc(a.objectif)}</p>
-          <p style="margin:4px 0 0">${esc(a.defi)}</p>
+          <p class="note" style="margin:2px 0 0"><i${traduit(a.objectif) ? "" : " data-notr"}>Objectif :</i> ${esc(typoFr(a.objectif))}</p>
+          <p style="margin:4px 0 0">${esc(typoFr(a.defi))}</p>
         </div>`).join("")}</div>
       </div>`;
     });
@@ -708,7 +763,7 @@ const outilFormation = {
     h += `<h4>10 défis sur une semaine <span class="pastille">${faits}/10</span></h4>
       <ul class="fo-liste fo-defis">${FORMATION.defis.map(d =>
         `<li><label class="fo-case"><input type="checkbox" data-defi="${esc(d[0])}"${D.defis[d[0]] ? " checked" : ""}>
-          <span><b>${esc(d[1])}</b><br><span class="note">${esc(d[2])}</span></span></label></li>`).join("")}</ul></div>`;
+          <span><b>${esc(typoFr(d[1]))}</b><br><span class="note">${esc(typoFr(d[2]))}</span></span></label></li>`).join("")}</ul></div>`;
     return h;
   },
 
@@ -723,20 +778,56 @@ const outilFormation = {
     const sauver = () => Store.ecrire(self.cle, D);
     const visibles = outilsVisibles().filter(o => !horsVitrine(o)).map(o => o.id);   // v50 : pas de lien vers un onglet cache au prospect
     const nouvelId = () => "x" + Date.now().toString(36) + Math.floor(Math.random() * 1000);
+    /* v60 (brief V2, I) : prospect — son calcul et sa pesee, lus sans rien ecrire (comme son accueil : ce que cet onglet
+       vient d'enregistrer et que le serveur n'a pas encore compte aussi, outilDecouverte.saisiesLocales) */
+    let depart = null;
+    if (self.pourProspect()){
+      const cles = [outilCalculateur.cle_perso, "mens"], locales = outilDecouverte.saisiesLocales(cles);
+      const { valeurs: R, dates } = await Store.lireTout(cles, { dates: true });
+      Object.keys(locales).forEach(c => { const x = locales[c], m = dates[c]; if (x.t === null || !m || new Date(m).getTime() < new Date(x.t).getTime()) R[c] = Forme.cle(c, x.v); });
+      if (!zone.isConnected) return;
+      depart = self.departEtat(D, R);
+    }
 
     const dessiner = () => {
-      zone.innerHTML = self.vue(D, visibles);
+      zone.innerHTML = self.vue(D, visibles, depart);
       brancher();
     };
+    /* v60 : la carte « Commence ici » seule redessinee (la video qui vient de demarrer reste a l'ecran) */
+    const majDepart = () => {
+      const c = zone.querySelector("#fo-depart"); if (!c || !depart) return;
+      const t = document.createElement("div"); t.innerHTML = self.departHTML(depart);
+      const n = t.firstElementChild; if (n){ c.replaceWith(n); brancherDepart(); }
+    };
+    /* la video de bienvenue lancee (prospect) : notee une fois dans sa cle formation, au clic */
+    const videoLancee = () => {
+      if (!depart || depart.video) return;
+      if (!D.depart || typeof D.depart !== "object" || Array.isArray(D.depart)) D.depart = {};
+      if (!D.depart.video) D.depart.video = new Date().toISOString();
+      depart.video = true;
+      sauver(); majDepart();
+    };
+    function brancherDepart(){
+      const a = zone.querySelector('[data-depart="video"]');
+      if (a) a.addEventListener("click", ev => {
+        ev.preventDefault();
+        const boite = $("fo-presentation"), vg = boite && boite.querySelector(".video-vignette");
+        if (boite) boite.scrollIntoView({ behavior: "smooth", block: "center" });
+        if (vg) vg.click();   // la lance (compte comme lancee)
+      });
+    }
 
     function brancher(){
+      brancherDepart();
       /* videos : on ne charge le lecteur qu'au clic */
       $$(".video-vignette", zone).forEach(v => v.addEventListener("click", () => {
         const cadre = document.createElement("div");
         cadre.className = "video-cadre";
         if (!idVideo(v.dataset.yt)) return;
+        const bienvenue = !!v.closest("#fo-presentation");   // v60 : la video de bienvenue (prospect)
         cadre.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${idVideo(v.dataset.yt)}?rel=0&autoplay=1" title="Vidéo de la formation" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
         v.parentNode.replaceChild(cadre, v);
+        if (bienvenue) videoLancee();
       }));
 
       /* ouverture des modules et des lecons */

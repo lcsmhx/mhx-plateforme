@@ -244,7 +244,7 @@ const outilProfil = {
     const boite = $("mc-reponses"), lien = $("mc-reponses-lien"); if (!boite) return;
     let I = null; try { I = await Store.lire("intake", {}); } catch(e){ I = null; }
     if (!boite.isConnected || !I || typeof I !== "object" || Store.nonLus.has(I)) return;
-    const rep = Decouverte.reponses(I);
+    const rep = Decouverte.reponses(I, false, true);   // v60 : ses reponses a choix dans sa langue
     boite.innerHTML = rep.length ? `<ul class="ingr fiche-l" style="margin-top:12px">${rep.map(x => `<li><span>${esc(trad(x.q.label))}</span><b>${esc(x.v)}</b></li>`).join("")}</ul>` : "";
     if (lien && Decouverte.questionnaireFait(I)) lien.innerHTML = `<a class="btn ghost petit" href="#/decouverte/reponses">${esc(trad(DECOUVERTE.resultat.modifier))}</a>`;
   },

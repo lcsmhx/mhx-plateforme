@@ -78,12 +78,15 @@ const Decouverte = {
   },
   /* v52 : les reponses a afficher (Profil du prospect, fiche du coach) : les questions de SON questionnaire (le nouveau, ou
      l'ancien), puis celles de l'autre qui ont une valeur — sauf l'objectif pose par l'app depuis la reponse « problème ».
-     tous : aussi les questions sans reponse de son questionnaire (valeur ""). Rend [{ q, v }], v chaine (400 car. au plus). */
-  reponses(I, tous){
+     tous : aussi les questions sans reponse de son questionnaire (valeur ""). Rend [{ q, v }], v chaine (400 car. au plus).
+     v60 : local (le prospect relit SES reponses) : une reponse a choix dans la langue de l'app (texteLocal), l'objectif
+     traduit ; sans local (fiche du coach), le texte francais enregistre. */
+  reponses(I, tous, local){
     I = I && typeof I === "object" ? I : {};
     const ancien = this.ancien(I), nv = this.cfg().questions || [], av = this.avant();
     const siens = ancien ? av : nv, autres = (ancien ? nv : av).filter(id => siens.indexOf(id) === -1);
-    const val = q => this.repondu(I, q.id) ? String(I[q.id]).trim().slice(0, 400) + (q.type === "echelle" ? " / 10" : "") : "";
+    const val = q => local && this.choixDe(I, q.id) ? this.texteLocal(I, q.id).slice(0, 400)
+      : this.repondu(I, q.id) ? (local && q.type === "cartes" ? trad(String(I[q.id]).trim()) : String(I[q.id]).trim()).slice(0, 400) + (q.type === "echelle" ? " / 10" : "") : "";
     const pose = this.objectifDepuis(I.probleme);
     const out = this.definitions(siens, ancien).map(q => ({ q, v: val(q) })).filter(x => tous || x.v);
     this.definitions(autres, !ancien).forEach(q => { const v = val(q); if (v && !(q.id === "objectif" && !ancien && pose && v === pose)) out.push({ q, v }); });
@@ -132,6 +135,41 @@ const Decouverte = {
     let s = a.slice(0, max).join(""); const i = s.lastIndexOf(" ");
     if (i > s.length * 0.6) s = s.slice(0, i);
     return s.replace(/[\s,;:.!?…'’-]+$/, "") + "…";
+  },
+  /* v60 (brief V2, C) — les questions a choix (type « choix » de DECOUVERTE.questions : obstacle, projection). Dans
+     intake : <id>_choix = les cles stables choisies, <id>_precision = la precision libre, et <id> = le texte FRANCAIS
+     lisible (libelles, puis la precision) : c'est lui que lisent le coach, le CSV, Mes clients et les anciens ecrans.
+     Une ancienne reponse en texte libre (sans <id>_choix) reste lue telle quelle. */
+  defQ(id){ return (DECOUVERTE.questions || []).find(q => q && q.id === id) || null; },
+  aChoix(q){ return !!(q && q.type === "choix" && Array.isArray(q.choix)); },
+  /* les cles choisies (seulement celles de la question, dans l'ordre de la question, sans doublon) ; null : ancien format */
+  choixDe(I, id){
+    const q = this.defQ(id), a = I && typeof I === "object" ? I[id + "_choix"] : undefined;
+    if (!this.aChoix(q) || !Array.isArray(a)) return null;
+    return q.choix.map(c => c[0]).filter(k => a.indexOf(k) > -1).slice(0, q.max || q.choix.length);
+  },
+  precisionDe(I, id){ const v = I && typeof I === "object" ? I[id + "_precision"] : ""; return typeof v === "string" ? v.trim().slice(0, 500) : ""; },
+  /* le libelle francais d'une cle (celui du dictionnaire : trad le traduit) */
+  libelleChoix(q, k){ const c = this.aChoix(q) ? q.choix.find(x => x[0] === k) : null; return c ? c[1] : ""; },
+  /* le texte francais lisible d'une reponse a choix : « libelle · libelle — precision » */
+  texteFr(q, choix, precision){
+    const l = (choix || []).map(k => this.libelleChoix(q, k)).filter(Boolean).join(" · "), p = typeof precision === "string" ? precision.trim() : "";
+    return l && p ? l + " — " + p : l || p;
+  },
+  /* la reponse dans la langue de l'app (le prospect relit ses reponses) : nouveau format, libelles traduits ; sinon le
+     texte enregistre (ancienne reponse libre, ou question sans choix) */
+  texteLocal(I, id){
+    const q = this.defQ(id), ch = this.choixDe(I, id);
+    if (!ch) return this.repondu(I, id) ? String(I[id]).trim() : "";
+    const l = ch.map(k => trad(this.libelleChoix(q, k))).filter(Boolean).join(" · "), p = this.precisionDe(I, id);
+    return l && p ? l + " — " + p : l || p;
+  },
+  /* {projection} (page de proposition, invitations) : la precision libre de la question « projection » si elle est
+     remplie, sinon le libelle choisi (traduit) ; une ancienne reponse libre telle quelle. Texte brut, a echapper. */
+  projection(I){
+    const ch = this.choixDe(I, "projection");
+    if (!ch) return this.repondu(I, "projection") ? String(I.projection).trim() : "";
+    return this.precisionDe(I, "projection") || (ch.length ? trad(this.libelleChoix(this.defQ("projection"), ch[0])) : "");
   },
   /* l'email du compte connecte (prospect seulement), s'il a une forme d'email */
   emailCompte(){
@@ -641,7 +679,7 @@ const outilDecouverte = {
     /* v52 : gratuit pour toujours — ni « Jour n/7 », ni jours restants, ni fin de decouverte */
     const eyebrow = trad(T.nom);
     /* sur la page bilan, rien d'autre : rien qui presse, deux choix de meme poids */
-    const lede = !fait ? trad(T.lede_questionnaire) : (bilan || form) ? "" : trad(T.lede_accueil);
+    const lede = !fait ? typoFr(trad(T.lede_questionnaire)) : (bilan || form) ? "" : trad(T.lede_accueil);
     /* « Réserver mon bilan » : visible des la fin du questionnaire (accueil, « Modifier mes réponses ») ; v52 : discret,
        l'action mise en avant de l'accueil est son etape (calcul, puis pesee) */
     const cal = fait && !bilan ? lienCalendly("decouverte") : "";
@@ -665,8 +703,9 @@ const outilDecouverte = {
 
   /* ---------- v52 : la page de proposition de bilan ---------- */
   bilanHTML(I){
-    const L = DECOUVERTE.bilan, cal = lienCalendly("bilan-propose"), pr = Decouverte.extrait(I && I.projection, 160);
-    /* sa reponse « projection », echappee et tronquee ; une phrase neutre si elle est vide (ancien prospect) */
+    const L = DECOUVERTE.bilan, cal = lienCalendly("bilan-propose"), pr = Decouverte.extrait(Decouverte.projection(I), 140);
+    /* sa reponse « projection », echappee et tronquee ; une phrase neutre si elle est vide (ancien prospect)
+       v60 (brief V2, C) : {projection} = sa precision libre, sinon le libelle choisi (traduit) ; 140 caracteres au plus */
     return `<section class="panel" id="dc-bilan"><h2>${esc(trad(L.titre))}</h2>
       <p class="dc-projection" id="dc-projection">${esc(pr ? trad(L.projection, { p: pr }) : trad(L.sans_projection))}</p>
       <p id="dc-bilan-texte">${esc(trad(L.texte))}</p>
@@ -731,6 +770,7 @@ const outilDecouverte = {
   formulaireHTML(I){
     const L = DECOUVERTE.questionnaire, B = this.bornes(), req = Decouverte.cfg().requis || [];
     const champs = this.questions().map(q => {
+      if (q.type === "cartes" || Decouverte.aChoix(q)) return this.choixHTML(q, I);   // v60 (brief V2, C) : a toucher
       const large = (q.type === "long" || q.grand) ? ' style="grid-column:1/-1"' : "";
       let aide = q.aide || "";
       if (q.id === "age" && B.age) aide = trad(L.age_aide, { n: B.age[0] }) + (aide ? " " + aide : "");
@@ -739,8 +779,25 @@ const outilDecouverte = {
       return `<div${large}><label for="q-${q.id}">${esc(lib)}</label>${aide ? `<p class="note" style="margin:-2px 0 8px">${esc(aide)}</p>` : ""}${outilProfil.champ(q, I[q.id])}</div>`;
     }).join("");
     return `<section class="panel"><h2>${esc(trad(L.titre))}</h2><div class="grid g2">${champs}</div>
-      <div class="actions"><button class="btn" id="dc-voir" type="button">${esc(trad(L.bouton))}</button>${Decouverte.questionnaireFait(I) ? `<button class="btn ghost" id="dc-annuler" type="button">${esc(trad(L.annuler))}</button>` : ""}<span class="msg" id="dc-msg" role="status" aria-live="polite"></span></div>
+      <div class="actions"><button class="btn" id="dc-voir" type="button">${esc(trad(L.bouton))}</button>${Decouverte.questionnaireFait(I) ? `<button class="btn ghost" id="dc-annuler" type="button">${esc(trad(L.annuler))}</button>` : ""}<span class="msg ko" id="dc-msg" role="status" aria-live="polite"></span></div>
       <p class="note" style="margin-top:10px">${esc(trad(L.note))}</p></section>`;
+  },
+  /* v60 (brief V2, C) — une question a toucher : « cartes » (un choix ; valeur = l'option francaise EXACTE, petit texte
+     dessous) ou « choix » (cles stables, un ou plusieurs choix, precision libre facultative). De vrais boutons radio / cases
+     a cocher (clavier, lecteurs d'ecran) sous des cartes d'au moins 44 px ; le choix en dore (css/outils.css, .dc-opt).
+     Une ancienne reponse libre (sans cles) pre-remplit la precision : rien n'est perdu en la modifiant. */
+  choixHTML(q, I){
+    const plusieurs = Decouverte.aChoix(q) && (q.max || 1) > 1, type = plusieurs ? "checkbox" : "radio";
+    const ch = Decouverte.aChoix(q) ? Decouverte.choixDe(I, q.id) : null;
+    const opts = Decouverte.aChoix(q)
+      ? q.choix.map(c => ({ v: c[0], l: c[1], s: "", on: !!ch && ch.indexOf(c[0]) > -1 }))
+      : (q.options || []).map((o, i) => ({ v: o, l: o, s: (q.sous || [])[i] || "", on: I[q.id] === o }));
+    const pr = !Decouverte.aChoix(q) || !q.precision ? null : ch ? Decouverte.precisionDe(I, q.id) : Decouverte.repondu(I, q.id) ? String(I[q.id]).trim() : "";
+    return `<fieldset class="dc-q" id="q-${esc(q.id)}" data-type="${esc(q.type)}"${plusieurs ? ` data-max="${+q.max}"` : ""}>
+      <legend>${esc(typoFr(trad(q.label)))}</legend>${q.aide ? `<p class="note dc-aide">${esc(typoFr(trad(q.aide)))}</p>` : ""}
+      <div class="dc-opts${q.type === "cartes" ? " dc-cartes" : ""}">${opts.map(o => `<label class="dc-opt"><input type="${type}" name="q-${esc(q.id)}" value="${esc(o.v)}"${o.on ? " checked" : ""}><span class="dc-opt-c"><span class="dc-opt-l">${esc(typoFr(trad(o.l)))}</span>${o.s ? `<span class="dc-opt-s">${esc(typoFr(trad(o.s)))}</span>` : ""}</span></label>`).join("")}</div>
+      ${plusieurs ? `<p class="msg ko dc-max" id="q-${esc(q.id)}-max" role="status" aria-live="polite"></p>` : ""}
+      ${pr != null ? `<label class="dc-precision" for="q-${esc(q.id)}-precision">${esc(typoFr(trad(q.precision)))}</label><textarea id="q-${esc(q.id)}-precision" rows="2" maxlength="500">${esc(pr)}</textarea>` : ""}</fieldset>`;
   },
   brancherFormulaire(zone, I, C){
     const self = this, L = DECOUVERTE.questionnaire, qs = this.questions(), B = this.bornes(), req = Decouverte.cfg().requis || [];
@@ -758,6 +815,27 @@ const outilDecouverte = {
        En « Modifier mes reponses », rien ne part avant « Valider mes réponses », qui valide sur une copie :
        « Annuler les modifications » retrouve donc exactement les reponses d'avant. */
     const enModification = Decouverte.questionnaireFait(I);
+    /* v60 (brief V2, C) : ce qu'une question donne a ecrire, { cle: valeur } — une question a choix donne son texte
+       francais lisible, ses cles et sa precision (Decouverte.texteFr) ; les autres, leur champ (outilProfil.valeur) */
+    const aToucher = q => q.type === "cartes" || Decouverte.aChoix(q);
+    const champsDe = q => {
+      if (q.type === "cartes"){ const c = zone.querySelector(`input[name="q-${q.id}"]:checked`); return { [q.id]: c ? c.value : "" }; }
+      if (Decouverte.aChoix(q)){
+        const ch = $$(`input[name="q-${q.id}"]:checked`, zone).map(c => c.value).filter(k => q.choix.some(x => x[0] === k)).slice(0, q.max || 1);
+        const pe = zone.querySelector("#q-" + q.id + "-precision"), p = pe ? pe.value.trim().slice(0, 500) : "";
+        return { [q.id]: Decouverte.texteFr(q, ch, p), [q.id + "_choix"]: ch, [q.id + "_precision"]: p };
+      }
+      return { [q.id]: outilProfil.valeur(q) };
+    };
+    const vide = v => v == null || v === "" || (Array.isArray(v) && !v.length);
+    const egal = (a, b) => (Array.isArray(a) || Array.isArray(b)) ? (vide(a) && vide(b)) || JSON.stringify(a) === JSON.stringify(b)
+      : String(a == null ? "" : a) === String(b == null ? "" : b);
+    const lireTout = () => { const V = Object.assign({}, I); qs.forEach(q => { if ($("q-" + q.id)) Object.assign(V, champsDe(q)); }); return V; };
+    /* v52 : une reponse faite d'espaces seulement ne compte pas ; v60 : une question a choix est repondue par un choix OU
+       sa precision (son texte francais n'est alors pas vide) */
+    const manquantsDe = V => qs.filter(q => req.indexOf(q.id) > -1 && (q.type === "nombre" ? !(num(V[q.id]) > 0) : !String(V[q.id] == null ? "" : V[q.id]).trim()));
+    /* v60 : le bouton a l'air inactif tant qu'il manque une reponse (aria-disabled, pas disabled : touche, il dit ce qui manque) */
+    const majBouton = () => { const b = zone.querySelector("#dc-voir"); if (!b) return; const ok = !manquantsDe(lireTout()).length; b.setAttribute("aria-disabled", String(!ok)); b.classList.toggle("inactif", !ok); };
     const ageSaisi = () => { if (!qAge) return true; const a = outilProfil.valeur(qAge); return String(a == null ? "" : a).trim() !== "" && valide(qAge, a); };
     let ageOk = ageSaisi();
     const avant = {};   // ce que ce formulaire a envoye : cle -> valeur d'avant
@@ -774,7 +852,8 @@ const outilDecouverte = {
       if (enModification || I.nom || I.complet) return;
       /* v52 : l'objectif pose par l'app depuis la reponse « problème » part avec elle */
       const pose = Decouverte.objectifDepuis(I.probleme) && I.objectif === Decouverte.objectifDepuis(I.probleme) ? ["objectif"] : [];
-      const presents = qs.map(q => q.id).concat(["court_debut", "email_compte"], pose).filter(k => Object.prototype.hasOwnProperty.call(I, k));
+      const presents = qs.reduce((a, q) => a.concat(Decouverte.aChoix(q) ? [q.id, q.id + "_choix", q.id + "_precision"] : [q.id]), [])
+        .concat(["court_debut", "email_compte"], pose).filter(k => Object.prototype.hasOwnProperty.call(I, k));
       if (!presents.length) return;
       presents.forEach(k => { delete I[k]; delete avant[k]; });
       Store.ecrire("intake", I);
@@ -785,8 +864,9 @@ const outilDecouverte = {
       const probleme = I.probleme;
       qs.forEach(q => {
         if (!$("q-" + q.id)) return;
-        const v = outilProfil.valeur(q);
-        if (valide(q, v) && String(I[q.id] == null ? "" : I[q.id]) !== String(v)){ if (!(q.id in avant)) avant[q.id] = I[q.id]; I[q.id] = v; change = true; }
+        const f = champsDe(q);
+        if (!aToucher(q) && !valide(q, f[q.id])) return;
+        Object.keys(f).forEach(k => { if (!egal(I[k], f[k])){ if (!(k in avant)) avant[k] = I[k]; I[k] = f[k]; change = true; } });
       });
       /* v52 : la reponse « problème » pose l'objectif du questionnaire complet s'il est vide (table CONFIG) */
       if (change && I.probleme !== probleme){ const o = I.objectif, oa = I.objectif_auto; if (Decouverte.poserObjectif(I) && !("objectif" in avant)){ avant.objectif = o; avant.objectif_auto = oa; } }
@@ -805,30 +885,40 @@ const outilDecouverte = {
       if (ageMin != null && a > 0 && a < ageMin){ retirer(); purger(); }
       brouillon();
     };
+    /* v60 (brief V2, C) : une question a plusieurs choix (max) refuse le choix de trop et le dit (« 2 réponses max ») ;
+       ecoute posee sur chaque case AVANT celle du brouillon (sur le cadre) : la case decochee n'est jamais ecrite */
+    qs.filter(q => Decouverte.aChoix(q) && (q.max || 1) > 1).forEach(q => {
+      $$(`input[name="q-${q.id}"]`, zone).forEach(c => c.addEventListener("change", () => {
+        if (c.checked && $$(`input[name="q-${q.id}"]:checked`, zone).length > q.max){ c.checked = false; flash("q-" + q.id + "-max", trad(L.max, { n: q.max })); }
+      }));
+    });
     qs.forEach(q => {
       const el = $("q-" + q.id); if (!el) return;
       if (q === qAge){ el.addEventListener("change", surAge); return; }   // l'age : a la sortie du champ seulement
       el.addEventListener("change", brouillon);
-      if (el.matches("textarea, input:not([type=checkbox]):not([type=radio])")) el.addEventListener("input", brouillon);
+      if (el.matches("textarea, input:not([type=checkbox]):not([type=radio])") || aToucher(q)) el.addEventListener("input", brouillon);   // v60 : la precision libre, pendant la frappe
     });
+    const cadre = zone.querySelector("#dc-voir") && zone.querySelector("#dc-voir").closest(".panel");   // le formulaire (redessine : ecoutes neuves)
+    if (cadre){ cadre.addEventListener("change", majBouton); cadre.addEventListener("input", majBouton); }
+    majBouton();
     const annuler = zone.querySelector("#dc-annuler");
     if (annuler) annuler.addEventListener("click", () => { self.quitterSousPage(); self.rendre(zone, I, C); window.scrollTo(0, 0); });
     const voir = zone.querySelector("#dc-voir");
     if (voir) voir.addEventListener("click", () => {
       /* on verifie une COPIE : les reponses n'entrent dans le questionnaire que valides */
-      const V = Object.assign({}, I);
-      qs.forEach(q => { if ($("q-" + q.id)) V[q.id] = outilProfil.valeur(q); });
-      /* v52 : une reponse faite d'espaces seulement ne compte pas */
-      const manquants = qs.filter(q => req.indexOf(q.id) > -1 && (q.type === "nombre" ? !(num(V[q.id]) > 0) : !String(V[q.id] == null ? "" : V[q.id]).trim()));
+      const V = lireTout();
+      const manquants = manquantsDe(V);
       const hors = qs.filter(q => B[q.id] && String(V[q.id] || "").trim() !== "" && (num(V[q.id]) < B[q.id][0] || num(V[q.id]) > B[q.id][1]));
       const lib = q => trad(q.label);
       if (ageMin != null && num(V.age) > 0 && num(V.age) < ageMin){ retirer(); purger(); }   // age sous le minimum : rien de ce formulaire ne reste
       if (manquants.length || hors.length){
-        const msg = manquants.length ? trad(L.manque, { l: manquants.map(lib).join(", ") })
+        /* v60 : une question a toucher sans reponse : « Il manque une réponse » (sans ouvrir le clavier : rien n'est mis au
+           point dans une precision libre) */
+        const msg = manquants.some(aToucher) ? trad(L.manque_une) : manquants.length ? trad(L.manque, { l: manquants.map(lib).join(", ") })
                                      : trad(L.verifie, { l: hors.map(q => lib(q) + " (" + trad("{a} à {b}", { a: B[q.id][0], b: B[q.id][1] }) + ")").join(", ") });
         flash("dc-msg", msg);
         const premier = $("q-" + (manquants.length ? manquants[0] : hors[0]).id);
-        if (premier){ premier.scrollIntoView({ behavior: "smooth", block: "center" }); premier.focus(); }
+        if (premier){ premier.scrollIntoView({ behavior: "smooth", block: "center" }); if (!aToucher(manquants.length ? manquants[0] : hors[0])) premier.focus(); }
         $$(".manque", zone).forEach(el => el.classList.remove("manque"));
         manquants.concat(hors).forEach(q => { const el = $("q-" + q.id); if (el) el.classList.add("manque"); });
         return;
