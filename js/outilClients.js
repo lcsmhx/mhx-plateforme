@@ -111,7 +111,10 @@ const outilClients = {
     const retour = l => { const r = l.retour; if (!r || !r.etat) return '<span class="meta">—</span>';
       const cls = r.etat === "a_traiter" ? "mauvais" : r.etat === "fait" ? "ok" : r.etat === "non_fait" ? "attention" : "";
       return `<span class="pastille${cls ? " " + cls : ""}" title="${esc(r.nom)}">${esc(r.texte)}</span>`; };
-    const note = l => l.note == null ? '<span class="meta">—</span>' : `<b${l.alertes.some(a => a.type === "note_chute") ? ' class="neg"' : ""}>${l.note}</b><span class="meta">/10</span>`;
+    /* v58 : une valeur en plusieurs morceaux (7 + /10, 72,5 kg + départ…) tient dans UN élément : sur téléphone, la ligne de la
+       carte (flex, space-between) écartait chaque morceau aux deux bouts (« 7        /10 ») */
+    const bloc = h => `<span class="tb-val">${h}</span>`;
+    const note = l => l.note == null ? '<span class="meta">—</span>' : bloc(`<b${l.alertes.some(a => a.type === "note_chute") ? ' class="neg"' : ""}>${l.note}</b><span class="meta">/10</span>`);
     const smiley = l => l.smiley ? `<span class="fbd-smiley-l" title="${esc(l.smiley.lbl)}${l.alertes.some(a => a.type === "avis_triste") ? " — à traiter" : ""}">${l.smiley.emo}</span>` : '<span class="meta">—</span>';
     const visite = l => { const t = Activite.texteVisite(l.visites); return t === "—" ? '<span class="meta" title="Visites non suivies pour ce compte">—</span>' : `<span class="meta">${esc(t)}</span>`; };
     /* v56 : nombre de connexions et dernière connexion (date et heure) ; l'info-bulle dit depuis quand elles sont comptées.
@@ -130,10 +133,10 @@ const outilClients = {
             : l.jours >= 10 ? `<span class="pastille manque">${l.jours} j</span>`
             : `<span class="meta">${l.jours === 0 ? "aujourd'hui" : "il y a " + l.jours + " j"}</span>`}</td>
       <td data-l="Régularité">${l.reg == null ? '<span class="meta">—</span>'
-            : `<b class="${Regularite.niveau(l.reg)}">${l.reg}</b><span class="meta">/100</span>${l.regEnCours != null ? ` <span class="meta">(en cours : ${l.regEnCours})</span>` : ""}`}</td>
-      <td data-l="Poids">${l.ev ? `${n1(l.ev.actuel)} kg <span class="meta">(départ ${n1(l.ev.depart)})</span>` : '<span class="meta">aucune mesure</span>'}</td>
+            : bloc(`<b class="${Regularite.niveau(l.reg)}">${l.reg}</b><span class="meta">/100</span>${l.regEnCours != null ? ` <span class="meta">(en cours : ${l.regEnCours})</span>` : ""}`)}</td>
+      <td data-l="Poids">${l.ev ? bloc(`${n1(l.ev.actuel)} kg <span class="meta">(départ ${n1(l.ev.depart)})</span>`) : '<span class="meta">aucune mesure</span>'}</td>
       <td data-l="Depuis le début">${l.ev ? variation(l.ev.total, l.sens) : '<span class="meta">—</span>'}</td>
-      <td data-l="4 dernières sem.">${l.ev && l.ev.mois !== null ? variation(l.ev.mois, l.sens) + (l.ev.jours_fenetre !== 28 ? ` <span class="meta">sur ${l.ev.jours_fenetre} j</span>` : "") : '<span class="meta">pas assez de recul</span>'}</td>
+      <td data-l="4 dernières sem.">${l.ev && l.ev.mois !== null ? bloc(variation(l.ev.mois, l.sens) + (l.ev.jours_fenetre !== 28 ? ` <span class="meta">sur ${l.ev.jours_fenetre} j</span>` : "")) : '<span class="meta">pas assez de recul</span>'}</td>
       <td data-l="Questionnaire">${pastille(l.intake, "rempli", "à remplir")}</td>
       <td data-l="Programme">${pastille(l.programme, "envoyé", "à faire")}</td>
       <td data-l="Diète">${pastille(l.diete, "envoyée", "à faire")}</td>

@@ -7,7 +7,8 @@
    B. Mes clients sur tablette (820 px) : le tableau défile de côté ; défilé jusqu'au bout, les noms et l'en-tête « Client »
       restent à gauche, par-dessus les autres cellules, et la dernière colonne reste utilisable ;
    C. Mes clients sur téléphone (375 px) : les cartes (rien de fixe), les lignes dans le nouvel ordre, la date courte, la page
-      ne déborde pas ;
+      ne déborde pas ; v58 : une valeur en plusieurs morceaux (« 7/10 », « 0/100 (en cours : 0) », « 83 kg (départ …) »)
+      reste d'un seul tenant, collée à droite (avant : chaque morceau poussé à un bout de la ligne) ;
    D. la connexion ouvre la page d'arrivée : un client, un prospect et le coach dont l'adresse gardait une page (#/formation,
       #/prospects : dernière page ouverte sur l'appareil quand la session a pris fin sans « Se déconnecter ») arrivent sur
       leur page d'arrivée ; « Me reconnecter » (session perdue en cours d'utilisation) ramène sur la page ouverte ;
@@ -580,6 +581,24 @@ const TRANSPARENT = /^(transparent|rgba\(0, 0, 0, 0\))$/;
     ok("C : 375 px : carte du compte de test : « Dernière visite », « Connexions », « Dernière connexion », « Jours actifs (30 j) », à la suite, avec leur libellé", i > 0 && egal(L.slice(i, i + 4), ORDRE_TD.slice(4, 8)) && c.l.slice(i, i + 4).every(x => x.avant.includes(x.l)), JSON.stringify(c.l.slice(i, i + 4)));
     ok("C : … « 12 » et la date courte « " + quandCourt(CX_TEST.derniere) + " » ; rien de fixe dans les cartes", c.l[i + 1].t === "12" && c.l[i + 2].t === quandCourt(CX_TEST.derniere) && c.pos === "static", JSON.stringify([c.l[i + 1], c.l[i + 2], c.pos]));
     ok("C : la page ne déborde pas en largeur", !(await deborde(page)), await largeur(page));
+    /* v58 : les morceaux de chaque valeur (texte et éléments, hors libellé) : écart le plus grand entre deux morceaux d'une même
+       ligne, et distance entre le dernier morceau et le bord droit de la cellule (le nom, aligné à gauche, et les boutons à part) */
+    const morceaux = await page.evaluate(() => Array.from(document.querySelectorAll("#tb-clients tr")).flatMap(tr => Array.from(tr.querySelectorAll("td")).filter((td, i) => i > 0 && td.dataset.l && !td.classList.contains("td-actions")).map(td => {
+      const rg = document.createRange(); rg.selectNodeContents(td);
+      const rs = Array.from(rg.getClientRects()).filter(r => r.width > 0 && r.height > 0).sort((a, b) => a.left - b.left);
+      if (!rs.length) return null;
+      const ligne = rs.filter(r => Math.abs((r.top + r.bottom) / 2 - (rs[0].top + rs[0].bottom) / 2) < 6);
+      let fin = ligne[0].right, ecart = 0; ligne.slice(1).forEach(r => { ecart = Math.max(ecart, r.left - fin); fin = Math.max(fin, r.right); });
+      const tdR = td.getBoundingClientRect(), pad = parseFloat(getComputedStyle(td).paddingRight) || 0;
+      return { nom: (tr.querySelector("td b") || {}).textContent, l: td.dataset.l, t: td.textContent.replace(/\s+/g, " ").trim(), ecart: Math.round(ecart), bord: Math.round(tdR.right - pad - Math.max(...rs.map(r => r.right))) };
+    })).filter(Boolean));
+    const ecartes = morceaux.filter(m => m.ecart > 8 || m.bord > 2);
+    ok("C : v58 : dans toutes les cartes, chaque valeur reste d'un seul tenant et collée à droite (" + morceaux.length + " valeurs mesurées)", morceaux.length > 100 && ecartes.length === 0, JSON.stringify(ecartes.slice(0, 6)));
+    const M = (nom, l) => morceaux.find(m => m.nom === nom && m.l === l) || {};
+    const tNote = M("Sans nom", "Dernière note"), tReg = M("Sans nom", "Régularité");
+    ok("C : v58 : compte de test : « 7/10 » et « 0/100 (en cours : 0) » d'un seul tenant", tNote.t === "7/10" && tNote.ecart <= 1 && /^\d+\/100 \(en cours : \d+\)$/.test(tReg.t) && tReg.ecart <= 8, JSON.stringify([tNote, tReg]));
+    const thP = M("Thomas Démo", "Poids"), th4 = M("Thomas Démo", "4 dernières sem.");
+    ok("C : v58 : Thomas : poids « " + thP.t + " » et « 4 dernières sem. » « " + th4.t + " » d'un seul tenant", /^\d+(,\d)? kg \(départ \d+(,\d)?\)$/.test(thP.t || "") && thP.ecart <= 8 && / kg/.test(th4.t || "") && th4.ecart <= 8, JSON.stringify([thP, th4]));
   });
 
   /* =================== D. la connexion ouvre la page d'arrivée =================== */

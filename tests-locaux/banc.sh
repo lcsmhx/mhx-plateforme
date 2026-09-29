@@ -73,12 +73,13 @@ HORS_BANC="verif44 verif45 verif46 verif47 verif49"
 # Mes clients à main sans les 2 nouvelles colonnes ; nombres inchangés.
 # v57 (retouches de Lucas du 29/09 : colonne du nom fixe, Connexions après Visite, date courte, page d'arrivée après la
 # connexion) : verif62 32 (nouvelle suite, partie 8) ; verif61 adaptée (ordre des colonnes, date courte), nombre inchangé.
+# v58 (cartes de Mes clients sur téléphone : « 7/10 » d'un seul tenant) : verif62 32 → 35.
 attendu() {
   case "$1" in
     flux) echo 19;; verif34) echo 13;; verif35) echo 14;; verif36) echo 13;; verif37) echo 12;; verif38) echo 66;;
     verif-xss) echo 5;; verif39) echo 48;; verif40) echo 64;; verif41) echo 25;; verif42) echo 20;; verif43) echo 27;;
     verif48) echo 42;; verif50) echo 57;; verif51) echo 89;; verif52) echo 137;; verif53) echo 114;;
-    verif54) echo 60;; verif55) echo 164;; verif56) echo 247;; verif57) echo 152;; verif58) echo 126;; verif60) echo 60;; verif61) echo 50;; verif62) echo 32;; rig) echo 90;; *) echo "";;
+    verif54) echo 60;; verif55) echo 164;; verif56) echo 247;; verif57) echo 152;; verif58) echo 126;; verif60) echo 60;; verif61) echo 50;; verif62) echo 35;; rig) echo 90;; *) echo "";;
   esac
 }
 # Partie de chaque suite pour les jobs parallèles de GitHub Actions (10 parties, durées équilibrées, 4 à 5 minutes chacune).
