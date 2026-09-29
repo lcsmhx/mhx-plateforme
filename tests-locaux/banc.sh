@@ -77,15 +77,16 @@ HORS_BANC="verif44 verif45 verif46 verif47 verif49"
 # v59 (interrupteurs forcés sur « test » pour toutes les suites par fichiers.js, simulation « tous » / « off » sur les branches
 # v2/simu-tous-* et v2/simu-off-*) : verif55 164 → 167 (bloc A0 + 1 vérification des conditions : contenus chargés depuis
 # Google) ; verif57, 58, 61 : garde « une valeur connue » au lieu de « test », nombres inchangés. Q13 (checkins relu avant
-# chaque écriture, vraies saisies) : verif63 66 (nouvelle suite, partie 3). « À traiter » complet : verif64 82 (nouvelle
-# suite, partie 2). Barre du haut à 320 px : verif62 37 → 50. Remarques de la v52 : verif56 247 → 259, verif60 60 → 71
+# chaque écriture, vraies saisies) : verif63 96 (nouvelle suite, partie 3 ; après les relectures : session perdue, copie d'une saisie jamais envoyée,
+# textes du 😞 hors ligne, « Annuler » et déconnexion pendant l'envoi, file, reprise au démarrage). « À traiter » complet : verif64 92
+# (nouvelle suite, partie 2 ; horloge posée à midi). verif52 J : écrans comparés avec les interrupteurs du fichier testé. Barre du haut à 320 px : verif62 37 → 50. Remarques de la v52 : verif56 247 → 259, verif60 60 → 71
 # (verif60 passe de la partie 10 à la partie 9).
 attendu() {
   case "$1" in
     flux) echo 19;; verif34) echo 13;; verif35) echo 14;; verif36) echo 13;; verif37) echo 12;; verif38) echo 66;;
     verif-xss) echo 5;; verif39) echo 48;; verif40) echo 64;; verif41) echo 25;; verif42) echo 20;; verif43) echo 27;;
     verif48) echo 42;; verif50) echo 57;; verif51) echo 89;; verif52) echo 137;; verif53) echo 114;;
-    verif54) echo 60;; verif55) echo 167;; verif56) echo 259;; verif57) echo 152;; verif58) echo 126;; verif60) echo 71;; verif61) echo 50;; verif62) echo 50;; verif63) echo 66;; verif64) echo 82;; rig) echo 90;; *) echo "";;
+    verif54) echo 60;; verif55) echo 167;; verif56) echo 259;; verif57) echo 152;; verif58) echo 126;; verif60) echo 71;; verif61) echo 50;; verif62) echo 50;; verif63) echo 96;; verif64) echo 92;; rig) echo 90;; *) echo "";;
   esac
 }
 # Partie de chaque suite pour les jobs parallèles de GitHub Actions (10 parties, durées équilibrées, 4 à 5 minutes chacune).
