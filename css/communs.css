@@ -235,6 +235,24 @@ footer a{color:var(--accent)}
 .compte button.icone svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .etat{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-3);white-space:nowrap}
 .etat.erreur{color:var(--warn);background:none;border:0;padding:0}
+/* v59 : barre du haut sur téléphone. La ligne du compte ne fait plus défiler la page de côté : seuls le nom et le témoin
+   d'enregistrement rétrécissent (terminés par « … ») ; ☀, EN et « Se déconnecter » gardent leur libellé entier, sur une
+   ligne. Quand tout tient, rien ne rétrécit : la barre est la même qu'avant. Avant, dès que la ligne ne tenait pas, les
+   boutons passaient sur deux lignes (« Se déconnecter », « 🇺🇸 EN » : barre plus haute, jusqu'à 390 px pour le coach), puis
+   la page débordait (345 px de large à 320 px pour le coach) ; un nom long ou le témoin « Hors ligne… » la faisaient
+   déborder à toutes les largeurs de téléphone. */
+@media (max-width:720px){
+  .compte{min-width:0}
+  .compte > *{flex-shrink:0}
+  .compte .qui,.compte .etat{flex-shrink:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+}
+/* v59 : sous 360 px (iPhone SE de 1re génération, petits Android, affichage agrandi) : écarts de 6 px, témoin vide retiré
+   (il comptait un écart), boutons un peu moins larges (toujours 32 px de haut) ; ☀ garde sa taille (.icone passe devant). */
+@media (max-width:359px){
+  .compte{gap:6px}
+  .compte .etat:empty{display:none}
+  .compte button{padding:6px 9px}
+}
 
 /* --- consultation d'une fiche client --- */
 .bandeau{display:flex;flex-wrap:wrap;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:var(--r);padding:14px 16px;margin-bottom:20px}

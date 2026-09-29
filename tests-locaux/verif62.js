@@ -9,11 +9,17 @@
    C. Mes clients sur téléphone (375 px) : les cartes (rien de fixe), les lignes dans le nouvel ordre, la date courte, la page
       ne déborde pas ; v58 : une valeur en plusieurs morceaux (« 7/10 », « 0/100 (en cours : 0) », « 83 kg (départ …) »)
       reste d'un seul tenant, collée à droite (avant : les morceaux étalés sur toute la ligne) ; aucune carte ne déborde (le nom et
-      les pastilles d'un prospect passent à la ligne), à 375 et à 320 px ;
+      les pastilles d'un prospect passent à la ligne), à 375 et à 320 px ; v59 : à 320 px, la page ne déborde plus (barre du haut) ;
    D. la connexion ouvre la page d'arrivée : un client, un prospect et le coach dont l'adresse gardait une page (#/formation,
       #/prospects : dernière page ouverte sur l'appareil quand la session a pris fin sans « Se déconnecter ») arrivent sur
       leur page d'arrivée ; « Me reconnecter » (session perdue en cours d'utilisation) ramène sur la page ouverte ;
       « Se déconnecter » puis connexion : l'accueil (comme avant) ; la connexion par mot de passe est toujours notée ;
+   E. v59 : la barre du haut sur téléphone (320, 359, 360, 375 et 390 px) : le coach (#/clients), le témoin d'enregistrement
+      affiché, un client, le compte de test (sans nom : son email), un prospect au nom de 60 + 60 caractères, l'anglais : la page
+      ne déborde pas, la marque et la ligne du compte restent dans la barre, ☀, EN et « Se déconnecter » entiers, sur une ligne,
+      cliquables, 32 px de haut au moins ; c'est le nom (et le témoin) qui se raccourcit avec « … » ; écarts et marges resserrés
+      sous 360 px seulement ; avec un nom normal à 360 px et plus, la barre est celle de la v58 au dixième de pixel (la même page
+      mesurée sans la règle v59 de css/communs.css) ;
    Z. aucun appel vers l'extérieur.
    Infrastructure (serveur, faux Supabase, personnes, décor) reprise de verif61. Dates relatives au lancement. Chaque bloc
    tourne à part (« ✗ BLOC INTERROMPU ») ; code de sortie 1 dès qu'un ✗ apparaît.
@@ -512,6 +518,61 @@ async function geo(page, uids, gauche){
 }
 const TRANSPARENT = /^(transparent|rgba\(0, 0, 0, 0\))$/;
 
+/* ---------- aides de la v59 (lot D) : la barre du haut sur téléphone ----------
+   jamais une largeur de texte comparée en pixels (les polices de Google sont bloquées ici : polices de secours, qui changent
+   d'une machine à l'autre) : seulement des bords (dans la barre, dans l'écran), des hauteurs, des styles calculés, et la
+   même page mesurée avec et sans la règle v59 (bloc E, « identique à la v58 ») */
+const LARGEURS = [320, 359, 360, 375, 390];
+const LONG_P = "Marie-Christine-Alexandra-Joséphine-Éléonore-Victoire-Annaël", LONG_N = "Delacroix-Beaumont de la Fontaine-Saint-Julien-des-Prés-Loir";   // 60 + 60 caractères (maxlength de l'inscription)
+/* la barre : zone utile (sans ses marges), bords, hauteur et état de la marque et de chaque élément du compte ; ici = l'élément
+   est bien celui qu'on touche en son centre (rien par-dessus) ; coupe = son texte ne tient pas dans sa largeur */
+const barre = page => page.evaluate(() => {
+  const w = document.querySelector(".topbar .wrap"), cw = getComputedStyle(w), rw = w.getBoundingClientRect(), a = v => Math.round(v * 10) / 10;
+  const m = e => {
+    const r = e.getBoundingClientRect(), cs = getComputedStyle(e);
+    const x = r.width ? document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2) : null;
+    return { g: a(r.left), d: a(r.right), t: a(r.top), l: a(r.width), h: a(r.height), vu: cs.display !== "none" && r.width > 0, coupe: e.scrollWidth > e.clientWidth + 1, to: cs.textOverflow, txt: e.textContent, ici: !!x && e.contains(x) };
+  };
+  const o = { brand: m(w.querySelector(".brand")) }; ["compte", "etat", "qui", "theme", "langue", "deco"].forEach(id => { o[id] = m(document.getElementById(id)); });
+  return { deb: a(rw.left + parseFloat(cw.paddingLeft)), fin: a(rw.right - parseFloat(cw.paddingRight)), o, haut: Math.round(document.querySelector(".topbar").getBoundingClientRect().height),
+    page: document.documentElement.scrollWidth, ecran: window.innerWidth };
+});
+/* les défauts d'une mesure (vide : rien à redire) : page qui déborde, marque ou élément hors de la zone utile, bouton coupé, sur deux
+   lignes (44 px), plus bas que 32 px, caché ou pas sur la ligne de « Se déconnecter », texte coupé sans « … », barre sur 3 lignes */
+function defautsBarre(B, L){
+  const p = [], o = B.o;
+  if (B.page > B.ecran + 1) p.push("page de " + B.page + " px");
+  ["brand", "compte", "qui", "theme", "langue", "deco"].concat(o.etat.vu ? ["etat"] : []).forEach(k => { if (o[k].g < B.deb - 0.5 || o[k].d > B.fin + 0.5) p.push(k + " hors de la barre (" + o[k].g + "-" + o[k].d + " pour " + B.deb + "-" + B.fin + ")"); });
+  ["theme", "langue", "deco"].forEach(k => {
+    const x = o[k];
+    if (x.h < 32 || x.h >= 40 || x.coupe || !x.ici) p.push(k + " « " + x.txt + " » " + x.l + " x " + x.h + (x.coupe ? " coupé" : "") + (x.ici ? "" : " caché"));
+    if (Math.abs(x.t - o.deco.t) > 2) p.push(k + " pas sur la ligne de « Se déconnecter »");
+  });
+  ["qui", "etat"].forEach(k => { if (o[k].coupe && o[k].to !== "ellipsis") p.push(k + " coupé sans « … »"); });
+  if (B.haut > 110) p.push("barre de " + B.haut + " px de haut");
+  return p.length ? L + " px : " + p.join(", ") : "";
+}
+/* la barre à chaque largeur (même page, fenêtre redimensionnée) ; avant(page) : juste avant chaque mesure (témoin…) */
+async function tourBarre(page, avant){
+  const trop = [], vus = {};
+  for (const L of LARGEURS) {
+    await page.setViewportSize({ width: L, height: 700 }); await attendre(page, 250);
+    if (avant) await avant(page);
+    const B = await barre(page); vus[L] = B;
+    const d = defautsBarre(B, L); if (d) trop.push(d);
+  }
+  return { trop, vus };
+}
+/* position et taille de chaque élément de la barre (au dixième de pixel), pour comparer deux feuilles de style sur la même machine */
+const geoBarre = page => page.evaluate(() => [".topbar", ".topbar .brand", "#compte", "#etat", "#qui", "#theme", "#langue", "#deco"].map(s => {
+  const r = document.querySelector(s).getBoundingClientRect(); return s + " " + [r.left, r.top, r.width, r.height].map(v => Math.round(v * 10) / 10).join(",");
+}).join(" | "));
+const styleBarre = page => page.evaluate(() => { const g = id => getComputedStyle(document.getElementById(id));
+  return [g("compte").columnGap, g("deco").paddingLeft + " " + g("deco").paddingRight, g("langue").paddingLeft, g("etat").display, g("theme").width + " " + g("theme").paddingLeft].join("|"); });
+/* la règle v59 telle qu'elle est dans le fichier servi (css/communs.css) : retirée le temps d'une mesure, la feuille redevient
+   celle de la v58. Absente (fichier de la v58) : la page est sa propre référence. */
+const BLOC59 = (/\/\* v59 : barre du haut sur téléphone[\s\S]*?@media \(max-width:359px\)\{(?:\s*[^{}]+\{[^{}]*\})*\s*\}\n/.exec(SRC) || [])[0] || null;
+
 (async () => {
   await new Promise((r, k) => { server.once("error", e => k(new Error(e && e.code === "EADDRINUSE" ? "port " + PORT + " déjà pris (une autre suite tourne ?) : VERIF62_PORT=9781 node verif62.js ../index.html" : String(e)))); server.listen(PORT, r); });
   const b = await chromium.launch();
@@ -605,8 +666,9 @@ const TRANSPARENT = /^(transparent|rgba\(0, 0, 0, 0\))$/;
     const x320 = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]", { viewport: { width: 320, height: 700 }, fuseau: FUSEAU });
     const k320 = await cartes(x320.page);
     await x320.page.$eval(`#tb-clients [data-ouvrir="${LEA}"]`, bt => bt.closest("tr").scrollIntoView({ block: "start" })); await capture(x320.page, "C-320-lea");
-    /* la page elle-même déborde à 320 px à cause de la barre du haut du coach (nom, EN, « Se déconnecter ») : défaut antérieur, hors des cartes */
     ok("C : v58 : 320 px : aucune carte ne déborde (pastille la plus longue repliée), le tableau ne défile pas de côté", !k320.defile && k320.trop.length === 0, JSON.stringify(k320).slice(0, 400));
+    /* v59 : jusqu'à la v58, la page débordait à 320 px à cause de la barre du haut du coach (nom, EN, « Se déconnecter ») ; le détail au bloc E */
+    ok("C : v59 : 320 px : la page ne déborde pas en largeur (barre du haut du coach comprise)", !(await deborde(x320.page)), await largeur(x320.page));
     const thP = M("Thomas Démo", "Poids"), th4 = M("Thomas Démo", "4 dernières sem.");
     ok("C : v58 : Thomas : poids « " + thP.t + " » et « 4 dernières sem. » « " + th4.t + " » d'un seul tenant", /^\d+(,\d)? kg \(départ \d+(,\d)?\)$/.test(thP.t || "") && thP.ecart <= 8 && / kg/.test(th4.t || "") && th4.ecart <= 8, JSON.stringify([thP, th4]));
   });
@@ -649,6 +711,80 @@ const TRANSPARENT = /^(transparent|rgba\(0, 0, 0, 0\))$/;
     const d5 = await ou(x3.page);
     ok("D : coach, adresse #/prospects : son tableau de bord", d5.courant === "tableau" && !!(await x3.page.$("#tb-vue")), JSON.stringify(d5));
     ok("D : aucune écriture dans les données pendant ces connexions (hors activité du prospect)", ecrDonnees(db).filter(e => e.outil !== "activite").length === 0, resume(db));
+  });
+
+  /* =================== E. v59 : la barre du haut sur téléphone =================== */
+  await bloc("E. barre du haut sur téléphone", async () => {
+    const TEL0 = { viewport: { width: 320, height: 700 } };
+    const LIB = "à " + LARGEURS.join(", ").replace(/, (\d+)$/, " et $1") + " px";
+    const resultat = r => r.trop.join(" ; ").slice(0, 700);
+    const nomVu = (r, n) => Object.values(r.vus).every(B => B.o.qui.txt === n);
+    /* le coach (#/clients), son nom suivi de « · coach » ; puis le témoin d'enregistrement affiché (il ne s'efface pas seul) */
+    const x1 = await coachSur(b, decor(), "#/clients", "#tb-clients [data-ouvrir]", TEL0);
+    const r1 = await tourBarre(x1.page, pg => pg.evaluate(() => majEtat("")));
+    ok("E : coach (#/clients) " + LIB + " : la page ne déborde pas ; ☀, EN et « Se déconnecter » entiers, sur une ligne, dans la barre, cliquables, 32 px de haut au moins ; le nom se raccourcit avec « … »", r1.trop.length === 0 && nomVu(r1, "Coach Démo · coach"), resultat(r1));
+    const r1a = await tourBarre(x1.page, pg => pg.evaluate(() => majEtat("enregistrement")));
+    const r1b = await tourBarre(x1.page, pg => pg.evaluate(() => majEtat("erreur")));
+    const temoin = (r, t) => Object.values(r.vus).every(B => B.o.etat.vu && B.o.etat.txt === t);
+    ok("E : témoin affiché (coach : « Enregistrement… », puis « Hors ligne — gardé sur cet appareil, renvoi automatique ») " + LIB + " : même chose, le témoin et le nom se raccourcissent avec « … »",
+      r1a.trop.length === 0 && r1b.trop.length === 0 && temoin(r1a, "Enregistrement…") && temoin(r1b, "Hors ligne — gardé sur cet appareil, renvoi automatique"), resultat({ trop: r1a.trop.concat(r1b.trop) }));
+    /* un client (Thomas) ; le compte de test (client sans prénom ni nom : son email dans la barre) */
+    const x2 = await contexte(b, THOMAS, decor(), TEL0);
+    await x2.page.goto(URL0 + "#/accueil"); await pret(x2.page, "#vue");
+    const r2 = await tourBarre(x2.page, pg => pg.evaluate(() => majEtat("")));
+    ok("E : client Thomas (#/accueil) " + LIB + " : la page ne déborde pas, les trois boutons entiers sur une ligne, dans la barre, 32 px de haut au moins", r2.trop.length === 0 && nomVu(r2, "Thomas Démo"), resultat(r2));
+    const x3 = await contexte(b, TESTEUR, decor(), TEL0);
+    await x3.page.goto(URL0 + "#/accueil"); await pret(x3.page, "#vue");
+    const r3 = await tourBarre(x3.page, pg => pg.evaluate(() => majEtat("")));
+    ok("E : compte de test (client sans nom : « test@exemple.fr » dans la barre) " + LIB + " : même chose", r3.trop.length === 0 && nomVu(r3, "test@exemple.fr"), resultat(r3));
+    /* un prospect au nom de 60 + 60 caractères (le plus long que permet l'inscription) */
+    const x4 = await contexte(b, qui(PID(20), "mc@exemple.fr"), decor({ comptes: [prospect(20, LONG_P, LONG_N, { cree: 2 * J, q: 2 * J, rep: { probleme: "Perdre du gras", obstacle: "Le temps", projection: "Courir" }, email: "mc@exemple.fr" })] }), TEL0);
+    await x4.page.goto(URL0); await pret(x4.page, "#vue");
+    const r4 = await tourBarre(x4.page, pg => pg.evaluate(() => majEtat("")));
+    ok("E : prospect au nom de 60 + 60 caractères " + LIB + " : même chose", r4.trop.length === 0 && nomVu(r4, LONG_P + " " + LONG_N), resultat(r4));
+    /* c'est le nom qui se raccourcit, jamais les boutons (le texte entier reste dans la barre) */
+    const n4 = r4.vus[320].o, n3 = r3.vus[320].o;
+    ok("E : 320 px : c'est le nom qui se raccourcit avec « … » (prospect au nom long ; compte de test : son email), texte entier gardé ; les boutons gardent leur libellé entier",
+      n4.qui.coupe && n4.qui.to === "ellipsis" && n4.qui.txt === LONG_P + " " + LONG_N && n3.qui.coupe && n3.qui.to === "ellipsis" && n3.qui.txt === "test@exemple.fr" && [n4, n3].every(o => !o.deco.coupe && !o.langue.coupe && o.deco.txt === "Se déconnecter" && o.langue.txt === "🇺🇸 EN"),
+      JSON.stringify([n4.qui, n3.qui, n4.deco]).slice(0, 500));
+    /* en anglais (« Log out », « 🇫🇷 FR ») : le compte de test, sans puis avec le témoin (« Offline — kept on this device… ») */
+    const db5 = decor(); avecEn(db5, TESTEUR.id);
+    const x5 = await contexte(b, TESTEUR, db5, TEL0);
+    await x5.page.goto(URL0 + "#/accueil"); await pret(x5.page, "#vue");
+    const r5 = await tourBarre(x5.page, pg => pg.evaluate(() => majEtat("")));
+    const r5b = await tourBarre(x5.page, pg => pg.evaluate(() => majEtat("erreur")));
+    const en = Object.values(r5.vus).every(B => B.o.deco.txt === "Log out" && B.o.langue.txt === "🇫🇷 FR");
+    ok("E : en anglais (compte de test : « Log out », « 🇫🇷 FR »), sans puis avec le témoin « Offline — kept on this device, will resend automatically », " + LIB + " : même chose",
+      en && r5.trop.length === 0 && r5b.trop.length === 0 && temoin(r5b, "Offline — kept on this device, will resend automatically"), resultat({ trop: (en ? [] : ["libellés : " + r5.vus[320].o.deco.txt + " / " + r5.vus[320].o.langue.txt]).concat(r5.trop, r5b.trop) }));
+    /* les écarts et les marges ne se resserrent que sous 360 px (Thomas, témoin vide) */
+    const st = {};
+    for (const L of LARGEURS) { await x2.page.setViewportSize({ width: L, height: 700 }); await attendre(x2.page, 250); await x2.page.evaluate(() => majEtat("")); st[L] = await styleBarre(x2.page); }
+    const SERRE = "6px|9px 9px|9px|none|32px 0px", NORMAL = "8px|12px 12px|12px|block|32px 0px";
+    ok("E : sous 360 px seulement : écarts de 6 px, témoin vide retiré, boutons moins larges (☀ reste de 32 px) ; à 360 px et plus : 8 px, témoin vide gardé, marges de la v58",
+      st[320] === SERRE && st[359] === SERRE && st[360] === NORMAL && st[375] === NORMAL && st[390] === NORMAL, JSON.stringify(st));
+    /* nom normal à 360, 375 et 390 px : la barre est celle de la v58 (même page, même machine, sans la règle v59), chaque fois
+       que la ligne tenait déjà avec la v58 (sinon, avec la v58, « Se déconnecter » passait sur deux lignes ou la page débordait) */
+    const comparer = [], ecarts = [], nonComparables = [];
+    let v59sansBloc = false, refV58 = true;
+    const normaux = [["Thomas", THOMAS, decor(), "#/accueil"], ["Léa (prospecte)", qui(LEA, "lea@exemple.fr"), decor(), ""], ["Thomas en anglais", THOMAS, (() => { const d = decor(); avecEn(d, THOMAS.id); return d; })(), "#/accueil"]];
+    for (const [nom, who, db, hash] of normaux) {
+      const x = await contexte(b, who, db, { viewport: { width: 360, height: 700 } });
+      await x.page.goto(URL0 + hash); await pret(x.page, "#vue");
+      const mesure = async () => { const g = {}; for (const L of [360, 375, 390]) { await x.page.setViewportSize({ width: L, height: 700 }); await attendre(x.page, 250); await x.page.evaluate(() => majEtat("")); g[L] = { geo: await geoBarre(x.page), B: await barre(x.page) }; } return g; };
+      const g59 = await mesure();
+      if (!BLOC59 && g59[375].B.o.qui.to === "ellipsis") v59sansBloc = true;   // la règle v59 est là, mais pas sous la forme attendue
+      let g58 = g59;
+      if (BLOC59) await avec([[BLOC59, ""]], async () => { await x.page.reload(); await pret(x.page, "#vue"); g58 = await mesure(); });
+      if (BLOC59 && g58[375].B.o.qui.to !== "clip") refV58 = false;   // la référence n'est pas la feuille de la v58 (règle toujours là)
+      for (const L of [360, 375, 390]) {
+        const B = g58[L].B;
+        if (defautsBarre(B, L)) { nonComparables.push(nom + " " + L); continue; }
+        comparer.push(L);
+        if (g58[L].geo !== g59[L].geo) ecarts.push(nom + " " + L + " px : v58 " + g58[L].geo + " / v59 " + g59[L].geo);
+      }
+    }
+    ok("E : nom normal (Thomas, Léa, Thomas en anglais) à 360, 375 et 390 px : barre identique à la v58, au dixième de pixel (même page sans la règle v59) — " + comparer.length + " mesures comparées",
+      !v59sansBloc && refV58 && ecarts.length === 0 && [360, 375, 390].every(L => comparer.includes(L)), (v59sansBloc ? "règle v59 introuvable dans css/communs.css (commentaire « v59 : barre du haut sur téléphone ») ; " : "") + (refV58 ? "" : "la règle v59 n'a pas pu être retirée ; ") + ecarts.join(" ; ").slice(0, 600) + " non comparables : " + nonComparables.join(", "));
   });
 
   /* =================== Z. rien vers l'extérieur =================== */
