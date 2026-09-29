@@ -692,7 +692,13 @@ const Store = {
   /* Sauvegarde manuelle : toujours disponible, en plus de la base */
   exporter(){
     const out = {};
-    OUTILS.map(o => o.cle).concat(this.clesSansOutil).forEach(k => { if (k && this.cache[k]) out[k] = this.cache[k]; });
+    OUTILS.map(o => o.cle).concat(this.clesSansOutil).forEach(k => {
+      if (!k || !this.cache[k]) return;
+      /* v59 : garde-fou 18 ans, comme importer — un calcul fait avec un age sous le minimum (tape, jamais enregistre :
+         le cache suit le formulaire) ne part pas dans la copie */
+      if (k === "calc_perso" && outilCalculateur.mineur(this.cache[k])) return;
+      out[k] = this.cache[k];
+    });
     return JSON.stringify({ plateforme:"mhx", version:2, donnees: out });
   },
 

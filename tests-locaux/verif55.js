@@ -27,10 +27,11 @@
       pendant l'envoi (insertion simple : rien d'écrasé) ;
    F. Profil du prospect : interrupteur « Newsletter » (FR / EN) → emails { newsletter, maj, version, source: "profil" },
       un « non » coupe aussi l'ancien suivi ; l'ancien accord ne coche jamais la newsletter ; lecture ratée ;
-   G. conditions FR / EN (version 2026-09-28b, DECOUVERTE.accords, newsletter 2026-09-28c) : plus de 7 jours, nom,
-      3 questions, newsletter (1 à 2 par semaine, désinscription en 1 clic, retrait dans le Profil), ni mesure d'ouverture,
-      ni prestataire nommé, ni relance, ni email du compte promis (décisions de Lucas), Calendly avec le nom ; mêmes
-      paragraphes aux mêmes places ;
+   G. conditions FR / EN (version 2026-09-29 depuis la v59, DECOUVERTE.accords, newsletter 2026-09-28c) : plus de 7 jours,
+      nom, 3 questions, newsletter (1 à 2 par semaine, désinscription en 1 clic, retrait dans le Profil), ni mesure
+      d'ouverture, ni prestataire d'emails nommé, ni relance, ni email du compte promis (décisions de Lucas), Calendly avec
+      le nom ; v59 : « Contenus chargés depuis Google » (polices, aperçus des vidéos, adresse IP, vidéo au clic seulement)
+      juste après « Hébergement » ; mêmes paragraphes aux mêmes places ;
    H. Calendly : name = prénom + nom, first_name, last_name, email (prospect, page verrouillée, fiche du coach,
       lienCalendlyPour à 3 ou 4 paramètres), pré-remplissage éteint, caractères piégés ;
    Lot G (côté coach) :
@@ -379,7 +380,9 @@ const V52 = "2026-09-28";   // version de la case santé des comptes créés ava
 /* v55 : DECOUVERTE.accords.sante passe à « 2026-09-28b » (anglais de la case santé avec son point final) : c'est la version
    attendue d'une NOUVELLE inscription et dans DECOUVERTE.accords ; les décors des comptes d'avant gardent V52 */
 const V_SANTE = "2026-09-28b";
-const V_COND = "2026-09-28b";   // version des conditions (confidentialite.version : aucun email du compte, décision de Lucas)
+/* v59 : « 2026-09-29 » = paragraphe « Contenus chargés depuis Google » ajouté (lot E, remarque d de la relecture v52) ; les
+   comptes déjà inscrits gardent leur version dans leurs métadonnées (rien ne la compare : personne n'est redemandé) */
+const V_COND = "2026-09-29";   // version des conditions (confidentialite.version ; v55 à v58 : 2026-09-28b)
 const V_NEWS = "2026-09-28c";   // version du texte de la case newsletter (texte final de Lucas du 28/09, sans mesure d'ouverture)
 const TXB = {
   titre: "Crée ton espace gratuit", titre_en: "Create your free space",
@@ -1038,15 +1041,23 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
     ok("FR : données collectées = prénom, nom, email, réponses aux 3 questions, données de santé saisies (poids, mensurations, calculateur)", i1 > -1 && ["ton prénom, ton nom, ton email", "3 questions", "poids", "mensurations", "calculateur de calories"].every(x => d.fr[i1].includes(x)), d.fr[i1]);
     ok("FR : Calendly « Ton prénom, ton nom et ton email y sont pré-remplis »", i6 > -1 && d.fr[i6].includes("Ton prénom, ton nom et ton email y sont pré-remplis"), d.fr[i6]);
     /* décisions de Lucas du 28/09 : plus aucune mention de mesure d'ouverture ; aucun prestataire d'emails nommé ; plus de
-       relances ni d'emails de suivi automatiques ; emails du compte envoyés par Gmail (Google) */
+       relances ni d'emails de suivi automatiques ; emails du compte envoyés par Gmail (Google). v59 : « Google » est nommé
+       pour les polices et les aperçus des vidéos (paragraphe à part) : l'interdit garde « Gmail », sans « Google » */
     ok("FR : paragraphe Newsletter à la place des « Emails de suivi » : 1 à 2 emails par semaine au plus, désinscription en 1 clic, retrait dans le Profil ; ni mesure d'ouverture, ni Brevo, ni relance, ni « 3 emails » ; aucun email du compte promis (confirmation, mot de passe, Gmail)",
-      i7 > -1 && ["1 à 2 emails par semaine au plus", "Désinscription en 1 clic dans chaque email", "retrait de ton accord possible à tout moment dans ton Profil"].every(x => d.fr[i7].includes(x)) && !/Gmail|Google|email de confirmation|confirmation de ton email|mot de passe oublié/i.test(fr)
+      i7 > -1 && ["1 à 2 emails par semaine au plus", "Désinscription en 1 clic dans chaque email", "retrait de ton accord possible à tout moment dans ton Profil"].every(x => d.fr[i7].includes(x)) && !/Gmail|email de confirmation|confirmation de ton email|mot de passe oublié/i.test(fr)
       && !/relance|3 emails|emails de suivi|réserv|ouvert|cliqu|mesur/i.test(d.fr[i7]) && !/Brevo|emails de suivi|au plus 3 emails|a été ouvert|mesure d'ouverture/i.test(fr), d.fr[i7]);
     ok("FR : toujours « réservés aux adultes » et « ne remplace pas un avis médical »", /réservés aux adultes/.test(d.fr[0]) && /ne remplace pas un avis médical/.test(d.fr[0]), d.fr[0]);
     ok("EN à la même place : last name, 3 questions, measurements ; « Your first name, last name and email are pre-filled » ; Newsletter (1 to 2 emails per week, one-click unsubscribe, withdrawal in the Profile ; no open tracking, no Brevo, no follow-up, no account email) ; adults only, not medical advice",
       /^Data collected: /.test(d.en[i1]) && ["your last name", "3 starting questions", "measurements", "calorie calculator"].every(x => d.en[i1].includes(x)) && /^Booking: /.test(d.en[i6]) && d.en[i6].includes("Your first name, last name and email are pre-filled")
-      && /^Newsletter \(optional\): /.test(d.en[i7]) && ["1 to 2 emails per week at most", "One-click unsubscribe in every email", "withdraw your consent at any time in your Profile"].every(x => d.en[i7].includes(x)) && !/Gmail|Google|confirmation email|email confirmation|forgotten password/i.test(en) && !/follow-up|3 emails|booked|opened|opening|clicked|track|measur/i.test(d.en[i7]) && !/Brevo|follow-up emails|at most 3 emails|was opened|open tracking/i.test(en)
+      && /^Newsletter \(optional\): /.test(d.en[i7]) && ["1 to 2 emails per week at most", "One-click unsubscribe in every email", "withdraw your consent at any time in your Profile"].every(x => d.en[i7].includes(x)) && !/Gmail|confirmation email|email confirmation|forgotten password/i.test(en) && !/follow-up|3 emails|booked|opened|opening|clicked|track|measur/i.test(d.en[i7]) && !/Brevo|follow-up emails|at most 3 emails|was opened|open tracking/i.test(en)
       && /for adults only/.test(d.en[0]) && /not medical advice/.test(d.en[0]), JSON.stringify([d.en[i1], d.en[i6], d.en[i7]]).slice(0, 400));
+    /* v59 : ce que l'app charge vraiment depuis Google, sans action de la personne (index.html : Google Fonts ; outilFormation
+       et outilProgramme : img.youtube.com/…/hqdefault.jpg) ; le lecteur (youtube-nocookie.com) seulement au clic */
+    const iH = d.fr.findIndex(p => p.startsWith("Hébergement")), iG = d.fr.findIndex(p => p.startsWith("Contenus chargés depuis Google"));
+    ok("conditions FR et EN : un paragraphe « Contenus chargés depuis Google » juste après « Hébergement » (polices Google Fonts, images d'aperçu des vidéos YouTube, adresse IP, vidéo au clic seulement, confidentialité renforcée), « Content loaded from Google » à la même place",
+      iH > -1 && iG === iH + 1 && ["polices de caractères de l'app (Google Fonts)", "images d'aperçu des vidéos (YouTube)", "serveurs de Google", "ton adresse IP", "ne démarre que si tu cliques dessus", "mode de confidentialité renforcée"].every(x => d.fr[iG].includes(x))
+      && /^Hosting: /.test(d.en[iH]) && /^Content loaded from Google: /.test(d.en[iG]) && ["the app's fonts (Google Fonts)", "video preview images (YouTube)", "Google's servers", "your IP address", "only starts if you click it", "privacy-enhanced mode"].every(x => d.en[iG].includes(x)),
+      JSON.stringify([iH, iG, d.fr[iG], d.en[iG]]).slice(0, 400));
     await c.close();
     /* le volet des conditions depuis l'inscription, en français puis en anglais : tous les paragraphes, dans la bonne langue */
     await inscriptionOuverte(async () => {

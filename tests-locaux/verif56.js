@@ -27,10 +27,12 @@
    I. accueil du prospect : une seule action mise en avant (« Calcule tes calories (2 min) » → #/calculateur, puis
       « Enregistre ta pesée de départ » → #/mensurations, puis l'accueil normal), décidée en lecture seule, sans écriture,
       « Réserver mon bilan » discret, Speed Formation ouverte, vitrine (programme, nutrition, journal, suivi) ; anglais ;
+      v59 : juste après un enregistrement (calcul, pesée) pas encore arrivé au serveur, l'étape en tient compte ;
    J. calculateur du prospect : sa clé calc_perso (jamais calc), rien d'inventé, rien d'écrit avant une saisie complète,
       mêmes formules, « pas un avis médical », départ depuis le calc du coach ou l'ancien questionnaire, calc_perso piégé ;
    K. garde-fou 18 ans (âge 17 : message, rien d'écrit ; mineur ensuite : calc_perso retiré ; écriture en attente
-      annulée ; calc_perso mineur en base retiré ; restauration refusée ; anglais) ;
+      annulée ; calc_perso mineur en base retiré ; restauration refusée ; anglais ; v59 : « Copier ma sauvegarde » ne
+      contient jamais un calcul fait avec un âge mineur) ;
    L. garde-fou IMC (< 18,5 : pas d'objectif de perte, phrase de prudence, maintien enregistré) ;
    M. client Thomas (v53 : calculateur et journal ouverts, sa barre du bas inchangée ; détail dans verif60) et coach (calc
       comme avant, son compte et la fiche de Thomas ; v53 : « Ses séances » → son journal) ;
@@ -875,6 +877,27 @@ function lienOk(href, base, attendu){
     await c.close(); await x.c.close();
   });
 
+  /* v59 (lot E, remarque a de la relecture v52) : le calcul, puis la pesée, enregistrés et pas encore arrivés au serveur
+     (envoi retenu 4 s par le faux Supabase : db.retard) ; retour immédiat à l'accueil : l'étape suit ce que l'onglet
+     vient d'enregistrer (sa copie gardée sur l'appareil), toujours sans rien écrire à l'affichage */
+  await bloc("I. accueil juste après l'enregistrement", async () => {
+    const k = 37, ID = PID(k);
+    const db = base({ comptes: [compte(k, "Léa", "Martin", [["intake", NOUVEAU({ bilan_propose: { choix: "plus_tard", le: avant(MIN) } })]])] });
+    db.retard = { calc_perso: 4000, mens: 4000 };
+    const { c, page } = await ouvrir(b, db, k, "#/calculateur", "#tdee"); await attendre(page, 1200);
+    await page.click('#sexe [data-v="F"]'); await page.fill("#age", "30"); await page.fill("#taille", "165"); await page.fill("#poids", "60"); await page.fill("#heures", "3");
+    await aller(page, "#/accueil", 300); await page.waitForSelector("#dc-accomp", { timeout: 3000 }).catch(() => {}); await attendre(page, 300);
+    const e1 = await page.$eval("#dc-etape", x => x.dataset.etape).catch(() => "");
+    ok("calcul enregistré, retour immédiat à l'accueil (envoi pas encore arrivé au serveur) : l'action mise en avant est déjà « Enregistre ta pesée de départ »", e1 === "pesee" && ecr(db, "calc_perso", ID).length === 0, e1 + " " + resume(db));
+    await aller(page, "#/mensurations", 300); await page.waitForSelector("#e-poids", { state: "visible", timeout: 3000 }).catch(() => {});
+    await page.fill("#e-poids", "72.4"); await page.click("#add");
+    await aller(page, "#/accueil", 300); await page.waitForSelector("#dc-accomp", { timeout: 3000 }).catch(() => {}); await attendre(page, 300);
+    ok("pesée enregistrée, retour immédiat à l'accueil (envoi pas encore arrivé) : plus d'étape mise en avant, l'accueil normal", !!(await page.$("#dc-accomp")) && !(await page.$("#dc-etape")) && ecr(db, "mens", ID).length === 0, (await page.$eval("#dc-etape", x => x.dataset.etape).catch(() => "aucune étape")) + " " + resume(db));
+    await attendre(page, 4800);
+    ok("… une fois arrivés : une écriture de calc_perso et une de mens (les deux saisies), rien d'autre, rien à l'affichage de l'accueil", ecr(db, "calc_perso", ID).length === 1 && ecr(db, "mens", ID).length === 1 && saisies(db).length === 2, resume(db));
+    await c.close();
+  });
+
   /* =================== J. calculateur du prospect : sa clé calc_perso, jamais calc =================== */
   await bloc("J. calculateur du prospect", async () => {
     const k = 13, ID = PID(k);
@@ -993,6 +1016,31 @@ function lienOk(href, base, attendu){
     ({ c, page } = await ouvrir(b, db2, 20, "#/calculateur", "#tdee", { langue: "en" })); await attendre(page, 1200);
     await page.fill("#age", "14"); await page.press("#age", "Tab"); await attendre(page, 800);
     ok("anglais : « The calculator is for adults only (18 and over): nothing is saved. »", (await texte(page, "#calc-etat")) === "The calculator is for adults only (18 and over): nothing is saved." && ecr(db2, "calc_perso").length === 0, await texte(page, "#calc-etat"));
+    await c.close();
+  });
+
+  /* v59 (lot E, remarque e de la relecture v52) : « Copier ma sauvegarde » (Profil, bouton #sv-copy : Store.exporter) suit le
+     même garde-fou que la restauration : un calcul fait avec un âge mineur (tapé, jamais enregistré, mais resté dans le
+     cache) n'en sort jamais ; un calcul adulte, si. Presse-papiers remplacé par un espion (rien ne sort de la page). */
+  await bloc("K. garde-fou 18 ans : « Copier ma sauvegarde »", async () => {
+    const k = 38, ID = PID(k);
+    const db = base({ comptes: [compte(k, "Léa", "Martin", [["intake", NOUVEAU({ bilan_propose: { choix: "plus_tard", le: avant(MIN) } })]])] });
+    const { c, page } = await ouvrir(b, db, k, "#/calculateur", "#tdee"); await attendre(page, 1200);
+    const remplir = async age => { await page.click('#sexe [data-v="F"]'); await page.fill("#taille", "165"); await page.fill("#poids", "60"); await page.fill("#heures", "3"); await page.fill("#age", age); await page.press("#age", "Tab"); await attendre(page, 1500); };
+    const copier = async () => { await aller(page, "#/profil", 1500); return page.evaluate(async () => {
+      let t = null;
+      try { Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: x => { t = x; return Promise.resolve(); } } }); } catch (e) { }
+      const bt = document.getElementById("sv-copy"); if (!bt) return { bouton: false };
+      bt.click(); await new Promise(r => setTimeout(r, 300));
+      let d = null; try { d = JSON.parse(t).donnees || null; } catch (e) { d = null; }
+      return { bouton: true, cache: (Store.cache.calc_perso || {}).age, cles: d ? Object.keys(d) : null, cp: d ? d.calc_perso || null : null };
+    }); };
+    await remplir("17");
+    const r1 = await copier();
+    ok("âge 17 tapé (rien d'enregistré, resté dans le cache) : « Copier ma sauvegarde » copie ses données sans ce calcul (aucun âge sous 18 ans)", r1.bouton && r1.cache === 17 && Array.isArray(r1.cles) && r1.cles.includes("intake") && !r1.cp && ecr(db, "calc_perso").length === 0, JSON.stringify(r1) + " " + resume(db));
+    await aller(page, "#/calculateur", 1500); await remplir("30");
+    const r2 = await copier();
+    ok("… un calcul adulte enregistré (30 ans) est bien dans la copie", r2.bouton && !!r2.cp && r2.cp.age === 30 && ((db.donnees.find(d => d.user_id === ID && d.outil === "calc_perso") || {}).contenu || {}).age === 30, JSON.stringify(r2));
     await c.close();
   });
 

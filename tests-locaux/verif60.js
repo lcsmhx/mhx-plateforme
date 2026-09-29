@@ -19,11 +19,14 @@
       lecture seule (ni formulaire ni champ, journal lu, perf jamais), aucune écriture (même forcée : refusée) ; hors
       fiche, pas d'onglet journal ;
    H. coach : calc comme avant (son compte, fiche de Thomas « Ses calories »), jamais calc_perso ; l'alerte d'écart
-      (Mes clients) et le générateur de diète (« Ses repas ») lisent calc, jamais calc_perso ;
+      (Mes clients) et le générateur de diète (« Ses repas ») lisent calc, jamais calc_perso ; v59 : fiche d'un prospect
+      sans calc, « Ses calories » part de son calc_perso (complet et adulte), lu sans être écrit ; client sans calc,
+      prospect avec calc, calc_perso mineur ou incomplet : départ d'avant ;
    I. prospect inchangé (navigation, #/journal verrouillé avec son exemple et sans lecture, calculateur sur calc_perso,
       barre du bas) ;
    J. téléphone 390 px (barre du bas du client inchangée, « Plus », pas de débordement, bouton tactile) ;
-   K. anglais ;
+   K. anglais ; v59 : Speed Formation (titres courts, objectifs et contenu des modules, « Goal: », « Your to-do list »,
+      bouton de la vidéo, note du module 3) ;
    L. données piégées (journal et programme écrits hors de l'app) : aucune injection, aucune erreur, aucune écriture ;
    Z. aucun appel vers l'extérieur.
    Supabase simulé (gabarit de verif56, carte 6 §15) : rien ne part vers la vraie base (routage par NOM D'HÔTE, jamais
@@ -551,6 +554,38 @@ const NOUVEAU = { probleme: "Perdre du gras", obstacle: "Le manque de temps avec
     await c.close();
   });
 
+  /* v59 (lot E, remarque c de la relecture v52) : fiche d'un PROSPECT qui n'a pas de calc (le coach ne lui a encore rien
+     calculé) : « Ses calories » part de son propre calcul (calc_perso, complet et adulte), lu sans rien écrire ; avant, le
+     coach voyait des valeurs inventées (homme, 25 ans, 178 cm, 80 kg…). Rien ne change pour un client sans calc (son
+     questionnaire), un compte qui a un calc (son calc), un calc_perso mineur ou incomplet (départ d'avant). */
+  await bloc("H. coach : « Ses calories » d'un prospect sans calc", async () => {
+    const CP = { sexe: "F", age: 30, taille: 165, poids: 60, pas: 6000, heures: 3, objectif: "perte" };
+    const CC = { sexe: "H", age: 41, taille: 181, poids: 88, pas: 9000, heures: 4, objectif: "maintien" };
+    const PERSO_S = { sexe: "H", age: 50, taille: 170, poids: 60, pas: 3000, heures: 1, objectif: "prise" };
+    const pr = (k, prenom, donnees) => ({ id: PID(k), prenom, nom: "Essai", statut: "prospect", cree: avant(2 * J), email: "p" + k + "@exemple.fr", donnees: [["intake", NOUVEAU]].concat(donnees) });
+    const db = base({ comptes: [pr(10, "Léa", [["calc_perso", CP]]), pr(11, "Inès", [["calc_perso", Object.assign({}, CP, { age: 16 })]]), pr(12, "Paul", [["calc_perso", { sexe: "H", age: 40, poids: 80 }]]), pr(13, "Marc", [["calc", CC], ["calc_perso", CP]])],
+      cles: [[F.IDS.c2, "calc_perso", PERSO_S]] });
+    const { c, page } = await contexte(b, COACH, db);
+    await page.goto(URL0 + "#/tableau"); await pret(page); await attendre(page, 600);
+    const calories = async id => { await ouvrirFiche(page, id); await aller(page, "#/calculateur", 1800); return { v: JSON.stringify(await valeurs(page)), s: await sexeChoisi(page), o: await objectifChoisi(page), note: await page.isVisible("#calc-depart").catch(() => false) }; };
+    const r1 = await calories(PID(10));
+    ok("fiche d'un prospect sans calc, « Ses calories » : départ = son propre calcul (calc_perso : 30 ans, 165 cm, 60 kg, 6 000 pas, 3 h, femme, perte), la note « Départ : son propre calcul » affichée",
+      r1.v === '["30","165","60","6000","3"]' && r1.s === "F" && r1.o === "perte" && r1.note && (await texte(page, "#calc-depart")).startsWith("Départ : son propre calcul"), JSON.stringify(r1));
+    ok("… à l'ouverture, rien d'écrit chez lui (ni calc, ni calc_perso)", saisies(db).length === 0, resume(db));
+    await page.fill("#heures", "4"); await attendre(page, 1400);
+    const e1 = ecr(db, "calc", PID(10));
+    ok("… un champ touché : le coach écrit calc chez le prospect (ses chiffres, 4 h), jamais calc_perso ; son calc_perso intact", e1.length === 1 && memes(e1[0].contenu, Object.assign({}, CP, { heures: 4 })) && ecr(db, "calc_perso").length === 0 && memes(contenuDe(db, PID(10), "calc_perso"), CP), resume(db) + " " + JSON.stringify(e1.map(e => e.contenu)));
+    const r2 = await calories(PID(11)), r3 = await calories(PID(12));
+    const avant59 = '["25","178","80","10000","10"]';   // CONFIG.calcul.valeurs_depart : le questionnaire court n'a ni âge, ni taille, ni poids
+    ok("prospect au calc_perso mineur (16 ans) ou incomplet : départ d'avant (valeurs de départ, objectif de sa réponse), note cachée", r2.v === avant59 && r3.v === avant59 && r2.o === "perte" && !r2.note && !r3.note, JSON.stringify([r2, r3]));
+    const r4 = await calories(PID(13));
+    ok("prospect qui a déjà un calc (préparé par le coach) : son calc, pas son calc_perso ; note cachée", r4.v === '["41","181","88","9000","4"]' && r4.s === "H" && r4.o === "maintien" && !r4.note, JSON.stringify(r4));
+    const r5 = await calories(F.IDS.c2);
+    ok("client sans calc (Sarah) : départ depuis son questionnaire comme avant (29 ans, 165 cm, 68,2 kg, 5 h ; pas : 10 000, la valeur de départ du coach), jamais son calc_perso ; note cachée", r5.v === '["29","165","68.2","10000","5"]' && r5.s === "F" && !r5.note, JSON.stringify(r5));
+    ok("tout le bloc : seule écriture, le calc du premier prospect (champ touché) ; aucun refus de la base", saisies(db).length === 1 && db.refus.length === 0, resume(db));
+    await c.close();
+  });
+
   /* =================== I. prospect inchangé =================== */
   await bloc("I. prospect inchangé", async () => {
     const ID = PID(1);
@@ -606,6 +641,36 @@ const NOUVEAU = { probleme: "Perdre du gras", obstacle: "Le manque de temps avec
     ({ c, page } = await contexte(b, SARAH, db, { langue: "en" }));
     await page.goto(URL0 + "#/journal"); await pret(page, "#jr-historique"); await attendre(page, 900);
     ok("anglais, sans programme : « " + TXD.sans_en + " » puis « No workouts logged yet. »", (await texte(page, "#jr-sans-programme")) === TXD.sans_en && (await texte(page, "#jr-historique .empty")) === "No workouts logged yet.", (await texte(page, "#jr-sans-programme")) + " · " + await texte(page, "#jr-historique .empty"));
+    await c.close();
+    /* v59 (lot E, remarque b de la relecture v52) : la Speed Formation en anglais — titres courts (la carte retire
+       « Module n — »), objectifs, contenu des modules, note du module 3, « Goal: », « Your to-do list », bouton de la vidéo.
+       Traductions du cours écrites par Claude (I18N.en, bloc « v59 — Speed Formation ») ; tâches, défis et leçons : plus tard */
+    const CARTES_EN = [["m0", "Introduction", "Lay the foundations and set expectations."], ["m1", "Mindset", "Work on your mindset so your transformation lasts."],
+      ["m2", "Nutrition", "Keep nutrition simple to get results without frustration."], ["m3", "Training", "Get training that fits you, whatever your level."],
+      ["m4", "Organization", "Organize your days to make the most progress."], ["m5", "Challenges", "Push past your limits to progress faster."], ["m6", "Boosters and resources", "Extra resources to boost your results."]];
+    ({ c, page } = await contexte(b, THOMAS, db, { langue: "en" }));
+    await page.goto(URL0 + "#/formation"); await pret(page, ".fo-tete"); await attendre(page, 900);
+    const cartes = await page.$$eval(".fo-tete", l => l.map(x => [x.dataset.mod, (x.querySelector(".fo-nom") || {}).textContent.replace(/\s+/g, " ").trim(), (x.querySelector(".fo-obj-court") || {}).textContent.replace(/\s+/g, " ").trim()]));
+    ok("anglais, Speed Formation : les 7 cartes des modules avec leur titre court et leur objectif en anglais (Nutrition, Training… ; « Lay the foundations and set expectations. »…)", JSON.stringify(cartes) === JSON.stringify(CARTES_EN), JSON.stringify(cartes));
+    const mods = [];
+    for (const [m] of CARTES_EN) {
+      if (!(await page.$(`.fo-mod.ouvert .fo-tete[data-mod="${m}"]`))) { await page.click(`.fo-tete[data-mod="${m}"]`); await attendre(page, 500); }
+      mods.push(await page.$eval(".fo-mod.ouvert", s => { const n = x => x ? x.textContent.replace(/\s+/g, " ").trim() : null, corps = s.querySelector(".fo-corps");
+        return { id: s.querySelector(".fo-tete").dataset.mod, obj: n(corps.querySelector(".fo-obj")), contenu: Array.from(corps.querySelectorAll(".fo-contenu li")).map(n), h3: Array.from(corps.querySelectorAll("h3")).map(n),
+          video: n(corps.querySelector(":scope > .video-boite .jouer")), note: n(corps.querySelector(":scope > p.note:last-child")) }; }).catch(() => ({ id: m })));
+    }
+    const attendu = await page.evaluate(() => FORMATION.modules.map(m => ({ id: m.id, obj: I18N.en[m.objectif] || null, contenu: m.contenu.map(t => I18N.en[t] || null), fr: [m.objectif].concat(m.contenu, m.note ? [m.note] : []) })));
+    const FR = attendu.reduce((a, x) => a.concat(x.fr), []);
+    const restes = mods.reduce((a, x) => a.concat([x.obj].concat(x.contenu || [], [x.note]).filter(t => t && FR.some(f => t.includes(f)))), []);
+    const m2 = mods.find(x => x.id === "m2") || {}, m3 = mods.find(x => x.id === "m3") || {};
+    ok("… chaque module ouvert : son objectif et son contenu en anglais (module 2 : « Nutrition basics: macronutrients and habits to adopt. »…), la note du module 3 en anglais, plus aucun de ces textes en français",
+      mods.length === 7 && mods.every((x, i) => attendu[i] && x.id === attendu[i].id && !!attendu[i].obj && x.obj === "Goal: " + attendu[i].obj && JSON.stringify(x.contenu) === JSON.stringify(attendu[i].contenu) && attendu[i].contenu.every(Boolean))
+      && JSON.stringify(m2.contenu) === JSON.stringify(["Nutrition basics: macronutrients and habits to adopt.", "Simple, practical meal plans.", "Avoiding common food traps."])
+      && m3.note === "Video demos of every move are right in your program: open “How to do it” under an exercise." && restes.length === 0, JSON.stringify(restes.length ? restes : mods).slice(0, 400));
+    const top = await page.$eval(".video-vignette .jouer", x => x.textContent.replace(/\s+/g, " ").trim()).catch(() => "");
+    ok("… « Goal: », « Your to-do list » (au-dessus des tâches) et « ▶ Watch the video » dans chaque module qui en a ; en tête, « ▶ Watch the course intro »",
+      mods.every(x => (x.obj || "").startsWith("Goal: ") && (x.h3 || []).includes("Your to-do list") && !(x.h3 || []).includes("Ta to-do list")) && mods.filter(x => x.id !== "m6").every(x => x.video === "▶ Watch the video") && top === "▶ Watch the course intro",
+      JSON.stringify(mods.map(x => [x.id, x.h3 && x.h3[0], x.video])) + " " + top);
     await c.close();
   });
 

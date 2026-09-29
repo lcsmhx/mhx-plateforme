@@ -589,10 +589,32 @@ const outilDecouverte = {
     const C = await Store.lire(Decouverte.cle, Decouverte.vide());
     /* v52 : l'action mise en avant sur son accueil (son calcul, puis sa pesee de depart) : lecture seule, sans toucher
        au cache, et seulement une fois le questionnaire valide (avant, l'accueil ne s'affiche pas) */
-    this._reperes = Decouverte.questionnaireFait(I) ? await Store.lireTout([outilCalculateur.cle_perso, "mens"]) : null;
+    /* v59 : ce que cet onglet vient d'enregistrer (calcul, pesee) et qui n'est pas encore arrive au serveur (700 ms, envoi
+       en cours, hors ligne) compte aussi : releve AVANT la lecture (arrive pendant la lecture, il est deja dans la
+       reponse), il passe devant, sauf si le serveur a deja aussi recent (meme regle que Store.reprendre) ; aucune ecriture */
+    this._reperes = null;
+    if (Decouverte.questionnaireFait(I)){
+      const cles = [outilCalculateur.cle_perso, "mens"], locales = this.saisiesLocales(cles);
+      const { valeurs: R, dates } = await Store.lireTout(cles, { dates: true });
+      Object.keys(locales).forEach(c => { const x = locales[c], m = dates[c]; if (x.t === null || !m || new Date(m).getTime() < new Date(x.t).getTime()) R[c] = Forme.cle(c, x.v); });
+      this._reperes = R;
+    }
     if (!zone.isConnected) return;
     this.majEmail(I);
     this.rendre(zone, I, C);
+  },
+  /* v59 : les saisies de cet onglet pas encore confirmees par le serveur, par cle : la valeur qui attend ses 700 ms
+     (t: null, toujours la plus recente), sinon la copie gardee sur l'appareil (Store.garder, retiree a l'arrivee) avec
+     son instant. Lecture seule : rien n'est ecrit ni retire. */
+  saisiesLocales(cles){
+    const uid = Store.cible(), out = {}; if (!uid) return out;
+    const o = Store.attenteLire();
+    cles.forEach(c => {
+      const k = uid + "|" + c, e = o[k], vA = Store.valeursEnAttente[k];
+      const x = vA !== undefined ? { v: vA, t: null } : (e && e.a === uid && typeof e.t === "string") ? { v: e.v, t: e.t } : null;
+      if (x && x.v && typeof x.v === "object" && !Array.isArray(x.v)) out[c] = x;
+    });
+    return out;
   },
   /* v51 : l'email du compte suit le compte (adresse changee dans le Profil) : recopie seulement si un email est deja
      enregistre et qu'il differe. Une simple visite n'ecrit rien d'autre : sans email enregistre (questionnaire

@@ -555,10 +555,13 @@ const DECOUVERTE = {
 
   /* --- conditions et confidentialité (volet ouvert depuis l'inscription et le Profil du prospect).
      v52 : version 2026-09-28b (plus de limite de 7 jours, nom, 3 questions, newsletter ; aucun email du compte envoyé par
-     l'app pour l'instant, décision de Lucas). Le texte change = la version
-     change ; FR et EN gardent le même nombre de paragraphes, dans le même ordre (traduction par position) --- */
+     l'app pour l'instant, décision de Lucas). v59 : version 2026-09-29, paragraphe « Contenus chargés depuis Google »
+     (polices, images d'aperçu des vidéos ; vidéo au clic seulement) juste après « Hébergement ». Les comptes déjà
+     inscrits gardent la version acceptée dans leurs métadonnées : rien ne la compare, personne n'est redemandé.
+     Le texte change = la version change ; FR et EN gardent le même nombre de paragraphes, dans le même ordre
+     (traduction par position) --- */
   confidentialite: {
-    version: "2026-09-28b",
+    version: "2026-09-29",
     titre: "Conditions d'utilisation et confidentialité",
     paragraphes: [
       "L'espace gratuit de MHX Coaching donne des informations et un entraînement généraux, réservés aux adultes. Il ne remplace pas un avis médical : en cas de doute sur ta santé, parles-en à un professionnel avant de commencer.",
@@ -567,6 +570,7 @@ const DECOUVERTE = {
       "Suivi par le coach : il voit tes réponses et ton activité, et note, pour son suivi, l'issue de ton bilan et ses relances. Ces notes n'apparaissent pas dans l'app : tu peux en demander une copie ou la suppression en lui écrivant.",
       "Données de santé (RGPD article 9) : tu dois accepter explicitement le traitement de tes données concernant ta santé (poids, mensurations, données du calculateur de calories). Tu peux les consulter ou les supprimer à tout moment. Ces données sont conservées tant que ton compte existe.",
       "Hébergement : Supabase, serveurs en Europe (Irlande).",
+      "Contenus chargés depuis Google : les polices de caractères de l'app (Google Fonts) et les images d'aperçu des vidéos (YouTube) sont chargées depuis les serveurs de Google, qui reçoivent alors ton adresse IP. Une vidéo ne démarre que si tu cliques dessus ; elle est alors lue depuis YouTube, en mode de confidentialité renforcée.",
       "Prise de rendez-vous : ton bilan se réserve sur Calendly (société américaine), qui enregistre ta réservation pour le compte du coach ; ces données peuvent être traitées aux États-Unis (cadre de protection des données UE–États-Unis). Ton prénom, ton nom et ton email y sont pré-remplis dès que tu ouvres la page de réservation, avec l'écran de l'app d'où tu viens.",
       "Newsletter (facultative) : si tu coches la case, tu reçois par email les conseils, témoignages et offres de coaching de MHX Coaching, 1 à 2 emails par semaine au plus. Désinscription en 1 clic dans chaque email, et retrait de ton accord possible à tout moment dans ton Profil.",
       "Tes droits : tu peux exporter ou supprimer ton compte et toutes tes données à tout moment depuis Profil, section « Mes données », ou en écrivant au coach.",
@@ -773,6 +777,7 @@ const DECOUVERTE = {
         "Coach follow-up: the coach sees your answers and activity, and records, for their follow-up, the outcome of your assessment and their follow-up messages. These notes don't appear in the app: you can ask for a copy or their deletion by writing to the coach.",
         "Health data (GDPR article 9): you must explicitly accept the processing of your health data (weight, measurements, calorie calculator data). You can view or delete this data at any time. This data is kept as long as your account exists.",
         "Hosting: Supabase, servers in Europe (Ireland).",
+        "Content loaded from Google: the app's fonts (Google Fonts) and video preview images (YouTube) are loaded from Google's servers, which then receive your IP address. A video only starts if you click it; it then plays from YouTube, in privacy-enhanced mode.",
         "Booking: your assessment is booked on Calendly (a US company), which records your booking on the coach's behalf; this data may be processed in the United States (EU–US Data Privacy Framework). Your first name, last name and email are pre-filled as soon as you open the booking page, along with the app screen you came from.",
         "Newsletter (optional): if you tick the box, you receive MHX Coaching's tips, testimonials and coaching offers by email, 1 to 2 emails per week at most. One-click unsubscribe in every email, and you can withdraw your consent at any time in your Profile.",
         "Your rights: you can export or delete your account and all your data at any time from Profile, section \"My data\", or by writing to the coach.",

@@ -57,6 +57,7 @@ const outilCalculateur = {
       </div>
       ${perso ? `<p class="flag" id="calc-etat" role="status" aria-live="polite" hidden></p>
       <div class="actions"><button class="btn" type="button" id="calc-ok" hidden>${esc(trad("Enregistrer mes chiffres"))}</button><span class="msg" id="calc-msg" role="status" aria-live="polite"></span></div>` : ""}
+      ${!perso && Store.idConsulte ? `<p class="note" id="calc-depart" style="margin:14px 0 0" hidden>Départ : son propre calcul (fait dans son calculateur). Rien n'est enregistré chez lui tant que tu ne modifies rien.</p>` : ""}
     </section>
 
     <section class="panel">
@@ -307,6 +308,21 @@ const outilCalculateur = {
     const intake = Store.cache["intake"] || await Store.lire("intake", {});
     const depart = this.departDepuis(intake);
     const D = await Store.lire(this.cle, depart);
+    /* v59 : fiche d'un PROSPECT sans calc (D est alors le depart lui-meme) : le depart est SON calcul (calc_perso, complet
+       et adulte), lu sans etre ecrit (lireTout : ni cache ni drapeaux) ; rien ne part chez lui tant que le coach ne touche
+       a rien (un champ touche ecrit calc, la cle du coach, comme avant). Un client sans calc garde le depart de son
+       questionnaire ; un compte qui a un calc, son calc. Lecture ratee : rien ne change. */
+    let depuisPerso = false;
+    const uid = Store.idConsulte;
+    if (uid && D === depart && !Store.nonLus.has(D)){
+      const P = (await Store.lireTout([this.cle_perso]))[this.cle_perso];
+      const pr = this.valide(P) && !this.mineur(P) && Store.idConsulte === uid
+        ? await Auth.appel("/rest/v1/profils?id=eq." + uid + "&select=*").then(r => Array.isArray(r) ? r[0] || null : null).catch(() => null) : null;
+      if (Store.idConsulte !== uid) return;   // fiche changee pendant la lecture
+      if (pr && pr.statut === "prospect"){ this.CHAMPS.forEach(k => { D[k] = (k === "sexe" || k === "objectif") ? P[k] : this.nombre(P[k]); }); depuisPerso = true; }
+    }
+    if (!$("tdee")) return;   // page quittee pendant la lecture
+    const nd = $("calc-depart"); if (nd) nd.hidden = !depuisPerso;
     const self = this;
     let touche = false;
     const sauver = () => { if (touche) Store.ecrire(self.cle, D); };
