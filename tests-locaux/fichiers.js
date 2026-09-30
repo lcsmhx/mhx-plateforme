@@ -45,8 +45,9 @@
    confidentialite_pdf, cgu_version) et le VERROU de publication (verif70, bloc A0). Rien de ceci n'est appliqué par
    défaut : servirFichier sert toujours le fichier tel quel (hors interrupteurs), comme avant.
    LEGAUX : les 3 noms. LEGAUX_TEST : 3 valeurs de test (2 liens Drive fictifs différents, jamais ouverts par un test ;
-     version 2026-10-01), les mêmes que celles des suites qui servent l'écran d'inscription : elles font marcher l'écran,
-     mais le verrou les REFUSE (jamais publiables).
+     version 2026-10-01), les mêmes liens que ceux des suites qui servent l'écran d'inscription (verif39, 50, 55, 67 bloc J
+     et verif71 servent, elles, une version 2026-10-15, distincte du texte court qui vaut 2026-10-01 depuis la v64) : elles
+     font marcher l'écran, mais le verrou les REFUSE (jamais publiables).
    LIENS_TEST : les liens Google Drive de test écrits dans les suites (grep du 30/09 : LEGAUX_TEST, recopié dans verif39,
      40, 50, 53, 55, 67 et 70 ; verif71 : TEST-CGU-71 et TEST-POLITIQUE-71 ; verif66 : un guide du banc).
    valeursLegales(texte, nom) : les valeurs (entre guillemets droits) de toutes les occurrences « nom: "…" ».
@@ -73,8 +74,9 @@
    legauxBorne(maintenant) : la dernière date acceptée pour cgu_version, aujourd'hui (UTC ; maintenant en ms, Date.now()
      par défaut) + 366 jours : une faute sur l'année (2062, 2099) est refusée, une version juste reste valide ensuite.
    legauxManquants(texte, maintenant) : ce qui manque pour publier ([] = complet), lu dans le TEXTE — chaque emplacement
-     écrit UNE fois, entre guillemets droits ; 2 liens publiables (problemeLien) vers 2 documents différents (sauf le
-     MÊME dossier Drive pour les deux, décision de Lucas du 30/09 : le dossier qui contient les 2 PDF), dont
+     écrit UNE fois, entre guillemets droits ; 2 liens publiables (problemeLien) vers 2 documents différents, OU le MÊME
+     dossier Drive pour les deux (décision de Lucas du 30/09 : le dossier qui contient les 2 PDF ; un dossier n'est jamais
+     accepté autrement : ni 2 dossiers différents, ni un dossier avec un fichier), dont
      l'identifiant n'est écrit nulle part ailleurs dans le texte (hors des 3 emplacements : un PDF de la formation,
      js/outilFormation.js, collé par erreur) ; cgu_version = une date AAAA-MM-JJ réelle, postérieure au 2026-09-30 et au
      plus tard legauxBorne(maintenant).
@@ -270,9 +272,12 @@ function legauxManquants(texte, maintenant){
     id[n] = p ? "" : lienDrive(v[n]).id;
     if (p) pb.push(n + " « " + montrer(v[n]) + " » : " + p + " — le lien https d'un PDF sur Google Drive est attendu (drive.google.com/file/d/… ou docs.google.com/document/d/…), ou celui du dossier Drive qui contient les 2 PDF (drive.google.com/drive/folders/…)");
   }
-  /* 2 documents différents ; le même DOSSIER pour les deux est accepté (décision de Lucas du 30/09) */
-  const dossiers = id.cgu_pdf && lienDrive(v.cgu_pdf).dossier && lienDrive(v.confidentialite_pdf).dossier;
-  if (id.cgu_pdf && id.cgu_pdf === id.confidentialite_pdf && !dossiers) pb.push("cgu_pdf et confidentialite_pdf mènent au même document (« " + id.cgu_pdf + " ») : 2 PDF différents attendus");
+  /* 2 documents différents, ou le MÊME dossier pour les deux (décision de Lucas du 30/09), rien d'autre avec un dossier */
+  const dA = !!id.cgu_pdf && !!lienDrive(v.cgu_pdf).dossier, dB = !!id.confidentialite_pdf && !!lienDrive(v.confidentialite_pdf).dossier;
+  const memeDossier = dA && dB && id.cgu_pdf === id.confidentialite_pdf;
+  if (id.cgu_pdf && id.confidentialite_pdf && !memeDossier && (dA || dB) && id.cgu_pdf !== id.confidentialite_pdf)
+    pb.push("un dossier Drive n'est accepté que le MÊME pour cgu_pdf et confidentialite_pdf (le dossier qui contient les 2 PDF, décision de Lucas du 30/09) : ici " + (dA && dB ? "2 dossiers différents" : "un dossier et un fichier"));
+  if (id.cgu_pdf && id.cgu_pdf === id.confidentialite_pdf && !memeDossier) pb.push("cgu_pdf et confidentialite_pdf mènent au même document (« " + id.cgu_pdf + " ») : 2 PDF différents attendus");
   /* relecture du verrou : le document d'un AUTRE lien du site (une ressource de la formation, js/outilFormation.js : erreur
      de copier-coller la plus plausible) — l'identifiant écrit ailleurs que dans les 3 emplacements, sous toute forme */
   const hors = LEGAUX.reduce((t, n) => t.replace(motifLegal(n, true), ""), String(texte));

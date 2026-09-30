@@ -8,7 +8,9 @@
    requête, rendues à la fin du délai).
    0. le config.js servi : les 3 emplacements CONFIG.textes_legaux (« à compléter » sur la branche de travail) remplacés PAR
       CETTE SUITE (retouche du fichier servi, jamais du disque) par des valeurs de test valides : 2 liens https Google Drive
-      et la version 2026-10-01 ; le bloc M sert « à compléter » et des liens invalides ;
+      et la version 2026-10-15 (DISTINCTE du texte court, 2026-10-01 depuis la v64 : sante_version vient bien de
+      CONFIG.textes_legaux.cgu_version, jamais de DECOUVERTE.confidentialite.version) ; le bloc M sert « à compléter » et
+      des liens invalides ;
    A. #/calculateur, prospect sans accord (inscrit en v64) : la carte section.panel.sante-carte#sante-carte
       [data-sante-ecran=calculateur], 1re carte juste après l'en-tête, avant tout champ ; son contenu dans l'ordre (titre,
       texte, phrase d'accord en gras juste au-dessus des boutons, « J'accepte », « Pas maintenant », message vide, lien
@@ -97,9 +99,12 @@ const MOBILE = { width: 390, height: 844 }, ETROIT = { width: 320, height: 700 }
 /* ---------- les textes légaux SERVIS (CONFIG.textes_legaux de js/config.js) : la suite remplace les 3 valeurs dans le
    fichier servi (jamais sur le disque) ; test par défaut, « à compléter » ou invalides le temps du bloc M ---------- */
 const NOMS_LEGAUX = ["cgu_pdf", "confidentialite_pdf", "cgu_version"];
-const LEGAUX_TEST = { cgu_pdf: "https://drive.google.com/file/d/TEST-CGU-71/view", confidentialite_pdf: "https://drive.google.com/file/d/TEST-POLITIQUE-71/view", cgu_version: "2026-10-01" };
+const LEGAUX_TEST = { cgu_pdf: "https://drive.google.com/file/d/TEST-CGU-71/view", confidentialite_pdf: "https://drive.google.com/file/d/TEST-POLITIQUE-71/view", cgu_version: "2026-10-15" };
 const LEGAUX_ABSENTS = { cgu_pdf: "à compléter", confidentialite_pdf: "à compléter", cgu_version: "à compléter" };
-const LEGAUX_INVALIDES = { cgu_pdf: "ftp://exemple.fr/cgu.pdf", confidentialite_pdf: "javascript:alert(71)", cgu_version: "2026-10-01" };
+const LEGAUX_INVALIDES = { cgu_pdf: "ftp://exemple.fr/cgu.pdf", confidentialite_pdf: "javascript:alert(71)", cgu_version: "2026-10-15" };
+/* relecture (v64) : la version du texte court (DECOUVERTE.confidentialite.version), lue dans js/config.js du disque exécuté
+   seul (vm) : sante_version doit en être DISTINCTE (putOk) — sinon une version prise au mauvais endroit passerait */
+const VERSION_COURT = (() => { try { const ctx = {}; require("vm").runInNewContext(fs.readFileSync(path.join(path.dirname(HTML), "js", "config.js"), "utf8") + "\n;this.v = DECOUVERTE.confidentialite.version;", ctx, { timeout: 2000 }); return typeof ctx.v === "string" ? ctx.v : null; } catch (e) { return null; } })();
 let LEGAUX = LEGAUX_TEST;
 /* la valeur entre guillemets collée à « nom: » (la première occurrence : il n'y en a qu'une, bloc 0) */
 const motifLegal = (n, g) => new RegExp("\\b(" + n + ": )\"([^\"\\n]*)\"", g ? "g" : "");
@@ -537,7 +542,7 @@ function putOk(x, ecran, tClic){
   if (!d || typeof d !== "object") return false;
   const t = Date.parse(d.consentement_sante);
   return egal(Object.keys(c), ["data"]) && egal(Object.keys(d).sort(), ["consentement_sante", "sante_ecran", "sante_version"]) && Object.values(d).every(v => v !== null)
-    && ISO.test(d.consentement_sante) && t >= tClic - 1000 && t <= tClic + 60000 && d.sante_version === LEGAUX.cgu_version && d.sante_ecran === ecran && x.q === "";
+    && ISO.test(d.consentement_sante) && t >= tClic - 1000 && t <= tClic + 60000 && d.sante_version === LEGAUX.cgu_version && !!VERSION_COURT && d.sante_version !== VERSION_COURT && d.sante_ecran === ecran && x.q === "";
 }
 /* les métadonnées en base après l'accord : toutes celles d'avant gardées, plus les 3 clés envoyées */
 const metaFusionnee = (apres, avantM, x) => !!apres && !!x && !!x.corps && egal(apres, Object.assign({}, avantM, x.corps.data));
@@ -600,8 +605,8 @@ const detA = A => JSON.stringify(A ? { page: A.page, carte: A.carte, dehors: A.d
     const disque = Object.fromEntries(NOMS_LEGAUX.map(n => [n, valeursLegales(cfg, n)]));
     const servi = poserLegaux(cfg, LEGAUX_TEST), vs = Object.fromEntries(NOMS_LEGAUX.map(n => [n, valeursLegales(servi, n)]));
     const ailleurs = NOMS_LEGAUX.filter(n => valeursLegales(SRC, n).length !== 1);
-    ok("config.js servi par la suite : les 3 emplacements CONFIG.textes_legaux (cgu_pdf, confidentialite_pdf, cgu_version) présents une fois chacun dans js/config.js (nulle part ailleurs dans la page et ses fichiers), remplacés dans le fichier SERVI par des valeurs de test valides (2 liens https Google Drive différents, version 2026-10-01) — le disque n'est jamais touché",
-      NOMS_LEGAUX.every(n => disque[n].length === 1 && vs[n].length === 1 && vs[n][0] === LEGAUX_TEST[n]) && !ailleurs.length, JSON.stringify({ disque, ailleurs }));
+    ok("config.js servi par la suite : les 3 emplacements CONFIG.textes_legaux (cgu_pdf, confidentialite_pdf, cgu_version) présents une fois chacun dans js/config.js (nulle part ailleurs dans la page et ses fichiers), remplacés dans le fichier SERVI par des valeurs de test valides (2 liens https Google Drive différents, version 2026-10-15, distincte de celle du texte court « " + VERSION_COURT + " ») — le disque n'est jamais touché",
+      NOMS_LEGAUX.every(n => disque[n].length === 1 && vs[n].length === 1 && vs[n][0] === LEGAUX_TEST[n]) && !ailleurs.length && !!VERSION_COURT && VERSION_COURT !== LEGAUX_TEST.cgu_version, JSON.stringify({ disque, ailleurs, court: VERSION_COURT }));
   });
 
   /* =================== A. le calculateur : la carte =================== */
