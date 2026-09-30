@@ -3,8 +3,8 @@
 # publié sur GitHub Pages seulement si tout est vert — À CONDITION que la source de GitHub Pages soit « GitHub Actions »
 # (Settings → Pages). Tant qu'elle est « Deploy from a branch », GitHub publie lui-même chaque push en 1 à 2 minutes,
 # sans attendre ce banc : la publication ci-dessous ne fait alors rien (avertissement dans le journal).
-# Publication identique à l'ancien mode : même construction Jekyll de GitHub Pages, sur tout le dépôt (les dossiers
-# commençant par un point, comme .github, ne sont pas publiés).
+# Publication : depuis la v67 (audit du 01/10), seulement l'app (index.html, css/, js/, polices/ : liste blanche, voir
+# l'étape « Site publié ») ; avant, construction Jekyll de tout le dépôt (notes, docs et donnees/ étaient servis sur le site).
 # Urgence (RETOUR ARRIÈRE SEULEMENT) : Actions → « Tests puis publication » → Run workflow, case « urgence » cochée : publie
 # main tout de suite, sans attendre le banc. Seulement pour remettre en ligne une version déjà testée (après un git revert),
 # JAMAIS pour publier du nouveau code sans tests (règle de Lucas, CLAUDE.md).
@@ -130,11 +130,25 @@ jobs:
       - uses: actions/configure-pages@v6
         if: steps.source.outputs.type == 'workflow'
 
-      - uses: actions/jekyll-build-pages@v1
+      # v67 (audit du 01/10) : le site ne publie QUE l'app (liste blanche), plus tout le dépôt par Jekyll. Avant, les notes
+      # (NOTES-GROK.md, NOTESCLAUDE.md, docs/, supabase/, tests-locaux/) et les fichiers de donnees/ (dont des données de
+      # vrais clients) étaient servis sur lcsmhx.github.io. L'app n'en lit aucun : icônes et logo sont intégrés à la page,
+      # le catalogue est lu sur raw.githubusercontent.com (CONFIG.source_donnees). Garde-fou : tout autre fichier, ou un
+      # fichier listé par index.html (MHX_CSS / MHX_JS) absent, arrête la publication (le site reste sur la version d'avant).
+      - name: Site publié (liste blanche : index.html, css/, js/, polices/)
         if: steps.source.outputs.type == 'workflow'
-        with:
-          source: ./
-          destination: ./_site
+        run: |
+          set -euo pipefail
+          rm -rf _site && mkdir -p _site
+          cp index.html _site/
+          cp -R css js polices _site/
+          autres=$(cd _site && find . -type f | grep -vE '^\./(index\.html|css/[A-Za-z0-9._-]+\.css|js/[A-Za-z0-9._-]+\.js|polices/[A-Za-z0-9._-]+\.(woff2|txt))$' | sort || true)
+          if [ -n "$autres" ]; then echo "::error::Fichiers inattendus dans le site : $autres"; exit 1; fi
+          listes=$(grep -oE '"(css|js)/[A-Za-z0-9._-]+\.(css|js)"' index.html | tr -d '"' | sort -u)
+          [ -n "$listes" ] || { echo "::error::MHX_CSS / MHX_JS introuvables dans index.html"; exit 1; }
+          for f in $listes; do [ -f "_site/$f" ] || { echo "::error::Fichier listé par index.html absent : $f"; exit 1; }; done
+          for f in $(grep -oE 'polices/[A-Za-z0-9._-]+\.woff2' css/*.css | cut -d: -f2 | sort -u); do [ -f "_site/$f" ] || { echo "::error::Police absente : $f"; exit 1; }; done
+          echo "Site : $(cd _site && find . -type f | wc -l) fichiers ($(echo "$listes" | wc -l) listés par index.html)"
 
       - uses: actions/upload-pages-artifact@v5
         if: steps.source.outputs.type == 'workflow'

@@ -409,7 +409,7 @@ Le tien : 1) cohérence 2) mdp+email 3) version+cache 4) PWA 5) légal.
 Ce que je changerais :
 
 1. **Fermer l’inscription publique.** Avant tout le reste, y compris la cohérence. Voir B1 : n’importe qui crée un compte, est confirmé tout de suite, et a la formation (elle est dans `index.html`). PWA et version n’ont aucun sens tant que la porte est ouverte.
-2. **Cohérence calc/intake** — d’accord, c’est ta n°1 actuelle, et Clio le justifie. Alerte coach, ne pas écraser.
+2. **Cohérence calc/intake** — d’accord, c’est ta n°1 actuelle, et un compte client le justifie. Alerte coach, ne pas écraser.
 3. **Email vérifié à la création + changement de mot de passe dans l’app.** La copie coach (l.3750) dit déjà que le client peut changer son mot de passe « depuis l’écran de connexion ». La récupération par lien existe ; le changement *connecté* manque. La faute de frappe sur l’email est plus grave que le PWA : compte perdu, formation injoignable.
 4. **Version affichée + cache** (1 h) — oui, après la porte fermée. `index (1).html` est un problème de dépôt Netlify, pas d’app.
 5. **Mentions + suppression de compte.** Clients en France : export à moitié et suppression absente, c’est du RGPD, pas du cosmétique. La case contre-indication existe déjà dans `intake` (`contre_ind`, `contre_ind_detail`) — ce qui manque, c’est la **date** et le **blocage** avant d’envoyer un programme.
@@ -432,10 +432,10 @@ Catalogue `aliments` / `recettes` lisible en client : voulu (catalogue partagé)
 
 Fichier : `donnees/audit-coherence.md`. Rien corrigé.
 
-- **clio clio** : calc 80/178/25 vs intake 62/158/37 → **+602 kcal/j** (même activité que le calc). C’est le cas ~950 selon l’activité qu’on colle ; avec 10 h d’entraînement restées en défaut vs 3 séances, l’écart gonfle encore.
-- **test grok** : 72 kg ok, taille 178 vs 175, âge 25 vs 28 → **+56 kcal/j**. Reliquat du seed âge/taille.
-- paul verzele, aissa lelover : alignés.
-- Lucas (coach) : calc encore à 80/178/25, pas d’intake.
+- **client A** : écart important entre le calcul et le questionnaire (poids, taille, âge) → plusieurs centaines de kcal/j d’écart. (Chiffres et nom retirés du dépôt public le 01/10/2026 : données de santé d’un vrai client.)
+- **compte de test** : petit écart taille / âge → **+56 kcal/j**. Reliquat du seed âge/taille.
+- deux autres comptes clients : alignés. (Noms retirés du dépôt public le 01/10/2026.)
+- Lucas (coach) : calc de démonstration, pas d’intake.
 
 Lucas tranche. Je ne touche pas aux fiches.
 
@@ -467,17 +467,17 @@ Recettes **242**. Paléo petit-déj **21** (les 11 live + 10). Réimporter.
 
 - `PATCH profils` `role=coach` sur soi → **400 P0001** « Seul un coach peut changer un rôle. » Trigger tient.
 - `POST upsert` merge-duplicates → **403** RLS.
-- `PATCH` le profil d’un autre (Clio) avec `return=representation` → **200 []** (0 ligne). Prénom Clio inchangé.
+- `PATCH` le profil d’un autre client avec `return=representation` → **200 []** (0 ligne). Son prénom est inchangé.
 - `PATCH donnees` calc d’un autre → **200 []**.
 - `PATCH` son propre `prenom` → **204** (autorisé, hors rôle).
 
-Je n’ai pas contourné. Deux coaches en base : Lucas + Ines Temmar (voulu).
+Je n’ai pas contourné. Deux coaches en base : Lucas + une 2e personne (voulu ; nom retiré du dépôt public le 01/10/2026).
 
 « Mon compte » : `outilProfil.compteHTML` retourne `""` si `Store.idConsulte` (l.2185). OK sur cette copie.
 
 Je n’ai pas rejoué le parcours client live (création d’accès masquée) faute de v16 dans le fichier GitHub. À retester dès que v16 est push.
 
-Audit cohérence + 10 paléo PD : déjà livrés (733c558). Clio a été recalé de ton côté.
+Audit cohérence + 10 paléo PD : déjà livrés (733c558). Le compte client A a été recalé de ton côté.
 
 ---
 

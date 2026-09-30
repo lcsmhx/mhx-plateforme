@@ -14,6 +14,9 @@
       requête ne part vers fonts.googleapis.com ni fonts.gstatic.com.
    E. emails de comptes retirés du dépôt public : aucun fichier suivi par git (hors donnees/) ne contient l'une des 5
       adresses retirées le 30/09 (comparées par empreinte SHA-256 : aucune adresse n'est écrite ici).
+      v67 (audit du 01/10) : ni le nom d'un vrai client ni celui de la 2e personne à l'accès coach (empreintes, mot par mot).
+   F. v67 : la publication ne copie que l'app (index.html, css/, js/, polices/ : liste blanche dans pages.yml, garde-fous),
+      plus tout le dépôt par Jekyll (notes, docs et donnees/ étaient servis sur le site).
    Supabase simulé : rien ne part vers la vraie base (routage par NOM D'HÔTE). Comptes fictifs.
    Usage : node verif72.js ../index.html
            VERIF72_PORT=9881 node verif72.js ../index.html     (autre port, si 9880 est pris) */
@@ -230,6 +233,32 @@ const etat = page => page.evaluate(() => ({
       }
     }
     ok("aucun fichier suivi (hors donnees/) ne contient l'email du compte coach ni celui d'un compte de test retirés le 30/09 (comparaison par empreinte)", liste.length > 50 && trouves.length === 0, JSON.stringify(Array.from(new Set(trouves))));
+    /* v67 (audit du 01/10) : noms de vrais clients et d'une 2e personne à l'accès coach retirés de NOTES-GROK.md (avec leurs
+       poids, taille et âge) — comparés mot par mot par empreinte SHA-256 : aucun nom n'est écrit ici. donnees/ (Grok) : hors
+       de ce contrôle, à nettoyer par Lucas ou Grok (donnees/audit-coherence.md, donnees/programme-stephanie.json). */
+    const NOMS = ["c38c694be0201b1fe5ab1dd8dac366a9fbd75daae63e34a23cad3a38b70c21f7", "1a30f7a797eeea67688374ad30dd61f4a6bf5103ded33cafad6ea7da058b5137",
+      "43d4bbc06fd3f0955e807d146b94490f9a600bc849a44c66df323b137554f307", "3471f50663eda35b15d9b3f3a77857ba011979b98d08d5df6e627069f0b5789d"];
+    const avecNom = [];
+    for (const f of liste) {
+      if (/^donnees\//.test(f) || /\.(woff2|png|jpe?g|pdf)$/i.test(f)) continue;
+      let t; try { t = fs.readFileSync(path.join(RACINE, f), "utf8"); } catch (e) { continue; }
+      for (const m of new Set(t.toLowerCase().split(/[^a-zà-ÿ]+/))) if (m.length > 2 && NOMS.includes(crypto.createHash("sha256").update(m).digest("hex"))) avecNom.push(f);
+    }
+    ok("aucun fichier suivi (hors donnees/) ne contient le nom d'un vrai client ni celui de la 2e personne à l'accès coach retirés le 01/10 (comparaison mot par mot, par empreinte)", avecNom.length === 0, JSON.stringify(Array.from(new Set(avecNom))));
+  });
+
+  /* =================== F. publication : seulement l'app =================== */
+  await bloc("F. site publié", async () => {
+    /* v67 (audit du 01/10) : GitHub Pages publiait tout le dépôt (Jekyll) : notes, docs, supabase/, tests-locaux/ et donnees/
+       (dont des données de vrais clients) étaient lisibles sur lcsmhx.github.io. La publication ne copie plus que
+       index.html, css/, js/ et polices/ (liste blanche), et s'arrête sur tout autre fichier. */
+    const wf = fs.readFileSync(path.join(RACINE, ".github", "workflows", "pages.yml"), "utf8");
+    const pub = wf.slice(wf.indexOf("publication:"));
+    ok("pages.yml : la publication n'utilise plus jekyll-build-pages (qui publiait tout le dépôt) mais la liste blanche index.html, css/, js/, polices/, avec un garde-fou sur tout autre fichier et sur les fichiers listés par index.html, avant upload-pages-artifact",
+      wf.indexOf("publication:") > -1 && !/jekyll-build-pages/.test(pub) && /cp index\.html _site\//.test(pub) && /cp -R css js polices _site\//.test(pub)
+        && /Fichiers inattendus dans le site/.test(pub) && /Fichier listé par index\.html absent/.test(pub)
+        && pub.indexOf("Site publié") > -1 && pub.indexOf("Site publié") < pub.indexOf("upload-pages-artifact"),
+      pub.slice(0, 300));
   });
 
   await b.close(); server.close();

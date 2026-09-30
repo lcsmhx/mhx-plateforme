@@ -98,12 +98,14 @@ HORS_BANC="verif44 verif45 verif46 verif47 verif49"
 # v66 (relecture sécurité du 30/09) : verif72 14 (nouvelle suite, partie 7 : liens à jetons ignorés, polices hébergées,
 # emails de comptes retirés) ; verif55 et verif56 adaptées (le lien de l'email n'ouvre plus de session : connexion par mot
 # de passe, même vérification), verif55 D (polices lentes servies depuis polices/), verif57 Z ; nombres inchangés.
+# v67 (audit du 01/10, publication) : verif72 16 (E : noms de vrais clients retirés de NOTES-GROK.md ; F : le site ne publie que
+# l'app, liste blanche dans pages.yml).
 attendu() {
   case "$1" in
     flux) echo 19;; verif34) echo 13;; verif35) echo 14;; verif36) echo 13;; verif37) echo 12;; verif38) echo 66;;
     verif-xss) echo 5;; verif39) echo 48;; verif40) echo 64;; verif41) echo 25;; verif42) echo 20;; verif43) echo 27;;
     verif48) echo 42;; verif50) echo 57;; verif51) echo 89;; verif52) echo 137;; verif53) echo 114;;
-    verif54) echo 60;; verif55) echo 167;; verif56) echo 259;; verif57) echo 152;; verif58) echo 138;; verif60) echo 71;; verif61) echo 50;; verif62) echo 50;; verif63) echo 96;; verif64) echo 92;; verif65) echo 70;; verif66) echo 57;; verif67) echo 63;; verif68) echo 76;; verif69) echo 83;; verif70) echo 32;; verif71) echo 84;; verif72) echo 14;; rig) echo 90;; *) echo "";;
+    verif54) echo 60;; verif55) echo 167;; verif56) echo 259;; verif57) echo 152;; verif58) echo 138;; verif60) echo 71;; verif61) echo 50;; verif62) echo 50;; verif63) echo 96;; verif64) echo 92;; verif65) echo 70;; verif66) echo 57;; verif67) echo 63;; verif68) echo 76;; verif69) echo 83;; verif70) echo 32;; verif71) echo 84;; verif72) echo 16;; rig) echo 90;; *) echo "";;
   esac
 }
 # Partie de chaque suite pour les jobs parallèles de GitHub Actions (10 parties, durées équilibrées, 4 à 5 minutes chacune).
