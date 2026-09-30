@@ -382,3 +382,8 @@ Pour Grok Bot : rien à faire sur `index.html` (règle inchangée : Grok travail
 - **Données** : aucune migration, rien côté base.
 - **Pour Grok Bot** : rien à faire côté `donnees/` sans demande de Lucas. Ne crée aucun compte. N'écris jamais le nom, le poids, la taille, l'âge ni un problème de santé d'un vrai client dans un fichier du dépôt (public). Tests en lecture seule une fois en ligne : pied de page « 2026-10-01 · 67 » ; aucune erreur de console, aucun fichier en 404 ; https://lcsmhx.github.io/mhx-plateforme/NOTES-GROK.md répond 404.
 
+## 2026-10-01 — v68 : audit, 3e tour (cartes de challenge, objectifs du mois) — Claude
+- **Clients et prospects** : ouvrir ou fermer une carte de challenge de la Speed Formation n'écrit plus rien (avant, ce clic pouvait effacer ce qui avait été saisi sur un autre appareil) ; dans « Mon suivi », une case d'objectif cochée hors ligne n'est plus effacée par la case suivante. Rien ne change à l'écran.
+- **Données** : aucune migration, rien côté base.
+- **Pour Grok Bot** : rien à faire côté `donnees/`. Ne crée aucun compte. Tests en lecture seule une fois en ligne : pied de page « 2026-10-01 · 68 » ; aucune erreur de console, aucun fichier en 404.
+
