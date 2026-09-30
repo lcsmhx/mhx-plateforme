@@ -603,9 +603,15 @@ const Store = {
   async lire(cle, defaut){
     const uid = this.cible(); if (!uid) return defaut;
     const k = uid + "|" + cle;
+    /* v67 (D1) : la saisie de cette cle qui attend ses 700 ms part d'abord (la base relue la contient) ; 4 s au plus
+       (reseau qui ne repond plus : sa copie gardee sur l'appareil prend le relais, plus bas) */
+    try { await Promise.race([this.envoyerCle(cle), new Promise(r => setTimeout(r, 4000))]); } catch(e){}
     try {
-      const r = await Auth.appel("/rest/v1/donnees?user_id=eq." + uid + "&outil=eq." + encodeURIComponent(cle) + "&select=contenu");
-      const contenu = Forme.cle(cle, r && r[0] && r[0].contenu);   // v42 : structure remise d'aplomb
+      const r = await Auth.appel("/rest/v1/donnees?user_id=eq." + uid + "&outil=eq." + encodeURIComponent(cle) + "&select=contenu,maj_le");
+      /* v67 (D1) : une saisie gardee sur l'appareil (hors ligne, envoi en cours) plus recente que la base passe devant :
+         sinon la page affichait l'ancienne version, et la saisie suivante reecrivait le document sans elle (perdue) */
+      const copie = this.copieAServir(uid, cle, r && r[0]);
+      const contenu = Forme.cle(cle, copie ? copie.v : (r && r[0] && r[0].contenu));   // v42 : structure remise d'aplomb
       const val = contenu ? Object.assign({}, defaut, contenu) : defaut;
       if (val && typeof val === "object"){ this.origines.set(val, uid); this.nonLus.delete(val); }
       this.boite(uid)[cle] = val;
@@ -619,6 +625,22 @@ const Store = {
       if (defaut && typeof defaut === "object"){ this.origines.set(defaut, uid); this.nonLus.add(defaut); }
       return defaut;
     }
+  },
+  /* v67 (D1) : la copie de l'appareil (Store.garder, « mhx_attente|compte|cle ») a servir a la place de la ligne lue, ou
+     null. Seulement la copie faite par le compte connecte (jamais celle d'un autre compte ; le coach dans la fiche d'un
+     client retrouve la sienne : programme, repas, calc, complements), strictement plus recente que la ligne (ou pas de
+     ligne) — meme regle que Store.reprendre, qui l'enverra ensuite. Jamais pour les cles du coach seul, ni checkins
+     (Checkin.fraiche relit la base et reunit sa copie : Checkin.avecCopie, Checkin.rattraper), ni activite
+     (Activite.rattraper), ni une cle de sante retenue avant l'accord (Sante.bloque). */
+  copieAServir(uid, cle, ligne){
+    if (this.clesCoachSeul.indexOf(cle) > -1 || cle === "activite" || cle === "checkins" || (typeof Checkin !== "undefined" && cle === Checkin.cle)) return null;
+    const u = Auth.utilisateur(), e = this.attenteLire()[uid + "|" + cle];
+    if (!u || !u.id || !e || e.a !== u.id || typeof e.t !== "string" || !Forme.objet(e.v)) return null;
+    if (Sante.bloque(cle, e.v)) return null;
+    const ts = new Date(e.t).getTime(), m = ligne && ligne.maj_le;
+    if (isNaN(ts)) return null;
+    if (m && !(new Date(m).getTime() < ts)) return null;   // la base a aussi recent (copie deja arrivee) ou plus recent
+    return e;
   },
 
   /* Plusieurs cles en UNE seule requete (l'accueil en lit sept). Renvoie
@@ -825,14 +847,15 @@ const Store = {
     }
     if (reste) this.planifierReprise();
   },
+  /* v67 (D5) : renvoie true si la modification est arrivee au serveur, false sinon (seul Store.importer s'en sert) */
   async envoyer(cle, valeur, uidFige, t, vite, repris){
-    const uid = uidFige || this.cible(); if (!uid) return;
-    if (this.clesCoachSeul.indexOf(cle) > -1) return;
-    if (Sante.bloque(cle, valeur)) return;   // v64 (B) : jamais envoyee avant l'accord sante (une copie ancienne reste, rien n'est perdu)
+    const uid = uidFige || this.cible(); if (!uid) return false;
+    if (this.clesCoachSeul.indexOf(cle) > -1) return false;
+    if (Sante.bloque(cle, valeur)) return false;   // v64 (B) : jamais envoyee avant l'accord sante (une copie ancienne reste, rien n'est perdu)
     const k = uid + "|" + cle, tt = t || new Date().toISOString();
     /* une copie REPRISE ne passe jamais apres une saisie plus recente de cet onglet (reprise lente, retour sur
        l'onglet) ; une saisie fraiche passe toujours (une horloge qui recule ne doit rien faire perdre) */
-    if (repris && this.dernierT[k] && tt < this.dernierT[k]){ this.lacher(uid, cle, t); return; }
+    if (repris && this.dernierT[k] && tt < this.dernierT[k]){ this.lacher(uid, cle, t); return false; }
     if (!this.dernierT[k] || tt > this.dernierT[k]) this.dernierT[k] = tt;
     majEtat("enregistrement");
     try {
@@ -846,12 +869,29 @@ const Store = {
       });
       this.lacher(uid, cle, t, valeur);
       majEtat("enregistre");
+      return true;
     } catch(e){
-      /* refus definitif (droits, requete invalide) : un nouvel essai n'y changerait rien, la copie est retiree, on le dit */
-      if (e && e.statut >= 400 && e.statut < 500 && [401, 408, 429].indexOf(e.statut) === -1){ console.warn("[MHX] enregistrement refusé", cle, e.statut); this.lacher(uid, cle, t, valeur); majEtat("refuse"); return; }
+      /* refus definitif (droits, requete invalide) : un nouvel essai n'y changerait rien, la copie est mise de cote
+         (v67, D7 : Store.refuser — avant, elle etait jetee), on le dit : en-tete ET message (la page avait deja dit
+         « enregistré ») */
+      if (e && e.statut >= 400 && e.statut < 500 && [401, 408, 429].indexOf(e.statut) === -1){
+        console.warn("[MHX] enregistrement refusé", cle, e.statut); this.refuser(uid, cle, t, valeur); majEtat("refuse");
+        const n = Date.now(); if (!(this._avisRefus && n - this._avisRefus < 5000)){ this._avisRefus = n; try { UI.toast(trad("Non enregistré : la base a refusé cette modification. Préviens ton coach."), "mauvais", 9000); } catch(err){} }
+        return false;
+      }
       this.planifierReprise();
       majEtat(this.aUneCopie(uid, cle) ? "erreur" : "perdu");   // « gardé sur cet appareil » seulement s'il l'est vraiment
+      return false;
     }
+  },
+  /* v67 (D7) : une modification refusee pour de bon par la base n'est plus perdue : elle quitte sa copie d'attente pour
+     « mhx_refus|compte|cle » (dans le meme rangement), jamais renvoyee (Store.reprendre ne lit que mhx_attente), jamais
+     comptee parmi les modifications « non envoyées » a la deconnexion, effacee avec les autres cles mhx_ */
+  PREFIXE_REFUS: "mhx_refus|",
+  refuser(uid, cle, t, valeur){
+    const u = Auth.utilisateur();
+    try { Auth.magasin().setItem(this.PREFIXE_REFUS + uid + "|" + cle, JSON.stringify({ a: (u && u.id) || null, t: t || new Date().toISOString(), v: valeur })); } catch(e){}   // appareil plein : comme avant
+    this.lacher(uid, cle, t, valeur);
   },
 
   /* Vide le cache d'un client : appele quand on change de fiche. */
@@ -902,16 +942,18 @@ const Store = {
       donnees: donnees
     };
   },
-  async importer(texte){
+  /* v67 (D5) : ce qu'une sauvegarde remplacerait, sans rien ecrire : [[cle, contenu]] ; erreur « format » (illisible) ou
+     « vide » (rien a restaurer) */
+  aRestaurer(texte){
     const p = JSON.parse(texte);
     const d = (p && p.donnees) ? p.donnees : p;
     if (!d || typeof d !== "object") throw new Error("format");
     /* On ne restaure que des outils qui existent. Et un client ne peut pas
        ecraser ce que le coach a prepare pour lui (programme, repas,
-       calories) avec une vieille copie : ca, c'est le coach qui le decide. */
+       calories ; v67 : complements, que le coach ecrit aussi) avec une vieille copie : ca, c'est le coach qui le decide. */
     const connues = OUTILS.map(o => o.cle).filter(Boolean).concat(this.clesSansOutil);
-    const duCoach = ["programme", "repas", "calc"];
-    let n = 0;
+    const duCoach = ["programme", "repas", "calc", "complements"];
+    const l = [];
     for (const cle in d){
       /* v38 : une vieille copie (ou une copie retouchee) ne remplace jamais
          un feedback ou une note du coach, pas meme depuis le compte coach */
@@ -926,10 +968,19 @@ const Store = {
       if (cle === "calc_perso" && outilCalculateur.mineur(d[cle])) continue;
       /* v64 (B) : prospect sans accord sante : ni ses mesures, ni son calcul, ni une diete remplie */
       if (Sante.bloque(cle, d[cle]) || (cle === "formation" && Sante.aDemander() && Sante.dieteRemplie(d[cle]))) continue;
-      this.cache[cle] = d[cle]; await this.envoyer(cle, d[cle]); n++;
+      l.push([cle, d[cle]]);
     }
-    if (!n) throw new Error("vide");
-    return true;
+    if (!l.length) throw new Error("vide");
+    return l;
+  },
+  /* renvoie true si tout est arrive au serveur, false si un envoi a echoue (v67, D5 : avant, « Sauvegarde restaurée. »
+     quoi qu'il arrive), null si confirmer (facultatif : recoit les cles remplacees) a dit non — rien n'est alors ecrit */
+  async importer(texte, confirmer){
+    const l = this.aRestaurer(texte);
+    if (typeof confirmer === "function" && !(await confirmer(l.map(x => x[0])))) return null;
+    let tout = true;
+    for (const [cle, v] of l){ this.cache[cle] = v; if ((await this.envoyer(cle, v)) !== true) tout = false; }
+    return tout;
   }
 };
 
@@ -1277,7 +1328,9 @@ const Import = {
 /* Petit temoin d'enregistrement dans la barre du haut */
 function majEtat(etat){
   const e = document.getElementById("etat"); if (!e) return;
-  const libelles = { enregistrement:"Enregistrement…", enregistre:"Enregistré", erreur:"Hors ligne — gardé sur cet appareil, renvoi automatique",
+  /* v67 (D8) : « Rester connecté » décoché, les copies vivent dans l'onglet (sessionStorage) : le fermer les perd, on le dit */
+  const libelles = { enregistrement:"Enregistrement…", enregistre:"Enregistré",
+                     erreur: Auth.persistant ? "Hors ligne — gardé sur cet appareil, renvoi automatique" : "Hors ligne — gardé dans cet onglet seulement : ne le ferme pas",
                      refuse:"Non enregistré — modification refusée", perdu:"Hors ligne — modification non enregistrée" };
   e.textContent = libelles[etat] || "";
   e.className = "etat " + etat;
@@ -1371,8 +1424,16 @@ function initSauvegarde(){
   $("sv-paste").addEventListener("click", async () => {
     const t = await UI.demander(trad("Colle ici la sauvegarde que tu avais copiée :"), "", { titre: trad("Restaurer une sauvegarde"), ok: trad("Restaurer") });
     if (!t) return;
-    Store.importer(t)
-      .then(() => { flash("sv-msg","Sauvegarde restaurée."); setTimeout(() => afficher(courant, true), 500); })
+    /* v67 (D5) : avant d'ecrire, les rubriques qui seront remplacees, et ce que cela veut dire */
+    const nom = c => { const x = OUTILS.find(o => o.cle === (c === "calc_perso" ? "calc" : c)); return x ? trad(nomOnglet(x)) : c; };
+    const confirmer = cles => UI.confirmer(trad("Ces rubriques seront remplacées par la sauvegarde : {l}.", { l: cles.map(nom).join(", ") }) + "\n\n" + trad("Ce que tu as saisi depuis cette copie sera remplacé."),
+      { titre: trad("Restaurer une sauvegarde"), ok: trad("Restaurer"), danger: true });
+    Store.importer(t, confirmer)
+      .then(r => {
+        if (r === null) return;   // « Annuler » : rien n'est ecrit
+        if (r === false){ flash("sv-msg", "Restauration non enregistrée."); return; }   // un envoi a echoue (hors ligne, refus)
+        flash("sv-msg","Sauvegarde restaurée."); setTimeout(() => afficher(courant, true), 500);
+      })
       .catch(() => flash("sv-msg","Cette sauvegarde n'est pas lisible."));
   });
 }

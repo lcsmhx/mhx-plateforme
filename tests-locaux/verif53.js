@@ -773,7 +773,10 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     /* le message s'affiche puis le Profil est réaffiché 500 ms plus tard (message effacé) : on note chaque message vu */
     const restaurer = async (t) => {
       await page.evaluate(() => { window.__msgs = []; const o = new MutationObserver(() => { const m = document.getElementById("sv-msg"); const x = m && m.textContent.trim(); if (x && window.__msgs[window.__msgs.length - 1] !== x) window.__msgs.push(x); }); o.observe(document.body, { childList: true, subtree: true, characterData: true }); });
-      await page.click("#sv-paste"); await page.waitForSelector("#ui-champ"); await page.fill("#ui-champ", t); await page.click('[data-ui-b="1"]'); await attendre(page, 1800);
+      await page.click("#sv-paste"); await page.waitForSelector("#ui-champ"); await page.fill("#ui-champ", t); await page.click('[data-ui-b="1"]'); await attendre(page, 500);
+      /* v67 (D5) : la restauration demande d'abord confirmation (rubriques remplacées) : « Restaurer » */
+      if (await page.$('.modale [data-ui-b="1"]')) await page.click('.modale [data-ui-b="1"]');
+      await attendre(page, 1300);
       return page.evaluate(() => window.__msgs || []);
     };
     const m1 = await restaurer(sauvegarde);
