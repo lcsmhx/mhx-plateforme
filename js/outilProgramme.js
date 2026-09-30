@@ -806,7 +806,7 @@ const outilProgramme = {
         <button class="btn ghost" id="pg-biblio-save">Enregistrer dans ma bibliothèque</button>
         <span class="msg" id="pg-msg"></span>
       </div>
-      <p class="note" style="margin-top:10px">Tout est enregistré automatiquement au fil de la saisie. « Envoyer au client » date le programme et le lui rend visible immédiatement.</p>
+      <p class="note" style="margin-top:10px">Tout est enregistré au fil de la saisie et ton client voit chaque changement tout de suite, avant même l'envoi. « Envoyer au client » date le programme (« Programme mis à jour le … » chez lui), fait démarrer la semaine 1 s'il n'a pas encore de date de début, et le fait entrer dans l'historique quand un autre le remplacera.</p>
     </section>`;
     return h;
   },

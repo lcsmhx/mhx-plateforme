@@ -45,6 +45,25 @@ const outilNutrition = {
     return R;
   },
 
+  /* v67 (D3) : empreinte de TOUTE la diete (semaine, dates debut / maj, cible, note…), cles triees : la base (jsonb)
+     renvoie les cles dans son propre ordre, une meme diete doit donner la meme empreinte */
+  signature(R){
+    return JSON.stringify(R || {}, (k, v) => (v && typeof v === "object" && !Array.isArray(v))
+      ? Object.keys(v).sort().reduce((o, c) => { o[c] = v[c]; return o; }, {}) : v);
+  },
+
+  /* v67 (D3) : la diete telle qu'elle est en base, lue comme a l'ouverture de la page (Store.lire, sans toucher au
+     cache ni aux drapeaux de lecture) ; null si la lecture echoue (hors ligne, reseau) */
+  async relire(){
+    const uid = Store.cible(); if (!uid) return null;
+    if (typeof navigator !== "undefined" && navigator.onLine === false) return null;
+    try {
+      const r = await Auth.appel("/rest/v1/donnees?user_id=eq." + uid + "&outil=eq." + encodeURIComponent(this.cle) + "&select=contenu");
+      const c = Forme.cle(this.cle, r && r[0] && r[0].contenu);
+      return this.migrer(c ? Object.assign({}, this.vide(), c) : this.vide());
+    } catch(e){ return null; }
+  },
+
   /* Une semaine, ce n'est pas sept fois la meme journee : on retient les
      recettes deja servies pour ne pas les reproposer le lendemain. */
   async composerSemaine(cible, regime, allergenes, nb, progres, nbRepas, shaker){
@@ -667,7 +686,7 @@ const outilNutrition = {
         <span class="msg" id="nu-msg2"></span>
       </div>
       <p class="note" style="margin-top:10px">Un mot sur les glucides : ils apparaissent souvent 20 à 40 g sous la cible théorique alors que les calories tombent juste. C'est normal — la cible compte 4 kcal par gramme de glucide, les valeurs réelles des aliments en donnent un peu moins. Fie-toi aux calories et aux protéines.</p>
-      <p class="note">Rien n'est envoyé automatiquement : relis les ingrédients — les allergies en premier — puis valide. Le client voit la semaine dès sa prochaine ouverture.</p>
+      <p class="note">Chaque changement est enregistré aussitôt et ton client le voit tout de suite, avant même que tu valides : relis les ingrédients — les allergies en premier — dès que la semaine est composée. « Valider et envoyer au client » date la semaine (« Repas mis à jour le … » chez lui) et la fait entrer dans l'historique quand une autre la remplacera.</p>
       <p class="note">Le filtre travaille sur la composition des aliments. Il ne remplace pas ta lecture : une allergie sévère, un interdit religieux qui dépend de la certification, un aliment que le client ne supporte pas sans le savoir — c'est toi qui les attrapes.</p>
     </section>`;
   },
@@ -692,6 +711,10 @@ const outilNutrition = {
       /* recettes deja refusees pendant cette visite : « Remplacer » propose
          a chaque clic un plat nouveau au lieu d'osciller entre deux */
       const refuses = [];
+      /* v67 (D3) : « repas » est ecrit par le coach ET par le client (« Remplacer »). Les versions de la base que cette
+         page connait : celle lue a l'ouverture, puis chacune qu'elle a ecrite. Une autre en base = le coach l'a changee
+         depuis (nouvelle semaine, envoi, retouche) : on n'ecrit rien par-dessus. */
+      const connues = new Set([self.signature(R)]);
 
       const dessiner = () => {
         zone.innerHTML = self.vueLecture(R, suivi, actif);
@@ -728,11 +751,29 @@ const outilNutrition = {
             UI.toast(trad("Pas d'autre recette disponible pour ce repas pour le moment."), "attention");
             dessiner(); return;
           }
+          /* v67 (D3) : la page a pu rester ouverte depuis la veille : on relit la base juste avant d'ecrire. Changee
+             par le coach : rien n'est ecrit, la page repart de sa version (meme objet R : un envoi encore en attente
+             part avec elle). Relecture impossible : rien n'est ecrit, on le dit. */
+          const enBase = await self.relire();
+          if (!enBase){
+            UI.toast(trad("Pas de connexion : ton repas n'a pas été remplacé. Réessaie dans un instant."), "attention", 6000);
+            dessiner(); return;
+          }
+          if (!connues.has(self.signature(enBase))){
+            Object.keys(R).forEach(k => { delete R[k]; });
+            Object.assign(R, enBase);
+            connues.clear(); connues.add(self.signature(R));
+            refuses.length = 0;
+            actif = R.jours.length ? Math.min(R.jours.length - 1, (new Date().getDay() + 6) % 7) : 0;
+            UI.toast(trad("Ton coach vient de mettre à jour tes repas : voici sa nouvelle version."), "attention", 6000);
+            dessiner(); return;
+          }
           nouveau.change_client = aujourdhui();
           jour.repas[i] = nouveau;
           if (suivi.mange) delete suivi.mange[b.dataset.remplacer];
           Regularite.noterRepas(R, suivi);
-          Store.ecrire(self.cle, R); Store.ecrire("repas_suivi", suivi);
+          if (Store.ecrire(self.cle, R)){ connues.add(self.signature(R)); Store.envoyerCle(self.cle); }
+          Store.ecrire("repas_suivi", suivi);
           dessiner();
         }));
       };

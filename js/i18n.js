@@ -130,8 +130,11 @@ const Contenus = {
     this._decouverte = true;
     this.zip(DECOUVERTE, DECOUVERTE.en);
   },
+  /* v67 (B2) : une paire qui contient < ou > est ignoree — Traduction.noeud insere les valeurs du dictionnaire en HTML
+     (innerHTML) : un texte du catalogue ne doit jamais pouvoir y glisser une balise */
   ajouter(fr, en){
     if (typeof fr !== "string" || typeof en !== "string" || !fr.trim() || !en.trim()) return;
+    if (/[<>]/.test(fr) || /[<>]/.test(en)) return;
     const k = Traduction.norm(fr);
     if (k && k !== en && !Object.prototype.hasOwnProperty.call(I18N.en, k)) I18N.en[k] = en;
   },
@@ -941,6 +944,9 @@ Object.assign(I18N.en, {
   "Exercices": "Exercises", "Séries": "Sets", "Répétitions": "Reps", "Charge en kg": "Weight in kg",
   "Remplacer": "Swap", "Changé par ton client": "Changed by your client",
   "Pas d'autre recette disponible pour ce repas pour le moment.": "No other recipe available for this meal right now.",
+  /* v67 (D3) : « Remplacer » relit la base avant d'ecrire */
+  "Ton coach vient de mettre à jour tes repas : voici sa nouvelle version.": "Your coach just updated your meals: here is the new version.",
+  "Pas de connexion : ton repas n'a pas été remplacé. Réessaie dans un instant.": "No connection: your meal wasn't swapped. Try again in a moment.",
   "Les grammages sont donnés crus, sauf mention contraire. Si un plat ne te convient pas, touche « Remplacer » : l'app t'en propose un autre avec les mêmes calories.": "Weights are given raw unless stated otherwise. If a dish doesn't work for you, tap “Swap”: the app suggests another one with the same calories."
 });
 I18N.motifs.push([/^Série (\d+)$/, "Set $1"]);
