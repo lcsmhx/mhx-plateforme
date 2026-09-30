@@ -52,14 +52,18 @@ const outilNutrition = {
       ? Object.keys(v).sort().reduce((o, c) => { o[c] = v[c]; return o; }, {}) : v);
   },
 
-  /* v67 (D3) : la diete telle qu'elle est en base, lue comme a l'ouverture de la page (Store.lire, sans toucher au
-     cache ni aux drapeaux de lecture) ; null si la lecture echoue (hors ligne, reseau) */
+  /* v67 (D3) : la diete telle qu'elle est en base, lue comme a l'ouverture de la page (meme regle que Store.lire, sans
+     toucher au cache ni aux drapeaux de lecture) ; null si la lecture echoue (hors ligne, reseau). Une copie de
+     l'appareil (remplacement dont l'envoi a rate) part d'abord (6 s au plus) ; si elle attend encore et qu'elle est plus
+     recente que la base, c'est elle qui est servie (comme a l'ouverture de la page) : pas de faux « changé entre-temps ». */
   async relire(){
     const uid = Store.cible(); if (!uid) return null;
     if (typeof navigator !== "undefined" && navigator.onLine === false) return null;
+    if (Store.aUneCopie(uid, this.cle)) try { await Promise.race([Store.reprendre(), new Promise(r => setTimeout(r, 6000))]); } catch(e){}
     try {
-      const r = await Auth.appel("/rest/v1/donnees?user_id=eq." + uid + "&outil=eq." + encodeURIComponent(this.cle) + "&select=contenu");
-      const c = Forme.cle(this.cle, r && r[0] && r[0].contenu);
+      const r = await Auth.appel("/rest/v1/donnees?user_id=eq." + uid + "&outil=eq." + encodeURIComponent(this.cle) + "&select=contenu,maj_le");
+      const copie = Store.copieAServir(uid, this.cle, r && r[0]);
+      const c = Forme.cle(this.cle, copie ? copie.v : (r && r[0] && r[0].contenu));
       return this.migrer(c ? Object.assign({}, this.vide(), c) : this.vide());
     } catch(e){ return null; }
   },
@@ -765,7 +769,7 @@ const outilNutrition = {
             connues.clear(); connues.add(self.signature(R));
             refuses.length = 0;
             actif = R.jours.length ? Math.min(R.jours.length - 1, (new Date().getDay() + 6) % 7) : 0;
-            UI.toast(trad("Ton coach vient de mettre à jour tes repas : voici sa nouvelle version."), "attention", 6000);
+            UI.toast(trad("Tes repas ont changé entre-temps : voici la dernière version."), "attention", 6000);
             dessiner(); return;
           }
           nouveau.change_client = aujourdhui();

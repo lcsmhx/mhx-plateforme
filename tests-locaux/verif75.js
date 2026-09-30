@@ -5,11 +5,14 @@
       coach compte toujours « Repas remplacés ce mois ».
    B. (D3) la page « Mes repas » est restée ouverte, le coach a changé la diète entre-temps (nouvelle semaine envoyée,
       retouche des grammes sans envoi, envoi seul) : « Remplacer » n'écrit RIEN (la version du coach reste entière),
-      message « Ton coach vient de mettre à jour tes repas », la page repart de la version du coach, bouton jamais figé
+      message « Tes repas ont changé entre-temps » (v67 : sans accuser le coach), la page repart de la version du coach, bouton jamais figé
       sur « … » ; un 2e « Remplacer » s'applique alors à la version du coach. En anglais aussi.
       Avant la v67, l'ancienne semaine (un repas changé) écrasait la nouvelle semaine du coach, perdue.
    C. (D3) relecture impossible (réseau) : rien n'est écrit, « Pas de connexion : ton repas n'a pas été remplacé »,
       bouton rendu ; le réseau revenu, « Remplacer » marche. En anglais aussi.
+   C2. (D3) l'envoi d'un remplacement a raté (copie gardée sur l'appareil), la page est rouverte avant le nouvel essai :
+      un 2e « Remplacer » ne voit aucun faux « changé entre-temps » (la copie part d'abord, ou est servie comme à
+      l'ouverture) ; les deux remplacements arrivent en base.
    D. (D4) écrans du coach : « Ses repas » et « Son programme » disent la vérité — chaque changement est visible du client
       tout de suite ; « Valider et envoyer » / « Envoyer au client » datent l'envoi (plus « Rien n'est envoyé
       automatiquement », ni « le lui rend visible »). Le conseil sur les allergies reste.
@@ -63,7 +66,7 @@ const session = id => ({ access_token: "jeton-" + id, refresh_token: "renouvelle
 function base(){
   const profils = clone(F.profils); profils.forEach(p => { if (p.role === "client") p.statut = "client"; });
   const donnees = clone(F.donnees).map(l => Object.assign(l, { contenu: jsonb(l.contenu) }));
-  return { profils, donnees, ecritures: [], panne: false, traductions: [] };
+  return { profils, donnees, ecritures: [], panne: false, panneEcr: false, traductions: [] };
 }
 const ligneDe = (db, uid, outil) => db.donnees.find(x => x.user_id === uid && x.outil === outil);
 const repasDe = (db, uid) => { const l = ligneDe(db, uid || THOMAS, "repas"); return l ? l.contenu : null; };
@@ -99,6 +102,7 @@ async function repondre(r, db){
       return json(clone(l));
     }
     if (m === "POST") {
+      if (db.panneEcr) return r.abort("failed").catch(() => {});   // envois coupés (C2)
       let rows = []; try { rows = JSON.parse(req.postData() || "[]"); } catch (e) {}
       rows = Array.isArray(rows) ? rows : [rows];
       for (const row of rows) {
@@ -186,14 +190,14 @@ const sansJours = R => { const x = clone(R); delete x.jours; return canon(x); };
       ecrRepas(db).length >= 1 && x1 && x1.recette_id !== repasN(R0, IDX, 0).recette_id && x1.moment === repasN(R0, IDX, 0).moment && x1.change_client === AUJ
         && e1.noms[0] === x1.nom && e1.noms[0] !== avant.noms[0] && e1.boutons.every(t => t === "Remplacer"),
       JSON.stringify({ n: ecrRepas(db).length, x1: x1 && [x1.recette_id, x1.change_client, x1.nom], noms: e1.noms.slice(0, 2), avant: avant.noms[0], boutons: e1.boutons }));
-    ok("… les 27 autres repas, les dates (debut, maj), la note et la cible sont inchangés ; aucun message « Ton coach vient de mettre à jour »",
-      autresIntacts(R1, R0, [IDX + ":0"]) && sansJours(R1) === sansJours(R0) && !e1.toasts.some(t => /Ton coach vient/.test(t)), JSON.stringify(e1.toasts));
+    ok("… les 27 autres repas, les dates (debut, maj), la note et la cible sont inchangés ; aucun message « Tes repas ont changé entre-temps »",
+      autresIntacts(R1, R0, [IDX + ":0"]) && sansJours(R1) === sansJours(R0) && !e1.toasts.some(t => /changé entre-temps/.test(t)), JSON.stringify(e1.toasts));
     const n1 = ecrRepas(db).length;
     await remplacer(page, 2);
     const R2 = repasDe(db), e2 = await etatPage(page), x2 = repasN(R2, IDX, 2);
     ok("… un 2e « Remplacer » (base qui renvoie les clés dans son ordre, comme jsonb) : pas de faux conflit — écrit, le 1er remplacement gardé, aucun autre repas touché, aucun message de conflit",
       ecrRepas(db).length > n1 && x2 && x2.change_client === AUJ && x2.recette_id !== repasN(R0, IDX, 2).recette_id && canon(repasN(R2, IDX, 0)) === canon(x1)
-        && autresIntacts(R2, R0, [IDX + ":0", IDX + ":2"]) && sansJours(R2) === sansJours(R0) && !e2.toasts.some(t => /Ton coach vient|Pas de connexion/.test(t)) && e2.noms[2] === x2.nom,
+        && autresIntacts(R2, R0, [IDX + ":0", IDX + ":2"]) && sansJours(R2) === sansJours(R0) && !e2.toasts.some(t => /changé entre-temps|Pas de connexion/.test(t)) && e2.noms[2] === x2.nom,
       JSON.stringify({ n: ecrRepas(db).length, x2: x2 && [x2.recette_id, x2.change_client], toasts: e2.toasts }));
     /* la fiche du coach compte toujours les remplacements (outilAccueil, « Repas remplacés ce mois ») */
     const co = await contexte(b, db, COACH);
@@ -229,7 +233,7 @@ const sansJours = R => { const x = clone(R); delete x.jours; return canon(x); };
       const n0 = ecrRepas(db).length;
       await remplacer(page, 0);
       const e = await etatPage(page);
-      const msg = V.langue === "en" ? "Your coach just updated your meals: here is the new version." : "Ton coach vient de mettre à jour tes repas : voici sa nouvelle version.";
+      const msg = V.langue === "en" ? "Your meals changed in the meantime: here is the latest version." : "Tes repas ont changé entre-temps : voici la dernière version.";
       ok(`${V.nom} : « Remplacer » n'écrit rien — la version du coach reste entière en base`, ecrRepas(db).length === n0 && canon(repasDe(db)) === canon(C),
         JSON.stringify({ ecritures: ecrRepas(db).length - n0, repas0: (repasN(repasDe(db), IDX, 0) || {}).nom }));
       ok(`… message « ${msg} », la page repart de la version du coach, boutons rendus (jamais figés sur « … »)`,
@@ -265,6 +269,25 @@ const sansJours = R => { const x = clone(R); delete x.jours; return canon(x); };
     });
   }
 
+  /* =================== C2. remplacement dont l'envoi a raté (copie gardée sur l'appareil), page rouverte =================== */
+  await bloc("C2. envoi raté puis page rouverte", async () => {
+    const db = base(), R0 = clone(repasDe(db));
+    const { page } = await contexte(b, db, THOMAS);
+    await page.goto(URL0 + "#/nutrition"); await pret(page, "#nu-vue [data-remplacer]");
+    db.panneEcr = true;   // les envois échouent (réseau), la lecture marche
+    await remplacer(page, 0);
+    const copie = await page.evaluate(k => !!localStorage.getItem(k), "mhx_attente|" + THOMAS + "|repas");
+    /* page rouverte avant le nouvel essai automatique (30 s) : Store.lire sert la copie de l'appareil (1er remplacement) */
+    await page.reload(); await pret(page, "#nu-vue [data-remplacer]");
+    db.panneEcr = false;
+    await remplacer(page, 2);
+    const R2 = repasDe(db), e = await etatPage(page), x0 = repasN(R2, IDX, 0), x2 = repasN(R2, IDX, 2);
+    ok("envoi du 1er remplacement raté (copie gardée sur l'appareil), page rouverte avant le nouvel essai, 2e « Remplacer » : aucun message « changé entre-temps », les DEUX remplacements arrivent en base, le reste intact",
+      copie && !e.toasts.some(t => /changé entre-temps|Pas de connexion/.test(t)) && x0 && x0.change_client === AUJ && x0.recette_id !== repasN(R0, IDX, 0).recette_id
+        && x2 && x2.change_client === AUJ && x2.recette_id !== repasN(R0, IDX, 2).recette_id && autresIntacts(R2, R0, [IDX + ":0", IDX + ":2"]),
+      JSON.stringify({ copie, toasts: e.toasts, x0: x0 && [x0.recette_id, x0.change_client], x2: x2 && [x2.recette_id, x2.change_client] }));
+  });
+
   /* =================== D. écrans du coach : ce qui est envoyé, et quand =================== */
   await bloc("D. textes du coach", async () => {
     const db = base();
@@ -299,6 +322,7 @@ const sansJours = R => { const x = clone(R); delete x.jours; return canon(x); };
       { nom: CLE, execution: "", erreurs: "", respiration: "", traductions: { en: { nom: "<img src=x onerror=\"window.__xss=(window.__xss||0)+1\">Hacked" } } },
       { nom: "Tirage < 90° (essai 75)", execution: "", erreurs: "", respiration: "", traductions: { en: { nom: "Row under 90 (test 75)" } } },
       { nom: "Pompes lestées (essai 75)", execution: "", erreurs: "", respiration: "", traductions: { en: { nom: "Weighted push-ups (test 75)" } } },
+      { nom: "Pompes piégées (essai 75)", execution: "", erreurs: "", respiration: "", traductions: { en: { nom: "<img src=x onerror=\"window.__xss=(window.__xss||0)+1\">Trap (test 75)" } } },
       { nom: "Poulet & riz (essai 75)", execution: "", erreurs: "", respiration: "", traductions: { en: { nom: "Chicken & rice (test 75)" } } },
       { nom: "Qualité > vitesse (essai 75)", execution: "", erreurs: "", respiration: "", traductions: { en: { nom: "Quality > speed (test 75)" } } }
     ];
@@ -306,10 +330,10 @@ const sansJours = R => { const x = clone(R); delete x.jours; return canon(x); };
     await page.goto(URL0 + "#/nutrition"); await pret(page, "#nu-vue .flag.info");
     await page.waitForFunction(() => I18N.en["Pompes lestées (essai 75)"] === "Weighted push-ups (test 75)", null, { timeout: 10000 }).catch(() => {});
     await attendre(page, 1200);
-    const e = await page.evaluate(k => ({ xss: window.__xss || 0, img: document.querySelectorAll("#nu-vue img, #nu-vue [onerror]").length, dans: Object.prototype.hasOwnProperty.call(I18N.en, k),
+    const e = await page.evaluate(k => ({ xss: window.__xss || 0, img: document.querySelectorAll("#nu-vue img, #nu-vue [onerror]").length, dans: Object.prototype.hasOwnProperty.call(I18N.en, k) || Object.prototype.hasOwnProperty.call(I18N.en, "Pompes piégées (essai 75)"),
       mot: Traduction.norm(document.querySelector("#nu-vue .flag.info").innerHTML),
       propres: [I18N.en["Pompes lestées (essai 75)"], I18N.en["Poulet & riz (essai 75)"], I18N.en["Qualité > vitesse (essai 75)"]], chevron: Object.prototype.hasOwnProperty.call(I18N.en, "Tirage < 90° (essai 75)") }), CLE);
-    ok("… une traduction du catalogue qui contient une balise (<img onerror>) n'entre pas dans le dictionnaire : rien d'exécuté, aucune image insérée, le mot du coach affiché tel quel",
+    ok("… une traduction du catalogue qui contient une balise (<img onerror>) n'entre pas dans le dictionnaire (clé piégée, ou clé française propre « Pompes piégées » à la traduction piégée) : rien d'exécuté, aucune image insérée, le mot du coach affiché tel quel",
       e.xss === 0 && e.img === 0 && !e.dans && e.mot === CLE, JSON.stringify(e));
     ok("… les traductions propres du catalogue entrent toujours (y compris avec « & » et « > », v67 : « Qualité > vitesse ») ; un texte français avec « < » est ignoré",
       e.propres[0] === "Weighted push-ups (test 75)" && e.propres[1] === "Chicken & rice (test 75)" && e.propres[2] === "Quality > speed (test 75)" && !e.chevron, JSON.stringify(e.propres) + " " + e.chevron);

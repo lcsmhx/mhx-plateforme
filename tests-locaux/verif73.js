@@ -17,7 +17,7 @@
       (en anglais aussi) ; coché : toujours « gardé sur cet appareil ».
    E. (D5) « Restaurer une sauvegarde » : une confirmation liste les rubriques remplacées (« sera remplacé ») ; « Annuler »
       n'écrit rien ; les compléments (écrits par le coach) ne sont jamais restaurés par un client ; un envoi raté affiche
-      « Restauration non enregistrée. » (plus « Sauvegarde restaurée. ») ; Store.importer appelé seul rend toujours true.
+      « Restauration incomplète : vérifie ta connexion, puis recommence. » (plus « Sauvegarde restaurée. ») ; Store.importer appelé seul rend toujours true.
    Supabase simulé : rien ne part vers la vraie base (routage par NOM D'HÔTE). Comptes fictifs.
    Usage : node verif73.js ../index.html
            VERIF73_PORT=9891 node verif73.js ../index.html     (autre port, si 9890 est pris) */
@@ -315,7 +315,7 @@ const texte = async (page, sel) => norm(await page.textContent(sel).catch(() => 
     await page.evaluate(() => { window.__msgs = []; const o = new MutationObserver(() => { const x = (document.getElementById("sv-msg") || {}).textContent; if (x && window.__msgs[window.__msgs.length - 1] !== x.trim()) window.__msgs.push(x.trim()); }); o.observe(document.body, { childList: true, subtree: true, characterData: true }); });
     await page.click('.modale [data-ui-b="1"]').catch(() => {}); await attendre(page, 1500);
     const msgs2 = await page.evaluate(() => window.__msgs || []);
-    ok("… envoi raté (hors ligne) : « Restauration non enregistrée. », jamais « Sauvegarde restaurée. »", msgs2.includes("Restauration non enregistrée.") && !msgs2.includes("Sauvegarde restaurée."), JSON.stringify(msgs2));
+    ok("… envoi raté (hors ligne) : « Restauration incomplète : vérifie ta connexion, puis recommence. », jamais « Sauvegarde restaurée. »", msgs2.includes("Restauration incomplète : vérifie ta connexion, puis recommence.") && !msgs2.includes("Sauvegarde restaurée."), JSON.stringify(msgs2));
     db.panne = 0;
     const r = await page.evaluate(async (t) => { try { return await Store.importer(t); } catch (e) { return "erreur " + e.message; } }, JSON.stringify({ plateforme: "mhx", version: 2, donnees: { formation: FO } }));
     ok("Store.importer appelé seul (sans confirmation) : restaure et rend true, comme avant", r === true && ecr(db, "formation", THOMAS).length === 2, JSON.stringify(r));

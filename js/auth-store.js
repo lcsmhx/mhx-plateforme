@@ -880,7 +880,7 @@ const Store = {
          « enregistré ») */
       if (e && e.statut >= 400 && e.statut < 500 && [401, 408, 429].indexOf(e.statut) === -1){
         console.warn("[MHX] enregistrement refusé", cle, e.statut); this.refuser(uid, cle, t, valeur); majEtat("refuse");
-        const n = Date.now(); if (!(this._avisRefus && n - this._avisRefus < 5000)){ this._avisRefus = n; try { UI.toast(trad("Non enregistré : la base a refusé cette modification. Préviens ton coach."), "mauvais", 9000); } catch(err){} }
+        const n = Date.now(); if (!(this._avisRefus && n - this._avisRefus < 5000)){ this._avisRefus = n; try { UI.toast(Auth.estCoach() ? "Non enregistré : la base a refusé cette modification." : trad("Non enregistré : la base a refusé cette modification. Préviens ton coach."), "mauvais", 9000); } catch(err){} }   // v67 : le coach ne se previent pas lui-meme (textes du coach non traduits, comme lectureRatee)
         return false;
       }
       this.planifierReprise();
@@ -958,12 +958,13 @@ const Store = {
     const connues = OUTILS.map(o => o.cle).filter(Boolean).concat(this.clesSansOutil);
     const duCoach = ["programme", "repas", "calc", "complements"];
     const l = [];
+    let duCoachSeul = false;   // v67 : une rubrique du coach a ete ecartee (message « Rien à restaurer… » si c'est tout)
     for (const cle in d){
       /* v38 : une vieille copie (ou une copie retouchee) ne remplace jamais
          un feedback ou une note du coach, pas meme depuis le compte coach */
-      if (this.clesCoachSeul.indexOf(cle) > -1) continue;
+      if (this.clesCoachSeul.indexOf(cle) > -1){ duCoachSeul = true; continue; }
       if (connues.indexOf(cle) === -1) continue;
-      if (!Auth.estCoach() && duCoach.indexOf(cle) > -1) continue;
+      if (!Auth.estCoach() && duCoach.indexOf(cle) > -1){ duCoachSeul = true; continue; }
       /* v51 : une vieille sauvegarde ne rallume pas les emails de suivi apres une desinscription, et ne remplace pas
          la mesure d'activite (elles restent dans l'export, droit d'acces) */
       if (cle === "emails" || cle === "activite") continue;
@@ -974,7 +975,7 @@ const Store = {
       if (Sante.bloque(cle, d[cle]) || (cle === "formation" && Sante.aDemander() && Sante.dieteRemplie(d[cle]))) continue;
       l.push([cle, d[cle]]);
     }
-    if (!l.length) throw new Error("vide");
+    if (!l.length) throw Object.assign(new Error("vide"), { duCoach: duCoachSeul && !Auth.estCoach() });
     return l;
   },
   /* renvoie true si tout est arrive au serveur, false si un envoi a echoue (v67, D5 : avant, « Sauvegarde restaurée. »
@@ -1435,10 +1436,12 @@ function initSauvegarde(){
     Store.importer(t, confirmer)
       .then(r => {
         if (r === null) return;   // « Annuler » : rien n'est ecrit
-        if (r === false){ flash("sv-msg", "Restauration non enregistrée."); return; }   // un envoi a echoue (hors ligne, refus)
+        if (r === false){ flash("sv-msg", trad("Restauration incomplète : vérifie ta connexion, puis recommence.")); return; }   // un envoi a echoue (hors ligne, refus)
         flash("sv-msg","Sauvegarde restaurée."); setTimeout(() => afficher(courant, true), 500);
       })
-      .catch(() => flash("sv-msg","Cette sauvegarde n'est pas lisible."));
+      /* v67 : rien a restaurer parce que la sauvegarde ne contient que des rubriques du coach : on le dit (avant :
+         « pas lisible », faux) ; sinon (format, rubriques inconnues, emails ou activite seuls) : comme avant */
+      .catch(e => flash("sv-msg", e && e.message === "vide" && e.duCoach ? trad("Rien à restaurer dans cette sauvegarde : ces rubriques sont gérées par ton coach.") : "Cette sauvegarde n'est pas lisible."));
   });
 }
 

@@ -664,7 +664,8 @@ I18N.en = {
 "Renseigne au moins ton poids ou une mensuration.": "Enter at least your weight or one measurement.",
 "Sauvegarde copiée. Colle-la dans une note.": "Backup copied. Paste it into a note.",
 "Sauvegarde restaurée.": "Backup restored.",
-"Restauration non enregistrée.": "Restore not saved.",
+"Restauration incomplète : vérifie ta connexion, puis recommence.": "Restore incomplete: check your connection, then try again.",
+"Rien à restaurer dans cette sauvegarde : ces rubriques sont gérées par ton coach.": "Nothing to restore in this backup: these sections are managed by your coach.",
 "Ces rubriques seront remplacées par la sauvegarde : {l}.": "These sections will be replaced by the backup: {l}.",
 "Ce que tu as saisi depuis cette copie sera remplacé.": "What you entered since this copy will be replaced.",
 "Si un compte existe pour cet email, tu vas recevoir un lien.": "If an account exists for this email, you'll receive a link.",
@@ -946,7 +947,7 @@ Object.assign(I18N.en, {
   "Remplacer": "Swap", "Changé par ton client": "Changed by your client",
   "Pas d'autre recette disponible pour ce repas pour le moment.": "No other recipe available for this meal right now.",
   /* v67 (D3) : « Remplacer » relit la base avant d'ecrire */
-  "Ton coach vient de mettre à jour tes repas : voici sa nouvelle version.": "Your coach just updated your meals: here is the new version.",
+  "Tes repas ont changé entre-temps : voici la dernière version.": "Your meals changed in the meantime: here is the latest version.",
   "Pas de connexion : ton repas n'a pas été remplacé. Réessaie dans un instant.": "No connection: your meal wasn't swapped. Try again in a moment.",
   "Les grammages sont donnés crus, sauf mention contraire. Si un plat ne te convient pas, touche « Remplacer » : l'app t'en propose un autre avec les mêmes calories.": "Weights are given raw unless stated otherwise. If a dish doesn't work for you, tap “Swap”: the app suggests another one with the same calories."
 });
