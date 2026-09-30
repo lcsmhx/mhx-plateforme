@@ -945,9 +945,10 @@ const outilDecouverte = {
         if (Store.ecrire("intake", J) === false){ if (avant === undefined) delete J.bilan_propose; else J.bilan_propose = avant; }   // refusee (message deja affiche)
       }
       if (J && typeof J === "object" && !Store.nonLus.has(J)) I = J;
-      /* v62 (brief V2, L) : « Plus tard » note aussi avec son origine (cle challenge, cta.plus_tard), chaque fois, seulement si
-         l'intake a pu etre lu (une lecture ratee : rien n'est ecrit, comme avant) */
-      if (choix === "plus_tard" && J && typeof J === "object" && !Store.nonLus.has(J)) Decouverte.plusTard(C, "apres_questionnaire");
+      /* v62 (brief V2, L) : « Plus tard » note aussi avec son origine (cle challenge, cta.plus_tard), une fois par affichage de
+         la page (un double clic ne compte qu'une fois), seulement si l'intake a pu etre lu (lecture ratee : rien n'est ecrit) */
+      const bt = zone.querySelector("#dc-bilan-plus-tard");
+      if (choix === "plus_tard" && J && typeof J === "object" && !Store.nonLus.has(J) && bt && bt.dataset.note !== "1"){ bt.dataset.note = "1"; Decouverte.plusTard(C, "apres_questionnaire"); }
     } finally { this._choisit = false; }
     /* apres la tache du clic : le lien vers Calendly (nouvel onglet) part avant que la page ne soit redessinee */
     setTimeout(() => {
