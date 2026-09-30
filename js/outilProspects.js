@@ -597,12 +597,14 @@ const Mesure = {
       <label class="coche" style="margin-top:12px"><input type="checkbox" id="pr-mesure-test"${this.avecTest ? " checked" : ""}> Inclure les comptes de test</label>
       <p class="note" style="margin:8px 0 0">${this.avecTest ? "Comptes de test inclus" : "Exclus : ton compte et " + M.exclus + " compte" + (M.exclus > 1 ? "s" : "") + " de test (email avec « +test », ou compte de test de l'app)"}. Un inscrit qui n'a pas encore répondu au questionnaire n'a pas d'email connu ici. Les réservations par écran se lisent dans Calendly (origine « utm_content »).</p>`;
   },
-  monter(boite, lignes){
+  /* focus = le reglage qui vient d'etre change : il garde le focus apres le redessin (clavier) */
+  monter(boite, lignes, focus){
     if (!boite) return;
     try { boite.innerHTML = this.html(lignes); } catch(e){ console.warn("[MHX] mesure illisible", e); boite.innerHTML = `<h2>Mesure</h2><p class="note">Mesure indisponible pour le moment.</p>`; return; }
     const p = boite.querySelector("#pr-mesure-periode"), t = boite.querySelector("#pr-mesure-test");
-    if (p) p.addEventListener("change", () => { this.periode = p.value; this.monter(boite, lignes); });
-    if (t) t.addEventListener("change", () => { this.avecTest = t.checked; this.monter(boite, lignes); });
+    if (p) p.addEventListener("change", () => { this.periode = p.value; this.monter(boite, lignes, p.id); });
+    if (t) t.addEventListener("change", () => { this.avecTest = t.checked; this.monter(boite, lignes, t.id); });
+    const f = focus && boite.querySelector("#" + focus); if (f) f.focus();
   }
 };
 
