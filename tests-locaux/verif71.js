@@ -4,7 +4,8 @@
    /auth/v1/user { data } FUSIONNE data dans les métadonnées (une valeur null supprime la clé, comme GoTrue) et rend
    { id, email, user_metadata } ; GET /auth/v1/user et les jetons (connexion par mot de passe, renouvellement) rendent les
    métadonnées de la base ; le PUT et le GET peuvent être mis en panne (4xx, 5xx, coupure réseau, réponse vide ou sans
-   métadonnées), ou retardés.
+   métadonnées, PUT réussi dont la réponse ne porte pas l'accord), ou retardés (GET : métadonnées lues à l'arrivée de la
+   requête, rendues à la fin du délai).
    0. le config.js servi : les 3 emplacements CONFIG.textes_legaux (« à compléter » sur la branche de travail) remplacés PAR
       CETTE SUITE (retouche du fichier servi, jamais du disque) par des valeurs de test valides : 2 liens https Google Drive
       et la version 2026-10-01 ; le bloc M sert « à compléter » et des liens invalides ;
@@ -56,6 +57,27 @@
    L. affichage : 390 px et 320 px, thèmes sombre et clair : rien ne déborde (carte, diète, message), texte lisible
       (contraste), « J'accepte » et « Pas maintenant » d'au moins 44 px ;
    M. liens absents (« à compléter ») ou invalides (javascript:, ftp:) : le lien « En savoir plus » devient un texte simple ;
+   Corrections après la relecture du code (v64, cdc9e68) :
+   N. relecture lente : le GET /auth/v1/user de l'ouverture, lu SANS l'accord, arrive après « J'accepte » → l'accord reste
+      (Sante.ok(), session rangée), la saisie du calculateur est enregistrée, aucune carte ailleurs ;
+   O. ancien client repassé prospect, copie mhx_attente|…|mens hors ligne plus récente que la base : après « J'accepte »,
+      la copie part AVANT que Ma progression relise mens (2 mesures affichées), puis une nouvelle mesure garde les 3 ; de
+      même quand l'accord est RELU (donné sur un autre appareil : une relecture, aucun PUT) ;
+   P. page quittée puis rouverte pendant un « J'accepte » lent : « J'accepte » touché à nouveau pendant l'envoi → toujours
+      un seul PUT ; la carte disparaît dès que le PUT aboutit ; la diète ouverte pendant l'envoi repart de même ;
+   Q. deux onglets : accord donné dans A, « J'accepte » dans B → aucun 2e PUT, B repart sans carte ; puis B range une
+      session du même compte SANS l'accord (reprise par A) : l'accord reste acquis pour la visite (Sante._donnes) ;
+   R. réponse du PUT avec des métadonnées SANS l'accord → « Non enregistré… », carte gardée, Sante.ok() faux, rien d'écrit ;
+   S. après « J'accepte » : focus sur le premier champ actif (calculateur) ou sur #fo-sem (diète) ; la page vue
+      « calculateur » comptée une seule fois dans la clé activite (comme une ouverture simple) ;
+   T. style : titre h4 de la carte dans la diète en 15 px sans capitales ; lien « En savoir plus » souligné, doré : --accent
+      en thème sombre, #7f5f19 en thème clair (00df998), contraste d'au moins 4,5:1 ;
+   U. copie retenue ET page ouverte pendant un « J'accepte » lent (5 s) : quand le PUT aboutit, deux pages repartent
+      (calculateur, Ma progression) ; la copie part AVANT toute lecture de mens par Ma progression (Sante.apres attend une
+      reprise déjà en cours, 00df998), 2 mesures affichées, une nouvelle mesure garde les 3 ;
+   V. reprise lente (lecture maj_le qui répond en 12 à 20 s) : après « J'accepte », l'outil repart en 4 s au plus, quoi qu'il
+      arrive — (a) la reprise lancée par l'accord (copie mhx_attente|…|mens retenue) : la page repart sans l'attendre, puis
+      la copie part quand la lecture répond ; (b) une reprise DÉJÀ en cours (lancée au démarrage) : même limite (00df998) ;
    Z. aucune erreur de console ni erreur JS pendant les pages ouvertes avec la carte, aucun appel vers l'extérieur.
    Infrastructure (serveur, faux Supabase, horloge) reprise de verif68 : rien ne part vers la vraie base (routage par NOM
    D'HÔTE), chaque écriture, lecture et appel /auth/v1/user est noté. Horloge de chaque navigateur : midi du jour du
@@ -178,7 +200,11 @@ function base(opts){
   const db = { profils, donnees, ecritures: [], refus: [], lectures: [], authUser: [], connexions: [], renouvellements: [], bloquees: [],
     emails: { [F.IDS.coach]: "coach@exemple.fr", [F.IDS.c1]: "thomas@exemple.fr", [F.IDS.c2]: "sarah@exemple.fr", [F.IDS.c3]: "julien@exemple.fr" },
     meta: { [F.IDS.coach]: { prenom: "Coach", nom: "Démo" }, [F.IDS.c1]: { prenom: "Thomas", nom: "Démo" }, [F.IDS.c2]: { prenom: "Sarah", nom: "Démo" }, [F.IDS.c3]: { prenom: "Julien", nom: "Démo" } },
-    panneGet: null, pannePut: null, retardPut: 0 };
+    panneGet: null, pannePut: null, retardPut: 0, retardGet: 0, retardMajLe: null, majLeLents: [],
+    /* n : numéro d'ordre commun aux lectures et aux écritures de donnees (qui passe avant qui) ; getsLents : les réponses
+       des GET /auth/v1/user retardés (métadonnées LUES À L'ARRIVÉE de la requête) ; putsFinis : l'instant de chaque réponse
+       réussie d'un PUT /auth/v1/user */
+    n: 0, getsLents: [], putsFinis: [] };
   for (const x of opts.comptes || []) {
     profils.push({ id: x.id, prenom: x.prenom, nom: x.nom || "", role: "client", statut: x.statut || "prospect", cree_le: x.cree || avant(J) });
     if (x.email) db.emails[x.id] = x.email;
@@ -244,7 +270,9 @@ async function repondre(r, who, db, appareil){
   }
   if (p === "/rest/v1/rpc/noter_connexion") return json(null, 204);
   /* le compte : GET rend les métadonnées de la base ; PUT { data } les FUSIONNE (null supprime la clé) et les rend. Pannes :
-     un statut (400, 500…), "coupure" (réseau coupé), et pour le GET "vide" ({}) ou "sans" (sans user_metadata) */
+     un statut (400, 500…), "coupure" (réseau coupé), pour le GET "vide" ({}) ou "sans" (sans user_metadata), pour le PUT
+     "sans accord" (200, les métadonnées du compte SANS rien fusionner). Lenteurs : retardPut (fusion à la fin du délai),
+     retardGet (métadonnées lues à l'ARRIVÉE de la requête, rendues à la fin du délai : une réponse périmée) */
   if (p === "/auth/v1/user") {
     const c = corps();
     db.authUser.push({ m, par: moi, corps: clone(c), q: url.search });
@@ -252,10 +280,18 @@ async function repondre(r, who, db, appareil){
     const panne = m === "GET" ? db.panneGet : db.pannePut;
     if (panne === "coupure") return r.abort("failed").catch(() => {});
     if (typeof panne === "number") return json({ msg: "panne simulée", code: panne }, panne);
+    if (m === "GET" && db.retardGet) {
+      const lu = clone(db.meta[moi] || {}), ms = db.retardGet;
+      await new Promise(k => setTimeout(k, ms));
+      db.getsLents.push({ meta: clone(lu), t: Date.now() });
+      return json({ id: moi, email: db.emails[moi] || "", role: "authenticated", user_metadata: lu });
+    }
     if (m === "PUT" && db.retardPut) await new Promise(k => setTimeout(k, db.retardPut));
     const meta = db.meta[moi] || (db.meta[moi] = {});
-    if (m === "PUT" && c && c.data && typeof c.data === "object") Object.keys(c.data).forEach(k => { if (c.data[k] === null) delete meta[k]; else meta[k] = clone(c.data[k]); });
     const uu = { id: moi, email: db.emails[moi] || "", role: "authenticated" };
+    if (m === "PUT" && panne === "sans accord") return json(Object.assign(uu, { user_metadata: clone(meta) }));
+    if (m === "PUT" && c && c.data && typeof c.data === "object") Object.keys(c.data).forEach(k => { if (c.data[k] === null) delete meta[k]; else meta[k] = clone(c.data[k]); });
+    if (m === "PUT") db.putsFinis.push(Date.now());
     if (m === "GET" && panne === "vide") return json({});
     if (m === "GET" && panne === "sans") return json(uu);
     return json(Object.assign(uu, { user_metadata: clone(meta) }));
@@ -279,7 +315,12 @@ async function repondre(r, who, db, appareil){
     const uid = (q.get("user_id") || "").replace(/^eq\./, ""), o = q.get("outil") || "", mj = q.get("maj_le");
     const cleEq = o.startsWith("eq.") ? o.slice(3) : null;
     if (m === "GET" || m === "HEAD") {
-      db.lectures.push({ par: moi, uid, outil: o, select: q.get("select") || "*" });
+      db.lectures.push({ par: moi, uid, outil: o, select: q.get("select") || "*", n: ++db.n });
+      /* reprise lente (bloc V) : la lecture maj_le d'une clé (celle de Store.reprendre) répond après ms (minuteur qui ne
+         retient pas la fin de la suite) ; majLeLents : l'instant de chaque réponse */
+      if (db.retardMajLe && (q.get("select") || "") === "maj_le" && o === "eq." + db.retardMajLe.outil) {
+        const ms = db.retardMajLe.ms; await new Promise(k => setTimeout(k, ms).unref()); db.majLeLents.push(Date.now());
+      }
       let l = db.donnees.filter(x => coach || (x.user_id === moi && !ILLISIBLES_PROPRIO.includes(x.outil)));
       if (uid) l = l.filter(x => x.user_id === uid);
       return json(colonnes(plage(parOutil(l, o)), q));
@@ -294,7 +335,7 @@ async function repondre(r, who, db, appareil){
         if (i > -1 && !upsert) return json({ code: "23505", message: "duplicate key value violates unique constraint" }, 409);
         const ligne = { user_id: row.user_id, outil: row.outil, contenu: clone(row.contenu), maj_le: row.maj_le || new Date().toISOString() };
         if (i > -1) db.donnees[i] = ligne; else db.donnees.push(ligne);
-        db.ecritures.push(Object.assign({ table: "donnees", m }, clone(ligne)));
+        db.ecritures.push(Object.assign({ table: "donnees", m, n: ++db.n }, clone(ligne)));
         out.push(ligne);
       }
       return (req.headers()["prefer"] || "").includes("return=representation") ? json(out, 201) : json(null, 201);
@@ -356,6 +397,8 @@ function surveiller(page){
 
 /* ---------- aides ---------- */
 const attendre = (page, ms) => page.waitForTimeout(ms);
+/* attend (côté suite) qu'une condition sur le faux Supabase devienne vraie ; faux au bout de ms */
+const attendreQue = async (f, ms) => { const fin = Date.now() + (ms || 5000); while (Date.now() < fin) { if (f()) return true; await new Promise(r => setTimeout(r, 100)); } return !!f(); };
 async function pret(page, sel){
   await page.waitForFunction(() => typeof appPrete !== "undefined" && appPrete === true, null, { timeout: 10000 });
   if (sel) await page.waitForSelector(sel, { timeout: 10000 });
@@ -814,7 +857,8 @@ const detA = A => JSON.stringify(A ? { page: A.page, carte: A.carte, dehors: A.d
     await couper(X, false);
     const att = [["vide", 1], ["dans la minute", 1], ["sans métadonnées", 2], ["500", 3], ["coupure", 4], ["hors ligne", 4]];
     ok("relecture sans accord en base : réponse {} , sans user_metadata, 500, coupure réseau → la carte reste (champs inactifs), métadonnées de l'appareil intactes (prénom gardé, rien effacé) ; au plus UNE relecture par minute (page rouverte dans la minute : aucune) ; hors ligne : aucune relecture ; aucun PUT",
-      etapes.length === 6 && att.every(([n, g], i) => etapes[i].nom === n && etapes[i].get === g && etapes[i].carte && etapes[i].meta) && auth(db2, "PUT").length === 0, JSON.stringify(etapes));
+      etapes.length === 6 && att.every(([n, g], i) => etapes[i].nom === n && etapes[i].get === g && etapes[i].carte && etapes[i].meta) && auth(db2, "PUT").length === 0
+      && !db2.bloquees.some(x => /^GET \/auth\/v1\/user/.test(x)), JSON.stringify(etapes) + " bloquées hors ligne : " + JSON.stringify(db2.bloquees));
   });
 
   /* =================== G. scénario 3 : « Pas maintenant » =================== */
@@ -911,10 +955,10 @@ const detA = A => JSON.stringify(A ? { page: A.page, carte: A.carte, dehors: A.d
     /* l'accord n'est jamais mis en file : ni reprise 30 s plus tard, ni au retour du réseau */
     await page.clock.fastForward(35000); await attendre(page, 500);
     await couper(X, false); await attendre(page, 2500);
-    await page.evaluate(() => { try { Store.reprendre(); } catch (e) {} }); await attendre(page, 1500);
+    const rp = await page.evaluate(async () => { if (typeof Store.reprendre !== "function") return "Store.reprendre absent"; await Store.reprendre(); return "ok"; }).catch(e => String(e)); await attendre(page, 1500);
     const S1 = await stockage(page);
     ok("l'accord n'est jamais mis en file : 35 s plus tard (reprises), puis au retour du réseau (événement online, Store.reprendre) : aucun PUT de plus, la carte toujours là, aucune écriture de santé, aucune copie",
-      auth(db, "PUT").length === 3 && db.bloquees.filter(x => /^PUT \/auth\/v1\/user/.test(x)).length === 1 && !!(await page.$("#sante-oui")) && ecr(db, "calc_perso").length === 0 && !copiesSante(S1).length, JSON.stringify([auth(db, "PUT").length, copiesSante(S1)]) + " " + resume(db));
+      rp === "ok" && auth(db, "PUT").length === 3 && db.bloquees.filter(x => /^PUT \/auth\/v1\/user/.test(x)).length === 1 && !!(await page.$("#sante-oui")) && ecr(db, "calc_perso").length === 0 && !copiesSante(S1).length, rp + " " + JSON.stringify([auth(db, "PUT").length, copiesSante(S1)]) + " " + resume(db));
     db.pannePut = null;
     const tClic = await accepter(page, 2500);
     const P = auth(db, "PUT"), C = await lireCarte(page);
@@ -939,9 +983,9 @@ const detA = A => JSON.stringify(A ? { page: A.page, carte: A.carte, dehors: A.d
     const S1 = await stockage(page);
     ok("Store.ecrire(\"calc_perso\", chiffres) et Store.ecrire(\"mens\", mesures) → false : rien en cache, aucune copie mhx_attente, rien envoyé",
       typeof r1 === "object" && r1.calc === false && r1.mens === false && r1.cacheC && r1.cacheM && !copiesSante(S1).length && saisies(db).length === e0, JSON.stringify([r1, copiesSante(S1)]) + " " + resume(db));
-    await page.evaluate(async ([c, m]) => { await Store.envoyer("mens", m); await Store.envoyer("calc_perso", c); }, [CHIFFRES, MENS]).catch(() => {});
+    const env = await page.evaluate(async ([c, m]) => { if (typeof Store.envoyer !== "function") return "Store.envoyer absent"; await Store.envoyer("mens", m); await Store.envoyer("calc_perso", c); return "ok"; }, [CHIFFRES, MENS]).catch(e => String(e));
     await attendre(page, 800);
-    ok("Store.envoyer de ces clés (appel direct) : rien envoyé", ecr(db, "mens").length === 0 && ecr(db, "calc_perso").length === 0, resume(db));
+    ok("Store.envoyer de ces clés (appel direct, sans erreur) : rien envoyé", env === "ok" && ecr(db, "mens").length === 0 && ecr(db, "calc_perso").length === 0, env + " " + resume(db));
     /* des copies anciennes sur l'appareil (app d'avant, coupure réseau) : Store.reprendre les saute, envoie les autres */
     const l0 = db.lectures.length;
     const r2 = await page.evaluate(async ([id, c, m]) => {
@@ -1133,6 +1177,353 @@ const detA = A => JSON.stringify(A ? { page: A.page, carte: A.carte, dehors: A.d
     ok("liens des textes légaux « à compléter » (la branche de travail) : la carte (calculateur et diète) garde le même texte « En savoir plus : politique de confidentialité », en texte simple (span, aucun lien)",
       !!r[0] && r[0].cfg && r[0].c1 && r[0].c2, JSON.stringify(r[0]));
     ok("liens invalides (javascript:, ftp:) : texte simple, aucun lien, rien de ces adresses dans la page", !!r[1] && r[1].cfg && r[1].c1 && r[1].c2 && !r[1].js, JSON.stringify(r[1]));
+  });
+
+  /* =================== N. relecture lente arrivée après « J'accepte » (correction de la relecture du code) =================== */
+  await bloc("N. relecture lente", async () => {
+    const k = 40, ID = PID(k);
+    const db = base({ comptes: [compte(k, { intake: CHIFFRES_Q, donnees: [["formation", FO({ ouvert: "m2" })]] })] });
+    db.retardGet = 5000;   // la relecture de l'ouverture : lue par le serveur SANS l'accord, sa réponse arrive 5 s plus tard
+    const { page } = await contexte(b, quiP(k), db);
+    await page.goto(URL0 + "#/calculateur"); await pret(page, "#sante-carte");
+    const getParti = await attendreQue(() => auth(db, "GET").length === 1, 3000);
+    db.retardGet = 0;
+    const tClic = await accepter(page, 1500);   // pendant la relecture
+    const avantGet = { lents: db.getsLents.length, carte: !!(await lireCarte(page)) };
+    const arrive = await attendreQue(() => db.getsLents.length === 1, 9000); await attendre(page, 1500);
+    const E = await santeEtat(page), S = await stockage(page), P = auth(db, "PUT");
+    const cs = P[0] && P[0].corps && P[0].corps.data ? P[0].corps.data.consentement_sante : null;
+    ok("relecture lente : le GET /auth/v1/user de l'ouverture, lu par le serveur SANS l'accord, répond 5 s plus tard ; « J'accepte » pendant ce temps (UN PUT exact, la page repart sans carte) ; la réponse périmée du GET arrive ensuite : l'accord reste — Sante.ok() vrai, session en mémoire ET session rangée avec le consentement_sante du PUT, jetons intacts",
+      getParti && arrive && avantGet.lents === 0 && !avantGet.carte && egal(auth(db).map(x => x.m), ["GET", "PUT"]) && !("consentement_sante" in db.getsLents[0].meta)
+      && P.length === 1 && putOk(P[0], "calculateur", tClic) && !!E && E.ok === true && E.a === false
+      && !!S.memoire && !!cs && S.memoire.consentement_sante === cs && !!S.rangee && !!S.rangee.meta && S.rangee.meta.consentement_sante === cs && S.rangee.access === "jeton-" + ID,
+      JSON.stringify([getParti, arrive, avantGet, auth(db).map(x => x.m), db.getsLents.map(x => x.meta), E, S.memoire, S.rangee]));
+    await saisirCalcul(page); await attendre(page, 2000);
+    const cp = contenuDe(db, ID, "calc_perso") || {};
+    await aller(page, "#/mensurations", 1800);
+    const Cm = await lireCarte(page);
+    const em = await page.evaluate(() => ({ off: document.querySelectorAll("#vue [data-sante-off]").length, poids: !!document.getElementById("e-poids") && !document.getElementById("e-poids").disabled })).catch(e => String(e));
+    await aller(page, "#/formation", 1800); await page.waitForSelector("#fo-vue .fo-diete", { timeout: 6000 }).catch(() => {});
+    const Cf = await lireCarte(page), Df = await lireDiete(page);
+    ok("après la réponse périmée : la saisie du calculateur est enregistrée (calc_perso écrit : femme, 30 ans, 165 cm, 60 kg, 3 h) ; aucune carte ailleurs (Ma progression active, diète active : 32 champs) ; aucune autre requête /auth/v1/user",
+      ecr(db, "calc_perso", ID).length === 1 && cp.sexe === "F" && cp.age === 30 && cp.taille === 165 && cp.poids === 60 && cp.heures === 3
+      && !Cm && typeof em === "object" && em.off === 0 && em.poids && !Cf && !!Df && Df.actifs === 32 && Df.off === 0 && db.authUser.length === 2,
+      JSON.stringify([cp, Cm && Cm.sig, em, Cf && Cf.sig, Df, auth(db).map(x => x.m)]) + " " + resume(db));
+  });
+
+  /* =================== O. copie de santé retenue sur l'appareil (ancien client repassé prospect) =================== */
+  await bloc("O. copie retenue sur l'appareil", async () => {
+    const k = 41, ID = PID(k);
+    const M1 = { sem: 1, date: "2026-01-12", poids: 79, vals: {} }, M2 = { sem: 2, date: "2026-01-19", poids: 77, vals: {} };
+    const MENS_BASE = { dstart: "2026-01-05", pstart: 80, zones: ZONES, affichees: [4, 5], compo_affichee: "mg", mesures: [M1] };
+    const MENS_COPIE = Object.assign(clone(MENS_BASE), { mesures: [clone(M1), clone(M2)] });
+    const db = base({ comptes: [compte(k, { donnees: [["mens", MENS_BASE, avant(3 * H)]] })] });
+    const X = await contexte(b, quiP(k), db), page = X.page;
+    /* la copie gardée sur l'appareil (pesée de la semaine 2 faite hors ligne quand il était client) : plus récente que la base */
+    const tCopie = avant(20 * MIN), CLE = "mhx_attente|" + ID + "|mens";
+    await page.addInitScript(([c, id, t, v]) => {
+      if (location.hostname !== "localhost" || localStorage.getItem("__copie71")) return;
+      localStorage.setItem("__copie71", "1"); localStorage.setItem(c, JSON.stringify({ a: id, t, v }));
+    }, [CLE, ID, tCopie, MENS_COPIE]);
+    await page.goto(URL0 + "#/mensurations"); await pret(page, "#sante-carte"); await attendre(page, 1200);
+    const S0 = await stockage(page), C0 = await lireCarte(page), e0 = ecr(db, "mens").length, n0 = db.n;
+    await accepter(page, 2500);
+    await page.waitForFunction(() => !document.getElementById("sante-carte"), null, { timeout: 8000 }).catch(() => {}); await attendre(page, 1200);
+    const Em = ecr(db, "mens", ID), lus = db.lectures.filter(l => l.n > n0 && /\bmens\b/.test(l.outil) && l.select !== "maj_le");
+    const aff = page => page.evaluate(() => ({ sem: document.getElementById("k-sem").textContent.trim(), lignes: document.querySelectorAll("#tbody tr").length, poids: document.getElementById("k-poids").textContent.trim() })).catch(e => String(e));
+    const A1 = await aff(page), S1 = await stockage(page);
+    ok("ancien client repassé prospect, une copie mhx_attente|…|mens hors ligne plus récente que la base (base : 79 kg ; copie : 79 et 77 kg) : gardée sans envoi avant l'accord ; après « J'accepte » sur Ma progression, la copie est envoyée (mens écrit avec 79 et 77, à l'instant de la copie) AVANT que l'outil relise mens, la page montre 2 mesures (dernière 77), la copie retirée de l'appareil ; UN PUT",
+      carteOk(C0, "mensurations", "fr") && S0.cles.includes("local:" + CLE) && e0 === 0
+      && Em.length === 1 && egal(Em[0].contenu.mesures.map(x => x.poids), [79, 77]) && Em[0].maj_le === tCopie && lus.length >= 1 && lus.every(l => l.n > Em[0].n)
+      && typeof A1 === "object" && A1.sem === "2" && A1.lignes === 2 && /^77/.test(A1.poids) && !S1.cles.includes("local:" + CLE) && auth(db, "PUT").length === 1,
+      JSON.stringify([C0 && C0.sig, e0, Em.map(e => [e.n, e.maj_le, e.contenu.mesures.map(x => x.poids)]), lus.map(l => [l.n, l.outil, l.select]), A1, S1.cles.filter(c => /attente/.test(c))]));
+    await page.evaluate(() => { const s = document.getElementById("mens-saisie"); if (s) s.hidden = false; });
+    await page.fill("#e-sem", "3"); await page.fill("#e-poids", "76"); await page.click("#add"); await attendre(page, 1800);
+    const mf = contenuDe(db, ID, "mens") || {}, A2 = await aff(page);
+    ok("puis une nouvelle mesure (semaine 3, 76 kg) : mens écrit avec les 3 mesures (79, 77, 76 : rien de la copie perdu), la page en montre 3",
+      Array.isArray(mf.mesures) && egal(mf.mesures.map(x => x.poids), [79, 77, 76]) && ecr(db, "mens", ID).length === 2 && typeof A2 === "object" && A2.sem === "3" && A2.lignes === 3,
+      JSON.stringify([mf.mesures, A2]));
+    /* l'accord donné sur un AUTRE appareil (en base, pas dans la session de cet appareil) : relu à l'ouverture ; la copie
+       retenue part aussi AVANT que Ma progression relise mens (Sante.apres dans Sante.pause) */
+    const k2 = 53, ID2 = PID(k2), CLE2 = "mhx_attente|" + ID2 + "|mens";
+    const db2 = base({ comptes: [compte(k2, { meta: META_V55(), donnees: [["mens", MENS_BASE, avant(3 * H)]] })] });
+    const X2 = await contexte(b, quiP(k2), db2), p2 = X2.page;
+    await p2.addInitScript(([c, id, t, v]) => {
+      if (location.hostname !== "localhost" || localStorage.getItem("__copie71")) return;
+      localStorage.setItem("__copie71", "1"); localStorage.setItem(c, JSON.stringify({ a: id, t, v }));
+    }, [CLE2, ID2, tCopie, MENS_COPIE]);
+    await p2.goto(URL0 + "#/mensurations"); await pret(p2);
+    await p2.waitForFunction(() => !document.getElementById("sante-carte") && !!document.getElementById("k-sem"), null, { timeout: 8000 }).catch(() => {}); await attendre(p2, 1500);
+    const Em2 = ecr(db2, "mens", ID2), lus2 = db2.lectures.filter(l => /\bmens\b/.test(l.outil) && l.select !== "maj_le");
+    const A3 = await aff(p2), S3 = await stockage(p2);
+    ok("accord donné sur un autre appareil (en base, pas dans la session), copie mhx_attente|…|mens retenue (79 et 77 kg) : la relecture trouve l'accord, la copie est envoyée AVANT que Ma progression relise mens, la page montre 2 mesures (dernière 77), copie retirée ; UNE relecture, aucun PUT",
+      auth(db2, "GET").length === 1 && auth(db2, "PUT").length === 0 && Em2.length === 1 && egal(Em2[0].contenu.mesures.map(x => x.poids), [79, 77]) && Em2[0].maj_le === tCopie
+      && lus2.length >= 1 && lus2.every(l => l.n > Em2[0].n) && typeof A3 === "object" && A3.sem === "2" && A3.lignes === 2 && /^77/.test(A3.poids) && !S3.cles.includes("local:" + CLE2),
+      JSON.stringify([auth(db2).map(x => x.m), Em2.map(e => [e.n, e.maj_le, e.contenu.mesures.map(x => x.poids)]), lus2.map(l => [l.n, l.outil, l.select]), A3, S3.cles.filter(c => /attente/.test(c))]));
+  });
+
+  /* =================== P. page quittée puis rouverte pendant un « J'accepte » lent =================== */
+  await bloc("P. page rouverte pendant l'envoi", async () => {
+    const k = 42, ID = PID(k);
+    const db = base({ comptes: [compte(k, { intake: CHIFFRES_Q })] });
+    const { page } = await contexte(b, quiP(k), db);
+    await page.goto(URL0 + "#/calculateur"); await pret(page, "#sante-carte"); await attendre(page, 800);
+    db.retardPut = 8000;   // marge : la page rouverte et le 2e clic ont lieu bien avant la fin de l'envoi
+    const tClic = await page.evaluate(() => Date.now());
+    await page.click("#sante-oui"); await attendre(page, 300);
+    await aller(page, "#/mensurations", 700);   // la page quittée pendant l'envoi…
+    const Cm = await lireCarte(page);
+    await aller(page, "#/calculateur", 900);    // … puis rouverte, l'envoi toujours en cours
+    const C1 = await lireCarte(page), pendant = { finis: db.putsFinis.length, puts: auth(db, "PUT").length };
+    await page.click("#sante-oui"); await attendre(page, 400);   // « J'accepte » touché aussi sur la page rouverte, l'envoi toujours en cours
+    const pendant2 = { finis: db.putsFinis.length, puts: auth(db, "PUT").length };
+    const fini = await attendreQue(() => db.putsFinis.length === 1, 9000); const tFin = Date.now();
+    const parti = await page.waitForFunction(() => !document.getElementById("sante-carte"), null, { timeout: 5000 }).then(() => true).catch(() => false);
+    const delai = Date.now() - tFin;
+    db.retardPut = 0; await attendre(page, 1200);
+    const P = auth(db, "PUT");
+    const etat = await page.evaluate(() => ({ off: document.querySelectorAll("#vue [data-sante-off]").length, age: document.getElementById("age").disabled, tdee: document.getElementById("tdee").textContent.trim() })).catch(e => String(e));
+    ok("« J'accepte » lent (8 s) : page quittée (Ma progression : sa carte) puis rouverte (calculateur : la carte, tant que l'envoi n'a pas abouti) ; dès que le PUT aboutit (moins de 3 s après), la page rouverte repart sans carte, champs actifs, calculateur lancé (calc_perso lu, résultat affiché) ; UN SEUL PUT exact",
+      carteOk(Cm, "mensurations", "fr") && carteOk(C1, "calculateur", "fr") && pendant.finis === 0 && pendant.puts === 1 && pendant2.finis === 0 && pendant2.puts === 1 && fini && parti && delai < 3000
+      && P.length === 1 && putOk(P[0], "calculateur", tClic) && typeof etat === "object" && etat.off === 0 && etat.age === false && /\d/.test(etat.tdee) && lusSante(db).some(l => /calc_perso/.test(l.outil)),
+      JSON.stringify([Cm && Cm.sig, C1 && C1.sig, pendant, pendant2, fini, parti, delai, P.length, etat, lusSante(db).map(l => l.outil)]));
+    /* la diète (module 02) ouverte pendant l'envoi (Sante._envoi dans outilFormation.js) : elle repart dès que le PUT aboutit */
+    const k2 = 52;
+    const db2 = base({ comptes: [compte(k2, { donnees: [["formation", FO({ ouvert: "m2" })]] })] });
+    const { page: p2 } = await contexte(b, quiP(k2), db2);
+    await p2.goto(URL0 + "#/calculateur"); await pret(p2, "#sante-carte"); await attendre(p2, 800);
+    db2.retardPut = 8000;   // marge : la formation doit s'afficher avant la fin de l'envoi
+    const tClic2 = await p2.evaluate(() => Date.now());
+    await p2.click("#sante-oui"); await attendre(p2, 300);
+    await aller(p2, "#/formation", 1200); await p2.waitForSelector("#fo-vue .fo-diete", { timeout: 6000 }).catch(() => {});
+    const Cf = await lireCarte(p2), pendantF = { finis: db2.putsFinis.length, puts: auth(db2, "PUT").length };
+    const finiF = await attendreQue(() => db2.putsFinis.length === 1, 12000); const tFinF = Date.now();
+    const partiF = await p2.waitForFunction(() => !document.getElementById("sante-carte"), null, { timeout: 5000 }).then(() => true).catch(() => false);
+    const delaiF = Date.now() - tFinF;
+    db2.retardPut = 0; await attendre(p2, 1000);
+    const Df = await lireDiete(p2), P2 = auth(db2, "PUT");
+    ok("la diète (module 02) ouverte pendant un « J'accepte » lent (8 s) donné sur le calculateur : sa carte tant que l'envoi n'a pas abouti ; dès que le PUT aboutit (moins de 3 s après), la diète repart sans carte, active (32 champs) ; UN SEUL PUT exact",
+      carteOk(Cf, "formation", "fr") && pendantF.finis === 0 && pendantF.puts === 1 && finiF && partiF && delaiF < 3000 && !!Df && Df.actifs === 32 && Df.off === 0 && P2.length === 1 && putOk(P2[0], "calculateur", tClic2),
+      JSON.stringify([Cf && Cf.sig, pendantF, finiF, partiF, delaiF, Df, P2.length]));
+  });
+
+  /* =================== Q. deux onglets du même appareil =================== */
+  await bloc("Q. deux onglets", async () => {
+    const k = 43, ID = PID(k);
+    const db = base({ comptes: [compte(k, { intake: CHIFFRES_Q, donnees: [["mens", MENS1]] })] });
+    const X = await contexte(b, quiP(k), db);
+    const A = X.page, B = surveiller(await X.c.newPage());
+    await A.goto(URL0 + "#/calculateur"); await pret(A, "#sante-carte"); await attendre(A, 800);
+    await B.goto(URL0 + "#/mensurations"); await pret(B, "#sante-carte"); await attendre(B, 800);
+    const CB0 = await lireCarte(B);
+    const tClic = await accepter(A, 2500);   // l'accord donné dans l'onglet A
+    const CA = await lireCarte(A);
+    await B.click("#sante-oui"); await attendre(B, 2500);
+    const CB = await lireCarte(B), P = auth(db, "PUT"), EB = await santeEtat(B);
+    const eb = await B.evaluate(() => ({ off: document.querySelectorAll("#vue [data-sante-off]").length, poids: document.getElementById("k-poids").textContent.trim() })).catch(e => String(e));
+    ok("deux onglets : l'accord donné dans l'onglet A (calculateur : UN PUT exact, la page repart) ; l'onglet B (Ma progression, sa carte affichée avant) : « J'accepte » → AUCUN 2e PUT, B repart sans carte (champs actifs, ses mesures lues : 70,1 kg), Sante.ok() vrai",
+      carteOk(CB0, "mensurations", "fr") && !CA && P.length === 1 && putOk(P[0], "calculateur", tClic) && !CB && !!EB && EB.ok === true
+      && typeof eb === "object" && eb.off === 0 && /70,1/.test(eb.poids),
+      JSON.stringify([CB0 && CB0.sig, CA && CA.sig, P.length, CB && CB.sig, EB, eb]));
+    /* puis un autre onglet range une session du même compte SANS l'accord (lue avant l'accord : app d'avant, réponse
+       lente) : l'onglet A la reprend (événement storage) ; l'accord donné pendant la visite reste acquis (Sante._donnes) */
+    const a0 = db.authUser.length;   // avant l'événement storage : aucune relecture ni PUT depuis, saisie comprise
+    await B.evaluate(() => { const s = JSON.parse(localStorage.getItem("mhx_session")); ["consentement_sante", "sante_version", "sante_ecran"].forEach(c => delete s.user.user_metadata[c]); localStorage.setItem("mhx_session", JSON.stringify(s)); });
+    await attendre(A, 800);
+    const SA = await stockage(A), EA = await santeEtat(A), e0 = ecr(db, "calc_perso", ID).length;
+    await saisirCalcul(A); await attendre(A, 2000);
+    const cpA = contenuDe(db, ID, "calc_perso") || {};
+    await aller(A, "#/mensurations", 1800);
+    const CmA = await lireCarte(A);
+    const emA = await A.evaluate(() => ({ off: document.querySelectorAll("#vue [data-sante-off]").length, poids: !!document.getElementById("e-poids") && !document.getElementById("e-poids").disabled })).catch(e => String(e));
+    ok("puis une session du même compte SANS l'accord rangée par l'autre onglet (reprise par A : événement storage) : l'accord donné dans A reste acquis — Sante.ok() vrai, la saisie du calculateur enregistrée (calc_perso), Ma progression sans carte (active), aucune relecture ni PUT",
+      !!SA.memoire && typeof SA.memoire === "object" && SA.memoire.prenom === "Léa" && !("consentement_sante" in SA.memoire) && !!EA && EA.ok === true && EA.a === false
+      && ecr(db, "calc_perso", ID).length === e0 + 1 && cpA.age === 30 && cpA.poids === 60 && !CmA && typeof emA === "object" && emA.off === 0 && emA.poids && db.authUser.length === a0,
+      JSON.stringify([SA.memoire, EA, cpA, CmA && CmA.sig, emA, auth(db, null, a0).map(x => x.m)]) + " " + resume(db));
+  });
+
+  /* =================== R. réponse du PUT sans l'accord =================== */
+  await bloc("R. réponse sans l'accord", async () => {
+    const k = 44;
+    const db = base({ comptes: [compte(k)] });
+    const { page } = await contexte(b, quiP(k), db);
+    await page.goto(URL0 + "#/calculateur"); await pret(page, "#sante-carte"); await attendre(page, 1200);
+    const S0 = await stockage(page);
+    db.pannePut = "sans accord";   // 200, avec les métadonnées du compte, SANS l'accord
+    await page.click("#sante-oui"); await attendre(page, 1800);
+    const C = await lireCarte(page), E = await santeEtat(page), S = await stockage(page);
+    const f = await forcer(page, CHAMPS_CALC); await attendre(page, 2000);
+    const S2 = await stockage(page);
+    ok("réponse du PUT (200) avec des user_metadata SANS l'accord : « Non enregistré : réessaie dans un instant. », la carte reste (boutons réactivés, champs inactifs), Sante.ok() faux, métadonnées de l'appareil inchangées (mémoire et session rangée) ; rien d'écrit, même avec des valeurs forcées dans les champs (aucune écriture, aucune copie en file)",
+      auth(db, "PUT").length === 1 && !!C && C.sig === "section#sante-carte.panel.sante-carte" && norm(C.msg) === SANTE.fr.echec && C.ouiOff === false && C.nonOff === false && figee(C, 10)
+      && !!E && E.ok === false && E.a === true && egal(S.memoire, S0.memoire) && egal(S.rangee && S.rangee.meta, S0.rangee && S0.rangee.meta)
+      && f === true && saisies(db).length === 0 && !copiesSante(S2).length,
+      det(C) + " " + JSON.stringify([C && C.msg, E, S.memoire, f, copiesSante(S2)]) + " " + resume(db));
+  });
+
+  /* =================== S. après l'accord : focus, page vue comptée une fois =================== */
+  await bloc("S. focus et page vue", async () => {
+    const lireFocus = page => page.evaluate(() => {
+      const sig = e => e ? e.tagName.toLowerCase() + (e.id ? "#" + e.id : "") + (e.getAttribute && e.getAttribute("data-v") ? "[data-v=" + e.getAttribute("data-v") + "]" : "") : null;
+      const vue = document.getElementById("vue"), a = document.activeElement;
+      const premier = vue && vue.querySelector("section.panel input:not([disabled]), section.panel select:not([disabled]), section.panel button:not([disabled])");
+      return { actif: sig(a), premier: sig(premier), meme: !!premier && a === premier, carte: !!document.getElementById("sante-carte") };
+    }).catch(e => String(e));
+    const k = 45, ID = PID(k);
+    const db = base({ comptes: [compte(k, { intake: CHIFFRES_Q })] });
+    const { page } = await contexte(b, quiP(k), db);
+    await page.goto(URL0 + "#/calculateur"); await pret(page, "#sante-carte"); await attendre(page, 800);
+    await accepter(page, 1500);
+    await page.waitForFunction(() => !document.getElementById("sante-carte"), null, { timeout: 8000 }).catch(() => {}); await attendre(page, 800);
+    const Fc = await lireFocus(page);
+    ok("« J'accepte » sur le calculateur : la page repart sans carte et le focus est sur son premier champ actif (le bouton « Homme », ou le 1er champ de saisie) : le clavier et le lecteur d'écran ne perdent pas leur place",
+      typeof Fc === "object" && !Fc.carte && Fc.meme && (Fc.actif === "button[data-v=H]" || /^input/.test(Fc.actif || "")), JSON.stringify(Fc));
+    /* une ouverture simple du calculateur (prospect déjà d'accord), pour comparer le compteur de pages vues */
+    const k2 = 46, ID2 = PID(k2);
+    const db2 = base({ comptes: [compte(k2, { meta: META_V55(), intake: CHIFFRES_Q })] });
+    const { page: p2 } = await contexte(b, quiP(k2, META_V55()), db2);
+    await p2.goto(URL0 + "#/calculateur"); await pret(p2, "#tdee"); await attendre(p2, 800);
+    await page.clock.fastForward(61000); await p2.clock.fastForward(61000);   // l'envoi du compteur (une minute)
+    await attendre(page, 2500);
+    const vues = (d, id) => { const e = ecr(d, "activite", id); const c = e.length ? e[e.length - 1].contenu : null; return c && c.pages ? (c.pages.calculateur === undefined ? null : c.pages.calculateur) : null; };
+    const v1 = vues(db, ID), v2 = vues(db2, ID2);
+    ok("la page vue « calculateur » comptée UNE fois dans la clé activite (ouverture avec la carte, puis page reconstruite après l'accord), comme une ouverture simple du calculateur (prospect déjà d'accord : 1)",
+      v2 === 1 && v1 === v2, JSON.stringify([v1, v2, ecr(db, "activite", ID).map(e => e.contenu.pages), ecr(db2, "activite", ID2).map(e => e.contenu.pages)]));
+    const k3 = 47;
+    const db3 = base({ comptes: [compte(k3, { donnees: [["formation", FO({ ouvert: "m2" })]] })] });
+    const { page: p3 } = await contexte(b, quiP(k3), db3);
+    await p3.goto(URL0 + "#/formation"); await pret(p3, "#sante-carte"); await attendre(p3, 800);
+    await accepter(p3, 2500);
+    const f3 = await p3.evaluate(() => ({ actif: document.activeElement ? (document.activeElement.id || document.activeElement.tagName.toLowerCase()) : null,
+      sem: !!document.getElementById("fo-sem") && !document.getElementById("fo-sem").disabled, carte: !!document.getElementById("sante-carte") })).catch(e => String(e));
+    ok("« J'accepte » dans la diète : la diète repart sans carte et le focus est sur le sélecteur de semaine #fo-sem (actif)",
+      typeof f3 === "object" && f3.actif === "fo-sem" && f3.sem && !f3.carte, JSON.stringify(f3));
+  });
+
+  /* =================== T. style de la carte : titre dans la diète, lien doré =================== */
+  await bloc("T. style de la carte", async () => {
+    const style = page => page.evaluate(() => {
+      const c = document.getElementById("sante-carte"); if (!c) return null;
+      const jeton = v => { const s = document.createElement("span"); s.style.color = "var(" + v + ")"; document.body.appendChild(s); const x = getComputedStyle(s).color; s.remove(); return x; };
+      const h = c.querySelector("h2, h4"), a = c.querySelector("p.sante-lien a"), H = h ? getComputedStyle(h) : null, A = a ? getComputedStyle(a) : null;
+      return { ecran: c.getAttribute("data-sante-ecran"), theme: document.documentElement.getAttribute("data-theme"), h: h ? h.tagName.toLowerCase() : null,
+        taille: H && H.fontSize, casse: H && H.textTransform, espacement: H && H.letterSpacing, lien: A && A.color, accent: jeton("--accent"), souligne: !!A && /underline/.test(A.textDecorationLine || A.textDecoration || "") };
+    }).catch(e => String(e));
+    const r = [];
+    const mesurer = async (k, theme, h) => {
+      const db = base({ comptes: [compte(k, { donnees: [["formation", FO({ ouvert: "m2" })]] })] });
+      const { page } = await contexte(b, quiP(k), db, { theme });
+      await page.goto(URL0 + h); await pret(page, "#sante-carte"); await attendre(page, 800);
+      /* le contraste du lien sur son fond réel (même calcul que le bloc L) */
+      const st = await style(page), A = await affichage(page), liens = A ? A.textes.filter(x => x.qui === "a") : [];
+      r.push(st && typeof st === "object" ? Object.assign(st, { ratio: liens.length === 1 ? liens[0].ratio : null, nLiens: liens.length }) : st);
+      const cx = page.context(), i = ouverts.indexOf(cx); if (i > -1) ouverts.splice(i, 1); await cx.close().catch(() => {});
+    };
+    await mesurer(48, "", "#/formation"); await mesurer(49, "light", "#/formation");
+    await mesurer(50, "", "#/calculateur"); await mesurer(51, "light", "#/calculateur");
+    const bon = x => !!x && typeof x === "object";
+    ok("diète (module 02), thèmes sombre et clair : le titre h4 de la carte en 15 px, sans capitales ni espacement de .fo-outil h4 (text-transform none, letter-spacing normal)",
+      r.length === 4 && bon(r[0]) && bon(r[1]) && r[0].theme === null && r[1].theme === "light" && [r[0], r[1]].every(x => x.ecran === "formation" && x.h === "h4" && x.taille === "15px" && x.casse === "none" && x.espacement === "normal"),
+      JSON.stringify(r.slice(0, 2)));
+    /* le doré du lien : --accent en thème sombre ; en thème CLAIR #7f5f19, plus foncé que --accent (contrat, 00df998 : --accent
+       n'y donne que 4,29:1 sur la carte et 3,97:1 dans la diète) ; lisible (4,5:1) partout, souligné partout */
+    const DORE_CLAIR = "rgb(127, 95, 25)";
+    ok("lien « En savoir plus : politique de confidentialité » doré et souligné, diète et calculateur : thème sombre → la couleur --accent du thème ; thème CLAIR → #7f5f19 (un doré plus foncé que --accent) ; contraste du lien sur son fond d'au moins 4,5:1 dans les 4 cas",
+      r.length === 4 && r.every(bon) && egal(r.map(x => [x.ecran, x.theme]), [["formation", null], ["formation", "light"], ["calculateur", null], ["calculateur", "light"]])
+      && r.every(x => !!x.lien && x.souligne && x.nLiens === 1 && typeof x.ratio === "number" && x.ratio >= CONTRASTE)
+      && [r[0], r[2]].every(x => x.lien === x.accent) && [r[1], r[3]].every(x => x.lien === DORE_CLAIR && x.lien !== x.accent) && r[0].accent !== r[1].accent,
+      JSON.stringify(r.map(x => bon(x) ? [x.ecran, x.theme, x.lien, x.accent, x.souligne, x.ratio, x.nLiens] : x)));
+  });
+
+  /* =================== U. copie retenue ET page ouverte pendant un « J'accepte » lent (relecture du code, 00df998) ===================
+     deux pages repartent ensemble quand le PUT aboutit (le calculateur où « J'accepte » a été touché, Ma progression ouverte
+     pendant l'envoi) : la 2e ne relit jamais mens avant que la reprise de la 1re ait envoyé la copie retenue (Sante.apres
+     attend une reprise déjà en cours, Store._reprend) */
+  await bloc("U. copie retenue et page ouverte pendant l'envoi", async () => {
+    const k = 54, ID = PID(k);
+    const M1 = { sem: 1, date: "2026-01-12", poids: 79, vals: {} }, M2 = { sem: 2, date: "2026-01-19", poids: 77, vals: {} };
+    const MENS_BASE = { dstart: "2026-01-05", pstart: 80, zones: ZONES, affichees: [4, 5], compo_affichee: "mg", mesures: [M1] };
+    const MENS_COPIE = Object.assign(clone(MENS_BASE), { mesures: [clone(M1), clone(M2)] });
+    const db = base({ comptes: [compte(k, { intake: CHIFFRES_Q, donnees: [["mens", MENS_BASE, avant(3 * H)]] })] });
+    const X = await contexte(b, quiP(k), db), page = X.page;
+    /* ancien client repassé prospect : la pesée de la semaine 2 (77 kg) faite hors ligne, gardée sur l'appareil, plus récente que la base */
+    const tCopie = avant(20 * MIN), CLE = "mhx_attente|" + ID + "|mens";
+    await page.addInitScript(([c, id, t, v]) => {
+      if (location.hostname !== "localhost" || localStorage.getItem("__copie71")) return;
+      localStorage.setItem("__copie71", "1"); localStorage.setItem(c, JSON.stringify({ a: id, t, v }));
+    }, [CLE, ID, tCopie, MENS_COPIE]);
+    const aff = p => p.evaluate(() => ({ sem: document.getElementById("k-sem").textContent.trim(), lignes: document.querySelectorAll("#tbody tr").length, poids: document.getElementById("k-poids").textContent.trim() })).catch(e => String(e));
+    await page.goto(URL0 + "#/calculateur"); await pret(page, "#sante-carte"); await attendre(page, 1000);
+    const S0 = await stockage(page), C0 = await lireCarte(page), e0 = ecr(db, "mens").length, n0 = db.n;
+    db.retardPut = 5000;   // « J'accepte » lent : le PUT aboutit 5 s après le clic (Ma progression s'ouvre bien avant)
+    const tClic = await page.evaluate(() => Date.now());
+    await page.click("#sante-oui"); await attendre(page, 300);
+    await aller(page, "#/mensurations", 800);   // Ma progression ouverte pendant l'envoi (sa carte)
+    const C1 = await lireCarte(page), pendant = { finis: db.putsFinis.length, puts: auth(db, "PUT").length, mens: ecr(db, "mens").length, lus: lusSante(db).length };
+    const fini = await attendreQue(() => db.putsFinis.length === 1, 8000);
+    const parti = await page.waitForFunction(() => !document.getElementById("sante-carte"), null, { timeout: 8000 }).then(() => true).catch(() => false);
+    await attendre(page, 2000); db.retardPut = 0;
+    /* les lectures du CONTENU de mens (Ma progression) ; la lecture « maj_le » est celle de la reprise (comparaison des dates) */
+    const Em = ecr(db, "mens", ID), lus = db.lectures.filter(l => l.n > n0 && /\bmens\b/.test(l.outil) && l.select !== "maj_le");
+    const A1 = await aff(page), S1 = await stockage(page), P = auth(db, "PUT");
+    ok("copie mhx_attente|…|mens retenue (base : 79 kg ; copie hors ligne plus récente : 79 et 77 kg), « J'accepte » lent (5 s) sur le calculateur, Ma progression ouverte pendant l'envoi (sa carte) : quand le PUT aboutit, les deux pages repartent et la copie est envoyée (mens écrit avec 79 et 77, à l'instant de la copie) AVANT toute lecture de mens par Ma progression ; la page montre 2 mesures (dernière 77), copie retirée de l'appareil ; UN SEUL PUT exact",
+      carteOk(C0, "calculateur", "fr") && S0.cles.includes("local:" + CLE) && e0 === 0 && carteOk(C1, "mensurations", "fr")
+      && pendant.finis === 0 && pendant.puts === 1 && pendant.mens === 0 && pendant.lus === 0 && fini && parti
+      && Em.length === 1 && egal(Em[0].contenu.mesures.map(x => x.poids), [79, 77]) && Em[0].maj_le === tCopie && lus.length >= 1 && lus.every(l => l.n > Em[0].n)
+      && typeof A1 === "object" && A1.sem === "2" && A1.lignes === 2 && /^77/.test(A1.poids) && !S1.cles.includes("local:" + CLE) && P.length === 1 && putOk(P[0], "calculateur", tClic),
+      JSON.stringify([C0 && C0.sig, C1 && C1.sig, e0, pendant, fini, parti, Em.map(e => [e.n, e.maj_le, e.contenu.mesures.map(x => x.poids)]), lus.map(l => [l.n, l.outil, l.select]), A1, S1.cles.filter(c => /attente/.test(c)), P.length]));
+    await page.evaluate(() => { const s = document.getElementById("mens-saisie"); if (s) s.hidden = false; });
+    await page.fill("#e-sem", "3"); await page.fill("#e-poids", "76"); await page.click("#add"); await attendre(page, 1800);
+    const mf = contenuDe(db, ID, "mens") || {}, A2 = await aff(page);
+    ok("puis une nouvelle mesure sur cette page (semaine 3, 76 kg) : mens écrit avec les 3 mesures (79, 77, 76 : la pesée hors ligne n'est pas perdue), la page en montre 3",
+      Array.isArray(mf.mesures) && egal(mf.mesures.map(x => x.poids), [79, 77, 76]) && ecr(db, "mens", ID).length === 2 && typeof A2 === "object" && A2.sem === "3" && A2.lignes === 3,
+      JSON.stringify([mf.mesures, A2]));
+  });
+
+  /* =================== V. reprise lente : l'outil repart en 4 s au plus (contrat cdc9e68 et 00df998) =================== */
+  await bloc("V. reprise lente", async () => {
+    const M1 = { sem: 1, date: "2026-01-12", poids: 79, vals: {} }, M2 = { sem: 2, date: "2026-01-19", poids: 77, vals: {} };
+    const MENS_BASE = { dstart: "2026-01-05", pstart: 80, zones: ZONES, affichees: [4, 5], compo_affichee: "mg", mesures: [M1] };
+    const MENS_COPIE = Object.assign(clone(MENS_BASE), { mesures: [clone(M1), clone(M2)] });
+    const tCopie = avant(20 * MIN);
+    const poser = (page, cle, id, v) => page.addInitScript(([c, id, t, v]) => {
+      if (location.hostname !== "localhost" || localStorage.getItem("__copie71")) return;
+      localStorage.setItem("__copie71", "1"); localStorage.setItem(c, JSON.stringify({ a: id, t, v }));
+    }, [cle, id, tCopie, v]);
+    const repartie = (page, champ, ms) => page.waitForFunction(ch => !document.getElementById("sante-carte") && !document.querySelector("#vue [data-sante-off]")
+      && !!document.getElementById(ch) && !document.getElementById(ch).disabled, champ, { timeout: ms }).then(() => true).catch(() => false);
+    const majLe = (db, outil) => db.lectures.filter(l => l.outil === "eq." + outil && l.select === "maj_le").length;
+    /* (a) la reprise LANCÉE PAR L'ACCORD est lente : copie mhx_attente|…|mens retenue, sa lecture maj_le répond en 12 s */
+    const k = 55, ID = PID(k), CLE = "mhx_attente|" + ID + "|mens";
+    const db = base({ comptes: [compte(k, { donnees: [["mens", MENS_BASE, avant(3 * H)]] })] });
+    const { page } = await contexte(b, quiP(k), db);
+    await poser(page, CLE, ID, MENS_COPIE);
+    await page.goto(URL0 + "#/mensurations"); await pret(page, "#sante-carte"); await attendre(page, 1000);
+    db.retardMajLe = { outil: "mens", ms: 12000 };
+    const t0 = Date.now(); await page.click("#sante-oui");
+    const parti = await repartie(page, "e-poids", 11000), delai = Date.now() - t0;
+    const pendant = { majLe: majLe(db, "mens"), finies: db.majLeLents.length, mens: ecr(db, "mens").length };
+    const envoyee = await attendreQue(() => ecr(db, "mens", ID).length === 1, 14000); await attendre(page, 800);
+    const Em = ecr(db, "mens", ID), S1 = await stockage(page);
+    ok("reprise lancée par l'accord et lente (copie mhx_attente|…|mens retenue, sa lecture maj_le répond en 12 s) : après « J'accepte », Ma progression repart sans carte, champs actifs, en 4 s au plus (moins de 7 s après le clic) sans attendre la fin de la reprise ; puis la reprise aboutit et envoie la copie (mens écrit avec 79 et 77, à l'instant de la copie ; copie retirée) ; UN PUT",
+      parti && delai < 7000 && pendant.majLe === 1 && pendant.finies === 0 && pendant.mens === 0 && envoyee && db.majLeLents.length === 1
+      && Em.length === 1 && egal(Em[0].contenu.mesures.map(x => x.poids), [79, 77]) && Em[0].maj_le === tCopie && !S1.cles.includes("local:" + CLE) && auth(db, "PUT").length === 1,
+      JSON.stringify([parti, delai, pendant, envoyee, db.majLeLents.length, Em.map(e => [e.n, e.maj_le, e.contenu.mesures.map(x => x.poids)]), S1.cles.filter(c => /attente/.test(c)), auth(db).map(x => x.m)]));
+    /* (b) une reprise DÉJÀ EN COURS (lancée au démarrage pour une copie mhx_attente|…|intake, lecture maj_le de 20 s) :
+       Sante.apres l'attend (Store._reprend, 00df998), dans la même limite de 4 s */
+    const k2 = 56, ID2 = PID(k2);
+    const db2 = base({ comptes: [compte(k2, { intake: CHIFFRES_Q })] });
+    db2.retardMajLe = { outil: "intake", ms: 20000 };
+    const { page: p2 } = await contexte(b, quiP(k2), db2);
+    await poser(p2, "mhx_attente|" + ID2 + "|intake", ID2, Object.assign(AVEC_CHOIX(k2), CHIFFRES_Q));
+    await p2.goto(URL0 + "#/calculateur"); await pret(p2, "#sante-carte"); await attendre(p2, 800);
+    const avantClic = { majLe: majLe(db2, "intake"), finies: db2.majLeLents.length, reprend: await p2.evaluate(() => Store._reprend === true).catch(e => String(e)) };
+    const t2 = Date.now(); await p2.click("#sante-oui");
+    const parti2 = await repartie(p2, "age", 16000), delai2 = Date.now() - t2;
+    const apres2 = { finies: db2.majLeLents.length };
+    ok("reprise DÉJÀ en cours et lente (lancée au démarrage : copie mhx_attente|…|intake, lecture maj_le de 20 s) : « J'accepte » sur le calculateur → la page repart sans carte, champs actifs, en 4 s au plus (moins de 7 s après le clic), la reprise toujours en cours ; UN PUT",
+      avantClic.majLe === 1 && avantClic.finies === 0 && avantClic.reprend === true && parti2 && delai2 < 7000 && apres2.finies === 0 && auth(db2, "PUT").length === 1,
+      JSON.stringify([avantClic, parti2, delai2, apres2, auth(db2).map(x => x.m)]));
   });
 
   /* =================== Z. console, hôtes externes =================== */

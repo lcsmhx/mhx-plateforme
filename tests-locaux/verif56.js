@@ -459,11 +459,12 @@ const LIEN = (id, type) => "#access_token=lien." + id + ".x&refresh_token=renouv
 const compte = (k, prenom, nom, donnees, extra) => Object.assign({ id: PID(k), prenom, nom, cree: avant(2 * J), email: "p" + k + "@exemple.fr", donnees: donnees || [] }, extra || {});
 async function ouvrir(b, db, k, h, sel, opts){
   const x = db.profils.find(p => p.id === PID(k));
-  const meta = opts && "meta" in opts ? opts.meta : ACCORD_SANTE;
+  const meta = opts && opts.meta;
   const { c, page } = await contexte(b, qui(PID(k), db.emails[PID(k)] || ("p" + k + "@exemple.fr"), meta), db, opts);
   await page.goto(URL0 + (h || "")); await pret(page, sel || "#vue .masthead");
   return { c, page, x };
 }
+const ouvrirS = (b, db, k, h, sel, opts) => ouvrir(b, db, k, h, sel, Object.assign({ meta: ACCORD_SANTE }, opts || {}));   // revue : prospect avec accord (saisie santé)
 /* un clic sur un lien vers Calendly sans l'ouvrir (le clic est noté par l'app ; aucun onglet vers l'extérieur) */
 const cliquerSansOuvrir = (page, sel) => page.evaluate(s => { const a = document.querySelector(s); if (!a) return false; a.addEventListener("click", e => e.preventDefault(), { once: true }); a.click(); return true; }, sel).catch(() => false);
 const lignes = (page, sel) => page.$$eval(sel + " li", l => l.map(li => [li.querySelector("span") ? li.querySelector("span").textContent.replace(/\s+/g, " ").trim() : "", li.querySelector("b") ? li.querySelector("b").textContent.replace(/\s+/g, " ").trim() : ""])).catch(() => []);
@@ -1095,7 +1096,7 @@ function lienOk(href, base, attendu){
     const k = 37, ID = PID(k);
     const db = base({ comptes: [compte(k, "Léa", "Martin", [["intake", NOUVEAU({ bilan_propose: { choix: "plus_tard", le: avant(MIN) } })]])] });
     db.retard = { calc_perso: 4000, mens: 4000 };
-    const { c, page } = await ouvrir(b, db, k, "#/calculateur", "#tdee"); await attendre(page, 1200);
+    const { c, page } = await ouvrirS(b, db, k, "#/calculateur", "#tdee"); await attendre(page, 1200);
     await page.click('#sexe [data-v="F"]'); await page.fill("#age", "30"); await page.fill("#taille", "165"); await page.fill("#poids", "60"); await page.fill("#heures", "3");
     await aller(page, "#/accueil", 300); await page.waitForSelector("#dc-accomp", { timeout: 3000 }).catch(() => {}); await attendre(page, 300);
     const e1 = await page.$eval("#dc-etape", x => x.dataset.etape).catch(() => "");
@@ -1116,7 +1117,7 @@ function lienOk(href, base, attendu){
     const k = 39, ID = PID(k);
     const db = base({ comptes: [compte(k, "Léa", "Martin", [["intake", NOUVEAU({ bilan_propose: { choix: "plus_tard", le: avant(MIN) } })]])] });
     db.retard = { calc_perso: 4000, mens: 4000 };
-    const { c, page } = await ouvrir(b, db, k, "#/calculateur", "#tdee"); await attendre(page, 1200);
+    const { c, page } = await ouvrirS(b, db, k, "#/calculateur", "#tdee"); await attendre(page, 1200);
     const enVol = cle => page.evaluate(([id, x]) => ({ attente: Store.valeursEnAttente[id + "|" + x] !== undefined, copie: !!Auth.magasin().getItem("mhx_attente|" + id + "|" + x) }), [ID, cle]);
     const etape = async () => { await aller(page, "#/accueil", 300); await page.waitForSelector("#dc-accomp", { timeout: 3000 }).catch(() => {}); await attendre(page, 300); return page.$eval("#dc-etape", x => x.dataset.etape).catch(() => ""); };
     await page.click('#sexe [data-v="F"]'); await page.fill("#age", "30"); await page.fill("#taille", "165"); await page.fill("#poids", "60"); await page.fill("#heures", "3");
@@ -1164,7 +1165,7 @@ function lienOk(href, base, attendu){
   await bloc("J. calculateur du prospect", async () => {
     const k = 13, ID = PID(k);
     const db = base({ comptes: [compte(k, "Léa", "Martin", [["intake", NOUVEAU({ bilan_propose: { choix: "plus_tard", le: avant(MIN) } })]])] });
-    const { c, page } = await ouvrir(b, db, k, "#/calculateur", "#tdee"); await attendre(page, 1500);
+    const { c, page } = await ouvrirS(b, db, k, "#/calculateur", "#tdee"); await attendre(page, 1500);
     const champs = await page.evaluate(() => ["age", "taille", "poids", "pas", "heures"].map(i => document.getElementById(i).value));
     ok("ouvert au prospect : rien n'est inventé (âge, taille, poids, heures vides ; pas par jour : 6 000) ; aucun sexe choisi", JSON.stringify(champs) === '["","","","6000",""]' && (await page.$$eval('#sexe button[aria-pressed="true"]', l => l.length)) === 0, JSON.stringify(champs));
     ok("… « Il manque : Sexe, Âge (ans), Taille (cm), Poids (kg), Entraînement (h / semaine) », aucun chiffre", (await texte(page, "#calc-etat")) === "Il manque : Sexe, Âge (ans), Taille (cm), Poids (kg), Entraînement (h / semaine)" && (await texte(page, "#tdee")) === "—", await texte(page, "#calc-etat"));
@@ -1199,14 +1200,14 @@ function lienOk(href, base, attendu){
       compte(14, "Marc", "Essai", [["intake", NOUVEAU({ bilan_propose: { choix: "plus_tard", le: avant(MIN) } })], ["calc", CC]]),
       compte(15, "Ana", "Ancienne", [["intake", Object.assign({}, ANCIEN, { bilan_propose: { choix: "plus_tard", le: avant(MIN) } })]])
     ] });
-    let { c, page } = await ouvrir(b, db, 14, "#/calculateur", "#tdee"); await attendre(page, 1500);
+    let { c, page } = await ouvrirS(b, db, 14, "#/calculateur", "#tdee"); await attendre(page, 1500);
     const v1 = await page.evaluate(() => ["age", "taille", "poids", "pas", "heures"].map(i => document.getElementById(i).value).concat([(document.querySelector('#sexe [aria-pressed="true"]') || {}).dataset ? document.querySelector('#sexe [aria-pressed="true"]').dataset.v : ""]));
     ok("un calcul préparé par le coach (calc) sert de départ, lu sans être écrit", JSON.stringify(v1) === '["41","181","88","9000","4","H"]' && saisies(db).length === 0, JSON.stringify(v1));
     ok("… bouton « Enregistrer mes chiffres » (des chiffres connus ne partent pas sans son accord)", await page.isVisible("#calc-ok"), "");
     await page.click("#calc-ok"); await attendre(page, 1400);
     ok("… « Enregistrer mes chiffres » : calc_perso écrit, calc du coach intact", memes((db.donnees.find(d => d.user_id === PID(14) && d.outil === "calc_perso") || {}).contenu, CC) && ecr(db, "calc").length === 0 && memes((db.donnees.find(d => d.user_id === PID(14) && d.outil === "calc") || {}).contenu, CC), resume(db));
     await c.close();
-    ({ c, page } = await ouvrir(b, db, 15, "#/calculateur", "#tdee")); await attendre(page, 1500);
+    ({ c, page } = await ouvrirS(b, db, 15, "#/calculateur", "#tdee")); await attendre(page, 1500);
     const v2 = await page.evaluate(() => ["age", "taille", "poids", "pas", "heures"].map(i => document.getElementById(i).value));
     ok("un ancien prospect (10 réponses) : son âge, sa taille, son poids et ses séances servent de départ (pas : 6 000)", JSON.stringify(v2) === '["30","165","70","6000","3.75"]', JSON.stringify(v2));
     ok("… et rien n'est écrit sans son accord", ecr(db, "calc_perso", PID(15)).length === 0, resume(db));
@@ -1216,7 +1217,7 @@ function lienOk(href, base, attendu){
   await bloc("J. calculateur : calc_perso piégé", async () => {
     const XSS = "<img src=x onerror=\"window.__xss=1\">";
     const db = base({ comptes: [compte(33, "Léa", "Martin", [["intake", NOUVEAU({ bilan_propose: { choix: "plus_tard", le: avant(MIN) } })], ["calc_perso", { sexe: XSS, age: XSS, taille: { a: 1 }, poids: [80], pas: "x", heures: null, objectif: "<script>" }]])] });
-    const { c, page } = await ouvrir(b, db, 33, "#/calculateur", "#tdee"); await attendre(page, 1500);
+    const { c, page } = await ouvrirS(b, db, 33, "#/calculateur", "#tdee"); await attendre(page, 1500);
     const champs = await page.evaluate(() => ["age", "taille", "poids", "pas", "heures"].map(i => document.getElementById(i).value));
     ok("calc_perso écrit hors de l'app avec des valeurs piégées : la page s'affiche (champs vides, « Il manque : … »), aucune injection, rien d'écrit", JSON.stringify(champs) === '["","","","",""]' && (await texte(page, "#calc-etat")).startsWith("Il manque : Sexe, Âge (ans)") && !(await page.evaluate(() => window.__xss)) && !(await page.$("#vue img[src='x']")) && saisies(db).length === 0, JSON.stringify(champs) + " " + resume(db));
     await aller(page, "#/accueil", 1600);
@@ -1228,7 +1229,7 @@ function lienOk(href, base, attendu){
   await bloc("K. garde-fou 18 ans", async () => {
     const k = 16, ID = PID(k);
     const db = base({ comptes: [compte(k, "Léa", "Martin", [["intake", NOUVEAU({ bilan_propose: { choix: "plus_tard", le: avant(MIN) } })]])] });
-    const { c, page } = await ouvrir(b, db, k, "#/calculateur", "#tdee"); await attendre(page, 1200);
+    const { c, page } = await ouvrirS(b, db, k, "#/calculateur", "#tdee"); await attendre(page, 1200);
     await page.click('#sexe [data-v="F"]'); await page.fill("#taille", "165"); await page.fill("#poids", "60"); await page.fill("#heures", "3");
     await page.fill("#age", "17"); await page.press("#age", "Tab"); await attendre(page, 1600);
     ok("âge 17 : message clair « réservé aux adultes (18 ans et plus) : rien n'est enregistré », aucun chiffre", (await texte(page, "#calc-etat")) === TXD.mineur && (await texte(page, "#tdee")) === "—" && (await texte(page, "#g-prot")) === "—", await texte(page, "#calc-etat"));
@@ -1249,7 +1250,7 @@ function lienOk(href, base, attendu){
   await bloc("K. garde-fou 18 ans : écriture en attente", async () => {
     const k = 17, ID = PID(k);
     const db = base({ comptes: [compte(k, "Léa", "Martin", [["intake", NOUVEAU({ bilan_propose: { choix: "plus_tard", le: avant(MIN) } })]])] });
-    const { c, page } = await ouvrir(b, db, k, "#/calculateur", "#tdee"); await attendre(page, 1200);
+    const { c, page } = await ouvrirS(b, db, k, "#/calculateur", "#tdee"); await attendre(page, 1200);
     await page.click('#sexe [data-v="H"]'); await page.fill("#taille", "178"); await page.fill("#poids", "70"); await page.fill("#heures", "2");
     await page.fill("#age", "30"); await page.fill("#age", "15"); await page.press("#age", "Tab");   // en moins de 700 ms
     await attendre(page, 1800);
@@ -1262,10 +1263,10 @@ function lienOk(href, base, attendu){
     const MIN_CP = { sexe: "F", age: 16, taille: 160, poids: 52, pas: 6000, heures: 2, objectif: "maintien" };
     const db = base({ comptes: [compte(18, "Léa", "Martin", [["intake", NOUVEAU({ bilan_propose: { choix: "plus_tard", le: avant(MIN) } })], ["calc_perso", MIN_CP]]),
       compte(19, "Zoé", "Bernard", [["intake", NOUVEAU({ bilan_propose: { choix: "plus_tard", le: avant(MIN) } })]])] });
-    let { c, page } = await ouvrir(b, db, 18, "#/calculateur", "#tdee"); await attendre(page, 1800);
+    let { c, page } = await ouvrirS(b, db, 18, "#/calculateur", "#tdee"); await attendre(page, 1800);
     ok("un calc_perso enregistré avec un âge mineur (hors de l'app) est retiré à l'ouverture du calculateur, message clair", JSON.stringify((db.donnees.find(d => d.user_id === PID(18) && d.outil === "calc_perso") || {}).contenu) === "{}" && (await texte(page, "#calc-etat")) === TXD.mineur + " " + TXD.retire, await texte(page, "#calc-etat"));
     await c.close();
-    ({ c, page } = await ouvrir(b, db, 19, "#/profil", "#vue .masthead")); await attendre(page, 800);
+    ({ c, page } = await ouvrirS(b, db, 19, "#/profil", "#vue .masthead")); await attendre(page, 800);
     const r = await page.evaluate(async () => {
       const essai = async d => { try { await Store.importer(JSON.stringify({ plateforme: "mhx", version: 2, donnees: d })); return "ok"; } catch (e) { return String(e && e.message); } };
       return [await essai({ calc_perso: { sexe: "F", age: 15, taille: 160, poids: 50, pas: 6000, heures: 2, objectif: "maintien" } }),
@@ -1275,7 +1276,7 @@ function lienOk(href, base, attendu){
     ok("restauration d'une sauvegarde : un calc_perso fait avec un âge mineur n'est jamais restauré ; un calc_perso adulte l'est (sa clé à lui)", r[0] === "vide" && r[1] === "ok" && ecr(db, "calc_perso", PID(19)).length === 1 && ecr(db, "calc_perso", PID(19))[0].contenu.age === 28 && ecr(db, "calc").length === 0, JSON.stringify(r) + " " + resume(db));
     await c.close();
     const db2 = base({ comptes: [compte(20, "Léa", "Martin", [["intake", NOUVEAU({ bilan_propose: { choix: "plus_tard", le: avant(MIN) } })]])] }); avecEn(db2, PID(20));
-    ({ c, page } = await ouvrir(b, db2, 20, "#/calculateur", "#tdee", { langue: "en" })); await attendre(page, 1200);
+    ({ c, page } = await ouvrirS(b, db2, 20, "#/calculateur", "#tdee", { langue: "en" })); await attendre(page, 1200);
     await page.fill("#age", "14"); await page.press("#age", "Tab"); await attendre(page, 800);
     ok("anglais : « The calculator is for adults only (18 and over): nothing is saved. »", (await texte(page, "#calc-etat")) === "The calculator is for adults only (18 and over): nothing is saved." && ecr(db2, "calc_perso").length === 0, await texte(page, "#calc-etat"));
     await c.close();
@@ -1287,7 +1288,7 @@ function lienOk(href, base, attendu){
   await bloc("K. garde-fou 18 ans : « Copier ma sauvegarde »", async () => {
     const k = 38, ID = PID(k);
     const db = base({ comptes: [compte(k, "Léa", "Martin", [["intake", NOUVEAU({ bilan_propose: { choix: "plus_tard", le: avant(MIN) } })]])] });
-    const { c, page } = await ouvrir(b, db, k, "#/calculateur", "#tdee"); await attendre(page, 1200);
+    const { c, page } = await ouvrirS(b, db, k, "#/calculateur", "#tdee"); await attendre(page, 1200);
     const remplir = async age => { await page.click('#sexe [data-v="F"]'); await page.fill("#taille", "165"); await page.fill("#poids", "60"); await page.fill("#heures", "3"); await page.fill("#age", age); await page.press("#age", "Tab"); await attendre(page, 1500); };
     const copier = async () => { await aller(page, "#/profil", 1500); return page.evaluate(async () => {
       let t = null;
@@ -1310,7 +1311,7 @@ function lienOk(href, base, attendu){
   await bloc("L. garde-fou IMC", async () => {
     const k = 21, ID = PID(k);
     const db = base({ comptes: [compte(k, "Léa", "Martin", [["intake", NOUVEAU({ bilan_propose: { choix: "plus_tard", le: avant(MIN) } })]])] });
-    const { c, page } = await ouvrir(b, db, k, "#/calculateur", "#tdee"); await attendre(page, 1200);
+    const { c, page } = await ouvrirS(b, db, k, "#/calculateur", "#tdee"); await attendre(page, 1200);
     await page.click('#sexe [data-v="F"]'); await page.fill("#age", "25"); await page.fill("#taille", "175"); await page.fill("#heures", "2");
     await page.fill("#poids", "68"); await attendre(page, 1400);
     ok("IMC normal : l'objectif « Perte de poids −10% » est proposé (et choisi : sa réponse « Perdre du gras »)", await page.isVisible('#objs [data-k="perte"]') && await page.$eval('#objs [data-k="perte"]', x => !x.disabled && x.getAttribute("aria-pressed") === "true") && !(await page.isVisible("#calc-imc")), "");
@@ -1393,7 +1394,7 @@ function lienOk(href, base, attendu){
   await bloc("N. Ma progression du prospect", async () => {
     const k = 27, ID = PID(k);
     const db = base({ comptes: [compte(k, "Léa", "Martin", [["intake", NOUVEAU({ bilan_propose: { choix: "plus_tard", le: avant(MIN) } })]])] });
-    const { c, page } = await ouvrir(b, db, k, "#/mensurations", "#k-poids"); await attendre(page, 1500);
+    const { c, page } = await ouvrirS(b, db, k, "#/mensurations", "#k-poids"); await attendre(page, 1500);
     ok("Ma progression ouverte au prospect, sans la section photos (aucune lecture de photos, aucun appel au stockage)", !(await page.$("#vue .verrou")) && !(await page.$("#photos-panel, #ph-envoi")) && lu(db, "photos") === 0 && !db.chemins.some(x => x.includes("/storage/")), JSON.stringify(db.chemins.filter(x => /photos|storage/.test(x))));
     ok("… rien d'écrit à l'ouverture", saisies(db).length === 0, resume(db));
     await page.fill("#e-poids", "72.4"); await page.click("#add"); await attendre(page, 1500);

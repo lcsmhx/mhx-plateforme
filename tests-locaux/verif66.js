@@ -354,7 +354,7 @@ const PROSPECT = (k, prenom, donnees) => ({ id: PID(k), prenom, nom: "Essai", st
    les métadonnées de leur compte (sans clé newsletter : rien d'autre ne change), donc aucune carte d'accord santé dans le
    calculateur ni dans Ma progression (l'accord au premier usage est vérifié ailleurs) ; quiP(k, meta) : d'autres métadonnées */
 const ACCORD_SANTE = { consentement_sante: "2026-09-28T09:00:00.000Z", sante_version: "2026-09-28b" };
-const quiP = (k, meta) => qui(PID(k), "p" + k + "@exemple.fr", meta === undefined ? ACCORD_SANTE : meta);
+const quiP = (k, meta) => qui(PID(k), "p" + k + "@exemple.fr", meta);
 /* son calcul (calc_perso) et sa pesée (mens) */
 const CP = { sexe: "F", age: 30, taille: 165, poids: 60, pas: 6000, heures: 3, objectif: "perte" };
 const CP_MINEUR = Object.assign({}, CP, { age: 16 }), CP_INCOMPLET = { sexe: "F", age: 30, taille: 165, poids: 60 };
@@ -850,7 +850,7 @@ const ISO = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$/;
     const surFormation = async page => { await aller(page, "#/formation", 300); await page.waitForSelector("#fo-depart", { timeout: 5000 }); await attendre(page, 300); return carteDepart(page); };
     const enVol = (page, id) => page.evaluate(id => ({ attente: Store.valeursEnAttente[id + "|calc_perso"] !== undefined, copie: !!Auth.magasin().getItem("mhx_attente|" + id + "|calc_perso") }), id);
     const calculFait = d => !!d && egal(d.actions.map(a => [a.fait, a.c, a.sr]), [[false, "", null], [true, "✓", I_FR.fait], [false, "", null]]);
-    let { page } = await contexte(b, quiP(16), db, { viewport: MOBILE });   // reste ouverte : sa saisie doit pouvoir arriver
+    let { page } = await contexte(b, quiP(16, ACCORD_SANTE), db, { viewport: MOBILE });   // reste ouverte : sa saisie doit pouvoir arriver
     await page.goto(URL0 + "#/calculateur"); await pret(page, "#tdee"); await attendre(page, 800);
     await page.click('#sexe [data-v="F"]'); await page.fill("#age", "30"); await page.fill("#taille", "165"); await page.fill("#poids", "60"); await page.fill("#heures", "3");
     const L1 = db.lectures.length, v1 = await enVol(page, ID1);
@@ -858,7 +858,7 @@ const ISO = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$/;
     const r1 = { v1, serveur: ecr(db, "calc_perso", ID1).length, enBase: !!contenuDe(db, ID1, "calc_perso"), groupee: uneLectureGroupee(db, ID1, L1), autres: saisies(db).length };
     ok("calcul enregistré, retour immédiat sur la formation (pas encore arrivé au serveur : la lecture groupée ne le rapporte pas) : « Calcule tes calories » déjà faite (coche, « (fait) »), les 2 autres non ; une seule lecture groupée ; rien d'écrit à l'affichage",
       (v1.attente || v1.copie) && r1.serveur === 0 && !r1.enBase && calculFait(d1) && r1.groupee && r1.autres === 0, JSON.stringify(r1) + " " + JSON.stringify(d1 && d1.actions));
-    ({ page } = await contexte(b, quiP(17), db, { viewport: MOBILE }));
+    ({ page } = await contexte(b, quiP(17, ACCORD_SANTE), db, { viewport: MOBILE }));
     await page.goto(URL0 + "#/calculateur"); await pret(page, "#tdee"); await attendre(page, 800);
     await page.fill("#pas", "6000"); await page.fill("#heures", "3");
     await attendre(page, 1000);

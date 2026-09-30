@@ -812,7 +812,7 @@ const detail = (C, V) => JSON.stringify(C ? { sig: C.sig, n: C.n, enfants: C.enf
   await bloc("G. Mindset et première pesée", async () => {
     const k = 10, ID = PID(k);
     const db = base({ comptes: [compte(k, [["intake", AVEC_CHOIX(k)], ["formation", FO()]])] });
-    const { page } = await contexte(b, quiP(k), db, { langue: "en", theme: "light" });
+    const { page } = await contexte(b, quiP(k, null), db, { langue: "en", theme: "light" });
     await page.goto(URL0 + "#/formation"); await pret(page, '[data-coche="m1g"]'); await attendre(page, 800);
     await page.check('[data-coche="m1g"]');
     await page.waitForSelector("#invitation-declic_mindset", { timeout: 6000 }).catch(() => null); await attendre(page, 1800);
@@ -830,7 +830,7 @@ const detail = (C, V) => JSON.stringify(C ? { sig: C.sig, n: C.n, enfants: C.enf
     const pt = (((challengeDe(db, ID).cta || {}).plus_tard) || []).map(x => x.source);
     ok("« Later » : retirée, et une page redessinée ne la remet pas ; plus_tard noté en base (source declic_mindset)", n1.n === 0 && egal(pt, ["declic_mindset"]), JSON.stringify([n1, pt]));
     /* le même jour : « Poids de départ » → en attente ; le lendemain : carte en haut de l'accueil, avant « Your first step » */
-    await aller(page, "#/mensurations", 1800); await page.waitForSelector("#pstart", { state: "attached" });
+    await aller(page, "#/mensurations", 1800); await page.click("#sante-oui"); await page.waitForSelector("#pstart:not([disabled])", { state: "attached" }); await attendre(page, 800);
     await page.click("details:has(#pstart) > summary"); await page.fill("#pstart", "68"); await page.press("#pstart", "Tab"); await attendre(page, 2000);
     const n2 = await nbCartes(page), m2 = await memoire(page, ID);
     await visite(page, 1, ACCUEIL, "#dc-accomp"); await page.waitForSelector("#invitation-declic_premiere_pesee", { timeout: 6000 }).catch(() => null); await attendre(page, 1800);
@@ -885,7 +885,7 @@ const detail = (C, V) => JSON.stringify(C ? { sig: C.sig, n: C.n, enfants: C.enf
     {
       const k5 = 32, ID5 = PID(k5);
       const db5 = base({ comptes: [compte(k5, [["intake", AVEC_CHOIX(k5)], ["formation", FO({ coches: Object.assign({}, SIX, { m1g: true }) })]])] });
-      const { page: p5 } = await contexte(b, quiP(k5), db5);
+      const { page: p5 } = await contexte(b, quiP(k5, null), db5);
       await p5.goto(URL0 + "#/formation"); await pret(p5, '[data-coche="p1a"]'); await attendre(p5, 800);
       const n0 = await nbCartes(p5);
       await p5.check('[data-coche="p1a"]'); await attendre(p5, 2000);

@@ -350,3 +350,11 @@ Pour Grok Bot : rien à faire sur `index.html` (règle inchangée : Grok travail
 - **Données** : aucune migration, aucune écriture nouvelle.
 - **Fichiers** : `js/outilDecouverte.js` (dernierClic, instantClic, clicFutur), `js/outilProspects.js` (carte), `js/outilAccueil.js` (chronologie), `js/outilFormation.js`, `js/i18n.js`, `js/config.js` + `index.html` (version), `tests-locaux/` (verif52, 56, 58, 66, 67, 69 ; banc.sh). Rien dans `donnees/`.
 - **Pour Grok Bot** : rien à faire côté `donnees/`. Tests en lecture seule une fois en ligne (tu ne crées aucun compte) : pied de page « 2026-09-30 · 63 » ; aucune erreur de console, aucun fichier en 404 ; écran de connexion à 390 px.
+
+## 2026-09-30 — v64 : parcours prospect V2, lot 5 (A + B) — branche `v2/v64`, NON PUBLIÉE — Claude
+- **Rien n'est en ligne** : ce lot attend les PDF légaux (CGU, politique de confidentialité) et le lot K ; il partira avec eux.
+- **Inscription** : une seule case obligatoire (« J'ai 18 ans ou plus et j'accepte les CGU et la politique de confidentialité. », 2 liens vers les PDF), la newsletter (facultative) et « Rester connecté ». Plus de case santé. Le compte enregistre la date et la version des CGU (`consentement`, `conditions_version`) et le choix newsletter, comme avant.
+- **Accord santé au premier usage** : un prospect sans accord voit, en haut du calculateur, de Ma progression et d'« Organise ta diète », une carte « Ton accord, une seule fois » ; les champs restent inactifs et rien n'est enregistré avant « J'accepte ». L'accord va dans les métadonnées du compte (`consentement_sante`, `sante_version`, `sante_ecran`), sans changer la base. Jamais pour un client ni pour le coach ; les prospects inscrits avant (case cochée) ne voient rien.
+- **Données** : aucune migration. Aucune écriture dans `donnees/`.
+- **Fichiers** : `js/config.js` (textes, `textes_legaux` à compléter), `js/connexion.js`, `js/auth-store.js` (Sante, gardes du stockage), `js/navigation.js`, `js/outilFormation.js`, `js/outilProfil.js`, `css/outils.css`, `index.html` (version), `tests-locaux/` (verif70, verif71, fichiers.js, suites adaptées).
+- **Pour Grok Bot** : rien à faire. Ne crée aucun compte. Quand la v64 sera publiée, vérifications en lecture seule : pied de page « · 64 » (ou plus), aucune erreur de console, écran « Créer mon compte » à 390 px avec une seule case obligatoire.

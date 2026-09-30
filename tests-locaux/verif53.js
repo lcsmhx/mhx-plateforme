@@ -870,7 +870,7 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
         const okSans = sans.l.length === 2 && sans.nA === 0 && sans.l.every(x => x && x.tag === "SPAN" && /(^|\s)lien(\s|$)/.test(x.cls) && /(^|\s)lien-absent(\s|$)/.test(x.cls) && x.href === null && x.dansCase)
           && sans.l[0].t === L1 && sans.l[1].t === L2;
         ok(`inscription${langue ? " (anglais)" : ""} : « ${L1} » et « ${L2} », 2 liens distincts vers les PDF (href = CONFIG.textes_legaux, target=_blank, rel=noopener) ; liens « à compléter » : le mot seul (span.lien.lien-absent, même id, sans lien) ; écran sans aucun prix dans les deux cas (v64 : plus de volet ici)`,
-          okAvec && okSans && te.length > 100 && !prixTrouve(te) && !prixTrouve(te2), prixTrouve(te) || prixTrouve(te2) || JSON.stringify({ avec, sans }));
+          okAvec && okSans && te.length > 100 && te2.length > 100 && !prixTrouve(te) && !prixTrouve(te2), prixTrouve(te) || prixTrouve(te2) || JSON.stringify({ avec, sans, te: te.length, te2: te2.length }));
         await c.close();
       }
     } finally { inscriptionLibre = false; legaux = null; }

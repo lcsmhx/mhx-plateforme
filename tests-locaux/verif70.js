@@ -1,12 +1,21 @@
 /* verif70 — v64 (brief V2, lot 5, section A ; scénario 1a de la section 8) : l'inscription à UNE seule case obligatoire,
    vérifiée de bout en bout dans un vrai navigateur, et le VERROU de publication des textes légaux.
    A0. verrou de publication (sans navigateur) : les 3 emplacements de js/config.js (CONFIG.textes_legaux : cgu_pdf,
-      confidentialite_pdf, cgu_version), LUS SUR LE DISQUE (fichiers servis, jamais retouchés) : ✗ tant qu'une valeur
-      manque ou n'est pas valide (legauxManquants, fichiers.js), SAUF sur une branche de travail v2/* (hors
-      v2/simu-main-*) où la ligne reste ✓ en disant ce qui manque (modeLegaux, fichiers.js : BANC_LEGAUX=strict, sinon
-      GITHUB_REF, sinon la branche git de la copie ; main, tag, HEAD détaché → strict). Toujours UNE ligne : le nombre de
-      ✓ ne change pas d'un mode à l'autre. Puis la règle elle-même, sur des textes fabriqués (valeurs refusées, valeurs
-      acceptées, les deux modes) et sur le config.js de la page servi avec les valeurs de test (forcerLegaux) ;
+      confidentialite_pdf, cgu_version), LUS SUR LE DISQUE (fichiers servis, jamais retouchés) ET js/config.js EXÉCUTÉ
+      dans un bac à sable (vm) : ✗ tant qu'une valeur manque ou n'est pas publiable, ou que la valeur exécutée n'est pas
+      celle qui est lue (verrouLegaux, fichiers.js : 2 liens https Google Drive de document, identifiants d'au moins 25
+      caractères, ni valeur de test d'une suite ni identifiant TEST…, ni identifiant « modèle » (sans minuscule, sans
+      majuscule ou sans chiffre, 5 caractères identiques, suite de 6, mot de gabarit), ni le document d'un autre lien du
+      site (ressource de la formation), rien hors de \x21-\x7E ; version après le 2026-09-30 et au plus aujourd'hui + 366
+      jours ; CONFIG.textes_legaux jamais modifié hors de js/config.js), SAUF sur une branche de travail v2/* (hors
+      v2/simu-main et v2/simu-main-*)
+      où la ligne reste ✓ en disant ce qui manque (modeLegaux, fichiers.js : BANC_LEGAUX=strict, sinon GITHUB_REF, sinon
+      la branche git de la copie ; main, tag, HEAD détaché → strict). Toujours UNE ligne : le nombre de ✓ ne change pas
+      d'un mode à l'autre. Puis la règle elle-même, sur des js/config.js fabriqués et exécutables (valeurs refusées,
+      chacune pour sa raison ; liens réalistes tirés à chaque passage, acceptés ; les deux modes) et sur le config.js de
+      la page : servi avec les valeurs de test des suites (forcerLegaux) → refusé pour ses 2 liens de test ; avec des
+      liens réalistes → complet ; enfin la page entière (disque) avec des liens réalistes → complète, et chaque lien
+      Google Drive écrit ailleurs dans le site (PDF de la formation) : publiable seul, refusé comme lien des CGU ;
    A1. écran « Crée ton espace gratuit » (#/inscription), français et anglais, thèmes sombre et clair, 390 px et 320 px
       (config servie avec les 3 valeurs de test valides, LEGAUX_TEST) : textes EXACTS du brief (A1 sous-titre, A2 case,
       A4 newsletter, A6 bouton ; titre, « Rester connecté » et mention A7 inchangés) ; exactement 3 cases (conditions et
@@ -344,55 +353,150 @@ async function remplir(page, f){
 
   /* =================== A0. verrou de publication (sans navigateur) =================== */
   await bloc("A0. verrou de publication", async () => {
-    const fonctions = ["legauxManquants", "modeLegaux", "brancheGit", "forcerLegaux", "valeursLegales"].filter(n => typeof FT[n] !== "function");
-    /* le verrou : les fichiers de la page, lus sur le disque (source : jamais une retouche de suite) */
+    const fonctions = ["verrouLegaux", "legauxManquants", "legauxEcarts", "problemeLien", "modeLegaux", "brancheGit", "forcerLegaux", "valeursLegales", "listes"].filter(n => typeof FT[n] !== "function");
+    const dossier = path.dirname(HTML);
+    /* js/config.js tel qu'il est sur le disque (jamais une retouche de suite) */
+    let conf = "", confIllisible = "";
+    try { conf = fs.readFileSync(path.join(dossier, "js", "config.js"), "utf8"); } catch (e) { confIllisible = "js/config.js illisible (" + (e.code || e.message) + ")"; }
+    /* le verrou : le texte de la page et de ses fichiers (source) ET js/config.js exécuté dans un bac à sable (valeurs réelles = valeurs lues) */
     {
-      const dossier = path.dirname(HTML);
-      const pb = fonctions.length ? ["fichiers.js sans " + fonctions.join(", ")] : FT.legauxManquants(FT.source(HTML));
+      const pb = fonctions.length ? ["fichiers.js sans " + fonctions.join(", ")]
+        : FT.verrouLegaux(FT.source(HTML), conf).concat(confIllisible ? [confIllisible] : [],
+          FT.listes(fs.readFileSync(HTML, "utf8")).includes("js/config.js") ? [] : ["la page ne charge plus js/config.js (MHX_JS)"]);
       const branche = fonctions.length ? "" : FT.brancheGit(dossier), mode = fonctions.length ? "strict" : FT.modeLegaux(process.env, branche);
       const tolere = !fonctions.length && mode === "branche" && pb.length > 0;
-      ok("A0 : verrou de publication — liens des 2 PDF (CGU, politique de confidentialité) et version des CGU renseignés et valides dans js/config.js, lus sur le disque"
+      ok("A0 : verrou de publication — liens des 2 PDF (CGU, politique de confidentialité) et version des CGU renseignés et valides dans js/config.js, lus sur le disque, et les mêmes quand js/config.js est exécuté"
         + (tolere ? " — branche de travail « " + (String(process.env.GITHUB_REF || "").replace(/^refs\/heads\//, "") || branche) + " » : toléré ; à compléter avant de publier (main : rouge) : " + pb.join(" ; ") : ""),
         !fonctions.length && (pb.length === 0 || mode === "branche"),
         "mode " + mode + " (" + (String(process.env.BANC_LEGAUX || "").trim() ? "BANC_LEGAUX=" + String(process.env.BANC_LEGAUX).trim()
           : String(process.env.GITHUB_REF || "").trim() ? "GITHUB_REF=" + String(process.env.GITHUB_REF).trim() : "branche git « " + (branche || "illisible") + " »") + ") : " + pb.join(" ; "));
     }
-    /* la règle, sur des textes fabriqués et sur le config.js de la page servi avec les valeurs de test */
+    /* la règle, sur des js/config.js fabriqués (exécutables) et sur le config.js de la page (disque) */
     {
-      const C = "https://drive.google.com/file/d/1AbCdEfGhIjKlMnOpQrStUvWxYz012345/view?usp=sharing";
-      const P = "https://docs.google.com/document/d/9ZyXwVuTsRqPoNmLkJiHgFeDcBa98765/edit?usp=sharing";
-      const V = "2026-10-01";
-      const texte = (a, b2, c) => `  textes_legaux: {\n    cgu_pdf: ${JSON.stringify(a)},\n    confidentialite_pdf: ${JSON.stringify(b2)},\n    cgu_version: ${JSON.stringify(c)}\n  },\n`;
-      const d = {}, M = x => fonctions.length ? ["?"] : FT.legauxManquants(x);
-      d.complet = M(texte(C, P, V)).length === 0 && M(texte("https://drive.google.com/open?id=1AbCdEf", "https://drive.google.com/file/d/2XyZ/view", "2027-01-15")).length === 0;
-      d.aCompleter = M(texte("à compléter", "à compléter", "à compléter")).length === 3;
+      /* identifiants réalistes (25 à 44 caractères), tirés à chaque passage : écrits dans aucun fichier des suites */
+      const idReel = n => ("1" + require("crypto").randomBytes(48).toString("base64url")).slice(0, n);
+      const [I1, I2, I3, I4, I5, I6, I7, I8] = [33, 44, 33, 25, 28, 24, 33, 33].map(idReel);
+      const DRIVE = "https://drive.google.com/file/d/";
+      /* cgu_version : au plus aujourd'hui (UTC, au lancement : T0) + 366 jours, calculé ici sans fichiers.js */
+      const jourPlus = n => new Date(Math.floor(T0 / J) * J + n * J).toISOString().slice(0, 10), BORNE = jourPlus(366), APRES_BORNE = jourPlus(367);
+      const C = DRIVE + I1 + "/view?usp=sharing", P = "https://docs.google.com/document/d/" + I2 + "/edit?usp=sharing", V = "2026-10-01";
+      /* un lien réaliste écrit dans CETTE suite (30 caractères, sans TEST) : une valeur de test des suites, jamais publiable */
+      const LEURRE = "https://drive.google.com/file/d/1LeUrReVeRiF70NeJaMaIsPuBlIeR0/view";
+      const LEGAUX_71 = { cgu_pdf: "https://drive.google.com/file/d/TEST-CGU-71/view", confidentialite_pdf: "https://drive.google.com/file/d/TEST-POLITIQUE-71/view", cgu_version: "2026-10-01" };
+      /* un js/config.js complet et exécutable : corps de textes_legaux, texte avant la clé, code après l'objet */
+      const prog = (corps, avant, apres) => "const CONFIG = {\n  marque: { nom: \"MHX Coaching\" },\n" + (avant || "") + "  textes_legaux: {\n" + corps + "\n  },\n  gratuit_barre: [\"accueil\"]\n};\n" + (apres || "");
+      const corps = (a, b2, c, q) => [["cgu_pdf", a], ["confidentialite_pdf", b2], ["cgu_version", c]].map(([k, v]) => "    " + (q ? q(k, v) : k + ": " + JSON.stringify(v))).join(",\n");
+      const texte = (a, b2, c, apres) => prog(corps(a, b2, c), "", apres);
+      const commentaire = "  // cgu_pdf: " + JSON.stringify(C) + ", confidentialite_pdf: " + JSON.stringify(P) + ", cgu_version: " + JSON.stringify(V) + "\n";
+      /* Vr(t) : le verrou sur un js/config.js seul ; Vr(t, conf) : t = la source d'une page, conf = son js/config.js */
+      const d = {}, Vr = (x, conf) => fonctions.length ? ["?"] : FT.verrouLegaux(x, conf === undefined ? x : conf, T0);
+      /* du code d'un AUTRE fichier de la page qui LIT CONFIG.textes_legaux sans le modifier (comparaisons, lecture prudente) */
+      const lecteur = "\nconst v = CONFIG.textes_legaux.cgu_version, o = { a: (CONFIG.textes_legaux || {}).cgu_pdf, b: 1 };\n"
+        + "if (CONFIG.textes_legaux.cgu_version >= \"2026-10-01\" && CONFIG.textes_legaux.cgu_pdf !== \"\" && CONFIG[\"textes_legaux\"].cgu_version == v && x <= CONFIG.textes_legaux.cgu_version) {}\n";
+      d.complet = [[texte(C, P, V)], [texte("https://drive.google.com/open?id=" + I3, "https://drive.google.com/uc?id=" + I5 + "&export=download", "2027-01-15")],
+        [texte(DRIVE + I4, "https://docs.google.com/document/d/" + I2, BORNE)], [texte(C, P, V) + lecteur, texte(C, P, V)]]
+        .map(([t, conf]) => Vr(t, conf)).filter(pb => pb.length);   // [] attendu (version = la borne : acceptée ; un autre fichier qui lit seulement)
+      d.aCompleter = Vr(texte("à compléter", "à compléter", "à compléter")).length;   // 3 attendus
+      const deuxTests = pb => pb.length === 2 && /^cgu_pdf « .* lien de test/.test(pb[0]) && /^confidentialite_pdf « .* lien de test/.test(pb[1]);
+      /* chaque cas : [js/config.js (ou la source de la page), la raison attendue dans ce que le verrou refuse, js/config.js
+         de cette page si la source est plus que lui] */
+      const modele = (id, raison) => [texte(DRIVE + id + "/view", P, V), new RegExp("^cgu_pdf « .* ressemble à un exemple .*" + raison)];
+      const insere = x => I7.slice(0, 11) + "-" + x + "-" + I7.slice(12);   // « -x- » au milieu d'un identifiant réaliste : le « - » (ni lettre ni chiffre) empêche le motif de déborder sur le tirage aléatoire
+      const t0 = texte(C, P, V), ailleurs = code => [t0 + "\n" + code + "\n", /CONFIG\.textes_legaux modifié hors de js\/config\.js/, t0];
       const refuses = {
-        http: texte(C.replace("https:", "http:"), P, V), autreHote: texte("https://exemple.fr/cgu.pdf", P, V), sosie: texte("https://drive.google.com.exemple.fr/file/d/1Ab/view", P, V),
-        dossier: texte("https://drive.google.com/drive/folders/1AbCd", P, V), javascript: texte("javascript:alert(1)", P, V), espace: texte(" " + C, P, V),
-        identiques: texte(C, C, V), memeDocument: texte(C, "https://drive.google.com/file/d/1AbCdEfGhIjKlMnOpQrStUvWxYz012345/preview", V),
-        veille: texte(C, P, "2026-09-30"), dateImpossible: texte(C, P, "2026-02-30"), dateCourte: texte(C, P, "2026-10-1"), dateEnLettres: texte(C, P, "1er octobre 2026"), vide: texte(C, P, ""),
-        deuxFois: texte(C, P, V) + '    cgu_version: "2026-10-02"\n', absente: texte(C, P, V).replace(/ *cgu_version: "[^"]*"\n/, ""),
-        apostrophes: texte(C, P, V).replace(/cgu_pdf: "([^"]*)"/, "cgu_pdf: '$1'")
+        http: [texte(C.replace("https:", "http:"), P, V), /pas un lien https/], autreHote: [texte("https://exemple.fr/cgu.pdf", P, V), /pas un lien https/],
+        sosie: [texte("https://drive.google.com.exemple.fr/file/d/" + I3 + "/view", P, V), /pas un lien https/], javascript: [texte("javascript:alert(1)", P, V), /pas un lien/],
+        dossier: [texte("https://drive.google.com/drive/folders/" + I3, P, V), /chemin non accepté/], formulaire: [texte("https://docs.google.com/forms/d/" + I3 + "/viewform", P, V), /chemin non accepté/],
+        horsNorme: [texte("https://Drive.google.com/file/d/" + I3 + "/view", P, V), /forme non standard/],
+        espace: [texte(" " + C, P, V), /caractère interdit/], insecable: [texte(C.replace("/view", " /view"), P, V), /caractère interdit/],
+        invisible: [texte(DRIVE + I1.slice(0, 9) + "​" + I1.slice(9) + "/view", P, V), /caractère interdit/],
+        invisibleEncode: [texte(DRIVE + I1 + "%E2%80%8B/view", P, V), /identifiant de document illisible/],
+        idCourt: [texte(DRIVE + I6 + "/view", P, V), /trop court/], idUneLettre: [texte(DRIVE + "x" + "/view", P, V), /trop court/],
+        /* relecture du verrou : identifiants « modèles » (écrits à la main, jamais donnés par Google Drive), chacun pour sa raison */
+        modeleMajuscules: modele("REMPLACER-PAR-LE-LIEN-DU-PDF", "aucune minuscule"), modeleACompleter: modele("ID_DU_PDF_DES_CGU_A_COMPLETER", "aucune minuscule"),
+        modeleChiffres: modele("1".repeat(25), "aucune minuscule"), modeleSoulignes: modele("_".repeat(25), "aucune minuscule"),
+        sansMinuscule: modele(I7.toUpperCase(), "aucune minuscule"), modeleRepete: modele("x".repeat(33), "aucune majuscule"),
+        sansMajuscule: modele(I7.toLowerCase(), "aucune majuscule"), modeleVotre: modele("VotreIdentifiantDeDocumentIci", "aucun chiffre"),
+        sansChiffre: modele(I7.replace(/[0-9]/g, "k"), "aucun chiffre"), repete: modele(insere("QQQQQ"), "5 caractères identiques"),
+        suiteLettres: modele(insere("AbCdEf"), "suite « AbCdEf »"), suiteInverse: modele(insere("zYxWvU"), "suite « zYxWvU »"),
+        suiteChiffres: modele(insere("456789"), "suite « 456789 »"), suiteChiffresInverse: modele(insere("987654"), "suite « 987654 »"),
+        ancienExemple: modele("1AbCdEfGhIjKlMnOpQrStUvWxYz012345", "suite"), ancienExemple2: modele("9ZyXwVuTsRqPoNmLkJiHgFeDcBa98765", "suite"),
+        exemplePrefixe: modele("EXEMPLE-" + I7, "mot « EXEMPLE »"),
+        ...Object.fromEntries(["Example", "sample", "Complet", "REMPLAC", "PlaceHolder", "votre", "COLLER", "paste", "Dummy", "Identifiant", "DOCUMENT", "qwerty", "AZERTY"]
+          .map(w => ["mot" + w, modele(insere(w), "mot « " + w.toUpperCase() + " »")])),
+        suffixeTest: [texte(C, DRIVE + I8 + "-TEST/view", V), /^confidentialite_pdf « .* lien de test/], testColle: [texte(DRIVE + "TESTCGU" + I8 + "/view", P, V), /^cgu_pdf « .* lien de test/],
+        /* relecture du verrou : le document d'une ressource de la formation (ou de tout autre lien du site) */
+        ressourceDuSite: [prog(corps(DRIVE + I7 + "/view", P, V), "  ressources: [{ u: " + JSON.stringify(DRIVE + I7 + "/view?usp=sharing") + " }],\n"),
+          pb => pb.length === 1 && /^cgu_pdf : ce document .* déjà lié ailleurs dans le site/.test(pb[0])],
+        ressourceAutreFichier: [t0 + "\nconst GUIDE = " + JSON.stringify("https://drive.google.com/open?id=" + I2) + ";\n",
+          pb => pb.length === 1 && /^confidentialite_pdf : ce document .* déjà lié ailleurs dans le site/.test(pb[0]), t0],
+        /* relecture du verrou : CONFIG.textes_legaux modifié dans un AUTRE fichier de la page (ou un <script> de index.html) */
+        reaffectationAutreFichier: ailleurs('CONFIG.textes_legaux.cgu_pdf = "à compléter";'), reaffectationCrochets: ailleurs('CONFIG["textes_legaux"]["cgu_version"] = "2026-10-02";'),
+        reaffectationAjout: ailleurs('CONFIG.textes_legaux.cgu_pdf += "&x=1";'), alias: ailleurs('const T = CONFIG.textes_legaux; T.confidentialite_pdf = "à compléter";'),
+        objetRemplace: ailleurs("CONFIG.textes_legaux = {};"), assignAilleurs: ailleurs("Object.assign(CONFIG.textes_legaux, { cgu_version: v });"),
+        definePropertyAilleurs: ailleurs('Object.defineProperty(CONFIG, "textes_legaux", { value: {} });'), reflectSet: ailleurs('Reflect.set(CONFIG.textes_legaux, "cgu_pdf", "");'),
+        suppression: ailleurs("delete CONFIG.textes_legaux;"), configRemplace: ailleurs("window.CONFIG = Object.assign({}, CONFIG, { textes_legaux: {} });"),
+        assignAlias: ailleurs("const T = CONFIG.textes_legaux;\nObject.assign(T, { cgu_version: v });"), configRemplaceSeul: ailleurs("window.CONFIG = JSON.parse(s);"),
+        valeursDeTest: [texte(LEGAUX_TEST.cgu_pdf, LEGAUX_TEST.confidentialite_pdf, V), deuxTests],
+        valeursDeTest71: [texte(LEGAUX_71.cgu_pdf, LEGAUX_71.confidentialite_pdf, V), deuxTests],
+        copieDUneSuite: [texte(C, LEURRE, V), /confidentialite_pdf .*lien de test .*verif70\.js/],
+        prefixeTest: [texte(DRIVE + "TEST-" + I1 + "/view", P, V), /lien de test/], prefixeTestMinuscules: [texte(C, DRIVE + "test_" + I2 + "/view", V), /lien de test/],
+        identiques: [texte(C, C, V), /même document/], memeDocument: [texte(C, DRIVE + I1 + "/preview", V), /même document/],
+        veille: [texte(C, P, "2026-09-30"), /cgu_version/], an2100: [texte(C, P, "2100-01-01"), /cgu_version/], lointaine: [texte(C, P, "9999-12-31"), /cgu_version/],
+        apresLaBorne: [texte(C, P, APRES_BORNE), /^cgu_version « .* au plus tard le /], an2099: [texte(C, P, "2099-12-31"), /^cgu_version « /],   // relecture : aujourd'hui + 366 jours au plus
+        dateImpossible: [texte(C, P, "2026-02-30"), /cgu_version/], dateCourte: [texte(C, P, "2026-10-1"), /cgu_version/],
+        dateEnLettres: [texte(C, P, "1er octobre 2026"), /cgu_version/], vide: [texte(C, P, ""), /cgu_version/],
+        deuxFois: [texte(C, P, V).replace('cgu_version: "' + V + '"', 'cgu_version: "' + V + '",\n    cgu_version: "2026-10-02"'), /cgu_version : 2 valeur/],
+        absente: [texte(C, P, V).replace(/,\n *cgu_version: "[^"]*"/, ""), /cgu_version : 0 valeur/],
+        apostrophes: [texte(C, P, V).replace(/cgu_pdf: "([^"]*)"/, "cgu_pdf: '$1'"), /cgu_pdf : 0 valeur/],
+        commentaireApostrophes: [prog(corps("à compléter", "à compléter", "à compléter", (k, v) => k + ": '" + v + "'"), commentaire), /cgu_pdf : valeur exécutée/],
+        commentaireSansEspace: [prog(corps("à compléter", "à compléter", "à compléter", (k, v) => k + ":" + JSON.stringify(v)), commentaire), /cgu_pdf : valeur exécutée/],
+        commentaireCleGuillemets: [prog(corps("à compléter", "à compléter", "à compléter", (k, v) => JSON.stringify(k) + ": " + JSON.stringify(v)), commentaire), /cgu_version : valeur exécutée/],
+        reaffectation: [texte(C, P, V, 'CONFIG.textes_legaux.cgu_pdf = "à compléter";\n'), /cgu_pdf : valeur exécutée/],
+        reaffectationObjet: [texte(C, P, V, "Object.assign(CONFIG.textes_legaux, { cgu_version: 'à compléter' });\n"), /cgu_version : valeur exécutée/],
+        echappement: [texte(C, P, V).replace(I1 + "/view", I1 + "\\u002Fview"), /cgu_pdf : valeur exécutée/],
+        nonExecutable: [texte(C, P, V, "}\n"), /bac à sable/]
       };
-      d.refuses = Object.keys(refuses).filter(k => M(refuses[k]).length === 0);   // chacun doit être refusé : liste vide attendue
+      d.refuses = Object.keys(refuses).filter(k => { const [t, att, conf] = refuses[k], pb = Vr(t, conf); return !pb.length || !(typeof att === "function" ? att(pb) : att.test(pb.join(" | "))); })
+        .map(k => k + " → " + JSON.stringify(Vr(refuses[k][0], refuses[k][2])));   // chacun refusé pour la bonne raison : liste vide attendue
       /* les deux modes */
       const Mo = (env, br) => fonctions.length ? "?" : FT.modeLegaux(env, br);
       const modes = [
         [{ GITHUB_REF: "refs/heads/main" }, "v2/v64", "strict"], [{ GITHUB_REF: "refs/heads/v2/v64" }, "main", "branche"],
-        [{ GITHUB_REF: "refs/heads/v2/simu-main-verrou" }, undefined, "strict"], [{ GITHUB_REF: "refs/tags/v64" }, undefined, "strict"],
+        [{ GITHUB_REF: "refs/heads/v2/simu-main-verrou" }, undefined, "strict"], [{ GITHUB_REF: "refs/heads/v2/simu-main" }, undefined, "strict"],
+        [{ GITHUB_REF: "refs/heads/v2/SIMU-MAIN-x" }, undefined, "strict"], [{ GITHUB_REF: "refs/tags/v64" }, undefined, "strict"],
         [{ GITHUB_REF: "refs/pull/3/merge" }, undefined, "strict"], [{ GITHUB_REF: "refs/heads/v2/v64", BANC_LEGAUX: "strict" }, undefined, "strict"],
         [{ BANC_LEGAUX: "strict" }, "v2/v64", "strict"], [{ BANC_LEGAUX: "branche" }, "v2/v64", "strict"], [{ BANC_LEGAUX: "branche" }, "main", "strict"],
         [{}, "main", "strict"], [{}, "HEAD", "strict"], [{}, "", "strict"], [{}, "v2/v64", "branche"], [{ GITHUB_REF: "" }, "v2/v64", "branche"],
-        [{}, "v2/simu-main-x", "strict"], [{}, "v2/", "strict"], [{}, "v2", "strict"], [{}, "travail/v2/x", "strict"]
+        [{}, "v2/simu-main-x", "strict"], [{}, "v2/simu-main", "strict"], [{}, "v2/Simu-Main-y", "strict"], [{}, "v2/", "strict"], [{}, "v2", "strict"], [{}, "travail/v2/x", "strict"]
       ];
       d.modes = modes.filter(([env, br, att]) => Mo(env, br) !== att).map(([env, br, att]) => JSON.stringify(env) + " " + br + " → " + Mo(env, br) + " (attendu " + att + ")");
-      /* le config.js de la page (disque) servi avec les valeurs de test : complet, les 3 valeurs de test, une fois chacune */
-      const conf = fs.readFileSync(path.join(path.dirname(HTML), "js", "config.js"), "utf8");
+      /* le config.js de la page (disque) : servi avec les valeurs de test des suites (forcerLegaux) → refusé pour ses 2 liens de
+         test, et seulement pour eux ; avec des liens réalistes → complet (il s'exécute seul dans le bac à sable) ; « à compléter » → 3 */
       const servi = forcerLegaux(conf, LEGAUX_TEST);
-      d.servi = !fonctions.length && M(servi).length === 0 && FT.LEGAUX.every(n => JSON.stringify(FT.valeursLegales(servi, n)) === JSON.stringify([LEGAUX_TEST[n]]))
-        && M(forcerLegaux(conf, LEGAUX_A_COMPLETER)).length === 3 && FT.LEGAUX.every(n => FT.valeursLegales(conf, n).length === 1);
-      ok("A0 : règle du verrou — valeurs complètes acceptées ; « à compléter », http://, autre hôte (même sosie), dossier Drive, javascript:, espace, 2 liens vers le même document, version 2026-09-30 / impossible / mal écrite / vide, emplacement écrit 2 fois ou absent, apostrophes : refusés ; strict sur main, tag, pull request, v2/simu-main-*, HEAD détaché, git en échec, BANC_LEGAUX posée ; toléré seulement sur une branche v2/* ; le config.js de la page servi avec les valeurs de test (forcerLegaux) : complet",
-        !fonctions.length && d.complet && d.aCompleter && !d.refuses.length && !d.modes.length && d.servi, fonctions.length ? "fichiers.js sans " + fonctions.join(", ") : JSON.stringify(d));
+      d.servi = fonctions.length ? null : { test: Vr(servi), test71: Vr(forcerLegaux(conf, LEGAUX_71)), reel: Vr(forcerLegaux(conf, { cgu_pdf: C, confidentialite_pdf: P, cgu_version: V })),
+        aCompleter: Vr(forcerLegaux(conf, LEGAUX_A_COMPLETER)).length,
+        lus: FT.LEGAUX.every(n => JSON.stringify(FT.valeursLegales(servi, n)) === JSON.stringify([LEGAUX_TEST[n]]) && FT.valeursLegales(conf, n).length === 1) };
+      const serviOk = !!d.servi && deuxTests(d.servi.test) && deuxTests(d.servi.test71) && d.servi.reel.length === 0 && d.servi.aCompleter === 3 && d.servi.lus;
+      /* la page ENTIÈRE (index.html et tous ses fichiers, lus sur le disque) avec son js/config.js rempli : des liens réalistes →
+         complet (aucun faux refus des règles « ressemble à un exemple », « déjà lié ailleurs », « modifié hors de js/config.js ») ;
+         chaque lien Google Drive écrit ailleurs dans le site (les PDF de la formation) : un vrai identifiant, publiable seul
+         (problemeLien : aucun faux refus), mais refusé comme lien des CGU, pour cette seule raison */
+      let siteOk = false;
+      if (!fonctions.length) {
+        const avec = v => { const c2 = forcerLegaux(conf, v);
+          return { c2, src: FT.source(HTML, f => f === "js/config.js" ? c2 : fs.readFileSync(f === "index.html" ? HTML : path.join(dossier, f), "utf8")) }; };
+        const vide = avec(LEGAUX_A_COMPLETER).src;
+        const liens = Array.from(new Set(Array.from(vide.matchAll(/https:\/\/(?:drive|docs)\.google\.com\/[A-Za-z0-9._~:\/?#=&%+-]*/g), m => m[0])));
+        const r = avec({ cgu_pdf: C, confidentialite_pdf: P, cgu_version: V });
+        d.site = { reel: FT.verrouLegaux(r.src, r.c2, T0), liens: liens.length,
+          refusSeul: liens.map(l => [l, FT.problemeLien(l)]).filter(x => x[1]),
+          accepteCommeCgu: liens.map(l => { const a = avec({ cgu_pdf: l, confidentialite_pdf: P, cgu_version: V }), pb = FT.verrouLegaux(a.src, a.c2, T0); return [l, pb]; })
+            .filter(([l, pb]) => !(pb.length === 1 && /^cgu_pdf : ce document .* déjà lié ailleurs dans le site/.test(pb[0]))) };
+        siteOk = d.site.liens > 0 && d.site.reel.length === 0 && !d.site.refusSeul.length && !d.site.accepteCommeCgu.length;   // des liens Drive du site trouvés (sinon la règle « déjà lié ailleurs » ne protégerait rien)
+      }
+      ok("A0 : règle du verrou — liens réalistes acceptés (…/file/d/, …/document/d/, open?id=, uc?id=, identifiants de 25 à 44 caractères ; version jusqu'à aujourd'hui + 366 jours inclus ; un autre fichier qui lit seulement CONFIG.textes_legaux) ; refusés, chacun pour sa raison : « à compléter », http://, autre hôte (même sosie), javascript:, dossier Drive, formulaire, forme non standard, espace, espace insécable, caractère invisible (U+200B, même encodé), identifiant court (24 caractères, 1 lettre), identifiant « modèle » (sans minuscule, sans majuscule ou sans chiffre, 5 caractères identiques, suite abcdef / zyxwvu / 456789 / 987654, mots EXEMPLE, EXAMPLE, SAMPLE, COMPLET, REMPLAC, PLACEHOLDER, VOTRE, COLLER, PASTE, DUMMY, IDENTIFIANT, DOCUMENT, QWERTY, AZERTY, anciens exemples de cette suite), valeurs de test des suites (LEGAUX_TEST, TEST-…-71, lien écrit dans une suite, identifiant TEST-/test_/…-TEST/TESTxxx), document d'un autre lien du site (ressource de la formation, dans config.js ou un autre fichier), CONFIG.textes_legaux modifié dans un autre fichier de la page (réaffectation, crochets, +=, alias, objet remplacé, Object.assign, même sur un alias, defineProperty, Reflect.set, delete, window.CONFIG), 2 liens vers le même document, version 2026-09-30 / aujourd'hui + 367 jours / 2099-12-31 / 2100-01-01 / impossible / mal écrite / vide, emplacement écrit 2 fois ou absent, apostrophes, commentaire valide + vraie clé écrite autrement (apostrophes, sans espace, entre guillemets), réaffectation plus loin, échappement, config.js qui ne s'exécute pas ; strict sur main, tag, pull request, v2/simu-main et v2/simu-main-* (toute casse), HEAD détaché, git en échec, BANC_LEGAUX posée ; toléré seulement sur une branche v2/* ; le config.js de la page servi avec les valeurs de test des suites : refusé pour ses 2 liens de test, avec des liens réalistes : complet (exécuté dans le bac à sable) ; la page ENTIÈRE (disque) avec des liens réalistes : complète, et chaque lien Drive du site (PDF de la formation) publiable seul mais refusé comme lien des CGU",
+        !fonctions.length && !d.complet.length && d.aCompleter === 3 && !d.refuses.length && !d.modes.length && serviOk && siteOk, fonctions.length ? "fichiers.js sans " + fonctions.join(", ") : JSON.stringify(d));
     }
   });
 
