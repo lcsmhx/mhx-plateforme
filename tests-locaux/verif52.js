@@ -496,13 +496,20 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     const ch = await chrono(page);
     /* v53 (chantier 4) : plus d'emails de suivi dans la chronologie (journal retiré) ; « Dernière visite dans l'app » ; la case
        du prospect se lit « Le prospect a coché « J'ai réservé » » (le coach coche « Bilan réservé » lui-même) */
-    /* v61 (lot 2, F) : l'ANCIEN code « decouverte » garde exactement son libellé d'avant ; le NOUVEAU code
-       « apres_questionnaire » affiche le nom de son écran (Decouverte.ORIGINES), texte exact du contrat */
-    const NOM_APQ = "page « Ton plan d'action » (après les 3 questions)";
-    const nomApq = await page.evaluate(() => Decouverte.ORIGINES.apres_questionnaire).catch(() => null);
-    const attC = ["Dernière visite dans l'app", "Tu l'as relancé", "Le prospect a coché « J'ai réservé »", "Clic « Réserver mon bilan » (en haut de sa Découverte)", "Clic « Réserver mon bilan » (" + NOM_APQ + ")", "Questionnaire rempli", "Questionnaire commencé", "Inscription"];
+    /* v61 (lot 2, F) : le NOUVEAU code « apres_questionnaire » affiche le nom de son écran (Decouverte.ORIGINES), texte exact
+       du contrat. v63 (lot 4, point 1) : chaque clic se lit « Clic « Récupérer mon plan d'action » (<nom d'écran>) » et
+       l'ANCIEN code « decouverte » s'affiche sous le nom de l'écran d'aujourd'hui (Decouverte.nomOrigine, le même que
+       « Mesure » et la carte : « accueil, bouton du haut ») ; plus aucun ancien libellé (« Réserver mon bilan », « en haut
+       de sa Découverte », « bloc accompagnement », « page de proposition du bilan », « page verrouillée « programme » »…)
+       dans la chronologie */
+    const NOM_APQ = "page « Ton plan d'action » (après les 3 questions)", NOM_HAUT = "accueil, bouton du haut";
+    const CLIC = "Clic « Récupérer mon plan d'action »";
+    const nomsEcr = await page.evaluate(() => [Decouverte.ORIGINES.apres_questionnaire, Decouverte.nomOrigine("decouverte")]).catch(() => [null, null]);
+    const attC = ["Dernière visite dans l'app", "Tu l'as relancé", "Le prospect a coché « J'ai réservé »", CLIC + " (" + NOM_HAUT + ")", CLIC + " (" + NOM_APQ + ")", "Questionnaire rempli", "Questionnaire commencé", "Inscription"];
+    const ANC_CHRONO = /Réserver mon bilan|en haut de sa Découverte|bloc accompagnement|page de proposition du bilan|page verrouillée « (programme|journal|nutrition|suivi|bilan|complements) »/;
+    const txtChrono = await texte(page, "#fiche-chrono");
     const dates = ch.map(x => Date.parse(x.dt));
-    ok("chronologie dans l'ordre (la plus récente d'abord) : visite, relance, case « J'ai réservé », ancien clic « (en haut de sa Découverte) », nouveau clic « (" + NOM_APQ + ") » (= Decouverte.ORIGINES.apres_questionnaire), questionnaire rempli, commencé, inscription", JSON.stringify(ch.map(x => x.t)) === JSON.stringify(attC) && nomApq === NOM_APQ && dates.every((d, i) => i === 0 || dates[i - 1] >= d), JSON.stringify(ch.map(x => x.t)) + " · ORIGINES : " + nomApq);
+    ok("chronologie dans l'ordre (la plus récente d'abord) : visite, relance, case « J'ai réservé », ancien clic « " + CLIC + " (" + NOM_HAUT + ") » (code decouverte = Decouverte.nomOrigine), nouveau clic « " + CLIC + " (" + NOM_APQ + ") » (= Decouverte.ORIGINES.apres_questionnaire), questionnaire rempli, commencé, inscription ; plus aucun ancien libellé ni « Réserver mon bilan » dans la chronologie", JSON.stringify(ch.map(x => x.t)) === JSON.stringify(attC) && nomsEcr[0] === NOM_APQ && nomsEcr[1] === NOM_HAUT && txtChrono.includes(CLIC) && !ANC_CHRONO.test(txtChrono) && dates.every((d, i) => i === 0 || dates[i - 1] >= d), JSON.stringify(ch.map(x => x.t)) + " · noms d'écran : " + JSON.stringify(nomsEcr));
     ok("chronologie : chaque ligne datée « jj/mm/aaaa hh:mm » en heure locale (nouveau clic : " + fr(CLIC_NOUVEAU) + " " + hm(CLIC_NOUVEAU) + " ; inscription : " + fr(avant(26 * H)) + " " + hm(avant(26 * H)) + ")", ch.length === 8 && ch.every(x => /^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/.test(x.aff)) && ch[4].aff === fr(CLIC_NOUVEAU) + " " + hm(CLIC_NOUVEAU) && ch[4].dt === CLIC_NOUVEAU && ch[7].aff === fr(avant(26 * H)) + " " + hm(avant(26 * H)), JSON.stringify(ch.map(x => x.aff)));
     ok("chronologie : « 2 jours d'activité, 12 min dans l'app · pages vues : decouverte-resultat (4), formation (2), verrou-programme (1). »", (await texte(page, "#fiche-chrono p.note")) === "2 jours d'activité, 12 min dans l'app · pages vues : decouverte-resultat (4), formation (2), verrou-programme (1).", await texte(page, "#fiche-chrono p.note"));
     const lien = await page.$eval("#dc-lien", e => e.value).catch(() => "");

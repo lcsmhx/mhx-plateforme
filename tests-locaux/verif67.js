@@ -45,10 +45,12 @@
    J. décision 4 : version 2026-09-30 (= accords.conditions), volet « Conditions d'utilisation et confidentialité » du
       Profil : 12 paragraphes, le 2e EXACT (français, anglais), les 11 autres identiques à la v60 (empreinte) ; inscription :
       conditions_version 2026-09-30 envoyée ;
-   K. coach : fiche d'un prospect — anciens clics (decouverte, decouverte-accompagnement, bilan-propose, verrou-programme)
-      avec leurs anciens libellés, nouveaux codes avec leur nom d'écran, codes illisibles sans libellé (texte brut) ; autres
-      libellés du coach inchangés ; lien fiche_coach exact ; message « bilan de 15 minutes » ; le coach reçoit le lien sans
-      paramètres (sa page et la fiche) ; aucune écriture ;
+   K. coach : fiche d'un prospect — chronologie « Clic « Récupérer mon plan d'action » (<écran>) » (v63) : anciens clics
+      (decouverte, decouverte-accompagnement, bilan-propose, verrou-programme) sous le nom de l'écran d'aujourd'hui, plus
+      aucun ancien libellé ni « Réserver mon bilan », nouveaux codes avec leur nom d'écran, codes illisibles sans libellé
+      (texte brut) ; autres libellés du coach inchangés ; « 16 clics, le dernier le <date> » = date du clic le plus récent
+      (v63 : liste rangée du plus récent au plus ancien, sur deux jours) ; lien fiche_coach exact ; message « bilan de
+      15 minutes » ; le coach reçoit le lien sans paramètres (sa page et la fiche) ; aucune écriture ;
    L. client Thomas : accueil et pages (programme, journal, nutrition, suivi), en français et en anglais (langue
       prouvée : attribut lang de la page, accroche du programme dans la langue) : aucun des nouveaux textes, aucun verrou,
       aucun lien Calendly ; son lien Calendly sans paramètres ;
@@ -780,30 +782,43 @@ const verrouVu = (page, id) => page.evaluate(id => {
   await bloc("K. coach", async () => {
     const k = 40, ID = PID(k);
     const XSS = "<img src=x onerror=\"window.__xss=1\">";
-    /* [code enregistré, libellé attendu dans la chronologie] ; le plus récent d'abord */
+    /* [code enregistré, libellé attendu dans la chronologie] ; le plus récent d'abord. v63 (lot 4, point 1) : les anciens codes
+       (4 derniers) s'affichent sous le nom de l'écran d'aujourd'hui (Decouverte.nomOrigine, comme « Mesure » et la carte) */
     const CLICS = [
       ["apres_questionnaire", "page « Ton plan d'action » (après les 3 questions)"], ["accueil_haut", "accueil, bouton du haut"], ["reponses_haut", "« Modifier mes réponses », bouton du haut"],
       ["accueil_accompagnement", "accueil, carte « Ce que l'accompagnement ajoute »"], ["verrou_programme", "page verrouillée Mon programme"], ["verrou_journal", "page verrouillée Mon journal"],
       ["verrou_nutrition", "page verrouillée Nutrition"], ["verrou_suivi", "page verrouillée Mon suivi"], ["verrou_bilan", "page verrouillée Mon bilan"], ["verrou_complements", "page verrouillée Mes compléments"],
       ["__proto__", ""], [XSS, ""],
-      ["decouverte", "en haut de sa Découverte"], ["decouverte-accompagnement", "bloc accompagnement"], ["bilan-propose", "page de proposition du bilan"], ["verrou-programme", "page verrouillée « programme »"]
+      ["decouverte", "accueil, bouton du haut"], ["decouverte-accompagnement", "accueil, carte « Ce que l'accompagnement ajoute »"], ["bilan-propose", "page « Ton plan d'action » (après les 3 questions)"], ["verrou-programme", "page verrouillée Mon programme"]
     ];
-    const C0 = { version: 1, jours: {}, cta: { clics: CLICS.map(([source], i) => ({ jour: 2, source, date: avant((i + 1) * 7 * MIN) })) } };
+    /* v63 (lot 4, point 2) : 2 h de plus entre deux clics (le 1er il y a 7 min, le 16e il y a plus de 31 h) : le plus récent
+       (1er de la liste) et le dernier de la liste tombent toujours sur deux jours différents, à toute heure du lancement */
+    const C0 = { version: 1, jours: {}, cta: { clics: CLICS.map(([source], i) => ({ jour: 2, source, date: avant((i + 1) * 7 * MIN + i * 2 * H) })) } };
     const db = base({ comptes: [compte(k, [["intake", AVEC_CHOIX(k, { bilan_propose: { choix: "reserver", le: avant(2 * H) } })], ["challenge", C0]])] });
     const { page } = await contexte(b, COACH, db, { viewport: ORDI });
     await page.goto(URL0 + "#/clients"); await pret(page, `[data-ouvrir="${ID}"]`);
     const coachSeul = await page.evaluate(() => lienCalendly("accueil_haut"));
     await page.click(`[data-ouvrir="${ID}"]`); await page.waitForSelector("#fiche-chrono", { timeout: 8000 }); await attendre(page, 800);
     const chrono = await page.$$eval("#fiche-chrono ol.dc-chrono li span", l => l.map(x => x.textContent)).then(l => l.map(norm)).catch(() => []);
-    const clics = chrono.filter(x => x.startsWith("Clic « Réserver mon bilan »")), att = CLICS.map(([, lib]) => "Clic « Réserver mon bilan »" + (lib ? " (" + lib + ")" : ""));
-    ok("chronologie : les anciens clics gardent leurs anciens libellés (« (en haut de sa Découverte) », « (bloc accompagnement) », « (page de proposition du bilan) », « (page verrouillée « programme ») »)",
-      JSON.stringify(clics.slice(12)) === JSON.stringify(att.slice(12)), JSON.stringify(clics.slice(12)));
-    ok("chronologie : les 10 nouveaux codes avec le nom de leur écran (« (page « Ton plan d'action » (après les 3 questions)) », « (accueil, bouton du haut) »… « (page verrouillée Mon bilan) ») ; un code réservé (__proto__) ou piégé : « Clic « Réserver mon bilan » » sans libellé, en texte brut, aucune injection",
+    const CLIC = "Clic « Récupérer mon plan d'action »";
+    const clics = chrono.filter(x => x.startsWith(CLIC)), att = CLICS.map(([, lib]) => CLIC + (lib ? " (" + lib + ")" : ""));
+    /* v63 : plus aucun ancien libellé des anciens codes, ni « Réserver mon bilan », nulle part dans la chronologie */
+    const ANCIENS_CHRONO = ["Réserver mon bilan", "en haut de sa Découverte", "bloc accompagnement", "page de proposition du bilan", "page verrouillée « programme »"];
+    const vieux = chrono.filter(x => ANCIENS_CHRONO.some(v => x.includes(v)));
+    ok("chronologie : les anciens clics s'affichent sous le nom de l'écran d'aujourd'hui, comme « Mesure » et la carte (« (accueil, bouton du haut) », « (accueil, carte « Ce que l'accompagnement ajoute ») », « (page « Ton plan d'action » (après les 3 questions)) », « (page verrouillée Mon programme) »), préfixe « Clic « Récupérer mon plan d'action » » ; plus aucun ancien libellé (« en haut de sa Découverte », « bloc accompagnement », « page de proposition du bilan », « page verrouillée « programme » ») ni « Réserver mon bilan » dans la chronologie",
+      JSON.stringify(clics.slice(12)) === JSON.stringify(att.slice(12)) && !vieux.length, JSON.stringify(clics.slice(12)) + " · anciens : " + JSON.stringify(vieux));
+    ok("chronologie : les 10 nouveaux codes avec le nom de leur écran (« (page « Ton plan d'action » (après les 3 questions)) », « (accueil, bouton du haut) »… « (page verrouillée Mon bilan) ») ; un code réservé (__proto__) ou piégé : « Clic « Récupérer mon plan d'action » » sans libellé, en texte brut, aucune injection",
       JSON.stringify(clics.slice(0, 12)) === JSON.stringify(att.slice(0, 12)) && !(await page.evaluate(() => window.__xss)) && !(await page.$("#vue img[src='x']")), JSON.stringify(clics.slice(0, 12)));
     const fd = await lignes(page, "#fiche-decouverte"), val = x => (fd.find(l => l[0] === x) || [])[1] || "";
     ok("les autres libellés du coach ne changent pas : « Bouton « Réserver mon bilan » : 16 clics, le dernier le … », « Case « J'ai réservé mon bilan » : pas cochée », pastille « a cliqué Réserver »",
       /^16 clics, le dernier le \S.*$/.test(val("Bouton « Réserver mon bilan »")) && val("Case « J'ai réservé mon bilan »") === "pas cochée" && (await texte(page, "#fiche-decouverte .seance-c-tete")).includes("a cliqué Réserver"),
       JSON.stringify(fd) + " · " + (await texte(page, "#fiche-decouverte .seance-c-tete")));
+    /* v63 (lot 4, point 2) : « le dernier le <date> » = la date (jour local, JJ/MM/AAAA) du clic le PLUS RÉCENT, ici le 1er de la
+       liste (rangée du plus récent au plus ancien), pas celle du dernier de la liste ; dates relues par le navigateur (son fuseau) */
+    const jourFr = iso => page.evaluate(v => { const d = new Date(v); return String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0") + "/" + d.getFullYear(); }, iso);
+    const cl0 = C0.cta.clics, dRecent = await jourFr(cl0[0].date), dFin = await jourFr(cl0[cl0.length - 1].date);
+    ok("fiche, « Bouton « Réserver mon bilan » » : « 16 clics, le dernier le <date> » donne la date EXACTE du clic le plus récent (le 1er d'une liste rangée du plus récent au plus ancien, il y a 7 min), pas celle du dernier de la liste (il y a plus de 31 h, un autre jour)",
+      dRecent !== dFin && val("Bouton « Réserver mon bilan »") === "16 clics, le dernier le " + dRecent, "affiché " + JSON.stringify(val("Bouton « Réserver mon bilan »")) + " · attendu le " + dRecent + " (pas le " + dFin + ")");
     const LIEN = CAL + "?utm_source=app&utm_medium=coach&utm_content=fiche_coach&name=" + enc("Léa Martin") + "&first_name=" + enc("Léa") + "&last_name=Martin&email=" + enc("p40@exemple.fr");
     const lien = await page.$eval("#dc-lien", e => e.value).catch(() => null);
     ok("fiche, « Contacter » : son lien de réservation exact (nouvelle adresse, utm_source=app, utm_medium=coach, utm_content=fiche_coach, prénom, nom, email)", lien === LIEN, lien);

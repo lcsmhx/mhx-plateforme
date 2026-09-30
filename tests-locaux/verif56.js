@@ -31,7 +31,9 @@
    E. Profil du prospect : ses réponses, « Modifier mes réponses » (#/decouverte/reponses : rien ne part avant la
       validation, « Annuler les modifications »), objectif suivi quand il venait de la réponse « problème » ;
    F. coach : fiche d'un nouveau prospect (« 3 / 3 réponses », les 3 réponses, les anciennes qui ont une valeur, clic
-      depuis la page de proposition du bilan), aucune injection, aucune écriture ;
+      depuis la page « Ton plan d'action » ; v63 : ancien code bilan-propose comme nouveau apres_questionnaire, « Clic
+      « Récupérer mon plan d'action » (page « Ton plan d'action » (après les 3 questions)) » deux fois, plus aucun ancien
+      libellé ni « Réserver mon bilan » dans la chronologie), aucune injection, aucune écriture ;
    G. l'ancien écran « résultat » n'est plus affiché (ni calories, ni séance, ni recettes, aucune lecture du catalogue),
       son code est gardé ; client Thomas : rien de tout cela ;
    H. la garde d'âge du formulaire, inerte sans question « age », marche toujours si une question d'âge revient (page
@@ -911,8 +913,9 @@ function lienOk(href, base, attendu){
     const k = 70, ID = PID(k);
     const XSS = "<img src=x onerror=\"window.__xss=1\">";
     const I0 = NOUVEAU({ projection: "Tenir " + XSS, email_compte: "p70@exemple.fr", sexe: "Femme", poids: "64", bilan_propose: { choix: "reserver", le: avant(20 * MIN) } });
-    /* v61 (brief V2, F) : un clic d'avant (ancien code bilan-propose, déjà en base : son libellé d'avant) et un clic d'après
-       (nouveau code apres_questionnaire : le nom de son écran, Decouverte.ORIGINES) */
+    /* v61 (brief V2, F) : un clic d'avant (ancien code bilan-propose, déjà en base) et un clic d'après (nouveau code
+       apres_questionnaire : le nom de son écran, Decouverte.ORIGINES). v63 (lot 4, point 1) : l'ancien code s'affiche lui
+       aussi sous le nom de l'écran d'aujourd'hui (Decouverte.nomOrigine) : deux fois le même libellé */
     const C0 = { version: 1, jours: {}, cta: { clics: [{ jour: 3, source: "bilan-propose", date: avant(20 * MIN) }, { jour: 3, source: "apres_questionnaire", date: avant(10 * MIN) }] } };
     const db = base({ comptes: [compte(k, "Léa", "Martin", [["intake", I0], ["challenge", C0]])] });
     const { c, page } = await contexte(b, COACH, db);
@@ -922,7 +925,10 @@ function lienOk(href, base, attendu){
     ok("fiche : « 3 / 3 réponses, validé le … »", note.startsWith("3 / 3 réponses, validé le "), note);
     ok("fiche : email, puis les 3 réponses (v52, lot G : libellés courts Problème, Ce qui l'a bloqué, Dans 3 mois), puis les anciennes qui ont une valeur (sexe, poids) — pas l'objectif posé par l'app", JSON.stringify(rf) === JSON.stringify([["Email", "p70@exemple.fr"], ["Problème", "Perdre du gras"], ["Ce qui l'a bloqué", I0.obstacle], ["Dans 3 mois", "Tenir " + XSS], ["Sexe", "Femme"], ["Poids actuel (kg)", "64"]]), JSON.stringify(rf));
     const chrono = await texte(page, "#fiche-chrono");
-    ok("chronologie : l'ancien code garde son libellé (« Clic « Réserver mon bilan » (page de proposition du bilan) »), le nouveau a le nom de son écran (« … (page « Ton plan d'action » (après les 3 questions)) »)", chrono.includes("Clic « Réserver mon bilan » (page de proposition du bilan)") && chrono.includes("Clic « Réserver mon bilan » (page « Ton plan d'action » (après les 3 questions))") && !/apres_questionnaire/.test(chrono), chrono.slice(0, 400));
+    const CLIC_APQ = "Clic « Récupérer mon plan d'action » (page « Ton plan d'action » (après les 3 questions))";
+    const clicsChrono = await page.$$eval("#fiche-chrono ol li span", l => l.map(x => x.textContent.replace(/[\u00a0\u202f]/g, " ").replace(/\s+/g, " ").trim()).filter(t => /^Clic\b/.test(t))).catch(() => []);
+    const nomsEcr = await page.evaluate(() => [Decouverte.nomOrigine("bilan-propose"), Decouverte.ORIGINES.apres_questionnaire]).catch(() => []);
+    ok("chronologie : l'ancien code (bilan-propose) comme le nouveau (apres_questionnaire) se lisent « " + CLIC_APQ + " » (nom de l'écran d'aujourd'hui, Decouverte.nomOrigine) : exactement 2 lignes de clic, ce libellé deux fois ; plus aucun ancien libellé (« Réserver mon bilan », « page de proposition du bilan ») ni code brut", JSON.stringify(clicsChrono) === JSON.stringify([CLIC_APQ, CLIC_APQ]) && JSON.stringify(nomsEcr) === JSON.stringify(["page « Ton plan d'action » (après les 3 questions)", "page « Ton plan d'action » (après les 3 questions)"]) && chrono.split(CLIC_APQ).length === 3 && !/Réserver mon bilan|page de proposition du bilan|en haut de sa Découverte|bloc accompagnement/.test(chrono) && !/apres_questionnaire|bilan-propose/.test(chrono), JSON.stringify(clicsChrono) + " · " + JSON.stringify(nomsEcr) + " · " + chrono.slice(0, 400));
     ok("fiche : sa réponse piégée reste du texte (aucune injection), aucune écriture", !(await page.evaluate(() => window.__xss)) && !(await page.$("#vue img[src='x']")) && db.ecritures.length === 0, resume(db));
     await c.close();
   });
