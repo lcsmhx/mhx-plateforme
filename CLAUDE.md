@@ -78,6 +78,10 @@ Dans `.claude/` (sélection adaptée d'ECC), actifs puisque les sessions s'ouvre
 - **Avant chaque mise en ligne** : agent `code-reviewer` sur le diff (la relecture indépendante).
 - **Avant toute migration Supabase** : agent `database-reviewer` (SQL, sauvegarde, comptages, retour arrière).
 - **Tests** : agent `e2e-runner` (suites de `tests-locaux/`, une à la fois ; le banc complet tourne sur GitHub).
+- **Sécurité** : agent `security-reviewer` après un changement de connexion, d'inscription, d'affichage de données (`innerHTML`), de RLS ou de `config.js`, et avant une grosse version (lecture seule, rapport par gravité).
+- **Écritures qui échouent sans bruit** : agent `silent-failure-hunter` après un changement de `Store.ecrire`, d'appel Supabase, de `localStorage` ou de file hors ligne.
+- **Bouton « qui ne fait rien »** : skill `click-path-audit` (suit le clic jusqu'à l'état final : Store, `P`, `localStorage`, navigation).
+- **Finitions d'un écran** : skill `make-interfaces-feel-better` (jetons de `css/jetons.css` seulement, doré en accent).
 - **En fin de séance** : `/save-session` (résumé dans `.claude/session-notes/derniere-session.md`, jamais commité).
 - **Au démarrage** : `/resume-session` (le hook de démarrage en injecte déjà un extrait, 3 000 caractères au plus).
 - Au besoin : `/context-budget` (ce qui remplit le contexte), skills `e2e-testing` et `strategic-compact`.
