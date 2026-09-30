@@ -23,7 +23,11 @@
        calc_perso et mens qu'en UNE lecture groupée ; aucun prix ;
    I2. états des 3 actions selon la base : calc_perso valide et adulte (fait), mineur ou incomplet (pas fait), pesée
        (pstart ou une mesure avec un poids), vidéo déjà lancée (formation.depart.video) ; « ✓ » et « (fait) » (lecteurs
-       d'écran) sur les seules actions faites ; les 3 faites : une seule ligne « Départ lancé ✓ » ; compteur inchangé ;
+       d'écran) sur les seules actions faites ; les 3 faites : une seule ligne « Départ lancé ✓ », suivie (v62, brief V2,
+       H4) de l'invitation « Bien joué, ton départ est lancé. » (structure commune dans l'ordre, ses 6 textes et rien
+       d'autre — aucune valeur saisie —, lien Calendly de 15 min vérifié sans l'app, utm_content=formation_commence_ici,
+       noopener, « Plus tard ») ; aucune invitation tant qu'une action manque (aussi à 2 sur 3), ni lecture groupée
+       d'intake et challenge (au plus une pour les 3 faites) ; compteur inchangé ;
        aucune écriture, une lecture groupée par visite ; un calcul enregistré dans le calculateur et pas encore arrivé
        au serveur (saisie en attente, puis envoi en vol : outilDecouverte.saisiesLocales) compte déjà, sans rien écrire
        de plus ;
@@ -31,17 +35,19 @@
        entièrement à l'écran après), iframe youtube-nocookie à la place de la vignette, formation.depart.video écrit UNE
        fois (le reste de la clé intact), seule la carte « Commence ici » redessinée (« Ce qui t'attend », l'iframe et
        « Ton parcours » restent), compteur inchangé ; 2e clic et rechargement : plus aucune écriture ; clic sur la
-       vignette elle-même : même effet ;
+       vignette elle-même : même effet ; v62 (H4) : la vidéo qui complète les 3 (calcul et pesée déjà faits) → UNE
+       écriture, carte repliée et l'invitation juste après #fo-depart ; écriture de formation refusée → action non cochée,
+       rien de déclenché (ni invitation, ni lecture, ni mémoire sur l'appareil) ;
    I4. client Thomas et coach (fiche d'un prospect) : aucune des deux cartes, « Ton parcours » en premier, aucune
        lecture de calc_perso ni de mens (quel que soit l'ordre ou le découpage) ; la vignette de Thomas n'écrit rien ;
    I5. page servie retouchée (FORMATION.video_minutes à 4, une ressource de plus dans le module 6) : « Commence ici ·
        7 min » / « Start here · 7 min », tuile des documents à 16 (rien d'écrit en dur) ;
    I6. prospect, anglais (390 px, clair) : les deux cartes en anglais (« Start here », actions, tuiles, lignes,
-       « 0 / 49 steps », « (done) », « You're off ✓ »), pas de débordement ;
-   T. thèmes sombre et clair (390 px) : thème appliqué, chaque texte des deux cartes, et l'état replié « Départ lancé ✓ »,
-      se détache de son fond (contraste d'au moins 4,5:1 ; 3:1 pour les seules exceptions nommées, à la couleur exacte de
-      leur jeton : EXCEPTIONS_CONTRASTE), fond des cartes différent d'un thème à l'autre, rien ne sort de l'écran,
-      actions d'au moins 44 px ;
+       « 0 / 49 steps », « (done) », « You're off ✓ » et, v62, l'invitation anglaise du brief H), pas de débordement ;
+   T. thèmes sombre et clair (390 px) : thème appliqué, chaque texte des deux cartes, et l'état replié « Départ lancé ✓ »
+      suivi de son invitation (v62), se détache de son fond (contraste d'au moins 4,5:1 ; 3:1 pour les seules exceptions
+      nommées, à la couleur exacte de leur jeton : EXCEPTIONS_CONTRASTE), fond des cartes différent d'un thème à l'autre, rien ne sort de l'écran,
+      actions d'au moins 44 px (v62 : le bouton et « Plus tard » de l'invitation aussi) ;
    Z. aucun appel vers l'extérieur.
    Supabase simulé (gabarit de verif60, carte 6 §15) : rien ne part vers la vraie base (routage par NOM D'HÔTE, jamais
    par sous-chaîne) ; règles de la base reproduites (HANDOFF §2.3, v49) ; appelant reconnu à son jeton ; chaque écriture
@@ -452,8 +458,79 @@ const carteApercu = page => page.evaluate(() => {
   return { classes: s.className, h2: n(s.querySelector("h2")), tuiles: Array.from(s.querySelectorAll(".tiles > .tile")).map(t => [n(t.querySelector(".t-val.readout")), n(t.querySelector(".t-sub"))]),
     lignes: Array.from(s.querySelectorAll(":scope > p")).map(n), brut: s.textContent };
 });
-/* les 3 premiers enfants de #fo-vue (id, sinon le titre de la carte) */
-const ordre = page => page.evaluate(() => Array.from((document.getElementById("fo-vue") || { children: [] }).children).slice(0, 3).map(e => e.id || ((e.querySelector("h2") || {}).textContent || "").trim()));
+/* les 3 premiers enfants de #fo-vue (id, sinon le titre de la carte) ; n : les n premiers */
+const ordre = (page, n) => page.evaluate(n => Array.from((document.getElementById("fo-vue") || { children: [] }).children).slice(0, n).map(e => e.id || ((e.querySelector("h2") || {}).textContent || "").trim()), n || 3);
+/* v62 (brief V2, H) : une invitation telle qu'affichée (section.panel.invitation#invitation-<code>), son voisin d'avant,
+   le lien attendu (lienCalendly de la page, code d'origine = le code) et le nombre d'invitations de la page */
+const carteInvitation = (page, code) => page.evaluate(code => {
+  const n = x => x ? x.textContent.replace(/[  ]/g, " ").replace(/\s+/g, " ").trim() : null;
+  const nom = x => x.tagName + (x.className ? "." + String(x.className).trim().split(/\s+/).join(".") : "");
+  const s = document.getElementById("invitation-" + code); if (!s) return null;
+  const a = s.querySelector(":scope > .dc-cta > a.btn[data-inv-cal]"), t = s.querySelector(":scope > .dc-cta > button.lien-discret[data-inv-tard]"), cta = s.querySelector(":scope > .dc-cta");
+  let utm = null; try { utm = a ? new URL(a.getAttribute("href")).searchParams.get("utm_content") : null; } catch (e) { utm = "illisible"; }
+  /* relecture : chaque morceau de texte de la carte, dans l'ordre du document (aucun texte en plus, nulle part) */
+  const textes = [], w = document.createTreeWalker(s, NodeFilter.SHOW_TEXT);
+  for (let x = w.nextNode(); x; x = w.nextNode()) { const v = x.nodeValue.replace(/[  ]/g, " ").replace(/\s+/g, " ").trim(); if (v) textes.push(v); }
+  return { tag: s.tagName, classes: s.className, data: s.dataset.invitation, avant: s.previousElementSibling ? s.previousElementSibling.id : null,
+    enfants: Array.from(s.children).map(nom), cta: cta ? Array.from(cta.children).map(nom) : null, nEl: s.querySelectorAll("*").length, textes, html: s.outerHTML,
+    h2: n(s.querySelector("h2")), objectif: n(s.querySelector("p.inv-objectif")), texte: n(s.querySelector("p.inv-texte")),
+    lien: a ? { href: a.getAttribute("href"), attendu: lienCalendly(code), utm, cible: a.getAttribute("target"), rel: a.getAttribute("rel"), code: a.dataset.invCal, t: n(a) } : null,
+    sous: n(s.querySelector(":scope > .dc-cta > p.dc-cta-sous")), tard: t ? { t: n(t), code: t.dataset.invTard } : null, nb: document.querySelectorAll("section.invitation").length };
+}, code);
+const INV_DEPART = { code: "formation_commence_ici", h2: "Bien joué, ton départ est lancé.", objectif: "Ton objectif : « " + NOUVEAU.projection + " »",
+  texte: "Prochaine étape : ton plan d'action personnalisé, offert, en 15 min avec Lucas.", bouton: "Récupérer mon plan d'action", sous: "15 min avec Lucas · offert", tard: "Plus tard" };
+/* relecture : les textes anglais du brief H (4. « Commence ici » terminé), mot pour mot */
+const INV_DEPART_EN = { code: "formation_commence_ici", h2: "Nice work, you're off to a start.", objectif: "Your goal: “" + NOUVEAU.projection + "”",
+  texte: "Next step: your personalized action plan, free, in 15 min with Lucas.", bouton: "Get my action plan", sous: "15 min with Lucas · free", tard: "Later" };
+/* relecture : le lien d'une invitation vérifié SANS l'app (gabarit de lienOk, verif56) : l'événement de 15 min,
+   utm_source=app, utm_medium=bouton, utm_content=<code>, dans cet ordre, puis le nom, le prénom et l'email du prospect
+   (qui : { prenom, nom, email }), rien d'autre ; "" si tout est bon, sinon ce qui ne va pas */
+const CAL15 = "https://calendly.com/mhx-coaching/ton-plan-d-action-offert-15-min-avec-lucas";
+function lienInvOk(href, code, qui){
+  let u; try { u = new URL(href); } catch (e) { return "adresse illisible"; }
+  if (href.split("?")[0] !== CAL15) return "base " + href.split("?")[0];
+  const p = [...u.searchParams.entries()], k = p.map(x => x[0]), v = Object.fromEntries(p);
+  const admis = ["utm_source", "utm_medium", "utm_content", "name", "first_name", "last_name", "email"];
+  if (k.some(x => !admis.includes(x)) || new Set(k).size !== k.length) return "paramètres " + k.join(",");
+  if (v.utm_source !== "app" || v.utm_medium !== "bouton" || v.utm_content !== code) return "utm " + JSON.stringify(v);
+  if (!href.startsWith(CAL15 + "?utm_source=app&utm_medium=bouton&utm_content=" + code + "&")) return "ordre utm";
+  if (v.name !== qui.prenom + " " + qui.nom || v.first_name !== qui.prenom || v.last_name !== qui.nom || v.email !== qui.email) return "nom / prénom / email " + JSON.stringify(v);
+  return "";
+}
+/* le prospect k de cette suite (PROSPECT : nom « Essai », email pk@exemple.fr) */
+const quiLien = (k, prenom) => ({ prenom, nom: "Essai", email: "p" + k + "@exemple.fr" });
+/* relecture : une valeur saisie du prospect (poids 60 kg du calcul, 70,4 / 70,5 kg des pesées, calories) : jamais dans une
+   invitation (texte ni attribut) */
+const VALEURS = /\b60\b|\b70[.,]\s?[45]\b|\bkg\b|kcal/i;
+/* relecture (brief H, « STRUCTURE COMMUNE, dans cet ordre ») : une invitation conforme — section.panel.invitation
+   #invitation-<code>[data-invitation], seule de la page, juste après l'élément d'id « avant » ; enfants EXACTS h2,
+   p.inv-objectif, p.inv-texte, div.dc-cta ; dans div.dc-cta : a.btn, p.dc-cta-sous, button.lien-discret ; 7 éléments en
+   tout et ses 6 textes exacts, dans l'ordre, rien d'autre (aucun élément, texte ou valeur saisie en plus) ; lien vérifié
+   sans l'app (lienInvOk) et égal à lienCalendly(code), data-inv-cal, nouvel onglet, rel=noopener ; « Plus tard »
+   data-inv-tard. Renvoie la liste de ce qui ne va pas (vide : conforme) */
+function invitationKo(iv, A, avant, qui){
+  if (!iv) return ["absente"];
+  const e = [], si = (c, m) => { if (!c) e.push(m); }, l = iv.lien || {};
+  si(iv.tag === "SECTION" && /\bpanel\b/.test(iv.classes) && /\binvitation\b/.test(iv.classes), "section " + iv.tag + "." + iv.classes);
+  si(iv.data === A.code, "data-invitation " + iv.data);
+  si(iv.avant === avant, "juste après " + iv.avant);
+  si(iv.nb === 1, iv.nb + " invitations");
+  si(egal(iv.enfants, ["H2", "P.inv-objectif", "P.inv-texte", "DIV.dc-cta"]), "enfants " + JSON.stringify(iv.enfants));
+  si(egal(iv.cta, ["A.btn", "P.dc-cta-sous", "BUTTON.lien-discret"]), "dc-cta " + JSON.stringify(iv.cta));
+  si(iv.nEl === 7, iv.nEl + " éléments");
+  si(egal(iv.textes, [A.h2, A.objectif, A.texte, A.bouton, A.sous, A.tard]), "textes " + JSON.stringify(iv.textes));
+  si(iv.h2 === A.h2 && iv.objectif === A.objectif && iv.texte === A.texte && l.t === A.bouton && iv.sous === A.sous && !!iv.tard && iv.tard.t === A.tard, "textes par élément");
+  si(!VALEURS.test(iv.html || ""), "valeur saisie dans la carte");
+  si(!!l.href && l.href === l.attendu, "lien ≠ lienCalendly(code) : " + l.href);
+  const pb = lienInvOk(l.href || "", A.code, qui); si(!pb, "lien : " + pb);
+  si(l.utm === A.code && l.code === A.code, "utm_content / data-inv-cal " + l.utm + " " + l.code);
+  si(l.cible === "_blank" && /(^|\s)noopener(\s|$)/.test(l.rel || ""), "target / rel " + l.cible + " " + l.rel);
+  si(!!iv.tard && iv.tard.code === A.code, "data-inv-tard " + (iv.tard && iv.tard.code));
+  return e;
+}
+/* relecture (contrat H : « UNE lecture groupée au déclencheur, jamais à la simple ouverture d'une page ») : les lectures
+   de ce compte qui portent À LA FOIS intake et challenge (la lecture groupée de l'invitation, quel que soit l'ordre) */
+const lecturesInvitation = (db, uid, depuis) => db.lectures.slice(depuis || 0).filter(x => x.par === uid && /^in\./.test(x.outil) && couvre(x.outil, "intake") && couvre(x.outil, "challenge"));
 const compteur = page => page.$eval("#fo-vue .prog-compteur .t-sub", x => x.textContent.replace(/\s+/g, " ").trim()).catch(() => "");
 /* les chiffres attendus, comptés par la suite elle-même dans FORMATION et LECONS (modules ; vidéos : la bienvenue + celles
    des modules ; documents : ressources + leçons des modules ; défis : axes des challenges + défis) */
@@ -517,12 +594,14 @@ const objModule = (page, m) => page.evaluate(m => { const n = x => x ? x.textCon
 const introParcours = page => page.evaluate(() => { const h = Array.from(document.querySelectorAll("#fo-vue h2")).find(x => /^(Ton parcours|Your journey)$/.test(x.textContent.trim()));
   const p = h && h.parentElement.querySelector("p"); return p ? { brut: p.textContent, n: p.textContent.replace(/[\u00a0\u202f]/g, " ").replace(/\s+/g, " ").trim() } : { brut: "", n: "" }; });
 /* rien ne sort de l'écran : ni la page, ni un élément des deux cartes (texte pour lecteurs d'écran à part) ; bon : et les
-   cartes sont bien là (au moins 10 éléments mesurés) */
-const horsEcran = page => page.evaluate(() => { const w = window.innerWidth, l = []; let n = 0;
-  document.querySelectorAll("#fo-depart, #fo-depart *, #fo-apercu, #fo-apercu *").forEach(e => { if (e.closest(".sr-only")) return; const r = e.getBoundingClientRect(); if (r.width) n++;
+   cartes sont bien là (au moins 10 éléments mesurés) ; relecture (v62) : inv = le sélecteur d'une invitation mesurée aussi
+   (bon : ses 8 éléments, la section comprise, tous mesurés) */
+const INV_SEL = "#invitation-formation_commence_ici";
+const horsEcran = (page, inv) => page.evaluate(inv => { const w = window.innerWidth, l = []; let n = 0, ni = 0;
+  document.querySelectorAll("#fo-depart, #fo-depart *, #fo-apercu, #fo-apercu *" + (inv ? ", " + inv + ", " + inv + " *" : "")).forEach(e => { if (e.closest(".sr-only")) return; const r = e.getBoundingClientRect(); if (r.width) { n++; if (inv && e.closest(inv)) ni++; }
     if (r.width && (r.left < -1 || r.right > w + 1)) l.push((e.className || e.tagName) + " " + Math.round(r.left) + "-" + Math.round(r.right)); });
   const page = document.documentElement.scrollWidth > w + 1;
-  return { page, l, n, bon: !page && l.length === 0 && n >= 10 }; });
+  return { page, l, n, ni, bon: !page && l.length === 0 && n >= 10 && (!inv || ni === 8) }; }, inv || "");
 /* relecture : contraste d'au moins 4,5:1 par défaut ; 3:1 (celui des tuiles de l'app) seulement pour ces exceptions
    NOMMÉES, et seulement quand le texte a exactement la couleur du jeton de l'app nommé (un texte passé à une autre couleur
    retombe sous le seuil de 4,5:1) : [sélecteur, jeton] */
@@ -535,11 +614,19 @@ const EXCEPTIONS_CONTRASTE = [
      sur son disque d'accent) ; en thème sombre, ces textes doivent atteindre 4,5:1 */
   [".eyebrow", "--accent", "light"],
   [".fo-depart-ligne", "--accent", "light"],
-  [".fo-depart-c", "--accent-ink", "light"]
+  [".fo-depart-c", "--accent-ink", "light"],
+  /* relecture (v62) : l'invitation « Bien joué, ton départ est lancé. », mesurée aussi, reprend le bloc d'appel de la page
+     « Ton plan d'action » et de l'accueil (div.dc-cta) : sa ligne « 15 min avec Lucas · offert » et « Plus tard » sont le
+     même texte secondaire (--ink-3 : 3,99:1 en sombre, 4,27:1 en clair), et en thème clair seulement le bouton doré de
+     l'app (blanc sur --accent : 4,29:1, comme la coche ✓ ci-dessus) ; limitées à l'invitation */
+  [".invitation .dc-cta-sous", "--ink-3"],
+  [".invitation .lien-discret", "--ink-3"],
+  [".invitation a.btn", "--accent-ink", "light"]
 ];
 const tropFaibles = k => k.out.filter(x => !(x.r >= (x.exc ? CONTRASTE_EXC : CONTRASTE)));
-/* contraste de chaque texte des deux cartes avec son fond réel (fonds semi-transparents composés jusqu'au corps de la page) */
-const contrastes = page => page.evaluate(EXC => {
+/* contraste de chaque texte des deux cartes avec son fond réel (fonds semi-transparents composés jusqu'au corps de la page) ;
+   relecture (v62) : inv = le sélecteur d'une invitation mesurée aussi (ses textes marqués inv) */
+const contrastes = (page, inv) => page.evaluate(([EXC, inv]) => {
   const rgb = s => { const m = /rgba?\(([^)]+)\)/.exec(s || ""); if (!m) return null; const p = m[1].split(/[\s,/]+/).filter(Boolean).map(Number); return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 }; };
   const sur = (h, b) => ({ r: h.r * h.a + b.r * (1 - h.a), g: h.g * h.a + b.g * (1 - h.a), b: h.b * h.a + b.b * (1 - h.a), a: 1 });
   const fond = el => { const pile = []; for (let e = el; e; e = e.parentElement) { const c = rgb(getComputedStyle(e).backgroundColor); if (c && c.a > 0) { pile.push(c); if (c.a >= 1) break; } }
@@ -549,17 +636,18 @@ const contrastes = page => page.evaluate(EXC => {
   /* la couleur calculée d'un jeton (--ink-3…) : celle d'un élément témoin coloré par var(jeton) */
   const jeton = v => { const s = document.createElement("span"); s.style.color = "var(" + v + ")"; document.body.appendChild(s); const c = getComputedStyle(s).color; s.remove(); return c; };
   const out = [];
-  document.querySelectorAll("#fo-depart *, #fo-apercu *").forEach(el => {
+  document.querySelectorAll("#fo-depart *, #fo-apercu *" + (inv ? ", " + inv + " *" : "")).forEach(el => {
     if (el.closest(".sr-only")) return;
     const t = Array.from(el.childNodes).filter(x => x.nodeType === 3).map(x => x.nodeValue).join("").trim(); if (!t) return;
     const cs = getComputedStyle(el).color, f = fond(el), c = rgb(cs);
     /* exception nommée : l'élément porte la classe ET a exactement la couleur du jeton (et, si elle le dit, dans ce thème) */
     const theme = document.documentElement.getAttribute("data-theme"), exc = EXC.find(([sel, v, th]) => el.matches(sel) && cs === jeton(v) && (!th || th === theme));
-    if (!c) { out.push({ t: t.slice(0, 24), r: 0, exc: null }); return; }
-    out.push({ t: t.slice(0, 24), cls: String(el.className || el.tagName), r: Math.round(ratio(sur(c, f), f) * 100) / 100, exc: exc ? exc[0] : null });
+    const dansInv = !!inv && !!el.closest(inv);
+    if (!c) { out.push({ t: t.slice(0, 24), r: 0, exc: null, inv: dansInv }); return; }
+    out.push({ t: t.slice(0, 24), cls: String(el.className || el.tagName), r: Math.round(ratio(sur(c, f), f) * 100) / 100, exc: exc ? exc[0] : null, inv: dansInv });
   });
   return { out, fond: getComputedStyle(document.getElementById("fo-depart")).backgroundColor, theme: document.documentElement.getAttribute("data-theme") };
-}, EXCEPTIONS_CONTRASTE);
+}, [EXCEPTIONS_CONTRASTE, inv || ""]);
 const egal = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const ISO = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$/;
 
@@ -695,31 +783,52 @@ const ISO = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$/;
   /* =================== I2. états des 3 actions =================== */
   await bloc("I2. prospect : états des 3 actions selon la base", async () => {
     const vid = { depart: { video: avant(2 * H) } };
+    /* relecture (v62) : aussi deux cas à 2 actions sur 3 (vidéo + calcul sans pesée ; calcul + pesée sans vidéo) : aucune
+       invitation tant qu'une action manque */
     const cas = [
       [11, "rien", [], [false, false, false]],
       [12, "calcul valide et adulte, pas de pesée", [["calc_perso", CP]], [false, true, false]],
       [13, "calcul mineur (16 ans), pesée de départ", [["calc_perso", CP_MINEUR], ["mens", MENS_DEPART]], [false, false, true]],
       [14, "vidéo déjà lancée, calcul incomplet, suivi sans poids", [["formation", vid], ["calc_perso", CP_INCOMPLET], ["mens", MENS_VIDE]], [true, false, false]],
+      [18, "vidéo déjà lancée, calcul valide, pas de pesée", [["formation", vid], ["calc_perso", CP]], [true, true, false]],
+      [19, "calcul valide, une mesure avec un poids, pas de vidéo", [["calc_perso", CP], ["mens", MENS_MESURE]], [false, true, true]],
       [15, "les 3 : vidéo, calcul valide, une mesure avec un poids", [["formation", vid], ["calc_perso", CP], ["mens", MENS_MESURE]], null]];
     const db = base({ comptes: cas.map(([k, , d]) => PROSPECT(k, "P" + k, d)) });
     const vus = [];
-    for (const [k] of cas) {
+    for (const [k, , , etat] of cas) {
+      const L0 = db.lectures.length;
       const { c, page } = await contexte(b, quiP(k), db, { viewport: MOBILE });
       await ouvrirFormation(page);
-      vus.push({ k, d: await carteDepart(page), ordre: await ordre(page), compteur: await compteur(page) });
+      /* v62 (brief V2, H4) : les 3 faites à l'ouverture de #/formation → l'invitation formation_commence_ici juste après
+         #fo-depart (posée après la lecture groupée d'intake et challenge) ; relecture : une action manque → on laisse
+         1 s de plus à une invitation qui arriverait après une lecture, avant de compter */
+      if (!etat) await page.waitForSelector("#invitation-" + INV_DEPART.code, { timeout: 5000 }).catch(() => {});
+      else await attendre(page, 1000);
+      vus.push({ k, etat, d: await carteDepart(page), ordre: await ordre(page, 4), compteur: await compteur(page), inv: await carteInvitation(page, INV_DEPART.code), nbInv: await page.$$eval("section.invitation", l => l.length).catch(() => -1),
+        lInv: lecturesInvitation(db, PID(k), L0).map(x => x.outil) });
       await c.close();
     }
-    const partiels = vus.slice(0, 4);
-    ok("états : rien fait ; calcul seul ; pesée seule (calcul mineur : pas fait) ; vidéo seule (calcul incomplet, suivi sans poids : pas faits)",
-      partiels.every((v, i) => v.d && egal(v.d.actions.map(a => a.fait), cas[i][3])), JSON.stringify(partiels.map(v => v.d && v.d.actions.map(a => a.fait))));
+    const partiels = vus.filter(v => v.etat), trois = vus.find(v => !v.etat);
+    ok("états : rien fait ; calcul seul ; pesée seule (calcul mineur : pas fait) ; vidéo seule (calcul incomplet, suivi sans poids : pas faits) ; vidéo et calcul sans pesée ; calcul et pesée sans vidéo",
+      partiels.length === 6 && partiels.every(v => v.d && egal(v.d.actions.map(a => a.fait), v.etat)), JSON.stringify(partiels.map(v => v.d && v.d.actions.map(a => a.fait))));
     ok("la coche et « (fait) » (lecteurs d'écran) sur les seules actions faites ; mêmes textes et liens",
-      partiels.every((v, i) => v.d && v.d.actions.every((a, j) => a.c === (cas[i][3][j] ? "✓" : "") && a.sr === (cas[i][3][j] ? I_FR.fait : null) && a.t === I_FR.actions[j][2] && a.href === I_FR.actions[j][1])), JSON.stringify(partiels.map(v => v.d && v.d.actions.map(a => [a.c, a.sr]))));
-    const f = vus[4].d;
-    ok("les 3 faites : la carte se replie en UNE ligne « Départ lancé » avec sa coche (section.panel.fo-depart.fo-depart-fini, ni étiquette, ni titre, ni liste), « Ce qui t'attend » reste en dessous",
-      !!f && /\bfo-depart-fini\b/.test(f.classes) && /\bpanel\b/.test(f.classes) && egal(f.enfants, ["P.fo-depart-ligne"]) && f.ligne === I_FR.fini && f.ol === 0 && f.eyebrow === null && f.h2 === null && egal(vus[4].ordre, ["fo-depart", "fo-apercu", "Ton parcours"]),
-      JSON.stringify(f));
+      partiels.length === 6 && partiels.every(v => v.d && v.d.actions.every((a, j) => a.c === (v.etat[j] ? "✓" : "") && a.sr === (v.etat[j] ? I_FR.fait : null) && a.t === I_FR.actions[j][2] && a.href === I_FR.actions[j][1])), JSON.stringify(partiels.map(v => v.d && v.d.actions.map(a => [a.c, a.sr]))));
+    const f = trois.d, iv = trois.inv, ko = invitationKo(iv, INV_DEPART, "fo-depart", quiLien(15, "P15"));
+    /* v62 (brief V2, H4) : avant, « Ce qui t'attend » venait juste après ; désormais l'invitation « Bien joué, ton départ
+       est lancé. » s'intercale (juste après #fo-depart), puis « Ce qui t'attend » et « Ton parcours » ; la carte est
+       vérifiée (relecture : structure commune exacte et dans l'ordre, ses 6 textes et rien d'autre — aucune valeur saisie,
+       ce prospect a 60 kg et 70,4 kg en base —, lien Calendly vérifié sans l'app, rel=noopener, « Plus tard ») ; aucune
+       invitation tant qu'une des 3 actions manque */
+    ok("les 3 faites : la carte se replie en UNE ligne « Départ lancé » avec sa coche (section.panel.fo-depart.fo-depart-fini, ni étiquette, ni titre, ni liste), suivie de l'invitation « Bien joué, ton départ est lancé. » (structure commune dans l'ordre : h2, « Ton objectif », texte, div.dc-cta = bouton, « 15 min avec Lucas · offert », « Plus tard » ; ses 6 textes et rien d'autre ; lien Calendly de 15 min utm_source=app, utm_medium=bouton, utm_content=formation_commence_ici, nouvel onglet, noopener), puis « Ce qui t'attend » ; aucune invitation dans les 6 autres cas",
+      !!f && /\bfo-depart-fini\b/.test(f.classes) && /\bpanel\b/.test(f.classes) && egal(f.enfants, ["P.fo-depart-ligne"]) && f.ligne === I_FR.fini && f.ol === 0 && f.eyebrow === null && f.h2 === null && egal(trois.ordre, ["fo-depart", "invitation-" + INV_DEPART.code, "fo-apercu", "Ton parcours"])
+        && ko.length === 0 && partiels.every(v => v.nbInv === 0 && v.inv === null),
+      JSON.stringify([ko, f, trois.ordre, iv && iv.textes, iv && iv.lien, partiels.map(v => v.nbInv)]));
     ok("compteur « 0 / 49 étapes » dans tous les cas (vidéo lancée, calcul, pesée : aucune étape de plus)", vus.every(v => v.compteur === I_FR.compteur), JSON.stringify(vus.map(v => v.compteur)));
-    ok("ces 5 visites : rien d'écrit ; une seule lecture groupée de calc_perso et mens chacune", saisies(db).length === 0 && cas.every(([k]) => uneLectureGroupee(db, PID(k))), resume(db) + " " + JSON.stringify(cas.map(([k]) => lecturesDepart(db, PID(k)).map(x => x.outil))));
+    /* relecture (contrat H) : intake et challenge lus en UNE lecture groupée au déclencheur, jamais à la simple ouverture
+       d'une page : aucune tant qu'une action manque (pas de déclencheur), au plus une pour les 3 faites */
+    ok("ces 7 visites : rien d'écrit ; une seule lecture groupée de calc_perso et mens chacune ; lecture groupée d'intake et challenge (invitation) : aucune dans les 6 visites où une action manque, au plus une pour les 3 faites",
+      saisies(db).length === 0 && cas.every(([k]) => uneLectureGroupee(db, PID(k))) && partiels.every(v => v.lInv.length === 0) && trois.lInv.length <= 1,
+      resume(db) + " " + JSON.stringify(cas.map(([k]) => lecturesDepart(db, PID(k)).map(x => x.outil))) + " " + JSON.stringify(vus.map(v => [v.k, v.lInv])));
   });
 
   /* relecture (contrat I : « + ce qui attend encore d'être envoyé (outilDecouverte.saisiesLocales) ») : un calcul enregistré
@@ -788,8 +897,10 @@ const ISO = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$/;
       e1.length === 1 && saisies(db).length === 1 && ISO.test((Fo.depart || {}).video || "") && Date.parse(Fo.depart.video) >= t0 - 2000 && Date.parse(Fo.depart.video) <= Date.now() + 2000
       && egal(Fo.coches, { p1a: true }) && egal(Fo.defis, { d6: true }) && Fo.challenge === "c3", resume(db) + " " + JSON.stringify(Fo).slice(0, 200));
     const d1 = await carteDepart(page);
-    ok("seule la carte « Commence ici » est redessinée : l'action vidéo cochée (coche, « (fait) »), les 2 autres non ; « Ce qui t'attend », « Ton parcours » et le lecteur restent à l'écran (mêmes éléments) ; compteur inchangé",
-      ap.nouvelleCarte && ap.memeApercu && ap.memeParcours && ap.lecteurDansParcours && !!d1 && egal(d1.actions.map(a => [a.fait, a.c, a.sr]), [[true, "✓", I_FR.fait], [false, "", null], [false, "", null]]) && (await compteur(page)) === c0,
+    /* relecture (v62) : 1 action sur 3 après le clic : aucune invitation */
+    ok("seule la carte « Commence ici » est redessinée : l'action vidéo cochée (coche, « (fait) »), les 2 autres non ; « Ce qui t'attend », « Ton parcours » et le lecteur restent à l'écran (mêmes éléments) ; compteur inchangé ; aucune invitation (une seule action faite)",
+      ap.nouvelleCarte && ap.memeApercu && ap.memeParcours && ap.lecteurDansParcours && !!d1 && egal(d1.actions.map(a => [a.fait, a.c, a.sr]), [[true, "✓", I_FR.fait], [false, "", null], [false, "", null]]) && (await compteur(page)) === c0
+        && (await page.$$eval("section.invitation", l => l.length).catch(() => -1)) === 0,
       JSON.stringify([ap.nouvelleCarte, ap.memeApercu, ap.memeParcours, ap.lecteurDansParcours, d1 && d1.actions.map(a => a.fait), c0, await compteur(page)]));
     await page.click('[data-depart="video"]'); await attendre(page, 1500);
     const deux = await page.evaluate(() => { const f = document.querySelector("#fo-presentation iframe"); return { meme: !!f && f.__v66 === "lecteur", n: document.querySelectorAll("#fo-presentation iframe").length }; });
@@ -807,6 +918,41 @@ const ISO = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$/;
     const e2 = ecr(db, "formation", ID2), d3 = await carteDepart(page);
     ok("autre prospect, clic sur la vignette elle-même : le lecteur démarre, formation.depart.video écrit une fois, l'action vidéo cochée",
       !!(await page.$("#fo-presentation iframe")) && e2.length === 1 && ISO.test(((e2[0].contenu || {}).depart || {}).video || "") && !!d3 && egal(d3.actions.map(a => a.fait), [true, false, false]), resume(db));
+    await c.close();
+    /* relecture (contrat H4) : « juste après le lancement de la vidéo qui complète les 3 » — calcul et pesée déjà faits :
+       à l'ouverture, 2 actions sur 3, aucune invitation et aucune lecture d'intake et challenge ; clic sur la vidéo : UNE
+       écriture (formation), la carte se replie et l'invitation se pose juste après #fo-depart (conforme), avec au plus UNE
+       lecture groupée d'intake et challenge */
+    const ID3 = PID(23), db3 = base({ comptes: [PROSPECT(23, "Lina", [["calc_perso", CP], ["mens", MENS_DEPART]])] });
+    ({ c, page } = await contexte(b, quiP(23), db3, { viewport: MOBILE }));
+    await ouvrirFormation(page); await attendre(page, 1000);
+    const a3 = { d: await carteDepart(page), nb: await page.$$eval("section.invitation", l => l.length).catch(() => -1), lInv: lecturesInvitation(db3, ID3).map(x => x.outil) };
+    const L3 = db3.lectures.length;
+    await page.click('[data-depart="video"]');
+    await page.waitForSelector(INV_SEL, { timeout: 5000 }).catch(() => {}); await attendre(page, 1600);   // l'écriture part après ses 700 ms
+    const p3 = { d: await carteDepart(page), ordre: await ordre(page, 3), inv: await carteInvitation(page, INV_DEPART.code), lInv: lecturesInvitation(db3, ID3, L3).map(x => x.outil), e: ecr(db3, "formation", ID3) };
+    const ko3 = invitationKo(p3.inv, INV_DEPART, "fo-depart", quiLien(23, "Lina"));
+    ok("calcul et pesée déjà faits : à l'ouverture, 2 actions sur 3, aucune invitation ni lecture d'intake et challenge ; clic sur la vidéo de bienvenue (la 3e) : UNE écriture (formation.depart.video), la carte se replie en « Départ lancé ✓ », l'invitation « Bien joué, ton départ est lancé. » (conforme) juste après #fo-depart, puis « Ce qui t'attend » ; au plus une lecture groupée d'intake et challenge",
+      !!a3.d && egal(a3.d.actions.map(x => x.fait), [false, true, true]) && a3.nb === 0 && a3.lInv.length === 0
+        && p3.e.length === 1 && saisies(db3).length === 1 && ISO.test(((p3.e[0].contenu || {}).depart || {}).video || "")
+        && !!p3.d && /\bfo-depart-fini\b/.test(p3.d.classes) && p3.d.ligne === I_FR.fini && egal(p3.ordre, ["fo-depart", "invitation-" + INV_DEPART.code, "fo-apercu"]) && ko3.length === 0 && p3.lInv.length <= 1,
+      JSON.stringify([a3.d && a3.d.actions.map(x => x.fait), a3.nb, a3.lInv, ko3, p3.d && [p3.d.classes, p3.d.ligne], p3.ordre, p3.lInv]) + " " + resume(db3));
+    await c.close();
+    /* relecture (contrat H, corrections) : l'écriture de formation refusée (sa lecture a échoué : rien ne doit l'écraser) —
+       calcul et pesée faits, clic sur la vidéo : rien d'écrit, l'action vidéo reste non cochée (carte non repliée), et rien
+       n'est déclenché : aucune invitation, aucune lecture d'intake et challenge, rien noté sur l'appareil
+       (mhx_invitations|<id>) */
+    const ID4 = PID(24), db4 = base({ comptes: [PROSPECT(24, "Léna", [["calc_perso", CP], ["mens", MENS_DEPART]])], lectureKo: ["formation"] });
+    ({ c, page } = await contexte(b, quiP(24), db4, { viewport: MOBILE }));
+    await ouvrirFormation(page);
+    const L4 = db4.lectures.length, r4 = lu(db4, "formation");
+    await page.click('[data-depart="video"]'); await attendre(page, 2500);
+    const p4 = { d: await carteDepart(page), nb: await page.$$eval("section.invitation", l => l.length).catch(() => -1), lInv: lecturesInvitation(db4, ID4, L4).map(x => x.outil),
+      lecteur: !!(await page.$("#fo-presentation iframe")), memo: await page.evaluate(id => localStorage.getItem("mhx_invitations|" + id), ID4) };
+    ok("écriture de formation refusée (sa lecture a échoué) : clic sur la vidéo de bienvenue — rien d'écrit, l'action vidéo reste non cochée (2 sur 3, carte non repliée), aucune invitation, aucune lecture d'intake et challenge, rien noté sur l'appareil",
+      r4 >= 1 && saisies(db4).length === 0 && ecr(db4, "formation").length === 0 && !!p4.d && egal(p4.d.actions.map(x => x.fait), [false, true, true]) && !/\bfo-depart-fini\b/.test(p4.d.classes)
+        && p4.nb === 0 && p4.lInv.length === 0 && p4.memo === null,
+      JSON.stringify([r4, p4.d && p4.d.actions.map(x => x.fait), p4.d && p4.d.classes, p4.nb, p4.lInv, p4.lecteur, p4.memo]) + " " + resume(db4));
     await c.close();
   });
 
@@ -883,8 +1029,13 @@ const ISO = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$/;
     await c.close();
     ({ c, page } = await contexte(b, quiP(53), db, opts));
     await ouvrirFormation(page); await attendre(page, 300);
-    const d3 = await carteDepart(page);
-    ok("anglais, les 3 faites : une seule ligne « You're off » avec sa coche ; rien d'écrit par ces 3 visites", !!d3 && /\bfo-depart-fini\b/.test(d3.classes) && d3.ligne === I_EN.fini && d3.ol === 0 && saisies(db).length === 0, JSON.stringify(d3) + " " + resume(db));
+    await page.waitForSelector(INV_SEL, { timeout: 5000 }).catch(() => {});
+    const d3 = await carteDepart(page), iv3 = await carteInvitation(page, INV_DEPART_EN.code), ko3 = invitationKo(iv3, INV_DEPART_EN, "fo-depart", quiLien(53, "Ava"));
+    /* relecture (v62, brief H) : l'invitation anglaise, vérifiée comme la française (textes EN du brief H mot pour mot :
+       « Nice work, you're off to a start. », « Your goal: “…” », « Next step: … », « Get my action plan », « 15 min with
+       Lucas · free », « Later ») */
+    ok("anglais, les 3 faites : une seule ligne « You're off » avec sa coche, suivie de l'invitation anglaise (« Nice work, you're off to a start. », « Your goal: “…” », « Next step: your personalized action plan, free, in 15 min with Lucas. », « Get my action plan », « 15 min with Lucas · free », « Later » ; même structure, rien d'autre, même lien Calendly) ; rien d'écrit par ces 3 visites",
+      !!d3 && /\bfo-depart-fini\b/.test(d3.classes) && d3.ligne === I_EN.fini && d3.ol === 0 && ko3.length === 0 && saisies(db).length === 0, JSON.stringify([ko3, d3, iv3 && iv3.textes]) + " " + resume(db));
     await c.close();
   });
 
@@ -900,14 +1051,20 @@ const ISO = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$/;
     const db2 = base({ comptes: [PROSPECT(62, "Iris", [["formation", { depart: { video: avant(H) } }], ["calc_perso", CP], ["mens", MENS_DEPART]])] });
     const x2 = await contexte(b, quiP(62), db2, Object.assign({ viewport: MOBILE }, theme === "clair" ? { stockage: { mhx_theme: "light" } } : {}));
     await ouvrirFormation(x2.page);
-    const k2 = await contrastes(x2.page), replie = k2.out.filter(x => /\bfo-depart-ligne\b/.test(x.cls || ""));
+    /* relecture (v62) : les 3 faites → l'invitation « Bien joué, ton départ est lancé. » est là : mesurée aussi (contraste,
+       rien hors de l'écran, zones de tap du bouton et de « Plus tard ») */
+    await x2.page.waitForSelector(INV_SEL, { timeout: 5000 }).catch(() => {});
+    const k2 = await contrastes(x2.page, INV_SEL), replie = k2.out.filter(x => /\bfo-depart-ligne\b/.test(x.cls || "")), dansInv = k2.out.filter(x => x.inv);
+    const h2 = await horsEcran(x2.page, INV_SEL), tapInv = await x2.page.evaluate(s => Array.from(document.querySelectorAll(s + " > .dc-cta > a.btn, " + s + " > .dc-cta > button.lien-discret")).map(e => Math.round(e.getBoundingClientRect().height)), INV_SEL).catch(() => []);
     await x2.c.close();
     const tous = k.out.concat(k2.out), faibles = tropFaibles(k).concat(tropFaibles(k2)), exc = tous.filter(x => x.exc);
-    ok("thème " + theme + " : appliqué ; chaque texte des deux cartes (et « Départ lancé ✓ », l'état replié) se détache de son fond : au moins 4,5:1, 3:1 pour les seules exceptions nommées (" + EXCEPTIONS_CONTRASTE.map(x => x[0] + (x[2] ? " en clair" : "")).join(", ") + ") ; " + tous.length + " textes, le plus faible " + Math.min(...tous.map(x => x.r)) + ":1" + (theme === "clair" ? " ; fond des cartes différent du thème sombre" : ""),
-      (theme === "clair" ? k.theme === "light" && k2.theme === "light" && !!fondSombre && k.fond !== fondSombre : k.theme === null && k2.theme === null) && k.out.length >= 12 && replie.length === 1 && faibles.length === 0,
-      JSON.stringify([k.theme, k.fond, fondSombre, replie, faibles, exc.map(x => [x.t, x.exc, x.r])]));
+    ok("thème " + theme + " : appliqué ; chaque texte des deux cartes (et « Départ lancé ✓ », l'état replié, suivi de son invitation « Bien joué… » : ses 6 textes) se détache de son fond : au moins 4,5:1, 3:1 pour les seules exceptions nommées (" + EXCEPTIONS_CONTRASTE.map(x => x[0] + (x[2] ? " en clair" : "")).join(", ") + ") ; " + tous.length + " textes, le plus faible " + Math.min(...tous.map(x => x.r)) + ":1" + (theme === "clair" ? " ; fond des cartes différent du thème sombre" : ""),
+      (theme === "clair" ? k.theme === "light" && k2.theme === "light" && !!fondSombre && k.fond !== fondSombre : k.theme === null && k2.theme === null) && k.out.length >= 12 && replie.length === 1 && dansInv.length === 6 && faibles.length === 0,
+      JSON.stringify([k.theme, k.fond, fondSombre, replie, dansInv.map(x => [x.t, x.cls, x.r, x.exc]), faibles, exc.map(x => [x.t, x.exc, x.r])]));
     const h = await horsEcran(page), d = await carteDepart(page);
-    ok("thème " + theme + ", 390 px : rien ne sort de l'écran (page, cartes, tuiles), les 3 actions d'au moins 44 px de haut", h.bon && !!d && d.actions.length === 3 && d.actions.every(a => a.h >= 44), JSON.stringify(h) + " " + JSON.stringify(d && d.actions.map(a => a.h)));
+    ok("thème " + theme + ", 390 px : rien ne sort de l'écran (page, cartes, tuiles ; et, les 3 faites, « Départ lancé ✓ » et son invitation), les 3 actions d'au moins 44 px de haut, le bouton et « Plus tard » de l'invitation aussi",
+      h.bon && !!d && d.actions.length === 3 && d.actions.every(a => a.h >= 44) && h2.bon && tapInv.length === 2 && tapInv.every(x => x >= 44),
+      JSON.stringify(h) + " " + JSON.stringify(d && d.actions.map(a => a.h)) + " " + JSON.stringify(h2) + " " + JSON.stringify(tapInv));
   });
 
   /* =================== Z. hôtes externes =================== */

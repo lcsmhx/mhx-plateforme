@@ -548,9 +548,13 @@ const verrouVu = (page, id) => page.evaluate(id => {
     const yAvant = await page.evaluate(() => window.scrollY);
     await page.evaluate(() => { const t = document.querySelector("#dc-bilan-plus-tard"); t.click(); t.click(); }); await attendre(page, 1800);
     const I = clone(intakeDe(db, ID)) || {};
-    ok("« Later, let me explore my space » (deux taps) : intake.bilan_propose = { choix « plus_tard », le } en UNE écriture ; aucun clic compté, aucun onglet Calendly",
-      ecr(db, "intake", ID).length === 1 && !!I.bilan_propose && I.bilan_propose.choix === "plus_tard" && typeof I.bilan_propose.le === "string" && ecr(db, "challenge", ID).length === 0 && !db.calendly.length,
-      JSON.stringify(I.bilan_propose) + " · " + resume(db));
+    /* v62 (lot 3, L) : le « Plus tard » est aussi noté avec son origine dans la clé challenge (cta.plus_tard), une seule fois */
+    const Cpt = challengeDe(db, ID) || {}, pt = ((Cpt.cta || {}).plus_tard) || [];
+    ok("« Later, let me explore my space » (deux taps) : intake.bilan_propose = { choix « plus_tard », le } en UNE écriture ; v62 : cta.plus_tard = [{ source « apres_questionnaire », date }] en UNE écriture de challenge ; aucun clic compté, aucun onglet Calendly",
+      ecr(db, "intake", ID).length === 1 && !!I.bilan_propose && I.bilan_propose.choix === "plus_tard" && typeof I.bilan_propose.le === "string"
+      && ecr(db, "challenge", ID).length === 1 && pt.length === 1 && pt[0].source === "apres_questionnaire" && typeof pt[0].date === "string" && JSON.stringify(Object.keys(pt[0]).sort()) === '["date","source"]'
+      && !(((Cpt.cta || {}).clics) || []).length && !db.calendly.length,
+      JSON.stringify(I.bilan_propose) + " · " + JSON.stringify(Cpt) + " · " + resume(db));
     const yApres = await page.evaluate(() => window.scrollY);
     const acc1 = !!(await page.$("#dc-accomp")) && !(await page.$("#dc-bilan")) && yAvant > 0 && yApres === 0;
     await aller(page, "#/decouverte/bilan", 1500);

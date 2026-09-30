@@ -566,7 +566,13 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
     const { page } = await coachSur(b, db, "#/prospects", "#pr-liste .sc-carte");
     const t = await texte(page, "#pr-vue");
     const TEMP = /score|\/100|qualification/i, TEMP2 = /CHAUD|TIÈDE|FROID|NOUVEAU|Chauds|Tièdes|Froids|Nouveaux/;   // en majuscules : « Nouveautés » reste
-    ok("C : ni score, ni « /100 », ni température (CHAUD, TIÈDE, FROID, NOUVEAU), ni « Score moyen », ni « Chauds »", !TEMP.test(t) && !TEMP2.test(t), (t.match(/.{0,30}(score|\/100|CHAUD|TIÈDE|FROID|NOUVEAU).{0,30}/i) || [""])[0]);
+    /* v62 (brief V2, L) : le bloc « Mesure » a une tuile « Nouveaux inscrits » (légitime) ; elle seule est retirée (le
+       libellé exact de la tuile de #pr-mesure-chiffres, présent UNE fois) avant de chercher une température : une
+       pastille ou une tuile NOUVEAU / Nouveaux / CHAUD / TIÈDE / FROID ailleurs dans la page échoue toujours */
+    const sansMesure = await page.evaluate(() => { const v = document.querySelector("#pr-vue"); if (!v) return { n: -1, t: "" }; const x = v.cloneNode(true);
+      const l = Array.from(x.querySelectorAll("#pr-mesure-chiffres > .tile > .t-lbl")).filter(e => e.textContent.replace(/\s+/g, " ").trim() === "Nouveaux inscrits"); l.forEach(e => e.remove()); return { n: l.length, t: x.textContent }; });
+    const t2 = norm(sansMesure.t);
+    ok("C : ni score, ni « /100 », ni température (CHAUD, TIÈDE, FROID, NOUVEAU), ni « Score moyen », ni « Chauds » (seule exception : la tuile « Nouveaux inscrits » du bloc Mesure)", sansMesure.n === 1 && !TEMP.test(t) && !TEMP.test(t2) && !TEMP2.test(t2), sansMesure.n + " · " + (t2.match(new RegExp(".{0,30}(" + TEMP2.source + ").{0,30}")) || t.match(new RegExp(".{0,30}(" + TEMP.source + ").{0,30}", "i")) || [""])[0]);
     ok("C : aucune requête au journal des emails (emails_prospects), aucune fonction appelée", !db.chemins.some(x => /emails_prospects|functions\/v1/.test(x)), JSON.stringify(db.chemins.filter(x => /emails|functions/.test(x))));
     ok("C : en-tête « 8 comptes gratuits · 4 à traiter »", (await texte(page, "#pr-vue .masthead .lede")) === "8 comptes gratuits · 4 à traiter", await texte(page, "#pr-vue .masthead .lede"));
     ok("C : compteur « Inscrits 9 → 3 questions remplies 8 → bilans réservés 2 → clients 1 » (Karim, client passé par l'inscription, compte ; Thomas, Sarah, Julien et le compte de test non)", (await texte(page, "#pr-compteur")) === "Inscrits 9 → 3 questions remplies 8 → bilans réservés 2 → clients 1", await texte(page, "#pr-compteur"));

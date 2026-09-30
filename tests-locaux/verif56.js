@@ -20,6 +20,11 @@
       15 min avec Lucas, « Ton plan est à toi… », « Tu es libre de dire non ») : UN seul bouton doré « Récupérer mon plan
       d'action » (+ « 15 min · par téléphone · offert ») et « Plus tard, je découvre mon espace » en lien discret (ni fond
       ni bordure, souligné) ; lien Calendly utm_source=app, utm_medium=bouton, utm_content=apres_questionnaire ;
+      v62 (brief V2, L) : « Plus tard » aussi noté avec son origine dans la clé challenge (cta.plus_tard, source
+      apres_questionnaire), une seule écriture de chaque clé pour un double tape ; intake relu avant le choix : noté aussi ;
+      intake illisible au moment du choix : rien n'est écrit (ni intake, ni challenge) ; page rouverte par son adresse
+      puis « Plus tard » : intake jamais réécrit, mais une 2e entrée apres_questionnaire (une fois par affichage de la
+      page) ; un clic « Récupérer mon plan d'action » ne note jamais de « Plus tard » ;
    D. ancien prospect (10 réponses, court_le, pas de bilan_propose) : la page bilan une fois (phrase neutre, jamais
       « undefined »), puis l'accueil ; ses anciennes réponses intactes et lisibles (Profil, fiche du coach, « 10 / 10 ») ;
       un ancien questionnaire commencé reste compté sur 10 ;
@@ -669,7 +674,8 @@ function lienOk(href, base, attendu){
     await cliquerSansOuvrir(page, "#dc-bilan-reserver"); await attendre(page, 2200);
     const I = clone(intakeDe(db, ID)) || {}, C = (db.donnees.find(d => d.user_id === ID && d.outil === "challenge") || {}).contenu || {};
     const wI = ecr(db, "intake", ID), cl = ((C.cta || {}).clics || []);
-    ok("clic « Récupérer mon plan d'action » : noté une fois dans challenge (source apres_questionnaire)", cl.length === 1 && cl[0].source === "apres_questionnaire" && ecr(db, "challenge", ID).length === 1, JSON.stringify(C));
+    /* v62 (relecture) : un clic n'est jamais un « Plus tard » : aucun cta.plus_tard dans la même écriture */
+    ok("clic « Récupérer mon plan d'action » : noté une fois dans challenge (source apres_questionnaire), aucun « Plus tard » noté avec", cl.length === 1 && cl[0].source === "apres_questionnaire" && ecr(db, "challenge", ID).length === 1 && !(C.cta || {}).plus_tard, JSON.stringify(C));
     ok("… choix mémorisé en UNE écriture : intake.bilan_propose = { choix: « reserver », le: maintenant }, les réponses intactes", wI.length === 1 && I.bilan_propose && I.bilan_propose.choix === "reserver" && Math.abs(Date.parse(I.bilan_propose.le) - t0) < 10000 && Object.keys(I.bilan_propose).sort().join() === "choix,le" && I.projection === NOUVEAU().projection && I.court_le === NOUVEAU().court_le, JSON.stringify(I));
     ok("… puis l'accueil du prospect (Speed Formation, « Récupérer mon plan d'action »), plus la page du plan", !!(await page.$("#dc-accomp")) && !!(await page.$("#dc-formation")) && !(await page.$("#dc-bilan")), await texte(page, "#vue"));
     ok("… événement local « call_cta_clicked » (Calendly) noté", (await page.evaluate(() => { try { return JSON.parse(localStorage.getItem("mhx_tracking") || "[]").map(x => x.event); } catch (e) { return []; } })).includes("call_cta_clicked"), "");
@@ -682,22 +688,42 @@ function lienOk(href, base, attendu){
     const db = base({ comptes: [compte(k, "Léa", "Martin", [["intake", NOUVEAU()]])] });
     const { c, page } = await ouvrir(b, db, k, "", "#dc-bilan");
     /* deux clics coup sur coup (double tape) */
+    const t0 = Date.now();
     await page.evaluate(() => { const t = document.querySelector("#dc-bilan-plus-tard"); t.click(); t.click(); }); await attendre(page, 1800);
     const I = clone(intakeDe(db, ID)) || {}, wI = ecr(db, "intake", ID);
-    ok("« Plus tard, je découvre mon espace » (deux clics) : UNE écriture, bilan_propose = { choix: « plus_tard », le }, aucun clic Calendly noté", wI.length === 1 && I.bilan_propose && I.bilan_propose.choix === "plus_tard" && typeof I.bilan_propose.le === "string" && ecr(db, "challenge", ID).length === 0, JSON.stringify(I.bilan_propose) + " · " + resume(db));
+    /* v62 (brief V2, L) : le « Plus tard » est aussi noté avec son origine dans la clé challenge (cta.plus_tard =
+       [{ source, date }]) — avant : aucune écriture de challenge ; toujours UNE écriture de chaque clé pour un double tape,
+       et toujours aucun clic Calendly noté (cta.clics vide) */
+    const Cpt = (db.donnees.find(d => d.user_id === ID && d.outil === "challenge") || {}).contenu || {}, cta = Cpt.cta || {}, pt = Array.isArray(cta.plus_tard) ? cta.plus_tard : [];
+    ok("« Plus tard, je découvre mon espace » (deux clics) : UNE écriture de chaque clé : bilan_propose = { choix: « plus_tard », le } (intake) et UN « Plus tard » noté avec son origine (challenge.cta.plus_tard = [{ source: apres_questionnaire, date: maintenant }]), aucun clic Calendly noté",
+      wI.length === 1 && I.bilan_propose && I.bilan_propose.choix === "plus_tard" && typeof I.bilan_propose.le === "string" && ecr(db, "challenge", ID).length === 1 && saisies(db).length === 2
+        && pt.length === 1 && Object.keys(pt[0]).sort().join() === "date,source" && pt[0].source === "apres_questionnaire" && Math.abs(Date.parse(pt[0].date) - t0) < 10000 && !(Array.isArray(cta.clics) && cta.clics.length),
+      JSON.stringify(I.bilan_propose) + " · " + JSON.stringify(Cpt) + " · " + resume(db));
     ok("… l'accueil s'affiche en haut de page", !!(await page.$("#dc-accomp")) && !(await page.$("#dc-bilan")) && (await page.evaluate(() => window.scrollY)) === 0, "");
     const pages = await page.evaluate(() => Object.keys((Activite._delta && Activite._delta.pages) || {}).sort());
     ok("pages vues notées pour le coach : decouverte-bilan puis decouverte-accueil", pages.includes("decouverte-bilan") && pages.includes("decouverte-accueil") && !pages.includes("decouverte-resultat"), JSON.stringify(pages));
     /* la page reste accessible par son adresse ; y revenir n'écrit plus rien */
     await aller(page, "#/decouverte/bilan", 1500);
     ok("#/decouverte/bilan : la page « Ton plan d'action », toujours accessible (réponse « projection » reprise)", !!(await page.$("#dc-bilan")) && (await texte(page, "#dc-projection")) === TX.projection(NOUVEAU().projection), "");
+    const t1 = Date.now();
     await page.click("#dc-bilan-plus-tard"); await attendre(page, 1600);
     const d = await ou(page);
-    ok("… « Plus tard » : l'accueil, adresse #/decouverte, le premier choix gardé (rien de réécrit)", !!(await page.$("#dc-accomp")) && d.hash === "#/decouverte" && ecr(db, "intake", ID).length === 1 && (intakeDe(db, ID).bilan_propose || {}).le === I.bilan_propose.le, JSON.stringify(d) + " · " + resume(db));
+    /* v62 (relecture) : l'intake n'est pas réécrit (le premier choix gardé), mais l'origine du « Plus tard » est notée une
+       fois PAR AFFICHAGE de la page (le code : bt.dataset.note sur le bouton de la page affichée) : la page rouverte par son
+       adresse et un nouveau « Plus tard » ajoutent une 2e entrée apres_questionnaire (2e écriture de challenge) — comportement
+       figé ici : un changement (ne plus noter la revisite) doit être décidé, pas passer en silence */
+    const C2 = (db.donnees.find(x => x.user_id === ID && x.outil === "challenge") || {}).contenu || {}, cta2 = C2.cta || {}, pt2 = Array.isArray(cta2.plus_tard) ? cta2.plus_tard : [];
+    ok("… « Plus tard » une 2e fois (page rouverte par son adresse) : l'accueil, adresse #/decouverte, le premier choix gardé (intake jamais réécrit : UNE écriture) ; l'origine notée une fois par affichage : 2e écriture de challenge, 2 « Plus tard » { source: apres_questionnaire, date } (le premier intact, le 2e à l'instant du 2e choix), aucun clic Calendly",
+      !!(await page.$("#dc-accomp")) && d.hash === "#/decouverte" && ecr(db, "intake", ID).length === 1 && (intakeDe(db, ID).bilan_propose || {}).le === I.bilan_propose.le
+        && ecr(db, "challenge", ID).length === 2 && saisies(db).length === 3 && pt2.length === 2 && pt2.every(x => Object.keys(x).sort().join() === "date,source" && x.source === "apres_questionnaire")
+        && pt2[0].date === pt[0].date && Math.abs(Date.parse(pt2[1].date) - t1) < 10000 && Date.parse(pt2[1].date) > Date.parse(pt2[0].date) && !(Array.isArray(cta2.clics) && cta2.clics.length),
+      JSON.stringify(d) + " · " + JSON.stringify(C2) + " · " + resume(db));
     await aller(page, "#/decouverte/bilan", 1500);
     await cliquerSansOuvrir(page, "#dc-bilan-reserver"); await attendre(page, 2200);
-    const cl = (((db.donnees.find(x => x.user_id === ID && x.outil === "challenge") || {}).contenu || {}).cta || {}).clics || [];
-    ok("… « Récupérer mon plan d'action » plus tard depuis cette page : le clic est noté (apres_questionnaire), le premier choix reste « plus_tard »", cl.length === 1 && cl[0].source === "apres_questionnaire" && ecr(db, "intake", ID).length === 1 && intakeDe(db, ID).bilan_propose.choix === "plus_tard", JSON.stringify(cl) + " · " + resume(db));
+    const C3 = (db.donnees.find(x => x.user_id === ID && x.outil === "challenge") || {}).contenu || {}, cl = (C3.cta || {}).clics || [], pt3 = (C3.cta || {}).plus_tard;
+    ok("… « Récupérer mon plan d'action » plus tard depuis cette page : le clic est noté (apres_questionnaire) dans une 3e écriture de challenge qui garde les 2 « Plus tard » (aucun de plus), le premier choix reste « plus_tard » (intake jamais réécrit)",
+      cl.length === 1 && cl[0].source === "apres_questionnaire" && ecr(db, "intake", ID).length === 1 && intakeDe(db, ID).bilan_propose.choix === "plus_tard"
+        && ecr(db, "challenge", ID).length === 3 && JSON.stringify(pt3) === JSON.stringify(pt2), JSON.stringify(C3) + " · " + resume(db));
     await c.close();
   });
   await bloc("C. relecture avant le choix", async () => {
@@ -708,10 +734,16 @@ function lienOk(href, base, attendu){
     /* entre-temps, un autre appareil a ajouté une réponse : la relecture la garde */
     intakeDe(db, ID).seances = "4";
     await page.evaluate(() => { delete Store.charge[Store.cible() + "|intake"]; });
-    const l0 = lu(db, "intake");
+    const l0 = lu(db, "intake"), t0 = Date.now();
     await page.click("#dc-bilan-plus-tard"); await attendre(page, 1600);
     const I = clone(intakeDe(db, ID)) || {};
-    ok("cache non chargé : intake relu une fois avant l'écriture, puis une écriture (la réponse venue d'ailleurs gardée)", lu(db, "intake") === l0 + 1 && ecr(db, "intake", ID).length === 1 && I.seances === "4" && (I.bilan_propose || {}).choix === "plus_tard", "lectures +" + (lu(db, "intake") - l0) + " · " + JSON.stringify(I));
+    /* v62 (relecture) : le cas réussi de « noté seulement si l'intake a pu être lu » (le cas raté est plus bas) : l'intake
+       relu, le « Plus tard » est aussi noté avec son origine, en UNE écriture de challenge */
+    const Cr = (db.donnees.find(d => d.user_id === ID && d.outil === "challenge") || {}).contenu || {}, ptr = Array.isArray((Cr.cta || {}).plus_tard) ? Cr.cta.plus_tard : [];
+    ok("cache non chargé : intake relu une fois avant l'écriture, puis une écriture (la réponse venue d'ailleurs gardée) ; relu avec succès : le « Plus tard » noté avec son origine en UNE écriture de challenge (cta.plus_tard = [{ source: apres_questionnaire, date: maintenant }]), rien d'autre",
+      lu(db, "intake") === l0 + 1 && ecr(db, "intake", ID).length === 1 && I.seances === "4" && (I.bilan_propose || {}).choix === "plus_tard"
+        && ecr(db, "challenge", ID).length === 1 && saisies(db).length === 2 && ptr.length === 1 && Object.keys(ptr[0]).sort().join() === "date,source" && ptr[0].source === "apres_questionnaire" && Math.abs(Date.parse(ptr[0].date) - t0) < 10000,
+      "lectures +" + (lu(db, "intake") - l0) + " · " + JSON.stringify(I) + " · " + JSON.stringify(Cr) + " · " + resume(db));
     await c.close();
     /* lecture ratée au moment du choix : rien n'est écrit, il découvre quand même son espace ; la page revient à la visite suivante */
     const db2 = base({ comptes: [compte(25, "Léa", "Martin", [["intake", NOUVEAU()]])] });
@@ -787,7 +819,9 @@ function lienOk(href, base, attendu){
     ok("Profil : ses 10 anciennes réponses lisibles, avec les anciens libellés (obstacle d'avant, motivation « 8 / 10 »)", JSON.stringify(rp) === JSON.stringify(att), JSON.stringify(rp));
     ok("Profil : « Modifier mes réponses » (#/decouverte/reponses) ; aucune écriture", (await page.$eval("#mc-reponses-lien a", a => a.getAttribute("href") + "|" + a.textContent.trim()).catch(() => "")) === "#/decouverte/reponses|" + TX.modifier && ecr(db, "intake", ID).length === 1, resume(db));
     await c.close();
-    /* vues par le coach */
+    /* vues par le coach ; v62 (brief V2, L) : ce qui est écrit avant, par le prospect lui-même (son intake, et son
+       « Plus tard » noté avec son origine dans sa clé challenge), est compté ici pour que le coach n'écrive rien après */
+    const nAvantCoach = saisies(db).length;
     const { c: c2, page: p2 } = await contexte(b, COACH, db);
     await p2.goto(URL0 + "#/clients"); await pret(p2, `[data-ouvrir="${ID}"]`);
     await p2.click(`[data-ouvrir="${ID}"]`); await p2.waitForSelector("#fiche-reponses", { timeout: 8000 }); await attendre(p2, 500);
@@ -795,7 +829,8 @@ function lienOk(href, base, attendu){
     /* v52 (lot G) : côté coach, des libellés courts (l'obstacle d'avant : « Obstacle principal ») ; mêmes valeurs, même ordre */
     const attCoach = [["Sexe", "Femme"], ["Âge", "30"], ["Taille (cm)", "165"], ["Poids actuel (kg)", "70"], ["Objectif", "Perte de poids / sèche"], ["Séances par semaine", "3"], ["Déjà essayé", "Des régimes trop stricts."], ["Obstacle principal", "Je manque de temps avec le travail"], ["Pourquoi maintenant", "Me sentir mieux cet été"], ["Motivation", "8 / 10"]];
     ok("coach, fiche de l'ancien prospect : « 10 / 10 réponses, validé le … », ses 10 réponses (libellés courts du coach, lot G) (+ email)", note.startsWith("10 / 10 réponses, validé le ") && rf.length === 11 && JSON.stringify(rf.slice(1)) === JSON.stringify(attCoach) && rf[0][1] === "ancienne@exemple.fr", note + " · " + JSON.stringify(rf));
-    ok("coach : aucune écriture", saisies(db).filter(e => e.user_id !== ID || e.outil !== "intake").length === 0, resume(db));
+    const horsIntake = saisies(db).filter(e => e.user_id !== ID || e.outil !== "intake"), ptD = horsIntake.length === 1 ? (((horsIntake[0].contenu || {}).cta || {}).plus_tard || []) : [];
+    ok("coach : aucune écriture (avant lui, en dehors de l'intake du prospect : son seul « Plus tard » noté dans sa clé challenge, source apres_questionnaire)", saisies(db).length === nAvantCoach && horsIntake.length === 1 && horsIntake[0].user_id === ID && horsIntake[0].outil === "challenge" && Array.isArray(ptD) && ptD.length === 1 && ptD[0].source === "apres_questionnaire", resume(db));
     await c2.close();
   });
   await bloc("D. ancien questionnaire commencé", async () => {
