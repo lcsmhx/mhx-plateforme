@@ -42,9 +42,10 @@
       de marche rapide », « 30 minutes de sommeil en plus », brief F « Ne PAS toucher aux autres durées » ; les options
       de durée de séance du Profil ; un commentaire du compteur de temps). La Speed Formation n'est pas relevée. Le bloc
       I, lancé après J, relit ce que les blocs A à H et J ont ouvert et affiché : il se lance avec eux ;
-   J. décision 4 : version 2026-09-30 (= accords.conditions), volet « Conditions d'utilisation et confidentialité » du
-      Profil : 12 paragraphes, le 2e EXACT (français, anglais), les 11 autres identiques à la v60 (empreinte) ; inscription :
-      conditions_version 2026-09-30 envoyée ;
+   J. décision 4 : version 2026-09-30 du texte court, volet « Conditions d'utilisation et confidentialité » du
+      Profil : 12 paragraphes, le 2e EXACT (français, anglais), les 11 autres identiques à la v60 (empreinte) ; v64 (lot 5,
+      brief V2 A) : accords.conditions et conditions_version envoyée à l'inscription = la version des CGU en PDF
+      (CONFIG.textes_legaux.cgu_version, servie avec une valeur de test), plus celle du texte court ; plus de case santé ;
    K. coach : fiche d'un prospect — chronologie « Clic « Récupérer mon plan d'action » (<écran>) » (v63) : anciens clics
       (decouverte, decouverte-accompagnement, bilan-propose, verrou-programme) sous le nom de l'écran d'aujourd'hui, plus
       aucun ancien libellé ni « Réserver mon bilan », nouveaux codes avec leur nom d'écran, codes illisibles sans libellé
@@ -73,7 +74,14 @@ const MOBILE = { width: 390, height: 844 }, ORDI = { width: 1280, height: 900 };
 /* ---------- la page servie : le fichier testé (page, css/ et js/) ; inscription ouverte le temps du bloc J ---------- */
 const { servirFichier, source, forcerInscription } = require("./fichiers");
 let inscriptionLibre = null;
-const retouche = h => inscriptionLibre === null ? h : forcerInscription(h, inscriptionLibre);
+/* v64 (lot 5, brief V2 A) : le bloc J sert CONFIG.textes_legaux (js/config.js : liens des 2 PDF et version des CGU, « à
+   compléter » sur les branches de travail) avec des valeurs de test valides, quelle que soit la valeur du fichier (la suite
+   reste valable quand Lucas les remplit) ; jamais en silence : J relit dans la page la version servie */
+let legaux = null;
+const LEGAUX_TEST = { cgu_pdf: "https://drive.google.com/file/d/TEST-CGU/view", confidentialite_pdf: "https://drive.google.com/file/d/TEST-POLITIQUE/view", cgu_version: "2026-10-01" };
+const forcerLegaux = (t, v) => Object.keys(v).reduce((h, k) => h.replace(new RegExp("\\b(" + k + ": )\"[^\"\\n]*\""), (x, a) => a + JSON.stringify(v[k])), t);
+const retouche = h => { if (inscriptionLibre !== null) h = forcerInscription(h, inscriptionLibre); return legaux ? forcerLegaux(h, legaux) : h; };
+async function avecLegaux(v, fn){ legaux = v; try { return await fn(); } finally { legaux = null; } }
 const server = http.createServer((req, res) => {
   if (servirFichier(req, res, HTML, retouche)) return;
   res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); res.end(retouche(fs.readFileSync(HTML, "utf8")));
@@ -717,17 +725,18 @@ const verrouVu = (page, id) => page.evaluate(id => {
   });
 
   /* =================== J. décision 4 : texte court des conditions, version 2026-09-30 =================== */
-  await bloc("J. conditions (décision 4)", async () => {
+  /* v64 : servi avec LEGAUX_TEST (version des CGU de test « 2026-10-01 », distincte du texte court), le temps du bloc */
+  await bloc("J. conditions (décision 4)", () => avecLegaux(LEGAUX_TEST, async () => {
     for (const en of [false, true]) {
       const k = en ? 10 : 9, db = base({ comptes: [compte(k, [["intake", AVEC_CHOIX(k, PLUS_TARD())]])] });
       const { page } = await ouvrir(b, db, k, "#/profil", "#mc-conditions", en ? { langue: "en", theme: "light" } : {});
       await relever(page, en, "profil");
-      const vers = await page.evaluate(() => [DECOUVERTE.confidentialite.version, DECOUVERTE.accords.conditions]);
+      const vers = await page.evaluate(() => [DECOUVERTE.confidentialite.version, DECOUVERTE.accords.conditions, (CONFIG.textes_legaux || {}).cgu_version]);
       await page.click("#mc-conditions"); await page.waitForSelector(".volet .corps p", { timeout: 6000 }); await attendre(page, 300);
       const ps = await page.$$eval(".volet .corps p", l => l.map(p => p.textContent));
       await relever(page, en, "profil, volet des conditions");
       const autres = ps.filter((_, i) => i !== 1), emp = empreinte(autres);
-      if (!en) ok("version du texte court : « 2026-09-30 » (DECOUVERTE.confidentialite.version = DECOUVERTE.accords.conditions, envoyée à l'inscription)", vers[0] === COND.version && vers[1] === COND.version, JSON.stringify(vers));
+      if (!en) ok("version du texte court : « 2026-09-30 » (DECOUVERTE.confidentialite.version) ; v64 : DECOUVERTE.accords.conditions (envoyée à l'inscription) = CONFIG.textes_legaux.cgu_version, la version des CGU en PDF (« " + LEGAUX_TEST.cgu_version + " » servie), plus celle du texte court", vers[0] === COND.version && vers[2] === LEGAUX_TEST.cgu_version && vers[1] === LEGAUX_TEST.cgu_version, JSON.stringify(vers));
       ok(`Profil${en ? " (anglais)" : ""}, volet « ${en ? COND.titre_en : COND.titre} » : 12 paragraphes ; le 2e EXACT (« …${en ? "including your clicks on “Get my action plan”" : "dont tes clics sur « Récupérer mon plan d'action »"}. … ») ; les 11 autres identiques à la version 2026-09-29 (v60 : même empreinte) ; aucune durée à 30 min`,
         ps.length === 12 && norm(ps[1]) === norm(en ? COND.p2_en : COND.p2) && emp === (en ? COND.autres_en : COND.autres) && !ps.some(p => /Réserver mon bilan|Book my assessment/.test(p) || TRENTE.test(p)),
         ps.length + " · " + ps[1] + " · empreinte " + emp);
@@ -739,14 +748,15 @@ const verrouVu = (page, id) => page.evaluate(id => {
       const { page } = await contexte(b, null, db);
       await page.goto(URL0 + "#/inscription"); await page.waitForSelector("#c-go"); await attendre(page, 400);
       await page.fill("#c-prenom", "Zoé"); await page.fill("#c-nom", "Martin"); await page.fill("#c-email", "zoe67@exemple.fr"); await page.fill("#c-mdp", "motdepasse-fictif-67");
-      await page.check("#c-cgu"); await page.check("#c-sante");
+      await page.check("#c-cgu");   // v64 : la seule case obligatoire (plus de case santé)
+      const servie = await page.evaluate(() => (CONFIG.textes_legaux || {}).cgu_version).catch(() => null);
       await Promise.all([page.waitForNavigation({ waitUntil: "load", timeout: 15000 }), page.click("#c-go")]);
       await pret(page); await attendre(page, 1500);
       const md = ((db.inscriptions[0] || {}).data) || {};
-      ok("inscription : conditions_version « 2026-09-30 » envoyée avec l'acceptation des conditions (datée), une seule inscription",
-        db.inscriptions.length === 1 && md.conditions_version === COND.version && typeof md.consentement === "string" && /^\d{4}-\d{2}-\d{2}T/.test(md.consentement), JSON.stringify(db.inscriptions.map(x => x.data)));
+      ok("inscription : conditions_version = CONFIG.textes_legaux.cgu_version (« " + LEGAUX_TEST.cgu_version + " » servie, plus « 2026-09-30 » du texte court) envoyée avec l'acceptation des conditions (datée), une seule inscription, sans case santé ni accord santé (ni consentement_sante ni sante_version)",
+        db.inscriptions.length === 1 && servie === LEGAUX_TEST.cgu_version && md.conditions_version === LEGAUX_TEST.cgu_version && !("consentement_sante" in md) && !("sante_version" in md) && typeof md.consentement === "string" && /^\d{4}-\d{2}-\d{2}T/.test(md.consentement), JSON.stringify(db.inscriptions.map(x => x.data)) + " · servie " + servie);
     } finally { inscriptionLibre = null; }
-  });
+  }));
 
   /* =================== I. F récapitulé : chaque écran, et plus aucune durée à 30 min =================== */
   await bloc("I. lien Calendly de chaque écran", async () => {

@@ -657,9 +657,17 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
      v52 (chantier 1, lot B) : la case « emails de suivi » est remplacée par la case NEWSLETTER (facultative, décochée) :
      métadonnée newsletter (instant ou null) + newsletter_version, plus d'emails_suivi ; l'interrupteur du Profil pilote
      emails.newsletter (date, version, source « profil ») ; l'ancien accord (emails_suivi, emails.suivi) ne vaut pas
-     newsletter. Détails (copie à la première ouverture, anglais, cas limites) : verif55 blocs E et F. */
-  const NEWS = "Je veux recevoir par email les conseils, témoignages et offres de coaching de MHX Coaching (1 à 2 emails par semaine maximum). Désinscription en 1 clic dans chaque email.";
-  const V_NEWS = "2026-09-28c";   // version du texte de la case newsletter (DECOUVERTE.accords.newsletter)
+     newsletter. Détails (copie à la première ouverture, anglais, cas limites) : verif55 blocs E et F.
+     v64 (lot 5, brief V2 A) : la case newsletter de l'inscription a un texte court (A4), donc sa propre version
+     (V_NEWS_INSC = DECOUVERTE.accords.newsletter) ; l'interrupteur du Profil garde son texte et sa version (V_NEWS =
+     accords.newsletter_profil, aussi celle des comptes inscrits jusqu'à la v63) ; plus d'accord santé à l'inscription (ni
+     consentement_sante ni sante_version : demandé au premier usage) ; le volet des conditions ne s'ouvre plus depuis
+     l'inscription (ses deux mots mènent aux PDF) : il est vérifié depuis le Profil du prospect (#mc-conditions). */
+  const NEWS = "Oui, je veux les conseils et les offres de Lucas par email (2 max par semaine, désinscription en 1 clic).";
+  const V_NEWS_INSC = "2026-09-30";   // v64 : version du texte de la case newsletter de l'inscription (DECOUVERTE.accords.newsletter)
+  const V_NEWS = "2026-09-28c";   // version du texte de l'interrupteur du Profil (DECOUVERTE.accords.newsletter_profil ; la case de l'inscription jusqu'à la v63)
+  /* v64 : métadonnées EXACTES d'une nouvelle inscription (triées) */
+  const CLES_INSC = "conditions_version,consentement,newsletter,newsletter_version,nom,prenom";
   await bloc("F. case de l'inscription", async () => {
     /* v54 : l'inscription est ouverte (true) ; le banc doit rester vert si Lucas la referme (false) : une seule valeur, true ou false */
     ok("le fichier testé porte une seule valeur inscription_libre (true ou false), que le banc sait retoucher", valeursInscription(source(HTML)).length === 1);
@@ -706,21 +714,41 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
         await page.goto(`http://localhost:${PORT}/`); await attendre(page, 1200);
         await page.click('[data-mode="inscription"]'); await attendre(page, 400);
         const lib = await texte(page, "label.co-newsletter");
-        if (coche) ok("inscription : case facultative « " + NEWS.slice(0, 60) + "… » (texte exact), décochée par défaut ; plus de case « emails de suivi »", lib === NEWS && (await page.$eval("#c-newsletter", e => e.checked).catch(() => null)) === false && !(await page.$("#c-emails")), lib);
+        if (coche) ok("inscription : case facultative « " + NEWS.slice(0, 60) + "… » (texte exact), décochée par défaut ; plus de case « emails de suivi » ni de case santé (#c-sante)", lib === NEWS && (await page.$eval("#c-newsletter", e => e.checked).catch(() => null)) === false && !(await page.$("#c-emails")) && !(await page.$("#c-sante")), lib);
         if (coche) {
-          await page.click("#c-cgu-lien"); await attendre(page, 500);
-          const vt = await texte(page, "body");
-          ok("conditions (volet) : paragraphe « Newsletter (facultative) : … 1 à 2 emails par semaine au plus. Désinscription en 1 clic … », plus « Emails de suivi » ni « au plus 3 emails »", vt.includes("Newsletter (facultative) : si tu coches la case, tu reçois par email les conseils, témoignages et offres de coaching de MHX Coaching, 1 à 2 emails par semaine au plus.") && vt.includes("Désinscription en 1 clic dans chaque email, et retrait de ton accord possible à tout moment dans ton Profil.") && !vt.includes("Emails de suivi (facultatif)") && !vt.includes("au plus 3 emails"));
+          /* v64 : « CGU » et « politique de confidentialité » mènent aux PDF (CONFIG.textes_legaux, valeurs du fichier) : un
+             lien a[target=_blank] vers une adresse https (jamais cliqué : réseau), ou le mot seul (span.lien-absent) tant que
+             le lien est « à compléter » — cliqué, il n'ouvre aucun volet ; plus de bouton qui ouvre le volet des conditions */
+          const liens = await page.evaluate(async () => {
+            const l = ["c-cgu-lien", "c-politique-lien"].map(id => document.getElementById(id)), cgu = document.getElementById("c-cgu"), avant = cgu && cgu.checked;
+            const r = l.map(e => e ? { tag: e.tagName, dans: !!e.closest("label.co-cgu"), classe: e.className, href: e.getAttribute("href"), cible: e.getAttribute("target"), rel: e.getAttribute("rel") } : null);
+            for (const e of l) if (e && e.tagName === "SPAN") e.click();
+            await new Promise(ok => setTimeout(ok, 500));
+            const volet = !!document.querySelector(".volet") || !!(window.UI && UI._ouverte);
+            if (cgu) cgu.checked = avant;
+            return { r, volet };
+          }).catch(e => ({ r: [], volet: null, erreur: String(e) }));
+          const bon = x => !!x && x.dans && (x.tag === "A" ? /^https:\/\//.test(x.href || "") && x.cible === "_blank" && /\bnoopener\b/.test(x.rel || "") : x.tag === "SPAN" && /\blien-absent\b/.test(x.classe) && x.href === null);
           await page.keyboard.press("Escape"); await attendre(page, 300);
           await page.evaluate(() => { const f = document.querySelector("[data-ui-fermer]"); if (f) f.click(); }).catch(() => {}); await attendre(page, 300);
+          const dbP = base();
+          const { c: cP, page: pP } = await contexte(b, qui(LEA, "lea.martin@exemple.fr", { prenom: "Léa", nom: "Martin" }), dbP);
+          await pP.goto(`http://localhost:${PORT}/#/profil`); await pP.waitForSelector("#mc-conditions", { timeout: 8000 }).catch(() => {}); await attendre(pP, 800);
+          await pP.click("#mc-conditions").catch(() => {}); await pP.waitForSelector(".volet", { timeout: 5000 }).catch(() => {}); await attendre(pP, 400);
+          const vt = await texte(pP, ".volet");
+          ok("conditions : l'inscription n'ouvre plus le volet (« CGU » et « politique de confidentialité » : lien vers le PDF ou mot seul, jamais un bouton) ; volet du Profil du prospect (#mc-conditions) : paragraphe « Newsletter (facultative) : … 1 à 2 emails par semaine au plus. Désinscription en 1 clic … », plus « Emails de suivi » ni « au plus 3 emails »",
+            liens.r.length === 2 && liens.r.every(bon) && liens.volet === false
+            && vt.includes("Newsletter (facultative) : si tu coches la case, tu reçois par email les conseils, témoignages et offres de coaching de MHX Coaching, 1 à 2 emails par semaine au plus.") && vt.includes("Désinscription en 1 clic dans chaque email, et retrait de ton accord possible à tout moment dans ton Profil.") && !vt.includes("Emails de suivi (facultatif)") && !vt.includes("au plus 3 emails"),
+            JSON.stringify(liens) + " · volet du Profil : " + vt.slice(0, 80));
+          await cP.close();
         }
         await page.fill("#c-prenom", "Zoé"); await page.fill("#c-nom", "Martin"); await page.fill("#c-email", "nouvelle@exemple.fr"); await page.fill("#c-mdp", "motdepasse1");
-        await page.check("#c-cgu"); await page.check("#c-sante"); if (coche) await page.check("#c-newsletter");
+        await page.check("#c-cgu"); if (coche) await page.check("#c-newsletter");   // v64 : plus de case santé (#c-sante)
         const t0 = Date.now();
         await page.click("#c-go"); await attendre(page, 2500);
         const md = (db.inscriptions[0] || {}).data || {};
-        if (coche) ok("case cochée : l'inscription porte newsletter = l'instant de l'inscription et newsletter_version (métadonnées du compte), plus d'emails_suivi", db.inscriptions.length === 1 && typeof md.newsletter === "string" && Math.abs(Date.parse(md.newsletter) - t0) < 10000 && md.newsletter_version === V_NEWS && !("emails_suivi" in md), JSON.stringify(md));
-        else ok("case laissée vide : l'inscription passe quand même, newsletter = null, plus d'emails_suivi", db.inscriptions.length === 1 && "newsletter" in md && md.newsletter === null && !("emails_suivi" in md) && typeof md.consentement_sante === "string", JSON.stringify(md));
+        if (coche) ok("case cochée : l'inscription porte newsletter = l'instant de l'inscription et newsletter_version " + V_NEWS_INSC + " (texte de la case, métadonnées du compte), plus d'emails_suivi", db.inscriptions.length === 1 && typeof md.newsletter === "string" && Math.abs(Date.parse(md.newsletter) - t0) < 10000 && md.newsletter_version === V_NEWS_INSC && !("emails_suivi" in md), JSON.stringify(md));
+        else ok("case laissée vide : l'inscription passe quand même, newsletter = null ; métadonnées exactement " + CLES_INSC + " : plus d'emails_suivi, aucun accord santé (ni consentement_sante ni sante_version : demandé au premier usage)", db.inscriptions.length === 1 && "newsletter" in md && md.newsletter === null && md.newsletter_version === V_NEWS_INSC && Object.keys(md).sort().join(",") === CLES_INSC && !("emails_suivi" in md) && !("consentement_sante" in md) && !("sante_version" in md), JSON.stringify(md));
         await c.close();
       }
     } finally { inscriptionLibre = false; }

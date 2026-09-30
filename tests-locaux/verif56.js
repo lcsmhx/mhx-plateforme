@@ -129,6 +129,10 @@ const session = (id, email, meta) => ({ access_token: "jeton-" + id, refresh_tok
 const qui = (id, email, meta) => ({ id, email, session: session(id, email, meta) });
 const COACH = qui(F.IDS.coach, "coach@exemple.fr"), THOMAS = qui(F.IDS.c1, "thomas@exemple.fr");
 const PID = k => "00000000-0000-4000-8000-0000000056" + String(k).padStart(2, "0");   // verif56 : …56kk (une plage par suite)
+/* v64 (lot 5, B) : les prospects de cette suite sont inscrits entre la v52 et la v63, case santé cochée à l'inscription :
+   l'accord est dans les métadonnées de leur compte (sans clé newsletter : rien d'autre ne change), donc aucune carte
+   d'accord santé dans le calculateur ni dans Ma progression (l'accord au premier usage est vérifié ailleurs) */
+const ACCORD_SANTE = { consentement_sante: "2026-09-28T09:00:00.000Z", sante_version: "2026-09-28b" };
 const INTAKE_THOMAS = clone(F.donnees.find(d => d.user_id === F.IDS.c1 && d.outil === "intake").contenu);
 
 /* ---------- le décor : fixtures.js (coach, Thomas, Sarah, Julien, tous « client ») + les comptes du bloc ----------
@@ -450,11 +454,13 @@ const etatForm = page => page.evaluate(() => {
 const ANCIEN = { sexe: "Femme", age: "30", taille: "165", poids: "70", objectif: "Perte de poids / sèche", seances: "3", essaye: "Des régimes trop stricts.",
   obstacle: "Je manque de temps avec le travail", pourquoi: "Me sentir mieux cet été", motivation: "8", court_debut: avant(3 * J), court_le: avant(3 * J - H), email_compte: "ancienne@exemple.fr" };
 const LIEN = (id, type) => "#access_token=lien." + id + ".x&refresh_token=renouvellement-" + id + "&expires_in=3600&token_type=bearer&type=" + (type || "signup");
-/* un prospect : son compte (statut « prospect »), ses données, puis son navigateur, ouvert sur h (accueil par défaut) */
+/* un prospect : son compte (statut « prospect »), ses données, puis son navigateur, ouvert sur h (accueil par défaut) ;
+   les métadonnées de sa session : l'accord santé de l'inscription (ACCORD_SANTE), sauf opts.meta (autres métadonnées) */
 const compte = (k, prenom, nom, donnees, extra) => Object.assign({ id: PID(k), prenom, nom, cree: avant(2 * J), email: "p" + k + "@exemple.fr", donnees: donnees || [] }, extra || {});
 async function ouvrir(b, db, k, h, sel, opts){
   const x = db.profils.find(p => p.id === PID(k));
-  const { c, page } = await contexte(b, qui(PID(k), db.emails[PID(k)] || ("p" + k + "@exemple.fr")), db, opts);
+  const meta = opts && "meta" in opts ? opts.meta : ACCORD_SANTE;
+  const { c, page } = await contexte(b, qui(PID(k), db.emails[PID(k)] || ("p" + k + "@exemple.fr"), meta), db, opts);
   await page.goto(URL0 + (h || "")); await pret(page, sel || "#vue .masthead");
   return { c, page, x };
 }

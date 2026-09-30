@@ -18,18 +18,22 @@
       lentes), l'encadré « Bienvenue ! » sous l'en-tête, un seul affichage (intake lu 2 fois) ; l'encadré en anglais ;
    Lot B :
    E. inscription : écran « Crée ton espace gratuit » sans « 7 jours » (FR / EN), champ Nom obligatoire (#c-nom,
-      family-name, 60 caractères, « Indique ton nom. »), trois cases séparées jamais cochées d'avance (conditions avec
-      « J'ai 18 ans ou plus », santé, newsletter, textes exacts) ; métadonnées exactes (prénom, nom, consentement + conditions_version, consentement_sante
-      + sante_version, newsletter instant ou null + newsletter_version, plus d'emails_suivi), profils.nom, jamais
-      intake.nom ; copie { newsletter, maj, version, source: "inscription" } dans la clé emails à la première ouverture,
-      une seule fois (aussi par le lien de confirmation) ; rien d'écrit pour un ancien compte, un client, le coach, une clé
+      family-name, 60 caractères, « Indique ton nom. »), v64 (lot 5, brief V2 A) : deux cases séparées jamais cochées
+      d'avance, la seule obligatoire « J'ai 18 ans ou plus et j'accepte les CGU et la politique de confidentialité. » (deux
+      liens distincts vers les PDF de CONFIG.textes_legaux, target=_blank, rel=noopener, le point collé au second ; le mot
+      seul, sans lien, tant que le lien est « à compléter ») et la newsletter (texte court A4) ; plus de case santé ni de
+      texte « données de santé » ; métadonnées exactes (prénom, nom, consentement + conditions_version =
+      CONFIG.textes_legaux.cgu_version, newsletter instant ou null + newsletter_version 2026-09-30, plus d'emails_suivi,
+      aucun accord santé), profils.nom, jamais intake.nom ; copie { newsletter, maj, version, source: "inscription" } dans
+      la clé emails à la première ouverture, une seule fois (aussi par le lien de confirmation) ; rien d'écrit pour un ancien compte, un client, le coach, une clé
       déjà là, une lecture ratée (écrite à l'ouverture suivante), une copie en attente sur l'appareil, une clé apparue
       pendant l'envoi (insertion simple : rien d'écrasé) ;
    F. Profil du prospect : interrupteur « Newsletter » (FR / EN) → emails { newsletter, maj, version, source: "profil" },
       un « non » coupe aussi l'ancien suivi ; l'ancien accord ne coche jamais la newsletter ; lecture ratée ;
-   G. conditions FR / EN (version 2026-09-30 depuis la v61, 2026-09-29 depuis la v59 ; DECOUVERTE.accords, newsletter
-      2026-09-28c) : paragraphe 2 « dont tes clics sur « Récupérer mon plan d'action » » (v61), plus de 7 jours,
-      nom, 3 questions, newsletter (1 à 2 par semaine, désinscription en 1 clic, retrait dans le Profil), ni mesure
+   G. conditions FR / EN (version 2026-09-30 depuis la v61, 2026-09-29 depuis la v59 ; DECOUVERTE.accords : v64,
+      conditions = CONFIG.textes_legaux.cgu_version, sante 2026-09-28b, newsletter 2026-09-30 (inscription), newsletter_profil
+      2026-09-28c (Profil) ; volet ouvert depuis le Profil du prospect, plus depuis l'inscription) : paragraphe 2 « dont tes
+      clics sur « Récupérer mon plan d'action » » (v61), plus de 7 jours, nom, 3 questions, newsletter (1 à 2 par semaine, désinscription en 1 clic, retrait dans le Profil), ni mesure
       d'ouverture, ni prestataire d'emails nommé, ni relance, ni email du compte promis (décisions de Lucas), Calendly avec
       le nom ; v59 : « Contenus chargés depuis Google » (polices, aperçus des vidéos, adresse IP, vidéo au clic seulement)
       juste après « Hébergement » ; mêmes paragraphes aux mêmes places ;
@@ -70,7 +74,7 @@ let retouches = [];
 let inscriptionLibre = false;
 const { servirFichier, source, sourceServie, listes, forcerInscription, valeursInscription, valeursNouveaute } = require("./fichiers");   // 52.1 : la page charge css/ et js/, servis depuis son dossier (fichiers.js)
 /* 52.1 : les retouches valent pour la page et pour ses fichiers css/ et js/ (CONFIG est dans js/config.js) */
-const retouche = h => { h = forcerInscription(h, inscriptionLibre); for (const [de, vers] of retouches) h = h.split(de).join(vers); return h; };
+const retouche = h => { h = forcerInscription(h, inscriptionLibre); if (legaux) h = forcerLegaux(h, legaux); for (const [de, vers] of retouches) h = h.split(de).join(vers); return h; };
 const server = http.createServer((req, res) => {
   if (servirFichier(req, res, HTML, retouche)) return;
   let h = retouche(fs.readFileSync(HTML, "utf8"));
@@ -91,6 +95,18 @@ async function inscriptionOuverte(fn){
   inscriptionLibre = true;
   try { await fn(); } finally { inscriptionLibre = false; }
 }
+/* v64 (lot 5, brief V2 A) : les textes légaux (CONFIG.textes_legaux, js/config.js) : liens des 2 PDF (CGU, politique de
+   confidentialité) et version des CGU, « à compléter » sur les branches de travail (le verrou de publication est ailleurs :
+   verif70 A0). avecLegaux(v, fn) sert, le temps de fn, la valeur de chaque clé remplacée par celle de v, QUELLE QUE SOIT la
+   valeur du fichier (la suite reste valable quand Lucas les remplit) : LEGAUX_TEST (liens https Google Drive et version de
+   test valides) ou LEGAUX_VIDES (« à compléter » : le mot seul, sans lien). Jamais en silence : les vérifications relisent
+   dans la page les valeurs servies (CONFIG.textes_legaux) ou exigent les liens / la version de test exacts. */
+let legaux = null;
+const LEGAUX_TEST = { cgu_pdf: "https://drive.google.com/file/d/TEST-CGU/view", confidentialite_pdf: "https://drive.google.com/file/d/TEST-POLITIQUE/view", cgu_version: "2026-10-01" };
+const LEGAUX_VIDES = { cgu_pdf: "à compléter", confidentialite_pdf: "à compléter", cgu_version: "à compléter" };
+/* la valeur entre guillemets, collée à « cle: » (jamais « cgu_version : » d'un commentaire) */
+const forcerLegaux = (t, v) => Object.keys(v).reduce((h, k) => h.replace(new RegExp("\\b(" + k + ": )\"[^\"\\n]*\""), (x, a) => a + JSON.stringify(v[k])), t);
+async function avecLegaux(v, fn){ legaux = v; try { return await fn(); } finally { legaux = null; } }
 
 /* ---------- résultats ---------- */
 const res = [];
@@ -381,23 +397,31 @@ const LIEN_PREMIER = "#message=Confirmation+link+accepted.++Please+proceed+to+co
 /* ---------- lot B : inscription (nom, cases, accords), newsletter, conditions, Calendly ---------- */
 const V52 = "2026-09-28";   // version de la case santé des comptes créés avant la v55 (métadonnées des décors, et conditions_version de ces décors)
 /* v55 : DECOUVERTE.accords.sante passe à « 2026-09-28b » (anglais de la case santé avec son point final) : c'est la version
-   attendue d'une NOUVELLE inscription et dans DECOUVERTE.accords ; les décors des comptes d'avant gardent V52 */
+   attendue d'une NOUVELLE inscription et dans DECOUVERTE.accords ; les décors des comptes d'avant gardent V52. v64 (lot 5, A3) :
+   plus envoyée à l'inscription (plus de case santé : accord au premier usage) ; reste la valeur de DECOUVERTE.accords.sante (G) */
 const V_SANTE = "2026-09-28b";
 /* v59 : « 2026-09-29 » = paragraphe « Contenus chargés depuis Google » ajouté (lot E, remarque d de la relecture v52) ; les
    comptes déjà inscrits gardent leur version dans leurs métadonnées (rien ne la compare : personne n'est redemandé) */
 /* v61 (décision 4 de Lucas du 30/09) : « 2026-09-30 » = « Réserver mon bilan » devient « Récupérer mon plan d'action » dans le
    paragraphe 2 (données collectées) ; rien d'autre ne change */
-const V_COND = "2026-09-30";   // version des conditions (confidentialite.version ; v55 à v58 : 2026-09-28b ; v59, v60 : 2026-09-29)
-const V_NEWS = "2026-09-28c";   // version du texte de la case newsletter (texte final de Lucas du 28/09, sans mesure d'ouverture)
+const V_COND = "2026-09-30";   // version du texte court des conditions (confidentialite.version ; v55 à v58 : 2026-09-28b ; v59, v60 : 2026-09-29) ; jusqu'à la v63, aussi conditions_version des nouvelles inscriptions
+/* v64 (lot 5, brief V2 A) : conditions_version d'une nouvelle inscription = la version des CGU en PDF (CONFIG.textes_legaux.cgu_version
+   = DECOUVERTE.accords.conditions ; servie LEGAUX_TEST.cgu_version) ; le texte court garde V_COND (K plus tard) */
+const V_NEWS = "2026-09-28c";   // version du texte de l'interrupteur du Profil (DECOUVERTE.accords.newsletter_profil) ; jusqu'à la v63, aussi celle de la case de l'inscription (décors des comptes d'avant)
+const V_NEWS_INSC = "2026-09-30";   // v64 (A4) : version du texte court de la case newsletter de l'inscription (DECOUVERTE.accords.newsletter)
 const TXB = {
   titre: "Crée ton espace gratuit", titre_en: "Create your free space",
-  sous: "Gratuit pour toujours : calculateur de calories, suivi de ton poids et de tes mensurations, Speed Formation.",
-  sous_en: "Free forever: calorie calculator, weight and measurements tracking, Speed Formation.",
-  /* décisions de Lucas du 28/09 : newsletter sans mesure d'ouverture ; l'âge est dans la case des conditions */
-  news: "Je veux recevoir par email les conseils, témoignages et offres de coaching de MHX Coaching (1 à 2 emails par semaine maximum). Désinscription en 1 clic dans chaque email.",
-  news_en: "I want to receive MHX Coaching's tips, testimonials and coaching offers by email (1 to 2 emails per week maximum). One-click unsubscribe in every email.",
-  cgu: "J'ai 18 ans ou plus et j'accepte les conditions d'utilisation et la politique de confidentialité.",
-  cgu_en: "I am 18 or older and I accept the terms of use and the privacy policy.",
+  /* v64 (lot 5, brief V2 A1) */
+  sous: "Gratuit, pour toujours : calculateur de calories, suivi de ton poids et de tes mensurations, et la Speed Formation avec ses vidéos, programmes et plans alimentaires.",
+  sous_en: "Free, forever: calorie calculator, weight and measurement tracking, and the Speed Formation course with its videos, workout programs and meal plans.",
+  /* décisions de Lucas du 28/09 : newsletter sans mesure d'ouverture ; l'âge est dans la case des conditions. v64 (A4, A2) : textes
+     courts ; « CGU » et « politique de confidentialité » (cgu_mots) sont deux liens distincts vers les PDF */
+  news: "Oui, je veux les conseils et les offres de Lucas par email (2 max par semaine, désinscription en 1 clic).",
+  news_en: "Yes, send me Lucas's tips and offers by email (2 per week max, unsubscribe in 1 click).",
+  cgu: "J'ai 18 ans ou plus et j'accepte les CGU et la politique de confidentialité.",
+  cgu_en: "I'm 18 or older and I accept the Terms of Use and the Privacy Policy.",
+  cgu_mots: ["CGU", "politique de confidentialité"], cgu_mots_en: ["Terms of Use", "Privacy Policy"],
+  bouton: "Créer mon espace gratuit", bouton_en: "Create my free account",
   nom: "Ton nom", nom_en: "Your last name", nom_manque: "Indique ton nom.", nom_manque_en: "Enter your last name.",
   libelle: "Recevoir par email les conseils, témoignages et offres de coaching de MHX Coaching (1 à 2 emails par semaine maximum)",
   libelle_en: "Receive MHX Coaching's tips, testimonials and coaching offers by email (1 to 2 emails per week maximum)",
@@ -406,26 +430,43 @@ const TXB = {
   refuse: "Non enregistré : réessaie dans un instant."
 };
 const SEPT = /7 jours|7 days|7-day|jour \d+ ?\/ ?7|day \d+ ?\/ ?7/i;
-const CLES_META = "conditions_version,consentement,consentement_sante,newsletter,newsletter_version,nom,prenom,sante_version";
+const CLES_META = "conditions_version,consentement,newsletter,newsletter_version,nom,prenom";   // v64 : plus de consentement_sante ni sante_version (accord au premier usage)
 /* v61 (lot 2, F) : l'événement de 15 min « Ton plan d'action offert » (remplace …/30min) */
 const CAL = "https://calendly.com/mhx-coaching/ton-plan-d-action-offert-15-min-avec-lucas";
 /* remplit le formulaire d'inscription (page sur #/inscription) */
 async function remplir(page, f){
   await page.fill("#c-prenom", f.prenom); await page.fill("#c-nom", f.nom); await page.fill("#c-email", f.email); await page.fill("#c-mdp", f.mdp || "motdepasse1");
-  if (f.cgu !== false) await page.check("#c-cgu");
-  if (f.sante !== false) await page.check("#c-sante");
+  if (f.cgu !== false) await page.check("#c-cgu");   // v64 : la seule case obligatoire (plus de case santé)
   if (f.news) await page.check("#c-newsletter");
 }
 /* l'écran d'inscription tel qu'affiché */
 const ecranInscription = page => page.evaluate(() => {
   const t = s => { const x = document.querySelector(s); return x ? x.textContent.replace(/\s+/g, " ").trim() : null; };
   const at = (id, a) => { const x = document.getElementById(id); return x ? x.getAttribute(a) : null; };
-  const cases = ["c-cgu", "c-sante", "c-newsletter"].map(id => { const x = document.getElementById(id), l = x && x.closest("label");
+  /* v64 : deux cases (conditions, newsletter) ; la case santé ne doit plus exister (sante) */
+  const cases = ["c-cgu", "c-newsletter"].map(id => { const x = document.getElementById(id), l = x && x.closest("label");
     return x ? { id, type: x.type, coche: x.checked, attr: x.hasAttribute("checked"), label: l ? l.textContent.replace(/\s+/g, " ").trim() : null, seul: l ? l.querySelectorAll("input").length : 0 } : null; });
+  /* v64 (A2) : les deux mots de la case des conditions (lien vers le PDF, ou le mot seul) ; ce qui suit le second (« . » collé) */
+  const liens = ["c-cgu-lien", "c-politique-lien"].map(id => { const x = document.getElementById(id);
+    return x ? { id, tag: x.tagName, classe: x.className, texte: x.textContent.replace(/\s+/g, " ").trim(), href: x.getAttribute("href"), cible: x.getAttribute("target"), rel: x.getAttribute("rel"), dans: !!x.closest("label.co-cgu"), boutons: x.closest("label.co-cgu") ? x.closest("label.co-cgu").querySelectorAll("button").length : null } : null; });
+  const p2 = document.getElementById("c-politique-lien"), suite = p2 && p2.nextSibling;
   return { titre: t(".carte-co h2"), sous: t(".carte-co .co-sous"), ordre: Array.from(document.querySelectorAll(".carte-co input")).map(i => i.id),
-    labelNom: t('label[for="c-nom"]'), lienCgu: !!document.querySelector("label.co-cgu #c-cgu-lien"), nomType: at("c-nom", "type"), nomAuto: at("c-nom", "autocomplete"), nomMax: at("c-nom", "maxlength"), prenomMax: at("c-prenom", "maxlength"),
-    cases, anciennes: !!document.getElementById("c-emails"), texte: document.body.innerText.replace(/\s+/g, " ") };
+    labelNom: t('label[for="c-nom"]'), nomType: at("c-nom", "type"), nomAuto: at("c-nom", "autocomplete"), nomMax: at("c-nom", "maxlength"), prenomMax: at("c-prenom", "maxlength"),
+    cases, sante: !!document.getElementById("c-sante") || !!document.querySelector(".co-sante"), liens, apres: suite ? (suite.nodeType === 3 ? suite.textContent : "<" + suite.nodeName + ">") + (suite.nextSibling ? "+" : "") : null,
+    bouton: t("#c-go"), anciennes: !!document.getElementById("c-emails"), texte: document.body.innerText.replace(/\s+/g, " ") };
 });
+/* v64 (A2) : le point final de la case des conditions est-il sur la même ligne que la fin du dernier mot-lien (« politique de
+   confidentialité » ; jusqu'à la v63 : le bouton des conditions) ? écart vertical en px entre le dernier caractère du mot et le « . » */
+const ecartPoint = page => page.evaluate(() => {
+  const l = document.getElementById("c-politique-lien") || document.getElementById("c-cgu-lien");
+  if (!l) return null;
+  const t = Array.from(l.childNodes).reverse().find(n => n.nodeType === 3 && n.textContent.trim()), n = l.nextSibling;
+  if (!t || !n || n.nodeType !== 3 || !n.textContent.startsWith(".")) return null;
+  const r1 = document.createRange(); r1.setStart(t, t.textContent.trimEnd().length - 1); r1.setEnd(t, t.textContent.trimEnd().length);
+  const r2 = document.createRange(); r2.setStart(n, 0); r2.setEnd(n, 1);
+  const a = r1.getClientRects(), z = r2.getClientRects();
+  return a.length && z.length ? Math.abs(a[a.length - 1].top - z[0].top) : null;
+}).catch(() => null);
 /* v61 (lot 2, F) : utm_source=app, utm_medium=bouton (avant : app-mhx, app) ; code d'origine par défaut : le bouton du haut
    de l'accueil, accueil_haut (avant : decouverte) — le « _ » est accepté */
 const lienLea = (params, source) => CAL + "?utm_source=app&utm_medium=bouton&utm_content=" + (source || "accueil_haut") + params;
@@ -614,7 +655,7 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
         await page.goto(URL0 + "#/inscription"); await page.waitForSelector("#c-go"); await attendre(page, 300);
         await page.fill("#c-prenom", "Zoé"); if (await page.$("#c-nom")) await page.fill("#c-nom", "Martin");
         await page.fill("#c-email", "zoe@exemple.fr"); await page.fill("#c-mdp", "motdepasse1");
-        await page.check("#c-cgu"); await page.check("#c-sante");
+        await page.check("#c-cgu");   // v64 : la seule case obligatoire (plus de case santé)
         await page.click("#c-go"); await attendre(page, 900);
         const t = norm(await page.textContent("#co-err").catch(() => ""));
         ok("inscription, " + quoi + " (« " + err.msg + " ») : « " + attendu.slice(0, 60) + "… », jamais le texte brut", db.inscriptions.length === 1 && t.includes(attendu) && !t.includes(err.msg), t);
@@ -799,24 +840,53 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
     }
   });
 
-  /* =================== E. inscription : nom, trois cases, accords datés et versionnés, copie « emails » =================== */
+  /* =================== E. inscription : nom, deux cases (v64), accords datés et versionnés, copie « emails » =================== */
   await bloc("E. inscription : écran", async () => {
-    await inscriptionOuverte(async () => {
+    await inscriptionOuverte(() => avecLegaux(LEGAUX_TEST, async () => {
       for (const langue of ["", "en"]) {
         const T = k => TXB[k + (langue ? "_en" : "")], L = langue ? " (anglais)" : "";
         const db = base();
+        legaux = LEGAUX_TEST;   // v64 : liens de test valides (CONFIG.textes_legaux), puis « à compléter » plus bas
         const { c, page } = await contexte(b, null, db, { viewport: MOBILE, langue });
         await page.goto(URL0 + "#/inscription"); await page.waitForSelector("#c-go"); await attendre(page, 400);
         const e = await ecranInscription(page);
-        ok(`inscription${L} : « ${T("titre")} », « ${T("sous").slice(0, 45)}… », aucun « 7 jours » / « 7 days » ni email de confirmation promis à l'écran`, e.titre === T("titre") && e.sous === T("sous") && !SEPT.test(e.texte) && !/email de confirmation|lien de confirmation|confirmation (email|link)/i.test(e.texte), JSON.stringify({ titre: e.titre, sous: e.sous, sept: (SEPT.exec(e.texte) || [""])[0] }));
+        ok(`inscription${L} : « ${T("titre")} », « ${T("sous").slice(0, 45)}… », bouton « ${T("bouton")} », aucun « 7 jours » / « 7 days » ni email de confirmation promis à l'écran`, e.titre === T("titre") && e.sous === T("sous") && e.bouton === T("bouton") && !SEPT.test(e.texte) && !/email de confirmation|lien de confirmation|confirmation (email|link)/i.test(e.texte), JSON.stringify({ titre: e.titre, sous: e.sous, bouton: e.bouton, sept: (SEPT.exec(e.texte) || [""])[0] }));
         ok(`inscription${L} : champ « ${T("nom")} » (#c-nom) juste après le prénom, type text, autocomplete="family-name", maxlength="60" (prénom : maxlength="60" aussi)`,
           e.ordre[e.ordre.indexOf("c-prenom") + 1] === "c-nom" && e.labelNom === T("nom") && e.nomType === "text" && e.nomAuto === "family-name" && e.nomMax === "60" && e.prenomMax === "60", JSON.stringify(e.ordre) + " " + JSON.stringify([e.labelNom, e.nomType, e.nomAuto, e.nomMax, e.prenomMax]));
-        ok(`inscription${L} : trois cases séparées (conditions, santé, newsletter), chacune seule dans son libellé, aucune cochée d'avance ; plus de case « emails de suivi »`,
-          e.cases.every(x => x && x.type === "checkbox" && !x.coche && !x.attr && x.seul === 1) && !e.anciennes, JSON.stringify(e.cases));
-        ok(`inscription${L} : case newsletter, texte exact « ${T("news").slice(0, 55)}… »`, !!e.cases[2] && e.cases[2].label === T("news"), e.cases[2] && e.cases[2].label);
-        ok(`inscription${L} : case des conditions, texte exact « ${T("cgu")} » (l'âge y est), son lien ouvre le volet des conditions`, !!e.cases[0] && e.cases[0].label === T("cgu") && e.lienCgu, e.cases[0] && e.cases[0].label);
-        ok(`inscription${L}, téléphone 390 px : aucun défilement horizontal`, !(await deborde(page)), await largeur(page));
-        await page.fill("#c-prenom", "Zoé"); await page.fill("#c-email", "zoe@exemple.fr"); await page.fill("#c-mdp", "motdepasse1"); await page.check("#c-cgu"); await page.check("#c-sante");
+        /* v64 (A3) : plus de case santé ni de texte « données de santé » à l'inscription (accord au premier usage) */
+        ok(`inscription${L} : deux cases séparées (conditions, newsletter), chacune seule dans son libellé, aucune cochée d'avance, dans cet ordre avant « Rester connecté » ; plus de case santé (#c-sante) ni « ${langue ? "health data" : "données de santé"} » à l'écran ; plus de case « emails de suivi »`,
+          e.cases.every(x => x && x.type === "checkbox" && !x.coche && !x.attr && x.seul === 1) && e.ordre.slice(e.ordre.indexOf("c-cgu")).join(",") === "c-cgu,c-newsletter,c-rester" && !e.sante && !/données de santé|health data/i.test(e.texte) && !e.anciennes, JSON.stringify(e.cases) + " · " + JSON.stringify(e.ordre) + " · santé " + e.sante + " " + ((/.{0,40}(données de santé|health data).{0,20}/i.exec(e.texte) || [""])[0]));
+        ok(`inscription${L} : case newsletter, texte exact « ${T("news").slice(0, 55)}… »`, !!e.cases[1] && e.cases[1].label === T("news"), e.cases[1] && e.cases[1].label);
+        /* v64 (A2) : « CGU » et « politique de confidentialité » = deux liens distincts vers les PDF (CONFIG.textes_legaux ; jamais
+           cliqués : réseau), le point collé au second ; « à compléter » : le mot seul (span.lien-absent, même id), qui n'ouvre
+           aucun volet (le volet des conditions reste dans le Profil) */
+        const lienOk = (x, id, mot, href) => !!x && x.id === id && x.tag === "A" && /\blien\b/.test(x.classe) && x.texte === mot && x.href === href && x.cible === "_blank" && x.rel === "noopener" && x.dans && x.boutons === 0;
+        const liens = lienOk(e.liens[0], "c-cgu-lien", T("cgu_mots")[0], LEGAUX_TEST.cgu_pdf) && lienOk(e.liens[1], "c-politique-lien", T("cgu_mots")[1], LEGAUX_TEST.confidentialite_pdf) && e.apres === ".";
+        legaux = LEGAUX_VIDES;
+        await page.reload(); await page.waitForSelector("#c-go"); await attendre(page, 400);
+        const e2 = await ecranInscription(page);
+        const motOk = (x, id, mot) => !!x && x.id === id && x.tag === "SPAN" && /\blien-absent\b/.test(x.classe) && x.texte === mot && x.href === null && x.cible === null && x.dans && x.boutons === 0;
+        const clic = await page.evaluate(async () => {
+          const cgu = document.getElementById("c-cgu"), avant = cgu && cgu.checked;
+          for (const id of ["c-cgu-lien", "c-politique-lien"]) { const x = document.getElementById(id); if (x && x.tagName === "SPAN") x.click(); }
+          await new Promise(r => setTimeout(r, 500));
+          const volet = !!document.querySelector(".volet") || !!(window.UI && UI._ouverte);
+          if (cgu) cgu.checked = avant;
+          return volet;
+        }).catch(() => null);
+        const vides = motOk(e2.liens[0], "c-cgu-lien", T("cgu_mots")[0]) && motOk(e2.liens[1], "c-politique-lien", T("cgu_mots")[1]) && e2.apres === "." && e2.cases[0] && e2.cases[0].label === T("cgu") && clic === false;
+        ok(`inscription${L} : case des conditions, texte exact « ${T("cgu")} » (l'âge y est) ; « ${T("cgu_mots")[0]} » et « ${T("cgu_mots")[1]} » : deux liens distincts vers les PDF (href = CONFIG.textes_legaux.cgu_pdf / confidentialite_pdf, target=_blank, rel=noopener), aucun bouton, le « . » collé au second ; liens « à compléter » : le mot seul (span.lien-absent, même id, sans lien) qui n'ouvre aucun volet`,
+          !!e.cases[0] && e.cases[0].label === T("cgu") && liens && vides, JSON.stringify({ label: e.cases[0] && e.cases[0].label, liens: e.liens, apres: e.apres, vides: e2.liens, apres2: e2.apres, clic }));
+        /* v64 (A2) : le point final ne tombe plus seul sous le lien (à 320, 375 et 390 px, liens de test puis « à compléter ») */
+        const mesures = [];
+        for (const v of [LEGAUX_VIDES, LEGAUX_TEST]) {
+          if (legaux !== v) { legaux = v; await page.reload(); await page.waitForSelector("#c-go"); await attendre(page, 300); }
+          for (const w of [390, 375, 320]) { await page.setViewportSize({ width: w, height: MOBILE.height }); await attendre(page, 200); mesures.push({ w, lien: v === LEGAUX_TEST, deborde: await deborde(page), ecart: await ecartPoint(page) }); }
+        }
+        await page.setViewportSize(MOBILE); await attendre(page, 200);
+        ok(`inscription${L}, téléphone 390, 375 et 320 px : aucun défilement horizontal ; le point final sur la même ligne que la fin de « ${T("cgu_mots")[1]} » (jamais seul sous le lien), avec ou sans lien`,
+          mesures.length === 6 && mesures.every(m => !m.deborde && m.ecart !== null && m.ecart <= 2), JSON.stringify(mesures));
+        await page.fill("#c-prenom", "Zoé"); await page.fill("#c-email", "zoe@exemple.fr"); await page.fill("#c-mdp", "motdepasse1"); await page.check("#c-cgu");
         await page.click("#c-go"); await attendre(page, 300);
         const m1 = norm(await page.textContent("#co-err").catch(() => ""));
         await page.fill("#c-nom", "   "); await page.click("#c-go"); await attendre(page, 300);
@@ -824,45 +894,46 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
         ok(`inscription${L} : nom vide ou fait d'espaces → « ${T("nom_manque")} », rien n'est envoyé`, m1 === T("nom_manque") && m2 === T("nom_manque") && db.inscriptions.length === 0, m1 + " · " + m2 + " · " + db.inscriptions.length);
         await c.close();
       }
-    });
+    }));
   });
 
+  /* v64 (lot 5, A) : servi avec LEGAUX_TEST (version des CGU de test « 2026-10-01 », distincte du texte court 2026-09-30) */
   await bloc("E. inscription : accords et copie", async () => {
-    await inscriptionOuverte(async () => {
+    await inscriptionOuverte(() => avecLegaux(LEGAUX_TEST, async () => {
       for (const news of [false, true]) {
         const ZID = PID(40 + (news ? 1 : 0)), mail = "zoe" + (news ? 1 : 0) + "@exemple.fr", Q = news ? "AVEC la newsletter" : "sans la newsletter";
         const db = base(); db.inscription.id = ZID;
         const { c, page } = await contexte(b, null, db, { viewport: MOBILE });
         await page.goto(URL0 + "#/inscription"); await page.waitForSelector("#c-go"); await attendre(page, 300);
-        const versions = await page.evaluate(() => ({ c: DECOUVERTE.confidentialite.version, a: JSON.parse(JSON.stringify(DECOUVERTE.accords || null)) }));
+        const versions = await page.evaluate(() => ({ c: DECOUVERTE.confidentialite.version, a: JSON.parse(JSON.stringify(DECOUVERTE.accords || null)), l: JSON.parse(JSON.stringify(CONFIG.textes_legaux || null)) }));
         await remplir(page, { prenom: "Zoé", nom: "  Martin ", email: mail, news });
         const t0 = Date.now();
         await Promise.all([page.waitForNavigation({ waitUntil: "load", timeout: 15000 }), page.click("#c-go")]);
         await pret(page); await attendre(page, 2200);
         const md = (db.inscriptions[0] || {}).data || {}, cles = Object.keys(md).sort().join(",");
         const date = x => typeof x === "string" && /^\d{4}-\d{2}-\d{2}T/.test(x) && Math.abs(Date.parse(x) - t0) < 10000;
-        ok(`inscription ${Q} : métadonnées exactement ${CLES_META} (plus d'emails_suivi)`, db.inscriptions.length === 1 && cles === CLES_META, db.inscriptions.length + " · " + cles);
-        ok(`… prénom « Zoé », nom « Martin » (espaces retirés) ; conditions et santé datées de l'inscription ; versions ${V_COND} (conditions = confidentialite.version = accords.conditions), ${V_SANTE} (sante_version = accords.sante)`,
-          md.prenom === "Zoé" && md.nom === "Martin" && date(md.consentement) && date(md.consentement_sante) && md.conditions_version === V_COND && versions.c === V_COND && !!versions.a && versions.a.conditions === V_COND && md.sante_version === V_SANTE && versions.a.sante === V_SANTE,
+        ok(`inscription ${Q} : métadonnées exactement ${CLES_META} (plus d'emails_suivi ; aucun accord santé : ni consentement_sante ni sante_version)`, db.inscriptions.length === 1 && cles === CLES_META && !("consentement_sante" in md) && !("sante_version" in md), db.inscriptions.length + " · " + cles);
+        ok(`… prénom « Zoé », nom « Martin » (espaces retirés) ; conditions datées de l'inscription ; conditions_version = CONFIG.textes_legaux.cgu_version = accords.conditions (${LEGAUX_TEST.cgu_version} servie), plus la version du texte court (${V_COND})`,
+          md.prenom === "Zoé" && md.nom === "Martin" && date(md.consentement) && md.conditions_version === LEGAUX_TEST.cgu_version && !!versions.l && versions.l.cgu_version === LEGAUX_TEST.cgu_version && !!versions.a && versions.a.conditions === LEGAUX_TEST.cgu_version && versions.c === V_COND,
           JSON.stringify(md) + " · " + JSON.stringify(versions));
-        if (news) ok(`… newsletter cochée : newsletter = l'instant de l'inscription, newsletter_version = accords.newsletter (${V_NEWS})`, date(md.newsletter) && md.newsletter === md.consentement && md.newsletter_version === V_NEWS && versions.a.newsletter === V_NEWS, JSON.stringify(md));
-        else ok(`… newsletter laissée décochée : l'inscription passe quand même, newsletter = null, newsletter_version = ${V_NEWS} (le texte montré)`, "newsletter" in md && md.newsletter === null && md.newsletter_version === V_NEWS, JSON.stringify(md));
+        if (news) ok(`… newsletter cochée : newsletter = l'instant de l'inscription, newsletter_version = accords.newsletter (${V_NEWS_INSC}, texte court de la case)`, date(md.newsletter) && md.newsletter === md.consentement && md.newsletter_version === V_NEWS_INSC && versions.a.newsletter === V_NEWS_INSC, JSON.stringify(md));
+        else ok(`… newsletter laissée décochée : l'inscription passe quand même, newsletter = null, newsletter_version = ${V_NEWS_INSC} (le texte montré)`, "newsletter" in md && md.newsletter === null && md.newsletter_version === V_NEWS_INSC, JSON.stringify(md));
         const prof = db.profils.find(x => x.id === ZID) || {};
         const apres = await page.evaluate(() => ({ prospect: Auth.estProspect(), nom: (Auth.profil || {}).nom })).catch(() => ({}));
         ok(`… profil créé avec le nom (déclencheur creer_profil → profils.nom), lu par l'app ; jamais rangé dans intake.nom`,
           prof.nom === "Martin" && apres.prospect === true && apres.nom === "Martin" && ecr(db, "intake").every(x => !(x.contenu && typeof x.contenu === "object" && "nom" in x.contenu)), JSON.stringify(prof) + " · " + JSON.stringify(apres) + " · " + resume(db));
-        const E1 = ecr(db, "emails", ZID), att = { newsletter: news, maj: news ? md.newsletter : md.consentement, version: V_NEWS, source: "inscription" };
+        const E1 = ecr(db, "emails", ZID), att = { newsletter: news, maj: news ? md.newsletter : md.consentement, version: V_NEWS_INSC, source: "inscription" };   // v64 : la version de la case de l'inscription
         ok(`… première ouverture : clé emails écrite une fois, exactement ${JSON.stringify(Object.assign({}, att, { maj: "<date de l'accord>" }))} ; rien d'autre d'écrit`,
           E1.length === 1 && JSON.stringify(E1[0].contenu) === JSON.stringify(att) && ecrDonnees(db).every(x => x.outil === "emails"), JSON.stringify(E1.map(x => x.contenu)) + " · " + resume(db));
         await page.reload(); await pret(page); await attendre(page, 2000);
         ok(`… rechargement (deuxième ouverture) : la clé existe, rien n'est réécrit`, ecr(db, "emails", ZID).length === 1, resume(db));
         await c.close();
       }
-    });
+    }));
   });
 
   await bloc("E. inscription : anglais, longueur, lien de confirmation", async () => {
-    await inscriptionOuverte(async () => {
+    await inscriptionOuverte(() => avecLegaux(LEGAUX_TEST, async () => {
       /* anglais + noms trop longs (valeurs posées par script : maxlength ne s'applique pas) */
       {
         const ZID = PID(42), db = base(); db.inscription.id = ZID;
@@ -873,7 +944,7 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
         await Promise.all([page.waitForNavigation({ waitUntil: "load", timeout: 15000 }), page.click("#c-go")]);
         await pret(page); await attendre(page, 2000);
         const md = (db.inscriptions[0] || {}).data || {};
-        ok("inscription en anglais, newsletter cochée : mêmes métadonnées (versions " + V_SANTE + ", newsletter datée) ; prénom et nom coupés à 60 caractères", Object.keys(md).sort().join(",") === CLES_META && md.prenom === "P".repeat(60) && md.nom === "N".repeat(60) && typeof md.newsletter === "string" && md.newsletter_version === V_NEWS && md.sante_version === V_SANTE && md.conditions_version === V_COND, JSON.stringify(md).slice(0, 300));
+        ok("inscription en anglais, newsletter cochée : mêmes métadonnées (" + CLES_META + " : conditions_version " + LEGAUX_TEST.cgu_version + " servie, newsletter datée, version " + V_NEWS_INSC + ", aucun accord santé) ; prénom et nom coupés à 60 caractères", Object.keys(md).sort().join(",") === CLES_META && md.prenom === "P".repeat(60) && md.nom === "N".repeat(60) && typeof md.newsletter === "string" && md.newsletter_version === V_NEWS_INSC && !("sante_version" in md) && !("consentement_sante" in md) && md.conditions_version === LEGAUX_TEST.cgu_version, JSON.stringify(md).slice(0, 300));
         ok("… copie emails { newsletter: true } à la première ouverture", ecr(db, "emails", ZID).length === 1 && (ecr(db, "emails", ZID)[0].contenu || {}).newsletter === true, resume(db));
         await c.close();
       }
@@ -892,10 +963,10 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
         await pret(p2); await attendre(p2, 2200);
         const E1 = ecr(db, "emails", ZID), md = db.meta[ZID] || {};
         ok("… clic sur le lien de l'email : prospecte connectée, la newsletter de ses métadonnées (lues par /auth/v1/user) est recopiée une fois : { newsletter: true, maj = date de la case, version, source: \"inscription\" }",
-          (await p2.evaluate(() => Auth.estProspect()).catch(() => false)) && E1.length === 1 && JSON.stringify(E1[0].contenu) === JSON.stringify({ newsletter: true, maj: md.newsletter, version: V_NEWS, source: "inscription" }) && !/access_token/.test(p2.url()), JSON.stringify(E1.map(x => x.contenu)) + " · " + p2.url());
+          (await p2.evaluate(() => Auth.estProspect()).catch(() => false)) && E1.length === 1 && JSON.stringify(E1[0].contenu) === JSON.stringify({ newsletter: true, maj: md.newsletter, version: V_NEWS_INSC, source: "inscription" }) && !/access_token/.test(p2.url()), JSON.stringify(E1.map(x => x.contenu)) + " · " + p2.url());
         await c.close();
       }
-    });
+    }));
   });
 
   await bloc("E. copie emails : les cas où rien n'est écrit", async () => {
@@ -1039,11 +1110,15 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
   await bloc("G. conditions", async () => {
     const db = base();
     const { c, page } = await contexte(b, COACH, db);
-    await page.goto(URL0); await pret(page, "#tb-vue");
-    const d = await page.evaluate(() => ({ v: DECOUVERTE.confidentialite.version, a: JSON.parse(JSON.stringify(DECOUVERTE.accords || null)), fr: DECOUVERTE.confidentialite.paragraphes, en: DECOUVERTE.en.confidentialite.paragraphes,
-      ins: JSON.stringify([DECOUVERTE.inscription, DECOUVERTE.en.inscription, DECOUVERTE.emails, DECOUVERTE.en.emails]), vieille: "emails_avant" in DECOUVERTE.inscription || "emails_avant" in DECOUVERTE.en.inscription }));
+    /* v64 : la page servie avec LEGAUX_TEST (version des CGU de test : accords.conditions) */
+    const d = await avecLegaux(LEGAUX_TEST, async () => { await page.goto(URL0); await pret(page, "#tb-vue");
+      return page.evaluate(() => ({ v: DECOUVERTE.confidentialite.version, a: JSON.parse(JSON.stringify(DECOUVERTE.accords || null)), l: JSON.parse(JSON.stringify(CONFIG.textes_legaux || null)), fr: DECOUVERTE.confidentialite.paragraphes, en: DECOUVERTE.en.confidentialite.paragraphes,
+      ins: JSON.stringify([DECOUVERTE.inscription, DECOUVERTE.en.inscription, DECOUVERTE.emails, DECOUVERTE.en.emails]), vieille: "emails_avant" in DECOUVERTE.inscription || "emails_avant" in DECOUVERTE.en.inscription })); });
     const fr = (d.fr || []).join("\n"), en = (d.en || []).join("\n");
-    ok(`conditions : version ${V_COND}, DECOUVERTE.accords = { conditions: ${V_COND} (= confidentialite.version), sante: ${V_SANTE}, newsletter: ${V_NEWS} }`, d.v === V_COND && JSON.stringify(d.a) === JSON.stringify({ conditions: V_COND, sante: V_SANTE, newsletter: V_NEWS }), JSON.stringify([d.v, d.a]));
+    /* v64 (lot 5, A) : conditions = la version des CGU en PDF (CONFIG.textes_legaux.cgu_version, servie LEGAUX_TEST), plus celle du
+       texte court ; sante inchangée (ancienne case, plus envoyée) ; newsletter = la case de l'inscription (texte court A4) ;
+       newsletter_profil = l'interrupteur du Profil (texte inchangé) */
+    ok(`conditions : texte court en version ${V_COND} ; DECOUVERTE.accords = { conditions: ${LEGAUX_TEST.cgu_version} (= CONFIG.textes_legaux.cgu_version servie), sante: ${V_SANTE}, newsletter: ${V_NEWS_INSC}, newsletter_profil: ${V_NEWS} }`, d.v === V_COND && !!d.l && d.l.cgu_version === LEGAUX_TEST.cgu_version && JSON.stringify(d.a) === JSON.stringify({ conditions: LEGAUX_TEST.cgu_version, sante: V_SANTE, newsletter: V_NEWS_INSC, newsletter_profil: V_NEWS }), JSON.stringify([d.v, d.a, d.l]));
     ok("conditions FR et EN : même nombre de paragraphes (traduction par position), aucun « 7 jours » / « 7 days », ni dans les textes de l'inscription et du Profil ; plus d'ancienne case", d.fr.length === d.en.length && d.fr.length >= 10 && !SEPT.test(fr) && !SEPT.test(en) && !SEPT.test(d.ins) && !d.vieille, JSON.stringify([d.fr.length, d.en.length, (SEPT.exec(fr + en + d.ins) || [""])[0], d.vieille]));
     const i1 = d.fr.findIndex(p => p.startsWith("Données collectées")), i6 = d.fr.findIndex(p => p.startsWith("Prise de rendez-vous")), i7 = d.fr.findIndex(p => p.startsWith("Newsletter"));
     /* v61 (décision 4) : le paragraphe 2 (données collectées) nomme le bouton « Récupérer mon plan d'action » (avant : « Réserver
@@ -1069,20 +1144,38 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
       && /^Hosting: /.test(d.en[iH]) && /^Content loaded from Google: /.test(d.en[iG]) && ["the app's fonts (Google Fonts)", "video preview images (YouTube)", "Google's servers", "your IP address", "only starts if you click it", "privacy-enhanced mode"].every(x => d.en[iG].includes(x)),
       JSON.stringify([iH, iG, d.fr[iG], d.en[iG]]).slice(0, 400));
     await c.close();
-    /* le volet des conditions depuis l'inscription, en français puis en anglais : tous les paragraphes, dans la bonne langue */
-    await inscriptionOuverte(async () => {
+    /* le volet des conditions, en français puis en anglais : tous les paragraphes, dans la bonne langue. v64 (lot 5, A2) : il
+       s'ouvre depuis le Profil du prospect (#mc-conditions), plus depuis l'inscription : là, « CGU » et « politique de
+       confidentialité » mènent aux PDF ; servis « à compléter » (le mot seul, sans lien : rien vers le réseau), cliqués, ils
+       n'ouvrent aucun volet */
+    const L5 = PID(71);
+    await avecLegaux(LEGAUX_VIDES, () => inscriptionOuverte(async () => {
       for (const langue of ["", "en"]) {
         const db2 = base();
         const x = await contexte(b, null, db2, { langue });
-        await x.page.goto(URL0 + "#/inscription"); await x.page.waitForSelector("#c-cgu-lien"); await attendre(x.page, 300);
-        await x.page.click("#c-cgu-lien"); await x.page.waitForSelector(".volet"); await attendre(x.page, 300);
-        const tv = norm(await x.page.textContent(".volet").catch(() => ""));
+        await x.page.goto(URL0 + "#/inscription"); await x.page.waitForSelector("#c-go"); await attendre(x.page, 300);
+        const ins = await x.page.evaluate(async () => {
+          const l = ["c-cgu-lien", "c-politique-lien"].map(id => document.getElementById(id)), cgu = document.getElementById("c-cgu"), avant = cgu && cgu.checked;
+          const tags = l.map(e => e ? e.tagName : null);
+          for (const e of l) if (e && e.tagName === "SPAN") e.click();
+          await new Promise(r => setTimeout(r, 500));
+          const volet = !!document.querySelector(".volet") || !!(window.UI && UI._ouverte);
+          if (cgu) cgu.checked = avant;
+          return { tags, volet, boutons: document.querySelectorAll("label.co-cgu button").length };
+        }).catch(e => ({ erreur: String(e).slice(0, 80) }));
+        const db3 = base({ comptes: [{ id: L5, prenom: "Léa", nom: "Martin", cree: avant(2 * J), email: "lea71@exemple.fr" }] });
+        if (langue) avecEn(db3, L5);
+        const y = await contexte(b, qui(L5, "lea71@exemple.fr", { prenom: "Léa", nom: "Martin" }), db3, { langue });
+        await y.page.goto(URL0 + "#/profil"); await pret(y.page, "#mc-conditions"); await attendre(y.page, 300);
+        await y.page.click("#mc-conditions"); await y.page.waitForSelector(".volet"); await attendre(y.page, 300);
+        const tv = norm(await y.page.textContent(".volet").catch(() => ""));
         const P = langue ? d.en : d.fr, autres = langue ? d.fr : d.en;
         const manquants = P.filter(p => !tv.includes(norm(p))).map(p => p.slice(0, 30)), restes = autres.map(p => norm(p).slice(0, 25)).filter(p => tv.includes(p));
-        ok(`inscription${langue ? " (anglais)" : ""} : le volet des conditions montre les ${P.length} paragraphes ${langue ? "anglais" : "français"}, aucun dans l'autre langue ; la case des conditions reste décochée`,
-          manquants.length === 0 && restes.length === 0 && (await x.page.$eval("#c-cgu", e => e.checked).catch(() => null)) === false, JSON.stringify({ manquants, restes }));
+        ok(`Profil du prospect${langue ? " (anglais)" : ""} : le volet des conditions (#mc-conditions) montre les ${P.length} paragraphes ${langue ? "anglais" : "français"}, aucun dans l'autre langue ; l'inscription ne l'ouvre plus (« CGU » et « politique de confidentialité » « à compléter » : le mot seul, cliqué, aucun volet ; aucun bouton dans la case)`,
+          manquants.length === 0 && restes.length === 0 && JSON.stringify(ins.tags) === '["SPAN","SPAN"]' && ins.volet === false && ins.boutons === 0, JSON.stringify({ manquants, restes, ins }));
+        await x.c.close(); await y.c.close();
       }
-    });
+    }));
   });
 
   /* =================== H. Calendly : prénom + nom + email =================== */

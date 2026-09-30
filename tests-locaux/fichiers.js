@@ -40,7 +40,27 @@
      portait cette valeur, sans que le disque change ; les révisions git (lire, verif52) jamais. Lue à chaque lecture
      (verif55 A0 la pose le temps d'un bloc, y compris sur main). Posée pour tout le banc sur main (GITHUB_REF =
      refs/heads/main) : refusée, au chargement de ce fichier (chaque suite s'arrête aussitôt) et par banc.sh.
-   refusSimulation(env) : le message de ce refus, "" s'il n'y en a pas. */
+   refusSimulation(env) : le message de ce refus, "" s'il n'y en a pas.
+   v64 (brief V2, A2 et K) : les 3 emplacements « à compléter » de js/config.js (CONFIG.textes_legaux : cgu_pdf,
+   confidentialite_pdf, cgu_version) et le VERROU de publication (verif70, bloc A0). Rien de ceci n'est appliqué par
+   défaut : servirFichier sert toujours le fichier tel quel (hors interrupteurs), comme avant.
+   LEGAUX : les 3 noms. LEGAUX_TEST : 3 valeurs de test VALIDES (2 liens Drive fictifs différents, jamais ouverts par un
+     test ; version 2026-10-01), les mêmes que celles des suites qui servent l'écran d'inscription.
+   valeursLegales(texte, nom) : les valeurs (entre guillemets droits) de toutes les occurrences « nom: "…" ».
+   legauxManquants(texte) : ce qui manque pour publier ([] = complet) — chaque emplacement écrit UNE fois, entre
+     guillemets droits ; 2 liens https Google Drive (drive.google.com ou docs.google.com, vers un document : /d/<id> ou
+     ?id=<id>), sans espace autour, vers 2 documents différents ; cgu_version = une date AAAA-MM-JJ réelle, postérieure au
+     2026-09-30.
+   modeLegaux(env, brancheLocale) : "strict" (le verrou est ✗ tant que legauxManquants n'est pas vide) ou "branche" (✓ en
+     disant ce qui manque). BANC_LEGAUX posée (BANC_LEGAUX=strict ; toute valeur non vide) → strict. Sinon GITHUB_REF
+     (posé par GitHub Actions) : refs/heads/v2/… → branche, sauf refs/heads/v2/simu-main-… (preuve du rouge de main sans
+     toucher main) ; tout autre ref (refs/heads/main, un tag, une pull request) → strict. Sans GITHUB_REF : la branche git
+     de la copie (brancheLocale, sinon brancheGit()) : v2/… → branche ; main, HEAD (détaché), échec de git → strict.
+     Aucune variable ne force le mode « branche ».
+   brancheGit(dossier) : la branche git du dossier (par défaut la copie qui contient ce fichier), "" si git échoue.
+   forcerLegaux(texte, valeurs) : le texte avec la PREMIÈRE valeur de chaque emplacement remplacée par celle de valeurs
+     (LEGAUX_TEST par défaut ; un nom absent de valeurs garde la valeur du fichier) : pour la retouche d'une suite qui a
+     besoin de liens valides (écran d'inscription, carte de l'accord santé). */
 const fs = require("fs"), path = require("path");
 const TYPES = { ".css": "text/css; charset=utf-8", ".js": "text/javascript; charset=utf-8" };
 
@@ -111,5 +131,59 @@ function refusSimulation(env){
 function duDisque(t){ const v = simulation(); return v ? poserNouveautes(t, Object.fromEntries(NOUVEAUTES.map(n => [n, v]))) : t; }
 { const r = refusSimulation(); if (r) throw new Error(r); }   // au chargement : le banc entier, jamais le temps d'un bloc
 
+/* v64 : textes légaux (CONFIG.textes_legaux) et verrou de publication (voir l'en-tête) */
+const LEGAUX = ["cgu_pdf", "confidentialite_pdf", "cgu_version"];
+const LEGAUX_TEST = Object.freeze({ cgu_pdf: "https://drive.google.com/file/d/TEST-CGU/view",
+  confidentialite_pdf: "https://drive.google.com/file/d/TEST-POLITIQUE/view", cgu_version: "2026-10-01" });
+const LEGAUX_APRES = "2026-09-30";   // la version des CGU doit être postérieure à cette date (textes d'avant le brief V2)
+const motifLegal = (nom, g) => new RegExp("\\b(" + nom + ": )\"([^\"\\n]*)\"", g ? "g" : "");
+function valeursLegales(texte, nom){ return Array.from(String(texte).matchAll(motifLegal(nom, true)), m => m[2]); }
+/* l'identifiant du document Drive d'un lien valide, "" sinon */
+function documentDrive(s){
+  if (typeof s !== "string" || !s || s !== s.trim() || /\s/.test(s)) return "";
+  let u; try { u = new URL(s); } catch (e) { return ""; }
+  if (u.protocol !== "https:" || !/^(drive|docs)\.google\.com$/.test(u.hostname) || u.username || u.password || u.port) return "";
+  const m = /\/d\/([A-Za-z0-9_-]+)/.exec(u.pathname), id = m ? m[1] : (u.searchParams.get("id") || "");
+  return /^[A-Za-z0-9_-]+$/.test(id) ? id : "";
+}
+function legauxManquants(texte){
+  const v = {}, pb = [];
+  for (const n of LEGAUX) {
+    const l = valeursLegales(texte, n);
+    if (l.length !== 1) pb.push(n + " : " + l.length + " valeur(s) écrite(s) au lieu d'une (« " + n + ": \"…\" », guillemets droits)");
+    v[n] = l.length ? l[0] : "";
+  }
+  const id = {};
+  for (const n of ["cgu_pdf", "confidentialite_pdf"]) {
+    id[n] = documentDrive(v[n]);
+    if (!id[n]) pb.push(n + " « " + v[n] + " » : lien https d'un PDF sur Google Drive attendu (drive.google.com/file/d/… ou docs.google.com/…/d/…)");
+  }
+  if (id.cgu_pdf && id.cgu_pdf === id.confidentialite_pdf) pb.push("cgu_pdf et confidentialite_pdf mènent au même document (« " + id.cgu_pdf + " ») : 2 PDF différents attendus");
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v.cgu_version), d = m ? new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])) : null;
+  if (!d || isNaN(d) || d.toISOString().slice(0, 10) !== v.cgu_version || v.cgu_version <= LEGAUX_APRES)
+    pb.push("cgu_version « " + v.cgu_version + " » : date AAAA-MM-JJ postérieure au " + LEGAUX_APRES + " attendue (la date de mise en ligne des PDF)");
+  return pb;
+}
+function brancheGit(dossier){
+  try {
+    return require("child_process").execFileSync("git", ["rev-parse", "--abbrev-ref", "HEAD"],
+      { cwd: dossier || path.join(__dirname, ".."), stdio: ["ignore", "pipe", "ignore"], timeout: 10000 }).toString().trim();
+  } catch (e) { return ""; }
+}
+function modeLegaux(env, brancheLocale){
+  env = env || process.env;
+  if (String(env.BANC_LEGAUX || "").trim()) return "strict";   // BANC_LEGAUX=strict (preuve locale du rouge) ; rien ne force « branche »
+  const ref = String(env.GITHUB_REF || "").trim();
+  const b = ref ? (ref.startsWith("refs/heads/") ? ref.slice(11) : "") : String(brancheLocale != null ? brancheLocale : brancheGit()).trim();
+  return /^v2\/[^/\s]/.test(b) && !b.startsWith("v2/simu-main-") ? "branche" : "strict";
+}
+function forcerLegaux(texte, valeurs){
+  const V = valeurs || LEGAUX_TEST;
+  let t = String(texte);
+  for (const n of LEGAUX) if (V[n] != null) t = t.replace(motifLegal(n), (x, a) => a + JSON.stringify(String(V[n])));
+  return t;
+}
+
 module.exports = { servirFichier, source, sourceServie, listes, forcerInscription, valeursInscription,
-  NOUVEAUTES, forcerNouveautes, valeursNouveaute, simulation, refusSimulation };
+  NOUVEAUTES, forcerNouveautes, valeursNouveaute, simulation, refusSimulation,
+  LEGAUX, LEGAUX_TEST, valeursLegales, legauxManquants, modeLegaux, brancheGit, forcerLegaux };

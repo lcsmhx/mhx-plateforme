@@ -22,7 +22,10 @@
    H. restauration d'une sauvegarde (Profil, « Restaurer une sauvegarde ») : ni emails ni activite ne sont réécrits ;
    I. page Prospects : après une action sur une carte, la liste garde sa longueur (100 après « Afficher plus ») et sa place ;
    J. conditions (FR / EN, Profil et inscription) : v52, newsletter sans mesure d'ouverture ni prestataire nommé (avant : chaque ouverture et chaque clic indiqués au coach par Brevo), aucun prix (conditions,
-      Profil, Découverte, inscription), version « 2026-09-27 · 51 » en pied de page ;
+      Profil, Découverte, inscription), version « 2026-09-27 · 51 » en pied de page ; v64 (lot 5, brief V2 A2) : l'inscription
+      n'ouvre plus le volet des conditions (vérifié depuis le Profil) : « CGU » et « politique de confidentialité » sont 2 liens
+      distincts vers les PDF de CONFIG.textes_legaux (servis avec LEGAUX_TEST : href, target=_blank, rel=noopener, jamais
+      cliqués) ; valeurs « à compléter » : le mot seul (span.lien.lien-absent, même id, sans lien) ;
    K. statuts : clic « Réserver » sans questionnaire à 2 h = TIÈDE, à 30 h = FROID, NOUVEAU avec « questionnaire
       commencé (4/10 réponses) » ;
    L. client Thomas : ni lecture ni écriture d'activite, emails ou coach_notifs en naviguant, en arrière-plan, au bout de
@@ -48,7 +51,14 @@ const { servirFichier, source, forcerInscription } = require("./fichiers");   //
    (inscriptionLibre, fermée par défaut comme avant), dans les deux sens : la suite reste valable si Lucas la referme.
    v55 : par forcerInscription (fichiers.js), comme toutes les suites qui testent l'inscription (les autres servent la valeur
    du fichier) */
-const retouche = h => forcerInscription(h, inscriptionLibre);
+/* v64 (lot 5, brief V2 A2) : les 3 emplacements CONFIG.textes_legaux (js/config.js, « à compléter » tant que Lucas ne les a
+   pas remplis) servis avec les valeurs voulues le temps du bloc J (legaux : LEGAUX_TEST, valeurs de test valides — liens Drive
+   fictifs, jamais ouverts —, ou LEGAUX_A_COMPLETER, les valeurs de la branche de travail), sinon tels quels. */
+const LEGAUX_TEST = { cgu_pdf: "https://drive.google.com/file/d/TEST-CGU/view", confidentialite_pdf: "https://drive.google.com/file/d/TEST-POLITIQUE/view", cgu_version: "2026-10-01" };
+const LEGAUX_A_COMPLETER = { cgu_pdf: "à compléter", confidentialite_pdf: "à compléter", cgu_version: "à compléter" };
+let legaux = null;
+const poserLegaux = t => legaux ? t.replace(/\b(cgu_pdf|confidentialite_pdf|cgu_version): "[^"\n]*"/g, (x, k) => k + ": " + JSON.stringify(legaux[k])) : t;
+const retouche = h => poserLegaux(forcerInscription(h, inscriptionLibre));
 const server = http.createServer((req, res) => {
   if (servirFichier(req, res, HTML, retouche)) return;
   let h = retouche(fs.readFileSync(HTML, "utf8"));
@@ -835,19 +845,35 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
       if (!langue) ok("version affichée en pied de page : « v" + VERSION + " » (CONFIG.marque.version)", !!VERSION && norm(await page.textContent("#foot-right .version").catch(() => "")) === "v" + VERSION, await page.textContent("#foot-right .version").catch(() => "?"));
       await c.close();
     }
+    /* v64 (brief V2 A2) : l'inscription n'ouvre plus le volet des conditions (avant : clic sur #c-cgu-lien, PHRASE_FR / PHRASE_EN dans
+       le volet ; ce texte reste vérifié depuis le Profil, ci-dessus) : 2 liens distincts vers les PDF (jamais cliqués), ou, tant
+       que les liens valent « à compléter », le mot seul sans lien (même id) ; écran sans aucun prix dans les deux cas */
+    const lireLiens = page => page.evaluate(() => ["c-cgu-lien", "c-politique-lien"].map(id => { const e = document.getElementById(id);
+      return e ? { tag: e.tagName, cls: e.className, href: e.getAttribute("href"), cible: e.getAttribute("target"), rel: e.getAttribute("rel"), t: e.textContent.replace(/\s+/g, " ").trim(), dansCase: !!e.closest("label.co-cgu") } : null; }))
+      .then(l => ({ l, nA: null })).catch(e => ({ l: [], erreur: String(e) }));
     inscriptionLibre = true;
     try {
       for (const langue of ["", "en"]) {
         const db = base();
+        const [L1, L2] = langue ? ["Terms of Use", "Privacy Policy"] : ["CGU", "politique de confidentialité"];
+        legaux = LEGAUX_TEST;
         const { c, page } = await contexte(b, null, db, { langue });
         await page.goto(`http://localhost:${PORT}/#/inscription`); await page.waitForSelector("#c-cgu-lien", { timeout: 8000 }); await attendre(page, 400);
-        await page.click("#c-cgu-lien"); await page.waitForSelector(".volet", { timeout: 5000 }); await attendre(page, 300);
-        const tv = norm(await page.textContent(".volet").catch(() => "")), te = await page.evaluate(() => document.body.innerText).then(norm).catch(() => "");
-        const ph = langue ? PHRASE_EN : PHRASE_FR;
-        ok(`inscription${langue ? " (anglais)" : ""} : conditions avec « ${ph.slice(0, 60)}… », écran et conditions sans aucun prix`, tv.includes(ph) && !prixTrouve(te), prixTrouve(te) || tv.slice(0, 200));
+        const te = await page.evaluate(() => document.body.innerText).then(norm).catch(() => ""), avec = await lireLiens(page);
+        avec.nA = await page.$$eval("label.co-cgu a", l => l.length).catch(() => -1);
+        legaux = LEGAUX_A_COMPLETER;
+        await page.reload(); await page.waitForSelector("#c-cgu-lien", { timeout: 8000 }); await attendre(page, 400);
+        const te2 = await page.evaluate(() => document.body.innerText).then(norm).catch(() => ""), sans = await lireLiens(page);
+        sans.nA = await page.$$eval("label.co-cgu a", l => l.length).catch(() => -1);
+        const okAvec = avec.l.length === 2 && avec.nA === 2 && avec.l.every(x => x && x.tag === "A" && x.cible === "_blank" && /(^|\s)noopener(\s|$)/.test(x.rel || "") && x.dansCase)
+          && avec.l[0].href === LEGAUX_TEST.cgu_pdf && avec.l[1].href === LEGAUX_TEST.confidentialite_pdf && avec.l[0].t === L1 && avec.l[1].t === L2;
+        const okSans = sans.l.length === 2 && sans.nA === 0 && sans.l.every(x => x && x.tag === "SPAN" && /(^|\s)lien(\s|$)/.test(x.cls) && /(^|\s)lien-absent(\s|$)/.test(x.cls) && x.href === null && x.dansCase)
+          && sans.l[0].t === L1 && sans.l[1].t === L2;
+        ok(`inscription${langue ? " (anglais)" : ""} : « ${L1} » et « ${L2} », 2 liens distincts vers les PDF (href = CONFIG.textes_legaux, target=_blank, rel=noopener) ; liens « à compléter » : le mot seul (span.lien.lien-absent, même id, sans lien) ; écran sans aucun prix dans les deux cas (v64 : plus de volet ici)`,
+          okAvec && okSans && te.length > 100 && !prixTrouve(te) && !prixTrouve(te2), prixTrouve(te) || prixTrouve(te2) || JSON.stringify({ avec, sans }));
         await c.close();
       }
-    } finally { inscriptionLibre = false; }
+    } finally { inscriptionLibre = false; legaux = null; }
   });
 
   /* =================== K. statuts =================== */

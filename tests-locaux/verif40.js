@@ -24,6 +24,11 @@
      l'événement de 15 min avec utm_source=app, utm_medium=bouton, utm_content = accueil_haut, accueil_accompagnement,
      verrou_<page> (clic noté avec la même source) ; un texte propre à chaque page verrouillée de la vitrine ; texte court des
      conditions : « dont tes clics sur « Récupérer mon plan d'action » ». Nombre de vérifications inchangé (64).
+   - v64 (lot 5, brief V2 A) : écran d'inscription « Créer mon espace gratuit » / « Create my free account », UNE case obligatoire
+     (#c-cgu) et la newsletter, plus de case santé (#c-sante absente) ; « CGU » et « politique de confidentialité » (« Terms of
+     Use », « Privacy Policy ») sont 2 liens distincts vers les PDF (href = CONFIG.textes_legaux, servis avec LEGAUX_TEST ;
+     target=_blank, rel=noopener ; jamais cliqués) au lieu d'un lien vers le volet des conditions : le volet (et son contrôle
+     des prix) reste vérifié depuis le profil (blocs D et F). Nombre de vérifications inchangé (64).
    Supabase simulé : rien ne part vers la vraie base ; les écritures dans donnees sont appliquées en mémoire,
    et TOUTE requête non-GET vers /rest/v1/* est relevée (méthode + adresse) pour les contrôles « aucune écriture ».
    Chaque bloc est protégé : une exception (élément absent, délai dépassé) note un ✗ et la suite continue ;
@@ -40,7 +45,13 @@ const { servirFichier, forcerInscription } = require("./fichiers");   // 52.1 : 
    (inscriptionLibre, fermée par défaut comme avant), dans les deux sens : la suite reste valable si Lucas la referme.
    v55 : par forcerInscription (fichiers.js), comme toutes les suites qui testent l'inscription (les autres servent la valeur
    du fichier) */
-const retouche = h => forcerInscription(h, inscriptionLibre);
+/* v64 (lot 5, brief V2 A2) : les 3 emplacements CONFIG.textes_legaux (js/config.js, « à compléter » tant que Lucas ne les a
+   pas remplis) servis avec des valeurs de test valides (liens Drive fictifs, jamais ouverts ; version postérieure au
+   2026-09-30) le temps du bloc G (legaux = LEGAUX_TEST), sinon tels quels. Aucun test ne clique un lien PDF. */
+const LEGAUX_TEST = { cgu_pdf: "https://drive.google.com/file/d/TEST-CGU/view", confidentialite_pdf: "https://drive.google.com/file/d/TEST-POLITIQUE/view", cgu_version: "2026-10-01" };
+let legaux = null;
+const poserLegaux = t => legaux ? t.replace(/\b(cgu_pdf|confidentialite_pdf|cgu_version): "[^"\n]*"/g, (x, k) => k + ": " + JSON.stringify(legaux[k])) : t;
+const retouche = h => poserLegaux(forcerInscription(h, inscriptionLibre));
 const server = http.createServer((req, res) => {
   if (servirFichier(req, res, HTML, retouche)) return;
   let h = retouche(fs.readFileSync(HTML, "utf8"));
@@ -518,21 +529,29 @@ const cliquerVerrou = async (c, page) => {
   /* ---------- G. Écran d'inscription (inscription libre allumée pour le test) et ses conditions ---------- */
   for (const langue of ["", "en"]) {
     await bloc("G. inscription" + (langue ? " (anglais)" : ""), async () => {
-      inscriptionLibre = true;
+      inscriptionLibre = true; legaux = LEGAUX_TEST;   // v64 : liens des PDF de test (CONFIG.textes_legaux)
       try {
         const db = base();
         const { page } = await contexte(b, null, db, { langue });
         await page.goto(`http://localhost:${PORT}/#/inscription`); await attendre(page, 1500);
         const t = await toutLeTexte(page);
         const titre = (await texte(page, ".carte-co h2")).trim(), bouton = (await texte(page, "#c-go")).trim();
-        /* v52 (lot B) : « espace gratuit » (plus d'accès découverte de 7 jours) ; + la case newsletter (facultative) */
-        const [tA, bA] = langue ? ["Create your free space", "Create my access"] : ["Crée ton espace gratuit", "Créer mon accès"];
-        ok(`inscription${langue ? " (anglais)" : ""} : écran « ${tA} », bouton « ${bA} », cases des conditions (#c-cgu), des données de santé (#c-sante) et de la newsletter (#c-newsletter)`, titre === tA && bouton === bA && !!(await page.$("#c-cgu")) && !!(await page.$("#c-sante")) && !!(await page.$("#c-newsletter")), JSON.stringify({ titre, bouton }));
-        const okLien = await cliquer(page, "#c-cgu-lien"); await attendre(page, 500);
-        const tv = await toutLeTexte(page), heb = langue ? HEBERGEMENT.en : HEBERGEMENT.fr;
-        ok(`inscription${langue ? " (anglais)" : ""} : écran et volet des conditions (ouvert, « ${heb}… » capturé) sans aucun prix, tarif ni abonnement`, okLien && tv.includes(heb) && !prixTrouve(t + tv), prixTrouve(t + tv) || (okLien ? "volet des conditions pas capturé (« " + heb + " » introuvable)" : "lien #c-cgu-lien absent"));
-        if (langue) textesEn += "\n" + t + tv; else textesFr += "\n" + t + tv;
-      } finally { inscriptionLibre = false; }
+        /* v52 (lot B) : « espace gratuit » (plus d'accès découverte de 7 jours) ; + la case newsletter (facultative).
+           v64 (brief V2 A3, A6) : bouton « Créer mon espace gratuit » / « Create my free account » ; plus de case santé */
+        const [tA, bA] = langue ? ["Create your free space", "Create my free account"] : ["Crée ton espace gratuit", "Créer mon espace gratuit"];
+        const cases = { cgu: !!(await page.$("#c-cgu")), sante: !!(await page.$("#c-sante")), newsletter: !!(await page.$("#c-newsletter")) };
+        ok(`inscription${langue ? " (anglais)" : ""} : écran « ${tA} », bouton « ${bA} », cases des conditions (#c-cgu) et de la newsletter (#c-newsletter) ; plus de case des données de santé (#c-sante absente, v64)`, titre === tA && bouton === bA && cases.cgu && !cases.sante && cases.newsletter, JSON.stringify({ titre, bouton, cases }));
+        /* v64 (brief V2 A2) : le lien des conditions n'ouvre plus le volet (avant : clic sur #c-cgu-lien, volet « Hébergement… »
+           capturé) : 2 liens distincts dans la case, vers les 2 PDF de CONFIG.textes_legaux, dans un nouvel onglet ; jamais
+           cliqués (réseau). Le volet et son texte (contrôle des prix) restent vérifiés depuis le profil (blocs D et F). */
+        const liens = await page.evaluate(() => ["c-cgu-lien", "c-politique-lien"].map(id => { const a = document.getElementById(id);
+          return a ? { tag: a.tagName, href: a.getAttribute("href"), cible: a.getAttribute("target"), rel: a.getAttribute("rel"), t: a.textContent.replace(/\s+/g, " ").trim(), dansCase: !!a.closest("label.co-cgu") } : null; }));
+        const [L1, L2] = langue ? ["Terms of Use", "Privacy Policy"] : ["CGU", "politique de confidentialité"];
+        const okLiens = liens.every(l => l && l.tag === "A" && l.cible === "_blank" && /(^|\s)noopener(\s|$)/.test(l.rel || "") && l.dansCase)
+          && liens[0].href === LEGAUX_TEST.cgu_pdf && liens[1].href === LEGAUX_TEST.confidentialite_pdf && liens[0].href !== liens[1].href && liens[0].t === L1 && liens[1].t === L2;
+        ok(`inscription${langue ? " (anglais)" : ""} : écran sans aucun prix, tarif ni abonnement ; « ${L1} » et « ${L2} » : 2 liens distincts vers les PDF (href = CONFIG.textes_legaux.cgu_pdf / confidentialite_pdf, target=_blank, rel=noopener ; v64 : plus de volet ici, il reste vérifié depuis le profil)`, okLiens && !prixTrouve(t), prixTrouve(t) || JSON.stringify(liens));
+        if (langue) textesEn += "\n" + t; else textesFr += "\n" + t;
+      } finally { inscriptionLibre = false; legaux = null; }
     });
   }
 

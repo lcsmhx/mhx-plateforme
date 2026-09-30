@@ -119,9 +119,9 @@ const norm = t => String(t == null ? "" : t).replace(/[  ]/g, " ").replace(/\
 const typo = s => s.replace(/ ([:;?!»])/g, " $1").replace(/« /g, "« ");
 
 /* ---------- les personnes ---------- */
-const session = (id, email) => ({ access_token: "jeton-" + id, refresh_token: "renouvellement-" + id, token_type: "bearer",
-  expires_in: 3600, expire_le: Date.now() + 90 * J, user: { id, email, role: "authenticated" } });   // valable au-delà du 8e jour simulé
-const qui = (id, email) => ({ id, email, session: session(id, email) });
+const session = (id, email, meta) => ({ access_token: "jeton-" + id, refresh_token: "renouvellement-" + id, token_type: "bearer",
+  expires_in: 3600, expire_le: Date.now() + 90 * J, user: Object.assign({ id, email, role: "authenticated" }, meta ? { user_metadata: meta } : {}) });   // valable au-delà du 8e jour simulé
+const qui = (id, email, meta) => ({ id, email, session: session(id, email, meta) });
 const COACH = qui(F.IDS.coach, "coach@exemple.fr"), THOMAS = qui(F.IDS.c1, "thomas@exemple.fr");
 const PID = k => "00000000-0000-4000-8000-0000000068" + String(k).padStart(2, "0");   // verif68 : …68kk (une plage par suite)
 /* le compte client de test est lu dans le fichier servi (CONFIG.nouveautes.comptes_test : un identifiant, jamais un email) */
@@ -388,7 +388,11 @@ const MENS_DEPART = { dstart: JOUR(-3), pstart: 70.5, zones: ZONES, affichees: [
 const SIX = { m1a: true, m1b: true, m1c: true, m1d: true, m1e: true, m1f: true };
 const FO = extra => Object.assign({ coches: Object.assign({}, SIX), ouvert: "m1", lecon: "", challenge: "", defis: {}, diete: {}, semaine: 1, jour: 0, priorites: { semaine: [], demain: [] }, notes: [], objectifs: [] }, extra || {});
 const compte = (k, donnees) => ({ id: PID(k), prenom: "Léa", nom: "Martin", cree: avant(4 * J), email: "p" + k + "@exemple.fr", donnees: donnees || [] });
-const quiP = k => qui(PID(k), "p" + k + "@exemple.fr");
+/* v64 (lot 5, B) : ces prospects sont inscrits entre la v52 et la v63, case santé cochée à l'inscription : l'accord est dans
+   les métadonnées de leur compte (sans clé newsletter : rien d'autre ne change), donc aucune carte d'accord santé dans le
+   calculateur ni dans Ma progression (l'accord au premier usage est vérifié ailleurs) ; quiP(k, meta) : d'autres métadonnées */
+const ACCORD_SANTE = { consentement_sante: "2026-09-28T09:00:00.000Z", sante_version: "2026-09-28b" };
+const quiP = (k, meta) => qui(PID(k), "p" + k + "@exemple.fr", meta === undefined ? ACCORD_SANTE : meta);
 const memVide = () => ({ vues: {}, fermees: {}, attente: [], jour: "", clic: "", reserve: "" });
 
 /* ---------- la carte d'une invitation, lue dans la page (textes bruts : insécables gardées) ---------- */

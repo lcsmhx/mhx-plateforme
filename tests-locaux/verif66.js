@@ -350,7 +350,11 @@ const jourIlYA = n => { const d = new Date(T0); d.setHours(12, 0, 0, 0); d.setDa
 const NOUVEAU = { probleme: "Perdre du gras", obstacle: "Le manque de temps", projection: "Avoir de l'énergie toute la journée",
   objectif: "Perte de poids / sèche", objectif_auto: "Perte de poids / sèche", court_debut: avant(2 * H), court_le: avant(H), bilan_propose: { choix: "plus_tard", le: avant(MIN) } };
 const PROSPECT = (k, prenom, donnees) => ({ id: PID(k), prenom, nom: "Essai", statut: "prospect", cree: avant(2 * J), email: "p" + k + "@exemple.fr", donnees: [["intake", NOUVEAU]].concat(donnees || []) });
-const quiP = k => qui(PID(k), "p" + k + "@exemple.fr");
+/* v64 (lot 5, B) : ces prospects sont inscrits entre la v52 et la v63, case santé cochée à l'inscription : l'accord est dans
+   les métadonnées de leur compte (sans clé newsletter : rien d'autre ne change), donc aucune carte d'accord santé dans le
+   calculateur ni dans Ma progression (l'accord au premier usage est vérifié ailleurs) ; quiP(k, meta) : d'autres métadonnées */
+const ACCORD_SANTE = { consentement_sante: "2026-09-28T09:00:00.000Z", sante_version: "2026-09-28b" };
+const quiP = (k, meta) => qui(PID(k), "p" + k + "@exemple.fr", meta === undefined ? ACCORD_SANTE : meta);
 /* son calcul (calc_perso) et sa pesée (mens) */
 const CP = { sexe: "F", age: 30, taille: 165, poids: 60, pas: 6000, heures: 3, objectif: "perte" };
 const CP_MINEUR = Object.assign({}, CP, { age: 16 }), CP_INCOMPLET = { sexe: "F", age: 30, taille: 165, poids: 60 };

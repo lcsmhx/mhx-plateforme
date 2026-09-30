@@ -17,6 +17,13 @@
    v52 (lot B, décision de Lucas) : aucun email envoyé par l'app : « Mot de passe oublié » donne l'adresse du coach, sans appel.
    v55 : sante_version « 2026-09-28b » à l'inscription ; connexion, inscription ouverte : « Mot de passe oublié ? » et
    « Créer mon compte » centrés à 320, 375 et 390 px (côte à côte ou sur deux lignes), 1 vérification de plus (48).
+   v64 (lot 5, brief V2 A) : l'inscription n'a plus qu'UNE case obligatoire, « J'ai 18 ans ou plus et j'accepte les CGU et la
+   politique de confidentialité. » (deux liens vers les PDF de CONFIG.textes_legaux, point final collé au 2e lien), puis la
+   newsletter (facultative) et « Rester connecté » ; plus de case santé (accord demandé au premier usage, partie B) : « case santé
+   obligatoire » devient « plus de case ni de texte santé, un compte se crée sans elle » ; sous-titre A1, bouton « Créer mon
+   espace gratuit » / « Create my free account » ; métadonnées : conditions_version = CONFIG.textes_legaux.cgu_version (servie
+   « 2026-10-01 », LEGAUX_TEST), newsletter_version « 2026-09-30 », plus de consentement_sante ni de sante_version ; en anglais,
+   la case des conditions manquante (avant : la case santé). Même nombre de vérifications (48).
    Usage : node verif39.js ../index.html                                         */
 const { chromium } = require("playwright"); const fs = require("fs"); const http = require("http"); const path = require("path");
 const F = require("./fixtures"); const HTML = path.resolve(process.argv[2] || "../index.html");
@@ -28,13 +35,23 @@ const { servirFichier, forcerInscription } = require("./fichiers");   // 52.1 : 
    (inscriptionLibre, fermée par défaut comme avant), dans les deux sens : la suite reste valable si Lucas la referme.
    v55 : par forcerInscription (fichiers.js), comme toutes les suites qui testent l'inscription (les autres servent la valeur
    du fichier) */
-const retouche = h => forcerInscription(h, inscriptionLibre);
+/* v64 (lot 5, brief V2 A2) : les 3 emplacements CONFIG.textes_legaux (js/config.js, « à compléter » tant que Lucas ne les a
+   pas remplis) servis avec des valeurs de test valides (liens Drive fictifs, jamais ouverts ; version postérieure au
+   2026-09-30) le temps des blocs d'inscription (legaux = LEGAUX_TEST), sinon tels quels. Aucun test ne clique un lien PDF. */
+const LEGAUX_TEST = { cgu_pdf: "https://drive.google.com/file/d/TEST-CGU/view", confidentialite_pdf: "https://drive.google.com/file/d/TEST-POLITIQUE/view", cgu_version: "2026-10-01" };
+let legaux = null;
+const poserLegaux = t => legaux ? t.replace(/\b(cgu_pdf|confidentialite_pdf|cgu_version): "[^"\n]*"/g, (x, k) => k + ": " + JSON.stringify(legaux[k])) : t;
+const retouche = h => poserLegaux(forcerInscription(h, inscriptionLibre));
 const server = http.createServer((req, res) => {
   if (servirFichier(req, res, HTML, retouche)) return;
   let h = retouche(fs.readFileSync(HTML, "utf8"));
   res.writeHead(200, { "Content-Type": "text/html" }); res.end(h);
 });
 const res = []; const ok = (n, c, d) => res.push((c ? "  ✓ " : "  ✗ ") + n + (c ? "" : "  — " + (d || "")));
+/* v64 (lot 5, brief V2 A1 et A2) : sous-titre et case des conditions de l'inscription, FR et EN (textes du brief, mot pour mot) */
+const SOUS_FR = "Gratuit, pour toujours : calculateur de calories, suivi de ton poids et de tes mensurations, et la Speed Formation avec ses vidéos, programmes et plans alimentaires.";
+const SOUS_EN = "Free, forever: calorie calculator, weight and measurement tracking, and the Speed Formation course with its videos, workout programs and meal plans.";
+const CGU_FR = "J'ai 18 ans ou plus et j'accepte les CGU et la politique de confidentialité.", CGU_EN = "I'm 18 or older and I accept the Terms of Use and the Privacy Policy.";
 const PROSPECT = "00000000-0000-4000-8000-000000000c04", EQUIPE = "00000000-0000-4000-8000-0000000000e1", NOUVEAU = "00000000-0000-4000-8000-000000000c05";
 /* instant « il y a n jours » (midi, heure locale) : les dates d'inscription suivent le jour du test.
    Léa s'est inscrite il y a 3 jours : jour 4/7 de sa Découverte, quel que soit le jour où la suite tourne. */
@@ -276,7 +293,7 @@ const lireTuiles = page => page.$$eval("#tb-vue .tb-tuile", l => l.map(t => {
     await c.close();
   }
   {
-    inscriptionLibre = true;
+    inscriptionLibre = true; legaux = LEGAUX_TEST;   // v64 : liens et version des CGU de test (CONFIG.textes_legaux)
     const db = base();
     const { c, page } = await contexte(b, null, db);
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 1200);
@@ -284,11 +301,16 @@ const lireTuiles = page => page.$$eval("#tb-vue .tb-tuile", l => l.map(t => {
     await page.click('[data-mode="inscription"]'); await attendre(page, 400);
     const ecran = await page.evaluate(() => { const q = s => { const e = document.querySelector(s); return e ? e.textContent.replace(/\s+/g, " ").trim() : ""; };
       const cas = id => { const e = document.getElementById(id); return e ? (e.checked ? "cochée" : "vide") : "absente"; };
-      return { titre: q(".carte-co h2"), sous: q(".carte-co .co-sous"), bouton: q("#c-go"), cases: ["c-cgu", "c-sante", "c-newsletter"].map(cas), nom: !!document.getElementById("c-nom"), challenge: document.body.textContent.includes("Challenge") }; });
-    /* v52 (lot B) : plus de « 7 jours » ; titre et sous-titre de l'espace gratuit */
-    ok("inscription : titre « Crée ton espace gratuit », sous-titre « Gratuit pour toujours : … », bouton « Créer mon accès », plus aucun « Challenge » ni « 7 jours »", ecran.titre === "Crée ton espace gratuit" && ecran.sous === "Gratuit pour toujours : calculateur de calories, suivi de ton poids et de tes mensurations, Speed Formation." && ecran.bouton === "Créer mon accès" && !ecran.challenge && !/7 jours/.test(ecran.sous), JSON.stringify(ecran));
-    /* v52 (lot B) : trois cases séparées, aucune cochée d'avance, et le champ Nom */
-    ok("inscription : trois cases séparées, conditions (#c-cgu), données de santé (#c-sante), newsletter (#c-newsletter), toutes vides ; champ Nom (#c-nom)", JSON.stringify(ecran.cases) === '["vide","vide","vide"]' && ecran.nom, JSON.stringify(ecran));
+      /* v64 : le texte de la case des conditions, et le nœud qui suit le 2e lien (« politique de confidentialité ») : il
+         commence par le point final, sans espace (le point ne tombe plus seul sous le lien) */
+      const lab = document.querySelector("label.co-cgu > span"), l2 = document.getElementById("c-politique-lien");
+      return { titre: q(".carte-co h2"), sous: q(".carte-co .co-sous"), bouton: q("#c-go"), cases: ["c-cgu", "c-sante", "c-newsletter", "c-rester"].map(cas), cocher: [...document.querySelectorAll(".carte-co input[type=checkbox]")].map(i => i.id),
+        cgu: lab ? lab.textContent.replace(/\s+/g, " ").trim() : "", point: !!(l2 && l2.nextSibling && l2.nextSibling.nodeType === 3 && l2.nextSibling.textContent.startsWith(".")), nom: !!document.getElementById("c-nom"), challenge: document.body.textContent.includes("Challenge") }; });
+    /* v52 (lot B) : plus de « 7 jours » ; titre et sous-titre de l'espace gratuit. v64 (brief V2 A1, A6) : sous-titre et bouton */
+    ok("inscription : titre « Crée ton espace gratuit », sous-titre « Gratuit, pour toujours : … et la Speed Formation avec ses vidéos, programmes et plans alimentaires. », bouton « Créer mon espace gratuit », plus aucun « Challenge » ni « 7 jours »", ecran.titre === "Crée ton espace gratuit" && ecran.sous === SOUS_FR && ecran.bouton === "Créer mon espace gratuit" && !ecran.challenge && !/7 jours/.test(ecran.sous), JSON.stringify(ecran));
+    /* v52 (lot B) : cases séparées, aucune cochée d'avance, et le champ Nom. v64 (brief V2 A) : UNE seule case obligatoire
+       (conditions, son texte exact, point collé au 2e lien), la newsletter, « Rester connecté » (coché) ; plus de case santé */
+    ok("inscription : une seule case obligatoire, conditions (#c-cgu, « J'ai 18 ans ou plus et j'accepte les CGU et la politique de confidentialité. », point final collé au lien), puis newsletter (#c-newsletter), toutes deux vides ; plus de case santé (#c-sante absente) ; « Rester connecté » coché ; champ Nom (#c-nom)", JSON.stringify(ecran.cases) === '["vide","absente","vide","cochée"]' && JSON.stringify(ecran.cocher) === '["c-cgu","c-newsletter","c-rester"]' && ecran.cgu === CGU_FR && ecran.point && ecran.nom, JSON.stringify(ecran));
     await page.fill("#c-email", "nouvelle@exemple.fr"); await page.fill("#c-mdp", "court");
     await page.click("#c-go"); await attendre(page, 300);
     ok("inscription : prénom obligatoire", (await page.textContent("#co-err")).includes("prénom"));
@@ -302,20 +324,26 @@ const lireTuiles = page => page.$$eval("#tb-vue .tb-tuile", l => l.map(t => {
     await page.fill("#c-mdp", "motdepasse1");
     await page.click("#c-go"); await attendre(page, 300);
     ok("inscription : la case des conditions est obligatoire (v44)", (await page.textContent("#co-err")).includes("Coche la case") && db.inscriptions.length === 0);
+    /* v64 (brief V2 A3) : plus de case santé (avant, P0.5 : case obligatoire, « …données de santé… » au clic) : ni case, ni
+       texte santé à l'écran, ni texte santé dans DECOUVERTE.inscription (FR et EN) ; la case des conditions cochée suffit */
+    const sante = await page.evaluate(() => ({ cases: ["c-sante"].filter(id => document.getElementById(id)).concat(document.querySelector(".co-sante") ? [".co-sante"] : []),
+      texte: /données de santé|health data/i.test((document.querySelector(".carte-co") || document.body).textContent),
+      cles: ["sante_avant", "sante_manque"].filter(k => (k in (DECOUVERTE.inscription || {})) || (k in ((DECOUVERTE.en || {}).inscription || {}))) })).catch(e => ({ erreur: String(e) }));
+    /* version des conditions attendue (v64, brief V2 A2 et K) : celle des CGU en PDF, CONFIG.textes_legaux.cgu_version (servie :
+       LEGAUX_TEST), reprise par DECOUVERTE.accords.conditions ; avant : la version du texte court (confidentialite.version) */
+    const version = await page.evaluate(() => ({ cgu: (CONFIG.textes_legaux || {}).cgu_version, accords: (DECOUVERTE.accords || {}).conditions })).catch(e => ({ erreur: String(e) }));
     await page.check("#c-cgu");
-    await page.click("#c-go"); await attendre(page, 300);
-    ok("inscription : la case des données de santé est obligatoire (P0.5)", (await page.textContent("#co-err")).includes("données de santé") && db.inscriptions.length === 0, await page.textContent("#co-err"));
-    /* version des conditions attendue : celle de la page (CHALLENGE7 = nom de l'ancienne version, pour la comparaison avec main) */
-    const version = await page.evaluate(() => (typeof DECOUVERTE !== "undefined" ? DECOUVERTE : CHALLENGE7).confidentialite.version).catch(() => "");
-    await page.check("#c-sante");
     await page.click("#c-go"); await attendre(page, 2500);
+    ok("inscription : plus de case ni de texte santé (#c-sante absente, aucun « données de santé » à l'écran, sante_avant / sante_manque retirés des textes FR et EN) ; la case des conditions cochée suffit, un compte se crée sans accord santé (v64, brief V2 A3 ; avant : case santé obligatoire, P0.5)",
+      !!sante.cles && sante.cases.length === 0 && sante.texte === false && sante.cles.length === 0 && db.inscriptions.length === 1, JSON.stringify(sante) + " · inscriptions envoyées : " + db.inscriptions.length);
     const ins = db.inscriptions[0] || {}, md = ins.data || {}, isoRe = /^\d{4}-\d{2}-\d{2}T/;
     /* v52 (lot B) : le nom saisi (plus « » vide), chaque accord daté ET versionné, newsletter (null si la case est vide) au lieu d'emails_suivi.
-       v55 : sante_version « 2026-09-28b » (DECOUVERTE.accords.sante : l'anglais de la case santé a pris son point final) */
-    ok("inscription : POST /auth/v1/signup avec prénom et nom, consentement daté + version des conditions, consentement santé daté + version, newsletter null (case vide) + version, plus d'emails_suivi (v44, P0.5, v52)",
-      db.inscriptions.length === 1 && md.prenom === "Zoé" && md.nom === "Martin" && isoRe.test(md.consentement || "") && !!version && md.conditions_version === version && isoRe.test(md.consentement_sante || "") && md.sante_version === "2026-09-28b"
-      && md.newsletter === null && md.newsletter_version === "2026-09-28c" && Object.keys(md).sort().join(",") === "conditions_version,consentement,consentement_sante,newsletter,newsletter_version,nom,prenom,sante_version" && ins.email === "nouvelle@exemple.fr",
-      db.inscriptions.length + " " + JSON.stringify(md) + " attendu " + version);
+       v64 (brief V2 A) : EXACTEMENT prenom, nom, consentement, conditions_version (= CONFIG.textes_legaux.cgu_version), newsletter,
+       newsletter_version (« 2026-09-30 », texte A4) ; plus de consentement_sante ni de sante_version (accord au premier usage) */
+    ok("inscription : POST /auth/v1/signup avec prénom et nom, consentement daté + version des CGU (CONFIG.textes_legaux.cgu_version, « 2026-10-01 » servie, = DECOUVERTE.accords.conditions), newsletter null (case vide) + version « 2026-09-30 », aucun accord santé (ni consentement_sante ni sante_version), plus d'emails_suivi (v44, v52, v64)",
+      db.inscriptions.length === 1 && md.prenom === "Zoé" && md.nom === "Martin" && isoRe.test(md.consentement || "") && version.cgu === LEGAUX_TEST.cgu_version && version.accords === LEGAUX_TEST.cgu_version && md.conditions_version === LEGAUX_TEST.cgu_version
+      && md.newsletter === null && md.newsletter_version === "2026-09-30" && Object.keys(md).sort().join(",") === "conditions_version,consentement,newsletter,newsletter_version,nom,prenom" && ins.email === "nouvelle@exemple.fr",
+      db.inscriptions.length + " " + JSON.stringify(md) + " attendu " + JSON.stringify(version));
     ok("inscription : connecté ensuite, et prospect", await page.evaluate(() => Auth.connecte() && Auth.estProspect()).catch(() => false));
     /* le compte neuf arrive sur la Découverte au jour 1, questionnaire court à remplir, pas encore de bouton Calendly */
     const arrivee = await page.evaluate(() => { const z = document.querySelector("#dc-vue, #acc-vue");
@@ -328,6 +356,7 @@ const lireTuiles = page => page.$$eval("#tb-vue .tb-tuile", l => l.map(t => {
     const ecrArrivee = db.ecritures.filter(e => e.table === "donnees");
     ok("inscription : à l'arrivée du compte neuf, une seule écriture dans donnees, la copie de la newsletter (clé emails) ; ni brouillon intake, ni clé challenge", ecrArrivee.length === 1 && ecrArrivee[0].outil === "emails", JSON.stringify(ecrArrivee).slice(0, 250));
     await c.close();
+    legaux = null;
   }
   {
     inscriptionLibre = true;
@@ -335,12 +364,17 @@ const lireTuiles = page => page.$$eval("#tb-vue .tb-tuile", l => l.map(t => {
     const { c, page } = await contexte(b, null, db, { inscriptionKo: true, langue: "en" });
     await page.goto(`http://localhost:${PORT}/#/inscription`); await attendre(page, 1200);
     const t = await page.textContent("body");
-    /* v52 (lot B) : espace gratuit, plus de 7 jours ; champ « Your last name » */
-    ok("inscription en anglais : « Create your free space », sous-titre « Free forever: … », « Your first name », « Your last name », « Create my access », plus aucun « Challenge » ni « 7 days »", t.includes("Create your free space") && t.includes("Free forever: calorie calculator, weight and measurements tracking, Speed Formation.") && !t.includes("7 days") && t.includes("Your first name") && t.includes("Your last name") && t.includes("Create my access") && !t.includes("Challenge"), t.replace(/\s+/g, " ").slice(0, 250));
-    await page.fill("#c-prenom", "Zoé"); await page.fill("#c-nom", "Martin"); await page.fill("#c-email", "z@exemple.fr"); await page.fill("#c-mdp", "motdepasse1"); await page.check("#c-cgu");
+    /* v52 (lot B) : espace gratuit, plus de 7 jours ; champ « Your last name ». v64 (brief V2 A1, A2, A6) : sous-titre, case
+       des conditions « I'm 18 or older… », « Create my free account », plus aucun « health data » */
+    const cguEn = await page.$eval("label.co-cgu > span", s => s.textContent.replace(/\s+/g, " ").trim()).catch(() => "");
+    ok("inscription en anglais : « Create your free space », sous-titre « Free, forever: … and the Speed Formation course with its videos, workout programs and meal plans. », « Your first name », « Your last name », case « I'm 18 or older and I accept the Terms of Use and the Privacy Policy. », « Create my free account », plus aucun « health data », « Challenge » ni « 7 days »", t.includes("Create your free space") && t.includes(SOUS_EN) && !t.includes("7 days") && t.includes("Your first name") && t.includes("Your last name") && cguEn === CGU_EN && t.includes("Create my free account") && !/health data/i.test(t) && !t.includes("Challenge"), cguEn + " · " + t.replace(/\s+/g, " ").slice(0, 250));
+    /* v64 (brief V2 A) : la seule case obligatoire est celle des conditions (avant : la case santé manquante → « Accept the
+       processing of your health data ») : sans elle, « Tick the terms box to continue. » et rien n'est envoyé */
+    await page.fill("#c-prenom", "Zoé"); await page.fill("#c-nom", "Martin"); await page.fill("#c-email", "z@exemple.fr"); await page.fill("#c-mdp", "motdepasse1");
     await page.click("#c-go"); await attendre(page, 300);
-    ok("inscription en anglais : case santé manquante → « Accept the processing of your health data »", (await page.textContent("#co-err")).includes("Accept the processing of your health data") && db.inscriptions.length === 0, await page.textContent("#co-err"));
-    await page.check("#c-sante");
+    const santeEn = !!(await page.$("#c-sante"));
+    ok("inscription en anglais : case des conditions manquante → « Tick the terms box to continue. », rien n'est envoyé ; c'est la seule case obligatoire (plus de case santé, #c-sante absente)", (await page.textContent("#co-err")).trim() === "Tick the terms box to continue." && db.inscriptions.length === 0 && !santeEn, await page.textContent("#co-err") + " · #c-sante " + (santeEn ? "présente" : "absente"));
+    await page.check("#c-cgu");
     await page.click("#c-go"); await attendre(page, 800);
     ok("inscription refusée par Supabase : « Sign-ups are not open yet. »", (await page.textContent("#co-err")).includes("Sign-ups are not open yet"));
     await c.close();
@@ -354,7 +388,7 @@ const lireTuiles = page => page.$$eval("#tb-vue .tb-tuile", l => l.map(t => {
     const db = base();
     const { c, page } = await contexte(b, null, db, { inscriptionErreur: err });
     await page.goto(`http://localhost:${PORT}/#/inscription`); await attendre(page, 1200);
-    await page.fill("#c-prenom", "Zoé"); await page.fill("#c-nom", "Martin"); await page.fill("#c-email", "z@exemple.fr"); await page.fill("#c-mdp", "motdepasse1"); await page.check("#c-cgu"); await page.check("#c-sante");
+    await page.fill("#c-prenom", "Zoé"); await page.fill("#c-nom", "Martin"); await page.fill("#c-email", "z@exemple.fr"); await page.fill("#c-mdp", "motdepasse1"); await page.check("#c-cgu");   // v64 : plus de case santé
     await page.click("#c-go"); await attendre(page, 800);
     const t = await page.textContent("#co-err");
     ok("inscription, " + quoi + " (« " + err.msg + " ») : message en français, jamais le texte anglais brut", t.includes(attendu) && !t.includes(err.msg), t);
