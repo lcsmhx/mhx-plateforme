@@ -258,8 +258,7 @@ const Commercial = {
     try {
       const cl = Decouverte.clics(C);
       if (!cl.length) return "0";
-      const t = c => typeof c.date === "string" ? (Date.parse(c.date) || 0) : 0;   // une date piegee (objet…) ne fait rien tomber
-      const der = cl.reduce((x, y) => t(y) >= t(x) ? y : x);
+      const der = Decouverte.dernierClic(C) || cl[cl.length - 1];   // v63 : la meme regle que « A traiter » et le CSV ; aucune date lisible : le dernier de la liste
       return cl.length + " (dernier : " + (Decouverte.nomOrigine(der.source) || "origine inconnue (avant la v50)") + ")";
     } catch(e){ return "—"; }
   },

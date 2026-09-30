@@ -232,7 +232,7 @@ I18N.en = {
 "Départ lancé ✓": "You're off ✓",
 "Ce qui t'attend dans ta formation": "What's inside your course",
 "vidéos avec Lucas": "videos with Lucas",
-"guides et documents à télécharger": "guides and downloads",
+"guides et documents": "guides and documents",
 "défis": "challenges",
 "Dont 3 programmes d'entraînement (12 semaines femme, 12 semaines homme, full body maison) et 3 plans alimentaires (sans restriction, sans gluten, vegan).": "Including 3 workout programs (12 weeks for women, 12 weeks for men, full body at home) and 3 meal plans (no restrictions, gluten-free, vegan).",
 "Plus tes outils : organisation de la diète, priorités, notes et objectifs. Gratuit, sans limite de temps.": "Plus your tools: meal organizer, priorities, notes and goals. Free, with no time limit.",

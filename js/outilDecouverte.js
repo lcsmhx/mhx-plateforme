@@ -180,6 +180,14 @@ const Decouverte = {
     return (C && typeof C === "object" && C.cta && typeof C.cta === "object" && Array.isArray(C.cta.clics))
       ? C.cta.clics.filter(x => x && typeof x === "object" && !Array.isArray(x)) : [];
   },
+  /* v63 : le clic le plus recent PAR DATE (la liste peut etre dans le desordre : fusion de fraiche, deux appareils) ;
+     date lisible = texte AAAA-MM-JJ… que Date.parse comprend ; date piegee (objet, nombre, texte illisible) ignoree ;
+     a date egale, le plus loin dans la liste ; null si aucune date lisible */
+  dernierClic(C){
+    let d = null, td = -Infinity;
+    this.clics(C).forEach(c => { const t = typeof c.date === "string" && /^\d{4}-\d{2}-\d{2}/.test(c.date) ? Date.parse(c.date) : NaN; if (!isNaN(t) && t >= td){ d = c; td = t; } });
+    return d;
+  },
   /* v61 (brief V2, F et L) — les codes d'origine des boutons « Récupérer mon plan d'action » : envoyes a Calendly
      (utm_content) et notes avec chaque clic (cta.clics[].source). Nom d'ecran en clair pour le coach (francais seulement).
      Les clics deja en base gardent leur ancien code : il est lu comme le nouveau (ANCIENS), rien n'est reecrit. */
@@ -227,7 +235,7 @@ const Decouverte = {
   },
   /* resume pour le coach (lecture seule) : seules des chaines et des nombres sortent d'ici */
   resume(p, C, I){
-    const cl = this.clics(C), der = cl.length ? cl[cl.length - 1].date : null, j = this.jour(p);
+    const cl = this.clics(C), dc = this.dernierClic(C), der = dc ? dc.date : null, j = this.jour(p);
     return { jour: j, duree: this.duree(), finie: j != null && j > this.duree(), questionnaire: this.questionnaireFait(I) ? I.court_le : null,
              clics: cl.length, dernierClic: typeof der === "string" ? der : null, reserve: this.reserve(C) };
   },

@@ -108,10 +108,9 @@ const outilAccueil = {
     ajoute(p && p.cree_le, "Inscription");
     ajoute(I.court_debut, "Questionnaire commencé");
     ajoute(I.court_le, "Questionnaire rempli");
-    /* v61 : un ancien code garde son libelle d'avant (clics deja en base) ; un nouveau code, le nom de son ecran
-       (Decouverte.nomOrigine) */
-    const src = v => typeof v !== "string" ? "" : v === "decouverte" ? "en haut de sa Découverte" : v === "decouverte-accompagnement" ? "bloc accompagnement" : v === "bilan-propose" ? "page de proposition du bilan" : /^verrou-[a-z]+$/.test(v) ? "page verrouillée « " + v.slice(7) + " »" : Decouverte.nomOrigine(v);
-    Decouverte.clics(C).forEach(c => ajoute(c.date, "Clic « Réserver mon bilan »" + (src(c.source) ? " (" + src(c.source) + ")" : "")));
+    /* v63 : ancien ou nouveau code, le nom de l'ecran d'aujourd'hui (Decouverte.nomOrigine, comme « Mesure » et la carte) ;
+       affichage seulement, rien n'est reecrit en base */
+    Decouverte.clics(C).forEach(c => { const o = Decouverte.nomOrigine(c.source); ajoute(c.date, "Clic « Récupérer mon plan d'action »" + (o ? " (" + o + ")" : "")); });
     ajoute(Decouverte.reserve(C), "Le prospect a coché « J'ai réservé »");
     const hist = S && typeof S === "object" && Array.isArray(S.historique) ? S.historique : [];
     hist.forEach(e => {

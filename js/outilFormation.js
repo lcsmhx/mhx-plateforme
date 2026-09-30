@@ -19,7 +19,7 @@ const FORMATION = {
   },
   apercu: {
     titre: "Ce qui t'attend dans ta formation",
-    modules: "modules", videos: "vidéos avec Lucas", documents: "guides et documents à télécharger", defis: "défis",
+    modules: "modules", videos: "vidéos avec Lucas", documents: "guides et documents", defis: "défis",
     dont: "Dont 3 programmes d'entraînement (12 semaines femme, 12 semaines homme, full body maison) et 3 plans alimentaires (sans restriction, sans gluten, vegan).",
     outils: "Plus tes outils : organisation de la diète, priorités, notes et objectifs. Gratuit, sans limite de temps."
   },
