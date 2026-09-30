@@ -511,6 +511,7 @@ label.objectif{cursor:pointer;text-transform:none;letter-spacing:0;font-weight:4
 .echantillon .ech-marque .pastille{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
 .echantillon .panel{border-style:dashed}
 .ech-appel .verrou .btn{min-height:46px;padding:11px 22px}
+.verrou .btn{min-height:44px}   /* v61 : zone de tap de 44 px aussi sur les pages verrouillées sans exemple (#/bilan, #/complements) */
 .ech-repas summary{padding:2px 0}
 .ech-repas .ech-moment{display:block;font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:600}
 .ech-repas summary b{overflow-wrap:anywhere}
