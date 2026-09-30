@@ -789,7 +789,7 @@ const outilFormation = {
        v67 : meme chose pour le module et la lecon ouverts (D.ouvert, D.lecon) : ouvrir ou fermer un module ou une lecon
        n'ecrit plus rien ; le choix est garde avec la semaine et le jour ({ semaine, jour, ouvert, lecon }). Un choix garde
        par la v67 (sans ouvert ni lecon) laisse ceux du document ; un module ou une lecon qui n'existe pas est ignore.
-       v67 (3e tour) : meme chose pour la carte de challenge ouverte (D.challenge, seulement lue par wChallenges pour
+       v68 (3e tour) : meme chose pour la carte de challenge ouverte (D.challenge, seulement lue par wChallenges pour
        deplier la carte) : l'ouvrir ou la fermer n'ecrit plus rien ({ semaine, jour, ouvert, lecon, challenge }) ; un
        choix garde sans challenge laisse celui du document ; un challenge qui n'existe pas est ignore. */
     const cleAff = "mhx_aff|" + (Store.cible() || "_") + "|formation";
@@ -983,7 +983,7 @@ const outilFormation = {
         D.objectifs = D.objectifs.filter(x => x.id !== b.dataset.ox); sauver(); dessiner();
       }));
 
-      /* --- challenges --- (v67, 3e tour : ouvrir ou fermer une carte, affichage seul, rien n'est ecrit) */
+      /* --- challenges --- (v68, 3e tour : ouvrir ou fermer une carte, affichage seul, rien n'est ecrit) */
       $$("[data-chal]", zone).forEach(b => b.addEventListener("click", () => {
         D.challenge = (D.challenge === b.dataset.chal) ? "" : b.dataset.chal;
         garderAffichage(); dessiner();

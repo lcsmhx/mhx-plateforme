@@ -1054,7 +1054,7 @@ const outilSuivi = {
 
   async init(){
     const { valeurs: d, dates } = await Store.lireTout(["programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "intake", "checkins", "feedbacks"], { dates: true });
-    /* v67 (3e tour) : les objectifs du mois se cochent ici (Regularite.monterClient reecrit « objectifs_faits » a chaque
+    /* v68 (3e tour) : les objectifs du mois se cochent ici (Regularite.monterClient reecrit « objectifs_faits » a chaque
        case) : une case cochee gardee sur l'appareil (envoi rate, hors ligne) plus recente que la base passe devant, meme
        regle que Store.lire (Store.copieAServir) ; sinon la case suivante, cochee avant le nouvel essai automatique,
        reecrivait la liste sans elle (perdue). Les autres cles sont lues comme avant. */

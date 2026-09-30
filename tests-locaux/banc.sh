@@ -113,7 +113,7 @@ HORS_BANC="verif44 verif45 verif46 verif47 verif49"
 # sélecteur de fichier : rien ; F : un champ enregistré à chaque frappe ne bloque plus la relecture), verif75 24 (C2 : envoi raté puis page rouverte, pas de faux « changé entre-temps » ;
 # E renforcée), verif73 25 (C3 : refus chez le coach sans « Préviens ton coach »), verif53 F renforcée (badge et
 # compte encore à zéro), nombre de verif53 inchangé.
-# v67 (3e tour) : verif78 19 (partie 5 : ouvrir ou fermer une carte de challenge de la Speed Formation n'écrit plus rien,
+# v68 (3e tour) : verif78 19 (partie 5 : ouvrir ou fermer une carte de challenge de la Speed Formation n'écrit plus rien,
 # choix gardé sur l'appareil ; Mon suivi : une case d'objectif dont l'envoi a raté n'est plus effacée par la case suivante) ;
 # verif76 : le choix gardé sur l'appareil contient aussi challenge (4 vérifications ajustées), nombre inchangé.
 attendu() {
