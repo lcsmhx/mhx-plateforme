@@ -182,10 +182,13 @@ const Decouverte = {
   },
   /* v63 : le clic le plus recent PAR DATE (la liste peut etre dans le desordre : fusion de fraiche, deux appareils) ;
      date lisible = texte AAAA-MM-JJ… que Date.parse comprend ; date piegee (objet, nombre, texte illisible) ignoree ;
+     date a plus de 5 min dans le futur (horloge du telephone en avance) ignoree, comme dans la chronologie, « Mesure » et
+     les Nouveautes : sinon elle resterait « le dernier clic » (« A traiter », « revenu ») jusqu'a ce qu'elle soit passee ;
      a date egale, le plus loin dans la liste ; null si aucune date lisible */
   dernierClic(C){
     let d = null, td = -Infinity;
-    this.clics(C).forEach(c => { const t = typeof c.date === "string" && /^\d{4}-\d{2}-\d{2}/.test(c.date) ? Date.parse(c.date) : NaN; if (!isNaN(t) && t >= td){ d = c; td = t; } });
+    const maxi = Date.now() + 5 * 60000;
+    this.clics(C).forEach(c => { const t = typeof c.date === "string" && /^\d{4}-\d{2}-\d{2}/.test(c.date) ? Date.parse(c.date) : NaN; if (!isNaN(t) && t <= maxi && t >= td){ d = c; td = t; } });
     return d;
   },
   /* v61 (brief V2, F et L) — les codes d'origine des boutons « Récupérer mon plan d'action » : envoyes a Calendly
