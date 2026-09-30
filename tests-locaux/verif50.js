@@ -31,8 +31,8 @@
      2026-09-30. Les adresses Calendly fictives des essais « ? » / « # » ont un chemin neutre (avant : …/x/30min).
      Nombre de vérifications inchangé (57).
    v64 (lot 5, brief V2 A et K) : DECOUVERTE.accords.conditions (version enregistrée à l'inscription) = la version des CGU en
-     PDF, CONFIG.textes_legaux.cgu_version (servie « 2026-10-01 », LEGAUX_TEST), plus celle du texte court (qui reste
-     2026-09-30) ; à l'inscription, « CGU » et « politique de confidentialité » sont 2 liens distincts vers les PDF
+     PDF, CONFIG.textes_legaux.cgu_version (servie « 2026-10-15 », LEGAUX_TEST), plus celle du texte court (2026-09-30,
+     puis 2026-10-01 : la date des PDF, décision de Lucas du 30/09) ; à l'inscription, « CGU » et « politique de confidentialité » sont 2 liens distincts vers les PDF
      (target=_blank, rel=noopener ; jamais cliqués), plus de volet (le texte « Prise de rendez-vous » reste vérifié depuis le
      Profil), case des conditions présente, plus de case santé. Nombre de vérifications inchangé (57).
    Reprend le simulateur de verif47 : Supabase simulé en mémoire, rien ne part vers la vraie base.
@@ -52,7 +52,7 @@ const { servirFichier, forcerInscription } = require("./fichiers");   // 52.1 : 
 /* v64 (lot 5, brief V2 A2) : les 3 emplacements CONFIG.textes_legaux (js/config.js, « à compléter » tant que Lucas ne les a
    pas remplis) servis avec des valeurs de test valides (liens Drive fictifs, jamais ouverts ; version postérieure au
    2026-09-30) le temps des blocs qui en ont besoin (legaux = LEGAUX_TEST), sinon tels quels. Aucun test ne clique un lien PDF. */
-const LEGAUX_TEST = { cgu_pdf: "https://drive.google.com/file/d/TEST-CGU/view", confidentialite_pdf: "https://drive.google.com/file/d/TEST-POLITIQUE/view", cgu_version: "2026-10-01" };
+const LEGAUX_TEST = { cgu_pdf: "https://drive.google.com/file/d/TEST-CGU/view", confidentialite_pdf: "https://drive.google.com/file/d/TEST-POLITIQUE/view", cgu_version: "2026-10-15" };   // v64 : version DISTINCTE du texte court (2026-10-01 depuis la v64, comme les PDF)
 let legaux = null;
 const poserLegaux = t => legaux ? t.replace(/\b(cgu_pdf|confidentialite_pdf|cgu_version): "[^"\n]*"/g, (x, k) => k + ": " + JSON.stringify(legaux[k])) : t;
 const retouche = h => { h = poserLegaux(forcerInscription(h, inscriptionLibre));
@@ -332,10 +332,10 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     /* v61 (lot 2, décision 4) : texte court version 2026-09-30 (avant : 2026-09-29) ; 2e paragraphe « … dont tes clics sur
        « Récupérer mon plan d'action » » (avant : « Réserver mon bilan »).
        v64 (brief V2 A2 et K) : accords.conditions (version enregistrée aux nouvelles inscriptions) = la version des CGU en PDF,
-       CONFIG.textes_legaux.cgu_version (servie « 2026-10-01 ») ; avant : celle du texte court (2026-09-30), qui ne change pas */
-    ok("DECOUVERTE.confidentialite : un paragraphe « Prise de rendez-vous » (Calendly, société américaine, pour le compte du coach, États-Unis, pré-remplissage à l'ouverture, écran d'origine) ; v61 : 2e paragraphe « Données collectées : … dont tes clics sur « Récupérer mon plan d'action » », version 2026-09-30 ; v64 : accords.conditions = CONFIG.textes_legaux.cgu_version (« 2026-10-01 » servie), plus la version du texte court",
+       CONFIG.textes_legaux.cgu_version (servie « 2026-10-15 ») ; avant : celle du texte court, qui passe à 2026-10-01 (K) */
+    ok("DECOUVERTE.confidentialite : un paragraphe « Prise de rendez-vous » (Calendly, société américaine, pour le compte du coach, États-Unis, pré-remplissage à l'ouverture, écran d'origine) ; v61 : 2e paragraphe « Données collectées : … dont tes clics sur « Récupérer mon plan d'action » », version 2026-10-01 (v64, celle des PDF) ; v64 : accords.conditions = CONFIG.textes_legaux.cgu_version (« 2026-10-15 » servie), plus la version du texte court",
       !!d && d.i > -1 && ["ton bilan se réserve sur Calendly (société américaine)", "pour le compte du coach", "États-Unis", "pré-remplis dès que tu ouvres la page de réservation", "l'écran de l'app d'où tu viens", "Ton prénom, ton nom et ton email"].every(x => d.fr.includes(x))
-      && d.j === 1 && d.frD.includes("dont tes clics sur « " + CTA + " ».") && !d.frD.includes("Réserver mon bilan") && d.version === "2026-09-30" && d.cgu === LEGAUX_TEST.cgu_version && d.conditions === LEGAUX_TEST.cgu_version, JSON.stringify(d));
+      && d.j === 1 && d.frD.includes("dont tes clics sur « " + CTA + " ».") && !d.frD.includes("Réserver mon bilan") && d.version === "2026-10-01" && d.cgu === LEGAUX_TEST.cgu_version && d.conditions === LEGAUX_TEST.cgu_version && d.conditions !== d.version, JSON.stringify(d));
     ok("confidentialité en anglais : le paragraphe « Booking: » à la même place (Calendly, a US company, on the coach's behalf, pre-filled, app screen) ; v61 : « Data collected: … including your clicks on “Get my action plan” » à la même place que le français",
       !!d && d.nFr === d.nEn && /^Booking: /.test(d.en) && ["Calendly (a US company)", "on the coach's behalf", "United States", "pre-filled as soon as you open the booking page", "the app screen you came from", "Your first name, last name and email"].every(x => d.en.includes(x))
       && /^Data collected: /.test(d.enD) && d.enD.includes("including your clicks on “" + CTA_EN + "”.") && !d.enD.includes("Book my assessment"), JSON.stringify(d && [d.en, d.enD]));

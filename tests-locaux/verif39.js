@@ -22,7 +22,7 @@
    newsletter (facultative) et « Rester connecté » ; plus de case santé (accord demandé au premier usage, partie B) : « case santé
    obligatoire » devient « plus de case ni de texte santé, un compte se crée sans elle » ; sous-titre A1, bouton « Créer mon
    espace gratuit » / « Create my free account » ; métadonnées : conditions_version = CONFIG.textes_legaux.cgu_version (servie
-   « 2026-10-01 », LEGAUX_TEST), newsletter_version « 2026-09-30 », plus de consentement_sante ni de sante_version ; en anglais,
+   « 2026-10-15 », LEGAUX_TEST ; distincte du texte court, 2026-10-01), newsletter_version « 2026-09-30 », plus de consentement_sante ni de sante_version ; en anglais,
    la case des conditions manquante (avant : la case santé). Même nombre de vérifications (48).
    Usage : node verif39.js ../index.html                                         */
 const { chromium } = require("playwright"); const fs = require("fs"); const http = require("http"); const path = require("path");
@@ -38,7 +38,7 @@ const { servirFichier, forcerInscription } = require("./fichiers");   // 52.1 : 
 /* v64 (lot 5, brief V2 A2) : les 3 emplacements CONFIG.textes_legaux (js/config.js, « à compléter » tant que Lucas ne les a
    pas remplis) servis avec des valeurs de test valides (liens Drive fictifs, jamais ouverts ; version postérieure au
    2026-09-30) le temps des blocs d'inscription (legaux = LEGAUX_TEST), sinon tels quels. Aucun test ne clique un lien PDF. */
-const LEGAUX_TEST = { cgu_pdf: "https://drive.google.com/file/d/TEST-CGU/view", confidentialite_pdf: "https://drive.google.com/file/d/TEST-POLITIQUE/view", cgu_version: "2026-10-01" };
+const LEGAUX_TEST = { cgu_pdf: "https://drive.google.com/file/d/TEST-CGU/view", confidentialite_pdf: "https://drive.google.com/file/d/TEST-POLITIQUE/view", cgu_version: "2026-10-15" };   // v64 : version DISTINCTE du texte court (2026-10-01 depuis la v64, comme les PDF)
 let legaux = null;
 const poserLegaux = t => legaux ? t.replace(/\b(cgu_pdf|confidentialite_pdf|cgu_version): "[^"\n]*"/g, (x, k) => k + ": " + JSON.stringify(legaux[k])) : t;
 const retouche = h => poserLegaux(forcerInscription(h, inscriptionLibre));
@@ -331,7 +331,7 @@ const lireTuiles = page => page.$$eval("#tb-vue .tb-tuile", l => l.map(t => {
       cles: ["sante_avant", "sante_manque"].filter(k => (k in (DECOUVERTE.inscription || {})) || (k in ((DECOUVERTE.en || {}).inscription || {}))) })).catch(e => ({ erreur: String(e) }));
     /* version des conditions attendue (v64, brief V2 A2 et K) : celle des CGU en PDF, CONFIG.textes_legaux.cgu_version (servie :
        LEGAUX_TEST), reprise par DECOUVERTE.accords.conditions ; avant : la version du texte court (confidentialite.version) */
-    const version = await page.evaluate(() => ({ cgu: (CONFIG.textes_legaux || {}).cgu_version, accords: (DECOUVERTE.accords || {}).conditions })).catch(e => ({ erreur: String(e) }));
+    const version = await page.evaluate(() => ({ cgu: (CONFIG.textes_legaux || {}).cgu_version, accords: (DECOUVERTE.accords || {}).conditions, court: (DECOUVERTE.confidentialite || {}).version })).catch(e => ({ erreur: String(e) }));
     await page.check("#c-cgu");
     await page.click("#c-go"); await attendre(page, 2500);
     ok("inscription : plus de case ni de texte santé (#c-sante absente, aucun « données de santé » à l'écran, sante_avant / sante_manque retirés des textes FR et EN) ; la case des conditions cochée suffit, un compte se crée sans accord santé (v64, brief V2 A3 ; avant : case santé obligatoire, P0.5)",
@@ -340,8 +340,8 @@ const lireTuiles = page => page.$$eval("#tb-vue .tb-tuile", l => l.map(t => {
     /* v52 (lot B) : le nom saisi (plus « » vide), chaque accord daté ET versionné, newsletter (null si la case est vide) au lieu d'emails_suivi.
        v64 (brief V2 A) : EXACTEMENT prenom, nom, consentement, conditions_version (= CONFIG.textes_legaux.cgu_version), newsletter,
        newsletter_version (« 2026-09-30 », texte A4) ; plus de consentement_sante ni de sante_version (accord au premier usage) */
-    ok("inscription : POST /auth/v1/signup avec prénom et nom, consentement daté + version des CGU (CONFIG.textes_legaux.cgu_version, « 2026-10-01 » servie, = DECOUVERTE.accords.conditions), newsletter null (case vide) + version « 2026-09-30 », aucun accord santé (ni consentement_sante ni sante_version), plus d'emails_suivi (v44, v52, v64)",
-      db.inscriptions.length === 1 && md.prenom === "Zoé" && md.nom === "Martin" && isoRe.test(md.consentement || "") && version.cgu === LEGAUX_TEST.cgu_version && version.accords === LEGAUX_TEST.cgu_version && md.conditions_version === LEGAUX_TEST.cgu_version
+    ok("inscription : POST /auth/v1/signup avec prénom et nom, consentement daté + version des CGU (CONFIG.textes_legaux.cgu_version, « 2026-10-15 » servie, = DECOUVERTE.accords.conditions, ≠ version du texte court), newsletter null (case vide) + version « 2026-09-30 », aucun accord santé (ni consentement_sante ni sante_version), plus d'emails_suivi (v44, v52, v64)",
+      db.inscriptions.length === 1 && md.prenom === "Zoé" && md.nom === "Martin" && isoRe.test(md.consentement || "") && version.cgu === LEGAUX_TEST.cgu_version && version.accords === LEGAUX_TEST.cgu_version && md.conditions_version === LEGAUX_TEST.cgu_version && !!version.court && md.conditions_version !== version.court
       && md.newsletter === null && md.newsletter_version === "2026-09-30" && Object.keys(md).sort().join(",") === "conditions_version,consentement,newsletter,newsletter_version,nom,prenom" && ins.email === "nouvelle@exemple.fr",
       db.inscriptions.length + " " + JSON.stringify(md) + " attendu " + JSON.stringify(version));
     ok("inscription : connecté ensuite, et prospect", await page.evaluate(() => Auth.connecte() && Auth.estProspect()).catch(() => false));

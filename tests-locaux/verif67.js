@@ -431,12 +431,17 @@ const G_EN = {
 const CACHEES = { bilan: ["Mon bilan", "Ton bilan du mois, préparé avec ton coach."], complements: ["Mes compléments", "Tes compléments conseillés, avec les doses et les moments."] };
 const VERROU_TXT = "Cette fonctionnalité est disponible avec l'accompagnement MHX.";
 /* décision 4 : le 2e paragraphe du texte court des conditions, et l'empreinte des 11 autres (version 2026-09-29 de la v60 :
-   sha256 des 11 paragraphes, JSON, 16 premiers caractères) — « rien d'autre ne change » */
+   sha256 des 11 paragraphes, JSON, 16 premiers caractères) — « rien d'autre ne change ».
+   v64 (décision de Lucas du 30/09, version 2026-10-01) : deux faits changent, le 2e paragraphe (accord santé demandé au
+   premier usage, plus de « case dédiée ») et le 9e (newsletter : « 2 emails par semaine au plus ») : ces deux-là EXACTS,
+   et l'empreinte des 10 autres identique à celle de la v63 (a83567ba… / c13c2922…, calculée sur la v63 ET sur la v64) */
 const COND = {
-  version: "2026-09-30", titre: "Conditions d'utilisation et confidentialité", titre_en: "Terms of use and privacy",
-  p2: "Données collectées : ton prénom, ton nom, ton email, tes réponses aux 3 questions de départ et ton activité dans l'app, dont tes clics sur « Récupérer mon plan d'action ». Données de santé : celles que tu saisis (poids, mensurations, âge, taille et activité dans le calculateur de calories), avec ton accord (case dédiée).",
-  p2_en: "Data collected: your first name, your last name, your email, your answers to the 3 starting questions and your activity in the app, including your clicks on “Get my action plan”. Health data: what you enter (weight, measurements, age, height and activity in the calorie calculator), with your consent (dedicated box).",
-  autres: "71839dfa3afa4ec5", autres_en: "6d866771dcf795a5"
+  version: "2026-10-01", titre: "Conditions d'utilisation et confidentialité", titre_en: "Terms of use and privacy",
+  p2: "Données collectées : ton prénom, ton nom, ton email, tes réponses aux 3 questions de départ et ton activité dans l'app, dont tes clics sur « Récupérer mon plan d'action ». Données de santé : celles que tu saisis (poids, mensurations, âge, taille et activité dans le calculateur de calories), avec ton accord, demandé la première fois que tu utilises un outil qui les traite (calculateur, suivi du poids et des mensurations, outil « Organise ta diète »).",
+  p2_en: "Data collected: your first name, your last name, your email, your answers to the 3 starting questions and your activity in the app, including your clicks on “Get my action plan”. Health data: what you enter (weight, measurements, age, height and activity in the calorie calculator), with your consent, asked the first time you use a tool that processes it (calculator, weight and measurement tracking, “Organise ta diète” tool).",
+  p9: "Newsletter (facultative) : si tu coches la case, tu reçois par email les conseils, témoignages et offres de coaching de MHX Coaching, 2 emails par semaine au plus. Désinscription en 1 clic dans chaque email, et retrait de ton accord possible à tout moment dans ton Profil.",
+  p9_en: "Newsletter (optional): if you tick the box, you receive MHX Coaching's tips, testimonials and coaching offers by email, 2 emails per week at most. One-click unsubscribe in every email, and you can withdraw your consent at any time in your Profile.",
+  autres: "a83567ba5664f00b", autres_en: "c13c2922deb1971d"   // v60 à v63 (11 paragraphes, sans le 2e) : 71839dfa3afa4ec5 / 6d866771dcf795a5
 };
 const empreinte = a => crypto.createHash("sha256").update(JSON.stringify(a)).digest("hex").slice(0, 16);
 /* tous les nouveaux textes du lot 2 : jamais chez un client */
@@ -725,8 +730,10 @@ const verrouVu = (page, id) => page.evaluate(id => {
   });
 
   /* =================== J. décision 4 : texte court des conditions, version 2026-09-30 =================== */
-  /* v64 : servi avec LEGAUX_TEST (version des CGU de test « 2026-10-01 », distincte du texte court), le temps du bloc */
-  await bloc("J. conditions (décision 4)", () => avecLegaux(LEGAUX_TEST, async () => {
+  /* v64 : servi avec les liens de LEGAUX_TEST et une version des CGU « 2026-10-15 », DISTINCTE du texte court (2026-10-01
+     depuis la v64, comme les PDF) : la version envoyée vient bien de CONFIG.textes_legaux, pas du texte court */
+  const LEGAUX_J = Object.assign({}, LEGAUX_TEST, { cgu_version: "2026-10-15" });
+  await bloc("J. conditions (décision 4)", () => avecLegaux(LEGAUX_J, async () => {
     for (const en of [false, true]) {
       const k = en ? 10 : 9, db = base({ comptes: [compte(k, [["intake", AVEC_CHOIX(k, PLUS_TARD())]])] });
       const { page } = await ouvrir(b, db, k, "#/profil", "#mc-conditions", en ? { langue: "en", theme: "light" } : {});
@@ -735,11 +742,12 @@ const verrouVu = (page, id) => page.evaluate(id => {
       await page.click("#mc-conditions"); await page.waitForSelector(".volet .corps p", { timeout: 6000 }); await attendre(page, 300);
       const ps = await page.$$eval(".volet .corps p", l => l.map(p => p.textContent));
       await relever(page, en, "profil, volet des conditions");
-      const autres = ps.filter((_, i) => i !== 1), emp = empreinte(autres);
-      if (!en) ok("version du texte court : « 2026-09-30 » (DECOUVERTE.confidentialite.version) ; v64 : DECOUVERTE.accords.conditions (envoyée à l'inscription) = CONFIG.textes_legaux.cgu_version, la version des CGU en PDF (« " + LEGAUX_TEST.cgu_version + " » servie), plus celle du texte court", vers[0] === COND.version && vers[2] === LEGAUX_TEST.cgu_version && vers[1] === LEGAUX_TEST.cgu_version, JSON.stringify(vers));
-      ok(`Profil${en ? " (anglais)" : ""}, volet « ${en ? COND.titre_en : COND.titre} » : 12 paragraphes ; le 2e EXACT (« …${en ? "including your clicks on “Get my action plan”" : "dont tes clics sur « Récupérer mon plan d'action »"}. … ») ; les 11 autres identiques à la version 2026-09-29 (v60 : même empreinte) ; aucune durée à 30 min`,
-        ps.length === 12 && norm(ps[1]) === norm(en ? COND.p2_en : COND.p2) && emp === (en ? COND.autres_en : COND.autres) && !ps.some(p => /Réserver mon bilan|Book my assessment/.test(p) || TRENTE.test(p)),
-        ps.length + " · " + ps[1] + " · empreinte " + emp);
+      const autres = ps.filter((_, i) => i !== 1 && i !== 8), emp = empreinte(autres);
+      if (!en) ok("version du texte court : « " + COND.version + " » (DECOUVERTE.confidentialite.version, celle des PDF) ; v64 : DECOUVERTE.accords.conditions (envoyée à l'inscription) = CONFIG.textes_legaux.cgu_version, la version des CGU en PDF (« " + LEGAUX_J.cgu_version + " » servie, distincte du texte court), plus celle du texte court", vers[0] === COND.version && vers[2] === LEGAUX_J.cgu_version && vers[1] === LEGAUX_J.cgu_version && vers[1] !== vers[0], JSON.stringify(vers));
+      ok(`Profil${en ? " (anglais)" : ""}, volet « ${en ? COND.titre_en : COND.titre} » : 12 paragraphes ; le 2e EXACT (« …${en ? "including your clicks on “Get my action plan”" : "dont tes clics sur « Récupérer mon plan d'action »"}. … », v64 : accord santé au premier usage, plus de ${en ? "« dedicated box »" : "« case dédiée »"}) ; v64 : le 9e EXACT (newsletter, ${en ? "« 2 emails per week at most »" : "« 2 emails par semaine au plus »"}) ; les 10 autres identiques à la v63 (même empreinte) ; aucune durée à 30 min`,
+        ps.length === 12 && norm(ps[1]) === norm(en ? COND.p2_en : COND.p2) && norm(ps[8]) === norm(en ? COND.p9_en : COND.p9) && emp === (en ? COND.autres_en : COND.autres)
+          && !ps.some(p => /Réserver mon bilan|Book my assessment|case dédiée|dedicated box|1 à 2 emails|1 to 2 emails/.test(p) || TRENTE.test(p)),
+        ps.length + " · " + ps[1] + " · " + ps[8] + " · empreinte " + emp);
     }
     /* inscription (faux serveur, données fictives) : la version envoyée */
     inscriptionLibre = true;
@@ -753,8 +761,8 @@ const verrouVu = (page, id) => page.evaluate(id => {
       await Promise.all([page.waitForNavigation({ waitUntil: "load", timeout: 15000 }), page.click("#c-go")]);
       await pret(page); await attendre(page, 1500);
       const md = ((db.inscriptions[0] || {}).data) || {};
-      ok("inscription : conditions_version = CONFIG.textes_legaux.cgu_version (« " + LEGAUX_TEST.cgu_version + " » servie, plus « 2026-09-30 » du texte court) envoyée avec l'acceptation des conditions (datée), une seule inscription, sans case santé ni accord santé (ni consentement_sante ni sante_version)",
-        db.inscriptions.length === 1 && servie === LEGAUX_TEST.cgu_version && md.conditions_version === LEGAUX_TEST.cgu_version && !("consentement_sante" in md) && !("sante_version" in md) && typeof md.consentement === "string" && /^\d{4}-\d{2}-\d{2}T/.test(md.consentement), JSON.stringify(db.inscriptions.map(x => x.data)) + " · servie " + servie);
+      ok("inscription : conditions_version = CONFIG.textes_legaux.cgu_version (« " + LEGAUX_J.cgu_version + " » servie, plus « " + COND.version + " » du texte court) envoyée avec l'acceptation des conditions (datée), une seule inscription, sans case santé ni accord santé (ni consentement_sante ni sante_version)",
+        db.inscriptions.length === 1 && servie === LEGAUX_J.cgu_version && md.conditions_version === LEGAUX_J.cgu_version && md.conditions_version !== COND.version && !("consentement_sante" in md) && !("sante_version" in md) && typeof md.consentement === "string" && /^\d{4}-\d{2}-\d{2}T/.test(md.consentement), JSON.stringify(db.inscriptions.map(x => x.data)) + " · servie " + servie);
     } finally { inscriptionLibre = null; }
   }));
 

@@ -54,7 +54,9 @@
      Drive). Accepté seulement : https, drive.google.com ou docs.google.com, sans compte ni port, écrit sous sa forme
      standard (new URL(s).href === s), uniquement des caractères de \x21 à \x7E (ni espace, ni caractère invisible
      comme U+200B, ni accent), et l'un des 4 chemins …/file/d/<id>, …/document/d/<id> (suivis de « / » ou de la fin du
-     chemin), …/open?id=<id>, …/uc?id=<id> ; <id> en [A-Za-z0-9_-].
+     chemin), …/open?id=<id>, …/uc?id=<id> ; <id> en [A-Za-z0-9_-]. Décision de Lucas du 30/09 (en attendant un lien par
+     fichier) : aussi le lien d'un DOSSIER Drive, drive.google.com/drive/folders/<id> (suivi au plus d'un « / » ; ni
+     /drive/u/0/… d'un compte, ni docs.google.com) → { id, dossier: true }.
    idsDeTest() : identifiant → fichier, pour LIENS_TEST ET tout lien Google Drive écrit dans un fichier .js de ce dossier
      (tests-locaux : les suites, lues une fois) : une valeur de test d'une suite n'est jamais publiable, même recopiée.
    idModele(id) : "" pour un identifiant qui a l'air réel, sinon pourquoi il ressemble à un modèle écrit à la main : sans
@@ -71,7 +73,8 @@
    legauxBorne(maintenant) : la dernière date acceptée pour cgu_version, aujourd'hui (UTC ; maintenant en ms, Date.now()
      par défaut) + 366 jours : une faute sur l'année (2062, 2099) est refusée, une version juste reste valide ensuite.
    legauxManquants(texte, maintenant) : ce qui manque pour publier ([] = complet), lu dans le TEXTE — chaque emplacement
-     écrit UNE fois, entre guillemets droits ; 2 liens publiables (problemeLien) vers 2 documents différents, dont
+     écrit UNE fois, entre guillemets droits ; 2 liens publiables (problemeLien) vers 2 documents différents (sauf le
+     MÊME dossier Drive pour les deux, décision de Lucas du 30/09 : le dossier qui contient les 2 PDF), dont
      l'identifiant n'est écrit nulle part ailleurs dans le texte (hors des 3 emplacements : un PDF de la formation,
      js/outilFormation.js, collé par erreur) ; cgu_version = une date AAAA-MM-JJ réelle, postérieure au 2026-09-30 et au
      plus tard legauxBorne(maintenant).
@@ -191,10 +194,12 @@ function lienDrive(s){
     return { pb: "pas un lien https de drive.google.com ou docs.google.com" };
   if (u.href !== s) return { pb: "forme non standard (lue « " + u.href + " ») : recopier le lien donné par Google Drive" };
   const m = /^\/(?:file|document)\/d\/([^/]*)(?:\/|$)/.exec(u.pathname);
-  const id = m ? m[1] : /^\/(?:open|uc)$/.test(u.pathname) ? (u.searchParams.get("id") || "") : null;
-  if (id === null) return { pb: "chemin non accepté (…/file/d/<id>, …/document/d/<id>, …/open?id=<id> ou …/uc?id=<id>)" };
+  /* décision de Lucas du 30/09 : le dossier Drive qui contient les 2 PDF (drive.google.com seulement, sans /u/0/ de compte) */
+  const f = u.hostname === "drive.google.com" ? /^\/drive\/folders\/([^/]*)\/?$/.exec(u.pathname) : null;
+  const id = m ? m[1] : f ? f[1] : /^\/(?:open|uc)$/.test(u.pathname) ? (u.searchParams.get("id") || "") : null;
+  if (id === null) return { pb: "chemin non accepté (…/file/d/<id>, …/document/d/<id>, …/open?id=<id>, …/uc?id=<id> ou drive.google.com/drive/folders/<id>)" };
   if (!/^[A-Za-z0-9_-]+$/.test(id)) return { pb: "identifiant de document illisible (« " + id + " »)" };
-  return { id };
+  return f ? { id, dossier: true } : { id };
 }
 let idsTest = null;
 function idsDeTest(){
@@ -263,9 +268,11 @@ function legauxManquants(texte, maintenant){
   for (const n of ["cgu_pdf", "confidentialite_pdf"]) {
     const p = problemeLien(v[n]);
     id[n] = p ? "" : lienDrive(v[n]).id;
-    if (p) pb.push(n + " « " + montrer(v[n]) + " » : " + p + " — le lien https d'un PDF sur Google Drive est attendu (drive.google.com/file/d/… ou docs.google.com/document/d/…)");
+    if (p) pb.push(n + " « " + montrer(v[n]) + " » : " + p + " — le lien https d'un PDF sur Google Drive est attendu (drive.google.com/file/d/… ou docs.google.com/document/d/…), ou celui du dossier Drive qui contient les 2 PDF (drive.google.com/drive/folders/…)");
   }
-  if (id.cgu_pdf && id.cgu_pdf === id.confidentialite_pdf) pb.push("cgu_pdf et confidentialite_pdf mènent au même document (« " + id.cgu_pdf + " ») : 2 PDF différents attendus");
+  /* 2 documents différents ; le même DOSSIER pour les deux est accepté (décision de Lucas du 30/09) */
+  const dossiers = id.cgu_pdf && lienDrive(v.cgu_pdf).dossier && lienDrive(v.confidentialite_pdf).dossier;
+  if (id.cgu_pdf && id.cgu_pdf === id.confidentialite_pdf && !dossiers) pb.push("cgu_pdf et confidentialite_pdf mènent au même document (« " + id.cgu_pdf + " ») : 2 PDF différents attendus");
   /* relecture du verrou : le document d'un AUTRE lien du site (une ressource de la formation, js/outilFormation.js : erreur
      de copier-coller la plus plausible) — l'identifiant écrit ailleurs que dans les 3 emplacements, sous toute forme */
   const hors = LEGAUX.reduce((t, n) => t.replace(motifLegal(n, true), ""), String(texte));

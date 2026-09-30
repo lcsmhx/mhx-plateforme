@@ -140,19 +140,22 @@ const egal = (x, y) => JSON.stringify(x) === JSON.stringify(y);
 /* texte comparé : espaces (insécables comprises) resserrées */
 const norm = t => String(t == null ? "" : t).replace(/[\u00a0\u202f]/g, " ").replace(/\s+/g, " ").trim();
 
-/* ---------- les textes attendus (brief V2, B, mot pour mot ; échec : DECOUVERTE.emails.refuse, contrat du lot 5) ---------- */
+/* ---------- les textes attendus (brief V2, B, mot pour mot ; échec : DECOUVERTE.emails.refuse, contrat du lot 5) ----------
+   v64 (décision de Lucas du 30/09) : la carte s'affiche aussi sur « Organise ta diète » : les repas prévus y sont ajoutés dans
+   le texte, la phrase d'accord (entre parenthèses, après « calculs ») et le message après « Pas maintenant » ; le reste mot pour
+   mot. En anglais, le nom de l'outil tel qu'il s'affiche (la Speed Formation n'est pas traduite) : “Organise ta diète”. */
 const SANTE = {
   fr: { titre: "Ton accord, une seule fois",
-    texte: "Pour calculer tes calories et suivre ta progression, l'app enregistre ton poids, ta taille, tes mensurations et tes calculs. Ce sont des données de santé : elles restent privées, visibles seulement par toi et ton coach, et tu peux les supprimer à tout moment.",
-    phrase: "J'accepte que mes données de santé (poids, taille, mensurations, calculs) servent à mes calculs et à mon suivi.",
+    texte: "Pour calculer tes calories et suivre ta progression, l'app enregistre ton poids, ta taille, tes mensurations, tes calculs et les repas prévus dans « Organise ta diète ». Ce sont des données de santé : elles restent privées, visibles seulement par toi et ton coach, et tu peux les supprimer à tout moment.",
+    phrase: "J'accepte que mes données de santé (poids, taille, mensurations, calculs, repas prévus dans « Organise ta diète ») servent à mes calculs et à mon suivi.",
     oui: "J'accepte", non: "Pas maintenant", lien: "En savoir plus : politique de confidentialité",
-    refus: "Pas de souci. Sans ton accord, le calculateur et le suivi restent en pause. Le reste de ton espace reste ouvert, et tu peux changer d'avis quand tu veux.",
+    refus: "Pas de souci. Sans ton accord, le calculateur, le suivi et l'organisation de la diète restent en pause. Le reste de ton espace reste ouvert, et tu peux changer d'avis quand tu veux.",
     echec: "Non enregistré : réessaie dans un instant." },
   en: { titre: "Your consent, just once",
-    texte: "To calculate your calories and track your progress, the app saves your weight, height, measurements and results. This is health data: it stays private, visible only to you and your coach, and you can delete it at any time.",
-    phrase: "I agree that my health data (weight, height, measurements, results) is used for my calculations and tracking.",
+    texte: "To calculate your calories and track your progress, the app saves your weight, height, measurements, results and the meals you plan in “Organise ta diète”. This is health data: it stays private, visible only to you and your coach, and you can delete it at any time.",
+    phrase: "I agree that my health data (weight, height, measurements, results, meals planned in “Organise ta diète”) is used for my calculations and tracking.",
     oui: "I agree", non: "Not now", lien: "Learn more: Privacy Policy",
-    refus: "No problem. Without your consent, the calculator and tracking stay paused. The rest of your space stays open, and you can change your mind anytime.",
+    refus: "No problem. Without your consent, the calculator, tracking and diet planning stay paused. The rest of your space stays open, and you can change your mind anytime.",
     echec: "Not saved: try again in a moment." }
 };
 
@@ -874,7 +877,7 @@ const detA = A => JSON.stringify(A ? { page: A.page, carte: A.carte, dehors: A.d
     const C0 = await lireCarte(page);
     await page.click("#sante-non"); await attendre(page, 400);
     const R = await lireCarte(page);
-    ok("depuis l'accueil (« Ta prochaine étape » : calories), le calculateur : la carte ; « Pas maintenant » → section.panel.sante-carte.sante-refus#sante-carte > p#sante-refus[role=status][tabindex=-1] à la place de la carte (juste après l'en-tête), texte EXACT « Pas de souci. Sans ton accord, le calculateur et le suivi restent en pause. Le reste de ton espace reste ouvert, et tu peux changer d'avis quand tu veux. », focus dessus",
+    ok("depuis l'accueil (« Ta prochaine étape » : calories), le calculateur : la carte ; « Pas maintenant » → section.panel.sante-carte.sante-refus#sante-carte > p#sante-refus[role=status][tabindex=-1] à la place de la carte (juste après l'en-tête), texte EXACT « " + SANTE.fr.refus + " », focus dessus",
       etape0 === "calories" && carteOk(C0, "calculateur", "fr") && verifRefus(R, "calculateur", "fr"), det(R) + " " + JSON.stringify([etape0, R && R.txt.refus]));
     await capturer(page, "refus-fr-sombre-390.png", "#sante-carte");
     const f = await forcer(page, CHAMPS_CALC); await attendre(page, 1500);

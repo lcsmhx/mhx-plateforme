@@ -102,7 +102,7 @@ async function inscriptionOuverte(fn){
    test valides) ou LEGAUX_VIDES (« à compléter » : le mot seul, sans lien). Jamais en silence : les vérifications relisent
    dans la page les valeurs servies (CONFIG.textes_legaux) ou exigent les liens / la version de test exacts. */
 let legaux = null;
-const LEGAUX_TEST = { cgu_pdf: "https://drive.google.com/file/d/TEST-CGU/view", confidentialite_pdf: "https://drive.google.com/file/d/TEST-POLITIQUE/view", cgu_version: "2026-10-01" };
+const LEGAUX_TEST = { cgu_pdf: "https://drive.google.com/file/d/TEST-CGU/view", confidentialite_pdf: "https://drive.google.com/file/d/TEST-POLITIQUE/view", cgu_version: "2026-10-15" };   // v64 : version DISTINCTE du texte court (V_COND)
 const LEGAUX_VIDES = { cgu_pdf: "à compléter", confidentialite_pdf: "à compléter", cgu_version: "à compléter" };
 /* la valeur entre guillemets, collée à « cle: » (jamais « cgu_version : » d'un commentaire) */
 const forcerLegaux = (t, v) => Object.keys(v).reduce((h, k) => h.replace(new RegExp("\\b(" + k + ": )\"[^\"\\n]*\""), (x, a) => a + JSON.stringify(v[k])), t);
@@ -404,9 +404,10 @@ const V_SANTE = "2026-09-28b";
    comptes déjà inscrits gardent leur version dans leurs métadonnées (rien ne la compare : personne n'est redemandé) */
 /* v61 (décision 4 de Lucas du 30/09) : « 2026-09-30 » = « Réserver mon bilan » devient « Récupérer mon plan d'action » dans le
    paragraphe 2 (données collectées) ; rien d'autre ne change */
-const V_COND = "2026-09-30";   // version du texte court des conditions (confidentialite.version ; v55 à v58 : 2026-09-28b ; v59, v60 : 2026-09-29) ; jusqu'à la v63, aussi conditions_version des nouvelles inscriptions
+const V_COND = "2026-10-01";   // version du texte court des conditions (confidentialite.version ; v55 à v58 : 2026-09-28b ; v59, v60 : 2026-09-29 ; v61 à v63 : 2026-09-30, aussi conditions_version des nouvelles inscriptions jusqu'à la v63 ; v64 : 2026-10-01, la date des PDF, décision de Lucas du 30/09)
 /* v64 (lot 5, brief V2 A) : conditions_version d'une nouvelle inscription = la version des CGU en PDF (CONFIG.textes_legaux.cgu_version
-   = DECOUVERTE.accords.conditions ; servie LEGAUX_TEST.cgu_version) ; le texte court garde V_COND (K plus tard) */
+   = DECOUVERTE.accords.conditions ; servie LEGAUX_TEST.cgu_version, distincte de V_COND : la version envoyée vient bien de
+   CONFIG.textes_legaux, jamais du texte court) */
 const V_NEWS = "2026-09-28c";   // version du texte de l'interrupteur du Profil (DECOUVERTE.accords.newsletter_profil) ; jusqu'à la v63, aussi celle de la case de l'inscription (décors des comptes d'avant)
 const V_NEWS_INSC = "2026-09-30";   // v64 (A4) : version du texte court de la case newsletter de l'inscription (DECOUVERTE.accords.newsletter)
 const TXB = {
@@ -897,7 +898,7 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
     }));
   });
 
-  /* v64 (lot 5, A) : servi avec LEGAUX_TEST (version des CGU de test « 2026-10-01 », distincte du texte court 2026-09-30) */
+  /* v64 (lot 5, A) : servi avec LEGAUX_TEST (version des CGU de test « 2026-10-15 », distincte du texte court 2026-10-01) */
   await bloc("E. inscription : accords et copie", async () => {
     await inscriptionOuverte(() => avecLegaux(LEGAUX_TEST, async () => {
       for (const news of [false, true]) {
@@ -914,7 +915,7 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
         const date = x => typeof x === "string" && /^\d{4}-\d{2}-\d{2}T/.test(x) && Math.abs(Date.parse(x) - t0) < 10000;
         ok(`inscription ${Q} : métadonnées exactement ${CLES_META} (plus d'emails_suivi ; aucun accord santé : ni consentement_sante ni sante_version)`, db.inscriptions.length === 1 && cles === CLES_META && !("consentement_sante" in md) && !("sante_version" in md), db.inscriptions.length + " · " + cles);
         ok(`… prénom « Zoé », nom « Martin » (espaces retirés) ; conditions datées de l'inscription ; conditions_version = CONFIG.textes_legaux.cgu_version = accords.conditions (${LEGAUX_TEST.cgu_version} servie), plus la version du texte court (${V_COND})`,
-          md.prenom === "Zoé" && md.nom === "Martin" && date(md.consentement) && md.conditions_version === LEGAUX_TEST.cgu_version && !!versions.l && versions.l.cgu_version === LEGAUX_TEST.cgu_version && !!versions.a && versions.a.conditions === LEGAUX_TEST.cgu_version && versions.c === V_COND,
+          md.prenom === "Zoé" && md.nom === "Martin" && date(md.consentement) && md.conditions_version === LEGAUX_TEST.cgu_version && !!versions.l && versions.l.cgu_version === LEGAUX_TEST.cgu_version && !!versions.a && versions.a.conditions === LEGAUX_TEST.cgu_version && versions.c === V_COND && md.conditions_version !== versions.c,
           JSON.stringify(md) + " · " + JSON.stringify(versions));
         if (news) ok(`… newsletter cochée : newsletter = l'instant de l'inscription, newsletter_version = accords.newsletter (${V_NEWS_INSC}, texte court de la case)`, date(md.newsletter) && md.newsletter === md.consentement && md.newsletter_version === V_NEWS_INSC && versions.a.newsletter === V_NEWS_INSC, JSON.stringify(md));
         else ok(`… newsletter laissée décochée : l'inscription passe quand même, newsletter = null, newsletter_version = ${V_NEWS_INSC} (le texte montré)`, "newsletter" in md && md.newsletter === null && md.newsletter_version === V_NEWS_INSC, JSON.stringify(md));
@@ -1128,13 +1129,14 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
     /* décisions de Lucas du 28/09 : plus aucune mention de mesure d'ouverture ; aucun prestataire d'emails nommé ; plus de
        relances ni d'emails de suivi automatiques ; emails du compte envoyés par Gmail (Google). v59 : « Google » est nommé
        pour les polices et les aperçus des vidéos (paragraphe à part) : l'interdit garde « Gmail », sans « Google » */
-    ok("FR : paragraphe Newsletter à la place des « Emails de suivi » : 1 à 2 emails par semaine au plus, désinscription en 1 clic, retrait dans le Profil ; ni mesure d'ouverture, ni Brevo, ni relance, ni « 3 emails » ; aucun email du compte promis (confirmation, mot de passe, Gmail)",
-      i7 > -1 && ["1 à 2 emails par semaine au plus", "Désinscription en 1 clic dans chaque email", "retrait de ton accord possible à tout moment dans ton Profil"].every(x => d.fr[i7].includes(x)) && !/Gmail|email de confirmation|confirmation de ton email|mot de passe oublié/i.test(fr)
+    /* v64 (décision de Lucas du 30/09, alignée sur les PDF) : « 2 emails par semaine au plus » (avant : « 1 à 2 emails ») */
+    ok("FR : paragraphe Newsletter à la place des « Emails de suivi » : « de MHX Coaching, 2 emails par semaine au plus » (v64 ; plus « 1 à 2 »), désinscription en 1 clic, retrait dans le Profil ; ni mesure d'ouverture, ni Brevo, ni relance, ni « 3 emails » ; aucun email du compte promis (confirmation, mot de passe, Gmail)",
+      i7 > -1 && !/1 à 2 emails/.test(d.fr[i7]) && ["offres de coaching de MHX Coaching, 2 emails par semaine au plus.", "Désinscription en 1 clic dans chaque email", "retrait de ton accord possible à tout moment dans ton Profil"].every(x => d.fr[i7].includes(x)) && !/Gmail|email de confirmation|confirmation de ton email|mot de passe oublié/i.test(fr)
       && !/relance|3 emails|emails de suivi|réserv|ouvert|cliqu|mesur/i.test(d.fr[i7]) && !/Brevo|emails de suivi|au plus 3 emails|a été ouvert|mesure d'ouverture/i.test(fr), d.fr[i7]);
     ok("FR : toujours « réservés aux adultes » et « ne remplace pas un avis médical »", /réservés aux adultes/.test(d.fr[0]) && /ne remplace pas un avis médical/.test(d.fr[0]), d.fr[0]);
-    ok("EN à la même place : last name, 3 questions, « including your clicks on “Get my action plan” » (plus de « Book my assessment »), measurements ; « Your first name, last name and email are pre-filled » ; Newsletter (1 to 2 emails per week, one-click unsubscribe, withdrawal in the Profile ; no open tracking, no Brevo, no follow-up, no account email) ; adults only, not medical advice",
+    ok("EN à la même place : last name, 3 questions, « including your clicks on “Get my action plan” » (plus de « Book my assessment »), measurements ; « Your first name, last name and email are pre-filled » ; Newsletter (v64 : « 2 emails per week at most », no more « 1 to 2 » ; one-click unsubscribe, withdrawal in the Profile ; no open tracking, no Brevo, no follow-up, no account email) ; adults only, not medical advice",
       /^Data collected: /.test(d.en[i1]) && ["your last name", "3 starting questions", "your activity in the app, including your clicks on “Get my action plan”. Health data", "measurements", "calorie calculator"].every(x => d.en[i1].includes(x)) && !/Book my assessment/.test(en) && /^Booking: /.test(d.en[i6]) && d.en[i6].includes("Your first name, last name and email are pre-filled")
-      && /^Newsletter \(optional\): /.test(d.en[i7]) && ["1 to 2 emails per week at most", "One-click unsubscribe in every email", "withdraw your consent at any time in your Profile"].every(x => d.en[i7].includes(x)) && !/Gmail|confirmation email|email confirmation|forgotten password/i.test(en) && !/follow-up|3 emails|booked|opened|opening|clicked|track|measur/i.test(d.en[i7]) && !/Brevo|follow-up emails|at most 3 emails|was opened|open tracking/i.test(en)
+      && /^Newsletter \(optional\): /.test(d.en[i7]) && !/1 to 2 emails/.test(d.en[i7]) && ["coaching offers by email, 2 emails per week at most.", "One-click unsubscribe in every email", "withdraw your consent at any time in your Profile"].every(x => d.en[i7].includes(x)) && !/Gmail|confirmation email|email confirmation|forgotten password/i.test(en) && !/follow-up|3 emails|booked|opened|opening|clicked|track|measur/i.test(d.en[i7]) && !/Brevo|follow-up emails|at most 3 emails|was opened|open tracking/i.test(en)
       && /for adults only/.test(d.en[0]) && /not medical advice/.test(d.en[0]), JSON.stringify([d.en[i1], d.en[i6], d.en[i7]]).slice(0, 400));
     /* v59 : ce que l'app charge vraiment depuis Google, sans action de la personne (index.html : Google Fonts ; outilFormation
        et outilProgramme : img.youtube.com/…/hqdefault.jpg) ; le lecteur (youtube-nocookie.com) seulement au clic */

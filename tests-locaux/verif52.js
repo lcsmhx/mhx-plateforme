@@ -736,9 +736,9 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
           await pP.goto(`http://localhost:${PORT}/#/profil`); await pP.waitForSelector("#mc-conditions", { timeout: 8000 }).catch(() => {}); await attendre(pP, 800);
           await pP.click("#mc-conditions").catch(() => {}); await pP.waitForSelector(".volet", { timeout: 5000 }).catch(() => {}); await attendre(pP, 400);
           const vt = await texte(pP, ".volet");
-          ok("conditions : l'inscription n'ouvre plus le volet (« CGU » et « politique de confidentialité » : lien vers le PDF ou mot seul, jamais un bouton) ; volet du Profil du prospect (#mc-conditions) : paragraphe « Newsletter (facultative) : … 1 à 2 emails par semaine au plus. Désinscription en 1 clic … », plus « Emails de suivi » ni « au plus 3 emails »",
+          ok("conditions : l'inscription n'ouvre plus le volet (« CGU » et « politique de confidentialité » : lien vers le PDF ou mot seul, jamais un bouton) ; volet du Profil du prospect (#mc-conditions) : paragraphe « Newsletter (facultative) : … de MHX Coaching, 2 emails par semaine au plus. Désinscription en 1 clic … » (v64, décision de Lucas du 30/09 : plus « 1 à 2 emails »), plus « Emails de suivi » ni « au plus 3 emails »",
             liens.r.length === 2 && liens.r.every(bon) && liens.volet === false
-            && vt.includes("Newsletter (facultative) : si tu coches la case, tu reçois par email les conseils, témoignages et offres de coaching de MHX Coaching, 1 à 2 emails par semaine au plus.") && vt.includes("Désinscription en 1 clic dans chaque email, et retrait de ton accord possible à tout moment dans ton Profil.") && !vt.includes("Emails de suivi (facultatif)") && !vt.includes("au plus 3 emails"),
+            && vt.includes("Newsletter (facultative) : si tu coches la case, tu reçois par email les conseils, témoignages et offres de coaching de MHX Coaching, 2 emails par semaine au plus.") && !vt.includes("1 à 2 emails") && vt.includes("Désinscription en 1 clic dans chaque email, et retrait de ton accord possible à tout moment dans ton Profil.") && !vt.includes("Emails de suivi (facultatif)") && !vt.includes("au plus 3 emails"),
             JSON.stringify(liens) + " · volet du Profil : " + vt.slice(0, 80));
           await cP.close();
         }
