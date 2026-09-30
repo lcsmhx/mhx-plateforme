@@ -18,6 +18,7 @@ const Photos = {
   vues: [["face", "De face"], ["profil", "De profil"], ["dos", "De dos"]],
   urls: {},   // chemin -> adresse locale de l'image deja lue (liberee en quittant la page)
   enCours: {},   // chemin -> lecture en cours (la meme photo affichee deux fois = une seule requete)
+  envois: 0,     // v67 : photos en route (Retour ne redessine pas la page pendant un envoi)
   vide(){ return { liste: [] }; },
   chemin(uid, semaine, vue){ return uid + "/s" + String(semaine).padStart(3, "0") + "-" + vue + ".jpg"; },
   entree(P, semaine){ return ((P && P.liste) || []).find(x => x && x.semaine === semaine) || null; },
@@ -156,6 +157,7 @@ const Photos = {
         const f = inp.files && inp.files[0]; inp.value = ""; if (!f) return;
         const n = semaine(), v = inp.dataset.fichier; if (n == null) return;
         dire(trad("Envoi…"));
+        this.envois++;   // v67 : une photo en route : le retour sur l'app ne redessine pas la page (Retour.possible)
         try {
           const chemin = this.chemin(uid, n, v);
           await this.envoyer(chemin, await this.reduire(f));
@@ -165,6 +167,7 @@ const Photos = {
           Store.ecrire(this.cle, P);
           dire(trad("Photo enregistrée.")); majEnvoi(); dessinerComparaison(true);
         } catch(e){ dire(this.message(e), true); }
+        finally { this.envois = Math.max(0, this.envois - 1); }
       }));
       $$("[data-retirer]", z).forEach(b => b.addEventListener("click", async () => {
         const n = semaine(), v = b.dataset.retirer, x = n == null ? null : this.entree(P, n);

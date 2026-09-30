@@ -14,6 +14,9 @@
    E. D2 (b), garde-fous : moins de 5 minutes → rien ; un poids à moitié saisi (focus dans le champ, ou focus parti)
       n'est JAMAIS effacé ; une fenêtre de l'app ouverte → rien ; champ vidé → la relecture a lieu.
    F. D2 (b) : Speed Formation relue au retour (diète modifiée ailleurs).
+   H. D2 (b) : au retour, la page n'est redessinée que si la base a changé (dates maj_le relues seules) : rien de changé →
+      rien de relu ni redessiné ; réseau en panne → la page reste, la pesée suivante s'enregistre ; sélecteur de fichier
+      (photo) ouvert → rien n'est redessiné à ce retour-là.
    G. K9 : un lien dont l'adresse ne porte que refresh_token, provider_token, provider_refresh_token ou token_hash est
       nettoyé comme #access_token (jetons jamais lus ni envoyés, « Ce lien n'est plus valable » ; connecté : il reste
       lui-même, « déjà dans ton espace »).
@@ -63,7 +66,7 @@ const maintenant = () => new Date().toISOString();
 /* ---------- le faux Supabase : lectures et écritures notées, upsert de « donnees » ---------- */
 function base(){
   const profils = clone(F.profils); profils.forEach(p => { p.statut = "client"; });
-  return { profils, donnees: clone(F.donnees), n: 0, ecritures: [], lectures: [], traces: [] };
+  return { profils, donnees: clone(F.donnees), n: 0, ecritures: [], lectures: [], traces: [], panne: false };
 }
 const ligne = (db, uid, outil) => db.donnees.find(x => x.user_id === uid && x.outil === outil);
 function mettre(db, uid, outil, contenu, maj){
@@ -71,6 +74,7 @@ function mettre(db, uid, outil, contenu, maj){
   if (l){ l.contenu = contenu; l.maj_le = maj || maintenant(); } else db.donnees.push({ user_id: uid, outil, contenu, maj_le: maj || maintenant() });
 }
 const ecr = (db, outil) => db.ecritures.filter(e => e.outil === outil);
+const legeres = db => db.lectures.filter(l => l.select === "outil,maj_le");   // v67 : Retour.change (dates seules)
 const lus = (db, outil) => db.lectures.filter(l => l.outil === "eq." + outil && /^contenu(,maj_le)?$/.test(l.select || ""));   // v67 : Store.lire lit aussi maj_le (D1)
 async function repondre(r, db){
   const req = r.request(), u = req.url(), host = new URL(u).hostname;
@@ -105,6 +109,7 @@ async function repondre(r, db){
       return json(null, 201);
     }
     if (m !== "GET") return json(null, 201);
+    if (db.panne) return r.abort("failed").catch(() => {});   // H : réseau coupé pour les lectures de donnees
     const uid = (q.get("user_id") || "").replace(/^eq\./, ""), o = q.get("outil") || "";
     db.n++; db.lectures.push({ n: db.n, outil: o, select: q.get("select") || "" });
     let l = db.donnees.filter(x => coach || (x.user_id === moi && !["notes_coach", "suivi_prospect"].includes(x.outil)));
@@ -322,6 +327,53 @@ const local = (page, k) => page.evaluate(k => { try { return JSON.parse(localSto
     const f1 = await foAff(page);
     ok("Speed Formation, rien de tapé : retour après plus de 5 min → la diète est relue (protéines du petit-déjeuner : 20 → 55, notées sur le téléphone), rien n'est écrit",
       f0.p0 === "20" && f1.p0 === "55" && ecr(db, "formation").length === 0, JSON.stringify([f0, f1, ecr(db, "formation").length]));
+  });
+
+  /* =================== H. D2 : redessiner seulement si la base a changé =================== */
+  const marquer = page => page.evaluate(() => { const i = document.createElement("i"); i.id = "marque-74"; document.getElementById("vue").appendChild(i); });
+  const marque = page => page.evaluate(() => !!document.getElementById("marque-74"));
+  const texteDe = (page, id) => page.evaluate(id => (document.getElementById(id) || {}).textContent || "", id);
+  await bloc("H. relecture seulement si la base a changé", async () => {
+    /* H1 : rien n'a changé en base */
+    { const db = base();
+      const { page } = await contexte(b, db, THOMAS);
+      await page.goto(URL0 + "#/mensurations"); await pret(page, "#tbody tr"); await attendre(page, 1200);
+      await marquer(page);
+      const n0 = lus(db, "mens").length, l0 = legeres(db).length;
+      await cacher(page); await attendre(page, 300); await reculer(page, 6 * MIN); await montrer(page); await attendre(page, 3000);
+      const a = await mensAff(page), mq = await marque(page);
+      ok("retour après plus de 5 min, RIEN de changé en base : seules les dates sont relues (outil,maj_le), mens n'est pas relu, la page n'est pas redessinée (repère posé dans la page toujours là, 4 lignes), rien n'est écrit",
+        legeres(db).length > l0 && lus(db, "mens").length === n0 && mq && a.lignes === 4 && db.ecritures.length === 0, JSON.stringify([legeres(db).length - l0, lus(db, "mens").length - n0, mq, a.lignes, db.ecritures.length])); }
+    /* H2 : réseau en panne au retour (la vérification échoue) */
+    { const db = base();
+      const { page } = await contexte(b, db, THOMAS);
+      await page.goto(URL0 + "#/mensurations"); await pret(page, "#tbody tr"); await attendre(page, 1200);
+      await marquer(page);
+      await cacher(page); await attendre(page, 300); db.panne = true; await reculer(page, 6 * MIN); await montrer(page); await attendre(page, 3000);
+      const a = await mensAff(page), mq = await marque(page), t = await texteDe(page, "toasts") + " " + await texteDe(page, "etat");
+      ok("retour après plus de 5 min, réseau en panne (lectures qui échouent) : la page reste telle quelle (4 semaines, repère toujours là), aucun « Non enregistré »",
+        mq && a.lignes === 4 && !/Non enregistré/.test(t) && db.ecritures.length === 0, JSON.stringify([mq, a.lignes, t, db.ecritures.length]));
+      db.panne = false;
+      await page.click("#mens-ajouter").catch(() => {});
+      await page.fill("#e-sem", "5"); await page.fill("#e-poids", "81.5"); await page.click("#add"); await attendre(page, 1800);
+      const E = ecr(db, "mens"), der = E[E.length - 1] && E[E.length - 1].contenu, t2 = await texteDe(page, "toasts") + " " + await texteDe(page, "etat");
+      ok("… le réseau revenu, une vraie pesée (semaine 5) est enregistrée : mens écrit avec les semaines 1 à 5, aucun « Non enregistré »",
+        E.length === 1 && !!der && egal(der.mesures.map(x => x.sem), [1, 2, 3, 4, 5]) && !/Non enregistré/.test(t2), JSON.stringify([E.length, der && der.mesures.map(x => x.sem), t2])); }
+    /* H3 : sélecteur de fichier (photo) ouvert, puis retour */
+    { const db = base();
+      const { page } = await contexte(b, db, THOMAS);
+      await page.goto(URL0 + "#/mensurations"); await pret(page, "#tbody tr"); await page.waitForSelector("[data-choisir]", { timeout: 8000 }); await attendre(page, 1200);
+      await marquer(page);
+      const fc = page.waitForEvent("filechooser", { timeout: 4000 }).catch(() => null);
+      await page.click("[data-choisir] >> nth=0"); await fc;
+      await cacher(page); await attendre(page, 300);
+      const M = MENS0(); M.mesures.push(clone(S5)); mettre(db, THOMAS, "mens", M);   // la semaine 5, notée sur le téléphone
+      await reculer(page, 6 * MIN); await montrer(page); await attendre(page, 3000);
+      const a1 = await mensAff(page), mq = await marque(page);
+      await cacher(page); await attendre(page, 300); await reculer(page, 6 * MIN); await montrer(page); await attendre(page, 3000);
+      const a2 = await mensAff(page);
+      ok("« Choisir une photo » (sélecteur de fichier) puis retour après plus de 5 min, semaine 5 notée ailleurs : la page n'est PAS redessinée (repère là, 4 lignes) ; au retour suivant, elle l'est (5 lignes) ; rien n'est écrit",
+        mq && a1.lignes === 4 && a2.lignes === 5 && db.ecritures.length === 0, JSON.stringify([mq, a1.lignes, a2.lignes, db.ecritures.length])); }
   });
 
   /* =================== G. K9 : jetons dans l'adresse =================== */

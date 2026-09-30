@@ -26,11 +26,15 @@ let lienEmail = null;   // v47 : "rate_connecte" apres un lien d'email (mot affi
    attend part d'abord, puis la page est relue et redessinee sur place. Seulement Ma progression et la Speed Formation
    (avec les cles qu'elles lisent), et jamais quand un champ a le focus, qu'une fenetre est ouverte, qu'une copie de ces
    cles attend encore son envoi ou qu'un champ de la page garde ce qui y a ete tape (une pesee a moitie saisie n'est
-   jamais effacee). Dans le doute, rien n'est redessine. */
+   jamais effacee). Dans le doute, rien n'est redessine.
+   Relecture des avis (v67) : la page n'est redessinee que si la base a VRAIMENT change (dates maj_le relues seules,
+   comparees a celles du dernier Store.lire) ; reseau en panne ou trop lent : rien. Jamais pendant une video (iframe),
+   l'envoi d'une photo, ni au retour du selecteur de fichier. */
 const Retour = {
   DELAI: 5 * 60000,
   PAGES: { mensurations: ["mens", "photos"], formation: ["formation"] },
   cachee: 0,          // instant du passage en arriere-plan
+  selecteur: false,   // un selecteur de fichier (photo) a ete ouvert : le retour qui suit ne redessine rien
   tapes: new Map(),   // champ de la page -> ce que la personne y a tape (valeur, texte ou case)
   lu(t){ return (t.type === "checkbox" || t.type === "radio") ? "c:" + t.checked : t.isContentEditable ? "t:" + (t.textContent || "") : "v:" + String(t.value == null ? "" : t.value); },
   noter(e){
@@ -58,9 +62,28 @@ const Retour = {
     const u = Auth.utilisateur(), cles = this.PAGES[courant];
     if (!appPrete || !cles || !u || !u.id || Auth.estCoach() || Store.idConsulte || $("session-perdue") || $("page-illisible")) return false;
     if (document.visibilityState !== "visible" || UI._ouverte || this.champActif() || this.saisieEnCours()) return false;
+    /* une video en cours (iframe), une photo en route : rien n'est redessine */
+    if (document.querySelector("#vue iframe") || (typeof Photos !== "undefined" && Photos.envois > 0)) return false;
     if (!envoyes) return true;
     const k = cles.map(c => u.id + "|" + c), copies = Store.attenteLire();
     return !k.some(x => Store.attente[x] || Store.retenues.has(x) || x in copies);
+  },
+  /* v67 (audit du 01/10) : la base a-t-elle change depuis la lecture de la page ? Lecture legere (maj_le seul), 6 s au
+     plus. Vrai seulement si, pour au moins une cle, la date lue differe de celle du dernier Store.lire (pas de ligne =
+     null des deux cotes). Reseau en panne, delai, reponse inattendue : faux (rien n'est redessine, la page reste). */
+  async change(uid, cles){
+    try {
+      const r = await Promise.race([
+        Auth.appel("/rest/v1/donnees?user_id=eq." + uid + "&outil=in.(" + cles.map(encodeURIComponent).join(",") + ")&select=outil,maj_le"),
+        new Promise((_, ko) => setTimeout(() => ko(new Error("delai")), 6000))
+      ]);
+      if (!Array.isArray(r)) return false;
+      const t = x => { const n = x ? new Date(x).getTime() : NaN; return isNaN(n) ? null : n; };
+      return cles.some(c => {
+        const l = r.find(x => x && x.outil === c), lu = Store.majLu[uid + "|" + c];
+        return t(l ? l.maj_le : null) !== t(lu == null ? null : lu);
+      });
+    } catch(e){ return false; }
   },
   async relire(){
     if (this._en || !this.possible()){ Store.reprendre(); return; }
@@ -70,6 +93,9 @@ const Retour = {
       try { await Promise.race([Store.toutEnvoyer(false), borne(4000)]); } catch(e){}
       try { await Promise.race([Store.reprendre(), borne(6000)]); } catch(e){}
       if (jeton !== affichage || page !== courant || !this.possible(true) || navigator.onLine === false) return;
+      const u = Auth.utilisateur();
+      if (!(await this.change(u.id, this.PAGES[page]))) return;   // rien de nouveau en base (ou pas de reseau) : la page reste telle quelle
+      if (jeton !== affichage || page !== courant || !this.possible(true)) return;
       const y = window.scrollY;
       await afficher(courant, true, true);   // sans compter une page vue de plus
       if (affichage === jeton + 1 && courant === page) try { window.scrollTo(0, y); } catch(e){}
@@ -146,8 +172,11 @@ const Retour = {
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden"){ Retour.cachee = Date.now(); Store.toutEnvoyer(); return; }
     const d = Retour.cachee; Retour.cachee = 0;
+    if (Retour.selecteur){ Retour.selecteur = false; Store.reprendre(); return; }   // retour du selecteur de fichier : rien n'est redessine
     if (d && Date.now() - d > Retour.DELAI) Retour.relire(); else Store.reprendre();
   });
+  /* v67 : un selecteur de fichier (photo de progression) s'ouvre : le retour sur l'app qui suit ne redessine pas la page */
+  document.addEventListener("click", e => { const t = e.target; if (t && t.closest && t.closest('input[type="file"], [data-choisir]')) Retour.selecteur = true; }, true);
   document.addEventListener("input", e => Retour.noter(e), true);
   document.addEventListener("change", e => Retour.noter(e), true);
   document.addEventListener("click", e => { if (e.target && e.target.href && e.target.href.includes("calendly")) Tracking.enregistrer("call_cta_clicked"); }, true);

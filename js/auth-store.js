@@ -581,6 +581,9 @@ const Store = {
   attente: {},
   valeursEnAttente: {},   // v45 : la valeur qui attend son envoi (700 ms), par cle ; effacee quand l'envoi part
   charge: {},          // le GET a-t-il reussi ? on n'ecrase pas ce qu'on n'a pas pu lire
+  /* v67 (audit du 01/10) : « compte|cle » -> maj_le de la ligne lue par le dernier Store.lire reussi (null : pas de
+     ligne). Retour (demarrage.js) ne redessine une page au retour sur l'app que si la base a change depuis. */
+  majLu: {},
   idConsulte: null,    // quand le coach consulte la fiche d'un client
   /* v38 — cles rangees chez le client mais ecrites par le coach seul, par
      leur propre chemin (Feedback, NotesCoach) : jamais par ecrire(), envoyer()
@@ -611,6 +614,7 @@ const Store = {
       /* v67 (D1) : une saisie gardee sur l'appareil (hors ligne, envoi en cours) plus recente que la base passe devant :
          sinon la page affichait l'ancienne version, et la saisie suivante reecrivait le document sans elle (perdue) */
       const copie = this.copieAServir(uid, cle, r && r[0]);
+      this.majLu[k] = (r && r[0] && r[0].maj_le) || null;   // meme quand la copie de l'appareil est servie : la ligne lue
       const contenu = Forme.cle(cle, copie ? copie.v : (r && r[0] && r[0].contenu));   // v42 : structure remise d'aplomb
       const val = contenu ? Object.assign({}, defaut, contenu) : defaut;
       if (val && typeof val === "object"){ this.origines.set(val, uid); this.nonLus.delete(val); }
