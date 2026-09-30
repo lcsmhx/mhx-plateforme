@@ -782,6 +782,19 @@ const outilFormation = {
     const zone = $("fo-vue");
     if (!zone) return;
     const sauver = () => Store.ecrire(self.cle, D);
+    /* v67 (audit du 01/10, D2) : la semaine et le jour affiches dans « Organise ta diète » sont un choix d'affichage de CET
+       appareil : les changer ne reecrit plus tout « formation » (notes, objectifs, challenges et diete saisis entre-temps
+       sur un autre appareil etaient effaces). Le choix reste sur l'appareil (cle mhx_, effacee a la deconnexion) ; au
+       depart, celui du document (rien ne change a l'ecran). Les champs du document ne sont jamais retires. */
+    const cleAff = "mhx_aff|" + (Store.cible() || "_") + "|formation";
+    try {
+      const a = JSON.parse(localStorage.getItem(cleAff) || "null");
+      if (a && typeof a === "object"){
+        if (Number.isInteger(a.semaine) && a.semaine >= 1 && a.semaine <= 12) D.semaine = a.semaine;
+        if (Number.isInteger(a.jour) && a.jour >= 0 && a.jour < JOURS_SEM.length) D.jour = a.jour;
+      }
+    } catch(e){}
+    const garderAffichage = () => { try { localStorage.setItem(cleAff, JSON.stringify({ semaine: D.semaine, jour: D.jour })); } catch(e){} };
     const visibles = outilsVisibles().filter(o => !horsVitrine(o)).map(o => o.id);   // v50 : pas de lien vers un onglet cache au prospect
     const nouvelId = () => "x" + Date.now().toString(36) + Math.floor(Math.random() * 1000);
     /* v60 (brief V2, I) : prospect — son calcul et sa pesee, lus sans rien ecrire (comme son accueil : ce que cet onglet
@@ -879,8 +892,9 @@ const outilFormation = {
         }
       } else {
       const selSem = $("fo-sem", zone);
-      if (selSem) selSem.addEventListener("change", () => { D.semaine = +selSem.value; sauver(); dessiner(); });
-      $$("[data-fj]", zone).forEach(b => b.addEventListener("click", () => { D.jour = +b.dataset.fj; sauver(); dessiner(); }));
+      /* v67 (D2) : affichage seul, rien n'est ecrit */
+      if (selSem) selSem.addEventListener("change", () => { D.semaine = +selSem.value; garderAffichage(); dessiner(); });
+      $$("[data-fj]", zone).forEach(b => b.addEventListener("click", () => { D.jour = +b.dataset.fj; garderAffichage(); dessiner(); }));
       $$("[data-df]", zone).forEach(c => c.addEventListener("change", () => {
         self.ligneDiete(D)[+c.dataset.df].f = c.checked; sauver();
       }));

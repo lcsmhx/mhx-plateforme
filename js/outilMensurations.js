@@ -303,6 +303,20 @@ const outilMensurations = {
       mesures: []
     });
     const sauver = () => Store.ecrire(self.cle, D);
+    /* v67 (audit du 01/10, D2) : les courbes affichees (zones, composition) sont un choix d'affichage de CET appareil.
+       Un clic sur une pastille ne reecrit plus tout « mens » : la page restee ouverte sur l'ordinateur effacait ainsi une
+       pesee faite entre-temps sur le telephone. Le choix reste sur l'appareil (cle mhx_, effacee a la deconnexion) ; au
+       depart, celui du document (rien ne change a l'ecran). Les champs du document ne sont jamais retires. */
+    const cleAff = "mhx_aff|" + (Store.cible() || "_") + "|mens";
+    try {
+      const a = JSON.parse(localStorage.getItem(cleAff) || "null");
+      if (a && typeof a === "object"){
+        const l = a.affichees;
+        if (Array.isArray(l) && l.length <= cfg.max_courbes && l.every((i, k) => Number.isInteger(i) && i >= 0 && i < D.zones.length && l.indexOf(i) === k)) D.affichees = l;
+        if (typeof a.compo_affichee === "string" && cfg.composition.some(c => c.id === a.compo_affichee)) D.compo_affichee = a.compo_affichee;
+      }
+    } catch(e){}
+    const garderAffichage = () => { try { localStorage.setItem(cleAff, JSON.stringify({ affichees: D.affichees, compo_affichee: D.compo_affichee })); } catch(e){} };
 
     const serieDuPoids = () => {
       const pts = [];
@@ -369,7 +383,7 @@ const outilMensurations = {
             if (D.affichees.length >= cfg.max_courbes){ flash("msg", `${cfg.max_courbes} zones maximum à l'écran.`); return; }
             D.affichees.push(i);
           }
-          sauver(); construireChips(); tout();
+          garderAffichage(); construireChips(); tout();   // v67 (D2) : affichage seul, rien n'est ecrit
         });
         c.appendChild(b);
       });
@@ -423,13 +437,18 @@ const outilMensurations = {
         return;
       }
       { const bloc = tb.closest(".scroll"); if (bloc) bloc.hidden = false; const v = $("mens-vide"); if (v) v.remove(); }
-      D.mesures.forEach((m, idx) => {
+      D.mesures.forEach(m => {
         const tr = document.createElement("tr");
         tr.innerHTML = `<td>S${esc(m.sem)}</td><td>${esc(dateFr(m.date))}</td><td>${m.poids != null ? n1(m.poids) : "—"}</td>` +
           D.zones.map((z,i) => `<td>${(m.vals[i] != null && isFinite(m.vals[i])) ? n1(m.vals[i]) : "—"}</td>`).join("") +
           cols.map(c => `<td>${(m.compo && m.compo[c.id] != null && isFinite(m.compo[c.id])) ? valCompo(c, m.compo[c.id]) : "—"}</td>`).join("") +
           `<td><button class="del" aria-label="Supprimer la semaine ${esc(m.sem)}">×</button></td>`;
-        tr.querySelector(".del").addEventListener("click", () => {
+        /* v67 (audit du 01/10, D6) : la croix effacait la semaine au premier toucher, sans confirmation ni retour
+           possible (aucun historique de « mens ») : on demande d'abord, comme pour une photo ou une semaine remplacee.
+           La mesure est retrouvee par elle-meme (et non par sa place) apres la confirmation. */
+        tr.querySelector(".del").addEventListener("click", async () => {
+          if (!(await UI.confirmer(trad("Supprimer la semaine {n} ? Cette mesure sera effacée.", { n: m.sem }), { ok: trad("Oui, supprimer"), danger: true }))) return;
+          const idx = D.mesures.indexOf(m); if (idx === -1) return;
           D.mesures.splice(idx,1); sauver(); dessinerTable(); tout(); viderFormulaire();
         });
         tb.appendChild(tr);
@@ -458,7 +477,7 @@ const outilMensurations = {
         const actif = c.id === D.compo_affichee;
         b.type = "button"; b.className = "chip"; b.setAttribute("aria-pressed", String(actif));
         b.innerHTML = `<span class="dot"${actif ? ` style="background:var(--s2)"` : ""}></span>${esc(c.nom)}`;
-        b.addEventListener("click", () => { D.compo_affichee = c.id; sauver(); dessinerCompo(); });
+        b.addEventListener("click", () => { D.compo_affichee = c.id; garderAffichage(); dessinerCompo(); });   // v67 (D2) : affichage seul
         ch.appendChild(b);
       });
       const c = l.find(x => x.id === D.compo_affichee);

@@ -672,6 +672,8 @@ I18N.en = {
 "Ton compte est supprimé. Merci d'avoir utilisé l'application.": "Your account has been deleted. Thanks for using the app.",
 "Colle ici la sauvegarde que tu avais copiée :": "Paste the backup you copied here:",
 "La semaine {n} existe déjà. La remplacer ?": "Week {n} already exists. Replace it?",
+/* v67 (audit du 01/10, D6) : la croix d'une ligne de « Toutes tes mesures » demande d'abord */
+"Supprimer la semaine {n} ? Cette mesure sera effacée.": "Delete week {n}? This measurement will be erased.", "Oui, supprimer": "Yes, delete",
 "Email ou mot de passe incorrect.": "Incorrect email or password.",
 "Une erreur est survenue.": "Something went wrong.",
 "Plateforme MHX Coaching": "MHX Coaching Platform",
