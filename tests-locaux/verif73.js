@@ -12,7 +12,8 @@
    B2. le coach, dans la fiche d'un client, retrouve sa propre saisie (programme) gardée sur l'appareil.
    C. (D7) refus définitif (403) : la modification est mise de côté (mhx_refus|compte|clé), plus dans mhx_attente, jamais
       renvoyée (même au retour du réseau), un message le dit (« Préviens ton coach ») en plus de l'en-tête ; déconnexion :
-      pas comptée « non envoyée », effacée de l'appareil ; en anglais aussi.
+      pas comptée « non envoyée », effacée de l'appareil ; en anglais aussi ; chez le coach, le message ne dit pas
+      « Préviens ton coach » (C3).
    D. (D8) « Rester connecté » décoché + hors ligne : l'en-tête dit « gardé dans cet onglet seulement : ne le ferme pas »
       (en anglais aussi) ; coché : toujours « gardé sur cet appareil ».
    E. (D5) « Restaurer une sauvegarde » : une confirmation liste les rubriques remplacées (« sera remplacé ») ; « Annuler »
@@ -270,6 +271,18 @@ const texte = async (page, sel) => norm(await page.textContent(sel).catch(() => 
     await ouvrir(page, "#/profil", "#q-stress");
     await page.selectOption("#q-stress", "5"); await attendre(page, 1600);
     ok("en anglais : « Not saved: the server refused this change. Let your coach know. »", (await texte(page, "#toasts")).includes("Not saved: the server refused this change. Let your coach know."), await texte(page, "#toasts"));
+  });
+
+  await bloc("C3. refus définitif chez le coach", async () => {
+    const db = base(); db.refus = true;
+    const { page } = await contexte(b, db, coach);
+    await ouvrir(page, "#/clients", `[data-ouvrir="${THOMAS}"]`);
+    await page.click(`[data-ouvrir="${THOMAS}"]`); await page.waitForSelector("#vue .bandeau", { timeout: 10000 }); await attendre(page, 600);
+    await aller(page, "#/programme", "#pg-nom");
+    await page.fill("#pg-nom", "Bloc refusé (essai 73)"); await attendre(page, 1800);
+    const t = await texte(page, "#toasts");
+    ok("coach, programme de Thomas refusé par la base : « Non enregistré : la base a refusé cette modification. » — sans « Préviens ton coach »",
+      t.includes("Non enregistré : la base a refusé cette modification.") && !t.includes("Préviens ton coach"), t);
   });
 
   /* =================== D. D8 : « Rester connecté » décoché =================== */
