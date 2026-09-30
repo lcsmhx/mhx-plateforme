@@ -299,7 +299,8 @@ const sansJours = R => { const x = clone(R); delete x.jours; return canon(x); };
       { nom: CLE, execution: "", erreurs: "", respiration: "", traductions: { en: { nom: "<img src=x onerror=\"window.__xss=(window.__xss||0)+1\">Hacked" } } },
       { nom: "Tirage < 90° (essai 75)", execution: "", erreurs: "", respiration: "", traductions: { en: { nom: "Row under 90 (test 75)" } } },
       { nom: "Pompes lestées (essai 75)", execution: "", erreurs: "", respiration: "", traductions: { en: { nom: "Weighted push-ups (test 75)" } } },
-      { nom: "Poulet & riz (essai 75)", execution: "", erreurs: "", respiration: "", traductions: { en: { nom: "Chicken & rice (test 75)" } } }
+      { nom: "Poulet & riz (essai 75)", execution: "", erreurs: "", respiration: "", traductions: { en: { nom: "Chicken & rice (test 75)" } } },
+      { nom: "Qualité > vitesse (essai 75)", execution: "", erreurs: "", respiration: "", traductions: { en: { nom: "Quality > speed (test 75)" } } }
     ];
     const { page } = await contexte(b, db, THOMAS, { langue: "en" });
     await page.goto(URL0 + "#/nutrition"); await pret(page, "#nu-vue .flag.info");
@@ -307,11 +308,11 @@ const sansJours = R => { const x = clone(R); delete x.jours; return canon(x); };
     await attendre(page, 1200);
     const e = await page.evaluate(k => ({ xss: window.__xss || 0, img: document.querySelectorAll("#nu-vue img, #nu-vue [onerror]").length, dans: Object.prototype.hasOwnProperty.call(I18N.en, k),
       mot: Traduction.norm(document.querySelector("#nu-vue .flag.info").innerHTML),
-      propres: [I18N.en["Pompes lestées (essai 75)"], I18N.en["Poulet & riz (essai 75)"]], chevron: Object.prototype.hasOwnProperty.call(I18N.en, "Tirage < 90° (essai 75)") }), CLE);
+      propres: [I18N.en["Pompes lestées (essai 75)"], I18N.en["Poulet & riz (essai 75)"], I18N.en["Qualité > vitesse (essai 75)"]], chevron: Object.prototype.hasOwnProperty.call(I18N.en, "Tirage < 90° (essai 75)") }), CLE);
     ok("… une traduction du catalogue qui contient une balise (<img onerror>) n'entre pas dans le dictionnaire : rien d'exécuté, aucune image insérée, le mot du coach affiché tel quel",
       e.xss === 0 && e.img === 0 && !e.dans && e.mot === CLE, JSON.stringify(e));
-    ok("… les traductions propres du catalogue entrent toujours (y compris avec « & ») ; un texte français avec « < » est ignoré",
-      e.propres[0] === "Weighted push-ups (test 75)" && e.propres[1] === "Chicken & rice (test 75)" && !e.chevron, JSON.stringify(e.propres) + " " + e.chevron);
+    ok("… les traductions propres du catalogue entrent toujours (y compris avec « & » et « > », v67 : « Qualité > vitesse ») ; un texte français avec « < » est ignoré",
+      e.propres[0] === "Weighted push-ups (test 75)" && e.propres[1] === "Chicken & rice (test 75)" && e.propres[2] === "Quality > speed (test 75)" && !e.chevron, JSON.stringify(e.propres) + " " + e.chevron);
   });
 
   await b.close(); server.close();

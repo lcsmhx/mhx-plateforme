@@ -130,11 +130,12 @@ const Contenus = {
     this._decouverte = true;
     this.zip(DECOUVERTE, DECOUVERTE.en);
   },
-  /* v67 (B2) : une paire qui contient < ou > est ignoree — Traduction.noeud insere les valeurs du dictionnaire en HTML
-     (innerHTML) : un texte du catalogue ne doit jamais pouvoir y glisser une balise */
+  /* v67 (B2) : une paire qui contient « < » est ignoree — Traduction.noeud insere les valeurs du dictionnaire en HTML
+     (innerHTML) : un texte du catalogue ne doit jamais pouvoir y glisser une balise (pas de balise sans « < » ; « > »
+     reste permis : « Qualité > vitesse », notes du catalogue) */
   ajouter(fr, en){
     if (typeof fr !== "string" || typeof en !== "string" || !fr.trim() || !en.trim()) return;
-    if (/[<>]/.test(fr) || /[<>]/.test(en)) return;
+    if (/</.test(fr) || /</.test(en)) return;
     const k = Traduction.norm(fr);
     if (k && k !== en && !Object.prototype.hasOwnProperty.call(I18N.en, k)) I18N.en[k] = en;
   },
