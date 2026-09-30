@@ -185,10 +185,11 @@ const Decouverte = {
      date a plus de 5 min dans le futur (horloge du telephone en avance) ignoree, comme dans la chronologie, « Mesure » et
      les Nouveautes : sinon elle resterait « le dernier clic » (« A traiter », « revenu ») jusqu'a ce qu'elle soit passee ;
      a date egale, le plus loin dans la liste ; null si aucune date lisible */
+  instantClic(c){ return c && typeof c.date === "string" && /^\d{4}-\d{2}-\d{2}/.test(c.date) ? Date.parse(c.date) : NaN; },
+  clicFutur(c){ const t = this.instantClic(c); return !isNaN(t) && t > Date.now() + 5 * 60000; },
   dernierClic(C){
     let d = null, td = -Infinity;
-    const maxi = Date.now() + 5 * 60000;
-    this.clics(C).forEach(c => { const t = typeof c.date === "string" && /^\d{4}-\d{2}-\d{2}/.test(c.date) ? Date.parse(c.date) : NaN; if (!isNaN(t) && t <= maxi && t >= td){ d = c; td = t; } });
+    this.clics(C).forEach(c => { const t = this.instantClic(c); if (!isNaN(t) && !this.clicFutur(c) && t >= td){ d = c; td = t; } });
     return d;
   },
   /* v61 (brief V2, F et L) — les codes d'origine des boutons « Récupérer mon plan d'action » : envoyes a Calendly

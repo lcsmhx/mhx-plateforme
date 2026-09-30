@@ -258,8 +258,10 @@ const Commercial = {
     try {
       const cl = Decouverte.clics(C);
       if (!cl.length) return "0";
-      const der = Decouverte.dernierClic(C) || cl[cl.length - 1];   // v63 : la meme regle que « A traiter » et le CSV ; aucune date lisible : le dernier de la liste
-      return cl.length + " (dernier : " + (Decouverte.nomOrigine(der.source) || "origine inconnue (avant la v50)") + ")";
+      /* v63 : la meme regle que « A traiter » et le CSV ; aucune date lisible : le dernier de la liste qui n'est pas date du
+         futur ; tous dates du futur (horloge en avance) : le nombre seul, comme le CSV (« Dernier clic » vide) */
+      const der = Decouverte.dernierClic(C) || cl.filter(c => !Decouverte.clicFutur(c)).pop();
+      return der ? cl.length + " (dernier : " + (Decouverte.nomOrigine(der.source) || "origine inconnue (avant la v50)") + ")" : String(cl.length);
     } catch(e){ return "—"; }
   },
   carteHTML(l, a){

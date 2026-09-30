@@ -8,7 +8,7 @@
    B. les 5 chiffres et le tableau exacts pour CHAQUE période, sur des données variées (inscriptions, questionnaires, clics,
       « Plus tard » et cases à des dates différentes ; limites à la seconde : un événement à 00:00:00 pile compté, un à
       23:59:59 la veille non compté, pour minuit il y a 6 jours (12/11), minuit il y a 29 jours (20/10) et le 28/09/2026 ;
-      un clic daté de demain ne compte jamais) ; noms d'écran en clair (Decouverte.ORIGINES) ; anciens codes
+      un clic daté de demain ne compte jamais — v63 : ni comme « dernier clic » de la carte et du CSV, voir E) ; noms d'écran en clair (Decouverte.ORIGINES) ; anciens codes
       (bilan-propose, decouverte, decouverte-accompagnement, verrou-programme) comptés avec les nouveaux ; clic sans
       source : « origine inconnue (avant la v50) » ; listes de clics PAS dans l'ordre des dates ; tableau : autant de
       lignes que d'écrans attendus, somme de la colonne Clics = tuile « Clics » ; tri par clics décroissants, puis « Plus tard » ; « Plus tard » par
@@ -24,7 +24,10 @@
       bout en bout : un prospect de test (« +test ») clique 3 VRAIS boutons (accueil, #/programme, #/journal ; faux
       Calendly : chaque onglet reçoit le bon utm_content), puis le coach regarde, sur la même base ;
    E. chaque carte de prospect : « Clics plan d'action » (dernière ligne) « 0 », ou « N (dernier : <écran du clic le plus
-      récent> ») , origine inconnue comprise, liste pas dans l'ordre des dates ; un calcul qui plante : « — » ;
+      récent> ») , origine inconnue comprise, liste pas dans l'ordre des dates ; v63 : un clic daté de demain (plus de 5 min
+      dans le futur : horloge du téléphone en avance) IGNORÉ, le plus récent d'avant compte (David) ; un calcul qui plante :
+      « — » ; v63 : l'export CSV « Dernier clic » = la date du clic le plus récent (liste pas dans l'ordre, dates objet
+      ignorées, date de demain ignorée), et la carte et le CSV désignent le MÊME clic pour chaque prospect ;
    F. période vide : « Aucun clic ni « Plus tard » sur cette période. », tuiles à 0, puis le tableau sur 30 jours ;
    G. aucune donnée de santé (poids, calories, mensurations) ni email dans le bloc ; rien n'est lu en plus (la lecture
       groupée de la page et les clés du coach seulement), aucune requête quand on change de période ou qu'on coche la case,
@@ -316,6 +319,20 @@ const clicsCartes = page => page.$$eval("#pr-liste .sc-carte", l => Object.fromE
 }))).catch(() => ({}));
 const tous = async page => { await page.click('[data-filtre="tous"]'); await attendre(page, 400); };
 const mesClients = page => page.$$eval("#tb-clients tr", l => l.map(tr => tr.textContent.replace(/[  ]/g, " ").replace(/\s+/g, " ").trim())).catch(() => []);
+/* v63 (lot 4) : l'export CSV des prospects (bouton #pr-csv), relu comme un vrai CSV (guillemets, point-virgule, CRLF ; repris de verif58) */
+async function exporter(page){
+  const [dl] = await Promise.all([page.waitForEvent("download", { timeout: 6000 }), page.click("#pr-csv")]);
+  return fs.readFileSync(await dl.path(), "utf8");
+}
+function lireCSV(s){
+  const L = []; let ligne = [], champ = "", dans = false;
+  for (let i = 0; i < s.length; i++) { const ch = s[i];
+    if (dans) { if (ch === '"') { if (s[i + 1] === '"') { champ += '"'; i++; } else dans = false; } else champ += ch; continue; }
+    if (ch === '"') dans = true; else if (ch === ";") { ligne.push(champ); champ = ""; } else if (ch === "\r" && s[i + 1] === "\n") { ligne.push(champ); L.push(ligne); ligne = []; champ = ""; i++; } else champ += ch; }
+  return L;
+}
+const pad2 = n => String(n).padStart(2, "0");
+const frL = v => { const d = new Date(v); return pad2(d.getDate()) + "/" + pad2(d.getMonth() + 1) + "/" + d.getFullYear(); };   // la date (locale) d'un instant, comme l'export
 /* le contraste (WCAG) du texte des éléments sel sur le premier fond opaque en remontant. Seuil : 4,5:1 ; 3:1 (celui des
    tuiles de l'app) pour les seules exceptions NOMMÉES — comme verif66 — et seulement si le texte a exactement la couleur du
    jeton de l'app : le texte secondaire de toute l'app (--ink-3, styles communs : libellés des tuiles .t-lbl, titres h3
@@ -397,7 +414,8 @@ const C = {
     ["intake", intake(L(5, 10, 9, 20), null, { email: "chloe@exemple.fr", bilan_propose: { choix: "plus_tard", le: L(5, 10, 9, 21) } }), L(5, 10, 9, 21)],
     ["challenge", chal([clic("decouverte", L(19, 10, 23, 59, 59), 15), clic(undefined, L(6, 10, 10, 0), 2), clic("decouverte-accompagnement", L(20, 10, 0, 0), 16)], null, L(20, 10, 0, 0)), L(20, 10, 0, 0)]] }),
   /* inscrit le 20/09 (avant le 28/09) : « Plus tard » de la page du plan le 20/09 (les deux formes) ; clic le 27/09 à 23:59:59
-     (une seconde avant le 28/09), clic le 17/11 (7 j), clic daté de DEMAIN (horloge d'un appareil en avance : jamais compté) */
+     (une seconde avant le 28/09), clic le 17/11 (7 j), clic daté de DEMAIN (horloge d'un appareil en avance : jamais compté ; v63 : ni pris
+     pour le « dernier clic » — carte et CSV sur son clic du 17/11) */
   david: () => ({ id: DAVID, prenom: "David", nom: "Septembre", cree: L(20, 9, 10, 0), email: "david@exemple.fr", donnees: [
     ["intake", intake(L(20, 9, 10, 10), "david@exemple.fr", { bilan_propose: { choix: "plus_tard", le: L(20, 9, 10, 11) } }), L(20, 9, 10, 11)],
     ["challenge", chal([clic("accueil_haut", L(27, 9, 23, 59, 59), 8), clic("verrou_nutrition", L(17, 11, 8, 0), 59), clic("apres_questionnaire", L(19, 11, 12, 0), 61)], [pt("apres_questionnaire", L(20, 9, 10, 11))]), L(17, 11, 8, 0)]] }),
@@ -567,7 +585,7 @@ const D_TINA = { chiffres: [1, 1, 1, 3, 0], table: { accueil_haut: [1, 0], verro
 const LBL = ["Nouveaux inscrits", "Questionnaires terminés", "Ont cliqué au moins une fois", "Clics", "« J'ai déjà choisi mon créneau »"];
 const CARTES = {
   [ANNA]: "2 (dernier : accueil, bouton du haut)", [BRUNO]: "2 (dernier : page verrouillée Mon programme)",
-  [CHLOE]: "3 (dernier : accueil, carte « Ce que l'accompagnement ajoute »)", [DAVID]: "3 (dernier : page « Ton plan d'action » (après les 3 questions))",
+  [CHLOE]: "3 (dernier : accueil, carte « Ce que l'accompagnement ajoute »)", [DAVID]: "3 (dernier : page verrouillée Nutrition)",   // v63 : son clic daté de demain ignoré
   [EMMA]: "0", [HELENE]: "2 (dernier : page verrouillée Mon suivi)", [INES]: "1 (dernier : page verrouillée Mon journal)",
   [KARIM]: "2 (dernier : origine inconnue (avant la v50))", [MARC]: "0", [TESS]: "3 (dernier : invitation après la première pesée)",
   [UGO]: "1 (dernier : accueil, bouton du haut)"
@@ -762,11 +780,43 @@ const SANTE = /71[,.]4|1\s?873|83[,.]5|92[,.]3|\bkcal\b|\bkg\b|\bpoids\b|\btaill
     ok("E : « Clics plan d'action » en dernière ligne de ul.sc-faits, après « Dernière connexion »", vus.length > 0 && vus.every(u => k[u].rang === k[u].n - 1 && k[u].avant === "Dernière connexion"), JSON.stringify(vus.map(u => [u.slice(-2), k[u].rang, k[u].n, k[u].avant])));
     ok("E : « 0 » sans clic (Emma, Marc)", k[EMMA] && k[EMMA].v === "0" && k[MARC] && k[MARC].v === "0", JSON.stringify([k[EMMA], k[MARC]]));
     const faux = attendus.filter(u => u !== EMMA && u !== MARC && (!k[u] || k[u].v !== CARTES[u]));
-    ok("E : « N (dernier : <écran du clic le plus récent>) » exacts : anciens codes en clair (Bruno, Chloé), le plus récent et pas le dernier de la liste (Bruno : le plus récent en premier), le plus récent même daté de demain (David), origine inconnue (Karim), comptes de test compris (Tess, Ugo)",
+    ok("E : « N (dernier : <écran du clic le plus récent>) » exacts : anciens codes en clair (Bruno, Chloé), le plus récent et pas le dernier de la liste (Bruno : le plus récent en premier), un clic daté de demain ignoré (v63 : David, « page verrouillée Nutrition », son clic du 17/11, pas celui de demain), origine inconnue (Karim), comptes de test compris (Tess, Ugo)",
       faux.length === 0, JSON.stringify(faux.map(u => [u.slice(-2), k[u] && k[u].v, CARTES[u]])));
     const tiret = await page.evaluate(() => { try { return Commercial.clicsTexte({ get cta(){ throw new Error("piège"); } }); } catch (e) { return "ERREUR " + e.message; } });
     ok("E : un calcul qui plante (clé piégée) donne « — » sans erreur", tiret === "—", tiret);
     ok("E : aucune écriture", intact(db), resume(db));
+  });
+  /* v63 (lot 4) : l'export CSV (« Dernier clic ») prend, comme la carte, le clic le plus récent PAR DATE : pour chaque
+     prospect, la carte et le CSV désignent le MÊME clic (Bruno : le plus récent en premier dans la liste ; Piège : le dernier
+     de la liste et un autre datés par un objet ; David : son clic daté de demain ignoré — plus de 5 min dans le futur, règle
+     de la v63 —, le dernier est celui du 17/11) */
+  await bloc("E. CSV « Dernier clic » et cartes", async () => {
+    const db = decor(PRINCIPAUX.concat(["piege"]));
+    const { page } = await coachSur(b, db, "#/prospects", "#pr-mesure-chiffres");
+    await tous(page);
+    const k = await clicsCartes(page);
+    const Lc = lireCSV((await exporter(page)).replace(/^﻿/, "")), tete = Lc[0] || [];
+    const iN = tete.indexOf("Clics « Réserver mon bilan »"), iD = tete.indexOf("Dernier clic");
+    const csv = nom => { const l = Lc.find(x => x[0] === nom) || []; return [l[iN], l[iD]]; };
+    const ATT = { "Anna Tôt": ["2", "16/11/2026"], "Bruno Ancien": ["2", "14/11/2026"], "Chloé Octobre": ["3", "20/10/2026"], "David Septembre": ["3", "17/11/2026"],
+      "Emma Plus-Tard": ["0", ""], "Hélène Minuit": ["2", "12/11/2026"], "Inès Ouverture": ["1", "28/09/2026"], "Karim Vieux": ["2", "17/09/2026"], "Marc Neuf": ["0", ""],
+      "Tess Essai": ["3", "17/11/2026"], "Ugo Essai": ["1", "17/11/2026"], "Piège Proto": ["5", "16/11/2026"] };
+    const fauxCsv = Object.keys(ATT).filter(n => !egal(csv(n), ATT[n]));
+    ok("E : export CSV (v63) : « Dernier clic » = la date du clic le plus récent, pas du dernier de la liste : Bruno 14/11/2026 (le plus récent en premier ; pas 25/10/2026), Piège 16/11/2026 (le dernier de la liste et un autre datés par un objet : ignorés), David 17/11/2026 (son clic daté de demain, 19/11, ignoré, comme sur la carte), Chloé, Karim… ; sans clic : vide ; une ligne par prospect (12)",
+      iN > -1 && iD === iN + 1 && Lc.length === 13 && fauxCsv.length === 0, JSON.stringify(fauxCsv.map(n => [n, csv(n), ATT[n]])) + " · " + Lc.length + " lignes");
+    /* pour chaque prospect : l'écran nommé par sa carte (« N (dernier : <écran>) ») est celui d'un de ses clics daté du jour du
+       « Dernier clic » du CSV, et la carte et le CSV comptent autant de clics ; sans clic : « 0 » et vide */
+    const memes = [];
+    for (const p of db.profils.filter(x => x.statut === "prospect" && x.role === "client")) {
+      const nom = (p.prenom + " " + p.nom).trim(), [n, d] = csv(nom), ch = cleDe(db, p.id, "challenge") || {};
+      const cl = ch.cta && Array.isArray(ch.cta.clics) ? ch.cta.clics : [], v = k[p.id] ? k[p.id].v : null, m = /^(\d+) \(dernier : (.*)\)$/.exec(v || "");
+      if (!cl.length) { memes.push([nom, v === "0" && n === "0" && d === "", v, n, d]); continue; }
+      const du = cl.filter(c => c && typeof c.date === "string" && /^\d{4}-\d{2}-\d{2}/.test(c.date) && frL(c.date) === d).map(c => c.source === undefined ? null : c.source);
+      const ecrans = await page.evaluate(l => l.map(s => Decouverte.nomOrigine(s) || "origine inconnue (avant la v50)"), du);
+      memes.push([nom, !!m && +m[1] === cl.length && n === m[1] && ecrans.includes(m[2]), v, n, d, ecrans]);
+    }
+    ok("E : la carte « Clics plan d'action » et le CSV désignent le MÊME clic pour chaque prospect (v63) : l'écran nommé par la carte est celui d'un clic daté du « Dernier clic » du CSV, même nombre de clics (Bruno : page verrouillée Mon programme, 14/11/2026 ; Piège : origine inconnue, 16/11/2026 ; David : page verrouillée Nutrition, 17/11/2026, pas son clic de demain) ; aucune écriture",
+      memes.length === 12 && memes.every(x => x[1]) && intact(db), JSON.stringify(memes.filter(x => !x[1])) + " · " + memes.length + " " + resume(db));
   });
 
   /* =================== F. période vide =================== */

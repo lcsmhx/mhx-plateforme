@@ -13,13 +13,19 @@
       d'inscription, 3 réponses, bilan réservé, newsletter, dernière visite, jours actifs ; « À traiter » (même définition
       que le badge), « Appel fait », « Tous » ; filtres bilan / newsletter / période, tri inscription / dernière visite,
       recherche ; compteur inscrits → 3 questions → bilans réservés → clients ; Nouveautés (case « J'ai réservé ») ;
-   D. export CSV des prospects (colonnes à jour, relu comme un vrai CSV : BOM, guillemets, = + - @ neutralisés) ;
+   D. export CSV des prospects (colonnes à jour, relu comme un vrai CSV : BOM, guillemets, = + - @ neutralisés) ; v63 :
+      « dernier clic » = le plus récent PAR DATE, liste de clics dans le désordre (tableau de bord, « À traiter », carte,
+      CSV « Dernier clic », fiche : le même clic) ;
    E. « Bilan réservé » en un clic dans la fiche (sans fenêtre) : écriture EXACTE de suivi_prospect (PATCH conditionnel,
       bilan_le + événement historique, le reste gardé), annulation, création (POST), conflit rejoué, 409, verrou ; tous les
       lecteurs suivent la coche (fiche, carte, Mes clients, filtre, compteur, CSV, Nouveautés, à traiter) ; l'ancienne case
       du prospect reste lisible (« Le prospect a coché « J'ai réservé » le … ») ; ancien client : coche d'avant ignorée ;
    F. relances, issues (Signé / Perdu / Absent, annuler, Passer client), conflit, 409, 504, verrou, issues qui vieillissent,
-      ancien client (blocs repris de verif49, sortie du banc avec le score et la température) ;
+      ancien client (blocs repris de verif49, sortie du banc avec le score et la température) ; v63 : dernier clic par date
+      (clic récent rangé avant un plus ancien, l'inverse, retour après « Perdu », dates piégées ignorées — dont un texte non
+      ISO plus récent que le vrai dernier clic —, à égalité le plus loin dans la liste, aucune date lisible : la carte prend
+      le dernier de la liste ; date à plus de 5 min dans le futur ignorée, où qu'elle soit dans la liste : ni « À traiter »
+      après une relance, ni retour après « Perdu » ; 2 min d'avance : comptée) ;
    G. suivi des visites : « test » (seul le compte de test écrit activite, son Accueil compté ; Thomas jamais), « off »
       (personne), « tous » (Thomas aussi) ; le coach jamais, une fiche consultée jamais ; « Inactif depuis N j » garde la
       dernière saisie ;
@@ -643,6 +649,47 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
     ok("D : export filtré (« À traiter ») : 4 lignes + en-têtes", lireCSV(t2.replace(/^﻿/, "")).length === 5, String(lireCSV(t2.replace(/^﻿/, "")).length));
     ok("D : export : aucune écriture", db.ecritures.length === 0, resume(db));
   });
+  /* v63 (lot 4) : le « dernier clic » est le plus récent PAR DATE sur tous les écrans du coach. Rayan a cliqué hier (page
+     « Ton plan d'action »), APRÈS ta relance d'il y a 3 jours, mais ce clic est rangé AVANT un clic d'il y a 5 jours (liste
+     pas dans l'ordre des dates : fusion d'un appareil, deux appareils) ; Sonia, l'inverse : son clic le plus récent (il y a
+     2 jours) est AVANT ta relance d'hier, un clic d'il y a 5 jours en fin de liste. Tableau de bord, page Prospects
+     (« À traiter », carte), CSV et fiche désignent le MÊME clic. Sarah seule parmi les clients, sans urgence (comme A) */
+  await bloc("D. dernier clic : liste dans le désordre", async () => {
+    const REP = { probleme: "Perdre du gras", obstacle: "Le temps", projection: "Courir 5 km" };
+    const cl = l => ({ version: 1, jours: {}, cta: { clics: l.map(([s, t, j]) => ({ jour: j, source: s, date: avant(t) })) } });
+    const RAYAN = PID(20), SONIA = PID(21), RQ = "page « Ton plan d'action » (après les 3 questions)";
+    const rayan = prospect(20, "Rayan", "Désordre", { cree: 6 * J, q: 6 * J, rep: REP, email: "rayan@exemple.fr",
+      suivi: { version: 1, relances: [avant(3 * J)], historique: [{ type: "relance", le: avant(3 * J) }] }, suiviLe: 3 * J,
+      extra: [["challenge", cl([["apres_questionnaire", J, 6], ["decouverte", 5 * J, 2]]), avant(J)]] });
+    const sonia = prospect(21, "Sonia", "Inverse", { cree: 6 * J, q: 6 * J, rep: REP, email: "sonia@exemple.fr",
+      suivi: { version: 1, relances: [avant(J)], historique: [{ type: "relance", le: avant(J) }] }, suiviLe: J,
+      extra: [["challenge", cl([["apres_questionnaire", 2 * J, 5], ["decouverte", 5 * J, 2]]), avant(2 * J)]] });
+    const db = decor({ test: false, prospects: false, sans: [F.IDS.c1, F.IDS.c3], comptes: [rayan, sonia] });
+    db.donnees = db.donnees.filter(d => !(d.user_id === F.IDS.c2 && d.outil === "checkins"));
+    const { page } = await coachSur(b, db, "#/tableau", "#tb-vue .tb-tiles");
+    const tp = await tuileTb(page, "tb-t-prospects"), L = await aTraiterTb(page);
+    ok("D : tableau de bord (v63) : Rayan (clic d'hier après ta relance, rangé avant un clic plus ancien) est une urgence : Prospects 2 « 1 urgence » ; « À traiter maintenant » : Rayan seul, « A cliqué « Réserver mon bilan », pas de bilan coché » ; Sonia (clic le plus récent avant ta relance) n'y est pas",
+      !!tp && tp.val === "2" && tp.badge === "1 urgence" && L.length === 1 && L[0].uid === RAYAN && L[0].t.includes("Rayan Désordre") && L[0].t.includes("A cliqué « Réserver mon bilan », pas de bilan coché"), JSON.stringify([tp, L]));
+    await page.click("#tb-t-prospects"); await page.waitForSelector("#pr-liste", { timeout: 8000 }); await attendre(page, 500);
+    const ua = await uids(page), cr = await carte(page, RAYAN);
+    const cpt = await page.$$eval("[data-filtre]", l => Object.fromEntries(l.map(e => [e.dataset.filtre, (e.querySelector(".meta") || {}).textContent])));
+    await filtre(page, "tous");
+    const cs = await carte(page, SONIA), motifS = !!(await page.$(`#pr-liste .sc-carte[data-uid="${SONIA}"] .sc-motif`));
+    ok("D : page Prospects (v63) : « À traiter » 1, Rayan seul, sa carte « à traiter A cliqué « Réserver mon bilan », pas de bilan coché » et « Clics plan d'action 2 (dernier : " + RQ + ") » (le clic d'hier) ; Sonia hors « À traiter » (carte sans motif), « Clics plan d'action 2 (dernier : " + RQ + ") » (son clic d'il y a 2 jours)",
+      JSON.stringify(ua) === JSON.stringify([RAYAN]) && cpt.a_traiter === "1" && cr.includes("à traiter A cliqué « Réserver mon bilan », pas de bilan coché") && cr.includes("Clics plan d'action 2 (dernier : " + RQ + ")")
+      && cs.includes("Clics plan d'action 2 (dernier : " + RQ + ")") && !motifS, JSON.stringify([ua, cpt, motifS]) + " | " + cr + " | " + cs);
+    const { t } = await exporter(page);
+    const Lc = lireCSV(t.replace(/^﻿/, "")), lig = n => Lc.find(l => l[0] === n) || [];
+    const lr = lig("Rayan Désordre"), ls = lig("Sonia Inverse");
+    ok("D : export CSV (v63) : « Dernier clic » = la date du clic le plus récent, pas du dernier de la liste : Rayan " + frL(avant(J)) + " (hier), Sonia " + frL(avant(2 * J)) + " (il y a 2 jours) ; 2 clics chacun",
+      !!Lc[0] && Lc[0][13] === "Clics « Réserver mon bilan »" && Lc[0][14] === "Dernier clic" && lr[13] === "2" && lr[14] === frL(avant(J)) && ls[13] === "2" && ls[14] === frL(avant(2 * J)), JSON.stringify([lr.slice(13, 18), ls.slice(13, 18)]));
+    await ficheDe(page, RAYAN, "Rayan Désordre");
+    const rs = await page.$$eval("#fiche-commercial ul.sc-raisons:not(.sc-histo) > li", l => l.map(e => e.textContent.replace(/\s+/g, " ").trim())).catch(() => []);
+    const dec = await lignesFiche(page, "#fiche-decouverte"), motifR = !!(await page.$("#fiche-commercial .sc-motif"));
+    ok("D : fiche de Rayan (v63) : « Suivi commercial » à traiter, « A cliqué « Réserver mon bilan » (2 fois), la dernière hier. » ; « Bouton « Réserver mon bilan » » : « 2 clics, le dernier le " + frL(avant(J)) + " » — le même clic que le tableau de bord, la carte et le CSV ; aucune écriture",
+      motifR && rs.includes("A cliqué « Réserver mon bilan » (2 fois), la dernière hier.") && valeur(dec, "Bouton « Réserver mon bilan »") === "2 clics, le dernier le " + frL(avant(J)) && db.ecritures.length === 0,
+      JSON.stringify([motifR, rs, valeur(dec, "Bouton « Réserver mon bilan »")]) + " " + resume(db));
+  });
 
   /* =================== E. « Bilan réservé » coché par le coach =================== */
   await bloc("E. bilan réservé : création, retrait, remise", async () => {
@@ -819,7 +866,41 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
       const Q = n => ({ court_le: J(n), probleme: "Perdre du gras", repondues: 3, nb_questions: 3 });
       const C = o => { const x = { version: 1, jours: {}, cta: { clics: (o.clics || []).map(n => ({ jour: 1, source: "decouverte", date: typeof n === "string" ? n : J(n) })) } }; if (o.reserve != null) x.reserve = J(o.reserve); return x; };
       const a = (P, Cc, S, act, D) => { const z = Commercial.analyse(P, Cc, S, act, D); return { etat: z.etat, urgent: z.urgent, motif: z.motif, action: z.action, raisons: z.raisons.join(" "), rang: z.rang }; };
-      return {
+      /* v63 (lot 4) : le « dernier clic » est le plus récent PAR DATE, pas le dernier de la liste (liste dans le désordre :
+         fusion d'un appareil, deux appareils) ; dates piégées ignorées (objet, nombre, texte illisible ou non ISO) ; à
+         égalité, le plus loin dans la liste ; aucune date lisible : pas de dernier clic, la carte prend le dernier de la
+         liste ; date à plus de 5 min dans le futur ignorée (horloge du téléphone en avance ; avant b33a9b9 elle était
+         gardée), 2 min d'avance comptées ; + le dernier clic de Decouverte.resume et la carte (Commercial.clicsTexte) du
+         même prospect */
+      const Cs = l => ({ version: 1, jours: {}, cta: { clics: l.map(([s, d]) => ({ jour: 1, source: s, date: d })) } });
+      const bv = (P, Cc, S, act, D) => Object.assign(a(P, Cc, S, act, D), { dernier: Decouverte.resume(P, Cc, D).dernierClic, carte: Commercial.clicsTexte(Cc) });
+      const nonIso = n => new Date(Date.now() - n * 86400000).toUTCString();   // « Fri, 25 Sep 2026 03:00:00 GMT » : Date.parse le lit, mais pas AAAA-MM-JJ
+      const plus = ms => new Date(Date.now() + ms).toISOString();
+      const d1 = J(1), d2 = J(2), d5 = J(5), d20 = J(20), fut2 = plus(2 * 86400000), fut400 = plus(400 * 86400000), plus2m = plus(2 * 60000), plus10m = plus(10 * 60000), plus4m = plus(4 * 60000), plus6m = plus(6 * 60000);
+      const v63 = {
+        dates: { d1, d2, d5, d20, fut2, fut400, plus2m, plus10m, plus4m, plus6m },
+        desordre: bv(p(6), Cs([["apres_questionnaire", d1], ["decouverte", d5]]), { relances: [J(3)] }, J(1), Q(6)),
+        inverse: bv(p(6), Cs([["apres_questionnaire", d2], ["decouverte", d5]]), { relances: [J(1)] }, J(1), Q(6)),
+        perduDesordre: bv(p(60), Cs([["verrou-programme", d1], ["decouverte", J(20)]]), { issue: "perdu", issue_le: J(10) }, J(1), Q(60)),
+        /* le texte non ISO est daté de MAINTENANT (plus récent que le clic d'hier) : s'il était lu, il deviendrait le dernier clic */
+        pieges: bv(p(6), Cs([["apres_questionnaire", d1], ["decouverte", {}], ["decouverte", 42], ["decouverte", "zzz"], ["decouverte", nonIso(0)]]), { relances: [J(3)] }, J(1), Q(6)),
+        nonIsoSeul: bv(p(6), Cs([["apres_questionnaire", nonIso(0)]]), {}, J(1), Q(6)),
+        egalite: bv(p(6), Cs([["decouverte", d1], ["verrou_nutrition", d1], ["apres_questionnaire", d5]]), { relances: [J(3)] }, J(1), Q(6)),
+        illisibles: bv(p(6), Cs([["decouverte", {}], ["apres_questionnaire", "zzz"]]), {}, J(1), Q(6)),
+        /* dates futures (b33a9b9) : après-demain en tête ; dans 400 jours en tête, au milieu, en fin de liste ; « Perdu » ;
+           dans 10 min (ignorée) ; dans 2 min au milieu (petite avance : comptée) */
+        futur: bv(p(6), Cs([["verrou_nutrition", fut2], ["decouverte", d5]]), { relances: [J(3)] }, J(1), Q(6)),
+        loin: [0, 1, 2].map(i => { const l = [["apres_questionnaire", d5], ["decouverte", J(8)]]; l.splice(i, 0, ["verrou_nutrition", fut400]); return bv(p(10), Cs(l), { relances: [J(3)] }, J(1), Q(10)); }),
+        perduLoin: bv(p(60), Cs([["verrou-programme", fut400], ["decouverte", d20]]), { issue: "perdu", issue_le: J(2) }, J(1), Q(60)),
+        avance10m: bv(p(6), Cs([["apres_questionnaire", d1], ["verrou_nutrition", plus10m]]), { relances: [J(3)] }, J(1), Q(6)),
+        avance2m: bv(p(6), Cs([["decouverte", d5], ["verrou_nutrition", plus2m], ["apres_questionnaire", J(4)]]), { relances: [J(3)] }, J(1), Q(6)),
+        /* le seuil de 5 min encadré de près : 4 min d'avance comptées, 6 min ignorées ; TOUS les clics datés du futur : pas de
+           dernier clic, et la carte ne nomme pas un clic du futur (le nombre seul, comme le CSV vide) */
+        seuil4: bv(p(6), Cs([["apres_questionnaire", d1], ["verrou_nutrition", plus4m]]), { relances: [J(3)] }, J(1), Q(6)),
+        seuil6: bv(p(6), Cs([["apres_questionnaire", d1], ["verrou_nutrition", plus6m]]), { relances: [J(3)] }, J(1), Q(6)),
+        toutFutur: bv(p(6), Cs([["verrou_nutrition", fut2], ["decouverte", fut400]]), {}, J(1), Q(6))
+      };
+      return { v63,
         cfg: Commercial.cfg(),
         n47: a(ph(47), null, {}, null, null), n49: a(ph(49), null, {}, null, null), nRelance: a(ph(10), null, { relances: [H(2)] }, null, null),
         clic: a(p(4), C({ clics: [1] }), {}, J(1), Q(4)), clicRelance: a(p(4), C({ clics: [2] }), { relances: [J(1)] }, J(2), Q(4)), clicPuisRelancePuisClic: a(p(6), C({ clics: [5, 1] }), { relances: [J(3)] }, J(1), Q(6)),
@@ -841,6 +922,40 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
     ok("F : seuils de CONFIG.suivi : urgence 48 h, relances max 3, appel 7 j (plus de nouveau_heures, inactif_jours, motivation_forte)", r.cfg.urgence_heures === 48 && r.cfg.relances_max === 3 && r.cfg.appel_jours === 7 && !("nouveau_heures" in r.cfg) && !("inactif_jours" in r.cfg) && !("motivation_forte" in r.cfg), JSON.stringify(r.cfg));
     ok("F : inscrit il y a 47 h sans rien : à traiter « DM de bienvenue » ; 49 h : plus à traiter ; relancé : plus à traiter", r.n47.urgent && r.n47.motif === "nouveau" && r.n47.action === "Il vient de s'inscrire : envoie-lui un DM de bienvenue." && !r.n49.urgent && !r.nRelance.urgent && r.nRelance.action.startsWith("Relancé"), JSON.stringify([r.n47, r.n49, r.nRelance]));
     ok("F : clic sans bilan coché : à traiter (clic) ; relancé après le clic : non ; nouveau clic après la relance : de nouveau", r.clic.urgent && r.clic.motif === "clic" && !r.clicRelance.urgent && r.clicPuisRelancePuisClic.urgent && r.clicPuisRelancePuisClic.motif === "clic", JSON.stringify([r.clic, r.clicRelance, r.clicPuisRelancePuisClic]));
+    /* v63 (lot 4) : le dernier clic par date (rouges sur la v62, qui prenait le dernier de la liste) */
+    const V = r.v63, RQ = "page « Ton plan d'action » (après les 3 questions)";
+    ok("F : liste de clics dans le désordre (v63) : clic d'hier (après la relance d'il y a 3 jours) rangé AVANT un clic d'il y a 5 jours : à traiter (clic), « A cliqué « Réserver mon bilan » (2 fois), la dernière hier. », dernier clic = celui d'hier, la carte nomme ce même clic ; l'inverse (le plus récent, il y a 2 jours, AVANT la relance d'hier ; un clic d'il y a 5 jours en fin de liste) : pas à traiter, « la dernière il y a 2 jours. »",
+      V.desordre.urgent && V.desordre.motif === "clic" && V.desordre.raisons.includes("A cliqué « Réserver mon bilan » (2 fois), la dernière hier.") && V.desordre.dernier === V.dates.d1 && V.desordre.carte === "2 (dernier : " + RQ + ")"
+      && !V.inverse.urgent && V.inverse.motif === null && V.inverse.raisons.includes("A cliqué « Réserver mon bilan » (2 fois), la dernière il y a 2 jours.") && V.inverse.dernier === V.dates.d2 && V.inverse.carte === "2 (dernier : " + RQ + ")",
+      JSON.stringify([V.desordre, V.inverse]));
+    ok("F : « Perdu » il y a 10 jours, puis un clic hier rangé AVANT un clic d'il y a 20 jours (v63) : revenu (« Revenu après l'issue « Perdu » »), à traiter pour son clic, « la dernière hier. », la carte nomme ce clic",
+      V.perduDesordre.etat === "en_cours" && V.perduDesordre.raisons.includes("Revenu après l'issue « Perdu »") && V.perduDesordre.urgent && V.perduDesordre.motif === "clic" && V.perduDesordre.raisons.includes("(2 fois), la dernière hier.") && V.perduDesordre.dernier === V.dates.d1 && V.perduDesordre.carte === "2 (dernier : page verrouillée Mon programme)",
+      JSON.stringify(V.perduDesordre));
+    ok("F : dates piégées ignorées pour le dernier clic (v63 : objet, nombre, « zzz », texte non ISO que Chrome lit, daté de MAINTENANT donc plus récent que le clic d'hier) : en fin de liste, elles ne cachent pas le clic d'hier (à traiter, « (5 fois), la dernière hier. », la carte nomme ce clic, pas celui du texte non ISO) ; un seul clic daté en texte non ISO : pas de dernier clic, pas à traiter, « la dernière à une date inconnue. » (carte : le dernier de la liste)",
+      V.pieges.urgent && V.pieges.motif === "clic" && V.pieges.raisons.includes("(5 fois), la dernière hier.") && V.pieges.dernier === V.dates.d1 && V.pieges.carte === "5 (dernier : " + RQ + ")"
+      && !V.nonIsoSeul.urgent && V.nonIsoSeul.motif === null && V.nonIsoSeul.dernier === null && V.nonIsoSeul.raisons.includes("(1 fois), la dernière à une date inconnue.") && V.nonIsoSeul.carte === "1 (dernier : " + RQ + ")",
+      JSON.stringify([V.pieges, V.nonIsoSeul]));
+    ok("F : deux clics à la même date (v63) : le plus loin dans la liste est le dernier — hier « accueil, bouton du haut », puis hier « page verrouillée Nutrition », puis un clic d'il y a 5 jours en fin de liste : à traiter (après la relance d'il y a 3 jours), « (3 fois), la dernière hier. », dernier clic d'hier, carte « 3 (dernier : page verrouillée Nutrition) »",
+      V.egalite.urgent && V.egalite.motif === "clic" && V.egalite.raisons.includes("A cliqué « Réserver mon bilan » (3 fois), la dernière hier.") && V.egalite.dernier === V.dates.d1 && V.egalite.carte === "3 (dernier : page verrouillée Nutrition)",
+      JSON.stringify(V.egalite));
+    ok("F : aucune date lisible (v63 : un objet, « zzz ») : pas de dernier clic, pas à traiter, « (2 fois), la dernière à une date inconnue. » ; la carte prend le dernier de la liste : « 2 (dernier : " + RQ + ") »",
+      V.illisibles.dernier === null && !V.illisibles.urgent && V.illisibles.motif === null && V.illisibles.raisons.includes("A cliqué « Réserver mon bilan » (2 fois), la dernière à une date inconnue.") && V.illisibles.carte === "2 (dernier : " + RQ + ")",
+      JSON.stringify(V.illisibles));
+    /* v63 (b33a9b9) : une date à plus de 5 min dans le futur (horloge du téléphone en avance) est ignorée pour le dernier clic
+       (rouges sur acd4225, qui la gardait comme la plus récente) ; 2 min d'avance : comptée */
+    const Lo = V.loin || [];
+    ok("F : clic daté à plus de 5 min dans le futur IGNORÉ (v63, horloge du téléphone en avance) : daté d'après-demain (en tête de liste), ou de dans 400 jours (en tête, au milieu, en fin de liste), avec une relance (il y a 3 jours) plus récente que le vrai dernier clic (il y a 5 jours) : pas à traiter, « la dernière il y a 5 jours. », dernier clic = le vrai, la carte le nomme ; « Perdu » il y a 2 jours, vrai dernier clic il y a 20 jours et un clic de dans 400 jours : reste « Perdu » (pas « Revenu »), pas à traiter ; daté de dans 10 min : ignoré (le clic d'hier reste le dernier) ; daté de dans 2 min (petite avance, 5 min au plus), au milieu de la liste : compté, le plus récent, à traiter, « la dernière aujourd'hui. », la carte le nomme",
+      !V.futur.urgent && V.futur.motif === null && V.futur.dernier === V.dates.d5 && V.futur.raisons.includes("A cliqué « Réserver mon bilan » (2 fois), la dernière il y a 5 jours.") && V.futur.carte === "2 (dernier : accueil, bouton du haut)"
+      && Lo.length === 3 && Lo.every(x => !x.urgent && x.motif === null && x.dernier === V.dates.d5 && x.raisons.includes("A cliqué « Réserver mon bilan » (3 fois), la dernière il y a 5 jours.") && x.carte === "3 (dernier : " + RQ + ")")
+      && V.perduLoin.etat === "perdu" && !V.perduLoin.raisons.includes("Revenu après") && V.perduLoin.raisons.includes("Appel : « Perdu » il y a 2 jours") && !V.perduLoin.urgent && V.perduLoin.motif === null && V.perduLoin.dernier === V.dates.d20 && V.perduLoin.raisons.includes("(2 fois), la dernière il y a 20 jours.") && V.perduLoin.carte === "2 (dernier : accueil, bouton du haut)"
+      && V.avance10m.urgent && V.avance10m.motif === "clic" && V.avance10m.dernier === V.dates.d1 && V.avance10m.raisons.includes("(2 fois), la dernière hier.") && V.avance10m.carte === "2 (dernier : " + RQ + ")"
+      && V.avance2m.urgent && V.avance2m.motif === "clic" && V.avance2m.dernier === V.dates.plus2m && V.avance2m.raisons.includes("A cliqué « Réserver mon bilan » (3 fois), la dernière aujourd'hui.") && V.avance2m.carte === "3 (dernier : page verrouillée Nutrition)",
+      JSON.stringify([V.futur, Lo, V.perduLoin, V.avance10m, V.avance2m]));
+    ok("F : seuil des dates futures à 5 min (v63) : 4 min d'avance comptées (le plus récent, carte « page verrouillée Nutrition »), 6 min ignorées (le clic d'hier reste le dernier) ; tous les clics datés du futur (après-demain, dans 400 jours) : pas de dernier clic, pas à traiter, « (2 fois), la dernière à une date inconnue. », carte « 2 » seule (aucun écran nommé, comme le CSV vide)",
+      V.seuil4.dernier === V.dates.plus4m && V.seuil4.carte === "2 (dernier : page verrouillée Nutrition)" && V.seuil4.urgent
+      && V.seuil6.dernier === V.dates.d1 && V.seuil6.carte === "2 (dernier : " + RQ + ")" && V.seuil6.urgent
+      && V.toutFutur.dernier === null && !V.toutFutur.urgent && V.toutFutur.motif === null && V.toutFutur.raisons.includes("A cliqué « Réserver mon bilan » (2 fois), la dernière à une date inconnue.") && V.toutFutur.carte === "2",
+      JSON.stringify([V.seuil4, V.seuil6, V.toutFutur]));
     ok("F : case « J'ai réservé » seule : à traiter (« vérifie ton agenda ») ; bilan coché : plus à traiter, « Prépare le bilan » ; coché il y a 8 jours : « l'appel a-t-il eu lieu ? »", r.caseP.urgent && r.caseP.motif === "case" && r.caseP.action.includes("vérifie ton agenda") && !r.coche.urgent && r.coche.action.startsWith("Prépare le bilan") && r.coche8.action.includes("l'appel a-t-il eu lieu ?"), JSON.stringify([r.caseP, r.coche, r.coche8]));
     ok("F : 5 relances sans réponse : « Sans réponse après 5 relances : classe-le « Perdu » », non urgent ; « Perdu » il y a 40 jours et relancé après : « laisse-le »", !r.vieux.urgent && r.vieux.action.includes("Sans réponse après 5 relances : classe-le « Perdu »") && r.perdu.etat === "perdu" && !r.perdu.urgent && r.perdu.action.includes("laisse-le"), JSON.stringify([r.vieux, r.perdu]));
     ok("F : « Perdu » puis reclic hier : revenu (« Revenu après l'issue « Perdu » »), à traiter pour son clic ; « Absent » puis case cochée hier : revenu, à vérifier ; clic 50 jours après « Perdu » (il y a 10 jours) : reste PERDU", r.perduClic.etat === "en_cours" && r.perduClic.raisons.includes("Revenu après l'issue « Perdu »") && r.perduClic.urgent && r.absentCase.etat === "en_cours" && r.absentCase.motif === "case" && r.vieuxClic.etat === "perdu", JSON.stringify([r.perduClic, r.absentCase, r.vieuxClic]));
