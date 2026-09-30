@@ -694,6 +694,7 @@ const Store = {
     const t = this.garder(uid, cle, valeur);   // v48 : une copie reste sur l'appareil jusqu'a l'arrivee au serveur
     this.tEnAttente[k] = t;
     this.attente[k] = setTimeout(() => { delete this.attente[k]; delete this.valeursEnAttente[k]; delete this.tEnAttente[k]; this.envoyer(cle, valeur, uid, t); }, 700);
+    try { if (typeof Retour !== "undefined") Retour.ecrit(); } catch(e){}   // v67 : le champ qui vient d'etre enregistre n'est plus une « saisie en cours »
     return true;
   },
 

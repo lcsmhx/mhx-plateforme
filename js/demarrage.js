@@ -36,12 +36,26 @@ const Retour = {
   cachee: 0,          // instant du passage en arriere-plan
   selecteur: false,   // un selecteur de fichier (photo) a ete ouvert : le retour qui suit ne redessine rien
   tapes: new Map(),   // champ de la page -> ce que la personne y a tape (valeur, texte ou case)
+  enregistres: new WeakMap(),   // champ -> la valeur enregistree pendant son propre evenement (Retour.ecrit)
   lu(t){ return (t.type === "checkbox" || t.type === "radio") ? "c:" + t.checked : t.isContentEditable ? "t:" + (t.textContent || "") : "v:" + String(t.value == null ? "" : t.value); },
   noter(e){
     const t = e && e.target;
     if (!t || !t.closest || !t.closest("#vue") || !(t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
-    this.tapes.set(t, this.lu(t));
+    const v = this.lu(t);
+    if (this.enregistres.get(t) === v) return;   // « change » en quittant un champ deja enregistre a la frappe : rien de nouveau
+    this.tapes.set(t, v);
     if (this.tapes.size > 200) this.tapes.forEach((v, c) => { if (!c.isConnected) this.tapes.delete(c); });
+  },
+  /* v67 (relecture des avis) : un champ enregistre a chaque frappe (Store.ecrire accepte PENDANT son propre evenement
+     input/change : notes, objectifs, grammes et cases de la diete, date de depart…) ne compte plus comme saisie en
+     cours : ce qu'il montre est parti (ou attend dans une copie, que possible(true) voit). Pas un champ dont la valeur
+     est hors limites (poids de depart « 8 » : pas enregistre tel quel), ni un champ tape sans enregistrement (pesee). */
+  ecrit(){
+    const ev = window.event, t = ev && ev.target;
+    if (!t || (ev.type !== "input" && ev.type !== "change") || !this.tapes.has(t)) return;
+    if (t.validity && !t.validity.valid) return;
+    const v = this.lu(t);
+    if (this.tapes.get(t) === v){ this.tapes.delete(t); this.enregistres.set(t, v); }
   },
   /* un champ encore a l'ecran garde exactement ce qui y a ete tape (non vide) : peut-etre pas enregistre */
   saisieEnCours(){

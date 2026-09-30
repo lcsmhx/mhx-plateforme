@@ -13,7 +13,8 @@
       ensuite ne l'efface plus.
    E. D2 (b), garde-fous : moins de 5 minutes → rien ; un poids à moitié saisi (focus dans le champ, ou focus parti)
       n'est JAMAIS effacé ; une fenêtre de l'app ouverte → rien ; champ vidé → la relecture a lieu.
-   F. D2 (b) : Speed Formation relue au retour (diète modifiée ailleurs).
+   F. D2 (b) : Speed Formation relue au retour (diète modifiée ailleurs) ; v67 (relecture des avis) : aussi après des
+      grammes tapés sur la page (enregistrés à chaque frappe, plus comptés comme « saisie en cours »).
    H. D2 (b) : au retour, la page n'est redessinée que si la base a changé (dates maj_le relues seules) : rien de changé →
       rien de relu ni redessiné ; réseau en panne → la page reste, la pesée suivante s'enregistre ; sélecteur de fichier
       (photo) ouvert → rien n'est redessiné à ce retour-là.
@@ -327,6 +328,15 @@ const local = (page, k) => page.evaluate(k => { try { return JSON.parse(localSto
     const f1 = await foAff(page);
     ok("Speed Formation, rien de tapé : retour après plus de 5 min → la diète est relue (protéines du petit-déjeuner : 20 → 55, notées sur le téléphone), rien n'est écrit",
       f0.p0 === "20" && f1.p0 === "55" && ecr(db, "formation").length === 0, JSON.stringify([f0, f1, ecr(db, "formation").length]));
+    /* v67 (relecture des avis) : des grammes tapés ICI sont enregistrés à chaque frappe : ils ne bloquent plus la relecture */
+    await page.fill('[data-dm="0.g"]', "30"); await page.evaluate(() => document.activeElement && document.activeElement.blur()); await attendre(page, 1800);
+    const n1 = ecr(db, "formation").length;
+    await cacher(page); await attendre(page, 300);
+    const T2 = clone(ligne(db, THOMAS, "formation").contenu); T2.diete["1"]["0"][1].p = "77"; mettre(db, THOMAS, "formation", T2);
+    await reculer(page, 6 * MIN); await montrer(page); await attendre(page, 3000);
+    const f2 = await page.evaluate(() => ({ g0: (document.querySelector('[data-dm="0.g"]') || {}).value, p1: (document.querySelector('[data-dm="1.p"]') || {}).value }));
+    ok("… puis des grammes tapés sur cette page (enregistrés à chaque frappe), des protéines notées sur le téléphone (2e repas : 77), retour après plus de 5 min : la page est relue (77 apparaît), les grammes tapés ici restent (30), rien d'autre n'est écrit",
+      n1 >= 1 && f2.p1 === "77" && f2.g0 === "30" && ecr(db, "formation").length === n1, JSON.stringify([n1, f2, ecr(db, "formation").length]));
   });
 
   /* =================== H. D2 : redessiner seulement si la base a changé =================== */
