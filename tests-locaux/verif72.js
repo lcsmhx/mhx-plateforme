@@ -5,7 +5,8 @@
       rien d'autre), écran de connexion avec « Ce lien n'est plus valable », adresse nettoyée ; en anglais aussi.
       Avant la v66, un lien fabriqué par un tiers avec SES jetons faisait entrer dans SON compte.
    B. un client connecté ouvre un lien à jetons d'un autre compte : il reste lui-même, le jeton n'est pas envoyé,
-      « déjà dans ton espace », adresse nettoyée.
+      « déjà dans ton espace », adresse nettoyée ; B2. session enregistrée mais expirée (renouvellement refusé) : retour à la
+      connexion avec « Ce lien n'est plus valable », jamais la session du lien.
    C. dernier lien d'un changement d'adresse (type=email_change) : inchangé — aucune session, le mot « adresse changée ».
    D. polices hébergées dans polices/ : plus aucune mention de Google Fonts dans la page servie ; css/jetons.css déclare
       les 3 familles en 400, 500 et 600 (latin et latin étendu, 18 @font-face), chaque fichier existe (woff2), aucun
@@ -108,7 +109,7 @@ async function contexte(b, db, who, opts){
     localStorage.setItem("mhx_installe", "1"); localStorage.setItem("mhx_visites", "3");
     if (s) localStorage.setItem("mhx_session", JSON.stringify(s));
     if (langue) localStorage.setItem("mhx_langue", langue);
-  }, { s: who ? session(who, "t@exemple.fr") : null, langue: opts.langue || "" });
+  }, { s: who ? Object.assign(session(who, "t@exemple.fr"), opts.expiree ? { refresh_token: "perime", expire_le: Date.now() - 60000 } : {}) : null, langue: opts.langue || "" });
   const page = await c.newPage();
   page.on("pageerror", e => res.push("  ✗ ERREUR JS " + String(e).slice(0, 300)));
   page.on("console", msg => { if (msg.type() === "error" && !/ERR_FAILED|status of [45]\d\d/.test(msg.text())) res.push("  ✗ CONSOLE " + msg.text().slice(0, 200)); });
@@ -156,6 +157,17 @@ const etat = page => page.evaluate(() => ({
     ok("client connecté + lien d'un autre compte : il reste lui-même (session intacte), jeton du lien jamais envoyé, « déjà dans ton espace », adresse nettoyée",
       id === THOMAS && s && s.access_token === "jeton-" + THOMAS && db.jetonsLien === 0 && norm(e.toasts).includes("déjà dans ton espace") && !/access_token/.test(e.url),
       JSON.stringify({ id, e, jetons: db.jetonsLien }));
+  });
+
+  await bloc("B2. lien à jetons avec une session expirée", async () => {
+    /* session enregistrée sur l'appareil mais périmée, renouvellement refusé : retour à la connexion, jamais le compte du lien */
+    const db = base();
+    const { page } = await contexte(b, db, THOMAS, { expiree: true });
+    await page.goto(URL0 + LIEN("signup")); await page.waitForSelector("#c-go", { timeout: 10000 }); await attendre(page, 600);
+    const e = await etat(page);
+    ok("session expirée (renouvellement refusé) + lien d'un autre compte : écran de connexion, « Ce lien n'est plus valable », jeton du lien jamais envoyé, jamais la session du lien, adresse nettoyée",
+      e.connexion && norm(e.err).startsWith("Ce lien n'est plus valable") && db.jetonsLien === 0 && !/lien\./.test(await page.evaluate(() => (localStorage.getItem("mhx_session") || "") + (sessionStorage.getItem("mhx_session") || ""))) && !/access_token/.test(e.url),
+      JSON.stringify(e) + " · jetons " + db.jetonsLien);
   });
 
   /* =================== C. dernier lien d'un changement d'adresse : inchangé =================== */

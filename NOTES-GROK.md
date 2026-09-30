@@ -282,7 +282,7 @@ Courses sur une vraie semaine, cases mangé J+1, rendu Jour 1…N, graphique men
 
 ## 30 août 2026 — envoi live coach → client test
 
-Compte coach (email du compte coach retiré du dépôt public le 30/09/2026) → client `mhx.client.test` (Test Grok).
+Compte coach (email du compte coach retiré du dépôt public le 30/09/2026) → client de test (Test Grok).
 
 Envoyé :
 - Programme catalogue **Haut / Bas — 4 séances** (intermédiaire, salle).
@@ -421,7 +421,7 @@ Ce que je changerais :
 
 **B1. Inscription ouverte : vrai.** `portail("inscription")` si le hash contient `inscription` (l.4936). L’écran de login n’affiche pas le lien, l’URL `#/inscription` suffit. `POST /auth/v1/signup` avec la clé publique → **200, `access_token`, email confirmé à la seconde.** Un profil `role=client` est créé. J’ai laissé un compte sonde : (email du compte sonde retiré du dépôt public le 30/09/2026) (id `3ef9207d-…`). **Supprime-le.** Tant que Supabase accepte les signups, cacher le hash ne suffit pas.
 
-**B2. Isolation `donnees` / `profils` : tient.** Jeton client `mhx.client.test` :
+**B2. Isolation `donnees` / `profils` : tient.** Jeton du client de test :
 - `GET /donnees` (sans filtre) → 7 lignes, toutes `user_id` = lui
 - `GET /donnees?user_id=neq.<lui>` → 0
 - `POST /donnees` vers l’uid coach → **403** RLS
@@ -463,7 +463,7 @@ Recettes **242**. Paléo petit-déj **21** (les 11 live + 10). Réimporter.
 
 `git pull` → `f27d8ae`. Le brief dit v16 ; **ce dépôt a encore `CONFIG.marque.version = "2026-08-30 · 15"`** (l.548), titre « Créer un accès client » (l.3922), pas de `#n-type`. Si v16 est en prod Netlify, elle n’est pas sur GitHub. Je spécifie ici ; tu codes dans `index.html`. Je ne le touche pas.
 
-### Sécu (MAJ 10 A) — jeton client réel `mhx.client.test`
+### Sécu (MAJ 10 A) — jeton réel du client de test
 
 - `PATCH profils` `role=coach` sur soi → **400 P0001** « Seul un coach peut changer un rôle. » Trigger tient.
 - `POST upsert` merge-duplicates → **403** RLS.
