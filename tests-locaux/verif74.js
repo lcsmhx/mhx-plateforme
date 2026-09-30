@@ -384,6 +384,34 @@ const local = (page, k) => page.evaluate(k => { try { return JSON.parse(localSto
       const a2 = await mensAff(page);
       ok("« Choisir une photo » (sélecteur de fichier) puis retour après plus de 5 min, semaine 5 notée ailleurs : la page n'est PAS redessinée (repère là, 4 lignes) ; au retour suivant, elle l'est (5 lignes) ; rien n'est écrit",
         mq && a1.lignes === 4 && a2.lignes === 5 && db.ecritures.length === 0, JSON.stringify([mq, a1.lignes, a2.lignes, db.ecritures.length])); }
+    /* H4 (contre-relecture) : un clic sur « Choisir une photo » qui ne cache pas la page (ordinateur, sélecteur refermé) ne
+       bloque jamais le vrai retour suivant, des heures plus tard */
+    { const db = base();
+      const { page } = await contexte(b, db, THOMAS);
+      await page.goto(URL0 + "#/mensurations"); await pret(page, "#tbody tr"); await page.waitForSelector("[data-choisir]", { timeout: 8000 }); await attendre(page, 1200);
+      const fc = page.waitForEvent("filechooser", { timeout: 4000 }).catch(() => null);
+      await page.click("[data-choisir] >> nth=0"); await fc;
+      await attendre(page, 5600);   // la page ne s'est pas cachée dans les 5 s : le clic n'a pas ouvert d'autre écran
+      await cacher(page); await attendre(page, 300);
+      const M = MENS0(); M.mesures.push(clone(S5)); mettre(db, THOMAS, "mens", M);
+      await reculer(page, 6 * MIN); await montrer(page); await attendre(page, 3000);
+      const a = await mensAff(page);
+      ok("« Choisir une photo » sans que la page se cache, puis vrai retour après plus de 5 min, semaine 5 notée ailleurs : la page est relue (5 lignes), rien n'est écrit",
+        a.lignes === 5 && db.ecritures.length === 0, JSON.stringify([a.lignes, db.ecritures.length])); }
+    /* H5 (contre-relecture) : Ma progression rouverte sans réseau (déjà lue une fois : sa date est connue) → page vide, écriture
+       bloquée ; au retour avec le réseau, la page est relue même si la date en base n'a pas changé */
+    { const db = base();
+      const { page } = await contexte(b, db, THOMAS);
+      await page.goto(URL0 + "#/mensurations"); await pret(page, "#tbody tr"); await attendre(page, 1200);
+      await page.evaluate(() => { location.hash = "#/profil"; }); await attendre(page, 1500);
+      db.panne = true;
+      await page.evaluate(() => { location.hash = "#/mensurations"; }); await attendre(page, 2500);
+      const a0 = await mensAff(page);
+      db.panne = false;
+      await cacher(page); await attendre(page, 300); await reculer(page, 6 * MIN); await montrer(page); await attendre(page, 3500);
+      const a1 = await mensAff(page);
+      ok("Ma progression rouverte sans réseau (0 ligne), puis retour après plus de 5 min avec le réseau, rien de changé en base : la page est relue (4 semaines), rien n'est écrit",
+        a0.lignes === 0 && a1.lignes === 4 && db.ecritures.length === 0, JSON.stringify([a0.lignes, a1.lignes, db.ecritures.length])); }
   });
 
   /* =================== G. K9 : jetons dans l'adresse =================== */

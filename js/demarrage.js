@@ -34,7 +34,8 @@ const Retour = {
   DELAI: 5 * 60000,
   PAGES: { mensurations: ["mens", "photos"], formation: ["formation"] },
   cachee: 0,          // instant du passage en arriere-plan
-  selecteur: false,   // un selecteur de fichier (photo) a ete ouvert : le retour qui suit ne redessine rien
+  selecteur: 0,       // instant du dernier clic sur un selecteur de fichier (photo) : si la page se cache dans les 5 s, le retour qui suit ne redessine rien
+  parSelecteur: false,   // la page s'est cachee juste apres ce clic (le selecteur s'est ouvert)
   tapes: new Map(),   // champ de la page -> ce que la personne y a tape (valeur, texte ou case)
   enregistres: new WeakMap(),   // champ -> la valeur enregistree pendant son propre evenement (Retour.ecrit)
   lu(t){ return (t.type === "checkbox" || t.type === "radio") ? "c:" + t.checked : t.isContentEditable ? "t:" + (t.textContent || "") : "v:" + String(t.value == null ? "" : t.value); },
@@ -92,6 +93,9 @@ const Retour = {
         new Promise((_, ko) => setTimeout(() => ko(new Error("delai")), 6000))
       ]);
       if (!Array.isArray(r)) return false;
+      /* contre-relecture : une page dont une cle n'a pas pu etre lue (reseau coupe a l'ouverture : vide, ecriture bloquee) est
+         relue des que la base repond, meme si sa date n'a pas change */
+      if (cles.some(c => Store.charge[uid + "|" + c] === false)) return true;
       const t = x => { const n = x ? new Date(x).getTime() : NaN; return isNaN(n) ? null : n; };
       return cles.some(c => {
         const l = r.find(x => x && x.outil === c), lu = Store.majLu[uid + "|" + c];
@@ -184,13 +188,20 @@ const Retour = {
   window.addEventListener("online", () => Store.reprendre());
   window.addEventListener("pagehide", () => Store.toutEnvoyer());
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden"){ Retour.cachee = Date.now(); Store.toutEnvoyer(); return; }
+    if (document.visibilityState === "hidden"){
+      Retour.cachee = Date.now();
+      Retour.parSelecteur = !!Retour.selecteur && Date.now() - Retour.selecteur < 5000;   // cachee par le selecteur de fichier qui s'ouvre
+      Store.toutEnvoyer(); return;
+    }
     const d = Retour.cachee; Retour.cachee = 0;
-    if (Retour.selecteur){ Retour.selecteur = false; Store.reprendre(); return; }   // retour du selecteur de fichier : rien n'est redessine
+    /* retour du selecteur de fichier (la page s'est cachee dans les 5 s qui suivent le clic) : rien n'est redessine. Le drapeau
+       retombe a chaque retour : un clic sans selecteur (ordinateur, clic refuse) ne bloque jamais le vrai retour suivant */
+    const sel = Retour.parSelecteur; Retour.parSelecteur = false; Retour.selecteur = 0;
+    if (sel){ Store.reprendre(); return; }
     if (d && Date.now() - d > Retour.DELAI) Retour.relire(); else Store.reprendre();
   });
   /* v67 : un selecteur de fichier (photo de progression) s'ouvre : le retour sur l'app qui suit ne redessine pas la page */
-  document.addEventListener("click", e => { const t = e.target; if (t && t.closest && t.closest('input[type="file"], [data-choisir]')) Retour.selecteur = true; }, true);
+  document.addEventListener("click", e => { const t = e.target; if (t && t.closest && t.closest('input[type="file"], [data-choisir]')) Retour.selecteur = Date.now(); }, true);
   document.addEventListener("input", e => Retour.noter(e), true);
   document.addEventListener("change", e => Retour.noter(e), true);
   document.addEventListener("click", e => { if (e.target && e.target.href && e.target.href.includes("calendly")) Tracking.enregistrer("call_cta_clicked"); }, true);
