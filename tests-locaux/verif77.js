@@ -1,4 +1,4 @@
-/* verif77 — v68 (audit du 01/10, lot « compte ») : 2 corrections, vérifiées de bout en bout dans le navigateur.
+/* verif77 — v67 (audit du 01/10, lot « compte ») : 2 corrections, vérifiées de bout en bout dans le navigateur.
    A. A5 : « Changer mon mot de passe » (Profil). Le mot de passe actuel est vérifié par une connexion
       (POST /auth/v1/token?grant_type=password) qui ouvre une session NEUVE ; le changement (PUT /auth/v1/user) part
       maintenant avec le jeton de CETTE session (avant : avec l'ancienne session de l'onglet) — prêt pour « Secure password

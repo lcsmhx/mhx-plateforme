@@ -1,4 +1,4 @@
-/* verif76 — v68 (lot « formation ») : ouvrir ou fermer un module ou une leçon de la Speed Formation n'écrit plus rien.
+/* verif76 — v67 (lot « formation ») : ouvrir ou fermer un module ou une leçon de la Speed Formation n'écrit plus rien.
    Avant : chaque clic sur un module (D.ouvert) ou une leçon (D.lecon) réécrivait TOUT « formation » depuis la copie de la
    page (notes, objectifs, challenges, grammes de la diète, cases cochées) : avec deux appareils, la page restée ouverte sur
    l'ordinateur effaçait ce qui venait d'être noté sur le téléphone, rien qu'en ouvrant un module. Maintenant : affichage

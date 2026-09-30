@@ -187,7 +187,7 @@ const Auth = {
   },
   /* Supabase ne redemande pas l'ancien mot de passe. On le verifie nous-memes :
      sinon un telephone laisse deverrouille suffit a se faire voler le compte.
-     v68 (audit du 01/10, A5) : la verification ouvre une session NEUVE ; le changement part avec elle (pret pour
+     v67 (audit du 01/10, A5) : la verification ouvre une session NEUVE ; le changement part avec elle (pret pour
      « Secure password change » de Supabase, qui exige une connexion recente) et l'app la garde des maintenant :
      Supabase ferme les autres sessions du compte quand le mot de passe change, l'ancienne de cet onglet comprise.
      Meme compte, meme rangement que la session d'avant (« Rester connecte », Auth.persistant) : les copies en
@@ -219,7 +219,7 @@ const Auth = {
   },
 
   /* Changement d'adresse (le bouton n'est plus affiche depuis la v52 : le changement passe par le coach).
-     v68 (A5) : avec « Confirm email » ACTIVE dans Supabase, il n'est effectif qu'apres le clic sur le lien recu a la
+     v67 (A5) : avec « Confirm email » ACTIVE dans Supabase, il n'est effectif qu'apres le clic sur le lien recu a la
      nouvelle adresse (et a l'ancienne, avec « Secure email change »). « Confirm email » est DESACTIVE depuis la v54
      (reglage de Lucas) : le changement est alors IMMEDIAT, sans aucun lien ni confirmation. */
   async changerEmail(nouveau){
@@ -956,7 +956,7 @@ const Store = {
     const profil = await Auth.appel("/rest/v1/profils?id=eq." + uid + "&select=*");
     const donnees = {};
     (lignes || []).forEach(l => { donnees[l.outil] = { contenu: l.contenu, modifie_le: l.maj_le }; });
-    /* v68 (audit du 01/10, E4) : les accords donnes (conditions, newsletter, sante : date et version), lus dans les
+    /* v67 (audit du 01/10, E4) : les accords donnes (conditions, newsletter, sante : date et version), lus dans les
        metadonnees du compte deja en memoire (aucun appel de plus) ; seulement ces champs, jamais un jeton ; seulement
        pour son propre compte */
     const accords = {};
@@ -981,7 +981,7 @@ const Store = {
       donnees: donnees
     };
   },
-  /* v68 (E4) : les accords rangés dans les metadonnees du compte (Accords, Sante ; emails_suivi : l'ancien accord v51) */
+  /* v67 (E4) : les accords rangés dans les metadonnees du compte (Accords, Sante ; emails_suivi : l'ancien accord v51) */
   champsAccords: ["consentement", "conditions_version", "consentement_sante", "sante_version", "sante_ecran",
                   "newsletter", "newsletter_version", "emails_suivi"],
   /* v67 (D5) : ce qu'une sauvegarde remplacerait, sans rien ecrire : [[cle, contenu]] ; erreur « format » (illisible) ou

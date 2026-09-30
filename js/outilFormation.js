@@ -786,7 +786,7 @@ const outilFormation = {
        appareil : les changer ne reecrit plus tout « formation » (notes, objectifs, challenges et diete saisis entre-temps
        sur un autre appareil etaient effaces). Le choix reste sur l'appareil (cle mhx_, effacee a la deconnexion) ; au
        depart, celui du document (rien ne change a l'ecran). Les champs du document ne sont jamais retires.
-       v68 : meme chose pour le module et la lecon ouverts (D.ouvert, D.lecon) : ouvrir ou fermer un module ou une lecon
+       v67 : meme chose pour le module et la lecon ouverts (D.ouvert, D.lecon) : ouvrir ou fermer un module ou une lecon
        n'ecrit plus rien ; le choix est garde avec la semaine et le jour ({ semaine, jour, ouvert, lecon }). Un choix garde
        par la v67 (sans ouvert ni lecon) laisse ceux du document ; un module ou une lecon qui n'existe pas est ignore. */
     const cleAff = "mhx_aff|" + (Store.cible() || "_") + "|formation";
@@ -865,7 +865,7 @@ const outilFormation = {
         if (bienvenue) videoLancee();
       }));
 
-      /* ouverture des modules et des lecons (v68 : affichage seul, rien n'est ecrit) */
+      /* ouverture des modules et des lecons (v67 : affichage seul, rien n'est ecrit) */
       $$("[data-mod]", zone).forEach(b => b.addEventListener("click", () => {
         D.ouvert = (D.ouvert === b.dataset.mod) ? "" : b.dataset.mod;
         garderAffichage(); dessiner();
