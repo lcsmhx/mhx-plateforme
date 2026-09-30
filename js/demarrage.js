@@ -100,7 +100,7 @@ const Retour = {
   /* v67 (audit du 01/10, K9) : l'adresse est nettoyee pour TOUT jeton, pas seulement access_token : un lien qui ne portait
      que refresh_token, provider_token, provider_refresh_token ou token_hash le laissait dans la barre d'adresse et
      l'historique. Toujours sans les lire ni les envoyer. */
-  const jetonDansAdresse = ["access_token", "refresh_token", "provider_token", "provider_refresh_token", "token_hash"].some(k => p[k]);
+  const jetonDansAdresse = ["access_token", "refresh_token", "provider_token", "provider_refresh_token", "token_hash"].some(k => Object.prototype.hasOwnProperty.call(p, k));
   if (jetonDansAdresse){
     try { history.replaceState(null, "", location.pathname + location.search); } catch(e){}
     /* v52 : dernier lien d'un changement d'adresse : le changement est fait, on le dit */
