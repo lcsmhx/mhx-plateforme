@@ -71,7 +71,7 @@ function mettre(db, uid, outil, contenu, maj){
   if (l){ l.contenu = contenu; l.maj_le = maj || maintenant(); } else db.donnees.push({ user_id: uid, outil, contenu, maj_le: maj || maintenant() });
 }
 const ecr = (db, outil) => db.ecritures.filter(e => e.outil === outil);
-const lus = (db, outil) => db.lectures.filter(l => l.outil === "eq." + outil && l.select === "contenu");
+const lus = (db, outil) => db.lectures.filter(l => l.outil === "eq." + outil && /^contenu(,maj_le)?$/.test(l.select || ""));   // v67 : Store.lire lit aussi maj_le (D1)
 async function repondre(r, db){
   const req = r.request(), u = req.url(), host = new URL(u).hostname;
   if (host === "localhost") return r.continue().catch(() => {});
