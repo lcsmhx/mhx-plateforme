@@ -691,7 +691,7 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
     await aller(page, "#/clients", 2200);
     const lLea = await ligneDe(page, PROSPECT), lMarc = await ligneDe(page, MARC);
     /* v52 (lot D) : « inscrit depuis n j » (avant : « Découverte J3/7 » / « Découverte terminée ») */
-    ok("Mes clients : Léa « Découverte · inscrit depuis 2 j » + « a cliqué Réserver » ; Marc « Découverte · inscrit depuis 10 j »", lLea.includes("Découverte · inscrit depuis 2 j") && lLea.includes("a cliqué Réserver") && lMarc.includes("Découverte · inscrit depuis 10 j") && !/J\d+\/7|terminée/.test(lLea + lMarc), lLea + " | " + lMarc);
+    ok("Mes clients : Léa « Découverte · inscrit depuis 2 j » + « a cliqué Plan d'action » ; Marc « Découverte · inscrit depuis 10 j »", lLea.includes("Découverte · inscrit depuis 2 j") && lLea.includes("a cliqué Plan d'action") && lMarc.includes("Découverte · inscrit depuis 10 j") && !/J\d+\/7|terminée/.test(lLea + lMarc), lLea + " | " + lMarc);
     await page.click(`[data-ouvrir="${PROSPECT}"]`).catch(() => {}); await attendre(page, 2200);
     const f = await texte(page, "#fiche-decouverte");
     ok("fiche de Léa : bloc « Découverte » (inscrit depuis 2 j — v52 ; avant : jour 3 / 7 —, questionnaire rempli, objectif, motivation 8 / 10, 1 clic, case pas cochée)", f.includes("inscrit depuis 2 j") && !f.includes("/ 7") && f.includes("rempli le") && f.includes("Perte de poids / sèche") && f.includes("8 / 10") && f.includes("1 clic") && f.includes("pas cochée"), f.slice(0, 300));
@@ -714,7 +714,7 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
     ok("v53 : ancien drapeau du mode test (mhx_decouverte_jour = 8) sur l'appareil du coach : effacé au démarrage ; le tableau de bord s'affiche (Prospects : 2)", (await page.evaluate(() => localStorage.getItem("mhx_decouverte_jour"))) === null && (await texte(page, "#tb-t-prospects .t-val")) === "2", await texte(page, "#tb-vue"));
     await aller(page, "#/clients", 2200);
     const lLea = await ligneDe(page, PROSPECT), lMarc = await ligneDe(page, MARC);
-    ok("Mes clients (même appareil) : Léa « Découverte · inscrit depuis 2 j » + « bilan réservé » (et pas « a cliqué Réserver ») ; Marc « Découverte · inscrit depuis 10 j » (v52)", lLea.includes("Découverte · inscrit depuis 2 j") && lLea.includes("bilan réservé") && !lLea.includes("a cliqué Réserver") && lMarc.includes("Découverte · inscrit depuis 10 j"), lLea + " | " + lMarc);
+    ok("Mes clients (même appareil) : Léa « Découverte · inscrit depuis 2 j » + « bilan réservé » (et pas « a cliqué Plan d'action ») ; Marc « Découverte · inscrit depuis 10 j » (v52)", lLea.includes("Découverte · inscrit depuis 2 j") && lLea.includes("bilan réservé") && !lLea.includes("a cliqué Plan d'action") && lMarc.includes("Découverte · inscrit depuis 10 j"), lLea + " | " + lMarc);
     await page.click(`[data-ouvrir="${PROSPECT}"]`).catch(() => {}); await attendre(page, 2200);
     const f = await texte(page, "#fiche-decouverte");
     /* v53 (chantier 4) : la case du prospect se lit « Le prospect a coché « J'ai réservé » le … » (le coach coche lui-même « Bilan réservé ») */

@@ -796,7 +796,7 @@ const SANTE = /71[,.]4|1\s?873|83[,.]5|92[,.]3|\bkcal\b|\bkg\b|\bpoids\b|\btaill
     await tous(page);
     const k = await clicsCartes(page);
     const Lc = lireCSV((await exporter(page)).replace(/^﻿/, "")), tete = Lc[0] || [];
-    const iN = tete.indexOf("Clics « Réserver mon bilan »"), iD = tete.indexOf("Dernier clic");
+    const iN = tete.indexOf("Clics « Récupérer mon plan d'action »"), iD = tete.indexOf("Dernier clic");
     const csv = nom => { const l = Lc.find(x => x[0] === nom) || []; return [l[iN], l[iD]]; };
     const ATT = { "Anna Tôt": ["2", "16/11/2026"], "Bruno Ancien": ["2", "14/11/2026"], "Chloé Octobre": ["3", "20/10/2026"], "David Septembre": ["3", "17/11/2026"],
       "Emma Plus-Tard": ["0", ""], "Hélène Minuit": ["2", "12/11/2026"], "Inès Ouverture": ["1", "28/09/2026"], "Karim Vieux": ["2", "17/09/2026"], "Marc Neuf": ["0", ""],

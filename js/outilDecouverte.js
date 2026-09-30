@@ -257,7 +257,7 @@ const Decouverte = {
     const a = B.reserve ? Commercial.analyseLigne(l) : null, avant = !!a && !a.coche && !a.caseAVerifier;
     if (B.reserve) h += ` <span class="pastille ok" title="${(a ? a.caseAVerifier : !B.coach) ? "A coché « J'ai réservé mon bilan » (à vérifier, puis coche « Bilan réservé » dans sa fiche)"
       : B.coach ? "Bilan réservé : coché par toi" + (avant ? ", avant l'appel" : "") : "A coché « J'ai réservé mon bilan », avant l'appel"}">bilan réservé</span>`;
-    else if (r.clics) h += ` <span class="pastille accent" title="A cliqué « Réserver mon bilan » ${r.clics} fois">a cliqué Réserver</span>`;
+    else if (r.clics) h += ` <span class="pastille accent" title="A cliqué « Récupérer mon plan d'action » ${r.clics} fois">a cliqué Plan d'action</span>`;
     return h;
   },
 

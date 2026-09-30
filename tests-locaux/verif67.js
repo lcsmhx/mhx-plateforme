@@ -828,15 +828,15 @@ const verrouVu = (page, id) => page.evaluate(id => {
     ok("chronologie : les 10 nouveaux codes avec le nom de leur écran (« (page « Ton plan d'action » (après les 3 questions)) », « (accueil, bouton du haut) »… « (page verrouillée Mon bilan) ») ; un code réservé (__proto__) ou piégé : « Clic « Récupérer mon plan d'action » » sans libellé, en texte brut, aucune injection",
       JSON.stringify(clics.slice(0, 12)) === JSON.stringify(att.slice(0, 12)) && !(await page.evaluate(() => window.__xss)) && !(await page.$("#vue img[src='x']")), JSON.stringify(clics.slice(0, 12)));
     const fd = await lignes(page, "#fiche-decouverte"), val = x => (fd.find(l => l[0] === x) || [])[1] || "";
-    ok("les autres libellés du coach ne changent pas : « Bouton « Réserver mon bilan » : 16 clics, le dernier le … », « Case « J'ai réservé mon bilan » : pas cochée », pastille « a cliqué Réserver »",
-      /^16 clics, le dernier le \S.*$/.test(val("Bouton « Réserver mon bilan »")) && val("Case « J'ai réservé mon bilan »") === "pas cochée" && (await texte(page, "#fiche-decouverte .seance-c-tete")).includes("a cliqué Réserver"),
+    ok("les autres libellés du coach (v65, décision de Lucas du 30/09 : le nom du bouton d'aujourd'hui, plus « Réserver ») : « Bouton « Récupérer mon plan d'action » : 16 clics, le dernier le … », « Case « J'ai réservé mon bilan » : pas cochée », pastille « a cliqué Plan d'action »",
+      /^16 clics, le dernier le \S.*$/.test(val("Bouton « Récupérer mon plan d'action »")) && val("Case « J'ai réservé mon bilan »") === "pas cochée" && (await texte(page, "#fiche-decouverte .seance-c-tete")).includes("a cliqué Plan d'action") && !/Réserver/.test(await texte(page, "#fiche-decouverte")),
       JSON.stringify(fd) + " · " + (await texte(page, "#fiche-decouverte .seance-c-tete")));
     /* v63 (lot 4, point 2) : « le dernier le <date> » = la date (jour local, JJ/MM/AAAA) du clic le PLUS RÉCENT, ici le 1er de la
        liste (rangée du plus récent au plus ancien), pas celle du dernier de la liste ; dates relues par le navigateur (son fuseau) */
     const jourFr = iso => page.evaluate(v => { const d = new Date(v); return String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0") + "/" + d.getFullYear(); }, iso);
     const cl0 = C0.cta.clics, dRecent = await jourFr(cl0[0].date), dFin = await jourFr(cl0[cl0.length - 1].date);
-    ok("fiche, « Bouton « Réserver mon bilan » » : « 16 clics, le dernier le <date> » donne la date EXACTE du clic le plus récent (le 1er d'une liste rangée du plus récent au plus ancien, il y a 7 min), pas celle du dernier de la liste (il y a plus de 31 h, un autre jour)",
-      dRecent !== dFin && val("Bouton « Réserver mon bilan »") === "16 clics, le dernier le " + dRecent, "affiché " + JSON.stringify(val("Bouton « Réserver mon bilan »")) + " · attendu le " + dRecent + " (pas le " + dFin + ")");
+    ok("fiche, « Bouton « Récupérer mon plan d'action » » : « 16 clics, le dernier le <date> » donne la date EXACTE du clic le plus récent (le 1er d'une liste rangée du plus récent au plus ancien, il y a 7 min), pas celle du dernier de la liste (il y a plus de 31 h, un autre jour)",
+      dRecent !== dFin && val("Bouton « Récupérer mon plan d'action »") === "16 clics, le dernier le " + dRecent, "affiché " + JSON.stringify(val("Bouton « Récupérer mon plan d'action »")) + " · attendu le " + dRecent + " (pas le " + dFin + ")");
     const LIEN = CAL + "?utm_source=app&utm_medium=coach&utm_content=fiche_coach&name=" + enc("Léa Martin") + "&first_name=" + enc("Léa") + "&last_name=Martin&email=" + enc("p40@exemple.fr");
     const lien = await page.$eval("#dc-lien", e => e.value).catch(() => null);
     ok("fiche, « Contacter » : son lien de réservation exact (nouvelle adresse, utm_source=app, utm_medium=coach, utm_content=fiche_coach, prénom, nom, email)", lien === LIEN, lien);

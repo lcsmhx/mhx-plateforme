@@ -1279,7 +1279,7 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
     const sans = (l, k) => l.filter(x => x[0] !== k);   // la ligne « Découverte » (jour, date d'inscription) n'est pas du lot G
     /* v53 (chantier 4) : après le bouton « Réserver mon bilan », « Bilan réservé » (la coche du coach), la case du prospect
        (« Le prospect a coché « J'ai réservé » le … » quand elle est cochée), la dernière visite et les jours actifs */
-    const FIN_V53 = [["Bouton « Réserver mon bilan »", "jamais cliqué"], ["Bilan réservé", "non"], ["Case « J'ai réservé mon bilan »", "pas cochée"], ["Dernière visite", "aucune"], ["Jours actifs (30 j)", "0"]];
+    const FIN_V53 = [["Bouton « Récupérer mon plan d'action »", "jamais cliqué"], ["Bilan réservé", "non"], ["Case « J'ai réservé mon bilan »", "pas cochée"], ["Dernière visite", "aucune"], ["Jours actifs (30 j)", "0"]];
     const coachSur = async db => { const x = await contexte(b, COACH, db); await x.page.goto(URL0 + "#/clients"); await pret(x.page, "#vue"); return x; };
 
     await bloc("G1. fiche : les 3 réponses, le nom, la newsletter", async () => {

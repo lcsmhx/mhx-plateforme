@@ -70,7 +70,8 @@ const outilAccueil = {
       ["Newsletter", nl.oui ? "oui" + (nl.depuis ? " (depuis le " + dt(nl.depuis) + ")" : "") : "non"],
       ["Questionnaire court", r.questionnaire ? "rempli le " + dt(r.questionnaire) : "pas encore rempli"]
     ].concat(Decouverte.reponsesCoach(I), [
-      ["Bouton « Réserver mon bilan »", r.clics ? r.clics + " clic" + (r.clics > 1 ? "s" : "") + (r.dernierClic ? ", le dernier le " + dt(r.dernierClic) : "") : "jamais cliqué"],
+      /* v65 (décision de Lucas du 30/09) : le nom du bouton d'aujourd'hui, comme la chronologie (avant : « Réserver mon bilan ») */
+      ["Bouton « Récupérer mon plan d'action »", r.clics ? r.clics + " clic" + (r.clics > 1 ? "s" : "") + (r.dernierClic ? ", le dernier le " + dt(r.dernierClic) : "") : "jamais cliqué"],
       /* v59 : une coche ou une case d'avant l'issue « Absent » / « Perdu » le dit (elle a servi à cet appel) */
       ["Bilan réservé", B.coach ? "oui, coché par toi le " + dt(B.coach) + (Commercial.avantIssue(S, B.coach) ? ", avant l'appel" : "")
         : B.source === "prospect" ? (Commercial.avantIssue(S, B.case) ? "case cochée par le prospect avant l'appel" : "à vérifier : le prospect a coché sa case") : B.retire ? "non (tu l'as retiré le " + dt(B.retire) + ")" : "non"],
@@ -80,7 +81,7 @@ const outilAccueil = {
     ]);
     const ligne = (k, v) => v ? `<li><span>${esc(k)}</span><b>${esc(String(v))}</b></li>` : "";
     const pastilles = (r.jour != null ? `<span class="pastille">${Decouverte.depuisTexte(r.jour)}</span>` : "")
-      + (B.reserve ? " " + Commercial.pastilleBilan(B) : r.clics ? ` <span class="pastille accent">a cliqué Réserver</span>` : "");
+      + (B.reserve ? " " + Commercial.pastilleBilan(B) : r.clics ? ` <span class="pastille accent">a cliqué Plan d'action</span>` : "");
     return `<section class="panel" id="fiche-decouverte"><div class="seance-c-tete"><h2>Découverte</h2>${pastilles}</div>
       <ul class="ingr fiche-l">${lignes.map(x => ligne(x[0], x[1])).join("")}</ul>
       <p class="note" style="margin:10px 0 0">Lecture seule : rien ne s'écrit d'ici.</p></section>`;

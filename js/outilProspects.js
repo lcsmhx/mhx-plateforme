@@ -60,10 +60,12 @@ const Commercial = {
   /* v59 : une date (ta coche, sa case) d'avant l'issue « Absent » / « Perdu » en cours : elle a servi à cet appel (analyse,
      et le bloc « Découverte » de la fiche) */
   avantIssue(S, v){ S = this.suivi(S); const tI = S.issue === "perdu" || S.issue === "absent" ? this.instant(S.issue_le) : null, tv = this.instant(v); return tI != null && tv != null && tv <= tI; },
-  /* ce qui le rend « à traiter » (texte court : tableau de bord, cartes) */
-  MOTIFS: { signe: "Signé : à passer client", case: "A coché « J'ai réservé » : à vérifier", absent: "Absent à l'appel : repropose-lui un créneau", clic: "A cliqué « Réserver mon bilan », pas de bilan coché", nouveau: "Vient de s'inscrire",
+  /* ce qui le rend « à traiter » (texte court : tableau de bord, cartes). v65 (décision de Lucas du 30/09) : côté coach, le
+     bouton porte son nom d'aujourd'hui, « Récupérer mon plan d'action » (motif, aide, faits, action, Nouveautés, CSV, pastille
+     « a cliqué Plan d'action ») ; avant : « Réserver mon bilan » / « a cliqué Réserver ». Les données ne changent pas. */
+  MOTIFS: { signe: "Signé : à passer client", case: "A coché « J'ai réservé » : à vérifier", absent: "Absent à l'appel : repropose-lui un créneau", clic: "A cliqué « Récupérer mon plan d'action », pas de bilan coché", nouveau: "Vient de s'inscrire",
     perdu: "Perdu : relance-le", appel: "Bilan réservé : l'appel a-t-il eu lieu ?" },   // v59 : + absent, perdu, appel (perdu et appel : avec depuis quand, motifTexte)
-  AIDE: "À traiter : les prospects inscrits depuis moins de 48 h, et ceux qui ont cliqué « Réserver mon bilan » ou coché « J'ai réservé », tant que tu n'as ni coché « Bilan réservé », ni indiqué l'issue de l'appel, ni relancé depuis ; les « Signé » à passer client ; les « Absent » (sans limite de durée) et les « Perdu » depuis 30 jours ou plus, tant que tu ne les as pas relancés depuis l'appel ; les bilans cochés depuis plus de 7 jours sans issue.",
+  AIDE: "À traiter : les prospects inscrits depuis moins de 48 h, et ceux qui ont cliqué « Récupérer mon plan d'action » ou coché « J'ai réservé », tant que tu n'as ni coché « Bilan réservé », ni indiqué l'issue de l'appel, ni relancé depuis ; les « Signé » à passer client ; les « Absent » (sans limite de durée) et les « Perdu » depuis 30 jours ou plus, tant que tu ne les as pas relancés depuis l'appel ; les bilans cochés depuis plus de 7 jours sans issue.",
   /* v59 : l'ordre de « À traiter » (page Prospects ; le tableau de bord a sa table, outilTableau.RANG_PROSPECTS) ; sans
      urgence ensuite : bilan coché 7, absent 8, perdu 9, le reste 10 (et une analyse de secours), signé 11 */
   RANG: { signe: 0, case: 1, absent: 2, clic: 3, nouveau: 4, appel: 5, perdu: 6 },
@@ -124,14 +126,14 @@ const Commercial = {
     const depuisH = heures == null ? "" : heures < 1 ? "il y a moins d'une heure" : "il y a " + Math.floor(heures) + " h";
     /* les faits, en clair (fiche : « Suivi commercial ») */
     const raisons = [];
-    if (issue && revenu) raisons.push("Revenu après l'issue « " + this.ISSUES[issue] + " » : a recliqué « Réserver » ou son bilan est de nouveau réservé.");
+    if (issue && revenu) raisons.push("Revenu après l'issue « " + this.ISSUES[issue] + " » : a recliqué « Récupérer mon plan d'action » ou son bilan est de nouveau réservé.");
     else if (issue) raisons.push("Appel : « " + this.ISSUES[issue] + " » " + this.quand(issueDepuis) + (typeof S.note === "string" && S.note ? " — " + S.note : "") + ".");
     if (ancienClient) raisons.push("Ancien client (« Signé » " + this.quand(this.depuis(S.issue_le)) + "), redevenu prospect.");
     if (B.coach) raisons.push("Bilan réservé : coché par toi " + this.quand(this.depuis(B.coach)) + (coche ? "" : ", avant l'appel") + ".");
     if (caseAv) raisons.push("A coché « J'ai réservé mon bilan » " + this.quand(this.depuis(caseAv)) + " : pas encore vérifié par toi.");
     else if (!B.coach && B.retire) raisons.push("« Bilan réservé » retiré par toi " + this.quand(this.depuis(B.retire)) + ".");
     raisons.push("Inscrit " + (heures != null && heures < 24 ? depuisH : this.quand(this.depuis(p && p.cree_le))) + (fait ? ", questionnaire rempli " + this.quand(this.depuis(r.questionnaire)) : commence > 0 ? ", questionnaire commencé (" + commence + "/" + total + " réponses)" : ", questionnaire pas encore rempli") + ".");
-    if (clics) raisons.push("A cliqué « Réserver mon bilan » (" + clics + " fois), la dernière " + this.quand(clic) + ".");
+    if (clics) raisons.push("A cliqué « Récupérer mon plan d'action » (" + clics + " fois), la dernière " + this.quand(clic) + ".");
     if (sansReponse) raisons.push("Relancé " + sansReponse + " fois sans réponse.");
     if (revenu) issue = null;   // il est de nouveau « en cours »
     /* à traiter : la définition simple (voir plus haut) */
@@ -167,7 +169,7 @@ const Commercial = {
     else if (coche){ action = dCoche != null && dCoche > cfg.appel_jours ? "Bilan réservé " + this.quand(dCoche) + " : l'appel a-t-il eu lieu ? Indique Signé, Perdu ou Absent." : "Prépare le bilan : relis sa fiche (ses 3 réponses). Après l'appel, indique Signé, Perdu ou Absent."; }
     else if (caseAv) action = "Il a coché « J'ai réservé » " + this.quand(this.depuis(caseAv)) + " : vérifie ton agenda, puis coche « Bilan réservé » dans sa fiche (ou retire-le).";
     else if (ancienClient) action = "Ancien client redevenu prospect : reprends contact si tu veux lui proposer de reprendre.";
-    else if (clics) action = siPasRelance("DM : il a cliqué « Réserver mon bilan » sans réserver, demande-lui ce qui le retient.");
+    else if (clics) action = siPasRelance("DM : il a cliqué « Récupérer mon plan d'action » sans réserver, demande-lui ce qui le retient.");
     else if (heures != null && heures < cfg.urgence_heures) action = siPasRelance("Il vient de s'inscrire : envoie-lui un DM de bienvenue.");
     else if (!fait) action = siPasRelance("DM : aide-le à répondre à ses 3 questions (1 minute).");
     else action = siPasRelance("Propose-lui le bilan en DM quand tu le sens prêt.");
@@ -425,8 +427,8 @@ const Nouveautes = {
      elle ne compte plus dès que le coach a décidé du bilan (coché ou retiré : Commercial.bilan) ; v59 : sauf une case
      cochée APRÈS sa dernière décision ; elle suit l'analyse (caseAVerifier) : ni une coche en cours, ni l'appel qui a suivi
      la case (Absent, Perdu) */
-  TYPES: { inscription: "inscription", questionnaire: "questionnaire rempli", clic: "clic « Réserver mon bilan »", reserve: "a coché « J'ai réservé »" },
-  COURTS: { inscription: ["inscription", "inscriptions"], questionnaire: ["questionnaire rempli", "questionnaires remplis"], clic: ["clic « Réserver »", "clics « Réserver »"], reserve: ["case « J'ai réservé »", "cases « J'ai réservé »"] },
+  TYPES: { inscription: "inscription", questionnaire: "questionnaire rempli", clic: "clic « Récupérer mon plan d'action »", reserve: "a coché « J'ai réservé »" },
+  COURTS: { inscription: ["inscription", "inscriptions"], questionnaire: ["questionnaire rempli", "questionnaires remplis"], clic: ["clic « Plan d'action »", "clics « Plan d'action »"], reserve: ["case « J'ai réservé »", "cases « J'ai réservé »"] },
   /* date de la derniere visite, relue a chaque affichage (un autre appareil a pu tout marquer comme vu).
      Une date qui n'est pas au format ISO (valeur piegee) compte comme absente. Lecture ratee : erreur = true,
      on garde la derniere valeur connue (sinon les 7 derniers jours) et on le dit dans le panneau. */
@@ -753,7 +755,9 @@ const outilProspects = {
   /* export CSV des prospects filtrés (v53 : colonnes à jour, sans statut ni score ; v59 : « Bilan réservé » et sa date
      suivent l'analyse, comme la carte : « oui », « à vérifier (case du prospect) », sinon « oui, avant l'appel » ou « case du
      prospect, avant l'appel ») */
-  TETE_CSV: ["Nom", "Email", "Inscrit le", "Problème", "Ce qui l'a bloqué", "Dans 3 mois", "Questionnaire", "Bilan réservé", "Bilan réservé le", "Case « J'ai réservé » (prospect)", "Newsletter", "Dernière visite", "Jours actifs (30 j)", "Clics « Réserver mon bilan »", "Dernier clic", "Issue", "Relances", "Prochaine action"],
+  /* v65 : « Clics « Récupérer mon plan d'action » » (avant : « Clics « Réserver mon bilan » ») : même place (14e colonne), même
+     contenu (le nombre de clics) ; aucun fichier du dépôt ne lit cet en-tête */
+  TETE_CSV: ["Nom", "Email", "Inscrit le", "Problème", "Ce qui l'a bloqué", "Dans 3 mois", "Questionnaire", "Bilan réservé", "Bilan réservé le", "Case « J'ai réservé » (prospect)", "Newsletter", "Dernière visite", "Jours actifs (30 j)", "Clics « Récupérer mon plan d'action »", "Dernier clic", "Issue", "Relances", "Prochaine action"],
   csv(liste){
     const dt = v => this.dateCsv(v);
     const lignes = liste.map(({ l, a }) => {
