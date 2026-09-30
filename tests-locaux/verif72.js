@@ -235,7 +235,7 @@ const etat = page => page.evaluate(() => ({
     ok("aucun fichier suivi (hors donnees/) ne contient l'email du compte coach ni celui d'un compte de test retirés le 30/09 (comparaison par empreinte)", liste.length > 50 && trouves.length === 0, JSON.stringify(Array.from(new Set(trouves))));
     /* v67 (audit du 01/10) : noms de vrais clients et d'une 2e personne à l'accès coach retirés de NOTES-GROK.md (avec leurs
        poids, taille et âge) — comparés mot par mot par empreinte SHA-256 : aucun nom n'est écrit ici. donnees/ (Grok) : hors
-       de ce contrôle, à nettoyer par Lucas ou Grok (donnees/audit-coherence.md, donnees/programme-stephanie.json). */
+       de ce contrôle, à nettoyer par Lucas ou Grok (donnees/audit-coherence.md et le programme au prénom d'une cliente). */
     const NOMS = ["c38c694be0201b1fe5ab1dd8dac366a9fbd75daae63e34a23cad3a38b70c21f7", "1a30f7a797eeea67688374ad30dd61f4a6bf5103ded33cafad6ea7da058b5137",
       "43d4bbc06fd3f0955e807d146b94490f9a600bc849a44c66df323b137554f307", "3471f50663eda35b15d9b3f3a77857ba011979b98d08d5df6e627069f0b5789d"];
     const avecNom = [];
@@ -256,10 +256,12 @@ const etat = page => page.evaluate(() => ({
     const pub = wf.slice(wf.indexOf("publication:"));
     let cfg = ""; try { cfg = fs.readFileSync(path.join(RACINE, "_config.yml"), "utf8"); } catch (e) {}   // filet si Pages repasse en mode Jekyll
     ok("pages.yml : la publication n'utilise plus jekyll-build-pages (qui publiait tout le dépôt) mais la liste blanche index.html, css/, js/, polices/, avec un garde-fou sur tout autre fichier et sur les fichiers listés par index.html, avant upload-pages-artifact ; _config.yml exclut notes, docs, tests et donnees/ si Pages repassait en mode Jekyll",
-      wf.indexOf("publication:") > -1 && !/jekyll-build-pages/.test(pub) && /cp index\.html _site\//.test(pub) && /cp -R css js polices _site\//.test(pub)
+      wf.indexOf("publication:") > -1 && !/jekyll-build-pages/.test(pub) && /cp index\.html _site\//.test(pub) && /for d in css js polices; do \[ ! -d "\$d" \] \|\| cp -RL "\$d" _site\/; done/.test(pub) && /find \. ! -type d/.test(pub)
         && /Fichiers inattendus dans le site/.test(pub) && /Fichier listé par index\.html absent/.test(pub)
         && pub.indexOf("Site publié") > -1 && pub.indexOf("Site publié") < pub.indexOf("upload-pages-artifact")
-        && /^exclude: \[docs, donnees, supabase, tests-locaux, CLAUDE\.md, NOTESCLAUDE\.md, NOTES-GROK\.md, README\.md\]$/m.test(cfg),
+        && /^exclude: \[docs, donnees, supabase, tests-locaux, CLAUDE\.md, NOTESCLAUDE\.md, NOTES-GROK\.md, README\.md\]$/m.test(cfg)
+        && pub.indexOf("upload-pages-artifact") > -1 && pub.indexOf("deploy-pages") > pub.indexOf("upload-pages-artifact")
+        && !/\b(with|path):/.test(pub.slice(pub.indexOf("upload-pages-artifact"), pub.indexOf("deploy-pages"))),   // chemin par défaut _site/ : jamais « path: . »
       pub.slice(0, 300));
   });
 

@@ -432,10 +432,10 @@ Catalogue `aliments` / `recettes` lisible en client : voulu (catalogue partagé)
 
 Fichier : `donnees/audit-coherence.md`. Rien corrigé.
 
-- **client A** : écart important entre le calcul et le questionnaire (poids, taille, âge) → plusieurs centaines de kcal/j d’écart. (Chiffres et nom retirés du dépôt public le 01/10/2026 : données de santé d’un vrai client.)
+- **client A** : écart important entre le calcul et le questionnaire (poids, taille, âge) → plusieurs centaines de kcal/j d’écart (activité restée en défaut, 10 h au lieu de 3 séances). (Chiffres et nom retirés du dépôt public le 01/10/2026 : données de santé d’un vrai client.)
 - **compte de test** : petit écart taille / âge → **+56 kcal/j**. Reliquat du seed âge/taille.
 - deux autres comptes clients : alignés. (Noms retirés du dépôt public le 01/10/2026.)
-- Lucas (coach) : calc de démonstration, pas d’intake.
+- Lucas (coach) : calc encore aux valeurs par défaut du calculateur, pas d’intake.
 
 Lucas tranche. Je ne touche pas aux fiches.
 

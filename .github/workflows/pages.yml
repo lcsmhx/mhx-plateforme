@@ -135,19 +135,20 @@ jobs:
       # vrais clients) étaient servis sur lcsmhx.github.io. L'app n'en lit aucun : icônes et logo sont intégrés à la page,
       # le catalogue est lu sur raw.githubusercontent.com (CONFIG.source_donnees). Garde-fou : tout autre fichier, ou un
       # fichier listé par index.html (MHX_CSS / MHX_JS) absent, arrête la publication (le site reste sur la version d'avant).
+      # Ne jamais annuler la v67 en bloc (git revert) : Jekyll republierait tout le dépôt (seul _config.yml protégerait).
       - name: "Site publié (liste blanche : index.html, css/, js/, polices/)"
         if: steps.source.outputs.type == 'workflow'
         run: |
           set -euo pipefail
           rm -rf _site && mkdir -p _site
           cp index.html _site/
-          cp -R css js polices _site/
-          autres=$(cd _site && find . -type f | grep -vE '^\./(index\.html|css/[A-Za-z0-9._-]+\.css|js/[A-Za-z0-9._-]+\.js|polices/[A-Za-z0-9._-]+\.(woff2|txt))$' | sort || true)
-          if [ -n "$autres" ]; then echo "::error::Fichiers inattendus dans le site : $autres"; exit 1; fi
-          listes=$(grep -oE '"(css|js)/[A-Za-z0-9._-]+\.(css|js)"' index.html | tr -d '"' | sort -u)
+          for d in css js polices; do [ ! -d "$d" ] || cp -RL "$d" _site/; done   # -L : aucun lien symbolique publié tel quel
+          autres=$(cd _site && find . ! -type d | grep -vE '^\./(index\.html|css/[A-Za-z0-9._-]+\.css|js/[A-Za-z0-9._-]+\.js|polices/[A-Za-z0-9._-]+\.(woff2|txt))$' | sort || true)
+          if [ -n "$autres" ]; then echo "::error::Fichiers inattendus dans le site : ${autres//$'\n'/, }"; exit 1; fi
+          listes=$(grep -oE '"(css|js)/[A-Za-z0-9._-]+\.(css|js)"' index.html | tr -d '"' | sort -u || true)
           [ -n "$listes" ] || { echo "::error::MHX_CSS / MHX_JS introuvables dans index.html"; exit 1; }
           for f in $listes; do [ -f "_site/$f" ] || { echo "::error::Fichier listé par index.html absent : $f"; exit 1; }; done
-          for f in $(grep -oE 'polices/[A-Za-z0-9._-]+\.woff2' css/*.css | cut -d: -f2 | sort -u); do [ -f "_site/$f" ] || { echo "::error::Police absente : $f"; exit 1; }; done
+          for f in $(grep -ohE 'polices/[A-Za-z0-9._-]+\.woff2' css/*.css | sort -u || true); do [ -f "_site/$f" ] || { echo "::error::Police absente : $f"; exit 1; }; done
           echo "Site : $(cd _site && find . -type f | wc -l) fichiers ($(echo "$listes" | wc -l) listés par index.html)"
 
       - uses: actions/upload-pages-artifact@v5

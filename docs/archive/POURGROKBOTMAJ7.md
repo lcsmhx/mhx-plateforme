@@ -81,7 +81,7 @@ sans explication visible. Le motif `miel` est maintenant gardé par
 
 2. **Contrôle de cohérence `calc` / `intake`.** Le point que je t'ai signalé
    en MAJ 6 s'est confirmé sur une vraie fiche cliente : calculateur à
-   80 kg / 178 cm / 25 ans alors que le formulaire dit 62 / 158 / 37.
+   80 kg / 178 cm / 25 ans alors que le formulaire dit autre chose (valeurs retirées le 01/10/2026).
    Environ 950 kcal d'écart par jour. Écris le contrôle, ne corrige rien
    sans validation du coach.
 

@@ -77,7 +77,7 @@ Deux sujets ouverts de ton côté, inchangés :
 
 En relisant la base aujourd'hui, j'ai trouvé une fiche cliente dont le
 calculateur portait les valeurs par défaut (80 kg / 178 cm / 25 ans) au
-lieu des siennes (62 / 158 / 37) : environ 950 kcal d'écart par jour. Le
+lieu des siennes (valeurs du questionnaire, retirées du dépôt public le 01/10/2026) : environ 950 kcal d'écart par jour. Le
 bug qui écrivait les défauts à l'ouverture est corrigé, mais **les fiches
 créées avant le 30 août peuvent encore porter ces valeurs**. Si tu écris un
 jour un contrôle de cohérence sur `donnees`, compare systématiquement
