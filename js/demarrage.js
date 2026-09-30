@@ -17,7 +17,7 @@ function sessionPerdue(){
     setTimeout(() => { const z = $("co-err"); if (z){ z.className = "erreur"; z.textContent = trad("Reconnecte-toi : ce que tu avais saisi est gardé sur cet appareil et repartira."); } }, 60);
   });
 }
-let lienEmail = null, lienEmailType = "", lienEmailAdresse = "";   // v47 : "ok" | "autre_compte" | "rate_connecte" apres un lien d'email (mot affiche une fois l'ecran construit)
+let lienEmail = null;   // v47 : "rate_connecte" apres un lien d'email (mot affiche une fois l'ecran construit) ; v66 : seule valeur restante
 
 (async function demarrer(){
   /* v52 : l'app gere seule le defilement (afficher remonte en haut). Sans cela, apres « Se connecter » (rechargement),
@@ -33,15 +33,17 @@ let lienEmail = null, lienEmailType = "", lienEmailAdresse = "";   // v47 : "ok"
   const p = lireAdresse();
   let premierLien = false, emailChange = false;   // v52 : changement d'adresse (premier lien / dernier lien)
 
-  /* lien de reinitialisation recu par email */
-  if (p.type === "recovery" && p.access_token){ ecranNouveauMotDePasse(p.access_token); return; }
-  /* v47 — lien de confirmation d'inscription (ou lien magique) : entree directe */
-  if (p.access_token && p.refresh_token && (p.type === "signup" || p.type === "magiclink")){
-    if (!(await entrerParLien(p))) return;
-  } else if (p.access_token){
-    try { history.replaceState(null, "", location.pathname + location.search); } catch(e){}   // autre lien (changement d'email…) : les jetons ne restent pas dans l'adresse
+  /* v66 (securite) : des jetons de connexion dans l'adresse (#access_token=…) n'ouvrent plus JAMAIS de session, ni ne
+     menent a l'ecran « nouveau mot de passe ». Aucun parcours de l'app n'en envoie (« Mot de passe oublie » donne
+     l'adresse du coach depuis la v52, « Confirm email » est coupe dans Supabase) ; un lien fabrique par un tiers avec
+     SES jetons faisait entrer dans SON compte (saisies de sante chez lui, ou mot de passe choisi pose sur son compte).
+     Les jetons sont retires de l'adresse sans etre lus ni envoyes nulle part ; « Ce lien n'est plus valable ». Le dernier
+     lien d'un changement d'adresse (type=email_change) garde son mot : il n'a jamais ouvert de session. */
+  if (p.access_token){
+    try { history.replaceState(null, "", location.pathname + location.search); } catch(e){}
     /* v52 : dernier lien d'un changement d'adresse : le changement est fait, on le dit */
     if (p.type === "email_change") emailChange = true;
+    else lienEmail = "rate_connecte";
   }
   /* v47 — lien perime ou deja utilise : Supabase revient SANS jeton, avec #error=…&error_code=otp_expired&error_description=…
      (deuxieme clic sur l'email de confirmation, lien de plus de 24 h, lien « visite » par un filtre anti-spam).
@@ -70,7 +72,8 @@ let lienEmail = null, lienEmailType = "", lienEmailAdresse = "";   // v47 : "ok"
      creation de compte ; sinon, l'ecran de connexion comme n'importe quelle autre adresse. */
   if (!Auth.connecte()){
     portail(/inscription/.test(location.hash) ? "inscription" : "connexion");
-    if (premierLien || emailChange) setTimeout(() => { const z = $("co-err"); if (z){ z.className = "erreur ok"; z.textContent = trad(DECOUVERTE.inscription[emailChange ? "email_change" : "premier_lien"]); } }, 60);
+    if (lienEmail) setTimeout(() => { const z = $("co-err"); if (z){ z.className = "erreur"; z.textContent = trad(DECOUVERTE.inscription.lien_rate); } }, 60);
+    else if (premierLien || emailChange) setTimeout(() => { const z = $("co-err"); if (z){ z.className = "erreur ok"; z.textContent = trad(DECOUVERTE.inscription[emailChange ? "email_change" : "premier_lien"]); } }, 60);
     return;
   }
   const ok = await Auth.assurer();
@@ -116,11 +119,7 @@ let lienEmail = null, lienEmailType = "", lienEmailAdresse = "";   // v47 : "ok"
   window.addEventListener("hashchange", routeDepuisAdresse);
   /* v47 — un mot apres un lien d'email, une fois l'ecran construit */
   if ((premierLien || emailChange) && !lienEmail) setTimeout(() => { try { UI.toast(trad(DECOUVERTE.inscription[emailChange ? "email_change" : "premier_lien"]), "ok", 9000); } catch(e){} }, 600);
-  if (lienEmail) setTimeout(() => { try {
-    const T = DECOUVERTE.inscription;
-    const cle = lienEmail === "ok" ? (lienEmailType === "signup" && Auth.estProspect() ? "lien_ok" : "lien_entree") : lienEmail === "autre_compte" ? "lien_autre_compte" : "lien_rate_connecte";
-    UI.toast(trad(T[cle], { e: lienEmailAdresse ? " (" + lienEmailAdresse + ")" : "" }), lienEmail === "ok" ? "ok" : "attention", 7000);
-  } catch(e){} }, 600);
+  if (lienEmail) setTimeout(() => { try { UI.toast(trad(DECOUVERTE.inscription.lien_rate_connecte), "attention", 7000); } catch(e){} }, 600);
 
   /* Premiere connexion d'un client : on l'envoie remplir son profil */
   if (!Auth.estCoach() && !Auth.estProspect()){

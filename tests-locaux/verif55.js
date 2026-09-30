@@ -189,16 +189,17 @@ function parOutil(l, o){
 const colonnes = (l, q) => { const sel = (q.get("select") || "*").split(","); return sel.includes("*") ? l : l.map(x => Object.fromEntries(sel.map(k => [k, x[k]]))); };
 const appelant = req => { const m = /^Bearer (?:jeton-|lien\.)([0-9a-f-]{36})/.exec(req.headers()["authorization"] || ""); return m ? m[1] : null; };
 
-/* polices simulées (db.polices = { css: ms, fichiers: ms }) : une feuille de style comme celle de Google Fonts, dont les
-   fichiers de police (fonts.gstatic.com) répondent après « fichiers » ms (404 : le texte garde la police de secours) */
-const POLICES_CSS = ["IBM Plex Sans", "IBM Plex Mono", "Oswald"].map((f, i) => "@font-face{font-family:'" + f + "';font-style:normal;font-weight:400;font-display:swap;src:url(https://fonts.gstatic.com/s/police" + i + "/v1/fausse.woff2) format('woff2')}").join("\n");
+/* polices lentes (db.polices = { css: ms, fichiers: ms }) — v66 : hébergées dans polices/ (plus de Google Fonts) ; la feuille
+   qui les déclare (css/jetons.css) répond après « css » ms, les fichiers woff2 après « fichiers » ms */
 async function repondre(r, who, db){
   const req = r.request(), u = req.url(), host = new URL(u).hostname;
-  if (host === "localhost") return r.continue();
+  if (host === "localhost") {
+    const pa = new URL(u).pathname;
+    if (db.polices && db.polices.css && pa === "/css/jetons.css") await new Promise(z => setTimeout(z, db.polices.css));
+    if (db.polices && db.polices.fichiers && /^\/polices\//.test(pa)) await new Promise(z => setTimeout(z, db.polices.fichiers));
+    return r.continue().catch(() => {});
+  }
   if (host === "www.youtube-nocookie.com") return r.fulfill({ status: 200, contentType: "text/html", body: "<html><body></body></html>" });
-  /* polices lentes (réseau mobile) : la feuille de style après db.polices.css ms, les fichiers après db.polices.fichiers ms */
-  if (host === "fonts.googleapis.com" && db.polices) { externes.add(host); if (db.polices.css) await new Promise(z => setTimeout(z, db.polices.css)); return r.fulfill({ status: 200, contentType: "text/css", body: POLICES_CSS }).catch(() => {}); }
-  if (host === "fonts.gstatic.com" && db.polices) { externes.add(host); if (db.polices.fichiers) await new Promise(z => setTimeout(z, db.polices.fichiers)); return r.fulfill({ status: 404, contentType: "text/plain", body: "" }).catch(() => {}); }
   if (!host.endsWith(".supabase.co")) { externes.add(host); return r.abort(); }   // polices, Calendly, Instagram… : rien ne sort
   const url = new URL(u), p = url.pathname, q = url.searchParams, m = req.method();
   const json = (body, status) => r.fulfill({ status: status || 200, contentType: "application/json", headers: { "Access-Control-Allow-Origin": "*" }, body: body === null ? "" : JSON.stringify(body) }).catch(() => {});   // page fermée entre-temps
@@ -799,7 +800,7 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
        fichiers de police arrivent après l'affichage du Profil (réseau mobile), le Profil sautait à 230 px, l'encadré caché
        sous l'en-tête (mesuré sur la v51). Feuille de style elle-même retenue : les scripts attendent, même contrôle. */
     let k = 0;
-    for (const [quoi, polices] of [["fichiers de police retardés de 2,5 s", { fichiers: 2500 }], ["feuille des polices (fonts.googleapis.com) retenue 2,5 s", { css: 2500 }], ["polices immédiates", {}]]) {
+    for (const [quoi, polices] of [["fichiers de police retardés de 2,5 s", { fichiers: 2500 }], ["feuille des polices (css/jetons.css) retenue 2,5 s", { css: 2500 }], ["polices immédiates", {}]]) {
       const CAM = PID(20 + k), mail = "camille" + k++ + "@exemple.fr";
       const db = base({ comptes: [{ id: CAM, prenom: "Camille", nom: "Martin", statut: "client", cree: avant(J), email: mail }] });
       db.connexions[mail] = CAM; db.polices = polices;
@@ -949,7 +950,8 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
         ok("… copie emails { newsletter: true } à la première ouverture", ecr(db, "emails", ZID).length === 1 && (ecr(db, "emails", ZID)[0].contenu || {}).newsletter === true, resume(db));
         await c.close();
       }
-      /* « Confirm email » activé : pas de session à l'inscription ; la copie se fait à l'ouverture par le lien */
+      /* « Confirm email » activé : pas de session à l'inscription ; v66 : le lien de l'email n'ouvre plus de session (jetons
+         ignorés) : la copie se fait à la première connexion par mot de passe */
       {
         const ZID = PID(43), db = base(); db.inscription.id = ZID; db.inscription.confirmation = true;
         const { c, page } = await contexte(b, null, db);
@@ -961,10 +963,15 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
         await page.close();
         const p2 = await nouvellePage(c);
         await p2.goto(URL0 + "#access_token=lien." + ZID + ".x&expires_in=3600&refresh_token=renouvellement-" + ZID + "&token_type=bearer&type=signup");
+        await p2.waitForSelector("#c-go", { timeout: 10000 }); await attendre(p2, 400);
+        const l0 = { url: p2.url(), err: await texte(p2, "#co-err"), session: await p2.evaluate(() => !!(localStorage.getItem("mhx_session") || sessionStorage.getItem("mhx_session"))), ecrit: ecrDonnees(db).length };
+        db.connexions["zoe3@exemple.fr"] = ZID;
+        await p2.fill("#c-email", "zoe3@exemple.fr"); await p2.fill("#c-mdp", "motdepasse1");
+        await Promise.all([p2.waitForNavigation({ waitUntil: "load", timeout: 15000 }), p2.click("#c-go")]);
         await pret(p2); await attendre(p2, 2200);
         const E1 = ecr(db, "emails", ZID), md = db.meta[ZID] || {};
-        ok("… clic sur le lien de l'email : prospecte connectée, la newsletter de ses métadonnées (lues par /auth/v1/user) est recopiée une fois : { newsletter: true, maj = date de la case, version, source: \"inscription\" }",
-          (await p2.evaluate(() => Auth.estProspect()).catch(() => false)) && E1.length === 1 && JSON.stringify(E1[0].contenu) === JSON.stringify({ newsletter: true, maj: md.newsletter, version: V_NEWS_INSC, source: "inscription" }) && !/access_token/.test(p2.url()), JSON.stringify(E1.map(x => x.contenu)) + " · " + p2.url());
+        ok("… clic sur le lien de l'email : aucune session (« Ce lien n'est plus valable », adresse nettoyée, rien d'écrit) ; connectée par mot de passe, prospecte, la newsletter de ses métadonnées (lues par /auth/v1/user) est recopiée une fois : { newsletter: true, maj = date de la case, version, source: \"inscription\" }",
+          !l0.session && l0.err.startsWith("Ce lien n'est plus valable") && !/access_token/.test(l0.url) && l0.ecrit === 0 && (await p2.evaluate(() => Auth.estProspect()).catch(() => false)) && E1.length === 1 && JSON.stringify(E1[0].contenu) === JSON.stringify({ newsletter: true, maj: md.newsletter, version: V_NEWS_INSC, source: "inscription" }), JSON.stringify(l0) + " · " + JSON.stringify(E1.map(x => x.contenu)));
         await c.close();
       }
     }));
@@ -1360,8 +1367,8 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
 
   /* =================== Z. rien vers l'extérieur =================== */
   await bloc("Z. hôtes externes", async () => {
-    const autres = Array.from(externes).filter(h => !/^fonts\.(googleapis|gstatic)\.com$/.test(h));
-    ok("aucune requête vers un autre hôte que la page, le faux Supabase et les polices (bloquées ou simulées)", autres.length === 0, JSON.stringify(autres));
+    const autres = Array.from(externes);   // v66 : polices hébergées, plus d'exception pour Google Fonts
+    ok("aucune requête vers un autre hôte que la page et le faux Supabase (polices comprises : plus de Google Fonts)", autres.length === 0, JSON.stringify(autres));
   });
 
   await b.close(); server.close();

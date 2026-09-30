@@ -66,13 +66,13 @@ Un commentaire en tête de fichier donne la carte des sections, dans l'ordre :
 - **Graphiques** : SVG inline maison (pas de librairie), avec curseur/tooltip. Courbes de poids et de mensurations.
 - Thème clair/sombre automatique, responsive (0 px de débordement horizontal testé en 390×844).
 - Tests Playwright passés sans erreur console ni `pageerror` sur : auth, questionnaire, reset, programmes, bibliothèque, vue coach.
-- **En production, la boucle complète a tourné pour de vrai** : compte coach `lucasmahauxpro@gmail.com` (role `coach`) et un compte client de test, tous deux connectés au moins une fois, chacun avec une ligne de données en base.
+- **En production, la boucle complète a tourné pour de vrai** : compte coach (email du compte coach retiré du dépôt public le 30/09/2026) (role `coach`) et un compte client de test, tous deux connectés au moins une fois, chacun avec une ligne de données en base.
 
 ## 5. Ce qui reste à faire, dans l'ordre
 1. **Réglages Supabase côté Lucas (bloquant pour les vrais clients)** — à faire par lui dans le dashboard, pas par code :
    - désactiver **« Confirm email »** (`Authentication → Providers → Email`) pour que les comptes créés soient utilisables immédiatement ;
    - vérifier que **Site URL** et **Redirect URLs** pointent bien sur `https://lcsmhxcoaching.netlify.app` (elles pointaient au départ sur `localhost:3000`, ce qui cassait le lien de confirmation) ;
-   - supprimer le compte de test `lucasmahaux@hotmail.com`.
+   - supprimer le compte de test (email du compte de test retiré du dépôt public le 30/09/2026).
 2. **Suivi de l'évolution dans le temps — partie non faite.** Aujourd'hui le coach voit les courbes d'**un** client à la fois quand il ouvre sa fiche. Il manque : un tableau de bord transversal (tous les clients, variation de poids/mensurations sur 4 semaines) et une alerte d'inactivité (client sans nouvelle donnée depuis X jours). C'est le chantier principal restant.
 3. **Améliorations possibles ensuite** (pas demandées explicitement, à valider avec Lucas avant de coder) : historique des programmes envoyés, export PDF d'un programme, notes du coach sur une fiche client.
 

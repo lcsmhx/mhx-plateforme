@@ -109,8 +109,8 @@ function base(opts){
   const db = { profils, donnees, emails_prospects: [], sansJournal: false, ecritures: [], refus: [], lectures: [], journal: [], chemins: [],
     fonctions: [], inscriptions: [], emails: {}, connexions: {}, inscription: {}, lectureKo: opts.lectureKo || [], retardLecture: {}, retard: {},
     reponseFonction: { status: 200, body: { ok: true } },
-    /* v52 (lot A) : mot de passe oublié et changement d'adresse (erreurs simulées), renouvellements de session, polices lentes */
-    oublis: [], recover: {}, majUsers: [], majUser: {}, tokens: [], polices: null };
+    /* v52 (lot A) : mot de passe oublié et changement d'adresse (erreurs simulées), renouvellements de session */
+    oublis: [], recover: {}, majUsers: [], majUser: {}, tokens: [] };
   for (const x of opts.comptes || []) {
     profils.push({ id: x.id, prenom: x.prenom, nom: x.nom || "", role: "client", statut: x.statut || "prospect", cree_le: x.cree || avant(J) });
     if (x.email) db.emails[x.id] = x.email;
@@ -144,16 +144,10 @@ function parOutil(l, o){
 const colonnes = (l, q) => { const sel = (q.get("select") || "*").split(","); return sel.includes("*") ? l : l.map(x => Object.fromEntries(sel.map(k => [k, x[k]]))); };
 const appelant = req => { const m = /^Bearer (?:jeton-|lien\.)([0-9a-f-]{36})/.exec(req.headers()["authorization"] || ""); return m ? m[1] : null; };
 
-/* polices simulées (db.polices = { css: ms, fichiers: ms }) : une feuille de style comme celle de Google Fonts, dont les
-   fichiers de police (fonts.gstatic.com) répondent après « fichiers » ms (404 : le texte garde la police de secours) */
-const POLICES_CSS = ["IBM Plex Sans", "IBM Plex Mono", "Oswald"].map((f, i) => "@font-face{font-family:'" + f + "';font-style:normal;font-weight:400;font-display:swap;src:url(https://fonts.gstatic.com/s/police" + i + "/v1/fausse.woff2) format('woff2')}").join("\n");
 async function repondre(r, who, db){
   const req = r.request(), u = req.url(), host = new URL(u).hostname;
   if (host === "localhost") return r.continue();
   if (host === "www.youtube-nocookie.com") return r.fulfill({ status: 200, contentType: "text/html", body: "<html><body></body></html>" });
-  /* polices lentes (réseau mobile) : la feuille de style après db.polices.css ms, les fichiers après db.polices.fichiers ms */
-  if (host === "fonts.googleapis.com" && db.polices) { externes.add(host); if (db.polices.css) await new Promise(z => setTimeout(z, db.polices.css)); return r.fulfill({ status: 200, contentType: "text/css", body: POLICES_CSS }).catch(() => {}); }
-  if (host === "fonts.gstatic.com" && db.polices) { externes.add(host); if (db.polices.fichiers) await new Promise(z => setTimeout(z, db.polices.fichiers)); return r.fulfill({ status: 404, contentType: "text/plain", body: "" }).catch(() => {}); }
   if (!host.endsWith(".supabase.co")) { externes.add(host); return r.abort(); }   // polices, Calendly, Instagram… : rien ne sort
   const url = new URL(u), p = url.pathname, q = url.searchParams, m = req.method();
   const json = (body, status) => r.fulfill({ status: status || 200, contentType: "application/json", headers: { "Access-Control-Allow-Origin": "*" }, body: body === null ? "" : JSON.stringify(body) }).catch(() => {});   // page fermée entre-temps
@@ -943,8 +937,8 @@ const NOUVEAUX = ["Ton bilan de la semaine du {a} au {b} n'est pas encore fait :
 
   /* =================== Z. rien vers l'extérieur =================== */
   await bloc("Z. hôtes externes", async () => {
-    const autres = Array.from(externes).filter(h => !/^(fonts\.(googleapis|gstatic)\.com|img\.youtube\.com)$/.test(h));
-    ok("aucune requête vers un autre hôte que la page, le faux Supabase et les polices (bloquées)", autres.length === 0, JSON.stringify(autres));
+    const autres = Array.from(externes).filter(h => !/^img\.youtube\.com$/.test(h));   // v66 : plus d'exception pour Google Fonts (polices hébergées)
+    ok("aucune requête vers un autre hôte que la page, le faux Supabase et les aperçus YouTube (bloqués) ; plus aucune vers Google Fonts", autres.length === 0, JSON.stringify(autres));
   });
 
   await b.close(); server.close();

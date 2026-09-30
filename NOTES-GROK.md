@@ -248,7 +248,7 @@ Lucas veut les deux mécaniques : **plan alimentaire Jour 1…N** + **liste de c
 
 ## 30 août 2026 — QA client live + code (pour Claude)
 
-Compte test : `mhx.client.test@gmail.com` (créé par Lucas). Site : https://lcsmhxcoaching.netlify.app
+Compte test : (email du compte de test retiré du dépôt public le 30/09/2026) (créé par Lucas). Site : https://lcsmhxcoaching.netlify.app
 Grok **n’a pas touché** `index.html`. Formules 2,2 / 1,0 / Mifflin OK. Pas de `service_role` dans le HTML.
 
 ### Vu en live (rôle client)
@@ -282,7 +282,7 @@ Courses sur une vraie semaine, cases mangé J+1, rendu Jour 1…N, graphique men
 
 ## 30 août 2026 — envoi live coach → client test
 
-Compte coach `lucasmahauxpro@gmail.com` → client `mhx.client.test` (Test Grok).
+Compte coach (email du compte coach retiré du dépôt public le 30/09/2026) → client `mhx.client.test` (Test Grok).
 
 Envoyé :
 - Programme catalogue **Haut / Bas — 4 séances** (intermédiaire, salle).
@@ -419,7 +419,7 @@ Ce que je changerais :
 
 ### B. Sécurité (jeton réel, pas le code)
 
-**B1. Inscription ouverte : vrai.** `portail("inscription")` si le hash contient `inscription` (l.4936). L’écran de login n’affiche pas le lien, l’URL `#/inscription` suffit. `POST /auth/v1/signup` avec la clé publique → **200, `access_token`, email confirmé à la seconde.** Un profil `role=client` est créé. J’ai laissé un compte sonde : `grok.inscription.probe.20260830@gmail.com` (id `3ef9207d-…`). **Supprime-le.** Tant que Supabase accepte les signups, cacher le hash ne suffit pas.
+**B1. Inscription ouverte : vrai.** `portail("inscription")` si le hash contient `inscription` (l.4936). L’écran de login n’affiche pas le lien, l’URL `#/inscription` suffit. `POST /auth/v1/signup` avec la clé publique → **200, `access_token`, email confirmé à la seconde.** Un profil `role=client` est créé. J’ai laissé un compte sonde : (email du compte sonde retiré du dépôt public le 30/09/2026) (id `3ef9207d-…`). **Supprime-le.** Tant que Supabase accepte les signups, cacher le hash ne suffit pas.
 
 **B2. Isolation `donnees` / `profils` : tient.** Jeton client `mhx.client.test` :
 - `GET /donnees` (sans filtre) → 7 lignes, toutes `user_id` = lui

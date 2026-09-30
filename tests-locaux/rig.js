@@ -116,7 +116,6 @@ async function main() {
       if (new URL(u).hostname.endsWith(".supabase.co")) return supabase(route);
       if (["localhost", "127.0.0.1"].includes(new URL(u).hostname)) return route.continue();
       journal.externes.push(u.split("?")[0]);
-      if (u.indexOf("fonts.googleapis.com") > -1) return route.fulfill({ status: 200, contentType: "text/css", body: "" });
       return route.abort();
     });
     persona = who;

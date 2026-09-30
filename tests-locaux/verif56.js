@@ -562,10 +562,16 @@ function lienOk(href, base, attendu){
   await bloc("B. arrivée par le lien", async () => {
     const ID = PID(10), mail = "lea@exemple.fr";
     const db = base({ comptes: [{ id: ID, prenom: "Léa", nom: "Martin", cree: avant(5 * MIN), email: mail }] });
-    const { c, page } = await contexte(b, null, db);
-    await page.goto(URL0 + LIEN(ID)); await pret(page, "#q-probleme");
+    /* v66 (sécurité) : un lien portant des jetons (#access_token=…) n'ouvre plus de session ; la personne se connecte avec
+       son email et son mot de passe (session posée ici), et arrive sur le même accueil */
+    const x0 = await contexte(b, null, db);
+    await x0.page.goto(URL0 + LIEN(ID)); await x0.page.waitForSelector("#c-go", { timeout: 10000 }); await attendre(x0.page, 400);
+    const l0 = { url: x0.page.url(), err: await texte(x0.page, "#co-err"), session: await x0.page.evaluate(() => !!(localStorage.getItem("mhx_session") || sessionStorage.getItem("mhx_session"))) };
+    await x0.c.close();
+    const { c, page } = await contexte(b, qui(ID, mail), db);
+    await page.goto(URL0); await pret(page, "#q-probleme");
     const d = await ou(page), v = await texte(page, "#vue");
-    ok("clic dans l'email de confirmation : connecté, adresse nettoyée, l'accueil est le questionnaire court", d.courant === "accueil" && !/access_token/.test(page.url()) && !!(await page.$("#vue #q-probleme")), JSON.stringify(d) + " · " + page.url());
+    ok("lien de l'email (jetons dans l'adresse) : aucune session, « Ce lien n'est plus valable », adresse nettoyée ; connectée par mot de passe, l'accueil est le questionnaire court", !l0.session && l0.err.startsWith("Ce lien n'est plus valable") && !/access_token/.test(l0.url) && d.courant === "accueil" && !!(await page.$("#vue #q-probleme")), JSON.stringify(l0) + " · " + JSON.stringify(d));
     /* v60 (brief V2, C) : 3 questions à toucher (fieldset) ; plus aucune liste (select) ni texte libre à la place des questions */
     const champs = await page.$$eval("#vue [id^='q-']", l => l.map(e => e.id + ":" + e.tagName + (e.dataset.type ? ":" + e.dataset.type : "") + (e.dataset.max ? ":" + e.dataset.max : ""))).catch(() => []);
     ok("exactement 3 questions à toucher : #q-probleme (cartes), #q-obstacle (pastilles, 2 au plus, message « max ») et #q-projection (pastilles), une précision libre sous les deux dernières ; plus aucune liste ; plus aucune question d'âge", JSON.stringify(champs) === '["q-probleme:FIELDSET:cartes","q-obstacle:FIELDSET:choix:2","q-obstacle-max:P","q-obstacle-precision:TEXTAREA","q-projection:FIELDSET:choix","q-projection-precision:TEXTAREA"]' && !(await page.$("#vue select")) && !(await page.$("#q-age")) && !v.includes("À partir de"), JSON.stringify(champs));

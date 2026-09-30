@@ -186,9 +186,9 @@ function portail(mode){
   document.addEventListener("keydown", portail._entree);
 }
 
-/* ---------------------- NOUVEAU MOT DE PASSE ----------------------
-   Quand le client clique sur le lien recu par email, Supabase le renvoie
-   ici avec un jeton dans l'adresse. On lui fait choisir son mot de passe. */
+/* ---------------------- ADRESSE ----------------------
+   Les parametres apres « # » (liens d'email de Supabase : changement d'adresse, lien perime). v66 : des jetons de
+   connexion n'y ouvrent plus jamais de session (demarrage.js). */
 function lireAdresse(){
   const h = (location.hash || "").replace(/^#\/?/, "");
   const p = {};
@@ -216,75 +216,5 @@ function ecranVerifieEmail(email){
       <div class="bascule"><button type="button" data-mode="connexion">${esc(trad(T.verif_retour))}</button></div>`;
   $$("[data-mode]", carte).forEach(b => b.addEventListener("click", () => portail(b.dataset.mode)));
   const h2 = $("co-verif"); if (h2) h2.focus();
-}
-
-/* v47 — entree par un lien recu par email (confirmation d'inscription, lien magique) : les jetons
-   sont dans l'adresse. On va chercher la personne avec ce jeton, on memorise la session comme
-   apres une connexion, on retire les jetons de l'adresse, et le demarrage continue (un prospect
-   arrive sur son jour 1). Lien perime : la connexion, avec un mot ; deja connecte sur cet
-   appareil : on entre quand meme, avec un mot. */
-async function entrerParLien(p){
-  const nettoyer = () => { try { history.replaceState(null, "", location.pathname + location.search); } catch(e){} };
-  Auth.charger();
-  const avant = Auth.utilisateur();   // un compte deja connecte sur cet appareil ?
-  try {
-    if (!/^[\w-]+\.[\w-]+\.[\w-]*$/.test(String(p.access_token))) throw Object.assign(new Error("sans utilisateur"), { statut: 400 });   // un jeton qui n'en a pas la forme : pas d'appel
-    const u = await Auth.appel("/auth/v1/user", { avecJeton: false, headers: { "Authorization": "Bearer " + p.access_token } });
-    if (!u || typeof u !== "object" || typeof u.id !== "string" || !u.id) throw new Error("sans utilisateur");
-    nettoyer();
-    lienEmailType = p.type; lienEmailAdresse = typeof u.email === "string" ? u.email : "";
-    /* un autre compte est connecte : on ne bascule jamais en silence (un lien envoye par un tiers
-       ferait saisir ses reponses dans le compte du tiers) ; l'email du lien est de toute facon confirme */
-    if (avant && avant.id && avant.id !== u.id){ lienEmail = "autre_compte"; return true; }
-    Auth.persistant = true;
-    const duree = Math.min(Math.max(parseInt(p.expires_in, 10) || 3600, 60), 3600);   // borne : un lien fabrique ne doit pas figer une session
-    Auth.memoriser({ access_token: p.access_token, refresh_token: p.refresh_token, expires_in: duree, token_type: p.token_type || "bearer", user: u });
-    lienEmail = "ok";
-    return true;
-  } catch(e){
-    nettoyer();
-    Auth.charger();
-    if (Auth.connecte()){ lienEmail = "rate_connecte"; return true; }
-    /* jeton refuse (4xx) : lien plus valable ; sinon (reseau, 5xx) l'email est confirme mais l'entree a echoue */
-    const refuse = e && e.statut >= 400 && e.statut < 500 && e.statut !== 429;   // 429 = trop de demandes, pas un lien perime
-    portail("connexion");
-    setTimeout(() => { const z = $("co-err"); if (z){ z.className = "erreur"; z.textContent = trad(DECOUVERTE.inscription[refuse || !(e && e.statut) && /sans utilisateur/.test(String(e && e.message)) ? "lien_rate" : "lien_reseau"]); } }, 60);
-    return false;
-  }
-}
-
-function ecranNouveauMotDePasse(jeton){
-  document.body.innerHTML = `
-  <div class="portail">
-    <div class="carte-co">
-      ${CONFIG.marque.logo ? `<img class="logo-img" src="${esc(CONFIG.marque.logo)}" alt="${esc(CONFIG.marque.nom)}">` : ""}
-      <div class="logo">${esc(CONFIG.marque.nom)}</div>
-      ${CONFIG.marque.programme ? `<div class="sous">${esc(CONFIG.marque.programme)}</div>` : ""}
-      <h2>Choisis ton nouveau mot de passe</h2>
-      <div id="co-err"></div>
-      <div class="champ"><label for="r-mdp">Nouveau mot de passe</label><input id="r-mdp" type="password" autocomplete="new-password"></div>
-      <div class="champ"><label for="r-mdp2">Confirme-le</label><input id="r-mdp2" type="password" autocomplete="new-password"></div>
-      <button class="btn" id="r-go">Enregistrer</button>
-    </div>
-  </div>`;
-  const err = (m, ok) => { const e = $("co-err"); e.className = "erreur" + (ok ? " ok" : ""); e.textContent = m; };
-  $("r-go").addEventListener("click", async () => {
-    const a = $("r-mdp").value, b = $("r-mdp2").value;
-    if (a.length < 6){ err("Le mot de passe doit faire au moins 6 caractères."); return; }
-    if (a !== b){ err("Les deux mots de passe ne sont pas identiques."); return; }
-    const bouton = $("r-go"); bouton.disabled = true; bouton.textContent = "Un instant…";
-    try {
-      await fetch(CONFIG.supabase.url + "/auth/v1/user", {
-        method: "PUT",
-        headers: { "apikey": CONFIG.supabase.cle, "Content-Type": "application/json", "Authorization": "Bearer " + jeton },
-        body: JSON.stringify({ password: a })
-      }).then(async r => { if (!r.ok) throw new Error((await r.json()).msg || "Lien expiré."); });
-      err("Mot de passe enregistré. Tu peux te connecter.", true);
-      setTimeout(() => { location.hash = ""; location.reload(); }, 1400);
-    } catch(e){
-      err(e.message || "Ce lien n'est plus valable. Redemande-en un depuis « Mot de passe oublié ».");
-      bouton.disabled = false; bouton.textContent = "Enregistrer";
-    }
-  });
 }
 

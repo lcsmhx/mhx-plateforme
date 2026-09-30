@@ -5,7 +5,7 @@
    js/config.js).
 
    servirFichier(req, res, html, retouche, lire)
-     sert /css/<nom>.css ou /js/<nom>.js (404 s'il n'existe pas) et renvoie true ; sinon renvoie false (la suite sert
+     sert /css/<nom>.css ou /js/<nom>.js (404 s'il n'existe pas) — v66 : et /polices/<nom>.woff2, tel quel — et renvoie true ; sinon renvoie false (la suite sert
      la page comme avant). retouche(texte) : facultative, appliquée au fichier comme à la page. lire(chemin) :
      facultatif, remplace la lecture sur le disque (verif52 : fichiers d'une révision git de référence).
    source(html, lire)
@@ -107,6 +107,16 @@ const TYPES = { ".css": "text/css; charset=utf-8", ".js": "text/javascript; char
 
 function servirFichier(req, res, html, retouche, lire){
   const p = decodeURIComponent(String(req.url || "").split("?")[0].split("#")[0]);
+  /* v66 : les polices hebergees dans polices/ (woff2, plus de Google Fonts) : servies telles quelles depuis le disque */
+  const pol = /^\/(polices\/[A-Za-z0-9._-]+\.woff2)$/.exec(p);
+  if (pol){
+    let b;
+    try { b = fs.readFileSync(path.join(path.dirname(html), pol[1])); }
+    catch (e) { res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" }); res.end("absent : " + pol[1]); return true; }
+    res.writeHead(200, { "Content-Type": "font/woff2", "Cache-Control": "no-store" });
+    res.end(b);
+    return true;
+  }
   const m = /^\/((css|js)\/[A-Za-z0-9._-]+\.(css|js))$/.exec(p);
   if (!m || m[2] !== m[3]) return false;
   let t;
