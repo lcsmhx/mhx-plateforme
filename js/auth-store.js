@@ -186,20 +186,42 @@ const Auth = {
     return this.memoriser(s);
   },
   /* Supabase ne redemande pas l'ancien mot de passe. On le verifie nous-memes :
-     sinon un telephone laisse deverrouille suffit a se faire voler le compte. */
+     sinon un telephone laisse deverrouille suffit a se faire voler le compte.
+     v68 (audit du 01/10, A5) : la verification ouvre une session NEUVE ; le changement part avec elle (pret pour
+     « Secure password change » de Supabase, qui exige une connexion recente) et l'app la garde des maintenant :
+     Supabase ferme les autres sessions du compte quand le mot de passe change, l'ancienne de cet onglet comprise.
+     Meme compte, meme rangement que la session d'avant (« Rester connecte », Auth.persistant) : les copies en
+     attente restent (meme compte) ; les autres onglets la reprennent (evenement « storage », depuisAutreOnglet).
+     Mauvais mot de passe actuel : rien n'est garde ni envoye. */
   async changerMotDePasse(actuel, nouveau){
     const u = this.utilisateur();
     if (!u || !u.email) throw new Error("Session expirée. Reconnecte-toi.");
+    /* un renouvellement en cours finit d'abord : sinon il rangerait l'ancienne session par-dessus la neuve */
+    if (this._renouvellement){ try { await this._renouvellement; } catch(e){} }
+    let s = null;
     try {
-      await this.appel("/auth/v1/token?grant_type=password", {
+      s = await this.appel("/auth/v1/token?grant_type=password", {
         method: "POST", avecJeton: false, body: { email: u.email, password: actuel }
       });
     } catch(e){ throw new Error("Ton mot de passe actuel n'est pas le bon."); }
-    await this.appel("/auth/v1/user", { method: "PUT", body: { password: nouveau } });
+    /* jamais la session d'un autre compte (ni si la personne s'est deconnectee entre-temps) */
+    const c = this.utilisateur();
+    if (!s || !s.access_token || !s.refresh_token || !s.user || s.user.id !== u.id || !c || c.id !== u.id)
+      throw new Error("Changement impossible.");
+    this.memoriser(s);
+    await this.appel("/auth/v1/user", { method: "PUT", avecJeton: false,
+      headers: { "Authorization": "Bearer " + s.access_token }, body: { password: nouveau } });
+    /* un renouvellement de l'ancienne session parti pendant la verification (ici ou dans un autre onglet) a pu la
+       ranger par-dessus la neuve : Supabase vient de la fermer, on remet la neuve */
+    if (this._renouvellement){ try { await this._renouvellement; } catch(e){} }
+    const d = this.session;
+    if (d && d.user && d.user.id === u.id && d.refresh_token !== s.refresh_token) this.memoriser(s);
   },
 
-  /* Le changement d'email n'est effectif qu'apres confirmation sur la nouvelle
-     adresse : c'est ce qui empeche d'enfermer quelqu'un hors de son compte. */
+  /* Changement d'adresse (le bouton n'est plus affiche depuis la v52 : le changement passe par le coach).
+     v68 (A5) : avec « Confirm email » ACTIVE dans Supabase, il n'est effectif qu'apres le clic sur le lien recu a la
+     nouvelle adresse (et a l'ancienne, avec « Secure email change »). « Confirm email » est DESACTIVE depuis la v54
+     (reglage de Lucas) : le changement est alors IMMEDIAT, sans aucun lien ni confirmation. */
   async changerEmail(nouveau){
     return this.appel("/auth/v1/user?redirect_to=" + encodeURIComponent(this.retour()),
                       { method: "PUT", body: { email: nouveau } });
@@ -934,6 +956,17 @@ const Store = {
     const profil = await Auth.appel("/rest/v1/profils?id=eq." + uid + "&select=*");
     const donnees = {};
     (lignes || []).forEach(l => { donnees[l.outil] = { contenu: l.contenu, modifie_le: l.maj_le }; });
+    /* v68 (audit du 01/10, E4) : les accords donnes (conditions, newsletter, sante : date et version), lus dans les
+       metadonnees du compte deja en memoire (aucun appel de plus) ; seulement ces champs, jamais un jeton ; seulement
+       pour son propre compte */
+    const accords = {};
+    if (u && uid === u.id){
+      const m = Accords.meta();
+      this.champsAccords.forEach(k => {
+        const v = Object.prototype.hasOwnProperty.call(m, k) ? m[k] : undefined;
+        if (v === null || ["string", "boolean", "number"].indexOf(typeof v) > -1) accords[k] = v;
+      });
+    }
     return {
       plateforme: "MHX Coaching",
       export_du: new Date().toISOString(),
@@ -942,11 +975,15 @@ const Store = {
         email: (u && u.email) || null,
         prenom: (profil && profil[0] && profil[0].prenom) || null,
         nom: (profil && profil[0] && profil[0].nom) || null,
-        cree_le: (profil && profil[0] && profil[0].cree_le) || null
+        cree_le: (profil && profil[0] && profil[0].cree_le) || null,
+        accords: accords
       },
       donnees: donnees
     };
   },
+  /* v68 (E4) : les accords rangés dans les metadonnees du compte (Accords, Sante ; emails_suivi : l'ancien accord v51) */
+  champsAccords: ["consentement", "conditions_version", "consentement_sante", "sante_version", "sante_ecran",
+                  "newsletter", "newsletter_version", "emails_suivi"],
   /* v67 (D5) : ce qu'une sauvegarde remplacerait, sans rien ecrire : [[cle, contenu]] ; erreur « format » (illisible) ou
      « vide » (rien a restaurer) */
   aRestaurer(texte){
@@ -1348,7 +1385,7 @@ function blocSauvegarde(){
   return `
   <section class="panel">
     <h2>Mes données</h2>
-    <p class="note">Tout est enregistré dans ton compte : tu retrouves tes données sur n'importe quel appareil en te connectant. Tu peux en récupérer une copie complète quand tu veux, et demander leur effacement.</p>
+    <p class="note">Tout est enregistré dans ton compte : tu retrouves tes données sur n'importe quel appareil en te connectant. Tu peux récupérer quand tu veux une copie de tes saisies et de tes accords (tes photos et ton historique de connexion : sur demande à ton coach), et demander leur effacement.</p>
     <div class="actions">
       <button class="btn ghost" id="sv-export">Télécharger toutes mes données</button>
       <button class="btn ghost" id="sv-copy">Copier ma sauvegarde</button>
