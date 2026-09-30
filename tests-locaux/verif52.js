@@ -1028,13 +1028,20 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
        changement d'adresse (plus de champ ni de bouton : « écris-nous à … »). Les deux sont remplacés par un repère. */
     const ADR_V51 = ". C'est à cette adresse qu'arrive le lien si tu oublies ton mot de passe — garde-la à jour.", ADR_V52 = ". C'est avec elle que tu te connectes.";
     const MAIL_V52 = "Pour changer ton adresse email, écris-nous à mhx.coaching@gmail.com, on s'en occupe rapidement.";
+    /* v67 (audit du 01/10, E4) : autre différence VOULUE, la note de « Mes données » ne promet plus « une copie complète »
+       (l'export contient les saisies et les accords ; photos et historique de connexion sur demande au coach). Remplacée par
+       un repère des deux côtés : tout le reste doit rester identique ; une fois la v67 sur main, la comparaison redevient
+       stricte d'elle-même. */
+    const DONNEES_V66 = "Tu peux en récupérer une copie complète quand tu veux, et demander leur effacement.";
+    const DONNEES_V67 = "Tu peux récupérer quand tu veux une copie de tes saisies et de tes accords (tes photos et ton historique de connexion : sur demande à ton coach), et demander leur effacement.";
     const sansNote = t => {
-      let x = t.split(NOTE_V52).join("[note du changement d'adresse]").split(NOTE_V51).join("[note du changement d'adresse]").split(ADR_V51).join("[adresse]").split(ADR_V52).join("[adresse]");
+      let x = t.split(NOTE_V52).join("[note du changement d'adresse]").split(NOTE_V51).join("[note du changement d'adresse]").split(ADR_V51).join("[adresse]").split(ADR_V52).join("[adresse]")
+        .split(DONNEES_V67).join("[mes données]").split(DONNEES_V66).join("[mes données]");
       const i = x.indexOf("Changer mon adresse email"); if (i < 0) return x;
       const fins = ["[note du changement d'adresse]", MAIL_V52].map(n => { const j = x.indexOf(n, i); return j < 0 ? -1 : j + n.length; }).filter(j => j > 0);
       return fins.length ? x.slice(0, i) + "[changement d'adresse]" + x.slice(Math.min(...fins)) : x;
     };
-    ok("client Thomas, Profil : texte identique à main (hors bloc « Mon compte » voulu en v52 : adresse et changement d'adresse sans email)", pro.t.length > 200 && pro.t.includes(MAIL_V52) && sansNote(pro.t) === sansNote(proM.t), pro.t.length + " / " + proM.t.length + " · nouveau texte : " + pro.t.includes(MAIL_V52) + " · " + (() => { const x = sansNote(pro.t), y = sansNote(proM.t); let k = 0; while (k < x.length && x[k] === y[k]) k++; return JSON.stringify(x.slice(Math.max(0, k - 40), k + 60)) + " ≠ " + JSON.stringify(y.slice(Math.max(0, k - 40), k + 60)); })());
+    ok("client Thomas, Profil : texte identique à main (hors bloc « Mon compte » voulu en v52 : adresse et changement d'adresse sans email ; v67 : note de « Mes données », présente)", pro.t.length > 200 && pro.t.includes(MAIL_V52) && pro.t.includes(DONNEES_V67) && sansNote(pro.t) === sansNote(proM.t), pro.t.length + " / " + proM.t.length + " · nouveau texte : " + pro.t.includes(MAIL_V52) + " · " + (() => { const x = sansNote(pro.t), y = sansNote(proM.t); let k = 0; while (k < x.length && x[k] === y[k]) k++; return JSON.stringify(x.slice(Math.max(0, k - 40), k + 60)) + " ≠ " + JSON.stringify(y.slice(Math.max(0, k - 40), k + 60)); })());
     await pro.c.close(); await proM.c.close();
   });
   await bloc("J. fiche d'un client et Mes clients", async () => {
