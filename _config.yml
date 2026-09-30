@@ -1,0 +1,5 @@
+# v67 (audit du 01/10) : filet de sécurité. En mode « GitHub Actions » (réglage actuel de GitHub Pages), ce fichier n'est
+# pas lu : la publication copie seulement l'app (liste blanche de .github/workflows/pages.yml). Si la source de Pages
+# repassait sur « Deploy from a branch » (construction Jekyll de tout le dépôt), les notes, docs, tests et donnees/ (dont
+# des données de vrais clients) ne seraient pas publiés pour autant. Ne rien ajouter d'autre ici.
+exclude: [docs, donnees, supabase, tests-locaux, CLAUDE.md, NOTESCLAUDE.md, NOTES-GROK.md, README.md]

@@ -254,10 +254,12 @@ const etat = page => page.evaluate(() => ({
        index.html, css/, js/ et polices/ (liste blanche), et s'arrête sur tout autre fichier. */
     const wf = fs.readFileSync(path.join(RACINE, ".github", "workflows", "pages.yml"), "utf8");
     const pub = wf.slice(wf.indexOf("publication:"));
-    ok("pages.yml : la publication n'utilise plus jekyll-build-pages (qui publiait tout le dépôt) mais la liste blanche index.html, css/, js/, polices/, avec un garde-fou sur tout autre fichier et sur les fichiers listés par index.html, avant upload-pages-artifact",
+    let cfg = ""; try { cfg = fs.readFileSync(path.join(RACINE, "_config.yml"), "utf8"); } catch (e) {}   // filet si Pages repasse en mode Jekyll
+    ok("pages.yml : la publication n'utilise plus jekyll-build-pages (qui publiait tout le dépôt) mais la liste blanche index.html, css/, js/, polices/, avec un garde-fou sur tout autre fichier et sur les fichiers listés par index.html, avant upload-pages-artifact ; _config.yml exclut notes, docs, tests et donnees/ si Pages repassait en mode Jekyll",
       wf.indexOf("publication:") > -1 && !/jekyll-build-pages/.test(pub) && /cp index\.html _site\//.test(pub) && /cp -R css js polices _site\//.test(pub)
         && /Fichiers inattendus dans le site/.test(pub) && /Fichier listé par index\.html absent/.test(pub)
-        && pub.indexOf("Site publié") > -1 && pub.indexOf("Site publié") < pub.indexOf("upload-pages-artifact"),
+        && pub.indexOf("Site publié") > -1 && pub.indexOf("Site publié") < pub.indexOf("upload-pages-artifact")
+        && /^exclude: \[docs, donnees, supabase, tests-locaux, CLAUDE\.md, NOTESCLAUDE\.md, NOTES-GROK\.md, README\.md\]$/m.test(cfg),
       pub.slice(0, 300));
   });
 
