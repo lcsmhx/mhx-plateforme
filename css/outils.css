@@ -135,8 +135,9 @@ label.dc-precision{margin:12px 0 6px;text-transform:none;letter-spacing:normal;f
 .sante-carte .dc-cta{margin-top:14px}
 .sante-carte #sante-msg:empty{margin:0;min-height:0}
 .sante-lien{margin:8px 0 0}
+.sante-lien a{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
 .sante-inline{border:1px solid var(--accent-line);border-radius:var(--r);background:var(--sunken);padding:14px 16px;margin:0 0 12px}
-.sante-inline h4{margin:0 0 8px;font-size:15px}
+.sante-inline h4,.fo-outil .sante-inline h4{margin:0 0 8px;font-size:15px;text-transform:none;letter-spacing:normal;color:var(--ink)}
 .sante-refus p{margin:0}
 [data-sante-off]{opacity:.55;cursor:not-allowed}
 /* v52 : l'action mise en avant de l'accueil du prospect (son calcul, puis sa pesee de depart) */

@@ -873,8 +873,9 @@ const outilFormation = {
          un accord donne sur un autre appareil : relu une fois par minute au plus) */
       if (Sante.aDemander()){
         if ($("sante-carte", zone)){
-          Sante.brancher(zone, "formation", () => { if (zone.isConnected) dessiner(); });
-          Sante.relire().then(ok => { if (ok && zone.isConnected && $("sante-carte", zone)) dessiner(); });
+          const repartir = () => { if (!zone.isConnected) return; dessiner(); const s = $("fo-sem"); if (s && !s.disabled) try { s.focus({ preventScroll: true }); } catch(e){} };
+          Sante.brancher(zone, "formation", repartir);
+          (Sante._envoi || Sante.relire()).then(ok => { if (ok && zone.isConnected && $("sante-carte")) Sante.apres(repartir); });
         }
       } else {
       const selSem = $("fo-sem", zone);

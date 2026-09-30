@@ -353,7 +353,8 @@ function signalerIllisible(outil, e){
   if (tete) tete.after(d); else vue.prepend(d);
 }
 
-async function afficher(id, silencieux){
+/* v64 : sansCompte = page reconstruite sur place apres l'accord sante (deja comptee a son ouverture) */
+async function afficher(id, silencieux, sansCompte){
   const jeton = ++affichage;
   const dispo = outilsVisibles();
   const outil = dispo.find(o => o.id === id) || dispo.find(o => o.id === outilParDefaut()) || dispo[0];
@@ -369,7 +370,7 @@ async function afficher(id, silencieux){
   /* v64 (brief V2, B) : calculateur et Ma progression en pause tant que le prospect n'a pas donne son accord sante */
   const pause = !verrouille && Sante.ECRANS.indexOf(outil.id) > -1 && Sante.aDemander();
   /* v51 : page vue par un prospect (la Decouverte compte elle-meme questionnaire et resultat) */
-  if (outil.id !== "accueil" && outil.id !== "decouverte") Activite.page(verrouille ? "verrou-" + outil.id : outil.id);
+  if (!sansCompte && outil.id !== "accueil" && outil.id !== "decouverte") Activite.page(verrouille ? "verrou-" + outil.id : outil.id);
   $("vue").innerHTML = `
     ${bandeauConsultation()}
     ${outil.sans_entete ? "" : `<header class="masthead">
@@ -400,7 +401,13 @@ async function afficher(id, silencieux){
     /* rien n'est lu ni branche (outil.init) avant l'accord : la carte, les champs inactifs ; « J'accepte » (ou un accord
        donne sur un autre appareil, relu) → la page repart, sans la carte */
     Sante.figer($("vue"));
-    Sante.pause($("vue"), outil.id, () => { if (jeton === affichage && courant === outil.id) afficher(courant, true); });
+    Sante.pause($("vue"), outil.id, async () => {
+      if (jeton !== affichage || courant !== outil.id) return;
+      await afficher(courant, true, true);
+      /* clavier, lecteur d'ecran : la place n'est pas perdue, le premier champ maintenant actif prend le focus */
+      const f = courant === outil.id && $("vue").querySelector("section.panel input:not([disabled]), section.panel select:not([disabled]), section.panel button:not([disabled])");
+      if (f) try { f.focus({ preventScroll: true }); } catch(e){}
+    });
   } else if (!verrouille){
     try { fin = (await outil.init()) || null; }
     catch(e){

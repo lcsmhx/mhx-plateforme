@@ -390,19 +390,27 @@ const Sante = {
   ECRANS: ["calculateur", "mensurations"],   // pages entieres en pause (navigation.js) ; la diete : son widget (outilFormation.js)
   refus: {},   // « Pas maintenant » pendant la visite de la formation (la diete redessinee garde le message)
   _relu: null,
+  _envoi: null,       // « J'accepte » en cours (promesse) : une page rouverte pendant l'envoi repart des qu'il aboutit
+  _donnes: new Set(), // comptes dont l'accord a ete enregistre pendant cette visite : une session relue ou reprise d'un autre
+                      // onglet qui ne le porterait pas encore ne le retire jamais (l'accord ne se retire pas dans l'app)
   concerne(){ return !!(Auth.estProspect() && !Store.idConsulte); },
   /* un accord enregistre, quelle que soit sa version : une date (inscription v52-v63, ou carte) */
   accordDans(m){ const v = m && typeof m === "object" ? m.consentement_sante : null; return v === true || (typeof v === "string" && v.trim() !== "" && !isNaN(Date.parse(v))); },
-  ok(){ return !this.concerne() || this.accordDans(Accords.meta()); },
+  ok(){
+    if (!this.concerne()) return true;
+    const u = Auth.utilisateur();
+    return this.accordDans(Accords.meta()) || !!(u && this._donnes.has(u.id));
+  },
   aDemander(){ return !this.ok(); },
   version(){ return String((CONFIG.textes_legaux || {}).cgu_version || ""); },
   /* l'appareil ne voit pas d'accord (donne sur un autre appareil ?) : UNE relecture du compte (une minute au plus) ;
-     reponse sans metadonnees, ratee ou hors ligne : rien ne change */
+     reponse sans metadonnees, sans accord, ratee ou hors ligne : rien ne change — la relecture ne sert qu'a DECOUVRIR un
+     accord, jamais a en retirer un (une reponse lue par le serveur avant « J'accepte » peut arriver apres) */
   async relire(){
     if (this.ok()) return true;
     if (typeof navigator !== "undefined" && navigator.onLine === false) return false;
     if (!this._relu || Date.now() - this._relu.t > 60000)
-      this._relu = { t: Date.now(), p: Auth.appel("/auth/v1/user").then(u => { Auth.majUtilisateur(u); }).catch(() => {}) };
+      this._relu = { t: Date.now(), p: Auth.appel("/auth/v1/user").then(u => { if (u && this.accordDans(u.user_metadata)) Auth.majUtilisateur(u); }).catch(() => {}) };
     await this._relu.p;
     return this.ok();
   },
@@ -412,10 +420,21 @@ const Sante = {
     const u0 = Auth.utilisateur(); if (!u0 || !u0.id) throw new Error("session");
     const data = { consentement_sante: new Date().toISOString(), sante_version: this.version(), sante_ecran: String(ecran || "") };
     const u = await Auth.appel("/auth/v1/user", { method: "PUT", body: { data: data } });
-    if (!(u && this.accordDans(u.user_metadata) && Auth.majUtilisateur(u)))
-      Auth.majUtilisateur({ id: u0.id, user_metadata: Object.assign({}, Accords.meta(), data) });
+    const m = u && u.user_metadata;
+    /* le compte renvoye ne porte pas l'accord : il n'est pas enregistre (jamais « accepte » sur l'appareil seulement) */
+    if (m && typeof m === "object" && !this.accordDans(m)) throw new Error("accord absent de la réponse");
+    if (!(m && Auth.majUtilisateur(u)))
+      Auth.majUtilisateur({ id: u0.id, user_metadata: Object.assign({}, Accords.meta(), data) });   // reponse sans metadonnees
+    this._donnes.add(u0.id);
     this._relu = null;
     return this.ok();
+  },
+  /* l'accord vient d'etre donne (ici, ou relu : donne ailleurs) : une copie de sante gardee sur l'appareil et retenue
+     jusque-la (ancien client repasse prospect, saisie hors ligne) part AVANT que l'outil relise la base — sinon la saisie
+     suivante l'ecraserait ; 4 s au plus, puis l'outil repart quoi qu'il arrive */
+  async apres(suite){
+    try { await Promise.race([Store.reprendre(), new Promise(r => setTimeout(r, 4000))]); } catch(e){}
+    if (typeof suite === "function") suite();
   },
   /* garde du stockage : une cle de sante (mens ; calc_perso avec des chiffres — le retrait « {} » du garde-fou 18 ans
      reste permis) d'un prospect sans accord */
@@ -463,9 +482,12 @@ const Sante = {
     if (oui) oui.addEventListener("click", async () => {
       if (oui.disabled) return;
       oui.disabled = true; if (non) non.disabled = true; if (msg) msg.textContent = "";
+      /* deja donne (autre onglet, envoi d'une page quittee) : pas de 2e envoi, la preuve d'origine reste */
+      if (this.ok()){ delete this.refus[ecran]; return this.apres(suite); }
       let ok = false;
-      try { ok = await this.donner(ecran); } catch(e){ console.warn("[MHX] accord santé non enregistré", e && (e.statut || e.message)); ok = false; }
-      if (ok){ delete this.refus[ecran]; if (typeof suite === "function") suite(); return; }
+      if (!this._envoi) this._envoi = this.donner(ecran).catch(e => { console.warn("[MHX] accord santé non enregistré", e && (e.statut || e.message)); return false; }).finally(() => { this._envoi = null; });
+      ok = await this._envoi;
+      if (ok){ delete this.refus[ecran]; return this.apres(suite); }
       oui.disabled = false; if (non) non.disabled = false;
       if (msg && carte.isConnected) msg.textContent = trad(DECOUVERTE.emails.refuse);
     });
@@ -479,7 +501,9 @@ const Sante = {
   /* ouverture d'une page en pause (navigation.js) : la carte, puis une relecture si l'accord a ete donne ailleurs */
   pause(zone, ecran, suite){
     this.brancher(zone, ecran, suite);
-    this.relire().then(ok => { const c = zone && zone.querySelector("#sante-carte"); if (ok && c && c.isConnected && typeof suite === "function") suite(); });
+    const reprendre = ok => { const c = zone && zone.querySelector("#sante-carte"); if (ok && c && c.isConnected) this.apres(suite); };
+    if (this._envoi) this._envoi.then(reprendre);   // page rouverte pendant « J'accepte » : elle repart des qu'il aboutit
+    else this.relire().then(reprendre);
   }
 };
 
