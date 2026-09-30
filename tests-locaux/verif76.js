@@ -198,8 +198,8 @@ const MOD = m => `#fo-vue .fo-tete[data-mod="${m}"]`, LEC = l => `#fo-vue [data-
       ecr(db, "formation").length === 0 && fo.notes.length === 1 && fo.notes[0].id === "n-tel" && fo.objectifs.length === 1 && fo.priorites.semaine.length === 1 && fo.challenge === "c3" && fo.defis.d2 === true && fo.diete["1"]["0"][0].p === "20" && fo.ouvert === "m2",
       JSON.stringify([ecr(db, "formation").map(e => e.outil), fo.notes, fo.ouvert]));
     ok("aucun message (« Non enregistré »…) pour un simple clic d'affichage", !/Non enregistré|Hors ligne/.test(a4.toasts), a4.toasts);
-    ok("le choix est gardé sur l'appareil : mhx_aff|<compte>|formation = { semaine: 1, jour: 0, ouvert: \"m1\", lecon: \"mindset\" }",
-      egal(L, { semaine: 1, jour: 0, ouvert: "m1", lecon: "mindset" }), JSON.stringify(L));
+    ok("le choix est gardé sur l'appareil : mhx_aff|<compte>|formation = { semaine: 1, jour: 0, ouvert: \"m1\", lecon: \"mindset\", challenge: \"c3\" } (v67, 3e tour : + la carte de challenge ouverte, celle du document)",
+      egal(L, { semaine: 1, jour: 0, ouvert: "m1", lecon: "mindset", challenge: "c3" }), JSON.stringify(L));
     await page.reload(); await pret(page, MOD("m1")); await attendre(page, 1500);
     const a5 = await foAff(page);
     ok("page rechargée : le module 01 et sa leçon restent ouverts (choix de l'appareil, le document dit toujours m2), toujours rien d'écrit",
@@ -237,8 +237,8 @@ const MOD = m => `#fo-vue .fo-tete[data-mod="${m}"]`, LEC = l => `#fo-vue [data-
         egal(a.mods, ["m2"]) && egal(a.lecons, ["alimentation"]) && a.sem === "3" && egal(a.jours, ["4"]), JSON.stringify(a));
       await clic(page, LEC("alimentation"), 1600);
       const a2 = await foAff(page), L = await local(page, cleAff(THOMAS));
-      ok("leçon fermée : rien d'écrit ; le choix de l'appareil devient { semaine: 3, jour: 4, ouvert: \"m2\", lecon: \"\" }",
-        egal(a2.lecons, []) && egal(a2.mods, ["m2"]) && ecr(db, "formation").length === 0 && egal(L, { semaine: 3, jour: 4, ouvert: "m2", lecon: "" }), JSON.stringify([a2.lecons, ecr(db, "formation").length, L]));
+      ok("leçon fermée : rien d'écrit ; le choix de l'appareil devient { semaine: 3, jour: 4, ouvert: \"m2\", lecon: \"\", challenge: \"c3\" } (v67, 3e tour : + le challenge du document)",
+        egal(a2.lecons, []) && egal(a2.mods, ["m2"]) && ecr(db, "formation").length === 0 && egal(L, { semaine: 3, jour: 4, ouvert: "m2", lecon: "", challenge: "c3" }), JSON.stringify([a2.lecons, ecr(db, "formation").length, L]));
     }
     /* B3 : valeurs inconnues ou de mauvais type → ignorées (celles du document) */
     for (const [quoi, v] of [["module et leçon inconnus", { semaine: 2, jour: 1, ouvert: "m99", lecon: "<img src=x onerror=alert(1)>" }], ["types faux", { semaine: 2, jour: 1, ouvert: 5, lecon: null }], ["leçon hors formation", { semaine: 2, jour: 1, ouvert: {}, lecon: "toString" }]]) {
@@ -277,8 +277,8 @@ const MOD = m => `#fo-vue .fo-tete[data-mod="${m}"]`, LEC = l => `#fo-vue [data-
       consulte === THOMAS && egal(c0.mods, ["m2"]) && egal(c1.mods, ["m1"]) && egal(c1.lecons, ["mindset"]), JSON.stringify([consulte, c0.mods, c1.mods, c1.lecons]));
     ok("rien n'est écrit (aucune écriture chez Thomas ni de formation, même refusée), le document de Thomas est inchangé, aucun message",
       ecr(db, "formation").length === 0 && ecr(db, null, THOMAS).length === 0 && egal(ligne(db, THOMAS, "formation"), avantT) && !/Non enregistré|Hors ligne/.test(c1.toasts), JSON.stringify([db.ecritures.map(e => [e.par, e.user_id, e.outil]), c1.toasts]));
-    ok("le choix reste sur l'appareil du coach, pour ce client : mhx_aff|<Thomas>|formation = { semaine: 1, jour: 0, ouvert: \"m1\", lecon: \"mindset\" }",
-      egal(L, { semaine: 1, jour: 0, ouvert: "m1", lecon: "mindset" }), JSON.stringify(L));
+    ok("le choix reste sur l'appareil du coach, pour ce client : mhx_aff|<Thomas>|formation = { semaine: 1, jour: 0, ouvert: \"m1\", lecon: \"mindset\", challenge: \"c3\" } (v67, 3e tour : + le challenge du document)",
+      egal(L, { semaine: 1, jour: 0, ouvert: "m1", lecon: "mindset", challenge: "c3" }), JSON.stringify(L));
     /* la fiche de Sarah : son propre document (module 04), pas le choix fait chez Thomas */
     await aller(page, "#/clients", 2000); await page.waitForSelector(`[data-ouvrir="${SARAH}"]`, { timeout: 8000 });
     await page.click(`[data-ouvrir="${SARAH}"]`); await page.waitForSelector("#vue .bandeau", { timeout: 8000 }); await attendre(page, 800);
@@ -298,7 +298,7 @@ const MOD = m => `#fo-vue .fo-tete[data-mod="${m}"]`, LEC = l => `#fo-vue [data-
     await clic(page, MOD("m1")); await clic(page, LEC("mindset")); await clic(page, LEC("mindset")); await clic(page, LEC("mindset"), 1800);
     const d1 = await foAff(page), L = await local(page, cleAff(PROSPECT));
     ok("prospect : « Commence ici » et « Ce qui t'attend » affichés, aucun module ouvert ; ouvrir le module 01 et sa leçon (fermée, rouverte) : les deux cartes restent, RIEN n'est écrit, le choix gardé sur l'appareil",
-      d0.depart && d0.apercu && egal(d0.mods, []) && d1.depart && d1.apercu && egal(d1.mods, ["m1"]) && egal(d1.lecons, ["mindset"]) && ecr(db, "formation").length === 0 && egal(L, { semaine: 1, jour: 0, ouvert: "m1", lecon: "mindset" }),
+      d0.depart && d0.apercu && egal(d0.mods, []) && d1.depart && d1.apercu && egal(d1.mods, ["m1"]) && egal(d1.lecons, ["mindset"]) && ecr(db, "formation").length === 0 && egal(L, { semaine: 1, jour: 0, ouvert: "m1", lecon: "mindset", challenge: "" }),
       JSON.stringify([d0.depart, d0.apercu, d0.mods, d1.mods, d1.lecons, ecr(db, "formation").map(e => e.outil), L]));
     await page.check('[data-coche="m1g"]');
     await page.waitForSelector("#invitation-declic_mindset", { timeout: 6000 }).catch(() => null); await attendre(page, 1500);

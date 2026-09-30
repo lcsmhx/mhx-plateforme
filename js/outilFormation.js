@@ -788,7 +788,10 @@ const outilFormation = {
        depart, celui du document (rien ne change a l'ecran). Les champs du document ne sont jamais retires.
        v67 : meme chose pour le module et la lecon ouverts (D.ouvert, D.lecon) : ouvrir ou fermer un module ou une lecon
        n'ecrit plus rien ; le choix est garde avec la semaine et le jour ({ semaine, jour, ouvert, lecon }). Un choix garde
-       par la v67 (sans ouvert ni lecon) laisse ceux du document ; un module ou une lecon qui n'existe pas est ignore. */
+       par la v67 (sans ouvert ni lecon) laisse ceux du document ; un module ou une lecon qui n'existe pas est ignore.
+       v67 (3e tour) : meme chose pour la carte de challenge ouverte (D.challenge, seulement lue par wChallenges pour
+       deplier la carte) : l'ouvrir ou la fermer n'ecrit plus rien ({ semaine, jour, ouvert, lecon, challenge }) ; un
+       choix garde sans challenge laisse celui du document ; un challenge qui n'existe pas est ignore. */
     const cleAff = "mhx_aff|" + (Store.cible() || "_") + "|formation";
     try {
       const a = JSON.parse(localStorage.getItem(cleAff) || "null");
@@ -797,9 +800,10 @@ const outilFormation = {
         if (Number.isInteger(a.jour) && a.jour >= 0 && a.jour < JOURS_SEM.length) D.jour = a.jour;
         if (typeof a.ouvert === "string" && (a.ouvert === "" || FORMATION.modules.some(m => m.id === a.ouvert))) D.ouvert = a.ouvert;
         if (typeof a.lecon === "string" && (a.lecon === "" || (Object.prototype.hasOwnProperty.call(LECONS, a.lecon) && FORMATION.modules.some(m => (m.lecons || []).indexOf(a.lecon) > -1)))) D.lecon = a.lecon;
+        if (typeof a.challenge === "string" && (a.challenge === "" || (FORMATION.challenges || []).some(c => c.id === a.challenge))) D.challenge = a.challenge;
       }
     } catch(e){}
-    const garderAffichage = () => { try { localStorage.setItem(cleAff, JSON.stringify({ semaine: D.semaine, jour: D.jour, ouvert: D.ouvert, lecon: D.lecon })); } catch(e){} };
+    const garderAffichage = () => { try { localStorage.setItem(cleAff, JSON.stringify({ semaine: D.semaine, jour: D.jour, ouvert: D.ouvert, lecon: D.lecon, challenge: D.challenge })); } catch(e){} };
     const visibles = outilsVisibles().filter(o => !horsVitrine(o)).map(o => o.id);   // v50 : pas de lien vers un onglet cache au prospect
     const nouvelId = () => "x" + Date.now().toString(36) + Math.floor(Math.random() * 1000);
     /* v60 (brief V2, I) : prospect — son calcul et sa pesee, lus sans rien ecrire (comme son accueil : ce que cet onglet
@@ -979,10 +983,10 @@ const outilFormation = {
         D.objectifs = D.objectifs.filter(x => x.id !== b.dataset.ox); sauver(); dessiner();
       }));
 
-      /* --- challenges --- */
+      /* --- challenges --- (v67, 3e tour : ouvrir ou fermer une carte, affichage seul, rien n'est ecrit) */
       $$("[data-chal]", zone).forEach(b => b.addEventListener("click", () => {
         D.challenge = (D.challenge === b.dataset.chal) ? "" : b.dataset.chal;
-        sauver(); dessiner();
+        garderAffichage(); dessiner();
       }));
       $$("[data-defi]", zone).forEach(c => c.addEventListener("change", () => {
         D.defis[c.dataset.defi] = c.checked;

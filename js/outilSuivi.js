@@ -1053,7 +1053,13 @@ const outilSuivi = {
   html(){ return `<div id="suivi-fb-haut"></div><div id="suivi-checkin"></div><div id="suivi-fb-bas"></div><div id="suivi-reg"><section class="panel"><div class="empty">Chargement…</div></section></div><div id="suivi-bilan"></div>`; },
 
   async init(){
-    const d = await Store.lireTout(["programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "intake", "checkins", "feedbacks"]);
+    const { valeurs: d, dates } = await Store.lireTout(["programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "intake", "checkins", "feedbacks"], { dates: true });
+    /* v67 (3e tour) : les objectifs du mois se cochent ici (Regularite.monterClient reecrit « objectifs_faits » a chaque
+       case) : une case cochee gardee sur l'appareil (envoi rate, hors ligne) plus recente que la base passe devant, meme
+       regle que Store.lire (Store.copieAServir) ; sinon la case suivante, cochee avant le nouvel essai automatique,
+       reecrivait la liste sans elle (perdue). Les autres cles sont lues comme avant. */
+    const copieOF = Store.copieAServir(Store.cible(), "objectifs_faits", { maj_le: dates.objectifs_faits || null });
+    if (copieOF) d.objectifs_faits = Forme.cle("objectifs_faits", copieOF.v);
     const P = d.programme || {}, J = d.journal || { seances: [] };
     if (!Array.isArray(J.seances)) J.seances = [];
     /* le bilan hebdo : la cle est lue ici, mais on la re-lit par Store.lire
