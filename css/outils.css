@@ -125,6 +125,20 @@ label.dc-precision{margin:12px 0 6px;text-transform:none;letter-spacing:normal;f
 .invitation h2{margin-top:0}
 .inv-objectif{font-weight:600;margin:0 0 8px;overflow-wrap:anywhere}
 .inv-texte{margin:0}
+/* v64 (brief V2, B) : la carte de l'accord sante, en haut du calculateur et de Ma progression (et dans « Organise ta
+   diete ») — meme bordure doree, meme bouton et meme « Pas maintenant » discret que les invitations ; champs de la page
+   inactifs tant que l'accord n'est pas donne */
+.sante-carte{border-color:var(--accent-line)}
+.sante-carte h2,.sante-carte h4{margin-top:0}
+.sante-texte{margin:0}
+.sante-phrase{margin:12px 0 0}
+.sante-carte .dc-cta{margin-top:14px}
+.sante-carte #sante-msg:empty{margin:0;min-height:0}
+.sante-lien{margin:8px 0 0}
+.sante-inline{border:1px solid var(--accent-line);border-radius:var(--r);background:var(--sunken);padding:14px 16px;margin:0 0 12px}
+.sante-inline h4{margin:0 0 8px;font-size:15px}
+.sante-refus p{margin:0}
+[data-sante-off]{opacity:.55;cursor:not-allowed}
 /* v52 : l'action mise en avant de l'accueil du prospect (son calcul, puis sa pesee de depart) */
 .dc-etape{border-color:var(--accent-line)}
 .dc-etape .btn{min-height:44px}
@@ -470,8 +484,9 @@ a.ch-etape:hover .num{border-color:var(--accent-line)}
 .ch-test{margin:0 0 12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .ch-attente{text-align:center;padding:26px 16px;border:1px dashed var(--line-strong);border-radius:var(--r-lg);background:var(--sunken)}
 .ch-attente h2{margin-bottom:6px}
-.co-cgu span,.co-sante span,.co-newsletter span{line-height:1.45}
+.co-cgu span,.co-newsletter span{line-height:1.45}
 .co-cgu .lien{background:none;border:0;padding:0;color:var(--accent);text-decoration:underline;cursor:pointer;font:inherit;min-height:0;width:auto;display:inline}
+.co-cgu .lien-absent{color:inherit;text-decoration:none;cursor:default}   /* v64 : lien du PDF pas encore renseigne (branche de travail) */
 .co-mdp{position:relative}
 .co-mdp input{padding-right:78px}
 .co-mdp .voir{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:0;color:var(--ink-3);font-size:12px;cursor:pointer;min-height:0;width:auto;padding:4px 8px;font-family:inherit}

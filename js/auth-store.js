@@ -67,6 +67,19 @@ const Auth = {
     if (!e || e.key !== this.cleSession || !e.newValue || !this.session || !this.session.user) return;
     try { const s = JSON.parse(e.newValue); if (s && s.access_token && s.user && s.user.id === this.session.user.id) this.session = s; } catch(err){}
   },
+  /* v64 (brief V2, B) : les metadonnees du compte relues ou modifiees (accord sante) → la session en memoire ET la
+     session rangee, sans toucher a ses jetons (un autre onglet a pu ranger un jeton plus recent, v48). Reponse sans
+     user_metadata, ou d'un autre compte : rien ne change (false). */
+  majUtilisateur(u){
+    const c = this.session, m = u && u.user_metadata;
+    if (!c || !c.user || !u || u.id !== c.user.id || !m || typeof m !== "object" || Array.isArray(m)) return false;
+    c.user = Object.assign({}, c.user, { user_metadata: m });
+    for (const st of [localStorage, sessionStorage]){
+      try { const s = JSON.parse(st.getItem(this.cleSession) || "null");
+            if (s && s.user && s.user.id === u.id){ s.user = Object.assign({}, s.user, { user_metadata: m }); st.setItem(this.cleSession, JSON.stringify(s)); } } catch(e){}
+    }
+    return true;
+  },
 
   async appel(chemin, options){
     options = options || {};
@@ -316,8 +329,8 @@ const Interrupteurs = {
 
 /* --- v52 : ACCORDS donnés à l'inscription ---------------------------------
    Posés une fois dans les métadonnées du compte (Auth.inscrire → user_metadata) : consentement +
-   conditions_version, consentement_sante + sante_version, newsletter (instant ou null) + newsletter_version
-   (versions : DECOUVERTE.accords). Le coach ne lit pas ces métadonnées : à la première ouverture connectée
+   conditions_version, consentement_sante + sante_version (v52 à v63 ; depuis la v64, au premier usage : Sante),
+   newsletter (instant ou null) + newsletter_version (versions : DECOUVERTE.accords). Le coach ne lit pas ces métadonnées : à la première ouverture connectée
    d'un prospect, le choix de la newsletter est recopié dans la clé « emails » (table donnees), qu'il lit.
    L'ancien accord « emails de suivi » (emails_suivi, emails.suivi) ne vaut jamais accord newsletter. ------ */
 const Accords = {
@@ -359,6 +372,114 @@ const Accords = {
     const oui = !!E && typeof E === "object" && !Array.isArray(E) && E.newsletter === true;
     const depuis = oui && typeof E.maj === "string" && /^\d{4}-\d{2}-\d{2}/.test(E.maj) && !isNaN(Date.parse(E.maj)) ? E.maj : null;
     return { oui, depuis };
+  }
+};
+
+/* --- v64 (brief V2, B) : ACCORD SANTÉ AU PREMIER USAGE ----------------------------------------------------
+   Un prospect (lui-même, jamais une fiche consultée) sans accord santé dans les métadonnées de son compte
+   (consentement_sante) voit le calculateur, Ma progression et « Organise ta diète » EN PAUSE derrière une carte
+   (« Ton accord, une seule fois ») : champs inactifs, rien n'est lu ni enregistré avant l'accord — ni en base ni
+   dans la file hors ligne (garde de Store.ecrire / envoyer / reprendre / importer). « J'accepte » :
+   PUT /auth/v1/user { data: consentement_sante (date et heure), sante_version (version de la politique,
+   CONFIG.textes_legaux.cgu_version), sante_ecran (calculateur, mensurations ou formation) } — les mêmes
+   métadonnées qu'à l'inscription des v52-v63 (+ l'écran, dans le même JSON) : aucune structure changée. L'accord
+   n'est jamais mis en file : hors ligne, il n'est pas donné et la carte reste. Jamais un client ni le coach ; les
+   inscrits de la v52 à la v63 ont coché la case à l'inscription : aucune carte. « Pas maintenant » : un message
+   remplace la carte, le reste de l'espace reste ouvert, la carte revient à la prochaine ouverture de l'outil. -- */
+const Sante = {
+  ECRANS: ["calculateur", "mensurations"],   // pages entieres en pause (navigation.js) ; la diete : son widget (outilFormation.js)
+  refus: {},   // « Pas maintenant » pendant la visite de la formation (la diete redessinee garde le message)
+  _relu: null,
+  concerne(){ return !!(Auth.estProspect() && !Store.idConsulte); },
+  /* un accord enregistre, quelle que soit sa version : une date (inscription v52-v63, ou carte) */
+  accordDans(m){ const v = m && typeof m === "object" ? m.consentement_sante : null; return v === true || (typeof v === "string" && v.trim() !== "" && !isNaN(Date.parse(v))); },
+  ok(){ return !this.concerne() || this.accordDans(Accords.meta()); },
+  aDemander(){ return !this.ok(); },
+  version(){ return String((CONFIG.textes_legaux || {}).cgu_version || ""); },
+  /* l'appareil ne voit pas d'accord (donne sur un autre appareil ?) : UNE relecture du compte (une minute au plus) ;
+     reponse sans metadonnees, ratee ou hors ligne : rien ne change */
+  async relire(){
+    if (this.ok()) return true;
+    if (typeof navigator !== "undefined" && navigator.onLine === false) return false;
+    if (!this._relu || Date.now() - this._relu.t > 60000)
+      this._relu = { t: Date.now(), p: Auth.appel("/auth/v1/user").then(u => { Auth.majUtilisateur(u); }).catch(() => {}) };
+    await this._relu.p;
+    return this.ok();
+  },
+  /* « J'accepte » : leve une erreur si l'accord n'a pas pu etre enregistre (reseau, refus) ; jamais de null (GoTrue
+     supprimerait la cle) ; les autres metadonnees (conditions, newsletter) restent : GoTrue fusionne data */
+  async donner(ecran){
+    const u0 = Auth.utilisateur(); if (!u0 || !u0.id) throw new Error("session");
+    const data = { consentement_sante: new Date().toISOString(), sante_version: this.version(), sante_ecran: String(ecran || "") };
+    const u = await Auth.appel("/auth/v1/user", { method: "PUT", body: { data: data } });
+    if (!(u && this.accordDans(u.user_metadata) && Auth.majUtilisateur(u)))
+      Auth.majUtilisateur({ id: u0.id, user_metadata: Object.assign({}, Accords.meta(), data) });
+    this._relu = null;
+    return this.ok();
+  },
+  /* garde du stockage : une cle de sante (mens ; calc_perso avec des chiffres — le retrait « {} » du garde-fou 18 ans
+     reste permis) d'un prospect sans accord */
+  bloque(cle, v){
+    if (cle !== "mens" && cle !== "calc_perso") return false;
+    if (cle === "calc_perso" && !(v && typeof v === "object" && Object.keys(v).some(k => v[k] != null && v[k] !== ""))) return false;
+    return this.aDemander();
+  },
+  /* une diete (formation.diete) qui contient une saisie : grammes ou repas coche */
+  dieteRemplie(F){
+    const d = F && typeof F === "object" ? F.diete : null; if (!d || typeof d !== "object") return false;
+    return Object.values(d).some(s => s && typeof s === "object" && Object.values(s).some(j => Array.isArray(j) && j.some(r => r && typeof r === "object" && (r.f === true || ["p", "g", "l"].some(k => r[k] != null && String(r[k]).trim() !== "")))));
+  },
+  carteHTML(ecran, dansPage){
+    const T = DECOUVERTE.sante, t = s => esc(typoFr(trad(s))), tag = dansPage ? "div" : "section";
+    const cls = dansPage ? "sante-carte sante-inline" : "panel sante-carte", h = dansPage ? "h4" : "h2";
+    if (dansPage && this.refus[ecran]) return this.refusHTML(ecran, dansPage);
+    const lien = lienSur((CONFIG.textes_legaux || {}).confidentialite_pdf);
+    return `<${tag} class="${cls}" id="sante-carte" data-sante-ecran="${esc(ecran)}">
+      <${h}>${t(T.titre)}</${h}>
+      <p class="sante-texte">${t(T.texte)}</p>
+      <p class="sante-phrase"><strong>${t(T.phrase)}</strong></p>
+      <div class="dc-cta"><button type="button" class="btn" id="sante-oui">${t(T.oui)}</button><button type="button" class="lien-discret" id="sante-non">${t(T.non)}</button></div>
+      <p class="msg ko" id="sante-msg" role="status" aria-live="polite"></p>
+      <p class="note sante-lien">${lien ? `<a href="${esc(lien)}" target="_blank" rel="noopener">${t(T.lien)}</a>` : `<span>${t(T.lien)}</span>`}</p>
+    </${tag}>`;
+  },
+  refusHTML(ecran, dansPage){
+    const tag = dansPage ? "div" : "section";
+    return `<${tag} class="${dansPage ? "sante-carte sante-inline" : "panel sante-carte"} sante-refus" id="sante-carte" data-sante-ecran="${esc(ecran)}"><p id="sante-refus" role="status" tabindex="-1">${esc(typoFr(trad(DECOUVERTE.sante.refus)))}</p></${tag}>`;
+  },
+  /* page en pause : tous les champs et boutons de la page, hors carte, en-tete et bandeau d'installation, inactifs */
+  figer(zone){
+    if (!zone) return;
+    zone.querySelectorAll("input, select, textarea, button").forEach(e => {
+      if (e.closest(".sante-carte, .masthead, #installe")) return;
+      e.disabled = true; e.setAttribute("data-sante-off", "");
+    });
+  },
+  /* les boutons de la carte ; suite() = l'outil repart sans la carte (accord donne) */
+  brancher(zone, ecran, suite){
+    const carte = zone && zone.querySelector("#sante-carte");
+    if (!carte || carte.classList.contains("sante-refus")) return;
+    const oui = carte.querySelector("#sante-oui"), non = carte.querySelector("#sante-non"), msg = carte.querySelector("#sante-msg");
+    if (oui) oui.addEventListener("click", async () => {
+      if (oui.disabled) return;
+      oui.disabled = true; if (non) non.disabled = true; if (msg) msg.textContent = "";
+      let ok = false;
+      try { ok = await this.donner(ecran); } catch(e){ console.warn("[MHX] accord santé non enregistré", e && (e.statut || e.message)); ok = false; }
+      if (ok){ delete this.refus[ecran]; if (typeof suite === "function") suite(); return; }
+      oui.disabled = false; if (non) non.disabled = false;
+      if (msg && carte.isConnected) msg.textContent = trad(DECOUVERTE.emails.refuse);
+    });
+    if (non) non.addEventListener("click", () => {
+      if (non.disabled || !carte.isConnected) return;
+      this.refus[ecran] = true;
+      carte.outerHTML = this.refusHTML(ecran, carte.classList.contains("sante-inline"));
+      const r = zone.querySelector("#sante-refus"); if (r) try { r.focus({ preventScroll: true }); } catch(e){}
+    });
+  },
+  /* ouverture d'une page en pause (navigation.js) : la carte, puis une relecture si l'accord a ete donne ailleurs */
+  pause(zone, ecran, suite){
+    this.brancher(zone, ecran, suite);
+    this.relire().then(ok => { const c = zone && zone.querySelector("#sante-carte"); if (ok && c && c.isConnected && typeof suite === "function") suite(); });
   }
 };
 
@@ -498,6 +619,7 @@ const Store = {
   ecrire(cle, valeur){
     const uid = this.cible(); if (!uid) return false;
     if (this.clesCoachSeul.indexOf(cle) > -1) return false;
+    if (Sante.bloque(cle, valeur)) return false;   // v64 (B) : rien avant l'accord sante (ni cache, ni copie, ni envoi)
     const origine = valeur && typeof valeur === "object" ? this.origines.get(valeur) : undefined;
     if (origine && origine !== uid){ console.warn("[MHX] écriture refusée : « " + cle + " » a été lu pour un autre compte (page quittée entre-temps)"); this.ficheChangee(); return false; }
     this.boite(uid)[cle] = valeur;
@@ -639,6 +761,7 @@ const Store = {
         if (!e || typeof e.t !== "string" || !uid || !cle || this.clesCoachSeul.indexOf(cle) > -1){ this.lacher(uid, cle); continue; }
         /* ecrite par un autre compte sur cet appareil : jamais envoyee ; retiree seulement au demarrage */
         if (e.a !== u.id){ if (auDemarrage) this.lacher(uid, cle); continue; }
+        if (Sante.bloque(cle, e.v)) continue;   // v64 (B) : attend l'accord sante (ni lecture ni envoi ; pas de nouvelle reprise pour elle)
         try {
           const r = await Auth.appel("/rest/v1/donnees?user_id=eq." + uid + "&outil=eq." + encodeURIComponent(cle) + "&select=maj_le");
           const m = r && r[0] && r[0].maj_le;
@@ -675,6 +798,7 @@ const Store = {
   async envoyer(cle, valeur, uidFige, t, vite, repris){
     const uid = uidFige || this.cible(); if (!uid) return;
     if (this.clesCoachSeul.indexOf(cle) > -1) return;
+    if (Sante.bloque(cle, valeur)) return;   // v64 (B) : jamais envoyee avant l'accord sante (une copie ancienne reste, rien n'est perdu)
     const k = uid + "|" + cle, tt = t || new Date().toISOString();
     /* une copie REPRISE ne passe jamais apres une saisie plus recente de cet onglet (reprise lente, retour sur
        l'onglet) ; une saisie fraiche passe toujours (une horloge qui recule ne doit rien faire perdre) */
@@ -770,6 +894,8 @@ const Store = {
       if (!d[cle] || typeof d[cle] !== "object") continue;
       /* v52 : garde-fou 18 ans du calculateur — un calcul fait avec un age sous le minimum n'est jamais restaure */
       if (cle === "calc_perso" && outilCalculateur.mineur(d[cle])) continue;
+      /* v64 (B) : prospect sans accord sante : ni ses mesures, ni son calcul, ni une diete remplie */
+      if (Sante.bloque(cle, d[cle]) || (cle === "formation" && Sante.aDemander() && Sante.dieteRemplie(d[cle]))) continue;
       this.cache[cle] = d[cle]; await this.envoyer(cle, d[cle]); n++;
     }
     if (!n) throw new Error("vide");

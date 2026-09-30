@@ -650,7 +650,11 @@ const outilFormation = {
   kcal(r){ return (+r.p || 0) * 4 + (+r.g || 0) * 4 + (+r.l || 0) * 9; },
 
   wDiete(D){
-    const lignes = this.ligneDiete(D);
+    /* v64 (brief V2, B) : prospect sans accord sante — la diete en pause derriere la carte (Sante) : lignes vides, champs
+       inactifs, aucun ecouteur (brancher), et rien de change dans D (ligneDiete cree un squelette qui partirait au
+       prochain enregistrement d'une case) */
+    const pause = Sante.aDemander(), off = pause ? " disabled data-sante-off" : "";
+    const lignes = pause ? REPAS_SEM.map(() => ({ f:false, p:"", g:"", l:"" })) : this.ligneDiete(D);
     let tp = 0, tg = 0, tl = 0;
     lignes.forEach(r => { tp += +r.p || 0; tg += +r.g || 0; tl += +r.l || 0; });
     const tot = tp * 4 + tg * 4 + tl * 9;
@@ -659,20 +663,21 @@ const outilFormation = {
 
     return `<div class="fo-outil">
       <h3>Organise ta diète</h3>
+      ${pause ? Sante.carteHTML("formation", true) : ""}
       <p class="note" style="margin:0 0 12px">Note tes grammes, les calories se calculent toutes seules. Coche les repas que tu as réellement pris.</p>
       <div class="fo-barre">
-        <select id="fo-sem" aria-label="Semaine">${sem}</select>
+        <select id="fo-sem" aria-label="Semaine"${off}>${sem}</select>
         <div class="tabs" style="margin:0">${JOURS_SEM.map((n, i) =>
-          `<button type="button" class="tab" data-fj="${i}" aria-pressed="${D.jour === i}">${n.slice(0,3)}</button>`).join("")}</div>
+          `<button type="button" class="tab" data-fj="${i}" aria-pressed="${D.jour === i}"${off}>${n.slice(0,3)}</button>`).join("")}</div>
       </div>
       <div class="fo-scroll"><table class="fo-tab fo-diete">
         <tr><th>Repas</th><th>Fait</th><th>Prot. (g)</th><th>Gluc. (g)</th><th>Lip. (g)</th><th>Calories</th></tr>
         ${lignes.map((r, i) => `<tr>
           <td>${REPAS_SEM[i]}</td>
-          <td><input type="checkbox" data-df="${i}"${r.f ? " checked" : ""} aria-label="Repas pris"></td>
-          <td><input type="number" min="0" step="1" data-dm="${i}.p" value="${esc(r.p)}" aria-label="Protéines"></td>
-          <td><input type="number" min="0" step="1" data-dm="${i}.g" value="${esc(r.g)}" aria-label="Glucides"></td>
-          <td><input type="number" min="0" step="1" data-dm="${i}.l" value="${esc(r.l)}" aria-label="Lipides"></td>
+          <td><input type="checkbox" data-df="${i}"${r.f ? " checked" : ""} aria-label="Repas pris"${off}></td>
+          <td><input type="number" min="0" step="1" data-dm="${i}.p" value="${esc(r.p)}" aria-label="Protéines"${off}></td>
+          <td><input type="number" min="0" step="1" data-dm="${i}.g" value="${esc(r.g)}" aria-label="Glucides"${off}></td>
+          <td><input type="number" min="0" step="1" data-dm="${i}.l" value="${esc(r.l)}" aria-label="Lipides"${off}></td>
           <td class="fo-kcal" data-kcal="${i}">${this.kcal(r) || ""}</td>
         </tr>`).join("")}
         <tr class="fo-total"><td><b>Total du jour</b></td><td></td>
@@ -772,6 +777,7 @@ const outilFormation = {
 
   async init(){
     const self = this;
+    Sante.refus.formation = false;   // v64 (B) : « Pas maintenant » ne vaut que pour la visite : la carte revient a la prochaine ouverture
     const D = this.migrer(await Store.lire(this.cle, this.vide()));
     const zone = $("fo-vue");
     if (!zone) return;
@@ -863,7 +869,14 @@ const outilFormation = {
         if (!avant && mindsetFini() && self.pourProspect()) Invitations.declencher("declic_mindset", poser("declic_mindset"));
       }));
 
-      /* --- diete --- */
+      /* --- diete --- (v64, B : en pause, seulement la carte de l'accord sante ; « J'accepte » → redessinee, active ;
+         un accord donne sur un autre appareil : relu une fois par minute au plus) */
+      if (Sante.aDemander()){
+        if ($("sante-carte", zone)){
+          Sante.brancher(zone, "formation", () => { if (zone.isConnected) dessiner(); });
+          Sante.relire().then(ok => { if (ok && zone.isConnected && $("sante-carte", zone)) dessiner(); });
+        }
+      } else {
       const selSem = $("fo-sem", zone);
       if (selSem) selSem.addEventListener("change", () => { D.semaine = +selSem.value; sauver(); dessiner(); });
       $$("[data-fj]", zone).forEach(b => b.addEventListener("click", () => { D.jour = +b.dataset.fj; sauver(); dessiner(); }));
@@ -887,6 +900,7 @@ const outilFormation = {
         self.ligneDiete(D)[+p[0]][p[1]] = e.value;
         majTotaux(); sauver();
       }));
+      }
 
       /* --- priorites --- */
       const ajouter = cle => {

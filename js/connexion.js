@@ -22,6 +22,12 @@ function routeDepuisAdresse(){
 }
 
 /* ---------------------- ÉCRAN DE CONNEXION ---------------------- */
+/* v64 (brief V2, A2) : un lien vers un PDF des textes legaux (CONFIG.textes_legaux) ; lien absent ou non valide (« à
+   compléter », branche de travail : le banc de main refuse de publier) → le mot seul, sans lien */
+function lienLegal(id, cle, texte){
+  const u = lienSur((CONFIG.textes_legaux || {})[cle]);
+  return u ? `<a class="lien" id="${id}" href="${esc(u)}" target="_blank" rel="noopener">${esc(texte)}</a>` : `<span class="lien lien-absent" id="${id}">${esc(texte)}</span>`;
+}
 function portail(mode){
   if (UI._ouverte) UI.fermer();   // v44 : un volet (conditions) encore ouvert ne doit pas figer l'ecran reconstruit
   /* v39 : « inscription » n'existe que si l'inscription libre est ouverte */
@@ -49,11 +55,11 @@ function portail(mode){
         : `<div class="champ"><label for="c-email">Email</label><input id="c-email" type="email" autocomplete="email"></div>`}
       ${mode === "inscription"
         /* v44 : prenom, email, mot de passe (un seul, avec « Afficher ») et la case des conditions.
-           v52 : + le nom ; trois cases SEPAREES, aucune cochee d'avance : conditions (obligatoire), donnees de sante
-           (obligatoire), newsletter (facultative) */
+           v52 : + le nom ; cases SEPAREES, aucune cochee d'avance. v64 (brief V2, A) : UNE seule case obligatoire, les
+           conditions (deux liens distincts vers les PDF, CONFIG.textes_legaux ; aucun espace avant le point final, qui ne
+           tombe plus seul sous le lien), et la newsletter (facultative) ; l'accord sante est demande au premier usage (Sante) */
         ? `<div class="champ"><label for="c-mdp">${esc(DECOUVERTE.inscription.mdp)}</label><div class="co-mdp"><input id="c-mdp" type="password" autocomplete="new-password"><button type="button" class="voir" id="c-voir" aria-pressed="false" aria-label="Afficher le mot de passe">Afficher</button></div></div>
-      <label class="co-rester co-cgu"><input type="checkbox" id="c-cgu"><span>${esc(DECOUVERTE.inscription.cgu_avant)} <button type="button" class="lien" id="c-cgu-lien">${esc(DECOUVERTE.inscription.cgu_lien)}</button>${esc(DECOUVERTE.inscription.cgu_apres || "")}</span></label>
-      <label class="co-rester co-sante"><input type="checkbox" id="c-sante"><span>${esc(DECOUVERTE.inscription.sante_avant)}</span></label>
+      <label class="co-rester co-cgu"><input type="checkbox" id="c-cgu"><span>${esc(DECOUVERTE.inscription.cgu_avant)} ${lienLegal("c-cgu-lien", "cgu_pdf", DECOUVERTE.inscription.cgu_lien)} ${esc(DECOUVERTE.inscription.cgu_entre)} ${lienLegal("c-politique-lien", "confidentialite_pdf", DECOUVERTE.inscription.politique_lien)}${esc(DECOUVERTE.inscription.cgu_apres || "")}</span></label>
       <label class="co-rester co-newsletter"><input type="checkbox" id="c-newsletter"><span>${esc(DECOUVERTE.inscription.newsletter)}</span></label>`
         : mode !== "oubli" ? `<div class="champ"><label for="c-mdp">Mot de passe</label><input id="c-mdp" type="password" autocomplete="current-password"></div>` : ""}
       ${mode !== "oubli" ? `<label class="co-rester"><input type="checkbox" id="c-rester" checked><span>Rester connecté</span></label>` : ""}
@@ -74,7 +80,7 @@ function portail(mode){
 
   $$("[data-mode]").forEach(b => b.addEventListener("click", () => portail(b.dataset.mode)));
   Theme.majBoutons();
-  /* v44 — inscription : voir le mot de passe, lire les conditions (volet) */
+  /* v44 — inscription : voir le mot de passe (v64 : les conditions sont des liens vers les PDF, plus de volet ici) */
   const voir = $("c-voir");
   if (voir) voir.addEventListener("click", () => {
     const c = $("c-mdp"); if (!c) return;
@@ -82,11 +88,6 @@ function portail(mode){
     c.type = montre ? "text" : "password";
     voir.textContent = montre ? trad("Masquer") : trad("Afficher");
     voir.setAttribute("aria-pressed", String(montre));
-  });
-  const cguLien = $("c-cgu-lien");
-  if (cguLien) cguLien.addEventListener("click", ev => {
-    ev.preventDefault();
-    UI.volet({ titre: trad(DECOUVERTE.confidentialite.titre), corps: (DECOUVERTE.confidentialite.paragraphes || []).map(p => `<p>${esc(trad(p))}</p>`).join("") });
   });
   $("co-langue").addEventListener("click", () => {
     const ok = I18N.choisir(I18N.langue === "en" ? "fr" : "en");
@@ -113,20 +114,19 @@ function portail(mode){
       if (mdp.length < 8){ err("Le mot de passe doit faire au moins 8 caractères."); return; }
       const cgu = $("c-cgu");
       if (!cgu || !cgu.checked){ err(trad(DECOUVERTE.inscription.cgu_manque)); return; }
-      const sante = $("c-sante");
-      if (!sante || !sante.checked){ err(trad(DECOUVERTE.inscription.sante_manque)); return; }
       b.disabled = true; b.textContent = "Un instant…";
       try {
         /* v44 : l'acceptation des conditions est datee ; P0.5 : consentement sante separe, horodate.
            v52 : prenom ET nom ; chaque accord porte sa date et la version de son texte (DECOUVERTE.accords) ;
            la newsletter (facultative) remplace les « emails de suivi » : emails_suivi n'est plus envoye (il reste lu
            pour les comptes d'avant). Le choix de la newsletter est recopie dans la cle « emails » a la premiere
-           ouverture (Accords.copierEmails), pour que le coach le voie. */
+           ouverture (Accords.copierEmails), pour que le coach le voie.
+           v64 (brief V2, A) : plus d'accord sante a l'inscription (consentement_sante / sante_version : au premier usage,
+           Sante.donner) ; conditions_version = la version des CGU en PDF (CONFIG.textes_legaux.cgu_version). */
         const A = DECOUVERTE.accords, maintenant = new Date().toISOString();
         const ok_news = !!($("c-newsletter") && $("c-newsletter").checked);
         const connecte = await Auth.inscrire(email, mdp, prenom, nom, {
           consentement: maintenant, conditions_version: A.conditions,
-          consentement_sante: maintenant, sante_version: A.sante,
           newsletter: ok_news ? maintenant : null, newsletter_version: A.newsletter });
         if (connecte){ location.hash = ""; location.reload(); return; }
         ecranVerifieEmail(email); return;   // v47 : un ecran dedie, pas une ligne de message

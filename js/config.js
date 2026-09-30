@@ -16,7 +16,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-09-30 · 63",
+    version: "2026-09-30 · 64",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -54,6 +54,21 @@ const CONFIG = {
     gratuit_vitrine: ["programme", "nutrition", "journal", "suivi"],
     /* v52 — la barre du bas (telephone) du prospect, dans cet ordre ; le reste est derriere « Plus » */
     gratuit_barre: ["accueil", "calculateur", "mensurations", "formation"]
+  },
+
+  /* --- v64 (brief V2, A2 et K) — À COMPLÉTER PAR LUCAS AVANT LA PUBLICATION ---------------------------------------
+     cgu_pdf, confidentialite_pdf : les liens https des 2 PDF sur Google Drive (partage « Tous les utilisateurs qui ont
+     le lien », lecture seule), ouverts par « CGU » et « politique de confidentialité » dans la case de l'inscription, et
+     par « En savoir plus : politique de confidentialité » dans la carte de l'accord santé.
+     cgu_version : la date de mise en ligne, au format AAAA-MM-JJ (« 2026-10-01 » pour « Version du 1er octobre 2026 ») :
+     version des CGU enregistrée à chaque nouvelle inscription (métadonnée conditions_version) ET version de la politique
+     enregistrée avec l'accord santé (sante_version) — les deux textes portent la même date (brief K).
+     Tant qu'une valeur vaut « à compléter » (ou n'est pas valide), le banc de main est rouge (verif70, bloc A0) : rien
+     n'est publié. Les branches de travail v2/* restent vertes. --------------------------------------------------- */
+  textes_legaux: {
+    cgu_pdf: "à compléter",
+    confidentialite_pdf: "à compléter",
+    cgu_version: "à compléter"
   },
 
   /* --- Découverte (prospects) : les réglages ; les textes sont dans DECOUVERTE --- */
@@ -408,6 +423,17 @@ const DECOUVERTE = {
     declic_mindset: { titre: "Ton pourquoi est clair.", texte: "Reste le comment. En 15 min, Lucas t'aide à transformer ta motivation en plan concret pour tes prochaines semaines." },
     formation_commence_ici: { titre: "Bien joué, ton départ est lancé.", texte: "Prochaine étape : ton plan d'action personnalisé, offert, en 15 min avec Lucas." }
   },
+  /* v64 (brief V2, B) : l'accord santé demandé au premier usage (calculateur, Ma progression, « Organise ta diète »),
+     prospect sans accord enregistré seulement (Sante, auth-store.js). Textes du brief, mot pour mot. */
+  sante: {
+    titre: "Ton accord, une seule fois",
+    texte: "Pour calculer tes calories et suivre ta progression, l'app enregistre ton poids, ta taille, tes mensurations et tes calculs. Ce sont des données de santé : elles restent privées, visibles seulement par toi et ton coach, et tu peux les supprimer à tout moment.",
+    phrase: "J'accepte que mes données de santé (poids, taille, mensurations, calculs) servent à mes calculs et à mon suivi.",
+    oui: "J'accepte",
+    non: "Pas maintenant",
+    lien: "En savoir plus : politique de confidentialité",
+    refus: "Pas de souci. Sans ton accord, le calculateur et le suivi restent en pause. Le reste de ton espace reste ouvert, et tu peux changer d'avis quand tu veux."
+  },
   resultat: {
     titre: "Ton résultat",
     priorites_titre: "Tes 3 priorités",
@@ -545,19 +571,20 @@ const DECOUVERTE = {
   /* --- écran d'inscription (portail) et retour du lien de confirmation --- */
   inscription: {
     titre: "Crée ton espace gratuit",
-    sous: "Gratuit pour toujours : calculateur de calories, suivi de ton poids et de tes mensurations, Speed Formation.",
-    bouton: "Créer mon accès",
+    sous: "Gratuit, pour toujours : calculateur de calories, suivi de ton poids et de tes mensurations, et la Speed Formation avec ses vidéos, programmes et plans alimentaires.",
+    bouton: "Créer mon espace gratuit",
     mdp: "Mot de passe (8 caractères minimum)",
-    /* v52 (décision de Lucas) : l'âge est dans la case des conditions : « J'ai 18 ans ou plus et j'accepte les conditions
-       d'utilisation et la politique de confidentialité. » (le lien ouvre le volet des conditions) */
+    /* v52 (décision de Lucas) : l'âge est dans la case des conditions. v64 (brief V2, A2) : la SEULE case obligatoire,
+       « J'ai 18 ans ou plus et j'accepte les CGU et la politique de confidentialité. », avec deux liens distincts vers les
+       PDF de CONFIG.textes_legaux ; A3 : plus de case « données de santé » (accord demandé au premier usage, DECOUVERTE.sante) */
     cgu_avant: "J'ai 18 ans ou plus et j'accepte les",
-    cgu_lien: "conditions d'utilisation et la politique de confidentialité",
+    cgu_lien: "CGU",
+    cgu_entre: "et la",
+    politique_lien: "politique de confidentialité",
     cgu_apres: ".",
     cgu_manque: "Coche la case des conditions pour continuer.",
-    sante_avant: "J'accepte le traitement de mes données de santé conformément à la politique de confidentialité.",
-    sante_manque: "Accepte le traitement de tes données de santé pour continuer.",
-    /* v52 : case facultative, décochée, qui remplace les « emails de suivi » (texte validé par Lucas : ne pas le reformuler sans changer accords.newsletter) */
-    newsletter: "Je veux recevoir par email les conseils, témoignages et offres de coaching de MHX Coaching (1 à 2 emails par semaine maximum). Désinscription en 1 clic dans chaque email.",
+    /* v52 : case facultative, décochée, qui remplace les « emails de suivi ». v64 (A4) : texte court (version accords.newsletter changée) */
+    newsletter: "Oui, je veux les conseils et les offres de Lucas par email (2 max par semaine, désinscription en 1 clic).",
     note: "L'app ne remplace pas un avis médical. Si tu as un doute sur ta santé, parles-en à un professionnel avant de commencer.",
     verif_titre: "Vérifie ta boîte mail",
     verif_texte: "On vient d'envoyer un lien à {e}. Ouvre-le pour confirmer ton compte : tu arriveras directement sur ton questionnaire.",
@@ -583,17 +610,19 @@ const DECOUVERTE = {
 
   /* --- v52 : versions des textes acceptés à l'inscription, envoyées avec chaque accord (métadonnées du compte :
      conditions_version, sante_version, newsletter_version ; copie « version » de la clé emails). Un texte change
-     (même une virgule) = sa version change ici. « conditions » suit toujours confidentialite.version (plus bas). --- */
+     (même une virgule) = sa version change ici. v64 (brief V2, A et K) : « conditions » = la version des CGU en PDF
+     (CONFIG.textes_legaux.cgu_version, à compléter) ; avant : confidentialite.version (le texte court). --- */
   accords: {
-    get conditions(){ return DECOUVERTE.confidentialite.version; },
+    get conditions(){ return CONFIG.textes_legaux.cgu_version; },
     /* sante : « 2026-09-28 » = texte coupé « …conformément à la politique » (v52-v53, inscription fermée : comptes de test
        seulement), puis complété « …de confidentialité. » (v54 ; anglais sans point final) ; « 2026-09-28b » (v55) : même
        texte français, anglais avec son point final. */
-    sante: "2026-09-28b",       // case « données de santé » (inscription.sante_avant)
-    newsletter: "2026-09-28c"   // case newsletter (inscription.newsletter) et interrupteur du Profil (emails.libelle) ; « c » : texte final de Lucas du 28/09 (distinct des brouillons « 2026-09-28 » et « 2026-09-28b », jamais publiés)
+    sante: "2026-09-28b",       // ancienne case « données de santé » de l'inscription (v55 à v63) ; v64 : plus envoyée à l'inscription, l'accord au premier usage enregistre la version de la politique (Sante.version)
+    newsletter: "2026-09-30",   // v64 (A4) : case newsletter de l'inscription, texte court (inscription.newsletter)
+    newsletter_profil: "2026-09-28c"   // interrupteur du Profil (emails.libelle, texte inchangé) ; « c » : texte final de Lucas du 28/09 (distinct des brouillons « 2026-09-28 » et « 2026-09-28b », jamais publiés) ; c'était aussi la case de l'inscription jusqu'à la v63
   },
 
-  /* --- conditions et confidentialité (volet ouvert depuis l'inscription et le Profil du prospect).
+  /* --- conditions et confidentialité (volet ouvert depuis le Profil du prospect ; v64 : plus depuis l'inscription, dont la case ouvre les PDF).
      v52 : version 2026-09-28b (plus de limite de 7 jours, nom, 3 questions, newsletter ; aucun email du compte envoyé par
      l'app pour l'instant, décision de Lucas). v59 : version 2026-09-29, paragraphe « Contenus chargés depuis Google »
      (polices, images d'aperçu des vidéos ; vidéo au clic seulement) juste après « Hébergement ». Les comptes déjà
@@ -678,6 +707,15 @@ const DECOUVERTE = {
       declic_premiere_pesee: { titre: "Your starting point is set.", texte: "From today, we measure your progress. To move your curve in the right direction, you need a plan that fits your life: that's what Lucas builds with you in 15 min." },
       declic_mindset: { titre: "Your why is clear.", texte: "Now for the how. In 15 min, Lucas helps you turn your motivation into a concrete plan for the weeks ahead." },
       formation_commence_ici: { titre: "Nice work, you're off to a start.", texte: "Next step: your personalized action plan, free, in 15 min with Lucas." }
+    },
+    sante: {
+      titre: "Your consent, just once",
+      texte: "To calculate your calories and track your progress, the app saves your weight, height, measurements and results. This is health data: it stays private, visible only to you and your coach, and you can delete it at any time.",
+      phrase: "I agree that my health data (weight, height, measurements, results) is used for my calculations and tracking.",
+      oui: "I agree",
+      non: "Not now",
+      lien: "Learn more: Privacy Policy",
+      refus: "No problem. Without your consent, the calculator and tracking stay paused. The rest of your space stays open, and you can change your mind anytime."
     },
     resultat: {
       titre: "Your result",
@@ -807,16 +845,16 @@ const DECOUVERTE = {
     },
     inscription: {
       titre: "Create your free space",
-      sous: "Free forever: calorie calculator, weight and measurements tracking, Speed Formation.",
-      bouton: "Create my access",
+      sous: "Free, forever: calorie calculator, weight and measurement tracking, and the Speed Formation course with its videos, workout programs and meal plans.",
+      bouton: "Create my free account",
       mdp: "Password (8 characters minimum)",
-      cgu_avant: "I am 18 or older and I accept the",
-      cgu_lien: "terms of use and the privacy policy",
+      cgu_avant: "I'm 18 or older and I accept the",
+      cgu_lien: "Terms of Use",
+      cgu_entre: "and the",
+      politique_lien: "Privacy Policy",
       cgu_apres: ".",
       cgu_manque: "Tick the terms box to continue.",
-      sante_avant: "I accept the processing of my health data in accordance with the privacy policy.",
-      sante_manque: "Accept the processing of your health data to continue.",
-      newsletter: "I want to receive MHX Coaching's tips, testimonials and coaching offers by email (1 to 2 emails per week maximum). One-click unsubscribe in every email.",
+      newsletter: "Yes, send me Lucas's tips and offers by email (2 per week max, unsubscribe in 1 click).",
       note: "The app is not medical advice. If you have any doubt about your health, talk to a professional before starting.",
       verif_titre: "Check your inbox",
       verif_texte: "We've just sent a link to {e}. Open it to confirm your account: you'll land straight on your questionnaire.",

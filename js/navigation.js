@@ -366,6 +366,8 @@ async function afficher(id, silencieux){
      qu'au bas du Profil : le repeter sous chaque page alourdissait tout. */
   const avecDonnees = outil.id === "profil" && !Store.idConsulte;
   const verrouille = estVerrouille(outil);   // v40 : mode gratuit
+  /* v64 (brief V2, B) : calculateur et Ma progression en pause tant que le prospect n'a pas donne son accord sante */
+  const pause = !verrouille && Sante.ECRANS.indexOf(outil.id) > -1 && Sante.aDemander();
   /* v51 : page vue par un prospect (la Decouverte compte elle-meme questionnaire et resultat) */
   if (outil.id !== "accueil" && outil.id !== "decouverte") Activite.page(verrouille ? "verrou-" + outil.id : outil.id);
   $("vue").innerHTML = `
@@ -375,7 +377,7 @@ async function afficher(id, silencieux){
       <h1>${Store.idConsulte ? esc(nomOnglet(outil)) : esc(outil.titre)}</h1>
       ${Store.idConsulte ? "" : `<p class="lede">${esc(outil.accroche)}</p>`}
     </header>`}
-    ${verrouille ? pageVerrouillee(outil) : htmlSur(outil)}
+    ${verrouille ? pageVerrouillee(outil) : (pause ? Sante.carteHTML(outil.id) : "") + htmlSur(outil)}
     ${avecDonnees ? blocSauvegarde() : ""}
     ${bandeauInstallation()}`;
 
@@ -394,7 +396,12 @@ async function afficher(id, silencieux){
   if (verrouille && Auth.estProspect() && !Store.idConsulte) $$("#vue .verrou a[target=_blank]").forEach(a => a.addEventListener("click", () => { try { Decouverte.clic(Store.cache[Decouverte.cle] || Decouverte.vide(), Decouverte.codeVerrou(outil.id)); } catch(e){} }));
   /* v52 (lot E) : l'exemple de la page verrouillee (journee type lue dans le catalogue public, demonstrations) */
   if (verrouille) Echantillons.brancher($("vue"), outil.id);
-  if (!verrouille){
+  if (pause){
+    /* rien n'est lu ni branche (outil.init) avant l'accord : la carte, les champs inactifs ; « J'accepte » (ou un accord
+       donne sur un autre appareil, relu) → la page repart, sans la carte */
+    Sante.figer($("vue"));
+    Sante.pause($("vue"), outil.id, () => { if (jeton === affichage && courant === outil.id) afficher(courant, true); });
+  } else if (!verrouille){
     try { fin = (await outil.init()) || null; }
     catch(e){
       /* une page quittee pendant son chargement ne trouve plus ses elements :

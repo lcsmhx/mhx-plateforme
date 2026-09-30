@@ -308,7 +308,7 @@ const outilProfil = {
     c.disabled = false;
     c.addEventListener("change", () => {
       const oui = c.checked;
-      const choix = { newsletter: oui, maj: new Date().toISOString(), version: DECOUVERTE.accords.newsletter, source: "profil" };
+      const choix = { newsletter: oui, maj: new Date().toISOString(), version: DECOUVERTE.accords.newsletter_profil, source: "profil" };
       if (!oui) choix.suivi = false;
       const ok = Store.ecrire("emails", Object.assign({}, d, choix));
       if (ok === false){ c.checked = !oui; if (msg) msg.textContent = trad(E.refuse); return; }
