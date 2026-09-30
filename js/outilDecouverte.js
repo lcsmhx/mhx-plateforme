@@ -925,8 +925,7 @@ const outilDecouverte = {
     const res = zone.querySelector("#dc-bilan-reserver"), tard = zone.querySelector("#dc-bilan-plus-tard");
     /* le lien s'ouvre dans un nouvel onglet (Calendly) ; ici, le choix est note puis l'accueil s'affiche */
     if (res) res.addEventListener("click", () => self.choisirBilan(zone, I, C, "reserver"));
-    /* v62 (brief V2, L) : le « Plus tard » est aussi note avec son origine (cle challenge, cta.plus_tard) */
-    if (tard) tard.addEventListener("click", () => { if (!self._choisit) Decouverte.plusTard(C, "apres_questionnaire"); self.choisirBilan(zone, I, C, "plus_tard"); });
+    if (tard) tard.addEventListener("click", () => self.choisirBilan(zone, I, C, "plus_tard"));
   },
   /* le choix est memorise UNE fois (intake.bilan_propose = { choix, le }), apres relecture d'intake si le cache n'est
      pas charge ; une page rouverte par son adresse n'ecrit plus rien. Ensuite, l'accueil. */
@@ -946,6 +945,9 @@ const outilDecouverte = {
         if (Store.ecrire("intake", J) === false){ if (avant === undefined) delete J.bilan_propose; else J.bilan_propose = avant; }   // refusee (message deja affiche)
       }
       if (J && typeof J === "object" && !Store.nonLus.has(J)) I = J;
+      /* v62 (brief V2, L) : « Plus tard » note aussi avec son origine (cle challenge, cta.plus_tard), chaque fois, seulement si
+         l'intake a pu etre lu (une lecture ratee : rien n'est ecrit, comme avant) */
+      if (choix === "plus_tard" && J && typeof J === "object" && !Store.nonLus.has(J)) Decouverte.plusTard(C, "apres_questionnaire");
     } finally { this._choisit = false; }
     /* apres la tache du clic : le lien vers Calendly (nouvel onglet) part avant que la page ne soit redessinee */
     setTimeout(() => {
