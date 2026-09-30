@@ -135,7 +135,7 @@ jobs:
       # vrais clients) étaient servis sur lcsmhx.github.io. L'app n'en lit aucun : icônes et logo sont intégrés à la page,
       # le catalogue est lu sur raw.githubusercontent.com (CONFIG.source_donnees). Garde-fou : tout autre fichier, ou un
       # fichier listé par index.html (MHX_CSS / MHX_JS) absent, arrête la publication (le site reste sur la version d'avant).
-      - name: Site publié (liste blanche : index.html, css/, js/, polices/)
+      - name: "Site publié (liste blanche : index.html, css/, js/, polices/)"
         if: steps.source.outputs.type == 'workflow'
         run: |
           set -euo pipefail
