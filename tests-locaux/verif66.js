@@ -704,8 +704,8 @@ const ISO = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$/;
       tout.length > 3000 && anciensVus(tout, ANCIENS).length === 0 && !PRIX.test(tout), JSON.stringify(anciensVus(tout, ANCIENS)) + " " + (tout.match(PRIX) || [""])[0]);
     await attendre(page, 1200);
     const Fo = contenuDe(db, ID, "formation") || {};
-    ok("en base, après ces 7 ouvertures (seule la clé formation est écrite) : d6, d7, c3 et les 3 étapes cochées intacts, aucune trace de « départ » (aucune vidéo lancée)",
-      saisies(db).length >= 1 && saisies(db).every(e => e.outil === "formation" && e.user_id === ID) && egal(Fo.defis, { d6: true, d7: true }) && Fo.challenge === "c3" && egal(Fo.coches, FORM_AVANT().coches) && !("depart" in Fo),
+    ok("en base, après ces 7 ouvertures (v68 : rien n'est écrit, ouvrir un module est un affichage seul) : d6, d7, c3 et les 3 étapes cochées intacts, aucune trace de « départ » (aucune vidéo lancée)",
+      saisies(db).length === 0 && saisies(db).every(e => e.outil === "formation" && e.user_id === ID) && egal(Fo.defis, { d6: true, d7: true }) && Fo.challenge === "c3" && egal(Fo.coches, FORM_AVANT().coches) && !("depart" in Fo),
       resume(db) + " " + JSON.stringify(Fo).slice(0, 200));
   });
 

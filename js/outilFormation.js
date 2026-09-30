@@ -785,16 +785,21 @@ const outilFormation = {
     /* v67 (audit du 01/10, D2) : la semaine et le jour affiches dans « Organise ta diète » sont un choix d'affichage de CET
        appareil : les changer ne reecrit plus tout « formation » (notes, objectifs, challenges et diete saisis entre-temps
        sur un autre appareil etaient effaces). Le choix reste sur l'appareil (cle mhx_, effacee a la deconnexion) ; au
-       depart, celui du document (rien ne change a l'ecran). Les champs du document ne sont jamais retires. */
+       depart, celui du document (rien ne change a l'ecran). Les champs du document ne sont jamais retires.
+       v68 : meme chose pour le module et la lecon ouverts (D.ouvert, D.lecon) : ouvrir ou fermer un module ou une lecon
+       n'ecrit plus rien ; le choix est garde avec la semaine et le jour ({ semaine, jour, ouvert, lecon }). Un choix garde
+       par la v67 (sans ouvert ni lecon) laisse ceux du document ; un module ou une lecon qui n'existe pas est ignore. */
     const cleAff = "mhx_aff|" + (Store.cible() || "_") + "|formation";
     try {
       const a = JSON.parse(localStorage.getItem(cleAff) || "null");
       if (a && typeof a === "object"){
         if (Number.isInteger(a.semaine) && a.semaine >= 1 && a.semaine <= 12) D.semaine = a.semaine;
         if (Number.isInteger(a.jour) && a.jour >= 0 && a.jour < JOURS_SEM.length) D.jour = a.jour;
+        if (typeof a.ouvert === "string" && (a.ouvert === "" || FORMATION.modules.some(m => m.id === a.ouvert))) D.ouvert = a.ouvert;
+        if (typeof a.lecon === "string" && (a.lecon === "" || (Object.prototype.hasOwnProperty.call(LECONS, a.lecon) && FORMATION.modules.some(m => (m.lecons || []).indexOf(a.lecon) > -1)))) D.lecon = a.lecon;
       }
     } catch(e){}
-    const garderAffichage = () => { try { localStorage.setItem(cleAff, JSON.stringify({ semaine: D.semaine, jour: D.jour })); } catch(e){} };
+    const garderAffichage = () => { try { localStorage.setItem(cleAff, JSON.stringify({ semaine: D.semaine, jour: D.jour, ouvert: D.ouvert, lecon: D.lecon })); } catch(e){} };
     const visibles = outilsVisibles().filter(o => !horsVitrine(o)).map(o => o.id);   // v50 : pas de lien vers un onglet cache au prospect
     const nouvelId = () => "x" + Date.now().toString(36) + Math.floor(Math.random() * 1000);
     /* v60 (brief V2, I) : prospect — son calcul et sa pesee, lus sans rien ecrire (comme son accueil : ce que cet onglet
@@ -860,16 +865,16 @@ const outilFormation = {
         if (bienvenue) videoLancee();
       }));
 
-      /* ouverture des modules et des lecons */
+      /* ouverture des modules et des lecons (v68 : affichage seul, rien n'est ecrit) */
       $$("[data-mod]", zone).forEach(b => b.addEventListener("click", () => {
         D.ouvert = (D.ouvert === b.dataset.mod) ? "" : b.dataset.mod;
-        sauver(); dessiner();
+        garderAffichage(); dessiner();
         const t = zone.querySelector('[data-mod="' + D.ouvert + '"]');
         if (t) t.scrollIntoView({ block:"start", behavior:"smooth" });
       }));
       $$("[data-lecon]", zone).forEach(b => b.addEventListener("click", () => {
         D.lecon = (D.lecon === b.dataset.lecon) ? "" : b.dataset.lecon;
-        sauver(); dessiner();
+        garderAffichage(); dessiner();
       }));
 
       /* cases a cocher du parcours */

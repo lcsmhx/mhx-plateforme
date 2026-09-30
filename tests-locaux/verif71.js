@@ -679,8 +679,8 @@ const detA = A => JSON.stringify(A ? { page: A.page, carte: A.carte, dehors: A.d
     const n1 = ecr(db, "formation", ID).length;
     await page.check('[data-coche="m2a"]'); await attendre(page, 2000);
     const Ec = ecr(db, "formation", ID), C2 = await lireCarte(page), fo = contenuDe(db, ID, "formation") || {};
-    ok("aucune ligne de diète créée en base : module ouvert (formation écrite : ouvert m2), valeurs forcées dans les grammes, la case, la semaine et le jour (aucun écouteur : rien d'écrit), puis une case de la to-do cochée (formation écrite, coches.m2a) — chaque écriture de formation porte une diète vide {} ; la carte redessinée",
-      n0 >= 1 && f === true && n1 === n0 && Ec.length === n0 + 1 && Ec.every(e => egal(e.contenu.diete, {})) && fo.coches && fo.coches.m2a === true && fo.ouvert === "m2" && carteOk(C2, "formation", "fr"),
+    ok("aucune ligne de diète créée en base : module ouvert (v68 : rien d'écrit, affichage seul), valeurs forcées dans les grammes, la case, la semaine et le jour (aucun écouteur : rien d'écrit), puis une case de la to-do cochée (formation écrite, coches.m2a) — chaque écriture de formation porte une diète vide {} ; la carte redessinée",
+      n0 === 0 && f === true && n1 === n0 && Ec.length === n0 + 1 && Ec.every(e => egal(e.contenu.diete, {})) && fo.coches && fo.coches.m2a === true && fo.ouvert === "m2" && carteOk(C2, "formation", "fr"),
       JSON.stringify([n0, n1, Ec.map(e => e.contenu.diete), fo.coches, f]));
     const S0 = await stockage(page);
     ok("rien d'autre : aucune lecture ni écriture de calc_perso ou mens par la diète, aucune copie en file, aucun PUT ; UNE relecture GET /auth/v1/user ; session rangée dans sessionStorage (« Rester connecté » décoché)",
