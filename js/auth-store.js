@@ -433,7 +433,13 @@ const Sante = {
      jusque-la (ancien client repasse prospect, saisie hors ligne) part AVANT que l'outil relise la base — sinon la saisie
      suivante l'ecraserait ; 4 s au plus, puis l'outil repart quoi qu'il arrive */
   async apres(suite){
-    try { await Promise.race([Store.reprendre(), new Promise(r => setTimeout(r, 4000))]); } catch(e){}
+    const fin = Date.now() + 4000;
+    try {
+      /* une reprise deja en cours (autre page qui repart, relecture) : l'attendre, sinon Store.reprendre rendrait la main
+         tout de suite et l'outil relirait la base avant l'envoi de la copie */
+      while (Store._reprend && Date.now() < fin) await new Promise(r => setTimeout(r, 50));
+      await Promise.race([Store.reprendre(), new Promise(r => setTimeout(r, Math.max(0, fin - Date.now())))]);
+    } catch(e){}
     if (typeof suite === "function") suite();
   },
   /* garde du stockage : une cle de sante (mens ; calc_perso avec des chiffres — le retrait « {} » du garde-fou 18 ans
