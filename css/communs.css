@@ -559,6 +559,13 @@ label.objectif{cursor:pointer;text-transform:none;letter-spacing:0;font-weight:4
   animation:volet var(--doux) cubic-bezier(.2,.7,.2,1) both}
 @keyframes volet{from{transform:translateX(30px);opacity:0}to{transform:none;opacity:1}}
 .volet .fermer-volet{position:absolute;top:12px;right:12px}
+/* v69 : fleche de retour a gauche du titre du volet (« Tout mon espace » du prospect) — discrete, couleur du texte secondaire */
+.volet-tete{display:flex;align-items:center;gap:4px;margin:0 0 14px}
+.volet-tete h2{margin:0;min-width:0}
+.retour-volet{display:inline-flex;align-items:center;justify-content:center;flex:none;width:40px;height:40px;margin:-10px 0 -10px -12px;
+  border-radius:var(--r-sm);color:var(--ink-3);text-decoration:none;transition:color var(--vite),background var(--vite)}
+.retour-volet svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.retour-volet:hover,.retour-volet:focus-visible{color:var(--ink);background:var(--sunken)}
 .toasts{position:fixed;left:0;right:0;bottom:calc(16px + env(safe-area-inset-bottom));z-index:70;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;padding:0 16px}
 .toast{pointer-events:auto;max-width:420px;width:auto;background:var(--raised);color:var(--ink);border:1px solid var(--line-strong);border-left:3px solid var(--ink-3);
   border-radius:var(--r);padding:11px 16px;font-size:14px;box-shadow:var(--shadow);animation:glisse var(--doux) cubic-bezier(.2,.7,.2,1) both}

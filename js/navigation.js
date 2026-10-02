@@ -256,8 +256,11 @@ function construireBarreBas(){
     `<a href="#/${o.id}" data-id="${o.id}"${estVerrouille(o) ? ' class="verrouille"' : ""}>${iconeOutil(o)}<span class="lbl">${esc(nomCourt(o))}</span>${cadenasNav(o)}</a>`).join("") +
     (autres.length ? `<button type="button" data-plus><span class="ico" aria-hidden="true">${ICONES.plus}</span><span class="lbl">Plus</span></button>` : "");
   const plus = b.querySelector("[data-plus]");
+  /* v69 : le prospect revient a l'accueil par une fleche a gauche du titre (la croix seule ne suffisait pas sur telephone) */
+  const retourAccueil = Auth.estProspect() && !Store.idConsulte && principaux.some(o => o.id === "accueil")
+    ? { href: "#/accueil", libelle: trad("Retour à l'accueil") } : null;
   if (plus) plus.addEventListener("click", () => {
-    UI.volet({ titre: trad("Tout mon espace"), corps: `<ul class="menu-plus">` + autres.map(o =>
+    UI.volet({ titre: trad("Tout mon espace"), retour: retourAccueil, corps: `<ul class="menu-plus">` + autres.map(o =>
       `<li><a href="#/${o.id}" data-id="${o.id}"${courant === o.id ? ' aria-current="page"' : ""}>${iconeOutil(o)}<span>${esc(nomOnglet(o))}${cadenasNav(o)}</span></a></li>`).join("") + `</ul>` });
     /* un clic sur un lien du volet le referme */
     setTimeout(() => { $$(".volet .menu-plus a").forEach(a => a.addEventListener("click", () => UI.fermer())); if (typeof Nouveautes !== "undefined") Nouveautes.badge(); }, 0);

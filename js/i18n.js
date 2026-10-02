@@ -778,7 +778,7 @@ I18N.en = {
 "verrouillé": "locked", "Réserver mon bilan": "Book my assessment",
 /* v34 — navigation et accueil */
 "Accueil": "Home", "Nutrition": "Nutrition", "Ma progression": "My progress", "Sa progression": "Their progress",
-"Speed Formation": "Speed Formation", "Profil": "Profile", "Plus": "More", "Tout mon espace": "My whole space",
+"Speed Formation": "Speed Formation", "Profil": "Profile", "Plus": "More", "Tout mon espace": "My whole space", "Retour à l'accueil": "Back to home",
 "Programme": "Program", "Progression": "Progress", "Bilan": "Review", "Compléments": "Supplements", "Formation": "Course",
 "Bonjour": "Hello", "Vue d'ensemble": "Overview", "Cette semaine": "This week", "Aujourd'hui": "Today",
 "Sa semaine en un coup d'œil.": "Their week at a glance.",
