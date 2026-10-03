@@ -1034,14 +1034,17 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
        stricte d'elle-même. */
     const DONNEES_V66 = "Tu peux en récupérer une copie complète quand tu veux, et demander leur effacement.";
     const DONNEES_V67 = "Tu peux récupérer quand tu veux une copie de tes saisies et de tes accords (tes photos et ton historique de connexion : sur demande à ton coach), et demander leur effacement.";
+    /* v70 : bloc « Partager l'app » du Profil (différence VOULUE avec main tant que la v70 n'y est pas ; ensuite, présent des
+       deux côtés, retiré des deux côtés : la comparaison reste stricte) */
+    const PARTAGE_V70 = "Partager l'app Envoie le lien de l'app à un proche : l'espace gratuit est ouvert à tout le monde. Partager l'app";
     const sansNote = t => {
       let x = t.split(NOTE_V52).join("[note du changement d'adresse]").split(NOTE_V51).join("[note du changement d'adresse]").split(ADR_V51).join("[adresse]").split(ADR_V52).join("[adresse]")
-        .split(DONNEES_V67).join("[mes données]").split(DONNEES_V66).join("[mes données]");
+        .split(DONNEES_V67).join("[mes données]").split(DONNEES_V66).join("[mes données]").split(" " + PARTAGE_V70).join("");
       const i = x.indexOf("Changer mon adresse email"); if (i < 0) return x;
       const fins = ["[note du changement d'adresse]", MAIL_V52].map(n => { const j = x.indexOf(n, i); return j < 0 ? -1 : j + n.length; }).filter(j => j > 0);
       return fins.length ? x.slice(0, i) + "[changement d'adresse]" + x.slice(Math.min(...fins)) : x;
     };
-    ok("client Thomas, Profil : texte identique à main (hors bloc « Mon compte » voulu en v52 : adresse et changement d'adresse sans email ; v67 : note de « Mes données », présente)", pro.t.length > 200 && pro.t.includes(MAIL_V52) && pro.t.includes(DONNEES_V67) && sansNote(pro.t) === sansNote(proM.t), pro.t.length + " / " + proM.t.length + " · nouveau texte : " + pro.t.includes(MAIL_V52) + " · " + (() => { const x = sansNote(pro.t), y = sansNote(proM.t); let k = 0; while (k < x.length && x[k] === y[k]) k++; return JSON.stringify(x.slice(Math.max(0, k - 40), k + 60)) + " ≠ " + JSON.stringify(y.slice(Math.max(0, k - 40), k + 60)); })());
+    ok("client Thomas, Profil : texte identique à main (hors bloc « Mon compte » voulu en v52 : adresse et changement d'adresse sans email ; v67 : note de « Mes données », présente ; v70 : bloc « Partager l'app », présent)", pro.t.length > 200 && pro.t.includes(MAIL_V52) && pro.t.includes(DONNEES_V67) && pro.t.includes(PARTAGE_V70) && sansNote(pro.t) === sansNote(proM.t), pro.t.length + " / " + proM.t.length + " · nouveau texte : " + pro.t.includes(MAIL_V52) + " · " + (() => { const x = sansNote(pro.t), y = sansNote(proM.t); let k = 0; while (k < x.length && x[k] === y[k]) k++; return JSON.stringify(x.slice(Math.max(0, k - 40), k + 60)) + " ≠ " + JSON.stringify(y.slice(Math.max(0, k - 40), k + 60)); })());
     await pro.c.close(); await proM.c.close();
   });
   await bloc("J. fiche d'un client et Mes clients", async () => {
