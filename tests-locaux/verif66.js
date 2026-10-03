@@ -38,7 +38,8 @@
        vignette elle-même : même effet ; v62 (H4) : la vidéo qui complète les 3 (calcul et pesée déjà faits) → UNE
        écriture, carte repliée et l'invitation juste après #fo-depart ; écriture de formation refusée → action non cochée,
        rien de déclenché (ni invitation, ni lecture, ni mémoire sur l'appareil) ;
-   I4. client Thomas et coach (fiche d'un prospect) : aucune des deux cartes, « Ton parcours » en premier, aucune
+   I4. client Thomas et coach (fiche d'un prospect, ouverte par Clients.ouvrir — v71 (D) : un prospect n'a plus de ligne dans
+       Mes clients) : aucune des deux cartes, « Ton parcours » en premier, aucune
        lecture de calc_perso ni de mens (quel que soit l'ordre ou le découpage) ; la vignette de Thomas n'écrit rien ;
    I5. page servie retouchée (FORMATION.video_minutes à 4, une ressource de plus dans le module 6) : « Commence ici ·
        7 min » / « Start here · 7 min », tuile des documents à 16 (rien d'écrit en dur) ;
@@ -978,8 +979,11 @@ const ISO = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$/;
     await c.close();
     ({ c, page } = await contexte(b, COACH, db));
     await page.goto(URL0 + "#/tableau"); await pret(page); await attendre(page, 600);
-    await aller(page, "#/clients", 2000); await page.waitForSelector(`[data-ouvrir="${IDP}"]`, { timeout: 8000 });
-    await page.click(`[data-ouvrir="${IDP}"]`); await page.waitForSelector("#vue .bandeau", { timeout: 8000 }); await attendre(page, 800);
+    /* v71 (D) : Jade est prospect : plus de ligne ni de bouton [data-ouvrir] dans Mes clients (les prospects sont dans Prospects) ;
+       Mes clients ouverte (le tableau des clients rendu), puis sa fiche ouverte comme le bouton le faisait : Clients.ouvrir
+       (nom affiché « Jade Essai » = Clients.nom, PROSPECT : prénom + « Essai ») */
+    await aller(page, "#/clients", 2000); await page.waitForSelector("#tb-clients [data-ouvrir]", { timeout: 8000 });
+    await page.evaluate(([id, n]) => Clients.ouvrir(id, n, "accueil"), [IDP, "Jade Essai"]); await page.waitForSelector("#vue .bandeau", { timeout: 8000 }); await attendre(page, 800);
     const L0 = db.lectures.length;
     await aller(page, "#/formation", 2000); await page.waitForSelector("#fo-vue .prog-compteur", { timeout: 8000 });
     const k = await page.evaluate(() => ({ consulte: Store.idConsulte, depart: !!document.getElementById("fo-depart"), apercu: !!document.getElementById("fo-apercu"), presentation: !!document.getElementById("fo-presentation") }));

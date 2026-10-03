@@ -46,7 +46,7 @@
       Profil : 12 paragraphes, le 2e EXACT (français, anglais), les 11 autres identiques à la v60 (empreinte) ; v64 (lot 5,
       brief V2 A) : accords.conditions et conditions_version envoyée à l'inscription = la version des CGU en PDF
       (CONFIG.textes_legaux.cgu_version, servie avec une valeur de test), plus celle du texte court ; plus de case santé ;
-   K. coach : fiche d'un prospect — chronologie « Clic « Récupérer mon plan d'action » (<écran>) » (v63) : anciens clics
+   K. coach : fiche d'un prospect (v71 (D) : ouverte par Clients.ouvrir, Léa n'a plus de ligne dans Mes clients) — chronologie « Clic « Récupérer mon plan d'action » (<écran>) » (v63) : anciens clics
       (decouverte, decouverte-accompagnement, bilan-propose, verrou-programme) sous le nom de l'écran d'aujourd'hui, plus
       aucun ancien libellé ni « Réserver mon bilan », nouveaux codes avec leur nom d'écran, codes illisibles sans libellé
       (texte brut) ; autres libellés du coach inchangés ; « 16 clics, le dernier le <date> » = date du clic le plus récent
@@ -819,9 +819,12 @@ const verrouVu = (page, id) => page.evaluate(id => {
     const C0 = { version: 1, jours: {}, cta: { clics: CLICS.map(([source], i) => ({ jour: 2, source, date: avant((i + 1) * 7 * MIN + i * 2 * H) })) } };
     const db = base({ comptes: [compte(k, [["intake", AVEC_CHOIX(k, { bilan_propose: { choix: "reserver", le: avant(2 * H) } })], ["challenge", C0]])] });
     const { page } = await contexte(b, COACH, db, { viewport: ORDI });
-    await page.goto(URL0 + "#/clients"); await pret(page, `[data-ouvrir="${ID}"]`);
+    /* v71 (D) : Léa (prospecte) n'a plus de ligne ni de bouton « Ouvrir » dans Mes clients : on attend le tableau chargé (la ligne
+       « Les prospects sont dans Prospects → » sous le titre), puis sa fiche s'ouvre par Clients.ouvrir (ce que faisait le bouton),
+       avec le nom que portait le bouton (Clients.nom : prénom + nom) ; la suite attend #fiche-chrono comme avant */
+    await page.goto(URL0 + "#/clients"); await pret(page, "#clients-prospects:not([hidden])");
     const coachSeul = await page.evaluate(() => lienCalendly("accueil_haut"));
-    await page.click(`[data-ouvrir="${ID}"]`); await page.waitForSelector("#fiche-chrono", { timeout: 8000 }); await attendre(page, 800);
+    await page.evaluate(([id, n]) => Clients.ouvrir(id, n, "accueil"), [ID, "Léa Martin"]); await page.waitForSelector("#fiche-chrono", { timeout: 8000 }); await attendre(page, 800);
     const chrono = await page.$$eval("#fiche-chrono ol.dc-chrono li span", l => l.map(x => x.textContent)).then(l => l.map(norm)).catch(() => []);
     const CLIC = "Clic « Récupérer mon plan d'action »";
     const clics = chrono.filter(x => x.startsWith(CLIC)), att = CLICS.map(([, lib]) => CLIC + (lib ? " (" + lib + ")" : ""));

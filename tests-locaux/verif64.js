@@ -10,7 +10,8 @@
       « nouveau créneau » ; la case du prospect cochée APRÈS la dernière décision du coach compte de nouveau (pas une case
       datée dans le futur) ; l'ordre : signé, case, absent, clic, nouveau, appel, perdu, puis tout ce qui n'est pas à traiter
       (un « Signé » oublié le dernier, même coché avant l'appel) ; le texte d'aide ; v59 (relecture) : Nouveautés et
-      l'info-bulle de Mes clients suivent la case à vérifier de l'analyse ; un Absent dont la case d'après l'appel reste à
+      l'info-bulle « bilan réservé » (Decouverte.pastilleCoach, appelée directement ; v71 (D) : Mes clients ne l'affiche
+      plus) suivent la case à vérifier de l'analyse ; un Absent dont la case d'après l'appel reste à
       vérifier au-delà de 14 jours : « Retirer « Bilan réservé » » dans la fiche ;
    B. page Prospects : les 3 motifs dans « À traiter » (ordre, tuile, filtre, en-tête, cartes avec le motif et la prochaine
       action, aide), les autres issues hors de la liste ; « J'ai relancé » (Absent, Perdu) et « Perdu » (bilan à conclure) :
@@ -32,7 +33,9 @@
    H. la coche ou la case d'avant l'appel, et la case à vérifier après l'appel : la ligne « Bilan » de la carte, l'info-bulle
       « bilan réservé », les colonnes « Bilan réservé » du CSV et le bloc « Découverte » de la fiche suivent l'analyse (plus
       « réservé le … » ni « à vérifier » contraires au motif) ; sans issue : inchangés ; v59 (relecture) : de même
-      Nouveautés, le badge de l'onglet Prospects et l'info-bulle « bilan réservé » de Mes clients ;
+      Nouveautés et le badge de l'onglet Prospects ; v71 (D) : Mes clients ne liste plus les prospects (« Les prospects sont
+      dans Prospects → (N comptes gratuits). », lien), le fait « Bilan » de leur carte Prospects tient lieu de l'info-bulle
+      de leur ligne ;
    Z. aucun appel vers l'extérieur.
    Infrastructure (serveur, faux Supabase, personnes, décor) reprise de verif58 : rien ne part vers la vraie base (routage
    par NOM D'HÔTE) ; règles de la base reproduites ; chaque écriture appliquée en mémoire et notée, avec sa condition maj_le.
@@ -371,8 +374,11 @@ const uids = page => page.$$eval("#pr-liste .sc-carte", l => l.map(e => e.datase
 const carte = (page, uid) => page.$eval(`#pr-liste .sc-carte[data-uid="${uid}"]`, e => e.textContent.replace(/[  ]/g, " ").replace(/\s+/g, " ").trim()).catch(() => "");
 const motifCarte = (page, uid) => page.$eval(`#pr-liste .sc-carte[data-uid="${uid}"] .sc-motif`, e => e.textContent.replace(/[  ]/g, " ").replace(/\s+/g, " ").trim()).catch(() => "");
 const titreBilan = (page, uid) => page.$$eval(`#pr-liste .sc-carte[data-uid="${uid}"] .sc-tete .pastille.ok`, l => { const e = l.find(x => x.textContent.trim() === "bilan réservé"); return e ? e.getAttribute("title") : null; }).catch(() => null);
-/* v59 (relecture) : l'info-bulle de la pastille « bilan réservé » d'un prospect dans Mes clients (Decouverte.pastilleCoach) */
-const titreClients = (page, uid) => page.$eval(`#tb-clients [data-ouvrir="${uid}"]`, bt => { const e = Array.from(bt.closest("tr").querySelectorAll('td[data-l="Client"] .pastille.ok')).find(x => x.textContent.trim() === "bilan réservé"); return e ? e.getAttribute("title") : null; }).catch(() => null);
+/* v71 (D) : les faits d'une carte Prospects ({ libellé : valeur }, .sc-faits, comme verif61) — là où se lisait, jusqu'à la v70,
+   l'info-bulle « bilan réservé » de la ligne d'un prospect dans Mes clients (Decouverte.pastilleCoach : plus de ligne) */
+const faits = (page, uid) => page.$eval(`#pr-liste .sc-carte[data-uid="${uid}"]`, e => { const o = {}; e.querySelectorAll(".sc-faits li").forEach(li => { const n = x => ((x || {}).textContent || "").replace(/[  ]/g, " ").replace(/\s+/g, " ").trim(); o[n(li.querySelector("span"))] = n(li.querySelector("b")); }); return o; }).catch(() => ({}));
+/* v71 (D) : la ligne sous le titre de Mes clients, « Les prospects sont dans Prospects → (N compte(s) gratuit(s)). » : { t, href } */
+const ligneProspects = async page => { const r = await page.$eval("#clients-prospects", e => { const a = e.querySelector("a.link-a"); return { t: e.textContent, href: a ? a.getAttribute("href") : "" }; }).catch(() => null); return r ? { t: norm(r.t), href: r.href } : { t: "", href: "" }; };
 const boutonsCarte = (page, uid) => page.$$eval(`#pr-liste .sc-carte[data-uid="${uid}"] [data-sc]`, l => l.map(e => e.dataset.sc)).catch(() => []);
 const boutonsFiche = page => page.$$eval("#fiche-commercial [data-sc]", l => l.map(e => e.dataset.sc + "=" + e.textContent.trim())).catch(() => []);
 const filtre = async (page, f) => { await page.click(`[data-filtre="${f}"]`); await attendre(page, 400); };
@@ -851,12 +857,15 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
       egal(cols("Alice Absente"), ["oui, avant l'appel", frL(MIDI(5)), ""]) && egal(cols("Sara Recase"), ["à vérifier (case du prospect)", frL(avant(20 * H)), frL(avant(20 * H))]) && egal(cols("Tina Reclic"), ["case du prospect, avant l'appel", frL(avant(6 * J)), frL(avant(6 * J))]),
       JSON.stringify([cols("Alice Absente"), cols("Sara Recase"), cols("Tina Reclic")]));
     ok("H : … Hugo inchangé (« oui », " + frL(MIDI(1)) + ")", egal(cols("Hugo Réservé"), ["oui", frL(MIDI(1)), ""]), JSON.stringify(cols("Hugo Réservé")));
-    /* v59 (relecture) : Mes clients, l'info-bulle « bilan réservé » (Decouverte.pastilleCoach) suit l'analyse, comme la carte */
+    /* v71 (D) : Mes clients ne liste plus les prospects (« Les prospects sont dans Prospects → (N comptes gratuits). ») : ce que
+       disait l'info-bulle « bilan réservé » de leur ligne (v59, Decouverte.pastilleCoach) se lit sur leur carte Prospects, fait
+       « Bilan », valeur exacte (la page est encore sur Prospects, filtre « Tous ») ; puis Mes clients : aucun des 4, la ligne */
+    const fb = {}; for (const [k, u] of [["Alice", ALICE], ["Sara", SARA], ["Tina", TINA], ["Hugo", HUGO]]) fb[k] = (await faits(page, u)).Bilan;
     await aller(page, "#/clients", 300); await page.waitForSelector("#tb-clients [data-ouvrir]", { timeout: 8000 }); await attendre(page, 500);
-    const tmc = {}; for (const [k, u] of [["Alice", ALICE], ["Sara", SARA], ["Tina", TINA], ["Hugo", HUGO]]) tmc[k] = await titreClients(page, u);
-    ok("H : Mes clients, info-bulle « bilan réservé » : Sara « à vérifier, puis coche « Bilan réservé » dans sa fiche » (plus « coché par toi »), Alice « coché par toi, avant l'appel », Tina « …, avant l'appel », Hugo inchangé (« coché par toi »)",
-      tmc.Sara === "A coché « J'ai réservé mon bilan » (à vérifier, puis coche « Bilan réservé » dans sa fiche)" && tmc.Alice === "Bilan réservé : coché par toi, avant l'appel" && tmc.Tina === "A coché « J'ai réservé mon bilan », avant l'appel" && tmc.Hugo === "Bilan réservé : coché par toi",
-      JSON.stringify(tmc));
+    const lp = await ligneProspects(page), dansTb = !!(await page.$([ALICE, SARA, TINA, HUGO].map(u => `#tb-clients [data-ouvrir="${u}"]`).join(", ")));
+    ok("H : Mes clients (v71) : ni Alice, Sara, Tina ni Hugo dans « Suivi de mes clients », « Les prospects sont dans Prospects → (4 comptes gratuits). » (lien #/prospects) ; cartes Prospects, fait « Bilan » : Sara « à vérifier (case cochée le " + frL(avant(20 * H)) + ") » (plus « réservé le »), Alice « coché le " + frL(MIDI(5)) + ", avant l'appel », Tina « case cochée le " + frL(avant(6 * J)) + ", avant l'appel », Hugo inchangé (« réservé le " + frL(MIDI(1)) + " »)",
+      !dansTb && lp.t === "Les prospects sont dans Prospects → (4 comptes gratuits)." && lp.href === "#/prospects" && fb.Sara === "à vérifier (case cochée le " + frL(avant(20 * H)) + ")" && fb.Alice === "coché le " + frL(MIDI(5)) + ", avant l'appel" && fb.Tina === "case cochée le " + frL(avant(6 * J)) + ", avant l'appel" && fb.Hugo === "réservé le " + frL(MIDI(1)),
+      JSON.stringify([dansTb, lp, fb]));
     await ficheDe(page, ALICE, "Alice Absente", "#fiche-decouverte");
     const da = await valeurFiche(page, "#fiche-decouverte", "Bilan réservé");
     await ficheDe(page, TINA, "Tina Reclic", "#fiche-decouverte");

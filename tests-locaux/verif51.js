@@ -27,6 +27,11 @@
    + « 15 min avec Lucas · offert », carte « Ce que l'accompagnement ajoute », case « J'ai déjà choisi mon créneau » ;
    pages verrouillées : un texte par page, bouton et ligne sous le bouton. Côté coach : libellés inchangés (anciens codes
    en base). Aucune vérification ajoutée ni retirée (89) : chaque attente changée est expliquée par un commentaire « v61 ».
+   v71 (D) : « Suivi de mes clients » ne liste plus que les clients : un prospect n'y a plus de ligne ni de bouton « Ouvrir »
+   (la ligne sous le titre renvoie à Prospects, avec le nombre de comptes gratuits). Ce que disaient ses pastilles se lit sur
+   sa carte de la page Prospects (sous-titre « inscrit le … · il y a n jours », faits « Clics plan d'action » et « Bilan »,
+   pastille « bilan réservé ») et dans sa fiche, ouverte par Clients.ouvrir (blocs G et I). Aucune vérification ajoutée ni
+   retirée ; chaque attente changée est expliquée par un commentaire « v71 (D) ».
    Texte d'origine (v51) :
    v51 — funnel « Découverte » (remplace le Challenge 7 jours) : démarrage du prospect (Jour n/7 depuis
    profils.cree_le, date locale), questionnaire court (manquants, bornes, brouillon pendant la frappe, garde
@@ -231,6 +236,16 @@ const memes = (I, R) => CLES.every(k => JSON.stringify(I[k]) === JSON.stringify(
 /* un clic « Récupérer mon plan d'action » (v61 ; avant : « Réserver mon bilan ») sans ouvrir Calendly */
 const cliquerCal = (page, sel) => page.evaluate(s => { const a = document.querySelector(s); if (!a) return false; a.addEventListener("click", e => e.preventDefault(), { once: true }); a.click(); return true; }, sel).catch(() => false);
 const ligneDe = (page, id) => page.$eval(`[data-ouvrir="${id}"]`, b => b.closest("tr").textContent).then(norm).catch(() => "");
+/* v71 (D) : un prospect n'a plus de ligne dans « Suivi de mes clients » (ligneDe rend "" ; un client en garde une) ; la ligne
+   sous le titre (#clients-prospects) renvoie à Prospects. Ce que disaient ses pastilles se lit sur sa carte de la page
+   Prospects (filtre « Tous ») — sous-titre « inscrit le … · il y a n jours », pastilles de l'en-tête, faits « Bilan »,
+   « Clics plan d'action »… — ou dans sa fiche (#fiche-decouverte), ouverte par Clients.ouvrir (avant : clic sur son bouton
+   « Ouvrir » de Mes clients). dateFrDe : une date locale « AAAA-MM-JJ » (ilYA) en « JJ/MM/AAAA » (dateFr de l'app) */
+const noteProspects = async page => ({ texte: await texte(page, "#clients-prospects"), lien: await page.$eval("#clients-prospects a.link-a", a => a.getAttribute("href")).catch(() => null) });
+const carteDe = (page, uid) => page.$eval(`#pr-liste .sc-carte[data-uid="${uid}"]`, e => { const n = t => String(t || "").replace(/[\u00a0\u202f]/g, " ").replace(/\s+/g, " ").trim(); const o = { _sous: n((e.querySelector(".sc-nom small") || {}).textContent), _pastilles: Array.from(e.querySelectorAll(".sc-tete .pastille")).map(x => n(x.textContent)) }; e.querySelectorAll(".sc-faits li").forEach(li => { o[n((li.querySelector("span") || {}).textContent)] = n((li.querySelector("b") || {}).textContent); }); return o; }).catch(() => ({}));
+const prospectsTous = async page => { await aller(page, "#/prospects", 300); await page.waitForSelector("#pr-liste", { timeout: 8000 }).catch(() => {}); await page.click('[data-filtre="tous"]').catch(() => {}); await attendre(page, 500); };
+const ouvrirFiche = async (page, uid, nom) => { await page.evaluate(([id, n]) => Clients.ouvrir(id, n, "accueil"), [uid, nom]).catch(() => {}); await attendre(page, 2200); };
+const dateFrDe = j => j.slice(8, 10) + "/" + j.slice(5, 7) + "/" + j.slice(0, 4);
 const deborde = page => page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
 
 (async () => {
@@ -597,9 +612,13 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
     const db2 = base({ intake, challenge });
     const { c: c2, page: p2 } = await contexte(b, coach, db2);
     await p2.goto(`http://localhost:${PORT}/#/clients`); await attendre(p2, 2400);
-    const l = await ligneDe(p2, PROSPECT);
-    await p2.click(`[data-ouvrir="${PROSPECT}"]`).catch(() => {}); await attendre(p2, 2200);
-    ok("coach : prospect aux données piégées — pastille « Découverte · inscrit depuis 2 j » (v52 ; avant : « J3/7 »), bloc « Découverte » de la fiche lisible, aucune injection", l.includes("Découverte · inscrit depuis 2 j") && !!(await p2.$("#fiche-decouverte")) && (await texte(p2, "#fiche-decouverte")).includes("Obstacle principal") && !(await p2.evaluate(() => window.__xss)) && !(await p2.$("#vue img[src='x']")) && db2.ecritures.length === 0, l);
+    /* v71 (D) : Léa (prospect) n'a plus de ligne dans « Suivi de mes clients » (Thomas en garde une ; la ligne sous le titre
+       renvoie à Prospects : 1 compte gratuit) ; sa fiche s'ouvre par Clients.ouvrir (avant : clic sur son bouton « Ouvrir »)
+       et porte « inscrit depuis 2 j » (avant : la pastille « Découverte · inscrit depuis 2 j » de sa ligne) */
+    const l = await ligneDe(p2, PROSPECT), lT = await ligneDe(p2, F.IDS.c1), np = await noteProspects(p2);
+    await ouvrirFiche(p2, PROSPECT, "Léa");
+    const f = await texte(p2, "#fiche-decouverte");
+    ok("coach : prospect aux données piégées — sans ligne dans Mes clients (Thomas en a une ; « Les prospects sont dans Prospects → (1 compte gratuit). », lien #/prospects), fiche « inscrit depuis 2 j » (v52 ; avant : « J3/7 »), bloc « Découverte » de la fiche lisible, aucune injection", l === "" && lT !== "" && np.texte === "Les prospects sont dans Prospects → (1 compte gratuit)." && np.lien === "#/prospects" && !!(await p2.$("#fiche-decouverte")) && f.includes("inscrit depuis 2 j") && f.includes("Obstacle principal") && !(await p2.evaluate(() => window.__xss)) && !(await p2.$("#vue img[src='x']")) && db2.ecritures.length === 0, (l || "(pas de ligne)") + " | " + np.texte + " | " + f.slice(0, 160));
     await c2.close();
   });
 
@@ -689,10 +708,17 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
     /* v53 (chantier 4) : plus de tuile « Prospects en découverte » ni de température (TIÈDE / FROID / CHAUD) : retirées (2),
        les nouvelles tuiles et la page Prospects sont vérifiées par verif58 */
     await aller(page, "#/clients", 2200);
-    const lLea = await ligneDe(page, PROSPECT), lMarc = await ligneDe(page, MARC);
+    /* v71 (D) : Léa et Marc (prospects) n'ont plus de ligne dans « Suivi de mes clients » (Thomas en garde une), aucune
+       pastille de prospect dans le tableau, la ligne sous le titre renvoie à Prospects (2 comptes gratuits) ; leurs anciennes
+       pastilles se lisent sur leurs cartes de la page Prospects (filtre « Tous ») : sous-titre « inscrit le … · il y a n jours »
+       (avant : « Découverte · inscrit depuis n j ») et fait « Clics plan d'action » (avant : « a cliqué Plan d'action » ; le clic
+       d'aujourd'hui de Léa, source decouverte = « accueil, bouton du haut ») */
+    const lLea = await ligneDe(page, PROSPECT), lMarc = await ligneDe(page, MARC), lT = await ligneDe(page, F.IDS.c1), tb = await texte(page, "#tb-clients"), np = await noteProspects(page);
+    await prospectsTous(page);
+    const cLea = await carteDe(page, PROSPECT), cMarc = await carteDe(page, MARC);
     /* v52 (lot D) : « inscrit depuis n j » (avant : « Découverte J3/7 » / « Découverte terminée ») */
-    ok("Mes clients : Léa « Découverte · inscrit depuis 2 j » + « a cliqué Plan d'action » ; Marc « Découverte · inscrit depuis 10 j »", lLea.includes("Découverte · inscrit depuis 2 j") && lLea.includes("a cliqué Plan d'action") && lMarc.includes("Découverte · inscrit depuis 10 j") && !/J\d+\/7|terminée/.test(lLea + lMarc), lLea + " | " + lMarc);
-    await page.click(`[data-ouvrir="${PROSPECT}"]`).catch(() => {}); await attendre(page, 2200);
+    ok("Mes clients (v71 D) : ni Léa ni Marc (Thomas si), aucune pastille Découverte / prospect dans le tableau, « Les prospects sont dans Prospects → (2 comptes gratuits). » (lien #/prospects) ; page Prospects : Léa « inscrit le … · il y a 2 jours », « Clics plan d'action » 1 (dernier : accueil, bouton du haut), « Bilan » pas réservé ; Marc « il y a 10 jours », 0 clic", lLea === "" && lMarc === "" && lT !== "" && !/Découverte ·|a cliqué Plan d'action|bilan réservé|prospect|J\d+\/7|terminée/.test(tb) && np.texte === "Les prospects sont dans Prospects → (2 comptes gratuits)." && np.lien === "#/prospects" && cLea._sous === "inscrit le " + dateFrDe(ilYA(2)) + " · il y a 2 jours" && cLea["Clics plan d'action"] === "1 (dernier : accueil, bouton du haut)" && cLea.Bilan === "pas réservé" && cMarc._sous === "inscrit le " + dateFrDe(ilYA(10)) + " · il y a 10 jours" && cMarc["Clics plan d'action"] === "0", (lLea || "(pas de ligne)") + " | " + (lMarc || "(pas de ligne)") + " | " + np.texte + " | " + JSON.stringify(cLea) + " | " + JSON.stringify(cMarc));
+    await ouvrirFiche(page, PROSPECT, "Léa");   // v71 (D) : avant, clic sur son bouton « Ouvrir » de Mes clients
     const f = await texte(page, "#fiche-decouverte");
     ok("fiche de Léa : bloc « Découverte » (inscrit depuis 2 j — v52 ; avant : jour 3 / 7 —, questionnaire rempli, objectif, motivation 8 / 10, 1 clic, case pas cochée)", f.includes("inscrit depuis 2 j") && !f.includes("/ 7") && f.includes("rempli le") && f.includes("Perte de poids / sèche") && f.includes("8 / 10") && f.includes("1 clic") && f.includes("pas cochée"), f.slice(0, 300));
     /* v61 : l'adresse du nouvel événement (CAL), demandée avec un code nouveau (accueil_haut ; avant : decouverte) */
@@ -713,9 +739,15 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
        vérification et « Léa CHAUD, Marc FROID » (page Prospects) sont retirées (1) ; l'effacement du drapeau reste vérifié */
     ok("v53 : ancien drapeau du mode test (mhx_decouverte_jour = 8) sur l'appareil du coach : effacé au démarrage ; le tableau de bord s'affiche (Prospects : 2)", (await page.evaluate(() => localStorage.getItem("mhx_decouverte_jour"))) === null && (await texte(page, "#tb-t-prospects .t-val")) === "2", await texte(page, "#tb-vue"));
     await aller(page, "#/clients", 2200);
-    const lLea = await ligneDe(page, PROSPECT), lMarc = await ligneDe(page, MARC);
-    ok("Mes clients (même appareil) : Léa « Découverte · inscrit depuis 2 j » + « bilan réservé » (et pas « a cliqué Plan d'action ») ; Marc « Découverte · inscrit depuis 10 j » (v52)", lLea.includes("Découverte · inscrit depuis 2 j") && lLea.includes("bilan réservé") && !lLea.includes("a cliqué Plan d'action") && lMarc.includes("Découverte · inscrit depuis 10 j"), lLea + " | " + lMarc);
-    await page.click(`[data-ouvrir="${PROSPECT}"]`).catch(() => {}); await attendre(page, 2200);
+    /* v71 (D) : comme au bloc I, plus de ligne de prospect dans Mes clients ; la case « J'ai réservé » cochée aujourd'hui se lit
+       sur la carte Prospects de Léa : pastille « bilan réservé » seule dans l'en-tête (avant : sur sa ligne, sans « a cliqué
+       Plan d'action ») et fait « Bilan » « à vérifier (case cochée le <aujourd'hui>) » ; son clic d'hier reste compté dans
+       « Clics plan d'action » ; Marc : « pas réservé », aucune pastille */
+    const lLea = await ligneDe(page, PROSPECT), lMarc = await ligneDe(page, MARC), lT = await ligneDe(page, F.IDS.c1), tb = await texte(page, "#tb-clients"), np = await noteProspects(page);
+    await prospectsTous(page);
+    const cLea = await carteDe(page, PROSPECT), cMarc = await carteDe(page, MARC);
+    ok("Mes clients (même appareil, v71 D) : ni Léa ni Marc (Thomas si), aucune pastille de prospect dans le tableau, « Les prospects sont dans Prospects → (2 comptes gratuits). » ; page Prospects : Léa « il y a 2 jours », pastille « bilan réservé » seule, « Bilan » à vérifier (case cochée aujourd'hui), 1 clic (hier) ; Marc « il y a 10 jours », « Bilan » pas réservé, aucune pastille (v52)", lLea === "" && lMarc === "" && lT !== "" && !/Découverte ·|a cliqué Plan d'action|bilan réservé|prospect/.test(tb) && np.texte === "Les prospects sont dans Prospects → (2 comptes gratuits)." && np.lien === "#/prospects" && cLea._sous === "inscrit le " + dateFrDe(ilYA(2)) + " · il y a 2 jours" && JSON.stringify(cLea._pastilles) === '["bilan réservé"]' && cLea.Bilan === "à vérifier (case cochée le " + dateFrDe(ilYA(0)) + ")" && cLea["Clics plan d'action"] === "1 (dernier : accueil, bouton du haut)" && cMarc._sous === "inscrit le " + dateFrDe(ilYA(10)) + " · il y a 10 jours" && cMarc.Bilan === "pas réservé" && JSON.stringify(cMarc._pastilles) === "[]", (lLea || "(pas de ligne)") + " | " + (lMarc || "(pas de ligne)") + " | " + np.texte + " | " + JSON.stringify(cLea) + " | " + JSON.stringify(cMarc));
+    await ouvrirFiche(page, PROSPECT, "Léa");   // v71 (D) : avant, clic sur son bouton « Ouvrir » de Mes clients
     const f = await texte(page, "#fiche-decouverte");
     /* v53 (chantier 4) : la case du prospect se lit « Le prospect a coché « J'ai réservé » le … » (le coach coche lui-même « Bilan réservé ») */
     ok("fiche de Léa (même appareil) : « inscrit depuis 2 j » (v52 ; avant : « jour 3 / 7 »), case « Le prospect a coché « J'ai réservé » le … », pastille « bilan réservé » ; aucune écriture (tableau de bord, Mes clients, fiche)", f.includes("inscrit depuis 2 j") && f.includes("Le prospect a coché « J'ai réservé » le") && f.includes("bilan réservé") && db.ecritures.length === 0, f.slice(0, 300));

@@ -1109,8 +1109,10 @@ const detail = (C, V) => JSON.stringify(C ? { sig: C.sig, n: C.n, enfants: C.enf
       const k = 30, IDP = PID(k);
       const db = base({ comptes: [compte(k, [["intake", AVEC_CHOIX(k)], ["calc_perso", CP], ["mens", MENS_DEPART], ["formation", FO({ depart: { video: avant(2 * H) } })]])] });
       const { page } = await contexte(b, COACH, db, { viewport: ORDI });
-      await page.goto(URL0 + "#/clients"); await pret(page, `[data-ouvrir="${IDP}"]`);
-      await page.click(`[data-ouvrir="${IDP}"]`); await page.waitForSelector("#vue .bandeau", { timeout: 8000 }); await attendre(page, 800);
+      /* v71 (D) : un prospect n'a plus de ligne (ni bouton « Ouvrir ») dans « Suivi de mes clients » : sa fiche s'ouvre par
+         Clients.ouvrir (ce que fait le bouton de sa carte Prospects), une fois Mes clients chargée (les clients du décor y sont) */
+      await page.goto(URL0 + "#/clients"); await pret(page, "#tb-clients [data-ouvrir]");
+      await page.evaluate(([id, n]) => Clients.ouvrir(id, n, "accueil"), [IDP, "Léa Martin"]); await page.waitForSelector("#vue .bandeau", { timeout: 8000 }); await attendre(page, 800);
       await aller(page, "#/formation", 2000);
       const coche = !!(await page.$('[data-coche="m1g"]'));
       /* la case est vraiment cochée par le coach (échec de page.check noté, pas avalé) et l'est encore à l'écran ensuite */

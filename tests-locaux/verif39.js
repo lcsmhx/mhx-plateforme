@@ -24,6 +24,9 @@
    espace gratuit » / « Create my free account » ; métadonnées : conditions_version = CONFIG.textes_legaux.cgu_version (servie
    « 2026-10-15 », LEGAUX_TEST ; distincte du texte court, 2026-10-01), newsletter_version « 2026-09-30 », plus de consentement_sante ni de sante_version ; en anglais,
    la case des conditions manquante (avant : la case santé). Même nombre de vérifications (48).
+   v71 (D) : le tableau « Suivi de mes clients » ne liste plus les prospects (ligne « Les prospects sont dans Prospects →
+   (N compte gratuit). » sous le titre) : les 2 vérifications de la ligne de Léa dans #tb-clients (pastille « prospect », feu
+   vert) sont adaptées (absence de Léa, ligne et lien vers Prospects). Même nombre (48).
    Usage : node verif39.js ../index.html                                         */
 const { chromium } = require("playwright"); const fs = require("fs"); const http = require("http"); const path = require("path");
 const F = require("./fixtures"); const HTML = path.resolve(process.argv[2] || "../index.html");
@@ -166,10 +169,15 @@ const lireTuiles = page => page.$$eval("#tb-vue .tb-tuile", l => l.map(t => {
        (2) ; les nouvelles tuiles et leurs urgences sont vérifiées par verif58 (bloc A). Le prospect reste sans alerte de
        suivi dans Mes clients (ci-dessous). */
     await aller(page, "#/clients", 1800);
-    const ligne = await page.locator("#tb-clients tr", { hasText: "Léa Démo" }).textContent();
-    ok("mes clients : pastille « prospect » sur la ligne de Léa", ligne.includes("prospect"));
-    const feu = await page.locator("#tb-clients tr", { hasText: "Léa Démo" }).locator(".point").getAttribute("class");
-    ok("mes clients : aucune alerte de suivi pour un prospect (feu vert)", /\bok\b/.test(feu), feu);
+    /* v71 (D) : le tableau « Suivi de mes clients » ne liste plus les prospects : plus de ligne, de pastille « prospect »,
+       de feu ni de bouton « Ouvrir » pour Léa dans #tb-clients ; une ligne sous le titre renvoie vers la page Prospects avec
+       le nombre de comptes gratuits (toujours affichée). Avant : pastille « prospect » et feu vert sur la ligne de Léa. */
+    await page.waitForSelector(`#tb-clients [data-ouvrir="${F.IDS.c1}"]`, { timeout: 8000 }).catch(() => {});   // le tableau est rendu (Thomas, client) ; l'ancien locator attendait de lui-même
+    const tbl = await page.$$eval("#tb-clients tr", trs => trs.map(tr => ({ t: tr.textContent.replace(/\s+/g, " ").trim(), feux: tr.querySelectorAll(".point").length, ouvrir: [...tr.querySelectorAll("[data-ouvrir]")].map(b => b.dataset.ouvrir) })));
+    ok("mes clients (v71 D) : Léa (prospect) n'a plus de ligne dans #tb-clients (ni pastille « prospect », ni bouton Ouvrir [data-ouvrir]) ; les 3 clients Thomas, Sarah et Julien y sont, chacun avec son feu",
+      !tbl.some(r => r.t.includes("Léa Démo")) && !tbl.some(r => r.ouvrir.includes(PROSPECT)) && !tbl.some(r => /\bprospect\b/.test(r.t)) && tbl.length === 3 && ["Thomas Démo", "Sarah Démo", "Julien Démo"].every(n => tbl.some(r => r.t.includes(n))) && tbl.every(r => r.feux === 1), JSON.stringify(tbl.map(r => r.t.slice(0, 40) + " · feux " + r.feux)));
+    const zp = await page.$eval("#clients-prospects", e => { const a = e.querySelector("a.link-a"); return { cache: e.hidden, t: e.textContent.replace(/\s+/g, " ").trim(), href: a ? a.getAttribute("href") : null }; }).catch(e => ({ erreur: String(e) }));
+    ok("mes clients (v71 D) : sous le titre, « Les prospects sont dans Prospects → (1 compte gratuit). » avec le lien a[href=\"#/prospects\"] (aucune alerte de suivi pour un prospect : il n'est plus dans ce tableau)", zp.cache === false && zp.t === "Les prospects sont dans Prospects → (1 compte gratuit)." && zp.href === "#/prospects", JSON.stringify(zp));
     const encadres = (await page.textContent("#alertes-clients")).replace(/\s+/g, " ");
     ok("mes clients : le prospect n'est pas dans les encadrés « Sans nouvelles… » / « Il manque quelque chose… »", !encadres.includes("Léa Démo") && encadres.includes("Julien Démo"), encadres.slice(0, 300));
     const compteLea = await ligneCompte(page, "Léa Démo").textContent();

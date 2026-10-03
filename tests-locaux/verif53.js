@@ -7,7 +7,8 @@
       ancienne que la base (fusionnée sans message, alors que la clé emails garde son message avec le nom « Emails de
       suivi ») ; déconnexion (l'activité part avant l'effacement de l'appareil) ;
    B. Mes clients, tableau de bord et fiche : activite / emails / coach_notifs récents ne cachent pas l'alerte
-      « Inactif depuis N j » d'un client ; l'activité d'un prospect compte toujours, ses emails non ;
+      « Inactif depuis N j » d'un client ; l'activité d'un prospect compte toujours, ses emails non (v71 (D) : lu sur la
+      tuile « Activité » de sa fiche, Mes clients ne liste plus que les clients) ;
    C. email du compte (email_compte) : premier brouillon, réponse « email » d'un questionnaire jamais écrasée, adresse
       du compte changée (une seule écriture à l'affichage), aucune écriture sinon ; côté coach (carte, recherche, CSV,
       fiche, mailto) email_compte, à défaut l'ancien intake.email ;
@@ -291,6 +292,8 @@ async function ouvrirFiche(page, uid){
   await page.waitForSelector("#fiche-reponses", { timeout: 6000 }); await attendre(page, 500);   // v53 (chantier 4) : #fiche-score n'existe plus
 }
 const lignesLi = (page, sel) => page.$$eval(sel + " li", l => l.map(li => [li.querySelector("span") ? li.querySelector("span").textContent.replace(/\s+/g, " ").trim() : "", li.querySelector("b") ? li.querySelector("b").textContent.replace(/\s+/g, " ").trim() : ""])).catch(() => []);
+/* v71 (D) : une tuile « En bref » de la fiche ({ val, sub }), par son libellé (modèle verif63) */
+const tuile = (page, lbl) => page.$$eval("#vue .tile", (l, t) => { const x = l.find(e => (e.querySelector(".t-lbl") || {}).textContent.trim() === t); return x ? { val: x.querySelector(".t-val").textContent.replace(/\s+/g, "").trim(), sub: x.querySelector(".t-sub").textContent.replace(/\s+/g, " ").trim() } : null; }, lbl).catch(() => null);
 const nvVisibles = (page, sel) => page.$$eval(sel + " .nv-liste li", l => l.filter(li => !li.closest("[hidden]")).map(li => li.querySelector(".nv-txt").textContent.replace(/\s+/g, " ").trim())).catch(() => []);
 const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", poids: "82", objectif: "Perte de poids / sèche", seances: "3", essaye: "Rien de sérieux", obstacle: "Le temps", pourquoi: "Pour ma santé", motivation: "7" }, o);
 
@@ -512,8 +515,22 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     ok("Mes clients : Marc (clé emails écrite il y a 1 h) garde « 15 j » / « Inactif depuis 15 j » ; Nora (coach_notifs il y a 2 h) garde « 20 j » / « Inactif depuis 20 j »", lm.act === "15 j" && lm.feu.includes("Inactif depuis 15 j") && ln.act === "20 j" && ln.feu.includes("Inactif depuis 20 j"), JSON.stringify({ lm, ln }));
     const flag = await texte(page, "#alertes-clients");
     ok("Mes clients : « Sans nouvelles depuis 10 jours ou plus : » cite Julien Démo, Marc Ancien et Nora Ancienne", /Sans nouvelles depuis 10 jours ou plus :[^.]*Julien Démo/.test(flag) && /Sans nouvelles depuis 10 jours ou plus :[^.]*Marc Ancien/.test(flag) && /Sans nouvelles depuis 10 jours ou plus :[^.]*Nora Ancienne/.test(flag), flag.slice(0, 300));
-    const lp = await ligne(PIA), lr = await ligne(REMI), le = await ligne(EVA);
-    ok("Mes clients : la prospecte Pia (activite il y a 1 h) « aujourd'hui » ; Eva (clé emails il y a 1 h, rien d'autre depuis 8 jours) comme Rémi (" + lr.act + "), pas « aujourd'hui »", lp.act === "aujourd'hui" && lr.act !== "aujourd'hui" && le.act === lr.act, JSON.stringify({ lp, lr, le }));
+    /* v71 (D) : les prospects ne sont plus dans #tb-clients (la ligne #clients-prospects renvoie à la page Prospects) : la
+       dernière saisie de Pia, Rémi et Eva se lit sur la tuile « Activité » de leur fiche (même règle que Mes clients : l'activité
+       d'un prospect compte, ses emails non ; « Dernière visite » de la carte Prospects n'est pas cette donnée, elle ne lit que
+       la clé activite) ; la fiche s'ouvre par Clients.ouvrir (modèle verif58), puis retour à Mes clients */
+    const absents = await page.$$eval("#tb-clients [data-ouvrir]", (l, ids) => ids.filter(id => !l.some(e => e.dataset.ouvrir === id)), [PIA, REMI, EVA]).catch(() => []);
+    const lprosp = await page.$eval("#clients-prospects", e => { const a = e.querySelector("a.link-a"); return { t: e.textContent, href: a ? a.getAttribute("href") : "" }; }).then(r => ({ t: norm(r.t), href: r.href })).catch(() => ({ t: "", href: "" }));
+    const ficheProspect = async (uid, nom) => {
+      await page.evaluate(([id, n]) => Clients.ouvrir(id, n, "accueil"), [uid, nom]);
+      await page.waitForSelector("#fiche-decouverte", { timeout: 8000 }); await attendre(page, 700);
+      const t = (await tuile(page, "Activité")) || { val: "?", sub: "?" }; t.h1 = await texte(page, "#vue .masthead h1");
+      await page.click("#sortir-fiche").catch(() => {}); await attendre(page, 800);
+      await aller(page, "#/clients", 1800); await page.waitForSelector(`#tb-clients [data-ouvrir="${F.IDS.c3}"]`, { timeout: 8000 });
+      return t;
+    };
+    const tp = await ficheProspect(PIA, "Pia Active"), tr = await ficheProspect(REMI, "Rémi Muet"), te = await ficheProspect(EVA, "Eva Désinscrite");
+    ok("Mes clients (v71) : Pia, Rémi et Eva n'y sont plus, « Les prospects sont dans Prospects → (3 comptes gratuits). » (lien #/prospects) ; fiche de Pia (activite il y a 1 h) : tuile « Activité » « auj. » ; Eva (clé emails il y a 1 h, rien d'autre depuis 8 jours) comme Rémi (" + tr.val + "), pas « auj. »", absents.length === 3 && lprosp.t === "Les prospects sont dans Prospects → (3 comptes gratuits)." && lprosp.href === "#/prospects" && tp.h1.startsWith("Pia Active") && tp.val === "auj." && tp.sub === "depuis sa dernière saisie" && tr.h1.startsWith("Rémi Muet") && tr.val !== "auj." && tr.sub === "depuis sa dernière saisie" && te.h1.startsWith("Eva Désinscrite") && te.val === tr.val && te.sub === tr.sub, JSON.stringify({ absents, lprosp, tp, tr, te }));
     await page.click(`#tb-clients [data-ouvrir="${F.IDS.c3}"]`); await attendre(page, 2600);
     const alertes = await page.$$eval("#vue .masthead .attention-alertes .pastille", l => l.map(e => e.textContent.trim())).catch(() => []);
     ok("fiche de Julien : l'alerte « Inactif depuis 12 j » est dans l'en-tête (la clé activite, lue par la fiche, ne compte pas pour un client)", alertes.includes("Inactif depuis 12 j"), JSON.stringify(alertes));
@@ -531,7 +548,7 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     ok("tableau de bord, « À traiter maintenant » : Julien « Inactif depuis 12 j »", cj.length === 1 && cj[0].includes("Inactif depuis 12 j"), JSON.stringify(cj));
     /* v53 (chantier 4) : plus de température ni de raison « Aucune action depuis N jours » : les vérifications de la page
        Prospects (Pia TIÈDE ; Rémi et Eva FROID) et de la fiche de Pia (TIÈDE) sont retirées (3) ; l'activité de Pia compte
-       toujours (« aujourd'hui » dans Mes clients, ci-dessus) */
+       toujours (v71 (D) : « auj. » sur la tuile « Activité » de sa fiche, ci-dessus ; avant : « aujourd'hui » dans Mes clients) */
     ok("affichages : aucune écriture", db.ecritures.length === 0, JSON.stringify(db.ecritures.map(e => e.outil || e.table)));
   });
 

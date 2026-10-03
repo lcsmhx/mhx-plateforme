@@ -13,8 +13,9 @@
       404 / 403 : plus d'essai avant le prochain chargement ; réseau coupé : nouvel essai à la prochaine ouverture ; côté
       coach : Mes clients et Prospects s'affichent, « — » dans les deux colonnes ;
    D. Mes clients : colonnes « Connexions » et « Dernière connexion » (v57 : juste après « Visite », date courte « 29/09 10:53 » ;
-      verif62), nombre, date et heure (heure de l'appareil du coach), « 0 » / « aucune » pour un client ou un prospect jamais connecté depuis, info-bulle « comptées
-      depuis le … », téléphone 390 px ;
+      verif62), nombre, date et heure (heure de l'appareil du coach), « 0 » / « aucune » pour un client jamais connecté depuis, info-bulle « comptées
+      depuis le … », téléphone 390 px ; v71 (D) : plus de prospect dans ce tableau (la ligne sous le titre renvoie vers Prospects :
+      leurs connexions, même piégées ou indisponibles, se lisent sur leur carte) ;
    E. page Prospects : les deux lignes dans chaque carte, la phrase d'aide ;
    F. rien côté client ni prospect : aucun texte du compteur, aucune lecture de la table ;
    G. l'interrupteur des visites (suivi_visites_clients) ne change rien au compteur : « tous » et « off », clients et
@@ -484,6 +485,12 @@ function avecLignes(db){
 /* les faits d'une carte de la page Prospects : { libellé : valeur } */
 const faits = (page, uid) => page.$eval(`#pr-liste .sc-carte[data-uid="${uid}"]`, e => { const o = {}, k = []; e.querySelectorAll(".sc-faits li").forEach(li => { const a = (li.querySelector("span") || {}).textContent || "", v = (li.querySelector("b") || {}).textContent || ""; o[a.trim()] = v.trim(); k.push(a.trim()); }); o._ordre = k; return o; }).catch(() => ({}));
 const titre = (page, uid, col) => page.$eval(`#tb-clients [data-ouvrir="${uid}"]`, (bt, c) => { const td = bt.closest("tr").querySelector(`td[data-l="${c}"] [title]`); return td ? td.getAttribute("title") : ""; }, col).catch(() => "");
+/* v71 (D) : un compte a-t-il sa ligne dans Mes clients ? true / false ; null si le tableau est vide ou absent (une absence ne
+   doit jamais venir d'une erreur : on exige « === false ») */
+const dansTableau = (page, uid) => page.$$eval("#tb-clients [data-ouvrir]", l => l.map(e => e.dataset.ouvrir)).then(l => l.length ? l.includes(uid) : null).catch(() => null);
+/* v71 (D) : la ligne sous le titre de Mes clients (« Les prospects sont dans Prospects → (N comptes gratuits). ») : texte, lien, visible */
+const noteProspects = page => page.$eval("#clients-prospects", e => ({ t: e.textContent, lien: !!e.querySelector('a[href="#/prospects"]'), visible: !e.hidden && e.offsetParent !== null })).then(o => Object.assign(o, { t: norm(o.t) })).catch(() => ({ t: "", lien: false, visible: false }));
+const NOTE_PROSPECTS = "Les prospects sont dans Prospects → (8 comptes gratuits).";   // le décor : 8 prospects (Karim est client)
 
 (async () => {
   await new Promise((r, k) => { server.once("error", e => k(new Error(e && e.code === "EADDRINUSE" ? "port " + PORT + " déjà pris (une autre suite tourne ?) : VERIF61_PORT=9771 node verif61.js ../index.html" : String(e)))); server.listen(PORT, r); });
@@ -612,11 +619,12 @@ const titre = (page, uid, col) => page.$eval(`#tb-clients [data-ouvrir="${uid}"]
     await cacher(page); await page.clock.fastForward(11 * MIN); await montrer(page); await attendre(page, 800);
     ok("C : … revenue après 11 min : plus d'essai avant le prochain chargement", notees(db).length === 1, String(notees(db).length));
     const { page: pc } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]");
-    const T = await ligneClient(pc, TESTEUR.id), Le = await ligneClient(pc, LEA);
-    ok("C : coach, table absente : Mes clients s'affiche, « — » dans les deux colonnes (compte de test et Léa), info-bulle « indisponibles »", T["Connexions"] === "—" && T["Dernière connexion"] === "—" && Le["Connexions"] === "—" && Le["Dernière connexion"] === "—" && /indisponibles/.test(await titre(pc, LEA, "Connexions")), JSON.stringify([T["Connexions"], T["Dernière connexion"], Le["Connexions"]]) + " " + (await titre(pc, LEA, "Connexions")));
-    await aller(pc, "#/prospects", 1800);
-    const fm = await faits(pc, MARC);
-    ok("C : … la page Prospects s'affiche, cartes avec « Connexions — » et « Dernière connexion — »", (await pc.$$("#pr-liste .sc-carte")).length > 0 && fm["Connexions"] === "—" && fm["Dernière connexion"] === "—", JSON.stringify(fm));
+    /* v71 (D) : Léa (prospecte) n'a plus de ligne dans Mes clients : l'info-bulle se lit sur le compte de test, ses « — » sur sa carte Prospects */
+    const T = await ligneClient(pc, TESTEUR.id), np = await noteProspects(pc);
+    ok("C : coach, table absente : Mes clients s'affiche, « — » dans les deux colonnes (compte de test), info-bulle « indisponibles » ; Léa (prospecte) n'y est plus, « " + NOTE_PROSPECTS + " » (lien)", T["Connexions"] === "—" && T["Dernière connexion"] === "—" && /indisponibles/.test(await titre(pc, TESTEUR.id, "Connexions")) && (await dansTableau(pc, LEA)) === false && np.t === NOTE_PROSPECTS && np.lien && np.visible, JSON.stringify([T["Connexions"], T["Dernière connexion"], await dansTableau(pc, LEA), np]) + " " + (await titre(pc, TESTEUR.id, "Connexions")));
+    await aller(pc, "#/prospects", 1800); await filtre(pc, "tous");
+    const fm = await faits(pc, MARC), fl = await faits(pc, LEA);
+    ok("C : … la page Prospects s'affiche, cartes avec « Connexions — » et « Dernière connexion — » (Marc et Léa)", (await pc.$$("#pr-liste .sc-carte")).length > 0 && fm["Connexions"] === "—" && fm["Dernière connexion"] === "—" && fl["Connexions"] === "—" && fl["Dernière connexion"] === "—", JSON.stringify([fm, fl]));
   });
 
   await bloc("C. retour arrière (403) et réseau coupé", async () => {
@@ -647,9 +655,15 @@ const titre = (page, uid, col) => page.$eval(`#tb-clients [data-ouvrir="${uid}"]
     ok("D : … info-bulle « comptées depuis le " + jourCoach(CX_TEST.premiere) + " »", (await titre(page, TESTEUR.id, "Connexions")) === "Une connexion par jour au plus, comptées depuis le " + jourCoach(CX_TEST.premiere), await titre(page, TESTEUR.id, "Connexions"));
     const Th = await ligneClient(page, F.IDS.c1);
     ok("D : Thomas (client hors de l'interrupteur des visites) : « 5 » et " + quandCourt(CX_THOMAS.derniere) + ", info-bulle « comptées depuis le " + jourCoach(CX_THOMAS.premiere) + " »", Th["Connexions"] === "5" && Th["Dernière connexion"] === quandCourt(CX_THOMAS.derniere) && (await titre(page, F.IDS.c1, "Connexions")) === "Une connexion par jour au plus, comptées depuis le " + jourCoach(CX_THOMAS.premiere), JSON.stringify([Th["Connexions"], Th["Dernière connexion"]]) + " " + (await titre(page, F.IDS.c1, "Connexions")));
-    const Le = await ligneClient(page, LEA), Ma = await ligneClient(page, MARC), Ka = await ligneClient(page, KARIM);
-    ok("D : prospecte Léa : « 3 » et " + quandCourt(CX_LEA.derniere) + " ; Marc (prospect, jamais connecté depuis) : « 0 » et « aucune »", Le["Connexions"] === "3" && Le["Dernière connexion"] === quandCourt(CX_LEA.derniere) && Ma["Connexions"] === "0" && Ma["Dernière connexion"] === "aucune" && /Aucune connexion notée/.test(await titre(page, MARC, "Connexions")), JSON.stringify([Le["Connexions"], Le["Dernière connexion"], Ma["Connexions"], Ma["Dernière connexion"]]));
-    ok("D : Karim (client, jamais connecté depuis, sans ligne) : « 0 » et « aucune »", Ka["Connexions"] === "0" && Ka["Dernière connexion"] === "aucune", JSON.stringify([Ka["Connexions"], Ka["Dernière connexion"]]));
+    /* v71 (D) : Léa et Marc (prospects) n'ont plus de ligne dans Mes clients ; leurs connexions se lisent sur leur carte Prospects,
+       ouverte sur un second décor identique (la table de CE décor doit rester lue une seule fois, vérifié plus bas) ; l'info-bulle
+       « Aucune connexion notée » (Mes clients seulement) se lit sur Karim, client sans ligne */
+    const Ka = await ligneClient(page, KARIM), np = await noteProspects(page), leaT = await dansTableau(page, LEA), marcT = await dansTableau(page, MARC);
+    const db2 = avecLignes(decor());
+    const { page: pp } = await coachSur(b, db2, "#/prospects", "#pr-liste", { fuseau: FUSEAU }); await filtre(pp, "tous");
+    const Le = await faits(pp, LEA), Ma = await faits(pp, MARC);
+    ok("D : prospects Léa et Marc : plus de ligne dans Mes clients, « " + NOTE_PROSPECTS + " » (lien) ; carte Prospects de Léa : « 3 » et " + quandCoach(CX_LEA.derniere) + " ; Marc (jamais connecté depuis) : « 0 » et « aucune »", leaT === false && marcT === false && np.t === NOTE_PROSPECTS && np.lien && np.visible && Le["Connexions"] === "3" && Le["Dernière connexion"] === quandCoach(CX_LEA.derniere) && Ma["Connexions"] === "0" && Ma["Dernière connexion"] === "aucune", JSON.stringify([leaT, marcT, np, Le["Connexions"], Le["Dernière connexion"], Ma["Connexions"], Ma["Dernière connexion"]]));
+    ok("D : Karim (client, jamais connecté depuis, sans ligne) : « 0 » et « aucune », info-bulle « Aucune connexion notée »", Ka["Connexions"] === "0" && Ka["Dernière connexion"] === "aucune" && /Aucune connexion notée/.test(await titre(page, KARIM, "Connexions")), JSON.stringify([Ka["Connexions"], Ka["Dernière connexion"]]) + " " + (await titre(page, KARIM, "Connexions")));
     ok("D : la phrase sous le tableau explique les deux colonnes", /« Connexions » : le nombre de jours où il a ouvert l'app connecté/.test(await texte(page, "#vue")) && /« Dernière connexion » : la date et l'heure/.test(await texte(page, "#vue")), "");
     ok("D : la table est lue une fois par le coach, sans écriture", db.cxLectures.length === 1 && db.cxLectures[0].par === COACH.id && db.cxLectures[0].m === "GET" && db.ecritures.length === 0, JSON.stringify(db.cxLectures) + " " + resume(db));
     ok("D : aucune connexion notée pour le coach", notees(db).length === 0, JSON.stringify(notees(db)));
@@ -709,8 +723,11 @@ const titre = (page, uid, col) => page.$eval(`#tb-clients [data-ouvrir="${uid}"]
       await pl.goto(URL0); await pret(pl, "#vue"); await attendre(pl, 600);
       ok("G : « off » : le compte de test est noté quand même, la prospecte Léa aussi", notees(db, TESTEUR.id).length === 1 && notees(db, LEA).length === 1, JSON.stringify(notees(db)));
       const { page: pc } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]");
-      const T = await ligneClient(pc, TESTEUR.id), Le = await ligneClient(pc, LEA);
-      ok("G : « off » : Mes clients montre les connexions du compte de test (" + db.cx[TESTEUR.id].nombre + ") ; Léa : 4 (ses 3, plus son ouverture d'aujourd'hui)", T["Connexions"] === String(db.cx[TESTEUR.id].nombre) && db.cx[TESTEUR.id].nombre >= 12 && Le["Connexions"] === "4", JSON.stringify([T["Connexions"], Le["Connexions"]]));
+      /* v71 (D) : Léa (prospecte) n'est plus dans Mes clients : ses connexions se lisent sur sa carte Prospects */
+      const T = await ligneClient(pc, TESTEUR.id), leaT = await dansTableau(pc, LEA);
+      await aller(pc, "#/prospects", 1800); await filtre(pc, "tous");
+      const Le = await faits(pc, LEA);
+      ok("G : « off » : Mes clients montre les connexions du compte de test (" + db.cx[TESTEUR.id].nombre + ") ; Léa (prospecte, plus dans Mes clients), sur sa carte Prospects : 4 (ses 3, plus son ouverture d'aujourd'hui)", T["Connexions"] === String(db.cx[TESTEUR.id].nombre) && db.cx[TESTEUR.id].nombre >= 12 && leaT === false && Le["Connexions"] === "4", JSON.stringify([T["Connexions"], leaT, Le["Connexions"]]));
     });
   });
 
@@ -722,11 +739,13 @@ const titre = (page, uid, col) => page.$eval(`#tb-clients [data-ouvrir="${uid}"]
     db.cx[MARC] = { user_id: MARC, nombre: 2.7, derniere: { a: 1 }, premiere: [PIEGE] };
     db.cx["pas-un-compte"] = { user_id: "pas-un-compte", nombre: 99, derniere: avant(H), premiere: avant(J) };
     const { page } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]", { fuseau: FUSEAU });
-    const T = await ligneClient(page, TESTEUR.id), Le = await ligneClient(page, LEA), Ma = await ligneClient(page, MARC);
+    /* v71 (D) : Léa et Marc (prospects) ne sont plus dans Mes clients : leurs valeurs piégées se lisent sur leurs cartes Prospects */
+    const T = await ligneClient(page, TESTEUR.id), leaT = await dansTableau(page, LEA), marcT = await dansTableau(page, MARC);
     const tout = norm(await page.evaluate(() => document.body.innerText));
-    ok("H : nombre et dates piégés : « 0 » / « aucune » (nombre décimal : arrondi à 2), rien de brut, rien d'injecté", T["Connexions"] === "0" && T["Dernière connexion"] === "aucune" && Le["Connexions"] === "0" && Le["Dernière connexion"] === "aucune" && Ma["Connexions"] === "2" && Ma["Dernière connexion"] === "aucune" && !RIEN_DE_BRUT.test(tout) && !(await injecte(page)), JSON.stringify([T["Connexions"], T["Dernière connexion"], Le["Connexions"], Ma["Connexions"], Ma["Dernière connexion"]]));
+    ok("H : nombre et dates piégés (compte de test) : « 0 » / « aucune », rien de brut, rien d'injecté ; Léa et Marc (prospects) : plus de ligne dans Mes clients", T["Connexions"] === "0" && T["Dernière connexion"] === "aucune" && leaT === false && marcT === false && !RIEN_DE_BRUT.test(tout) && !(await injecte(page)), JSON.stringify([T["Connexions"], T["Dernière connexion"], leaT, marcT]));
     await aller(page, "#/prospects", 1800); await filtre(page, "tous");
-    ok("H : … la page Prospects s'affiche aussi, sans injection", (await page.$$("#pr-liste .sc-carte")).length > 0 && !(await injecte(page)) && !RIEN_DE_BRUT.test(norm(await page.evaluate(() => document.body.innerText))), "");
+    const Le = await faits(page, LEA), Ma = await faits(page, MARC);
+    ok("H : … la page Prospects s'affiche aussi, sans injection ; cartes de Léa : « 0 » / « aucune », de Marc : « 2 » (nombre décimal : arrondi à 2) / « aucune »", (await page.$$("#pr-liste .sc-carte")).length > 0 && Le["Connexions"] === "0" && Le["Dernière connexion"] === "aucune" && Ma["Connexions"] === "2" && Ma["Dernière connexion"] === "aucune" && !(await injecte(page)) && !RIEN_DE_BRUT.test(norm(await page.evaluate(() => document.body.innerText))), JSON.stringify([Le["Connexions"], Le["Dernière connexion"], Ma["Connexions"], Ma["Dernière connexion"]]));
   });
 
   /* =================== Z. rien vers l'extérieur =================== */

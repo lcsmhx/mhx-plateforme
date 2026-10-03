@@ -21,7 +21,8 @@
    H. coach : calc comme avant (son compte, fiche de Thomas « Ses calories »), jamais calc_perso ; l'alerte d'écart
       (Mes clients) et le générateur de diète (« Ses repas ») lisent calc, jamais calc_perso ; v59 : fiche d'un prospect
       sans calc, « Ses calories » part de son calc_perso (complet et adulte), lu sans être écrit ; client sans calc,
-      prospect avec calc, calc_perso mineur ou incomplet : départ d'avant ;
+      prospect avec calc, calc_perso mineur ou incomplet : départ d'avant ; v71 (D) : un prospect n'a plus de ligne
+      dans Mes clients, sa fiche s'ouvre par Clients.ouvrir (ouvrirFiche) ;
    I. prospect inchangé (navigation, #/journal verrouillé avec son exemple et sans lecture, calculateur sur calc_perso,
       barre du bas) ;
    J. téléphone 390 px (barre du bas du client inchangée, « Plus », pas de débordement, bouton tactile) ;
@@ -347,9 +348,14 @@ const historique = page => page.$$eval("#jr-historique [data-jr-h]", l => l.map(
 /* l'ordre attendu : date décroissante, puis la dernière enregistrée d'abord */
 const attenduHist = (Jr, dt) => Jr.seances.map((x, i) => ({ x, i })).sort((a, b) => a.x.date < b.x.date ? 1 : a.x.date > b.x.date ? -1 : b.i - a.i).map(o => [o.x.nom, (dt || frDate)(o.x.date)]);
 const valeurDe = (page, sel) => page.$eval(sel, e => e.value).catch(() => null);
-async function ouvrirFiche(page, id){
-  await aller(page, "#/clients", 2000); await page.waitForSelector(`[data-ouvrir="${id}"]`, { timeout: 8000 });
-  await page.click(`[data-ouvrir="${id}"]`); await page.waitForSelector("#vue .bandeau", { timeout: 8000 }); await attendre(page, 800);
+/* v71 (D) : Mes clients ne liste plus les prospects ; un client s'ouvre toujours par son bouton « Ouvrir », un prospect (sans
+   bouton [data-ouvrir]) par Clients.ouvrir, comme le fait la page Prospects ; nom : celui du compte (nomDe), "" sinon */
+const nomDe = (db, id) => { const p = db.profils.find(x => x.id === id); return p ? ((p.prenom || "") + " " + (p.nom || "")).trim() : ""; };
+async function ouvrirFiche(page, id, nom){
+  await aller(page, "#/clients", 2000); await page.waitForSelector("#tb-clients [data-ouvrir]", { timeout: 8000 });
+  if (await page.$(`[data-ouvrir="${id}"]`)) await page.click(`[data-ouvrir="${id}"]`);
+  else await page.evaluate(([i, n]) => Clients.ouvrir(i, n, "accueil"), [id, nom || ""]);
+  await page.waitForSelector("#vue .bandeau", { timeout: 8000 }); await attendre(page, 800);
 }
 const NAV_CLIENT = ["accueil", "programme", "journal", "nutrition", "mensurations", "calculateur", "suivi", "formation", "complements", "profil"];
 const TXD = {
@@ -570,7 +576,8 @@ const NOUVEAU = { probleme: "Perdre du gras", obstacle: "Le manque de temps avec
       cles: [[F.IDS.c2, "calc_perso", PERSO_S]] });
     const { c, page } = await contexte(b, COACH, db);
     await page.goto(URL0 + "#/tableau"); await pret(page); await attendre(page, 600);
-    const calories = async id => { await ouvrirFiche(page, id); await aller(page, "#/calculateur", 1800); return { v: JSON.stringify(await valeurs(page)), s: await sexeChoisi(page), o: await objectifChoisi(page), note: await page.isVisible("#calc-depart").catch(() => false) }; };
+    /* v71 (D) : les quatre prospects n'ont plus de ligne dans Mes clients : ouvrirFiche passe par Clients.ouvrir, avec leur nom */
+    const calories = async id => { await ouvrirFiche(page, id, nomDe(db, id)); await aller(page, "#/calculateur", 1800); return { v: JSON.stringify(await valeurs(page)), s: await sexeChoisi(page), o: await objectifChoisi(page), note: await page.isVisible("#calc-depart").catch(() => false) }; };
     const r1 = await calories(PID(10));
     ok("fiche d'un prospect sans calc, « Ses calories » : départ = son propre calcul (calc_perso : 30 ans, 165 cm, 60 kg, 6 000 pas, 3 h, femme, perte), la note « Départ : son propre calcul » affichée",
       r1.v === '["30","165","60","6000","3"]' && r1.s === "F" && r1.o === "perte" && r1.note && (await texte(page, "#calc-depart")).startsWith("Départ : son propre calcul"), JSON.stringify(r1));

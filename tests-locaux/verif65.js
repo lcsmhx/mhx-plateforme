@@ -579,8 +579,9 @@ const structure = page => page.evaluate(() => {
       JSON.stringify(rp.map(x => x[1])) === JSON.stringify(["Perdre du gras", "Le manque de temps — " + B, PIEGE]) && !(await injecte(page)), JSON.stringify(rp));
     const n0 = saisies(db).length;
     const { page: p2 } = await contexte(b, COACH, db);
-    await p2.goto(URL0 + "#/clients"); await pret(p2, `[data-ouvrir="${ID}"]`);
-    await p2.click(`[data-ouvrir="${ID}"]`); await p2.waitForSelector("#fiche-reponses", { timeout: 8000 }); await attendre(p2, 600);
+    /* v71 (D) : un prospect n'a plus de ligne dans Mes clients : sa fiche s'ouvre par Clients.ouvrir (modèle verif58, ficheDe) */
+    await p2.goto(URL0 + "#/clients"); await pret(p2, "#tb-clients [data-ouvrir]");
+    await p2.evaluate(([id, n]) => Clients.ouvrir(id, n, "accueil"), [ID, "Léa Martin"]); await p2.waitForSelector("#fiche-reponses", { timeout: 8000 }); await attendre(p2, 600);
     const rf = await lignes(p2, "#fiche-reponses"), fd = await lignes(p2, "#fiche-decouverte"), v = k2 => (fd.find(x => x[0] === k2) || [])[1];
     ok("coach, fiche du prospect : « Ce qui l'a bloqué » et « Dans 3 mois » en texte brut (réponses et bloc Découverte), aucune balise créée, aucun script lancé",
       JSON.stringify(rf.slice(1, 4)) === JSON.stringify([["Problème", "Perdre du gras"], ["Ce qui l'a bloqué", "Le manque de temps — " + B], ["Dans 3 mois", PIEGE]]) && v("Ce qui l'a bloqué") === "Le manque de temps — " + B && v("Dans 3 mois") === PIEGE && !(await injecte(p2)),
@@ -598,8 +599,9 @@ const structure = page => page.evaluate(() => {
     const k = 10, ID = PID(k), db = base({ comptes: [compte(k, "Nina", "", [["intake", ANCIEN_V52]], { cree: avant(4 * J) })] });
     const ficheCoach = async () => {
       const { c, page: p } = await contexte(b, COACH, db);
-      await p.goto(URL0 + "#/clients"); await pret(p, `[data-ouvrir="${ID}"]`);
-      await p.click(`[data-ouvrir="${ID}"]`); await p.waitForSelector("#fiche-reponses", { timeout: 8000 }); await attendre(p, 500);
+      /* v71 (D) : un prospect n'a plus de ligne dans Mes clients : sa fiche s'ouvre par Clients.ouvrir */
+      await p.goto(URL0 + "#/clients"); await pret(p, "#tb-clients [data-ouvrir]");
+      await p.evaluate(([id, n]) => Clients.ouvrir(id, n, "accueil"), [ID, "Nina"]); await p.waitForSelector("#fiche-reponses", { timeout: 8000 }); await attendre(p, 500);
       const r = await lignes(p, "#fiche-reponses"); await c.close(); return r;
     };
     const attCoach = [["Email", "p10@exemple.fr"], ["Problème", "Perdre du gras"], ["Ce qui l'a bloqué", ANCIEN_V52.obstacle], ["Dans 3 mois", ANCIEN_V52.projection]];
@@ -644,8 +646,9 @@ const structure = page => page.evaluate(() => {
       JSON.stringify([choisis(p1), choisis(o1), choisis(r1)]) === '[["Perdre du gras"],["temps","craquages"],["photos"]]' && [p1, o1, r1].every(e => bienVisible(e, OR_CLAIR)) && S.fs[1].zone.val === "le soir" && norm(S.fs[1].opts[0].l) === "Not enough time" && norm(S.fs[0].opts[0].l) === "Lose fat",
       JSON.stringify([choisis(p1), choisis(o1), choisis(r1), S.fs[1].zone]));
     const { page: p2 } = await contexte(b, COACH, db);
-    await p2.goto(URL0 + "#/clients"); await pret(p2, `[data-ouvrir="${ID}"]`);
-    await p2.click(`[data-ouvrir="${ID}"]`); await p2.waitForSelector("#fiche-reponses", { timeout: 8000 }); await attendre(p2, 500);
+    /* v71 (D) : un prospect n'a plus de ligne dans Mes clients : sa fiche s'ouvre par Clients.ouvrir */
+    await p2.goto(URL0 + "#/clients"); await pret(p2, "#tb-clients [data-ouvrir]");
+    await p2.evaluate(([id, n]) => Clients.ouvrir(id, n, "accueil"), [ID, "Léa Martin"]); await p2.waitForSelector("#fiche-reponses", { timeout: 8000 }); await attendre(p2, 500);
     const rf = await lignes(p2, "#fiche-reponses");
     ok("coach : la fiche de ce prospect anglophone montre le texte français (« Le manque de temps · Je craque sur la nourriture — le soir », « M'aimer sur les photos »)",
       JSON.stringify(rf.slice(1, 4)) === JSON.stringify([["Problème", "Perdre du gras"], ["Ce qui l'a bloqué", I0.obstacle], ["Dans 3 mois", "M'aimer sur les photos"]]), JSON.stringify(rf));

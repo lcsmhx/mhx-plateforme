@@ -1114,8 +1114,10 @@ const detA = A => JSON.stringify(A ? { page: A.page, carte: A.carte, dehors: A.d
       const C0 = await lireCarte(page), E0 = await santeEtat(page);
       await page.fill("#poids", "84"); await attendre(page, 1800);
       ok("coach, son calculateur : aucune carte, Sante.aDemander() faux, écriture comme avant (calc du coach)", !C0 && !!E0 && E0.a === false && ecr(db, "calc", F.IDS.coach).length >= 1, JSON.stringify([C0 && C0.sig, E0]) + " " + resume(db));
-      await aller(page, "#/clients", 1500); await page.waitForSelector(`[data-ouvrir="${IDP}"]`, { timeout: 10000 });
-      await page.click(`[data-ouvrir="${IDP}"]`); await page.waitForSelector("#vue .bandeau", { timeout: 8000 }); await attendre(page, 800);
+      /* v71 (D) : un prospect n'a plus de ligne ni de bouton Ouvrir dans #tb-clients (Mes clients ne liste que les clients) :
+         Mes clients ouvert (les clients des fixtures y sont), puis la fiche par Clients.ouvrir, comme le bouton le faisait */
+      await aller(page, "#/clients", 1500); await page.waitForSelector("#tb-clients [data-ouvrir]", { timeout: 10000 });
+      await page.evaluate(([id, n]) => Clients.ouvrir(id, n, "accueil"), [IDP, "Léa Martin"]); await page.waitForSelector("#vue .bandeau", { timeout: 8000 }); await attendre(page, 800);
       await aller(page, "#/calculateur", 1800);
       const C1 = await lireCarte(page), E1 = await santeEtat(page);
       await aller(page, "#/mensurations", 1800);

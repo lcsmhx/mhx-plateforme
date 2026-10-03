@@ -42,6 +42,8 @@
       utm_source=app, utm_medium=bouton (fiche du coach : coach), codes d'origine avec « _ » (accueil_haut, verrou_programme,
       fiche_coach) ;
    Lot G (côté coach) :
+   v71 (D) : un prospect n'a plus de ligne dans « Suivi de mes clients » (il est sur la page Prospects) : sa fiche s'ouvre par
+      Clients.ouvrir, une fois le tableau chargé ;
    G1. fiche d'un prospect : son nom (profils.nom, « pas renseigné » s'il manque), « Newsletter : oui (depuis le …) / non »
        d'après la clé emails (absente ou ancien accord « emails de suivi » seul : non), ses 3 réponses avec des libellés
        courts (Problème, Ce qui l'a bloqué, Dans 3 mois) puis les anciennes qui ont une valeur, jamais « undefined » ;
@@ -1237,7 +1239,8 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
       const db3 = base({ comptes: [{ id: L4, prenom: "Léa", nom: "Martin", cree: avant(2 * J), email: "lea@exemple.fr", donnees: [["intake", { email_compte: "lea@exemple.fr" }, avant(J)]] }] });
       const x = await contexte(b, COACH, db3);
       await x.page.goto(URL0 + "#/clients"); await pret(x.page, "#tb-vue, #vue"); await attendre(x.page, 1500);
-      await x.page.click(`[data-ouvrir="${L4}"]`).catch(() => {});
+      /* v71 (D) : Léa (prospecte) n'a plus de ligne dans Mes clients : sa fiche s'ouvre par Clients.ouvrir (ce que faisait le bouton « Ouvrir ») */
+      await x.page.evaluate(([id, n]) => Clients.ouvrir(id, n, "accueil"), [L4, "Léa Martin"]).catch(() => {});
       await x.page.waitForSelector("#dc-lien", { timeout: 8000 }).catch(() => {}); await attendre(x.page, 500);
       const lien = await x.page.$eval("#dc-lien", e => e.value).catch(() => ""), note = await texte(x.page, "#fiche-actions p.note");
       /* v61 (lot 2, F) : utm_source=app (avant : app-mhx), code d'origine fiche_coach (avant : fiche-coach) */
@@ -1276,10 +1279,14 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
     const RIEN_DE_BRUT = /\bundefined\b|\bnull\b|\bNaN\b|\[object /;
     const lignesFiche = (page, sel) => page.$$eval(sel + " ul.fiche-l > li", l => l.map(li => [li.querySelector("span") ? li.querySelector("span").textContent.replace(/\s+/g, " ").trim() : "", li.querySelector("b") ? li.querySelector("b").textContent.replace(/\s+/g, " ").trim() : ""])).catch(() => []);
     const injecte = page => page.evaluate(() => !!window.__xss || !!document.querySelector("#vue img[src='x']")).catch(() => true);
+    /* v71 (D) : un prospect n'a plus de ligne (ni de bouton [data-ouvrir]) dans Mes clients : sa fiche s'ouvre par Clients.ouvrir
+       (ce que faisait le bouton « Ouvrir »), une fois le tableau chargé (la ligne « Les prospects sont dans Prospects → » n'est
+       affichée qu'à ce moment) ; le nom passé est celui du bouton d'avant (Clients.nom : prénom + nom, sinon « Sans nom ») */
+    const nomDe = uid => { const c = comptes().find(x => x.id === uid) || {}; return ((c.prenom || "") + " " + (c.nom || "")).trim() || "Sans nom"; };
     async function ficheDe(page, uid){
       await aller(page, "#/clients", 300);
-      await page.waitForSelector(`[data-ouvrir="${uid}"]`, { timeout: 8000 });
-      await page.click(`[data-ouvrir="${uid}"]`);
+      await page.waitForSelector("#clients-prospects:not([hidden])", { timeout: 8000 });
+      await page.evaluate(([id, n]) => Clients.ouvrir(id, n, "accueil"), [uid, nomDe(uid)]);
       await page.waitForSelector("#fiche-reponses", { timeout: 8000 }); await attendre(page, 400);
       return { dec: await lignesFiche(page, "#fiche-decouverte"), rep: await lignesFiche(page, "#fiche-reponses"), vue: await texte(page, "#vue") };
     }

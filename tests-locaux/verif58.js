@@ -9,6 +9,8 @@
       à traiter ; bilan du vendredi pour Thomas : à lire), dernière note, dernier smiley, dernière visite et jours actifs sur
       30 jours (« — » pour un client dont les visites ne sont pas suivies, même avec une ancienne clé activite), 😞 et notes en
       chute en haut, puis les retours à traiter ; « Passer client » / « Repasser prospect » toujours là ; aucune température ;
+      v71 (D) : les prospects n'ont plus de ligne dans « Suivi de mes clients » (« Les prospects sont dans Prospects →
+      (N comptes gratuits). »), leurs visites et clics se lisent sur leur carte Prospects ;
    C. page Prospects : ni score, ni température, ni journal des emails (aucune requête emails_prospects) ; date
       d'inscription, 3 réponses, bilan réservé, newsletter, dernière visite, jours actifs ; « À traiter » (même définition
       que le badge), « Appel fait », « Tous » ; filtres bilan / newsletter / période, tri inscription / dernière visite,
@@ -18,7 +20,8 @@
       CSV « Dernier clic », fiche : le même clic) ;
    E. « Bilan réservé » en un clic dans la fiche (sans fenêtre) : écriture EXACTE de suivi_prospect (PATCH conditionnel,
       bilan_le + événement historique, le reste gardé), annulation, création (POST), conflit rejoué, 409, verrou ; tous les
-      lecteurs suivent la coche (fiche, carte, Mes clients, filtre, compteur, CSV, Nouveautés, à traiter) ; l'ancienne case
+      lecteurs suivent la coche (fiche, carte, filtre, compteur, CSV, Nouveautés, à traiter ; v71 : plus Mes clients, qui ne
+      liste plus les prospects) ; l'ancienne case
       du prospect reste lisible (« Le prospect a coché « J'ai réservé » le … ») ; ancien client : coche d'avant ignorée ;
    F. relances, issues (Signé / Perdu / Absent, annuler, Passer client), conflit, 409, 504, verrou, issues qui vieillissent,
       ancien client (blocs repris de verif49, sortie du banc avec le score et la température) ; v63 : dernier clic par date
@@ -458,6 +461,8 @@ function lireCSV(s){
 /* la ligne d'un compte dans Mes clients : { colonne (data-l) : texte } */
 const ligneClient = (page, uid) => page.$eval(`#tb-clients [data-ouvrir="${uid}"]`, bt => { const o = {}; bt.closest("tr").querySelectorAll("td").forEach(td => { o[td.dataset.l || "_"] = td.textContent.replace(/[  ]/g, " ").replace(/\s+/g, " ").trim(); }); return o; }).catch(() => ({}));
 const ordreClients = page => page.$$eval("#tb-clients [data-ouvrir]", l => l.map(e => e.dataset.ouvrir)).catch(() => []);
+/* v71 (D) : la ligne sous le titre de Mes clients, « Les prospects sont dans Prospects → (N compte(s) gratuit(s)). » : { t, href } */
+const ligneProspects = async page => { const r = await page.$eval("#clients-prospects", e => { const a = e.querySelector("a.link-a"); return { t: e.textContent, href: a ? a.getAttribute("href") : "" }; }).catch(() => null); return r ? { t: norm(r.t), href: r.href } : { t: "", href: "" }; };
 const lignesFiche = (page, sel) => page.$$eval(sel + " ul.fiche-l > li", l => l.map(li => [li.querySelector("span") ? li.querySelector("span").textContent.replace(/\s+/g, " ").trim() : "", li.querySelector("b") ? li.querySelector("b").textContent.replace(/\s+/g, " ").trim() : ""])).catch(() => []);
 const valeur = (L, k) => (L.find(x => x[0] === k) || [])[1];
 async function ficheDe(page, uid, nom, sel){
@@ -534,11 +539,18 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
   await bloc("B. Mes clients : colonnes et ordre", async () => {
     const db = decor();
     const { page } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]");
-    const T = await ligneClient(page, TESTEUR.id), Th = await ligneClient(page, F.IDS.c1), S = await ligneClient(page, F.IDS.c2), Ju = await ligneClient(page, F.IDS.c3), Le = await ligneClient(page, LEA);
+    const T = await ligneClient(page, TESTEUR.id), Th = await ligneClient(page, F.IDS.c1), S = await ligneClient(page, F.IDS.c2), Ju = await ligneClient(page, F.IDS.c3);
+    /* v71 (D) : Léa (prospecte) n'a plus de ligne dans « Suivi de mes clients » ; la ligne sous le titre renvoie à Prospects ;
+       ses visites et son clic se lisent sur sa carte Prospects (filtre « Tous ») */
+    const leaTb = !!(await page.$(`#tb-clients [data-ouvrir="${LEA}"]`)), lp = await ligneProspects(page);
     ok("B : compte de test (feedback du dimanche, répondu) : retour « fait », note « 7/10 », smiley 😞, dernière visite « " + visiteTxt(ACT_TEST.derniere) + " », 2 jours actifs sur 30 (le jour d'il y a 40 jours ne compte pas)", T["Retour de la semaine"] === "fait" && T["Dernière note"] === "7/10" && T["Dernier smiley"] === "😞" && T["Dernière visite"] === visiteTxt(ACT_TEST.derniere) && T["Jours actifs (30 j)"] === "2", JSON.stringify(T));
     ok("B : Thomas (bilan du vendredi, sa règle) : retour « à lire », ni note ni smiley, visites « — » (non suivi, même avec une ancienne clé activite)", Th["Retour de la semaine"] === "à lire" && Th["Dernière note"] === "—" && Th["Dernier smiley"] === "—" && Th["Dernière visite"] === "—" && Th["Jours actifs (30 j)"] === "—", JSON.stringify(Th));
     ok("B : Sarah (note 4 : en chute) « 4/10 » ; Julien : visites « — », « Inactif depuis 12 j » gardé", S["Dernière note"] === "4/10" && Ju["Dernière visite"] === "—" && Ju["Jours actifs (30 j)"] === "—" && /12 j/.test(Ju["Activité"] || ""), JSON.stringify([S, Ju]));
-    ok("B : prospecte Léa : visites suivies (« " + visiteTxt(avant(5 * H)) + " », 2 jours), pastilles « prospect » et « a cliqué Plan d'action », aucune température", Le["Dernière visite"] === visiteTxt(avant(5 * H)) && Le["Jours actifs (30 j)"] === "2" && /prospect/.test(Le.Client) && /a cliqué Plan d'action/.test(Le.Client) && !/CHAUD|TIÈDE|FROID|NOUVEAU/.test(Le.Client), JSON.stringify(Le));
+    await aller(page, "#/prospects", 300); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 }); await filtre(page, "tous");
+    const cLea = await carte(page, LEA);
+    ok("B : prospecte Léa (v71) : plus de ligne dans « Suivi de mes clients », « Les prospects sont dans Prospects → (8 comptes gratuits). » avec le lien #/prospects ; sa carte Prospects : visites suivies (« " + visiteTxt(avant(5 * H)) + " », 2 jours), « Clics plan d'action 1 (dernier : accueil, bouton du haut) », aucune température",
+      !leaTb && lp.t === "Les prospects sont dans Prospects → (8 comptes gratuits)." && lp.href === "#/prospects" && cLea.includes("Dernière visite " + visiteTxt(avant(5 * H))) && cLea.includes("Jours actifs (30 j) 2") && cLea.includes("Clics plan d'action 1 (dernier : accueil, bouton du haut)") && !/CHAUD|TIÈDE|FROID|NOUVEAU/.test(cLea), JSON.stringify([leaTb, lp]) + " | " + cLea);
+    await aller(page, "#/clients", 300); await page.waitForSelector("#tb-clients [data-ouvrir]", { timeout: 8000 }); await attendre(page, 400);
     const o = await ordreClients(page);
     ok("B : en haut les 😞 non traités et les notes en chute (compte de test, Sarah), puis les retours à traiter (Thomas), puis le reste", JSON.stringify(o.slice(0, 2).sort()) === JSON.stringify([TESTEUR.id, F.IDS.c2].sort()) && o[2] === F.IDS.c1, JSON.stringify(o.slice(0, 5)));
     const t = await texte(page, "#vue");
@@ -750,9 +762,12 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
     const { t } = await exporter(page);
     const L = lireCSV(t.replace(/^﻿/, "")), lea = L.find(l => l[0] === "Léa Martin") || [], ines = L.find(l => l[0] === "Inès Dupré") || [];
     ok("E : CSV : Léa « oui » (coché le …), Inès « non » avec sa case datée", lea[7] === "oui" && lea[8] === frL(S3.bilan_le) && ines[7] === "non" && ines[8] === "" && ines[9] === frL(avant(2 * J)), JSON.stringify([lea.slice(7, 10), ines.slice(7, 10)]));
+    /* v71 (D) : Mes clients ne liste plus les prospects : la pastille se lit sur la carte Prospects (encore à l'écran, filtre « Tous ») */
+    const cL = await carte(page, LEA), cI = await carte(page, INES);
     await aller(page, "#/clients", 300); await page.waitForSelector("#tb-clients [data-ouvrir]", { timeout: 8000 }); await attendre(page, 400);
-    const lL = await ligneClient(page, LEA), lI = await ligneClient(page, INES);
-    ok("E : Mes clients : Léa « bilan réservé » (coché par le coach), Inès plus « bilan réservé » mais « a cliqué Plan d'action »", /bilan réservé/.test(lL.Client) && !/bilan réservé/.test(lI.Client) && /a cliqué Plan d'action/.test(lI.Client), JSON.stringify([lL.Client, lI.Client]));
+    const lp = await ligneProspects(page), dansTb = !!(await page.$(`#tb-clients [data-ouvrir="${LEA}"], #tb-clients [data-ouvrir="${INES}"]`));
+    ok("E : Mes clients (v71) : ni Léa ni Inès dans « Suivi de mes clients », « Les prospects sont dans Prospects → (8 comptes gratuits). » (lien #/prospects) ; cartes Prospects : Léa « bilan réservé » (coché par le coach), Inès plus « bilan réservé » (« Bilan pas réservé ») mais « Clics plan d'action 1 (dernier : accueil, bouton du haut) »",
+      !dansTb && lp.t === "Les prospects sont dans Prospects → (8 comptes gratuits)." && lp.href === "#/prospects" && /bilan réservé/.test(cL) && !/bilan réservé/.test(cI) && cI.includes("Bilan pas réservé") && cI.includes("Clics plan d'action 1 (dernier : accueil, bouton du haut)"), JSON.stringify([dansTb, lp]) + " | " + cL + " | " + cI);
     await aller(page, "#/tableau", 300); await page.waitForSelector("#tb-t-prospects", { timeout: 8000 }); await attendre(page, 400);
     ok("E : tableau de bord : Prospects « 4 urgences » (Zoé, Hugo et Inès pour leur clic, Marc)", (await tuileTb(page, "tb-t-prospects")).badge === "4 urgences", JSON.stringify(await tuileTb(page, "tb-t-prospects")));
     ok("E : seules des écritures de suivi_prospect (5 : Léa 3, Hugo 1, Inès 1), jamais d'autre clé", db.ecritures.length === 5 && db.ecritures.every(e => e.table === "donnees" && e.outil === "suivi_prospect"), resume(db));

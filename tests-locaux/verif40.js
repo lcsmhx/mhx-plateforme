@@ -29,6 +29,9 @@
      Use », « Privacy Policy ») sont 2 liens distincts vers les PDF (href = CONFIG.textes_legaux, servis avec LEGAUX_TEST ;
      target=_blank, rel=noopener ; jamais cliqués) au lieu d'un lien vers le volet des conditions : le volet (et son contrôle
      des prix) reste vérifié depuis le profil (blocs D et F). Nombre de vérifications inchangé (64).
+   - v71 (D) : « Suivi de mes clients » (#tb-clients) ne liste plus les prospects (ligne #clients-prospects → Prospects) : dans le
+     bloc I coach, la fiche de Léa s'ouvre par Clients.ouvrir au lieu du clic sur son [data-ouvrir] (disparu), après contrôle de
+     son absence du tableau et de la ligne de renvoi. Nombre de vérifications inchangé.
    Supabase simulé : rien ne part vers la vraie base ; les écritures dans donnees sont appliquées en mémoire,
    et TOUTE requête non-GET vers /rest/v1/* est relevée (méthode + adresse) pour les contrôles « aucune écriture ».
    Chaque bloc est protégé : une exception (élément absent, délai dépassé) note un ✗ et la suite continue ;
@@ -600,10 +603,21 @@ const cliquerVerrou = async (c, page) => {
     /* le coach consulte la fiche de Léa, prospecte dont la découverte est terminée */
     const { page } = await contexte(b, coach, base({ ilYA: 20 }));
     await page.goto(`http://localhost:${PORT}/#/clients`); await attendre(page, 2000);
-    const okFiche = await cliquer(page, `[data-ouvrir="${PROSPECT}"]`); await attendre(page, 1500);
+    /* v71 (D) : « Suivi de mes clients » ne liste plus les prospects : Léa n'a plus de bouton [data-ouvrir] (avant : clic
+       dessus). On attend le tableau (le bouton de Thomas, client), on relève l'absence de Léa et la ligne #clients-prospects
+       (« Les prospects sont dans Prospects → (1 compte gratuit). », lien #/prospects), puis la fiche s'ouvre par
+       Clients.ouvrir (ce que faisait le clic), attendue par son bandeau. Rien ne lève d'exception : un ✗ au lieu d'un arrêt */
+    const tableauPret = await page.waitForSelector(`#tb-clients [data-ouvrir="${F.IDS.c1}"]`, { timeout: 6000 }).then(() => true, () => false);
+    const leaListee = !!(await page.$(`#tb-clients [data-ouvrir="${PROSPECT}"]`));
+    const renvoi = await page.$eval("#clients-prospects", e => { const a = e.querySelector("a.link-a"); return { t: e.textContent.replace(/\s+/g, " ").trim(), cache: e.hidden, lien: a ? a.getAttribute("href") : null }; }).catch(() => null);
+    const renvoiOk = !!renvoi && !renvoi.cache && plat(renvoi.t) === "Les prospects sont dans Prospects → (1 compte gratuit)." && renvoi.lien === "#/prospects";
+    const ouvert = await page.evaluate(([id, n]) => { Clients.ouvrir(id, n, "accueil"); return Store.idConsulte === id; }, [PROSPECT, "Léa Démo"]).catch(() => false);
+    const bandeau = await page.waitForSelector("#vue .bandeau", { timeout: 6000 }).then(() => true, () => false); await attendre(page, 1500);
+    const okFiche = tableauPret && !leaListee && renvoiOk && ouvert && bandeau;
+    const detailFiche = okFiche ? "" : "fiche de Léa : " + JSON.stringify({ tableauPret, leaListee, renvoi, ouvert, bandeau }) + " | ";
     await aller(page, "#/programme", 1500);
     const vu = await valeursVue(page);
-    ok("coach dans la fiche d'un prospect : rien n'est verrouillé, il voit son programme", okFiche && !(await page.$("#vue .verrou")) && (await page.$$("#nav .nav-cadenas")).length === 0 && vu.includes(TEMOIN), (okFiche ? "" : "fiche de Léa introuvable dans Mes clients | ") + vu.slice(0, 300));
+    ok("coach dans la fiche d'un prospect (v71 : Léa n'est plus dans #tb-clients, « Les prospects sont dans Prospects → (1 compte gratuit). » avec a[href=\"#/prospects\"], fiche ouverte par Clients.ouvrir, bandeau affiché) : rien n'est verrouillé, il voit son programme", okFiche && !(await page.$("#vue .verrou")) && (await page.$$("#nav .nav-cadenas")).length === 0 && vu.includes(TEMOIN), detailFiche + vu.slice(0, 300));
     await aller(page, "#/formation", 1500);
     /* ouverte ET affichée : ni cadenas, ni page en erreur, ni « Chargement… » ; la progression est celle de Léa (10 étapes cochées) */
     const fo = await page.evaluate(() => { const v = document.querySelector("#vue"); return { verrou: !!document.querySelector("#vue .verrou"), illisible: !!document.getElementById("page-illisible"), chargement: !!v && /Chargement…/.test(v.innerText), h1: ((document.querySelector("#vue h1") || {}).textContent || "").replace(/\s+/g, ""), progression: ((document.querySelector("#vue .prog-compteur .t-sub") || {}).textContent || "").trim(), modules: document.querySelectorAll("#vue .fo-mod").length }; });

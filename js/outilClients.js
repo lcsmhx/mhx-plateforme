@@ -85,15 +85,25 @@ const outilClients = {
   tableau(profils, parClient, contenus, connexions){
     const tb = $("tb-clients"), zoneA = $("alertes-clients");
     if (!tb) return;
-    const clients = (profils || []).filter(p => p.role !== "coach");
+    /* v71 (D) : le tableau ne liste que les clients ; un compte sans colonne statut reste un client (comme partout) ;
+       les prospects sont sur la page Prospects, la ligne sous le titre le dit (toujours, meme a zero) ;
+       la section Comptes garde tout le monde (c'est la qu'on passe un prospect client) */
+    const tous = (profils || []).filter(p => p && p.role !== "coach");
+    const clients = tous.filter(p => p.statut !== "prospect"), nbProspects = tous.length - clients.length;
+    const zp = $("clients-prospects");
+    if (zp){
+      zp.hidden = false;
+      zp.innerHTML = `Les prospects sont dans <a class="link-a" href="#/prospects">Prospects →</a> (${nbProspects} compte${nbProspects > 1 ? "s" : ""} gratuit${nbProspects > 1 ? "s" : ""}).`;
+    }
     if (!clients.length){
       tb.innerHTML = '<tr><td colspan="17">Aucun client pour le moment.</td></tr>';
       if (zoneA) zoneA.innerHTML = "";
       return;
     }
     /* v37 — le resume de chaque client et son tri par urgence vivent dans
-       Clients.resumer : le tableau de bord et la fiche s'en servent aussi */
-    const lignes = Clients.resumer(profils, parClient, contenus, connexions);
+       Clients.resumer : le tableau de bord et la fiche s'en servent aussi (ici, les clients seulement : un prospect
+       n'est plus classe par le score d'urgence devant les clients sains) */
+    const lignes = Clients.resumer(clients, parClient, contenus, connexions);
 
     const pastille = (ok, txtOk, txtNon) =>
       `<span class="pastille${ok ? "" : " manque"}">${ok ? txtOk : txtNon}</span>`;
@@ -189,6 +199,7 @@ const outilClients = {
     return `
     <section class="panel">
       <h2>Suivi de mes clients</h2>
+      <p class="note" id="clients-prospects" hidden style="margin:0 0 10px"></p>
       <div id="alertes-clients"></div>
       <div class="scroll" style="margin-top:14px"><table class="tb-clients-table"><thead><tr>
         <th>Client</th><th>Retour</th><th>Note</th><th>Smiley</th><th>Visite</th><th>Connexions</th><th>Dernière connexion</th><th>Jours actifs</th><th>Activité</th><th>Régularité</th><th>Poids</th><th>Depuis le début</th><th>4 dernières sem.</th>

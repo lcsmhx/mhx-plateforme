@@ -35,6 +35,9 @@
      puis 2026-10-01 : la date des PDF, décision de Lucas du 30/09) ; à l'inscription, « CGU » et « politique de confidentialité » sont 2 liens distincts vers les PDF
      (target=_blank, rel=noopener ; jamais cliqués), plus de volet (le texte « Prise de rendez-vous » reste vérifié depuis le
      Profil), case des conditions présente, plus de case santé. Nombre de vérifications inchangé (57).
+   v71 (sujet D) : « Suivi de mes clients » (#tb-clients) ne liste plus les prospects (plus de ligne ni de bouton « Ouvrir » pour
+     Léa) : la fiche du prospect s'ouvre par Clients.ouvrir (ouvrirFiche), et ne compte comme ouverte que si son bandeau de
+     consultation est affiché. Nombre de vérifications inchangé (57).
    Reprend le simulateur de verif47 : Supabase simulé en mémoire, rien ne part vers la vraie base.
    Usage : node verif50.js ../index.html                                          */
 const { chromium } = require("playwright"); const fs = require("fs"); const http = require("http"); const path = require("path");
@@ -165,8 +168,13 @@ const cliquerSansOuvrir = (page, sel) => page.evaluate(s => { const a = document
 const cleChallenge = db => (db.donnees.find(x => x.user_id === PROSPECT && x.outil === "challenge") || {}).contenu || {};
 /* fiche consultee par le coach (Store.idConsulte), null hors fiche */
 const idConsulte = page => page.evaluate(() => (typeof Store !== "undefined" && Store.idConsulte) || null).catch(() => null);
-/* ouvre la fiche depuis Mes clients et rend la fiche reellement ouverte (a verifier : le clic peut echouer) */
-const ouvrirFiche = async (page, id) => { await page.goto(`http://localhost:${PORT}/#/clients`); await attendre(page, 2200); await page.click(`[data-ouvrir="${id}"]`).catch(() => {}); await attendre(page, 1800); return idConsulte(page); };
+/* ouvre la fiche d'un compte depuis Mes clients et rend la fiche reellement ouverte (a verifier : l'ouverture peut echouer).
+   v71 (D) : un prospect n'a plus de ligne ni de bouton « Ouvrir » ([data-ouvrir]) dans #tb-clients : la fiche s'ouvre par
+   Clients.ouvrir(id, nom, "accueil") (comme ficheDe de verif58 ; avant : clic sur le bouton), nom = celui que portait le bouton
+   (Clients.nom : « Léa ») ; la fiche ne compte comme ouverte (idConsulte) que si son bandeau de consultation est affiché */
+const ouvrirFiche = async (page, id, nom) => { await page.goto(`http://localhost:${PORT}/#/clients`); await attendre(page, 2200);
+  await page.evaluate(([i, n]) => Clients.ouvrir(i, n, "accueil"), [id, nom || ""]).catch(() => {}); await attendre(page, 1800);
+  return (await page.$("#vue .bandeau .bandeau-actions")) ? idConsulte(page) : null; };
 const TXT_VERROU = "Cette fonctionnalité est disponible avec l'accompagnement MHX.";
 /* v52 (28/09/2026, Chantier 1 lot E) : programme, nutrition, suivi (vitrine) montrent d'abord un exemple générique marqué
    « Exemple » (#ech-<id>, détaillé dans verif56, blocs E1), puis cet appel à la place du texte du verrou ; les pages cachées
@@ -285,7 +293,7 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     const hors = await idConsulte(page);
     /* v61 : avec un nouveau code (accueil_haut, verrou_programme) comme avec un ancien (decouverte) : la base seule */
     const lc = await page.evaluate(() => typeof lienCalendly === "function" ? lienCalendly("accueil_haut") : null).catch(() => null);
-    const fiche = await ouvrirFiche(page, PROSPECT);
+    const fiche = await ouvrirFiche(page, PROSPECT, "Léa");   // v71 (D) : par Clients.ouvrir (plus de bouton « Ouvrir » pour un prospect)
     const lf = await page.evaluate(() => typeof lienCalendly === "function" ? [lienCalendly("accueil_haut"), lienCalendly("verrou_programme"), lienCalendly("decouverte"), lienCalendly()] : null).catch(() => null);
     ok("coach (hors fiche, puis dans la fiche du prospect bien ouverte) : lienCalendly() rend l'adresse brute, sans utm ni pré-remplissage", hors === null && fiche === PROSPECT && lc === CAL && Array.isArray(lf) && lf.every(x => x === CAL), JSON.stringify({ hors, fiche, lc, lf }));
     await c.close();
@@ -380,7 +388,7 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     await c.close();
     const db2 = base();
     const { c: c2, page: p2 } = await contexte(b, coach, db2);
-    const f1 = await ouvrirFiche(p2, PROSPECT);
+    const f1 = await ouvrirFiche(p2, PROSPECT, "Léa");   // v71 (D) : par Clients.ouvrir
     await aller(p2, "#/profil", 1800);
     const f2 = await idConsulte(p2), h2 = await p2.evaluate(() => location.hash);
     /* le Profil de la fiche est bien affiche (questionnaire du prospect), toujours dans sa fiche */
@@ -477,7 +485,7 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
   {
     const db = base();
     const { c, page } = await contexte(b, coach, db);
-    const fiche = await ouvrirFiche(page, PROSPECT);
+    const fiche = await ouvrirFiche(page, PROSPECT, "Léa");   // v71 (D) : par Clients.ouvrir
     const ids = await navIds(page);
     await aller(page, "#/programme", 1600);
     const verrou = !!(await page.$("#vue .verrou"));

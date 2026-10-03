@@ -55,7 +55,8 @@
       comme avant, son compte et la fiche de Thomas ; v53 : « Ses séances » → son journal) ;
    N. navigation du prospect (barre du bas, « Plus », ordre des onglets, #/journal verrouillé et compté, Speed Formation
       ouverte au 30e jour), Ma progression sans photos, plus aucun « 7 jours » (FR et EN) ;
-   O. coach : « inscrit depuis n j » (pastilles, fiche, suivi, cartes, CSV).
+   O. coach : « inscrit depuis n j » (fiche, suivi, cartes, CSV ; v71 (D) : plus de ligne ni de pastille de prospect dans Mes
+      clients, la ligne sous le titre renvoie à Prospects).
    Lot E (v52) :
    E1. pages verrouillées du prospect avec un exemple générique marqué « Exemple » (programme, nutrition, journal — le
       vrai onglet du lot D —, suivi), puis l'appel « Tu veux un programme construit pour toi… » et « Réserver mon bilan »
@@ -469,6 +470,14 @@ const ouvrirS = (b, db, k, h, sel, opts) => ouvrir(b, db, k, h, sel, Object.assi
 /* un clic sur un lien vers Calendly sans l'ouvrir (le clic est noté par l'app ; aucun onglet vers l'extérieur) */
 const cliquerSansOuvrir = (page, sel) => page.evaluate(s => { const a = document.querySelector(s); if (!a) return false; a.addEventListener("click", e => e.preventDefault(), { once: true }); a.click(); return true; }, sel).catch(() => false);
 const lignes = (page, sel) => page.$$eval(sel + " li", l => l.map(li => [li.querySelector("span") ? li.querySelector("span").textContent.replace(/\s+/g, " ").trim() : "", li.querySelector("b") ? li.querySelector("b").textContent.replace(/\s+/g, " ").trim() : ""])).catch(() => []);
+/* v71 (D) : un prospect n'a plus de ligne (ni bouton « Ouvrir ») dans « Suivi de mes clients » : sa fiche s'ouvre comme la page
+   Prospects le fait (Clients.ouvrir), une fois Mes clients chargée ; sel = ce que la fiche doit montrer (#fiche-reponses) */
+async function ficheDe(page, uid, nom, sel){
+  await page.evaluate(([id, n]) => Clients.ouvrir(id, n, "accueil"), [uid, nom]);
+  await page.waitForSelector(sel || "#fiche-reponses", { timeout: 8000 });
+}
+/* v71 (D) : la ligne sous le titre de Mes clients, « Les prospects sont dans Prospects → (N compte(s) gratuit(s)). » : { t, href, visible } */
+const ligneProspects = async page => { const r = await page.$eval("#clients-prospects", e => { const a = e.querySelector("a.link-a"); return { t: e.textContent, href: a ? a.getAttribute("href") : "", visible: !e.hidden }; }).catch(() => null); return r ? { t: norm(r.t), href: r.href, visible: r.visible } : { t: "", href: "", visible: false }; };
 const valeurDe = (page, sel) => page.$eval(sel, e => e.value).catch(() => null);
 /* les écritures de données, hors compteur de visites du prospect (clé activite, écrite au plus une fois par minute) */
 const saisies = db => ecrDonnees(db).filter(e => e.outil !== "activite");
@@ -840,8 +849,8 @@ function lienOk(href, base, attendu){
        « Plus tard » noté avec son origine dans sa clé challenge), est compté ici pour que le coach n'écrive rien après */
     const nAvantCoach = saisies(db).length;
     const { c: c2, page: p2 } = await contexte(b, COACH, db);
-    await p2.goto(URL0 + "#/clients"); await pret(p2, `[data-ouvrir="${ID}"]`);
-    await p2.click(`[data-ouvrir="${ID}"]`); await p2.waitForSelector("#fiche-reponses", { timeout: 8000 }); await attendre(p2, 500);
+    await p2.goto(URL0 + "#/clients"); await pret(p2, "#tb-clients [data-ouvrir]");   // v71 (D) : plus de ligne pour un prospect
+    await ficheDe(p2, ID, "Nina"); await attendre(p2, 500);
     const note = await texte(p2, "#fiche-reponses p.note"), rf = await lignes(p2, "#fiche-reponses");
     /* v52 (lot G) : côté coach, des libellés courts (l'obstacle d'avant : « Obstacle principal ») ; mêmes valeurs, même ordre */
     const attCoach = [["Sexe", "Femme"], ["Âge", "30"], ["Taille (cm)", "165"], ["Poids actuel (kg)", "70"], ["Objectif", "Perte de poids / sèche"], ["Séances par semaine", "3"], ["Déjà essayé", "Des régimes trop stricts."], ["Obstacle principal", "Je manque de temps avec le travail"], ["Pourquoi maintenant", "Me sentir mieux cet été"], ["Motivation", "8 / 10"]];
@@ -858,8 +867,8 @@ function lienOk(href, base, attendu){
     ok("ancien questionnaire commencé : les 3 nouvelles questions (pas l'âge ni le poids), rien d'écrit à l'affichage", !(await page.$("#q-age, #q-poids")) && !!(await page.$("#q-projection")) && saisies(db).length === 0, "");
     await c.close();
     const { c: c2, page: p2 } = await contexte(b, COACH, db);
-    await p2.goto(URL0 + "#/clients"); await pret(p2, `[data-ouvrir="${ID}"]`);
-    await p2.click(`[data-ouvrir="${ID}"]`); await p2.waitForSelector("#fiche-reponses", { timeout: 8000 }); await attendre(p2, 500);
+    await p2.goto(URL0 + "#/clients"); await pret(p2, "#tb-clients [data-ouvrir]");   // v71 (D) : plus de ligne pour un prospect
+    await ficheDe(p2, ID, "Hugo"); await attendre(p2, 500);
     /* v53 (chantier 4) : plus de score (« Questionnaire en cours (4/10 réponses) ») : la note des réponses suffit */
     ok("coach : « 4 / 10 réponses, pas encore validé. » (compté sur l'ancien questionnaire)", (await texte(p2, "#fiche-reponses p.note")) === "4 / 10 réponses, pas encore validé." && !(await p2.$("#fiche-score")), await texte(p2, "#fiche-reponses p.note"));
     await c2.close();
@@ -934,8 +943,8 @@ function lienOk(href, base, attendu){
     const C0 = { version: 1, jours: {}, cta: { clics: [{ jour: 3, source: "bilan-propose", date: avant(20 * MIN) }, { jour: 3, source: "apres_questionnaire", date: avant(10 * MIN) }] } };
     const db = base({ comptes: [compte(k, "Léa", "Martin", [["intake", I0], ["challenge", C0]])] });
     const { c, page } = await contexte(b, COACH, db);
-    await page.goto(URL0 + "#/clients"); await pret(page, `[data-ouvrir="${ID}"]`);
-    await page.click(`[data-ouvrir="${ID}"]`); await page.waitForSelector("#fiche-reponses", { timeout: 8000 }); await attendre(page, 600);
+    await page.goto(URL0 + "#/clients"); await pret(page, "#tb-clients [data-ouvrir]");   // v71 (D) : plus de ligne pour un prospect
+    await ficheDe(page, ID, "Léa Martin"); await attendre(page, 600);
     const note = await texte(page, "#fiche-reponses p.note"), rf = await lignes(page, "#fiche-reponses");
     ok("fiche : « 3 / 3 réponses, validé le … »", note.startsWith("3 / 3 réponses, validé le "), note);
     ok("fiche : email, puis les 3 réponses (v52, lot G : libellés courts Problème, Ce qui l'a bloqué, Dans 3 mois), puis les anciennes qui ont une valeur (sexe, poids) — pas l'objectif posé par l'app", JSON.stringify(rf) === JSON.stringify([["Email", "p70@exemple.fr"], ["Problème", "Perdre du gras"], ["Ce qui l'a bloqué", I0.obstacle], ["Dans 3 mois", "Tenir " + XSS], ["Sexe", "Femme"], ["Poids actuel (kg)", "64"]]), JSON.stringify(rf));
@@ -1450,13 +1459,15 @@ function lienOk(href, base, attendu){
       compte(32, "Paul", "Dujour", [], { cree: avant(2 * MIN) })
     ] });
     const { c, page } = await contexte(b, COACH, db);
-    await page.goto(URL0 + "#/clients"); await pret(page, `[data-ouvrir="${PID(30)}"]`); await attendre(page, 600);
-    const ligneDe = async id => norm(await page.$eval(`#vue [data-ouvrir="${id}"]`, a => (a.closest("tr") || a.closest(".sc-carte") || a.parentElement).textContent).catch(() => ""));
-    const l150 = await ligneDe(PID(30)), l151 = await ligneDe(PID(31)), l152 = await ligneDe(PID(32));
-    ok("Mes clients : pastilles « Découverte · inscrit depuis 30 j », « … 3 j », « … inscrit aujourd'hui »", l150.includes("Découverte · inscrit depuis 30 j") && l151.includes("Découverte · inscrit depuis 3 j") && l152.includes("Découverte · inscrit aujourd'hui"), [l150, l151, l152].map(x => x.slice(0, 160)).join(" | "));
+    await page.goto(URL0 + "#/clients"); await pret(page, "#tb-clients [data-ouvrir]"); await attendre(page, 600);
+    /* v71 (D) : Léa, Zoé et Paul (prospects) n'ont plus de ligne ni de pastille dans « Suivi de mes clients » : la ligne sous
+       le titre renvoie à Prospects ; « inscrit depuis 30 j » se lit dans la fiche (ci-dessous), « inscrit le … » sur les cartes */
+    const dansTb = await page.$$eval("#tb-clients [data-ouvrir]", l => l.map(e => e.dataset.ouvrir)).catch(() => []);
+    const tbTexte = await texte(page, "#tb-clients"), lp = await ligneProspects(page);
+    ok("Mes clients (v71) : ni Léa, ni Zoé, ni Paul dans « Suivi de mes clients » (les clients y sont ; aucune pastille « Découverte · inscrit… »), « Les prospects sont dans Prospects → (3 comptes gratuits). » (lien #/prospects, ligne visible)", dansTb.includes(F.IDS.c1) && ![PID(30), PID(31), PID(32)].some(id => dansTb.includes(id)) && !/Léa Ancienne|Zoé Récente|Paul Dujour|Découverte · inscrit/.test(tbTexte) && lp.t === "Les prospects sont dans Prospects → (3 comptes gratuits)." && lp.href === "#/prospects" && lp.visible, JSON.stringify([dansTb, lp]) + " · " + tbTexte.slice(0, 160));
     const vc = await texte(page, "#vue");
     ok("Mes clients : plus aucun « J n/7 » ni « Découverte terminée »", !/J\d+\/7|Découverte terminée|terminée/.test(vc), (vc.match(/J\d+\/7|terminée/) || [""])[0]);
-    await page.click(`[data-ouvrir="${PID(30)}"]`); await page.waitForSelector("#fiche-decouverte", { timeout: 8000 }); await attendre(page, 800);
+    await ficheDe(page, PID(30), "Léa Ancienne", "#fiche-decouverte"); await attendre(page, 800);   // v71 (D) : par Clients.ouvrir
     /* le bloc « Suivi commercial » (raisons, action : « découverte terminée ») part avec le score et la température (chantier 4) */
     const fd = await texte(page, "#fiche-decouverte"), lede = await texte(page, "#vue .masthead .lede");
     ok("fiche : « inscrit depuis 30 j » (pastille et ligne du bloc Découverte, en-tête), plus de « jour n / 7 » ni de « terminée »", fd.includes("inscrit depuis 30 j") && lede.includes("Découverte : inscrit depuis 30 j, questionnaire rempli.") && !/jour \d+ ?\/ ?7|J\d+\/7|terminée/i.test(fd + " " + lede), fd.slice(0, 200) + " · " + lede);
@@ -1775,8 +1786,8 @@ function lienOk(href, base, attendu){
       /* le coach dans la fiche d'un prospect : ses pages, sans exemple ni verrou */
       const k3 = 52, ID3 = PID(k3), db3 = base({ comptes: [prospectE(k3)] });
       const co = await contexte(b, COACH, db3);
-      await co.page.goto(URL0 + "#/clients"); await pret(co.page, `[data-ouvrir="${ID3}"]`);
-      await co.page.click(`[data-ouvrir="${ID3}"]`); await co.page.waitForSelector("#vue .bandeau", { timeout: 8000 }); await attendre(co.page, 600);
+      await co.page.goto(URL0 + "#/clients"); await pret(co.page, "#tb-clients [data-ouvrir]");   // v71 (D) : plus de ligne pour un prospect
+      await ficheDe(co.page, ID3, "Léa Martin", "#vue .bandeau"); await attendre(co.page, 600);
       const vc = [];
       for (const h of ["#/programme", "#/nutrition", "#/suivi"]) { await aller(co.page, h, 1600); vc.push([h, await co.page.evaluate(() => Store.idConsulte), !!(await co.page.$("#vue .echantillon, #vue .verrou, #vue .ech-marque"))]); }
       const videC = await co.page.evaluate(() => ["programme", "nutrition", "journal", "suivi"].map(id => Echantillons.html(id)).join(""));

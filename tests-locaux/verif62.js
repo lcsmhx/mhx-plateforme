@@ -9,7 +9,9 @@
    C. Mes clients sur téléphone (375 px) : les cartes (rien de fixe), les lignes dans le nouvel ordre, la date courte, la page
       ne déborde pas ; v58 : une valeur en plusieurs morceaux (« 7/10 », « 0/100 (en cours : 0) », « 83 kg (départ …) »)
       reste d'un seul tenant, collée à droite (avant : les morceaux étalés sur toute la ligne) ; aucune carte ne déborde (le nom et
-      les pastilles d'un prospect passent à la ligne), à 375 et à 320 px ; v59 : à 320 px, la page ne déborde plus (barre du haut) ;
+      les pastilles passent à la ligne), à 375 et à 320 px ; v59 : à 320 px, la page ne déborde plus (barre du haut) ;
+      v71 (D) : le tableau ne liste plus les prospects (ligne « Les prospects sont dans Prospects → (n comptes gratuits). ») :
+      Léa et Marc se lisent sur leur carte de la page Prospects, les mesures du tableau portent sur les clients ;
    D. la connexion ouvre la page d'arrivée : un client, un prospect et le coach dont l'adresse gardait une page (#/formation,
       #/prospects : dernière page ouverte sur l'appareil quand la session a pris fin sans « Se déconnecter ») arrivent sur
       leur page d'arrivée ; « Me reconnecter » (session perdue en cours d'utilisation) ramène sur la page ouverte ;
@@ -601,12 +603,19 @@ const ALERTE59 = (/\n  @supports selector\(:has\(\*\)\)\{[\s\S]*?\n  \}\n/.exec(
     if (theme === "sombre") {
       const th = await page.$$eval(".tb-clients-table thead th", l => l.map(e => e.textContent.trim()));
       ok("A : en-têtes : Client, Retour, Note, Smiley, Visite, puis « Connexions » et « Dernière connexion », puis « Jours actifs » et « Activité »", egal(th.slice(0, ORDRE_TH.length), ORDRE_TH) && th.length === 17, JSON.stringify(th));
-      const o = await ordreTd(page, TESTEUR.id), o2 = await ordreTd(page, LEA);
-      ok("A : les cellules d'une ligne suivent le même ordre (compte de test, prospecte Léa)", egal(o.slice(0, ORDRE_TD.length), ORDRE_TD) && egal(o2, o), JSON.stringify(o));
-      const T = await ligneClient(page, TESTEUR.id), Th = await ligneClient(page, F.IDS.c1), Le = await ligneClient(page, LEA), Ma = await ligneClient(page, MARC);
-      ok("A : date courte à l'heure du coach : compte de test « " + quandCourt(CX_TEST.derniere) + " », Thomas « " + quandCourt(CX_THOMAS.derniere) + " », Léa « " + quandCourt(CX_LEA.derniere) + " »",
-        T["Dernière connexion"] === quandCourt(CX_TEST.derniere) && Th["Dernière connexion"] === quandCourt(CX_THOMAS.derniere) && Le["Dernière connexion"] === quandCourt(CX_LEA.derniere) && COURT.test(T["Dernière connexion"]), JSON.stringify([T["Dernière connexion"], Th["Dernière connexion"], Le["Dernière connexion"]]));
-      ok("A : nombres et « aucune » inchangés (12, 5, 3 ; Marc « 0 » et « aucune »), info-bulle inchangée", T["Connexions"] === "12" && Th["Connexions"] === "5" && Le["Connexions"] === "3" && Ma["Connexions"] === "0" && Ma["Dernière connexion"] === "aucune" && (await titre(page, TESTEUR.id, "Connexions")) === "Une connexion par jour au plus, comptées depuis le " + jourCoach(CX_TEST.premiere), JSON.stringify([T["Connexions"], Th["Connexions"], Le["Connexions"], Ma]));
+      const o = await ordreTd(page, TESTEUR.id), o2 = await ordreTd(page, F.IDS.c1);   // v71 (D) : Thomas (Léa, prospecte, n'est plus dans le tableau)
+      ok("A : les cellules d'une ligne suivent le même ordre (compte de test, Thomas)", egal(o.slice(0, ORDRE_TD.length), ORDRE_TD) && egal(o2, o), JSON.stringify(o));
+      const T = await ligneClient(page, TESTEUR.id), Th = await ligneClient(page, F.IDS.c1);
+      /* v71 (D) : Léa et Marc (prospects) n'ont plus de ligne dans le tableau : la ligne sous le titre renvoie à la page Prospects,
+         où leurs connexions se lisent sur leur carte (date longue) — lue ici dans un second navigateur du coach */
+      const absents = await page.evaluate(ids => ids.map(id => !document.querySelector(`#tb-clients [data-ouvrir="${id}"]`)), [LEA, MARC]);
+      const notePr = await page.$eval("#clients-prospects", e => { const a = e.querySelector("a.link-a"); return { t: e.textContent, lien: a ? a.getAttribute("href") : "", cache: e.hidden }; }).catch(() => ({}));
+      const NB_PR = prospects().filter(p => p.statut === "prospect").length;
+      const xp = await coachSur(b, db, "#/prospects", "#pr-liste", { fuseau: FUSEAU }); await filtre(xp.page, "tous");
+      const Le = await faits(xp.page, LEA), Ma = await faits(xp.page, MARC);
+      ok("A : date courte à l'heure du coach : compte de test « " + quandCourt(CX_TEST.derniere) + " », Thomas « " + quandCourt(CX_THOMAS.derniere) + " » ; Léa (prospecte) n'est plus dans le tableau, la ligne « Les prospects sont dans Prospects → (" + NB_PR + " comptes gratuits). » y renvoie, sa carte Prospects garde la date longue « " + quandCoach(CX_LEA.derniere) + " »",
+        T["Dernière connexion"] === quandCourt(CX_TEST.derniere) && Th["Dernière connexion"] === quandCourt(CX_THOMAS.derniere) && COURT.test(T["Dernière connexion"]) && absents[0] && norm(notePr.t) === "Les prospects sont dans Prospects → (" + NB_PR + " comptes gratuits)." && notePr.lien === "#/prospects" && !notePr.cache && Le["Dernière connexion"] === quandCoach(CX_LEA.derniere), JSON.stringify([T["Dernière connexion"], Th["Dernière connexion"], absents, notePr, Le["Dernière connexion"]]));
+      ok("A : nombres et « aucune » inchangés (12, 5 ; sur leurs cartes Prospects : Léa 3, Marc « 0 » et « aucune »), info-bulle inchangée", T["Connexions"] === "12" && Th["Connexions"] === "5" && Le["Connexions"] === "3" && Ma["Connexions"] === "0" && Ma["Dernière connexion"] === "aucune" && absents[1] && (await titre(page, TESTEUR.id, "Connexions")) === "Une connexion par jour au plus, comptées depuis le " + jourCoach(CX_TEST.premiere), JSON.stringify([T["Connexions"], Th["Connexions"], Le["Connexions"], Ma]));
     }
     const g0 = await geo(page, [TESTEUR.id, F.IDS.c1], 0);
     await capture(page, "A-1280-" + theme + "-debut");
@@ -634,13 +643,13 @@ const ALERTE59 = (/\n  @supports selector\(:has\(\*\)\)\{[\s\S]*?\n  \}\n/.exec(
   await bloc("B. Mes clients sur tablette", async () => {
     const db = avecLignes(decor());
     const { page } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]", { viewport: TABLETTE, fuseau: FUSEAU });
-    const ids = [TESTEUR.id, F.IDS.c1, LEA];
+    const ids = [TESTEUR.id, F.IDS.c1, F.IDS.c2];   // v71 (D) : Sarah à la place de Léa (prospecte, plus dans le tableau)
     const g0 = await geo(page, ids, 0);
     await capture(page, "B-820-debut");
     ok("B : 820 px : le tableau est plus large que l'écran (il défile de côté)", g0.deborde, JSON.stringify(g0));
     const g1 = await geo(page, ids, 300);
     await capture(page, "B-820-milieu");
-    ok("B : défilé de 300 px : les noms (compte de test, Thomas, Léa) et « Client » restent à gauche, par-dessus", g1.defile > 0 && g1.noms.every(n => n && Math.abs(n.gauche) <= 1 && n.dessus) && Math.abs(g1.th.gauche) <= 1 && g1.noms[2].nom === "Léa Martin", JSON.stringify(g1));
+    ok("B : défilé de 300 px : les noms (compte de test, Thomas, Sarah) et « Client » restent à gauche, par-dessus", g1.defile > 0 && g1.noms.every(n => n && Math.abs(n.gauche) <= 1 && n.dessus) && Math.abs(g1.th.gauche) <= 1 && g1.noms[2].nom === "Sarah Démo", JSON.stringify(g1));
     const g2 = await geo(page, ids, "fin");
     await capture(page, "B-820-fin");
     ok("B : défilé jusqu'au bout : les noms restent lisibles, et « Ouvrir » (dernière colonne) reste cliquable", g2.defile > g1.defile && g2.noms.every(n => n && Math.abs(n.gauche) <= 1 && n.dessus && n.ouvrir), JSON.stringify(g2));
@@ -670,18 +679,19 @@ const ALERTE59 = (/\n  @supports selector\(:has\(\*\)\)\{[\s\S]*?\n  \}\n/.exec(
       return { nom: (tr.querySelector("td b") || {}).textContent, l: td.dataset.l, t: td.textContent.replace(/\s+/g, " ").trim(), ecart: Math.round(ecart), bord: Math.round(tdR.right - pad - Math.max(...rs.map(r => r.right))) };
     })).filter(Boolean));
     const ecartes = morceaux.filter(m => m.ecart > 8 || m.bord > 2);
-    ok("C : v58 : dans toutes les cartes, chaque valeur reste d'un seul tenant et collée à droite (" + morceaux.length + " valeurs mesurées)", morceaux.length > 100 && ecartes.length === 0, JSON.stringify(ecartes.slice(0, 6)));
+    /* v71 (D) : les prospects ne sont plus dans le tableau : 5 clients (Thomas, Sarah, Julien, compte de test, Karim) × 15 valeurs = 75 */
+    ok("C : v58 : dans toutes les cartes, chaque valeur reste d'un seul tenant et collée à droite (" + morceaux.length + " valeurs mesurées)", morceaux.length >= 75 && ecartes.length === 0, JSON.stringify(ecartes.slice(0, 6)));
     const M = (nom, l) => morceaux.find(m => m.nom === nom && m.l === l) || {};
     const tNote = M("Sans nom", "Dernière note"), tReg = M("Sans nom", "Régularité");
     ok("C : v58 : compte de test : « 7/10 » et « 0/100 (en cours : 0) » d'un seul tenant", tNote.t === "7/10" && tNote.ecart <= 1 && /^\d+\/100 \(en cours : \d+\)$/.test(tReg.t) && tReg.ecart <= 8, JSON.stringify([tNote, tReg]));
     /* v58 : rien ne dépasse d'une carte (le cadre du tableau ne défile pas de côté, aucune cellule plus large que sa place) */
     const cartes = pg => pg.evaluate(() => { const sc = document.querySelector(".tb-clients-table").closest(".scroll"); const trop = Array.from(document.querySelectorAll("#tb-clients td")).filter(td => td.scrollWidth > td.clientWidth + 1).map(td => ((td.closest("tr").querySelector("td b") || {}).textContent || "?") + " / " + (td.dataset.l || "Client") + " : " + td.scrollWidth + " pour " + td.clientWidth); return { cadre: sc.scrollWidth + "/" + sc.clientWidth, defile: sc.scrollWidth > sc.clientWidth + 1, trop }; });
     const k375 = await cartes(page);
-    ok("C : v58 : 375 px : aucune carte ne déborde (nom et pastilles des prospects repliés dans la carte), le tableau ne défile pas de côté", !k375.defile && k375.trop.length === 0, JSON.stringify(k375).slice(0, 400));
+    ok("C : v58 : 375 px : aucune carte ne déborde (nom et pastilles repliés dans la carte), le tableau ne défile pas de côté", !k375.defile && k375.trop.length === 0, JSON.stringify(k375).slice(0, 400));
     const x320 = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]", { viewport: { width: 320, height: 700 }, fuseau: FUSEAU });
     const k320 = await cartes(x320.page);
-    await x320.page.$eval(`#tb-clients [data-ouvrir="${LEA}"]`, bt => bt.closest("tr").scrollIntoView({ block: "start" })); await capture(x320.page, "C-320-lea");
-    ok("C : v58 : 320 px : aucune carte ne déborde (pastille la plus longue repliée), le tableau ne défile pas de côté", !k320.defile && k320.trop.length === 0, JSON.stringify(k320).slice(0, 400));
+    await x320.page.$eval(`#tb-clients [data-ouvrir="${TESTEUR.id}"]`, bt => bt.closest("tr").scrollIntoView({ block: "start" })); await capture(x320.page, "C-320-test");   // v71 (D) : le compte de test (Léa, prospecte, n'a plus de ligne)
+    ok("C : v58 : 320 px : aucune carte ne déborde (pastilles repliées), le tableau ne défile pas de côté", !k320.defile && k320.trop.length === 0, JSON.stringify(k320).slice(0, 400));
     /* v59 : jusqu'à la v58, la page débordait à 320 px à cause de la barre du haut du coach (nom, EN, « Se déconnecter ») ; le détail au bloc E */
     ok("C : v59 : 320 px : la page ne déborde pas en largeur (barre du haut du coach comprise)", !(await deborde(x320.page)), await largeur(x320.page));
     const thP = M("Thomas Démo", "Poids"), th4 = M("Thomas Démo", "4 dernières sem.");
