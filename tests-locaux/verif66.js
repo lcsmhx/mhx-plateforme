@@ -951,15 +951,23 @@ const ISO = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$/;
        (mhx_invitations|<id>) */
     const ID4 = PID(24), db4 = base({ comptes: [PROSPECT(24, "Léna", [["calc_perso", CP], ["mens", MENS_DEPART]])], lectureKo: ["formation"] });
     ({ c, page } = await contexte(b, quiP(24), db4, { viewport: MOBILE }));
-    await ouvrirFormation(page);
+    /* v71 (F) : la lecture de formation a échoué → « Pas de connexion : tes données n'ont pas pu être chargées. » + Réessayer,
+       pas de carte « Commence ici » (rien d'écrit, aucune invitation, aucune lecture d'intake et challenge, rien noté sur
+       l'appareil) ; lecture rétablie + « Réessayer » : la carte comme avant (2 sur 3, non repliée), toujours rien d'écrit
+       (avant v71 : la carte s'affichait sur une lecture ratée et le clic sur la vidéo n'écrivait rien) */
+    await page.goto(URL0 + "#/formation"); await page.waitForSelector("#fo-vue [data-reessayer]", { timeout: 12000 }); await attendre(page, 600);
     const L4 = db4.lectures.length, r4 = lu(db4, "formation");
-    await page.click('[data-depart="video"]'); await attendre(page, 2500);
-    const p4 = { d: await carteDepart(page), nb: await page.$$eval("section.invitation", l => l.length).catch(() => -1), lInv: lecturesInvitation(db4, ID4, L4).map(x => x.outil),
+    const h4 = { texte: await texte(page, "#fo-vue #page-hors-ligne"), carte: !!(await page.$('[data-depart="video"]')), nb: await page.$$eval("section.invitation", l => l.length).catch(() => -1),
+      lInv: lecturesInvitation(db4, ID4, 0).map(x => x.outil), memo: await page.evaluate(id => localStorage.getItem("mhx_invitations|" + id), ID4) };
+    db4.lectureKo = [];
+    await page.click("#fo-vue [data-reessayer]"); await pret(page, "#fo-vue .prog-compteur"); await attendre(page, 800);
+    const p4 = { d: await carteDepart(page), nb: await page.$$eval("section.invitation", l => l.length).catch(() => -1),
       lecteur: !!(await page.$("#fo-presentation iframe")), memo: await page.evaluate(id => localStorage.getItem("mhx_invitations|" + id), ID4) };
-    ok("écriture de formation refusée (sa lecture a échoué) : clic sur la vidéo de bienvenue — rien d'écrit, l'action vidéo reste non cochée (2 sur 3, carte non repliée), aucune invitation, aucune lecture d'intake et challenge, rien noté sur l'appareil",
-      r4 >= 1 && saisies(db4).length === 0 && ecr(db4, "formation").length === 0 && !!p4.d && egal(p4.d.actions.map(x => x.fait), [false, true, true]) && !/\bfo-depart-fini\b/.test(p4.d.classes)
-        && p4.nb === 0 && p4.lInv.length === 0 && p4.memo === null,
-      JSON.stringify([r4, p4.d && p4.d.actions.map(x => x.fait), p4.d && p4.d.classes, p4.nb, p4.lInv, p4.lecteur, p4.memo]) + " " + resume(db4));
+    ok("lecture de formation ratée (v71 F) : « Pas de connexion » + Réessayer, pas de carte « Commence ici », rien d'écrit, aucune invitation, aucune lecture d'intake et challenge, rien noté sur l'appareil ; « Réessayer » (lecture rétablie) : la carte (2 sur 3, non repliée), toujours rien d'écrit",
+      r4 >= 1 && h4.texte.includes("Pas de connexion : tes données n'ont pas pu être chargées.") && !h4.carte && h4.nb === 0 && h4.lInv.length === 0 && h4.memo === null
+        && saisies(db4).length === 0 && ecr(db4, "formation").length === 0 && !!p4.d && egal(p4.d.actions.map(x => x.fait), [false, true, true]) && !/\bfo-depart-fini\b/.test(p4.d.classes)
+        && p4.nb === 0 && p4.memo === null,
+      JSON.stringify([r4, h4, p4.d && p4.d.actions.map(x => x.fait), p4.d && p4.d.classes, p4.nb, p4.lecteur, p4.memo]) + " " + resume(db4));
     await c.close();
   });
 

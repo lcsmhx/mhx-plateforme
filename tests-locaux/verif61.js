@@ -591,15 +591,22 @@ const NOTE_PROSPECTS = "Les prospects sont dans Prospects → (8 comptes gratuit
        pendant le chargement (page masquée avant que l'écoute commence) : son retour 10 min plus tard compte aussi. */
     const db = decor(); db.profilRate = 1;
     const { page } = await contexte(b, THOMAS, db, { horloge: true });
-    await page.goto(URL0); await pret(page, "#vue"); await attendre(page, 800);
-    const n0 = notees(db).length;
+    /* v71 (F) : profil illisible (réseau) → page « Impossible de charger ton compte » : rien de l'app, rien de noté, aucune
+       relecture au retour (l'app n'a pas démarré) ; « Réessayer » recharge : profil lu, UNE connexion notée
+       (avant v71 : l'app s'ouvrait sans profil et le rôle était relu au retour au premier plan) */
+    await page.goto(URL0); await page.waitForSelector("#co-indispo", { timeout: 12000 }); await attendre(page, 800);
+    const n0 = notees(db).length, r0 = db.profilRelus, vue0 = !!(await page.$("#vue"));
     await cacher(page); await page.clock.fastForward(11 * MIN); await montrer(page); await attendre(page, 1200);
-    ok("B : Thomas, profil illisible au démarrage : rien de noté à l'ouverture ; revenu après 11 min : profil relu, UNE connexion notée", n0 === 0 && db.profilRelus === 1 && notees(db, F.IDS.c1).length === 1 && notees(db).length === 1, n0 + " puis " + JSON.stringify(notees(db)) + " · relectures " + db.profilRelus);
+    const n0b = notees(db).length, r0b = db.profilRelus;
+    await page.click("#co-reessayer"); await pret(page, "#vue"); await attendre(page, 1200);
+    ok("B : Thomas, profil illisible au démarrage (v71 F) : page « Impossible de charger ton compte », rien de l'app, rien de noté, pas de relecture au retour après 11 min ; « Réessayer » : profil lu, UNE connexion notée", n0 === 0 && r0 === 0 && !vue0 && n0b === 0 && r0b === 0 && notees(db, F.IDS.c1).length === 1 && notees(db).length === 1, n0 + "/" + n0b + " puis " + JSON.stringify(notees(db)) + " · relectures " + db.profilRelus + " · vue0 " + vue0);
     const dbc = decor(); dbc.profilRate = 1;
     const { page: pc } = await contexte(b, COACH, dbc, { horloge: true });
-    await pc.goto(URL0); await pret(pc, "#vue"); await attendre(pc, 800);
+    await pc.goto(URL0); await pc.waitForSelector("#co-indispo", { timeout: 12000 }); await attendre(pc, 800);
     await cacher(pc); await pc.clock.fastForward(11 * MIN); await montrer(pc); await attendre(pc, 1200);
-    ok("B : le coach, même cas : son profil est relu (une fois) et dit « coach » : aucune connexion notée", dbc.profilRelus === 1 && notees(dbc).length === 0, JSON.stringify(notees(dbc)) + " · relectures " + dbc.profilRelus);
+    const rc = dbc.profilRelus;
+    await pc.click("#co-reessayer"); await pret(pc, "#vue"); await attendre(pc, 1200);
+    ok("B : le coach, même cas (v71 F) : la page « Impossible de charger », aucune relecture au retour ; « Réessayer » : son profil dit « coach », aucune connexion notée", rc === 0 && (await pc.evaluate(() => Auth.estCoach())) && notees(dbc).length === 0, JSON.stringify(notees(dbc)) + " · relectures " + dbc.profilRelus);
     const dbl = decor(); dbl.profilRetard = 3000;
     const { page: pl } = await contexte(b, qui(LEA, "lea@exemple.fr"), dbl, { horloge: true });
     await pl.goto(URL0); await cacher(pl);   // elle passe à une autre app pendant le chargement (profil lent : 3 s)

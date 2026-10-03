@@ -231,7 +231,7 @@ const outilMensurations = {
       <div class="seance-c-tete"><h2>${esc(trad("Poids"))}</h2>
         ${Store.idConsulte ? "" : `<button type="button" class="btn petit" id="mens-ajouter">+ ${esc(trad("Ajouter ma mesure"))}</button>`}</div>
       <div class="tiles">
-        <div class="tile"><div class="t-lbl">Poids actuel</div><div class="t-val readout" id="k-poids">—</div><div class="t-sub" id="k-poids-d">Pas encore de mesure</div></div>
+        <div class="tile"><div class="t-lbl">Poids actuel</div><div class="t-val readout" id="k-poids">—</div><div class="t-sub" id="k-poids-d">Chargement…</div></div>
         <div class="tile"><div class="t-lbl">Poids de départ</div><div class="t-val readout" id="k-depart">—</div><div class="t-sub" id="k-depart-d">à renseigner</div></div>
         <div class="tile"><div class="t-lbl">Variation de poids</div><div class="t-val readout" id="k-delta">—</div><div class="t-sub">depuis le départ</div></div>
         <div class="tile"><div class="t-lbl">Semaines suivies</div><div class="t-val readout" id="k-sem">0</div><div class="t-sub" id="k-sem-sub">Commence cette semaine</div></div>
