@@ -366,7 +366,9 @@ const DECOUVERTE = {
   /* v52 : l'action mise en avant sur l'accueil du prospect, une à la fois (d'abord le calcul, puis la pesée) */
   etapes: {
     calories: { titre: "Ta première étape", texte: "Ta maintenance et tes macros, calculées sur ta morphologie et ton activité réelle.", bouton: "Calcule tes calories (2 min)" },
-    pesee: { titre: "Ta prochaine étape", texte: "Note ton poids d'aujourd'hui : c'est ton point de départ, et la base de ta courbe.", bouton: "Enregistre ta pesée de départ" }
+    pesee: { titre: "Ta prochaine étape", texte: "Note ton poids d'aujourd'hui : c'est ton point de départ, et la base de ta courbe.", bouton: "Enregistre ta pesée de départ" },
+    /* v71 (H) : calcul et pesée faits, aucun créneau coché : l'action dorée = le plan d'action (bouton et sous-ligne : cta) */
+    plan: { titre: "Ta prochaine étape", texte: "Ton calcul et ta pesée de départ sont faits. Il reste à en faire un plan qui tient : 15 min avec Lucas, offert." }
   },
   /* questions du questionnaire court qui ne sont pas dans le questionnaire complet (celui des clients ne change pas).
      v52 : les 3 questions (même ordre en anglais). « probleme » a son propre identifiant (pas « objectif », dont les
@@ -561,7 +563,9 @@ const DECOUVERTE = {
     titre: "Ce que l'accompagnement ajoute",   // v61 (brief V2, E2)
     note: "15 min avec Lucas pour faire le point sur ton objectif. Offert.",
     reserve_case: "J'ai déjà choisi mon créneau",
-    reserve_ok: "Bilan réservé le {d}. Ton coach te retrouve à l'heure prévue."
+    reserve_ok: "Bilan réservé le {d}. Ton coach te retrouve à l'heure prévue.",
+    /* v71 (H) : l'en-tête de l'accueil une fois le créneau coché (plus aucun « Récupérer mon plan d'action ») */
+    reserve_haut: "Créneau choisi le {d} — Lucas t'appelle à l'heure réservée"
   },
   profil: {
     texte: "Tes réponses au questionnaire sont enregistrées : ton coach les verra. Le questionnaire complet s'ouvrira au démarrage de ton accompagnement.",
@@ -666,7 +670,8 @@ const DECOUVERTE = {
     charge_rate: "Your answers could not be loaded. Reload the page.",
     etapes: {
       calories: { titre: "Your first step", texte: "Your maintenance calories and macros, calculated from your body and your real activity.", bouton: "Calculate your calories (2 min)" },
-      pesee: { titre: "Your next step", texte: "Log today's weight: it's your starting point, and the base of your curve.", bouton: "Log your starting weight" }
+      pesee: { titre: "Your next step", texte: "Log today's weight: it's your starting point, and the base of your curve.", bouton: "Log your starting weight" },
+      plan: { titre: "Your next step", texte: "Your calories and your starting weight are in. Now let's turn them into a plan that sticks: 15 min with Lucas, free." }
     },
     questions: [
       { id: "probleme", label: "Your #1 goal?", type: "cartes", options: ["Lose fat", "Build muscle", "Get back in shape"],
@@ -837,7 +842,8 @@ const DECOUVERTE = {
       titre: "What coaching adds",
       note: "15 min with Lucas to go over your goal. Free.",
       reserve_case: "I've already booked my slot",
-      reserve_ok: "Assessment booked on {d}. Your coach will meet you at the scheduled time."
+      reserve_ok: "Assessment booked on {d}. Your coach will meet you at the scheduled time.",
+      reserve_haut: "Slot booked on {d} — Lucas will call you at the reserved time"
     },
     profil: {
       texte: "Your questionnaire answers are saved: your coach will see them. The full questionnaire opens when your coaching starts.",

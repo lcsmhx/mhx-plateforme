@@ -1049,6 +1049,31 @@ function lienOk(href, base, attendu){
     await c.close();
   });
 
+  /* v71 (H) : carte dorée « Ta prochaine étape » (calcul + pesée faits, pas de créneau), origine accueil_etape ;
+     prospect réservé : plus aucun « Récupérer mon plan d'action » (accueil, pages verrouillées), ligne « Créneau choisi » */
+  await bloc("I. (v71 H) accueil : carte dorée du plan d'action, prospect réservé", async () => {
+    const CP = { sexe: "F", age: 30, taille: 165, poids: 60, pas: 6000, heures: 3, objectif: "perte" };
+    const I0 = NOUVEAU({ bilan_propose: { choix: "plus_tard", le: avant(MIN) } });
+    const db = base({ comptes: [
+      compte(8, "Nour", "Haddad", [["intake", I0], ["calc_perso", CP], ["mens", { pstart: 70, mesures: [] }]]),
+      compte(9, "Sami", "Rey", [["intake", I0], ["calc_perso", CP], ["mens", { pstart: 70, mesures: [] }], ["challenge", { version: 1, jours: {}, cta: { clics: [] }, reserve: avant(H) }]])
+    ] });
+    const clicsDe = uid => ((((db.donnees.find(d => d.user_id === uid && d.outil === "challenge") || {}).contenu || {}).cta || {}).clics || []);
+    let { c, page } = await ouvrir(b, db, 8, "", "#dc-accomp"); await attendre(page, 1000);
+    const carte = await page.$eval("#dc-etape", x => ({ etape: x.dataset.etape, h2: x.querySelector("h2").textContent.trim(), a: x.querySelector("a.btn") ? x.querySelector("a.btn").textContent.trim() : "", cal: x.querySelector("a.btn") ? x.querySelector("a.btn").getAttribute("data-dc-cal") : "", sous: x.querySelector(".dc-cta-sous") ? x.querySelector(".dc-cta-sous").textContent.trim() : "" })).catch(() => null);
+    const forts = await page.$$eval("#vue a.btn:not(.ghost), #vue button.btn:not(.ghost)", l => l.map(x => x.id || x.textContent.trim()));
+    ok("calcul et pesée faits, pas de créneau : carte « Ta prochaine étape » (plan) avec le bouton doré « Récupérer mon plan d'action » (origine accueil_etape) et « 15 min avec Lucas · offert » ; seul bouton doré de l'accueil", !!carte && carte.etape === "plan" && carte.h2 === "Ta prochaine étape" && norm(carte.a) === TX.reserver && carte.cal === "accueil_etape" && norm(carte.sous) === TX.cta_sous && forts.length === 1 && forts[0] === "dc-etape-go", JSON.stringify(carte) + " " + JSON.stringify(forts));
+    await cliquerSansOuvrir(page, '#dc-etape a[data-dc-cal="accueil_etape"]'); await attendre(page, 2200);
+    const cl = clicsDe(PID(8));
+    ok("clic sur la carte dorée : un clic noté dans challenge (source accueil_etape), rien d'autre d'écrit", cl.length === 1 && cl[0].source === "accueil_etape" && ecr(db, "challenge", PID(8)).length === 1 && saisies(db).length === 1, JSON.stringify(cl) + " " + resume(db));
+    await c.close();
+    ({ c, page } = await ouvrir(b, db, 9, "", "#dc-accomp")); await attendre(page, 1000);
+    ok("réservé (créneau coché) : aucun « Récupérer mon plan d'action » sur l'accueil, pas de carte « plan », ligne « Créneau choisi le … » dans l'en-tête, pastille « Bilan réservé le … » gardée, rien d'écrit", (await page.$$("#vue [data-dc-cal]")).length === 0 && !(await page.$("#dc-etape")) && (await texte(page, "#dc-reserve-haut")).startsWith("Créneau choisi le") && (await texte(page, "#dc-reserve-ok")).startsWith("Bilan réservé le") && !(await texte(page, "#vue")).includes(TX.reserver) && saisies(db).length === 1, (await texte(page, "#dc-reserve-haut")) + " · " + resume(db));
+    await aller(page, "#/programme", 1400);
+    ok("réservé, page verrouillée : cadenas et texte d'appel sans bouton, pastille « Bilan réservé le … », rien d'écrit", !!(await page.$("#vue .verrou")) && !(await page.$("#vue .verrou a[target=_blank]")) && (await texte(page, "#vue .verrou-reserve")).startsWith("Bilan réservé le") && !(await texte(page, "#vue")).includes(TX.reserver) && saisies(db).length === 1, (await texte(page, "#vue .verrou-reserve")) + " · " + resume(db));
+    await c.close();
+  });
+
   await bloc("I. accueil : pesée puis accueil normal", async () => {
     const CP = { sexe: "F", age: 30, taille: 165, poids: 60, pas: 6000, heures: 3, objectif: "perte" };
     const I0 = NOUVEAU({ bilan_propose: { choix: "plus_tard", le: avant(MIN) } });
@@ -1067,10 +1092,11 @@ function lienOk(href, base, attendu){
     await c.close();
     ({ c, page } = await ouvrir(b, db, 4, "", "#dc-accomp")); await attendre(page, 1000);
     const forts = await page.$$eval("#vue a.btn:not(.ghost), #vue button.btn:not(.ghost)", l => l.length);
-    ok("calcul et pesée faits : l'accueil normal (plus d'étape, aucun bouton mis en avant) : Speed Formation, pages de l'accompagnement, « Récupérer mon plan d'action » discret (contour, en haut et dans la carte)", !(await page.$("#dc-etape")) && forts === 0 && !!(await page.$("#dc-formation")) && !!(await page.$("#dc-accomp .liste-debloque a")) && !!(await page.$('#vue .masthead a.btn.ghost[data-dc-cal="accueil_haut"]')) && !!(await page.$('#dc-accomp a.btn.ghost[data-dc-cal="accueil_accompagnement"]')), "forts " + forts);
+    /* v71 (H) : calcul + pesée faits, pas de créneau : la carte dorée « Ta prochaine étape » (plan) est le seul bouton doré (avant : aucune étape, forts === 0) */
+    ok("calcul et pesée faits : carte « Ta prochaine étape » (plan, accueil_etape), le seul bouton doré ; Speed Formation, pages de l'accompagnement, « Récupérer mon plan d'action » en contour en haut et dans la carte", !!(await page.$('#dc-etape[data-etape="plan"]')) && forts === 1 && !!(await page.$("#dc-formation")) && !!(await page.$("#dc-accomp .liste-debloque a")) && !!(await page.$('#vue .masthead a.btn.ghost[data-dc-cal="accueil_haut"]')) && !!(await page.$('#dc-accomp a.btn.ghost[data-dc-cal="accueil_accompagnement"]')), "forts " + forts);
     await c.close();
     ({ c, page } = await ouvrir(b, db, 7, "", "#dc-accomp")); await attendre(page, 1000);
-    ok("un poids de départ (réglages de Ma progression) compte comme une pesée : accueil normal", !(await page.$("#dc-etape")), "");
+    ok("un poids de départ (réglages de Ma progression) compte comme une pesée : carte « plan » (v71 H ; avant : accueil normal)", (await page.$eval("#dc-etape", x => x.dataset.etape).catch(() => "")) === "plan", "");
     await c.close();
     ({ c, page } = await ouvrir(b, db, 5, "", "#dc-accomp")); await attendre(page, 1000);
     ok("un calc_perso fait avec un âge mineur ne compte pas : « Calcule tes calories (2 min) »", (await page.$eval("#dc-etape", x => x.dataset.etape).catch(() => "")) === "calories", "");
@@ -1121,7 +1147,7 @@ function lienOk(href, base, attendu){
     await aller(page, "#/mensurations", 300); await page.waitForSelector("#e-poids", { state: "visible", timeout: 3000 }).catch(() => {});
     await page.fill("#e-poids", "72.4"); await page.click("#add");
     await aller(page, "#/accueil", 300); await page.waitForSelector("#dc-accomp", { timeout: 3000 }).catch(() => {}); await attendre(page, 300);
-    ok("pesée enregistrée, retour immédiat à l'accueil (envoi pas encore arrivé) : plus d'étape mise en avant, l'accueil normal", !!(await page.$("#dc-accomp")) && !(await page.$("#dc-etape")) && ecr(db, "mens", ID).length === 0, (await page.$eval("#dc-etape", x => x.dataset.etape).catch(() => "aucune étape")) + " " + resume(db));
+    ok("pesée enregistrée, retour immédiat à l'accueil (envoi pas encore arrivé) : l'étape devient « plan » (v71 H ; avant : plus d'étape)", !!(await page.$("#dc-accomp")) && (await page.$eval("#dc-etape", x => x.dataset.etape).catch(() => "")) === "plan" && ecr(db, "mens", ID).length === 0, (await page.$eval("#dc-etape", x => x.dataset.etape).catch(() => "aucune étape")) + " " + resume(db));
     await attendre(page, 4800);
     ok("… une fois arrivés : une écriture de calc_perso et une de mens (les deux saisies), rien d'autre, rien à l'affichage de l'accueil", ecr(db, "calc_perso", ID).length === 1 && ecr(db, "mens", ID).length === 1 && saisies(db).length === 2, resume(db));
     await c.close();
@@ -1146,8 +1172,8 @@ function lienOk(href, base, attendu){
     await page.fill("#e-poids", "72.4"); await page.click("#add");
     await attendre(page, 1000);
     const v2 = await enVol("mens"), e2 = await etape();
-    ok("pesée enregistrée, accueil ouvert 1 s après (envoi en vol) : plus d'étape mise en avant, l'accueil normal",
-      !v2.attente && v2.copie && db.journal.includes("P mens") && !!(await page.$("#dc-accomp")) && e2 === "" && ecr(db, "mens", ID).length === 0, JSON.stringify(v2) + " " + (e2 || "aucune étape") + " " + resume(db));
+    ok("pesée enregistrée, accueil ouvert 1 s après (envoi en vol) : l'étape devient « plan » (v71 H ; avant : plus d'étape)",
+      !v2.attente && v2.copie && db.journal.includes("P mens") && !!(await page.$("#dc-accomp")) && e2 === "plan" && ecr(db, "mens", ID).length === 0, JSON.stringify(v2) + " " + (e2 || "aucune étape") + " " + resume(db));
     await attendre(page, 4800);
     ok("… une fois arrivés : une écriture de calc_perso et une de mens, rien d'autre, copies retirées par leur arrivée (pas par l'accueil)",
       ecr(db, "calc_perso", ID).length === 1 && ecr(db, "mens", ID).length === 1 && saisies(db).length === 2 && !(await enVol("calc_perso")).copie && !(await enVol("mens")).copie, resume(db));

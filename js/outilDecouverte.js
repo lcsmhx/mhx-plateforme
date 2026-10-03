@@ -200,6 +200,7 @@ const Decouverte = {
     accueil_haut: "accueil, bouton du haut",
     accueil_accompagnement: "accueil, carte « Ce que l'accompagnement ajoute »",
     reponses_haut: "« Modifier mes réponses », bouton du haut",
+    accueil_etape: "accueil, carte « Ta prochaine étape »",   // v71 (H) : calcul + pesée faits, pas de créneau coché
     verrou_programme: "page verrouillée Mon programme",
     verrou_journal: "page verrouillée Mon journal",
     verrou_nutrition: "page verrouillée Nutrition",
@@ -891,10 +892,13 @@ const outilDecouverte = {
     /* v61 (brief V2, E1 et F) : « Récupérer mon plan d'action », en contour, et sa ligne « 15 min avec Lucas · offert » ;
        origine accueil_haut (sur « Modifier mes réponses » : reponses_haut) */
     const haut = form ? "reponses_haut" : "accueil_haut", K = T.cta || {};
-    const cal = fait && !bilan ? lienCalendly(haut) : "";
+    /* v71 (H) : creneau coche (Decouverte.reserve) : plus de « Récupérer mon plan d'action » (accueil ni « Modifier mes
+       reponses ») ; sur l'accueil, la ligne « Créneau choisi le … » prend sa place */
+    const r = fait && !bilan ? Decouverte.reserve(C) : null;
+    const cal = fait && !bilan && !r ? lienCalendly(haut) : "";
     zone.innerHTML = `<header class="masthead"><span class="eyebrow">${esc(eyebrow)}</span>
         <h1>${esc(trad("Bonjour"))}${p.prenom ? " " + esc(p.prenom) : ""}</h1>${lede ? `<p class="lede">${esc(lede)}</p>` : ""}
-        ${cal ? `<div class="actions"><a class="btn ghost petit" href="${esc(cal)}" target="_blank" rel="noopener" data-dc-cal="${haut}">${esc(trad(K.bouton))}</a></div><p class="dc-cta-sous dc-haut-sous">${esc(typoFr(trad(K.sous)))}</p>` : ""}</header>`
+        ${cal ? `<div class="actions"><a class="btn ghost petit" href="${esc(cal)}" target="_blank" rel="noopener" data-dc-cal="${haut}">${esc(trad(K.bouton))}</a></div><p class="dc-cta-sous dc-haut-sous">${esc(typoFr(trad(K.sous)))}</p>` : (r && !form ? this.ligneReserveHTML(r) : "")}</header>`
       + (form ? this.formulaireHTML(I) : bilan ? this.bilanHTML(I) : this.accueilHTML(I, C));
     /* chaque clic vers Calendly est note pour le coach, avec l'ecran d'origine (accueil, page bilan, « Modifier mes reponses ») */
     $$("[data-dc-cal]", zone).forEach(a => a.addEventListener("click", () => Decouverte.clic(C, a.dataset.dcCal)));
@@ -977,16 +981,26 @@ const outilDecouverte = {
      (calc_perso), puis « Enregistre ta pesée de départ » tant qu'il n'a aucune pesee (mens), puis l'accueil normal
      (Speed Formation, pages de l'accompagnement, « Réserver mon bilan » discret). Decide sur une lecture seule
      (afficher : Store.lireTout), aucune ecriture a l'affichage. */
-  accueilHTML(I, C){ return this.etapeHTML() + this.formationHTML() + this.accompHTML(C); },
-  etape(){
+  accueilHTML(I, C){ return this.etapeHTML(C) + this.formationHTML() + this.accompHTML(C); },
+  etape(C){
     const R = this._reperes || {};
     if (!outilCalculateur.valide(R[outilCalculateur.cle_perso]) || outilCalculateur.mineur(R[outilCalculateur.cle_perso])) return "calories";
     if (!Decouverte.peseeFaite(R.mens)) return "pesee";
+    /* v71 (H) : calcul et pesee faits : l'action doree = le plan d'action, tant qu'aucun creneau n'est coche */
+    if (!Decouverte.reserve(C)) return "plan";
     return "";
   },
-  etapeHTML(){
-    const e = this.etape(), L = e && DECOUVERTE.etapes ? DECOUVERTE.etapes[e] : null;
+  etapeHTML(C){
+    const e = this.etape(C), L = e && DECOUVERTE.etapes ? DECOUVERTE.etapes[e] : null;
     if (!L) return "";
+    if (e === "plan"){
+      /* v71 (H) : troisieme carte, bouton dore « Récupérer mon plan d'action » (origine accueil_etape, clic note par rendre) ;
+         sans lien Calendly configure : pas de carte (accueil normal) */
+      const cal = lienCalendly("accueil_etape"), K = DECOUVERTE.cta || {}; if (!cal) return "";
+      return `<section class="panel dc-etape" id="dc-etape" data-etape="plan"><h2>${esc(trad(L.titre))}</h2>
+      <p class="note" style="margin:0 0 4px">${esc(typoFr(trad(L.texte)))}</p>
+      <div class="dc-cta"><a class="btn" id="dc-etape-go" href="${esc(cal)}" target="_blank" rel="noopener" data-dc-cal="accueil_etape">${esc(trad(K.bouton))}</a><p class="dc-cta-sous">${esc(typoFr(trad(K.sous)))}</p></div></section>`;
+    }
     return `<section class="panel dc-etape" id="dc-etape" data-etape="${e}"><h2>${esc(trad(L.titre))}</h2>
       <p class="note" style="margin:0 0 14px">${esc(trad(L.texte))}</p>
       <div class="actions"><a class="btn" id="dc-etape-go" href="${e === "calories" ? "#/calculateur" : "#/mensurations"}">${esc(trad(L.bouton))}</a></div></section>`;
@@ -1275,7 +1289,7 @@ const outilDecouverte = {
   accompHTML(C){
     /* v61 (brief V2, E2) : « Ce que l'accompagnement ajoute », « Récupérer mon plan d'action » (origine accueil_accompagnement),
        « 15 min avec Lucas pour faire le point… », case « J'ai déjà choisi mon créneau » (meme case, meme cle) */
-    const L = DECOUVERTE.accomp, cal = lienCalendly("accueil_accompagnement"), r = Decouverte.reserve(C), K = DECOUVERTE.cta || {};
+    const L = DECOUVERTE.accomp, r = Decouverte.reserve(C), cal = r ? "" : lienCalendly("accueil_accompagnement"), K = DECOUVERTE.cta || {};   // v71 (H) : reserve → plus de bouton
     const vitrine = ((CONFIG.marque && CONFIG.marque.gratuit_vitrine) || []).map(id => OUTILS.find(o => o.id === id)).filter(o => o && AVANTAGES[o.id]);
     return `<section class="panel" id="dc-accomp"><h2>${esc(trad(L.titre))}</h2>
       <ul class="liste-debloque">${vitrine.map(o => `<li><a href="#/${esc(o.id)}" data-dc-vitrine="${esc(o.id)}">${esc(trad(o.nom))}</a> — ${esc(trad(AVANTAGES[o.id]))}</li>`).join("")}</ul>
@@ -1284,6 +1298,8 @@ const outilDecouverte = {
       <div id="dc-reserve" style="margin-top:14px">${r ? this.reserveHTML(r) : `<label class="coche"><input type="checkbox" id="dc-reserve-case"> ${esc(trad(L.reserve_case))}</label>`}</div></section>`;
   },
   reserveHTML(r){ return `<span class="pastille ok" id="dc-reserve-ok" tabindex="-1">${esc(trad(DECOUVERTE.accomp.reserve_ok, { d: dateFr(Decouverte.dateLocale(r) || "") }))}</span>`; },
+  /* v71 (H) : la ligne de l'en-tete de l'accueil quand le creneau est coche (a la place du bouton « Récupérer ») */
+  ligneReserveHTML(r){ return `<p class="dc-cta-sous dc-haut-sous" id="dc-reserve-haut">${esc(typoFr(trad(DECOUVERTE.accomp.reserve_haut, { d: dateFr(Decouverte.dateLocale(r) || "") })))}</p>`; },
   brancherPage(zone, I, C){
     const self = this;
     const mod = zone.querySelector("#dc-modifier");
@@ -1305,7 +1321,14 @@ const outilDecouverte = {
       C = F;
       Tracking.enregistrer("call_booked");
       const boite = zone.querySelector("#dc-reserve");
-      if (boite){ boite.innerHTML = self.reserveHTML(Decouverte.reserve(F)); const ok = boite.querySelector("#dc-reserve-ok"); if (ok) ok.focus(); }
+      if (boite) boite.innerHTML = self.reserveHTML(Decouverte.reserve(F));
+      /* v71 (H) : plus aucun « Récupérer mon plan d'action » sur la page (en-tete, carte accomp, carte « plan », invitation),
+         la ligne « Créneau choisi » en tete ; rien n'est redessine ni ecrit */
+      $$("[data-dc-cal], [data-inv-cal]", zone).forEach(a => { const b = a.closest(".actions, .dc-cta"); if (b) b.remove(); else a.remove(); });
+      const sous = zone.querySelector(".masthead .dc-haut-sous"); if (sous) sous.remove();
+      const et = zone.querySelector('#dc-etape[data-etape="plan"]'); if (et) et.remove();
+      const tete = zone.querySelector(".masthead"); if (tete && !zone.querySelector("#dc-reserve-haut")) tete.insertAdjacentHTML("beforeend", self.ligneReserveHTML(Decouverte.reserve(F)));
+      const ok = zone.querySelector("#dc-reserve-ok"); if (ok) ok.focus();
     });
     this.chargerRecettes(zone);
   }

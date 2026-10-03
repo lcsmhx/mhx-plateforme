@@ -60,10 +60,14 @@ function pageVerrouillee(o){
   /* v61 (brief V2, G et F) : un texte par page (DECOUVERTE.echantillons.appels), « Récupérer mon plan d'action », la ligne
      « 15 min avec Lucas · offert », et l'origine verrou_<id> (lien Calendly et clic compte par afficher) */
   const ech = Echantillons.html(o.id), cta = DECOUVERTE.cta || {}, appels = DECOUVERTE.echantillons.appels || {};
-  const bouton = { lien: lienCalendly(Decouverte.codeVerrou(o.id)), cta: trad(cta.bouton), sous: typoFr(trad(cta.sous)) };
-  if (ech) return `${ech}<section class="panel ech-appel">${UI.verrou(Object.assign({ titre: trad(nomOnglet(o)), texte: typoFr(trad(appels[o.id] || "")) }, bouton))}
+  /* v71 (H) : creneau coche (cle challenge deja en cache, cf. :404 plus bas ; ou la case cochee sur cet appareil,
+     Invitations.lire) : le texte d'appel sans bouton, puis la pastille « Bilan réservé le … » ; aucune lecture de plus */
+  let r = null; try { r = Decouverte.reserve(Store.cache[Decouverte.cle]) || Invitations.lire().reserve || null; } catch(e){ r = null; }
+  const bouton = r ? {} : { lien: lienCalendly(Decouverte.codeVerrou(o.id)), cta: trad(cta.bouton), sous: typoFr(trad(cta.sous)) };
+  const pastille = r ? `<p class="verrou-reserve"><span class="pastille ok">${esc(trad(DECOUVERTE.accomp.reserve_ok, { d: dateFr(Decouverte.dateLocale(r) || "") }))}</span></p>` : "";
+  if (ech) return `${ech}<section class="panel ech-appel">${UI.verrou(Object.assign({ titre: trad(nomOnglet(o)), texte: typoFr(trad(appels[o.id] || "")) }, bouton))}${pastille}
     ${plus ? `<p class="note verrou-plus">${esc(typoFr(trad(plus)))}</p>` : ""}</section>`;
-  return `<section class="panel">${UI.verrou(Object.assign({ titre: trad(nomOnglet(o)), texte: trad("Cette fonctionnalité est disponible avec l'accompagnement MHX.") }, bouton))}
+  return `<section class="panel">${UI.verrou(Object.assign({ titre: trad(nomOnglet(o)), texte: trad("Cette fonctionnalité est disponible avec l'accompagnement MHX.") }, bouton))}${pastille}
     ${plus ? `<p class="note verrou-plus">${esc(typoFr(trad(plus)))}</p>` : ""}</section>`;
 }
 

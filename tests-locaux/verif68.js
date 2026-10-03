@@ -508,7 +508,7 @@ const detail = (C, V) => JSON.stringify(C ? { sig: C.sig, n: C.n, enfants: C.enf
     await ouvrir("accueil (jour 1)", async () => { await visite(page, 1, ACCUEIL, "#dc-accomp"); await page.waitForSelector("#invitation-declic_mindset", { timeout: 6000 }).catch(() => null); await attendre(page, 1800); });
     const Cm = await carteVue(page, "declic_mindset"), Vm = verifCarte(Cm, "declic_mindset", false, k, PHOTOS.fr), plm = await placeVue(page, "declic_mindset", "entete"), m4 = await memoire(page, ID);
     ok("UN AUTRE JOUR (lendemain), l'accueil : UNE carte, la plus récente en attente (declic_mindset), en haut, juste après l'en-tête .masthead et avant la suite de l'accueil (Speed Formation), visible sans défiler ; structure, textes exacts (« Ton pourquoi est clair. »…), lien declic_mindset",
-      Vm.struct && Vm.textes && Vm.lien && Vm.style && plm.juste && plm.apres === "section#dc-formation.panel" && Cm.haut < 844, detail(Cm, Vm) + " · " + JSON.stringify(plm));
+      Vm.struct && Vm.textes && Vm.lien && Vm.style && plm.juste && plm.apres === "section#dc-etape.dc-etape.panel" && plm.apresH2 === "Ta prochaine étape" && Cm.haut < 844, detail(Cm, Vm) + " · " + JSON.stringify(plm));   // v71 (H) : calcul + pesée faits → la carte « plan » suit l'invitation (avant : la Speed Formation)
     ok("… comptée comme l'invitation du jour : vues declic_calculateur + declic_mindset, jour « " + JOUR(1) + " », la pesée toujours en attente (seule)",
       !!m4 && egal(Object.keys(m4.vues).sort(), ["declic_calculateur", "declic_mindset"]) && m4.jour === JOUR(1) && egal(codesAttente(m4), ["declic_premiere_pesee"]), JSON.stringify(m4));
     await capturer(page, "accueil-fr-sombre.png", "#invitation-declic_mindset", true);

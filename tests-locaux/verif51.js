@@ -562,10 +562,12 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
     ok("… validé : court_le posé, ses anciennes réponses gardées (niveau, lieu, poids objectif, âge 29, objectif d'avant)", typeof I.court_le === "string" && I.niveau === ANCIEN_INTAKE.niveau && I.lieu === ANCIEN_INTAKE.lieu && I.poids_obj === "60" && I.age === "29" && I.objectif === ANCIEN_INTAKE.objectif && I.projection === N.projection, JSON.stringify(I));
     await page.click("#dc-bilan-plus-tard").catch(() => {}); await attendre(page, 1500);
     ok("… page « Ton plan d'action » puis « Plus tard » (v61 ; avant : « Pas maintenant ») : l'accueil, case du jour 7 lue : « Bilan réservé le … »", !!(await page.$("#dc-accomp")) && (await texte(page, "#dc-reserve")).startsWith("Bilan réservé le") && !(await page.$("#dc-reserve-case")), await texte(page, "#dc-reserve"));
-    await cliquerCal(page, "#dc-accomp a[data-dc-cal]"); await attendre(page, 2000);
+    /* v71 (H) : réservé (case du jour 7) : plus aucun « Récupérer mon plan d'action » (en-tête, carte), la ligne « Créneau choisi le … »
+       en tête ; son ancien clic (sans source), ses jours et sa case restent intacts ; le « Plus tard » ci-dessus a déjà écrit
+       challenge (cta.plus_tard) : aucune écriture de plus (avant v71 : un clic s'ajoutait, source accueil_accompagnement) */
+    const n0 = ecr(db, "challenge").length;
     const C = contenu(db, "challenge") || {};
-    /* v61 : source accueil_accompagnement (avant : decouverte-accompagnement) ; l'ancien clic (sans source) reste le 1er */
-    ok("… un clic s'ajoute à ses anciens clics (source accueil_accompagnement) ; ses jours et sa case du jour 7 restent intacts", ((C.cta || {}).clics || []).length === 2 && C.cta.clics[1].source === "accueil_accompagnement" && C.jours && C.jours["1"] && C.jours["1"].fait === ANCIEN_CH.jours["1"].fait && C.jours["7"].reserve === ANCIEN_CH.jours["7"].reserve, JSON.stringify(C).slice(0, 300));
+    ok("… réservé (case du jour 7) : aucun « Récupérer mon plan d'action » sur l'accueil, « Créneau choisi le … » en tête ; son ancien clic (sans source), ses jours et sa case du jour 7 restent intacts, rien d'écrit de plus", (await page.$$("#vue [data-dc-cal]")).length === 0 && (await texte(page, "#dc-reserve-haut")).startsWith("Créneau choisi le") && ((C.cta || {}).clics || []).length === 1 && !C.cta.clics[0].source && C.jours && C.jours["1"] && C.jours["1"].fait === ANCIEN_CH.jours["1"].fait && C.jours["7"].reserve === ANCIEN_CH.jours["7"].reserve && ecr(db, "challenge").length === n0, (await texte(page, "#dc-reserve-haut")) + " · " + JSON.stringify(C).slice(0, 300));
     await c.close();
   });
   await bloc("G. données piégées (types faux)", async () => {
