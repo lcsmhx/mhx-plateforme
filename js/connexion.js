@@ -13,15 +13,16 @@ async function routeDepuisAdresse(){
   /* v71 (I) : #/client/<uuid>/<outil> : la fiche consultee est dans l'adresse (posee par Clients.ouvrir et le bandeau). Coach
      seulement : si ce n'est pas deja la fiche ouverte, relire le profil AVANT d'afficher (meme lecture que la fiche) ; uuid
      inconnu, compte coach, lecture ratee ou personne qui n'est pas le coach : Mes clients (ou la page d'arrivee). */
+  let reecrire = false;   // v71 (I) : #/client/… refuse (uuid inconnu, coach, personne qui n'est pas le coach) : l'adresse le dit
   if (parts[0] === "client"){
     const uid = parts[1] || "";
-    if (!Auth.estCoach() || !/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(uid)) parts = ["clients"];
+    if (!Auth.estCoach() || !/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(uid)){ parts = ["clients"]; reecrire = true; }
     else {
       if (Store.idConsulte !== uid){
         let pr = null;
         try { const r = await Auth.appel("/rest/v1/profils?id=eq." + uid + "&select=*"); pr = (r && r[0]) || null; } catch(e){}
         if (mien !== routage || $("session-perdue")) return;
-        if (!pr || pr.role === "coach") parts = ["clients"];
+        if (!pr || pr.role === "coach"){ parts = ["clients"]; reecrire = true; }
         else { Store.oublier(Store.idConsulte); Store.idConsulte = uid; Store.nomConsulte = Clients.nom(pr); Store.retourVers = Store.retourVers || "clients"; }
       }
       if (parts[0] === "client") parts = parts.length > 2 ? parts.slice(2) : ["accueil"];
@@ -34,7 +35,7 @@ async function routeDepuisAdresse(){
      Sans ce correctif, un « Ouvrir » du coach qui pose #/accueil (deja dans l'adresse) ne faisait rien.
      Adresse vide (page d'arrivee) : rien a reecrire. */
   const cible = outilsVisibles().some(o => o.id === id) ? id : outilParDefaut();
-  if (id && cible !== id){
+  if ((id && cible !== id) || reecrire){
     sousRoute = "";
     try { history.replaceState(null, "", lienOutil(cible)); } catch(e){}   // v71 (I) : en consultation, l'adresse canonique
   }
