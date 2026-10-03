@@ -1398,7 +1398,7 @@ function lienOk(href, base, attendu){
     const actions = await page.$$eval("#vue .bandeau-actions a", l => l.map(a => [a.textContent.trim(), a.getAttribute("href")]));
     /* v53 (lot D-clients) : changement VOULU — « Ses séances » mène au journal du client (#/journal, lecture seule) au lieu
        de #/entrainement (sa clé perf, vide) ; « Son journal » entre dans la navigation de sa fiche (détail : verif60 G) */
-    ok("fiche de Thomas : « Ses calories » → #/calculateur comme avant ; v53 : « Ses séances » → #/journal, « Son journal » dans sa navigation", actions.some(([t, h]) => t === "Ses calories" && h === "#/calculateur") && actions.some(([t, h]) => t === "Ses séances" && h === "#/journal") && !!(await page.$('#nav a[data-id="journal"]')), JSON.stringify(actions));
+    ok("fiche de Thomas : « Ses calories » → #/client/<uuid>/calculateur (v71 I : adresse canonique) ; v53 : « Ses séances » → …/journal, « Son journal » dans sa navigation", actions.some(([t, h]) => t === "Ses calories" && h === "#/client/" + F.IDS.c1 + "/calculateur") && actions.some(([t, h]) => t === "Ses séances" && h === "#/client/" + F.IDS.c1 + "/journal") && !!(await page.$('#nav a[data-id="journal"]')), JSON.stringify(actions));
     await aller(page, "#/calculateur", 1800);
     ok("fiche de Thomas, Ses calories : son calc (celui du coach) en départ", (await valeurDe(page, "#age")) === String(CALC_T.age) && (await valeurDe(page, "#poids")) === String(CALC_T.poids), (await valeurDe(page, "#age")) + " / " + JSON.stringify(CALC_T));
     const n0 = ecr(db, "calc", F.IDS.c1).length;

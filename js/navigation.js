@@ -18,6 +18,7 @@ function outilsVisibles(){
   return OUTILS.filter(o => (!o.role || (o.role === "coach" && Auth.estCoach()))
                          && (!o.masque_client || Auth.estCoach() || (o.ouvert_prospect && Auth.estProspect()))
                          && (!o.client_seul || !Auth.estCoach() || Store.idConsulte)
+                         && (!o.coach_perso || !Store.idConsulte)   // v71 (I) : l'Entrainement du coach n'apparait pas dans une fiche
                          && (!o.prospect_seul || Auth.estProspect()));
 }
 
@@ -217,7 +218,7 @@ function construireNav(){
   const visibles = outilsVisibles().filter(o => !o.masque_nav && !horsVitrine(o));   // v50
   const ordre = coachSeul ? visibles.filter(o => o.role === "coach").concat(visibles.filter(o => o.role !== "coach")) : visibles;
   nav.innerHTML = ordre.map(o =>
-    `<a href="#/${o.id}" data-id="${o.id}">${iconeOutil(o)}${esc(nomOnglet(o))}${cadenasNav(o)}</a>`
+    `<a href="${lienOutil(o.id)}" data-id="${o.id}">${iconeOutil(o)}${esc(nomOnglet(o))}${cadenasNav(o)}</a>`
   ).join("");
   construireBarreBas();
   if (typeof Nouveautes !== "undefined") Nouveautes.badge();   // v51 : le badge survit a la reconstruction
@@ -257,7 +258,7 @@ function construireBarreBas(){
   const principaux = outilsPrincipaux();
   const autres = outilsVisibles().filter(o => principaux.indexOf(o) === -1 && !o.masque_nav && !horsVitrine(o));   // v50
   b.innerHTML = principaux.map(o =>
-    `<a href="#/${o.id}" data-id="${o.id}"${estVerrouille(o) ? ' class="verrouille"' : ""}>${iconeOutil(o)}<span class="lbl">${esc(nomCourt(o))}</span>${cadenasNav(o)}</a>`).join("") +
+    `<a href="${lienOutil(o.id)}" data-id="${o.id}"${estVerrouille(o) ? ' class="verrouille"' : ""}>${iconeOutil(o)}<span class="lbl">${esc(nomCourt(o))}</span>${cadenasNav(o)}</a>`).join("") +
     (autres.length ? `<button type="button" data-plus><span class="ico" aria-hidden="true">${ICONES.plus}</span><span class="lbl">Plus</span></button>` : "");
   const plus = b.querySelector("[data-plus]");
   /* v69 : le prospect revient a l'accueil par une fleche a gauche du titre (la croix seule ne suffisait pas sur telephone) ;
@@ -266,7 +267,7 @@ function construireBarreBas(){
     ? { href: "#/accueil", libelle: trad("Retour à l'accueil") } : null;
   if (plus) plus.addEventListener("click", () => {
     UI.volet({ titre: trad("Tout mon espace"), retour: retourAccueil, corps: `<ul class="menu-plus">` + autres.map(o =>
-      `<li><a href="#/${o.id}" data-id="${o.id}"${courant === o.id ? ' aria-current="page"' : ""}>${iconeOutil(o)}<span>${esc(nomOnglet(o))}${cadenasNav(o)}</span></a></li>`).join("") + `</ul>` +
+      `<li><a href="${lienOutil(o.id)}" data-id="${o.id}"${courant === o.id ? ' aria-current="page"' : ""}>${iconeOutil(o)}<span>${esc(nomOnglet(o))}${cadenasNav(o)}</span></a></li>`).join("") + `</ul>` +
       /* v70 : « Partager l'app » sous la liste (lien copie ou feuille de partage du telephone) */
       `<div class="menu-plus-partage"><button type="button" class="btn ghost petit" data-partager>${SVG.partager}<span>${esc(trad("Partager l'app"))}</span></button></div>` });
     /* un clic sur un lien du volet le referme */
@@ -312,6 +313,14 @@ document.addEventListener("scroll", e => {
 document.addEventListener("click", () => setTimeout(majFondus, 80), true);
 window.addEventListener("resize", () => setTimeout(majFondus, 80));
 
+/* v71 (I) : l'adresse d'un outil ; en consultation, la canonique #/client/<uuid>/<outil> (les outils du coach gardent #/<id>) :
+   un rechargement rouvre la meme fiche (routeDepuisAdresse relit le profil). Les adresses nues (#/programme) restent acceptees
+   a l'interieur d'une consultation ouverte. */
+function lienOutil(id){
+  const o = OUTILS.find(x => x.id === id);
+  return Store.idConsulte && o && o.role !== "coach" ? "#/client/" + Store.idConsulte + "/" + id : "#/" + id;
+}
+const RETOURS = { tableau: "Revenir au tableau de bord", clients: "Revenir à mes clients", prospects: "Revenir aux prospects" };
 function bandeauConsultation(){
   if (!Store.idConsulte) return "";
   /* Sans ces boutons, le coach atterrit sur une page et ne devine pas que
@@ -336,8 +345,8 @@ function bandeauConsultation(){
       <span class="note">Tu vois ses données. Tu écris pour lui dans les boutons dorés, dans « Préparer le call » (ton feedback) et dans la fiche (tes notes privées, qu'il ne voit jamais).</span>
     </div>
     <div class="bandeau-actions">
-      ${actions.map(a => `<a href="#/${a.id}" class="b-act${a.fort ? " fort" : ""}${courant === a.id ? " ici" : ""}">${esc(a.nom)}</a>`).join("")}
-      <button class="sortir" type="button" id="sortir-fiche">Revenir à mes clients</button>
+      ${actions.map(a => `<a href="${lienOutil(a.id)}" class="b-act${a.fort ? " fort" : ""}${courant === a.id ? " ici" : ""}">${esc(a.nom)}</a>`).join("")}
+      <button class="sortir" type="button" id="sortir-fiche">${esc(RETOURS[Store.retourVers] || RETOURS.clients)}</button>
     </div>
   </div>`;
 }
@@ -393,7 +402,7 @@ async function afficher(id, silencieux, sansCompte){
   courant = outil.id;
   if (nettoyage){ nettoyage(); nettoyage = null; }
 
-  if (outil.role === "coach"){ Store.oublier(Store.idConsulte); Store.idConsulte = null; Store.nomConsulte = null; }
+  if (outil.role === "coach"){ Store.oublier(Store.idConsulte); Store.idConsulte = null; Store.nomConsulte = null; Store.retourVers = null; }
 
   /* Le bloc « Mes donnees » (export, restauration, suppression) ne vit plus
      qu'au bas du Profil : le repeter sous chaque page alourdissait tout. */
@@ -456,7 +465,9 @@ async function afficher(id, silencieux, sansCompte){
   if (avecDonnees){ initSauvegarde(); }
   const sortir = $("sortir-fiche");
   if (sortir) sortir.addEventListener("click", () => {
-    Store.oublier(Store.idConsulte); Store.idConsulte = null; Store.nomConsulte = null; location.hash = "#/clients";
+    const vers = Store.retourVers || "clients";   // v71 (I) : retour vers l'ecran d'origine (tableau, clients, prospects)
+    Store.oublier(Store.idConsulte); Store.idConsulte = null; Store.nomConsulte = null; Store.retourVers = null;
+    location.hash = "#/" + vers;
   });
 
   brancherInstallation();

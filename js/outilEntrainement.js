@@ -5,6 +5,7 @@ const outilEntrainement = {
   id: "entrainement",
   cle: "perf",
   masque_client: true,     // outil de travail du coach : le client ne le voit pas
+  coach_perso: true,       // v71 (I) : journal perso du coach (cle perf) : jamais pendant la consultation d'une fiche
   nom: "Entraînement",
   icone: "🏋️",
   titre: "Journal d'entraînement",

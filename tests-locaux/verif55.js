@@ -13,7 +13,9 @@
       renouvelée après le dernier lien). v52, lot B (décision de Lucas : aucun email envoyé par l'app) : « Mot de passe
       oublié » et le changement d'adresse du Profil donnent seulement l'adresse du coach, sans aucun appel ;
    C. adresse réécrite quand la page demandée n'est pas pour la personne (client, prospect, coach), sans boucle ; le
-      coach sur #/accueil hors fiche : « Ouvrir » du tableau de bord ouvre bien la fiche ;
+      coach sur #/accueil hors fiche : « Ouvrir » du tableau de bord ouvre bien la fiche ; v71 (I) : la fiche consultée est
+      dans l'adresse (#/client/<uuid>/<outil>) : rechargement → même fiche, uuid inconnu → Mes clients, « Revenir … » vers
+      l'écran d'origine, pas d'onglet Entraînement dans une fiche ;
    D. première connexion d'un client sur téléphone : le Profil s'ouvre en haut (écran de connexion défilé, polices
       lentes), l'encadré « Bienvenue ! » sous l'en-tête, un seul affichage (intake lu 2 fois) ; l'encadré en anglais ;
    Lot B :
@@ -787,10 +789,30 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
       await page.click(`#tb-vue button[data-fiche="${cible.id}"][data-cible="accueil"]`);
       await page.waitForSelector("#vue .bandeau strong", { timeout: 8000 }).catch(() => {}); await attendre(page, 900);
       const d1 = await ou(page), fiche = await page.evaluate(() => Store.idConsulte), titre = await texte(page, "#vue .bandeau strong");
-      ok(`coach (${viewport.width} px) : « Ouvrir » (${cible.nom}) ouvre bien sa fiche (Store.idConsulte, #/accueil, bandeau « Fiche de ${cible.nom} »)`, fiche === cible.id && d1.courant === "accueil" && d1.hash === "#/accueil" && titre === "Fiche de " + cible.nom, JSON.stringify([d1, fiche, titre]));
+      /* v71 (I) : l'adresse porte la fiche (#/client/<uuid>/accueil), posée par Clients.ouvrir */
+      ok(`coach (${viewport.width} px) : « Ouvrir » (${cible.nom}) ouvre bien sa fiche (Store.idConsulte, #/client/<uuid>/accueil, bandeau « Fiche de ${cible.nom} »)`, fiche === cible.id && d1.courant === "accueil" && d1.hash === "#/client/" + cible.id + "/accueil" && titre === "Fiche de " + cible.nom, JSON.stringify([d1, fiche, titre]));
       await aller(page, "#/clients", 1500); const d2 = await ou(page);
       ok(`coach (${viewport.width} px) : une page du coach garde son adresse (#/clients) et quitte la fiche`, d2.courant === "clients" && d2.hash === "#/clients" && (await page.evaluate(() => Store.idConsulte)) === null, JSON.stringify(d2));
       ok(`coach (${viewport.width} px) : aucune écriture`, db.ecritures.length === 0, resume(db));
+      await c.close();
+    }
+    /* v71 (I) : la fiche consultée est dans l'adresse : un rechargement sur #/client/<uuid>/programme rouvre la fiche (profil relu
+       avant l'affichage) ; uuid inconnu → Mes clients ; « Revenir … » ramène à l'écran d'origine (tableau de bord, Prospects) ;
+       l'onglet Entraînement du coach n'apparaît pas dans une fiche */
+    {
+      const db = base(); const { c, page } = await contexte(b, COACH, db, { viewport: ORDI });
+      await page.goto(URL0 + "#/client/" + F.IDS.c1 + "/programme"); await pret(page, "#vue .bandeau"); await attendre(page, 1500);
+      const e1 = await page.evaluate(() => ({ consulte: Store.idConsulte, courant, hash: location.hash, titre: ($("vue").querySelector(".bandeau strong") || {}).textContent, h1: ($("vue").querySelector(".masthead h1") || {}).textContent, prog: $("vue").textContent.includes("Bloc 1 — 4 semaines"), nav: Array.from(document.querySelectorAll("#nav a")).map(a => a.dataset.id), bouton: ($("sortir-fiche") || {}).textContent, liens: Array.from(document.querySelectorAll("#vue .bandeau-actions a")).map(a => a.getAttribute("href")) }));
+      ok("coach : rechargement sur #/client/<uuid>/programme → la fiche de Thomas (bandeau, « Son programme », SON programme), « Revenir à mes clients », liens du bandeau canoniques, pas d'onglet Entraînement", e1.consulte === F.IDS.c1 && e1.courant === "programme" && e1.hash === "#/client/" + F.IDS.c1 + "/programme" && e1.titre === "Fiche de Thomas Démo" && e1.h1 === "Son programme" && e1.prog && !e1.nav.includes("entrainement") && e1.bouton === "Revenir à mes clients" && e1.liens.length > 0 && e1.liens.every(h => h.startsWith("#/client/" + F.IDS.c1 + "/")), JSON.stringify(e1));
+      await page.goto(URL0 + "#/client/00000000-0000-4000-8000-00000000dead/programme"); await pret(page, "#tb-clients"); await attendre(page, 800);
+      ok("coach : uuid inconnu → Mes clients (#/clients), aucune fiche ouverte", (await ou(page)).hash === "#/clients" && (await page.evaluate(() => Store.idConsulte)) === null, JSON.stringify(await ou(page)));
+      await aller(page, "#/tableau", 1500); await page.waitForSelector("#tb-vue button[data-fiche]", { timeout: 8000 }); await page.click("#tb-vue button[data-fiche]"); await pret(page, "#vue .bandeau"); await attendre(page, 600);
+      const b1 = await texte(page, "#sortir-fiche"); await page.click("#sortir-fiche"); await attendre(page, 1200); const d1 = await ou(page);
+      ok("coach : fiche ouverte depuis le tableau de bord → « Revenir au tableau de bord » ramène sur #/tableau", b1 === "Revenir au tableau de bord" && d1.courant === "tableau" && d1.hash === "#/tableau", b1 + " " + JSON.stringify(d1));
+      await aller(page, "#/prospects", 1800); await page.click('[data-filtre="tous"]').catch(() => {}); await page.waitForSelector('#pr-liste [data-sc="fiche"]', { timeout: 8000 }); await page.click('#pr-liste [data-sc="fiche"]'); await pret(page, "#vue .bandeau"); await attendre(page, 600);
+      const b2 = await texte(page, "#sortir-fiche"); await page.click("#sortir-fiche"); await attendre(page, 1200); const d2 = await ou(page);
+      ok("coach : fiche ouverte depuis Prospects → « Revenir aux prospects » ramène sur #/prospects", b2 === "Revenir aux prospects" && d2.courant === "prospects" && d2.hash === "#/prospects", b2 + " " + JSON.stringify(d2));
+      ok("coach : ces parcours n'écrivent rien", db.ecritures.length === 0, resume(db));
       await c.close();
     }
   });

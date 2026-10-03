@@ -153,18 +153,9 @@ const outilClients = {
       <td data-l="" class="td-actions"><button class="voir" type="button" data-bilan="${esc(l.p.id)}" data-nom="${esc(l.nom)}">Préparer le call</button> <button class="voir" type="button" data-ouvrir="${esc(l.p.id)}" data-nom="${esc(l.nom)}">Ouvrir</button></td>
     </tr>`).join("");
 
-    $$("[data-ouvrir]", tb).forEach(b => b.addEventListener("click", () => {
-      Store.oublier(Store.idConsulte);
-      Store.idConsulte = b.dataset.ouvrir;
-      Store.nomConsulte = b.dataset.nom;
-      location.hash = "#/accueil";     // v37 : la fiche s'ouvre sur la vue d'ensemble
-    }));
-    $$("[data-bilan]", tb).forEach(b => b.addEventListener("click", () => {
-      Store.oublier(Store.idConsulte);
-      Store.idConsulte = b.dataset.bilan;
-      Store.nomConsulte = b.dataset.nom;
-      location.hash = "#/bilan";
-    }));
+    /* v71 (I) : tout passe par Clients.ouvrir (adresse canonique #/client/<uuid>/<outil>, ecran d'origine memorise) */
+    $$("[data-ouvrir]", tb).forEach(b => b.addEventListener("click", () => Clients.ouvrir(b.dataset.ouvrir, b.dataset.nom, "accueil")));   // v37 : la fiche s'ouvre sur la vue d'ensemble
+    $$("[data-bilan]", tb).forEach(b => b.addEventListener("click", () => Clients.ouvrir(b.dataset.bilan, b.dataset.nom, "bilan")));
 
     if (zoneA){
       /* v39 : un prospect (compte gratuit) n'a pas de suivi a assurer */
@@ -269,12 +260,7 @@ const outilClients = {
                           ${!estCoach && "statut" in p ? `<button class="voir statut" type="button" data-statut="${p.statut === "prospect" ? "client" : "prospect"}">${p.statut === "prospect" ? "Passer client" : "Repasser prospect"}</button>` : ""}
                           ${cestMoi ? "" : `<button class="voir suppr" type="button">Supprimer</button>`}`;
           const bv = el.querySelector(".voir:not(.role):not(.statut):not(.suppr)");
-          if (bv) bv.addEventListener("click", () => {
-            Store.oublier(Store.idConsulte);
-            Store.idConsulte = p.id;
-            Store.nomConsulte = Clients.nom(p);   // v43 : « Sans nom », comme dans la liste
-            location.hash = "#/profil";
-          });
+          if (bv) bv.addEventListener("click", () => Clients.ouvrir(p.id, Clients.nom(p), "profil"));   // v43 : « Sans nom », comme dans la liste ; v71 (I) : Clients.ouvrir
           const bsup = el.querySelector(".suppr");
           if (bsup) bsup.addEventListener("click", async () => {
             const nom = Clients.nom(p);
@@ -649,9 +635,13 @@ const Clients = {
 
   /* ouvre la fiche d'un client sur un onglet */
   ouvrir(p, nom, cible){
+    /* v71 (I) : l'ecran d'origine (pour « Revenir … » : tableau, clients, prospects ; une fiche ouverte depuis une autre fiche
+       garde l'origine de la premiere) et l'adresse canonique #/client/<uuid>/<outil>, qui survit a un rechargement */
+    if (["tableau", "clients", "prospects"].indexOf(courant) > -1) Store.retourVers = courant;
+    else if (Store.idConsulte !== p || !Store.retourVers) Store.retourVers = "clients";
     Store.oublier(Store.idConsulte);
     Store.idConsulte = p; Store.nomConsulte = nom;
-    location.hash = "#/" + (cible || "accueil");
+    location.hash = "#/client/" + p + "/" + (cible || "accueil");
   },
 
   /* v43 — le nom affiche d'un compte, le meme partout (tableau de bord, Mes

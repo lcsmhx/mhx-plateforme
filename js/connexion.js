@@ -1,5 +1,7 @@
-function routeDepuisAdresse(){
+let routage = 0;   // v71 (I) : numero du dernier routage (une relecture de profil perimee n'affiche rien)
+async function routeDepuisAdresse(){
   if (!$("vue") || $("session-perdue")) return;   // v48 : session terminee (bandeau ou ecran de connexion) : rien a router
+  const mien = ++routage;
   let id = (location.hash || "").replace(/^#\/?/, "");
   if (id.indexOf("=") > -1 || id.indexOf("&") > -1) id = "";
   /* le Challenge 7 jours n'existe plus : ses anciennes adresses (liens partages, favoris) menent a la Decouverte */
@@ -7,7 +9,25 @@ function routeDepuisAdresse(){
   /* v53 : le mode test « jour n » de la Decouverte n'existe plus : ses anciennes adresses (#/decouverte-jour/N) menent
      simplement a la Decouverte (un client ou le coach arrivent ensuite sur leur page d'arrivee, comme pour #/decouverte) */
   if (/^decouverte-jour(\/.*)?$/.test(id)){ try { history.replaceState(null, "", "#/decouverte"); } catch(e){} id = "decouverte"; }
-  const parts = id.split("/"); id = parts[0]; sousRoute = parts.slice(1).join("/");
+  let parts = id.split("/");
+  /* v71 (I) : #/client/<uuid>/<outil> : la fiche consultee est dans l'adresse (posee par Clients.ouvrir et le bandeau). Coach
+     seulement : si ce n'est pas deja la fiche ouverte, relire le profil AVANT d'afficher (meme lecture que la fiche) ; uuid
+     inconnu, compte coach, lecture ratee ou personne qui n'est pas le coach : Mes clients (ou la page d'arrivee). */
+  if (parts[0] === "client"){
+    const uid = parts[1] || "";
+    if (!Auth.estCoach() || !/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(uid)) parts = ["clients"];
+    else {
+      if (Store.idConsulte !== uid){
+        let pr = null;
+        try { const r = await Auth.appel("/rest/v1/profils?id=eq." + uid + "&select=*"); pr = (r && r[0]) || null; } catch(e){}
+        if (mien !== routage || $("session-perdue")) return;
+        if (!pr || pr.role === "coach") parts = ["clients"];
+        else { Store.oublier(Store.idConsulte); Store.idConsulte = uid; Store.nomConsulte = Clients.nom(pr); Store.retourVers = Store.retourVers || "clients"; }
+      }
+      if (parts[0] === "client") parts = parts.length > 2 ? parts.slice(2) : ["accueil"];
+    }
+  }
+  id = parts[0]; sousRoute = parts.slice(1).join("/");
   if (ALIAS_ROUTES[id]) id = ALIAS_ROUTES[id];
   /* v52 : une page qui n'est pas pour cette personne (client sur #/calculateur, coach hors fiche sur #/accueil…)
      affiche la page d'arrivee ET l'adresse le dit. replaceState ne declenche pas hashchange : pas de boucle.
@@ -16,7 +36,7 @@ function routeDepuisAdresse(){
   const cible = outilsVisibles().some(o => o.id === id) ? id : outilParDefaut();
   if (id && cible !== id){
     sousRoute = "";
-    try { history.replaceState(null, "", "#/" + cible); } catch(e){}
+    try { history.replaceState(null, "", lienOutil(cible)); } catch(e){}   // v71 (I) : en consultation, l'adresse canonique
   }
   afficher(cible);
 }

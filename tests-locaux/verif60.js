@@ -540,15 +540,16 @@ const NOUVEAU = { probleme: "Perdre du gras", obstacle: "Le manque de temps avec
     ok("coach hors fiche : pas d'onglet journal ; #/journal → son tableau de bord", !navCoach.includes("journal") && hors.courant === "tableau", JSON.stringify(navCoach) + " " + JSON.stringify(hors));
     await ouvrirFiche(page, F.IDS.c1);
     const actions = await page.$$eval("#vue .bandeau-actions a", l => l.map(a => [a.textContent.trim(), a.getAttribute("href")]));
-    ok("fiche de Thomas : « Ses séances » → #/journal (plus #/entrainement), « Ses calories » → #/calculateur", actions.some(([t, hr]) => t === "Ses séances" && hr === "#/journal") && !actions.some(([, hr]) => hr === "#/entrainement") && actions.some(([t, hr]) => t === "Ses calories" && hr === "#/calculateur"), JSON.stringify(actions));
+    /* v71 (I) : les liens du bandeau portent l'adresse canonique #/client/<uuid>/<outil> */
+    ok("fiche de Thomas : « Ses séances » → #/client/<uuid>/journal (plus #/entrainement), « Ses calories » → #/client/<uuid>/calculateur", actions.some(([t, hr]) => t === "Ses séances" && hr === "#/client/" + F.IDS.c1 + "/journal") && !actions.some(([, hr]) => /\/entrainement$/.test(hr)) && actions.some(([t, hr]) => t === "Ses calories" && hr === "#/client/" + F.IDS.c1 + "/calculateur"), JSON.stringify(actions));
     const navF = await page.$$eval("#nav a", l => l.map(a => [a.dataset.id, a.textContent.replace(/\s+/g, " ").trim()]));
     const iJ = navF.findIndex(x => x[0] === "journal");
     ok("… sa navigation (fiche) : « Son journal » juste après « Son programme »", iJ > 0 && navF[iJ][1] === "Son journal" && navF[iJ - 1][0] === "programme", JSON.stringify(navF.map(x => x[0])));
     const L0 = db.lectures.length;
-    await page.click('#vue .bandeau-actions a[href="#/journal"]'); await attendre(page, 1800);
+    await page.click('#vue .bandeau-actions a[href$="/journal"]'); await attendre(page, 1800);   // v71 (I) : lien canonique #/client/<uuid>/journal
     const etat = await page.evaluate(() => ({ consulte: Store.idConsulte, hash: location.hash, courant, lecture: $("vue").classList.contains("lecture-seule"), h1: ($("vue").querySelector(".masthead h1") || {}).textContent }));
     const h = await historique(page);
-    ok("clic « Ses séances » : #/journal dans sa fiche (« Son journal », lecture seule) : ses 10 séances, les plus récentes d'abord", etat.consulte === F.IDS.c1 && etat.hash === "#/journal" && etat.courant === "journal" && etat.lecture && etat.h1 === "Son journal" && JSON.stringify(h) === JSON.stringify(attenduHist(JOURNAL_T)), JSON.stringify(etat) + " " + JSON.stringify(h.slice(0, 2)));
+    ok("clic « Ses séances » : #/journal dans sa fiche (« Son journal », lecture seule) : ses 10 séances, les plus récentes d'abord", etat.consulte === F.IDS.c1 && etat.hash === "#/client/" + F.IDS.c1 + "/journal" && etat.courant === "journal" && etat.lecture && etat.h1 === "Son journal" && JSON.stringify(h) === JSON.stringify(attenduHist(JOURNAL_T)), JSON.stringify(etat) + " " + JSON.stringify(h.slice(0, 2)));
     const champs = await page.$$eval("#vue .masthead ~ * input, #vue .masthead ~ * textarea, #vue .masthead ~ * select, #vue [data-jr-ouvrir], #vue [data-jr-fin], #vue [data-jr-place], #jr-noter *", l => l.length);
     ok("… ni « Noter ma séance », ni champ, ni formulaire : l'historique seul ; lu chez Thomas : son journal (jamais perf)", champs === 0 && db.lectures.slice(L0).some(x => x.uid === F.IDS.c1 && x.outil === "eq.journal") && lu(db, "perf", L0) === 0, champs + " · " + JSON.stringify(db.lectures.slice(L0).map(x => x.outil)));
     await attendre(page, 800);
@@ -738,7 +739,7 @@ const NOUVEAU = { probleme: "Perdre du gras", obstacle: "Le manque de temps avec
     await c.close();
     ({ c, page } = await contexte(b, COACH, db));
     await page.goto(URL0 + "#/tableau"); await pret(page); await ouvrirFiche(page, PID(4));
-    await page.click('#vue .bandeau-actions a[href="#/journal"]'); await attendre(page, 1800);
+    await page.click('#vue .bandeau-actions a[href$="/journal"]'); await attendre(page, 1800);   // v71 (I) : lien canonique #/client/<uuid>/journal
     const v2 = await vu(page);
     ok("coach, fiche de ce client, « Ses séances » : même chose, aucune injection, aucune écriture", !v2.xss && !v2.img && v2.items === 3 && db.ecritures.length === 0, JSON.stringify(v2) + " " + resume(db));
     await c.close();

@@ -640,6 +640,7 @@ const Store = {
      ligne). Retour (demarrage.js) ne redessine une page au retour sur l'app que si la base a change depuis. */
   majLu: {},
   idConsulte: null,    // quand le coach consulte la fiche d'un client
+  retourVers: null,    // v71 (I) : l'ecran d'ou la fiche a ete ouverte (tableau, clients, prospects) : libelle « Revenir … » du bandeau
   /* v38 — cles rangees chez le client mais ecrites par le coach seul, par
      leur propre chemin (Feedback, NotesCoach) : jamais par ecrire(), envoyer()
      ni une restauration de sauvegarde. La base le refuse de toute facon. */
