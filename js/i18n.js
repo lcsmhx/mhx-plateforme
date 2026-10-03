@@ -819,7 +819,7 @@ I18N.en = {
 "Ce cycle est terminé : ton coach prépare la suite.": "This cycle is complete: your coach is preparing what comes next.",
 "{n} séances par semaine. Note chaque séance : c'est ce qui fait avancer ta régularité.": "{n} workouts a week. Log every workout: that's what moves your consistency.",
 "notée le {d}": "logged on {d}", "à faire": "to do",
-"{a} / {b} repas respectés": "{a} / {b} meals on plan", "aujourd'hui": "today", "Respecté": "On plan", "Non respecté": "Off plan",
+"{a} / {b} repas respectés": "{a} / {b} meals on plan", "aujourd'hui": "today", "Respecté": "On plan", "Respecté ?": "On plan?", "Vider la liste": "Clear the list", "Vider la liste de courses ? Les articles cochés seront décochés.": "Clear the grocery list? Ticked items will be unticked.", "Oui, vider": "Yes, clear",
 "Ta progression": "Your progress",
 "Ton poids, tes mensurations et ta composition corporelle, semaine après semaine. Une mesure par semaine, toujours dans les mêmes conditions : c'est la tendance qui compte.": "Your weight, measurements and body composition, week after week. One entry a week, always in the same conditions: the trend is what matters.",
 "Ajouter ma mesure": "Add my entry", "Poids de départ": "Starting weight", "à renseigner": "to fill in", "le {d}": "on {d}", "point de départ": "starting point", "première mesure": "first entry",

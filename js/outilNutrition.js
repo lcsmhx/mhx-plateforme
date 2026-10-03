@@ -478,7 +478,16 @@ const outilNutrition = {
     return rayons.filter(r => r.lignes.length);
   },
 
-  blocCourses(R, suivi){
+  /* v71 (E) : les articles coches valent pour UNE diete (R.maj, pose par « Valider et envoyer », vide apres « Generer la
+     semaine ») : une autre diete = panier vide. Ancien document sans courses_pour : on retient la diete d'aujourd'hui sans
+     rien vider. En memoire seulement, comme la remise a zero de mange : ecrit avec la prochaine coche, jamais a l'ouverture. */
+  alignerCourses(R, suivi){
+    const pour = String(R.maj || "");
+    if (typeof suivi.courses_pour !== "string") suivi.courses_pour = pour;
+    else if (suivi.courses_pour !== pour){ suivi.courses = {}; suivi.courses_pour = pour; }
+  },
+
+  blocCourses(R, suivi, client){
     if (!(R.jours || []).some(j => (j.repas || []).length)) return "";
     const actifs = (suivi && suivi.joursCourses) || {};
     const coches = (suivi && suivi.courses) || {};
@@ -493,7 +502,8 @@ const outilNutrition = {
       <div class="coches" style="margin-bottom:16px">${(R.jours || []).map((j, i) =>
         (j.repas || []).length ? `<label class="coche"><input type="checkbox" data-jc="${i}"${actifs[i] === false ? "" : " checked"}> ${esc(j.nom)}</label>` : "").join("")}</div>
       <div class="jauge"><i style="width:${total ? Math.round(faits / total * 100) : 0}%"></i></div>
-      <p class="note" style="margin:8px 0 4px">${faits} article${faits > 1 ? "s" : ""} sur ${total} dans le panier.</p>`;
+      <p class="note" style="margin:8px 0 4px">${faits} article${faits > 1 ? "s" : ""} sur ${total} dans le panier.</p>
+      ${client ? `<div class="actions" style="margin:4px 0 8px"><button type="button" class="btn ghost petit" data-vider-courses${Object.keys(coches).some(k => coches[k]) ? "" : " disabled"}>${esc(trad("Vider la liste"))}</button></div>` : ""}`;
     rayons.forEach(r => {
       h += `<h3 style="margin-top:18px">${esc(r.nom)}</h3><ul class="ingr courses-l">` +
         r.lignes.map(l => `<li class="${coches[l.id] ? "pris" : ""}"><label class="coche"><input type="checkbox" data-course="${esc(l.id)}"${coches[l.id] ? " checked" : ""}> ${esc(l.nom)}</label><b>${fmt(l.grammes)} g</b></li>`).join("") +
@@ -553,7 +563,7 @@ const outilNutrition = {
       ${R.cible ? `<p class="note" style="margin-top:14px">Objectif visé : ${fmt(R.cible.kcal)} kcal · ${fmt(R.cible.prot)} g de protéines · ${fmt(R.cible.gluc)} g de glucides · ${fmt(R.cible.lip)} g de lipides.</p>` : ""}
     </section>`;
     (jour.repas || []).forEach((x, i) => h += this.carteRepas(x, false, actif + ":" + i, suivi));
-    h += this.blocCourses(R, suivi);
+    h += this.blocCourses(R, suivi, true);   // v71 (E) : bouton « Vider la liste » cote client seulement
     h += `<section class="panel"><p class="note" style="margin:0">Les grammages sont donnés crus, sauf mention contraire. Si un plat ne te convient pas, touche « Remplacer » : l'app t'en propose un autre avec les mêmes calories.</p></section>`;
     if (R.maj) h += `<p class="note" style="text-align:center">Repas mis à jour le ${esc(R.maj)}</p>`;
     return h;
@@ -572,7 +582,7 @@ const outilNutrition = {
         ${edition ? `<span class="actions-b">
           ${x.recette_id ? `<button data-autre="${cle}">Autre proposition</button>` : ""}
           <button data-retirer="${cle}">Retirer</button></span>`
-        : `<span class="actions-b">${x.recette_id ? `<button type="button" data-remplacer="${cle}">Remplacer</button>` : ""}<button type="button" class="respect${coche ? " on" : ""}" data-mange="${cle}" aria-pressed="${coche ? "true" : "false"}">${coche ? "✓ " + esc(trad("Respecté")) : esc(trad("Non respecté"))}</button></span>`}
+        : `<span class="actions-b">${x.recette_id ? `<button type="button" data-remplacer="${cle}">Remplacer</button>` : ""}<button type="button" class="respect${coche ? " on" : ""}" data-mange="${cle}" aria-pressed="${coche ? "true" : "false"}">${coche ? "✓ " + esc(trad("Respecté")) : esc(trad("Respecté ?"))}</button></span>`}
       </div>
       <div class="repas-macros">
         <span><b>${fmt(m.kcal)}</b> kcal</span>
@@ -710,6 +720,7 @@ const outilNutrition = {
       const suivi = await Store.lire("repas_suivi", { date:"", mange:{}, courses:{}, joursCourses:{} });
       if (suivi.date !== aujourdhui()){ suivi.date = aujourdhui(); suivi.mange = {}; }
       if (!suivi.joursCourses) suivi.joursCourses = {};
+      self.alignerCourses(R, suivi);   // v71 (E) : panier vide si la diete a change (en memoire, rien d'ecrit ici)
       /* on ouvre sur le jour de la semaine reel : lundi = 0 */
       let actif = R.jours.length ? Math.min(R.jours.length - 1, (new Date().getDay() + 6) % 7) : 0;
       /* recettes deja refusees pendant cette visite : « Remplacer » propose
@@ -735,6 +746,13 @@ const outilNutrition = {
         $$("[data-jc]", zone).forEach(c => c.addEventListener("change", () => {
           suivi.joursCourses[c.dataset.jc] = c.checked;
           Store.ecrire("repas_suivi", suivi); dessiner();
+        }));
+        /* v71 (E) : « Vider la liste » decoche tous les articles (les jours choisis restent) apres confirmation ;
+           si l'ecriture est refusee (lecture ratee), rien ne change a l'ecran */
+        $$("[data-vider-courses]", zone).forEach(b => b.addEventListener("click", async () => {
+          if (!(await UI.confirmer(trad("Vider la liste de courses ? Les articles cochés seront décochés."), { ok: trad("Oui, vider"), danger: true }))) return;
+          const avant = suivi.courses; suivi.courses = {};
+          if (Store.ecrire("repas_suivi", suivi)) dessiner(); else suivi.courses = avant;
         }));
         $$("[data-remplacer]", zone).forEach(b => b.addEventListener("click", async () => {
           const [d, i] = b.dataset.remplacer.split(":").map(Number);
@@ -767,6 +785,7 @@ const outilNutrition = {
             Object.keys(R).forEach(k => { delete R[k]; });
             Object.assign(R, enBase);
             connues.clear(); connues.add(self.signature(R));
+            self.alignerCourses(R, suivi);   // v71 (E) : la diete vient de changer : panier vide (en memoire)
             refuses.length = 0;
             actif = R.jours.length ? Math.min(R.jours.length - 1, (new Date().getDay() + 6) % 7) : 0;
             UI.toast(trad("Tes repas ont changé entre-temps : voici la dernière version."), "attention", 6000);
