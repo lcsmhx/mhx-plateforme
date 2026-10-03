@@ -256,14 +256,18 @@ function construireBarreBas(){
     `<a href="#/${o.id}" data-id="${o.id}"${estVerrouille(o) ? ' class="verrouille"' : ""}>${iconeOutil(o)}<span class="lbl">${esc(nomCourt(o))}</span>${cadenasNav(o)}</a>`).join("") +
     (autres.length ? `<button type="button" data-plus><span class="ico" aria-hidden="true">${ICONES.plus}</span><span class="lbl">Plus</span></button>` : "");
   const plus = b.querySelector("[data-plus]");
-  /* v69 : le prospect revient a l'accueil par une fleche a gauche du titre (la croix seule ne suffisait pas sur telephone) */
-  const retourAccueil = Auth.estProspect() && !Store.idConsulte && principaux.some(o => o.id === "accueil")
+  /* v69 : le prospect revient a l'accueil par une fleche a gauche du titre (la croix seule ne suffisait pas sur telephone) ;
+     v70 : le client aussi (tout compte qui n'est pas le coach, hors consultation d'une fiche) */
+  const retourAccueil = !Auth.estCoach() && !Store.idConsulte && principaux.some(o => o.id === "accueil")
     ? { href: "#/accueil", libelle: trad("Retour à l'accueil") } : null;
   if (plus) plus.addEventListener("click", () => {
     UI.volet({ titre: trad("Tout mon espace"), retour: retourAccueil, corps: `<ul class="menu-plus">` + autres.map(o =>
-      `<li><a href="#/${o.id}" data-id="${o.id}"${courant === o.id ? ' aria-current="page"' : ""}>${iconeOutil(o)}<span>${esc(nomOnglet(o))}${cadenasNav(o)}</span></a></li>`).join("") + `</ul>` });
+      `<li><a href="#/${o.id}" data-id="${o.id}"${courant === o.id ? ' aria-current="page"' : ""}>${iconeOutil(o)}<span>${esc(nomOnglet(o))}${cadenasNav(o)}</span></a></li>`).join("") + `</ul>` +
+      /* v70 : « Partager l'app » sous la liste (lien copie ou feuille de partage du telephone) */
+      `<div class="menu-plus-partage"><button type="button" class="btn ghost petit" data-partager>${SVG.partager}<span>${esc(trad("Partager l'app"))}</span></button></div>` });
     /* un clic sur un lien du volet le referme */
-    setTimeout(() => { $$(".volet .menu-plus a").forEach(a => a.addEventListener("click", () => UI.fermer())); if (typeof Nouveautes !== "undefined") Nouveautes.badge(); }, 0);
+    setTimeout(() => { $$(".volet .menu-plus a").forEach(a => a.addEventListener("click", () => UI.fermer())); if (typeof Nouveautes !== "undefined") Nouveautes.badge();
+      const bp = document.querySelector(".volet [data-partager]"); if (bp) bp.addEventListener("click", () => partagerApp()); }, 0);
     if (typeof Checkin !== "undefined") setTimeout(() => Checkin.badge(), 0);   // v53 : le badge sur « Mon suivi » du volet
   });
   b.hidden = !Auth.connecte();

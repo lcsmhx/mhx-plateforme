@@ -16,10 +16,17 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-10-02 · 69",
+    version: "2026-10-03 · 70",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
+
+    /* v70 — « Partager l'app » (volet « Plus » et Profil) : le lien envoyé (vide = l'adresse de l'app elle-même)
+       et la phrase qui l'accompagne quand le téléphone propose le partage (Messages, WhatsApp…). */
+    partage: {
+      lien: "",
+      texte: "Rejoins-moi sur l'app MHX Coaching : calculateur de calories, suivi du poids et Speed Formation, gratuit."
+    },
 
     /* Lien du formulaire de bilan Notion.
        Laisse vide tant qu'il n'existe pas : le bouton se contente alors
@@ -408,7 +415,7 @@ const DECOUVERTE = {
     sans_projection: "Faisons le point ensemble sur ton objectif.",
     texte: "En 15 minutes au téléphone avec Lucas, on transforme cet objectif en plan concret : ce qui te freine vraiment, par quoi commencer, et les 3 actions à mettre en place en priorité.",
     garde: "Ton plan est à toi, quelle que soit la suite.",
-    libre: "Si l'accompagnement te correspond, Lucas te le présente à la fin, seulement si tu le veux. Tu es libre de dire non.",
+    /* v70 : la phrase « Si l'accompagnement te correspond… Tu es libre de dire non. » est retirée (décision de Lucas, 03/10/2026) */
     reserver: "Récupérer mon plan d'action",
     sous: "15 min · par téléphone · offert",
     plus_tard: "Plus tard, je découvre mon espace"
@@ -696,7 +703,6 @@ const DECOUVERTE = {
       sans_projection: "Let's review your goal together.",
       texte: "In a 15-minute call with Lucas, we turn this goal into a concrete plan: what's really holding you back, where to start, and the 3 actions to put in place first.",
       garde: "The plan is yours to keep, whatever you decide next.",
-      libre: "If coaching is a good fit, Lucas will tell you about it at the end, only if you want. You're free to say no.",
       reserver: "Get my action plan",
       sous: "15 min · phone call · free",
       plus_tard: "Later, let me explore my space"

@@ -39,6 +39,10 @@ body{margin:0;background:var(--ground);color:var(--ink);
 .menu-plus a .ico{display:inline-flex;color:var(--ink-3)}
 .menu-plus a .ico svg{width:20px;height:20px}
 .menu-plus a[aria-current="page"]{color:var(--accent)} .menu-plus a[aria-current="page"] .ico{color:var(--accent)}
+/* v70 : « Partager l'app » sous la liste du volet « Plus » */
+.menu-plus-partage{padding:16px 4px 4px}
+.menu-plus-partage .btn{display:inline-flex;align-items:center;gap:8px}
+.menu-plus-partage .btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 @media (max-width:720px){
   .topbar .nav{display:none}
   main{padding-bottom:96px}

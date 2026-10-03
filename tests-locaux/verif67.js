@@ -387,6 +387,7 @@ const D = {
   texte: "En 15 minutes au téléphone avec Lucas, on transforme cet objectif en plan concret : ce qui te freine vraiment, par quoi commencer, et les 3 actions à mettre en place en priorité.",
   texte_en: "In a 15-minute call with Lucas, we turn this goal into a concrete plan: what's really holding you back, where to start, and the 3 actions to put in place first.",
   garde: "Ton plan est à toi, quelle que soit la suite.", garde_en: "The plan is yours to keep, whatever you decide next.",
+  /* v70 : cette phrase n'est plus affichée (FR et EN) ; gardée ici pour vérifier son ABSENCE (NOUVEAUX, « aucun texte français ») */
   libre: "Si l'accompagnement te correspond, Lucas te le présente à la fin, seulement si tu le veux. Tu es libre de dire non.",
   libre_en: "If coaching is a good fit, Lucas will tell you about it at the end, only if you want. You're free to say no.",
   bouton: "Récupérer mon plan d'action", bouton_en: "Get my action plan",
@@ -467,7 +468,8 @@ const planVu = page => page.evaluate(() => {
   const q = x => brut(s.querySelector(x));
   const acc = (() => { const x = document.createElement("span"); x.style.color = "var(--accent)"; document.body.appendChild(x); const v = getComputedStyle(x).color; x.remove(); return v; })();
   return { classes: [...s.classList].sort().join("."), enfants: [...s.children].map(sig), cta: cta ? [...cta.children].map(sig) : [],
-    txt: [q("#dc-offert"), q("h2"), q("#dc-projection"), q("#dc-bilan-texte"), q("#dc-bilan-garde"), q("#dc-bilan-libre"), q("#dc-bilan-reserver"), q("#dc-bilan-sous"), q("#dc-bilan-plus-tard")],
+    txt: [q("#dc-offert"), q("h2"), q("#dc-projection"), q("#dc-bilan-texte"), q("#dc-bilan-garde"), q("#dc-bilan-reserver"), q("#dc-bilan-sous"), q("#dc-bilan-plus-tard")],
+    libre: !!s.querySelector("#dc-bilan-libre"),   // v70 : doit être absent
     a: a ? { href: a.getAttribute("href"), cible: a.getAttribute("target"), rel: a.getAttribute("rel") || "", dc: a.getAttribute("data-dc-cal") } : null,
     sa: st(a), st: st(t), so: st(o), ctaW: cta ? Math.round(cta.getBoundingClientRect().width) : 0,
     nBtn: s.querySelectorAll(".btn").length, tag: t ? t.tagName + (t.classList.contains("btn") ? ".btn" : "") : "",
@@ -513,14 +515,14 @@ const verrouVu = (page, id) => page.evaluate(id => {
     const { c, page } = await ouvrir(b, db, k, "", "#dc-bilan");
     await attendre(page, 1300);   // Store.ecrire n'envoie qu'après 700 ms : une écriture lancée par l'affichage aurait le temps d'arriver
     const P = await planVu(page), T = P ? P.txt : [], th = await page.evaluate(() => document.documentElement.getAttribute("data-theme"));
-    const ink3 = await couleur(page, "--ink-3");
-    ok("questionnaire validé sans choix : la page « Ton plan d'action » (section.panel.dc-plan#dc-bilan), thème sombre ; dans l'ordre : « Offert » (span.eyebrow.dc-offert), titre, projection, texte, « Ton plan est à toi… », petit texte gris (p.note), puis div.dc-cta = bouton doré, « 15 min · par téléphone · offert », « Plus tard… » (button.lien-discret)",
-      !!P && th === null && P.classes === "dc-plan.panel" && JSON.stringify(P.enfants) === JSON.stringify(["span#dc-offert.dc-offert.eyebrow", "h2", "p#dc-projection.dc-projection", "p#dc-bilan-texte", "p#dc-bilan-garde", "p#dc-bilan-libre.note", "div.dc-cta"])
+    const ink3 = await couleur(page, "--ink-3"), v0 = await texte(page, "#vue");
+    ok("questionnaire validé sans choix : la page « Ton plan d'action » (section.panel.dc-plan#dc-bilan), thème sombre ; dans l'ordre : « Offert » (span.eyebrow.dc-offert), titre, projection, texte, « Ton plan est à toi… », puis div.dc-cta = bouton doré, « 15 min · par téléphone · offert », « Plus tard… » (button.lien-discret) ; plus de petit texte gris (v70)",
+      !!P && th === null && P.classes === "dc-plan.panel" && !P.libre && JSON.stringify(P.enfants) === JSON.stringify(["span#dc-offert.dc-offert.eyebrow", "h2", "p#dc-projection.dc-projection", "p#dc-bilan-texte", "p#dc-bilan-garde", "div.dc-cta"])
       && JSON.stringify(P.cta) === JSON.stringify(["a#dc-bilan-reserver.btn", "p#dc-bilan-sous.dc-cta-sous", "button#dc-bilan-plus-tard.lien-discret"]), JSON.stringify(P && [th, P.classes, P.enfants, P.cta]));
-    ok("textes EXACTS : « Offert », « Ton plan d'action personnalisé », « Ton objectif dans 3 mois : « M'aimer sur les photos » », « En 15 minutes au téléphone avec Lucas… », « Ton plan est à toi, quelle que soit la suite. », « Si l'accompagnement te correspond… Tu es libre de dire non. »",
-      JSON.stringify(T.slice(0, 6).map(norm)) === JSON.stringify([D.offert, D.titre, D.projection("M'aimer sur les photos"), D.texte, D.garde, D.libre]), JSON.stringify(T.slice(0, 6)));
+    ok("textes EXACTS : « Offert », « Ton plan d'action personnalisé », « Ton objectif dans 3 mois : « M'aimer sur les photos » », « En 15 minutes au téléphone avec Lucas… », « Ton plan est à toi, quelle que soit la suite. » ; « Si l'accompagnement te correspond… Tu es libre de dire non. » absent (v70)",
+      JSON.stringify(T.slice(0, 5).map(norm)) === JSON.stringify([D.offert, D.titre, D.projection("M'aimer sur les photos"), D.texte, D.garde]) && !v0.includes(D.libre), JSON.stringify(T.slice(0, 5)));
     ok("bouton « Récupérer mon plan d'action », ligne « 15 min · par téléphone · offert », lien « Plus tard, je découvre mon espace »",
-      JSON.stringify(T.slice(6).map(norm)) === JSON.stringify([D.bouton, D.sous, D.plus_tard]), JSON.stringify(T.slice(6)));
+      JSON.stringify(T.slice(5).map(norm)) === JSON.stringify([D.bouton, D.sous, D.plus_tard]), JSON.stringify(T.slice(5)));
     ok("typographie française : espace insécable avant « : » et dans « « … » » (projection, texte) ; « Offert » affiché en capitales, en doré",
       T[2] === typo(D.projection("M'aimer sur les photos")) && T[3] === typo(D.texte) && !!P.so && P.so.tt === "uppercase" && P.so.coul === OR_SOMBRE, JSON.stringify([T[2], T[3], P && P.so]));
     ok("UN seul élément doré : le bouton (seul .btn de la page, fond doré) ; « Plus tard » n'est pas un .btn : bouton texte gris (--ink-3), souligné, sans fond ni bordure",
@@ -548,8 +550,8 @@ const verrouVu = (page, id) => page.evaluate(id => {
     const { page } = await ouvrir(b, db, k, "", "#dc-bilan", { langue: "en", theme: "light" });
     await attendre(page, 1000);
     const P = await planVu(page), T = P ? P.txt : [], th = await page.evaluate(() => document.documentElement.getAttribute("data-theme")), v = await texte(page, "#vue");
-    ok("anglais, thème clair : « Free », « Your personalized action plan », « Your goal in 3 months: “Loving how I look in photos” », texte, « The plan is yours to keep… », « If coaching is a good fit… », « Get my action plan », « 15 min · phone call · free », « Later, let me explore my space » (exacts, dans cet ordre, sans espace insécable)",
-      th === "light" && JSON.stringify(T.map(norm)) === JSON.stringify([D.offert_en, D.titre_en, D.projection_en("Loving how I look in photos"), D.texte_en, D.garde_en, D.libre_en, D.bouton_en, D.sous_en, D.plus_tard_en]) && !T.some(x => /[  ]/.test(x || "")),
+    ok("anglais, thème clair : « Free », « Your personalized action plan », « Your goal in 3 months: “Loving how I look in photos” », texte, « The plan is yours to keep… », « Get my action plan », « 15 min · phone call · free », « Later, let me explore my space » (exacts, dans cet ordre, sans espace insécable) ; « If coaching is a good fit… » absent (v70)",
+      th === "light" && !P.libre && !v.includes(D.libre_en) && JSON.stringify(T.map(norm)) === JSON.stringify([D.offert_en, D.titre_en, D.projection_en("Loving how I look in photos"), D.texte_en, D.garde_en, D.bouton_en, D.sous_en, D.plus_tard_en]) && !T.some(x => /[  ]/.test(x || "")),
       JSON.stringify([th, T]));
     const ink3 = await couleur(page, "--ink-3"), francais = [D.offert, D.titre, D.texte, D.garde, D.libre, D.bouton, D.sous, D.plus_tard, "M'aimer sur les photos"].filter(x => v.includes(x));
     ok("anglais : aucun texte français de la page ; un seul élément doré (doré du thème clair), « Later… » gris, souligné, sans fond ni bordure ; « Free » en capitales dorées",
@@ -558,8 +560,10 @@ const verrouVu = (page, id) => page.evaluate(id => {
     ok("anglais : même lien exact (apres_questionnaire, pré-rempli), 390 px sans débordement, aucun prix ni « undefined », aucune écriture à l'affichage",
       !!P.a && P.a.href === lienAtt("apres_questionnaire", k) && P.a.cible === "_blank" && !(await deborde(page)) && propre(v) && saisies(db).length === 0, JSON.stringify(P.a) + " · " + resume(db));
     await relever(page, true, "plan d'action");
-    /* « Later » touché deux fois coup sur coup, la page défilée jusqu'en bas (le retour en haut de page est alors prouvé) */
-    await page.evaluate(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "instant" })); await attendre(page, 300);
+    /* « Later » touché deux fois coup sur coup, la page défilée jusqu'en bas (le retour en haut de page est alors prouvé).
+       v70 : sans le petit texte « If coaching is a good fit… », la page tient dans l'écran de 390 × 844 : on l'allonge
+       (marge basse du body, retirée après) pour qu'elle puisse défiler et que le retour en haut reste prouvé. */
+    await page.evaluate(() => { document.body.style.paddingBottom = "1200px"; window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "instant" }); }); await attendre(page, 300);
     const yAvant = await page.evaluate(() => window.scrollY);
     await page.evaluate(() => { const t = document.querySelector("#dc-bilan-plus-tard"); t.click(); t.click(); }); await attendre(page, 1800);
     const I = clone(intakeDe(db, ID)) || {};
@@ -572,6 +576,7 @@ const verrouVu = (page, id) => page.evaluate(id => {
       JSON.stringify(I.bilan_propose) + " · " + JSON.stringify(Cpt) + " · " + resume(db));
     const yApres = await page.evaluate(() => window.scrollY);
     const acc1 = !!(await page.$("#dc-accomp")) && !(await page.$("#dc-bilan")) && yAvant > 0 && yApres === 0;
+    await page.evaluate(() => { document.body.style.paddingBottom = ""; });   // v70 : la marge de l'étape précédente retirée
     await aller(page, "#/decouverte/bilan", 1500);
     const rouverte = !!(await page.$("#dc-bilan")) && norm((await planVu(page) || { txt: [] }).txt[1]) === D.titre_en;
     await page.click("#dc-bilan-plus-tard"); await attendre(page, 1600);

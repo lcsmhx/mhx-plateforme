@@ -779,6 +779,10 @@ I18N.en = {
 /* v34 — navigation et accueil */
 "Accueil": "Home", "Nutrition": "Nutrition", "Ma progression": "My progress", "Sa progression": "Their progress",
 "Speed Formation": "Speed Formation", "Profil": "Profile", "Plus": "More", "Tout mon espace": "My whole space", "Retour à l'accueil": "Back to home",
+/* v70 : « Partager l'app » */
+"Partager l'app": "Share the app", "Lien copié !": "Link copied!", "Copie ce lien :": "Copy this link:",
+"Envoie le lien de l'app à un proche : l'espace gratuit est ouvert à tout le monde.": "Send the app link to someone you know: the free space is open to everyone.",
+"Rejoins-moi sur l'app MHX Coaching : calculateur de calories, suivi du poids et Speed Formation, gratuit.": "Join me on the MHX Coaching app: calorie calculator, weight tracking and Speed Formation, free.",
 "Programme": "Program", "Progression": "Progress", "Bilan": "Review", "Compléments": "Supplements", "Formation": "Course",
 "Bonjour": "Hello", "Vue d'ensemble": "Overview", "Cette semaine": "This week", "Aujourd'hui": "Today",
 "Sa semaine en un coup d'œil.": "Their week at a glance.",

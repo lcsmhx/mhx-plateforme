@@ -928,7 +928,6 @@ const outilDecouverte = {
       <p class="dc-projection" id="dc-projection">${esc(typoFr(pr ? trad(L.projection, { p: pr }) : trad(L.sans_projection)))}</p>
       <p id="dc-bilan-texte">${t(L.texte)}</p>
       <p id="dc-bilan-garde">${t(L.garde)}</p>
-      <p class="note" id="dc-bilan-libre">${t(L.libre)}</p>
       <div class="dc-cta">${cal ? `<a class="btn" id="dc-bilan-reserver" href="${esc(cal)}" target="_blank" rel="noopener" data-dc-cal="apres_questionnaire">${t(L.reserver)}</a><p class="dc-cta-sous" id="dc-bilan-sous">${t(L.sous)}</p>` : ""}
         <button class="lien-discret" type="button" id="dc-bilan-plus-tard">${t(L.plus_tard)}</button></div></section>`;
   },

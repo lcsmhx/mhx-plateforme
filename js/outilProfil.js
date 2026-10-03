@@ -219,6 +219,10 @@ const outilProfil = {
 
       <h3 style="font-family:Oswald,sans-serif;text-transform:uppercase;letter-spacing:.05em;font-size:14px;font-weight:500;color:var(--ink-2);margin:26px 0 12px">Changer mon adresse email</h3>
       ${ecrisNous("Pour changer ton adresse email, écris-nous à {e}, on s'en occupe rapidement.", "mc-email-aide", "note")}
+
+      <h3 style="font-family:Oswald,sans-serif;text-transform:uppercase;letter-spacing:.05em;font-size:14px;font-weight:500;color:var(--ink-2);margin:26px 0 12px">Partager l'app</h3>
+      <p class="note" style="margin:0 0 12px">Envoie le lien de l'app à un proche : l'espace gratuit est ouvert à tout le monde.</p>
+      <div class="actions" style="margin-top:0"><button type="button" class="btn ghost" id="mc-partager">Partager l'app</button></div>
     </section>`;
   },
 
@@ -318,6 +322,8 @@ const outilProfil = {
   },
   brancherCompte(){
     this.brancherEmails();
+    const bPart = $("mc-partager");
+    if (bPart) bPart.addEventListener("click", () => partagerApp());   // v70
     const bCond = $("mc-conditions");
     if (bCond) bCond.addEventListener("click", () => UI.volet({ titre: trad(DECOUVERTE.confidentialite.titre), corps: (DECOUVERTE.confidentialite.paragraphes || []).map(p => `<p>${esc(trad(p))}</p>`).join("") }));
     const bMdp = $("mc-mdp");

@@ -393,8 +393,9 @@ const TX = {
   bilan: "En 15 minutes au téléphone avec Lucas, on transforme cet objectif en plan concret : ce qui te freine vraiment, par quoi commencer, et les 3 actions à mettre en place en priorité.",
   bilan_en: "In a 15-minute call with Lucas, we turn this goal into a concrete plan: what's really holding you back, where to start, and the 3 actions to put in place first.",
   garde: "Ton plan est à toi, quelle que soit la suite.", garde_en: "The plan is yours to keep, whatever you decide next.",
-  libre: "Si l'accompagnement te correspond, Lucas te le présente à la fin, seulement si tu le veux. Tu es libre de dire non.",
-  libre_en: "If coaching is a good fit, Lucas will tell you about it at the end, only if you want. You're free to say no.",
+  /* v70 : la phrase « Si l'accompagnement te correspond… Tu es libre de dire non. » n'existe plus (FR et EN) ; les suites
+     vérifient son ABSENCE (#dc-bilan-libre absent, texte absent de la page) */
+  libre: "Tu es libre de dire non", libre_en: "You're free to say no",
   plan_sous: "15 min · par téléphone · offert", plan_sous_en: "15 min · phone call · free",
   projection: p => "Ton objectif dans 3 mois : « " + p + " »",
   projection_en: p => "Your goal in 3 months: “" + p + "”",
@@ -653,9 +654,10 @@ function lienOk(href, base, attendu){
       ok(`${w} : sa réponse « projection » reprise : « Ton objectif dans 3 mois : « Courir 10 km sans m'arrêter » »`, (await texte(page, "#dc-projection")) === TX.projection("Courir 10 km sans m'arrêter"), await texte(page, "#dc-projection"));
       /* v61 (brief V2, D) : les textes EXACTS du plan d'action offert, dans l'ordre (avant : le texte du bilan de 30 minutes) */
       const ordre = await page.$$eval("#dc-bilan > *", l => l.map(e => e.tagName.toLowerCase() + (e.id ? "#" + e.id : "") + (e.className ? "." + e.className.trim().split(/\s+/).join(".") : ""))).catch(() => []);
-      const txts = [await texte(page, "#dc-offert"), await texte(page, "#dc-bilan h2"), await texte(page, "#dc-bilan-texte"), await texte(page, "#dc-bilan-garde"), await texte(page, "#dc-bilan-libre")];
-      ok(`${w} : textes EXACTS du plan d'action offert, dans l'ordre (« ${TX.offert} » en étiquette, « ${TX.titre} », projection, « En 15 minutes au téléphone avec Lucas… », « ${TX.garde} », petit texte « Tu es libre de dire non »), plus aucun « Réserver mon bilan » ni « 30 minutes »`,
-        JSON.stringify(txts) === JSON.stringify([TX.offert, TX.titre, TX.bilan, TX.garde, TX.libre]) && JSON.stringify(ordre) === JSON.stringify(["span#dc-offert.eyebrow.dc-offert", "h2", "p#dc-projection.dc-projection", "p#dc-bilan-texte", "p#dc-bilan-garde", "p#dc-bilan-libre.note", "div.dc-cta"]) && !TX.anciens.test(await texte(page, "#vue")), JSON.stringify([txts, ordre]));
+      const txts = [await texte(page, "#dc-offert"), await texte(page, "#dc-bilan h2"), await texte(page, "#dc-bilan-texte"), await texte(page, "#dc-bilan-garde")];
+      const vueTxt = await texte(page, "#vue");
+      ok(`${w} : textes EXACTS du plan d'action offert, dans l'ordre (« ${TX.offert} » en étiquette, « ${TX.titre} », projection, « En 15 minutes au téléphone avec Lucas… », « ${TX.garde} »), sans le petit texte « Tu es libre de dire non » (v70), plus aucun « Réserver mon bilan » ni « 30 minutes »`,
+        JSON.stringify(txts) === JSON.stringify([TX.offert, TX.titre, TX.bilan, TX.garde]) && JSON.stringify(ordre) === JSON.stringify(["span#dc-offert.eyebrow.dc-offert", "h2", "p#dc-projection.dc-projection", "p#dc-bilan-texte", "p#dc-bilan-garde", "div.dc-cta"]) && !(await page.$("#dc-bilan-libre")) && !vueTxt.includes(TX.libre) && !TX.anciens.test(vueTxt), JSON.stringify([txts, ordre]));
       const bt = await page.evaluate(() => {
         const f = e => { if (!e) return null; const r = e.getBoundingClientRect(), s = getComputedStyle(e); return { tag: e.tagName, cls: e.className, txt: e.textContent.trim(), w: r.width, h: r.height, fond: s.backgroundColor, image: s.backgroundImage, couleur: s.color, bord: [s.borderTopWidth, s.borderRightWidth, s.borderBottomWidth, s.borderLeftWidth].join(" "), souligne: s.textDecorationLine, graisse: s.fontWeight }; };
         const cta = document.querySelector("#dc-bilan .dc-cta");
@@ -808,8 +810,8 @@ function lienOk(href, base, attendu){
     const v = await texte(page, "#vue");
     /* v61 (brief V2, D) : « Free », « Your personalized action plan », « Your goal in 3 months: “…” », les textes du plan
        (avant : « Your next step », « In 3 months, for you », l'assessment de 30 minutes) */
-    const en = [await texte(page, "#dc-offert"), await texte(page, "#dc-bilan h2"), await texte(page, "#dc-projection"), await texte(page, "#dc-bilan-texte"), await texte(page, "#dc-bilan-garde"), await texte(page, "#dc-bilan-libre")];
-    ok("anglais : « Free », « Your personalized action plan », sa réponse reprise (« Your goal in 3 months: “…” »), textes du plan en anglais (15-minute call with Lucas, « The plan is yours to keep… », « You're free to say no. »)", JSON.stringify(en) === JSON.stringify([TX.offert_en, TX.titre_en, TX.projection_en(NOUVEAU().projection), TX.bilan_en, TX.garde_en, TX.libre_en]), JSON.stringify(en));
+    const en = [await texte(page, "#dc-offert"), await texte(page, "#dc-bilan h2"), await texte(page, "#dc-projection"), await texte(page, "#dc-bilan-texte"), await texte(page, "#dc-bilan-garde")];
+    ok("anglais : « Free », « Your personalized action plan », sa réponse reprise (« Your goal in 3 months: “…” »), textes du plan en anglais (15-minute call with Lucas, « The plan is yours to keep… »), sans « You're free to say no. » (v70)", JSON.stringify(en) === JSON.stringify([TX.offert_en, TX.titre_en, TX.projection_en(NOUVEAU().projection), TX.bilan_en, TX.garde_en]) && !(await page.$("#dc-bilan-libre")) && !v.includes(TX.libre_en), JSON.stringify(en));
     ok("anglais : « Get my action plan », « 15 min · phone call · free » et « Later, let me explore my space », aucun texte français de la page, plus aucun « Book my assessment » ni « 30-minute »", (await texte(page, "#dc-bilan-reserver")) === TX.reserver_en && (await texte(page, "#dc-bilan-sous")) === TX.plan_sous_en && (await texte(page, "#dc-bilan-plus-tard")) === TX.plus_tard_en && ![TX.offert, TX.bilan, TX.garde, TX.libre, TX.reserver, TX.plan_sous, TX.plus_tard, TX.titre, "Ton objectif dans 3 mois"].some(x => v.includes(x)) && !TX.anciens.test(v), v.slice(0, 300));
     await c.close();
   });

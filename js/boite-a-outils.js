@@ -88,6 +88,24 @@ function ecrisNous(phrase, id, classe){
   const lien = /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(mail) ? `<a href="mailto:${esc(mail)}">${esc(mail)}</a>` : "";
   return `<p class="${esc(classe || "note")}" id="${esc(id || "")}" data-notr>${esc(avant)}${lien}${esc(apres)}</p>`;
 }
+/* v70 — « Partager l'app » : le lien de l'app (CONFIG.marque.partage.lien, sinon l'adresse de la page sans
+   son ancre). Sur telephone, la feuille de partage du systeme (Messages, WhatsApp…) ; sinon le lien est copie
+   dans le presse-papier et un toast le dit ; si la copie est refusee, une fenetre montre le lien a copier. */
+function lienApp(){
+  const p = (CONFIG.marque && CONFIG.marque.partage) || {};
+  const l = lienSur(p.lien);
+  return l || (location.origin + location.pathname);
+}
+async function partagerApp(){
+  const lien = lienApp(), p = (CONFIG.marque && CONFIG.marque.partage) || {};
+  const texte = p.texte ? trad(p.texte) : "";
+  if (navigator.share){
+    try { await navigator.share({ title: CONFIG.marque.nom, text: texte, url: lien }); return true; }
+    catch(e){ if (e && e.name === "AbortError") return false; }   // partage annule : rien a dire ; autre refus : on copie
+  }
+  try { await navigator.clipboard.writeText(lien); UI.toast(trad("Lien copié !"), "ok"); return true; }
+  catch(e){ await UI.demander(trad("Copie ce lien :"), lien, { ok: trad("Fermer") }); return false; }
+}
 /* Un ecran vide doit toujours proposer quoi faire. Sans bouton, le client
    se dit que l'app ne marche pas et ne revient plus. Rien en consultation
    coach : c'est le coach lui-meme qui regarde. */
