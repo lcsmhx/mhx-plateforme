@@ -12,7 +12,8 @@
    B2. le coach, dans la fiche d'un client, retrouve sa propre saisie (programme) gardée sur l'appareil.
    C. (D7) refus définitif (403) : la modification est mise de côté (mhx_refus|compte|clé), plus dans mhx_attente, jamais
       renvoyée (même au retour du réseau), un message le dit (« Préviens ton coach ») en plus de l'en-tête ; déconnexion :
-      pas comptée « non envoyée », effacée de l'appareil ; en anglais aussi ; chez le coach, le message ne dit pas
+      comptée à part (« refusées par la base … gardées sur cet appareil », v71 B), effacée après « Me déconnecter quand
+      même » ; en anglais aussi ; chez le coach, le message ne dit pas
       « Préviens ton coach » (C3).
    D. (D8) « Rester connecté » décoché + hors ligne : l'en-tête dit « gardé dans cet onglet seulement : ne le ferme pas »
       (en anglais aussi) ; coché : toujours « gardé sur cet appareil ».
@@ -261,8 +262,11 @@ const texte = async (page, sel) => norm(await page.textContent(sel).catch(() => 
     ok("… jamais renvoyée (retour du réseau : aucun nouvel envoi)", db.posts.length === envois && envois === 1, "envois " + db.posts.length);
     db.refus = false;
     await page.click("#deco"); await attendre(page, 5200);
+    /* v71 (B) : le refus gardé est compté avant d'effacer (sans « n'ont pas encore pu être envoyées » : rien n'attend) */
+    const dlg = await texte(page, ".modale");
+    await page.click(".modale button:has-text(\"Me déconnecter quand même\")").catch(() => {}); await attendre(page, 1800);
     const reste = await page.evaluate(() => Object.keys(localStorage).concat(Object.keys(sessionStorage)).filter(k => k.indexOf("mhx_refus|") === 0 || k === "mhx_session"));
-    ok("… déconnexion : pas de « modifications non envoyées » à confirmer, la copie mise de côté est effacée de l'appareil", reste.length === 0, JSON.stringify(reste));
+    ok("… déconnexion : l'avertissement compte la modification refusée (« refusées par la base … gardées sur cet appareil »), pas « n'ont pas encore pu être envoyées » ; « Me déconnecter quand même » : la copie mise de côté est effacée de l'appareil", dlg.includes("refusées par la base") && !dlg.includes("n'ont pas encore pu être envoyées") && reste.length === 0, dlg.slice(0, 160) + " · " + JSON.stringify(reste));
   });
 
   await bloc("C2. refus définitif en anglais", async () => {

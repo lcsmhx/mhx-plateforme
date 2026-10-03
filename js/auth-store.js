@@ -5,6 +5,16 @@
 const Auth = {
   cleSession: "mhx_session",
   session: null,
+  /* v71 (B) : ce qui appartient a l'APPAREIL (theme, langue, banniere d'installation, compteur de visites, drapeau du
+     mode test) reste a la deconnexion ; tout autre « mhx_* » (session, copies en attente, refus, invitations, activite,
+     tracking, brouillons, choix d'affichage par compte) part avec le compte : sur un appareil partage, rien d'un compte
+     ne doit rester. mhx_visite_comptee (sessionStorage) n'est qu'un drapeau d'onglet : garde lui aussi. */
+  CLES_APPAREIL: ["mhx_theme", "mhx_langue", "mhx_installe", "mhx_visites", "mhx_decouverte_jour", "mhx_visite_comptee"],
+  viderCompte(){
+    [localStorage, sessionStorage].forEach(m => {
+      try { Object.keys(m).forEach(k => { if (k.indexOf("mhx_") === 0 && this.CLES_APPAREIL.indexOf(k) === -1) m.removeItem(k); }); } catch(e){}
+    });
+  },
 
   /* « Rester connecte » decide seulement d'OU la session est rangee :
      localStorage survit a la fermeture du navigateur, sessionStorage
@@ -278,13 +288,18 @@ const Auth = {
     const moi = this.utilisateur();
     /* v59 (contre-relecture) : session déjà perdue (bandeau « Ta session a pris fin… », qui promet que la saisie repartira) :
        toutes les copies de l'appareil comptent — elles étaient effacées sans un mot */
-    const nonEnvoyees = Object.values(Store.attenteLire()).filter(e => e && (!moi || e.a === moi.id)).length;
-    if (nonEnvoyees && !(await UI.confirmer(trad("Des modifications n'ont pas encore pu être envoyées (hors ligne). Si tu te déconnectes maintenant, elles seront perdues."), { ok: trad("Me déconnecter quand même"), danger: true }))) return;
+    const duCompte = e => e && (!moi || e.a === moi.id);
+    const nonEnvoyees = Object.values(Store.attenteLire()).filter(duCompte).length;
+    /* v71 (B) : les modifications refusees par la base (mhx_refus|…, v67) partent aussi avec le compte : on le dit avant
+       (un refus peut naitre a l'instant, pendant toutEnvoyer ci-dessus : il est compte lui aussi) */
+    const refusees = Object.values(Store.attenteLire(Store.PREFIXE_REFUS)).filter(duCompte).length;
+    const avis = nonEnvoyees && refusees ? "Des modifications n'ont pas encore pu être envoyées (hors ligne), et d'autres, refusées par la base, sont encore gardées sur cet appareil. Si tu te déconnectes maintenant, elles seront perdues."
+               : refusees ? "Des modifications refusées par la base sont encore gardées sur cet appareil. Si tu te déconnectes maintenant, elles seront perdues."
+               : "Des modifications n'ont pas encore pu être envoyées (hors ligne). Si tu te déconnectes maintenant, elles seront perdues.";
+    if ((nonEnvoyees || refusees) && !(await UI.confirmer(trad(avis), { ok: trad("Me déconnecter quand même"), danger: true }))) return;
     try { await this.appel("/auth/v1/logout", { method: "POST" }); } catch(e){}
     this.oublier();
-    [localStorage, sessionStorage].forEach(m => {
-      Object.keys(m).forEach(k => { if (k.indexOf("mhx_") === 0) m.removeItem(k); });
-    });
+    this.viderCompte();   // v71 (B) : theme, langue, banniere d'installation et compteur de visites restent (reglages de l'appareil)
     location.hash = "";
     location.reload();
   },
@@ -731,8 +746,8 @@ const Store = {
   tEnAttente: {},
   dernierT: {},   // « compte|cle » → instant de la saisie la plus recente deja partie de cet onglet
   retenues: new Set(),   // v59 : « compte|cle » dont la copie attend une ecriture en cours dans cet onglet (Checkin : relecture avant d'ecrire)
-  attenteLire(){
-    const out = {}, P = this.PREFIXE_ATTENTE;
+  attenteLire(prefixe){
+    const out = {}, P = prefixe || this.PREFIXE_ATTENTE;   // v71 (B) : aussi les refus gardes (PREFIXE_REFUS), meme forme, meme rangement
     try {
       const m = Auth.magasin();
       for (let i = 0; i < m.length; i++){
@@ -912,8 +927,8 @@ const Store = {
     }
   },
   /* v67 (D7) : une modification refusee pour de bon par la base n'est plus perdue : elle quitte sa copie d'attente pour
-     « mhx_refus|compte|cle » (dans le meme rangement), jamais renvoyee (Store.reprendre ne lit que mhx_attente), jamais
-     comptee parmi les modifications « non envoyées » a la deconnexion, effacee avec les autres cles mhx_ */
+     « mhx_refus|compte|cle » (dans le meme rangement), jamais renvoyee (Store.reprendre ne lit que mhx_attente), comptee
+     a part a la deconnexion (v71, B : « refusées par la base … gardées sur cet appareil »), effacee avec le compte (Auth.viderCompte) */
   PREFIXE_REFUS: "mhx_refus|",
   refuser(uid, cle, t, valeur){
     const u = Auth.utilisateur();

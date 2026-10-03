@@ -691,6 +691,8 @@ I18N.en = {
 "Une modification faite hors ligne n'a pas été envoyée ({o}, {d}) : une version plus récente existe déjà.": "A change made offline was not sent ({o}, {d}): a newer version already exists.",
 "Des modifications n'ont pas encore pu être envoyées (hors ligne). Si tu te déconnectes maintenant, elles seront perdues.": "Some changes could not be sent yet (offline). If you log out now, they will be lost.",
 "Me déconnecter quand même": "Log out anyway",
+"Des modifications refusées par la base sont encore gardées sur cet appareil. Si tu te déconnectes maintenant, elles seront perdues.": "Some changes refused by the server are still kept on this device. If you log out now, they will be lost.",
+"Des modifications n'ont pas encore pu être envoyées (hors ligne), et d'autres, refusées par la base, sont encore gardées sur cet appareil. Si tu te déconnectes maintenant, elles seront perdues.": "Some changes could not be sent yet (offline), and others, refused by the server, are still kept on this device. If you log out now, they will be lost.",
 "Ta session a pris fin (déconnexion depuis un autre appareil ?). Ce qui est à l'écran reste là : copie ton texte si besoin, puis reconnecte-toi. Ce que tu avais saisi avant est gardé sur cet appareil et repartira ; ce que tu saisis maintenant n'est plus enregistré.": "Your session has ended (logged out from another device?). What is on screen stays there: copy your text if needed, then sign in again. What you entered before is kept on this device and will be sent; what you enter now is no longer saved.",
 "Me reconnecter": "Sign in again",
 "Reconnecte-toi : ce que tu avais saisi est gardé sur cet appareil et repartira.": "Sign in again: what you entered is kept on this device and will be sent.",
