@@ -13,7 +13,9 @@
    E. « Mon journal » : l'historique de ses séances notées (les plus récentes d'abord, exercices et séries), « Noter ma
       séance » pour chaque séance de son programme (formulaire replié), une séance notée s'ajoute (zéro perte, seule la
       clé journal est écrite), la liste et la pastille suivent, « Mon programme » la voit ; longue liste : 20 d'abord,
-      « Afficher les séances plus anciennes » ;
+      « Afficher les séances plus anciennes » ; v71 (G) : brouillon de la séance en cours sur l'appareil (rechargement :
+      formulaire pré-rempli, « Séance en cours reprise »), « Annuler » avec des chiffres demande confirmation, brouillon
+      effacé après « Séance terminée » ;
    F. sans programme : message clair, pas de « Noter ma séance », l'historique reste lisible ;
    G. coach : « Ses séances » de la fiche mène au journal du client (#/journal en consultation, « Son journal »), en
       lecture seule (ni formulaire ni champ, journal lu, perf jamais), aucune écriture (même forcée : refusée) ; hors
@@ -475,6 +477,27 @@ const NOUVEAU = { probleme: "Perdre du gras", obstacle: "Le manque de temps avec
     ok("… l'historique la montre tout de suite (11 séances, même ordre), « Séance enregistrée. Bravo ! », la séance D passe « notée le … »", JSON.stringify(h2) === JSON.stringify(attenduHist(J2)) && (await texte(page, "#jr-ok-3")) === "Séance enregistrée. Bravo !" && (await texte(page, "#jr-seance-3 .seance-c-tete .pastille")) === "✓ notée le " + frDate(isoJ(new Date())), JSON.stringify(h2.slice(0, 3)) + " · " + await texte(page, "#jr-ok-3") + " · " + await texte(page, "#jr-seance-3 .seance-c-tete .pastille"));
     await aller(page, "#/programme", 1800);
     ok("« Mon programme » voit la même séance notée (même clé journal) ; toujours une seule écriture", (await texte(page, "#seance-3 .seance-c-tete .pastille")) === "✓ notée le " + frDate(isoJ(new Date())) && saisies(db).length === 1, await texte(page, "#seance-3 .seance-c-tete .pastille"));
+    await c.close();
+  });
+
+  /* v71 (G) : brouillon de la séance en cours (mhx_brouillon|<compte>|<si>), « Annuler » confirmé, effacé après « Séance terminée » */
+  await bloc("E. client Thomas : brouillon de la séance en cours (v71, G)", async () => {
+    const db = base(), ID = F.IDS.c1, CLE = "mhx_brouillon|" + ID + "|3";
+    const { c, page } = await contexte(b, THOMAS, db);
+    const lire = () => page.evaluate(k => localStorage.getItem(k), CLE);
+    await page.goto(URL0 + "#/journal"); await pret(page, "#jr-historique"); await attendre(page, 600);
+    await page.click('[data-jr-ouvrir="3"]'); await attendre(page, 300);
+    await page.fill('#jr-seance-3 [data-jr-ex="1"] [data-r="0"]', "10"); await page.fill('#jr-seance-3 [data-jr-ex="1"] [data-c="0"]', "12.5");
+    const brut = await lire();
+    await page.reload(); await pret(page, "#jr-historique"); await attendre(page, 600);
+    const e = await page.evaluate(() => ({ ouvert: !document.querySelector('#jr-seance-3 [data-jr-form]').hidden, bouton: document.querySelector('[data-jr-ouvrir="3"]').hidden, r: document.querySelector('#jr-seance-3 [data-jr-ex="1"] [data-r="0"]').value, c: document.querySelector('#jr-seance-3 [data-jr-ex="1"] [data-c="0"]').value, ligne: (document.querySelector("#jr-seance-3 .jr-reprise") || {}).textContent || "", lien: !!document.querySelector('#jr-seance-3 [data-jr-effacer]') }));
+    ok("saisie (10 reps, 12,5 kg) puis rechargement : brouillon mhx_brouillon|<compte>|3 sur l'appareil, formulaire rouvert pré-rempli, « Séance en cours reprise » et « Effacer le brouillon » ; rien d'écrit en base", !!brut && e.ouvert && e.bouton && e.r === "10" && e.c === "12.5" && norm(e.ligne).includes("Séance en cours reprise") && e.lien && db.ecritures.length === 0, JSON.stringify(e) + " " + brut);
+    await page.click('#jr-seance-3 [data-jr-annuler]'); await attendre(page, 400);
+    const dlg = await texte(page, ".modale"); await page.click('.modale [data-ui-b="0"]'); await attendre(page, 400);   // « Continuer »
+    ok("« Annuler » avec des chiffres saisis : confirmation « Abandonner cette séance ? … » ; refusée (« Continuer ») → formulaire ouvert, chiffres et brouillon gardés", dlg.includes("Abandonner cette séance ?") && !(await page.$('#jr-seance-3 [data-jr-form][hidden]')) && (await page.$eval('#jr-seance-3 [data-jr-ex="1"] [data-r="0"]', x => x.value)) === "10" && !!(await lire()), dlg);
+    await page.click('[data-jr-fin="3"]'); await attendre(page, 1600);
+    const J2 = contenuDe(db, ID, "journal") || { seances: [] }, der = J2.seances[J2.seances.length - 1] || {};
+    ok("« Séance terminée » : la séance en base (Wall angels, 10 × 12,5 kg), le brouillon effacé de l'appareil, formulaire replié", der.si === 3 && JSON.stringify(der.exos) === JSON.stringify([{ nom: "Wall angels", series: [{ r: 10, c: 12.5 }] }]) && (await lire()) === null && !!(await page.$('#jr-seance-3 [data-jr-form][hidden]')), JSON.stringify(der) + " · " + await lire());
     await c.close();
   });
 

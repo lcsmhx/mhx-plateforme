@@ -147,6 +147,33 @@ const Journal = {
   max: 400,
   vide(){ return { seances: [] }; },
 
+  /* v71 (G) : brouillon de la seance en cours, sur l'appareil, par compte (jamais en consultation) :
+     mhx_brouillon|<compte>|<si> = { v: { "<exercice>:<serie>": { r, c } } }, ecrit a chaque frappe, efface par une ecriture
+     acceptee de la seance, par « Annuler » confirme ou par « Effacer le brouillon » — jamais par un refus de la base. */
+  brouillon: {
+    PREFIXE: "mhx_brouillon|",
+    cle(si){ const u = Auth.utilisateur(); return (u && u.id && !Store.idConsulte) ? this.PREFIXE + u.id + "|" + si : null; },
+    lire(si){
+      const k = this.cle(si); if (!k) return null;
+      let x = null; try { x = JSON.parse(localStorage.getItem(k) || "null"); } catch(e){ x = null; }
+      if (!x || typeof x !== "object" || !x.v || typeof x.v !== "object" || Array.isArray(x.v)) return null;
+      const v = {};
+      Object.keys(x.v).forEach(p => { const s = x.v[p]; if (/^\d+:\d+$/.test(p) && s && typeof s === "object") v[p] = { r: String(s.r == null ? "" : s.r).slice(0, 6), c: String(s.c == null ? "" : s.c).slice(0, 8) }; });
+      return Object.keys(v).length ? { v: v } : null;
+    },
+    ecrire(si, v){ const k = this.cle(si); if (!k) return; if (!Object.keys(v).length){ this.effacer(si); return; } try { localStorage.setItem(k, JSON.stringify({ v: v })); } catch(e){} },
+    effacer(si){ const k = this.cle(si); if (!k) return; try { localStorage.removeItem(k); } catch(e){} },
+    /* ce que le formulaire contient : les series ou quelque chose a ete tape (reps, ou charge differente de la proposee) */
+    depuis(boite){
+      const v = {};
+      $$("[data-jr-ex]", boite).forEach(bloc => { const ei = bloc.dataset.jrEx;
+        $$("[data-r]", bloc).forEach(inp => { const j = inp.dataset.r, ci = bloc.querySelector(`[data-c="${j}"]`), c = ci ? ci.value : "";
+          if (inp.value !== "" || (ci && c !== (ci.dataset.kg || ""))) v[ei + ":" + j] = { r: inp.value, c: c }; }); });
+      return v;
+    },
+    saisi(boite){ return Object.keys(this.depuis(boite)).length > 0; }
+  },
+
   /* « 8-10 » -> {8,10} ; « 12 » -> {12,12} ; « 30 s », « 1 min » -> rien */
   cibleReps(reps){
     const s = String(reps || "");
@@ -194,7 +221,7 @@ const Journal = {
       .map(s => num(s.c) > 0 ? s.r + " × " + this.kg(num(s.c)) + " kg" : s.r + " reps").join(" · ");
   },
 
-  htmlSeance(J, sc, si){
+  htmlSeance(J, sc, si, B){   // v71 (G) : B = brouillon de cette seance (Journal.brouillon.lire) ou null
     const exos = (sc.exercices || []).filter(e => e.nom);
     if (!exos.length) return "";
     let der = null;
@@ -202,23 +229,25 @@ const Journal = {
     const corps = exos.map((e, ei) => {
       const prec = this.dernier(J, e.nom), c = this.conseil(e, prec);
       const rc = this.cibleReps(e.reps);
+      const b = j => (B && B.v[ei + ":" + j]) || null;   // v71 (G) : la serie du brouillon
       return `<div class="exo jr-ex" data-jr-ex="${ei}">
         <b>${esc(e.nom)}</b>
         ${prec ? `<p class="note" style="margin:6px 0 0">${esc(trad("Dernière fois ({date}) : {detail}", { date: dateFr(prec.date), detail: this.resumeSeries(prec.e) }))}</p>` : ""}
         ${c && c.texte ? `<p class="note" style="margin:4px 0 0"><b class="${c.monte ? "pos" : ""}">${esc(c.texte)}</b></p>` : ""}
         <div class="sets">${Array.from({ length: this.nbSeries(e.series) }, (_, j) => `<div class="set"><div class="s-lbl">Série ${j + 1}</div><div class="pair">
-            <input type="number" min="0" max="100" step="1" inputmode="numeric" placeholder="${rc ? rc.max : "reps"}" data-r="${j}" aria-label="Répétitions">
-            <input type="number" min="0" max="500" step="0.5" inputmode="decimal" placeholder="kg" value="${c && c.kg ? c.kg : ""}" data-c="${j}" aria-label="Charge en kg">
+            <input type="number" min="0" max="100" step="1" inputmode="numeric" placeholder="${rc ? rc.max : "reps"}" value="${b(j) ? esc(b(j).r) : ""}" data-r="${j}" aria-label="Répétitions">
+            <input type="number" min="0" max="500" step="0.5" inputmode="decimal" placeholder="kg" value="${b(j) ? esc(b(j).c) : (c && c.kg ? c.kg : "")}" data-kg="${c && c.kg ? c.kg : ""}" data-c="${j}" aria-label="Charge en kg">
           </div><div class="cap">reps · kg</div></div>`).join("")}</div>
       </div>`;
     }).join("");
     return `<div class="jr-zone" data-jr="${si}">
       <div class="actions">
-        <button type="button" class="btn" data-jr-ouvrir="${si}">Noter ma séance</button>
+        <button type="button" class="btn" data-jr-ouvrir="${si}"${B ? " hidden" : ""}>Noter ma séance</button>
         ${der ? `<span class="note" style="margin:0">${esc(trad("Dernière séance notée le {date}", { date: dateFr(der.date) }))}</span>` : ""}
         <span class="msg" id="jr-ok-${si}"></span>
       </div>
-      <div data-jr-form hidden>
+      <div data-jr-form${B ? "" : " hidden"}>
+        ${B ? `<p class="note jr-reprise" style="margin:0 0 8px"><span>Séance en cours reprise</span> · <button type="button" class="lien-bouton" data-jr-effacer="${si}">Effacer le brouillon</button></p>` : ""}
         <p class="note">Note tes répétitions et ta charge pour chaque série. La charge proposée vient de ta dernière séance : ajuste-la si besoin.</p>
         ${corps}
         <div class="actions"><button type="button" class="btn" data-jr-fin="${si}">Séance terminée</button><button type="button" class="btn ghost" data-jr-annuler>Annuler</button><span class="msg" id="jr-msg-${si}"></span></div>
@@ -234,13 +263,24 @@ const Journal = {
     const remplir = () => {
       $$("[data-jr-place]", zone).forEach(pl => {
         const si = +pl.dataset.jrPlace, sc = (P.seances || [])[si];
-        pl.innerHTML = sc ? self.htmlSeance(J, sc, si) : "";
+        pl.innerHTML = sc ? self.htmlSeance(J, sc, si, self.brouillon.lire(si)) : "";
       });
       $$("[data-jr-ouvrir]", zone).forEach(b => b.addEventListener("click", () => {
         b.closest(".jr-zone").querySelector("[data-jr-form]").hidden = false;
         b.hidden = true;
       }));
-      $$("[data-jr-annuler]", zone).forEach(b => b.addEventListener("click", remplir));
+      /* v71 (G) : chaque frappe met le brouillon de la seance sur l'appareil ; « Effacer le brouillon » le retire */
+      $$("[data-jr-form]", zone).forEach(f => { const boite = f.closest(".jr-zone"), si = +boite.dataset.jr;
+        f.addEventListener("input", () => self.brouillon.ecrire(si, self.brouillon.depuis(boite)));
+      });
+      $$("[data-jr-effacer]", zone).forEach(b => b.addEventListener("click", () => { self.brouillon.effacer(+b.dataset.jrEffacer); remplir(); }));
+      /* v71 (G) : « Annuler » avec des chiffres saisis demande confirmation (fenetre de l'app) */
+      $$("[data-jr-annuler]", zone).forEach(b => b.addEventListener("click", async () => {
+        const boite = b.closest(".jr-zone"), si = +boite.dataset.jr;
+        if (self.brouillon.saisi(boite) && !(await UI.confirmer(trad("Abandonner cette séance ? Les chiffres saisis seront effacés."), { ok: trad("Abandonner"), annuler: trad("Continuer"), danger: true }))) return;
+        self.brouillon.effacer(si);
+        remplir();
+      }));
       $$("[data-jr-fin]", zone).forEach(b => b.addEventListener("click", () => {
         const si = +b.dataset.jrFin, sc = P.seances[si], boite = b.closest(".jr-zone");
         let aberrant = false;
@@ -261,7 +301,8 @@ const Journal = {
         J.seances = J.seances.filter(x => !(x.si === si && x.date === date));
         J.seances.push({ date: date, si: si, nom: sc.nom || "", exos: exos });
         if (J.seances.length > self.max) J.seances = J.seances.slice(-self.max);
-        if (Store.ecrire(self.cle, J) === false) return;   // refusee (message deja affiche)
+        if (Store.ecrire(self.cle, J) === false) return;   // refusee (message deja affiche) : le brouillon reste
+        self.brouillon.effacer(si);   // v71 (G) : seulement apres une ecriture acceptee, avant de redessiner
         remplir();
         if (typeof apres === "function") apres();
         flash("jr-ok-" + si, "Séance enregistrée. Bravo !");

@@ -1023,4 +1023,12 @@ Object.assign(I18N.en, {
   "Service momentanément indisponible, réessaie dans une minute.": "The service is temporarily unavailable, try again in a minute."
 });
 
+/* v71 (G) — brouillon de la séance en cours */
+Object.assign(I18N.en, {
+  "Séance en cours reprise": "Workout in progress restored",
+  "Effacer le brouillon": "Clear the draft",
+  "Abandonner cette séance ? Les chiffres saisis seront effacés.": "Discard this workout? The numbers you entered will be erased.",
+  "Abandonner": "Discard"
+});
+
 
