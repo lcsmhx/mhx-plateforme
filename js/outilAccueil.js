@@ -341,7 +341,7 @@ const outilAccueil = {
       acces.push({ id: "nutrition", ico: ICONES.nutrition, t: trad("Mes repas du jour"), s: trad("{a} sur {b} cochés aujourd'hui", { a: coches, b: prevus }), ok: prevus > 0 && coches >= prevus });
     }
     if (aProgramme || aDiete || (M.mesures || []).length){
-      acces.push(p.mesure.faite
+      acces.push((p.mesure && p.mesure.faite)   // v71 (A) : pas de part mesure tant qu'il n'y a rien a mesurer
         ? { id: "mensurations", ico: ICONES.mensurations, t: trad("Mesure de la semaine faite"), s: trad("Voir ma progression"), ok: true }
         : { id: "mensurations", ico: ICONES.mensurations, t: trad("Ma mesure de la semaine"), s: trad("Poids et tours de taille, à jeun") });
     }

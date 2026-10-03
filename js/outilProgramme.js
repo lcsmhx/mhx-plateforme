@@ -288,7 +288,8 @@ const Journal = {
    Il mesure ce que le client FAIT, pas ce que dit la balance : seances
    notees (50), repas coches (30), mesure de la semaine (20).
    Une partie sans objet (pas de programme, pas de diete, repas jamais
-   coches) sort du calcul au lieu de faire baisser la note. Les repas ne
+   coches) sort du calcul au lieu de faire baisser la note ; sans programme,
+   diete ni mesure enregistree, il n'y a pas de score (v71). Les repas ne
    comptent qu'a partir du premier jour ou le client a coche quelque chose :
    les jours d'avant l'existence du suivi ne sont pas des jours rates.
    ------------------------------------------------------------------ */
@@ -338,8 +339,15 @@ const Regularite = {
       });
       if (prevus) parts.repas = { coches: coches, prevus: prevus, ratio: coches / prevus };
     }
-    const faite = (M.mesures || []).some(m => m.date && m.date >= b.debut && m.date <= b.fin);
-    parts.mesure = { faite: faite, ratio: faite ? 1 : 0 };
+    /* v71 (A) : la mesure ne compte que s'il y a quelque chose a mesurer — un programme (part seances), une diete
+       (meme test que l'accueil et Mes clients, ancien format compris) ou au moins une mesure enregistree ;
+       sinon aucune part : score null, les ecrans affichent « — » au lieu de « 0/100 » */
+    const aDiete = (R.jours || []).some(j => (j.repas || []).length) || (R.repas || []).length;
+    const aMesure = Array.isArray(M.mesures) && M.mesures.length > 0;
+    if (nb || aDiete || aMesure){
+      const faite = (M.mesures || []).some(m => m && m.date && m.date >= b.debut && m.date <= b.fin);
+      parts.mesure = { faite: faite, ratio: faite ? 1 : 0 };
+    }
     let total = 0, poids = 0;
     for (const k in parts){ total += this.poids[k] * parts[k].ratio; poids += this.poids[k]; }
     return { score: poids ? Math.round(total / poids * 100) : null, parts: parts, bornes: b };
@@ -394,6 +402,7 @@ const Regularite = {
       const c = { programme: P, journal: J, repas: R, repas_suivi: S, mens: M };
       const r = this.calculer(c, 0);
       const p = r.parts;
+      const mesureFaite = !!(p.mesure && p.mesure.faite);   // v71 (A) : pas de part mesure tant qu'il n'y a rien a mesurer
       /* v35 — les quatre semaines precedentes, pour voir la tendance */
       const evo = [-4, -3, -2, -1].map(k => this.calculer(c, k).score).concat([r.score]);
       const obj = (P.objectifs && (P.objectifs.liste || []).some(Boolean)) ? P.objectifs : null;
@@ -404,7 +413,7 @@ const Regularite = {
           <div class="tile"><div class="t-lbl">Score de régularité</div><div class="t-val readout ${this.niveau(r.score)}">${r.score == null ? "—" : r.score}<small>/100</small></div><div class="t-sub">remis à zéro chaque lundi</div></div>
           ${p.seances ? `<div class="tile"><div class="t-lbl">Training</div><div class="t-val readout${p.seances.faites >= p.seances.cible ? " pos" : ""}">${p.seances.faites}<small>/ ${p.seances.cible}</small></div><div class="t-sub">${esc(trad("séances notées"))}</div></div>` : ""}
           ${p.repas ? `<div class="tile"><div class="t-lbl">Nutrition</div><div class="t-val readout${p.repas.ratio >= 0.9 ? " pos" : ""}">${fmt(p.repas.coches)}<small>/ ${fmt(p.repas.prevus)}</small></div><div class="t-sub">${esc(trad("repas respectés"))}</div></div>` : ""}
-          <div class="tile"><div class="t-lbl">Mesure de la semaine</div><div class="t-val readout ${p.mesure.faite ? "pos" : ""}">${p.mesure.faite ? "✓" : "—"}</div><div class="t-sub">${p.mesure.faite ? "c'est fait" : esc(trad("dans Ma progression"))}</div></div>
+          <div class="tile"><div class="t-lbl">Mesure de la semaine</div><div class="t-val readout ${mesureFaite ? "pos" : ""}">${mesureFaite ? "✓" : "—"}</div><div class="t-sub">${mesureFaite ? "c'est fait" : esc(trad("dans Ma progression"))}</div></div>
         </div>
         <div class="reg-evo" aria-label="${esc(trad("Régularité des cinq dernières semaines"))}">${evo.map((v, i) => `<div class="reg-evo-col${i === evo.length - 1 ? " ici" : ""}"><div class="reg-evo-barre"><i style="height:${v == null ? 0 : Math.max(4, v)}%"></i></div><span class="reg-evo-val ${this.niveau(v)}">${v == null ? "—" : v}</span><span class="reg-evo-lbl">${i === evo.length - 1 ? esc(trad("en cours")) : "S−" + (evo.length - 1 - i)}</span></div>`).join("")}</div>
         <p class="note" style="margin:12px 0 0">${esc(trad("Un indicateur de motivation, pas une mesure médicale : il compte ce que tu fais — séances, repas, mesure — pas ce que dit la balance."))}</p>
