@@ -879,7 +879,7 @@ const outilDecouverte = {
 
   rendre(zone, I, C){
     const T = DECOUVERTE, p = Auth.profil || {};
-    if (Store.nonLus.has(I) || Store.nonLus.has(C)){ pageHorsLigne(zone); return; }   // v71 (F) : « Pas de connexion » + Reessayer (avant : charge_rate sans bouton)
+    if (Store.nonLus.has(I)){ pageHorsLigne(zone); return; }   // v71 (F) : « Pas de connexion » + Reessayer (avant : charge_rate sans bouton) ; challenge illisible seul : l'accueil s'affiche, sans carte (comme avant)
     const fait = Decouverte.questionnaireFait(I), form = !fait || this._form;
     /* v52 : questionnaire valide et pas encore de choix (ou page demandee par son adresse) : la proposition de bilan */
     const bilan = !form && (this._bilan || (!Decouverte.bilanPropose(I) && !this._choixFait));

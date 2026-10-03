@@ -1009,20 +1009,23 @@ const detail = (C, V) => JSON.stringify(C ? { sig: C.sig, n: C.n, enfants: C.enf
       const k = 23, ID = PID(k);
       const db = base({ comptes: [compte(k, [["intake", AVEC_CHOIX(k)], ["calc_perso", CP]])] }); db.lectureKo = ["mens"];
       const { page } = await contexte(b, quiP(k), db);
-      await page.goto(URL0 + "#/mensurations"); await pret(page, "#add"); await attendre(page, 600);
-      await page.fill("#e-poids", "70"); await page.click("#add"); await attendre(page, 1500);
-      await page.click("details:has(#pstart) > summary"); await page.fill("#pstart", "72"); await page.press("#pstart", "Tab"); await attendre(page, 2000);
+      /* v71 (F) : mens illisible → Ma progression affiche « Pas de connexion » + Réessayer, sans formulaire (avant : le formulaire
+         s'affichait et l'écriture était refusée) ; rien n'est écrit, aucune carte, rien en attente, aucune lecture intake+challenge */
+      await page.goto(URL0 + "#/mensurations"); await page.waitForSelector("#page-hors-ligne", { timeout: 10000 }); await attendre(page, 800);
+      const h1 = { saisie: !!(await page.$("#add, #e-poids, #pstart")), texte: await page.$eval("#page-hors-ligne", x => x.textContent).catch(() => "") };
       const n1 = await nbCartes(page), m1 = await memoire(page, ID);
-      ok("mens illisible (500) : « Enregistrer la semaine » puis « Poids de départ » refusés (rien écrit en base) : aucune carte, rien en attente, aucune lecture intake+challenge",
-        n1.poses === 0 && ecr(db, "mens", ID).length === 0 && (m1 === null || egal(m1.attente, [])) && lecturesInv(db).length === 0, JSON.stringify([n1, m1]) + " · " + resume(db));
+      ok("mens illisible (500) : « Pas de connexion » + Réessayer à la place de Ma progression (ni « Enregistrer la semaine » ni « Poids de départ » : rien écrit en base) : aucune carte, rien en attente, aucune lecture intake+challenge",
+        !h1.saisie && /Pas de connexion/.test(h1.texte) && n1.poses === 0 && ecr(db, "mens", ID).length === 0 && (m1 === null || egal(m1.attente, [])) && lecturesInv(db).length === 0, JSON.stringify([h1, n1, m1]) + " · " + resume(db));
       const k2 = 24, ID2 = PID(k2);
       const db2 = base({ comptes: [compte(k2, [["intake", AVEC_CHOIX(k2)], ["calc_perso", CP], ["mens", MENS_DEPART], ["formation", FO({ coches: {}, ouvert: "" })]])] }); db2.lectureKo = ["formation"];
       const { page: p2 } = await contexte(b, quiP(k2), db2);
-      await p2.goto(URL0 + "#/formation"); await pret(p2, "#fo-depart"); await attendre(p2, 800);
-      await p2.click('[data-depart="video"]'); await attendre(p2, 2200);
+      /* v71 (F) : formation illisible → « Pas de connexion » + Réessayer, sans carte « Commence ici » (avant : la carte s'affichait
+         et l'écriture de la vidéo était refusée) ; rien écrit, aucune carte, rien en attente */
+      await p2.goto(URL0 + "#/formation"); await p2.waitForSelector("#fo-vue #page-hors-ligne", { timeout: 10000 }); await attendre(p2, 800);
+      const h2 = { depart: !!(await p2.$("#fo-depart, [data-depart]")), texte: await p2.$eval("#fo-vue #page-hors-ligne", x => x.textContent).catch(() => "") };
       const n2 = await nbCartes(p2), m2 = await memoire(p2, ID2), fini = await p2.evaluate(() => { const d = document.getElementById("fo-depart"); return !!d && d.classList.contains("fo-depart-fini"); });
-      ok("formation illisible (500) : la vidéo de bienvenue lancée, son écriture refusée : l'action n'est pas cochée (pas de « Départ lancé »), aucune carte, rien en attente, rien écrit",
-        !fini && n2.poses === 0 && ecr(db2, "formation", ID2).length === 0 && (m2 === null || egal(m2.attente, [])) && lecturesInv(db2).length === 0, JSON.stringify([fini, n2, m2]) + " · " + resume(db2));
+      ok("formation illisible (500) : « Pas de connexion » + Réessayer à la place de la Speed Formation (pas de carte « Commence ici », pas de vidéo à lancer : rien écrit, pas de « Départ lancé »), aucune carte, rien en attente",
+        !h2.depart && /Pas de connexion/.test(h2.texte) && !fini && n2.poses === 0 && ecr(db2, "formation", ID2).length === 0 && (m2 === null || egal(m2.attente, [])) && lecturesInv(db2).length === 0, JSON.stringify([h2, fini, n2, m2]) + " · " + resume(db2));
       /* calc_perso illisible (500) : « Enregistrer mes chiffres » est refusé (rien n'est écrit) : rien n'est déclenché */
       const k3 = 33, ID3 = PID(k3);
       const db3 = base({ comptes: [compte(k3, [["intake", AVEC_CHOIX(k3, CHIFFRES)]])] }); db3.lectureKo = ["calc_perso"];
