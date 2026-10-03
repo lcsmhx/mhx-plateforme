@@ -359,6 +359,27 @@ function signalerIllisible(outil, e){
   const tete = vue.querySelector(".masthead");
   if (tete) tete.after(d); else vue.prepend(d);
 }
+/* v71 (F) : la page n'a pas pu lire ses donnees (reseau, 5xx) : « Pas de connexion » + Reessayer, a la place d'un etat
+   vide faux (« pas encore de programme »…). zone : l'element a remplacer ; zone null (Ma progression, sans zone) : les
+   panneaux de la page sont retires et le bloc est pose sous l'en-tete — l'appelant verifie d'abord que SA page est encore
+   affichee. L'id n'est pas page-illisible : Retour.relire doit pouvoir redessiner la page au retour du reseau. */
+function flagHorsLigne(){
+  const t = Store.idConsulte ? "Pas de connexion : les données de ce client n'ont pas pu être chargées." : trad("Pas de connexion : tes données n'ont pas pu être chargées.");
+  return `<div class="flag grave flag-hors-ligne" id="page-hors-ligne" role="alert"><span>${esc(t)}</span><button type="button" class="btn petit" data-reessayer data-lecture-ok>${esc(trad("Réessayer"))}</button></div>`;
+}
+function pageHorsLigne(zone){
+  if (zone){ zone.innerHTML = flagHorsLigne(); return; }
+  const vue = $("vue"); if (!vue || $("page-hors-ligne")) return;
+  $$("#vue section.panel").forEach(s => s.remove());
+  const d = document.createElement("div"); d.innerHTML = flagHorsLigne();
+  const tete = vue.querySelector(".masthead"); if (tete) tete.after(d.firstElementChild); else vue.prepend(d.firstElementChild);
+}
+/* « Reessayer » : la page est relue (sans retour en haut, sans compter une page vue de plus : comme Retour.relire) */
+document.addEventListener("click", e => {
+  const b = e.target && e.target.closest ? e.target.closest("[data-reessayer]") : null;
+  if (!b || !$("vue") || !$("vue").contains(b)) return;
+  afficher(courant, true, true);
+});
 
 /* v64 : sansCompte = page reconstruite sur place apres l'accord sante (deja comptee a son ouverture) */
 async function afficher(id, silencieux, sansCompte){

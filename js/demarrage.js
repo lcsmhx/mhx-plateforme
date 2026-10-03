@@ -210,12 +210,19 @@ const Retour = {
     /* v47 : on arrivait par un lien d'email et la session enregistree ne se renouvelle plus : le dire */
     if (lienEmail) setTimeout(() => { const z = $("co-err"); if (z){ z.className = "erreur"; z.textContent = trad(DECOUVERTE.inscription.lien_rate); } }, 60);
     else if (premierLien || emailChange) setTimeout(() => { const z = $("co-err"); if (z){ z.className = "erreur ok"; z.textContent = trad(DECOUVERTE.inscription[emailChange ? "email_change" : "premier_lien"]); } }, 60);
+    /* v71 (F) : renouvellement rate pour le reseau ou un 5xx (Auth.rafraichir garde alors la session) : on le dit, au lieu
+       d'un ecran de connexion muet ; un jeton refuse (session effacee) garde l'ecran d'avant */
+    else if (Auth.connecte()) setTimeout(() => { const z = $("co-err"); if (z){ z.className = "erreur"; z.textContent = trad("Service momentanément indisponible, réessaie dans une minute."); } }, 60);
     return;
   }
   /* v52 : adresse changee (dernier lien) : la session de l'appareil est renouvelee tout de suite, pour que le Profil,
      le changement de mot de passe et l'email du prospect utilisent la nouvelle adresse */
   if (emailChange){ try { await Auth.rafraichir(); } catch(e){} }
-  try { await Auth.chargerProfil(); } catch(e){}
+  let profilKo = null;
+  try { await Auth.chargerProfil(); } catch(e){ profilKo = e; }
+  /* v71 (F) : profil illisible pour le reseau ou un 5xx (pas un 401/403, comme avant) : page « Impossible de charger ton
+     compte » et rien de l'app (sans profil, un prospect verrait l'espace client sans cadenas, le coach « Bienvenue ! ») */
+  if (profilKo && Auth.indispo(profilKo)){ ecranIndisponible(); return; }
   /* v56 : une ouverture de l'app avec une session valide (connexion automatique comprise) est notee pour le coach, en
      arriere-plan : rien n'attend, rien ne s'affiche (Connexions) */
   try { Connexions.noter(); } catch(e){}
@@ -246,7 +253,8 @@ const Retour = {
   /* Premiere connexion d'un client : on l'envoie remplir son profil */
   if (!Auth.estCoach() && !Auth.estProspect()){
     const intake = await Store.lire("intake", {});
-    if (!intake || !intake.complet){
+    /* v71 (F) : questionnaire illisible (reseau, 5xx) : pas de « Bienvenue ! » faux ; l'accueil dira « Pas de connexion » */
+    if (!Store.nonLus.has(intake) && (!intake || !intake.complet)){
       premiereFois = true;
       /* v52 : replaceState et non location.hash : l'ecouteur hashchange est deja pose, un changement d'ancre relancait
          un second affichage du Profil pendant le premier (intake lu 3 fois, champs branches deux fois, encadre perdu) */

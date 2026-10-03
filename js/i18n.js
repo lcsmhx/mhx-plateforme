@@ -1014,4 +1014,13 @@ Object.assign(I18N.en, {
   "Chaque séance notée, et la charge à viser la fois suivante.": "Every workout logged, with the weight to aim for next time."   // v61 (brief V2, E2)
 });
 
+/* v71 (F) — réseau faible : lecture ratée, profil illisible, service indisponible */
+Object.assign(I18N.en, {
+  "Pas de connexion : tes données n'ont pas pu être chargées.": "No connection: your data couldn't be loaded.",
+  "Réessayer": "Try again",
+  "Impossible de charger ton compte pour le moment": "Your account couldn't be loaded right now",
+  "Vérifie ta connexion, puis réessaie.": "Check your connection, then try again.",
+  "Service momentanément indisponible, réessaie dans une minute.": "The service is temporarily unavailable, try again in a minute."
+});
+
 

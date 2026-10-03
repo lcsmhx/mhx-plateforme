@@ -21,6 +21,8 @@
 .flag.bon{border-left-color:var(--good)}
 .flag.grave b{color:var(--ink)}
 .flag.grave li{margin-bottom:5px;line-height:1.6}
+/* v71 (F) : « Pas de connexion » + Réessayer (texte et bouton sur une ligne, le bouton passe dessous sur téléphone) */
+.flag-hors-ligne{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;justify-content:space-between}
 
 /* --- outil : mensurations --- */
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}

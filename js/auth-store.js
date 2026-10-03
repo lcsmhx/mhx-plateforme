@@ -91,6 +91,12 @@ const Auth = {
     return true;
   },
 
+  /* v71 (F) : une requete sans reponse est abandonnee apres ce delai (jamais un envoi keepalive) ; l'abandon est une
+     erreur reseau, comme « TypeError: Failed to fetch » : pas de statut, session gardee, copie gardee, nouvel essai */
+  DELAI: 15000,
+  /* v71 (F) : « service indisponible » = reseau (fetch rate, delai depasse) ou reponse 5xx ; jamais un refus (401, 403, 4xx) */
+  indispo(e){ return !!(e && (e.reseau === true || e.name === "AbortError" || (typeof e.statut === "number" && e.statut >= 500 && e.statut < 600))); },
+
   async appel(chemin, options){
     options = options || {};
     const entetes = Object.assign({
@@ -101,14 +107,26 @@ const Auth = {
       entetes["Authorization"] = "Bearer " + this.session.access_token;
     }
     const corps = options.body ? JSON.stringify(options.body) : undefined;
-    const r = await fetch(CONFIG.supabase.url + chemin, {
-      method: options.method || "GET",
-      headers: entetes,
-      body: corps,
-      /* v48 : envoi qui doit survivre a la fermeture de l'onglet (limite du navigateur : 64 Ko) */
-      keepalive: !!(options.keepalive && (!corps || corps.length < 60000))
-    });
-    const texte = await r.text();
+    /* v48 : envoi qui doit survivre a la fermeture de l'onglet (limite du navigateur : 64 Ko) */
+    const vite = !!(options.keepalive && (!corps || corps.length < 60000));
+    const ctrl = (!vite && typeof AbortController === "function") ? new AbortController() : null;
+    const minuterie = ctrl ? setTimeout(() => ctrl.abort(), this.DELAI) : null;
+    let r, texte;
+    try {
+      r = await fetch(CONFIG.supabase.url + chemin, {
+        method: options.method || "GET",
+        headers: entetes,
+        body: corps,
+        keepalive: vite,
+        signal: ctrl ? ctrl.signal : undefined
+      });
+      texte = await r.text();
+    } catch(e){
+      /* delai depasse : meme traitement que « TypeError: Failed to fetch » (reseau) */
+      if (e && e.name === "AbortError"){ const err = new TypeError("Failed to fetch"); err.reseau = true; err.delai = true; throw err; }
+      if (e && typeof e === "object"){ try { e.reseau = true; } catch(x){} }
+      throw e;
+    } finally { if (minuterie) clearTimeout(minuterie); }
     let data = null;
     try { data = texte ? JSON.parse(texte) : null; } catch(e){ data = texte; }
     if (!r.ok){
@@ -689,14 +707,16 @@ const Store = {
      lecture : chaque outil continue de faire son propre lire() avec ses
      valeurs par defaut. */
   async lireTout(cles, opts){
-    const uid = this.cible(); const out = {}, dates = {};
+    const uid = this.cible(); const out = {}, dates = {}; let erreur = false;
     cles.forEach(k => { out[k] = null; });
     if (!uid) return (opts && opts.dates) ? { valeurs: out, dates } : out;
     try {
       const r = await Auth.appel("/rest/v1/donnees?user_id=eq." + uid + "&outil=in.(" + cles.map(encodeURIComponent).join(",") + ")&select=outil,contenu,maj_le");
       (r || []).forEach(l => { if (l && l.outil in out){ out[l.outil] = Forme.cle(l.outil, l.contenu); dates[l.outil] = l.maj_le || null; } });
-    } catch(e){}
-    return (opts && opts.dates) ? { valeurs: out, dates } : out;
+    } catch(e){ erreur = true; }   // v71 (F) : l'echec est expose (erreur : true), les valeurs restent les defauts
+    if (opts && opts.dates) return { valeurs: out, dates, erreur };
+    if (erreur) out.erreur = true;   // seulement en cas d'echec : aucune cle « donnees » ne s'appelle erreur
+    return out;
   },
 
   /* une operation commencee sur une fiche s'est terminee sur une autre : rien n'est ecrit, on le dit */

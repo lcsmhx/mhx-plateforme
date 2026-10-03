@@ -159,7 +159,9 @@ function portail(mode){
     } catch(e){
       const m = (e.message || "").toLowerCase();
       /* v47 : les messages de Supabase qui arrivent sur le parcours du funnel, en francais */
-      err(m.indexOf("not confirmed") > -1 ? trad(DECOUVERTE.inscription.non_confirme)
+      /* v71 (F) : service indisponible (5xx, coupure, delai) : une phrase claire, jamais « Erreur 540 » ni « Failed to fetch » */
+      err(Auth.indispo(e) ? trad("Service momentanément indisponible, réessaie dans une minute.")
+        : m.indexOf("not confirmed") > -1 ? trad(DECOUVERTE.inscription.non_confirme)
         : /email rate limit/.test(m) ? trad(DECOUVERTE.inscription.trop_emails_compte)   // v52 : limite horaire d'emails du projet (pas forcement des inscriptions)
         : /error sending|sending .*email|smtp/.test(m) ? trad(DECOUVERTE.inscription.envoi_rate, { p: CONFIG.marque.pseudo || "" })   // v52 : « Error sending recovery email »
         : /rate limit|security purposes|after \d+ seconds/.test(m) ? trad(DECOUVERTE.inscription.trop_demandes)
@@ -216,5 +218,24 @@ function ecranVerifieEmail(email){
       <div class="bascule"><button type="button" data-mode="connexion">${esc(trad(T.verif_retour))}</button></div>`;
   $$("[data-mode]", carte).forEach(b => b.addEventListener("click", () => portail(b.dataset.mode)));
   const h2 = $("co-verif"); if (h2) h2.focus();
+}
+
+/* v71 (F) — le profil du compte n'a pas pu etre lu (reseau, 5xx) : rien de l'app ne s'affiche (un prospect verrait
+   l'espace client sans cadenas, le coach « Bienvenue ! »). « Reessayer » et le retour du reseau rechargent la page
+   (demarrer n'est pas rappelable) ; la session reste rangee sur l'appareil. */
+function ecranIndisponible(){
+  try { if (UI._ouverte) UI.fermer(); } catch(e){}
+  document.body.innerHTML = `
+  <div class="portail"><div class="carte-co">
+      ${CONFIG.marque.logo ? `<img class="logo-img" src="${esc(CONFIG.marque.logo)}" alt="${esc(CONFIG.marque.nom)}">` : ""}
+      <div class="logo">${esc(CONFIG.marque.nom)}</div>
+      <h2 id="co-indispo" tabindex="-1">${esc(trad("Impossible de charger ton compte pour le moment"))}</h2>
+      <p class="co-sous">${esc(trad("Vérifie ta connexion, puis réessaie."))}</p>
+      <div class="actions"><button type="button" class="btn" id="co-reessayer">${esc(trad("Réessayer"))}</button></div>
+      ${CONFIG.marque.version ? `<p class="co-aide">v${esc(CONFIG.marque.version)}</p>` : ""}
+  </div></div>`;
+  $("co-reessayer").addEventListener("click", () => location.reload());
+  window.addEventListener("online", () => location.reload(), { once: true });
+  const h2 = $("co-indispo"); if (h2) h2.focus();
 }
 

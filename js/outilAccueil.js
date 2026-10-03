@@ -280,6 +280,8 @@ const outilAccueil = {
        si ses visites ne sont pas suivies (interrupteur suivi_visites_clients), pour le coach et pour une fiche consultée */
     Activite.page("accueil");
     const d = await Store.lireTout(["intake", "programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "checkins", "feedbacks"]);
+    /* v71 (F) : lecture ratee : « Pas de connexion » + Reessayer sous le « Bonjour », jamais « Ton coach prepare ton programme » */
+    if (d.erreur){ const tete = zone.querySelector(".masthead"); zone.innerHTML = (tete ? tete.outerHTML : "") + flagHorsLigne(); return; }
     const I = d.intake || {}, P = d.programme || {}, J = d.journal || { seances: [] }, R = d.repas || {}, S = d.repas_suivi || {}, M = d.mens || {}, OF = d.objectifs_faits || {}, CK = d.checkins || { liste: [] };
     const fbR = Feedback.recent(d.feedbacks);   // v38 : un feedback du coach de moins de 7 jours
     /* v53 (chantier 3) — feedback du dimanche (compte en test) : le rappel du dimanche en haut, « Ton coach a

@@ -305,6 +305,8 @@ const outilMensurations = {
       compo_affichee: "mg",
       mesures: []
     });
+    /* v71 (F) : lecture ratee : « Pas de connexion » + Reessayer a la place des panneaux (seulement si Ma progression est encore affichee) */
+    if (Store.nonLus.has(D)){ if ($("k-poids")) pageHorsLigne(null); return; }
     const sauver = () => Store.ecrire(self.cle, D);
     /* v67 (audit du 01/10, D2) : les courbes affichees (zones, composition) sont un choix d'affichage de CET appareil.
        Un clic sur une pastille ne reecrit plus tout « mens » : la page restee ouverte sur l'ordinateur effacait ainsi une

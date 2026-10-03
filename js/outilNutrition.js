@@ -713,11 +713,14 @@ const outilNutrition = {
     const R = this.migrer(await Store.lire(this.cle, this.vide()));
     const zone = $("nu-vue");
     if (!zone) return;
+    /* v71 (F) : lecture ratee (R passe par migrer : drapeau Store.charge) : « Pas de connexion », pas « pas encore valide tes repas » */
+    if (Store.charge[Store.cible() + "|" + self.cle] === false){ pageHorsLigne(zone); return; }
     const sauver = () => Store.ecrire(self.cle, R);
 
     /* ---------- cote client ---------- */
     if (!edition){
       const suivi = await Store.lire("repas_suivi", { date:"", mange:{}, courses:{}, joursCourses:{} });
+      if (Store.nonLus.has(suivi)){ pageHorsLigne(zone); return; }   // v71 (F)
       if (suivi.date !== aujourdhui()){ suivi.date = aujourdhui(); suivi.mange = {}; }
       if (!suivi.joursCourses) suivi.joursCourses = {};
       self.alignerCourses(R, suivi);   // v71 (E) : panier vide si la diete a change (en memoire, rien d'ecrit ici)

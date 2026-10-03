@@ -932,11 +932,13 @@ const outilProgramme = {
     if (edition){ try { intake = await Store.lire("intake", {}) || {}; } catch(e){} }
     const zone = $("prog-vue");
     if (!zone) return;
+    if (Store.nonLus.has(P)){ pageHorsLigne(zone); return; }   // v71 (F) : lecture ratee : « Pas de connexion », pas un programme vide
 
     const sauver = () => Store.ecrire(self.cle, P);
 
     if (!edition){
       const J = await Store.lire(Journal.cle, Journal.vide());
+      if (Store.nonLus.has(J)){ pageHorsLigne(zone); return; }   // v71 (F)
       if (!Array.isArray(J.seances)) J.seances = [];
       const dessiner = () => { zone.innerHTML = self.vueLecture(P, J); self.brancherFiches(zone); };
       dessiner();

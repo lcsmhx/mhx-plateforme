@@ -781,6 +781,8 @@ const outilFormation = {
     const D = this.migrer(await Store.lire(this.cle, this.vide()));
     const zone = $("fo-vue");
     if (!zone) return;
+    /* v71 (F) : lecture ratee (D passe par migrer : drapeau Store.charge) : « Pas de connexion » + Reessayer */
+    if (Store.charge[Store.cible() + "|" + this.cle] === false){ pageHorsLigne(zone); return; }
     const sauver = () => Store.ecrire(self.cle, D);
     /* v67 (audit du 01/10, D2) : la semaine et le jour affiches dans « Organise ta diète » sont un choix d'affichage de CET
        appareil : les changer ne reecrit plus tout « formation » (notes, objectifs, challenges et diete saisis entre-temps
@@ -811,9 +813,10 @@ const outilFormation = {
     let depart = null;
     if (self.pourProspect()){
       const cles = [outilCalculateur.cle_perso, "mens"], locales = outilDecouverte.saisiesLocales(cles);
-      const { valeurs: R, dates } = await Store.lireTout(cles, { dates: true });
-      Object.keys(locales).forEach(c => { const x = locales[c], m = dates[c]; if (x.t === null || !m || new Date(m).getTime() < new Date(x.t).getTime()) R[c] = Forme.cle(c, x.v); });
+      const { valeurs: R, dates, erreur } = await Store.lireTout(cles, { dates: true });
       if (!zone.isConnected) return;
+      if (erreur){ pageHorsLigne(zone); return; }   // v71 (F) : calcul et pesee illisibles : pas de « Commence ici » faux
+      Object.keys(locales).forEach(c => { const x = locales[c], m = dates[c]; if (x.t === null || !m || new Date(m).getTime() < new Date(x.t).getTime()) R[c] = Forme.cle(c, x.v); });
       depart = self.departEtat(D, R);
     }
 

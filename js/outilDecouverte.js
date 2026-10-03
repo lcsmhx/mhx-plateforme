@@ -842,7 +842,9 @@ const outilDecouverte = {
     this._reperes = null;
     if (Decouverte.questionnaireFait(I)){
       const cles = [outilCalculateur.cle_perso, "mens"], locales = this.saisiesLocales(cles);
-      const { valeurs: R, dates } = await Store.lireTout(cles, { dates: true });
+      const { valeurs: R, dates, erreur } = await Store.lireTout(cles, { dates: true });
+      if (!zone.isConnected) return;
+      if (erreur){ pageHorsLigne(zone); return; }   // v71 (F) : calcul et pesee illisibles : pas d'etape « a faire » fausse
       Object.keys(locales).forEach(c => { const x = locales[c], m = dates[c]; if (x.t === null || !m || new Date(m).getTime() < new Date(x.t).getTime()) R[c] = Forme.cle(c, x.v); });
       this._reperes = R;
     }
@@ -876,7 +878,7 @@ const outilDecouverte = {
 
   rendre(zone, I, C){
     const T = DECOUVERTE, p = Auth.profil || {};
-    if (Store.nonLus.has(I)){ zone.innerHTML = `<section class="panel"><div class="empty">${esc(trad(T.charge_rate))}</div></section>`; return; }
+    if (Store.nonLus.has(I) || Store.nonLus.has(C)){ pageHorsLigne(zone); return; }   // v71 (F) : « Pas de connexion » + Reessayer (avant : charge_rate sans bouton)
     const fait = Decouverte.questionnaireFait(I), form = !fait || this._form;
     /* v52 : questionnaire valide et pas encore de choix (ou page demandee par son adresse) : la proposition de bilan */
     const bilan = !form && (this._bilan || (!Decouverte.bilanPropose(I) && !this._choixFait));

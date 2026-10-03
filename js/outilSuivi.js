@@ -1053,7 +1053,13 @@ const outilSuivi = {
   html(){ return `<div id="suivi-fb-haut"></div><div id="suivi-checkin"></div><div id="suivi-fb-bas"></div><div id="suivi-reg"><section class="panel"><div class="empty">Chargement…</div></section></div><div id="suivi-bilan"></div>`; },
 
   async init(){
-    const { valeurs: d, dates } = await Store.lireTout(["programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "intake", "checkins", "feedbacks"], { dates: true });
+    const { valeurs: d, dates, erreur } = await Store.lireTout(["programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "intake", "checkins", "feedbacks"], { dates: true });
+    /* v71 (F) : lecture ratee : « Pas de connexion » + Reessayer a la place des panneaux (si la page est encore affichee) */
+    if (erreur){
+      const zr = $("suivi-reg"); if (!zr) return;
+      ["suivi-fb-haut", "suivi-checkin", "suivi-fb-bas", "suivi-bilan"].forEach(id => { const z = $(id); if (z) z.innerHTML = ""; });
+      pageHorsLigne(zr); return;
+    }
     /* v68 (3e tour) : les objectifs du mois se cochent ici (Regularite.monterClient reecrit « objectifs_faits » a chaque
        case) : une case cochee gardee sur l'appareil (envoi rate, hors ligne) plus recente que la base passe devant, meme
        regle que Store.lire (Store.copieAServir) ; sinon la case suivante, cochee avant le nouvel essai automatique,
