@@ -126,6 +126,19 @@ const outilProfil = {
   /* v44 : un prospect n'a que son compte ici (le questionnaire complet arrive avec l'accompagnement) */
   get accroche(){ return (Auth.estProspect() && !Store.idConsulte) ? "Ton compte et tes réglages." : "Plus tes réponses sont précises, plus ton programme sera adapté. Ne cherche pas la bonne réponse : cherche la vraie. Compte 10 à 15 minutes."; },
 
+  /* v71 (C) : en consultation (Store.idConsulte), chaque reponse est rendue en texte, pas en champ desactive :
+     le coach lit une reponse longue en entier. Vide, ou valeur piegee (objet, liste) : « — ». esc() obligatoire ;
+     data-q garde (les suites s'en servent), data-notr : la reponse du client n'est jamais traduite. */
+  lecture(q, v){
+    if (v == null || typeof v === "object") return "—";
+    let s = String(v).trim();
+    if (q.type === "multi") s = s.split("|").filter(Boolean).join(", ");
+    return s || "—";
+  },
+  lectureHTML(q, v){
+    return `<p class="checkin-rep q-lecture" id="q-${q.id}" data-q="${q.id}" data-lecture="1"><span data-notr>${esc(this.lecture(q, v))}</span></p>`;
+  },
+
   champ(q, valeur){
     const v = valeur == null ? "" : valeur;
     if (q.type === "echelle"){
@@ -178,17 +191,18 @@ const outilProfil = {
       corps += `<div${large}>
         <label for="q-${q.id}">${esc(q.label)}${q.requis ? " *" : ""}</label>
         ${q.aide ? `<p class="note" style="margin:-2px 0 8px">${esc(q.aide)}</p>` : ""}
-        ${this.champ(q, D[q.id])}</div>`;
+        ${Store.idConsulte ? this.lectureHTML(q, D[q.id]) : this.champ(q, D[q.id])}</div>`;
     });
     if (ouverte) corps += `</div></section>`;
-    return corps + `
+    /* v71 (C) : en consultation, pas de bouton « Enregistrer mon profil » (rien n'est modifiable) */
+    return corps + (Store.idConsulte ? "" : `
     <section class="panel">
       <div class="actions">
         <button class="btn" id="p-save">Enregistrer mon profil</button>
         <span class="msg" id="p-msg"></span>
       </div>
       <p class="note" style="margin-top:10px">Les questions marquées d'une étoile sont indispensables. Tu peux revenir modifier tes réponses à tout moment.</p>
-    </section>` + this.compteHTML();
+    </section>`) + this.compteHTML();
   },
 
   /* Le compte n'appartient qu'a son proprietaire : quand le coach consulte la
@@ -234,6 +248,7 @@ const outilProfil = {
   },
   poser(q, v){
     const el = $("q-" + q.id); if (!el || v == null) return;
+    if (el.dataset.lecture){ const s = el.querySelector("[data-notr]"); if (s) s.textContent = this.lecture(q, v); return; }   // v71 (C) : texte de la consultation
     if (q.type === "multi"){
       const choisis = String(v).split("|");
       $$("input", el).forEach(c => { c.checked = choisis.indexOf(c.value) > -1; });
@@ -263,6 +278,7 @@ const outilProfil = {
 
     /* si le cache etait vide au moment du rendu, on re-remplit les champs */
     QUESTIONS.forEach(q => { if (q.id) this.poser(q, D[q.id]); });
+    if (Store.idConsulte) return;   // v71 (C) : consultation : rien a brancher (ni champs, ni #p-save, ni compte)
 
     const enregistrer = () => {
       QUESTIONS.forEach(q => { if (!q.id) return; const el = $("q-" + q.id); if (el) D[q.id] = this.valeur(q); });

@@ -377,7 +377,7 @@ const outilMensurations = {
       D.zones.forEach((z,i) => {
         const rang = D.affichees.indexOf(i), actif = rang > -1;
         const b = document.createElement("button");
-        b.type = "button"; b.className = "chip"; b.setAttribute("aria-pressed", String(actif));
+        b.type = "button"; b.className = "chip"; b.setAttribute("aria-pressed", String(actif)); b.setAttribute("data-lecture-ok", "");   // v71 (C) : affichage seul (v67 D2), cliquable en consultation
         b.innerHTML = `<span class="dot"${actif ? ` style="background:${self.couleurs[rang]}"` : ""}></span>${esc(z)}`;
         b.addEventListener("click", () => {
           const k = D.affichees.indexOf(i);
@@ -478,7 +478,7 @@ const outilMensurations = {
       l.forEach(c => {
         const b = document.createElement("button");
         const actif = c.id === D.compo_affichee;
-        b.type = "button"; b.className = "chip"; b.setAttribute("aria-pressed", String(actif));
+        b.type = "button"; b.className = "chip"; b.setAttribute("aria-pressed", String(actif)); b.setAttribute("data-lecture-ok", "");   // v71 (C) : affichage seul (v67 D2), cliquable en consultation
         b.innerHTML = `<span class="dot"${actif ? ` style="background:var(--s2)"` : ""}></span>${esc(c.nom)}`;
         b.addEventListener("click", () => { D.compo_affichee = c.id; garderAffichage(); dessinerCompo(); });   // v67 (D2) : affichage seul
         ch.appendChild(b);

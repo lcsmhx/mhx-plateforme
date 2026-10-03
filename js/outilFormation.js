@@ -482,7 +482,7 @@ const outilFormation = {
   video(id, legende, ancre){   // v60 : ancre = id de la boite (la video de bienvenue du prospect, « Commence ici »)
     if (!idVideo(id)) return "";
     return `<div class="video-boite"${ancre ? ` id="${esc(ancre)}"` : ""}>
-      <button type="button" class="video-vignette" data-yt="${esc(id)}" aria-label="Lire la vidéo">
+      <button type="button" class="video-vignette" data-lecture-ok data-yt="${esc(id)}" aria-label="Lire la vidéo">
         <img src="https://img.youtube.com/vi/${esc(id)}/hqdefault.jpg" alt="" loading="lazy">
         <span class="jouer">▶ ${esc(legende || "Regarder la vidéo")}</span>
       </button>
@@ -580,7 +580,7 @@ const outilFormation = {
       const pct = cm.tot ? Math.round(cm.faits / cm.tot * 100) : 0;
       const titre = String(m.titre || "").replace(/^Module \d+\s*[—-]\s*/, "");
       h += `<section class="panel fo-mod${ouvert ? " ouvert" : ""}${cm.tot && cm.faits === cm.tot ? " fini" : ""}">
-        <button type="button" class="fo-tete" data-mod="${esc(m.id)}" aria-expanded="${ouvert}">
+        <button type="button" class="fo-tete" data-lecture-ok data-mod="${esc(m.id)}" aria-expanded="${ouvert}">
           <span class="fo-num" aria-hidden="true">${String(idx).padStart(2, "0")}</span>
           <span class="fo-corps-tete"><span class="fo-nom">${esc(titre)}</span><span class="fo-obj-court">${esc(typoFr(m.objectif || ""))}</span>
             ${cm.tot ? `<span class="fo-jauge fo-jauge-mod"><span class="fo-jauge-in" style="width:${pct}%"></span></span>` : ""}</span>
@@ -599,7 +599,7 @@ const outilFormation = {
           const L = LECONS[cle]; if (!L) return;
           const on = D.lecon === cle;
           h += `<div class="fo-lecon">
-            <button type="button" class="fo-lecon-tete" data-lecon="${esc(cle)}" aria-expanded="${on}">
+            <button type="button" class="fo-lecon-tete" data-lecture-ok data-lecon="${esc(cle)}" aria-expanded="${on}">
               <span>📄 ${esc(L.titre)}</span><span class="meta">${esc(L.duree || "")}</span>
             </button>
             ${on ? `<div class="fo-lecon-corps">${L.html}</div>` : ""}
@@ -668,7 +668,7 @@ const outilFormation = {
       <div class="fo-barre">
         <select id="fo-sem" aria-label="Semaine"${off}>${sem}</select>
         <div class="tabs" style="margin:0">${JOURS_SEM.map((n, i) =>
-          `<button type="button" class="tab" data-fj="${i}" aria-pressed="${D.jour === i}"${off}>${n.slice(0,3)}</button>`).join("")}</div>
+          `<button type="button" class="tab" data-lecture-ok data-fj="${i}" aria-pressed="${D.jour === i}"${off}>${n.slice(0,3)}</button>`).join("")}</div>
       </div>
       <div class="fo-scroll"><table class="fo-tab fo-diete">
         <tr><th>Repas</th><th>Fait</th><th>Prot. (g)</th><th>Gluc. (g)</th><th>Lip. (g)</th><th>Calories</th></tr>
@@ -754,7 +754,7 @@ const outilFormation = {
     FORMATION.challenges.forEach(c => {
       const on = D.challenge === c.id;
       h += `<div class="fo-chal${on ? " fo-chal-on" : ""}">
-        <button type="button" class="fo-chal-tete" data-chal="${esc(c.id)}" aria-pressed="${on}">
+        <button type="button" class="fo-chal-tete" data-lecture-ok data-chal="${esc(c.id)}" aria-pressed="${on}">
           <span>${esc(c.titre)}</span><span class="pastille">${on ? "Choisi" : "Choisir"}</span>
         </button>
         <div class="fo-chal-corps">${c.axes.map(a => `<div class="fo-axe">

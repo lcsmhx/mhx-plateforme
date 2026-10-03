@@ -270,7 +270,7 @@ const MOD = m => `#fo-vue .fo-tete[data-mod="${m}"]`, LEC = l => `#fo-vue [data-
     await page.click(`[data-ouvrir="${THOMAS}"]`); await page.waitForSelector("#vue .bandeau", { timeout: 8000 }); await attendre(page, 800);
     await aller(page, "#/formation", 1800); await page.waitForSelector(MOD("m2"), { timeout: 8000 }); await attendre(page, 600);
     const c0 = await foAff(page), consulte = await page.evaluate(() => Store.idConsulte);
-    /* en consultation, la souris est coupée sur les boutons (.lecture-seule .panel button : pointer-events none) : au clavier */
+    /* au clavier (focus + Entrée) : marche avec ou sans souris ; depuis la v71 (C) ces boutons d'affichage portent data-lecture-ok et restent cliquables en consultation */
     await clavier(page, MOD("m3")); await clavier(page, MOD("m1")); await clavier(page, LEC("mindset"), 1800);
     const c1 = await foAff(page), L = await local(page, cleAff(THOMAS));
     ok("coach dans la fiche de Thomas, #/formation : le module 02 de son document ouvert ; ouvrir (au clavier) le 03, puis le 01 et sa leçon : l'affichage suit",

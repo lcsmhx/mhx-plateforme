@@ -60,7 +60,7 @@ const outilJournal = {
         <div class="seance-c-tete" style="margin-bottom:8px"><h3 style="margin:0;flex:1">${esc(x.nom || T("Séance"))}</h3><span class="pastille">${esc(dateFr(x.date))}</span></div>
         ${exos(x).length ? `<ul class="ingr fiche-l">${exos(x).map(e => `<li><span>${esc(e.nom)}</span><b>${esc(Journal.resumeSeries(e) || "—")}</b></li>`).join("")}</ul>` : ""}
       </div>`).join("")}
-      ${l.length > vus.length ? `<div class="actions"><button type="button" class="btn ghost" id="jr-plus">${esc(T("Afficher les séances plus anciennes"))}</button></div>` : ""}
+      ${l.length > vus.length ? `<div class="actions"><button type="button" class="btn ghost" id="jr-plus" data-lecture-ok>${esc(T("Afficher les séances plus anciennes"))}</button></div>` : ""}
     </section>`;
   },
 

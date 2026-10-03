@@ -280,7 +280,9 @@ footer a{color:var(--accent)}
 .bandeau strong{font-size:15px}
 .bandeau .sortir{margin-left:auto;background:var(--accent);color:var(--accent-ink);border:0;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;min-height:36px}
 .lecture-seule .panel input,.lecture-seule .panel select,.lecture-seule .panel textarea,
-.lecture-seule .panel button,.lecture-seule .panel a.btn{pointer-events:none;opacity:.7}
+.lecture-seule .panel button:not([data-lecture-ok]),.lecture-seule .panel a.btn{pointer-events:none;opacity:.7}
+/* v71 (C) : data-lecture-ok = commande d'affichage pur (chips des courbes, « Afficher les séances plus anciennes »,
+   modules et leçons de la formation) : elle n'écrit rien, elle reste vivante en consultation */
 
 /* --- programmes --- */
 .seance{background:var(--sunken);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:16px}
@@ -380,6 +382,8 @@ a.tb-tuile:hover{border-color:var(--accent-line)}
 .checkin-echelles .pastille b{color:var(--ink);margin-left:2px}
 .checkin-rep{margin:8px 0;font-size:14px;line-height:1.55}
 .checkin-rep .lbl{display:block;font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin-bottom:2px}
+/* v71 (C) : reponse du questionnaire rendue en texte dans la fiche d'un client (consultation) */
+.q-lecture{margin:0;white-space:pre-line;overflow-wrap:anywhere}
 /* v38 — feedback du coach, notes privees */
 .fb-entree{padding:12px 14px;border:1px solid var(--accent-line);border-radius:var(--r);background:var(--sunken)}
 .fb-tete{margin-bottom:4px}

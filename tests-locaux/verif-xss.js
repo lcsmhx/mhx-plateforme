@@ -26,6 +26,9 @@ function donneesPiegees() {
   ck.push({ semaine: "2026-09-21", fin: "2026-09-27", envoye_le: PIEGE, reponses: { energie: 3, motivation: 3, sommeil: 3, stress: 3 } });
   const carte = get(F.IDS.c1, "repas").contenu.jours[0].repas[0];
   carte.temps_min = PIEGE; carte.inconnus = PIEGE; carte.ingredients[0].grammes = '">' + PIEGE;
+  /* v71 (C) : questionnaire rendu en texte dans la fiche (« Son questionnaire ») : réponses piégées (texte long, choix multiple) */
+  const it = get(F.IDS.c1, "intake").contenu;
+  it.metier = PIEGE; it.objectif_phrase = '">' + PIEGE; it.allergenes = "Gluten|" + PIEGE; it.objectif = PIEGE;
   /* Sarah : mesures (numéro de semaine, avec composition) et diète dont un jour a « repas » en objet */
   const m = get(F.IDS.c2, "mens").contenu.mesures;
   m[m.length - 1].sem = PIEGE; m[m.length - 1].compo = { mg: 30.1, mm: 45.2 };
@@ -84,7 +87,7 @@ const compter = (page) => page.evaluate(() => ({ exec: window.__xss || 0, balise
   const lignes = donneesPiegees();
   const coach = { id: F.IDS.coach, email: "c@e.fr", session: F.session(F.IDS.coach, "c@e.fr") };
   const pages = [
-    [F.IDS.c1, ["accueil", "bilan", "suivi", "nutrition"]],
+    [F.IDS.c1, ["accueil", "bilan", "suivi", "nutrition", "profil"]],   // v71 (C) : « Son questionnaire » en texte (après nutrition, qui lit intake dans le cache)
     [F.IDS.c2, ["accueil", "suivi", "mensurations", "bilan"]],
     [F.IDS.c3, ["accueil", "programme", "entrainement", "suivi", "journal"]]   // v53 : + « Mon journal » / « Ses séances » (journal piégé)
   ];
