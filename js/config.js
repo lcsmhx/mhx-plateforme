@@ -56,6 +56,10 @@ const CONFIG = {
        officiels name et email) : il n'a rien a retaper et sa reservation porte l'email de son compte.
        Allume le 26/09/2026 (decision de Lucas) ; la confidentialite mentionne Calendly et le pre-remplissage. */
     calendly_prerempli: true,
+    /* v72 (C) — le paramètre Calendly qui reçoit le numéro du prospect (format international, +33612345678), avec le prénom,
+       le nom et l'email : "a1" = la réponse à la 1re question de l'événement (a2 la 2e…) ; "location" = le champ du lieu
+       quand l'événement est un appel au numéro du prospect ; "" = jamais de numéro. */
+    calendly_tel: "a1",
     /* v52 — gratuit pour toujours : le calculateur (sa cle a lui, calc_perso), Ma progression (sans les
        photos) et la Speed Formation sont ouverts au prospect, sans limite de duree */
     gratuit_ouverts: ["accueil", "decouverte", "profil", "calculateur", "mensurations", "formation"],

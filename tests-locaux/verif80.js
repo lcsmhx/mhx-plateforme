@@ -80,7 +80,10 @@ function base(extra){
   profils.push({ id: NOAH.id, prenom: "Noah", nom: "Petit", role: "client", statut: "prospect", cree_le: avant(2 * J) });
   profils.push({ id: MAEL.id, prenom: "Maël", nom: "Roux", role: "client", statut: "prospect", cree_le: avant(1 * J) });
   const donnees = clone(F.donnees).concat([
-    { user_id: NOAH.id, outil: "contact", contenu: { telephone: TEL_NOAH, ref: "insta", inscrit_le: avant(2 * J) }, maj_le: avant(2 * J) }
+    { user_id: NOAH.id, outil: "contact", contenu: { telephone: TEL_NOAH, ref: "insta", inscrit_le: avant(2 * J) }, maj_le: avant(2 * J) },
+    /* v72 (C) : Noah a répondu à ses 3 questions et choisi « Plus tard » : son accueil montre la carte de l'accompagnement */
+    { user_id: NOAH.id, outil: "intake", contenu: { court_debut: avant(2 * J), court_le: avant(2 * J), probleme: "Perdre du ventre", obstacle: "Le manque de temps",
+      projection: "Avoir plus d'énergie", bilan_propose: { choix: "plus_tard", le: avant(2 * J) } }, maj_le: avant(2 * J) }
   ], extra || []);
   return { profils, donnees, ecritures: [], lectures: [], chemins: [], inscriptions: [], emails: {}, meta: {}, inscription: {}, ko: {}, perdre: {} };
 }
@@ -571,6 +574,40 @@ const champTel = (page, id) => page.evaluate(id => {
     await page.goto(URL0); await page.waitForSelector("#c-go"); await attendre(page, 300);
     const v = await portailVu(page);
     ok("B : inscription fermée, appareil neuf : la connexion, sans lien vers la création de compte", v.h2 === CONN.h2 && JSON.stringify(v.liens.map(x => x.mode)) === JSON.stringify(["oubli"]), JSON.stringify(v));
+  });
+
+  /* =================== C. Calendly déjà rempli =================== */
+  const CAL = "https://calendly.com/mhx-coaching/ton-plan-d-action-offert-15-min-avec-lucas";
+  const NOAH_CAL = "&name=Noah%20Petit&first_name=Noah&last_name=Petit&email=noah%40exemple.fr";
+  await bloc("C. Calendly", async () => {
+    const db = base();
+    const { page } = await contexte(b, db, { qui: NOAH });
+    await page.goto(URL0 + "#/programme"); await pret(page); await page.waitForSelector(".verrou a[target=_blank]");
+    const v = await page.evaluate(() => Array.from(document.querySelectorAll(".verrou a[target=_blank]")).map(a => a.getAttribute("href")));
+    ok("C : page verrouillée (Mon programme) d'un prospect : le lien de réservation porte name (prénom + nom), email et a1 = son numéro encodé (%2B33…), après l'origine",
+      v.length === 1 && v[0] === CAL + "?utm_source=app&utm_medium=bouton&utm_content=verrou_programme" + NOAH_CAL + "&a1=%2B33639980002", JSON.stringify(v));
+    const u = await page.evaluate(() => {
+      const M = CONFIG.marque, garde = { calendly: M.calendly, tel: M.calendly_tel }, out = {};
+      const essai = (k, cal, tel) => { M.calendly = cal; M.calendly_tel = tel; out[k] = lienCalendly("accueil_haut"); };
+      essai("deja", garde.calendly + "?name=Deja%20La&a1=note&month=2026-10#haut", "a1");
+      essai("location", garde.calendly, "location");
+      essai("vide", garde.calendly, "");
+      essai("bidon", garde.calendly, "javascript");
+      essai("sansLien", "", "a1");
+      const c0 = Store.cache.contact; Store.cache.contact = { ref: "insta" }; essai("sansNumero", garde.calendly, "a1"); Store.cache.contact = { telephone: "06 12" }; essai("numeroFaux", garde.calendly, "a1"); Store.cache.contact = c0;
+      M.calendly = garde.calendly; M.calendly_tel = garde.tel;
+      return out;
+    });
+    const PRE = CAL + "?utm_source=app&utm_medium=bouton&utm_content=accueil_haut";
+    ok("C : rien n'écrase un paramètre déjà dans le lien de la config (name et a1 gardés, sans doublon ; les autres ajoutés ; l'ancre gardée) ; paramètre « location » possible ; réglage vide ou inconnu : pas de numéro ; pas de numéro enregistré (ou illisible) : le lien d'avant ; lien vide : aucun lien",
+      u.deja === CAL + "?name=Deja%20La&a1=note&month=2026-10&utm_source=app&utm_medium=bouton&utm_content=accueil_haut&first_name=Noah&last_name=Petit&email=noah%40exemple.fr#haut"
+        && u.location === PRE + NOAH_CAL + "&location=%2B33639980002" && u.vide === PRE + NOAH_CAL && u.bidon === PRE + NOAH_CAL && u.sansLien === ""
+        && u.sansNumero === PRE + NOAH_CAL && u.numeroFaux === PRE + NOAH_CAL,
+      JSON.stringify(u));
+    await page.evaluate(() => { location.hash = "#/accueil"; }); await pret(page); await page.waitForSelector("#dc-accomp [data-dc-cal]");
+    const a = await page.evaluate(() => Array.from(document.querySelectorAll("#vue [data-dc-cal]")).map(x => x.getAttribute("href")));
+    ok("C : accueil du prospect : chaque bouton de réservation porte aussi le numéro (a1), en dernier", a.length >= 1 && a.every(h => h.startsWith(CAL + "?utm_source=app&utm_medium=bouton&utm_content=") && h.endsWith(NOAH_CAL + "&a1=%2B33639980002")), JSON.stringify(a));
+    ok("C : rien d'écrit, une seule lecture de contact (au démarrage)", ecr(db, "contact").length === 0 && lu(db, NOAH.id, "contact").length === 1, JSON.stringify({ lus: lu(db, NOAH.id, "contact").length, ecr: resume(db) }));
   });
 
   await b.close(); server.close();

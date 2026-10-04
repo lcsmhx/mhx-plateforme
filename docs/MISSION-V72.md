@@ -49,6 +49,8 @@ Remplies au fil des sujets ; le détail est dans chaque commit.
 - Changer de langue sur la connexion ou l'inscription garde l'écran (le rechargement rouvrait l'écran par défaut).
 - Textes : « Déjà un compte ? Se connecter » (sur l'inscription) et « Pas encore de compte ? Créer mon compte » (sur la connexion, à côté de « Mot de passe oublié ? »), en anglais « Already have an account? Log in » et « No account yet? Create my account ».
 
+**C — Calendly déjà rempli.** Le prénom + nom (`name`, et `first_name` / `last_name`) et l'email étaient déjà pré-remplis depuis la v52 ; s'y ajoute le numéro, encodé (`%2B33…`), en dernier, sur tous les boutons de réservation du prospect (accueil, « Ton plan d'action », pages verrouillées, invitations). Le nom du paramètre est un réglage, `CONFIG.marque.calendly_tel`, réglé sur `"a1"` comme demandé. Un paramètre déjà présent dans le lien collé dans la config n'est jamais remplacé ni doublé (les autres sont ajoutés). Le numéro vient de la clé `contact` lue au démarrage (aucune lecture de plus, rien sur les pages verrouillées). Lien vide : comme avant (aucun bouton).
+
 ## Questions pour Lucas
 
 Remplies au fil des sujets.
@@ -57,6 +59,7 @@ Remplies au fil des sujets.
 - **A — Liste des pays.** J'ai ajouté « Autre pays » pour ne bloquer personne. Si tu préfères la liste fermée, dis-le (un client hors de ces 8 pays ne pourrait plus entrer dans l'app).
 - **A — Doublon.** Le questionnaire client a déjà une question « Numéro WhatsApp (avec indicatif) » (texte libre). Je l'ai laissée telle quelle : faut-il la retirer maintenant que le numéro est demandé à tous ?
 - **A — Base (lot 2 de la v66, en attente).** Si tu appliques un jour la liste des clés autorisées (relevé `supabase/releve-2026-09-30/`), il faudra y ajouter `contact` (et la clé de visite du coach du sujet E), sinon ces écritures seraient refusées.
+- **C — a1 ou location ?** Dans ton compte Calendly, l'événement actif (« Ton plan d'action offert, 15 min avec Lucas ») a pour lieu « appel téléphonique » : le numéro de la personne se saisit dans le champ du lieu, et sa 1re question (donc `a1`) est le texte libre « Veuillez partager tout ce qui pourra être utile à la préparation de notre réunion ». Avec `a1`, le numéro arrive donc dans ce champ de notes, pas dans le champ du numéro. Pour remplir le champ du numéro, il suffit de changer un mot dans `js/config.js` : `calendly_tel: "location"` (à vérifier une fois sur la vraie page, en ouvrant le lien pré-rempli sans réserver). J'ai gardé `a1`, comme tu l'as écrit.
 - **B — Suppression de compte.** « Supprimer mon compte » (Mes données) efface tout ce que l'app garde sur l'appareil, marqueur compris : ce téléphone rouvre ensuite la création de compte. Je l'ai laissé ainsi (comportement d'avant) ; dis-moi si tu préfères qu'il garde la connexion.
 - **B — Clients créés par toi.** Sur un appareil neuf, ils voient d'abord « Crée ton espace gratuit » (avec « Déjà un compte ? Se connecter » en bas du formulaire). Pour leur éviter de chercher, envoie-leur l'adresse `https://lcsmhx.github.io/mhx-plateforme/#/connexion`.
 - **A — Confirmation d'email.** Elle est coupée dans Supabase (inscription = session tout de suite). Si tu la rallumes un jour, le numéro tapé à l'inscription ne pourra pas être enregistré avant la première connexion : l'écran « Ajoute ton numéro… » le redemandera.

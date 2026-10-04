@@ -61,9 +61,18 @@ function lienCalendly(source){
       const email = u && typeof u.email === "string" ? u.email.trim() : "";
       params.push(...paramsNomCalendly(p.prenom, p.nom));   // v52 : + le nom (profils.nom, saisi a l'inscription)
       if (email) params.push("email=" + encodeURIComponent(email));
+      /* v72 (C) : + le numéro (clé contact, deja lue au demarrage : aucune lecture ici), dans le parametre de
+         CONFIG.marque.calendly_tel ; « + » encode (%2B : un « + » brut serait lu comme une espace) */
+      const P = CONFIG.marque.calendly_tel, tel = Contact.telephone(Store.cache[Contact.cle]);
+      if (tel && typeof P === "string" && /^(a([1-9]|10)|location)$/.test(P)) params.push(P + "=" + encodeURIComponent(tel));
     }
     const i = base.indexOf("#"), avant = i > -1 ? base.slice(0, i) : base, apres = i > -1 ? base.slice(i) : "";   // les parametres avant un eventuel #
-    return avant + (avant.indexOf("?") > -1 ? "&" : "?") + params.join("&") + apres;
+    /* v72 (C) : un parametre deja present dans le lien colle dans la config n'est jamais remplace ni double */
+    const deja = new Set(), iq = avant.indexOf("?");
+    if (iq > -1) avant.slice(iq + 1).split("&").forEach(kv => { const k = kv.split("=")[0]; if (!k) return; try { deja.add(decodeURIComponent(k)); } catch(e){ deja.add(k); } });
+    const libres = params.filter(x => !deja.has(x.split("=")[0]));
+    if (!libres.length) return base;
+    return avant + (iq > -1 ? "&" : "?") + libres.join("&") + apres;
   } catch(e){ return base; }   // un caractere mal forme ne doit jamais empecher la page de s'afficher
 }
 /* v51 — le lien de reservation d'un prospect, construit pour le coach (fiche) : prenom, nom (v52, 4e parametre :
