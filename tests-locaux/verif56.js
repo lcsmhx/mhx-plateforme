@@ -673,10 +673,11 @@ function lienOk(href, base, attendu){
         /* les éléments de la page qui ont un fond (le seul attendu : le bouton doré) */
         const fonds = [...document.querySelectorAll("#dc-bilan *")].filter(e => { const s = getComputedStyle(e); return (s.backgroundColor !== "rgba(0, 0, 0, 0)" && s.backgroundColor !== "transparent") || s.backgroundImage !== "none"; }).map(e => e.id || e.tagName);
         return { r: f(document.querySelector("#dc-bilan-reserver")), t: f(document.querySelector("#dc-bilan-plus-tard")), sous: document.querySelector("#dc-bilan-sous") ? document.querySelector("#dc-bilan-sous").textContent.replace(/\s+/g, " ").trim() : null,
-          dansCta: !!cta && [...cta.children].map(e => e.id).join(",") === "dc-bilan-reserver,dc-bilan-sous,dc-bilan-plus-tard",
-          nCal: document.querySelectorAll("#vue a[href*='calendly']").length, nBtn: document.querySelectorAll("#dc-bilan .btn").length, fonds };
+          /* v73 (D) : + « Écrire à ton coach sur WhatsApp » (bloc #dc-bilan-wa, a.btn.ghost[data-wa]) entre la ligne et « Plus tard » */
+          dansCta: !!cta && [...cta.children].map(e => e.id).join(",") === "dc-bilan-reserver,dc-bilan-sous,dc-bilan-wa,dc-bilan-plus-tard",
+          nCal: document.querySelectorAll("#vue a[href*='calendly']").length, nBtn: document.querySelectorAll("#dc-bilan .btn").length, nWa: document.querySelectorAll("#dc-bilan-wa > a.btn.ghost[data-wa]").length, fonds };
       });
-      ok(`${w} : UN seul bouton « ${TX.reserver} » (a.btn, le seul .btn et le seul lien Calendly de la page), suivi de « ${TX.plan_sous} », puis « ${TX.plus_tard} » (button.lien-discret, pas .btn)`, !!bt.r && !!bt.t && bt.r.tag === "A" && bt.r.txt === TX.reserver && bt.t.tag === "BUTTON" && /(^| )lien-discret( |$)/.test(bt.t.cls) && !/(^| )btn( |$)/.test(bt.t.cls) && bt.t.txt === TX.plus_tard && bt.sous === TX.plan_sous && bt.dansCta && bt.nCal === 1 && bt.nBtn === 1, JSON.stringify(bt));
+      ok(`${w} : UN seul bouton « ${TX.reserver} » (a.btn, le seul .btn et le seul lien Calendly de la page), suivi de « ${TX.plan_sous} », (v73) du bouton secondaire « Écrire à ton coach sur WhatsApp » (seul autre .btn, contour), puis « ${TX.plus_tard} » (button.lien-discret, pas .btn)`, !!bt.r && !!bt.t && bt.r.tag === "A" && bt.r.txt === TX.reserver && bt.t.tag === "BUTTON" && /(^| )lien-discret( |$)/.test(bt.t.cls) && !/(^| )btn( |$)/.test(bt.t.cls) && bt.t.txt === TX.plus_tard && bt.sous === TX.plan_sous && bt.dansCta && bt.nCal === 1 && bt.nBtn === 2 && bt.nWa === 1, JSON.stringify(bt));
       /* v61 (brief V2, D) : avant, deux boutons de même taille et de même poids ; désormais un seul élément doré domine —
          le bouton a son fond (seul élément de la page à en avoir un), au moins 120 × 40 px ; « Plus tard » n'a ni fond ni
          bordure, il est souligné, d'une autre couleur que le fond du bouton, jamais plus gras que lui, zone de tap ≥ 44 px */

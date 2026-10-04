@@ -472,7 +472,7 @@ const planVu = page => page.evaluate(() => {
     libre: !!s.querySelector("#dc-bilan-libre"),   // v70 : doit être absent
     a: a ? { href: a.getAttribute("href"), cible: a.getAttribute("target"), rel: a.getAttribute("rel") || "", dc: a.getAttribute("data-dc-cal") } : null,
     sa: st(a), st: st(t), so: st(o), ctaW: cta ? Math.round(cta.getBoundingClientRect().width) : 0,
-    nBtn: s.querySelectorAll(".btn").length, tag: t ? t.tagName + (t.classList.contains("btn") ? ".btn" : "") : "",
+    nBtn: s.querySelectorAll(".btn").length, nWa: s.querySelectorAll("#dc-bilan-wa > a.btn.ghost[data-wa]").length, tag: t ? t.tagName + (t.classList.contains("btn") ? ".btn" : "") : "",
     nCal: document.querySelectorAll("#vue a[href*='calendly']").length, nDc: document.querySelectorAll("#vue [data-dc-cal]").length,
     dores: [...document.querySelectorAll("#vue a, #vue button")].filter(e => e.offsetParent !== null && getComputedStyle(e).backgroundColor === acc).map(e => e.id || e.textContent.trim()) };
 });
@@ -516,17 +516,18 @@ const verrouVu = (page, id) => page.evaluate(id => {
     await attendre(page, 1300);   // Store.ecrire n'envoie qu'après 700 ms : une écriture lancée par l'affichage aurait le temps d'arriver
     const P = await planVu(page), T = P ? P.txt : [], th = await page.evaluate(() => document.documentElement.getAttribute("data-theme"));
     const ink3 = await couleur(page, "--ink-3"), v0 = await texte(page, "#vue");
-    ok("questionnaire validé sans choix : la page « Ton plan d'action » (section.panel.dc-plan#dc-bilan), thème sombre ; dans l'ordre : « Offert » (span.eyebrow.dc-offert), titre, projection, texte, « Ton plan est à toi… », puis div.dc-cta = bouton doré, « 15 min · par téléphone · offert », « Plus tard… » (button.lien-discret) ; plus de petit texte gris (v70)",
+    ok("questionnaire validé sans choix : la page « Ton plan d'action » (section.panel.dc-plan#dc-bilan), thème sombre ; dans l'ordre : « Offert » (span.eyebrow.dc-offert), titre, projection, texte, « Ton plan est à toi… », puis div.dc-cta = bouton doré, « 15 min · par téléphone · offert », (v73) « Écrire à ton coach sur WhatsApp » (div#dc-bilan-wa), « Plus tard… » (button.lien-discret) ; plus de petit texte gris (v70)",
       !!P && th === null && P.classes === "dc-plan.panel" && !P.libre && JSON.stringify(P.enfants) === JSON.stringify(["span#dc-offert.dc-offert.eyebrow", "h2", "p#dc-projection.dc-projection", "p#dc-bilan-texte", "p#dc-bilan-garde", "div.dc-cta"])
-      && JSON.stringify(P.cta) === JSON.stringify(["a#dc-bilan-reserver.btn", "p#dc-bilan-sous.dc-cta-sous", "button#dc-bilan-plus-tard.lien-discret"]), JSON.stringify(P && [th, P.classes, P.enfants, P.cta]));
+      && JSON.stringify(P.cta) === JSON.stringify(["a#dc-bilan-reserver.btn", "p#dc-bilan-sous.dc-cta-sous", "div#dc-bilan-wa.actions.dc-wa", "button#dc-bilan-plus-tard.lien-discret"]), JSON.stringify(P && [th, P.classes, P.enfants, P.cta]));
     ok("textes EXACTS : « Offert », « Ton plan d'action personnalisé », « Ton objectif dans 3 mois : « M'aimer sur les photos » », « En 15 minutes au téléphone avec Lucas… », « Ton plan est à toi, quelle que soit la suite. » ; « Si l'accompagnement te correspond… Tu es libre de dire non. » absent (v70)",
       JSON.stringify(T.slice(0, 5).map(norm)) === JSON.stringify([D.offert, D.titre, D.projection("M'aimer sur les photos"), D.texte, D.garde]) && !v0.includes(D.libre), JSON.stringify(T.slice(0, 5)));
     ok("bouton « Récupérer mon plan d'action », ligne « 15 min · par téléphone · offert », lien « Plus tard, je découvre mon espace »",
       JSON.stringify(T.slice(5).map(norm)) === JSON.stringify([D.bouton, D.sous, D.plus_tard]), JSON.stringify(T.slice(5)));
     ok("typographie française : espace insécable avant « : » et dans « « … » » (projection, texte) ; « Offert » affiché en capitales, en doré",
       T[2] === typo(D.projection("M'aimer sur les photos")) && T[3] === typo(D.texte) && !!P.so && P.so.tt === "uppercase" && P.so.coul === OR_SOMBRE, JSON.stringify([T[2], T[3], P && P.so]));
-    ok("UN seul élément doré : le bouton (seul .btn de la page, fond doré) ; « Plus tard » n'est pas un .btn : bouton texte gris (--ink-3), souligné, sans fond ni bordure",
-      P.nBtn === 1 && JSON.stringify(P.dores) === '["dc-bilan-reserver"]' && P.sa.bg === OR_SOMBRE && P.tag === "BUTTON" && P.st.bg === TRANSPARENT && P.st.bord === "0px 0px 0px 0px" && /underline/.test(P.st.deco) && P.st.coul === ink3 && P.st.coul !== OR_SOMBRE,
+    /* v73 (D) : le seul autre .btn est « Écrire à ton coach sur WhatsApp » (a.btn.ghost[data-wa], contour, jamais doré) */
+    ok("UN seul élément doré : le bouton (fond doré ; seul autre .btn : « Écrire à ton coach sur WhatsApp », contour) ; « Plus tard » n'est pas un .btn : bouton texte gris (--ink-3), souligné, sans fond ni bordure",
+      P.nBtn === 2 && P.nWa === 1 && JSON.stringify(P.dores) === '["dc-bilan-reserver"]' && P.sa.bg === OR_SOMBRE && P.tag === "BUTTON" && P.st.bg === TRANSPARENT && P.st.bord === "0px 0px 0px 0px" && /underline/.test(P.st.deco) && P.st.coul === ink3 && P.st.coul !== OR_SOMBRE,
       JSON.stringify([P.nBtn, P.dores, P.sa, P.tag, P.st, ink3]));
     ok("lien exact : " + lienAtt("apres_questionnaire", k).slice(0, 110) + "… (nouvelle adresse, utm_source=app, utm_medium=bouton, utm_content=apres_questionnaire, prénom, nom, email), nouvel onglet, data-dc-cal « apres_questionnaire », seul lien Calendly de la page",
       !!P.a && P.a.href === lienAtt("apres_questionnaire", k) && P.a.cible === "_blank" && /noopener/.test(P.a.rel) && P.a.dc === "apres_questionnaire" && P.nCal === 1 && P.nDc === 1, JSON.stringify([P.a, P.nCal, P.nDc]));
@@ -553,9 +554,9 @@ const verrouVu = (page, id) => page.evaluate(id => {
     ok("anglais, thème clair : « Free », « Your personalized action plan », « Your goal in 3 months: “Loving how I look in photos” », texte, « The plan is yours to keep… », « Get my action plan », « 15 min · phone call · free », « Later, let me explore my space » (exacts, dans cet ordre, sans espace insécable) ; « If coaching is a good fit… » absent (v70)",
       th === "light" && !P.libre && !v.includes(D.libre_en) && JSON.stringify(T.map(norm)) === JSON.stringify([D.offert_en, D.titre_en, D.projection_en("Loving how I look in photos"), D.texte_en, D.garde_en, D.bouton_en, D.sous_en, D.plus_tard_en]) && !T.some(x => /[  ]/.test(x || "")),
       JSON.stringify([th, T]));
-    const ink3 = await couleur(page, "--ink-3"), francais = [D.offert, D.titre, D.texte, D.garde, D.libre, D.bouton, D.sous, D.plus_tard, "M'aimer sur les photos"].filter(x => v.includes(x));
-    ok("anglais : aucun texte français de la page ; un seul élément doré (doré du thème clair), « Later… » gris, souligné, sans fond ni bordure ; « Free » en capitales dorées",
-      !francais.length && P.nBtn === 1 && JSON.stringify(P.dores) === '["dc-bilan-reserver"]' && P.sa.bg === OR_CLAIR && P.st.bg === TRANSPARENT && P.st.bord === "0px 0px 0px 0px" && /underline/.test(P.st.deco) && P.st.coul === ink3 && P.so.tt === "uppercase" && P.so.coul === OR_CLAIR,
+    const ink3 = await couleur(page, "--ink-3"), francais = [D.offert, D.titre, D.texte, D.garde, D.libre, D.bouton, D.sous, D.plus_tard, "M'aimer sur les photos", "Écrire à ton coach sur WhatsApp"].filter(x => v.includes(x));   // v73 (D) : + le bouton WhatsApp
+    ok("anglais : aucun texte français de la page ; un seul élément doré (doré du thème clair ; v73 : seul autre .btn, « Message your coach on WhatsApp », contour), « Later… » gris, souligné, sans fond ni bordure ; « Free » en capitales dorées",
+      !francais.length && P.nBtn === 2 && P.nWa === 1 && JSON.stringify(P.dores) === '["dc-bilan-reserver"]' && P.sa.bg === OR_CLAIR && P.st.bg === TRANSPARENT && P.st.bord === "0px 0px 0px 0px" && /underline/.test(P.st.deco) && P.st.coul === ink3 && P.so.tt === "uppercase" && P.so.coul === OR_CLAIR,
       JSON.stringify([francais, P.dores, P.sa, P.st, P.so]));
     ok("anglais : même lien exact (apres_questionnaire, pré-rempli), 390 px sans débordement, aucun prix ni « undefined », aucune écriture à l'affichage",
       !!P.a && P.a.href === lienAtt("apres_questionnaire", k) && P.a.cible === "_blank" && !(await deborde(page)) && propre(v) && saisies(db).length === 0, JSON.stringify(P.a) + " · " + resume(db));

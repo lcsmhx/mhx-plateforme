@@ -278,8 +278,8 @@ function ecranTelephone(){
   <div class="portail"><div class="carte-co" id="co-tel-carte">
       ${CONFIG.marque.logo ? `<img class="logo-img" src="${esc(CONFIG.marque.logo)}" alt="${esc(CONFIG.marque.nom)}">` : ""}
       <div class="logo">${esc(CONFIG.marque.nom)}</div>
-      <h2 id="co-tel" tabindex="-1">${esc(trad("Ajoute ton numéro pour que Lucas puisse te joindre"))}</h2>
-      <p class="co-sous">${esc(trad("Lucas s'en sert pour t'appeler ou t'écrire sur WhatsApp."))}</p>
+      <h2 id="co-tel" tabindex="-1">${esc(trad("Ajoute ton numéro pour que ton coach puisse te joindre"))}</h2>
+      <p class="co-sous">${esc(trad("Ton coach s'en sert pour t'appeler ou t'écrire sur WhatsApp."))}</p>
       <div id="co-err" role="alert"></div>
       <div class="champ"><label for="t-tel">${esc(trad("Ton numéro (WhatsApp)"))}</label>${Telephone.champHTML("t-tel", att && att.telephone)}</div>
       <button class="btn" id="t-go">${esc(trad("Enregistrer mon numéro"))}</button>

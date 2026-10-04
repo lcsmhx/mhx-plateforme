@@ -1045,8 +1045,8 @@ Object.assign(I18N.en, {
   "Avec « Autre pays », tape ton numéro avec son indicatif, par exemple +212 6 12 34 56 78.": "With “Other country”, type your number with its country code, for example +212 6 12 34 56 78.",
   "Ce numéro est trop court : 6 chiffres au moins, sans l'indicatif.": "This number is too short: at least 6 digits, without the country code.",
   "Ce numéro est trop long : 14 chiffres au plus, sans l'indicatif.": "This number is too long: 14 digits at most, without the country code.",
-  "Ajoute ton numéro pour que Lucas puisse te joindre": "Add your phone number so Lucas can reach you",
-  "Lucas s'en sert pour t'appeler ou t'écrire sur WhatsApp.": "Lucas uses it to call you or message you on WhatsApp.",
+  "Ajoute ton numéro pour que ton coach puisse te joindre": "Add your phone number so your coach can reach you",   // v73 (D) : « ton coach »
+  "Ton coach s'en sert pour t'appeler ou t'écrire sur WhatsApp.": "Your coach uses it to call you or message you on WhatsApp.",
   "Enregistrer mon numéro": "Save my number",
   "Ta session a pris fin : reconnecte-toi.": "Your session has ended: sign in again.",
   "Non enregistré : réessaie dans un instant.": "Not saved: try again in a moment.",

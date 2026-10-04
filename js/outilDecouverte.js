@@ -928,13 +928,16 @@ const outilDecouverte = {
     /* sa reponse « projection », echappee et tronquee ; une phrase neutre si elle est vide (ancien prospect)
        v60 (brief V2, C) : {projection} = sa precision libre, sinon le libelle choisi (traduit) ; 140 caracteres au plus
        v61 (brief V2, D) : le plan d'action offert — étiquette « Offert », un seul bouton doré (origine apres_questionnaire)
-       et sa ligne, « Plus tard » en simple lien gris (meme effet qu'avant : l'accueil) */
+       et sa ligne, « Plus tard » en simple lien gris (meme effet qu'avant : l'accueil)
+       v73 (D) : sous le bouton et sa ligne, « Écrire à ton coach sur WhatsApp » (secondaire, contour, sans data-dc-cal : jamais
+       compte comme un clic de reservation ; rien n'est note au toucher), puis « Plus tard » */
     const t = x => esc(typoFr(trad(x)));
     return `<section class="panel dc-plan" id="dc-bilan"><span class="eyebrow dc-offert" id="dc-offert">${t(L.offert)}</span><h2>${t(L.titre)}</h2>
       <p class="dc-projection" id="dc-projection">${esc(typoFr(pr ? trad(L.projection, { p: pr }) : trad(L.sans_projection)))}</p>
       <p id="dc-bilan-texte">${t(L.texte)}</p>
       <p id="dc-bilan-garde">${t(L.garde)}</p>
       <div class="dc-cta">${cal ? `<a class="btn" id="dc-bilan-reserver" href="${esc(cal)}" target="_blank" rel="noopener" data-dc-cal="apres_questionnaire">${t(L.reserver)}</a><p class="dc-cta-sous" id="dc-bilan-sous">${t(L.sous)}</p>` : ""}
+        ${boutonWhatsApp("dc-wa", "dc-bilan-wa")}
         <button class="lien-discret" type="button" id="dc-bilan-plus-tard">${t(L.plus_tard)}</button></div></section>`;
   },
   brancherBilan(zone, I, C){

@@ -63,8 +63,9 @@ const CONFIG = {
        page (lien pré-rempli ouvert sans réserver) : location=%2B33612345678 remplit le champ « Numéro de téléphone »
        (+33 6 12 34 56 78, drapeau du pays) et laisse vide le champ de notes. */
     calendly_tel: "location",
-    /* v72 (D) — WhatsApp de Lucas (avec l'indicatif) : bouton « Écrire à Lucas sur WhatsApp » sur l'accueil du prospect et ses
-       pages verrouillées, avec un message déjà écrit (DECOUVERTE.whatsapp). Vide : pas de bouton. */
+    /* v72 (D) — WhatsApp de Lucas (avec l'indicatif) : bouton « Écrire à ton coach sur WhatsApp » (v73 : « ton coach » au lieu
+       de « Lucas ») sur l'accueil du prospect, ses pages verrouillées et (v73) « Ton plan d'action », avec un message déjà
+       écrit (DECOUVERTE.whatsapp). Vide : pas de bouton. */
     whatsapp: "+61418876361",
     /* v52 — gratuit pour toujours : le calculateur (sa cle a lui, calc_perso), Ma progression (sans les
        photos) et la Speed Formation sont ouverts au prospect, sans limite de duree */
@@ -440,9 +441,10 @@ const DECOUVERTE = {
   },
   /* v61 (brief V2, vocabulaire) : le bouton unique partout où le bilan est proposé au prospect, et sa petite ligne */
   cta: { bouton: "Récupérer mon plan d'action", sous: "15 min avec Lucas · offert" },
-  /* v72 (D) : le bouton WhatsApp du prospect et son message ({p} : son prénom ; sans prénom, la seconde phrase) */
-  whatsapp: { bouton: "Écrire à Lucas sur WhatsApp", message: "Salut Lucas, c'est {p}, je viens de m'inscrire sur l'app MHX.",
-    message_sans_prenom: "Salut Lucas, je viens de m'inscrire sur l'app MHX." },
+  /* v72 (D) : le bouton WhatsApp du prospect et son message ({p} : son prénom ; sans prénom, la seconde phrase)
+     v73 (D) : « ton coach » au lieu de « Lucas » (décision de Lucas du 04/10/2026) */
+  whatsapp: { bouton: "Écrire à ton coach sur WhatsApp", message: "Salut, c'est {p}, je viens de m'inscrire sur l'app MHX.",
+    message_sans_prenom: "Salut, je viens de m'inscrire sur l'app MHX." },
   /* v62 (brief V2, H) : les invitations au bon moment (prospect seulement), une par déclencheur ; l'objet porte le code
      d'origine du bouton (Decouverte.ORIGINES). Aucune valeur saisie (poids, mesures, calories) dans ces textes. */
   invitations: {
@@ -732,8 +734,8 @@ const DECOUVERTE = {
       plus_tard: "Later, let me explore my space"
     },
     cta: { bouton: "Get my action plan", sous: "15 min with Lucas · free" },
-    whatsapp: { bouton: "Message Lucas on WhatsApp", message: "Hi Lucas, it's {p}, I just signed up on the MHX app.",
-      message_sans_prenom: "Hi Lucas, I just signed up on the MHX app." },
+    whatsapp: { bouton: "Message your coach on WhatsApp", message: "Hi, it's {p}, I just signed up on the MHX app.",
+      message_sans_prenom: "Hi, I just signed up on the MHX app." },
     invitations: {
       objectif: "Your goal: “{p}”",
       plus_tard: "Later",
