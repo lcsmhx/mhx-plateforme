@@ -159,6 +159,8 @@ HORS_BANC="verif44 verif45 verif46 verif47 verif49"
 # base ; Mon compte la retire ; « Se déconnecter » l'envoie avant de l'effacer).
 # v72 (F, correction après relecture) : verif80 60 → 62 (après l'inscription l'adresse n'a plus le code, une déconnexion ne le
 # relit pas ; un compte existant qui se connecte depuis un lien avec code : code oublié et retiré de l'adresse).
+# v73 (A, réponses de Lucas du 04/10) : CONFIG.marque.calendly_tel = "location" (le champ « Numéro de téléphone » de l'événement
+# « appel téléphonique », vérifié sur la vraie page) ; verif80 C (le numéro en location=%2B… au lieu de a1) adaptée, nombre inchangé.
 attendu() {
   case "$1" in
     flux) echo 19;; verif34) echo 13;; verif35) echo 14;; verif36) echo 13;; verif37) echo 12;; verif38) echo 66;;

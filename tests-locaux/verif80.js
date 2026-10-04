@@ -612,8 +612,9 @@ const champTel = (page, id) => page.evaluate(id => {
     const { page } = await contexte(b, db, { qui: NOAH });
     await page.goto(URL0 + "#/programme"); await pret(page); await page.waitForSelector(".verrou a[target=_blank]");
     const v = await page.evaluate(() => Array.from(document.querySelectorAll(".verrou a[target=_blank]")).map(a => a.getAttribute("href")));
-    ok("C : page verrouillée (Mon programme) d'un prospect : le lien de réservation porte name (prénom + nom), email et a1 = son numéro encodé (%2B33…), après l'origine",
-      v.length === 1 && v[0] === CAL + "?utm_source=app&utm_medium=bouton&utm_content=verrou_programme" + NOAH_CAL + "&a1=%2B33639980002", JSON.stringify(v));
+    /* v73 (A) : le réglage est passé de a1 à location (le champ « Numéro de téléphone » de l'événement « appel téléphonique ») */
+    ok("C : page verrouillée (Mon programme) d'un prospect : le lien de réservation porte name (prénom + nom), email et location = son numéro encodé (%2B33…), après l'origine",
+      v.length === 1 && v[0] === CAL + "?utm_source=app&utm_medium=bouton&utm_content=verrou_programme" + NOAH_CAL + "&location=%2B33639980002", JSON.stringify(v));
     const u = await page.evaluate(() => {
       const M = CONFIG.marque, garde = { calendly: M.calendly, tel: M.calendly_tel }, out = {};
       const essai = (k, cal, tel) => { M.calendly = cal; M.calendly_tel = tel; out[k] = lienCalendly("accueil_haut"); };
@@ -634,7 +635,7 @@ const champTel = (page, id) => page.evaluate(id => {
       JSON.stringify(u));
     await page.evaluate(() => { location.hash = "#/accueil"; }); await pret(page); await page.waitForSelector("#dc-accomp [data-dc-cal]");
     const a = await page.evaluate(() => Array.from(document.querySelectorAll("#vue [data-dc-cal]")).map(x => x.getAttribute("href")));
-    ok("C : accueil du prospect : chaque bouton de réservation porte aussi le numéro (a1), en dernier", a.length >= 1 && a.every(h => h.startsWith(CAL + "?utm_source=app&utm_medium=bouton&utm_content=") && h.endsWith(NOAH_CAL + "&a1=%2B33639980002")), JSON.stringify(a));
+    ok("C : accueil du prospect : chaque bouton de réservation porte aussi le numéro (location), en dernier", a.length >= 1 && a.every(h => h.startsWith(CAL + "?utm_source=app&utm_medium=bouton&utm_content=") && h.endsWith(NOAH_CAL + "&location=%2B33639980002")), JSON.stringify(a));
     ok("C : rien d'écrit, une seule lecture de contact (au démarrage)", ecr(db, "contact").length === 0 && lu(db, NOAH.id, "contact").length === 1, JSON.stringify({ lus: lu(db, NOAH.id, "contact").length, ecr: resume(db) }));
   });
 

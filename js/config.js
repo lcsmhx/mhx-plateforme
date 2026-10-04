@@ -58,8 +58,11 @@ const CONFIG = {
     calendly_prerempli: true,
     /* v72 (C) — le paramètre Calendly qui reçoit le numéro du prospect (format international, +33612345678), avec le prénom,
        le nom et l'email : "a1" = la réponse à la 1re question de l'événement (a2 la 2e…) ; "location" = le champ du lieu
-       quand l'événement est un appel au numéro du prospect ; "" = jamais de numéro. */
-    calendly_tel: "a1",
+       quand l'événement est un appel au numéro du prospect ; "" = jamais de numéro.
+       v73 (A) : "location" (décision de Lucas du 04/10/2026) : l'événement est un « appel téléphonique » ; vérifié sur la vraie
+       page (lien pré-rempli ouvert sans réserver) : location=%2B33612345678 remplit le champ « Numéro de téléphone »
+       (+33 6 12 34 56 78, drapeau du pays) et laisse vide le champ de notes. */
+    calendly_tel: "location",
     /* v72 (D) — WhatsApp de Lucas (avec l'indicatif) : bouton « Écrire à Lucas sur WhatsApp » sur l'accueil du prospect et ses
        pages verrouillées, avec un message déjà écrit (DECOUVERTE.whatsapp). Vide : pas de bouton. */
     whatsapp: "+61418876361",
