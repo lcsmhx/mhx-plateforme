@@ -170,7 +170,9 @@ function portail(mode){
             try { await Contact.borne(Contact.enregistrer(champs, uid)); } catch(e){ if (uid) Contact.garderAttente(uid, champs); }
           }
           Provenance.oublier();   // v72 (F) : enregistré (ou dans la copie de secours) : il ne sert plus sur cet appareil
-          location.hash = ""; location.reload(); return;
+          /* v72 (F) : rechargement sans le code dans l'adresse (sinon une déconnexion le relirait) */
+          try { history.replaceState(null, "", Provenance.adresseSans()); } catch(e){ location.hash = ""; }
+          location.reload(); return;
         }
         ecranVerifieEmail(email); return;   // v47 : un ecran dedie, pas une ligne de message
       } catch(e){
@@ -196,7 +198,9 @@ function portail(mode){
            L'adresse gardait la derniere page ouverte sur l'appareil quand la session avait pris fin sans deconnexion
            (session expiree, « Rester connecte » decoche, navigateur ferme) : on arrivait sur la Speed Formation.
            Sauf « Me reconnecter » (session perdue en cours d'utilisation) : retour sur la page qu'on avait sous les yeux. */
-        if (!reconnexion){ try { history.replaceState(null, "", location.pathname + location.search); } catch(e){} }
+        if (!reconnexion){ try { history.replaceState(null, "", Provenance.adresseSans()); } catch(e){} }   // v72 (F) : sans le code ?ref=
+        /* v72 (F) : une personne qui se connecte n'est pas un nouvel inscrit : un code de lien gardé sur l'appareil est oublié */
+        try { Provenance.oublier(); } catch(e){}
         location.reload();
       }
     } catch(e){

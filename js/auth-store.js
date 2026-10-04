@@ -528,7 +528,10 @@ const Provenance = {
   },
   capter(){ const r = this.propre(this.dansAdresse()); if (!r || this.locale()) return; try { localStorage.setItem(this.CLE, r); } catch(e){} },
   locale(){ try { return this.propre(localStorage.getItem(this.CLE)); } catch(e){ return ""; } },
-  oublier(){ try { localStorage.removeItem(this.CLE); } catch(e){} }
+  oublier(){ try { localStorage.removeItem(this.CLE); } catch(e){} },
+  /* l'adresse de la page sans son code (après l'inscription ou une connexion : un rechargement ou une déconnexion ne doit
+     pas le relire), ancre retirée */
+  adresseSans(){ try { const q = new URLSearchParams(location.search); q.delete("ref"); return location.pathname + (q.toString() ? "?" + q : ""); } catch(e){ return location.pathname; } }
 };
 
 /* --- v64 (brief V2, B) : ACCORD SANTÉ AU PREMIER USAGE ----------------------------------------------------

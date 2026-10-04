@@ -130,6 +130,7 @@ async function repondre(r, db){
   }
   if (p.startsWith("/auth/v1/token")) {
     const c = corps() || {}, r1 = /^renouvellement-(.+)$/.exec(String(c.refresh_token || ""));
+    if (c.email && c.password){ const idm = Object.keys(db.emails).find(k => db.emails[k] === c.email); return idm ? json(session(idm, c.email, db.meta[idm])) : json({ error: "invalid_grant", error_description: "Invalid login credentials" }, 400); }   // connexion par mot de passe
     const id = r1 && r1[1];
     if (!id) return json({ error: "invalid_grant", error_description: "Invalid login credentials" }, 400);
     return json(session(id, db.emails[id] || "", db.meta[id]));
@@ -694,7 +695,21 @@ const champTel = (page, id) => page.evaluate(id => {
       await pret(page);
       const C = ecr(db, "contact", PID(60)), r3 = await refLocal(page);
       ok("F : inscription : clé contact du nouveau compte { telephone, ref: « insta-2026 », inscrit_le }, une écriture ; le code retiré de l\x27appareil",
-        C.length === 1 && C[0].contenu.ref === "insta-2026" && C[0].contenu.telephone === "+33639980060" && isoPres(C[0].contenu.inscrit_le, tClic) && r3 === null, JSON.stringify({ C: C.map(x => x.contenu), r3 })); }
+        C.length === 1 && C[0].contenu.ref === "insta-2026" && C[0].contenu.telephone === "+33639980060" && isoPres(C[0].contenu.inscrit_le, tClic) && r3 === null, JSON.stringify({ C: C.map(x => x.contenu), r3 }));
+      const s1 = await page.evaluate(() => location.search);
+      await Promise.all([page.waitForNavigation({ timeout: 15000 }).catch(() => {}), page.evaluate(() => Auth.deconnecter())]);
+      await page.waitForSelector("#c-go");
+      const r4 = await refLocal(page);
+      ok("F : après l'inscription, l'adresse n'a plus le code ; « Se déconnecter » ne le relit donc pas", s1 === "" && r4 === null, JSON.stringify({ s1, r4 })); }
+    { const db = base(); db.emails[NOAH.id] = NOAH.email;
+      const { page } = await contexte(b, db, { stockage: { mhx_deja_venu: "1" }, neuf: true });
+      await page.goto(URL0 + "?ref=insta"); await page.waitForSelector("#c-go");
+      const r1 = await refLocal(page);
+      await page.fill("#c-email", NOAH.email); await page.fill("#c-mdp", "motdepasse1");
+      await Promise.all([page.waitForNavigation({ timeout: 15000 }).catch(() => {}), page.click("#c-go")]);
+      await pret(page);
+      const r2 = await refLocal(page), s = await page.evaluate(() => location.search);
+      ok("F : un compte existant qui se connecte depuis un lien avec code : le code est oublié (pas un nouvel inscrit) et retiré de l'adresse", r1 === "insta" && r2 === null && s === "", JSON.stringify({ r1, r2, s })); }
     const lus = [];
     for (const q of ["?ref=Insta", "?ref=" + "a".repeat(31), "?ref=a%20b", "?ref=%3Cb%3E", "?ref=", "#/inscription?ref=tiktok", "?ref=" + "a".repeat(30)]) {
       const db = base();
