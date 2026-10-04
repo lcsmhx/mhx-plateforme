@@ -11,7 +11,7 @@
    v72 (E) : en haut, « Nouveaux depuis ta dernière visite » : les prospects inscrits depuis la visite précédente du coach,
    avec prénom, date d'inscription, numéro, « Appeler » et « WhatsApp ». La visite est gardée dans une clé du coach lui-même
    (coach_visite : { le, jusqua, avant, avant_le }), déjà lue par Clients.charger (aucune lecture de plus) : une NOUVELLE
-   visite = un affichage du tableau de bord 30 min ou plus après le début de la précédente ; seule écriture de cette page,
+   visite = un affichage du tableau de bord une demi-heure ou plus après le début de la précédente ; seule écriture de cette page,
    une fois par visite (un rechargement ou un retour au tableau de bord pendant la visite ne vide pas la liste et n'écrit
    rien). Le seuil est la date d'inscription la plus récente vue au début de la visite précédente (horloge du serveur :
    rien ne se perd entre la lecture et l'écriture, quelle que soit l'heure du téléphone du coach). Aucune visite
@@ -119,7 +119,8 @@ const outilTableau = {
     /* v72 (E) : la visite (décidée ici, au rendu : la clé du coach est dans contenus), puis les inscrits d'après elle */
     const moi = Auth.utilisateur() && Auth.utilisateur().id, t = Date.now(), futur = t + 5 * 60000;
     const V = this.visiteLue(moi && contenus[moi] ? contenus[moi][this.VISITE.cle] : null);
-    const crees = (profils || []).map(p => p && this.iso(p.cree_le)).filter(x => x && Date.parse(x) <= futur).sort();
+    /* le seuil de la visite suivante : jamais une date future (cree_le est modifiable par son compte) */
+    const crees = (profils || []).map(p => p && this.iso(p.cree_le)).filter(x => x && Date.parse(x) <= t).sort();
     const vis = this.visite(V, t, crees.length ? crees[crees.length - 1] : null);
     const borne = vis.seuil ? Date.parse(vis.seuil) : t - this.VISITE.JOURS * 86400000;
     const nouveaux = lignes.filter(l => l.p.statut === "prospect" && this.iso(l.p.cree_le) && Date.parse(l.p.cree_le) > borne && Date.parse(l.p.cree_le) <= futur)
@@ -158,7 +159,7 @@ const outilTableau = {
        repartira de l'ancienne */
     if (vis.nouvelle && moi && !Store.idConsulte){
       Auth.appel("/rest/v1/donnees?on_conflict=user_id,outil", { method: "POST", headers: { "Prefer": "resolution=merge-duplicates,return=minimal" },
-        body: [{ user_id: moi, outil: this.VISITE.cle, contenu: vis.nouvelle, maj_le: new Date(t).toISOString() }] }).catch(() => {});
+        body: [{ user_id: moi, outil: this.VISITE.cle, contenu: vis.nouvelle, maj_le: new Date(t).toISOString() }] }).catch(e => console.warn("[MHX] visite du coach non enregistrée", e && e.statut));
     }
     Nouveautes.compter(lignes);   // v51 : le badge de l'onglet Prospects (le panneau est sur la page Prospects)
   }

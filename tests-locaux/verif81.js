@@ -270,6 +270,14 @@ const PREMIERE = "Première visite enregistrée : les inscrits des 7 derniers jo
     const p4 = await panneau(page);
     ok("E3 : un prospect inscrit pendant la visite apparaît au rechargement (Inès), sans nouvelle écriture", !!p4 && JSON.stringify(p4.lignes.map(l => l.prenom)) === '["Inès"]' && visites(db).length === 2, JSON.stringify({ p4, ecr: resume(db) }));
   });
+  await bloc("E1b. date d'inscription future", async () => {
+    const db = base({ profils: [{ id: PID(9), prenom: "Futur", nom: "Proche", role: "client", statut: "prospect", cree_le: new Date(Date.now() + 3 * MIN).toISOString() }] });
+    const { page } = await contexte(b, db, { qui: COACH, viewport: LARGE });
+    await page.goto(URL0); await pret(page); await page.waitForSelector("#tb-nouveaux"); await attendre(page, 600);
+    const V = visites(db);
+    ok("E1 : une date d'inscription dans le futur (profil modifiable par son compte) ne devient jamais le seuil de la visite suivante : jusqua = l'inscription passée la plus récente (Zoé)",
+      V.length === 1 && V[0].contenu.jusqua === avant(2 * H), JSON.stringify(V.map(x => x.contenu)));
+  });
   await bloc("E4. visite récente, clé piégée", async () => {
     { const db = base({ visite: true });
       const { page } = await contexte(b, db, { qui: COACH, viewport: LARGE });
