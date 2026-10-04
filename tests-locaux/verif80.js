@@ -742,6 +742,30 @@ const champTel = (page, id) => page.evaluate(id => {
     });
   });
 
+  /* =================== v73 (C). le questionnaire client ne pose plus « Numéro WhatsApp » =================== */
+  await bloc("v73 C. questionnaire", async () => {
+    const ANCIEN = "+33 6 39 98 00 01 (réponse d'avant la v73)", Q = "Numéro WhatsApp (avec indicatif)";
+    const db = base([{ user_id: THOMAS.id, outil: "contact", contenu: { telephone: TEL_THOMAS }, maj_le: avant(J) }]);
+    db.donnees.find(r => r.user_id === THOMAS.id && r.outil === "intake").contenu.whatsapp = ANCIEN;
+    { const { page } = await contexte(b, db, { qui: THOMAS });
+      await page.goto(URL0 + "#/profil"); await pret(page); await page.waitForSelector("#q-ville");
+      const v = await page.evaluate(q => ({ champ: !!document.getElementById("q-whatsapp"), libelle: document.getElementById("vue").textContent.includes(q),
+        voisins: ["q-email", "q-fuseau", "q-metier"].every(id => !!document.getElementById(id)) }), Q);
+      ok("v73 C : client (Thomas) : la question « Numéro WhatsApp (avec indicatif) » n'est plus posée dans son questionnaire (ni champ, ni libellé) ; ses voisines (email, fuseau, métier) restent",
+        !v.champ && !v.libelle && v.voisins, JSON.stringify(v));
+      await page.fill("#q-ville", "Lyon 3e"); await attendre(page, 2000);
+      const W = ecr(db, "intake", THOMAS.id), dern = W.length ? W[W.length - 1].contenu : null;
+      ok("v73 C : une réponse modifiée (ville) réécrit son questionnaire sans effacer l'ancienne réponse WhatsApp (gardée telle quelle)",
+        !!dern && dern.ville === "Lyon 3e" && dern.whatsapp === ANCIEN, JSON.stringify({ n: W.length, dern })); }
+    { const n0 = db.ecritures.length;
+      const { page } = await contexte(b, db, { qui: COACH, viewport: LARGE });
+      await page.goto(URL0 + "#/client/" + THOMAS.id + "/profil"); await pret(page); await page.waitForSelector("#q-ville"); await attendre(page, 800);
+      const v = await page.evaluate(() => { const e = document.getElementById("q-whatsapp"), l = document.querySelector('label[for="q-whatsapp"]');
+        return { lecture: e && e.dataset.lecture, t: e && e.textContent.trim(), libelle: l && l.textContent.trim() }; });
+      ok("v73 C : coach, fiche de Thomas (son questionnaire, en lecture) : l'ancienne réponse « Numéro WhatsApp (avec indicatif) » toujours lisible ; rien d'écrit",
+        v.lecture === "1" && v.t === ANCIEN && v.libelle === Q && db.ecritures.length === n0, JSON.stringify({ v, ecr: resume(db) })); }
+  });
+
   await b.close(); server.close();
   bilan();
 })().catch(e => { res.push("  ✗ SUITE INTERROMPUE — " + String((e && e.message) || e).split("\n")[0].slice(0, 160)); bilan(); process.exit(1); });

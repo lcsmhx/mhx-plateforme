@@ -12,7 +12,9 @@ const QUESTIONS = [
   { id:"ville",      label:"Ville / Pays", type:"texte" },
   { id:"fuseau",     label:"Fuseau horaire", type:"texte" },
   { id:"email",      label:"Email", type:"texte" },
-  { id:"whatsapp",   label:"Numéro WhatsApp (avec indicatif)", type:"texte" },
+  /* v73 (C) : plus posée (décision de Lucas du 04/10/2026 : le numéro est demandé à tous depuis la v72, clé contact). Une
+     réponse déjà donnée reste dans intake (jamais effacée : le champ absent n'est pas réécrit) et se lit dans la fiche, côté coach. */
+  { id:"whatsapp",   label:"Numéro WhatsApp (avec indicatif)", type:"texte", retiree:true },
   { id:"metier",     label:"Ton métier et ton rythme de travail", type:"long",
     aide:"Horaires, déplacements, poste sédentaire ou physique." },
   { id:"taille",     label:"Taille (cm)", type:"nombre", requis:true },
@@ -177,6 +179,7 @@ const outilProfil = {
     const D = Store.cache["intake"] || {};
     let corps = "", ouverte = false;
     QUESTIONS.forEach(q => {
+      if (q.retiree && !Store.idConsulte) return;   // v73 (C) : question retirée, lue seulement en consultation
       if (q.section){
         if (ouverte) corps += `</div></section>`;
         corps += `<section class="panel"><h2>${esc(q.section)}</h2><div class="grid g2">`;
