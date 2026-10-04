@@ -43,6 +43,12 @@ Remplies au fil des sujets ; le détail est dans chaque commit.
 - Après une inscription, si l'écriture du numéro rate (réseau), il est gardé sur l'appareil et renvoyé à l'ouverture suivante (sans redemander).
 - Coach : colonne « Téléphone » à droite de Mes clients (après Diète : l'ordre des colonnes existantes ne bouge pas), ligne « Téléphone : … » sur chaque carte Prospects et dans l'en-tête de la fiche, avec « Appeler » et « WhatsApp ». Le coach ne peut pas modifier un numéro (règles de la base) : seule la personne le fait, dans Mon compte. Le numéro n'est pas compté comme une « saisie » (Activité, « Inactif depuis »).
 
+**B — L'inscription en premier.**
+- « Appareil déjà venu » (s'ouvre sur la connexion) : le marqueur `mhx_deja_venu` (posé à chaque ouverture avec une session, gardé à la déconnexion), **ou** les traces d'avant la v72 que l'app n'écrit que pour un compte connecté (compteur de visites, bannière d'installation) — sinon tous les clients déjà déconnectés ou dont la session a expiré arriveraient sur « Crée ton espace gratuit » sur leur propre téléphone —, **ou** l'app ouverte depuis l'écran d'accueil (sur iPhone, elle a un stockage séparé de Safari, et elle n'est proposée qu'à un compte connecté). Sinon (appareil neuf) : la création de compte.
+- Nouvelle adresse `…/#/connexion` : ouvre toujours la connexion (à envoyer à un client dont tu as créé le compte : sur un appareil neuf, il verrait sinon la création de compte). `#/inscription` ouvre toujours la création de compte. Les liens d'email (jetons, lien périmé, changement d'adresse) restent sur la connexion, comme avant.
+- Changer de langue sur la connexion ou l'inscription garde l'écran (le rechargement rouvrait l'écran par défaut).
+- Textes : « Déjà un compte ? Se connecter » (sur l'inscription) et « Pas encore de compte ? Créer mon compte » (sur la connexion, à côté de « Mot de passe oublié ? »), en anglais « Already have an account? Log in » et « No account yet? Create my account ».
+
 ## Questions pour Lucas
 
 Remplies au fil des sujets.
@@ -51,4 +57,6 @@ Remplies au fil des sujets.
 - **A — Liste des pays.** J'ai ajouté « Autre pays » pour ne bloquer personne. Si tu préfères la liste fermée, dis-le (un client hors de ces 8 pays ne pourrait plus entrer dans l'app).
 - **A — Doublon.** Le questionnaire client a déjà une question « Numéro WhatsApp (avec indicatif) » (texte libre). Je l'ai laissée telle quelle : faut-il la retirer maintenant que le numéro est demandé à tous ?
 - **A — Base (lot 2 de la v66, en attente).** Si tu appliques un jour la liste des clés autorisées (relevé `supabase/releve-2026-09-30/`), il faudra y ajouter `contact` (et la clé de visite du coach du sujet E), sinon ces écritures seraient refusées.
+- **B — Suppression de compte.** « Supprimer mon compte » (Mes données) efface tout ce que l'app garde sur l'appareil, marqueur compris : ce téléphone rouvre ensuite la création de compte. Je l'ai laissé ainsi (comportement d'avant) ; dis-moi si tu préfères qu'il garde la connexion.
+- **B — Clients créés par toi.** Sur un appareil neuf, ils voient d'abord « Crée ton espace gratuit » (avec « Déjà un compte ? Se connecter » en bas du formulaire). Pour leur éviter de chercher, envoie-leur l'adresse `https://lcsmhx.github.io/mhx-plateforme/#/connexion`.
 - **A — Confirmation d'email.** Elle est coupée dans Supabase (inscription = session tout de suite). Si tu la rallumes un jour, le numéro tapé à l'inscription ne pourra pas être enregistré avant la première connexion : l'écran « Ajoute ton numéro… » le redemandera.

@@ -189,7 +189,8 @@ async function repondre(r, db){
 }
 
 /* ---------- un navigateur (contexte) ----------
-   opts : viewport (MOBILE par défaut), langue ("en"), qui (compte connecté : { id, email }), stockage ({ clé: valeur }) */
+   opts : viewport (MOBILE par défaut), langue ("en"), qui (compte connecté : { id, email }), stockage ({ clé: valeur }),
+   neuf (appareil sans aucune trace : ni mhx_installe ni mhx_visites), autonome (app lancée depuis l'écran d'accueil) */
 async function contexte(b, db, opts){
   opts = opts || {};
   const c = await b.newContext({ viewport: opts.viewport || MOBILE });
@@ -197,16 +198,17 @@ async function contexte(b, db, opts){
   c.setDefaultTimeout(8000);
   await c.route("**/*", r => repondre(r, db));
   if (opts.qui) db.emails[opts.qui.id] = opts.qui.email;
-  await c.addInitScript(({ langue, s, stockage }) => {
+  await c.addInitScript(({ langue, s, stockage, neuf, autonome }) => {
     if (!/^https?:$/.test(location.protocol)) return;
+    if (autonome) Object.defineProperty(navigator, "standalone", { get: () => true });
     if (!localStorage.getItem("__init")) {   // l'appareil n'est préparé qu'une fois : un rechargement le garde
       localStorage.setItem("__init", "1");
-      localStorage.setItem("mhx_installe", "1"); localStorage.setItem("mhx_visites", "3");
+      if (!neuf){ localStorage.setItem("mhx_installe", "1"); localStorage.setItem("mhx_visites", "3"); }
       if (langue) localStorage.setItem("mhx_langue", langue);
       if (s) localStorage.setItem("mhx_session", JSON.stringify(s));
       Object.keys(stockage || {}).forEach(k => localStorage.setItem(k, stockage[k]));
     }
-  }, { langue: opts.langue || "", s: opts.qui ? session(opts.qui.id, opts.qui.email) : null, stockage: opts.stockage || null });
+  }, { langue: opts.langue || "", s: opts.qui ? session(opts.qui.id, opts.qui.email) : null, stockage: opts.stockage || null, neuf: !!opts.neuf, autonome: !!opts.autonome });
   const page = await c.newPage();
   page.on("pageerror", e => res.push("  ✗ ERREUR JS " + String(e).slice(0, 300)));
   page.on("console", msg => { if (msg.type() === "error" && !/ERR_FAILED|status of [45]\d\d/.test(msg.text())) res.push("  ✗ CONSOLE " + msg.text().slice(0, 200)); });
@@ -498,6 +500,77 @@ const champTel = (page, id) => page.evaluate(id => {
       !!f1 && f1.t === "Téléphone : " + TEL_NOAH + " Appeler WhatsApp" && JSON.stringify(f1.liens) === JSON.stringify(["tel:" + TEL_NOAH, "https://wa.me/33639980002"]) && f2 === "Téléphone : —",
       JSON.stringify({ f1, f2 }));
     ok("A7 : le coach n'a rien écrit", db.ecritures.length === 0, resume(db));
+  });
+
+  /* =================== B. l'inscription en premier =================== */
+  const portailVu = page => page.evaluate(() => ({ h2: ((document.querySelector(".carte-co h2") || {}).textContent || "").trim(),
+    liens: Array.from(document.querySelectorAll(".bascule button")).map(x => ({ mode: x.dataset.mode, t: x.textContent.replace(/[\u00a0\u202f]/g, " ").trim() })),
+    err: ((document.getElementById("co-err") || {}).textContent || "").trim(), hash: location.hash, prenom: !!document.getElementById("c-prenom") }));
+  const INSC = { h2: "Crée ton espace gratuit", lien: "Déjà un compte ? Se connecter" }, CONN = { h2: "Connexion à ton espace", oubli: "Mot de passe oublié ?", lien: "Pas encore de compte ? Créer mon compte" };
+  await bloc("B. inscription en premier", async () => {
+    { const db = base();
+      const { page } = await contexte(b, db, { neuf: true });
+      await page.goto(URL0); await page.waitForSelector("#c-go"); await attendre(page, 300);
+      const v1 = await portailVu(page);
+      await page.click('.bascule [data-mode="connexion"]'); await attendre(page, 300);
+      const v2 = await portailVu(page);
+      ok("B : appareil neuf, adresse vide : la page d'entrée est « Crée ton espace gratuit » avec le lien « Déjà un compte ? Se connecter » ; il mène à « Connexion à ton espace » avec « Mot de passe oublié ? » et « Pas encore de compte ? Créer mon compte »",
+        v1.h2 === INSC.h2 && v1.prenom && JSON.stringify(v1.liens) === JSON.stringify([{ mode: "connexion", t: INSC.lien }])
+          && v2.h2 === CONN.h2 && !v2.prenom && JSON.stringify(v2.liens) === JSON.stringify([{ mode: "oubli", t: CONN.oubli }, { mode: "inscription", t: CONN.lien }]),
+        JSON.stringify({ v1, v2 }));
+      await page.click("#co-langue"); await page.waitForSelector("#c-go"); await attendre(page, 500);
+      const v3 = await portailVu(page);
+      ok("B : … changer de langue sur la connexion la garde (adresse #/connexion), liens en anglais", v3.h2 === "Log in to your space" && v3.hash === "#/connexion" && JSON.stringify(v3.liens.map(x => x.t)) === JSON.stringify(["Forgot your password?", "No account yet? Create my account"]),
+        JSON.stringify(v3));
+      await page.click('.bascule [data-mode="inscription"]'); await attendre(page, 300);
+      const v4 = await portailVu(page);
+      ok("B : … et l'inscription en anglais : « Already have an account? Log in »", JSON.stringify(v4.liens.map(x => x.t)) === JSON.stringify(["Already have an account? Log in"]), JSON.stringify(v4));
+    }
+    const vues = [];
+    for (const o of [{ stockage: { mhx_deja_venu: "1" }, neuf: true }, { stockage: { mhx_visites: "1" }, neuf: true }, { stockage: { mhx_installe: "1" }, neuf: true }, { neuf: true, autonome: true }]) {
+      const db = base();
+      const { page } = await contexte(b, db, o);
+      await page.goto(URL0); await page.waitForSelector("#c-go"); await attendre(page, 300);
+      vues.push((await portailVu(page)).h2);
+    }
+    ok("B : appareil déjà venu (marqueur mhx_deja_venu, ou traces d'avant la v72 : compteur de visites, bannière d'installation ; ou app lancée depuis l'écran d'accueil) : la page d'entrée est la connexion",
+      vues.length === 4 && vues.every(h => h === CONN.h2), JSON.stringify(vues));
+    const liensEmail = [];
+    for (const h of ["#access_token=jeton-tiers&refresh_token=x&type=recovery", "#access_token=jeton-tiers&type=invite", "#message=Confirmation+link+accepted", "#error=access_denied&error_code=otp_expired", "#/connexion"]) {
+      const db = base();
+      const { page } = await contexte(b, db, { neuf: true });
+      await page.goto(URL0 + h); await page.waitForSelector("#c-go"); await attendre(page, 400);
+      const v = await portailVu(page); liensEmail.push(v.h2 + (v.err ? " [" + v.err.slice(0, 30) + "]" : ""));
+    }
+    ok("B : appareil neuf, liens d'email (réinitialisation, invitation, message, lien périmé) et #/connexion : la connexion, comme avant (avec leur message)",
+      liensEmail.length === 5 && liensEmail.every(x => x.indexOf(CONN.h2) === 0) && liensEmail.slice(0, 4).every(x => / \[/.test(x)), JSON.stringify(liensEmail));
+    { const db = base();
+      const { page } = await contexte(b, db, { stockage: { mhx_deja_venu: "1" }, neuf: true });
+      await page.goto(URL0 + "#/inscription"); await page.waitForSelector("#c-go"); await attendre(page, 300);
+      ok("B : #/inscription ouvre la création de compte, même sur un appareil déjà venu", (await portailVu(page)).h2 === INSC.h2, ""); }
+    { const db = base();
+      const { page } = await contexte(b, db, { qui: NOAH, neuf: true });
+      await page.goto(URL0); await pret(page);
+      const m1 = await page.evaluate(() => localStorage.getItem("mhx_deja_venu"));
+      await Promise.all([page.waitForNavigation({ timeout: 15000 }).catch(() => {}), page.evaluate(() => Auth.deconnecter())]);
+      await page.waitForSelector("#c-go"); await attendre(page, 300);
+      const m2 = await page.evaluate(() => localStorage.getItem("mhx_deja_venu")), v = await portailVu(page);
+      ok("B : une ouverture avec une session pose le marqueur ; « Se déconnecter » le garde, et l'appareil s'ouvre sur la connexion", m1 === "1" && m2 === "1" && v.h2 === CONN.h2, JSON.stringify({ m1, m2, v })); }
+  });
+  await bloc("B. inscription fermée", async () => {
+    const db = base();
+    const serveurFerme = h => FT.forcerInscription(h, false);
+    /* inscription fermée (la suite la sert ouverte) : un contexte qui sert le fichier avec la valeur fermée */
+    const c = await b.newContext({ viewport: MOBILE }); ouverts.push(c);
+    await c.route("**/*", async r => {
+      const u = new URL(r.request().url());
+      if (u.hostname === "localhost" && /\/js\/config\.js$/.test(u.pathname)) { const t = serveurFerme(retouche(fs.readFileSync(path.join(path.dirname(HTML), "js", "config.js"), "utf8"))); return r.fulfill({ status: 200, contentType: "text/javascript; charset=utf-8", body: t }); }
+      return repondre(r, db);
+    });
+    const page = await c.newPage();
+    await page.goto(URL0); await page.waitForSelector("#c-go"); await attendre(page, 300);
+    const v = await portailVu(page);
+    ok("B : inscription fermée, appareil neuf : la connexion, sans lien vers la création de compte", v.h2 === CONN.h2 && JSON.stringify(v.liens.map(x => x.mode)) === JSON.stringify(["oubli"]), JSON.stringify(v));
   });
 
   await b.close(); server.close();

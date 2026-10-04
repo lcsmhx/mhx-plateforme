@@ -9,7 +9,21 @@ const Auth = {
      mode test) reste a la deconnexion ; tout autre « mhx_* » (session, copies en attente, refus, invitations, activite,
      tracking, brouillons, choix d'affichage par compte) part avec le compte : sur un appareil partage, rien d'un compte
      ne doit rester. mhx_visite_comptee (sessionStorage) n'est qu'un drapeau d'onglet : garde lui aussi. */
-  CLES_APPAREIL: ["mhx_theme", "mhx_langue", "mhx_installe", "mhx_visites", "mhx_decouverte_jour", "mhx_visite_comptee"],
+  CLES_APPAREIL: ["mhx_theme", "mhx_langue", "mhx_installe", "mhx_visites", "mhx_decouverte_jour", "mhx_visite_comptee", "mhx_deja_venu"],
+  /* v72 (B) : un appareil qui s'est déjà connecté au moins une fois (marqueur posé à chaque ouverture avec une session, gardé
+     à la déconnexion ; aussi les traces d'avant la v72, écrites seulement quand on est connecté : compteur de visites,
+     bannière d'installation ; et l'app lancée depuis l'écran d'accueil, qui n'existe que pour un compte) s'ouvre sur la
+     connexion ; un appareil neuf, sur la création de compte. Stockage bloqué : appareil neuf. */
+  CLE_VENU: "mhx_deja_venu",
+  appareilConnu(){
+    try { if (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) return true; } catch(e){}
+    try { if (window.navigator && window.navigator.standalone === true) return true; } catch(e){}
+    try {
+      if (localStorage.getItem(this.CLE_VENU) === "1" || localStorage.getItem("mhx_installe") === "1") return true;
+      return (parseInt(localStorage.getItem("mhx_visites"), 10) || 0) >= 1;
+    } catch(e){ return false; }
+  },
+  noterAppareil(){ try { localStorage.setItem(this.CLE_VENU, "1"); } catch(e){} },
   viderCompte(){
     [localStorage, sessionStorage].forEach(m => {
       try { Object.keys(m).forEach(k => { if (k.indexOf("mhx_") === 0 && this.CLES_APPAREIL.indexOf(k) === -1) m.removeItem(k); }); } catch(e){}

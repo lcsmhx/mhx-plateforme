@@ -1057,3 +1057,9 @@ Object.assign(I18N.en, {
   "C'est déjà ton numéro.": "That's already your number.",
   "Ton numéro n'a pas pu être chargé. Recharge la page.": "Your number couldn't be loaded. Reload the page."
 });
+
+/* v72 (B) — l'inscription en premier : les liens entre création de compte et connexion */
+Object.assign(I18N.en, {
+  "Déjà un compte ? Se connecter": "Already have an account? Log in",
+  "Pas encore de compte ? Créer mon compte": "No account yet? Create my account"
+});

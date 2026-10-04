@@ -49,6 +49,9 @@ function lienLegal(id, cle, texte){
   const u = lienSur((CONFIG.textes_legaux || {})[cle]);
   return u ? `<a class="lien" id="${id}" href="${esc(u)}" target="_blank" rel="noopener">${esc(texte)}</a>` : `<span class="lien lien-absent" id="${id}">${esc(texte)}</span>`;
 }
+/* v72 (B) : l'écran d'entrée sans session ni adresse particulière — la création de compte sur un appareil neuf, la
+   connexion sur un appareil déjà venu (Auth.appareilConnu) ; inscription fermée : toujours la connexion */
+function entreePortail(){ return (CONFIG.marque && CONFIG.marque.inscription_libre && !Auth.appareilConnu()) ? "inscription" : "connexion"; }
 function portail(mode){
   if (UI._ouverte) UI.fermer();   // v44 : un volet (conditions) encore ouvert ne doit pas figer l'ecran reconstruit
   /* v39 : « inscription » n'existe que si l'inscription libre est ouverte */
@@ -90,9 +93,9 @@ function portail(mode){
       ${CONFIG.marque.version ? `<p class="co-aide">v${esc(CONFIG.marque.version)}</p>` : ""}
       <div class="bascule">
         ${mode === "connexion"
-          ? `<button type="button" data-mode="oubli">Mot de passe oublié ?</button>${libre ? `<button type="button" data-mode="inscription">Créer mon compte</button>` : ""}`
+          ? `<button type="button" data-mode="oubli">Mot de passe oublié ?</button>${libre ? `<button type="button" data-mode="inscription">${esc(typoFr("Pas encore de compte ? Créer mon compte"))}</button>` : ""}`
           : mode === "inscription"
-          ? `<button type="button" data-mode="connexion">J'ai déjà un compte</button>`
+          ? `<button type="button" data-mode="connexion">${esc(typoFr("Déjà un compte ? Se connecter"))}</button>`
           : `<button type="button" data-mode="connexion">Retour à la connexion</button>`}
       </div>
     </div>
@@ -113,6 +116,8 @@ function portail(mode){
   });
   $("co-langue").addEventListener("click", () => {
     const ok = I18N.choisir(I18N.langue === "en" ? "fr" : "en");
+    /* v72 (B) : le rechargement rouvre le même écran (sur un appareil neuf, l'adresse vide rouvrirait la création de compte) */
+    if (ok && (mode === "connexion" || mode === "inscription")){ try { history.replaceState(null, "", location.pathname + location.search + "#/" + mode); } catch(e){} }
     if (ok) location.reload(); else portail(mode);
   });
 

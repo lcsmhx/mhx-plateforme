@@ -422,18 +422,18 @@ const lireTuiles = page => page.$$eval("#tb-vue .tb-tuile", l => l.map(t => {
             if (bs.length !== 2) return { largeur: innerWidth, erreur: bs.length + " lien(s) dans .bascule", bon: false };
             const B = bas.getBoundingClientRect(), [a, z] = bs.map(e => e.getBoundingClientRect());
             const centre = r => (r.left + r.right) / 2, cB = centre(B), arr = x => Math.round(x * 10) / 10;
-            const liens = bs.map(e => e.textContent.trim());
+            const liens = bs.map(e => e.textContent.replace(/[\u00a0\u202f]/g, " ").trim());
             const ligne = Math.abs(a.top - z.top) < 3, deuxLignes = z.top >= a.bottom + 6;
             const ecart = z.left - a.right, decalPaire = (a.left + z.right) / 2 - cB, decal = [centre(a) - cB, centre(z) - cB];
             const place = ligne ? ecart >= 12 && ecart <= 24 && Math.abs(decalPaire) <= 3 : deuxLignes && decal.every(d => Math.abs(d) <= 3);
             return { largeur: innerWidth, liens, disposition: ligne ? "côte à côte" : deuxLignes ? "deux lignes" : "ni l'un ni l'autre",
               ecart: arr(ecart), dessous: arr(z.top - a.bottom), decalPaire: arr(decalPaire), decal: decal.map(arr),
-              bon: liens[0] === "Mot de passe oublié ?" && liens[1] === "Créer mon compte" && place };
+              bon: liens[0] === "Mot de passe oublié ?" && liens[1] === "Pas encore de compte ? Créer mon compte" && place };   // v72 (B) : le texte du lien
           }));
         } finally { await c.close(); }
       }
     } catch (e) { mesures.push({ erreur: String((e && e.message) || e).split("\n")[0].slice(0, 160), bon: false }); }
-    ok("connexion, inscription ouverte, téléphone 320 / 375 / 390 px : « Mot de passe oublié ? » et « Créer mon compte » côte à côte (12 à 24 px entre les deux, paire centrée à 3 px près) ou sur deux lignes (au moins 6 px entre les deux, chacun centré à 3 px près)",
+    ok("connexion, inscription ouverte, téléphone 320 / 375 / 390 px : « Mot de passe oublié ? » et « Pas encore de compte ? Créer mon compte » (v72 : texte du lien) côte à côte (12 à 24 px entre les deux, paire centrée à 3 px près) ou sur deux lignes (au moins 6 px entre les deux, chacun centré à 3 px près)",
       mesures.length === 3 && mesures.every(m => m.bon), JSON.stringify(mesures));
   } finally { inscriptionLibre = false; }
   inscriptionLibre = false;

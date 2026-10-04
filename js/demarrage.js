@@ -177,11 +177,14 @@ const Retour = {
      si CONFIG.marque.inscription_libre vaut true : #/inscription ouvre alors la
      creation de compte ; sinon, l'ecran de connexion comme n'importe quelle autre adresse. */
   if (!Auth.connecte()){
-    portail(/inscription/.test(location.hash) ? "inscription" : "connexion");
+    /* v72 (B) : #/inscription → création de compte, #/connexion → connexion ; un lien d'email (jetons, message,
+       changement d'adresse) garde la connexion, comme avant ; sinon l'écran d'entrée de l'appareil (entreePortail) */
+    portail(/inscription/.test(location.hash) ? "inscription" : (/connexion/.test(location.hash) || lienEmail || premierLien || emailChange) ? "connexion" : entreePortail());
     if (lienEmail) setTimeout(() => { const z = $("co-err"); if (z){ z.className = "erreur"; z.textContent = trad(DECOUVERTE.inscription.lien_rate); } }, 60);
     else if (premierLien || emailChange) setTimeout(() => { const z = $("co-err"); if (z){ z.className = "erreur ok"; z.textContent = trad(DECOUVERTE.inscription[emailChange ? "email_change" : "premier_lien"]); } }, 60);
     return;
   }
+  Auth.noterAppareil();   // v72 (B) : une session sur cet appareil : il s'ouvrira sur la connexion, même après « Se déconnecter »
   const ok = await Auth.assurer();
   /* v48 : sessions partagees entre onglets, modifications gardees sur l'appareil */
   window.addEventListener("storage", e => Auth.depuisAutreOnglet(e));
