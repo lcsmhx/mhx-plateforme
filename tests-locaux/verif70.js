@@ -41,6 +41,7 @@
       source « inscription » }, une fois), aucune donnée de santé écrite ni aucune métadonnée santé demandée ; le
       Profil garde son interrupteur (état d'après la copie ; un changement écrit version « 2026-09-28c »,
       DECOUVERTE.accords.newsletter_profil, source « profil »).
+   v74 (décision de Lucas du 04/10) : plus de champ Nom à l'inscription : data.nom = "" (profils.nom vide). Même nombre.
    Supabase simulé (gabarit de verif55) : rien ne part vers la vraie base (routage par NOM D'HÔTE) ; chaque écriture est
    notée. Dates relatives au lancement. Chaque bloc tourne à part (« ✗ BLOC INTERROMPU ») ; code de sortie 1 dès qu'un ✗
    apparaît. Comptes fictifs (@exemple.fr).
@@ -342,9 +343,9 @@ const couleurs = page => page.evaluate(() => {
   });
 });
 
-/* remplit le formulaire (page sur #/inscription), sans toucher aux cases */
+/* remplit le formulaire (page sur #/inscription), sans toucher aux cases ; v74 : plus de champ Nom */
 async function remplir(page, f){
-  await page.fill("#c-prenom", f.prenom); await page.fill("#c-nom", f.nom); await page.fill("#c-email", f.email); await page.fill("#c-mdp", f.mdp || "motdepasse1");
+  await page.fill("#c-prenom", f.prenom); await page.fill("#c-email", f.email); await page.fill("#c-mdp", f.mdp || "motdepasse1");
 }
 
 (async () => {
@@ -583,7 +584,7 @@ async function remplir(page, f){
         const db = base(); db.inscription.id = ZID;
         const { page } = await contexte(b, db, { viewport: MOBILE, langue: langue === "en" ? "en" : "", theme });
         await page.goto(URL0 + "#/inscription"); await page.waitForSelector("#c-go"); await attendre(page, 400);
-        await remplir(page, { prenom: "Zoé", nom: "  Martin ", email: mail });
+        await remplir(page, { prenom: "Zoé", email: mail });   // v74 : plus de champ Nom
         /* sans la case des conditions : refus, message exact, aucun appel ; même refus avec la seule newsletter */
         await page.click("#c-go"); await attendre(page, 300);
         const m1 = norm(await page.textContent("#co-err").catch(() => ""));
@@ -612,8 +613,8 @@ async function remplir(page, f){
 
         const c0 = db.inscriptions[0] || {}, md = c0.data || {}, cles = Object.keys(md).sort().join(",");
         const vus = await page.evaluate(() => ({ cgu: (CONFIG.textes_legaux || {}).cgu_version, conditions: (DECOUVERTE.accords || {}).conditions, news: (DECOUVERTE.accords || {}).newsletter })).catch(e => ({ erreur: String(e) }));
-        ok(`… POST /auth/v1/signup : data = EXACTEMENT ${CLES_DATA} — prénom « Zoé », nom « Martin », consentement = instant ISO du clic, conditions_version « ${version} » (valeur servie = CONFIG.textes_legaux.cgu_version = DECOUVERTE.accords.conditions), newsletter ${news ? "= le même instant ISO" : "null"}, newsletter_version « ${V_NEWS} » (= DECOUVERTE.accords.newsletter) ; ni consentement_sante ni sante_version ; aucun appel hors de la page, du faux Supabase et des polices`,
-          cles === CLES_DATA && c0.email === mail && c0.password === "motdepasse1" && md.prenom === "Zoé" && md.nom === "Martin" && isoPres(md.consentement, t0)
+        ok(`… POST /auth/v1/signup : data = EXACTEMENT ${CLES_DATA} — prénom « Zoé », nom vide (v74 : plus de champ Nom), consentement = instant ISO du clic, conditions_version « ${version} » (valeur servie = CONFIG.textes_legaux.cgu_version = DECOUVERTE.accords.conditions), newsletter ${news ? "= le même instant ISO" : "null"}, newsletter_version « ${V_NEWS} » (= DECOUVERTE.accords.newsletter) ; ni consentement_sante ni sante_version ; aucun appel hors de la page, du faux Supabase et des polices`,
+          cles === CLES_DATA && c0.email === mail && c0.password === "motdepasse1" && md.prenom === "Zoé" && md.nom === "" && isoPres(md.consentement, t0)
             && md.conditions_version === version && vus.cgu === version && vus.conditions === version
             && (news ? (isoPres(md.newsletter, t0) && md.newsletter === md.consentement) : md.newsletter === null)
             && md.newsletter_version === V_NEWS && vus.news === V_NEWS && !autresHotes().length,

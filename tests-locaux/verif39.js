@@ -27,6 +27,9 @@
    v71 (D) : le tableau « Suivi de mes clients » ne liste plus les prospects (ligne « Les prospects sont dans Prospects →
    (N compte gratuit). » sous le titre) : les 2 vérifications de la ligne de Léa dans #tb-clients (pastille « prospect », feu
    vert) sont adaptées (absence de Léa, ligne et lien vers Prospects). Même nombre (48).
+   v74 (décision de Lucas du 04/10) : plus de champ Nom à l'inscription : #c-nom absent (FR, et « Your last name » en anglais),
+   aucune erreur sur le nom (le prénom rempli, l'envoi passe au mot de passe), métadonnées avec nom "" (profils.nom vide,
+   comme avant la v52). Même nombre (48).
    Usage : node verif39.js ../index.html                                         */
 const { chromium } = require("playwright"); const fs = require("fs"); const http = require("http"); const path = require("path");
 const F = require("./fixtures"); const HTML = path.resolve(process.argv[2] || "../index.html");
@@ -317,16 +320,17 @@ const lireTuiles = page => page.$$eval("#tb-vue .tb-tuile", l => l.map(t => {
     /* v52 (lot B) : plus de « 7 jours » ; titre et sous-titre de l'espace gratuit. v64 (brief V2 A1, A6) : sous-titre et bouton */
     ok("inscription : titre « Crée ton espace gratuit », sous-titre « Gratuit, pour toujours : … et la Speed Formation avec ses vidéos, programmes et plans alimentaires. », bouton « Créer mon espace gratuit », plus aucun « Challenge » ni « 7 jours »", ecran.titre === "Crée ton espace gratuit" && ecran.sous === SOUS_FR && ecran.bouton === "Créer mon espace gratuit" && !ecran.challenge && !/7 jours/.test(ecran.sous), JSON.stringify(ecran));
     /* v52 (lot B) : cases séparées, aucune cochée d'avance, et le champ Nom. v64 (brief V2 A) : UNE seule case obligatoire
-       (conditions, son texte exact, point collé au 2e lien), la newsletter, « Rester connecté » (coché) ; plus de case santé */
-    ok("inscription : une seule case obligatoire, conditions (#c-cgu, « J'ai 18 ans ou plus et j'accepte les CGU et la politique de confidentialité. », point final collé au lien), puis newsletter (#c-newsletter), toutes deux vides ; plus de case santé (#c-sante absente) ; « Rester connecté » coché ; champ Nom (#c-nom)", JSON.stringify(ecran.cases) === '["vide","absente","vide","cochée"]' && JSON.stringify(ecran.cocher) === '["c-cgu","c-newsletter","c-rester"]' && ecran.cgu === CGU_FR && ecran.point && ecran.nom, JSON.stringify(ecran));
+       (conditions, son texte exact, point collé au 2e lien), la newsletter, « Rester connecté » (coché) ; plus de case santé.
+       v74 : plus de champ Nom (#c-nom absent) */
+    ok("inscription : une seule case obligatoire, conditions (#c-cgu, « J'ai 18 ans ou plus et j'accepte les CGU et la politique de confidentialité. », point final collé au lien), puis newsletter (#c-newsletter), toutes deux vides ; plus de case santé (#c-sante absente) ; « Rester connecté » coché ; plus de champ Nom (#c-nom absent, v74)", JSON.stringify(ecran.cases) === '["vide","absente","vide","cochée"]' && JSON.stringify(ecran.cocher) === '["c-cgu","c-newsletter","c-rester"]' && ecran.cgu === CGU_FR && ecran.point && !ecran.nom, JSON.stringify(ecran));
     await page.fill("#c-email", "nouvelle@exemple.fr"); await page.fill("#c-mdp", "court");
     await page.click("#c-go"); await attendre(page, 300);
     ok("inscription : prénom obligatoire", (await page.textContent("#co-err")).includes("prénom"));
     await page.fill("#c-prenom", "Zoé");
     await page.click("#c-go"); await attendre(page, 300);
-    /* v52 (lot B) : le nom est obligatoire */
-    ok("inscription : nom obligatoire (« Indique ton nom. »)", (await page.textContent("#co-err")).includes("Indique ton nom.") && db.inscriptions.length === 0, await page.textContent("#co-err"));
-    await page.fill("#c-nom", "Martin");
+    /* v52 (lot B) : le nom était obligatoire. v74 : plus de nom demandé — le prénom rempli, l'envoi passe directement au
+       contrôle suivant (le mot de passe trop court), jamais « Indique ton nom. », et rien n'est envoyé */
+    ok("inscription : aucun nom demandé (v74) — le prénom rempli, l'erreur suivante est celle du mot de passe (« 8 caractères »), jamais « Indique ton nom. », rien n'est envoyé", (await page.textContent("#co-err")).includes("8 caractères") && !(await page.textContent("#co-err")).includes("Indique ton nom.") && db.inscriptions.length === 0, await page.textContent("#co-err"));
     await page.click("#c-go"); await attendre(page, 300);
     ok("inscription : 8 caractères minimum", (await page.textContent("#co-err")).includes("8 caractères"));
     await page.fill("#c-mdp", "motdepasse1");
@@ -347,9 +351,10 @@ const lireTuiles = page => page.$$eval("#tb-vue .tb-tuile", l => l.map(t => {
     const ins = db.inscriptions[0] || {}, md = ins.data || {}, isoRe = /^\d{4}-\d{2}-\d{2}T/;
     /* v52 (lot B) : le nom saisi (plus « » vide), chaque accord daté ET versionné, newsletter (null si la case est vide) au lieu d'emails_suivi.
        v64 (brief V2 A) : EXACTEMENT prenom, nom, consentement, conditions_version (= CONFIG.textes_legaux.cgu_version), newsletter,
-       newsletter_version (« 2026-09-30 », texte A4) ; plus de consentement_sante ni de sante_version (accord au premier usage) */
-    ok("inscription : POST /auth/v1/signup avec prénom et nom, consentement daté + version des CGU (CONFIG.textes_legaux.cgu_version, « 2026-10-15 » servie, = DECOUVERTE.accords.conditions, ≠ version du texte court), newsletter null (case vide) + version « 2026-09-30 », aucun accord santé (ni consentement_sante ni sante_version), plus d'emails_suivi (v44, v52, v64)",
-      db.inscriptions.length === 1 && md.prenom === "Zoé" && md.nom === "Martin" && isoRe.test(md.consentement || "") && version.cgu === LEGAUX_TEST.cgu_version && version.accords === LEGAUX_TEST.cgu_version && md.conditions_version === LEGAUX_TEST.cgu_version && !!version.court && md.conditions_version !== version.court
+       newsletter_version (« 2026-09-30 », texte A4) ; plus de consentement_sante ni de sante_version (accord au premier usage).
+       v74 : plus de champ Nom : nom "" (profils.nom vide, comme avant la v52) */
+    ok("inscription : POST /auth/v1/signup avec le prénom et un nom vide (v74 : plus de champ Nom), consentement daté + version des CGU (CONFIG.textes_legaux.cgu_version, « 2026-10-15 » servie, = DECOUVERTE.accords.conditions, ≠ version du texte court), newsletter null (case vide) + version « 2026-09-30 », aucun accord santé (ni consentement_sante ni sante_version), plus d'emails_suivi (v44, v52, v64)",
+      db.inscriptions.length === 1 && md.prenom === "Zoé" && md.nom === "" && isoRe.test(md.consentement || "") && version.cgu === LEGAUX_TEST.cgu_version && version.accords === LEGAUX_TEST.cgu_version && md.conditions_version === LEGAUX_TEST.cgu_version && !!version.court && md.conditions_version !== version.court
       && md.newsletter === null && md.newsletter_version === "2026-09-30" && Object.keys(md).sort().join(",") === "conditions_version,consentement,newsletter,newsletter_version,nom,prenom" && ins.email === "nouvelle@exemple.fr",
       db.inscriptions.length + " " + JSON.stringify(md) + " attendu " + JSON.stringify(version));
     ok("inscription : connecté ensuite, et prospect", await page.evaluate(() => Auth.connecte() && Auth.estProspect()).catch(() => false));
@@ -373,12 +378,12 @@ const lireTuiles = page => page.$$eval("#tb-vue .tb-tuile", l => l.map(t => {
     await page.goto(`http://localhost:${PORT}/#/inscription`); await attendre(page, 1200);
     const t = await page.textContent("body");
     /* v52 (lot B) : espace gratuit, plus de 7 jours ; champ « Your last name ». v64 (brief V2 A1, A2, A6) : sous-titre, case
-       des conditions « I'm 18 or older… », « Create my free account », plus aucun « health data » */
+       des conditions « I'm 18 or older… », « Create my free account », plus aucun « health data ». v74 : plus de « Your last name » */
     const cguEn = await page.$eval("label.co-cgu > span", s => s.textContent.replace(/\s+/g, " ").trim()).catch(() => "");
-    ok("inscription en anglais : « Create your free space », sous-titre « Free, forever: … and the Speed Formation course with its videos, workout programs and meal plans. », « Your first name », « Your last name », case « I'm 18 or older and I accept the Terms of Use and the Privacy Policy. », « Create my free account », plus aucun « health data », « Challenge » ni « 7 days »", t.includes("Create your free space") && t.includes(SOUS_EN) && !t.includes("7 days") && t.includes("Your first name") && t.includes("Your last name") && cguEn === CGU_EN && t.includes("Create my free account") && !/health data/i.test(t) && !t.includes("Challenge"), cguEn + " · " + t.replace(/\s+/g, " ").slice(0, 250));
+    ok("inscription en anglais : « Create your free space », sous-titre « Free, forever: … and the Speed Formation course with its videos, workout programs and meal plans. », « Your first name » (plus de « Your last name », v74), case « I'm 18 or older and I accept the Terms of Use and the Privacy Policy. », « Create my free account », plus aucun « health data », « Challenge » ni « 7 days »", t.includes("Create your free space") && t.includes(SOUS_EN) && !t.includes("7 days") && t.includes("Your first name") && !t.includes("Your last name") && cguEn === CGU_EN && t.includes("Create my free account") && !/health data/i.test(t) && !t.includes("Challenge"), cguEn + " · " + t.replace(/\s+/g, " ").slice(0, 250));
     /* v64 (brief V2 A) : la seule case obligatoire est celle des conditions (avant : la case santé manquante → « Accept the
        processing of your health data ») : sans elle, « Tick the terms box to continue. » et rien n'est envoyé */
-    await page.fill("#c-prenom", "Zoé"); await page.fill("#c-nom", "Martin"); await page.fill("#c-email", "z@exemple.fr"); await page.fill("#c-mdp", "motdepasse1");
+    await page.fill("#c-prenom", "Zoé"); await page.fill("#c-email", "z@exemple.fr"); await page.fill("#c-mdp", "motdepasse1");   // v74 : plus de nom
     await page.click("#c-go"); await attendre(page, 300);
     const santeEn = !!(await page.$("#c-sante"));
     ok("inscription en anglais : case des conditions manquante → « Tick the terms box to continue. », rien n'est envoyé ; c'est la seule case obligatoire (plus de case santé, #c-sante absente)", (await page.textContent("#co-err")).trim() === "Tick the terms box to continue." && db.inscriptions.length === 0 && !santeEn, await page.textContent("#co-err") + " · #c-sante " + (santeEn ? "présente" : "absente"));
@@ -396,7 +401,7 @@ const lireTuiles = page => page.$$eval("#tb-vue .tb-tuile", l => l.map(t => {
     const db = base();
     const { c, page } = await contexte(b, null, db, { inscriptionErreur: err });
     await page.goto(`http://localhost:${PORT}/#/inscription`); await attendre(page, 1200);
-    await page.fill("#c-prenom", "Zoé"); await page.fill("#c-nom", "Martin"); await page.fill("#c-email", "z@exemple.fr"); await page.fill("#c-mdp", "motdepasse1"); await page.check("#c-cgu");   // v64 : plus de case santé
+    await page.fill("#c-prenom", "Zoé"); await page.fill("#c-email", "z@exemple.fr"); await page.fill("#c-mdp", "motdepasse1"); await page.check("#c-cgu");   // v64 : plus de case santé ; v74 : plus de nom
     await page.click("#c-go"); await attendre(page, 800);
     const t = await page.textContent("#co-err");
     ok("inscription, " + quoi + " (« " + err.msg + " ») : message en français, jamais le texte anglais brut", t.includes(attendu) && !t.includes(err.msg), t);

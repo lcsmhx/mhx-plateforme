@@ -742,7 +742,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
             JSON.stringify(liens) + " · volet du Profil : " + vt.slice(0, 80));
           await cP.close();
         }
-        await page.fill("#c-prenom", "Zoé"); await page.fill("#c-nom", "Martin"); await page.fill("#c-email", "nouvelle@exemple.fr"); await page.fill("#c-mdp", "motdepasse1");
+        await page.fill("#c-prenom", "Zoé"); await page.fill("#c-email", "nouvelle@exemple.fr"); await page.fill("#c-mdp", "motdepasse1");   // v74 : plus de champ Nom
         await page.check("#c-cgu"); if (coche) await page.check("#c-newsletter");   // v64 : plus de case santé (#c-sante)
         const t0 = Date.now();
         await page.click("#c-go"); await attendre(page, 2500);

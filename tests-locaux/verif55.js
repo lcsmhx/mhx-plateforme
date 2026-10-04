@@ -30,6 +30,8 @@
       la clé emails à la première ouverture, une seule fois (aussi par le lien de confirmation) ; rien d'écrit pour un ancien compte, un client, le coach, une clé
       déjà là, une lecture ratée (écrite à l'ouverture suivante), une copie en attente sur l'appareil, une clé apparue
       pendant l'envoi (insertion simple : rien d'écrasé) ;
+      v74 (décision de Lucas du 04/10) : plus de champ Nom (#c-nom absent, ni « Ton nom » ni « Your last name ») ;
+      prénom, email, mot de passe et la case des conditions suffisent : l'inscription part avec nom "" (profils.nom vide) ;
    F. Profil du prospect : interrupteur « Newsletter » (FR / EN) → emails { newsletter, maj, version, source: "profil" },
       un « non » coupe aussi l'ancien suivi ; l'ancien accord ne coche jamais la newsletter ; lecture ratée ;
    G. conditions FR / EN (version 2026-09-30 depuis la v61, 2026-09-29 depuis la v59 ; DECOUVERTE.accords : v64,
@@ -46,7 +48,7 @@
    Lot G (côté coach) :
    v71 (D) : un prospect n'a plus de ligne dans « Suivi de mes clients » (il est sur la page Prospects) : sa fiche s'ouvre par
       Clients.ouvrir, une fois le tableau chargé ;
-   G1. fiche d'un prospect : son nom (profils.nom, « pas renseigné » s'il manque), « Newsletter : oui (depuis le …) / non »
+   G1. fiche d'un prospect : son nom (profils.nom ; v74 : ligne absente s'il manque, avant « pas renseigné »), « Newsletter : oui (depuis le …) / non »
        d'après la clé emails (absente ou ancien accord « emails de suivi » seul : non), ses 3 réponses avec des libellés
        courts (Problème, Ce qui l'a bloqué, Dans 3 mois) puis les anciennes qui ont une valeur, jamais « undefined » ;
    G2. données piégées (nom, réponses, date) : du texte, rien d'injecté ; clé emails illisible : non ;
@@ -439,9 +441,9 @@ const SEPT = /7 jours|7 days|7-day|jour \d+ ?\/ ?7|day \d+ ?\/ ?7/i;
 const CLES_META = "conditions_version,consentement,newsletter,newsletter_version,nom,prenom";   // v64 : plus de consentement_sante ni sante_version (accord au premier usage)
 /* v61 (lot 2, F) : l'événement de 15 min « Ton plan d'action offert » (remplace …/30min) */
 const CAL = "https://calendly.com/mhx-coaching/ton-plan-d-action-offert-15-min-avec-lucas";
-/* remplit le formulaire d'inscription (page sur #/inscription) */
+/* remplit le formulaire d'inscription (page sur #/inscription) ; v74 : plus de champ Nom */
 async function remplir(page, f){
-  await page.fill("#c-prenom", f.prenom); await page.fill("#c-nom", f.nom); await page.fill("#c-email", f.email); await page.fill("#c-mdp", f.mdp || "motdepasse1");
+  await page.fill("#c-prenom", f.prenom); await page.fill("#c-email", f.email); await page.fill("#c-mdp", f.mdp || "motdepasse1");
   if (f.cgu !== false) await page.check("#c-cgu");   // v64 : la seule case obligatoire (plus de case santé)
   if (f.news) await page.check("#c-newsletter");
 }
@@ -881,8 +883,9 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
         await page.goto(URL0 + "#/inscription"); await page.waitForSelector("#c-go"); await attendre(page, 400);
         const e = await ecranInscription(page);
         ok(`inscription${L} : « ${T("titre")} », « ${T("sous").slice(0, 45)}… », bouton « ${T("bouton")} », aucun « 7 jours » / « 7 days » ni email de confirmation promis à l'écran`, e.titre === T("titre") && e.sous === T("sous") && e.bouton === T("bouton") && !SEPT.test(e.texte) && !/email de confirmation|lien de confirmation|confirmation (email|link)/i.test(e.texte), JSON.stringify({ titre: e.titre, sous: e.sous, bouton: e.bouton, sept: (SEPT.exec(e.texte) || [""])[0] }));
-        ok(`inscription${L} : champ « ${T("nom")} » (#c-nom) juste après le prénom, type text, autocomplete="family-name", maxlength="60" (prénom : maxlength="60" aussi)`,
-          e.ordre[e.ordre.indexOf("c-prenom") + 1] === "c-nom" && e.labelNom === T("nom") && e.nomType === "text" && e.nomAuto === "family-name" && e.nomMax === "60" && e.prenomMax === "60", JSON.stringify(e.ordre) + " " + JSON.stringify([e.labelNom, e.nomType, e.nomAuto, e.nomMax, e.prenomMax]));
+        /* v74 (décision de Lucas du 04/10) : plus de champ Nom (v52 : #c-nom juste après le prénom) ; le prénom garde maxlength="60" */
+        ok(`inscription${L} : plus de champ « ${T("nom")} » (#c-nom absent, ni son libellé à l'écran) ; le prénom (#c-prenom, maxlength="60") reste`,
+          e.ordre.indexOf("c-prenom") > -1 && e.ordre.indexOf("c-nom") === -1 && e.labelNom === null && e.nomType === null && e.prenomMax === "60" && !e.texte.includes(T("nom")), JSON.stringify(e.ordre) + " " + JSON.stringify([e.labelNom, e.nomType, e.prenomMax]));
         /* v64 (A3) : plus de case santé ni de texte « données de santé » à l'inscription (accord au premier usage) */
         ok(`inscription${L} : deux cases séparées (conditions, newsletter), chacune seule dans son libellé, aucune cochée d'avance, dans cet ordre avant « Rester connecté » ; plus de case santé (#c-sante) ni « ${langue ? "health data" : "données de santé"} » à l'écran ; plus de case « emails de suivi »`,
           e.cases.every(x => x && x.type === "checkbox" && !x.coche && !x.attr && x.seul === 1) && e.ordre.slice(e.ordre.indexOf("c-cgu")).join(",") === "c-cgu,c-newsletter,c-rester" && !e.sante && !/données de santé|health data/i.test(e.texte) && !e.anciennes, JSON.stringify(e.cases) + " · " + JSON.stringify(e.ordre) + " · santé " + e.sante + " " + ((/.{0,40}(données de santé|health data).{0,20}/i.exec(e.texte) || [""])[0]));
@@ -916,12 +919,14 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
         await page.setViewportSize(MOBILE); await attendre(page, 200);
         ok(`inscription${L}, téléphone 390, 375 et 320 px : aucun défilement horizontal ; le point final sur la même ligne que la fin de « ${T("cgu_mots")[1]} » (jamais seul sous le lien), avec ou sans lien`,
           mesures.length === 6 && mesures.every(m => !m.deborde && m.ecart !== null && m.ecart <= 2), JSON.stringify(mesures));
+        /* v52 : nom vide ou fait d'espaces → « Indique ton nom. ». v74 : plus de nom demandé — prénom, email, mot de passe et
+           la case des conditions suffisent : l'inscription part une fois, avec nom "" (la page se recharge, connectée) */
         await page.fill("#c-prenom", "Zoé"); await page.fill("#c-email", "zoe@exemple.fr"); await page.fill("#c-mdp", "motdepasse1"); await page.check("#c-cgu");
-        await page.click("#c-go"); await attendre(page, 300);
-        const m1 = norm(await page.textContent("#co-err").catch(() => ""));
-        await page.fill("#c-nom", "   "); await page.click("#c-go"); await attendre(page, 300);
-        const m2 = norm(await page.textContent("#co-err").catch(() => ""));
-        ok(`inscription${L} : nom vide ou fait d'espaces → « ${T("nom_manque")} », rien n'est envoyé`, m1 === T("nom_manque") && m2 === T("nom_manque") && db.inscriptions.length === 0, m1 + " · " + m2 + " · " + db.inscriptions.length);
+        await Promise.all([page.waitForNavigation({ waitUntil: "load", timeout: 15000 }).catch(() => null), page.click("#c-go")]);
+        await attendre(page, 300);
+        const m1 = norm(await page.evaluate(() => (document.getElementById("co-err") || {}).textContent || "").catch(() => ""));
+        const md0 = (db.inscriptions[0] || {}).data || {};
+        ok(`inscription${L} : aucun nom demandé (v74) — prénom, email, mot de passe et case des conditions suffisent : l'inscription part une fois, prénom « Zoé », nom vide ; jamais « ${T("nom_manque")} »`, db.inscriptions.length === 1 && md0.prenom === "Zoé" && md0.nom === "" && m1 !== T("nom_manque"), m1 + " · " + db.inscriptions.length + " · " + JSON.stringify(md0));
         await c.close();
       }
     }));
@@ -936,22 +941,22 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
         const { c, page } = await contexte(b, null, db, { viewport: MOBILE });
         await page.goto(URL0 + "#/inscription"); await page.waitForSelector("#c-go"); await attendre(page, 300);
         const versions = await page.evaluate(() => ({ c: DECOUVERTE.confidentialite.version, a: JSON.parse(JSON.stringify(DECOUVERTE.accords || null)), l: JSON.parse(JSON.stringify(CONFIG.textes_legaux || null)) }));
-        await remplir(page, { prenom: "Zoé", nom: "  Martin ", email: mail, news });
+        await remplir(page, { prenom: "Zoé", email: mail, news });   // v74 : plus de champ Nom
         const t0 = Date.now();
         await Promise.all([page.waitForNavigation({ waitUntil: "load", timeout: 15000 }), page.click("#c-go")]);
         await pret(page); await attendre(page, 2200);
         const md = (db.inscriptions[0] || {}).data || {}, cles = Object.keys(md).sort().join(",");
         const date = x => typeof x === "string" && /^\d{4}-\d{2}-\d{2}T/.test(x) && Math.abs(Date.parse(x) - t0) < 10000;
         ok(`inscription ${Q} : métadonnées exactement ${CLES_META} (plus d'emails_suivi ; aucun accord santé : ni consentement_sante ni sante_version)`, db.inscriptions.length === 1 && cles === CLES_META && !("consentement_sante" in md) && !("sante_version" in md), db.inscriptions.length + " · " + cles);
-        ok(`… prénom « Zoé », nom « Martin » (espaces retirés) ; conditions datées de l'inscription ; conditions_version = CONFIG.textes_legaux.cgu_version = accords.conditions (${LEGAUX_TEST.cgu_version} servie), plus la version du texte court (${V_COND})`,
-          md.prenom === "Zoé" && md.nom === "Martin" && date(md.consentement) && md.conditions_version === LEGAUX_TEST.cgu_version && !!versions.l && versions.l.cgu_version === LEGAUX_TEST.cgu_version && !!versions.a && versions.a.conditions === LEGAUX_TEST.cgu_version && versions.c === V_COND && md.conditions_version !== versions.c,
+        ok(`… prénom « Zoé », nom vide (v74 : plus de champ Nom ; v52 : le nom saisi, espaces retirés) ; conditions datées de l'inscription ; conditions_version = CONFIG.textes_legaux.cgu_version = accords.conditions (${LEGAUX_TEST.cgu_version} servie), plus la version du texte court (${V_COND})`,
+          md.prenom === "Zoé" && md.nom === "" && date(md.consentement) && md.conditions_version === LEGAUX_TEST.cgu_version && !!versions.l && versions.l.cgu_version === LEGAUX_TEST.cgu_version && !!versions.a && versions.a.conditions === LEGAUX_TEST.cgu_version && versions.c === V_COND && md.conditions_version !== versions.c,
           JSON.stringify(md) + " · " + JSON.stringify(versions));
         if (news) ok(`… newsletter cochée : newsletter = l'instant de l'inscription, newsletter_version = accords.newsletter (${V_NEWS_INSC}, texte court de la case)`, date(md.newsletter) && md.newsletter === md.consentement && md.newsletter_version === V_NEWS_INSC && versions.a.newsletter === V_NEWS_INSC, JSON.stringify(md));
         else ok(`… newsletter laissée décochée : l'inscription passe quand même, newsletter = null, newsletter_version = ${V_NEWS_INSC} (le texte montré)`, "newsletter" in md && md.newsletter === null && md.newsletter_version === V_NEWS_INSC, JSON.stringify(md));
         const prof = db.profils.find(x => x.id === ZID) || {};
         const apres = await page.evaluate(() => ({ prospect: Auth.estProspect(), nom: (Auth.profil || {}).nom })).catch(() => ({}));
-        ok(`… profil créé avec le nom (déclencheur creer_profil → profils.nom), lu par l'app ; jamais rangé dans intake.nom`,
-          prof.nom === "Martin" && apres.prospect === true && apres.nom === "Martin" && ecr(db, "intake").every(x => !(x.contenu && typeof x.contenu === "object" && "nom" in x.contenu)), JSON.stringify(prof) + " · " + JSON.stringify(apres) + " · " + resume(db));
+        ok(`… profil créé avec un nom vide (déclencheur creer_profil → profils.nom = "", v74), lu par l'app ; rien dans intake.nom`,
+          prof.nom === "" && apres.prospect === true && apres.nom === "" && ecr(db, "intake").every(x => !(x.contenu && typeof x.contenu === "object" && "nom" in x.contenu)), JSON.stringify(prof) + " · " + JSON.stringify(apres) + " · " + resume(db));
         const E1 = ecr(db, "emails", ZID), att = { newsletter: news, maj: news ? md.newsletter : md.consentement, version: V_NEWS_INSC, source: "inscription" };   // v64 : la version de la case de l'inscription
         ok(`… première ouverture : clé emails écrite une fois, exactement ${JSON.stringify(Object.assign({}, att, { maj: "<date de l'accord>" }))} ; rien d'autre d'écrit`,
           E1.length === 1 && JSON.stringify(E1[0].contenu) === JSON.stringify(att) && ecrDonnees(db).every(x => x.outil === "emails"), JSON.stringify(E1.map(x => x.contenu)) + " · " + resume(db));
@@ -964,17 +969,17 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
 
   await bloc("E. inscription : anglais, longueur, lien de confirmation", async () => {
     await inscriptionOuverte(() => avecLegaux(LEGAUX_TEST, async () => {
-      /* anglais + noms trop longs (valeurs posées par script : maxlength ne s'applique pas) */
+      /* anglais + prénom trop long (valeur posée par script : maxlength ne s'applique pas) ; v74 : plus de champ Nom (nom "") */
       {
         const ZID = PID(42), db = base(); db.inscription.id = ZID;
         const { c, page } = await contexte(b, null, db, { langue: "en" });
         await page.goto(URL0 + "#/inscription"); await page.waitForSelector("#c-go"); await attendre(page, 300);
-        await remplir(page, { prenom: "Zoé", nom: "Martin", email: "zoe2@exemple.fr", news: true });
-        await page.evaluate(() => { document.getElementById("c-prenom").value = " " + "P".repeat(70); document.getElementById("c-nom").value = "N".repeat(70) + " "; });
+        await remplir(page, { prenom: "Zoé", email: "zoe2@exemple.fr", news: true });
+        await page.evaluate(() => { document.getElementById("c-prenom").value = " " + "P".repeat(70); });
         await Promise.all([page.waitForNavigation({ waitUntil: "load", timeout: 15000 }), page.click("#c-go")]);
         await pret(page); await attendre(page, 2000);
         const md = (db.inscriptions[0] || {}).data || {};
-        ok("inscription en anglais, newsletter cochée : mêmes métadonnées (" + CLES_META + " : conditions_version " + LEGAUX_TEST.cgu_version + " servie, newsletter datée, version " + V_NEWS_INSC + ", aucun accord santé) ; prénom et nom coupés à 60 caractères", Object.keys(md).sort().join(",") === CLES_META && md.prenom === "P".repeat(60) && md.nom === "N".repeat(60) && typeof md.newsletter === "string" && md.newsletter_version === V_NEWS_INSC && !("sante_version" in md) && !("consentement_sante" in md) && md.conditions_version === LEGAUX_TEST.cgu_version, JSON.stringify(md).slice(0, 300));
+        ok("inscription en anglais, newsletter cochée : mêmes métadonnées (" + CLES_META + " : conditions_version " + LEGAUX_TEST.cgu_version + " servie, newsletter datée, version " + V_NEWS_INSC + ", aucun accord santé) ; prénom coupé à 60 caractères, nom vide (v74)", Object.keys(md).sort().join(",") === CLES_META && md.prenom === "P".repeat(60) && md.nom === "" && typeof md.newsletter === "string" && md.newsletter_version === V_NEWS_INSC && !("sante_version" in md) && !("consentement_sante" in md) && md.conditions_version === LEGAUX_TEST.cgu_version, JSON.stringify(md).slice(0, 300));
         ok("… copie emails { newsletter: true } à la première ouverture", ecr(db, "emails", ZID).length === 1 && (ecr(db, "emails", ZID)[0].contenu || {}).newsletter === true, resume(db));
         await c.close();
       }
@@ -984,7 +989,7 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
         const ZID = PID(43), db = base(); db.inscription.id = ZID; db.inscription.confirmation = true;
         const { c, page } = await contexte(b, null, db);
         await page.goto(URL0 + "#/inscription"); await page.waitForSelector("#c-go"); await attendre(page, 300);
-        await remplir(page, { prenom: "Zoé", nom: "Martin", email: "zoe3@exemple.fr", news: true });
+        await remplir(page, { prenom: "Zoé", email: "zoe3@exemple.fr", news: true });
         await page.click("#c-go"); await attendre(page, 1500);
         const h2 = norm(await page.textContent(".carte-co h2").catch(() => ""));
         ok("« Confirm email » activé : écran « Vérifie ta boîte mail », rien d'écrit (personne n'est encore connecté)", h2 === "Vérifie ta boîte mail" && db.inscriptions.length === 1 && ecrDonnees(db).length === 0, h2 + " · " + resume(db));
@@ -1331,8 +1336,9 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
       ok("… « Réponses au questionnaire court » : Email, Problème, Ce qui l'a bloqué, Dans 3 mois (libellés courts du coach)", JSON.stringify(f.rep) === JSON.stringify([["Email", "lea.martin@exemple.fr"], ["Problème", "Perdre du gras"], ["Ce qui l'a bloqué", "Le manque de temps"], ["Dans 3 mois", "Rentrer dans mon jean d'avant"]]), JSON.stringify(f.rep));
       const m = await ficheDe(page, MARC);
       const ATT_M = [["Sexe", "Homme"], ["Âge", "40"], ["Taille (cm)", "180"], ["Poids actuel (kg)", "90"], ["Objectif", "Prise de muscle"], ["Séances par semaine", "3"], ["Déjà essayé", "La salle, seul"], ["Obstacle principal", "Je lâche au bout de 2 semaines"], ["Pourquoi maintenant", "Mon mariage en juin"], ["Motivation", "8 / 10"]];
-      ok("ancien prospect Marc (nom vide, ancien accord « emails de suivi » seul) : Nom « pas renseigné », Newsletter « non », ses 10 anciennes réponses (obstacle d'avant « Obstacle principal », motivation « 8 / 10 »), pas de Problème",
-        JSON.stringify(sans(m.dec, "Découverte")) === JSON.stringify([["Nom", "pas renseigné"], ["Newsletter", "non"], ["Questionnaire court", "rempli le " + frDe(avant(20 * J))]].concat(ATT_M, FIN_V53)), JSON.stringify(m.dec));
+      /* v74 : la ligne « Nom » n'apparaît que si le nom existe (avant : « pas renseigné ») */
+      ok("ancien prospect Marc (nom vide, ancien accord « emails de suivi » seul) : pas de ligne « Nom » (v74), Newsletter « non », ses 10 anciennes réponses (obstacle d'avant « Obstacle principal », motivation « 8 / 10 »), pas de Problème",
+        JSON.stringify(sans(m.dec, "Découverte")) === JSON.stringify([["Newsletter", "non"], ["Questionnaire court", "rempli le " + frDe(avant(20 * J))]].concat(ATT_M, FIN_V53)), JSON.stringify(m.dec));
       ok("… ses réponses (bloc du bas) : Email puis les mêmes libellés", JSON.stringify(m.rep) === JSON.stringify([["Email", "marc@exemple.fr"]].concat(ATT_M)), JSON.stringify(m.rep));
       const z = await ficheDe(page, ZOE), n = await ficheDe(page, NINA);
       ok("Zoé (rien répondu, pas de clé emails) : Nom « Durand », Newsletter « non », questionnaire pas encore rempli, aucune réponse inventée ; ses 3 questions « — »",

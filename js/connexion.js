@@ -70,8 +70,7 @@ function portail(mode){
       <h2>${esc(titre)}</h2>
       ${mode === "inscription" ? `<p class="co-sous">${esc(DECOUVERTE.inscription.sous)}</p>` : ""}
       <div id="co-err"></div>
-      ${mode === "inscription" ? `<div class="champ"><label for="c-prenom">Ton prénom</label><input id="c-prenom" type="text" autocomplete="given-name" maxlength="60"></div>
-      <div class="champ"><label for="c-nom">Ton nom</label><input id="c-nom" type="text" autocomplete="family-name" maxlength="60"></div>` : ""}
+      ${mode === "inscription" ? `<div class="champ"><label for="c-prenom">Ton prénom</label><input id="c-prenom" type="text" autocomplete="given-name" maxlength="60"></div>` : ""}
       ${mode === "inscription" && Contact.obligatoire() ? `<div class="champ"><label for="c-tel">${esc(trad("Ton numéro (WhatsApp)"))}</label>${Telephone.champHTML("c-tel")}</div>` : ""}
       ${mode === "oubli"
         /* v52 (décision de Lucas) : l'app n'envoie aucun email pour l'instant (ni lien de mot de passe, ni vérification) :
@@ -82,7 +81,8 @@ function portail(mode){
         /* v44 : prenom, email, mot de passe (un seul, avec « Afficher ») et la case des conditions.
            v52 : + le nom ; cases SEPAREES, aucune cochee d'avance. v64 (brief V2, A) : UNE seule case obligatoire, les
            conditions (deux liens distincts vers les PDF, CONFIG.textes_legaux ; aucun espace avant le point final, qui ne
-           tombe plus seul sous le lien), et la newsletter (facultative) ; l'accord sante est demande au premier usage (Sante) */
+           tombe plus seul sous le lien), et la newsletter (facultative) ; l'accord sante est demande au premier usage (Sante).
+           v74 (décision de Lucas du 04/10) : plus de champ « Nom » (prénom seul) */
         ? `<div class="champ"><label for="c-mdp">${esc(DECOUVERTE.inscription.mdp)}</label><div class="co-mdp"><input id="c-mdp" type="password" autocomplete="new-password"><button type="button" class="voir" id="c-voir" aria-pressed="false" aria-label="Afficher le mot de passe">Afficher</button></div></div>
       <label class="co-rester co-cgu"><input type="checkbox" id="c-cgu"><span>${esc(DECOUVERTE.inscription.cgu_avant)} ${lienLegal("c-cgu-lien", "cgu_pdf", DECOUVERTE.inscription.cgu_lien)} ${esc(DECOUVERTE.inscription.cgu_entre)} ${lienLegal("c-politique-lien", "confidentialite_pdf", DECOUVERTE.inscription.politique_lien)}${esc(DECOUVERTE.inscription.cgu_apres || "")}</span></label>
       <label class="co-rester co-newsletter"><input type="checkbox" id="c-newsletter"><span>${esc(DECOUVERTE.inscription.newsletter)}</span></label>`
@@ -135,9 +135,6 @@ function portail(mode){
     if (mode === "inscription"){
       const prenom = ($("c-prenom").value || "").trim().slice(0, 60);
       if (!prenom){ err("Indique ton prénom."); return; }
-      /* v52 : nom obligatoire (→ profils.nom par le declencheur de la base ; jamais dans intake.nom) */
-      const nom = (($("c-nom") && $("c-nom").value) || "").trim().slice(0, 60);
-      if (!nom){ err("Indique ton nom."); return; }
       /* v72 (A) : le numéro (WhatsApp), obligatoire si CONFIG.marque.telephone_obligatoire vaut true */
       let T = null;
       if (Contact.obligatoire()){ T = Telephone.lire("c-tel"); if (T.erreur){ err(typoFr(trad(T.erreur))); return; } }
@@ -152,10 +149,11 @@ function portail(mode){
            pour les comptes d'avant). Le choix de la newsletter est recopie dans la cle « emails » a la premiere
            ouverture (Accords.copierEmails), pour que le coach le voie.
            v64 (brief V2, A) : plus d'accord sante a l'inscription (consentement_sante / sante_version : au premier usage,
-           Sante.donner) ; conditions_version = la version des CGU en PDF (CONFIG.textes_legaux.cgu_version). */
+           Sante.donner) ; conditions_version = la version des CGU en PDF (CONFIG.textes_legaux.cgu_version).
+           v74 : plus de nom demandé : nom "" (le declencheur creer_profil range '' dans profils.nom, comme avant la v52) */
         const A = DECOUVERTE.accords, maintenant = new Date().toISOString();
         const ok_news = !!($("c-newsletter") && $("c-newsletter").checked);
-        const connecte = await Auth.inscrire(email, mdp, prenom, nom, {
+        const connecte = await Auth.inscrire(email, mdp, prenom, "", {
           consentement: maintenant, conditions_version: A.conditions,
           newsletter: ok_news ? maintenant : null, newsletter_version: A.newsletter });
         if (connecte){

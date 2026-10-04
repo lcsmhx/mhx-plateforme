@@ -297,11 +297,12 @@ const champTel = (page, id) => page.evaluate(id => {
     await page.goto(URL0 + "#/inscription"); await page.waitForSelector("#c-go");
     const ch = await champTel(page, "c-tel");
     const ordre = await page.evaluate(() => Array.from(document.querySelectorAll(".carte-co input, .carte-co select")).map(x => x.id).filter(Boolean));
-    ok("A2 : inscription — champ « Ton numéro (WhatsApp) » : menu de 8 pays + « Autre pays » (France +33 par défaut, l'ordre de Lucas), champ type tel ; placé après le nom, avant l'email",
+    /* v74 : plus de champ Nom (avant : « placé après le nom ») */
+    ok("A2 : inscription — champ « Ton numéro (WhatsApp) » : menu de 8 pays + « Autre pays » (France +33 par défaut, l'ordre de Lucas), champ type tel ; placé après le prénom, avant l'email (plus de champ Nom, v74)",
       ch.label === TX.fr.label && JSON.stringify(ch.options) === JSON.stringify(TX.fr.options) && JSON.stringify(ch.valeurs) === JSON.stringify(["33", "32", "41", "1", "61", "225", "221", "262", "autre"])
-        && ch.defaut === "33" && ch.type === "tel" && ordre.slice(0, 5).join(",") === "c-prenom,c-nom,c-tel-ind,c-tel,c-email",
+        && ch.defaut === "33" && ch.type === "tel" && ordre.slice(0, 4).join(",") === "c-prenom,c-tel-ind,c-tel,c-email" && !ordre.includes("c-nom"),
       JSON.stringify({ ch, ordre }));
-    await page.fill("#c-prenom", "Zoé"); await page.fill("#c-nom", "Martin"); await page.fill("#c-email", "zoe@exemple.fr"); await page.fill("#c-mdp", "motdepasse1");
+    await page.fill("#c-prenom", "Zoé"); await page.fill("#c-email", "zoe@exemple.fr"); await page.fill("#c-mdp", "motdepasse1");
     await page.check("#c-cgu");
     const essai = async (tel, ind) => { if (ind) await page.selectOption("#c-tel-ind", ind); await page.fill("#c-tel", tel); await page.click("#c-go"); await attendre(page, 300); return norm(await page.textContent("#co-err")); };
     const e1 = await essai(""), e2 = await essai("012345"), e3 = await essai("0123456789012345"), e4 = await essai("06 12 ab 56 78"), e5 = await essai("06 12 34 56 78", "autre");
@@ -331,7 +332,7 @@ const champTel = (page, id) => page.evaluate(id => {
     const db = base(); db.inscription.id = PID(51); db.perdre.contact = 1;   // la première écriture de contact se perd (réseau)
     const { page } = await contexte(b, db);
     await page.goto(URL0 + "#/inscription"); await page.waitForSelector("#c-go");
-    await page.fill("#c-prenom", "Léo"); await page.fill("#c-nom", "Blanc"); await page.fill("#c-tel", "06 39 98 00 51"); await page.fill("#c-email", "leo@exemple.fr"); await page.fill("#c-mdp", "motdepasse1");
+    await page.fill("#c-prenom", "Léo"); await page.fill("#c-tel", "06 39 98 00 51"); await page.fill("#c-email", "leo@exemple.fr"); await page.fill("#c-mdp", "motdepasse1");
     await page.check("#c-cgu");
     await Promise.all([page.waitForNavigation({ timeout: 15000 }).catch(() => {}), page.click("#c-go")]);
     await pret(page);
@@ -720,7 +721,7 @@ const champTel = (page, id) => page.evaluate(id => {
       await page.goto(URL0 + "?ref=second#/inscription"); await page.waitForSelector("#c-go");
       const r2 = await refLocal(page);
       ok("F : « /?ref=insta-2026#/inscription » : le code gardé sur l\x27appareil (mhx_ref), l\x27adresse inchangée ; un autre lien ensuite ne le remplace pas (le premier gagne)", r1 === "insta-2026" && adr === "?ref=insta-2026" && r2 === "insta-2026", JSON.stringify({ r1, adr, r2 }));
-      await page.fill("#c-prenom", "Lina"); await page.fill("#c-nom", "Faure"); await page.fill("#c-tel", "06 39 98 00 60"); await page.fill("#c-email", "lina@exemple.fr"); await page.fill("#c-mdp", "motdepasse1");
+      await page.fill("#c-prenom", "Lina"); await page.fill("#c-tel", "06 39 98 00 60"); await page.fill("#c-email", "lina@exemple.fr"); await page.fill("#c-mdp", "motdepasse1");
       await page.check("#c-cgu");
       const tClic = Date.now();
       await Promise.all([page.waitForNavigation({ timeout: 15000 }).catch(() => {}), page.click("#c-go")]);
@@ -763,7 +764,7 @@ const champTel = (page, id) => page.evaluate(id => {
       const db = base(); db.inscription.id = PID(61);
       const { page } = await contexte(b, db, { neuf: true });
       await page.goto(URL0 + "?ref=salon-lyon#/inscription"); await page.waitForSelector("#c-go");
-      await page.fill("#c-prenom", "Tom"); await page.fill("#c-nom", "Durand"); await page.fill("#c-email", "tom@exemple.fr"); await page.fill("#c-mdp", "motdepasse1");
+      await page.fill("#c-prenom", "Tom"); await page.fill("#c-email", "tom@exemple.fr"); await page.fill("#c-mdp", "motdepasse1");
       await page.check("#c-cgu");
       await Promise.all([page.waitForNavigation({ timeout: 15000 }).catch(() => {}), page.click("#c-go")]);
       await pret(page);

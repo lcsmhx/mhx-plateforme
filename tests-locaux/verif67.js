@@ -761,7 +761,7 @@ const verrouVu = (page, id) => page.evaluate(id => {
       const db = base(); db.nouvelId = PID(90);
       const { page } = await contexte(b, null, db);
       await page.goto(URL0 + "#/inscription"); await page.waitForSelector("#c-go"); await attendre(page, 400);
-      await page.fill("#c-prenom", "Zoé"); await page.fill("#c-nom", "Martin"); await page.fill("#c-email", "zoe67@exemple.fr"); await page.fill("#c-mdp", "motdepasse-fictif-67");
+      await page.fill("#c-prenom", "Zoé"); await page.fill("#c-email", "zoe67@exemple.fr"); await page.fill("#c-mdp", "motdepasse-fictif-67");   // v74 : plus de champ Nom
       await page.check("#c-cgu");   // v64 : la seule case obligatoire (plus de case santé)
       const servie = await page.evaluate(() => (CONFIG.textes_legaux || {}).cgu_version).catch(() => null);
       await Promise.all([page.waitForNavigation({ waitUntil: "load", timeout: 15000 }), page.click("#c-go")]);

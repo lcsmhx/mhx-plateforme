@@ -62,11 +62,12 @@ const outilAccueil = {
     /* v52 : plus de « jour n / 7 » ni de « terminée » : le nombre de jours depuis son inscription */
     const jourTxt = r.jour == null ? "date d'inscription inconnue" : Decouverte.depuisTexte(r.jour);
     /* v52 (lot G) : son nom (profils.nom, demandé à l'inscription), la newsletter (clé emails), puis ses réponses qui ont
-       une valeur : les 3 questions d'abord, puis les anciennes (Decouverte.reponsesCoach) */
+       une valeur : les 3 questions d'abord, puis les anciennes (Decouverte.reponsesCoach).
+       v74 : le nom n'est plus demandé à l'inscription : la ligne « Nom » n'apparaît que s'il existe (comptes d'avant) */
     const nl = Accords.newsletterCoach(EM);
     const lignes = [
       ["Découverte", jourTxt + (p && typeof p.cree_le === "string" ? " · inscrit le " + dt(p.cree_le) : "")],
-      ["Nom", s(p && p.nom).trim() || "pas renseigné"],
+      ["Nom", s(p && p.nom).trim()],
       ["Newsletter", nl.oui ? "oui" + (nl.depuis ? " (depuis le " + dt(nl.depuis) + ")" : "") : "non"],
       ["Questionnaire court", r.questionnaire ? "rempli le " + dt(r.questionnaire) : "pas encore rempli"]
     ].concat(Decouverte.reponsesCoach(I), [
