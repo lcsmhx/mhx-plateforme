@@ -340,6 +340,33 @@ const champTel = (page, id) => page.evaluate(id => {
       JSON.stringify({ C: C.map(x => x.contenu), e, reste, ecr: resume(db) }));
   });
 
+  await bloc("A3. copie de secours : jamais devant un numéro plus récent", async () => {
+    const CLE = id => "mhx_contact_attente|" + id, VIEUX = { telephone: "+33639980099", inscrit_le: avant(1 * J) };
+    { const db = base();
+      const { page } = await contexte(b, db, { qui: NOAH, stockage: { [CLE(NOAH.id)]: JSON.stringify(VIEUX) } });
+      await page.goto(URL0); await pret(page);
+      const L = ligne0(db, NOAH.id, "contact"), reste = await page.evaluate(k => localStorage.getItem(k), CLE(NOAH.id));
+      ok("A3 : une copie de l'inscription encore sur l'appareil (ancien numéro) ne remplace pas le numéro en base (changé depuis) : il reste +33639980002, ref et date d'inscription gardées ; la copie retirée",
+        !!L && L.contenu.telephone === TEL_NOAH && L.contenu.ref === "insta" && L.contenu.inscrit_le === avant(2 * J) && reste === null, JSON.stringify({ L: L && L.contenu, reste })); }
+    { const db = base(); db.ko.contact = true;   // la copie ne peut pas partir au démarrage (lecture de la ligne en panne)
+      const { page } = await contexte(b, db, { qui: NOAH, stockage: { [CLE(NOAH.id)]: JSON.stringify(VIEUX) } });
+      await page.goto(URL0); await pret(page);
+      db.ko.contact = false;
+      await page.evaluate(() => { location.hash = "#/profil"; }); await pret(page);
+      await page.waitForFunction(() => { const b = document.getElementById("mc-tel-ok"); return !!b && !b.disabled; }, null, { timeout: 8000 });
+      await page.selectOption("#mc-tel-ind", "33"); await page.fill("#mc-tel", "06 39 98 00 77"); await page.click("#mc-tel-ok"); await attendre(page, 1200);
+      const L = ligne0(db, NOAH.id, "contact"), reste = await page.evaluate(k => localStorage.getItem(k), CLE(NOAH.id));
+      ok("A3 : un numéro changé dans Mon compte retire la copie de l'inscription restée sur l'appareil (elle ne repartira jamais)", !!L && L.contenu.telephone === "+33639980077" && reste === null, JSON.stringify({ L: L && L.contenu, reste })); }
+    { const db = base(); db.ko.contact = true;
+      const { page } = await contexte(b, db, { qui: INES, stockage: { [CLE(INES.id)]: JSON.stringify({ telephone: "+33639980071", inscrit_le: avant(J) }) } });
+      await avecTelephone(false, async () => { await page.goto(URL0); await pret(page); });
+      db.ko.contact = false;
+      await Promise.all([page.waitForNavigation({ timeout: 15000 }).catch(() => {}), page.evaluate(() => Auth.deconnecter())]);
+      await page.waitForSelector("#c-go");
+      const L = ligne0(db, INES.id, "contact"), reste = await page.evaluate(k => localStorage.getItem(k), CLE(INES.id));
+      ok("A3 : « Se déconnecter » envoie d'abord la copie restée sur l'appareil (clé contact créée), puis l'efface", !!L && L.contenu.telephone === "+33639980071" && reste === null, JSON.stringify({ L: L && L.contenu, reste })); }
+  });
+
   /* =================== A4. l'écran « Ajoute ton numéro » =================== */
   await bloc("A4. écran prospect", async () => {
     const db = base();

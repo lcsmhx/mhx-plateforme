@@ -351,10 +351,11 @@ ${Auth.estCoach() ? "" : `<div id="mc-tel-bloc" style="margin:0 0 26px">
     if (!b.isConnected) return;
     if (!C || Store.nonLus.has(C)){ if (val) val.textContent = "—"; dire("Ton numéro n'a pas pu être chargé. Recharge la page."); return; }
     let actuel = Contact.telephone(C);
-    const montrer = () => {
+    /* force : après un enregistrement ; sinon le champ n'est rempli que s'il est vide (une saisie faite pendant la lecture reste) */
+    const montrer = force => {
       if (val){ if (actuel){ val.textContent = actuel; val.setAttribute("data-notr", ""); } else { val.textContent = trad("Aucun numéro enregistré."); val.removeAttribute("data-notr"); } }
       const d = Telephone.decouper(actuel), i = $("mc-tel-ind"), c = $("mc-tel");
-      if (i) i.value = d.ind; if (c) c.value = d.num;
+      if (c && (force || !c.value.trim())){ if (i) i.value = d.ind; c.value = d.num; }
     };
     montrer();
     b.disabled = false;
@@ -364,7 +365,10 @@ ${Auth.estCoach() ? "" : `<div id="mc-tel-bloc" style="margin:0 0 26px">
       if (T.erreur){ dire(T.erreur); return; }
       if (T.tel === actuel){ dire("C'est déjà ton numéro."); return; }
       b.disabled = true; dire("Un instant…");
-      try { const apres = await Contact.enregistrer({ telephone: T.tel }); actuel = Contact.telephone(apres); montrer(); dire("Numéro enregistré."); }
+      try {
+        const apres = await Contact.enregistrer({ telephone: T.tel }); actuel = Contact.telephone(apres); montrer(true); dire("Numéro enregistré.");
+        const u = Auth.utilisateur(); if (u && u.id) Contact.oublierAttente(u.id);   // v72 (A) : une copie de l'inscription ne repartira plus
+      }
       catch(e){ dire(Auth.indispo(e) ? "Service momentanément indisponible, réessaie dans une minute." : "Non enregistré : réessaie dans un instant."); }
       b.disabled = false;
     });

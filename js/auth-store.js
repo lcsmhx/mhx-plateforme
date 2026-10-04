@@ -321,7 +321,11 @@ const Auth = {
     /* v59 (contre-relecture) : session déjà perdue (bandeau « Ta session a pris fin… », qui promet que la saisie repartira) :
        toutes les copies de l'appareil comptent — elles étaient effacées sans un mot */
     const duCompte = e => e && (!moi || e.a === moi.id);
-    const nonEnvoyees = Object.values(Store.attenteLire()).filter(duCompte).length;
+    /* v72 (A) : la copie de secours du numéro (inscription sur un réseau faible) part avant, sans remplacer un numéro déjà en
+       base ; si elle n'a pas pu partir, elle compte comme une modification non envoyée */
+    let contactAttente = 0;
+    try { if (moi && typeof Contact !== "undefined" && Contact.lireAttente(moi.id)){ try { await Contact.borne(Contact.enregistrer(Contact.lireAttente(moi.id), moi.id, true)); Contact.oublierAttente(moi.id); } catch(e){} contactAttente = Contact.lireAttente(moi.id) ? 1 : 0; } } catch(e){}
+    const nonEnvoyees = Object.values(Store.attenteLire()).filter(duCompte).length + contactAttente;
     /* v71 (B) : les modifications refusees par la base (mhx_refus|…, v67) partent aussi avec le compte : on le dit avant
        (un refus peut naitre a l'instant, pendant toutEnvoyer ci-dessus : il est compte lui aussi) */
     const refusees = Object.values(Store.attenteLire(Store.PREFIXE_REFUS)).filter(duCompte).length;
@@ -464,8 +468,9 @@ const Contact = {
   telephone(C){ const t = Forme.objet(C) && typeof C.telephone === "string" ? C.telephone : ""; return Telephone.valide(t) ? t : ""; },
   ref(C){ const r = Forme.objet(C) && typeof C.ref === "string" ? C.ref : ""; return /^[a-z0-9-]{1,30}$/.test(r) ? r : ""; },
   inscritLe(C){ const v = Forme.objet(C) && typeof C.inscrit_le === "string" ? C.inscrit_le : ""; return /^\d{4}-\d{2}-\d{2}T/.test(v) && !isNaN(Date.parse(v)) ? v : ""; },
-  /* relire puis écrire : champs = { telephone } et/ou { ref, inscrit_le } ; rend le contenu enregistré */
-  async enregistrer(champs, uid){
+  /* relire puis écrire : champs = { telephone } et/ou { ref, inscrit_le } ; rend le contenu enregistré. garderTel : un numéro
+     déjà en base n'est pas remplacé (la copie de secours de l'inscription ne passe jamais devant un numéro changé depuis) */
+  async enregistrer(champs, uid, garderTel){
     uid = uid || (Auth.utilisateur() && Auth.utilisateur().id);
     if (!uid) throw Object.assign(new Error("session"), { statut: 401 });
     for (let i = 0; ; i++){
@@ -474,6 +479,7 @@ const Contact = {
       const apres = Object.assign({}, avant, champs || {});
       if (this.ref(avant)) apres.ref = avant.ref;                      // le premier ref gagne
       if (this.inscritLe(avant)) apres.inscrit_le = avant.inscrit_le;  // la date d'inscription ne change jamais
+      if (garderTel && this.telephone(avant)) apres.telephone = avant.telephone;
       try {
         await CleCoach.ecrireSi(uid, this.cle, apres, l);
         if (Store.cible() === uid){ Store.boite(uid)[this.cle] = apres; Store.charge[uid + "|" + this.cle] = true; }
@@ -491,8 +497,10 @@ const Contact = {
   async preparer(){
     const u = Auth.utilisateur(); if (!u || !u.id || !Auth.profil || Auth.estCoach() || Store.idConsulte) return null;
     const att = this.lireAttente(u.id);
-    if (att){ try { await this.borne(this.enregistrer(att, u.id)); this.oublierAttente(u.id); } catch(e){} }
+    let ecrit = null;
+    if (att){ try { ecrit = await this.borne(this.enregistrer(att, u.id, true)); this.oublierAttente(u.id); } catch(e){ console.warn("[MHX] numéro de l'inscription pas encore envoyé", e && e.statut); } }
     if (!this.concerne()) return null;
+    if (ecrit) return this.telephone(ecrit) ? "ok" : "manque";   // la clé vient d'être écrite (et rangée) : pas besoin de la relire
     try {
       const C = await Promise.race([Store.lire(this.cle, {}), new Promise(r => setTimeout(() => r(null), this.DELAI))]);
       if (!C || Store.nonLus.has(C)) return "inconnu";
