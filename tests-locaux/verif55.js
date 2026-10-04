@@ -494,14 +494,17 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
     const ecrire = (t, v) => t.replace(/\b(feedback_dimanche|suivi_visites_clients): "[^"\n]*"/g, (x, n) => n + ': "' + v + '"');
     /* ce que servirFichier (du banc testé) sert pour ce texte, sans retouche de suite */
     const servi = (f, t) => { let corps = null; FT.servirFichier({ url: "/" + f + "?v=1" }, { writeHead(){}, end(x){ corps = String(x); } }, HTML, null, () => t); return corps; };
+    /* v72 (A) : le banc sert aussi le téléphone obligatoire ÉTEINT (forcerTelephone, fichiers.js) : « exactement le fichier », avec ce
+       seul réglage éteint en plus */
+    const eteint = t => typeof FT.forcerTelephone === "function" ? FT.forcerTelephone(t, false) : t;
     const index = fs.readFileSync(HTML, "utf8"), fichiers = listes(index), ecarts = [];
     for (const f of fichiers) {
       const t = fs.readFileSync(path.join(path.dirname(HTML), f), "utf8"), s = V.map(v => servi(f, ecrire(t, v)));
-      if (s.some(x => x !== s[0]) || s[0] !== ecrire(t, "test")) ecarts.push(f);
+      if (s.some(x => x !== s[0]) || s[0] !== eteint(ecrire(t, "test"))) ecarts.push(f);
     }
     const conf = servi("js/config.js", ecrire(fs.readFileSync(path.join(path.dirname(HTML), "js", "config.js"), "utf8"), "tous")) || "";
-    const surTest = NOMS.every(n => JSON.stringify(valeursNouveaute(conf, n)) === '["test"]'), pageSans = NOMS.every(n => !valeursNouveaute(index, n).length);
-    ok("A0 : le banc sert les interrupteurs sur « test » : chaque fichier css/ et js/ servi identique octet pour octet que le fichier dise « test », « tous », « off » ou « Tous » (sur « test » : exactement le fichier) ; la page, servie sans retouche, n'en porte aucun",
+    const surTest = NOMS.every(n => JSON.stringify(valeursNouveaute(conf, n)) === '["test"]') && (typeof FT.valeursTelephone !== "function" || JSON.stringify(FT.valeursTelephone(conf)) === '["false"]'), pageSans = NOMS.every(n => !valeursNouveaute(index, n).length);
+    ok("A0 : le banc sert les interrupteurs sur « test » : chaque fichier css/ et js/ servi identique octet pour octet que le fichier dise « test », « tous », « off » ou « Tous » (sur « test » : exactement le fichier ; v72 : avec le téléphone obligatoire éteint) ; la page, servie sans retouche, n'en porte aucun",
       fichiers.includes("js/config.js") && !ecarts.length && surTest && pageSans, JSON.stringify({ ecarts, surTest, pageSans }));
 
     /* fichier simulé sur « tous » le temps du bloc (comme une branche v2/simu-tous-*), puis remis comme avant */
