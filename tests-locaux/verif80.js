@@ -650,6 +650,55 @@ const champTel = (page, id) => page.evaluate(id => {
       ok("D : un client n'a jamais le bouton (lien vide, rien sur l'accueil)", !(await page.$("[data-wa]")) && (await page.evaluate(() => lienWhatsApp())) === "", ""); }
   });
 
+  /* =================== F. le code d'un lien d'inscription (?ref=) =================== */
+  const refLocal = page => page.evaluate(() => localStorage.getItem("mhx_ref"));
+  await bloc("F. lien avec code", async () => {
+    { const db = base(); db.inscription.id = PID(60);
+      const { page } = await contexte(b, db, { neuf: true });
+      await page.goto(URL0 + "?ref=insta-2026#/inscription"); await page.waitForSelector("#c-go");
+      const r1 = await refLocal(page), adr = await page.evaluate(() => location.search);
+      await page.goto(URL0 + "?ref=second#/inscription"); await page.waitForSelector("#c-go");
+      const r2 = await refLocal(page);
+      ok("F : « /?ref=insta-2026#/inscription » : le code gardé sur l\x27appareil (mhx_ref), l\x27adresse inchangée ; un autre lien ensuite ne le remplace pas (le premier gagne)", r1 === "insta-2026" && adr === "?ref=insta-2026" && r2 === "insta-2026", JSON.stringify({ r1, adr, r2 }));
+      await page.fill("#c-prenom", "Lina"); await page.fill("#c-nom", "Faure"); await page.fill("#c-tel", "06 39 98 00 60"); await page.fill("#c-email", "lina@exemple.fr"); await page.fill("#c-mdp", "motdepasse1");
+      await page.check("#c-cgu");
+      const tClic = Date.now();
+      await Promise.all([page.waitForNavigation({ timeout: 15000 }).catch(() => {}), page.click("#c-go")]);
+      await pret(page);
+      const C = ecr(db, "contact", PID(60)), r3 = await refLocal(page);
+      ok("F : inscription : clé contact du nouveau compte { telephone, ref: « insta-2026 », inscrit_le }, une écriture ; le code retiré de l\x27appareil",
+        C.length === 1 && C[0].contenu.ref === "insta-2026" && C[0].contenu.telephone === "+33639980060" && isoPres(C[0].contenu.inscrit_le, tClic) && r3 === null, JSON.stringify({ C: C.map(x => x.contenu), r3 })); }
+    const lus = [];
+    for (const q of ["?ref=Insta", "?ref=" + "a".repeat(31), "?ref=a%20b", "?ref=%3Cb%3E", "?ref=", "#/inscription?ref=tiktok", "?ref=" + "a".repeat(30)]) {
+      const db = base();
+      const { page } = await contexte(b, db, { neuf: true });
+      await page.goto(URL0 + (q[0] === "#" ? q : q + "#/inscription")); await page.waitForSelector("#c-go");
+      lus.push(await refLocal(page));
+    }
+    ok("F : codes refusés (majuscule, 31 caractères, espace, balise, vide) : rien de gardé ; dans l\x27ancre (#/inscription?ref=tiktok) et 30 caractères : gardés",
+      JSON.stringify(lus) === JSON.stringify([null, null, null, null, null, "tiktok", "a".repeat(30)]), JSON.stringify(lus));
+    { const db = base();
+      const { page } = await contexte(b, db, { qui: NOAH, stockage: { mhx_ref: "ancien" } });
+      await page.goto(URL0 + "?ref=autre"); await pret(page);
+      const r1 = await refLocal(page);
+      await Promise.all([page.waitForNavigation({ timeout: 15000 }).catch(() => {}), page.evaluate(() => Auth.deconnecter())]);
+      await page.waitForSelector("#c-go");
+      const r2 = await refLocal(page);
+      ok("F : avec une session, un lien avec code n\x27est pas lu ; le code gardé survit à « Se déconnecter » (clé de l\x27appareil)", r1 === "ancien" && r2 === "ancien", JSON.stringify({ r1, r2 })); }
+    await avecTelephone(false, async () => {
+      const db = base(); db.inscription.id = PID(61);
+      const { page } = await contexte(b, db, { neuf: true });
+      await page.goto(URL0 + "?ref=salon-lyon#/inscription"); await page.waitForSelector("#c-go");
+      await page.fill("#c-prenom", "Tom"); await page.fill("#c-nom", "Durand"); await page.fill("#c-email", "tom@exemple.fr"); await page.fill("#c-mdp", "motdepasse1");
+      await page.check("#c-cgu");
+      await Promise.all([page.waitForNavigation({ timeout: 15000 }).catch(() => {}), page.click("#c-go")]);
+      await pret(page);
+      const C = ecr(db, "contact", PID(61));
+      ok("F : téléphone obligatoire éteint : l\x27inscription par un lien avec code écrit quand même la clé contact, exactement { ref, inscrit_le }",
+        C.length === 1 && JSON.stringify(Object.keys(C[0].contenu)) === '["ref","inscrit_le"]' && C[0].contenu.ref === "salon-lyon", JSON.stringify(C.map(x => x.contenu)));
+    });
+  });
+
   await b.close(); server.close();
   bilan();
 })().catch(e => { res.push("  ✗ SUITE INTERROMPUE — " + String((e && e.message) || e).split("\n")[0].slice(0, 160)); bilan(); process.exit(1); });

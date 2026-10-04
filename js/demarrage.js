@@ -177,6 +177,7 @@ const Retour = {
      si CONFIG.marque.inscription_libre vaut true : #/inscription ouvre alors la
      creation de compte ; sinon, l'ecran de connexion comme n'importe quelle autre adresse. */
   if (!Auth.connecte()){
+    try { Provenance.capter(); } catch(e){}   // v72 (F) : le code d'un lien d'inscription (?ref=…), gardé jusqu'à l'inscription
     /* v72 (B) : #/inscription → création de compte, #/connexion → connexion ; un lien d'email (jetons, message,
        changement d'adresse) garde la connexion, comme avant ; sinon l'écran d'entrée de l'appareil (entreePortail) */
     portail(/inscription/.test(location.hash) ? "inscription" : (/connexion/.test(location.hash) || lienEmail || premierLien || emailChange) ? "connexion" : entreePortail());

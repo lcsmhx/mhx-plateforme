@@ -163,11 +163,13 @@ function portail(mode){
              l'appareil, elle repart à l'ouverture qui suit (Contact.preparer) */
           const champs = {};
           if (T && T.tel) champs.telephone = T.tel;
+          const ref = Provenance.locale(); if (ref) champs.ref = ref;   // v72 (F) : le code du lien d'inscription
           if (Object.keys(champs).length){
             champs.inscrit_le = maintenant;
             const uid = Auth.utilisateur() && Auth.utilisateur().id;
             try { await Contact.borne(Contact.enregistrer(champs, uid)); } catch(e){ if (uid) Contact.garderAttente(uid, champs); }
           }
+          Provenance.oublier();   // v72 (F) : enregistré (ou dans la copie de secours) : il ne sert plus sur cet appareil
           location.hash = ""; location.reload(); return;
         }
         ecranVerifieEmail(email); return;   // v47 : un ecran dedie, pas une ligne de message

@@ -199,6 +199,7 @@ const outilAccueil = {
         <h1>${esc(nomC)}${profil.statut === "prospect" ? ` <span class="pastille accent" title="Compte gratuit : pas encore accompagné">prospect</span>` : ""}${(d.prefs && d.prefs.langue === "en") ? ` <span class="pastille" title="Ce client utilise l'app en anglais">🇺🇸 anglais</span>` : ""}</h1>
         <p class="lede">${profil.statut === "prospect" ? "Compte gratuit : pas de suivi à assurer tant qu'il n'est pas passé client." + (rdc ? " Découverte : " + (rdc.jour == null ? "date d'inscription inconnue" : Decouverte.depuisTexte(rdc.jour)) + (rdc.questionnaire ? ", questionnaire rempli." : ", questionnaire pas encore rempli.") : "") : alertes.length ? `${alertes.length} point${alertes.length > 1 ? "s" : ""} à regarder.` : "Rien à signaler : tout est en ordre."}</p>
         <p class="fiche-tel" id="fiche-tel">Téléphone : ${Telephone.coachHTML(Contact.telephone(d.contact))}</p>
+        <p class="fiche-tel" id="fiche-source">Source : <span data-notr>${esc(Contact.ref(d.contact) || "—")}</span></p>
         ${alertes.length ? `<div class="attention-alertes" style="margin-top:4px">${alertes.map(a => `<a class="pastille ${a.niveau === "info" ? "accent" : a.niveau}" href="#/${esc(a.cible)}">${esc(a.texte)}</a>`).join("")}</div>` : ""}
       </header>
       <section class="panel">

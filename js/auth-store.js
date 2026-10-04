@@ -9,7 +9,7 @@ const Auth = {
      mode test) reste a la deconnexion ; tout autre « mhx_* » (session, copies en attente, refus, invitations, activite,
      tracking, brouillons, choix d'affichage par compte) part avec le compte : sur un appareil partage, rien d'un compte
      ne doit rester. mhx_visite_comptee (sessionStorage) n'est qu'un drapeau d'onglet : garde lui aussi. */
-  CLES_APPAREIL: ["mhx_theme", "mhx_langue", "mhx_installe", "mhx_visites", "mhx_decouverte_jour", "mhx_visite_comptee", "mhx_deja_venu"],
+  CLES_APPAREIL: ["mhx_theme", "mhx_langue", "mhx_installe", "mhx_visites", "mhx_decouverte_jour", "mhx_visite_comptee", "mhx_deja_venu", "mhx_ref"],   // v72 (F) : + le code d'un lien d'inscription (Provenance), gardé jusqu'à l'inscription
   /* v72 (B) : un appareil qui s'est déjà connecté au moins une fois (marqueur posé à chaque ouverture avec une session, gardé
      à la déconnexion ; aussi les traces d'avant la v72, écrites seulement quand on est connecté : compteur de visites,
      bannière d'installation ; et l'app lancée depuis l'écran d'accueil, qui n'existe que pour un compte) s'ouvre sur la
@@ -499,6 +499,28 @@ const Contact = {
       return this.telephone(C) ? "ok" : "manque";
     } catch(e){ return "inconnu"; }
   }
+};
+
+/* --- v72 (F) : PROVENANCE — le code d'un lien d'inscription (…/?ref=insta#/inscription) -------------------------------
+   Lu à l'ouverture de l'app SANS session, dans l'adresse (?ref=… avant l'ancre, ou dans l'ancre : #/inscription?ref=…) :
+   lettres minuscules, chiffres et tirets, 30 caractères au plus ; sinon ignoré. Gardé sur l'appareil (« mhx_ref », clé de
+   l'appareil : une déconnexion ne l'efface pas) jusqu'à l'inscription, puis enregistré dans la clé contact (ref) du nouveau
+   compte et retiré. Le premier code vu gagne : un autre lien ensuite ne le remplace pas. L'adresse n'est pas modifiée (un
+   lien ouvert dans le navigateur d'Instagram puis « ouvrir dans Safari » garde son code). --------------------------------- */
+const Provenance = {
+  CLE: "mhx_ref",
+  propre(v){ return typeof v === "string" && /^[a-z0-9-]{1,30}$/.test(v) ? v : ""; },
+  dansAdresse(){
+    try {
+      const q = new URLSearchParams(location.search); if (q.has("ref")) return q.get("ref");
+      const h = location.hash || "", i = h.indexOf("?");
+      if (i > -1){ const qh = new URLSearchParams(h.slice(i + 1)); if (qh.has("ref")) return qh.get("ref"); }
+    } catch(e){}
+    return null;
+  },
+  capter(){ const r = this.propre(this.dansAdresse()); if (!r || this.locale()) return; try { localStorage.setItem(this.CLE, r); } catch(e){} },
+  locale(){ try { return this.propre(localStorage.getItem(this.CLE)); } catch(e){ return ""; } },
+  oublier(){ try { localStorage.removeItem(this.CLE); } catch(e){} }
 };
 
 /* --- v64 (brief V2, B) : ACCORD SANTÉ AU PREMIER USAGE ----------------------------------------------------

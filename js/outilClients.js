@@ -511,6 +511,7 @@ const Clients = {
             bilan: Decouverte.bilanPropose(c.intake) } : null,   // v62 (L) : son choix sur la page « Ton plan d'action » (« Plus tard » d'avant la v62)
       newsletter: Accords.newsletterCoach(c.emails),   // v52 (lot G) : { oui, depuis } d'après la clé emails (CSV)
       tel: Contact.telephone(c.contact),   // v72 (A) : son numéro (clé contact), "" si aucun ou illisible
+      ref: Contact.ref(c.contact),   // v72 (F) : le code de son lien d'inscription (clé contact), "" si aucun ou illisible
       act: (c.activite && typeof c.activite === "object") ? c.activite : null,   // v51 : activite (chronologie de la fiche)
       /* v53 (chantier 4) : dernière visite et jours actifs sur 30 jours ; un compte non suivi (client hors interrupteur
          suivi_visites_clients) : rien (« — »), même s'il a une ancienne clé activite de quand il était prospect */

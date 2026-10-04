@@ -67,6 +67,25 @@ const outilTableau = {
     return { seuil, depuis: V ? V.le : null, nouvelle: { le: new Date(t).toISOString(), jusqua: maxCree, avant: seuil, avant_le: V ? V.le : null } };
   },
   quand(iso){ const d = new Date(iso), p = n => String(n).padStart(2, "0"); return p(d.getDate()) + "/" + p(d.getMonth() + 1) + " à " + p(d.getHours()) + ":" + p(d.getMinutes()); },
+  /* v72 (F) — les inscrits des 30 derniers jours (aujourd'hui compris, depuis minuit il y a 29 jours) par source (le code du
+     lien d'inscription, clé contact) : les comptes passés par l'inscription gratuite, hors coach et hors comptes de test (même
+     règle que la Mesure de la page Prospects, sans sa case « Inclure les comptes de test ») */
+  sources(lignes){
+    const passe = l => l.p.statut === "prospect" || !!l.ch || !!(l.dc && (l.dc.court_le || l.dc.court_debut)) || !!(l.suivi && (l.suivi.client_le || l.suivi.issue));
+    const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - 29);
+    const n = Object.create(null);   // sans prototype : un code « constructor » ne touche rien
+    let total = 0;
+    (lignes || []).filter(l => l && l.p && l.p.role !== "coach" && passe(l) && !Mesure.estTest(l) && Mesure.dans(l.p.cree_le, d.getTime())).forEach(l => { const k = l.ref || ""; n[k] = (n[k] || 0) + 1; total++; });
+    const table = Object.keys(n).map(k => ({ ref: k, n: n[k] })).sort((a, b) => b.n - a.n || (a.ref === "" ? 1 : b.ref === "" ? -1 : a.ref < b.ref ? -1 : a.ref > b.ref ? 1 : 0));
+    return { total, table };
+  },
+  sourcesHTML(S){
+    return `<section class="panel" id="tb-sources"><h2>Inscrits par source</h2>
+      <p class="note" style="margin:0 0 10px">30 derniers jours, hors comptes de test. La source est le code du lien d'inscription (…/?ref=insta) ; « — » : sans code.</p>
+      ${S.total ? `<table class="pr-mesure-t" id="tb-sources-t"><thead><tr><th>Source</th><th>Inscrits</th></tr></thead><tbody>${S.table.map(r => `<tr><td data-notr>${esc(r.ref || "—")}</td><td>${r.n}</td></tr>`).join("")}</tbody>
+        <tfoot><tr><td><b>Total</b></td><td><b>${S.total}</b></td></tr></tfoot></table>`
+        : `<p class="empty" style="margin:0">Aucun inscrit sur les 30 derniers jours.</p>`}</section>`;
+  },
   nouveauxHTML(nouveaux, vis){
     const reste = nouveaux.length - this.VISITE.MAX;
     const ligne = l => { const pr = String((l.p && l.p.prenom) || "").trim() || Clients.nom(l.p);
@@ -121,6 +140,7 @@ const outilTableau = {
       ${liste.length ? `<section class="panel" id="tb-a-traiter"><h2>À traiter maintenant</h2>
         <ul class="tb-liste">${liste.slice(0, this.MAX_LIGNES).map(ligne).join("")}</ul>
         ${reste > 0 ? `<p class="note" style="margin:10px 0 0">Et ${reste} autre${reste > 1 ? "s" : ""} : <a class="link-a" href="#/clients">Mes clients →</a> · <a class="link-a" href="#/prospects">Prospects →</a></p>` : ""}</section>` : ""}
+      ${this.sourcesHTML(this.sources(lignes))}
       <section class="panel">
         <h2>Raccourcis</h2>
         <div class="acces-l">

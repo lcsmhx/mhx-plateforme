@@ -308,6 +308,49 @@ const PREMIERE = "Première visite enregistrée : les inscrits des 7 derniers jo
     ok("E6 : Prospects (« Tous ») : tri par défaut « inscription récente », du plus récent au plus ancien (Zoé, Hugo, Ana)", o.tri === "inscription" && JSON.stringify(o.uids) === JSON.stringify([ZOE, HUGO, ANA]), JSON.stringify(o));
   });
 
+  /* =================== F. la source des inscrits (côté coach) =================== */
+  await bloc("F. source", async () => {
+    const pros = [
+      { id: PID(40), prenom: "Paul", nom: "Ancien", role: "client", statut: "prospect", cree_le: avant(40 * J) },
+      { id: PID(41), prenom: "Testeur", nom: "Interne", role: "client", statut: "prospect", cree_le: avant(5 * J) },
+      { id: PID(42), prenom: "Léon", nom: "Client", role: "client", statut: "client", cree_le: avant(20 * J) },
+      { id: PID(43), prenom: "Piège", nom: "Code", role: "client", statut: "prospect", cree_le: avant(45 * J) }
+    ];
+    const extra = [
+      { user_id: HUGO, outil: "contact", contenu: { inscrit_le: avant(3 * J) }, maj_le: avant(3 * J) },
+      { user_id: ANA, outil: "contact", contenu: { ref: "tiktok", inscrit_le: avant(10 * J) }, maj_le: avant(10 * J) },
+      { user_id: PID(40), outil: "contact", contenu: { ref: "insta" }, maj_le: avant(40 * J) },
+      { user_id: PID(41), outil: "contact", contenu: { ref: "insta" }, maj_le: avant(5 * J) },
+      { user_id: PID(41), outil: "intake", contenu: { email_compte: "lucas+test@exemple.fr", court_debut: avant(5 * J) }, maj_le: avant(5 * J) },
+      { user_id: PID(42), outil: "contact", contenu: { ref: "salon" }, maj_le: avant(20 * J) },
+      { user_id: PID(42), outil: "intake", contenu: { court_le: avant(20 * J), court_debut: avant(20 * J) }, maj_le: avant(20 * J) },
+      { user_id: PID(43), outil: "contact", contenu: { ref: "<b>x</b>" }, maj_le: avant(45 * J) }
+    ];
+    const db = base({ profils: pros, extra });
+    const zoe = db.donnees.find(d => d.user_id === ZOE && d.outil === "contact"); zoe.contenu.ref = "insta";
+    const { page } = await contexte(b, db, { qui: COACH, viewport: LARGE });
+    await page.goto(URL0); await pret(page); await page.waitForSelector("#tb-sources");
+    const s = await page.evaluate(() => { const S = document.getElementById("tb-sources");
+      return { h2: S.querySelector("h2").textContent, lignes: Array.from(S.querySelectorAll("tbody tr")).map(tr => Array.from(tr.querySelectorAll("td")).map(td => td.textContent.trim())),
+        total: Array.from(S.querySelectorAll("tfoot td")).map(td => td.textContent.trim()) }; });
+    ok("F : tableau de bord « Inscrits par source » (30 derniers jours, hors comptes de test) : insta 1 (Zoé ; pas Paul, 40 j, ni le compte de test), salon 1 (Léon, passé client), tiktok 1 (Ana), — 1 (Hugo, sans code) ; total 4",
+      s.h2 === "Inscrits par source" && JSON.stringify(s.lignes) === JSON.stringify([["insta", "1"], ["salon", "1"], ["tiktok", "1"], ["—", "1"]]) && JSON.stringify(s.total) === '["Total","4"]',
+      JSON.stringify(s));
+    await page.evaluate(() => { location.hash = "#/prospects"; }); await pret(page); await page.waitForSelector("#pr-liste"); await page.click('[data-filtre="tous"]'); await attendre(page, 500);
+    const c = await page.evaluate(ids => ids.map(id => { const x = document.querySelector('.sc-carte[data-uid="' + id + '"] .sc-source'); return x ? x.textContent.replace(/\s+/g, " ").trim() : null; }), [ZOE, HUGO, PID(43)]);
+    ok("F : cartes Prospects : « Source : insta » (Zoé), « Source : — » (Hugo, sans code ; code piégé : « — », aucune balise)", JSON.stringify(c) === JSON.stringify(["Source : insta", "Source : —", "Source : —"]), JSON.stringify(c));
+    await page.evaluate(id => Clients.ouvrir(id, "Zoé Martin", "accueil"), ZOE); await attendre(page, 2000);
+    const f1 = await page.evaluate(() => (document.getElementById("fiche-source") || {}).textContent);
+    await page.evaluate(id => Clients.ouvrir(id, "Thomas Démo", "accueil"), F.IDS.c1); await attendre(page, 2000);
+    const f2 = await page.evaluate(() => (document.getElementById("fiche-source") || {}).textContent);
+    ok("F : fiche : « Source : insta » (Zoé) ; « Source : — » (Thomas, sans code)", f1 === "Source : insta" && f2 === "Source : —", JSON.stringify({ f1, f2 }));
+    const d0 = base({ profils: [] }); d0.profils = d0.profils.filter(p => p.statut !== "prospect"); d0.donnees = d0.donnees.filter(d => d.outil !== "contact");
+    const { page: p0 } = await contexte(b, d0, { qui: COACH, viewport: PETIT });
+    await p0.goto(URL0); await pret(p0); await p0.waitForSelector("#tb-sources");
+    const v = await p0.evaluate(() => ({ t: ((document.querySelector("#tb-sources .empty") || {}).textContent || "").trim(), sw: document.documentElement.scrollWidth, iw: innerWidth }));
+    ok("F : aucun inscrit sur 30 jours : « Aucun inscrit sur les 30 derniers jours. » ; 320 px sans défilement horizontal", v.t === "Aucun inscrit sur les 30 derniers jours." && v.sw <= v.iw, JSON.stringify(v));
+  });
+
   await b.close(); server.close();
   bilan();
 })().catch(e => { res.push("  ✗ SUITE INTERROMPUE — " + String((e && e.message) || e).split("\n")[0].slice(0, 160)); bilan(); process.exit(1); });
