@@ -60,6 +60,9 @@ const CONFIG = {
        le nom et l'email : "a1" = la réponse à la 1re question de l'événement (a2 la 2e…) ; "location" = le champ du lieu
        quand l'événement est un appel au numéro du prospect ; "" = jamais de numéro. */
     calendly_tel: "a1",
+    /* v72 (D) — WhatsApp de Lucas (avec l'indicatif) : bouton « Écrire à Lucas sur WhatsApp » sur l'accueil du prospect et ses
+       pages verrouillées, avec un message déjà écrit (DECOUVERTE.whatsapp). Vide : pas de bouton. */
+    whatsapp: "+61418876361",
     /* v52 — gratuit pour toujours : le calculateur (sa cle a lui, calc_perso), Ma progression (sans les
        photos) et la Speed Formation sont ouverts au prospect, sans limite de duree */
     gratuit_ouverts: ["accueil", "decouverte", "profil", "calculateur", "mensurations", "formation"],
@@ -434,6 +437,9 @@ const DECOUVERTE = {
   },
   /* v61 (brief V2, vocabulaire) : le bouton unique partout où le bilan est proposé au prospect, et sa petite ligne */
   cta: { bouton: "Récupérer mon plan d'action", sous: "15 min avec Lucas · offert" },
+  /* v72 (D) : le bouton WhatsApp du prospect et son message ({p} : son prénom ; sans prénom, la seconde phrase) */
+  whatsapp: { bouton: "Écrire à Lucas sur WhatsApp", message: "Salut Lucas, c'est {p}, je viens de m'inscrire sur l'app MHX.",
+    message_sans_prenom: "Salut Lucas, je viens de m'inscrire sur l'app MHX." },
   /* v62 (brief V2, H) : les invitations au bon moment (prospect seulement), une par déclencheur ; l'objet porte le code
      d'origine du bouton (Decouverte.ORIGINES). Aucune valeur saisie (poids, mesures, calories) dans ces textes. */
   invitations: {
@@ -723,6 +729,8 @@ const DECOUVERTE = {
       plus_tard: "Later, let me explore my space"
     },
     cta: { bouton: "Get my action plan", sous: "15 min with Lucas · free" },
+    whatsapp: { bouton: "Message Lucas on WhatsApp", message: "Hi Lucas, it's {p}, I just signed up on the MHX app.",
+      message_sans_prenom: "Hi Lucas, I just signed up on the MHX app." },
     invitations: {
       objectif: "Your goal: “{p}”",
       plus_tard: "Later",

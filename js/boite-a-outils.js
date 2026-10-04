@@ -150,6 +150,30 @@ const Telephone = {
     return `<span class="tel-coach"><span class="tel-num" data-notr>${esc(t)}</span> <a class="${c}" href="tel:${esc(t)}">Appeler</a> <a class="${c}" href="https://wa.me/${esc(t.slice(1))}" target="_blank" rel="noopener">WhatsApp</a></span>`;
   }
 };
+/* v72 (D) — « Écrire à Lucas sur WhatsApp » (prospect connecté, jamais une fiche consultée) : https://wa.me/<chiffres du numéro
+   de CONFIG.marque.whatsapp>?text=<message encodé, avec son prénom>. Numéro vide ou mal formé (il doit commencer par +),
+   texte absent : "" (pas de bouton). Le message n'est jamais retouché par la typographie française (il part tel quel). */
+function lienWhatsApp(){
+  try {
+    if (!Auth.estProspect() || Store.idConsulte) return "";
+    const brut = String((CONFIG.marque && CONFIG.marque.whatsapp) || "").trim();
+    if (!/^\+/.test(brut)) return "";
+    const n = brut.slice(1).replace(/[\s.()-]/g, "");
+    if (!/^[1-9]\d{7,14}$/.test(n)) return "";
+    const L = DECOUVERTE.whatsapp || {};
+    if (![L.bouton, L.message, L.message_sans_prenom].every(x => typeof x === "string" && x.trim())) return "";
+    const p = Auth.profil && typeof Auth.profil.prenom === "string" ? Array.from(Auth.profil.prenom.replace(/\s+/g, " ").trim()).slice(0, 60).join("") : "";
+    let texte;
+    try { texte = encodeURIComponent(p ? trad(L.message, { p }) : trad(L.message_sans_prenom)); }
+    catch(e){ texte = encodeURIComponent(trad(L.message_sans_prenom)); }
+    return "https://wa.me/" + n + "?text=" + texte;
+  } catch(e){ return ""; }
+}
+/* le bouton (secondaire, dans son propre bloc, hors du cadre « verrou » et sans data-dc-cal : ce n'est pas une réservation) */
+function boutonWhatsApp(classe){
+  const l = lienWhatsApp(); if (!l) return "";
+  return `<div class="actions ${esc(classe || "")}"><a class="btn ghost" href="${esc(l)}" target="_blank" rel="noopener" data-wa>${esc(trad(DECOUVERTE.whatsapp.bouton))}</a></div>`;
+}
 /* v52 — « écris-nous » : une phrase (clé française, traduite par trad) dont {e} devient l'adresse email du coach, en lien
    mailto (CONFIG.marque.email). Sert tant que l'app n'envoie aucun email (mot de passe oublié, changement d'adresse). */
 function ecrisNous(phrase, id, classe){

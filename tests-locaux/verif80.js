@@ -610,6 +610,46 @@ const champTel = (page, id) => page.evaluate(id => {
     ok("C : rien d'écrit, une seule lecture de contact (au démarrage)", ecr(db, "contact").length === 0 && lu(db, NOAH.id, "contact").length === 1, JSON.stringify({ lus: lu(db, NOAH.id, "contact").length, ecr: resume(db) }));
   });
 
+  /* =================== D. Écrire à Lucas sur WhatsApp =================== */
+  const WA = "https://wa.me/61418876361?text=";
+  await bloc("D. WhatsApp", async () => {
+    const db = base();
+    const { page } = await contexte(b, db, { qui: NOAH });
+    await page.goto(URL0 + "#/nutrition"); await pret(page); await page.waitForSelector(".verrou a[target=_blank]");
+    const v = await page.evaluate(() => { const w = document.querySelectorAll("[data-wa]"), a = w[0];
+      return { n: w.length, href: a && a.getAttribute("href"), t: a && a.textContent.trim(), cls: a && a.className, target: a && a.getAttribute("target"), rel: a && a.getAttribute("rel"),
+        dansVerrou: !!(a && a.closest(".verrou")), calVerrou: document.querySelectorAll(".verrou a[target=_blank]").length, apresVerrou: !!(a && a.closest(".verrou-wa") && document.querySelector(".verrou").compareDocumentPosition(a) & Node.DOCUMENT_POSITION_FOLLOWING) }; });
+    ok("D : page verrouillée (Nutrition) : un bouton secondaire « Écrire à Lucas sur WhatsApp » sous le cadre de réservation (hors du cadre : 1 seul lien Calendly), qui ouvre wa.me/61418876361 avec « Salut Lucas, c'est Noah, je viens de m'inscrire sur l'app MHX. » encodé (nouvel onglet)",
+      v.n === 1 && v.href === WA + encodeURIComponent("Salut Lucas, c'est Noah, je viens de m'inscrire sur l'app MHX.") && v.t === "Écrire à Lucas sur WhatsApp" && v.cls === "btn ghost"
+        && v.target === "_blank" && v.rel === "noopener" && !v.dansVerrou && v.calVerrou === 1 && v.apresVerrou,
+      JSON.stringify(v));
+    await page.evaluate(() => { location.hash = "#/accueil"; }); await pret(page); await page.waitForSelector("#dc-accomp");
+    const a = await page.evaluate(() => { const w = document.querySelector("#dc-accomp [data-wa]"), cal = document.querySelector('#dc-accomp [data-dc-cal="accueil_accompagnement"]');
+      return { href: w && w.getAttribute("href"), cls: w && w.className, apresCal: !!(w && cal && (cal.compareDocumentPosition(w) & Node.DOCUMENT_POSITION_FOLLOWING)), dore: document.querySelectorAll("#vue a.btn:not(.ghost)").length, total: document.querySelectorAll("#vue [data-wa]").length }; });
+    ok("D : accueil du prospect : le même bouton (secondaire) sous « Récupérer mon plan d'action » de la carte « Ce que l'accompagnement ajoute », une seule fois sur la page",
+      a.href === WA + encodeURIComponent("Salut Lucas, c'est Noah, je viens de m'inscrire sur l'app MHX.") && a.cls === "btn ghost" && a.apresCal && a.total === 1, JSON.stringify(a));
+    const u = await page.evaluate(() => { const M = CONFIG.marque, g = M.whatsapp, pr = Auth.profil.prenom, out = {};
+      M.whatsapp = ""; out.vide = boutonWhatsApp("x"); M.whatsapp = "0418 876 361"; out.sansPlus = lienWhatsApp(); M.whatsapp = "+61 418 876 361"; out.espaces = lienWhatsApp(); M.whatsapp = g;
+      Auth.profil.prenom = ""; out.sansPrenom = lienWhatsApp(); Auth.profil.prenom = "<b>Zoé</b> & co"; out.piege = boutonWhatsApp("x"); Auth.profil.prenom = pr;
+      return out; });
+    ok("D : réglage vide : pas de bouton ; numéro sans « + » : pas de lien ; « +61 418 876 361 » nettoyé ; sans prénom : « Salut Lucas, je viens de m'inscrire sur l'app MHX. » ; prénom piégé encodé (aucune balise)",
+      u.vide === "" && u.sansPlus === "" && u.espaces === WA + encodeURIComponent("Salut Lucas, c'est Noah, je viens de m'inscrire sur l'app MHX.")
+        && u.sansPrenom === WA + encodeURIComponent("Salut Lucas, je viens de m'inscrire sur l'app MHX.") && !/<b>/.test(u.piege) && u.piege.includes(encodeURIComponent("<b>Zoé</b> & co").replace(/&/g, "&amp;")),
+      JSON.stringify(u));
+    ok("D : rien d'écrit", db.ecritures.length === 0, resume(db));
+  });
+  await bloc("D. WhatsApp en anglais, client", async () => {
+    { const db = base([{ user_id: NOAH.id, outil: "prefs", contenu: { langue: "en" }, maj_le: avant(J) }]);
+      const { page } = await contexte(b, db, { qui: NOAH, langue: "en" });
+      await page.goto(URL0 + "#/programme"); await pret(page); await page.waitForSelector("[data-wa]");
+      const v = await page.evaluate(() => { const a = document.querySelector("[data-wa]"); return { t: a.textContent.trim(), href: a.getAttribute("href") }; });
+      ok("D : en anglais : « Message Lucas on WhatsApp », message « Hi Lucas, it's Noah, I just signed up on the MHX app. »", v.t === "Message Lucas on WhatsApp" && v.href === WA + encodeURIComponent("Hi Lucas, it's Noah, I just signed up on the MHX app."), JSON.stringify(v)); }
+    { const db = base([{ user_id: THOMAS.id, outil: "contact", contenu: { telephone: TEL_THOMAS }, maj_le: avant(J) }]);
+      const { page } = await contexte(b, db, { qui: THOMAS });
+      await page.goto(URL0); await pret(page);
+      ok("D : un client n'a jamais le bouton (lien vide, rien sur l'accueil)", !(await page.$("[data-wa]")) && (await page.evaluate(() => lienWhatsApp())) === "", ""); }
+  });
+
   await b.close(); server.close();
   bilan();
 })().catch(e => { res.push("  ✗ SUITE INTERROMPUE — " + String((e && e.message) || e).split("\n")[0].slice(0, 160)); bilan(); process.exit(1); });

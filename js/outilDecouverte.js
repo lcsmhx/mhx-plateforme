@@ -1295,6 +1295,7 @@ const outilDecouverte = {
       <ul class="liste-debloque">${vitrine.map(o => `<li><a href="#/${esc(o.id)}" data-dc-vitrine="${esc(o.id)}">${esc(trad(o.nom))}</a> — ${esc(trad(AVANTAGES[o.id]))}</li>`).join("")}</ul>
       ${cal ? `<div class="actions"><a class="btn ghost" href="${esc(cal)}" target="_blank" rel="noopener" data-dc-cal="accueil_accompagnement">${esc(trad(K.bouton))}</a></div>` : ""}
       <p class="note" style="margin:10px 0 0">${esc(trad(L.note))}</p>
+      ${boutonWhatsApp("dc-wa")}
       <div id="dc-reserve" style="margin-top:14px">${r ? this.reserveHTML(r) : `<label class="coche"><input type="checkbox" id="dc-reserve-case"> ${esc(trad(L.reserve_case))}</label>`}</div></section>`;
   },
   reserveHTML(r){ return `<span class="pastille ok" id="dc-reserve-ok" tabindex="-1">${esc(trad(DECOUVERTE.accomp.reserve_ok, { d: dateFr(Decouverte.dateLocale(r) || "") }))}</span>`; },

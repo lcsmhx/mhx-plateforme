@@ -600,3 +600,8 @@ body.figee{overflow:hidden}
 #tb-clients a.voir{text-decoration:none;display:inline-flex;align-items:center}
 .fiche-tel{margin:6px 0 0;color:var(--ink-2)}
 .sc-tel{margin:6px 0 0;font-size:12px;color:var(--ink-3)}
+
+/* v72 (D) — « Écrire à Lucas sur WhatsApp » (prospect) : bouton secondaire, sous la réservation, à la hauteur des autres */
+.dc-wa{margin-top:12px}
+.verrou-wa{justify-content:center;margin:12px auto 0}
+.dc-wa .btn,.verrou-wa .btn{min-height:44px;text-align:center}
