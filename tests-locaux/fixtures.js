@@ -138,6 +138,7 @@ const histProgrammeC1 = { liste: [{ nom: "Bloc 0 — mise en route", du: ilYA(52
 const calcC1 = { sexe: "H", age: 32, taille: 180, poids: 83, pas: 8000, heures: 5, objectif: "perte" };
 
 const VISITE_COACH = new Date().toISOString();   // v72 (E) : le lancement de la suite (voir la clé coach_visite plus bas)
+const VISITE_DEBUT = "2099-01-01T00:00:00.000Z";   // v72 (E) : début de cette visite, plus tard que toute horloge des suites (voir plus bas)
 
 const donnees = [
   [IDS.c1, "intake", intakeC1, ilYA(2)], [IDS.c1, "programme", programmeC1, ilYA(24)], [IDS.c1, "journal", journalC1, jourSem(2)],
@@ -157,8 +158,12 @@ const donnees = [
   [IDS.coach, "intake", { nom: "Coach Démo", complet: true, age: 35, sexe: "Homme", taille: 182, poids: 84, objectif: "Performance / condition physique", niveau: "Avancé (2 ans et +)", lieu: "Salle complète", seances: "5", journee_type: "-", nb_repas: "4 repas (3 + une collation)", regime_type: "Omnivore" }, ilYA(1)],
   /* v72 (E) : la visite du coach au tableau de bord (clé coach_visite) : il « vient de passer » au lancement de la suite et a vu
      tous les inscrits de ce moment. Ouvrir le tableau de bord dans les 30 min est donc la même visite : aucune écriture (une
-     NOUVELLE visite et son écriture sont testées dans verif81). Ligne datée d'il y a 40 jours : pas une activité. */
-  [IDS.coach, "coach_visite", { le: VISITE_COACH, jusqua: VISITE_COACH, avant: VISITE_COACH, avant_le: VISITE_COACH }, ilYA(40)]
+     NOUVELLE visite et son écriture sont testées dans verif81). Ligne datée d'il y a 40 jours : pas une activité.
+     Correction (banc GitHub n° 91) : « le » (début de la visite) est en 2099 et non au lancement : beaucoup de suites posent leur
+     propre horloge (midi du jour, un autre jour, novembre 2026…) ; lancée en UTC avant 11 h 30, verif64 voyait midi plus d'une
+     demi-heure après le lancement, donc une nouvelle visite et son écriture. Un début dans le futur reste la même visite
+     (outilTableau.visite) quelle que soit l'horloge ; « avant » / « avant_le » (seuil et date affichés) restent au lancement. */
+  [IDS.coach, "coach_visite", { le: VISITE_DEBUT, jusqua: VISITE_COACH, avant: VISITE_COACH, avant_le: VISITE_COACH }, ilYA(40)]
 ].map(([user_id, outil, contenu, d]) => ({ user_id, outil, contenu, maj_le: d + "T00:30:00+00:00" }));
 
 const bibliotheque = [
