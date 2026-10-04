@@ -4,7 +4,13 @@ const { chromium } = require("playwright"); const fs=require("fs"); const http=r
    (vendredi, dimanche compris : jamais de passage de minuit pendant la suite) :
    les 13 vérifications tournent tous les jours (avant : 8 du lundi au jeudi, les 5 de l'envoi sautées sans le dire). */
 const DECALAGE = (() => { const n = new Date(), j = n.getDay(), c = new Date(n); c.setDate(n.getDate() + (j === 0 ? -1 : 6 - j)); c.setHours(12, 0, 0, 0); return c.getTime() - n.getTime(); })();
-{ const Vrai = Date; global.Date = class extends Vrai { constructor(...a) { super(...(a.length ? a : [Vrai.now() + DECALAGE])); } static now() { return Vrai.now() + DECALAGE; } }; }
+const VraiDate = Date;
+global.Date = class extends VraiDate { constructor(...a) { super(...(a.length ? a : [VraiDate.now() + DECALAGE])); } static now() { return VraiDate.now() + DECALAGE; } };
+/* v71 : Playwright 1.63 (celui du banc GitHub) date chaque réglage de l'horloge avec Date.now() de Node et, à chaque nouveau
+   document, le navigateur rattrape l'écart avec sa vraie heure. Avec le Date décalé de Node, un décalage en arrière (le dimanche,
+   vers le samedi) était annulé : la page revenait au vrai jour. L'horloge de la page est donc installée avec le vrai Date de Node
+   le temps de l'appel, à l'heure décalée : la page est au samedi tous les jours. */
+const installerHorloge = async (c) => { const Decale = global.Date, t = Decale.now(); global.Date = VraiDate; try { await c.clock.install({ time: t }); } finally { global.Date = Decale; } };
 const F = require("./fixtures"); const HTML = path.resolve(process.argv[2]);
 const { servirFichier } = require("./fichiers");   // 52.1 : la page charge css/ et js/, servis depuis son dossier (fichiers.js)
 const server = http.createServer((req,res)=>{if(servirFichier(req,res,HTML))return;res.writeHead(200,{"Content-Type":"text/html"});res.end(fs.readFileSync(HTML));});
@@ -13,7 +19,7 @@ const server = http.createServer((req,res)=>{if(servirFichier(req,res,HTML))retu
   const ok=(n,c,d)=>res.push((c?"  ✓ ":"  ✗ ")+n+(c?"":"  — "+(d||"")));
   async function ctx(who){
     const c = await b.newContext({ viewport:{width:390,height:844} });
-    await c.clock.install({ time: Date.now() });   // horloge décalée qui continue de tourner (une seule page par contexte : un nouveau document repartirait de l'installation)
+    await installerHorloge(c);   // horloge décalée qui continue de tourner (une seule page par contexte : un nouveau document repartirait de l'installation)
     await c.route("**/*", r => { const req=r.request(); const u=req.url(); if(new URL(u).hostname === "localhost") return r.continue(); if(!new URL(u).hostname.endsWith(".supabase.co")) return r.abort();
       const url=new URL(u); const p=url.pathname, q=url.searchParams, m=req.method();
       // v56 : la connexion notée par la base (noter_connexion, au démarrage) n'est pas une écriture de l'app : testée à part (verif61)

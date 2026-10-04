@@ -10,7 +10,13 @@ const { chromium } = require("playwright"); const fs = require("fs"); const http
    (vendredi, dimanche compris : jamais de passage de minuit pendant la suite) : le résultat ne
    dépend plus du jour où il tourne (avant : 65/67 du lundi au jeudi). */
 const DECALAGE = (() => { const n = new Date(), j = n.getDay(), c = new Date(n); c.setDate(n.getDate() + (j === 0 ? -1 : 6 - j)); c.setHours(12, 0, 0, 0); return c.getTime() - n.getTime(); })();
-{ const Vrai = Date; global.Date = class extends Vrai { constructor(...a) { super(...(a.length ? a : [Vrai.now() + DECALAGE])); } static now() { return Vrai.now() + DECALAGE; } }; }
+const VraiDate = Date;
+global.Date = class extends VraiDate { constructor(...a) { super(...(a.length ? a : [VraiDate.now() + DECALAGE])); } static now() { return VraiDate.now() + DECALAGE; } };
+/* v71 : Playwright 1.63 (celui du banc GitHub) date chaque réglage de l'horloge avec Date.now() de Node et, à chaque nouveau
+   document, le navigateur rattrape l'écart avec sa vraie heure. Avec le Date décalé de Node, un décalage en arrière (le dimanche,
+   vers le samedi) était annulé : la page revenait au vrai jour. L'horloge de la page est donc installée avec le vrai Date de Node
+   le temps de l'appel, à l'heure décalée : la page est au samedi tous les jours. */
+const installerHorloge = async (c) => { const Decale = global.Date, t = Decale.now(); global.Date = VraiDate; try { await c.clock.install({ time: t }); } finally { global.Date = Decale; } };
 const F = require("./fixtures"); const HTML = path.resolve(process.argv[2] || "../index.html");
 const OUT = path.join(__dirname, "captures", "v38"); fs.mkdirSync(OUT, { recursive: true });
 const { servirFichier } = require("./fichiers");   // 52.1 : la page charge css/ et js/, servis depuis son dossier (fichiers.js)
@@ -32,7 +38,7 @@ function base(extra) {
 async function contexte(b, who, opts) {
   opts = opts || {};
   const c = await b.newContext({ viewport: opts.viewport || { width: 1280, height: 900 } });
-  await c.clock.install({ time: Date.now() });   // horloge décalée qui continue de tourner (une seule page par contexte : un nouveau document repartirait de l'installation)
+  await installerHorloge(c);   // horloge décalée qui continue de tourner (une seule page par contexte : un nouveau document repartirait de l'installation)
   const db = opts.db;
   await c.route("**/*", async r => {
     const req = r.request(); const u = req.url();
