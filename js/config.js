@@ -24,7 +24,9 @@ const CONFIG = {
     /* v70 — « Partager l'app » (volet « Plus » et Profil) : le lien envoyé (vide = l'adresse de l'app elle-même)
        et la phrase qui l'accompagne quand le téléphone propose le partage (Messages, WhatsApp…). */
     partage: {
-      lien: "",
+      /* v73 (E) : le lien d'inscription avec le code « partage » (décision de Lucas du 04/10/2026) : les inscrits venus par ce
+         bouton sont comptés à part dans « Inscrits par source » */
+      lien: "https://lcsmhx.github.io/mhx-plateforme/?ref=partage#/inscription",
       texte: "Rejoins-moi sur l'app MHX Coaching : calculateur de calories, suivi du poids et Speed Formation, gratuit."
     },
 

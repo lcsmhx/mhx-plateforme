@@ -773,6 +773,23 @@ const champTel = (page, id) => page.evaluate(id => {
     });
   });
 
+  /* =================== v73 (E). « Partager l'app » : le lien d'inscription avec le code « partage » =================== */
+  await bloc("v73 E. partager l'app", async () => {
+    const LIEN = "https://lcsmhx.github.io/mhx-plateforme/?ref=partage#/inscription";
+    { const db = base();
+      const { page } = await contexte(b, db, { qui: NOAH, viewport: LARGE });
+      await page.goto(URL0 + "#/profil"); await pret(page); await page.waitForSelector("#mc-partager");
+      await page.evaluate(() => { window.__copie = null; Object.defineProperty(navigator, "share", { configurable: true, value: undefined });
+        Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: t => { window.__copie = t; return Promise.resolve(); } } }); });
+      await page.click("#mc-partager"); await attendre(page, 600);
+      const v = await page.evaluate(() => ({ copie: window.__copie, fn: lienApp() }));
+      ok("v73 E : « Partager l'app » (Profil) envoie le lien d'inscription avec le code « partage » (" + LIEN + ") ; rien d'écrit", v.copie === LIEN && v.fn === LIEN && db.ecritures.length === 0, JSON.stringify({ v, ecr: resume(db) })); }
+    { const { page } = await contexte(b, base(), { neuf: true });
+      await page.goto(URL0 + "?ref=partage#/inscription"); await page.waitForSelector("#c-go");
+      const h2 = await page.evaluate(() => ((document.querySelector(".carte-co h2") || {}).textContent || "").trim()), r = await refLocal(page);
+      ok("v73 E : ce lien, ouvert sur un appareil neuf : la création de compte, et le code « partage » est accepté (gardé jusqu'à l'inscription)", h2 === "Crée ton espace gratuit" && r === "partage", JSON.stringify({ h2, r })); }
+  });
+
   /* =================== v73 (C). le questionnaire client ne pose plus « Numéro WhatsApp » =================== */
   await bloc("v73 C. questionnaire", async () => {
     const ANCIEN = "+33 6 39 98 00 01 (réponse d'avant la v73)", Q = "Numéro WhatsApp (avec indicatif)";
