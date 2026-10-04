@@ -28,7 +28,7 @@ etat_disque() { git -C .. status --porcelain --untracked-files=no 2>/dev/null; }
 DISQUE_DEBUT=$(etat_disque)
 
 # Suites du banc, et suites volontairement hors banc (verif44 à verif47 testent le Challenge 7 jours supprimé).
-SUITES="flux verif34 verif35 verif36 verif37 verif38 verif-xss verif39 verif40 verif41 verif42 verif43 verif48 verif50 verif51 verif52 verif53 verif54 verif55 verif56 verif57 verif58 verif60 verif61 verif62 verif63 verif64 verif65 verif66 verif67 verif68 verif69 verif70 verif71 verif72 verif73 verif74 verif75 verif76 verif77 verif78 verif79"
+SUITES="flux verif34 verif35 verif36 verif37 verif38 verif-xss verif39 verif40 verif41 verif42 verif43 verif48 verif50 verif51 verif52 verif53 verif54 verif55 verif56 verif57 verif58 verif60 verif61 verif62 verif63 verif64 verif65 verif66 verif67 verif68 verif69 verif70 verif71 verif72 verif73 verif74 verif75 verif76 verif77 verif78 verif79 verif80"
 # v53 (chantier 4) : verif49 (score sur 100 et température NOUVEAU / CHAUD / TIÈDE / FROID, journal des emails) sort du banc ;
 # ses blocs relances, issues, conflits, verrou et passage client sont repris dans verif58 (bloc F).
 HORS_BANC="verif44 verif45 verif46 verif47 verif49"
@@ -128,12 +128,18 @@ HORS_BANC="verif44 verif45 verif46 verif47 verif49"
 # lecture figée → « Pas de connexion » + Réessayer après le délai (Auth.DELAI), écran de connexion « Service momentanément
 # indisponible » sur un renouvellement ou une connexion en 5xx / réseau) ; verif66 (formation illisible → « Pas de connexion »)
 # et verif61 B (profil illisible → page « Impossible de charger ») adaptées, nombres inchangés.
+# v72 (A, mission du 04/10) : verif80 34 (nouvelle suite, partie 4 : téléphone obligatoire — règle du numéro, champ de
+# l'inscription et clé contact, copie de secours, écran « Ajoute ton numéro… » avant l'accueil, Mon compte, colonne et liens
+# Appeler / WhatsApp du coach). Le réglage telephone_obligatoire est servi ÉTEINT aux autres suites (fichiers.js, comme
+# inscription_libre) et ALLUMÉ dans verif80 et rig (rig : chaque compte fictif qui se connecte a son numéro, 90 pages). verif62
+# (18 colonnes, « Téléphone » avant les boutons) et verif52 J (bloc « Mon numéro », ligne « Téléphone : — » de la fiche, colonne
+# Téléphone hors comparaison : différences voulues) adaptées, nombres inchangés.
 attendu() {
   case "$1" in
     flux) echo 19;; verif34) echo 13;; verif35) echo 14;; verif36) echo 13;; verif37) echo 12;; verif38) echo 66;;
     verif-xss) echo 5;; verif39) echo 48;; verif40) echo 64;; verif41) echo 25;; verif42) echo 20;; verif43) echo 27;;
     verif48) echo 42;; verif50) echo 57;; verif51) echo 89;; verif52) echo 137;; verif53) echo 114;;
-    verif54) echo 60;; verif55) echo 172;; verif56) echo 263;; verif57) echo 152;; verif58) echo 138;; verif60) echo 74;; verif61) echo 50;; verif62) echo 50;; verif63) echo 96;; verif64) echo 92;; verif65) echo 70;; verif66) echo 57;; verif67) echo 63;; verif68) echo 76;; verif69) echo 83;; verif70) echo 32;; verif71) echo 84;; verif72) echo 16;; verif73) echo 25;; verif74) echo 33;; verif75) echo 24;; verif76) echo 22;; verif77) echo 26;; verif78) echo 19;; verif79) echo 25;; rig) echo 90;; *) echo "";;
+    verif54) echo 60;; verif55) echo 172;; verif56) echo 263;; verif57) echo 152;; verif58) echo 138;; verif60) echo 74;; verif61) echo 50;; verif62) echo 50;; verif63) echo 96;; verif64) echo 92;; verif65) echo 70;; verif66) echo 57;; verif67) echo 63;; verif68) echo 76;; verif69) echo 83;; verif70) echo 32;; verif71) echo 84;; verif72) echo 16;; verif73) echo 25;; verif74) echo 33;; verif75) echo 24;; verif76) echo 22;; verif77) echo 26;; verif78) echo 19;; verif79) echo 25;; verif80) echo 34;; rig) echo 90;; *) echo "";;
   esac
 }
 # Partie de chaque suite pour les jobs parallèles de GitHub Actions (10 parties, durées équilibrées, 4 à 5 minutes chacune).
@@ -142,7 +148,7 @@ partie() {
     verif52|verif68|verif74) echo 1;;
     verif53|verif64|verif69|verif70) echo 2;;
     verif51|verif34|verif35|verif63|verif79) echo 3;;
-    verif38|verif36|verif37|verif66|verif76) echo 4;;
+    verif38|verif36|verif37|verif66|verif76|verif80) echo 4;;
     verif48|verif43|flux|verif58|verif78) echo 5;;
     verif41|verif57|verif61|verif67|verif77) echo 6;;
     verif42|verif50|verif65|verif72|verif75) echo 7;;

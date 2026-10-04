@@ -430,6 +430,63 @@ const Accords = {
   }
 };
 
+/* --- v72 (A) : CONTACT — le numéro du compte (clé « contact » : { telephone, ref, inscrit_le }) ------------------------
+   Écrite par le compte lui-même (règles de la base : le propriétaire écrit toutes ses clés sauf feedbacks, notes_coach et
+   suivi_prospect), lue par le coach (Clients.charger, fiche). Jamais par Store.ecrire (document entier, sans relecture) :
+   enregistrer() relit la ligne puis l'écrit à condition qu'elle n'ait pas bougé (CleCoach), 3 essais ; ref et inscrit_le
+   déjà là ne sont jamais remplacés. Juste après l'inscription, une écriture ratée (réseau) est gardée sur l'appareil
+   (« mhx_contact_attente|<compte> », partie avec le compte à la déconnexion) et renvoyée à l'ouverture suivante.
+   Téléphone obligatoire (CONFIG.marque.telephone_obligatoire) : au démarrage d'un client ou d'un prospect (jamais le coach,
+   jamais une fiche consultée), la clé est lue ; sans numéro, l'écran « Ajoute ton numéro… » passe avant l'accueil.
+   Lecture ratée ou trop lente : pas d'écran (jamais un faux écran sur un réseau faible), la question revient à
+   l'ouverture suivante. -------------------------------------------------------------------------------------------- */
+const Contact = {
+  cle: "contact",
+  PREFIXE_ATTENTE: "mhx_contact_attente|",
+  DELAI: 6000,
+  obligatoire(){ return !!(CONFIG.marque && CONFIG.marque.telephone_obligatoire === true); },
+  concerne(){ return this.obligatoire() && !!Auth.profil && !Auth.estCoach() && !Store.idConsulte; },
+  /* les champs lus dans un contenu (écrit par le compte : revalidé à chaque lecture) */
+  telephone(C){ const t = Forme.objet(C) && typeof C.telephone === "string" ? C.telephone : ""; return Telephone.valide(t) ? t : ""; },
+  ref(C){ const r = Forme.objet(C) && typeof C.ref === "string" ? C.ref : ""; return /^[a-z0-9-]{1,30}$/.test(r) ? r : ""; },
+  inscritLe(C){ const v = Forme.objet(C) && typeof C.inscrit_le === "string" ? C.inscrit_le : ""; return /^\d{4}-\d{2}-\d{2}T/.test(v) && !isNaN(Date.parse(v)) ? v : ""; },
+  /* relire puis écrire : champs = { telephone } et/ou { ref, inscrit_le } ; rend le contenu enregistré */
+  async enregistrer(champs, uid){
+    uid = uid || (Auth.utilisateur() && Auth.utilisateur().id);
+    if (!uid) throw Object.assign(new Error("session"), { statut: 401 });
+    for (let i = 0; ; i++){
+      const l = await CleCoach.ligne(uid, this.cle);
+      const avant = l && Forme.objet(l.contenu) ? l.contenu : {};
+      const apres = Object.assign({}, avant, champs || {});
+      if (this.ref(avant)) apres.ref = avant.ref;                      // le premier ref gagne
+      if (this.inscritLe(avant)) apres.inscrit_le = avant.inscrit_le;  // la date d'inscription ne change jamais
+      try {
+        await CleCoach.ecrireSi(uid, this.cle, apres, l);
+        if (Store.cible() === uid){ Store.boite(uid)[this.cle] = apres; Store.charge[uid + "|" + this.cle] = true; }
+        return apres;
+      } catch(e){ if (!(e && e.conflit) || i >= 2) throw e; }   // conflit (autre onglet) : on relit et on recommence
+    }
+  },
+  /* la copie de secours de l'inscription */
+  garderAttente(uid, champs){ try { Auth.magasin().setItem(this.PREFIXE_ATTENTE + uid, JSON.stringify(champs)); } catch(e){} },
+  lireAttente(uid){ try { const v = JSON.parse(Auth.magasin().getItem(this.PREFIXE_ATTENTE + uid) || "null"); return Forme.objet(v) ? v : null; } catch(e){ return null; } },
+  oublierAttente(uid){ try { Auth.magasin().removeItem(this.PREFIXE_ATTENTE + uid); } catch(e){} },
+  borne(p){ return Promise.race([p, new Promise((_, ko) => setTimeout(() => ko(Object.assign(new Error("delai"), { reseau: true })), this.DELAI))]); },
+  /* au démarrage (compte connecté, profil lu) : la copie de secours repart, puis, si le numéro est obligatoire pour ce
+     compte, « ok » / « manque » / « inconnu » (lecture ratée ou trop lente : pas d'écran) ; null si rien à vérifier */
+  async preparer(){
+    const u = Auth.utilisateur(); if (!u || !u.id || !Auth.profil || Auth.estCoach() || Store.idConsulte) return null;
+    const att = this.lireAttente(u.id);
+    if (att){ try { await this.borne(this.enregistrer(att, u.id)); this.oublierAttente(u.id); } catch(e){} }
+    if (!this.concerne()) return null;
+    try {
+      const C = await Promise.race([Store.lire(this.cle, {}), new Promise(r => setTimeout(() => r(null), this.DELAI))]);
+      if (!C || Store.nonLus.has(C)) return "inconnu";
+      return this.telephone(C) ? "ok" : "manque";
+    } catch(e){ return "inconnu"; }
+  }
+};
+
 /* --- v64 (brief V2, B) : ACCORD SANTÉ AU PREMIER USAGE ----------------------------------------------------
    Un prospect (lui-même, jamais une fiche consultée) sans accord santé dans les métadonnées de son compte
    (consentement_sante) voit le calculateur, Ma progression et « Organise ta diète » EN PAUSE derrière une carte

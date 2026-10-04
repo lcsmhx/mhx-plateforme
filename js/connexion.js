@@ -69,6 +69,7 @@ function portail(mode){
       <div id="co-err"></div>
       ${mode === "inscription" ? `<div class="champ"><label for="c-prenom">Ton prénom</label><input id="c-prenom" type="text" autocomplete="given-name" maxlength="60"></div>
       <div class="champ"><label for="c-nom">Ton nom</label><input id="c-nom" type="text" autocomplete="family-name" maxlength="60"></div>` : ""}
+      ${mode === "inscription" && Contact.obligatoire() ? `<div class="champ"><label for="c-tel">${esc(trad("Ton numéro (WhatsApp)"))}</label>${Telephone.champHTML("c-tel")}</div>` : ""}
       ${mode === "oubli"
         /* v52 (décision de Lucas) : l'app n'envoie aucun email pour l'instant (ni lien de mot de passe, ni vérification) :
            « Mot de passe oublié ? » donne seulement l'adresse du coach, aucun appel à /auth/v1/recover */
@@ -132,6 +133,9 @@ function portail(mode){
       /* v52 : nom obligatoire (→ profils.nom par le declencheur de la base ; jamais dans intake.nom) */
       const nom = (($("c-nom") && $("c-nom").value) || "").trim().slice(0, 60);
       if (!nom){ err("Indique ton nom."); return; }
+      /* v72 (A) : le numéro (WhatsApp), obligatoire si CONFIG.marque.telephone_obligatoire vaut true */
+      let T = null;
+      if (Contact.obligatoire()){ T = Telephone.lire("c-tel"); if (T.erreur){ err(typoFr(trad(T.erreur))); return; } }
       if (mdp.length < 8){ err("Le mot de passe doit faire au moins 8 caractères."); return; }
       const cgu = $("c-cgu");
       if (!cgu || !cgu.checked){ err(trad(DECOUVERTE.inscription.cgu_manque)); return; }
@@ -149,7 +153,18 @@ function portail(mode){
         const connecte = await Auth.inscrire(email, mdp, prenom, nom, {
           consentement: maintenant, conditions_version: A.conditions,
           newsletter: ok_news ? maintenant : null, newsletter_version: A.newsletter });
-        if (connecte){ location.hash = ""; location.reload(); return; }
+        if (connecte){
+          /* v72 (A) : la clé « contact » du nouveau compte (la session existe déjà), 6 s au plus ; ratée : gardée sur
+             l'appareil, elle repart à l'ouverture qui suit (Contact.preparer) */
+          const champs = {};
+          if (T && T.tel) champs.telephone = T.tel;
+          if (Object.keys(champs).length){
+            champs.inscrit_le = maintenant;
+            const uid = Auth.utilisateur() && Auth.utilisateur().id;
+            try { await Contact.borne(Contact.enregistrer(champs, uid)); } catch(e){ if (uid) Contact.garderAttente(uid, champs); }
+          }
+          location.hash = ""; location.reload(); return;
+        }
         ecranVerifieEmail(email); return;   // v47 : un ecran dedie, pas une ligne de message
       } catch(e){
         const m = (e.message || "").toLowerCase();
@@ -239,6 +254,51 @@ function ecranVerifieEmail(email){
       <div class="bascule"><button type="button" data-mode="connexion">${esc(trad(T.verif_retour))}</button></div>`;
   $$("[data-mode]", carte).forEach(b => b.addEventListener("click", () => portail(b.dataset.mode)));
   const h2 = $("co-verif"); if (h2) h2.focus();
+}
+
+/* v72 (A) — téléphone obligatoire : un client ou un prospect sans numéro le donne ici, avant l'accueil (demarrage.js).
+   Aucun moyen de passer : seulement enregistrer, ou se déconnecter (appareil partagé). Enregistré : la page se recharge
+   et l'app s'ouvre normalement. Le numéro gardé sur l'appareil après une inscription ratée pré-remplit le champ. */
+function ecranTelephone(){
+  try { if (UI._ouverte) UI.fermer(); } catch(e){}
+  if (portail._entree){ document.removeEventListener("keydown", portail._entree); portail._entree = null; }
+  const u = Auth.utilisateur(), att = u && u.id ? Contact.lireAttente(u.id) : null;
+  document.body.innerHTML = `
+  <div class="portail"><div class="carte-co" id="co-tel-carte">
+      ${CONFIG.marque.logo ? `<img class="logo-img" src="${esc(CONFIG.marque.logo)}" alt="${esc(CONFIG.marque.nom)}">` : ""}
+      <div class="logo">${esc(CONFIG.marque.nom)}</div>
+      <h2 id="co-tel" tabindex="-1">${esc(trad("Ajoute ton numéro pour que Lucas puisse te joindre"))}</h2>
+      <p class="co-sous">${esc(trad("Lucas s'en sert pour t'appeler ou t'écrire sur WhatsApp."))}</p>
+      <div id="co-err" role="alert"></div>
+      <div class="champ"><label for="t-tel">${esc(trad("Ton numéro (WhatsApp)"))}</label>${Telephone.champHTML("t-tel", att && att.telephone)}</div>
+      <button class="btn" id="t-go">${esc(trad("Enregistrer mon numéro"))}</button>
+      ${CONFIG.marque.version ? `<p class="co-aide">v${esc(CONFIG.marque.version)}</p>` : ""}
+      <div class="bascule"><button type="button" id="t-sortir">${esc(trad("Se déconnecter"))}</button></div>
+  </div></div>`;
+  const err = msg => { const e = $("co-err"); e.className = "erreur"; e.textContent = msg; };
+  const go = $("t-go");
+  const envoyer = async () => {
+    if (go.disabled) return;
+    const T = Telephone.lire("t-tel");
+    if (T.erreur){ err(typoFr(trad(T.erreur))); return; }
+    go.disabled = true; go.textContent = trad("Un instant…");
+    try {
+      await Contact.enregistrer({ telephone: T.tel });
+      if (u && u.id) Contact.oublierAttente(u.id);
+      location.reload();
+      return;
+    } catch(e){
+      err(Auth.indispo(e) ? trad("Service momentanément indisponible, réessaie dans une minute.")
+        : e && e.statut === 401 ? trad("Ta session a pris fin : reconnecte-toi.")
+        : trad("Non enregistré : réessaie dans un instant."));
+    }
+    go.disabled = false; go.textContent = trad("Enregistrer mon numéro");
+  };
+  go.addEventListener("click", envoyer);
+  $("t-sortir").addEventListener("click", () => Auth.deconnecter());
+  portail._entree = e => { if (e.key === "Enter" && e.target && e.target.id === "t-tel") envoyer(); };
+  document.addEventListener("keydown", portail._entree);
+  const h2 = $("co-tel"); if (h2) h2.focus();
 }
 
 /* v71 (F) — le profil du compte n'a pas pu etre lu (reseau, 5xx) : rien de l'app ne s'affiche (un prospect verrait

@@ -96,7 +96,7 @@ const outilClients = {
       zp.innerHTML = `Les prospects sont dans <a class="link-a" href="#/prospects">Prospects →</a> (${nbProspects} compte${nbProspects > 1 ? "s" : ""} gratuit${nbProspects > 1 ? "s" : ""}).`;
     }
     if (!clients.length){
-      tb.innerHTML = '<tr><td colspan="17">Aucun client pour le moment.</td></tr>';
+      tb.innerHTML = '<tr><td colspan="18">Aucun client pour le moment.</td></tr>';
       if (zoneA) zoneA.innerHTML = "";
       return;
     }
@@ -150,6 +150,7 @@ const outilClients = {
       <td data-l="Questionnaire">${pastille(l.intake, "rempli", "à remplir")}</td>
       <td data-l="Programme">${pastille(l.programme, "envoyé", "à faire")}</td>
       <td data-l="Diète">${pastille(l.diete, "envoyée", "à faire")}</td>
+      <td data-l="Téléphone" class="td-tel">${Telephone.coachHTML(l.tel, "voir")}</td>
       <td data-l="" class="td-actions"><button class="voir" type="button" data-bilan="${esc(l.p.id)}" data-nom="${esc(l.nom)}">Préparer le call</button> <button class="voir" type="button" data-ouvrir="${esc(l.p.id)}" data-nom="${esc(l.nom)}">Ouvrir</button></td>
     </tr>`).join("");
 
@@ -194,8 +195,8 @@ const outilClients = {
       <div id="alertes-clients"></div>
       <div class="scroll" style="margin-top:14px"><table class="tb-clients-table"><thead><tr>
         <th>Client</th><th>Retour</th><th>Note</th><th>Smiley</th><th>Visite</th><th>Connexions</th><th>Dernière connexion</th><th>Jours actifs</th><th>Activité</th><th>Régularité</th><th>Poids</th><th>Depuis le début</th><th>4 dernières sem.</th>
-        <th>Questionnaire</th><th>Programme</th><th>Diète</th><th></th>
-      </tr></thead><tbody id="tb-clients"><tr><td colspan="17">Chargement…</td></tr></tbody></table></div>
+        <th>Questionnaire</th><th>Programme</th><th>Diète</th><th>Téléphone</th><th></th>
+      </tr></thead><tbody id="tb-clients"><tr><td colspan="18">Chargement…</td></tr></tbody></table></div>
       <p class="note" style="margin-top:12px">En haut : les 😞 non traités et les notes en chute, puis les retours de la semaine à lire. « Retour » : le feedback du dimanche ou le bilan du vendredi, selon ce que voit le client (à traiter / fait / non fait). « Note » et « Smiley » : son dernier feedback du dimanche. « Visite » et « Jours actifs » (sur 30 jours) : les jours où il a ouvert l'app — « — » quand ses visites ne sont pas suivies. « Connexions » : le nombre de jours où il a ouvert l'app connecté (une fois par jour au plus, depuis la mise en place du compteur) ; « Dernière connexion » : la date et l'heure de sa dernière ouverture — « — » si le compteur n'a pas pu être lu. « Activité » compte les jours depuis la dernière saisie du client, quelle qu'elle soit (une visite, un smiley ou une réponse lue ne comptent pas). Une variation de poids se lit sur quatre semaines : en dessous, c'est du bruit.</p>
     </section>
 
@@ -329,7 +330,7 @@ const outilClients = {
         });
       } catch(e){
         box.innerHTML = '<div class="empty">Impossible de charger la liste.</div>';
-        const tb = $("tb-clients"); if (tb) tb.innerHTML = '<tr><td colspan="17">Impossible de charger le suivi.</td></tr>';
+        const tb = $("tb-clients"); if (tb) tb.innerHTML = '<tr><td colspan="18">Impossible de charger le suivi.</td></tr>';
       }
     };
 
@@ -448,7 +449,8 @@ const Clients = {
     const ecritParCoach = ["programme", "repas", "calc", "complements", "feedbacks", "notes_coach", "suivi_prospect"];
     /* v51 : ni le choix des emails de suivi, ni la date « vu » des Nouveautes ne sont une saisie ; les pages vues
        (activite) ne comptent que pour un prospect (un client inactif garde son alerte « Inactif depuis N j ») */
-    const pasSaisie = ["emails", "coach_notifs"], prospects = new Set((profils || []).filter(p => p && p.statut === "prospect").map(p => p.id));
+    /* v72 (A) : le numéro (contact) non plus */
+    const pasSaisie = ["emails", "coach_notifs", "contact"], prospects = new Set((profils || []).filter(p => p && p.statut === "prospect").map(p => p.id));
     (donnees || []).forEach(d => {
       const saisie = ecritParCoach.indexOf(d.outil) === -1 && pasSaisie.indexOf(d.outil) === -1 && (d.outil !== "activite" || prospects.has(d.user_id));
       const c = Forme.cle(d.outil, d.contenu);   // v42
@@ -508,6 +510,7 @@ const Clients = {
             ancien: Decouverte.ancien(c.intake),
             bilan: Decouverte.bilanPropose(c.intake) } : null,   // v62 (L) : son choix sur la page « Ton plan d'action » (« Plus tard » d'avant la v62)
       newsletter: Accords.newsletterCoach(c.emails),   // v52 (lot G) : { oui, depuis } d'après la clé emails (CSV)
+      tel: Contact.telephone(c.contact),   // v72 (A) : son numéro (clé contact), "" si aucun ou illisible
       act: (c.activite && typeof c.activite === "object") ? c.activite : null,   // v51 : activite (chronologie de la fiche)
       /* v53 (chantier 4) : dernière visite et jours actifs sur 30 jours ; un compte non suivi (client hors interrupteur
          suivi_visites_clients) : rien (« — »), même s'il a une ancienne clé activite de quand il était prospect */

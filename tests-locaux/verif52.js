@@ -1037,14 +1037,17 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     /* v70 : bloc « Partager l'app » du Profil (différence VOULUE avec main tant que la v70 n'y est pas ; ensuite, présent des
        deux côtés, retiré des deux côtés : la comparaison reste stricte) */
     const PARTAGE_V70 = "Partager l'app Envoie le lien de l'app à un proche : l'espace gratuit est ouvert à tout le monde. Partager l'app";
+    /* v72 (A) : bloc « Mon numéro » de Mon compte (différence VOULUE avec main tant que la v72 n'y est pas : Thomas n'a pas de
+       numéro ; ensuite présent des deux côtés, retiré des deux côtés : la comparaison reste stricte) */
+    const TEL_V72 = "Mon numéro Numéro actuel : Aucun numéro enregistré. Ton numéro (WhatsApp)France (+33)Belgique (+32)Suisse (+41)Canada (+1)Australie (+61)Côte d'Ivoire (+225)Sénégal (+221)La Réunion (+262)Autre pays Enregistrer mon numéro";
     const sansNote = t => {
       let x = t.split(NOTE_V52).join("[note du changement d'adresse]").split(NOTE_V51).join("[note du changement d'adresse]").split(ADR_V51).join("[adresse]").split(ADR_V52).join("[adresse]")
-        .split(DONNEES_V67).join("[mes données]").split(DONNEES_V66).join("[mes données]").split(" " + PARTAGE_V70).join("");
+        .split(DONNEES_V67).join("[mes données]").split(DONNEES_V66).join("[mes données]").split(" " + PARTAGE_V70).join("").split(" " + TEL_V72).join("");
       const i = x.indexOf("Changer mon adresse email"); if (i < 0) return x;
       const fins = ["[note du changement d'adresse]", MAIL_V52].map(n => { const j = x.indexOf(n, i); return j < 0 ? -1 : j + n.length; }).filter(j => j > 0);
       return fins.length ? x.slice(0, i) + "[changement d'adresse]" + x.slice(Math.min(...fins)) : x;
     };
-    ok("client Thomas, Profil : texte identique à main (hors bloc « Mon compte » voulu en v52 : adresse et changement d'adresse sans email ; v67 : note de « Mes données », présente ; v70 : bloc « Partager l'app », présent)", pro.t.length > 200 && pro.t.includes(MAIL_V52) && pro.t.includes(DONNEES_V67) && pro.t.includes(PARTAGE_V70) && sansNote(pro.t) === sansNote(proM.t), pro.t.length + " / " + proM.t.length + " · nouveau texte : " + pro.t.includes(MAIL_V52) + " · " + (() => { const x = sansNote(pro.t), y = sansNote(proM.t); let k = 0; while (k < x.length && x[k] === y[k]) k++; return JSON.stringify(x.slice(Math.max(0, k - 40), k + 60)) + " ≠ " + JSON.stringify(y.slice(Math.max(0, k - 40), k + 60)); })());
+    ok("client Thomas, Profil : texte identique à main (hors bloc « Mon compte » voulu en v52 : adresse et changement d'adresse sans email ; v67 : note de « Mes données », présente ; v70 : bloc « Partager l'app », présent ; v72 : bloc « Mon numéro », présent)", pro.t.length > 200 && pro.t.includes(MAIL_V52) && pro.t.includes(DONNEES_V67) && pro.t.includes(PARTAGE_V70) && pro.t.includes(TEL_V72) && sansNote(pro.t) === sansNote(proM.t), pro.t.length + " / " + proM.t.length + " · nouveau texte : " + pro.t.includes(MAIL_V52) + " · " + (() => { const x = sansNote(pro.t), y = sansNote(proM.t); let k = 0; while (k < x.length && x[k] === y[k]) k++; return JSON.stringify(x.slice(Math.max(0, k - 40), k + 60)) + " ≠ " + JSON.stringify(y.slice(Math.max(0, k - 40), k + 60)); })());
     await pro.c.close(); await proM.c.close();
   });
   await bloc("J. fiche d'un client et Mes clients", async () => {
@@ -1052,13 +1055,17 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     const ouvrir = async (page) => { await page.click(`[data-ouvrir="${F.IDS.c1}"]`); await attendre(page, 2600); };
     /* v59 (relecture) : avec les interrupteurs du fichier testé, des deux côtés (voir avecNouveautesFichier) */
     const [f, fM] = await avecNouveautesFichier(async () => [await vueDe(coach, `http://localhost:${PORT}/#/clients`, ouvrir), await vueDe(coach, `http://localhost:${PORT}/?ref=main#/clients`, ouvrir)]);
-    ok("fiche de Thomas vue par le coach : texte et sections identiques à main (" + f.h2.join(", ") + ")", f.t.length > 300 && f.t === fM.t && JSON.stringify(f.h2) === JSON.stringify(fM.h2), f.t.length + " / " + fM.t.length + " · " + JSON.stringify(f.h2) + " vs " + JSON.stringify(fM.h2));
+    /* v72 (A) : la ligne « Téléphone : … » de l'en-tête de la fiche (Thomas n'a pas de numéro : « — ») est une différence VOULUE
+       avec main tant que la v72 n'y est pas : présente, retirée du texte comparé (ensuite des deux côtés : comparaison stricte) */
+    const FICHE_TEL_V72 = " Téléphone : —", sansTel = x => x.split(FICHE_TEL_V72).join("");
+    ok("fiche de Thomas vue par le coach : texte et sections identiques à main (" + f.h2.join(", ") + ") ; v72 : ligne « Téléphone : — », présente", f.t.length > 300 && f.t.includes(FICHE_TEL_V72) && sansTel(f.t) === sansTel(fM.t) && JSON.stringify(f.h2) === JSON.stringify(fM.h2), f.t.length + " / " + fM.t.length + " · " + JSON.stringify(f.h2) + " vs " + JSON.stringify(fM.h2) + " · " + (() => { const x = sansTel(f.t), y = sansTel(fM.t); let k = 0; while (k < x.length && x[k] === y[k]) k++; return JSON.stringify(x.slice(Math.max(0, k - 40), k + 60)) + " ≠ " + JSON.stringify(y.slice(Math.max(0, k - 40), k + 60)); })());
     ok("fiche de Thomas : ni score, ni réponses du questionnaire court, ni chronologie, ni lien de réservation, aucune écriture", !(await f.page.$("#fiche-score, #fiche-reponses, #fiche-chrono, #fiche-actions, #fiche-decouverte, #fiche-prospect, #dc-lien")) && f.db.ecritures.length === 0);
     await f.c.close(); await fM.c.close();
     /* v53 (chantier 4) : Mes clients gagne 5 colonnes (retour de la semaine, note, smiley, dernière visite, jours actifs) :
        changement voulu ; la comparaison avec la version en ligne porte sur les colonnes d'avant, qui ne doivent pas bouger */
     /* v56 : + 2 colonnes (nombre de connexions, dernière connexion), changement voulu, elles aussi hors comparaison */
-    const NOUVELLES = ["Retour de la semaine", "Dernière note", "Dernier smiley", "Dernière visite", "Jours actifs (30 j)", "Connexions", "Dernière connexion"];
+    /* v72 (A) : + la colonne Téléphone (changement voulu, hors comparaison) */
+    const NOUVELLES = ["Retour de la semaine", "Dernière note", "Dernier smiley", "Dernière visite", "Jours actifs (30 j)", "Connexions", "Dernière connexion", "Téléphone"];
     const ligne = async (page) => page.$eval(`[data-ouvrir="${F.IDS.c1}"]`, (bt, nv) => Array.from(bt.closest("tr").querySelectorAll("td")).filter(td => nv.indexOf(td.dataset.l) === -1).map(td => td.textContent).join(" "), NOUVELLES).then(norm).catch(() => "");
     const [m1, m2] = await avecNouveautesFichier(async () => [await vueDe(coach, `http://localhost:${PORT}/#/clients`), await vueDe(coach, `http://localhost:${PORT}/?ref=main#/clients`)]);
     const l1 = await ligne(m1.page), l2 = await ligne(m2.page);

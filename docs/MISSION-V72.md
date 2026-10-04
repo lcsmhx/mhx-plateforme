@@ -34,6 +34,21 @@ Mission autonome pour Claude Code, lancée par Lucas après la mise en ligne de 
 
 Remplies au fil des sujets ; le détail est dans chaque commit.
 
+**A — Téléphone.**
+- Un réglage `CONFIG.marque.telephone_obligatoire` (`true` en ligne) commande les deux demandes (champ de l'inscription, écran « Ajoute ton numéro… ») : Lucas peut les couper d'un mot si l'écran gêne un vrai client. Le numéro reste visible et modifiable dans Mon compte, et le coach voit toujours ceux qui sont enregistrés. Au banc, le réglage est servi éteint aux suites d'avant (comme `inscription_libre`) et allumé dans la nouvelle suite `verif80` et dans `rig` (les 90 pages, comme en ligne).
+- Clé `contact` écrite par le compte lui-même par « relire puis écrire » (jamais d'écrasement de `ref` ni de `inscrit_le`). `inscrit_le` n'est posé qu'à l'inscription (un compte existant qui ajoute son numéro n'a pas de date inventée ; le coach garde la date du profil).
+- Indicatifs : en plus des 8 pays, **« Autre pays »** (le numéro tapé avec son indicatif, ex. +212…) : sans lui, un client vivant ailleurs resterait bloqué sur l'écran pour toujours. Un numéro tapé avec son indicatif (« +33 6… », « 0033 6… », autofill du téléphone) garde cet indicatif.
+- Le 0 initial est retiré, **sauf pour la Côte d'Ivoire** (depuis 2021, le 0 fait partie du numéro : +225 07…). Canada : le « 1 » national tapé devant les 10 chiffres est retiré.
+- L'écran « Ajoute ton numéro… » n'a pas de bouton pour passer, mais un **« Se déconnecter »** (appareil partagé, personne qui ne veut pas continuer). Il n'apparaît jamais sur une lecture ratée ou trop lente (6 s) : l'app s'ouvre, la question revient à l'ouverture suivante. Une phrase explique l'usage du numéro (« Lucas s'en sert pour t'appeler ou t'écrire sur WhatsApp. »).
+- Après une inscription, si l'écriture du numéro rate (réseau), il est gardé sur l'appareil et renvoyé à l'ouverture suivante (sans redemander).
+- Coach : colonne « Téléphone » à droite de Mes clients (après Diète : l'ordre des colonnes existantes ne bouge pas), ligne « Téléphone : … » sur chaque carte Prospects et dans l'en-tête de la fiche, avec « Appeler » et « WhatsApp ». Le coach ne peut pas modifier un numéro (règles de la base) : seule la personne le fait, dans Mon compte. Le numéro n'est pas compté comme une « saisie » (Activité, « Inactif depuis »).
+
 ## Questions pour Lucas
 
 Remplies au fil des sujets.
+
+- **A — Textes légaux.** Le numéro est une donnée personnelle nouvelle : le texte « Confidentialité » de l'app (`DECOUVERTE.confidentialite`, paragraphe « Données collectées » et « Prise de rendez-vous ») et les PDF sur Drive ne le citent pas encore. Je n'y ai pas touché : ce texte doit rester identique aux PDF (sa version 2026-10-01 est celle des PDF). À faire par toi : ajouter le téléphone (et son usage : appel, WhatsApp, pré-remplissage Calendly) dans les PDF, puis me demander d'aligner le texte de l'app et sa version.
+- **A — Liste des pays.** J'ai ajouté « Autre pays » pour ne bloquer personne. Si tu préfères la liste fermée, dis-le (un client hors de ces 8 pays ne pourrait plus entrer dans l'app).
+- **A — Doublon.** Le questionnaire client a déjà une question « Numéro WhatsApp (avec indicatif) » (texte libre). Je l'ai laissée telle quelle : faut-il la retirer maintenant que le numéro est demandé à tous ?
+- **A — Base (lot 2 de la v66, en attente).** Si tu appliques un jour la liste des clés autorisées (relevé `supabase/releve-2026-09-30/`), il faudra y ajouter `contact` (et la clé de visite du coach du sujet E), sinon ces écritures seraient refusées.
+- **A — Confirmation d'email.** Elle est coupée dans Supabase (inscription = session tout de suite). Si tu la rallumes un jour, le numéro tapé à l'inscription ne pourra pas être enregistré avant la première connexion : l'écran « Ajoute ton numéro… » le redemandera.

@@ -148,7 +148,7 @@ const outilAccueil = {
      avec un lien vers l'editeur de chaque bloc. Lecture seule ici. Les
      notes privees et les feedbacks arrivent avec les phases 10 et 18. */
   async fiche(zone){
-    const cles = ["intake", "programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "checkins", "complements", "calc", "formation", "hist_programme", "hist_repas", "prefs", "feedbacks", "challenge", "suivi_prospect", "activite", "emails"];   // v47 : + challenge ; v49 : + suivi commercial ; v51 : + activite ; v52 : + emails (newsletter d'un prospect)
+    const cles = ["intake", "programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "checkins", "complements", "calc", "formation", "hist_programme", "hist_repas", "prefs", "feedbacks", "challenge", "suivi_prospect", "activite", "emails", "contact"];   // v47 : + challenge ; v49 : + suivi commercial ; v51 : + activite ; v52 : + emails (newsletter d'un prospect) ; v72 : + contact (numéro)
     const uidFiche = Store.idConsulte;
     const [{ valeurs: d, dates }, pr] = await Promise.all([
       Store.lireTout(cles, { dates: true }),
@@ -165,7 +165,7 @@ const outilAccueil = {
     /* v51 : les pages vues (activite) ne sont une activite que pour un prospect, comme dans Mes clients ;
        v52 : le choix de la newsletter (emails) n'est pas une saisie, comme dans Mes clients (pasSaisie) ;
        v59 (Q13-4) : checkins compte par ses vraies saisies (Clients.dateSaisie : ni smiley, ni « réponse vue »), comme dans Mes clients */
-    const dernier = Object.keys(dates).filter(k => ecritParCoach.indexOf(k) === -1 && k !== "emails" && dates[k] && (k !== "activite" || profil.statut === "prospect")).map(k => Clients.dateSaisie(k, dates[k], d[k])).filter(Boolean).sort().pop() || null;
+    const dernier = Object.keys(dates).filter(k => ecritParCoach.indexOf(k) === -1 && k !== "emails" && k !== "contact" && dates[k] && (k !== "activite" || profil.statut === "prospect")).map(k => Clients.dateSaisie(k, dates[k], d[k])).filter(Boolean).sort().pop() || null;
     const l = Clients.resumerUn(profil, d, dernier);
     const r = Regularite.calculer({ programme: P, journal: J, repas: R, repas_suivi: S, mens: M }, 0), prec = Regularite.calculer({ programme: P, journal: J, repas: R, repas_suivi: S, mens: M }, -1);
     const b = outilBilan.calculer({ programme: P, journal: J, repas: R, repas_suivi: S, mens: M, objectifs_faits: d.objectifs_faits || {} });
@@ -198,6 +198,7 @@ const outilAccueil = {
         <span class="eyebrow">${esc(trad("Fiche client"))} · ${esc(this.dateLongue())}</span>
         <h1>${esc(nomC)}${profil.statut === "prospect" ? ` <span class="pastille accent" title="Compte gratuit : pas encore accompagné">prospect</span>` : ""}${(d.prefs && d.prefs.langue === "en") ? ` <span class="pastille" title="Ce client utilise l'app en anglais">🇺🇸 anglais</span>` : ""}</h1>
         <p class="lede">${profil.statut === "prospect" ? "Compte gratuit : pas de suivi à assurer tant qu'il n'est pas passé client." + (rdc ? " Découverte : " + (rdc.jour == null ? "date d'inscription inconnue" : Decouverte.depuisTexte(rdc.jour)) + (rdc.questionnaire ? ", questionnaire rempli." : ", questionnaire pas encore rempli.") : "") : alertes.length ? `${alertes.length} point${alertes.length > 1 ? "s" : ""} à regarder.` : "Rien à signaler : tout est en ordre."}</p>
+        <p class="fiche-tel" id="fiche-tel">Téléphone : ${Telephone.coachHTML(Contact.telephone(d.contact))}</p>
         ${alertes.length ? `<div class="attention-alertes" style="margin-top:4px">${alertes.map(a => `<a class="pastille ${a.niveau === "info" ? "accent" : a.niveau}" href="#/${esc(a.cible)}">${esc(a.texte)}</a>`).join("")}</div>` : ""}
       </header>
       <section class="panel">

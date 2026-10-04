@@ -278,6 +278,7 @@ const Commercial = {
     return `<article class="sc-carte${a.urgent ? " urgent" : ""}" data-uid="${esc(p.id)}">
       <div class="sc-tete">${Clients.avatar(nom)}<div class="sc-nom"><b>${esc(nom)}</b><small>${esc(this.sousTitre(p, a))}</small></div>${this.pastille(a)}${this.pastilleBilan(B, a)}${a.illisible ? '<span class="pastille attention">données illisibles</span>' : ""}</div>
       ${dc.email ? `<p class="sc-infos">${esc(dc.email)}</p>` : ""}
+      <p class="sc-tel">Téléphone : ${Telephone.coachHTML(l.tel)}</p>
       ${reponses.length ? `<ul class="sc-reponses">${reponses.map(([k, v]) => `<li><span>${esc(k)}</span> ${esc(v)}</li>`).join("")}</ul>` : `<p class="sc-infos sc-sans">${dc.ancien ? "Anciennes réponses : dans sa fiche." : "Pas encore de réponse à ses 3 questions."}</p>`}
       <ul class="sc-faits">${faits.map(([k, v]) => `<li><span>${esc(k)}</span> <b>${esc(v)}</b></li>`).join("")}</ul>
       ${a.urgent ? `<p class="sc-motif"><span class="pastille mauvais">à traiter</span> ${esc(this.motifTexte(a))}</p>` : ""}

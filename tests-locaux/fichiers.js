@@ -21,6 +21,11 @@
    valeursInscription(texte)
      les valeurs ("true" / "false") de toutes les occurrences « inscription_libre: true|false » (verif52 : une seule
      attendue dans source(HTML), sinon forcerInscription ne forcerait qu'une partie du fichier).
+   v72 (A) : forcerTelephone(texte, valeur) / valeursTelephone(texte)
+     comme forcerInscription / valeursInscription, pour « telephone_obligatoire: true|false » (js/config.js, true en ligne).
+     servirFichier (et sourceServie) le servent ÉTEINT par défaut, à toutes les suites, AVANT la retouche de la suite : les
+     comptes fictifs n'ont pas de numéro et les inscriptions des suites n'en tapent pas. verif80 et rig, qui testent le
+     téléphone obligatoire, l'allument dans leur retouche (forcerTelephone(t, true)).
    v59 : forcerNouveautes(texte, valeurs)
      le texte avec la PREMIÈRE valeur de chaque interrupteur des nouveautés (NOUVEAUTES : « feedback_dimanche: "…" »,
      « suivi_visites_clients: "…" », js/config.js) remplacée par celle de valeurs, « test » par défaut (NOUVEAUTES_BANC).
@@ -124,6 +129,7 @@ function servirFichier(req, res, html, retouche, lire){
   catch (e) { res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" }); res.end("absent : " + m[1]); return true; }
   if (!lire) t = duDisque(t);   // v59 : le disque, vu à travers la simulation (jamais une révision git)
   t = forcerNouveautes(t);   // v59 : toujours « test », AVANT la retouche de la suite (ses avec() partent de « test »)
+  t = forcerTelephone(t, false);   // v72 (A) : téléphone obligatoire éteint par défaut, AVANT la retouche (verif80 et rig l'allument)
   if (retouche) t = retouche(t);
   res.writeHead(200, { "Content-Type": TYPES["." + m[3]], "Cache-Control": "no-store" });
   res.end(t);
@@ -142,7 +148,7 @@ function morceaux(html, lire){
 }
 function source(html, lire){ return morceaux(html, lire).join("\n"); }
 /* v59 : ce que les suites servent — la page telle quelle, ses fichiers css/ et js/ avec les interrupteurs forcés (servirFichier) */
-function sourceServie(html, lire){ return morceaux(html, lire).map((t, i) => i ? forcerNouveautes(t) : t).join("\n"); }
+function sourceServie(html, lire){ return morceaux(html, lire).map((t, i) => i ? forcerTelephone(forcerNouveautes(t), false) : t).join("\n"); }
 
 function forcerInscription(texte, valeur){
   return texte.replace(/inscription_libre: (?:true|false)\b/, "inscription_libre: " + (valeur ? "true" : "false"));
@@ -150,6 +156,14 @@ function forcerInscription(texte, valeur){
 
 function valeursInscription(texte){
   return Array.from(String(texte).matchAll(/inscription_libre: (true|false)\b/g), m => m[1]);
+}
+
+/* v72 (A) : téléphone obligatoire (CONFIG.marque.telephone_obligatoire, js/config.js), voir l'en-tête */
+function forcerTelephone(texte, valeur){
+  return String(texte).replace(/\btelephone_obligatoire: (?:true|false)\b/, "telephone_obligatoire: " + (valeur ? "true" : "false"));
+}
+function valeursTelephone(texte){
+  return Array.from(String(texte).matchAll(/\btelephone_obligatoire: (true|false)\b/g), m => m[1]);
 }
 
 /* v59 : interrupteurs des nouveautés (CONFIG.nouveautes, js/config.js), servis sur « test » par le banc */
@@ -374,7 +388,7 @@ function forcerLegaux(texte, valeurs){
   return t;
 }
 
-module.exports = { servirFichier, source, sourceServie, listes, forcerInscription, valeursInscription,
+module.exports = { servirFichier, source, sourceServie, listes, forcerInscription, valeursInscription, forcerTelephone, valeursTelephone,
   NOUVEAUTES, forcerNouveautes, valeursNouveaute, simulation, refusSimulation,
   LEGAUX, LEGAUX_TEST, LIENS_TEST, valeursLegales, lienDrive, idsDeTest, idModele, problemeLien, documentDrive, legauxBorne,
   legauxManquants, legauxExecutes, legauxEcarts, legauxAilleurs, verrouLegaux, modeLegaux, brancheGit, forcerLegaux };

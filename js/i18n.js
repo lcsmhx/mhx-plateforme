@@ -1032,3 +1032,28 @@ Object.assign(I18N.en, {
 });
 
 
+
+/* v72 (A) — téléphone obligatoire : inscription, écran « Ajoute ton numéro », Mon compte */
+Object.assign(I18N.en, {
+  "Ton numéro (WhatsApp)": "Your phone number (WhatsApp)",
+  "Indicatif du pays": "Country code",
+  "France (+33)": "France (+33)", "Belgique (+32)": "Belgium (+32)", "Suisse (+41)": "Switzerland (+41)", "Canada (+1)": "Canada (+1)",
+  "Australie (+61)": "Australia (+61)", "Côte d'Ivoire (+225)": "Ivory Coast (+225)", "Sénégal (+221)": "Senegal (+221)",
+  "La Réunion (+262)": "Réunion (+262)", "Autre pays": "Other country",
+  "Indique ton numéro.": "Enter your phone number.",
+  "Un numéro ne contient que des chiffres.": "A phone number contains digits only.",
+  "Avec « Autre pays », tape ton numéro avec son indicatif, par exemple +212 6 12 34 56 78.": "With “Other country”, type your number with its country code, for example +212 6 12 34 56 78.",
+  "Ce numéro est trop court : 6 chiffres au moins, sans l'indicatif.": "This number is too short: at least 6 digits, without the country code.",
+  "Ce numéro est trop long : 14 chiffres au plus, sans l'indicatif.": "This number is too long: 14 digits at most, without the country code.",
+  "Ajoute ton numéro pour que Lucas puisse te joindre": "Add your phone number so Lucas can reach you",
+  "Lucas s'en sert pour t'appeler ou t'écrire sur WhatsApp.": "Lucas uses it to call you or message you on WhatsApp.",
+  "Enregistrer mon numéro": "Save my number",
+  "Ta session a pris fin : reconnecte-toi.": "Your session has ended: sign in again.",
+  "Non enregistré : réessaie dans un instant.": "Not saved: try again in a moment.",
+  "Mon numéro": "My phone number",
+  "Numéro actuel :": "Current number:",
+  "Aucun numéro enregistré.": "No number saved.",
+  "Numéro enregistré.": "Number saved.",
+  "C'est déjà ton numéro.": "That's already your number.",
+  "Ton numéro n'a pas pu être chargé. Recharge la page.": "Your number couldn't be loaded. Reload the page."
+});

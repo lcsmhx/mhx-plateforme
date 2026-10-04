@@ -602,7 +602,7 @@ const ALERTE59 = (/\n  @supports selector\(:has\(\*\)\)\{[\s\S]*?\n  \}\n/.exec(
     const t = " (" + theme + ")";
     if (theme === "sombre") {
       const th = await page.$$eval(".tb-clients-table thead th", l => l.map(e => e.textContent.trim()));
-      ok("A : en-têtes : Client, Retour, Note, Smiley, Visite, puis « Connexions » et « Dernière connexion », puis « Jours actifs » et « Activité »", egal(th.slice(0, ORDRE_TH.length), ORDRE_TH) && th.length === 17, JSON.stringify(th));
+      ok("A : en-têtes : Client, Retour, Note, Smiley, Visite, puis « Connexions » et « Dernière connexion », puis « Jours actifs » et « Activité » ; v72 (A) : 18 colonnes, « Téléphone » juste avant celle des boutons", egal(th.slice(0, ORDRE_TH.length), ORDRE_TH) && th.length === 18 && th[16] === "Téléphone", JSON.stringify(th));
       const o = await ordreTd(page, TESTEUR.id), o2 = await ordreTd(page, F.IDS.c1);   // v71 (D) : Thomas (Léa, prospecte, n'est plus dans le tableau)
       ok("A : les cellules d'une ligne suivent le même ordre (compte de test, Thomas)", egal(o.slice(0, ORDRE_TD.length), ORDRE_TD) && egal(o2, o), JSON.stringify(o));
       const T = await ligneClient(page, TESTEUR.id), Th = await ligneClient(page, F.IDS.c1);

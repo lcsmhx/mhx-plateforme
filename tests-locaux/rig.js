@@ -26,11 +26,13 @@ fs.mkdirSync(OUT, { recursive: true });
 let inscriptionLibre = false;   // v44 : l'ecran d'inscription n'existe que si CONFIG.marque.inscription_libre vaut true
 /* 52.1 : la page charge css/ et js/ (servis depuis son dossier, fichiers.js) ; la retouche vaut aussi pour ces fichiers
    (inscription_libre est dans js/config.js) */
-const { servirFichier, forcerInscription } = require("./fichiers");
+const { servirFichier, forcerInscription, forcerTelephone } = require("./fichiers");
 /* v54 : l'inscription est ouverte dans le fichier ; la retouche force la valeur voulue (fermée par défaut), dans les deux sens.
    v55 : par forcerInscription (fichiers.js), comme toutes les suites qui testent l'inscription (les autres servent la valeur
    du fichier) */
-const retouche = h => forcerInscription(h, inscriptionLibre);
+/* v72 (A) : le téléphone obligatoire est servi ALLUMÉ, comme en ligne (les autres suites le servent éteint) : chaque compte
+   fictif qui se connecte a son numéro (plus bas), et l'inscription montre le champ du numéro */
+const retouche = h => forcerTelephone(forcerInscription(h, inscriptionLibre), true);
 const server = http.createServer((req, res) => {
   if (servirFichier(req, res, HTML, retouche)) return;
   if (req.url.split("?")[0] === "/" || req.url.startsWith("/index.html")) {
@@ -54,6 +56,8 @@ F.profils.forEach(p => { p.statut = "client"; });
 F.profils.push({ id: PROSPECT_ID, prenom: "Léa", nom: "", role: "client", statut: "prospect", cree_le: "2026-09-24T10:00:00Z" });
 F.donnees.push({ user_id: PROSPECT_ID, outil: "intake", contenu: { sexe: "Femme", age: "29", taille: "168", poids: "64", poids_obj: "60", objectif: "Perte de poids / sèche", niveau: "Débutant (0 à 6 mois)", seances: "3", lieu: "À la maison", nb_repas: "3 repas", sommeil_h: "6.5", energie: "4", pourquoi: "Retrouver de l'énergie." }, maj_le: HIER + "T08:00:00+00:00" });
 F.donnees.push({ user_id: PROSPECT_ID, outil: "challenge", contenu: { version: 1, debut: HIER, jours: { "1": { fait: HIER + "T08:00:00.000Z", date: HIER } }, cta: { clics: [] }, termine: null }, maj_le: HIER + "T08:00:00+00:00" });
+/* v72 (A) : le numéro de chaque compte fictif qui se connecte (client et prospecte ; numéros de la plage réservée à la fiction) */
+F.profils.filter(p => p.role !== "coach").forEach((p, i) => F.donnees.push({ user_id: p.id, outil: "contact", contenu: { telephone: "+3363998000" + i }, maj_le: "2026-09-01T08:00:00Z" }));
 
 function supabase(route) {
   const req = route.request();

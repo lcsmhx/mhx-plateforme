@@ -232,6 +232,9 @@ const Retour = {
      coach) si elle n'existe pas encore ; en arriere-plan, sans retarder l'affichage (lecture ratee : rien d'ecrit,
      nouvel essai a la prochaine ouverture) */
   if (Auth.estProspect()) Accords.copierEmails();
+  /* v72 (A) : la clé « contact » (numéro gardé après une inscription ratée, puis numéro obligatoire), lue pendant que la
+     langue se règle ; attendue juste avant la navigation */
+  const pContact = Contact.preparer().catch(() => null);
 
   /* la langue choisie sur un autre appareil l'emporte */
   try {
@@ -243,6 +246,9 @@ const Retour = {
     }
   } catch(e){}
 
+  /* v72 (A) : téléphone obligatoire et pas de numéro : l'écran « Ajoute ton numéro… » avant tout le reste (ni navigation,
+     ni routage, ni « Bienvenue ! ») ; lecture ratée ou trop lente : l'app s'ouvre (la question revient la fois suivante) */
+  if ((await pContact) === "manque"){ ecranTelephone(); return; }
   construireNav();
   Contenus.charger();
   window.addEventListener("hashchange", routeDepuisAdresse);

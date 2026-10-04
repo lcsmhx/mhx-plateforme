@@ -40,6 +40,12 @@ const CONFIG = {
        v54 : ouverte le 28/09/2026 (décision de Lucas, Supabase réglé par lui). Pour refermer : false. */
     inscription_libre: true,
 
+    /* v72 (A) — Téléphone obligatoire. true : le numéro (WhatsApp) est demandé à l'inscription, et un client ou un
+       prospect qui n'en a pas encore le donne à sa prochaine ouverture de l'app (écran « Ajoute ton numéro… », avant
+       l'accueil ; jamais le coach). false : plus aucune de ces deux demandes ; le numéro reste visible et modifiable
+       dans Mon compte, et le coach voit ceux qui sont enregistrés. */
+    telephone_obligatoire: true,
+
     /* v40 — Mode gratuit (prospects). Le lien de l'appel découverte, et les
        SEULS onglets ouverts à un prospect : tous les autres affichent un
        cadenas et « Réserver mon bilan ». Aucun prix dans l'application. */

@@ -80,6 +80,67 @@ function lienCalendlyPour(prenom, email, source, nom){
     return avant + (avant.indexOf("?") > -1 ? "&" : "?") + params.join("&") + apres;
   } catch(e){ return base; }
 }
+/* v72 (A) — TÉLÉPHONE : un menu d'indicatif (les pays de Lucas, France par défaut, et « Autre pays ») et le numéro.
+   Espaces, points et tirets ignorés, le 0 initial retiré (sauf Côte d'Ivoire : depuis 2021, le 0 fait partie du
+   numéro), 6 à 14 chiffres sans l'indicatif ; enregistré au format international sans espaces (+33612345678).
+   Un numéro tapé avec son indicatif (« +33 6… », « 0033 6… ») garde cet indicatif ; « Autre pays » : le numéro complet
+   avec son indicatif (+…), pour ne bloquer personne. Les phrases sont des clés françaises (trad). Côté coach (coachHTML) :
+   le numéro, « Appeler » (tel:+…) et « WhatsApp » (wa.me, chiffres sans le +), seulement pour un numéro bien formé :
+   la clé est écrite par le compte lui-même, rien d'autre n'en sort en lien ; sinon « — ». */
+const Telephone = {
+  PAYS: [["33", "France (+33)"], ["32", "Belgique (+32)"], ["41", "Suisse (+41)"], ["1", "Canada (+1)"], ["61", "Australie (+61)"],
+    ["225", "Côte d'Ivoire (+225)"], ["221", "Sénégal (+221)"], ["262", "La Réunion (+262)"]],
+  AUTRE: "autre",
+  DEFAUT: "33",
+  /* un numéro enregistré : « + » puis 7 à 17 chiffres (indicatif de 1 à 3 chiffres + 6 à 14) */
+  valide(t){ return typeof t === "string" && /^\+[1-9]\d{6,16}$/.test(t); },
+  /* ind : indicatif du menu ("33"…) ou "autre" ; saisie : ce qui est tapé. Rend { tel } ou { erreur } (clé française) */
+  normaliser(ind, saisie){
+    let s = String(saisie == null ? "" : saisie).replace(/[\s.\-  ]/g, "");
+    if (!s) return { erreur: "Indique ton numéro." };
+    let code = this.PAYS.some(p => p[0] === ind) ? ind : ind === this.AUTRE ? this.AUTRE : this.DEFAUT;
+    if (/^(\+|00)/.test(s)){
+      s = s.replace(/^(\+|00)/, "");
+      if (!/^\d+$/.test(s)) return { erreur: "Un numéro ne contient que des chiffres." };
+      /* l'indicatif tapé l'emporte : celui du menu, sinon un pays de la liste (le plus long d'abord), sinon « Autre pays » */
+      const connus = this.PAYS.map(p => p[0]).sort((a, b) => b.length - a.length);
+      const c = code !== this.AUTRE && s.indexOf(code) === 0 ? code : connus.find(k => s.indexOf(k) === 0);
+      if (c){ code = c; s = s.slice(c.length); }
+      else code = this.AUTRE;
+    } else if (code === this.AUTRE) return { erreur: "Avec « Autre pays », tape ton numéro avec son indicatif, par exemple +212 6 12 34 56 78." };
+    if (!/^\d+$/.test(s)) return { erreur: "Un numéro ne contient que des chiffres." };
+    if (code === this.AUTRE){
+      if (s.length < 7 || s[0] === "0") return { erreur: "Ce numéro est trop court : 6 chiffres au moins, sans l'indicatif." };
+      if (s.length > 17) return { erreur: "Ce numéro est trop long : 14 chiffres au plus, sans l'indicatif." };
+      return { tel: "+" + s };
+    }
+    if (code !== "225") s = s.replace(/^0/, "");
+    if (code === "1" && s.length === 11 && s[0] === "1") s = s.slice(1);   // Canada : le « 1 » national devant les 10 chiffres
+    if (s.length < 6) return { erreur: "Ce numéro est trop court : 6 chiffres au moins, sans l'indicatif." };
+    if (s.length > 14) return { erreur: "Ce numéro est trop long : 14 chiffres au plus, sans l'indicatif." };
+    return { tel: "+" + code + s };
+  },
+  /* pour pré-remplir le champ : { ind, num } (le pays de la liste le plus long qui correspond, sinon « Autre pays ») */
+  decouper(t){
+    if (!this.valide(t)) return { ind: this.DEFAUT, num: "" };
+    const c = this.PAYS.map(p => p[0]).sort((a, b) => b.length - a.length).find(k => t.slice(1).indexOf(k) === 0);
+    return c ? { ind: c, num: t.slice(1 + c.length) } : { ind: this.AUTRE, num: t };
+  },
+  /* le menu (id + "-ind") et le champ (id) ; tel : un numéro enregistré, pour pré-remplir */
+  champHTML(id, tel){
+    const d = this.decouper(tel), opt = (v, l) => `<option value="${esc(v)}"${v === d.ind ? " selected" : ""}>${esc(trad(l))}</option>`;
+    return `<div class="tel-ligne"><select id="${esc(id)}-ind" aria-label="${esc(trad("Indicatif du pays"))}">${this.PAYS.map(p => opt(p[0], p[1])).join("")}${opt(this.AUTRE, "Autre pays")}</select>`
+      + `<input id="${esc(id)}" type="tel" inputmode="tel" autocomplete="tel" maxlength="24" placeholder="06 12 34 56 78" value="${esc(d.num)}"></div>`;
+  },
+  /* lecture du champ : { tel } ou { erreur } */
+  lire(id){ const i = $(id + "-ind"), c = $(id); return this.normaliser(i ? i.value : this.DEFAUT, c ? c.value : ""); },
+  /* côté coach (écrans non traduits) : le numéro et ses deux liens, ou « — » */
+  coachHTML(t, classe){
+    if (!this.valide(t)) return '<span class="meta">—</span>';
+    const c = esc(classe || "btn ghost petit");
+    return `<span class="tel-coach"><span class="tel-num" data-notr>${esc(t)}</span> <a class="${c}" href="tel:${esc(t)}">Appeler</a> <a class="${c}" href="https://wa.me/${esc(t.slice(1))}" target="_blank" rel="noopener">WhatsApp</a></span>`;
+  }
+};
 /* v52 — « écris-nous » : une phrase (clé française, traduite par trad) dont {e} devient l'adresse email du coach, en lien
    mailto (CONFIG.marque.email). Sert tant que l'app n'envoie aucun email (mot de passe oublié, changement d'adresse). */
 function ecrisNous(phrase, id, classe){

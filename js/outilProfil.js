@@ -222,7 +222,12 @@ const outilProfil = {
     <section class="panel">${conditions}
       <h2>Mon compte</h2>
       <p class="note" style="margin:0 0 18px">Adresse actuelle : <b>${esc((u && u.email) || "—")}</b>. C'est avec elle que tu te connectes.</p>
-
+${Auth.estCoach() ? "" : `<div id="mc-tel-bloc" style="margin:0 0 26px">
+      <h3 style="font-family:Oswald,sans-serif;text-transform:uppercase;letter-spacing:.05em;font-size:14px;font-weight:500;color:var(--ink-2);margin:0 0 12px">Mon numéro</h3>
+      <p class="note" style="margin:0 0 10px" id="mc-tel-ligne">Numéro actuel : <b id="mc-tel-actuel" data-notr>…</b></p>
+      <div class="champ"><label for="mc-tel">Ton numéro (WhatsApp)</label>${Telephone.champHTML("mc-tel")}</div>
+      <div class="actions"><button class="btn ghost" id="mc-tel-ok" disabled>Enregistrer mon numéro</button><span class="msg" id="mc-tel-msg" role="status" aria-live="polite"></span></div>
+      </div>`}
       <h3 style="font-family:Oswald,sans-serif;text-transform:uppercase;letter-spacing:.05em;font-size:14px;font-weight:500;color:var(--ink-2);margin:0 0 12px">Changer mon mot de passe</h3>
       <div class="grid g2">
         <div><label for="mc-actuel">Mot de passe actuel</label><input id="mc-actuel" type="password" autocomplete="current-password"></div>
@@ -336,8 +341,37 @@ const outilProfil = {
       if (msg) msg.textContent = trad(oui ? E.oui : E.non);
     });
   },
+  /* v72 (A) : « Mon numéro » (client et prospect) : la clé contact lue ; lecture ratée : un mot, le bouton reste inactif.
+     Enregistrer relit la ligne puis l'écrit (Contact.enregistrer : ref et date d'inscription gardées). */
+  async brancherTelephone(){
+    const b = $("mc-tel-ok"), val = $("mc-tel-actuel"), msg = $("mc-tel-msg");
+    if (!b || Auth.estCoach() || Store.idConsulte) return;
+    const dire = t => { if (msg) msg.textContent = typoFr(trad(t)); };
+    let C = null; try { C = await Store.lire(Contact.cle, {}); } catch(e){ C = null; }
+    if (!b.isConnected) return;
+    if (!C || Store.nonLus.has(C)){ if (val) val.textContent = "—"; dire("Ton numéro n'a pas pu être chargé. Recharge la page."); return; }
+    let actuel = Contact.telephone(C);
+    const montrer = () => {
+      if (val){ if (actuel){ val.textContent = actuel; val.setAttribute("data-notr", ""); } else { val.textContent = trad("Aucun numéro enregistré."); val.removeAttribute("data-notr"); } }
+      const d = Telephone.decouper(actuel), i = $("mc-tel-ind"), c = $("mc-tel");
+      if (i) i.value = d.ind; if (c) c.value = d.num;
+    };
+    montrer();
+    b.disabled = false;
+    b.addEventListener("click", async () => {
+      if (b.disabled) return;
+      const T = Telephone.lire("mc-tel");
+      if (T.erreur){ dire(T.erreur); return; }
+      if (T.tel === actuel){ dire("C'est déjà ton numéro."); return; }
+      b.disabled = true; dire("Un instant…");
+      try { const apres = await Contact.enregistrer({ telephone: T.tel }); actuel = Contact.telephone(apres); montrer(); dire("Numéro enregistré."); }
+      catch(e){ dire(Auth.indispo(e) ? "Service momentanément indisponible, réessaie dans une minute." : "Non enregistré : réessaie dans un instant."); }
+      b.disabled = false;
+    });
+  },
   brancherCompte(){
     this.brancherEmails();
+    this.brancherTelephone();
     const bPart = $("mc-partager");
     if (bPart) bPart.addEventListener("click", () => partagerApp());   // v70
     const bCond = $("mc-conditions");
