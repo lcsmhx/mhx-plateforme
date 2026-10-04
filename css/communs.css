@@ -605,3 +605,8 @@ body.figee{overflow:hidden}
 .dc-wa{margin-top:12px}
 .verrou-wa{justify-content:center;margin:12px auto 0}
 .dc-wa .btn,.verrou-wa .btn{min-height:44px;text-align:center}
+
+/* v72 (E) — « Nouveaux depuis ta dernière visite » (tableau de bord du coach) : prénom et date, puis le numéro et ses liens,
+   qui passent à la ligne sur un écran étroit */
+#tb-nouveaux .tb-liste li{flex-wrap:wrap;gap:6px 12px}
+#tb-nouveaux .tb-nv-tel{margin-left:auto}

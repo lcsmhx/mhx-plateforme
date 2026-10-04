@@ -449,8 +449,8 @@ const Clients = {
     const ecritParCoach = ["programme", "repas", "calc", "complements", "feedbacks", "notes_coach", "suivi_prospect"];
     /* v51 : ni le choix des emails de suivi, ni la date « vu » des Nouveautes ne sont une saisie ; les pages vues
        (activite) ne comptent que pour un prospect (un client inactif garde son alerte « Inactif depuis N j ») */
-    /* v72 (A) : le numéro (contact) non plus */
-    const pasSaisie = ["emails", "coach_notifs", "contact"], prospects = new Set((profils || []).filter(p => p && p.statut === "prospect").map(p => p.id));
+    /* v72 (A) : le numéro (contact) non plus ; v72 (E) : la visite du coach (coach_visite) non plus */
+    const pasSaisie = ["emails", "coach_notifs", "contact", "coach_visite"], prospects = new Set((profils || []).filter(p => p && p.statut === "prospect").map(p => p.id));
     (donnees || []).forEach(d => {
       const saisie = ecritParCoach.indexOf(d.outil) === -1 && pasSaisie.indexOf(d.outil) === -1 && (d.outil !== "activite" || prospects.has(d.user_id));
       const c = Forme.cle(d.outil, d.contenu);   // v42

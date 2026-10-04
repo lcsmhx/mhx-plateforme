@@ -574,7 +574,9 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
   await bloc("B. page Prospects : les 3 motifs, puis les actions du coach", async () => {
     const db = decor({ comptes: [P.alice(), P.marc(), P.bruno(), P.victor(), P.omar(), P.hugo(), P.paul()] });
     const { page } = await coachSur(b, db, "#/prospects", "#pr-liste .sc-carte");
-    ok("B : « À traiter » par défaut, dans l'ordre : Alice (Absent), Marc (10 h), Bruno (bilan coché il y a 9 jours), Victor (Perdu il y a 31 jours)",
+    /* v72 (E) : le tri par défaut des Prospects est « inscription récente » (verif81) ; l'ordre de priorité, toujours au choix, reste vérifié ici au mot près */
+    await page.selectOption("#pr-tri", "priorite"); await attendre(page, 400);
+    ok("B : « À traiter » (tri « priorité »), dans l'ordre : Alice (Absent), Marc (10 h), Bruno (bilan coché il y a 9 jours), Victor (Perdu il y a 31 jours)",
       egal(await uids(page), [ALICE, MARC, BRUNO, VICTOR]), noms(await uids(page)));
     const cpt = await compteFiltres(page);
     ok("B : en-tête « 7 comptes gratuits · 4 à traiter », tuile « À traiter » 4, filtres « À traiter » 4, « Appel fait » 4 (Alice, Victor, Omar, Paul), « Tous » 7",
@@ -658,6 +660,7 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
       egal(L.map(x => x.uid), [TESTEUR.id, ZOE, INES, ALICE, LEA]) && L[0].t.includes("Sans nom") && L[0].t.includes("😞") && L[0].cible === "bilan" && L[3].t.includes("Absent à l'appel : repropose-lui un créneau") && (await texte(page, "#tb-a-traiter")).includes("Et 4 autres : Mes clients → · Prospects →"),
       noms(L.map(x => x.uid)) + " " + await texte(page, "#tb-a-traiter"));
     await aller(page, "#/prospects", 300); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 }); await attendre(page, 500);
+    await page.selectOption("#pr-tri", "priorite"); await attendre(page, 400);   // v72 (E) : « priorité » n'est plus le tri par défaut
     ok("C : page Prospects, « À traiter » (tri priorité) : Zoé, Inès, Alice, Léa, Marc, Bruno, Victor — signé, case, absent, clic, nouveau, appel, perdu ; tuile 7 = badge",
       egal(await uids(page), [ZOE, INES, ALICE, LEA, MARC, BRUNO, VICTOR]) && (await tuilePr(page, "À traiter")) === "7", noms(await uids(page)));
     ok("C : aucune écriture", db.ecritures.length === 0, resume(db));
@@ -814,8 +817,9 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
     const cpt = await compteFiltres(page);
     ok("G : en-tête « 4 comptes gratuits · 2 à traiter » (Léa, Marc), filtres « Tous » 4, « À traiter » 2 ; « 4 prospects »",
       (await texte(page, "#pr-vue .masthead .lede")) === "4 comptes gratuits · 2 à traiter" && cpt.tous === "4" && cpt.a_traiter === "2" && (await texte(page, "#pr-compte")) === "4 prospects", (await texte(page, "#pr-vue .masthead .lede")) + " " + JSON.stringify(cpt));
+    await page.selectOption("#pr-tri", "priorite"); await attendre(page, 400);   // v72 (E) : l'ordre de priorité (plus le tri par défaut)
     const a = await page.evaluate(id => { const x = (outilProspects.tous || []).find(y => y.l.p.id === id); return x ? { illisible: x.a.illisible, urgent: x.a.urgent, rang: x.a.rang, etat: x.a.etat } : null; }, OMAR);
-    ok("G : analyse de secours : sans urgence, en cours, au rang le plus bas (10), après Léa (clic), Marc (nouveau) et Hugo (bilan coché)",
+    ok("G : analyse de secours : sans urgence, en cours, au rang le plus bas (10), après Léa (clic), Marc (nouveau) et Hugo (bilan coché) (tri « priorité »)",
       !!a && a.illisible === true && a.urgent === false && a.rang === 10 && a.etat === "en_cours" && egal(await uids(page), [LEA, MARC, HUGO, OMAR]), JSON.stringify(a) + " " + noms(await uids(page)));
     const { t } = await exporter(page);
     const L = lireCSV(t.replace(/^﻿/, "")), lo = L.find(l => l[0] === "Omar Récent") || [];

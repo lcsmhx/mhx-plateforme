@@ -622,7 +622,8 @@ const outilProspects = {
   titre: "Prospects",
   accroche: "",
   /* filtres (gardes le temps de la session), recherche, tri, pagination par 50, export CSV */
-  filtre: "a_traiter", periode: "tout", bilanF: "tout", newsF: "tout", tri: "priorite", recherche: "",
+  /* v72 (E) : tri par défaut « inscription récente » (les plus récents en premier) ; « priorité » reste au choix */
+  filtre: "a_traiter", periode: "tout", bilanF: "tout", newsF: "tout", tri: "inscription", recherche: "",
   PAS: 50, limite: 50, NL_PREMIERS: 10,
   donnees: null, lignes: [], tous: [], _nlDeplie: false,
   html(){ return `<div id="pr-vue"><header class="masthead"><h1>Prospects</h1></header><section class="panel"><div class="empty">Chargement…</div></section></div>`; },
@@ -663,7 +664,9 @@ const outilProspects = {
   trier(liste){
     const t = v => { const x = typeof v === "string" ? Date.parse(v) : NaN; return isNaN(x) ? 0 : x; };
     const visite = x => { const v = x.l.visites; return v && v.derniere ? t(v.derniere) : 0; };
-    const cmp = this.tri === "inscription" ? (x, y) => t(y.l.p.cree_le) - t(x.l.p.cree_le)
+    /* v72 (E) : une date d'inscription dans le futur (le profil est modifiable par son compte) va en dernier ; à date égale, la priorité */
+    const insc = x => { const v = t(x.l.p.cree_le); return v > Date.now() + 5 * 60000 ? 0 : v; };
+    const cmp = this.tri === "inscription" ? (x, y) => insc(y) - insc(x) || x.a.rang - y.a.rang || x.a.recence - y.a.recence
               : this.tri === "visite" ? (x, y) => visite(y) - visite(x) || x.a.rang - y.a.rang
               : (x, y) => x.a.rang - y.a.rang || x.a.recence - y.a.recence;
     return liste.slice().sort(cmp);

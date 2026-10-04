@@ -8,6 +8,14 @@
    Urgences clients : une alerte de niveau « mauvais » (😞 non traité, note en chute, inactivité, régularité faible,
    calculateur ≠ questionnaire), ou un retour de la semaine reçu à lire (Clients.urgent). Urgences prospects : ceux
    « à traiter » (Commercial.analyse : même définition que la page Prospects).
+   v72 (E) : en haut, « Nouveaux depuis ta dernière visite » : les prospects inscrits depuis la visite précédente du coach,
+   avec prénom, date d'inscription, numéro, « Appeler » et « WhatsApp ». La visite est gardée dans une clé du coach lui-même
+   (coach_visite : { le, jusqua, avant, avant_le }), déjà lue par Clients.charger (aucune lecture de plus) : une NOUVELLE
+   visite = un affichage du tableau de bord 30 min ou plus après le début de la précédente ; seule écriture de cette page,
+   une fois par visite (un rechargement ou un retour au tableau de bord pendant la visite ne vide pas la liste et n'écrit
+   rien). Le seuil est la date d'inscription la plus récente vue au début de la visite précédente (horloge du serveur :
+   rien ne se perd entre la lecture et l'écriture, quelle que soit l'heure du téléphone du coach). Aucune visite
+   enregistrée : les inscrits des 7 derniers jours.
    ------------------------------------------------------------------ */
 const outilTableau = {
   id: "tableau",
@@ -43,6 +51,33 @@ const outilTableau = {
     return out.sort((a, b) => a.rang - b.rang || b.jours - a.jours || (a.recence || 0) - (b.recence || 0));
   },
 
+  /* v72 (E) — la visite du coach */
+  VISITE: { cle: "coach_visite", PAUSE: 30 * 60000, JOURS: 7, MAX: 10 },
+  iso(v){ return typeof v === "string" && /^\d{4}-\d{2}-\d{2}T/.test(v) && !isNaN(Date.parse(v)) ? v : null; },
+  /* la visite enregistrée, revalidée (écrite par le coach, mais jamais lue sans contrôle), ou null */
+  visiteLue(V){
+    if (!V || typeof V !== "object" || Array.isArray(V) || !this.iso(V.le)) return null;
+    return { le: V.le, jusqua: this.iso(V.jusqua), avant: this.iso(V.avant), avant_le: this.iso(V.avant_le) };
+  },
+  /* V : la visite enregistrée ; t : maintenant ; maxCree : l'inscription la plus récente des profils chargés.
+     Rend { seuil (null : 7 derniers jours), depuis (début de la visite précédente, à afficher), nouvelle (à écrire, ou null) } */
+  visite(V, t, maxCree){
+    if (V && t - Date.parse(V.le) < this.VISITE.PAUSE) return { seuil: V.avant, depuis: V.avant_le, nouvelle: null };   // même visite (début dans le futur : aussi)
+    const seuil = V ? (V.jusqua || V.le) : null;
+    return { seuil, depuis: V ? V.le : null, nouvelle: { le: new Date(t).toISOString(), jusqua: maxCree, avant: seuil, avant_le: V ? V.le : null } };
+  },
+  quand(iso){ const d = new Date(iso), p = n => String(n).padStart(2, "0"); return p(d.getDate()) + "/" + p(d.getMonth() + 1) + " à " + p(d.getHours()) + ":" + p(d.getMinutes()); },
+  nouveauxHTML(nouveaux, vis){
+    const reste = nouveaux.length - this.VISITE.MAX;
+    const ligne = l => { const pr = String((l.p && l.p.prenom) || "").trim() || Clients.nom(l.p);
+      return `<li><span class="tb-quoi"><b data-notr>${esc(pr)}</b><small>inscrit le ${esc(this.quand(l.p.cree_le))}</small></span><span class="tb-nv-tel">${Telephone.coachHTML(l.tel)}</span></li>`; };
+    return `<section class="panel" id="tb-nouveaux"><h2>Nouveaux depuis ta dernière visite</h2>
+      <p class="note" style="margin:0 0 10px">${vis.depuis ? `Ta dernière visite : le ${esc(this.quand(vis.depuis))}.` : "Première visite enregistrée : les inscrits des 7 derniers jours."}</p>
+      ${nouveaux.length ? `<ul class="tb-liste">${nouveaux.slice(0, this.VISITE.MAX).map(ligne).join("")}</ul>
+        ${reste > 0 ? `<p class="note" style="margin:10px 0 0">Et ${reste} autre${reste > 1 ? "s" : ""} : <a class="link-a" href="#/prospects" data-tb-tous>Prospects →</a></p>` : ""}`
+        : `<p class="empty" style="margin:0">Aucun nouvel inscrit depuis ta dernière visite.</p>`}</section>`;
+  },
+
   async init(){
     const zone = $("tb-vue"); if (!zone) return;
     let profils, parClient, contenus;
@@ -62,12 +97,21 @@ const outilTableau = {
     const total = urgClients + urgProspects;
     const ligne = x => `<li><span class="tb-quoi"><b>${esc(x.nom)}</b>${x.prospect ? ` <span class="pastille accent">prospect</span>` : ""}<small>${esc(x.texte)}</small></span><button type="button" class="btn ghost petit" data-fiche="${esc(x.uid)}" data-nom="${esc(x.nom)}" data-cible="${esc(x.cible)}">Ouvrir</button></li>`;
     const reste = liste.length - this.MAX_LIGNES;
+    /* v72 (E) : la visite (décidée ici, au rendu : la clé du coach est dans contenus), puis les inscrits d'après elle */
+    const moi = Auth.utilisateur() && Auth.utilisateur().id, t = Date.now(), futur = t + 5 * 60000;
+    const V = this.visiteLue(moi && contenus[moi] ? contenus[moi][this.VISITE.cle] : null);
+    const crees = (profils || []).map(p => p && this.iso(p.cree_le)).filter(x => x && Date.parse(x) <= futur).sort();
+    const vis = this.visite(V, t, crees.length ? crees[crees.length - 1] : null);
+    const borne = vis.seuil ? Date.parse(vis.seuil) : t - this.VISITE.JOURS * 86400000;
+    const nouveaux = lignes.filter(l => l.p.statut === "prospect" && this.iso(l.p.cree_le) && Date.parse(l.p.cree_le) > borne && Date.parse(l.p.cree_le) <= futur)
+      .sort((a, b) => Date.parse(b.p.cree_le) - Date.parse(a.p.cree_le));
     zone.innerHTML = `
       <header class="masthead">
         <span class="eyebrow">${esc(outilAccueil.dateLongue())}</span>
         <h1>Bonjour${prenom ? " " + esc(prenom) : ""}</h1>
         <p class="lede">${total ? `${total} ${pl(total, "urgence", "urgences")} aujourd'hui.` : "Rien d'urgent aujourd'hui."}</p>
       </header>
+      ${this.nouveauxHTML(nouveaux, vis)}
       <section class="panel">
         <div class="tiles tb-tiles">
           ${tuile("tb-t-clients", "Clients", clients.length, pl(clients.length, "accompagnement en cours", "accompagnements en cours"), urgClients, this.AIDE_CLIENTS, "#/clients")}
@@ -87,6 +131,15 @@ const outilTableau = {
         </div>
       </section>`;
     $$("[data-fiche]", zone).forEach(b => b.addEventListener("click", () => Clients.ouvrir(b.dataset.fiche, b.dataset.nom, b.dataset.cible)));
+    /* v72 (E) : « Et N autres » ouvre Prospects sur tous les prospects (le filtre « À traiter » cacherait les inscrits de plus de 48 h) */
+    $$("[data-tb-tous]", zone).forEach(a => a.addEventListener("click", () => { outilProspects.filtre = "tous"; outilProspects.tri = "inscription"; }));
+    /* v72 (E) : nouvelle visite : la seule écriture de cette page, une ligne du coach lui-même (règles de la base : le propriétaire),
+       directe (pas de copie sur l'appareil ni d'« Enregistrement… » : rien que le coach ait saisi) ; ratée : la visite suivante
+       repartira de l'ancienne */
+    if (vis.nouvelle && moi && !Store.idConsulte){
+      Auth.appel("/rest/v1/donnees?on_conflict=user_id,outil", { method: "POST", headers: { "Prefer": "resolution=merge-duplicates,return=minimal" },
+        body: [{ user_id: moi, outil: this.VISITE.cle, contenu: vis.nouvelle, maj_le: new Date(t).toISOString() }] }).catch(() => {});
+    }
     Nouveautes.compter(lignes);   // v51 : le badge de l'onglet Prospects (le panneau est sur la page Prospects)
   }
 };

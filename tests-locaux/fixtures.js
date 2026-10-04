@@ -137,6 +137,8 @@ const histProgrammeC1 = { liste: [{ nom: "Bloc 0 — mise en route", du: ilYA(52
 
 const calcC1 = { sexe: "H", age: 32, taille: 180, poids: 83, pas: 8000, heures: 5, objectif: "perte" };
 
+const VISITE_COACH = new Date().toISOString();   // v72 (E) : le lancement de la suite (voir la clé coach_visite plus bas)
+
 const donnees = [
   [IDS.c1, "intake", intakeC1, ilYA(2)], [IDS.c1, "programme", programmeC1, ilYA(24)], [IDS.c1, "journal", journalC1, jourSem(2)],
   [IDS.c1, "repas", repasC1, ilYA(24)], [IDS.c1, "repas_suivi", repasSuiviC1, AUJ], [IDS.c1, "mens", mensC1, jourSem(1)],
@@ -152,7 +154,11 @@ const donnees = [
   [IDS.c3, "intake", { nom: "Julien Démo", age: 41, sexe: "Homme", taille: 176, poids: 91.2, complet: false }, ilYA(12)],
   [IDS.c3, "mens", { dstart: ilYA(30), pstart: 92.0, zones, affichees: [4, 5], compo_affichee: "mg", mesures: [{ sem: 1, date: ilYA(23), poids: 91.6, vals: {} }, { sem: 2, date: ilYA(12), poids: 91.2, vals: {} }] }, ilYA(12)],
   /* Coach : ses propres outils */
-  [IDS.coach, "intake", { nom: "Coach Démo", complet: true, age: 35, sexe: "Homme", taille: 182, poids: 84, objectif: "Performance / condition physique", niveau: "Avancé (2 ans et +)", lieu: "Salle complète", seances: "5", journee_type: "-", nb_repas: "4 repas (3 + une collation)", regime_type: "Omnivore" }, ilYA(1)]
+  [IDS.coach, "intake", { nom: "Coach Démo", complet: true, age: 35, sexe: "Homme", taille: 182, poids: 84, objectif: "Performance / condition physique", niveau: "Avancé (2 ans et +)", lieu: "Salle complète", seances: "5", journee_type: "-", nb_repas: "4 repas (3 + une collation)", regime_type: "Omnivore" }, ilYA(1)],
+  /* v72 (E) : la visite du coach au tableau de bord (clé coach_visite) : il « vient de passer » au lancement de la suite et a vu
+     tous les inscrits de ce moment. Ouvrir le tableau de bord dans les 30 min est donc la même visite : aucune écriture (une
+     NOUVELLE visite et son écriture sont testées dans verif81). Ligne datée d'il y a 40 jours : pas une activité. */
+  [IDS.coach, "coach_visite", { le: VISITE_COACH, jusqua: VISITE_COACH, avant: VISITE_COACH, avant_le: VISITE_COACH }, ilYA(40)]
 ].map(([user_id, outil, contenu, d]) => ({ user_id, outil, contenu, maj_le: d + "T00:30:00+00:00" }));
 
 const bibliotheque = [
