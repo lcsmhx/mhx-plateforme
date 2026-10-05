@@ -733,6 +733,8 @@ const Checkin = {
       this._badgeLecture = uid;
       Store.lireTout([this.cle, Feedback.cle]).then(d => {
         if (this._badge && this._badge.uid === uid) return;
+        /* lecture ratee : pas de « 0 » garde pour toute la visite ; nouvel essai a la prochaine construction de la navigation */
+        if (!d || d.erreur){ if (this._badgeLecture === uid) this._badgeLecture = null; return; }
         const moi = Auth.utilisateur();
         if (moi && moi.id === uid) this.majBadge(uid, this.nonVus(d[this.cle], d[Feedback.cle]).length);
       }).catch(() => {});

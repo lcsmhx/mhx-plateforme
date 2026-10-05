@@ -268,8 +268,7 @@ const Decouverte = {
     const uid = Store.cible(); if (!uid) return null;
     const k = uid + "|" + this.cle;
     try { await Auth.assurer(); } catch(e){}
-    const enAttente = Store.valeursEnAttente[k];
-    if (Store.attente[k] && enAttente !== undefined){ clearTimeout(Store.attente[k]); delete Store.attente[k]; delete Store.valeursEnAttente[k]; try { await Store.envoyer(this.cle, enAttente, uid); } catch(e){} }
+    try { await Store.envoyerCle(this.cle); } catch(e){}   // l'ecriture en attente (700 ms) part d'abord, avec l'instant de sa saisie
     let F = null;
     try { F = await Store.lire(this.cle, this.vide()); } catch(e){ F = null; }
     if (!F || typeof F !== "object" || Store.nonLus.has(F)){
@@ -289,9 +288,11 @@ const Decouverte = {
     return F;
   },
   _file: Promise.resolve(),
+  /* le delai de 15 s part quand l'operation DEMARRE, comme Checkin.enFile (v59, remarque 4) : derriere une operation lente,
+     la suivante ne demarre jamais pendant la relecture de celle d'avant (deux ecritures en meme temps : un clic perdu) */
   enFile(fn){
     const p = this._file.then(fn, fn);
-    this._file = Promise.race([p.then(() => {}, () => {}), new Promise(r => setTimeout(r, 15000))]);
+    this._file = this._file.then(() => Promise.race([p.then(() => {}, () => {}), new Promise(r => setTimeout(r, 15000))]));
     return p;
   },
   /* un clic « Réserver mon bilan » : note pour le coach, jamais bloquant

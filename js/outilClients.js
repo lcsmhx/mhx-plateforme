@@ -340,8 +340,10 @@ const outilClients = {
 
     $("n-gen").addEventListener("click", () => {
       const a = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-      let m = ""; for (let i=0;i<10;i++) m += a[Math.floor(Math.random()*a.length)];
-      $("n-mdp").value = m;
+      /* un tirage fait pour les secrets (crypto), pas Math.random */
+      const r = new Uint32Array(10);
+      try { crypto.getRandomValues(r); } catch(e){ for (let i = 0; i < r.length; i++) r[i] = Math.floor(Math.random() * 4294967296); }
+      $("n-mdp").value = Array.from(r, x => a[x % a.length]).join("");
     });
 
     $("n-creer").addEventListener("click", async () => {
@@ -438,11 +440,14 @@ const Clients = {
     /* v56 : en meme temps que le reste ; elle ne rejette jamais et ne retarde jamais la liste de plus de 8 s (« — » alors) */
     const cx = opts && opts.connexions === false ? Promise.resolve(null)
       : Promise.race([this.lireConnexions(), new Promise(r => setTimeout(() => r(null), 8000))]);
-    const profils = await this.pages("/rest/v1/profils?select=*&order=cree_le.desc,id.asc", l => String(l && l.id));
     /* les historiques (jusqu'a 24 plans par client) ne servent pas ici :
        on ne les telecharge pas */
     /* v38 : les notes privees ne servent pas ici non plus */
-    const donnees = await this.pages("/rest/v1/donnees?select=user_id,outil,contenu,maj_le&outil=not.in.(hist_programme,hist_repas,notes_coach)&order=user_id.asc,outil.asc", l => String(l && l.user_id) + "|" + String(l && l.outil));
+    /* profils et donnees en meme temps (deux lectures independantes : un aller-retour au lieu de deux) */
+    const [profils, donnees] = await Promise.all([
+      this.pages("/rest/v1/profils?select=*&order=cree_le.desc,id.asc", l => String(l && l.id)),
+      this.pages("/rest/v1/donnees?select=user_id,outil,contenu,maj_le&outil=not.in.(hist_programme,hist_repas,notes_coach)&order=user_id.asc,outil.asc", l => String(l && l.user_id) + "|" + String(l && l.outil))
+    ]);
     const parClient = {}, contenus = {};
     /* « Activite » = ce que le CLIENT a saisi. Ce que le coach ecrit dans
        sa fiche (programme, diete, calories, feedbacks, notes) ne dit rien de lui. */

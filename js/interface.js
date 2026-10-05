@@ -126,7 +126,10 @@ const UI = {
       const valeur = b => { if (b.champ){ const c = boite.querySelector("#ui-champ"); return c ? c.value : ""; } return b.valeur; };
       const clavier = ev => {
         if (ev.key === "Escape"){ ev.preventDefault(); this.fermer(o.annulation); return; }
-        if (ev.key === "Enter" && !(ev.target && ev.target.tagName === "TEXTAREA")){
+        /* un bouton ou un lien de la fenetre qui a le focus (« Annuler », la croix) garde son propre clic : Entree sur
+           « Annuler » ne lance jamais le bouton principal */
+        const t = ev.target;
+        if (ev.key === "Enter" && !(t && t.tagName === "TEXTAREA") && !(t && boite.contains(t) && /^(BUTTON|A)$/.test(t.tagName))){
           const p = boutons.find(b => b.principal);
           if (p){ ev.preventDefault(); this.fermer(valeur(p)); }
         }

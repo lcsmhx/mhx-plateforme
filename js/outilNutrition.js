@@ -978,7 +978,7 @@ const outilNutrition = {
       $$("[data-autre]", zone).forEach(b => b.addEventListener("click", async () => {
         const { jour, i } = cible(b.dataset.autre); const x = jour.repas[i];
         const vus = []; R.jours.forEach(j => (j.repas || []).forEach(c => { if (c.recette_id) vus.push(c.recette_id); }));
-        const remplacants = await self.composer(R.cible || { kcal: x.macros.kcal * 4, prot:0 }, R.regime, R.allergenes, vus);
+        const remplacants = await self.composer(R.cible || { kcal: x.macros.kcal * 4, prot:0 }, R.regime, R.allergenes, vus, R.nb_repas);   // sa structure de journee, comme « Remplacer » cote client
         const nouveau = remplacants.find(n => n.moment === x.moment);
         if (nouveau){ jour.repas[i] = nouveau; if (sauver() === false) return; redessiner(); }
         else flash("nu-msg", "Pas d'autre recette disponible pour ce repas.");

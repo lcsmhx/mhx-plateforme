@@ -71,6 +71,9 @@ const outilJournal = {
     const J = await Store.lire(Journal.cle, Journal.vide());
     const noter = $("jr-noter"), hist = $("jr-hist");
     if (!noter || !hist) return;   // page quittee pendant la lecture
+    /* lecture ratee (reseau, 5xx) : « Pas de connexion » + Reessayer, jamais « Aucune séance notée » ni « pas encore déposé ton
+       programme » (faux), comme Mon programme (v71 F) */
+    if (Store.nonLus.has(J) || (P && Store.nonLus.has(P))){ pageHorsLigne(noter); hist.innerHTML = ""; return; }
     if (!Array.isArray(J.seances)) J.seances = [];
     let n = this.PAS;
     const dessinerHist = () => {

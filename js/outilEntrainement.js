@@ -201,11 +201,13 @@ const outilEntrainement = {
         return;
       }
       D.historique.slice().reverse().forEach(h => {
-        const idx = D.historique.indexOf(h);
         const tr = document.createElement("tr");
         tr.innerHTML = `<td>${esc(dateFr(h.date))}</td><td>${esc(h.nom)}</td><td>${fmt(Array.isArray(h.exos) ? h.exos.length : 0)}</td><td>${fmt(h.series || 0)}</td><td>${fmt(h.vol)} kg</td>` +
                        `<td><button class="del" aria-label="Supprimer cette séance">×</button></td>`;
-        tr.querySelector(".del").addEventListener("click", () => {
+        /* comme une mesure de Ma progression (v67, D6) : on demande d'abord, puis la seance est retrouvee par elle-meme */
+        tr.querySelector(".del").addEventListener("click", async () => {
+          if (!(await UI.confirmer("Supprimer cette séance de l'historique ? Elle sera effacée.", { ok: "Oui, supprimer", danger: true }))) return;
+          const idx = D.historique.indexOf(h); if (idx === -1) return;
           D.historique.splice(idx,1); sauver(); dessinerHistorique(); construireExercices(); dessinerKPI();
         });
         tb.appendChild(tr);

@@ -726,7 +726,7 @@ const outilProspects = {
     if (csv) csv.addEventListener("click", () => {
       const liste = this.trier(this.tous.filter(x => this.passe(x)));
       if (!liste.length){ UI.toast("Aucun prospect à exporter avec ces filtres.", "attention"); return; }
-      this.telecharger(this.csv(liste), "prospects-" + aujourdhui() + ".csv");
+      telecharger("prospects-" + aujourdhui() + ".csv", this.csv(liste), "text/csv;charset=utf-8");
       UI.toast(liste.length + " prospect" + (liste.length > 1 ? "s" : "") + " exporté" + (liste.length > 1 ? "s" : "") + ".", "ok");
     });
     this.majListe(zone);
@@ -803,15 +803,9 @@ const outilProspects = {
     if (bc) bc.addEventListener("click", () => {
       const l = this.newsletter(this.lignes);
       if (!l.length){ UI.toast("Personne à exporter.", "attention"); return; }
-      this.telecharger(this.csvNewsletter(l), "newsletter-" + aujourdhui() + ".csv");
+      telecharger("newsletter-" + aujourdhui() + ".csv", this.csvNewsletter(l), "text/csv;charset=utf-8");
       UI.toast(l.length + " personne" + (l.length > 1 ? "s" : "") + " exportée" + (l.length > 1 ? "s" : "") + ".", "ok");
     });
-  },
-  telecharger(texte, nom){
-    const url = URL.createObjectURL(new Blob([texte], { type: "text/csv;charset=utf-8" }));
-    const a = document.createElement("a"); a.href = url; a.download = nom; a.style.display = "none";
-    document.body.appendChild(a); a.click();
-    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1500);
   }
 };
 

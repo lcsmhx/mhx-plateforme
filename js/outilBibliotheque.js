@@ -62,7 +62,7 @@ const outilBibliotheque = {
             el.querySelector("[data-suppr]").addEventListener("click", async () => {
               if (!(await UI.confirmer("Supprimer « " + x.nom + " » de ta bibliothèque ?", { ok: "Supprimer", danger: true }))) return;
               try { await Auth.appel("/rest/v1/bibliotheque?id=eq." + x.id, { method:"DELETE", headers:{ "Prefer":"return=minimal" } }); charger(); }
-              catch(e){}
+              catch(e){ UI.alerte("Suppression impossible : " + (e.message || "erreur inconnue")); }
             });
             g.box.appendChild(el);
           });

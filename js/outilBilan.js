@@ -173,6 +173,8 @@ const outilBilan = {
       Store.lire("repas_suivi", {}), Store.lire("mens", {}), Store.lire("objectifs_faits", {}), Store.lire("intake", {}),
       Store.lire(Checkin.cle, Checkin.vide())
     ]);
+    /* lecture ratee : « Pas de connexion » + Reessayer, pas un bilan vide ni des « points à aborder » tires de donnees non lues */
+    if ([programme, journal, repas, repas_suivi, mens, objectifs_faits, intake, checkins].some(v => Store.nonLus.has(v))){ pageHorsLigne(zone); return; }
     const b = this.calculer({ programme, journal, repas, repas_suivi, mens, objectifs_faits });
     zone.innerHTML = this.vue(b, coach, (intake && intake.objectif) || "");
     /* v36 — ce que le client a ecrit dans ses bilans hebdo : a lire avant le call.

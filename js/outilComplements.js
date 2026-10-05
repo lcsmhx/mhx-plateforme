@@ -116,6 +116,7 @@ const outilComplements = {
     const D = this.migrer(await Store.lire(this.cle, this.vide()));
     const zone = $("cp-vue");
     if (!zone) return;
+    if (Store.nonLus.has(D)){ pageHorsLigne(zone); return; }   // lecture ratee : « Pas de connexion », pas « aucun complément prescrit » (faux)
     const sauver = () => Store.ecrire(self.cle, D);
 
     if (!edition){ zone.innerHTML = self.vueLecture(D); return; }

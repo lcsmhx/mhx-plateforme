@@ -1181,10 +1181,18 @@ const Catalogue = {
      recettes qui les utilisent s'affichaient a 0 kcal avec un avertissement
      « ingredients absents ». Le secours GitHub ne se declenchait pas, puisque
      la table n'etait pas vide. On lit donc page par page jusqu'au bout. */
-  async lire(table){
-    if (this._c[table]) return this._c[table];
+  /* lectures en cours, par table : deux appels simultanes (recettes() et indexAliments() lances ensemble) ne telechargent
+     pas deux fois toute la table */
+  _p: {},
+  lire(table){
+    if (this._c[table]) return Promise.resolve(this._c[table]);
+    if (!this._p[table]) this._p[table] = this.lireUneFois(table).finally(() => { delete this._p[table]; });
+    return this._p[table];
+  },
+  async lireUneFois(table){
     const PAGE = 1000;
     const tout = [];
+    let complet = false;
     try {
       for (let debut = 0; ; debut += PAGE){
         const lot = await Auth.appel("/rest/v1/" + table + "?select=*&order=id.asc", {
@@ -1197,27 +1205,33 @@ const Catalogue = {
         if (lot.length !== PAGE) break;
         if (debut > 50000) break;          // garde-fou
       }
-      this._c[table] = tout;
-    } catch(e){ this._c[table] = tout.length ? tout : []; }
+      complet = true;
+    } catch(e){}
+    /* lecture interrompue (reseau, delai) : ce qui a ete lu sert a l'affichage, mais n'est PAS garde pour la visite —
+       sinon une table vide ou coupee en deux restait en memoire jusqu'au rechargement (recettes introuvables, macros
+       fausses) ; le prochain appel relit la base */
+    let liste = tout;
     /* Secours : si la table est vide — base en pause, import jamais lancé —
        on lit directement le dépôt. Les aliments passent par la MEME
        normalisation que l'import : sans elle, on servirait des plans batis
        sur des etiquettes de regime non verifiees, ce qui est precisement
        le risque que l'import existe pour ecarter. */
-    if (!this._c[table].length){
+    if (!liste.length){
       const fichier = { aliments:"aliments.json", recettes:"recettes.json", programmes_types:"programmes.json", exercices:"exercices.json" }[table];
       if (fichier){
         try {
           const f = await fetch(CONFIG.nutrition.source_donnees + fichier, { cache: "no-store" });
           if (f.ok){
             const brut = await f.json();
-            this._c[table] = (table === "aliments") ? brut.map(a => Normaliser.aliment(a)) : brut;
+            liste = (table === "aliments") ? brut.map(a => Normaliser.aliment(a)) : brut;
             this.secours = true;
+            complet = true;
           }
         } catch(e){}
       }
     }
-    return this._c[table];
+    if (complet) this._c[table] = liste;
+    return liste;
   },
   aliments(){ return this.lire("aliments"); },
   async recettes(){
@@ -1237,9 +1251,10 @@ const Catalogue = {
   async indexExercices(){
     if (this._idxEx) return this._idxEx;
     const l = await this.exercices();
-    this._idxEx = {};
-    l.forEach(e => { this._idxEx[Normaliser.aplatir(e.nom)] = e; this._idxEx[e.id] = e; });
-    return this._idxEx;
+    const idx = {};
+    l.forEach(e => { idx[Normaliser.aplatir(e.nom)] = e; idx[e.id] = e; });
+    if (this._c["exercices"] === l) this._idxEx = idx;   // garde seulement l'index d'une lecture complete (gardee par lire)
+    return idx;
   },
   async fiche(nom){
     const idx = await this.indexExercices();
@@ -1284,8 +1299,9 @@ const Catalogue = {
   async indexAliments(){
     if (this._idx) return this._idx;
     const l = await this.aliments();
-    this._idx = {}; l.forEach(a => { this._idx[a.id] = a; });
-    return this._idx;
+    const idx = {}; l.forEach(a => { idx[a.id] = a; });
+    if (this._c["aliments"] === l) this._idx = idx;   // garde seulement l'index d'une lecture complete (gardee par lire)
+    return idx;
   },
 
   /* Macros d'une recette, calculees a partir de ses ingredients.
@@ -1546,8 +1562,8 @@ function blocSauvegarde(){
 }
 /* Propose un fichier au telechargement. L'application est un site normal :
    le navigateur sait faire, il suffit de lui donner un lien et de le cliquer. */
-function telecharger(nomFichier, texte){
-  const blob = new Blob([texte], { type: "application/json;charset=utf-8" });
+function telecharger(nomFichier, texte, type){   // type : JSON par defaut (exports CSV de la page Prospects : "text/csv;charset=utf-8")
+  const blob = new Blob([texte], { type: type || "application/json;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url; a.download = nomFichier;
