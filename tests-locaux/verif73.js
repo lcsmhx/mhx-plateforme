@@ -61,6 +61,11 @@ function base(){
      mercredi de la semaine en cours : un lundi, la base serait « plus récente » que toute saisie) */
   const donnees = clone(F.donnees), hier = new Date(Date.now() - 86400000).toISOString();
   donnees.forEach(x => { if (!(new Date(x.maj_le).getTime() < Date.now() - 3600000)) x.maj_le = hier; });
+  /* … et le journal de Thomas ne garde que les séances d'avant aujourd'hui : « Séance terminée » remplace la séance du
+     même jour et du même numéro, donc un lundi (séance A) ou un mardi (séance B) la séance notée par le test remplaçait
+     celle des fixtures (compteur 10 au lieu de 11 en A) */
+  const j = donnees.find(x => x.user_id === THOMAS && x.outil === "journal");
+  if (j && j.contenu && Array.isArray(j.contenu.seances)) j.contenu.seances = j.contenu.seances.filter(x => x.date < F.AUJ);
   return { profils, donnees, ecritures: [], posts: [], panne: 0, refus: false, lentPost: 0 };
 }
 const ligne = (db, uid, outil) => db.donnees.find(x => x.user_id === uid && x.outil === outil);
