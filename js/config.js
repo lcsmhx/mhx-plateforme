@@ -608,7 +608,7 @@ const DECOUVERTE = {
   /* --- écran d'inscription (portail) et retour du lien de confirmation --- */
   inscription: {
     titre: "Crée ton espace gratuit",
-    sous: "Gratuit, pour toujours : calculateur de calories, suivi de ton poids et de tes mensurations, et la Speed Formation avec ses vidéos, programmes et plans alimentaires.",
+    sous: "Ton calculateur de calories, ton suivi de poids et la Speed Formation pour poser tes bases en 14 jours. Inscris-toi pendant la bêta : tout reste gratuit pour toi, à vie.",
     bouton: "Créer mon espace gratuit",
     mdp: "Mot de passe (8 caractères minimum)",
     /* v52 (décision de Lucas) : l'âge est dans la case des conditions. v64 (brief V2, A2) : la SEULE case obligatoire,
@@ -884,7 +884,7 @@ const DECOUVERTE = {
     },
     inscription: {
       titre: "Create your free space",
-      sous: "Free, forever: calorie calculator, weight and measurement tracking, and the Speed Formation course with its videos, workout programs and meal plans.",
+      sous: "Your calorie calculator, weight tracking and the Speed Formation to build your foundations in 14 days. Sign up during the beta: it stays free for you, for life.",
       bouton: "Create my free account",
       mdp: "Password (8 characters minimum)",
       cgu_avant: "I'm 18 or older and I accept the",
