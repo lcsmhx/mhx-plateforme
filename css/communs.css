@@ -217,7 +217,8 @@ footer a{color:var(--accent)}
 .carte-co{width:100%;max-width:420px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:32px 28px;box-shadow:var(--shadow)}
 .carte-co .logo{font-family:"Oswald",Impact,sans-serif;font-weight:600;font-size:22px;letter-spacing:.09em;text-transform:uppercase;text-align:center}
 .carte-co .sous{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:600;text-align:center;margin-bottom:22px}
-.carte-co h2{text-align:center;font-size:17px;margin:18px 0 20px}
+.carte-co h2{text-align:center;font-size:22px;margin:18px 0 20px}
+.carte-co .logo-img + .logo{display:none}   /* v76 : le logo en image suffit, le nom en texte ne se répète pas dessous */
 .carte-co .champ{margin-bottom:14px}
 .carte-co button.btn{width:100%;padding:12px;min-height:46px}
 /* v55 : marges égales autour de chaque lien (au lieu d'un margin-left sur le second, v54) : 16 px entre « Mot de passe
@@ -229,6 +230,11 @@ footer a{color:var(--accent)}
 .erreur{background:var(--bad-soft);border-left:3px solid var(--bad);color:var(--ink-2);font-size:13px;padding:10px 12px;border-radius:0 var(--r-sm) var(--r-sm) 0;margin-bottom:14px}
 .erreur:empty{display:none}
 .erreur.ok{border-left-color:var(--good);background:var(--good-soft)}
+/* v76 : sur téléphone, la carte de connexion prend tout l'écran, sans cadre, collée en haut : le bouton d'inscription se voit sans défiler (390 × 844) */
+@media (max-width:560px){
+  .portail{padding:8px 12px 24px;align-items:flex-start}
+  .carte-co{padding:20px 16px;border-color:transparent;background:transparent;box-shadow:none}
+}
 
 /* --- barre du haut : compte --- */
 .compte{display:flex;align-items:center;gap:8px;margin-left:auto}

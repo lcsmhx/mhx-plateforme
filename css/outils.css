@@ -183,7 +183,7 @@ input.manque,select.manque,textarea.manque{border-color:var(--bad);box-shadow:0 
 .b-logo,.logo-img{filter:invert(1)}
 :root[data-theme="light"] .b-logo,
 :root[data-theme="light"] .logo-img{filter:none}
-.logo-img{display:block;max-width:170px;max-height:80px;margin:0 auto 14px;object-fit:contain}
+.logo-img{display:block;max-width:170px;max-height:64px;margin:0 auto 14px;object-fit:contain}
 .ex-fiche{margin-top:10px;font:inherit;font-size:12px;padding:5px 11px;min-height:30px;border:1px solid var(--line-strong);
   background:var(--surface);color:var(--ink-2);border-radius:var(--r-sm);cursor:pointer}
 .ex-fiche:hover{border-color:var(--accent);color:var(--accent)}

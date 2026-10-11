@@ -87,10 +87,10 @@ function portail(mode){
       <label class="co-rester co-cgu"><input type="checkbox" id="c-cgu"><span>${esc(DECOUVERTE.inscription.cgu_avant)} ${lienLegal("c-cgu-lien", "cgu_pdf", DECOUVERTE.inscription.cgu_lien)} ${esc(DECOUVERTE.inscription.cgu_entre)} ${lienLegal("c-politique-lien", "confidentialite_pdf", DECOUVERTE.inscription.politique_lien)}${esc(DECOUVERTE.inscription.cgu_apres || "")}</span></label>
       <label class="co-rester co-newsletter"><input type="checkbox" id="c-newsletter"><span>${esc(DECOUVERTE.inscription.newsletter)}</span></label>`
         : mode !== "oubli" ? `<div class="champ"><label for="c-mdp">Mot de passe</label><input id="c-mdp" type="password" autocomplete="current-password"></div>` : ""}
-      ${mode !== "oubli" ? `<label class="co-rester"><input type="checkbox" id="c-rester" checked><span>Rester connecté</span></label>` : ""}
+      ${mode === "connexion" ? `<label class="co-rester"><input type="checkbox" id="c-rester" checked><span>Rester connecté</span></label>` : ""}
       ${mode !== "oubli" ? `<button class="btn" id="c-go">${esc(bouton)}</button>` : ""}
       ${mode === "inscription" ? `<p class="co-note">${esc(DECOUVERTE.inscription.note)}</p>` : ""}
-      ${CONFIG.marque.version ? `<p class="co-aide">v${esc(CONFIG.marque.version)}</p>` : ""}
+      ${CONFIG.marque.version && mode !== "inscription" ? `<p class="co-aide">v${esc(CONFIG.marque.version)}</p>` : ""}
       <div class="bascule">
         ${mode === "connexion"
           ? `<button type="button" data-mode="oubli">Mot de passe oublié ?</button>${libre ? `<button type="button" data-mode="inscription">${esc(typoFr("Pas encore de compte ? Créer mon compte"))}</button>` : ""}`
