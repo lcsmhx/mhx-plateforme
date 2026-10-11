@@ -1067,3 +1067,9 @@ Object.assign(I18N.en, {
   "Déjà un compte ? Se connecter": "Already have an account? Log in",
   "Pas encore de compte ? Créer mon compte": "No account yet? Create my account"
 });
+
+/* v78 (tâche 2) — la bannière d'installation dans le navigateur d'Instagram, de TikTok ou de Facebook (ses autres textes :
+   DECOUVERTE.integre et DECOUVERTE.en.integre, js/config.js) */
+Object.assign(I18N.en, {
+  "Je suis sur Android": "I'm on Android"
+});

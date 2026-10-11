@@ -48,6 +48,14 @@ const CONFIG = {
        dans Mon compte, et le coach voit ceux qui sont enregistrés. */
     telephone_obligatoire: true,
 
+    /* v78 (tâche 2) — Navigateur d'Instagram, de TikTok ou de Facebook / Messenger (repéré par son user agent, iPhone et
+       Android). true : un prospect qui s'y inscrit voit « Dernière étape : mets l'app sur ton téléphone » sur son accueil,
+       après la page « Ton plan d'action » (jamais avant), jusqu'à « Plus tard » ; la bannière d'installation y donne les
+       étapes de ces navigateurs (textes : DECOUVERTE.integre) ; l'adresse ouverte ensuite dans Safari ou Chrome mène à la
+       connexion (?ouvrir=connexion, aucune donnée personnelle), et la bannière normale s'y affiche dès la connexion.
+       false : exactement comme avant. Rien n'est écrit en base. Safari et Chrome normaux : aucun changement. */
+    navigateur_integre: true,
+
     /* v40 — Mode gratuit (prospects). Le lien de l'appel découverte, et les
        SEULS onglets ouverts à un prospect : tous les autres affichent un
        cadenas et « Réserver mon bilan ». Aucun prix dans l'application. */
@@ -458,6 +466,38 @@ const DECOUVERTE = {
     declic_mindset: { titre: "Ton pourquoi est clair.", texte: "Reste le comment : quoi faire, et quand, ces prochaines semaines. C'est l'objet de ton plan d'action." },
     formation_commence_ici: { titre: "Bien joué, ton départ est lancé.", texte: "Prochaine étape : ton plan d'action, pour savoir quoi faire ces prochaines semaines." }
   },
+  /* v78 (tâche 2) : navigateur d'Instagram, de TikTok ou de Facebook / Messenger (CONFIG.marque.navigateur_integre) — la carte
+     « Dernière étape » de l'accueil du prospect inscrit dans ce navigateur, et les étapes de la bannière d'installation dans
+     ces navigateurs. **…** = en gras ; {e} : l'email du compte ; {a} : l'app (Instagram, TikTok, Facebook ou Messenger) ;
+     {n} : Safari ou Chrome. Les libellés des menus d'Instagram, de TikTok et de Facebook changent selon la version de l'app :
+     à vérifier sur un téléphone et à corriger ici (l'anglais : DECOUVERTE.en.integre, mêmes clés). */
+  integre: {
+    titre: "Dernière étape : mets l'app sur ton téléphone",
+    identifiants: "Tu te connectes avec **{e}** et le mot de passe que tu viens de choisir.",
+    identifiants_sans: "Tu te connectes avec ton email et le mot de passe que tu viens de choisir.",
+    plus_tard: "Plus tard",
+    /* la bannière d'installation dans ces navigateurs : cette ligne, puis les mêmes étapes que la carte */
+    bandeau: "Ici, tu es dans {a} : ouvre l'app dans {n} pour l'installer.",
+    /* iPhone : la 1re étape selon l'app, puis celles de Safari */
+    ios_ouvrir: {
+      instagram: "Touche **⋯** en haut à droite (parfois en bas), puis **« Ouvrir dans le navigateur externe »** (ou « Ouvrir dans Safari »).",
+      tiktok: "Touche **⋯** en haut à droite, puis **« Ouvrir dans le navigateur »**.",
+      facebook: "Touche **⋯** en bas à droite, puis **« Ouvrir dans le navigateur du système »**."
+    },
+    ios: [
+      "Connecte-toi avec ton email et ton mot de passe.",
+      "Touche **Partager** (le carré avec une flèche ; sur iOS 26, d'abord **⋯** à côté de l'adresse).",
+      "Puis **« Sur l'écran d'accueil »** (sur iOS 26, **« Voir plus »** d'abord si tu ne le vois pas) et **« Ajouter »**."
+    ],
+    /* Android : un bouton qui ouvre Chrome (lien intent://, seulement sur un vrai toucher), puis les étapes à la main */
+    chrome: "Ouvrir dans Chrome",
+    secours: "Chrome ne s'ouvre pas ? Fais-le à la main :",
+    android: [
+      "Touche **⋮** (ou **⋯**), puis **« Ouvrir dans Chrome »** (ou « Ouvrir dans le navigateur »).",
+      "Connecte-toi avec ton email et ton mot de passe.",
+      "Dans Chrome : **⋮** puis **« Installer l'application »** ou **« Ajouter à l'écran d'accueil »**."
+    ]
+  },
   /* v64 (brief V2, B) : l'accord santé demandé au premier usage (calculateur, Ma progression, « Organise ta diète »),
      prospect sans accord enregistré seulement (Sante, auth-store.js). Textes du brief, mot pour mot, plus (décision de
      Lucas du 30/09) les repas prévus dans « Organise ta diète » dans le texte, la phrase d'accord et le message de refus. */
@@ -747,6 +787,31 @@ const DECOUVERTE = {
       declic_premiere_pesee: { titre: "Your starting point is set.", texte: "Your curve starts today. To move it the right way, you need a plan that fits your life." },
       declic_mindset: { titre: "Your why is clear.", texte: "Now for the how: what to do, and when, over the next weeks. That's what your action plan is for." },
       formation_commence_ici: { titre: "Nice work, you're off to a start.", texte: "Next step: your action plan, so you know what to do over the next weeks." }
+    },
+    /* v78 (tâche 2) : mêmes clés que DECOUVERTE.integre */
+    integre: {
+      titre: "Last step: put the app on your phone",
+      identifiants: "You log in with **{e}** and the password you just chose.",
+      identifiants_sans: "You log in with your email and the password you just chose.",
+      plus_tard: "Later",
+      bandeau: "Right now you're inside {a}: open the app in {n} to install it.",
+      ios_ouvrir: {
+        instagram: "Tap **⋯** at the top right (sometimes at the bottom), then **“Open in external browser”** (or “Open in Safari”).",
+        tiktok: "Tap **⋯** at the top right, then **“Open in browser”**.",
+        facebook: "Tap **⋯** at the bottom right, then **“Open in system browser”** (or “Open in external browser”)."
+      },
+      ios: [
+        "Log in with your email and password.",
+        "Tap **Share** (the square with an arrow; on iOS 26, tap **⋯** next to the address first).",
+        "Then **“Add to Home Screen”** (on iOS 26, tap **“View More”** first if you don't see it) and **“Add”**."
+      ],
+      chrome: "Open in Chrome",
+      secours: "Chrome didn't open? Do it by hand:",
+      android: [
+        "Tap **⋮** (or **⋯**), then **“Open in Chrome”** (or “Open in browser”).",
+        "Log in with your email and password.",
+        "In Chrome: **⋮**, then **“Install app”** or **“Add to Home screen”**."
+      ]
     },
     sante: {
       titre: "Your consent, just once",
