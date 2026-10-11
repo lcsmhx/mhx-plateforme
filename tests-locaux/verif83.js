@@ -9,8 +9,10 @@
    timeout-or-duplicate) », 500 « captcha verification process failed ».
      A0  sans navigateur : une seule clé et un seul « profil » dans les fichiers, la valeur réellement exécutée ; la règle des
          clés publiables (problemeTurnstile : jamais une clé de test, jamais la longueur d'une clé secrète) ; sur main la clé
-         du fichier doit la respecter (branche v2/* : toléré, en le disant) ; servi éteint aux autres suites ; l'adresse du
-         script écrite une seule fois (js/connexion.js), jamais dans index.html ni en preconnect ;
+         du fichier doit la respecter (branche v2/* : seule une clé de TEST est tolérée, en le disant ; la longueur d'une
+         clé secrète est rouge partout, toute branche poussée est publique) ; clé remplie (main) : le texte court de
+         confidentialité de l'app cite Cloudflare (FR et EN) et plus Google Fonts ; servi éteint aux autres suites ;
+         l'adresse du script écrite une seule fois (js/connexion.js), jamais dans index.html ni en preconnect ;
      A   clé vide : aucun élément, aucun script ni requête vers Cloudflare, corps de /token et /signup au caractère près,
          connexion, inscription (FR, EN), « Me reconnecter » et renouvellement inchangés ; écran identique à celui de la clé
          de test sans son widget ; CAPTCHA allumé dans Supabase sans clé : message « écris à ton coach » ;
@@ -18,10 +20,12 @@
          jamais sur l'app d'un client ou du coach ; rendu explicite (options exactes) ; jeton dans
          gotrue_meta_security.captcha_token de /token et /signup ; remise à zéro après un mot de passe faux (nouveau jeton à
          l'essai suivant), aucune après un refus de saisie ; retrait au changement d'écran ; script arrivé après un
-         changement d'écran ; place réservée (rien ne saute) ; bouton jamais bloqué par le CAPTCHA ;
-     C   2x…AB (échec) et 1x…BB (invisible) ; D 3x…FF (défi) : 4 s d'attente au plus, puis envoi sans jeton ; E script
-         injoignable ou qui ne répond pas ; F erreurs de Supabase (FR et EN) ; G le coach qui crée un compte (creer-acces
-         inchangé, aucun CAPTCHA) ; H Profil (profil false / true) ; I 320 px (compact, rien ne déborde).
+         changement d'écran ; place réservée SOUS le bouton (rien ne saute) ; bouton jamais bloqué par le CAPTCHA ;
+     C   2x…AB (échec) et 1x…BB (invisible) ; D 3x…FF (défi) : 4 s d'attente au plus, puis envoi sans jeton (et sans remise
+         à zéro : la vérification continue) ; écran quitté pendant l'attente : rien n'est envoyé ; E script injoignable ou
+         qui ne répond pas ; F erreurs de Supabase (FR et EN) ; G le coach qui crée un compte (creer-acces inchangé, aucun
+         CAPTCHA) ; H Profil (profil false / true) ; I 320 px (compact, rien ne déborde) ; le bouton à la même place qu'avec
+         la clé vide, visible sans défiler (390 × 844 et 320 × 568, téléphone obligatoire comme en ligne).
    Hors banc : R (VERIF83_RESEAU=1) charge le VRAI script de Cloudflare avec la clé 1x00000000000000000000AA sur localhost et
    attend un jeton dans le corps de /signup ; AV (VERIF83_AVANT=<index.html de la version d'avant>) compare l'écran et les
    corps de /token et /signup avec cette version, clé vide.
@@ -47,9 +51,9 @@ const DUMMY = "XXXX.DUMMY.TOKEN.XXXX";
 const SCRIPT = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=mhxTurnstilePret";
 
 /* ---------- la page servie : inscription ouverte, textes légaux de test, CAPTCHA réglé par avecCle ---------- */
-let cle = "", profil = false;
+let cle = "", profil = false, tel = false;   // tel : téléphone obligatoire (comme en ligne), seulement pour le bloc I
 const forcerTs = (h, k, p) => typeof FT.forcerTurnstile === "function" ? FT.forcerTurnstile(h, k, p) : h;
-const retouche = h => forcerTs(FT.forcerLegaux(FT.forcerInscription(h, true)), cle, profil);
+const retouche = h => { const x = forcerTs(FT.forcerLegaux(FT.forcerInscription(h, true)), cle, profil); return tel ? FT.forcerTelephone(x, true) : x; };
 const serveur = page => http.createServer((req, res) => {
   if (FT.servirFichier(req, res, page, retouche)) return;
   res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); res.end(retouche(fs.readFileSync(page, "utf8")));
@@ -336,7 +340,7 @@ const etat = page => page.evaluate(() => {
   return { zone: !!z, classes: z ? z.className : "", h: r ? Math.round(r.height) : 0, larg: z ? z.clientWidth : 0,
     widgets: document.querySelectorAll(".faux-ts").length, taille: bx ? bx.getAttribute("data-taille") : "",
     boite: rb ? { g: Math.round(rb.left), d: Math.round(rb.right), l: Math.round(rb.width), h: Math.round(rb.height) } : null,
-    avantErr: !!(z && z.nextElementSibling && z.nextElementSibling.id === "co-err"),
+    apresBouton: !!(z && z.previousElementSibling && z.previousElementSibling.id === "c-go"),
     bouton: b ? { actif: !b.disabled, texte: b.textContent.trim(), haut: Math.round(b.getBoundingClientRect().top) } : null,
     err: e ? e.textContent.replace(/[  ]/g, " ").trim() : "", errOk: !!(e && e.classList.contains("ok")),
     ts: typeof window.turnstile, pret: typeof window.mhxTurnstilePret,
@@ -358,22 +362,22 @@ async function cliquerEtEntrer(page){ await Promise.all([page.waitForNavigation(
 const email = page => page.evaluate(() => CONFIG.marque.email);
 /* les textes attendus (Captcha.TEXTES, connexion.js, et leur traduction, i18n.js) — {e} : l'adresse de la marque */
 const TX = {
-  fr: { attente: "La vérification anti-robot n'est pas encore terminée. Attends qu'elle soit validée (ou coche la case), puis réessaie.",
-    refus: "La vérification anti-robot n'a pas été acceptée. Elle vient d'être relancée : attends qu'elle soit validée, puis réessaie.",
+  fr: { attente: "La vérification anti-robot n'est pas encore terminée. Attends qu'elle soit validée (ou coche la case), puis réessaie. Si ça continue, écris à ton coach à {e}.",
+    refus: "La vérification anti-robot n'a pas été acceptée. Elle vient d'être relancée : attends qu'elle soit validée, puis réessaie. Si ça continue, écris à ton coach à {e}.",
     injoignable: "La vérification anti-robot n'a pas pu se charger. Vérifie ta connexion, recharge la page, puis réessaie. Si ça continue, écris à ton coach à {e}.",
     echec: "La vérification anti-robot a échoué. Recharge la page, puis réessaie. Si ça continue, écris à ton coach à {e}.",
     navigateur: "Ton navigateur ne permet pas la vérification anti-robot. Mets-le à jour ou ouvre l'app dans un autre navigateur (Safari, Chrome). Si ça continue, écris à ton coach à {e}.",
     indispo: "La vérification anti-robot est momentanément indisponible : réessaie dans une minute.",
-    eteint: "Impossible pour le moment (vérification de sécurité) : écris à ton coach à {e}, il règle ça rapidement.",
-    profil: "Le changement de mot de passe n'est pas possible pour le moment (vérification anti-robot) : écris à ton coach à {e}, il s'en occupe.",
+    eteint: "Impossible pour le moment (vérification de sécurité). Ferme et rouvre l'app (ou recharge la page), puis réessaie. Si ça continue, écris à ton coach à {e}.",
+    profil: "Le changement de mot de passe n'est pas possible pour le moment (vérification anti-robot). Ferme et rouvre l'app (ou recharge la page), puis réessaie. Si ça continue, écris à ton coach à {e}.",
     faux: "Email ou mot de passe incorrect.", indispoService: "Service momentanément indisponible, réessaie dans une minute." },
-  en: { attente: "The anti-bot check isn't finished yet. Wait until it's confirmed (or check the box), then try again.",
-    refus: "The anti-bot check wasn't accepted. It just restarted: wait until it's confirmed, then try again.",
+  en: { attente: "The anti-bot check isn't finished yet. Wait until it's confirmed (or check the box), then try again. If it keeps happening, email your coach at {e}.",
+    refus: "The anti-bot check wasn't accepted. It just restarted: wait until it's confirmed, then try again. If it keeps happening, email your coach at {e}.",
     injoignable: "The anti-bot check couldn't load. Check your connection, reload the page, then try again. If it keeps happening, email your coach at {e}.",
     echec: "The anti-bot check failed. Reload the page, then try again. If it keeps happening, email your coach at {e}.",
     indispo: "The anti-bot check is temporarily unavailable: try again in a minute.",
-    eteint: "Not possible right now (security check): email your coach at {e}, they'll fix it quickly.",
-    profil: "Changing your password isn't possible right now (anti-bot check): email your coach at {e}, they'll take care of it." }
+    eteint: "Not possible right now (security check). Close and reopen the app (or reload the page), then try again. If it keeps happening, email your coach at {e}.",
+    profil: "Changing your password isn't possible right now (anti-bot check). Close and reopen the app (or reload the page), then try again. If it keeps happening, email your coach at {e}." }
 };
 const avecE = (t, e) => String(t).split("{e}").join(e);
 
@@ -385,9 +389,10 @@ const avecE = (t, e) => String(t).split("{e}").join(e);
   await bloc("A0. réglage", async () => {
     const fonctions = ["forcerTurnstile", "valeursTurnstile", "problemeTurnstile", "modeLegaux", "brancheGit"].filter(n => typeof FT[n] !== "function");
     const disque = fonctions.length ? null : FT.valeursTurnstile(FT.source(HTML)), servi = fonctions.length ? null : FT.valeursTurnstile(FT.sourceServie(HTML));
-    let execute = null;
+    let execute = null, D = null;
     try { const conf = fs.readFileSync(path.join(path.dirname(HTML), "js", "config.js"), "utf8"), ctx = {};
-      require("vm").runInNewContext(conf + "\n;this.__C = CONFIG;", ctx, { timeout: 2000 }); execute = ctx.__C && ctx.__C.turnstile ? clone(ctx.__C.turnstile) : null; } catch (e) { execute = { erreur: String(e.message).slice(0, 80) }; }
+      require("vm").runInNewContext(conf + "\n;this.__C = CONFIG; this.__D = typeof DECOUVERTE !== \"undefined\" ? DECOUVERTE : null;", ctx, { timeout: 2000 });
+      execute = ctx.__C && ctx.__C.turnstile ? clone(ctx.__C.turnstile) : null; D = ctx.__D || null; } catch (e) { execute = { erreur: String(e.message).slice(0, 80) }; }
     ok("A0 : une seule clé « cle_site: \"…\" » et, juste dessous, un seul « profil: true|false » dans les fichiers (le forçage du banc les prend en entier), et ce sont les valeurs réellement exécutées (CONFIG.turnstile de js/config.js, bac à sable) ; servis éteints aux autres suites (sourceServie : \"\" et false)",
       !fonctions.length && disque.cles.length === 1 && disque.profils.length === 1 && !!execute && execute.cle_site === disque.cles[0] && String(execute.profil) === disque.profils[0]
         && servi.cles.length === 1 && servi.cles[0] === "" && servi.profils.length === 1 && servi.profils[0] === "false",
@@ -403,9 +408,33 @@ const avecE = (t, e) => String(t).split("{e}").join(e);
         faux.length === 0, faux.join(" | "));
       const dossier = path.join(path.dirname(HTML)), branche = FT.brancheGit(dossier), mode = FT.modeLegaux(process.env, branche);
       const pb = disque.cles.length === 1 ? FT.problemeTurnstile(disque.cles[0]) : "clé absente ou écrite " + disque.cles.length + " fois";
-      const tolere = mode === "branche" && !!pb;
-      ok("A0 : la clé de js/config.js est publiable (vide ou clé de site réelle, jamais une clé de test ni la clé secrète) — strict sur main" + (tolere ? " ; branche de travail « " + (String(process.env.GITHUB_REF || "").replace(/^refs\/heads\//, "") || branche) + " » : toléré (main : rouge) : " + pb : ""),
-        !pb || mode === "branche", "mode " + mode + " : " + pb);
+      /* v78 (tâche 3) : hors de main, seule une clé de TEST est tolérée ; la longueur d'une clé secrète (ou une autre forme)
+         est rouge partout : toute branche poussée est publique */
+      const estTest = k => Object.values(TS).includes(k) || /^[123]x0{10,}/i.test(String(k));
+      const nomBranche = String(process.env.GITHUB_REF || "").replace(/^refs\/heads\//, "") || branche;
+      const tolere = mode === "branche" && !!pb && disque.cles.length === 1 && estTest(disque.cles[0]);
+      ok("A0 : la clé de js/config.js est publiable (vide ou clé de site réelle, jamais une clé de test ni la clé secrète) — strict sur main ; sur une branche v2/*, seule une clé de test est tolérée" + (tolere ? " ; branche de travail « " + nomBranche + " » : clé de test tolérée (main : rouge) : " + pb : ""),
+        !pb || tolere, "mode " + mode + " : " + pb);
+      /* clé remplie : le texte court de confidentialité de l'app (DECOUVERTE.confidentialite, accepté à l'inscription) doit
+         déjà citer Cloudflare, en français ET en anglais (le script part chez Cloudflare dès que la clé est en ligne), et
+         plus Google Fonts (polices hébergées avec l'app depuis la v66) — mode d'emploi : docs/TURNSTILE.md, étape 2 */
+      const confProbleme = X => {
+        const fr = ((X && X.confidentialite && X.confidentialite.paragraphes) || []).join(" "), en = ((X && X.en && X.en.confidentialite && X.en.confidentialite.paragraphes) || []).join(" ");
+        const l = [];
+        if (!/Cloudflare/.test(fr)) l.push("le texte français ne cite pas Cloudflare");
+        if (!/Cloudflare/.test(en)) l.push("le texte anglais ne cite pas Cloudflare");
+        if (/Google Fonts/i.test(fr + " " + en)) l.push("il cite encore Google Fonts (polices hébergées avec l'app depuis la v66)");
+        return l.join(" ; ");
+      };
+      const texte = (fr, en) => ({ confidentialite: { paragraphes: fr }, en: { confidentialite: { paragraphes: en } } });
+      const EX = [[texte(["Polices (Google Fonts) et vidéos (YouTube)."], ["Fonts (Google Fonts) and videos (YouTube)."]), false],
+        [texte(["Vérification anti-robot : Cloudflare Turnstile.", "Vidéos : YouTube."], ["Videos: YouTube."]), false],
+        [texte(["Vérification anti-robot : Cloudflare Turnstile.", "Vidéos : YouTube."], ["Anti-bot check: Cloudflare Turnstile.", "Videos: YouTube."]), true]];
+      const regle = EX.every(([X, bon]) => (confProbleme(X) === "") === bon);
+      const pbConf = disque.cles.length === 1 && disque.cles[0] !== "" ? (D ? confProbleme(D) : "DECOUVERTE introuvable dans js/config.js") : "";
+      const tolereConf = mode === "branche" && !!pbConf;
+      ok("A0 : clé remplie ⇒ le texte court de confidentialité de l'app (DECOUVERTE.confidentialite) cite Cloudflare en français ET en anglais, et plus Google Fonts (règle vérifiée sur 3 textes d'exemple) ; sur main, js/config.js la respecte (clé vide : rien à exiger)" + (tolereConf ? " ; branche « " + nomBranche + " » : toléré (main : rouge) : " + pbConf : ""),
+        regle && (!pbConf || tolereConf), JSON.stringify({ regle, mode, pbConf }));
     }
     const src = FT.source(HTML), page0 = fs.readFileSync(HTML, "utf8");
     const nb = (src.match(/challenges\.cloudflare\.com/g) || []).length;
@@ -485,9 +514,9 @@ const avecE = (t, e) => String(t).split("{e}").join(e);
         const page = await portailOuvert(b, db, "connexion");
         await attendreWidget(page); await attendre(page, 200);
         const e = await etat(page), R = (e.T && e.T.rendus[0]) || {}, o = R.opts || {};
-        ok("B : connexion — le script de Cloudflare chargé une fois, à l'adresse exacte (" + SCRIPT + "), widget rendu dans #co-captcha, juste avant la zone d'erreur et le bouton",
-          db.cf.length === 1 && db.cf[0] === SCRIPT && e.T && e.T.chargements === 1 && e.T.rendus.length === 1 && R.zone === "co-captcha" && e.widgets === 1 && e.avantErr && e.scripts.length === 1 && e.scripts[0] === SCRIPT,
-          JSON.stringify({ cf: db.cf, T: e.T, avantErr: e.avantErr, scripts: e.scripts }));
+        ok("B : connexion — le script de Cloudflare chargé une fois, à l'adresse exacte (" + SCRIPT + "), widget rendu dans #co-captcha, juste SOUS le bouton (le bouton garde sa place)",
+          db.cf.length === 1 && db.cf[0] === SCRIPT && e.T && e.T.chargements === 1 && e.T.rendus.length === 1 && R.zone === "co-captcha" && e.widgets === 1 && e.apresBouton && e.scripts.length === 1 && e.scripts[0] === SCRIPT,
+          JSON.stringify({ cf: db.cf, T: e.T, apresBouton: e.apresBouton, scripts: e.scripts }));
         const att = { sitekey: TS.passe, action: "connexion", language: "fr", theme: "dark", size: "normal", appearance: "always", "response-field": false, "refresh-expired": "auto",
           callback: "fonction", "error-callback": "fonction", "expired-callback": "fonction", "timeout-callback": "fonction", "unsupported-callback": "fonction" };
         ok("B : rendu explicite, options exactes — sitekey, action « connexion », langue fr, thème sombre (celui de l'app), taille normal (390 px), appearance always, response-field false, refresh-expired auto, les 5 rappels (callback, error, expired, timeout, unsupported)",
@@ -660,10 +689,10 @@ const avecE = (t, e) => String(t).split("{e}").join(e);
       await attendre(page, 1000);
       const pendant = await etat(page);
       await attendreErr(page);
-      const d = (db.bruts.token[0] || {}).t - t0, e = await etat(page);
-      ok("D : défi pas fait au clic — bouton « Un instant… » pendant l'envoi, la requête part après 4 s (pas avant, pas bien après) sans jeton ; refusée : « " + TX.fr.attente.slice(0, 50) + "… », bouton actif ; widget relancé",
+      const d = (db.bruts.token[0] || {}).t - t0, e = await etat(page), m = await email(page);
+      ok("D : défi pas fait au clic — bouton « Un instant… » pendant l'envoi, la requête part après 4 s (pas avant, pas bien après) sans jeton ; refusée : « " + TX.fr.attente.slice(0, 50) + "… », bouton actif ; widget PAS remis à zéro (aucun jeton n'est parti : la vérification continue, le défi reste à l'écran)",
         pendant.bouton && !pendant.bouton.actif && db.bruts.token.length === 1 && d >= 3800 && d < 6500 && !(lireJ(db.bruts.token[0].brut) || {}).gotrue_meta_security
-          && e.err === TX.fr.attente && e.bouton.actif && e.bouton.texte === "Se connecter" && e.T.resets === 1,
+          && e.err === avecE(TX.fr.attente, m) && e.bouton.actif && e.bouton.texte === "Se connecter" && e.T.resets === 0 && (await page.evaluate(() => !!document.getElementById("faux-ts-case"))),
         JSON.stringify({ d, pendant: pendant.bouton, err: e.err, resets: e.T.resets }));
       await page.waitForSelector("#faux-ts-case");
       const t1 = Date.now(); await page.click("#c-go"); await attendre(page, 800);
@@ -671,6 +700,22 @@ const avecE = (t, e) => String(t).split("{e}").join(e);
       const d2 = (db.bruts.token[1] || {}).t - t1, c = lireJ((db.bruts.token[1] || {}).brut) || {};
       ok("D : défi fait PENDANT l'attente — la requête part dès le jeton reçu (avant les 4 s), avec lui ; connexion réussie",
         db.bruts.token.length === 2 && c.gotrue_meta_security && c.gotrue_meta_security.captcha_token === DUMMY && d2 < 3500, JSON.stringify({ d2, brut: (db.bruts.token[1] || {}).brut }));
+      { /* écran quitté pendant l'attente du jeton : l'envoi de l'écran quitté ne part pas (ni message ni remise à zéro sur le nouveau) */
+        const db2 = base(); db2.captcha = "1x";
+        const vus = [];
+        for (const [de, vers, sel] of [["connexion", "inscription", "#c-prenom"], ["inscription", "connexion", "#c-rester"]]) {
+          const p = await portailOuvert(b, db2, de, { neuf: de === "inscription" });
+          await p.waitForSelector("#faux-ts-case");
+          if (de === "connexion") await remplirConnexion(p, INES.email, MDP); else await remplirInscription(p, "Léa", "lea-d@exemple.fr");
+          const n0 = db2.bruts.token.length + db2.bruts.signup.length;
+          await p.click("#c-go"); await attendre(p, 800);
+          await p.click('[data-mode="' + vers + '"]'); await p.waitForSelector(sel); await attendre(p, 4600);
+          const e2 = await etat(p);
+          vus.push({ de, envoyes: db2.bruts.token.length + db2.bruts.signup.length - n0, err: e2.err, resets: e2.T.resets, removes: e2.T.removes, widgets: e2.widgets,
+            defi: await p.evaluate(() => !!document.getElementById("faux-ts-case")), bouton: e2.bouton });
+        }
+        ok("D : écran quitté pendant l'attente du jeton (clic, puis « Créer mon compte » ou « Se connecter » dans les 4 s) — rien n'est envoyé, aucun message sur le nouvel écran, son widget tout neuf n'est pas remis à zéro (défi intact), bouton actif",
+          vus.every(v => v.envoyes === 0 && v.err === "" && v.resets === 0 && v.removes === 1 && v.widgets === 1 && v.defi && v.bouton && v.bouton.actif), JSON.stringify(vus)); }
     });
   });
 
@@ -719,8 +764,8 @@ const avecE = (t, e) => String(t).split("{e}").join(e);
           await attendreWidget(page);
           if (hash === "connexion") await remplirConnexion(page, INES.email, MDP); else await remplirInscription(page, "Léo", "leo-f@exemple.fr");
           await page.click("#c-go"); await attendreErr(page); await attendre(page, 200);
-          const e = await etat(page), n = db.bruts[hash === "connexion" ? "token" : "signup"];
-          vus.push({ hash, langue, err: e.err, attendu: TX[langue][cleTx], actif: e.bouton.actif, resets: e.T.resets, jeton: !!(lireJ((n[0] || {}).brut) || {}).gotrue_meta_security });
+          const e = await etat(page), n = db.bruts[hash === "connexion" ? "token" : "signup"], m = await email(page);
+          vus.push({ hash, langue, err: e.err, attendu: avecE(TX[langue][cleTx], m), actif: e.bouton.actif, resets: e.T.resets, jeton: !!(lireJ((n[0] || {}).brut) || {}).gotrue_meta_security });
         }
         ok("F : Supabase refuse le jeton (« " + nom + " ») — " + (cleTx === "indispo" ? "« " + TX.fr.indispo + " » (et non « Service momentanément indisponible »)" : "« " + TX.fr.refus.slice(0, 55) + "… »") + ", à la connexion (FR) et à la création de compte (EN) ; bouton actif, widget relancé",
           vus.every(v => v.err === v.attendu && v.actif && v.resets === 1 && v.jeton), JSON.stringify(vus));
@@ -733,9 +778,9 @@ const avecE = (t, e) => String(t).split("{e}").join(e);
       const page = await portailOuvert(b, db, "connexion");
       await page.waitForSelector("#faux-ts-case"); await remplirConnexion(page, INES.email, MDP);
       await page.click("#c-go"); await attendreErr(page);
-      const e = await etat(page);
+      const e = await etat(page), m = await email(page);
       ok("F : version de Supabase d'avant la v2.189.0 (jeton absent → 500 « captcha verification process failed ») sans jeton — le message dit que la vérification n'est pas terminée, jamais « Service momentanément indisponible »",
-        e.err === TX.fr.attente && e.bouton.actif, JSON.stringify({ err: e.err }));
+        e.err === avecE(TX.fr.attente, m) && e.bouton.actif, JSON.stringify({ err: e.err }));
     });
   });
 
@@ -831,6 +876,26 @@ const avecE = (t, e) => String(t).split("{e}").join(e);
         : v.size === "normal" && v.taille === "normal" && !/\bcompact\b/.test(v.classes) && v.h === 72 && v.larg >= 300) && !!v.boite && v.boite.g >= 0 && v.boite.d <= v.iw && v.sw <= v.iw;
       ok("I : 320 px — widget « compact » (150 × 147, moins de 300 px utiles), place réservée exactement à sa taille, rien ne déborde (connexion, création de compte FR et EN) ; 390 px et ordinateur : « normal » (300 × 72)",
         vus.every(bon), JSON.stringify(vus.filter(v => !bon(v))));
+      { /* réglages de production (téléphone obligatoire) : le bouton reste là où il est avec la clé vide (widget dessous),
+           visible sans défiler — l'exigence de la v76 (tâche 1) : « Créer mon espace gratuit » visible en 390 × 844 */
+        const pli = [];
+        tel = true;
+        try {
+          for (const [vp, hash, langue] of [[MOBILE, "inscription", "fr"], [MOBILE, "inscription", "en"], [{ width: 320, height: 568 }, "connexion", "fr"], [MOBILE, "connexion", "en"]]) {
+            const mesure = async () => {
+              const p = await portailOuvert(b, base(), hash, { viewport: vp, langue, neuf: hash === "inscription" });
+              if (cle) await attendreWidget(p);
+              await attendre(p, 200);
+              return p.evaluate(() => { const r = document.getElementById("c-go").getBoundingClientRect(); return { haut: Math.round(r.top), bas: Math.round(r.bottom), tel: !!document.getElementById("c-tel"), sy: Math.round(scrollY) }; });
+            };
+            let sans = null; await avecCle("", false, async () => { sans = await mesure(); });
+            const avec = await mesure();
+            pli.push({ l: vp.width, h: vp.height, hash, langue, sans, avec });
+          }
+        } finally { tel = false; }
+        const bonPli = v => v.avec.haut === v.sans.haut && v.avec.bas <= v.h && v.avec.sy === 0 && (v.hash !== "inscription" || (v.avec.tel && v.sans.tel));
+        ok("I : clé remplie, réglages de production (téléphone obligatoire) — le bouton reste exactement à sa place (widget dessous) et visible sans défiler : création de compte en 390 × 844 (FR, EN), connexion en 320 × 568 (FR) et 390 × 844 (EN)",
+          pli.every(bonPli), JSON.stringify(pli)); }
     });
   });
 

@@ -194,7 +194,7 @@ function problemeTurnstile(cle){
   const c = String(cle == null ? "" : cle);
   if (c === "") return "";
   if (Object.values(TURNSTILE_TEST).includes(c) || /^[123]x0{10,}/i.test(c)) return "clé de TEST de Cloudflare (« " + c + " ») : en ligne, elle laisserait passer les robots ou bloquerait tout le monde — la clé de SITE du widget de Cloudflare (0x…) est attendue";
-  if (c.length >= 32) return "valeur de " + c.length + " caractères : la longueur d'une clé SECRÈTE (jamais dans le dépôt, qui est public : seulement dans Supabase) ; la clé de SITE (0x…, 24 caractères) est attendue";
+  if (c.length >= 32) return "valeur de " + c.length + " caractères : la longueur d'une clé SECRÈTE (jamais dans le dépôt, qui est public : seulement dans Supabase) ; si c'en est une, elle est exposée, même sur une branche poussée : régénère-la chez Cloudflare (le widget → « Rotate Secret Key »), mets la nouvelle seulement dans Supabase et retire celle-ci du fichier ; la clé de SITE (0x…, 24 caractères) est attendue";
   if (!/^0x[0-9A-Za-z_-]{10,}$/.test(c)) return "format inattendu (« " + montrerTs(c) + " ») : la clé de SITE de Cloudflare commence par 0x, sans espace";
   return "";
 }
