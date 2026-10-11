@@ -601,7 +601,7 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
     ok("C : filtres « À traiter » 4, « Appel fait » 2 (Omar, Zoé), « Tous » 8", cpt.a_traiter === "4" && cpt.issues === "2" && cpt.tous === "8" && Object.keys(cpt).length === 3, JSON.stringify(cpt));
     const cl = await carte(page, LEA), cr = new Date(db.profils.find(p => p.id === LEA).cree_le);
     ok("C : carte de Léa : inscrite le " + frL(cr) + ", email, ses 3 réponses (Problème, Ce qui l'a bloqué, Dans 3 mois), bilan pas réservé, newsletter oui, dernière visite, 2 jours actifs, « à traiter », prochaine action",
-      ["inscrit le " + frL(cr), "lea@exemple.fr", "Problème Perdre du gras", "Ce qui l'a bloqué « Le manque de temps »", "Dans 3 mois « Rentrer dans mon jean d'avant »", "Bilan pas réservé", "Newsletter oui", "Dernière visite " + visiteTxt(avant(5 * H)), "Jours actifs (30 j) 2", "à traiter A cliqué « Récupérer mon plan d'action », pas de bilan coché", "Prochaine action : DM : il a cliqué « Réserver mon plan d'action » sans réserver, demande-lui ce qui le retient."].every(x => cl.includes(x)), cl);
+      ["inscrit le " + frL(cr), "lea@exemple.fr", "Problème Perdre du gras", "Ce qui l'a bloqué « Le manque de temps »", "Dans 3 mois « Rentrer dans mon jean d'avant »", "Bilan pas réservé", "Newsletter oui", "Dernière visite " + visiteTxt(avant(5 * H)), "Jours actifs (30 j) 2", "à traiter A cliqué « Réserver mon plan d'action », pas de bilan coché", "Prochaine action : DM : il a cliqué « Réserver mon plan d'action » sans réserver, demande-lui ce qui le retient."].every(x => cl.includes(x)), cl);
     const ci = await carte(page, INES);
     ok("C : carte d'Inès (case « J'ai réservé » cochée, pas de coche du coach) : « bilan réservé » à vérifier, newsletter non, dernière visite « aucune », 0 jour actif, « Il a coché « J'ai réservé » … vérifie ton agenda »",
       ci.includes("bilan réservé") && ci.includes("Bilan à vérifier (case cochée le " + frL(avant(2 * J)) + ")") && ci.includes("Newsletter non") && ci.includes("Dernière visite aucune") && ci.includes("Jours actifs (30 j) 0") && ci.includes("vérifie ton agenda, puis coche « Bilan réservé »"), ci);
@@ -647,7 +647,7 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
     await filtre(page, "tous");
     const { nom, t } = await exporter(page);
     const L = lireCSV(t.replace(/^﻿/, ""));
-    const TETE = ["Nom", "Email", "Inscrit le", "Problème", "Ce qui l'a bloqué", "Dans 3 mois", "Questionnaire", "Bilan réservé", "Bilan réservé le", "Case « J'ai réservé » (prospect)", "Newsletter", "Dernière visite", "Jours actifs (30 j)", "Clics « Récupérer mon plan d'action »", "Dernier clic", "Issue", "Relances", "Prochaine action"];
+    const TETE = ["Nom", "Email", "Inscrit le", "Problème", "Ce qui l'a bloqué", "Dans 3 mois", "Questionnaire", "Bilan réservé", "Bilan réservé le", "Case « J'ai réservé » (prospect)", "Newsletter", "Dernière visite", "Jours actifs (30 j)", "Clics « Réserver mon plan d'action »", "Dernier clic", "Issue", "Relances", "Prochaine action"];
     ok("D : fichier « prospects-AAAA-MM-JJ.csv », BOM UTF-8, point-virgule, CRLF ; 18 colonnes à jour (ni statut, ni score, ni « Découverte »)", /^prospects-\d{4}-\d{2}-\d{2}\.csv$/.test(nom) && t.startsWith("﻿") && t.includes("\r\n") && JSON.stringify(L[0]) === JSON.stringify(TETE) && L.slice(1).every(l => l.length === 18), nom + " · " + JSON.stringify(L[0]));
     ok("D : une ligne par prospect filtré (« Tous » : 9)", L.length === 10, String(L.length));
     const lig = n => L.find(l => l[0] === n) || [];
@@ -683,22 +683,22 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
     const { page } = await coachSur(b, db, "#/tableau", "#tb-vue .tb-tiles");
     const tp = await tuileTb(page, "tb-t-prospects"), L = await aTraiterTb(page);
     const vTb = await texte(page, "#vue");   // v65 : plus aucun « Réserver » à l'écran (vérifié en fin de bloc)
-    ok("D : tableau de bord (v63) : Rayan (clic d'hier après ta relance, rangé avant un clic plus ancien) est une urgence : Prospects 2 « 1 urgence » ; « À traiter maintenant » : Rayan seul, « A cliqué « Récupérer mon plan d'action », pas de bilan coché » ; Sonia (clic le plus récent avant ta relance) n'y est pas",
-      !!tp && tp.val === "2" && tp.badge === "1 urgence" && L.length === 1 && L[0].uid === RAYAN && L[0].t.includes("Rayan Désordre") && L[0].t.includes("A cliqué « Récupérer mon plan d'action », pas de bilan coché"), JSON.stringify([tp, L]));
+    ok("D : tableau de bord (v63) : Rayan (clic d'hier après ta relance, rangé avant un clic plus ancien) est une urgence : Prospects 2 « 1 urgence » ; « À traiter maintenant » : Rayan seul, « A cliqué « Réserver mon plan d'action », pas de bilan coché » ; Sonia (clic le plus récent avant ta relance) n'y est pas",
+      !!tp && tp.val === "2" && tp.badge === "1 urgence" && L.length === 1 && L[0].uid === RAYAN && L[0].t.includes("Rayan Désordre") && L[0].t.includes("A cliqué « Réserver mon plan d'action », pas de bilan coché"), JSON.stringify([tp, L]));
     await page.click("#tb-t-prospects"); await page.waitForSelector("#pr-liste", { timeout: 8000 }); await attendre(page, 500);
     const ua = await uids(page), cr = await carte(page, RAYAN);
     const cpt = await page.$$eval("[data-filtre]", l => Object.fromEntries(l.map(e => [e.dataset.filtre, (e.querySelector(".meta") || {}).textContent])));
     await filtre(page, "tous");
     const cs = await carte(page, SONIA), motifS = !!(await page.$(`#pr-liste .sc-carte[data-uid="${SONIA}"] .sc-motif`));
     const vPr = await texte(page, "#vue"), nvPr = await texte(page, "#pr-nouveautes");
-    ok("D : page Prospects (v63) : « À traiter » 1, Rayan seul, sa carte « à traiter A cliqué « Récupérer mon plan d'action », pas de bilan coché » et « Clics plan d'action 2 (dernier : " + RQ + ") » (le clic d'hier) ; Sonia hors « À traiter » (carte sans motif), « Clics plan d'action 2 (dernier : " + RQ + ") » (son clic d'il y a 2 jours)",
-      JSON.stringify(ua) === JSON.stringify([RAYAN]) && cpt.a_traiter === "1" && cr.includes("à traiter A cliqué « Récupérer mon plan d'action », pas de bilan coché") && cr.includes("Clics plan d'action 2 (dernier : " + RQ + ")")
+    ok("D : page Prospects (v63) : « À traiter » 1, Rayan seul, sa carte « à traiter A cliqué « Réserver mon plan d'action », pas de bilan coché » et « Clics plan d'action 2 (dernier : " + RQ + ") » (le clic d'hier) ; Sonia hors « À traiter » (carte sans motif), « Clics plan d'action 2 (dernier : " + RQ + ") » (son clic d'il y a 2 jours)",
+      JSON.stringify(ua) === JSON.stringify([RAYAN]) && cpt.a_traiter === "1" && cr.includes("à traiter A cliqué « Réserver mon plan d'action », pas de bilan coché") && cr.includes("Clics plan d'action 2 (dernier : " + RQ + ")")
       && cs.includes("Clics plan d'action 2 (dernier : " + RQ + ")") && !motifS, JSON.stringify([ua, cpt, motifS]) + " | " + cr + " | " + cs);
     const { t } = await exporter(page);
     const Lc = lireCSV(t.replace(/^﻿/, "")), lig = n => Lc.find(l => l[0] === n) || [];
     const lr = lig("Rayan Désordre"), ls = lig("Sonia Inverse");
     ok("D : export CSV (v63) : « Dernier clic » = la date du clic le plus récent, pas du dernier de la liste : Rayan " + frL(avant(J)) + " (hier), Sonia " + frL(avant(2 * J)) + " (il y a 2 jours) ; 2 clics chacun",
-      !!Lc[0] && Lc[0][13] === "Clics « Récupérer mon plan d'action »" && Lc[0][14] === "Dernier clic" && lr[13] === "2" && lr[14] === frL(avant(J)) && ls[13] === "2" && ls[14] === frL(avant(2 * J)), JSON.stringify([lr.slice(13, 18), ls.slice(13, 18)]));
+      !!Lc[0] && Lc[0][13] === "Clics « Réserver mon plan d'action »" && Lc[0][14] === "Dernier clic" && lr[13] === "2" && lr[14] === frL(avant(J)) && ls[13] === "2" && ls[14] === frL(avant(2 * J)), JSON.stringify([lr.slice(13, 18), ls.slice(13, 18)]));
     await ficheDe(page, RAYAN, "Rayan Désordre");
     const rs = await page.$$eval("#fiche-commercial ul.sc-raisons:not(.sc-histo) > li", l => l.map(e => e.textContent.replace(/\s+/g, " ").trim())).catch(() => []);
     const dec = await lignesFiche(page, "#fiche-decouverte"), motifR = !!(await page.$("#fiche-commercial .sc-motif"));
@@ -711,9 +711,9 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
        d'action », en-tête du CSV (même 14e colonne) — et plus aucun « Réserver » (bouton, pastille, motif, aide, faits,
        action) sur le tableau de bord, la page Prospects (cartes, « À traiter », Nouveautés), la fiche ni l'en-tête du CSV */
     const anc = /Réserver(?! mon plan d'action)|a cliqué Réserv/;   // v76 : « Réserver mon plan d'action » est le nom du bouton
-    ok("D : v65 — Nouveautés « Rayan Désordre · clic « Réserver mon plan d'action » » et « N clics « Plan d'action » », pastille de la fiche « a cliqué Plan d'action », en-tête du CSV « Clics « Récupérer mon plan d'action » » (14e colonne) ; plus aucun « Réserver » sur le tableau de bord, la page Prospects, la fiche ni dans l'en-tête du CSV",
+    ok("D : v65 — Nouveautés « Rayan Désordre · clic « Réserver mon plan d'action » » et « N clics « Plan d'action » », pastille de la fiche « a cliqué Plan d'action », en-tête du CSV « Clics « Réserver mon plan d'action » » (14e colonne) ; plus aucun « Réserver » sur le tableau de bord, la page Prospects, la fiche ni dans l'en-tête du CSV",
       nvPr.includes("Rayan Désordre · clic « Réserver mon plan d'action »") && /\d clics « Plan d'action »/.test(nvPr) && pFi.includes("a cliqué Plan d'action")
-        && !!Lc[0] && Lc[0].indexOf("Clics « Récupérer mon plan d'action »") === 13 && Lc[0].length === 18
+        && !!Lc[0] && Lc[0].indexOf("Clics « Réserver mon plan d'action »") === 13 && Lc[0].length === 18
         && ![vTb, vPr, vFi, Lc[0].join(" | ")].some(x => anc.test(x)),
       JSON.stringify({ nv: nvPr.slice(0, 300), pastille: pFi, tete: Lc[0], anciens: [vTb, vPr, vFi, Lc[0].join(" | ")].map(x => (anc.exec(x) || [""])[0] ? x.slice(Math.max(0, anc.exec(x).index - 60), anc.exec(x).index + 60) : "") }));
   });
@@ -757,7 +757,7 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
     /* les lecteurs suivent la coche : page Prospects, compteur, Mes clients, tableau de bord */
     await aller(page, "#/prospects", 300); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 }); await attendre(page, 400);
     await page.selectOption("#pr-tri", "priorite"); await attendre(page, 400);   // v72 (E) : l'ordre de priorité (plus le tri par défaut)
-    ok("E : page Prospects (tri « priorité ») : Léa (bilan coché) sort de « À traiter » ; Hugo et Inès (bilan retiré, un clic sans bilan coché depuis) y entrent pour leur clic", JSON.stringify(await uids(page)) === JSON.stringify([ZOE, HUGO, INES, MARC]) && (await carte(page, INES)).includes("A cliqué « Récupérer mon plan d'action », pas de bilan coché"), JSON.stringify(await uids(page)) + " " + await carte(page, INES));
+    ok("E : page Prospects (tri « priorité ») : Léa (bilan coché) sort de « À traiter » ; Hugo et Inès (bilan retiré, un clic sans bilan coché depuis) y entrent pour leur clic", JSON.stringify(await uids(page)) === JSON.stringify([ZOE, HUGO, INES, MARC]) && (await carte(page, INES)).includes("A cliqué « Réserver mon plan d'action », pas de bilan coché"), JSON.stringify(await uids(page)) + " " + await carte(page, INES));
     ok("E : compteur « … → bilans réservés 1 → … » (Léa ; Hugo et Inès retirés)", (await texte(page, "#pr-compteur")) === "Inscrits 9 → 3 questions remplies 8 → bilans réservés 1 → clients 1", await texte(page, "#pr-compteur"));
     await filtre(page, "tous"); await choisir(page, "#pr-bilan", "oui");
     ok("E : filtre « Bilan réservé » : Léa seule ; sa carte « Bilan réservé le … »", JSON.stringify(await uids(page)) === JSON.stringify([LEA]) && (await carte(page, LEA)).includes("Bilan réservé le " + frL(S3.bilan_le)), JSON.stringify(await uids(page)));

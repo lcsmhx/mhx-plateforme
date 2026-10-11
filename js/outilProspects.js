@@ -63,7 +63,7 @@ const Commercial = {
   /* ce qui le rend « à traiter » (texte court : tableau de bord, cartes). v65 (décision de Lucas du 30/09) : côté coach, le
      bouton porte son nom d'aujourd'hui, « Récupérer mon plan d'action » (motif, aide, faits, action, Nouveautés, CSV, pastille
      « a cliqué Plan d'action ») ; avant : « Réserver mon bilan » / « a cliqué Réserver ». Les données ne changent pas. */
-  MOTIFS: { signe: "Signé : à passer client", case: "A coché « J'ai réservé » : à vérifier", absent: "Absent à l'appel : repropose-lui un créneau", clic: "A cliqué « Récupérer mon plan d'action », pas de bilan coché", nouveau: "Vient de s'inscrire",
+  MOTIFS: { signe: "Signé : à passer client", case: "A coché « J'ai réservé » : à vérifier", absent: "Absent à l'appel : repropose-lui un créneau", clic: "A cliqué « Réserver mon plan d'action », pas de bilan coché", nouveau: "Vient de s'inscrire",
     perdu: "Perdu : relance-le", appel: "Bilan réservé : l'appel a-t-il eu lieu ?" },   // v59 : + absent, perdu, appel (perdu et appel : avec depuis quand, motifTexte)
   AIDE: "À traiter : les prospects inscrits depuis moins de 48 h, et ceux qui ont cliqué « Réserver mon plan d'action » ou coché « J'ai réservé », tant que tu n'as ni coché « Bilan réservé », ni indiqué l'issue de l'appel, ni relancé depuis ; les « Signé » à passer client ; les « Absent » (sans limite de durée) et les « Perdu » depuis 30 jours ou plus, tant que tu ne les as pas relancés depuis l'appel ; les bilans cochés depuis plus de 7 jours sans issue.",
   /* v59 : l'ordre de « À traiter » (page Prospects ; le tableau de bord a sa table, outilTableau.RANG_PROSPECTS) ; sans
@@ -761,8 +761,9 @@ const outilProspects = {
      suivent l'analyse, comme la carte : « oui », « à vérifier (case du prospect) », sinon « oui, avant l'appel » ou « case du
      prospect, avant l'appel ») */
   /* v65 : « Clics « Récupérer mon plan d'action » » (avant : « Clics « Réserver mon bilan » ») : même place (14e colonne), même
-     contenu (le nombre de clics) ; aucun fichier du dépôt ne lit cet en-tête */
-  TETE_CSV: ["Nom", "Email", "Inscrit le", "Problème", "Ce qui l'a bloqué", "Dans 3 mois", "Questionnaire", "Bilan réservé", "Bilan réservé le", "Case « J'ai réservé » (prospect)", "Newsletter", "Dernière visite", "Jours actifs (30 j)", "Clics « Récupérer mon plan d'action »", "Dernier clic", "Issue", "Relances", "Prochaine action"],
+     contenu (le nombre de clics) ; aucun fichier du dépôt ne lit cet en-tête. v76 (décision de Lucas du 11/10) : « Clics « Réserver
+     mon plan d'action » », comme le motif d'un clic (MOTIFS.clic) et le bouton du prospect */
+  TETE_CSV: ["Nom", "Email", "Inscrit le", "Problème", "Ce qui l'a bloqué", "Dans 3 mois", "Questionnaire", "Bilan réservé", "Bilan réservé le", "Case « J'ai réservé » (prospect)", "Newsletter", "Dernière visite", "Jours actifs (30 j)", "Clics « Réserver mon plan d'action »", "Dernier clic", "Issue", "Relances", "Prochaine action"],
   csv(liste){
     const dt = v => this.dateCsv(v);
     const lignes = liste.map(({ l, a }) => {

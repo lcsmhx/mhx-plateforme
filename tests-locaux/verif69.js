@@ -745,7 +745,7 @@ const SANTE = /71[,.]4|1\s?873|83[,.]5|92[,.]3|\bkcal\b|\bkg\b|\bpoids\b|\btaill
     await aller(T.page, "#/journal", 1800);
     vus.push(["verrou_journal", await ouvrirCalendly(T.c, T.page, "#vue .verrou a[target=_blank]")]);
     CAL_ATTENDUS += 3;
-    ok("D (vrais clics) : un nouveau prospect de test (« tina+test@… ») clique « Récupérer mon plan d'action » depuis 3 écrans (accueil, #/programme, #/journal) : chaque onglet ouvert reçoit le lien Calendly avec le bon utm_content (accueil_haut, verrou_programme, verrou_journal)",
+    ok("D (vrais clics) : un nouveau prospect de test (« tina+test@… ») clique « Réserver mon plan d'action » depuis 3 écrans (accueil, #/programme, #/journal) : chaque onglet ouvert reçoit le lien Calendly avec le bon utm_content (accueil_haut, verrou_programme, verrou_journal)",
       vus.every(([code, o]) => o.url.startsWith("https://calendly.com/") && o.recus.length === 1 && o.recus[0] === o.url && utm(o.url) === code), JSON.stringify(vus.map(([k, o]) => [k, utm(o.url), o.recus.length, o.absent || ""])));
     const cl = ((cleDe(db, TINA, "challenge") || {}).cta || {}).clics || [];
     ok("D (vrais clics) : ses 3 clics notés en base, avec leurs origines, dans l'ordre (challenge.cta.clics : accueil_haut, verrou_programme, verrou_journal, datés de maintenant) ; rien d'autre changé, pour personne",
@@ -796,7 +796,7 @@ const SANTE = /71[,.]4|1\s?873|83[,.]5|92[,.]3|\bkcal\b|\bkg\b|\bpoids\b|\btaill
     await tous(page);
     const k = await clicsCartes(page);
     const Lc = lireCSV((await exporter(page)).replace(/^﻿/, "")), tete = Lc[0] || [];
-    const iN = tete.indexOf("Clics « Récupérer mon plan d'action »"), iD = tete.indexOf("Dernier clic");
+    const iN = tete.indexOf("Clics « Réserver mon plan d'action »"), iD = tete.indexOf("Dernier clic");
     const csv = nom => { const l = Lc.find(x => x[0] === nom) || []; return [l[iN], l[iD]]; };
     const ATT = { "Anna Tôt": ["2", "16/11/2026"], "Bruno Ancien": ["2", "14/11/2026"], "Chloé Octobre": ["3", "20/10/2026"], "David Septembre": ["3", "17/11/2026"],
       "Emma Plus-Tard": ["0", ""], "Hélène Minuit": ["2", "12/11/2026"], "Inès Ouverture": ["1", "28/09/2026"], "Karim Vieux": ["2", "17/09/2026"], "Marc Neuf": ["0", ""],

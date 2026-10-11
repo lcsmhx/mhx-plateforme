@@ -790,7 +790,7 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
     await filtre(page, "tous");
     const { t } = await exporter(page);
     const L = lireCSV(t.replace(/^﻿/, "")), ligne = n => L.find(l => l[0] === n) || [];
-    const col = k => L[0].indexOf(k), iE = col("Email"), iR = col("Relances"), iI = col("Inscrit le"), iC = col("Clics « Récupérer mon plan d'action »");
+    const col = k => L[0].indexOf(k), iE = col("Email"), iR = col("Relances"), iI = col("Inscrit le"), iC = col("Clics « Réserver mon plan d'action »");
     ok("F : CSV des prospects : email « ␣␣=HYPERLINK(…) » → « '␣␣=HYPERLINK(…) », « ␣@evil.fr » → « '␣@evil.fr », espace insécable + tabulation + « + » neutralisé",
       ligne("Esp Ace")[iE] === '\'  =HYPERLINK("http://x")' && ligne("Evi Lat")[iE] === "' @evil.fr" && ligne("Tab Plus")[iE] === "' \t+33 6 00", JSON.stringify([ligne("Esp Ace")[iE], ligne("Evi Lat")[iE], ligne("Tab Plus")[iE]]));
     ok("F : … sans signe après les espaces (« ␣lou@exemple.fr »), un nom avec un tiret au milieu, les nombres (relances, clics) et les dates : inchangés",
@@ -844,7 +844,7 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
       (await motifCarte(page, SARA)) === "à traiter A coché « J'ai réservé » : à vérifier" && cs.includes("Bilan à vérifier (case cochée le " + frL(avant(20 * H)) + ")") && !cs.includes("Bilan réservé le") && (await titreBilan(page, SARA)) === "A coché « J'ai réservé mon bilan » : à vérifier",
       cs + " | " + await titreBilan(page, SARA));
     ok("H : Tina (case d'avant l'appel, puis un clic) : motif « clic », « Bilan case cochée le " + frL(avant(6 * J)) + ", avant l'appel », pas « à vérifier », info-bulle « avant l'appel »",
-      (await motifCarte(page, TINA)) === "à traiter A cliqué « Récupérer mon plan d'action », pas de bilan coché" && ct.includes("Bilan case cochée le " + frL(avant(6 * J)) + ", avant l'appel") && !ct.includes("à vérifier") && (await titreBilan(page, TINA)) === "A coché « J'ai réservé mon bilan », avant l'appel",
+      (await motifCarte(page, TINA)) === "à traiter A cliqué « Réserver mon plan d'action », pas de bilan coché" && ct.includes("Bilan case cochée le " + frL(avant(6 * J)) + ", avant l'appel") && !ct.includes("à vérifier") && (await titreBilan(page, TINA)) === "A coché « J'ai réservé mon bilan », avant l'appel",
       ct + " | " + await titreBilan(page, TINA));
     ok("H : Hugo (coché hier, sans issue) : inchangé, « Bilan réservé le " + frL(MIDI(1)) + " », info-bulle « Bilan réservé : coché par toi »",
       ch.includes("Bilan réservé le " + frL(MIDI(1))) && (await titreBilan(page, HUGO)) === "Bilan réservé : coché par toi", ch + " | " + await titreBilan(page, HUGO));

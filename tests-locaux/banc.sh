@@ -182,6 +182,8 @@ HORS_BANC="verif44 verif45 verif46 verif47 verif49"
 # nombre inchangé.
 # v76 (tâche 8) : page « Ton plan d'action » : p#dc-obstacle (« Ce qui coince : « … » ») après l'objectif : verif51 et verif67
 # (ordre des éléments) adaptées, nombres inchangés.
+# v76 (décision de Lucas du 11/10) : côté coach, le motif d'un clic et l'en-tête du CSV disent aussi « Réserver mon plan d'action » :
+# verif58, verif64, verif69 adaptées, nombres inchangés.
 attendu() {
   case "$1" in
     flux) echo 19;; verif34) echo 13;; verif35) echo 14;; verif36) echo 13;; verif37) echo 12;; verif38) echo 66;;
