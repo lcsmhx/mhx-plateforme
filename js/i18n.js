@@ -235,7 +235,7 @@ I18N.en = {
 "Note ton poids de départ (1 min)": "Log your starting weight (1 min)",
 "Départ lancé ✓": "You're off ✓",
 "Ce qui t'attend dans ta formation": "What's inside your course",
-"vidéos avec Lucas": "videos with Lucas",
+"vidéos de ton coach": "videos from your coach",
 "guides et documents": "guides and documents",
 "défis": "challenges",
 "Dont 3 programmes d'entraînement (12 semaines femme, 12 semaines homme, full body maison) et 3 plans alimentaires (sans restriction, sans gluten, vegan).": "Including 3 workout programs (12 weeks for women, 12 weeks for men, full body at home) and 3 meal plans (no restrictions, gluten-free, vegan).",

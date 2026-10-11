@@ -387,7 +387,7 @@ const DECOUVERTE = {
     calories: { titre: "Ta première étape", texte: "Ta maintenance et tes macros, calculées sur ta morphologie et ton activité réelle.", bouton: "Calcule tes calories (2 min)" },
     pesee: { titre: "Ta prochaine étape", texte: "Note ton poids d'aujourd'hui : c'est ton point de départ, et la base de ta courbe.", bouton: "Enregistre ta pesée de départ" },
     /* v71 (H) : calcul et pesée faits, aucun créneau coché : l'action dorée = le plan d'action (bouton et sous-ligne : cta) */
-    plan: { titre: "Ta prochaine étape", texte: "Ton calcul et ta pesée de départ sont faits. Il reste à en faire un plan qui tient : 15 min avec Lucas, offert." }
+    plan: { titre: "Ta prochaine étape", texte: "Ton calcul et ta pesée de départ sont faits. Reste à en faire un plan pour tes prochaines semaines." }
   },
   /* questions du questionnaire court qui ne sont pas dans le questionnaire complet (celui des clients ne change pas).
      v52 : les 3 questions (même ordre en anglais). « probleme » a son propre identifiant (pas « objectif », dont les
@@ -452,10 +452,10 @@ const DECOUVERTE = {
   invitations: {
     objectif: "Ton objectif : « {p} »",
     plus_tard: "Plus tard",
-    declic_calculateur: { titre: "Tu as ton chiffre. Maintenant, le plan.", texte: "Savoir combien manger, c'est la base. Le tenir avec ton rythme, tes envies et tes semaines chargées, c'est là que tout se joue. En 15 min, Lucas t'aide à en faire un plan qui tient." },
-    declic_premiere_pesee: { titre: "Ton point de départ est posé.", texte: "C'est à partir d'aujourd'hui qu'on mesure tes progrès. Pour que ta courbe aille dans le bon sens, il te faut un plan qui colle à ta vie : c'est ce que Lucas te prépare en 15 min." },
-    declic_mindset: { titre: "Ton pourquoi est clair.", texte: "Reste le comment. En 15 min, Lucas t'aide à transformer ta motivation en plan concret pour tes prochaines semaines." },
-    formation_commence_ici: { titre: "Bien joué, ton départ est lancé.", texte: "Prochaine étape : ton plan d'action personnalisé, offert, en 15 min avec Lucas." }
+    declic_calculateur: { titre: "Tes calories sont calculées.", texte: "Le plus dur, c'est de tenir ce chiffre avec tes semaines chargées. C'est ce que tu prépares pendant l'appel." },
+    declic_premiere_pesee: { titre: "Ton point de départ est posé.", texte: "Ta courbe part d'aujourd'hui. Pour qu'elle aille dans le bon sens, il te faut un plan qui colle à ta vie." },
+    declic_mindset: { titre: "Ton pourquoi est clair.", texte: "Reste le comment : quoi faire, et quand, ces prochaines semaines. C'est l'objet de ton plan d'action." },
+    formation_commence_ici: { titre: "Bien joué, ton départ est lancé.", texte: "Prochaine étape : ton plan d'action, pour savoir quoi faire ces prochaines semaines." }
   },
   /* v64 (brief V2, B) : l'accord santé demandé au premier usage (calculateur, Ma progression, « Organise ta diète »),
      prospect sans accord enregistré seulement (Sante, auth-store.js). Textes du brief, mot pour mot, plus (décision de
@@ -621,7 +621,7 @@ const DECOUVERTE = {
     cgu_apres: ".",
     cgu_manque: "Coche la case des conditions pour continuer.",
     /* v52 : case facultative, décochée, qui remplace les « emails de suivi ». v64 (A4) : texte court (version accords.newsletter changée) */
-    newsletter: "Oui, je veux les conseils et les offres de Lucas par email (2 max par semaine, désinscription en 1 clic).",
+    newsletter: "Oui, je veux recevoir par email les conseils et les offres de MHX Coaching (2 par semaine au plus, désinscription en 1 clic).",
     note: "L'app ne remplace pas un avis médical. Si tu as un doute sur ta santé, parles-en à un professionnel avant de commencer.",
     verif_titre: "Vérifie ta boîte mail",
     verif_texte: "On vient d'envoyer un lien à {e}. Ouvre-le pour confirmer ton compte, puis connecte-toi ici avec ton email et ton mot de passe.",
@@ -651,7 +651,7 @@ const DECOUVERTE = {
        seulement), puis complété « …de confidentialité. » (v54 ; anglais sans point final) ; « 2026-09-28b » (v55) : même
        texte français, anglais avec son point final. */
     sante: "2026-09-28b",       // ancienne case « données de santé » de l'inscription (v55 à v63) ; v64 : plus envoyée à l'inscription, l'accord au premier usage enregistre la version de la politique (Sante.version)
-    newsletter: "2026-09-30",   // v64 (A4) : case newsletter de l'inscription, texte court (inscription.newsletter)
+    newsletter: "2026-10-11",   // v64 (A4) : case newsletter de l'inscription, texte court (inscription.newsletter) ; v76 : « MHX Coaching » au lieu de « Lucas »
     newsletter_profil: "2026-09-28c"   // interrupteur du Profil (emails.libelle, texte inchangé) ; « c » : texte final de Lucas du 28/09 (distinct des brouillons « 2026-09-28 » et « 2026-09-28b », jamais publiés) ; c'était aussi la case de l'inscription jusqu'à la v63
   },
 
@@ -694,7 +694,7 @@ const DECOUVERTE = {
     etapes: {
       calories: { titre: "Your first step", texte: "Your maintenance calories and macros, calculated from your body and your real activity.", bouton: "Calculate your calories (2 min)" },
       pesee: { titre: "Your next step", texte: "Log today's weight: it's your starting point, and the base of your curve.", bouton: "Log your starting weight" },
-      plan: { titre: "Your next step", texte: "Your calories and your starting weight are in. Now let's turn them into a plan that sticks: 15 min with Lucas, free." }
+      plan: { titre: "Your next step", texte: "Your calculation and starting weight are done. Next: turn them into a plan for the coming weeks." }
     },
     questions: [
       { id: "probleme", label: "Your #1 goal?", type: "cartes", options: ["Lose fat", "Build muscle", "Get back in shape"],
@@ -741,10 +741,10 @@ const DECOUVERTE = {
     invitations: {
       objectif: "Your goal: “{p}”",
       plus_tard: "Later",
-      declic_calculateur: { titre: "You've got your number. Now, the plan.", texte: "Knowing how much to eat is the foundation. Sticking to it with your schedule, your cravings and your busy weeks is where it all happens. In 15 min, Lucas helps you turn it into a plan that sticks." },
-      declic_premiere_pesee: { titre: "Your starting point is set.", texte: "From today, we measure your progress. To move your curve in the right direction, you need a plan that fits your life: that's what Lucas builds with you in 15 min." },
-      declic_mindset: { titre: "Your why is clear.", texte: "Now for the how. In 15 min, Lucas helps you turn your motivation into a concrete plan for the weeks ahead." },
-      formation_commence_ici: { titre: "Nice work, you're off to a start.", texte: "Next step: your personalized action plan, free, in 15 min with Lucas." }
+      declic_calculateur: { titre: "Your calories are calculated.", texte: "The hard part is sticking to that number through your busy weeks. That's what you plan on the call." },
+      declic_premiere_pesee: { titre: "Your starting point is set.", texte: "Your curve starts today. To move it the right way, you need a plan that fits your life." },
+      declic_mindset: { titre: "Your why is clear.", texte: "Now for the how: what to do, and when, over the next weeks. That's what your action plan is for." },
+      formation_commence_ici: { titre: "Nice work, you're off to a start.", texte: "Next step: your action plan, so you know what to do over the next weeks." }
     },
     sante: {
       titre: "Your consent, just once",
@@ -893,7 +893,7 @@ const DECOUVERTE = {
       politique_lien: "Privacy Policy",
       cgu_apres: ".",
       cgu_manque: "Tick the terms box to continue.",
-      newsletter: "Yes, send me Lucas's tips and offers by email (2 per week max, unsubscribe in 1 click).",
+      newsletter: "Yes, send me MHX Coaching's tips and offers by email (2 per week max, 1-click unsubscribe).",
       note: "The app is not medical advice. If you have any doubt about your health, talk to a professional before starting.",
       verif_titre: "Check your inbox",
       verif_texte: "We've just sent a link to {e}. Open it to confirm your account, then sign in here with your email and password.",
