@@ -1079,3 +1079,9 @@ Object.assign(I18N.en, {
   "Impossible pour le moment (vérification de sécurité). Ferme et rouvre l'app (ou recharge la page), puis réessaie. Si ça continue, écris à ton coach à {e}.": "Not possible right now (security check). Close and reopen the app (or reload the page), then try again. If it keeps happening, email your coach at {e}.",
   "Le changement de mot de passe n'est pas possible pour le moment (vérification anti-robot). Ferme et rouvre l'app (ou recharge la page), puis réessaie. Si ça continue, écris à ton coach à {e}.": "Changing your password isn't possible right now (anti-bot check). Close and reopen the app (or reload the page), then try again. If it keeps happening, email your coach at {e}."
 });
+
+/* v78 (tâche 2) — la bannière d'installation dans le navigateur d'Instagram, de TikTok ou de Facebook (ses autres textes :
+   DECOUVERTE.integre et DECOUVERTE.en.integre, js/config.js) */
+Object.assign(I18N.en, {
+  "Je suis sur Android": "I'm on Android"
+});

@@ -306,6 +306,9 @@ function portail(mode){
           consentement: maintenant, conditions_version: A.conditions,
           newsletter: ok_news ? maintenant : null, newsletter_version: A.newsletter }, jeton);
         if (connecte){
+          /* v78 (tâche 2) : inscrit dans le navigateur d'Instagram, de TikTok ou de Facebook : le drapeau de l'appareil (rien en
+             base, rien n'attend) */
+          try { if (typeof Integre !== "undefined") Integre.noterInscription(); } catch(e){}
           /* v72 (A) : la clé « contact » du nouveau compte (la session existe déjà), 6 s au plus ; ratée : gardée sur
              l'appareil, elle repart à l'ouverture qui suit (Contact.preparer) */
           const champs = {};
@@ -353,6 +356,8 @@ function portail(mode){
            L'adresse gardait la derniere page ouverte sur l'appareil quand la session avait pris fin sans deconnexion
            (session expiree, « Rester connecte » decoche, navigateur ferme) : on arrivait sur la Speed Formation.
            Sauf « Me reconnecter » (session perdue en cours d'utilisation) : retour sur la page qu'on avait sous les yeux. */
+        /* v78 (tâche 2) : arrivée par ?ouvrir=connexion dans un navigateur normal : la bannière d'installation dès cette visite */
+        try { if (typeof Integre !== "undefined") Integre.noterConnexion(); } catch(e){}
         if (!reconnexion){ try { history.replaceState(null, "", Provenance.adresseSans()); } catch(e){} }   // v72 (F) : sans le code ?ref=
         /* v72 (F) : une personne qui se connecte n'est pas un nouvel inscrit : un code de lien gardé sur l'appareil est oublié */
         try { Provenance.oublier(); } catch(e){}

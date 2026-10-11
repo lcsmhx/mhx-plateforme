@@ -906,7 +906,13 @@ const outilDecouverte = {
     Activite.page(form ? "decouverte-questionnaire" : bilan ? "decouverte-bilan" : "decouverte-accueil");
     if (form) this.brancherFormulaire(zone, I, C);
     else if (bilan){ Tracking.enregistrer("bilan_viewed"); this.brancherBilan(zone, I, C); }
-    else { this.brancherPage(zone, I, C); this.invitationAccueil(zone, I, C); }
+    else {
+      this.brancherPage(zone, I, C);
+      /* v78 (tâche 2) : prospect inscrit dans le navigateur d'Instagram, de TikTok ou de Facebook : « Dernière étape : mets l'app
+         sur ton téléphone » sous l'en-tête (jamais avant la page du plan d'action) ; carte affichée : pas d'invitation */
+      const carte = typeof Integre !== "undefined" ? Integre.montrerCarte(zone) : null;
+      if (!carte) this.invitationAccueil(zone, I, C);
+    }
   },
   /* v62 (brief V2, H) : sur l'accueil, un autre jour, l'invitation en attente la plus recente, en haut (sous l'en-tete) ;
      choisie une fois par visite, gardee a l'ecran si l'accueil est redessine */
