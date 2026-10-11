@@ -47,24 +47,27 @@ async function routeDepuisAdresse(){
    exactement comme avant : aucun élément ajouté, aucun script chargé, aucune attente, mêmes requêtes. Le script de
    Cloudflare n'est chargé qu'à l'ouverture de la connexion et de la création de compte (et du bloc « Changer mon mot de
    passe » du Profil si CONFIG.turnstile.profil vaut true), jamais ailleurs ni dans index.html. Widget en rendu explicite,
-   langue et thème de l'app, « compact » sous 300 px utiles (320 px de large), hauteur réservée en CSS (.co-captcha). Le
-   jeton est lu au clic, 4 s d'attente au plus, puis la requête part avec ou sans jeton : Supabase tranche, le bouton
-   n'est jamais bloqué. Un jeton ne sert qu'une fois : remise à zéro après chaque envoi raté (erreur réseau comprise) ;
-   widget retiré quand l'écran change ; « tour » ignore un script ou un rappel qui arrive après un changement d'écran. */
+   langue et thème de l'app, « compact » sous 300 px utiles (320 px de large), hauteur réservée en CSS (.co-captcha),
+   SOUS le bouton (le bouton reste à sa place, visible sans défiler). Le jeton est lu au clic, 4 s d'attente au plus, puis
+   la requête part avec ou sans jeton : Supabase tranche, le bouton n'est jamais bloqué. Un jeton ne sert qu'une fois :
+   remise à zéro après un envoi raté qui l'a emporté (erreur réseau comprise) ou d'un widget en échec ; widget retiré
+   quand l'écran change (un envoi encore en attente du jeton ne part plus) ; « tour » ignore un script ou un rappel qui
+   arrive après un changement d'écran. */
 const Captcha = {
   SCRIPT: "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=mhxTurnstilePret",
   ATTENTE: 4000, CHARGEMENT: 15000,
   id: null, zone: null, etat: "", tour: 0, envoye: false, _charge: null, _attentes: [], _veille: false,
   /* traduits dans I18N.en (i18n.js, bloc v78 tâche 3) ; {e} = CONFIG.marque.email */
   TEXTES: {
-    attente: "La vérification anti-robot n'est pas encore terminée. Attends qu'elle soit validée (ou coche la case), puis réessaie.",
-    refus: "La vérification anti-robot n'a pas été acceptée. Elle vient d'être relancée : attends qu'elle soit validée, puis réessaie.",
+    attente: "La vérification anti-robot n'est pas encore terminée. Attends qu'elle soit validée (ou coche la case), puis réessaie. Si ça continue, écris à ton coach à {e}.",
+    refus: "La vérification anti-robot n'a pas été acceptée. Elle vient d'être relancée : attends qu'elle soit validée, puis réessaie. Si ça continue, écris à ton coach à {e}.",
     injoignable: "La vérification anti-robot n'a pas pu se charger. Vérifie ta connexion, recharge la page, puis réessaie. Si ça continue, écris à ton coach à {e}.",
     echec: "La vérification anti-robot a échoué. Recharge la page, puis réessaie. Si ça continue, écris à ton coach à {e}.",
     navigateur: "Ton navigateur ne permet pas la vérification anti-robot. Mets-le à jour ou ouvre l'app dans un autre navigateur (Safari, Chrome). Si ça continue, écris à ton coach à {e}.",
     indispo: "La vérification anti-robot est momentanément indisponible : réessaie dans une minute.",
-    eteint: "Impossible pour le moment (vérification de sécurité) : écris à ton coach à {e}, il règle ça rapidement.",
-    profil: "Le changement de mot de passe n'est pas possible pour le moment (vérification anti-robot) : écris à ton coach à {e}, il s'en occupe."
+    /* eteint : surtout une page chargée avant la mise en ligne de la clé, restée ouverte : la rouvrir suffit */
+    eteint: "Impossible pour le moment (vérification de sécurité). Ferme et rouvre l'app (ou recharge la page), puis réessaie. Si ça continue, écris à ton coach à {e}.",
+    profil: "Le changement de mot de passe n'est pas possible pour le moment (vérification anti-robot). Ferme et rouvre l'app (ou recharge la page), puis réessaie. Si ça continue, écris à ton coach à {e}."
   },
   cle(){ try { const c = CONFIG.turnstile && CONFIG.turnstile.cle_site; return typeof c === "string" ? c.trim() : ""; } catch(e){ return ""; } },
   actif(){ return !!this.cle(); },
@@ -140,11 +143,15 @@ const Captcha = {
   },
   liberer(t){ const l = this._attentes.slice(); this._attentes = []; l.forEach(f => { try { f(t); } catch(e){} }); },
   async prendreJeton(){ const t = await this.attendreJeton(); this.envoye = !!t; return t; },
-  /* après un envoi qui n'a pas abouti : un nouveau jeton (celui-ci est consommé, même si le mot de passe était faux) */
+  /* après un envoi qui n'a pas abouti : un nouveau jeton si celui-ci est parti (consommé, même si le mot de passe était
+     faux) ou si le widget a échoué ; parti SANS jeton (vérification pas finie) : on la laisse finir, le clic suivant
+     prendra son jeton tout de suite */
   apresEssai(){
-    try { if (this.id != null && window.turnstile){ turnstile.reset(this.id); if (this.etat !== "navigateur") this.etat = "charge"; } } catch(e){}
+    try { if (this.id != null && window.turnstile && (this.envoye || this.etat === "echec")){ turnstile.reset(this.id); this.etat = "charge"; } } catch(e){}
     this.envoye = false;
   },
+  /* le cadre (sous le bouton) amené à l'écran : il reste peut-être une case à cocher */
+  voir(){ try { if (this.zone && this.zone.isConnected) this.zone.scrollIntoView({ block: "nearest" }); } catch(e){} },
   oublier(){
     try { if (this.id != null && window.turnstile) turnstile.remove(this.id); } catch(e){}
     this.id = null; this.zone = null; this.etat = ""; this.envoye = false; this.tour++; this.liberer("");
@@ -155,8 +162,10 @@ const Captcha = {
     if (!/captcha/i.test(String((e && e.message) || ""))) return "";
     const p = { e: String((CONFIG.marque && CONFIG.marque.email) || "") };
     if (!this.actif()) return trad(this.TEXTES.eteint, p);   // CAPTCHA allumé dans Supabase avant la clé : écrire au coach
-    if (this.envoye) return trad(e && e.statut >= 500 ? this.TEXTES.indispo : this.TEXTES.refus);
-    return trad(this.TEXTES[["injoignable", "echec", "navigateur"].includes(this.etat) ? this.etat : "attente"], p);
+    if (this.envoye) return trad(e && e.statut >= 500 ? this.TEXTES.indispo : this.TEXTES.refus, p);
+    const k = ["injoignable", "echec", "navigateur"].includes(this.etat) ? this.etat : "attente";
+    if (k === "attente") this.voir();
+    return trad(this.TEXTES[k], p);
   },
   erreurProfil(e){
     if (!/captcha/i.test(String((e && e.message) || ""))) return "";
@@ -211,8 +220,8 @@ function portail(mode){
       <label class="co-rester co-newsletter"><input type="checkbox" id="c-newsletter"><span>${esc(DECOUVERTE.inscription.newsletter)}</span></label>`
         : mode !== "oubli" ? `<div class="champ"><label for="c-mdp">Mot de passe</label><input id="c-mdp" type="password" autocomplete="current-password"></div>` : ""}
       ${mode === "connexion" ? `<label class="co-rester"><input type="checkbox" id="c-rester" checked><span>Rester connecté</span></label>` : ""}
-      ${Captcha.html(mode)}<div id="co-err" role="alert"></div>
-      ${mode !== "oubli" ? `<button class="btn" id="c-go">${esc(bouton)}</button>` : ""}
+      <div id="co-err" role="alert"></div>
+      ${mode !== "oubli" ? `<button class="btn" id="c-go">${esc(bouton)}</button>` : ""}${Captcha.html(mode)}
       ${mode === "inscription" ? `<p class="co-note">${esc(DECOUVERTE.inscription.note)}</p>` : ""}
       ${CONFIG.marque.version && mode !== "inscription" ? `<p class="co-aide">v${esc(CONFIG.marque.version)}</p>` : ""}
       <div class="bascule">
@@ -282,6 +291,7 @@ function portail(mode){
       b.disabled = true; b.textContent = "Un instant…";
       try {
         const jeton = Captcha.actif() ? await Captcha.prendreJeton() : "";   // v78 (tâche 3) : 4 s au plus, puis envoi avec ou sans jeton
+        if (!b.isConnected) return;   // v78 (tâche 3) : écran quitté pendant l'attente du jeton : rien n'est envoyé
         /* v44 : l'acceptation des conditions est datee ; P0.5 : consentement sante separe, horodate.
            v52 : prenom ET nom ; chaque accord porte sa date et la version de son texte (DECOUVERTE.accords) ;
            la newsletter (facultative) remplace les « emails de suivi » : emails_suivi n'est plus envoye (il reste lu
@@ -337,6 +347,7 @@ function portail(mode){
         err("Si un compte existe pour cet email, tu vas recevoir un lien.", true);
       } else {
         const jeton = Captcha.actif() ? await Captcha.prendreJeton() : "";   // v78 (tâche 3) : 4 s au plus, puis envoi avec ou sans jeton
+        if (!b.isConnected) return;   // v78 (tâche 3) : écran quitté pendant l'attente du jeton : rien n'est envoyé
         await Auth.connecter(email, mdp, jeton);
         /* v57 : une connexion ouvre la page d'arrivee (accueil ; tableau de bord du coach), comme apres « Se deconnecter ».
            L'adresse gardait la derniere page ouverte sur l'appareil quand la session avait pris fin sans deconnexion
