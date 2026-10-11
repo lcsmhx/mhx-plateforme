@@ -3,6 +3,11 @@
 Lis ce fichier en entier au début de chaque conversation. Il passe avant tout autre fichier du dépôt.
 
 ## Mode de travail
+> **Exception de la nuit du 12/10/2026 (mission v78, `docs/MISSION-V78.md`) — à retirer en fin de mission** : autonomie
+> complète, push sur `main` et mise en ligne compris, pour les tâches 1 à 4 seulement ; tâches 5 et 6 en préparation
+> seulement (aucune écriture dans la base, aucun push de l'historique réécrit). Toutes les autres règles de ce fichier
+> restent valables, surtout zéro perte de données.
+
 Règle de Lucas du 02/10/2026 : elle passe avant toutes les autres règles de ce fichier.
 - **Fais exactement ce qui est demandé, rien de plus.** Sauf demande explicite de Lucas : pas de tests automatiques (en écrire ou en exécuter), relectures, audits, agents, sous-agents, tâches en arrière-plan, captures d'écran, surveillance du banc GitHub, ni de modification hors de la demande. Seuls ajouts sans qu'on te le dise : ce que ce fichier impose (numéro de version, traduction anglaise d'une phrase visible). Une bonne idée en plus ? Note-la dans ton rapport, ne la code pas. Une demande floue ? Une question courte, pas une interprétation.
 - **Une seule étape à la fois.** Lis les fichiers concernés, fais la modif, commite, rapport court, **STOP** : tu attends la validation de Lucas. Jamais plusieurs phases enchaînées sans validation.
