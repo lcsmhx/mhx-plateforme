@@ -53,6 +53,7 @@ Règle de Lucas du 02/10/2026 : elle passe avant toutes les autres règles de ce
 - Faire évoluer l'existant, ne pas réécrire ce qui marche.
 - Toute nouvelle phrase visible côté client a sa traduction dans `I18N.en`.
 - Pas de `alert`, `confirm` ou `prompt` natifs : utiliser l'objet `UI`.
+- **Aucun script tiers** (polices hébergées dans `polices/` depuis la v66 ; YouTube seulement en images et vidéos des exercices). Seule exception (v78, tâche 3) : **Cloudflare Turnstile**, chargé seulement si `CONFIG.turnstile.cle_site` est remplie et seulement sur les écrans de connexion et de création de compte (et le bloc « Changer mon mot de passe » du Profil si `profil: true`) ; jamais dans `index.html`. Allumer : la clé en ligne d'abord, puis le CAPTCHA dans Supabase ; éteindre : Supabase d'abord, puis vider la clé (`docs/TURNSTILE.md`). Jamais une clé de test de Cloudflare (`1x0000…`, `2x0000…`, `3x0000…` : refusée par le banc sur main, `verif83`) ni la clé secrète dans le dépôt.
 - Tout reste gratuit : GitHub Pages, Supabase en plan gratuit, Calendly gratuit, Brevo gratuit. Aucun service ni option payante. Si une idée demande un plan payant, arrête-toi et propose une alternative gratuite.
 
 ## Qualité
