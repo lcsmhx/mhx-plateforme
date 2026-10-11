@@ -2,6 +2,10 @@
 -- But : comparer les règles réellement en place au texte de référence (docs/HANDOFF-CLAUDE-CODE.md §2.3, état du 25/09,
 -- complété v49 et v56), et mesurer l'usage du plan gratuit avant la migration « limites d'écriture ».
 -- Le résultat est rangé à côté (releve-resultat.md), sans aucune donnée de compte (pas d'email, pas de contenu).
+-- Complété le 12/10/2026 (v78) : liste des clés à jour (27 : + contact et coach_visite, inventaire dans INVENTAIRE-CLES.md),
+-- longueur des prénoms et noms face à la limite de 100 caractères (requêtes 13 et 14). Pour la v78, sur la vraie base, on
+-- lance SEULEMENT supabase/v78-limites/01-releve-agregats.sql (agrégats, une requête) : les requêtes 11 et 15 ci-dessous
+-- sortent une ligne par compte (identifiant, empreinte), ce que la v78 ne fait plus.
 
 -- 1. Règles RLS (public et storage)
 select schemaname, tablename, policyname, permissive, cmd, roles::text, qual, with_check, md5(coalesce(qual,'') || '|' || coalesce(with_check,'')) as empreinte
@@ -66,16 +70,23 @@ where table_schema = 'public' and table_name = 'donnees' order by ordinal_positi
 select indexname, indexdef from pg_indexes where schemaname = 'public' and tablename = 'donnees' order by 1;
 
 -- 13. Garde-fous de la migration v66, en simple lecture (tous doivent rendre 0)
+--     12/10/2026 : + contact (v72) et coach_visite (v72 E), oubliées le 30/09 : 27 clés (INVENTAIRE-CLES.md)
 select count(*) as cles_hors_liste from public.donnees where outil <> all (array['activite','atelier','calc','calc_perso','challenge',
-  'checkins','coach_notifs','complements','emails','formation','hist_programme','hist_repas','intake','journal','mens','objectifs_faits',
-  'perf','photos','prefs','programme','repas','repas_suivi','feedbacks','notes_coach','suivi_prospect']);
+  'checkins','coach_notifs','coach_visite','complements','contact','emails','formation','hist_programme','hist_repas','intake','journal',
+  'mens','objectifs_faits','perf','photos','prefs','programme','repas','repas_suivi','feedbacks','notes_coach','suivi_prospect']);
 select count(*) as au_dessus_du_quart from public.donnees d left join public.profils p on p.id = d.user_id
 where d.outil not in ('feedbacks','notes_coach','suivi_prospect')
   and coalesce(octet_length(d.contenu::text), 0) > case when p.role = 'coach' or (p.role = 'client' and p.statut = 'client') then 262144 else 32768 end;
 select count(*) as contenu_vide from public.donnees where contenu is null;
 
 -- 14. Profils : taille des prénoms et noms (risque signalé hors de ce lot)
-select max(octet_length(prenom)) as prenom_max, max(octet_length(nom)) as nom_max from public.profils;
+--     12/10/2026 (v78) : limite proposée de 100 CARACTÈRES pour chacun (l'app en écrit 60 au plus) ; les deux derniers
+--     comptes doivent rendre 0
+select max(octet_length(prenom)) as prenom_max, max(octet_length(nom)) as nom_max,
+       max(char_length(prenom)) as prenom_max_car, max(char_length(nom)) as nom_max_car,
+       count(*) filter (where char_length(prenom) > 100) as prenoms_trop_longs,
+       count(*) filter (where char_length(nom) > 100) as noms_trop_longs
+from public.profils;
 
 -- 15. Empreintes et comptages (avant / après ; méthode de sauvegardes/empreintes.sql), ligne par ligne sans contenu
 select user_id, outil, maj_le, md5(contenu::text) from public.donnees order by 1, 2;
