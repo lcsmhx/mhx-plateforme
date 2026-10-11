@@ -151,6 +151,21 @@ const CONFIG = {
     cle: "sb_publishable_bxhCWuzxgVyrmzIKlfOXhg_wGpNq-8n"
   },
 
+  /* --- v78 (tâche 3) — CAPTCHA Cloudflare Turnstile (vérification anti-robot), sur la connexion et la création de compte.
+     L'INTERRUPTEUR, c'est cle_site : la clé de SITE (publique, « 0x… ») du widget créé dans Cloudflare (Turnstile, domaine
+     lcsmhx.github.io, mode Managed). VIDE = éteint : l'app se comporte exactement comme avant (aucun script de Cloudflare,
+     aucun élément ajouté, mêmes requêtes). La clé SECRÈTE ne s'écrit JAMAIS ici (dépôt public) : seulement dans Supabase
+     (Authentication → Attack Protection → Captcha). Allumer : 1. la clé ici, mise en ligne ; 2. ensuite seulement le
+     CAPTCHA dans Supabase. Éteindre : Supabase d'abord, puis vider la clé. Jamais une clé de TEST de Cloudflare (1x0000…,
+     2x0000…, 3x0000…) : refusée par le banc sur main (verif83 A0). Mode d'emploi : docs/TURNSTILE.md.
+     profil : true = le même widget dans le Profil, bloc « Changer mon mot de passe » (Supabase revérifie l'ancien mot de
+     passe par une connexion, refusée sans jeton quand le CAPTCHA est allumé) ; false = pas de widget là (décision à prendre
+     par Lucas avant d'allumer le CAPTCHA dans Supabase). Les deux lignes restent l'une sous l'autre (lues par le banc). --- */
+  turnstile: {
+    cle_site: "",
+    profil: false
+  },
+
   /* --- Calculateur métabolique : toutes les constantes du calcul --- */
   calcul: {
     proteines_g_par_kg: 2.2,   // grammes de protéines par kg de poids de corps

@@ -221,9 +221,13 @@ const Auth = {
     return d;
   },
 
-  async connecter(email, motdepasse){
+  /* v78 (tâche 3) : jeton = le jeton du CAPTCHA (Captcha, connexion.js), envoyé au format de Supabase Auth
+     (gotrue_meta_security.captcha_token) ; sans jeton, le corps est exactement celui d'avant */
+  async connecter(email, motdepasse, jeton){
+    const body = { email, password: motdepasse };
+    if (jeton) body.gotrue_meta_security = { captcha_token: jeton };
     const s = await this.appel("/auth/v1/token?grant_type=password", {
-      method: "POST", avecJeton: false, body: { email, password: motdepasse }
+      method: "POST", avecJeton: false, body
     });
     return this.memoriser(s);
   },
@@ -235,17 +239,21 @@ const Auth = {
      Meme compte, meme rangement que la session d'avant (« Rester connecte », Auth.persistant) : les copies en
      attente restent (meme compte) ; les autres onglets la reprennent (evenement « storage », depuisAutreOnglet).
      Mauvais mot de passe actuel : rien n'est garde ni envoye. */
-  async changerMotDePasse(actuel, nouveau){
+  async changerMotDePasse(actuel, nouveau, jeton){
     const u = this.utilisateur();
     if (!u || !u.email) throw new Error("Session expirée. Reconnecte-toi.");
     /* un renouvellement en cours finit d'abord : sinon il rangerait l'ancienne session par-dessus la neuve */
     if (this._renouvellement){ try { await this._renouvellement; } catch(e){} }
     let s = null;
+    /* v78 (tâche 3) : le jeton du CAPTCHA du Profil (CONFIG.turnstile.profil), s'il y en a un ; un refus du CAPTCHA par
+       Supabase repart tel quel (message clair dans le Profil), jamais « Ton mot de passe actuel n'est pas le bon. » */
+    const body = { email: u.email, password: actuel };
+    if (jeton) body.gotrue_meta_security = { captcha_token: jeton };
     try {
       s = await this.appel("/auth/v1/token?grant_type=password", {
-        method: "POST", avecJeton: false, body: { email: u.email, password: actuel }
+        method: "POST", avecJeton: false, body
       });
-    } catch(e){ throw new Error("Ton mot de passe actuel n'est pas le bon."); }
+    } catch(e){ if (/captcha/i.test(String((e && e.message) || ""))) throw e; throw new Error("Ton mot de passe actuel n'est pas le bon."); }
     /* jamais la session d'un autre compte (ni si la personne s'est deconnectee entre-temps) */
     const c = this.utilisateur();
     if (!s || !s.access_token || !s.refresh_token || !s.user || s.user.id !== u.id || !c || c.id !== u.id)
@@ -358,13 +366,16 @@ const Auth = {
      « prospect » est la valeur par defaut de la colonne. Renvoie true si la
      personne est connectee tout de suite, false si un email de confirmation
      lui a ete envoye. */
-  async inscrire(email, motdepasse, prenom, nom, extra){
+  async inscrire(email, motdepasse, prenom, nom, extra, jeton){
     /* v44 : extra (date d'acceptation des conditions, version) reste dans les
        metadonnees du compte (raw_user_meta_data) : preuve horodatee, sans migration.
-       v52 : le nom saisi a l'inscription part ici (le declencheur creer_profil le range dans profils.nom) */
+       v52 : le nom saisi a l'inscription part ici (le declencheur creer_profil le range dans profils.nom).
+       v78 (tâche 3) : jeton = le jeton du CAPTCHA, après data (gotrue_meta_security.captcha_token) ; sans jeton, même corps */
+    const body = { email: email, password: motdepasse, data: Object.assign({ prenom: prenom, nom: nom || "" }, extra || {}) };
+    if (jeton) body.gotrue_meta_security = { captcha_token: jeton };
     const s = await this.appel("/auth/v1/signup?redirect_to=" + encodeURIComponent(this.retour()), {
       method: "POST", avecJeton: false,
-      body: { email: email, password: motdepasse, data: Object.assign({ prenom: prenom, nom: nom || "" }, extra || {}) }
+      body
     });
     if (s && s.access_token){ this.memoriser(s); return true; }
     return false;
