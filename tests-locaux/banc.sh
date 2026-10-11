@@ -7,7 +7,8 @@
 # Code de sortie 1 au moindre échec : code de sortie non nul, une ligne ✗, un bloc interrompu, un nombre de ✓ différent
 # du nombre attendu (une vérification sautée sans le dire, ou ajoutée sans relever le compte), une suite inconnue ou oubliée,
 # une erreur de console, une écriture ou une page manquante pendant rig.js,
-# un fichier js/ qui utilise au chargement un nom d'un fichier chargé plus tard (niveau-haut.js, 52.1).
+# un fichier js/ qui utilise au chargement un nom d'un fichier chargé plus tard (niveau-haut.js, 52.1),
+# un fichier de donnees/ hors liste blanche ou une adresse email réelle dans un fichier suivi (garde-depot.js, v78).
 # Le banc teste index.html tel qu'il est sur le disque : il ne conclut « vert » que si ce disque est exactement un commit
 # (aucun fichier suivi modifié) du début à la fin. Pour un essai sur des modifications non commitées : BANC_LIBRE=1.
 # Découpage (GitHub Actions, jobs en parallèle) : BANC_PARTIE=1 … 10 ne lance que les suites de cette partie (voir partie()) ;
@@ -184,6 +185,8 @@ HORS_BANC="verif44 verif45 verif46 verif47 verif49"
 # (ordre des éléments) adaptées, nombres inchangés.
 # v76 (décision de Lucas du 11/10) : côté coach, le motif d'un clic et l'en-tête du CSV disent aussi « Réserver mon plan d'action » :
 # verif58, verif64, verif69 adaptées, nombres inchangés.
+# v78 (tâche 1 : données personnelles hors du dépôt public) : garde-depot.js (sans navigateur, partie 10) — donnees/ en
+# liste blanche, aucune adresse email hors domaines d'exemple et hors adresse de la marque dans les fichiers suivis.
 attendu() {
   case "$1" in
     flux) echo 19;; verif34) echo 13;; verif35) echo 14;; verif36) echo 13;; verif37) echo 12;; verif38) echo 66;;
@@ -204,7 +207,7 @@ partie() {
     verif42|verif50|verif65|verif72|verif75) echo 7;;
     verif40|verif54|verif62|verif71) echo 8;;
     verif55|verif39|verif60|verif73) echo 9;;
-    verif56|rig|verif-xss|niveau) echo 10;;
+    verif56|rig|verif-xss|niveau|garde) echo 10;;
     *) echo "";;
   esac
 }
@@ -233,7 +236,7 @@ for f in verif*.js; do
   case " $SUITES $HORS_BANC " in *" $s "*) ;; *) echec "$s : suite ni au banc ni dans HORS_BANC (banc.sh)";; esac
 done
 
-for s in $SUITES rig niveau; do
+for s in $SUITES rig niveau garde; do
   if [ -z "$(partie "$s")" ]; then echec "$s : aucune partie dans partie() (banc.sh)"; fi
 done
 case "${BANC_PARTIE:-}" in ''|[1-9]|10) ;; *) echec "BANC_PARTIE=${BANC_PARTIE} : partie inconnue";; esac
@@ -290,6 +293,16 @@ rc=$?
 duree=$(( $(date +%s) - debut ))
 if [ "$rc" -ne 0 ]; then echec "niveau-haut : code $rc, ${duree} s"; grep -E 'PROBLÈME|Error' "$OUT/niveau-haut.log" | head -20
 else note "ok     niveau-haut : $(tail -1 "$OUT/niveau-haut.log"), ${duree} s"; fi
+fi
+
+# v78 : dépôt public — donnees/ en liste blanche, aucune adresse email réelle dans les fichiers suivis (voir garde-depot.js).
+if dans_partie garde; then
+debut=$(date +%s)
+node garde-depot.js ../index.html > "$OUT/garde-depot.log" 2>&1
+rc=$?
+duree=$(( $(date +%s) - debut ))
+if [ "$rc" -ne 0 ]; then echec "garde-depot : code $rc, ${duree} s"; grep -E 'PROBLÈME|Error' "$OUT/garde-depot.log" | head -20
+else note "ok     garde-depot : $(tail -1 "$OUT/garde-depot.log"), ${duree} s"; fi
 fi
 
 # Le disque doit être resté exactement le commit testé.
