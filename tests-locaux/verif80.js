@@ -298,9 +298,9 @@ const champTel = (page, id) => page.evaluate(id => {
     const ch = await champTel(page, "c-tel");
     const ordre = await page.evaluate(() => Array.from(document.querySelectorAll(".carte-co input, .carte-co select")).map(x => x.id).filter(Boolean));
     /* v74 : plus de champ Nom (avant : « placé après le nom ») */
-    ok("A2 : inscription — champ « Ton numéro (WhatsApp) » : menu de 8 pays + « Autre pays » (France +33 par défaut, l'ordre de Lucas), champ type tel ; placé après le prénom, avant l'email (plus de champ Nom, v74)",
+    ok("A2 : inscription — champ « Ton numéro (WhatsApp) » : menu de 8 pays + « Autre pays » (France +33 par défaut, l'ordre de Lucas), champ type tel ; v76 : placé après le mot de passe, avant les cases — ordre exact prénom, email, mot de passe, numéro, CGU, newsletter (plus de champ Nom, v74)",
       ch.label === TX.fr.label && JSON.stringify(ch.options) === JSON.stringify(TX.fr.options) && JSON.stringify(ch.valeurs) === JSON.stringify(["33", "32", "41", "1", "61", "225", "221", "262", "autre"])
-        && ch.defaut === "33" && ch.type === "tel" && ordre.slice(0, 4).join(",") === "c-prenom,c-tel-ind,c-tel,c-email" && !ordre.includes("c-nom"),
+        && ch.defaut === "33" && ch.type === "tel" && ordre.join(",") === "c-prenom,c-email,c-mdp,c-tel-ind,c-tel,c-cgu,c-newsletter" && !ordre.includes("c-nom"),
       JSON.stringify({ ch, ordre }));
     await page.fill("#c-prenom", "Zoé"); await page.fill("#c-email", "zoe@exemple.fr"); await page.fill("#c-mdp", "motdepasse1");
     await page.check("#c-cgu");

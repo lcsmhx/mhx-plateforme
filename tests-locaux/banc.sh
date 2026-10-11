@@ -178,6 +178,8 @@ HORS_BANC="verif44 verif45 verif46 verif47 verif49"
 # permis), « Appel de 15 min avec ton coach, offert », « J'ai déjà réservé », « C'est réservé : … » (sans date), phrase d'accueil
 # avec la bêta, versions 2026-10-11 (case newsletter, texte court des conditions) : verif39, 40, 50, 51, 52, 55, 56, 58, 64,
 # 65, 66, 67, 68, 70 adaptées (textes recopiés), nombres inchangés.
+# v76 (tâche 7) : inscription dans l'ordre prénom, email, mot de passe, numéro, CGU, newsletter : verif80 A2 (ordre exact) adaptée,
+# nombre inchangé.
 attendu() {
   case "$1" in
     flux) echo 19;; verif34) echo 13;; verif35) echo 14;; verif36) echo 13;; verif37) echo 12;; verif38) echo 66;;
