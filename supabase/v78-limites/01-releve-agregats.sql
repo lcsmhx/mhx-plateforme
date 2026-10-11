@@ -13,9 +13,13 @@
 --   A  par clé : aucune clé hors liste, aucune ligne au-dessus de sa limite, ni du QUART de sa limite (marge ≥ ×4) ;
 --   B  comptes prospects : pareil avec le plafond prospect (256 Ko) ;
 --   D  prénoms et noms : aucun au-dessus de 100 caractères ;
+--   G  règles RLS : 6 sur donnees et 2 sur profils, comme au 29/09 (04, test 4, et 05 l'attendent aussi) ;
 --   H  pré-requis : est_coach / est_client en place, Postgres ≥ 14, clé unique (user_id, outil).
 -- Une ligne « STOP » = on n'applique pas ; on relève la limite concernée dans 02-migration.sql (et 04, 05, ce fichier :
--- les quatre listes sont identiques), on relance les tests locaux, puis ce relevé.
+-- les quatre listes sont identiques, le banc le vérifie : tests-locaux/garde-cles.js), on refait 06, on relance les
+-- tests locaux, puis ce relevé.
+-- Partie F : le nombre de lignes de chaque table à sauvegarder (étape 2 : la sauvegarde doit avoir les mêmes nombres).
+-- Ces nombres passent par query_to_xml('select count(*) …'), une lecture elle aussi ; une table absente est signalée.
 -- Les limites ci-dessous : celles de public.v78_limite() (02-migration.sql) ; détail et raisons : INVENTAIRE-CLES.md.
 -- =====================================================================================================================
 with
@@ -116,15 +120,25 @@ r (partie, element, lignes, octets_max, octets_moyen, octets_p95, limite, marge,
   select 'F base', 'table donnees (index et TOAST compris)', (select count(*) from public.donnees), pg_total_relation_size('public.donnees'),
          null::bigint, null::bigint, null::bigint, null::numeric, 'INFO', pg_size_pretty(pg_total_relation_size('public.donnees'))
   union all
+  -- F. nombre de lignes de chaque table à sauvegarder (LISEZMOI, étape 2) ; la migration ne touche à aucune d'elles
+  select 'F base', 'lignes de la table ' || x.nom,
+         case when to_regclass('public.' || x.nom) is not null
+              then (xpath('/row/n/text()', query_to_xml(format('select count(*) as n from public.%I', x.nom), false, true, '')))[1]::text::bigint end,
+         null::bigint, null::bigint, null::bigint, null::bigint, null::numeric,
+         case when to_regclass('public.' || x.nom) is null then 'INFO : table absente' else 'INFO' end, null::text
+    from (values ('profils'), ('donnees'), ('bibliotheque'), ('aliments'), ('recettes'), ('programmes_types'), ('exercices'),
+                 ('briefs'), ('connexions')) as x (nom)
+  union all
   -- G. structure et empreintes « avant » (à comparer avec 05-verifications.sql après la migration)
   select 'G structure', 'empreinte des règles RLS (public, storage)', count(*), null::bigint, null::bigint, null::bigint, null::bigint,
          null::numeric, 'INFO',
-         coalesce(md5(string_agg(policyname || ':' || coalesce(qual, '') || '|' || coalesce(with_check, ''), ',' order by schemaname, tablename, policyname)), '')
+         coalesce(md5(string_agg(schemaname || '.' || tablename || ':' || policyname || ':' || cmd || ':' || roles::text || ':' || permissive || ':' || coalesce(qual, '') || '|' || coalesce(with_check, ''), ',' order by schemaname, tablename, policyname)), '')
     from pg_policies where schemaname in ('public', 'storage')
   union all
   select 'G structure', 'règles RLS de donnees et profils', count(*), null::bigint, null::bigint, null::bigint, null::bigint, null::numeric,
          case when count(*) filter (where tablename = 'donnees') = 6 and count(*) filter (where tablename = 'profils') = 2
-              then 'OK (6 + 2, comme au 29/09)' else 'À REGARDER : pas 6 + 2 (comparer au HANDOFF §2.3)' end,
+              then 'OK (6 + 2, comme au 29/09)'
+              else 'STOP : pas 6 + 2 (comparer au HANDOFF §2.3 ; un écart voulu se règle avant d''appliquer : le bon nombre dans 01, 04 test 4 et 05)' end,
          string_agg(tablename || ':' || cmd || ':' || policyname, ' ; ' order by tablename, cmd, policyname)
     from pg_policies where schemaname = 'public' and tablename in ('donnees', 'profils')
   union all
@@ -135,6 +149,11 @@ r (partie, element, lignes, octets_max, octets_moyen, octets_p95, limite, marge,
   select 'G structure', 'déclencheurs de donnees et profils', count(*), null::bigint, null::bigint, null::bigint, null::bigint, null::numeric,
          'INFO', string_agg(tg.tgrelid::regclass::text || ':' || tg.tgname || ':' || tg.tgenabled, ' ; ' order by tg.tgrelid::regclass::text, tg.tgname)
     from pg_trigger tg where not tg.tgisinternal and tg.tgrelid in ('public.donnees'::regclass, 'public.profils'::regclass)
+  union all
+  -- ce qui se déclenche quand la répétition (06) et les tests (04) créent leurs comptes fictifs (annulés avec eux)
+  select 'G structure', 'déclencheurs de auth.users', count(*), null::bigint, null::bigint, null::bigint, null::bigint, null::numeric,
+         'INFO', coalesce(string_agg(tg.tgname || ':' || tg.tgfoid::regproc::text || ':' || tg.tgenabled, ' ; ' order by tg.tgname), 'aucun')
+    from pg_trigger tg where not tg.tgisinternal and tg.tgrelid = to_regclass('auth.users')
   union all
   select 'G structure', 'contraintes de donnees et profils', count(*), null::bigint, null::bigint, null::bigint, null::bigint, null::numeric,
          'INFO', string_agg(c.conrelid::regclass::text || ':' || c.conname || ':' || c.contype, ' ; ' order by c.conrelid::regclass::text, c.conname)

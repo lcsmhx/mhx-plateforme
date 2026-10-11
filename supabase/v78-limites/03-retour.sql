@@ -6,6 +6,11 @@
 -- AUCUNE LIGNE n'est lue, modifiée ni supprimée ; aucune règle RLS, aucune autre fonction, aucune colonne n'est touchée.
 -- Les DROP … IF EXISTS ci-dessous ne visent que des objets créés par la v78 (vérifié d'abord par leur commentaire « v78 : ») ;
 -- jamais de CASCADE. Après ce fichier, la base est exactement comme avant la v78 : l'app n'a rien à changer.
+-- RELANÇABLE : une 2e fois (ou après une migration qui n'a rien appliqué), il ne trouve rien à retirer et passe sans
+-- erreur (les garde-fous utilisent to_regprocedure, qui rend null au lieu d'arrêter le fichier ; l'étape 0 le lance
+-- deux fois de suite pour le vérifier).
+-- Il ne retire pas la ligne d'historique que apply_migration aurait notée dans supabase_migrations (ce n'est pas une
+-- donnée de compte : on la laisse, voir LISEZMOI, étape 7).
 --
 -- Arrêt d'urgence plus léger, SANS RIEN SUPPRIMER (une ligne, réversible) :
 --     alter table public.donnees disable trigger v78_donnees_limites;   -- les limites de donnees ne s'appliquent plus
@@ -19,11 +24,11 @@ set local lock_timeout = '5s';
 do $$
 begin
   if to_regprocedure('public.v78_limite(text, boolean)') is not null
-     and coalesce(obj_description('public.v78_limite(text, boolean)'::regprocedure, 'pg_proc'), '') not like 'v78 :%' then
+     and coalesce(obj_description(to_regprocedure('public.v78_limite(text, boolean)'), 'pg_proc'), '') not like 'v78 :%' then
     raise exception 'v78 retour : STOP — public.v78_limite(text, boolean) n''est pas celle de la v78 (commentaire) : rien n''est retiré';
   end if;
   if to_regprocedure('public.v78_donnees_limites()') is not null
-     and coalesce(obj_description('public.v78_donnees_limites()'::regprocedure, 'pg_proc'), '') not like 'v78 :%' then
+     and coalesce(obj_description(to_regprocedure('public.v78_donnees_limites()'), 'pg_proc'), '') not like 'v78 :%' then
     raise exception 'v78 retour : STOP — public.v78_donnees_limites() n''est pas celle de la v78 (commentaire) : rien n''est retiré';
   end if;
   if exists (select 1 from pg_constraint c
@@ -32,7 +37,7 @@ begin
     raise exception 'v78 retour : STOP — une contrainte v78_profils_… ne porte pas le commentaire de la v78 : rien n''est retiré';
   end if;
   perform set_config('v78.regles_avant', coalesce((
-    select md5(string_agg(policyname || ':' || coalesce(qual, '') || '|' || coalesce(with_check, ''), ',' order by schemaname, tablename, policyname))
+    select md5(string_agg(schemaname || '.' || tablename || ':' || policyname || ':' || cmd || ':' || roles::text || ':' || permissive || ':' || coalesce(qual, '') || '|' || coalesce(with_check, ''), ',' order by schemaname, tablename, policyname))
       from pg_policies where schemaname in ('public', 'storage')), ''), true);
 end $$;
 
@@ -54,7 +59,7 @@ begin
      or exists (select 1 from pg_constraint where conrelid = 'public.profils'::regclass and conname like 'v78\_%') then
     raise exception 'v78 retour : STOP — un objet de la v78 est encore là : rien n''est retiré';
   end if;
-  if coalesce((select md5(string_agg(policyname || ':' || coalesce(qual, '') || '|' || coalesce(with_check, ''), ',' order by schemaname, tablename, policyname))
+  if coalesce((select md5(string_agg(schemaname || '.' || tablename || ':' || policyname || ':' || cmd || ':' || roles::text || ':' || permissive || ':' || coalesce(qual, '') || '|' || coalesce(with_check, ''), ',' order by schemaname, tablename, policyname))
                  from pg_policies where schemaname in ('public', 'storage')), '') <> current_setting('v78.regles_avant') then
     raise exception 'v78 retour : STOP — les règles RLS ont changé : rien n''est retiré';
   end if;

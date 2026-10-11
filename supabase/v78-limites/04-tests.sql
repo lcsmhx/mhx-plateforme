@@ -8,8 +8,8 @@
 --   psql -d mhx_v78_local -f 00-socle-local.sql        (socle : POUR POSTGRES LOCAL SEULEMENT)
 --   psql -d mhx_v78_local -f 02-migration.sql
 --   psql -d mhx_v78_local -f 04-tests.sql              (sans ON_ERROR_STOP : la liste OK / ÉCHEC s'affiche d'abord)
--- Résultat attendu : la liste des 74 tests, tous « OK », puis l'erreur VOULUE de la fin :
---   « v78 : 74 / 74 tests OK, 0 sauté(s) — aucun échec. Annulation forcée : rien n'est gardé. »
+-- Résultat attendu : la liste des 76 tests, tous « OK », puis l'erreur VOULUE de la fin :
+--   « v78 : 76 / 76 tests OK, 0 sauté(s) — aucun échec. Annulation forcée : rien n'est gardé. »
 -- Toute autre erreur = un test qui ne tourne pas : STOP, on corrige le fichier avant d'aller plus loin.
 --
 -- TOUJOURS DANS UNE TRANSACTION ANNULÉE (begin … rollback, et une erreur voulue juste avant) : rien de ce que fait ce
@@ -17,8 +17,10 @@
 -- adresses @exemple.invalid), annulés avec elle ; aucun vrai compte n'est lu ni écrit (chaque requête vise un compte
 -- fictif). Contenus marqués « test_v78 : s9999 ». Rôles simulés comme dans supabase/tests/v56_connexions_rls.sql :
 -- SET LOCAL ROLE anon / authenticated + request.jwt.claims.
--- Répétition sur la vraie base (seulement pendant la séance, avec l'« ok » de Lucas) : voir LISEZMOI, étape 3 ; les 8
--- tests de la partie F y sont « SAUTÉS » (il faut un superutilisateur pour poser une ligne sans le déclencheur).
+-- Répétition sur la vraie base (seulement pendant la séance, avec l'« ok » de Lucas) : 06-repetition.sql, tel quel (il
+-- contient le corps de ce fichier, recopié par tests-locaux/garde-cles.js) ; voir LISEZMOI, étape 3. Attendu là-bas :
+-- « 68 / 68 tests OK, 8 sauté(s) » : les 8 tests de la partie F y sont « SAUTÉS » (il faut un superutilisateur pour poser
+-- une ligne sans le déclencheur). Après un changement entre DÉBUT et FIN DU CORPS : refaire 06 (voir 06-repetition.sql).
 --
 -- Comment lire un test : « attendu ok » = l'écriture passe ; « taille » = refus de la v78 (erreur 23514, aussi la
 -- contrainte de prénom / nom) ; « droits » = refus des règles RLS ou d'un droit (42501) ; « zero » = aucune ligne lue ou
@@ -242,6 +244,19 @@ begin
   perform pg_temp.profil(63, 'prospect : se passer client : refusé (protege_role, inchangé)', 't.prospect', 'statut', 'client', 'refus');
   perform pg_temp.profil(64, 'prospect : un prénom de 101 caractères : refusé', 't.prospect', 'prenom', repeat('a', 101), 'taille');
 end $t$;
+
+-- ---------- D bis. sans session (clé de service, éditeur SQL) — en tant que propriétaire de la base ----------
+-- Le déclencheur ne voit aucun compte (auth.uid() vide) : la limite de la clé seule, sans le plafond prospect, quel que
+-- soit le compte dont c'est la ligne. (Le prospect est encore « prospect » ici : le coach le passe client en E, test 84.)
+reset role;
+do $t$
+begin
+  perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
+  perform pg_temp.ecrire(65, 'sans session (clé de service) : formation de 300 000 octets chez le prospect : acceptée (pas de plafond prospect ; limite de la clé : 512 Ko)', 't.prospect', 'formation', 300000, 'ok');
+  perform pg_temp.ecrire(66, 'sans session (clé de service) : journal de 4 194 305 octets (sa limite + 1) chez le prospect : refusé (trop gros)', 't.prospect', 'journal', 4194305, 'taille');
+  perform set_config('request.jwt.claims', '', true);
+end $t$;
+set local role authenticated;
 
 -- ---------- E. le coach (fictif) ----------
 do $t$

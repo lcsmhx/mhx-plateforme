@@ -2,6 +2,10 @@
 -- v78 — LIMITES D'ÉCRITURE (lot 2 de la v66) — PROJET, NON APPLIQUÉ (préparé la nuit du 12/10/2026).
 -- À appliquer seulement avec Lucas, dans l'ordre de supabase/v78-limites/LISEZMOI.md (relevé 01 d'abord, sauvegarde,
 -- tests 04 verts sur un Postgres local). Jamais sans son « ok ».
+-- Application : ce fichier TEL QUEL dans l'éditeur SQL de Supabase (il ouvre et ferme lui-même sa transaction). Pas par
+-- apply_migration (l'outil peut ajouter sa propre transaction autour et note une ligne d'historique : sa réponse peut
+-- tromper) ; dans tous les cas, on ne juge que sur 05-verifications.sql. La répétition (tout annulé) est
+-- 06-repetition.sql, jamais un morceau de ce fichier.
 --
 -- NON DESTRUCTIVE : aucune ligne n'est modifiée ni supprimée, aucune règle RLS, aucune fonction existante, aucune colonne
 -- n'est touchée (ni DROP, ni DELETE, ni TRUNCATE, ni UPDATE). Elle AJOUTE seulement cinq objets, tous nommés « v78_ » :
@@ -32,14 +36,14 @@ begin;
 set local lock_timeout = '5s';          -- un verrou attendu plus de 5 s : on abandonne (rien n'est appliqué), on réessaie
 set local statement_timeout = '120s';
 
--- ---------- DÉBUT DU CORPS (répétition sur la vraie base : copier d'ici à « FIN DU CORPS », voir LISEZMOI) ----------
+-- ---------- DÉBUT DU CORPS (recopié tel quel dans 06-repetition.sql, la répétition : ne rien recopier à la main) ----------
 
 -- 0. Empreintes « avant », dans la transaction : règles RLS (même formule que le relevé), fonctions existantes, droits
 --    d'exécution que le Security Advisor voudrait retirer (et qu'il ne faut PAS retirer, CLAUDE.md « Repères »)
 do $$
 begin
   perform set_config('v78.regles_avant', coalesce((
-    select md5(string_agg(policyname || ':' || coalesce(qual, '') || '|' || coalesce(with_check, ''), ',' order by schemaname, tablename, policyname))
+    select md5(string_agg(schemaname || '.' || tablename || ':' || policyname || ':' || cmd || ':' || roles::text || ':' || permissive || ':' || coalesce(qual, '') || '|' || coalesce(with_check, ''), ',' order by schemaname, tablename, policyname))
       from pg_policies where schemaname in ('public', 'storage')), ''), true);
   perform set_config('v78.fonctions_avant', coalesce((
     select md5(string_agg(pg_get_functiondef(p.oid), ',' order by p.proname, p.oid))
@@ -223,7 +227,7 @@ declare
   fonctions text;
   droits text;
 begin
-  select coalesce(md5(string_agg(policyname || ':' || coalesce(qual, '') || '|' || coalesce(with_check, ''), ',' order by schemaname, tablename, policyname)), '')
+  select coalesce(md5(string_agg(schemaname || '.' || tablename || ':' || policyname || ':' || cmd || ':' || roles::text || ':' || permissive || ':' || coalesce(qual, '') || '|' || coalesce(with_check, ''), ',' order by schemaname, tablename, policyname)), '')
     into regles from pg_policies where schemaname in ('public', 'storage');
   if regles <> current_setting('v78.regles_avant') then
     raise exception 'v78 : STOP — les règles RLS ont changé pendant la migration : rien n''est appliqué';

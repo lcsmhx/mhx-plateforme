@@ -10,6 +10,8 @@
 -- Attendu : aucune ligne « ÉCHEC ». Les lignes de la partie E se comparent une à une à la partie A du relevé 01 : mêmes
 -- nombres de lignes et mêmes empreintes, sauf pour une clé que l'app a écrite entre les deux (activite, coach_visite,
 -- checkins… : à vérifier, voir LISEZMOI, étape 5) ; un écart inexpliqué = STOP et retour arrière (03-retour.sql).
+-- Les lignes « lignes de la table … » se comparent à la partie F du relevé 01 (bibliothèque et catalogue : identiques) ;
+-- elles passent par query_to_xml('select count(*) …'), une lecture elle aussi.
 -- Si la requête s'arrête sur « function public.v78_limite(…) does not exist » : la migration n'est pas en place.
 -- =====================================================================================================================
 with
@@ -26,7 +28,7 @@ cles_coach (outil) as (values ('programme'), ('repas'), ('calc'), ('complements'
                               ('feedbacks'), ('notes_coach'), ('suivi_prospect')),
 maintenant as (
   select
-    coalesce((select md5(string_agg(policyname || ':' || coalesce(qual, '') || '|' || coalesce(with_check, ''), ',' order by schemaname, tablename, policyname))
+    coalesce((select md5(string_agg(schemaname || '.' || tablename || ':' || policyname || ':' || cmd || ':' || roles::text || ':' || permissive || ':' || coalesce(qual, '') || '|' || coalesce(with_check, ''), ',' order by schemaname, tablename, policyname))
                 from pg_policies where schemaname in ('public', 'storage')), '') as regles,
     coalesce((select md5(string_agg(pg_get_functiondef(p.oid), ',' order by p.proname, p.oid))
                 from pg_proc p where p.pronamespace = 'public'::regnamespace and p.prokind in ('f', 'p') and p.proname !~ '^v78_'), '') as fonctions,
@@ -102,6 +104,8 @@ v (partie, verification, resultat, detail) as (
          'maintenant ' || m.regles || ' · avant ' || av.regles
     from avant av, maintenant m
   union all
+  -- le relevé 01 (partie G) s'arrête AVANT d'appliquer si la base n'a pas 6 + 2 : ici, un ÉCHEC veut donc dire qu'une règle
+  -- a été ajoutée ou retirée entre le relevé et maintenant (la v78 n'en touche aucune : l'empreinte ci-dessus le dit aussi)
   select 'D inchangé', 'règles RLS : 6 sur donnees, 2 sur profils',
          case when (select count(*) from pg_policies where schemaname = 'public' and tablename = 'donnees') = 6
                    and (select count(*) from pg_policies where schemaname = 'public' and tablename = 'profils') = 2 then 'OK' else 'ÉCHEC' end, null
@@ -139,6 +143,13 @@ v (partie, verification, resultat, detail) as (
   union all
   select 'E comptages', 'profils · ' || coalesce(role, '?') || ' / ' || coalesce(statut, '?'), 'INFO', count(*) || ' compte(s)'
     from public.profils group by role, statut
+  union all
+  -- mêmes nombres que la partie F du relevé 01 « lignes de la table … » (catalogue et bibliothèque : identiques attendus)
+  select 'E comptages', 'lignes de la table ' || x.nom, 'INFO',
+         case when to_regclass('public.' || x.nom) is null then 'table absente'
+              else (xpath('/row/n/text()', query_to_xml(format('select count(*) as n from public.%I', x.nom), false, true, '')))[1]::text || ' ligne(s)' end
+    from (values ('profils'), ('donnees'), ('bibliotheque'), ('aliments'), ('recettes'), ('programmes_types'), ('exercices'),
+                 ('briefs'), ('connexions')) as x (nom)
 )
 select * from v
 union all

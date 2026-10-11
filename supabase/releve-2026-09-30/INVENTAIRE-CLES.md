@@ -88,5 +88,8 @@ Affichage seulement (rien d'écrit) : `js/boite-a-outils.js:46` (Calendly, 80 ca
 
 ## À tenir à jour
 Une **nouvelle clé** écrite par l'app : l'ajouter d'abord dans `public.v78_limite()` (`CREATE OR REPLACE FUNCTION`, non
-destructif), puis dans ce fichier et dans les listes de `supabase/v78-limites/` (01, 04, 05) ; sinon la base refuse son écriture
-(l'app la garde sur l'appareil et affiche « Préviens ton coach »). C'est un 4e endroit à aligner, en plus des trois du HANDOFF §2.2.
+destructif), puis dans ce fichier et dans les listes de `supabase/v78-limites/` (01, 04, 05), et refaire `06-repetition.sql`
+(`node garde-cles.js ../index.html --refaire-06`, depuis `tests-locaux/`) ; sinon la base refuse son écriture (l'app la garde
+sur l'appareil et affiche « Préviens ton coach »). C'est un 4e endroit à aligner, en plus des trois du HANDOFF §2.2. Le banc le
+vérifie sans navigateur (`tests-locaux/garde-cles.js`, partie 10) : rouge si une clé que `js/` écrit ou lit manque dans
+`public.v78_limite` de `02-migration.sql`, ou si ce tableau, 01, 04 et 05 n'ont plus les mêmes clés.
