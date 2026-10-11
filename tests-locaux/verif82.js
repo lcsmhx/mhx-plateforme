@@ -13,16 +13,19 @@
          nombre de chargements (jamais bloquée ni retardée) ; puis ?ouvrir=connexion dans l'adresse (Instagram seulement, sans
          email) ; drapeau de l'appareil sans rien de personnel ; ni carte ni bannière sur le questionnaire ;
      A3  la carte « Dernière étape » : jamais sur la page « Ton plan d'action », puis sur l'accueil (sous l'en-tête, avant
-         l'étape), textes, email, 4 étapes iPhone ; ni bannière ni invitation ; mêmes écritures que dans Safari ; invitation en
+         l'étape), textes, email, 5 étapes iPhone ; ni bannière ni invitation ; mêmes écritures que dans Safari ; invitation en
          attente : cachée par la carte, remontrée après « Plus tard » ;
      A4  « Plus tard » : la carte part (mémoire de l'appareil), aucune écriture, ni bannière dans cette visite ; nouvelle visite :
-         pas de carte, la bannière avec les étapes d'Instagram ;
+         pas de carte, la bannière avec les étapes d'Instagram ; stockage plein (écriture refusée) : « Plus tard » tient quand
+         même pendant la visite ;
      A5  Android (Instagram, TikTok long et court, Facebook FB_IAB et MetaIAB) : le lien intent:// exact vers Chrome (jamais
-         suivi : schéma inconnu), les étapes à la main ; iPhone (TikTok long et court, Facebook FBAN et MetaIAB) : la 1re étape
-         de chaque app ;
+         suivi : schéma inconnu ; ni ?ref=, ni fbclid, ni utm_), quoi faire s'il n'ouvre rien, les étapes dans Chrome ; iPhone
+         (TikTok long et court, Facebook FBAN et MetaIAB) : la 1re étape de chaque app ;
      A6  adresse : ?ouvrir=connexion sur un appareil neuf → connexion (#/connexion), même dans Safari ou Chrome ; connexion →
-         paramètre retiré, accueil, bannière normale dès cette visite ; témoins ; avec une session : ignoré dans Safari, posé
-         dans Instagram (ancre gardée), jamais dans Chrome iOS ;
+         paramètre retiré, accueil, bannière normale dès cette visite, en haut de la page, avec la suite des étapes de la carte
+         (Safari, Chrome Android) ; témoins ; avec une session : ignoré dans Safari, posé dans Instagram pour le compte inscrit
+         là (ancre gardée ; ancre d'inscription retirée), jamais pour un client sans drapeau ni pour le coach, jamais dans
+         Chrome iOS ;
      A7  bannière dans ces navigateurs (client) : étapes de l'app, « Je suis sur Android » (bouton Chrome), « C'est fait »,
          « Plus tard » ; Facebook Android, Messenger iPhone ;
      A8  anglais (carte, carte Android, bannière) ;
@@ -30,8 +33,8 @@
          connexion ignoré) ;
      A10 Safari iPhone, Chrome Android, Chrome iOS, ordinateur : écran d'inscription et accueil (bannière comprise) identiques
          interrupteur allumé ou éteint, jamais de paramètre ni de drapeau ;
-     A11 client, coach, page du plan d'action : jamais de carte ; email piégé échappé ; 320 × 568 : la croix « Plus tard »
-         visible sans défiler, puis plus de carte.
+     A11 client, coach, page du plan d'action : jamais de carte ; email piégé échappé ; 320 × 568 : « Plus tard » écrit en
+         toutes lettres en haut de la carte, visible sans défiler, puis plus de carte.
    Supabase simulé (gabarit de verif80) : rien ne part vers la vraie base (routage par NOM D'HÔTE) ; chaque écriture est
    notée. Comptes fictifs (@exemple.fr). Le lien intent:// n'est jamais touché (Chromium : erreur console « schéme inconnu »).
    Chaque bloc tourne à part (« ✗ BLOC INTERROMPU ») ; code de sortie 1 dès qu'un ✗ apparaît.
@@ -296,13 +299,15 @@ const carte = page => page.evaluate(() => {
     li: [...c.querySelectorAll("li")].map(l => n(l.textContent)), gras: [...c.querySelectorAll("li")].map(l => l.querySelectorAll("b").length),
     tard: t ? n(t.textContent) : null, croix: x ? x.getAttribute("aria-label") : null, croixT: x ? n(x.textContent) : null,
     chrome: a ? { href: a.getAttribute("href"), t: n(a.textContent), target: a.getAttribute("target"), id: a.id, cls: a.className } : null,
-    secours: n((c.querySelector(".integre-secours") || {}).textContent), nChrome: c.querySelectorAll("[data-integre-chrome], a[href^='intent:']").length, texte: n(c.textContent) };
+    secours: n((c.querySelector(".integre-secours") || {}).textContent), nChrome: c.querySelectorAll("[data-integre-chrome], a[href^='intent:']").length, texte: n(c.textContent),
+    ordre: [...c.querySelectorAll(".integre-etapes > *")].map(e => e.tagName) };
 });
 /* les textes attendus, lus dans DECOUVERTE.integre (ou .en) de la page servie : « ** » retirés, espaces normalisés */
 const attendus = (page, app, sys, en) => page.evaluate(([app, sys, en]) => {
   const T = en ? DECOUVERTE.en.integre : DECOUVERTE.integre, n = s => String(s).replace(/\*\*/g, "").replace(/[  ]/g, " ").replace(/\s+/g, " ").trim(), g = s => (String(s).match(/\*\*/g) || []).length / 2;
   const l = sys === "android" ? T.android : [T.ios_ouvrir[app]].concat(T.ios);
-  return { li: l.map(n), gras: l.map(g), chrome: n(T.chrome), secours: n(T.secours), bandeau: n(T.bandeau), tard: n(T.plus_tard) };
+  return { li: l.map(n), gras: l.map(g), chrome: n(T.chrome), secours: n(T.secours), bandeau: n(T.bandeau), tard: n(T.plus_tard),
+    suite: (sys === "android" ? T.android : T.ios).slice(1).map(n) };
 }, [app, sys, !!en]);
 /* la bannière d'installation */
 const banniere = page => page.evaluate(() => {
@@ -312,7 +317,9 @@ const banniere = page => page.evaluate(() => {
     etapesTag: (b.querySelector("#inst-etapes") || {}).tagName || "", li: [...b.querySelectorAll("#inst-etapes li")].map(l => n(l.textContent)),
     bascule: n((b.querySelector("#inst-bascule") || {}).textContent), ids: [...b.querySelectorAll("[id]")].map(e => e.id),
     chrome: a ? { href: a.getAttribute("href"), t: n(a.textContent), target: a.getAttribute("target") } : null,
-    fait: n((b.querySelector("#inst-fait") || {}).textContent), tard: n((b.querySelector("#inst-plus-tard-2") || {}).textContent), html: b.outerHTML };
+    fait: n((b.querySelector("#inst-fait") || {}).textContent), tard: n((b.querySelector("#inst-plus-tard-2") || {}).textContent), html: b.outerHTML,
+    suite: b.hasAttribute("data-integre-suite"), premier: b.parentElement && b.parentElement.id === "vue" && b.parentElement.firstElementChild === b,
+    dernier: b.parentElement && b.parentElement.id === "vue" && b.parentElement.lastElementChild === b, haut: Math.round(b.getBoundingClientRect().top + window.scrollY), ecran: window.innerHeight };
 });
 const lienAttendu = () => `intent://localhost:${PORT}/?ouvrir=connexion#Intent;scheme=http;package=com.android.chrome;S.browser_fallback_url=` + encodeURIComponent(`http://localhost:${PORT}/?ouvrir=connexion`) + ";end";
 /* le questionnaire court (3 réponses), puis la page « Ton plan d'action » */
@@ -375,8 +382,9 @@ let URL0 = "";
       if (typeof x === "string" && typeof y === "string" && (x.match(/\{[a-z]\}/g) || []).join() !== (y.match(/\{[a-z]\}/g) || []).join()) pbs.push(ch + " : variables différentes");
     };
     if (fr) compare(fr, en, "integre"); else pbs.push("DECOUVERTE.integre absent " + err);
-    ok("A0 : textes DECOUVERTE.integre et DECOUVERTE.en.integre : mêmes clés et mêmes listes, rien de vide, gras « ** » fermé, aucune balise, jamais « Lucas », l'anglais traduit (mêmes variables) ; 3 étapes iPhone communes, 1 par app (Instagram, TikTok, Facebook), 3 étapes Android",
-      !pbs.length && fr && fr.ios.length === 3 && egal(Object.keys(fr.ios_ouvrir).sort(), ["facebook", "instagram", "tiktok"]) && fr.android.length === 3, JSON.stringify(pbs));
+    ok("A0 : textes DECOUVERTE.integre et DECOUVERTE.en.integre : mêmes clés et mêmes listes, rien de vide, gras « ** » fermé, aucune balise, jamais « Lucas », l'anglais traduit (mêmes variables) ; 4 étapes iPhone communes, 1 par app (Instagram, TikTok, Facebook), 2 étapes Android (dans Chrome) ; Chrome 150 et suivants : « Installer et créer un raccourci » / « Install and create shortcut »",
+      !pbs.length && fr && fr.ios.length === 4 && egal(Object.keys(fr.ios_ouvrir).sort(), ["facebook", "instagram", "tiktok"]) && fr.android.length === 2
+        && /Installer et créer un raccourci/.test(fr.android[1]) && /Install and create shortcut/.test(en.android[1]), JSON.stringify(pbs));
     ok("A0 : mot pour mot (demande de Lucas) : « Dernière étape : mets l'app sur ton téléphone » / « Last step: put the app on your phone », « Tu te connectes avec **{e}** et le mot de passe que tu viens de choisir. » / « You log in with **{e}** and the password you just chose. »",
       !!fr && fr.titre === "Dernière étape : mets l'app sur ton téléphone" && en.titre === "Last step: put the app on your phone"
         && fr.identifiants === "Tu te connectes avec **{e}** et le mot de passe que tu viens de choisir." && en.identifiants === "You log in with **{e}** and the password you just chose.",
@@ -436,9 +444,9 @@ let URL0 = "";
     const vI = await carte(I.page), vS = await carte(S.page), A = await attendus(I.page, "instagram", "ios");
     ok("A3 : « Voir mon espace d'abord » → l'accueil : dans Instagram, la carte juste sous l'en-tête (« Bonjour »), avant « Ta première étape » ; dans Safari, aucune carte",
       !!vI && vI.avant === "HEADER.masthead" && vI.apres === "dc-etape" && vS === null, JSON.stringify({ vI: vI && [vI.avant, vI.apres], vS }));
-    ok("A3 : textes : « Dernière étape : mets l'app sur ton téléphone », « Tu te connectes avec zoe@exemple.fr (en gras) et le mot de passe que tu viens de choisir. », les 4 étapes iPhone d'Instagram (DECOUVERTE.integre, gras compris), « Plus tard » en bas et la croix (aria-label « Plus tard ») ; aucun bouton Chrome sur iPhone",
+    ok("A3 : textes : « Dernière étape : mets l'app sur ton téléphone », « Tu te connectes avec zoe@exemple.fr (en gras) et le mot de passe que tu viens de choisir. », les 5 étapes iPhone d'Instagram (DECOUVERTE.integre, gras compris, la dernière : ouvrir l'icône et se connecter), « Plus tard » écrit en haut à droite et en bas ; aucun bouton Chrome sur iPhone",
       !!vI && vI.titre === "Dernière étape : mets l'app sur ton téléphone" && vI.ids === "Tu te connectes avec zoe@exemple.fr et le mot de passe que tu viens de choisir." && vI.idsB === "zoe@exemple.fr"
-        && egal(vI.li, A.li) && egal(vI.gras, A.gras) && vI.li.length === 4 && vI.tard === "Plus tard" && vI.croix === "Plus tard" && vI.croixT === "×" && vI.nChrome === 0 && !/lucas/i.test(vI.texte),
+        && egal(vI.li, A.li) && egal(vI.gras, A.gras) && vI.li.length === 5 && /depuis l'icône/.test(vI.li[4]) && vI.tard === "Plus tard" && vI.croixT === "Plus tard" && vI.nChrome === 0 && !/lucas/i.test(vI.texte),
       JSON.stringify({ vI, A }));
     const vu = await I.page.evaluate(() => ({ inst: !!document.getElementById("installe"), inv: document.querySelectorAll(".invitation").length }));
     ok("A3 : carte affichée : ni bannière d'installation ni invitation dans cet affichage", !vu.inst && vu.inv === 0, JSON.stringify(vu));
@@ -496,15 +504,36 @@ let URL0 = "";
       JSON.stringify({ v7, bn: bn && { cls: bn.cls, ici: bn.ici, li: bn.li }, ecr: resume(db).slice(n0) }));
   });
 
+  await bloc("A4. stockage plein", async () => {
+    /* le drapeau se lit, mais son écriture est refusée (stockage plein : QuotaExceededError) : « Plus tard » tient quand même
+       pendant la visite (la copie de la visite passe avant l'appareil) */
+    const db = base();
+    const { page } = await accueil(b, db, UA.ig_ios, prospectIntegre("instagram", "ios"));
+    await page.evaluate(() => { const o = Storage.prototype.setItem; Storage.prototype.setItem = function(k, v){ if (String(k).indexOf("mhx_integre|") === 0) throw new DOMException("plein", "QuotaExceededError"); return o.call(this, k, v); }; });
+    const n0 = saisies(db).length;
+    await page.click("#integre-plus-tard"); await attendre(page, 300);
+    await aller(page, "#/formation");
+    await aller(page, "#/accueil"); await page.waitForSelector("#dc-etape"); await attendre(page, 300);
+    const v = await page.evaluate(() => ({ carte: !!document.getElementById("integre-carte"), ferme: JSON.parse(localStorage.getItem("mhx_integre|" + Auth.utilisateur().id)).ferme }));
+    ok("A4 : stockage plein (écriture du drapeau refusée) : après « Plus tard », de retour sur l'accueil dans la même visite, plus de carte (l'appareil garde l'ancien drapeau) ; aucune écriture en base",
+      !v.carte && v.ferme === "" && saisies(db).length === n0, JSON.stringify({ v, ecr: resume(db).slice(n0) }));
+  });
+
   /* =================== A5. Android : le lien vers Chrome ; iPhone : la 1re étape de chaque app =================== */
   await bloc("A5. android", async () => {
     const db = base();
     const { page } = await accueil(b, db, UA.ig_and, prospectIntegre("instagram", "android"));
     const v = await carte(page), A = await attendus(page, "instagram", "android");
-    ok("A5 : Instagram Android : bouton « Ouvrir dans Chrome » = lien intent:// exact (" + lienAttendu() + "), sans target, sans email ; puis « Chrome ne s'ouvre pas ? Fais-le à la main : » et les 3 étapes à la main (DECOUVERTE.integre.android)",
+    ok("A5 : Instagram Android : bouton « Ouvrir dans Chrome » = lien intent:// exact (" + lienAttendu() + "), sans target, sans email ; juste dessous quoi faire s'il n'ouvre rien (revenir en arrière, ⋮, « Ouvrir dans Chrome ») ; puis les 2 étapes de tous, dans Chrome (DECOUVERTE.integre.android : se connecter, « Installer et créer un raccourci »)",
       !!v && !!v.chrome && v.chrome.href === lienAttendu() && v.chrome.target === null && v.chrome.t === A.chrome && v.chrome.id === "integre-chrome" && v.nChrome === 1 && !/@|%40|noah/i.test(v.chrome.href)
-        && v.secours === A.secours && egal(v.li, A.li) && egal(v.gras, A.gras) && v.li.length === 3 && v.tard === "Plus tard",
+        && v.secours === A.secours && /Reviens en arrière/.test(v.secours) && /« Ouvrir dans Chrome »/.test(v.secours) && egal(v.ordre, ["DIV", "P", "OL"])
+        && egal(v.li, A.li) && egal(v.gras, A.gras) && v.li.length === 2 && /^Dans Chrome/.test(v.li[0]) && /Installer et créer un raccourci/.test(v.li[1]) && v.tard === "Plus tard",
       JSON.stringify({ v, A }));
+    { const { page: p } = await accueil(b, base(), UA.ig_and, prospectIntegre("instagram", "android"), { adresse: "?utm_source=ig&utm_medium=social&utm_content=link_in_bio&fbclid=PAZtest123&igsh=abc#/accueil" });
+      const w = await carte(p), ad = await adresse(p);
+      ok("A5 : arrivée par le lien de la bio (utm_…, fbclid, igsh ajoutés par Instagram) : le lien vers Chrome n'emporte que ?ouvrir=connexion (ni fbclid, ni utm_, ni igsh, même encodés dans l'adresse de secours)",
+        !!w && !!w.chrome && w.chrome.href === lienAttendu() && !/fbclid|utm_|igsh|PAZ/.test(w.chrome.href) && /fbclid=PAZtest123/.test(ad.search) && /ouvrir=connexion$/.test(ad.search),
+        JSON.stringify({ href: w && w.chrome && w.chrome.href, ad })); }
     const vus = [];
     for (const k of ["tt_and_long", "tt_and_court", "fb_and", "meta_and"]) {
       const app = /^tt/.test(k) ? "tiktok" : "facebook";
@@ -513,7 +542,7 @@ let URL0 = "";
       vus.push({ k, href: w && w.chrome && w.chrome.href, n: w && w.li.length, ad });
     }
     ok("A5 : TikTok Android (format long et court), Facebook Android (FB_IAB) et MetaIAB : la carte avec le même lien vers Chrome (le code ?ref= de l'adresse n'y passe pas) ; l'adresse garde ?ref= et reçoit ouvrir=connexion",
-      vus.length === 4 && vus.every(x => x.href === lienAttendu() && x.n === 3 && x.ad.search === "?ref=insta&ouvrir=connexion" && x.ad.hash === "#/accueil"), JSON.stringify(vus));
+      vus.length === 4 && vus.every(x => x.href === lienAttendu() && x.n === 2 && x.ad.search === "?ref=insta&ouvrir=connexion" && x.ad.hash === "#/accueil"), JSON.stringify(vus));
     const ios = [];
     for (const [k, app] of [["tt_ios_long", "tiktok"], ["tt_ios_court", "tiktok"], ["fb_ios", "facebook"], ["meta_ios", "facebook"]]) {
       const { page: p } = await accueil(b, base(), UA[k], prospectIntegre(app, "ios"));
@@ -544,22 +573,46 @@ let URL0 = "";
       const { page } = await contexte(b, db, { ua: UA.safari_ios, neuf: true });
       await page.goto(URL0 + "?ouvrir=connexion"); await page.waitForSelector("#c-go");
       await connecter(page, NOAH.email); await page.waitForSelector("#dc-etape"); await attendre(page, 400);
-      const ad = await adresse(page), bn = await banniere(page), x = await page.evaluate(() => ({ v: localStorage.getItem("mhx_visites"), carte: !!document.getElementById("integre-carte") }));
+      await page.evaluate(() => window.scrollTo(0, 0)); await attendre(page, 100);
+      const ad = await adresse(page), bn = await banniere(page), A = await attendus(page, "instagram", "ios"), x = await page.evaluate(() => ({ v: localStorage.getItem("mhx_visites"), carte: !!document.getElementById("integre-carte") }));
       ok("A6 : … connexion (Safari) : l'adresse n'a plus le paramètre, l'accueil s'ouvre (pas de carte : navigateur normal)", ad.search === "" && ad.hash === "" && !x.carte, JSON.stringify({ ad, x }));
-      ok("A6 : … et la bannière d'installation NORMALE (Partager → Sur l'écran d'accueil) s'affiche dès cette première visite",
-        !!bn && bn.cls === "installe" && bn.etapesTag === "OL" && bn.li.length === 3 && /Partager/.test(bn.li[0]) && bn.ici === "" && x.v === "1", JSON.stringify({ bn: bn && { cls: bn.cls, li: bn.li, ici: bn.ici }, x })); }
+      ok("A6 : … et la bannière d'installation normale (mêmes titre, boutons et id) s'affiche dès cette première visite, EN HAUT de la page (avant « Bonjour », visible sans défiler), avec la suite des étapes de la carte (Partager, « Sur l'écran d'accueil », ouvrir l'icône : DECOUVERTE.integre.ios sans la connexion)",
+        !!bn && bn.cls === "installe" && bn.suite && bn.premier && bn.haut < bn.ecran && bn.etapesTag === "OL" && egal(bn.li, A.suite) && bn.li.length === 3 && /Partager/.test(bn.li[0]) && /depuis l'icône/.test(bn.li[2])
+          && bn.ici === "" && bn.h3 === "Mets MHX Coaching sur ton écran d'accueil" && ["inst-plus-tard", "inst-etapes", "inst-bascule", "inst-fait", "inst-plus-tard-2"].every(i => bn.ids.includes(i)) && x.v === "1",
+        JSON.stringify({ bn: bn && Object.assign({}, bn, { html: undefined }), A: A.suite, x }));
+      const An = await attendus(page, "instagram", "android");
+      await page.click("#inst-bascule"); await attendre(page, 200);
+      const w = await banniere(page);
+      await page.click("#inst-plus-tard-2"); await attendre(page, 200);
+      await aller(page, "#/formation");
+      const apres = await banniere(page);
+      ok("A6 : … « Je suis sur Android ou ordinateur » : l'étape de Chrome de la carte (« Installer et créer un raccourci ») ; « Plus tard » : plus de bannière dans cette visite",
+        !!w && egal(w.li, An.suite) && /Installer et créer un raccourci/.test(w.li[0]) && !apres, JSON.stringify({ w: w && w.li, apres: !!apres })); }
+    { const db = base(); db.emails[NOAH.id] = NOAH.email;
+      const { page } = await contexte(b, db, { ua: UA.chrome_and, neuf: true });
+      await page.goto(URL0 + "?ouvrir=connexion"); await page.waitForSelector("#c-go");
+      await connecter(page, NOAH.email); await page.waitForSelector("#dc-etape"); await attendre(page, 400);
+      const bn = await banniere(page), A = await attendus(page, "instagram", "android");
+      ok("A6 : … même chose dans Chrome Android (bouton Chrome touché) : la bannière en haut, avec « Touche ⋮ puis « Installer et créer un raccourci » … »",
+        !!bn && bn.cls === "installe" && bn.suite && bn.premier && egal(bn.li, A.suite) && bn.li.length === 1, JSON.stringify({ bn: bn && { li: bn.li, premier: bn.premier, suite: bn.suite }, A: A.suite })); }
     { const db = base(); db.emails[NOAH.id] = NOAH.email;
       const { page } = await contexte(b, db, { ua: UA.safari_ios, neuf: true });
       await page.goto(URL0 + "#/connexion"); await page.waitForSelector("#c-go");
       await connecter(page, NOAH.email); await page.waitForSelector("#dc-etape"); await attendre(page, 400);
-      ok("A6 : témoin : la même connexion sans le paramètre : pas de bannière à la première visite, comme avant", !(await banniere(page)), ""); }
+      const b1 = await banniere(page);
+      const p2 = await nouvellePage(page.context());
+      await p2.goto(URL0 + "#/accueil"); await pret(p2); await p2.waitForSelector("#dc-etape"); await p2.waitForSelector("#installe"); await attendre(p2, 300);
+      const b2 = await banniere(p2);
+      ok("A6 : témoin : la même connexion sans le paramètre : pas de bannière à la première visite ; à la visite suivante, la bannière de Safari, en bas de la page, comme avant",
+        !b1 && !!b2 && b2.cls === "installe" && !b2.suite && b2.dernier && !b2.premier && /^Touche le bouton Partager en bas de Safari/.test(b2.li[0]) && b2.li.length === 3,
+        JSON.stringify({ b1: !!b1, b2: b2 && { li: b2.li, suite: b2.suite, dernier: b2.dernier } })); }
     { const { page } = await contexte(b, base(), { ua: UA.safari_ios, qui: NOAH });
       await page.goto(URL0 + "?ouvrir=connexion#/profil"); await pret(page);
       const v = await page.evaluate(() => ({ portail: !!document.querySelector(".portail"), vue: !!document.getElementById("vue"), hash: location.hash, search: location.search }));
       ok("A6 : avec une session, dans Safari : le paramètre est ignoré (l'app s'ouvre sur la page demandée, l'adresse n'est pas touchée)", !v.portail && v.vue && v.hash === "#/profil" && v.search === "?ouvrir=connexion", JSON.stringify(v)); }
     { const r = [];
       for (const k of ["ig_ios", "chrome_ios"]) {
-        const { page } = await contexte(b, base(), { ua: UA[k], qui: NOAH });
+        const { page } = await contexte(b, base(), { ua: UA[k], qui: NOAH, stockage: prospectIntegre("instagram", "ios") });
         await page.goto(URL0 + "#/profil"); await pret(page);
         r.push(await page.evaluate(() => ({ vue: !!document.getElementById("vue"), hash: location.hash, search: location.search })));
         if (k === "ig_ios") {
@@ -568,8 +621,29 @@ let URL0 = "";
           r.push(await portailVu(page));
         }
       }
-      ok("A6 : avec une session dans Instagram (#/profil) : « ?ouvrir=connexion#/profil » (ancre gardée) ; « Se déconnecter » y rouvre la connexion ; Chrome iOS : jamais de paramètre",
+      ok("A6 : avec une session dans Instagram (#/profil), prospect inscrit là : « ?ouvrir=connexion#/profil » (ancre gardée) ; « Se déconnecter » y rouvre la connexion ; Chrome iOS : jamais de paramètre",
         r[0].vue && r[0].hash === "#/profil" && r[0].search === "?ouvrir=connexion" && r[1].h2 === CONN && r[2].vue && r[2].hash === "#/profil" && r[2].search === "", JSON.stringify(r)); }
+    { const r = [];
+      for (const [nom, qui, vp, h] of [["prospect sans drapeau", NOAH, MOBILE, "#/profil"], ["client", THOMAS, MOBILE, "#/profil"], ["coach", COACH, LARGE, "#/tableau"]]) {
+        const { page } = await contexte(b, base(), { ua: UA.ig_ios, qui, viewport: vp });
+        await page.goto(URL0 + h); await pret(page); await attendre(page, 300);
+        r.push(Object.assign({ nom }, await adresse(page), { vue: !!(await page.$("#vue")) }));
+      }
+      ok("A6 : dans Instagram, un compte qui ne s'y est pas inscrit (prospect sans drapeau, client, coach) : jamais de paramètre (un lien copié puis partagé ouvre l'écran d'entrée habituel), ancre intacte",
+        r.length === 3 && r.every(x => x.vue && x.search === "") && r[0].hash === "#/profil" && r[1].hash === "#/profil", JSON.stringify(r)); }
+    { const r = [];
+      for (const depart of ["#/inscription?ref=insta", "?ouvrir=connexion#/inscription?ref=insta", "?ref=insta#/connexion"]) {
+        const { page } = await contexte(b, base(), { ua: UA.ig_ios, qui: NOAH, stockage: { [CLEF(NOAH.id)]: flag("instagram", "ios", avant(H)) } });   // « Plus tard » déjà touché : le paramètre reste (la bannière prend le relais)
+        await page.goto(URL0 + depart); await pret(page); await attendre(page, 300);
+        r.push(Object.assign({ depart }, await adresse(page), { accueil: !!(await page.$("#dc-etape")), portail: !!(await page.$(".portail")) }));
+      }
+      const db = base(); db.emails[NOAH.id] = NOAH.email;
+      const { page: ps } = await contexte(b, db, { ua: UA.safari_ios, neuf: true });
+      await ps.goto(URL0 + r[0].search + r[0].hash); await ps.waitForSelector("#c-go"); await attendre(ps, 300);
+      const vs = await portailVu(ps);
+      ok("A6 : session dans Instagram (prospect inscrit là) ouverte par « …/#/inscription?ref=insta » (lien touché de nouveau) : l'ancre d'inscription (ou de connexion) est retirée, même si le paramètre est déjà là ; l'accueil s'ouvre ; cette adresse ouverte ensuite dans Safari (appareil neuf) mène à la connexion, pas à l'inscription",
+        r.length === 3 && r[0].search === "?ouvrir=connexion" && r[1].search === "?ouvrir=connexion" && r[2].search === "?ref=insta&ouvrir=connexion" && r.every(x => x.hash === "" && x.accueil && !x.portail)
+          && vs.h2 === CONN && !vs.prenom && vs.hash === "#/connexion", JSON.stringify({ r, vs })); }
   });
 
   /* =================== A7. la bannière d'installation dans ces navigateurs =================== */
@@ -579,7 +653,7 @@ let URL0 = "";
     await page.goto(URL0 + "#/accueil"); await pret(page); await page.waitForSelector("#installe"); await attendre(page, 300);
     const n0 = saisies(db).length;
     const v = await banniere(page), A = await attendus(page, "instagram", "ios"), An = await attendus(page, "instagram", "android");
-    ok("A7 : client (Thomas) dans Instagram, 2e visite : la bannière garde son titre, sa phrase, ses boutons et ses id (inst-plus-tard, inst-etapes, inst-bascule, inst-fait, inst-plus-tard-2), avec « Ici, tu es dans Instagram : ouvre l'app dans Safari pour l'installer. » et les 4 étapes d'Instagram ; « Je suis sur Android » ; jamais la carte (client)",
+    ok("A7 : client (Thomas) dans Instagram, 2e visite : la bannière garde son titre, sa phrase, ses boutons et ses id (inst-plus-tard, inst-etapes, inst-bascule, inst-fait, inst-plus-tard-2), avec « Ici, tu es dans Instagram : ouvre l'app dans Safari pour l'installer. » et les 5 étapes d'Instagram ; « Je suis sur Android » ; jamais la carte (client)",
       !!v && v.cls === "installe installe-integre" && v.h3 === "Mets MHX Coaching sur ton écran d'accueil" && v.p[0] === "Tu l'ouvres d'un doigt, elle s'affiche en plein écran, et tu n'as plus à retenir l'adresse."
         && v.ici === "Ici, tu es dans Instagram : ouvre l'app dans Safari pour l'installer." && egal(v.li, A.li) && v.bascule === "Je suis sur Android" && v.fait === "C'est fait" && v.tard === "Plus tard"
         && ["inst-plus-tard", "inst-etapes", "inst-bascule", "inst-fait", "inst-plus-tard-2"].every(i => v.ids.includes(i)) && !(await page.$("#integre-carte")),
@@ -588,7 +662,7 @@ let URL0 = "";
     const w = await banniere(page);
     await page.click("#inst-bascule"); await attendre(page, 300);
     const w2 = await banniere(page);
-    ok("A7 : « Je suis sur Android » : le bouton « Ouvrir dans Chrome » (même lien intent://) et les 3 étapes à la main, « … dans Chrome pour l'installer. », « Je suis sur iPhone » ; et retour",
+    ok("A7 : « Je suis sur Android » : le bouton « Ouvrir dans Chrome » (même lien intent://), quoi faire s'il n'ouvre rien et les 2 étapes dans Chrome, « … dans Chrome pour l'installer. », « Je suis sur iPhone » ; et retour",
       !!w && !!w.chrome && w.chrome.href === lienAttendu() && egal(w.li, An.li) && w.ici === "Ici, tu es dans Instagram : ouvre l'app dans Chrome pour l'installer." && w.bascule === "Je suis sur iPhone"
         && !!w2 && egal(w2.li, A.li) && !w2.chrome && w2.bascule === "Je suis sur Android", JSON.stringify({ w: w && { li: w.li, ici: w.ici, chrome: w.chrome, b: w.bascule }, w2: w2 && { li: w2.li, b: w2.bascule } }));
     await page.click("#inst-fait"); await attendre(page, 300);
@@ -602,9 +676,9 @@ let URL0 = "";
       await p.goto(URL0 + "#/accueil"); await pret(p); await p.waitForSelector("#installe"); await attendre(p, 300);
       const x = await banniere(p), Ax = await attendus(p, app, sys);
       r.push({ k, ok: !!x && x.ici === ici && egal(x.li, Ax.li) && (sys === "android" ? !!x.chrome && x.chrome.href === lienAttendu() : !x.chrome), ici: x && x.ici });
-      if (k === "msg_ios") { await p.click("#inst-plus-tard"); await attendre(p, 200); await aller(p, "#/formation"); r.push({ k: "plus tard", ok: !(await p.$("#installe")) && (await adresse(p)).search === "?ouvrir=connexion" }); }
+      if (k === "msg_ios") { await p.click("#inst-plus-tard"); await attendre(p, 200); await aller(p, "#/formation"); r.push({ k: "plus tard", ok: !(await p.$("#installe")) && (await adresse(p)).search === "" }); }
     }
-    ok("A7 : Facebook Android : le bouton Chrome d'emblée (« … dans Facebook : ouvre l'app dans Chrome … ») ; Messenger iPhone : « Ici, tu es dans Messenger … Safari … » et l'étape de Facebook ; la croix « Plus tard » ferme la bannière pour la visite, comme avant",
+    ok("A7 : Facebook Android : le bouton Chrome d'emblée (« … dans Facebook : ouvre l'app dans Chrome … ») ; Messenger iPhone : « Ici, tu es dans Messenger … Safari … » et l'étape de Facebook ; la croix « Plus tard » ferme la bannière pour la visite, comme avant (client sans drapeau : pas de paramètre dans l'adresse)",
       r.length === 3 && r.every(x => x.ok), JSON.stringify(r));
   });
 
@@ -615,16 +689,17 @@ let URL0 = "";
       const { page } = await accueil(b, db, UA.ig_ios, prospectIntegre("instagram", "ios"), { langue: "en" });
       await attendre(page, 400);
       const v = await carte(page), A = await attendus(page, "instagram", "ios", true);
-      ok("A8 : anglais (iPhone) : « Last step: put the app on your phone », « You log in with noah@exemple.fr and the password you just chose. », les 4 étapes anglaises (DECOUVERTE.en.integre), « Later » (bouton et croix) ; aucun mot français",
+      ok("A8 : anglais (iPhone) : « Last step: put the app on your phone », « You log in with noah@exemple.fr and the password you just chose. », les 5 étapes anglaises (DECOUVERTE.en.integre), « Later » (en haut et en bas) ; aucun mot français",
         !!v && v.titre === "Last step: put the app on your phone" && v.ids === "You log in with noah@exemple.fr and the password you just chose." && v.idsB === "noah@exemple.fr"
-          && egal(v.li, A.li) && egal(v.gras, A.gras) && v.tard === "Later" && v.croix === "Later" && !/Touche|Connecte|Partager|Plus tard|Dernière|écran|navigateur|Ajouter/.test(v.texte),
+          && egal(v.li, A.li) && egal(v.gras, A.gras) && v.tard === "Later" && v.croixT === "Later" && !/Touche|Connecte|Partager|Plus tard|Dernière|écran|navigateur|Ajouter/.test(v.texte),
         JSON.stringify({ v, A })); }
     { const db = base([prefs(NOAH.id)]);
       const { page } = await accueil(b, db, UA.ig_and, prospectIntegre("instagram", "android"), { langue: "en" });
       await attendre(page, 400);
       const v = await carte(page), A = await attendus(page, "instagram", "android", true);
-      ok("A8 : anglais (Android) : « Open in Chrome » (même lien), « Chrome didn't open? Do it by hand: », les 3 étapes anglaises",
-        !!v && !!v.chrome && v.chrome.t === "Open in Chrome" && v.chrome.href === lienAttendu() && v.secours === "Chrome didn't open? Do it by hand:" && egal(v.li, A.li) && !/Touche|Connecte|Ouvrir|Fais-le/.test(v.texte),
+      ok("A8 : anglais (Android) : « Open in Chrome » (même lien), « Chrome didn't open, or you see an error page? Go back… », les 2 étapes anglaises (« Install and create shortcut »)",
+        !!v && !!v.chrome && v.chrome.t === "Open in Chrome" && v.chrome.href === lienAttendu() && v.secours === A.secours && /^Chrome didn't open, or you see an error page\? Go back/.test(v.secours) && egal(v.li, A.li)
+          && /Install and create shortcut/.test(v.li[1]) && !/Touche|Connecte|Ouvrir|Fais-le|Reviens/.test(v.texte),
         JSON.stringify({ v, A })); }
     { const db = base(); db.donnees.find(d => d.user_id === THOMAS.id && d.outil === "prefs").contenu.langue = "en";
       const { page } = await contexte(b, db, { ua: UA.ig_ios, qui: THOMAS, neuf: true, langue: "en", stockage: { mhx_visites: "1" } });
@@ -726,14 +801,17 @@ let URL0 = "";
         const cx = r.left + r.width / 2, cy = r.top + r.height / 2, e = document.elementFromPoint(cx, cy);
         const pt = document.getElementById("integre-plus-tard").getBoundingClientRect();
         return { y: window.scrollY, sw: document.documentElement.scrollWidth, iw: window.innerWidth, top: Math.round(r.top), bottom: Math.round(r.bottom), w: Math.round(r.width), h: Math.round(r.height), haut: Math.round(haut), bas: Math.round(bas),
-          dessus: e === x, cx, cy, boutonBas: Math.round(pt.bottom), boutonVisible: pt.bottom <= bas };
+          dessus: e === x, cx, cy, boutonBas: Math.round(pt.bottom), boutonVisible: pt.bottom <= bas, texte: x.textContent.replace(/\s+/g, " ").trim(),
+          titreDroite: (() => { const rg = document.createRange(); rg.selectNodeContents(document.getElementById("integre-titre")); return Math.max(...[...rg.getClientRects()].filter(q => q.bottom > r.top && q.top < r.bottom).map(q => q.right), -1); })(),
+          gauche: r.left, dehors: r.right <= window.innerWidth && r.left >= 0 };
       });
       const n0 = saisies(db2).length;
-      res.push("    (info) 320 × 568, " + sys + " : croix de " + m.top + " à " + m.bottom + " px, barre du bas à " + m.bas + " px ; bouton « Plus tard » du bas à " + m.boutonBas + " px (" + (m.boutonVisible ? "visible" : "après défilement") + ")");
+      res.push("    (info) 320 × 568, " + sys + " : « Plus tard » du haut de " + m.top + " à " + m.bottom + " px (" + m.w + " × " + m.h + "), barre du bas à " + m.bas + " px ; bouton « Plus tard » du bas à " + m.boutonBas + " px (" + (m.boutonVisible ? "visible" : "après défilement") + ")");
       await p.mouse.click(m.cx, m.cy); await attendre(p, 400);
       const apres = await p.evaluate(() => ({ carte: !!document.getElementById("integre-carte"), y: window.scrollY }));
-      ok("A11 : 320 × 568 (" + sys + ", email long) : aucun défilement horizontal ; la croix « Plus tard » (44 × 44) visible sans défiler, entre la barre du haut et celle du bas ; touchée sans défiler, la carte part (aucune écriture)",
-        m.y === 0 && m.sw <= m.iw && m.top >= m.haut && m.bottom <= m.bas && m.w >= 44 && m.h >= 44 && m.dessus && !apres.carte && apres.y === 0 && saisies(db2).length === n0,
+      ok("A11 : 320 × 568 (" + sys + ", email long) : aucun défilement horizontal ; « Plus tard » écrit en toutes lettres en haut à droite de la carte (au moins 44 × 44, sans chevaucher le titre), visible sans défiler, entre la barre du haut et celle du bas ; touché sans défiler, la carte part (aucune écriture)",
+        m.y === 0 && m.sw <= m.iw && m.texte === "Plus tard" && m.dehors && m.top >= m.haut && m.bottom <= m.bas && m.w >= 44 && m.h >= 44 && m.dessus && m.titreDroite <= m.gauche
+          && !apres.carte && apres.y === 0 && saisies(db2).length === n0,
         JSON.stringify({ m, apres }));
     }
   });
