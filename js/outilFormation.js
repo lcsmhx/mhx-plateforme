@@ -113,8 +113,7 @@ const FORMATION = {
         ["m2a","Lire la ressource « Comprendre l'alimentation »"],
         ["m2b","Prendre en main « Organise ta diète »"],
         ["m2c","Remplir ton tableau de suivi et faire ton calcul"],
-        ["m2d","Regarder ton plan de repas et ta liste de courses"],
-        ["m2e","Lire le guide d'astuces pour gérer les fringales"]
+        ["m2d","Regarder ton plan de repas et ta liste de courses"]
       ],
       lecons:[ "alimentation" ],
       widgets:[ "diete" ],
@@ -123,8 +122,7 @@ const FORMATION = {
         {t:"Organise ta diète (PDF)", u:"https://drive.google.com/file/d/13mgHbjBg65AoHNsf04X5Hj-BNyyfJM5h/view?usp=drive_link"},
         {t:"Plan alimentaire sans restriction", u:"https://drive.google.com/file/d/1BGtdJ5bK-kH1WuGZayNSbxnj1qFIJXLA/view?usp=sharing"},
         {t:"Plan alimentaire sans gluten", u:"https://drive.google.com/file/d/1g0DCGNe_MmorfUvUhleaP2mWFWQnj9P8/view?usp=drive_link"},
-        {t:"Plan alimentaire vegan", u:"https://drive.google.com/file/d/14v8BBGNFjwzyXUHzqybuImxHQ0kM2LvQ/view?usp=drive_link"},
-        {t:"Guide d'astuces (fringales et excès)", u:"https://drive.google.com/file/d/13CaG8T6PKYsEPT6Sou-BgfiFM--pmkAp/view?usp=sharing"}
+        {t:"Plan alimentaire vegan", u:"https://drive.google.com/file/d/14v8BBGNFjwzyXUHzqybuImxHQ0kM2LvQ/view?usp=drive_link"}
       ]
     },
 
@@ -146,10 +144,10 @@ const FORMATION = {
       ],
       interne:[{t:"Ton programme d'entraînement", id:"programme"}],
       ressources:[
-        {t:"Guide START 1.0", u:"https://drive.google.com/file/d/1ilSWfNUE516VSx7lUKX4TV8K-WjsgdtY/view?usp=sharing"},
+        {t:"Guide START 1.0", u:"https://drive.google.com/file/d/1u7yjrWEFXLu9KxATpGPj7SzyjzEvLTgX/view?usp=sharing"},
         {t:"Training 12 semaines — Femme", u:"https://drive.google.com/file/d/1X5KcFQf-euB8bLjDfcv9TqbVniqMzzZ7/view?usp=drive_link"},
         {t:"Training 12 semaines — Homme", u:"https://drive.google.com/file/d/1csUSlfliebu6JTz0wUssZkpHb8X9MGD_/view?usp=drive_link"},
-        {t:"Full body à la maison", u:"https://drive.google.com/file/d/197E2YJaa7jORdykUkFuQYQjOGFydgDV5/view?usp=sharing"}
+        {t:"Full body à la maison", u:"https://drive.google.com/file/d/1HWZYvY8ybAqAlL6FAjt-tOrjivPmmnQy/view?usp=sharing"}
       ],
       note:"Les démonstrations vidéo de chaque mouvement sont directement dans ton programme : ouvre « Comment faire ? » sous un exercice."
     },
@@ -509,7 +507,7 @@ const outilFormation = {
   /* ---------- v60 (brief V2, I) : les deux cartes du haut, prospect seulement ----------
      « Commence ici » : 3 actions qui se cochent toutes seules — la video de bienvenue lancee (D.depart.video, un instant,
      ecrit au clic seulement : une visite n'ecrit rien), un calcul enregistre (calc_perso valide, pas mineur), une pesee
-     (mens) — lus par init() en lecture seule. Elles ne comptent pas dans les 49 etapes. Les 3 faites : une seule ligne.
+     (mens) — lus par init() en lecture seule. Elles ne comptent pas dans les 48 etapes. Les 3 faites : une seule ligne.
      « Ce qui t'attend dans ta formation » : chiffres comptes dans FORMATION et LECONS, jamais ecrits en dur. */
   pourProspect(){ return Auth.estProspect() && !Store.idConsulte; },
   departEtat(D, R){

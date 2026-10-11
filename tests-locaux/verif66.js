@@ -18,8 +18,8 @@
        d6, d7, c3 gardés ; aucun ancien texte (anglais ni français) ; aucun prix ;
    I1. prospect, français (390 px, sombre) : #fo-depart puis #fo-apercu, au-dessus de « Ton parcours » ; « Commence
        ici » sans durée (affiché en capitales), titre, les 3 actions (liens, rien de fait, tactiles), les 4 tuiles
-       7 / 7 / 15 / 25 (= comptées dans FORMATION et LECONS ; v63 : « guides et documents », plus de « à télécharger »),
-       les 2 lignes, compteur « 0 / 49 étapes » ; les liens mènent au calculateur et à Ma progression ; pas de débordement ; une simple visite n'écrit rien et ne lit
+       7 / 7 / 14 / 25 (= comptées dans FORMATION et LECONS ; v63 : « guides et documents », plus de « à télécharger »),
+       les 2 lignes, compteur « 0 / 48 étapes » ; les liens mènent au calculateur et à Ma progression ; pas de débordement ; une simple visite n'écrit rien et ne lit
        calc_perso et mens qu'en UNE lecture groupée ; aucun prix ;
    I2. états des 3 actions selon la base : calc_perso valide et adulte (fait), mineur ou incomplet (pas fait), pesée
        (pstart ou une mesure avec un poids), vidéo déjà lancée (formation.depart.video) ; « ✓ » et « (fait) » (lecteurs
@@ -42,9 +42,9 @@
        Mes clients) : aucune des deux cartes, « Ton parcours » en premier, aucune
        lecture de calc_perso ni de mens (quel que soit l'ordre ou le découpage) ; la vignette de Thomas n'écrit rien ;
    I5. page servie retouchée (FORMATION.video_minutes à 4, une ressource de plus dans le module 6) : « Commence ici ·
-       7 min » / « Start here · 7 min », tuile des documents à 16 (rien d'écrit en dur) ;
+       7 min » / « Start here · 7 min », tuile des documents à 15 (rien d'écrit en dur) ;
    I6. prospect, anglais (390 px, clair) : les deux cartes en anglais (« Start here », actions, tuiles, lignes,
-       « 0 / 49 steps », « (done) », « You're off ✓ » et, v62, l'invitation anglaise du brief H), pas de débordement ;
+       « 0 / 48 steps », « (done) », « You're off ✓ » et, v62, l'invitation anglaise du brief H), pas de débordement ;
    T. thèmes sombre et clair (390 px) : thème appliqué, chaque texte des deux cartes, et l'état replié « Départ lancé ✓ »
       suivi de son invitation (v62), se détache de son fond (contraste d'au moins 4,5:1 ; 3:1 pour les seules exceptions
       nommées, à la couleur exacte de leur jeton : EXCEPTIONS_CONTRASTE), fond des cartes différent d'un thème à l'autre, rien ne sort de l'écran,
@@ -438,12 +438,12 @@ const I_FR = { etiquette: "Commence ici", titre: "3 actions pour bien démarrer 
   actions: [["video", "#fo-presentation", "Regarde la vidéo de bienvenue"], ["calcul", "#/calculateur", "Calcule tes calories (2 min)"], ["pesee", "#/mensurations", "Note ton poids de départ (1 min)"]],
   fait: "(fait)", fini: "Départ lancé ✓", apercu: "Ce qui t'attend dans ta formation", tuiles: ["modules", "vidéos de ton coach", "guides et documents", "défis"],
   lignes: ["Dont 3 programmes d'entraînement (12 semaines femme, 12 semaines homme, full body maison) et 3 plans alimentaires (sans restriction, sans gluten, vegan).",
-    "Plus tes outils : organisation de la diète, priorités, notes et objectifs. Gratuit, sans limite de temps."], compteur: "0 / 49 étapes" };
+    "Plus tes outils : organisation de la diète, priorités, notes et objectifs. Gratuit, sans limite de temps."], compteur: "0 / 48 étapes" };
 const I_EN = { etiquette: "Start here", titre: "3 actions to get started today",
   actions: [["video", "#fo-presentation", "Watch the welcome video"], ["calcul", "#/calculateur", "Calculate your calories (2 min)"], ["pesee", "#/mensurations", "Log your starting weight (1 min)"]],
   fait: "(done)", fini: "You're off ✓", apercu: "What's inside your course", tuiles: ["modules", "videos from your coach", "guides and documents", "challenges"],
   lignes: ["Including 3 workout programs (12 weeks for women, 12 weeks for men, full body at home) and 3 meal plans (no restrictions, gluten-free, vegan).",
-    "Plus your tools: meal organizer, priorities, notes and goals. Free, with no time limit."], compteur: "0 / 49 steps" };
+    "Plus your tools: meal organizer, priorities, notes and goals. Free, with no time limit."], compteur: "0 / 48 steps" };
 
 /* ---------- lectures de la page ---------- */
 async function ouvrirFormation(page, url){ await page.goto(url || URL0 + "#/formation"); await pret(page, "#fo-vue .prog-compteur"); await attendre(page, 500); }
@@ -770,12 +770,12 @@ const ISO = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$/;
     ok("les 3 actions : vidéo (#fo-presentation), calories (#/calculateur), poids (#/mensurations), leurs textes ; aucune faite (ni coche, ni « (fait) ») ; tactiles (44 px au moins)",
       !!d && d.ol === 1 && egal(d.actions.map(a => [a.k, a.href, a.t]), I_FR.actions) && d.actions.every(a => !a.fait && a.c === "" && a.sr === null && a.h >= 44), JSON.stringify(d && d.actions));
     const a = await carteApercu(page), n = await chiffresAttendus(page);
-    ok("« Ce qui t'attend dans ta formation » : 7 modules, 7 vidéos de ton coach, 15 guides et documents, 25 défis (comptés dans FORMATION et LECONS) ; plus aucun « à télécharger » (ni « download ») dans la carte",
-      !!a && /\bpanel\b/.test(a.classes) && a.h2 === I_FR.apercu && egal(a.tuiles, [["7", I_FR.tuiles[0]], ["7", I_FR.tuiles[1]], ["15", I_FR.tuiles[2]], ["25", I_FR.tuiles[3]]]) && egal(a.tuiles.map(x => x[0]), n) && !TELECHARGER.test(a.brut),
+    ok("« Ce qui t'attend dans ta formation » : 7 modules, 7 vidéos de ton coach, 14 guides et documents, 25 défis (comptés dans FORMATION et LECONS) ; plus aucun « à télécharger » (ni « download ») dans la carte",
+      !!a && /\bpanel\b/.test(a.classes) && a.h2 === I_FR.apercu && egal(a.tuiles, [["7", I_FR.tuiles[0]], ["7", I_FR.tuiles[1]], ["14", I_FR.tuiles[2]], ["25", I_FR.tuiles[3]]]) && egal(a.tuiles.map(x => x[0]), n) && !TELECHARGER.test(a.brut),
       JSON.stringify(a && a.tuiles) + " attendu " + JSON.stringify(n) + " · " + JSON.stringify(a && (a.brut.match(TELECHARGER) || [""])[0]));
     ok("… ses 2 lignes (« Dont 3 programmes d'entraînement… », « Plus tes outils : … Gratuit, sans limite de temps. »), espace insécable avant « : »",
       !!a && egal(a.lignes, I_FR.lignes) && a.brut.includes("outils\u00a0: organisation"), JSON.stringify(a && a.lignes));
-    ok("compteur « 0 / 49 étapes » (les 3 actions ne sont pas des étapes) ; aucun prix dans les deux cartes", (await compteur(page)) === I_FR.compteur && !PRIX.test(await page.$eval("#fo-depart", x => x.textContent) + (a ? a.brut : "")), await compteur(page));
+    ok("compteur « 0 / 48 étapes » (les 3 actions ne sont pas des étapes) ; aucun prix dans les deux cartes", (await compteur(page)) === I_FR.compteur && !PRIX.test(await page.$eval("#fo-depart", x => x.textContent) + (a ? a.brut : "")), await compteur(page));
     ok("390 px : aucun débordement horizontal (la page, les cartes, les tuiles)", (await horsEcran(page)).bon, JSON.stringify(await horsEcran(page)) + " " + await largeur(page));
     ok("une simple visite : rien d'écrit ; calc_perso et mens lus en UNE lecture groupée (outil=in.(calc_perso,mens))", saisies(db).length === 0 && uneLectureGroupee(db, ID), resume(db) + " " + JSON.stringify(lecturesDepart(db, ID)));
     await page.click('[data-depart="calcul"]'); await attendre(page, 1600); const v1 = await ou(page);
@@ -830,7 +830,7 @@ const ISO = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$/;
       !!f && /\bfo-depart-fini\b/.test(f.classes) && /\bpanel\b/.test(f.classes) && egal(f.enfants, ["P.fo-depart-ligne"]) && f.ligne === I_FR.fini && f.ol === 0 && f.eyebrow === null && f.h2 === null && egal(trois.ordre, ["fo-depart", "invitation-" + INV_DEPART.code, "fo-apercu", "Ton parcours"])
         && ko.length === 0 && partiels.every(v => v.nbInv === 0 && v.inv === null),
       JSON.stringify([ko, f, trois.ordre, iv && iv.textes, iv && iv.lien, partiels.map(v => v.nbInv)]));
-    ok("compteur « 0 / 49 étapes » dans tous les cas (vidéo lancée, calcul, pesée : aucune étape de plus)", vus.every(v => v.compteur === I_FR.compteur), JSON.stringify(vus.map(v => v.compteur)));
+    ok("compteur « 0 / 48 étapes » dans tous les cas (vidéo lancée, calcul, pesée : aucune étape de plus)", vus.every(v => v.compteur === I_FR.compteur), JSON.stringify(vus.map(v => v.compteur)));
     /* relecture (contrat H) : intake et challenge lus en UNE lecture groupée au déclencheur, jamais à la simple ouverture
        d'une page : aucune tant qu'une action manque (pas de déclencheur), au plus une pour les 3 faites */
     ok("ces 7 visites : rien d'écrit ; une seule lecture groupée de calc_perso et mens chacune ; lecture groupée d'intake et challenge (invitation) : aucune dans les 6 visites où une action manque, au plus une pour les 3 faites",
@@ -1012,8 +1012,8 @@ const ISO = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$/;
       const d = await carteDepart(page), a = await carteApercu(page);
       const srv = await page.evaluate(() => ({ min: FORMATION.video_minutes, res: FORMATION.modules[6].ressources.length, ch: outilFormation.chiffres() }));
       ok("FORMATION.video_minutes à 4 (servi) : « Commence ici · 7 min » (3 + 4), affiché « COMMENCE ICI · 7 MIN »", srv.min === 4 && !!d && d.eyebrow === "Commence ici · 7 min" && d.capitales === "COMMENCE ICI · 7 MIN", JSON.stringify([srv.min, d && d.eyebrow, d && d.capitales]));
-      ok("une ressource de plus dans le module 6 : la tuile passe à 16 guides et documents (comptés, rien d'écrit en dur), les autres 7 / 7 / 25, compteur « 0 / 49 étapes »",
-        srv.res === 5 && srv.ch.documents === 16 && !!a && egal(a.tuiles.map(x => x[0]), ["7", "7", "16", "25"]) && (await compteur(page)) === I_FR.compteur, JSON.stringify([srv, a && a.tuiles]));
+      ok("une ressource de plus dans le module 6 : la tuile passe à 15 guides et documents (comptés, rien d'écrit en dur), les autres 7 / 7 / 25, compteur « 0 / 48 étapes »",
+        srv.res === 5 && srv.ch.documents === 15 && !!a && egal(a.tuiles.map(x => x[0]), ["7", "7", "15", "25"]) && (await compteur(page)) === I_FR.compteur, JSON.stringify([srv, a && a.tuiles]));
       await c.close();
       ({ c, page } = await contexte(b, quiP(42), db, { viewport: MOBILE, langue: "en" }));
       await ouvrirFormation(page); await attendre(page, 300);
@@ -1034,8 +1034,8 @@ const ISO = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$/;
     const d = await carteDepart(page), a = await carteApercu(page);
     ok("anglais : « Start here » (« START HERE »), « 3 actions to get started today », « Watch the welcome video », « Calculate your calories (2 min) », « Log your starting weight (1 min) », mêmes liens",
       !!d && d.eyebrow === I_EN.etiquette && d.capitales === "START HERE" && d.h2 === I_EN.titre && egal(d.actions.map(x => [x.k, x.href, x.t]), I_EN.actions), JSON.stringify(d));
-    ok("anglais : « What's inside your course », 7 modules, 7 videos from your coach, 15 guides and documents, 25 challenges, ses 2 lignes, « 0 / 49 steps » ; plus aucun « downloads » (ni « à télécharger ») dans la carte",
-      !!a && a.h2 === I_EN.apercu && egal(a.tuiles, [["7", I_EN.tuiles[0]], ["7", I_EN.tuiles[1]], ["15", I_EN.tuiles[2]], ["25", I_EN.tuiles[3]]]) && egal(a.lignes, I_EN.lignes) && (await compteur(page)) === I_EN.compteur && !TELECHARGER.test(a.brut),
+    ok("anglais : « What's inside your course », 7 modules, 7 videos from your coach, 14 guides and documents, 25 challenges, ses 2 lignes, « 0 / 48 steps » ; plus aucun « downloads » (ni « à télécharger ») dans la carte",
+      !!a && a.h2 === I_EN.apercu && egal(a.tuiles, [["7", I_EN.tuiles[0]], ["7", I_EN.tuiles[1]], ["14", I_EN.tuiles[2]], ["25", I_EN.tuiles[3]]]) && egal(a.lignes, I_EN.lignes) && (await compteur(page)) === I_EN.compteur && !TELECHARGER.test(a.brut),
       JSON.stringify(a && [a.h2, a.tuiles, a.lignes]) + " " + await compteur(page) + " · " + JSON.stringify(a && (a.brut.match(TELECHARGER) || [""])[0]));
     const h = await horsEcran(page), th = await page.evaluate(() => document.documentElement.getAttribute("data-theme"));
     ok("anglais, thème clair, 390 px : aucun débordement", th === "light" && h.bon, th + " " + JSON.stringify(h));

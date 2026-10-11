@@ -323,7 +323,7 @@ const flagOk = (f, texte) => !!f && f.present && f.nb === 1 && /\bflag\b/.test(f
       retour: () => { const z = document.getElementById("acc-vue"); return !!z && !document.getElementById("page-hors-ligne") && z.querySelectorAll("section.panel").length > 0 && !/Chargement…/.test(z.textContent); } },
     { nom: "Mon suivi (lecture groupée)", hash: "#/suivi", depart: URL0 + "#/programme", fige: "in.(", interdit: /Ta régularité/, zone: "#suivi-reg", retour: "#suivi-reg .reg-evo" },
     { nom: "Ma progression (sans zone)", hash: "#/mensurations", depart: URL0, fige: "eq.mens", interdit: /Pas encore de mesure/, zone: null, apresEntete: true, sansPanneau: true, retour: "#tbody tr" },
-    { nom: "Speed Formation", hash: "#/formation", depart: URL0, fige: "eq.formation", interdit: /0 \/ 49 étapes/, zone: "#fo-vue", retour: "#fo-vue .prog-compteur" }
+    { nom: "Speed Formation", hash: "#/formation", depart: URL0, fige: "eq.formation", interdit: /0 \/ 48 étapes/, zone: "#fo-vue", retour: "#fo-vue .prog-compteur" }
   ];
   for (const P of PAGES) await bloc("B. " + P.nom + " : lecture figée (" + P.fige + ") → « Pas de connexion » + Réessayer", async () => {
     const db = base();
