@@ -933,8 +933,14 @@ const outilDecouverte = {
        v73 (D) : sous le bouton et sa ligne, « Écrire à ton coach sur WhatsApp » (secondaire, contour, sans data-dc-cal : jamais
        compte comme un clic de reservation ; rien n'est note au toucher), puis « Plus tard » */
     const t = x => esc(typoFr(trad(x)));
+    /* v76 (tâche 8) : ce qui coince (question « obstacle ») : les libellés choisis, traduits, séparés par « , », puis sa précision
+       libre après « : » ; échappé, 140 caractères au plus ; sans réponse (ou ancienne réponse libre) : pas de ligne */
+    const qo = Decouverte.defQ("obstacle"), co = Decouverte.choixDe(I, "obstacle") || [];
+    const lo = co.map(k => trad(Decouverte.libelleChoix(qo, k))).filter(Boolean).join(", "), po = Decouverte.choixDe(I, "obstacle") ? Decouverte.precisionDe(I, "obstacle") : "";
+    const ob = Decouverte.extrait(lo && po ? lo + (I18N.langue === "en" ? ": " : " : ") + po : lo || po, 140);
     return `<section class="panel dc-plan" id="dc-bilan"><span class="eyebrow dc-offert" id="dc-offert">${t(L.offert)}</span><h2>${t(L.titre)}</h2>
       <p class="dc-projection" id="dc-projection">${esc(typoFr(pr ? trad(L.projection, { p: pr }) : trad(L.sans_projection)))}</p>
+      ${ob ? `<p id="dc-obstacle">${esc(typoFr(trad(L.obstacle, { o: ob })))}</p>` : ""}
       <p id="dc-bilan-texte">${t(L.texte)}</p>
       <p id="dc-bilan-garde">${t(L.garde)}</p>
       <div class="dc-cta">${cal ? `<a class="btn" id="dc-bilan-reserver" href="${esc(cal)}" target="_blank" rel="noopener" data-dc-cal="apres_questionnaire">${t(L.reserver)}</a><p class="dc-cta-sous" id="dc-bilan-sous">${t(L.sous)}</p>` : ""}

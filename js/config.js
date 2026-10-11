@@ -433,6 +433,7 @@ const DECOUVERTE = {
     offert: "Offert",
     titre: "Ton plan d'action",
     projection: "Ton objectif dans 3 mois : « {p} »",
+    obstacle: "Ce qui coince : « {o} ». C'est par là que commence ton plan.",   // v76 (tâche 8) : ses réponses à « obstacle », sans réponse : pas de ligne
     sans_projection: "Faisons le point ensemble sur ton objectif.",
     texte: "15 minutes au téléphone avec ton coach pour faire de cet objectif un plan : ce qui te freine, par quoi commencer, et tes 3 premières actions.",
     garde: "En fin d'appel, si tu veux être suivi, ton coach te présente l'accompagnement. Ton plan reste à toi dans tous les cas.",
@@ -728,6 +729,7 @@ const DECOUVERTE = {
       offert: "Free",
       titre: "Your action plan",
       projection: "Your goal in 3 months: “{p}”",
+      obstacle: "What's in your way: “{o}”. That's where your plan starts.",
       sans_projection: "Let's review your goal together.",
       texte: "A 15-minute call with your coach to turn this goal into a plan: what's holding you back, where to start, and your first 3 actions.",
       garde: "At the end of the call, if you want ongoing coaching, your coach will tell you about it. Your plan is yours either way.",
