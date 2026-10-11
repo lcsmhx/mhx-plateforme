@@ -431,18 +431,18 @@ const DECOUVERTE = {
      v61 (brief V2, D) : le plan d'action offert — une seule action dorée, « Plus tard » en lien discret */
   bilan: {
     offert: "Offert",
-    titre: "Ton plan d'action personnalisé",
+    titre: "Ton plan d'action",
     projection: "Ton objectif dans 3 mois : « {p} »",
     sans_projection: "Faisons le point ensemble sur ton objectif.",
-    texte: "En 15 minutes au téléphone avec Lucas, on transforme cet objectif en plan concret : ce qui te freine vraiment, par quoi commencer, et les 3 actions à mettre en place en priorité.",
-    garde: "Ton plan est à toi, quelle que soit la suite.",
+    texte: "15 minutes au téléphone avec ton coach pour faire de cet objectif un plan : ce qui te freine, par quoi commencer, et tes 3 premières actions.",
+    garde: "En fin d'appel, si tu veux être suivi, ton coach te présente l'accompagnement. Ton plan reste à toi dans tous les cas.",
     /* v70 : la phrase « Si l'accompagnement te correspond… Tu es libre de dire non. » est retirée (décision de Lucas, 03/10/2026) */
-    reserver: "Récupérer mon plan d'action",
-    sous: "15 min · par téléphone · offert",
-    plus_tard: "Plus tard, je découvre mon espace"
+    reserver: "Réserver mon plan d'action",
+    sous: "Tu choisis l'heure, ton coach t'appelle",
+    plus_tard: "Voir mon espace d'abord"
   },
   /* v61 (brief V2, vocabulaire) : le bouton unique partout où le bilan est proposé au prospect, et sa petite ligne */
-  cta: { bouton: "Récupérer mon plan d'action", sous: "15 min avec Lucas · offert" },
+  cta: { bouton: "Réserver mon plan d'action", sous: "Appel de 15 min avec ton coach, offert" },
   /* v72 (D) : le bouton WhatsApp du prospect et son message ({p} : son prénom ; sans prénom, la seconde phrase)
      v73 (D) : « ton coach » au lieu de « Lucas » (décision de Lucas du 04/10/2026) */
   whatsapp: { bouton: "Écrire à ton coach sur WhatsApp", message: "Salut, c'est {p}, je viens de m'inscrire sur l'app MHX.",
@@ -584,11 +584,11 @@ const DECOUVERTE = {
   },
   accomp: {
     titre: "Ce que l'accompagnement ajoute",   // v61 (brief V2, E2)
-    note: "15 min avec Lucas pour faire le point sur ton objectif. Offert.",
-    reserve_case: "J'ai déjà choisi mon créneau",
-    reserve_ok: "Bilan réservé le {d}. Ton coach te retrouve à l'heure prévue.",
+    note: "Appel de 15 min avec ton coach, offert",
+    reserve_case: "J'ai déjà réservé",
+    reserve_ok: "C'est réservé : ton coach t'appelle à l'heure choisie.",
     /* v71 (H) : l'en-tête de l'accueil une fois le créneau coché (plus aucun « Récupérer mon plan d'action ») */
-    reserve_haut: "Créneau choisi le {d} — Lucas t'appelle à l'heure réservée"
+    reserve_haut: "Ton coach t'appelle à l'heure que tu as choisie."
   },
   profil: {
     texte: "Tes réponses au questionnaire sont enregistrées : ton coach les verra. Le questionnaire complet s'ouvrira au démarrage de ton accompagnement.",
@@ -668,11 +668,11 @@ const DECOUVERTE = {
      Le texte change = la version change ; FR et EN gardent le même nombre de paragraphes, dans le même ordre
      (traduction par position) --- */
   confidentialite: {
-    version: "2026-10-01",
+    version: "2026-10-11",
     titre: "Conditions d'utilisation et confidentialité",
     paragraphes: [
       "L'espace gratuit de MHX Coaching donne des informations et un entraînement généraux, réservés aux adultes. Il ne remplace pas un avis médical : en cas de doute sur ta santé, parles-en à un professionnel avant de commencer.",
-      "Données collectées : ton prénom, ton nom, ton email, tes réponses aux 3 questions de départ et ton activité dans l'app, dont tes clics sur « Récupérer mon plan d'action ». Données de santé : celles que tu saisis (poids, mensurations, âge, taille et activité dans le calculateur de calories), avec ton accord, demandé la première fois que tu utilises un outil qui les traite (calculateur, suivi du poids et des mensurations, outil « Organise ta diète »).",
+      "Données collectées : ton prénom, ton nom, ton email, tes réponses aux 3 questions de départ et ton activité dans l'app, dont tes clics sur « Réserver mon plan d'action ». Données de santé : celles que tu saisis (poids, mensurations, âge, taille et activité dans le calculateur de calories), avec ton accord, demandé la première fois que tu utilises un outil qui les traite (calculateur, suivi du poids et des mensurations, outil « Organise ta diète »).",
       "Usage : adapter ce qui s'affiche à tes réponses, calculer tes calories, suivre ta progression et te proposer un bilan avec le coach. Aucune revente, aucune publicité.",
       "Suivi par le coach : il voit tes réponses et ton activité, et note, pour son suivi, l'issue de ton bilan et ses relances. Ces notes n'apparaissent pas dans l'app : tu peux en demander une copie ou la suppression en lui écrivant.",
       "Données de santé (RGPD article 9) : tu dois accepter explicitement le traitement de tes données concernant ta santé (poids, mensurations, données du calculateur de calories). Tu peux les consulter ou les supprimer à tout moment. Ces données sont conservées tant que ton compte existe.",
@@ -726,16 +726,16 @@ const DECOUVERTE = {
     },
     bilan: {
       offert: "Free",
-      titre: "Your personalized action plan",
+      titre: "Your action plan",
       projection: "Your goal in 3 months: “{p}”",
       sans_projection: "Let's review your goal together.",
-      texte: "In a 15-minute call with Lucas, we turn this goal into a concrete plan: what's really holding you back, where to start, and the 3 actions to put in place first.",
-      garde: "The plan is yours to keep, whatever you decide next.",
-      reserver: "Get my action plan",
-      sous: "15 min · phone call · free",
-      plus_tard: "Later, let me explore my space"
+      texte: "A 15-minute call with your coach to turn this goal into a plan: what's holding you back, where to start, and your first 3 actions.",
+      garde: "At the end of the call, if you want ongoing coaching, your coach will tell you about it. Your plan is yours either way.",
+      reserver: "Book my action plan",
+      sous: "You pick the time, your coach calls you",
+      plus_tard: "See my space first"
     },
-    cta: { bouton: "Get my action plan", sous: "15 min with Lucas · free" },
+    cta: { bouton: "Book my action plan", sous: "Free 15-min call with your coach" },
     whatsapp: { bouton: "Message your coach on WhatsApp", message: "Hi, it's {p}, I just signed up on the MHX app.",
       message_sans_prenom: "Hi, I just signed up on the MHX app." },
     invitations: {
@@ -865,10 +865,10 @@ const DECOUVERTE = {
     },
     accomp: {
       titre: "What coaching adds",
-      note: "15 min with Lucas to go over your goal. Free.",
-      reserve_case: "I've already booked my slot",
-      reserve_ok: "Assessment booked on {d}. Your coach will meet you at the scheduled time.",
-      reserve_haut: "Slot booked on {d} — Lucas will call you at the reserved time"
+      note: "Free 15-min call with your coach",
+      reserve_case: "Already booked",
+      reserve_ok: "It's booked: your coach will call you at the time you chose.",
+      reserve_haut: "Your coach will call you at the time you chose."
     },
     profil: {
       texte: "Your questionnaire answers are saved: your coach will see them. The full questionnaire opens when your coaching starts.",
@@ -914,7 +914,7 @@ const DECOUVERTE = {
       titre: "Terms of use and privacy",
       paragraphes: [
         "MHX Coaching's free space gives you general information and training, for adults only. It is not medical advice: if you have any doubt about your health, talk to a professional before starting.",
-        "Data collected: your first name, your last name, your email, your answers to the 3 starting questions and your activity in the app, including your clicks on “Get my action plan”. Health data: what you enter (weight, measurements, age, height and activity in the calorie calculator), with your consent, asked the first time you use a tool that processes it (calculator, weight and measurement tracking, “Organise ta diète” tool).",
+        "Data collected: your first name, your last name, your email, your answers to the 3 starting questions and your activity in the app, including your clicks on “Book my action plan”. Health data: what you enter (weight, measurements, age, height and activity in the calorie calculator), with your consent, asked the first time you use a tool that processes it (calculator, weight and measurement tracking, “Organise ta diète” tool).",
         "Use: to adapt what you see to your answers, calculate your calories, track your progress and offer you an assessment with the coach. No resale, no advertising.",
         "Coach follow-up: the coach sees your answers and activity, and records, for their follow-up, the outcome of your assessment and their follow-up messages. These notes don't appear in the app: you can ask for a copy or their deletion by writing to the coach.",
         "Health data (GDPR article 9): you must explicitly accept the processing of your health data (weight, measurements, calorie calculator data). You can view or delete this data at any time. This data is kept as long as your account exists.",

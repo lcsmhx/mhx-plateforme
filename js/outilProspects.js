@@ -65,7 +65,7 @@ const Commercial = {
      « a cliqué Plan d'action ») ; avant : « Réserver mon bilan » / « a cliqué Réserver ». Les données ne changent pas. */
   MOTIFS: { signe: "Signé : à passer client", case: "A coché « J'ai réservé » : à vérifier", absent: "Absent à l'appel : repropose-lui un créneau", clic: "A cliqué « Récupérer mon plan d'action », pas de bilan coché", nouveau: "Vient de s'inscrire",
     perdu: "Perdu : relance-le", appel: "Bilan réservé : l'appel a-t-il eu lieu ?" },   // v59 : + absent, perdu, appel (perdu et appel : avec depuis quand, motifTexte)
-  AIDE: "À traiter : les prospects inscrits depuis moins de 48 h, et ceux qui ont cliqué « Récupérer mon plan d'action » ou coché « J'ai réservé », tant que tu n'as ni coché « Bilan réservé », ni indiqué l'issue de l'appel, ni relancé depuis ; les « Signé » à passer client ; les « Absent » (sans limite de durée) et les « Perdu » depuis 30 jours ou plus, tant que tu ne les as pas relancés depuis l'appel ; les bilans cochés depuis plus de 7 jours sans issue.",
+  AIDE: "À traiter : les prospects inscrits depuis moins de 48 h, et ceux qui ont cliqué « Réserver mon plan d'action » ou coché « J'ai réservé », tant que tu n'as ni coché « Bilan réservé », ni indiqué l'issue de l'appel, ni relancé depuis ; les « Signé » à passer client ; les « Absent » (sans limite de durée) et les « Perdu » depuis 30 jours ou plus, tant que tu ne les as pas relancés depuis l'appel ; les bilans cochés depuis plus de 7 jours sans issue.",
   /* v59 : l'ordre de « À traiter » (page Prospects ; le tableau de bord a sa table, outilTableau.RANG_PROSPECTS) ; sans
      urgence ensuite : bilan coché 7, absent 8, perdu 9, le reste 10 (et une analyse de secours), signé 11 */
   RANG: { signe: 0, case: 1, absent: 2, clic: 3, nouveau: 4, appel: 5, perdu: 6 },
@@ -126,14 +126,14 @@ const Commercial = {
     const depuisH = heures == null ? "" : heures < 1 ? "il y a moins d'une heure" : "il y a " + Math.floor(heures) + " h";
     /* les faits, en clair (fiche : « Suivi commercial ») */
     const raisons = [];
-    if (issue && revenu) raisons.push("Revenu après l'issue « " + this.ISSUES[issue] + " » : a recliqué « Récupérer mon plan d'action » ou son bilan est de nouveau réservé.");
+    if (issue && revenu) raisons.push("Revenu après l'issue « " + this.ISSUES[issue] + " » : a recliqué « Réserver mon plan d'action » ou son bilan est de nouveau réservé.");
     else if (issue) raisons.push("Appel : « " + this.ISSUES[issue] + " » " + this.quand(issueDepuis) + (typeof S.note === "string" && S.note ? " — " + S.note : "") + ".");
     if (ancienClient) raisons.push("Ancien client (« Signé » " + this.quand(this.depuis(S.issue_le)) + "), redevenu prospect.");
     if (B.coach) raisons.push("Bilan réservé : coché par toi " + this.quand(this.depuis(B.coach)) + (coche ? "" : ", avant l'appel") + ".");
     if (caseAv) raisons.push("A coché « J'ai réservé mon bilan » " + this.quand(this.depuis(caseAv)) + " : pas encore vérifié par toi.");
     else if (!B.coach && B.retire) raisons.push("« Bilan réservé » retiré par toi " + this.quand(this.depuis(B.retire)) + ".");
     raisons.push("Inscrit " + (heures != null && heures < 24 ? depuisH : this.quand(this.depuis(p && p.cree_le))) + (fait ? ", questionnaire rempli " + this.quand(this.depuis(r.questionnaire)) : commence > 0 ? ", questionnaire commencé (" + commence + "/" + total + " réponses)" : ", questionnaire pas encore rempli") + ".");
-    if (clics) raisons.push("A cliqué « Récupérer mon plan d'action » (" + clics + " fois), la dernière " + this.quand(clic) + ".");
+    if (clics) raisons.push("A cliqué « Réserver mon plan d'action » (" + clics + " fois), la dernière " + this.quand(clic) + ".");
     if (sansReponse) raisons.push("Relancé " + sansReponse + " fois sans réponse.");
     if (revenu) issue = null;   // il est de nouveau « en cours »
     /* à traiter : la définition simple (voir plus haut) */
@@ -169,7 +169,7 @@ const Commercial = {
     else if (coche){ action = dCoche != null && dCoche > cfg.appel_jours ? "Bilan réservé " + this.quand(dCoche) + " : l'appel a-t-il eu lieu ? Indique Signé, Perdu ou Absent." : "Prépare le bilan : relis sa fiche (ses 3 réponses). Après l'appel, indique Signé, Perdu ou Absent."; }
     else if (caseAv) action = "Il a coché « J'ai réservé » " + this.quand(this.depuis(caseAv)) + " : vérifie ton agenda, puis coche « Bilan réservé » dans sa fiche (ou retire-le).";
     else if (ancienClient) action = "Ancien client redevenu prospect : reprends contact si tu veux lui proposer de reprendre.";
-    else if (clics) action = siPasRelance("DM : il a cliqué « Récupérer mon plan d'action » sans réserver, demande-lui ce qui le retient.");
+    else if (clics) action = siPasRelance("DM : il a cliqué « Réserver mon plan d'action » sans réserver, demande-lui ce qui le retient.");
     else if (heures != null && heures < cfg.urgence_heures) action = siPasRelance("Il vient de s'inscrire : envoie-lui un DM de bienvenue.");
     else if (!fait) action = siPasRelance("DM : aide-le à répondre à ses 3 questions (1 minute).");
     else action = siPasRelance("Propose-lui le bilan en DM quand tu le sens prêt.");
@@ -429,7 +429,7 @@ const Nouveautes = {
      elle ne compte plus dès que le coach a décidé du bilan (coché ou retiré : Commercial.bilan) ; v59 : sauf une case
      cochée APRÈS sa dernière décision ; elle suit l'analyse (caseAVerifier) : ni une coche en cours, ni l'appel qui a suivi
      la case (Absent, Perdu) */
-  TYPES: { inscription: "inscription", questionnaire: "questionnaire rempli", clic: "clic « Récupérer mon plan d'action »", reserve: "a coché « J'ai réservé »" },
+  TYPES: { inscription: "inscription", questionnaire: "questionnaire rempli", clic: "clic « Réserver mon plan d'action »", reserve: "a coché « J'ai réservé »" },
   COURTS: { inscription: ["inscription", "inscriptions"], questionnaire: ["questionnaire rempli", "questionnaires remplis"], clic: ["clic « Plan d'action »", "clics « Plan d'action »"], reserve: ["case « J'ai réservé »", "cases « J'ai réservé »"] },
   /* date de la derniere visite, relue a chaque affichage (un autre appareil a pu tout marquer comme vu).
      Une date qui n'est pas au format ISO (valeur piegee) compte comme absente. Lecture ratee : erreur = true,

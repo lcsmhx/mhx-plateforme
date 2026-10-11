@@ -72,7 +72,7 @@ const outilAccueil = {
       ["Questionnaire court", r.questionnaire ? "rempli le " + dt(r.questionnaire) : "pas encore rempli"]
     ].concat(Decouverte.reponsesCoach(I), [
       /* v65 (décision de Lucas du 30/09) : le nom du bouton d'aujourd'hui, comme la chronologie (avant : « Réserver mon bilan ») */
-      ["Bouton « Récupérer mon plan d'action »", r.clics ? r.clics + " clic" + (r.clics > 1 ? "s" : "") + (r.dernierClic ? ", le dernier le " + dt(r.dernierClic) : "") : "jamais cliqué"],
+      ["Bouton « Réserver mon plan d'action »", r.clics ? r.clics + " clic" + (r.clics > 1 ? "s" : "") + (r.dernierClic ? ", le dernier le " + dt(r.dernierClic) : "") : "jamais cliqué"],
       /* v59 : une coche ou une case d'avant l'issue « Absent » / « Perdu » le dit (elle a servi à cet appel) */
       ["Bilan réservé", B.coach ? "oui, coché par toi le " + dt(B.coach) + (Commercial.avantIssue(S, B.coach) ? ", avant l'appel" : "")
         : B.source === "prospect" ? (Commercial.avantIssue(S, B.case) ? "case cochée par le prospect avant l'appel" : "à vérifier : le prospect a coché sa case") : B.retire ? "non (tu l'as retiré le " + dt(B.retire) + ")" : "non"],
@@ -112,7 +112,7 @@ const outilAccueil = {
     ajoute(I.court_le, "Questionnaire rempli");
     /* v63 : ancien ou nouveau code, le nom de l'ecran d'aujourd'hui (Decouverte.nomOrigine, comme « Mesure » et la carte) ;
        affichage seulement, rien n'est reecrit en base */
-    Decouverte.clics(C).forEach(c => { const o = Decouverte.nomOrigine(c.source); ajoute(c.date, "Clic « Récupérer mon plan d'action »" + (o ? " (" + o + ")" : "")); });
+    Decouverte.clics(C).forEach(c => { const o = Decouverte.nomOrigine(c.source); ajoute(c.date, "Clic « Réserver mon plan d'action »" + (o ? " (" + o + ")" : "")); });
     ajoute(Decouverte.reserve(C), "Le prospect a coché « J'ai réservé »");
     const hist = S && typeof S === "object" && Array.isArray(S.historique) ? S.historique : [];
     hist.forEach(e => {

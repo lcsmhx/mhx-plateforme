@@ -865,7 +865,7 @@ I18N.en = {
 "Bienvenue": "Welcome", "Ton espace gratuit MHX : commence par la Speed Formation, à ton rythme.": "Your free MHX space: start with the Speed Formation, at your own pace.",
 "Ton espace gratuit": "Your free space", "Ce que l'accompagnement ajoute": "What coaching adds",
 "Ton questionnaire et tes réglages": "Your questionnaire and settings",
-"15 min avec Lucas pour faire le point sur ton objectif. Offert.": "15 min with Lucas to go over your goal. Free.",
+"Appel de 15 min avec ton coach, offert": "Free 15-min call with your coach",
 /* v41 — photos de progression */
 "Photos de progression": "Progress photos", "privées": "private",
 "Visibles par toi et ton coach seulement. Même lumière, même tenue, même position : c'est ce qui rend la comparaison utile.": "Visible only to you and your coach. Same light, same outfit, same pose: that's what makes the comparison useful.",
