@@ -261,13 +261,6 @@ footer a{color:var(--accent)}
   .compte{min-width:0}
   .compte > *{flex-shrink:0}
   .compte .qui,.compte .etat{flex-shrink:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
-  /* v76 : zones de toucher plus grandes sur téléphone (ici, après les règles de base, pour passer devant) */
-  button.btn.petit,a.btn.petit{min-height:44px} .seg button{min-height:40px} .compte button{min-height:40px} .compte button.icone{width:40px} .coche{min-height:44px}
-  /* v76 : la barre du haut sur une ligne (le nom n'y est plus ; le prospect se déconnecte depuis « Tout mon espace ») ; le pied de
-     page passe au-dessus de la barre du bas */
-  .topbar .wrap{flex-wrap:nowrap;padding-top:8px;padding-bottom:8px} .compte{flex:1 1 0;justify-content:flex-end} .compte .qui{display:none}
-  .compte #deco.deco-volet{display:none}
-  footer .wrap{padding-bottom:calc(84px + env(safe-area-inset-bottom))}
 }
 /* v59 : une alerte du témoin (« Hors ligne — … », « Non enregistré — … ») ne se raccourcit pas : raccourcies, « Hors ligne —
    gardé sur cet appareil… » (la modification sera renvoyée) et « Hors ligne — modification non enregistrée » (elle est perdue)
@@ -288,6 +281,15 @@ footer a{color:var(--accent)}
   .compte{gap:6px}
   .compte .etat:empty{display:none}
   .compte button{padding:6px 9px}
+}
+/* v76 (téléphone) : zones de toucher plus grandes, barre du haut sur une ligne (le nom n'y est plus ; le prospect se déconnecte
+   depuis « Tout mon espace »), pied de page au-dessus de la barre du bas. Bloc à part, après ceux de la v59 et des règles de base
+   (pour passer devant). */
+@media (max-width:720px){
+  button.btn.petit,a.btn.petit{min-height:44px} .seg button{min-height:40px} .compte button{min-height:40px} .compte button.icone{width:40px} .coche{min-height:44px}
+  .topbar .wrap{flex-wrap:nowrap;padding-top:8px;padding-bottom:8px} .compte{flex:1 1 0;justify-content:flex-end} .compte .qui{display:none}
+  .compte #deco.deco-volet{display:none}
+  footer .wrap{padding-bottom:calc(84px + env(safe-area-inset-bottom))}
 }
 
 /* --- consultation d'une fiche client --- */
