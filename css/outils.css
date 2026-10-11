@@ -373,9 +373,10 @@ label.fo-case{display:flex;align-items:flex-start;gap:10px;cursor:pointer;flex:1
 .version{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.06em;color:var(--ink-3)}
 .carte-co .co-aide{font-size:12px;color:var(--ink-3);text-align:center;margin:12px 0 0;line-height:1.5}
 /* v78 (tâche 3) : la place du CAPTCHA Turnstile (seulement si CONFIG.turnstile.cle_site est remplie), réservée avant son
-   arrivée : rien ne saute. normal = 300 × 65, compact = 150 × 140 (moins de 300 px utiles : écran de 320 px) */
-.co-captcha{display:flex;justify-content:center;align-items:flex-start;min-height:65px;margin:0 0 14px;max-width:100%}
-.co-captcha.compact{min-height:140px}
+   arrivée : rien ne saute. normal = 300 × 72, compact = 150 × 147 (moins de 300 px utiles : écran de 320 px) — tailles
+   relevées sur le vrai widget le 12/10/2026 (la documentation de Cloudflare dit 65 et 140) */
+.co-captcha{display:flex;justify-content:center;align-items:flex-start;min-height:72px;margin:0 0 14px;max-width:100%}
+.co-captcha.compact{min-height:147px}
 .mc-captcha{justify-content:flex-start;margin:4px 0 0}
 
 /* --- selecteur d'exercice --- */

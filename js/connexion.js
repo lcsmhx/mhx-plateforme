@@ -87,8 +87,9 @@ const Captcha = {
       window.mhxTurnstilePret = () => fin(null);
       s.src = this.SCRIPT; s.async = true;
       s.onerror = () => fin(new Error("script injoignable"));
-      m = setTimeout(() => fin(new Error("délai dépassé")), this.CHARGEMENT);
-      document.head.appendChild(s);
+      /* ajouté après l'événement « load » de la page : il ne retarde jamais le reste de l'app (MHX_JS, index.html) */
+      const ajouter = () => { m = setTimeout(() => fin(new Error("délai dépassé")), this.CHARGEMENT); document.head.appendChild(s); };
+      if (document.readyState === "complete") ajouter(); else window.addEventListener("load", ajouter, { once: true });
     });
     return this._charge;
   },
