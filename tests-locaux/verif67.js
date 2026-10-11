@@ -326,7 +326,7 @@ async function ouvrirCalendly(c, page, sel){
 }
 /* la couleur calculée d'une variable du thème (--accent, --ink-3) */
 const couleur = (page, v) => page.evaluate(v => { const s = document.createElement("span"); s.style.color = "var(" + v + ")"; document.body.appendChild(s); const c = getComputedStyle(s).color; s.remove(); return c; }, v);
-const OR_SOMBRE = "rgb(212, 168, 68)", OR_CLAIR = "rgb(154, 116, 32)";   // --accent des deux thèmes (css/jetons.css)
+const OR_SOMBRE = "rgb(212, 168, 68)", OR_CLAIR = "rgb(127, 95, 25)";   // --accent des deux thèmes (css/jetons.css ; v76 : #7f5f19 en clair)
 const TRANSPARENT = "rgba(0, 0, 0, 0)";
 /* ce qui ne doit jamais s'afficher : un prix, un « undefined » */
 const PRIX = /€|\$ ?\d|\d ?\$|\bprix\b|\bprice\b|\btarifs?\b|\beuros?\b|\bEUR\b/i, BRUT = /undefined|\[object|\bNaN\b|\bnull\b/;

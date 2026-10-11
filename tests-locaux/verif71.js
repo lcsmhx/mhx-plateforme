@@ -1435,13 +1435,14 @@ const detA = A => JSON.stringify(A ? { page: A.page, carte: A.carte, dehors: A.d
     ok("diète (module 02), thèmes sombre et clair : le titre h4 de la carte en 15 px, sans capitales ni espacement de .fo-outil h4 (text-transform none, letter-spacing normal)",
       r.length === 4 && bon(r[0]) && bon(r[1]) && r[0].theme === null && r[1].theme === "light" && [r[0], r[1]].every(x => x.ecran === "formation" && x.h === "h4" && x.taille === "15px" && x.casse === "none" && x.espacement === "normal"),
       JSON.stringify(r.slice(0, 2)));
-    /* le doré du lien : --accent en thème sombre ; en thème CLAIR #7f5f19, plus foncé que --accent (contrat, 00df998 : --accent
-       n'y donne que 4,29:1 sur la carte et 3,97:1 dans la diète) ; lisible (4,5:1) partout, souligné partout */
+    /* le doré du lien : --accent en thème sombre ; en thème CLAIR #7f5f19, plus foncé que l'ancien --accent (contrat, 00df998 : #9a7420
+       n'y donnait que 4,29:1 sur la carte et 3,97:1 dans la diète) ; v76 : c'est désormais le --accent du thème clair (règle propre
+       au lien retirée) ; lisible (4,5:1) partout, souligné partout */
     const DORE_CLAIR = "rgb(127, 95, 25)";
-    ok("lien « En savoir plus : politique de confidentialité » doré et souligné, diète et calculateur : thème sombre → la couleur --accent du thème ; thème CLAIR → #7f5f19 (un doré plus foncé que --accent) ; contraste du lien sur son fond d'au moins 4,5:1 dans les 4 cas",
+    ok("lien « En savoir plus : politique de confidentialité » doré et souligné, diète et calculateur : thème sombre → la couleur --accent du thème ; thème CLAIR → #7f5f19 (v76 : le --accent du thème clair) ; contraste du lien sur son fond d'au moins 4,5:1 dans les 4 cas",
       r.length === 4 && r.every(bon) && egal(r.map(x => [x.ecran, x.theme]), [["formation", null], ["formation", "light"], ["calculateur", null], ["calculateur", "light"]])
       && r.every(x => !!x.lien && x.souligne && x.nLiens === 1 && typeof x.ratio === "number" && x.ratio >= CONTRASTE)
-      && [r[0], r[2]].every(x => x.lien === x.accent) && [r[1], r[3]].every(x => x.lien === DORE_CLAIR && x.lien !== x.accent) && r[0].accent !== r[1].accent,
+      && [r[0], r[2]].every(x => x.lien === x.accent) && [r[1], r[3]].every(x => x.lien === DORE_CLAIR && x.lien === x.accent) && r[0].accent !== r[1].accent,
       JSON.stringify(r.map(x => bon(x) ? [x.ecran, x.theme, x.lien, x.accent, x.souligne, x.ratio, x.nLiens] : x)));
   });
 

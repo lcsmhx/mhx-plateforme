@@ -171,6 +171,9 @@ HORS_BANC="verif44 verif45 verif46 verif47 verif49"
 # contour) adaptées, nombres inchangés.
 # v73 (E, réponses de Lucas du 04/10) : CONFIG.marque.partage.lien = …/?ref=partage#/inscription ; verif80 68 → 70 (« Partager
 # l'app » envoie ce lien ; ouvert sur un appareil neuf : création de compte, code « partage » gardé).
+# v76 (tâches 1 à 3, mission « Audit v76 ») : plus de « Rester connecté » à l'inscription (verif39, 55, 70) ; doré du thème clair
+# #7f5f19, devenu --accent (verif65, 67 : OR_CLAIR ; verif71 : le lien santé = --accent) ; barre du haut sur une ligne sur téléphone :
+# nom absent, boutons de 40 px, « Se déconnecter » du prospect dans « Tout mon espace » (verif62 E) ; adaptées, nombres inchangés.
 attendu() {
   case "$1" in
     flux) echo 19;; verif34) echo 13;; verif35) echo 14;; verif36) echo 13;; verif37) echo 12;; verif38) echo 66;;

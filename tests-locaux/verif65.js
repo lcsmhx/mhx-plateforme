@@ -279,7 +279,7 @@ const choisis = e => e.opts.filter(o => o.on).map(o => o.v);
 const dores = (e, or) => e.opts.filter(o => o.bord === or).map(o => o.v);
 /* le choix se voit : bordure et libellé de la couleur d'accent (or), fond différent des cartes non choisies */
 const bienVisible = (e, or) => { const on = e.opts.filter(o => o.on), off = e.opts.filter(o => !o.on); return e.acc === or && on.length > 0 && on.every(o => o.bord === or && o.coul === or && off.every(x => x.fond !== o.fond)) && off.every(o => o.bord !== or); };
-const OR_SOMBRE = "rgb(212, 168, 68)", OR_CLAIR = "rgb(154, 116, 32)";   // --accent des deux thèmes (css/jetons.css)
+const OR_SOMBRE = "rgb(212, 168, 68)", OR_CLAIR = "rgb(127, 95, 25)";   // --accent des deux thèmes (css/jetons.css ; v76 : #7f5f19 en clair)
 /* « Voir ma prochaine étape » touché : aria-disabled="true" n'est pas « disabled » (touché, il dit ce qui manque) ; Playwright
    le tient pour désactivé et attendrait : le tap part quand même, au centre du bouton, comme le doigt */
 const taperBouton = page => page.tap("#dc-voir", { force: true });
@@ -524,7 +524,7 @@ const structure = page => page.evaluate(() => {
     const e1 = await etat(page, "obstacle"), mx = (await structure(page)).fs[1].maxMsg;
     ok("anglais : 3e pastille pas prise, « 2 answers max »", JSON.stringify(choisis(e1)) === '["temps","craquages"]' && !!mx && mx.txt === TX.max_en && mx.vu, JSON.stringify([choisis(e1), mx]));
     const e2 = await etat(page, "probleme");
-    ok("thème clair : le choix en doré du thème clair (accent #9a7420) — bordure, libellé, fond ; les autres non", e2.theme === "light" && bienVisible(e1, OR_CLAIR) && bienVisible(e2, OR_CLAIR) && JSON.stringify(dores(e2, OR_CLAIR)) === '["Perdre du gras"]', JSON.stringify([e2.acc, e2.opts.map(o => [o.v, o.bord, o.fond])]));
+    ok("thème clair : le choix en doré du thème clair (accent #7f5f19) — bordure, libellé, fond ; les autres non", e2.theme === "light" && bienVisible(e1, OR_CLAIR) && bienVisible(e2, OR_CLAIR) && JSON.stringify(dores(e2, OR_CLAIR)) === '["Perdre du gras"]', JSON.stringify([e2.acc, e2.opts.map(o => [o.v, o.bord, o.fond])]));
     await toucher(page, "projection", "energie");
     const cl = await claviers(page);
     await page.tap("#dc-voir"); await attendre(page, 1600);

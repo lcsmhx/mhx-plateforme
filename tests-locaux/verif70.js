@@ -528,11 +528,11 @@ async function remplir(page, f){
       const { page } = await contexte(b, db, { viewport: vp, langue: langue === "en" ? "en" : "", theme });
       await page.goto(URL0 + "#/inscription"); await page.waitForSelector("#c-go"); await attendre(page, 500);
       const e = await ecran(page);
-      ok(`inscription (${L}) : textes exacts — titre « ${T.titre} », sous-titre A1 « ${T.sous.slice(0, 40)}… », case A2 « ${T.cgu} », newsletter A4 « ${T.news.slice(0, 40)}… », « ${T.rester} », bouton A6 « ${T.bouton} », mention A7 inchangée`,
-        e.titre === T.titre && e.sous === T.sous && e.cgu === T.cgu && e.news === T.news && e.rester === T.rester && e.bouton === T.bouton && e.note === T.note,
+      ok(`inscription (${L}) : textes exacts — titre « ${T.titre} », sous-titre A1 « ${T.sous.slice(0, 40)}… », case A2 « ${T.cgu} », newsletter A4 « ${T.news.slice(0, 40)}… », plus de « ${T.rester} » (v76), bouton A6 « ${T.bouton} », mention A7 inchangée`,
+        e.titre === T.titre && e.sous === T.sous && e.cgu === T.cgu && e.news === T.news && e.rester === null && !e.texte.includes(T.rester) && e.bouton === T.bouton && e.note === T.note,
         JSON.stringify({ titre: e.titre, sous: e.sous, cgu: e.cgu, news: e.news, rester: e.rester, bouton: e.bouton, note: e.note }));
-      ok(`inscription (${L}) : UNE case obligatoire (conditions) + newsletter + « ${T.rester} » — exactement ces 3 cases, dans cet ordre, les 2 premières non cochées (sans attribut checked), « ${T.rester} » cochée ; #c-sante absente, aucun « données de santé » / « health data » à l'écran`,
-        JSON.stringify(e.cases) === JSON.stringify([{ id: "c-cgu", coche: false, attr: false }, { id: "c-newsletter", coche: false, attr: false }, { id: "c-rester", coche: true, attr: true }]) && !e.sante && !T.sante.test(e.texte),
+      ok(`inscription (${L}) : UNE case obligatoire (conditions) + newsletter — exactement ces 2 cases, dans cet ordre, non cochées (sans attribut checked), plus de « ${T.rester} » (v76 : la session reste gardée) ; #c-sante absente, aucun « données de santé » / « health data » à l'écran`,
+        JSON.stringify(e.cases) === JSON.stringify([{ id: "c-cgu", coche: false, attr: false }, { id: "c-newsletter", coche: false, attr: false }]) && !e.sante && !T.sante.test(e.texte),
         JSON.stringify(e.cases) + " santé " + e.sante + " " + ((T.sante.exec(e.texte) || [""])[0]));
       const [l1, l2] = e.liens;
       const lienOk = (l, t, href) => !!l && l.tag === "A" && l.t === t && l.href === href && l.target === "_blank" && /(^|\s)noopener(\s|$)/.test(l.rel || "") && l.dans;
@@ -570,7 +570,7 @@ async function remplir(page, f){
       const spanOk = (l, t) => !!l && l.tag === "SPAN" && /(^|\s)lien-absent(\s|$)/.test(l.cls) && l.t === t && l.href === null && l.target === null && l.dans;
       ok(`inscription (${L}, 320 px) : liens « à compléter »${langue === "fr" ? " (ou javascript: / data:)" : ""} → « ${T.lien_cgu} » et « ${T.lien_politique} » sans lien (span.lien-absent, mêmes id, même texte « ${T.cgu} »), aucun <a> dans la case, point final collé et sur la même ligne, une seule case obligatoire`,
         vus.length > 0 && vus.every(v => v.cgu === T.cgu && spanOk(v.liens[0], T.lien_cgu) && spanOk(v.liens[1], T.lien_politique) && v.a === 0 && !!v.fin && v.fin.data === "." && v.fin.avant === "c-politique-lien"
-          && memeLigne(v.m) && JSON.stringify(v.cases) === '["c-cgu","c-newsletter","c-rester"]'),
+          && memeLigne(v.m) && JSON.stringify(v.cases) === '["c-cgu","c-newsletter"]'),
         JSON.stringify(vus));
     });
   }
@@ -605,9 +605,9 @@ async function remplir(page, f){
         await attendre(page, 2500);
         const apres = await page.evaluate(() => ({ connecte: Auth.connecte(), prospect: Auth.estProspect(), id: (Auth.utilisateur() || {}).id,
           local: (JSON.parse(localStorage.getItem("mhx_session") || "null") || { user: {} }).user.id || null, erreur: (document.getElementById("co-err") || {}).textContent || "" })).catch(e => ({ erreur: String(e) }));
-        ok(`inscription en ${L} : sans la case des conditions → « ${T.manque} », aucun appel, même avec la newsletter cochée ; un tap sur le texte de la case la coche ; cette SEULE case obligatoire suffit (${Q}, « ${T.rester} » coché) : le compte se crée sans accord santé (1 appel, prospect connecté, session gardée sur l'appareil)`,
+        ok(`inscription en ${L} : sans la case des conditions → « ${T.manque} », aucun appel, même avec la newsletter cochée ; un tap sur le texte de la case la coche ; cette SEULE case obligatoire suffit (${Q} ; plus de « ${T.rester} », v76) : le compte se crée sans accord santé (1 appel, prospect connecté, session gardée sur l'appareil)`,
           m1 === T.manque && m2 === T.manque && refus.appels.length === 0 && refus.inscriptions === 0 && coche === true
-            && JSON.stringify(cases) === JSON.stringify(news ? ["c-cgu", "c-newsletter", "c-rester"] : ["c-cgu", "c-rester"])
+            && JSON.stringify(cases) === JSON.stringify(news ? ["c-cgu", "c-newsletter"] : ["c-cgu"])
             && db.inscriptions.length === 1 && recharge === true && apres.connecte === true && apres.prospect === true && apres.id === ZID && apres.local === ZID,
           JSON.stringify({ refus, coche, cases, inscriptions: db.inscriptions.length, recharge, apres }));
 
