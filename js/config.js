@@ -155,12 +155,16 @@ const CONFIG = {
      L'INTERRUPTEUR, c'est cle_site : la clé de SITE (publique, « 0x… ») du widget créé dans Cloudflare (Turnstile, domaine
      lcsmhx.github.io, mode Managed). VIDE = éteint : l'app se comporte exactement comme avant (aucun script de Cloudflare,
      aucun élément ajouté, mêmes requêtes). La clé SECRÈTE ne s'écrit JAMAIS ici (dépôt public) : seulement dans Supabase
-     (Authentication → Attack Protection → Captcha). Allumer : 1. la clé ici, mise en ligne ; 2. ensuite seulement le
-     CAPTCHA dans Supabase. Éteindre : Supabase d'abord, puis vider la clé. Jamais une clé de TEST de Cloudflare (1x0000…,
-     2x0000…, 3x0000…) : refusée par le banc sur main (verif83 A0). Mode d'emploi : docs/TURNSTILE.md.
+     (Authentication → Attack Protection → Captcha). Allumer : 0. la confidentialité (DECOUVERTE.confidentialite FR et EN
+     cite Cloudflare : le script part dès que la clé est en ligne ; refusé sinon par le banc sur main) ; 1. la clé ici, mise
+     en ligne ; 2. 1 à 2 jours plus tard seulement, le CAPTCHA dans Supabase. Éteindre : Supabase d'abord, puis vider la
+     clé. Jamais une clé de TEST de Cloudflare (1x0000…, 2x0000…, 3x0000…) : refusée par le banc sur main (verif83 A0).
+     Mode d'emploi : docs/TURNSTILE.md.
      profil : true = le même widget dans le Profil, bloc « Changer mon mot de passe » (Supabase revérifie l'ancien mot de
-     passe par une connexion, refusée sans jeton quand le CAPTCHA est allumé) ; false = pas de widget là (décision à prendre
-     par Lucas avant d'allumer le CAPTCHA dans Supabase). Les deux lignes restent l'une sous l'autre (lues par le banc). --- */
+     passe par une connexion, refusée sans jeton quand le CAPTCHA est allumé) ; false = pas de widget là : plus aucun
+     changement de mot de passe depuis l'app une fois le CAPTCHA allumé (même un mot de passe provisoire donné par le
+     coach) — décision à prendre par Lucas avant d'allumer le CAPTCHA dans Supabase, true conseillé (docs/TURNSTILE.md,
+     étape 0). Les deux lignes restent l'une sous l'autre (lues par le banc). --- */
   turnstile: {
     cle_site: "",
     profil: false
