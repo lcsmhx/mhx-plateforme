@@ -45,6 +45,7 @@ Règle de Lucas du 02/10/2026 : elle passe avant toutes les autres règles de ce
 - Avant toute migration : sauvegarde + comptage avant/après. Un écart = STOP.
 - L'ancien format des données doit toujours fonctionner.
 - Toujours tester d'abord sur le compte client de test, jamais sur un vrai client.
+- **Dépôt public** (règle de Lucas du 12/10/2026, v78) : aucun prénom ni nom de client, aucun email réel, aucun secret dans un fichier suivi, un message de commit, un journal ou un rapport. `donnees/` (public, lu par l'onglet Catalogue) n'accepte que les fichiers de la liste blanche de `tests-locaux/garde-depot.js` : un nouveau fichier s'y ajoute dans le même commit, après avoir vérifié qu'il ne contient aucune donnée personnelle. Le banc refuse aussi toute adresse email hors domaines d'exemple des tests et hors `CONFIG.marque.email`. Ce qui est personnel va hors dépôt, dans `~/MHX-prive/`.
 
 ## Règles produit
 - Aucun prix, tarif ni abonnement dans l'app. La vente se fait en call.
