@@ -1047,6 +1047,10 @@ Object.assign(I18N.en, {
   "Ce numéro est trop long : 14 chiffres au plus, sans l'indicatif.": "This number is too long: 14 digits at most, without the country code.",
   "Ajoute ton numéro pour que ton coach puisse te joindre": "Add your phone number so your coach can reach you",   // v73 (D) : « ton coach »
   "Ton coach s'en sert pour t'appeler ou t'écrire sur WhatsApp.": "Your coach uses it to call you or message you on WhatsApp.",
+  /* v76 (tâche 7) : la ligne sous le numéro à l'inscription, les erreurs du serveur à l'inscription */
+  "Ton coach s'en sert pour t'appeler ou t'écrire sur WhatsApp. Jamais revendu.": "Your coach uses it to call you or message you on WhatsApp. Never sold.",
+  "Cette adresse email ne semble pas valide. Vérifie-la.": "This email address doesn't look valid. Please check it.",
+  "Inscription impossible pour le moment. Réessaie dans une minute.": "Sign-up isn't possible right now. Try again in a minute.",
   "Enregistrer mon numéro": "Save my number",
   "Ta session a pris fin : reconnecte-toi.": "Your session has ended: sign in again.",
   "Non enregistré : réessaie dans un instant.": "Not saved: try again in a moment.",
