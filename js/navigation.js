@@ -243,6 +243,9 @@ function construireNav(){
   $("qui").textContent = nom + (Auth.estCoach() ? " · coach" : "");
   $("compte").hidden = false;
   $("deco").onclick = () => Auth.deconnecter();
+  /* v76 : sur téléphone, le prospect se déconnecte depuis « Tout mon espace » (volet « Plus ») : sa barre du haut tient sur une
+     ligne. Sur un grand écran (pas de barre du bas, donc pas de volet), le bouton reste en haut. */
+  $("deco").classList.toggle("deco-volet", Auth.estProspect() && !!document.querySelector("#barre-bas [data-plus]"));
   const bl = $("langue");
   if (bl){
     bl.textContent = libelleLangue();
@@ -270,10 +273,13 @@ function construireBarreBas(){
     UI.volet({ titre: trad("Tout mon espace"), retour: retourAccueil, corps: `<ul class="menu-plus">` + autres.map(o =>
       `<li><a href="${lienOutil(o.id)}" data-id="${o.id}"${courant === o.id ? ' aria-current="page"' : ""}>${iconeOutil(o)}<span>${esc(nomOnglet(o))}${cadenasNav(o)}</span></a></li>`).join("") + `</ul>` +
       /* v70 : « Partager l'app » sous la liste (lien copie ou feuille de partage du telephone) */
-      `<div class="menu-plus-partage"><button type="button" class="btn ghost petit" data-partager>${SVG.partager}<span>${esc(trad("Partager l'app"))}</span></button></div>` });
+      `<div class="menu-plus-partage"><button type="button" class="btn ghost petit" data-partager>${SVG.partager}<span>${esc(trad("Partager l'app"))}</span></button></div>` +
+      /* v76 : « Se déconnecter » du prospect, en bas du volet (il n'est plus dans sa barre du haut sur téléphone) */
+      (Auth.estProspect() ? `<div class="menu-plus-partage"><button type="button" class="btn ghost petit" data-deconnecter>${esc(trad("Se déconnecter"))}</button></div>` : "") });
     /* un clic sur un lien du volet le referme */
     setTimeout(() => { $$(".volet .menu-plus a").forEach(a => a.addEventListener("click", () => UI.fermer())); if (typeof Nouveautes !== "undefined") Nouveautes.badge();
-      const bp = document.querySelector(".volet [data-partager]"); if (bp) bp.addEventListener("click", () => partagerApp()); }, 0);
+      const bp = document.querySelector(".volet [data-partager]"); if (bp) bp.addEventListener("click", () => partagerApp());
+      const bd = document.querySelector(".volet [data-deconnecter]"); if (bd) bd.addEventListener("click", () => { UI.fermer(); Auth.deconnecter(); }); }, 0);
     if (typeof Checkin !== "undefined") setTimeout(() => Checkin.badge(), 0);   // v53 : le badge sur « Mon suivi » du volet
   });
   b.hidden = !Auth.connecte();
