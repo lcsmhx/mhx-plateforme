@@ -75,8 +75,8 @@ const UTM = "utm_source=app&utm_medium=bouton";
 /* le lien attendu pour la prospecte Léa (l@e.fr) : utm, puis prénom et email */
 const lienAttendu = (source, sansPre) => CAL + "?" + UTM + (source ? "&utm_content=" + source : "") + (sansPre ? "" : PRE);
 /* v61 (lot 2, vocabulaire commun) : le bouton unique et sa ligne dessous (avant : « Réserver mon bilan », sans ligne) */
-const CTA = "Récupérer mon plan d'action", CTA_EN = "Get my action plan";
-const SOUS = "15 min avec Lucas · offert", SOUS_EN = "15 min with Lucas · free";
+const CTA = "Réserver mon plan d'action", CTA_EN = "Book my action plan";
+const SOUS = "Appel de 15 min avec ton coach, offert", SOUS_EN = "Free 15-min call with your coach";
 /* v61 : les textes français passent par typoFr (espaces insécables U+00A0 / U+202F) : comparés après les avoir remplacés par des
    espaces simples (norm, plus bas, ne le fait pas : sa classe ne contient que des espaces simples) */
 const plat = t => String(t || "").replace(/[\u00a0\u202f]/g, " ");
@@ -209,11 +209,11 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     const hTete = await href(page, '#dc-vue a[data-dc-cal="accueil_haut"]');
     const tTete = await texte(page, '#dc-vue a[data-dc-cal="accueil_haut"]');
     const sTete = plat(await texte(page, "#dc-vue header.masthead .actions + p.dc-cta-sous.dc-haut-sous")).trim();
-    ok("Découverte : « Récupérer mon plan d'action » de l'en-tête → Calendly avec utm_source=app, utm_medium=bouton, utm_content=accueil_haut, puis name, first_name, email ; « 15 min avec Lucas · offert » dessous", hTete === lienAttendu("accueil_haut") && tTete.trim() === CTA && sTete === SOUS, hTete + " | " + tTete + " | " + sTete);
+    ok("Découverte : « Réserver mon plan d'action » de l'en-tête → Calendly avec utm_source=app, utm_medium=bouton, utm_content=accueil_haut, puis name, first_name, email ; « Appel de 15 min avec ton coach, offert » dessous", hTete === lienAttendu("accueil_haut") && tTete.trim() === CTA && sTete === SOUS, hTete + " | " + tTete + " | " + sTete);
     /* v61 (E2) : code accueil_accompagnement (avant : decouverte-accompagnement) ; + le texte du bouton */
     const hAcc = await href(page, '#dc-accomp a[data-dc-cal="accueil_accompagnement"]');
     const tAcc = await texte(page, '#dc-accomp a[data-dc-cal="accueil_accompagnement"]');
-    ok("Découverte : le bouton de la carte « Ce que l'accompagnement ajoute » (« Récupérer mon plan d'action ») porte utm_content=accueil_accompagnement", hAcc === lienAttendu("accueil_accompagnement") && tAcc.trim() === CTA, hAcc + " | " + tAcc);
+    ok("Découverte : le bouton de la carte « Ce que l'accompagnement ajoute » (« Réserver mon plan d'action ») porte utm_content=accueil_accompagnement", hAcc === lienAttendu("accueil_accompagnement") && tAcc.trim() === CTA, hAcc + " | " + tAcc);
     const r = await page.evaluate(() => {
       if (typeof lienCalendly !== "function") return { err: "lienCalendly absent" };
       const out = {};
@@ -256,12 +256,12 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     await aller(page, "#/decouverte/reponses", 2000);
     const hRep = await href(page, '#dc-vue a[data-dc-cal="reponses_haut"]'), nRep = (await page.$$("#dc-vue [data-dc-cal]")).length;
     const sRep = plat(await texte(page, "#dc-vue header.masthead .actions + p.dc-cta-sous.dc-haut-sous")).trim();
-    ok("#/accueil du prospect : le même écran Découverte, le même lien (utm_content=accueil_haut) ; v61 : « Modifier mes réponses » : un seul bouton, utm_content=reponses_haut, « 15 min avec Lucas · offert » dessous", hAccueil === lienAttendu("accueil_haut") && hRep === lienAttendu("reponses_haut") && nRep === 1 && sRep === SOUS, hAccueil + " | " + hRep + " (" + nRep + " bouton(s)) | " + sRep);
+    ok("#/accueil du prospect : le même écran Découverte, le même lien (utm_content=accueil_haut) ; v61 : « Modifier mes réponses » : un seul bouton, utm_content=reponses_haut, « Appel de 15 min avec ton coach, offert » dessous", hAccueil === lienAttendu("accueil_haut") && hRep === lienAttendu("reponses_haut") && nRep === 1 && sRep === SOUS, hAccueil + " | " + hRep + " (" + nRep + " bouton(s)) | " + sRep);
     await aller(page, "#/programme", 1400);
     /* v61 (G et F) : « Récupérer mon plan d'action » (avant : « Réserver mon bilan »), code verrou_programme (avant :
        verrou-programme), seul lien du verrou, puis « 15 min avec Lucas · offert » */
     const hV = await href(page, "#vue .verrou a[target=_blank]"), bV = await boutonVerrou(page);
-    ok("page verrouillée (#/programme) : « Récupérer mon plan d'action » → utm_content=verrou_programme, prénom et email ; « 15 min avec Lucas · offert » dessous", hV === lienAttendu("verrou_programme") && !!bV && bV.n === 1 && bV.t === CTA && plat(bV.sous) === SOUS, hV + " | " + JSON.stringify(bV));
+    ok("page verrouillée (#/programme) : « Réserver mon plan d'action » → utm_content=verrou_programme, prénom et email ; « Appel de 15 min avec ton coach, offert » dessous", hV === lienAttendu("verrou_programme") && !!bV && bV.n === 1 && bV.t === CTA && plat(bV.sous) === SOUS, hV + " | " + JSON.stringify(bV));
     ok("prospect (Découverte, #/accueil, page verrouillée, liens calculés) : aucune écriture en base", db.ecritures.length === 0, JSON.stringify(db.ecritures.map(e => [e.table, e.user_id, e.outil])));
     await c.close();
   }
@@ -317,7 +317,7 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     await aller(page, "#/programme", 1400);
     const tV = await texte(page, "#vue .verrou");
     const hV = await href(page, "#vue .verrou a[target=_blank]"), bV = await boutonVerrou(page);
-    ok("anglais : « Get my action plan » et « 15 min with Lucas · free » sur la Découverte et la page verrouillée (#/programme : « " + TXT_APPEL_EN + " »), même lien", tTete.trim() === CTA_EN && sTete === SOUS_EN && !!bV && bV.n === 1 && bV.t === CTA_EN && bV.sous === SOUS_EN && tV.includes(TXT_APPEL_EN) && !tV.includes("Book my assessment") && hV === lienAttendu("verrou_programme"), tTete + " | " + sTete + " | " + JSON.stringify(bV) + " | " + tV.slice(0, 160) + " | " + hV);
+    ok("anglais : « Book my action plan » et « Free 15-min call with your coach » sur la Découverte et la page verrouillée (#/programme : « " + TXT_APPEL_EN + " »), même lien", tTete.trim() === CTA_EN && sTete === SOUS_EN && !!bV && bV.n === 1 && bV.t === CTA_EN && bV.sous === SOUS_EN && tV.includes(TXT_APPEL_EN) && !tV.includes("Book my assessment") && hV === lienAttendu("verrou_programme"), tTete + " | " + sTete + " | " + JSON.stringify(bV) + " | " + tV.slice(0, 160) + " | " + hV);
     await c.close();
   }
 
@@ -341,10 +341,10 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
        « Récupérer mon plan d'action » » (avant : « Réserver mon bilan »).
        v64 (brief V2 A2 et K) : accords.conditions (version enregistrée aux nouvelles inscriptions) = la version des CGU en PDF,
        CONFIG.textes_legaux.cgu_version (servie « 2026-10-15 ») ; avant : celle du texte court, qui passe à 2026-10-01 (K) */
-    ok("DECOUVERTE.confidentialite : un paragraphe « Prise de rendez-vous » (Calendly, société américaine, pour le compte du coach, États-Unis, pré-remplissage à l'ouverture, écran d'origine) ; v61 : 2e paragraphe « Données collectées : … dont tes clics sur « Récupérer mon plan d'action » », version 2026-10-01 (v64, celle des PDF) ; v64 : accords.conditions = CONFIG.textes_legaux.cgu_version (« 2026-10-15 » servie), plus la version du texte court",
+    ok("DECOUVERTE.confidentialite : un paragraphe « Prise de rendez-vous » (Calendly, société américaine, pour le compte du coach, États-Unis, pré-remplissage à l'ouverture, écran d'origine) ; v61 : 2e paragraphe « Données collectées : … dont tes clics sur « Réserver mon plan d'action » », version 2026-10-01 (v64, celle des PDF) ; v64 : accords.conditions = CONFIG.textes_legaux.cgu_version (« 2026-10-15 » servie), plus la version du texte court",
       !!d && d.i > -1 && ["ton bilan se réserve sur Calendly (société américaine)", "pour le compte du coach", "États-Unis", "pré-remplis dès que tu ouvres la page de réservation", "l'écran de l'app d'où tu viens", "Ton prénom, ton nom et ton email"].every(x => d.fr.includes(x))
-      && d.j === 1 && d.frD.includes("dont tes clics sur « " + CTA + " ».") && !d.frD.includes("Réserver mon bilan") && d.version === "2026-10-01" && d.cgu === LEGAUX_TEST.cgu_version && d.conditions === LEGAUX_TEST.cgu_version && d.conditions !== d.version, JSON.stringify(d));
-    ok("confidentialité en anglais : le paragraphe « Booking: » à la même place (Calendly, a US company, on the coach's behalf, pre-filled, app screen) ; v61 : « Data collected: … including your clicks on “Get my action plan” » à la même place que le français",
+      && d.j === 1 && d.frD.includes("dont tes clics sur « " + CTA + " ».") && !d.frD.includes("Réserver mon bilan") && d.version === "2026-10-11" && d.cgu === LEGAUX_TEST.cgu_version && d.conditions === LEGAUX_TEST.cgu_version && d.conditions !== d.version, JSON.stringify(d));
+    ok("confidentialité en anglais : le paragraphe « Booking: » à la même place (Calendly, a US company, on the coach's behalf, pre-filled, app screen) ; v61 : « Data collected: … including your clicks on “Book my action plan” » à la même place que le français",
       !!d && d.nFr === d.nEn && /^Booking: /.test(d.en) && ["Calendly (a US company)", "on the coach's behalf", "United States", "pre-filled as soon as you open the booking page", "the app screen you came from", "Your first name, last name and email"].every(x => d.en.includes(x))
       && /^Data collected: /.test(d.enD) && d.enD.includes("including your clicks on “" + CTA_EN + "”.") && !d.enD.includes("Book my assessment"), JSON.stringify(d && [d.en, d.enD]));
     const vue = await texte(page);
@@ -354,7 +354,7 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     await page.click("#mc-conditions").catch(() => {}); await attendre(page, 500);
     const v = await texte(page, ".volet");
     /* v61 (décision 4) : le volet affiche le nouveau 2e paragraphe (« Récupérer mon plan d'action »), plus « Réserver mon bilan » */
-    ok("Profil du prospect : « Conditions d'utilisation et confidentialité » s'ouvre sur le texte complet, « Prise de rendez-vous » compris ; v61 : « dont tes clics sur « Récupérer mon plan d'action » », plus de « Réserver mon bilan »",
+    ok("Profil du prospect : « Conditions d'utilisation et confidentialité » s'ouvre sur le texte complet, « Prise de rendez-vous » compris ; v61 : « dont tes clics sur « Réserver mon plan d'action » », plus de « Réserver mon bilan »",
       bouton.trim() === "Conditions d'utilisation et confidentialité" && v.includes("Prise de rendez-vous : ton bilan se réserve sur Calendly (société américaine)") && v.includes("l'écran de l'app d'où tu viens") && v.includes("Hébergement : Supabase")
       && plat(v).includes("dont tes clics sur « " + CTA + " »") && !plat(v).includes("Réserver mon bilan"), bouton + " | " + v.slice(0, 200) + " | " + (/dont tes clics sur[^.]*/.exec(plat(v)) || [""])[0]);
     await page.keyboard.press("Escape"); await attendre(page, 400);
@@ -374,7 +374,7 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     const manquantsEn = P ? P.en.filter(x => !v.includes(norm(x))).map(x => x.slice(0, 30)) : ["DECOUVERTE absent"];
     const restesFr = P ? P.fr.map(x => norm(x).slice(0, 20)).concat(["Conditions d'utilisation", "Hébergement :", "Données collectées", "Prise de rendez-vous"]).filter(x => v.includes(x)) : [];
     /* v61 (décision 4) : dont « including your clicks on “Get my action plan” » (avant : “Book my assessment”) */
-    ok("Profil du prospect en anglais : « Terms of use and privacy » → tous les paragraphes anglais (dont « Booking: your assessment is booked on Calendly (a US company)… » et, v61, « including your clicks on “Get my action plan” »), aucun paragraphe français",
+    ok("Profil du prospect en anglais : « Terms of use and privacy » → tous les paragraphes anglais (dont « Booking: your assessment is booked on Calendly (a US company)… » et, v61, « including your clicks on “Book my action plan” »), aucun paragraphe français",
       bouton.trim() === "Terms of use and privacy" && !!P && P.fr.length > 0 && P.en.length === P.fr.length && manquantsEn.length === 0 && restesFr.length === 0 && v.includes("Booking: your assessment is booked on Calendly (a US company)") && v.includes("on the coach's behalf") && v.includes("the app screen you came from")
       && v.includes("including your clicks on “" + CTA_EN + "”") && !v.includes("Book my assessment"),
       bouton + " | anglais manquants " + JSON.stringify(manquantsEn) + " | restes français " + JSON.stringify(restesFr) + " | " + v.slice(0, 160));
@@ -436,7 +436,7 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
          v61 (lot 2, G et F) : le texte propre à la page (avant : l'appel commun), « Récupérer mon plan d'action » (avant :
          « Réserver mon bilan »), seul lien du verrou, utm_content=verrou_<page> (avant : verrou-<page>), « 15 min avec Lucas ·
          offert » dessous */
-      ok(`#/${r} (vitrine) : page verrouillée (l'exemple, puis son texte), « Récupérer mon plan d'action » (utm_content=verrou_${r}) et « 15 min avec Lucas · offert », aucune de ses données lue`, t.includes(TXT_APPELS[r]) && !!(await page.$("#vue #ech-" + r + ".echantillon")) && !!bV && bV.n === 1 && bV.t === CTA && plat(bV.sous) === SOUS && !t.includes("Réserver mon bilan") && (await href(page, "#vue .verrou a[target=_blank]")) === lienAttendu("verrou_" + r) && lu.length === 0, t.slice(0, 160) + " | " + JSON.stringify(bV) + " | lectures " + JSON.stringify(lu));
+      ok(`#/${r} (vitrine) : page verrouillée (l'exemple, puis son texte), « Réserver mon plan d'action » (utm_content=verrou_${r}) et « Appel de 15 min avec ton coach, offert », aucune de ses données lue`, t.includes(TXT_APPELS[r]) && !!(await page.$("#vue #ech-" + r + ".echantillon")) && !!bV && bV.n === 1 && bV.t === CTA && plat(bV.sous) === SOUS && !t.includes("Réserver mon bilan") && (await href(page, "#vue .verrou a[target=_blank]")) === lienAttendu("verrou_" + r) && lu.length === 0, t.slice(0, 160) + " | " + JSON.stringify(bV) + " | lectures " + JSON.stringify(lu));
     }
     for (const r of ["complements", "bilan"]) {   // v52 : Ma progression n'est plus verrouillée
       const avant = db.lectures.length;
@@ -445,7 +445,7 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
       const lu = db.lectures.slice(avant);
       /* avant > 0 : le compteur de lectures marche (l'accueil a bien lu ses donnees)
          v61 (lot 2) : même bouton et même ligne que la vitrine, code verrou_<page> (avant : « Réserver mon bilan », verrou-<page>) */
-      ok(`#/${r} (caché) : verrouillé à son adresse, « Récupérer mon plan d'action » (utm_content=verrou_${r}) et « 15 min avec Lucas · offert », aucune donnée lue`, t.includes(TXT_VERROU) && !!bV && bV.n === 1 && bV.t === CTA && plat(bV.sous) === SOUS && !t.includes("Réserver mon bilan") && (await href(page, "#vue .verrou a[target=_blank]")) === lienAttendu("verrou_" + r) && avant > 0 && lu.length === 0, t.slice(0, 120) + " | " + JSON.stringify(bV) + " | lectures " + JSON.stringify(lu) + " (avant : " + avant + ")");
+      ok(`#/${r} (caché) : verrouillé à son adresse, « Réserver mon plan d'action » (utm_content=verrou_${r}) et « Appel de 15 min avec ton coach, offert », aucune donnée lue`, t.includes(TXT_VERROU) && !!bV && bV.n === 1 && bV.t === CTA && plat(bV.sous) === SOUS && !t.includes("Réserver mon bilan") && (await href(page, "#vue .verrou a[target=_blank]")) === lienAttendu("verrou_" + r) && avant > 0 && lu.length === 0, t.slice(0, 120) + " | " + JSON.stringify(bV) + " | lectures " + JSON.stringify(lu) + " (avant : " + avant + ")");
     }
     const redir = [];
     for (const h of ["#/challenge", "#/challenge/3", "#/challenge-libre", "#/challenge-rythme"]) {
@@ -511,7 +511,7 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     await cliquerSansOuvrir(page, "#vue .verrou a[target=_blank]"); await attendre(page, 1800);
     let C = cleChallenge(db), cl = (C.cta && C.cta.clics) || [];
     const der = cl[cl.length - 1] || {};
-    ok("clic « Récupérer mon plan d'action » sur #/programme : noté dans challenge.cta.clics { jour: 2, source: \"verrou_programme\", date }",
+    ok("clic « Réserver mon plan d'action » sur #/programme : noté dans challenge.cta.clics { jour: 2, source: \"verrou_programme\", date }",
       cl.length === 2 && der.jour === 2 && der.source === "verrou_programme" && typeof der.date === "string" && Math.abs(Date.parse(der.date) - t0) < 60000, JSON.stringify(C.cta));
     ok("le clic s'ajoute sans rien perdre (ancien clic et anciens jours gardés)", cl.length === 2 && cl[0].source === "decouverte" && !!(C.jours && C.jours["1"]), JSON.stringify(C));
     /* v52 (lot D) : Ma progression est ouverte au prospect ; la page cachée essayée est #/complements */

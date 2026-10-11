@@ -390,25 +390,25 @@ const TX = {
      avec un coach MHX, deux boutons de même poids) — dans l'ordre : Offert, titre, projection, texte, garde, libre, bouton
      doré + sa ligne, « Plus tard » en lien discret */
   offert: "Offert", offert_en: "Free",
-  titre: "Ton plan d'action personnalisé", titre_en: "Your personalized action plan",
-  bilan: "En 15 minutes au téléphone avec Lucas, on transforme cet objectif en plan concret : ce qui te freine vraiment, par quoi commencer, et les 3 actions à mettre en place en priorité.",
-  bilan_en: "In a 15-minute call with Lucas, we turn this goal into a concrete plan: what's really holding you back, where to start, and the 3 actions to put in place first.",
-  garde: "Ton plan est à toi, quelle que soit la suite.", garde_en: "The plan is yours to keep, whatever you decide next.",
+  titre: "Ton plan d'action", titre_en: "Your action plan",
+  bilan: "15 minutes au téléphone avec ton coach pour faire de cet objectif un plan : ce qui te freine, par quoi commencer, et tes 3 premières actions.",
+  bilan_en: "A 15-minute call with your coach to turn this goal into a plan: what's holding you back, where to start, and your first 3 actions.",
+  garde: "En fin d'appel, si tu veux être suivi, ton coach te présente l'accompagnement. Ton plan reste à toi dans tous les cas.", garde_en: "At the end of the call, if you want ongoing coaching, your coach will tell you about it. Your plan is yours either way.",
   /* v70 : la phrase « Si l'accompagnement te correspond… Tu es libre de dire non. » n'existe plus (FR et EN) ; les suites
      vérifient son ABSENCE (#dc-bilan-libre absent, texte absent de la page) */
   libre: "Tu es libre de dire non", libre_en: "You're free to say no",
-  plan_sous: "15 min · par téléphone · offert", plan_sous_en: "15 min · phone call · free",
+  plan_sous: "Tu choisis l'heure, ton coach t'appelle", plan_sous_en: "You pick the time, your coach calls you",
   projection: p => "Ton objectif dans 3 mois : « " + p + " »",
   projection_en: p => "Your goal in 3 months: “" + p + "”",
   neutre: "Faisons le point ensemble sur ton objectif.", neutre_en: "Let's review your goal together.",
-  reserver: "Récupérer mon plan d'action", reserver_en: "Get my action plan",
-  plus_tard: "Plus tard, je découvre mon espace", plus_tard_en: "Later, let me explore my space",
+  reserver: "Réserver mon plan d'action", reserver_en: "Book my action plan",
+  plus_tard: "Voir mon espace d'abord", plus_tard_en: "See my space first",
   /* v61 (vocabulaire commun, E et G) : la ligne sous « Récupérer mon plan d'action » (accueil, pages verrouillées) */
-  cta_sous: "15 min avec Lucas · offert", cta_sous_en: "15 min with Lucas · free",
+  cta_sous: "Appel de 15 min avec ton coach, offert", cta_sous_en: "Free 15-min call with your coach",
   /* v61 (brief V2, E2) : la carte de l'accueil */
   accomp: "Ce que l'accompagnement ajoute", accomp_en: "What coaching adds",
-  accomp_note: "15 min avec Lucas pour faire le point sur ton objectif. Offert.", accomp_note_en: "15 min with Lucas to go over your goal. Free.",
-  reserve_case: "J'ai déjà choisi mon créneau", reserve_case_en: "I've already booked my slot",
+  accomp_note: "Appel de 15 min avec ton coach, offert", accomp_note_en: "Free 15-min call with your coach",
+  reserve_case: "J'ai déjà réservé", reserve_case_en: "Already booked",
   /* ce qui ne doit plus jamais apparaître sur l'accueil ni la page du plan (FR et EN) : l'ancien bouton, une durée de 30 min */
   anciens: /Réserver mon bilan|Book my assessment|\b30 ?(minutes?|min)\b|30-minute/i,
   modifier: "Modifier mes réponses", modifier_en: "Edit my answers",
@@ -693,7 +693,7 @@ function lienOk(href, base, attendu){
       await c.close();
     }
   });
-  await bloc("C. « Récupérer mon plan d'action »", async () => {
+  await bloc("C. « Réserver mon plan d'action »", async () => {
     const k = 22, ID = PID(k);
     const db = base({ comptes: [compte(k, "Léa", "Martin", [["intake", NOUVEAU()]])] });
     const { c, page } = await ouvrir(b, db, k, "", "#dc-bilan");
@@ -702,9 +702,9 @@ function lienOk(href, base, attendu){
     const I = clone(intakeDe(db, ID)) || {}, C = (db.donnees.find(d => d.user_id === ID && d.outil === "challenge") || {}).contenu || {};
     const wI = ecr(db, "intake", ID), cl = ((C.cta || {}).clics || []);
     /* v62 (relecture) : un clic n'est jamais un « Plus tard » : aucun cta.plus_tard dans la même écriture */
-    ok("clic « Récupérer mon plan d'action » : noté une fois dans challenge (source apres_questionnaire), aucun « Plus tard » noté avec", cl.length === 1 && cl[0].source === "apres_questionnaire" && ecr(db, "challenge", ID).length === 1 && !(C.cta || {}).plus_tard, JSON.stringify(C));
+    ok("clic « Réserver mon plan d'action » : noté une fois dans challenge (source apres_questionnaire), aucun « Plus tard » noté avec", cl.length === 1 && cl[0].source === "apres_questionnaire" && ecr(db, "challenge", ID).length === 1 && !(C.cta || {}).plus_tard, JSON.stringify(C));
     ok("… choix mémorisé en UNE écriture : intake.bilan_propose = { choix: « reserver », le: maintenant }, les réponses intactes", wI.length === 1 && I.bilan_propose && I.bilan_propose.choix === "reserver" && Math.abs(Date.parse(I.bilan_propose.le) - t0) < 10000 && Object.keys(I.bilan_propose).sort().join() === "choix,le" && I.projection === NOUVEAU().projection && I.court_le === NOUVEAU().court_le, JSON.stringify(I));
-    ok("… puis l'accueil du prospect (Speed Formation, « Récupérer mon plan d'action »), plus la page du plan", !!(await page.$("#dc-accomp")) && !!(await page.$("#dc-formation")) && !(await page.$("#dc-bilan")), await texte(page, "#vue"));
+    ok("… puis l'accueil du prospect (Speed Formation, « Réserver mon plan d'action »), plus la page du plan", !!(await page.$("#dc-accomp")) && !!(await page.$("#dc-formation")) && !(await page.$("#dc-bilan")), await texte(page, "#vue"));
     ok("… événement local « call_cta_clicked » (Calendly) noté", (await page.evaluate(() => { try { return JSON.parse(localStorage.getItem("mhx_tracking") || "[]").map(x => x.event); } catch (e) { return []; } })).includes("call_cta_clicked"), "");
     await page.reload(); await pret(page, "#dc-accomp");
     ok("rechargement : l'accueil directement, la page du plan ne revient pas, rien de réécrit", !(await page.$("#dc-bilan")) && ecr(db, "intake", ID).length === 1 && ecr(db, "challenge", ID).length === 1 && saisies(db).length === n0 + 2, resume(db));
@@ -722,7 +722,7 @@ function lienOk(href, base, attendu){
        [{ source, date }]) — avant : aucune écriture de challenge ; toujours UNE écriture de chaque clé pour un double tape,
        et toujours aucun clic Calendly noté (cta.clics vide) */
     const Cpt = (db.donnees.find(d => d.user_id === ID && d.outil === "challenge") || {}).contenu || {}, cta = Cpt.cta || {}, pt = Array.isArray(cta.plus_tard) ? cta.plus_tard : [];
-    ok("« Plus tard, je découvre mon espace » (deux clics) : UNE écriture de chaque clé : bilan_propose = { choix: « plus_tard », le } (intake) et UN « Plus tard » noté avec son origine (challenge.cta.plus_tard = [{ source: apres_questionnaire, date: maintenant }]), aucun clic Calendly noté",
+    ok("« Voir mon espace d'abord » (deux clics) : UNE écriture de chaque clé : bilan_propose = { choix: « plus_tard », le } (intake) et UN « Plus tard » noté avec son origine (challenge.cta.plus_tard = [{ source: apres_questionnaire, date: maintenant }]), aucun clic Calendly noté",
       wI.length === 1 && I.bilan_propose && I.bilan_propose.choix === "plus_tard" && typeof I.bilan_propose.le === "string" && ecr(db, "challenge", ID).length === 1 && saisies(db).length === 2
         && pt.length === 1 && Object.keys(pt[0]).sort().join() === "date,source" && pt[0].source === "apres_questionnaire" && Math.abs(Date.parse(pt[0].date) - t0) < 10000 && !(Array.isArray(cta.clics) && cta.clics.length),
       JSON.stringify(I.bilan_propose) + " · " + JSON.stringify(Cpt) + " · " + resume(db));
@@ -748,7 +748,7 @@ function lienOk(href, base, attendu){
     await aller(page, "#/decouverte/bilan", 1500);
     await cliquerSansOuvrir(page, "#dc-bilan-reserver"); await attendre(page, 2200);
     const C3 = (db.donnees.find(x => x.user_id === ID && x.outil === "challenge") || {}).contenu || {}, cl = (C3.cta || {}).clics || [], pt3 = (C3.cta || {}).plus_tard;
-    ok("… « Récupérer mon plan d'action » plus tard depuis cette page : le clic est noté (apres_questionnaire) dans une 3e écriture de challenge qui garde les 2 « Plus tard » (aucun de plus), le premier choix reste « plus_tard » (intake jamais réécrit)",
+    ok("… « Réserver mon plan d'action » plus tard depuis cette page : le clic est noté (apres_questionnaire) dans une 3e écriture de challenge qui garde les 2 « Plus tard » (aucun de plus), le premier choix reste « plus_tard » (intake jamais réécrit)",
       cl.length === 1 && cl[0].source === "apres_questionnaire" && ecr(db, "intake", ID).length === 1 && intakeDe(db, ID).bilan_propose.choix === "plus_tard"
         && ecr(db, "challenge", ID).length === 3 && JSON.stringify(pt3) === JSON.stringify(pt2), JSON.stringify(C3) + " · " + resume(db));
     await c.close();
@@ -821,8 +821,8 @@ function lienOk(href, base, attendu){
     /* v61 (brief V2, D) : « Free », « Your personalized action plan », « Your goal in 3 months: “…” », les textes du plan
        (avant : « Your next step », « In 3 months, for you », l'assessment de 30 minutes) */
     const en = [await texte(page, "#dc-offert"), await texte(page, "#dc-bilan h2"), await texte(page, "#dc-projection"), await texte(page, "#dc-bilan-texte"), await texte(page, "#dc-bilan-garde")];
-    ok("anglais : « Free », « Your personalized action plan », sa réponse reprise (« Your goal in 3 months: “…” »), textes du plan en anglais (15-minute call with Lucas, « The plan is yours to keep… »), sans « You're free to say no. » (v70)", JSON.stringify(en) === JSON.stringify([TX.offert_en, TX.titre_en, TX.projection_en(NOUVEAU().projection), TX.bilan_en, TX.garde_en]) && !(await page.$("#dc-bilan-libre")) && !v.includes(TX.libre_en), JSON.stringify(en));
-    ok("anglais : « Get my action plan », « 15 min · phone call · free » et « Later, let me explore my space », aucun texte français de la page, plus aucun « Book my assessment » ni « 30-minute »", (await texte(page, "#dc-bilan-reserver")) === TX.reserver_en && (await texte(page, "#dc-bilan-sous")) === TX.plan_sous_en && (await texte(page, "#dc-bilan-plus-tard")) === TX.plus_tard_en && ![TX.offert, TX.bilan, TX.garde, TX.libre, TX.reserver, TX.plan_sous, TX.plus_tard, TX.titre, "Ton objectif dans 3 mois"].some(x => v.includes(x)) && !TX.anciens.test(v), v.slice(0, 300));
+    ok("anglais : « Free », « Your action plan », sa réponse reprise (« Your goal in 3 months: “…” »), textes du plan en anglais (15-minute call with Lucas, « The plan is yours to keep… »), sans « You're free to say no. » (v70)", JSON.stringify(en) === JSON.stringify([TX.offert_en, TX.titre_en, TX.projection_en(NOUVEAU().projection), TX.bilan_en, TX.garde_en]) && !(await page.$("#dc-bilan-libre")) && !v.includes(TX.libre_en), JSON.stringify(en));
+    ok("anglais : « Book my action plan », « You pick the time, your coach calls you » et « See my space first », aucun texte français de la page, plus aucun « Book my assessment » ni « 30-minute »", (await texte(page, "#dc-bilan-reserver")) === TX.reserver_en && (await texte(page, "#dc-bilan-sous")) === TX.plan_sous_en && (await texte(page, "#dc-bilan-plus-tard")) === TX.plus_tard_en && ![TX.offert, TX.bilan, TX.garde, TX.libre, TX.reserver, TX.plan_sous, TX.plus_tard, TX.titre, "Ton objectif dans 3 mois"].some(x => v.includes(x)) && !TX.anciens.test(v), v.slice(0, 300));
     await c.close();
   });
 
@@ -892,7 +892,7 @@ function lienOk(href, base, attendu){
     const haut = await page.$$eval("#vue [data-dc-cal]", l => l.map(a => ({ cal: a.dataset.dcCal, cls: a.className, t: a.textContent.replace(/\s+/g, " ").trim(), href: a.getAttribute("href"), dansTete: !!a.closest(".masthead"),
       sous: a.closest(".masthead") && a.closest(".masthead").querySelector(".dc-haut-sous") ? a.closest(".masthead").querySelector(".dc-haut-sous").textContent.replace(/[\s\u00a0\u202f]+/g, " ").trim() : null }))).catch(() => []);
     const pbHaut = haut.length === 1 ? lienOk(haut[0].href || "", await page.evaluate(() => CONFIG.marque.calendly), { source: "reponses_haut", prenom: "Léa", nom: "Martin", email: "p60@exemple.fr" }) : "liens " + haut.length;
-    ok("« Modifier mes réponses » : le questionnaire pré-rempli (carte « Perdre du gras » cochée ; ses anciennes réponses libres dans les précisions, aucune pastille inventée ; bouton actif), « Annuler les modifications » ; en haut, « Récupérer mon plan d'action » en contour + « 15 min avec Lucas · offert » (seul lien Calendly, origine reponses_haut)", JSON.stringify(e1.probleme) === '["Perdre du gras"]' && !e1.obstacle.length && e1.po === I0.obstacle && !e1.projection.length && e1.pp === I0.projection && e1.inactif === "false|false" && (await texte(page, "#dc-annuler")) === TX.annuler
+    ok("« Modifier mes réponses » : le questionnaire pré-rempli (carte « Perdre du gras » cochée ; ses anciennes réponses libres dans les précisions, aucune pastille inventée ; bouton actif), « Annuler les modifications » ; en haut, « Réserver mon plan d'action » en contour + « Appel de 15 min avec ton coach, offert » (seul lien Calendly, origine reponses_haut)", JSON.stringify(e1.probleme) === '["Perdre du gras"]' && !e1.obstacle.length && e1.po === I0.obstacle && !e1.projection.length && e1.pp === I0.projection && e1.inactif === "false|false" && (await texte(page, "#dc-annuler")) === TX.annuler
       && !pbHaut && haut[0].cal === "reponses_haut" && /(^| )ghost( |$)/.test(haut[0].cls) && /(^| )btn( |$)/.test(haut[0].cls) && haut[0].t === TX.reserver && haut[0].dansTete && haut[0].sous === TX.cta_sous, JSON.stringify(e1) + " · " + pbHaut + " · " + JSON.stringify(haut));
     await choisir(page, "probleme", "Prendre du muscle"); await choisir(page, "obstacle", "temps"); await page.fill("#q-obstacle-precision", "Autre chose"); await attendre(page, 1500);
     ok("en modification : rien ne part pendant la saisie", saisies(db).length === 0, resume(db));
@@ -950,7 +950,7 @@ function lienOk(href, base, attendu){
     ok("fiche : « 3 / 3 réponses, validé le … »", note.startsWith("3 / 3 réponses, validé le "), note);
     ok("fiche : email, puis les 3 réponses (v52, lot G : libellés courts Problème, Ce qui l'a bloqué, Dans 3 mois), puis les anciennes qui ont une valeur (sexe, poids) — pas l'objectif posé par l'app", JSON.stringify(rf) === JSON.stringify([["Email", "p70@exemple.fr"], ["Problème", "Perdre du gras"], ["Ce qui l'a bloqué", I0.obstacle], ["Dans 3 mois", "Tenir " + XSS], ["Sexe", "Femme"], ["Poids actuel (kg)", "64"]]), JSON.stringify(rf));
     const chrono = await texte(page, "#fiche-chrono");
-    const CLIC_APQ = "Clic « Récupérer mon plan d'action » (page « Ton plan d'action » (après les 3 questions))";
+    const CLIC_APQ = "Clic « Réserver mon plan d'action » (page « Ton plan d'action » (après les 3 questions))";
     const clicsChrono = await page.$$eval("#fiche-chrono ol li span", l => l.map(x => x.textContent.replace(/[\u00a0\u202f]/g, " ").replace(/\s+/g, " ").trim()).filter(t => /^Clic\b/.test(t))).catch(() => []);
     const nomsEcr = await page.evaluate(() => [Decouverte.nomOrigine("bilan-propose"), Decouverte.ORIGINES.apres_questionnaire]).catch(() => []);
     ok("chronologie : l'ancien code (bilan-propose) comme le nouveau (apres_questionnaire) se lisent « " + CLIC_APQ + " » (nom de l'écran d'aujourd'hui, Decouverte.nomOrigine) : exactement 2 lignes de clic, ce libellé deux fois ; plus aucun ancien libellé (« Réserver mon bilan », « page de proposition du bilan ») ni code brut", JSON.stringify(clicsChrono) === JSON.stringify([CLIC_APQ, CLIC_APQ]) && JSON.stringify(nomsEcr) === JSON.stringify(["page « Ton plan d'action » (après les 3 questions)", "page « Ton plan d'action » (après les 3 questions)"]) && chrono.split(CLIC_APQ).length === 3 && !/Réserver mon bilan|page de proposition du bilan|en haut de sa Découverte|bloc accompagnement/.test(chrono) && !/apres_questionnaire|bilan-propose/.test(chrono), JSON.stringify(clicsChrono) + " · " + JSON.stringify(nomsEcr) + " · " + chrono.slice(0, 400));
@@ -982,7 +982,7 @@ function lienOk(href, base, attendu){
     });
     const pbH = lienOk(acc.hautHref || "", acc.base, { source: "accueil_haut", prenom: "Léa", nom: "Martin", email: "p80@exemple.fr" }), pbC = lienOk(acc.carteHref || "", acc.base, { source: "accueil_accompagnement", prenom: "Léa", nom: "Martin", email: "p80@exemple.fr" });
     const lignesAtt = [["Mon programme", "programme"], ["Nutrition", "nutrition"], ["Mon journal", "journal"], ["Mon suivi", "suivi"]].map(([nom, id]) => nom + " — " + TXD.av[id]);
-    ok("… « Récupérer mon plan d'action » en haut (accueil_haut, « 15 min avec Lucas · offert ») et dans la carte « Ce que l'accompagnement ajoute » (accueil_accompagnement ; nouvelles descriptions, « 15 min avec Lucas pour faire le point… »), case « J'ai déjà choisi mon créneau » ; exactement 2 liens Calendly, pré-remplis exacts ; plus aucun « Réserver mon bilan » ni « 30 minutes »",
+    ok("… « Réserver mon plan d'action » en haut (accueil_haut, « Appel de 15 min avec ton coach, offert ») et dans la carte « Ce que l'accompagnement ajoute » (accueil_accompagnement ; nouvelles descriptions, « Appel de 15 min avec ton coach pour faire le point… »), case « J'ai déjà réservé » ; exactement 2 liens Calendly, pré-remplis exacts ; plus aucun « Réserver mon bilan » ni « 30 minutes »",
       JSON.stringify(acc.cal) === '["accueil_haut","accueil_accompagnement"]' && acc.haut === TX.reserver && acc.hautSous === TX.cta_sous && acc.carte === TX.reserver && !pbH && !pbC && acc.titre === TX.accomp && JSON.stringify(acc.lignes) === JSON.stringify(lignesAtt) && acc.note === TX.accomp_note && acc.cas && acc.casTxt === TX.reserve_case && !TX.anciens.test(v),
       pbH + " · " + pbC + " · " + JSON.stringify(acc) + (TX.anciens.test(v) ? " · ancien texte : " + v.match(TX.anciens)[0] : ""));
     const code = await page.evaluate(() => ["chiffres", "calculHTML", "seanceHTML", "recettesHTML", "chargerRecettes", "resultatHTML", "prioriteObstacle", "formationHTML", "accompHTML"].filter(f => typeof outilDecouverte[f] !== "function"));
@@ -1037,8 +1037,8 @@ function lienOk(href, base, attendu){
     const e = await page.$eval("#dc-etape", x => ({ etape: x.dataset.etape, h2: x.querySelector("h2").textContent.trim(), a: x.querySelector("a.btn").textContent.trim(), href: x.querySelector("a.btn").getAttribute("href"), ghost: x.querySelector("a.btn").classList.contains("ghost") })).catch(() => null);
     ok("accueil d'un nouveau prospect : l'action mise en avant est « Calcule tes calories (2 min) » → #/calculateur", !!e && e.etape === "calories" && e.a === TXD.calories && e.href === "#/calculateur" && !e.ghost, JSON.stringify(e));
     const forts = await page.$$eval("#vue a.btn:not(.ghost), #vue button.btn:not(.ghost)", l => l.map(x => x.id || x.textContent.trim()));
-    ok("… une seule action mise en avant : tous les autres boutons de l'accueil sont discrets (« Récupérer mon plan d'action » compris)", forts.length === 1 && forts[0] === "dc-etape-go", JSON.stringify(forts));
-    ok("… « Récupérer mon plan d'action » reste là, discret, en contour (en-tête et carte de l'accompagnement, origines accueil_haut / accueil_accompagnement)", !!(await page.$('#vue .masthead a.btn.ghost[data-dc-cal="accueil_haut"]')) && !!(await page.$('#dc-accomp a.btn.ghost[data-dc-cal="accueil_accompagnement"]')) && (await texte(page, '#vue .masthead a[data-dc-cal="accueil_haut"]')) === TX.reserver && (await texte(page, '#dc-accomp a[data-dc-cal="accueil_accompagnement"]')) === TX.reserver, "");
+    ok("… une seule action mise en avant : tous les autres boutons de l'accueil sont discrets (« Réserver mon plan d'action » compris)", forts.length === 1 && forts[0] === "dc-etape-go", JSON.stringify(forts));
+    ok("… « Réserver mon plan d'action » reste là, discret, en contour (en-tête et carte de l'accompagnement, origines accueil_haut / accueil_accompagnement)", !!(await page.$('#vue .masthead a.btn.ghost[data-dc-cal="accueil_haut"]')) && !!(await page.$('#dc-accomp a.btn.ghost[data-dc-cal="accueil_accompagnement"]')) && (await texte(page, '#vue .masthead a[data-dc-cal="accueil_haut"]')) === TX.reserver && (await texte(page, '#dc-accomp a[data-dc-cal="accueil_accompagnement"]')) === TX.reserver, "");
     const v = await texte(page, "#vue");
     ok("… en-tête « Découverte », phrase « gratuit, sans limite de temps », aucun « Jour n/7 » ni jours restants", (await texte(page, "#vue .masthead .eyebrow")) === "Découverte" && v.includes(TXD.lede) && !SEPT.test(v), v.slice(0, 260));
     const vit = await page.$$eval("#dc-accomp .liste-debloque a", l => l.map(a => a.getAttribute("href")));
@@ -1063,15 +1063,15 @@ function lienOk(href, base, attendu){
     let { c, page } = await ouvrir(b, db, 8, "", "#dc-accomp"); await attendre(page, 1000);
     const carte = await page.$eval("#dc-etape", x => ({ etape: x.dataset.etape, h2: x.querySelector("h2").textContent.trim(), a: x.querySelector("a.btn") ? x.querySelector("a.btn").textContent.trim() : "", cal: x.querySelector("a.btn") ? x.querySelector("a.btn").getAttribute("data-dc-cal") : "", sous: x.querySelector(".dc-cta-sous") ? x.querySelector(".dc-cta-sous").textContent.trim() : "" })).catch(() => null);
     const forts = await page.$$eval("#vue a.btn:not(.ghost), #vue button.btn:not(.ghost)", l => l.map(x => x.id || x.textContent.trim()));
-    ok("calcul et pesée faits, pas de créneau : carte « Ta prochaine étape » (plan) avec le bouton doré « Récupérer mon plan d'action » (origine accueil_etape) et « 15 min avec Lucas · offert » ; seul bouton doré de l'accueil", !!carte && carte.etape === "plan" && carte.h2 === "Ta prochaine étape" && norm(carte.a) === TX.reserver && carte.cal === "accueil_etape" && norm(carte.sous) === TX.cta_sous && forts.length === 1 && forts[0] === "dc-etape-go", JSON.stringify(carte) + " " + JSON.stringify(forts));
+    ok("calcul et pesée faits, pas de créneau : carte « Ta prochaine étape » (plan) avec le bouton doré « Réserver mon plan d'action » (origine accueil_etape) et « Appel de 15 min avec ton coach, offert » ; seul bouton doré de l'accueil", !!carte && carte.etape === "plan" && carte.h2 === "Ta prochaine étape" && norm(carte.a) === TX.reserver && carte.cal === "accueil_etape" && norm(carte.sous) === TX.cta_sous && forts.length === 1 && forts[0] === "dc-etape-go", JSON.stringify(carte) + " " + JSON.stringify(forts));
     await cliquerSansOuvrir(page, '#dc-etape a[data-dc-cal="accueil_etape"]'); await attendre(page, 2200);
     const cl = clicsDe(PID(8));
     ok("clic sur la carte dorée : un clic noté dans challenge (source accueil_etape), rien d'autre d'écrit", cl.length === 1 && cl[0].source === "accueil_etape" && ecr(db, "challenge", PID(8)).length === 1 && saisies(db).length === 1, JSON.stringify(cl) + " " + resume(db));
     await c.close();
     ({ c, page } = await ouvrir(b, db, 9, "", "#dc-accomp")); await attendre(page, 1000);
-    ok("réservé (créneau coché) : aucun « Récupérer mon plan d'action » sur l'accueil, pas de carte « plan », ligne « Créneau choisi le … » dans l'en-tête, pastille « Bilan réservé le … » gardée, rien d'écrit", (await page.$$("#vue [data-dc-cal]")).length === 0 && !(await page.$("#dc-etape")) && (await texte(page, "#dc-reserve-haut")).startsWith("Créneau choisi le") && (await texte(page, "#dc-reserve-ok")).startsWith("Bilan réservé le") && !(await texte(page, "#vue")).includes(TX.reserver) && saisies(db).length === 1, (await texte(page, "#dc-reserve-haut")) + " · " + resume(db));
+    ok("réservé (créneau coché) : aucun « Réserver mon plan d'action » sur l'accueil, pas de carte « plan », ligne « Ton coach t'appelle à l'heure que tu as choisie. » dans l'en-tête, pastille « C'est réservé : … » gardée, rien d'écrit", (await page.$$("#vue [data-dc-cal]")).length === 0 && !(await page.$("#dc-etape")) && (await texte(page, "#dc-reserve-haut")) === "Ton coach t'appelle à l'heure que tu as choisie." && (await texte(page, "#dc-reserve-ok")).startsWith("C'est réservé") && !(await texte(page, "#vue")).includes(TX.reserver) && saisies(db).length === 1, (await texte(page, "#dc-reserve-haut")) + " · " + resume(db));
     await aller(page, "#/programme", 1400);
-    ok("réservé, page verrouillée : cadenas et texte d'appel sans bouton, pastille « Bilan réservé le … », rien d'écrit", !!(await page.$("#vue .verrou")) && !(await page.$("#vue .verrou a[target=_blank]")) && (await texte(page, "#vue .verrou-reserve")).startsWith("Bilan réservé le") && !(await texte(page, "#vue")).includes(TX.reserver) && saisies(db).length === 1, (await texte(page, "#vue .verrou-reserve")) + " · " + resume(db));
+    ok("réservé, page verrouillée : cadenas et texte d'appel sans bouton, pastille « C'est réservé : … », rien d'écrit", !!(await page.$("#vue .verrou")) && !(await page.$("#vue .verrou a[target=_blank]")) && (await texte(page, "#vue .verrou-reserve")).startsWith("C'est réservé") && !(await texte(page, "#vue")).includes(TX.reserver) && saisies(db).length === 1, (await texte(page, "#vue .verrou-reserve")) + " · " + resume(db));
     await c.close();
   });
 
@@ -1094,7 +1094,7 @@ function lienOk(href, base, attendu){
     ({ c, page } = await ouvrir(b, db, 4, "", "#dc-accomp")); await attendre(page, 1000);
     const forts = await page.$$eval("#vue a.btn:not(.ghost), #vue button.btn:not(.ghost)", l => l.length);
     /* v71 (H) : calcul + pesée faits, pas de créneau : la carte dorée « Ta prochaine étape » (plan) est le seul bouton doré (avant : aucune étape, forts === 0) */
-    ok("calcul et pesée faits : carte « Ta prochaine étape » (plan, accueil_etape), le seul bouton doré ; Speed Formation, pages de l'accompagnement, « Récupérer mon plan d'action » en contour en haut et dans la carte", !!(await page.$('#dc-etape[data-etape="plan"]')) && forts === 1 && !!(await page.$("#dc-formation")) && !!(await page.$("#dc-accomp .liste-debloque a")) && !!(await page.$('#vue .masthead a.btn.ghost[data-dc-cal="accueil_haut"]')) && !!(await page.$('#dc-accomp a.btn.ghost[data-dc-cal="accueil_accompagnement"]')), "forts " + forts);
+    ok("calcul et pesée faits : carte « Ta prochaine étape » (plan, accueil_etape), le seul bouton doré ; Speed Formation, pages de l'accompagnement, « Réserver mon plan d'action » en contour en haut et dans la carte", !!(await page.$('#dc-etape[data-etape="plan"]')) && forts === 1 && !!(await page.$("#dc-formation")) && !!(await page.$("#dc-accomp .liste-debloque a")) && !!(await page.$('#vue .masthead a.btn.ghost[data-dc-cal="accueil_haut"]')) && !!(await page.$('#dc-accomp a.btn.ghost[data-dc-cal="accueil_accompagnement"]')), "forts " + forts);
     await c.close();
     ({ c, page } = await ouvrir(b, db, 7, "", "#dc-accomp")); await attendre(page, 1000);
     ok("un poids de départ (réglages de Ma progression) compte comme une pesée : carte « plan » (v71 H ; avant : accueil normal)", (await page.$eval("#dc-etape", x => x.dataset.etape).catch(() => "")) === "plan", "");
@@ -1124,7 +1124,7 @@ function lienOk(href, base, attendu){
     });
     const lignesEn = [["My program", "programme"], ["Nutrition", "nutrition"], ["My training log", "journal"], ["My follow-up", "suivi"]].map(([nom, id]) => nom + " — " + TXD.av_en[id]);
     const frAcc = [TX.reserver, TX.cta_sous, TX.accomp, TX.accomp_note, TX.reserve_case].concat(Object.values(TXD.av)).filter(x => v.includes(x));
-    ok("anglais : liens de la vitrine traduits (My program, Nutrition, My training log, My follow-up) avec leurs nouvelles descriptions, « What coaching adds », « Get my action plan » (haut et carte), « 15 min with Lucas · free », « 15 min with Lucas to go over your goal. Free. », « I've already booked my slot » ; aucun texte français de la carte, aucun « Book my assessment » ni « 30-minute », aucun « 7 days » ni « Day n/7 »",
+    ok("anglais : liens de la vitrine traduits (My program, Nutrition, My training log, My follow-up) avec leurs nouvelles descriptions, « What coaching adds », « Book my action plan » (haut et carte), « Free 15-min call with your coach », « Free 15-min call with your coach », « Already booked » ; aucun texte français de la carte, aucun « Book my assessment » ni « 30-minute », aucun « 7 days » ni « Day n/7 »",
       JSON.stringify(accEn.liens) === JSON.stringify(["My program", "Nutrition", "My training log", "My follow-up"]) && JSON.stringify(accEn.lignes) === JSON.stringify(lignesEn) && accEn.titre === TX.accomp_en && accEn.haut === TX.reserver_en && accEn.hautSous === TX.cta_sous_en && accEn.carte === TX.reserver_en && accEn.note === TX.accomp_note_en && accEn.casTxt === TX.reserve_case_en && frAcc.length === 0 && !TX.anciens.test(v) && !SEPT.test(v),
       JSON.stringify(accEn) + " · " + JSON.stringify(frAcc));
     const db2 = base({ comptes: [compte(9, "Léa", "Martin", [["intake", NOUVEAU({ bilan_propose: { choix: "plus_tard", le: avant(MIN) } })]])] }); avecEn(db2, PID(9));
@@ -1426,10 +1426,10 @@ function lienOk(href, base, attendu){
     await aller(page, "#/journal", 1500);
     /* v52 : lots D + E — la page verrouillée du journal montre d'abord son exemple (#ech-journal, lot E : détaillé en E1) */
     /* v61 (brief V2, E2) : la note sous la carte (.verrou-plus) = la nouvelle description AVANTAGES.journal */
-    ok("#/journal : page verrouillée « Mon journal » (l'exemple, puis cadenas, « Récupérer mon plan d'action », et sous la carte ce que l'accompagnement ajoute : « Chaque séance notée, et la charge à viser la fois suivante. »), rien de ses données n'est lu", !!(await page.$("#vue #ech-journal.echantillon")) && !!(await page.$("#vue .verrou")) && (await texte(page, "#vue .verrou a[target=_blank]")) === TX.reserver && (await texte(page, "#vue .verrou-plus")) === TXD.av_journal && db.lectures.slice(L0).filter(l => l.outil !== "eq.challenge").length === 0, JSON.stringify(db.lectures.slice(L0).map(l => l.outil)) + " · " + (await texte(page, "#vue .verrou-plus")));
+    ok("#/journal : page verrouillée « Mon journal » (l'exemple, puis cadenas, « Réserver mon plan d'action », et sous la carte ce que l'accompagnement ajoute : « Chaque séance notée, et la charge à viser la fois suivante. »), rien de ses données n'est lu", !!(await page.$("#vue #ech-journal.echantillon")) && !!(await page.$("#vue .verrou")) && (await texte(page, "#vue .verrou a[target=_blank]")) === TX.reserver && (await texte(page, "#vue .verrou-plus")) === TXD.av_journal && db.lectures.slice(L0).filter(l => l.outil !== "eq.challenge").length === 0, JSON.stringify(db.lectures.slice(L0).map(l => l.outil)) + " · " + (await texte(page, "#vue .verrou-plus")));
     await cliquerSansOuvrir(page, "#vue .verrou a[target=_blank]"); await attendre(page, 1800);
     const cl = (((db.donnees.find(d => d.user_id === ID && d.outil === "challenge") || {}).contenu || {}).cta || {}).clics || [];
-    ok("… son « Récupérer mon plan d'action » est compté (source verrou_journal)", cl.length === 1 && cl[0].source === "verrou_journal", JSON.stringify(cl));
+    ok("… son « Réserver mon plan d'action » est compté (source verrou_journal)", cl.length === 1 && cl[0].source === "verrou_journal", JSON.stringify(cl));
     await aller(page, "#/formation", 2200);
     ok("inscrit il y a 30 jours : la Speed Formation est ouverte (plus de verrou au 8e jour)", !(await page.$("#vue .verrou")) && !!(await page.$("#fo-vue")) && (await ou(page)).courant === "formation", JSON.stringify(await ou(page)));
     await c.close();
@@ -1591,7 +1591,7 @@ function lienOk(href, base, attendu){
       const w0 = saisies(db).length;
       await cliquerSansOuvrir(page, "#vue .verrou a[target=_blank]"); await attendre(page, 2200);
       const cl = clicsDe(db, uid), aut = saisies(db).slice(w0).filter(e => e.outil !== "challenge");
-      ok(`#/${id} : un clic « Récupérer mon plan d'action » est compté (challenge.cta.clics, source verrou_${id}), rien d'autre n'est écrit`, cl.length === 1 && cl[0].source === "verrou_" + id && ecr(db, "challenge", uid).length === 1 && aut.length === 0, JSON.stringify(cl) + " · " + resume(db));
+      ok(`#/${id} : un clic « Réserver mon plan d'action » est compté (challenge.cta.clics, source verrou_${id}), rien d'autre n'est écrit`, cl.length === 1 && cl[0].source === "verrou_" + id && ecr(db, "challenge", uid).length === 1 && aut.length === 0, JSON.stringify(cl) + " · " + resume(db));
     }
     const capture = async (page, nom) => { try { fs.mkdirSync(path.join(__dirname, "captures", "v56"), { recursive: true }); } catch (e) { } await page.screenshot({ path: path.join(__dirname, "captures", "v56", nom + ".png"), fullPage: true }).catch(() => {}); };
     const RECETTES = CATALOGUE.recettes, ALIM = Object.fromEntries(CATALOGUE.aliments.map(a => [a.id, a]));
@@ -1639,10 +1639,10 @@ function lienOk(href, base, attendu){
         ok(`${w} : l'exemple = la séance découverte, niveau débutant (échauffement, 5 exercices, 2 tours, 5 démonstrations)`, !!s && s.h2 === "Ta séance découverte" && JSON.stringify(s.exos) === JSON.stringify(["Squats", "Pompes", "Fentes arrière", "Pont fessier", "Gainage"]) && s.notes.includes("2 tours (ton niveau : Débutant)") && s.echauffement > 0 && s.demos === 5, JSON.stringify(s));
         ok(`${w} : aucune donnée personnelle dans l'exemple (ni prénom, ni nom, ni email, ni ses données témoins) ; lecture seule (aucun lien ni champ)`, !perso(v.texte) && v.champs === 0 && !(await texte(page, "#vue")).includes(TEMOIN), v.texte.slice(0, 200));
         const pb = lienPre(v, k, "programme");
-        ok(`${w} : le texte exact de la page (« ${EX.appels.programme.slice(0, 50)}… »), « Récupérer mon plan d'action » (seul lien du verrou, Calendly pré-rempli exact, source verrou_programme, nouvel onglet), « 15 min avec Lucas · offert », la note « ${TXD.av.programme} »`, appelOk(v, "programme") && !pb, pb + " · " + JSON.stringify([v.appel, v.nLiens, v.lien]));
+        ok(`${w} : le texte exact de la page (« ${EX.appels.programme.slice(0, 50)}… »), « Réserver mon plan d'action » (seul lien du verrou, Calendly pré-rempli exact, source verrou_programme, nouvel onglet), « Appel de 15 min avec ton coach, offert », la note « ${TXD.av.programme} »`, appelOk(v, "programme") && !pb, pb + " · " + JSON.stringify([v.appel, v.nLiens, v.lien]));
         ok(`${w} : aucune clé « donnees » lue en ouvrant la page, aucune écriture`, luHors(db, n0).length === 0 && saisies(db).length === 0, JSON.stringify(luHors(db, n0)) + " · " + resume(db));
         if (viewport === MOBILE) {
-          ok("390 px : #/programme sans défilement horizontal, « Récupérer mon plan d'action » tactile (44 px de haut au moins)", !(await deborde(page)) && v.h >= 44, (await largeur(page)) + " · " + v.h);
+          ok("390 px : #/programme sans défilement horizontal, « Réserver mon plan d'action » tactile (44 px de haut au moins)", !(await deborde(page)) && v.h >= 44, (await largeur(page)) + " · " + v.h);
           await capture(page, "ech-programme-mobile");
         } else {
           await page.click("#ech-programme [data-yt]"); await attendre(page, 500);
@@ -1669,7 +1669,7 @@ function lienOk(href, base, attendu){
         const ch = db.chemins.slice(ch0);
         ok(`${w} : seul le catalogue public est lu (recettes, aliments) : aucune clé « donnees », aucune écriture, aucune donnée personnelle affichée`, ch.includes("GET /rest/v1/recettes") && ch.includes("GET /rest/v1/aliments") && luHors(db, n0).length === 0 && saisies(db).length === 0 && !perso(v.texte) && v.champs === 0, JSON.stringify(ch.filter(x => !x.startsWith("OPTIONS")).slice(0, 12)) + " · " + JSON.stringify(luHors(db, n0)));
         const pb = lienPre(v, k, "nutrition");
-        ok(`${w} : le texte exact de la page nutrition, « Récupérer mon plan d'action » (source verrou_nutrition, pré-rempli, nouvel onglet), « 15 min avec Lucas · offert », la note AVANTAGES`, appelOk(v, "nutrition") && !pb, pb + " · " + JSON.stringify([v.appel, v.nLiens, v.lien]));
+        ok(`${w} : le texte exact de la page nutrition, « Réserver mon plan d'action » (source verrou_nutrition, pré-rempli, nouvel onglet), « Appel de 15 min avec ton coach, offert », la note AVANTAGES`, appelOk(v, "nutrition") && !pb, pb + " · " + JSON.stringify([v.appel, v.nLiens, v.lien]));
         if (viewport === MOBILE) {
           await page.$$eval("#ech-repas details", l => l.forEach(d => { d.open = true; })); await attendre(page, 300);
           ok("390 px : journée type dépliée sans défilement horizontal, bouton tactile", !(await deborde(page)) && v.h >= 44, (await largeur(page)) + " · " + v.h);
@@ -1704,7 +1704,7 @@ function lienOk(href, base, attendu){
         ok(`${w} : #/journal — l'exemple (« ${EX.marque} ») d'une séance notée : « Séance A — Corps entier », « Séance notée », « 4 exercices · 12 séries », puis l'appel`, marqueOk(v) && v.avant && !!j && j.h2 === "Séance A — Corps entier" && j.pastille === "Séance notée" && j.resume === "4 exercices · 12 séries", JSON.stringify(j && [j.h2, j.pastille, j.resume]) + " · " + JSON.stringify(v).slice(0, 200));
         ok(`${w} : chaque série avec ses répétitions et sa charge (ou « poids du corps »), et le conseil de la séance suivante calculé comme le vrai journal`, !!j && JSON.stringify(j.exos) === JSON.stringify(JOURNAL_ATTENDU), JSON.stringify(j && j.exos));
         const pb = lienPre(v, k, "journal");
-        ok(`${w} : le texte exact de la page journal, « Récupérer mon plan d'action » (source verrou_journal, pré-rempli, nouvel onglet), « 15 min avec Lucas · offert », la note AVANTAGES ; aucune donnée personnelle, aucun champ`, appelOk(v, "journal") && !pb && !perso(v.texte) && v.champs === 0, pb + " · " + JSON.stringify([v.appel, v.lien]));
+        ok(`${w} : le texte exact de la page journal, « Réserver mon plan d'action » (source verrou_journal, pré-rempli, nouvel onglet), « Appel de 15 min avec ton coach, offert », la note AVANTAGES ; aucune donnée personnelle, aucun champ`, appelOk(v, "journal") && !pb && !perso(v.texte) && v.champs === 0, pb + " · " + JSON.stringify([v.appel, v.lien]));
         ok(`${w} : aucune clé « donnees » lue (ni journal, ni autre), aucune écriture`, luHors(db, n0).length === 0 && saisies(db).length === 0, JSON.stringify(luHors(db, n0)) + " · " + resume(db));
         if (viewport === MOBILE) { ok("390 px : #/journal sans défilement horizontal, bouton tactile", !(await deborde(page)) && v.h >= 44, (await largeur(page)) + " · " + v.h); await capture(page, "ech-journal-mobile"); }
         else await clicCompte(page, db, ID, "journal");
@@ -1723,7 +1723,7 @@ function lienOk(href, base, attendu){
         ok(`${w} : #/suivi — l'exemple (« ${EX.marque} ») d'un suivi de la semaine : « Ton suivi de la semaine », « Semaine 5 », régularité, séances, poids`, marqueOk(v) && v.avant && !!s && s.h2 === "Ton suivi de la semaine" && s.semaine === "Semaine 5" && JSON.stringify(s.tuiles) === JSON.stringify(["Régularité|86/ 100|cette semaine", "Séances notées|3/ 3|cette semaine", "Poids|−0,4kg|depuis la semaine dernière"]), JSON.stringify(s && [s.h2, s.semaine, s.tuiles]));
         ok(`${w} : la courbe de poids (5 points S1 à S5), une image décrite pour les lecteurs d'écran, et le message du coach`, !!s && s.courbe === "Ta courbe de poids" && !!s.svg && s.svg.role === "img" && s.svg.label === "Poids sur 5 semaines : de 82,0 kg à 80,4 kg." && s.svg.points === 5 && ["S1", "S2", "S3", "S4", "S5", "82,0", "80,4"].every(x => s.svg.textes.includes(x)) && s.titreMsg === "Feedback de ton coach" && s.msg === "Belle semaine : 3 séances sur 3 et 400 g de moins sur la balance. On garde le même plan. Cette semaine, ajoute 10 minutes de marche après le dîner.", JSON.stringify(s && [s.courbe, s.svg, s.titreMsg, s.msg]));
         const pb = lienPre(v, k, "suivi");
-        ok(`${w} : le texte exact de la page suivi, « Récupérer mon plan d'action » (source verrou_suivi, pré-rempli, nouvel onglet), « 15 min avec Lucas · offert », la note AVANTAGES ; aucune donnée personnelle, aucun champ`, appelOk(v, "suivi") && !pb && !perso(v.texte) && v.champs === 0, pb + " · " + JSON.stringify([v.appel, v.lien]));
+        ok(`${w} : le texte exact de la page suivi, « Réserver mon plan d'action » (source verrou_suivi, pré-rempli, nouvel onglet), « Appel de 15 min avec ton coach, offert », la note AVANTAGES ; aucune donnée personnelle, aucun champ`, appelOk(v, "suivi") && !pb && !perso(v.texte) && v.champs === 0, pb + " · " + JSON.stringify([v.appel, v.lien]));
         ok(`${w} : aucune clé « donnees » lue (ni checkins, ni mens, ni autre), aucune écriture`, luHors(db, n0).length === 0 && saisies(db).length === 0, JSON.stringify(luHors(db, n0)) + " · " + resume(db));
         if (viewport === MOBILE) { ok("390 px : #/suivi sans défilement horizontal, bouton tactile", !(await deborde(page)) && v.h >= 44, (await largeur(page)) + " · " + v.h); await capture(page, "ech-suivi-mobile"); }
         else await clicCompte(page, db, ID, "suivi");
@@ -1768,7 +1768,7 @@ function lienOk(href, base, attendu){
       });
       ok("DECOUVERTE.en.echantillons : même forme et même ordre que le français ; en anglais, chaque texte a sa traduction exacte", forme.meme && forme.paires > 30 && forme.manque.length === 0, JSON.stringify(forme));
       /* v61 : + les nouveaux textes français (texte de chaque page, bouton, ligne sous le bouton, note AVANTAGES) */
-      const FR = ["Exemple", "Tu veux un programme", "Réserver mon bilan", "Réserve ton bilan", "Récupérer mon plan d'action", "15 min avec Lucas", "Avec l'accompagnement", "Cette séance découverte", "Tes séances construites", "Tes repas calculés", "Chaque séance notée", "Ta régularité", "Ta séance découverte", "Une journée type", "Petit-déjeuner", "Séance notée", "Série 1", "poids du corps", "Toutes tes séries", "Ton suivi de la semaine", "Régularité", "Feedback de ton coach", "Belle semaine", "Ta courbe de poids", "Cette fonctionnalité"];
+      const FR = ["Exemple", "Tu veux un programme", "Réserver mon bilan", "Réserve ton bilan", "Réserver mon plan d'action", "Appel de 15 min avec ton coach", "Avec l'accompagnement", "Cette séance découverte", "Tes séances construites", "Tes repas calculés", "Chaque séance notée", "Ta régularité", "Ta séance découverte", "Une journée type", "Petit-déjeuner", "Séance notée", "Série 1", "poids du corps", "Toutes tes séries", "Ton suivi de la semaine", "Régularité", "Feedback de ton coach", "Belle semaine", "Ta courbe de poids", "Cette fonctionnalité"];
       const attendus = {
         programme: async () => { const s = await page.evaluate(() => { const e = document.querySelector("#ech-programme"); return e ? [(e.querySelector("h2") || {}).textContent, [...e.querySelectorAll("p.note")].map(p => p.textContent).join(" | "), [...e.querySelectorAll(".ch-exos b")].map(x => x.textContent).join(",")] : []; }); return s[0] === "Your discovery workout" && (s[1] || "").includes("2 rounds (your level: Beginner)") && s[2] === "Squats,Push-ups,Reverse lunges,Glute bridge,Plank" ? "" : JSON.stringify(s); },
         nutrition: async () => { await page.waitForSelector("#ech-repas details", { timeout: 10000 }).catch(() => {}); const h = await texte(page, "#ech-nutrition h2"), vus = await journeeVue(page), att = journeeAttendue(await page.evaluate(() => CONFIG.decouverte.recettes), true); return h === "A sample day of eating" && JSON.stringify(vus.map(x => [x.moment, x.info])) === JSON.stringify(att.map(x => [x.moment, x.info])) ? "" : h + " " + JSON.stringify(vus.map(x => [x.moment, x.info])) + " ≠ " + JSON.stringify(att.map(x => [x.moment, x.info])); },
@@ -1782,7 +1782,7 @@ function lienOk(href, base, attendu){
         /* l'exemple et l'appel (les recettes du catalogue — noms, ingrédients, étapes — restent telles que le catalogue les donne) */
         const t = await page.evaluate(() => [...document.querySelectorAll("#vue .echantillon, #vue .ech-appel")].map(x => { const e = x.cloneNode(true); e.querySelectorAll("#ech-repas details .ingr, #ech-repas details .etapes, #ech-repas summary b").forEach(y => y.remove()); return e.textContent; }).join(" ")).then(norm);
         const tout = await texte(page, "#vue"), fr = FR.filter(x => t.includes(x)), m = PRIX.exec(tout);
-        ok(`anglais, #/${id} : « ${EX.marque_en} », l'exemple en anglais, « ${EX.appels_en[id].slice(0, 40)}… », « Get my action plan », « 15 min with Lucas · free », la note « ${TXD.av_en[id]} », aucun texte français de l'exemple ni de l'appel, aucun prix`, marqueOk(v, true) && appelOk(v, id, true) && !pb && fr.length === 0 && !m, pb + " · " + JSON.stringify(fr) + " · " + JSON.stringify([v.marque, v.label, v.appel, v.lien && v.lien.t, v.sous, v.plus]) + (m ? " · prix : " + tout.slice(Math.max(0, m.index - 40), m.index + 30) : ""));
+        ok(`anglais, #/${id} : « ${EX.marque_en} », l'exemple en anglais, « ${EX.appels_en[id].slice(0, 40)}… », « Book my action plan », « Free 15-min call with your coach », la note « ${TXD.av_en[id]} », aucun texte français de l'exemple ni de l'appel, aucun prix`, marqueOk(v, true) && appelOk(v, id, true) && !pb && fr.length === 0 && !m, pb + " · " + JSON.stringify(fr) + " · " + JSON.stringify([v.marque, v.label, v.appel, v.lien && v.lien.t, v.sous, v.plus]) + (m ? " · prix : " + tout.slice(Math.max(0, m.index - 40), m.index + 30) : ""));
       }
       await c.close();
     });
@@ -1800,7 +1800,7 @@ function lienOk(href, base, attendu){
         vus.push([id, !!(await page.$("#vue .echantillon")), v.appel, v.nLiens, v.lien && v.lien.href === v.attendu, lienPre(v, k, id), v.lien && v.lien.t, v.sous, v.sousApres]);
       }
       const clV = clicsDe(db, ID).map(x => x.source);
-      ok(`prospect, #/complements et #/bilan (sans exemple) : texte inchangé (« ${EX.ancien} »), « Récupérer mon plan d'action » (Calendly pré-rempli exact, verrou_<id>) puis « 15 min avec Lucas · offert », clic compté (verrou_complements, verrou_bilan)`, vus.every(([, e, a, n, l, pb, t, so, apres]) => !e && a === EX.ancien && n === 1 && l && !pb && t === TX.reserver && so === TX.cta_sous && apres) && JSON.stringify(clV) === '["verrou_complements","verrou_bilan"]', JSON.stringify(vus) + " · " + JSON.stringify(clV));
+      ok(`prospect, #/complements et #/bilan (sans exemple) : texte inchangé (« ${EX.ancien} »), « Réserver mon plan d'action » (Calendly pré-rempli exact, verrou_<id>) puis « Appel de 15 min avec ton coach, offert », clic compté (verrou_complements, verrou_bilan)`, vus.every(([, e, a, n, l, pb, t, so, apres]) => !e && a === EX.ancien && n === 1 && l && !pb && t === TX.reserver && so === TX.cta_sous && apres) && JSON.stringify(clV) === '["verrou_complements","verrou_bilan"]', JSON.stringify(vus) + " · " + JSON.stringify(clV));
       await c.close();
       /* client Thomas : ses vraies pages, jamais d'exemple ni de verrou */
       const db2 = base();

@@ -411,21 +411,21 @@ const V_SANTE = "2026-09-28b";
    comptes déjà inscrits gardent leur version dans leurs métadonnées (rien ne la compare : personne n'est redemandé) */
 /* v61 (décision 4 de Lucas du 30/09) : « 2026-09-30 » = « Réserver mon bilan » devient « Récupérer mon plan d'action » dans le
    paragraphe 2 (données collectées) ; rien d'autre ne change */
-const V_COND = "2026-10-01";   // version du texte court des conditions (confidentialite.version ; v55 à v58 : 2026-09-28b ; v59, v60 : 2026-09-29 ; v61 à v63 : 2026-09-30, aussi conditions_version des nouvelles inscriptions jusqu'à la v63 ; v64 : 2026-10-01, la date des PDF, décision de Lucas du 30/09)
+const V_COND = "2026-10-11";   // v76 : « Réserver mon plan d'action » ; version du texte court des conditions (confidentialite.version ; v55 à v58 : 2026-09-28b ; v59, v60 : 2026-09-29 ; v61 à v63 : 2026-09-30, aussi conditions_version des nouvelles inscriptions jusqu'à la v63 ; v64 : 2026-10-01, la date des PDF, décision de Lucas du 30/09)
 /* v64 (lot 5, brief V2 A) : conditions_version d'une nouvelle inscription = la version des CGU en PDF (CONFIG.textes_legaux.cgu_version
    = DECOUVERTE.accords.conditions ; servie LEGAUX_TEST.cgu_version, distincte de V_COND : la version envoyée vient bien de
    CONFIG.textes_legaux, jamais du texte court) */
 const V_NEWS = "2026-09-28c";   // version du texte de l'interrupteur du Profil (DECOUVERTE.accords.newsletter_profil) ; jusqu'à la v63, aussi celle de la case de l'inscription (décors des comptes d'avant)
-const V_NEWS_INSC = "2026-09-30";   // v64 (A4) : version du texte court de la case newsletter de l'inscription (DECOUVERTE.accords.newsletter)
+const V_NEWS_INSC = "2026-10-11";   // v76 : « MHX Coaching » au lieu de « Lucas » ; v64 (A4) : version du texte court de la case newsletter de l'inscription (DECOUVERTE.accords.newsletter)
 const TXB = {
   titre: "Crée ton espace gratuit", titre_en: "Create your free space",
   /* v64 (lot 5, brief V2 A1) */
-  sous: "Gratuit, pour toujours : calculateur de calories, suivi de ton poids et de tes mensurations, et la Speed Formation avec ses vidéos, programmes et plans alimentaires.",
-  sous_en: "Free, forever: calorie calculator, weight and measurement tracking, and the Speed Formation course with its videos, workout programs and meal plans.",
+  sous: "Ton calculateur de calories, ton suivi de poids et la Speed Formation pour poser tes bases en 14 jours. Inscris-toi pendant la bêta : tout reste gratuit pour toi, à vie.",
+  sous_en: "Your calorie calculator, weight tracking and the Speed Formation to build your foundations in 14 days. Sign up during the beta: it stays free for you, for life.",
   /* décisions de Lucas du 28/09 : newsletter sans mesure d'ouverture ; l'âge est dans la case des conditions. v64 (A4, A2) : textes
      courts ; « CGU » et « politique de confidentialité » (cgu_mots) sont deux liens distincts vers les PDF */
-  news: "Oui, je veux les conseils et les offres de Lucas par email (2 max par semaine, désinscription en 1 clic).",
-  news_en: "Yes, send me Lucas's tips and offers by email (2 per week max, unsubscribe in 1 click).",
+  news: "Oui, je veux recevoir par email les conseils et les offres de MHX Coaching (2 par semaine au plus, désinscription en 1 clic).",
+  news_en: "Yes, send me MHX Coaching's tips and offers by email (2 per week max, 1-click unsubscribe).",
   cgu: "J'ai 18 ans ou plus et j'accepte les CGU et la politique de confidentialité.",
   cgu_en: "I'm 18 or older and I accept the Terms of Use and the Privacy Policy.",
   cgu_mots: ["CGU", "politique de confidentialité"], cgu_mots_en: ["Terms of Use", "Privacy Policy"],
@@ -1164,7 +1164,7 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
     const i1 = d.fr.findIndex(p => p.startsWith("Données collectées")), i6 = d.fr.findIndex(p => p.startsWith("Prise de rendez-vous")), i7 = d.fr.findIndex(p => p.startsWith("Newsletter"));
     /* v61 (décision 4) : le paragraphe 2 (données collectées) nomme le bouton « Récupérer mon plan d'action » (avant : « Réserver
        mon bilan »), plus aucun « Réserver mon bilan » dans le texte ; c'est bien le 2e paragraphe */
-    ok("FR : données collectées (2e paragraphe) = prénom, nom, email, réponses aux 3 questions, « dont tes clics sur « Récupérer mon plan d'action » », données de santé saisies (poids, mensurations, calculateur) ; plus de « Réserver mon bilan »", i1 === 1 && ["ton prénom, ton nom, ton email", "3 questions", "ton activité dans l'app, dont tes clics sur « Récupérer mon plan d'action ». Données de santé", "poids", "mensurations", "calculateur de calories"].every(x => d.fr[i1].includes(x)) && !/Réserver mon bilan/.test(fr), d.fr[i1]);
+    ok("FR : données collectées (2e paragraphe) = prénom, nom, email, réponses aux 3 questions, « dont tes clics sur « Réserver mon plan d'action » », données de santé saisies (poids, mensurations, calculateur) ; plus de « Réserver mon bilan »", i1 === 1 && ["ton prénom, ton nom, ton email", "3 questions", "ton activité dans l'app, dont tes clics sur « Réserver mon plan d'action ». Données de santé", "poids", "mensurations", "calculateur de calories"].every(x => d.fr[i1].includes(x)) && !/Réserver mon bilan/.test(fr), d.fr[i1]);
     ok("FR : Calendly « Ton prénom, ton nom et ton email y sont pré-remplis »", i6 > -1 && d.fr[i6].includes("Ton prénom, ton nom et ton email y sont pré-remplis"), d.fr[i6]);
     /* décisions de Lucas du 28/09 : plus aucune mention de mesure d'ouverture ; aucun prestataire d'emails nommé ; plus de
        relances ni d'emails de suivi automatiques ; emails du compte envoyés par Gmail (Google). v59 : « Google » est nommé
@@ -1174,8 +1174,8 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
       i7 > -1 && !/1 à 2 emails/.test(d.fr[i7]) && ["offres de coaching de MHX Coaching, 2 emails par semaine au plus.", "Désinscription en 1 clic dans chaque email", "retrait de ton accord possible à tout moment dans ton Profil"].every(x => d.fr[i7].includes(x)) && !/Gmail|email de confirmation|confirmation de ton email|mot de passe oublié/i.test(fr)
       && !/relance|3 emails|emails de suivi|réserv|ouvert|cliqu|mesur/i.test(d.fr[i7]) && !/Brevo|emails de suivi|au plus 3 emails|a été ouvert|mesure d'ouverture/i.test(fr), d.fr[i7]);
     ok("FR : toujours « réservés aux adultes » et « ne remplace pas un avis médical »", /réservés aux adultes/.test(d.fr[0]) && /ne remplace pas un avis médical/.test(d.fr[0]), d.fr[0]);
-    ok("EN à la même place : last name, 3 questions, « including your clicks on “Get my action plan” » (plus de « Book my assessment »), measurements ; « Your first name, last name and email are pre-filled » ; Newsletter (v64 : « 2 emails per week at most », no more « 1 to 2 » ; one-click unsubscribe, withdrawal in the Profile ; no open tracking, no Brevo, no follow-up, no account email) ; adults only, not medical advice",
-      /^Data collected: /.test(d.en[i1]) && ["your last name", "3 starting questions", "your activity in the app, including your clicks on “Get my action plan”. Health data", "measurements", "calorie calculator"].every(x => d.en[i1].includes(x)) && !/Book my assessment/.test(en) && /^Booking: /.test(d.en[i6]) && d.en[i6].includes("Your first name, last name and email are pre-filled")
+    ok("EN à la même place : last name, 3 questions, « including your clicks on “Book my action plan” » (plus de « Book my assessment »), measurements ; « Your first name, last name and email are pre-filled » ; Newsletter (v64 : « 2 emails per week at most », no more « 1 to 2 » ; one-click unsubscribe, withdrawal in the Profile ; no open tracking, no Brevo, no follow-up, no account email) ; adults only, not medical advice",
+      /^Data collected: /.test(d.en[i1]) && ["your last name", "3 starting questions", "your activity in the app, including your clicks on “Book my action plan”. Health data", "measurements", "calorie calculator"].every(x => d.en[i1].includes(x)) && !/Book my assessment/.test(en) && /^Booking: /.test(d.en[i6]) && d.en[i6].includes("Your first name, last name and email are pre-filled")
       && /^Newsletter \(optional\): /.test(d.en[i7]) && !/1 to 2 emails/.test(d.en[i7]) && ["coaching offers by email, 2 emails per week at most.", "One-click unsubscribe in every email", "withdraw your consent at any time in your Profile"].every(x => d.en[i7].includes(x)) && !/Gmail|confirmation email|email confirmation|forgotten password/i.test(en) && !/follow-up|3 emails|booked|opened|opening|clicked|track|measur/i.test(d.en[i7]) && !/Brevo|follow-up emails|at most 3 emails|was opened|open tracking/i.test(en)
       && /for adults only/.test(d.en[0]) && /not medical advice/.test(d.en[0]), JSON.stringify([d.en[i1], d.en[i6], d.en[i7]]).slice(0, 400));
     /* v59 : ce que l'app charge vraiment depuis Google, sans action de la personne (index.html : Google Fonts ; outilFormation
@@ -1248,7 +1248,7 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
     /* v61 (lot 2, F et G) : le bouton s'appelle « Récupérer mon plan d'action » ; code d'origine verrou_programme (avant : verrou-programme) */
     const hv = await page.$eval("#vue .verrou a[target=_blank]", a => a.getAttribute("href")).catch(() => "");
     const tv = await texte(page, "#vue .verrou a[target=_blank]");
-    ok("page verrouillée (#/programme) : le bouton « Récupérer mon plan d'action » porte le code verrou_programme, prénom, nom et email", hv === lienLea(NOMS, "verrou_programme") && tv === "Récupérer mon plan d'action", hv + " · " + tv);
+    ok("page verrouillée (#/programme) : le bouton « Réserver mon plan d'action » porte le code verrou_programme, prénom, nom et email", hv === lienLea(NOMS, "verrou_programme") && tv === "Réserver mon plan d'action", hv + " · " + tv);
     ok("prospecte : aucune écriture en calculant ses liens", ecrDonnees(db).length === 0, resume(db));
     await c.close();
     /* pré-remplissage éteint : ni prénom, ni nom, ni email */
@@ -1324,7 +1324,7 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
     const sans = (l, k) => l.filter(x => x[0] !== k);   // la ligne « Découverte » (jour, date d'inscription) n'est pas du lot G
     /* v53 (chantier 4) : après le bouton « Réserver mon bilan », « Bilan réservé » (la coche du coach), la case du prospect
        (« Le prospect a coché « J'ai réservé » le … » quand elle est cochée), la dernière visite et les jours actifs */
-    const FIN_V53 = [["Bouton « Récupérer mon plan d'action »", "jamais cliqué"], ["Bilan réservé", "non"], ["Case « J'ai réservé mon bilan »", "pas cochée"], ["Dernière visite", "aucune"], ["Jours actifs (30 j)", "0"]];
+    const FIN_V53 = [["Bouton « Réserver mon plan d'action »", "jamais cliqué"], ["Bilan réservé", "non"], ["Case « J'ai réservé mon bilan »", "pas cochée"], ["Dernière visite", "aucune"], ["Jours actifs (30 j)", "0"]];
     const coachSur = async db => { const x = await contexte(b, COACH, db); await x.page.goto(URL0 + "#/clients"); await pret(x.page, "#vue"); return x; };
 
     await bloc("G1. fiche : les 3 réponses, le nom, la newsletter", async () => {

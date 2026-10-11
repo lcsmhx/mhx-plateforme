@@ -436,12 +436,12 @@ const TELECHARGER = /télécharg|download/i;
 /* I (brief V2) : les deux cartes */
 const I_FR = { etiquette: "Commence ici", titre: "3 actions pour bien démarrer aujourd'hui",
   actions: [["video", "#fo-presentation", "Regarde la vidéo de bienvenue"], ["calcul", "#/calculateur", "Calcule tes calories (2 min)"], ["pesee", "#/mensurations", "Note ton poids de départ (1 min)"]],
-  fait: "(fait)", fini: "Départ lancé ✓", apercu: "Ce qui t'attend dans ta formation", tuiles: ["modules", "vidéos avec Lucas", "guides et documents", "défis"],
+  fait: "(fait)", fini: "Départ lancé ✓", apercu: "Ce qui t'attend dans ta formation", tuiles: ["modules", "vidéos de ton coach", "guides et documents", "défis"],
   lignes: ["Dont 3 programmes d'entraînement (12 semaines femme, 12 semaines homme, full body maison) et 3 plans alimentaires (sans restriction, sans gluten, vegan).",
     "Plus tes outils : organisation de la diète, priorités, notes et objectifs. Gratuit, sans limite de temps."], compteur: "0 / 49 étapes" };
 const I_EN = { etiquette: "Start here", titre: "3 actions to get started today",
   actions: [["video", "#fo-presentation", "Watch the welcome video"], ["calcul", "#/calculateur", "Calculate your calories (2 min)"], ["pesee", "#/mensurations", "Log your starting weight (1 min)"]],
-  fait: "(done)", fini: "You're off ✓", apercu: "What's inside your course", tuiles: ["modules", "videos with Lucas", "guides and documents", "challenges"],
+  fait: "(done)", fini: "You're off ✓", apercu: "What's inside your course", tuiles: ["modules", "videos from your coach", "guides and documents", "challenges"],
   lignes: ["Including 3 workout programs (12 weeks for women, 12 weeks for men, full body at home) and 3 meal plans (no restrictions, gluten-free, vegan).",
     "Plus your tools: meal organizer, priorities, notes and goals. Free, with no time limit."], compteur: "0 / 49 steps" };
 
@@ -485,10 +485,10 @@ const carteInvitation = (page, code) => page.evaluate(code => {
     sous: n(s.querySelector(":scope > .dc-cta > p.dc-cta-sous")), tard: t ? { t: n(t), code: t.dataset.invTard } : null, nb: document.querySelectorAll("section.invitation").length };
 }, code);
 const INV_DEPART = { code: "formation_commence_ici", h2: "Bien joué, ton départ est lancé.", objectif: "Ton objectif : « " + NOUVEAU.projection + " »",
-  texte: "Prochaine étape : ton plan d'action personnalisé, offert, en 15 min avec Lucas.", bouton: "Récupérer mon plan d'action", sous: "15 min avec Lucas · offert", tard: "Plus tard" };
+  texte: "Prochaine étape : ton plan d'action, pour savoir quoi faire ces prochaines semaines.", bouton: "Réserver mon plan d'action", sous: "Appel de 15 min avec ton coach, offert", tard: "Plus tard" };
 /* relecture : les textes anglais du brief H (4. « Commence ici » terminé), mot pour mot */
 const INV_DEPART_EN = { code: "formation_commence_ici", h2: "Nice work, you're off to a start.", objectif: "Your goal: “" + NOUVEAU.projection + "”",
-  texte: "Next step: your personalized action plan, free, in 15 min with Lucas.", bouton: "Get my action plan", sous: "15 min with Lucas · free", tard: "Later" };
+  texte: "Next step: your action plan, so you know what to do over the next weeks.", bouton: "Book my action plan", sous: "Free 15-min call with your coach", tard: "Later" };
 /* relecture : le lien d'une invitation vérifié SANS l'app (gabarit de lienOk, verif56) : l'événement de 15 min,
    utm_source=app, utm_medium=bouton, utm_content=<code>, dans cet ordre, puis le nom, le prénom et l'email du prospect
    (qui : { prenom, nom, email }), rien d'autre ; "" si tout est bon, sinon ce qui ne va pas */
@@ -770,7 +770,7 @@ const ISO = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$/;
     ok("les 3 actions : vidéo (#fo-presentation), calories (#/calculateur), poids (#/mensurations), leurs textes ; aucune faite (ni coche, ni « (fait) ») ; tactiles (44 px au moins)",
       !!d && d.ol === 1 && egal(d.actions.map(a => [a.k, a.href, a.t]), I_FR.actions) && d.actions.every(a => !a.fait && a.c === "" && a.sr === null && a.h >= 44), JSON.stringify(d && d.actions));
     const a = await carteApercu(page), n = await chiffresAttendus(page);
-    ok("« Ce qui t'attend dans ta formation » : 7 modules, 7 vidéos avec Lucas, 15 guides et documents, 25 défis (comptés dans FORMATION et LECONS) ; plus aucun « à télécharger » (ni « download ») dans la carte",
+    ok("« Ce qui t'attend dans ta formation » : 7 modules, 7 vidéos de ton coach, 15 guides et documents, 25 défis (comptés dans FORMATION et LECONS) ; plus aucun « à télécharger » (ni « download ») dans la carte",
       !!a && /\bpanel\b/.test(a.classes) && a.h2 === I_FR.apercu && egal(a.tuiles, [["7", I_FR.tuiles[0]], ["7", I_FR.tuiles[1]], ["15", I_FR.tuiles[2]], ["25", I_FR.tuiles[3]]]) && egal(a.tuiles.map(x => x[0]), n) && !TELECHARGER.test(a.brut),
       JSON.stringify(a && a.tuiles) + " attendu " + JSON.stringify(n) + " · " + JSON.stringify(a && (a.brut.match(TELECHARGER) || [""])[0]));
     ok("… ses 2 lignes (« Dont 3 programmes d'entraînement… », « Plus tes outils : … Gratuit, sans limite de temps. »), espace insécable avant « : »",
@@ -826,7 +826,7 @@ const ISO = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$/;
        vérifiée (relecture : structure commune exacte et dans l'ordre, ses 6 textes et rien d'autre — aucune valeur saisie,
        ce prospect a 60 kg et 70,4 kg en base —, lien Calendly vérifié sans l'app, rel=noopener, « Plus tard ») ; aucune
        invitation tant qu'une des 3 actions manque */
-    ok("les 3 faites : la carte se replie en UNE ligne « Départ lancé » avec sa coche (section.panel.fo-depart.fo-depart-fini, ni étiquette, ni titre, ni liste), suivie de l'invitation « Bien joué, ton départ est lancé. » (structure commune dans l'ordre : h2, « Ton objectif », texte, div.dc-cta = bouton, « 15 min avec Lucas · offert », « Plus tard » ; ses 6 textes et rien d'autre ; lien Calendly de 15 min utm_source=app, utm_medium=bouton, utm_content=formation_commence_ici, nouvel onglet, noopener), puis « Ce qui t'attend » ; aucune invitation dans les 6 autres cas",
+    ok("les 3 faites : la carte se replie en UNE ligne « Départ lancé » avec sa coche (section.panel.fo-depart.fo-depart-fini, ni étiquette, ni titre, ni liste), suivie de l'invitation « Bien joué, ton départ est lancé. » (structure commune dans l'ordre : h2, « Ton objectif », texte, div.dc-cta = bouton, « Appel de 15 min avec ton coach, offert », « Plus tard » ; ses 6 textes et rien d'autre ; lien Calendly de 15 min utm_source=app, utm_medium=bouton, utm_content=formation_commence_ici, nouvel onglet, noopener), puis « Ce qui t'attend » ; aucune invitation dans les 6 autres cas",
       !!f && /\bfo-depart-fini\b/.test(f.classes) && /\bpanel\b/.test(f.classes) && egal(f.enfants, ["P.fo-depart-ligne"]) && f.ligne === I_FR.fini && f.ol === 0 && f.eyebrow === null && f.h2 === null && egal(trois.ordre, ["fo-depart", "invitation-" + INV_DEPART.code, "fo-apercu", "Ton parcours"])
         && ko.length === 0 && partiels.every(v => v.nbInv === 0 && v.inv === null),
       JSON.stringify([ko, f, trois.ordre, iv && iv.textes, iv && iv.lien, partiels.map(v => v.nbInv)]));
@@ -1034,7 +1034,7 @@ const ISO = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$/;
     const d = await carteDepart(page), a = await carteApercu(page);
     ok("anglais : « Start here » (« START HERE »), « 3 actions to get started today », « Watch the welcome video », « Calculate your calories (2 min) », « Log your starting weight (1 min) », mêmes liens",
       !!d && d.eyebrow === I_EN.etiquette && d.capitales === "START HERE" && d.h2 === I_EN.titre && egal(d.actions.map(x => [x.k, x.href, x.t]), I_EN.actions), JSON.stringify(d));
-    ok("anglais : « What's inside your course », 7 modules, 7 videos with Lucas, 15 guides and documents, 25 challenges, ses 2 lignes, « 0 / 49 steps » ; plus aucun « downloads » (ni « à télécharger ») dans la carte",
+    ok("anglais : « What's inside your course », 7 modules, 7 videos from your coach, 15 guides and documents, 25 challenges, ses 2 lignes, « 0 / 49 steps » ; plus aucun « downloads » (ni « à télécharger ») dans la carte",
       !!a && a.h2 === I_EN.apercu && egal(a.tuiles, [["7", I_EN.tuiles[0]], ["7", I_EN.tuiles[1]], ["15", I_EN.tuiles[2]], ["25", I_EN.tuiles[3]]]) && egal(a.lignes, I_EN.lignes) && (await compteur(page)) === I_EN.compteur && !TELECHARGER.test(a.brut),
       JSON.stringify(a && [a.h2, a.tuiles, a.lignes]) + " " + await compteur(page) + " · " + JSON.stringify(a && (a.brut.match(TELECHARGER) || [""])[0]));
     const h = await horsEcran(page), th = await page.evaluate(() => document.documentElement.getAttribute("data-theme"));
@@ -1052,7 +1052,7 @@ const ISO = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$/;
     /* relecture (v62, brief H) : l'invitation anglaise, vérifiée comme la française (textes EN du brief H mot pour mot :
        « Nice work, you're off to a start. », « Your goal: “…” », « Next step: … », « Get my action plan », « 15 min with
        Lucas · free », « Later ») */
-    ok("anglais, les 3 faites : une seule ligne « You're off » avec sa coche, suivie de l'invitation anglaise (« Nice work, you're off to a start. », « Your goal: “…” », « Next step: your personalized action plan, free, in 15 min with Lucas. », « Get my action plan », « 15 min with Lucas · free », « Later » ; même structure, rien d'autre, même lien Calendly) ; rien d'écrit par ces 3 visites",
+    ok("anglais, les 3 faites : une seule ligne « You're off » avec sa coche, suivie de l'invitation anglaise (« Nice work, you're off to a start. », « Your goal: “…” », « Next step: your action plan, so you know what to do over the next weeks. », « Book my action plan », « Free 15-min call with your coach », « Later » ; même structure, rien d'autre, même lien Calendly) ; rien d'écrit par ces 3 visites",
       !!d3 && /\bfo-depart-fini\b/.test(d3.classes) && d3.ligne === I_EN.fini && d3.ol === 0 && ko3.length === 0 && saisies(db).length === 0, JSON.stringify([ko3, d3, iv3 && iv3.textes]) + " " + resume(db));
     await c.close();
   });

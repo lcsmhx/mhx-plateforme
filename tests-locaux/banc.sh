@@ -174,6 +174,10 @@ HORS_BANC="verif44 verif45 verif46 verif47 verif49"
 # v76 (tâches 1 à 3, mission « Audit v76 ») : plus de « Rester connecté » à l'inscription (verif39, 55, 70) ; doré du thème clair
 # #7f5f19, devenu --accent (verif65, 67 : OR_CLAIR ; verif71 : le lien santé = --accent) ; barre du haut sur une ligne sur téléphone :
 # nom absent, boutons de 40 px, « Se déconnecter » du prospect dans « Tout mon espace » (verif62 E) ; adaptées, nombres inchangés.
+# v76 (tâches 4 à 6) : « ton coach » au lieu de « Lucas », « Réserver mon plan d'action » (aussi côté coach : le seul « Réserver »
+# permis), « Appel de 15 min avec ton coach, offert », « J'ai déjà réservé », « C'est réservé : … » (sans date), phrase d'accueil
+# avec la bêta, versions 2026-10-11 (case newsletter, texte court des conditions) : verif39, 40, 50, 51, 52, 55, 56, 58, 64,
+# 65, 66, 67, 68, 70 adaptées (textes recopiés), nombres inchangés.
 attendu() {
   case "$1" in
     flux) echo 19;; verif34) echo 13;; verif35) echo 14;; verif36) echo 13;; verif37) echo 12;; verif38) echo 66;;

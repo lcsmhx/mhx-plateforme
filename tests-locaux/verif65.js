@@ -317,7 +317,7 @@ const TX = {
   note_en: "This questionnaire is not medical advice. If you have any doubt about your health, talk to a professional.",
   titre: "Ton questionnaire", titre_en: "Your questionnaire",
   /* v61 (lot 2, brief V2, D) : la page qui suit le questionnaire (#dc-bilan), son titre et sa projection */
-  plan: "Ton plan d'action personnalisé", plan_en: "Your personalized action plan",
+  plan: "Ton plan d'action", plan_en: "Your action plan",
   projection_page: p => "Ton objectif dans 3 mois : « " + p + " »", projection_page_en: p => "Your goal in 3 months: “" + p + "”",
   modifier: "Modifier mes réponses", modifier_en: "Edit my answers"
 };
@@ -460,7 +460,7 @@ const structure = page => page.evaluate(() => {
     ok("validation : obstacle « Le temps » et projection « Courir 10 km sans m'arrêter » (le texte seul, comme avant), leurs précisions, court_le ; aucun choix vide créé (ni obstacle_choix, ni projection_choix)",
       I.probleme === "Me remettre en forme" && I.obstacle === "Le temps" && I.obstacle_precision === "Le temps" && I.projection === "Courir 10 km sans m'arrêter" && I.projection_precision === "Courir 10 km sans m'arrêter" && typeof I.court_le === "string" && Math.abs(Date.parse(I.court_le) - t0) < 10000 && !videsDe(I).length,
       "vides : " + JSON.stringify(videsDe(I)) + " · " + JSON.stringify(I));
-    ok("page « Ton plan d'action personnalisé » : « Ton objectif dans 3 mois : « Courir 10 km sans m'arrêter » »", !!(await page.$("#dc-bilan")) && (await texte(page, "#dc-projection")) === TX.projection_page("Courir 10 km sans m'arrêter"), await texte(page, "#dc-projection"));
+    ok("page « Ton plan d'action » : « Ton objectif dans 3 mois : « Courir 10 km sans m'arrêter » »", !!(await page.$("#dc-bilan")) && (await texte(page, "#dc-projection")) === TX.projection_page("Courir 10 km sans m'arrêter"), await texte(page, "#dc-projection"));
   });
 
   /* =================== E. réponse complète en taps seulement, validation, modification =================== */
@@ -485,7 +485,7 @@ const structure = page => page.evaluate(() => {
     ok("court_le posé (maintenant), une seule date de validation, court_debut du premier brouillon ; seule la clé intake est écrite",
       typeof I.court_le === "string" && Math.abs(Date.parse(I.court_le) - t0) < 10000 && new Set(fin.map(e => e.contenu.court_le)).size === 1 && typeof I.court_debut === "string" && Date.parse(I.court_debut) <= Date.parse(I.court_le) && saisies(db).every(e => e.table === "donnees" && e.outil === "intake"), resume(db));
     const v = await texte(page, "#vue");
-    ok("page « Ton plan d'action personnalisé » : « Ton objectif dans 3 mois : « Avoir de l'énergie toute la journée » » (le libellé choisi) ; plus le questionnaire ; 390 px sans débordement ; aucun prix ni « undefined »",
+    ok("page « Ton plan d'action » : « Ton objectif dans 3 mois : « Avoir de l'énergie toute la journée » » (le libellé choisi) ; plus le questionnaire ; 390 px sans débordement ; aucun prix ni « undefined »",
       (await texte(page, "#dc-bilan h2")) === TX.plan && (await texte(page, "#dc-projection")) === TX.projection_page("Avoir de l'énergie toute la journée") && !(await page.$("#q-probleme")) && !(await deborde(page)) && propre(v), await texte(page, "#dc-projection"));
     /* « Modifier mes réponses » : pré-coché, puis la précision de la projection */
     await aller(page, "#/decouverte/reponses", 1500);
@@ -502,7 +502,7 @@ const structure = page => page.evaluate(() => {
       ecr(db, "intake", ID).length === n0 + 1 && I2.projection_precision === "Courir 10 km sans m'arrêter" && I2.projection === "Avoir de l'énergie toute la journée — Courir 10 km sans m'arrêter" && JSON.stringify(I2.projection_choix) === '["energie"]' && I2.court_le === I.court_le && I2.obstacle === I.obstacle && !videsDe(I2).length,
       "vides : " + JSON.stringify(videsDe(I2)) + " · " + JSON.stringify(I2));
     /* pas encore de choix sur la page de bilan : la validation en modification la ré-affiche d'elle-même (aucun détour par l'adresse) */
-    ok("page « Ton plan d'action personnalisé » affichée tout de suite après la validation ; la précision remplie prend la place du libellé (« Ton objectif dans 3 mois : « Courir 10 km sans m'arrêter » »)",
+    ok("page « Ton plan d'action » affichée tout de suite après la validation ; la précision remplie prend la place du libellé (« Ton objectif dans 3 mois : « Courir 10 km sans m'arrêter » »)",
       !!(await page.$("#dc-bilan")) && (await texte(page, "#dc-bilan h2")) === TX.plan && !(await page.$("#q-probleme")) && (await texte(page, "#dc-projection")) === TX.projection_page("Courir 10 km sans m'arrêter"),
       JSON.stringify([!!(await page.$("#dc-bilan")), await texte(page, "#dc-projection")]));
     await aller(page, "#/profil", 1800); await page.waitForSelector("#mc-reponses li", { timeout: 6000 }).catch(() => {});
@@ -533,7 +533,7 @@ const structure = page => page.evaluate(() => {
       sansClavier(cl) && I.probleme === "Perdre du gras" && I.obstacle === "Le manque de temps · Je craque sur la nourriture" && JSON.stringify(I.obstacle_choix) === '["temps","craquages"]' && I.projection === "Avoir de l'énergie toute la journée" && JSON.stringify(I.projection_choix) === '["energie"]' && typeof I.court_le === "string" && !videsDe(I).length,
       "vides : " + JSON.stringify(videsDe(I)) + " · " + JSON.stringify([cl, I]));
     const v = await texte(page, "#vue");
-    ok("anglais : « Your personalized action plan », « Your goal in 3 months: “Having energy all day long” » (le libellé anglais, pas le français)",
+    ok("anglais : « Your action plan », « Your goal in 3 months: “Having energy all day long” » (le libellé anglais, pas le français)",
       (await texte(page, "#dc-bilan h2")) === TX.plan_en && (await texte(page, "#dc-projection")) === TX.projection_page_en("Having energy all day long") && !v.includes("Avoir de l'énergie") && propre(v), await texte(page, "#dc-projection"));
     await aller(page, "#/profil", 1800); await page.waitForSelector("#mc-reponses li", { timeout: 6000 }).catch(() => {}); await attendre(page, 300);
     const rp = await lignes(page, "#mc-reponses");
@@ -572,7 +572,7 @@ const structure = page => page.evaluate(() => {
     const I = clone(intakeDe(db, ID)) || {};
     ok("précisions piégées enregistrées telles quelles (texte) : obstacle « Le manque de temps — <b>test</b> », projection « <img src=x onerror=…> » ; aucun champ vide créé (pas de projection_choix [])",
       I.obstacle === "Le manque de temps — " + B && I.obstacle_precision === B && I.projection === PIEGE && I.projection_precision === PIEGE && typeof I.court_le === "string" && !videsDe(I).length, "vides : " + JSON.stringify(videsDe(I)) + " · " + JSON.stringify(I));
-    ok("page « Ton plan d'action personnalisé » : la précision piégée affichée comme du texte, aucune balise créée, aucun script lancé", (await texte(page, "#dc-projection")) === TX.projection_page(PIEGE) && !(await injecte(page)), await texte(page, "#dc-projection"));
+    ok("page « Ton plan d'action » : la précision piégée affichée comme du texte, aucune balise créée, aucun script lancé", (await texte(page, "#dc-projection")) === TX.projection_page(PIEGE) && !(await injecte(page)), await texte(page, "#dc-projection"));
     await aller(page, "#/profil", 1800); await page.waitForSelector("#mc-reponses li", { timeout: 6000 }).catch(() => {});
     const rp = await lignes(page, "#mc-reponses");
     ok("Profil du prospect : « Le manque de temps — <b>test</b> » et la précision piégée en texte brut, aucune balise créée",
@@ -613,7 +613,7 @@ const structure = page => page.evaluate(() => {
     const rp = await lignes(page, "#mc-reponses");
     ok("Profil de l'ancien prospect : ses 3 réponses libres telles quelles", JSON.stringify(rp) === JSON.stringify(attProfil), JSON.stringify(rp));
     await aller(page, "#/decouverte/bilan", 1500);
-    ok("page « Ton plan d'action personnalisé » (#/decouverte/bilan) : son ancienne réponse reprise telle quelle (« Ton objectif dans 3 mois : « Courir 10 km sans m'arrêter » »)", (await texte(page, "#dc-projection")) === TX.projection_page(ANCIEN_V52.projection), await texte(page, "#dc-projection"));
+    ok("page « Ton plan d'action » (#/decouverte/bilan) : son ancienne réponse reprise telle quelle (« Ton objectif dans 3 mois : « Courir 10 km sans m'arrêter » »)", (await texte(page, "#dc-projection")) === TX.projection_page(ANCIEN_V52.projection), await texte(page, "#dc-projection"));
     await aller(page, "#/decouverte/reponses", 1500);
     const [p1, o1, r1] = [await etat(page, "probleme"), await etat(page, "obstacle"), await etat(page, "projection")], S = await structure(page), bt = await bouton(page);
     ok("« Modifier mes réponses » : « Perdre du gras » pré-cochée ; aucune pastille ni projection cochée ; les précisions pré-remplies avec ses anciens textes ; bouton actif",
@@ -679,7 +679,7 @@ const structure = page => page.evaluate(() => {
     const n4 = await tabJusqua("#dc-voir", 5), bt = await bouton(page);
     await page.keyboard.press("Enter"); await attendre(page, 1600);
     const I = clone(intakeDe(db, ID)) || {};
-    ok("Tab jusqu'à la question 3, Espace, Tab jusqu'au bouton (actif), Entrée : validé (court_le), page « Ton plan d'action personnalisé » (« Ton objectif dans 3 mois : « Rentrer à nouveau dans mes vêtements préférés » ») ; probleme « Prendre du muscle », obstacle_choix temps + craquages, projection « Rentrer à nouveau dans mes vêtements préférés », aucun champ vide créé",
+    ok("Tab jusqu'à la question 3, Espace, Tab jusqu'au bouton (actif), Entrée : validé (court_le), page « Ton plan d'action » (« Ton objectif dans 3 mois : « Rentrer à nouveau dans mes vêtements préférés » ») ; probleme « Prendre du muscle », obstacle_choix temps + craquages, projection « Rentrer à nouveau dans mes vêtements préférés », aucun champ vide créé",
       n3 > 0 && n4 > 0 && bt.aria === "false" && typeof I.court_le === "string" && I.probleme === "Prendre du muscle" && JSON.stringify(I.obstacle_choix) === '["temps","craquages"]' && JSON.stringify(I.projection_choix) === '["vetements"]' && I.projection === "Rentrer à nouveau dans mes vêtements préférés" && !videsDe(I).length && (await texte(page, "#dc-projection")) === TX.projection_page("Rentrer à nouveau dans mes vêtements préférés"),
       "vides : " + JSON.stringify(videsDe(I)) + " · " + JSON.stringify([n3, n4, bt, I]));
   });

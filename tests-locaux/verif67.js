@@ -382,27 +382,27 @@ const CODES = ["apres_questionnaire", "accueil_haut", "reponses_haut", "accueil_
 /* ---------- les textes attendus (brief V2, D, E, G et décision 4, mot pour mot) ---------- */
 const D = {
   offert: "Offert", offert_en: "Free",
-  titre: "Ton plan d'action personnalisé", titre_en: "Your personalized action plan",
+  titre: "Ton plan d'action", titre_en: "Your action plan",
   projection: p => "Ton objectif dans 3 mois : « " + p + " »", projection_en: p => "Your goal in 3 months: “" + p + "”",
-  texte: "En 15 minutes au téléphone avec Lucas, on transforme cet objectif en plan concret : ce qui te freine vraiment, par quoi commencer, et les 3 actions à mettre en place en priorité.",
-  texte_en: "In a 15-minute call with Lucas, we turn this goal into a concrete plan: what's really holding you back, where to start, and the 3 actions to put in place first.",
-  garde: "Ton plan est à toi, quelle que soit la suite.", garde_en: "The plan is yours to keep, whatever you decide next.",
+  texte: "15 minutes au téléphone avec ton coach pour faire de cet objectif un plan : ce qui te freine, par quoi commencer, et tes 3 premières actions.",
+  texte_en: "A 15-minute call with your coach to turn this goal into a plan: what's holding you back, where to start, and your first 3 actions.",
+  garde: "En fin d'appel, si tu veux être suivi, ton coach te présente l'accompagnement. Ton plan reste à toi dans tous les cas.", garde_en: "At the end of the call, if you want ongoing coaching, your coach will tell you about it. Your plan is yours either way.",
   /* v70 : cette phrase n'est plus affichée (FR et EN) ; gardée ici pour vérifier son ABSENCE (NOUVEAUX, « aucun texte français ») */
   libre: "Si l'accompagnement te correspond, Lucas te le présente à la fin, seulement si tu le veux. Tu es libre de dire non.",
   libre_en: "If coaching is a good fit, Lucas will tell you about it at the end, only if you want. You're free to say no.",
-  bouton: "Récupérer mon plan d'action", bouton_en: "Get my action plan",
-  sous: "15 min · par téléphone · offert", sous_en: "15 min · phone call · free",
-  plus_tard: "Plus tard, je découvre mon espace", plus_tard_en: "Later, let me explore my space"
+  bouton: "Réserver mon plan d'action", bouton_en: "Book my action plan",
+  sous: "Tu choisis l'heure, ton coach t'appelle", sous_en: "You pick the time, your coach calls you",
+  plus_tard: "Voir mon espace d'abord", plus_tard_en: "See my space first"
 };
 const E = {
-  sous: "15 min avec Lucas · offert", sous_en: "15 min with Lucas · free",
+  sous: "Appel de 15 min avec ton coach, offert", sous_en: "Free 15-min call with your coach",
   titre: "Ce que l'accompagnement ajoute", titre_en: "What coaching adds",
   lignes: [["Mon programme", "Tes séances construites pour toi et ajustées par ton coach selon tes progrès."], ["Nutrition", "Tes repas calculés pour ton objectif, avec ta liste de courses."],
     ["Mon journal", "Chaque séance notée, et la charge à viser la fois suivante."], ["Mon suivi", "Ta régularité, ta courbe et le retour de ton coach chaque semaine."]],
   lignes_en: [["My program", "Workouts built for you and adjusted by your coach as you progress."], ["Nutrition", "Meals calculated for your goal, with your shopping list."],
     ["My training log", "Every workout logged, with the weight to aim for next time."], ["My follow-up", "Your consistency, your progress curve and your coach's feedback every week."]],
-  note: "15 min avec Lucas pour faire le point sur ton objectif. Offert.", note_en: "15 min with Lucas to go over your goal. Free.",
-  case: "J'ai déjà choisi mon créneau", case_en: "I've already booked my slot"
+  note: "Appel de 15 min avec ton coach, offert", note_en: "Free 15-min call with your coach",
+  case: "J'ai déjà réservé", case_en: "Already booked"
 };
 /* G : [page, titre, texte, description sous la carte (E2), titre de l'exemple, texte d'introduction de l'exemple (v60,
    DECOUVERTE.seance.intro et DECOUVERTE.echantillons.<page>.intro, inchangés)] ; puis l'anglais */
@@ -437,9 +437,9 @@ const VERROU_TXT = "Cette fonctionnalité est disponible avec l'accompagnement M
    premier usage, plus de « case dédiée ») et le 9e (newsletter : « 2 emails par semaine au plus ») : ces deux-là EXACTS,
    et l'empreinte des 10 autres identique à celle de la v63 (a83567ba… / c13c2922…, calculée sur la v63 ET sur la v64) */
 const COND = {
-  version: "2026-10-01", titre: "Conditions d'utilisation et confidentialité", titre_en: "Terms of use and privacy",
-  p2: "Données collectées : ton prénom, ton nom, ton email, tes réponses aux 3 questions de départ et ton activité dans l'app, dont tes clics sur « Récupérer mon plan d'action ». Données de santé : celles que tu saisis (poids, mensurations, âge, taille et activité dans le calculateur de calories), avec ton accord, demandé la première fois que tu utilises un outil qui les traite (calculateur, suivi du poids et des mensurations, outil « Organise ta diète »).",
-  p2_en: "Data collected: your first name, your last name, your email, your answers to the 3 starting questions and your activity in the app, including your clicks on “Get my action plan”. Health data: what you enter (weight, measurements, age, height and activity in the calorie calculator), with your consent, asked the first time you use a tool that processes it (calculator, weight and measurement tracking, “Organise ta diète” tool).",
+  version: "2026-10-11", titre: "Conditions d'utilisation et confidentialité", titre_en: "Terms of use and privacy",
+  p2: "Données collectées : ton prénom, ton nom, ton email, tes réponses aux 3 questions de départ et ton activité dans l'app, dont tes clics sur « Réserver mon plan d'action ». Données de santé : celles que tu saisis (poids, mensurations, âge, taille et activité dans le calculateur de calories), avec ton accord, demandé la première fois que tu utilises un outil qui les traite (calculateur, suivi du poids et des mensurations, outil « Organise ta diète »).",
+  p2_en: "Data collected: your first name, your last name, your email, your answers to the 3 starting questions and your activity in the app, including your clicks on “Book my action plan”. Health data: what you enter (weight, measurements, age, height and activity in the calorie calculator), with your consent, asked the first time you use a tool that processes it (calculator, weight and measurement tracking, “Organise ta diète” tool).",
   p9: "Newsletter (facultative) : si tu coches la case, tu reçois par email les conseils, témoignages et offres de coaching de MHX Coaching, 2 emails par semaine au plus. Désinscription en 1 clic dans chaque email, et retrait de ton accord possible à tout moment dans ton Profil.",
   p9_en: "Newsletter (optional): if you tick the box, you receive MHX Coaching's tips, testimonials and coaching offers by email, 2 emails per week at most. One-click unsubscribe in every email, and you can withdraw your consent at any time in your Profile.",
   autres: "a83567ba5664f00b", autres_en: "c13c2922deb1971d"   // v60 à v63 (11 paragraphes, sans le 2e) : 71839dfa3afa4ec5 / 6d866771dcf795a5
@@ -448,7 +448,7 @@ const empreinte = a => crypto.createHash("sha256").update(JSON.stringify(a)).dig
 /* tous les nouveaux textes du lot 2 : jamais chez un client */
 const NOUVEAUX = [D.offert, D.titre, D.texte, D.garde, D.libre, D.bouton, D.sous, D.plus_tard, E.sous, E.titre, E.note, E.case].concat(E.lignes.map(x => x[1]), Object.values(G).map(x => x[1]));
 const NOUVEAUX_EN = [D.titre_en, D.texte_en, D.garde_en, D.libre_en, D.bouton_en, D.sous_en, D.plus_tard_en, E.sous_en, E.titre_en, E.note_en, E.case_en].concat(E.lignes_en.map(x => x[1]), Object.values(G_EN).map(x => x[1]));
-const NOUVEAUX_RE = /Récupérer mon plan|Get my action plan|15 min avec Lucas|15 min with Lucas|plan d'action|action plan/i;
+const NOUVEAUX_RE = /Récupérer mon plan|Book my action plan|Appel de 15 min avec ton coach|Free 15-min call with your coach|plan d'action|action plan/i;
 
 /* l'objectif du questionnaire complet posé par l'app depuis la réponse « problème » */
 const OBJ = { "Perdre du gras": "Perte de poids / sèche" };
@@ -516,12 +516,12 @@ const verrouVu = (page, id) => page.evaluate(id => {
     await attendre(page, 1300);   // Store.ecrire n'envoie qu'après 700 ms : une écriture lancée par l'affichage aurait le temps d'arriver
     const P = await planVu(page), T = P ? P.txt : [], th = await page.evaluate(() => document.documentElement.getAttribute("data-theme"));
     const ink3 = await couleur(page, "--ink-3"), v0 = await texte(page, "#vue");
-    ok("questionnaire validé sans choix : la page « Ton plan d'action » (section.panel.dc-plan#dc-bilan), thème sombre ; dans l'ordre : « Offert » (span.eyebrow.dc-offert), titre, projection, texte, « Ton plan est à toi… », puis div.dc-cta = bouton doré, « 15 min · par téléphone · offert », (v73) « Écrire à ton coach sur WhatsApp » (div#dc-bilan-wa), « Plus tard… » (button.lien-discret) ; plus de petit texte gris (v70)",
+    ok("questionnaire validé sans choix : la page « Ton plan d'action » (section.panel.dc-plan#dc-bilan), thème sombre ; dans l'ordre : « Offert » (span.eyebrow.dc-offert), titre, projection, texte, « Ton plan est à toi… », puis div.dc-cta = bouton doré, « Tu choisis l'heure, ton coach t'appelle », (v73) « Écrire à ton coach sur WhatsApp » (div#dc-bilan-wa), « Plus tard… » (button.lien-discret) ; plus de petit texte gris (v70)",
       !!P && th === null && P.classes === "dc-plan.panel" && !P.libre && JSON.stringify(P.enfants) === JSON.stringify(["span#dc-offert.dc-offert.eyebrow", "h2", "p#dc-projection.dc-projection", "p#dc-bilan-texte", "p#dc-bilan-garde", "div.dc-cta"])
       && JSON.stringify(P.cta) === JSON.stringify(["a#dc-bilan-reserver.btn", "p#dc-bilan-sous.dc-cta-sous", "div#dc-bilan-wa.actions.dc-wa", "button#dc-bilan-plus-tard.lien-discret"]), JSON.stringify(P && [th, P.classes, P.enfants, P.cta]));
-    ok("textes EXACTS : « Offert », « Ton plan d'action personnalisé », « Ton objectif dans 3 mois : « M'aimer sur les photos » », « En 15 minutes au téléphone avec Lucas… », « Ton plan est à toi, quelle que soit la suite. » ; « Si l'accompagnement te correspond… Tu es libre de dire non. » absent (v70)",
+    ok("textes EXACTS : « Offert », « Ton plan d'action », « Ton objectif dans 3 mois : « M'aimer sur les photos » », « En 15 minutes au téléphone avec Lucas… », « En fin d'appel, si tu veux être suivi, ton coach te présente l'accompagnement. Ton plan reste à toi dans tous les cas. » ; « Si l'accompagnement te correspond… Tu es libre de dire non. » absent (v70)",
       JSON.stringify(T.slice(0, 5).map(norm)) === JSON.stringify([D.offert, D.titre, D.projection("M'aimer sur les photos"), D.texte, D.garde]) && !v0.includes(D.libre), JSON.stringify(T.slice(0, 5)));
-    ok("bouton « Récupérer mon plan d'action », ligne « 15 min · par téléphone · offert », lien « Plus tard, je découvre mon espace »",
+    ok("bouton « Réserver mon plan d'action », ligne « Tu choisis l'heure, ton coach t'appelle », lien « Voir mon espace d'abord »",
       JSON.stringify(T.slice(5).map(norm)) === JSON.stringify([D.bouton, D.sous, D.plus_tard]), JSON.stringify(T.slice(5)));
     ok("typographie française : espace insécable avant « : » et dans « « … » » (projection, texte) ; « Offert » affiché en capitales, en doré",
       T[2] === typo(D.projection("M'aimer sur les photos")) && T[3] === typo(D.texte) && !!P.so && P.so.tt === "uppercase" && P.so.coul === OR_SOMBRE, JSON.stringify([T[2], T[3], P && P.so]));
@@ -551,7 +551,7 @@ const verrouVu = (page, id) => page.evaluate(id => {
     const { page } = await ouvrir(b, db, k, "", "#dc-bilan", { langue: "en", theme: "light" });
     await attendre(page, 1000);
     const P = await planVu(page), T = P ? P.txt : [], th = await page.evaluate(() => document.documentElement.getAttribute("data-theme")), v = await texte(page, "#vue");
-    ok("anglais, thème clair : « Free », « Your personalized action plan », « Your goal in 3 months: “Loving how I look in photos” », texte, « The plan is yours to keep… », « Get my action plan », « 15 min · phone call · free », « Later, let me explore my space » (exacts, dans cet ordre, sans espace insécable) ; « If coaching is a good fit… » absent (v70)",
+    ok("anglais, thème clair : « Free », « Your action plan », « Your goal in 3 months: “Loving how I look in photos” », texte, « The plan is yours to keep… », « Book my action plan », « You pick the time, your coach calls you », « See my space first » (exacts, dans cet ordre, sans espace insécable) ; « If coaching is a good fit… » absent (v70)",
       th === "light" && !P.libre && !v.includes(D.libre_en) && JSON.stringify(T.map(norm)) === JSON.stringify([D.offert_en, D.titre_en, D.projection_en("Loving how I look in photos"), D.texte_en, D.garde_en, D.bouton_en, D.sous_en, D.plus_tard_en]) && !T.some(x => /[  ]/.test(x || "")),
       JSON.stringify([th, T]));
     const ink3 = await couleur(page, "--ink-3"), francais = [D.offert, D.titre, D.texte, D.garde, D.libre, D.bouton, D.sous, D.plus_tard, "M'aimer sur les photos", "Écrire à ton coach sur WhatsApp"].filter(x => v.includes(x));   // v73 (D) : + le bouton WhatsApp
@@ -570,7 +570,7 @@ const verrouVu = (page, id) => page.evaluate(id => {
     const I = clone(intakeDe(db, ID)) || {};
     /* v62 (lot 3, L) : le « Plus tard » est aussi noté avec son origine dans la clé challenge (cta.plus_tard), une seule fois */
     const Cpt = challengeDe(db, ID) || {}, pt = ((Cpt.cta || {}).plus_tard) || [];
-    ok("« Later, let me explore my space » (deux taps) : intake.bilan_propose = { choix « plus_tard », le } en UNE écriture ; v62 : cta.plus_tard = [{ source « apres_questionnaire », date }] en UNE écriture de challenge ; aucun clic compté, aucun onglet Calendly",
+    ok("« See my space first » (deux taps) : intake.bilan_propose = { choix « plus_tard », le } en UNE écriture ; v62 : cta.plus_tard = [{ source « apres_questionnaire », date }] en UNE écriture de challenge ; aucun clic compté, aucun onglet Calendly",
       ecr(db, "intake", ID).length === 1 && !!I.bilan_propose && I.bilan_propose.choix === "plus_tard" && typeof I.bilan_propose.le === "string"
       && ecr(db, "challenge", ID).length === 1 && pt.length === 1 && pt[0].source === "apres_questionnaire" && typeof pt[0].date === "string" && JSON.stringify(Object.keys(pt[0]).sort()) === '["date","source"]'
       && !(((Cpt.cta || {}).clics) || []).length && !db.calendly.length,
@@ -600,12 +600,12 @@ const verrouVu = (page, id) => page.evaluate(id => {
     ok("exactement 2 liens Calendly (data-dc-cal) : accueil_haut dans l'en-tête et accueil_accompagnement dans la carte, liens exacts (nouvelle adresse, pré-remplis), nouvel onglet",
       A.cals.length === 2 && A.nCal === 2 && A.cals[0].code === "accueil_haut" && A.cals[0].haut && A.cals[1].code === "accueil_accompagnement" && A.cals[1].carte
       && A.cals.every(x => x.href === lienAtt(x.code, k) && x.cible === "_blank" && /noopener/.test(x.rel)), JSON.stringify(A.cals));
-    ok("bouton du haut : « Récupérer mon plan d'action », en contour (btn ghost petit : sans fond, bordure fine), suivi de la ligne « 15 min avec Lucas · offert » (p.dc-cta-sous.dc-haut-sous, dans l'en-tête)",
+    ok("bouton du haut : « Réserver mon plan d'action », en contour (btn ghost petit : sans fond, bordure fine), suivi de la ligne « Appel de 15 min avec ton coach, offert » (p.dc-cta-sous.dc-haut-sous, dans l'en-tête)",
       !!A.haut && A.haut.t === D.bouton && A.cals[0].cls === "btn.ghost.petit" && A.haut.style.bg === TRANSPARENT && A.haut.style.bord === "solid 1px" && !!A.sous && A.sous.cls === "dc-cta-sous.dc-haut-sous" && A.sous.t === E.sous && A.sous.dansHaut,
       JSON.stringify([A.haut, A.cals[0] && A.cals[0].cls, A.sous]));
     ok("carte « Ce que l'accompagnement ajoute » : 4 lignes exactes (Mon programme, Nutrition, Mon journal, Mon suivi — nouvelles descriptions)",
       A.titre === E.titre && JSON.stringify(A.lignes) === JSON.stringify(E.lignes.map(([n, d]) => [n, n + " — " + d])), JSON.stringify([A.titre, A.lignes]));
-    ok("carte : bouton « Récupérer mon plan d'action » en contour (btn ghost), note « 15 min avec Lucas pour faire le point sur ton objectif. Offert. », case « J'ai déjà choisi mon créneau » décochée",
+    ok("carte : bouton « Réserver mon plan d'action » en contour (btn ghost), note « Appel de 15 min avec ton coach, offert », case « J'ai déjà réservé » décochée",
       !!A.carte && A.carte.t === D.bouton && A.cals[1].cls === "btn.ghost" && A.carte.style.bg === TRANSPARENT && A.note === E.note && A.caseT === E.case && A.caseCoche === false, JSON.stringify([A.carte, A.note, A.caseT, A.caseCoche]));
     ok("accueil : plus aucun « Réserver mon bilan » ni durée à 30 min (« 30min », « 30 min », « 30 minutes », « 30-minute »), aucun prix ni « undefined » ; 390 px sans débordement ; aucune écriture à l'affichage",
       !ANCIENS_TXT.test(v) && !TRENTE.test(v) && propre(v) && !(await deborde(page)) && saisies(db).length === 0, (v.match(ANCIENS_TXT) || v.match(TRENTE) || [""])[0] + " · " + resume(db));
@@ -619,8 +619,8 @@ const verrouVu = (page, id) => page.evaluate(id => {
     const n0 = ecr(db, "challenge", ID).length, t0 = Date.now();
     await page.check("#dc-reserve-case"); await attendre(page, 2300);
     const C = challengeDe(db, ID), pastille = await texte(page, "#dc-reserve-ok");
-    ok("case « J'ai déjà choisi mon créneau » cochée : même comportement — challenge.reserve (maintenant) en UNE écriture, les 2 clics gardés, pastille « Bilan réservé le … Ton coach te retrouve à l'heure prévue. »",
-      ecr(db, "challenge", ID).length === n0 + 1 && typeof C.reserve === "string" && Math.abs(Date.parse(C.reserve) - t0) < 15000 && ((C.cta || {}).clics || []).length === 2 && /^Bilan réservé le .+\. Ton coach te retrouve à l'heure prévue\.$/.test(pastille) && !(await page.$("#dc-reserve-case")),
+    ok("case « J'ai déjà réservé » cochée : même comportement — challenge.reserve (maintenant) en UNE écriture, les 2 clics gardés, pastille « C'est réservé : ton coach t'appelle à l'heure choisie. »",
+      ecr(db, "challenge", ID).length === n0 + 1 && typeof C.reserve === "string" && Math.abs(Date.parse(C.reserve) - t0) < 15000 && ((C.cta || {}).clics || []).length === 2 && /^C'est réservé\s?:\s?ton coach t'appelle à l'heure choisie\.$/.test(pastille) && !(await page.$("#dc-reserve-case")),
       JSON.stringify(C) + " · " + pastille);
   });
 
@@ -630,17 +630,17 @@ const verrouVu = (page, id) => page.evaluate(id => {
     const { page } = await ouvrir(b, db, k, "", "#dc-accomp", { langue: "en", theme: "light" });
     await attendre(page, 1300);
     const A = await accueilVu(page), v = await texte(page, "#vue");
-    ok("anglais, thème clair : bouton du haut « Get my action plan » (accueil_haut) + « 15 min with Lucas · free » ; carte « What coaching adds » : 4 lignes exactes (My program, Nutrition, My training log, My follow-up — descriptions anglaises)",
+    ok("anglais, thème clair : bouton du haut « Book my action plan » (accueil_haut) + « Free 15-min call with your coach » ; carte « What coaching adds » : 4 lignes exactes (My program, Nutrition, My training log, My follow-up — descriptions anglaises)",
       (await page.evaluate(() => document.documentElement.getAttribute("data-theme"))) === "light" && !!A.haut && A.haut.t === D.bouton_en && !!A.sous && A.sous.t === E.sous_en && A.titre === E.titre_en
       && JSON.stringify(A.lignes) === JSON.stringify(E.lignes_en.map(([n, d]) => [n, n + " — " + d])), JSON.stringify([A.haut, A.sous, A.titre, A.lignes]));
     const francais = NOUVEAUX.filter(x => v.includes(x));
-    ok("anglais : carte « Get my action plan » (accueil_accompagnement), « 15 min with Lucas to go over your goal. Free. », « I've already booked my slot » ; les 2 liens exacts ; aucun texte français du lot 2, aucun ancien libellé ni durée à 30 min ; 390 px sans débordement ; aucune écriture",
+    ok("anglais : carte « Book my action plan » (accueil_accompagnement), « Free 15-min call with your coach », « Already booked » ; les 2 liens exacts ; aucun texte français du lot 2, aucun ancien libellé ni durée à 30 min ; 390 px sans débordement ; aucune écriture",
       !!A.carte && A.carte.t === D.bouton_en && A.note === E.note_en && A.caseT === E.case_en && A.cals.length === 2 && A.cals.every(x => x.href === lienAtt(x.code, k)) && A.cals.map(x => x.code).join() === "accueil_haut,accueil_accompagnement"
       && !francais.length && !ANCIENS_TXT.test(v) && !TRENTE.test(v) && propre(v) && !(await deborde(page)) && saisies(db).length === 0, JSON.stringify([A.carte, A.note, A.caseT, francais]) + " · " + resume(db));
     await relever(page, true, "accueil");
     await aller(page, "#/decouverte/reponses", 1500); await page.waitForSelector("#q-probleme", { timeout: 6000 });
     const R = await accueilVu(page), vr = await texte(page, "#vue");
-    ok("« Edit my answers » (#/decouverte/reponses) : bouton du haut « Get my action plan » (reponses_haut, lien exact) + « 15 min with Lucas · free », seul lien Calendly de la page",
+    ok("« Edit my answers » (#/decouverte/reponses) : bouton du haut « Book my action plan » (reponses_haut, lien exact) + « Free 15-min call with your coach », seul lien Calendly de la page",
       R.cals.length === 1 && R.nCal === 1 && R.cals[0].code === "reponses_haut" && R.cals[0].href === lienAtt("reponses_haut", k) && R.cals[0].t === D.bouton_en && !!R.sous && R.sous.t === E.sous_en && !ANCIENS_TXT.test(vr) && !TRENTE.test(vr),
       JSON.stringify([R.cals, R.sous]));
     await relever(page, true, "modifier mes réponses");
@@ -652,7 +652,7 @@ const verrouVu = (page, id) => page.evaluate(id => {
     const { c, page } = await ouvrir(b, db, k, "#/decouverte/reponses", "#q-probleme");
     await attendre(page, 1300);
     const R = await accueilVu(page), v = await texte(page, "#vue");
-    ok("« Modifier mes réponses » : bouton du haut « Récupérer mon plan d'action » en contour, data-dc-cal « reponses_haut », lien exact, ligne « 15 min avec Lucas · offert » ; seul lien Calendly de la page ; aucun ancien libellé ni durée à 30 min",
+    ok("« Modifier mes réponses » : bouton du haut « Réserver mon plan d'action » en contour, data-dc-cal « reponses_haut », lien exact, ligne « Appel de 15 min avec ton coach, offert » ; seul lien Calendly de la page ; aucun ancien libellé ni durée à 30 min",
       R.cals.length === 1 && R.nCal === 1 && R.cals[0].code === "reponses_haut" && R.cals[0].haut && R.cals[0].cls === "btn.ghost.petit" && R.cals[0].href === lienAtt("reponses_haut", k) && R.cals[0].t === D.bouton && R.cals[0].cible === "_blank"
       && !!R.sous && R.sous.t === E.sous && R.sous.cls === "dc-cta-sous.dc-haut-sous" && !ANCIENS_TXT.test(v) && !TRENTE.test(v) && saisies(db).length === 0, JSON.stringify([R.cals, R.sous]) + " · " + resume(db));
     await relever(page, false, "modifier mes réponses");
@@ -674,7 +674,7 @@ const verrouVu = (page, id) => page.evaluate(id => {
       await aller(page, "#/" + id, 1800);
       const V = await verrouVu(page, id), lus = luHors(db, n0);
       const lot2 = V.ech ? NOUVEAUX.concat([E.sous]).filter(x => norm(V.ech.texte).includes(x)) : [];
-      ok(`#/${id} : l'exemple au-dessus inchangé (« ${h2} », marqué « Exemple » avec sa note, « ${intro.slice(0, 30)}… » exacts comme en v60, aucun texte du lot 2 dedans), puis la carte : « ${nom} », son texte propre (typographie française), « Récupérer mon plan d'action » (bouton doré, lien ${code} exact, nouvel onglet, noopener, 44 px), « 15 min avec Lucas · offert », puis « ${av.slice(0, 40)}… » ; aucune clé « donnees » lue`,
+      ok(`#/${id} : l'exemple au-dessus inchangé (« ${h2} », marqué « Exemple » avec sa note, « ${intro.slice(0, 30)}… » exacts comme en v60, aucun texte du lot 2 dedans), puis la carte : « ${nom} », son texte propre (typographie française), « Réserver mon plan d'action » (bouton doré, lien ${code} exact, nouvel onglet, noopener, 44 px), « Appel de 15 min avec ton coach, offert », puis « ${av.slice(0, 40)}… » ; aucune clé « donnees » lue`,
         !!V.ech && V.ech.h2 === h2 && V.ech.role === "region" && V.ech.marque === "Exemple" && norm(V.ech.note) === norm(ECH_NOTE) && V.ech.notes.map(norm).includes(norm(intro)) && V.ech.avant && !lot2.length && V.nEch === 1
         && V.titre === nom && V.texte === typo(txt) && V.nLiens === 1 && !!V.a && V.a.href === lienAtt(code, k) && V.a.t === D.bouton && V.a.btn && V.a.bg === OR_SOMBRE && V.a.cible === "_blank" && /noopener/.test(V.a.rel) && V.a.h >= 44
         && !!V.sous && V.sous.cls === "verrou-sous" && V.sous.t === E.sous && V.plus === av && V.plusApres && !lus.length,
@@ -700,7 +700,7 @@ const verrouVu = (page, id) => page.evaluate(id => {
       const V = await verrouVu(page, id), lus = luHors(db, n0);
       /* v61 : 44 px de haut au moins, comme les pages avec un exemple (css/communs.css « .verrou .btn{min-height:44px} » ;
          42 px jusqu'ici) */
-      ok(`#/${id} (hors de la navigation) : pas d'exemple, « ${nom} », texte inchangé « ${VERROU_TXT} », même bouton « Récupérer mon plan d'action » (bouton doré, lien ${code} exact, nouvel onglet, noopener), même ligne « 15 min avec Lucas · offert », description inchangée ; aucune clé « donnees » lue`,
+      ok(`#/${id} (hors de la navigation) : pas d'exemple, « ${nom} », texte inchangé « ${VERROU_TXT} », même bouton « Réserver mon plan d'action » (bouton doré, lien ${code} exact, nouvel onglet, noopener), même ligne « Appel de 15 min avec ton coach, offert », description inchangée ; aucune clé « donnees » lue`,
         V.v && !V.ech && V.nEch === 0 && V.titre === nom && V.texte === VERROU_TXT && V.nLiens === 1 && !!V.a && V.a.href === lienAtt(code, k) && V.a.t === D.bouton && V.a.btn && V.a.bg === OR_SOMBRE && V.a.cible === "_blank" && /noopener/.test(V.a.rel) && V.a.h >= 44
         && !!V.sous && V.sous.cls === "verrou-sous" && V.sous.t === E.sous && V.plus === av && !lus.length, JSON.stringify([V, lus]));
       await relever(page, false, "#/" + id);
@@ -723,7 +723,7 @@ const verrouVu = (page, id) => page.evaluate(id => {
       await aller(page, "#/" + id, 1800);
       const V = await verrouVu(page, id), lus = luHors(db, n0), v = await texte(page, "#vue"), francais = NOUVEAUX.filter(x => v.includes(x));
       const th = await page.evaluate(() => document.documentElement.getAttribute("data-theme"));
-      ok(`anglais, thème clair, #/${id} : l'exemple (« Example ») au-dessus, « ${nom} », « ${txt.slice(0, 45)}… », « Get my action plan » (bouton du doré clair, lien ${code} exact, nouvel onglet, noopener, 44 px), « 15 min with Lucas · free », « ${av.slice(0, 35)}… » ; aucun texte français du lot 2 ; aucune clé « donnees » lue`,
+      ok(`anglais, thème clair, #/${id} : l'exemple (« Example ») au-dessus, « ${nom} », « ${txt.slice(0, 45)}… », « Book my action plan » (bouton du doré clair, lien ${code} exact, nouvel onglet, noopener, 44 px), « Free 15-min call with your coach », « ${av.slice(0, 35)}… » ; aucun texte français du lot 2 ; aucune clé « donnees » lue`,
         th === "light" && !!V.ech && V.ech.marque === "Example" && V.ech.avant && V.nEch === 1 && V.titre === nom && V.texte === txt && !!V.a && V.a.href === lienAtt(code, k) && V.a.t === D.bouton_en && V.nLiens === 1
         && V.a.btn && V.a.bg === OR_CLAIR && V.a.cible === "_blank" && /noopener/.test(V.a.rel) && V.a.h >= 44
         && !!V.sous && V.sous.t === E.sous_en && norm(V.plus) === norm(av) && !francais.length && !lus.length && !(await deborde(page)), JSON.stringify([th, V, francais, lus]));
@@ -750,7 +750,7 @@ const verrouVu = (page, id) => page.evaluate(id => {
       await relever(page, en, "profil, volet des conditions");
       const autres = ps.filter((_, i) => i !== 1 && i !== 8), emp = empreinte(autres);
       if (!en) ok("version du texte court : « " + COND.version + " » (DECOUVERTE.confidentialite.version, celle des PDF) ; v64 : DECOUVERTE.accords.conditions (envoyée à l'inscription) = CONFIG.textes_legaux.cgu_version, la version des CGU en PDF (« " + LEGAUX_J.cgu_version + " » servie, distincte du texte court), plus celle du texte court", vers[0] === COND.version && vers[2] === LEGAUX_J.cgu_version && vers[1] === LEGAUX_J.cgu_version && vers[1] !== vers[0], JSON.stringify(vers));
-      ok(`Profil${en ? " (anglais)" : ""}, volet « ${en ? COND.titre_en : COND.titre} » : 12 paragraphes ; le 2e EXACT (« …${en ? "including your clicks on “Get my action plan”" : "dont tes clics sur « Récupérer mon plan d'action »"}. … », v64 : accord santé au premier usage, plus de ${en ? "« dedicated box »" : "« case dédiée »"}) ; v64 : le 9e EXACT (newsletter, ${en ? "« 2 emails per week at most »" : "« 2 emails par semaine au plus »"}) ; les 10 autres identiques à la v63 (même empreinte) ; aucune durée à 30 min`,
+      ok(`Profil${en ? " (anglais)" : ""}, volet « ${en ? COND.titre_en : COND.titre} » : 12 paragraphes ; le 2e EXACT (« …${en ? "including your clicks on “Book my action plan”" : "dont tes clics sur « Réserver mon plan d'action »"}. … », v64 : accord santé au premier usage, plus de ${en ? "« dedicated box »" : "« case dédiée »"}) ; v64 : le 9e EXACT (newsletter, ${en ? "« 2 emails per week at most »" : "« 2 emails par semaine au plus »"}) ; les 10 autres identiques à la v63 (même empreinte) ; aucune durée à 30 min`,
         ps.length === 12 && norm(ps[1]) === norm(en ? COND.p2_en : COND.p2) && norm(ps[8]) === norm(en ? COND.p9_en : COND.p9) && emp === (en ? COND.autres_en : COND.autres)
           && !ps.some(p => /Réserver mon bilan|Book my assessment|case dédiée|dedicated box|1 à 2 emails|1 to 2 emails/.test(p) || TRENTE.test(p)),
         ps.length + " · " + ps[1] + " · " + ps[8] + " · empreinte " + emp);
@@ -827,25 +827,25 @@ const verrouVu = (page, id) => page.evaluate(id => {
     const coachSeul = await page.evaluate(() => lienCalendly("accueil_haut"));
     await page.evaluate(([id, n]) => Clients.ouvrir(id, n, "accueil"), [ID, "Léa Martin"]); await page.waitForSelector("#fiche-chrono", { timeout: 8000 }); await attendre(page, 800);
     const chrono = await page.$$eval("#fiche-chrono ol.dc-chrono li span", l => l.map(x => x.textContent)).then(l => l.map(norm)).catch(() => []);
-    const CLIC = "Clic « Récupérer mon plan d'action »";
+    const CLIC = "Clic « Réserver mon plan d'action »";
     const clics = chrono.filter(x => x.startsWith(CLIC)), att = CLICS.map(([, lib]) => CLIC + (lib ? " (" + lib + ")" : ""));
     /* v63 : plus aucun ancien libellé des anciens codes, ni « Réserver mon bilan », nulle part dans la chronologie */
     const ANCIENS_CHRONO = ["Réserver mon bilan", "en haut de sa Découverte", "bloc accompagnement", "page de proposition du bilan", "page verrouillée « programme »"];
     const vieux = chrono.filter(x => ANCIENS_CHRONO.some(v => x.includes(v)));
-    ok("chronologie : les anciens clics s'affichent sous le nom de l'écran d'aujourd'hui, comme « Mesure » et la carte (« (accueil, bouton du haut) », « (accueil, carte « Ce que l'accompagnement ajoute ») », « (page « Ton plan d'action » (après les 3 questions)) », « (page verrouillée Mon programme) »), préfixe « Clic « Récupérer mon plan d'action » » ; plus aucun ancien libellé (« en haut de sa Découverte », « bloc accompagnement », « page de proposition du bilan », « page verrouillée « programme » ») ni « Réserver mon bilan » dans la chronologie",
+    ok("chronologie : les anciens clics s'affichent sous le nom de l'écran d'aujourd'hui, comme « Mesure » et la carte (« (accueil, bouton du haut) », « (accueil, carte « Ce que l'accompagnement ajoute ») », « (page « Ton plan d'action » (après les 3 questions)) », « (page verrouillée Mon programme) »), préfixe « Clic « Réserver mon plan d'action » » ; plus aucun ancien libellé (« en haut de sa Découverte », « bloc accompagnement », « page de proposition du bilan », « page verrouillée « programme » ») ni « Réserver mon bilan » dans la chronologie",
       JSON.stringify(clics.slice(12)) === JSON.stringify(att.slice(12)) && !vieux.length, JSON.stringify(clics.slice(12)) + " · anciens : " + JSON.stringify(vieux));
-    ok("chronologie : les 10 nouveaux codes avec le nom de leur écran (« (page « Ton plan d'action » (après les 3 questions)) », « (accueil, bouton du haut) »… « (page verrouillée Mon bilan) ») ; un code réservé (__proto__) ou piégé : « Clic « Récupérer mon plan d'action » » sans libellé, en texte brut, aucune injection",
+    ok("chronologie : les 10 nouveaux codes avec le nom de leur écran (« (page « Ton plan d'action » (après les 3 questions)) », « (accueil, bouton du haut) »… « (page verrouillée Mon bilan) ») ; un code réservé (__proto__) ou piégé : « Clic « Réserver mon plan d'action » » sans libellé, en texte brut, aucune injection",
       JSON.stringify(clics.slice(0, 12)) === JSON.stringify(att.slice(0, 12)) && !(await page.evaluate(() => window.__xss)) && !(await page.$("#vue img[src='x']")), JSON.stringify(clics.slice(0, 12)));
     const fd = await lignes(page, "#fiche-decouverte"), val = x => (fd.find(l => l[0] === x) || [])[1] || "";
-    ok("les autres libellés du coach (v65, décision de Lucas du 30/09 : le nom du bouton d'aujourd'hui, plus « Réserver ») : « Bouton « Récupérer mon plan d'action » : 16 clics, le dernier le … », « Case « J'ai réservé mon bilan » : pas cochée », pastille « a cliqué Plan d'action »",
-      /^16 clics, le dernier le \S.*$/.test(val("Bouton « Récupérer mon plan d'action »")) && val("Case « J'ai réservé mon bilan »") === "pas cochée" && (await texte(page, "#fiche-decouverte .seance-c-tete")).includes("a cliqué Plan d'action") && !/Réserver/.test(await texte(page, "#fiche-decouverte")),
+    ok("les autres libellés du coach (v65, décision de Lucas du 30/09 : le nom du bouton d'aujourd'hui, plus « Réserver ») : « Bouton « Réserver mon plan d'action » : 16 clics, le dernier le … », « Case « J'ai réservé mon bilan » : pas cochée », pastille « a cliqué Plan d'action »",
+      /^16 clics, le dernier le \S.*$/.test(val("Bouton « Réserver mon plan d'action »")) && val("Case « J'ai réservé mon bilan »") === "pas cochée" && (await texte(page, "#fiche-decouverte .seance-c-tete")).includes("a cliqué Plan d'action") && !/Réserver(?! mon plan d'action)/.test(await texte(page, "#fiche-decouverte")),
       JSON.stringify(fd) + " · " + (await texte(page, "#fiche-decouverte .seance-c-tete")));
     /* v63 (lot 4, point 2) : « le dernier le <date> » = la date (jour local, JJ/MM/AAAA) du clic le PLUS RÉCENT, ici le 1er de la
        liste (rangée du plus récent au plus ancien), pas celle du dernier de la liste ; dates relues par le navigateur (son fuseau) */
     const jourFr = iso => page.evaluate(v => { const d = new Date(v); return String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0") + "/" + d.getFullYear(); }, iso);
     const cl0 = C0.cta.clics, dRecent = await jourFr(cl0[0].date), dFin = await jourFr(cl0[cl0.length - 1].date);
-    ok("fiche, « Bouton « Récupérer mon plan d'action » » : « 16 clics, le dernier le <date> » donne la date EXACTE du clic le plus récent (le 1er d'une liste rangée du plus récent au plus ancien, il y a 7 min), pas celle du dernier de la liste (il y a plus de 31 h, un autre jour)",
-      dRecent !== dFin && val("Bouton « Récupérer mon plan d'action »") === "16 clics, le dernier le " + dRecent, "affiché " + JSON.stringify(val("Bouton « Récupérer mon plan d'action »")) + " · attendu le " + dRecent + " (pas le " + dFin + ")");
+    ok("fiche, « Bouton « Réserver mon plan d'action » » : « 16 clics, le dernier le <date> » donne la date EXACTE du clic le plus récent (le 1er d'une liste rangée du plus récent au plus ancien, il y a 7 min), pas celle du dernier de la liste (il y a plus de 31 h, un autre jour)",
+      dRecent !== dFin && val("Bouton « Réserver mon plan d'action »") === "16 clics, le dernier le " + dRecent, "affiché " + JSON.stringify(val("Bouton « Réserver mon plan d'action »")) + " · attendu le " + dRecent + " (pas le " + dFin + ")");
     const LIEN = CAL + "?utm_source=app&utm_medium=coach&utm_content=fiche_coach&name=" + enc("Léa Martin") + "&first_name=" + enc("Léa") + "&last_name=Martin&email=" + enc("p40@exemple.fr");
     const lien = await page.$eval("#dc-lien", e => e.value).catch(() => null);
     ok("fiche, « Contacter » : son lien de réservation exact (nouvelle adresse, utm_source=app, utm_medium=coach, utm_content=fiche_coach, prénom, nom, email)", lien === LIEN, lien);

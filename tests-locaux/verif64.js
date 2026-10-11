@@ -565,8 +565,8 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
       && autres.every(x => !x[1]) && autres.every(x => x[2] > urg[6][2]) && autres.every((x, i) => i === 0 || x[2] > autres[i - 1][2]), JSON.stringify(R));
     ok("A : un « Signé » d'il y a 40 jours, coché avant l'appel (il y a 45 jours), toujours prospect : pas à traiter, au dernier rang (celui d'un signé ancien, après bilan coché, absent relancé, perdu récent et le reste)",
       !r.signeCoche.urgent && r.signeCoche.rang === R[R.length - 1][2] && autres.slice(0, -1).every(x => x[2] < r.signeCoche.rang), JSON.stringify([r.signeCoche.rang, R]));
-    ok("A : l'aide « À traiter » cite les nouveaux cas (« Absent » sans limite de durée, « Perdu » depuis 30 jours ou plus, bilans cochés depuis plus de 7 jours) et garde les anciens (48 h, le clic — v65 : « Récupérer mon plan d'action », plus « Réserver » —, « Signé »)",
-      /« Absent » \(sans limite de durée\)/.test(r.aide) && /« Perdu » depuis 30 jours ou plus/.test(r.aide) && /plus de 7 jours/.test(r.aide) && /48 h/.test(r.aide) && /« Récupérer mon plan d'action »/.test(r.aide) && !/Réserver/.test(r.aide) && /« Signé »/.test(r.aide), r.aide);
+    ok("A : l'aide « À traiter » cite les nouveaux cas (« Absent » sans limite de durée, « Perdu » depuis 30 jours ou plus, bilans cochés depuis plus de 7 jours) et garde les anciens (48 h, le clic — v65 : « Réserver mon plan d'action », plus « Réserver » —, « Signé »)",
+      /« Absent » \(sans limite de durée\)/.test(r.aide) && /« Perdu » depuis 30 jours ou plus/.test(r.aide) && /plus de 7 jours/.test(r.aide) && /48 h/.test(r.aide) && /« Réserver mon plan d'action »/.test(r.aide) && !/Réserver(?! mon plan d'action)/.test(r.aide) && /« Signé »/.test(r.aide), r.aide);
     ok("A : aucune écriture", db.ecritures.length === 0, resume(db));
   });
 
@@ -638,8 +638,8 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
     ok("C : textes : « Absent à l'appel : repropose-lui un créneau », « Inscrit il y a 10 h : DM de bienvenue », « Bilan réservé depuis 9 j : l'appel a-t-il eu lieu ? », « Perdu depuis 31 j : relance-le » ; pas de « Et … autres »",
       L.length === 5 && L[0].t.includes("Absent à l'appel : repropose-lui un créneau") && L[1].t.includes("Inscrit il y a 10 h : DM de bienvenue") && L[3].t.includes("Bilan réservé depuis 9 j : l'appel a-t-il eu lieu ?") && L[4].t.includes("Perdu depuis 31 j : relance-le") && !(await texte(page, "#tb-a-traiter")).includes("Et "),
       JSON.stringify(L.map(x => x.t)));
-    ok("C : info-bulle de la tuile Prospects : la même aide que la page (Absent sans limite de durée, Perdu depuis 30 jours ou plus, 7 jours ; 48 h, « Récupérer mon plan d'action » ; v65 : plus « Réserver »)",
-      /« Absent » \(sans limite de durée\)/.test(tp.titre) && /« Perdu » depuis 30 jours ou plus/.test(tp.titre) && /plus de 7 jours/.test(tp.titre) && /48 h/.test(tp.titre) && /« Récupérer mon plan d'action »/.test(tp.titre) && !/Réserver/.test(tp.titre), tp.titre);
+    ok("C : info-bulle de la tuile Prospects : la même aide que la page (Absent sans limite de durée, Perdu depuis 30 jours ou plus, 7 jours ; 48 h, « Réserver mon plan d'action » ; v65 : plus « Réserver »)",
+      /« Absent » \(sans limite de durée\)/.test(tp.titre) && /« Perdu » depuis 30 jours ou plus/.test(tp.titre) && /plus de 7 jours/.test(tp.titre) && /48 h/.test(tp.titre) && /« Réserver mon plan d'action »/.test(tp.titre) && !/Réserver(?! mon plan d'action)/.test(tp.titre), tp.titre);
     await cliquer(page, `#tb-a-traiter [data-fiche="${BRUNO}"]`); await page.waitForSelector("#fiche-commercial", { timeout: 8000 }).catch(() => {}); await attendre(page, 600);
     const bf = await boutonsFiche(page);
     ok("C : « Ouvrir » sur Bruno : sa fiche, « à traiter » avec le même motif, boutons Signé, Perdu, Absent et « Retirer « Bilan réservé » »",
@@ -852,7 +852,7 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
     const nvH = await page.$$eval("#pr-nouveautes .nv-liste li .nv-txt", l => l.map(e => e.textContent.replace(/\s+/g, " ").trim())).catch(() => []);
     const bgH = await page.$$eval('#nav a[data-id="prospects"] .nav-badge', l => l.map(e => e.textContent.trim())).catch(() => []);
     ok("H : Nouveautés : « Sara Recase · a coché « J'ai réservé » » (sa case d'après l'appel, face à ta coche d'avant) ; pas la case de Tina (d'avant l'appel), son clic oui ; badge de l'onglet Prospects « 2 »",
-      nvH.includes("Sara Recase · a coché « J'ai réservé »") && !nvH.some(x => x.startsWith("Tina Reclic · a coché")) && nvH.includes("Tina Reclic · clic « Récupérer mon plan d'action »") && nvH.length === 2 && egal(bgH, ["2"]),
+      nvH.includes("Sara Recase · a coché « J'ai réservé »") && !nvH.some(x => x.startsWith("Tina Reclic · a coché")) && nvH.includes("Tina Reclic · clic « Réserver mon plan d'action »") && nvH.length === 2 && egal(bgH, ["2"]),
       JSON.stringify([nvH, bgH]));
     const { t } = await exporter(page);
     const L = lireCSV(t.replace(/^\uFEFF/, "")), ligne = n => L.find(l => l[0] === n) || [], iB = L[0].indexOf("Bilan réservé"), iL = L[0].indexOf("Bilan réservé le"), iC = L[0].indexOf("Case « J'ai réservé » (prospect)");

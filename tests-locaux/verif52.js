@@ -503,7 +503,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
        de sa Découverte », « bloc accompagnement », « page de proposition du bilan », « page verrouillée « programme » »…)
        dans la chronologie */
     const NOM_APQ = "page « Ton plan d'action » (après les 3 questions)", NOM_HAUT = "accueil, bouton du haut";
-    const CLIC = "Clic « Récupérer mon plan d'action »";
+    const CLIC = "Clic « Réserver mon plan d'action »";
     const nomsEcr = await page.evaluate(() => [Decouverte.ORIGINES.apres_questionnaire, Decouverte.nomOrigine("decouverte")]).catch(() => [null, null]);
     const attC = ["Dernière visite dans l'app", "Tu l'as relancé", "Le prospect a coché « J'ai réservé »", CLIC + " (" + NOM_HAUT + ")", CLIC + " (" + NOM_APQ + ")", "Questionnaire rempli", "Questionnaire commencé", "Inscription"];
     const ANC_CHRONO = /Réserver mon bilan|en haut de sa Découverte|bloc accompagnement|page de proposition du bilan|page verrouillée « (programme|journal|nutrition|suivi|bilan|complements) »/;
@@ -575,7 +575,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     const types = await page.$$eval("#pr-nouveautes .nv-types .pastille", l => l.map(e => e.textContent.trim())).catch(() => []);
     ok("première visite (pas de coach_notifs) : « Ces 7 derniers jours : », 11 nouveautés — 5 inscriptions, 2 questionnaires remplis, 3 clics « Plan d'action », 1 case « J'ai réservé »", pan.includes("Ces 7 derniers jours :") && (await texte(page, "#pr-nouveautes .seance-c-tete .pastille")) === "11" && JSON.stringify(types) === JSON.stringify(["5 inscriptions", "2 questionnaires remplis", "3 clics « Plan d'action »", "1 case « J'ai réservé »"]), JSON.stringify(types) + " · " + pan.slice(0, 120));
     const li = await page.$$eval("#pr-nouveautes .nv-liste li", l => l.filter(e => !e.closest("[hidden]")).map(e => e.querySelector(".nv-txt").textContent.replace(/\s+/g, " ").trim())).catch(() => []);
-    const attL = ["Léa Martin · inscription", "Émilie Rousseau · clic « Récupérer mon plan d'action »", "Inès Dupré · a coché « J'ai réservé »", "Inès Dupré · clic « Récupérer mon plan d'action »", "Inès Dupré · questionnaire rempli", "Inès Dupré · inscription", "Émilie Rousseau · clic « Récupérer mon plan d'action »", "Émilie Rousseau · questionnaire rempli"];
+    const attL = ["Léa Martin · inscription", "Émilie Rousseau · clic « Réserver mon plan d'action »", "Inès Dupré · a coché « J'ai réservé »", "Inès Dupré · clic « Réserver mon plan d'action »", "Inès Dupré · questionnaire rempli", "Inès Dupré · inscription", "Émilie Rousseau · clic « Réserver mon plan d'action »", "Émilie Rousseau · questionnaire rempli"];
     ok("liste : les 8 plus récentes, de la plus récente à la plus ancienne, puis « Voir les 3 suivantes » (les autres repliées)", JSON.stringify(li) === JSON.stringify(attL) && (await texte(page, "#pr-nouveautes [data-nv-plus]")) === "Voir les 3 suivantes", JSON.stringify(li) + " · " + (await texte(page, "#pr-nouveautes [data-nv-plus]")));
     ok("7 jours : Karim (8 jours) et Paul (10 jours) absents, le client Julien (inscrit il y a 3 h) jamais compté", !pan.includes("Karim") && !pan.includes("Paul") && !pan.includes("Julien"));
     ok("badge « 11 » sur l'onglet Prospects", JSON.stringify(await badge(page)) === '["11"]', JSON.stringify(await badge(page)));
@@ -630,7 +630,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     const lignesNv = sel => page.$$eval(sel + " .nv-liste li", l => l.map(li => { const bt = li.querySelector("[data-nv-ouvrir]"), t = li.querySelector("time"), g = li.querySelector("b"), x = li.querySelector(".nv-txt"); return { uid: bt && bt.dataset.nvOuvrir, nom: g && g.textContent, dataNom: bt && bt.getAttribute("data-nom"), dt: t && t.getAttribute("datetime"), txt: x && x.textContent.replace(/\s+/g, " ").trim() }; })).catch(() => []);
     const verifier = async (sel, ou) => {
       const L = await lignesNv(sel), q = L[0] || {}, pg = L[1] || {};
-      ok(`${ou} : en tête « ${litQ} · inscription » puis « ${litP} · clic » — noms affichés tels quels, attribut data-nom intact, date exacte`, q.uid === QUOTE && q.nom === litQ && q.dataNom === litQ && q.dt === creeQ && q.txt === litQ + " · inscription" && pg.uid === PIEGE && pg.nom === litP && pg.dataNom === litP && pg.dt === clicP && pg.txt === litP + " · clic « Récupérer mon plan d'action »", JSON.stringify(L.slice(0, 2)));
+      ok(`${ou} : en tête « ${litQ} · inscription » puis « ${litP} · clic » — noms affichés tels quels, attribut data-nom intact, date exacte`, q.uid === QUOTE && q.nom === litQ && q.dataNom === litQ && q.dt === creeQ && q.txt === litQ + " · inscription" && pg.uid === PIEGE && pg.nom === litP && pg.dataNom === litP && pg.dt === clicP && pg.txt === litP + " · clic « Réserver mon plan d'action »", JSON.stringify(L.slice(0, 2)));
       ok(`${ou} : aucune injection (ni image, ni balise <i>, ni attribut onmouseover), aucune écriture`, !(await xss(page)) && db.ecritures.length === 0);
     };
     /* v53 (chantier 4) : plus de panneau sur le tableau de bord : sa vérification est retirée (2), la page Prospects reste */
@@ -663,8 +663,8 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
      accords.newsletter_profil, aussi celle des comptes inscrits jusqu'à la v63) ; plus d'accord santé à l'inscription (ni
      consentement_sante ni sante_version : demandé au premier usage) ; le volet des conditions ne s'ouvre plus depuis
      l'inscription (ses deux mots mènent aux PDF) : il est vérifié depuis le Profil du prospect (#mc-conditions). */
-  const NEWS = "Oui, je veux les conseils et les offres de Lucas par email (2 max par semaine, désinscription en 1 clic).";
-  const V_NEWS_INSC = "2026-09-30";   // v64 : version du texte de la case newsletter de l'inscription (DECOUVERTE.accords.newsletter)
+  const NEWS = "Oui, je veux recevoir par email les conseils et les offres de MHX Coaching (2 par semaine au plus, désinscription en 1 clic).";
+  const V_NEWS_INSC = "2026-10-11";   // v76 (avant : 2026-09-30) ; v64 : version du texte de la case newsletter de l'inscription (DECOUVERTE.accords.newsletter)
   const V_NEWS = "2026-09-28c";   // version du texte de l'interrupteur du Profil (DECOUVERTE.accords.newsletter_profil ; la case de l'inscription jusqu'à la v63)
   /* v64 : métadonnées EXACTES d'une nouvelle inscription (triées) */
   const CLES_INSC = "conditions_version,consentement,newsletter,newsletter_version,nom,prenom";

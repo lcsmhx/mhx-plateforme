@@ -266,10 +266,10 @@ const autresHotes = () => Array.from(externes).filter(h => !/^fonts\.(googleapis
 const TXA = {
   fr: {
     titre: "Crée ton espace gratuit",
-    sous: "Gratuit, pour toujours : calculateur de calories, suivi de ton poids et de tes mensurations, et la Speed Formation avec ses vidéos, programmes et plans alimentaires.",
+    sous: "Ton calculateur de calories, ton suivi de poids et la Speed Formation pour poser tes bases en 14 jours. Inscris-toi pendant la bêta : tout reste gratuit pour toi, à vie.",
     cgu: "J'ai 18 ans ou plus et j'accepte les CGU et la politique de confidentialité.",
     lien_cgu: "CGU", lien_politique: "politique de confidentialité",
-    news: "Oui, je veux les conseils et les offres de Lucas par email (2 max par semaine, désinscription en 1 clic).",
+    news: "Oui, je veux recevoir par email les conseils et les offres de MHX Coaching (2 par semaine au plus, désinscription en 1 clic).",
     rester: "Rester connecté",
     bouton: "Créer mon espace gratuit",
     note: "L'app ne remplace pas un avis médical. Si tu as un doute sur ta santé, parles-en à un professionnel avant de commencer.",
@@ -278,10 +278,10 @@ const TXA = {
   },
   en: {
     titre: "Create your free space",
-    sous: "Free, forever: calorie calculator, weight and measurement tracking, and the Speed Formation course with its videos, workout programs and meal plans.",
+    sous: "Your calorie calculator, weight tracking and the Speed Formation to build your foundations in 14 days. Sign up during the beta: it stays free for you, for life.",
     cgu: "I'm 18 or older and I accept the Terms of Use and the Privacy Policy.",
     lien_cgu: "Terms of Use", lien_politique: "Privacy Policy",
-    news: "Yes, send me Lucas's tips and offers by email (2 per week max, unsubscribe in 1 click).",
+    news: "Yes, send me MHX Coaching's tips and offers by email (2 per week max, 1-click unsubscribe).",
     rester: "Stay logged in",
     bouton: "Create my free account",
     note: "The app is not medical advice. If you have any doubt about your health, talk to a professional before starting.",
@@ -289,7 +289,7 @@ const TXA = {
     sante: /health data|données de santé/i
   }
 };
-const V_NEWS = "2026-09-30", V_NEWS_PROFIL = "2026-09-28c";
+const V_NEWS = "2026-10-11", V_NEWS_PROFIL = "2026-09-28c";   // v76 : case newsletter « MHX Coaching »
 const CLES_DATA = "conditions_version,consentement,newsletter,newsletter_version,nom,prenom";
 
 /* l'écran d'inscription tel qu'affiché */

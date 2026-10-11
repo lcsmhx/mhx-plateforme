@@ -341,7 +341,7 @@ const TRANSPARENT = "rgba(0, 0, 0, 0)";
 const PRIX = /€|\$ ?\d|\d ?\$|\bprix\b|\bprice\b|\btarifs?\b|\beuros?\b|\bEUR\b/i, BRUT = /undefined|\[object|\bNaN\b|\bnull\b/;
 const propre = t => !PRIX.test(t) && !BRUT.test(t);
 /* aucune valeur saisie dans une carte : aucun chiffre hors « 15 min », ni kcal, kg, cm */
-const sansValeurs = t => !/\d/.test(String(t).replace(/15\s?min/gi, "")) && !/kcal|\bkg\b|\bcm\b/i.test(t);
+const sansValeurs = t => !/\d/.test(String(t).replace(/15[\s-]?min/gi, ""))   /* v76 : « Free 15-min call… » */ && !/kcal|\bkg\b|\bcm\b/i.test(t);
 async function capturer(page, nom, sel, haut){
   if (!CAPT) return;
   fs.mkdirSync(CAPT, { recursive: true });
@@ -357,17 +357,17 @@ const lienAtt = (code, k) => CAL + "?utm_source=app&utm_medium=bouton&utm_conten
 
 /* ---------- les textes attendus (brief V2, H, mot pour mot) : [titre, texte] ---------- */
 const INV = {
-  declic_calculateur: { fr: ["Tu as ton chiffre. Maintenant, le plan.", "Savoir combien manger, c'est la base. Le tenir avec ton rythme, tes envies et tes semaines chargées, c'est là que tout se joue. En 15 min, Lucas t'aide à en faire un plan qui tient."],
-    en: ["You've got your number. Now, the plan.", "Knowing how much to eat is the foundation. Sticking to it with your schedule, your cravings and your busy weeks is where it all happens. In 15 min, Lucas helps you turn it into a plan that sticks."] },
-  declic_premiere_pesee: { fr: ["Ton point de départ est posé.", "C'est à partir d'aujourd'hui qu'on mesure tes progrès. Pour que ta courbe aille dans le bon sens, il te faut un plan qui colle à ta vie : c'est ce que Lucas te prépare en 15 min."],
-    en: ["Your starting point is set.", "From today, we measure your progress. To move your curve in the right direction, you need a plan that fits your life: that's what Lucas builds with you in 15 min."] },
-  declic_mindset: { fr: ["Ton pourquoi est clair.", "Reste le comment. En 15 min, Lucas t'aide à transformer ta motivation en plan concret pour tes prochaines semaines."],
-    en: ["Your why is clear.", "Now for the how. In 15 min, Lucas helps you turn your motivation into a concrete plan for the weeks ahead."] },
-  formation_commence_ici: { fr: ["Bien joué, ton départ est lancé.", "Prochaine étape : ton plan d'action personnalisé, offert, en 15 min avec Lucas."],
-    en: ["Nice work, you're off to a start.", "Next step: your personalized action plan, free, in 15 min with Lucas."] }
+  declic_calculateur: { fr: ["Tes calories sont calculées.", "Le plus dur, c'est de tenir ce chiffre avec tes semaines chargées. C'est ce que tu prépares pendant l'appel."],
+    en: ["Your calories are calculated.", "The hard part is sticking to that number through your busy weeks. That's what you plan on the call."] },
+  declic_premiere_pesee: { fr: ["Ton point de départ est posé.", "Ta courbe part d'aujourd'hui. Pour qu'elle aille dans le bon sens, il te faut un plan qui colle à ta vie."],
+    en: ["Your starting point is set.", "Your curve starts today. To move it the right way, you need a plan that fits your life."] },
+  declic_mindset: { fr: ["Ton pourquoi est clair.", "Reste le comment : quoi faire, et quand, ces prochaines semaines. C'est l'objet de ton plan d'action."],
+    en: ["Your why is clear.", "Now for the how: what to do, and when, over the next weeks. That's what your action plan is for."] },
+  formation_commence_ici: { fr: ["Bien joué, ton départ est lancé.", "Prochaine étape : ton plan d'action, pour savoir quoi faire ces prochaines semaines."],
+    en: ["Nice work, you're off to a start.", "Next step: your action plan, so you know what to do over the next weeks."] }
 };
 const OBJ = { fr: p => "Ton objectif : « " + p + " »", en: p => "Your goal: “" + p + "”" };
-const BOUTON = { fr: "Récupérer mon plan d'action", en: "Get my action plan" }, SOUS = { fr: "15 min avec Lucas · offert", en: "15 min with Lucas · free" }, TARD = { fr: "Plus tard", en: "Later" };
+const BOUTON = { fr: "Réserver mon plan d'action", en: "Book my action plan" }, SOUS = { fr: "Appel de 15 min avec ton coach, offert", en: "Free 15-min call with your coach" }, TARD = { fr: "Plus tard", en: "Later" };
 /* les textes d'une carte tels qu'ils doivent s'afficher (français : typographie française ; anglais : tels quels) */
 function textesAtt(code, en, p){
   const l = en ? "en" : "fr", f = x => en ? x : typo(x);
@@ -469,9 +469,9 @@ const detail = (C, V) => JSON.stringify(C ? { sig: C.sig, n: C.n, enfants: C.enf
     const msg = await page.$eval("#calc-msg", e => e.textContent).catch(() => "");
     await attendre(page, 2000);   // la carte reste à l'écran au-delà de 1,5 s : comptée vue ; l'écriture du calcul est partie
     const C = await carteVue(page, "declic_calculateur"), V = verifCarte(C, "declic_calculateur", false, k, PHOTOS.fr), pl = await placeVue(page, "declic_calculateur", "macros");
-    ok("« Enregistrer mes chiffres » (« Tes chiffres sont enregistrés. ») : la carte section.panel.invitation#invitation-declic_calculateur[data-invitation], seule de la page, juste APRÈS la section des macros (la dernière section du calculateur) ; dans l'ordre : h2, « Ton objectif », texte, div.dc-cta (bouton doré, « 15 min avec Lucas · offert », button.lien-discret « Plus tard »)",
+    ok("« Enregistrer mes chiffres » (« Tes chiffres sont enregistrés. ») : la carte section.panel.invitation#invitation-declic_calculateur[data-invitation], seule de la page, juste APRÈS la section des macros (la dernière section du calculateur) ; dans l'ordre : h2, « Ton objectif », texte, div.dc-cta (bouton doré, « Appel de 15 min avec ton coach, offert », button.lien-discret « Plus tard »)",
       /Tes chiffres sont enregistrés\./.test(msg) && V.struct && pl.juste && pl.apres === null, detail(C, V) + " · " + JSON.stringify([msg, pl]));
-    ok("textes EXACTS du brief H (typographie française : espace insécable avant « : », dans « « … » ») : « Tu as ton chiffre. Maintenant, le plan. », « Ton objectif : « M'aimer sur les photos » », « Savoir combien manger… un plan qui tient. », « Récupérer mon plan d'action », « 15 min avec Lucas · offert », « Plus tard » ; aucune valeur saisie (poids, taille, âge, kcal : aucun chiffre hors « 15 min »), aucun prix ni « undefined »",
+    ok("textes EXACTS du brief H (typographie française : espace insécable avant « : », dans « « … » ») : « Tes calories sont calculées. », « Ton objectif : « M'aimer sur les photos » », « Savoir combien manger… un plan qui tient. », « Réserver mon plan d'action », « Appel de 15 min avec ton coach, offert », « Plus tard » ; aucune valeur saisie (poids, taille, âge, kcal : aucun chiffre hors « 15 min »), aucun prix ni « undefined »",
       V.textes, detail(C, V) + " · " + JSON.stringify(C && C.tout));
     ok("lien exact : " + lienAtt("declic_calculateur", k).slice(0, 118) + "… (base 15 min, utm_source=app, utm_medium=bouton, utm_content=declic_calculateur, prénom, nom, email), nouvel onglet (noopener), data-inv-cal",
       V.lien, JSON.stringify(C && C.a));
@@ -551,7 +551,7 @@ const detail = (C, V) => JSON.stringify(C ? { sig: C.sig, n: C.n, enfants: C.enf
     await page.fill("#heures", "3");
     await page.waitForSelector("#invitation-declic_calculateur", { timeout: 6000 }).catch(() => null); await attendre(page, 1800);
     const C = await carteVue(page, "declic_calculateur"), V = verifCarte(C, "declic_calculateur", true, k, PHOTOS.en), pl = await placeVue(page, "declic_calculateur", "macros");
-    ok("anglais, thème clair : calcul incomplet (4 champs sur 5, 1,5 s d'attente : aucune carte posée, rien d'enregistré, aucune lecture intake+challenge), puis complet et enregistré : la carte juste après les macros ; textes EXACTS (« You've got your number. Now, the plan. », « Your goal: “Loving how I look in photos” », « Knowing how much to eat… », « Get my action plan », « 15 min with Lucas · free », « Later »), sans espace insécable ni aucune valeur saisie",
+    ok("anglais, thème clair : calcul incomplet (4 champs sur 5, 1,5 s d'attente : aucune carte posée, rien d'enregistré, aucune lecture intake+challenge), puis complet et enregistré : la carte juste après les macros ; textes EXACTS (« Your calories are calculated. », « Your goal: “Loving how I look in photos” », « Knowing how much to eat… », « Book my action plan », « Free 15-min call with your coach », « Later »), sans espace insécable ni aucune valeur saisie",
       avantDernier.n === 0 && avantDernier.poses === 0 && avantDernier.calc === 0 && avantDernier.L === 0 && V.struct && V.textes && pl.juste && ecr(db, "calc_perso", ID).length === 1, detail(C, V) + " · " + JSON.stringify([avantDernier, pl, C && C.tout]));
     ok("anglais : lien exact (declic_calculateur, pré-rempli) ; bordure dorée et bouton doré du thème clair, « Later » gris souligné ; 390 px sans débordement",
       V.lien && V.style, detail(C, V));
@@ -564,11 +564,11 @@ const detail = (C, V) => JSON.stringify(C ? { sig: C.sig, n: C.n, enfants: C.enf
       n1.n === 0 && (contenuDe(db, ID, "mens") || {}).pstart === 72 && egal(codesAttente(m1), ["declic_premiere_pesee"]), JSON.stringify([n1, m1]) + " · " + resume(db));
     await visite(page, 1, ACCUEIL, "#dc-accomp"); await page.waitForSelector("#invitation-declic_premiere_pesee", { timeout: 6000 }).catch(() => null); await attendre(page, 1800);
     const Cp = await carteVue(page, "declic_premiere_pesee"), Vp = verifCarte(Cp, "declic_premiere_pesee", true, k, PHOTOS.en), plp = await placeVue(page, "declic_premiere_pesee", "entete");
-    ok("anglais, le lendemain : l'accueil montre la carte en haut, juste après l'en-tête : « Your starting point is set. », « Your goal: “Loving how I look in photos” », « From today, we measure your progress… », « Get my action plan », « 15 min with Lucas · free », « Later » ; lien declic_premiere_pesee ; thème clair, 390 px",
+    ok("anglais, le lendemain : l'accueil montre la carte en haut, juste après l'en-tête : « Your starting point is set. », « Your goal: “Loving how I look in photos” », « From today, we measure your progress… », « Book my action plan », « Free 15-min call with your coach », « Later » ; lien declic_premiere_pesee ; thème clair, 390 px",
       Vp.struct && Vp.textes && Vp.lien && Vp.style && plp.juste, detail(Cp, Vp) + " · " + JSON.stringify(plp));
     await capturer(page, "accueil-en-clair.png", "#invitation-declic_premiere_pesee", true);
     const o = await ouvrirCalendly(c, page, '[data-inv-cal="declic_premiere_pesee"]'), cl = ((challengeDe(db, ID).cta || {}).clics) || [], m2 = await memoire(page, ID);
-    ok("clic sur « Get my action plan » de la carte : l'onglet ouvert reçoit exactement le lien declic_premiere_pesee (faux Calendly) ; clic noté en base (challenge.cta.clics : source declic_premiere_pesee, jour, date) et sur l'appareil (clic)",
+    ok("clic sur « Book my action plan » de la carte : l'onglet ouvert reçoit exactement le lien declic_premiere_pesee (faux Calendly) ; clic noté en base (challenge.cta.clics : source declic_premiere_pesee, jour, date) et sur l'appareil (clic)",
       o.url === lienAtt("declic_premiere_pesee", k) && o.recus.length === 1 && cl.length === 1 && cl[0].source === "declic_premiere_pesee" && typeof cl[0].jour === "number" && ISO.test(cl[0].date) && !!m2 && ISO.test(m2.clic),
       JSON.stringify([o, cl, m2]) + " · " + resume(db));
   });
@@ -681,7 +681,7 @@ const detail = (C, V) => JSON.stringify(C ? { sig: C.sig, n: C.n, enfants: C.enf
     await page.goto(URL0 + "#/calculateur"); await pret(page, "#tdee"); await attendre(page, 800);
     await page.click("#calc-ok"); await page.waitForSelector("#invitation-declic_calculateur", { timeout: 6000 }).catch(() => null); await attendre(page, 1800);
     const o = await ouvrirCalendly(c, page, '[data-inv-cal="declic_calculateur"]'), cl = ((challengeDe(db, ID).cta || {}).clics) || [], m0 = await memoire(page, ID);
-    ok("clic sur « Récupérer mon plan d'action » de la carte : l'onglet ouvert reçoit exactement le lien declic_calculateur ; clic noté en base (source declic_calculateur, jour, date) en UNE écriture de challenge, et sur l'appareil (clic)",
+    ok("clic sur « Réserver mon plan d'action » de la carte : l'onglet ouvert reçoit exactement le lien declic_calculateur ; clic noté en base (source declic_calculateur, jour, date) en UNE écriture de challenge, et sur l'appareil (clic)",
       o.url === lienAtt("declic_calculateur", k) && o.recus.length === 1 && cl.length === 1 && cl[0].source === "declic_calculateur" && typeof cl[0].jour === "number" && ecr(db, "challenge", ID).length === 1 && !!m0 && ISO.test(m0.clic),
       JSON.stringify([o, cl, m0]) + " · " + resume(db));
     await visite(page, 1, "#/mensurations", "#add");
@@ -737,7 +737,7 @@ const detail = (C, V) => JSON.stringify(C ? { sig: C.sig, n: C.n, enfants: C.enf
   });
 
   /* =================== E. « J'ai déjà choisi mon créneau » =================== */
-  await bloc("E. case « J'ai déjà choisi mon créneau »", async () => {
+  await bloc("E. case « J'ai déjà réservé »", async () => {
     const k = 6, ID = PID(k);
     const C0 = { version: 1, jours: {}, cta: { clics: [] }, reserve: avant(J) };
     /* sur l'appareil, une invitation en attente d'un autre jour (Commence ici) */
@@ -752,8 +752,8 @@ const detail = (C, V) => JSON.stringify(C ? { sig: C.sig, n: C.n, enfants: C.enf
     const pesee = await nbCartes(page);
     await aller(page, "#/formation", 1800); await page.waitForSelector('[data-coche="m1g"]'); await page.check('[data-coche="m1g"]'); await attendre(page, 2000);
     const mindset = await nbCartes(page), m1 = await memoire(page, ID);
-    ok("case cochée en base (challenge.reserve) : accueil (pastille « Bilan réservé le … »), calcul enregistré, toute première pesée, 7e case du Mindset : aucune carte nulle part ; aucune lecture intake+challenge (déjà en cache depuis l'accueil : la décision se prend sans relire)",
-      acc.n.n === 0 && /Bilan réservé le/.test(acc.pastille) && calc.n === 0 && pesee.n === 0 && mindset.n === 0 && mindset.poses === 0 && ecr(db, "calc_perso", ID).length === 1 && ecr(db, "mens", ID).length === 1
+    ok("case cochée en base (challenge.reserve) : accueil (pastille « C'est réservé : … »), calcul enregistré, toute première pesée, 7e case du Mindset : aucune carte nulle part ; aucune lecture intake+challenge (déjà en cache depuis l'accueil : la décision se prend sans relire)",
+      acc.n.n === 0 && /^C'est réservé/.test(acc.pastille) && calc.n === 0 && pesee.n === 0 && mindset.n === 0 && mindset.poses === 0 && ecr(db, "calc_perso", ID).length === 1 && ecr(db, "mens", ID).length === 1
         && ((contenuDe(db, ID, "formation") || {}).coches || {}).m1g === true && lecturesInv(db).length === 0,
       JSON.stringify([acc, calc, pesee, mindset, lecturesInv(db)]) + " · " + resume(db));
     ok("… rien d'ajouté en attente ni compté (attente = l'ancienne seule, vues vides, jour inchangé)", !!m1 && egal(codesAttente(m1), ["formation_commence_ici"]) && egal(m1.vues, {}) && m1.jour === JOUR(-1), JSON.stringify(m1));
@@ -792,7 +792,7 @@ const detail = (C, V) => JSON.stringify(C ? { sig: C.sig, n: C.n, enfants: C.enf
       a0.n.n === 0 && !a0.fini && a0.L === 0 && a0.w === 0 && !!dep && /fo-depart-fini/.test(dep.cls) && dep.t === "Départ lancé ✓" && pl.juste && !!(await page.$("#fo-presentation iframe")),
       JSON.stringify([a0, dep, pl]));
     const L = lecturesInv(db);
-    ok("carte formation_commence_ici : structure, textes EXACTS (« Bien joué, ton départ est lancé. », « Ton objectif : « M'aimer sur les photos » », « Prochaine étape : ton plan d'action personnalisé, offert, en 15 min avec Lucas. »), lien formation_commence_ici, style ; une lecture intake+challenge ; en base : formation.depart.video seul (une écriture)",
+    ok("carte formation_commence_ici : structure, textes EXACTS (« Bien joué, ton départ est lancé. », « Ton objectif : « M'aimer sur les photos » », « Prochaine étape : ton plan d'action, pour savoir quoi faire ces prochaines semaines. »), lien formation_commence_ici, style ; une lecture intake+challenge ; en base : formation.depart.video seul (une écriture)",
       V.struct && V.textes && V.lien && V.style && L.length === 1 && lectureExacte(L[0], ID) && saisies(db).length === 1 && ecr(db, "formation", ID).length === 1 && ISO.test(((contenuDe(db, ID, "formation") || {}).depart || {}).video || ""),
       detail(C, V) + " · " + resume(db));
     /* anglais, thème clair : les 3 actions déjà faites → la carte à l'ouverture de la page */
@@ -803,7 +803,7 @@ const detail = (C, V) => JSON.stringify(C ? { sig: C.sig, n: C.n, enfants: C.enf
     await p2.waitForSelector("#invitation-formation_commence_ici", { timeout: 6000 }).catch(() => null); await attendre(p2, 1800);
     const C2 = await carteVue(p2, "formation_commence_ici"), V2 = verifCarte(C2, "formation_commence_ici", true, k2, PHOTOS.en), pl2 = await placeVue(p2, "formation_commence_ici", "fo_depart");
     const dep2 = await p2.evaluate(() => { const d = document.getElementById("fo-depart"); return d ? d.textContent.replace(/\s+/g, " ").trim() : null; }), m2 = await memoire(p2, ID2);
-    ok("anglais, thème clair, les 3 actions déjà faites : à l'ouverture de #/formation, « You're off ✓ » puis la carte (« Nice work, you're off to a start. », « Your goal: “Loving how I look in photos” », « Next step: your personalized action plan, free, in 15 min with Lucas. », lien formation_commence_ici) ; notée vue sur l'appareil ; rien d'écrit en base",
+    ok("anglais, thème clair, les 3 actions déjà faites : à l'ouverture de #/formation, « You're off ✓ » puis la carte (« Nice work, you're off to a start. », « Your goal: “Loving how I look in photos” », « Next step: your action plan, so you know what to do over the next weeks. », lien formation_commence_ici) ; notée vue sur l'appareil ; rien d'écrit en base",
       V2.struct && V2.textes && V2.lien && V2.style && pl2.juste && dep2 === "You're off ✓" && !!m2 && ISO.test(m2.vues.formation_commence_ici || "") && saisies(db2).length === 0,
       detail(C2, V2) + " · " + JSON.stringify([pl2, dep2, m2]) + " · " + resume(db2));
   });

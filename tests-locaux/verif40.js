@@ -71,10 +71,10 @@ const CAL = "https://calendly.com/mhx-coaching/ton-plan-d-action-offert-15-min-a
 const lienPre = src => CAL + "?utm_source=app&utm_medium=bouton&utm_content=" + src + "&name=L%C3%A9a%20D%C3%A9mo&first_name=L%C3%A9a&last_name=D%C3%A9mo&email=l%40e.fr";
 /* v61 (lot 2, vocabulaire commun) : le bouton unique partout où le bilan est proposé au prospect (avant : « Réserver mon
    bilan » / « Book my assessment ») et sa petite ligne dessous (nouvelle) */
-const CTA = { fr: "Récupérer mon plan d'action", en: "Get my action plan" };
-const SOUS = { fr: "15 min avec Lucas · offert", en: "15 min with Lucas · free" };
+const CTA = { fr: "Réserver mon plan d'action", en: "Book my action plan" };
+const SOUS = { fr: "Appel de 15 min avec ton coach, offert", en: "Free 15-min call with your coach" };
 /* la note de la carte « Ce que l'accompagnement ajoute », sous son bouton (avant : « Un bilan de 30 minutes… ») */
-const NOTE_ACCOMP = { fr: "15 min avec Lucas pour faire le point sur ton objectif. Offert.", en: "15 min with Lucas to go over your goal. Free." };
+const NOTE_ACCOMP = { fr: "Appel de 15 min avec ton coach, offert", en: "Free 15-min call with your coach" };
 /* v61 : les textes français passent par typoFr (espace insécable avant « : ; ? ! » et dans « ») : comparés après
    remplacement des espaces insécables (U+00A0, U+202F) par des espaces simples. (norm, plus haut, ne le fait pas : sa
    classe ne contient que des espaces simples.) */
@@ -361,7 +361,7 @@ const cliquerVerrou = async (c, page) => {
        bilan » ni « 30 minutes » sur l'accueil */
     const sousAcc = await page.evaluate(z => ({ haut: (document.querySelector(z + " header.masthead .actions + p.dc-cta-sous.dc-haut-sous") || {}).textContent || null,
       note: (document.querySelector("#dc-accomp .actions + p.note") || {}).textContent || null }), DC_ZONE).catch(() => ({}));
-    ok("prospect jour 4 : « Récupérer mon plan d'action » sur l'accueil (en-tête + carte « Ce que l'accompagnement ajoute »), Calendly pré-rempli, utm_content=accueil_haut / accueil_accompagnement, « 15 min avec Lucas · offert » sous le bouton du haut et « 15 min avec Lucas pour faire le point sur ton objectif. Offert. » sous celui de la carte ; plus de « Réserver mon bilan » ni de « 30 minutes »",
+    ok("prospect jour 4 : « Réserver mon plan d'action » sur l'accueil (en-tête + carte « Ce que l'accompagnement ajoute »), Calendly pré-rempli, utm_content=accueil_haut / accueil_accompagnement, « Appel de 15 min avec ton coach, offert » sous le bouton du haut et « Appel de 15 min avec ton coach, offert » sous celui de la carte ; plus de « Réserver mon bilan » ni de « 30 minutes »",
       cals.length === 2 && cals.every(x => x.href === lienPre(x.src) && x.t === CTA.fr && x.cible === "_blank") && cals.map(x => x.src).join() === "accueil_haut,accueil_accompagnement"
       && plat(sousAcc.haut).trim() === SOUS.fr && plat(sousAcc.note).trim() === NOTE_ACCOMP.fr && !/Réserver mon bilan|30 minutes/.test(plat(acc)), JSON.stringify(cals) + " | " + JSON.stringify(sousAcc));
     ok("prospect jour 4 : bloc Speed Formation ouvert pendant la découverte (lien « Ouvrir la Speed Formation »)", !!(await page.$('#dc-formation a[href="#/formation"]')) && !(await texte(page, "#dc-formation")).includes(TEXTE_FORMATION));
@@ -427,7 +427,7 @@ const cliquerVerrou = async (c, page) => {
     const tc = await toutLeTexte(page);
     /* v61 (lot 2, décision 4) : le texte court dit « dont tes clics sur « Récupérer mon plan d'action » » (avant : « Réserver
        mon bilan ») */
-    ok("prospect : le volet « Conditions d'utilisation et confidentialité » s'ouvre depuis le profil (texte capturé pour le contrôle des prix) ; v61 : « dont tes clics sur « Récupérer mon plan d'action » », plus de « Réserver mon bilan »", okCond && tc.includes(HEBERGEMENT.fr) && plat(tc).includes("dont tes clics sur « " + CTA.fr + " »") && !plat(tc).includes("Réserver mon bilan"), okCond ? (tc.includes(HEBERGEMENT.fr) ? "clics : " + (/dont tes clics sur[^.]*/.exec(plat(tc)) || ["introuvable"])[0] : "« " + HEBERGEMENT.fr + " » introuvable") : "bouton #mc-conditions absent");
+    ok("prospect : le volet « Conditions d'utilisation et confidentialité » s'ouvre depuis le profil (texte capturé pour le contrôle des prix) ; v61 : « dont tes clics sur « Réserver mon plan d'action » », plus de « Réserver mon bilan »", okCond && tc.includes(HEBERGEMENT.fr) && plat(tc).includes("dont tes clics sur « " + CTA.fr + " »") && !plat(tc).includes("Réserver mon bilan"), okCond ? (tc.includes(HEBERGEMENT.fr) ? "clics : " + (/dont tes clics sur[^.]*/.exec(plat(tc)) || ["introuvable"])[0] : "« " + HEBERGEMENT.fr + " » introuvable") : "bouton #mc-conditions absent");
     textesFr += "\n" + tc;
     await page.keyboard.press("Escape"); await attendre(page, 300);
     ok("prospect : aucune écriture pendant toute la visite (accueil, navigation, pages verrouillées, formation, profil, conditions) — aucune requête non-GET vers /rest/v1/*", db.requetes.length === 0 && db.ecritures.length === 0, db.requetes.join(" ; "));
@@ -441,7 +441,7 @@ const cliquerVerrou = async (c, page) => {
     const der = ec.length ? ec[ec.length - 1] : null;
     const clics = der && der.contenu && der.contenu.cta && Array.isArray(der.contenu.cta.clics) ? der.contenu.cta.clics : [];
     const clic = clics[clics.length - 1] || {};
-    ok("prospect : clic « Récupérer mon plan d'action » sur #/nutrition verrouillé — Calendly s'ouvre dans un nouvel onglet avec le lien pré-rempli (utm_content=verrou_nutrition)", popUrl === lienPre("verrou_nutrition") && db.calendly.length === 1 && db.calendly[0] === lienPre("verrou_nutrition"), manque + (popUrl || "aucun onglet") + " | " + db.calendly.join(" ; "));
+    ok("prospect : clic « Réserver mon plan d'action » sur #/nutrition verrouillé — Calendly s'ouvre dans un nouvel onglet avec le lien pré-rempli (utm_content=verrou_nutrition)", popUrl === lienPre("verrou_nutrition") && db.calendly.length === 1 && db.calendly[0] === lienPre("verrou_nutrition"), manque + (popUrl || "aucun onglet") + " | " + db.calendly.join(" ; "));
     ok("prospect : ce clic est noté dans la clé « challenge » (cta.clics : source verrou_nutrition, jour 4, date) et rien d'autre n'est écrit (une seule requête non-GET)", db.requetes.length === 1 && /^POST \/rest\/v1\/donnees/.test(db.requetes[0]) && ec.length === 1 && der.outil === "challenge" && clics.length === 1 && clic.source === "verrou_nutrition" && clic.jour === 4 && /^\d{4}-\d{2}-\d{2}T/.test(clic.date || ""), manque + db.requetes.join(" ; ") + " | " + JSON.stringify(ec.map(e => ({ outil: e.outil, cta: e.contenu && e.contenu.cta }))));
     const suivi = await page.evaluate(() => { try { return JSON.parse(localStorage.getItem("mhx_tracking") || "[]").map(e => e.event); } catch (e) { return []; } });
     ok("prospect : le clic est aussi compté dans le suivi local (call_cta_clicked)", suivi.includes("call_cta_clicked"), manque + JSON.stringify(suivi));
@@ -500,7 +500,7 @@ const cliquerVerrou = async (c, page) => {
        « 15 min with Lucas to go over your goal. Free. » sous celui de la carte ; plus de « Book my assessment » ni de « 30-minute » */
     const sousAcc = await page.evaluate(z => ({ haut: (document.querySelector(z + " header.masthead .actions + p.dc-cta-sous.dc-haut-sous") || {}).textContent || null,
       note: (document.querySelector("#dc-accomp .actions + p.note") || {}).textContent || null }), DC_ZONE).catch(() => ({}));
-    ok("prospect en anglais : accueil « Discovery » (v52 : sans « Day n/7 »), boutons « Get my action plan », « 15 min with Lucas · free » sous celui du haut, « 15 min with Lucas to go over your goal. Free. » sous celui de la carte ; plus de « Book my assessment » ni de « 30-minute »", /^\s*Discovery\s+Hello/.test(acc) && !/Day \d/.test(acc) && cals.length === 2 && cals.every(x => x === CTA.en)
+    ok("prospect en anglais : accueil « Discovery » (v52 : sans « Day n/7 »), boutons « Book my action plan », « Free 15-min call with your coach » sous celui du haut, « Free 15-min call with your coach » sous celui de la carte ; plus de « Book my assessment » ni de « 30-minute »", /^\s*Discovery\s+Hello/.test(acc) && !/Day \d/.test(acc) && cals.length === 2 && cals.every(x => x === CTA.en)
       && (sousAcc.haut || "").trim() === SOUS.en && (sousAcc.note || "").trim() === NOTE_ACCOMP.en && !/Book my assessment|30-minute|30 minutes/.test(acc), acc.slice(0, 160) + " | " + JSON.stringify(cals) + " | " + JSON.stringify(sousAcc));
     textesEn += "\n" + await toutLeTexte(page);
     /* les 5 autres pages verrouillées, cachées ou non (leurs avantages traduits passent au contrôle des prix) */
@@ -520,7 +520,7 @@ const cliquerVerrou = async (c, page) => {
     const okCond = await cliquer(page, "#mc-conditions"); await attendre(page, 500);
     const tc = await toutLeTexte(page);
     /* v61 (lot 2, décision 4) : « including your clicks on “Get my action plan” » (avant : “Book my assessment”) */
-    ok("prospect en anglais : le volet des conditions s'ouvre depuis le profil, en anglais (texte capturé pour le contrôle des prix) ; v61 : « including your clicks on “Get my action plan” », plus de « Book my assessment »", okCond && tc.includes(HEBERGEMENT.en) && tc.includes("including your clicks on “" + CTA.en + "”") && !tc.includes("Book my assessment"), okCond ? (tc.includes(HEBERGEMENT.en) ? "clics : " + (/including your clicks on[^.]*/.exec(tc) || ["introuvable"])[0] : "« " + HEBERGEMENT.en + " » introuvable") : "bouton #mc-conditions absent");
+    ok("prospect en anglais : le volet des conditions s'ouvre depuis le profil, en anglais (texte capturé pour le contrôle des prix) ; v61 : « including your clicks on “Book my action plan” », plus de « Book my assessment »", okCond && tc.includes(HEBERGEMENT.en) && tc.includes("including your clicks on “" + CTA.en + "”") && !tc.includes("Book my assessment"), okCond ? (tc.includes(HEBERGEMENT.en) ? "clics : " + (/including your clicks on[^.]*/.exec(tc) || ["introuvable"])[0] : "« " + HEBERGEMENT.en + " » introuvable") : "bouton #mc-conditions absent");
     textesEn += "\n" + tc;
     await page.keyboard.press("Escape"); await attendre(page, 300);
     /* v52 (lot D) : fonction supprimée — « jour 8 : #/formation verrouillée en anglais » (plus de verrou au jour 8) ; la

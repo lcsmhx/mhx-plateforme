@@ -55,8 +55,8 @@ const server = http.createServer((req, res) => {
 });
 const res = []; const ok = (n, c, d) => res.push((c ? "  ✓ " : "  ✗ ") + n + (c ? "" : "  — " + (d || "")));
 /* v64 (lot 5, brief V2 A1 et A2) : sous-titre et case des conditions de l'inscription, FR et EN (textes du brief, mot pour mot) */
-const SOUS_FR = "Gratuit, pour toujours : calculateur de calories, suivi de ton poids et de tes mensurations, et la Speed Formation avec ses vidéos, programmes et plans alimentaires.";
-const SOUS_EN = "Free, forever: calorie calculator, weight and measurement tracking, and the Speed Formation course with its videos, workout programs and meal plans.";
+const SOUS_FR = "Ton calculateur de calories, ton suivi de poids et la Speed Formation pour poser tes bases en 14 jours. Inscris-toi pendant la bêta : tout reste gratuit pour toi, à vie.";
+const SOUS_EN = "Your calorie calculator, weight tracking and the Speed Formation to build your foundations in 14 days. Sign up during the beta: it stays free for you, for life.";
 const CGU_FR = "J'ai 18 ans ou plus et j'accepte les CGU et la politique de confidentialité.", CGU_EN = "I'm 18 or older and I accept the Terms of Use and the Privacy Policy.";
 const PROSPECT = "00000000-0000-4000-8000-000000000c04", EQUIPE = "00000000-0000-4000-8000-0000000000e1", NOUVEAU = "00000000-0000-4000-8000-000000000c05";
 /* instant « il y a n jours » (midi, heure locale) : les dates d'inscription suivent le jour du test.
@@ -355,7 +355,7 @@ const lireTuiles = page => page.$$eval("#tb-vue .tb-tuile", l => l.map(t => {
        v74 : plus de champ Nom : nom "" (profils.nom vide, comme avant la v52) */
     ok("inscription : POST /auth/v1/signup avec le prénom et un nom vide (v74 : plus de champ Nom), consentement daté + version des CGU (CONFIG.textes_legaux.cgu_version, « 2026-10-15 » servie, = DECOUVERTE.accords.conditions, ≠ version du texte court), newsletter null (case vide) + version « 2026-09-30 », aucun accord santé (ni consentement_sante ni sante_version), plus d'emails_suivi (v44, v52, v64)",
       db.inscriptions.length === 1 && md.prenom === "Zoé" && md.nom === "" && isoRe.test(md.consentement || "") && version.cgu === LEGAUX_TEST.cgu_version && version.accords === LEGAUX_TEST.cgu_version && md.conditions_version === LEGAUX_TEST.cgu_version && !!version.court && md.conditions_version !== version.court
-      && md.newsletter === null && md.newsletter_version === "2026-09-30" && Object.keys(md).sort().join(",") === "conditions_version,consentement,newsletter,newsletter_version,nom,prenom" && ins.email === "nouvelle@exemple.fr",
+      && md.newsletter === null && md.newsletter_version === "2026-10-11" && Object.keys(md).sort().join(",") === "conditions_version,consentement,newsletter,newsletter_version,nom,prenom" && ins.email === "nouvelle@exemple.fr",
       db.inscriptions.length + " " + JSON.stringify(md) + " attendu " + JSON.stringify(version));
     ok("inscription : connecté ensuite, et prospect", await page.evaluate(() => Auth.connecte() && Auth.estProspect()).catch(() => false));
     /* le compte neuf arrive sur la Découverte au jour 1, questionnaire court à remplir, pas encore de bouton Calendly */
