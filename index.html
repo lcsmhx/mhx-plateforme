@@ -55,8 +55,17 @@ var MHX_JS = [
     "js/connexion.js",
     "js/demarrage.js"
 ];
+/* v76 (tâche 9) : MHX_SOCLE = les fichiers de MHX_JS qui suffisent à l'écran de connexion et d'inscription (visiteur sans
+   session) ; ils sont chargés d'abord, le reste de MHX_JS après le chargement de la page. MHX_SOCLE est à tenir à jour :
+   un fichier dont l'écran de connexion a besoin doit y être (même ordre que MHX_JS). */
+var MHX_SOCLE = ["js/config.js", "js/boite-a-outils.js", "js/i18n.js", "js/interface.js", "js/auth-store.js", "js/installation.js", "js/connexion.js", "js/demarrage.js"];
+var MHX_CONNU = true; try { MHX_CONNU = !!(localStorage.getItem("mhx_session") || sessionStorage.getItem("mhx_session")); } catch (e) {}
 document.write(MHX_CSS.map(function (f) { return '<link rel="stylesheet" href="' + f + '?v=' + MHX_FICHIERS + '">'; }).join(""));
-document.write(MHX_JS.map(function (f) { return '<script defer src="' + f + '?v=' + MHX_FICHIERS + '"><\/script>'; }).join(""));
+document.write((MHX_CONNU ? MHX_JS : MHX_SOCLE).map(function (f) { return '<script defer src="' + f + '?v=' + MHX_FICHIERS + '"><\/script>'; }).join(""));
+if (!MHX_CONNU) window.addEventListener("load", function () { setTimeout(function () {
+  MHX_JS.filter(function (f) { return MHX_SOCLE.indexOf(f) < 0; }).forEach(function (f) {
+    var s = document.createElement("script"); s.src = f + "?v=" + MHX_FICHIERS; s.async = false; document.body.appendChild(s); });
+}, 0); });
 </script>
 
 <!-- Icone du site : le logo blanc sur le fond sombre de l'application.
