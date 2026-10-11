@@ -106,7 +106,17 @@
    brancheGit(dossier) : la branche git du dossier (par défaut la copie qui contient ce fichier), "" si git échoue.
    forcerLegaux(texte, valeurs) : le texte avec la PREMIÈRE valeur de chaque emplacement remplacée par celle de valeurs
      (LEGAUX_TEST par défaut ; un nom absent de valeurs garde la valeur du fichier) : pour la retouche d'une suite qui a
-     besoin de liens valides (écran d'inscription, carte de l'accord santé). */
+     besoin de liens valides (écran d'inscription, carte de l'accord santé).
+   v78 (tâche 3) : forcerTurnstile(texte, cle, profil) / valeursTurnstile(texte)
+     le CAPTCHA Turnstile (CONFIG.turnstile, js/config.js : « cle_site: "…" » puis, juste dessous, « profil: true|false ») :
+     la PREMIÈRE clé remplacée par cle (et profil par la valeur voulue, si elle est donnée). servirFichier (et sourceServie) le
+     servent ÉTEINT par défaut (cle_site "", profil false), à toutes les suites, AVANT la retouche de la suite, quelle que
+     soit la valeur du fichier : le jour où Lucas remplit la clé, aucune suite ne charge le script de Cloudflare. verif83
+     l'allume dans sa retouche, avec les clés de test officielles de Cloudflare (TURNSTILE_TEST).
+     valeursTurnstile : { cles: [toutes les valeurs « cle_site: "…" »], profils: [« profil: true|false » juste après] }.
+     problemeTurnstile(cle) : "" pour une clé publiable (vide = éteint, ou au format d'une clé de site « 0x… »), sinon la
+     raison : clé de TEST de Cloudflare (1x0000…, 2x0000…, 3x0000… : elle laisserait passer les robots ou bloquerait tout le
+     monde en ligne), longueur d'une clé SECRÈTE (35 caractères ; une clé de site en a 24), ou format inattendu. */
 const fs = require("fs"), path = require("path");
 const TYPES = { ".css": "text/css; charset=utf-8", ".js": "text/javascript; charset=utf-8" };
 
@@ -130,6 +140,7 @@ function servirFichier(req, res, html, retouche, lire){
   if (!lire) t = duDisque(t);   // v59 : le disque, vu à travers la simulation (jamais une révision git)
   t = forcerNouveautes(t);   // v59 : toujours « test », AVANT la retouche de la suite (ses avec() partent de « test »)
   t = forcerTelephone(t, false);   // v72 (A) : téléphone obligatoire éteint par défaut, AVANT la retouche (verif80 et rig l'allument)
+  t = forcerTurnstile(t, "", false);   // v78 (tâche 3) : CAPTCHA éteint par défaut, AVANT la retouche (verif83 l'allume)
   if (retouche) t = retouche(t);
   res.writeHead(200, { "Content-Type": TYPES["." + m[3]], "Cache-Control": "no-store" });
   res.end(t);
@@ -148,7 +159,7 @@ function morceaux(html, lire){
 }
 function source(html, lire){ return morceaux(html, lire).join("\n"); }
 /* v59 : ce que les suites servent — la page telle quelle, ses fichiers css/ et js/ avec les interrupteurs forcés (servirFichier) */
-function sourceServie(html, lire){ return morceaux(html, lire).map((t, i) => i ? forcerTelephone(forcerNouveautes(t), false) : t).join("\n"); }
+function sourceServie(html, lire){ return morceaux(html, lire).map((t, i) => i ? forcerTurnstile(forcerTelephone(forcerNouveautes(t), false), "", false) : t).join("\n"); }
 
 function forcerInscription(texte, valeur){
   return texte.replace(/inscription_libre: (?:true|false)\b/, "inscription_libre: " + (valeur ? "true" : "false"));
@@ -165,6 +176,29 @@ function forcerTelephone(texte, valeur){
 function valeursTelephone(texte){
   return Array.from(String(texte).matchAll(/\btelephone_obligatoire: (true|false)\b/g), m => m[1]);
 }
+
+/* v78 (tâche 3) : CAPTCHA Turnstile (CONFIG.turnstile, js/config.js), voir l'en-tête */
+const TURNSTILE_TEST = Object.freeze({ passe: "1x00000000000000000000AA", echoue: "2x00000000000000000000AB",
+  passe_invisible: "1x00000000000000000000BB", echoue_invisible: "2x00000000000000000000BB", interactif: "3x00000000000000000000FF" });
+function forcerTurnstile(texte, cle, profil){
+  let t = String(texte).replace(/\bcle_site: "[^"\n]*"/, () => "cle_site: " + JSON.stringify(String(cle == null ? "" : cle)));
+  if (profil != null) t = t.replace(/(\bcle_site: "[^"\n]*",\s*profil: )(?:true|false)\b/, (x, a) => a + (profil ? "true" : "false"));
+  return t;
+}
+function valeursTurnstile(texte){
+  const t = String(texte);
+  return { cles: Array.from(t.matchAll(/\bcle_site: "([^"\n]*)"/g), m => m[1]),
+    profils: Array.from(t.matchAll(/\bcle_site: "[^"\n]*",\s*profil: (true|false)\b/g), m => m[1]) };
+}
+function problemeTurnstile(cle){
+  const c = String(cle == null ? "" : cle);
+  if (c === "") return "";
+  if (Object.values(TURNSTILE_TEST).includes(c) || /^[123]x0{10,}/i.test(c)) return "clé de TEST de Cloudflare (« " + c + " ») : en ligne, elle laisserait passer les robots ou bloquerait tout le monde — la clé de SITE du widget de Cloudflare (0x…) est attendue";
+  if (c.length >= 32) return "valeur de " + c.length + " caractères : la longueur d'une clé SECRÈTE (jamais dans le dépôt, qui est public : seulement dans Supabase) ; la clé de SITE (0x…, 24 caractères) est attendue";
+  if (!/^0x[0-9A-Za-z_-]{10,}$/.test(c)) return "format inattendu (« " + montrerTs(c) + " ») : la clé de SITE de Cloudflare commence par 0x, sans espace";
+  return "";
+}
+const montrerTs = s => String(s).replace(/[^\x20-\x7e]/g, c => "\\u" + c.charCodeAt(0).toString(16).padStart(4, "0"));
 
 /* v59 : interrupteurs des nouveautés (CONFIG.nouveautes, js/config.js), servis sur « test » par le banc */
 const NOUVEAUTES = ["feedback_dimanche", "suivi_visites_clients"], NOUVEAUTES_BANC = Object.fromEntries(NOUVEAUTES.map(n => [n, "test"]));
@@ -389,6 +423,7 @@ function forcerLegaux(texte, valeurs){
 }
 
 module.exports = { servirFichier, source, sourceServie, listes, forcerInscription, valeursInscription, forcerTelephone, valeursTelephone,
+  TURNSTILE_TEST, forcerTurnstile, valeursTurnstile, problemeTurnstile,
   NOUVEAUTES, forcerNouveautes, valeursNouveaute, simulation, refusSimulation,
   LEGAUX, LEGAUX_TEST, LIENS_TEST, valeursLegales, lienDrive, idsDeTest, idModele, problemeLien, documentDrive, legauxBorne,
   legauxManquants, legauxExecutes, legauxEcarts, legauxAilleurs, verrouLegaux, modeLegaux, brancheGit, forcerLegaux };
