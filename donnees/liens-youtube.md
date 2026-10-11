@@ -184,7 +184,7 @@ Occurrences dans les 18 programmes : **361**.
 - Élévations latérales de bras
 - Équilibre unipodal avec appui
 
-## Ajouts du 23/09/2026 — programme de Stéphanie (Claude)
+## Ajouts du 23/09/2026 — programme d'une cliente (Claude)
 
 Versions machine ou guidées exactes, vérifiées le 23/09/2026 : lien actif, lisible en intégré, format paysage (pas de Short), moins de 5 min. Source prioritaire : la chaîne AZEOO (même bibliothèque que les liens de Grok Bot) ; autres chaînes seulement quand AZEOO n'a pas la version machine.
 
@@ -209,7 +209,7 @@ Versions machine ou guidées exactes, vérifiées le 23/09/2026 : lien actif, li
 | Presse à cuisses pieds hauts | High and Wide Leg Press: How To | https://www.youtube.com/watch?v=OIq-tsCx_9k |
 | Mollets à la presse | Calf Press On The Leg Press Machine | https://www.youtube.com/watch?v=1YjDjUOHFUM |
 
-## Ajouts du 23/09/2026 (2) — échauffement ostéo-articulaire de Stéphanie (Claude)
+## Ajouts du 23/09/2026 (2) — échauffement ostéo-articulaire du programme d'une cliente (Claude)
 
 AZEOO cherché en premier : seule une version assise des cercles de chevilles existe (Slow Ankle Circles), pas les versions debout demandées. Autres chaînes, vérifiées : lien actif, lisible en intégré, pas de Short, moins d'une minute et demie.
 

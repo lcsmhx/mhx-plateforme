@@ -43,7 +43,7 @@ Un commentaire en tête de fichier donne la carte des sections, dans l'ordre :
 **C'est le seul endroit qui parle à la base.** Toute nouvelle donnée persistée doit passer par `Store`, jamais par un `fetch` écrit dans un outil.
 
 ### CONFIG (section [D]) — tout ce qui se change sans toucher au code
-- `marque` : nom, programme (`SPEEDFORM 1.0`), instagram, pseudo, email `contact@lcsmhxcoaching.com`, `formulaire_bilan` (vide, non utilisé).
+- `marque` : nom, programme (`SPEEDFORM 1.0`), instagram, pseudo, email de contact de la marque (ancienne adresse, retirée du dépôt public le 12/10/2026 ; aujourd'hui `CONFIG.marque.email`), `formulaire_bilan` (vide, non utilisé).
 - `supabase` : `url` + `cle` **publishable** (voir §7).
 - `calcul` : `proteines_g_par_kg:2.2`, `lipides_g_par_kg:1.0`, `deficit_perte:0.10`, `surplus_prise:0.10`, `facteur_base:1.20`, `bonus_10000_pas:0.15`, `plafond_pas:16670`, `bonus_par_heure:0.03`, `plafond_heures:15`, `seuil_alerte_glucides:50`, `valeurs_depart`.
 - `mensurations` : 10 zones, 2 affichées au départ, `max_courbes:4`.

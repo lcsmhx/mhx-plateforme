@@ -14,7 +14,7 @@ Régimes : omnivore, vegetarien, vegan, pescetarien, paleo, sans_gluten, sans_la
 ## exercices.json
 **172** fiches, une par nom d’exercice distinct dans `programmes.json` (18 programmes, 455 occurrences). Cues MHX originales (tutoiement), pas de copie Muscle & Strength / Bodybuilding.com / JEFIT / Alpha Progression / Azeoo. **104** fiches ont un `lien` YouTube watch (démo, pas un catalogue) ; **68** restent vides (match trop incertain). `Gainage latéral` pointe vers **Side Plank Up Down** (variante up-down ; pas de Side Plank simple dans la bibliothèque). Détail : `liens-youtube.md`.
 
-**23/09/2026 (Claude)** : +16 fiches machines/guidées pour le programme de Stéphanie → **188** fiches, **122** avec `lien`. Liens aussi posés dans `liensexercices.json` (l'import en base lit ce fichier en priorité). Liste dans `liens-youtube.md`, section du 23/09.
+**23/09/2026 (Claude)** : +16 fiches machines/guidées pour le programme d'une cliente → **188** fiches, **122** avec `lien`. Liens aussi posés dans `liensexercices.json` (l'import en base lit ce fichier en priorité). Liste dans `liens-youtube.md`, section du 23/09.
 
 **23/09/2026 (Claude, 2)** : +8 fiches de mobilité (échauffement ostéo-articulaire) → **196** fiches, **130** avec `lien`.
 
@@ -34,8 +34,12 @@ def slug(nom: str) -> str:
 
 Exemple : `"Développé couché"` → `"developpe-couche"`. Aucune collision de slug sur les 172 noms. Schéma : `id`, `nom`, `groupe`, `muscles`, `materiel`, `niveau`, `type`, `execution`, `erreurs`, `respiration`, `alternatives`, `lien`. Enums `groupe` / `materiel` / `niveau` / `type` documentés dans le fichier (valeurs FR). `alternatives` = 1–3 ids qui existent dans ce même fichier.
 
-## programme-stephanie.json
-Programme client de Stéphanie (semaine 1, 6 séances : Échauffement ostéo-articulaire, Jambes A, Haut du corps, Jambes B, 2 bonus). Même structure que le `programme` enregistré dans la table `donnees` (outil `programme`) : `nom`, `note`, `maj`, `seances[].exercices[]` avec `nom` (= `nom` de la fiche, pour que la fiche s'ouvre), `id`, `lien`, `series`, `reps`, `tempo`, `repos`, `note`, `alternative` (+ `superset` sur le bonus 2). Pas de RPE. L'app n'affiche côté client que `note` : tempo et alternative y sont donc aussi écrits en clair. Échauffement commun placé en tête de chaque séance.
+## Programmes de clients : jamais ici
+Le programme nominatif d'une cliente (23/09) a été retiré du dépôt public le 12/10/2026 (mission v78) : `donnees/` est public
+(lu par l'onglet Catalogue sur raw.githubusercontent.com), il ne contient aucune donnée de client (prénom, programme, poids,
+santé, email). Les programmes des clients vivent dans la base (table `donnees`, clé `programme`).
+**Liste blanche** : le banc refuse tout fichier de `donnees/` qui n'est pas dans la liste de `tests-locaux/garde-depot.js`
+(un nouveau fichier de catalogue s'y ajoute dans le même commit, après vérification qu'il ne contient aucune donnée personnelle).
 
 ## recettes.json
 **248** recettes du quotidien (petit-déj / déjeuner / dîner / collation). Paléo petit-déj : 21 (filtre positif). Paléo déjeuner : 18. Vegan petit-déj : 20. Vegan déjeuner : 24. Schéma : `id`, `nom`, `moment`, `temps_min`, `portions`, `ingredients`, `etapes` — **pas** de champs `allergenes` / `regimes` (Claude calcule l’intersection des ingrédients). `aliment_id` pointe vers aliments.json. Macros recalculées par l’app. 0 id manquant.
