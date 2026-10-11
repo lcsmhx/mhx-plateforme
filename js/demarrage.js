@@ -180,12 +180,19 @@ const Retour = {
     try { Provenance.capter(); } catch(e){}   // v72 (F) : le code d'un lien d'inscription (?ref=…), gardé jusqu'à l'inscription
     /* v72 (B) : #/inscription → création de compte, #/connexion → connexion ; un lien d'email (jetons, message,
        changement d'adresse) garde la connexion, comme avant ; sinon l'écran d'entrée de l'appareil (entreePortail) */
-    portail(/inscription/.test(location.hash) ? "inscription" : (/connexion/.test(location.hash) || lienEmail || premierLien || emailChange) ? "connexion" : entreePortail());
+    /* v78 (tâche 2) : ?ouvrir=connexion (page ouverte depuis le navigateur d'Instagram, de TikTok ou de Facebook) : la connexion,
+       même sur un appareil neuf, et l'adresse le dit (#/connexion) ; #/inscription garde la priorité */
+    const parLien = !/inscription|connexion/.test(location.hash) && !lienEmail && !premierLien && !emailChange && typeof Integre !== "undefined" && Integre.versConnexion();
+    if (parLien){ try { history.replaceState(null, "", location.pathname + location.search + "#/connexion"); } catch(e){} }
+    portail(/inscription/.test(location.hash) ? "inscription" : (/connexion/.test(location.hash) || lienEmail || premierLien || emailChange || parLien) ? "connexion" : entreePortail());
     if (lienEmail) setTimeout(() => { const z = $("co-err"); if (z){ z.className = "erreur"; z.textContent = trad(DECOUVERTE.inscription.lien_rate); } }, 60);
     else if (premierLien || emailChange) setTimeout(() => { const z = $("co-err"); if (z){ z.className = "erreur ok"; z.textContent = trad(DECOUVERTE.inscription[emailChange ? "email_change" : "premier_lien"]); } }, 60);
     return;
   }
   Auth.noterAppareil();   // v72 (B) : une session sur cet appareil : il s'ouvrira sur la connexion, même après « Se déconnecter »
+  /* v78 (tâche 2) : dans le navigateur d'Instagram, de TikTok ou de Facebook, ?ouvrir=connexion dans l'adresse (la page ouverte
+     ensuite dans Safari ou Chrome mène à la connexion) ; ailleurs rien */
+  try { if (typeof Integre !== "undefined") Integre.adresse(); } catch(e){}
   const ok = await Auth.assurer();
   /* v48 : sessions partagees entre onglets, modifications gardees sur l'appareil */
   window.addEventListener("storage", e => Auth.depuisAutreOnglet(e));
