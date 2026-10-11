@@ -395,13 +395,18 @@ label.fo-case{display:flex;align-items:flex-start;gap:10px;cursor:pointer;flex:1
 .installe .fermer:hover{color:var(--ink)}
 .installe .actions{margin-top:0}
 /* v78 (tâche 2) : carte « Dernière étape » (navigateur d'Instagram, de TikTok ou de Facebook), sous l'en-tête de l'accueil du
-   prospect — bordure dorée comme les invitations, compacte ; la croix « Plus tard » (44 px) en haut à droite. Ses étapes
-   (.integre-etapes) servent aussi à la bannière d'installation dans ces navigateurs. */
+   prospect — bordure dorée comme les invitations, compacte ; « Plus tard » écrit en toutes lettres en haut à droite (44 px de
+   haut : visible sans défiler, même à 320 × 568), et en bas. Ses étapes (.integre-etapes) servent aussi à la bannière
+   d'installation dans ces navigateurs. */
 .integre-carte{position:relative;border-color:var(--accent-line)}
-.integre-carte h2{margin:0 0 8px;padding-right:30px}
-.integre-carte .fermer{position:absolute;top:6px;right:6px;background:none;border:0;color:var(--ink-3);font-size:20px;line-height:1;
-  cursor:pointer;min-width:44px;min-height:44px;padding:0}
+.integre-carte h2{margin:0 0 8px;padding-right:96px}
+.integre-carte .fermer{position:absolute;top:4px;right:4px;background:none;border:0;color:var(--ink-2);font:inherit;font-size:14px;
+  line-height:1;cursor:pointer;min-width:44px;min-height:44px;padding:0 12px;text-decoration:underline;text-underline-offset:3px}
 .integre-carte .fermer:hover{color:var(--ink)}
+/* la bannière d'installation dans ces navigateurs (gabarit à part : la bannière normale ne change pas) : la croix et
+   « Je suis sur Android / iPhone » assez grands pour le doigt */
+.installe-integre .fermer{min-width:44px;min-height:44px;top:4px;right:4px}
+.installe-integre .lien-bouton{min-height:40px}
 .integre-ids{margin:0 0 10px;font-size:14px;color:var(--ink-2);line-height:1.5}
 .integre-ids b{color:var(--ink);overflow-wrap:anywhere}
 .integre-carte .integre-etapes ol{margin:0;padding-left:20px;font-size:14px;color:var(--ink-2);line-height:1.5}

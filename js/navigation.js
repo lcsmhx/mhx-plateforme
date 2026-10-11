@@ -419,8 +419,12 @@ async function afficher(id, silencieux, sansCompte){
   const pause = !verrouille && Sante.ECRANS.indexOf(outil.id) > -1 && Sante.aDemander();
   /* v51 : page vue par un prospect (la Decouverte compte elle-meme questionnaire et resultat) */
   if (!sansCompte && outil.id !== "accueil" && outil.id !== "decouverte") Activite.page(verrouille ? "verrou-" + outil.id : outil.id);
+  /* v78 (tâche 2) : la bannière d'installation, en bas de la page comme avant ; en haut (avant l'en-tête) seulement après une
+     connexion arrivée par ?ouvrir=connexion (Integre.suiteConnexion : la suite des étapes vues dans Instagram, TikTok ou
+     Facebook). Ailleurs, la page est identique au caractère près. */
+  const installation = bandeauInstallation(), installationHaut = !!installation && typeof Integre !== "undefined" && Integre.suiteConnexion();
   $("vue").innerHTML = `
-    ${bandeauConsultation()}
+    ${bandeauConsultation()}${installationHaut ? installation : ""}
     ${outil.sans_entete ? "" : `<header class="masthead">
       <span class="eyebrow">${Store.idConsulte ? esc(Store.nomConsulte || "client") + " — " : (CONFIG.marque.programme ? esc(CONFIG.marque.programme) + " — " : "")}${esc(nomOnglet(outil))}</span>
       <h1>${Store.idConsulte ? esc(nomOnglet(outil)) : esc(outil.titre)}</h1>
@@ -428,7 +432,7 @@ async function afficher(id, silencieux, sansCompte){
     </header>`}
     ${verrouille ? pageVerrouillee(outil) : (pause ? Sante.carteHTML(outil.id) : "") + htmlSur(outil)}
     ${avecDonnees ? blocSauvegarde() : ""}
-    ${bandeauInstallation()}`;
+    ${installationHaut ? "" : installation}`;
 
   construireNav();   // les libelles dependent du mode : on les rafraichit
   /* Les outils que le coach REMPLIT depuis la fiche d'un client. Oublier

@@ -16,11 +16,14 @@ const CLE_INSTALL = "mhx_installe";
      sys, inscrit, ferme } (rien de personnel ; pas dans Auth.CLES_APPAREIL : il part à la déconnexion).
    - Carte « Dernière étape : mets l'app sur ton téléphone » (outilDecouverte.rendre, branche accueil : jamais avant la page
      « Ton plan d'action ») pour ce prospect, tant qu'il est dans un de ces navigateurs, à chaque affichage de l'accueil
-     jusqu'à « Plus tard » (ou la croix) ; ensuite plus jamais (mémoire de l'appareil) : la bannière prend le relais aux
+     jusqu'à « Plus tard » (écrit en haut à droite, et en bas) ; ensuite plus jamais (mémoire de l'appareil) : la bannière prend le relais aux
      visites suivantes. Carte affichée : ni invitation (v62) ni bannière.
-   - Adresse : avec une session dans un de ces navigateurs, « ?ouvrir=connexion » (ancre gardée) : la page ouverte ensuite
-     dans Safari ou Chrome (appareil neuf pour l'app) mène à #/connexion, pas à l'inscription ; retiré à la connexion
-     (Provenance.adresseSans). Connexion arrivée ainsi dans un navigateur normal : la bannière normale dès cette visite.
+   - Adresse : session d'un compte inscrit dans ce navigateur (drapeau), toujours dedans : « ?ouvrir=connexion » (ancre
+     gardée, sauf une ancre d'inscription ou de connexion, qui n'y sert à rien) : la page ouverte ensuite dans Safari ou
+     Chrome (appareil neuf pour l'app) mène à #/connexion, pas à l'inscription ; retiré à la connexion
+     (Provenance.adresseSans). Jamais pour un autre compte (coach, client) : un lien copié puis partagé ouvre l'écran
+     d'entrée habituel. Connexion arrivée ainsi dans un navigateur normal : la bannière normale dès cette visite, en haut de
+     la page, avec les étapes de DECOUVERTE.integre (sans la connexion, déjà faite).
    - Bannière d'installation dans ces navigateurs : les étapes de l'app (iPhone), ou le bouton Chrome (Android).
    Textes : DECOUVERTE.integre (et .en). Aucune écriture en base. CONFIG.marque.navigateur_integre !== true : exactement
    comme avant (rien de tout ceci). Rien ne s'exécute au chargement de ce fichier. */
@@ -45,30 +48,35 @@ const Integre = {
   ici(ua){ try { if (!this.allume()) return null; const a = this.app(ua), y = this.systeme(ua); return a && y ? { app: a, sys: y } : null; } catch(e){ return null; } },
   /* sans session : l'adresse demande la connexion (lien ouvert depuis un de ces navigateurs) */
   versConnexion(){ if (!this.allume()) return false; try { return new URLSearchParams(location.search).get(this.PARAM) === "connexion"; } catch(e){ return false; } },
-  /* avec une session, dans un de ces navigateurs : ?ouvrir=connexion dans l'adresse (seulement si elle change ; ancre et
-     reste de la requête gardés). Ailleurs : rien. */
+  /* avec une session dans un de ces navigateurs, compte inscrit ici (drapeau) : ?ouvrir=connexion dans l'adresse (seulement
+     si elle change ; reste de la requête gardé). L'ancre est gardée, sauf une ancre d'inscription ou de connexion (lien
+     « …/#/inscription?ref=… » touché de nouveau) : avec une session elle ne sert à rien, et ouverte ensuite dans Safari ou
+     Chrome elle mènerait à l'inscription (#/inscription garde la priorité, demarrage.js) ; retirée, l'app ouvre sa page
+     d'arrivée. Ailleurs, ou un autre compte (coach, client sans drapeau) : rien. */
   adresse(){
     if (!this.ici()) return;
     try {
-      const q = new URLSearchParams(location.search); if (q.get(this.PARAM) === "connexion") return;
+      const u = Auth.utilisateur(); if (!u || !u.id || !this.lire(u.id)) return;
+      const q = new URLSearchParams(location.search), ancre = /inscription|connexion/.test(location.hash) ? "" : location.hash;
+      if (q.get(this.PARAM) === "connexion" && ancre === location.hash) return;
       q.set(this.PARAM, "connexion");
-      history.replaceState(null, "", location.pathname + "?" + q.toString() + location.hash);
+      history.replaceState(null, "", location.pathname + "?" + q.toString() + ancre);
     } catch(e){}
   },
   /* Android : le lien qui ouvre la page dans Chrome (format documenté par Chrome ; adresse de secours si Chrome manque),
-     sur un vrai toucher seulement ; aucune donnée personnelle (le code ?ref= retiré) */
+     sur un vrai toucher seulement ; rien d'autre que ?ouvrir=connexion (ni le code ?ref=, ni les traceurs ajoutés par
+     Instagram ou Facebook : fbclid, utm_…, igsh) : aucune donnée personnelle */
   lienChrome(){
-    let q; try { q = new URLSearchParams(location.search); } catch(e){ q = new URLSearchParams(""); }
-    q.delete("ref"); q.set(this.PARAM, "connexion");
-    const cible = location.host + location.pathname + "?" + q.toString();
+    const cible = location.host + location.pathname + "?" + this.PARAM + "=connexion";
     return "intent://" + cible + "#Intent;scheme=" + String(location.protocol).replace(/:$/, "") + ";package=com.android.chrome;S.browser_fallback_url=" + encodeURIComponent(location.protocol + "//" + cible) + ";end";
   },
-  /* le drapeau du compte : l'appareil, sinon (stockage bloqué) la copie gardée pendant la visite */
+  /* le drapeau du compte : la copie de la visite d'abord (toujours la dernière écriture, même si l'appareil l'a refusée :
+     stockage plein ou bloqué), sinon l'appareil */
   _memo: {},
   lire(uid){
     if (!uid) return null;
-    let x = null; try { x = JSON.parse(localStorage.getItem(this.CLE + uid) || "null"); } catch(e){ x = null; }
-    if (!x && this._memo[uid]) x = this._memo[uid];
+    let x = this._memo[uid] || null;
+    if (!x) try { x = JSON.parse(localStorage.getItem(this.CLE + uid) || "null"); } catch(e){ x = null; }
     if (!x || typeof x !== "object" || Array.isArray(x) || typeof x.inscrit !== "string" || !x.inscrit) return null;
     return { app: this.NOMS[x.app] ? x.app : "", sys: x.sys === "android" ? "android" : x.sys === "ios" ? "ios" : "", inscrit: x.inscrit.slice(0, 40), ferme: typeof x.ferme === "string" ? x.ferme.slice(0, 40) : "" };
   },
@@ -103,7 +111,8 @@ const Integre = {
     if (vars) Object.keys(vars).forEach(k => { s = s.split("{" + k + "}").join(esc(vars[k])); });
     return s;
   },
-  /* les étapes (contenu du bloc .integre-etapes) ; p : préfixe des id (integre : la carte, inst : la bannière) */
+  /* les étapes (contenu du bloc .integre-etapes) ; p : préfixe des id (integre : la carte, inst : la bannière). Android : le
+     bouton Chrome, juste dessous ce qu'il faut faire s'il n'ouvre rien (à lire avant de toucher), puis les étapes de tous */
   etapesHTML(sys, app, p){
     const T = this.textes(), li = x => `<li>${this.html(x)}</li>`;
     if (sys === "android") return `<div class="actions integre-ouvrir"><a class="btn" id="${p}-chrome" data-integre-chrome href="${esc(this.lienChrome())}">${esc(typoFr(trad(T.chrome || "")))}</a></div>`
@@ -111,12 +120,15 @@ const Integre = {
     const o = T.ios_ouvrir || {};
     return `<ol>${[o[app] || o.instagram].concat(T.ios || []).map(li).join("")}</ol>`;
   },
+  /* la bannière normale après une connexion arrivée par ?ouvrir=connexion (suiteConnexion) : les étapes de la carte qui
+     restent (Safari : Partager, Sur l'écran d'accueil, ouvrir l'icône ; Chrome : ⋮ puis Installer), sans la connexion */
+  etapesSuite(ios){ const T = this.textes(); return ((ios ? T.ios : T.android) || []).slice(1).map(x => `<li>${this.html(x)}</li>`).join(""); },
   carteHTML(){
     const ici = this.ici(), T = this.textes(), u = Auth.utilisateur() || {};
     const email = typeof u.email === "string" ? u.email.trim().slice(0, 254) : "";
     const tard = esc(typoFr(trad(T.plus_tard || "Plus tard")));
     return `<section class="panel integre-carte" id="integre-carte" aria-labelledby="integre-titre">
-      <button type="button" class="fermer" id="integre-fermer" aria-label="${tard}">×</button>
+      <button type="button" class="fermer" id="integre-fermer">${tard}</button>
       <h2 id="integre-titre">${esc(typoFr(trad(T.titre || "")))}</h2>
       <p class="integre-ids" id="integre-ids">${email ? this.html(T.identifiants, { e: email }) : this.html(T.identifiants_sans)}</p>
       <div class="integre-etapes" id="integre-etapes">${this.etapesHTML(ici.sys, ici.app, "integre")}</div>
@@ -214,18 +226,19 @@ function visiteSuivante(){
 }
 
 function bandeauInstallation(){
-  /* v78 (tâche 2) : après une connexion arrivée par ?ouvrir=connexion (navigateur normal), dès cette visite ; dans le
-     navigateur d'Instagram, de TikTok ou de Facebook, les étapes de l'app (Integre) ; sinon exactement comme avant */
-  const I = typeof Integre !== "undefined" ? Integre : null;
-  if (!Auth.connecte() || Store.idConsulte || dejaInstalle() || (!visiteSuivante() && !(I && I.suiteConnexion()))) return "";
+  /* v78 (tâche 2) : après une connexion arrivée par ?ouvrir=connexion (navigateur normal), dès cette visite, avec les étapes
+     de DECOUVERTE.integre (data-integre-suite ; navigation.js la pose en haut de la page) ; dans le navigateur d'Instagram,
+     de TikTok ou de Facebook, les étapes de l'app (Integre) ; sinon exactement comme avant */
+  const I = typeof Integre !== "undefined" ? Integre : null, suite = !!(I && I.suiteConnexion());
+  if (!Auth.connecte() || Store.idConsulte || dejaInstalle() || (!visiteSuivante() && !suite)) return "";
   const ici = I && I.ici();
   if (ici) return I.retientBandeau() ? "" : I.bandeauHTML(ici);
   const ios = /iphone|ipad|ipod/i.test(navigator.userAgent || "");
-  return `<div class="installe" id="installe">
+  return `<div class="installe" id="installe"${suite ? " data-integre-suite" : ""}>
     <button type="button" class="fermer" id="inst-plus-tard" aria-label="Plus tard">×</button>
     <h3>Mets ${esc(CONFIG.marque.nom)} sur ton écran d'accueil</h3>
     <p>Tu l'ouvres d'un doigt, elle s'affiche en plein écran, et tu n'as plus à retenir l'adresse.</p>
-    <ol id="inst-etapes">${ios ? etapesIOS() : etapesAndroid()}</ol>
+    <ol id="inst-etapes">${suite ? I.etapesSuite(ios) : ios ? etapesIOS() : etapesAndroid()}</ol>
     <p class="note" style="margin:0 0 12px">
       <button type="button" class="lien-bouton" id="inst-bascule">${ios ? "Je suis sur Android ou ordinateur" : "Je suis sur iPhone"}</button>
     </p>
@@ -252,13 +265,14 @@ function brancherInstallation(){
   if (!boite) return;
   /* v78 (tâche 2) : la bannière du navigateur d'Instagram, de TikTok ou de Facebook (Integre.bandeauHTML) */
   const ici = boite.classList.contains("installe-integre") && typeof Integre !== "undefined" ? Integre.ici() : null;
+  const suite = !ici && boite.hasAttribute("data-integre-suite") && typeof Integre !== "undefined";   // après ?ouvrir=connexion
   let ios = ici ? ici.sys === "ios" : /iphone|ipad|ipod/i.test(navigator.userAgent || "");
 
   const bascule = $("inst-bascule");
   if (bascule) bascule.addEventListener("click", () => {
     ios = !ios;
     if (ici){ Integre.basculer(ici, ios); bascule.textContent = ios ? "Je suis sur Android" : "Je suis sur iPhone"; return; }
-    $("inst-etapes").innerHTML = ios ? etapesIOS() : etapesAndroid();
+    $("inst-etapes").innerHTML = suite ? Integre.etapesSuite(ios) : ios ? etapesIOS() : etapesAndroid();
     bascule.textContent = ios ? "Je suis sur Android ou ordinateur" : "Je suis sur iPhone";
   });
 
