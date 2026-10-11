@@ -180,6 +180,8 @@ HORS_BANC="verif44 verif45 verif46 verif47 verif49"
 # 65, 66, 67, 68, 70 adaptées (textes recopiés), nombres inchangés.
 # v76 (tâche 7) : inscription dans l'ordre prénom, email, mot de passe, numéro, CGU, newsletter : verif80 A2 (ordre exact) adaptée,
 # nombre inchangé.
+# v76 (tâche 8) : page « Ton plan d'action » : p#dc-obstacle (« Ce qui coince : « … » ») après l'objectif : verif51 et verif67
+# (ordre des éléments) adaptées, nombres inchangés.
 attendu() {
   case "$1" in
     flux) echo 19;; verif34) echo 13;; verif35) echo 14;; verif36) echo 13;; verif37) echo 12;; verif38) echo 66;;
