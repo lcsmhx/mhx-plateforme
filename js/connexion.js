@@ -42,6 +42,127 @@ async function routeDepuisAdresse(){
   afficher(cible);
 }
 
+/* ---------------------- v78 (tâche 3) : CAPTCHA CLOUDFLARE TURNSTILE ----------------------
+   Allumé seulement si CONFIG.turnstile.cle_site est remplie. Vide (ou absent : config.js gardé en cache), l'app fait
+   exactement comme avant : aucun élément ajouté, aucun script chargé, aucune attente, mêmes requêtes. Le script de
+   Cloudflare n'est chargé qu'à l'ouverture de la connexion et de la création de compte (et du bloc « Changer mon mot de
+   passe » du Profil si CONFIG.turnstile.profil vaut true), jamais ailleurs ni dans index.html. Widget en rendu explicite,
+   langue et thème de l'app, « compact » sous 300 px utiles (320 px de large), hauteur réservée en CSS (.co-captcha). Le
+   jeton est lu au clic, 4 s d'attente au plus, puis la requête part avec ou sans jeton : Supabase tranche, le bouton
+   n'est jamais bloqué. Un jeton ne sert qu'une fois : remise à zéro après chaque envoi raté (erreur réseau comprise) ;
+   widget retiré quand l'écran change ; « tour » ignore un script ou un rappel qui arrive après un changement d'écran. */
+const Captcha = {
+  SCRIPT: "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=mhxTurnstilePret",
+  ATTENTE: 4000, CHARGEMENT: 15000,
+  id: null, zone: null, etat: "", tour: 0, envoye: false, _charge: null, _attentes: [], _veille: false,
+  /* traduits dans I18N.en (i18n.js, bloc v78 tâche 3) ; {e} = CONFIG.marque.email */
+  TEXTES: {
+    attente: "La vérification anti-robot n'est pas encore terminée. Attends qu'elle soit validée (ou coche la case), puis réessaie.",
+    refus: "La vérification anti-robot n'a pas été acceptée. Elle vient d'être relancée : attends qu'elle soit validée, puis réessaie.",
+    injoignable: "La vérification anti-robot n'a pas pu se charger. Vérifie ta connexion, recharge la page, puis réessaie. Si ça continue, écris à ton coach à {e}.",
+    echec: "La vérification anti-robot a échoué. Recharge la page, puis réessaie. Si ça continue, écris à ton coach à {e}.",
+    navigateur: "Ton navigateur ne permet pas la vérification anti-robot. Mets-le à jour ou ouvre l'app dans un autre navigateur (Safari, Chrome). Si ça continue, écris à ton coach à {e}.",
+    indispo: "La vérification anti-robot est momentanément indisponible : réessaie dans une minute.",
+    eteint: "Impossible pour le moment (vérification de sécurité) : écris à ton coach à {e}, il règle ça rapidement.",
+    profil: "Le changement de mot de passe n'est pas possible pour le moment (vérification anti-robot) : écris à ton coach à {e}, il s'en occupe."
+  },
+  cle(){ try { const c = CONFIG.turnstile && CONFIG.turnstile.cle_site; return typeof c === "string" ? c.trim() : ""; } catch(e){ return ""; } },
+  actif(){ return !!this.cle(); },
+  surProfil(){ try { return this.actif() && CONFIG.turnstile.profil === true; } catch(e){ return false; } },
+  html(mode){ return this.actif() && (mode === "connexion" || mode === "inscription") ? '<div class="co-captcha" id="co-captcha" data-notr></div>' : ""; },
+  htmlProfil(){ return this.surProfil() ? '<div class="co-captcha mc-captcha" id="mc-captcha" data-notr></div>' : ""; },
+  /* le script, une fois par page ; raté (injoignable, 15 s) : rejet, et un écran suivant réessaiera */
+  charger(){
+    if (window.turnstile && typeof window.turnstile.render === "function") return Promise.resolve(window.turnstile);
+    if (this._charge) return this._charge;
+    this._charge = new Promise((ok, ko) => {
+      const s = document.createElement("script");
+      let fini = false, m = null;
+      const fin = erreur => {
+        if (fini) return; fini = true; clearTimeout(m);
+        if (!erreur && window.turnstile && typeof window.turnstile.render === "function") return ok(window.turnstile);
+        this._charge = null; try { s.remove(); } catch(e){}
+        ko(erreur || new Error("turnstile absent"));
+      };
+      window.mhxTurnstilePret = () => fin(null);
+      s.src = this.SCRIPT; s.async = true;
+      s.onerror = () => fin(new Error("script injoignable"));
+      m = setTimeout(() => fin(new Error("délai dépassé")), this.CHARGEMENT);
+      document.head.appendChild(s);
+    });
+    return this._charge;
+  },
+  /* ecran : « connexion », « inscription » ou « profil » (action du widget) ; idZone : le conteneur (#co-captcha par défaut) */
+  monter(ecran, idZone){
+    if (!this.actif()) return;
+    this.oublier();
+    const z = $(idZone || "co-captcha"); if (!z) return;
+    const n = this.tour; this.zone = z; this.etat = "charge";
+    const compact = z.clientWidth > 0 && z.clientWidth < 300;
+    z.classList.toggle("compact", compact);
+    /* Profil : la page quittée (autre outil), le widget est retiré */
+    if (!this._veille){ this._veille = true; window.addEventListener("hashchange", () => setTimeout(() => { if (this.zone && !this.zone.isConnected) this.oublier(); }, 800)); }
+    this.charger().then(T => {
+      if (n !== this.tour || !z.isConnected) return;
+      try {
+        this.id = T.render(z, {
+          sitekey: this.cle(), action: ecran, language: I18N.langue === "en" ? "en" : "fr",
+          theme: Theme.actuel === "light" ? "light" : "dark", size: compact ? "compact" : "normal", appearance: "always",
+          "response-field": false, "refresh-expired": "auto",
+          callback: t => { if (n === this.tour){ this.etat = "pret"; this.liberer(t); } },
+          "error-callback": () => { if (n === this.tour){ this.etat = "echec"; this.liberer(""); } return true; },
+          "expired-callback": () => { if (n === this.tour) this.etat = "charge"; },
+          "timeout-callback": () => { if (n === this.tour) this.etat = "charge"; },
+          "unsupported-callback": () => { if (n === this.tour){ this.etat = "navigateur"; this.liberer(""); } }
+        });
+      } catch(e){ this.etat = "echec"; this.liberer(""); }
+    }, () => { if (n === this.tour){ this.etat = "injoignable"; this.liberer(""); } });
+  },
+  jeton(){
+    try {
+      if (this.id == null || !window.turnstile) return "";
+      if (typeof turnstile.isExpired === "function" && turnstile.isExpired(this.id)) return "";
+      const t = turnstile.getResponse(this.id);
+      return typeof t === "string" ? t : "";
+    } catch(e){ return ""; }
+  },
+  /* le jeton, ATTENTE ms au plus ; tout de suite si le widget a échoué. Ne rejette jamais. */
+  attendreJeton(){
+    const t = this.jeton();
+    if (t || !this.zone || !this.zone.isConnected || ["echec", "injoignable", "navigateur"].includes(this.etat)) return Promise.resolve(t);
+    return new Promise(ok => {
+      let m = null;
+      const fini = x => { clearTimeout(m); const i = this._attentes.indexOf(fini); if (i > -1) this._attentes.splice(i, 1); ok(x || ""); };
+      m = setTimeout(() => fini(this.jeton()), this.ATTENTE);
+      this._attentes.push(fini);
+    });
+  },
+  liberer(t){ const l = this._attentes.slice(); this._attentes = []; l.forEach(f => { try { f(t); } catch(e){} }); },
+  async prendreJeton(){ const t = await this.attendreJeton(); this.envoye = !!t; return t; },
+  /* après un envoi qui n'a pas abouti : un nouveau jeton (celui-ci est consommé, même si le mot de passe était faux) */
+  apresEssai(){
+    try { if (this.id != null && window.turnstile){ turnstile.reset(this.id); if (this.etat !== "navigateur") this.etat = "charge"; } } catch(e){}
+    this.envoye = false;
+  },
+  oublier(){
+    try { if (this.id != null && window.turnstile) turnstile.remove(this.id); } catch(e){}
+    this.id = null; this.zone = null; this.etat = ""; this.envoye = false; this.tour++; this.liberer("");
+  },
+  /* le message d'un refus du CAPTCHA par Supabase (400 captcha_failed, 500 « captcha verification process failed »),
+     "" pour toute autre erreur ; reconnu au mot « captcha » (Auth.appel ne garde pas error_code), AVANT Auth.indispo */
+  erreur(e){
+    if (!/captcha/i.test(String((e && e.message) || ""))) return "";
+    const p = { e: String((CONFIG.marque && CONFIG.marque.email) || "") };
+    if (!this.actif()) return trad(this.TEXTES.eteint, p);   // CAPTCHA allumé dans Supabase avant la clé : écrire au coach
+    if (this.envoye) return trad(e && e.statut >= 500 ? this.TEXTES.indispo : this.TEXTES.refus);
+    return trad(this.TEXTES[["injoignable", "echec", "navigateur"].includes(this.etat) ? this.etat : "attente"], p);
+  },
+  erreurProfil(e){
+    if (!/captcha/i.test(String((e && e.message) || ""))) return "";
+    return this.surProfil() ? this.erreur(e) : trad(this.TEXTES.profil, { e: String((CONFIG.marque && CONFIG.marque.email) || "") });
+  }
+};
+
 /* ---------------------- ÉCRAN DE CONNEXION ---------------------- */
 /* v64 (brief V2, A2) : un lien vers un PDF des textes legaux (CONFIG.textes_legaux) ; lien absent ou non valide (« à
    compléter », branche de travail : le banc de main refuse de publier) → le mot seul, sans lien */
@@ -59,6 +180,7 @@ function portail(mode){
   mode = (mode === "oubli") ? "oubli" : (mode === "inscription" && libre) ? "inscription" : "connexion";
   const titre = mode === "oubli" ? "Mot de passe oublié" : mode === "inscription" ? DECOUVERTE.inscription.titre : "Connexion à ton espace";
   const bouton = mode === "oubli" ? "Recevoir le lien" : mode === "inscription" ? DECOUVERTE.inscription.bouton : "Se connecter";
+  Captcha.oublier();   // v78 (tâche 3) : l'ancien widget (autre écran) est retiré avant que la page soit remplacée
   document.body.innerHTML = `
   <div class="portail">
     <div class="carte-co">
@@ -88,7 +210,7 @@ function portail(mode){
       <label class="co-rester co-newsletter"><input type="checkbox" id="c-newsletter"><span>${esc(DECOUVERTE.inscription.newsletter)}</span></label>`
         : mode !== "oubli" ? `<div class="champ"><label for="c-mdp">Mot de passe</label><input id="c-mdp" type="password" autocomplete="current-password"></div>` : ""}
       ${mode === "connexion" ? `<label class="co-rester"><input type="checkbox" id="c-rester" checked><span>Rester connecté</span></label>` : ""}
-      <div id="co-err" role="alert"></div>
+      ${Captcha.html(mode)}<div id="co-err" role="alert"></div>
       ${mode !== "oubli" ? `<button class="btn" id="c-go">${esc(bouton)}</button>` : ""}
       ${mode === "inscription" ? `<p class="co-note">${esc(DECOUVERTE.inscription.note)}</p>` : ""}
       ${CONFIG.marque.version && mode !== "inscription" ? `<p class="co-aide">v${esc(CONFIG.marque.version)}</p>` : ""}
@@ -158,6 +280,7 @@ function portail(mode){
       if (!cgu || !cgu.checked){ err(trad(DECOUVERTE.inscription.cgu_manque)); fautif("c-cgu"); return; }
       b.disabled = true; b.textContent = "Un instant…";
       try {
+        const jeton = Captcha.actif() ? await Captcha.prendreJeton() : "";   // v78 (tâche 3) : 4 s au plus, puis envoi avec ou sans jeton
         /* v44 : l'acceptation des conditions est datee ; P0.5 : consentement sante separe, horodate.
            v52 : prenom ET nom ; chaque accord porte sa date et la version de son texte (DECOUVERTE.accords) ;
            la newsletter (facultative) remplace les « emails de suivi » : emails_suivi n'est plus envoye (il reste lu
@@ -170,7 +293,7 @@ function portail(mode){
         const ok_news = !!($("c-newsletter") && $("c-newsletter").checked);
         const connecte = await Auth.inscrire(email, mdp, prenom, "", {
           consentement: maintenant, conditions_version: A.conditions,
-          newsletter: ok_news ? maintenant : null, newsletter_version: A.newsletter });
+          newsletter: ok_news ? maintenant : null, newsletter_version: A.newsletter }, jeton);
         if (connecte){
           /* v72 (A) : la clé « contact » du nouveau compte (la session existe déjà), 6 s au plus ; ratée : gardée sur
              l'appareil, elle repart à l'ouverture qui suit (Contact.preparer) */
@@ -191,7 +314,9 @@ function portail(mode){
       } catch(e){
         const m = (e.message || "").toLowerCase();
         const invalide = m.indexOf("email") > -1 && m.indexOf("invalid") > -1;   // v76 (tâche 7) : adresse refusée par le serveur
-        err(/email rate limit/.test(m) ? trad(DECOUVERTE.inscription.trop_emails)   // v52 : limite horaire d'emails du projet
+        const cap = Captcha.erreur(e); Captcha.apresEssai();   // v78 (tâche 3) : refus du CAPTCHA d'abord ; jeton consommé : un nouveau
+        err(cap ? cap
+          : /email rate limit/.test(m) ? trad(DECOUVERTE.inscription.trop_emails)   // v52 : limite horaire d'emails du projet
           : /error sending|sending .*email|smtp/.test(m) ? trad(DECOUVERTE.inscription.envoi_rate, { p: CONFIG.marque.pseudo || "" })   // v52 : le serveur d'emails a refusé
           : /rate limit|security purposes|after \d+ seconds/.test(m) ? trad(DECOUVERTE.inscription.trop_demandes)   // v47
           : m.indexOf("already") > -1 || m.indexOf("registered") > -1 ? "Un compte existe déjà avec cet email : connecte-toi."
@@ -210,7 +335,8 @@ function portail(mode){
         await Auth.motDePasseOublie(email);
         err("Si un compte existe pour cet email, tu vas recevoir un lien.", true);
       } else {
-        await Auth.connecter(email, mdp);
+        const jeton = Captcha.actif() ? await Captcha.prendreJeton() : "";   // v78 (tâche 3) : 4 s au plus, puis envoi avec ou sans jeton
+        await Auth.connecter(email, mdp, jeton);
         /* v57 : une connexion ouvre la page d'arrivee (accueil ; tableau de bord du coach), comme apres « Se deconnecter ».
            L'adresse gardait la derniere page ouverte sur l'appareil quand la session avait pris fin sans deconnexion
            (session expiree, « Rester connecte » decoche, navigateur ferme) : on arrivait sur la Speed Formation.
@@ -224,7 +350,9 @@ function portail(mode){
       const m = (e.message || "").toLowerCase();
       /* v47 : les messages de Supabase qui arrivent sur le parcours du funnel, en francais */
       /* v71 (F) : service indisponible (5xx, coupure, delai) : une phrase claire, jamais « Erreur 540 » ni « Failed to fetch » */
-      err(Auth.indispo(e) ? trad("Service momentanément indisponible, réessaie dans une minute.")
+      const cap = Captcha.erreur(e); Captcha.apresEssai();   // v78 (tâche 3) : refus du CAPTCHA avant « Service… indisponible » (500) ; un nouveau jeton
+      err(cap ? cap
+        : Auth.indispo(e) ? trad("Service momentanément indisponible, réessaie dans une minute.")
         : m.indexOf("not confirmed") > -1 ? trad(DECOUVERTE.inscription.non_confirme)
         : /email rate limit/.test(m) ? trad(DECOUVERTE.inscription.trop_emails_compte)   // v52 : limite horaire d'emails du projet (pas forcement des inscriptions)
         : /error sending|sending .*email|smtp/.test(m) ? trad(DECOUVERTE.inscription.envoi_rate, { p: CONFIG.marque.pseudo || "" })   // v52 : « Error sending recovery email »
@@ -256,6 +384,7 @@ function portail(mode){
     valider();
   };
   document.addEventListener("keydown", portail._entree);
+  Captcha.monter(mode);   // v78 (tâche 3) : rien si la clé est vide ou sur « Mot de passe oublié »
 }
 
 /* ---------------------- ADRESSE ----------------------
@@ -279,6 +408,7 @@ function ecranVerifieEmail(email){
   const T = DECOUVERTE.inscription;
   /* le formulaire n'existe plus : la touche Entree ne doit plus chercher a l'envoyer */
   if (portail._entree){ document.removeEventListener("keydown", portail._entree); portail._entree = null; }
+  Captcha.oublier();   // v78 (tâche 3) : le formulaire et son widget disparaissent
   carte.innerHTML = `
       ${CONFIG.marque.logo ? `<img class="logo-img" src="${esc(CONFIG.marque.logo)}" alt="${esc(CONFIG.marque.nom)}">` : ""}
       <div class="logo">${esc(CONFIG.marque.nom)}</div>

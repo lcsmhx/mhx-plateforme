@@ -1067,3 +1067,15 @@ Object.assign(I18N.en, {
   "Déjà un compte ? Se connecter": "Already have an account? Log in",
   "Pas encore de compte ? Créer mon compte": "No account yet? Create my account"
 });
+
+/* v78 (tâche 3) — CAPTCHA Cloudflare Turnstile (Captcha.TEXTES, connexion.js), seulement quand il est allumé */
+Object.assign(I18N.en, {
+  "La vérification anti-robot n'est pas encore terminée. Attends qu'elle soit validée (ou coche la case), puis réessaie.": "The anti-bot check isn't finished yet. Wait until it's confirmed (or check the box), then try again.",
+  "La vérification anti-robot n'a pas été acceptée. Elle vient d'être relancée : attends qu'elle soit validée, puis réessaie.": "The anti-bot check wasn't accepted. It just restarted: wait until it's confirmed, then try again.",
+  "La vérification anti-robot n'a pas pu se charger. Vérifie ta connexion, recharge la page, puis réessaie. Si ça continue, écris à ton coach à {e}.": "The anti-bot check couldn't load. Check your connection, reload the page, then try again. If it keeps happening, email your coach at {e}.",
+  "La vérification anti-robot a échoué. Recharge la page, puis réessaie. Si ça continue, écris à ton coach à {e}.": "The anti-bot check failed. Reload the page, then try again. If it keeps happening, email your coach at {e}.",
+  "Ton navigateur ne permet pas la vérification anti-robot. Mets-le à jour ou ouvre l'app dans un autre navigateur (Safari, Chrome). Si ça continue, écris à ton coach à {e}.": "Your browser doesn't support the anti-bot check. Update it or open the app in another browser (Safari, Chrome). If it keeps happening, email your coach at {e}.",
+  "La vérification anti-robot est momentanément indisponible : réessaie dans une minute.": "The anti-bot check is temporarily unavailable: try again in a minute.",
+  "Impossible pour le moment (vérification de sécurité) : écris à ton coach à {e}, il règle ça rapidement.": "Not possible right now (security check): email your coach at {e}, they'll fix it quickly.",
+  "Le changement de mot de passe n'est pas possible pour le moment (vérification anti-robot) : écris à ton coach à {e}, il s'en occupe.": "Changing your password isn't possible right now (anti-bot check): email your coach at {e}, they'll take care of it."
+});

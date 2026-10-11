@@ -237,7 +237,7 @@ ${Auth.estCoach() ? "" : `<div id="mc-tel-bloc" style="margin:0 0 26px">
         <div><label for="mc-nouveau">Nouveau mot de passe</label><input id="mc-nouveau" type="password" autocomplete="new-password"></div>
         <div><label for="mc-nouveau2">Confirme le nouveau</label><input id="mc-nouveau2" type="password" autocomplete="new-password"></div>
       </div>
-      <div class="actions"><button class="btn ghost" id="mc-mdp">Changer mon mot de passe</button><span class="msg" id="mc-mdp-msg"></span></div>
+      ${typeof Captcha !== "undefined" ? Captcha.htmlProfil() : ""}<div class="actions"><button class="btn ghost" id="mc-mdp">Changer mon mot de passe</button><span class="msg" id="mc-mdp-msg"></span></div>
 
       <h3 style="font-family:Oswald,sans-serif;text-transform:uppercase;letter-spacing:.05em;font-size:14px;font-weight:500;color:var(--ink-2);margin:26px 0 12px">Changer mon adresse email</h3>
       ${ecrisNous("Pour changer ton adresse email, écris-nous à {e}, on s'en occupe rapidement.", "mc-email-aide", "note")}
@@ -384,6 +384,9 @@ ${Auth.estCoach() ? "" : `<div id="mc-tel-bloc" style="margin:0 0 26px">
     const bCond = $("mc-conditions");
     if (bCond) bCond.addEventListener("click", () => UI.volet({ titre: trad(DECOUVERTE.confidentialite.titre), corps: (DECOUVERTE.confidentialite.paragraphes || []).map(p => `<p>${esc(trad(p))}</p>`).join("") }));
     const bMdp = $("mc-mdp");
+    /* v78 (tâche 3) : le CAPTCHA du bloc mot de passe, seulement si CONFIG.turnstile.profil vaut true (et la clé remplie) */
+    const C = typeof Captcha !== "undefined" ? Captcha : null;
+    if (bMdp && C && C.surProfil()) C.monter("profil", "mc-captcha");
     if (bMdp) bMdp.addEventListener("click", async () => {
       const actuel = $("mc-actuel").value, nouveau = $("mc-nouveau").value, nouveau2 = $("mc-nouveau2").value;
       if (!actuel || !nouveau)      return flash("mc-mdp-msg", "Remplis les trois champs.");
@@ -391,11 +394,14 @@ ${Auth.estCoach() ? "" : `<div id="mc-tel-bloc" style="margin:0 0 26px">
       if (nouveau !== nouveau2)     return flash("mc-mdp-msg", "Les deux nouveaux mots de passe ne sont pas identiques.");
       if (nouveau === actuel)       return flash("mc-mdp-msg", "Le nouveau mot de passe est le même que l'ancien.");
       bMdp.disabled = true; flash("mc-mdp-msg", "Un instant…");
+      const avec = !!(C && C.surProfil());   // v78 (tâche 3)
       try {
-        await Auth.changerMotDePasse(actuel, nouveau);
+        const jeton = avec ? await C.prendreJeton() : "";
+        await Auth.changerMotDePasse(actuel, nouveau, jeton);
         $("mc-actuel").value = $("mc-nouveau").value = $("mc-nouveau2").value = "";
         flash("mc-mdp-msg", "Mot de passe changé. Utilise le nouveau à ta prochaine connexion.");
-      } catch(e){ flash("mc-mdp-msg", e.message || "Changement impossible."); }
+      } catch(e){ flash("mc-mdp-msg", (C && C.erreurProfil(e)) || e.message || "Changement impossible."); }
+      if (avec) C.apresEssai();   // v78 (tâche 3) : le jeton a servi (réussite ou non) : un nouveau pour le prochain changement
       bMdp.disabled = false;
     });
 
