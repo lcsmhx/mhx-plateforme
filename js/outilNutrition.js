@@ -846,8 +846,9 @@ const outilNutrition = {
       const bmr  = outilCalculateur.metabolismeDeBase(calc);
       const tdee = bmr * outilCalculateur.facteurActivite(calc).total;
       const c = CONFIG.calcul;
-      const kcal = calc.objectif === "perte" ? tdee * (1 - c.deficit_perte)
-                 : calc.objectif === "prise" ? tdee * (1 + c.surplus_prise) : tdee;
+      /* v79 : une cible pré-remplie est calculée : jamais sous le plancher (1 200 / 1 500 kcal) ; celle que le coach tape reste la sienne */
+      const kcal = Math.max(calc.objectif === "perte" ? tdee * (1 - c.deficit_perte)
+                 : calc.objectif === "prise" ? tdee * (1 + c.surplus_prise) : tdee, outilCalculateur.plancher(calc.sexe));
       const m = outilCalculateur.macros(kcal, calc.poids);
       R.cible = { kcal: Math.round(kcal), prot: Math.round(m.prot), lip: Math.round(m.lip), gluc: Math.round(m.gluc) };
       ctx.prerempli = true;

@@ -201,7 +201,7 @@ function problemeTurnstile(cle){
 const montrerTs = s => String(s).replace(/[^\x20-\x7e]/g, c => "\\u" + c.charCodeAt(0).toString(16).padStart(4, "0"));
 
 /* v59 : interrupteurs des nouveautés (CONFIG.nouveautes, js/config.js), servis sur « test » par le banc */
-const NOUVEAUTES = ["feedback_dimanche", "suivi_visites_clients"], NOUVEAUTES_BANC = Object.fromEntries(NOUVEAUTES.map(n => [n, "test"]));
+const NOUVEAUTES = ["feedback_dimanche", "suivi_visites_clients", "journal_alimentaire"], NOUVEAUTES_BANC = Object.fromEntries(NOUVEAUTES.map(n => [n, "test"]));
 /* la valeur entre guillemets, collée à « nom: » (jamais « feedback_dimanche : » d'un commentaire, js/outilSuivi.js) */
 const motifNouveaute = (nom, g) => new RegExp("\\b(" + nom + ": )\"([^\"\\n]*)\"", g ? "g" : "");
 function poserNouveautes(texte, valeurs){

@@ -148,19 +148,21 @@ const norm = t => String(t == null ? "" : t).replace(/[\u00a0\u202f]/g, " ").rep
 /* ---------- les textes attendus (brief V2, B, mot pour mot ; échec : DECOUVERTE.emails.refuse, contrat du lot 5) ----------
    v64 (décision de Lucas du 30/09) : la carte s'affiche aussi sur « Organise ta diète » : les repas prévus y sont ajoutés dans
    le texte, la phrase d'accord (entre parenthèses, après « calculs ») et le message après « Pas maintenant » ; le reste mot pour
-   mot. En anglais, le nom de l'outil tel qu'il s'affiche (la Speed Formation n'est pas traduite) : “Organise ta diète”. */
+   mot. En anglais, le nom de l'outil tel qu'il s'affiche (la Speed Formation n'est pas traduite) : “Organise ta diète”.
+   v79 (mission de Lucas du 13/10) : + les aliments notés dans le journal alimentaire, dans les 3 textes (FR et EN), le reste
+   mot pour mot. */
 const SANTE = {
   fr: { titre: "Ton accord, une seule fois",
-    texte: "Pour calculer tes calories et suivre ta progression, l'app enregistre ton poids, ta taille, tes mensurations, tes calculs et les repas prévus dans « Organise ta diète ». Ce sont des données de santé : elles restent privées, visibles seulement par toi et ton coach, et tu peux les supprimer à tout moment.",
-    phrase: "J'accepte que mes données de santé (poids, taille, mensurations, calculs, repas prévus dans « Organise ta diète ») servent à mes calculs et à mon suivi.",
+    texte: "Pour calculer tes calories et suivre ta progression, l'app enregistre ton poids, ta taille, tes mensurations, tes calculs, les repas prévus dans « Organise ta diète » et les aliments notés dans ton journal alimentaire. Ce sont des données de santé : elles restent privées, visibles seulement par toi et ton coach, et tu peux les supprimer à tout moment.",
+    phrase: "J'accepte que mes données de santé (poids, taille, mensurations, calculs, repas prévus dans « Organise ta diète », aliments notés dans le journal) servent à mes calculs et à mon suivi.",
     oui: "J'accepte", non: "Pas maintenant", lien: "En savoir plus : politique de confidentialité",
-    refus: "Pas de souci. Sans ton accord, le calculateur, le suivi et l'organisation de la diète restent en pause. Le reste de ton espace reste ouvert, et tu peux changer d'avis quand tu veux.",
+    refus: "Pas de souci. Sans ton accord, le calculateur, le suivi, l'organisation de la diète et le journal alimentaire restent en pause. Le reste de ton espace reste ouvert, et tu peux changer d'avis quand tu veux.",
     echec: "Non enregistré : réessaie dans un instant." },
   en: { titre: "Your consent, just once",
-    texte: "To calculate your calories and track your progress, the app saves your weight, height, measurements, results and the meals you plan in “Organise ta diète”. This is health data: it stays private, visible only to you and your coach, and you can delete it at any time.",
-    phrase: "I agree that my health data (weight, height, measurements, results, meals planned in “Organise ta diète”) is used for my calculations and tracking.",
+    texte: "To calculate your calories and track your progress, the app saves your weight, height, measurements, results, the meals you plan in “Organise ta diète” and the foods you log in your food diary. This is health data: it stays private, visible only to you and your coach, and you can delete it at any time.",
+    phrase: "I agree that my health data (weight, height, measurements, results, meals planned in “Organise ta diète”, foods logged in the diary) is used for my calculations and tracking.",
     oui: "I agree", non: "Not now", lien: "Learn more: Privacy Policy",
-    refus: "No problem. Without your consent, the calculator, tracking and diet planning stay paused. The rest of your space stays open, and you can change your mind anytime.",
+    refus: "No problem. Without your consent, the calculator, tracking, diet planning and food diary stay paused. The rest of your space stays open, and you can change your mind anytime.",
     echec: "Not saved: try again in a moment." }
 };
 

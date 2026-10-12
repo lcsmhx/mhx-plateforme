@@ -32,7 +32,7 @@ let lienEmail = null;   // v47 : "rate_connecte" apres un lien d'email (mot affi
    l'envoi d'une photo, ni au retour du selecteur de fichier. */
 const Retour = {
   DELAI: 5 * 60000,
-  PAGES: { mensurations: ["mens", "photos"], formation: ["formation"] },
+  PAGES: { mensurations: ["mens", "photos"], formation: ["formation"], "journal-alimentaire": ["journal_alimentaire"] },   // v79 : le journal alimentaire (tenu sur deux appareils)
   cachee: 0,          // instant du passage en arriere-plan
   selecteur: 0,       // instant du dernier clic sur un selecteur de fichier (photo) : si la page se cache dans les 5 s, le retour qui suit ne redessine rien
   parSelecteur: false,   // la page s'est cachee juste apres ce clic (le selecteur s'est ouvert)

@@ -530,3 +530,117 @@ a.ch-etape:hover .num{border-color:var(--accent-line)}
 /* v76 : petites lignes et chiffres secondaires dans la police du texte (plus la police à chasse fixe espacée) */
 .dc-cta-sous,.verrou .verrou-sous,.tile .t-sub,.tuile .t-sub,.etat,.version,.ech-repas .ech-macros{font-family:inherit;letter-spacing:0}
 .dc-cta-sous,.verrou .verrou-sous{font-size:13px}
+
+/* ==================================================================
+   v79 — JOURNAL ALIMENTAIRE (préfixe ja-) : jetons seulement, doré en accent, zones de toucher de 44 px, 320 à 390 px
+   ================================================================== */
+/* la barre de date : ‹ Aujourd'hui › */
+.ja-date{display:flex;align-items:center;gap:8px;margin:4px 0 16px}
+.ja-fleche{flex:none;width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;border-radius:999px;
+  background:var(--surface);border:1px solid var(--line);color:var(--ink);font-size:24px;line-height:1;cursor:pointer;font-family:inherit;
+  transition:border-color var(--vite),color var(--vite),background var(--vite)}
+.ja-fleche:hover{border-color:var(--accent-line);color:var(--accent)}
+.ja-fleche:disabled{opacity:.35;cursor:default;border-color:var(--line);color:var(--ink-3)}
+.ja-date-lib{flex:1;min-width:0;text-align:center;display:flex;flex-direction:column;gap:1px}
+.ja-date-lib b{font-size:17px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ja-date-lib small{font-size:12.5px;color:var(--ink-3);min-height:1em}
+/* la carte résumé : les kcal restantes en grand, la jauge dorée, les 3 macros */
+.ja-grand{display:flex;flex-direction:column;gap:2px}
+.ja-lbl{font-size:13px;color:var(--ink-2);font-weight:500}
+.ja-grand-l{display:flex;align-items:baseline;gap:8px}
+.ja-num{font-size:clamp(40px,12vw,54px);line-height:1.05;color:var(--accent)}
+.ja-jauge{margin:12px 0 0;height:10px}
+.ja-jauge.ja-plus i{background:var(--warn)}
+.ja-detail{margin:8px 0 0;font-size:13px;color:var(--ink-3)}
+.ja-calc{display:inline-flex;align-items:center;min-height:44px;margin-top:6px;color:var(--accent);font-size:14px;font-weight:500;text-decoration:none}
+.ja-calc[hidden]{display:none}
+.ja-macros{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.ja-macro{min-width:0}
+.ja-m-l{display:flex;flex-direction:column;gap:2px;margin-bottom:6px}
+.ja-m-l span{font-size:12px;color:var(--ink-3)}
+.ja-m-l b{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ja-fin{height:4px}
+.ja-fin[hidden]{display:none}
+/* une carte par repas */
+.ja .panel{animation:none}
+.ja-repas-tete{display:flex;align-items:center;gap:10px;margin:-4px 0 6px;min-height:44px}
+.ja-repas-tete h2{flex:1;min-width:0;margin:0}
+.ja-repas-kcal{font-size:14px;color:var(--ink-2);white-space:nowrap}
+.ja-menu{flex:none;width:44px;height:44px;margin:0 -10px 0 -6px;display:inline-flex;align-items:center;justify-content:center;background:none;border:0;
+  border-radius:var(--r);color:var(--ink-3);cursor:pointer;transition:color var(--vite),background var(--vite)}
+.ja-menu svg{width:20px;height:20px;fill:currentColor;stroke:none}
+.ja-menu:hover{color:var(--ink);background:var(--sunken)}
+.ja-lignes{display:flex;flex-direction:column}
+.ja-ligne{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:8px 2px;background:none;border:0;border-top:1px solid var(--line);
+  color:var(--ink);text-align:left;font-family:inherit;cursor:pointer;border-radius:0;transition:background var(--doux)}
+.ja-lignes .ja-ligne:first-child{border-top:0}
+button.ja-ligne:hover{background:var(--sunken)}
+.ja-l-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.ja-l-txt b{font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ja-l-txt small{font-size:12.5px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ja-l-kcal{flex:none;font-size:15px;color:var(--ink-2)}
+.ja-nouveau{animation:ja-eclat 1.6s ease-out}
+@keyframes ja-eclat{0%,30%{background:var(--accent-soft)}100%{background:transparent}}
+.ja-vide{margin:2px 0 4px;font-size:14px;color:var(--ink-3)}
+.ja-ajouter{width:100%;min-height:44px;margin-top:10px;color:var(--accent);border-color:var(--accent-line)}
+.ja-ajouter:hover{color:var(--accent)}
+.ja-sources{margin:14px 0 0;text-align:center;font-size:12px}
+.ja-sept{border-left:3px solid var(--accent)}
+/* la carte des accueils */
+.ja-carte .ja-num{font-size:clamp(36px,10vw,46px)}
+.ja-carte-txt{margin:0;color:var(--ink-2);font-size:14px;line-height:1.55}
+.ja-carte-a{margin-top:14px}
+a.btn.ja-btn-ajout{width:100%;min-height:44px;color:var(--accent);border-color:var(--accent-line)}
+a.btn.ja-btn-ajout:hover{color:var(--accent)}
+/* le panneau qui monte du bas (UI.ouvrir, classe ja-feuille) */
+.modale.ja-feuille{max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain}
+.modale.ja-feuille .corps{white-space:normal;color:var(--ink);font-size:15px}
+@media (max-width:560px){ .modale.ja-feuille{max-height:88dvh} .ja-f-liste{min-height:56dvh} }
+.ja-f{display:flex;flex-direction:column;gap:12px}
+.ja-q{min-height:48px}
+.ja-f h3{margin:4px 0 -4px}
+.ja-f h3[hidden]{display:none}
+.ja-res{display:flex;flex-direction:column}
+.ja-res-l{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:8px 4px;background:none;border:0;border-top:1px solid var(--line);
+  color:var(--ink);text-align:left;font-family:inherit;cursor:pointer;transition:background var(--vite)}
+.ja-res .ja-res-l:first-child{border-top:0}
+.ja-res-l:hover,.ja-res-l:focus-visible{background:var(--sunken)}
+.ja-res-k{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:0}
+.ja-res-k .readout{font-size:15px}
+.ja-res-k small{font-size:11px;color:var(--ink-3)}
+.ja-f-etat{margin:0;text-align:center}
+.ja-f-etat:empty{display:none}
+.ja-retour{align-self:flex-start;min-height:44px;padding:0 6px;margin:-6px 0 -6px -6px;background:none;border:0;color:var(--ink-2);font-family:inherit;font-size:14px;cursor:pointer}
+.ja-retour:hover{color:var(--accent)}
+.ja-f-nom{display:flex;flex-direction:column;gap:2px}
+.ja-f-nom b{font-size:18px;font-weight:600;line-height:1.3}
+.ja-f-nom small{font-size:13px;color:var(--ink-3)}
+.ja-pastilles{display:flex;flex-wrap:wrap;gap:8px}
+.ja-past{min-height:44px;padding:8px 14px;border-radius:999px;background:var(--sunken);border:1px solid var(--line-strong);color:var(--ink-2);
+  font-family:inherit;font-size:14px;cursor:pointer;max-width:100%;overflow-wrap:anywhere;text-align:left;transition:border-color var(--vite),background var(--vite),color var(--vite)}
+.ja-past[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--ink);font-weight:500}
+.ja-qte{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ja-pas{display:inline-flex;align-items:center;border:1px solid var(--line-strong);border-radius:999px;background:var(--sunken)}
+.ja-pas[hidden]{display:none}
+.ja-pas button{width:44px;height:44px;background:none;border:0;color:var(--ink);font-size:22px;line-height:1;cursor:pointer;font-family:inherit;border-radius:999px}
+.ja-pas button:disabled{color:var(--ink-3);opacity:.5;cursor:default}
+.ja-pas span{min-width:34px;text-align:center;font-size:16px}
+.ja-g{display:inline-flex;align-items:center;gap:8px;margin:0;flex:1 1 120px;min-width:0;font-size:14px;color:var(--ink-2)}
+.ja-g input{min-height:44px;max-width:140px}
+.ja-g-large input{max-width:none;flex:1}
+.ja-calcul{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 8px;padding:12px 14px;background:var(--sunken);border:1px solid var(--line);border-radius:var(--r)}
+.ja-calcul-n{font-size:32px;line-height:1;color:var(--accent)}
+.ja-calcul small{flex-basis:100%;font-size:12.5px;color:var(--ink-3)}
+.ja-calcul small:empty{display:none}
+.ja-ok{width:100%;min-height:50px;font-size:16px}
+.ja-suppr{width:100%;min-height:44px}
+.ja-action{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;min-height:56px;padding:10px 14px;background:var(--sunken);
+  border:1px solid var(--line);border-radius:var(--r);color:var(--ink);text-align:left;font-family:inherit;cursor:pointer;transition:border-color var(--vite)}
+.ja-action b{font-size:15px;font-weight:600}
+.ja-action small{font-size:13px;color:var(--ink-3)}
+.ja-action:hover{border-color:var(--accent-line)}
+.ja-action:disabled{opacity:.55;cursor:default;border-color:var(--line)}
+/* le message « Supprimé : … » avec « Annuler » */
+.toast.ja-toast{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center}
+.ja-annuler{min-height:44px;padding:0 14px;background:none;border:1px solid var(--accent-line);border-radius:999px;color:var(--accent);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer}
+@media (max-width:360px){ .ja-macros{gap:8px} .ja-m-l b{font-size:12px} .ja-past{padding:8px 12px} }

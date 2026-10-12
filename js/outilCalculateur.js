@@ -71,6 +71,7 @@ const outilCalculateur = {
         <button class="obj" type="button" data-k="prise"><span class="lbl">${esc(trad("Prise de masse +10%"))}</span><span class="val readout" id="v-prise">—</span></button>
       </div>
       ${perso ? `<p class="flag" id="calc-imc" hidden></p>` : ""}
+      <p class="flag info" id="calc-plancher" hidden></p>
     </section>
 
     <section class="panel">
@@ -120,6 +121,31 @@ const outilCalculateur = {
     const parPas    = Math.min(d.pas, c.plafond_pas)/10000 * c.bonus_10000_pas;
     const parHeures = Math.min(d.heures, c.plafond_heures) * c.bonus_par_heure;
     return { total: c.facteur_base + parPas + parHeures, parPas, parHeures };
+  },
+  /* v79 — le plancher d'un objectif CALCULÉ (CONFIG.calcul.plancher_kcal : 1 200 kcal pour une femme, 1 500 pour un homme) :
+     les trois objectifs proposés ne descendent jamais en dessous. Un objectif fixé à la main par le coach (repas.cible,
+     champ « kcal » de Nutrition) n'y passe pas. */
+  plancher(sexe){ const p = (CONFIG.calcul && CONFIG.calcul.plancher_kcal) || {}; return num(p[sexe]); },
+  cibles(T, sexe){
+    const c = CONFIG.calcul, pl = this.plancher(sexe);
+    const brut = { perte: T*(1-c.deficit_perte), maintien: T, prise: T*(1+c.surplus_prise) };
+    return { perte: Math.max(brut.perte, pl), maintien: Math.max(brut.maintien, pl), prise: Math.max(brut.prise, pl), brut, plancher: pl };
+  },
+  /* l'objectif du jour d'un calcul enregistré (calc ou calc_perso), pour un autre outil (journal alimentaire) : null s'il
+     n'est pas complet, dans les bornes et adulte ; sous un IMC de 18,5, pas de perte (maintien), comme à l'écran */
+  objectif(D){
+    if (!this.valide(D) || this.mineur(D)) return null;
+    const X = {}; this.CHAMPS.forEach(k => { X[k] = (k === "sexe" || k === "objectif") ? D[k] : this.nombre(D[k]); });
+    const o = X.objectif === "perte" && this.imcBas(X) ? "maintien" : X.objectif;
+    const C = this.cibles(this.metabolismeDeBase(X) * this.facteurActivite(X).total, X.sexe), kcal = C[o];
+    const m = this.macros(kcal, X.poids);
+    return { kcal: Math.round(kcal), p: Math.round(m.prot), g: Math.round(m.gluc), l: Math.round(m.lip), objectif: o, plancher: kcal > C.brut[o] };
+  },
+  /* la phrase sous les objectifs quand le plancher a relevé celui qui est choisi */
+  phrasePlancher(perso){
+    const c = CONFIG.calcul.plancher_kcal || {};
+    return perso ? trad("Ton objectif est relevé : un objectif calculé ne descend jamais sous {f} kcal par jour pour une femme, ni sous {h} kcal pour un homme. En dessous, c'est trop peu pour tenir sans suivi médical.", { f: fmt(c.F), h: fmt(c.H) })
+      : `Objectif relevé : un objectif calculé ne descend jamais sous ${fmt(c.F)} kcal par jour pour une femme, ni sous ${fmt(c.H)} kcal pour un homme (en dessous, trop peu sans suivi médical). Un objectif que tu fixes à la main dans Nutrition n'y passe pas.`;
   },
   macros(kcal, poids){
     const c = CONFIG.calcul;
@@ -214,6 +240,7 @@ const outilCalculateur = {
       ["b-prot", "b-lip", "b-gluc"].forEach(id => { $(id).style.width = "0%"; });
       $("flag").hidden = true;
       $("calc-ok").hidden = true;
+      $("calc-plancher").hidden = true;
     };
     const dire = (t) => { const e = $("calc-etat"); if (!e) return; e.hidden = !t; e.textContent = t || ""; };
     const lib = k => trad(self.LIBELLES[k]);
@@ -244,7 +271,9 @@ const outilCalculateur = {
       const Bm = self.metabolismeDeBase(D);
       const F = self.facteurActivite(D);
       const T = Bm * F.total;
-      const cibles = { perte: T*(1-c.deficit_perte), maintien: T, prise: T*(1+c.surplus_prise) };
+      const cibles = self.cibles(T, D.sexe);   // v79 : avec le plancher (1 200 / 1 500 kcal)
+      const fp = $("calc-plancher"), releve = cibles[D.objectif] > cibles.brut[D.objectif];
+      fp.hidden = !releve; fp.textContent = releve ? self.phrasePlancher(true) : "";
       $("tdee").textContent = fmt(T);
       $("v-perte").textContent = imcBas ? "—" : fmt(cibles.perte);
       $("v-maintien").textContent = fmt(cibles.maintien);
@@ -335,7 +364,9 @@ const outilCalculateur = {
       const B = self.metabolismeDeBase(D);
       const F = self.facteurActivite(D);
       const T = B * F.total;
-      const cibles = { perte: T*(1-c.deficit_perte), maintien: T, prise: T*(1+c.surplus_prise) };
+      const cibles = self.cibles(T, D.sexe);   // v79 : avec le plancher (1 200 / 1 500 kcal)
+      const fp = $("calc-plancher"), releve = cibles[D.objectif] > cibles.brut[D.objectif];
+      fp.hidden = !releve; fp.textContent = releve ? self.phrasePlancher(false) : "";
 
       $("tdee").textContent = fmt(T);
       $("v-perte").textContent = fmt(cibles.perte);

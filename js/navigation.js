@@ -19,7 +19,10 @@ function outilsVisibles(){
                          && (!o.masque_client || Auth.estCoach() || (o.ouvert_prospect && Auth.estProspect()))
                          && (!o.client_seul || !Auth.estCoach() || Store.idConsulte)
                          && (!o.coach_perso || !Store.idConsulte)   // v71 (I) : l'Entrainement du coach n'apparait pas dans une fiche
-                         && (!o.prospect_seul || Auth.estProspect()));
+                         && (!o.prospect_seul || Auth.estProspect())
+                         /* v79 — interrupteur de nouveaute (CONFIG.nouveautes) : pour soi, Interrupteurs.visible ; dans une fiche,
+                            celui du compte consulte (en « test », le coach ne le voit que chez un compte de test) */
+                         && (!o.interrupteur || (Store.idConsulte ? Interrupteurs.pourCompte(o.interrupteur, Store.idConsulte) : Interrupteurs.visible(o.interrupteur))));
 }
 
 /* v40 — MODE GRATUIT. Un prospect (Auth.estProspect) n'a d'ouverts que les
@@ -344,8 +347,10 @@ function bandeauConsultation(){
     { id:"mensurations", nom:"Ses courbes" },
     /* v53 : le journal du client (cle journal, #/journal en lecture seule), et non plus #/entrainement (sa cle perf,
        l'outil du coach : toujours vide chez un client, le coach croyait qu'il n'avait rien note) */
-    { id:"journal",      nom:"Ses séances" }
-  ];
+    { id:"journal",      nom:"Ses séances" },
+    /* v79 : son journal alimentaire (lecture seule), seulement s'il lui est ouvert (interrupteur) */
+    { id:"journal-alimentaire", nom:"Son journal alimentaire" }
+  ].filter(a => a.id !== "journal-alimentaire" || outilsVisibles().some(o => o.id === a.id));
   return `<div class="bandeau">
     <div class="bandeau-tete">
       <strong>${Store.nomConsulte === Clients.SANS_NOM ? "Fiche — " : "Fiche de "}${esc(Store.nomConsulte || "ce client")}</strong>

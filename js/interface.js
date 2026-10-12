@@ -45,6 +45,8 @@ const ICONES = {
   calculateur:  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c1 4 5 5.5 5 10a5 5 0 0 1-10 0c0-2 1-3.2 2-4.2 0 2 1 3.2 2.2 3.2C10.5 9 11 6 12 3z"/></svg>',
   entrainement: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>',
   journal:      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h11a2 2 0 0 1 2 2v16H7a2 2 0 0 1-2-2V4a1 1 0 0 1 1-1z"/><path d="M5 17a2 2 0 0 1 2-2h12"/><path d="M9 7h6M9 10.5h4"/></svg>',
+  /* v79 : le journal alimentaire (fourchette et couteau) */
+  "journal-alimentaire": '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10"/><path d="M17 21V3c-2 1.2-3 4-3 7 0 2 1.2 3 3 3"/></svg>',
   prospects:    '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>',
   plus:         '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>'
 };
@@ -103,7 +105,8 @@ const UI = {
   },
 
   /* o = { titre, corps, html, champ:{type, valeur, placeholder}, boutons:[{texte, valeur, classe, principal, champ}],
-           annulation (valeur rendue si on ferme sans choisir), volet, fermable,
+           annulation (valeur rendue si on ferme sans choisir), volet, fermable, classe (v79 : classe de plus sur la
+           fenetre, ex. « ja-feuille » du journal alimentaire),
            retour:{href, libelle} (v69 : fleche a gauche du titre d'un volet, qui le ferme et ouvre href) } */
   ouvrir(o){
     return new Promise(resoudre => {
@@ -111,7 +114,7 @@ const UI = {
       const fond = document.createElement("div");
       fond.className = "fond" + (o.volet ? " volet-fond" : "");
       const boite = document.createElement("div");
-      boite.className = o.volet ? "volet" : "modale";
+      boite.className = (o.volet ? "volet" : "modale") + (o.classe ? " " + o.classe : "");
       boite.setAttribute("role", "dialog"); boite.setAttribute("aria-modal", "true");
       const boutons = o.boutons || [];
       let h = "";

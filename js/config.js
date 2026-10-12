@@ -16,7 +16,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-10-12 · 78.2",
+    version: "2026-10-13 · 79",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -80,7 +80,8 @@ const CONFIG = {
     whatsapp: "+61418876361",
     /* v52 — gratuit pour toujours : le calculateur (sa cle a lui, calc_perso), Ma progression (sans les
        photos) et la Speed Formation sont ouverts au prospect, sans limite de duree */
-    gratuit_ouverts: ["accueil", "decouverte", "profil", "calculateur", "mensurations", "formation"],
+    /* v79 : + le journal alimentaire (gratuit, derrière l'accord santé comme le calculateur ; interrupteur nouveautes.journal_alimentaire) */
+    gratuit_ouverts: ["accueil", "decouverte", "profil", "calculateur", "mensurations", "formation", "journal-alimentaire"],
     /* v50 — onglets verrouilles qu'un prospect voit quand meme (cadenas + ce qu'apporte l'accompagnement) :
        la vitrine de l'offre. Les autres onglets verrouilles sont caches de sa navigation (leur adresse
        montre toujours la page verrouillee). v52 : programme, nutrition, journal d'entrainement et suivi
@@ -138,7 +139,8 @@ const CONFIG = {
   nouveautes: {
     feedback_dimanche: "test",
     suivi_visites_clients: "test",   // v53 (chantier 4) : suivi des visites des CLIENTS (dernière visite, jours actifs) ; « tous » quand Lucas les aura prévenus
-    comptes_test: ["9df6bb84-5a09-4bb0-a77a-b2633d842ed9"]   // compte client de test de Lucas
+    journal_alimentaire: "test",     // v79 : le journal alimentaire (page, cartes des accueils, fiche du coach) ; « tous » : tout le monde
+    comptes_test: ["294c473f-a770-472c-8b5d-5a0e8ef0e5e4"]   // compte client de test de Lucas (v79 : le 9df6bb84… n'existe plus en base)
   },
 
   /* --- v49 : suivi commercial des prospects (page « Prospects » du coach). Les seuils en jours
@@ -191,6 +193,7 @@ const CONFIG = {
     bonus_par_heure:    0.03,  // ce qu'ajoute 1 h d'entraînement par semaine
     plafond_heures:     15,    // au-delà, le bonus d'entraînement ne monte plus
     seuil_alerte_glucides: 50, // en dessous de X g, on affiche l'avertissement
+    plancher_kcal: { F: 1200, H: 1500 },   // v79 : un objectif CALCULÉ ne descend jamais en dessous (jamais un objectif fixé à la main par le coach)
     valeurs_depart: { sexe:"H", age:25, taille:178, poids:80, pas:10000, heures:10 }
   },
 
@@ -523,15 +526,17 @@ const DECOUVERTE = {
   },
   /* v64 (brief V2, B) : l'accord santé demandé au premier usage (calculateur, Ma progression, « Organise ta diète »),
      prospect sans accord enregistré seulement (Sante, auth-store.js). Textes du brief, mot pour mot, plus (décision de
-     Lucas du 30/09) les repas prévus dans « Organise ta diète » dans le texte, la phrase d'accord et le message de refus. */
+     Lucas du 30/09) les repas prévus dans « Organise ta diète » dans le texte, la phrase d'accord et le message de refus.
+     v79 : + les aliments notés dans le journal alimentaire (mission de Lucas du 13/10 : cette mention seulement, le reste
+     mot pour mot ; un accord déjà donné reste valable, comme avant). */
   sante: {
     titre: "Ton accord, une seule fois",
-    texte: "Pour calculer tes calories et suivre ta progression, l'app enregistre ton poids, ta taille, tes mensurations, tes calculs et les repas prévus dans « Organise ta diète ». Ce sont des données de santé : elles restent privées, visibles seulement par toi et ton coach, et tu peux les supprimer à tout moment.",
-    phrase: "J'accepte que mes données de santé (poids, taille, mensurations, calculs, repas prévus dans « Organise ta diète ») servent à mes calculs et à mon suivi.",
+    texte: "Pour calculer tes calories et suivre ta progression, l'app enregistre ton poids, ta taille, tes mensurations, tes calculs, les repas prévus dans « Organise ta diète » et les aliments notés dans ton journal alimentaire. Ce sont des données de santé : elles restent privées, visibles seulement par toi et ton coach, et tu peux les supprimer à tout moment.",
+    phrase: "J'accepte que mes données de santé (poids, taille, mensurations, calculs, repas prévus dans « Organise ta diète », aliments notés dans le journal) servent à mes calculs et à mon suivi.",
     oui: "J'accepte",
     non: "Pas maintenant",
     lien: "En savoir plus : politique de confidentialité",
-    refus: "Pas de souci. Sans ton accord, le calculateur, le suivi et l'organisation de la diète restent en pause. Le reste de ton espace reste ouvert, et tu peux changer d'avis quand tu veux."
+    refus: "Pas de souci. Sans ton accord, le calculateur, le suivi, l'organisation de la diète et le journal alimentaire restent en pause. Le reste de ton espace reste ouvert, et tu peux changer d'avis quand tu veux."
   },
   resultat: {
     titre: "Ton résultat",
@@ -838,12 +843,12 @@ const DECOUVERTE = {
     },
     sante: {
       titre: "Your consent, just once",
-      texte: "To calculate your calories and track your progress, the app saves your weight, height, measurements, results and the meals you plan in “Organise ta diète”. This is health data: it stays private, visible only to you and your coach, and you can delete it at any time.",
-      phrase: "I agree that my health data (weight, height, measurements, results, meals planned in “Organise ta diète”) is used for my calculations and tracking.",
+      texte: "To calculate your calories and track your progress, the app saves your weight, height, measurements, results, the meals you plan in “Organise ta diète” and the foods you log in your food diary. This is health data: it stays private, visible only to you and your coach, and you can delete it at any time.",
+      phrase: "I agree that my health data (weight, height, measurements, results, meals planned in “Organise ta diète”, foods logged in the diary) is used for my calculations and tracking.",
       oui: "I agree",
       non: "Not now",
       lien: "Learn more: Privacy Policy",
-      refus: "No problem. Without your consent, the calculator, tracking and diet planning stay paused. The rest of your space stays open, and you can change your mind anytime."
+      refus: "No problem. Without your consent, the calculator, tracking, diet planning and food diary stay paused. The rest of your space stays open, and you can change your mind anytime."
     },
     resultat: {
       titre: "Your result",

@@ -843,7 +843,11 @@ const outilDecouverte = {
        reponse), il passe devant, sauf si le serveur a deja aussi recent (meme regle que Store.reprendre) ; aucune ecriture */
     this._reperes = null;
     if (Decouverte.questionnaireFait(I)){
-      const cles = [outilCalculateur.cle_perso, "mens"], locales = this.saisiesLocales(cles);
+      const cles = [outilCalculateur.cle_perso, "mens"];
+      /* v79 : la carte du journal alimentaire (interrupteur) : son journal et le calcul du coach, seulement après l'accord
+         santé (avant : rien n'est lu) */
+      if (JournalAlim.visible() && Sante.ok()) cles.push(JournalAlim.cle, "calc");
+      const locales = this.saisiesLocales(cles);
       const { valeurs: R, dates, erreur } = await Store.lireTout(cles, { dates: true });
       if (!zone.isConnected) return;
       if (erreur){ pageHorsLigne(zone); return; }   // v71 (F) : calcul et pesee illisibles : pas d'etape « a faire » fausse
@@ -997,7 +1001,13 @@ const outilDecouverte = {
      (calc_perso), puis « Enregistre ta pesée de départ » tant qu'il n'a aucune pesee (mens), puis l'accueil normal
      (Speed Formation, pages de l'accompagnement, « Réserver mon bilan » discret). Decide sur une lecture seule
      (afficher : Store.lireTout), aucune ecriture a l'affichage. */
-  accueilHTML(I, C){ return this.etapeHTML(C) + this.formationHTML() + this.accompHTML(C); },
+  accueilHTML(I, C){ return this.journalHTML() + this.etapeHTML(C) + this.formationHTML() + this.accompHTML(C); },
+  /* v79 : « Mon journal alimentaire » en premier (interrupteur) ; sans accord santé, la carte invite seulement (rien n'est lu) */
+  journalHTML(){
+    if (!JournalAlim.visible()) return "";
+    const R = this._reperes || {}, ok = Sante.ok() && JournalAlim.cle in R;
+    return JournalAlim.carteAccueilHTML(ok ? JournalAlim.remettre(R[JournalAlim.cle] || JournalAlim.vide()) : null, ok ? JournalAlim.objectif(R, true) : null);
+  },
   etape(C){
     const R = this._reperes || {};
     if (!outilCalculateur.valide(R[outilCalculateur.cle_perso]) || outilCalculateur.mineur(R[outilCalculateur.cle_perso])) return "calories";

@@ -151,6 +151,9 @@ const outilAccueil = {
   async fiche(zone){
     const cles = ["intake", "programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "checkins", "complements", "calc", "formation", "hist_programme", "hist_repas", "prefs", "feedbacks", "challenge", "suivi_prospect", "activite", "emails", "contact"];   // v47 : + challenge ; v49 : + suivi commercial ; v51 : + activite ; v52 : + emails (newsletter d'un prospect) ; v72 : + contact (numéro)
     const uidFiche = Store.idConsulte;
+    /* v79 : son journal alimentaire (s'il lui est ouvert : interrupteur) et son propre calcul (l'objectif du journal) */
+    const avecJA = JournalAlim.pourCompte(uidFiche);
+    if (avecJA) cles.push("journal_alimentaire", "calc_perso");
     const [{ valeurs: d, dates }, pr] = await Promise.all([
       Store.lireTout(cles, { dates: true }),
       /* v39 : prospect ou client ? (colonne absente ou lecture ratee : rien ne change) */
@@ -230,6 +233,7 @@ const outilAccueil = {
       <section class="panel"><div class="seance-c-tete"><h2>Nutrition</h2>${nbJours ? `<span class="pastille ok">envoyée</span>` : `<span class="pastille attention">à faire</span>`}</div>
         <ul class="ingr fiche-l">${ligne("Cible", cible ? fmt(cible.kcal) + " kcal · " + fmt(cible.prot) + " g prot." : "")}${ligne("Régime", R.regime)}${ligne("Allergènes écartés", (R.allergenes || []).join(", "))}${ligne("Jours différents", nbJours || "")}${ligne("Envoyée le", R.maj)}${ligne("Repas respectés (28 j)", b.repas != null ? b.repas + " %" : "")}${ligne("Repas remplacés ce mois", b.remplaces.length || "")}</ul>
         <p class="note" style="margin:10px 0 0">${lien("nutrition", "Ses repas")} · ${lien("calculateur", "Ses calories")}</p></section>
+      ${avecJA ? JournalAlim.ficheHTML(JournalAlim.remettre(d.journal_alimentaire || JournalAlim.vide()), JournalAlim.objectif({ repas: R, calc: d.calc, calc_perso: d.calc_perso }, profil.statut === "prospect")) : ""}
       <section class="panel"><h2>Poids et mensurations</h2>
         <ul class="ingr fiche-l">${ligne("Poids actuel", l.ev ? n1(l.ev.actuel) + " kg" : "")}${ligne("Départ", l.ev ? n1(l.ev.depart) + " kg" : "")}${ligne("Depuis le début", l.ev ? (l.ev.total > 0 ? "+" : "") + n1(l.ev.total) + " kg" : "")}${ligne("4 dernières semaines", l.ev && l.ev.mois != null ? (l.ev.mois > 0 ? "+" : "") + n1(l.ev.mois) + " kg" : "")}${ligne("Mesures", (M.mesures || []).length || "")}${ligne("Dernière mesure", l.ev && l.ev.date ? dateFr(l.ev.date) : "")}${b.zones.map(z => ligne(z.nom, n1(z.de) + " → " + n1(z.a) + " cm")).join("")}</ul>
         <p class="note" style="margin:10px 0 0">${lien("mensurations", "Ses courbes")}</p></section>
@@ -282,7 +286,9 @@ const outilAccueil = {
     /* v53 (chantier 4) : l'accueil d'un client compte comme une visite (afficher() compte les autres pages) ; sans effet
        si ses visites ne sont pas suivies (interrupteur suivi_visites_clients), pour le coach et pour une fiche consultée */
     Activite.page("accueil");
-    const d = await Store.lireTout(["intake", "programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "checkins", "feedbacks"]);
+    /* v79 : la carte du journal alimentaire (interrupteur) : son journal et son calcul, dans la même lecture */
+    const ja = JournalAlim.visible();
+    const d = await Store.lireTout(["intake", "programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "checkins", "feedbacks"].concat(ja ? ["journal_alimentaire", "calc", "calc_perso"] : []));
     /* v71 (F) : lecture ratee : « Pas de connexion » + Reessayer sous le « Bonjour », jamais « Ton coach prepare ton programme » */
     if (d.erreur){ const tete = zone.querySelector(".masthead"); zone.innerHTML = (tete ? tete.outerHTML : "") + flagHorsLigne(); return; }
     const I = d.intake || {}, P = d.programme || {}, J = d.journal || { seances: [] }, R = d.repas || {}, S = d.repas_suivi || {}, M = d.mens || {}, OF = d.objectifs_faits || {}, CK = d.checkins || { liste: [] };
@@ -361,6 +367,7 @@ const outilAccueil = {
         <h1>${consult ? esc(trad("Vue d'ensemble")) + (prenom ? " — " + esc(prenom) : "") : esc(trad("Bonjour")) + (prenom ? " " + esc(prenom) : "")}</h1>
         <p class="lede">${esc(resume)}</p>
       </header>
+      ${ja ? JournalAlim.carteAccueilHTML(JournalAlim.local(d.journal_alimentaire), JournalAlim.objectif(d, false)) : ""}
       ${dim ? Checkin.bandeauHTML(CK, moi) : ""}
       <section class="panel">
         <h2>${esc(trad("Cette semaine"))}</h2>

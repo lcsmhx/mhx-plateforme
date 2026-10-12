@@ -559,7 +559,7 @@ const Provenance = {
    inscrits de la v52 à la v63 ont coché la case à l'inscription : aucune carte. « Pas maintenant » : un message
    remplace la carte, le reste de l'espace reste ouvert, la carte revient à la prochaine ouverture de l'outil. -- */
 const Sante = {
-  ECRANS: ["calculateur", "mensurations"],   // pages entieres en pause (navigation.js) ; la diete : son widget (outilFormation.js)
+  ECRANS: ["calculateur", "mensurations", "journal-alimentaire"],   // pages entieres en pause (navigation.js) ; la diete : son widget (outilFormation.js) ; v79 : le journal alimentaire
   refus: {},   // « Pas maintenant » pendant la visite de la formation (la diete redessinee garde le message)
   _relu: null,
   _envoi: null,       // « J'accepte » en cours (promesse) : une page rouverte pendant l'envoi repart des qu'il aboutit
@@ -615,8 +615,9 @@ const Sante = {
     if (typeof suite === "function") suite();
   },
   /* garde du stockage : une cle de sante (mens ; calc_perso avec des chiffres — le retrait « {} » du garde-fou 18 ans
-     reste permis) d'un prospect sans accord */
+     reste permis ; v79 : le journal alimentaire) d'un prospect sans accord */
   bloque(cle, v){
+    if (cle === "journal_alimentaire") return this.aDemander();
     if (cle !== "mens" && cle !== "calc_perso") return false;
     if (cle === "calc_perso" && !(v && typeof v === "object" && Object.keys(v).some(k => v[k] != null && v[k] !== ""))) return false;
     return this.aDemander();
@@ -712,7 +713,10 @@ const Forme = {
     hist_repas: { liste: [{}] },
     photos: { liste: [{ vues: {} }] },
     challenge: { jours: {}, cta: { clics: [] } },   // cle lue par la Decouverte : cta.clics = liste (jours = ancien challenge, objet par numero)
-    activite: { jours: [], pages: {} }              // v51 : activite du prospect (jours, pages vues, temps)
+    activite: { jours: [], pages: {} },             // v51 : activite du prospect (jours, pages vues, temps)
+    /* v79 : journal alimentaire — des n-uplets (listes), jamais [{}] ni [[]] : Forme retirerait tout element qui n'est pas
+       un objet (les lignes du journal). Le reste est verifie a la lecture par JournalAlim (lignes, aliment). */
+    journal_alimentaire: { a: [], j: {} }
   },
   objet(v){ return !!v && typeof v === "object" && !Array.isArray(v); },
   appliquer(m, v){
