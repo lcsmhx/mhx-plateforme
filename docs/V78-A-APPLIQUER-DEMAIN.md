@@ -2,7 +2,7 @@
 
 Préparé la nuit du 12/10/2026. **Rien de ce fichier n'a encore été lancé.** Deux parties :
 - **Tâche 5 — limites d'écriture dans la base** : procédure complète, étape par étape.
-- **Tâche 6 — nettoyage de l'historique du dépôt** : squelette, à compléter après la répétition de cette nuit.
+- **Tâche 6 — nettoyage de l'historique du dépôt** : procédure ; cette nuit, inventaire et essai à blanc faits et vérifiés, réécriture du miroir PAS faite (refusée par le contrôle de permissions).
 
 Référence de la tâche 5 : `supabase/v78-limites/LISEZMOI.md` (il fait foi en cas d'écart avec ce fichier).
 
@@ -454,26 +454,112 @@ décider par Lucas.
 
 # Partie 6 — Nettoyage de l'historique du dépôt public
 
-> **SQUELETTE — À COMPLÉTER APRÈS LA RÉPÉTITION DE CETTE NUIT** (Claude principal le remplira : commandes, nombres,
-> résultats). Rien n'est fait ni décidé ici. **Le push forcé est fait par Lucas seulement**, avec son « ok » ; il reste
-> refusé à Claude par `.claude/settings.local.json`.
+**But** : les fichiers retirés à la tâche 1 (le programme nominatif d'une cliente, `donnees/audit-coherence.md`), les
+prénoms et noms de clients et les adresses email réelles sont sortis de l'arbre actuel, mais restent dans l'**historique**
+git du dépôt public (et dans la pull request #1). On réécrit cet historique sur une copie, on vérifie, puis **Lucas** pousse.
 
-**But** : les fichiers retirés à la tâche 1 (programme nominatif d'une cliente, `donnees/audit-coherence.md`, prénoms,
-ancienne adresse) sont sortis de l'arbre actuel, mais restent dans l'historique git du dépôt public. Liste des noms à
-chercher : hors dépôt (`~/MHX-prive/`), jamais recopiée ici.
+**Où est tout** (hors dépôt, sur le Mac de Lucas, droits réservés à son compte) : `~/MHX-prive/nettoyage/`
+- `mhx-plateforme.git` : le **miroir de travail** (clone `--mirror` de GitHub du 12/10 08:42 ; envoi désactivé :
+  `pushurl = NE-PAS-POUSSER`) ; `sauvegarde-avant-nettoyage.git` : une 2e copie, intacte, du même miroir.
+- `outils/git-filter-repo` (git-filter-repo **2.47.0**, paquet officiel PyPI, installé dans `outils/pylib/` seulement) ;
+  `outils/nettoyer.sh` (la réécriture, avec ses garde-fous) ; `outils/inventaire.py`, `outils/verifier-essai.py`,
+  `outils/releve.py` (comptages et comparaisons, sans afficher de nom).
+- `regles-remplacement.json` et `plan-remplacement.md` : **la liste des noms, des adresses et des marqueurs neutres**
+  (jamais dans le dépôt) ; `avant.txt` (+ `.catalogue.json`) : le relevé d'avant (références, arbre de `main`,
+  empreintes du catalogue à chaque version).
 
-1. **Sauvegarde** — un `git bundle` complet du dépôt (toutes les branches et étiquettes), vérifié, rangé dans
-   `~/MHX-prive/sauvegardes-depot/` (modèle : `mhx-plateforme-2026-10-12-avant-v78.bundle`). *À compléter.*
-2. **Dépôt miroir nettoyé** — une copie miroir hors du dépôt (scratchpad), nettoyée avec l'outil choisi pendant la
-   répétition ; jamais dans la copie de travail de Lucas. *À compléter : outil, commandes, liste des chemins et des textes.*
-3. **Vérifications** — sur le miroir nettoyé : plus aucun fichier retiré dans aucun commit, plus aucun prénom de la liste
-   ni l'ancienne adresse ; l'arbre de `main` identique à celui d'avant (rien de l'app ne change) ; le banc vert. Critère
-   d'arrêt : un seul écart. *À compléter : commandes et nombres attendus.*
-4. **Push forcé — par Lucas seulement** — après son « ok », à une heure calme ; ce qu'il faut savoir avant (identifiants
-   des commits changés, banc et publication relancés, copies locales à remplacer). Retour arrière : le bundle de l'étape 1.
-   *À compléter.*
-5. **GitHub Support** — demander la purge du cache (vues des anciens commits) et de la pull request #1, qui garde les
-   anciens commits même après le push forcé. *À compléter : texte de la demande.*
-6. **Autres copies** — les copies locales (Mac de Lucas, copies de travail), celle de Grok Bot, d'éventuels forks, les
-   artefacts GitHub (28, du 05/10 au 11/10, aucun d'avant la v67 : relevé le 12/10), les bundles (à garder dans
-   `~/MHX-prive/` seulement). *À compléter.*
+## Ce qui a été fait cette nuit (12/10)
+
+| Étape | Résultat |
+|---|---|
+| Inventaire de tout l'historique | 37 références (`main`, 35 branches `v2/*`, `refs/pull/1/head`, aucune étiquette), 379 commits. Les 2 fichiers de la tâche 1 sont encore à la pointe de 33 références (dont la pull request #1). 6 adresses email réelles, des noms dans 8 chemins (anciennes versions de `NOTES-GROK.md`, `docs/PLAN-V2.md`, `index.html`, `donnees/README.md`, `donnees/liens-youtube.md`, du brief d'origine, un commentaire de `tests-locaux/verif72.js`) et dans 3 messages de commit. |
+| Règles | 2 chemins retirés de tout l'historique ; 21 règles de remplacement actives, **par chemin** : jamais dans les fichiers du catalogue (identiques au bit près), jamais sur le prénom d'un prospect **fictif** des tests (il reste). |
+| Essai à blanc (`--dry-run`, rien de réécrit) | 31,7 s, code 0 : 65 versions de fichiers réécrites dans 8 chemins, 3 messages de commit. |
+| Vérification de l'essai | **OK sur les 5 points** : 0 chemin retiré restant, 0 nom ni adresse réelle restants (hors prospect fictif et produit du catalogue) ; arbre de `main` **identique au bit près** (`bae9940c…`, rien de l'app ne change) ; catalogue identique (4 287 couples commit-fichier comparés, 0 écart) ; 379 commits, mêmes auteurs et dates ; le commit de l'ouverture de l'inscription garde son message (verif52 en dépend). |
+| **Réécriture du miroir** | **PAS faite** : la commande a été refusée par le contrôle de permissions de la session. Rien n'a été contourné ; le miroir est intact (`main` = `0727aed`, envoi toujours désactivé). |
+| Banc | Pas relancé : l'arbre de `main` nettoyé est celui de `0727aed`, banc local 10/10 et GitHub verts. Seule verif52 lit l'historique : à relancer après la vraie réécriture (étape 3). |
+
+## Étapes pour la séance
+
+**0. Décisions de Lucas, avant tout**
+- Ajouter ou non à la liste le prénom et le nom de la **2e personne qui a eu l'accès coach** (présents dans d'anciennes
+  versions de `NOTES-GROK.md`) : une règle est prête, inactive.
+- Son **adresse personnelle d'auteur** reste dans les métadonnées de 344 commits (la demande ne visait que fichiers et
+  messages). La changer aussi (option `--mailmap`, un fichier de plus) : oui / non.
+- L'**ancienne adresse de contact de la marque** est remplacée comme les autres (cohérent avec la tâche 1) : à confirmer.
+- Les **branches `v2/*`** de GitHub (35) : les réécrire et les repousser aussi (recommandé, elles contiennent les
+  fichiers), ou les supprimer de GitHub (suppression = « ok » écrit de Lucas).
+
+**1. Sauvegarde et relevé**
+```bash
+cd ~/MHX-Code/mhx-plateforme && git fetch origin && git bundle create ~/MHX-prive/sauvegardes-depot/mhx-plateforme-AAAA-MM-JJ-avant-nettoyage.bundle --all && git bundle verify ~/MHX-prive/sauvegardes-depot/mhx-plateforme-AAAA-MM-JJ-avant-nettoyage.bundle
+```
+On doit lire « The bundle records a complete history ». Si GitHub a changé depuis le 12/10 (nouveau commit sur `main`) :
+refaire le miroir (`git clone --mirror` dans un dossier neuf, `git remote set-url --push origin NE-PAS-POUSSER` tout de
+suite), relancer `outils/inventaire.py` et l'essai : `nettoyer.sh` refuse de tourner si `main` n'est plus `0727aed`.
+
+**2. Essai à blanc, puis réécriture du miroir** (Lucas autorise la commande pour la séance)
+```bash
+bash ~/MHX-prive/nettoyage/outils/nettoyer.sh --essai
+```
+```bash
+bash ~/MHX-prive/nettoyage/outils/nettoyer.sh
+```
+Le script vérifie d'abord : miroir nu, `pushurl = NE-PAS-POUSSER`, `main` = celui du relevé, sauvegarde présente ;
+pendant la réécriture, git n'a accès à aucun réseau. Il remet ensuite `url = NE-PAS-RECUPERER` et
+`pushurl = NE-PAS-POUSSER` (git-filter-repo retire le remote) et garde la table anciens → nouveaux commits
+(`filter-repo/commit-map`). Critère d'arrêt : code de sortie différent de 0, ou nombres différents de l'essai.
+Retour arrière : rien n'est parti ; supprimer le miroir réécrit et repartir de `sauvegarde-avant-nettoyage.git`.
+
+**3. Vérifications sur le miroir réécrit** (avant tout push)
+- Relancer `outils/inventaire.py` sur le miroir (copier d'abord `inventaire-resultats.json` et
+  `remplacements-emails.txt` d'avant, qu'il réécrit) : **0** chemin retiré, **0** nom de la liste (hors prospect fictif
+  des tests et produit du catalogue), **0** adresse réelle, dans toutes les références et tous les messages.
+- `git -C ~/MHX-prive/nettoyage/mhx-plateforme.git rev-parse main^{tree}` doit donner l'arbre noté dans `avant.txt`
+  (`bae9940c…`, le même que `0727aed`).
+- Catalogue : `outils/releve.py` (comparaison avec `avant.txt.catalogue.json`) : 0 écart.
+- Banc : une copie de travail de `main` du miroir nettoyé (`git clone ~/MHX-prive/nettoyage/mhx-plateforme.git`
+  dans un dossier temporaire), puis le banc complet, `VERIF52_REF` = le `main~1` nettoyé : tout vert.
+Critère d'arrêt : un seul écart. Retour arrière : comme à l'étape 2.
+
+**4. Push forcé — par Lucas seulement**, à une heure calme, après son « ok » écrit
+- Avant : dire à Grok Bot de ne rien pousser pendant l'opération ; noter que **tous les identifiants de commits
+  changent** (ceux cités dans CLAUDE.md, HISTORIQUE, NOTESCLAUDE et la mémoire de Claude deviennent anciens : la table
+  `commit-map` fait la correspondance) ; les 53 commits faits sur GitHub perdent leur signature « Verified ».
+- La commande (dans le miroir réécrit ; le push forcé reste refusé à Claude) : pousser les **branches seulement**, vers
+  l'adresse écrite en entier (le remote du miroir garde `NE-PAS-POUSSER` et son réglage `mirror`, qui refuserait une
+  liste de branches ; GitHub refuse d'écrire `refs/pull/*`) :
+```bash
+cd ~/MHX-prive/nettoyage/mhx-plateforme.git && git push --force https://github.com/lcsmhx/mhx-plateforme 'refs/heads/*:refs/heads/*'
+```
+- Après : « Tests puis publication » rejoue le banc sur le nouveau `main` (même arbre : le site ne change pas, pied de
+  page « · 78.2 »).
+- Retour arrière : repousser l'ancien historique depuis le bundle de l'étape 1 (même commande, depuis un clone du bundle).
+
+**5. GitHub Support — seulement après l'étape 4**
+- La pull request #1 garde les anciens commits (`refs/pull/1/head`) et GitHub garde en cache les vues des anciens commits :
+  seul le support peut les purger. Formulaire : https://support.github.com/contact (rubrique sur les données sensibles ;
+  guide : https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository).
+- Texte proposé : « Repository lcsmhx/mhx-plateforme (public). I rewrote the history to remove personal data of my clients
+  (files and names) and force-pushed all branches. Please remove the cached views of the old commits and the references
+  of pull request #1 (refs/pull/1/head), which still point to the old history. I can provide the list of affected old
+  commit IDs. » (joindre la liste des anciens identifiants tirée de `commit-map`, jamais les noms).
+
+**6. Autres copies** (relevé du 12/10, rien supprimé ; supprimer = décision de Lucas)
+- `~/MHX-Code/mhx-plateforme` : son `.git` garde l'ancien historique (96 références, dont des branches locales jamais
+  poussées). Après l'étape 4 : le remplacer par un clone neuf (garder l'ancien dans `~/MHX-prive/` le temps de vérifier).
+- 2 copies de travail d'une session Claude du 11/10 dans un dossier temporaire du Mac (`/private/tmp/claude-501/…`) :
+  elles contiennent les 2 fichiers de la tâche 1 ; les copies de cette nuit (`wt-*`) partagent le `.git` du dépôt.
+- `~/MHX-prive/` : le bundle d'avant la v78, `sauvegarde-avant-nettoyage.git`, le miroir, `archives/` (les 2 fichiers en
+  clair, voulu) et le dépôt privé `mhx-prive` (archive chiffrée).
+- `~/MHX-Code/sauvegardes/` (copies de la base du 25/09 au 01/10) : des noms et des adresses réelles, hors dépôt.
+- Time Machine configurée (disque non branché au moment du relevé) et instantanés locaux du Mac : ceux d'avant le
+  12/10 04:26 contiennent l'ancien dépôt.
+- Journaux de session de Claude (`~/.claude/projects`, `~/.claude/file-history`) : des extraits avec des noms.
+- La copie de Grok Bot (autre machine) et d'éventuels forks : à recloner après l'étape 4.
+- Non vérifiés (accès refusé par macOS) : Bureau, Documents, iCloud Drive.
+- Artefacts GitHub : 28, tous du 05/10 au 11/10, aucun d'avant la v67 (relevé du 12/10).
+
+**À savoir aussi** : `tests-locaux/verif72.js` (sur `main`) contient des **empreintes SHA-256** de noms et d'adresses
+retirés ; un prénom se retrouve à partir de son empreinte avec une liste de prénoms. Les remplacer demande de modifier la
+suite (décision à part). Un commentaire de `js/outilClients.js` cite les mesures (sans nom) d'un cas réel.
