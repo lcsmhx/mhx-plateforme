@@ -37,7 +37,7 @@ gratuits de la base (audit du 01/10), et un prénom de plusieurs mégaoctets pas
 | `03-retour.sql` | retour arrière : retire les 5 objets ajoutés (2 fonctions, 1 déclencheur, 2 contraintes), rien d'autre ; relançable | si besoin |
 | `04-tests.sql` | 76 tests, transaction annulée, comptes fictifs | local |
 | `05-verifications.sql` | vérifications après application, une seule requête `SELECT` | vraie base, juste après |
-| `06-repetition.sql` | la répétition **toute prête** : `begin` + corps de 02 + corps de 04 + `rollback`, **aucun `commit`** | local (étape 0), puis vraie base (étape 3, facultative) |
+| `06-repetition.sql` | la répétition **toute prête** : `begin` + corps de 02 + corps de 04 + `rollback`, **aucun `commit`** | local (étape 0), puis vraie base (étape 3, obligatoire) |
 
 `06-repetition.sql` ne se modifie jamais à la main : après un changement de 02 ou de 04, depuis `tests-locaux/` :
 `node garde-cles.js ../index.html --refaire-06`. Le banc (`garde-cles.js`) est rouge si 06 n'est plus exactement 02 + 04, si un
@@ -100,11 +100,14 @@ comptes fictifs de 04, annulés avec eux).
   table donnees ») ; dans `profils`, les **7 clients** (rôle et statut « client ») et le coach (partie D) ; le texte des 8 règles
   de `donnees` et `profils`. Un écart : on relance le relevé puis la sauvegarde (une inscription a pu arriver entre les deux) ;
   un écart qui reste = STOP.
-- Le comptage « avant » est ce relevé (le relancer s'il date de plus d'une heure).
+- Le comptage « avant » est ce relevé (le relancer s'il date de plus d'une heure ; une sauvegarde de plus d'une heure : la
+  relancer aussi, pas seulement le relevé).
 - De préférence à une heure calme (peu de clients connectés : moins d'écritures entre « avant » et « après », et l'app ne se
   fige pour personne, voir l'étape 3).
 
-### 3. Répétition sur la vraie base (facultative, avec l'« ok » de Lucas)
+### 3. Répétition sur la vraie base (obligatoire, avec l'« ok » de Lucas)
+Obligatoire : `CLAUDE.md`, « Les garde-fous » (« répétition annulée ») ; l'étape 0 ne voit ni les vraies règles d'accès, ni les
+vrais déclencheurs de `auth.users`, ni les vraies tailles. La sauter = une exception, seulement sur un « ok » écrit de Lucas.
 Coller **`06-repetition.sql` tel quel** dans l'éditeur SQL, en un seul envoi — jamais un morceau de 02 ou de 04 (06 n'a aucun
 `commit` ; 02 en a un, qui appliquerait la migration pour de bon). Tout est annulé. Attendu : l'erreur voulue
 `v78 : 68 / 68 tests OK, 8 sauté(s) — aucun échec. Annulation forcée : rien n'est gardé.` (la partie F demande un
@@ -114,8 +117,9 @@ superutilisateur, qu'on n'a pas sur Supabase : elle est couverte par l'étape 0)
 **Pendant l'envoi, l'app peut se figer quelques secondes.** Ajouter une contrainte à `profils` verrouille toute la table jusqu'à
 la fin de la transaction (même en `NOT VALID`), et chaque règle d'accès lit `profils` (`est_coach`). Pour la répétition, cela
 dure le temps de tous les tests (contenus de plusieurs Mo) : un client connecté peut voir « Hors ligne — gardé sur cet appareil,
-renvoi automatique ». **C'est normal** : l'app réessaie seule, rien n'est perdu. (Pour l'application, étape 4 : moins d'une
-seconde.) Après : relancer 01, partie G : « objets v78 déjà là » = 0.
+renvoi automatique » (ou, sans « Rester connecté », « Hors ligne — gardé dans cet onglet seulement : ne le ferme pas »).
+**C'est normal** : l'app réessaie seule, rien n'est perdu tant que l'onglet reste ouvert (d'où l'heure calme). (Pour
+l'application, étape 4 : moins d'une seconde.) Après : relancer 01, partie G : « objets v78 déjà là » = 0.
 
 ### 4. Application
 `02-migration.sql` en entier, **dans l'éditeur SQL de Supabase** (Lucas, ou Claude par `execute_sql` si Lucas lève le refus) :
@@ -130,15 +134,17 @@ verrou attendu plus de 5 s annule tout aussi : on réessaie quelques minutes plu
 
 ### 5. Vérifications et comptage « après »
 `05-verifications.sql`, après avoir collé dans `avant` les 4 empreintes de la partie G du relevé. Attendu : aucune ligne
-« ÉCHEC », dernière ligne « OK ». Comparer la partie E (lignes et empreinte par clé, lignes de chaque table) aux parties A et F
-du relevé :
+« ÉCHEC », dernière ligne « OK » (ou « À COMPARER / À REGARDER » si les seules lignes ni « OK » ni « INFO » sont en
+« ÉCART » sur les empreintes de `donnees` ou des profils, expliquées par la partie E : `docs/V78-A-APPLIQUER-DEMAIN.md`,
+étape 5). Comparer la partie E (lignes et empreinte par clé, lignes de chaque table) aux parties A et F du relevé :
 - identiques : parfait ;
 - une clé de `donnees` diffère : seulement si l'app l'a écrite entre-temps (une personne connectée : `activite`,
   `coach_visite`, `checkins`, `journal`…). Le catalogue et la bibliothèque : identiques attendus. Une différence qu'on ne sait
   pas expliquer, ou un nombre de lignes qui **baisse** : STOP, retour arrière (étape 7), on regarde avec Lucas. (La migration ne
   contient aucun `INSERT`, `UPDATE` ni `DELETE`.)
 
-Puis relancer `04-tests.sql` (sur la vraie base, il est annulé) : attendu `68 / 68 tests OK, 8 sauté(s)`.
+Puis, avec l'« ok » de Lucas, relancer `04-tests.sql` (sur la vraie base, il écrit des comptes fictifs puis annule tout) :
+attendu `68 / 68 tests OK, 8 sauté(s)`.
 
 **Le jour même, dès que 05 dit « OK »** (pas « plus tard ») : mettre à jour les repères, pour qu'aucune nouvelle clé ne parte
 sans être ajoutée à la base :
@@ -151,7 +157,8 @@ sans être ajoutée à la base :
 
 ### 6. Dans l'app (Lucas, avec le compte de test `9df6bb84…`, jamais un vrai client)
 Ouvrir l'app, noter une séance, cocher un repas, ajouter une mesure, envoyer un bilan ; côté coach, ouvrir la fiche du compte de
-test et envoyer un programme ; un compte prospect de test : questionnaire, calculateur. Aucun message « refusée par la base ».
+test et envoyer un programme ; un compte prospect de test (à vérifier : aucun n'est noté, à décider avec Lucas) :
+questionnaire, calculateur. Aucun message « refusée par la base ».
 
 ### 7. Si quelque chose ne va pas
 - Urgence, sans rien supprimer (une ligne, réversible) : `alter table public.donnees disable trigger v78_donnees_limites;`
@@ -190,7 +197,8 @@ Dans tous les cas : on s'arrête, rien n'est perdu (aucune ligne n'est touchée)
   **Choix simple pour Lucas** : garder 256 Ko et l'accepter (repasser un client prospect reste rare ; le coach peut le
   repasser client), ou passer le plafond prospect à **512 Ko** (environ 6,3 Mo au plus par compte prospect au lieu de 3,6 Mo ;
   marge de `formation` ×7,4). Si 512 Ko : changer la valeur dans 02 et ses copies (01, 04, 05 : le banc vérifie qu'elles
-  concordent), adapter les tests 25, 55, 56, 65 et 71 de 04, refaire 06, relancer l'étape 0.
+  concordent), adapter les tests 3, 25, 55, 56, 65 et 71 de 04, refaire 06, relancer l'étape 0. Ne pas remplacer 262144
+  partout : c'est aussi la limite de `intake`.
 - **Prénom / nom** : contraintes `CHECK` validées (100 caractères). Une inscription faite hors de l'app avec un prénom plus long
   échoue en entier (aucun compte créé) ; un accès créé par le coach avec un nom de plus de 100 caractères aussi (message
   d'erreur de Supabase, le champ du coach n'a pas de `maxlength`).

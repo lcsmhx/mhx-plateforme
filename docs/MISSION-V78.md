@@ -53,7 +53,7 @@ Fin de mission : `docs/V78-A-APPLIQUER-DEMAIN.md`, HISTORIQUE, HANDOFF, `CLAUDE.
   puis chiffrés dans le dépôt privé) et retirés (404 sur raw.githubusercontent.com) ; prénom retiré de `donnees/README.md` et
   `donnees/liens-youtube.md` ; ancienne adresse de contact retirée de `docs/archive/BRIEFHANDOVERPLATEFORMEMHX.md` ;
   `tests-locaux/garde-depot.js` au banc (partie 10) ; règle « Dépôt public » dans `CLAUDE.md`. Artefacts GitHub d'avant la
-  v67 : aucun, rien supprimé. Laissés : le prospect fictif « Paul » des tests ; un produit du catalogue qui porte un prénom
+  v67 : aucun, rien supprimé. Laissés : le prénom d'un prospect fictif des tests ; un produit du catalogue qui porte un prénom
   (catalogue intact).
 - Vers 05:55 — **tâche 4 faite** : dépôt privé `lcsmhx/mhx-prive` (README, RESTAURATION.md, workflows `sauvegarde.yml` —
   dimanche 12:00 UTC et à la main —, `restauration-essai.yml`, `essai-sans-secrets.yml`) ; secret `PHRASE_SAUVEGARDE` posé,
@@ -65,7 +65,7 @@ Fin de mission : `docs/V78-A-APPLIQUER-DEMAIN.md`, HISTORIQUE, HANDOFF, `CLAUDE.
   `supabase/releve-2026-09-30/INVENTAIRE-CLES.md`, `tests-locaux/garde-cles.js` au banc (partie 10). Relevé en agrégats sur
   la vraie base **pas lancé** (`execute_sql` refusé par `.claude/settings.local.json`) ; pas de Postgres sur le Mac :
   `04-tests.sql` écrit, pas exécuté.
-- Vers 07:58 — **tâche 2 poussée** (`main` `9bd42ea`, version 78.1 ; banc local 10/10 et GitHub verts) : `Integre`
+- Vers 07:51 — **tâche 2 poussée** (`main` `9bd42ea`, version 78.1 ; banc local 10/10 et GitHub verts) : `Integre`
   (`js/installation.js`), réglage `CONFIG.marque.navigateur_integre` (true), textes `DECOUVERTE.integre` (FR et EN),
   `?ouvrir=connexion`, carte « Dernière étape : mets l'app sur ton téléphone », bouton `intent://` vers Chrome, bannière
   adaptée, `verif82` (56, partie 8). Publication en cours à la rédaction : en ligne si « Tests puis publication » est vert

@@ -11,8 +11,8 @@ Référence de la tâche 5 : `supabase/v78-limites/LISEZMOI.md` (il fait foi en 
 ## Les règles de la séance (`CLAUDE.md`)
 
 - **Une étape à la fois.** Claude fait l'étape, fait un rapport court, puis **STOP** : il attend l'« ok » de Lucas.
-- **Toute écriture dans la vraie base demande l'« ok » de Lucas, juste avant** : la répétition (06), la migration (02), le
-  retour arrière (03), et même l'arrêt d'urgence.
+- **Toute écriture dans la vraie base demande l'« ok » de Lucas, juste avant** : la répétition (06), la migration (02),
+  `04-tests.sql` relancé à l'étape 5 (écriture annulée, comme 06), le retour arrière (03), et même l'arrêt d'urgence.
 - **Jamais `DROP`, `DELETE` ni `TRUNCATE` sur les données.** Le seul fichier avec des `DROP` est `03-retour.sql` : il ne
   retire que les 5 objets ajoutés par la v78 (vérifiés par leur commentaire), jamais une ligne.
 - **Sauvegarde et comptage avant, répétition annulée, comptage après.** Un écart qu'on ne sait pas expliquer = **STOP**.
@@ -24,7 +24,9 @@ Référence de la tâche 5 : `supabase/v78-limites/LISEZMOI.md` (il fait foi en 
 
 ## Avant de commencer
 
-**1. Les décisions de Lucas** (voir la liste à la fin de la partie 5). Elles se prennent avant l'étape 3.
+**1. Les décisions de Lucas** (voir la liste à la fin de la partie 5). Décisions 1 à 5 **avant l'étape 0** (elles changent
+02 et 04, donc le test local, et le plafond est aussi dans 01) ; 7 avant l'étape 1 ; 8 et 9 avant l'étape 2 ; 6 avant
+l'étape 3.
 
 **2. Le dossier de la séance**, hors dépôt (il reçoit le relevé, la sauvegarde, les journaux) :
 ```bash
@@ -68,9 +70,9 @@ Rien à changer dans l'app.
 | 1 | relevé en agrégats (`01`) | vraie base | non (lecture seule) |
 | 2 | sauvegarde et comptage « avant » | GitHub (dépôt privé) ou vraie base | non |
 | 2 bis | relecture `database-reviewer` | dépôt | non |
-| 3 | répétition (`06`, tout annulé) — facultative | vraie base | non (annulée) |
+| 3 | répétition (`06`, tout annulé) — obligatoire | vraie base | **oui, puis annulé** (« ok » de Lucas) |
 | 4 | application (`02`) | vraie base | **oui** |
-| 5 | vérifications (`05`) et comptage « après » | vraie base | non |
+| 5 | vérifications (`05`) et comptage « après », puis `04` relancé | vraie base | `05` : non ; `04` : **oui, puis annulé** (« ok » de Lucas) |
 | 6 | essai dans l'app, compte de test | app | non (saisies de test) |
 | 7 | si besoin : arrêt d'urgence ou retour arrière (`03`) | vraie base | **oui** |
 | 8 | après : repères et historique | dépôt | non |
@@ -225,6 +227,11 @@ nombres pour `profils`, `donnees`, `bibliotheque`, `aliments`, `recettes`, `prog
 `connexions`. Le nombre de `profils` doit aussi être la somme des comptes de la partie D. (Ouvrir la sauvegarde sur le Mac,
 si besoin : `RESTAURATION.md` du dépôt privé, parties A et B ; c'est Lucas qui tape la phrase secrète.)
 
+**Attention : ce sera la 1re vraie sauvegarde** (la CLI Supabase, Docker et le pooler n'ont encore jamais tourné sur la vraie
+base). Comptages identiques **obligatoires**. Qu'on puisse la remettre en place n'est pas encore prouvé : la restauration
+d'essai du `README.md` de `mhx-prive` (« Mise en service : trois vérifications », point 2 ; `RESTAURATION.md`, partie D1)
+reste à faire (à vérifier). Proposer à Lucas, au choix, de faire cette restauration d'essai avant l'étape 4.
+
 **Façon B — export par `SELECT`** (si les secrets ne sont pas posés ; demande la façon B de l'étape 1) : comme la
 sauvegarde du 29/09 (`~/MHX-Code/sauvegardes/2026-09-29-avant-v56/`, son `LISEZMOI.md`) : `profils`, `donnees` avec
 `contenu`, `bibliotheque`, le catalogue, `briefs`, `connexions`, et le texte des règles, des fonctions et des déclencheurs ;
@@ -232,7 +239,9 @@ résultats relus dans le journal de la session par `extraire.py` (chemin du jour
 contrôle ligne par ligne comme `verifier.py`. Rangé dans `~/MHX-Code/sauvegardes/2026-10-13-avant-v78/` (droits 700 / 600,
 jamais commité).
 
-**Comptage « avant »** : c'est le relevé de l'étape 1. Le relancer s'il a plus d'une heure.
+**Comptage « avant »** : c'est le relevé de l'étape 1. Le relancer s'il a plus d'une heure. **Une sauvegarde de plus d'une
+heure** : relancer aussi la sauvegarde (façon A : Run workflow ; façon B : refaire l'export), pas seulement le relevé, puis
+refaire la comparaison ci-dessus (les saisies des clients faites entre-temps n'y seraient pas).
 
 **Retour arrière** : rien à défaire (une sauvegarde n'écrit rien dans la base).
 
@@ -255,18 +264,26 @@ la sauvegarde des étapes 1 et 2 : SQL, sauvegarde, comptages, retour arrière.
 
 ---
 
-## Étape 3 — Répétition sur la vraie base (facultative, « ok » de Lucas)
+## Étape 3 — Répétition sur la vraie base (obligatoire, « ok » de Lucas juste avant)
 
 **But** : jouer la migration et les tests sur la vraie base, puis **tout annuler**. `06-repetition.sql` n'a aucun `commit`.
 
-**Sauvegarde** : celle de l'étape 2 (moins d'une heure, sinon relancer le relevé).
+**Obligatoire** : `CLAUDE.md`, « Les garde-fous » (« répétition annulée »). L'étape 0 ne la remplace pas : le Postgres local
+ne voit ni les vraies règles d'accès, ni les vrais déclencheurs de `auth.users`, ni les vraies tailles. La sauter serait une
+exception à cette règle : seulement sur un « ok » écrit de Lucas pour cette exception précise.
+
+**Sauvegarde** : celle de l'étape 2, de moins d'une heure ; sinon relancer la sauvegarde **et** le relevé (étape 2).
 
 **Commande** : coller **`06-repetition.sql` tel quel, en entier, en un seul envoi** dans l'éditeur SQL (Lucas), ou Claude
 par `execute_sql` avec tout le fichier. **Jamais un morceau de 02 ou de 04** : 02 a un `commit`, il appliquerait la
 migration pour de bon. Si l'éditeur affiche un avertissement : le lire et le dire à Claude avant de confirmer.
 
-**Pendant l'envoi**, l'app peut se figer quelques secondes et afficher « Hors ligne — gardé sur cet appareil, renvoi
-automatique » : c'est normal (verrou le temps des tests), l'app réessaie seule, rien n'est perdu.
+**Pendant l'envoi**, l'app peut se figer quelques secondes et afficher, en haut :
+- « Hors ligne — gardé sur cet appareil, renvoi automatique » (« Rester connecté » coché) ;
+- ou « Hors ligne — gardé dans cet onglet seulement : ne le ferme pas » (« Rester connecté » décoché, `js/auth-store.js`).
+
+C'est normal (verrou le temps des tests) : l'app réessaie seule, et rien n'est perdu **tant que l'onglet reste ouvert**. Un
+client qui ferme l'onglet à ce moment, sans « Rester connecté », perd sa saisie : d'où l'**heure calme** (décision 9).
 
 **On doit lire** l'erreur **voulue** :
 `v78 : 68 / 68 tests OK, 8 sauté(s) — aucun échec. Annulation forcée : rien n'est gardé.`
@@ -285,7 +302,9 @@ Rapport court, puis **STOP**.
 
 ## Étape 4 — Application (« ok » de Lucas juste avant)
 
-**Sauvegarde** : celle de l'étape 2 (et le relevé de moins d'une heure).
+**Sauvegarde** : celle de l'étape 2, de moins d'une heure, avec un relevé de moins d'une heure. Sinon (la relecture et la
+répétition peuvent prendre plusieurs heures) : relancer la sauvegarde **et** le relevé (étape 2) ; les empreintes à coller à
+l'étape 5 sont alors celles de ce dernier relevé.
 
 **Commande** : **`02-migration.sql` en entier**, dans l'éditeur SQL (Lucas), ou Claude par `execute_sql` avec tout le
 fichier. Le fichier ouvre et ferme lui-même sa transaction. **Pas `apply_migration`.**
@@ -311,13 +330,23 @@ Pas de rapport long : on enchaîne sur l'étape 5 tout de suite, dans la même s
 sont remplacés, dans cet ordre, par les 4 empreintes de la partie G du relevé « avant » : règles RLS, fonctions de public
 (hors v78_), toutes les lignes de donnees, profils. La coller dans l'éditeur (ou `execute_sql`).
 
-**On doit lire** : aucune ligne « ÉCHEC », dernière ligne **« OK »**. Puis comparer :
+**On doit lire** : aucune ligne « ÉCHEC », et une dernière ligne (« Z bilan / verdict ») :
+- **« OK »** ;
+- ou **« À COMPARER / À REGARDER »** : acceptable **seulement** si les seules lignes ni « OK » ni « INFO » sont en « ÉCART » sur
+  « empreinte de toutes les lignes de donnees » et / ou « empreinte des profils », et que la partie E explique la différence
+  (une écriture de l'app entre-temps, voir ci-dessous). Une ligne « À COMPARER » = une empreinte pas collée : la coller et
+  relancer. Une ligne « À REGARDER » (marge au-dessus du quart de la limite) : STOP, on regarde avec Lucas.
+- Une ligne « ÉCHEC » = étape 7.
+
+Puis comparer :
 - partie E (lignes et empreinte par clé, lignes de chaque table, comptes par rôle) aux parties A, D et F du relevé : les
   mêmes ;
 - une clé de `donnees` différente : seulement si l'app l'a écrite entre-temps (`activite`, `coach_visite`, `checkins`,
   `journal`…) ; catalogue et bibliothèque : identiques.
 
-Puis relancer `04-tests.sql` (annulé) : on doit lire `68 / 68 tests OK, 8 sauté(s)`. Facultatif : relancer `01` et
+Puis, **avec l'« ok » de Lucas**, relancer `04-tests.sql` en entier : il écrit des comptes fictifs (`@exemple.invalid`) dans
+`auth.users` et des lignes dans `donnees`, puis annule tout (écriture annulée, comme 06). On doit lire
+`68 / 68 tests OK, 8 sauté(s)`. Facultatif : relancer `01` et
 l'enregistrer en `releve-apres.csv` (mêmes nombres en partie F, « objets v78 déjà là » = 5).
 
 **Le jour même, dès que 05 dit « OK »** (`LISEZMOI.md`, étape 5) :
@@ -338,7 +367,9 @@ Rapport (comptage avant / après, chemin de la sauvegarde), puis **STOP**.
 ## Étape 6 — Essai dans l'app (Lucas, compte de test `9df6bb84…`, jamais un vrai client)
 
 Ouvrir l'app, noter une séance, cocher un repas, ajouter une mesure, envoyer un bilan. Côté coach : ouvrir la fiche du
-compte de test, envoyer un programme. Avec un compte prospect de test : questionnaire, calculateur.
+compte de test, envoyer un programme. Avec un compte prospect de test : questionnaire, calculateur. **Compte prospect de
+test : à vérifier** (aucun n'est noté dans le dépôt : lequel ? à décider avec Lucas). C'est pourtant là qu'un refus est le
+plus probable (plafond prospect).
 
 **On doit lire** : aucun message « Non enregistré : la base a refusé cette modification. » (côté client et prospect,
 suivi de « Préviens ton coach. »).
@@ -388,16 +419,18 @@ d'avant.
 Un test local rouge · `garde-cles.js` rouge · une ligne « STOP » au relevé · une sauvegarde absente ou avec un nombre de
 lignes différent du relevé · une réserve du `database-reviewer` · une erreur à l'application · une ligne « ÉCHEC » aux
 vérifications · un écart de comptage inexpliqué · un message « refusée par la base » dans l'app.
-Dans tous les cas : on s'arrête, rien n'est perdu, on en parle à Lucas.
+Dans tous les cas : on s'arrête, rien n'est perdu, on en parle à Lucas. Et si la façon B a servi : **remettre le refus
+`execute_sql`** (étape 8), même en cas d'arrêt.
 
-## Décisions à trancher par Lucas (avant l'étape 3)
+## Décisions à trancher par Lucas (1 à 5 avant l'étape 0 ; 7 avant l'étape 1 ; 8 et 9 avant l'étape 2 ; 6 avant l'étape 3)
 
 Détail et raisons : `supabase/v78-limites/LISEZMOI.md`, « Décisions prises dans ce projet ».
 1. **Plafond d'un prospect : 256 Ko par clé (prévu) ou 512 Ko.** Avec 256 Ko : un client que le coach « repasse
    prospect » et qui a déjà une clé plus lourde (journal, bilans) ne peut plus la faire grossir (ses nouvelles saisies
    restent sur l'appareil, « Préviens ton coach ») ; `formation` n'a que ×3,7 de marge pour un prospect lourd. Avec 512 Ko :
    environ 6,3 Mo au plus par compte prospect au lieu de 3,6 Mo. Si 512 Ko : changer la valeur dans 02 et ses copies (01,
-   04, 05), adapter les tests 25, 55, 56, 65 et 71 de 04, refaire 06, relancer l'étape 0.
+   04, 05), adapter les tests 3, 25, 55, 56, 65 et 71 de 04, refaire 06, relancer l'étape 0. **Ne pas remplacer 262144
+   partout** : c'est aussi la limite propre de la clé `intake`.
 2. **Les limites par clé** (16 Mo pour l'historique des diètes, 8 Mo des programmes, 4 Mo pour le journal, … 16 Ko pour les
    petites clés) : tableau et raisons dans `supabase/releve-2026-09-30/INVENTAIRE-CLES.md`. D'accord ?
 3. **Prénom et nom : 100 caractères au plus.** Une inscription faite hors de l'app avec un prénom plus long échoue en
@@ -406,13 +439,15 @@ Détail et raisons : `supabase/v78-limites/LISEZMOI.md`, « Décisions prises da
    aucune règle, et s'agrandit sans `DROP` quand une clé arrive.
 5. **Une ancienne ligne plus grosse que sa limite** (impossible le jour J) : lisible, modifiable sans grossir, ne peut plus
    grossir. Personne n'est bloqué, la base ne coupe ni n'efface rien.
-6. **La répétition sur la vraie base (étape 3)** : la faire ou non.
+6. **La répétition sur la vraie base (étape 3)** : obligatoire (`CLAUDE.md`, « Les garde-fous »). La sauter = une exception
+   à cette règle, seulement sur un « ok » écrit de Lucas pour cette exception précise.
 7. **Qui lance le SQL** : Lucas dans l'éditeur (façon A) ou Claude par `execute_sql`, refus levé pour la séance (façon B).
-8. **La sauvegarde** : par le dépôt privé (poser d'abord les 2 secrets) ou par export `SELECT`.
+8. **La sauvegarde** : par le dépôt privé (poser d'abord les 2 secrets) ou par export `SELECT`. Avec le dépôt privé : faire
+   ou non la restauration d'essai avant l'étape 4 (étape 2).
 9. **L'heure de la séance** : une heure calme.
 
 **Ce que ce lot ne règle pas** : après la v78, environ 140 faux comptes suffiraient encore à remplir les 500 Mo. C'est le
-rôle du CAPTCHA (tâche 3, en ligne mais éteint : `docs/TURNSTILE.md`) et des limites d'inscription de Supabase Auth, à
+rôle du CAPTCHA (tâche 3, prête mais éteinte : `docs/TURNSTILE.md`) et des limites d'inscription de Supabase Auth, à
 décider par Lucas.
 
 ---
