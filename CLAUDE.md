@@ -3,11 +3,6 @@
 Lis ce fichier en entier au début de chaque conversation. Il passe avant tout autre fichier du dépôt.
 
 ## Mode de travail
-> **Exception de la nuit du 12/10/2026 (mission v78, `docs/MISSION-V78.md`) — à retirer en fin de mission** : autonomie
-> complète, push sur `main` et mise en ligne compris, pour les tâches 1 à 4 seulement ; tâches 5 et 6 en préparation
-> seulement (aucune écriture dans la base, aucun push de l'historique réécrit). Toutes les autres règles de ce fichier
-> restent valables, surtout zéro perte de données.
-
 Règle de Lucas du 02/10/2026 : elle passe avant toutes les autres règles de ce fichier.
 - **Fais exactement ce qui est demandé, rien de plus.** Sauf demande explicite de Lucas : pas de tests automatiques (en écrire ou en exécuter), relectures, audits, agents, sous-agents, tâches en arrière-plan, captures d'écran, surveillance du banc GitHub, ni de modification hors de la demande. Seuls ajouts sans qu'on te le dise : ce que ce fichier impose (numéro de version, traduction anglaise d'une phrase visible). Une bonne idée en plus ? Note-la dans ton rapport, ne la code pas. Une demande floue ? Une question courte, pas une interprétation.
 - **Une seule étape à la fois.** Lis les fichiers concernés, fais la modif, commite, rapport court, **STOP** : tu attends la validation de Lucas. Jamais plusieurs phases enchaînées sans validation.
@@ -91,7 +86,7 @@ Dans `.claude/` (sélection adaptée d'ECC), actifs puisque les sessions s'ouvre
 - Seulement quand Lucas dit que le chantier est fini, pas avant : une note courte pour Grok Bot dans `NOTESCLAUDE.md`, la ligne « En ligne » de « État actuel » ci-dessous mise à jour, et une ligne ajoutée dans `docs/HISTORIQUE.md`.
 
 ## État actuel
-- **En ligne : v78 (12/10/2026, 2026-10-12 · 78.2 — en ligne quand « Tests puis publication » est vert, à confirmer)** — mission de nuit : données personnelles sorties du dépôt public (`donnees/` en liste blanche, aucune adresse email réelle dans les fichiers suivis : `tests-locaux/garde-depot.js`), carte « Dernière étape : mets l'app sur ton téléphone » pour le prospect inscrit depuis le navigateur d'Instagram, TikTok ou Facebook, CAPTCHA Cloudflare Turnstile prêt mais éteint, sauvegarde automatique de la base préparée dans le dépôt privé `lcsmhx/mhx-prive` ; rien côté base. Historique détaillé des versions : `docs/HISTORIQUE.md` (à compléter à chaque version, une ligne) ; ce qui reste à appliquer avec Lucas : `docs/V78-A-APPLIQUER-DEMAIN.md`.
+- **En ligne : v78 (12/10/2026, `0727aed`, vérifiée sur le site : « 2026-10-12 · 78.2 »)** — mission de nuit : données personnelles sorties du dépôt public (`donnees/` en liste blanche, aucune adresse email réelle dans les fichiers suivis : `tests-locaux/garde-depot.js`), carte « Dernière étape : mets l'app sur ton téléphone » pour le prospect inscrit depuis le navigateur d'Instagram, TikTok ou Facebook, CAPTCHA Cloudflare Turnstile prêt mais éteint, sauvegarde automatique de la base préparée dans le dépôt privé `lcsmhx/mhx-prive` ; rien côté base. Historique détaillé des versions : `docs/HISTORIQUE.md` (à compléter à chaque version, une ligne) ; ce qui reste à appliquer avec Lucas : `docs/V78-A-APPLIQUER-DEMAIN.md`.
 - **Inscription publique ouverte** depuis la v54 (`inscription_libre: true`, décision de Lucas). Pour refermer : `docs/OUVERTURE-INSCRIPTION.md`, étape 8.
 - **Depuis la v67, le site ne publie que l'app** (`.github/workflows/pages.yml` : `index.html`, `css/`, `js/`, `polices/`) : avant, des données de santé de vrais clients étaient servies en ligne. **Ne jamais annuler ce commit en bloc.**
 - Fichiers : `index.html` (HTML) + `css/` + `js/` depuis la 52.1. GitHub Actions : banc en 10 parties sur `main` et `v2/*`, publication seulement si tout est vert.

@@ -68,12 +68,19 @@ Fin de mission : `docs/V78-A-APPLIQUER-DEMAIN.md`, HISTORIQUE, HANDOFF, `CLAUDE.
 - Vers 07:51 — **tâche 2 poussée** (`main` `9bd42ea`, version 78.1 ; banc local 10/10 et GitHub verts) : `Integre`
   (`js/installation.js`), réglage `CONFIG.marque.navigateur_integre` (true), textes `DECOUVERTE.integre` (FR et EN),
   `?ouvrir=connexion`, carte « Dernière étape : mets l'app sur ton téléphone », bouton `intent://` vers Chrome, bannière
-  adaptée, `verif82` (56, partie 8). Publication en cours à la rédaction : en ligne si « Tests puis publication » est vert
-  (à confirmer).
-- **Tâche 3 en cours** : branche `v2/v78-turnstile` (`0727aed`, contient la tâche 2 ; banc GitHub vert ; banc local en
-  cours), version 78.2 : `CONFIG.turnstile { cle_site: "", profil: false }` (vide = comportement d'avant exact), objet
+  adaptée, `verif82` (56, partie 8). **En ligne** vers 08:10 (« Tests puis publication » vert, site « v2026-10-12 · 78.1 »
+  vu, `?ouvrir=connexion` → `#/connexion` vérifié).
+- Vers 08:47 — **tâche 3 en ligne** (`main` `0727aed`, contient la tâche 2 ; banc local 10/10 et GitHub verts ; site
+  « v2026-10-12 · 78.2 » vu ; clé vide : aucun script ni cadre de Cloudflare chargé), version 78.2 : `CONFIG.turnstile { cle_site: "", profil: false }` (vide = comportement d'avant exact), objet
   `Captcha` (`js/connexion.js`), `verif83` (54, partie 1), `docs/TURNSTILE.md`, paragraphe dans
   `docs/CONFIDENTIALITE-BROUILLON.md`, ligne dans `CLAUDE.md`.
-- **Tâche 6 pas encore faite** (répétition prévue après la mise en ligne de la tâche 3).
+- 08:47 à 09:35 — **tâche 6, répétition** (aucun push) : miroir `~/MHX-prive/nettoyage/mhx-plateforme.git` (envoi
+  désactivé tout de suite), git-filter-repo 2.47.0 (PyPI, installé dans ce dossier seulement), inventaire de tout
+  l'historique (37 références, 379 commits), règles hors dépôt, **essai à blanc vérifié OK** (0 occurrence restante hors
+  prospect fictif et produit du catalogue, arbre de `main` identique, catalogue identique au bit près). **La réécriture du
+  miroir n'a pas été faite** : la commande a été refusée par le contrôle de permissions de la session ; arrêt de la tâche
+  comme le prévoit la mission, miroir intact. Procédure : `docs/V78-A-APPLIQUER-DEMAIN.md`, partie 6. Autres copies
+  relevées (rien supprimé) : même document, étape 6.
+- Vers 09:45 — fin de mission : exception d'autonomie retirée de `CLAUDE.md`, documents poussés.
 - Fin de mission, branche `v2/v78-fin` (commits locaux) : `docs/V78-A-APPLIQUER-DEMAIN.md`, ligne v78 de `docs/HISTORIQUE.md`,
   HANDOFF, « État actuel » de `CLAUDE.md`, note pour Grok Bot dans `NOTESCLAUDE.md`.
