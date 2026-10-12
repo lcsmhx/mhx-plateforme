@@ -48,7 +48,7 @@ On doit lire 8 fichiers : `00-socle-local.sql` à `06-repetition.sql` et `LISEZM
 cd ~/MHX-Code/mhx-plateforme/tests-locaux
 PATH="$HOME/.local/node/bin:$PATH" node garde-cles.js ../index.html
 ```
-On doit lire : « 27 clés dans public.v78_limite » puis « aucun problème : … 06 = 02 + 04 sans commit ».
+On doit lire : « 28 clés dans public.v78_limite » (27 avant la v79 et son journal alimentaire) puis « aucun problème : … 06 = 02 + 04 sans commit ».
 **Arrêt si** une ligne « PROBLÈME » : on corrige d'abord.
 
 ---
@@ -56,7 +56,7 @@ On doit lire : « 27 clés dans public.v78_limite » puis « aucun problème : �
 # Partie 5 — Limites d'écriture dans la base (lot 2 de la v66)
 
 **En deux phrases.** Aujourd'hui, un inscrit peut écrire par l'API n'importe quelle clé, de n'importe quelle taille, dans
-ses propres lignes : un seul compte pourrait remplir les 500 Mo gratuits. La migration n'accepte plus que les 27 clés de
+ses propres lignes : un seul compte pourrait remplir les 500 Mo gratuits. La migration n'accepte plus que les 28 clés de
 l'app, chacune avec une taille maximale (256 Ko au plus par clé pour un prospect), et limite prénom et nom à 100 caractères.
 
 **Ce qu'elle ne change pas** : aucune ligne modifiée ni supprimée ; règles d'accès, fonctions, colonnes, lecture : identiques.

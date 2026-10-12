@@ -2,7 +2,7 @@
 
 Fait dans le code de la branche `v2/v78-limites` (au départ de `main` = v77, `85973aa` + plan v78). Il complète le relevé du 30/09
 (`releve.sql`, requête 13), dont la liste de 25 clés **oubliait `contact` (v72) et `coach_visite` (v72 E)** : le projet de
-migration v66 aurait refusé le numéro de téléphone des inscrits et la visite du coach. La liste à jour compte **27 clés** ;
+migration v66 aurait refusé le numéro de téléphone des inscrits et la visite du coach. La liste à jour compte **28 clés** (v79 : `journal_alimentaire`, le journal alimentaire) ;
 c'est la seule liste admise par la migration v78 (`supabase/v78-limites/02-migration.sql`, fonction `public.v78_limite`).
 
 Taille = ce que la base mesure : `octet_length(contenu::text)`, le JSON tel que Postgres l'écrit (avec `", "` et `": "`, accents
@@ -18,7 +18,7 @@ donnera les vraies tailles (max, moyenne, p95) ; la migration s'arrête si une l
   `hist_programme`, `hist_repas`, `feedbacks`, `notes_coach`, `suivi_prospect`.
 - **L'anonyme** : rien.
 
-## Les 27 clés
+## Les 28 clés
 
 | Clé | Qui l'écrit (et où dans le code) | Forme | Bornes déjà imposées par le code | Taille lourde | Limite v78 | Marge |
 |---|---|---|---|---|---|---|
@@ -28,6 +28,7 @@ donnera les vraies tailles (max, moyenne, p95) ; la migration s'arrête si une l
 | `perf` | coach, pour lui-même (journal d'entraînement) : `js/outilEntrainement.js:72` | `{seances[…], courante, historique[{date, si, nom, exos[{nom, vol, max}], series, vol}]}` | **aucune** : `historique` grossit à chaque séance (`js/outilEntrainement.js:235`) | 622 Ko (3 ans à 5 séances par semaine ; ~210 Ko par an) | 4 Mo | ×6,6 (≈ 19 ans) |
 | `checkins` | client : `Checkin`, `Store.ecrire` (`js/outilSuivi.js:246, 259`) | `{liste[{semaine, fin, envoye_le, envoye_a, reponses{}}], avis[{semaine, fb, smiley, le, deplu?, ameliorer?}], fb_vu}` | 60 bilans (`js/outilSuivi.js:11`, 186, 348) ; 200 avis (12, 194, 617) ; textes du dimanche et des avis ≤ 2 000 car. (549, 571, 598-599, 634) ; textes du vendredi **sans** `maxlength` (75) | 281 Ko (60 bilans × 5 textes de 600 car. + 200 avis) | 2 Mo | ×7,3 |
 | `repas` | coach, fiche du client (`js/outilNutrition.js:718`, 1018) ; client par « Remplacer » (801) | `{nom, note, cible, regime, allergenes, nb_repas, maj, debut, jours[{nom, repas[carte], manquants, complement, diagnostic}]}` | 7 jours × 2 à 6 repas (`js/outilNutrition.js:625`) ; cartes figées depuis le catalogue (étapes ≤ 320 o, ≤ 11 ingrédients dans `donnees/recettes.json`) | 121 Ko (7 j × 6 repas × 11 ingrédients) ; ~30 Ko pour une vraie diète (code, commentaire `js/outilProgramme.js:10`) | 1 Mo | ×8,5 |
+| **`journal_alimentaire`** (v79, 13/10/2026) | client, prospect (après l'accord santé), le compte lui-même (jamais le coach, qui le lit seulement) : `JournalAlim`, `Store.ecrire` (`js/outilJournalAlimentaire.js`) | `{v, a[[id, kcal, p, g, l, nom]], j{"AAAA-MM-JJ":[[repas, n° dans a (-1 = ajout rapide), grammes ou kcal]]}}` | un aliment = son identifiant une seule fois dans `a`, puis 3 nombres par ligne ; 40 lignes par jour au plus | ~130 Ko par an (20 lignes par jour, 300 aliments) ; ~85 Ko réalistes | 1 Mo (prospect : 256 Ko) | ×7,7 sur un an (prospect : ×2 sur un an, ×1 sur deux ans soutenus) |
 | `feedbacks` | coach seul (le client la lit) : `Feedback`, `CleCoach.ecrireSi` (`js/outilSuivi.js:880`) | `{liste[{semaine, fin, date, texte, bilan?}]}` | 60 réponses (`js/outilSuivi.js:823`, 880) ; texte **sans** `maxlength` (916) | 105 Ko (60 × 1 500 car.) | 1 Mo | ×10 |
 | `programme` | coach, fiche du client (`js/outilProgramme.js:978`, 1066) | `{nom, note, seances[{nom, note, exercices[{nom, series, reps, repos, note, lien, id}]}], maj, debut, cycle, duree_semaines, objectifs{mois, liste[3], statuts[3]}}` | aucune (séances, exercices, notes) ; programmes types du catalogue : 10 Ko au plus | 52 Ko (7 séances × 12 exercices, notes de 300 car.) | 512 Ko | ×10 |
 | `atelier` | coach, pour lui-même (programme modèle) : `js/outilAtelier.js:46` | comme `programme` (+ lieu, niveau, objectif) | aucune | 52 Ko | 512 Ko | ×10 |
