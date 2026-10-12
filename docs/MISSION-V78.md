@@ -48,3 +48,32 @@ Fin de mission : `docs/V78-A-APPLIQUER-DEMAIN.md`, HISTORIQUE, HANDOFF, `CLAUDE.
 - 04:18 — départ, `caffeinate`, lecture de CLAUDE.md / HISTORIQUE / HANDOFF, sauvegarde du dépôt vérifiée, v77 constatée en
   ligne (`85973aa`, pull request #1, banc vert).
 - Artefacts GitHub du dépôt public relevés à 04:25 : 28, tous du 05/10 au 11/10 (après la v67) ; aucun d'avant la v67.
+- Vers 05:30 — **tâche 1 en ligne** (`main` `2f908ff`, version 78 ; banc local 10/10 et GitHub verts ; site « v2026-10-12 · 78 »
+  vu) : le programme nominatif d'une cliente et `donnees/audit-coherence.md` archivés hors dépôt (`~/MHX-prive/archives/`,
+  puis chiffrés dans le dépôt privé) et retirés (404 sur raw.githubusercontent.com) ; prénom retiré de `donnees/README.md` et
+  `donnees/liens-youtube.md` ; ancienne adresse de contact retirée de `docs/archive/BRIEFHANDOVERPLATEFORMEMHX.md` ;
+  `tests-locaux/garde-depot.js` au banc (partie 10) ; règle « Dépôt public » dans `CLAUDE.md`. Artefacts GitHub d'avant la
+  v67 : aucun, rien supprimé. Laissés : le prospect fictif « Paul » des tests ; un produit du catalogue qui porte un prénom
+  (catalogue intact).
+- Vers 05:55 — **tâche 4 faite** : dépôt privé `lcsmhx/mhx-prive` (README, RESTAURATION.md, workflows `sauvegarde.yml` —
+  dimanche 12:00 UTC et à la main —, `restauration-essai.yml`, `essai-sans-secrets.yml`) ; secret `PHRASE_SAUVEGARDE` posé,
+  phrase dans `~/MHX-prive/A-GARDER-phrase-secrete.txt` ; archive chiffrée `archives/donnees-retirees-2026-10-12.tar.enc`
+  (relue identique) ; sans les secrets de la base, la sauvegarde s'arrête au 1er pas avec un message clair (vu sur GitHub) ;
+  « Essai sans secrets » vert. Restent à Lucas : `SUPABASE_DB_URL` et `SUPABASE_SERVICE_ROLE_KEY`, la 1re sauvegarde à la
+  main, une restauration d'essai dans un 2e projet.
+- Vers 06:00 — **tâche 5 préparée, rien appliqué** : `supabase/v78-limites/` (LISEZMOI, 00 à 06),
+  `supabase/releve-2026-09-30/INVENTAIRE-CLES.md`, `tests-locaux/garde-cles.js` au banc (partie 10). Relevé en agrégats sur
+  la vraie base **pas lancé** (`execute_sql` refusé par `.claude/settings.local.json`) ; pas de Postgres sur le Mac :
+  `04-tests.sql` écrit, pas exécuté.
+- Vers 07:58 — **tâche 2 poussée** (`main` `9bd42ea`, version 78.1 ; banc local 10/10 et GitHub verts) : `Integre`
+  (`js/installation.js`), réglage `CONFIG.marque.navigateur_integre` (true), textes `DECOUVERTE.integre` (FR et EN),
+  `?ouvrir=connexion`, carte « Dernière étape : mets l'app sur ton téléphone », bouton `intent://` vers Chrome, bannière
+  adaptée, `verif82` (56, partie 8). Publication en cours à la rédaction : en ligne si « Tests puis publication » est vert
+  (à confirmer).
+- **Tâche 3 en cours** : branche `v2/v78-turnstile` (`0727aed`, contient la tâche 2 ; banc GitHub vert ; banc local en
+  cours), version 78.2 : `CONFIG.turnstile { cle_site: "", profil: false }` (vide = comportement d'avant exact), objet
+  `Captcha` (`js/connexion.js`), `verif83` (54, partie 1), `docs/TURNSTILE.md`, paragraphe dans
+  `docs/CONFIDENTIALITE-BROUILLON.md`, ligne dans `CLAUDE.md`.
+- **Tâche 6 pas encore faite** (répétition prévue après la mise en ligne de la tâche 3).
+- Fin de mission, branche `v2/v78-fin` (commits locaux) : `docs/V78-A-APPLIQUER-DEMAIN.md`, ligne v78 de `docs/HISTORIQUE.md`,
+  HANDOFF, « État actuel » de `CLAUDE.md`, note pour Grok Bot dans `NOTESCLAUDE.md`.
