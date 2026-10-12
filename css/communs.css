@@ -598,6 +598,7 @@ label.objectif{cursor:pointer;text-transform:none;letter-spacing:0;font-weight:4
 .retour-volet svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .retour-volet:hover,.retour-volet:focus-visible{color:var(--ink);background:var(--sunken)}
 .toasts{position:fixed;left:0;right:0;bottom:calc(16px + env(safe-area-inset-bottom));z-index:70;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;padding:0 16px}
+@media (max-width:720px){.toasts{bottom:calc(84px + env(safe-area-inset-bottom))}}   /* v79 : au-dessus de la barre du bas (la règle du haut, l. 61, était écrasée par celle-ci) */
 .toast{pointer-events:auto;max-width:420px;width:auto;background:var(--raised);color:var(--ink);border:1px solid var(--line-strong);border-left:3px solid var(--ink-3);
   border-radius:var(--r);padding:11px 16px;font-size:14px;box-shadow:var(--shadow);animation:glisse var(--doux) cubic-bezier(.2,.7,.2,1) both}
 .toast.ok{border-left-color:var(--good)} .toast.attention{border-left-color:var(--warn)} .toast.mauvais{border-left-color:var(--bad)}

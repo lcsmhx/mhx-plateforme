@@ -377,8 +377,10 @@ const geo = page => page.evaluate(() => {
     theme: document.documentElement.getAttribute("data-theme") };
 }).catch(() => null);
 /* les lectures de « donnees » depuis n0 qui ne sont ni la lecture groupée de la page (Clients.charger) ni une clé du coach */
-const GROUPEE = "not.in.(hist_programme,hist_repas,notes_coach)";
-const luEnPlus = (db, n0) => db.lectures.slice(n0).filter(l => !(l.uid === COACH.id || (!l.uid && l.outil === GROUPEE)));
+/* v79 : la lecture groupée de Mes clients ne télécharge plus les journaux alimentaires (jusqu'à 1 Mo par compte) ; leur DATE
+   seule est lue à part (LEGERE, select=user_id,outil,maj_le : jamais un contenu) — seule autre lecture admise, exactement */
+const GROUPEE = "not.in.(hist_programme,hist_repas,notes_coach,journal_alimentaire)", LEGERE = "eq.journal_alimentaire";
+const luEnPlus = (db, n0) => db.lectures.slice(n0).filter(l => !(l.uid === COACH.id || (!l.uid && l.outil === GROUPEE) || (!l.uid && l.outil === LEGERE && l.select === "user_id,outil,maj_le")));
 
 /* ---------- le décor ---------- */
 const SRC = source(HTML);

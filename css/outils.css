@@ -576,26 +576,31 @@ a.ch-etape:hover .num{border-color:var(--accent-line)}
 .ja-lignes .ja-ligne:first-child{border-top:0}
 button.ja-ligne:hover{background:var(--sunken)}
 .ja-l-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
-.ja-l-txt b{font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ja-l-txt b{font-size:15px;font-weight:500;line-height:1.3;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
 .ja-l-txt small{font-size:12.5px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ja-l-kcal{flex:none;font-size:15px;color:var(--ink-2)}
 .ja-nouveau{animation:ja-eclat 1.6s ease-out}
 @keyframes ja-eclat{0%,30%{background:var(--accent-soft)}100%{background:transparent}}
 .ja-vide{margin:2px 0 4px;font-size:14px;color:var(--ink-3)}
-.ja-ajouter{width:100%;min-height:44px;margin-top:10px;color:var(--accent);border-color:var(--accent-line)}
-.ja-ajouter:hover{color:var(--accent)}
+button.btn.ja-ajouter{width:100%;min-height:44px;margin-top:10px}
 .ja-sources{margin:14px 0 0;text-align:center;font-size:12px}
 .ja-sept{border-left:3px solid var(--accent)}
+.ja-sept + .ja-date{margin-top:16px}
 /* la carte des accueils */
 .ja-carte .ja-num{font-size:clamp(36px,10vw,46px)}
 .ja-carte-txt{margin:0;color:var(--ink-2);font-size:14px;line-height:1.55}
 .ja-carte-a{margin-top:14px}
-a.btn.ja-btn-ajout{width:100%;min-height:44px;color:var(--accent);border-color:var(--accent-line)}
-a.btn.ja-btn-ajout:hover{color:var(--accent)}
+a.btn.ja-btn-ajout{width:100%;min-height:44px}
 /* le panneau qui monte du bas (UI.ouvrir, classe ja-feuille) */
-.modale.ja-feuille{max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain}
+.modale.ja-feuille{position:relative;max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain}
+.modale.ja-feuille.ja-recherche{height:min(680px,calc(100dvh - 24px))}
+.modale.ja-feuille h2{padding-right:44px}
+.modale.ja-feuille .fermer-volet{position:absolute;top:10px;right:10px;min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center}
+.modale.ja-feuille .fermer-volet svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
 .modale.ja-feuille .corps{white-space:normal;color:var(--ink);font-size:15px}
-@media (max-width:560px){ .modale.ja-feuille{max-height:88dvh} .ja-f-liste{min-height:56dvh} }
+@media (max-width:560px){ .modale.ja-feuille{max-height:88dvh} .modale.ja-feuille.ja-recherche{height:88dvh} }
+/* le champ de recherche reste en haut du panneau quand la liste défile */
+.ja-q-zone{position:sticky;top:-22px;z-index:1;margin:-8px 0 0;padding:8px 0 4px;background:var(--surface)}
 .ja-f{display:flex;flex-direction:column;gap:12px}
 .ja-q{min-height:48px}
 .ja-f h3{margin:4px 0 -4px}
@@ -625,21 +630,23 @@ a.btn.ja-btn-ajout:hover{color:var(--accent)}
 .ja-pas button{width:44px;height:44px;background:none;border:0;color:var(--ink);font-size:22px;line-height:1;cursor:pointer;font-family:inherit;border-radius:999px}
 .ja-pas button:disabled{color:var(--ink-3);opacity:.5;cursor:default}
 .ja-pas span{min-width:34px;text-align:center;font-size:16px}
-.ja-g{display:inline-flex;align-items:center;gap:8px;margin:0;flex:1 1 120px;min-width:0;font-size:14px;color:var(--ink-2)}
+.ja-g{display:inline-flex;align-items:center;gap:8px;margin:0;flex:none;min-width:0;font-size:14px;color:var(--ink-2)}
+.ja-qte .ja-g{flex:1 1 120px}
 .ja-g input{min-height:44px;max-width:140px}
 .ja-g-large input{max-width:none;flex:1}
 .ja-calcul{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 8px;padding:12px 14px;background:var(--sunken);border:1px solid var(--line);border-radius:var(--r)}
 .ja-calcul-n{font-size:32px;line-height:1;color:var(--accent)}
 .ja-calcul small{flex-basis:100%;font-size:12.5px;color:var(--ink-3)}
 .ja-calcul small:empty{display:none}
-.ja-ok{width:100%;min-height:50px;font-size:16px}
-.ja-suppr{width:100%;min-height:44px}
+button.btn.ja-ok{width:100%;min-height:50px;font-size:16px}
+button.btn.ja-suppr{width:100%;min-height:44px}
 .ja-action{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;min-height:56px;padding:10px 14px;background:var(--sunken);
   border:1px solid var(--line);border-radius:var(--r);color:var(--ink);text-align:left;font-family:inherit;cursor:pointer;transition:border-color var(--vite)}
 .ja-action b{font-size:15px;font-weight:600}
 .ja-action small{font-size:13px;color:var(--ink-3)}
 .ja-action:hover{border-color:var(--accent-line)}
 .ja-action:disabled{opacity:.55;cursor:default;border-color:var(--line)}
+.ja-action[hidden],.ja-f h3[hidden]{display:none}
 /* le message « Supprimé : … » avec « Annuler » */
 .toast.ja-toast{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center}
 .ja-annuler{min-height:44px;padding:0 14px;background:none;border:1px solid var(--accent-line);border-radius:999px;color:var(--accent);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer}

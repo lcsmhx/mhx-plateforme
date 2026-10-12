@@ -38,16 +38,21 @@ const JournalAlim = {
   jourValide(s){ return typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s) && !isNaN(new Date(s + "T12:00:00").getTime()); },
   iso(d){ return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); },
   decaler(iso, n){ const [y, m, d] = iso.split("-").map(Number); return this.iso(new Date(y, m - 1, d + n, 12)); },
+  /* la barre de date : un titre court (« Aujourd'hui », « Hier », sinon le jour de la semaine) et la date dessous : deux
+     lignes qui tiennent à 320 px dans les deux langues */
   libelleJour(iso, consultation){
     const T = t => consultation ? t : trad(t), auj = aujourdhui();
     if (iso === auj) return T("Aujourd'hui");
     if (iso === this.decaler(auj, -1)) return T("Hier");
-    if (iso === this.decaler(auj, 1)) return T("Demain");
-    return this.dateLongue(iso, consultation);
+    return this.format(iso, consultation, { weekday: "long" });
   },
-  dateLongue(iso, consultation){
+  sousJour(iso, consultation){
+    const auj = aujourdhui(), proche = iso === auj || iso === this.decaler(auj, -1);
+    return this.format(iso, consultation, proche ? { weekday: "long", day: "numeric", month: "long" } : { day: "numeric", month: "long", year: "numeric" });
+  },
+  format(iso, consultation, o){
     const [y, m, d] = iso.split("-").map(Number);
-    const t = new Date(y, m - 1, d, 12).toLocaleDateString(consultation ? "fr-FR" : locale(), { weekday: "long", day: "numeric", month: "long" });
+    const t = new Date(y, m - 1, d, 12).toLocaleDateString(consultation ? "fr-FR" : locale(), o);
     return t.charAt(0).toUpperCase() + t.slice(1);
   },
   /* le repas probable à cette heure (bouton « Ajouter » de l'accueil) */
@@ -72,7 +77,7 @@ const JournalAlim = {
   },
   /* les lignes lisibles d'un jour, avec leur place (k) dans la liste rangée et leurs valeurs */
   lignes(JA, iso){
-    const brut = JA && JA.j && Array.isArray(JA.j[iso]) ? JA.j[iso] : [];
+    const brut = JA && JA.j && Array.isArray(JA.j[iso]) ? JA.j[iso].slice(0, 200) : [];   // 60 écrites au plus par l'app
     const out = [];
     brut.forEach((x, k) => {
       if (!Array.isArray(x)) return;
@@ -103,7 +108,7 @@ const JournalAlim = {
     }
     for (const k of ["calc_perso", "calc"]){
       const o = outilCalculateur.objectif(O[k]);
-      if (o) return Object.assign({ source: "calcul" }, o);
+      if (o) return Object.assign({ source: k }, o);   // calc_perso : son calculateur ; calc : le calcul préparé par le coach
     }
     return null;
   },
@@ -135,6 +140,8 @@ const JournalAlim = {
   /* ---------- écritures (sur le document lu par Store.lire, puis Store.ecrire) ---------- */
   arrondi1(v){ return Math.round(num(v) * 10) / 10; },
   arrondiG(q){ return Math.round(num(q) * 2) / 2; },   // au demi-gramme
+  grammesOk(g){ return this.arrondiG(g) > 0 && g <= this.MAX_GRAMMES; },
+  kcalOk(k){ return Math.round(k) >= 1 && k <= this.MAX_KCAL; },
   /* a : un aliment du catalogue ({id, nom, kcal, proteines, glucides, lipides}) ou un aliment déjà rangé ({id, nom, kcal, p, g, l}) */
   ranger(JA, a){
     const v = a.proteines !== undefined ? [a.kcal, a.proteines, a.glucides, a.lipides] : [a.kcal, a.p, a.g, a.l];
@@ -147,21 +154,27 @@ const JournalAlim = {
   jour(JA, iso){ if (!Array.isArray(JA.j[iso])) JA.j[iso] = []; return JA.j[iso]; },
   /* renvoie la place (k) de la nouvelle ligne, ou -1 (journée pleine) */
   ajouter(JA, iso, r, a, q){
+    const g = this.arrondiG(Math.min(q, this.MAX_GRAMMES));
+    if (!(g > 0)) return -1;
     const L = this.jour(JA, iso);
     if (L.length >= this.MAX_LIGNES) return -1;
     const i = this.ranger(JA, a);
-    L.push([r, i, this.arrondiG(Math.min(q, this.MAX_GRAMMES))]);
+    L.push([r, i, g]);
     return L.length - 1;
   },
   ajoutRapide(JA, iso, r, kcal){
+    const k = Math.round(Math.min(kcal, this.MAX_KCAL));
+    if (!(k >= 1)) return -1;
     const L = this.jour(JA, iso);
     if (L.length >= this.MAX_LIGNES) return -1;
-    L.push([r, -1, Math.round(Math.min(kcal, this.MAX_KCAL))]);
+    L.push([r, -1, k]);
     return L.length - 1;
   },
   modifier(JA, iso, k, q){
     const L = JA.j[iso]; if (!Array.isArray(L) || !Array.isArray(L[k])) return false;
-    L[k][2] = L[k][1] === -1 ? Math.round(Math.min(q, this.MAX_KCAL)) : this.arrondiG(Math.min(q, this.MAX_GRAMMES));
+    const v = L[k][1] === -1 ? Math.round(Math.min(q, this.MAX_KCAL)) : this.arrondiG(Math.min(q, this.MAX_GRAMMES));
+    if (!(v > 0)) return false;
+    L[k][2] = v;
     return true;
   },
   retirer(JA, iso, k){
@@ -171,6 +184,7 @@ const JournalAlim = {
     return x;
   },
   remettreLigne(JA, iso, k, x){ const L = this.jour(JA, iso); L.splice(Math.min(k, L.length), 0, x); },
+  place(JA, iso, ref){ const L = JA && JA.j ? JA.j[iso] : null; return Array.isArray(L) ? L.indexOf(ref) : -1; },
   /* copie le repas r de la veille dans le jour iso ; renvoie les lignes ajoutées (null : journée pleine) */
   copierVeille(JA, iso, r){
     const src = this.lignes(JA, this.decaler(iso, -1)).filter(x => x.r === r);
@@ -227,15 +241,15 @@ const JournalAlim = {
   },
 
   /* ---------- recherche (moteur du matériel « journal », en JavaScript natif) ---------- */
-  MOTS_VIDES: new Set(["de", "du", "des", "d", "la", "le", "les", "l", "au", "aux", "a", "et", "ou", "en", "un", "une", "avec", "sans", "pour", "par", "ex", "of", "and", "with", "the", "an", "in"]),
+  MOTS_VIDES: new Set(["de", "du", "des", "d", "la", "le", "les", "l", "au", "aux", "a", "et", "ou", "en", "un", "une", "avec", "sans", "pour", "par", "ex", "of", "and", "with", "an", "in"]),
   normaliser(s){
     return String(s || "").toLowerCase().replace(/œ/g, "oe").replace(/æ/g, "ae")
       .normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9%]+/g, " ").trim();
   },
   singulier(m){
     if (m.length <= 3) return m;
-    if (m.endsWith("aux") && m.length > 4) return m.slice(0, -3) + "al";
     if (m.endsWith("eaux") || m.endsWith("eux")) return m.slice(0, -1);
+    if (m.endsWith("aux") && m.length > 4) return m.slice(0, -3) + "al";
     if (/[^su]s$/.test(m)) return m.slice(0, -1);
     return m;
   },
@@ -364,8 +378,7 @@ const JournalAlim = {
       <p class="note" style="margin:0 0 10px">${esc(this.ligne7(JA, auj, obj))}</p>
       <ul class="ingr fiche-l">
         <li><span>Aujourd'hui</span><b>${L.length ? esc(fmt(t.kcal) + " kcal" + (obj ? " / " + fmt(obj.kcal) : "")) : "rien de noté"}</b></li>
-        <li><span>Dernier jour noté</span><b>${dj ? esc(dateFr(dj)) : "—"}</b></li>
-        <li><span>Objectif</span><b>${obj ? esc(fmt(obj.kcal) + " kcal · " + (obj.source === "coach" ? "ta diète" : "son calculateur")) : "pas d'objectif calculé"}</b></li>
+        <li><span>Objectif</span><b>${obj ? esc(fmt(obj.kcal) + " kcal · " + (obj.source === "coach" ? "ta diète" : obj.source === "calc" ? "ton calcul" : "son calculateur")) : "pas d'objectif calculé"}</b></li>
       </ul>
       <p class="note" style="margin:10px 0 0"><a class="link-a" href="#/journal-alimentaire">Son journal, jour par jour →</a></p></section>`;
   }
@@ -384,7 +397,7 @@ const outilJournalAlimentaire = {
   accroche: "",
 
   html(){
-    const c = !!Store.idConsulte;
+    const c = !!Store.idConsulte, pause = !c && Sante.aDemander();   // en pause (accord santé) : rien à charger avant l'accord
     const fl = (id, sens, lib) => `<button type="button" class="ja-fleche" id="${id}" data-lecture-ok aria-label="${esc(c ? lib : trad(lib))}">${sens}</button>`;
     return `<div class="ja" id="ja-vue">
       ${c ? `<header class="masthead"><h1>Son journal alimentaire</h1><p class="lede">Lecture seule : ce qu'il a noté, jour par jour.</p></header>
@@ -395,13 +408,13 @@ const outilJournalAlimentaire = {
         <div class="ja-date-lib"><b id="ja-jour">${esc(c ? "Aujourd'hui" : trad("Aujourd'hui"))}</b><small id="ja-date-sous"></small></div>
         ${fl("ja-suiv", "›", "Jour suivant")}
       </div>
-      <div id="ja-corps"><section class="panel"><div class="empty">${esc(c ? "Chargement…" : trad("Chargement…"))}</div></section></div>
+      <div id="ja-corps">${pause ? "" : `<section class="panel"><div class="empty">${esc(c ? "Chargement…" : trad("Chargement…"))}</div></section>`}</div>
       <p class="note ja-sources">${esc(c ? "Sources : Anses – CIQUAL 2025, INCA 3, USDA" : trad("Sources : Anses – CIQUAL 2025, INCA 3, USDA"))}</p>
     </div>`;
   },
 
   async init(){
-    const self = this, J = JournalAlim, consultation = !!Store.idConsulte, uid = Store.cible();
+    const J = JournalAlim, consultation = !!Store.idConsulte, uid = Store.cible();
     const T = t => consultation ? t : trad(t);
     const zone = $("ja-vue"); if (!zone) return;
     /* le statut de la personne (fiche : lu dans profils ; sinon son propre compte) : un prospect n'a pas de diète du coach */
@@ -411,8 +424,8 @@ const outilJournalAlimentaire = {
     const [JA0, O, st] = await Promise.all([Store.lire(J.cle, J.vide()), Store.lireTout(["repas", "calc", "calc_perso"]), statut]);
     if (!zone.isConnected || Store.cible() !== uid) return;   // page ou fiche quittée pendant la lecture
     const corps = $("ja-corps");
-    /* lecture ratée : « Pas de connexion » + Réessayer, jamais un journal vide (qu'une saisie écraserait) */
-    if (Store.nonLus.has(JA0)){ pageHorsLigne(corps); return; }
+    /* lecture ratée : « Pas de connexion » + Réessayer, jamais un journal vide (qu'une saisie écraserait) ; ni flèches inertes */
+    if (Store.nonLus.has(JA0)){ const bd = zone.querySelector(".ja-date"); if (bd) bd.hidden = true; pageHorsLigne(corps); return; }
     const JA = J.remettre(JA0);
     /* saisie de calcul pas encore partie (700 ms, hors ligne) : comme l'accueil du prospect */
     if (!consultation && !O.erreur && typeof outilDecouverte !== "undefined"){
@@ -420,7 +433,8 @@ const outilJournalAlimentaire = {
       if (loc.calc_perso) O.calc_perso = Forme.cle("calc_perso", loc.calc_perso.v);
     }
     const obj = O.erreur ? undefined : J.objectif(O, st === "prospect");
-    let jour = aujourdhui(), nouveau = null;
+    /* suitAujourdhui : la page montre « aujourd'hui » et le suit (passé minuit, elle passe au nouveau jour) */
+    let jour = aujourdhui(), suitAujourdhui = true, nouveau = null;
 
     /* ---------- la page ---------- */
     corps.innerHTML = `
@@ -444,7 +458,7 @@ const outilJournalAlimentaire = {
       const L = J.lignes(JA, jour), t = J.totaux(L), c = J.chiffre(t, obj, consultation);
       /* la barre de date */
       $("ja-jour").textContent = J.libelleJour(jour, consultation);
-      $("ja-date-sous").textContent = [T("Aujourd'hui"), T("Hier"), T("Demain")].indexOf($("ja-jour").textContent) > -1 ? J.dateLongue(jour, consultation) : "";
+      $("ja-date-sous").textContent = J.sousJour(jour, consultation);
       $("ja-suiv").disabled = jour >= aujourdhui();
       /* le résumé */
       $("ja-lbl").textContent = c.lbl;
@@ -479,12 +493,18 @@ const outilJournalAlimentaire = {
         const n = nouveau; setTimeout(() => { if (nouveau === n) nouveau = null; }, 50);
       }
     };
-    const changerJour = n => { const d = J.decaler(jour, n); if (n > 0 && d > aujourdhui()) return; jour = d; nouveau = null; dessiner(); };
+    const changerJour = n => {
+      const d = J.decaler(jour, n); if (n > 0 && d > aujourdhui()) return;
+      jour = d; suitAujourdhui = jour === aujourdhui(); nouveau = null; dessiner();
+    };
     $("ja-prec").addEventListener("click", () => changerJour(-1));
     $("ja-suiv").addEventListener("click", () => changerJour(1));
     dessiner();
     /* le coach : lecture seule, rien d'autre (aucun écouteur qui écrit) */
     if (consultation) return;
+
+    /* passé minuit, page restée ouverte sur « aujourd'hui » : elle suit la date (l'ajout du matin va au bon jour) */
+    const aJour = () => { if (suitAujourdhui && jour !== aujourdhui()){ jour = aujourdhui(); nouveau = null; dessiner(); } };
 
     /* ---------- écrire : le document entier (Store.ecrire, 700 ms) ; refus = on remet l'écran comme avant ---------- */
     const enregistrer = (annuler) => {
@@ -494,90 +514,189 @@ const outilJournalAlimentaire = {
       dessiner();
       return false;
     };
+    /* le message « … · Annuler » : retiré dès qu'un panneau s'ouvre ou que la page change (il agirait sur un état dépassé) */
+    const fermerToasts = () => $$(".toast.ja-toast").forEach(t => t.remove());
     const annulable = (texte, retour) => {
       const t = UI.toast(texte, "ok", 6000);
       const b = document.createElement("button"); b.type = "button"; b.className = "ja-annuler"; b.textContent = trad("Annuler");
-      b.addEventListener("click", () => { t.remove(); retour(); }, { once: true });
+      b.addEventListener("click", () => { t.remove(); if (zone.isConnected) retour(); }, { once: true });
       t.classList.add("ja-toast"); t.append(" ", b);
     };
     const eclairer = (r, k) => { nouveau = { r, k: Array.isArray(k) ? k : [k] }; dessiner(); setTimeout(() => { $$(".ja-nouveau", zone).forEach(e => e.classList.remove("ja-nouveau")); }, 1700); };
+    const ligneChangee = () => { UI.fermer(null); UI.toast(trad("Cette ligne a changé : rouvre-la pour la modifier."), "attention"); dessiner(); };
 
-    /* ---------- le panneau (UI.ouvrir : un panneau qui monte du bas sur téléphone) ---------- */
-    const panneau = (titre, html) => {
-      UI.ouvrir({ titre, corps: html || "<div></div>", html: true, classe: "ja-feuille", annulation: null });
+    /* ---------- un autre appareil (ou onglet) a écrit le journal depuis la lecture : la page se recharge au lieu de l'écraser.
+       Vérifié (date seule) au retour sur l'app et à chaque ouverture d'un panneau ; rien si une saisie de cet onglet attend
+       son envoi (c'est elle la plus récente) ou si la lecture échoue. ---------- */
+    const kStore = uid + "|" + J.cle;
+    let verif = null;
+    const enAttente = () => !!Store.attente[kStore] || Store.aUneCopie(uid, J.cle);
+    const verifier = () => verif || (verif = (async () => {
+      try {
+        if (enAttente()) return;
+        const r = await Promise.race([Auth.appel("/rest/v1/donnees?user_id=eq." + uid + "&outil=eq." + J.cle + "&select=maj_le"), new Promise(res => setTimeout(() => res(null), 4000))]);
+        if (!Array.isArray(r) || !zone.isConnected || enAttente()) return;
+        const ms = x => { const v = x == null ? NaN : new Date(x).getTime(); return isNaN(v) ? null : v; };
+        const base = ms(r[0] && r[0].maj_le);
+        if (base === null || [ms(Store.majLu[kStore]), ms(Store.dernierT[kStore])].indexOf(base) > -1) return;
+        fermerToasts(); UI.fermer(null);
+        UI.toast(trad("Ton journal a changé sur un autre appareil : il vient d'être rechargé."), "attention", 4500);
+        afficher(courant, true, true);
+      } catch(e){} finally { verif = null; }
+    })());
+    const surRetour = () => { if (document.visibilityState === "visible"){ aJour(); verifier(); } };
+    document.addEventListener("visibilitychange", surRetour);
+
+    /* ---------- le panneau (UI.ouvrir : un panneau qui monte du bas sur téléphone, avec sa croix) ---------- */
+    const panneau = titre => {
+      fermerToasts(); aJour();
+      UI.ouvrir({ titre, corps: "<div></div>", html: true, classe: "ja-feuille", croix: true, annulation: null });
+      verifier();
       return document.querySelector(".modale.ja-feuille .corps");
     };
+    const recherche = (boite, oui) => { const m = boite.closest(".modale"); if (m) m.classList.toggle("ja-recherche", !!oui); };
 
-    /* le catalogue : chargé une fois, à la première recherche (4 pages de 1 000 aliments) */
+    /* le catalogue : chargé une fois, à la première recherche (4 pages de 1 000 aliments) ; une lecture incomplète n'est pas
+       gardée (Catalogue ne garde que la liste complète) : la recherche suivante relit */
     let cat = null, chargement = null;
-    const catalogue = () => chargement || (chargement = Catalogue.aliments().then(l => { cat = Array.isArray(l) && l.length ? l : null; if (!cat) chargement = null; return cat; }).catch(() => { chargement = null; return null; }));
+    const catalogue = () => chargement || (chargement = Catalogue.aliments()
+      .then(l => { cat = Array.isArray(l) && l.length && Catalogue._c && Catalogue._c.aliments === l ? l : null; if (!cat) chargement = null; return cat; })
+      .catch(() => { chargement = null; return null; }));
+    const duCatalogue = id => cat ? cat.find(y => y.id === id) || null : null;
 
-    /* étape 2 : la portion, pour un aliment du catalogue (a) ou déjà rangé (al), puis « Ajouter » */
-    const choisirPortion = (boite, r, a, al, qDepart) => {
-      const id = a ? a.id : al.id, nomA = J.nom(id, a ? a.nom : al.nom, a);
-      const v = a ? { kcal: num(a.kcal), p: num(a.proteines), g: num(a.glucides), l: num(a.lipides) } : { kcal: al.kcal, p: al.p, g: al.g, l: al.l };
-      const P = J.portions(id, a || (cat && cat.find(x => x.id === id)) || null);
+    /* supprimer une ligne (repérée par elle-même, pas par sa place), avec « Annuler » */
+    const supprimer = (ref, r, nomL) => {
+      const d = jour, kk = J.place(JA, d, ref);
+      if (kk < 0) return ligneChangee();
+      UI.fermer(null);
+      J.retirer(JA, d, kk);
+      if (!enregistrer(() => J.remettreLigne(JA, d, kk, ref))) return;
+      dessiner();
+      annulable(trad("Supprimé : {n}", { n: nomL }), () => {
+        if (J.place(JA, d, ref) > -1) return;
+        J.remettreLigne(JA, d, kk, ref);
+        if (enregistrer(() => { const p = J.place(JA, d, ref); if (p > -1) J.retirer(JA, d, p); }) && d === jour) eclairer(r, J.place(JA, d, ref));
+      });
+    };
+
+    /* la portion : ajouter un aliment (a du catalogue, ou al déjà rangé) ou, avec mode { ref, x, nomL }, modifier une ligne */
+    const choisirPortion = (boite, r, a, al, qDepart, mode) => {
+      recherche(boite, false);
+      const id = a ? a.id : al.id, nomA = mode ? mode.nomL : J.nom(id, a ? a.nom : al.nom, a);
+      /* les valeurs : celles du catalogue pour un nouvel ajout (elles seront rangées), celles déjà rangées pour une ligne */
+      const v = !mode && a ? { kcal: num(a.kcal), p: num(a.proteines), g: num(a.glucides), l: num(a.lipides) } : { kcal: al.kcal, p: al.p, g: al.g, l: al.l };
+      const P = J.portions(id, a || duCatalogue(id));
       let sel = 0, n = 1;
-      if (qDepart > 0){ const k = P.findIndex(p => Math.abs(qDepart / p.g - Math.round(qDepart / p.g * 2) / 2) < 0.01 && qDepart / p.g <= 10 && qDepart / p.g >= 0.5); if (k > -1){ sel = k; n = Math.round(qDepart / P[k].g * 2) / 2; } else { sel = -1; } }
+      if (qDepart > 0){
+        const k = P.findIndex(p => Math.abs(qDepart / p.g - Math.round(qDepart / p.g * 2) / 2) < 0.01 && qDepart / p.g <= 20 && qDepart / p.g >= 0.5);
+        if (k > -1){ sel = k; n = Math.round(qDepart / P[k].g * 2) / 2; } else sel = -1;
+      }
       let g = sel > -1 ? P[sel].g * n : qDepart;
       boite.innerHTML = `<div class="ja-f ja-f-portion">
-        <button type="button" class="ja-retour" id="ja-retour">‹ ${esc(trad("Retour"))}</button>
-        <div class="ja-f-nom"><b data-notr>${esc(nomA)}</b><small>${esc(trad("{k} kcal pour 100 g", { k: fmt(v.kcal) }))}</small></div>
+        ${mode ? "" : `<button type="button" class="ja-retour" id="ja-retour">‹ ${esc(trad("Retour"))}</button>`}
+        <div class="ja-f-nom">${mode ? "" : `<b data-notr>${esc(nomA)}</b>`}<small>${esc(trad("{k} kcal pour 100 g", { k: fmt(v.kcal) }))}</small></div>
         <div class="ja-pastilles" role="group" aria-label="${esc(trad("Portion"))}">${P.map((p, k) => `<button type="button" class="ja-past" data-p="${k}" aria-pressed="false">${esc(J.libPortion(p))}</button>`).join("")}</div>
         <div class="ja-qte">
           <div class="ja-pas" id="ja-pas"><button type="button" id="ja-moins" aria-label="${esc(trad("Moins"))}">−</button><span class="readout" id="ja-n" aria-live="polite"></span><button type="button" id="ja-plus" aria-label="${esc(trad("Plus"))}">+</button></div>
-          <label class="ja-g" for="ja-g"><input id="ja-g" type="number" inputmode="decimal" min="1" max="${J.MAX_GRAMMES}" step="any" aria-label="${esc(trad("Grammes"))}"><span>g</span></label>
+          <label class="ja-g" for="ja-g"><input id="ja-g" type="number" inputmode="decimal" min="0.5" max="${J.MAX_GRAMMES}" step="any" aria-label="${esc(trad("Grammes"))}"><span>g</span></label>
         </div>
         <div class="ja-calcul" aria-live="polite"><span class="readout ja-calcul-n" id="ja-ck"></span><span class="unit">${esc(trad("kcal"))}</span><small id="ja-pgl"></small></div>
-        <button type="button" class="btn ja-ok" id="ja-ok">${esc(trad("Ajouter"))}</button>
+        <button type="button" class="btn ja-ok" id="ja-ok">${esc(trad(mode ? "Enregistrer" : "Ajouter"))}</button>
+        ${mode ? `<button type="button" class="btn danger ja-suppr" id="ja-suppr">${esc(trad("Supprimer"))}</button>` : ""}
       </div>`;
       const champ = $("ja-g");
       const maj = (depuisChamp) => {
         if (!depuisChamp) champ.value = g > 0 ? String(Math.round(g * 10) / 10) : "";
         $$(".ja-past", boite).forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.p === sel)));
-        $("ja-pas").hidden = sel < 0;
-        $("ja-n").textContent = (n).toLocaleString(locale());
-        $("ja-moins").disabled = n <= 0.5;
+        /* le compteur reste en place (grisé) quand les grammes sont tapés à la main : rien ne saute */
+        $("ja-n").textContent = sel < 0 ? "–" : n.toLocaleString(locale());
+        $("ja-moins").disabled = sel < 0 || n <= 0.5;
+        $("ja-plus").disabled = sel < 0 || n >= 20;
         const f = g > 0 ? g / 100 : 0;
         $("ja-ck").textContent = fmt(v.kcal * f);
         $("ja-pgl").textContent = trad("Protéines {p} g · Glucides {g} g · Lipides {l} g", { p: fmt(v.p * f), g: fmt(v.g * f), l: fmt(v.l * f) });
-        $("ja-ok").disabled = !(g > 0 && g <= J.MAX_GRAMMES);
+        $("ja-ok").disabled = !J.grammesOk(g);
       };
       $$(".ja-past", boite).forEach(b => b.addEventListener("click", () => { sel = +b.dataset.p; n = 1; g = P[sel].g; maj(); }));
       $("ja-moins").addEventListener("click", () => { if (sel < 0) return; n = Math.max(0.5, n - (n > 1 ? 1 : 0.5)); g = P[sel].g * n; maj(); });
       $("ja-plus").addEventListener("click", () => { if (sel < 0) return; n = Math.min(20, n < 1 ? n + 0.5 : n + 1); g = P[sel].g * n; maj(); });
       champ.addEventListener("input", () => { const x = outilCalculateur.nombre(champ.value); g = x && x > 0 ? x : 0; sel = -1; maj(true); });
       champ.addEventListener("keydown", e => { if (e.key === "Enter"){ e.preventDefault(); $("ja-ok").click(); } });
-      $("ja-retour").addEventListener("click", () => etapeListe(boite, r));
+      const ret = $("ja-retour"); if (ret) ret.addEventListener("click", () => etapeListe(boite, r));
       $("ja-ok").addEventListener("click", () => {
-        if (!(g > 0 && g <= J.MAX_GRAMMES)) return;
+        if (!J.grammesOk(g)) return;
+        if (mode){
+          const kk = J.place(JA, jour, mode.ref); if (kk < 0) return ligneChangee();
+          const avant = mode.ref[2];
+          if (!J.modifier(JA, jour, kk, g)) return;
+          UI.fermer(null);
+          if (enregistrer(() => { mode.ref[2] = avant; })) eclairer(r, kk);
+          return;
+        }
         const k = J.ajouter(JA, jour, r, a || al, g);
         if (k < 0){ UI.toast(trad("Cette journée est pleine (60 lignes)."), "attention"); return; }
         UI.fermer(null);
         if (enregistrer(() => J.retirer(JA, jour, k))) eclairer(r, k);
       });
+      const sup = $("ja-suppr"); if (sup) sup.addEventListener("click", () => supprimer(mode.ref, r, mode.nomL));
       maj();
     };
 
-    /* étape 1 : la recherche (récents d'abord, avant de taper) */
-    const etapeListe = (boite, r, q) => {
+    /* l'ajout rapide de kcal (menu ⋯, ou « aliment introuvable » dans la recherche) ; avec mode : modifier ce chiffre */
+    const formRapide = (boite, r, retour, mode) => {
+      recherche(boite, false);
+      boite.innerHTML = `<div class="ja-f">
+        ${retour ? `<button type="button" class="ja-retour" id="ja-retour">‹ ${esc(trad("Retour"))}</button>` : ""}
+        <label class="ja-g ja-g-large" for="ja-rk"><input id="ja-rk" type="number" inputmode="numeric" min="1" max="${J.MAX_KCAL}" step="1" aria-label="${esc(trad("Calories (kcal)"))}" placeholder="0" value="${mode ? esc(String(mode.x.q)) : ""}"><span>${esc(trad("kcal"))}</span></label>
+        <button type="button" class="btn ja-ok" id="ja-ok"${mode ? "" : " disabled"}>${esc(trad(mode ? "Enregistrer" : "Ajouter"))}</button>
+        ${mode ? `<button type="button" class="btn danger ja-suppr" id="ja-suppr">${esc(trad("Supprimer"))}</button>` : ""}
+      </div>`;
+      const champ = $("ja-rk"), lu = () => { const v = outilCalculateur.nombre(champ.value); return v && J.kcalOk(v) ? v : 0; };
+      champ.addEventListener("input", () => { $("ja-ok").disabled = !lu(); });
+      champ.addEventListener("keydown", e => { if (e.key === "Enter"){ e.preventDefault(); $("ja-ok").click(); } });
+      if (retour) $("ja-retour").addEventListener("click", retour);
+      $("ja-ok").addEventListener("click", () => {
+        const v = lu(); if (!v) return;
+        if (mode){
+          const kk = J.place(JA, jour, mode.ref); if (kk < 0) return ligneChangee();
+          const avant = mode.ref[2];
+          if (!J.modifier(JA, jour, kk, v)) return;
+          UI.fermer(null);
+          if (enregistrer(() => { mode.ref[2] = avant; })) eclairer(r, kk);
+          return;
+        }
+        const k = J.ajoutRapide(JA, jour, r, v);
+        if (k < 0){ UI.toast(trad("Cette journée est pleine (60 lignes)."), "attention"); return; }
+        UI.fermer(null);
+        if (enregistrer(() => J.retirer(JA, jour, k))) eclairer(r, k);
+      });
+      const sup = $("ja-suppr"); if (sup) sup.addEventListener("click", () => supprimer(mode.ref, r, mode.nomL));
+      if (!mode) try { champ.focus(); } catch(e){}
+    };
+
+    /* la recherche (récents d'abord, avant de taper) ; la dernière recherche revient après « ‹ Retour » */
+    let derniereQ = "";
+    const etapeListe = (boite, r) => {
+      recherche(boite, true);
       boite.innerHTML = `<div class="ja-f ja-f-liste">
-        <input type="search" id="ja-q" class="ja-q" placeholder="${esc(trad("Cherche un aliment (ex. poulet)"))}" aria-label="${esc(trad("Cherche un aliment"))}" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" maxlength="80">
+        <div class="ja-q-zone"><input type="search" id="ja-q" class="ja-q" placeholder="${esc(trad("Cherche un aliment (ex. poulet)"))}" aria-label="${esc(trad("Cherche un aliment"))}" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" maxlength="80"></div>
         <h3 id="ja-res-titre"></h3>
         <div class="ja-res" id="ja-res"></div>
         <p class="note ja-f-etat" id="ja-f-etat" role="status" aria-live="polite"></p>
+        <button type="button" class="ja-action" id="ja-vers-rapide" hidden><b>${esc(trad("Ajout rapide de kcal"))}</b><small>${esc(trad("Quand tu ne trouves pas l'aliment : les calories seulement."))}</small></button>
       </div>`;
-      const champ = $("ja-q"), res = $("ja-res"), etat = $("ja-f-etat"), titre = $("ja-res-titre");
+      const champ = $("ja-q"), res = $("ja-res"), etat = $("ja-f-etat"), titre = $("ja-res-titre"), versRapide = $("ja-vers-rapide");
       const item = (o, k) => {
-        const g = o.q || (J.portions(o.id, o.a)[0] || { g: 100 }).g, kc = o.kcal * g / 100;
-        const sous = o.q ? J.grammes(o.q) : J.libPortion(J.portions(o.id, o.a)[0] || { fr: "100 g", en: "100 g", g: 100 });
-        return `<button type="button" class="ja-res-l" data-ja-res="${k}"><span class="ja-l-txt"><b data-notr>${esc(o.nom)}</b><small data-notr>${esc(sous)}</small></span><span class="ja-res-k"><span class="readout">${fmt(kc)}</span><small>${esc(trad("kcal"))}</small></span></button>`;
+        const p0 = J.portions(o.id, o.a)[0] || { fr: "100 g", en: "100 g", g: 100 }, g = o.q || p0.g;
+        const sous = o.q ? J.grammes(o.q) : J.libPortion(p0);
+        return `<button type="button" class="ja-res-l" data-ja-res="${k}"><span class="ja-l-txt"><b data-notr>${esc(o.nom)}</b><small data-notr>${esc(sous)}</small></span><span class="ja-res-k"><span class="readout">${fmt(o.kcal * g / 100)}</span><small>${esc(trad("kcal"))}</small></span></button>`;
       };
       let liste = [];
-      const montrer = (l, t, vide) => {
+      const montrer = (l, t, vide, rapide) => {
         liste = l; titre.textContent = t; titre.hidden = !t;
         res.innerHTML = l.map(item).join("");
         etat.textContent = l.length ? "" : vide || "";
+        versRapide.hidden = !rapide;
         $$("[data-ja-res]", res).forEach(b => b.addEventListener("click", () => {
           const o = liste[+b.dataset.jaRes]; if (!o) return;
           choisirPortion(boite, r, o.a, o.al, o.q || 0);
@@ -585,75 +704,52 @@ const outilJournalAlimentaire = {
       };
       const deCatalogue = a => ({ id: a.id, a, al: null, nom: J.nom(a.id, a.nom, a), kcal: num(a.kcal), q: 0 });
       const accueil = () => {
-        const rec = J.recents(JA, 10).map(x => ({ id: x.al.id, a: cat ? cat.find(y => y.id === x.al.id) || null : null, al: x.al, nom: J.nom(x.al.id, x.al.nom), kcal: x.al.kcal, q: x.q }));
+        const rec = J.recents(JA, 10).map(x => ({ id: x.al.id, a: duCatalogue(x.al.id), al: x.al, nom: J.nom(x.al.id, x.al.nom), kcal: x.al.kcal, q: x.q }));
         if (rec.length) return montrer(rec, trad("Récents"));
         if (cat) return montrer(J.courants(cat, 10).map(deCatalogue), trad("Les plus courants"));
         montrer([], "", trad("Chargement des aliments…"));
       };
+      const impossible = () => montrer([], "", trad("Les aliments n'ont pas pu être chargés. Vérifie ta connexion, puis réessaie."), true);
       let minuterie = null;
       const lancer = () => {
-        const t = champ.value.trim();
-        if (!t){ accueil(); return; }
-        if (!cat){ montrer([], "", trad("Chargement des aliments…")); catalogue().then(l => { if (!boite.isConnected || champ.value.trim() !== t) return; if (!l){ montrer([], "", trad("Les aliments n'ont pas pu être chargés. Vérifie ta connexion, puis réessaie.")); return; } lancer(); }); return; }
-        const l = J.chercher(cat, t, 20).map(deCatalogue);
-        montrer(l, "", trad("Aucun aliment trouvé. Essaie un autre mot, ou ajoute tes calories à la main (menu ⋯ du repas)."));
+        const t = champ.value.trim(); derniereQ = t;
+        /* une lettre, ou seulement des petits mots (« la », « de ») : les récents, pas « aucun aliment » */
+        if (t.length < 2 || !J.jetons(t).length){ accueil(); return; }
+        if (!cat){ montrer([], "", trad("Chargement des aliments…")); catalogue().then(l => { if (!boite.isConnected || champ.value.trim() !== t) return; if (!l) return impossible(); lancer(); }); return; }
+        montrer(J.chercher(cat, t, 20).map(deCatalogue), "", trad("Aucun aliment trouvé. Essaie un autre mot."), true);
       };
       champ.addEventListener("input", () => { clearTimeout(minuterie); minuterie = setTimeout(lancer, 90); });
       champ.addEventListener("keydown", e => { if (e.key === "Enter"){ e.preventDefault(); clearTimeout(minuterie); lancer(); } });
-      if (q) champ.value = q;
+      versRapide.addEventListener("click", () => formRapide(boite, r, () => etapeListe(boite, r)));
+      if (derniereQ) champ.value = derniereQ;
       lancer();
       /* le catalogue arrive pendant qu'on regarde les récents : rien ne bouge ; sans récents, les plus courants apparaissent */
       if (!cat) catalogue().then(l => {
-        if (!boite.isConnected || champ.value.trim() || J.recents(JA, 1).length) return;
-        if (l) accueil(); else montrer([], "", trad("Les aliments n'ont pas pu être chargés. Vérifie ta connexion, puis réessaie."));
+        if (!boite.isConnected || champ.value.trim().length >= 2 || J.recents(JA, 1).length) return;
+        if (l) accueil(); else impossible();
       });
       try { champ.focus(); } catch(e){}
     };
-    const ouvrirAjout = r => { const b = panneau(trad(J.AJOUT_A[r]), ""); if (b) etapeListe(b, r); };
+    const ouvrirAjout = r => { derniereQ = ""; const b = panneau(trad(J.AJOUT_A[r])); if (b) etapeListe(b, r); };
 
-    /* toucher une ligne : modifier les grammes (ou les kcal d'un ajout rapide), ou la supprimer (annulable) */
+    /* toucher une ligne : la même étape portion (ou le chiffre d'un ajout rapide), en mode « modifier », avec Supprimer */
     const ouvrirLigne = k => {
       const x = J.lignes(JA, jour).find(y => y.k === k); if (!x) return;
-      const rapide = x.i === -1, nomL = rapide ? trad("Ajout rapide") : J.nom(x.al.id, x.al.nom);
-      const P = rapide ? [] : J.portions(x.al.id, cat ? cat.find(y => y.id === x.al.id) : null);
-      const b = panneau(nomL, `<div class="ja-f">
-        ${rapide ? "" : `<div class="ja-pastilles" role="group" aria-label="${esc(trad("Portion"))}">${P.map((p, n) => `<button type="button" class="ja-past" data-g="${p.g}" aria-pressed="${String(p.g === x.q)}">${esc(J.libPortion(p))}</button>`).join("")}</div>`}
-        <label class="ja-g ja-g-large" for="ja-mg"><input id="ja-mg" type="number" inputmode="decimal" min="1" max="${rapide ? J.MAX_KCAL : J.MAX_GRAMMES}" step="any" value="${esc(String(x.q))}" aria-label="${esc(rapide ? trad("Calories (kcal)") : trad("Grammes"))}"><span>${esc(rapide ? trad("kcal") : "g")}</span></label>
-        <div class="ja-calcul" aria-live="polite"><span class="readout ja-calcul-n" id="ja-ck"></span><span class="unit">${esc(trad("kcal"))}</span></div>
-        <button type="button" class="btn ja-ok" id="ja-ok">${esc(trad("Enregistrer"))}</button>
-        <button type="button" class="btn danger ja-suppr" id="ja-suppr">${esc(trad("Supprimer"))}</button>
-      </div>`);
-      if (!b) return;
-      const champ = $("ja-mg");
-      const lu = () => { const v = outilCalculateur.nombre(champ.value); return v && v > 0 ? v : 0; };
-      const maj = () => { const q = lu(); $("ja-ck").textContent = fmt(rapide ? q : x.al.kcal * q / 100); $("ja-ok").disabled = !(q > 0 && q <= (rapide ? J.MAX_KCAL : J.MAX_GRAMMES)); $$(".ja-past", b).forEach(p => p.setAttribute("aria-pressed", String(+p.dataset.g === q))); };
-      $$(".ja-past", b).forEach(p => p.addEventListener("click", () => { champ.value = p.dataset.g; maj(); }));
-      champ.addEventListener("input", maj);
-      champ.addEventListener("keydown", e => { if (e.key === "Enter"){ e.preventDefault(); $("ja-ok").click(); } });
-      $("ja-ok").addEventListener("click", () => {
-        const q = lu(); if (!(q > 0)) return;
-        const avant = JA.j[jour][k][2];
-        J.modifier(JA, jour, k, q); UI.fermer(null);
-        if (enregistrer(() => { JA.j[jour][k][2] = avant; })) eclairer(x.r, k);
-      });
-      $("ja-suppr").addEventListener("click", () => {
-        const d = jour, ligne = J.retirer(JA, d, k); UI.fermer(null);
-        if (!ligne || !enregistrer(() => J.remettreLigne(JA, d, k, ligne))) return;
-        dessiner();
-        annulable(trad("Supprimé : {n}", { n: nomL }), () => { J.remettreLigne(JA, d, k, ligne); if (enregistrer(() => J.retirer(JA, d, k)) && d === jour) eclairer(x.r, k); });
-      });
-      maj();
-      try { champ.focus(); champ.select(); } catch(e){}
+      const ref = JA.j[jour][k], nomL = x.i === -1 ? trad("Ajout rapide") : J.nom(x.al.id, x.al.nom), mode = { ref, x, nomL };
+      const b = panneau(nomL); if (!b) return;
+      if (J.place(JA, jour, ref) < 0) return ligneChangee();   // la page vient de passer au nouveau jour (aJour)
+      if (x.i === -1) formRapide(b, x.r, null, mode);
+      else choisirPortion(b, x.r, null, x.al, x.q, mode);
     };
 
     /* le menu « ⋯ » d'un repas : copier depuis hier, ajout rapide de kcal */
     const ouvrirMenu = r => {
+      const b = panneau(trad(J.REPAS[r])); if (!b) return;
       const hier = J.lignes(JA, J.decaler(jour, -1)).filter(x => x.r === r);
-      const b = panneau(trad(J.REPAS[r]), `<div class="ja-f ja-f-menu">
+      b.innerHTML = `<div class="ja-f ja-f-menu">
         <button type="button" class="ja-action" id="ja-copier"${hier.length ? "" : " disabled"}><b>${esc(trad("Copier depuis hier"))}</b><small>${esc(hier.length ? trad(hier.length > 1 ? "{n} aliments notés la veille" : "{n} aliment noté la veille", { n: hier.length }) : trad("Rien de noté la veille à ce repas."))}</small></button>
         <button type="button" class="ja-action" id="ja-rapide"><b>${esc(trad("Ajout rapide de kcal"))}</b><small>${esc(trad("Quand tu ne trouves pas l'aliment : les calories seulement."))}</small></button>
-      </div>`);
-      if (!b) return;
+      </div>`;
       $("ja-copier").addEventListener("click", () => {
         const refs = J.copierVeille(JA, jour, r);
         if (refs === null){ UI.toast(trad("Cette journée est pleine (60 lignes)."), "attention"); return; }
@@ -661,31 +757,15 @@ const outilJournalAlimentaire = {
         UI.fermer(null);
         const d = jour, n = refs.length, retirer = () => J.retirerLignes(JA, d, refs);
         if (!enregistrer(retirer)) return;
-        eclairer(r, refs.map(y => JA.j[d].indexOf(y)));
+        eclairer(r, refs.map(y => J.place(JA, d, y)));
         annulable(trad(n > 1 ? "{n} aliments copiés depuis hier" : "{n} aliment copié depuis hier", { n }), () => {
-          const L = JA.j[d] || [], places = refs.map(y => [L.indexOf(y), y]).filter(z => z[0] > -1);
+          const places = refs.map(y => [J.place(JA, d, y), y]).filter(z => z[0] > -1);
+          if (!places.length) return;
           retirer();
-          if (enregistrer(() => places.sort((a, b) => a[0] - b[0]).forEach(([k, y]) => J.remettreLigne(JA, d, k, y)))) dessiner();
+          if (enregistrer(() => places.sort((x, y) => x[0] - y[0]).forEach(([k, y]) => J.remettreLigne(JA, d, k, y)))) dessiner();
         });
       });
-      $("ja-rapide").addEventListener("click", () => {
-        const b2 = document.querySelector(".modale.ja-feuille .corps"); if (!b2) return;
-        b2.innerHTML = `<div class="ja-f">
-          <label class="ja-g ja-g-large" for="ja-rk"><input id="ja-rk" type="number" inputmode="numeric" min="1" max="${J.MAX_KCAL}" step="1" aria-label="${esc(trad("Calories (kcal)"))}" placeholder="0"><span>${esc(trad("kcal"))}</span></label>
-          <button type="button" class="btn ja-ok" id="ja-ok" disabled>${esc(trad("Ajouter"))}</button>
-        </div>`;
-        const champ = $("ja-rk"), lu = () => { const v = outilCalculateur.nombre(champ.value); return v && v > 0 && v <= J.MAX_KCAL ? v : 0; };
-        champ.addEventListener("input", () => { $("ja-ok").disabled = !lu(); });
-        champ.addEventListener("keydown", e => { if (e.key === "Enter"){ e.preventDefault(); $("ja-ok").click(); } });
-        $("ja-ok").addEventListener("click", () => {
-          const v = lu(); if (!v) return;
-          const k = J.ajoutRapide(JA, jour, r, v);
-          if (k < 0){ UI.toast(trad("Cette journée est pleine (60 lignes)."), "attention"); return; }
-          UI.fermer(null);
-          if (enregistrer(() => J.retirer(JA, jour, k))) eclairer(r, k);
-        });
-        try { champ.focus(); } catch(e){}
-      });
+      $("ja-rapide").addEventListener("click", () => formRapide(b, r, null));
     };
 
     corps.addEventListener("click", e => {
@@ -701,7 +781,12 @@ const outilJournalAlimentaire = {
       try { history.replaceState(null, "", "#/journal-alimentaire"); } catch(e){}
       ouvrirAjout(J.repasDeLHeure());
     }
-    /* en quittant la page : le panneau se ferme (il écrirait dans un journal qui n'est plus affiché) */
-    return () => { const f = document.querySelector(".modale.ja-feuille"); if (f) UI.fermer(null); };
+    /* en quittant la page : le panneau et les messages « Annuler » disparaissent (ils agiraient sur un journal qui n'est plus
+       affiché), l'écoute du retour sur l'app aussi */
+    return () => {
+      document.removeEventListener("visibilitychange", surRetour);
+      fermerToasts();
+      if (document.querySelector(".modale.ja-feuille")) UI.fermer(null);
+    };
   }
 };

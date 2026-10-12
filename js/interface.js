@@ -106,7 +106,7 @@ const UI = {
 
   /* o = { titre, corps, html, champ:{type, valeur, placeholder}, boutons:[{texte, valeur, classe, principal, champ}],
            annulation (valeur rendue si on ferme sans choisir), volet, fermable, classe (v79 : classe de plus sur la
-           fenetre, ex. « ja-feuille » du journal alimentaire),
+           fenetre, ex. « ja-feuille » du journal alimentaire), croix (v79 : la croix de fermeture, comme un volet),
            retour:{href, libelle} (v69 : fleche a gauche du titre d'un volet, qui le ferme et ouvre href) } */
   ouvrir(o){
     return new Promise(resoudre => {
@@ -119,6 +119,7 @@ const UI = {
       const boutons = o.boutons || [];
       let h = "";
       if (o.volet) h += `<button type="button" class="del fermer-volet" data-ui-fermer aria-label="Fermer">${SVG.croix}</button>`;
+      else if (o.croix) h += `<button type="button" class="del fermer-volet" data-ui-fermer aria-label="${esc(trad("Fermer"))}">${SVG.croix}</button>`;
       if (o.titre && o.volet && o.retour) h += `<div class="volet-tete"><a class="retour-volet" href="${esc(o.retour.href)}" data-ui-retour aria-label="${esc(o.retour.libelle)}" title="${esc(o.retour.libelle)}">${SVG.retour}</a><h2>${esc(o.titre)}</h2></div>`;
       else if (o.titre) h += `<h2>${esc(o.titre)}</h2>`;
       if (o.corps) h += `<div class="corps">${o.html ? o.corps : esc(o.corps)}</div>`;
