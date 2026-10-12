@@ -1,3 +1,15 @@
 # Données locales de Claude Code : jamais versionnées (dépôt public)
 .claude/session-notes/
 .claude/settings.local.json
+
+# Secrets et clés : jamais versionnés (dépôt public)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore
+service-account*.json
+supabase/.temp/
