@@ -852,7 +852,11 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
          ouverte depuis une carte ramène à cette page (« Revenir au suivi commercial », RETOURS) ; même vérification */
       await aller(page, "#/suivi-commercial", 1800); await page.click('[data-filtre="tous"]').catch(() => {}); await page.waitForSelector('#pr-liste [data-sc="fiche"]', { timeout: 8000 }); await page.click('#pr-liste [data-sc="fiche"]'); await pret(page, "#vue .bandeau"); await attendre(page, 600);
       const b2 = await texte(page, "#sortir-fiche"); await page.click("#sortir-fiche"); await attendre(page, 1200); const d2 = await ou(page);
-      ok("coach : fiche ouverte depuis une carte du Suivi commercial (v84 : les cartes de l'ancienne page Prospects) → « Revenir au suivi commercial » ramène sur #/suivi-commercial", b2 === "Revenir au suivi commercial" && d2.courant === "suivi-commercial" && d2.hash === "#/suivi-commercial", b2 + " " + JSON.stringify(d2));
+      /* v84 (ménage du bloc 3) : le chemin d'avant existe toujours : fiche ouverte depuis la page Prospects (sa liste, [data-lc-ligne])
+         → « Revenir aux prospects » (#sortir-fiche, RETOURS.prospects) ramène sur #/prospects ; les deux chemins dans le même ok */
+      await aller(page, "#/prospects", 1800); await page.waitForSelector("#lc-prospects [data-lc-ligne]", { timeout: 8000 }); await page.click("#lc-prospects [data-lc-ligne]"); await pret(page, "#vue .bandeau"); await attendre(page, 600);
+      const b3 = await texte(page, "#sortir-fiche"); await page.click("#sortir-fiche"); await attendre(page, 1200); const d3 = await ou(page);
+      ok("coach : fiche ouverte depuis une carte du Suivi commercial (v84 : les cartes de l'ancienne page Prospects) → « Revenir au suivi commercial » ramène sur #/suivi-commercial ; depuis la liste de la page Prospects → « Revenir aux prospects » ramène sur #/prospects", b2 === "Revenir au suivi commercial" && d2.courant === "suivi-commercial" && d2.hash === "#/suivi-commercial" && b3 === "Revenir aux prospects" && d3.courant === "prospects" && d3.hash === "#/prospects", b2 + " " + JSON.stringify(d2) + " · " + b3 + " " + JSON.stringify(d3));
       ok("coach : ces parcours n'écrivent rien", db.ecritures.length === 0, resume(db));
       await c.close();
     }
@@ -1446,7 +1450,18 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
       const ext = (cn.rep[2] || "").replace(/^Dans 3 mois « /, "").replace(/ »$/, "");
       ok("carte de Nina : sa réponse « Dans 3 mois » tronquée proprement (100 caractères au plus, « … »), début identique", ext.endsWith("…") && Array.from(ext).length <= 101 && LONGUE.startsWith(ext.slice(0, -1)), cn.rep[2]);
       ok("cartes de Marc (ancien : « Anciennes réponses : dans sa fiche. ») et Zoé (rien répondu) : pas de réponses sur la carte ; aucune carte avec « undefined » ou « null »", !cm.rep.length && cm.t.includes("Anciennes réponses : dans sa fiche.") && !cm.t.includes("Problème") && !cz.rep.length && !cz.t.includes("Problème") && !RIEN_DE_BRUT.test(await texte(page, "#pr-liste")), JSON.stringify([cm.infos, cz.infos]));
-      ok("carte piégée : réponses en texte, aucune balise injectée", (cp.rep[0] || "").startsWith("Problème " + XSS) && !(await injecte(page)), JSON.stringify(cp.rep));
+      /* v84 (ménage du bloc 3) : avant, la page Prospects rendait aussi la liste, les Nouveautés et la newsletter, où paraît le
+         prospect piégé (prénom et nom) : l'injection se relit sur chacune des pages qui en ont reçu un morceau — le Suivi commercial
+         (ici), la page Prospects (liste #lc-prospects et Nouveautés) et « Newsletter » (#pr-nl-liste), le piège affiché en texte —
+         puis retour au Suivi commercial pour l'export (même ok) */
+      const injSC = await injecte(page);
+      await aller(page, "#/prospects", 300); await page.waitForSelector("#lc-prospects #lc-liste li", { timeout: 8000 }).catch(() => {}); await page.waitForSelector("#pr-nouveautes .nv-panneau", { timeout: 8000 }).catch(() => {}); await attendre(page, 400);
+      const pgP = { liste: (await texte(page, "#lc-prospects")).includes(XSS), nv: (await texte(page, "#pr-nouveautes")).includes(XSS), inj: await injecte(page) };
+      await aller(page, "#/newsletter", 300); await page.waitForSelector("#pr-nl-liste", { timeout: 8000 }).catch(() => {}); await attendre(page, 400);
+      const pgN = { nl: (await texte(page, "#pr-nl-liste")).includes(XSS), inj: await injecte(page) };
+      await aller(page, "#/suivi-commercial", 300); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 });
+      await page.click('[data-filtre="tous"]'); await attendre(page, 500);
+      ok("carte piégée : réponses en texte, aucune balise injectée (v84 : ni dans le Suivi commercial, ni sur la page Prospects — liste et Nouveautés —, ni dans « Newsletter », où le piège paraît en texte)", (cp.rep[0] || "").startsWith("Problème " + XSS) && !injSC && pgP.liste && pgP.nv && !pgP.inj && pgN.nl && !pgN.inj, JSON.stringify([cp.rep, injSC, pgP, pgN]));
       const [dl] = await Promise.all([page.waitForEvent("download", { timeout: 5000 }), page.click("#pr-csv")]);
       const t = fs.readFileSync(await dl.path(), "utf8").replace(/^﻿/, "");
       const L = [], lire = s => { let ligne = [], champ = "", dans = false; for (let i = 0; i < s.length; i++) { const ch = s[i];
@@ -1463,7 +1478,7 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
         JSON.stringify(["Léa Martin", "Marc", "Zoé Durand", "Nina Petit", "Tom Liste", "Chloé Texte"].map(ligne)));
       const lp = L.find(l => l[1] === "piege@exemple.fr") || [];
       ok("CSV piégé : « Dans 3 mois » qui commence par « = » neutralisé (apostrophe), newsletter « oui » (vrai booléen)", lp[K3[1]] === "'=HYPERLINK(\"http://x\") " + XSS && lp[K3[0]] === XSS && lp[K3[2]] === "oui" && L.length === 8 && L.every(l => l.length === L[0].length), JSON.stringify(K3.map(i => lp[i])));
-      ok("page Suivi commercial (v84 : les cartes de l'ancienne page Prospects) et export : aucune écriture", ecrDonnees(db).length === 0, resume(db));
+      ok("page Suivi commercial (v84 : les cartes de l'ancienne page Prospects ; la page Prospects et « Newsletter » visitées ci-dessus) et export : aucune écriture", ecrDonnees(db).length === 0, resume(db));
     });
 
     await bloc("G4. téléphone 390 px", async () => {
@@ -1474,7 +1489,14 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
       ok("téléphone : fiche de Nina (longue réponse « Dans 3 mois ») sans défilement horizontal", !(await deborde(x.page)), await largeur(x.page));
       await aller(x.page, "#/suivi-commercial", 300); await x.page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 });   // v84 (ménage du bloc 3) : les cartes sont dans « Suivi commercial »
       await x.page.click('[data-filtre="tous"]'); await attendre(x.page, 500);
-      ok("téléphone : page Suivi commercial (v84 : cartes avec les réponses, prospect piégé) sans défilement horizontal, aucune écriture", !(await deborde(x.page)) && ecrDonnees(db).length === 0, await largeur(x.page));
+      /* v84 (ménage du bloc 3) : avant, la page Prospects contrôlée ici portait aussi la liste, les Nouveautés et la newsletter
+         (prospect piégé compris) : le défilement horizontal se relit sur la page Prospects (liste et Nouveautés) et sur « Newsletter » */
+      const dSC = await deborde(x.page), lSC = await largeur(x.page);
+      await aller(x.page, "#/prospects", 300); await x.page.waitForSelector("#lc-prospects #lc-liste li", { timeout: 8000 }).catch(() => {}); await x.page.waitForSelector("#pr-nouveautes .nv-panneau", { timeout: 8000 }).catch(() => {}); await attendre(x.page, 400);
+      const dP = await deborde(x.page), lP = await largeur(x.page), vuP = !!(await x.page.$("#lc-prospects #lc-liste li")) && !!(await x.page.$("#pr-nouveautes .nv-panneau"));
+      await aller(x.page, "#/newsletter", 300); await x.page.waitForSelector("#pr-nl-liste", { timeout: 8000 }).catch(() => {}); await attendre(x.page, 400);
+      const dN = await deborde(x.page), lN = await largeur(x.page), vuN = !!(await x.page.$("#pr-nl-liste li"));
+      ok("téléphone : page Suivi commercial (v84 : cartes avec les réponses, prospect piégé) sans défilement horizontal, aucune écriture (v84 : page Prospects — liste et Nouveautés — et « Newsletter » non plus)", !dSC && vuP && !dP && vuN && !dN && ecrDonnees(db).length === 0, "Suivi commercial " + lSC + " · Prospects " + lP + " · Newsletter " + lN);
     });
   }
 

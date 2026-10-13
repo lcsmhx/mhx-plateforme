@@ -96,7 +96,18 @@ const compter = (page) => page.evaluate(() => ({ exec: window.__xss || 0, balise
     const { c, page, erreurs } = await contexte(b, coach, lignes);
     await page.goto(`http://localhost:${PORT}/`); await page.waitForTimeout(1800);
     for (const [uid, routes] of pages) {
-      await page.evaluate(() => { location.hash = "#/suivi-clients"; }); await page.waitForTimeout(1500);   // v84 (ménage du bloc 3) : les « Ouvrir » du tableau complet ([data-ouvrir]) sont dans « Suivi détaillé » (menu Plus)
+      /* v84 (ménage du bloc 3) : l'ancien écran « Mes clients » (#/clients : liste, tableau complet, Comptes) est réparti sur la
+         liste « Clients » (#/clients), « Comptes » (#/comptes) et « Suivi détaillé » (#/suivi-clients) : les trois pages sont
+         ouvertes avec les données piégées à chaque tour (comme #/clients avant ; le compteur de scripts window.__xss couvre toute
+         la session) et les balises injectées y sont relevées (même ok « aucune balise injectée ») */
+      for (const [h, sel] of [["#/clients", "#lc-clients #lc-liste li"], ["#/comptes", "#liste-clients .client-l"], ["#/suivi-clients", `#tb-clients [data-ouvrir="${uid}"]`]]) {
+        await page.evaluate(x => { location.hash = x; }, h);
+        const vu = await page.waitForSelector(sel, { timeout: 6000 }).then(() => true).catch(() => false); await page.waitForTimeout(1500);   // v84 (ménage du bloc 3) : les « Ouvrir » du tableau complet ([data-ouvrir]) sont dans « Suivi détaillé » (menu Plus), ouvert en dernier
+        if (!vu) touches.push(`coach › ${h.slice(2)} : page non affichée (${sel} absent), contrôle sans objet`);   // v84 (ménage du bloc 3) : chaque page doit s'être affichée avec les données piégées
+        const n = await compter(page);
+        if (n.balises) touches.push(`coach › ${h.slice(2)} (${n.balises} balise(s))`);
+        total.balises += n.balises;
+      }
       await page.click(`[data-ouvrir="${uid}"]`); await page.waitForTimeout(1500);
       for (const r of routes) {
         await page.evaluate(h => { location.hash = h; }, "#/" + r); await page.waitForTimeout(1500);
