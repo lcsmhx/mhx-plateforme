@@ -11,6 +11,7 @@ Règle de Lucas du 02/10/2026 : elle passe avant toutes les autres règles de ce
 - **Avant toute action irréversible, tu fais la sauvegarde et le comptage, puis tu t'arrêtes et tu demandes à Lucas** : quoi, pourquoi, comment revenir en arrière. Irréversibles : une suppression, une migration ou toute écriture dans la base Supabase (schéma ou données), un push forcé, tout ce qui touche aux données d'un vrai client. Les tests passés par l'app sur le compte de test restent autorisés sans demander.
 - **Tu t'arrêtes aussi** sur un écart inexpliqué au comptage, un test rouge que tu ne peux pas corriger, ou un risque de perte de données.
 - **Les garde-fous** : jamais de `DROP`, `DELETE` ni `TRUNCATE` ; sauvegarde et comptage avant ; répétition annulée ; comptage après. Ne jamais supprimer ni affaiblir un test pour le faire passer.
+- **Exception en cours (mission « bloc 3 », espace coach, validée par Lucas le 13/10/2026)** : autonomie complète, push sur `main` compris, nouveaux tests, banc GitHub et captures avant / après, selon `docs/maj-bloc-3/MISSION.md` et ses règles d'arrêt ; toutes les autres règles restent valables. Cette ligne est retirée à la fin de la mission.
 - **Méthode** : git comme historique, de petits commits en français ; un fichier de progression hors du dépôt (fait / en cours / suivant), relu après chaque compression du contexte ; ouvrir un fichier avant d'en parler ; les tests, c'est le banc GitHub au push, ou une suite locale si Lucas le demande.
 
 ## L'app en bref
