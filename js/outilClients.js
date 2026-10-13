@@ -287,7 +287,7 @@ const outilSuiviClients = {
   icone: "📋",
   role: "coach",
   titre: "Suivi détaillé",
-  accroche: "Tous tes clients et leurs données, en direct. Le tableau te dit d'un coup d'œil qui avance, qui décroche, et à qui il manque quelque chose.",
+  accroche: "Le tableau complet de tes clients, côte à côte, et ses alertes.",
   html(){
     return `
     <section class="panel">
@@ -307,6 +307,7 @@ const outilSuiviClients = {
       if (!$("tb-clients")) return;
       const lignes = Clients.resumer((profils || []).filter(p => p && p.role !== "coach" && p.statut !== "prospect"), parClient, contenus, connexions);
       outilClients.tableau(profils, parClient, contenus, connexions, lignes);
+      ListeCoach.reprendre("suivi-clients");
     } catch(e){
       const tb = $("tb-clients"); if (tb) tb.innerHTML = '<tr><td colspan="18">Impossible de charger le suivi.</td></tr>';
     }
@@ -341,6 +342,7 @@ const outilComptes = {
         const donnees = await Clients.charger({ connexions: false });
         if (!box || !box.isConnected) return;
         outilClients.comptes(box, donnees, charger);
+        ListeCoach.reprendre("comptes");
       } catch(e){ if (box) box.innerHTML = '<div class="empty">Impossible de charger la liste.</div>'; }
     };
     charger();
@@ -691,8 +693,12 @@ const ListeCoach = {
   /* singulier / pluriel (« 0 client », mais « 0 clients » en anglais) */
   plur(n, formes){ return trad(n > 1 || (n === 0 && I18N.langue === "en") ? formes[1] : formes[0], { n }); },
   /* la page Clients ou Prospects la note en ouvrant une fiche (Clients.ouvrir) ; la croix de la fiche demande de la rendre */
-  memoriser(t){ if (this.TEXTES[t]) this.etat(t).y = window.scrollY || 0; },
-  revenir(t){ if (this.TEXTES[t]) this.etat(t).revenir = true; },
+  memoriser(t){ if (this.TEXTES[t] || this.PAGES.indexOf(t) > -1) this.etat(t).y = window.scrollY || 0; },
+  revenir(t){ if (this.TEXTES[t] || this.PAGES.indexOf(t) > -1) this.etat(t).revenir = true; },
+  /* v84 : les pages du menu Plus qui ont reçu l'écran d'avant retrouvent aussi leur position au retour d'une fiche (comme avant,
+     quand le tableau, Comptes et les cartes étaient sur Clients et Prospects) : appelé à la fin de leur dessin */
+  PAGES: ["suivi-clients", "comptes", "suivi-commercial", "newsletter"],
+  reprendre(t){ const E = this.etats[t]; if (!E || !E.revenir) return; E.revenir = false; const y = E.y; setTimeout(() => window.scrollTo(0, y), 0); },
   /* le titre et « + » (Créer un accès reste joignable pendant le chargement et si la liste n'a pas pu se charger) */
   tetePlus(t){ return `<div class="lc-tete"><div class="lc-titres"><h1>${esc(trad(this.TEXTES[t].titre))}</h1></div><div class="lc-actions"><a class="rond" href="#/${t}/nouveau" data-lc-plus aria-label="${esc(trad("Créer un accès"))}" title="${esc(trad("Créer un accès"))}">${SVG.ajouter}</a></div></div>`; },
   attente(t){ return `<section class="lc" data-liste="${t}">${this.tetePlus(t)}<div class="empty">${esc(trad("Chargement…"))}</div></section>`; },

@@ -1314,6 +1314,7 @@ Object.assign(I18N.en, {
    américain, même ton. */
 Object.assign(I18N.en, {
   "Suivi détaillé": "Detailed tracking", "Comptes": "Accounts", "Suivi commercial": "Sales follow-up",
+  "Le tableau complet de tes clients, côte à côte, et ses alertes.": "The full table of your clients, side by side, with its alerts.",
   "Tous les comptes, ton équipe comprise : rôle, accès complet, passage client ou prospect.": "Every account, your team included: role, full access, switching between client and prospect.",
   "Les personnes qui ont accepté la newsletter, à exporter pour ton outil d'envoi.": "People who opted in to the newsletter, ready to export to your email tool."
 });

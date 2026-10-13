@@ -705,8 +705,8 @@ const outilProspects = {
     if (!zone.isConnected) return;
     if (!garder) this.limite = this.PAS;
     this.tCharge = t0;
-    if (vue === "detail") this.rendre(zone);
-    else if (vue === "newsletter"){ this.preparer(); zone.innerHTML = `<div id="pr-newsletter"></div>`; this.monterNewsletter(zone.querySelector("#pr-newsletter")); }
+    if (vue === "detail"){ this.rendre(zone); ListeCoach.reprendre("suivi-commercial"); }
+    else if (vue === "newsletter"){ this.preparer(); zone.innerHTML = `<div id="pr-newsletter"></div>`; this.monterNewsletter(zone.querySelector("#pr-newsletter")); ListeCoach.reprendre("newsletter"); }
     else this.rendreListe(zone);
   },
   /* v84 : la page Prospects — la liste, puis les Nouveautés */
