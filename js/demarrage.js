@@ -310,4 +310,7 @@ const Retour = {
 
   appPrete = true;
   routeDepuisAdresse();
+  /* v88 : l'accord santé redemandé après un changement de la politique (RappelSante : une fenêtre au plus, une fois l'écran
+     affiché ; jamais au premier remplissage du profil, ni pendant le parcours ou l'écran du numéro) */
+  setTimeout(() => { try { RappelSante.verifier(); } catch(e){} }, 1500);
 })();

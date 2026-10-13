@@ -168,6 +168,9 @@ async function contexte(b, db, opts){
     localStorage.setItem("mhx_installe", "1"); localStorage.setItem("mhx_visites", "3");
     (magasin === "session" ? sessionStorage : localStorage).setItem("mhx_session", JSON.stringify(s));
     if (langue) localStorage.setItem("mhx_langue", langue);
+    /* v88 : cette suite ne teste pas la fenêtre « Notre politique de confidentialité a changé » (verif90) : « Plus tard » déjà
+       touché sur cet appareil pour ce compte (son accord santé date d'une version plus ancienne) */
+    if (s && s.user && s.user.id) localStorage.setItem("mhx_rappel_politique|" + s.user.id, new Date().toISOString());
   }, { s: sessionDepart(opts.meta), magasin: opts.magasin || "local", langue: opts.langue || "" });
   const page = await nouvellePage(c);
   return { c, page };

@@ -706,6 +706,97 @@ const Sante = {
   }
 };
 
+/* --- v88 (mission de nuit du 14/10/2026, demande de Lucas du 13/10) : L'ACCORD SANTÉ REDEMANDÉ APRÈS UN CHANGEMENT DE LA
+   POLITIQUE. Un compte (prospect ou client, lui-même : jamais le coach ni une fiche consultée) dont l'accord santé
+   (consentement_sante) a été donné pour une version plus ancienne de la politique (sante_version avant
+   CONFIG.textes_legaux.cgu_version, ou absente) voit, à l'ouverture de l'app, une fenêtre courte : la phrase d'accord de la
+   carte, le lien vers la politique, « J'accepte » et « Plus tard ». Son accord d'avant reste valable dans tous les cas
+   (Sante.accordDans ne compare jamais les versions) : personne ne perd l'accès à ses données ni à ses outils, rien n'est
+   effacé. « J'accepte » : les mêmes métadonnées du compte que l'accord actuel (consentement_sante = la date, sante_version =
+   la version actuelle, sante_ecran = « nouvelle-version »), et le tout premier accord gardé une fois pour toutes
+   (sante_premier_accord, sante_premiere_version, sante_premier_ecran, jamais réécrits) ; pas enregistré (réseau, refus) : un message, la
+   fenêtre reviendra à la prochaine ouverture. « Plus tard » (ou la fenêtre fermée) : rien n'est écrit dans le compte ;
+   l'appareil retient la date (mhx_rappel_politique|<id>, retirée à la déconnexion comme toute clé d'un compte) et la
+   fenêtre revient au plus tôt 7 jours après. Un compte dont l'accord porte déjà la version actuelle, ou sans accord (la
+   carte « Ton accord, une seule fois » s'en charge pour un prospect), ne voit rien. Avant de s'ouvrir, la fenêtre relit
+   le compte (accord donné sur un autre appareil ?) : lecture ratée ou hors ligne, rien ne s'ouvre. --- */
+const RappelSante = {
+  JOURS: 7,
+  ECRAN: "nouvelle-version",
+  _fait: false,   // une seule vérification par ouverture de l'app
+  cle(id){ return "mhx_rappel_politique|" + id; },
+  /* un accord (une date) donné pour une version plus ancienne que l'actuelle : versions AAAA-MM-JJ, avec une lettre
+     parfois (« 2026-09-28b ») — l'ordre alphabétique suit les dates ; une version illisible ou plus récente : rien */
+  ancien(m){
+    if (!Sante.accordDans(m)) return false;
+    const act = Sante.version(), v = typeof m.sante_version === "string" ? m.sante_version.trim() : "";
+    if (!/^\d{4}-\d{2}-\d{2}/.test(act)) return false;
+    return v === "" || (/^\d{4}-\d{2}-\d{2}/.test(v) && v < act);
+  },
+  concerne(){
+    const u = Auth.utilisateur();
+    return !!(u && u.id && Auth.profil && !Auth.estCoach() && !Store.idConsulte && this.ancien(Accords.meta()));
+  },
+  /* « Plus tard » touché il y a moins de 7 jours sur cet appareil (une date à venir, horloge changée : ignorée) */
+  reporte(id){
+    try {
+      const t = Date.parse(localStorage.getItem(this.cle(id)) || "");
+      return !isNaN(t) && t <= Date.now() + 60000 && Date.now() - t < this.JOURS * 86400000;
+    } catch(e){ return false; }
+  },
+  plusTard(id){ try { localStorage.setItem(this.cle(id), new Date().toISOString()); } catch(e){} },
+  corpsHTML(){
+    const T = DECOUVERTE.sante_maj, t = s => esc(typoFr(trad(s)));
+    const lien = lienSur((CONFIG.textes_legaux || {}).confidentialite_pdf);
+    /* sur une seule ligne : le corps des fenêtres garde les retours à la ligne (white-space: pre-line) */
+    return `<p class="rappel-sante-texte">${t(T.texte)}</p>` + `<p class="rappel-sante-phrase"><strong>${t(DECOUVERTE.sante.phrase)}</strong></p>`
+      + `<p class="note">${lien ? `<a href="${esc(lien)}" target="_blank" rel="noopener" id="rappel-sante-lien">${t(T.lien)}</a>` : `<span>${t(T.lien)}</span>`}</p>`;
+  },
+  /* « J'accepte » : lève une erreur si l'accord n'a pas pu être enregistré ; GoTrue fusionne data (les autres
+     métadonnées restent) ; jamais de null */
+  async donner(id){
+    const m0 = Accords.meta();
+    const data = { consentement_sante: new Date().toISOString(), sante_version: Sante.version(), sante_ecran: this.ECRAN };
+    if (!Object.prototype.hasOwnProperty.call(m0, "sante_premier_accord")){
+      data.sante_premier_accord = m0.consentement_sante === true ? true : String(m0.consentement_sante || "");
+      data.sante_premiere_version = typeof m0.sante_version === "string" ? m0.sante_version : "";
+      data.sante_premier_ecran = typeof m0.sante_ecran === "string" ? m0.sante_ecran : "";   // l'écran du premier accord (calculateur…), gardé lui aussi
+    }
+    const u = await Auth.appel("/auth/v1/user", { method: "PUT", body: { data: data } });
+    const m = u && u.user_metadata;
+    /* le compte renvoyé ne porte pas la nouvelle version : rien n'est enregistré (jamais « accepté » sur l'appareil seulement) */
+    if (m && typeof m === "object" && m.sante_version !== data.sante_version) throw new Error("accord absent de la réponse");
+    if (!(m && Auth.majUtilisateur(u))) Auth.majUtilisateur({ id: id, user_metadata: Object.assign({}, m0, data) });
+    return true;
+  },
+  /* à l'ouverture de l'app (demarrage.js), une fois l'app prête ; jamais bloquant, jamais par-dessus une autre fenêtre */
+  async verifier(){
+    if (this._fait) return;
+    this._fait = true;
+    try {
+      if (!this.concerne()) return;
+      const id = Auth.utilisateur().id;
+      if (this.reporte(id)) return;
+      if (typeof navigator !== "undefined" && navigator.onLine === false) return;
+      let u = null;
+      try { u = await Auth.appel("/auth/v1/user"); } catch(e){ return; }
+      const m = u && u.user_metadata;
+      if (!u || u.id !== id || !m || typeof m !== "object" || Array.isArray(m)) return;
+      Auth.majUtilisateur(u);
+      if (!this.ancien(m) || !this.concerne() || UI._ouverte) return;
+      const cur = Auth.utilisateur(); if (!cur || cur.id !== id) return;
+      const T = DECOUVERTE.sante_maj;
+      const choix = await UI.ouvrir({ titre: typoFr(trad(T.titre)), corps: this.corpsHTML(), html: true, annulation: "plus-tard", classe: "rappel-sante", boutons: [
+        { texte: trad(T.non), valeur: "plus-tard", classe: "ghost" },
+        { texte: trad(T.oui), valeur: "oui", principal: true }
+      ] });
+      if (choix !== "oui"){ this.plusTard(id); return; }
+      try { await this.donner(id); UI.toast(trad(T.merci), "ok", 5000); }
+      catch(e){ console.warn("[MHX] accord santé (nouvelle version) non enregistré", e && (e.statut || e.message)); UI.toast(trad(T.rate), "attention", 8000); }
+    } catch(e){}
+  }
+};
+
 /* --- STOCKAGE ---------------------------------------------------------
    Meme interface qu'avant (lire / ecrire) : les outils n'ont pas
    conscience du changement. Les donnees vivent maintenant dans la base,
@@ -1160,8 +1251,9 @@ const Store = {
     };
   },
   /* v67 (E4) : les accords rangés dans les metadonnees du compte (Accords, Sante ; emails_suivi : l'ancien accord v51) */
+  /* v88 : + le tout premier accord santé, gardé quand l'accord est redonné pour une nouvelle version (RappelSante) */
   champsAccords: ["consentement", "conditions_version", "consentement_sante", "sante_version", "sante_ecran",
-                  "newsletter", "newsletter_version", "emails_suivi"],
+                  "sante_premier_accord", "sante_premiere_version", "sante_premier_ecran", "newsletter", "newsletter_version", "emails_suivi"],
   /* v67 (D5) : ce qu'une sauvegarde remplacerait, sans rien ecrire : [[cle, contenu]] ; erreur « format » (illisible) ou
      « vide » (rien a restaurer) */
   aRestaurer(texte){

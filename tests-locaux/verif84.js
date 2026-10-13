@@ -280,15 +280,18 @@ async function contexte(b, who, db, opts){
   ouverts.push(c);
   c.setDefaultTimeout(8000);
   await c.route("**/*", r => repondre(r, who, db));
-  await c.addInitScript(({ s, langue }) => {
+  await c.addInitScript(({ s, langue, plusTard }) => {
     if (!/^https?:$/.test(location.protocol) || location.hostname !== "localhost") return;
     if (!localStorage.getItem("__init")) {
       localStorage.setItem("__init", "1");
       if (s) localStorage.setItem("mhx_session", JSON.stringify(s));
       localStorage.setItem("mhx_installe", "1"); localStorage.setItem("mhx_visites", "3");
       if (langue) localStorage.setItem("mhx_langue", langue);
+      /* v88 : cette suite ne teste pas la fenêtre « Notre politique de confidentialité a changé » (verif90) : « Plus tard » déjà touché
+         sur cet appareil pour ce compte (accord santé d'une version plus ancienne), une minute avant l'horloge de la page */
+      if (s && s.user && s.user.id) localStorage.setItem("mhx_rappel_politique|" + s.user.id, plusTard);
     }
-  }, { s: who ? who.session : null, langue: opts.langue || "" });
+  }, { s: who ? who.session : null, langue: opts.langue || "", plusTard: new Date((opts.temps || T0) - 60000).toISOString() });
   await c.clock.install({ time: opts.temps || T0 });   // midi du jour du lancement (ou opts.temps, bloc Q : 23 h 59), puis l'horloge tourne
   const page = surveiller(await c.newPage());
   return { c, page };
