@@ -31,7 +31,7 @@ etat_disque() { git -C .. status --porcelain --untracked-files=no 2>/dev/null; }
 DISQUE_DEBUT=$(etat_disque)
 
 # Suites du banc, et suites volontairement hors banc (verif44 à verif47 testent le Challenge 7 jours supprimé).
-SUITES="flux verif34 verif35 verif36 verif37 verif38 verif-xss verif39 verif40 verif41 verif42 verif43 verif48 verif50 verif51 verif52 verif53 verif54 verif55 verif56 verif57 verif58 verif60 verif61 verif62 verif63 verif64 verif65 verif66 verif67 verif68 verif69 verif70 verif71 verif72 verif73 verif74 verif75 verif76 verif77 verif78 verif79 verif80 verif81 verif82 verif83 verif84 verif85 verif86 verif87"
+SUITES="flux verif34 verif35 verif36 verif37 verif38 verif-xss verif39 verif40 verif41 verif42 verif43 verif48 verif50 verif51 verif52 verif53 verif54 verif55 verif56 verif57 verif58 verif60 verif61 verif62 verif63 verif64 verif65 verif66 verif67 verif68 verif69 verif70 verif71 verif72 verif73 verif74 verif75 verif76 verif77 verif78 verif79 verif80 verif81 verif82 verif83 verif84 verif85 verif86 verif87 verif88"
 # v53 (chantier 4) : verif49 (score sur 100 et température NOUVEAU / CHAUD / TIÈDE / FROID, journal des emails) sort du banc ;
 # ses blocs relances, issues, conflits, verrou et passage client sont repris dans verif58 (bloc F).
 HORS_BANC="verif44 verif45 verif46 verif47 verif49"
@@ -237,12 +237,16 @@ HORS_BANC="verif44 verif45 verif46 verif47 verif49"
 #   le parcours) : verif87 44 (nouvelle suite, partie 6 : attribution objectif × sexe, choix, phase du moment, chaque séance des 3
 #   programmes, supersets, dropsets, HIIT, options, cardio, circuit, vidéos, programme du coach inchangé, accueil, Bientôt, Formation,
 #   anglais, 360 / 390 / 430 px, et W : WebKit ; VERIF87_WEBKIT=0 en local : 42).
+# v86 (mission de nuit du 14/10, lot 1 : sécurité) : verif88 15 (nouvelle suite, partie 9 : réponses du parcours gardées si leur
+#   enregistrement rate, notes et feedback du coach non enregistrés après la fiche fermée, déconnexion des autres onglets, noms
+#   réservés de JavaScript, lien Instagram, bandeau de la fiche, garde du dépôt et ses secrets, « Claude outputs/ » ignoré) ;
+#   garde-depot.js : aucun secret dans les fichiers suivis (partie 10).
 attendu() {
   case "$1" in
     flux) echo 19;; verif34) echo 13;; verif35) echo 14;; verif36) echo 13;; verif37) echo 12;; verif38) echo 66;;
     verif-xss) echo 5;; verif39) echo 48;; verif40) echo 64;; verif41) echo 25;; verif42) echo 20;; verif43) echo 27;;
     verif48) echo 42;; verif50) echo 57;; verif51) echo 89;; verif52) echo 137;; verif53) echo 114;;
-    verif54) echo 60;; verif55) echo 172;; verif56) echo 263;; verif57) echo 152;; verif58) echo 138;; verif60) echo 74;; verif61) echo 50;; verif62) echo 50;; verif63) echo 96;; verif64) echo 92;; verif65) echo 70;; verif66) echo 57;; verif67) echo 63;; verif68) echo 76;; verif69) echo 83;; verif70) echo 32;; verif71) echo 84;; verif72) echo 16;; verif73) echo 25;; verif74) echo 33;; verif75) echo 24;; verif76) echo 22;; verif77) echo 26;; verif78) echo 19;; verif79) echo 25;; verif80) echo 70;; verif81) echo 18;; verif82) echo 56;; verif83) echo 54;; verif84) echo 87;; verif85) echo 51;; verif86) echo 57;; verif87) echo 44;; rig) echo 90;; *) echo "";;
+    verif54) echo 60;; verif55) echo 172;; verif56) echo 263;; verif57) echo 152;; verif58) echo 138;; verif60) echo 74;; verif61) echo 50;; verif62) echo 50;; verif63) echo 96;; verif64) echo 92;; verif65) echo 70;; verif66) echo 57;; verif67) echo 63;; verif68) echo 76;; verif69) echo 83;; verif70) echo 32;; verif71) echo 84;; verif72) echo 16;; verif73) echo 25;; verif74) echo 33;; verif75) echo 24;; verif76) echo 22;; verif77) echo 26;; verif78) echo 19;; verif79) echo 25;; verif80) echo 70;; verif81) echo 18;; verif82) echo 56;; verif83) echo 54;; verif84) echo 87;; verif85) echo 51;; verif86) echo 57;; verif87) echo 44;; verif88) echo 15;; rig) echo 90;; *) echo "";;
   esac
 }
 # Partie de chaque suite pour les jobs parallèles de GitHub Actions (10 parties, durées équilibrées, 4 à 5 minutes chacune).
@@ -256,7 +260,7 @@ partie() {
     verif41|verif57|verif61|verif67|verif77|verif86|verif87) echo 6;;
     verif42|verif50|verif65|verif72|verif75|verif84) echo 7;;
     verif40|verif54|verif62|verif71|verif82) echo 8;;
-    verif55|verif39|verif60|verif73) echo 9;;
+    verif55|verif39|verif60|verif73|verif88) echo 9;;
     verif56|rig|verif-xss|niveau|garde|cles) echo 10;;
     *) echo "";;
   esac

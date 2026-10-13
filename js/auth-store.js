@@ -88,6 +88,14 @@ const Auth = {
   },
   /* un autre onglet vient de ranger une session : meme compte → on la prend (evenement « storage ») */
   depuisAutreOnglet(e){
+    /* v86 (lot 1 de la mission de nuit) : la session de CE compte retirée par un autre onglet (« Se déconnecter », « Supprimer mon
+       compte ») et plus aucune session rangée : cet onglet est rechargé, donc sans session (écran de connexion) — sur un
+       ordinateur ou un téléphone partagé, l'espace ne reste plus ouvert dans un autre onglet. Rien n'est effacé ici (l'onglet qui
+       se déconnecte a déjà fait le ménage) ; une session rangée ailleurs dans cet onglet, ou celle d'un autre compte : rien. */
+    if (e && e.key === this.cleSession && e.newValue == null && this.session && this.session.user && !this.stockee()){
+      let avant = null; try { avant = JSON.parse(e.oldValue || "null"); } catch(err){}
+      if (avant && avant.user && avant.user.id === this.session.user.id){ this.session = null; try { location.reload(); } catch(err){} return; }
+    }
     if (!e || e.key !== this.cleSession || !e.newValue || !this.session || !this.session.user) return;
     try { const s = JSON.parse(e.newValue); if (s && s.access_token && s.user && s.user.id === this.session.user.id) this.session = s; } catch(err){}
   },
@@ -206,6 +214,7 @@ const Auth = {
      l'espace, formation comprise. Elle passe par une fonction serveur qui
      verifie d'abord que l'appelant est bien un coach. */
   async creerAcces(email, motdepasse, prenom, nom, role){
+    await this.assurer();   // v86 (lot 1) : un jeton qui expire (téléphone en veille) est d'abord renouvelé, comme pour les photos
     const r = await fetch(CONFIG.supabase.url + "/functions/v1/creer-acces", {
       method: "POST",
       headers: {
@@ -291,6 +300,7 @@ const Auth = {
      Le serveur reverifie tout, y compris le mot « SUPPRIMER » : l'ecran ne
      protege que ceux qui passent par l'ecran. */
   async supprimerCompte(id, confirmation){
+    await this.assurer();   // v86 (lot 1) : un jeton qui expire est d'abord renouvelé (sinon « Session expirée » trompeur)
     const r = await fetch(CONFIG.supabase.url + "/functions/v1/supprimer-acces", {
       method: "POST",
       headers: {

@@ -655,6 +655,14 @@ const Parcours = {
     if (this._envoi) return; this._envoi = true;
     try {
       await this.enregistrer();   // les réponses, si leur écriture avait raté à l'arrivée (réseau) : un nouvel essai avant d'oublier l'onglet
+      /* v86 (lot 1 de la mission de nuit) : toujours pas enregistrées (lecture d'intake ratée : réseau, délai, 5xx) — avant, l'onglet
+         était oublié et la page rechargée : les réponses disparaissaient sans un mot. Elles restent dans l'onglet, un message le dit,
+         et elles repartent au toucher suivant (rien n'est noté, rien n'est rechargé). */
+      if (this.lire().a_ecrire){
+        this._envoi = false;
+        UI.toast(trad("Tes réponses n'ont pas pu être enregistrées : vérifie ta connexion, puis touche à nouveau le bouton."), "mauvais", 9000);
+        return;
+      }
       const C = await Store.lire(Decouverte.cle, Decouverte.vide()).catch(() => null);
       const C2 = C && !Store.nonLus.has(C) ? C : Decouverte.vide();
       const note = choix === "reserver" ? Decouverte.clic(C2, "cadeau") : Decouverte.plusTard(C2, "cadeau");
