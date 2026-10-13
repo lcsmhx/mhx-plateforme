@@ -46,6 +46,10 @@
      par FT.parcours (fichiers.js : accueil → objectif → coincé → projection → sexe → prénom → chargement → compte, rien de
      rempli sur Compte) et y fait la même vérification (mêmes hrefs exacts, mêmes textes, target=_blank, rel=noopener, dans la
      case, case présente, pas de case santé), plus : l'écran affiché est bien « compte ». Nombre de vérifications inchangé (57).
+   v85 (bloc 4) : #/programme du prospect montre son programme de la formation (#pf-zone : nom, onglets, séances) à la place de
+     l'exemple « Ta séance découverte », la carte 🔒 dit « Après ton bilan : ton programme sur mesure, avec ton coach. » (anglais :
+     « After your check-in: your tailor-made program, with your coach. ») et la page lit seulement intake et prefs de la personne
+     elle-même, sans rien écrire (les autres pages verrouillées : aucune lecture, inchangé). Nombre de vérifications inchangé (57).
    Reprend le simulateur de verif47 : Supabase simulé en mémoire, rien ne part vers la vraie base.
    Usage : node verif50.js ../index.html                                          */
 const { chromium } = require("playwright"); const fs = require("fs"); const http = require("http"); const path = require("path");
@@ -192,12 +196,30 @@ const TXT_VERROU = "Cette fonctionnalité est disponible avec l'accompagnement M
    construit pour toi, qui évolue chaque semaine ? Réserve ton bilan. » / « Want a program built for you that evolves every
    week? Book your assessment. ») */
 const TXT_APPELS = {
-  programme: "Cette séance découverte est la même pour tout le monde. Ton programme, lui, part de ton niveau, de ton matériel et de ton emploi du temps, puis évolue avec tes progrès.",
+  /* v85 (bloc 4) : plus d'exemple sur #/programme (son programme de la formation à la place) ; la carte dit « Après ton bilan : ton
+     programme sur mesure, avec ton coach. » (avant : « Cette séance découverte est la même pour tout le monde. Ton programme, lui,
+     part de ton niveau, de ton matériel et de ton emploi du temps, puis évolue avec tes progrès. ») */
+  programme: "Après ton bilan : ton programme sur mesure, avec ton coach.",
   journal: "Avec l'accompagnement, chaque séance est notée et l'app te propose la charge à viser la fois suivante : tu sais toujours quoi faire pour progresser.",
   nutrition: "Avec l'accompagnement, tes repas sont calculés sur tes calories et tes macros, en tenant compte de ton régime et de tes allergies, avec ta liste de courses.",
   suivi: "Avec l'accompagnement, ton coach lit ton bilan chaque semaine et te répond avec la suite du plan : tu sais toujours où tu en es et quoi faire ensuite."
 };
-const TXT_APPEL_EN = "This starter workout is the same for everyone. Your program starts from your level, your equipment and your schedule, then evolves as you progress.";   // #/programme
+/* v85 (bloc 4) : avant « This starter workout is the same for everyone. Your program starts from your level, your equipment and your
+   schedule, then evolves as you progress. » */
+const TXT_APPEL_EN = "After your check-in: your tailor-made program, with your coach.";   // #/programme
+/* v85 (bloc 4) : au-dessus de la carte 🔒 de #/programme, son programme de la formation (#pf-zone, js/programmesFormation.js) à la
+   place de l'exemple « Ta séance découverte » (#ech-programme) : Léa (« Femme », « Perte de poids / sèche ») a le programme salle
+   femme : son nom exact (#pf-nom), ses 3 onglets de semaines ([data-pf-phase], le 1er choisi) et les séances de sa 1re phase
+   (.pf-seance-l, autant que dans PF_DONNEES) ; la page lit seulement intake et prefs de Léa elle-même (rien d'autre, aucune autre
+   personne) et n'écrit rien */
+const PF_NOM = "Programme salle 12 semaines · Femme";
+const pfVu = page => page.evaluate(() => { const z = document.querySelector("#vue #pf-zone.pf"), v = document.querySelector("#vue .verrou"); if (!z) return null;
+  const p = (typeof PF_DONNEES !== "undefined" && PF_DONNEES.programmes || []).find(x => x && x.id === "salle-femme");
+  const o = [...z.querySelectorAll(".pf-liste [data-pf-phase]")];
+  return { avant: !!(v && (z.compareDocumentPosition(v) & Node.DOCUMENT_POSITION_FOLLOWING)), nom: (z.querySelector("#pf-tete #pf-nom") || {}).textContent || null,
+    onglets: o.length, choisi: o.map(b => b.getAttribute("aria-selected")).join(","), seances: z.querySelectorAll("#pf-ph-0:not([hidden]) .pf-seance-l").length,
+    attendues: p && p.phases[0] ? p.phases[0].seances.length : -1, ech: !!document.querySelector("#vue #ech-programme, #vue .echantillon") }; }).catch(() => null);
+const pfLecturesOk = lu => lu.every(l => l.uid === "eq." + PROSPECT && ["eq.intake", "eq.prefs"].includes(l.outil));
 /* le bouton du verrou (seul lien du verrou) et la ligne juste après son bloc : { n, t, sous } */
 const boutonVerrou = page => page.evaluate(() => { const v = document.querySelector("#vue .verrou"); if (!v) return null; const a = v.querySelector(".actions a[target=_blank]"), s = v.querySelector(".actions + p.verrou-sous");
   return { n: v.querySelectorAll("a").length, t: a ? a.textContent.trim() : null, sous: s ? s.textContent.trim() : null }; }).catch(() => null);
@@ -319,7 +341,8 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     const { c, page } = await contexte(b, lea, db, { langue: "en" });
     await page.goto(`http://localhost:${PORT}/#/decouverte`); await attendre(page, 2600);
     /* v61 (lot 2) : « Get my action plan » (avant : « Book my assessment ») et « 15 min with Lucas · free » dessous ; #/programme :
-       son texte anglais propre (avant : l'appel commun) ; codes accueil_haut / verrou_programme */
+       son texte anglais propre (avant : l'appel commun) ; codes accueil_haut / verrou_programme. v85 (bloc 4) : ce texte devient
+       « After your check-in: your tailor-made program, with your coach. » (TXT_APPEL_EN) */
     const tTete = await texte(page, '#dc-vue a[data-dc-cal="accueil_haut"]');
     const sTete = (await texte(page, "#dc-vue header.masthead .actions + p.dc-cta-sous.dc-haut-sous")).trim();
     await aller(page, "#/programme", 1400);
@@ -453,7 +476,13 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
          v61 (lot 2, G et F) : le texte propre à la page (avant : l'appel commun), « Récupérer mon plan d'action » (avant :
          « Réserver mon bilan »), seul lien du verrou, utm_content=verrou_<page> (avant : verrou-<page>), « 15 min avec Lucas ·
          offert » dessous */
-      ok(`#/${r} (vitrine) : page verrouillée (l'exemple, puis son texte), « Réserver mon plan d'action » (utm_content=verrou_${r}) et « Appel de 15 min avec ton coach, offert », aucune de ses données lue`, t.includes(TXT_APPELS[r]) && !!(await page.$("#vue #ech-" + r + ".echantillon")) && !!bV && bV.n === 1 && bV.t === CTA && plat(bV.sous) === SOUS && !t.includes("Réserver mon bilan") && (await href(page, "#vue .verrou a[target=_blank]")) === lienAttendu("verrou_" + r) && lu.length === 0, t.slice(0, 160) + " | " + JSON.stringify(bV) + " | lectures " + JSON.stringify(lu));
+      /* v85 (bloc 4) : #/programme : son programme de la formation (pfVu) à la place de l'exemple, puis son texte ; seules intake et
+         prefs de Léa elle-même lues, aucune écriture ; les 3 autres pages : l'exemple et aucune lecture, inchangés */
+      const pf = r === "programme" ? await pfVu(page) : null;
+      const dessus = r === "programme" ? !!pf && pf.avant && pf.nom === PF_NOM && pf.onglets === 3 && pf.choisi === "true,false,false" && pf.attendues > 0 && pf.seances === pf.attendues && !pf.ech : !!(await page.$("#vue #ech-" + r + ".echantillon"));
+      const lecture = r === "programme" ? pfLecturesOk(lu) && db.ecritures.length === 0 : lu.length === 0;
+      ok(r === "programme" ? `#/programme (vitrine) : page verrouillée (v85 : son programme de la formation, « ${PF_NOM} », ses 3 onglets de semaines et les séances de sa 1re phase, à la place de l'exemple ; puis son texte « ${TXT_APPELS.programme} »), « Réserver mon plan d'action » (utm_content=verrou_programme) et « Appel de 15 min avec ton coach, offert », seules intake et prefs de Léa elle-même lues, aucune écriture`
+        : `#/${r} (vitrine) : page verrouillée (l'exemple, puis son texte), « Réserver mon plan d'action » (utm_content=verrou_${r}) et « Appel de 15 min avec ton coach, offert », aucune de ses données lue`, t.includes(TXT_APPELS[r]) && dessus && !!bV && bV.n === 1 && bV.t === CTA && plat(bV.sous) === SOUS && !t.includes("Réserver mon bilan") && (await href(page, "#vue .verrou a[target=_blank]")) === lienAttendu("verrou_" + r) && lecture, t.slice(0, 160) + " | " + JSON.stringify(bV) + " | " + JSON.stringify(pf) + " | lectures " + JSON.stringify(lu) + " | écritures " + JSON.stringify(db.ecritures.map(e => [e.table, e.user_id, e.outil])));
     }
     for (const r of ["complements", "bilan"]) {   // v52 : Ma progression n'est plus verrouillée
       const avant = db.lectures.length;

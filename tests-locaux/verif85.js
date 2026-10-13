@@ -22,6 +22,8 @@
    I. anglais : textes exacts, aucun mot français ; J. moins de mouvement : animation immobile (1re scène) ;
    W. moteur WebKit (Safari) : le parcours jusqu'à « Ton espace » (si WebKit est installé : banc GitHub ; VERIF85_WEBKIT=0
       pour s'en passer en local — le nombre de ✓ change alors).
+   v85 (bloc 4) : CONFIG.parcours.disponibles.programme = true : « Bientôt » seulement sur les recettes (scène de l'accueil, A1,
+      et carte de « Ton espace », A12) ; nombre de ✓ inchangé (51 ; 50 avec VERIF85_WEBKIT=0).
    Comptes fictifs (@exemple.fr), numéros de la plage réservée à la fiction (06 39 98 …). Aucun vrai compte créé.
    Usage : node verif85.js ../index.html
            VERIF85_PORT=10011 node verif85.js ../index.html     (autre port, si 10010 est pris)
@@ -255,7 +257,9 @@ async function neuf(b, db, opts){ const x = await contexte(b, db, Object.assign(
 const TX = {
   accueil: { titre: "Combien de lundis tu as dit « je commence » ?", sous: "Séances prêtes, journal alimentaire, recettes, suivi. Gratuit à vie pour les inscrits.",
     bouton: "Créer mon espace gratuit", connexion: "Déjà un compte ? Se connecter",
-    scenes: ["Journal alimentaire", "Programmes homme ou femme Bientôt", "Recettes Bientôt", "Calculateur de calories", "Suivi de tes progrès"] },
+    /* v85 (bloc 4) : CONFIG.parcours.disponibles.programme = true : plus de « Bientôt » sur « Programmes homme ou femme » (les recettes
+       le gardent) ; avant : "Programmes homme ou femme Bientôt" */
+    scenes: ["Journal alimentaire", "Programmes homme ou femme", "Recettes Bientôt", "Calculateur de calories", "Suivi de tes progrès"] },
   objectif: { titre: "Ton objectif ?", options: ["Perdre du gras Affiner ma silhouette", "Prendre du muscle Me dessiner et gagner en force", "Me remettre en forme Retrouver de l’énergie et une routine"], bas: "Ça prend 1 minute." },
   coince: { titre: "Jusqu’ici, qu’est-ce qui a coincé ?", sous: "Jusqu’à 2 réponses.",
     options: ["Le manque de temps", "Je craque sur la nourriture", "Je ne sais pas quoi faire exactement", "La motivation retombe vite", "J’ai déjà tout essayé, rien ne dure", "Personne pour me suivre et me recadrer"],
@@ -277,7 +281,9 @@ const TX = {
     note: "L’app ne remplace pas un avis médical. Si tu as un doute sur ta santé, parles-en à un professionnel avant de commencer.", bouton: "Débloquer mon espace",
     pays: ["France (+33)", "Belgique (+32)", "Suisse (+41)", "Luxembourg (+352)", "Canada (+1)", "La Réunion (+262)", "Guadeloupe (+590)", "Martinique (+596)", "Guyane (+594)",
       "Côte d'Ivoire (+225)", "Sénégal (+221)", "Maroc (+212)", "Algérie (+213)", "Tunisie (+216)", "Cameroun (+237)", "Australie (+61)", "Autre (indicatif à saisir)"] },
-  espace: { cartes: ["Ton programme Bientôt Des séances toutes prêtes, avec la vidéo de chaque exercice.", "Ton journal alimentaire Note tes repas et suis ta journée.",
+  /* v85 (bloc 4) : plus de « Bientôt » sur la carte « Ton programme » (programme disponible) ; les recettes le gardent ; avant :
+     "Ton programme Bientôt Des séances toutes prêtes…" */
+  espace: { cartes: ["Ton programme Des séances toutes prêtes, avec la vidéo de chaque exercice.", "Ton journal alimentaire Note tes repas et suis ta journée.",
     "Tes recettes Bientôt Des recettes simples pour manger mieux.", "Ton calculateur Combien manger pour ton objectif.", "Ton suivi Poids et mensurations, pour voir ce qui bouge."],
     verrou: "🔒 Après ton bilan : ton programme sur mesure, avec ton coach.", bouton: "Entrer dans mon espace" },
   cadeau: { surtitre: "🎁 Cadeau de bienvenue", titre: "Ton plan d’action sur mesure, offert", reperes: ["15 min", "par téléphone", "sans engagement"], coach: "Ton coach",
@@ -311,9 +317,9 @@ const ecran = page => page.evaluate(() => {
     const e0 = await ecran(page);
     const sc = await txts(page, ".pc-et"), bientot = await page.$$eval(".pc-et", l => l.map(e => !!e.querySelector(".pc-bientot")));
     const reb = await txt(page, "#pc-rebours");
-    ok("A1 : accueil (appareil neuf, adresse vide) : sans barre de progression ; titre, sous-titre, bouton, « Déjà un compte ? Se connecter » exacts ; compte à rebours ; 5 scènes dans l'ordre, « Bientôt » sur les programmes et les recettes seulement ; aucune navigation de l'app",
+    ok("A1 : accueil (appareil neuf, adresse vide) : sans barre de progression ; titre, sous-titre, bouton, « Déjà un compte ? Se connecter » exacts ; compte à rebours ; 5 scènes dans l'ordre, « Bientôt » sur les recettes seulement (v85 : plus sur les programmes) ; aucune navigation de l'app",
       e0.etape === "accueil" && e0.progres === null && e0.h1 === TX.accueil.titre && (await txt(page, ".pc-sous")) === TX.accueil.sous && (await txt(page, "#pc-go")) === TX.accueil.bouton
-      && (await txt(page, "#pc-connexion")) === TX.accueil.connexion && REBOURS.test(reb || "") && JSON.stringify(sc) === JSON.stringify(TX.accueil.scenes) && JSON.stringify(bientot) === "[false,true,true,false,false]" && !e0.nav,
+      && (await txt(page, "#pc-connexion")) === TX.accueil.connexion && REBOURS.test(reb || "") && JSON.stringify(sc) === JSON.stringify(TX.accueil.scenes) && JSON.stringify(bientot) === "[false,false,true,false,false]" && !e0.nav,   // v85 (bloc 4) : avant [false,true,true,false,false]
       JSON.stringify([e0, reb, sc, bientot]));
     await page.click("#pc-go"); await sur(page, "objectif");
     await capture(page, "parcours-02-objectif");
@@ -381,8 +387,8 @@ const ecran = page => page.evaluate(() => {
       && contact.length === 1 && contact[0].contenu.telephone === "+33639980099" && ISO(contact[0].contenu.inscrit_le), JSON.stringify([db.inscriptions, contact]).slice(0, 600));
     await capture(page, "parcours-11-ton-espace");
     const e9 = await ecran(page), pas = await txts(page, ".pc-pastilles-espace .pastille"), cartes = await txts(page, ".pc-fonction", true), bt = await page.$$eval(".pc-fonction", l => l.filter(x => x.querySelector(".pc-bientot")).map(x => x.dataset.fonction));
-    ok("A12 : après la création (page rechargée, session ouverte) : « Ton espace » (90 %) : « Zoé, voici ce qui t’attend dans ton espace. », pastilles « Objectif : perdre du gras » et « Profil : femme », les 5 cartes exactes, « Bientôt » sur le programme et les recettes, carte « Après ton bilan » ; ni navigation, ni bannière d'installation",
-      e9.progres === "90" && e9.h1 === "Zoé, voici ce qui t’attend dans ton espace." && JSON.stringify(pas) === '["Objectif : perdre du gras","Profil : femme"]' && JSON.stringify(cartes) === JSON.stringify(TX.espace.cartes) && JSON.stringify(bt) === '["programme","recettes"]'
+    ok("A12 : après la création (page rechargée, session ouverte) : « Ton espace » (90 %) : « Zoé, voici ce qui t’attend dans ton espace. », pastilles « Objectif : perdre du gras » et « Profil : femme », les 5 cartes exactes, « Bientôt » sur les recettes seulement (v85 : plus sur le programme), carte « Après ton bilan » ; ni navigation, ni bannière d'installation",
+      e9.progres === "90" && e9.h1 === "Zoé, voici ce qui t’attend dans ton espace." && JSON.stringify(pas) === '["Objectif : perdre du gras","Profil : femme"]' && JSON.stringify(cartes) === JSON.stringify(TX.espace.cartes) && JSON.stringify(bt) === '["recettes"]'   /* v85 (bloc 4) : avant ["programme","recettes"] */
       && (await txt(page, ".pc-verrou")) === TX.espace.verrou && (await txt(page, "#pc-suivant")) === TX.espace.bouton && !e9.nav && !e9.installe && !e9.retour, JSON.stringify([e9, pas, cartes, bt]));
     const I = intakeDe(db, UID_NOUVEAU) || {}, ei = ecr(db, "intake", UID_NOUVEAU);
     ok("A13 : réponses rangées UNE fois dans intake, au format des 3 questions (v60) + le sexe : probleme, obstacle (texte français) + obstacle_choix, projection + projection_choix, sexe « Femme », court_debut / court_le / parcours_le datés, email_compte, objectif du calculateur ; aucun champ vide",

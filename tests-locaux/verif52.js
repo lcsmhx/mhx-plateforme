@@ -35,6 +35,8 @@
    sur #/prospects (sous la liste) ; H et I mesurent / regardent les deux pages ; Thomas tape aussi #/suivi-commercial et
    #/newsletter ; J ouvre la fiche de Thomas et lit sa ligne dans « Suivi détaillé » (#/suivi-clients ; la référence, là où elle
    les a), avec une différence voulue déclarée (le bouton « Revenir au suivi détaillé » du bandeau). Nombre de ✓ inchangé (137).
+   v85 (bloc 4) : bloc G, l'onglet Programme du prospect montre son programme de la formation : il lit seulement intake et prefs de
+   la personne elle-même, sans écriture ; #/journal ne lit toujours rien. Nombre de ✓ inchangé (137).
    Usage : node verif52.js ../index.html
            VERIF52_PORT=9700 node verif52.js ../index.html     (autre port, si 9682 est pris)
            VERIF52_BLOCS="G.,H. journal" node verif52.js …     (seulement les blocs dont le nom commence ainsi) */
@@ -842,8 +844,12 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     const n0 = db.lectures.length;
     await aller(page, "#/programme", 1400);
     const v1 = !!(await page.$("#vue .verrou"));
+    /* v85 (bloc 4) : #/programme montre le programme de la formation de Léa : il lit seulement intake et prefs de Léa elle-même
+       (rien d'autre — ni activite —, aucune autre personne) et n'écrit rien ; #/journal : toujours aucune lecture (avant : aucune
+       lecture sur les deux pages) */
+    const n1 = db.lectures.length, lusProg = db.lectures.slice(n0, n1);
     await aller(page, "#/journal", 1400);   // v52 (lot D) : Ma progression est ouverte au prospect ; page verrouillée : « Mon journal »
-    ok("pages verrouillées #/programme et #/journal : aucune donnée lue (ni activite, ni autre)", v1 && !!(await page.$("#vue .verrou")) && db.lectures.length === n0, JSON.stringify(db.lectures.slice(n0)));
+    ok("pages verrouillées #/programme et #/journal : aucune donnée lue (ni activite, ni autre) — v85 : sauf, sur #/programme, intake et prefs de Léa elle-même (rien d'autre), sans écriture", v1 && !!(await page.$("#vue .verrou")) && lusProg.every(x => x.uid === ACT && (x.outil === "eq.intake" || x.outil === "eq.prefs")) && lu(db, "activite", n0) === 0 && db.lectures.length === n1 && db.ecritures.length === 0, "programme : " + JSON.stringify(lusProg) + " · journal : " + JSON.stringify(db.lectures.slice(n1)) + " · écritures " + JSON.stringify(db.ecritures.map(e => e.outil || e.table)));
     await aller(page, "#/formation", 1600);
     ok("navigation (4 pages) : rien d'écrit tant que l'envoi n'a pas lieu (au plus une fois par minute)", db.ecritures.length === 0, JSON.stringify(db.ecritures.map(e => e.outil)));
     await cacher(page); await attendre(page, 1800); await montrer(page);
