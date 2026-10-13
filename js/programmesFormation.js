@@ -92,7 +92,7 @@ Object.assign(I18N.en, {
   "Facultative": "Optional", "Superset": "Superset", "Dropset": "Dropset", "HIIT": "HIIT", "Circuit": "Circuit",
   "{n} exercice": "{n} exercise", "{n} exercices": "{n} exercises", "{n} options": "{n} options",
   "{s} × {r}": "{s} × {r}", "Repos {r}": "Rest {r}", "{t} travail / {r} repos": "{t} work / {r} rest",
-  "Vidéo": "Video", "Voir la vidéo : {nom}": "Watch the video: {nom}", "Démonstration de l'exercice": "Exercise demo",
+  "Vidéo": "Video", "Voir la vidéo : {nom}": "Watch the video: {nom}",
   "Enchaîne ces exercices sans repos entre eux, puis récupère.": "Do these exercises back to back with no rest in between, then recover.",
   "Retour au programme": "Back to the program", "La méthode": "The method",
   "À la salle · Homme": "Gym · Men", "À la salle · Femme": "Gym · Women", "À la maison · Homme ou femme": "At home · Men or women",
@@ -103,7 +103,7 @@ Object.assign(I18N.en, {
   "Séance introuvable.": "Workout not found.", "À choisir": "To choose",
   "Les programmes de la formation": "The course programs",
   "En plus du programme de ton coach : 3 programmes prêts à suivre (salle homme, salle femme, full body à la maison), avec la vidéo de chaque exercice.": "On top of your coach's program: 3 ready-to-follow programs (men's gym, women's gym, full body at home), with a video for every exercise.",
-  "Voir les programmes": "See the programs", "Ta séance du moment": "Your current workout"
+  "Voir les programmes": "See the programs"
 });
 
 /* ------------------------------------------------------------------
@@ -185,15 +185,18 @@ const ProgFormation = {
   /* une sous-adresse de #/programme qui appartient aux programmes de la formation */
   sous(sr){ return /^(formation|seance|choisir)(\/|$)/.test(String(sr || "")); },
   zoneHTML(){ return `<div id="pf-zone" class="pf"><section class="panel"><div class="empty">${esc(trad("Chargement…"))}</div></section></div>`; },
-  /* lecture : intake et prefs de la personne (jamais d'écriture ici) */
+  /* lecture : intake et prefs de la personne (jamais d'écriture ici) ; une lecture ratée (réseau) : null */
   async lire(){
-    const [I, pr] = await Promise.all([Store.lire("intake", {}).catch(() => ({})), Store.lire("prefs", {}).catch(() => ({}))]);
-    return { I: I || {}, pr: pr || {} };
+    const [I, pr] = await Promise.all([Store.lire("intake", {}), Store.lire("prefs", {})]);
+    if (!I || !pr || Store.nonLus.has(I) || Store.nonLus.has(pr)) return null;
+    return { I, pr };
   },
   async monter(zone, sr){
     if (!zone) return;
-    let D; try { D = await this.lire(); } catch(e){ D = { I: {}, pr: {} }; }
+    let D = null; try { D = await this.lire(); } catch(e){ D = null; }
     if (!zone.isConnected) return;
+    /* v71 (F) : une lecture ratée n'est pas « aucun programme » : « Pas de connexion » et Réessayer, comme partout */
+    if (!D){ pageHorsLigne(zone); return; }
     this._D = D;
     this.dessiner(zone, sr);
   },
@@ -206,7 +209,8 @@ const ProgFormation = {
   },
   /* ---------- la page du programme ---------- */
   pageHTML(E){
-    const p = E.p, ph = this.phaseDu(p, E.debut), s = this.semaine(E.debut), P = PF_DONNEES;
+    /* « Semaine n sur 12 » : seulement pour un programme de 12 semaines (la maison n'a qu'une phase, sans durée) */
+    const p = E.p, ph = this.phaseDu(p, E.debut), s = p.phases.length > 1 ? this.semaine(E.debut) : null, P = PF_DONNEES;
     const onglets = p.phases.length > 1 ? `<div class="pf-onglets" role="tablist" aria-label="${esc(trad("Semaines"))}">${p.phases.map((f, i) =>
       `<button type="button" role="tab" id="pf-o-${i}" aria-controls="pf-ph-${i}" aria-selected="${i === ph}" data-pf-phase="${i}" aria-label="${esc(trad("Semaines {p}", { p: f.semaines }))}"><small aria-hidden="true">${esc(trad("Semaines"))}</small><b aria-hidden="true">${esc(f.semaines)}</b></button>`).join("")}</div>` : "";
     const phases = p.phases.map((f, i) => `<div class="pf-phase" id="pf-ph-${i}" role="${p.phases.length > 1 ? "tabpanel" : "region"}"${p.phases.length > 1 ? ` aria-labelledby="pf-o-${i}"` : ""}${i === ph ? "" : " hidden"}>
@@ -243,7 +247,7 @@ const ProgFormation = {
   },
   videoHTML(x){
     const v = idVideo(x.yt); if (!v) return "";
-    return `<button type="button" class="btn ghost petit pf-video" data-yt="${esc(v)}" aria-label="${esc(trad("Voir la vidéo : {nom}", { nom: trad(x.nom) }))}">${SVG.lecture || "▶"}<span>${esc(trad("Vidéo"))}</span></button>`;
+    return `<button type="button" class="btn ghost petit pf-video" data-yt="${esc(v)}" aria-label="${esc(trad("Voir la vidéo : {nom}", { nom: trad(x.nom) }))}"><span aria-hidden="true">▶</span><span>${esc(trad("Vidéo"))}</span></button>`;
   },
   exoHTML(x){
     const chiffres = [];
