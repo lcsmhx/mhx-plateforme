@@ -17,7 +17,7 @@
 --   4. deux contraintes CHECK de profils   v78_profils_prenom_longueur et v78_profils_nom_longueur : 100 caractères au plus
 --                                          (ajoutées NOT VALID, puis VALIDATE : la base vérifie elle-même les lignes déjà là).
 -- Les règles :
---   * clé : seulement les 28 clés que l'app écrit (inventaire : supabase/releve-2026-09-30/INVENTAIRE-CLES.md) ;
+--   * clé : seulement les 29 clés que l'app écrit (inventaire : supabase/releve-2026-09-30/INVENTAIRE-CLES.md) ;
 --   * taille : une limite par clé, pour tout le monde (coach, client, clé de service, éditeur SQL) ; en plus, un compte
 --     PROSPECT (connecté, ni coach ni client : l'inscription libre) écrit 256 Ko au plus par clé ;
 --   * une ligne qui existe déjà et dépasse sa limite (cas qui ne peut pas exister le jour J : les garde-fous ci-dessous
@@ -89,6 +89,7 @@ as $$
                    when 'challenge'       then 131072
                    when 'suivi_prospect'  then 131072
                    when 'activite'        then 65536      --  64 Ko
+                   when 'seances_formation' then 262144   -- 256 Ko : séances faites des programmes de la formation (v90), 400 au plus (~36 Ko : marge ×7)
                    when 'calc'            then 16384      --  16 Ko : les petites clés
                    when 'calc_perso'      then 16384
                    when 'objectifs_faits' then 16384

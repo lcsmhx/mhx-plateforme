@@ -144,13 +144,13 @@ insert into t_res select 2, 'structure : contraintes v78_profils_prenom_longueur
   (select count(*) from pg_constraint where conrelid = 'public.profils'::regclass
      and conname in ('v78_profils_prenom_longueur', 'v78_profils_nom_longueur') and contype = 'c' and convalidated) = 2, null;
 
-insert into t_res select 3, 'limites : les 28 clés de l''inventaire aux valeurs prévues ; prospect 256 Ko au plus ; clé inconnue = null (aussi pour un prospect)',
-  (select count(*) = 28 and bool_and(public.v78_limite(a.outil) = a.limite) and bool_and(public.v78_limite(a.outil, true) = least(a.limite, 262144))
+insert into t_res select 3, 'limites : les 29 clés de l''inventaire aux valeurs prévues ; prospect 256 Ko au plus ; clé inconnue = null (aussi pour un prospect)',
+  (select count(*) = 29 and bool_and(public.v78_limite(a.outil) = a.limite) and bool_and(public.v78_limite(a.outil, true) = least(a.limite, 262144))
      from (values ('hist_repas', 16777216), ('hist_programme', 8388608), ('journal', 4194304), ('perf', 4194304),
                   ('checkins', 2097152), ('repas', 1048576), ('journal_alimentaire', 1048576), ('feedbacks', 1048576), ('programme', 524288), ('atelier', 524288),
                   ('mens', 524288), ('formation', 524288), ('photos', 524288), ('notes_coach', 524288), ('intake', 262144),
                   ('complements', 131072), ('repas_suivi', 131072), ('challenge', 131072), ('suivi_prospect', 131072),
-                  ('activite', 65536), ('calc', 16384), ('calc_perso', 16384), ('objectifs_faits', 16384), ('prefs', 16384),
+                  ('activite', 65536), ('seances_formation', 262144), ('calc', 16384), ('calc_perso', 16384), ('objectifs_faits', 16384), ('prefs', 16384),
                   ('emails', 16384), ('contact', 16384), ('coach_notifs', 16384), ('coach_visite', 16384)) as a (outil, limite))
   and public.v78_limite('cle_inconnue_v78') is null and public.v78_limite('cle_inconnue_v78', true) is null
   and public.v78_limite(null) is null, null;

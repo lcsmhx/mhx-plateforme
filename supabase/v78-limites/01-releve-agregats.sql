@@ -27,7 +27,7 @@ limites (outil, limite) as (values
   ('hist_repas', 16777216), ('hist_programme', 8388608), ('journal', 4194304), ('perf', 4194304), ('checkins', 2097152),
   ('repas', 1048576), ('journal_alimentaire', 1048576), ('feedbacks', 1048576), ('programme', 524288), ('atelier', 524288), ('mens', 524288),
   ('formation', 524288), ('photos', 524288), ('notes_coach', 524288), ('intake', 262144), ('complements', 131072),
-  ('repas_suivi', 131072), ('challenge', 131072), ('suivi_prospect', 131072), ('activite', 65536), ('calc', 16384),
+  ('repas_suivi', 131072), ('challenge', 131072), ('suivi_prospect', 131072), ('activite', 65536), ('seances_formation', 262144), ('calc', 16384),
   ('calc_perso', 16384), ('objectifs_faits', 16384), ('prefs', 16384), ('emails', 16384), ('contact', 16384),
   ('coach_notifs', 16384), ('coach_visite', 16384)),
 cles_coach (outil) as (values ('programme'), ('repas'), ('calc'), ('complements'), ('hist_programme'), ('hist_repas'),

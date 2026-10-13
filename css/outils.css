@@ -1063,3 +1063,5 @@ ul.fc-lignes li > b{font-weight:500;text-align:right;min-width:0;overflow-wrap:a
 .pf-choix-l:first-child{border-top:0}
 .pf-choix-l.actuel b{color:var(--accent)}
 .pf-carte-nom{margin:0}
+/* v90 (lot 5) : « J'ai fait cette séance » — les marges des nouveaux paragraphes, comme leurs voisins */
+.fc-pf-l{margin:0}.pf-faites-sem{margin:6px 0 0}.pf-fait-msg{margin:8px 0 0}
