@@ -984,7 +984,7 @@ const NotesCoach = {
     const quand = (iso) => { const d = new Date(iso); return isNaN(d) ? "" : d.toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }); };
     const dire = (t, ko) => {
       etat.classList.toggle("ko", !!ko); etat.textContent = t;
-      if (ko && !etat.isConnected) CleCoach.horsPage("Notes privées non enregistrées", t, ta.value);   // v86 : la fiche est déjà fermée
+      if (ko && !etat.isConnected && lu && ta.value.trim() && ta.value !== dernier) CleCoach.horsPage("Notes privées non enregistrées", t, ta.value);   // v86 : fiche déjà fermée, texte non enregistré
     };
     /* ecrit le texte du champ, par ecriture conditionnelle. Sur un conflit : si
        c'etait notre propre ecriture (reponse perdue), on la reprend ; si les

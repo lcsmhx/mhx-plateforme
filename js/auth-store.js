@@ -86,16 +86,24 @@ const Auth = {
     if (c.expire_le && s.expire_le <= c.expire_le) return null;
     return s;
   },
+  /* v86 (lot 1 de la mission de nuit) : « Se déconnecter » (et « Supprimer mon compte ») préviennent les autres onglets ouverts sur
+     le même compte, par le canal du navigateur (BroadcastChannel : rien n'est rangé sur l'appareil) : ils sont rechargés, donc
+     sans session (écran de connexion) — sur un ordinateur ou un téléphone partagé, l'espace ne reste plus ouvert dans un autre
+     onglet. Une session qui prend fin toute seule (jeton refusé) ne recharge rien : la page reste, avec son bandeau (sessionPerdue).
+     Navigateur sans BroadcastChannel : comme avant. */
+  _canal: null,
+  canal(){
+    try { if (!this._canal && typeof BroadcastChannel === "function"){ this._canal = new BroadcastChannel("mhx-sortie"); this._canal.onmessage = e => this.sortieAilleurs(e && e.data); } } catch(e){}
+    return this._canal;
+  },
+  annoncerSortie(id){ try { const c = this.canal(); if (c && id) c.postMessage({ sortie: String(id) }); } catch(e){} },
+  sortieAilleurs(d){
+    if (!d || typeof d !== "object" || !this.session || !this.session.user || d.sortie !== this.session.user.id) return;
+    this.session = null;
+    setTimeout(() => { try { location.reload(); } catch(e){} }, 300);   // le temps que la session retirée par l'autre onglet arrive ici
+  },
   /* un autre onglet vient de ranger une session : meme compte → on la prend (evenement « storage ») */
   depuisAutreOnglet(e){
-    /* v86 (lot 1 de la mission de nuit) : la session de CE compte retirée par un autre onglet (« Se déconnecter », « Supprimer mon
-       compte ») et plus aucune session rangée : cet onglet est rechargé, donc sans session (écran de connexion) — sur un
-       ordinateur ou un téléphone partagé, l'espace ne reste plus ouvert dans un autre onglet. Rien n'est effacé ici (l'onglet qui
-       se déconnecte a déjà fait le ménage) ; une session rangée ailleurs dans cet onglet, ou celle d'un autre compte : rien. */
-    if (e && e.key === this.cleSession && e.newValue == null && this.session && this.session.user && !this.stockee()){
-      let avant = null; try { avant = JSON.parse(e.oldValue || "null"); } catch(err){}
-      if (avant && avant.user && avant.user.id === this.session.user.id){ this.session = null; try { location.reload(); } catch(err){} return; }
-    }
     if (!e || e.key !== this.cleSession || !e.newValue || !this.session || !this.session.user) return;
     try { const s = JSON.parse(e.newValue); if (s && s.access_token && s.user && s.user.id === this.session.user.id) this.session = s; } catch(err){}
   },
@@ -352,8 +360,10 @@ const Auth = {
                : "Des modifications n'ont pas encore pu être envoyées (hors ligne). Si tu te déconnectes maintenant, elles seront perdues.";
     if ((nonEnvoyees || refusees) && !(await UI.confirmer(trad(avis), { ok: trad("Me déconnecter quand même"), danger: true }))) return;
     try { await this.appel("/auth/v1/logout", { method: "POST" }); } catch(e){}
+    const sortant = moi && moi.id;
     this.oublier();
     this.viderCompte();   // v71 (B) : theme, langue, banniere d'installation et compteur de visites restent (reglages de l'appareil)
+    this.annoncerSortie(sortant);   // v86 : les autres onglets de ce compte se ferment sur la connexion
     location.hash = "";
     location.reload();
   },
@@ -1251,11 +1261,7 @@ const Catalogue = {
           const f = await fetch(CONFIG.nutrition.source_donnees + fichier, { cache: "no-store" });
           if (f.ok){
             const brut = await f.json();
-            /* v86 (lot 1) : en secours, les étiquettes de régime et d'allergènes d'une recette du fichier ne sont jamais reprises telles
-               quelles : recettes() les recalcule depuis les aliments (aujourd'hui, aucune recette du fichier n'en porte) */
-            liste = (table === "aliments") ? brut.map(a => Normaliser.aliment(a))
-              : (table === "recettes") ? brut.map(r => { if (!r || typeof r !== "object") return r; const c = Object.assign({}, r); delete c.regimes; delete c.allergenes; return c; })
-              : brut;
+            liste = (table === "aliments") ? brut.map(a => Normaliser.aliment(a)) : brut;
             this.secours = true;
             complet = true;
           }
@@ -1630,11 +1636,13 @@ function initSauvegarde(){
     }
     sup.disabled = true; flash("sv-suppr-msg", "Suppression…");
     try {
+      const sortant = (Auth.utilisateur() || {}).id;
       await Auth.supprimerCompte(null, "SUPPRIMER");
       Auth.oublier();
       [localStorage, sessionStorage].forEach(m => {
         try { Object.keys(m).forEach(k => { if (k.indexOf("mhx_") === 0) m.removeItem(k); }); } catch(e){}
       });
+      Auth.annoncerSortie(sortant);   // v86 : les autres onglets de ce compte se ferment sur la connexion
       await UI.alerte(trad("Ton compte est supprimé. Merci d'avoir utilisé l'application."));
       location.hash = ""; location.reload();
     } catch(e){

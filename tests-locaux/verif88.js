@@ -8,7 +8,8 @@
       (avant : message écrit dans un élément disparu, texte perdu) ;
    C. feedback du coach : même chose (« Feedback non enregistré ») ;
    D. « Se déconnecter » dans un onglet : l'autre onglet ouvert sur le même compte est rechargé, sans session (avant : il restait
-      ouvert sur l'espace) ; un simple renouvellement de session dans l'autre onglet ne déconnecte rien ;
+      ouvert sur l'espace) ; un simple renouvellement de session dans l'autre onglet ne déconnecte rien, ni une session qui prend
+      fin toute seule (la page et un texte en cours restent) ;
    E. noms choisis par un client (« __proto__ », « constructor ») : la liste de courses ne touche plus aux objets communs de la
       page, les charges de « Préparer le call » ne plantent plus ;
    F. lien Instagram du pied de page passé par lienSur() et esc() : une valeur « javascript:… » ne donne jamais un lien actif ;
@@ -501,6 +502,13 @@ const attendreSel = async (page, sel, ms) => { try { await page.waitForSelector(
     await attendre(p2, 1500);
     const r2 = await p2.evaluate(() => ({ marque: window.__verif88 === 1, connecte: Auth.connecte() }));
     ok("D2 : un renouvellement de session rangé par un autre onglet ne déconnecte rien (l'onglet 2 reste sur l'espace, connecté)", r2.marque === true && r2.connecte === true, JSON.stringify(r2));
+    /* la session prend fin toute seule dans l'onglet 1 (jeton refusé : Auth.oublier, sans « Se déconnecter ») : l'onglet 2 garde sa page */
+    await p1.evaluate(() => { window.__s88 = JSON.stringify(Auth.session); Auth.oublier(); });
+    await attendre(p2, 1500);
+    const r3 = await p2.evaluate(() => ({ marque: window.__verif88 === 1 }));
+    ok("D3 : une session qui prend fin toute seule dans un autre onglet (jeton refusé, sans « Se déconnecter ») ne recharge pas cet onglet : la page reste (un texte en cours n'est jamais effacé)", r3.marque === true, JSON.stringify(r3));
+    await p1.evaluate(() => { Auth.memoriser(JSON.parse(window.__s88)); });   // la session revient, pour la suite
+    await attendre(p2, 800);
     await p1.evaluate(() => { Auth.deconnecter(); }).catch(() => {});
     const recharge = await p2.waitForFunction(() => window.__verif88 !== 1, null, { timeout: 8000 }).then(() => true).catch(() => false);
     await attendre(p2, 2500);
