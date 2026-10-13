@@ -28,6 +28,11 @@ const BLOCS = (process.env.VERIF87_BLOCS || "").split(",").map(x => x.trim()).fi
 const MOBILE = { width: 390, height: 844 }, ETROIT = { width: 360, height: 740 }, GRAND = { width: 430, height: 932 };
 const JSON_PF = JSON.parse(fs.readFileSync(path.join(path.dirname(HTML), "docs", "maj-bloc-4", "programmes-formation.json"), "utf8"));
 const EXOS_APP = JSON.parse(fs.readFileSync(path.join(path.dirname(HTML), "donnees", "exercices.json"), "utf8"));
+/* v87 (mission de nuit du 14/10, lot 2) : les noms sans équivalent dans l'app qui portent une vidéo de la chaîne AZEOO (titre vérifié
+   par oEmbed : auteur « AZEOO ») — nom affiché → identifiant YouTube ; tout autre nom sans équivalent reste sans vidéo */
+const AZEOO_V87 = { "Soulevé de terre jambes tendues": "Rtwy_BbAhgQ", "Hip thrust à l'haltère": "2KaDiDFL0HY", "Développé militaire avec haltères": "WuHq01Jnf8I",
+  "Squat avec haltères": "0MOw1B2YysY", "Fentes avant": "LphXqrsgLUI", "Fentes latérales": "XOAzj8Vu-EU", "Peck deck": "OrkQU-f0mEY",
+  "Triceps kickback avec haltères": "dgjl5H-TK3g", "High knees": "G4TXQzNMZEY", "High knees rapides": "G4TXQzNMZEY", "Fentes sautées": "-g1shAUmIws" };
 
 /* la page servie : inscription ouverte et textes légaux de test (le parcours du bloc G s'affiche comme en ligne) */
 const retouche = h => FT.forcerLegaux(FT.forcerInscription(h, true));
@@ -363,7 +368,7 @@ const nbAttendu = sc => sc.options ? sc.options.map(o => o.exercices.length) : (
       chiffres: Array.from(document.querySelectorAll(".pf-superset .pf-chiffres span")).slice(0, 2).map(x => x.textContent).join(" | ") }));
     ok("D1 : supersets : 2 lignes du même groupe dans un même cadre (« Développé couché » + « Pompes », « Tirage vertical » + « Tirage horizontal », « Développé militaire » + « Élévations latérales »), pastille « Superset » sur chacune ; les autres seules ; séries × reps et repos",
       JSON.stringify(s.groupes) === JSON.stringify([["Développé couché", "Pompes"], ["Tirage vertical", "Tirage horizontal"], ["Développé militaire", "Élévations latérales"]]) && s.pastilles.length === 6 && s.pastilles.every(x => x === "Superset")
-        && JSON.stringify(s.seules) === JSON.stringify(["Dips", "Curl barre", "Extension triceps poulie"]) && norm(s.chiffres) === "4 × 12 | Repos 90-120 s", JSON.stringify(s));
+        && JSON.stringify(s.seules) === JSON.stringify(["Dips", "Curl barre EZ", "Extension triceps poulie"]) && norm(s.chiffres) === "4 × 12 | Repos 90-120 s", JSON.stringify(s));
     await ouvrirPf(page, "#/programme/seance/salle-femme/2/0", "#pf-seance");
     const d = await page.evaluate(() => Array.from(document.querySelectorAll(".pf-exo")).map(e => ({ nom: e.querySelector(".pf-exo-nom").textContent, tech: (e.querySelector(".pf-tech") || {}).textContent || "", note: (e.querySelector(".pf-note") || {}).textContent || "" })));
     ok("D2 : dropset : pastille « Dropset » et sa note (« Dropset sur la dernière série ») sur le squat ; les supersets de la séance aussi",
@@ -400,8 +405,10 @@ const nbAttendu = sc => sc.options ? sc.options.map(o => o.exercices.length) : (
     const relies = await page.evaluate(() => { const out = []; PF_DONNEES.programmes.forEach(p => p.phases.forEach(f => f.seances.forEach(sc => (sc.exercices || []).concat(...(sc.options || []).map(o => o.exercices)).forEach(x => out.push(x))))); return out; });
     const ids = new Set(EXOS_APP.map(e => e.id)), noms = Object.fromEntries(EXOS_APP.map(e => [e.id, e.nom]));
     const faux = relies.filter(x => x.ex && (!ids.has(x.ex) || noms[x.ex] !== x.nom));
-    ok("E1 : chaque exercice relié l'est à un exercice de l'app (id de donnees/exercices.json) et s'affiche sous son nom ; 234 lignes, dont des noms sans équivalent sûr (sans id ni vidéo)",
-      relies.length === 234 && !faux.length && relies.some(x => !x.ex) && relies.filter(x => !x.ex).every(x => !x.yt), JSON.stringify(faux).slice(0, 400));
+    /* v87 : un nom sans équivalent n'a une vidéo que s'il est dans AZEOO_V87, avec exactement cet identifiant ; chaque nom de la liste est présent */
+    const sansId = relies.filter(x => !x.ex), azeooFaux = sansId.filter(x => x.yt && AZEOO_V87[x.nom] !== x.yt).concat(Object.keys(AZEOO_V87).filter(n => !sansId.some(x => x.nom === n && x.yt === AZEOO_V87[n])));
+    ok("E1 : chaque exercice relié l'est à un exercice de l'app (id de donnees/exercices.json) et s'affiche sous son nom ; 234 lignes, dont des noms sans équivalent sûr (sans id), sans vidéo sauf les 11 noms à vidéo AZEOO de la v87 (identifiant exact)",
+      relies.length === 234 && !faux.length && sansId.length > 0 && !azeooFaux.length && sansId.some(x => !x.yt), JSON.stringify(faux).slice(0, 400) + " " + JSON.stringify(azeooFaux).slice(0, 400));
     await ouvrirPf(page, "#/programme/seance/salle-homme/2/0", "#pf-seance");
     const v = await page.evaluate(() => Array.from(document.querySelectorAll(".pf-exo")).map(e => ({ nom: e.querySelector(".pf-exo-nom").textContent, ex: e.dataset.ex || "", yt: (e.querySelector("[data-yt]") || {}).dataset ? (e.querySelector("[data-yt]") || { dataset: {} }).dataset.yt || "" : "" })));
     const att = JSON_PF.programmes[0].phases[2].seances[0].exercices.map(x => x.nom);
@@ -426,6 +433,12 @@ const nbAttendu = sc => sc.options ? sc.options.map(o => o.exercices.length) : (
     const clap = await txt(page, ".pf-option:not([hidden]) .pf-exo-nom");
     ok("E4 : un seul nom par exercice : « Squat bulgare » et « Fentes bulgares » → « Fentes bulgares » ; « Planche statique » et « Planche abdominale » → « Planche » ; sans équivalent dans l'app : « Jump squats » → « Squats sautés », « Pompes avec clap » → « Pompes avec claquement »",
       bulg === "Fentes bulgares" && bulg2 === "Fentes bulgares" && planche === "Planche" && planche2 === "Planche" && jump === "Squats sautés" && clap === "Pompes avec claquement", JSON.stringify([bulg, bulg2, planche, planche2, jump, clap]));
+    /* v87 (mission de nuit du 14/10, lot 2) : « Burpees » du PDF (classique, avec saut) n'est plus « Burpees contrôlés » (sans saut) ; « Tractions
+       assistées » et « Curl barre EZ » (avec « Curl biceps barre EZ ») ne sont plus reliés : nom du PDF, sans id ni vidéo */
+    const delies = n => relies.filter(x => x.nom === n);
+    ok("E5 : « Burpees » (10 lignes, HIIT, circuits, full body), « Tractions assistées » (4) et « Curl barre EZ » (4) : nom du PDF, sans id ni vidéo ; plus aucun « Burpees contrôlés » ni « Tractions » ni « Curl barre » dans les programmes",
+      delies("Burpees").length === 10 && delies("Tractions assistées").length === 4 && delies("Curl barre EZ").length === 4 && ["Burpees", "Tractions assistées", "Curl barre EZ"].every(n => delies(n).every(x => !x.ex && !x.yt))
+        && !relies.some(x => ["burpees-controles", "tractions", "curl-barre"].includes(x.ex)), JSON.stringify(["Burpees", "Tractions assistées", "Curl barre EZ"].map(n => [n, delies(n).length])));
     await ouvrirPf(page, "#/programme/seance/salle-homme/0/0", "#pf-seance");
     const b1 = await page.$$("[data-yt]");
     await b1[0].click(); await attendre(page, 300);
