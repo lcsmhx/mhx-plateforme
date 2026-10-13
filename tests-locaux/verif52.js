@@ -978,12 +978,20 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     await page.waitForSelector("#lc-prospects .lc-ligne", { timeout: 15000 }); await page.waitForSelector("#pr-nouveautes .nv-panneau", { timeout: 15000 });
     const totalL = Date.now() - t0;   // changement d'adresse → liste ET Nouveautés (calculées après coup) affichées
     const appL = await page.evaluate(() => { const z = document.getElementById("pr-vue"); const t = performance.now(); outilProspects.rendreListe(z); return Math.round(performance.now() - t); }).catch(() => 99999);
+    /* v84 (ménage du bloc 3) : la newsletter, construite en v83 dans le même appel que le reste de la page, est sur #/newsletter :
+       mesurée elle aussi (arrivée, puis construction monterNewsletter) ; et les trois constructions côté app ENSEMBLE en moins de
+       2 000 ms, ce que faisait le seul appel outilProspects.rendre(z) de la v83 (comme verif58 K) */
+    const tN = Date.now();
+    await page.evaluate(() => { location.hash = "#/newsletter"; });
+    await page.waitForSelector("#pr-nl", { timeout: 15000 });
+    const totalN = Date.now() - tN;   // changement d'adresse → newsletter affichée
+    const appN = await page.evaluate(() => { const z = document.getElementById("pr-newsletter"); const t = performance.now(); outilProspects.preparer(); outilProspects.monterNewsletter(z); return Math.round(performance.now() - t); }).catch(() => 99999);
     const t1 = Date.now();
     await page.evaluate(() => { location.hash = "#/suivi-commercial"; });
     await page.waitForSelector("#pr-liste .sc-carte", { timeout: 15000 });
     const total = Date.now() - t1;   // changement d'adresse → cartes affichées
     const app = await page.evaluate(() => { const z = document.getElementById("pr-vue"); const t = performance.now(); outilProspects.rendre(z); return Math.round(performance.now() - t); }).catch(() => 99999);
-    ok(`1 008 prospects : page complète depuis le changement d'adresse et construite côté app, chacun < 2 000 ms (v84 : Prospects, liste et Nouveautés, en ${totalL} ms, construite en ${appL} ms ; Suivi commercial, cartes, en ${total} ms, construit en ${app} ms)`, total < 2000 && app < 2000 && totalL < 2000 && appL < 2000, "Prospects " + totalL + " ms · app " + appL + " ms · Suivi commercial " + total + " ms · app " + app + " ms");
+    ok(`1 008 prospects : page complète depuis le changement d'adresse et construite côté app, chacun < 2 000 ms (v84 : Prospects, liste et Nouveautés, en ${totalL} ms, construite en ${appL} ms ; Newsletter en ${totalN} ms, construite en ${appN} ms ; Suivi commercial, cartes, en ${total} ms, construit en ${app} ms ; les trois constructions ensemble en ${appL + appN + app} ms)`, total < 2000 && app < 2000 && totalL < 2000 && appL < 2000 && totalN < 2000 && appL + appN + app < 2000, "Prospects " + totalL + " ms · app " + appL + " ms · Newsletter " + totalN + " ms · app " + appN + " ms · Suivi commercial " + total + " ms · app " + app + " ms · constructions " + (appL + appN + app) + " ms");
     ok("1 008 prospects : « 1008 comptes gratuits », badge « 99+ »", (await texte(page, "#pr-vue .masthead .lede")).startsWith("1008 comptes gratuits") && JSON.stringify(await badge(page)) === badge2("99+") /* v83 (bloc 3) : badge en double */, (await texte(page, "#pr-vue .masthead .lede")) + " · " + JSON.stringify(await badge(page)));
     const tf = await page.evaluate(() => { const t = performance.now(); document.querySelector('[data-filtre="tous"]').click(); return Math.round(performance.now() - t); });
     ok(`filtre « Tous » en ${tf} ms : 50 cartes, « Afficher 50 de plus (958 restants) », « 1008 prospects »`, tf < 2000 && (await page.$$("#pr-liste .sc-carte")).length === 50 && (await texte(page, "#pr-plus")) === "Afficher 50 de plus (958 restants)" && (await texte(page, "#pr-compte")) === "1008 prospects", (await texte(page, "#pr-plus")) + " · " + (await texte(page, "#pr-compte")));
@@ -1017,8 +1025,11 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
        sont dans « Suivi commercial » : les deux pages, chacune sans débordement, Nouveautés présentes sur la page Prospects */
     await page.goto(`http://localhost:${PORT}/#/prospects`); await page.waitForSelector("#lc-prospects .lc-ligne", { timeout: 8000 }); await page.waitForSelector("#pr-nouveautes .nv-panneau", { timeout: 8000 }); await attendre(page, 600);
     const debL = await deborde(page), largL = await page.evaluate(() => document.documentElement.scrollWidth), nvL = !!(await page.$("#pr-nouveautes .nv-panneau"));
+    /* v84 (ménage du bloc 3) : le panneau newsletter, mesuré en v83 avec le reste de la page Prospects, est sur #/newsletter : mesuré là */
+    await aller(page, "#/newsletter", 600); await page.waitForSelector("#pr-nl", { timeout: 8000 }); await attendre(page, 600);
+    const debN = await deborde(page), largN = await page.evaluate(() => document.documentElement.scrollWidth);
     await aller(page, "#/suivi-commercial", 600); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 }); await attendre(page, 600);
-    ok("mobile 390 px, page Prospects (compteurs, filtres, recherche, Nouveautés, cartes) : aucun débordement horizontal (v84 : Prospects avec la liste et les Nouveautés, puis Suivi commercial avec compteurs, filtres, recherche et cartes)", !debL && nvL && !(await deborde(page)), "Prospects " + largL + " · Nouveautés " + nvL + " · Suivi commercial " + String(await page.evaluate(() => document.documentElement.scrollWidth)));
+    ok("mobile 390 px, page Prospects (compteurs, filtres, recherche, Nouveautés, cartes) : aucun débordement horizontal (v84 : Prospects avec la liste et les Nouveautés, Newsletter, puis Suivi commercial avec compteurs, filtres, recherche et cartes)", !debL && nvL && !debN && !(await deborde(page)), "Prospects " + largL + " · Nouveautés " + nvL + " · Newsletter " + largN + " · Suivi commercial " + String(await page.evaluate(() => document.documentElement.scrollWidth)));
     await filtre(page, "tous");
     ok("mobile : filtre « Tous » (8 cartes, dont la piégée), toujours sans débordement", (await uids(page)).length === 8 && !(await deborde(page)), String(await page.evaluate(() => document.documentElement.scrollWidth)));
     const bb = await page.$$eval('#barre-bas a[data-id="prospects"] .nav-badge, #nav a[data-id="prospects"] .nav-badge', l => l.map(e => e.textContent.trim())).catch(() => []);

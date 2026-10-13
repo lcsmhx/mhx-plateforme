@@ -751,6 +751,10 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
     const lr = lig("Rayan Désordre"), ls = lig("Sonia Inverse");
     ok("D : export CSV (v63) : « Dernier clic » = la date du clic le plus récent, pas du dernier de la liste : Rayan " + frL(avant(J)) + " (hier), Sonia " + frL(avant(2 * J)) + " (il y a 2 jours) ; 2 clics chacun",
       !!Lc[0] && Lc[0][13] === "Clics « Réserver mon plan d'action »" && Lc[0][14] === "Dernier clic" && lr[13] === "2" && lr[14] === frL(avant(J)) && ls[13] === "2" && ls[14] === frL(avant(2 * J)), JSON.stringify([lr.slice(13, 18), ls.slice(13, 18)]));
+    /* v84 (ménage du bloc 3) : la newsletter, qui était en bas de l'ancienne page Prospects, est sur #/newsletter : son texte
+       rejoint celui de la page Prospects (vPr) dans le contrôle « plus aucun « Réserver » » de fin de bloc (comme tNlC en C) */
+    await aller(page, "#/newsletter", 300); await page.waitForSelector("#pr-nl", { timeout: 8000 }); await attendre(page, 400);
+    const vNlD = await texte(page, "#vue");
     await ficheDe(page, RAYAN, "Rayan Désordre");
     const rs = await page.$$eval("#fiche-commercial ul.sc-raisons:not(.sc-histo) > li", l => l.map(e => e.textContent.replace(/\s+/g, " ").trim())).catch(() => []);
     const dec = await lignesFiche(page, "#fiche-decouverte"), motifR = !!(await page.$("#fiche-commercial .sc-motif"));
@@ -766,8 +770,8 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
     ok("D : v65 — Nouveautés « Rayan Désordre · clic « Réserver mon plan d'action » » et « N clics « Plan d'action » », pastille de la fiche « a cliqué Plan d'action », en-tête du CSV « Clics « Réserver mon plan d'action » » (14e colonne) ; plus aucun « Réserver » sur le tableau de bord, la page Prospects, la fiche ni dans l'en-tête du CSV",
       nvPr.includes("Rayan Désordre · clic « Réserver mon plan d'action »") && /\d clics « Plan d'action »/.test(nvPr) && pFi.includes("a cliqué Plan d'action")
         && !!Lc[0] && Lc[0].indexOf("Clics « Réserver mon plan d'action »") === 13 && Lc[0].length === 18
-        && ![vTb, vPr, vFi, Lc[0].join(" | ")].some(x => anc.test(x)),
-      JSON.stringify({ nv: nvPr.slice(0, 300), pastille: pFi, tete: Lc[0], anciens: [vTb, vPr, vFi, Lc[0].join(" | ")].map(x => (anc.exec(x) || [""])[0] ? x.slice(Math.max(0, anc.exec(x).index - 60), anc.exec(x).index + 60) : "") }));
+        && vNlD.includes("Newsletter") && ![vTb, vPr + " " + vNlD, vFi, Lc[0].join(" | ")].some(x => anc.test(x)),   // v84 (ménage du bloc 3) : + la newsletter (#/newsletter)
+      JSON.stringify({ nv: nvPr.slice(0, 300), pastille: pFi, tete: Lc[0], anciens: [vTb, vPr + " " + vNlD, vFi, Lc[0].join(" | ")].map(x => (anc.exec(x) || [""])[0] ? x.slice(Math.max(0, anc.exec(x).index - 60), anc.exec(x).index + 60) : "") }));
   });
 
   /* =================== E. « Bilan réservé » coché par le coach =================== */
@@ -1080,13 +1084,19 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
     const db2 = decor({ prospects: false });
     const { page: p2 } = await contexte(b, COACH, db2, { horloge: true });
     await p2.goto(URL0 + "#/tableau"); await pret(p2, "#tb-vue .tb-tiles");
-    for (const h of ["#/clients", "#/prospects", "#/tableau"]) await aller(p2, h, 1200);
+    /* v84 (ménage du bloc 3) : le tableau, les comptes, les cartes et la newsletter que montraient #/clients et #/prospects sont
+       sur #/suivi-clients, #/comptes, #/suivi-commercial et #/newsletter : le coach passe aussi par ces quatre pages (comme
+       « J. coach : aucune activité suivie » de verif52), chacune affichée (son écran est là) avant d'aller plus loin */
+    const vusG = [];
+    for (const [h, sel] of [["#/clients", "#lc-clients"], ["#/suivi-clients", "#tb-clients [data-ouvrir]"], ["#/comptes", "#liste-clients .client-l"], ["#/prospects", "#lc-prospects"], ["#/suivi-commercial", "#pr-vue .pr-detail"], ["#/newsletter", "#pr-nl"], ["#/tableau", "#tb-vue .tb-tiles"]]) {
+      await aller(p2, h, 1200); if (!(await p2.waitForSelector(sel, { timeout: 8000 }).then(() => true, () => false))) vusG.push(h);
+    }
     await p2.evaluate(id => Clients.ouvrir(id, "Sans nom", "accueil"), TESTEUR.id); await attendre(p2, 1500);
     await aller(p2, "#/programme", 1200);
     const consult = await p2.evaluate(() => Store.idConsulte);
     await cacher(p2); await attendre(p2, 1200); await montrer(p2);
     await p2.clock.fastForward(61000); await attendre(p2, 1500); await cacher(p2); await attendre(p2, 1500);
-    ok("G : le coach (ses pages, puis la fiche du compte de test consultée) : aucune écriture d'activite (ni la sienne, ni celle du client), aucune lecture de la clé activite hors lecture de la fiche", consult === TESTEUR.id && ecr(db2, "activite").length === 0 && db2.ecritures.length === 0 && !contenu(db2, "activite", F.IDS.coach), consult + " " + resume(db2));
+    ok("G : le coach (ses pages, puis la fiche du compte de test consultée) : aucune écriture d'activite (ni la sienne, ni celle du client), aucune lecture de la clé activite hors lecture de la fiche (v84 : pages Clients, Suivi détaillé, Comptes, Prospects, Suivi commercial, Newsletter, tableau de bord)", vusG.length === 0 && consult === TESTEUR.id && ecr(db2, "activite").length === 0 && db2.ecritures.length === 0 && !contenu(db2, "activite", F.IDS.coach), "non affichées " + JSON.stringify(vusG) + " · " + consult + " " + resume(db2));
   });
   await bloc("G. visites : interrupteur « off » et « tous »", async () => {
     await avec([['suivi_visites_clients: "test"', 'suivi_visites_clients: "off"']], async () => {
@@ -1235,15 +1245,28 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
     await attendre(page, 800);
     const refus = await page.evaluate(() => Store.ecrire("suivi_prospect", { bilan_le: new Date().toISOString() }));
     await attendre(page, 1200);
-    const corps = norm(await page.evaluate(() => document.body.innerText));
-    ok("L : prospecte Léa : #/prospects ne montre pas la page coach, Store.ecrire refuse suivi_prospect, aucune requête ne nomme suivi_prospect, rien d'écrit dans suivi_prospect", !(await page.$("#pr-vue, #tb-vue")) && refus === false && !db.chemins.some(x => /suivi_prospect/.test(x)) && !db.lectures.some(x => /suivi_prospect/.test(x.outil)) && ecr(db, "suivi_prospect").length === 0, JSON.stringify({ refus, e: resume(db) }));
-    ok("L : … ni « Bilan réservé » coché par le coach, ni urgence, ni compteur dans ce qu'elle voit", !/coché par toi|à traiter|Inscrits \d/.test(corps), (corps.match(/.{0,30}(coché par toi|à traiter|Inscrits \d).{0,30}/) || [""])[0]);
+    /* v84 (ménage du bloc 3) : l'écran coach d'avant de #/prospects (et de #/clients) est aussi sur #/suivi-commercial (compteur
+       #pr-compteur, cartes #pr-liste, « à traiter »), #/newsletter (#pr-nl), #/suivi-clients (#tb-clients, #alertes-clients) et
+       #/comptes (#liste-clients) : Léa tape chacune de ces adresses ; sur aucune, ni élément de ces écrans, ni coche, urgence ou
+       compteur dans le texte (ce que vérifiait #/prospects seul quand tout y était) */
+    const ECRAN_COACH = "#pr-vue, #tb-vue, #pr-liste, #pr-compteur, #pr-nl, #pr-newsletter, .nv-panneau, #lc-zone, #tb-clients, #alertes-clients, #liste-clients";
+    const vuL = [{ h: "#/prospects", coach: !!(await page.$(ECRAN_COACH)), corps: norm(await page.evaluate(() => document.body.innerText)) }];
+    for (const h of ["#/suivi-commercial", "#/newsletter", "#/suivi-clients", "#/comptes"]) { await aller(page, h, 1200); vuL.push({ h, coach: !!(await page.$(ECRAN_COACH)), corps: norm(await page.evaluate(() => document.body.innerText)) }); }
+    const corps = vuL.map(x => x.corps).join(" | ");
+    ok("L : prospecte Léa : #/prospects ne montre pas la page coach, Store.ecrire refuse suivi_prospect, aucune requête ne nomme suivi_prospect, rien d'écrit dans suivi_prospect (v84 : ni #/suivi-commercial, #/newsletter, #/suivi-clients, #/comptes)", !(await page.$("#pr-vue, #tb-vue")) && vuL.every(x => !x.coach) && refus === false && !db.chemins.some(x => /suivi_prospect/.test(x)) && !db.lectures.some(x => /suivi_prospect/.test(x.outil)) && ecr(db, "suivi_prospect").length === 0, JSON.stringify({ refus, coach: vuL.filter(x => x.coach).map(x => x.h), e: resume(db) }));
+    ok("L : … ni « Bilan réservé » coché par le coach, ni urgence, ni compteur dans ce qu'elle voit (v84 : sur chacune de ces adresses)", vuL.length === 5 && !/coché par toi|à traiter|Inscrits \d/.test(corps), (corps.match(/.{0,30}(coché par toi|à traiter|Inscrits \d).{0,30}/) || [""])[0]);
     const db2 = decor({ prospects: false });
     const { page: p2 } = await contexte(b, THOMAS, db2);
     await p2.goto(URL0 + "#/tableau"); await pret(p2, "#vue");
     ok("L : client Thomas : ni tableau de bord coach, ni onglet Prospects", !(await p2.$("#tb-vue")) && !(await p2.$('#nav a[data-id="prospects"]')));
+    /* v84 (ménage du bloc 3) : #pr-liste et #pr-nl ont quitté #/prospects (même chez le coach) pour #/suivi-commercial et
+       #/newsletter, le tableau et les comptes de #/clients pour #/suivi-clients et #/comptes : Thomas tape chacune de ces
+       adresses (comme verif52) ; sur aucune, rien de ces écrans (sélecteurs à leur nouvelle place) */
+    const ECRAN_COACH2 = "#pr-vue, #pr-liste, #pr-nl, #pr-newsletter, #pr-compteur, .nv-panneau, #lc-zone, #tb-clients, #alertes-clients, #liste-clients";
+    const vuT = [];
+    for (const h of ["#/prospects", "#/suivi-commercial", "#/newsletter", "#/suivi-clients", "#/comptes"]) { await aller(p2, h, 1200); if (await p2.$(ECRAN_COACH2)) vuT.push(h); }
     await aller(p2, "#/prospects", 1200);
-    ok("L : client Thomas tape #/prospects : rien de la page coach, aucune écriture", !(await p2.$("#pr-vue, #pr-liste, #pr-nl")) && db2.ecritures.length === 0, resume(db2));
+    ok("L : client Thomas tape #/prospects : rien de la page coach, aucune écriture (v84 : ni #/suivi-commercial, #/newsletter, #/suivi-clients, #/comptes)", !(await p2.$("#pr-vue, #pr-liste, #pr-nl")) && vuT.length === 0 && db2.ecritures.length === 0, JSON.stringify(vuT) + " " + resume(db2));
   });
 
   /* =================== Z. rien vers l'extérieur =================== */

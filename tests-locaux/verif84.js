@@ -888,7 +888,10 @@ const zones = (page, sel) => page.$$eval(sel, l => l.filter(e => e.offsetParent 
     const lignesJulien = async (avecJA) => {
       const db = base({ cles: avecJA ? [[F.IDS.c3, "journal_alimentaire", JA({ [AUJ]: [[1, "poulet-blanc-grille", 150]] }), avant(2 * H)]] : [] });
       const { c, page } = await contexte(b, COACH, db, { viewport: ORDI });
-      await page.goto(URL0 + "#/suivi-clients"); await pret(page, "#tb-clients [data-ouvrir]"); await attendre(page, 1000);   // v84 (ménage du bloc 3) : le tableau complet et ses lignes ([data-ouvrir], Activité, feu) sont dans « Suivi détaillé » (menu Plus)
+      /* v84 (ménage du bloc 3) : l'ancien « Mes clients » est réparti : la liste « Clients » (#/clients, qui lit aussi par
+         Clients.charger()) est ouverte d'abord, puis « Suivi détaillé » ; les lectures relevées (ok ci-dessous) couvrent les deux */
+      await page.goto(URL0 + "#/clients"); await pret(page, "#lc-clients #lc-liste li"); await attendre(page, 1000);
+      await aller(page, "#/suivi-clients", 400); await pret(page, "#tb-clients [data-ouvrir]"); await attendre(page, 1000);   // v84 (ménage du bloc 3) : le tableau complet et ses lignes ([data-ouvrir], Activité, feu) sont dans « Suivi détaillé » (menu Plus)
       const l = await page.$eval(`[data-ouvrir="${F.IDS.c3}"]`, bt => { const tr = bt.closest("tr"), t = x => x ? x.textContent.replace(/\s+/g, " ").trim() : null; return { activite: t(tr.querySelector('[data-l="Activité"]')), feu: tr.querySelector(".point") ? tr.querySelector(".point").getAttribute("title") : null }; }).catch(e => ({ erreur: String(e) }));
       await c.close();
       return { db, l };

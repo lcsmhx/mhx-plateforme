@@ -56,7 +56,15 @@ const server = http.createServer((req,res)=>{if(servirFichier(req,res,HTML))retu
   const disp = await p2.$eval("#tb-clients tr", e=>getComputedStyle(e).display);
   ok("mes clients mobile : lignes en cartes (display block)", disp==="block", disp);
   const largeur = await p2.evaluate(()=>document.documentElement.scrollWidth<=390);
-  ok("mes clients mobile : pas de defilement horizontal", largeur);
-  await p2.screenshot({ path: "captures/v37/coach-clients-mobile-cartes.png", fullPage: true });
+  await p2.screenshot({ path: "captures/v37/coach-clients-mobile-cartes.png", fullPage: true });   // v84 (ménage du bloc 3) : capture du tableau en cartes prise avant de passer aux autres pages
+  /* v84 (ménage du bloc 3) : à 390 px, l'ancien #/clients contenait la liste, le tableau complet ET le panneau Comptes ; ils
+     sont maintenant sur #/clients (liste), #/suivi-clients (tableau, ci-dessus) et #/comptes : le même contrôle
+     scrollWidth<=390 est fait sur chacune, chaque page devant s'être affichée (sa liste présente) */
+  const largeurs = {};
+  for (const [h, sel] of [["#/comptes", "#liste-clients .client-l"], ["#/clients", "#lc-clients #lc-liste li"]]) {
+    await p2.evaluate(x=>{location.hash=x}, h); const vu = await p2.waitForSelector(sel, { timeout: 6000 }).then(()=>true).catch(()=>false); await p2.waitForTimeout(800);
+    largeurs[h] = { vu, scrollWidth: await p2.evaluate(()=>document.documentElement.scrollWidth) };
+  }
+  ok("mes clients mobile : pas de defilement horizontal", largeur && Object.values(largeurs).every(x=>x.vu && x.scrollWidth<=390), JSON.stringify(largeurs));
   await b.close(); server.close(); console.log(res.join("\n"));
 })();

@@ -1496,6 +1496,10 @@ function lienOk(href, base, attendu){
        le titre renvoie à Prospects ; « inscrit depuis 30 j » se lit dans la fiche (ci-dessous), « inscrit le … » sur les cartes */
     const dansTb = await page.$$eval("#tb-clients [data-ouvrir]", l => l.map(e => e.dataset.ouvrir)).catch(() => []);
     const tbTexte = await texte(page, "#tb-clients"), lp = await ligneProspects(page);
+    /* v84 (ménage du bloc 3) : la ligne « Les prospects sont dans Prospects → » était sous le titre de Mes clients : son absence se
+       relit aussi sur #/clients (la page « Mes clients », sa liste #lc-clients chargée), pas seulement dans le Suivi détaillé */
+    await aller(page, "#/clients", 600); await pret(page, "#lc-clients #lc-liste li");
+    const lpc = { liste: !!(await page.$("#lc-clients")), absente: (await ligneProspects(page)).absente };
     /* v83 (bloc 3) : la ligne « Les prospects sont dans Prospects → (3 comptes gratuits). » n'existe plus (décision 7) : on passe
        par l'onglet Prospects de la navigation, et le nombre se lit sur la page Prospects (« 3 prospects », « 3 comptes gratuits · … ») */
     await aller(page, "#/prospects", 2400);
@@ -1503,7 +1507,7 @@ function lienOk(href, base, attendu){
     /* v84 (ménage du bloc 3) : l'en-tête détaillé (header.masthead.pr-detail, « N comptes gratuits · M à traiter ») est dans « Suivi commercial » */
     await aller(page, "#/suivi-commercial", 2400); nbP.lede = await texte(page, "#vue .masthead.pr-detail .lede");
     await aller(page, "#/suivi-clients", 600); await pret(page, "#tb-clients [data-ouvrir]"); await attendre(page, 600);   // v84 (ménage du bloc 3) : retour au tableau, dans « Suivi détaillé »
-    ok("Mes clients (v71) : ni Léa, ni Zoé, ni Paul dans « Suivi de mes clients » (v84 : page « Suivi détaillé » ; les clients y sont ; aucune pastille « Découverte · inscrit… ») ; v83 (bloc 3) : plus de ligne « Les prospects sont dans Prospects → » (décision 7), l'onglet Prospects (#/prospects) dans la navigation, « 3 prospects » sur la page Prospects et « 3 comptes gratuits · … » (v84 : dans « Suivi commercial »)", dansTb.includes(F.IDS.c1) && ![PID(30), PID(31), PID(32)].some(id => dansTb.includes(id)) && !/Léa Ancienne|Zoé Récente|Paul Dujour|Découverte · inscrit/.test(tbTexte) && lp.absente && lp.onglets.length === 2 && lp.onglets.every(h => h === "#/prospects") && nbP.compte === "3 prospects" && /^3 comptes gratuits · \d+ à traiter$/.test(nbP.lede), JSON.stringify([dansTb, lp, nbP]) + " · " + tbTexte.slice(0, 160));
+    ok("Mes clients (v71) : ni Léa, ni Zoé, ni Paul dans « Suivi de mes clients » (v84 : page « Suivi détaillé » ; les clients y sont ; aucune pastille « Découverte · inscrit… ») ; v83 (bloc 3) : plus de ligne « Les prospects sont dans Prospects → » (décision 7), l'onglet Prospects (#/prospects) dans la navigation, « 3 prospects » sur la page Prospects et « 3 comptes gratuits · … » (v84 : dans « Suivi commercial »)", dansTb.includes(F.IDS.c1) && ![PID(30), PID(31), PID(32)].some(id => dansTb.includes(id)) && !/Léa Ancienne|Zoé Récente|Paul Dujour|Découverte · inscrit/.test(tbTexte) && lp.absente && lpc.liste && lpc.absente && lp.onglets.length === 2 && lp.onglets.every(h => h === "#/prospects") && nbP.compte === "3 prospects" && /^3 comptes gratuits · \d+ à traiter$/.test(nbP.lede), JSON.stringify([dansTb, lp, lpc, nbP]) + " · " + tbTexte.slice(0, 160));   // v84 (ménage du bloc 3) : + lpc (ligne absente de #/clients aussi)
     /* v84 (ménage du bloc 3) : l'écran d'avant de Mes clients est réparti entre #/clients (la liste), « Suivi détaillé » (le tableau, ici)
        et « Comptes » (#liste-clients) : la même vérification lit les trois pages */
     let vc = await texte(page, "#vue");

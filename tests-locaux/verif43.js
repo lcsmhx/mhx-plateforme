@@ -8,8 +8,8 @@
    v83 (bloc 3) : la fenêtre « Supprimer » d'un client s'ouvre depuis l'onglet Compte de sa fiche (plus depuis Comptes).
    v84 (ménage du bloc 3) : le tableau « Suivi de mes clients » (#tb-clients, [data-ouvrir], [data-bilan]) et ses encadrés
    (#alertes-clients) sont dans « Suivi détaillé » (#/suivi-clients), les comptes (#liste-clients) dans « Comptes » (#/comptes) ;
-   la liste « Clients » reste sur #/clients. Seules les adresses changent (aucun identifiant : lu sur la liste ET sur le
-   Suivi détaillé) ; même nombre (27).
+   la liste « Clients » reste sur #/clients. Seules les adresses changent (aucun identifiant : lu sur la liste, sur Comptes ET
+   sur le Suivi détaillé) ; même nombre (27).
    Supabase simulé (aucun appel réel), toute écriture est journalisée.
    Usage : node verif43.js ../index.html                                          */
 const { chromium } = require("playwright"); const fs = require("fs"); const http = require("http"); const path = require("path");
@@ -100,10 +100,14 @@ const flagsDe = (page) => page.$$eval("#alertes-clients .flag", l => l.map(x => 
     /* --- Mes clients --- */
     E.ici = "Mes clients"; await page.evaluate(() => { location.hash = "#/clients"; }); await attendre(page, 2200);
     const vueListe = await texte(page, "#vue");
+    /* v84 (ménage du bloc 3) : le panneau Comptes, qui était dans le #vue de #/clients, est dans « Comptes » (#/comptes) : tout
+       son #vue (en-tête, note, rangées) est lu aussi pour l'absence d'identifiant */
+    E.ici = "Comptes (vue)"; await page.evaluate(() => { location.hash = "#/comptes"; }); await page.waitForSelector(`#liste-clients .client-l`).catch(() => {}); await attendre(page, 500);
+    const vueComptes = await texte(page, "#vue");
     /* v84 (ménage du bloc 3) : le tableau et ses encadrés sont dans « Suivi détaillé » : l'absence d'identifiant est relevée sur
-       la liste (#/clients) ET sur le Suivi détaillé ; la ligne et les encadrés y sont lus */
+       la liste (#/clients), sur Comptes (#/comptes) ET sur le Suivi détaillé ; la ligne et les encadrés y sont lus */
     E.ici = "Suivi détaillé"; await page.evaluate(() => { location.hash = "#/suivi-clients"; }); await page.waitForSelector(`#tb-clients [data-ouvrir="${N1}"]`).catch(() => {}); await attendre(page, 500);
-    const vue = vueListe + " " + await texte(page, "#vue");
+    const vue = vueListe + " " + vueComptes + " " + await texte(page, "#vue");
     ok("Mes clients : aucun identifiant de compte affiché", !vue.includes(MARQUE));
     const ligne = await page.$(`#tb-clients tr:has([data-ouvrir="${N1}"])`);
     const ligneT = ligne ? (await ligne.textContent()).replace(/\s+/g, " ") : "";
