@@ -205,7 +205,7 @@ const outilAccueil = {
        retour là d'où l'on vient, initiales, nom, pastille Client ou Prospect, pastille du programme s'il est connu), bouton
        principal (client : « Préparer le call » ; prospect : « WhatsApp » pré-rempli, ou « Pas de numéro ») et bouton rond
        Appeler, puis 2 onglets. Suivi : (prospect : « Ses réponses » puis le « Suivi commercial » complet), le retour de la
-       semaine, le poids, la régularité sur 30 jours, questionnaire / programme / diète, « Ses outils » (le bandeau d'avant),
+       semaine, le poids, la régularité sur 30 jours, questionnaire / programme / diète, le bandeau d'avant (tous les outils du client),
        puis tout ce que la fiche montrait déjà. Compte : email, téléphone, source, rôle (« Changer »), dernière connexion,
        l'accès complet, « Archiver ce compte » / « Restaurer ce compte », la zone rouge « Supprimer définitivement ». */
     const prospectF = profil.statut === "prospect", tel = Contact.telephone(d.contact), arch = Archive.le(d.suivi_prospect);
@@ -249,7 +249,7 @@ const outilAccueil = {
         ${ancienF ? `<p class="note" style="margin:8px 0 0">${esc(trad("Anciennes réponses (questionnaire d'avant) : toutes dans « Découverte », plus bas."))}</p>` : ""}</section>` : "";
     zone.innerHTML = `
       <div class="fc-tete">
-        <div class="fc-haut"><button type="button" class="rond" id="sortir-fiche" aria-label="${esc(trad("Fermer la fiche"))}" title="${esc(trad("Fermer la fiche"))}">${SVG.croix}</button></div>
+        <div class="fc-haut"><button type="button" class="rond" id="fc-fermer" aria-label="${esc(trad("Fermer la fiche"))}" title="${esc(trad("Fermer la fiche"))}">${SVG.croix}</button></div>
         <header class="masthead fc-masthead"><span class="eyebrow">${esc(trad("Fiche client"))} · ${esc(this.dateLongue())}</span>
         <div class="fc-id"><span class="avatar grand fc-avatar${nomC === Clients.SANS_NOM ? " neutre" : ""}">${esc(Clients.initiales(nomC))}</span>
           <div class="fc-id-t"><h1 data-notr>${esc(nomC)}</h1>
@@ -269,9 +269,7 @@ const outilAccueil = {
       <section class="carte fc-carte fc-poids" id="fc-poids">${l.ev ? `<p class="fc-kg"><b>${kg(l.ev.total)}</b> <span>${esc(trad("depuis le début"))}</span></p>${courbe}${l.ev.mois != null ? `<span class="pastille fc-4s">${esc(trad("4 dernières sem. : {v}", { v: kg(l.ev.mois) }))}</span>` : ""}` : `<p class="fc-kg"><span>${esc(trad("Poids : aucune mesure"))}</span></p>`}</section>
       <section class="carte fc-carte fc-reg" id="fc-regularite"><div class="fc-reg-l"><b>${esc(trad("Régularité"))}</b><span>${esc(regTexte)}</span></div><div class="fc-jauge" role="img" aria-label="${esc(regTexte)}"><span style="width:${regPct}%"></span></div></section>
       <section class="carte fc-carte" id="fc-etat"><ul class="fiche-l fc-lignes">${etat("Questionnaire", I.complet, trad("Rempli"), trad("à remplir"))}${etat("Programme", seances.length, progNom || trad("envoyé"), trad("à faire"))}${etat("Diète", nbJours, trad("envoyée"), trad("à définir"))}</ul></section>
-      <section class="panel fc-outils" id="fc-outils"><h2>${esc(trad("Ses outils"))}</h2>
-        <div class="bandeau-actions">${actionsConsultation().filter(a => a.id !== "accueil").map(a => `<a href="${lienOutil(a.id)}" class="b-act${a.fort ? " fort" : ""}">${esc(a.nom)}</a>`).join("")}</div>
-        <p class="note" style="margin:10px 0 0">Tu vois ses données. Tu écris pour lui dans les boutons dorés, dans « Préparer le call » (ton feedback) et dans la fiche (tes notes privées, qu'il ne voit jamais).</p></section>
+      <div class="fc-outils" id="fc-outils">${bandeauConsultation(true)}</div>
       <section class="panel">
         <h2>En bref</h2>
         <div class="tiles">

@@ -341,7 +341,7 @@ function lienOutil(id){
   return Store.idConsulte && o && o.role !== "coach" ? "#/client/" + Store.idConsulte + "/" + id : "#/" + id;
 }
 const RETOURS = { tableau: "Revenir au tableau de bord", clients: "Revenir à mes clients", prospects: "Revenir aux prospects" };
-/* les outils du client consulté (le bandeau des pages de sa fiche ; v83 : aussi « Ses outils », onglet Suivi de la fiche) */
+/* les outils du client consulté (le bandeau des pages de sa fiche ; v83 : aussi dans l'onglet Suivi de la fiche) */
 function actionsConsultation(){
   return [
     { id:"accueil",      nom:"Fiche" },
@@ -359,9 +359,10 @@ function actionsConsultation(){
     { id:"journal-alimentaire", nom:"Son journal alimentaire" }
   ].filter(a => a.id !== "journal-alimentaire" || outilsVisibles().some(o => o.id === a.id));
 }
-function bandeauConsultation(){
-  /* v83 (bloc 3) : la fiche elle-même (accueil) a son propre en-tête (croix, onglets Suivi / Compte, « Ses outils ») */
-  if (!Store.idConsulte || courant === "accueil") return "";
+/* v83 (bloc 3) : sur la fiche elle-même (accueil), le bandeau n'est plus en haut de la page (la fiche a son en-tête : croix,
+   onglets) ; il est dans l'onglet Suivi (dansFiche), tel qu'avant : l'accès à tous les outils du client */
+function bandeauConsultation(dansFiche){
+  if (!Store.idConsulte || (courant === "accueil" && !dansFiche)) return "";
   /* Sans ces boutons, le coach atterrit sur une page et ne devine pas que
      tout le reste de la fiche est accessible par les onglets du haut.
      Un mode implicite est un mode qu'on ne trouve pas. */
@@ -421,6 +422,14 @@ document.addEventListener("click", e => {
   afficher(courant, true, true);
 });
 
+/* quitter la fiche consultée : retour vers l'écran d'origine (v71 (I) : tableau, clients, prospects) ; v83 (bloc 3) : la liste
+   retrouve sa recherche, son filtre et sa position */
+function sortirFiche(){
+  const vers = Store.retourVers || "clients";
+  ListeCoach.revenir(vers);
+  Store.oublier(Store.idConsulte); Store.idConsulte = null; Store.nomConsulte = null; Store.retourVers = null;
+  location.hash = "#/" + vers;
+}
 /* v64 : sansCompte = page reconstruite sur place apres l'accord sante (deja comptee a son ouverture) */
 async function afficher(id, silencieux, sansCompte){
   const jeton = ++affichage;
@@ -495,13 +504,8 @@ async function afficher(id, silencieux, sansCompte){
   if (jeton !== affichage){ if (typeof fin === "function") fin(); return; }
   nettoyage = fin;
   if (avecDonnees){ initSauvegarde(); }
-  const sortir = $("sortir-fiche");
-  if (sortir) sortir.addEventListener("click", () => {
-    const vers = Store.retourVers || "clients";   // v71 (I) : retour vers l'ecran d'origine (tableau, clients, prospects)
-    ListeCoach.revenir(vers);   // v83 (bloc 3) : la liste retrouve sa recherche, son filtre et sa position
-    Store.oublier(Store.idConsulte); Store.idConsulte = null; Store.nomConsulte = null; Store.retourVers = null;
-    location.hash = "#/" + vers;
-  });
+  /* « Revenir … » du bandeau et, v83 (bloc 3), la croix de la fiche (« Fermer la fiche ») : là d'où l'on vient */
+  ["sortir-fiche", "fc-fermer"].forEach(id => { const b = $(id); if (b) b.addEventListener("click", sortirFiche); });
 
   brancherInstallation();
 

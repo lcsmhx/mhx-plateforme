@@ -1296,7 +1296,6 @@ Object.assign(I18N.en, {
   "depuis le début": "since the start", "4 dernières sem. : {v}": "Last 4 wks: {v}", "Poids : aucune mesure": "Weight: no entry yet", "Courbe du poids": "Weight curve",
   "{n} jours actifs sur 30": "{n} active days out of 30",
   "Rempli": "Completed", "à remplir": "to fill in", "envoyé": "sent", "envoyée": "sent", "à faire": "to do", "à définir": "to set", "Diète": "Meal plan",
-  "Ses outils": "Their tools",
   "Tu vois ses données. Tu écris pour lui dans les boutons dorés, dans « Préparer le call » (ton feedback) et dans la fiche (tes notes privées, qu'il ne voit jamais).": "You're seeing their data. You write for them with the gold buttons, in “Prepare the call” (your feedback), and on the profile (your private notes, which they never see).",
   "Téléphone": "Phone", "Rôle": "Role", "Changer": "Change", "Dernière connexion": "Last login", "Connexions": "Logins",
   "Donner l'accès complet": "Give full access",
