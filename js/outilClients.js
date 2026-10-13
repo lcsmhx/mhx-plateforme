@@ -196,6 +196,7 @@ const outilClients = {
 
     <section class="panel">
       <h2>Suivi de mes clients</h2>
+      <p class="note" style="margin:0 0 12px">Tous tes clients et leurs données, en direct. Le tableau te dit d'un coup d'œil qui avance, qui décroche, et à qui il manque quelque chose.</p>
       <div id="alertes-clients"></div>
       <div class="scroll" style="margin-top:14px"><table class="tb-clients-table"><thead><tr>
         <th>Client</th><th>Retour</th><th>Note</th><th>Smiley</th><th>Visite</th><th>Connexions</th><th>Dernière connexion</th><th>Jours actifs</th><th>Activité</th><th>Régularité</th><th>Poids</th><th>Depuis le début</th><th>4 dernières sem.</th>
@@ -475,6 +476,7 @@ const Clients = {
         console.warn("[MHX] résumé impossible pour un client", e);
         const l = this.resumerUn(p, {}, parClient[p.id], cx(p));
         l.illisible = true;
+        l.archive = Archive.le((contenus[p.id] || {}).suivi_prospect);   // v83 : un compte archivé reste archivé, même illisible
         l.alertes = [{ type: "illisible", niveau: "attention", cible: "accueil", texte: "Données illisibles — à vérifier" }];
         return l;
       }
@@ -616,7 +618,8 @@ const Archive = {
    ------------------------------------------------------------------ */
 const ListeCoach = {
   etats: {},
-  etat(t){ return this.etats[t] || (this.etats[t] = { q: "", filtre: "tous", y: 0, revenir: false, focus: false, sel: null, garder: false, items: [], opts: {} }); },
+  PAS: 50,   // lignes affichées, puis « Afficher N de plus » (une longue liste n'enterre pas le reste de la page)
+  etat(t){ return this.etats[t] || (this.etats[t] = { q: "", filtre: "tous", y: 0, revenir: false, focus: false, sel: null, garder: false, limite: 50, items: [], opts: {} }); },
   /* sans accents ni majuscules (comme la recherche de la page Prospects) */
   norm(s){ return String(s == null ? "" : s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\s+/g, " ").trim(); },
   TEXTES: {
@@ -636,8 +639,10 @@ const ListeCoach = {
   /* la page Clients ou Prospects la note en ouvrant une fiche (Clients.ouvrir) ; la croix de la fiche demande de la rendre */
   memoriser(t){ if (this.TEXTES[t]) this.etat(t).y = window.scrollY || 0; },
   revenir(t){ if (this.TEXTES[t]) this.etat(t).revenir = true; },
-  attente(t){ return `<section class="lc" data-liste="${t}"><div class="lc-tete"><div class="lc-titres"><h1>${esc(trad(this.TEXTES[t].titre))}</h1></div></div><div class="empty">${esc(trad("Chargement…"))}</div></section>`; },
-  erreur(zone, t){ if (zone && zone.isConnected) zone.innerHTML = `<section class="lc" data-liste="${t}"><div class="lc-tete"><div class="lc-titres"><h1>${esc(trad(this.TEXTES[t].titre))}</h1></div></div><div class="empty">${esc(trad("Impossible de charger la liste."))}</div></section>`; },
+  /* le titre et « + » (Créer un accès reste joignable pendant le chargement et si la liste n'a pas pu se charger) */
+  tetePlus(t){ return `<div class="lc-tete"><div class="lc-titres"><h1>${esc(trad(this.TEXTES[t].titre))}</h1></div><div class="lc-actions"><a class="rond" href="#/${t}/nouveau" data-lc-plus aria-label="${esc(trad("Créer un accès"))}" title="${esc(trad("Créer un accès"))}">${SVG.ajouter}</a></div></div>`; },
+  attente(t){ return `<section class="lc" data-liste="${t}">${this.tetePlus(t)}<div class="empty">${esc(trad("Chargement…"))}</div></section>`; },
+  erreur(zone, t){ if (zone && zone.isConnected) zone.innerHTML = `<section class="lc" data-liste="${t}">${this.tetePlus(t)}<div class="empty">${esc(trad("Impossible de charger la liste."))}</div></section>`; },
   /* la liste filtrée (filtre, puis recherche) */
   visibles(t){
     const E = this.etat(t), q = this.norm(E.q);
@@ -685,7 +690,9 @@ const ListeCoach = {
     const E = this.etat(t), boite = zone.querySelector("#lc-liste"); if (!boite) return;
     const v = this.visibles(t);
     if (E.sel){ const vus = new Set(v.map(x => x.uid)); E.sel.forEach(uid => { if (!vus.has(uid)) E.sel.delete(uid); }); }   // jamais un compte caché par le filtre ou la recherche
-    boite.innerHTML = v.length ? v.map(x => this.ligneHTML(x, E.sel)).join("")
+    const vus = v.slice(0, Math.max(this.PAS, E.limite || this.PAS)), reste = v.length - vus.length;
+    boite.innerHTML = v.length ? vus.map(x => this.ligneHTML(x, E.sel)).join("")
+        + (reste > 0 ? `<li class="lc-plus"><button type="button" class="btn ghost" data-lc-plus-lignes>${esc(trad(reste > 1 ? "Afficher {n} de plus ({r} restants)" : "Afficher {n} de plus ({r} restant)", { n: Math.min(this.PAS, reste), r: reste }))}</button></li>` : "")
       : `<li class="lc-vide"><p class="empty">${esc(trad(E.q.trim() ? "Aucun résultat pour ce nom." : this.TEXTES[t].vide[E.filtre] || this.TEXTES[t].vide.tous))}</p></li>`;
     this.majBarre(zone, t);
   },
@@ -698,8 +705,8 @@ const ListeCoach = {
   brancher(zone, t){
     const E = this.etat(t), q = zone.querySelector("#lc-q");
     let minuteur = null;
-    if (q) q.addEventListener("input", () => { clearTimeout(minuteur); minuteur = setTimeout(() => { if (!zone.isConnected) return; E.q = q.value.slice(0, 120); this.majListe(zone, t); }, 120); });
-    $$("[data-lc-filtre]", zone).forEach(b => b.addEventListener("click", () => { E.filtre = b.dataset.lcFiltre; this.dessiner(zone, t); const f = zone.querySelector(`[data-lc-filtre="${E.filtre}"]`); if (f) f.focus(); }));
+    if (q) q.addEventListener("input", () => { clearTimeout(minuteur); minuteur = setTimeout(() => { if (!zone.isConnected) return; E.q = q.value.slice(0, 120); E.limite = this.PAS; this.majListe(zone, t); }, 120); });
+    $$("[data-lc-filtre]", zone).forEach(b => b.addEventListener("click", () => { E.filtre = b.dataset.lcFiltre; E.limite = this.PAS; this.dessiner(zone, t); const f = zone.querySelector(`[data-lc-filtre="${E.filtre}"]`); if (f) f.focus(); }));
     const debut = zone.querySelector("[data-sel-debut]");
     if (debut) debut.addEventListener("click", () => { E.sel = new Set(); this.dessiner(zone, t); const a = zone.querySelector("[data-sel-annuler]"); if (a) a.focus(); });
     const fin = zone.querySelector("[data-sel-annuler]");
@@ -710,6 +717,7 @@ const ListeCoach = {
     if (plus) plus.addEventListener("click", () => this.memoriser(t));
     const boite = zone.querySelector("#lc-liste");
     if (boite) boite.addEventListener("click", ev => {
+      if (ev.target && ev.target.closest && ev.target.closest("[data-lc-plus-lignes]")){ E.limite = (E.limite || this.PAS) + this.PAS; this.majListe(zone, t); return; }
       const b = ev.target && ev.target.closest ? ev.target.closest("[data-lc-ligne]") : null; if (!b) return;
       const uid = b.dataset.lcLigne;
       if (E.sel){

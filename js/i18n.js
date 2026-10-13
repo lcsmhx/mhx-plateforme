@@ -1306,3 +1306,7 @@ Object.assign(I18N.en, {
   "Cette personne verra les fiches de tous tes clients, leur questionnaire de santé, leurs programmes et leur diète, et pourra les modifier.": "This person will see all your clients' profiles, their health questionnaire, their programs and meal plans, and will be able to edit them.",
   "Créer le compte": "Create the account"
 });
+Object.assign(I18N.en, {
+  "Afficher {n} de plus ({r} restants)": "Show {n} more ({r} left)", "Afficher {n} de plus ({r} restant)": "Show {n} more ({r} left)",
+  "Tous tes clients et leurs données, en direct. Le tableau te dit d'un coup d'œil qui avance, qui décroche, et à qui il manque quelque chose.": "All your clients and their data, live. The table shows you at a glance who's progressing, who's slipping, and who's missing something."
+});

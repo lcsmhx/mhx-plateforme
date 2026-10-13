@@ -359,10 +359,11 @@ function actionsConsultation(){
     { id:"journal-alimentaire", nom:"Son journal alimentaire" }
   ].filter(a => a.id !== "journal-alimentaire" || outilsVisibles().some(o => o.id === a.id));
 }
-/* v83 (bloc 3) : sur la fiche elle-même (accueil), le bandeau n'est plus en haut de la page (la fiche a son en-tête : croix,
-   onglets) ; il est dans l'onglet Suivi (dansFiche), tel qu'avant : l'accès à tous les outils du client */
-function bandeauConsultation(dansFiche){
-  if (!Store.idConsulte || (courant === "accueil" && !dansFiche)) return "";
+/* v83 (bloc 3) : sur la fiche elle-même (accueil), une fois la fiche dessinée, le bandeau quitte le haut de la page (la fiche a son
+   en-tête : croix, onglets) pour l'onglet Suivi (outilAccueil.fiche), tel qu'avant : l'accès à tous les outils du client. Pendant
+   le chargement de la fiche, ou si elle n'a pas pu s'afficher, il reste en haut (« Revenir … » et les outils restent là). */
+function bandeauConsultation(){
+  if (!Store.idConsulte) return "";
   /* Sans ces boutons, le coach atterrit sur une page et ne devine pas que
      tout le reste de la fiche est accessible par les onglets du haut.
      Un mode implicite est un mode qu'on ne trouve pas. */

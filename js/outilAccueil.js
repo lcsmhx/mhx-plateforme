@@ -247,13 +247,16 @@ const outilAccueil = {
     const reponsesHTML = prospectF ? `<section class="carte fc-carte" id="fc-reponses"><h2 class="fc-sur">${esc(trad("Ses réponses"))}</h2><ul class="fiche-l fc-lignes">
         ${rep(trad("Objectif"), objectifRep)}${rep(trad("Ce qui bloque"), bloque)}${rep(trad("Avec ses mots"), Decouverte.extrait(sesMots, 400))}${rep(trad("Dans 3 mois"), Decouverte.extrait(dans3, 400))}${rep(trad("Tu es ?"), I.sexe === "Homme" || I.sexe === "Femme" ? trad(I.sexe) : "")}</ul>
         ${ancienF ? `<p class="note" style="margin:8px 0 0">${esc(trad("Anciennes réponses (questionnaire d'avant) : toutes dans « Découverte », plus bas."))}</p>` : ""}</section>` : "";
+    /* v83 : le bandeau du haut de la page (posé par afficher pendant le chargement) laisse sa place à l'en-tête de la fiche ; le
+       même bandeau est dans l'onglet Suivi */
+    const bandeauHaut = $("vue") && $("vue").querySelector(":scope > .bandeau"); if (bandeauHaut) bandeauHaut.remove();
     zone.innerHTML = `
       <div class="fc-tete">
         <div class="fc-haut"><button type="button" class="rond" id="fc-fermer" aria-label="${esc(trad("Fermer la fiche"))}" title="${esc(trad("Fermer la fiche"))}">${SVG.croix}</button></div>
         <header class="masthead fc-masthead"><span class="eyebrow">${esc(trad("Fiche client"))} · ${esc(this.dateLongue())}</span>
         <div class="fc-id"><span class="avatar grand fc-avatar${nomC === Clients.SANS_NOM ? " neutre" : ""}">${esc(Clients.initiales(nomC))}</span>
           <div class="fc-id-t"><h1 data-notr>${esc(nomC)}</h1>
-            <div class="fc-pastilles"><span class="pastille fc-role-p">${esc(trad(prospectF ? "Prospect" : "Client"))}</span>${progNom ? `<span class="pastille fc-prog" data-notr>${esc(progNom)}</span>` : ""}${arch ? `<span class="pastille attention fc-archive">${esc(trad("Archivé"))}</span>` : ""}${anglais ? ` <span class="pastille" title="Ce client utilise l'app en anglais">🇺🇸 anglais</span>` : ""}</div></div></div></header>
+            <div class="fc-pastilles"><span class="pastille fc-role-p"${prospectF ? ' title="Compte gratuit : pas encore accompagné"' : ""}>${esc(trad(prospectF ? "Prospect" : "Client"))}</span>${progNom ? `<span class="pastille fc-prog" data-notr>${esc(progNom)}</span>` : ""}${arch ? `<span class="pastille attention fc-archive">${esc(trad("Archivé"))}</span>` : ""}${anglais ? ` <span class="pastille" title="Ce client utilise l'app en anglais">🇺🇸 anglais</span>` : ""}</div></div></div></header>
         <div class="fc-actions">${principal}${appeler}</div>
         <div class="fc-onglets" role="tablist" aria-label="${esc(trad("Fiche"))}">
           <button type="button" role="tab" id="fc-tab-suivi" data-onglet="suivi" aria-controls="fc-suivi" aria-selected="${onglet === "suivi"}"${onglet === "suivi" ? "" : ' tabindex="-1"'}>${esc(trad("Suivi"))}</button>
@@ -269,7 +272,7 @@ const outilAccueil = {
       <section class="carte fc-carte fc-poids" id="fc-poids">${l.ev ? `<p class="fc-kg"><b>${kg(l.ev.total)}</b> <span>${esc(trad("depuis le début"))}</span></p>${courbe}${l.ev.mois != null ? `<span class="pastille fc-4s">${esc(trad("4 dernières sem. : {v}", { v: kg(l.ev.mois) }))}</span>` : ""}` : `<p class="fc-kg"><span>${esc(trad("Poids : aucune mesure"))}</span></p>`}</section>
       <section class="carte fc-carte fc-reg" id="fc-regularite"><div class="fc-reg-l"><b>${esc(trad("Régularité"))}</b><span>${esc(regTexte)}</span></div><div class="fc-jauge" role="img" aria-label="${esc(regTexte)}"><span style="width:${regPct}%"></span></div></section>
       <section class="carte fc-carte" id="fc-etat"><ul class="fiche-l fc-lignes">${etat("Questionnaire", I.complet, trad("Rempli"), trad("à remplir"))}${etat("Programme", seances.length, progNom || trad("envoyé"), trad("à faire"))}${etat("Diète", nbJours, trad("envoyée"), trad("à définir"))}</ul></section>
-      <div class="fc-outils" id="fc-outils">${bandeauConsultation(true)}</div>
+      <div class="fc-outils" id="fc-outils">${bandeauConsultation()}</div>
       <section class="panel">
         <h2>En bref</h2>
         <div class="tiles">

@@ -1010,3 +1010,4 @@ ul.fc-lignes li > b{font-weight:500;text-align:right;min-width:0;overflow-wrap:a
 .bandeau .sortir{min-height:var(--h-toucher)}
 .fc-masthead{padding:0;margin:0;border-bottom:0;gap:0}
 .fc-outils .bandeau{margin:16px 0 0}
+.lc-plus{list-style:none;display:flex;justify-content:center;margin-top:4px}
