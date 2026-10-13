@@ -384,7 +384,7 @@ async function contexte(b, who, db, opts){
   c.setDefaultTimeout(8000);
   const appareil = { horsLigne: false };
   await c.route("**/*", r => repondre(r, who, db, appareil));
-  await c.addInitScript(({ s, langue, theme, rangement }) => {
+  await c.addInitScript(({ s, langue, theme, rangement, plusTard }) => {
     if (!/^https?:$/.test(location.protocol) || location.hostname !== "localhost") return;
     if (!localStorage.getItem("__init")) {
       localStorage.setItem("__init", "1");
@@ -394,9 +394,9 @@ async function contexte(b, who, db, opts){
       if (theme) localStorage.setItem("mhx_theme", theme);
       /* v88 : cette suite ne teste pas la fenêtre « Notre politique de confidentialité a changé » (verif90) : « Plus tard » déjà
          touché sur cet appareil pour ce compte (les inscrits v55 ont un accord d'une version plus ancienne) */
-      if (s && s.user && s.user.id) localStorage.setItem("mhx_rappel_politique|" + s.user.id, new Date().toISOString());
+      if (s && s.user && s.user.id) localStorage.setItem("mhx_rappel_politique|" + s.user.id, plusTard);   // une minute avant T0 (l'horloge de la page)
     }
-  }, { s: who ? who.session : null, langue: opts.langue || "", theme: opts.theme || "", rangement: opts.rangement || "" });
+  }, { s: who ? who.session : null, langue: opts.langue || "", theme: opts.theme || "", rangement: opts.rangement || "", plusTard: new Date(T0 - MIN).toISOString() });
   await c.clock.install({ time: T0 });   // midi du jour du lancement, puis l'horloge tourne
   const page = surveiller(await c.newPage());
   return { c, page, appareil };
