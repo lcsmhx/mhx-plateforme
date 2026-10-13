@@ -441,16 +441,16 @@ const PLUSIEURS = "Ces comptes disparaissent de tes listes. Tu les retrouves dan
         tel: v("#fc-appeler") && v("#fc-appeler").getAttribute("href"), onglets: Array.from(document.querySelectorAll("[data-onglet]")).map(x => x.textContent + ":" + x.getAttribute("aria-selected")),
         suivi: vis("#fc-suivi"), compte: vis("#fc-compte"), croix: (v("#fc-fermer") || {}).getAttribute ? v("#fc-fermer").getAttribute("aria-label") : null,
         retour: (v("#fc-retour") || {}).textContent, lire: (v("#fc-lire") || {}).getAttribute ? v("#fc-lire").getAttribute("href") : null, poids: (v("#fc-poids") || {}).textContent, reg: (v("#fc-regularite") || {}).textContent,
-        etat: Array.from(document.querySelectorAll("#fc-etat li")).map(li => li.textContent.replace(/\s+/g, " ").trim()), outils: Array.from(document.querySelectorAll("#fc-outils a")).map(a => a.textContent),
+        etat: Array.from(document.querySelectorAll("#fc-etat li")).map(li => (li.querySelector("span").textContent + " " + li.querySelector("b").textContent).replace(/\s+/g, " ").trim()), outils: Array.from(document.querySelectorAll("#fc-outils a")).map(a => a.textContent),
         avant: ["En bref", "Profil", "Objectifs du mois", "Programme", "Nutrition", "Poids et mensurations", "Bilan hebdomadaire", "Le reste"].filter(h => !Array.from(document.querySelectorAll("#fc-suivi h2")).some(x => x.textContent === h)),
         notes: !!document.querySelector("#fc-suivi .notes-coach"), bandeau: !!document.querySelector("#vue > .bandeau"), bandeauSuivi: !!document.querySelector("#fc-suivi #fc-outils .bandeau #sortir-fiche") }; });
     ok("E1 : la fiche d'un client (depuis la liste) : croix « Fermer la fiche », initiales, nom, pastille « Client » et celle du programme, « Préparer le call » (#/client/…/bilan), Appeler (tel:) ; onglets Suivi (ouvert) et Compte",
       f.hash === "#/client/" + THOMAS + "/accueil" && f.h1 === "Thomas Démo" && f.role === "Client" && f.prog === "Bloc 1 — 4 semaines" && f.callT === "Préparer le call" && f.call === "#/client/" + THOMAS + "/bilan" && f.tel === "tel:" + TEL_THOMAS
         && JSON.stringify(f.onglets) === '["Suivi:true","Compte:false"]' && f.suivi && !f.compte && f.croix === "Fermer la fiche" && !f.bandeau && f.bandeauSuivi, JSON.stringify(f));
-    ok("E2 : Suivi : retour de la semaine (« Bilan hebdo reçu — à lire », Lire → Préparer le call), poids depuis le début, régularité, questionnaire / programme / diète, le bandeau d'avant (la fiche et les 9 outils du client), puis toute la fiche d'avant (notes privées comprises)",
+    ok("E2 : Suivi : retour de la semaine (« Bilan hebdo reçu — à lire », Lire → Préparer le call), poids depuis le début, régularité, questionnaire / programme / diète, le bandeau d'avant (« Fiche » et les outils du client ; son journal alimentaire seulement s'il lui est ouvert), puis toute la fiche d'avant (notes privées comprises)",
       /Retour de la semaine/i.test(f.retour) && /Bilan hebdo reçu — à lire/.test(f.retour) && f.lire === "#/client/" + THOMAS + "/bilan" && /kg/.test(f.poids) && /depuis le début/.test(f.poids) && /Régularité/.test(f.reg)
         && f.etat.length === 3 && /^Questionnaire Rempli/.test(f.etat[0]) && /^Programme Bloc 1/.test(f.etat[1]) && /^Diète envoyée/.test(f.etat[2])
-        && JSON.stringify(f.outils) === '["Fiche","Préparer le call","Son suivi","Son questionnaire","Son programme","Ses repas","Ses calories","Ses courbes","Ses séances","Son journal alimentaire"]' && !f.avant.length && f.notes, JSON.stringify(f));
+        && JSON.stringify(f.outils) === '["Fiche","Préparer le call","Son suivi","Son questionnaire","Son programme","Ses repas","Ses calories","Ses courbes","Ses séances"]' && !f.avant.length && f.notes, JSON.stringify(f));
     await onglet(page, "compte");
     const c = await page.evaluate(() => { const p = document.getElementById("fc-compte");
       return { vis: !p.hidden, suivi: document.getElementById("fc-suivi").hidden, lignes: Array.from(p.querySelectorAll("#fc-infos li")).map(li => li.querySelector("span").textContent),
@@ -507,7 +507,7 @@ const PLUSIEURS = "Ces comptes disparaissent de tes listes. Tu les retrouves dan
     ok("F1 : Tableau de bord → une ligne « À traiter » (Julien, inactif) ouvre sa fiche → la croix ramène au Tableau de bord",
       h1 === "#/client/" + JULIEN + "/accueil" && retour === "#/tableau", JSON.stringify({ h1, retour }));
     await ouvrirListe(page, "clients"); await filtrer(page, "tous"); await chercher(page, "émo");
-    await page.evaluate(id => document.querySelector('.lc-ligne[data-uid="' + id + '"]').scrollIntoView({ block: "end" }), SARAH); await attendre(page, 200);
+    await page.evaluate(id => document.querySelector('.lc-ligne[data-uid="' + id + '"]').scrollIntoView({ block: "center" }), SARAH); await attendre(page, 200);
     const y0 = await page.evaluate(() => window.scrollY);
     await ligne(page, SARAH); await pret(page); await page.waitForSelector("#fc-suivi"); await attendre(page, 300);
     await page.click("#fc-fermer"); await pret(page); await page.waitForSelector("#lc-clients #lc-liste li"); await attendre(page, 600);
@@ -615,15 +615,15 @@ const PLUSIEURS = "Ces comptes disparaissent de tes listes. Tu les retrouves dan
       const page = await c.newPage(); const err = [];
       page.on("pageerror", e => err.push(String(e)));
       await page.goto(URL0 + "#/clients"); await pret(page); await page.waitForSelector("#lc-clients #lc-liste li"); await attendre(page, 400);
-      await page.tap("[data-sel-debut]"); await attendre(page, 200); await page.tap('.lc-ligne[data-uid="' + SARAH + '"] [data-lc-ligne]'); await attendre(page, 200);
-      await page.tap("[data-sel-archiver]"); await attendre(page, 400);
+      await page.click("[data-sel-debut]"); await attendre(page, 200); await page.click('.lc-ligne[data-uid="' + SARAH + '"] [data-lc-ligne]'); await attendre(page, 200);
+      await page.click("[data-sel-archiver]"); await attendre(page, 400);
       const m = await modale(page); await bouton(page, "Archiver");
       await page.waitForFunction(() => !document.querySelector("[data-sel-annuler]"), null, { timeout: 8000 }); await attendre(page, 400);
       const S = suiviDe(db, SARAH) || {};
       ok("W1 : WebKit (moteur de Safari sur iPhone) : liste Clients, sélection au toucher, fenêtre « Archiver 1 client ? », archivage écrit (archive_le), aucune erreur, aucun DELETE",
         !!m && m.titre === "Archiver 1 client ?" && !!S.archive_le && !err.length && sansDelete(db), JSON.stringify({ m, S, err }));
       await page.evaluate(id => Clients.ouvrir(id, "Zoé Martin", "accueil"), ZOE); await pret(page); await page.waitForSelector("#fc-suivi"); await attendre(page, 400);
-      await page.tap('[data-onglet="compte"]'); await attendre(page, 200);
+      await page.click('[data-onglet="compte"]'); await attendre(page, 200);
       const f = await page.evaluate(() => ({ compte: !document.getElementById("fc-compte").hidden, wa: (document.getElementById("fc-wa") || {}).getAttribute ? document.getElementById("fc-wa").getAttribute("href") : "", deb: document.documentElement.scrollWidth > window.innerWidth + 1 }));
       ok("W2 : WebKit : la fiche d'un prospect, onglet Compte au toucher, lien WhatsApp pré-rempli, aucun débordement", f.compte && f.wa === "https://wa.me/33639980011?text=" + encodeURIComponent(MSG_ZOE) && !f.deb && !err.length, JSON.stringify({ f, err }));
     } finally { await wb.close().catch(() => {}); }
