@@ -74,7 +74,7 @@ th{font-family:inherit;font-variant-numeric:tabular-nums;font-size:10px;letter-s
   text-align:right;padding:8px 10px;border-bottom:1px solid var(--line-strong);white-space:nowrap;font-weight:600}
 th:first-child,td:first-child{text-align:left}
 td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:right;font-family:inherit;font-variant-numeric:tabular-nums}
-tbody tr:hover td{background:var(--sunken)}
+tbody tr:hover td{background:var(--plein-survol)}
 .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .note{font-size:13px;color:var(--ink-3);line-height:1.6}
 details{border-top:1px solid var(--line);margin-top:20px;padding-top:14px}
@@ -191,13 +191,21 @@ footer a{color:var(--accent)}
 @media (max-width:560px){
   .portail{padding:8px 12px 24px;align-items:flex-start}
   .carte-co{padding:20px 16px;border-color:transparent;background:transparent;box-shadow:none}
+  /* v80 : avec les champs de 60 px et les boutons de 56 px, la création de compte se lit encore sans défiler (390 × 844) :
+     logo et marges resserrés, champs de 52 px dans cette carte seulement (téléphone) */
+  .carte-co .logo-img{max-height:44px;margin-bottom:4px}
+  .portail .carte-co .co-sous{margin:-4px 0 12px}
+  .carte-co h2{margin:8px 0 12px;font-size:21px}
+  .carte-co .champ{margin-bottom:8px}
+  .portail .carte-co .co-rester{margin-bottom:8px}
+  .carte-co input:not([type=checkbox]):not([type=radio]),.carte-co select{min-height:52px}
 }
 
 /* --- barre du haut : compte --- */
 .compte{display:flex;align-items:center;gap:8px;margin-left:auto}
 .compte[hidden]{display:none}   /* v76 : rien de la barre du compte (« Se déconnecter ») avant la connexion */
 .compte .qui{font-size:13px;color:var(--ink-2);white-space:nowrap}
-.compte button{background:var(--verre);border:1px solid var(--verre-bord);border-radius:999px;color:var(--ink-2);font-size:13px;padding:6px 14px;cursor:pointer;font-family:inherit;min-height:var(--h-rond)}
+.compte button{background:var(--verre);border:1px solid var(--verre-bord);border-radius:999px;color:var(--ink-2);font-size:12px;padding:6px 12px;cursor:pointer;font-family:inherit;min-height:var(--h-rond)}
 .compte button:hover{color:var(--ink);border-color:var(--accent)}
 .compte button.icone{width:var(--h-rond);padding:0;display:inline-flex;align-items:center;justify-content:center}
 .compte button.icone svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -341,7 +349,7 @@ a.tb-tuile:hover{border-color:var(--accent-line)}
 @media (min-width:721px){
   .tb-clients-table{border-collapse:separate;border-spacing:0}
   .tb-clients-table th:first-child,#tb-clients td:first-child{position:sticky;left:0;z-index:1;background:var(--plein);box-shadow:inset -1px 0 0 var(--line)}
-  #tb-clients tr:hover td:first-child{background:#181d25}
+  #tb-clients tr:hover td:first-child{background:var(--plein-survol)}
 }
 
 /* --- bilan hebdomadaire --- */

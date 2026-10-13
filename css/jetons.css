@@ -27,7 +27,7 @@
   --surface:var(--verre); --sunken:rgba(255,255,255,.04); --raised:rgba(255,255,255,.10);
   --line:var(--verre-bord); --line-strong:rgba(255,255,255,.22);
   /* fond plein, là où ce qui passe dessous ne doit pas se voir (colonne collée d'un tableau, info-bulle, message) */
-  --plein:#12161d;
+  --plein:#16181c; --plein-survol:#1c1f24;   /* #16181c = le verre (6 %) posé sur #07090d */
   /* fenêtre (modale, volet) : presque pleine, posée sur un fond flouté */
   --fenetre:rgba(17,21,28,.94);
   --s1:#4a8fe8; --s2:#e0673a; --s3:#22b07c; --s4:#D4A844;
