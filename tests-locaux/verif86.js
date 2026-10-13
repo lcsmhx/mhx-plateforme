@@ -1,9 +1,10 @@
 /* verif86 — v83 (bloc 3 de la mission du 13/10/2026) : l'espace coach réorganisé, dans un vrai navigateur, Supabase simulé.
    A. liste Clients : titre, nombre, recherche par nom sans accents ni majuscules (« Aucun résultat pour ce nom. »), filtres
       Tous · À traiter · Inactifs · Archivés, « + », « Sélectionner », plus de lien « Clients | Prospects » ; chaque ligne :
-      initiales, nom, raison, poids à droite ; tout l'écran d'avant reste dessous (tableau complet, alertes, Comptes) ;
-   B. liste Prospects : Tous · À traiter · Archivés, issue (PERDU) et « bilan réservé » sur la ligne ; tout le reste de la page
-      d'avant dessous (compteur, Nouveautés, chiffres, Mesure, filtres détaillés, cartes, CSV, newsletter) ;
+      initiales, nom, raison, poids à droite ; v84 : plus d'écran d'avant dessous (tableau complet, alertes et Comptes sont
+      dans le menu Plus : bloc J) ;
+   B. liste Prospects : Tous · À traiter · Archivés, issue (PERDU) et « bilan réservé » sur la ligne ; v84 : dessous, seulement
+      les Nouveautés (le reste de la page d'avant est dans le menu Plus : bloc J) ;
    C. sélection et archivage : les cases, « Tout sélectionner » (la liste filtrée), « N sélectionné(s) », la fenêtre de
       confirmation (1 compte, puis plusieurs : titre et texte exacts, « Annuler » n'écrit rien), le message après, l'écriture
       (clé coach-seul suivi_prospect, archive_le, rien d'autre ne change), « Archivés », « Restaurer » ; un prospect aussi ;
@@ -20,7 +21,15 @@
       Créer un accès (mêmes champs, mêmes rôles), croix ;
    G. le Suivi commercial toujours utilisable (« J'ai relancé » sur un compte archivé : l'archivage est gardé) ;
    H. largeurs 360, 390 et 430 px : aucun débordement, zones de toucher d'au moins 44 px ;
-   I. anglais (US) ; W. moteur WebKit (Safari), si installé (banc GitHub ; VERIF86_WEBKIT=0 pour s'en passer en local — le
+   I. anglais (US) ;
+   J. v84 (ménage du bloc 3) : plus d'écran d'avant sous les listes Clients et Prospects (les Nouveautés restent sous la liste
+      Prospects) ; chaque élément déplacé reste accessible par le menu Plus : « Suivi détaillé » (tableau complet, alertes,
+      Ouvrir et retour), « Comptes » (équipe comprise, 🇺🇸 anglais, boutons), « Suivi commercial » (compteur, chiffres, Mesure,
+      filtres détaillés, cartes, export CSV ; les statistiques comptent toujours les archivés), « Newsletter » (archivés
+      compris) ; « Archiver » en or (barre de sélection, fenêtre, onglet Compte), « Supprimer définitivement » reste rouge ;
+      un parcours fait en anglais range prefs.langue = "en" (pas un parcours en français) et la fiche du coach donne le
+      message WhatsApp en anglais ;
+   W. moteur WebKit (Safari), si installé (banc GitHub ; VERIF86_WEBKIT=0 pour s'en passer en local — le
       nombre de ✓ change alors).
    Comptes fictifs (@exemple.fr), numéros de la plage réservée à la fiction (06 39 98 …). Aucun vrai compte, aucune écriture
    dans Supabase.
@@ -35,10 +44,15 @@ const PORT = +process.env.VERIF86_PORT || 10020;
 const BLOCS = (process.env.VERIF86_BLOCS || "").split(",").map(x => x.trim()).filter(Boolean);
 const MOBILE = { width: 390, height: 844 }, ETROIT = { width: 360, height: 740 }, GRAND = { width: 430, height: 932 };
 
+/* v84 (bloc J) : le temps d'un parcours, la page servie comme en ligne (inscription ouverte, téléphone obligatoire allumé, textes
+   légaux de test : la retouche de verif85) ; sinon, rien de changé */
+let parcoursOuvert = false;
+const retouche = h => parcoursOuvert ? FT.forcerLegaux(FT.forcerTelephone(FT.forcerInscription(h, true), true)) : h;
 const server = http.createServer((req, res) => {
-  if (FT.servirFichier(req, res, HTML)) return;
-  res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); res.end(fs.readFileSync(HTML, "utf8"));
+  if (FT.servirFichier(req, res, HTML, retouche)) return;
+  res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); res.end(retouche(fs.readFileSync(HTML, "utf8")));
 });
+async function avecParcours(fn){ const a = parcoursOuvert; parcoursOuvert = true; try { await fn(); } finally { parcoursOuvert = a; } }
 
 /* ---------- résultats ---------- */
 const res = [];
@@ -118,7 +132,7 @@ function base(opts){
     for (let i = profils.length - 1; i >= 0; i--) if (!garder.includes(profils[i].id)) profils.splice(i, 1);
   }
   const connexions = [{ user_id: THOMAS, nombre: 41, derniere: avant(3 * H), premiere: avant(50 * J) }, { user_id: ZOE, nombre: 1, derniere: avant(2 * H), premiere: avant(2 * H) }];
-  return { profils, donnees, connexions, ecritures: [], lectures: [], chemins: [], conditions: [], emails: {}, meta: {} };
+  return { profils, donnees, connexions, ecritures: [], lectures: [], chemins: [], conditions: [], emails: {}, meta: {}, inscription: {}, inscriptions: [] };
 }
 
 /* ---------- le faux Supabase (gabarit de verif85 ; + la table connexions, le statut posé par le coach, la condition de chaque
@@ -156,7 +170,17 @@ async function repondre(r, db){
   const moi = appelant(req);
   const coach = !!moi && db.profils.some(x => x.id === moi && x.role === "coach");
   db.chemins.push(m + " " + p);
-  if (p.startsWith("/auth/v1/token")) { const c = corps() || {}, r1 = /^renouvellement-(.+)$/.exec(String(c.refresh_token || "")); return r1 ? json(session(r1[1], db.emails[r1[1]] || "")) : json({ error: "invalid_grant", error_description: "Invalid login credentials" }, 400); }
+  if (p.startsWith("/auth/v1/signup")) {   // v84 (bloc J) : gabarit de verif85 (déclencheur creer_profil : un profil prospect)
+    const c = corps() || {}, data = c.data || {}; db.inscriptions.push(clone(c));
+    const id = db.inscription.id || PID(99); db.emails[id] = c.email; db.meta[id] = clone(data);
+    db.profils.push({ id, prenom: data.prenom || "", nom: data.nom || "", role: "client", statut: "prospect", cree_le: new Date().toISOString() });
+    return json(Object.assign(session(id, c.email), { user: { id, email: c.email, role: "authenticated", user_metadata: clone(data) } }));
+  }
+  if (p.startsWith("/auth/v1/token")) {
+    const c = corps() || {}, r1 = /^renouvellement-(.+)$/.exec(String(c.refresh_token || ""));
+    if (c.email && c.password){ const idm = Object.keys(db.emails).find(k => db.emails[k] === c.email); return idm ? json(session(idm, c.email)) : json({ error: "invalid_grant", error_description: "Invalid login credentials" }, 400); }
+    return r1 ? json(session(r1[1], db.emails[r1[1]] || "")) : json({ error: "invalid_grant", error_description: "Invalid login credentials" }, 400);
+  }
   if (p === "/rest/v1/rpc/noter_connexion") return json(null, 204);
   if (p.startsWith("/auth/v1/logout")) return json(null, 204);
   if (p.startsWith("/auth/v1/user")) return moi ? json({ id: moi, email: db.emails[moi] || "", role: "authenticated" }) : json({ msg: "invalid JWT" }, 401);
@@ -214,7 +238,8 @@ async function repondre(r, db){
   return json([]);
 }
 
-/* ---------- un navigateur (contexte) : le coach connecté ; opts : viewport, langue ---------- */
+/* ---------- un navigateur (contexte) : le coach connecté ; opts : viewport, langue ; v84 : neuf (appareil sans aucune trace ni
+   session : le parcours s'ouvre) ---------- */
 async function contexte(b, db, opts){
   opts = opts || {};
   const c = await b.newContext({ viewport: opts.viewport || MOBILE });
@@ -225,11 +250,12 @@ async function contexte(b, db, opts){
   await c.addInitScript(({ langue, s }) => {
     if (!/^https?:$/.test(location.protocol)) return;
     if (!localStorage.getItem("__init")) {
-      localStorage.setItem("__init", "1"); localStorage.setItem("mhx_installe", "1"); localStorage.setItem("mhx_visites", "3");
+      localStorage.setItem("__init", "1");
+      if (s){ localStorage.setItem("mhx_installe", "1"); localStorage.setItem("mhx_visites", "3"); }
       if (langue) localStorage.setItem("mhx_langue", langue);
-      localStorage.setItem("mhx_session", JSON.stringify(s));
+      if (s) localStorage.setItem("mhx_session", JSON.stringify(s));
     }
-  }, { langue: opts.langue || "", s: session(COACH.id, COACH.email) });
+  }, { langue: opts.langue || "", s: opts.neuf ? null : session(COACH.id, COACH.email) });
   const page = await c.newPage();
   page.on("pageerror", e => res.push("  ✗ ERREUR JS " + String(e).slice(0, 300)));
   page.on("console", msg => { if (msg.type() === "error" && !/ERR_FAILED|status of [45]\d\d/.test(msg.text())) res.push("  ✗ CONSOLE " + msg.text().slice(0, 200)); });
@@ -287,10 +313,11 @@ const PLUSIEURS = "Ces comptes disparaissent de tes listes. Tu les retrouves dan
         filtres: Array.from(s.querySelectorAll("[data-lc-filtre]")).map(x => x.textContent.trim() + (x.getAttribute("aria-pressed") === "true" ? "*" : "")),
         plus: (s.querySelector("[data-lc-plus]") || {}).getAttribute ? s.querySelector("[data-lc-plus]").getAttribute("href") : null, sel: (s.querySelector("[data-sel-debut]") || {}).textContent,
         selecteur: !!document.getElementById("clients-prospects") || Array.from(s.querySelectorAll("button, a")).some(x => x.textContent.trim() === "Prospects"),
-        detail: !!document.querySelector("#tb-clients [data-ouvrir]") && !!document.getElementById("alertes-clients") && !!document.querySelector("#liste-clients .client-l") };
+        detail: !!document.querySelector("#tb-clients [data-ouvrir]") && !!document.getElementById("alertes-clients") && !!document.querySelector("#liste-clients .client-l"),
+        morceaux: document.querySelectorAll("#tb-clients, #alertes-clients, #liste-clients, .tb-clients-table, .client-l").length };
     });
-    ok("A1 : en haut de Mes clients : « Clients », « 5 clients » (sans l'archivé), recherche « Rechercher un client par son nom », filtres Tous · À traiter · Inactifs · Archivés (Tous choisi), « + » vers Créer un accès, « Sélectionner » ; plus de lien « Clients | Prospects » ; dessous, le tableau complet, ses alertes et Comptes restent",
-      e.h1 === "Clients" && e.compte === "5 clients" && e.ph === "Rechercher un client par son nom" && JSON.stringify(e.filtres) === '["Tous*","À traiter","Inactifs","Archivés"]' && e.plus === "#/clients/nouveau" && e.sel === "Sélectionner" && !e.selecteur && e.detail, JSON.stringify(e));
+    ok("A1 : en haut de Mes clients : « Clients », « 5 clients » (sans l'archivé), recherche « Rechercher un client par son nom », filtres Tous · À traiter · Inactifs · Archivés (Tous choisi), « + » vers Créer un accès, « Sélectionner » ; plus de lien « Clients | Prospects » ; v84 : plus d'écran d'avant dessous (ni le tableau complet, ni ses alertes, ni Comptes : ils sont dans le menu Plus)",
+      e.h1 === "Clients" && e.compte === "5 clients" && e.ph === "Rechercher un client par son nom" && JSON.stringify(e.filtres) === '["Tous*","À traiter","Inactifs","Archivés"]' && e.plus === "#/clients/nouveau" && e.sel === "Sélectionner" && !e.selecteur && e.detail === false && e.morceaux === 0, JSON.stringify(e));
     const l = await page.$$eval("#lc-liste .lc-ligne", l => l.map(li => ({ uid: li.dataset.uid, ini: li.querySelector(".avatar").textContent, nom: li.querySelector(".lc-nom b").textContent,
       raison: li.querySelector("small").textContent, droite: (li.querySelector(".lc-droite") || {}).textContent || "" })));
     const julien = l.find(x => x.uid === JULIEN) || {}, thomas = l.find(x => x.uid === THOMAS) || {};
@@ -309,9 +336,12 @@ const PLUSIEURS = "Ces comptes disparaissent de tes listes. Tu les retrouves dan
     await filtrer(page, "tous"); const f4 = await uids(page);
     ok("A4 : filtres : À traiter = Thomas et Julien (définition du Tableau de bord) ; Inactifs = Julien (10 jours ou plus sans saisie) ; Archivés = Paul seul ; Tous = les 5 autres",
       JSON.stringify(f1) === JSON.stringify([THOMAS, JULIEN].sort()) && JSON.stringify(f2) === JSON.stringify([JULIEN]) && JSON.stringify(f3) === JSON.stringify([PAUL]) && f4.length === 5 && !f4.includes(PAUL), JSON.stringify({ f1, f2, f3, f4 }));
+    /* v84 : le tableau complet et Comptes sont dans le menu Plus (« Suivi détaillé », « Comptes ») */
+    await aller(page, "#/suivi-clients"); await page.waitForSelector("#tb-clients [data-ouvrir]"); await attendre(page, 200);
     const tb = await page.$$eval("#tb-clients [data-ouvrir]", l => l.map(x => x.dataset.ouvrir));
+    await aller(page, "#/comptes"); await page.waitForSelector("#liste-clients .client-l"); await attendre(page, 200);
     const cpt = await page.$$eval("#liste-clients .client-l", l => l.map(x => x.querySelector(".nom").textContent.trim()));
-    ok("A5 : l'archivé est aussi retiré du tableau complet et de Comptes (rien d'autre ne change : 5 clients au tableau, les comptes de l'équipe et les prospects restent dans Comptes)",
+    ok("A5 : l'archivé est aussi retiré du tableau complet (« Suivi détaillé ») et de « Comptes » (rien d'autre ne change : 5 clients au tableau, les comptes de l'équipe et les prospects restent dans Comptes)",
       tb.length === 5 && !tb.includes(PAUL) && !cpt.some(n => /Paul/.test(n)) && cpt.some(n => /Coach/.test(n)) && cpt.some(n => /Zoé/.test(n)) && !cpt.some(n => /Inès/.test(n)), JSON.stringify({ tb, cpt }));
   });
 
@@ -336,8 +366,8 @@ const PLUSIEURS = "Ces comptes disparaissent de tes listes. Tu les retrouves dan
       mesure: !!document.querySelector("#pr-mesure h2"), seg: Array.from(document.querySelectorAll("[data-filtre]")).map(x => x.dataset.filtre), csv: !!document.getElementById("pr-csv"),
       cartes: Array.from(document.querySelectorAll(".sc-carte")).map(c => c.dataset.uid), nl: !!document.getElementById("pr-nl"), q: !!document.getElementById("pr-q"),
       nv: Array.from(document.querySelectorAll("#pr-nouveautes .nv-liste li b")).map(x => x.textContent) }));
-    ok("B3 : dessous, tout ce que la page montrait reste (compteur, Nouveautés, chiffres, Mesure, filtres détaillés, recherche nom ou email, export CSV, cartes avec leurs boutons, newsletter) ; l'archivée n'est ni dans les cartes ni dans les Nouveautés",
-      d.compteur && d.nouv && d.tuiles && d.mesure && JSON.stringify(d.seg) === '["a_traiter","issues","tous"]' && d.csv && d.nl && d.q && !d.cartes.includes(INES) && d.cartes.length >= 3 && !d.nv.some(n => /Inès/.test(n)) && d.nv.some(n => /Zoé/.test(n)), JSON.stringify(d));
+    ok("B3 : v84 : dessous, seulement les Nouveautés (l'archivée n'y est pas) ; plus d'écran d'avant en double (ni compteur, ni chiffres, ni Mesure, ni filtres détaillés, ni recherche nom ou email, ni export CSV, ni cartes, ni newsletter : ils sont dans le menu Plus)",
+      !d.compteur && d.nouv && !d.tuiles && !d.mesure && JSON.stringify(d.seg) === '[]' && !d.csv && !d.nl && !d.q && d.cartes.length === 0 && !d.nv.some(n => /Inès/.test(n)) && d.nv.some(n => /Zoé/.test(n)), JSON.stringify(d));
   });
 
   /* =================== C. sélection et archivage =================== */
@@ -390,10 +420,13 @@ const PLUSIEURS = "Ces comptes disparaissent de tes listes. Tu les retrouves dan
     const m4 = await modale(page); await bouton(page, "Archiver");
     await page.waitForFunction(() => !document.querySelector("[data-sel-annuler]"), null, { timeout: 8000 }); await attendre(page, 400);
     const toast4 = await dernierToast(page), H4 = suiviDe(db, HUGO) || {}, c4 = db.conditions.filter(c => c.user_id === HUGO);
+    const resteListe = await uids(page);
+    /* v84 : les cartes sont dans « Suivi commercial » (menu Plus), filtre « Tous » */
+    await aller(page, "#/suivi-commercial"); await page.waitForSelector("#pr-liste"); await page.click('[data-filtre="tous"]'); await attendre(page, 300);
     const cartes = await page.$$eval(".sc-carte", l => l.map(c => c.dataset.uid));
     ok("C7 : un prospect (Hugo) : « Archiver 1 prospect ? », « 1 prospect archivé » ; son suivi commercial est gardé tel quel (Bilan réservé, historique) + archive_le, par une écriture conditionnelle (maj_le lu) ; il quitte la liste et les cartes",
       !!m4 && m4.titre === "Archiver 1 prospect ?" && toast4 === "1 prospect archivé" && H4.bilan_le === SUIVI_HUGO.bilan_le && JSON.stringify(H4.historique) === JSON.stringify(SUIVI_HUGO.historique) && isoPres(H4.archive_le, Date.now())
-        && c4.length === 1 && /^eq\./.test(c4[0].maj_le || "") && !(await uids(page)).includes(HUGO) && !cartes.includes(HUGO), JSON.stringify({ m4, toast4, H4, c4, cartes }));
+        && c4.length === 1 && /^eq\./.test(c4[0].maj_le || "") && resteListe.length === 4 && !resteListe.includes(HUGO) && cartes.length === 4 && !cartes.includes(HUGO), JSON.stringify({ m4, toast4, H4, c4, resteListe, cartes }));
     ok("C8 : aucun appel DELETE pendant tout ce parcours (listes, sélection, archivage, restauration)", sansDelete(db), JSON.stringify(db.chemins.filter(c => !c.startsWith("GET "))));
   });
 
@@ -600,6 +633,107 @@ const PLUSIEURS = "Ces comptes disparaissent de tes listes. Tu les retrouves dan
       rep: Array.from(document.querySelectorAll("#fc-reponses li span")).map(x => x.textContent), croix: document.getElementById("fc-fermer").getAttribute("aria-label"), role: document.querySelector(".fc-role-p").textContent }));
     ok("I3 : fiche en anglais : onglets Follow-up / Account, « Their answers » (Goal, What's holding them back, In their own words, In 3 months, You are…?), croix « Close profile »",
       JSON.stringify(f.onglets) === '["Follow-up","Account"]' && f.titre === "Their answers" && JSON.stringify(f.rep) === JSON.stringify(["Goal", "What's holding them back", "In their own words", "In 3 months", "You are…?"]) && f.croix === "Close profile" && f.role === "Prospect", JSON.stringify(f));
+  });
+
+  /* =================== J. v84 : ménage du bloc 3 =================== */
+  await bloc("J. v84 ménage", async () => {
+    const db = base();
+    /* Ana (« Perdu » il y a 9 j) est archivée ; Inès (archivée) et Zoé ont accepté la newsletter */
+    db.donnees.find(x => x.user_id === ANA && x.outil === "suivi_prospect").contenu.archive_le = avant(1 * J);
+    db.donnees.push({ user_id: INES, outil: "emails", contenu: { newsletter: true, maj: avant(50 * MIN) }, maj_le: avant(50 * MIN) },
+      { user_id: ZOE, outil: "emails", contenu: { newsletter: true, maj: avant(2 * H) }, maj_le: avant(2 * H) });
+    const { page } = await contexte(b, db);
+    await page.goto(URL0 + "#/tableau"); await pret(page); await page.waitForSelector("#tb-a-traiter"); await attendre(page, 300);
+    await page.click("#barre-bas [data-plus]"); await attendre(page, 400);
+    const menu = await page.$$eval(".menu-plus a", l => l.map(a => a.dataset.id + "=" + a.textContent.trim() + "=" + a.getAttribute("href")));
+    const attendus = ["suivi-clients=Suivi détaillé=#/suivi-clients", "comptes=Comptes=#/comptes", "suivi-commercial=Suivi commercial=#/suivi-commercial", "newsletter=Newsletter=#/newsletter"];
+    ok("J1 : le menu Plus du coach donne les 4 nouvelles places de l'écran d'avant : « Suivi détaillé », « Comptes », « Suivi commercial », « Newsletter »",
+      attendus.every(x => menu.includes(x)), JSON.stringify(menu));
+    await page.click('.menu-plus a[data-id="suivi-clients"]'); await pret(page); await page.waitForSelector("#tb-clients [data-ouvrir]"); await attendre(page, 300);
+    const sd = await page.evaluate(() => ({ hash: location.hash, h1: (document.querySelector(".masthead h1") || {}).textContent, ths: document.querySelectorAll(".tb-clients-table th").length,
+      lignes: Array.from(document.querySelectorAll("#tb-clients [data-ouvrir]")).map(x => x.dataset.ouvrir), call: document.querySelectorAll("#tb-clients [data-bilan]").length,
+      alertes: Array.from(document.querySelectorAll("#alertes-clients .flag")).map(x => x.textContent.replace(/\s+/g, " ").trim()),
+      legende: Array.from(document.querySelectorAll(".panel .note")).some(x => /Une variation de poids se lit sur quatre semaines/.test(x.textContent)), tel: document.querySelectorAll("#tb-clients td.td-tel").length }));
+    ok("J2 : « Suivi détaillé » : le tableau complet (18 colonnes, les 5 clients sans l'archivé, « Préparer le call » et « Ouvrir », le téléphone), ses alertes regroupées (« Sans nouvelles depuis 10 jours ou plus : Julien Démo ») et sa légende",
+      sd.hash === "#/suivi-clients" && sd.h1 === "Suivi détaillé" && sd.ths === 18 && sd.lignes.length === 5 && !sd.lignes.includes(PAUL) && sd.call === 5 && sd.tel === 5 && sd.legende
+        && sd.alertes.some(a => /Sans nouvelles depuis 10 jours ou plus : Julien Démo/.test(a)), JSON.stringify(sd));
+    await page.click('#tb-clients [data-ouvrir="' + JULIEN + '"]'); await pret(page); await page.waitForSelector("#fc-suivi"); await attendre(page, 300);
+    const h1 = await page.evaluate(() => location.hash);
+    await page.click("#fc-fermer"); await pret(page); await page.waitForSelector("#tb-clients [data-ouvrir]"); await attendre(page, 300);
+    const h2 = await page.evaluate(() => location.hash);
+    ok("J3 : « Ouvrir » ouvre la fiche (#/client/…/accueil) et la croix ramène au « Suivi détaillé »", h1 === "#/client/" + JULIEN + "/accueil" && h2 === "#/suivi-clients", JSON.stringify({ h1, h2 }));
+    await aller(page, "#/comptes"); await page.waitForSelector("#liste-clients .client-l"); await attendre(page, 300);
+    const cp = await page.evaluate(() => Array.from(document.querySelectorAll("#liste-clients .client-l")).map(x => ({ nom: x.querySelector(".nom").textContent.replace(/\s+/g, " ").trim(),
+      pastilles: Array.from(x.querySelectorAll(".pastille")).map(y => y.textContent.trim()), meta: x.querySelector(".meta").textContent.trim(), boutons: Array.from(x.querySelectorAll("button")).map(y => y.textContent.trim()) })));
+    const moi = cp.find(x => /^Coach/.test(x.nom)) || {}, leo = cp.find(x => /^Leo/.test(x.nom)) || {}, zoe = cp.find(x => /^Zoé/.test(x.nom)) || {}, tho = cp.find(x => /^Thomas/.test(x.nom)) || {};
+    ok("J4 : « Comptes » : tous les comptes non archivés, toi compris (« accès complet », « c'est toi ») ; « 🇺🇸 anglais » pour Leo ; « Ouvrir sa fiche », « Donner l'accès complet », « Passer client » (prospect) et « Repasser prospect » (client) ; ni Paul, ni Inès, ni Ana (archivés)",
+      moi.meta === "c'est toi" && moi.pastilles.includes("accès complet") && /🇺🇸 anglais/.test(leo.nom) && JSON.stringify(zoe.boutons) === '["Ouvrir sa fiche","Donner l\'accès complet","Passer client"]'
+        && JSON.stringify(tho.boutons) === '["Ouvrir sa fiche","Donner l\'accès complet","Repasser prospect"]' && !cp.some(x => /^(Paul|Inès|Ana)/.test(x.nom)), JSON.stringify(cp));
+    await aller(page, "#/suivi-commercial"); await page.waitForSelector("#pr-liste"); await attendre(page, 400);
+    const sc = await page.evaluate(() => ({ h1: (document.querySelector(".pr-detail h1") || {}).textContent, lede: (document.querySelector(".pr-detail .lede") || {}).textContent, compteur: (document.getElementById("pr-compteur") || {}).textContent,
+      tuiles: Array.from((document.querySelector("#pr-vue .tiles") || document.createElement("i")).querySelectorAll(".tile")).map(t => t.querySelector(".t-lbl").textContent + " " + t.querySelector(".t-val").textContent),
+      mesure: !!document.querySelector("#pr-mesure h2"), seg: Array.from(document.querySelectorAll("[data-filtre]")).map(x => x.dataset.filtre), outils: ["pr-q", "pr-periode", "pr-bilan", "pr-news", "pr-tri", "pr-csv"].filter(i => document.getElementById(i)),
+      cartes: Array.from(document.querySelectorAll(".sc-carte")).map(c => c.dataset.uid), liste: !!document.getElementById("lc-prospects"), nouv: !!document.getElementById("pr-nouveautes") }));
+    await page.click('[data-filtre="tous"]'); await attendre(page, 200); await page.fill("#pr-q", "hugo@exemple"); await attendre(page, 500);
+    const parMail = await page.$$eval(".sc-carte", l => l.map(c => c.dataset.uid));
+    ok("J5 : « Suivi commercial » : « 4 comptes gratuits · 3 à traiter », le compteur Inscrits → clients, les 4 tuiles, la Mesure, les filtres détaillés (À traiter, Appel fait, Tous), la recherche nom ou email (« hugo@exemple » → Hugo), période, bilan, newsletter, tri, export CSV ; les cartes (À traiter : Zoé, Noé, Leo) ; sans la liste ni les Nouveautés",
+      sc.h1 === "Suivi commercial" && norm(sc.lede) === "4 comptes gratuits · 3 à traiter" && /^Inscrits \d+ → 3 questions remplies \d+ → bilans réservés \d+ → clients \d+$/.test(norm(sc.compteur)) && JSON.stringify(sc.tuiles.map(t => t.replace(/ \d+$/, ""))) === '["À traiter","Signés","Perdus","Absents"]' && sc.mesure
+        && JSON.stringify(sc.seg) === '["a_traiter","issues","tous"]' && sc.outils.length === 6 && JSON.stringify(sc.cartes.slice().sort()) === JSON.stringify([ZOE, NOE, LEO].sort()) && !sc.liste && !sc.nouv && JSON.stringify(parMail) === JSON.stringify([HUGO]), JSON.stringify({ sc, parMail }));
+    const st = await page.evaluate(id => ({ archivesDedans: (outilProspects.lignes || []).some(l => l.p.id === id), K: Commercial.compteur(outilProspects.lignes),
+      sansArchives: Commercial.compteur((outilProspects.lignes || []).filter(l => !l.archive)), affiche: (document.getElementById("pr-compteur") || {}).textContent }), INES);
+    const perdus = sc.tuiles.find(t => /^Perdus/.test(t));
+    ok("J6 : les statistiques comptent toujours les archivés (décision de Lucas) : le compteur Inscrits compte Inès et Ana (archivées), la tuile « Perdus » compte Ana (archivée, perdue il y a 9 j) ; Ana n'est plus dans les cartes",
+      st.archivesDedans && st.K.inscrits === st.sansArchives.inscrits + 2 && norm(st.affiche).startsWith("Inscrits " + st.K.inscrits + " ") && perdus === "Perdus 1" && !parMail.includes(ANA) && !sc.cartes.includes(ANA), JSON.stringify({ st, perdus }));
+    await page.fill("#pr-q", ""); await attendre(page, 400);
+    await page.click('.sc-carte[data-uid="' + ZOE + '"] [data-sc="fiche"]'); await pret(page); await page.waitForSelector("#fc-suivi"); await attendre(page, 300);
+    const f1 = await page.evaluate(() => location.hash);
+    await page.click("#fc-fermer"); await pret(page); await page.waitForSelector("#pr-liste"); await attendre(page, 300);
+    const f2 = await page.evaluate(() => location.hash);
+    ok("J7 : la carte ouvre la fiche, la croix ramène au « Suivi commercial »", f1 === "#/client/" + ZOE + "/accueil" && f2 === "#/suivi-commercial", JSON.stringify({ f1, f2 }));
+    await aller(page, "#/newsletter"); await page.waitForSelector("#pr-nl"); await attendre(page, 300);
+    const nl = await page.evaluate(() => ({ n: (document.getElementById("pr-nl-n") || {}).textContent, uids: Array.from(document.querySelectorAll("#pr-nl-liste li")).map(x => x.dataset.nl), csv: !!document.getElementById("pr-nl-csv"), h1: (document.querySelector(".masthead h1") || {}).textContent }));
+    ok("J8 : « Newsletter » : la liste et son export CSV, archivés compris (Inès, archivée, y est, avec Zoé)",
+      nl.h1 === "Newsletter" && nl.csv && nl.uids.includes(INES) && nl.uids.includes(ZOE) && +nl.n === nl.uids.length, JSON.stringify(nl));
+    /* « Archiver » en or (fond #D4A844, texte #07090d), « Supprimer définitivement » en rouge (#F87171) */
+    const OR = "rgb(212, 168, 68)", NOIR = "rgb(7, 9, 13)", ROUGE = "rgb(248, 113, 113)";
+    const couleurs = sel => page.$eval(sel, e => { const s = getComputedStyle(e); return { fond: s.backgroundColor, texte: s.color }; }).catch(() => null);
+    await ouvrirListe(page, "clients"); await page.click("[data-sel-debut]"); await attendre(page, 200); await ligne(page, SARAH); await attendre(page, 150);
+    const cBarre = await couleurs("[data-sel-archiver]");
+    await page.click("[data-sel-archiver]"); await attendre(page, 300);
+    const cFen = await page.evaluate(() => { const bt = Array.from(document.querySelectorAll(".modale .actions .btn")).find(x => x.textContent.trim() === "Archiver"); if (!bt) return null; const s = getComputedStyle(bt); return { fond: s.backgroundColor, texte: s.color }; });
+    await bouton(page, "Annuler"); await attendre(page, 300);
+    await page.click("[data-sel-annuler]"); await attendre(page, 200);
+    await fiche(page, SARAH, "Sarah Démo"); await onglet(page, "compte");
+    const cFiche = await couleurs("#fc-archiver"), cSuppr = await couleurs("#fc-supprimer");
+    ok("J9 : « Archiver » en or, texte #07090d posé dessus (barre de sélection, fenêtre de confirmation, onglet Compte) ; « Supprimer définitivement » reste rouge",
+      [cBarre, cFen, cFiche].every(c => c && c.fond === OR && c.texte === NOIR) && cSuppr && cSuppr.texte === ROUGE && cSuppr.fond !== OR && !ecr(db, "suivi_prospect", SARAH).length, JSON.stringify({ cBarre, cFen, cFiche, cSuppr }));
+  });
+
+  /* =================== J bis. v84 : un parcours fait en anglais =================== */
+  await bloc("J bis. v84 parcours en anglais", async () => {
+    const db = base(); const MAX = PID(60), LOU = PID(61);
+    await avecParcours(async () => {
+      db.inscription.id = MAX;
+      const { page } = await contexte(b, db, { neuf: true, langue: "en" });
+      await page.goto(URL0); await page.waitForSelector("#pc", { timeout: 10000 });
+      await FT.parcours(page, { objectif: "Prendre du muscle", obstacle: ["temps"], projection: "energie", sexe: "Homme", prenom: "Max", email: "max@exemple.fr", tel: "0639980096" }, "cree");
+      await page.waitForSelector('#pc[data-etape="espace"]', { timeout: 12000 }); await attendre(page, 500);
+      db.inscription.id = LOU;
+      const x2 = await contexte(b, db, { neuf: true });
+      await x2.page.goto(URL0); await x2.page.waitForSelector("#pc", { timeout: 10000 });
+      await FT.parcours(x2.page, { objectif: "Perdre du gras", obstacle: ["temps"], sexe: "Femme", prenom: "Lou", email: "lou@exemple.fr", tel: "0639980097" }, "cree");
+      await x2.page.waitForSelector('#pc[data-etape="espace"]', { timeout: 12000 }); await attendre(x2.page, 500);
+    });
+    const pm = ecr(db, "prefs", MAX), pl = ecr(db, "prefs", LOU), PM = (ligne0(db, MAX, "prefs") || {}).contenu || null;
+    ok("J10 : un parcours fait en anglais range la langue sur le compte (prefs { langue: \"en\" }, écrite une fois) ; un parcours en français n'écrit aucune préférence",
+      pm.length === 1 && JSON.stringify(PM) === '{"langue":"en"}' && pl.length === 0 && !ligne0(db, LOU, "prefs"), JSON.stringify({ pm, pl, PM }));
+    const { page } = await contexte(b, db);
+    await page.goto(URL0 + "#/prospects"); await pret(page); await page.waitForSelector("#lc-prospects #lc-liste li"); await attendre(page, 300);
+    await fiche(page, MAX, "Max");
+    const wa = await page.$eval("#fc-wa", x => x.getAttribute("href")).catch(() => null);
+    const MSG_MAX = "Hi Max 👋 Welcome to MHX Coaching! I got your answers: your goal is to build muscle, and what's held you back so far: lack of time. I'm putting together your action plan. Were you able to book your free 15-min call?";
+    ok("J11 : sur la fiche de ce prospect, le message WhatsApp pré-rempli sort en anglais (« Hi Max 👋 Welcome to MHX Coaching! … »)",
+      wa === "https://wa.me/33639980096?text=" + encodeURIComponent(MSG_MAX), decodeURIComponent(String(wa)));
   });
 
   /* =================== W. moteur WebKit (Safari) =================== */
