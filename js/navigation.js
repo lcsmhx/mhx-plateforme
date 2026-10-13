@@ -230,7 +230,7 @@ function construireNav(){
   const visibles = outilsVisibles().filter(o => !o.masque_nav && !horsVitrine(o));   // v50
   const ordre = coachSeul ? visibles.filter(o => o.role === "coach").concat(visibles.filter(o => o.role !== "coach")) : visibles;
   nav.innerHTML = ordre.map(o =>
-    `<a href="${lienOutil(o.id)}" data-id="${o.id}">${iconeOutil(o)}${esc(nomOnglet(o))}${cadenasNav(o)}</a>`
+    `<a href="${esc(lienOutil(o.id))}" data-id="${esc(o.id)}">${iconeOutil(o)}${esc(nomOnglet(o))}${cadenasNav(o)}</a>`
   ).join("");
   construireBarreBas();
   if (typeof Nouveautes !== "undefined") Nouveautes.badge();   // v51 : le badge survit a la reconstruction
@@ -247,7 +247,8 @@ function construireNav(){
     lg.hidden = false;
   } else lg.hidden = true;
   $("foot-left").textContent  = CONFIG.marque.programme ? `${CONFIG.marque.programme} — ${CONFIG.marque.nom}` : CONFIG.marque.nom;
-  $("foot-right").innerHTML   = `Une question ? <a href="${CONFIG.marque.instagram}" target="_blank" rel="noopener">${esc(CONFIG.marque.pseudo)}</a> · ${esc(CONFIG.marque.email)}` + (CONFIG.marque.version ? ` · <span class="version">v${esc(CONFIG.marque.version)}</span>` : "");
+  /* v86 (lot 1, défense en profondeur) : le lien Instagram passe par lienSur() et esc(), comme les autres liens de la marque */
+  $("foot-right").innerHTML   = `Une question ? <a href="${esc(lienSur(CONFIG.marque.instagram))}" target="_blank" rel="noopener">${esc(CONFIG.marque.pseudo)}</a> · ${esc(CONFIG.marque.email)}` + (CONFIG.marque.version ? ` · <span class="version">v${esc(CONFIG.marque.version)}</span>` : "");
 
   const p = Auth.profil, u = Auth.utilisateur();
   const nom = p && (p.prenom || p.nom) ? ((p.prenom || "") + " " + (p.nom || "")).trim() : (u ? u.email : "");
@@ -283,7 +284,7 @@ function construireBarreBas(){
   const principaux = outilsPrincipaux();
   const autres = outilsVisibles().filter(o => principaux.indexOf(o) === -1 && !o.masque_nav && !horsVitrine(o));   // v50
   b.innerHTML = principaux.map(o =>
-    `<a href="${lienOutil(o.id)}" data-id="${o.id}"${estVerrouille(o) ? ' class="verrouille"' : ""}>${iconeOutil(o)}<span class="lbl">${esc(nomCourt(o))}</span>${cadenasNav(o)}</a>`).join("") +
+    `<a href="${esc(lienOutil(o.id))}" data-id="${esc(o.id)}"${estVerrouille(o) ? ' class="verrouille"' : ""}>${iconeOutil(o)}<span class="lbl">${esc(nomCourt(o))}</span>${cadenasNav(o)}</a>`).join("") +
     (autres.length ? `<button type="button" data-plus><span class="ico" aria-hidden="true">${ICONES.plus}</span><span class="lbl">Plus</span></button>` : "");
   const plus = b.querySelector("[data-plus]");
   /* v69 : le prospect revient a l'accueil par une fleche a gauche du titre (la croix seule ne suffisait pas sur telephone) ;
@@ -292,7 +293,7 @@ function construireBarreBas(){
     ? { href: "#/accueil", libelle: trad("Retour à l'accueil") } : null;
   if (plus) plus.addEventListener("click", () => {
     UI.volet({ titre: trad("Tout mon espace"), retour: retourAccueil, corps: `<ul class="menu-plus">` + autres.map(o =>
-      `<li><a href="${lienOutil(o.id)}" data-id="${o.id}"${courant === o.id ? ' aria-current="page"' : ""}>${iconeOutil(o)}<span>${esc(nomOnglet(o))}${cadenasNav(o)}</span></a></li>`).join("") + `</ul>` +
+      `<li><a href="${esc(lienOutil(o.id))}" data-id="${esc(o.id)}"${courant === o.id ? ' aria-current="page"' : ""}>${iconeOutil(o)}<span>${esc(nomOnglet(o))}${cadenasNav(o)}</span></a></li>`).join("") + `</ul>` +
       /* v70 : « Partager l'app » sous la liste (lien copie ou feuille de partage du telephone) */
       `<div class="menu-plus-partage"><button type="button" class="btn ghost petit" data-partager>${SVG.partager}<span>${esc(trad("Partager l'app"))}</span></button></div>` +
       /* v76 : « Se déconnecter » du prospect, en bas du volet (il n'est plus dans sa barre du haut sur téléphone) */
@@ -384,7 +385,7 @@ function bandeauConsultation(){
       <span class="note">Tu vois ses données. Tu écris pour lui dans les boutons dorés, dans « Préparer le call » (ton feedback) et dans la fiche (tes notes privées, qu'il ne voit jamais).</span>
     </div>
     <div class="bandeau-actions">
-      ${actions.map(a => `<a href="${lienOutil(a.id)}" class="b-act${a.fort ? " fort" : ""}${courant === a.id ? " ici" : ""}">${esc(a.nom)}</a>`).join("")}
+      ${actions.map(a => `<a href="${esc(lienOutil(a.id))}" class="b-act${a.fort ? " fort" : ""}${courant === a.id ? " ici" : ""}">${esc(a.nom)}</a>`).join("")}
       <button class="sortir" type="button" id="sortir-fiche">${esc(RETOURS[Store.retourVers] || RETOURS.clients)}</button>
     </div>
   </div>`;

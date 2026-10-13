@@ -457,7 +457,9 @@ const outilNutrition = {
      si le client mange chez ses parents le dimanche, il decoche dimanche
      et la liste s'ajuste. */
   courses(R, actifs){
-    const somme = {};
+    /* v86 (lot 1) : un objet sans prototype — un identifiant d'aliment écrit par le client (« __proto__ », « constructor »…)
+       ne touche jamais aux objets communs de la page */
+    const somme = Object.create(null);
     (R.jours || []).forEach((j, ji) => {
       if (actifs && actifs[ji] === false) return;
       (j.repas || []).forEach(c => (c.ingredients || []).forEach(i => {

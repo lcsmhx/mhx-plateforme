@@ -196,6 +196,7 @@ const Retour = {
   const ok = await Auth.assurer();
   /* v48 : sessions partagees entre onglets, modifications gardees sur l'appareil */
   window.addEventListener("storage", e => Auth.depuisAutreOnglet(e));
+  try { Auth.canal(); } catch(e){}   // v86 : à l'écoute d'un « Se déconnecter » fait dans un autre onglet
   window.addEventListener("online", () => Store.reprendre());
   window.addEventListener("pagehide", () => Store.toutEnvoyer());
   document.addEventListener("visibilitychange", () => {

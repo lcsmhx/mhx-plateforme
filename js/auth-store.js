@@ -86,6 +86,22 @@ const Auth = {
     if (c.expire_le && s.expire_le <= c.expire_le) return null;
     return s;
   },
+  /* v86 (lot 1 de la mission de nuit) : « Se déconnecter » (et « Supprimer mon compte ») préviennent les autres onglets ouverts sur
+     le même compte, par le canal du navigateur (BroadcastChannel : rien n'est rangé sur l'appareil) : ils sont rechargés, donc
+     sans session (écran de connexion) — sur un ordinateur ou un téléphone partagé, l'espace ne reste plus ouvert dans un autre
+     onglet. Une session qui prend fin toute seule (jeton refusé) ne recharge rien : la page reste, avec son bandeau (sessionPerdue).
+     Navigateur sans BroadcastChannel : comme avant. */
+  _canal: null,
+  canal(){
+    try { if (!this._canal && typeof BroadcastChannel === "function"){ this._canal = new BroadcastChannel("mhx-sortie"); this._canal.onmessage = e => this.sortieAilleurs(e && e.data); } } catch(e){}
+    return this._canal;
+  },
+  annoncerSortie(id){ try { const c = this.canal(); if (c && id) c.postMessage({ sortie: String(id) }); } catch(e){} },
+  sortieAilleurs(d){
+    if (!d || typeof d !== "object" || !this.session || !this.session.user || d.sortie !== this.session.user.id) return;
+    this.session = null;
+    setTimeout(() => { try { location.reload(); } catch(e){} }, 300);   // le temps que la session retirée par l'autre onglet arrive ici
+  },
   /* un autre onglet vient de ranger une session : meme compte → on la prend (evenement « storage ») */
   depuisAutreOnglet(e){
     if (!e || e.key !== this.cleSession || !e.newValue || !this.session || !this.session.user) return;
@@ -206,6 +222,7 @@ const Auth = {
      l'espace, formation comprise. Elle passe par une fonction serveur qui
      verifie d'abord que l'appelant est bien un coach. */
   async creerAcces(email, motdepasse, prenom, nom, role){
+    await this.assurer();   // v86 (lot 1) : un jeton qui expire (téléphone en veille) est d'abord renouvelé, comme pour les photos
     const r = await fetch(CONFIG.supabase.url + "/functions/v1/creer-acces", {
       method: "POST",
       headers: {
@@ -291,6 +308,7 @@ const Auth = {
      Le serveur reverifie tout, y compris le mot « SUPPRIMER » : l'ecran ne
      protege que ceux qui passent par l'ecran. */
   async supprimerCompte(id, confirmation){
+    await this.assurer();   // v86 (lot 1) : un jeton qui expire est d'abord renouvelé (sinon « Session expirée » trompeur)
     const r = await fetch(CONFIG.supabase.url + "/functions/v1/supprimer-acces", {
       method: "POST",
       headers: {
@@ -342,8 +360,10 @@ const Auth = {
                : "Des modifications n'ont pas encore pu être envoyées (hors ligne). Si tu te déconnectes maintenant, elles seront perdues.";
     if ((nonEnvoyees || refusees) && !(await UI.confirmer(trad(avis), { ok: trad("Me déconnecter quand même"), danger: true }))) return;
     try { await this.appel("/auth/v1/logout", { method: "POST" }); } catch(e){}
+    const sortant = moi && moi.id;
     this.oublier();
     this.viderCompte();   // v71 (B) : theme, langue, banniere d'installation et compteur de visites restent (reglages de l'appareil)
+    this.annoncerSortie(sortant);   // v86 : les autres onglets de ce compte se ferment sur la connexion
     location.hash = "";
     location.reload();
   },
@@ -744,7 +764,7 @@ const Forme = {
   /* le contenu d'une cle : null s'il n'est pas un objet (comme absent) */
   cle(cle, v){
     if (!this.objet(v)) return null;
-    const m = this.modeles[cle];
+    const m = Object.prototype.hasOwnProperty.call(this.modeles, cle) ? this.modeles[cle] : null;   // v86 : jamais un modèle hérité (« constructor »…)
     return m ? this.appliquer(m, v) : v;
   }
 };
@@ -1017,7 +1037,8 @@ const Store = {
             if (typeof Checkin !== "undefined" && cle === Checkin.cle && ms > ts && uid === u.id){ await Checkin.rattraper(); if (this.attenteLire()[k]) reste = true; continue; }
             this.lacher(uid, cle, e.t);
             if (cle === "activite") continue;
-            if (ms > ts) ecartees.push({ cle: cle, t: e.t, autre: uid !== u.id }); continue;
+            /* v86 (lot 1) : une date illisible en base (« infinity »…) écarte la copie elle aussi : le message le dit, comme pour une date plus récente */
+            if (ms > ts || isNaN(ms)) ecartees.push({ cle: cle, t: e.t, autre: uid !== u.id }); continue;
           }
           await this.envoyer(cle, e.v, uid, e.t, false, true);
           if (this.attenteLire()[k]) reste = true;
@@ -1111,7 +1132,7 @@ const Store = {
     const uid = this.cible();
     const lignes = await Auth.appel("/rest/v1/donnees?user_id=eq." + uid + "&select=outil,contenu,maj_le");
     const profil = await Auth.appel("/rest/v1/profils?id=eq." + uid + "&select=*");
-    const donnees = {};
+    const donnees = Object.create(null);   // v86 (lot 1) : une ligne « __proto__ » reste une rubrique ordinaire de l'export
     (lignes || []).forEach(l => { donnees[l.outil] = { contenu: l.contenu, modifie_le: l.maj_le }; });
     /* v67 (audit du 01/10, E4) : les accords donnes (conditions, newsletter, sante : date et version), lus dans les
        metadonnees du compte deja en memoire (aucun appel de plus) ; seulement ces champs, jamais un jeton ; seulement
@@ -1615,11 +1636,13 @@ function initSauvegarde(){
     }
     sup.disabled = true; flash("sv-suppr-msg", "Suppression…");
     try {
+      const sortant = (Auth.utilisateur() || {}).id;
       await Auth.supprimerCompte(null, "SUPPRIMER");
       Auth.oublier();
       [localStorage, sessionStorage].forEach(m => {
         try { Object.keys(m).forEach(k => { if (k.indexOf("mhx_") === 0) m.removeItem(k); }); } catch(e){}
       });
+      Auth.annoncerSortie(sortant);   // v86 : les autres onglets de ce compte se ferment sur la connexion
       await UI.alerte(trad("Ton compte est supprimé. Merci d'avoir utilisé l'application."));
       location.hash = ""; location.reload();
     } catch(e){

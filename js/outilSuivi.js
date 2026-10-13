@@ -766,6 +766,16 @@ const Checkin = {
    la ligne. Un refus est dit clairement, et le texte tape reste dans le champ.
    ------------------------------------------------------------------ */
 const CleCoach = {
+  /* v86 (lot 1 de la mission de nuit) : un envoi du coach (notes privées, feedback) qui échoue alors que la fiche est déjà
+     fermée — le message s'écrivait dans un élément qui n'est plus à l'écran et le texte disparaissait avec la fiche : une
+     fenêtre le dit, avec le texte à copier (une autre fenêtre déjà ouverte est fermée comme « Annuler » : le texte passe avant) */
+  horsPage(titre, message, texte){
+    try {
+      UI.ouvrir({ titre: titre, html: true, classe: "texte-a-copier",
+        corps: `<p>${esc(message)}</p>${texte ? `<p class="note">Ton texte, à copier :</p><textarea readonly rows="6" aria-label="Ton texte, à copier">${esc(texte)}</textarea>` : ""}`,
+        boutons: [{ texte: "OK", principal: true }] });
+    } catch(e){}
+  },
   /* une session qu'on ne peut plus renouveler n'est pas « aucune donnee » :
      on s'arrete net plutot que de lire sans jeton */
   async session(){ if (!(await Auth.assurer())) throw Object.assign(new Error("session"), { statut: 401 }); },
@@ -944,6 +954,7 @@ const Feedback = {
           if (!(e && e.conflit) && tentative.texte) dejas.push(tentative);
           msg.classList.add("ko");
           msg.textContent = (e && e.conflit) ? "Ce feedback a changé entre-temps (autre onglet ou appareil) : recharge la page avant d'écrire. Ton texte est gardé ici." : CleCoach.message(e);
+          if (!bloc.isConnected) CleCoach.horsPage("Feedback non enregistré", (e && e.conflit) ? "Ce feedback a changé entre-temps (autre onglet ou appareil)." : CleCoach.message(e), texte);   // v86 : la fiche est déjà fermée
         }
         btn.disabled = false;
       });
@@ -971,7 +982,10 @@ const NotesCoach = {
     let dernier = "", ligneLue = null, avant = null;
     let envois = [];   // « maj » des ecritures dont la reponse n'est pas revenue (elles ont pu passer)
     const quand = (iso) => { const d = new Date(iso); return isNaN(d) ? "" : d.toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }); };
-    const dire = (t, ko) => { etat.classList.toggle("ko", !!ko); etat.textContent = t; };
+    const dire = (t, ko) => {
+      etat.classList.toggle("ko", !!ko); etat.textContent = t;
+      if (ko && !etat.isConnected && lu && ta.value.trim() && ta.value !== dernier) CleCoach.horsPage("Notes privées non enregistrées", t, ta.value);   // v86 : fiche déjà fermée, texte non enregistré
+    };
     /* ecrit le texte du champ, par ecriture conditionnelle. Sur un conflit : si
        c'etait notre propre ecriture (reponse perdue), on la reprend ; si les
        notes ont vraiment change ailleurs, on garde LES DEUX versions (la notre
