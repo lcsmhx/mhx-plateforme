@@ -28,6 +28,8 @@
    le menu des pays du numéro (bloc « Mon numéro » du Profil) passe à 16 pays + « Autre pays » (changement voulu, mission) :
    le texte de ses <option> est retiré des deux côtés de la comparaison, la liste du fichier testé est vérifiée à part (exacte,
    dans l'ordre de TEXTES.md) ; tout le reste du Profil reste comparé strictement. Nombre de ✓ inchangé (137).
+   v83 (bloc 3) : le badge des Nouveautés est vérifié sur ses deux copies (#nav et #barre-bas) ; bloc J : la fiche de Thomas,
+   réorganisée (en-tête, onglets Suivi / Compte), est comparée à la référence morceau par morceau. Nombre de ✓ inchangé (137).
    Usage : node verif52.js ../index.html
            VERIF52_PORT=9700 node verif52.js ../index.html     (autre port, si 9682 est pris)
            VERIF52_BLOCS="G.,H. journal" node verif52.js …     (seulement les blocs dont le nom commence ainsi) */
@@ -315,6 +317,9 @@ const chercher = async (page, v) => { await page.fill("#pr-q", v); await attendr
 const tuiles = (page, sel) => page.$$eval(sel + " .tile", l => l.map(t => ({ lbl: t.querySelector(".t-lbl").textContent.trim(), val: (t.querySelector(".t-val").firstChild || { textContent: "" }).textContent.replace(/[  ]/g, " ").trim() }))).catch(() => []);
 const tuile = (ts, lbl) => (ts.find(t => t.lbl === lbl) || {}).val;
 const badge = page => page.$$eval('#nav a[data-id="prospects"] .nav-badge, #barre-bas a[data-id="prospects"] .nav-badge', l => l.map(e => e.textContent.trim())).catch(() => []);
+/* v83 (bloc 3) : l'onglet Prospects est dans la barre du haut (#nav) ET dans la barre du bas (#barre-bas) : le badge des
+   Nouveautés existe en double (une seule copie visible selon la largeur) ; « badge N » = les DEUX copies affichent N */
+const badge2 = n => JSON.stringify([n, n]);
 const ecr = (db, outil, uid) => db.ecritures.filter(e => e.outil === outil && (!uid || e.user_id === uid));
 const contenu = (db, outil, uid) => (db.donnees.find(x => x.user_id === uid && x.outil === outil) || {}).contenu;
 /* la clé k fait-elle partie de ce qu'une lecture de « donnees » renvoie ? filtre outil = eq.k, in.(…,k,…),
@@ -586,7 +591,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     const attL = ["Léa Martin · inscription", "Émilie Rousseau · clic « Réserver mon plan d'action »", "Inès Dupré · a coché « J'ai réservé »", "Inès Dupré · clic « Réserver mon plan d'action »", "Inès Dupré · questionnaire rempli", "Inès Dupré · inscription", "Émilie Rousseau · clic « Réserver mon plan d'action »", "Émilie Rousseau · questionnaire rempli"];
     ok("liste : les 8 plus récentes, de la plus récente à la plus ancienne, puis « Voir les 3 suivantes » (les autres repliées)", JSON.stringify(li) === JSON.stringify(attL) && (await texte(page, "#pr-nouveautes [data-nv-plus]")) === "Voir les 3 suivantes", JSON.stringify(li) + " · " + (await texte(page, "#pr-nouveautes [data-nv-plus]")));
     ok("7 jours : Karim (8 jours) et Paul (10 jours) absents, le client Julien (inscrit il y a 3 h) jamais compté", !pan.includes("Karim") && !pan.includes("Paul") && !pan.includes("Julien"));
-    ok("badge « 11 » sur l'onglet Prospects", JSON.stringify(await badge(page)) === '["11"]', JSON.stringify(await badge(page)));
+    ok("badge « 11 » sur l'onglet Prospects", JSON.stringify(await badge(page)) === badge2("11") /* v83 (bloc 3) : badge en double */, JSON.stringify(await badge(page)));
     /* v53 (chantier 4) : « Prospects à traiter » du tableau de bord (carte d'Inès avec son score) retiré (1) */
     ok("affichage : aucune écriture (coach_notifs pas écrit tant qu'on ne clique pas)", db.ecritures.length === 0, JSON.stringify(db.ecritures));
     const t0 = Date.now();
@@ -601,9 +606,9 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     db.profils.push({ id: NINA, prenom: "Nina", nom: "Nouvelle", role: "client", statut: "prospect", cree_le: new Date().toISOString() });
     await aller(page, "#/prospects", 2400);
     const li2 = await page.$$eval("#pr-nouveautes .nv-liste li .nv-txt", l => l.map(e => e.textContent.replace(/\s+/g, " ").trim())).catch(() => []);
-    ok("nouvelle inscription après la visite : « Depuis ta dernière visite (…) : », 1 nouveauté « Nina Nouvelle · inscription », badge « 1 »", JSON.stringify(li2) === '["Nina Nouvelle · inscription"]' && (await texte(page, "#pr-nouveautes")).includes("Depuis ta dernière visite (" + fr(N.vu || 0) + " " + hm(N.vu || 0) + ") :") && JSON.stringify(await badge(page)) === '["1"]', JSON.stringify(li2) + " · " + JSON.stringify(await badge(page)));
+    ok("nouvelle inscription après la visite : « Depuis ta dernière visite (…) : », 1 nouveauté « Nina Nouvelle · inscription », badge « 1 »", JSON.stringify(li2) === '["Nina Nouvelle · inscription"]' && (await texte(page, "#pr-nouveautes")).includes("Depuis ta dernière visite (" + fr(N.vu || 0) + " " + hm(N.vu || 0) + ") :") && JSON.stringify(await badge(page)) === badge2("1") /* v83 (bloc 3) : badge en double */, JSON.stringify(li2) + " · " + JSON.stringify(await badge(page)));
     await page.reload(); await attendre(page, 2600);
-    ok("après rechargement (coach_notifs relu en base) : toujours 1 nouveauté, badge « 1 »", (await page.$$("#pr-nouveautes .nv-liste li")).length === 1 && JSON.stringify(await badge(page)) === '["1"]', JSON.stringify(await badge(page)));
+    ok("après rechargement (coach_notifs relu en base) : toujours 1 nouveauté, badge « 1 »", (await page.$$("#pr-nouveautes .nv-liste li")).length === 1 && JSON.stringify(await badge(page)) === badge2("1") /* v83 (bloc 3) : badge en double */, JSON.stringify(await badge(page)));
     await page.click(`#pr-nouveautes [data-nv-ouvrir="${NINA}"]`); await attendre(page, 2400);
     ok("« Ouvrir » dans les Nouveautés : la fiche de Nina s'ouvre", (await texte(page, "#vue .masthead h1")).startsWith("Nina Nouvelle") && !!(await page.$("#fiche-reponses")), await texte(page, "#vue .masthead h1"));
     ok("Nouveautés : une seule écriture en tout (coach_notifs), aucune injection", db.ecritures.length === 1 && !(await xss(page)), JSON.stringify(db.ecritures.map(e => e.outil)));
@@ -614,7 +619,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     const { page } = await contexte(b, coach, db);
     await page.goto(`http://localhost:${PORT}/#/prospects`); await page.waitForSelector("#pr-nouveautes .nv-panneau", { timeout: 8000 }); await attendre(page, 500);
     const types = await page.$$eval("#pr-nouveautes .nv-types .pastille", l => l.map(e => e.textContent.trim())).catch(() => []);
-    ok("coach_notifs.vu il y a 30 h : page Prospects « Depuis ta dernière visite (" + fr(vu) + " " + hm(vu) + ") : », 6 nouveautés (2 inscriptions, 1 questionnaire, 2 clics, 1 bilan), badge « 6 »", (await texte(page, "#pr-nouveautes")).includes("Depuis ta dernière visite (" + fr(vu) + " " + hm(vu) + ") :") && (await texte(page, "#pr-nouveautes .seance-c-tete .pastille")) === "6" && JSON.stringify(types) === JSON.stringify(["2 inscriptions", "1 questionnaire rempli", "2 clics « Plan d'action »", "1 case « J'ai réservé »"]) && JSON.stringify(await badge(page)) === '["6"]', JSON.stringify(types) + " · " + JSON.stringify(await badge(page)));
+    ok("coach_notifs.vu il y a 30 h : page Prospects « Depuis ta dernière visite (" + fr(vu) + " " + hm(vu) + ") : », 6 nouveautés (2 inscriptions, 1 questionnaire, 2 clics, 1 bilan), badge « 6 »", (await texte(page, "#pr-nouveautes")).includes("Depuis ta dernière visite (" + fr(vu) + " " + hm(vu) + ") :") && (await texte(page, "#pr-nouveautes .seance-c-tete .pastille")) === "6" && JSON.stringify(types) === JSON.stringify(["2 inscriptions", "1 questionnaire rempli", "2 clics « Plan d'action »", "1 case « J'ai réservé »"]) && JSON.stringify(await badge(page)) === badge2("6") /* v83 (bloc 3) : badge en double */, JSON.stringify(types) + " · " + JSON.stringify(await badge(page)));
     ok("… le clic d'Émilie d'il y a 31 h et son questionnaire (40 h) n'y sont pas ; rien n'est écrit", !(await texte(page, "#pr-nouveautes")).includes("Émilie Rousseau · questionnaire rempli") && (await page.$$("#pr-nouveautes .nv-liste li")).length === 6 && db.ecritures.length === 0);
   });
   await bloc("E. Nouveautés : coach_notifs piégé", async () => {
@@ -964,7 +969,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     const total = Date.now() - t0;   // changement d'adresse → cartes ET Nouveautés (calculées après coup) affichées
     const app = await page.evaluate(() => { const z = document.getElementById("pr-vue"); const t = performance.now(); outilProspects.rendre(z); return Math.round(performance.now() - t); }).catch(() => 99999);
     ok(`1 008 prospects : page complète (cartes et Nouveautés) en ${total} ms depuis le changement d'adresse, construite en ${app} ms côté app (chacun < 2 000)`, total < 2000 && app < 2000, "complet " + total + " ms · app " + app + " ms");
-    ok("1 008 prospects : « 1008 comptes gratuits », badge « 99+ »", (await texte(page, "#pr-vue .masthead .lede")).startsWith("1008 comptes gratuits") && JSON.stringify(await badge(page)) === '["99+"]', (await texte(page, "#pr-vue .masthead .lede")) + " · " + JSON.stringify(await badge(page)));
+    ok("1 008 prospects : « 1008 comptes gratuits », badge « 99+ »", (await texte(page, "#pr-vue .masthead .lede")).startsWith("1008 comptes gratuits") && JSON.stringify(await badge(page)) === badge2("99+") /* v83 (bloc 3) : badge en double */, (await texte(page, "#pr-vue .masthead .lede")) + " · " + JSON.stringify(await badge(page)));
     const tf = await page.evaluate(() => { const t = performance.now(); document.querySelector('[data-filtre="tous"]').click(); return Math.round(performance.now() - t); });
     ok(`filtre « Tous » en ${tf} ms : 50 cartes, « Afficher 50 de plus (958 restants) », « 1008 prospects »`, tf < 2000 && (await page.$$("#pr-liste .sc-carte")).length === 50 && (await texte(page, "#pr-plus")) === "Afficher 50 de plus (958 restants)" && (await texte(page, "#pr-compte")) === "1008 prospects", (await texte(page, "#pr-plus")) + " · " + (await texte(page, "#pr-compte")));
     const avant50 = await uids(page);
@@ -1101,13 +1106,42 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     /* v72 (A) : la ligne « Téléphone : … » de l'en-tête de la fiche (Thomas n'a pas de numéro : « — ») est une différence VOULUE
        avec main tant que la v72 n'y est pas : présente, retirée du texte comparé (ensuite des deux côtés : comparaison stricte) */
     /* v72 (F) : de même, la ligne « Source : — » (Thomas n'est pas arrivé par un lien avec code) */
+    /* v83 (bloc 3) : FICHE_TEL_V72, FICHE_SOURCE_V72 et sansTel ne servent plus (téléphone et source : valeurs « — » de l'onglet
+       Compte, comparées morceau par morceau ci-dessous) */
     const FICHE_TEL_V72 = " Téléphone : —", FICHE_SOURCE_V72 = " Source : —", sansTel = x => x.split(FICHE_TEL_V72).join("").split(FICHE_SOURCE_V72).join("");
     /* v77 : la Speed Formation passe de 49 à 48 étapes (« Guide d'astuces » et sa tâche m2e retirés) : la ligne « Formation … »
        de la fiche est une différence VOULUE avec main tant que la v77 n'y est pas ; le texte de main est converti en ce que la
        v77 doit afficher (mêmes étapes faites, sur 48, pourcentage arrondi comme outilFormation.compte) ; ensuite 48 des deux
        côtés : rien à convertir, comparaison stricte */
     const FORM_V77 = x => x.replace(/Formation(\d+) % \((\d+) \/ 49\)/g, (m, p, n) => "Formation" + Math.round(n * 100 / 48) + " % (" + n + " / 48)");
-    ok("fiche de Thomas vue par le coach : texte et sections identiques à main (" + f.h2.join(", ") + ") ; v72 : lignes « Téléphone : — » et « Source : — », présentes ; v77 : formation sur 48 étapes", f.t.length > 300 && f.t.includes(FICHE_TEL_V72 + FICHE_SOURCE_V72) && sansTel(f.t) === sansTel(FORM_V77(fM.t)) && JSON.stringify(f.h2) === JSON.stringify(fM.h2), f.t.length + " / " + fM.t.length + " · " + JSON.stringify(f.h2) + " vs " + JSON.stringify(fM.h2) + " · " + (() => { const x = sansTel(f.t), y = sansTel(FORM_V77(fM.t)); let k = 0; while (k < x.length && x[k] === y[k]) k++; return JSON.stringify(x.slice(Math.max(0, k - 40), k + 60)) + " ≠ " + JSON.stringify(y.slice(Math.max(0, k - 40), k + 60)); })());
+    /* v83 (bloc 3) : la fiche est réorganisée (changement VOULU, docs/maj-bloc-3/MISSION.md) : en-tête .fc-tete (nom seul dans le
+       h1, pastilles Client et programme, « Préparer le call », onglets Suivi / Compte), le bandeau d'avant (« Fiche de … », les
+       outils, « Revenir … ») passe dans l'onglet Suivi (#fc-suivi #fc-outils), les lignes « Téléphone : — » et « Source : — »
+       deviennent les valeurs « — » des lignes Téléphone et Source de l'onglet Compte (#fc-compte #fiche-tel, #fiche-source), et
+       de nouvelles cartes (retour de la semaine, poids, régularité, état) s'ajoutent. La comparaison avec la référence se fait donc
+       morceau par morceau : chaque morceau d'avant, retrouvé à sa nouvelle place, au texte identique (bandeau, eyebrow, nom,
+       phrase, alertes, téléphone, source, et tout le bas de la fiche de « En bref » à « Le reste »), les mêmes h2, plus la
+       nouvelle vérité (plus de bandeau en haut de #vue, en-tête de la fiche, téléphone et source dans l'onglet Compte). Une fois
+       la v83 sur main, la même structure des deux côtés : comparaison stricte, morceau par morceau. */
+    const morceaux = page => page.evaluate(() => {
+      const n = t => String(t || "").replace(/[\u00a0\u202f]/g, " ").replace(/\s+/g, " ").trim();
+      const v = document.getElementById("vue"), neuf = !!v.querySelector(".fc-tete");
+      const tx = sel => { const e = v.querySelector(sel); return e ? n(e.textContent) : null; };
+      const sans = (t, pre) => t == null ? null : t.startsWith(pre) ? t.slice(pre.length) : "?" + t;
+      const eb = Array.from(v.querySelectorAll("h2")).find(h => n(h.textContent) === "En bref"), reste = [];
+      for (let x = eb && eb.closest("section"); x; x = x.nextElementSibling) if (x.id !== "fiche-commercial") reste.push(n(x.textContent));
+      const lbl = id => { const e = v.querySelector("#fc-compte #" + id); return e && e.closest("li") ? n(e.closest("li").querySelector("span").textContent) : null; };
+      return { neuf, bandeauHaut: !!v.querySelector(":scope > .bandeau"), telLbl: neuf ? lbl("fiche-tel") : null, sourceLbl: neuf ? lbl("fiche-source") : null,
+        role: tx(".fc-pastilles .fc-role-p"), prog: tx(".fc-pastilles .fc-prog"), call: v.querySelector("#fc-call") ? v.querySelector("#fc-call").getAttribute("href") : null,
+        onglets: Array.from(v.querySelectorAll('[role="tab"][data-onglet]')).map(t => t.dataset.onglet + ":" + t.getAttribute("aria-selected")),
+        commun: { bandeau: neuf ? tx("#fc-suivi #fc-outils .bandeau") : tx(":scope > .bandeau"), eyebrow: tx(".masthead .eyebrow"), h1: tx(".masthead h1"),
+          lede: neuf ? tx("#fc-suivi > .fc-lede") : tx(".masthead > .lede"), alertes: neuf ? tx("#fc-suivi > .attention-alertes") : tx(".masthead > .attention-alertes"),
+          tel: neuf ? tx("#fc-compte #fiche-tel") : sans(tx("#fiche-tel"), "Téléphone : "), source: neuf ? tx("#fc-compte #fiche-source") : sans(tx("#fiche-source"), "Source : "),
+          reste: reste.join(" | ") } };
+    });
+    const mf = await morceaux(f.page), mfM = await morceaux(fM.page);
+    const comF = JSON.stringify(mf.commun), comM = JSON.stringify(Object.assign({}, mfM.commun, { reste: FORM_V77(mfM.commun.reste) }));
+    ok("fiche de Thomas vue par le coach : sections identiques à main (" + f.h2.join(", ") + ") ; v83 : chaque morceau d'avant identique à main à sa nouvelle place (bandeau dans l'onglet Suivi, nom, phrase, alertes, de « En bref » à « Le reste »), en-tête de la fiche (nom seul, « Client », programme, « Préparer le call », onglets) ; v72 : Téléphone « — » et Source « — », présents (onglet Compte) ; v77 : formation sur 48 étapes", f.t.length > 300 && mf.neuf && !mf.bandeauHaut && comF === comM && mf.commun.h1 === "Thomas Démo" && !!mf.commun.bandeau && mf.commun.bandeau.startsWith("Fiche de Thomas Démo") && mf.commun.reste.startsWith("En bref") && mf.commun.reste.includes("Le reste") && mf.commun.tel === "—" && mf.commun.source === "—" && mf.telLbl === "Téléphone" && mf.sourceLbl === "Source" && mf.role === "Client" && !!mf.prog && fM.t.includes("Nom" + mf.prog) && mf.call === "#/client/" + F.IDS.c1 + "/bilan" && JSON.stringify(mf.onglets) === '["suivi:true","compte:false"]' && JSON.stringify(f.h2) === JSON.stringify(fM.h2), f.t.length + " / " + fM.t.length + " · " + JSON.stringify(f.h2) + " vs " + JSON.stringify(fM.h2) + " · " + JSON.stringify({ neuf: mf.neuf, bandeauHaut: mf.bandeauHaut, telLbl: mf.telLbl, sourceLbl: mf.sourceLbl, role: mf.role, prog: mf.prog, call: mf.call, onglets: mf.onglets }) + " · " + (() => { const x = comF, y = comM; let k = 0; while (k < x.length && x[k] === y[k]) k++; return JSON.stringify(x.slice(Math.max(0, k - 40), k + 60)) + " ≠ " + JSON.stringify(y.slice(Math.max(0, k - 40), k + 60)); })());
     ok("fiche de Thomas : ni score, ni réponses du questionnaire court, ni chronologie, ni lien de réservation, aucune écriture", !(await f.page.$("#fiche-score, #fiche-reponses, #fiche-chrono, #fiche-actions, #fiche-decouverte, #fiche-prospect, #dc-lien")) && f.db.ecritures.length === 0);
     await f.c.close(); await fM.c.close();
     /* v53 (chantier 4) : Mes clients gagne 5 colonnes (retour de la semaine, note, smiley, dernière visite, jours actifs) :

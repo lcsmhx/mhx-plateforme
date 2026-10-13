@@ -12,6 +12,7 @@
       les pastilles passent à la ligne), à 375 et à 320 px ; v59 : à 320 px, la page ne déborde plus (barre du haut) ;
       v71 (D) : le tableau ne liste plus les prospects (ligne « Les prospects sont dans Prospects → (n comptes gratuits). ») :
       Léa et Marc se lisent sur leur carte de la page Prospects, les mesures du tableau portent sur les clients ;
+      v83 (bloc 3) : la ligne « Les prospects sont dans Prospects → » est supprimée, le nombre se lit sur la page Prospects ;
    D. la connexion ouvre la page d'arrivée : un client, un prospect et le coach dont l'adresse gardait une page (#/formation,
       #/prospects : dernière page ouverte sur l'appareil quand la session a pris fin sans « Se déconnecter ») arrivent sur
       leur page d'arrivée ; « Me reconnecter » (session perdue en cours d'utilisation) ramène sur la page ouverte ;
@@ -621,11 +622,15 @@ const ALERTE59 = (/\n  @supports selector\(:has\(\*\)\)\{[\s\S]*?\n  \}\n/.exec(
          où leurs connexions se lisent sur leur carte (date longue) — lue ici dans un second navigateur du coach */
       const absents = await page.evaluate(ids => ids.map(id => !document.querySelector(`#tb-clients [data-ouvrir="${id}"]`)), [LEA, MARC]);
       const notePr = await page.$eval("#clients-prospects", e => { const a = e.querySelector("a.link-a"); return { t: e.textContent, lien: a ? a.getAttribute("href") : "", cache: e.hidden }; }).catch(() => ({}));
+      /* v83 (bloc 3) : la ligne « Les prospects sont dans Prospects → » est supprimée (décision 7) : absente de Mes clients (dont la
+         liste du haut est affichée) ; le nombre de prospects se lit sur la page Prospects (#lc-compte, en-tête « N comptes gratuits · … ») */
+      const sansNote = !(await page.$("#clients-prospects")) && !!(await page.$("#lc-clients"));
       const NB_PR = prospects().filter(p => p.statut === "prospect").length;
       const xp = await coachSur(b, db, "#/prospects", "#pr-liste", { fuseau: FUSEAU }); await filtre(xp.page, "tous");
       const Le = await faits(xp.page, LEA), Ma = await faits(xp.page, MARC);
-      ok("A : date courte à l'heure du coach : compte de test « " + quandCourt(CX_TEST.derniere) + " », Thomas « " + quandCourt(CX_THOMAS.derniere) + " » ; Léa (prospecte) n'est plus dans le tableau, la ligne « Les prospects sont dans Prospects → (" + NB_PR + " comptes gratuits). » y renvoie, sa carte Prospects garde la date longue « " + quandCoach(CX_LEA.derniere) + " »",
-        T["Dernière connexion"] === quandCourt(CX_TEST.derniere) && Th["Dernière connexion"] === quandCourt(CX_THOMAS.derniere) && COURT.test(T["Dernière connexion"]) && absents[0] && norm(notePr.t) === "Les prospects sont dans Prospects → (" + NB_PR + " comptes gratuits)." && notePr.lien === "#/prospects" && !notePr.cache && Le["Dernière connexion"] === quandCoach(CX_LEA.derniere), JSON.stringify([T["Dernière connexion"], Th["Dernière connexion"], absents, notePr, Le["Dernière connexion"]]));
+      const nbP = [await texte(xp.page, "#lc-prospects #lc-compte"), (await texte(xp.page, "#pr-vue .pr-detail .lede")).split(" · ")[0]];
+      ok("A : date courte à l'heure du coach : compte de test « " + quandCourt(CX_TEST.derniere) + " », Thomas « " + quandCourt(CX_THOMAS.derniere) + " » ; Léa (prospecte) n'est plus dans le tableau ; v83 : plus de ligne « Les prospects sont dans Prospects → », « " + NB_PR + " prospects » sur la page Prospects ; sa carte Prospects garde la date longue « " + quandCoach(CX_LEA.derniere) + " »",
+        T["Dernière connexion"] === quandCourt(CX_TEST.derniere) && Th["Dernière connexion"] === quandCourt(CX_THOMAS.derniere) && COURT.test(T["Dernière connexion"]) && absents[0] && NB_PR === 8 && sansNote && notePr.t === undefined && JSON.stringify(nbP) === JSON.stringify([NB_PR + " prospects", NB_PR + " comptes gratuits"]) && Le["Dernière connexion"] === quandCoach(CX_LEA.derniere), JSON.stringify([T["Dernière connexion"], Th["Dernière connexion"], absents, notePr, sansNote, nbP, Le["Dernière connexion"]]));
       ok("A : nombres et « aucune » inchangés (12, 5 ; sur leurs cartes Prospects : Léa 3, Marc « 0 » et « aucune »), info-bulle inchangée", T["Connexions"] === "12" && Th["Connexions"] === "5" && Le["Connexions"] === "3" && Ma["Connexions"] === "0" && Ma["Dernière connexion"] === "aucune" && absents[1] && (await titre(page, TESTEUR.id, "Connexions")) === "Une connexion par jour au plus, comptées depuis le " + jourCoach(CX_TEST.premiere), JSON.stringify([T["Connexions"], Th["Connexions"], Le["Connexions"], Ma]));
     }
     const g0 = await geo(page, [TESTEUR.id, F.IDS.c1], 0);

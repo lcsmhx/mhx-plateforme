@@ -56,7 +56,8 @@
    N. navigation du prospect (barre du bas, « Plus », ordre des onglets, #/journal verrouillé et compté, Speed Formation
       ouverte au 30e jour), Ma progression sans photos, plus aucun « 7 jours » (FR et EN) ;
    O. coach : « inscrit depuis n j » (fiche, suivi, cartes, CSV ; v71 (D) : plus de ligne ni de pastille de prospect dans Mes
-      clients, la ligne sous le titre renvoie à Prospects).
+      clients, la ligne sous le titre renvoie à Prospects ; v83 (bloc 3) : cette ligne n'existe plus, l'onglet Prospects et le
+      nombre sur la page Prospects la remplacent).
    Lot E (v52) :
    E1. pages verrouillées du prospect avec un exemple générique marqué « Exemple » (programme, nutrition, journal — le
       vrai onglet du lot D —, suivi), puis l'appel « Tu veux un programme construit pour toi… » et « Réserver mon bilan »
@@ -476,8 +477,11 @@ async function ficheDe(page, uid, nom, sel){
   await page.evaluate(([id, n]) => Clients.ouvrir(id, n, "accueil"), [uid, nom]);
   await page.waitForSelector(sel || "#fiche-reponses", { timeout: 8000 });
 }
-/* v71 (D) : la ligne sous le titre de Mes clients, « Les prospects sont dans Prospects → (N compte(s) gratuit(s)). » : { t, href, visible } */
-const ligneProspects = async page => { const r = await page.$eval("#clients-prospects", e => { const a = e.querySelector("a.link-a"); return { t: e.textContent, href: a ? a.getAttribute("href") : "", visible: !e.hidden }; }).catch(() => null); return r ? { t: norm(r.t), href: r.href, visible: r.visible } : { t: "", href: "", visible: false }; };
+/* v71 (D) : la ligne sous le titre de Mes clients, « Les prospects sont dans Prospects → (N compte(s) gratuit(s)). » : { t, href, visible }
+   v83 (bloc 3) : cette ligne (#clients-prospects) est SUPPRIMÉE (décision 7 de Lucas : on passe de Clients à Prospects par la
+   barre du bas) : { absente, onglets } — onglets : les adresses de l'onglet Prospects de la navigation (#nav et #barre-bas) */
+const ligneProspects = page => page.evaluate(() => ({ absente: !document.getElementById("clients-prospects"),
+  onglets: [...document.querySelectorAll('#nav a[data-id="prospects"], #barre-bas a[data-id="prospects"]')].map(a => a.getAttribute("href")) })).catch(() => ({ absente: false, onglets: [] }));
 const valeurDe = (page, sel) => page.$eval(sel, e => e.value).catch(() => null);
 /* les écritures de données, hors compteur de visites du prospect (clé activite, écrite au plus une fois par minute) */
 const saisies = db => ecrDonnees(db).filter(e => e.outil !== "activite");
@@ -1491,12 +1495,17 @@ function lienOk(href, base, attendu){
        le titre renvoie à Prospects ; « inscrit depuis 30 j » se lit dans la fiche (ci-dessous), « inscrit le … » sur les cartes */
     const dansTb = await page.$$eval("#tb-clients [data-ouvrir]", l => l.map(e => e.dataset.ouvrir)).catch(() => []);
     const tbTexte = await texte(page, "#tb-clients"), lp = await ligneProspects(page);
-    ok("Mes clients (v71) : ni Léa, ni Zoé, ni Paul dans « Suivi de mes clients » (les clients y sont ; aucune pastille « Découverte · inscrit… »), « Les prospects sont dans Prospects → (3 comptes gratuits). » (lien #/prospects, ligne visible)", dansTb.includes(F.IDS.c1) && ![PID(30), PID(31), PID(32)].some(id => dansTb.includes(id)) && !/Léa Ancienne|Zoé Récente|Paul Dujour|Découverte · inscrit/.test(tbTexte) && lp.t === "Les prospects sont dans Prospects → (3 comptes gratuits)." && lp.href === "#/prospects" && lp.visible, JSON.stringify([dansTb, lp]) + " · " + tbTexte.slice(0, 160));
+    /* v83 (bloc 3) : la ligne « Les prospects sont dans Prospects → (3 comptes gratuits). » n'existe plus (décision 7) : on passe
+       par l'onglet Prospects de la navigation, et le nombre se lit sur la page Prospects (« 3 prospects », « 3 comptes gratuits · … ») */
+    await aller(page, "#/prospects", 2400);
+    const nbP = { compte: await texte(page, "#lc-prospects #lc-compte"), lede: await texte(page, "#vue .masthead.pr-detail .lede") };
+    await aller(page, "#/clients", 600); await pret(page, "#tb-clients [data-ouvrir]"); await attendre(page, 600);
+    ok("Mes clients (v71) : ni Léa, ni Zoé, ni Paul dans « Suivi de mes clients » (les clients y sont ; aucune pastille « Découverte · inscrit… ») ; v83 (bloc 3) : plus de ligne « Les prospects sont dans Prospects → » (décision 7), l'onglet Prospects (#/prospects) dans la navigation, « 3 prospects » et « 3 comptes gratuits · … » sur la page Prospects", dansTb.includes(F.IDS.c1) && ![PID(30), PID(31), PID(32)].some(id => dansTb.includes(id)) && !/Léa Ancienne|Zoé Récente|Paul Dujour|Découverte · inscrit/.test(tbTexte) && lp.absente && lp.onglets.length === 2 && lp.onglets.every(h => h === "#/prospects") && nbP.compte === "3 prospects" && /^3 comptes gratuits · \d+ à traiter$/.test(nbP.lede), JSON.stringify([dansTb, lp, nbP]) + " · " + tbTexte.slice(0, 160));
     const vc = await texte(page, "#vue");
     ok("Mes clients : plus aucun « J n/7 » ni « Découverte terminée »", !/J\d+\/7|Découverte terminée|terminée/.test(vc), (vc.match(/J\d+\/7|terminée/) || [""])[0]);
     await ficheDe(page, PID(30), "Léa Ancienne", "#fiche-decouverte"); await attendre(page, 800);   // v71 (D) : par Clients.ouvrir
     /* le bloc « Suivi commercial » (raisons, action : « découverte terminée ») part avec le score et la température (chantier 4) */
-    const fd = await texte(page, "#fiche-decouverte"), lede = await texte(page, "#vue .masthead .lede");
+    const fd = await texte(page, "#fiche-decouverte"), lede = await texte(page, "#fc-suivi .fc-lede");   /* v83 (bloc 3) : la phrase d'en-tête de la fiche est en haut de l'onglet Suivi (p.lede.fc-lede), plus dans le masthead */
     ok("fiche : « inscrit depuis 30 j » (pastille et ligne du bloc Découverte, en-tête), plus de « jour n / 7 » ni de « terminée »", fd.includes("inscrit depuis 30 j") && lede.includes("Découverte : inscrit depuis 30 j, questionnaire rempli.") && !/jour \d+ ?\/ ?7|J\d+\/7|terminée/i.test(fd + " " + lede), fd.slice(0, 200) + " · " + lede);
     await aller(page, "#/prospects", 2400);
     await page.click('[data-filtre="tous"]').catch(() => {}); await attendre(page, 600);

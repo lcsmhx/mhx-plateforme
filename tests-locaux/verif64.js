@@ -19,6 +19,7 @@
    C. tableau de bord : « À traiter maintenant » (5 lignes au plus) dans l'ordre 😞 (compte de test), signé, case, absent,
       clic, nouveau, urgence d'un client (Julien), bilan à conclure, « Perdu » à relancer ; badge de la tuile Prospects =
       la liste de la page Prospects (même définition) ; « Ouvrir » sur un bilan à conclure : sa fiche, Signé / Perdu / Absent ;
+      v83 (bloc 3) : « N urgences aujourd'hui. » remplacé par la tuile « À traiter » (le même nombre) ;
    D. fiche d'un Absent qui reprend un créneau : « Bilan réservé (nouveau créneau) » en un clic, sans fenêtre, une écriture
       EXACTE (issue et historique gardés), de nouveau en cours (« Prépare le bilan ») ; la tuile des Absents le garde ;
       « Retirer » le remet Absent ; un Signé n'a pas ce bouton ; un Perdu : le même bouton, la même écriture exacte ;
@@ -35,7 +36,7 @@
       « réservé le … » ni « à vérifier » contraires au motif) ; sans issue : inchangés ; v59 (relecture) : de même
       Nouveautés et le badge de l'onglet Prospects ; v71 (D) : Mes clients ne liste plus les prospects (« Les prospects sont
       dans Prospects → (N comptes gratuits). », lien), le fait « Bilan » de leur carte Prospects tient lieu de l'info-bulle
-      de leur ligne ;
+      de leur ligne ; v83 (bloc 3) : cette ligne est supprimée, le nombre se lit sur la page Prospects ;
    Z. aucun appel vers l'extérieur.
    Infrastructure (serveur, faux Supabase, personnes, décor) reprise de verif58 : rien ne part vers la vraie base (routage
    par NOM D'HÔTE) ; règles de la base reproduites ; chaque écriture appliquée en mémoire et notée, avec sa condition maj_le.
@@ -378,6 +379,10 @@ const titreBilan = (page, uid) => page.$$eval(`#pr-liste .sc-carte[data-uid="${u
    l'info-bulle « bilan réservé » de la ligne d'un prospect dans Mes clients (Decouverte.pastilleCoach : plus de ligne) */
 const faits = (page, uid) => page.$eval(`#pr-liste .sc-carte[data-uid="${uid}"]`, e => { const o = {}; e.querySelectorAll(".sc-faits li").forEach(li => { const n = x => ((x || {}).textContent || "").replace(/[  ]/g, " ").replace(/\s+/g, " ").trim(); o[n(li.querySelector("span"))] = n(li.querySelector("b")); }); return o; }).catch(() => ({}));
 /* v71 (D) : la ligne sous le titre de Mes clients, « Les prospects sont dans Prospects → (N compte(s) gratuit(s)). » : { t, href } */
+/* v83 (bloc 3) : le nombre de la tuile « À traiter » du tableau de bord (à la place de « N urgences aujourd'hui. ») ; la ligne
+   « Les prospects sont dans Prospects → » est supprimée de Mes clients : le nombre de prospects se lit sur la page Prospects */
+const traiterTb = page => texte(page, "#tb-t-traiter .t-val");
+const nbProspects = async page => [await texte(page, "#lc-prospects #lc-compte"), (await texte(page, "#pr-vue .pr-detail .lede")).split(" · ")[0]];
 const ligneProspects = async page => { const r = await page.$eval("#clients-prospects", e => { const a = e.querySelector("a.link-a"); return { t: e.textContent, href: a ? a.getAttribute("href") : "" }; }).catch(() => null); return r ? { t: norm(r.t), href: r.href } : { t: "", href: "" }; };
 const boutonsCarte = (page, uid) => page.$$eval(`#pr-liste .sc-carte[data-uid="${uid}"] [data-sc]`, l => l.map(e => e.dataset.sc)).catch(() => []);
 const boutonsFiche = page => page.$$eval("#fiche-commercial [data-sc]", l => l.map(e => e.dataset.sc + "=" + e.textContent.trim())).catch(() => []);
@@ -631,8 +636,9 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
     const db = decor({ test: false, comptes: [P.alice(), P.marc(), P.bruno(), P.victor(), P.omar(), P.hugo(), P.paul()], sans: [F.IDS.c1, F.IDS.c2] });
     const { page } = await coachSur(b, db, "#/tableau", "#tb-vue .tb-tiles");
     const tp = await tuileTb(page, "tb-t-prospects"), L = await aTraiterTb(page);
-    ok("C : tuile Prospects 7, badge « 4 urgences » en couleur (Alice, Marc, Bruno, Victor) ; « 5 urgences aujourd'hui. » (avec Julien)",
-      tp && tp.val === "7" && tp.badge === "4 urgences" && /mauvais/.test(tp.cls) && (await texte(page, "#tb-vue .lede")) === "5 urgences aujourd'hui.", JSON.stringify(tp) + " " + await texte(page, "#tb-vue .lede"));
+    /* v83 (bloc 3) : « 5 urgences aujourd'hui. » → la tuile « À traiter » (5) */
+    ok("C : tuile Prospects 7, badge « 4 urgences » en couleur (Alice, Marc, Bruno, Victor) ; tuile « À traiter » 5 (avec Julien)",
+      tp && tp.val === "7" && tp.badge === "4 urgences" && /mauvais/.test(tp.cls) && (await traiterTb(page)) === "5", JSON.stringify(tp) + " " + await traiterTb(page));
     ok("C : « À traiter maintenant » : 5 lignes, Alice (absent), Marc (nouveau), Julien (urgence d'un client), puis Bruno (bilan à conclure) et Victor (« Perdu » à relancer)",
       egal(L.map(x => x.uid), [ALICE, MARC, F.IDS.c3, BRUNO, VICTOR]), noms(L.map(x => x.uid)));
     ok("C : textes : « Absent à l'appel : repropose-lui un créneau », « Inscrit il y a 10 h : DM de bienvenue », « Bilan réservé depuis 9 j : l'appel a-t-il eu lieu ? », « Perdu depuis 31 j : relance-le » ; pas de « Et … autres »",
@@ -654,8 +660,9 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
     const db = decor({ comptes: [P.zoe(), P.ines(), P.alice(), P.lea(), P.marc(), P.bruno(), P.victor(), P.omar()], sans: [F.IDS.c1, F.IDS.c2] });
     const { page } = await coachSur(b, db, "#/tableau", "#tb-a-traiter");
     const tc = await tuileTb(page, "tb-t-clients"), tp = await tuileTb(page, "tb-t-prospects"), L = await aTraiterTb(page);
-    ok("C : Clients « 2 urgences » (compte de test, Julien), Prospects 8 « 7 urgences » ; « 9 urgences aujourd'hui. »",
-      tc && tc.badge === "2 urgences" && tp && tp.val === "8" && tp.badge === "7 urgences" && (await texte(page, "#tb-vue .lede")) === "9 urgences aujourd'hui.", JSON.stringify([tc, tp]));
+    /* v83 (bloc 3) : « 9 urgences aujourd'hui. » → la tuile « À traiter » (9) */
+    ok("C : Clients « 2 urgences » (compte de test, Julien), Prospects 8 « 7 urgences » ; tuile « À traiter » 9",
+      tc && tc.badge === "2 urgences" && tp && tp.val === "8" && tp.badge === "7 urgences" && (await traiterTb(page)) === "9", JSON.stringify([tc, tp, await traiterTb(page)]));
     ok("C : 5 lignes : le 😞 du compte de test (« Sans nom », vers Préparer le call), Zoé (signé), Inès (case), Alice (absent), Léa (clic) ; « Et 4 autres »",
       egal(L.map(x => x.uid), [TESTEUR.id, ZOE, INES, ALICE, LEA]) && L[0].t.includes("Sans nom") && L[0].t.includes("😞") && L[0].cible === "bilan" && L[3].t.includes("Absent à l'appel : repropose-lui un créneau") && (await texte(page, "#tb-a-traiter")).includes("Et 4 autres : Mes clients → · Prospects →"),
       noms(L.map(x => x.uid)) + " " + await texte(page, "#tb-a-traiter"));
@@ -865,11 +872,13 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
        disait l'info-bulle « bilan réservé » de leur ligne (v59, Decouverte.pastilleCoach) se lit sur leur carte Prospects, fait
        « Bilan », valeur exacte (la page est encore sur Prospects, filtre « Tous ») ; puis Mes clients : aucun des 4, la ligne */
     const fb = {}; for (const [k, u] of [["Alice", ALICE], ["Sara", SARA], ["Tina", TINA], ["Hugo", HUGO]]) fb[k] = (await faits(page, u)).Bilan;
+    const nbP = await nbProspects(page);   /* v83 (bloc 3) : le nombre de prospects, sur la page Prospects */
     await aller(page, "#/clients", 300); await page.waitForSelector("#tb-clients [data-ouvrir]", { timeout: 8000 }); await attendre(page, 500);
     const lp = await ligneProspects(page), dansTb = !!(await page.$([ALICE, SARA, TINA, HUGO].map(u => `#tb-clients [data-ouvrir="${u}"]`).join(", ")));
-    ok("H : Mes clients (v71) : ni Alice, Sara, Tina ni Hugo dans « Suivi de mes clients », « Les prospects sont dans Prospects → (4 comptes gratuits). » (lien #/prospects) ; cartes Prospects, fait « Bilan » : Sara « à vérifier (case cochée le " + frL(avant(20 * H)) + ") » (plus « réservé le »), Alice « coché le " + frL(MIDI(5)) + ", avant l'appel », Tina « case cochée le " + frL(avant(6 * J)) + ", avant l'appel », Hugo inchangé (« réservé le " + frL(MIDI(1)) + " »)",
-      !dansTb && lp.t === "Les prospects sont dans Prospects → (4 comptes gratuits)." && lp.href === "#/prospects" && fb.Sara === "à vérifier (case cochée le " + frL(avant(20 * H)) + ")" && fb.Alice === "coché le " + frL(MIDI(5)) + ", avant l'appel" && fb.Tina === "case cochée le " + frL(avant(6 * J)) + ", avant l'appel" && fb.Hugo === "réservé le " + frL(MIDI(1)),
-      JSON.stringify([dansTb, lp, fb]));
+    const sansNote = !(await page.$("#clients-prospects")) && !!(await page.$("#lc-clients"));   /* v83 (bloc 3) : la ligne vers Prospects n'existe plus */
+    ok("H : Mes clients (v71) : ni Alice, Sara, Tina ni Hugo dans « Suivi de mes clients » ; v83 : plus de ligne « Les prospects sont dans Prospects → », « 4 prospects » sur la page Prospects ; cartes Prospects, fait « Bilan » : Sara « à vérifier (case cochée le " + frL(avant(20 * H)) + ") » (plus « réservé le »), Alice « coché le " + frL(MIDI(5)) + ", avant l'appel », Tina « case cochée le " + frL(avant(6 * J)) + ", avant l'appel », Hugo inchangé (« réservé le " + frL(MIDI(1)) + " »)",
+      !dansTb && lp.t === "" && lp.href === "" && sansNote && egal(nbP, ["4 prospects", "4 comptes gratuits"]) && fb.Sara === "à vérifier (case cochée le " + frL(avant(20 * H)) + ")" && fb.Alice === "coché le " + frL(MIDI(5)) + ", avant l'appel" && fb.Tina === "case cochée le " + frL(avant(6 * J)) + ", avant l'appel" && fb.Hugo === "réservé le " + frL(MIDI(1)),
+      JSON.stringify([dansTb, lp, sansNote, nbP, fb]));
     await ficheDe(page, ALICE, "Alice Absente", "#fiche-decouverte");
     const da = await valeurFiche(page, "#fiche-decouverte", "Bilan réservé");
     await ficheDe(page, TINA, "Tina Reclic", "#fiche-decouverte");

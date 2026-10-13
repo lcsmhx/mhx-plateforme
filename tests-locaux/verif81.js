@@ -1,6 +1,6 @@
 /* v72 — côté coach : « Nouveaux depuis ta dernière visite » (sujet E) et la source des inscrits (sujet F, côté coach).
    E. Tableau de bord du coach :
-     E1  première visite (aucune clé coach_visite) : le panneau en haut (entre l'en-tête et les tuiles), « Première visite
+     E1  première visite (aucune clé coach_visite) : le panneau (v83 : sous l'en-tête, les 3 tuiles et « À traiter maintenant »), « Première visite
          enregistrée : les inscrits des 7 derniers jours. », les prospects de moins de 7 jours du plus récent au plus ancien
          (prénom, « inscrit le jj/mm à hh:mm », numéro, Appeler / WhatsApp ou « — »), jamais un client ; UNE écriture, du
          coach chez lui-même, exactement { le, jusqua (inscription la plus récente), avant: null, avant_le: null } ;
@@ -10,7 +10,7 @@
          apparaît (rechargement) ; une écriture { le, jusqua, avant = jusqua d'avant, avant_le = le d'avant } ;
      E4  visite des données fictives (récente) : aucune écriture ; une clé piégée est ignorée (première visite) ;
      E5  plus de 10 nouveaux : 10 lignes et « Et N autres : Prospects → » (ouvre Prospects sur « Tous ») ; 320 px ; prénom
-         piégé échappé ; deux tuiles toujours, aucun bouton « Ouvrir » dans le panneau ;
+         piégé échappé ; trois tuiles toujours (v83 : deux avant), aucun bouton « Ouvrir » dans le panneau ;
      E6  Mes clients, Prospects, fiche : aucune écriture de visite ; Prospects triés du plus récent au plus ancien par défaut.
    Supabase simulé (gabarit de verif70 / verif80) : rien ne part vers la vraie base ; chaque écriture est notée. Comptes et
    numéros fictifs. Chaque bloc tourne à part (« ✗ BLOC INTERROMPU ») ; code de sortie 1 dès qu'un ✗ apparaît.
@@ -218,13 +218,14 @@ const visites = db => ecr(db, "coach_visite");
 /* le panneau tel qu'affiché */
 const panneau = page => page.evaluate(() => {
   const s = document.getElementById("tb-nouveaux"); if (!s) return null;
-  const head = document.querySelector("#tb-vue header.masthead"), tuiles = document.querySelector("#tb-vue .tb-tiles");
+  /* v83 (bloc 3) : ordre du tableau de bord = en-tête, tuiles, « À traiter maintenant » (#tb-a-traiter), puis ce panneau */
+  const head = document.querySelector("#tb-vue header.masthead"), tuiles = document.querySelector("#tb-vue .tb-tiles"), aTraiter = document.getElementById("tb-a-traiter");
   return { h2: (s.querySelector("h2") || {}).textContent, note: ((s.querySelector("p.note") || {}).textContent || "").replace(/[  ]/g, " ").trim(),
     vide: ((s.querySelector("p.empty") || {}).textContent || "").trim(),
     lignes: Array.from(s.querySelectorAll(".tb-liste li")).map(li => ({ prenom: (li.querySelector("b") || {}).textContent, quand: ((li.querySelector("small") || {}).textContent || "").trim(),
       tel: ((li.querySelector(".tb-nv-tel") || {}).textContent || "").replace(/\s+/g, " ").trim(), liens: Array.from(li.querySelectorAll("a")).map(a => a.getAttribute("href")) })),
     autres: ((s.querySelector("[data-tb-tous]") || {}).textContent || "").trim(), autresTexte: ((s.querySelector("[data-tb-tous]") || { parentNode: {} }).parentNode.textContent || "").replace(/\s+/g, " ").trim(),
-    ordre: !!(head && tuiles && (head.compareDocumentPosition(s) & Node.DOCUMENT_POSITION_FOLLOWING) && (s.compareDocumentPosition(tuiles) & Node.DOCUMENT_POSITION_FOLLOWING)),
+    ordre: !!(head && tuiles && aTraiter && (head.compareDocumentPosition(tuiles) & Node.DOCUMENT_POSITION_FOLLOWING) && (tuiles.compareDocumentPosition(aTraiter) & Node.DOCUMENT_POSITION_FOLLOWING) && (aTraiter.compareDocumentPosition(s) & Node.DOCUMENT_POSITION_FOLLOWING)),
     nTuiles: document.querySelectorAll("#tb-vue .tb-tuile").length, ouvrir: s.querySelectorAll("[data-fiche], button").length, img: !!s.querySelector("img"),
     sw: document.documentElement.scrollWidth, iw: window.innerWidth };
 });
@@ -242,8 +243,9 @@ const PREMIERE = "Première visite enregistrée : les inscrits des 7 derniers jo
     const t1 = Date.now();
     await page.goto(URL0); await pret(page); await page.waitForSelector("#tb-nouveaux"); await attendre(page, 600);
     const p1 = await panneau(page), V1 = visites(db);
-    ok("E1 : première visite : « Nouveaux depuis ta dernière visite » en haut du tableau de bord (entre l'en-tête et les tuiles, deux tuiles toujours, aucun bouton « Ouvrir »), « " + PREMIERE + " »",
-      !!p1 && p1.h2 === H2 && p1.note === PREMIERE && p1.ordre && p1.nTuiles === 2 && p1.ouvrir === 0, JSON.stringify(p1));
+    /* v83 (bloc 3) : le panneau est maintenant sous l'en-tête, les tuiles et « À traiter maintenant » ; 3 tuiles (Clients, À traiter, Prospects) au lieu de 2 */
+    ok("E1 : première visite : « Nouveaux depuis ta dernière visite » sur le tableau de bord (après l'en-tête, les tuiles et « À traiter maintenant », trois tuiles toujours, aucun bouton « Ouvrir »), « " + PREMIERE + " »",
+      !!p1 && p1.h2 === H2 && p1.note === PREMIERE && p1.ordre && p1.nTuiles === 3 && p1.ouvrir === 0, JSON.stringify(p1));
     ok("E1 : les prospects inscrits depuis moins de 7 jours, du plus récent au plus ancien (Zoé il y a 2 h, Hugo il y a 3 j ; pas Ana, 10 j ; jamais un client) : prénom, « inscrit le jj/mm à hh:mm », numéro + Appeler / WhatsApp (Zoé) ou « — » (Hugo)",
       !!p1 && JSON.stringify(p1.lignes.map(l => l.prenom)) === '["Zoé","Hugo"]' && p1.lignes[0].quand === "inscrit le " + quand(avant(2 * H)) && p1.lignes[1].quand === "inscrit le " + quand(avant(3 * J))
         && p1.lignes[0].tel === TEL_ZOE + " Appeler WhatsApp" && JSON.stringify(p1.lignes[0].liens) === JSON.stringify(["tel:" + TEL_ZOE, "https://wa.me/33639980011"]) && p1.lignes[1].tel === "—" && !p1.lignes[1].liens.length,
@@ -348,10 +350,14 @@ const PREMIERE = "Première visite enregistrée : les inscrits des 7 derniers jo
     const c = await page.evaluate(ids => ids.map(id => { const x = document.querySelector('.sc-carte[data-uid="' + id + '"] .sc-source'); return x ? x.textContent.replace(/\s+/g, " ").trim() : null; }), [ZOE, HUGO, PID(43)]);
     ok("F : cartes Prospects : « Source : insta » (Zoé), « Source : — » (Hugo, sans code ; code piégé : « — », aucune balise)", JSON.stringify(c) === JSON.stringify(["Source : insta", "Source : —", "Source : —"]), JSON.stringify(c));
     await page.evaluate(id => Clients.ouvrir(id, "Zoé Martin", "accueil"), ZOE); await attendre(page, 2000);
-    const f1 = await page.evaluate(() => (document.getElementById("fiche-source") || {}).textContent);
+    /* v83 (bloc 3) : #fiche-source est maintenant la VALEUR (le code seul) de la ligne « Source » de #fc-infos (onglet Compte) ;
+       on relit l'étiquette de sa ligne et on recompose « Source : <valeur> » (même texte attendu qu'avant) */
+    const srcFiche = () => { const x = document.getElementById("fiche-source"), li = x && x.closest("#fc-infos li"), lbl = li && li.querySelector(":scope > span");
+      return x && lbl ? lbl.textContent.trim() + " : " + x.textContent.trim() : undefined; };
+    const f1 = await page.evaluate(srcFiche);
     await page.evaluate(id => Clients.ouvrir(id, "Thomas Démo", "accueil"), F.IDS.c1); await attendre(page, 2000);
-    const f2 = await page.evaluate(() => (document.getElementById("fiche-source") || {}).textContent);
-    ok("F : fiche : « Source : insta » (Zoé) ; « Source : — » (Thomas, sans code)", f1 === "Source : insta" && f2 === "Source : —", JSON.stringify({ f1, f2 }));
+    const f2 = await page.evaluate(srcFiche); /* v83 (bloc 3) : idem */
+    ok("F : fiche (onglet Compte, ligne Source) : « Source : insta » (Zoé) ; « Source : — » (Thomas, sans code)", f1 === "Source : insta" && f2 === "Source : —", JSON.stringify({ f1, f2 }));
     const d0 = base({ profils: [] }); d0.profils = d0.profils.filter(p => p.statut !== "prospect"); d0.donnees = d0.donnees.filter(d => d.outil !== "contact");
     const { page: p0 } = await contexte(b, d0, { qui: COACH, viewport: PETIT });
     await p0.goto(URL0); await pret(p0); await p0.waitForSelector("#tb-sources");

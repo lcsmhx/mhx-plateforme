@@ -5,6 +5,7 @@
       confirmation), avec un avatar neutre ;
    2. un compte qui n'a jamais rien saisi était compté « Sans nouvelles depuis
       10 jours ou plus » : il est classé à part (« Jamais rien saisi »).
+   v83 (bloc 3) : la fenêtre « Supprimer » d'un client s'ouvre depuis l'onglet Compte de sa fiche (plus depuis Comptes).
    Supabase simulé (aucun appel réel), toute écriture est journalisée.
    Usage : node verif43.js ../index.html                                          */
 const { chromium } = require("playwright"); const fs = require("fs"); const http = require("http"); const path = require("path");
@@ -110,14 +111,24 @@ const flagsDe = (page) => page.$$eval("#alertes-clients .flag", l => l.map(x => 
     ok("Comptes : « Sans nom » et « pas encore utilisé », sans identifiant", comptes.includes("Sans nom") && comptes.includes("pas encore utilisé") && !comptes.includes(MARQUE), comptes.slice(0, 200));
 
     /* --- fenêtres de Comptes : le nom y est « Sans nom » ; on annule, rien n'est écrit --- */
-    const rangee = await page.$(`#liste-clients .client-l:has-text("Sans nom")`);
+    let rangee = await page.$(`#liste-clients .client-l:has-text("Sans nom")`);
     ok("Comptes : la rangée du compte sans nom existe", !!rangee);
     if (rangee) {
-      await (await rangee.$(".suppr")).click(); await attendre(page, 500);
+      /* v83 (bloc 3) : dans Comptes, « Supprimer » (.suppr) n'existe plus que pour un compte d'équipe ; pour un client, la
+         suppression définitive est dans l'onglet Compte de sa fiche (#fc-supprimer), avec la même double confirmation. On
+         relève l'absence de .suppr sur la rangée, puis on ouvre la même fenêtre depuis la fiche (ouverte par son [data-ouvrir]),
+         on remet l'onglet Suivi et on revient sur Mes clients pour la suite (fenêtre de statut, toujours dans Comptes) */
+      const supprComptes = !!(await rangee.$(".suppr"));
+      await page.click(`[data-ouvrir="${N1}"]`); await page.waitForSelector("#fc-supprimer", { state: "attached" }).catch(() => {});
+      await page.click('[data-onglet="compte"]'); await attendre(page, 300);
+      await page.click("#fc-supprimer"); await attendre(page, 500);
       const corps = await texte(page, ".modale .corps");
-      ok("Comptes / Supprimer : la fenêtre parle de « Sans nom », plus de « ce compte »", corps.includes("le compte de Sans nom") && !corps.includes("ce compte") && !corps.includes(MARQUE), corps.slice(0, 160));
+      ok("Fiche, onglet Compte / Supprimer (v83 : plus dans Comptes pour un client) : la fenêtre parle de « Sans nom », plus de « ce compte »", !supprComptes && corps.includes("le compte de Sans nom") && !corps.includes("ce compte") && !corps.includes(MARQUE), "suppr dans Comptes : " + supprComptes + " · " + corps.slice(0, 160));
       await page.keyboard.press("Escape"); await attendre(page, 400);
-      ok("Comptes / Supprimer : Échap ferme la fenêtre", !(await page.$(".modale")));
+      ok("Fiche, onglet Compte / Supprimer : Échap ferme la fenêtre", !(await page.$(".modale")));
+      await page.click('[data-onglet="suivi"]'); await attendre(page, 200);   // v83 (bloc 3) : l'onglet choisi est gardé pour cette fiche
+      await page.evaluate(() => { location.hash = "#/clients"; }); await page.waitForSelector(`#liste-clients .client-l:has-text("Sans nom") .statut`).catch(() => {}); await attendre(page, 500);
+      rangee = await page.$(`#liste-clients .client-l:has-text("Sans nom")`);   // v83 (bloc 3) : Mes clients redessiné au retour
       await (await rangee.$(".statut")).click(); await attendre(page, 500);
       const corps2 = await texte(page, ".modale .corps");
       ok("Comptes / Repasser prospect : la fenêtre parle de « Sans nom »", corps2.includes("Repasser Sans nom en prospect"), corps2.slice(0, 160));

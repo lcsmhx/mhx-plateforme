@@ -852,7 +852,9 @@ const verrouVu = (page, id) => page.evaluate(id => {
     /* v71 (D) : Léa (prospecte) n'a plus de ligne ni de bouton « Ouvrir » dans Mes clients : on attend le tableau chargé (la ligne
        « Les prospects sont dans Prospects → » sous le titre), puis sa fiche s'ouvre par Clients.ouvrir (ce que faisait le bouton),
        avec le nom que portait le bouton (Clients.nom : prénom + nom) ; la suite attend #fiche-chrono comme avant */
-    await page.goto(URL0 + "#/clients"); await pret(page, "#clients-prospects:not([hidden])");
+    /* v83 (bloc 3) : la ligne « Les prospects sont dans Prospects → » (#clients-prospects) n'existe plus (décision 7) ; signal « page
+       chargée » équivalent : la liste du haut de Mes clients affichée avec son compte (#lc-clients #lc-compte, rendu après le chargement) */
+    await page.goto(URL0 + "#/clients"); await pret(page, "#lc-clients #lc-compte");
     const coachSeul = await page.evaluate(() => lienCalendly("accueil_haut"));
     await page.evaluate(([id, n]) => Clients.ouvrir(id, n, "accueil"), [ID, "Léa Martin"]); await page.waitForSelector("#fiche-chrono", { timeout: 8000 }); await attendre(page, 800);
     const chrono = await page.$$eval("#fiche-chrono ol.dc-chrono li span", l => l.map(x => x.textContent)).then(l => l.map(norm)).catch(() => []);

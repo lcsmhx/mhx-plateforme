@@ -871,11 +871,12 @@ const avecE = (t, e) => String(t).split("{e}").join(e);
     await bloc("G. creer-acces", async () => {
       const db = base(); db.captcha = "1x";
       const { page } = await contexte(b, db, { qui: COACH, viewport: LARGE });
-      await page.goto(URL0 + "#/clients"); await pret(page); await page.waitForSelector("#n-creer");
+      /* v83 (bloc 3) : « Créer un accès » n'est plus un panneau de #/clients mais l'écran #/clients/nouveau, ouvert par « + » (mêmes champs) */
+      await page.goto(URL0 + "#/clients"); await pret(page); await page.waitForSelector("#lc-clients [data-lc-plus]"); await page.click("#lc-clients [data-lc-plus]"); await pret(page); await page.waitForSelector("#acces-vue #n-creer");
       await page.fill("#n-prenom", "Nina"); await page.fill("#n-nom", "Démo"); await page.fill("#n-email", "nina@exemple.fr"); await page.fill("#n-mdp", "motdepasse83");
       await page.click("#n-creer"); await attendre(page, 1500);
       const f = db.fonctions[0] || {}, v = await page.evaluate(() => typeof window.turnstile + "," + !!document.querySelector(".co-captcha"));
-      ok("G : CAPTCHA allumé (clé et Supabase) — le coach crée un compte (Mes clients) : un seul appel creer-acces, corps exactement {email, motdepasse, prenom, nom, role} (aucun jeton), avec la session du coach ; aucun script ni élément du CAPTCHA, aucune connexion /token",
+      ok("G : CAPTCHA allumé (clé et Supabase) — le coach crée un compte (Créer un accès, « + » de Mes clients) : un seul appel creer-acces, corps exactement {email, motdepasse, prenom, nom, role} (aucun jeton), avec la session du coach ; aucun script ni élément du CAPTCHA, aucune connexion /token",
         db.fonctions.length === 1 && f.brut === JSON.stringify({ email: "nina@exemple.fr", motdepasse: "motdepasse83", prenom: "Nina", nom: "Démo", role: "client" }) && f.auth === "Bearer jeton-" + COACH.id
           && db.cf.length === 0 && v === "undefined,false" && db.bruts.token.length === 0,
         JSON.stringify({ f, cf: db.cf, v, token: db.bruts.token.length }));

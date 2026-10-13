@@ -15,7 +15,8 @@
    D. Mes clients : colonnes « Connexions » et « Dernière connexion » (v57 : juste après « Visite », date courte « 29/09 10:53 » ;
       verif62), nombre, date et heure (heure de l'appareil du coach), « 0 » / « aucune » pour un client jamais connecté depuis, info-bulle « comptées
       depuis le … », téléphone 390 px ; v71 (D) : plus de prospect dans ce tableau (la ligne sous le titre renvoie vers Prospects :
-      leurs connexions, même piégées ou indisponibles, se lisent sur leur carte) ;
+      leurs connexions, même piégées ou indisponibles, se lisent sur leur carte) ; v83 (bloc 3) : cette ligne est supprimée,
+      le nombre de prospects se lit sur la page Prospects (« 8 prospects », « 8 comptes gratuits ») ;
    E. page Prospects : les deux lignes dans chaque carte, la phrase d'aide ;
    F. rien côté client ni prospect : aucun texte du compteur, aucune lecture de la table ;
    G. l'interrupteur des visites (suivi_visites_clients) ne change rien au compteur : « tous » et « off », clients et
@@ -491,6 +492,11 @@ const dansTableau = (page, uid) => page.$$eval("#tb-clients [data-ouvrir]", l =>
 /* v71 (D) : la ligne sous le titre de Mes clients (« Les prospects sont dans Prospects → (N comptes gratuits). ») : texte, lien, visible */
 const noteProspects = page => page.$eval("#clients-prospects", e => ({ t: e.textContent, lien: !!e.querySelector('a[href="#/prospects"]'), visible: !e.hidden && e.offsetParent !== null })).then(o => Object.assign(o, { t: norm(o.t) })).catch(() => ({ t: "", lien: false, visible: false }));
 const NOTE_PROSPECTS = "Les prospects sont dans Prospects → (8 comptes gratuits).";   // le décor : 8 prospects (Karim est client)
+/* v83 (bloc 3) : la ligne NOTE_PROSPECTS est supprimée de Mes clients (décision 7) : elle n'existe plus (la liste du haut, elle,
+   est affichée) et le nombre de prospects se lit sur la page Prospects (#lc-compte et l'en-tête « N comptes gratuits · M à traiter ») */
+const NB_PROSPECTS = JSON.stringify(["8 prospects", "8 comptes gratuits"]);
+const sansNoteProspects = async page => !(await page.$("#clients-prospects")) && !!(await page.$("#lc-clients"));
+const nbProspects = async page => JSON.stringify([await texte(page, "#lc-prospects #lc-compte"), (await texte(page, "#pr-vue .pr-detail .lede")).split(" · ")[0]]);
 
 (async () => {
   await new Promise((r, k) => { server.once("error", e => k(new Error(e && e.code === "EADDRINUSE" ? "port " + PORT + " déjà pris (une autre suite tourne ?) : VERIF61_PORT=9771 node verif61.js ../index.html" : String(e)))); server.listen(PORT, r); });
@@ -628,8 +634,11 @@ const NOTE_PROSPECTS = "Les prospects sont dans Prospects → (8 comptes gratuit
     const { page: pc } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]");
     /* v71 (D) : Léa (prospecte) n'a plus de ligne dans Mes clients : l'info-bulle se lit sur le compte de test, ses « — » sur sa carte Prospects */
     const T = await ligneClient(pc, TESTEUR.id), np = await noteProspects(pc);
-    ok("C : coach, table absente : Mes clients s'affiche, « — » dans les deux colonnes (compte de test), info-bulle « indisponibles » ; Léa (prospecte) n'y est plus, « " + NOTE_PROSPECTS + " » (lien)", T["Connexions"] === "—" && T["Dernière connexion"] === "—" && /indisponibles/.test(await titre(pc, TESTEUR.id, "Connexions")) && (await dansTableau(pc, LEA)) === false && np.t === NOTE_PROSPECTS && np.lien && np.visible, JSON.stringify([T["Connexions"], T["Dernière connexion"], await dansTableau(pc, LEA), np]) + " " + (await titre(pc, TESTEUR.id, "Connexions")));
+    /* v83 (bloc 3) : tout est lu sur Mes clients, puis sur la page Prospects (le nombre de prospects, à la place de la ligne supprimée) */
+    const titreT = await titre(pc, TESTEUR.id, "Connexions"), leaT = await dansTableau(pc, LEA), sansNote = await sansNoteProspects(pc);
     await aller(pc, "#/prospects", 1800); await filtre(pc, "tous");
+    const nbP = await nbProspects(pc);
+    ok("C : coach, table absente : Mes clients s'affiche, « — » dans les deux colonnes (compte de test), info-bulle « indisponibles » ; Léa (prospecte) n'y est plus ; v83 : plus de ligne « Les prospects sont dans Prospects → », « 8 prospects » sur la page Prospects", T["Connexions"] === "—" && T["Dernière connexion"] === "—" && /indisponibles/.test(titreT) && leaT === false && np.t === "" && !np.lien && sansNote && nbP === NB_PROSPECTS, JSON.stringify([T["Connexions"], T["Dernière connexion"], leaT, np, sansNote]) + " " + nbP + " " + titreT);
     const fm = await faits(pc, MARC), fl = await faits(pc, LEA);
     ok("C : … la page Prospects s'affiche, cartes avec « Connexions — » et « Dernière connexion — » (Marc et Léa)", (await pc.$$("#pr-liste .sc-carte")).length > 0 && fm["Connexions"] === "—" && fm["Dernière connexion"] === "—" && fl["Connexions"] === "—" && fl["Dernière connexion"] === "—", JSON.stringify([fm, fl]));
   });
@@ -665,11 +674,11 @@ const NOTE_PROSPECTS = "Les prospects sont dans Prospects → (8 comptes gratuit
     /* v71 (D) : Léa et Marc (prospects) n'ont plus de ligne dans Mes clients ; leurs connexions se lisent sur leur carte Prospects,
        ouverte sur un second décor identique (la table de CE décor doit rester lue une seule fois, vérifié plus bas) ; l'info-bulle
        « Aucune connexion notée » (Mes clients seulement) se lit sur Karim, client sans ligne */
-    const Ka = await ligneClient(page, KARIM), np = await noteProspects(page), leaT = await dansTableau(page, LEA), marcT = await dansTableau(page, MARC);
+    const Ka = await ligneClient(page, KARIM), np = await noteProspects(page), leaT = await dansTableau(page, LEA), marcT = await dansTableau(page, MARC), sansNote = await sansNoteProspects(page);
     const db2 = avecLignes(decor());
     const { page: pp } = await coachSur(b, db2, "#/prospects", "#pr-liste", { fuseau: FUSEAU }); await filtre(pp, "tous");
-    const Le = await faits(pp, LEA), Ma = await faits(pp, MARC);
-    ok("D : prospects Léa et Marc : plus de ligne dans Mes clients, « " + NOTE_PROSPECTS + " » (lien) ; carte Prospects de Léa : « 3 » et " + quandCoach(CX_LEA.derniere) + " ; Marc (jamais connecté depuis) : « 0 » et « aucune »", leaT === false && marcT === false && np.t === NOTE_PROSPECTS && np.lien && np.visible && Le["Connexions"] === "3" && Le["Dernière connexion"] === quandCoach(CX_LEA.derniere) && Ma["Connexions"] === "0" && Ma["Dernière connexion"] === "aucune", JSON.stringify([leaT, marcT, np, Le["Connexions"], Le["Dernière connexion"], Ma["Connexions"], Ma["Dernière connexion"]]));
+    const Le = await faits(pp, LEA), Ma = await faits(pp, MARC), nbP = await nbProspects(pp);   /* v83 (bloc 3) : le nombre de prospects, sur la page Prospects */
+    ok("D : prospects Léa et Marc : plus de ligne dans Mes clients ; v83 : plus de ligne « Les prospects sont dans Prospects → », « 8 prospects » sur la page Prospects ; carte Prospects de Léa : « 3 » et " + quandCoach(CX_LEA.derniere) + " ; Marc (jamais connecté depuis) : « 0 » et « aucune »", leaT === false && marcT === false && np.t === "" && !np.lien && sansNote && nbP === NB_PROSPECTS && Le["Connexions"] === "3" && Le["Dernière connexion"] === quandCoach(CX_LEA.derniere) && Ma["Connexions"] === "0" && Ma["Dernière connexion"] === "aucune", JSON.stringify([leaT, marcT, np, sansNote, nbP, Le["Connexions"], Le["Dernière connexion"], Ma["Connexions"], Ma["Dernière connexion"]]));
     ok("D : Karim (client, jamais connecté depuis, sans ligne) : « 0 » et « aucune », info-bulle « Aucune connexion notée »", Ka["Connexions"] === "0" && Ka["Dernière connexion"] === "aucune" && /Aucune connexion notée/.test(await titre(page, KARIM, "Connexions")), JSON.stringify([Ka["Connexions"], Ka["Dernière connexion"]]) + " " + (await titre(page, KARIM, "Connexions")));
     ok("D : la phrase sous le tableau explique les deux colonnes", /« Connexions » : le nombre de jours où il a ouvert l'app connecté/.test(await texte(page, "#vue")) && /« Dernière connexion » : la date et l'heure/.test(await texte(page, "#vue")), "");
     ok("D : la table est lue une fois par le coach, sans écriture", db.cxLectures.length === 1 && db.cxLectures[0].par === COACH.id && db.cxLectures[0].m === "GET" && db.ecritures.length === 0, JSON.stringify(db.cxLectures) + " " + resume(db));

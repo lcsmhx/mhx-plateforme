@@ -242,8 +242,13 @@ const messageServeur = async page => { await page.waitForFunction(() => { const 
     const tbl = await page.$$eval("#tb-clients tr", trs => trs.map(tr => ({ t: tr.textContent.replace(/\s+/g, " ").trim(), feux: tr.querySelectorAll(".point").length, ouvrir: [...tr.querySelectorAll("[data-ouvrir]")].map(b => b.dataset.ouvrir) })));
     ok("mes clients (v71 D) : Léa (prospect) n'a plus de ligne dans #tb-clients (ni pastille « prospect », ni bouton Ouvrir [data-ouvrir]) ; les 3 clients Thomas, Sarah et Julien y sont, chacun avec son feu",
       !tbl.some(r => r.t.includes("Léa Démo")) && !tbl.some(r => r.ouvrir.includes(PROSPECT)) && !tbl.some(r => /\bprospect\b/.test(r.t)) && tbl.length === 3 && ["Thomas Démo", "Sarah Démo", "Julien Démo"].every(n => tbl.some(r => r.t.includes(n))) && tbl.every(r => r.feux === 1), JSON.stringify(tbl.map(r => r.t.slice(0, 40) + " · feux " + r.feux)));
-    const zp = await page.$eval("#clients-prospects", e => { const a = e.querySelector("a.link-a"); return { cache: e.hidden, t: e.textContent.replace(/\s+/g, " ").trim(), href: a ? a.getAttribute("href") : null }; }).catch(e => ({ erreur: String(e) }));
-    ok("mes clients (v71 D) : sous le titre, « Les prospects sont dans Prospects → (1 compte gratuit). » avec le lien a[href=\"#/prospects\"] (aucune alerte de suivi pour un prospect : il n'est plus dans ce tableau)", zp.cache === false && zp.t === "Les prospects sont dans Prospects → (1 compte gratuit)." && zp.href === "#/prospects", JSON.stringify(zp));
+    /* v83 (bloc 3, décision 7 de Lucas) : plus de lien « Les prospects sont dans Prospects → » sous le titre : on passe de Clients
+       à Prospects par la barre du bas seulement ; Léa n'est pas non plus dans la liste « Clients » du haut (ni dans Tous, ni
+       dans Archivés) ; le nombre de comptes gratuits est sur le Tableau de bord et la page Prospects */
+    const zp = await page.evaluate(id => ({ lien: !!document.getElementById("clients-prospects"), liste: Array.from(document.querySelectorAll("#lc-clients .lc-ligne")).map(x => x.dataset.uid),
+      compte: (document.getElementById("lc-compte") || {}).textContent, onglet: !!document.querySelector('#barre-bas a[data-id="prospects"][href="#/prospects"]') }), PROSPECT).catch(e => ({ erreur: String(e) }));
+    ok("mes clients (v83, décision 7) : plus de lien « Prospects → » en haut ; la liste « Clients » (3 clients) sans Léa ; l'onglet Prospects de la barre du bas mène à #/prospects (aucune alerte de suivi pour un prospect : il n'est plus dans ce tableau)",
+      zp.lien === false && zp.compte === "3 clients" && zp.liste.length === 3 && !zp.liste.includes(PROSPECT) && zp.onglet === true, JSON.stringify(zp));
     const encadres = (await page.textContent("#alertes-clients")).replace(/\s+/g, " ");
     ok("mes clients : le prospect n'est pas dans les encadrés « Sans nouvelles… » / « Il manque quelque chose… »", !encadres.includes("Léa Démo") && encadres.includes("Julien Démo"), encadres.slice(0, 300));
     const compteLea = await ligneCompte(page, "Léa Démo").textContent();
@@ -275,7 +280,7 @@ const messageServeur = async page => { await page.waitForFunction(() => { const 
     await aller(page, "#/clients", 1500);   // meme ancre #/accueil : il faut en sortir pour changer de fiche
     await page.evaluate(id => { Store.oublier(Store.idConsulte); Store.idConsulte = id; Store.nomConsulte = "Julien Démo"; location.hash = "#/accueil"; }, F.IDS.c3); await attendre(page, 1800);
     ok("fiche d'un client : alertes de suivi toujours là", await page.locator("#vue .attention-alertes").count() === 1);
-    await page.evaluate(() => { Store.oublier(Store.idConsulte); Store.idConsulte = null; Store.nomConsulte = null; location.hash = "#/clients"; }); await attendre(page, 1800);
+    await page.evaluate(() => { Store.oublier(Store.idConsulte); Store.idConsulte = null; Store.nomConsulte = null; location.hash = "#/clients/nouveau"; }); await attendre(page, 1800);   // v83 : Créer un accès est un écran à part (« + »)
     /* creation d'un acces : nait prospect en base, passe client tout de suite */
     await page.fill("#n-prenom", "Nina"); await page.fill("#n-nom", "Démo"); await page.fill("#n-email", "nina@exemple.fr"); await page.fill("#n-mdp", "motdepasse1");
     await page.click("#n-creer"); await attendre(page, 1500);
@@ -289,12 +294,13 @@ const messageServeur = async page => { await page.waitForFunction(() => { const 
     /* le passage en client echoue : le coach le sait */
     const db = base();
     const { c, page } = await contexte(b, coach, db, { patchKo: true });
-    await page.goto(`http://localhost:${PORT}/#/clients`); await attendre(page, 2000);
+    await page.goto(`http://localhost:${PORT}/#/clients/nouveau`); await attendre(page, 2000);   // v83 : Créer un accès est un écran à part (« + »)
     await page.fill("#n-prenom", "Nina"); await page.fill("#n-email", "nina@exemple.fr"); await page.fill("#n-mdp", "motdepasse1");
     await page.click("#n-creer"); await attendre(page, 1500);
     ok("créer un accès, statut refusé : message « encore prospect … Passer client »", (await page.textContent("#n-msg")).includes("encore « prospect »"));
     ok("créer un accès, statut refusé : une fenêtre le dit aussi (le message ne s'efface pas)", (await page.textContent(".modale").catch(() => "")).includes("encore « prospect »"));
     await page.click('.modale [data-ui-b]').catch(() => {}); await attendre(page, 300);
+    await aller(page, "#/clients", 2000);   // v83 : les Comptes sont sur la page Mes clients
     /* le bouton de statut qui echoue retrouve son libelle */
     await ligneCompte(page, "Léa Démo").locator(".statut").click(); await attendre(page, 300);
     await page.click('.modale [data-ui-b="1"]'); await attendre(page, 1000);
@@ -308,6 +314,7 @@ const messageServeur = async page => { await page.waitForFunction(() => { const 
     const db = base();
     const { c, page } = await contexte(b, coach, db, { listeKo: true });
     await page.goto(`http://localhost:${PORT}/#/clients`); await attendre(page, 2000);
+    await aller(page, "#/clients/nouveau", 1500);   // v83 : Créer un accès est un écran à part (« + »)
     await page.fill("#n-prenom", "Nina"); await page.fill("#n-email", "nina@exemple.fr"); await page.fill("#n-mdp", "motdepasse1");
     await page.click("#n-creer"); await attendre(page, 1500);
     ok("liste en panne : la création pose quand même le statut « client »", db.fonctions.length === 1 && db.patchs.some(x => x.id === NOUVEAU && x.corps.statut === "client") && db.profils.find(x => x.id === NOUVEAU).statut === "client", JSON.stringify(db.patchs));
@@ -317,7 +324,7 @@ const messageServeur = async page => { await page.waitForFunction(() => { const 
     /* acces d'equipe demande, mais la base ne l'a pas accorde : le coach le sait */
     const db = base();
     const { c, page } = await contexte(b, coach, db, { equipeRefusee: true });
-    await page.goto(`http://localhost:${PORT}/#/clients`); await attendre(page, 2000);
+    await page.goto(`http://localhost:${PORT}/#/clients/nouveau`); await attendre(page, 2000);   // v83 : Créer un accès est un écran à part (« + »)
     await page.fill("#n-prenom", "Eva"); await page.fill("#n-email", "eva@exemple.fr"); await page.fill("#n-mdp", "motdepasse1");
     await page.selectOption("#n-type", "coach"); await attendre(page, 200);
     await page.click("#n-creer"); await attendre(page, 500);
@@ -336,6 +343,7 @@ const messageServeur = async page => { await page.waitForFunction(() => { const 
     ok("sans colonne statut : tuile des prospects = 0", tSans.val === "0", JSON.stringify(tSans));
     await aller(page, "#/clients", 1800);
     ok("sans colonne statut : ni pastille ni bouton de statut", !(await page.textContent("#liste-clients")).includes("Passer client") && !(await page.textContent("#liste-clients")).includes("Repasser prospect"));
+    await aller(page, "#/clients/nouveau", 1500);   // v83 : Créer un accès est un écran à part (« + »)
     await page.fill("#n-prenom", "Nina"); await page.fill("#n-email", "nina@exemple.fr"); await page.fill("#n-mdp", "motdepasse1");
     await page.click("#n-creer"); await attendre(page, 1500);
     const msgSans = await page.textContent("#n-msg");

@@ -26,7 +26,7 @@
          d'écrit), le coach (aucune lecture de contact), réglage éteint (ni écran, ni numéro demandé par le parcours :
          CONFIG.marque.telephone_obligatoire, « false : plus aucune de ces deux demandes ») ;
      A6  Mon compte : numéro affiché et modifiable (ref et inscrit_le gardés), « C'est déjà ton numéro. », lecture ratée ;
-     A7  coach : colonne Téléphone de Mes clients, carte Prospects, en-tête de la fiche : le numéro, « Appeler » (tel:+…)
+     A7  coach : colonne Téléphone de Mes clients, carte Prospects, fiche (v83 : ligne Téléphone de l'onglet Compte) : le numéro, « Appeler » (tel:+…)
          et « WhatsApp » (wa.me, chiffres sans +) ; « — » sans numéro ou pour un numéro piégé ; le numéro n'est pas une
          « saisie » (Activité inchangée).
    Supabase simulé (gabarit de verif70) : rien ne part vers la vraie base (routage par NOM D'HÔTE) ; chaque écriture est
@@ -590,10 +590,15 @@ const champTel = (page, id) => page.evaluate(id => {
         && !!pr[1] && pr[1].t === "Téléphone : —" && !pr[1].liens.length && !!pr[2] && pr[2].t === "Téléphone : —" && !pr[2].liens.length && !pr[2].img,
       JSON.stringify(pr));
     await page.evaluate(id => Clients.ouvrir(id, "Noah Petit", "accueil"), NOAH.id); await attendre(page, 2000);
-    const f1 = await page.evaluate(() => { const x = document.getElementById("fiche-tel"); return x ? { t: x.textContent.replace(/\s+/g, " ").trim(), liens: Array.from(x.querySelectorAll("a")).map(a => a.getAttribute("href")) } : null; });
+    /* v83 (bloc 3) : #fiche-tel est maintenant la VALEUR de la ligne « Téléphone » de #fc-infos (onglet Compte de la fiche) ;
+       on relit l'étiquette de sa ligne et on recompose « Téléphone : <valeur> » (même texte attendu qu'avant) */
+    const f1 = await page.evaluate(() => { const x = document.getElementById("fiche-tel"), li = x && x.closest("#fc-infos li"), lbl = li && li.querySelector(":scope > span");
+      return x && lbl ? { t: lbl.textContent.replace(/\s+/g, " ").trim() + " : " + x.textContent.replace(/\s+/g, " ").trim(), liens: Array.from(x.querySelectorAll("a")).map(a => a.getAttribute("href")) } : null; });
     await page.evaluate(id => Clients.ouvrir(id, "Julien Démo", "accueil"), F.IDS.c3); await attendre(page, 2000);
-    const f2 = await page.evaluate(() => { const x = document.getElementById("fiche-tel"); return x ? x.textContent.replace(/\s+/g, " ").trim() : null; });
-    ok("A7 : fiche (en-tête) : prospect Noah « Téléphone : +33639980002 Appeler WhatsApp » ; client sans numéro « Téléphone : — »",
+    /* v83 (bloc 3) : idem, étiquette « Téléphone » de la ligne + valeur « — » */
+    const f2 = await page.evaluate(() => { const x = document.getElementById("fiche-tel"), li = x && x.closest("#fc-infos li"), lbl = li && li.querySelector(":scope > span");
+      return x && lbl ? lbl.textContent.replace(/\s+/g, " ").trim() + " : " + x.textContent.replace(/\s+/g, " ").trim() : null; });
+    ok("A7 : fiche (onglet Compte, ligne Téléphone) : prospect Noah « Téléphone : +33639980002 Appeler WhatsApp » ; client sans numéro « Téléphone : — »",
       !!f1 && f1.t === "Téléphone : " + TEL_NOAH + " Appeler WhatsApp" && JSON.stringify(f1.liens) === JSON.stringify(["tel:" + TEL_NOAH, "https://wa.me/33639980002"]) && f2 === "Téléphone : —",
       JSON.stringify({ f1, f2 }));
     ok("A7 : le coach n'a rien écrit", db.ecritures.length === 0, resume(db));

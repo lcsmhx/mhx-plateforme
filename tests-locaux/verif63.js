@@ -30,7 +30,7 @@
    F3. relecture qui ne répond pas (réseau bloqué) : le bilan du vendredi est sur l'appareil dès l'envoi ; l'app fermée
       puis rouverte, il arrive une seule fois ; F4. … au bout du délai maximum, il part quand même (comme en v48) ;
    G. inactivité (Q13-4) : un smiley ou fb_vu récents ne font pas disparaître « Inactif depuis N j » (Mes clients, fiche,
-      tableau de bord, Comptes) ; ancienne entrée sans envoye_a ; entrées à dates piégées (jamais « NaN ») ; de bout en
+      tableau de bord, Comptes ; v83 : sur la fiche, en haut de l'onglet Suivi) ; ancienne entrée sans envoye_a ; entrées à dates piégées (jamais « NaN ») ; de bout en
       bout (le compte de test ouvre Mon suivi, le coach voit toujours « 12 j ») ;
    H. remarque v53 c1 : les réponses de l'autre format d'une entrée (vendredi ↔ dimanche) restent affichées, client et
       coach, « Alimentation » une seule fois ; une entrée sans réponse de l'autre format : affichage d'avant ;
@@ -346,7 +346,8 @@ const heure = async (page, t) => { await page.clock.setSystemTime(t); };
 const ligneClient = (page, uid) => page.$eval(`#tb-clients [data-ouvrir="${uid}"]`, bt => { const o = {}; const tr = bt.closest("tr"); tr.querySelectorAll("td").forEach(td => { o[td.dataset.l || "_"] = td.textContent.replace(/[  ]/g, " ").replace(/\s+/g, " ").trim(); }); o._point = (tr.querySelector(".point") || {}).title || ""; return o; }).catch(() => ({}));
 /* la ligne d'un compte dans « Comptes » : { etat (actif / pas encore utilisé), meta } */
 const ligneCompte = (page, nom) => page.$$eval("#liste-clients .client-l", (l, n) => { const x = l.find(e => (e.querySelector(".nom") || {}).textContent.trim().startsWith(n)); if (!x) return null; const ps = Array.from(x.querySelectorAll(".pastille")).map(p => p.textContent.trim()); return { etats: ps, meta: (x.querySelector(".meta") || {}).textContent.trim() }; }, nom).catch(() => null);
-const alertesFiche = page => page.$$eval("#vue .masthead .attention-alertes .pastille", l => l.map(e => e.textContent.trim())).catch(() => []);
+/* v83 (bloc 3) : les pastilles d'alerte de la fiche ne sont plus dans l'en-tête (.masthead) mais en haut de l'onglet Suivi (#fc-suivi, ouvert par défaut) */
+const alertesFiche = page => page.$$eval("#vue #fc-suivi:not([hidden]) .attention-alertes .pastille", l => l.map(e => e.textContent.trim())).catch(() => []);
 const tuile = (page, lbl) => page.$$eval("#vue .tile", (l, t) => { const x = l.find(e => (e.querySelector(".t-lbl") || {}).textContent.trim() === t); return x ? { val: x.querySelector(".t-val").textContent.replace(/\s+/g, "").trim(), sub: x.querySelector(".t-sub").textContent.trim() } : null; }, lbl).catch(() => null);
 const aTraiterTb = page => page.$$eval("#tb-a-traiter .tb-liste li", l => l.map(li => li.textContent.replace(/[  ]/g, " ").replace(/\s+/g, " ").trim())).catch(() => []);
 /* les libellés « alimentation » (vendredi : la question ; dimanche : « Alimentation ») dans une zone */
@@ -748,7 +749,7 @@ const blocSemaine = (page, s) => page.evaluate(x => { const ed = document.queryS
     ok(`G : Comptes : Julien « dernière saisie : ${dJu} » ; Nina « pas encore utilisé », « dernière saisie : jamais »`, !!cJu && cJu.meta === "dernière saisie : " + dJu && !!cNi && cNi.etats.includes("pas encore utilisé") && cNi.meta === "dernière saisie : jamais", JSON.stringify([cJu, cNi]));
     await fiche(page, F.IDS.c3, "Julien Démo", "accueil", "#vue .masthead");
     const al = await alertesFiche(page), tu = await tuile(page, "Activité");
-    ok("G : fiche de Julien : « Inactif depuis 12 j » dans l'en-tête, tuile « Activité » 12 j", al.includes("Inactif depuis 12 j") && !!tu && tu.val === "12j" && tu.sub === "depuis sa dernière saisie", JSON.stringify([al, tu]));
+    ok("G : fiche de Julien : « Inactif depuis 12 j » en haut de l'onglet Suivi (v83), tuile « Activité » 12 j", al.includes("Inactif depuis 12 j") && !!tu && tu.val === "12j" && tu.sub === "depuis sa dernière saisie", JSON.stringify([al, tu]));
     await aller(page, "#/clients", 1500);
     await fiche(page, NINA, "Nina Piégée", "accueil", "#vue .masthead");
     const alN = await alertesFiche(page), tuN = await tuile(page, "Activité");

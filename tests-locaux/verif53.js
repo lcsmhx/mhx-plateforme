@@ -36,6 +36,8 @@
       11 minutes (horloge contrôlée), à la fermeture ni à la réouverture ;
    M. page de désinscription (desinscription.html) : v53, fonction supprimée (la fonction des emails de suivi v51, jamais
       déployée, et sa page de désinscription sont retirées) : bloc retiré (6 vérifications).
+   v83 (bloc 3) : badge des Nouveautés vérifié sur ses deux copies (#nav, #barre-bas) ; alertes de la fiche en haut de l'onglet
+   Suivi ; la ligne « Les prospects sont dans Prospects → » de Mes clients n'existe plus (nombre sur la tuile Prospects du tableau de bord).
    Supabase simulé : rien ne part vers la vraie base ; chaque écriture est appliquée en mémoire et notée, chaque lecture
    de « donnees » aussi ; réponses coupées à 1 000 lignes, en-tête Range et tri order= respectés. Dates relatives au
    lancement (la suite passe quel que soit le jour ou l'heure). Chaque bloc tourne à part (« ✗ BLOC INTERROMPU ») ;
@@ -244,6 +246,9 @@ const carte = (page, uid) => page.$eval(`#pr-liste .sc-carte[data-uid="${uid}"]`
 const filtre = async (page, f) => { await page.click(`[data-filtre="${f}"]`); await attendre(page, 350); };
 const chercher = async (page, v) => { await page.fill("#pr-q", v); await attendre(page, 550); };
 const badge = page => page.$$eval('#nav a[data-id="prospects"] .nav-badge, #barre-bas a[data-id="prospects"] .nav-badge', l => l.map(e => e.textContent.trim())).catch(() => []);
+/* v83 (bloc 3) : l'onglet Prospects est dans #nav ET dans #barre-bas : le badge des Nouveautés existe en double (une seule
+   copie visible selon la largeur) ; « badge N » = les DEUX copies affichent N */
+const badge2 = n => JSON.stringify([n, n]);
 const ecr = (db, outil, uid) => db.ecritures.filter(e => e.outil === outil && (!uid || e.user_id === uid));
 const contenu = (db, outil, uid) => (db.donnees.find(x => x.user_id === uid && x.outil === outil) || {}).contenu;
 /* la clé k fait-elle partie de ce qu'une lecture de « donnees » renvoie ? (eq., in., not.in., sans filtre) */
@@ -523,7 +528,12 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
        d'un prospect compte, ses emails non ; « Dernière visite » de la carte Prospects n'est pas cette donnée, elle ne lit que
        la clé activite) ; la fiche s'ouvre par Clients.ouvrir (modèle verif58), puis retour à Mes clients */
     const absents = await page.$$eval("#tb-clients [data-ouvrir]", (l, ids) => ids.filter(id => !l.some(e => e.dataset.ouvrir === id)), [PIA, REMI, EVA]).catch(() => []);
-    const lprosp = await page.$eval("#clients-prospects", e => { const a = e.querySelector("a.link-a"); return { t: e.textContent, href: a ? a.getAttribute("href") : "" }; }).then(r => ({ t: norm(r.t), href: r.href })).catch(() => ({ t: "", href: "" }));
+    /* v83 (bloc 3) : la ligne #clients-prospects « Les prospects sont dans Prospects → (N comptes gratuits). » est SUPPRIMÉE
+       (décision 7 de Lucas : on passe de Clients à Prospects par la barre du bas) ; le nombre de prospects reste sur la tuile
+       Prospects du tableau de bord (lien #/prospects) : la ligne n'existe plus ET la tuile dit « 3 » (lue avant d'ouvrir les fiches) */
+    const lprosp = { absente: !(await page.$("#clients-prospects")) };
+    await aller(page, "#/tableau", 2200); await page.waitForSelector("#tb-t-prospects", { timeout: 8000 }).catch(() => {});
+    Object.assign(lprosp, await page.$eval("#tb-t-prospects", e => ({ val: e.querySelector(".t-val").textContent.replace(/\s+/g, " ").trim(), lbl: e.querySelector(".t-lbl").textContent.trim(), href: e.getAttribute("href") })).catch(() => ({ val: "", lbl: "", href: "" })));
     const ficheProspect = async (uid, nom) => {
       await page.evaluate(([id, n]) => Clients.ouvrir(id, n, "accueil"), [uid, nom]);
       await page.waitForSelector("#fiche-decouverte", { timeout: 8000 }); await attendre(page, 700);
@@ -533,16 +543,17 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
       return t;
     };
     const tp = await ficheProspect(PIA, "Pia Active"), tr = await ficheProspect(REMI, "Rémi Muet"), te = await ficheProspect(EVA, "Eva Désinscrite");
-    ok("Mes clients (v71) : Pia, Rémi et Eva n'y sont plus, « Les prospects sont dans Prospects → (3 comptes gratuits). » (lien #/prospects) ; fiche de Pia (activite il y a 1 h) : tuile « Activité » « auj. » ; Eva (clé emails il y a 1 h, rien d'autre depuis 8 jours) comme Rémi (" + tr.val + "), pas « auj. »", absents.length === 3 && lprosp.t === "Les prospects sont dans Prospects → (3 comptes gratuits)." && lprosp.href === "#/prospects" && tp.h1.startsWith("Pia Active") && tp.val === "auj." && tp.sub === "depuis sa dernière saisie" && tr.h1.startsWith("Rémi Muet") && tr.val !== "auj." && tr.sub === "depuis sa dernière saisie" && te.h1.startsWith("Eva Désinscrite") && te.val === tr.val && te.sub === tr.sub, JSON.stringify({ absents, lprosp, tp, tr, te }));
+    ok("Mes clients (v71) : Pia, Rémi et Eva n'y sont plus ; v83 : plus de ligne « Les prospects sont dans Prospects → », tuile « Prospects » du tableau de bord à 3 (lien #/prospects) ; fiche de Pia (activite il y a 1 h) : tuile « Activité » « auj. » ; Eva (clé emails il y a 1 h, rien d'autre depuis 8 jours) comme Rémi (" + tr.val + "), pas « auj. »", absents.length === 3 && lprosp.absente && lprosp.val === "3" && lprosp.lbl === "Prospects" && lprosp.href === "#/prospects" /* v83 (bloc 3) */ && tp.h1.startsWith("Pia Active") && tp.val === "auj." && tp.sub === "depuis sa dernière saisie" && tr.h1.startsWith("Rémi Muet") && tr.val !== "auj." && tr.sub === "depuis sa dernière saisie" && te.h1.startsWith("Eva Désinscrite") && te.val === tr.val && te.sub === tr.sub, JSON.stringify({ absents, lprosp, tp, tr, te }));
     await page.click(`#tb-clients [data-ouvrir="${F.IDS.c3}"]`); await attendre(page, 2600);
-    const alertes = await page.$$eval("#vue .masthead .attention-alertes .pastille", l => l.map(e => e.textContent.trim())).catch(() => []);
-    ok("fiche de Julien : l'alerte « Inactif depuis 12 j » est dans l'en-tête (la clé activite, lue par la fiche, ne compte pas pour un client)", alertes.includes("Inactif depuis 12 j"), JSON.stringify(alertes));
+    /* v83 (bloc 3) : les alertes de la fiche sont en haut de l'onglet Suivi (#fc-suivi), sous l'en-tête .fc-tete */
+    const alertes = await page.$$eval("#vue #fc-suivi > .attention-alertes .pastille", l => l.map(e => e.textContent.trim())).catch(() => []);
+    ok("fiche de Julien : l'alerte « Inactif depuis 12 j » est en haut de la fiche (v83 : onglet Suivi) (la clé activite, lue par la fiche, ne compte pas pour un client)", alertes.includes("Inactif depuis 12 j"), JSON.stringify(alertes));
     await page.click("#sortir-fiche").catch(() => {}); await attendre(page, 800);
     for (const [uid, nom, n] of [[MARC, "Marc", 15], [NORA, "Nora", 20]]) {
       await aller(page, "#/clients", 1800); await page.waitForSelector(`#tb-clients [data-ouvrir="${uid}"]`, { timeout: 8000 });
       await page.click(`#tb-clients [data-ouvrir="${uid}"]`); await attendre(page, 2600);
-      const al = await page.$$eval("#vue .masthead .attention-alertes .pastille", l => l.map(e => e.textContent.trim())).catch(() => []);
-      ok(`fiche de ${nom} (clé ${uid === MARC ? "emails" : "coach_notifs"} récente) : « Inactif depuis ${n} j » dans l'en-tête`, al.includes("Inactif depuis " + n + " j"), JSON.stringify(al));
+      const al = await page.$$eval("#vue #fc-suivi > .attention-alertes .pastille" /* v83 (bloc 3) : en haut de l'onglet Suivi */, l => l.map(e => e.textContent.trim())).catch(() => []);
+      ok(`fiche de ${nom} (clé ${uid === MARC ? "emails" : "coach_notifs"} récente) : « Inactif depuis ${n} j » en haut de la fiche (v83 : onglet Suivi)`, al.includes("Inactif depuis " + n + " j"), JSON.stringify(al));
       await page.click("#sortir-fiche").catch(() => {}); await attendre(page, 800);
     }
     await aller(page, "#/tableau", 2600);
@@ -716,7 +727,7 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     /* v53 (chantier 4) : le tableau de bord n'a plus le panneau, mais calcule toujours le badge (même lecture de coach_notifs) */
     await page.goto(`http://localhost:${PORT}/#/tableau`); await page.waitForSelector("#tb-vue .tb-tiles", { timeout: 8000 }); await page.waitForFunction(() => document.querySelector('#nav a[data-id="prospects"] .nav-badge'), null, { timeout: 8000 }); await attendre(page, 500);
     const n1 = luDirect(db, "coach_notifs");
-    ok("tableau de bord : 12 nouveautés, badge « 12 », coach_notifs lu une fois", JSON.stringify(await badge(page)) === '["12"]' && n1 === 1, "lectures " + n1 + " · " + JSON.stringify(await badge(page)));
+    ok("tableau de bord : 12 nouveautés, badge « 12 », coach_notifs lu une fois", JSON.stringify(await badge(page)) === badge2("12") /* v83 (bloc 3) : badge en double */ && n1 === 1, "lectures " + n1 + " · " + JSON.stringify(await badge(page)));
     /* un autre appareil du coach marque tout comme vu */
     const vu = new Date().toISOString();
     db.donnees.push({ user_id: F.IDS.coach, outil: "coach_notifs", contenu: { vu }, maj_le: vu });
@@ -731,7 +742,7 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     /* v53 (chantier 4) : « Tout marquer comme vu » est sur la page Prospects ; on part aussitôt sur le tableau de bord (qui relit
        la date pour son badge), puis on revient */
     await page.goto(`http://localhost:${PORT}/#/prospects`); await page.waitForSelector("#pr-nouveautes [data-nv-vu]", { timeout: 8000 }); await attendre(page, 500);
-    ok("avant : 12 nouveautés, badge « 12 »", (await texte(page, "#pr-nouveautes .seance-c-tete .pastille")) === "12" && JSON.stringify(await badge(page)) === '["12"]', JSON.stringify(await badge(page)));
+    ok("avant : 12 nouveautés, badge « 12 »", (await texte(page, "#pr-nouveautes .seance-c-tete .pastille")) === "12" && JSON.stringify(await badge(page)) === badge2("12") /* v83 (bloc 3) : badge en double */, JSON.stringify(await badge(page)));
     const n0 = luDirect(db, "coach_notifs"), t0 = Date.now();
     await page.click("#pr-nouveautes [data-nv-vu]");
     await page.evaluate(() => { location.hash = "#/tableau"; });   // aussitôt, pendant le délai d'écriture (700 ms) puis son envoi

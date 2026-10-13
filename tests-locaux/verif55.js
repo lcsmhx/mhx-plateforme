@@ -1387,7 +1387,7 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
     const nomDe = uid => { const c = comptes().find(x => x.id === uid) || {}; return ((c.prenom || "") + " " + (c.nom || "")).trim() || "Sans nom"; };
     async function ficheDe(page, uid){
       await aller(page, "#/clients", 300);
-      await page.waitForSelector("#clients-prospects:not([hidden])", { timeout: 8000 });
+      await page.waitForSelector("#lc-clients #lc-liste li", { timeout: 8000 });   /* v83 (bloc 3) : la liste du haut est chargée (le lien « Prospects → » n'existe plus, décision 7) */
       await page.evaluate(([id, n]) => Clients.ouvrir(id, n, "accueil"), [uid, nomDe(uid)]);
       await page.waitForSelector("#fiche-reponses", { timeout: 8000 }); await attendre(page, 400);
       return { dec: await lignesFiche(page, "#fiche-decouverte"), rep: await lignesFiche(page, "#fiche-reponses"), vue: await texte(page, "#vue") };

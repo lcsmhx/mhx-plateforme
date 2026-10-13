@@ -41,6 +41,8 @@
      my space » (jamais touché : rien n'est envoyé) ; #c-sante absente de chacun des 9 écrans d'avant la création ; contrôle des
      prix sur le texte de ces 9 écrans (accueil → WhatsApp). Bloc H : les textes du parcours (PARCOURS_T), qui remplacent ceux de
      l'écran unique (DECOUVERTE.inscription, plus affichés), passent aussi au contrôle des prix. Nombre de vérifications inchangé (64).
+   - v83 (bloc 3) : bloc I coach, la ligne de renvoi #clients-prospects n'existe plus (décision 7) : on vérifie son absence, Léa hors
+     de la liste « Clients » (#lc-clients, 3 clients) et l'onglet Prospects de la barre du bas. Nombre de vérifications inchangé (64).
    Supabase simulé : rien ne part vers la vraie base ; les écritures dans donnees sont appliquées en mémoire,
    et TOUTE requête non-GET vers /rest/v1/* est relevée (méthode + adresse) pour les contrôles « aucune écriture ».
    Chaque bloc est protégé : une exception (élément absent, délai dépassé) note un ✗ et la suite continue ;
@@ -651,15 +653,19 @@ const cliquerVerrou = async (c, page) => {
        Clients.ouvrir (ce que faisait le clic), attendue par son bandeau. Rien ne lève d'exception : un ✗ au lieu d'un arrêt */
     const tableauPret = await page.waitForSelector(`#tb-clients [data-ouvrir="${F.IDS.c1}"]`, { timeout: 6000 }).then(() => true, () => false);
     const leaListee = !!(await page.$(`#tb-clients [data-ouvrir="${PROSPECT}"]`));
-    const renvoi = await page.$eval("#clients-prospects", e => { const a = e.querySelector("a.link-a"); return { t: e.textContent.replace(/\s+/g, " ").trim(), cache: e.hidden, lien: a ? a.getAttribute("href") : null }; }).catch(() => null);
-    const renvoiOk = !!renvoi && !renvoi.cache && plat(renvoi.t) === "Les prospects sont dans Prospects → (1 compte gratuit)." && renvoi.lien === "#/prospects";
+    /* v83 (bloc 3, décision 7 de Lucas) : la ligne #clients-prospects (« Les prospects sont dans Prospects → ») est supprimée : on
+       passe de Clients à Prospects par la barre du bas seulement. Nouvelle vérité : plus de #clients-prospects, Léa absente de la
+       liste « Clients » du haut (#lc-clients, « 3 clients »), l'onglet Prospects de la barre du bas mène à #/prospects */
+    const renvoi = await page.evaluate(() => ({ lien: !!document.getElementById("clients-prospects"), liste: Array.from(document.querySelectorAll("#lc-clients .lc-ligne")).map(x => x.dataset.uid),
+      compte: (document.getElementById("lc-compte") || {}).textContent || "", onglet: !!document.querySelector('#barre-bas a[data-id="prospects"][href="#/prospects"]') })).catch(() => null);
+    const renvoiOk = !!renvoi && renvoi.lien === false && plat(renvoi.compte) === "3 clients" && renvoi.liste.length === 3 && !renvoi.liste.includes(PROSPECT) && renvoi.onglet === true;
     const ouvert = await page.evaluate(([id, n]) => { Clients.ouvrir(id, n, "accueil"); return Store.idConsulte === id; }, [PROSPECT, "Léa Démo"]).catch(() => false);
     const bandeau = await page.waitForSelector("#vue .bandeau", { timeout: 6000 }).then(() => true, () => false); await attendre(page, 1500);
     const okFiche = tableauPret && !leaListee && renvoiOk && ouvert && bandeau;
     const detailFiche = okFiche ? "" : "fiche de Léa : " + JSON.stringify({ tableauPret, leaListee, renvoi, ouvert, bandeau }) + " | ";
     await aller(page, "#/programme", 1500);
     const vu = await valeursVue(page);
-    ok("coach dans la fiche d'un prospect (v71 : Léa n'est plus dans #tb-clients, « Les prospects sont dans Prospects → (1 compte gratuit). » avec a[href=\"#/prospects\"], fiche ouverte par Clients.ouvrir, bandeau affiché) : rien n'est verrouillé, il voit son programme", okFiche && !(await page.$("#vue .verrou")) && (await page.$$("#nav .nav-cadenas")).length === 0 && vu.includes(TEMOIN), detailFiche + vu.slice(0, 300));
+    ok("coach dans la fiche d'un prospect (v71 : Léa n'est plus dans #tb-clients ; v83 : ni dans la liste « Clients » (3 clients), plus de ligne « Prospects → », l'onglet Prospects de la barre du bas mène à #/prospects ; fiche ouverte par Clients.ouvrir, bandeau affiché) : rien n'est verrouillé, il voit son programme", okFiche && !(await page.$("#vue .verrou")) && (await page.$$("#nav .nav-cadenas")).length === 0 && vu.includes(TEMOIN), detailFiche + vu.slice(0, 300));
     await aller(page, "#/formation", 1500);
     /* ouverte ET affichée : ni cadenas, ni page en erreur, ni « Chargement… » ; la progression est celle de Léa (10 étapes cochées) */
     const fo = await page.evaluate(() => { const v = document.querySelector("#vue"); return { verrou: !!document.querySelector("#vue .verrou"), illisible: !!document.getElementById("page-illisible"), chargement: !!v && /Chargement…/.test(v.innerText), h1: ((document.querySelector("#vue h1") || {}).textContent || "").replace(/\s+/g, ""), progression: ((document.querySelector("#vue .prog-compteur .t-sub") || {}).textContent || "").trim(), modules: document.querySelectorAll("#vue .fo-mod").length }; });
