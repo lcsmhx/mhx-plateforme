@@ -31,7 +31,7 @@ etat_disque() { git -C .. status --porcelain --untracked-files=no 2>/dev/null; }
 DISQUE_DEBUT=$(etat_disque)
 
 # Suites du banc, et suites volontairement hors banc (verif44 à verif47 testent le Challenge 7 jours supprimé).
-SUITES="flux verif34 verif35 verif36 verif37 verif38 verif-xss verif39 verif40 verif41 verif42 verif43 verif48 verif50 verif51 verif52 verif53 verif54 verif55 verif56 verif57 verif58 verif60 verif61 verif62 verif63 verif64 verif65 verif66 verif67 verif68 verif69 verif70 verif71 verif72 verif73 verif74 verif75 verif76 verif77 verif78 verif79 verif80 verif81 verif82 verif83 verif84"
+SUITES="flux verif34 verif35 verif36 verif37 verif38 verif-xss verif39 verif40 verif41 verif42 verif43 verif48 verif50 verif51 verif52 verif53 verif54 verif55 verif56 verif57 verif58 verif60 verif61 verif62 verif63 verif64 verif65 verif66 verif67 verif68 verif69 verif70 verif71 verif72 verif73 verif74 verif75 verif76 verif77 verif78 verif79 verif80 verif81 verif82 verif83 verif84 verif85"
 # v53 (chantier 4) : verif49 (score sur 100 et température NOUVEAU / CHAUD / TIÈDE / FROID, journal des emails) sort du banc ;
 # ses blocs relances, issues, conflits, verrou et passage client sont repris dans verif58 (bloc F).
 HORS_BANC="verif44 verif45 verif46 verif47 verif49"
@@ -215,12 +215,16 @@ HORS_BANC="verif44 verif45 verif46 verif47 verif49"
 #   mention des aliments notés dans le journal, FR et EN) adaptées, nombres inchangés ; fichiers.js : interrupteur journal_alimentaire servi « test ».
 # v79.1 (interrupteur journal_alimentaire sur « tous », catalogue préchargé) : verif55 A0 (tous les interrupteurs de fichiers.js, plus
 #   seulement les deux premiers) et verif84 A (catalogue lu dès l'ouverture) adaptées, nombres inchangés.
+# v81 (bloc 2, parcours du prospect en 11 écrans) : verif85 51 (nouvelle suite, partie 3 : parcours complet avec 1 et 2 blocages et le
+#   texte libre seul, retours, rechargements, erreurs, compte à rebours, carte cadeau, comptes existants, 360 / 390 / 430 px, anglais,
+#   moins de mouvement, et W : le moteur WebKit de Safari, installé pour la partie 3 dans pages.yml) ; les suites de l'ancien écran
+#   unique d'inscription adaptées au parcours (voir leurs en-têtes).
 attendu() {
   case "$1" in
     flux) echo 19;; verif34) echo 13;; verif35) echo 14;; verif36) echo 13;; verif37) echo 12;; verif38) echo 66;;
     verif-xss) echo 5;; verif39) echo 48;; verif40) echo 64;; verif41) echo 25;; verif42) echo 20;; verif43) echo 27;;
     verif48) echo 42;; verif50) echo 57;; verif51) echo 89;; verif52) echo 137;; verif53) echo 114;;
-    verif54) echo 60;; verif55) echo 172;; verif56) echo 263;; verif57) echo 152;; verif58) echo 138;; verif60) echo 74;; verif61) echo 50;; verif62) echo 50;; verif63) echo 96;; verif64) echo 92;; verif65) echo 70;; verif66) echo 57;; verif67) echo 63;; verif68) echo 76;; verif69) echo 83;; verif70) echo 32;; verif71) echo 84;; verif72) echo 16;; verif73) echo 25;; verif74) echo 33;; verif75) echo 24;; verif76) echo 22;; verif77) echo 26;; verif78) echo 19;; verif79) echo 25;; verif80) echo 70;; verif81) echo 18;; verif82) echo 56;; verif83) echo 54;; verif84) echo 87;; rig) echo 90;; *) echo "";;
+    verif54) echo 60;; verif55) echo 172;; verif56) echo 263;; verif57) echo 152;; verif58) echo 138;; verif60) echo 74;; verif61) echo 50;; verif62) echo 50;; verif63) echo 96;; verif64) echo 92;; verif65) echo 70;; verif66) echo 57;; verif67) echo 63;; verif68) echo 76;; verif69) echo 83;; verif70) echo 32;; verif71) echo 84;; verif72) echo 16;; verif73) echo 25;; verif74) echo 33;; verif75) echo 24;; verif76) echo 22;; verif77) echo 26;; verif78) echo 19;; verif79) echo 25;; verif80) echo 70;; verif81) echo 18;; verif82) echo 56;; verif83) echo 54;; verif84) echo 87;; verif85) echo 51;; rig) echo 90;; *) echo "";;
   esac
 }
 # Partie de chaque suite pour les jobs parallèles de GitHub Actions (10 parties, durées équilibrées, 4 à 5 minutes chacune).
@@ -228,7 +232,7 @@ partie() {
   case "$1" in
     verif52|verif68|verif74|verif83) echo 1;;
     verif53|verif64|verif69|verif70|verif81) echo 2;;
-    verif51|verif34|verif35|verif63|verif79) echo 3;;
+    verif51|verif34|verif35|verif63|verif79|verif85) echo 3;;
     verif38|verif36|verif37|verif66|verif76|verif80) echo 4;;
     verif48|verif43|flux|verif58|verif78) echo 5;;
     verif41|verif57|verif61|verif67|verif77) echo 6;;

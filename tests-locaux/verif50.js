@@ -8,7 +8,8 @@
      pour le coach dans une fiche ni pour un client (adresse brute).
    - Confidentialité : paragraphe « Prise de rendez-vous » de DECOUVERTE.confidentialite (FR et EN, même place :
      Calendly, pour le compte du coach, États-Unis, pré-remplissage, écran d'origine), relisible depuis le Profil
-     du prospect (v64 : plus depuis l'inscription, dont la case ouvre les PDF des CGU et de la politique).
+     du prospect (v64 : plus depuis l'inscription, dont la case ouvre les PDF des CGU et de la politique ; v81 : cette case
+     est sur l'écran « Compte » du parcours du prospect).
    - v52 (lot D) : onglets ouverts accueil, Ma progression, calculateur, Speed Formation (sans limite), profil ; vitrine
      programme, journal, nutrition, suivi ; barre du bas accueil, calculateur, progression, Speed Formation ; les
      vérifications du jour 8 (formation verrouillée) sont retirées (fonction supprimée).
@@ -39,6 +40,12 @@
    v71 (sujet D) : « Suivi de mes clients » (#tb-clients) ne liste plus les prospects (plus de ligne ni de bouton « Ouvrir » pour
      Léa) : la fiche du prospect s'ouvre par Clients.ouvrir (ouvrirFiche), et ne compte comme ouverte que si son bandeau de
      consultation est affiché. Nombre de vérifications inchangé (57).
+   v81 (bloc 2, parcours du prospect en 11 écrans, js/parcours.js) : l'écran unique « Crée ton espace gratuit » n'existe plus ;
+     #/inscription ouvre le parcours (#pc). La case des conditions (#c-cgu, label.co-cgu) et ses 2 liens vers les PDF
+     (#c-cgu-lien, #c-politique-lien, construits par lienLegal comme avant) sont sur l'écran « Compte » (70 %) : la suite y va
+     par FT.parcours (fichiers.js : accueil → objectif → coincé → projection → sexe → prénom → chargement → compte, rien de
+     rempli sur Compte) et y fait la même vérification (mêmes hrefs exacts, mêmes textes, target=_blank, rel=noopener, dans la
+     case, case présente, pas de case santé), plus : l'écran affiché est bien « compte ». Nombre de vérifications inchangé (57).
    Reprend le simulateur de verif47 : Supabase simulé en mémoire, rien ne part vers la vraie base.
    Usage : node verif50.js ../index.html                                          */
 const { chromium } = require("playwright"); const fs = require("fs"); const http = require("http"); const path = require("path");
@@ -48,7 +55,7 @@ const OUT = path.join(__dirname, "captures", "v50"); fs.mkdirSync(OUT, { recursi
 /* reglages du HTML servi : inscription ouverte ou fermée, pre-remplissage eteint. v55 : le depot garde inscription_libre: true
    (ouverte par Lucas en v54) et calendly_prerempli: true ; la suite ferme l'inscription par défaut (inscriptionLibre) */
 let inscriptionLibre = false, prerempliEteint = false;
-const { servirFichier, forcerInscription } = require("./fichiers");   // 52.1 : la page charge css/ et js/, servis depuis son dossier (fichiers.js)
+const { servirFichier, forcerInscription, parcours } = require("./fichiers");   // 52.1 : la page charge css/ et js/, servis depuis son dossier (fichiers.js) ; v81 : + parcours (pilote le parcours du prospect)
 /* 52.1 : les retouches valent pour la page et pour ses fichiers (ces réglages sont dans js/config.js) */
 /* v54 : l'inscription est ouverte dans le fichier ; la retouche force la valeur voulue (fermée par défaut), dans les deux sens.
    v55 : par forcerInscription (fichiers.js), comme toutes les suites qui testent l'inscription (les autres servent la valeur
@@ -403,17 +410,24 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     const db = base();
     const { c, page } = await contexte(b, null, db);
     await page.goto(`http://localhost:${PORT}/#/inscription`); await attendre(page, 1400);
+    /* v81 (bloc 2) : #/inscription ouvre le parcours du prospect (#pc) ; la case des conditions et ses 2 liens sont sur
+       l'écran « Compte » (70 %), atteint par les écrans précédents (FT.parcours, rien de rempli sur Compte). Une erreur du
+       parcours (écran inattendu, élément absent) ne coupe pas la suite : elle fait échouer cette seule vérification */
+    const atteint = await parcours(page, {}, "compte").catch(x => "ERREUR " + String((x && x.message) || x).split("\n")[0].slice(0, 160));
     /* v61 (décision 4) : le même texte court à l'inscription (« Récupérer mon plan d'action »).
        v64 (brief V2 A2, A3) : l'inscription n'ouvre plus le volet du texte court (avant : clic sur #c-cgu-lien, « Prise de
        rendez-vous… » dans le volet ; ce texte reste relisible et vérifié depuis le Profil, plus haut) : « CGU » et « politique
        de confidentialité » sont 2 liens distincts vers les PDF de CONFIG.textes_legaux (nouvel onglet, jamais cliqués) ; la
-       case des conditions reste, la case santé a disparu */
-    const e = await page.evaluate(() => ({ liens: ["c-cgu-lien", "c-politique-lien"].map(id => { const a = document.getElementById(id);
+       case des conditions reste, la case santé a disparu.
+       v81 : même lecture, sur l'écran « Compte » du parcours (etape = data-etape de #pc, qui doit valoir « compte ») */
+    const e = await page.evaluate(() => ({ etape: (document.getElementById("pc") || { dataset: {} }).dataset.etape || null,
+      liens: ["c-cgu-lien", "c-politique-lien"].map(id => { const a = document.getElementById(id);
         return a ? { tag: a.tagName, href: a.getAttribute("href"), cible: a.getAttribute("target"), rel: a.getAttribute("rel"), t: a.textContent.replace(/\s+/g, " ").trim(), dansCase: !!a.closest("label.co-cgu") } : null; }),
       cgu: !!document.getElementById("c-cgu"), sante: !!document.getElementById("c-sante") })).catch(e => ({ erreur: String(e), liens: [] }));
-    ok("inscription : « CGU » et « politique de confidentialité », 2 liens distincts vers les PDF (href = CONFIG.textes_legaux.cgu_pdf / confidentialite_pdf, target=_blank, rel=noopener) au lieu du volet du texte court (relisible depuis le Profil) ; case des conditions présente, plus de case santé (v64)",
-      e.liens.length === 2 && e.liens.every(l => l && l.tag === "A" && l.cible === "_blank" && /(^|\s)noopener(\s|$)/.test(l.rel || "") && l.dansCase) && e.liens[0].href === LEGAUX_TEST.cgu_pdf && e.liens[1].href === LEGAUX_TEST.confidentialite_pdf
-      && e.liens[0].t === "CGU" && e.liens[1].t === "politique de confidentialité" && e.cgu && !e.sante, JSON.stringify(e));
+    ok("inscription (v81 : écran « Compte » du parcours du prospect) : « CGU » et « politique de confidentialité », 2 liens distincts vers les PDF (href = CONFIG.textes_legaux.cgu_pdf / confidentialite_pdf, target=_blank, rel=noopener) au lieu du volet du texte court (relisible depuis le Profil) ; case des conditions présente, plus de case santé (v64)",
+      atteint === "compte" && e.etape === "compte"
+      && e.liens.length === 2 && e.liens.every(l => l && l.tag === "A" && l.cible === "_blank" && /(^|\s)noopener(\s|$)/.test(l.rel || "") && l.dansCase) && e.liens[0].href === LEGAUX_TEST.cgu_pdf && e.liens[1].href === LEGAUX_TEST.confidentialite_pdf
+      && e.liens[0].t === "CGU" && e.liens[1].t === "politique de confidentialité" && e.cgu && !e.sante, "écran atteint " + atteint + " | " + JSON.stringify(e));
     await c.close();
     inscriptionLibre = false; legaux = null;
   }

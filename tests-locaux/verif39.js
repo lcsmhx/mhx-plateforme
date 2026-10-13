@@ -30,6 +30,31 @@
    v74 (décision de Lucas du 04/10) : plus de champ Nom à l'inscription : #c-nom absent (FR, et « Your last name » en anglais),
    aucune erreur sur le nom (le prénom rempli, l'envoi passe au mot de passe), métadonnées avec nom "" (profils.nom vide,
    comme avant la v52). Même nombre (48).
+   v81 (bloc 2, mission du 13/10) : l'écran unique « Crée ton espace gratuit » n'existe plus, la création de compte est le
+   parcours du prospect en 11 écrans (js/parcours.js, piloté comme un doigt par FT.parcours de fichiers.js). Chaque
+   vérification de l'ancien écran porte sur l'écran du parcours qui fait maintenant la même chose, même exigence, mêmes
+   valeurs exactes quand elles existent encore :
+   - titre, sous-titre, bouton → accueil du parcours (#pc[data-etape="accueil"], adresse #/inscription) : le sous-titre
+     « …poser tes bases en 14 jours… » n'existe plus, c'est celui de l'accueil (TEXTES.md) qui est vérifié, et plus aucun
+     « 14 jours », « 7 jours » ni « Challenge » : ni dans les textes des 11 écrans (PARCOURS_T), ni à l'écran sur les 11
+     écrans vus (accueil → cadeau ; hors compte à rebours, qui dit « plus que 14 jours » le 1er novembre) ; en anglais,
+     ni « 14 days », « 7 days », « Challenge », « health data » de l'accueil à l'écran Compte ;
+   - prénom obligatoire → écran « On t’appelle comment ? » (« Continuer » inactif, vide ou fait d'espaces ; avant : le
+     message « Indique ton prénom. ») ;
+   - cases (conditions seule obligatoire, son texte, point collé au 2e lien, liens des PDF de test ; newsletter avec son
+     texte v81), mot de passe court, case manquante → écran Compte (#pc-err-mdp, #pc-err-cgu : textes exacts) ; aucun
+     champ Nom sur aucun écran ; santé → écrans Compte et WhatsApp ;
+   - bouton qui crée le compte et erreurs du serveur (SMTP, limites, inscriptions fermées) → « Débloquer mon espace »
+     (#c-go) et #co-err de l'écran WhatsApp ;
+   - métadonnées EXACTES : mêmes clés, dans leur ordre ; newsletter_version « 2026-10-13 » (v81 : nouveau texte de la case,
+     DECOUVERTE.accords.newsletter ; avant 2026-10-11) ;
+   - arrivée → écran « Ton espace » du parcours (page rechargée avec la session), plus le questionnaire de l'app ; écritures
+     du compte neuf : contact UNE fois (le numéro du parcours, à la création), emails (copie de la newsletter) et intake en
+     UNE écriture (les réponses), rien d'autre (avant : la seule copie emails, le numéro n'étant pas demandé ici).
+   Le faux Supabase rend la ligne écrite quand on la demande (Prefer: return=representation, comme la vraie base : la clé
+   contact, écrite par CleCoach) ; avant, il rendait un corps vide et l'écriture du numéro aurait passé pour refusée.
+   Inchangés : partie A (coach), l'inscription fermée (la connexion, jamais le parcours), les deux liens de la connexion
+   (320 / 375 / 390 px, 12 à 24 px entre eux), « Mot de passe oublié », le changement d'adresse. Même nombre (48).
    Usage : node verif39.js ../index.html                                         */
 const { chromium } = require("playwright"); const fs = require("fs"); const http = require("http"); const path = require("path");
 const F = require("./fixtures"); const HTML = path.resolve(process.argv[2] || "../index.html");
@@ -37,6 +62,7 @@ const PORT = 9670;
 let inscriptionLibre = false;
 /* 52.1 : la retouche vaut pour la page et pour ses fichiers (inscription_libre est dans js/config.js) */
 const { servirFichier, forcerInscription } = require("./fichiers");   // 52.1 : la page charge css/ et js/, servis depuis son dossier (fichiers.js)
+const FT = require("./fichiers");   // v81 : FT.parcours, le parcours du prospect piloté écran par écran
 /* v54 : l'inscription est ouverte dans le fichier (inscription_libre: true) ; la retouche FORCE la valeur voulue
    (inscriptionLibre, fermée par défaut comme avant), dans les deux sens : la suite reste valable si Lucas la referme.
    v55 : par forcerInscription (fichiers.js), comme toutes les suites qui testent l'inscription (les autres servent la valeur
@@ -54,11 +80,20 @@ const server = http.createServer((req, res) => {
   res.writeHead(200, { "Content-Type": "text/html" }); res.end(h);
 });
 const res = []; const ok = (n, c, d) => res.push((c ? "  ✓ " : "  ✗ ") + n + (c ? "" : "  — " + (d || "")));
-/* v64 (lot 5, brief V2 A1 et A2) : sous-titre et case des conditions de l'inscription, FR et EN (textes du brief, mot pour mot) */
-const SOUS_FR = "Ton calculateur de calories, ton suivi de poids et la Speed Formation pour poser tes bases en 14 jours. Inscris-toi pendant la bêta : tout reste gratuit pour toi, à vie.";
-const SOUS_EN = "Your calorie calculator, weight tracking and the Speed Formation to build your foundations in 14 days. Sign up during the beta: it stays free for you, for life.";
+/* v64 (lot 5, brief V2 A1 et A2) : sous-titre et case des conditions de l'inscription, FR et EN (textes du brief, mot pour mot).
+   v81 (bloc 2) : l'écran unique et son sous-titre « …poser tes bases en 14 jours… » n'existent plus : titre, sous-titre et
+   bouton de l'ACCUEIL DU PARCOURS (docs/maj-blocs-1-2/TEXTES.md, § 1 ; anglais : js/i18n.js, bloc v81) ; la case des
+   conditions (écran Compte du parcours) garde son texte ; la newsletter a son texte v81 */
+const TITRE_FR = "Combien de lundis tu as dit « je commence » ?", TITRE_EN = "How many Mondays have you said “I’ll start”?";
+const SOUS_FR = "Séances prêtes, journal alimentaire, recettes, suivi. Gratuit à vie pour les inscrits.";
+const SOUS_EN = "Ready-made workouts, food diary, recipes, progress tracking. Free for life when you sign up.";
+const BOUTON_FR = "Créer mon espace gratuit", BOUTON_EN = "Create my free space";
 const CGU_FR = "J'ai 18 ans ou plus et j'accepte les CGU et la politique de confidentialité.", CGU_EN = "I'm 18 or older and I accept the Terms of Use and the Privacy Policy.";
+const NEWSLETTER_FR = "Je veux recevoir les conseils et les offres de MHX Coaching par email.";
 const PROSPECT = "00000000-0000-4000-8000-000000000c04", EQUIPE = "00000000-0000-4000-8000-0000000000e1", NOUVEAU = "00000000-0000-4000-8000-000000000c05";
+const INSCRIT = "00000000-0000-4000-8000-00000000abcd";   // le compte créé par /auth/v1/signup (faux Supabase)
+/* v81 : les 11 écrans du parcours, dans l'ordre */
+const ETAPES_PC = ["accueil", "objectif", "coince", "projection", "sexe", "prenom", "chargement", "compte", "whatsapp", "espace", "cadeau"];
 /* instant « il y a n jours » (midi, heure locale) : les dates d'inscription suivent le jour du test.
    Léa s'est inscrite il y a 3 jours : jour 4/7 de sa Découverte, quel que soit le jour où la suite tourne. */
 const ilYAIso = n => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - n); return d.toISOString(); };
@@ -88,7 +123,7 @@ async function contexte(b, who, db, opts) {
       const corps = JSON.parse(req.postData() || "{}"); db.inscriptions.push(corps);
       if (opts.inscriptionKo) return json({ msg: "Signups not allowed for this instance" }, 422);
       if (opts.inscriptionErreur) return json({ msg: opts.inscriptionErreur.msg }, opts.inscriptionErreur.status);   // v52 : SMTP en panne, limites
-      const id = "00000000-0000-4000-8000-00000000abcd";
+      const id = INSCRIT;
       /* le declencheur de la base : profil avec prenom / nom, statut par defaut « prospect » */
       db.profils.push(Object.assign({ id, prenom: corps.data.prenom, nom: corps.data.nom, role: "client", cree_le: new Date().toISOString() }, "statut" in db.profils[0] ? { statut: "prospect" } : {}));
       /* v52 : comme la vraie base, la session rendue porte les métadonnées de l'inscription (user_metadata) */
@@ -124,6 +159,9 @@ async function contexte(b, who, db, opts) {
         let rows = []; try { rows = JSON.parse(req.postData() || "[]"); } catch (e) { }
         (Array.isArray(rows) ? rows : [rows]).forEach(row => db.ecritures.push({ table: "donnees", m, user_id: row && row.user_id, outil: row && row.outil }));
         if (!rows || (Array.isArray(rows) && !rows.length)) db.ecritures.push({ table: "donnees", m, filtre: url.search });
+        /* v81 : comme la vraie base, un POST qui demande la ligne en retour (Prefer: return=representation : CleCoach, la clé
+           contact écrite par le parcours à la création du compte) la reçoit ; sinon, corps vide comme avant */
+        if (m === "POST" && (req.headers()["prefer"] || "").includes("return=representation") && Array.isArray(rows) && rows.length) return json(rows, 201);
         return json(null, 201);
       }
       let l = db.donnees; const uid = q.get("user_id"), o = q.get("outil") || "";
@@ -157,6 +195,31 @@ const lireTuiles = page => page.$$eval("#tb-vue .tb-tuile", l => l.map(t => {
   const txt = sel => { const e = t.querySelector(sel); return e ? e.textContent.replace(/\s+/g, " ").trim() : ""; };
   return { lbl: txt(".t-lbl"), val: txt(".t-val"), sub: txt(".t-sub"), href: t.getAttribute("href") };
 }));
+/* v81 — le parcours du prospect : l'écran affiché (data-etape de #pc), un bouton inactif (aria-disabled : touché, il ne fait
+   rien), les erreurs de l'écran Compte, le texte d'un écran (sans le compte à rebours, « plus que N jours », qui dit
+   « 14 jours » le 1er novembre et « 7 jours » le 8) et la présence d'un champ Nom, rangés par écran dans vus */
+const etapeDe = page => page.$eval("#pc", e => e.dataset.etape).catch(() => "");
+const inactif = (page, sel) => page.$eval(sel, b => b.getAttribute("aria-disabled") === "true").catch(() => null);
+const erreursCompte = page => page.evaluate(() => {
+  const t = id => { const e = document.getElementById(id); return e ? e.textContent.replace(/\s+/g, " ").trim() : null; }, pc = document.getElementById("pc");
+  return { etape: pc ? pc.dataset.etape : "", email: t("pc-err-email"), mdp: t("pc-err-mdp"), cgu: t("pc-err-cgu"), texte: pc ? pc.textContent.replace(/\s+/g, " ") : "" };
+}).catch(e => ({ erreur: String(e) }));
+const noter = async (page, vus) => {
+  const v = await page.evaluate(() => {
+    const pc = document.getElementById("pc"); if (!pc) return null;
+    const k = pc.cloneNode(true); k.querySelectorAll("#pc-rebours").forEach(x => x.remove());
+    return { e: pc.dataset.etape, t: k.textContent.replace(/\s+/g, " ").trim(), nom: !!document.getElementById("c-nom") };
+  }).catch(() => null);
+  if (v && v.e) vus[v.e] = v;
+  return v ? v.e : "";
+};
+/* plus de case ni de texte santé sur l'écran affiché (v64) ; sante_avant / sante_manque absents des textes FR et EN */
+const santeIci = page => page.evaluate(() => ({ cases: ["c-sante"].filter(id => document.getElementById(id)).concat(document.querySelector(".co-sante") ? [".co-sante"] : []),
+  texte: /données de santé|health data/i.test((document.getElementById("pc") || document.body).textContent),
+  cles: ["sante_avant", "sante_manque"].filter(k => (k in (DECOUVERTE.inscription || {})) || (k in ((DECOUVERTE.en || {}).inscription || {}))) })).catch(e => ({ erreur: String(e) }));
+const santeOk = s => !!s && !!s.cles && s.cases.length === 0 && s.texte === false && s.cles.length === 0;
+/* le message de l'écran WhatsApp (#co-err), une fois écrit */
+const messageServeur = async page => { await page.waitForFunction(() => { const z = document.getElementById("co-err"); return !!z && !!z.textContent.trim(); }, null, { timeout: 8000 }).catch(() => {}); return (await page.textContent("#co-err").catch(() => "")) || ""; };
 
 (async () => {
   await new Promise(r => server.listen(PORT, r));
@@ -299,8 +362,8 @@ const lireTuiles = page => page.$$eval("#tb-vue .tb-tuile", l => l.map(t => {
     const db = base();
     const { c, page } = await contexte(b, null, db);
     await page.goto(`http://localhost:${PORT}/#/inscription`); await attendre(page, 1200);
-    const t = await page.textContent("body");
-    ok("inscription fermée : pas de « Créer mon compte », #/inscription ouvre la connexion", !t.includes("Créer mon compte") && t.includes("Connexion à ton espace"));
+    const t = await page.textContent("body"), pc = !!(await page.$("#pc"));
+    ok("inscription fermée : pas de « Créer mon compte », #/inscription ouvre la connexion (v81 : jamais le parcours, #pc absent)", !t.includes("Créer mon compte") && t.includes("Connexion à ton espace") && !pc, (pc ? "parcours ouvert · " : "") + t.replace(/\s+/g, " ").slice(0, 160));
     await c.close();
   }
   {
@@ -309,65 +372,125 @@ const lireTuiles = page => page.$$eval("#tb-vue .tb-tuile", l => l.map(t => {
     const { c, page } = await contexte(b, null, db);
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 1200);
     ok("inscription ouverte : bouton « Créer mon compte » sur la connexion", !!(await page.$('[data-mode="inscription"]')));
-    await page.click('[data-mode="inscription"]'); await attendre(page, 400);
-    const ecran = await page.evaluate(() => { const q = s => { const e = document.querySelector(s); return e ? e.textContent.replace(/\s+/g, " ").trim() : ""; };
+    /* v81 (bloc 2) : « Pas encore de compte ? Créer mon compte » ouvre le parcours du prospect (plus l'écran unique) ; le texte
+       de chaque écran est rangé dans vus, au fil du parcours */
+    await page.click('[data-mode="inscription"]'); await page.waitForSelector('#pc[data-etape="accueil"]', { timeout: 8000 }).catch(() => {}); await attendre(page, 300);
+    const vus = {};
+    await noter(page, vus);
+    const accueil = await page.evaluate(() => { const q = s => { const e = document.querySelector(s); return e ? e.textContent.replace(/\s+/g, " ").trim() : ""; };
+      let textes = null; try { textes = JSON.stringify(PARCOURS_T); } catch (e) { }   // les textes des 11 écrans (js/parcours.js)
+      return { etape: (document.getElementById("pc") || { dataset: {} }).dataset.etape || "", h: location.hash, titre: q("#pc h1"), sous: q("#pc .pc-sous"), bouton: q("#pc-go"),
+        ancien: !!document.querySelector(".carte-co, #c-prenom, .co-sous, .co-note"), textes }; }).catch(e => ({ erreur: String(e) }));
+    const textesOk = typeof accueil.textes === "string" && accueil.textes.length > 2000 && !/14\s*jours|(^|\D)7\s*jours|Challenge/.test(accueil.textes);
+    const vuAccueil = (vus.accueil || {}).t || "";
+    /* v52 (lot B) : plus de « 7 jours » ; titre et sous-titre de l'espace gratuit. v64 (brief V2 A1, A6) : sous-titre et bouton.
+       v81 : l'accueil du parcours (TEXTES.md § 1) ; son sous-titre remplace « …poser tes bases en 14 jours… » ; plus aucun
+       « 14 jours » (mission, point 15), ni à l'écran ni dans les textes du parcours */
+    ok("inscription (v81 : le parcours, plus d'écran unique) : « Créer mon compte » ouvre l'accueil du parcours (#/inscription) : titre « Combien de lundis tu as dit « je commence » ? », sous-titre « Séances prêtes, journal alimentaire, recettes, suivi. Gratuit à vie pour les inscrits. » (avant : « …poser tes bases en 14 jours… »), bouton « Créer mon espace gratuit » ; plus d'ancien écran (.carte-co, #c-prenom, .co-sous) ; plus aucun « Challenge », « 7 jours » ni « 14 jours » à l'écran (hors compte à rebours) ni dans les textes des 11 écrans (PARCOURS_T)",
+      accueil.etape === "accueil" && accueil.h === "#/inscription" && accueil.titre === TITRE_FR && accueil.sous === SOUS_FR && accueil.bouton === BOUTON_FR && !accueil.ancien
+      && !!vuAccueil && !/14 jours|(^|\D)7 jours|Challenge/.test(vuAccueil) && textesOk, JSON.stringify(Object.assign({}, accueil, { textes: typeof accueil.textes === "string" ? accueil.textes.length + " car." : accueil.textes })) + " · " + vuAccueil.slice(0, 200));
+    /* objectif, ce qui a coincé, dans 3 mois, « Tu es ? » (réponses par défaut de FT.parcours), jusqu'à l'écran du prénom */
+    for (const e of ["objectif", "coince", "projection", "sexe", "prenom"]) { await FT.parcours(page, {}, e); await noter(page, vus); }
+    /* avant : « Indique ton prénom. » sur l'écran unique. v81 : le prénom a son écran ; vide (ou fait d'espaces), « Continuer »
+       reste inactif et, touché quand même, ne fait rien */
+    const p0 = { champ: await page.$eval("#pc-prenom", e => e.value).catch(() => null), inactif: await inactif(page, "#pc-suivant") };
+    await page.click("#pc-suivant", { force: true }); await attendre(page, 300);
+    const p1 = await etapeDe(page);
+    await page.fill("#pc-prenom", "   "); const p2 = await inactif(page, "#pc-suivant");
+    await page.click("#pc-suivant", { force: true }); await attendre(page, 300);
+    const p3 = await etapeDe(page);
+    await page.fill("#pc-prenom", "Zoé"); const p4 = await inactif(page, "#pc-suivant");
+    ok("inscription : prénom obligatoire (v81 : écran « On t’appelle comment ? » du parcours) — vide, puis fait d'espaces : « Continuer » inactif (aria-disabled) et, touché, on reste sur l'écran du prénom, rien n'est envoyé ; « Zoé » tapé : « Continuer » s'active",
+      p0.champ === "" && p0.inactif === true && p1 === "prenom" && p2 === true && p3 === "prenom" && p4 === false && db.inscriptions.length === 0, JSON.stringify([p0, p1, p2, p3, p4, db.inscriptions.length]));
+    await page.click("#pc-suivant"); await page.waitForSelector('#pc[data-etape="chargement"]', { timeout: 8000 }).catch(() => {}); await noter(page, vus);
+    await FT.parcours(page, {}, "compte"); await noter(page, vus);
+    /* v52 (lot B) : cases séparées, aucune cochée d'avance, et le champ Nom. v64 (brief V2 A) : UNE seule case obligatoire
+       (conditions, son texte exact, point collé au 2e lien), la newsletter ; plus de case santé. v74 : plus de champ Nom (#c-nom
+       absent). v76 : plus de « Rester connecté ». v81 : sur l'écran Compte du parcours ; les deux liens vers les PDF de test
+       (lienLegal, nouvel onglet) ; la newsletter avec son texte v81 */
+    const ecran = await page.evaluate(() => {
       const cas = id => { const e = document.getElementById(id); return e ? (e.checked ? "cochée" : "vide") : "absente"; };
       /* v64 : le texte de la case des conditions, et le nœud qui suit le 2e lien (« politique de confidentialité ») : il
          commence par le point final, sans espace (le point ne tombe plus seul sous le lien) */
-      const lab = document.querySelector("label.co-cgu > span"), l2 = document.getElementById("c-politique-lien");
-      return { titre: q(".carte-co h2"), sous: q(".carte-co .co-sous"), bouton: q("#c-go"), cases: ["c-cgu", "c-sante", "c-newsletter", "c-rester"].map(cas), cocher: [...document.querySelectorAll(".carte-co input[type=checkbox]")].map(i => i.id),
-        cgu: lab ? lab.textContent.replace(/\s+/g, " ").trim() : "", point: !!(l2 && l2.nextSibling && l2.nextSibling.nodeType === 3 && l2.nextSibling.textContent.startsWith(".")), nom: !!document.getElementById("c-nom"), challenge: document.body.textContent.includes("Challenge") }; });
-    /* v52 (lot B) : plus de « 7 jours » ; titre et sous-titre de l'espace gratuit. v64 (brief V2 A1, A6) : sous-titre et bouton */
-    ok("inscription : titre « Crée ton espace gratuit », sous-titre « Gratuit, pour toujours : … et la Speed Formation avec ses vidéos, programmes et plans alimentaires. », bouton « Créer mon espace gratuit », plus aucun « Challenge » ni « 7 jours »", ecran.titre === "Crée ton espace gratuit" && ecran.sous === SOUS_FR && ecran.bouton === "Créer mon espace gratuit" && !ecran.challenge && !/7 jours/.test(ecran.sous), JSON.stringify(ecran));
-    /* v52 (lot B) : cases séparées, aucune cochée d'avance, et le champ Nom. v64 (brief V2 A) : UNE seule case obligatoire
-       (conditions, son texte exact, point collé au 2e lien), la newsletter, « Rester connecté » (coché) ; plus de case santé.
-       v74 : plus de champ Nom (#c-nom absent) */
-    ok("inscription : une seule case obligatoire, conditions (#c-cgu, « J'ai 18 ans ou plus et j'accepte les CGU et la politique de confidentialité. », point final collé au lien), puis newsletter (#c-newsletter), toutes deux vides ; plus de case santé (#c-sante absente) ; plus de « Rester connecté » (#c-rester absent, v76 : la session reste gardée) ; plus de champ Nom (#c-nom absent, v74)", JSON.stringify(ecran.cases) === '["vide","absente","vide","absente"]' && JSON.stringify(ecran.cocher) === '["c-cgu","c-newsletter"]' && ecran.cgu === CGU_FR && ecran.point && !ecran.nom, JSON.stringify(ecran));
+      const lab = document.querySelector("#pc label.co-cgu > span"), l1 = document.getElementById("c-cgu-lien"), l2 = document.getElementById("c-politique-lien"), nl = document.querySelector("#pc label.co-newsletter > span");
+      return { etape: (document.getElementById("pc") || { dataset: {} }).dataset.etape || "", cases: ["c-cgu", "c-sante", "c-newsletter", "c-rester"].map(cas), cocher: [...document.querySelectorAll("#pc input[type=checkbox]")].map(i => i.id),
+        cgu: lab ? lab.textContent.replace(/\s+/g, " ").trim() : "", point: !!(l2 && l2.nextSibling && l2.nextSibling.nodeType === 3 && l2.nextSibling.textContent.startsWith(".")),
+        liens: [l1, l2].map(a => a && a.tagName === "A" ? a.getAttribute("href") + (a.target === "_blank" ? " (nouvel onglet)" : "") : null),
+        newsletter: nl ? nl.textContent.replace(/\s+/g, " ").trim() : "", nom: !!document.getElementById("c-nom") }; }).catch(e => ({ erreur: String(e) }));
+    ok("inscription (v81 : écran Compte du parcours) : une seule case obligatoire, conditions (#c-cgu, « J'ai 18 ans ou plus et j'accepte les CGU et la politique de confidentialité. », point final collé au lien, liens vers les 2 PDF de test dans un nouvel onglet), puis newsletter (#c-newsletter, « Je veux recevoir les conseils et les offres de MHX Coaching par email. »), toutes deux vides ; plus de case santé (#c-sante absente) ; plus de « Rester connecté » (#c-rester absent, v76 : la session reste gardée) ; plus de champ Nom (#c-nom absent, v74)",
+      ecran.etape === "compte" && JSON.stringify(ecran.cases) === '["vide","absente","vide","absente"]' && JSON.stringify(ecran.cocher) === '["c-cgu","c-newsletter"]' && ecran.cgu === CGU_FR && ecran.point
+      && JSON.stringify(ecran.liens) === JSON.stringify([LEGAUX_TEST.cgu_pdf + " (nouvel onglet)", LEGAUX_TEST.confidentialite_pdf + " (nouvel onglet)"]) && ecran.newsletter === NEWSLETTER_FR && !ecran.nom, JSON.stringify(ecran));
+    /* v52 (lot B) : le nom était obligatoire. v74 : plus de nom demandé. v81 : aucun champ Nom sur aucun écran du parcours (de
+       l'accueil à l'écran Compte) ; le prénom donné, l'email valide, l'erreur de l'écran Compte est celle du mot de passe trop
+       court, jamais « Indique ton nom. », et rien n'est envoyé (« Continuer » inactif, touché quand même) */
     await page.fill("#c-email", "nouvelle@exemple.fr"); await page.fill("#c-mdp", "court");
-    await page.click("#c-go"); await attendre(page, 300);
-    ok("inscription : prénom obligatoire", (await page.textContent("#co-err")).includes("prénom"));
-    await page.fill("#c-prenom", "Zoé");
-    await page.click("#c-go"); await attendre(page, 300);
-    /* v52 (lot B) : le nom était obligatoire. v74 : plus de nom demandé — le prénom rempli, l'envoi passe directement au
-       contrôle suivant (le mot de passe trop court), jamais « Indique ton nom. », et rien n'est envoyé */
-    ok("inscription : aucun nom demandé (v74) — le prénom rempli, l'erreur suivante est celle du mot de passe (« 8 caractères »), jamais « Indique ton nom. », rien n'est envoyé", (await page.textContent("#co-err")).includes("8 caractères") && !(await page.textContent("#co-err")).includes("Indique ton nom.") && db.inscriptions.length === 0, await page.textContent("#co-err"));
-    await page.click("#c-go"); await attendre(page, 300);
-    ok("inscription : 8 caractères minimum", (await page.textContent("#co-err")).includes("8 caractères"));
-    await page.fill("#c-mdp", "motdepasse1");
-    await page.click("#c-go"); await attendre(page, 300);
-    ok("inscription : la case des conditions est obligatoire (v44)", (await page.textContent("#co-err")).includes("Coche la case") && db.inscriptions.length === 0);
+    await page.click("#pc-suivant", { force: true }); await attendre(page, 300);
+    const e6 = await erreursCompte(page);
+    ok("inscription : aucun nom demandé (v74 ; v81 : #c-nom absent de chaque écran du parcours, de l'accueil à l'écran Compte) — prénom donné, email valide, mot de passe court : l'erreur de l'écran Compte est celle du mot de passe (« 8 caractères minimum. »), aucune sur l'email, jamais « Indique ton nom. », rien n'est envoyé",
+      e6.etape === "compte" && e6.mdp === "8 caractères minimum." && e6.email === "" && !/Indique ton nom/.test(e6.texte || "") && ETAPES_PC.slice(0, 8).every(k => vus[k] && !vus[k].nom) && db.inscriptions.length === 0,
+      JSON.stringify(e6).slice(0, 200) + " · écrans vus : " + Object.keys(vus).join(",") + " · inscriptions " + db.inscriptions.length);
+    await page.fill("#c-mdp", "abcdefg"); const b7 = await inactif(page, "#pc-suivant");
+    await page.click("#pc-suivant", { force: true }); await attendre(page, 300);
+    const e7 = await erreursCompte(page);
+    ok("inscription : 8 caractères minimum (v81 : écran Compte) — 7 caractères : « Continuer » reste inactif et, touché, « 8 caractères minimum. » sous le mot de passe ; on reste sur l'écran Compte, rien n'est envoyé",
+      b7 === true && e7.mdp === "8 caractères minimum." && e7.etape === "compte" && db.inscriptions.length === 0, JSON.stringify([b7, e7.etape, e7.mdp, db.inscriptions.length]));
+    await page.fill("#c-mdp", "motdepasse1"); const b8 = await inactif(page, "#pc-suivant");
+    await page.click("#pc-suivant", { force: true }); await attendre(page, 300);
+    const e8 = await erreursCompte(page);
+    ok("inscription : la case des conditions est obligatoire (v44 ; v81 : écran Compte) — email valide et 8 caractères, case vide : « Continuer » inactif et, touché, « Coche la case des conditions pour continuer. » (plus d'erreur sur l'email ni le mot de passe) ; on reste sur l'écran Compte, rien n'est envoyé",
+      b8 === true && e8.cgu === "Coche la case des conditions pour continuer." && e8.mdp === "" && e8.email === "" && e8.etape === "compte" && db.inscriptions.length === 0, JSON.stringify([b8, e8.etape, e8.email, e8.mdp, e8.cgu, db.inscriptions.length]));
     /* v64 (brief V2 A3) : plus de case santé (avant, P0.5 : case obligatoire, « …données de santé… » au clic) : ni case, ni
-       texte santé à l'écran, ni texte santé dans DECOUVERTE.inscription (FR et EN) ; la case des conditions cochée suffit */
-    const sante = await page.evaluate(() => ({ cases: ["c-sante"].filter(id => document.getElementById(id)).concat(document.querySelector(".co-sante") ? [".co-sante"] : []),
-      texte: /données de santé|health data/i.test((document.querySelector(".carte-co") || document.body).textContent),
-      cles: ["sante_avant", "sante_manque"].filter(k => (k in (DECOUVERTE.inscription || {})) || (k in ((DECOUVERTE.en || {}).inscription || {}))) })).catch(e => ({ erreur: String(e) }));
+       texte santé à l'écran, ni texte santé dans DECOUVERTE.inscription (FR et EN) ; la case des conditions cochée suffit.
+       v81 : vérifié sur l'écran Compte et sur l'écran WhatsApp, où « Débloquer mon espace » crée le compte */
+    const santeC = await santeIci(page);
     /* version des conditions attendue (v64, brief V2 A2 et K) : celle des CGU en PDF, CONFIG.textes_legaux.cgu_version (servie :
-       LEGAUX_TEST), reprise par DECOUVERTE.accords.conditions ; avant : la version du texte court (confidentialite.version) */
-    const version = await page.evaluate(() => ({ cgu: (CONFIG.textes_legaux || {}).cgu_version, accords: (DECOUVERTE.accords || {}).conditions, court: (DECOUVERTE.confidentialite || {}).version })).catch(e => ({ erreur: String(e) }));
-    await page.check("#c-cgu");
-    await page.click("#c-go"); await attendre(page, 2500);
-    ok("inscription : plus de case ni de texte santé (#c-sante absente, aucun « données de santé » à l'écran, sante_avant / sante_manque retirés des textes FR et EN) ; la case des conditions cochée suffit, un compte se crée sans accord santé (v64, brief V2 A3 ; avant : case santé obligatoire, P0.5)",
-      !!sante.cles && sante.cases.length === 0 && sante.texte === false && sante.cles.length === 0 && db.inscriptions.length === 1, JSON.stringify(sante) + " · inscriptions envoyées : " + db.inscriptions.length);
+       LEGAUX_TEST), reprise par DECOUVERTE.accords.conditions ; avant : la version du texte court (confidentialite.version).
+       v81 : et la version de la newsletter (DECOUVERTE.accords.newsletter, 2026-10-13 : texte de la case du parcours) */
+    const version = await page.evaluate(() => ({ cgu: (CONFIG.textes_legaux || {}).cgu_version, accords: (DECOUVERTE.accords || {}).conditions, court: (DECOUVERTE.confidentialite || {}).version, newsletter: (DECOUVERTE.accords || {}).newsletter })).catch(e => ({ erreur: String(e) }));
+    await page.check("#c-cgu"); const b9 = await inactif(page, "#pc-suivant");
+    await page.click("#pc-suivant"); await page.waitForSelector('#pc[data-etape="whatsapp"]', { timeout: 8000 }).catch(() => {}); await noter(page, vus);
+    const santeW = await santeIci(page);
+    await page.fill("#c-tel", "06 39 98 00 99");   // plage réservée à la fiction
+    await page.click("#c-go");
+    /* le compte est créé, la page se recharge avec la session : « Ton espace » (Parcours.suite, après l'écriture d'intake) */
+    await page.waitForSelector('#pc[data-etape="espace"]', { timeout: 15000 }).catch(() => {}); await attendre(page, 1200);
+    ok("inscription : plus de case ni de texte santé (#c-sante absente, aucun « données de santé » à l'écran, sante_avant / sante_manque retirés des textes FR et EN ; v81 : écrans Compte et WhatsApp du parcours) ; la case des conditions cochée suffit (« Continuer » s'active), un compte se crée sans accord santé au toucher de « Débloquer mon espace » (v64, brief V2 A3 ; avant : case santé obligatoire, P0.5)",
+      santeOk(santeC) && santeOk(santeW) && b9 === false && db.inscriptions.length === 1, JSON.stringify([santeC, santeW, b9]) + " · inscriptions envoyées : " + db.inscriptions.length);
     const ins = db.inscriptions[0] || {}, md = ins.data || {}, isoRe = /^\d{4}-\d{2}-\d{2}T/;
-    /* v52 (lot B) : le nom saisi (plus « » vide), chaque accord daté ET versionné, newsletter (null si la case est vide) au lieu d'emails_suivi.
+    /* v52 (lot B) : chaque accord daté ET versionné, newsletter (null si la case est vide) au lieu d'emails_suivi.
        v64 (brief V2 A) : EXACTEMENT prenom, nom, consentement, conditions_version (= CONFIG.textes_legaux.cgu_version), newsletter,
-       newsletter_version (« 2026-09-30 », texte A4) ; plus de consentement_sante ni de sante_version (accord au premier usage).
-       v74 : plus de champ Nom : nom "" (profils.nom vide, comme avant la v52) */
-    ok("inscription : POST /auth/v1/signup avec le prénom et un nom vide (v74 : plus de champ Nom), consentement daté + version des CGU (CONFIG.textes_legaux.cgu_version, « 2026-10-15 » servie, = DECOUVERTE.accords.conditions, ≠ version du texte court), newsletter null (case vide) + version « 2026-09-30 », aucun accord santé (ni consentement_sante ni sante_version), plus d'emails_suivi (v44, v52, v64)",
+       newsletter_version ; plus de consentement_sante ni de sante_version (accord au premier usage). v74 : nom "".
+       v81 : le prénom de l'écran « On t’appelle comment ? » ; newsletter_version « 2026-10-13 » (nouveau texte de la case ; avant
+       2026-10-11) ; mêmes clés DANS LEUR ORDRE, corps sans autre clé (pas de jeton CAPTCHA : Turnstile éteint) */
+    ok("inscription : POST /auth/v1/signup (v81 : au toucher de « Débloquer mon espace », écran WhatsApp du parcours) avec le prénom de l'écran « On t’appelle comment ? » et un nom vide (v74), consentement daté + version des CGU (CONFIG.textes_legaux.cgu_version, « 2026-10-15 » servie, = DECOUVERTE.accords.conditions, ≠ version du texte court), newsletter null (case vide) + version « 2026-10-13 » (v81, = DECOUVERTE.accords.newsletter), aucun accord santé (ni consentement_sante ni sante_version), plus d'emails_suivi ; exactement prenom, nom, consentement, conditions_version, newsletter, newsletter_version, dans cet ordre (v44, v52, v64, v81)",
       db.inscriptions.length === 1 && md.prenom === "Zoé" && md.nom === "" && isoRe.test(md.consentement || "") && version.cgu === LEGAUX_TEST.cgu_version && version.accords === LEGAUX_TEST.cgu_version && md.conditions_version === LEGAUX_TEST.cgu_version && !!version.court && md.conditions_version !== version.court
-      && md.newsletter === null && md.newsletter_version === "2026-10-11" && Object.keys(md).sort().join(",") === "conditions_version,consentement,newsletter,newsletter_version,nom,prenom" && ins.email === "nouvelle@exemple.fr",
-      db.inscriptions.length + " " + JSON.stringify(md) + " attendu " + JSON.stringify(version));
-    ok("inscription : connecté ensuite, et prospect", await page.evaluate(() => Auth.connecte() && Auth.estProspect()).catch(() => false));
-    /* le compte neuf arrive sur la Découverte au jour 1, questionnaire court à remplir, pas encore de bouton Calendly */
-    const arrivee = await page.evaluate(() => { const z = document.querySelector("#dc-vue, #acc-vue");
-      return { h: location.hash, t: z ? z.textContent.replace(/\s+/g, " ") : "", age: !!document.getElementById("q-probleme"), voir: !!document.getElementById("dc-voir"), cal: z ? z.querySelectorAll('a[href*="calendly"], [data-dc-cal]').length : -1 }; }).catch(e => ({ erreur: String(e) }));
-    /* v52 (Chantier 1 lot C) : les 3 questions, sans âge (#q-probleme ; avant : #q-age) */
-    /* v52 (lot D) : « Découverte » sans « Jour n/7 » (gratuit pour toujours) */
-    ok("inscription : arrivée sur la Découverte (sans « Jour n/7 »), questionnaire court (#q-probleme, #dc-voir), aucun bouton Calendly", /^ ?Découverte Bonjour/.test(arrivee.t || "") && !/Jour \d/.test(arrivee.t || "") && arrivee.age && arrivee.voir && arrivee.cal === 0, JSON.stringify(arrivee).slice(0, 250));
-    /* rien ne part dans donnees avant la saisie d'un âge ≥ 18 : ni brouillon intake, ni clé challenge écrite au démarrage.
-       v52 (lot B) : la seule écriture est la copie du choix de la newsletter dans la clé emails (première ouverture) */
+      && md.newsletter === null && md.newsletter_version === "2026-10-13" && version.newsletter === "2026-10-13" && JSON.stringify(Object.keys(md)) === '["prenom","nom","consentement","conditions_version","newsletter","newsletter_version"]'
+      && JSON.stringify(Object.keys(ins)) === '["email","password","data"]' && ins.email === "nouvelle@exemple.fr" && ins.password === "motdepasse1",
+      db.inscriptions.length + " " + JSON.stringify(Object.assign({}, ins, { password: ins.password ? "(" + ins.password.length + " car.)" : ins.password })) + " attendu " + JSON.stringify(version));
+    ok("inscription : connecté ensuite (v81 : page rechargée avec la session), et prospect", await page.evaluate(() => Auth.connecte() && Auth.estProspect()).catch(() => false));
+    /* avant (v52, lots C et D) : le compte neuf arrivait sur la Découverte, questionnaire court à remplir (#q-probleme, #dc-voir),
+       sans « Jour n/7 » ni bouton Calendly. v81 : il arrive sur « Ton espace » du parcours (les réponses sont déjà données) ;
+       ni questionnaire, ni page « Ton plan d'action », ni navigation, ni bouton Calendly (le cadeau vient après) */
+    const arrivee = await page.evaluate(() => { const pc = document.getElementById("pc"), n = s => String(s || "").replace(/\s+/g, " ").trim(), q = s => { const e = document.querySelector(s); return e ? n(e.textContent) : ""; };
+      const pr = document.querySelector("#pc .pc-progres");
+      return { h: location.hash, etape: pc ? pc.dataset.etape : "", progres: pr ? pr.getAttribute("aria-valuenow") : null, titre: q("#pc h1"), bouton: q("#pc-suivant"), t: pc ? n(pc.textContent) : "",
+        questionnaire: !!document.getElementById("q-probleme"), voir: !!document.getElementById("dc-voir"), bilan: !!document.getElementById("dc-bilan"), nav: !!document.querySelector(".topbar, #barre-bas"),
+        installe: !!document.getElementById("installe"), cal: document.querySelectorAll('a[href*="calendly"], [data-dc-cal]').length }; }).catch(e => ({ erreur: String(e) }));
+    await noter(page, vus);
+    /* le cadeau (100 %), affiché sans être touché : son texte aussi, pour l'absence de « 14 jours » sur les 11 écrans */
+    await page.click("#pc-suivant").catch(() => {}); await page.waitForSelector('#pc[data-etape="cadeau"]', { timeout: 8000 }).catch(() => {}); await noter(page, vus); await attendre(page, 600);
+    const tous = ETAPES_PC.filter(k => vus[k]).map(k => k + " : " + vus[k].t).join(" | ");
+    ok("inscription (v81) : arrivée du compte neuf sur « Ton espace » du parcours (90 %, « Zoé, voici ce qui t’attend dans ton espace. », « Entrer dans mon espace »), page rechargée avec la session : plus le questionnaire de l'app (#q-probleme, #dc-voir absents), ni la page « Ton plan d'action » (#dc-bilan), ni navigation, ni bannière d'installation, ni « Jour n/7 », aucun bouton Calendly ; et sur les 11 écrans du parcours vus (accueil → cadeau, hors compte à rebours) : plus aucun « 14 jours », « 7 jours » ni « Challenge »",
+      arrivee.etape === "espace" && arrivee.progres === "90" && arrivee.titre === "Zoé, voici ce qui t’attend dans ton espace." && arrivee.bouton === "Entrer dans mon espace" && !arrivee.questionnaire && !arrivee.voir && !arrivee.bilan && !arrivee.nav && !arrivee.installe
+      && !/Jour \d/.test(arrivee.t || "") && arrivee.cal === 0 && ETAPES_PC.every(k => vus[k] && !!vus[k].t) && !/14 jours|(^|\D)7 jours|Challenge/.test(tous),
+      JSON.stringify(Object.assign({}, arrivee, { t: (arrivee.t || "").slice(0, 120) })) + " · écrans vus : " + Object.keys(vus).join(",") + " · " + ((tous.match(/[^|]*(14 jours|7 jours|Challenge)[^|]*/) || [""])[0]).slice(0, 160));
+    /* avant (v52, lot B) : à l'arrivée, la seule écriture était la copie du choix de la newsletter (clé emails). v81 : le numéro
+       est demandé par le parcours (écran WhatsApp) : clé contact écrite UNE fois à la création ; puis, page rechargée, la copie
+       emails et les réponses du parcours en UNE écriture d'intake (après lecture) ; rien d'autre (ni challenge : il n'est écrit
+       qu'au toucher d'un bouton du cadeau) */
     const ecrArrivee = db.ecritures.filter(e => e.table === "donnees");
-    ok("inscription : à l'arrivée du compte neuf, une seule écriture dans donnees, la copie de la newsletter (clé emails) ; ni brouillon intake, ni clé challenge", ecrArrivee.length === 1 && ecrArrivee[0].outil === "emails", JSON.stringify(ecrArrivee).slice(0, 250));
+    ok("inscription (v81) : écritures dans donnees du compte neuf, de « Débloquer mon espace » au cadeau (affiché, pas touché) : la clé contact UNE fois (le numéro, à la création), la copie de la newsletter (clé emails) UNE fois et les réponses du parcours en UNE écriture d'intake ; rien d'autre (ni challenge, ni autre clé) ; avant la v81 : la seule copie emails",
+      ecrArrivee.map(e => e.outil).sort().join(",") === "contact,emails,intake" && ecrArrivee.every(e => e.user_id === INSCRIT && e.m === "POST"), JSON.stringify(ecrArrivee).slice(0, 300));
     await c.close();
     legaux = null;
   }
@@ -375,24 +498,46 @@ const lireTuiles = page => page.$$eval("#tb-vue .tb-tuile", l => l.map(t => {
     inscriptionLibre = true;
     const db = base();
     const { c, page } = await contexte(b, null, db, { inscriptionKo: true, langue: "en" });
-    await page.goto(`http://localhost:${PORT}/#/inscription`); await attendre(page, 1200);
-    const t = await page.textContent("body");
+    await page.goto(`http://localhost:${PORT}/#/inscription`); await page.waitForSelector('#pc[data-etape="accueil"]', { timeout: 10000 }).catch(() => {}); await attendre(page, 300);
     /* v52 (lot B) : espace gratuit, plus de 7 jours ; champ « Your last name ». v64 (brief V2 A1, A2, A6) : sous-titre, case
-       des conditions « I'm 18 or older… », « Create my free account », plus aucun « health data ». v74 : plus de « Your last name » */
-    const cguEn = await page.$eval("label.co-cgu > span", s => s.textContent.replace(/\s+/g, " ").trim()).catch(() => "");
-    ok("inscription en anglais : « Create your free space », sous-titre « Free, forever: … and the Speed Formation course with its videos, workout programs and meal plans. », « Your first name » (plus de « Your last name », v74), case « I'm 18 or older and I accept the Terms of Use and the Privacy Policy. », « Create my free account », plus aucun « health data », « Challenge » ni « 7 days »", t.includes("Create your free space") && t.includes(SOUS_EN) && !t.includes("7 days") && t.includes("Your first name") && !t.includes("Your last name") && cguEn === CGU_EN && t.includes("Create my free account") && !/health data/i.test(t) && !t.includes("Challenge"), cguEn + " · " + t.replace(/\s+/g, " ").slice(0, 250));
+       des conditions « I'm 18 or older… », « Create my free account », plus aucun « health data ». v74 : plus de « Your last name ».
+       v81 : le parcours en anglais — accueil (titre, sous-titre sans « 14 days », « Create my free space »), écran du prénom
+       (« Your first name »), écran Compte (la case des conditions) ; de l'accueil à l'écran Compte, aucun champ Nom ni « Your
+       last name », « health data », « Challenge », « 7 days » ou « 14 days » (hors compte à rebours) */
+    const vusEn = {};
+    await noter(page, vusEn);
+    const accEn = await page.evaluate(() => { const q = s => { const e = document.querySelector(s); return e ? e.textContent.replace(/\s+/g, " ").trim() : ""; };
+      return { etape: (document.getElementById("pc") || { dataset: {} }).dataset.etape || "", titre: q("#pc h1"), sous: q("#pc .pc-sous"), bouton: q("#pc-go") }; }).catch(e => ({ erreur: String(e) }));
+    let prenomEn = "";
+    for (const e of ["objectif", "coince", "projection", "sexe", "prenom", "chargement", "compte"]) {
+      await FT.parcours(page, {}, e); await noter(page, vusEn);
+      if (e === "prenom") prenomEn = await page.$eval('label[for="pc-prenom"]', l => l.textContent.replace(/\s+/g, " ").trim()).catch(() => "");
+    }
+    const cguEn = await page.$eval("#pc label.co-cgu > span", s => s.textContent.replace(/\s+/g, " ").trim()).catch(() => "");
+    const tousEn = ETAPES_PC.filter(k => vusEn[k]).map(k => k + " : " + vusEn[k].t).join(" | ");
+    ok("inscription en anglais (v81 : le parcours) : accueil « How many Mondays have you said “I’ll start”? », sous-titre « Ready-made workouts, food diary, recipes, progress tracking. Free for life when you sign up. » (avant : « …in 14 days… »), « Create my free space » ; écran du prénom « Your first name » (plus de « Your last name », v74 ; #c-nom absent) ; écran Compte : case « I'm 18 or older and I accept the Terms of Use and the Privacy Policy. » ; de l'accueil à l'écran Compte, plus aucun « health data », « Challenge », « 7 days » ni « 14 days »",
+      accEn.etape === "accueil" && accEn.titre === TITRE_EN && accEn.sous === SOUS_EN && accEn.bouton === BOUTON_EN && prenomEn === "Your first name" && cguEn === CGU_EN
+      && ETAPES_PC.slice(0, 8).every(k => vusEn[k] && !vusEn[k].nom) && !/Your last name/i.test(tousEn) && !/health data/i.test(tousEn) && !tousEn.includes("Challenge") && !/(^|\D)7 days|14 days/.test(tousEn),
+      JSON.stringify([accEn, prenomEn, cguEn, Object.keys(vusEn)]) + " · " + tousEn.slice(0, 200));
     /* v64 (brief V2 A) : la seule case obligatoire est celle des conditions (avant : la case santé manquante → « Accept the
-       processing of your health data ») : sans elle, « Tick the terms box to continue. » et rien n'est envoyé */
-    await page.fill("#c-prenom", "Zoé"); await page.fill("#c-email", "z@exemple.fr"); await page.fill("#c-mdp", "motdepasse1");   // v74 : plus de nom
-    await page.click("#c-go"); await attendre(page, 300);
-    const santeEn = !!(await page.$("#c-sante"));
-    ok("inscription en anglais : case des conditions manquante → « Tick the terms box to continue. », rien n'est envoyé ; c'est la seule case obligatoire (plus de case santé, #c-sante absente)", (await page.textContent("#co-err")).trim() === "Tick the terms box to continue." && db.inscriptions.length === 0 && !santeEn, await page.textContent("#co-err") + " · #c-sante " + (santeEn ? "présente" : "absente"));
-    await page.check("#c-cgu");
-    await page.click("#c-go"); await attendre(page, 800);
-    ok("inscription refusée par Supabase : « Sign-ups are not open yet. »", (await page.textContent("#co-err")).includes("Sign-ups are not open yet"));
+       processing of your health data ») : sans elle, « Tick the terms box to continue. » et rien n'est envoyé. v81 : sur l'écran
+       Compte, « Continuer » reste inactif (touché quand même : le message) ; la case cochée, il s'active (newsletter vide) */
+    await page.fill("#c-email", "z@exemple.fr"); await page.fill("#c-mdp", "motdepasse1");   // v74 : plus de nom
+    const b0 = await inactif(page, "#pc-suivant");
+    await page.click("#pc-suivant", { force: true }); await attendre(page, 300);
+    const errEn = await erreursCompte(page), santeEn = !!(await page.$("#c-sante"));
+    await page.check("#c-cgu"); const b1 = await inactif(page, "#pc-suivant"), nlEn = await page.isChecked("#c-newsletter").catch(() => null);
+    ok("inscription en anglais : case des conditions manquante → « Tick the terms box to continue. » (v81 : écran Compte, « Continuer » inactif), on reste sur l'écran Compte, rien n'est envoyé ; c'est la seule case obligatoire (cochée, « Continuer » s'active, newsletter vide ; plus de case santé, #c-sante absente)",
+      b0 === true && errEn.cgu === "Tick the terms box to continue." && errEn.etape === "compte" && db.inscriptions.length === 0 && !santeEn && b1 === false && nlEn === false,
+      JSON.stringify([b0, errEn.etape, errEn.cgu, b1, nlEn, db.inscriptions.length]) + " · #c-sante " + (santeEn ? "présente" : "absente"));
+    await page.click("#pc-suivant"); await page.waitForSelector('#pc[data-etape="whatsapp"]', { timeout: 8000 }).catch(() => {});
+    await page.fill("#c-tel", "0639980099"); await page.click("#c-go");
+    const refusEn = await messageServeur(page);
+    ok("inscription refusée par Supabase : « Sign-ups are not open yet. » (v81 : écran WhatsApp du parcours, au toucher de « Débloquer mon espace » ; on y reste)", refusEn.includes("Sign-ups are not open yet") && db.inscriptions.length === 1 && (await etapeDe(page)) === "whatsapp", refusEn + " · inscriptions " + db.inscriptions.length);
     await c.close();
   }
-  /* v52 (reprise de la nuit du 28/09) : erreurs d'envoi d'email (SMTP Brevo en panne, limite horaire du projet) : jamais l'anglais brut */
+  /* v52 (reprise de la nuit du 28/09) : erreurs d'envoi d'email (SMTP Brevo en panne, limite horaire du projet) : jamais l'anglais brut.
+     v81 : la création de compte est au bout du parcours (« Débloquer mon espace », écran WhatsApp, message dans #co-err) */
   for (const [quoi, err, attendu] of [
     ["serveur d'emails en panne", { status: 500, msg: "Error sending confirmation email" }, "L'email n'a pas pu partir (souci de notre côté). Réessaie dans un moment ; si ça continue, écris-moi sur Instagram (@lucasmhxcoaching)."],
     ["limite horaire d'emails du projet", { status: 429, msg: "email rate limit exceeded" }, "Beaucoup d'inscriptions en ce moment : réessaie dans une heure."],
@@ -400,11 +545,10 @@ const lireTuiles = page => page.$$eval("#tb-vue .tb-tuile", l => l.map(t => {
     inscriptionLibre = true;
     const db = base();
     const { c, page } = await contexte(b, null, db, { inscriptionErreur: err });
-    await page.goto(`http://localhost:${PORT}/#/inscription`); await attendre(page, 1200);
-    await page.fill("#c-prenom", "Zoé"); await page.fill("#c-email", "z@exemple.fr"); await page.fill("#c-mdp", "motdepasse1"); await page.check("#c-cgu");   // v64 : plus de case santé ; v74 : plus de nom
-    await page.click("#c-go"); await attendre(page, 800);
-    const t = await page.textContent("#co-err");
-    ok("inscription, " + quoi + " (« " + err.msg + " ») : message en français, jamais le texte anglais brut", t.includes(attendu) && !t.includes(err.msg), t);
+    await page.goto(`http://localhost:${PORT}/#/inscription`); await page.waitForSelector("#pc", { timeout: 10000 }).catch(() => {});
+    await FT.parcours(page, { prenom: "Zoé", email: "z@exemple.fr", mdp: "motdepasse1", tel: "0639980099" }, "cree");   // v64 : plus de case santé ; v74 : plus de nom
+    const t = await messageServeur(page);
+    ok("inscription, " + quoi + " (« " + err.msg + " ») : message en français, jamais le texte anglais brut (v81 : écran WhatsApp du parcours)", t.includes(attendu) && !t.includes(err.msg) && db.inscriptions.length === 1, t + " · inscriptions " + db.inscriptions.length);
     await c.close();
   }
   /* v55 : écran de connexion, inscription ouverte : « Mot de passe oublié ? » et « Créer mon compte » bien placés sur
@@ -476,4 +620,6 @@ const lireTuiles = page => page.$$eval("#tb-vue .tb-tuile", l => l.map(t => {
     await c.close();
   }
   await b.close(); server.close(); console.log(res.join("\n"));
-})();
+})().catch(e => {   // v81 : une étape qui casse (écran attendu jamais affiché…) montre les vérifications déjà faites, au lieu de 0 ✓ muet
+  console.log(res.join("\n")); console.log("  ✗ SUITE INTERROMPUE — " + String((e && e.message) || e).split("\n")[0].slice(0, 200)); process.exit(1);
+});

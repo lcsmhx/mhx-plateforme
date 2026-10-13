@@ -26,7 +26,10 @@
       Profil, Découverte, inscription), version « 2026-09-27 · 51 » en pied de page ; v64 (lot 5, brief V2 A2) : l'inscription
       n'ouvre plus le volet des conditions (vérifié depuis le Profil) : « CGU » et « politique de confidentialité » sont 2 liens
       distincts vers les PDF de CONFIG.textes_legaux (servis avec LEGAUX_TEST : href, target=_blank, rel=noopener, jamais
-      cliqués) ; valeurs « à compléter » : le mot seul (span.lien.lien-absent, même id, sans lien) ;
+      cliqués) ; valeurs « à compléter » : le mot seul (span.lien.lien-absent, même id, sans lien) ; v81 (bloc 2) : l'écran
+      unique d'inscription est remplacé par le parcours du prospect (js/parcours.js) : les 2 liens sont vérifiés sur l'écran
+      « compte » du parcours (atteint par FT.parcours, retrouvé après rechargement) et « aucun prix » sur chacun des 9 écrans
+      d'avant la création du compte (accueil … whatsapp) ;
    K. statuts : clic « Réserver » sans questionnaire à 2 h = TIÈDE, à 30 h = FROID, NOUVEAU avec « questionnaire
       commencé (4/10 réponses) » ;
    L. client Thomas : ni lecture ni écriture d'activite, emails ou coach_notifs en naviguant, en arrière-plan, au bout de
@@ -47,7 +50,7 @@ const BLOCS = (process.env.VERIF53_BLOCS || "").split(",").map(x => x.trim()).fi
 const OUT = path.join(__dirname, "captures", "v53"); fs.mkdirSync(OUT, { recursive: true });
 let inscriptionLibre = false;
 /* 52.1 : la retouche vaut pour la page et pour ses fichiers (inscription_libre est dans js/config.js) */
-const { servirFichier, source, forcerInscription } = require("./fichiers");   // 52.1 : la page charge css/ et js/, servis depuis son dossier (fichiers.js)
+const { servirFichier, source, forcerInscription, parcours } = require("./fichiers");   // 52.1 : la page charge css/ et js/, servis depuis son dossier (fichiers.js) ; v81 : parcours = FT.parcours (le parcours du prospect piloté comme un doigt)
 /* v54 : l'inscription est ouverte dans le fichier (inscription_libre: true) ; la retouche FORCE la valeur voulue
    (inscriptionLibre, fermée par défaut comme avant), dans les deux sens : la suite reste valable si Lucas la referme.
    v55 : par forcerInscription (fichiers.js), comme toutes les suites qui testent l'inscription (les autres servent la valeur
@@ -870,10 +873,18 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     }
     /* v64 (brief V2 A2) : l'inscription n'ouvre plus le volet des conditions (avant : clic sur #c-cgu-lien, PHRASE_FR / PHRASE_EN dans
        le volet ; ce texte reste vérifié depuis le Profil, ci-dessus) : 2 liens distincts vers les PDF (jamais cliqués), ou, tant
-       que les liens valent « à compléter », le mot seul sans lien (même id) ; écran sans aucun prix dans les deux cas */
+       que les liens valent « à compléter », le mot seul sans lien (même id) ; écran sans aucun prix dans les deux cas.
+       v81 (bloc 2) : l'écran unique « Crée ton espace gratuit » n'existe plus, #/inscription ouvre le parcours du prospect
+       (js/parcours.js). La case des conditions et ses 2 liens sont sur l'écran « compte » (label.co-cgu, mêmes ids, même
+       lienLegal) : atteint par FT.parcours (réponses par défaut), puis, page rechargée avec LEGAUX_A_COMPLETER depuis l'écran
+       « whatsapp », le parcours revient à « compte » (réponses gardées dans l'onglet, mot de passe jamais gardé). « Aucun prix » :
+       l'écran « compte » (plus de 100 caractères, avant et après le rechargement, comme l'écran unique) ET chacun des 8 autres
+       écrans d'avant la création du compte (accueil … whatsapp), qui portent ensemble ce que portait l'écran unique. */
     const lireLiens = page => page.evaluate(() => ["c-cgu-lien", "c-politique-lien"].map(id => { const e = document.getElementById(id);
       return e ? { tag: e.tagName, cls: e.className, href: e.getAttribute("href"), cible: e.getAttribute("target"), rel: e.getAttribute("rel"), t: e.textContent.replace(/\s+/g, " ").trim(), dansCase: !!e.closest("label.co-cgu") } : null; }))
       .then(l => ({ l, nA: null })).catch(e => ({ l: [], erreur: String(e) }));
+    const ECRANS_AVANT = ["accueil", "objectif", "coince", "projection", "sexe", "prenom", "chargement", "compte", "whatsapp"];
+    const texteAffiche = page => page.evaluate(() => document.body.innerText).then(norm).catch(() => "");
     inscriptionLibre = true;
     try {
       for (const langue of ["", "en"]) {
@@ -881,19 +892,31 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
         const [L1, L2] = langue ? ["Terms of Use", "Privacy Policy"] : ["CGU", "politique de confidentialité"];
         legaux = LEGAUX_TEST;
         const { c, page } = await contexte(b, null, db, { langue });
-        await page.goto(`http://localhost:${PORT}/#/inscription`); await page.waitForSelector("#c-cgu-lien", { timeout: 8000 }); await attendre(page, 400);
-        const te = await page.evaluate(() => document.body.innerText).then(norm).catch(() => ""), avec = await lireLiens(page);
-        avec.nA = await page.$$eval("label.co-cgu a", l => l.length).catch(() => -1);
+        await page.goto(`http://localhost:${PORT}/#/inscription`); await page.waitForSelector("#pc", { timeout: 8000 });
+        /* chaque écran d'avant la création du compte, dans l'ordre, lu dès qu'il est affiché (le chargement passe seul à « compte ») */
+        const textes = {}; let avec = { l: [], nA: -1, erreur: "écran « compte » jamais atteint" };
+        for (const e of ECRANS_AVANT) {
+          const vu = await parcours(page, {}, e);
+          if (vu !== e) throw new Error("parcours : écran « " + vu + " » au lieu de « " + e + " »");
+          if (e === "compte") { await page.waitForSelector('#pc[data-etape="compte"] #c-cgu-lien', { timeout: 8000 }); await attendre(page, 400); }
+          textes[e] = await texteAffiche(page);
+          if (e === "compte") { avec = await lireLiens(page); avec.nA = await page.$$eval("label.co-cgu a", l => l.length).catch(() => -1); }
+        }
+        const te = textes.compte || "";
         legaux = LEGAUX_A_COMPLETER;
-        await page.reload(); await page.waitForSelector("#c-cgu-lien", { timeout: 8000 }); await attendre(page, 400);
-        const te2 = await page.evaluate(() => document.body.innerText).then(norm).catch(() => ""), sans = await lireLiens(page);
+        await page.reload(); await page.waitForSelector('#pc[data-etape="compte"] #c-cgu-lien', { timeout: 8000 }); await attendre(page, 400);
+        const te2 = await texteAffiche(page), sans = await lireLiens(page);
         sans.nA = await page.$$eval("label.co-cgu a", l => l.length).catch(() => -1);
         const okAvec = avec.l.length === 2 && avec.nA === 2 && avec.l.every(x => x && x.tag === "A" && x.cible === "_blank" && /(^|\s)noopener(\s|$)/.test(x.rel || "") && x.dansCase)
           && avec.l[0].href === LEGAUX_TEST.cgu_pdf && avec.l[1].href === LEGAUX_TEST.confidentialite_pdf && avec.l[0].t === L1 && avec.l[1].t === L2;
         const okSans = sans.l.length === 2 && sans.nA === 0 && sans.l.every(x => x && x.tag === "SPAN" && /(^|\s)lien(\s|$)/.test(x.cls) && /(^|\s)lien-absent(\s|$)/.test(x.cls) && x.href === null && x.dansCase)
           && sans.l[0].t === L1 && sans.l[1].t === L2;
-        ok(`inscription${langue ? " (anglais)" : ""} : « ${L1} » et « ${L2} », 2 liens distincts vers les PDF (href = CONFIG.textes_legaux, target=_blank, rel=noopener) ; liens « à compléter » : le mot seul (span.lien.lien-absent, même id, sans lien) ; écran sans aucun prix dans les deux cas (v64 : plus de volet ici)`,
-          okAvec && okSans && te.length > 100 && te2.length > 100 && !prixTrouve(te) && !prixTrouve(te2), prixTrouve(te) || prixTrouve(te2) || JSON.stringify({ avec, sans, te: te.length, te2: te2.length }));
+        const autres = ECRANS_AVANT.filter(e => e !== "compte");
+        const vides = autres.filter(e => (textes[e] || "").length <= 20);
+        const prixAutres = autres.filter(e => prixTrouve(textes[e] || "")).map(e => e + " : " + prixTrouve(textes[e])).join(" · ");
+        ok(`parcours d'inscription${langue ? " (anglais)" : ""}, écran « compte » : « ${L1} » et « ${L2} », 2 liens distincts vers les PDF dans la case des conditions (href = CONFIG.textes_legaux, target=_blank, rel=noopener) ; page rechargée (liens « à compléter ») : retour à l'écran « compte », le mot seul (span.lien.lien-absent, même id, sans lien) ; aucun prix sur cet écran dans les deux cas ni sur les 8 autres écrans d'avant la création du compte (v64 : plus de volet ici)`,
+          okAvec && okSans && te.length > 100 && te2.length > 100 && !prixTrouve(te) && !prixTrouve(te2) && vides.length === 0 && !prixAutres,
+          prixTrouve(te) || prixTrouve(te2) || prixAutres || JSON.stringify({ avec, sans, te: te.length, te2: te2.length, vides }));
         await c.close();
       }
     } finally { inscriptionLibre = false; legaux = null; }

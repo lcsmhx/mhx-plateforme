@@ -6,8 +6,8 @@
    d'un prospect (score détaillé, réponses, chronologie dans l'ordre, lien de réservation exact, mailto, Copier),
    Nouveautés (panneau du tableau de bord et de la page Prospects, 7 jours par défaut, « Tout marquer comme vu »
    qui écrit coach_notifs, badge qui disparaît, nouvel événement après la visite), journal des emails présent ou
-   absent (404), accord pour les emails (v52 : case newsletter de l'inscription → newsletter daté et versionné ;
-   interrupteur du Profil → clé emails { newsletter, maj, version, source }), activité du prospect (pages comptées en mémoire, aucune lecture à l'affichage d'une page
+   absent (404), accord pour les emails (v52 : case newsletter de l'inscription → newsletter daté et versionné, v81 : sur
+   l'écran « compte » du parcours ; interrupteur du Profil → clé emails { newsletter, maj, version, source }), activité du prospect (pages comptées en mémoire, aucune lecture à l'affichage d'une page
    verrouillée, écriture après relecture de la base — le delta s'ajoute —, pagehide : rien d'écrit, delta gardé
    sur l'appareil et repris au prochain envoi ou à la visite suivante, une minute), email du compte (email_compte)
    et début du questionnaire dans le premier brouillon (jamais avant 18 ans, retirés
@@ -20,6 +20,14 @@
    respecte l'en-tête Range et le tri demandé (order=…). Un défaut connu de l'app, hors brief (rien ne
    casse, rien ne s'exécute), s'affiche « ⚠ DÉFAUT CONNU » sans compter dans le total ; la suite sort
    avec le code 1 dès qu'un ✗ apparaît.
+   v81 (bloc 2 de la mission du 13/10, parcours du prospect en 11 écrans, js/parcours.js) : l'écran unique « Crée ton espace
+   gratuit » n'existe plus. Bloc F : « Pas encore de compte ? Créer mon compte » ouvre le parcours, piloté par FT.parcours
+   (fichiers.js) ; la case newsletter, la case des conditions et ses deux liens sont vérifiés sur l'écran « compte » (nouveau
+   texte de la case, version 2026-10-13), l'absence des cases « emails de suivi » et santé sur « compte » ET « whatsapp », et le
+   compte est créé par « Débloquer mon espace » (#c-go de l'écran « whatsapp ») : mêmes métadonnées exactes qu'avant. Bloc J :
+   le menu des pays du numéro (bloc « Mon numéro » du Profil) passe à 16 pays + « Autre pays » (changement voulu, mission) :
+   le texte de ses <option> est retiré des deux côtés de la comparaison, la liste du fichier testé est vérifiée à part (exacte,
+   dans l'ordre de TEXTES.md) ; tout le reste du Profil reste comparé strictement. Nombre de ✓ inchangé (137).
    Usage : node verif52.js ../index.html
            VERIF52_PORT=9700 node verif52.js ../index.html     (autre port, si 9682 est pris)
            VERIF52_BLOCS="G.,H. journal" node verif52.js …     (seulement les blocs dont le nom commence ainsi) */
@@ -36,7 +44,7 @@ let inscriptionLibre = false;
 /* 52.1 : la page charge css/ et js/ (fichiers.js) ; la retouche vaut pour la page et pour ses fichiers (inscription_libre
    est dans js/config.js). Les fichiers d'une page de référence (/?ref=main, reconnue à l'en-tête Referer de ses requêtes)
    viennent de la même révision git que sa page. */
-const { servirFichier, source, listes, forcerInscription, valeursInscription, NOUVEAUTES, forcerNouveautes, valeursNouveaute } = require("./fichiers");
+const { servirFichier, source, listes, forcerInscription, valeursInscription, NOUVEAUTES, forcerNouveautes, valeursNouveaute, parcours } = require("./fichiers");
 /* v54 : l'inscription est ouverte dans le fichier (inscription_libre: true) ; la retouche FORCE la valeur voulue
    (inscriptionLibre, fermée par défaut comme avant), dans les deux sens : la suite reste valable si Lucas la referme.
    v55 : par forcerInscription (fichiers.js), comme toutes les suites qui testent l'inscription (les autres servent la valeur
@@ -662,9 +670,14 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
      (V_NEWS_INSC = DECOUVERTE.accords.newsletter) ; l'interrupteur du Profil garde son texte et sa version (V_NEWS =
      accords.newsletter_profil, aussi celle des comptes inscrits jusqu'à la v63) ; plus d'accord santé à l'inscription (ni
      consentement_sante ni sante_version : demandé au premier usage) ; le volet des conditions ne s'ouvre plus depuis
-     l'inscription (ses deux mots mènent aux PDF) : il est vérifié depuis le Profil du prospect (#mc-conditions). */
-  const NEWS = "Oui, je veux recevoir par email les conseils et les offres de MHX Coaching (2 par semaine au plus, désinscription en 1 clic).";
-  const V_NEWS_INSC = "2026-10-11";   // v76 (avant : 2026-09-30) ; v64 : version du texte de la case newsletter de l'inscription (DECOUVERTE.accords.newsletter)
+     l'inscription (ses deux mots mènent aux PDF) : il est vérifié depuis le Profil du prospect (#mc-conditions).
+     v81 (bloc 2) : l'inscription est le parcours du prospect (js/parcours.js), piloté par FT.parcours. Chaque vérification de
+     l'ancien écran unique porte sur l'écran du parcours qui fait la même chose : case newsletter (nouveau texte de TEXTES.md,
+     version 2026-10-13), case des conditions et ses deux liens → écran « compte » ; absence des cases « emails de suivi » et
+     santé → écrans « compte » et « whatsapp » (les deux écrans qui remplacent l'ancien) ; prénom « Zoé » → écran « prenom » ;
+     création du compte → « Débloquer mon espace » (#c-go de l'écran « whatsapp ») ; mêmes métadonnées exactes. */
+  const NEWS = "Je veux recevoir les conseils et les offres de MHX Coaching par email.";   // v81 : texte de la case du parcours (TEXTES.md, PARCOURS_T.compte.newsletter, nom de la marque)
+  const V_NEWS_INSC = "2026-10-13";   // v81 (avant : 2026-10-11 ; v76 : 2026-09-30) ; v64 : version du texte de la case newsletter de l'inscription (DECOUVERTE.accords.newsletter)
   const V_NEWS = "2026-09-28c";   // version du texte de l'interrupteur du Profil (DECOUVERTE.accords.newsletter_profil ; la case de l'inscription jusqu'à la v63)
   /* v64 : métadonnées EXACTES d'une nouvelle inscription (triées) */
   const CLES_INSC = "conditions_version,consentement,newsletter,newsletter_version,nom,prenom";
@@ -712,21 +725,31 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
         const db = base();
         const { c, page } = await contexte(b, null, db);
         await page.goto(`http://localhost:${PORT}/`); await attendre(page, 1200);
-        await page.click('[data-mode="inscription"]'); await attendre(page, 400);
-        const lib = await texte(page, "label.co-newsletter");
-        if (coche) ok("inscription : case facultative « " + NEWS.slice(0, 60) + "… » (texte exact), décochée par défaut ; plus de case « emails de suivi » ni de case santé (#c-sante)", lib === NEWS && (await page.$eval("#c-newsletter", e => e.checked).catch(() => null)) === false && !(await page.$("#c-emails")) && !(await page.$("#c-sante")), lib);
+        /* v81 : « Pas encore de compte ? Créer mon compte » (connexion d'un appareil déjà venu) ouvre le parcours, à son accueil ;
+           mêmes valeurs qu'avant (prénom « Zoé », nouvelle@exemple.fr, motdepasse1), le reste par défaut (FT.parcours) */
+        await page.click('[data-mode="inscription"]'); await page.waitForSelector('#pc[data-etape="accueil"]', { timeout: 8000 });
+        const R = { prenom: "Zoé", email: "nouvelle@exemple.fr", mdp: "motdepasse1", newsletter: coche };
+        await parcours(page, R, "compte");
+        const etape = () => page.$eval("#pc", e => e.dataset.etape).catch(() => "");
+        const sansCases = async () => !(await page.$("#c-emails")) && !(await page.$("#c-sante"));   // v64 : plus de case santé (#c-sante)
+        const surCompte = await etape();
+        const lib = await texte(page, '#pc[data-etape="compte"] label.co-newsletter');
+        const nlCochee = await page.$eval('#pc[data-etape="compte"] label.co-newsletter #c-newsletter', e => e.checked).catch(() => null);
+        const sansCasesCompte = await sansCases();
         if (coche) {
           /* v64 : « CGU » et « politique de confidentialité » mènent aux PDF (CONFIG.textes_legaux, valeurs du fichier) : un
              lien a[target=_blank] vers une adresse https (jamais cliqué : réseau), ou le mot seul (span.lien-absent) tant que
-             le lien est « à compléter » — cliqué, il n'ouvre aucun volet ; plus de bouton qui ouvre le volet des conditions */
+             le lien est « à compléter » — cliqué, il n'ouvre aucun volet ; plus de bouton qui ouvre le volet des conditions.
+             v81 : sur l'écran « compte » du parcours (la case des conditions, même texte, même construction lienLegal) */
           const liens = await page.evaluate(async () => {
+            const pc = document.getElementById("pc"), ecran = pc ? pc.dataset.etape : null;
             const l = ["c-cgu-lien", "c-politique-lien"].map(id => document.getElementById(id)), cgu = document.getElementById("c-cgu"), avant = cgu && cgu.checked;
             const r = l.map(e => e ? { tag: e.tagName, dans: !!e.closest("label.co-cgu"), classe: e.className, href: e.getAttribute("href"), cible: e.getAttribute("target"), rel: e.getAttribute("rel") } : null);
             for (const e of l) if (e && e.tagName === "SPAN") e.click();
             await new Promise(ok => setTimeout(ok, 500));
             const volet = !!document.querySelector(".volet") || !!(window.UI && UI._ouverte);
             if (cgu) cgu.checked = avant;
-            return { r, volet };
+            return { ecran, r, volet };
           }).catch(e => ({ r: [], volet: null, erreur: String(e) }));
           const bon = x => !!x && x.dans && (x.tag === "A" ? /^https:\/\//.test(x.href || "") && x.cible === "_blank" && /\bnoopener\b/.test(x.rel || "") : x.tag === "SPAN" && /\blien-absent\b/.test(x.classe) && x.href === null);
           await page.keyboard.press("Escape"); await attendre(page, 300);
@@ -736,19 +759,25 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
           await pP.goto(`http://localhost:${PORT}/#/profil`); await pP.waitForSelector("#mc-conditions", { timeout: 8000 }).catch(() => {}); await attendre(pP, 800);
           await pP.click("#mc-conditions").catch(() => {}); await pP.waitForSelector(".volet", { timeout: 5000 }).catch(() => {}); await attendre(pP, 400);
           const vt = await texte(pP, ".volet");
-          ok("conditions : l'inscription n'ouvre plus le volet (« CGU » et « politique de confidentialité » : lien vers le PDF ou mot seul, jamais un bouton) ; volet du Profil du prospect (#mc-conditions) : paragraphe « Newsletter (facultative) : … de MHX Coaching, 2 emails par semaine au plus. Désinscription en 1 clic … » (v64, décision de Lucas du 30/09 : plus « 1 à 2 emails »), plus « Emails de suivi » ni « au plus 3 emails »",
-            liens.r.length === 2 && liens.r.every(bon) && liens.volet === false
+          await cP.close();
+          /* v81 : l'ancien écran unique = les écrans « compte » puis « whatsapp » : ni case « emails de suivi » ni case santé sur l'un ou l'autre */
+          await parcours(page, R, "whatsapp");
+          const surWhatsapp = await etape(), sansCasesWhatsapp = await sansCases();
+          ok("inscription (parcours, écran « compte ») : case facultative « " + NEWS.slice(0, 60) + "… » (texte exact), décochée par défaut ; plus de case « emails de suivi » ni de case santé (#c-sante), ni sur « compte » ni sur « whatsapp »",
+            surCompte === "compte" && lib === NEWS && nlCochee === false && sansCasesCompte && surWhatsapp === "whatsapp" && sansCasesWhatsapp,
+            JSON.stringify({ surCompte, lib, nlCochee, sansCasesCompte, surWhatsapp, sansCasesWhatsapp }));
+          ok("conditions : l'inscription (parcours, écran « compte ») n'ouvre plus le volet (« CGU » et « politique de confidentialité » : lien vers le PDF ou mot seul, jamais un bouton) ; volet du Profil du prospect (#mc-conditions) : paragraphe « Newsletter (facultative) : … de MHX Coaching, 2 emails par semaine au plus. Désinscription en 1 clic … » (v64, décision de Lucas du 30/09 : plus « 1 à 2 emails »), plus « Emails de suivi » ni « au plus 3 emails »",
+            liens.ecran === "compte" && liens.r.length === 2 && liens.r.every(bon) && liens.volet === false
             && vt.includes("Newsletter (facultative) : si tu coches la case, tu reçois par email les conseils, témoignages et offres de coaching de MHX Coaching, 2 emails par semaine au plus.") && !vt.includes("1 à 2 emails") && vt.includes("Désinscription en 1 clic dans chaque email, et retrait de ton accord possible à tout moment dans ton Profil.") && !vt.includes("Emails de suivi (facultatif)") && !vt.includes("au plus 3 emails"),
             JSON.stringify(liens) + " · volet du Profil : " + vt.slice(0, 80));
-          await cP.close();
-        }
-        await page.fill("#c-prenom", "Zoé"); await page.fill("#c-email", "nouvelle@exemple.fr"); await page.fill("#c-mdp", "motdepasse1");   // v74 : plus de champ Nom
-        await page.check("#c-cgu"); if (coche) await page.check("#c-newsletter");   // v64 : plus de case santé (#c-sante)
+        } else await parcours(page, R, "whatsapp");
+        /* v81 : prénom (écran « prenom »), email, mot de passe, case des conditions et newsletter (écran « compte ») déjà remplis par
+           FT.parcours ; v74 : plus de champ Nom ; le compte est créé par « Débloquer mon espace » (#c-go de l'écran « whatsapp ») */
         const t0 = Date.now();
-        await page.click("#c-go"); await attendre(page, 2500);
+        await parcours(page, R, "cree"); await attendre(page, 2500);
         const md = (db.inscriptions[0] || {}).data || {};
-        if (coche) ok("case cochée : l'inscription porte newsletter = l'instant de l'inscription et newsletter_version " + V_NEWS_INSC + " (texte de la case, métadonnées du compte), plus d'emails_suivi", db.inscriptions.length === 1 && typeof md.newsletter === "string" && Math.abs(Date.parse(md.newsletter) - t0) < 10000 && md.newsletter_version === V_NEWS_INSC && !("emails_suivi" in md), JSON.stringify(md));
-        else ok("case laissée vide : l'inscription passe quand même, newsletter = null ; métadonnées exactement " + CLES_INSC + " : plus d'emails_suivi, aucun accord santé (ni consentement_sante ni sante_version : demandé au premier usage)", db.inscriptions.length === 1 && "newsletter" in md && md.newsletter === null && md.newsletter_version === V_NEWS_INSC && Object.keys(md).sort().join(",") === CLES_INSC && !("emails_suivi" in md) && !("consentement_sante" in md) && !("sante_version" in md), JSON.stringify(md));
+        if (coche) ok("case cochée (parcours, « Débloquer mon espace ») : l'inscription porte newsletter = l'instant de l'inscription et newsletter_version " + V_NEWS_INSC + " (texte de la case, métadonnées du compte), plus d'emails_suivi", db.inscriptions.length === 1 && typeof md.newsletter === "string" && Math.abs(Date.parse(md.newsletter) - t0) < 10000 && md.newsletter_version === V_NEWS_INSC && !("emails_suivi" in md), JSON.stringify(md));
+        else ok("case laissée vide (parcours, « Débloquer mon espace ») : l'inscription passe quand même, newsletter = null ; métadonnées exactement " + CLES_INSC + " : plus d'emails_suivi, aucun accord santé (ni consentement_sante ni sante_version : demandé au premier usage)", db.inscriptions.length === 1 && "newsletter" in md && md.newsletter === null && md.newsletter_version === V_NEWS_INSC && Object.keys(md).sort().join(",") === CLES_INSC && !("emails_suivi" in md) && !("consentement_sante" in md) && !("sante_version" in md), JSON.stringify(md));
         await c.close();
       }
     } finally { inscriptionLibre = false; }
@@ -1038,8 +1067,19 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
        deux côtés, retiré des deux côtés : la comparaison reste stricte) */
     const PARTAGE_V70 = "Partager l'app Envoie le lien de l'app à un proche : l'espace gratuit est ouvert à tout le monde. Partager l'app";
     /* v72 (A) : bloc « Mon numéro » de Mon compte (différence VOULUE avec main tant que la v72 n'y est pas : Thomas n'a pas de
-       numéro ; ensuite présent des deux côtés, retiré des deux côtés : la comparaison reste stricte) */
-    const TEL_V72 = "Mon numéro Numéro actuel : Aucun numéro enregistré. Ton numéro (WhatsApp)France (+33)Belgique (+32)Suisse (+41)Canada (+1)Australie (+61)Côte d'Ivoire (+225)Sénégal (+221)La Réunion (+262)Autre pays Enregistrer mon numéro";
+       numéro ; ensuite présent des deux côtés, retiré des deux côtés : la comparaison reste stricte).
+       v81 (bloc 2, mission) : le menu des pays du numéro (#mc-tel-ind, Telephone.PAYS) passe de 8 à 16 pays + « Autre pays »
+       (liste de TEXTES.md, la même que l'écran « whatsapp » du parcours) : changement VOULU. Le texte de ses <option>, lu dans
+       chaque page, est retiré des deux côtés (TEL_V72 est donc le bloc sans les pays) ; la liste du fichier testé est vérifiée à
+       part, exacte et dans l'ordre (PAYS_V81, comme l'ancien TEL_V72 fixait les 8 pays) ; tout le reste reste comparé strictement.
+       Une fois la v81 sur main, les mêmes 16 pays des deux côtés : rien ne change. */
+    const TEL_V72 = "Mon numéro Numéro actuel : Aucun numéro enregistré. Ton numéro (WhatsApp) Enregistrer mon numéro";
+    const PAYS_V81 = ["France (+33)", "Belgique (+32)", "Suisse (+41)", "Luxembourg (+352)", "Canada (+1)", "La Réunion (+262)", "Guadeloupe (+590)", "Martinique (+596)", "Guyane (+594)",
+      "Côte d'Ivoire (+225)", "Sénégal (+221)", "Maroc (+212)", "Algérie (+213)", "Tunisie (+216)", "Cameroun (+237)", "Australie (+61)", "Autre pays"];
+    const paysDe = v => v.page.$$eval("#vue #mc-tel-ind option", l => l.map(o => o.textContent)).catch(() => []);
+    const pays = await paysDe(pro), paysM = await paysDe(proM);
+    const sansPays = (t, l) => l.length ? t.split(norm(l.join(""))).join("") : t;
+    const proT = sansPays(pro.t, pays), proMT = sansPays(proM.t, paysM);
     /* v73 (C) : la question « Numéro WhatsApp (avec indicatif) » n'est plus posée au client (différence VOULUE avec main tant que
        la v73 n'y est pas : absente, retirée du texte de main ; ensuite absente des deux côtés : la comparaison reste stricte) */
     const QWA_V73 = "Numéro WhatsApp (avec indicatif)";
@@ -1050,7 +1090,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
       const fins = ["[note du changement d'adresse]", MAIL_V52].map(n => { const j = x.indexOf(n, i); return j < 0 ? -1 : j + n.length; }).filter(j => j > 0);
       return fins.length ? x.slice(0, i) + "[changement d'adresse]" + x.slice(Math.min(...fins)) : x;
     };
-    ok("client Thomas, Profil : texte identique à main (hors bloc « Mon compte » voulu en v52 : adresse et changement d'adresse sans email ; v67 : note de « Mes données », présente ; v70 : bloc « Partager l'app », présent ; v72 : bloc « Mon numéro », présent ; v73 : question « Numéro WhatsApp », absente)", pro.t.length > 200 && !pro.t.includes(QWA_V73) && pro.t.includes(MAIL_V52) && pro.t.includes(DONNEES_V67) && pro.t.includes(PARTAGE_V70) && pro.t.includes(TEL_V72) && sansNote(pro.t) === sansNote(proM.t), pro.t.length + " / " + proM.t.length + " · nouveau texte : " + pro.t.includes(MAIL_V52) + " · " + (() => { const x = sansNote(pro.t), y = sansNote(proM.t); let k = 0; while (k < x.length && x[k] === y[k]) k++; return JSON.stringify(x.slice(Math.max(0, k - 40), k + 60)) + " ≠ " + JSON.stringify(y.slice(Math.max(0, k - 40), k + 60)); })());
+    ok("client Thomas, Profil : texte identique à main (hors bloc « Mon compte » voulu en v52 : adresse et changement d'adresse sans email ; v67 : note de « Mes données », présente ; v70 : bloc « Partager l'app », présent ; v72 : bloc « Mon numéro », présent ; v73 : question « Numéro WhatsApp », absente ; v81 : menu des pays du numéro, 16 pays + « Autre pays » dans l'ordre de TEXTES.md, texte des options retiré des deux côtés)", pro.t.length > 200 && !pro.t.includes(QWA_V73) && pro.t.includes(MAIL_V52) && pro.t.includes(DONNEES_V67) && pro.t.includes(PARTAGE_V70) && JSON.stringify(pays.map(norm)) === JSON.stringify(PAYS_V81) && proT.includes(TEL_V72) && sansNote(proT) === sansNote(proMT), pro.t.length + " / " + proM.t.length + " · nouveau texte : " + pro.t.includes(MAIL_V52) + " · pays : " + JSON.stringify(pays.map(norm)) + " · " + (() => { const x = sansNote(proT), y = sansNote(proMT); let k = 0; while (k < x.length && x[k] === y[k]) k++; return JSON.stringify(x.slice(Math.max(0, k - 40), k + 60)) + " ≠ " + JSON.stringify(y.slice(Math.max(0, k - 40), k + 60)); })());
     await pro.c.close(); await proM.c.close();
   });
   await bloc("J. fiche d'un client et Mes clients", async () => {

@@ -32,6 +32,15 @@
    - v71 (D) : « Suivi de mes clients » (#tb-clients) ne liste plus les prospects (ligne #clients-prospects → Prospects) : dans le
      bloc I coach, la fiche de Léa s'ouvre par Clients.ouvrir au lieu du clic sur son [data-ouvrir] (disparu), après contrôle de
      son absence du tableau et de la ligne de renvoi. Nombre de vérifications inchangé.
+   - v81 (bloc 2, mission du 13/10/2026) : l'écran unique « Crée ton espace gratuit » n'existe plus, #/inscription ouvre le
+     parcours du prospect (js/parcours.js, piloté par FT.parcours de fichiers.js). Le bloc G vérifie les MÊMES choses sur l'écran
+     qui les porte maintenant : bouton « Créer mon espace gratuit » → #pc-go de l'accueil du parcours (anglais : « Create my free
+     space », traduction v81 de ce même texte ; avant « Create my free account ») ; titre « Crée ton espace gratuit » → titre de
+     l'écran Compte « Ton espace est prêt 🔒 » / « Your space is ready 🔒 », qui porte les cases #c-cgu et #c-newsletter et les
+     2 liens des PDF (mêmes exigences) ; bouton qui crée le compte → #c-go de l'écran WhatsApp « Débloquer mon espace » / « Unlock
+     my space » (jamais touché : rien n'est envoyé) ; #c-sante absente de chacun des 9 écrans d'avant la création ; contrôle des
+     prix sur le texte de ces 9 écrans (accueil → WhatsApp). Bloc H : les textes du parcours (PARCOURS_T), qui remplacent ceux de
+     l'écran unique (DECOUVERTE.inscription, plus affichés), passent aussi au contrôle des prix. Nombre de vérifications inchangé (64).
    Supabase simulé : rien ne part vers la vraie base ; les écritures dans donnees sont appliquées en mémoire,
    et TOUTE requête non-GET vers /rest/v1/* est relevée (méthode + adresse) pour les contrôles « aucune écriture ».
    Chaque bloc est protégé : une exception (élément absent, délai dépassé) note un ✗ et la suite continue ;
@@ -43,7 +52,7 @@ const PORT = 9671;
 const OUT = path.join(__dirname, "captures", "v40"); fs.mkdirSync(OUT, { recursive: true });
 let inscriptionLibre = false;
 /* 52.1 : la retouche vaut pour la page et pour ses fichiers (inscription_libre est dans js/config.js) */
-const { servirFichier, forcerInscription } = require("./fichiers");   // 52.1 : la page charge css/ et js/, servis depuis son dossier (fichiers.js)
+const { servirFichier, forcerInscription, parcours } = require("./fichiers");   // 52.1 : la page charge css/ et js/, servis depuis son dossier (fichiers.js) ; v81 : parcours = FT.parcours (bloc G)
 /* v54 : l'inscription est ouverte dans le fichier (inscription_libre: true) ; la retouche FORCE la valeur voulue
    (inscriptionLibre, fermée par défaut comme avant), dans les deux sens : la suite reste valable si Lucas la referme.
    v55 : par forcerInscription (fichiers.js), comme toutes les suites qui testent l'inscription (les autres servent la valeur
@@ -529,7 +538,16 @@ const cliquerVerrou = async (c, page) => {
     textesEn += "\n" + await toutLeTexte(page);
   });
 
-  /* ---------- G. Écran d'inscription (inscription libre allumée pour le test) et ses conditions ---------- */
+  /* ---------- G. Inscription (inscription libre allumée pour le test) : le parcours du prospect et ses conditions ----------
+     v81 (bloc 2) : #/inscription ouvre le parcours en 11 écrans (js/parcours.js) au lieu de l'écran unique « Crée ton espace
+     gratuit » (.carte-co h2, #c-go « Créer mon espace gratuit », cases et liens sur le même écran). Mêmes vérifications, sur
+     l'écran qui porte maintenant chaque chose, en passant par les 9 écrans d'avant la création (FT.parcours, réponses par
+     défaut, prénom « Zoé ») : accueil (#pc-go « Créer mon espace gratuit ») → … → Compte (titre « Ton espace est prêt 🔒 »,
+     #c-cgu, #c-newsletter, les 2 liens des PDF) → WhatsApp (#c-go « Débloquer mon espace », le bouton qui crée le compte,
+     jamais touché : rien n'est envoyé). #c-sante ne doit être sur AUCUN de ces écrans ; le contrôle des prix porte sur le
+     texte de tous (avant : celui de l'écran unique). Un écran qui manque ne lève pas d'exception : les 2 vérifications
+     tombent avec les écrans atteints dans leur détail. */
+  const ECRANS_AVANT = ["accueil", "objectif", "coince", "projection", "sexe", "prenom", "chargement", "compte", "whatsapp"];
   for (const langue of ["", "en"]) {
     await bloc("G. inscription" + (langue ? " (anglais)" : ""), async () => {
       inscriptionLibre = true; legaux = LEGAUX_TEST;   // v64 : liens des PDF de test (CONFIG.textes_legaux)
@@ -537,22 +555,41 @@ const cliquerVerrou = async (c, page) => {
         const db = base();
         const { page } = await contexte(b, null, db, { langue });
         await page.goto(`http://localhost:${PORT}/#/inscription`); await attendre(page, 1500);
-        const t = await toutLeTexte(page);
-        const titre = (await texte(page, ".carte-co h2")).trim(), bouton = (await texte(page, "#c-go")).trim();
         /* v52 (lot B) : « espace gratuit » (plus d'accès découverte de 7 jours) ; + la case newsletter (facultative).
-           v64 (brief V2 A3, A6) : bouton « Créer mon espace gratuit » / « Create my free account » ; plus de case santé */
-        const [tA, bA] = langue ? ["Create your free space", "Create my free account"] : ["Crée ton espace gratuit", "Créer mon espace gratuit"];
-        const cases = { cgu: !!(await page.$("#c-cgu")), sante: !!(await page.$("#c-sante")), newsletter: !!(await page.$("#c-newsletter")) };
-        ok(`inscription${langue ? " (anglais)" : ""} : écran « ${tA} », bouton « ${bA} », cases des conditions (#c-cgu) et de la newsletter (#c-newsletter) ; plus de case des données de santé (#c-sante absente, v64)`, titre === tA && bouton === bA && cases.cgu && !cases.sante && cases.newsletter, JSON.stringify({ titre, bouton, cases }));
-        /* v64 (brief V2 A2) : le lien des conditions n'ouvre plus le volet (avant : clic sur #c-cgu-lien, volet « Hébergement… »
-           capturé) : 2 liens distincts dans la case, vers les 2 PDF de CONFIG.textes_legaux, dans un nouvel onglet ; jamais
-           cliqués (réseau). Le volet et son texte (contrôle des prix) restent vérifiés depuis le profil (blocs D et F). */
-        const liens = await page.evaluate(() => ["c-cgu-lien", "c-politique-lien"].map(id => { const a = document.getElementById(id);
-          return a ? { tag: a.tagName, href: a.getAttribute("href"), cible: a.getAttribute("target"), rel: a.getAttribute("rel"), t: a.textContent.replace(/\s+/g, " ").trim(), dansCase: !!a.closest("label.co-cgu") } : null; }));
+           v64 (brief V2 A3, A6) : bouton « Créer mon espace gratuit » ; plus de case santé.
+           v81 : le bouton « Créer mon espace gratuit » est celui de l'accueil du parcours (#pc-go ; en anglais « Create my free
+           space », traduction v81 du même texte, avant « Create my free account ») ; l'écran des cases s'appelle « Ton espace est
+           prêt 🔒 » / « Your space is ready 🔒 » (avant : « Crée ton espace gratuit » / « Create your free space ») ; le compte est
+           créé par #c-go « Débloquer mon espace » / « Unlock my space » (écran WhatsApp) */
+        const [tA, bA, bC] = langue ? ["Your space is ready 🔒", "Create my free space", "Unlock my space"] : ["Ton espace est prêt 🔒", "Créer mon espace gratuit", "Débloquer mon espace"];
         const [L1, L2] = langue ? ["Terms of Use", "Privacy Policy"] : ["CGU", "politique de confidentialité"];
+        const vus = [], sante = [];
+        let t = "", titre = "", bouton = "", boutonCree = "", cases = { cgu: false, newsletter: false }, liens = [null, null];
+        for (const e of ECRANS_AVANT) {
+          const ici = await parcours(page, {}, e).catch(err => "✗ " + String((err && err.message) || err).split("\n")[0].slice(0, 120));
+          vus.push(ici); if (ici !== e) break;
+          t += "\n" + await toutLeTexte(page);
+          if (await page.$("#c-sante")) sante.push(e);
+          if (e === "accueil") bouton = plat(await texte(page, "#pc-go")).trim();
+          if (e === "compte") {
+            titre = plat(await texte(page, "#pc h1")).trim();
+            cases = { cgu: !!(await page.$("#c-cgu")), newsletter: !!(await page.$("#c-newsletter")) };
+            /* v64 (brief V2 A2) : le lien des conditions n'ouvre plus le volet (avant : clic sur #c-cgu-lien, volet « Hébergement… »
+               capturé) : 2 liens distincts dans la case, vers les 2 PDF de CONFIG.textes_legaux, dans un nouvel onglet ; jamais
+               cliqués (réseau). Le volet et son texte (contrôle des prix) restent vérifiés depuis le profil (blocs D et F).
+               v81 : la case (label.co-cgu) et ses 2 liens sont sur l'écran Compte du parcours */
+            liens = await page.evaluate(() => ["c-cgu-lien", "c-politique-lien"].map(id => { const a = document.getElementById(id);
+              return a ? { tag: a.tagName, href: a.getAttribute("href"), cible: a.getAttribute("target"), rel: a.getAttribute("rel"), t: a.textContent.replace(/\s+/g, " ").trim(), dansCase: !!a.closest("label.co-cgu") } : null; }));
+          }
+          if (e === "whatsapp") boutonCree = plat(await texte(page, "#c-go")).trim();
+        }
+        const tousVus = JSON.stringify(vus) === JSON.stringify(ECRANS_AVANT);
+        ok(`inscription${langue ? " (anglais)" : ""} (v81 : le parcours) : accueil, bouton « ${bA} » (#pc-go) ; écran Compte « ${tA} », cases des conditions (#c-cgu) et de la newsletter (#c-newsletter) ; écran WhatsApp, bouton « ${bC} » (#c-go, crée le compte) ; plus de case des données de santé (#c-sante absente des 9 écrans, v64)`,
+          tousVus && bouton === bA && titre === tA && cases.cgu && cases.newsletter && !sante.length && boutonCree === bC, JSON.stringify({ vus, bouton, titre, cases, sante, boutonCree }));
         const okLiens = liens.every(l => l && l.tag === "A" && l.cible === "_blank" && /(^|\s)noopener(\s|$)/.test(l.rel || "") && l.dansCase)
           && liens[0].href === LEGAUX_TEST.cgu_pdf && liens[1].href === LEGAUX_TEST.confidentialite_pdf && liens[0].href !== liens[1].href && liens[0].t === L1 && liens[1].t === L2;
-        ok(`inscription${langue ? " (anglais)" : ""} : écran sans aucun prix, tarif ni abonnement ; « ${L1} » et « ${L2} » : 2 liens distincts vers les PDF (href = CONFIG.textes_legaux.cgu_pdf / confidentialite_pdf, target=_blank, rel=noopener ; v64 : plus de volet ici, il reste vérifié depuis le profil)`, okLiens && !prixTrouve(t), prixTrouve(t) || JSON.stringify(liens));
+        ok(`inscription${langue ? " (anglais)" : ""} (v81 : le parcours) : les 9 écrans d'avant la création (accueil → WhatsApp) sans aucun prix, tarif ni abonnement ; écran Compte : « ${L1} » et « ${L2} » : 2 liens distincts vers les PDF (href = CONFIG.textes_legaux.cgu_pdf / confidentialite_pdf, target=_blank, rel=noopener ; v64 : plus de volet ici, il reste vérifié depuis le profil)`,
+          tousVus && okLiens && !prixTrouve(t), prixTrouve(t) || (tousVus ? "" : "écrans : " + vus.join(" → ") + " | ") + JSON.stringify(liens));
         if (langue) textesEn += "\n" + t; else textesFr += "\n" + t;
       } finally { inscriptionLibre = false; legaux = null; }
     });
@@ -568,8 +605,12 @@ const cliquerVerrou = async (c, page) => {
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 2000);
     const r = await page.evaluate(() => {
       const l = []; const tour = v => { if (typeof v === "string") l.push(v); else if (v && typeof v === "object") Object.values(v).forEach(tour); };
-      const out = { decouverte: null };
+      const out = { decouverte: null, parcours: null };
       if (typeof DECOUVERTE !== "undefined") { tour(DECOUVERTE); out.decouverte = l.splice(0).join("\n"); }
+      /* v81 : les textes du parcours du prospect (PARCOURS_T, js/parcours.js), qui remplacent ceux de l'écran unique
+         (DECOUVERTE.inscription, plus affichés) : réactions, « Ton espace », cadeau, carte de l'accueil, même ceux qu'aucun
+         écran du bloc G n'a montrés */
+      if (typeof PARCOURS_T !== "undefined") { tour(PARCOURS_T); out.parcours = l.splice(0).join("\n"); }
       const av = typeof AVANTAGES !== "undefined" ? AVANTAGES : null, dico = typeof I18N !== "undefined" && I18N.en ? I18N.en : null;
       if (av) Object.values(av).forEach(s => l.push(s, trad(s)));
       if (dico) Object.keys(dico).forEach(k => { l.push(k); tour(dico[k]); });
@@ -580,7 +621,8 @@ const cliquerVerrou = async (c, page) => {
       out.nDico = dico ? Object.keys(dico).length : 0;
       return out;
     });
-    ok("textes de la Découverte (DECOUVERTE, français + anglais) : aucun prix, tarif ni abonnement", !!r.decouverte && !prixTrouve(r.decouverte), r.decouverte ? prixTrouve(r.decouverte) : "DECOUVERTE absent");
+    ok("textes de la Découverte (DECOUVERTE, français + anglais) et du parcours du prospect (PARCOURS_T, v81) : aucun prix, tarif ni abonnement", !!r.decouverte && !!r.parcours && !prixTrouve(r.decouverte) && !prixTrouve(r.parcours),
+      !r.decouverte ? "DECOUVERTE absent" : !r.parcours ? "PARCOURS_T absent" : prixTrouve(r.decouverte) || prixTrouve(r.parcours));
     ok("avantages de l'accompagnement (français + traduction anglaise de chacun) et tout le dictionnaire anglais I18N.en (clés et valeurs) : aucun prix, tarif ni abonnement", r.langue === "en" && r.nAv >= 6 && r.avEn === r.nAv && r.nDico > 500 && !prixTrouve(r.reste), prixTrouve(r.reste) || JSON.stringify({ langue: r.langue, avantages: r.nAv, traduits: r.avEn, dictionnaire: r.nDico }));
   });
 

@@ -1,4 +1,11 @@
 /* v72 — le numéro de téléphone (sujet A) et le parcours d'arrivée des inscrits (sujets B, C, D, F côté inscrit).
+   v81 (bloc 2) : l'écran unique « Crée ton espace gratuit » est remplacé par le parcours du prospect en 11 écrans
+   (js/parcours.js, piloté par FT.parcours de fichiers.js) ; chaque vérification de l'ancien écran porte maintenant sur
+   l'écran du parcours qui fait la même chose : le numéro SEUL sur l'écran « whatsapp » (16 pays de TEXTES.md + « Autre
+   (indicatif à saisir) », refus « Vérifie ton numéro. »), le compte créé par « Débloquer mon espace » (#c-go de cet écran),
+   l'arrivée sur l'écran « espace » (« Ton espace ») et non plus directement dans l'app, l'appareil neuf sur l'ACCUEIL du
+   parcours, le code ?ref= gardé pendant tout le parcours. Le menu du numéro de l'écran « Ajoute ton numéro » et de Mon
+   compte a lui aussi les 16 pays (changement voulu de la mission, A4).
    Toute la suite sert l'inscription OUVERTE et le téléphone obligatoire ALLUMÉ (forcerInscription, forcerTelephone :
    fichiers.js), comme en ligne ; les autres suites servent le téléphone éteint.
    A. Téléphone obligatoire :
@@ -6,15 +13,18 @@
          qu'une partie) ; servi éteint aux autres suites ;
      A1  Telephone.normaliser : espaces, points, tirets ignorés, 0 initial retiré (sauf Côte d'Ivoire), 6 à 14 chiffres sans
          l'indicatif, indicatif tapé (+33, 0033) gardé, « Autre pays » (+…), format +33612345678 ;
-     A2  inscription : le champ « Ton numéro (WhatsApp) » (menu de 8 pays + Autre, France par défaut) après le nom ; refus
-         clairs, aucune inscription envoyée ; une inscription réussie écrit la clé contact { telephone, inscrit_le } une
-         fois, puis l'app s'ouvre sans écran du numéro ; 320 px sans défilement ;
-     A3  copie de secours : l'écriture ratée juste après l'inscription repart à l'ouverture suivante (aucun écran) ;
+     A2  parcours : les écrans dans l'ordre et les champs de chacun, le numéro « Ton numéro (WhatsApp) » SEUL sur l'écran
+         « whatsapp » (France par défaut) ; refus « Vérifie ton numéro. », aucune inscription envoyée ; 390 et 320 px sans
+         défilement ; « Débloquer mon espace » écrit la clé contact { telephone, inscrit_le } une fois, puis « Ton espace »
+         sans écran du numéro, puis (cadeau, « Plus tard ») l'app sans écran du numéro ;
+     A3  copie de secours : l'écriture ratée juste après la création du compte repart à l'ouverture suivante (page
+         rechargée : aucun écran du numéro, « Ton espace ») ;
      A4  un prospect et un client sans numéro : écran « Ajoute ton numéro… » avant tout (ni navigation, ni routage, même
          par un lien profond), refus clair, enregistrement (relire puis écrire : ref et inscrit_le gardés), puis l'app ;
          « Se déconnecter » ; en anglais ; 320 px ;
      A5  pas d'écran : compte qui a son numéro (une seule lecture de contact), lecture ratée (500 : l'app s'ouvre, rien
-         d'écrit), le coach (aucune lecture de contact), réglage éteint ;
+         d'écrit), le coach (aucune lecture de contact), réglage éteint (ni écran, ni numéro demandé par le parcours :
+         CONFIG.marque.telephone_obligatoire, « false : plus aucune de ces deux demandes ») ;
      A6  Mon compte : numéro affiché et modifiable (ref et inscrit_le gardés), « C'est déjà ton numéro. », lecture ratée ;
      A7  coach : colonne Téléphone de Mes clients, carte Prospects, en-tête de la fiche : le numéro, « Appeler » (tel:+…)
          et « WhatsApp » (wa.me, chiffres sans +) ; « — » sans numéro ou pour un numéro piégé ; le numéro n'est pas une
@@ -234,14 +244,41 @@ const etat = page => page.evaluate(() => ({
 }));
 /* v73 (D) : « ton coach » au lieu de « Lucas » (écran du numéro, bouton et message WhatsApp) */
 const SOUS_TITRE = { fr: "Ton coach s'en sert pour t'appeler ou t'écrire sur WhatsApp.", en: "Your coach uses it to call you or message you on WhatsApp." };
+/* v81 (bloc 2) : les 16 pays de TEXTES.md (écran WhatsApp du parcours), dans cet ordre, France par défaut ; le même menu sert
+   l'écran « Ajoute ton numéro » et Mon compte (« Autre pays ») ; le parcours dit « Autre (indicatif à saisir) » */
+const PAYS = { fr: ["France (+33)", "Belgique (+32)", "Suisse (+41)", "Luxembourg (+352)", "Canada (+1)", "La Réunion (+262)", "Guadeloupe (+590)", "Martinique (+596)", "Guyane (+594)",
+    "Côte d'Ivoire (+225)", "Sénégal (+221)", "Maroc (+212)", "Algérie (+213)", "Tunisie (+216)", "Cameroun (+237)", "Australie (+61)"],
+  en: ["France (+33)", "Belgium (+32)", "Switzerland (+41)", "Luxembourg (+352)", "Canada (+1)", "Réunion (+262)", "Guadeloupe (+590)", "Martinique (+596)", "French Guiana (+594)",
+    "Ivory Coast (+225)", "Senegal (+221)", "Morocco (+212)", "Algeria (+213)", "Tunisia (+216)", "Cameroon (+237)", "Australia (+61)"],
+  valeurs: ["33", "32", "41", "352", "1", "262", "590", "596", "594", "225", "221", "212", "213", "216", "237", "61", "autre"] };
 const TX = {
   fr: { h2: "Ajoute ton numéro pour que ton coach puisse te joindre", label: "Ton numéro (WhatsApp)", bouton: "Enregistrer mon numéro", sortir: "Se déconnecter",
     vide: "Indique ton numéro.", court: "Ce numéro est trop court : 6 chiffres au moins, sans l'indicatif.", long: "Ce numéro est trop long : 14 chiffres au plus, sans l'indicatif.",
     chiffres: "Un numéro ne contient que des chiffres.", autre: "Avec « Autre pays », tape ton numéro avec son indicatif, par exemple +212 6 12 34 56 78.",
-    options: ["France (+33)", "Belgique (+32)", "Suisse (+41)", "Canada (+1)", "Australie (+61)", "Côte d'Ivoire (+225)", "Sénégal (+221)", "La Réunion (+262)", "Autre pays"] },
+    options: PAYS.fr.concat(["Autre pays"]),
+    /* v81 : l'écran WhatsApp du parcours (TEXTES.md : « Numéro invalide : Vérifie ton numéro. ») */
+    parcours: PAYS.fr.concat(["Autre (indicatif à saisir)"]), refus: "Vérifie ton numéro." },
   en: { h2: "Add your phone number so your coach can reach you", label: "Your phone number (WhatsApp)", bouton: "Save my number", sortir: "Log out",
     vide: "Enter your phone number.", court: "This number is too short: at least 6 digits, without the country code.",
-    options: ["France (+33)", "Belgium (+32)", "Switzerland (+41)", "Canada (+1)", "Australia (+61)", "Ivory Coast (+225)", "Senegal (+221)", "Réunion (+262)", "Other country"] }
+    options: PAYS.en.concat(["Other country"]) }
+};
+/* v81 (bloc 2) : le parcours du prospect — l'écran affiché (data-etape de #pc), les écrans avant la création du compte dans
+   l'ordre, et les champs (input, select, textarea) de chacun : le numéro est SEUL sur l'écran « whatsapp » */
+const etapeDe = page => page.$eval("#pc", e => e.dataset.etape).catch(() => null);
+const ECRANS = ["accueil", "objectif", "coince", "projection", "sexe", "prenom", "chargement", "compte", "whatsapp"];   // l'ordre de MISSION.md (bloc 2)
+const CHAMPS_PARCOURS = { accueil: [], objectif: [], coince: ["pc-libre"], projection: [], sexe: [], prenom: ["pc-prenom"], chargement: [],
+  compte: ["c-email", "c-mdp", "c-cgu", "c-newsletter"], whatsapp: ["c-tel-ind", "c-tel"] };
+const champsDe = page => page.evaluate(() => Array.from(document.querySelectorAll("#pc input, #pc select, #pc textarea")).map(x => x.id));
+const surEspace = async page => { await page.waitForSelector('#pc[data-etape="espace"]', { timeout: 15000 }); await attendre(page, 400); };
+/* téléphone obligatoire éteint : le parcours jusqu'à l'écran Compte, rempli, puis « Continuer » ; rend l'écran qui suit
+   (sans rien supposer de lui : écran WhatsApp, ou compte déjà créé et « Ton espace ») */
+const apresCompte = async (page, r) => {
+  await FT.parcours(page, r, "compte");
+  await page.fill("#c-email", r.email); await page.fill("#c-mdp", r.mdp || "motdepasse1"); await page.check("#c-cgu");
+  await page.click("#pc-suivant");
+  await page.waitForFunction(() => { const p = document.getElementById("pc"); return !!p && p.dataset.etape !== "compte"; }, null, { timeout: 15000 });
+  await attendre(page, 400);
+  return etapeDe(page);
 };
 const champTel = (page, id) => page.evaluate(id => {
   const s = document.getElementById(id + "-ind"), i = document.getElementById(id), lab = document.querySelector('label[for="' + id + '"]');
@@ -265,7 +302,7 @@ const champTel = (page, id) => page.evaluate(id => {
   await bloc("A1. normaliser", async () => {
     const db = base();
     const { page } = await contexte(b, db);
-    await page.goto(URL0 + "#/inscription"); await page.waitForSelector("#c-go");
+    await page.goto(URL0 + "#/inscription"); await page.waitForSelector('#pc[data-etape="accueil"]');   // v81 : l'accueil du parcours (Telephone chargé sans session)
     const CAS = [
       ["33", "06 12 34 56 78", "+33612345678"], ["33", "06.12.34.56.78", "+33612345678"], ["33", "06-12-34-56-78", "+33612345678"],
       ["33", "+33 6 12 34 56 78", "+33612345678"], ["33", "0033 6 12 34 56 78", "+33612345678"], ["33", "6 12 34 56 78", "+33612345678"],
@@ -284,63 +321,81 @@ const champTel = (page, id) => page.evaluate(id => {
       const bon = att.startsWith("E:") ? (o.erreur === (MSG[att.slice(2)] || att.slice(2)) && !o.tel) : (o.tel === att && !o.erreur);
       return bon ? null : c[0] + " « " + c[1] + " » → " + JSON.stringify(o) + " (attendu " + att + ")";
     }).filter(Boolean);
-    ok(`A1 : Telephone.normaliser — ${CAS.length} cas : espaces, points, tirets ignorés, 0 initial retiré (gardé pour +225), « 1 » national du Canada, indicatif tapé (+33, 0033, +32, +212 → Autre pays) gardé, 6 à 14 chiffres sans l'indicatif, format +33612345678, refus clairs (vide, court, long, lettres, Autre pays sans +)`,
+    ok(`A1 : Telephone.normaliser — ${CAS.length} cas : espaces, points, tirets ignorés, 0 initial retiré (gardé pour +225), « 1 » national du Canada, indicatif tapé (+33, 0033, +32, +212 — Maroc, dans la liste depuis la v81) gardé, 6 à 14 chiffres sans l'indicatif, format +33612345678, refus clairs (vide, court, long, lettres, Autre pays sans +)`,
       faux.length === 0, faux.join(" | "));
     const val = await page.evaluate(() => [Telephone.valide("+33612345678"), Telephone.valide("+212612345678"), Telephone.valide("0612345678"), Telephone.valide("+33 6 12"), Telephone.valide("javascript:alert(1)"), Telephone.valide("+0612345678"), Telephone.valide(null)]);
     ok("A1 : Telephone.valide — +33612345678 et +212612345678 oui ; 0612345678, « +33 6 12 », javascript:, +0…, null non", JSON.stringify(val) === JSON.stringify([true, true, false, false, false, false, false]), JSON.stringify(val));
   });
 
-  /* =================== A2. l'inscription =================== */
+  /* =================== A2. l'inscription (v81 : le parcours, le numéro sur l'écran « whatsapp ») =================== */
   await bloc("A2. inscription", async () => {
     const db = base(); db.inscription.id = PID(50);
     const { page } = await contexte(b, db);
-    await page.goto(URL0 + "#/inscription"); await page.waitForSelector("#c-go");
+    await page.goto(URL0 + "#/inscription");
+    /* chaque écran jusqu'à « whatsapp » (rien touché dessus) : l'écran atteint et ses champs ; 390 et 320 px pour les écrans
+       qui portent les champs de l'ancien formulaire (prénom, compte, whatsapp — ce dernier mesuré après les refus) */
+    const R = { prenom: "Zoé", email: "zoe@exemple.fr", mdp: "motdepasse1" }, vus = [], champs = {}, larg = {};
+    for (const e of ECRANS) {
+      vus.push(await FT.parcours(page, R, e));
+      champs[e] = await champsDe(page);
+      if (e === "prenom" || e === "compte") {
+        const sw = await page.evaluate(() => document.documentElement.scrollWidth);
+        await page.setViewportSize(PETIT); await attendre(page, 200);
+        larg[e] = Object.assign({ sw390: sw }, await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, iw: window.innerWidth })));
+        await page.setViewportSize(MOBILE); await attendre(page, 100);
+      }
+    }
     const ch = await champTel(page, "c-tel");
-    const ordre = await page.evaluate(() => Array.from(document.querySelectorAll(".carte-co input, .carte-co select")).map(x => x.id).filter(Boolean));
-    /* v74 : plus de champ Nom (avant : « placé après le nom ») */
-    ok("A2 : inscription — champ « Ton numéro (WhatsApp) » : menu de 8 pays + « Autre pays » (France +33 par défaut, l'ordre de Lucas), champ type tel ; v76 : placé après le mot de passe, avant les cases — ordre exact prénom, email, mot de passe, numéro, CGU, newsletter (plus de champ Nom, v74)",
-      ch.label === TX.fr.label && JSON.stringify(ch.options) === JSON.stringify(TX.fr.options) && JSON.stringify(ch.valeurs) === JSON.stringify(["33", "32", "41", "1", "61", "225", "221", "262", "autre"])
-        && ch.defaut === "33" && ch.type === "tel" && ordre.join(",") === "c-prenom,c-email,c-mdp,c-tel-ind,c-tel,c-cgu,c-newsletter" && !ordre.includes("c-nom"),
-      JSON.stringify({ ch, ordre }));
-    await page.fill("#c-prenom", "Zoé"); await page.fill("#c-email", "zoe@exemple.fr"); await page.fill("#c-mdp", "motdepasse1");
-    await page.check("#c-cgu");
-    const essai = async (tel, ind) => { if (ind) await page.selectOption("#c-tel-ind", ind); await page.fill("#c-tel", tel); await page.click("#c-go"); await attendre(page, 300); return norm(await page.textContent("#co-err")); };
+    const ailleurs = ECRANS.filter(e => e !== "whatsapp" && champs[e].some(id => /^c-tel/.test(id)));
+    /* v74 : plus de champ Nom ; v81 : plus de champ prénom sur l'écran du compte (écran « prenom », #pc-prenom) */
+    ok("A2 : parcours (v81) — les écrans dans l'ordre accueil, objectif, coincé, dans 3 mois, tu es, prénom, chargement, compte, WhatsApp, et les champs exacts de chacun (prénom seul sur « prenom » ; email, mot de passe, CGU, newsletter sur « compte » ; plus de champ Nom) ; le numéro SEUL sur l'écran « whatsapp » : « Ton numéro (WhatsApp) », menu des 16 pays de TEXTES.md + « Autre (indicatif à saisir) » (France +33 par défaut, cet ordre), champ type tel",
+      JSON.stringify(vus) === JSON.stringify(ECRANS) && JSON.stringify(champs) === JSON.stringify(CHAMPS_PARCOURS) && !ailleurs.length
+        && ch.label === TX.fr.label && JSON.stringify(ch.options) === JSON.stringify(TX.fr.parcours) && JSON.stringify(ch.valeurs) === JSON.stringify(PAYS.valeurs)
+        && ch.defaut === "33" && ch.type === "tel",
+      JSON.stringify({ vus, champs, ch }));
+    const essai = async (tel, ind) => { if (ind) await page.selectOption("#c-tel-ind", ind); await page.fill("#c-tel", tel); await page.click("#c-go"); await attendre(page, 300); return norm(await page.textContent("#pc-err-tel")); };
     const e1 = await essai(""), e2 = await essai("012345"), e3 = await essai("0123456789012345"), e4 = await essai("06 12 ab 56 78"), e5 = await essai("06 12 34 56 78", "autre");
-    ok("A2 : refus clairs (vide, trop court, trop long, lettres, « Autre pays » sans indicatif), aucune inscription envoyée",
-      e1 === TX.fr.vide && e2 === norm(TX.fr.court) && e3 === norm(TX.fr.long) && e4 === TX.fr.chiffres && e5 === norm(TX.fr.autre) && db.inscriptions.length === 0,
-      JSON.stringify({ e1, e2, e3, e4, e5, n: db.inscriptions.length }));
-    const sw = await page.evaluate(() => document.documentElement.scrollWidth);
-    await page.setViewportSize(PETIT); await attendre(page, 200);
-    const sw320 = await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, iw: window.innerWidth }));
-    ok("A2 : 390 et 320 px : le formulaire et son champ du numéro tiennent sans défilement horizontal", sw <= 390 && sw320.sw <= sw320.iw, JSON.stringify({ sw, sw320 }));
+    const reste = await etapeDe(page);
+    ok("A2 : écran « whatsapp » : numéro refusé (vide, trop court, trop long, lettres, « Autre (indicatif à saisir) » sans indicatif) → « Vérifie ton numéro. » (TEXTES.md) à chaque fois, on reste sur l'écran, aucune inscription envoyée",
+      [e1, e2, e3, e4, e5].every(x => x === TX.fr.refus) && reste === "whatsapp" && db.inscriptions.length === 0,
+      JSON.stringify({ e1, e2, e3, e4, e5, reste, n: db.inscriptions.length }));
+    { const sw = await page.evaluate(() => document.documentElement.scrollWidth);
+      await page.setViewportSize(PETIT); await attendre(page, 200);
+      larg.whatsapp = Object.assign({ sw390: sw }, await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, iw: window.innerWidth }))); }
+    ok("A2 : 390 et 320 px : les écrans qui portent les champs de l'ancien formulaire (prénom, compte, whatsapp avec son champ du numéro et son refus) tiennent sans défilement horizontal",
+      ["prenom", "compte", "whatsapp"].every(e => larg[e] && larg[e].sw390 <= 390 && larg[e].sw <= larg[e].iw), JSON.stringify(larg));
     await page.setViewportSize(MOBILE);
     await page.selectOption("#c-tel-ind", "33"); await page.fill("#c-tel", "06 12 34 56 78");
     const tClic = Date.now();
-    await Promise.all([page.waitForNavigation({ timeout: 15000 }).catch(() => {}), page.click("#c-go")]);
-    await pret(page);
+    await page.click("#c-go");   // « Débloquer mon espace » : le compte est créé, la page se recharge avec la session
+    await surEspace(page);
     const C = ecr(db, "contact", PID(50)), data = (db.inscriptions[0] || {}).data || {};
-    ok("A2 : inscription réussie — clé contact écrite UNE fois par le nouveau compte : exactement { telephone: « +33612345678 », inscrit_le: instant de l'inscription } ; le numéro ne part pas dans les métadonnées du compte",
-      db.inscriptions.length === 1 && C.length === 1 && JSON.stringify(Object.keys(C[0].contenu).sort()) === '["inscrit_le","telephone"]' && C[0].contenu.telephone === "+33612345678"
+    ok("A2 : « Débloquer mon espace » — compte créé (prénom de l'écran « prenom »), clé contact écrite UNE fois par le nouveau compte : exactement { telephone: « +33612345678 », inscrit_le: instant de l'inscription } ; le numéro ne part pas dans les métadonnées du compte",
+      db.inscriptions.length === 1 && data.prenom === "Zoé" && C.length === 1 && JSON.stringify(Object.keys(C[0].contenu).sort()) === '["inscrit_le","telephone"]' && C[0].contenu.telephone === "+33612345678"
         && isoPres(C[0].contenu.inscrit_le, tClic) && !("telephone" in data),
-      JSON.stringify({ C: C.map(x => x.contenu), data: Object.keys(data), ecr: resume(db) }));
-    const e = await etat(page);
-    ok("A2 : … puis l'app s'ouvre (prête, navigation), sans l'écran du numéro", e.pret && !e.ecranTel && e.vue, JSON.stringify(e));
+      JSON.stringify({ C: C.map(x => x.contenu), data: Object.keys(data), prenom: data.prenom, ecr: resume(db) }));
+    const e = await etat(page), et = await etapeDe(page);
+    await page.click("#pc-suivant"); await page.waitForSelector('#pc[data-etape="cadeau"]');
+    await Promise.all([page.waitForNavigation({ timeout: 15000 }).catch(() => {}), page.click("#pc-plus-tard")]);
+    await pret(page);
+    const eApp = await etat(page);
+    ok("A2 : … puis « Ton espace » (écran « espace » du parcours, plein écran : ni navigation, app pas encore prête), sans l'écran du numéro ; et après le cadeau (« Plus tard »), l'app s'ouvre (prête, page), toujours sans l'écran du numéro",
+      et === "espace" && !e.ecranTel && !e.nav && !e.pret && eApp.pret && !eApp.ecranTel && eApp.vue, JSON.stringify({ et, e, eApp }));
   });
 
   /* =================== A3. la copie de secours =================== */
   await bloc("A3. copie de secours", async () => {
     const db = base(); db.inscription.id = PID(51); db.perdre.contact = 1;   // la première écriture de contact se perd (réseau)
     const { page } = await contexte(b, db);
-    await page.goto(URL0 + "#/inscription"); await page.waitForSelector("#c-go");
-    await page.fill("#c-prenom", "Léo"); await page.fill("#c-tel", "06 39 98 00 51"); await page.fill("#c-email", "leo@exemple.fr"); await page.fill("#c-mdp", "motdepasse1");
-    await page.check("#c-cgu");
-    await Promise.all([page.waitForNavigation({ timeout: 15000 }).catch(() => {}), page.click("#c-go")]);
-    await pret(page);
-    const C = ecr(db, "contact", PID(51)), L = ligne0(db, PID(51), "contact"), e = await etat(page);
+    await page.goto(URL0 + "#/inscription");
+    /* v81 : le parcours (prénom, email, mot de passe, CGU, puis le numéro sur l'écran « whatsapp ») et « Débloquer mon espace » */
+    await FT.parcours(page, { prenom: "Léo", email: "leo@exemple.fr", mdp: "motdepasse1", ind: "33", tel: "06 39 98 00 51" }, "cree");
+    await surEspace(page);
+    const C = ecr(db, "contact", PID(51)), L = ligne0(db, PID(51), "contact"), e = await etat(page), et = await etapeDe(page);
     const reste = await page.evaluate(id => Object.keys(localStorage).concat(Object.keys(sessionStorage)).filter(k => k.indexOf("mhx_contact_attente|") === 0), PID(51));
-    ok("A3 : l'écriture ratée juste après l'inscription (réseau) est gardée sur l'appareil puis repart à l'ouverture qui suit : une ligne contact { telephone +33639980051, inscrit_le }, aucun écran du numéro, la copie retirée",
-      db.ecritures.filter(x => x.perdue).length === 1 && C.length === 1 && !!L && L.contenu.telephone === "+33639980051" && !!L.contenu.inscrit_le && e.pret && !e.ecranTel && reste.length === 0,
-      JSON.stringify({ C: C.map(x => x.contenu), e, reste, ecr: resume(db) }));
+    ok("A3 : l'écriture ratée juste après la création du compte (« Débloquer mon espace », réseau) est gardée sur l'appareil puis repart à l'ouverture qui suit (page rechargée) : une ligne contact { telephone +33639980051, inscrit_le }, aucun écran du numéro (« Ton espace » du parcours), la copie retirée",
+      db.ecritures.filter(x => x.perdue).length === 1 && C.length === 1 && !!L && L.contenu.telephone === "+33639980051" && !!L.contenu.inscrit_le && et === "espace" && !e.ecranTel && reste.length === 0,
+      JSON.stringify({ C: C.map(x => x.contenu), et, e, reste, ecr: resume(db) }));
   });
 
   await bloc("A3. copie de secours : jamais devant un numéro plus récent", async () => {
@@ -377,7 +432,7 @@ const champTel = (page, id) => page.evaluate(id => {
     await page.goto(URL0 + "#/calculateur"); await page.waitForSelector("#co-tel");
     const e = await etat(page), ch = await champTel(page, "t-tel");
     const txt = await page.evaluate(() => ({ sous: ((document.querySelector(".carte-co .co-sous") || {}).textContent || "").trim(), go: ((document.getElementById("t-go") || {}).textContent || "").trim(), sortir: ((document.getElementById("t-sortir") || {}).textContent || "").trim() }));
-    ok("A4 : prospect sans numéro, ouvert par un lien profond (#/calculateur) : l'écran « Ajoute ton numéro pour que ton coach puisse te joindre » seul (ni navigation, ni page, app pas prête), le champ (France par défaut), « Enregistrer mon numéro », « Se déconnecter »",
+    ok("A4 : prospect sans numéro, ouvert par un lien profond (#/calculateur) : l'écran « Ajoute ton numéro pour que ton coach puisse te joindre » seul (ni navigation, ni page, app pas prête), le champ (menu des 16 pays de la v81 + « Autre pays », France par défaut), « Enregistrer mon numéro », « Se déconnecter »",
       e.ecranTel && e.h2 === TX.fr.h2 && !e.nav && !e.vue && !e.pret && ch.label === TX.fr.label && ch.defaut === "33" && JSON.stringify(ch.options) === JSON.stringify(TX.fr.options)
         && txt.sous === SOUS_TITRE.fr && txt.go === TX.fr.bouton && txt.sortir === TX.fr.sortir,
       JSON.stringify({ e, ch, txt }));
@@ -417,7 +472,7 @@ const champTel = (page, id) => page.evaluate(id => {
     const txt = await page.evaluate(() => ({ sous: ((document.querySelector(".carte-co .co-sous") || {}).textContent || "").trim(), go: document.getElementById("t-go").textContent.trim(), sortir: document.getElementById("t-sortir").textContent.trim() }));
     await page.click("#t-go"); await attendre(page, 300);
     const err = norm(await page.textContent("#co-err"));
-    ok("A4 : en anglais : titre, phrase, champ, menu (pays en anglais), boutons et refus traduits",
+    ok("A4 : en anglais : titre, phrase, champ, menu (les 16 pays de la v81 en anglais, « Other country »), boutons et refus traduits",
       e.h2 === TX.en.h2 && txt.sous === SOUS_TITRE.en && ch.label === TX.en.label && JSON.stringify(ch.options) === JSON.stringify(TX.en.options) && txt.go === TX.en.bouton && txt.sortir === TX.en.sortir && err === TX.en.vide,
       JSON.stringify({ h2: e.h2, txt, ch, err }));
     await Promise.all([page.waitForNavigation({ timeout: 15000 }).catch(() => {}), page.click("#t-sortir")]);
@@ -457,8 +512,17 @@ const champTel = (page, id) => page.evaluate(id => {
     await avecTelephone(false, async () => {
       const db = base();
       const { page } = await contexte(b, db);
-      await page.goto(URL0 + "#/inscription"); await page.waitForSelector("#c-go");
-      ok("A5 : réglage éteint : l'inscription n'a pas de champ du numéro", !(await page.$("#c-tel")) && !(await page.$("#c-tel-ind")), "");
+      await page.goto(URL0 + "#/inscription");
+      /* v81 : le parcours demande TOUJOURS le numéro, sur son écran WhatsApp seulement (mission du 13/10 : l'écran fait partie du
+         parcours et le compte s'y crée) ; le réglage éteint ne gouverne plus que l'écran « Ajoute ton numéro » des comptes déjà
+         inscrits (vérifié juste au-dessus). Chaque écran jusqu'à « compte » : aucun champ du numéro ; l'écran qui suit
+         « Continuer » : l'écran WhatsApp, avec le menu et le champ */
+      const R = { prenom: "Zoé", email: "zoe-off@exemple.fr", mdp: "motdepasse1" }, avec = [];
+      for (const e of ECRANS.slice(0, ECRANS.indexOf("compte") + 1)) { const ici = await FT.parcours(page, R, e); if (await page.$("#c-tel, #c-tel-ind")) avec.push(ici); }
+      const suite = await apresCompte(page, R);
+      if (await page.$("#c-tel, #c-tel-ind")) avec.push(suite);
+      ok("A5 : réglage éteint (v81) : le parcours demande le numéro sur son seul écran WhatsApp — aucun champ du numéro de l'accueil à l'écran « compte », l'écran qui suit « Continuer » est « whatsapp » avec le menu et le champ ; rien d'envoyé",
+        JSON.stringify(avec) === '["whatsapp"]' && suite === "whatsapp" && db.inscriptions.length === 0, JSON.stringify({ avec, suite, inscriptions: db.inscriptions.length }));
     });
   });
 
@@ -535,35 +599,39 @@ const champTel = (page, id) => page.evaluate(id => {
     ok("A7 : le coach n'a rien écrit", db.ecritures.length === 0, resume(db));
   });
 
-  /* =================== B. l'inscription en premier =================== */
-  const portailVu = page => page.evaluate(() => ({ h2: ((document.querySelector(".carte-co h2") || {}).textContent || "").trim(),
-    liens: Array.from(document.querySelectorAll(".bascule button")).map(x => ({ mode: x.dataset.mode, t: x.textContent.replace(/[\u00a0\u202f]/g, " ").trim() })),
-    err: ((document.getElementById("co-err") || {}).textContent || "").trim(), hash: location.hash, prenom: !!document.getElementById("c-prenom") }));
-  const INSC = { h2: "Crée ton espace gratuit", lien: "Déjà un compte ? Se connecter" }, CONN = { h2: "Connexion à ton espace", oubli: "Mot de passe oublié ?", lien: "Pas encore de compte ? Créer mon compte" };
+  /* =================== B. l'inscription en premier (v81 : l'accueil du parcours) =================== */
+  /* l'écran d'entrée : la connexion (.carte-co : titre, liens du bas) ou le parcours (#pc : son écran, « Créer mon espace
+     gratuit », « Déjà un compte ? Se connecter ») */
+  const portailVu = page => page.evaluate(() => { const pc = document.getElementById("pc"), t = id => ((document.getElementById(id) || {}).textContent || "").replace(/[\u00a0\u202f]/g, " ").trim();
+    return { h2: ((document.querySelector(".carte-co h2") || {}).textContent || "").trim(),
+      liens: Array.from(document.querySelectorAll(".bascule button")).map(x => ({ mode: x.dataset.mode, t: x.textContent.replace(/[\u00a0\u202f]/g, " ").trim() })),
+      err: ((document.getElementById("co-err") || {}).textContent || "").trim(), hash: location.hash, etape: pc ? pc.dataset.etape : null, go: t("pc-go"), connexion: t("pc-connexion") }; });
+  const INSC = { etape: "accueil", bouton: "Créer mon espace gratuit", lien: "Déjà un compte ? Se connecter" }, CONN = { h2: "Connexion à ton espace", oubli: "Mot de passe oublié ?", lien: "Pas encore de compte ? Créer mon compte" };
+  const accueilParcours = v => v.etape === INSC.etape && v.go === INSC.bouton && v.connexion === INSC.lien && !v.h2 && !v.liens.length;
   await bloc("B. inscription en premier", async () => {
     { const db = base();
       const { page } = await contexte(b, db, { neuf: true });
-      await page.goto(URL0); await page.waitForSelector("#c-go"); await attendre(page, 300);
+      await page.goto(URL0); await page.waitForSelector("#pc, #c-go"); await attendre(page, 300);
       const v1 = await portailVu(page);
-      await page.click('.bascule [data-mode="connexion"]'); await attendre(page, 300);
+      await page.click("#pc-connexion"); await page.waitForSelector("#c-go"); await attendre(page, 300);
       const v2 = await portailVu(page);
-      ok("B : appareil neuf, adresse vide : la page d'entrée est « Crée ton espace gratuit » avec le lien « Déjà un compte ? Se connecter » ; il mène à « Connexion à ton espace » avec « Mot de passe oublié ? » et « Pas encore de compte ? Créer mon compte »",
-        v1.h2 === INSC.h2 && v1.prenom && JSON.stringify(v1.liens) === JSON.stringify([{ mode: "connexion", t: INSC.lien }])
-          && v2.h2 === CONN.h2 && !v2.prenom && JSON.stringify(v2.liens) === JSON.stringify([{ mode: "oubli", t: CONN.oubli }, { mode: "inscription", t: CONN.lien }]),
+      ok("B : appareil neuf, adresse vide : la page d'entrée est l'ACCUEIL du parcours (« Créer mon espace gratuit ») avec le lien « Déjà un compte ? Se connecter » ; il mène à « Connexion à ton espace » (adresse #/connexion) avec « Mot de passe oublié ? » et « Pas encore de compte ? Créer mon compte »",
+        accueilParcours(v1)
+          && v2.h2 === CONN.h2 && v2.etape === null && v2.hash === "#/connexion" && JSON.stringify(v2.liens) === JSON.stringify([{ mode: "oubli", t: CONN.oubli }, { mode: "inscription", t: CONN.lien }]),
         JSON.stringify({ v1, v2 }));
       await page.click("#co-langue"); await page.waitForSelector("#c-go"); await attendre(page, 500);
       const v3 = await portailVu(page);
       ok("B : … changer de langue sur la connexion la garde (adresse #/connexion), liens en anglais", v3.h2 === "Log in to your space" && v3.hash === "#/connexion" && JSON.stringify(v3.liens.map(x => x.t)) === JSON.stringify(["Forgot your password?", "No account yet? Create my account"]),
         JSON.stringify(v3));
-      await page.click('.bascule [data-mode="inscription"]'); await attendre(page, 300);
+      await page.click('.bascule [data-mode="inscription"]'); await page.waitForSelector('#pc[data-etape="accueil"]'); await attendre(page, 300);
       const v4 = await portailVu(page);
-      ok("B : … et l'inscription en anglais : « Already have an account? Log in »", JSON.stringify(v4.liens.map(x => x.t)) === JSON.stringify(["Already have an account? Log in"]), JSON.stringify(v4));
+      ok("B : … et « Create my account » ouvre l'accueil du parcours en anglais : « Already have an account? Log in »", v4.etape === "accueil" && v4.connexion === "Already have an account? Log in", JSON.stringify(v4));
     }
     const vues = [];
     for (const o of [{ stockage: { mhx_deja_venu: "1" }, neuf: true }, { stockage: { mhx_visites: "1" }, neuf: true }, { stockage: { mhx_installe: "1" }, neuf: true }, { neuf: true, autonome: true }]) {
       const db = base();
       const { page } = await contexte(b, db, o);
-      await page.goto(URL0); await page.waitForSelector("#c-go"); await attendre(page, 300);
+      await page.goto(URL0); await page.waitForSelector("#c-go, #pc"); await attendre(page, 300);
       vues.push((await portailVu(page)).h2);
     }
     ok("B : appareil déjà venu (marqueur mhx_deja_venu, ou traces d'avant la v72 : compteur de visites, bannière d'installation ; ou app lancée depuis l'écran d'accueil) : la page d'entrée est la connexion",
@@ -572,15 +640,16 @@ const champTel = (page, id) => page.evaluate(id => {
     for (const h of ["#access_token=jeton-tiers&refresh_token=x&type=recovery", "#access_token=jeton-tiers&type=invite", "#message=Confirmation+link+accepted", "#error=access_denied&error_code=otp_expired", "#/connexion"]) {
       const db = base();
       const { page } = await contexte(b, db, { neuf: true });
-      await page.goto(URL0 + h); await page.waitForSelector("#c-go"); await attendre(page, 400);
+      await page.goto(URL0 + h); await page.waitForSelector("#c-go, #pc"); await attendre(page, 400);
       const v = await portailVu(page); liensEmail.push(v.h2 + (v.err ? " [" + v.err.slice(0, 30) + "]" : ""));
     }
     ok("B : appareil neuf, liens d'email (réinitialisation, invitation, message, lien périmé) et #/connexion : la connexion, comme avant (avec leur message)",
       liensEmail.length === 5 && liensEmail.every(x => x.indexOf(CONN.h2) === 0) && liensEmail.slice(0, 4).every(x => / \[/.test(x)), JSON.stringify(liensEmail));
     { const db = base();
       const { page } = await contexte(b, db, { stockage: { mhx_deja_venu: "1" }, neuf: true });
-      await page.goto(URL0 + "#/inscription"); await page.waitForSelector("#c-go"); await attendre(page, 300);
-      ok("B : #/inscription ouvre la création de compte, même sur un appareil déjà venu", (await portailVu(page)).h2 === INSC.h2, ""); }
+      await page.goto(URL0 + "#/inscription"); await page.waitForSelector("#pc, #c-go"); await attendre(page, 300);
+      const v = await portailVu(page);
+      ok("B : #/inscription ouvre la création de compte (l'accueil du parcours), même sur un appareil déjà venu", accueilParcours(v), JSON.stringify(v)); }
     { const db = base();
       const { page } = await contexte(b, db, { qui: NOAH, neuf: true });
       await page.goto(URL0); await pret(page);
@@ -716,24 +785,29 @@ const champTel = (page, id) => page.evaluate(id => {
   await bloc("F. lien avec code", async () => {
     { const db = base(); db.inscription.id = PID(60);
       const { page } = await contexte(b, db, { neuf: true });
-      await page.goto(URL0 + "?ref=insta-2026#/inscription"); await page.waitForSelector("#c-go");
+      await page.goto(URL0 + "?ref=insta-2026#/inscription"); await page.waitForSelector('#pc[data-etape="accueil"]');
       const r1 = await refLocal(page), adr = await page.evaluate(() => location.search);
-      await page.goto(URL0 + "?ref=second#/inscription"); await page.waitForSelector("#c-go");
+      await page.goto(URL0 + "?ref=second#/inscription"); await page.waitForSelector('#pc[data-etape="accueil"]');
       const r2 = await refLocal(page);
-      ok("F : « /?ref=insta-2026#/inscription » : le code gardé sur l\x27appareil (mhx_ref), l\x27adresse inchangée ; un autre lien ensuite ne le remplace pas (le premier gagne)", r1 === "insta-2026" && adr === "?ref=insta-2026" && r2 === "insta-2026", JSON.stringify({ r1, adr, r2 }));
-      await page.fill("#c-prenom", "Lina"); await page.fill("#c-tel", "06 39 98 00 60"); await page.fill("#c-email", "lina@exemple.fr"); await page.fill("#c-mdp", "motdepasse1");
-      await page.check("#c-cgu");
+      ok("F : « /?ref=insta-2026#/inscription » (l\x27accueil du parcours) : le code gardé sur l\x27appareil (mhx_ref), l\x27adresse inchangée ; un autre lien ensuite ne le remplace pas (le premier gagne)", r1 === "insta-2026" && adr === "?ref=insta-2026" && r2 === "insta-2026", JSON.stringify({ r1, adr, r2 }));
+      /* v81 : chaque écran du parcours jusqu'à « whatsapp » : le PREMIER code toujours gardé sur l'appareil ; l'adresse reste celle
+         qu'on a ouverte (le second lien, « ?ref=second » : le parcours ne la réécrit pas) */
+      const R = { prenom: "Lina", email: "lina@exemple.fr", mdp: "motdepasse1" }, garde = [];
+      for (const e of ECRANS) { const ici = await FT.parcours(page, R, e); garde.push([ici, await refLocal(page), await page.evaluate(() => location.search)]); }
+      await page.selectOption("#c-tel-ind", "33"); await page.fill("#c-tel", "06 39 98 00 60");
       const tClic = Date.now();
-      await Promise.all([page.waitForNavigation({ timeout: 15000 }).catch(() => {}), page.click("#c-go")]);
-      await pret(page);
+      await page.click("#c-go");   // « Débloquer mon espace »
+      await surEspace(page);
       const C = ecr(db, "contact", PID(60)), r3 = await refLocal(page);
-      ok("F : inscription : clé contact du nouveau compte { telephone, ref: « insta-2026 », inscrit_le }, une écriture ; le code retiré de l\x27appareil",
-        C.length === 1 && C[0].contenu.ref === "insta-2026" && C[0].contenu.telephone === "+33639980060" && isoPres(C[0].contenu.inscrit_le, tClic) && r3 === null, JSON.stringify({ C: C.map(x => x.contenu), r3 }));
+      ok("F : le premier code gardé sur l\x27appareil à chaque écran du parcours, de l\x27accueil à « whatsapp », l\x27adresse ouverte inchangée ; « Débloquer mon espace » : clé contact du nouveau compte { telephone, ref: « insta-2026 », inscrit_le }, une écriture ; le code retiré de l\x27appareil",
+        JSON.stringify(garde) === JSON.stringify(ECRANS.map(e => [e, "insta-2026", "?ref=second"]))
+          && C.length === 1 && C[0].contenu.ref === "insta-2026" && C[0].contenu.telephone === "+33639980060" && isoPres(C[0].contenu.inscrit_le, tClic) && r3 === null,
+        JSON.stringify({ garde, C: C.map(x => x.contenu), r3 }));
       const s1 = await page.evaluate(() => location.search);
       await Promise.all([page.waitForNavigation({ timeout: 15000 }).catch(() => {}), page.evaluate(() => Auth.deconnecter())]);
       await page.waitForSelector("#c-go");
       const r4 = await refLocal(page);
-      ok("F : après l'inscription, l'adresse n'a plus le code ; « Se déconnecter » ne le relit donc pas", s1 === "" && r4 === null, JSON.stringify({ s1, r4 })); }
+      ok("F : après l'inscription (« Ton espace »), l'adresse n'a plus le code ; « Se déconnecter » ne le relit donc pas", s1 === "" && r4 === null, JSON.stringify({ s1, r4 })); }
     { const db = base(); db.emails[NOAH.id] = NOAH.email;
       const { page } = await contexte(b, db, { stockage: { mhx_deja_venu: "1" }, neuf: true });
       await page.goto(URL0 + "?ref=insta"); await page.waitForSelector("#c-go");
@@ -747,7 +821,7 @@ const champTel = (page, id) => page.evaluate(id => {
     for (const q of ["?ref=Insta", "?ref=" + "a".repeat(31), "?ref=a%20b", "?ref=%3Cb%3E", "?ref=", "#/inscription?ref=tiktok", "?ref=" + "a".repeat(30)]) {
       const db = base();
       const { page } = await contexte(b, db, { neuf: true });
-      await page.goto(URL0 + (q[0] === "#" ? q : q + "#/inscription")); await page.waitForSelector("#c-go");
+      await page.goto(URL0 + (q[0] === "#" ? q : q + "#/inscription")); await page.waitForSelector("#pc, #c-go");
       lus.push(await refLocal(page));
     }
     ok("F : codes refusés (majuscule, 31 caractères, espace, balise, vide) : rien de gardé ; dans l\x27ancre (#/inscription?ref=tiktok) et 30 caractères : gardés",
@@ -763,14 +837,16 @@ const champTel = (page, id) => page.evaluate(id => {
     await avecTelephone(false, async () => {
       const db = base(); db.inscription.id = PID(61);
       const { page } = await contexte(b, db, { neuf: true });
-      await page.goto(URL0 + "?ref=salon-lyon#/inscription"); await page.waitForSelector("#c-go");
-      await page.fill("#c-prenom", "Tom"); await page.fill("#c-email", "tom@exemple.fr"); await page.fill("#c-mdp", "motdepasse1");
-      await page.check("#c-cgu");
-      await Promise.all([page.waitForNavigation({ timeout: 15000 }).catch(() => {}), page.click("#c-go")]);
-      await pret(page);
+      await page.goto(URL0 + "?ref=salon-lyon#/inscription"); await page.waitForSelector('#pc[data-etape="accueil"]');
+      /* v81 : le parcours jusqu'à l'écran « compte », « Continuer » ; si l'écran WhatsApp est encore là (réglage ignoré), on
+         le passe (numéro tapé seulement s'il est demandé) pour voir ce qui est écrit */
+      const R = { prenom: "Tom", email: "tom@exemple.fr", mdp: "motdepasse1" };
+      const suite = await apresCompte(page, R);
+      if (suite === "whatsapp"){ if (await page.$("#c-tel")) await page.fill("#c-tel", "06 39 98 00 61"); await page.click("#c-go"); }
+      await surEspace(page);
       const C = ecr(db, "contact", PID(61));
-      ok("F : téléphone obligatoire éteint : l\x27inscription par un lien avec code écrit quand même la clé contact, exactement { ref, inscrit_le }",
-        C.length === 1 && JSON.stringify(Object.keys(C[0].contenu)) === '["ref","inscrit_le"]' && C[0].contenu.ref === "salon-lyon", JSON.stringify(C.map(x => x.contenu)));
+      ok("F : réglage du numéro éteint (v81 : le parcours le demande quand même) : la création de compte par le parcours ouvert par un lien avec code écrit la clé contact une fois, exactement { telephone, ref, inscrit_le }",
+        suite === "whatsapp" && C.length === 1 && JSON.stringify(Object.keys(C[0].contenu).sort()) === '["inscrit_le","ref","telephone"]' && C[0].contenu.ref === "salon-lyon" && C[0].contenu.telephone === "+33639980061", JSON.stringify({ suite, C: C.map(x => x.contenu) }));
     });
   });
 
@@ -786,9 +862,9 @@ const champTel = (page, id) => page.evaluate(id => {
       const v = await page.evaluate(() => ({ copie: window.__copie, fn: lienApp() }));
       ok("v73 E : « Partager l'app » (Profil) envoie le lien d'inscription avec le code « partage » (" + LIEN + ") ; rien d'écrit", v.copie === LIEN && v.fn === LIEN && db.ecritures.length === 0, JSON.stringify({ v, ecr: resume(db) })); }
     { const { page } = await contexte(b, base(), { neuf: true });
-      await page.goto(URL0 + "?ref=partage#/inscription"); await page.waitForSelector("#c-go");
-      const h2 = await page.evaluate(() => ((document.querySelector(".carte-co h2") || {}).textContent || "").trim()), r = await refLocal(page);
-      ok("v73 E : ce lien, ouvert sur un appareil neuf : la création de compte, et le code « partage » est accepté (gardé jusqu'à l'inscription)", h2 === "Crée ton espace gratuit" && r === "partage", JSON.stringify({ h2, r })); }
+      await page.goto(URL0 + "?ref=partage#/inscription"); await page.waitForSelector("#pc, #c-go");
+      const et = await etapeDe(page), go = await page.evaluate(() => ((document.getElementById("pc-go") || {}).textContent || "").trim()), r = await refLocal(page);
+      ok("v73 E : ce lien, ouvert sur un appareil neuf : la création de compte (v81 : l'accueil du parcours, « Créer mon espace gratuit »), et le code « partage » est accepté (gardé jusqu'à l'inscription)", et === "accueil" && go === "Créer mon espace gratuit" && r === "partage", JSON.stringify({ et, go, r })); }
   });
 
   /* =================== v73 (C). le questionnaire client ne pose plus « Numéro WhatsApp » =================== */

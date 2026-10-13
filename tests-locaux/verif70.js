@@ -1,5 +1,7 @@
 /* verif70 — v64 (brief V2, lot 5, section A ; scénario 1a de la section 8) : l'inscription à UNE seule case obligatoire,
    vérifiée de bout en bout dans un vrai navigateur, et le VERROU de publication des textes légaux.
+   v81 (bloc 2, mission du 13/10/2026) : l'inscription passe par le parcours du prospect en 11 écrans (js/parcours.js) ;
+   A1 et A2 portent sur ses écrans Compte et WhatsApp (voir plus bas), A0 inchangé.
    A0. verrou de publication (sans navigateur) : les 3 emplacements de js/config.js (CONFIG.textes_legaux : cgu_pdf,
       confidentialite_pdf, cgu_version), LUS SUR LE DISQUE (fichiers servis, jamais retouchés) ET js/config.js EXÉCUTÉ
       dans un bac à sable (vm) : ✗ tant qu'une valeur manque ou n'est pas publiable, ou que la valeur exécutée n'est pas
@@ -17,35 +19,44 @@
       la page : servi avec les valeurs de test des suites (forcerLegaux) → refusé pour ses 2 liens de test ; avec des
       liens réalistes → complet ; enfin la page entière (disque) avec des liens réalistes → complète, et chaque lien
       Google Drive écrit ailleurs dans le site (PDF de la formation) : publiable seul, refusé comme lien des CGU ;
-   A1. écran « Crée ton espace gratuit » (#/inscription), français et anglais, thème sombre et ancien choix « clair »
-      rangé sur l'appareil (mhx_theme = light), ignoré (v80 : tout en sombre, data-theme absent), 390 px et 320 px
-      (config servie avec les 3 valeurs de test valides, LEGAUX_TEST) : textes EXACTS du brief (A1 sous-titre, A2 case,
-      A4 newsletter, A6 bouton ; titre, « Rester connecté » et mention A7 inchangés) ; exactement 3 cases (conditions et
-      newsletter non cochées, « Rester connecté » cochée), #c-sante absente, aucun « données de santé » / « health
-      data » ; « CGU » et « politique de confidentialité » (« Terms of Use », « Privacy Policy ») = 2 liens distincts
-      (href = les 2 PDF de la config servie, target=_blank, rel=noopener ; jamais cliqués : aucun appel vers Google
-      Drive) ; le point final collé au 2e lien et, mesuré par Range à 414, 390, 375, 360 et 320 px, sur la MÊME ligne
-      que la dernière lettre de ce lien (le point orphelin du brief), sans défilement horizontal ; les 2 liens visibles
-      dans le thème (couleur dorée du thème, soulignés, contraste ≥ 3 avec la carte — v80 : la carte est en verre
-      semi-transparent, son fond est composé sur le fond opaque de la page, la couleur réellement vue ; l'ancien choix
-      « clair » ignoré : le doré du thème sombre, rgb(212, 168, 68)). La zone de tap de la case n'est
-      pas exigée à 44 px : l'app ne la garantit nulle part pour ses cases (.co-rester input : 16 px, aussi sur l'écran de
-      connexion) ;
+   A1. v81 (bloc 2) : l'écran unique « Crée ton espace gratuit » n'existe plus (#/inscription ouvre le parcours du prospect
+      en 11 écrans, js/parcours.js) ; ce qu'il portait est vérifié, avec la même exigence, sur l'écran du parcours qui le
+      porte maintenant : l'écran Compte (70 %, #pc[data-etape="compte"], atteint par FT.parcours depuis #/inscription) et,
+      pour le bouton qui crée le compte et la mention médicale, l'écran WhatsApp (80 %). Français et anglais, thème sombre
+      et ancien choix « clair » rangé sur l'appareil (mhx_theme = light), ignoré (v80 : tout en sombre, data-theme
+      absent), 390 px et 320 px (config servie avec les 3 valeurs de test valides, LEGAUX_TEST) : textes EXACTS de
+      docs/maj-blocs-1-2/TEXTES.md (Compte : titre « Ton espace est prêt 🔒 », sous-titre, case des conditions INCHANGÉE,
+      case newsletter au nouveau texte, bouton « Continuer » ; WhatsApp : bouton « Débloquer mon espace », mention
+      médicale) ; plus de « Rester connecté » (v76) ni de « 14 jours » ; exactement 2 cases (conditions et newsletter, non
+      cochées, sans attribut checked), #c-sante absente, aucun « données de santé » / « health data » ; « CGU » et
+      « politique de confidentialité » (« Terms of Use », « Privacy Policy ») = 2 liens distincts (href = les 2 PDF de la
+      config servie, target=_blank, rel=noopener ; jamais cliqués : aucun appel vers Google Drive) ; le point final collé
+      au 2e lien et, mesuré par Range à 414, 390, 375, 360 et 320 px, sur la MÊME ligne que la dernière lettre de ce
+      lien (le point orphelin du brief), dans la case, sans défilement horizontal ; les 2 liens visibles dans le thème
+      (couleur dorée du thème, soulignés, en ligne, contraste ≥ 3 avec le fond réellement vu : chaque fond du lien et de
+      ses parents, alpha compris — la case en verre du parcours comprise —, composé sur le fond opaque de la page ;
+      l'ancien choix « clair » ignoré : le doré du thème sombre, rgb(212, 168, 68)). La zone de tap n'est pas mesurée
+      ici : la case entière (.pc-case, 44 px au moins) l'est par verif85 H ;
       config « à compléter » (la branche de travail), et un lien « javascript: » : les 2 mots sont des span.lien-absent,
-      sans lien, même texte, point collé ;
-   A2. inscription en français (sans newsletter, 390 px, thème sombre) et en anglais (avec newsletter, 390 px, ancien
-      choix « clair » rangé sur l'appareil, ignoré (v80), une autre version servie, 2026-10-15) : sans la case des
-      conditions → message exact (« Coche la case des
-      conditions pour continuer. » / « Tick the terms box to continue. »), aucun appel, même avec la newsletter cochée ;
-      un tap sur le texte de la case la coche ; cette seule case suffit : le compte se crée SANS accord santé ;
+      sans lien, même texte, point collé (écran Compte du parcours) ;
+   A2. inscription par le parcours, en français (sans newsletter, 390 px, thème sombre) et en anglais (avec newsletter,
+      390 px, ancien choix « clair » rangé sur l'appareil, ignoré (v80), une autre version servie, 2026-10-15) : prénom
+      « Zoé » à l'écran Prénom ; à l'écran Compte, sans la case des conditions, « Continuer » (inactif, touché quand même)
+      → message exact (« Coche la case des conditions pour continuer. » / « Tick the terms box to continue. »), on reste
+      sur l'écran Compte, aucun appel, même avec la newsletter cochée ; un tap sur le texte de la case la coche ; cette
+      seule case suffit : à l'écran WhatsApp, « Débloquer mon espace » crée le compte SANS accord santé, la page se
+      recharge avec la session et arrive sur l'écran « Ton espace » (plus sur le questionnaire de l'app) ;
       POST /auth/v1/signup data = EXACTEMENT prenom, nom, consentement (instant ISO du clic), conditions_version (= la
       valeur de config servie = CONFIG.textes_legaux.cgu_version = DECOUVERTE.accords.conditions), newsletter (instant
-      ISO si cochée, sinon null), newsletter_version « 2026-09-30 » (= DECOUVERTE.accords.newsletter) ; à la première
-      ouverture, la clé emails recopiée comme avant (Accords.copierEmails : { newsletter, maj, version « 2026-09-30 »,
-      source « inscription » }, une fois), aucune donnée de santé écrite ni aucune métadonnée santé demandée ; le
-      Profil garde son interrupteur (état d'après la copie ; un changement écrit version « 2026-09-28c »,
+      ISO si cochée, sinon null), newsletter_version « 2026-10-13 » (= DECOUVERTE.accords.newsletter, v81 : nouveau texte
+      de la case) ; à la première ouverture, la clé emails recopiée comme avant (Accords.copierEmails : { newsletter, maj,
+      version « 2026-10-13 », source « inscription » }, une fois), aucune donnée de santé écrite ni aucune métadonnée
+      santé demandée ; le Profil (atteint après « Ton espace » et le cadeau, « Plus tard », à l'accueil de l'app) garde
+      son interrupteur (état d'après la copie ; un changement écrit version « 2026-09-28c »,
       DECOUVERTE.accords.newsletter_profil, source « profil »).
    v74 (décision de Lucas du 04/10) : plus de champ Nom à l'inscription : data.nom = "" (profils.nom vide). Même nombre.
+   v81 (bloc 2) : A1 et A2 portés sur le parcours, même nombre de ✓ (32) ; dans chaque bloc A1, la ligne des textes vient
+   en dernier (elle attend l'écran WhatsApp, atteint après les mesures de l'écran Compte).
    Supabase simulé (gabarit de verif55) : rien ne part vers la vraie base (routage par NOM D'HÔTE) ; chaque écriture est
    notée. Dates relatives au lancement. Chaque bloc tourne à part (« ✗ BLOC INTERROMPU ») ; code de sortie 1 dès qu'un ✗
    apparaît. Comptes fictifs (@exemple.fr).
@@ -267,53 +278,76 @@ const contenu0 = (db, uid, outil) => (db.donnees.find(d => d.user_id === uid && 
 const drive = () => Array.from(externes).filter(h => /(^|\.)google\.com$/.test(h));
 const autresHotes = () => Array.from(externes).filter(h => !/^fonts\.(googleapis|gstatic)\.com$/.test(h));
 
-/* ---------- les textes attendus : brief V2, section A, mot pour mot ---------- */
+/* ---------- les textes attendus : brief V2, section A, puis v81 docs/maj-blocs-1-2/TEXTES.md (font foi), mot pour mot ----------
+   v81 : titre et sous-titre = ceux de l'écran Compte du parcours ; la case des conditions et son message inchangés ;
+   newsletter : le nouveau texte de la case (version 2026-10-13) ; suivant : le bouton de l'écran Compte ; bouton (celui
+   qui crée le compte) et note (mention médicale) : l'écran WhatsApp ; jours : plus aucun « 14 jours » (TEXTES.md) */
 const TXA = {
   fr: {
-    titre: "Crée ton espace gratuit",
-    sous: "Ton calculateur de calories, ton suivi de poids et la Speed Formation pour poser tes bases en 14 jours. Inscris-toi pendant la bêta : tout reste gratuit pour toi, à vie.",
+    titre: "Ton espace est prêt 🔒",
+    sous: "Crée ton compte pour le débloquer et le garder.",
     cgu: "J'ai 18 ans ou plus et j'accepte les CGU et la politique de confidentialité.",
     lien_cgu: "CGU", lien_politique: "politique de confidentialité",
-    news: "Oui, je veux recevoir par email les conseils et les offres de MHX Coaching (2 par semaine au plus, désinscription en 1 clic).",
+    news: "Je veux recevoir les conseils et les offres de MHX Coaching par email.",
     rester: "Rester connecté",
-    bouton: "Créer mon espace gratuit",
-    note: "L'app ne remplace pas un avis médical. Si tu as un doute sur ta santé, parles-en à un professionnel avant de commencer.",
+    suivant: "Continuer",
+    bouton: "Débloquer mon espace",
+    note: "L’app ne remplace pas un avis médical. Si tu as un doute sur ta santé, parles-en à un professionnel avant de commencer.",
     manque: "Coche la case des conditions pour continuer.",
+    jours: /14 jours/i,
     sante: /données de santé|traitement de mes données/i
   },
   en: {
-    titre: "Create your free space",
-    sous: "Your calorie calculator, weight tracking and the Speed Formation to build your foundations in 14 days. Sign up during the beta: it stays free for you, for life.",
+    titre: "Your space is ready 🔒",
+    sous: "Create your account to unlock it and keep it.",
     cgu: "I'm 18 or older and I accept the Terms of Use and the Privacy Policy.",
     lien_cgu: "Terms of Use", lien_politique: "Privacy Policy",
-    news: "Yes, send me MHX Coaching's tips and offers by email (2 per week max, 1-click unsubscribe).",
+    news: "I want to get tips and offers from MHX Coaching by email.",
     rester: "Stay logged in",
-    bouton: "Create my free account",
-    note: "The app is not medical advice. If you have any doubt about your health, talk to a professional before starting.",
+    suivant: "Continue",
+    bouton: "Unlock my space",
+    note: "The app doesn’t replace medical advice. If you have any doubt about your health, talk to a professional before you start.",
     manque: "Tick the terms box to continue.",
+    jours: /14 days|14 jours/i,
     sante: /health data|données de santé/i
   }
 };
-const V_NEWS = "2026-10-11", V_NEWS_PROFIL = "2026-09-28c";   // v76 : case newsletter « MHX Coaching »
+const V_NEWS = "2026-10-13", V_NEWS_PROFIL = "2026-09-28c";   // v76 : case newsletter « MHX Coaching » ; v81 : texte de la case du parcours (2026-10-13)
 const CLES_DATA = "conditions_version,consentement,newsletter,newsletter_version,nom,prenom";
 
-/* l'écran d'inscription tel qu'affiché */
+/* l'écran du parcours affiché (v81 : l'écran Compte porte ce que portait l'écran unique d'inscription ; #pc, data-etape) */
 const ecran = page => page.evaluate(() => {
   const t = s => { const x = document.querySelector(s); return x ? x.textContent.replace(/[  ]/g, " ").replace(/\s+/g, " ").trim() : null; };
   const lab = id => { const x = document.getElementById(id), l = x && x.closest("label"); return l ? l.textContent.replace(/[  ]/g, " ").replace(/\s+/g, " ").trim() : null; };
   const lien = id => { const x = document.getElementById(id); if (!x) return null;
     return { tag: x.tagName, cls: x.className, t: x.textContent, href: x.getAttribute("href"), target: x.getAttribute("target"), rel: x.getAttribute("rel"),
       dans: !!x.closest("label.co-cgu > span") }; };
-  const span = document.querySelector("label.co-cgu > span");
-  const cases = Array.from(document.querySelectorAll(".carte-co input[type=checkbox]")).map(i => ({ id: i.id, coche: i.checked, attr: i.hasAttribute("checked") }));
-  return { titre: t(".carte-co h2"), sous: t(".carte-co .co-sous"), cgu: lab("c-cgu"), news: lab("c-newsletter"), rester: lab("c-rester"), bouton: t("#c-go"), note: t(".carte-co .co-note"),
+  const span = document.querySelector("label.co-cgu > span"), pc = document.getElementById("pc"), pg = document.querySelector("#pc .pc-progres");
+  const cases = Array.from(document.querySelectorAll("#pc input[type=checkbox]")).map(i => ({ id: i.id, coche: i.checked, attr: i.hasAttribute("checked") }));
+  return { etape: pc ? pc.getAttribute("data-etape") : null, progres: pg ? pg.getAttribute("aria-valuenow") : null,
+    titre: t("#pc h1"), sous: t("#pc .pc-sous-titre"), cgu: lab("c-cgu"), news: lab("c-newsletter"), rester: lab("c-rester"), suivant: t("#pc-suivant"),
     cases, sante: !!document.getElementById("c-sante"), liens: [lien("c-cgu-lien"), lien("c-politique-lien")],
     dansCase: span ? Array.from(span.querySelectorAll("a, button, span")).map(x => x.tagName + "#" + x.id) : null,
     fin: span && span.lastChild ? { type: span.lastChild.nodeType, data: span.lastChild.nodeType === 3 ? span.lastChild.data : null, avant: span.lastChild.previousSibling ? span.lastChild.previousSibling.id || span.lastChild.previousSibling.nodeName : null } : null,
     theme: document.documentElement.getAttribute("data-theme"), texte: document.body.innerText };
 });
+/* v81 : l'écran WhatsApp du parcours (le bouton qui crée le compte, la mention médicale) */
+const ecranWhatsapp = page => page.evaluate(() => {
+  const t = s => { const x = document.querySelector(s); return x ? x.textContent.replace(/[  ]/g, " ").replace(/\s+/g, " ").trim() : null; };
+  const pc = document.getElementById("pc"), pg = document.querySelector("#pc .pc-progres");
+  return { etape: pc ? pc.getAttribute("data-etape") : null, progres: pg ? pg.getAttribute("aria-valuenow") : null, bouton: t("#c-go"), note: t("#pc .pc-note") };
+});
+/* v81 : le parcours ouvert à #/inscription (adresse de l'ancien écran unique), mené par FT.parcours jusqu'à l'écran Compte,
+   sans rien toucher sur lui */
+async function versCompte(page, url, r){
+  await page.goto(url + "#/inscription");
+  await FT.parcours(page, Object.assign({ prenom: "Zoé" }, r || {}), "compte");
+  await page.waitForSelector('#pc[data-etape="compte"] #c-cgu');
+}
 
-/* le point final et la dernière lettre du 2e lien : même ligne ? (Range), défilement horizontal ? */
+/* le point final et la dernière lettre du 2e lien : même ligne ? (Range), défilement horizontal ?
+   v81 : « dans la carte » = dans la case des conditions de l'écran Compte (label.co-cgu, la boîte en verre qui porte le texte,
+   à l'intérieur de #pc) au lieu de .carte-co (l'ancien écran unique) */
 async function mesurer(page, largeur){
   const vp = page.viewportSize();
   await page.setViewportSize({ width: largeur, height: vp ? vp.height : 844 });
@@ -326,38 +360,47 @@ async function mesurer(page, largeur){
     if (!tn || !pt || pt.nodeType !== 3 || !pt.data.length) return { sansPoint: true, apres: pt ? pt.nodeName : null };
     const rect = (n, i, j) => { const r = document.createRange(); r.setStart(n, i); r.setEnd(n, j); const l = Array.from(r.getClientRects()).filter(x => x.width > 0 || x.height > 0); const q = l[l.length - 1]; return q ? { top: Math.round(q.top * 10) / 10, bottom: Math.round(q.bottom * 10) / 10, left: Math.round(q.left * 10) / 10, right: Math.round(q.right * 10) / 10 } : null; };
     const lettre = rect(tn, tn.data.length - 1, tn.data.length), point = rect(pt, 0, 1);
-    const carte = document.querySelector(".carte-co").getBoundingClientRect();
+    const boite = a.closest("#pc label.co-cgu");
+    if (!boite) return { horsCase: true, lettre, point, texte: pt.data };
+    const carte = boite.getBoundingClientRect();
     return { lettre, point, texte: pt.data, carteD: Math.round(carte.right), sw: document.documentElement.scrollWidth, iw: window.innerWidth };
   });
 }
 const memeLigne = m => !!(m && m.lettre && m.point && m.texte === "." && Math.abs(m.lettre.top - m.point.top) <= 2 && Math.abs(m.lettre.bottom - m.point.bottom) <= 2
   && m.point.left >= m.lettre.right - 1 && m.point.right <= m.carteD && m.sw <= m.iw);
 
-/* couleurs : le lien doré du thème, souligné, lisible sur la carte
+/* couleurs : le lien doré du thème, souligné, lisible sur ce qu'il y a derrière lui
    v80 : la carte est en verre semi-transparent (rgba, transparente sur téléphone) : le fond comparé est la couleur
-   réellement vue, chaque fond de la carte et de ses parents (alpha compris) composé sur le fond opaque du body (#07090d) */
+   réellement vue, chaque fond de la carte et de ses parents (alpha compris) composé sur le fond opaque du body (#07090d).
+   v81 : plus de .carte-co ; les couches partent du lien lui-même et remontent jusqu'au body exclu (le lien, sa phrase, la
+   case en verre .pc-case de l'écran Compte, #pc…), chacune avec son alpha, composées sur le fond opaque du body : la case
+   en verre éclaircit le fond, la règle n'en est pas plus facile */
 const couleurs = page => page.evaluate(() => {
   const rgb = s => { const m = /rgba?\(([^)]+)\)/.exec(s || ""); return m ? m[1].split(",").slice(0, 3).map(x => +x.trim()) : null; };
   const rgba = s => { const m = /rgba?\(([^)]+)\)/.exec(s || ""); if (!m) return null; const p = m[1].split(",").map(x => +x.trim()); return [p[0], p[1], p[2], p.length > 3 ? p[3] : 1]; };
   const hex = s => { const m = /^#([0-9a-f]{6})$/i.exec(String(s || "").trim()); return m ? [0, 2, 4].map(i => parseInt(m[1].slice(i, i + 2), 16)) : null; };
   const lum = c => { const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]); };
-  const couches = [];   // de la carte jusqu'au body exclu
-  for (let n = document.querySelector(".carte-co"); n && n !== document.body && n !== document.documentElement; n = n.parentElement) couches.push(rgba(getComputedStyle(n).backgroundColor));
-  let fond = rgb(getComputedStyle(document.body).backgroundColor);   // le fond opaque de la page
-  if (fond) for (const k of couches.reverse()) if (k) fond = fond.map((v, i) => k[i] * k[3] + v * (1 - k[3]));
+  const fondVu = x => {
+    const couches = [];   // du lien jusqu'au body exclu
+    for (let n = x; n && n !== document.body && n !== document.documentElement; n = n.parentElement) couches.push(rgba(getComputedStyle(n).backgroundColor));
+    let fond = rgb(getComputedStyle(document.body).backgroundColor);   // le fond opaque de la page
+    if (fond) for (const k of couches.reverse()) if (k) fond = fond.map((v, i) => k[i] * k[3] + v * (1 - k[3]));
+    return fond;
+  };
   const accent = hex(getComputedStyle(document.documentElement).getPropertyValue("--accent"));
   return ["c-cgu-lien", "c-politique-lien"].map(id => {
     const x = document.getElementById(id); if (!x) return null;
-    const cs = getComputedStyle(x), c = rgb(cs.color);
+    const cs = getComputedStyle(x), c = rgb(cs.color), fond = fondVu(x);
     const L1 = c ? lum(c) : 0, L2 = fond ? lum(fond) : 0, contraste = (Math.max(L1, L2) + 0.05) / (Math.min(L1, L2) + 0.05);
     return { id, couleur: c, accent, dore: !!c && !!accent && c.join() === accent.join(), souligne: /underline/.test(cs.textDecorationLine), contraste: Math.round(contraste * 100) / 100, display: cs.display,
-      fond: fond ? fond.map(v => Math.round(v * 10) / 10) : null };
+      dansPc: !!x.closest("#pc label.pc-case"), fond: fond ? fond.map(v => Math.round(v * 10) / 10) : null };
   });
 });
 
-/* remplit le formulaire (page sur #/inscription), sans toucher aux cases ; v74 : plus de champ Nom */
+/* remplit l'écran Compte du parcours (email, mot de passe), sans toucher aux cases ; v74 : plus de champ Nom ; v81 : le
+   prénom est donné à l'écran Prénom (versCompte) */
 async function remplir(page, f){
-  await page.fill("#c-prenom", f.prenom); await page.fill("#c-email", f.email); await page.fill("#c-mdp", f.mdp || "motdepasse1");
+  await page.fill("#c-email", f.email); await page.fill("#c-mdp", f.mdp || "motdepasse1");
 }
 
 (async () => {
@@ -532,64 +575,76 @@ async function remplir(page, f){
     }
   });
 
-  /* =================== A1. écran d'inscription (config de test) =================== */
+  /* =================== A1. inscription : écran Compte du parcours (config de test) ===================
+     v81 (bloc 2) : l'écran unique « Crée ton espace gratuit » n'existe plus ; #/inscription ouvre le parcours, mené jusqu'à
+     l'écran Compte (FT.parcours, versCompte) : textes, cases, liens, couleurs et mesures y sont vérifiés comme avant sur
+     l'écran unique ; le bouton qui crée le compte et la mention médicale, à l'écran WhatsApp, atteint à la fin du bloc (la
+     ligne des textes vient donc en dernier). */
   /* theme "clair" : l'ancien choix « clair » rangé sur l'appareil (mhx_theme = light), ignoré depuis la v80 (tout en sombre) */
   for (const [langue, theme, vp] of [["fr", "sombre", MOBILE], ["fr", "clair", PETIT], ["en", "sombre", PETIT], ["en", "clair", MOBILE]]) {
     const T = TXA[langue], L = (langue === "en" ? "anglais" : "français") + ", " + (theme === "clair" ? "ancien choix « clair » ignoré (v80)" : "thème " + theme) + ", " + vp.width + " px";
-    await bloc("A1. écran d'inscription (" + L + ")", async () => {
+    await bloc("A1. écran d'inscription, écran Compte du parcours (" + L + ")", async () => {
       const db = base();
       const { page } = await contexte(b, db, { viewport: vp, langue: langue === "en" ? "en" : "", theme });
-      await page.goto(URL0 + "#/inscription"); await page.waitForSelector("#c-go"); await attendre(page, 500);
+      await versCompte(page, URL0); await attendre(page, 500);
       const e = await ecran(page);
-      ok(`inscription (${L}) : textes exacts — titre « ${T.titre} », sous-titre A1 « ${T.sous.slice(0, 40)}… », case A2 « ${T.cgu} », newsletter A4 « ${T.news.slice(0, 40)}… », plus de « ${T.rester} » (v76), bouton A6 « ${T.bouton} », mention A7 inchangée`,
-        e.titre === T.titre && e.sous === T.sous && e.cgu === T.cgu && e.news === T.news && e.rester === null && !e.texte.includes(T.rester) && e.bouton === T.bouton && e.note === T.note,
-        JSON.stringify({ titre: e.titre, sous: e.sous, cgu: e.cgu, news: e.news, rester: e.rester, bouton: e.bouton, note: e.note }));
-      ok(`inscription (${L}) : UNE case obligatoire (conditions) + newsletter — exactement ces 2 cases, dans cet ordre, non cochées (sans attribut checked), plus de « ${T.rester} » (v76 : la session reste gardée) ; #c-sante absente, aucun « données de santé » / « health data » à l'écran`,
+      ok(`inscription (${L}) : écran Compte du parcours — UNE case obligatoire (conditions) + newsletter — exactement ces 2 cases, dans cet ordre, non cochées (sans attribut checked), plus de « ${T.rester} » (v76 : la session reste gardée) ; #c-sante absente, aucun « données de santé » / « health data » à l'écran`,
         JSON.stringify(e.cases) === JSON.stringify([{ id: "c-cgu", coche: false, attr: false }, { id: "c-newsletter", coche: false, attr: false }]) && !e.sante && !T.sante.test(e.texte),
         JSON.stringify(e.cases) + " santé " + e.sante + " " + ((T.sante.exec(e.texte) || [""])[0]));
       const [l1, l2] = e.liens;
       const lienOk = (l, t, href) => !!l && l.tag === "A" && l.t === t && l.href === href && l.target === "_blank" && /(^|\s)noopener(\s|$)/.test(l.rel || "") && l.dans;
-      ok(`inscription (${L}) : « ${T.lien_cgu} » et « ${T.lien_politique} » = 2 liens distincts dans la case (href = les 2 PDF de la config servie, target=_blank, rel=noopener), rien d'autre de cliquable dans la case, le point final collé au 2e lien (dernier nœud « . ») ; aucun lien suivi (aucun appel vers Google Drive)`,
+      ok(`inscription (${L}) : écran Compte — « ${T.lien_cgu} » et « ${T.lien_politique} » = 2 liens distincts dans la case (href = les 2 PDF de la config servie, target=_blank, rel=noopener), rien d'autre de cliquable dans la case, le point final collé au 2e lien (dernier nœud « . ») ; aucun lien suivi (aucun appel vers Google Drive)`,
         lienOk(l1, T.lien_cgu, LEGAUX_TEST.cgu_pdf) && lienOk(l2, T.lien_politique, LEGAUX_TEST.confidentialite_pdf) && l1.href !== l2.href
           && JSON.stringify(e.dansCase) === '["A#c-cgu-lien","A#c-politique-lien"]' && !!e.fin && e.fin.type === 3 && e.fin.data === "." && e.fin.avant === "c-politique-lien" && !drive().length,
         JSON.stringify({ liens: e.liens, dansCase: e.dansCase, fin: e.fin, drive: drive() }));
       const coul = await couleurs(page);
-      ok(`inscription (${L}) : thème sombre appliqué (data-theme absent${theme === "clair" ? ", l'ancien choix « clair » rangé sur l'appareil ignoré" : ""}) ; les 2 liens dorés du thème (--accent${theme === "clair" ? " = le doré du thème sombre, rgb(212, 168, 68)" : ""}), soulignés, en ligne (display inline), contraste ≥ 3 avec la carte (verre composé sur le fond de la page)`,
-        e.theme === null && coul.every(x => x && x.dore && x.souligne && x.display === "inline" && x.contraste >= 3 && (theme !== "clair" || (!!x.accent && x.accent.join() === "212,168,68"))), JSON.stringify({ theme: e.theme, coul }));
+      ok(`inscription (${L}) : écran Compte — thème sombre appliqué (data-theme absent${theme === "clair" ? ", l'ancien choix « clair » rangé sur l'appareil ignoré" : ""}) ; les 2 liens dorés du thème (--accent${theme === "clair" ? " = le doré du thème sombre, rgb(212, 168, 68)" : ""}), soulignés, en ligne (display inline), contraste ≥ 3 avec le fond réellement vu (chaque fond du lien et de ses parents, la case en verre comprise, composé sur le fond de la page)`,
+        e.theme === null && coul.every(x => x && x.dansPc && x.dore && x.souligne && x.display === "inline" && x.contraste >= 3 && (theme !== "clair" || (!!x.accent && x.accent.join() === "212,168,68"))), JSON.stringify({ theme: e.theme, coul }));
       const mesures = {};
       for (const w of LARGEURS) mesures[w] = await mesurer(page, w);
       await page.setViewportSize(vp);
       const faux = LARGEURS.filter(w => !memeLigne(mesures[w]));
-      ok(`inscription (${L}) : à ${LARGEURS.join(", ")} px, le point final sur la MÊME ligne que la fin de « ${T.lien_politique} » (Range : même haut et même bas de ligne, juste après), dans la carte, aucun défilement horizontal`,
+      ok(`inscription (${L}) : écran Compte — à ${LARGEURS.join(", ")} px, le point final sur la MÊME ligne que la fin de « ${T.lien_politique} » (Range : même haut et même bas de ligne, juste après), dans la case, aucun défilement horizontal`,
         !faux.length, JSON.stringify(faux.map(w => [w, mesures[w]])));
+      /* l'écran WhatsApp (80 %) : le bouton qui crée le compte (jamais touché ici) et la mention médicale */
+      await FT.parcours(page, { email: "zoe@exemple.fr" }, "whatsapp"); await attendre(page, 300);
+      const w = await ecranWhatsapp(page);
+      ok(`inscription (${L}) : textes exacts (TEXTES.md) — écran Compte (70 %) : titre « ${T.titre} », sous-titre « ${T.sous} », case des conditions « ${T.cgu} » (inchangée), newsletter « ${T.news} », bouton « ${T.suivant} », plus de « ${T.rester} » (v76) ni de « 14 jours » ; écran WhatsApp (80 %) : bouton qui crée le compte « ${T.bouton} » (rien d'envoyé sans le toucher), mention médicale « ${T.note.slice(0, 40)}… »`,
+        e.etape === "compte" && e.progres === "70" && e.titre === T.titre && e.sous === T.sous && e.cgu === T.cgu && e.news === T.news && e.suivant === T.suivant
+          && e.rester === null && !e.texte.includes(T.rester) && !T.jours.test(e.texte)
+          && w.etape === "whatsapp" && w.progres === "80" && w.bouton === T.bouton && w.note === T.note && db.inscriptions.length === 0,
+        JSON.stringify({ etape: e.etape, progres: e.progres, titre: e.titre, sous: e.sous, cgu: e.cgu, news: e.news, suivant: e.suivant, rester: e.rester, jours: (T.jours.exec(e.texte) || [""])[0], whatsapp: w, inscriptions: db.inscriptions.length }));
     });
   }
 
-  /* =================== A1. config « à compléter » (branche de travail) : les mots sans lien =================== */
+  /* =================== A1. config « à compléter » (branche de travail) : les mots sans lien (écran Compte du parcours) =================== */
   for (const langue of ["fr", "en"]) {
     const T = TXA[langue], L = langue === "en" ? "anglais" : "français";
-    await bloc("A1. écran d'inscription « à compléter » (" + L + ")", async () => {
+    await bloc("A1. écran d'inscription « à compléter », écran Compte du parcours (" + L + ")", async () => {
       const vus = [];
       for (const valeurs of langue === "fr" ? [LEGAUX_A_COMPLETER, Object.assign({}, LEGAUX_A_COMPLETER, { cgu_pdf: "javascript:alert(document.domain)", confidentialite_pdf: "data:text/html,x" })] : [LEGAUX_A_COMPLETER]) {
         await avecLegaux(valeurs, async () => {
           const db = base();
           const { c, page } = await contexte(b, db, { viewport: PETIT, langue: langue === "en" ? "en" : "" });
-          await page.goto(URL0 + "#/inscription"); await page.waitForSelector("#c-go"); await attendre(page, 500);
+          await versCompte(page, URL0); await attendre(page, 500);
           const e = await ecran(page), m = await mesurer(page, 320);
-          vus.push({ valeurs: valeurs.cgu_pdf, cgu: e.cgu, liens: e.liens, dansCase: e.dansCase, fin: e.fin, m, cases: e.cases.map(x => x.id), a: await page.evaluate(() => document.querySelectorAll("label.co-cgu a").length) });
+          vus.push({ valeurs: valeurs.cgu_pdf, etape: e.etape, cgu: e.cgu, liens: e.liens, dansCase: e.dansCase, fin: e.fin, m, cases: e.cases.map(x => x.id), a: await page.evaluate(() => document.querySelectorAll("label.co-cgu a").length) });
           await c.close();
         });
       }
       const spanOk = (l, t) => !!l && l.tag === "SPAN" && /(^|\s)lien-absent(\s|$)/.test(l.cls) && l.t === t && l.href === null && l.target === null && l.dans;
-      ok(`inscription (${L}, 320 px) : liens « à compléter »${langue === "fr" ? " (ou javascript: / data:)" : ""} → « ${T.lien_cgu} » et « ${T.lien_politique} » sans lien (span.lien-absent, mêmes id, même texte « ${T.cgu} »), aucun <a> dans la case, point final collé et sur la même ligne, une seule case obligatoire`,
-        vus.length > 0 && vus.every(v => v.cgu === T.cgu && spanOk(v.liens[0], T.lien_cgu) && spanOk(v.liens[1], T.lien_politique) && v.a === 0 && !!v.fin && v.fin.data === "." && v.fin.avant === "c-politique-lien"
+      ok(`inscription (${L}, 320 px) : écran Compte du parcours, liens « à compléter »${langue === "fr" ? " (ou javascript: / data:)" : ""} → « ${T.lien_cgu} » et « ${T.lien_politique} » sans lien (span.lien-absent, mêmes id, même texte « ${T.cgu} »), aucun <a> dans la case, point final collé et sur la même ligne, une seule case obligatoire`,
+        vus.length > 0 && vus.every(v => v.etape === "compte" && v.cgu === T.cgu && spanOk(v.liens[0], T.lien_cgu) && spanOk(v.liens[1], T.lien_politique) && v.a === 0 && !!v.fin && v.fin.data === "." && v.fin.avant === "c-politique-lien"
           && memeLigne(v.m) && JSON.stringify(v.cases) === '["c-cgu","c-newsletter"]'),
         JSON.stringify(vus));
     });
   }
 
-  /* =================== A2. inscription de bout en bout : une seule case, data exact, copie emails, Profil ===================
-     (theme "clair" : l'ancien choix « clair » rangé sur l'appareil, ignoré depuis la v80) */
+  /* =================== A2. inscription de bout en bout par le parcours : une seule case, data exact, copie emails, Profil ===================
+     (theme "clair" : l'ancien choix « clair » rangé sur l'appareil, ignoré depuis la v80)
+     v81 (bloc 2) : prénom à l'écran Prénom, cases à l'écran Compte (« Continuer »), compte créé à l'écran WhatsApp
+     (« Débloquer mon espace »), arrivée sur « Ton espace » (page rechargée, session ouverte : plus le questionnaire de
+     l'app) ; le Profil, après « Ton espace » et le cadeau (« Plus tard »), depuis l'accueil de l'app */
   for (const [langue, news, theme, version, k] of [["fr", false, "sombre", LEGAUX_TEST.cgu_version, 1], ["en", true, "clair", "2026-10-15", 2]]) {
     const T = TXA[langue], L = langue === "en" ? "anglais" : "français", Q = news ? "avec la newsletter" : "sans la newsletter";
     await bloc("A2. inscription en " + L, async () => {
@@ -597,37 +652,45 @@ async function remplir(page, f){
         const ZID = PID(10 + k), mail = "zoe" + k + "@exemple.fr";
         const db = base(); db.inscription.id = ZID;
         const { page } = await contexte(b, db, { viewport: MOBILE, langue: langue === "en" ? "en" : "", theme });
-        await page.goto(URL0 + "#/inscription"); await page.waitForSelector("#c-go"); await attendre(page, 400);
-        await remplir(page, { prenom: "Zoé", email: mail });   // v74 : plus de champ Nom
-        /* sans la case des conditions : refus, message exact, aucun appel ; même refus avec la seule newsletter */
-        await page.click("#c-go"); await attendre(page, 300);
-        const m1 = norm(await page.textContent("#co-err").catch(() => ""));
-        await page.check("#c-newsletter"); await page.click("#c-go"); await attendre(page, 300);
-        const m2 = norm(await page.textContent("#co-err").catch(() => ""));
-        const refus = { m1, m2, appels: db.chemins.filter(x => /\/auth\/v1\//.test(x)), inscriptions: db.inscriptions.length };
+        await versCompte(page, URL0, { prenom: "Zoé" }); await attendre(page, 400);   // v81 : le prénom à l'écran Prénom
+        await remplir(page, { email: mail });   // v74 : plus de champ Nom
+        /* sans la case des conditions : refus, message exact, on reste sur l'écran Compte, aucun appel ; même refus avec la
+           seule newsletter (« Continuer » a l'air inactif, aria-disabled : touché quand même, force) */
+        const sansCgu = async () => {
+          await page.click("#pc-suivant", { force: true }); await attendre(page, 300);
+          return { m: norm(await page.textContent("#pc-err-cgu").catch(() => "")), ici: await page.$eval("#pc", x => x.dataset.etape).catch(() => "") };
+        };
+        const r1 = await sansCgu();
+        await page.check("#c-newsletter");
+        const r2 = await sansCgu();
+        const refus = { m1: r1.m, m2: r2.m, ici: [r1.ici, r2.ici], appels: db.chemins.filter(x => /\/auth\/v1\//.test(x)), inscriptions: db.inscriptions.length };
         if (!news) await page.uncheck("#c-newsletter");
         /* un tap sur le TEXTE de la case (pas sur un lien) la coche */
         await page.click("label.co-cgu > span", { position: { x: 4, y: 6 } }); await attendre(page, 150);
         const coche = await page.evaluate(() => { const x = document.getElementById("c-cgu"); return x ? x.checked : null; });
         if (!coche) await page.check("#c-cgu").catch(() => {});
-        const cases = await page.evaluate(() => Array.from(document.querySelectorAll(".carte-co input[type=checkbox]")).filter(i => i.checked).map(i => i.id));
-        /* le compte créé, l'app recharge la page (location.reload) : un nouveau document, sans la marque posée ici, prêt */
+        const cases = await page.evaluate(() => Array.from(document.querySelectorAll("#pc input[type=checkbox]")).filter(i => i.checked).map(i => i.id));
+        /* « Continuer » → l'écran WhatsApp ; « Débloquer mon espace » (FT.parcours : France, un numéro de la plage réservée à
+           la fiction) crée le compte ; l'app recharge la page (location.reload) : un nouveau document, sans la marque posée
+           ici, sur l'écran « Ton espace » */
+        await page.click("#pc-suivant"); await page.waitForSelector('#pc[data-etape="whatsapp"] #c-go');
+        const avantCreation = db.inscriptions.length;
         await page.evaluate(() => { window.__avantInscription = true; });
         const t0 = Date.now();
-        await page.click("#c-go");
-        const recharge = await page.waitForFunction(() => !window.__avantInscription && typeof appPrete !== "undefined" && appPrete === true, null, { timeout: 12000 }).then(() => true, () => false);
+        await FT.parcours(page, { tel: "063998007" + k }, "cree");
+        const recharge = await page.waitForFunction(() => !window.__avantInscription && !!document.querySelector('#pc[data-etape="espace"]'), null, { timeout: 12000 }).then(() => true, () => false);
         await attendre(page, 2500);
-        const apres = await page.evaluate(() => ({ connecte: Auth.connecte(), prospect: Auth.estProspect(), id: (Auth.utilisateur() || {}).id,
+        const apres = await page.evaluate(() => ({ etape: (document.getElementById("pc") || { dataset: {} }).dataset.etape || null, connecte: Auth.connecte(), prospect: Auth.estProspect(), id: (Auth.utilisateur() || {}).id,
           local: (JSON.parse(localStorage.getItem("mhx_session") || "null") || { user: {} }).user.id || null, erreur: (document.getElementById("co-err") || {}).textContent || "" })).catch(e => ({ erreur: String(e) }));
-        ok(`inscription en ${L} : sans la case des conditions → « ${T.manque} », aucun appel, même avec la newsletter cochée ; un tap sur le texte de la case la coche ; cette SEULE case obligatoire suffit (${Q} ; plus de « ${T.rester} », v76) : le compte se crée sans accord santé (1 appel, prospect connecté, session gardée sur l'appareil)`,
-          m1 === T.manque && m2 === T.manque && refus.appels.length === 0 && refus.inscriptions === 0 && coche === true
+        ok(`inscription en ${L} (parcours) : à l'écran Compte, sans la case des conditions, « ${T.suivant} » → « ${T.manque} », on reste sur l'écran Compte, aucun appel, même avec la newsletter cochée ; un tap sur le texte de la case la coche ; cette SEULE case obligatoire suffit (${Q} ; plus de « ${T.rester} », v76) : à l'écran WhatsApp, « ${T.bouton} » crée le compte sans accord santé (1 appel, aucun avant ce toucher), la page rechargée arrive sur « Ton espace » (prospect connecté, session gardée sur l'appareil)`,
+          refus.m1 === T.manque && refus.m2 === T.manque && refus.ici.every(x => x === "compte") && refus.appels.length === 0 && refus.inscriptions === 0 && coche === true
             && JSON.stringify(cases) === JSON.stringify(news ? ["c-cgu", "c-newsletter"] : ["c-cgu"])
-            && db.inscriptions.length === 1 && recharge === true && apres.connecte === true && apres.prospect === true && apres.id === ZID && apres.local === ZID,
-          JSON.stringify({ refus, coche, cases, inscriptions: db.inscriptions.length, recharge, apres }));
+            && avantCreation === 0 && db.inscriptions.length === 1 && recharge === true && apres.etape === "espace" && apres.connecte === true && apres.prospect === true && apres.id === ZID && apres.local === ZID,
+          JSON.stringify({ refus, coche, cases, avantCreation, inscriptions: db.inscriptions.length, recharge, apres }));
 
         const c0 = db.inscriptions[0] || {}, md = c0.data || {}, cles = Object.keys(md).sort().join(",");
         const vus = await page.evaluate(() => ({ cgu: (CONFIG.textes_legaux || {}).cgu_version, conditions: (DECOUVERTE.accords || {}).conditions, news: (DECOUVERTE.accords || {}).newsletter })).catch(e => ({ erreur: String(e) }));
-        ok(`… POST /auth/v1/signup : data = EXACTEMENT ${CLES_DATA} — prénom « Zoé », nom vide (v74 : plus de champ Nom), consentement = instant ISO du clic, conditions_version « ${version} » (valeur servie = CONFIG.textes_legaux.cgu_version = DECOUVERTE.accords.conditions), newsletter ${news ? "= le même instant ISO" : "null"}, newsletter_version « ${V_NEWS} » (= DECOUVERTE.accords.newsletter) ; ni consentement_sante ni sante_version ; aucun appel hors de la page, du faux Supabase et des polices`,
+        ok(`… POST /auth/v1/signup : data = EXACTEMENT ${CLES_DATA} — prénom « Zoé » (écran Prénom), nom vide (v74 : plus de champ Nom), consentement = instant ISO du clic sur « ${T.bouton} », conditions_version « ${version} » (valeur servie = CONFIG.textes_legaux.cgu_version = DECOUVERTE.accords.conditions), newsletter ${news ? "= le même instant ISO" : "null"}, newsletter_version « ${V_NEWS} » (= DECOUVERTE.accords.newsletter, v81) ; ni consentement_sante ni sante_version ; aucun appel hors de la page, du faux Supabase et des polices`,
           cles === CLES_DATA && c0.email === mail && c0.password === "motdepasse1" && md.prenom === "Zoé" && md.nom === "" && isoPres(md.consentement, t0)
             && md.conditions_version === version && vus.cgu === version && vus.conditions === version
             && (news ? (isoPres(md.newsletter, t0) && md.newsletter === md.consentement) : md.newsletter === null)
@@ -636,11 +699,18 @@ async function remplir(page, f){
 
         const E1 = ecr(db, "emails", ZID), att = { newsletter: news, maj: news ? md.newsletter : md.consentement, version: V_NEWS, source: "inscription" };
         const sante = db.ecritures.filter(x => x.table === "donnees" && ["mens", "calc_perso", "calc"].includes(x.outil));
-        ok(`… première ouverture : la clé emails recopiée comme avant (Accords.copierEmails), une fois, exactement ${JSON.stringify(Object.assign({}, att, { maj: news ? "<instant de la newsletter>" : "<instant du consentement>" }))} ; aucune donnée de santé écrite, aucune métadonnée santé envoyée (aucun PUT /auth/v1/user)`,
+        ok(`… première ouverture (« Ton espace ») : la clé emails recopiée comme avant (Accords.copierEmails), une fois, exactement ${JSON.stringify(Object.assign({}, att, { maj: news ? "<instant de la newsletter>" : "<instant du consentement>" }))} ; aucune donnée de santé écrite, aucune métadonnée santé envoyée (aucun PUT /auth/v1/user)`,
           E1.length === 1 && JSON.stringify(E1[0].contenu) === JSON.stringify(att) && !sante.length && db.majUsers.length === 0 && !db.chemins.some(x => x === "PUT /auth/v1/user"),
           JSON.stringify({ emails: E1.map(x => x.contenu), sante: sante.length, majUsers: db.majUsers }) + " · " + resume(db));
 
-        /* le Profil garde son interrupteur : état d'après la copie, un changement écrit la version du Profil */
+        /* le Profil garde son interrupteur : état d'après la copie, un changement écrit la version du Profil
+           v81 : « Ton espace » (« Entrer dans mon espace ») puis le cadeau (« Plus tard ») : la page rechargée sur l'accueil de
+           l'app (appPrete) ; puis le Profil */
+        await page.click("#pc-suivant").catch(() => {});
+        await page.waitForSelector('#pc[data-etape="cadeau"] #pc-plus-tard', { timeout: 8000 }).catch(() => {});
+        await page.click("#pc-plus-tard").catch(() => {});
+        const accueil = await page.waitForFunction(() => location.hash === "#/accueil" && !document.getElementById("pc") && typeof appPrete !== "undefined" && appPrete === true, null, { timeout: 12000 }).then(() => true, () => false);
+        await attendre(page, 400);
         await page.evaluate(() => { location.hash = "#/profil"; });
         await page.waitForSelector("#mc-emails-bloc", { timeout: 10000 }).catch(() => {});
         await page.waitForFunction(() => { const x = document.getElementById("mc-emails"); return !!x && !x.disabled; }, null, { timeout: 8000 }).catch(() => {});
@@ -650,10 +720,10 @@ async function remplir(page, f){
         const E2 = contenu0(db, ZID, "emails") || {}, etat1 = await page.$eval("#mc-emails", x => ({ c: x.checked, d: x.disabled })).catch(() => null);
         const vp2 = await page.evaluate(() => (DECOUVERTE.accords || {}).newsletter_profil).catch(() => null);
         const attendu2 = Object.assign({ newsletter: !news, maj: E2.maj, version: V_NEWS_PROFIL, source: "profil" }, news ? { suivi: false } : {});
-        ok(`… Profil : l'interrupteur « Newsletter » garde son rôle — ${news ? "coché" : "décoché"} d'après la copie de l'inscription (version ${V_NEWS}), un tap écrit { newsletter: ${!news}, maj, version « ${V_NEWS_PROFIL} » (DECOUVERTE.accords.newsletter_profil), source « profil »${news ? ", suivi: false" : ""} }, une écriture`,
-          !!etat0 && etat0.c === news && etat0.d === false && E1.length === 1 && (E1[0].contenu || {}).version === V_NEWS && vp2 === V_NEWS_PROFIL
+        ok(`… Profil (atteint après « Ton espace » et le cadeau, « Plus tard », depuis l'accueil de l'app) : l'interrupteur « Newsletter » garde son rôle — ${news ? "coché" : "décoché"} d'après la copie de l'inscription (version ${V_NEWS}), un tap écrit { newsletter: ${!news}, maj, version « ${V_NEWS_PROFIL} » (DECOUVERTE.accords.newsletter_profil), source « profil »${news ? ", suivi: false" : ""} }, une écriture`,
+          accueil === true && !!etat0 && etat0.c === news && etat0.d === false && E1.length === 1 && (E1[0].contenu || {}).version === V_NEWS && vp2 === V_NEWS_PROFIL
             && ecr(db, "emails", ZID).length === n0 + 1 && JSON.stringify(E2) === JSON.stringify(attendu2) && isoPres(E2.maj, tBascule) && !!etat1 && etat1.c === !news,
-          JSON.stringify({ etat0, etat1, E2, vp2, n: ecr(db, "emails", ZID).length - n0 }));
+          JSON.stringify({ accueil, hash: await page.evaluate(() => location.hash).catch(() => null), etat0, etat1, E2, vp2, n: ecr(db, "emails", ZID).length - n0 }));
       });
     });
   }

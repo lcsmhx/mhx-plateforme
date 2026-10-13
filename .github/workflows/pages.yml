@@ -77,6 +77,8 @@ jobs:
         run: |
           npm install -g playwright@1.63.0
           npx playwright install --with-deps chromium
+          # v81 : verif85 (partie 3) rejoue le parcours du prospect dans WebKit, le moteur de Safari sur iPhone
+          if [ "${{ matrix.partie }}" = "3" ]; then npx playwright install --with-deps webkit; fi
 
       - name: Banc complet
         env:

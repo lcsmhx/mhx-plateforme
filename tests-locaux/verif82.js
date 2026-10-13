@@ -1,4 +1,12 @@
 /* v78 (tâche 2) — le navigateur d'Instagram, de TikTok ou de Facebook / Messenger (Integre, js/installation.js).
+   v81 (bloc 2) : l'écran unique « Crée ton espace gratuit » n'existe plus ; l'inscription est le PARCOURS DU PROSPECT
+   (js/parcours.js, piloté par FT.parcours) : accueil, objectif, coincé, dans 3 mois, sexe, prénom, chargement, compte, WhatsApp
+   (« Débloquer mon espace » crée le compte, Integre.noterInscription y est appelé), puis, page rechargée avec la session,
+   « Ton espace » et le cadeau en plein écran, puis l'accueil de l'app. Chaque vérification de l'ancien écran porte sur l'écran
+   du parcours qui fait maintenant la même chose : écran d'inscription → les 9 écrans du parcours jusqu'à WhatsApp ;
+   questionnaire (arrivée après l'inscription) → « Ton espace » ; page « Ton plan d'action » → le cadeau ; « Voir mon espace
+   d'abord » → « Plus tard » du cadeau (l'accueil garde alors la carte « 🎁 Ton cadeau t’attend », sous la carte
+   « Dernière étape ») ; lien « Se connecter » de l'inscription → « Déjà un compte ? Se connecter » (#pc-connexion).
    Un compte créé dans ces navigateurs y reste coincé (leur mémoire est séparée de Safari et de Chrome). Toute la suite sert
    l'inscription OUVERTE (forcerInscription) et l'interrupteur CONFIG.marque.navigateur_integre allumé (la valeur du fichier ;
    les autres suites tournent avec le user agent par défaut, jamais repéré), sauf le bloc A9 (éteint). Téléphone obligatoire
@@ -9,19 +17,21 @@
      A1  détection : Instagram, TikTok, Facebook / Messenger (anciens et nouveaux formats), iPhone et Android ; jamais Safari,
          Chrome (Android, iOS), Firefox, Samsung Internet, Edge, ordinateur, robot d'aperçu de Facebook, Snapchat, LinkedIn,
          WhatsApp, WebView quelconque ;
-     A2  inscription dans Instagram (iPhone) comparée à la même dans Safari : même écran, mêmes requêtes, mêmes écritures, même
-         nombre de chargements (jamais bloquée ni retardée) ; puis ?ouvrir=connexion dans l'adresse (Instagram seulement, sans
-         email) ; drapeau de l'appareil sans rien de personnel ; ni carte ni bannière sur le questionnaire ;
-     A3  la carte « Dernière étape » : jamais sur la page « Ton plan d'action », puis sur l'accueil (sous l'en-tête, avant
-         l'étape), textes, email, 5 étapes iPhone ; ni bannière ni invitation ; mêmes écritures que dans Safari ; invitation en
-         attente : cachée par la carte, remontrée après « Plus tard » ;
+     A2  inscription par le parcours dans Instagram (iPhone) comparée à la même dans Safari : mêmes écrans (les 9 jusqu'à
+         WhatsApp, puis « Ton espace »), mêmes requêtes, mêmes écritures, même nombre de chargements (jamais bloquée ni
+         retardée) ; puis ?ouvrir=connexion dans l'adresse (Instagram seulement, sans email) ; drapeau de l'appareil sans rien
+         de personnel ; ni carte ni bannière sur « Ton espace » ;
+     A3  la carte « Dernière étape » : jamais sur le cadeau, puis sur l'accueil après « Plus tard » (sous l'en-tête, avant la
+         carte cadeau et l'étape), textes, email, 5 étapes iPhone ; ni bannière ni invitation ; mêmes écritures que dans
+         Safari ; invitation en attente : cachée par la carte, remontrée après « Plus tard » ;
      A4  « Plus tard » : la carte part (mémoire de l'appareil), aucune écriture, ni bannière dans cette visite ; nouvelle visite :
          pas de carte, la bannière avec les étapes d'Instagram ; stockage plein (écriture refusée) : « Plus tard » tient quand
          même pendant la visite ;
      A5  Android (Instagram, TikTok long et court, Facebook FB_IAB et MetaIAB) : le lien intent:// exact vers Chrome (jamais
          suivi : schéma inconnu ; ni ?ref=, ni fbclid, ni utm_), quoi faire s'il n'ouvre rien, les étapes dans Chrome ; iPhone
          (TikTok long et court, Facebook FBAN et MetaIAB) : la 1re étape de chaque app ;
-     A6  adresse : ?ouvrir=connexion sur un appareil neuf → connexion (#/connexion), même dans Safari ou Chrome ; connexion →
+     A6  adresse : ?ouvrir=connexion sur un appareil neuf → connexion (#/connexion), même dans Safari ou Chrome (sans le
+         paramètre, ou avec #/inscription : l'accueil du parcours) ; connexion →
          paramètre retiré, accueil, bannière normale dès cette visite, en haut de la page, avec la suite des étapes de la carte
          (Safari, Chrome Android) ; témoins ; avec une session : ignoré dans Safari, posé dans Instagram pour le compte inscrit
          là (ancre gardée ; ancre d'inscription retirée), jamais pour un client sans drapeau ni pour le coach, jamais dans
@@ -30,9 +40,9 @@
          « Plus tard » ; Facebook Android, Messenger iPhone ;
      A8  anglais (carte, carte Android, bannière) ;
      A9  interrupteur éteint : tout comme avant (aucun paramètre, aucun drapeau, aucune carte, bannière de Safari, ?ouvrir=
-         connexion ignoré) ;
-     A10 Safari iPhone, Chrome Android, Chrome iOS, ordinateur : écran d'inscription et accueil (bannière comprise) identiques
-         interrupteur allumé ou éteint, jamais de paramètre ni de drapeau ;
+         connexion ignoré : l'accueil du parcours) ;
+     A10 Safari iPhone, Chrome Android, Chrome iOS, ordinateur : écrans d'inscription (les 9 écrans du parcours jusqu'à
+         WhatsApp) et accueil (bannière comprise) identiques interrupteur allumé ou éteint, jamais de paramètre ni de drapeau ;
      A11 client, coach, page du plan d'action : jamais de carte ; email piégé échappé ; 320 × 568 : « Plus tard » écrit en
          toutes lettres en haut de la carte, visible sans défiler, puis plus de carte.
    Supabase simulé (gabarit de verif80) : rien ne part vers la vraie base (routage par NOM D'HÔTE) ; chaque écriture est
@@ -287,14 +297,25 @@ const flag = (app, sys, ferme) => JSON.stringify({ app, sys, inscrit: avant(H), 
 const CLEF = uid => "mhx_integre|" + uid;
 const drapeaux = page => page.evaluate(() => Object.keys(localStorage).filter(k => k.indexOf("mhx_integre") === 0).map(k => [k, localStorage.getItem(k)]));
 const adresse = page => page.evaluate(() => ({ search: location.search, hash: location.hash }));
-const portailVu = page => page.evaluate(() => ({ h2: ((document.querySelector(".carte-co h2") || {}).textContent || "").trim(), prenom: !!document.getElementById("c-prenom"), hash: location.hash, search: location.search }));
-const INSC = "Crée ton espace gratuit", CONN = "Connexion à ton espace";
+/* v81 : l'écran d'entrée sans session : la connexion (.carte-co, son h2) ou l'accueil du parcours d'inscription (#pc, son
+   data-etape et son h1, espaces normalisés) ; ENTREE : l'un ou l'autre affiché */
+const ENTREE = "#c-go, #pc";
+const portailVu = page => page.evaluate(() => {
+  const n = s => String(s == null ? "" : s).replace(/[\u00a0\u202f]/g, " ").replace(/\s+/g, " ").trim(), pc = document.getElementById("pc");
+  return { h2: n((document.querySelector(".carte-co h2") || {}).textContent), pc: pc ? pc.dataset.etape || "" : "", h1: pc ? n((pc.querySelector("h1") || {}).textContent) : "",
+    hash: location.hash, search: location.search };
+});
+const INSC = "Combien de lundis tu as dit « je commence » ?", CONN = "Connexion à ton espace";
+const estParcours = v => !!v && v.pc === "accueil" && v.h1 === INSC && !v.h2;   // l'accueil du parcours (plus d'écran de connexion)
+const estConnexion = v => !!v && v.h2 === CONN && !v.pc;                          // la connexion (aucun écran du parcours)
 /* la carte « Dernière étape », lue telle qu'affichée */
 const carte = page => page.evaluate(() => {
   const c = document.getElementById("integre-carte"); if (!c) return null;
   const n = s => String(s == null ? "" : s).replace(/[  ]/g, " ").replace(/\s+/g, " ").trim();
   const a = c.querySelector("[data-integre-chrome]"), x = c.querySelector("#integre-fermer"), t = c.querySelector("#integre-plus-tard");
+  const et = document.getElementById("dc-etape");
   return { avant: c.previousElementSibling ? c.previousElementSibling.tagName + "." + c.previousElementSibling.className : "", apres: c.nextElementSibling ? c.nextElementSibling.id : "",
+    etapeApres: !!et && !!(c.compareDocumentPosition(et) & Node.DOCUMENT_POSITION_FOLLOWING),   // v81 : « Ta première étape » plus bas (la carte cadeau entre les deux)
     titre: n((c.querySelector("h2") || {}).textContent), ids: n((c.querySelector("#integre-ids") || {}).textContent), idsB: n((c.querySelector("#integre-ids b") || {}).textContent),
     li: [...c.querySelectorAll("li")].map(l => n(l.textContent)), gras: [...c.querySelectorAll("li")].map(l => l.querySelectorAll("b").length),
     tard: t ? n(t.textContent) : null, croix: x ? x.getAttribute("aria-label") : null, croixT: x ? n(x.textContent) : null,
@@ -322,27 +343,35 @@ const banniere = page => page.evaluate(() => {
     dernier: b.parentElement && b.parentElement.id === "vue" && b.parentElement.lastElementChild === b, haut: Math.round(b.getBoundingClientRect().top + window.scrollY), ecran: window.innerHeight };
 });
 const lienAttendu = () => `intent://localhost:${PORT}/?ouvrir=connexion#Intent;scheme=http;package=com.android.chrome;S.browser_fallback_url=` + encodeURIComponent(`http://localhost:${PORT}/?ouvrir=connexion`) + ";end";
-/* le questionnaire court (3 réponses), puis la page « Ton plan d'action » */
-const option = (q, v) => `#q-${q} label.dc-opt:has(input[value="${v}"])`;
-async function questionnaire(page){
-  await page.waitForSelector(option("probleme", "Perdre du gras"));
-  await page.click(option("probleme", "Perdre du gras")); await attendre(page, 300);
-  await page.click(option("obstacle", "temps")); await attendre(page, 300);
-  await page.click(option("projection", "energie")); await attendre(page, 300);
-  await page.click("#dc-voir", { force: true }); await page.waitForSelector("#dc-bilan"); await attendre(page, 500);
-}
 /* changer de page sans recharger (l'ancre seule : l'adresse d'Instagram porte ?ouvrir=connexion) */
 async function aller(page, h){
   await page.evaluate(h => { location.hash = h; }, h);
   await page.waitForFunction(id => typeof courant !== "undefined" && courant === id, h.replace(/^#\//, "").split("/")[0], { timeout: 8000 });
   await attendre(page, 500);
 }
-async function apresPlan(page){ await page.click("#dc-bilan-plus-tard"); await page.waitForSelector("#dc-etape"); await attendre(page, 500); }
-async function inscrire(page, prenom, email){
-  await page.fill("#c-prenom", prenom); await page.fill("#c-email", email); await page.fill("#c-mdp", "motdepasse1");
-  await page.check("#c-cgu");
-  await Promise.all([page.waitForNavigation({ timeout: 15000 }).catch(() => {}), page.click("#c-go")]);
-  await pret(page);
+/* v81 : l'inscription par le parcours (FT.parcours), un écran à la fois depuis son accueil jusqu'à WhatsApp (ecrans : chaque
+   écran noté [data-etape, #pc tel qu'affiché à son arrivée]), puis « Débloquer mon espace » ; la page se recharge avec la
+   session sur « Ton espace » (plein écran : appPrete reste faux pendant le parcours). Rend l'instant du toucher. */
+const AVANT_COMPTE = FT.ETAPES_PARCOURS.slice(0, -1);   // accueil … whatsapp (9 écrans)
+const ETAPE = e => '#pc[data-etape="' + e + '"]';
+async function inscrire(page, prenom, email, ecrans){
+  const r = { prenom, email, mdp: "motdepasse1" };
+  for (const e of AVANT_COMPTE) {
+    const ici = await FT.parcours(page, r, e);
+    if (ecrans) ecrans.push([ici, await page.evaluate(() => document.getElementById("pc").outerHTML)]);
+  }
+  const t = Date.now();
+  await FT.parcours(page, r, "cree");
+  await page.waitForSelector(ETAPE("espace"), { timeout: 15000 }); await attendre(page, 300);
+  return t;
+}
+/* « Ton espace » → « Entrer dans mon espace » → le cadeau (il remplace la page « Ton plan d'action ») */
+async function versCadeau(page){ await page.click("#pc-suivant"); await page.waitForSelector(ETAPE("cadeau")); await attendre(page, 500); }
+/* le cadeau → « Plus tard » (comme « Voir mon espace d'abord » de l'ancienne page du plan) → la page se recharge sur l'accueil */
+async function apresCadeau(page){
+  await page.click("#pc-plus-tard");
+  await page.waitForFunction(() => location.hash === "#/accueil" && typeof appPrete !== "undefined" && appPrete === true, null, { timeout: 12000 });
+  await page.waitForSelector("#dc-etape"); await attendre(page, 500);
 }
 async function connecter(page, email){
   await page.fill("#c-email", email); await page.fill("#c-mdp", "motdepasse1");
@@ -395,7 +424,7 @@ let URL0 = "";
   await bloc("A1. détection", async () => {
     const db = base();
     const { page } = await contexte(b, db, { neuf: true });
-    await page.goto(URL0 + "#/inscription"); await page.waitForSelector("#c-go");
+    await page.goto(URL0 + "#/inscription"); await page.waitForSelector(ETAPE("accueil"));   // v81 : l'accueil du parcours
     const r = await page.evaluate(L => L.map(u => { const i = Integre.ici(u); return [Integre.app(u), Integre.systeme(u), Integre.nom(Integre.app(u), u), i ? i.app + "/" + i.sys : ""]; }), REPERES.map(x => UA[x[0]]));
     const faux = REPERES.map((x, k) => egal(r[k], [x[1], x[2], x[3], x[1] + "/" + x[2]]) ? "" : x[0] + " → " + JSON.stringify(r[k])).filter(Boolean);
     ok("A1 : repérés (app, système, nom affiché) : Instagram iPhone (iOS 26 et iOS 18) et Android ; TikTok iPhone (format long, court musical_ly, court trill) et Android (long et court) ; Facebook iPhone (FBAN) et Android (FB_IAB), nouveau format MetaIAB (iPhone et Android) ; Messenger (FBAN/MessengerForiOS, FB_IAB/Orca-Android) avec Facebook",
@@ -407,43 +436,45 @@ let URL0 = "";
       !vus.length && defaut.ici === null, JSON.stringify({ vus, defaut }));
   });
 
-  /* =================== A2. l'inscription dans Instagram (iPhone), comparée à Safari =================== */
-  const parcours = {};
+  /* =================== A2. l'inscription par le parcours dans Instagram (iPhone), comparée à Safari =================== */
+  const inscrits = {};
   await bloc("A2. inscription, A3. carte", async () => {
     for (const k of ["ig_ios", "safari_ios"]) {
       const db = base(); db.inscription.id = PID(k === "ig_ios" ? 10 : 11);
       const { page } = await contexte(b, db, { ua: UA[k], neuf: true });
-      await page.goto(URL0 + "?ref=insta#/inscription"); await page.waitForSelector("#c-go"); await attendre(page, 300);
-      const ecran = await page.evaluate(() => document.querySelector(".carte-co").innerHTML);
-      const h2 = (await portailVu(page)).h2;
-      const tClic = Date.now();
-      await inscrire(page, "Zoé", "zoe@exemple.fr");
-      await page.waitForSelector("#dc-voir"); await attendre(page, 800);
-      parcours[k] = { db, page, ecran, h2, tClic, charges: page.__charges, chemins: trie(db.chemins), ecr: resume(db), adr: await adresse(page), url: page.url(),
+      await page.goto(URL0 + "?ref=insta#/inscription"); await page.waitForSelector(ETAPE("accueil")); await attendre(page, 300);
+      const h1 = (await portailVu(page)).h1, ecrans = [];
+      const tClic = await inscrire(page, "Zoé", "zoe@exemple.fr", ecrans);
+      await attendre(page, 800);
+      inscrits[k] = { db, page, ecrans, h1, tClic, charges: page.__charges, chemins: trie(db.chemins), ecr: resume(db), adr: await adresse(page), url: page.url(),
+        etape: (await portailVu(page)).pc, espace: await page.evaluate(() => document.getElementById("pc").outerHTML),
         dr: await drapeaux(page), carte: !!(await page.$("#integre-carte")), banniere: !!(await page.$("#installe")), corps: JSON.stringify(db.inscriptions).replace(/\d{4}-\d\d-\d\dT[\d:.]+Z/g, "<instant>") };
     }
-    const I = parcours.ig_ios, S = parcours.safari_ios;
-    ok("A2 : Instagram (iPhone) : même écran d'inscription que Safari (« Crée ton espace gratuit », formulaire identique au caractère près), puis, après « Créer mon compte », le même écran (le questionnaire) ; même nombre de chargements de page (aucun écran ni rechargement en plus)",
-      I.h2 === INSC && S.h2 === INSC && I.ecran === S.ecran && I.charges === S.charges && I.charges === 2, JSON.stringify({ h2: [I.h2, S.h2], memeEcran: I.ecran === S.ecran, charges: [I.charges, S.charges] }));
-    ok("A2 : … la même demande d'inscription, exactement les mêmes requêtes vers la base (aucune de plus) et les mêmes écritures (jamais bloquée ni retardée)",
+    const I = inscrits.ig_ios, S = inscrits.safari_ios;
+    const ordre = x => x.ecrans.map(e => e[0]), diff = I.ecrans.map((e, i) => S.ecrans[i] && e[1] === S.ecrans[i][1] ? "" : e[0]).filter(Boolean);
+    ok("A2 : Instagram (iPhone) : mêmes écrans d'inscription que Safari (le parcours : l'accueil « Combien de lundis tu as dit « je commence » ? », puis objectif, coincé, dans 3 mois, sexe, prénom, chargement, compte et WhatsApp, chacun identique au caractère près), puis, après « Débloquer mon espace », le même écran (« Ton espace », identique) ; même nombre de chargements de page (aucun écran ni rechargement en plus)",
+      I.h1 === INSC && S.h1 === INSC && egal(ordre(I), AVANT_COMPTE) && egal(ordre(S), AVANT_COMPTE) && !diff.length && I.etape === "espace" && S.etape === "espace" && I.espace === S.espace
+        && I.charges === S.charges && I.charges === 2,
+      JSON.stringify({ h1: [I.h1, S.h1], ordre: [ordre(I), ordre(S)], ecransDifferents: diff, etape: [I.etape, S.etape], memeEspace: I.espace === S.espace, charges: [I.charges, S.charges] }));
+    ok("A2 : … la même demande d'inscription (« Débloquer mon espace »), exactement les mêmes requêtes vers la base jusqu'à « Ton espace » (aucune de plus) et les mêmes écritures (jamais bloquée ni retardée)",
       I.corps === S.corps && egal(I.chemins, S.chemins) && egal(trie(I.ecr), trie(S.ecr)), JSON.stringify({ corps: [I.corps, S.corps], ig: I.chemins.filter(x => !S.chemins.includes(x)), safari: S.chemins.filter(x => !I.chemins.includes(x)), n: [I.chemins.length, S.chemins.length], ecr: [I.ecr, S.ecr] }));
-    ok("A2 : après l'inscription, l'adresse d'Instagram porte « ?ouvrir=connexion » (sans le code ?ref=), celle de Safari rien ; jamais l'email (ni « %40 ») ni le prénom dans l'adresse",
+    ok("A2 : après l'inscription (« Ton espace »), l'adresse d'Instagram porte « ?ouvrir=connexion » (sans le code ?ref=), celle de Safari rien ; jamais l'email (ni « %40 ») ni le prénom dans l'adresse",
       I.adr.search === "?ouvrir=connexion" && S.adr.search === "" && !/zoe|%40|@|Zo%C3%A9|Zoé/i.test(I.url) && !/zoe|%40|@/i.test(S.url), JSON.stringify({ ig: I.adr, s: S.adr, url: I.url }));
     const v = I.dr.length === 1 ? JSON.parse(I.dr[0][1]) : null;
-    ok("A2 : le drapeau de l'appareil « mhx_integre|<id du compte> » = exactement { app: instagram, sys: ios, inscrit (l'instant de l'inscription), ferme: \"\" }, rien de personnel ; aucun dans Safari",
+    ok("A2 : le drapeau de l'appareil « mhx_integre|<id du compte> » = exactement { app: instagram, sys: ios, inscrit (l'instant du toucher de « Débloquer mon espace »), ferme: \"\" }, rien de personnel ; aucun dans Safari",
       I.dr.length === 1 && I.dr[0][0] === CLEF(PID(10)) && egal(Object.keys(v), ["app", "sys", "inscrit", "ferme"]) && v.app === "instagram" && v.sys === "ios" && isoPres(v.inscrit, I.tClic) && v.ferme === ""
         && !/@|zoe|Zoé/i.test(I.dr[0][1]) && S.dr.length === 0, JSON.stringify({ ig: I.dr, s: S.dr }));
-    ok("A2 : sur le questionnaire (jamais avant la page du plan d'action) : ni carte « Dernière étape » ni bannière d'installation, dans Instagram comme dans Safari",
+    ok("A2 : sur « Ton espace » (l'arrivée après l'inscription, jamais avant l'accueil de l'app) : ni carte « Dernière étape » ni bannière d'installation, dans Instagram comme dans Safari",
       !I.carte && !S.carte && !I.banniere && !S.banniere, JSON.stringify({ I: [I.carte, I.banniere], S: [S.carte, S.banniere] }));
 
-    /* =================== A3. la carte « Dernière étape », après la page du plan d'action (mêmes pages) =================== */
-    await questionnaire(I.page); await questionnaire(S.page);
-    const surPlan = [!!(await I.page.$("#integre-carte")), !!(await S.page.$("#integre-carte"))];
-    ok("A3 : la page « Ton plan d'action » (après les 3 réponses) : pas de carte, ni dans Instagram ni dans Safari", egal(surPlan, [false, false]), JSON.stringify(surPlan));
-    await apresPlan(I.page); await apresPlan(S.page);
+    /* =================== A3. la carte « Dernière étape », après le cadeau (mêmes pages) =================== */
+    await versCadeau(I.page); await versCadeau(S.page);
+    const surCadeau = [!!(await I.page.$("#integre-carte")), !!(await S.page.$("#integre-carte")), !!(await I.page.$("#installe")), !!(await S.page.$("#installe"))];
+    ok("A3 : le cadeau (« Entrer dans mon espace » touché ; il remplace la page « Ton plan d'action ») : pas de carte (ni bannière), ni dans Instagram ni dans Safari", egal(surCadeau, [false, false, false, false]), JSON.stringify(surCadeau));
+    await apresCadeau(I.page); await apresCadeau(S.page);
     const vI = await carte(I.page), vS = await carte(S.page), A = await attendus(I.page, "instagram", "ios");
-    ok("A3 : « Voir mon espace d'abord » → l'accueil : dans Instagram, la carte juste sous l'en-tête (« Bonjour »), avant « Ta première étape » ; dans Safari, aucune carte",
-      !!vI && vI.avant === "HEADER.masthead" && vI.apres === "dc-etape" && vS === null, JSON.stringify({ vI: vI && [vI.avant, vI.apres], vS }));
+    ok("A3 : « Plus tard » du cadeau → l'accueil de l'app : dans Instagram, la carte juste sous l'en-tête (« Bonjour »), avant la carte « 🎁 Ton cadeau t’attend » et « Ta première étape » ; dans Safari, aucune carte",
+      !!vI && vI.avant === "HEADER.masthead" && vI.apres === "dc-cadeau" && vI.etapeApres && vS === null, JSON.stringify({ vI: vI && [vI.avant, vI.apres, vI.etapeApres], vS }));
     ok("A3 : textes : « Dernière étape : mets l'app sur ton téléphone », « Tu te connectes avec zoe@exemple.fr (en gras) et le mot de passe que tu viens de choisir. », les 5 étapes iPhone d'Instagram (DECOUVERTE.integre, gras compris, la dernière : ouvrir l'icône et se connecter), « Plus tard » écrit en haut à droite et en bas ; aucun bouton Chrome sur iPhone",
       !!vI && vI.titre === "Dernière étape : mets l'app sur ton téléphone" && vI.ids === "Tu te connectes avec zoe@exemple.fr et le mot de passe que tu viens de choisir." && vI.idsB === "zoe@exemple.fr"
         && egal(vI.li, A.li) && egal(vI.gras, A.gras) && vI.li.length === 5 && /depuis l'icône/.test(vI.li[4]) && vI.tard === "Plus tard" && vI.croixT === "Plus tard" && vI.nChrome === 0 && !/lucas/i.test(vI.texte),
@@ -452,7 +483,7 @@ let URL0 = "";
     ok("A3 : carte affichée : ni bannière d'installation ni invitation dans cet affichage", !vu.inst && vu.inv === 0, JSON.stringify(vu));
     await attendre(I.page, 1200); await attendre(S.page, 200);
     const dI = await drapeaux(I.page);
-    ok("A3 : tout le parcours (inscription, questionnaire, plan d'action, accueil avec la carte) écrit en base exactement les mêmes clés que dans Safari (hors compteur de visites), rien de plus ; le drapeau n'est pas fermé",
+    ok("A3 : tout le parcours (inscription, « Ton espace », cadeau, accueil avec la carte) écrit en base exactement les mêmes clés que dans Safari (hors compteur de visites), rien de plus ; le drapeau n'est pas fermé",
       egal(sorte(I.db), sorte(S.db)) && dI.length === 1 && JSON.parse(dI[0][1]).ferme === "", JSON.stringify({ ig: sorte(I.db), s: sorte(S.db), dI }));
   });
 
@@ -558,17 +589,17 @@ let URL0 = "";
     const vus = [];
     for (const k of ["safari_ios", "chrome_and"]) {
       const { page } = await contexte(b, base(), { ua: UA[k], neuf: true });
-      await page.goto(URL0 + "?ouvrir=connexion"); await page.waitForSelector("#c-go"); await attendre(page, 300);
+      await page.goto(URL0 + "?ouvrir=connexion"); await page.waitForSelector(ENTREE); await attendre(page, 300);
       vus.push(await portailVu(page));
-      await page.goto(URL0 + "?ouvrir=connexion#/inscription"); await page.reload(); await page.waitForSelector("#c-go"); await attendre(page, 300);
+      await page.goto(URL0 + "?ouvrir=connexion#/inscription"); await page.reload(); await page.waitForSelector(ENTREE); await attendre(page, 300);
       vus.push(await portailVu(page));
     }
-    ok("A6 : appareil neuf (Safari iPhone, Chrome Android) ouvert sur « ?ouvrir=connexion » : l'écran de connexion (pas l'inscription), l'adresse dit #/connexion ; « #/inscription » garde la priorité",
-      vus.length === 4 && [0, 2].every(i => vus[i].h2 === CONN && !vus[i].prenom && vus[i].hash === "#/connexion" && vus[i].search === "?ouvrir=connexion") && [1, 3].every(i => vus[i].h2 === INSC), JSON.stringify(vus));
+    ok("A6 : appareil neuf (Safari iPhone, Chrome Android) ouvert sur « ?ouvrir=connexion » : l'écran de connexion (pas le parcours d'inscription), l'adresse dit #/connexion ; « #/inscription » garde la priorité (l'accueil du parcours, « Combien de lundis tu as dit « je commence » ? »)",
+      vus.length === 4 && [0, 2].every(i => estConnexion(vus[i]) && vus[i].hash === "#/connexion" && vus[i].search === "?ouvrir=connexion") && [1, 3].every(i => estParcours(vus[i])), JSON.stringify(vus));
     { const { page } = await contexte(b, base(), { ua: UA.safari_ios, neuf: true });
-      await page.goto(URL0); await page.waitForSelector("#c-go"); await attendre(page, 300);
+      await page.goto(URL0); await page.waitForSelector(ENTREE); await attendre(page, 300);
       const v = await portailVu(page);
-      ok("A6 : témoin : le même appareil neuf sans le paramètre : l'inscription, comme avant", v.h2 === INSC && v.prenom, JSON.stringify(v)); }
+      ok("A6 : témoin : le même appareil neuf sans le paramètre : l'inscription (l'accueil du parcours), comme avant", estParcours(v), JSON.stringify(v)); }
     { const db = base(); db.emails[NOAH.id] = NOAH.email;
       const { page } = await contexte(b, db, { ua: UA.safari_ios, neuf: true });
       await page.goto(URL0 + "?ouvrir=connexion"); await page.waitForSelector("#c-go");
@@ -617,7 +648,7 @@ let URL0 = "";
         r.push(await page.evaluate(() => ({ vue: !!document.getElementById("vue"), hash: location.hash, search: location.search })));
         if (k === "ig_ios") {
           await Promise.all([page.waitForNavigation({ timeout: 15000 }).catch(() => {}), page.evaluate(() => Auth.deconnecter())]);
-          await page.waitForSelector("#c-go"); await attendre(page, 300);
+          await page.waitForSelector(ENTREE); await attendre(page, 300);
           r.push(await portailVu(page));
         }
       }
@@ -639,11 +670,11 @@ let URL0 = "";
       }
       const db = base(); db.emails[NOAH.id] = NOAH.email;
       const { page: ps } = await contexte(b, db, { ua: UA.safari_ios, neuf: true });
-      await ps.goto(URL0 + r[0].search + r[0].hash); await ps.waitForSelector("#c-go"); await attendre(ps, 300);
+      await ps.goto(URL0 + r[0].search + r[0].hash); await ps.waitForSelector(ENTREE); await attendre(ps, 300);
       const vs = await portailVu(ps);
-      ok("A6 : session dans Instagram (prospect inscrit là) ouverte par « …/#/inscription?ref=insta » (lien touché de nouveau) : l'ancre d'inscription (ou de connexion) est retirée, même si le paramètre est déjà là ; l'accueil s'ouvre ; cette adresse ouverte ensuite dans Safari (appareil neuf) mène à la connexion, pas à l'inscription",
+      ok("A6 : session dans Instagram (prospect inscrit là) ouverte par « …/#/inscription?ref=insta » (lien touché de nouveau) : l'ancre d'inscription (ou de connexion) est retirée, même si le paramètre est déjà là ; l'accueil s'ouvre ; cette adresse ouverte ensuite dans Safari (appareil neuf) mène à la connexion, pas au parcours d'inscription",
         r.length === 3 && r[0].search === "?ouvrir=connexion" && r[1].search === "?ouvrir=connexion" && r[2].search === "?ref=insta&ouvrir=connexion" && r.every(x => x.hash === "" && x.accueil && !x.portail)
-          && vs.h2 === CONN && !vs.prenom && vs.hash === "#/connexion", JSON.stringify({ r, vs })); }
+          && estConnexion(vs) && vs.hash === "#/connexion", JSON.stringify({ r, vs })); }
   });
 
   /* =================== A7. la bannière d'installation dans ces navigateurs =================== */
@@ -718,14 +749,14 @@ let URL0 = "";
     await avecInterrupteur(false, async () => {
       const db = base(); db.inscription.id = PID(20);
       const { page } = await contexte(b, db, { ua: UA.ig_ios, neuf: true });
-      await page.goto(URL0 + "?ref=insta#/inscription"); await page.waitForSelector("#c-go");
+      await page.goto(URL0 + "?ref=insta#/inscription"); await page.waitForSelector(ETAPE("accueil"));
       const ici = await page.evaluate(() => [Integre.ici(), Integre.versConnexion()]);
-      await inscrire(page, "Léa", "lea@exemple.fr"); await page.waitForSelector("#dc-voir"); await attendre(page, 500);
+      await inscrire(page, "Léa", "lea@exemple.fr"); await attendre(page, 500);
       const ad = await adresse(page), dr = await drapeaux(page);
-      ok("A9 : éteint : dans Instagram, rien n'est repéré ; après l'inscription, aucun paramètre dans l'adresse et aucun drapeau sur l'appareil",
+      ok("A9 : éteint : dans Instagram, rien n'est repéré ; après l'inscription par le parcours (« Ton espace »), aucun paramètre dans l'adresse et aucun drapeau sur l'appareil",
         ici[0] === null && ici[1] === false && ad.search === "" && dr.length === 0, JSON.stringify({ ici, ad, dr }));
-      await questionnaire(page); await apresPlan(page);
-      ok("A9 : éteint : l'accueil après la page du plan d'action, sans carte", !(await page.$("#integre-carte")), "");
+      await versCadeau(page); await apresCadeau(page);
+      ok("A9 : éteint : l'accueil après « Ton espace » et le cadeau (« Plus tard »), sans carte", !(await page.$("#integre-carte")), "");
       const bannieres = [];
       for (const k of ["ig_ios", "safari_ios"]) {
         const { page: p } = await contexte(b, base(), { ua: UA[k], qui: THOMAS, neuf: true, stockage: { mhx_visites: "1" } });
@@ -736,13 +767,13 @@ let URL0 = "";
         bannieres.length === 2 && !!bannieres[0] && bannieres[0].html === bannieres[1].html && bannieres[0].cls === "installe" && /Partager/.test(bannieres[0].li[0]), JSON.stringify(bannieres.map(x => x && x.cls)));
       const db2 = base(); db2.emails[NOAH.id] = NOAH.email;
       const { page: p3 } = await contexte(b, db2, { ua: UA.safari_ios, neuf: true });
-      await p3.goto(URL0 + "?ouvrir=connexion"); await p3.waitForSelector("#c-go"); await attendre(p3, 300);
+      await p3.goto(URL0 + "?ouvrir=connexion"); await p3.waitForSelector(ENTREE); await attendre(p3, 300);
       const v = await portailVu(p3);
-      await p3.click('.bascule [data-mode="connexion"]'); await attendre(p3, 300);
+      await p3.click("#pc-connexion"); await p3.waitForSelector("#c-go"); await attendre(p3, 300);   // « Déjà un compte ? Se connecter »
       await connecter(p3, NOAH.email); await p3.waitForSelector("#dc-etape"); await attendre(p3, 300);
       const ad3 = await adresse(p3), bn3 = await banniere(p3);
-      ok("A9 : éteint : « ?ouvrir=connexion » sur un appareil neuf ouvre l'inscription, comme avant ; après la connexion, pas de bannière à la première visite et le paramètre n'est pas touché (comme avant : il ne veut rien dire)",
-        v.h2 === INSC && v.hash === "" && !bn3 && ad3.search === "?ouvrir=connexion", JSON.stringify({ v, ad3, bn3: !!bn3 }));
+      ok("A9 : éteint : « ?ouvrir=connexion » sur un appareil neuf ouvre l'inscription (l'accueil du parcours, adresse #/inscription, paramètre gardé), comme avant ; après la connexion (« Déjà un compte ? Se connecter »), pas de bannière à la première visite et le paramètre n'est pas touché (comme avant : il ne veut rien dire)",
+        estParcours(v) && v.hash === "#/inscription" && v.search === "?ouvrir=connexion" && !bn3 && ad3.search === "?ouvrir=connexion", JSON.stringify({ v, ad3, bn3: !!bn3 }));
     });
   });
 
@@ -753,8 +784,10 @@ let URL0 = "";
       for (const v of [true, false]) {
         await avecInterrupteur(v, async () => {
           const { page } = await contexte(b, base(), { ua: k ? UA[k] : undefined, viewport: vp, neuf: true });
-          await page.goto(URL0 + "?ref=insta#/inscription"); await page.waitForSelector("#c-go"); await attendre(page, 900);
-          const insc = await page.evaluate(() => document.body.innerHTML);
+          await page.goto(URL0 + "?ref=insta#/inscription"); await page.waitForSelector(ETAPE("accueil")); await attendre(page, 900);
+          /* v81 : l'inscription, ce sont les 9 écrans du parcours jusqu'à WhatsApp : chacun lu à son arrivée (rien de tapé) */
+          const insc = [];
+          for (const e of AVANT_COMPTE) { const ici = await FT.parcours(page, {}, e); if (e === "whatsapp") await attendre(page, 300); insc.push([ici, await page.evaluate(() => document.body.innerHTML)]); }
           const { page: p } = await contexte(b, base(), { ua: k ? UA[k] : undefined, viewport: vp, qui: NOAH, neuf: true, stockage: { mhx_visites: "1" } });
           await p.goto(URL0 + "#/accueil"); await pret(p); await p.waitForSelector("#dc-etape"); await p.waitForSelector("#installe"); await attendre(p, 500);
           const vue = await p.evaluate(() => document.getElementById("vue").innerHTML.replace(/ style="[^"]*animation[^"]*"/g, ""));
@@ -762,9 +795,10 @@ let URL0 = "";
         });
       }
       const A = vus[true], E = vus[false];
-      ok("A10 : " + nom + " : écran d'inscription et accueil (bannière d'installation comprise) identiques au caractère près, interrupteur allumé ou éteint ; ni carte, ni paramètre, ni drapeau",
-        !!A && !!E && A.insc === E.insc && A.vue === E.vue && !A.carte && A.ad.search === "" && A.dr.length === 0 && A.cls === "installe",
-        JSON.stringify({ insc: A && A.insc === E.insc, vue: A && A.vue === E.vue, carte: A && A.carte, ad: A && A.ad, dr: A && A.dr, cls: A && A.cls }));
+      const ordre = x => x.insc.map(e => e[0]), diff = A && E ? A.insc.map((e, i) => E.insc[i] && e[1] === E.insc[i][1] ? "" : e[0]).filter(Boolean) : null;
+      ok("A10 : " + nom + " : écrans d'inscription (le parcours : accueil, objectif, coincé, dans 3 mois, sexe, prénom, chargement, compte, WhatsApp) et accueil (bannière d'installation comprise) identiques au caractère près, interrupteur allumé ou éteint ; ni carte, ni paramètre, ni drapeau",
+        !!A && !!E && egal(ordre(A), AVANT_COMPTE) && egal(ordre(E), AVANT_COMPTE) && !diff.length && A.vue === E.vue && !A.carte && A.ad.search === "" && A.dr.length === 0 && A.cls === "installe",
+        JSON.stringify({ ordre: A && E && [ordre(A), ordre(E)], ecransDifferents: diff, vue: A && A.vue === E.vue, carte: A && A.carte, ad: A && A.ad, dr: A && A.dr, cls: A && A.cls }));
     }
   });
 

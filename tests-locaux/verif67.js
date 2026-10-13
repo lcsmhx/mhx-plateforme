@@ -3,6 +3,8 @@
    aussi avec un ancien choix « clair » rangé sur l'appareil (mhx_theme = "light"), ignoré depuis la v80 (app tout en
    sombre : jamais de data-theme, doré du thème sombre). Un faux Calendly (hôte calendly.com, comme verif40) sert une page
    blanche à l'onglet que le bouton ouvre et note l'adresse reçue : aucun appel ne part vers le vrai Calendly.
+   v81 (bloc 2, parcours du prospect en 11 écrans) : seul le bloc J change (son inscription passe par le parcours) ; les
+   prospects des autres blocs sont des comptes d'avant (sans parcours_le) : page « Ton plan d'action », accueil, inchangés.
    A. page « Ton plan d'action » (juste après les 3 questions), français, 390 px, thème sombre : ordre exact (« Offert »,
       titre, projection, texte, « Ton plan est à toi… », petit texte gris, bouton, « 15 min · par téléphone · offert »,
       « Plus tard… »), textes EXACTS, typographie française (espaces insécables), « Offert » en capitales dorées, UN seul
@@ -50,6 +52,9 @@
       Profil : 12 paragraphes, le 2e EXACT (français, anglais), les 11 autres identiques à la v60 (empreinte) ; v64 (lot 5,
       brief V2 A) : accords.conditions et conditions_version envoyée à l'inscription = la version des CGU en PDF
       (CONFIG.textes_legaux.cgu_version, servie avec une valeur de test), plus celle du texte court ; plus de case santé ;
+      v81 (bloc 2) : l'écran unique d'inscription n'existe plus, l'inscription passe par le parcours du prospect
+      (FT.parcours) : prénom à l'écran « prenom », email, mot de passe et case des conditions à l'écran « compte »,
+      « Débloquer mon espace » (#c-go) de l'écran « whatsapp » ; arrivée, après le rechargement, sur « Ton espace » ;
    K. coach : fiche d'un prospect (v71 (D) : ouverte par Clients.ouvrir, Léa n'a plus de ligne dans Mes clients) — chronologie « Clic « Récupérer mon plan d'action » (<écran>) » (v63) : anciens clics
       (decouverte, decouverte-accompagnement, bilan-propose, verrou-programme) sous le nom de l'écran d'aujourd'hui, plus
       aucun ancien libellé ni « Réserver mon bilan », nouveaux codes avec leur nom d'écran, codes illisibles sans libellé
@@ -76,7 +81,7 @@ const BLOCS = (process.env.VERIF67_BLOCS || "").split(",").map(x => x.trim()).fi
 const MOBILE = { width: 390, height: 844 }, ORDI = { width: 1280, height: 900 };
 
 /* ---------- la page servie : le fichier testé (page, css/ et js/) ; inscription ouverte le temps du bloc J ---------- */
-const { servirFichier, source, forcerInscription } = require("./fichiers");
+const { servirFichier, source, forcerInscription, parcours } = require("./fichiers");   // v81 : parcours (FT.parcours) pilote le parcours du prospect (bloc J)
 let inscriptionLibre = null;
 /* v64 (lot 5, brief V2 A) : le bloc J sert CONFIG.textes_legaux (js/config.js : liens des 2 PDF et version des CGU, « à
    compléter » sur les branches de travail) avec des valeurs de test valides, quelle que soit la valeur du fichier (la suite
@@ -770,19 +775,22 @@ const verrouVu = (page, id) => page.evaluate(id => {
           && !ps.some(p => /Réserver mon bilan|Book my assessment|case dédiée|dedicated box|1 à 2 emails|1 to 2 emails/.test(p) || TRENTE.test(p)),
         ps.length + " · " + [1, 3, 4, 6, 7, 8].filter(i => norm(ps[i]) !== norm(X(["p2", "p4", "p5", "p7", "p8", "p9"][[1, 3, 4, 6, 7, 8].indexOf(i)]))).map(i => (i + 1) + "e : " + ps[i]).join(" · ") + " · empreinte " + emp);
     }
-    /* inscription (faux serveur, données fictives) : la version envoyée */
+    /* inscription (faux serveur, données fictives) : la version envoyée. v81 (bloc 2) : plus d'écran unique, le parcours
+       (FT.parcours) : prénom à l'écran « prenom » ; email, mot de passe et case des conditions (la seule obligatoire, v64 : plus
+       de case santé) à l'écran « compte » ; numéro et « Débloquer mon espace » (#c-go, qui crée le compte) à l'écran
+       « whatsapp » ; après le rechargement, l'écran « Ton espace » (data-etape espace : appPrete reste faux dans le parcours) */
     inscriptionLibre = true;
     try {
       const db = base(); db.nouvelId = PID(90);
       const { page } = await contexte(b, null, db);
-      await page.goto(URL0 + "#/inscription"); await page.waitForSelector("#c-go"); await attendre(page, 400);
-      await page.fill("#c-prenom", "Zoé"); await page.fill("#c-email", "zoe67@exemple.fr"); await page.fill("#c-mdp", "motdepasse-fictif-67");   // v74 : plus de champ Nom
-      await page.check("#c-cgu");   // v64 : la seule case obligatoire (plus de case santé)
+      const R = { prenom: "Zoé", email: "zoe67@exemple.fr", mdp: "motdepasse-fictif-67", cgu: true, tel: "0639980067" };   // v74 : plus de champ Nom
+      await page.goto(URL0 + "#/inscription"); await page.waitForSelector("#pc"); await attendre(page, 400);
+      await parcours(page, R, "whatsapp"); await page.waitForSelector("#c-go");
       const servie = await page.evaluate(() => (CONFIG.textes_legaux || {}).cgu_version).catch(() => null);
-      await Promise.all([page.waitForNavigation({ waitUntil: "load", timeout: 15000 }), page.click("#c-go")]);
-      await pret(page); await attendre(page, 1500);
+      await Promise.all([page.waitForNavigation({ waitUntil: "load", timeout: 15000 }), parcours(page, R, "cree")]);   // « Débloquer mon espace » touché
+      await page.waitForSelector('#pc[data-etape="espace"]', { timeout: 12000 }); await attendre(page, 1500);
       const md = ((db.inscriptions[0] || {}).data) || {};
-      ok("inscription : conditions_version = CONFIG.textes_legaux.cgu_version (« " + LEGAUX_J.cgu_version + " » servie, plus « " + COND.version + " » du texte court) envoyée avec l'acceptation des conditions (datée), une seule inscription, sans case santé ni accord santé (ni consentement_sante ni sante_version)",
+      ok("inscription par le parcours (v81 : prénom à l'écran « prenom », email, mot de passe et case des conditions à l'écran « compte », « Débloquer mon espace » de l'écran « whatsapp », arrivée sur « Ton espace ») : conditions_version = CONFIG.textes_legaux.cgu_version (« " + LEGAUX_J.cgu_version + " » servie, plus « " + COND.version + " » du texte court) envoyée avec l'acceptation des conditions (datée), une seule inscription, sans case santé ni accord santé (ni consentement_sante ni sante_version)",
         db.inscriptions.length === 1 && servie === LEGAUX_J.cgu_version && md.conditions_version === LEGAUX_J.cgu_version && md.conditions_version !== COND.version && !("consentement_sante" in md) && !("sante_version" in md) && typeof md.consentement === "string" && /^\d{4}-\d{2}-\d{2}T/.test(md.consentement), JSON.stringify(db.inscriptions.map(x => x.data)) + " · servie " + servie);
     } finally { inscriptionLibre = null; }
   }));

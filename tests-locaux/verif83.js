@@ -1,4 +1,5 @@
-/* v78 (tâche 3) — CAPTCHA Cloudflare Turnstile sur la connexion et la création de compte, « en ligne mais éteint ».
+/* v78 (tâche 3) — CAPTCHA Cloudflare Turnstile sur la connexion et la création de compte, « en ligne mais éteint » ;
+   adaptée à la v81 (bloc 2 : la création de compte est l'écran whatsapp du parcours du prospect, voir plus bas).
    L'interrupteur est la clé : CONFIG.turnstile.cle_site (js/config.js). Vide = l'app exactement comme avant. Les autres
    suites la reçoivent toujours vide (fichiers.js, forcerTurnstile) ; celle-ci l'allume dans sa retouche avec les clés de
    TEST officielles de Cloudflare, servies par un FAUX api.js (route Playwright sur challenges.cloudflare.com) qui les
@@ -26,9 +27,20 @@
          qui ne répond pas ; F erreurs de Supabase (FR et EN) ; G le coach qui crée un compte (creer-acces inchangé, aucun
          CAPTCHA) ; H Profil (profil false / true) ; I 320 px (compact, rien ne déborde) ; le bouton à la même place qu'avec
          la clé vide, visible sans défiler (390 × 844 et 320 × 568, téléphone obligatoire comme en ligne).
+   v81 (bloc 2) : l'écran unique « Crée ton espace gratuit » n'existe plus ; la création de compte est le parcours du
+   prospect (js/parcours.js) et le compte est créé sur son écran `whatsapp` (#c-go « Débloquer mon espace », #co-err) : c'est
+   là qu'est le CAPTCHA (#co-captcha JUSTE SOUS #c-go, action « inscription »). Chaque vérification de l'ancien écran porte
+   sur cet écran, même exigence, mêmes valeurs : « inscription » = #/inscription, le parcours piloté jusqu'à l'écran whatsapp
+   (FT.parcours : prénom, email, mot de passe, cases sur leurs écrans), le numéro tapé, « Débloquer mon espace » ; arrivée
+   après la création = l'écran « Ton espace » (plus l'app : appPrete reste faux dans le parcours). Le CAPTCHA n'est chargé
+   sur AUCUN autre écran du parcours (accueil … compte, puis « Ton espace » et le cadeau) : vérifié en B (saisie refusée,
+   changement d'écran, création de compte). Saisie refusée sur place (B) : prénom (écran prenom), mot de passe et case
+   (écran compte), sans CAPTCHA ; numéro (écran whatsapp). Écran quitté pendant l'attente du jeton (D) : « Retour » de
+   l'écran whatsapp. La connexion, « Mot de passe oublié », « Me reconnecter », le Profil, creer-acces : inchangés.
    Hors banc : R (VERIF83_RESEAU=1) charge le VRAI script de Cloudflare avec la clé 1x00000000000000000000AA sur localhost et
-   attend un jeton dans le corps de /signup ; AV (VERIF83_AVANT=<index.html de la version d'avant>) compare l'écran et les
-   corps de /token et /signup avec cette version, clé vide.
+   attend un jeton dans le corps de /signup ; AV (VERIF83_AVANT=<index.html de la version d'avant>) compare l'écran de
+   connexion et les corps de /token et /signup avec cette version, clé vide (v81 : la création de compte n'a plus d'écran
+   comparable ; seule différence voulue du corps de /signup, newsletter_version 2026-10-13).
    Supabase simulé (gabarit de verif80) : rien ne part vers la vraie base ni vers Cloudflare (routage par NOM D'HÔTE).
    Comptes fictifs (@exemple.fr). Chaque bloc tourne à part (« ✗ BLOC INTERROMPU ») ; code de sortie 1 dès qu'un ✗ apparaît.
    Usage : node verif83.js ../index.html
@@ -328,16 +340,30 @@ async function contexte(b, db, opts){
 const attendre = (page, ms) => page.waitForTimeout(ms);
 const pret = async page => { await page.waitForFunction(() => typeof appPrete !== "undefined" && appPrete === true, null, { timeout: 12000 }); await attendre(page, 300); };
 const URL0 = `http://localhost:${PORT}/`;
-async function portailOuvert(b, db, hash, opts){
+/* hash "connexion" : l'écran de connexion (inchangé). v81 (bloc 2) : hash "inscription" = la création de compte, c'est-à-dire
+   #/inscription puis le parcours du prospect piloté jusqu'à son écran « whatsapp » (FT.parcours, fichiers.js) ; r : les
+   réponses (prenom, email, newsletter… ; mot de passe MDP par défaut) ; rien n'est touché sur l'écran whatsapp */
+async function portailOuvert(b, db, hash, opts, r){
   const { page } = await contexte(b, db, opts);
-  await page.goto((opts && opts.url0 || URL0) + "#/" + hash); await page.waitForSelector("#c-go");
+  await page.goto((opts && opts.url0 || URL0) + "#/" + hash);
+  if (hash === "inscription") { await page.waitForSelector("#pc"); await FT.parcours(page, Object.assign({ mdp: MDP }, r || {}), "whatsapp"); }
+  await page.waitForSelector("#c-go");
   return page;
 }
-/* l'écran du portail tel qu'on le voit */
+const etapeDe = page => page.$eval("#pc", e => e.dataset.etape).catch(() => "");
+/* « Retour » depuis l'écran whatsapp jusqu'à l'accueil du parcours (le chargement n'a pas de retour : compte → prénom) ;
+   fn : appelée sur chaque écran atteint */
+const RETOURS = ["compte", "prenom", "sexe", "projection", "coince", "objectif", "accueil"];
+async function retourAccueil(page, fn){
+  for (const e of RETOURS) { await page.click(".pc-retour"); await page.waitForSelector('#pc[data-etape="' + e + '"]').catch(() => {}); await attendre(page, 80); if (fn) await fn(); }
+}
+/* le widget rendu n fois en tout, un seul à l'écran (le script déjà chargé : un rendu aussitôt l'écran affiché) */
+const attendreRendu = (page, n) => page.waitForFunction(n => !!(window.__ts && window.__ts.rendus.length === n && document.querySelectorAll(".faux-ts").length === 1), n, { timeout: 9000 }).catch(() => {});
+/* l'écran du portail (ou du parcours) tel qu'on le voit */
 const etat = page => page.evaluate(() => {
-  const z = document.getElementById("co-captcha"), b = document.getElementById("c-go"), e = document.getElementById("co-err");
+  const z = document.getElementById("co-captcha"), b = document.getElementById("c-go"), e = document.getElementById("co-err"), pc = document.getElementById("pc");
   const r = z ? z.getBoundingClientRect() : null, bx = z ? z.querySelector(".faux-ts") : null, rb = bx ? bx.getBoundingClientRect() : null;
-  return { zone: !!z, classes: z ? z.className : "", h: r ? Math.round(r.height) : 0, larg: z ? z.clientWidth : 0,
+  return { etape: pc ? pc.dataset.etape || "" : "", zone: !!z, classes: z ? z.className : "", h: r ? Math.round(r.height) : 0, larg: z ? z.clientWidth : 0,
     widgets: document.querySelectorAll(".faux-ts").length, taille: bx ? bx.getAttribute("data-taille") : "",
     boite: rb ? { g: Math.round(rb.left), d: Math.round(rb.right), l: Math.round(rb.width), h: Math.round(rb.height) } : null,
     apresBouton: !!(z && z.previousElementSibling && z.previousElementSibling.id === "c-go"),
@@ -347,8 +373,9 @@ const etat = page => page.evaluate(() => {
     scripts: Array.from(document.querySelectorAll("script[src], link[href]")).map(s => s.src || s.href).filter(s => /cloudflare/i.test(s)),
     T: window.__ts ? JSON.parse(JSON.stringify(window.__ts)) : null, sw: document.documentElement.scrollWidth, iw: window.innerWidth };
 });
+/* la carte de la connexion ; v81 : l'écran du parcours (#pc) pour la création de compte */
 const carte = (page, sans) => page.evaluate(sans => {
-  const c = document.querySelector(".carte-co"); if (!c) return "";
+  const c = document.querySelector(".carte-co") || document.getElementById("pc"); if (!c) return "";
   const x = c.cloneNode(true); if (sans) x.querySelectorAll("#co-captcha").forEach(z => z.remove());
   return x.outerHTML;
 }, !!sans);
@@ -356,9 +383,16 @@ const attendreWidget = page => page.waitForFunction(() => !!(window.__ts && wind
 const attendreEtat = (page, e) => page.waitForFunction(e => !!document.querySelector('.faux-ts[data-etat="' + e + '"]'), e, { timeout: 9000 });
 const attendreErr = page => page.waitForFunction(() => { const e = document.getElementById("co-err"), b = document.getElementById("c-go"); return !!(e && e.textContent.trim() && b && !b.disabled); }, null, { timeout: 12000 });
 async function remplirConnexion(page, email, mdp){ await page.fill("#c-email", email); await page.fill("#c-mdp", mdp); }
-async function remplirInscription(page, prenom, email){ await page.fill("#c-prenom", prenom); await page.fill("#c-email", email); await page.fill("#c-mdp", MDP); await page.check("#c-cgu"); }
+/* v81 : sur l'écran whatsapp du parcours, le numéro (France, plage réservée à la fiction) ; le reste est sur les écrans d'avant */
+const NUMERO = "06 39 98 00 83";
+async function remplirTel(page, n){ await page.selectOption("#c-tel-ind", "33"); await page.fill("#c-tel", n || NUMERO); }
+/* l'ancien écran unique (seulement pour AV, la version d'avant la v81) */
+async function remplirAncienEcran(page, prenom, email){ await page.fill("#c-prenom", prenom); await page.fill("#c-email", email); await page.fill("#c-mdp", MDP); await page.check("#c-cgu"); }
 /* un clic qui doit ouvrir l'app (rechargement) */
 async function cliquerEtEntrer(page){ await Promise.all([page.waitForNavigation({ timeout: 15000 }).catch(() => {}), page.click("#c-go")]); await pret(page); }
+/* v81 : « Débloquer mon espace » qui crée le compte : rechargement, puis l'écran « Ton espace » du parcours (appPrete reste faux) */
+async function cliquerEtArriver(page){ await Promise.all([page.waitForNavigation({ timeout: 15000 }).catch(() => {}), page.click("#c-go")]); await page.waitForSelector('#pc[data-etape="espace"]', { timeout: 15000 }); await attendre(page, 300); }
+const BOUTON = { fr: "Débloquer mon espace", en: "Unlock my space" };
 const email = page => page.evaluate(() => CONFIG.marque.email);
 /* les textes attendus (Captcha.TEXTES, connexion.js, et leur traduction, i18n.js) — {e} : l'adresse de la marque */
 const TX = {
@@ -462,16 +496,16 @@ const avecE = (t, e) => String(t).split("{e}").join(e);
         db.bruts.token.length === 2 && db.bruts.token[1].brut === JSON.stringify({ email: INES.email, password: MDP }) && db.cf.length === 0, JSON.stringify({ bruts: db.bruts.token, cf: db.cf })); }
     for (const langue of ["fr", "en"]) {
       const db = base(); db.inscription.id = PID(langue === "fr" ? 10 : 11);
-      const page = await portailOuvert(b, db, "inscription", { langue, neuf: true });
+      const page = await portailOuvert(b, db, "inscription", { langue, neuf: true }, { prenom: "Zoé", email: "zoe" + langue + "@exemple.fr", newsletter: true });
       await attendre(page, 500);
       const e = await etat(page);
-      await remplirInscription(page, "Zoé", "zoe" + langue + "@exemple.fr"); await page.check("#c-newsletter");
-      await cliquerEtEntrer(page);
-      const s = db.bruts.signup[0] || {}, c = lireJ(s.brut) || {};
-      ok("A : clé vide, création de compte (" + langue.toUpperCase() + ") — aucun élément ni requête vers Cloudflare ; corps de /signup : clés exactement email, password, data (dans cet ordre, sans gotrue_meta_security), data exactement prenom, nom, consentement, conditions_version, newsletter, newsletter_version ; compte créé, l'app s'ouvre",
-        !e.zone && e.ts === "undefined" && db.cf.length === 0 && db.bruts.signup.length === 1 && JSON.stringify(cles(s.brut)) === '["email","password","data"]'
-          && JSON.stringify(Object.keys(c.data || {})) === '["prenom","nom","consentement","conditions_version","newsletter","newsletter_version"]' && c.email === "zoe" + langue + "@exemple.fr",
-        JSON.stringify({ e: { zone: e.zone, ts: e.ts }, cf: db.cf, brut: s.brut }));
+      await remplirTel(page);
+      await cliquerEtArriver(page);
+      const s = db.bruts.signup[0] || {}, c = lireJ(s.brut) || {}, arrivee = await etapeDe(page);
+      ok("A : clé vide, création de compte (écran whatsapp du parcours, " + langue.toUpperCase() + ") — aucun élément ni requête vers Cloudflare (de tout le parcours) ; corps de /signup : clés exactement email, password, data (dans cet ordre, sans gotrue_meta_security), data exactement prenom, nom, consentement, conditions_version, newsletter, newsletter_version ; compte créé, arrivée sur « Ton espace »",
+        e.etape === "whatsapp" && !e.zone && e.ts === "undefined" && db.cf.length === 0 && db.bruts.signup.length === 1 && JSON.stringify(cles(s.brut)) === '["email","password","data"]'
+          && JSON.stringify(Object.keys(c.data || {})) === '["prenom","nom","consentement","conditions_version","newsletter","newsletter_version"]' && c.email === "zoe" + langue + "@exemple.fr" && arrivee === "espace",
+        JSON.stringify({ e: { etape: e.etape, zone: e.zone, ts: e.ts }, cf: db.cf, brut: s.brut, arrivee }));
     }
     { /* renouvellement au démarrage, puis « Me reconnecter » (session perdue en cours d'utilisation) */
       const db = base();
@@ -483,28 +517,29 @@ const avecE = (t, e) => String(t).split("{e}").join(e);
       ok("A : clé vide — renouvellement de session inchangé (corps exactement {\"refresh_token\"}), « Me reconnecter » : connexion sans élément ni requête vers Cloudflare",
         db.bruts.refresh.length >= 1 && r.brut === JSON.stringify({ refresh_token: "renouvellement-" + THOMAS.id }) && !e.zone && e.ts === "undefined" && db.cf.length === 0,
         JSON.stringify({ r, e: { zone: e.zone, ts: e.ts }, cf: db.cf })); }
-    { /* l'écran avec la clé vide = l'écran avec la clé de test, sans son widget (même HTML, mêmes espaces) */
+    { /* l'écran avec la clé vide = l'écran avec la clé de test, sans son widget (même HTML, mêmes espaces) — v81 : pour la
+         création de compte, l'écran whatsapp du parcours en entier (#pc) */
       const pareils = [];
       for (const [hash, langue] of [["connexion", "fr"], ["inscription", "fr"], ["inscription", "en"], ["connexion", "en"]]) {
         const p1 = await portailOuvert(b, base(), hash, { langue }); const vide = await carte(p1);
         let avec = "", z = false;
         await avecCle(TS.passe, false, async () => { const p2 = await portailOuvert(b, base(), hash, { langue }); await attendreWidget(p2); z = (await etat(p2)).widgets === 1; avec = await carte(p2, true); });
-        pareils.push({ hash, langue, egal: vide === avec && vide.length > 500, z });
+        pareils.push({ hash, langue, egal: vide === avec && vide.length > 500, z, ecran: hash === "connexion" ? /class="carte-co"/.test(vide) : /data-etape="whatsapp"/.test(vide) });
       }
-      ok("A : connexion et création de compte (FR, EN) — avec la clé vide, la carte est au caractère près celle de la clé de test sans son widget (aucun espace ni retour à la ligne ajouté)",
-        pareils.every(x => x.egal && x.z), JSON.stringify(pareils)); }
+      ok("A : connexion (FR, EN) et création de compte (écran whatsapp du parcours, FR, EN) — avec la clé vide, la carte (l'écran du parcours) est au caractère près celle de la clé de test sans son widget (aucun espace ni retour à la ligne ajouté)",
+        pareils.every(x => x.egal && x.z && x.ecran), JSON.stringify(pareils)); }
     { /* CAPTCHA allumé dans Supabase alors que la clé est vide (ordre d'activation inversé) */
       const vus = [];
       for (const [hash, langue] of [["connexion", "fr"], ["inscription", "en"]]) {
         const db = base(); db.captcha = "1x";
-        const page = await portailOuvert(b, db, hash, { langue, neuf: hash === "inscription" });
-        if (hash === "connexion") await remplirConnexion(page, INES.email, MDP); else await remplirInscription(page, "Léo", "leo@exemple.fr");
+        const page = await portailOuvert(b, db, hash, { langue, neuf: hash === "inscription" }, { prenom: "Léo", email: "leo@exemple.fr" });
+        if (hash === "connexion") await remplirConnexion(page, INES.email, MDP); else await remplirTel(page);
         await page.click("#c-go"); await attendreErr(page);
         const e = await etat(page), m = await email(page);
-        vus.push({ hash, langue, err: e.err, attendu: avecE(TX[langue].eteint, m), actif: e.bouton.actif, cf: db.cf.length, n: db.bruts[hash === "connexion" ? "token" : "signup"].length });
+        vus.push({ hash, langue, etape: e.etape, err: e.err, attendu: avecE(TX[langue].eteint, m), actif: e.bouton.actif, cf: db.cf.length, n: db.bruts[hash === "connexion" ? "token" : "signup"].length });
       }
-      ok("A : CAPTCHA allumé dans Supabase avec la clé vide (400 « no captcha_token found ») — message « écris à ton coach » (FR à la connexion, EN à l'inscription) au lieu du texte brut ou de « Inscription impossible », bouton actif, aucune requête vers Cloudflare",
-        vus.every(v => v.err === v.attendu && v.actif && v.cf === 0 && v.n === 1), JSON.stringify(vus)); }
+      ok("A : CAPTCHA allumé dans Supabase avec la clé vide (400 « no captcha_token found ») — message « écris à ton coach » (FR à la connexion, EN à la création de compte, écran whatsapp du parcours) au lieu du texte brut ou de « Inscription impossible », bouton actif, aucune requête vers Cloudflare",
+        vus.every(v => v.err === v.attendu && v.actif && v.cf === 0 && v.n === 1 && (v.hash === "connexion" || v.etape === "whatsapp")), JSON.stringify(vus)); }
   });
 
   /* =================== B. clé de test 1x…AA (passe) =================== */
@@ -547,61 +582,102 @@ const avecE = (t, e) => String(t).split("{e}").join(e);
           !avantClic && db.bruts.token.length === 1 && c.gotrue_meta_security && c.gotrue_meta_security.captcha_token === DUMMY && d > 400 && d < 3800, JSON.stringify({ avantClic, d, brut: (db.bruts.token[0] || {}).brut })); }
       for (const [langue, theme] of [["fr", ""], ["en", "light"]]) {   // EN : ancien choix « clair » rangé sur l'appareil, ignoré (v80 : tout en sombre)
         const db = base(); db.captcha = "1x"; db.inscription.id = PID(langue === "fr" ? 20 : 21);
-        const page = await portailOuvert(b, db, "inscription", { langue, theme, neuf: true });
+        const page = await portailOuvert(b, db, "inscription", { langue, theme, neuf: true }, { prenom: "Zoé", email: "zoe-b" + langue + "@exemple.fr" });
         await attendreWidget(page);
         const e = await etat(page), o = ((e.T && e.T.rendus[0]) || {}).opts || {};
-        await remplirInscription(page, "Zoé", "zoe-b" + langue + "@exemple.fr");
-        await cliquerEtEntrer(page);
+        await remplirTel(page);
+        await cliquerEtArriver(page);
         const s = db.bruts.signup[0] || {}, c = lireJ(s.brut) || {};
-        ok("B : création de compte (" + langue.toUpperCase() + (theme ? ", ancien choix « clair » ignoré, v80" : "") + ") — widget : action « inscription », langue " + langue + ", thème dark ; corps de /signup : email, password, data (exactement comme sans CAPTCHA), puis gotrue_meta_security.captcha_token ; compte créé, l'app s'ouvre",
-          o.action === "inscription" && o.language === langue && o.theme === "dark" && db.bruts.signup.length === 1 && JSON.stringify(cles(s.brut)) === '["email","password","data","gotrue_meta_security"]'
-            && JSON.stringify(Object.keys(c.data || {})) === '["prenom","nom","consentement","conditions_version","newsletter","newsletter_version"]' && c.gotrue_meta_security.captcha_token === DUMMY && db.inscriptions.length === 1,
-          JSON.stringify({ o: { action: o.action, language: o.language, theme: o.theme }, brut: s.brut }));
+        /* après la création (page rechargée) : « Ton espace », puis le cadeau — écrans du parcours sans CAPTCHA */
+        const apres = [await etat(page)];
+        await page.click("#pc-suivant"); await page.waitForSelector('#pc[data-etape="cadeau"]'); await attendre(page, 300);
+        apres.push(await etat(page));
+        ok("B : création de compte (" + langue.toUpperCase() + (theme ? ", ancien choix « clair » ignoré, v80" : "") + ") — widget sur l'écran whatsapp du parcours, juste sous « " + BOUTON[langue] + " » : action « inscription », langue " + langue + ", thème dark ; corps de /signup : email, password, data (exactement comme sans CAPTCHA), puis gotrue_meta_security.captcha_token ; compte créé, arrivée sur « Ton espace » puis le cadeau, sans élément ni script du CAPTCHA (aucune nouvelle requête vers Cloudflare)",
+          e.etape === "whatsapp" && e.apresBouton && !!e.bouton && e.bouton.texte === BOUTON[langue] && o.action === "inscription" && o.language === langue && o.theme === "dark"
+            && db.bruts.signup.length === 1 && JSON.stringify(cles(s.brut)) === '["email","password","data","gotrue_meta_security"]'
+            && JSON.stringify(Object.keys(c.data || {})) === '["prenom","nom","consentement","conditions_version","newsletter","newsletter_version"]' && (c.gotrue_meta_security || {}).captcha_token === DUMMY && db.inscriptions.length === 1
+            && apres[0].etape === "espace" && apres[1].etape === "cadeau" && apres.every(x => !x.zone && x.widgets === 0 && x.ts === "undefined" && x.scripts.length === 0) && db.cf.length === 1,
+          JSON.stringify({ e: { etape: e.etape, apresBouton: e.apresBouton, bouton: e.bouton }, o: { action: o.action, language: o.language, theme: o.theme }, brut: s.brut, apres: apres.map(x => ({ etape: x.etape, zone: x.zone, ts: x.ts, scripts: x.scripts })), cf: db.cf }));
       }
-      { const db = base(); db.captcha = "1x";
-        const page = await portailOuvert(b, db, "inscription", { neuf: true });
+      { /* v81 : le prénom, le mot de passe et la case sont refusés sur leurs écrans du parcours (prenom, compte), qui n'ont
+           pas de CAPTCHA : rien de Cloudflare avant l'écran whatsapp ; là, le numéro refusé sur place */
+        const db = base(); db.captcha = "1x";
+        const { page } = await contexte(b, db, { neuf: true });
+        await page.goto(URL0 + "#/inscription"); await page.waitForSelector("#pc");
+        const avantW = [];
+        const releve = async () => avantW.push(await page.evaluate(() => ({ etape: document.getElementById("pc").dataset.etape, zone: !!document.getElementById("co-captcha"),
+          ts: typeof window.turnstile, scripts: Array.from(document.querySelectorAll("script[src], link[href]")).filter(s => /cloudflare/i.test(s.src || s.href)).length })));
+        await releve();
+        for (const x of ["objectif", "coince", "projection", "sexe", "prenom"]) { await FT.parcours(page, { mdp: MDP }, x); await releve(); }
+        await page.fill("#pc-prenom", ""); await page.click("#pc-suivant", { force: true }); await attendre(page, 250);   // prénom manquant
+        const resteP = await etapeDe(page);
+        await page.fill("#pc-prenom", "Léa"); await page.click("#pc-suivant"); await page.waitForSelector('#pc[data-etape="chargement"]'); await releve();
+        await FT.parcours(page, { mdp: MDP }, "compte"); await releve();
+        await page.fill("#c-email", "lea@exemple.fr"); await page.fill("#c-mdp", "court");
+        await page.click("#pc-suivant", { force: true }); await attendre(page, 250);                                  // mot de passe trop court
+        await page.fill("#c-mdp", MDP); await page.click("#pc-suivant", { force: true }); await attendre(page, 250);  // case non cochée
+        const resteC = await etapeDe(page); await releve();
+        const cfAvant = db.cf.length;
+        await page.check("#c-cgu"); await page.click("#pc-suivant"); await page.waitForSelector('#pc[data-etape="whatsapp"]');
         await attendreWidget(page);
-        await page.click("#c-go"); await attendre(page, 250);                                         // prénom manquant
-        await page.fill("#c-prenom", "Léa"); await page.fill("#c-email", "lea@exemple.fr"); await page.fill("#c-mdp", "court");
-        await page.click("#c-go"); await attendre(page, 250);                                         // mot de passe trop court
-        await page.fill("#c-mdp", MDP); await page.click("#c-go"); await attendre(page, 250);        // case non cochée
-        const e = await etat(page);
-        ok("B : saisie refusée sur place (prénom, mot de passe trop court, case) — rien n'est envoyé, le widget n'est PAS remis à zéro (jeton intact), bouton actif",
-          db.bruts.signup.length === 0 && e.T.resets === 0 && e.bouton.actif && e.widgets === 1, JSON.stringify({ n: db.bruts.signup.length, resets: e.T.resets, err: e.err })); }
-      { const db = base();
+        await page.click("#c-go"); await attendre(page, 250);                                                         // numéro manquant
+        await page.fill("#c-tel", "06 12"); await page.click("#c-go"); await attendre(page, 250);                     // numéro trop court
+        await page.fill("#c-tel", "06 12 ab 56 78"); await page.click("#c-go"); await attendre(page, 250);            // des lettres
+        const e = await etat(page), errTel = norm(await page.textContent("#pc-err-tel").catch(() => ""));
+        const AVANT_W = ["accueil", "objectif", "coince", "projection", "sexe", "prenom", "chargement", "compte"];
+        ok("B : saisie refusée sur place — prénom manquant (écran prenom), mot de passe trop court puis case non cochée (écran compte) : on reste sur l'écran ; aucun écran du parcours avant whatsapp n'a le CAPTCHA (ni élément, ni script, aucune requête vers Cloudflare) ; numéro manquant, trop court, avec des lettres (écran whatsapp, « Vérifie ton numéro. ») : rien n'est envoyé, le widget n'est PAS remis à zéro (jeton intact), bouton actif",
+          resteP === "prenom" && resteC === "compte" && cfAvant === 0 && AVANT_W.every(x => avantW.some(v => v.etape === x)) && avantW.every(v => AVANT_W.includes(v.etape) && !v.zone && v.ts === "undefined" && v.scripts === 0)
+            && e.etape === "whatsapp" && errTel === "Vérifie ton numéro." && db.bruts.signup.length === 0 && e.T.resets === 0 && e.bouton.actif && e.widgets === 1,
+          JSON.stringify({ resteP, resteC, cfAvant, avantW, etape: e.etape, errTel, n: db.bruts.signup.length, resets: e.T && e.T.resets, err: e.err })); }
+      { /* v81 : connexion → « Créer mon compte » (le parcours) → … → écran whatsapp → « Retour » jusqu'à l'accueil du parcours →
+           « Déjà un compte ? Se connecter » → « Mot de passe oublié ? » ; chaque écran du parcours autre que whatsapp relevé */
+        const db = base();
         const page = await portailOuvert(b, db, "connexion");
         await attendreWidget(page);
-        await page.click('[data-mode="inscription"]'); await page.waitForSelector("#c-prenom"); await attendreWidget(page); await attendre(page, 150);
+        const ailleurs = [];
+        const releve = async () => ailleurs.push(await page.evaluate(() => ({ etape: (document.getElementById("pc") || { dataset: {} }).dataset.etape || "",
+          zone: !!document.getElementById("co-captcha"), w: document.querySelectorAll(".faux-ts").length, rendus: window.__ts ? window.__ts.rendus.length : -1 })));
+        await page.click('[data-mode="inscription"]'); await page.waitForSelector('#pc[data-etape="accueil"]'); await attendre(page, 150); await releve();
+        for (const x of ["objectif", "coince", "projection", "sexe", "prenom", "chargement", "compte"]) { await FT.parcours(page, { mdp: MDP }, x); await releve(); }
+        await FT.parcours(page, { mdp: MDP }, "whatsapp"); await attendreRendu(page, 2); await attendre(page, 150);
         const e1 = await etat(page);
-        await page.click('[data-mode="connexion"]'); await page.waitForSelector("#c-rester"); await attendre(page, 250);
+        await retourAccueil(page, releve);
+        await page.click("#pc-connexion"); await page.waitForSelector("#c-rester"); await attendreRendu(page, 3); await attendre(page, 250);
         const e2 = await etat(page);
         await page.click('[data-mode="oubli"]'); await page.waitForSelector("#co-oubli"); await attendre(page, 250);
         const e3 = await etat(page);
-        ok("B : changement d'écran — connexion → création de compte → connexion : l'ancien widget retiré à chaque fois (turnstile.remove), un seul à l'écran, script chargé une seule fois ; « Mot de passe oublié ? » : widget retiré, aucun nouveau",
-          e1.T.removes === 1 && e1.widgets === 1 && e1.T.rendus.length === 2 && e2.T.removes === 2 && e2.widgets === 1 && e2.T.rendus.length === 3
+        const AVANT_W = ["accueil", "objectif", "coince", "projection", "sexe", "prenom", "chargement", "compte"];
+        ok("B : changement d'écran — connexion → création de compte (parcours, écran whatsapp) → « Retour » jusqu'à l'accueil du parcours → connexion : l'ancien widget retiré à chaque fois (turnstile.remove), un seul à l'écran, script chargé une seule fois ; sur les autres écrans du parcours (accueil … compte, à l'aller et au retour) : aucun élément du CAPTCHA, aucun rendu ; « Mot de passe oublié ? » : widget retiré, aucun nouveau",
+          ailleurs.length === 15 && ailleurs.every(x => AVANT_W.includes(x.etape) && !x.zone && x.w === 0) && ailleurs.slice(0, 8).every(x => x.rendus === 1) && ailleurs.slice(8).every(x => x.rendus === 2)
+            && JSON.stringify(ailleurs.slice(8).map(x => x.etape)) === JSON.stringify(RETOURS)
+            && e1.etape === "whatsapp" && e1.apresBouton && e1.T.removes === 1 && e1.widgets === 1 && e1.T.rendus.length === 2 && e1.T.rendus[1].opts.action === "inscription"
+            && e2.T.removes === 2 && e2.widgets === 1 && e2.T.rendus.length === 3
             && e3.T.removes === 3 && e3.widgets === 0 && !e3.zone && e3.T.rendus.length === 3 && e3.T.chargements === 1 && db.cf.length === 1,
-          JSON.stringify({ e1: e1.T, e2: e2.T, e3: e3.T, w: [e1.widgets, e2.widgets, e3.widgets], cf: db.cf.length })); }
+          JSON.stringify({ ailleurs, e1: e1.T, e2: e2.T, e3: e3.T, w: [e1.widgets, e2.widgets, e3.widgets], cf: db.cf.length })); }
       { const db = base(); db.captcha = "1x"; db.inscription.id = PID(22); db.inscription.sansSession = true;
-        const page = await portailOuvert(b, db, "inscription", { neuf: true });
-        await attendreWidget(page); await remplirInscription(page, "Noé", "noe@exemple.fr");
+        const page = await portailOuvert(b, db, "inscription", { neuf: true }, { prenom: "Noé", email: "noe@exemple.fr" });
+        await attendreWidget(page); await remplirTel(page);
         await page.click("#c-go"); await page.waitForSelector("#co-verif"); await attendre(page, 200);
         const e = await etat(page);
-        ok("B : « Vérifie ta boîte mail » (Supabase demande de confirmer l'email) — le jeton est parti, le widget est retiré avec le formulaire",
+        ok("B : « Vérifie ta boîte mail » (Supabase demande de confirmer l'email) — le jeton est parti (écran whatsapp du parcours), le widget est retiré avec le formulaire",
           db.bruts.signup.length === 1 && (lireJ(db.bruts.signup[0].brut) || {}).gotrue_meta_security && e.T.removes === 1 && e.widgets === 0, JSON.stringify({ T: e.T, n: db.bruts.signup.length })); }
-      { /* script lent : il arrive après le changement d'écran (compteur de tour) ; place réservée avant son arrivée */
-        const db = base(); db.ts.delai = 1500;
+      { /* script lent : il arrive après le changement d'écran (compteur de tour) ; place réservée avant son arrivée.
+           v81 : demandé par la connexion, il arrive quand l'écran whatsapp du parcours est affiché (8 s : le temps de traverser
+           le parcours avant son arrivée) */
+        const db = base(); db.ts.delai = 8000;
         const t00 = Date.now();
         const page = await portailOuvert(b, db, "connexion");
         const ouvert = Date.now() - t00;
         await attendre(page, 200);
         const e0 = await etat(page);
-        await page.click('[data-mode="inscription"]'); await page.waitForSelector("#c-prenom"); await attendre(page, 200);
+        await page.click('[data-mode="inscription"]'); await page.waitForSelector("#pc"); await FT.parcours(page, { mdp: MDP, email: "lent@exemple.fr" }, "whatsapp"); await attendre(page, 200);
         const e1 = await etat(page);
         await attendreWidget(page); await attendre(page, 300);
         const e2 = await etat(page);
-        ok("B : script lent (1,5 s) — la page est chargée sans l'attendre (script ajouté après l'événement « load » : le reste de l'app n'est pas retardé) ; en attendant, la place est réservée (72 px) et le bouton reste actif ; arrivé après le passage à la création de compte : un seul rendu, pour l'écran affiché (action « inscription »), le bouton n'a pas bougé (rien ne saute)",
-          ouvert < 1400 && e0.h >= 72 && e0.bouton.actif && e0.widgets === 0 && e1.h >= 72 && e2.T.chargements === 1 && e2.T.rendus.length === 1 && e2.T.rendus[0].opts.action === "inscription" && e2.widgets === 1 && e2.bouton.haut === e1.bouton.haut && e2.h === e1.h,
-          JSON.stringify({ ouvert, e0: { h: e0.h, b: e0.bouton }, e1: { h: e1.h, b: e1.bouton }, e2: { h: e2.h, b: e2.bouton, T: e2.T } })); }
+        ok("B : script lent (8 s) — la page est chargée sans l'attendre (script ajouté après l'événement « load » : le reste de l'app n'est pas retardé) ; en attendant, la place est réservée (72 px) et le bouton reste actif (connexion, puis écran whatsapp du parcours, avant l'arrivée du script) ; arrivé après le passage à la création de compte : un seul rendu, pour l'écran affiché (action « inscription »), le bouton n'a pas bougé (rien ne saute)",
+          ouvert < 1400 && e0.h >= 72 && e0.bouton.actif && e0.widgets === 0 && e1.etape === "whatsapp" && e1.h >= 72 && e1.widgets === 0 && !!e1.bouton && e1.bouton.actif
+            && e2.T.chargements === 1 && e2.T.rendus.length === 1 && e2.T.rendus[0].opts.action === "inscription" && e2.widgets === 1 && e2.bouton.haut === e1.bouton.haut && e2.h === e1.h,
+          JSON.stringify({ ouvert, e0: { h: e0.h, b: e0.bouton }, e1: { etape: e1.etape, h: e1.h, w: e1.widgets, b: e1.bouton }, e2: { h: e2.h, b: e2.bouton, T: e2.T } })); }
       { /* le script ne se charge jamais dans l'app : client (accueil, Profil, Ma progression), coach (tableau de bord, Mes clients) */
         const db = base();
         const vus = [];
@@ -639,13 +715,13 @@ const avecE = (t, e) => String(t).split("{e}").join(e);
           db.bruts.token.length === 1 && db.bruts.token[0].brut === JSON.stringify({ email: INES.email, password: MDP }) && d < 2000, JSON.stringify({ d, bruts: db.bruts.token })); }
       for (const [hash, langue] of [["connexion", "fr"], ["inscription", "en"]]) {
         const db = base(); db.captcha = "1x";
-        const page = await portailOuvert(b, db, hash, { langue, neuf: hash === "inscription" });
+        const page = await portailOuvert(b, db, hash, { langue, neuf: hash === "inscription" }, { prenom: "Léo", email: "leo-c@exemple.fr" });
         await page.waitForFunction(() => window.__ts && window.__ts.erreurs > 0);
-        if (hash === "connexion") await remplirConnexion(page, INES.email, MDP); else await remplirInscription(page, "Léo", "leo-c@exemple.fr");
+        if (hash === "connexion") await remplirConnexion(page, INES.email, MDP); else await remplirTel(page);
         await page.click("#c-go"); await attendreErr(page);
         const e = await etat(page), m = await email(page), n = db.bruts[hash === "connexion" ? "token" : "signup"];
-        ok("C : widget en échec, CAPTCHA allumé dans Supabase (" + langue.toUpperCase() + ", " + hash + ") — envoyé quand même sans jeton, refusé : « " + avecE(TX[langue].echec, m).slice(0, 60) + "… », bouton actif, widget relancé (remise à zéro)",
-          n.length === 1 && !(lireJ(n[0].brut) || {}).gotrue_meta_security && e.err === avecE(TX[langue].echec, m) && e.bouton.actif && e.T.resets === 1, JSON.stringify({ err: e.err, n: n.length, resets: e.T.resets }));
+        ok("C : widget en échec, CAPTCHA allumé dans Supabase (" + langue.toUpperCase() + ", " + (hash === "connexion" ? hash : "création de compte, écran whatsapp du parcours") + ") — envoyé quand même sans jeton, refusé : « " + avecE(TX[langue].echec, m).slice(0, 60) + "… », bouton actif, widget relancé (remise à zéro)",
+          n.length === 1 && !(lireJ(n[0].brut) || {}).gotrue_meta_security && e.err === avecE(TX[langue].echec, m) && e.bouton.actif && e.T.resets === 1 && (hash === "connexion" || e.etape === "whatsapp"), JSON.stringify({ etape: e.etape, err: e.err, n: n.length, resets: e.T.resets }));
       }
     });
   });
@@ -670,11 +746,12 @@ const avecE = (t, e) => String(t).split("{e}").join(e);
   await avecCle(TS.passe_invisible, false, async () => {
     await bloc("C. clé 1x…BB", async () => {
       const db = base(); db.captcha = "1x"; db.inscription.id = PID(30);
-      const page = await portailOuvert(b, db, "inscription", { neuf: true });
-      await attendreWidget(page); await remplirInscription(page, "Inès", "ines-c@exemple.fr");
-      await cliquerEtEntrer(page);
-      const c = lireJ((db.bruts.signup[0] || {}).brut) || {};
-      ok("C : clé invisible 1x…BB — le jeton part avec la création de compte, compte créé", c.gotrue_meta_security && c.gotrue_meta_security.captcha_token === DUMMY && db.inscriptions.length === 1, (db.bruts.signup[0] || {}).brut);
+      const page = await portailOuvert(b, db, "inscription", { neuf: true }, { prenom: "Inès", email: "ines-c@exemple.fr" });
+      await attendreWidget(page); await remplirTel(page);
+      await cliquerEtArriver(page);
+      const c = lireJ((db.bruts.signup[0] || {}).brut) || {}, arrivee = await etapeDe(page);
+      ok("C : clé invisible 1x…BB — le jeton part avec la création de compte (écran whatsapp du parcours), compte créé (« Ton espace »)",
+        c.gotrue_meta_security && c.gotrue_meta_security.captcha_token === DUMMY && db.inscriptions.length === 1 && arrivee === "espace", JSON.stringify({ brut: (db.bruts.signup[0] || {}).brut, arrivee }));
     });
   });
 
@@ -700,22 +777,27 @@ const avecE = (t, e) => String(t).split("{e}").join(e);
       const d2 = (db.bruts.token[1] || {}).t - t1, c = lireJ((db.bruts.token[1] || {}).brut) || {};
       ok("D : défi fait PENDANT l'attente — la requête part dès le jeton reçu (avant les 4 s), avec lui ; connexion réussie",
         db.bruts.token.length === 2 && c.gotrue_meta_security && c.gotrue_meta_security.captcha_token === DUMMY && d2 < 3500, JSON.stringify({ d2, brut: (db.bruts.token[1] || {}).brut }));
-      { /* écran quitté pendant l'attente du jeton : l'envoi de l'écran quitté ne part pas (ni message ni remise à zéro sur le nouveau) */
+      { /* écran quitté pendant l'attente du jeton : l'envoi de l'écran quitté ne part pas (ni message ni remise à zéro sur le nouveau).
+           v81 : connexion → « Créer mon compte » puis le parcours jusqu'à l'écran whatsapp (son widget tout neuf) ; écran whatsapp
+           → « Retour » (dans les 4 s) jusqu'à l'accueil du parcours → « Déjà un compte ? Se connecter » (le widget de la connexion) */
         const db2 = base(); db2.captcha = "1x";
         const vus = [];
-        for (const [de, vers, sel] of [["connexion", "inscription", "#c-prenom"], ["inscription", "connexion", "#c-rester"]]) {
-          const p = await portailOuvert(b, db2, de, { neuf: de === "inscription" });
+        for (const de of ["connexion", "inscription"]) {
+          const p = await portailOuvert(b, db2, de, { neuf: de === "inscription" }, { prenom: "Léa", email: "lea-d@exemple.fr" });
           await p.waitForSelector("#faux-ts-case");
-          if (de === "connexion") await remplirConnexion(p, INES.email, MDP); else await remplirInscription(p, "Léa", "lea-d@exemple.fr");
+          if (de === "connexion") await remplirConnexion(p, INES.email, MDP); else await remplirTel(p);
           const n0 = db2.bruts.token.length + db2.bruts.signup.length;
           await p.click("#c-go"); await attendre(p, 800);
-          await p.click('[data-mode="' + vers + '"]'); await p.waitForSelector(sel); await attendre(p, 4600);
+          if (de === "connexion") { await p.click('[data-mode="inscription"]'); await p.waitForSelector("#pc"); await FT.parcours(p, { mdp: MDP, email: "lea-d2@exemple.fr" }, "whatsapp"); }
+          else { await retourAccueil(p); await p.click("#pc-connexion"); await p.waitForSelector("#c-rester"); }
+          await p.waitForSelector("#faux-ts-case"); await attendre(p, 4600);
           const e2 = await etat(p);
-          vus.push({ de, envoyes: db2.bruts.token.length + db2.bruts.signup.length - n0, err: e2.err, resets: e2.T.resets, removes: e2.T.removes, widgets: e2.widgets,
+          vus.push({ de, vers: e2.etape || (await p.evaluate(() => !!document.getElementById("c-rester")) ? "connexion" : "?"), envoyes: db2.bruts.token.length + db2.bruts.signup.length - n0, err: e2.err, resets: e2.T.resets, removes: e2.T.removes, widgets: e2.widgets,
             defi: await p.evaluate(() => !!document.getElementById("faux-ts-case")), bouton: e2.bouton });
         }
-        ok("D : écran quitté pendant l'attente du jeton (clic, puis « Créer mon compte » ou « Se connecter » dans les 4 s) — rien n'est envoyé, aucun message sur le nouvel écran, son widget tout neuf n'est pas remis à zéro (défi intact), bouton actif",
-          vus.every(v => v.envoyes === 0 && v.err === "" && v.resets === 0 && v.removes === 1 && v.widgets === 1 && v.defi && v.bouton && v.bouton.actif), JSON.stringify(vus)); }
+        ok("D : écran quitté pendant l'attente du jeton (clic, puis dans les 4 s : « Créer mon compte » de la connexion → le parcours jusqu'à l'écran whatsapp ; « Retour » de l'écran whatsapp → … → « Déjà un compte ? Se connecter ») — rien n'est envoyé, aucun message sur le nouvel écran, son widget tout neuf n'est pas remis à zéro (défi intact), bouton actif",
+          vus.length === 2 && vus[0].vers === "whatsapp" && vus[1].vers === "connexion"
+            && vus.every(v => v.envoyes === 0 && v.err === "" && v.resets === 0 && v.removes === 1 && v.widgets === 1 && v.defi && v.bouton && v.bouton.actif), JSON.stringify(vus)); }
     });
   });
 
@@ -734,13 +816,13 @@ const avecE = (t, e) => String(t).split("{e}").join(e);
           JSON.stringify({ cf: db.cf.length, e0: e0.bouton, d, bruts: db.bruts.token })); }
       for (const [hash, langue] of [["connexion", "fr"], ["inscription", "en"]]) {
         const db = base(); db.ts.injoignable = true; db.captcha = "1x";
-        const page = await portailOuvert(b, db, hash, { langue, neuf: hash === "inscription" });
+        const page = await portailOuvert(b, db, hash, { langue, neuf: hash === "inscription" }, { prenom: "Léo", email: "leo-e@exemple.fr" });
         await attendre(page, 600);
-        if (hash === "connexion") await remplirConnexion(page, INES.email, MDP); else await remplirInscription(page, "Léo", "leo-e@exemple.fr");
+        if (hash === "connexion") await remplirConnexion(page, INES.email, MDP); else await remplirTel(page);
         await page.click("#c-go"); await attendreErr(page);
         const e = await etat(page), m = await email(page);
-        ok("E : script injoignable, CAPTCHA allumé dans Supabase (" + langue.toUpperCase() + ", " + hash + ") — « " + avecE(TX[langue].injoignable, m).slice(0, 60) + "… », bouton actif",
-          e.err === avecE(TX[langue].injoignable, m) && e.bouton.actif && db.bruts[hash === "connexion" ? "token" : "signup"].length === 1, JSON.stringify({ err: e.err }));
+        ok("E : script injoignable, CAPTCHA allumé dans Supabase (" + langue.toUpperCase() + ", " + (hash === "connexion" ? hash : "création de compte, écran whatsapp du parcours") + ") — « " + avecE(TX[langue].injoignable, m).slice(0, 60) + "… », bouton actif",
+          e.err === avecE(TX[langue].injoignable, m) && e.bouton.actif && db.bruts[hash === "connexion" ? "token" : "signup"].length === 1 && (hash === "connexion" || e.etape === "whatsapp"), JSON.stringify({ etape: e.etape, err: e.err }));
       }
       { const db = base(); db.ts.muet = true;
         const page = await portailOuvert(b, db, "connexion");
@@ -760,15 +842,15 @@ const avecE = (t, e) => String(t).split("{e}").join(e);
         const vus = [];
         for (const [hash, langue] of [["connexion", "fr"], ["inscription", "en"]]) {
           const db = base(); db.captcha = mode;
-          const page = await portailOuvert(b, db, hash, { langue, neuf: hash === "inscription" });
+          const page = await portailOuvert(b, db, hash, { langue, neuf: hash === "inscription" }, { prenom: "Léo", email: "leo-f@exemple.fr" });
           await attendreWidget(page);
-          if (hash === "connexion") await remplirConnexion(page, INES.email, MDP); else await remplirInscription(page, "Léo", "leo-f@exemple.fr");
+          if (hash === "connexion") await remplirConnexion(page, INES.email, MDP); else await remplirTel(page);
           await page.click("#c-go"); await attendreErr(page); await attendre(page, 200);
           const e = await etat(page), n = db.bruts[hash === "connexion" ? "token" : "signup"], m = await email(page);
-          vus.push({ hash, langue, err: e.err, attendu: avecE(TX[langue][cleTx], m), actif: e.bouton.actif, resets: e.T.resets, jeton: !!(lireJ((n[0] || {}).brut) || {}).gotrue_meta_security });
+          vus.push({ hash, langue, etape: e.etape, err: e.err, attendu: avecE(TX[langue][cleTx], m), actif: e.bouton.actif, resets: e.T.resets, jeton: !!(lireJ((n[0] || {}).brut) || {}).gotrue_meta_security });
         }
-        ok("F : Supabase refuse le jeton (« " + nom + " ») — " + (cleTx === "indispo" ? "« " + TX.fr.indispo + " » (et non « Service momentanément indisponible »)" : "« " + TX.fr.refus.slice(0, 55) + "… »") + ", à la connexion (FR) et à la création de compte (EN) ; bouton actif, widget relancé",
-          vus.every(v => v.err === v.attendu && v.actif && v.resets === 1 && v.jeton), JSON.stringify(vus));
+        ok("F : Supabase refuse le jeton (« " + nom + " ») — " + (cleTx === "indispo" ? "« " + TX.fr.indispo + " » (et non « Service momentanément indisponible »)" : "« " + TX.fr.refus.slice(0, 55) + "… »") + ", à la connexion (FR) et à la création de compte (EN, écran whatsapp du parcours) ; bouton actif, widget relancé",
+          vus.every(v => v.err === v.attendu && v.actif && v.resets === 1 && v.jeton && (v.hash === "connexion" || v.etape === "whatsapp")), JSON.stringify(vus));
       }
     });
   });
@@ -870,31 +952,43 @@ const avecE = (t, e) => String(t).split("{e}").join(e);
         const page = await portailOuvert(b, base(), hash, { viewport: vp, langue, neuf: hash === "inscription" });
         await attendreWidget(page); await attendre(page, 150);
         const e = await etat(page), o = ((e.T && e.T.rendus[0]) || {}).opts || {};
-        vus.push({ l: vp.width, hash, langue, size: o.size, taille: e.taille, classes: e.classes, h: e.h, larg: e.larg, boite: e.boite, sw: e.sw, iw: e.iw });
+        vus.push({ l: vp.width, hash, langue, etape: e.etape, dessous: e.apresBouton, size: o.size, taille: e.taille, classes: e.classes, h: e.h, larg: e.larg, boite: e.boite, sw: e.sw, iw: e.iw });
       }
       const bon = v => (v.l === 320 ? v.size === "compact" && v.taille === "compact" && /\bcompact\b/.test(v.classes) && v.h === 147 && v.larg < 300
-        : v.size === "normal" && v.taille === "normal" && !/\bcompact\b/.test(v.classes) && v.h === 72 && v.larg >= 300) && !!v.boite && v.boite.g >= 0 && v.boite.d <= v.iw && v.sw <= v.iw;
-      ok("I : 320 px — widget « compact » (150 × 147, moins de 300 px utiles), place réservée exactement à sa taille, rien ne déborde (connexion, création de compte FR et EN) ; 390 px et ordinateur : « normal » (300 × 72)",
+        : v.size === "normal" && v.taille === "normal" && !/\bcompact\b/.test(v.classes) && v.h === 72 && v.larg >= 300) && !!v.boite && v.boite.g >= 0 && v.boite.d <= v.iw && v.sw <= v.iw
+        && v.dessous && (v.hash === "connexion" || v.etape === "whatsapp");
+      ok("I : 320 px — widget « compact » (150 × 147, moins de 300 px utiles), place réservée exactement à sa taille, juste sous le bouton, rien ne déborde (connexion, création de compte : écran whatsapp du parcours, FR et EN) ; 390 px et ordinateur : « normal » (300 × 72)",
         vus.every(bon), JSON.stringify(vus.filter(v => !bon(v))));
       { /* réglages de production (téléphone obligatoire) : le bouton reste là où il est avec la clé vide (widget dessous),
-           visible sans défiler — l'exigence de la v76 (tâche 1) : « Créer mon espace gratuit » visible en 390 × 844 */
+           visible sans défiler — l'exigence de la v76 (tâche 1), v81 : « Débloquer mon espace » (écran whatsapp du parcours, qui crée
+           le compte) visible en 390 × 844 */
         const pli = [];
         tel = true;
         try {
           for (const [vp, hash, langue] of [[MOBILE, "inscription", "fr"], [MOBILE, "inscription", "en"], [{ width: 320, height: 568 }, "connexion", "fr"], [MOBILE, "connexion", "en"]]) {
+            const lire = p => p.evaluate(() => { const r = document.getElementById("c-go").getBoundingClientRect(), z = document.getElementById("co-captcha"), pc = document.getElementById("pc");
+                return { haut: Math.round(r.top), bas: Math.round(r.bottom), tel: !!document.getElementById("c-tel"), sy: Math.round(scrollY), etape: pc ? pc.dataset.etape : "",
+                  dessous: !!(z && z.previousElementSibling && z.previousElementSibling.id === "c-go"), zone: z ? Math.round(z.getBoundingClientRect().height) : 0 }; });
             const mesure = async () => {
               const p = await portailOuvert(b, base(), hash, { viewport: vp, langue, neuf: hash === "inscription" });
+              /* v81 : sur l'écran whatsapp, le bouton est en bas de l'écran (maquette) ; sa place est mesurée dès l'affichage, place
+                 du widget déjà réservée (avant que le widget ne soit dessiné), puis une fois le widget dessiné : elle ne bouge pas */
+              const tot = hash === "inscription" && cle ? await lire(p) : null;
               if (cle) await attendreWidget(p);
               await attendre(p, 200);
-              return p.evaluate(() => { const r = document.getElementById("c-go").getBoundingClientRect(); return { haut: Math.round(r.top), bas: Math.round(r.bottom), tel: !!document.getElementById("c-tel"), sy: Math.round(scrollY) }; });
+              return Object.assign(await lire(p), tot ? { tot } : {});
             };
             let sans = null; await avecCle("", false, async () => { sans = await mesure(); });
             const avec = await mesure();
             pli.push({ l: vp.width, h: vp.height, hash, langue, sans, avec });
           }
         } finally { tel = false; }
-        const bonPli = v => v.avec.haut === v.sans.haut && v.avec.bas <= v.h && v.avec.sy === 0 && (v.hash !== "inscription" || (v.avec.tel && v.sans.tel));
-        ok("I : clé remplie, réglages de production (téléphone obligatoire) — le bouton reste exactement à sa place (widget dessous) et visible sans défiler : création de compte en 390 × 844 (FR, EN), connexion en 320 × 568 (FR) et 390 × 844 (EN)",
+        /* connexion (contenu depuis le haut) : même place avec ou sans la clé ; parcours (bouton en bas) : même place dès l'affichage
+           et une fois le widget dessiné (place réservée, rien ne saute), widget dessous, bouton visible sans défiler, sans la clé aussi */
+        const bonPli = v => (v.hash === "inscription" ? !!v.avec.tot && v.avec.tot.haut === v.avec.haut && v.avec.tot.zone >= 72 && v.sans.bas <= v.h && v.sans.sy === 0 : v.avec.haut === v.sans.haut)
+          && v.avec.bas <= v.h && v.avec.sy === 0 && v.avec.dessous
+          && (v.hash !== "inscription" || (v.avec.tel && v.sans.tel && v.avec.etape === "whatsapp" && v.sans.etape === "whatsapp"));
+        ok("I : clé remplie, réglages de production (téléphone obligatoire) — le bouton ne bouge pas quand le widget se dessine (place réservée dès l'affichage ; connexion : même place qu'avec la clé vide), widget dessous, bouton visible sans défiler : création de compte (« Débloquer mon espace », écran whatsapp du parcours, bouton en bas de l'écran) en 390 × 844 (FR, EN), connexion en 320 × 568 (FR) et 390 × 844 (EN)",
           pli.every(bonPli), JSON.stringify(pli)); }
     });
   });
@@ -913,7 +1007,7 @@ const avecE = (t, e) => String(t).split("{e}").join(e);
         console.log("R 320 px : " + JSON.stringify(v320));
       }
       const db = base(); db.ts.reel = true; db.inscription.id = PID(40);
-      const page = await portailOuvert(b, db, "inscription", { neuf: true });
+      const page = await portailOuvert(b, db, "inscription", { neuf: true }, { prenom: "Réa", email: "rea@exemple.fr" });   // v81 : l'écran whatsapp du parcours
       let jeton = "";
       try { await page.waitForFunction(() => typeof Captcha !== "undefined" && !!Captcha.jeton(), null, { timeout: 20000 }); jeton = await page.evaluate(() => Captcha.jeton()); } catch (e) {}
       const info = await page.evaluate(() => { const z = document.getElementById("co-captcha"), r = z && z.getBoundingClientRect();
@@ -921,8 +1015,8 @@ const avecE = (t, e) => String(t).split("{e}").join(e);
           iframe: !!(z && (z.querySelector("iframe") || Array.from(z.querySelectorAll("*")).some(x => x.shadowRoot))),
           enfant: z && z.firstElementChild ? (c => { const q = c.getBoundingClientRect(), st = getComputedStyle(c); return { tag: c.tagName, l: Math.round(q.width), h: Math.round(q.height), display: st.display, marge: st.margin, html: c.outerHTML.slice(0, 300) }; })(z.firstElementChild) : null }; });
       console.log("R : " + JSON.stringify({ jeton, info, hotes: Array.from(new Set(db.cf.map(u => new URL(u).hostname))), requetes: db.cf.length }));
-      await remplirInscription(page, "Réa", "rea@exemple.fr");
-      await cliquerEtEntrer(page).catch(() => {});
+      await remplirTel(page);
+      await cliquerEtArriver(page).catch(() => {});
       const c = lireJ((db.bruts.signup[0] || {}).brut) || {};
       ok("R (hors banc, réseau) : le vrai api.js de Cloudflare avec la clé de test 1x00000000000000000000AA sur localhost — widget réel rendu, jeton « " + DUMMY + " » obtenu et envoyé dans gotrue_meta_security.captcha_token de /signup ; il tient dans la place réservée (390 px : 72 px de haut ; 320 px : compact, 147 px, rien ne déborde)",
         jeton === DUMMY && !!c.gotrue_meta_security && c.gotrue_meta_security.captcha_token === DUMMY && info.h === 72 && !!v320 && v320.etat === "pret" && !!v320.zone && v320.zone[1] === 147 && v320.sw <= v320.iw,
@@ -937,26 +1031,30 @@ const avecE = (t, e) => String(t).split("{e}").join(e);
     const URL2 = `http://localhost:${PORT2}/`;
     try {
       const sansVersion = h => String(h).replace(/<p class="co-aide">v[^<]*<\/p>/g, "<p class=\"co-aide\">v…</p>");
+      /* v81 : la création de compte n'a plus d'écran comparable (l'écran unique est devenu le parcours, voulu par la mission) :
+         seule la connexion se compare ; la création de compte : le corps de /signup (version d'avant : l'écran unique ; ici : le parcours) */
       const ecrans = [];
-      for (const [hash, langue] of [["connexion", "fr"], ["inscription", "fr"], ["inscription", "en"], ["connexion", "en"]]) {
+      for (const [hash, langue] of [["connexion", "fr"], ["connexion", "en"]]) {
         const p1 = await portailOuvert(b, base(), hash, { langue }); await attendre(p1, 400);
         const p2 = await portailOuvert(b, base(), hash, { langue, url0: URL2 }); await attendre(p2, 400);
         const a = sansVersion(await carte(p1)), v = sansVersion(await carte(p2));
         ecrans.push({ hash, langue, egal: a === v && a.length > 500, n: [a.length, v.length] });
       }
-      ok("AV (hors banc) : clé vide — connexion et création de compte (FR, EN) : la carte est au caractère près celle de la version d'avant (" + AVANT + "), numéro de version mis à part",
+      ok("AV (hors banc) : clé vide — connexion (FR, EN) : la carte est au caractère près celle de la version d'avant (" + AVANT + "), numéro de version mis à part (v81 : la création de compte est devenue le parcours, plus d'écran à comparer)",
         ecrans.every(x => x.egal), JSON.stringify(ecrans));
       const corps = [];
       for (const url0 of [URL0, URL2]) {
         const db = base(); db.inscription.id = PID(50);
         const p = await portailOuvert(b, db, "connexion", { url0 });
         await remplirConnexion(p, INES.email, "mauvais"); await p.click("#c-go"); await attendreErr(p);
-        const q = await portailOuvert(b, db, "inscription", { url0, neuf: true });
-        await remplirInscription(q, "Zoé", "zoe-av@exemple.fr"); await cliquerEtEntrer(q);
+        if (url0 === URL0) { const q = await portailOuvert(b, db, "inscription", { url0, neuf: true }, { prenom: "Zoé", email: "zoe-av@exemple.fr" }); await remplirTel(q); await cliquerEtArriver(q); }
+        else { const { page: q } = await contexte(b, db, { neuf: true }); await q.goto(url0 + "#/inscription"); await q.waitForSelector("#c-prenom"); await remplirAncienEcran(q, "Zoé", "zoe-av@exemple.fr"); await cliquerEtEntrer(q); }
         corps.push({ token: (db.bruts.token[0] || {}).brut, signup: String((db.bruts.signup[0] || {}).brut || "").replace(/"\d{4}-\d\d-\d\dT[\d:.]+Z"/g, "\"<date>\""), msg: (await etat(p)).err });
       }
-      ok("AV (hors banc) : clé vide — corps de /token et de /signup au caractère près ceux de la version d'avant (dates mises à part), même message d'erreur",
-        corps[0].token === corps[1].token && corps[0].signup === corps[1].signup && corps[0].msg === corps[1].msg && !!corps[0].token && !!corps[0].signup, JSON.stringify(corps));
+      /* la seule différence voulue : newsletter_version (DECOUVERTE.accords.newsletter, nouveau texte de la case, v81 : 2026-10-13) */
+      const nv = s => String(s).replace(/"newsletter_version":"[^"]*"/, "\"newsletter_version\":\"<v>\"");
+      ok("AV (hors banc) : clé vide — corps de /token et de /signup au caractère près ceux de la version d'avant (dates mises à part ; newsletter_version : 2026-10-13 ici, nouveau texte de la case), même message d'erreur",
+        corps[0].token === corps[1].token && nv(corps[0].signup) === nv(corps[1].signup) && corps[0].signup.includes("\"newsletter_version\":\"2026-10-13\"") && corps[0].msg === corps[1].msg && !!corps[0].token && !!corps[0].signup, JSON.stringify(corps));
     } finally { srv2.close(); }
   });
 
