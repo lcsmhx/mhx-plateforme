@@ -250,9 +250,10 @@ const outilAccueil = {
     zone.innerHTML = `
       <div class="fc-tete">
         <div class="fc-haut"><button type="button" class="rond" id="sortir-fiche" aria-label="${esc(trad("Fermer la fiche"))}" title="${esc(trad("Fermer la fiche"))}">${SVG.croix}</button></div>
+        <header class="masthead fc-masthead"><span class="eyebrow">${esc(trad("Fiche client"))} · ${esc(this.dateLongue())}</span>
         <div class="fc-id"><span class="avatar grand fc-avatar${nomC === Clients.SANS_NOM ? " neutre" : ""}">${esc(Clients.initiales(nomC))}</span>
           <div class="fc-id-t"><h1 data-notr>${esc(nomC)}</h1>
-            <div class="fc-pastilles"><span class="pastille fc-role-p">${esc(trad(prospectF ? "Prospect" : "Client"))}</span>${progNom ? `<span class="pastille fc-prog" data-notr>${esc(progNom)}</span>` : ""}${arch ? `<span class="pastille attention fc-archive">${esc(trad("Archivé"))}</span>` : ""}${anglais ? ` <span class="pastille" title="Ce client utilise l'app en anglais">🇺🇸 anglais</span>` : ""}</div></div></div>
+            <div class="fc-pastilles"><span class="pastille fc-role-p">${esc(trad(prospectF ? "Prospect" : "Client"))}</span>${progNom ? `<span class="pastille fc-prog" data-notr>${esc(progNom)}</span>` : ""}${arch ? `<span class="pastille attention fc-archive">${esc(trad("Archivé"))}</span>` : ""}${anglais ? ` <span class="pastille" title="Ce client utilise l'app en anglais">🇺🇸 anglais</span>` : ""}</div></div></div></header>
         <div class="fc-actions">${principal}${appeler}</div>
         <div class="fc-onglets" role="tablist" aria-label="${esc(trad("Fiche"))}">
           <button type="button" role="tab" id="fc-tab-suivi" data-onglet="suivi" aria-controls="fc-suivi" aria-selected="${onglet === "suivi"}"${onglet === "suivi" ? "" : ' tabindex="-1"'}>${esc(trad("Suivi"))}</button>
