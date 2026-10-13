@@ -418,7 +418,14 @@ const nbAttendu = sc => sc.options ? sc.options.map(o => o.exercices.length) : (
     const planche = (await txts(page, ".pf-exo-nom"))[4];
     await ouvrirPf(page, "#/programme/seance/salle-femme/2/4", "#pf-seance");
     const planche2 = (await txts(page, ".pf-exo-nom"))[7];
-    ok("E4 : un seul nom par exercice : « Squat bulgare » et « Fentes bulgares » → « Fentes bulgares » ; « Planche statique » et « Planche abdominale » → « Planche »", bulg === "Fentes bulgares" && bulg2 === "Fentes bulgares" && planche === "Planche" && planche2 === "Planche", JSON.stringify([bulg, bulg2, planche, planche2]));
+    /* sans équivalent dans l'app, un seul nom aussi : « Jump squats » = « Squats sautés », « Pompes avec clap » = « Pompes avec claquement » */
+    await ouvrirPf(page, "#/programme/seance/salle-femme/1/0", "#pf-seance");
+    const jump = (await txts(page, ".pf-exo-nom"))[2];
+    await ouvrirPf(page, "#/programme/seance/salle-femme/1/3", "#pf-seance");
+    await page.click('[data-pf-option="1"]'); await attendre(page, 200);
+    const clap = await txt(page, ".pf-option:not([hidden]) .pf-exo-nom");
+    ok("E4 : un seul nom par exercice : « Squat bulgare » et « Fentes bulgares » → « Fentes bulgares » ; « Planche statique » et « Planche abdominale » → « Planche » ; sans équivalent dans l'app : « Jump squats » → « Squats sautés », « Pompes avec clap » → « Pompes avec claquement »",
+      bulg === "Fentes bulgares" && bulg2 === "Fentes bulgares" && planche === "Planche" && planche2 === "Planche" && jump === "Squats sautés" && clap === "Pompes avec claquement", JSON.stringify([bulg, bulg2, planche, planche2, jump, clap]));
     await ouvrirPf(page, "#/programme/seance/salle-homme/0/0", "#pf-seance");
     const b1 = await page.$$("[data-yt]");
     await b1[0].click(); await attendre(page, 300);
