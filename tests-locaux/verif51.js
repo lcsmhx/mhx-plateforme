@@ -33,6 +33,10 @@
    pastille « bilan réservé ») et dans sa fiche, ouverte par Clients.ouvrir (blocs G et I). Aucune vérification ajoutée ni
    retirée ; chaque attente changée est expliquée par un commentaire « v71 (D) ».
    v83 (bloc 3) : la ligne sous le titre n'existe plus (décision 7) : l'onglet Prospects et le nombre sur la page Prospects.
+   v85 (bloc 4) : #/programme montre le programme de la formation (Léa sans sexe : l'écran « Choisis ton programme ») à la place
+   de l'exemple, la carte 🔒 dit « Après ton bilan : ton programme sur mesure, avec ton coach. » (FR et EN) et la page lit
+   seulement intake et prefs de Léa, sans rien écrire ; « Speed Formation » devient « Formation » (« Course » en anglais).
+   Aucune vérification ajoutée ni retirée (89) : chaque attente changée a un commentaire « v85 (bloc 4) ».
    Texte d'origine (v51) :
    v51 — funnel « Découverte » (remplace le Challenge 7 jours) : démarrage du prospect (Jour n/7 depuis
    profils.cree_le, date locale), questionnaire court (manquants, bornes, brouillon pendant la frappe, garde
@@ -421,7 +425,7 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
     /* v61 : code accueil_accompagnement (avant : decouverte-accompagnement), dans le lien et dans data-dc-cal */
     ok("accompagnement : son bouton porte utm_content=accueil_accompagnement", hAcc === "accueil_accompagnement|" + lienAttendu("accueil_accompagnement"), hAcc);
     ok("accueil : ni résultat, ni calories, ni séance, ni recettes (l'ancien écran n'est plus affiché)", !(await page.$("#dc-resultat, #dc-calcul, #dc-seance, #dc-recettes")) && !(await texte(page, "#vue")).includes("Tes 3 priorités"));
-    ok("pendant la découverte : la Speed Formation est ouverte (lien « Ouvrir la Speed Formation »)", !!(await page.$('#dc-formation a[href="#/formation"]')));
+    ok("pendant la découverte : la Formation est ouverte (lien « Ouvrir la Formation » ; v85 : avant « Speed Formation »)", !!(await page.$('#dc-formation a[href="#/formation"]')));
     /* v61 : « Ce que l'accompagnement ajoute », les 4 rubriques de la vitrine avec leurs nouvelles descriptions (avant : au
        moins 3 lignes), « Récupérer mon plan d'action » (contour), « 15 min avec Lucas pour faire le point… Offert. », case
        « J'ai déjà choisi mon créneau » (avant : « J'ai réservé mon bilan ») ; exactement 2 liens Calendly sur l'accueil
@@ -533,16 +537,31 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
        (avant : « Réserver mon bilan »), seul lien de la carte, code verrou_<page> (avant : verrou-<page>), puis la ligne
        « 15 min avec Lucas · offert » ; sous la carte, la note = ce que l'accompagnement ajoute pour cette page (nouveau
        texte pour programme et journal) */
-    const APPELS = { programme: "Cette séance découverte est la même pour tout le monde. Ton programme, lui, part de ton niveau, de ton matériel et de ton emploi du temps, puis évolue avec tes progrès.", journal: "Avec l'accompagnement, chaque séance est notée et l'app te propose la charge à viser la fois suivante : tu sais toujours quoi faire pour progresser." };
+    /* v85 (bloc 4) : sous le programme de la formation, la carte 🔒 de #/programme dit « Après ton bilan : ton programme sur mesure,
+       avec ton coach. » (avant : « Cette séance découverte est la même pour tout le monde… » : l'exemple n'est plus là) */
+    const APPELS = { programme: "Après ton bilan : ton programme sur mesure, avec ton coach.", journal: "Avec l'accompagnement, chaque séance est notée et l'app te propose la charge à viser la fois suivante : tu sais toujours quoi faire pour progresser." };
     const VERROU = "Cette fonctionnalité est disponible avec l'accompagnement MHX.";
-    const AVEC_EXEMPLE = ["programme", "journal"];
+    /* v85 (bloc 4) : #/programme n'a plus l'exemple « Ta séance découverte » (#ech-programme, .echantillon) : il montre le programme
+       de la formation de Léa (#pf-zone.pf). Léa a un objectif (« Perdre du gras ») mais pas de sexe : aucun programme attribué, donc
+       l'écran de choix (#pf-choisir, « Choisis ton programme », les 3 programmes, chacun avec son bouton « Choisir »). Avant :
+       AVEC_EXEMPLE = ["programme", "journal"] */
+    const AVEC_EXEMPLE = ["journal"];
     for (const [h, id] of [["#/programme", "programme"], ["#/journal", "journal"], ["#/complements", "complements"], ["#/bilan", "bilan"]]) {
-      const n0 = db.lectures.length;
+      const n0 = db.lectures.length, e0 = db.ecritures.length;
       await aller(page, h, 1400);
       const hv = await page.$eval("#vue .verrou a[target=_blank]", a => a.getAttribute("href") + "|" + a.textContent.trim()).catch(() => "");
-      const avecEx = AVEC_EXEMPLE.includes(id), tx = avecEx ? APPELS[id] : VERROU, ex = avecEx === !!(await page.$("#vue #ech-" + id + ".echantillon")) && avecEx === !!(await page.$("#vue .echantillon"));
+      const pf = id === "programme";
+      const pfVu = pf ? { zone: !!(await page.$("#vue #pf-zone.pf")), choisir: !!(await page.$("#vue #pf-zone #pf-choisir")), h2: await texte(page, "#pf-choisir h2"), choix: await page.$$eval("#pf-choisir .pf-choix-l", l => l.map(e => (e.querySelector(".txt b") || {}).textContent + "|" + !!e.querySelector("button[data-pf-choisir]"))).catch(() => []) } : null;
+      const PF_CHOIX = ["Programme salle 12 semaines · Homme|true", "Programme salle 12 semaines · Femme|true", "Full body à la maison|true"];
+      const avecEx = AVEC_EXEMPLE.includes(id), tx = (avecEx || pf) ? APPELS[id] : VERROU;
+      const ex = avecEx === !!(await page.$("#vue #ech-" + id + ".echantillon")) && avecEx === !!(await page.$("#vue .echantillon"))
+        && (!pf || (pfVu.zone && pfVu.choisir && pfVu.h2 === "Choisis ton programme" && JSON.stringify(pfVu.choix) === JSON.stringify(PF_CHOIX)));
       const pv = await texte(page, "#vue .verrou > p:not(.verrou-sous)"), sv = await texte(page, "#vue .verrou > p.verrou-sous"), plus = await texte(page, "#vue .verrou-plus"), nLiens = (await page.$$("#vue .verrou a")).length;
-      ok(`${h} : verrouillée (${avecEx ? "l'exemple, puis " : ""}« ${tx.slice(0, 48)}… » + « Réserver mon plan d'action », utm_content=verrou_${id}, « Appel de 15 min avec ton coach, offert », note « ${AVANTAGES_FR[id].slice(0, 30)}… »), aucune donnée lue`, pv === tx && ex && hv === lienAttendu("verrou_" + id) + "|" + BOUTON && nLiens === 1 && sv === SOUS && plus === AVANTAGES_FR[id] && db.lectures.length === n0, pv + " · " + hv + " · " + sv + " · " + plus + " · liens " + nLiens + " · lectures " + JSON.stringify(db.lectures.slice(n0)));
+      /* v85 (bloc 4) : « aucune donnée lue » devient, pour #/programme seulement : seulement intake et prefs de Léa elle-même (rien
+         d'autre, aucune autre personne), et aucune écriture ; les autres pages verrouillées : toujours aucune lecture */
+      const lus = db.lectures.slice(n0);
+      const lecturesOk = pf ? lus.every(x => x.uid === "eq." + PROSPECT && (x.outil === "eq.intake" || x.outil === "eq.prefs")) && db.ecritures.length === e0 : lus.length === 0;
+      ok(`${h} : verrouillée (${pf ? "le programme de la formation (Léa sans sexe : l'écran « Choisis ton programme », 3 programmes), sans l'exemple d'avant, puis " : avecEx ? "l'exemple, puis " : ""}« ${tx.slice(0, 48)}… » + « Réserver mon plan d'action », utm_content=verrou_${id}, « Appel de 15 min avec ton coach, offert », note « ${AVANTAGES_FR[id].slice(0, 30)}… »), ${pf ? "seulement intake et prefs de Léa lues, aucune écriture" : "aucune donnée lue"}`, pv === tx && ex && hv === lienAttendu("verrou_" + id) + "|" + BOUTON && nLiens === 1 && sv === SOUS && plus === AVANTAGES_FR[id] && lecturesOk, pv + " · " + hv + " · " + sv + " · " + plus + " · liens " + nLiens + (pf ? " · programme de la formation " + JSON.stringify(pfVu) : "") + " · lectures " + JSON.stringify(lus) + " · écritures " + JSON.stringify(db.ecritures.slice(e0).map(e => e.outil || e.table)));
     }
     await cliquerCal(page, "#vue .verrou a[target=_blank]"); await attendre(page, 2000);
     const cl = ((contenu(db, "challenge") || {}).cta || {}).clics || [];
@@ -684,7 +703,9 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
     /* v61 : « What coaching adds », « I've already booked my slot » (avant : « With MHX coaching », « I booked my
        assessment ») ; + les 4 descriptions anglaises de la carte, sa note et la ligne sous le bouton du haut */
     const lignesEn = await page.$$eval("#dc-accomp .liste-debloque li", l => l.map(li => li.textContent.split(" — ").slice(1).join(" — ").trim())).catch(() => []);
-    ok("anglais : accueil (« What coaching adds » et ses 4 descriptions, « Free 15-min call with your coach », « Already booked », « Free 15-min call with your coach » en haut, Speed Formation)", ["What coaching adds", "Already booked", "Free 15-min call with your coach", "Speed Formation"].every(x => v.includes(x)) && JSON.stringify(lignesEn) === JSON.stringify(VITRINE.map(id => AVANTAGES_EN[id])) && (await texte(page, "#vue .masthead .dc-haut-sous")) === SOUS_EN, JSON.stringify(lignesEn) + " · " + v.slice(0, 300));
+    /* v85 (bloc 4) : « Speed Formation » s'appelle « Course » en anglais (carte « Course », « Open the Course », « … and the Course. ») ;
+       l'ancien nom ne paraît plus */
+    ok("anglais : accueil (« What coaching adds » et ses 4 descriptions, « Free 15-min call with your coach », « Already booked », « Free 15-min call with your coach » en haut, Course — v85 : avant Speed Formation)", ["What coaching adds", "Already booked", "Free 15-min call with your coach", "Course"].every(x => v.includes(x)) && !v.includes("Speed Formation") && JSON.stringify(lignesEn) === JSON.stringify(VITRINE.map(id => AVANTAGES_EN[id])) && (await texte(page, "#vue .masthead .dc-haut-sous")) === SOUS_EN, JSON.stringify(lignesEn) + " · " + v.slice(0, 300));
     /* v61 : « Get my action plan » (avant : « Book my assessment ») ; aucun texte français de l'accueil (les nouveaux, et les
        anciens toujours cherchés) */
     ok("anglais : « Book my action plan » (en-tête et accompagnement), aucun « Réserver mon plan d'action » ni autre texte français de l'accueil", (await texte(page, "#vue .masthead a[data-dc-cal]")) === BOUTON_EN && (await texte(page, "#dc-accomp a[data-dc-cal]")) === BOUTON_EN && !["Réserver mon plan d'action", "Ce que l'accompagnement ajoute", "J'ai déjà réservé", "Appel de 15 min avec ton coach", "Réserver mon bilan", "Avec l'accompagnement MHX"].some(x => v.includes(x)), v.slice(0, 300));
@@ -696,8 +717,10 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
     /* v61 (lot 2, brief V2 G) : le texte anglais propre à la page programme, comparé en entier (avant : « Want a program
        built for you… Book your assessment. », contenu dans la carte), « Get my action plan » (avant : « Book my
        assessment »), la ligne « 15 min with Lucas · free » et la note anglaise de ce que l'accompagnement ajoute */
+    /* v85 (bloc 4) : sous le programme de la formation, la carte 🔒 dit « After your check-in: your tailor-made program, with your
+       coach. » (avant : « This starter workout is the same for everyone… » : l'exemple n'est plus là) */
     const pvEn = await texte(page, "#vue .verrou > p:not(.verrou-sous)");
-    ok("anglais : page verrouillée « This starter workout is the same for everyone… » + « Book my action plan », « Free 15-min call with your coach », note « Workouts built for you… »", pvEn === "This starter workout is the same for everyone. Your program starts from your level, your equipment and your schedule, then evolves as you progress." && (await texte(page, "#vue .verrou a[target=_blank]")) === BOUTON_EN && (await texte(page, "#vue .verrou > p.verrou-sous")) === SOUS_EN && (await texte(page, "#vue .verrou-plus")) === AVANTAGES_EN.programme, pvEn + " · " + (await texte(page, "#vue .verrou")) + " · " + (await texte(page, "#vue .verrou-plus")));
+    ok("anglais : page verrouillée « After your check-in: your tailor-made program, with your coach. » (v85 ; avant : « This starter workout is the same for everyone… ») + « Book my action plan », « Free 15-min call with your coach », note « Workouts built for you… »", pvEn === "After your check-in: your tailor-made program, with your coach." && (await texte(page, "#vue .verrou a[target=_blank]")) === BOUTON_EN && (await texte(page, "#vue .verrou > p.verrou-sous")) === SOUS_EN && (await texte(page, "#vue .verrou-plus")) === AVANTAGES_EN.programme, pvEn + " · " + (await texte(page, "#vue .verrou")) + " · " + (await texte(page, "#vue .verrou-plus")));
     await c.close();
   });
   await bloc("H. mobile, questionnaire", async () => {
@@ -710,7 +733,7 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
     ok("mobile 390 px : message « Il manque une réponse » affiché, toujours sans débordement", (await texte(page, "#dc-msg")) === "Il manque une réponse" && !(await deborde(page)), await texte(page, "#dc-msg"));
     const barre = await page.$$eval("#barre-bas a", l => l.map(a => a.dataset.id)).catch(() => []);
     /* v52 (lot D) : la barre du bas du prospect est Accueil, Calculateur, Progression, Speed Formation (le Profil passe dans « Plus ») */
-    ok("mobile : barre du bas Accueil, Calculateur, Progression, Speed Formation, sans Challenge", JSON.stringify(barre) === '["accueil","calculateur","mensurations","formation"]' && !barre.includes("challenge"), JSON.stringify(barre));
+    ok("mobile : barre du bas Accueil, Calculateur, Progression, Formation (v85 : avant « Speed Formation »), sans Challenge", JSON.stringify(barre) === '["accueil","calculateur","mensurations","formation"]' && !barre.includes("challenge"), JSON.stringify(barre));
     await page.screenshot({ path: path.join(OUT, "questionnaire-mobile.png"), fullPage: true });
     await c.close();
   });
@@ -723,7 +746,7 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
     const bilanOk = !!(await page.$("#dc-bilan")) && !(await deborde(page));
     await page.screenshot({ path: path.join(OUT, "bilan-mobile.png"), fullPage: true });
     await page.click("#dc-bilan-plus-tard").catch(() => {}); await attendre(page, 1500);
-    ok("mobile 390 px : page bilan (réponse très longue) puis accueil (Speed Formation, accompagnement) — sans débordement", bilanOk && !!(await page.$("#dc-accomp")) && !(await deborde(page)), String(await page.evaluate(() => document.documentElement.scrollWidth)));
+    ok("mobile 390 px : page bilan (réponse très longue) puis accueil (Formation, accompagnement) — sans débordement", bilanOk && !!(await page.$("#dc-accomp")) && !(await deborde(page)), String(await page.evaluate(() => document.documentElement.scrollWidth)));
     await page.screenshot({ path: path.join(OUT, "accueil-mobile.png"), fullPage: true });
     await c.close();
   });
@@ -812,7 +835,7 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
     await aller(page, "#/decouverte-jour/8", 2000);
     ok("client Thomas tape #/decouverte-jour/8 (ancienne adresse du mode test) : son accueil, rien de la Découverte, aucun cadenas", !!(await page.$("#acc-vue")) && (await rien()) && (await cadenas(page)).length === 0);
     await aller(page, "#/formation", 1800);
-    ok("client Thomas (après #/decouverte-jour/8) : Speed Formation ouverte, pas de verrou", !(await page.$("#vue .verrou")) && (await texte(page, "#vue")).length > 50);
+    ok("client Thomas (après #/decouverte-jour/8) : Formation ouverte, pas de verrou", !(await page.$("#vue .verrou")) && (await texte(page, "#vue")).length > 50);
     await aller(page, "#/challenge", 1800);
     ok("client Thomas tape #/challenge : son accueil, rien de la Découverte ; aucune écriture de toute la visite", !!(await page.$("#acc-vue")) && (await rien()) && db.ecritures.length === 0);
     await c.close();

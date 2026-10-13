@@ -66,6 +66,10 @@
       verrou_<page>), la ligne « 15 min avec Lucas · offert » sous le bouton, et sous la carte la nouvelle description
       AVANTAGES de la page ; accueil : codes accueil_haut / accueil_accompagnement (reponses_haut sur « Modifier mes
       réponses »), boutons toujours en contour.
+      v85 (bloc 4) : #/programme montre le programme de la formation (#pf-zone : sa page — nom, onglets, séances, vidéo dans une
+      séance — ou l'écran de choix) à la place de l'exemple « Ta séance découverte », la carte 🔒 « Après ton bilan : ton
+      programme sur mesure, avec ton coach. » dessous ; la page lit seulement ses clés intake et prefs (les autres pages
+      verrouillées : toujours rien) ; « Speed Formation » devient « Formation ».
    Z. aucun appel vers l'extérieur.
    Le garde-fou 18 ans n'est plus dans le questionnaire court (plus d'âge demandé) : il passe au calculateur (lot D).
    Supabase simulé (gabarit de verif55, carte 6 §15) : rien ne part vers la vraie base (routage par NOM D'HÔTE, jamais
@@ -418,8 +422,12 @@ const TX = {
 /* v52 (lot D) : les textes attendus de l'accueil du prospect et du calculateur */
 const TXD = {
   calories: "Calcule tes calories (2 min)", pesee: "Enregistre ta pesée de départ",
-  lede: "Ton espace gratuit, sans limite de temps : calculateur de calories, suivi de ton poids et Speed Formation.",
-  lede_en: "Your free space, with no time limit: calorie calculator, weight tracking and Speed Formation.",
+  /* v85 (bloc 4) : « Speed Formation » devient « Formation » (anglais : « the Course ») */
+  lede: "Ton espace gratuit, sans limite de temps : calculateur de calories, suivi de ton poids et la Formation.",
+  lede_en: "Your free space, with no time limit: calorie calculator, weight tracking and the Course.",
+  /* v85 (bloc 4) : la carte Formation de l'accueil du prospect (titre, sous-titre, bouton), FR et EN */
+  formation: { titre: "Formation", texte: "Cours et ebooks : alimentation, entraînement, mindset", bouton: "Ouvrir la Formation" },
+  formation_en: { titre: "Course", texte: "Courses and ebooks: nutrition, training, mindset", bouton: "Open the Course" },
   avis: "Ces chiffres sont une estimation générale, pas un avis médical. Si tu as un doute sur ta santé, parles-en à un professionnel.",
   mineur: "Le calculateur est réservé aux adultes (18 ans et plus) : rien n'est enregistré.",
   retire: "Ce que tu avais enregistré ici a été retiré.",
@@ -708,7 +716,7 @@ function lienOk(href, base, attendu){
     /* v62 (relecture) : un clic n'est jamais un « Plus tard » : aucun cta.plus_tard dans la même écriture */
     ok("clic « Réserver mon plan d'action » : noté une fois dans challenge (source apres_questionnaire), aucun « Plus tard » noté avec", cl.length === 1 && cl[0].source === "apres_questionnaire" && ecr(db, "challenge", ID).length === 1 && !(C.cta || {}).plus_tard, JSON.stringify(C));
     ok("… choix mémorisé en UNE écriture : intake.bilan_propose = { choix: « reserver », le: maintenant }, les réponses intactes", wI.length === 1 && I.bilan_propose && I.bilan_propose.choix === "reserver" && Math.abs(Date.parse(I.bilan_propose.le) - t0) < 10000 && Object.keys(I.bilan_propose).sort().join() === "choix,le" && I.projection === NOUVEAU().projection && I.court_le === NOUVEAU().court_le, JSON.stringify(I));
-    ok("… puis l'accueil du prospect (Speed Formation, « Réserver mon plan d'action »), plus la page du plan", !!(await page.$("#dc-accomp")) && !!(await page.$("#dc-formation")) && !(await page.$("#dc-bilan")), await texte(page, "#vue"));
+    ok("… puis l'accueil du prospect (Formation — v85 : avant « Speed Formation » —, « Réserver mon plan d'action »), plus la page du plan", !!(await page.$("#dc-accomp")) && !!(await page.$("#dc-formation")) && !(await page.$("#dc-bilan")), await texte(page, "#vue"));
     ok("… événement local « call_cta_clicked » (Calendly) noté", (await page.evaluate(() => { try { return JSON.parse(localStorage.getItem("mhx_tracking") || "[]").map(x => x.event); } catch (e) { return []; } })).includes("call_cta_clicked"), "");
     await page.reload(); await pret(page, "#dc-accomp");
     ok("rechargement : l'accueil directement, la page du plan ne revient pas, rien de réécrit", !(await page.$("#dc-bilan")) && ecr(db, "intake", ID).length === 1 && ecr(db, "challenge", ID).length === 1 && saisies(db).length === n0 + 2, resume(db));
@@ -1047,7 +1055,9 @@ function lienOk(href, base, attendu){
     ok("… en-tête « Découverte », phrase « gratuit, sans limite de temps », aucun « Jour n/7 » ni jours restants", (await texte(page, "#vue .masthead .eyebrow")) === "Découverte" && v.includes(TXD.lede) && !SEPT.test(v), v.slice(0, 260));
     const vit = await page.$$eval("#dc-accomp .liste-debloque a", l => l.map(a => a.getAttribute("href")));
     ok("… le bloc accompagnement mène aux pages de la vitrine (programme, nutrition, journal, suivi) ; plus « Ma progression » (ouverte)", JSON.stringify(vit) === JSON.stringify(["#/programme", "#/nutrition", "#/journal", "#/suivi"]), JSON.stringify(vit));
-    ok("… Speed Formation ouverte (« Ouvrir la Speed Formation », sans « pendant ta découverte »)", !!(await page.$('#dc-formation a[href="#/formation"]')) && (await texte(page, "#dc-formation")).includes("Les bases de la nutrition et de l'entraînement, à ton rythme.") && !/découverte/i.test(await texte(page, "#dc-formation p")), await texte(page, "#dc-formation"));
+    /* v85 (bloc 4) : la carte s'appelle « Formation » (avant « Speed Formation »), son texte « Cours et ebooks : alimentation,
+       entraînement, mindset » (avant « Les bases de la nutrition et de l'entraînement, à ton rythme. »), bouton « Ouvrir la Formation » */
+    ok("… Formation ouverte (« Ouvrir la Formation », sans « pendant ta découverte »)", !!(await page.$('#dc-formation a[href="#/formation"]')) && (await texte(page, "#dc-formation h2")) === TXD.formation.titre && (await texte(page, "#dc-formation")).includes(TXD.formation.texte) && (await texte(page, '#dc-formation a[href="#/formation"]')) === TXD.formation.bouton && !/découverte/i.test(await texte(page, "#dc-formation p")), await texte(page, "#dc-formation"));
     ok("… décidé en lecture seule (calc_perso et mens lus d'un coup, sans cache) : aucune écriture à l'affichage", db.lectures.some(l => l.outil === "in.(calc_perso,mens)") && saisies(db).length === 0, resume(db) + " " + JSON.stringify(db.lectures.map(l => l.outil)));
     await page.click("#dc-etape-go"); await attendre(page, 1800);
     ok("clic : le calculateur s'ouvre (#/calculateur)", (await ou(page)).courant === "calculateur" && (await ou(page)).hash === "#/calculateur" && !!(await page.$("#tdee")) && !(await page.$("#vue .verrou")), JSON.stringify(await ou(page)));
@@ -1098,7 +1108,7 @@ function lienOk(href, base, attendu){
     ({ c, page } = await ouvrir(b, db, 4, "", "#dc-accomp")); await attendre(page, 1000);
     const forts = await page.$$eval("#vue a.btn:not(.ghost), #vue button.btn:not(.ghost)", l => l.length);
     /* v71 (H) : calcul + pesée faits, pas de créneau : la carte dorée « Ta prochaine étape » (plan) est le seul bouton doré (avant : aucune étape, forts === 0) */
-    ok("calcul et pesée faits : carte « Ta prochaine étape » (plan, accueil_etape), le seul bouton doré ; Speed Formation, pages de l'accompagnement, « Réserver mon plan d'action » en contour en haut et dans la carte", !!(await page.$('#dc-etape[data-etape="plan"]')) && forts === 1 && !!(await page.$("#dc-formation")) && !!(await page.$("#dc-accomp .liste-debloque a")) && !!(await page.$('#vue .masthead a.btn.ghost[data-dc-cal="accueil_haut"]')) && !!(await page.$('#dc-accomp a.btn.ghost[data-dc-cal="accueil_accompagnement"]')), "forts " + forts);
+    ok("calcul et pesée faits : carte « Ta prochaine étape » (plan, accueil_etape), le seul bouton doré ; Formation (v85 : avant « Speed Formation »), pages de l'accompagnement, « Réserver mon plan d'action » en contour en haut et dans la carte", !!(await page.$('#dc-etape[data-etape="plan"]')) && forts === 1 && !!(await page.$("#dc-formation")) && !!(await page.$("#dc-accomp .liste-debloque a")) && !!(await page.$('#vue .masthead a.btn.ghost[data-dc-cal="accueil_haut"]')) && !!(await page.$('#dc-accomp a.btn.ghost[data-dc-cal="accueil_accompagnement"]')), "forts " + forts);
     await c.close();
     ({ c, page } = await ouvrir(b, db, 7, "", "#dc-accomp")); await attendre(page, 1000);
     ok("un poids de départ (réglages de Ma progression) compte comme une pesée : carte « plan » (v71 H ; avant : accueil normal)", (await page.$eval("#dc-etape", x => x.dataset.etape).catch(() => "")) === "plan", "");
@@ -1118,7 +1128,9 @@ function lienOk(href, base, attendu){
     avecEn(db, ID);
     const { c, page } = await ouvrir(b, db, k, "", "#dc-accomp", { langue: "en" }); await attendre(page, 1200);
     const v = await texte(page, "#vue");
-    ok("anglais : « Log your starting weight », « Your next step », phrase d'accueil traduite, bloc Speed Formation traduit", (await texte(page, "#dc-etape-go")) === "Log your starting weight" && (await texte(page, "#dc-etape h2")) === "Your next step" && v.includes(TXD.lede_en) && (await texte(page, "#dc-formation p")) === "The basics of nutrition and training, at your pace.", v.slice(0, 300));
+    /* v85 (bloc 4) : le bloc Formation traduit est « Course » : « Courses and ebooks: nutrition, training, mindset » (avant « The
+       basics of nutrition and training, at your pace. ») */
+    ok("anglais : « Log your starting weight », « Your next step », phrase d'accueil traduite, bloc Formation traduit (« Course »)", (await texte(page, "#dc-etape-go")) === "Log your starting weight" && (await texte(page, "#dc-etape h2")) === "Your next step" && v.includes(TXD.lede_en) && (await texte(page, "#dc-formation p")) === TXD.formation_en.texte, v.slice(0, 300));
     /* v61 (brief V2, E) : la carte « What coaching adds » (descriptions, bouton, note, case) et le bouton du haut, en anglais */
     const accEn = await page.evaluate(() => {
       const n = x => (x || "").replace(/[\s\u00a0\u202f]+/g, " ").trim(), q = s => document.querySelector(s), t = s => q(s) ? n(q(s).textContent) : null;
@@ -1417,7 +1429,8 @@ function lienOk(href, base, attendu){
     const k = 26, ID = PID(k);
     const db = base({ comptes: [compte(k, "Léa", "Martin", [["intake", NOUVEAU({ bilan_propose: { choix: "plus_tard", le: avant(MIN) } })]], { cree: avant(30 * J) })] });
     let { c, page } = await ouvrir(b, db, k, "", "#dc-accomp", { viewport: MOBILE }); await attendre(page, 800);
-    ok("téléphone : barre du bas Accueil, Calculateur, Progression, Speed Formation (+ Plus)", JSON.stringify(await page.$$eval("#barre-bas a[data-id]", l => l.map(a => a.dataset.id))) === '["accueil","calculateur","mensurations","formation"]' && JSON.stringify(await page.$$eval("#barre-bas a[data-id] .lbl", l => l.map(a => a.textContent.trim()))) === '["Accueil","Calculateur","Progression","Speed Formation"]' && !!(await page.$("#barre-bas [data-plus]")), JSON.stringify(await page.$$eval("#barre-bas a[data-id] .lbl", l => l.map(a => a.textContent.trim()))));
+    /* v85 (bloc 4) : l'onglet s'appelle « Formation » (avant « Speed Formation ») */
+    ok("téléphone : barre du bas Accueil, Calculateur, Progression, Formation (+ Plus)", JSON.stringify(await page.$$eval("#barre-bas a[data-id]", l => l.map(a => a.dataset.id))) === '["accueil","calculateur","mensurations","formation"]' && JSON.stringify(await page.$$eval("#barre-bas a[data-id] .lbl", l => l.map(a => a.textContent.trim()))) === '["Accueil","Calculateur","Progression","Formation"]' && !!(await page.$("#barre-bas [data-plus]")), JSON.stringify(await page.$$eval("#barre-bas a[data-id] .lbl", l => l.map(a => a.textContent.trim()))));
     await page.click("#barre-bas [data-plus]"); await attendre(page, 500);
     const plus = await page.$$eval(".menu-plus a", l => l.map(a => a.dataset.id + (a.querySelector(".nav-cadenas") ? "🔒" : "")));
     ok("« Plus » : la vitrine verrouillée (programme, journal, nutrition, suivi) et le Profil", JSON.stringify(plus) === JSON.stringify(["programme🔒", "journal🔒", "nutrition🔒", "suivi🔒", "profil"]), JSON.stringify(plus));
@@ -1425,7 +1438,7 @@ function lienOk(href, base, attendu){
     await c.close();
     ({ c, page } = await ouvrir(b, db, k, "", "#dc-accomp")); await attendre(page, 800);
     const nav = await page.$$eval("#nav a", l => l.map(a => a.dataset.id + (a.querySelector(".nav-cadenas") ? "🔒" : "")));
-    ok("ordinateur : calculateur juste après Ma progression, ouverts avec la Speed Formation ; journal dans la vitrine ; compléments et bilan cachés", JSON.stringify(nav) === JSON.stringify(["accueil", "programme🔒", "journal🔒", "nutrition🔒", "mensurations", "calculateur", "suivi🔒", "formation", "profil"]), JSON.stringify(nav));
+    ok("ordinateur : calculateur juste après Ma progression, ouverts avec la Formation (v85 : avant « Speed Formation ») ; journal dans la vitrine ; compléments et bilan cachés", JSON.stringify(nav) === JSON.stringify(["accueil", "programme🔒", "journal🔒", "nutrition🔒", "mensurations", "calculateur", "suivi🔒", "formation", "profil"]), JSON.stringify(nav));
     const L0 = db.lectures.length;
     await aller(page, "#/journal", 1500);
     /* v52 : lots D + E — la page verrouillée du journal montre d'abord son exemple (#ech-journal, lot E : détaillé en E1) */
@@ -1435,7 +1448,7 @@ function lienOk(href, base, attendu){
     const cl = (((db.donnees.find(d => d.user_id === ID && d.outil === "challenge") || {}).contenu || {}).cta || {}).clics || [];
     ok("… son « Réserver mon plan d'action » est compté (source verrou_journal)", cl.length === 1 && cl[0].source === "verrou_journal", JSON.stringify(cl));
     await aller(page, "#/formation", 2200);
-    ok("inscrit il y a 30 jours : la Speed Formation est ouverte (plus de verrou au 8e jour)", !(await page.$("#vue .verrou")) && !!(await page.$("#fo-vue")) && (await ou(page)).courant === "formation", JSON.stringify(await ou(page)));
+    ok("inscrit il y a 30 jours : la Formation est ouverte (plus de verrou au 8e jour ; v85 : avant « Speed Formation »)", !(await page.$("#vue .verrou")) && !!(await page.$("#fo-vue")) && (await ou(page)).courant === "formation", JSON.stringify(await ou(page)));
     await c.close();
   });
 
@@ -1549,13 +1562,18 @@ function lienOk(href, base, attendu){
       /* v61 (brief V2, G) : un texte par page (avant, le même partout : « Tu veux un programme construit pour toi, qui évolue
          chaque semaine ? Réserve ton bilan. ») */
       appels: {
-        programme: "Cette séance découverte est la même pour tout le monde. Ton programme, lui, part de ton niveau, de ton matériel et de ton emploi du temps, puis évolue avec tes progrès.",
+        /* v85 (bloc 4) : sous le programme de la formation (l'exemple « Ta séance découverte » n'est plus là), la carte 🔒 dit le
+           texte de « Ton espace » du parcours (avant : « Cette séance découverte est la même pour tout le monde. Ton programme,
+           lui, part de ton niveau, de ton matériel et de ton emploi du temps, puis évolue avec tes progrès. ») */
+        programme: "Après ton bilan : ton programme sur mesure, avec ton coach.",
         journal: "Avec l'accompagnement, chaque séance est notée et l'app te propose la charge à viser la fois suivante : tu sais toujours quoi faire pour progresser.",
         nutrition: "Avec l'accompagnement, tes repas sont calculés sur tes calories et tes macros, en tenant compte de ton régime et de tes allergies, avec ta liste de courses.",
         suivi: "Avec l'accompagnement, ton coach lit ton bilan chaque semaine et te répond avec la suite du plan : tu sais toujours où tu en es et quoi faire ensuite."
       },
       appels_en: {
-        programme: "This starter workout is the same for everyone. Your program starts from your level, your equipment and your schedule, then evolves as you progress.",
+        /* v85 (bloc 4) : avant « This starter workout is the same for everyone. Your program starts from your level, your
+           equipment and your schedule, then evolves as you progress. » */
+        programme: "After your check-in: your tailor-made program, with your coach.",
         journal: "With coaching, every workout is logged and the app suggests the weight to aim for next time: you always know what to do to progress.",
         nutrition: "With coaching, your meals are calculated from your calories and macros, taking your diet and allergies into account, with your shopping list.",
         suivi: "With coaching, your coach reads your weekly check-in and replies with the next step: you always know where you stand and what to do next."
@@ -1576,10 +1594,16 @@ function lienOk(href, base, attendu){
       ["checkins", { liste: [{ semaine: TEMOIN, note: TEMOIN }] }]
     ];
     const CLES_TEMOINS = TEMOINS.map(x => x[0]);
-    const prospectE = k => compte(k, "Léa", "Martin", [["intake", NOUVEAU({ bilan_propose: { choix: "plus_tard", le: avant(H) }, email_compte: "p" + k + "@exemple.fr" })]].concat(TEMOINS));
-    /* ce que montre une page verrouillée : l'exemple, son nom accessible, l'appel du verrou, son lien, l'ordre */
+    /* v85 (bloc 4) : extra = des réponses de plus dans son intake (E1. programme : sexe « Femme », pour que la page montre un
+       programme attribué — objectif « Perdre du gras » × Femme → salle femme — et non l'écran de choix) */
+    const prospectE = (k, extra) => compte(k, "Léa", "Martin", [["intake", NOUVEAU(Object.assign({ bilan_propose: { choix: "plus_tard", le: avant(H) }, email_compte: "p" + k + "@exemple.fr" }, extra || {}))]].concat(TEMOINS));
+    /* ce que montre une page verrouillée : l'exemple, son nom accessible, l'appel du verrou, son lien, l'ordre
+       v85 (bloc 4) : sur #/programme, à la place de l'exemple (#ech-programme), le programme de la formation (#pf-zone) : e = la
+       zone ; exemple = un exemple encore affiché (#ech-programme, .echantillon, marque « Exemple ») ; ses liens (internes à
+       l'onglet) sont listés à part (liens), champs = les champs de saisie seulement */
     const vueVerrou = (page, id) => page.evaluate(id => {
-      const e = document.getElementById("ech-" + id), v = document.querySelector("#vue .verrou");
+      const pf = id === "programme";
+      const e = pf ? document.querySelector("#vue #pf-zone.pf") : document.getElementById("ech-" + id), v = document.querySelector("#vue .verrou");
       const a = v ? v.querySelectorAll("a") : [], lab = e && e.getAttribute("aria-labelledby") ? document.getElementById(e.getAttribute("aria-labelledby")) : null;
       const n = x => (x || "").replace(/\s+/g, " ").trim();
       return { ech: !!e, role: e ? e.getAttribute("role") : "", label: lab ? n(lab.textContent) : "", marque: e ? n((e.querySelector(".ech-marque .pastille") || {}).textContent) : "",
@@ -1591,8 +1615,14 @@ function lienOk(href, base, attendu){
         sousApres: !!(a[0] && v && v.querySelector(".verrou-sous") && (a[0].compareDocumentPosition(v.querySelector(".verrou-sous")) & Node.DOCUMENT_POSITION_FOLLOWING)),
         plus: n(((document.querySelector("#vue .verrou-plus") || {}).textContent || "").replace(/[\u00a0\u202f]/g, " ")),
         attendu: lienCalendly("verrou_" + id), base: CONFIG.marque.calendly, h: a[0] ? a[0].getBoundingClientRect().height : 0,
-        champs: e ? e.querySelectorAll("a, input, textarea, select, [contenteditable]").length : -1 };
+        champs: e ? e.querySelectorAll(pf ? "input, textarea, select, [contenteditable]" : "a, input, textarea, select, [contenteditable]").length : -1,
+        exemple: pf ? !!document.querySelector("#ech-programme, #vue .echantillon, #vue .ech-marque") : false,
+        charge: pf && e ? !!e.querySelector("#pf-tete, #pf-choisir") : false,
+        liens: pf && e ? [...e.querySelectorAll("a")].map(a => [a.getAttribute("href") || "", a.getAttribute("target") || ""]) : [] };
     }, id);
+    /* v85 (bloc 4) : le programme de la formation (zone chargée : sa page #pf-tete ou l'écran de choix #pf-choisir), plus aucun
+       exemple, puis l'appel (à la place de marqueOk sur #/programme) */
+    const pfOk = v => !!v && v.ech && !v.exemple && v.avant && v.charge;
     /* v61 (brief V2, G) : le texte propre à la page (avant : le même appel partout), « Récupérer mon plan d'action » (avant :
        « Réserver mon bilan »), la ligne « 15 min avec Lucas · offert » juste après, la note AVANTAGES de la page sous la carte */
     const appelOk = (v, id, en) => !!v && v.ech && v.appel === (en ? EX.appels_en : EX.appels)[id] && v.nLiens === 1 && !!v.lien && v.lien.href === v.attendu && v.lien.t === (en ? TX.reserver_en : TX.reserver) && v.lien.cible === "_blank" && /noopener/.test(v.lien.rel || "") && v.avant
@@ -1646,28 +1676,58 @@ function lienOk(href, base, attendu){
         titreMsg: n((e.querySelector(".ech-message .fb-tete") || {}).textContent), msg: n((e.querySelector(".ech-message .fb-texte") || {}).textContent) };
     });
 
+    /* v85 (bloc 4) : le programme de la formation attendu pour « Perdre du gras » × Femme (docs/maj-bloc-4/programmes-formation.json) :
+       son nom et les 6 séances des semaines 1 à 4 */
+    const PF_FEMME = { nom: "Programme salle 12 semaines · Femme", seances: ["Séance 1 — Bas du corps", "Séance 2 — Haut du corps", "Séance 3 — Bas du corps", "Séance 4 — HIIT (choisis 1 option)", "Séance 5 — Full body", "Séance 6 — Cardio"] };
     await bloc("E1. programme", async () => {
       for (const viewport of [ORDI, MOBILE]) {
         const k = viewport === ORDI ? 40 : 41, ID = PID(k), w = viewport.width + " px";
-        const db = base({ comptes: [prospectE(k)] });
+        const db = base({ comptes: [prospectE(k, { sexe: "Femme" })] });   // v85 (bloc 4) : sexe « Femme » : un programme attribué (voir prospectE)
         const { c, page } = await ouvrir(b, db, k, "#/profil", "#vue .masthead", { viewport });
         const n0 = db.lectures.length;
         await aller(page, "#/programme", 1600);
         const v = await vueVerrou(page, "programme");
-        ok(`${w} : #/programme — d'abord l'exemple, marqué « ${EX.marque} » (région nommée « ${EX.marque} ${EX.note} »), puis l'appel`, marqueOk(v) && v.avant, JSON.stringify(v).slice(0, 300));
-        const s = await page.evaluate(() => { const e = document.querySelector("#ech-programme"); return e ? { h2: (e.querySelector("h2") || {}).textContent, exos: [...e.querySelectorAll(".ch-exos b")].map(x => x.textContent), notes: [...e.querySelectorAll("p.note")].map(p => p.textContent).join(" | "), echauffement: e.querySelectorAll(".ingr li").length, demos: e.querySelectorAll("[data-yt]").length } : null; });
-        ok(`${w} : l'exemple = la séance découverte, niveau débutant (échauffement, 5 exercices, 2 tours, 5 démonstrations)`, !!s && s.h2 === "Ta séance découverte" && JSON.stringify(s.exos) === JSON.stringify(["Squats", "Pompes", "Fentes arrière", "Pont fessier", "Gainage"]) && s.notes.includes("2 tours (ton niveau : Débutant)") && s.echauffement > 0 && s.demos === 5, JSON.stringify(s));
-        ok(`${w} : aucune donnée personnelle dans l'exemple (ni prénom, ni nom, ni email, ni ses données témoins) ; lecture seule (aucun lien ni champ)`, !perso(v.texte) && v.champs === 0 && !(await texte(page, "#vue")).includes(TEMOIN), v.texte.slice(0, 200));
+        /* v85 (bloc 4) : d'abord son programme de la formation (#pf-zone), à la place de l'exemple marqué « Exemple » (#ech-programme,
+           région nommée) : la zone chargée, plus aucun exemple, puis l'appel */
+        ok(`${w} : #/programme — d'abord son programme de la formation (#pf-zone ; v85 : à la place de l'exemple marqué « ${EX.marque} »), plus aucun exemple, puis l'appel`, pfOk(v), JSON.stringify(v).slice(0, 300));
+        /* v85 (bloc 4) : « l'exemple = la séance découverte » devient : la page montre son programme de la formation (Perdre du gras ×
+           Femme → salle femme) : son nom, les 3 onglets de semaines (le 1er ouvert : pas de date de début), les 6 séances des semaines
+           1 à 4, « Changer de programme » (#/programme/choisir), « Combien de séances ? » ; et plus l'exemple « Ta séance découverte » */
+        const s = await page.evaluate(() => {
+          const z = document.querySelector("#vue #pf-zone.pf"); if (!z) return null;
+          const n = x => (x || "").replace(/\s+/g, " ").trim(), ph = z.querySelector(".pf-phase:not([hidden])"), ch = z.querySelector("#pf-tete #pf-changer");
+          return { nom: n((z.querySelector("#pf-tete #pf-nom") || {}).textContent), onglets: [...z.querySelectorAll("[data-pf-phase]")].map(x => n(x.getAttribute("aria-label")) + (x.getAttribute("aria-selected") === "true" ? "*" : "")),
+            ouvertes: z.querySelectorAll(".pf-phase:not([hidden])").length, phase: ph ? n((ph.querySelector(".pf-phase-t") || {}).textContent) : "", seances: ph ? [...ph.querySelectorAll(".pf-seance-l b")].map(x => n(x.textContent)) : [],
+            changer: ch ? [n(ch.textContent), ch.getAttribute("href")] : null, combien: n((z.querySelector("#pf-tete #pf-combien summary") || {}).textContent),
+            ancien: !!document.querySelector("#ech-programme") || /Ta séance découverte/.test(document.querySelector("#vue").textContent) };
+        });
+        ok(`${w} : la page montre son programme de la formation (v85 ; avant : l'exemple « Ta séance découverte ») : « ${PF_FEMME.nom} » (Perdre du gras × Femme), 3 onglets de semaines (le 1er ouvert), les 6 séances des semaines 1 à 4, « Changer de programme », « Combien de séances ? » ; plus d'exemple`,
+          !!s && s.nom === PF_FEMME.nom && JSON.stringify(s.onglets) === JSON.stringify(["Semaines 1-4*", "Semaines 5-8", "Semaines 9-12"]) && s.ouvertes === 1 && s.phase === "Semaines 1 à 4" && JSON.stringify(s.seances) === JSON.stringify(PF_FEMME.seances) && JSON.stringify(s.changer) === JSON.stringify(["Changer de programme", "#/programme/choisir"]) && s.combien === "Combien de séances ?" && !s.ancien, JSON.stringify(s));
+        /* v85 (bloc 4) : la page a maintenant des liens (ses séances, « Changer de programme »), tous dans l'onglet (#/programme/…, même
+           onglet) : « aucun lien ni champ » devient « aucun champ de saisie, aucun lien hors de l'onglet » */
+        ok(`${w} : aucune donnée personnelle dans son programme (ni prénom, ni nom, ni email, ni ses données témoins — son ancien programme du coach compris) ; aucun champ de saisie, ses seuls liens restent dans l'onglet (#/programme/seance/… ou /choisir, même onglet)`, !perso(v.texte) && v.champs === 0 && v.liens.length > 0 && v.liens.every(([h, t]) => /^#\/programme\/(seance|choisir)(\/|$)/.test(h) && !t) && !(await texte(page, "#vue")).includes(TEMOIN), v.texte.slice(0, 200) + " · " + JSON.stringify(v.liens.slice(0, 4)) + " · " + v.champs);
         const pb = lienPre(v, k, "programme");
         ok(`${w} : le texte exact de la page (« ${EX.appels.programme.slice(0, 50)}… »), « Réserver mon plan d'action » (seul lien du verrou, Calendly pré-rempli exact, source verrou_programme, nouvel onglet), « Appel de 15 min avec ton coach, offert », la note « ${TXD.av.programme} »`, appelOk(v, "programme") && !pb, pb + " · " + JSON.stringify([v.appel, v.nLiens, v.lien]));
-        ok(`${w} : aucune clé « donnees » lue en ouvrant la page, aucune écriture`, luHors(db, n0).length === 0 && saisies(db).length === 0, JSON.stringify(luHors(db, n0)) + " · " + resume(db));
+        /* v85 (bloc 4) : « aucune clé lue » devient : seulement SES clés intake et prefs (le programme à montrer), rien d'autre, aucune
+           autre personne ; toujours aucune écriture */
+        const lus = luHors(db, n0);
+        ok(`${w} : en ouvrant la page, seulement ses clés intake et prefs lues (les siennes : aucune autre clé « donnees », aucune autre personne), aucune écriture`, lus.every(l => ["eq.intake", "eq.prefs"].includes(l.outil) && l.par === ID && l.uid === ID) && saisies(db).length === 0, JSON.stringify(lus) + " · " + resume(db));
         if (viewport === MOBILE) {
           ok("390 px : #/programme sans défilement horizontal, « Réserver mon plan d'action » tactile (44 px de haut au moins)", !(await deborde(page)) && v.h >= 44, (await largeur(page)) + " · " + v.h);
           await capture(page, "ech-programme-mobile");
         } else {
-          await page.click("#ech-programme [data-yt]"); await attendre(page, 500);
-          const f = await page.evaluate(() => ({ src: (document.querySelector("#ech-programme iframe") || {}).src || "", reste: document.querySelectorAll("#ech-programme [data-yt]").length }));
-          ok("« Démonstration » ouvre la vidéo à la place du bouton (youtube-nocookie), rien n'est écrit", f.src.startsWith("https://www.youtube-nocookie.com/embed/G9nGRJjQFXw") && f.reste === 4 && saisies(db).length === 0, JSON.stringify(f));
+          /* v85 (bloc 4) : les démonstrations ne sont plus sur la page (l'exemple est parti) : elles sont dans l'écran d'une séance de
+             son programme (#/programme/seance/…, ouvert par sa 1re séance) ; même règle : la vidéo (youtube-nocookie) à la place du
+             bouton, une seule ; rien n'est écrit. Puis retour sur #/programme pour le clic compté */
+          await page.click("#pf-ph-0 .pf-seance-l"); await page.waitForSelector("#pf-zone #pf-seance", { timeout: 8000 }); await attendre(page, 400);
+          const yt0 = await page.$eval("#pf-seance [data-yt]", x => x.dataset.yt).catch(() => ""), nb = await page.$$eval("#pf-zone [data-yt]", l => l.length);
+          /* v85 (bloc 4) : comme l'exemple d'avant (échauffement, liste exacte, 5 démonstrations de la séance découverte), la séance 1
+             montrée : l'échauffement, ses 7 exercices exacts (noms de l'app) et ses 4 vidéos, la 1re celle du squat barre */
+          const sv = await page.evaluate(() => ({ ech: !!document.querySelector("#pf-echauffement summary"), exos: Array.from(document.querySelectorAll("#pf-seance .pf-exo-nom")).map(x => x.textContent) }));
+          await page.click("#pf-seance [data-yt]"); await attendre(page, 500);
+          const f = await page.evaluate(() => ({ src: (document.querySelector("#pf-zone iframe") || {}).src || "", reste: document.querySelectorAll("#pf-zone [data-yt]").length, cadres: document.querySelectorAll("#pf-zone iframe").length, hash: location.hash }));
+          ok("« Vidéo » (v85 : dans une séance de son programme ; avant : « Démonstration » de l'exemple) ouvre la vidéo à la place du bouton (youtube-nocookie), rien n'est écrit", yt0 === "LSAalN4gEjY" && f.src.startsWith("https://www.youtube-nocookie.com/embed/" + yt0) && nb === 4 && f.reste === 3 && f.cadres === 1 && sv.ech && JSON.stringify(sv.exos) === JSON.stringify(["Squat barre", "Fentes avant", "Soulevé de terre jambes tendues", "Presse à cuisses", "Mollets debout", "Abducteurs machine", "Step-ups avec haltères"]) && f.hash === "#/programme/seance/salle-femme/0/0" && saisies(db).length === 0, JSON.stringify([yt0, nb, f, sv]));
+          await aller(page, "#/programme", 1600);   // v85 (bloc 4) : la carte 🔒 est sur la page du programme (pas sur l'écran d'une séance)
           await clicCompte(page, db, ID, "programme");
         }
         await c.close();
@@ -1754,21 +1814,29 @@ function lienOk(href, base, attendu){
     await bloc("E1. les quatre pages : rien de ses données, aucun prix", async () => {
       const k = 49, db = base({ comptes: [prospectE(k)] });
       const { c, page } = await ouvrir(b, db, k, "#/profil", "#vue .masthead");
-      const n0 = db.lectures.length, fautes = [];
+      const n0 = db.lectures.length, fautes = [], parPage = {};   // v85 (bloc 4) : parPage = les lectures de chaque page
       for (const id of ["programme", "nutrition", "journal", "suivi"]) {
+        const nP = db.lectures.length;   // v85 (bloc 4)
         await aller(page, "#/" + id, 1800);
         if (id === "nutrition") await page.waitForSelector("#ech-repas details", { timeout: 10000 }).catch(() => {});
         const t = await page.evaluate(() => { const v = document.querySelector("#vue"); return v ? v.innerText + "\n" + v.textContent : ""; }).then(norm);
-        if (!(await page.$("#ech-" + id))) fautes.push(id + " : pas d'exemple");
+        /* v85 (bloc 4) : #/programme montre son programme de la formation (#pf-zone chargée : sa page ou l'écran de choix), plus
+           l'exemple (#ech-programme) ; les autres pages, leur exemple comme avant */
+        if (id === "programme") { if (!(await page.$("#vue #pf-zone.pf #pf-tete, #vue #pf-zone.pf #pf-choisir"))) fautes.push("programme : pas son programme de la formation"); if (await page.$("#ech-programme, #vue .echantillon, #vue .ech-marque")) fautes.push("programme : un exemple encore affiché"); }
+        else if (!(await page.$("#ech-" + id))) fautes.push(id + " : pas d'exemple");
         if (t.includes(TEMOIN)) fautes.push(id + " : donnée témoin affichée");
         const m = PRIX.exec(t); if (m) fautes.push(id + " : prix « " + t.slice(Math.max(0, m.index - 40), m.index + 30) + " »");
+        parPage[id] = luHors(db, nP);   // v85 (bloc 4)
       }
       const pendant = luHors(db, n0), n1 = db.lectures.length;
       await page.reload(); await pret(page, "#vue .masthead"); await attendre(page, 800);
       if (!(await page.$("#ech-suivi"))) fautes.push("suivi rechargé : pas d'exemple");
       const cles = await clesCache(page), apres = luHors(db, n1).filter(l => l.outil !== "eq.prefs");   // au démarrage, l'app lit la langue (prefs), comme partout
-      ok("#/programme, #/nutrition, #/journal, #/suivi (puis rechargement) : chacune son exemple, aucune donnée témoin affichée, aucun prix, tarif ni abonnement", fautes.length === 0, fautes.join(" ; "));
-      ok("… aucune clé « donnees » lue pendant toute la visite (au rechargement : sa langue seulement), aucune de ses données d'accompagnement dans le cache de l'app, aucune écriture", pendant.length === 0 && apres.length === 0 && Array.isArray(cles) && !cles.some(x => CLES_TEMOINS.includes(x)) && saisies(db).length === 0, JSON.stringify(pendant.concat(apres)) + " · " + JSON.stringify(cles) + " · " + resume(db));
+      ok("#/programme (v85 : son programme de la formation, plus d'exemple), #/nutrition, #/journal, #/suivi (puis rechargement) : chacune son exemple, aucune donnée témoin affichée, aucun prix, tarif ni abonnement", fautes.length === 0, fautes.join(" ; "));
+      /* v85 (bloc 4) : « aucune clé lue pendant toute la visite » devient : sur #/programme, seulement SES clés intake et prefs (rien
+         d'autre, aucune autre personne) ; sur #/nutrition, #/journal, #/suivi, toujours aucune ; au rechargement, sa langue seulement */
+      const pendantOk = Object.keys(parPage).length === 4 && Object.entries(parPage).every(([id, l]) => id === "programme" ? l.every(x => ["eq.intake", "eq.prefs"].includes(x.outil) && x.par === PID(k) && x.uid === PID(k)) : l.length === 0) && pendant.length === Object.values(parPage).reduce((a, l) => a + l.length, 0);
+      ok("… aucune clé « donnees » lue pendant toute la visite (v85 : sauf sur #/programme, ses clés intake et prefs seulement ; au rechargement : sa langue seulement), aucune de ses données d'accompagnement dans le cache de l'app, aucune écriture", pendantOk && apres.length === 0 && Array.isArray(cles) && !cles.some(x => CLES_TEMOINS.includes(x)) && saisies(db).length === 0, JSON.stringify(parPage) + " · " + JSON.stringify(apres) + " · " + JSON.stringify(cles) + " · " + resume(db));
       const txt = await page.evaluate(() => { const l = []; const f = x => { if (typeof x === "string") l.push(x); else if (x && typeof x === "object") Object.values(x).forEach(f); }; f(DECOUVERTE.echantillons); f(DECOUVERTE.en.echantillons); return l.join("\n"); });
       const m = PRIX.exec(txt);
       ok("textes des exemples (DECOUVERTE.echantillons, FR et EN) : aucun prix, tarif ni abonnement", !!txt && !m, m ? txt.slice(Math.max(0, m.index - 40), m.index + 30) : "");
@@ -1788,9 +1856,14 @@ function lienOk(href, base, attendu){
       });
       ok("DECOUVERTE.en.echantillons : même forme et même ordre que le français ; en anglais, chaque texte a sa traduction exacte", forme.meme && forme.paires > 30 && forme.manque.length === 0, JSON.stringify(forme));
       /* v61 : + les nouveaux textes français (texte de chaque page, bouton, ligne sous le bouton, note AVANTAGES) */
-      const FR = ["Exemple", "Tu veux un programme", "Réserver mon bilan", "Réserve ton bilan", "Réserver mon plan d'action", "Appel de 15 min avec ton coach", "Avec l'accompagnement", "Cette séance découverte", "Tes séances construites", "Tes repas calculés", "Chaque séance notée", "Ta régularité", "Ta séance découverte", "Une journée type", "Petit-déjeuner", "Séance notée", "Série 1", "poids du corps", "Toutes tes séries", "Ton suivi de la semaine", "Régularité", "Feedback de ton coach", "Belle semaine", "Ta courbe de poids", "Cette fonctionnalité"];
+      const FR = ["Exemple", "Tu veux un programme", "Réserver mon bilan", "Réserve ton bilan", "Réserver mon plan d'action", "Appel de 15 min avec ton coach", "Avec l'accompagnement", "Cette séance découverte", "Tes séances construites", "Tes repas calculés", "Chaque séance notée", "Ta régularité", "Ta séance découverte", "Une journée type", "Petit-déjeuner", "Séance notée", "Série 1", "poids du corps", "Toutes tes séries", "Ton suivi de la semaine", "Régularité", "Feedback de ton coach", "Belle semaine", "Ta courbe de poids", "Cette fonctionnalité",
+        /* v85 (bloc 4) : + les textes français du programme de la formation (écran de choix) et de la nouvelle carte 🔒 */
+        "Choisis ton programme", "Ton objectif et ton profil", "Programme salle", "À la salle", "À la maison", "Après ton bilan", "ton programme sur mesure"];
       const attendus = {
-        programme: async () => { const s = await page.evaluate(() => { const e = document.querySelector("#ech-programme"); return e ? [(e.querySelector("h2") || {}).textContent, [...e.querySelectorAll("p.note")].map(p => p.textContent).join(" | "), [...e.querySelectorAll(".ch-exos b")].map(x => x.textContent).join(",")] : []; }); return s[0] === "Your discovery workout" && (s[1] || "").includes("2 rounds (your level: Beginner)") && s[2] === "Squats,Push-ups,Reverse lunges,Glute bridge,Plank" ? "" : JSON.stringify(s); },
+        /* v85 (bloc 4) : à la place de l'exemple « Your discovery workout », son programme de la formation en anglais : ce prospect n'a
+           pas de sexe dans ses réponses (Perdre du gras sans sexe : aucun programme attribué) → l'écran de choix, « Choose your
+           program », les 3 programmes et leurs lieux, 3 « Choose » ; plus d'exemple */
+        programme: async () => { const s = await page.evaluate(() => { const n = x => (x || "").replace(/\s+/g, " ").trim(), e = document.querySelector("#vue #pf-zone.pf #pf-choisir"); return e ? [n((e.querySelector("h2") || {}).textContent), n((e.querySelector("p.note") || {}).textContent), [...e.querySelectorAll(".pf-choix-l .txt b")].map(x => n(x.textContent)).join(","), [...e.querySelectorAll(".pf-choix-l .txt small")].map(x => n(x.textContent)).join(","), [...e.querySelectorAll("[data-pf-choisir]")].map(x => n(x.textContent)).join(","), !!document.querySelector("#ech-programme, #vue .echantillon, #vue .ech-marque")] : []; }); return s[0] === "Choose your program" && s[1] === "Your goal and profile don't point to a program yet: choose the one that suits you. You can change it anytime." && s[2] === "12-week gym program · Men,12-week gym program · Women,Full body at home" && s[3] === "Gym · Men,Gym · Women,At home · Men or women" && s[4] === "Choose,Choose,Choose" && s[5] === false ? "" : JSON.stringify(s); },
         nutrition: async () => { await page.waitForSelector("#ech-repas details", { timeout: 10000 }).catch(() => {}); const h = await texte(page, "#ech-nutrition h2"), vus = await journeeVue(page), att = journeeAttendue(await page.evaluate(() => CONFIG.decouverte.recettes), true); return h === "A sample day of eating" && JSON.stringify(vus.map(x => [x.moment, x.info])) === JSON.stringify(att.map(x => [x.moment, x.info])) ? "" : h + " " + JSON.stringify(vus.map(x => [x.moment, x.info])) + " ≠ " + JSON.stringify(att.map(x => [x.moment, x.info])); },
         journal: async () => { const j = await journalVu(page); const bon = !!j && j.h2 === "Workout A — Full body" && j.pastille === "Workout logged" && j.resume === "4 exercises · 12 sets" && j.exos.map(x => x.nom).join(",") === "Goblet squat,Push-ups,Dumbbell row,Hip thrust" && j.exos[0].series[0] === "Set 1|12 reps|16 kg" && j.exos[1].series[0] === "Set 1|10 reps|bodyweight" && j.exos[3].conseil === "All your sets hit 12 reps: move up to 42.5 kg."; return bon ? "" : JSON.stringify(j); },
         suivi: async () => { const s = await suiviVu(page); const bon = !!s && s.h2 === "Your weekly follow-up" && s.semaine === "Week 5" && JSON.stringify(s.tuiles) === JSON.stringify(["Consistency|86/ 100|this week", "Workouts logged|3/ 3|this week", "Weight|−0.4kg|since last week"]) && s.courbe === "Your weight curve" && s.svg && s.svg.label === "Weight over 5 weeks: from 82.0 kg to 80.4 kg." && ["W1", "W5", "82.0", "80.4"].every(x => s.svg.textes.includes(x)) && s.titreMsg === "Your coach's feedback" && s.msg === "Great week: 3 workouts out of 3 and 400 g down on the scale. We keep the same plan. This week, add a 10-minute walk after dinner."; return bon ? "" : JSON.stringify(s); }
@@ -1800,9 +1873,11 @@ function lienOk(href, base, attendu){
         const pb = await attendus[id]();
         const v = await vueVerrou(page, id);
         /* l'exemple et l'appel (les recettes du catalogue — noms, ingrédients, étapes — restent telles que le catalogue les donne) */
-        const t = await page.evaluate(() => [...document.querySelectorAll("#vue .echantillon, #vue .ech-appel")].map(x => { const e = x.cloneNode(true); e.querySelectorAll("#ech-repas details .ingr, #ech-repas details .etapes, #ech-repas summary b").forEach(y => y.remove()); return e.textContent; }).join(" ")).then(norm);
+        const t = await page.evaluate(() => [...document.querySelectorAll("#vue .echantillon, #vue .ech-appel, #vue #pf-zone")].map(x => { const e = x.cloneNode(true); e.querySelectorAll("#ech-repas details .ingr, #ech-repas details .etapes, #ech-repas summary b").forEach(y => y.remove()); return e.textContent; }).join(" ")).then(norm);   // v85 (bloc 4) : + le programme de la formation (#pf-zone)
         const tout = await texte(page, "#vue"), fr = FR.filter(x => t.includes(x)), m = PRIX.exec(tout);
-        ok(`anglais, #/${id} : « ${EX.marque_en} », l'exemple en anglais, « ${EX.appels_en[id].slice(0, 40)}… », « Book my action plan », « Free 15-min call with your coach », la note « ${TXD.av_en[id]} », aucun texte français de l'exemple ni de l'appel, aucun prix`, marqueOk(v, true) && appelOk(v, id, true) && !pb && fr.length === 0 && !m, pb + " · " + JSON.stringify(fr) + " · " + JSON.stringify([v.marque, v.label, v.appel, v.lien && v.lien.t, v.sous, v.plus]) + (m ? " · prix : " + tout.slice(Math.max(0, m.index - 40), m.index + 30) : ""));
+        /* v85 (bloc 4) : sur #/programme, son programme de la formation en anglais (pfOk : la zone chargée, plus d'exemple, puis l'appel)
+           à la place de l'exemple marqué « Example » */
+        ok(`anglais, #/${id} : ${id === "programme" ? "son programme de la formation en anglais (v85 : « Choose your program » ; plus l'exemple « " + EX.marque_en + " »)" : "« " + EX.marque_en + " », l'exemple en anglais"}, « ${EX.appels_en[id].slice(0, 40)}… », « Book my action plan », « Free 15-min call with your coach », la note « ${TXD.av_en[id]} », aucun texte français de l'exemple ni de l'appel, aucun prix`, (id === "programme" ? pfOk(v) : marqueOk(v, true)) && appelOk(v, id, true) && !pb && fr.length === 0 && !m, pb + " · " + JSON.stringify(fr) + " · " + JSON.stringify([v.marque, v.label, v.appel, v.lien && v.lien.t, v.sous, v.plus]) + (m ? " · prix : " + tout.slice(Math.max(0, m.index - 40), m.index + 30) : ""));
       }
       await c.close();
     });
@@ -1887,9 +1962,9 @@ function lienOk(href, base, attendu){
 
   /* =================== Z. rien vers l'extérieur =================== */
   await bloc("Z. hôtes externes", async () => {
-    /* v52 (lot D) : la Speed Formation, ouverte au prospect, montre les vignettes de ses vidéos (img.youtube.com, bloquées ici) */
+    /* v52 (lot D) : la Speed Formation (v85 : « Formation »), ouverte au prospect, montre les vignettes de ses vidéos (img.youtube.com, bloquées ici) */
     const autres = Array.from(externes).filter(h => !/^(fonts\.(googleapis|gstatic)\.com|img\.youtube\.com)$/.test(h));
-    ok("aucune requête vers un autre hôte que la page, le faux Supabase, les polices et les vignettes des vidéos de la Speed Formation (bloquées)", autres.length === 0, JSON.stringify(autres));
+    ok("aucune requête vers un autre hôte que la page, le faux Supabase, les polices et les vignettes des vidéos de la Formation (bloquées)", autres.length === 0, JSON.stringify(autres));
   });
 
   await b.close(); server.close();

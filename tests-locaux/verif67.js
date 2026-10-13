@@ -5,6 +5,12 @@
    blanche à l'onglet que le bouton ouvre et note l'adresse reçue : aucun appel ne part vers le vrai Calendly.
    v81 (bloc 2, parcours du prospect en 11 écrans) : seul le bloc J change (son inscription passe par le parcours) ; les
    prospects des autres blocs sont des comptes d'avant (sans parcours_le) : page « Ton plan d'action », accueil, inchangés.
+   v85 (bloc 4) : « Speed Formation » devient « Formation » (carte de l'accueil, bloc C) ; #/programme (F, H) montre son
+      programme de la formation (#pf-zone, ici l'écran de choix) à la place de l'exemple « Ta séance découverte », la carte
+      🔒 dit « Après ton bilan : ton programme sur mesure, avec ton coach. », et la page lit seulement intake et prefs de la
+      personne elle-même, sans rien écrire (les autres pages verrouillées : aucune lecture, inchangé) ; bloc I : #/programme
+      relevé comme un écran sans exemple, et la consigne cardio « 30 min à intensité moyenne… » des programmes (et sa
+      traduction) en liste blanche exacte. Même nombre de vérifications (63).
    A. page « Ton plan d'action » (juste après les 3 questions), français, 390 px, thème sombre : ordre exact (« Offert »,
       titre, projection, texte, « Ton plan est à toi… », petit texte gris, bouton, « 15 min · par téléphone · offert »,
       « Plus tard… »), textes EXACTS, typographie française (espaces insécables), « Offert » en capitales dorées, UN seul
@@ -355,7 +361,11 @@ const TRENTE_PERMIS = [
   '"30 minutes de sommeil en plus chaque nuit": "30 more minutes of sleep every night",',
   '"Se coucher 30 minutes plus tôt : bien dormir aide à récupérer et à mieux gérer la faim.": "Go to bed 30 minutes earlier: good sleep helps you recover and manage hunger.",',
   'options:["30 min","45 min","60 min","90 min"]',
-  "ne compte pas plus de 30 min d'affilee"
+  "ne compte pas plus de 30 min d'affilee",
+  /* v85 (bloc 4) : la consigne de la séance cardio des programmes de la formation (js/programmesFormation.js, une durée de
+     séance, pas l'ancien appel de 30 min) et sa traduction, en texte exact */
+  '"consigne":"30 min à intensité moyenne (marche rapide en pente, vélo elliptique…)."',
+  '"30 min à intensité moyenne (marche rapide en pente, vélo elliptique…).": "30 min at moderate intensity (brisk incline walking, elliptical…).",'
 ];
 const ANCIENS_TXT = /Réserver mon bilan|Réserve ton bilan|J'ai réservé mon bilan|Avec l'accompagnement MHX|Pas maintenant, découvrir|Book my assessment|Book your assessment|I booked my assessment|With MHX coaching|Not now, explore|Tu veux un programme construit|Want a program built/;
 /* ce que le prospect a vu (texte et adresses des liens de #vue, volet ouvert compris), par langue : relu par le bloc I.
@@ -416,8 +426,11 @@ const E = {
 /* G : [page, titre, texte, description sous la carte (E2), titre de l'exemple, texte d'introduction de l'exemple (v60,
    DECOUVERTE.seance.intro et DECOUVERTE.echantillons.<page>.intro, inchangés)] ; puis l'anglais */
 const G = {
-  programme: ["Mon programme", "Cette séance découverte est la même pour tout le monde. Ton programme, lui, part de ton niveau, de ton matériel et de ton emploi du temps, puis évolue avec tes progrès.", E.lignes[0][1], "Ta séance découverte",
-    "15 à 20 minutes, chez toi, aucun matériel. Le but : faire, proprement."],
+  /* v85 (bloc 4) : #/programme n'a plus d'exemple (« Ta séance découverte », « 15 à 20 minutes, chez toi, aucun matériel. Le
+     but : faire, proprement. ») : son programme de la formation à la place (PF_CHOIX) ; le texte de la carte devient « Après ton
+     bilan : ton programme sur mesure, avec ton coach. » (avant : « Cette séance découverte est la même pour tout le monde. Ton
+     programme, lui, part de ton niveau, de ton matériel et de ton emploi du temps, puis évolue avec tes progrès. ») */
+  programme: ["Mon programme", "Après ton bilan : ton programme sur mesure, avec ton coach.", E.lignes[0][1], null, null],
   journal: ["Mon journal", "Avec l'accompagnement, chaque séance est notée et l'app te propose la charge à viser la fois suivante : tu sais toujours quoi faire pour progresser.", E.lignes[2][1], "Séance A — Corps entier",
     "Chaque série notée : répétitions et charge. À la séance suivante, l'app te propose la charge à viser."],
   nutrition: ["Nutrition", "Avec l'accompagnement, tes repas sont calculés sur tes calories et tes macros, en tenant compte de ton régime et de tes allergies, avec ta liste de courses.", E.lignes[1][1], "Une journée type",
@@ -427,12 +440,29 @@ const G = {
 };
 /* la note de la marque « Exemple » (v60, DECOUVERTE.echantillons.note, inchangée) */
 const ECH_NOTE = "Un aperçu de cette page avec l'accompagnement : ce ne sont pas tes données.";
-/* la carte Speed Formation de l'accueil (v60, DECOUVERTE.formation, inchangée) : titre, texte, lien */
-const FORMATION = { titre: "Speed Formation", note: "Les bases de la nutrition et de l'entraînement, à ton rythme.", lien: ["Ouvrir la Speed Formation", "#/formation", "btn.ghost"] };
+/* la carte Formation de l'accueil (DECOUVERTE.formation) : titre, texte, lien. v85 (bloc 4) : « Speed Formation » devient
+   « Formation » (avant : « Speed Formation », « Les bases de la nutrition et de l'entraînement, à ton rythme. », « Ouvrir la Speed
+   Formation ») ; même lien, même style */
+const FORMATION = { titre: "Formation", note: "Cours et ebooks : alimentation, entraînement, mindset", lien: ["Ouvrir la Formation", "#/formation", "btn.ghost"] };
+/* v85 (bloc 4) : au-dessus de la carte 🔒 de #/programme, son programme de la formation (#pf-zone, js/programmesFormation.js) à
+   la place de l'exemple ; les prospects de F et H (« Perdre du gras », sans réponse à « Tu es ? ») n'ont pas de programme
+   attribué : l'écran de choix (#pf-choisir) — titre, texte, les 3 programmes (nom, lieu, bouton « Choisir »), exacts. La page
+   lit seulement intake et prefs de la personne elle-même (PF_LUES) et n'écrit rien à l'affichage */
+const PF_CHOIX = { h2: "Choisis ton programme", intro: "Ton objectif et ton profil n'indiquent pas encore de programme : choisis celui qui te convient. Tu pourras en changer quand tu veux.",
+  choix: [["Programme salle 12 semaines · Homme", "À la salle · Homme", "Choisir"], ["Programme salle 12 semaines · Femme", "À la salle · Femme", "Choisir"], ["Full body à la maison", "À la maison · Homme ou femme", "Choisir"]] };
+const PF_CHOIX_EN = { h2: "Choose your program", intro: "Your goal and profile don't point to a program yet: choose the one that suits you. You can change it anytime.",
+  choix: [["12-week gym program · Men", "Gym · Men", "Choose"], ["12-week gym program · Women", "Gym · Women", "Choose"], ["Full body at home", "At home · Men or women", "Choose"]] };
+const PF_LUES = ["eq.intake", "eq.prefs"];
+/* l'écran de choix lu (verrouVu) comparé à l'attendu, textes normalisés */
+const pfChoixOk = (pf, att) => !!pf && !!pf.choisir && norm(pf.choisir.h2) === att.h2 && norm(pf.choisir.intro) === norm(att.intro) && JSON.stringify(pf.choisir.choix.map(l => l.map(norm))) === JSON.stringify(att.choix);
+/* seules les clés intake et prefs de la personne elle-même lues (lectures relevées par le faux Supabase : appelant, user_id, clé) */
+const pfLecturesOk = (lus, uid) => lus.every(l => l.par === uid && l.uid === uid && PF_LUES.includes(l.outil));
 /* l'accroche du programme (en-tête de #/programme), en français et en anglais : preuve de la langue affichée (bloc L) */
 const ACCROCHE_PROG = { fr: "Les séances construites pour toi : les exercices, les séries, les répétitions et les temps de repos.", en: "Workouts built for you: the exercises, sets, reps and rest times." };
 const G_EN = {
-  programme: ["My program", "This starter workout is the same for everyone. Your program starts from your level, your equipment and your schedule, then evolves as you progress.", E.lignes_en[0][1]],
+  /* v85 (bloc 4) : avant « This starter workout is the same for everyone. Your program starts from your level, your equipment and
+     your schedule, then evolves as you progress. » */
+  programme: ["My program", "After your check-in: your tailor-made program, with your coach.", E.lignes_en[0][1]],
   journal: ["My training log", "With coaching, every workout is logged and the app suggests the weight to aim for next time: you always know what to do to progress.", E.lignes_en[2][1]],
   nutrition: ["Nutrition", "With coaching, your meals are calculated from your calories and macros, taking your diet and allergies into account, with your shopping list.", E.lignes_en[1][1]],
   suivi: ["My follow-up", "With coaching, your coach reads your weekly check-in and replies with the next step: you always know where you stand and what to do next.", E.lignes_en[3][1]]
@@ -528,7 +558,13 @@ const verrouVu = (page, id) => page.evaluate(id => {
     sous: sous ? { cls: sous.className, t: n(sous) } : null, plus: plus ? n(plus) : null, plusApres: !!(v && plus && (v.compareDocumentPosition(plus) & Node.DOCUMENT_POSITION_FOLLOWING)),
     ech: e ? { h2: n(e.querySelector("h2")), role: e.getAttribute("role"), marque: n(e.querySelector(".ech-marque .pastille")), note: n(e.querySelector(".ech-marque span:not(.pastille)")),
       notes: [...e.querySelectorAll("p.note")].map(n), avant: !!(v && (e.compareDocumentPosition(v) & Node.DOCUMENT_POSITION_FOLLOWING)), texte: n(e) } : null,
-    nEch: document.querySelectorAll("#vue .echantillon").length };
+    nEch: document.querySelectorAll("#vue .echantillon").length,
+    /* v85 (bloc 4) : son programme de la formation (#pf-zone), à la place de l'exemple sur #/programme : avant la carte, son nom
+       ou l'écran de choix (titre, texte, [nom, lieu, bouton] de chaque programme), son texte */
+    pf: (() => { const z = document.querySelector("#vue #pf-zone.pf"); if (!z) return null; const ch = z.querySelector("#pf-choisir");
+      return { avant: !!(v && (z.compareDocumentPosition(v) & Node.DOCUMENT_POSITION_FOLLOWING)), nom: n(z.querySelector("#pf-nom")), onglets: z.querySelectorAll("[data-pf-phase]").length,
+        choisir: ch ? { h2: n(ch.querySelector("h2")), intro: n(ch.querySelector("p.note")), choix: [...ch.querySelectorAll("li.pf-choix-l")].map(li => [n(li.querySelector(".txt b")), n(li.querySelector(".txt small")), n(li.querySelector("button[data-pf-choisir]"))]) } : null,
+        texte: n(z) }; })() };
 }, id);
 
 (async () => {
@@ -619,7 +655,8 @@ const verrouVu = (page, id) => page.evaluate(id => {
     await attendre(page, 1300);
     const A = await accueilVu(page), v = await texte(page, "#vue");
     const fo = A.formation;
-    ok("accueil : son étape (« Ta première étape », « Calcule tes calories (2 min) » → #/calculateur), la Speed Formation (« Speed Formation », « Les bases de la nutrition et de l'entraînement, à ton rythme. », un seul lien « Ouvrir la Speed Formation » → #/formation, en contour : textes de la v60), puis la carte de l'accompagnement (inchangés)",
+    /* v85 (bloc 4) : « Speed Formation » devient « Formation » (FORMATION : titre, texte, lien) ; le reste inchangé */
+    ok("accueil : son étape (« Ta première étape », « Calcule tes calories (2 min) » → #/calculateur), la Formation (v85 : « Formation », « Cours et ebooks : alimentation, entraînement, mindset », un seul lien « Ouvrir la Formation » → #/formation, en contour), puis la carte de l'accompagnement (inchangés)",
       JSON.stringify(A.blocs) === '["dc-etape","dc-formation","dc-accomp"]' && A.etape === "Ta première étape | Calcule tes calories (2 min) | #/calculateur"
       && !!fo && norm(fo.titre) === FORMATION.titre && norm(fo.note) === norm(FORMATION.note) && JSON.stringify(fo.liens.map(([t, h, c]) => [norm(t), h, c])) === JSON.stringify([FORMATION.lien]),
       JSON.stringify([A.blocs, A.etape, fo]));
@@ -696,15 +733,25 @@ const verrouVu = (page, id) => page.evaluate(id => {
     for (const id of ["programme", "journal", "nutrition", "suivi"]) {
       const [nom, txt, av, h2, intro] = G[id], code = "verrou_" + id;
       await aller(page, "#/profil", 1000);
-      const n0 = db.lectures.length;
+      const n0 = db.lectures.length, w0aff = saisies(db).length;   // v85 (bloc 4) : les écritures de l'affichage (#/programme : aucune)
       await aller(page, "#/" + id, 1800);
       const V = await verrouVu(page, id), lus = luHors(db, n0);
-      const lot2 = V.ech ? NOUVEAUX.concat([E.sous]).filter(x => norm(V.ech.texte).includes(x)) : [];
-      ok(`#/${id} : l'exemple au-dessus inchangé (« ${h2} », marqué « Exemple » avec sa note, « ${intro.slice(0, 30)}… » exacts comme en v60, aucun texte du lot 2 dedans), puis la carte : « ${nom} », son texte propre (typographie française), « Réserver mon plan d'action » (bouton doré, lien ${code} exact, nouvel onglet, noopener, 44 px), « Appel de 15 min avec ton coach, offert », puis « ${av.slice(0, 40)}… » ; aucune clé « donnees » lue`,
-        !!V.ech && V.ech.h2 === h2 && V.ech.role === "region" && V.ech.marque === "Exemple" && norm(V.ech.note) === norm(ECH_NOTE) && V.ech.notes.map(norm).includes(norm(intro)) && V.ech.avant && !lot2.length && V.nEch === 1
+      /* v85 (bloc 4) : sur #/programme, le texte du lot 2 est cherché dans son programme de la formation (#pf-zone), qui remplace
+         l'exemple */
+      const lot2 = V.ech ? NOUVEAUX.concat([E.sous]).filter(x => norm(V.ech.texte).includes(x)) : V.pf ? NOUVEAUX.concat([E.sous]).filter(x => norm(V.pf.texte).includes(x)) : [];
+      /* v85 (bloc 4) : #/programme montre son programme de la formation au-dessus de la carte (ici l'écran de choix, PF_CHOIX
+         exact), plus d'exemple (ni #ech-programme ni .echantillon) ; il lit seulement intake et prefs de la personne elle-même et
+         n'écrit rien ; les 3 autres pages : l'exemple et aucune lecture, inchangés */
+      const pfPage = id === "programme";
+      const dessus = pfPage ? !V.ech && V.nEch === 0 && !!V.pf && V.pf.avant && pfChoixOk(V.pf, PF_CHOIX) && !lot2.length
+        : !!V.ech && V.ech.h2 === h2 && V.ech.role === "region" && V.ech.marque === "Exemple" && norm(V.ech.note) === norm(ECH_NOTE) && V.ech.notes.map(norm).includes(norm(intro)) && V.ech.avant && !lot2.length && V.nEch === 1;
+      const lectures = pfPage ? pfLecturesOk(lus, ID) && saisies(db).length === w0aff : !lus.length;
+      ok(pfPage ? `#/programme : au-dessus, son programme de la formation (v85 : #pf-zone à la place de l'exemple « Ta séance découverte » ; ici l'écran de choix, sans programme attribué : « ${PF_CHOIX.h2} », son texte, les 3 programmes exacts avec « Choisir » ; aucun exemple, aucun texte du lot 2 dedans), puis la carte : « ${nom} », son texte propre « ${txt} » (typographie française), « Réserver mon plan d'action » (bouton doré, lien ${code} exact, nouvel onglet, noopener, 44 px), « Appel de 15 min avec ton coach, offert », puis « ${av.slice(0, 40)}… » ; seules intake et prefs de la personne elle-même lues, aucune écriture`
+        : `#/${id} : l'exemple au-dessus inchangé (« ${h2} », marqué « Exemple » avec sa note, « ${intro.slice(0, 30)}… » exacts comme en v60, aucun texte du lot 2 dedans), puis la carte : « ${nom} », son texte propre (typographie française), « Réserver mon plan d'action » (bouton doré, lien ${code} exact, nouvel onglet, noopener, 44 px), « Appel de 15 min avec ton coach, offert », puis « ${av.slice(0, 40)}… » ; aucune clé « donnees » lue`,
+        dessus
         && V.titre === nom && V.texte === typo(txt) && V.nLiens === 1 && !!V.a && V.a.href === lienAtt(code, k) && V.a.t === D.bouton && V.a.btn && V.a.bg === OR_SOMBRE && V.a.cible === "_blank" && /noopener/.test(V.a.rel) && V.a.h >= 44
-        && !!V.sous && V.sous.cls === "verrou-sous" && V.sous.t === E.sous && V.plus === av && V.plusApres && !lus.length,
-        JSON.stringify([V, lot2, lus]));
+        && !!V.sous && V.sous.cls === "verrou-sous" && V.sous.t === E.sous && V.plus === av && V.plusApres && lectures,
+        JSON.stringify([V, lot2, lus]) + " · " + resume(db));
       await relever(page, false, "#/" + id);
       const w0 = saisies(db).length, o = await ouvrirCalendly(c, page, "#vue .verrou a[target=_blank]"), cl = clicsDe(db, ID), autres = saisies(db).slice(w0).filter(e => e.outil !== "challenge");
       n++;
@@ -745,14 +792,19 @@ const verrouVu = (page, id) => page.evaluate(id => {
     for (const id of ["programme", "journal", "nutrition", "suivi"]) {
       const [nom, txt, av] = G_EN[id], code = "verrou_" + id;
       await aller(page, "#/profil", 1000);
-      const n0 = db.lectures.length;
+      const n0 = db.lectures.length, w0aff = saisies(db).length;   // v85 (bloc 4) : les écritures de l'affichage (#/programme : aucune)
       await aller(page, "#/" + id, 1800);
       const V = await verrouVu(page, id), lus = luHors(db, n0), v = await texte(page, "#vue"), francais = NOUVEAUX.filter(x => v.includes(x));
       const th = await page.evaluate(() => document.documentElement.getAttribute("data-theme"));
-      ok(`anglais, ancien choix « clair » ignoré, v80 (pas de data-theme), #/${id} : l'exemple (« Example ») au-dessus, « ${nom} », « ${txt.slice(0, 45)}… », « Book my action plan » (bouton du doré du thème sombre, lien ${code} exact, nouvel onglet, noopener, 44 px), « Free 15-min call with your coach », « ${av.slice(0, 35)}… » ; aucun texte français du lot 2 ; aucune clé « donnees » lue`,
-        th === null && !!V.ech && V.ech.marque === "Example" && V.ech.avant && V.nEch === 1 && V.titre === nom && V.texte === txt && !!V.a && V.a.href === lienAtt(code, k) && V.a.t === D.bouton_en && V.nLiens === 1
+      /* v85 (bloc 4) : #/programme : son programme de la formation au-dessus (écran de choix en anglais, PF_CHOIX_EN exact), plus
+         d'exemple ; seules intake et prefs de la personne elle-même lues, aucune écriture ; les 3 autres pages inchangées */
+      const pfPage = id === "programme";
+      const dessus = pfPage ? !V.ech && V.nEch === 0 && !!V.pf && V.pf.avant && pfChoixOk(V.pf, PF_CHOIX_EN) : !!V.ech && V.ech.marque === "Example" && V.ech.avant && V.nEch === 1;
+      const lectures = pfPage ? pfLecturesOk(lus, ID) && saisies(db).length === w0aff : !lus.length;
+      ok(`anglais, ancien choix « clair » ignoré, v80 (pas de data-theme), #/${id} : ${pfPage ? `son programme de la formation au-dessus (v85, à la place de l'exemple : « ${PF_CHOIX_EN.h2} », son texte, les 3 programmes anglais exacts avec « Choose », aucun exemple)` : "l'exemple (« Example ») au-dessus"}, « ${nom} », « ${txt.slice(0, 45)}… », « Book my action plan » (bouton du doré du thème sombre, lien ${code} exact, nouvel onglet, noopener, 44 px), « Free 15-min call with your coach », « ${av.slice(0, 35)}… » ; aucun texte français du lot 2 ; ${pfPage ? "seules intake et prefs de la personne elle-même lues, aucune écriture" : "aucune clé « donnees » lue"}`,
+        th === null && dessus && V.titre === nom && V.texte === txt && !!V.a && V.a.href === lienAtt(code, k) && V.a.t === D.bouton_en && V.nLiens === 1
         && V.a.btn && V.a.bg === OR_SOMBRE && V.a.cible === "_blank" && /noopener/.test(V.a.rel) && V.a.h >= 44
-        && !!V.sous && V.sous.t === E.sous_en && norm(V.plus) === norm(av) && !francais.length && !lus.length && !(await deborde(page)), JSON.stringify([th, V, francais, lus]));
+        && !!V.sous && V.sous.t === E.sous_en && norm(V.plus) === norm(av) && !francais.length && lectures && !(await deborde(page)), JSON.stringify([th, V, francais, lus]) + " · " + resume(db));
       await relever(page, true, "#/" + id);
     }
     await aller(page, "#/journal", 1800);
@@ -816,8 +868,10 @@ const verrouVu = (page, id) => page.evaluate(id => {
       /* aucun relevé vide : chaque écran contient le bouton (le volet des conditions le cite, 2e paragraphe), le Profil son lien des conditions */
       const marque = x => x.ou === "profil" ? (en ? COND.titre_en : COND.titre) : (en ? D.bouton_en : D.bouton);
       const vides = vus.filter(x => !x.t.includes(norm(marque(x))) || !x.t30.includes(norm(marque(x)))).map(x => x.ou);
-      /* le texte sans exemples n'ôte que les exemples : plus court sur les 4 pages de la vitrine, identique ailleurs */
-      const vitrine = x => /^#\/(programme|journal|nutrition|suivi)$/.test(x.ou);
+      /* le texte sans exemples n'ôte que les exemples : plus court sur les pages de la vitrine qui en ont un, identique ailleurs.
+         v85 (bloc 4) : #/programme n'a plus d'exemple (son programme de la formation à la place) : identique, comme les autres
+         écrans (son texte entier est donc cherché pour toutes les durées à 30 min) */
+      const vitrine = x => /^#\/(journal|nutrition|suivi)$/.test(x.ou);
       const exclusion = vus.filter(x => vitrine(x) ? !(x.t30.length < x.t.length) : x.t30 !== x.t).map(x => x.ou);
       const ecrans = vus.map(x => x.ou).sort();
       ok(`${en ? "anglais" : "français"} : les ${att.length} écrans du prospect relevés, exactement (${att.join(", ")}), aucun vide (chacun contient « ${en ? D.bouton_en : D.bouton} », le Profil « ${en ? COND.titre_en : COND.titre} ») ; aucun « 30min », « 30 min », « 30 minutes », « 30-minute » (dans les exemples des pages verrouillées : « 30min », « 30 minutes », « 30-minute ») ni ancien libellé du bilan (textes et adresses des liens)`,
@@ -827,7 +881,7 @@ const verrouVu = (page, id) => page.evaluate(id => {
     const src = source(HTML), cfg = src.match(/calendly: "([^"]*)"/);
     const reste = TRENTE_PERMIS.reduce((s, w) => s.split(w).join(""), src);
     const hors = [...reste.matchAll(new RegExp(TRENTE.source, "gi"))].map(m => reste.slice(Math.max(0, m.index - 50), m.index + 50).replace(/\s+/g, " "));
-    ok("fichiers servis (page, js/, css/) : CONFIG.marque.calendly = la nouvelle adresse ; plus aucun « 30min » (ancien lien), « 30 min », « 30 minutes » ni « 30-minute » hors liste blanche exacte (défis d5 et d9 de la Speed Formation et leur traduction, options de durée de séance du Profil, commentaire du compteur de temps)",
+    ok("fichiers servis (page, js/, css/) : CONFIG.marque.calendly = la nouvelle adresse ; plus aucun « 30min » (ancien lien), « 30 min », « 30 minutes » ni « 30-minute » hors liste blanche exacte (défis d5 et d9 de la Formation et leur traduction, options de durée de séance du Profil, commentaire du compteur de temps ; v85 : consigne de la séance cardio des programmes de la formation et sa traduction)",
       !!cfg && cfg[1] === CAL && !hors.length, (cfg ? cfg[1] : "calendly introuvable") + " · " + JSON.stringify(hors.slice(0, 6)));
   });
 

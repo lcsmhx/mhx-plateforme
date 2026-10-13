@@ -1,11 +1,11 @@
 /* ==================================================================
-   DONNEES DE LA FORMATION — SpeedFormation 1.0
+   DONNEES DE LA FORMATION (v85 : elle s'appelle « Formation »)
    Le contenu est rapatrie ici depuis Notion : le client n'a plus a
    sortir de l'application, et les cases cochees sont enregistrees
    sur son compte.
    ================================================================== */
 const FORMATION = {
-  titre: "SpeedFormation 1.0",
+  titre: "Formation",   // v85 (bloc 4, décision de Lucas) : la formation s'appelle maintenant « Formation » (son ancien nom ne paraît plus nulle part)
   video: "Bsinn0muMF4",
   /* v60 (brief V2, I1) : duree de la video de bienvenue, en minutes. Vide : l'etiquette « Commence ici » s'affiche sans
      duree ; sinon « Commence ici · X min » avec X = 2 + 1 + cette duree (calcul 2 min, pesee 1 min). */
@@ -446,7 +446,7 @@ const LECONS = {
 
 /* ------------------------------------------------------------------
    OUTIL — Formation
-   La formation SpeedFormation 1.0, rapatriee dans l'application :
+   La Formation, rapatriee dans l'application :
    les videos, les lecons, les cases a cocher et les outils de suivi.
    Tout ce que le client coche est enregistre sur son compte.
    ------------------------------------------------------------------ */
@@ -456,10 +456,10 @@ const REPAS_SEM = ["Petit-déjeuner","Collation matin","Déjeuner","Collation ap
 const outilFormation = {
   id: "formation",
   cle: "formation",
-  nom: "Speed Formation",
+  nom: "Formation",
   icone: "🎓",
   titre: FORMATION.titre,
-  accroche: "Ta formation complète : les vidéos, les guides et tes outils de suivi. Ce que tu coches ici reste enregistré.",
+  accroche: "Cours et ebooks : alimentation, entraînement, mindset",   // v85 : le sous-titre de la Formation
 
   vide(){
     return { coches:{}, ouvert:"", lecon:"", challenge:"", defis:{},

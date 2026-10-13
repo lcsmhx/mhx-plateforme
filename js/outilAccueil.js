@@ -476,7 +476,7 @@ const outilAccueil = {
         : { id: "mensurations", ico: ICONES.mensurations, t: trad("Ma mesure de la semaine"), s: trad("Poids et tours de taille, à jeun") });
     }
     if (!consult && !I.complet) acces.unshift({ id: "profil", ico: ICONES.profil, t: trad("Compléter mon profil"), s: trad("C'est ce qui permet à ton coach de construire ton suivi") });
-    if (!consult && !aProgramme && !aDiete) acces.push({ id: "formation", ico: ICONES.formation, t: trad("Commencer la Speed Formation"), s: trad("Les bases, à ton rythme") });
+    if (!consult && !aProgramme && !aDiete) acces.push({ id: "formation", ico: ICONES.formation, t: trad("Commencer la Formation"), s: trad("Les bases, à ton rythme") });
 
     const ligne = a => `<a class="acces${a.ok ? " fait" : ""}" href="#/${a.id}"><span class="ico">${a.ico}</span><span class="txt"><b>${esc(a.t)}</b><small>${esc(a.s)}</small></span><span class="fleche">›</span></a>`;
 
@@ -495,6 +495,7 @@ const outilAccueil = {
       </section>
       ${dim ? `<section class="panel" id="acc-fbd"><h2>${esc(trad("Feedback de la semaine"))}</h2><div class="acces-l">${nonVus.length ? Checkin.accesReponseHTML(nonVus[0]) : ""}${Checkin.statutHTML(CK, { lien: "#/suivi", uid: moi })}</div></section>`
         : (aProgramme || aDiete || fbR) ? `<section class="panel"><h2>${esc(trad("Bilan hebdomadaire"))}</h2><div class="acces-l">${fbR ? Feedback.accesHTML(fbR) : ""}${(aProgramme || aDiete) ? Checkin.statutHTML(CK, { lien: "#/suivi", uid: moi }) : ""}</div></section>` : ""}
+      ${!consult && !aProgramme ? ProgFormation.carteHTML(I, (Store.cache && Store.cache.prefs) || {}) : ""}
       ${acces.length ? `<section class="panel"><h2>${esc(trad("Aujourd'hui"))}</h2><div class="acces-l">${acces.map(ligne).join("")}</div></section>` : ""}
       ${obj ? `<section class="panel"><h2>${esc(trad("Tes objectifs du mois"))}</h2>
         ${obj.liste.map((t, i) => { if (!t) return ""; const st = Regularite.statutObjectif(P, OF, i); return `<div class="objectif${st === "atteint" ? " atteint" : ""}${st === "non_atteint" ? " rate" : ""}"><span class="num">0${i + 1}</span><span class="texte" data-notr>${esc(t)}</span><span class="pastille ${Regularite.classeStatut(st)}">${esc(Regularite.libelleStatut(st))}</span></div>`; }).join("")}

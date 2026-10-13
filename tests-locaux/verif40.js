@@ -46,6 +46,12 @@
    - v84 (ménage du bloc 3) : bloc I coach, le tableau « Suivi de mes clients » (#tb-clients) a quitté la page Clients pour « Suivi
      détaillé » (#/suivi-clients) : l'absence de Léa y est relevée là, puis la liste « Clients » sur #/clients (sans le tableau
      d'avant sous elle). Seules les adresses changent ; nombre de vérifications inchangé (64).
+   - v85 (bloc 4) : l'onglet Programme du prospect montre SON programme de la formation (#pf-zone.pf : #pf-tete, ou l'écran de
+     choix #pf-choisir) au lieu de l'exemple « Ta séance découverte » (#ech-programme) ; le texte de sa carte 🔒 devient « Après
+     ton bilan : ton programme sur mesure, avec ton coach. » / « After your check-in: your tailor-made program, with your coach. » ;
+     cette page lit seulement l'intake et les prefs de la personne elle-même (aucune autre donnée, aucune autre personne, aucune
+     écriture), les autres pages verrouillées ne lisent toujours rien. « Speed Formation » devient « Formation » (titre de la page
+     #/formation : « Formation »). Nombre de vérifications inchangé (64).
    Supabase simulé : rien ne part vers la vraie base ; les écritures dans donnees sont appliquées en mémoire,
    et TOUTE requête non-GET vers /rest/v1/* est relevée (méthode + adresse) pour les contrôles « aucune écriture ».
    Chaque bloc est protégé : une exception (élément absent, délai dépassé) note un ✗ et la suite continue ;
@@ -289,20 +295,51 @@ const cliquerVerrou = async (c, page) => {
      partout, « Tu veux un programme construit pour toi, qui évolue chaque semaine ? Réserve ton bilan. » / « Want a program
      built for you that evolves every week? Book your assessment. ») ; les pages cachées gardent « Cette fonctionnalité… » */
   const APPELS = {
-    programme: "Cette séance découverte est la même pour tout le monde. Ton programme, lui, part de ton niveau, de ton matériel et de ton emploi du temps, puis évolue avec tes progrès.",
+    /* v85 (bloc 4) : l'exemple n'est plus là (son programme de la formation à la place) : « Après ton bilan : ton programme sur
+       mesure, avec ton coach. » (avant : « Cette séance découverte est la même pour tout le monde. Ton programme, lui, part de
+       ton niveau, de ton matériel et de ton emploi du temps, puis évolue avec tes progrès. ») */
+    programme: "Après ton bilan : ton programme sur mesure, avec ton coach.",
     journal: "Avec l'accompagnement, chaque séance est notée et l'app te propose la charge à viser la fois suivante : tu sais toujours quoi faire pour progresser.",
     nutrition: "Avec l'accompagnement, tes repas sont calculés sur tes calories et tes macros, en tenant compte de ton régime et de tes allergies, avec ta liste de courses.",
     suivi: "Avec l'accompagnement, ton coach lit ton bilan chaque semaine et te répond avec la suite du plan : tu sais toujours où tu en es et quoi faire ensuite."
   };
   const APPELS_EN = {
-    programme: "This starter workout is the same for everyone. Your program starts from your level, your equipment and your schedule, then evolves as you progress.",
+    /* v85 (bloc 4) : avant « This starter workout is the same for everyone. Your program starts from your level, your equipment
+       and your schedule, then evolves as you progress. » */
+    programme: "After your check-in: your tailor-made program, with your coach.",
     journal: "With coaching, every workout is logged and the app suggests the weight to aim for next time: you always know what to do to progress.",
     nutrition: "With coaching, your meals are calculated from your calories and macros, taking your diet and allergies into account, with your shopping list.",
     suivi: "With coaching, your coach reads your weekly check-in and replies with the next step: you always know where you stand and what to do next."
   };
   const texteVerrou = (r, en) => AVEC_EXEMPLE.includes(r) ? (en ? APPELS_EN[r] : APPELS[r]) : (en ? TEXTE_VERROU_EN : TEXTE_VERROU);
-  const exempleOk = async (page, r) => AVEC_EXEMPLE.includes(r) === !!(await page.$("#vue #ech-" + r + ".echantillon"));
-  const TEXTE_FORMATION = "Ta période découverte est terminée : la Speed Formation fait partie de l'accompagnement.";
+  /* v85 (bloc 4) : l'onglet Programme du prospect ne montre plus l'exemple « Ta séance découverte » (#ech-programme, .echantillon)
+     mais SON programme de la formation (#pf-zone.pf, rempli après la lecture de son intake et de ses prefs) : soit sa page
+     (#pf-tete : son nom #pf-nom, ses séances .pf-seance-l, ses onglets de phase [data-pf-phase] quand il y en a plusieurs), soit
+     l'écran de choix (#pf-choisir : les 3 programmes salle-homme, salle-femme, maison, chacun avec son nom et son bouton
+     « Choisir ») quand son objectif et son sexe n'en désignent pas un (Léa : « Perdre du gras », sans sexe). Même rigueur que
+     pour l'exemple : présent et rempli (plus le « Chargement… » d'attente), et plus aucun exemple sur la page. */
+  const programmeFormationOk = async page => {
+    await page.waitForSelector("#vue #pf-zone.pf :is(#pf-tete, #pf-choisir)", { timeout: 4000 }).catch(() => {});
+    return page.evaluate(() => {
+      const z = document.querySelector("#vue #pf-zone.pf");
+      if (!z || document.querySelector("#vue #ech-programme, #vue .echantillon")) return false;
+      const tete = z.querySelector("#pf-tete"), choix = z.querySelector("#pf-choisir");
+      if (tete) { const ph = z.querySelectorAll("[data-pf-phase]").length; return !!((z.querySelector("#pf-nom") || {}).textContent || "").trim() && z.querySelectorAll(".pf-seance-l").length > 0 && ph !== 1; }
+      if (!choix) return false;
+      const l = [...choix.querySelectorAll(".pf-choix-l")];
+      return JSON.stringify([...choix.querySelectorAll("[data-pf-choisir]")].map(x => x.dataset.pfChoisir)) === '["salle-homme","salle-femme","maison"]'
+        && l.length === 3 && l.every(x => !!((x.querySelector("b") || {}).textContent || "").trim());
+    }).catch(() => false);
+  };
+  const exempleOk = async (page, r) => r === "programme" ? await programmeFormationOk(page) : AVEC_EXEMPLE.includes(r) === !!(await page.$("#vue #ech-" + r + ".echantillon"));
+  /* v85 (bloc 4) : #/programme du prospect lit seulement SON intake et SES prefs (GET, user_id = elle-même, outil = intake ou
+     prefs, rien d'autre dans la requête) ; aucune autre donnée, aucune autre personne, aucune écriture. Les autres pages
+     verrouillées : toujours aucune requête. */
+  const lecturePf = u => { const m = /^GET \/rest\/v1\/donnees\?(.*)$/.exec(u); if (!m) return false; const q = new URLSearchParams(m[1]);
+    return q.get("user_id") === "eq." + PROSPECT && ["eq.intake", "eq.prefs"].includes(q.get("outil")) && [...q.keys()].every(k => ["user_id", "outil", "select"].includes(k)); };
+  const lecturesOk = (page, r) => r === "programme" ? page.donnees.every(lecturePf) : page.donnees.length === 0;
+  /* v85 (bloc 4) : la formation s'appelle « Formation » (avant : « … la Speed Formation fait partie de l'accompagnement. ») */
+  const TEXTE_FORMATION = "Ta période découverte est terminée : la Formation fait partie de l'accompagnement.";
   let textesFr = "", textesEn = "";
   try {
 
@@ -367,7 +404,7 @@ const cliquerVerrou = async (c, page) => {
     const blocs = await page.$$eval(DC_ZONE + " section[id^='dc-']", l => l.map(s => s.id)).catch(() => []);
     /* v52 : l'accueil après la page bilan = Speed Formation + accompagnement (avant : résultat, calcul, séance, recettes en plus) ;
        lot D : l'action mise en avant en tête (dc-etape, « Calcule tes calories »), plus de « Jour n/7 » */
-    ok("prospect jour 4 : accueil Découverte « Découverte » (sans « Jour n/7 »), « Bonjour Léa », son étape, Speed Formation et accompagnement (plus d'ancien écran « résultat »)", /^\s*Découverte\s+Bonjour Léa/.test(acc) && !/Jour \d/.test(acc) && JSON.stringify(blocs) === '["dc-etape","dc-formation","dc-accomp"]', acc.slice(0, 160) + " | " + JSON.stringify(blocs));
+    ok("prospect jour 4 : accueil Découverte « Découverte » (sans « Jour n/7 »), « Bonjour Léa », son étape, Formation et accompagnement (plus d'ancien écran « résultat »)", /^\s*Découverte\s+Bonjour Léa/.test(acc) && !/Jour \d/.test(acc) && JSON.stringify(blocs) === '["dc-etape","dc-formation","dc-accomp"]', acc.slice(0, 160) + " | " + JSON.stringify(blocs));
     const cals = await page.$$eval(DC_ZONE + " [data-dc-cal]", l => l.map(a => ({ src: a.dataset.dcCal, href: a.href, t: a.textContent.trim(), cible: a.target })));
     /* v61 (lot 2, brief V2 E et F) : « Récupérer mon plan d'action » (avant : « Réserver mon bilan »), codes accueil_haut /
        accueil_accompagnement (avant : decouverte / decouverte-accompagnement) ; sous le bouton du haut, la ligne « 15 min avec
@@ -378,7 +415,8 @@ const cliquerVerrou = async (c, page) => {
     ok("prospect jour 4 : « Réserver mon plan d'action » sur l'accueil (en-tête + carte « Ce que l'accompagnement ajoute »), Calendly pré-rempli, utm_content=accueil_haut / accueil_accompagnement, « Appel de 15 min avec ton coach, offert » sous le bouton du haut et « Appel de 15 min avec ton coach, offert » sous celui de la carte ; plus de « Réserver mon bilan » ni de « 30 minutes »",
       cals.length === 2 && cals.every(x => x.href === lienPre(x.src) && x.t === CTA.fr && x.cible === "_blank") && cals.map(x => x.src).join() === "accueil_haut,accueil_accompagnement"
       && plat(sousAcc.haut).trim() === SOUS.fr && plat(sousAcc.note).trim() === NOTE_ACCOMP.fr && !/Réserver mon bilan|30 minutes/.test(plat(acc)), JSON.stringify(cals) + " | " + JSON.stringify(sousAcc));
-    ok("prospect jour 4 : bloc Speed Formation ouvert pendant la découverte (lien « Ouvrir la Speed Formation »)", !!(await page.$('#dc-formation a[href="#/formation"]')) && !(await texte(page, "#dc-formation")).includes(TEXTE_FORMATION));
+    ok("prospect jour 4 : bloc Formation ouvert pendant la découverte (lien « Ouvrir la Formation »)",   // v85 (bloc 4) : « Speed Formation » → « Formation » (libellé seul)
+ !!(await page.$('#dc-formation a[href="#/formation"]')) && !(await texte(page, "#dc-formation")).includes(TEXTE_FORMATION));
     await page.screenshot({ path: path.join(OUT, "prospect-accueil.png"), fullPage: true });
     textesFr += "\n" + await toutLeTexte(page);
 
@@ -390,7 +428,7 @@ const cliquerVerrou = async (c, page) => {
     ok("prospect jour 4 : chaque onglet verrouillé est annoncé « (verrouillé) » aux lecteurs d'écran", cad.length > 0 && await page.$$eval("#nav a", l => l.filter(a => a.querySelector(".nav-cadenas")).every(a => (a.querySelector(".sr-only") || {}).textContent === " (verrouillé)")));
     const barre = await barreIds(page);
     /* v52 (lot D) : accueil, calculateur, progression, Speed Formation (avant : accueil, formation, profil, programme verrouillé) */
-    ok("prospect jour 4 : barre du bas = accueil, calculateur, progression, Speed Formation (aucun onglet verrouillé) ; le reste derrière « Plus »", JSON.stringify(barre) === '["accueil","calculateur","mensurations","formation"]' && !!(await page.$("#barre-bas [data-plus]")) && (await page.$$eval("#barre-bas a.verrouille", l => l.map(a => a.dataset.id))).join() === "", JSON.stringify(barre));
+    ok("prospect jour 4 : barre du bas = accueil, calculateur, progression, Formation (aucun onglet verrouillé) ; le reste derrière « Plus »", JSON.stringify(barre) === '["accueil","calculateur","mensurations","formation"]' && !!(await page.$("#barre-bas [data-plus]")) && (await page.$$eval("#barre-bas a.verrouille", l => l.map(a => a.dataset.id))).join() === "", JSON.stringify(barre));
 
     /* pages verrouillées : on part d'une page ouverte, puis chaque adresse */
     await aller(page, "#/profil", 1500);
@@ -401,9 +439,11 @@ const cliquerVerrou = async (c, page) => {
       /* v61 (lot 2) : le texte propre à la page (typographie française : comparé sans les espaces insécables), « Récupérer
          mon plan d'action » (utm_content=verrou_<page>) et la ligne « 15 min avec Lucas · offert » (avant : l'appel commun,
          « Réserver mon bilan », verrou-<page>) */
-      ok(`prospect : #/${r} verrouillé — ${AVEC_EXEMPLE.includes(r) ? "l'exemple, puis " : ""}cadenas, « ${texteVerrou(r)} », « ${CTA.fr} » vers Calendly (utm_content=verrou_${r}, prénom et email pré-remplis), « ${SOUS.fr} » dessous`, !!v && v.cadenas && plat(v.texte) === texteVerrou(r) && await exempleOk(page, r) && lienOk(v, "verrou_" + r), JSON.stringify(v));
+      /* v85 (bloc 4) : #/programme = son programme de la formation (plus l'exemple), puis la carte 🔒 et son nouveau texte */
+      ok(`prospect : #/${r} verrouillé — ${r === "programme" ? "son programme de la formation (#pf-zone, plus l'exemple), puis " : AVEC_EXEMPLE.includes(r) ? "l'exemple, puis " : ""}cadenas, « ${texteVerrou(r)} », « ${CTA.fr} » vers Calendly (utm_content=verrou_${r}, prénom et email pré-remplis), « ${SOUS.fr} » dessous`, !!v && v.cadenas && plat(v.texte) === texteVerrou(r) && await exempleOk(page, r) && lienOk(v, "verrou_" + r), JSON.stringify(v));
       const html = await page.evaluate(() => document.body.innerHTML);
-      ok(`prospect : #/${r} verrouillé — aucune requête vers ses données (ni lecture ni écriture), rien de ses données affiché`, page.donnees.length === 0 && !html.includes(TEMOIN), page.donnees.join(" ; ") + (html.includes(TEMOIN) ? " | donnée témoin affichée" : ""));
+      /* v85 (bloc 4) : #/programme lit seulement son intake et ses prefs (rien d'autre, personne d'autre, aucune écriture) */
+      ok(`prospect : #/${r} verrouillé — ${r === "programme" ? "seulement la lecture de son intake et de ses prefs (aucune autre donnée, aucune autre personne, aucune écriture)" : "aucune requête vers ses données (ni lecture ni écriture)"}, rien de ses données affiché`, lecturesOk(page, r) && !html.includes(TEMOIN), page.donnees.join(" ; ") + (html.includes(TEMOIN) ? " | donnée témoin affichée" : ""));
       textesFr += "\n" + await toutLeTexte(page);
     }
     /* le relevé du cache marche : prefs (langue, lue au démarrage de tout compte) doit y figurer */
@@ -418,7 +458,8 @@ const cliquerVerrou = async (c, page) => {
        v60 (lot 1, brief V2 I) : pour le prospect, la carte « Commence ici » (#fo-depart, dessinée après la lecture groupée de
        son calcul et de sa pesée) est là : le contrôle « aucune écriture pendant toute la visite » ci-dessous couvre donc
        aussi ce nouveau chemin (une simple visite n'écrit rien) */
-    ok("prospect jour 4 : #/formation ouvert (la Speed Formation s'affiche, pas de cadenas, sa formation est lue, v60 : carte « Commence ici » dessinée)", !(await page.$("#vue .verrou")) && (await texte(page, "#vue h1")).includes("SpeedFormation") && page.donnees.some(u => /^GET .*outil=(eq\.formation|in\.\([^)]*formation)/.test(u)) && !!(await page.$("#fo-vue #fo-depart")), (await texte(page, "#vue")).slice(0, 160) + " | " + page.donnees.join(" ; "));
+    /* v85 (bloc 4) : titre « Formation » (avant : « SpeedFormation 1.0 ») */
+    ok("prospect jour 4 : #/formation ouvert (la Formation s'affiche, pas de cadenas, sa formation est lue, v60 : carte « Commence ici » dessinée)", !(await page.$("#vue .verrou")) && (await texte(page, "#vue h1")).trim() === "Formation" && page.donnees.some(u => /^GET .*outil=(eq\.formation|in\.\([^)]*formation)/.test(u)) && !!(await page.$("#fo-vue #fo-depart")), (await texte(page, "#vue")).slice(0, 160) + " | " + page.donnees.join(" ; "));
     textesFr += "\n" + await toutLeTexte(page);
 
     /* anciennes adresses du challenge */
@@ -505,7 +546,8 @@ const cliquerVerrou = async (c, page) => {
     const v = await verrou(page);
     /* v61 (lot 2) : le texte anglais propre à la page, « Get my action plan » (utm_content=verrou_programme) et « 15 min with
        Lucas · free » (avant : l'appel commun, « Book my assessment », verrou-programme) */
-    ok(`prospect en anglais : #/programme (l'exemple, puis) « ${APPELS_EN.programme} », « ${CTA.en} » (utm_content=verrou_programme) et « ${SOUS.en} »`, !!v && v.texte === APPELS_EN.programme && await exempleOk(page, "programme") && lienOk(v, "verrou_programme", "en"), JSON.stringify(v));
+    /* v85 (bloc 4) : son programme de la formation (plus l'exemple), puis le nouveau texte anglais de la carte 🔒 */
+    ok(`prospect en anglais : #/programme (son programme de la formation, puis) « ${APPELS_EN.programme} », « ${CTA.en} » (utm_content=verrou_programme) et « ${SOUS.en} »`, !!v && v.texte === APPELS_EN.programme && await exempleOk(page, "programme") && lienOk(v, "verrou_programme", "en"), JSON.stringify(v));
     textesEn += "\n" + await toutLeTexte(page);
     await aller(page, "#/accueil", 2000);
     const acc = await texte(page, "#acc-vue");
@@ -642,7 +684,9 @@ const cliquerVerrou = async (c, page) => {
     await aller(page, "#/programme", 1500);
     ok("client : son programme s'affiche (pas de verrou)", !(await page.$("#vue .verrou")) && (await texte(page, "#vue")).includes("Séance"));
     await aller(page, "#/formation", 1500);
-    ok("client : Speed Formation ouverte (pas de verrou)", !(await page.$("#vue .verrou")) && (await texte(page, "#vue h1")).includes("SpeedFormation"));
+    /* v85 (bloc 4) : titre « Formation » (avant : « SpeedFormation 1.0 ») */
+    const h1C = (await texte(page, "#vue h1")).trim();
+    ok("client : Formation ouverte (pas de verrou)", !(await page.$("#vue .verrou")) && h1C === "Formation", h1C);
     await aller(page, "#/decouverte", 1500);
     ok("client : #/decouverte ne lui ouvre rien de nouveau (retour à son accueil, pas d'écran Découverte)", !(await page.$(DC_ECRAN)) && !(await page.$("#vue .verrou")) && !!(await page.$("#acc-vue")));
   });
@@ -674,7 +718,8 @@ const cliquerVerrou = async (c, page) => {
     await aller(page, "#/formation", 1500);
     /* ouverte ET affichée : ni cadenas, ni page en erreur, ni « Chargement… » ; la progression est celle de Léa (10 étapes cochées) */
     const fo = await page.evaluate(() => { const v = document.querySelector("#vue"); return { verrou: !!document.querySelector("#vue .verrou"), illisible: !!document.getElementById("page-illisible"), chargement: !!v && /Chargement…/.test(v.innerText), h1: ((document.querySelector("#vue h1") || {}).textContent || "").replace(/\s+/g, ""), progression: ((document.querySelector("#vue .prog-compteur .t-sub") || {}).textContent || "").trim(), modules: document.querySelectorAll("#vue .fo-mod").length }; });
-    ok("coach dans la fiche d'un prospect au jour 21 : Speed Formation ouverte et affichée (titre, modules, progression de Léa « 10 / … étapes ») — le verrou du jour 8 ne vaut que pour le prospect", okFiche && !fo.verrou && !fo.illisible && !fo.chargement && fo.h1.includes("SpeedFormation") && fo.modules > 0 && /^10 \//.test(fo.progression), JSON.stringify(fo));
+    /* v85 (bloc 4) : titre « Formation » (avant : « SpeedFormation 1.0 ») */
+    ok("coach dans la fiche d'un prospect au jour 21 : Formation ouverte et affichée (titre, modules, progression de Léa « 10 / … étapes ») — le verrou du jour 8 ne vaut que pour le prospect", okFiche && !fo.verrou && !fo.illisible && !fo.chargement && fo.h1 === "Formation" && fo.modules > 0 && /^10 \//.test(fo.progression), JSON.stringify(fo));
     /* v61 (lot 2) : le nouveau code (verrou_programme) comme l'ancien (verrou-programme) : la base seule (nouvelle adresse) */
     const lien = await page.evaluate(() => { try { return [lienCalendly("verrou_programme"), lienCalendly("verrou-programme")]; } catch (e) { return ["ERREUR " + e.message]; } });
     ok("coach dans la fiche d'un prospect : lien Calendly brut (ni source, ni prénom, ni email ; v61 : l'adresse de l'événement de 15 min, nouveau et ancien code)", okFiche && lien.length === 2 && lien.every(x => x === CAL), JSON.stringify(lien));

@@ -102,10 +102,16 @@ const Traduction = {
 async function basculerLangue(){
   const l = I18N.langue === "en" ? "fr" : "en";
   const range = I18N.choisir(l);
-  /* le choix suit le client d'un appareil a l'autre */
+  /* le choix suit le client d'un appareil a l'autre ; v85 (bloc 4) : prefs porte aussi le programme de la formation choisi
+     (prog_formation) : lue d'abord, tous ses champs gardes (jamais un document { langue } seul par-dessus) ; illisible (reseau) :
+     rien n'est ecrit, la langue change quand meme sur cet appareil */
   try {
     const u = Auth.utilisateur();
-    if (u && !Store.idConsulte) await Store.envoyer("prefs", { langue: l }, u.id);
+    if (u && !Store.idConsulte){
+      const pr = await Store.lire("prefs", {});
+      if (pr && typeof pr === "object" && !Store.nonLus.has(pr) && Store.ecrire("prefs", Object.assign({}, pr, { langue: l })) !== false)
+        await Promise.race([Store.envoyerCle("prefs"), new Promise(r => setTimeout(r, 6000))]);
+    }
   } catch(e){}
   if (range) location.reload();
   else afficher(courant);
@@ -161,7 +167,7 @@ const Contenus = {
 
 /* Dictionnaire anglais (US) — genere depuis i18n/en_data.py. Cle = texte francais exact. */
 I18N.en = {
-/* v59 — Speed Formation : titres courts des modules (la carte retire « Module n — »), objectifs, contenu, note du module 3,
+/* v59 — Formation : titres courts des modules (la carte retire « Module n — »), objectifs, contenu, note du module 3,
    libellés « Objectif : », « Ta to-do list » et bouton de la vidéo (« ▶ » compris : un seul texte). « Introduction » et
    « Mindset » restent tels quels (même mot en anglais). Tâches, défis, challenges et les 2 leçons : pas encore traduits
    (l'étiquette « Objectif : » des challenges reste donc en français : data-notr dans outilFormation.wChallenges). */
@@ -226,7 +232,7 @@ I18N.en = {
 "Réduire le stress aide à tenir tes bonnes habitudes.": "Lowering stress helps you stick to your good habits.",
 "30 minutes de sommeil en plus chaque nuit": "30 more minutes of sleep every night",
 "Se coucher 30 minutes plus tôt : bien dormir aide à récupérer et à mieux gérer la faim.": "Go to bed 30 minutes earlier: good sleep helps you recover and manage hunger.",
-/* v60 (brief V2, I) — les deux cartes du haut de la Speed Formation (prospect) : FORMATION.depart et FORMATION.apercu */
+/* v60 (brief V2, I) — les deux cartes du haut de la Formation (prospect) : FORMATION.depart et FORMATION.apercu */
 "Commence ici": "Start here",
 "Commence ici · {x} min": "Start here · {x} min",
 "3 actions pour bien démarrer aujourd'hui": "3 actions to get started today",
@@ -780,11 +786,11 @@ I18N.en = {
 "verrouillé": "locked", "Réserver mon bilan": "Book my assessment",
 /* v34 — navigation et accueil */
 "Accueil": "Home", "Nutrition": "Nutrition", "Ma progression": "My progress", "Sa progression": "Their progress",
-"Speed Formation": "Speed Formation", "Profil": "Profile", "Plus": "More", "Tout mon espace": "My whole space", "Retour à l'accueil": "Back to home",
+"Formation": "Course", "Profil": "Profile", "Plus": "More", "Tout mon espace": "My whole space", "Retour à l'accueil": "Back to home",
 /* v70 : « Partager l'app » */
 "Partager l'app": "Share the app", "Lien copié !": "Link copied!", "Copie ce lien :": "Copy this link:",
 "Envoie le lien de l'app à un proche : l'espace gratuit est ouvert à tout le monde.": "Send the app link to someone you know: the free space is open to everyone.",
-"Rejoins-moi sur l'app MHX Coaching : calculateur de calories, suivi du poids et Speed Formation, gratuit.": "Join me on the MHX Coaching app: calorie calculator, weight tracking and Speed Formation, free.",
+"Rejoins-moi sur l'app MHX Coaching : calculateur de calories, suivi du poids et la Formation, gratuit.": "Join me on the MHX Coaching app: calorie calculator, weight tracking and the Course, free.",
 "Programme": "Program", "Progression": "Progress", "Bilan": "Review", "Compléments": "Supplements", "Formation": "Course",
 "Bonjour": "Hello", "Vue d'ensemble": "Overview", "Cette semaine": "This week", "Aujourd'hui": "Today",
 "Sa semaine en un coup d'œil.": "Their week at a glance.",
@@ -801,7 +807,7 @@ I18N.en = {
 "{a} sur {b} cochés aujourd'hui": "{a} of {b} checked today", "Mesure de la semaine faite": "This week's entry is done",
 "Voir ma progression": "See my progress", "Ma mesure de la semaine": "My weekly entry", "Poids et tours de taille, à jeun": "Weight and measurements, fasted",
 "C'est ce qui permet à ton coach de construire ton suivi": "This is what lets your coach build your follow-up",
-"Commencer la Speed Formation": "Start the Speed Formation", "Les bases, à ton rythme": "The basics, at your pace",
+"Commencer la Formation": "Start the Course", "Les bases, à ton rythme": "The basics, at your pace",
 "La régularité mesure ce que tu fais — séances, repas, mesure — pas ce que dit la balance.": "Consistency measures what you do — workouts, meals, weekly entry — not what the scale says.",
 "Tes objectifs du mois": "Your goals this month", "Atteint": "Reached", "En cours": "In progress", "Cocher mes objectifs": "Tick my goals",
 "Mon bilan": "My review", "Tes quatre dernières semaines : régularité, poids, ce qui a bougé et la progression de tes charges.": "Your last four weeks: consistency, weight, what changed and how your loads progressed.",
@@ -862,7 +868,7 @@ I18N.en = {
 "Ta régularité, ta courbe et le retour de ton coach chaque semaine.": "Your consistency, your progress curve and your coach's feedback every week.",
 "Ton bilan du mois, préparé avec ton coach.": "Your monthly review, prepared with your coach.",
 "Tes compléments conseillés, avec les doses et les moments.": "Your recommended supplements, with doses and timing.",
-"Bienvenue": "Welcome", "Ton espace gratuit MHX : commence par la Speed Formation, à ton rythme.": "Your free MHX space: start with the Speed Formation, at your own pace.",
+"Bienvenue": "Welcome", "Ton espace gratuit MHX : commence par la Formation, à ton rythme.": "Your free MHX space: start with the Course, at your own pace.",
 "Ton espace gratuit": "Your free space", "Ce que l'accompagnement ajoute": "What coaching adds",
 "Ton questionnaire et tes réglages": "Your questionnaire and settings",
 "Appel de 15 min avec ton coach, offert": "Free 15-min call with your coach",
@@ -1317,4 +1323,8 @@ Object.assign(I18N.en, {
   "Le tableau complet de tes clients, côte à côte, et ses alertes.": "The full table of your clients, side by side, with its alerts.",
   "Tous les comptes, ton équipe comprise : rôle, accès complet, passage client ou prospect.": "Every account, your team included: role, full access, switching between client and prospect.",
   "Les personnes qui ont accepté la newsletter, à exporter pour ton outil d'envoi.": "People who opted in to the newsletter, ready to export to your email tool."
+});
+/* v85 (bloc 4, décision de Lucas) — la formation s'appelle maintenant « Formation » (son ancien nom ne paraît plus nulle part) (anglais : « Course ») ; son sous-titre. */
+Object.assign(I18N.en, {
+  "Cours et ebooks : alimentation, entraînement, mindset": "Courses and ebooks: nutrition, training, mindset"
 });

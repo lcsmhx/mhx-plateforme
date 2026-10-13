@@ -320,8 +320,10 @@ const texte = async (page, sel) => norm(await page.textContent(sel).catch(() => 
     };
     await coller();
     const m = await texte(page, ".modale .corps");
-    ok("« Restaurer » : une confirmation liste les rubriques remplacées (Speed Formation, jamais Mes compléments ni le programme) et dit « Ce que tu as saisi depuis cette copie sera remplacé. »",
-      m.includes("Speed Formation") && m.includes("Ce que tu as saisi depuis cette copie sera remplacé.") && !m.includes("compléments") && !/programme/i.test(m) && db.ecritures.length === 0, m || "(pas de confirmation)");
+    /* v85 (bloc 4) : la rubrique s'appelle « Formation » (avant : « Speed Formation ») ; la liste est relue en entier (seule
+       rubrique : « … par la sauvegarde : Formation. ») et l'ancien nom n'y est plus */
+    ok("« Restaurer » : une confirmation liste les rubriques remplacées (Formation, jamais Mes compléments ni le programme) et dit « Ce que tu as saisi depuis cette copie sera remplacé. »",
+      m.includes("Ces rubriques seront remplacées par la sauvegarde : Formation.") && !m.includes("Speed") && m.includes("Ce que tu as saisi depuis cette copie sera remplacé.") && !m.includes("compléments") && !/programme/i.test(m) && db.ecritures.length === 0, m || "(pas de confirmation)");
     await page.click('.modale [data-ui-b="0"]').catch(() => {}); await attendre(page, 1000);
     ok("… « Annuler » : rien n'est écrit", db.ecritures.length === 0 && !(await page.$(".modale")), JSON.stringify(db.ecritures.map(e => e.outil)));
     await coller();

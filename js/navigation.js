@@ -33,7 +33,7 @@ function outilsVisibles(){
 function estVerrouille(o){
   if (!o || o.role === "coach" || Store.idConsulte || !Auth.estProspect()) return false;
   const ouverts = (CONFIG.marque && CONFIG.marque.gratuit_ouverts) || ["accueil", "decouverte", "profil"];
-  /* v52 : gratuit pour toujours — plus de verrou de la Speed Formation au 8e jour (elle est dans gratuit_ouverts) */
+  /* v52 : gratuit pour toujours — plus de verrou de la Formation au 8e jour (elle est dans gratuit_ouverts) */
   return ouverts.indexOf(o.id) === -1;
 }
 /* v50 — un onglet verrouille hors de la vitrine (CONFIG.marque.gratuit_vitrine) n'encombre pas la navigation
@@ -56,21 +56,29 @@ const AVANTAGES = {
   journal: "Chaque séance notée, et la charge à viser la fois suivante."   // v52 ; v61 (brief V2, E2)
 };
 function pageVerrouillee(o){
-  /* v52 : plus de page spéciale pour la Speed Formation (ouverte pour toujours) */
+  /* v52 : plus de page spéciale pour la Formation (ouverte pour toujours) */
   const plus = AVANTAGES[o.id];
   /* v52 (lot E) : pour un prospect, d'abord un exemple generique de la page (Echantillons : marque « Exemple », aucune de
      ses donnees), puis « Tu veux un programme construit pour toi… » et « Réserver mon bilan » — toujours un lien
      .verrou a[target=_blank] : afficher() compte le clic (source verrou-<id>). Les autres pages verrouillees : inchangees. */
   /* v61 (brief V2, G et F) : un texte par page (DECOUVERTE.echantillons.appels), « Récupérer mon plan d'action », la ligne
      « 15 min avec Lucas · offert », et l'origine verrou_<id> (lien Calendly et clic compte par afficher) */
-  const ech = Echantillons.html(o.id), cta = DECOUVERTE.cta || {}, appels = DECOUVERTE.echantillons.appels || {};
+  /* v85 (bloc 4) : l'onglet Programme du prospect montre son programme de la formation (ProgFormation, à la place de l'exemple
+     « Ta séance découverte ») ; dessous, la carte 🔒 d'avant (programme sur mesure avec son coach, Calendly verrou_programme)
+     reste, sur la page du programme (pas sur l'écran d'une séance ni sur « Changer de programme ») */
+  const pf = o.id === "programme" && Auth.estProspect() && !Store.idConsulte;
+  const ech = pf ? ProgFormation.zoneHTML() : Echantillons.html(o.id), cta = DECOUVERTE.cta || {}, appels = DECOUVERTE.echantillons.appels || {};
+  if (pf && sousRoute) return ech;
   /* v71 (H) : creneau coche (cle challenge deja en cache, cf. :404 plus bas ; ou la case cochee sur cet appareil,
      Invitations.lire) : le texte d'appel sans bouton, puis la pastille « Bilan réservé le … » ; aucune lecture de plus */
   let r = null; try { r = Decouverte.reserve(Store.cache[Decouverte.cle]) || Invitations.lire().reserve || null; } catch(e){ r = null; }
   const bouton = r ? {} : { lien: lienCalendly(Decouverte.codeVerrou(o.id)), cta: trad(cta.bouton), sous: typoFr(trad(cta.sous)) };
   const pastille = r ? `<p class="verrou-reserve"><span class="pastille ok">${esc(trad(DECOUVERTE.accomp.reserve_ok, { d: dateFr(Decouverte.dateLocale(r) || "") }))}</span></p>` : "";
   const wa = boutonWhatsApp("verrou-wa");   // v72 (D) : sous le cadre de réservation, hors de .verrou (pas un clic Calendly)
-  if (ech) return `${ech}<section class="panel ech-appel">${UI.verrou(Object.assign({ titre: trad(nomOnglet(o)), texte: typoFr(trad(appels[o.id] || "")) }, bouton))}${pastille}${wa}
+  /* v85 : sous le programme de la formation, la carte 🔒 dit « Après ton bilan : ton programme sur mesure, avec ton coach. » (le
+     texte de « Ton espace » du parcours, PARCOURS_T.espace : l'appel d'avant parlait de la séance découverte, qui n'est plus là) */
+  const texteVerrou = pf ? trad(PARCOURS_T.espace.bilan) + trad(PARCOURS_T.espace.bilan_suite) : trad(appels[o.id] || "");
+  if (ech) return `${ech}<section class="panel ech-appel">${UI.verrou(Object.assign({ titre: trad(nomOnglet(o)), texte: typoFr(texteVerrou) }, bouton))}${pastille}${wa}
     ${plus ? `<p class="note verrou-plus">${esc(typoFr(trad(plus)))}</p>` : ""}</section>`;
   return `<section class="panel">${UI.verrou(Object.assign({ titre: trad(nomOnglet(o)), texte: trad("Cette fonctionnalité est disponible avec l'accompagnement MHX.") }, bouton))}${pastille}${wa}
     ${plus ? `<p class="note verrou-plus">${esc(typoFr(trad(plus)))}</p>` : ""}</section>`;
@@ -191,7 +199,7 @@ function outilsPrincipaux(){
   const coach = Auth.estCoach() && !Store.idConsulte;
   /* v40 : un prospect voit d'abord ce qui lui est ouvert (accueil, formation,
      profil), puis un onglet verrouille ; le reste derriere « Plus ».
-     v52 : l'ordre est celui de CONFIG.marque.gratuit_barre (accueil, calculateur, progression, Speed Formation) */
+     v52 : l'ordre est celui de CONFIG.marque.gratuit_barre (accueil, calculateur, progression, Formation) */
   if (!coach && v.some(o => estVerrouille(o))){
     const barre = CONFIG.marque && CONFIG.marque.gratuit_barre;
     const choisis = Array.isArray(barre) ? barre.map(id => v.find(o => o.id === id && !o.masque_nav && !estVerrouille(o))).filter(Boolean) : [];
@@ -482,6 +490,7 @@ async function afficher(id, silencieux, sansCompte){
   if (verrouille && Auth.estProspect() && !Store.idConsulte) $$("#vue .verrou a[target=_blank]").forEach(a => a.addEventListener("click", () => { try { Decouverte.clic(Store.cache[Decouverte.cle] || Decouverte.vide(), Decouverte.codeVerrou(outil.id)); } catch(e){} }));
   /* v52 (lot E) : l'exemple de la page verrouillee (journee type lue dans le catalogue public, demonstrations) */
   if (verrouille) Echantillons.brancher($("vue"), outil.id);
+  if (verrouille && outil.id === "programme" && $("pf-zone")) ProgFormation.monter($("pf-zone"), sousRoute);   // v85 (bloc 4)
   if (pause){
     /* rien n'est lu ni branche (outil.init) avant l'accord : la carte, les champs inactifs ; « J'accepte » (ou un accord
        donne sur un autre appareil, relu) → la page repart, sans la carte */
