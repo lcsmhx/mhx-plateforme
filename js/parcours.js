@@ -493,9 +493,12 @@ const Parcours = {
     try { Captcha.monter("inscription"); } catch(e){}
   },
   /* la création du compte : celle de l'inscription v72 (mêmes métadonnées, même clé contact, même code ?ref=) */
+  /* le parcours demande toujours le numéro (écran WhatsApp, mission du 13/10) ; le réglage CONFIG.marque.telephone_obligatoire
+     ne gouverne plus que l'écran « Ajoute ton numéro » des comptes déjà inscrits sans numéro (demarrage.js) */
   async creer(){
     const b = $("c-go"); if (!b || b.disabled || this._envoi) return;
     const S = this.lire(), E = PARCOURS_T.erreurs, err = msg => { const z = $("co-err"); if (z){ z.className = "erreur"; z.textContent = msg; } };
+    const libelle = b.textContent;
     const T = Telephone.lire("c-tel");
     if (T.erreur){ $("pc-err-tel").textContent = trad(E.tel); [$("c-tel-ind"), $("c-tel")].forEach(x => { x.classList.add("manque"); x.setAttribute("aria-invalid", "true"); }); $("c-tel").focus(); return; }
     if (!this.possible("whatsapp", S)){ this.afficher(this.cible("whatsapp", S)); return; }   // mot de passe perdu (page rechargée)
@@ -512,9 +515,14 @@ const Parcours = {
       if (!connecte){ this.maj({ etape: "compte" }); this._mdp = ""; portail("connexion"); ecranVerifieEmail(S.email); return; }   // confirmation d'email rallumée
       try { if (typeof Integre !== "undefined") Integre.noterInscription(); } catch(e){}
       const uid = Auth.utilisateur() && Auth.utilisateur().id;
-      const champs = { telephone: T.tel, inscrit_le: maintenant };
+      /* la clé contact : le numéro (s'il est demandé) et le code du lien, avec la date d'inscription ; rien sans l'un ni l'autre */
+      const champs = {};
+      if (T && T.tel) champs.telephone = T.tel;
       const ref = Provenance.locale(); if (ref) champs.ref = ref;
-      try { await Contact.borne(Contact.enregistrer(champs, uid)); } catch(e){ if (uid) Contact.garderAttente(uid, champs); }
+      if (Object.keys(champs).length){
+        champs.inscrit_le = maintenant;
+        try { await Contact.borne(Contact.enregistrer(champs, uid)); } catch(e){ if (uid) Contact.garderAttente(uid, champs); }
+      }
       Provenance.oublier();
       /* les réponses partent dans intake après le rechargement (Parcours.suite : la session et toute l'app chargées) */
       this.maj({ etape: "espace", uid: uid || undefined, cree: maintenant, a_ecrire: true, tel: undefined, erreur: undefined });
@@ -527,14 +535,16 @@ const Parcours = {
       const cap = Captcha.erreur(e); Captcha.apresEssai();
       if (!cap && (m.indexOf("already") > -1 || m.indexOf("registered") > -1)){ this.maj({ erreur: "email_pris" }); this.afficher("compte"); return; }
       if (!cap && m.indexOf("email") > -1 && m.indexOf("invalid") > -1){ this.maj({ erreur: "email" }); this.afficher("compte"); return; }
+      /* même ordre que l'inscription v72 : limites et serveur d'emails avant « Pas de connexion » (une panne SMTP répond en 500) */
       err(cap ? cap
-        : Auth.indispo(e) ? trad(E.reseau)
         : /email rate limit/.test(m) ? trad(DECOUVERTE.inscription.trop_emails)
+        : /error sending|sending .*email|smtp/.test(m) ? trad(DECOUVERTE.inscription.envoi_rate, { p: CONFIG.marque.pseudo || "" })
         : /rate limit|security purposes|after \d+ seconds/.test(m) ? trad(DECOUVERTE.inscription.trop_demandes)
+        : Auth.indispo(e) ? trad(E.reseau)
         : m.indexOf("disabled") > -1 || m.indexOf("not allowed") > -1 ? trad("Les inscriptions ne sont pas encore ouvertes.")
         : trad("Inscription impossible pour le moment. Réessaie dans une minute."));
     } finally { this._envoi = false; }
-    if (b.isConnected){ b.disabled = false; b.textContent = trad(PARCOURS_T.whatsapp.bouton); }
+    if (b.isConnected){ b.disabled = false; b.textContent = libelle; }
   },
 
   /* ---------- après la création (session ouverte, demarrage.js) : réponses rangées, « Ton espace », cadeau ---------- */
@@ -630,6 +640,7 @@ const Parcours = {
   async finir(choix){
     if (this._envoi) return; this._envoi = true;
     try {
+      await this.enregistrer();   // les réponses, si leur écriture avait raté à l'arrivée (réseau) : un nouvel essai avant d'oublier l'onglet
       const C = await Store.lire(Decouverte.cle, Decouverte.vide()).catch(() => null);
       const C2 = C && !Store.nonLus.has(C) ? C : Decouverte.vide();
       const note = choix === "reserver" ? Decouverte.clic(C2, "cadeau") : Decouverte.plusTard(C2, "cadeau");

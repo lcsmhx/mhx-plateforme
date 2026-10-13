@@ -1203,7 +1203,6 @@ Object.assign(I18N.en, {
   "Crée ton compte pour le débloquer et le garder.": "Create your account to unlock it and keep it.",
   "Email": "Email",
   "ton@email.com": "you@email.com",
-  "Mot de passe (8 caractères minimum)": "Password (at least 8 characters)",
   "Je veux recevoir les conseils et les offres de {m} par email.": "I want to get tips and offers from {m} by email.",
   "Ton numéro WhatsApp ?": "Your WhatsApp number?",
   "Ton coach s’en sert pour t’appeler ou t’écrire sur WhatsApp. Jamais revendu.": "Your coach uses it to call you or message you on WhatsApp. Never sold.",
