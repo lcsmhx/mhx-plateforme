@@ -9,7 +9,8 @@
       connexion avec « Ce lien n'est plus valable », jamais la session du lien.
    C. dernier lien d'un changement d'adresse (type=email_change) : inchangé — aucune session, le mot « adresse changée ».
    D. polices hébergées dans polices/ : plus aucune mention de Google Fonts dans la page servie ; css/jetons.css déclare
-      les 3 familles en 400, 500 et 600 (latin et latin étendu, 18 @font-face), chaque fichier existe (woff2), aucun
+      les 3 familles en 400, 500 et 600 (latin et latin étendu, 18 @font-face) — v82 : plus IBM Plex Sans 700 et
+      Instrument Serif 400 (22 @font-face) —, chaque fichier existe (woff2), aucun
       fichier orphelin, licences OFL présentes ; dans le navigateur, les polices se chargent depuis polices/ et aucune
       requête ne part vers fonts.googleapis.com ni fonts.gstatic.com.
    E. emails de comptes retirés du dépôt public : aucun fichier suivi par git (hors donnees/) ne contient l'une des 5
@@ -191,16 +192,17 @@ const etat = page => page.evaluate(() => ({
     const faces = [...jetons.matchAll(/@font-face\{([^}]*)\}/g)].map(x => x[1]);
     const lu = faces.map(f => ({ fam: (/font-family:'([^']+)'/.exec(f) || [])[1], w: +(/font-weight:(\d+)/.exec(f) || [])[1], swap: /font-display:swap/.test(f), plage: /unicode-range:/.test(f), url: (/url\(\.\.\/polices\/([^)]+)\)/.exec(f) || [])[1] }));
     const attendus = [];
-    for (const fam of ["Oswald", "IBM Plex Sans", "IBM Plex Mono"]) for (const w of [400, 500, 600]) for (const j of ["latin-ext", "latin"]) attendus.push(fam + "|" + w + "|" + fam.toLowerCase().replace(/ /g, "-") + "-" + j + "-" + w + "-normal.woff2");
+    const graisses = [["Oswald", [400, 500, 600]], ["IBM Plex Sans", [400, 500, 600, 700]], ["IBM Plex Mono", [400, 500, 600]], ["Instrument Serif", [400]]];   // v82 : Plex Sans 700, Instrument Serif 400
+    for (const [fam, ws] of graisses) for (const w of ws) for (const j of ["latin-ext", "latin"]) attendus.push(fam + "|" + w + "|" + fam.toLowerCase().replace(/ /g, "-") + "-" + j + "-" + w + "-normal.woff2");
     const vus = lu.map(x => x.fam + "|" + x.w + "|" + x.url);
     const fichiers = fs.readdirSync(path.join(RACINE, "polices"));
     const woff = fichiers.filter(f => f.endsWith(".woff2"));
     const valides = woff.every(f => fs.readFileSync(path.join(RACINE, "polices", f)).slice(0, 4).toString("latin1") === "wOF2");
-    ok("css/jetons.css : 18 @font-face (Oswald, IBM Plex Sans, IBM Plex Mono × 400, 500, 600 × latin, latin étendu), font-display:swap et unicode-range partout ; chaque fichier existe dans polices/, est un vrai woff2, aucun orphelin",
-      faces.length === 18 && JSON.stringify(vus.slice().sort()) === JSON.stringify(attendus.slice().sort()) && lu.every(x => x.swap && x.plage) && woff.length === 18 && woff.every(f => lu.some(x => x.url === f)) && valides,
+    ok("css/jetons.css : 22 @font-face (Oswald, IBM Plex Sans, IBM Plex Mono × 400, 500, 600, plus IBM Plex Sans 700 et Instrument Serif 400 — v82 —, × latin, latin étendu), font-display:swap et unicode-range partout ; chaque fichier existe dans polices/, est un vrai woff2, aucun orphelin",
+      faces.length === 22 && JSON.stringify(vus.slice().sort()) === JSON.stringify(attendus.slice().sort()) && lu.every(x => x.swap && x.plage) && woff.length === 22 && woff.every(f => lu.some(x => x.url === f)) && valides,
       JSON.stringify({ n: faces.length, manquants: attendus.filter(x => !vus.includes(x)), orphelins: woff.filter(f => !lu.some(x => x.url === f)), valides }));
-    const lic = ["oswald", "ibm-plex-sans", "ibm-plex-mono"].map(k => { try { return /SIL Open Font License, Version 1\.1/.test(fs.readFileSync(path.join(RACINE, "polices", "LICENCE-OFL-" + k + ".txt"), "utf8")); } catch (e) { return false; } });
-    ok("licences : polices/LICENCE-OFL-oswald.txt, -ibm-plex-sans.txt, -ibm-plex-mono.txt (SIL OFL 1.1)", lic.every(Boolean), JSON.stringify(lic));
+    const lic = ["oswald", "ibm-plex-sans", "ibm-plex-mono", "instrument-serif"].map(k => { try { return /SIL Open Font License, Version 1\.1/.test(fs.readFileSync(path.join(RACINE, "polices", "LICENCE-OFL-" + k + ".txt"), "utf8")); } catch (e) { return false; } });
+    ok("licences : polices/LICENCE-OFL-oswald.txt, -ibm-plex-sans.txt, -ibm-plex-mono.txt, -instrument-serif.txt (v82) (SIL OFL 1.1)", lic.every(Boolean), JSON.stringify(lic));
     externes.clear();
     const db = base();
     const { page } = await contexte(b, db, THOMAS);
