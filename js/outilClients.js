@@ -186,30 +186,14 @@ const outilClients = {
     }
   },
 
-  /* v83 (bloc 3) : en haut, la liste des clients de la maquette (titre, nombre, recherche, filtres, « + », « Sélectionner »,
-     ListeCoach) ; dessous, sans rien retirer, le tableau complet et ses alertes, puis les comptes. « Créer un accès » est un
-     écran à part (#/clients/nouveau, Acces), ouvert par « + ». */
+  /* v83 (bloc 3) : la liste des clients de la maquette (titre, nombre, recherche, filtres, « + », « Sélectionner »,
+     ListeCoach). « Créer un accès » est un écran à part (#/clients/nouveau, Acces), ouvert par « + ».
+     v84 (ménage du bloc 3) : l'écran d'avant, qui faisait doublon sous la liste, a quitté la page sans rien perdre : le
+     tableau complet et ses alertes sont dans « Suivi détaillé » (outilSuiviClients, menu Plus), les comptes (équipe comprise)
+     dans « Comptes » (outilComptes, menu Plus) ; mêmes contenus, mêmes boutons, mêmes identifiants. */
   html(){
     if (sousRoute === "nouveau") return Acces.html("clients");
-    return `
-    <div id="lc-zone">${ListeCoach.attente("clients")}</div>
-
-    <section class="panel">
-      <h2>Suivi de mes clients</h2>
-      <p class="note" style="margin:0 0 12px">Tous tes clients et leurs données, en direct. Le tableau te dit d'un coup d'œil qui avance, qui décroche, et à qui il manque quelque chose.</p>
-      <div id="alertes-clients"></div>
-      <div class="scroll" style="margin-top:14px"><table class="tb-clients-table"><thead><tr>
-        <th>Client</th><th>Retour</th><th>Note</th><th>Smiley</th><th>Visite</th><th>Connexions</th><th>Dernière connexion</th><th>Jours actifs</th><th>Activité</th><th>Régularité</th><th>Poids</th><th>Depuis le début</th><th>4 dernières sem.</th>
-        <th>Questionnaire</th><th>Programme</th><th>Diète</th><th>Téléphone</th><th></th>
-      </tr></thead><tbody id="tb-clients"><tr><td colspan="18">Chargement…</td></tr></tbody></table></div>
-      <p class="note" style="margin-top:12px">En haut : les 😞 non traités et les notes en chute, puis les retours de la semaine à lire. « Retour » : le feedback du dimanche ou le bilan du vendredi, selon ce que voit le client (à traiter / fait / non fait). « Note » et « Smiley » : son dernier feedback du dimanche. « Visite » et « Jours actifs » (sur 30 jours) : les jours où il a ouvert l'app — « — » quand ses visites ne sont pas suivies. « Connexions » : le nombre de jours où il a ouvert l'app connecté (une fois par jour au plus, depuis la mise en place du compteur) ; « Dernière connexion » : la date et l'heure de sa dernière ouverture — « — » si le compteur n'a pas pu être lu. « Activité » compte les jours depuis la dernière saisie du client, quelle qu'elle soit (une visite, un smiley ou une réponse lue ne comptent pas). Une variation de poids se lit sur quatre semaines : en dessous, c'est du bruit.</p>
-    </section>
-
-    <section class="panel">
-      <h2>Comptes</h2>
-      <p class="note" style="margin:0 0 16px">« Supprimer définitivement » efface un compte et toutes ses données — c'est ce qu'il faut faire quand un client le demande : il est dans l'onglet « Compte » de sa fiche (ici, seulement pour un compte de ton équipe, qui n'a pas de fiche). « Accès complet » donne à une personne de ton équipe exactement ta vue : toutes les fiches, tous les questionnaires de santé, tous les programmes. Donne-le à un compte créé pour elle, jamais en partageant ton mot de passe — sinon tu ne sauras plus qui a modifié quoi, et tu ne pourras pas le lui retirer. Un compte archivé n'est pas listé ici : il est dans « Archivés », en haut.</p>
-      <div id="liste-clients"><div class="empty">Chargement…</div></div>
-    </section>`;
+    return `<div id="lc-zone">${ListeCoach.attente("clients")}</div>`;
   },
 
   /* les lignes de la liste du haut (ListeCoach) : nom, raison (l'alerte la plus urgente, sinon la dernière saisie), poids
@@ -235,60 +219,130 @@ const outilClients = {
   async init(){
     if (sousRoute === "nouveau") return Acces.init("clients");
     const self = this;
+    const charger = async () => {
+      try {
+        const { profils, parClient, contenus, connexions } = await Clients.charger();
+        const zone = $("lc-zone"); if (!zone || !zone.isConnected) return;
+        /* v83 : les clients résumés une fois (la liste, avec les archivés : son filtre « Archivés ») */
+        const lignes = Clients.resumer((profils || []).filter(p => p && p.role !== "coach" && p.statut !== "prospect"), parClient, contenus, connexions);
+        ListeCoach.monter(zone, "clients", self.lignesListe(lignes), { recharger: charger });
+      } catch(e){ ListeCoach.erreur($("lc-zone"), "clients"); }
+    };
+    charger();
+  },
 
+  /* v84 : les lignes du panneau « Comptes » (outilComptes) — tous les comptes non archivés, coachs compris : c'est là qu'on
+     donne l'accès complet à quelqu'un de l'équipe, qu'on le retire, et qu'on supprime un compte d'équipe (qui n'a pas de fiche).
+     Le même code qu'en v83 (déplacé tel quel depuis Mes clients). */
+  comptes(box, donnees, recharger){
+    const { profils, parClient, contenus } = donnees;
+    const moi = Auth.utilisateur() && Auth.utilisateur().id;
+    const comptes = (profils || []).filter(p => p && (p.role === "coach" || !Archive.le(contenus[p.id] && contenus[p.id].suivi_prospect)));
+    if (!comptes.length){ box.innerHTML = '<div class="empty">Aucun compte pour le moment. Crée le premier accès avec « + », dans Clients.</div>'; return; }
+    box.innerHTML = "";
+    comptes.forEach(p => {
+      const d = parClient[p.id];
+      const quand = d ? new Date(d).toLocaleDateString("fr-FR") : "jamais";
+      const estCoach = p.role === "coach", cestMoi = p.id === moi;
+      const el = document.createElement("div");
+      el.className = "client-l";
+      /* le client a choisi l'anglais : le coach le voit, et ecrit ses notes en anglais */
+      const enAnglais = !estCoach && contenus[p.id] && contenus[p.id].prefs && contenus[p.id].prefs.langue === "en";
+      /* v83 : « Supprimer » d'un client ou d'un prospect est dans l'onglet Compte de sa fiche (décision de Lucas) ; il reste
+         ici pour un compte d'équipe (accès complet), qui n'a pas de fiche */
+      el.innerHTML = `<span class="nom">${esc(Clients.nom(p))}${enAnglais ? ` <span class="pastille" title="Ce client utilise l'app en anglais : écris-lui tes notes en anglais">🇺🇸 anglais</span>` : ""}</span>
+                      ${estCoach ? `<span class="pastille role-coach">accès complet</span>` : `<span class="pastille">${d ? "actif" : "pas encore utilisé"}</span>`}
+                      ${!estCoach && "statut" in p ? `<span class="pastille${p.statut === "prospect" ? " accent" : " ok"}">${p.statut === "prospect" ? "prospect" : "client"}</span>` : ""}
+                      <span class="meta">${estCoach ? (cestMoi ? "c'est toi" : "voit tout, comme toi") : "dernière saisie : " + quand}</span>
+                      ${estCoach ? "" : `<button class="voir" type="button">Ouvrir sa fiche</button>`}
+                      ${cestMoi ? "" : `<button class="voir role" type="button" data-role="${estCoach ? "client" : "coach"}">${estCoach ? "Retirer l'accès complet" : "Donner l'accès complet"}</button>`}
+                      ${!estCoach && "statut" in p ? `<button class="voir statut" type="button" data-statut="${p.statut === "prospect" ? "client" : "prospect"}">${p.statut === "prospect" ? "Passer client" : "Repasser prospect"}</button>` : ""}
+                      ${cestMoi || !estCoach ? "" : `<button class="voir suppr" type="button">Supprimer</button>`}`;
+      const bv = el.querySelector(".voir:not(.role):not(.statut):not(.suppr)");
+      if (bv) bv.addEventListener("click", () => Clients.ouvrir(p.id, Clients.nom(p), "profil"));   // v43 : « Sans nom », comme dans la liste ; v71 (I) : Clients.ouvrir
+      const bsup = el.querySelector(".suppr");
+      if (bsup) bsup.addEventListener("click", async () => { if (await Acces.supprimer(p, bsup) === "fait") await recharger(); });
+
+      /* v39 — prospect <-> client : seul un coach peut le changer (garanti par la base) */
+      const bst = el.querySelector(".statut");
+      if (bst) bst.addEventListener("click", async () => { if (await Acces.changerStatut(p, bst.dataset.statut, bst)) await recharger(); });
+
+      const br = el.querySelector(".role");
+      if (br) br.addEventListener("click", async () => { if (await Acces.changerRole(p, br.dataset.role, br)) await recharger(); });
+      box.appendChild(el);
+    });
+  }
+};
+
+/* ------------------------------------------------------------------
+   v84 (ménage du bloc 3) — SUIVI DÉTAILLÉ (menu Plus) : le panneau « Suivi de mes clients » qui était sous la liste Clients,
+   déplacé tel quel (le tableau complet de 18 colonnes, la légende, les alertes regroupées : calculateur ≠ questionnaire,
+   régularité faible, sans nouvelles, jamais rien saisi, il manque quelque chose ; Préparer le call, Ouvrir, Appeler,
+   WhatsApp) ; mêmes identifiants (#tb-clients, #alertes-clients). Sans les comptes archivés, comme avant.
+   ------------------------------------------------------------------ */
+const outilSuiviClients = {
+  id: "suivi-clients",
+  cle: null,
+  nom: "Suivi détaillé",
+  icone: "📋",
+  role: "coach",
+  titre: "Suivi détaillé",
+  accroche: "Tous tes clients et leurs données, en direct. Le tableau te dit d'un coup d'œil qui avance, qui décroche, et à qui il manque quelque chose.",
+  html(){
+    return `
+    <section class="panel">
+      <h2>Suivi de mes clients</h2>
+      <p class="note" style="margin:0 0 12px">Tous tes clients et leurs données, en direct. Le tableau te dit d'un coup d'œil qui avance, qui décroche, et à qui il manque quelque chose.</p>
+      <div id="alertes-clients"></div>
+      <div class="scroll" style="margin-top:14px"><table class="tb-clients-table"><thead><tr>
+        <th>Client</th><th>Retour</th><th>Note</th><th>Smiley</th><th>Visite</th><th>Connexions</th><th>Dernière connexion</th><th>Jours actifs</th><th>Activité</th><th>Régularité</th><th>Poids</th><th>Depuis le début</th><th>4 dernières sem.</th>
+        <th>Questionnaire</th><th>Programme</th><th>Diète</th><th>Téléphone</th><th></th>
+      </tr></thead><tbody id="tb-clients"><tr><td colspan="18">Chargement…</td></tr></tbody></table></div>
+      <p class="note" style="margin-top:12px">En haut : les 😞 non traités et les notes en chute, puis les retours de la semaine à lire. « Retour » : le feedback du dimanche ou le bilan du vendredi, selon ce que voit le client (à traiter / fait / non fait). « Note » et « Smiley » : son dernier feedback du dimanche. « Visite » et « Jours actifs » (sur 30 jours) : les jours où il a ouvert l'app — « — » quand ses visites ne sont pas suivies. « Connexions » : le nombre de jours où il a ouvert l'app connecté (une fois par jour au plus, depuis la mise en place du compteur) ; « Dernière connexion » : la date et l'heure de sa dernière ouverture — « — » si le compteur n'a pas pu être lu. « Activité » compte les jours depuis la dernière saisie du client, quelle qu'elle soit (une visite, un smiley ou une réponse lue ne comptent pas). Une variation de poids se lit sur quatre semaines : en dessous, c'est du bruit. Un compte archivé n'est pas dans ce tableau : il est dans « Archivés », dans Clients.</p>
+    </section>`;
+  },
+  async init(){
+    try {
+      const { profils, parClient, contenus, connexions } = await Clients.charger();
+      if (!$("tb-clients")) return;
+      const lignes = Clients.resumer((profils || []).filter(p => p && p.role !== "coach" && p.statut !== "prospect"), parClient, contenus, connexions);
+      outilClients.tableau(profils, parClient, contenus, connexions, lignes);
+    } catch(e){
+      const tb = $("tb-clients"); if (tb) tb.innerHTML = '<tr><td colspan="18">Impossible de charger le suivi.</td></tr>';
+    }
+  }
+};
+
+/* ------------------------------------------------------------------
+   v84 (ménage du bloc 3) — COMPTES (menu Plus) : le panneau « Comptes » qui était sous la liste Clients, déplacé tel quel :
+   tous les comptes non archivés, ton équipe et toi compris ; Ouvrir sa fiche, Passer client / Repasser prospect,
+   Donner / Retirer l'accès complet, Supprimer un compte d'équipe (qui n'a pas de fiche). Même identifiant (#liste-clients).
+   ------------------------------------------------------------------ */
+const outilComptes = {
+  id: "comptes",
+  cle: null,
+  nom: "Comptes",
+  icone: "🔑",
+  role: "coach",
+  titre: "Comptes",
+  accroche: "Tous les comptes, ton équipe comprise : rôle, accès complet, passage client ou prospect.",
+  html(){
+    return `
+    <section class="panel">
+      <h2>Comptes</h2>
+      <p class="note" style="margin:0 0 16px">« Supprimer définitivement » efface un compte et toutes ses données — c'est ce qu'il faut faire quand un client le demande : il est dans l'onglet « Compte » de sa fiche (ici, seulement pour un compte de ton équipe, qui n'a pas de fiche). « Accès complet » donne à une personne de ton équipe exactement ta vue : toutes les fiches, tous les questionnaires de santé, tous les programmes. Donne-le à un compte créé pour elle, jamais en partageant ton mot de passe — sinon tu ne sauras plus qui a modifié quoi, et tu ne pourras pas le lui retirer. Un compte archivé n'est pas listé ici : il est dans « Archivés », dans Clients ou Prospects.</p>
+      <div id="liste-clients"><div class="empty">Chargement…</div></div>
+    </section>`;
+  },
+  async init(){
     const charger = async () => {
       const box = $("liste-clients");
       try {
-        const { profils, parClient, contenus, connexions } = await Clients.charger();
+        const donnees = await Clients.charger({ connexions: false });
         if (!box || !box.isConnected) return;
-        /* v83 : les clients résumés une fois (liste du haut, avec les archivés ; tableau complet, sans eux) */
-        const lignes = Clients.resumer((profils || []).filter(p => p && p.role !== "coach" && p.statut !== "prospect"), parClient, contenus, connexions);
-        ListeCoach.monter($("lc-zone"), "clients", self.lignesListe(lignes), { recharger: charger });
-        self.tableau(profils, parClient, contenus, connexions, lignes);
-        /* Tous les comptes, coachs compris : c'est ici qu'on donne l'acces
-           complet a quelqu'un de l'equipe, et qu'on le retire. v83 : sans les comptes archivés. */
-        const moi = Auth.utilisateur() && Auth.utilisateur().id;
-        const comptes = (profils || []).filter(p => p && (p.role === "coach" || !Archive.le(contenus[p.id] && contenus[p.id].suivi_prospect)));
-        if (!comptes.length){ box.innerHTML = '<div class="empty">Aucun compte pour le moment. Crée le premier accès avec « + », en haut.</div>'; return; }
-        box.innerHTML = "";
-        comptes.forEach(p => {
-          const d = parClient[p.id];
-          const quand = d ? new Date(d).toLocaleDateString("fr-FR") : "jamais";
-          const estCoach = p.role === "coach", cestMoi = p.id === moi;
-          const el = document.createElement("div");
-          el.className = "client-l";
-          /* le client a choisi l'anglais : le coach le voit, et ecrit ses notes en anglais */
-          const enAnglais = !estCoach && contenus[p.id] && contenus[p.id].prefs && contenus[p.id].prefs.langue === "en";
-          /* v83 : « Supprimer » d'un client ou d'un prospect est dans l'onglet Compte de sa fiche (décision de Lucas) ; il reste
-             ici pour un compte d'équipe (accès complet), qui n'a pas de fiche */
-          el.innerHTML = `<span class="nom">${esc(Clients.nom(p))}${enAnglais ? ` <span class="pastille" title="Ce client utilise l'app en anglais : écris-lui tes notes en anglais">🇺🇸 anglais</span>` : ""}</span>
-                          ${estCoach ? `<span class="pastille role-coach">accès complet</span>` : `<span class="pastille">${d ? "actif" : "pas encore utilisé"}</span>`}
-                          ${!estCoach && "statut" in p ? `<span class="pastille${p.statut === "prospect" ? " accent" : " ok"}">${p.statut === "prospect" ? "prospect" : "client"}</span>` : ""}
-                          <span class="meta">${estCoach ? (cestMoi ? "c'est toi" : "voit tout, comme toi") : "dernière saisie : " + quand}</span>
-                          ${estCoach ? "" : `<button class="voir" type="button">Ouvrir sa fiche</button>`}
-                          ${cestMoi ? "" : `<button class="voir role" type="button" data-role="${estCoach ? "client" : "coach"}">${estCoach ? "Retirer l'accès complet" : "Donner l'accès complet"}</button>`}
-                          ${!estCoach && "statut" in p ? `<button class="voir statut" type="button" data-statut="${p.statut === "prospect" ? "client" : "prospect"}">${p.statut === "prospect" ? "Passer client" : "Repasser prospect"}</button>` : ""}
-                          ${cestMoi || !estCoach ? "" : `<button class="voir suppr" type="button">Supprimer</button>`}`;
-          const bv = el.querySelector(".voir:not(.role):not(.statut):not(.suppr)");
-          if (bv) bv.addEventListener("click", () => Clients.ouvrir(p.id, Clients.nom(p), "profil"));   // v43 : « Sans nom », comme dans la liste ; v71 (I) : Clients.ouvrir
-          const bsup = el.querySelector(".suppr");
-          if (bsup) bsup.addEventListener("click", async () => { if (await Acces.supprimer(p, bsup) === "fait") await charger(); });
-
-          /* v39 — prospect <-> client : seul un coach peut le changer (garanti par la base) */
-          const bst = el.querySelector(".statut");
-          if (bst) bst.addEventListener("click", async () => { if (await Acces.changerStatut(p, bst.dataset.statut, bst)) await charger(); });
-
-          const br = el.querySelector(".role");
-          if (br) br.addEventListener("click", async () => { if (await Acces.changerRole(p, br.dataset.role, br)) await charger(); });
-          box.appendChild(el);
-        });
-      } catch(e){
-        if (box) box.innerHTML = '<div class="empty">Impossible de charger la liste.</div>';
-        const tb = $("tb-clients"); if (tb) tb.innerHTML = '<tr><td colspan="18">Impossible de charger le suivi.</td></tr>';
-        ListeCoach.erreur($("lc-zone"), "clients");
-      }
+        outilClients.comptes(box, donnees, charger);
+      } catch(e){ if (box) box.innerHTML = '<div class="empty">Impossible de charger la liste.</div>'; }
     };
-
     charger();
   }
 };
@@ -552,7 +606,7 @@ const Clients = {
   ouvrir(p, nom, cible){
     /* v71 (I) : l'ecran d'origine (pour « Revenir … » : tableau, clients, prospects ; une fiche ouverte depuis une autre fiche
        garde l'origine de la premiere) et l'adresse canonique #/client/<uuid>/<outil>, qui survit a un rechargement */
-    if (["tableau", "clients", "prospects"].indexOf(courant) > -1){ Store.retourVers = courant; ListeCoach.memoriser(courant); }   // v83 : la position de la page, retrouvée au retour
+    if (["tableau", "clients", "prospects", "suivi-clients", "comptes", "suivi-commercial", "newsletter"].indexOf(courant) > -1){ Store.retourVers = courant; ListeCoach.memoriser(courant); }   // v83 : la position de la page, retrouvée au retour
     else if (Store.idConsulte !== p || !Store.retourVers) Store.retourVers = "clients";
     Store.oublier(Store.idConsulte);
     Store.idConsulte = p; Store.nomConsulte = nom;
@@ -674,7 +728,7 @@ const ListeCoach = {
       <label class="lc-recherche"><span class="lc-loupe" aria-hidden="true">${SVG.loupe}</span><input type="search" id="lc-q" placeholder="${esc(trad(T.recherche))}" aria-label="${esc(trad(T.recherche))}" value="${esc(E.q)}" autocomplete="off" maxlength="120"></label>
       <div class="lc-filtres" role="group" aria-label="${esc(trad("Filtrer la liste"))}">${this.FILTRES[t].map(([k, lib]) => `<button type="button" class="lc-filtre" data-lc-filtre="${k}" aria-pressed="${E.filtre === k}">${esc(trad(lib))}</button>`).join("")}</div>
       <ul class="lc-liste" id="lc-liste"></ul>
-      ${sel ? `<div class="lc-barre" id="lc-barre" role="region" aria-label="${esc(trad("Sélection"))}"><b id="lc-nb-sel" aria-live="polite"></b><button type="button" class="btn${restaurer ? "" : " danger"}" data-sel-archiver>${esc(trad(restaurer ? "Restaurer" : "Archiver"))}</button></div>` : ""}
+      ${sel ? `<div class="lc-barre" id="lc-barre" role="region" aria-label="${esc(trad("Sélection"))}"><b id="lc-nb-sel" aria-live="polite"></b><button type="button" class="btn" data-sel-archiver>${esc(trad(restaurer ? "Restaurer" : "Archiver"))}</button></div>` : ""}
     </section>`;
     this.brancher(zone, t);
     this.majListe(zone, t);
@@ -740,7 +794,7 @@ const ListeCoach = {
     const restaurer = E.filtre === "archives";
     if (!restaurer){
       const oui = await UI.ouvrir({ titre: this.plur(n, T.confirmer), corps: trad(n > 1 ? this.PLUSIEURS : this.UN), annulation: false, boutons: [
-        { texte: trad("Annuler"), valeur: false, classe: "ghost" }, { texte: trad("Archiver"), valeur: true, classe: "danger", principal: true }] });
+        { texte: trad("Annuler"), valeur: false, classe: "ghost" }, { texte: trad("Archiver"), valeur: true, principal: true }] });   // v84 : « Archiver » en or (le rouge est pour « Supprimer définitivement »)
       if (!oui || !zone.isConnected) return;
     }
     b.disabled = true; b.textContent = "…";
@@ -831,12 +885,12 @@ const Acces = {
         if ($("n-avert")) $("n-avert").hidden = true;
         /* la fonction renvoie le role REELLEMENT pose (v39) : un acces d'equipe refuse se voit */
         const sansAcces = type === "coach" && cree && cree.role !== "coach";
-        if (!statutOk) UI.alerte("Le compte de " + (((prenom + " " + nom).trim()) || email) + " est créé, mais il est encore « prospect » : son espace resterait limité.\n\nClique « Passer client » sur sa ligne, dans la liste des comptes.");
-        else if (sansAcces) UI.alerte("Le compte de " + (((prenom + " " + nom).trim()) || email) + " est créé, mais sans l'accès complet.\n\nClique « Donner l'accès complet » sur sa ligne, dans la liste des comptes.");
+        if (!statutOk) UI.alerte("Le compte de " + (((prenom + " " + nom).trim()) || email) + " est créé, mais il est encore « prospect » : son espace resterait limité.\n\nClique « Passer client » sur sa ligne, dans « Comptes » (menu Plus), ou dans l'onglet Compte de sa fiche.");
+        else if (sansAcces) UI.alerte("Le compte de " + (((prenom + " " + nom).trim()) || email) + " est créé, mais sans l'accès complet.\n\nClique « Donner l'accès complet » sur sa ligne, dans « Comptes » (menu Plus).");
         flash("n-msg", !statutOk
-          ? "Compte créé, mais il est encore « prospect » : clique « Passer client » sur sa ligne."
+          ? "Compte créé, mais il est encore « prospect » : clique « Passer client » sur sa ligne, dans « Comptes » (menu Plus)."
           : sansAcces
-          ? "Compte créé, mais sans l'accès complet : clique « Donner l'accès complet » sur sa ligne."
+          ? "Compte créé, mais sans l'accès complet : clique « Donner l'accès complet » sur sa ligne, dans « Comptes » (menu Plus)."
           : type === "coach"
           ? "Compte d'équipe créé, avec l'accès complet. Transmets-lui ses identifiants."
           : "Compte créé. Transmets-lui ses identifiants.");

@@ -323,7 +323,7 @@ const outilAccueil = {
         </ul></section>
         <div class="fc-boutons">
           <button type="button" class="btn ghost fc-large" id="fc-acces" data-role="coach">Donner l'accès complet</button>
-          <button type="button" class="btn ghost fc-large" id="fc-archiver" data-archiver="${arch ? "non" : "oui"}">${esc(trad(arch ? "Restaurer ce compte" : "Archiver ce compte"))}</button>
+          <button type="button" class="btn fc-large" id="fc-archiver" data-archiver="${arch ? "non" : "oui"}">${esc(trad(arch ? "Restaurer ce compte" : "Archiver ce compte"))}</button>
           ${arch ? `<p class="note" id="fc-archive-note" style="margin:0">${esc(trad("Archivé le {d} : ce compte n'apparaît plus dans tes listes, tes compteurs ni « À traiter ». Rien n'a changé pour la personne.", { d: dateFr(Decouverte.dateLocale(arch) || arch.slice(0, 10)) }))}</p>` : ""}
         </div>
         <section class="zone-danger fc-danger" id="fc-danger"><h3>Supprimer définitivement</h3>
@@ -384,7 +384,7 @@ const outilAccueil = {
     if (bar) bar.addEventListener("click", async () => {
       const oui = bar.dataset.archiver === "oui", T = ListeCoach.TEXTES[prospectF ? "prospects" : "clients"];
       if (oui && !(await UI.ouvrir({ titre: ListeCoach.plur(1, T.confirmer), corps: trad(ListeCoach.UN), annulation: false, boutons: [
-        { texte: trad("Annuler"), valeur: false, classe: "ghost" }, { texte: trad("Archiver"), valeur: true, classe: "danger", principal: true }] }))) return;
+        { texte: trad("Annuler"), valeur: false, classe: "ghost" }, { texte: trad("Archiver"), valeur: true, principal: true }] }))) return;   // v84 : « Archiver » en or (le rouge reste à « Supprimer définitivement »)
       const avant = bar.textContent; bar.disabled = true; bar.textContent = "…";
       const r = await Archive.appliquer([uidFiche], oui);
       if (r.ok.length){ UI.toast(ListeCoach.plur(1, oui ? T.archives : T.restaures), "ok"); refaire(); return; }

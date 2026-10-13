@@ -156,7 +156,7 @@ const outilTableau = {
       <section class="panel">
         <h2>Raccourcis</h2>
         <div class="acces-l">
-          <a class="acces" href="#/clients"><span class="ico">${ICONES.clients}</span><span class="txt"><b>Mes clients</b><small>tableau complet, comptes, création d'accès</small></span><span class="fleche">›</span></a>
+          <a class="acces" href="#/clients"><span class="ico">${ICONES.clients}</span><span class="txt"><b>Mes clients</b><small>liste, recherche, création d'accès</small></span><span class="fleche">›</span></a>
           <a class="acces" href="#/atelier"><span class="ico">${ICONES.atelier}</span><span class="txt"><b>Mes séances</b><small>construire un programme modèle</small></span><span class="fleche">›</span></a>
           <a class="acces" href="#/bibliotheque"><span class="ico">${ICONES.bibliotheque}</span><span class="txt"><b>Bibliothèque</b><small>entraînements et journées types</small></span><span class="fleche">›</span></a>
           <a class="acces" href="#/catalogue"><span class="ico">${ICONES.catalogue}</span><span class="txt"><b>Catalogue</b><small>aliments, recettes, programmes, exercices</small></span><span class="fleche">›</span></a>
@@ -166,7 +166,8 @@ const outilTableau = {
     /* v83 : la loupe ouvre la liste Clients, le curseur dans sa recherche */
     $$("[data-tb-chercher]", zone).forEach(a => a.addEventListener("click", () => { ListeCoach.etat("clients").focus = true; }));
     /* v72 (E) : « Et N autres » ouvre Prospects sur tous les prospects (le filtre « À traiter » cacherait les inscrits de plus de 48 h) */
-    $$("[data-tb-tous]", zone).forEach(a => a.addEventListener("click", () => { outilProspects.filtre = "tous"; outilProspects.tri = "inscription"; }));
+    /* v84 : la liste Prospects (son filtre « Tous », sans recherche) ; le Suivi commercial (menu Plus) garde aussi « Tous » */
+    $$("[data-tb-tous]", zone).forEach(a => a.addEventListener("click", () => { const E = ListeCoach.etat("prospects"); E.filtre = "tous"; E.q = ""; outilProspects.filtre = "tous"; outilProspects.tri = "inscription"; }));
     /* v72 (E) : nouvelle visite : la seule écriture de cette page, une ligne du coach lui-même (règles de la base : le propriétaire),
        directe (pas de copie sur l'appareil ni d'« Enregistrement… » : rien que le coach ait saisi) ; ratée : la visite suivante
        repartira de l'ancienne */

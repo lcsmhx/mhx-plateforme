@@ -1310,3 +1310,10 @@ Object.assign(I18N.en, {
   "Afficher {n} de plus ({r} restants)": "Show {n} more ({r} left)", "Afficher {n} de plus ({r} restant)": "Show {n} more ({r} left)",
   "Tous tes clients et leurs données, en direct. Le tableau te dit d'un coup d'œil qui avance, qui décroche, et à qui il manque quelque chose.": "All your clients and their data, live. The table shows you at a glance who's progressing, who's slipping, and who's missing something."
 });
+/* v84 (ménage du bloc 3) — les 4 pages du menu Plus du coach qui ont reçu l'écran d'avant de Clients et de Prospects. Anglais
+   américain, même ton. */
+Object.assign(I18N.en, {
+  "Suivi détaillé": "Detailed tracking", "Comptes": "Accounts", "Suivi commercial": "Sales follow-up",
+  "Tous les comptes, ton équipe comprise : rôle, accès complet, passage client ou prospect.": "Every account, your team included: role, full access, switching between client and prospect.",
+  "Les personnes qui ont accepté la newsletter, à exporter pour ton outil d'envoi.": "People who opted in to the newsletter, ready to export to your email tool."
+});

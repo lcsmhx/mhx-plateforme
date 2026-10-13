@@ -517,7 +517,7 @@ const Nouveautes = {
     const li = e => `<li><span class="nv-txt"><b>${esc(e.nom)}</b> · ${esc(this.TYPES[e.type])}</span><time datetime="${esc(e.quand)}">${esc(this.quand(e.quand))}</time><button type="button" class="btn ghost petit" data-nv-ouvrir="${esc(e.uid)}" data-nom="${esc(e.nom)}">Ouvrir</button></li>`;
     const reste = ev.length - PREMIERS, pl = n => n > 1 ? "s" : "";
     const suite = reste <= 0 ? ""
-      : complet ? `<ul class="nv-liste nv-suite"${this._deplie ? "" : " hidden"}>${ev.slice(PREMIERS, MAXI).map(li).join("")}</ul>${ev.length > MAXI ? `<p class="note nv-suite"${this._deplie ? "" : " hidden"} style="margin:8px 0 0">Les ${ev.length - MAXI} plus anciennes ne sont pas listées : filtre la liste ci-dessous par date d'inscription.</p>` : ""}${this._deplie ? "" : `<p style="margin:8px 0 0"><button type="button" class="btn ghost petit" data-nv-plus aria-expanded="false">${Math.min(reste, MAXI - PREMIERS) > 1 ? "Voir les " + Math.min(reste, MAXI - PREMIERS) + " suivantes" : "Voir la suivante"}</button></p>`}`
+      : complet ? `<ul class="nv-liste nv-suite"${this._deplie ? "" : " hidden"}>${ev.slice(PREMIERS, MAXI).map(li).join("")}</ul>${ev.length > MAXI ? `<p class="note nv-suite"${this._deplie ? "" : " hidden"} style="margin:8px 0 0">Les ${ev.length - MAXI} plus anciennes ne sont pas listées : filtre les prospects par date d'inscription dans « Suivi commercial » (menu Plus).</p>` : ""}${this._deplie ? "" : `<p style="margin:8px 0 0"><button type="button" class="btn ghost petit" data-nv-plus aria-expanded="false">${Math.min(reste, MAXI - PREMIERS) > 1 ? "Voir les " + Math.min(reste, MAXI - PREMIERS) + " suivantes" : "Voir la suivante"}</button></p>`}`
       : `<p class="note" style="margin:8px 0 0">Et ${reste} autre${pl(reste)} : <a class="link-a" href="#/prospects">tout voir dans la page Prospects →</a></p>`;
     return `<section class="panel nv-panneau"><div class="seance-c-tete"><h2>Nouveautés</h2><span class="pastille accent">${ev.length}</span></div>
       ${avert}<p class="note" style="margin:0 0 10px">${esc(depuis.charAt(0).toUpperCase() + depuis.slice(1))} :</p>
@@ -672,26 +672,49 @@ const outilProspects = {
   PAS: 50, limite: 50, NL_PREMIERS: 10,
   donnees: null, lignes: [], tous: [], _nlDeplie: false,
   /* v83 (bloc 3) : en haut, la liste de la maquette ListeProspects (ListeCoach : nombre, recherche par nom, Tous · À traiter ·
-     Archivés, « + », « Sélectionner », archivage) ; dessous, sans rien retirer, tout ce que la page montrait : nombre de comptes
-     gratuits et à traiter, compteur, Nouveautés, chiffres des 30 jours, Mesure, filtres détaillés, cartes, export CSV, newsletter.
-     « Créer un accès » : #/prospects/nouveau (Acces). Les comptes archivés ne sont que dans « Archivés » de la liste du haut. */
+     Archivés, « + », « Sélectionner », archivage). « Créer un accès » : #/prospects/nouveau (Acces). Les comptes archivés ne
+     sont que dans « Archivés » de la liste.
+     v84 (ménage du bloc 3) : l'écran d'avant, qui faisait doublon sous la liste, a quitté la page sans rien perdre. Sous la liste
+     reste le panneau Nouveautés (le badge de l'onglet Prospects et « Tout marquer comme vu » vivent avec lui). Le reste, tel quel
+     et avec les mêmes identifiants : « Suivi commercial » (outilSuiviCommercial, menu Plus : nombre de comptes gratuits et à
+     traiter, compteur Inscrits → clients, chiffres des 30 jours, Mesure, filtres détaillés, cartes avec leurs boutons, export
+     CSV) et « Newsletter » (outilNewsletter, menu Plus : la liste et son export). */
   html(){
     if (sousRoute === "nouveau") return Acces.html("prospects");
     return `<div id="pr-vue"><div id="lc-zone">${ListeCoach.attente("prospects")}</div></div>`;
   },
-  /* garder = rechargement apres une action sur une carte : le coach garde sa place (nombre de prospects affiches) */
+  /* garder = rechargement apres une action (carte, archivage) : le coach garde sa place (nombre de prospects affiches) */
   async init(garder){
     if (sousRoute === "nouveau") return Acces.init("prospects");
+    return this.monter(garder, "liste");
+  },
+  /* v84 : vue = "liste" (page Prospects : la liste et les Nouveautés), "detail" (Suivi commercial) ou "newsletter" */
+  async monter(garder, vue){
     const zone = $("pr-vue"); if (!zone) return;
+    this.vue = vue;
     if (!garder && typeof Nouveautes !== "undefined") Nouveautes._deplie = false;
     if (!garder) this._nlDeplie = false;
     const t0 = new Date().toISOString();
-    try { this.donnees = await Clients.charger(); }
-    catch(e){ zone.innerHTML = `<div id="lc-zone"></div><section class="panel"><div class="empty">Impossible de charger les prospects pour le moment.</div></section>`; ListeCoach.erreur(zone.querySelector("#lc-zone"), "prospects"); return; }
+    try { this.donnees = await Clients.charger(vue === "newsletter" ? { connexions: false } : undefined); }
+    catch(e){
+      if (!zone.isConnected) return;
+      if (vue === "liste"){ zone.innerHTML = `<div id="lc-zone"></div><section class="panel"><div class="empty">Impossible de charger les prospects pour le moment.</div></section>`; ListeCoach.erreur(zone.querySelector("#lc-zone"), "prospects"); }
+      else zone.innerHTML = `<section class="panel"><div class="empty">Impossible de charger les prospects pour le moment.</div></section>`;
+      return;
+    }
     if (!zone.isConnected) return;
     if (!garder) this.limite = this.PAS;
     this.tCharge = t0;
-    this.rendre(zone);
+    if (vue === "detail") this.rendre(zone);
+    else if (vue === "newsletter"){ this.preparer(); zone.innerHTML = `<div id="pr-newsletter"></div>`; this.monterNewsletter(zone.querySelector("#pr-newsletter")); }
+    else this.rendreListe(zone);
+  },
+  /* v84 : la page Prospects — la liste, puis les Nouveautés */
+  rendreListe(zone){
+    this.preparer();
+    zone.innerHTML = `<div id="lc-zone"></div><div id="pr-nouveautes"></div>`;
+    ListeCoach.monter(zone.querySelector("#lc-zone"), "prospects", this.lignesListe(), { recharger: async () => { if (zone.isConnected) await this.monter(true, "liste"); } });   // v83 (bloc 3)
+    if (typeof Nouveautes !== "undefined") Nouveautes.monter(zone.querySelector("#pr-nouveautes"), this.lignes, true, this.tCharge);
   },
   /* chaque prospect : sa ligne (Clients.resumer) et son analyse (issue, prochaine action, à traiter) */
   preparer(){
@@ -704,7 +727,10 @@ const outilProspects = {
   /* v83 : les lignes de la liste du haut — la raison : le motif « à traiter », sinon l'inscription (et les relances) ; à droite,
      l'issue de l'appel (SIGNÉ / PERDU / ABSENT) et « bilan réservé » ; triées comme la page (inscription récente d'abord) */
   lignesListe(){
-    return this.trier(this.avecArchives).map(({ l, a }) => {
+    /* v84 : toujours « inscription récente d'abord » (le tri choisi dans le Suivi commercial ne change pas l'ordre de la liste) */
+    const tri = this.tri; this.tri = "inscription";
+    let liste; try { liste = this.trier(this.avecArchives); } finally { this.tri = tri; }
+    return liste.map(({ l, a }) => {
       const pastilles = Commercial.pastille(a) + Commercial.pastilleBilan(a.bilan, a) + (a.illisible ? '<span class="pastille attention">données illisibles</span>' : "");
       return { uid: l.p.id, nom: Clients.nom(l.p), archive: !!l.archive, niveau: a.urgent ? "accent" : "",   // maquette : point doré « à traiter »
         raison: a.urgent ? Commercial.motifTexte(a) : Commercial.sousTitre(l.p, a), droite: pastilles ? `<span class="lc-pastilles">${pastilles}</span>` : "", a_traiter: !!a.urgent };
@@ -745,14 +771,15 @@ const outilProspects = {
     const tuile = (lbl, val, sub, cls) => `<div class="tile"><div class="t-lbl">${lbl}</div><div class="t-val readout${cls ? " " + cls : ""}">${val}</div><div class="t-sub">${sub}</div></div>`;
     const opt = (v, t, cur) => `<option value="${v}"${v === cur ? " selected" : ""}>${esc(t)}</option>`;
     const aTraiter = tous.filter(x => x.a.urgent).length;
+    /* v84 : le Suivi commercial (menu Plus) — l'écran d'avant de la page Prospects, sans la liste du haut (elle reste sur la page
+       Prospects), sans les Nouveautés (sous la liste) ni la newsletter (son écran à part) */
     zone.innerHTML = `
-      <div id="lc-zone"></div>
       <header class="masthead pr-detail">
         <span class="eyebrow">${esc(outilAccueil.dateLongue())}</span>
+        <h1>Suivi commercial</h1>
         <p class="lede">${tous.length ? `${tous.length} ${pl(tous.length, "compte gratuit", "comptes gratuits")} · ${aTraiter} à traiter` : "Aucun prospect pour l'instant."}</p>
         <p class="note pr-compteur" id="pr-compteur" title="Inscrits : les prospects et les clients passés par l'inscription gratuite. Bilans réservés : ta coche « Bilan réservé », sinon la case « J'ai réservé » du prospect.">Inscrits <b>${K.inscrits}</b> → 3 questions remplies <b>${K.questions}</b> → bilans réservés <b>${K.bilans}</b> → clients <b>${K.clients}</b></p>
       </header>
-      <div id="pr-nouveautes"></div>
       <section class="panel"><div class="tiles">
         ${tuile("À traiter", aTraiter, "une action à faire", aTraiter ? "neg" : "")}
         ${tuile("Signés", cmpt("signe"), "30 derniers jours", "pos")}
@@ -773,8 +800,7 @@ const outilProspects = {
         <p class="note" id="pr-compte" role="status" aria-live="polite" style="margin:4px 0 10px"></p>
         <div id="pr-liste"></div>
         <p class="note" style="margin:12px 0 0">${esc(Commercial.AIDE)} « Bilan réservé » : ta coche, dans sa fiche (sans coche de ta part, la case « J'ai réservé » du prospect compte, à vérifier). « Dernière visite » et « Jours actifs » : les jours où il a ouvert l'app. « Connexions » : le nombre de jours où il a ouvert l'app connecté (une fois par jour au plus, depuis la mise en place du compteur) ; « Dernière connexion » : la date et l'heure de sa dernière ouverture.</p>
-      </section>
-      <div id="pr-newsletter"></div>`;
+      </section>`;
     $$("[data-filtre]", zone).forEach(b => b.addEventListener("click", () => {
       this.filtre = b.dataset.filtre; this.limite = this.PAS;
       $$("[data-filtre]", zone).forEach(x => x.setAttribute("aria-pressed", String(x === b)));
@@ -793,10 +819,7 @@ const outilProspects = {
       UI.toast(liste.length + " prospect" + (liste.length > 1 ? "s" : "") + " exporté" + (liste.length > 1 ? "s" : "") + ".", "ok");
     });
     this.majListe(zone);
-    ListeCoach.monter(zone.querySelector("#lc-zone"), "prospects", this.lignesListe(), { recharger: async () => { if (zone.isConnected) await this.init(true); } });   // v83 (bloc 3)
     Mesure.monter(zone.querySelector("#pr-mesure"), this.lignes);   // v62 (brief V2, L)
-    this.monterNewsletter(zone.querySelector("#pr-newsletter"));
-    if (typeof Nouveautes !== "undefined") Nouveautes.monter(zone.querySelector("#pr-nouveautes"), this.lignes, true, this.tCharge);
   },
   /* la liste seule (les filtres ne redessinent pas la recherche : le curseur y reste) */
   majListe(zone){
@@ -810,7 +833,7 @@ const outilProspects = {
       : `<div class="empty">${this.filtre === "a_traiter" && !this.recherche && this.periode === "tout" && this.bilanF === "tout" && this.newsF === "tout" ? "Rien à faire aujourd'hui : aucun prospect n'attend d'action de ta part." : "Aucun prospect ne correspond à ces filtres."}</div>`;
     const plus = boite.querySelector("#pr-plus");
     if (plus) plus.addEventListener("click", () => { this.limite += this.PAS; this.majListe(zone); });
-    Commercial.brancher(boite, async () => { if (!zone.isConnected) return; const y = window.scrollY; await this.init(true); if (zone.isConnected) window.scrollTo(0, y); });
+    Commercial.brancher(boite, async () => { if (!zone.isConnected) return; const y = window.scrollY; await this.monter(true, "detail"); if (zone.isConnected) window.scrollTo(0, y); });
   },
   /* une cellule CSV : point-virgule, UTF-8 avec BOM (s'ouvre tel quel dans Excel en français). Une cellule qui commence
      par = + - @ (ou une tabulation, un retour) est neutralisée (apostrophe) : un prénom piégé ne devient jamais une
@@ -874,3 +897,39 @@ const outilProspects = {
   }
 };
 
+/* ------------------------------------------------------------------
+   v84 (ménage du bloc 3) — SUIVI COMMERCIAL (menu Plus) : l'écran d'avant de la page Prospects, déplacé tel quel (nombre de
+   comptes gratuits et à traiter, compteur Inscrits → 3 questions → bilans → clients, tuiles À traiter / Signés / Perdus /
+   Absents des 30 jours, Mesure, filtres détaillés — À traiter, Appel fait, Tous, recherche nom ou email, période, bilan,
+   newsletter, tri —, cartes avec leurs boutons, export CSV) ; mêmes identifiants (#pr-vue, #pr-liste, #pr-csv…). Les
+   statistiques comptent toujours les archivés (décision de Lucas) ; les cartes et l'export, comme avant, sans eux.
+   ------------------------------------------------------------------ */
+const outilSuiviCommercial = {
+  id: "suivi-commercial",
+  cle: null,
+  nom: "Suivi commercial",
+  icone: "📈",
+  role: "coach",
+  sans_entete: true,
+  titre: "Suivi commercial",
+  accroche: "",
+  html(){ return `<div id="pr-vue"><section class="panel"><div class="empty">Chargement…</div></section></div>`; },
+  init(){ return outilProspects.monter(false, "detail"); }
+};
+
+/* ------------------------------------------------------------------
+   v84 (ménage du bloc 3) — NEWSLETTER (menu Plus) : la liste newsletter qui était en bas de la page Prospects, déplacée telle
+   quelle (prospects et clients qui ont accepté, archivés compris : l'accord de la personne ne change pas ; export CSV) ;
+   mêmes identifiants (#pr-nl, #pr-nl-csv…).
+   ------------------------------------------------------------------ */
+const outilNewsletter = {
+  id: "newsletter",
+  cle: null,
+  nom: "Newsletter",
+  icone: "✉️",
+  role: "coach",
+  titre: "Newsletter",
+  accroche: "Les personnes qui ont accepté la newsletter, à exporter pour ton outil d'envoi.",
+  html(){ return `<div id="pr-vue"><section class="panel"><div class="empty">Chargement…</div></section></div>`; },
+  init(){ return outilProspects.monter(false, "newsletter"); }
+};

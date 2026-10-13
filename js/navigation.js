@@ -340,7 +340,9 @@ function lienOutil(id){
   const o = OUTILS.find(x => x.id === id);
   return Store.idConsulte && o && o.role !== "coach" ? "#/client/" + Store.idConsulte + "/" + id : "#/" + id;
 }
-const RETOURS = { tableau: "Revenir au tableau de bord", clients: "Revenir à mes clients", prospects: "Revenir aux prospects" };
+const RETOURS = { tableau: "Revenir au tableau de bord", clients: "Revenir à mes clients", prospects: "Revenir aux prospects",
+  /* v84 : les pages du menu Plus qui ont reçu l'écran d'avant de Clients et de Prospects */
+  "suivi-clients": "Revenir au suivi détaillé", comptes: "Revenir aux comptes", "suivi-commercial": "Revenir au suivi commercial", newsletter: "Revenir à la newsletter" };
 /* les outils du client consulté (le bandeau des pages de sa fiche ; v83 : aussi dans l'onglet Suivi de la fiche) */
 function actionsConsultation(){
   return [
