@@ -185,11 +185,14 @@ function lienLegal(id, cle, texte){
 function entreePortail(){ return (CONFIG.marque && CONFIG.marque.inscription_libre && !Auth.appareilConnu()) ? "inscription" : "connexion"; }
 function portail(mode){
   if (UI._ouverte) UI.fermer();   // v44 : un volet (conditions) encore ouvert ne doit pas figer l'ecran reconstruit
-  /* v39 : « inscription » n'existe que si l'inscription libre est ouverte */
+  /* v39 : « inscription » n'existe que si l'inscription libre est ouverte.
+     v81 (bloc 2) : la création de compte est le parcours du prospect en 11 écrans (js/parcours.js) ; cet écran ne sert plus
+     qu'à la connexion et à « Mot de passe oublié » */
   const libre = !!(CONFIG.marque && CONFIG.marque.inscription_libre);
-  mode = (mode === "oubli") ? "oubli" : (mode === "inscription" && libre) ? "inscription" : "connexion";
-  const titre = mode === "oubli" ? "Mot de passe oublié" : mode === "inscription" ? DECOUVERTE.inscription.titre : "Connexion à ton espace";
-  const bouton = mode === "oubli" ? "Recevoir le lien" : mode === "inscription" ? DECOUVERTE.inscription.bouton : "Se connecter";
+  if (mode === "inscription" && libre && typeof Parcours !== "undefined"){ Captcha.oublier(); Parcours.ouvrir(); return; }
+  mode = (mode === "oubli") ? "oubli" : "connexion";
+  const titre = mode === "oubli" ? "Mot de passe oublié" : "Connexion à ton espace";
+  const bouton = mode === "oubli" ? "Recevoir le lien" : "Se connecter";
   Captcha.oublier();   // v78 (tâche 3) : l'ancien widget (autre écran) est retiré avant que la page soit remplacée
   document.body.innerHTML = `
   <div class="portail">
@@ -199,35 +202,19 @@ function portail(mode){
       <div class="logo">${esc(CONFIG.marque.nom)}</div>
       ${CONFIG.marque.programme ? `<div class="sous">${esc(CONFIG.marque.programme)}</div>` : ""}
       <h2>${esc(titre)}</h2>
-      ${mode === "inscription" ? `<p class="co-sous">${esc(DECOUVERTE.inscription.sous)}</p>` : ""}
-      ${mode === "inscription" ? `<div class="champ"><label for="c-prenom">Ton prénom</label><input id="c-prenom" type="text" autocomplete="given-name" maxlength="60"></div>` : ""}
       ${mode === "oubli"
         /* v52 (décision de Lucas) : l'app n'envoie aucun email pour l'instant (ni lien de mot de passe, ni vérification) :
            « Mot de passe oublié ? » donne seulement l'adresse du coach, aucun appel à /auth/v1/recover */
         ? ecrisNous(DECOUVERTE.inscription.oubli, "co-oubli", "co-sous")
         : `<div class="champ"><label for="c-email">Email</label><input id="c-email" type="email" autocomplete="email"></div>`}
-      ${mode === "inscription"
-        /* v44 : prenom, email, mot de passe (un seul, avec « Afficher ») et la case des conditions.
-           v52 : + le nom ; cases SEPAREES, aucune cochee d'avance. v64 (brief V2, A) : UNE seule case obligatoire, les
-           conditions (deux liens distincts vers les PDF, CONFIG.textes_legaux ; aucun espace avant le point final, qui ne
-           tombe plus seul sous le lien), et la newsletter (facultative) ; l'accord sante est demande au premier usage (Sante).
-           v74 (décision de Lucas du 04/10) : plus de champ « Nom » (prénom seul).
-           v76 (tâche 7) : le numéro (WhatsApp) après le mot de passe, avec à quoi il sert, juste avant les cases */
-        ? `<div class="champ"><label for="c-mdp">${esc(DECOUVERTE.inscription.mdp)}</label><div class="co-mdp"><input id="c-mdp" type="password" autocomplete="new-password"><button type="button" class="voir" id="c-voir" aria-pressed="false" aria-label="Afficher le mot de passe">Afficher</button></div></div>
-      ${Contact.obligatoire() ? `<div class="champ"><label for="c-tel">${esc(trad("Ton numéro (WhatsApp)"))}</label>${Telephone.champHTML("c-tel")}<p class="note" id="c-tel-note" style="margin:6px 0 0">${esc(trad("Ton coach s'en sert pour t'appeler ou t'écrire sur WhatsApp. Jamais revendu."))}</p></div>` : ""}
-      <label class="co-rester co-cgu"><input type="checkbox" id="c-cgu"><span>${esc(DECOUVERTE.inscription.cgu_avant)} ${lienLegal("c-cgu-lien", "cgu_pdf", DECOUVERTE.inscription.cgu_lien)} ${esc(DECOUVERTE.inscription.cgu_entre)} ${lienLegal("c-politique-lien", "confidentialite_pdf", DECOUVERTE.inscription.politique_lien)}${esc(DECOUVERTE.inscription.cgu_apres || "")}</span></label>
-      <label class="co-rester co-newsletter"><input type="checkbox" id="c-newsletter"><span>${esc(DECOUVERTE.inscription.newsletter)}</span></label>`
-        : mode !== "oubli" ? `<div class="champ"><label for="c-mdp">Mot de passe</label><input id="c-mdp" type="password" autocomplete="current-password"></div>` : ""}
+      ${mode !== "oubli" ? `<div class="champ"><label for="c-mdp">Mot de passe</label><input id="c-mdp" type="password" autocomplete="current-password"></div>` : ""}
       ${mode === "connexion" ? `<label class="co-rester"><input type="checkbox" id="c-rester" checked><span>Rester connecté</span></label>` : ""}
       <div id="co-err" role="alert"></div>
       ${mode !== "oubli" ? `<button class="btn" id="c-go">${esc(bouton)}</button>` : ""}${Captcha.html(mode)}
-      ${mode === "inscription" ? `<p class="co-note">${esc(DECOUVERTE.inscription.note)}</p>` : ""}
-      ${CONFIG.marque.version && mode !== "inscription" ? `<p class="co-aide">v${esc(CONFIG.marque.version)}</p>` : ""}
+      ${CONFIG.marque.version ? `<p class="co-aide">v${esc(CONFIG.marque.version)}</p>` : ""}
       <div class="bascule">
         ${mode === "connexion"
           ? `<button type="button" data-mode="oubli">Mot de passe oublié ?</button>${libre ? `<button type="button" data-mode="inscription">${esc(typoFr("Pas encore de compte ? Créer mon compte"))}</button>` : ""}`
-          : mode === "inscription"
-          ? `<button type="button" data-mode="connexion">${esc(typoFr("Déjà un compte ? Se connecter"))}</button>`
           : `<button type="button" data-mode="connexion">Retour à la connexion</button>`}
       </div>
     </div>
@@ -249,19 +236,10 @@ function portail(mode){
 
   $$("[data-mode]").forEach(b => b.addEventListener("click", () => portail(b.dataset.mode)));
   Theme.majBoutons();
-  /* v44 — inscription : voir le mot de passe (v64 : les conditions sont des liens vers les PDF, plus de volet ici) */
-  const voir = $("c-voir");
-  if (voir) voir.addEventListener("click", () => {
-    const c = $("c-mdp"); if (!c) return;
-    const montre = c.type === "password";
-    c.type = montre ? "text" : "password";
-    voir.textContent = montre ? trad("Masquer") : trad("Afficher");
-    voir.setAttribute("aria-pressed", String(montre));
-  });
   $("co-langue").addEventListener("click", () => {
     const ok = I18N.choisir(I18N.langue === "en" ? "fr" : "en");
     /* v72 (B) : le rechargement rouvre le même écran (sur un appareil neuf, l'adresse vide rouvrirait la création de compte) */
-    if (ok && (mode === "connexion" || mode === "inscription")){ try { history.replaceState(null, "", location.pathname + location.search + "#/" + mode); } catch(e){} }
+    if (ok && mode === "connexion"){ try { history.replaceState(null, "", location.pathname + location.search + "#/" + mode); } catch(e){} }
     if (ok) location.reload(); else portail(mode);
   });
 
@@ -271,77 +249,13 @@ function portail(mode){
     $$(".carte-co .manque").forEach(nettoyer);
     const email = ($("c-email").value || "").trim();
     const mdp = $("c-mdp") ? $("c-mdp").value : "";
-    /* v76 (tâche 7) : à l'inscription, la vérification suit l'ordre de l'écran : prénom, email, mot de passe, numéro, case */
-    const prenom = mode === "inscription" ? ($("c-prenom").value || "").trim().slice(0, 60) : "";
-    if (mode === "inscription" && !prenom){ err("Indique ton prénom."); fautif("c-prenom"); return; }
     if (!email){ err("Indique ton email."); fautif("c-email"); return; }
     /* le choix doit etre pris AVANT la connexion : c'est lui qui decide
        ou la session sera rangee */
     const rester = $("c-rester");
     Auth.persistant = rester ? rester.checked : true;
     const b = $("c-go");
-    if (mode === "inscription"){
-      if (mdp.length < 8){ err("Le mot de passe doit faire au moins 8 caractères."); fautif("c-mdp"); return; }
-      /* v72 (A) : le numéro (WhatsApp), obligatoire si CONFIG.marque.telephone_obligatoire vaut true */
-      let T = null;
-      if (Contact.obligatoire()){ T = Telephone.lire("c-tel"); if (T.erreur){ err(typoFr(trad(T.erreur))); fautif("c-tel"); return; } }
-      const cgu = $("c-cgu");
-      if (!cgu || !cgu.checked){ err(trad(DECOUVERTE.inscription.cgu_manque)); fautif("c-cgu"); return; }
-      b.disabled = true; b.textContent = "Un instant…";
-      try {
-        const jeton = Captcha.actif() ? await Captcha.prendreJeton() : "";   // v78 (tâche 3) : 4 s au plus, puis envoi avec ou sans jeton
-        if (!b.isConnected) return;   // v78 (tâche 3) : écran quitté pendant l'attente du jeton : rien n'est envoyé
-        /* v44 : l'acceptation des conditions est datee ; P0.5 : consentement sante separe, horodate.
-           v52 : prenom ET nom ; chaque accord porte sa date et la version de son texte (DECOUVERTE.accords) ;
-           la newsletter (facultative) remplace les « emails de suivi » : emails_suivi n'est plus envoye (il reste lu
-           pour les comptes d'avant). Le choix de la newsletter est recopie dans la cle « emails » a la premiere
-           ouverture (Accords.copierEmails), pour que le coach le voie.
-           v64 (brief V2, A) : plus d'accord sante a l'inscription (consentement_sante / sante_version : au premier usage,
-           Sante.donner) ; conditions_version = la version des CGU en PDF (CONFIG.textes_legaux.cgu_version).
-           v74 : plus de nom demandé : nom "" (le declencheur creer_profil range '' dans profils.nom, comme avant la v52) */
-        const A = DECOUVERTE.accords, maintenant = new Date().toISOString();
-        const ok_news = !!($("c-newsletter") && $("c-newsletter").checked);
-        const connecte = await Auth.inscrire(email, mdp, prenom, "", {
-          consentement: maintenant, conditions_version: A.conditions,
-          newsletter: ok_news ? maintenant : null, newsletter_version: A.newsletter }, jeton);
-        if (connecte){
-          /* v78 (tâche 2) : inscrit dans le navigateur d'Instagram, de TikTok ou de Facebook : le drapeau de l'appareil (rien en
-             base, rien n'attend) */
-          try { if (typeof Integre !== "undefined") Integre.noterInscription(); } catch(e){}
-          /* v72 (A) : la clé « contact » du nouveau compte (la session existe déjà), 6 s au plus ; ratée : gardée sur
-             l'appareil, elle repart à l'ouverture qui suit (Contact.preparer) */
-          const champs = {};
-          if (T && T.tel) champs.telephone = T.tel;
-          const ref = Provenance.locale(); if (ref) champs.ref = ref;   // v72 (F) : le code du lien d'inscription
-          if (Object.keys(champs).length){
-            champs.inscrit_le = maintenant;
-            const uid = Auth.utilisateur() && Auth.utilisateur().id;
-            try { await Contact.borne(Contact.enregistrer(champs, uid)); } catch(e){ if (uid) Contact.garderAttente(uid, champs); }
-          }
-          Provenance.oublier();   // v72 (F) : enregistré (ou dans la copie de secours) : il ne sert plus sur cet appareil
-          /* v72 (F) : rechargement sans le code dans l'adresse (sinon une déconnexion le relirait) */
-          try { history.replaceState(null, "", Provenance.adresseSans()); } catch(e){ location.hash = ""; }
-          location.reload(); return;
-        }
-        ecranVerifieEmail(email); return;   // v47 : un ecran dedie, pas une ligne de message
-      } catch(e){
-        const m = (e.message || "").toLowerCase();
-        const invalide = m.indexOf("email") > -1 && m.indexOf("invalid") > -1;   // v76 (tâche 7) : adresse refusée par le serveur
-        const cap = Captcha.erreur(e); Captcha.apresEssai();   // v78 (tâche 3) : refus du CAPTCHA d'abord ; jeton consommé : un nouveau
-        err(cap ? cap
-          : /email rate limit/.test(m) ? trad(DECOUVERTE.inscription.trop_emails)   // v52 : limite horaire d'emails du projet
-          : /error sending|sending .*email|smtp/.test(m) ? trad(DECOUVERTE.inscription.envoi_rate, { p: CONFIG.marque.pseudo || "" })   // v52 : le serveur d'emails a refusé
-          : /rate limit|security purposes|after \d+ seconds/.test(m) ? trad(DECOUVERTE.inscription.trop_demandes)   // v47
-          : m.indexOf("already") > -1 || m.indexOf("registered") > -1 ? "Un compte existe déjà avec cet email : connecte-toi."
-          : m.indexOf("disabled") > -1 || m.indexOf("not allowed") > -1 ? "Les inscriptions ne sont pas encore ouvertes."
-          /* v76 (tâche 7) : jamais le message brut du serveur à l'inscription */
-          : invalide ? trad("Cette adresse email ne semble pas valide. Vérifie-la.")
-          : trad("Inscription impossible pour le moment. Réessaie dans une minute."));
-        if (invalide) fautif("c-email");
-      }
-      b.disabled = false; b.textContent = bouton;
-      return;
-    }
+    /* v81 (bloc 2) : la création de compte vit dans le parcours (Parcours.creer, js/parcours.js), mêmes accords, même clé contact */
     b.disabled = true; b.textContent = "Un instant…";
     try {
       if (mode === "oubli"){
@@ -388,7 +302,7 @@ function portail(mode){
   if (portail._entree) document.removeEventListener("keydown", portail._entree);
   /* v76 (tâche 7) : les champs à taper, dans l'ordre de l'écran : Entrée passe au suivant (« suivant » sur le clavier du
      téléphone), seul le dernier envoie (« OK ») */
-  const champs = ["c-prenom", "c-email", "c-mdp", "c-tel"].map(id => $(id)).filter(Boolean);
+  const champs = ["c-email", "c-mdp"].map(id => $(id)).filter(Boolean);
   champs.forEach((c, i) => c.setAttribute("enterkeyhint", i < champs.length - 1 ? "next" : "go"));
   portail._entree = e => {
     if (e.key !== "Enter") return;

@@ -649,3 +649,222 @@ button.btn.ja-suppr{width:100%;min-height:var(--h-bouton)}
 .toast.ja-toast{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center}
 .ja-annuler{min-height:44px;padding:0 14px;background:none;border:1px solid var(--accent-line);border-radius:999px;color:var(--accent);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer}
 @media (max-width:360px){ .ja-macros{gap:8px} .ja-m-l b{font-size:12px} .ja-past{padding:8px 12px} }
+
+/* ==================================================================
+   v81 (bloc 2) — LE PARCOURS DU PROSPECT (js/parcours.js) : 11 écrans plein écran, d'après les maquettes
+   (docs/maj-blocs-1-2/maquettes/parcours-prospect) ; les halos du fond sont ceux de toute l'app (body::before).
+   Aucun flou ici (le fond de la page est fixe et lisse). L'animation d'accueil : CSS et SVG seulement ; immobile (la
+   1re scène) quand l'appareil demande moins de mouvement (règle commune de css/jetons.css).
+   ================================================================== */
+.pc{position:relative;max-width:480px;min-height:100vh;min-height:100dvh;margin:0 auto;box-sizing:border-box;
+  padding:max(28px,env(safe-area-inset-top)) 24px calc(32px + env(safe-area-inset-bottom));display:flex;flex-direction:column}
+@media (max-width:359px){.pc{padding-left:16px;padding-right:16px}}
+.pc-tete{display:flex;align-items:center;gap:16px}
+.pc-retour,.pc-retour-vide{flex:none;width:var(--h-rond);height:var(--h-rond);border-radius:50%}
+.pc-retour{display:flex;align-items:center;justify-content:center;border:1px solid var(--verre-bord);background:var(--verre);color:var(--ink);cursor:pointer;padding:0}
+.pc-retour svg,.pc-chevron,.pc-bouton svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.pc-progres{flex:1;height:4px;border-radius:2px;background:var(--verre-bord);overflow:hidden}
+.pc-progres i{display:block;height:100%;border-radius:2px;background:var(--accent)}
+.pc-titre{margin:40px 0 0;font-size:32px;font-weight:700;line-height:1.15;letter-spacing:-.01em;text-wrap:balance}
+.pc-titre-long{margin-top:24px;font-size:28px}
+.pc-titre:focus{outline:0}
+.pc-sous-titre{margin:10px 0 0;font-size:16px;line-height:1.5;color:var(--ink-2)}
+.pc-titre-long + .pc-sous-titre{margin-top:8px;font-size:15px}
+.pc-surtitre{margin:40px 0 0;font-size:14px;font-weight:600;color:var(--accent)}
+.pc-surtitre + .pc-titre{margin-top:10px}
+.pc-bas{margin:auto 0 0;padding-top:24px;text-align:center;font-size:14px;color:var(--ink-2)}
+.pc-pied{margin-top:auto;padding-top:16px;display:flex;flex-direction:column;gap:14px}
+.pc-bouton{width:100%;font-size:17px;gap:10px}
+.pc-bouton.inactif{background:rgba(255,255,255,.12);border-color:transparent;color:rgba(255,255,255,.45);filter:none;cursor:default}
+.pc-lien{background:none;border:0;padding:0 8px;min-height:var(--h-toucher);font:inherit;font-size:15px;color:var(--ink-2);cursor:pointer;align-self:center}
+.pc-lien-or{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
+.pc-cache{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:0}
+.pc-erreur{margin:6px 0 0;font-size:14px;color:var(--bad)}
+.pc-erreur:empty{display:none}
+.pc-erreur .pc-lien{display:inline;min-height:0;padding:0;font-size:14px}
+/* cartes à toucher (objectif, sexe) */
+.pc-cartes{margin-top:28px;display:flex;flex-direction:column;gap:12px}
+.pc-carte-choix{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:18px;border-radius:var(--r);
+  border:1px solid var(--verre-bord);background:var(--verre);color:var(--ink);text-align:left;font:inherit;cursor:pointer;min-height:64px}
+.pc-carte-choix > span{display:flex;flex-direction:column;gap:4px}
+.pc-carte-choix b{font-size:18px;font-weight:600}
+.pc-carte-choix small{font-size:14px;color:var(--ink-2)}
+.pc-carte-choix .pc-chevron{flex:none;width:18px;height:18px;color:var(--ink-2)}
+.pc-carte-choix:hover,.pc-opt:hover{border-color:var(--line-strong)}
+/* options à cocher (coincé : cases ; dans 3 mois : ronds) : élément choisi = fond 12 % et bordure dorée */
+.pc-options{margin-top:18px;display:flex;flex-direction:column;gap:8px}
+.pc-opt{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;min-height:52px;padding:10px 16px;border-radius:var(--r);
+  border:1px solid var(--verre-bord);background:var(--verre);color:var(--ink);text-align:left;font:inherit;font-size:16px;line-height:1.3;cursor:pointer}
+.pc-opt[aria-checked="true"]{background:var(--verre-choisi);border-color:var(--accent)}
+.pc-case-opt{flex:none;position:relative;width:24px;height:24px;border-radius:7px;border:2px solid rgba(255,255,255,.35)}
+.pc-radio .pc-case-opt{border-radius:50%}
+.pc-opt[aria-checked="true"] .pc-case-opt{border-color:var(--accent);background:var(--accent)}
+.pc-opt[aria-checked="true"] .pc-case-opt::after{content:"";position:absolute;left:7px;top:3px;width:6px;height:11px;border:solid var(--accent-ink);border-width:0 3px 3px 0;transform:rotate(45deg)}
+.pc-autre{align-self:flex-start;margin-top:8px;padding:0;font-size:15px;color:var(--ink-2);text-decoration:underline;text-underline-offset:3px}
+.pc-libre{margin-top:10px}
+.pc-libre textarea{min-height:76px}
+.pc-reaction{margin-top:12px;padding:14px 16px;border-radius:var(--r);border:1px solid var(--verre-bord);background:var(--verre);display:flex;gap:12px;align-items:flex-start;font-size:15px;line-height:1.45}
+.pc-reaction[hidden]{display:none}
+.pc-etoile{flex:none;width:28px;height:28px;border-radius:50%;background:rgba(212,168,68,.18);display:flex;align-items:center;justify-content:center}
+.pc-etoile svg{width:16px;height:16px;fill:none;stroke:var(--accent);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* champs (prénom, compte, numéro) */
+.pc-champ{margin-top:24px;display:flex;flex-direction:column}
+.pc-titre + .pc-champ{margin-top:28px}
+.pc-champ label{font-size:15px;font-weight:500;color:var(--ink-2);margin-bottom:10px}
+.pc-champ input:not([type=checkbox]),.pc-champ select{font-size:18px;padding:0 18px}
+.pc-champ select{font-size:17px}
+.pc-mdp input{padding-right:96px!important}
+.pc-case{display:flex;gap:14px;align-items:flex-start;margin:20px 0 0;padding:14px 16px;border-radius:var(--r);border:1px solid var(--verre-bord);background:var(--verre);
+  font-size:14.5px;line-height:1.45;color:var(--ink);cursor:pointer;text-transform:none;letter-spacing:0;font-weight:400}
+.pc-case + .pc-erreur + .pc-case,.pc-case + .pc-case{margin-top:10px}
+.pc-case input{flex:none;width:24px;height:24px;min-height:0;margin:0;accent-color:var(--accent)}
+.pc-case .lien{color:var(--accent);text-decoration:underline}
+.pc-aide{margin:16px 0 0;font-size:15px;line-height:1.5;color:var(--ink-2)}
+.pc-note{margin:0;font-size:13px;line-height:1.5;text-align:center;color:var(--ink-2)}
+.pc-pied .erreur{margin:0}
+.pc-whatsapp .tel-ligne{flex-wrap:nowrap}
+.pc-whatsapp .tel-ligne select{flex:0 1 150px}
+@media (max-width:359px){.pc-whatsapp .tel-ligne{flex-wrap:wrap}}
+/* chargement */
+.pc-charge{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding-top:16px}
+.pc-anneau{width:64px;height:64px;fill:none;stroke-width:5;stroke-linecap:round;animation:pc-tourne 1.1s linear infinite}
+.pc-anneau circle{stroke:var(--verre-bord)} .pc-anneau path{stroke:var(--accent)}
+.pc-charge .pc-titre{margin-top:32px;font-size:28px}
+.pc-carte-charge{margin-top:28px;width:100%;padding:22px;border-radius:var(--r-lg);border:1px solid var(--verre-bord);background:var(--verre);display:flex;flex-direction:column;gap:18px}
+.pc-coche-ligne{display:flex;align-items:center;gap:14px;text-align:left}
+.pc-coche-ligne > span:last-child{display:flex;flex-direction:column;gap:2px;min-width:0}
+.pc-coche-ligne small{font-size:12px;color:var(--ink-2)}
+.pc-coche-ligne b{font-size:16px;font-weight:500;line-height:1.3;overflow-wrap:anywhere}
+.pc-coche{flex:none;position:relative;width:24px;height:24px;border-radius:50%;border:2px solid rgba(255,255,255,.3)}
+.pc-coche > span{position:absolute;left:-2px;top:-2px;width:24px;height:24px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;animation:pc-pop .4s ease-out backwards}
+.pc-coche svg{width:14px;height:14px;fill:none;stroke:var(--accent-ink);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.pc-suite{font-size:14px}
+/* ton espace */
+.pc-titre-espace{margin-top:24px;font-size:26px}
+.pc-pastilles-espace{margin-top:14px;display:flex;flex-wrap:wrap;gap:8px}
+.pc-pastilles-espace .pastille{padding:7px 14px;font-size:13px;white-space:normal}
+.pc-fonctions{margin-top:16px;display:flex;flex-direction:column;gap:8px}
+.pc-fonction{display:flex;gap:14px;align-items:center;padding:12px 14px;border-radius:18px;border:1px solid var(--verre-bord);background:var(--verre)}
+.pc-fonction > span:last-child{display:flex;flex-direction:column;gap:2px;min-width:0}
+.pc-fonction b{font-size:16px;font-weight:600;line-height:1.25}
+.pc-fonction small{font-size:13.5px;line-height:1.4;color:var(--ink-2)}
+.pc-fonction-ico{flex:none;width:40px;height:40px;border-radius:50%;border:1px solid var(--accent);display:flex;align-items:center;justify-content:center}
+.pc-fonction-ico svg{width:20px;height:20px;fill:none;stroke:var(--accent);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.pc-plus-tard .pc-fonction-ico{border-color:var(--verre-bord)} .pc-plus-tard .pc-fonction-ico svg{stroke:var(--ink-2)}
+.pc-bientot{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;border:1px solid var(--accent-line);background:var(--accent-soft);color:var(--accent);
+  font-size:11px;font-weight:600;letter-spacing:.02em;text-transform:none;vertical-align:2px;line-height:1.5}
+.pc-verrou{padding:14px 16px;border-radius:18px;border:1px dashed rgba(212,168,68,.55);background:rgba(255,255,255,.04);font-size:14.5px;line-height:1.5;color:var(--ink-2)}
+.pc-verrou strong{color:var(--ink);font-weight:600}
+/* cadeau */
+.pc-cadeau-corps{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px 0 8px}
+.pc-surtitre-cadeau{margin:0;font-size:14px;letter-spacing:1.5px;text-transform:uppercase}
+.pc-titre-cadeau{margin-top:16px;font-size:34px;line-height:1.12}
+.pc-cadeau-texte{margin:16px 0 0;font-size:16px;line-height:1.55;color:var(--ink-2)}
+.pc-cadeau-texte strong{color:var(--ink);font-weight:600}
+.pc-reperes{margin-top:28px;width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.pc-reperes > div{display:flex;flex-direction:column;align-items:center;gap:10px;font-size:14px;line-height:1.3}
+.pc-repere-ico{width:48px;height:48px;border-radius:50%;border:1px solid var(--verre-bord);background:var(--verre);display:flex;align-items:center;justify-content:center}
+.pc-repere-ico svg{width:22px;height:22px;fill:none;stroke:var(--accent);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.pc-coach{margin-top:28px;display:flex;align-items:center;gap:12px;font-size:16px;font-weight:600}
+.pc-photo{width:64px;height:64px;border-radius:50%;border:1px solid rgba(255,255,255,.2);object-fit:cover;background:rgba(255,255,255,.08)}
+.pc-photo-logo{display:flex;align-items:center;justify-content:center}
+.pc-photo-logo img{width:44px;height:auto;filter:invert(1)}
+.pc-pied-cadeau{gap:4px}
+.pc-plus-tard-lien{font-size:15px}
+/* accueil : logo, langue, scène animée, puis le texte */
+.pc-accueil{padding-top:0}
+.pc-langue{position:absolute;top:max(16px,env(safe-area-inset-top));right:16px;z-index:3;min-height:var(--h-rond);padding:0 16px;border-radius:999px;border:1px solid var(--verre-bord);
+  background:var(--verre);color:var(--ink-2);font:inherit;font-size:14px;cursor:pointer}
+.pc-logo{position:absolute;top:24px;left:50%;width:88px;height:auto;margin-left:-44px;z-index:2;filter:invert(1)}
+.pc-scene{position:relative;height:540px;margin:0 -24px;overflow:hidden}
+.pc-scene-in{position:absolute;left:50%;top:0;width:390px;height:540px;margin-left:-195px}
+.pc-scene-lu{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);margin:0}
+.pc-accueil-bas{display:flex;flex-direction:column;margin-top:6px}
+.pc-titre-serif{margin:0;font-family:"Instrument Serif",Georgia,"Times New Roman",serif;font-weight:400;font-size:33px;line-height:1.05;text-wrap:balance}
+.pc-titre-serif:focus{outline:0}
+.pc-sous{margin:8px 0 0;font-size:14.5px;line-height:1.45;color:var(--ink-2)}
+.pc-accueil-bas .pc-bouton{margin-top:14px}
+.pc-rebours{margin:8px 0 0;text-align:center;font-size:12.5px;line-height:1.4;color:var(--ink-2)}
+.pc-accueil-bas .pc-lien-or{margin-top:2px}
+@media (max-height:740px){.pc-scene{height:440px}.pc-scene-in{transform:scale(.82);transform-origin:50% 0}}
+@media (max-width:359px){.pc-scene{margin:0 -16px}}
+/* la scène (repères en px de la maquette, 390 × 540) */
+.pc-halo-or{position:absolute;left:20px;top:120px;width:350px;height:350px;border-radius:50%;background:radial-gradient(circle,rgba(212,168,68,.26),rgba(212,168,68,.10) 45%,transparent 70%)}
+.pc-grille{position:absolute;left:0;top:0;width:390px;height:540px;background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);
+  background-size:32px 32px;-webkit-mask-image:radial-gradient(circle at 50% 50%,#000 0%,transparent 60%);mask-image:radial-gradient(circle at 50% 50%,#000 0%,transparent 60%);animation:pc-grille 8s linear infinite}
+.pc-cercle-1{position:absolute;left:-5px;top:102px;width:400px;height:400px;fill:none;stroke:rgba(212,168,68,.14);stroke-width:1;animation:pc-pulse 6s ease-in-out infinite}
+.pc-cercle-2{position:absolute;left:30px;top:137px;width:330px;height:330px;fill:none;stroke:rgba(212,168,68,.32);stroke-width:1;stroke-dasharray:2 10;animation:pc-tourne 60s linear infinite}
+.pc-cercle-2 .pc-point{fill:var(--accent);stroke:none}
+.pc-particule{position:absolute;width:3px;height:3px;border-radius:50%;background:rgba(212,168,68,.9);opacity:0;animation:pc-monte 7s ease-out infinite}
+.pc-particule.pc-blanche{width:2px;height:2px;background:rgba(255,255,255,.7)}
+.pc-tel{position:absolute;left:100px;top:92px;width:190px;height:420px;transform:perspective(900px) rotateY(-9deg) rotateX(2deg)}
+.pc-tel-flotte{position:absolute;inset:0;animation:pc-flotte 6s ease-in-out infinite}
+.pc-tel-cadre{position:absolute;inset:0;border-radius:34px;border:1px solid rgba(255,255,255,.25);background:rgba(10,13,18,.9);box-shadow:0 0 44px rgba(212,168,68,.2)}
+.pc-tel-reflet{position:absolute;left:30px;right:30px;top:0;height:1px;background:rgba(255,255,255,.35)}
+.pc-tel-ecran{position:absolute;inset:8px;border-radius:26px;overflow:hidden;background:#0a0d12}
+.pc-tel-encoche{position:absolute;left:50%;top:8px;margin-left:-22px;width:44px;height:5px;border-radius:3px;background:rgba(255,255,255,.18)}
+.pc-sc{position:absolute;inset:0;box-sizing:border-box;padding:30px 12px 12px;display:flex;flex-direction:column;align-items:center;gap:10px;opacity:0;animation:pc-scene 15s infinite;color:var(--ink);font-size:11px}
+.pc-sc-1{opacity:1}
+.pc-sc-titre{font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--ink-2)}
+.pc-jauge{width:84px;height:84px;flex:none;fill:none}
+.pc-jauge-fond{stroke:rgba(255,255,255,.12);stroke-width:8}
+.pc-jauge-or{stroke:var(--accent);stroke-width:8;stroke-linecap:round;stroke-dasharray:214;stroke-dashoffset:64;animation:pc-jauge 15s infinite backwards}
+.pc-trait-or{stroke:var(--accent);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.pc-barres{width:100%;display:flex;gap:6px}
+.pc-barres > div,.pc-macro-fond{flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.12)}
+.pc-barres i,.pc-macro-fond i{display:block;height:100%;border-radius:2px;background:var(--accent);transform-origin:left;animation:pc-barre 15s infinite backwards}
+.pc-ligne{width:100%;box-sizing:border-box;height:34px;padding:0 8px 0 10px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);
+  display:flex;align-items:center;justify-content:space-between;gap:8px;animation:pc-entre 15s infinite backwards}
+.pc-rond{width:18px;height:18px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center}
+.pc-rond svg,.pc-anim-case svg{width:9px;height:9px;fill:none;stroke:var(--accent-ink);stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+.pc-seg{position:relative;width:100%;height:28px;box-sizing:border-box;border-radius:14px;border:1px solid var(--verre-bord);background:rgba(255,255,255,.06);display:flex;font-weight:600}
+.pc-seg > div{position:relative;flex:1;display:flex;align-items:center;justify-content:center}
+.pc-seg-h,.pc-seg-f{position:absolute;inset:2px;border-radius:12px;border:1px solid var(--accent);background:rgba(212,168,68,.30);opacity:0}
+.pc-seg-h{animation:pc-seg-h 15s infinite backwards} .pc-seg-f{animation:pc-seg-f 15s infinite backwards}
+.pc-seg span:last-child{position:relative}
+.pc-exo{height:38px;padding:0 8px;justify-content:flex-start}
+.pc-lecture{flex:none;width:26px;height:26px;border-radius:7px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.10);display:flex;align-items:center;justify-content:center}
+.pc-lecture svg{width:10px;height:10px;fill:var(--accent)}
+.pc-exo-nom{flex:1}
+.pc-anim-case{position:relative;flex:none;width:16px;height:16px;box-sizing:border-box;border-radius:50%;border:1.5px solid var(--accent)}
+.pc-anim-case > span{position:absolute;left:-1.5px;top:-1.5px;width:16px;height:16px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;animation:pc-coche 15s infinite backwards}
+.pc-recettes{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.pc-recettes > div{box-sizing:border-box;padding:8px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);display:flex;flex-direction:column;align-items:center;gap:8px;animation:pc-entre 15s infinite backwards}
+.pc-recette-rond{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center}
+.pc-recette-rond svg{width:20px;height:20px;fill:none;stroke:var(--accent);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.pc-trait{height:5px;border-radius:3px}
+.pc-trait-1{width:80%;background:rgba(255,255,255,.14)} .pc-trait-2{width:55%;background:rgba(255,255,255,.08)}
+.pc-macro{width:100%} .pc-macro > div:first-child{font-size:10px;color:var(--ink-2);margin-bottom:4px} .pc-macro-fond{height:5px}
+.pc-courbe{width:150px;height:104px;fill:none}
+.pc-courbe-grille{stroke:rgba(255,255,255,.08);stroke-width:1}
+.pc-courbe-or{stroke:var(--accent);stroke-width:3.5;stroke-linecap:round;stroke-dasharray:300;animation:pc-trace 15s infinite backwards}
+.pc-pastilles{display:flex;gap:6px}
+.pc-pastilles span{padding:5px 10px;border-radius:999px;border:1px solid var(--verre-bord);background:rgba(255,255,255,.06);font-size:10.5px;color:var(--ink-2)}
+.pc-scan{position:absolute;left:0;right:0;top:0;height:2px;background:var(--accent);box-shadow:0 0 14px 2px rgba(212,168,68,.6);opacity:0;animation:pc-scan 3s linear infinite}
+.pc-fondu{position:absolute;left:0;right:0;top:430px;height:110px;background:linear-gradient(to top,var(--ground) 0%,rgba(7,9,13,0) 100%)}
+.pc-etiquette{position:absolute;left:45px;top:498px;width:300px;height:30px;border-radius:15px;border:1px solid rgba(255,255,255,.16);background:rgba(7,9,13,.6)}
+.pc-et{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--accent);opacity:0;animation:pc-scene 15s infinite;white-space:nowrap}
+.pc-et:first-child{opacity:1}
+.pc-et .pc-bientot{font-size:10px;letter-spacing:.5px}
+@keyframes pc-scene{0%{opacity:0}1.5%{opacity:1}18.5%{opacity:1}20%{opacity:0}100%{opacity:0}}
+@keyframes pc-entre{0%{opacity:0;transform:translateX(12px)}2%{opacity:1;transform:translateX(0)}18%{opacity:1;transform:translateX(0)}20%{opacity:0}100%{opacity:0}}
+@keyframes pc-coche{0%{opacity:0;transform:scale(.3)}1.5%{opacity:1;transform:scale(1)}18%{opacity:1;transform:scale(1)}20%{opacity:0}100%{opacity:0}}
+@keyframes pc-jauge{0%{stroke-dashoffset:214}10%{stroke-dashoffset:64}100%{stroke-dashoffset:64}}
+@keyframes pc-trace{0%{stroke-dashoffset:300}12%{stroke-dashoffset:0}100%{stroke-dashoffset:0}}
+@keyframes pc-barre{0%{transform:scaleX(0)}8%{transform:scaleX(1)}100%{transform:scaleX(1)}}
+@keyframes pc-seg-h{0%{opacity:0}2%{opacity:1}9%{opacity:1}10%{opacity:0}100%{opacity:0}}
+@keyframes pc-seg-f{0%,9%{opacity:0}10%{opacity:1}18%{opacity:1}20%{opacity:0}100%{opacity:0}}
+@keyframes pc-scan{0%{top:0;opacity:0}10%{opacity:.8}90%{opacity:.8}100%{top:100%;opacity:0}}
+@keyframes pc-tourne{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes pc-monte{0%{transform:translateY(0);opacity:0}15%{opacity:.9}100%{transform:translateY(-110px);opacity:0}}
+@keyframes pc-flotte{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes pc-pulse{0%,100%{opacity:.5}50%{opacity:1}}
+@keyframes pc-grille{from{background-position:0 0}to{background-position:0 32px}}
+@keyframes pc-pop{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:scale(1)}}
+.pc-cercle-2{transform-origin:50% 50%}
+
+/* v81 : la carte « Ton cadeau t'attend » de l'accueil du prospect (outilDecouverte) */
+.dc-cadeau{border-color:rgba(212,168,68,.55)}
+.dc-cadeau h2{font-size:17px;margin:0 0 6px}
+.dc-cadeau p{margin:0 0 14px;font-size:14.5px;line-height:1.5;color:var(--ink-2)}
+.dc-cadeau .btn{width:100%;min-height:50px;border-radius:14px}

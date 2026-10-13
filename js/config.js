@@ -16,7 +16,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-10-13 · 80",
+    version: "2026-10-13 · 81",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -109,6 +109,16 @@ const CONFIG = {
     cgu_pdf: "https://drive.google.com/drive/folders/1ncw9lOmVtBijzAVxLL715zxLiyqxNW0m?usp=drive_link",
     confidentialite_pdf: "https://drive.google.com/drive/folders/1ncw9lOmVtBijzAVxLL715zxLiyqxNW0m?usp=drive_link",
     cgu_version: "2026-10-13"
+  },
+
+  /* --- v81 (bloc 2) : le parcours du prospect (js/parcours.js ; textes : PARCOURS_T) ---
+     fin_beta : LA date de fin de la bêta, heure de Paris (le compte à rebours de l'accueil ; après, la ligne disparaît et
+     rien d'autre ne change). disponibles : LA liste des fonctions qu'un prospect peut utiliser aujourd'hui ; false = badge
+     « Bientôt » dans l'animation de l'accueil et dans « Ton espace ». Quand une fonction sort (blocs 4 et 5), passer sa
+     valeur à true ici, et c'est tout. */
+  parcours: {
+    fin_beta: "2026-11-15T23:59:59", fuseau: "Europe/Paris",
+    disponibles: { journal: true, programme: false, recettes: false, calculateur: true, suivi: true }
   },
 
   /* --- Découverte (prospects) : les réglages ; les textes sont dans DECOUVERTE --- */
@@ -692,7 +702,8 @@ const DECOUVERTE = {
     cgu_apres: ".",
     cgu_manque: "Coche la case des conditions pour continuer.",
     /* v52 : case facultative, décochée, qui remplace les « emails de suivi ». v64 (A4) : texte court (version accords.newsletter changée) */
-    newsletter: "Oui, je veux recevoir par email les conseils et les offres de MHX Coaching (2 par semaine au plus, désinscription en 1 clic).",
+    /* v81 (bloc 2) : le texte de la case du parcours (PARCOURS_T.compte.newsletter, TEXTES.md), version 2026-10-13 des accords */
+    newsletter: "Je veux recevoir les conseils et les offres de MHX Coaching par email.",
     note: "L'app ne remplace pas un avis médical. Si tu as un doute sur ta santé, parles-en à un professionnel avant de commencer.",
     verif_titre: "Vérifie ta boîte mail",
     verif_texte: "On vient d'envoyer un lien à {e}. Ouvre-le pour confirmer ton compte, puis connecte-toi ici avec ton email et ton mot de passe.",
@@ -722,7 +733,7 @@ const DECOUVERTE = {
        seulement), puis complété « …de confidentialité. » (v54 ; anglais sans point final) ; « 2026-09-28b » (v55) : même
        texte français, anglais avec son point final. */
     sante: "2026-09-28b",       // ancienne case « données de santé » de l'inscription (v55 à v63) ; v64 : plus envoyée à l'inscription, l'accord au premier usage enregistre la version de la politique (Sante.version)
-    newsletter: "2026-10-11",   // v64 (A4) : case newsletter de l'inscription, texte court (inscription.newsletter) ; v76 : « MHX Coaching » au lieu de « Lucas »
+    newsletter: "2026-10-13",   // v64 (A4) : case newsletter de l'inscription, texte court (inscription.newsletter) ; v76 : « MHX Coaching » au lieu de « Lucas » ; v81 : texte du parcours (« Je veux recevoir les conseils et les offres de MHX Coaching par email. »)
     newsletter_profil: "2026-09-28c"   // interrupteur du Profil (emails.libelle, texte inchangé) ; « c » : texte final de Lucas du 28/09 (distinct des brouillons « 2026-09-28 » et « 2026-09-28b », jamais publiés) ; c'était aussi la case de l'inscription jusqu'à la v63
   },
 
@@ -993,7 +1004,7 @@ const DECOUVERTE = {
       politique_lien: "Privacy Policy",
       cgu_apres: ".",
       cgu_manque: "Tick the terms box to continue.",
-      newsletter: "Yes, send me MHX Coaching's tips and offers by email (2 per week max, 1-click unsubscribe).",
+      newsletter: "I want to get tips and offers from MHX Coaching by email.",
       note: "The app is not medical advice. If you have any doubt about your health, talk to a professional before starting.",
       verif_titre: "Check your inbox",
       verif_texte: "We've just sent a link to {e}. Open it to confirm your account, then sign in here with your email and password.",

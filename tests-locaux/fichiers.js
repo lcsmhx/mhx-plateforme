@@ -422,8 +422,48 @@ function forcerLegaux(texte, valeurs){
   return t;
 }
 
+/* v81 (bloc 2) — LE PARCOURS DU PROSPECT (js/parcours.js) piloté comme un doigt, depuis l'écran affiché jusqu'à « jusqua » :
+   "objectif" … "whatsapp" (cet écran atteint, rien de touché dessus) ou "cree" (défaut : « Débloquer mon espace » touché).
+   r = { objectif ("Perdre du gras"…), obstacle ([clés], 2 au plus), libre (texte libre), projection (clé), sexe ("Homme"/"Femme"),
+   prenom, email, mdp, cgu (true par défaut), newsletter, ind (indicatif, "33" par défaut), tel } ; les écrans déjà passés (page
+   rechargée, retour) sont repris là où ils sont. Rend l'écran atteint (data-etape de #pc). */
+const ETAPES_PARCOURS = ["accueil", "objectif", "coince", "projection", "sexe", "prenom", "chargement", "compte", "whatsapp", "cree"];
+async function parcours(page, r, jusqua){
+  r = Object.assign({ objectif: "Perdre du gras", obstacle: ["temps"], libre: "", projection: "energie", sexe: "Femme", prenom: "Zoé",
+    email: "zoe@exemple.fr", mdp: "motdepasse1", cgu: true, newsletter: false, ind: "33", tel: "0639980099" }, r || {});
+  const fin = ETAPES_PARCOURS.indexOf(jusqua || "cree");
+  if (fin < 0) throw new Error("parcours : étape inconnue " + jusqua);
+  const ici = () => page.$eval("#pc", e => e.dataset.etape).catch(() => "");
+  const sur = async e => { await page.waitForSelector('#pc[data-etape="' + e + '"]', { timeout: 8000 }); await page.waitForTimeout(80); };
+  await page.waitForSelector("#pc", { timeout: 10000 });
+  for (let tour = 0; tour < 12; tour++) {
+    const e = await ici(), i = ETAPES_PARCOURS.indexOf(e);
+    if (i < 0) throw new Error("parcours : écran inattendu « " + e + " »");
+    if (i >= fin) return e;
+    if (e === "accueil") { await page.click("#pc-go"); await sur("objectif"); continue; }
+    if (e === "objectif") { await page.click('[data-objectif="' + r.objectif + '"]'); await sur("coince"); continue; }
+    if (e === "coince") {
+      for (const k of r.obstacle) if ((await page.getAttribute('.pc-opt[data-k="' + k + '"]', "aria-checked")) !== "true") await page.click('.pc-opt[data-k="' + k + '"]');
+      if (r.libre) { if (await page.isVisible("#pc-autre")) await page.click("#pc-autre"); await page.fill("#pc-libre", r.libre); }
+      await page.click("#pc-suivant"); await sur("projection"); continue;
+    }
+    if (e === "projection") { await page.click('.pc-opt[data-k="' + r.projection + '"]'); await page.click("#pc-suivant"); await sur("sexe"); continue; }
+    if (e === "sexe") { await page.click('[data-sexe="' + r.sexe + '"]'); await sur("prenom"); continue; }
+    if (e === "prenom") { await page.fill("#pc-prenom", r.prenom); await page.click("#pc-suivant"); await sur("chargement"); continue; }
+    if (e === "chargement") { await page.click("#pc-suite"); await sur("compte"); continue; }
+    if (e === "compte") {
+      await page.fill("#c-email", r.email); await page.fill("#c-mdp", r.mdp);
+      if (r.cgu) await page.check("#c-cgu"); else await page.uncheck("#c-cgu");
+      if (r.newsletter) await page.check("#c-newsletter"); else await page.uncheck("#c-newsletter");
+      await page.click("#pc-suivant"); await sur("whatsapp"); continue;
+    }
+    if (e === "whatsapp") { await page.selectOption("#c-tel-ind", r.ind); await page.fill("#c-tel", r.tel); await page.click("#c-go"); return "cree"; }
+  }
+  throw new Error("parcours : trop d'écrans");
+}
+
 module.exports = { servirFichier, source, sourceServie, listes, forcerInscription, valeursInscription, forcerTelephone, valeursTelephone,
   TURNSTILE_TEST, forcerTurnstile, valeursTurnstile, problemeTurnstile,
   NOUVEAUTES, forcerNouveautes, valeursNouveaute, simulation, refusSimulation,
   LEGAUX, LEGAUX_TEST, LIENS_TEST, valeursLegales, lienDrive, idsDeTest, idModele, problemeLien, documentDrive, legauxBorne,
-  legauxManquants, legauxExecutes, legauxEcarts, legauxAilleurs, verrouLegaux, modeLegaux, brancheGit, forcerLegaux };
+  legauxManquants, legauxExecutes, legauxEcarts, legauxAilleurs, verrouLegaux, modeLegaux, brancheGit, forcerLegaux, ETAPES_PARCOURS, parcours };

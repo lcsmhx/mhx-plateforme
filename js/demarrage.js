@@ -260,6 +260,9 @@ const Retour = {
   /* v72 (A) : téléphone obligatoire et pas de numéro : l'écran « Ajoute ton numéro… » avant tout le reste (ni navigation,
      ni routage, ni « Bienvenue ! ») ; lecture ratée ou trop lente : l'app s'ouvre (la question revient la fois suivante) */
   if ((await pContact) === "manque"){ ecranTelephone(); return; }
+  /* v81 (bloc 2) : un compte créé à l'instant par le parcours (même onglet) : ses réponses partent dans intake, puis « Ton
+     espace » et le cadeau, en plein écran, avant la navigation (aucune bannière d'installation pendant le parcours) */
+  if (typeof Parcours !== "undefined" && Parcours.suiteDue()){ await Parcours.suite(); return; }
   construireNav();
   Contenus.charger();
   window.addEventListener("hashchange", routeDepuisAdresse);

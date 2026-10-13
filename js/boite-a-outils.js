@@ -97,8 +97,11 @@ function lienCalendlyPour(prenom, email, source, nom){
    le numéro, « Appeler » (tel:+…) et « WhatsApp » (wa.me, chiffres sans le +), seulement pour un numéro bien formé :
    la clé est écrite par le compte lui-même, rien d'autre n'en sort en lien ; sinon « — ». */
 const Telephone = {
-  PAYS: [["33", "France (+33)"], ["32", "Belgique (+32)"], ["41", "Suisse (+41)"], ["1", "Canada (+1)"], ["61", "Australie (+61)"],
-    ["225", "Côte d'Ivoire (+225)"], ["221", "Sénégal (+221)"], ["262", "La Réunion (+262)"]],
+  /* v81 (bloc 2) : la liste du parcours (TEXTES.md), dans cet ordre ; un numéro déjà enregistré est relu pareil */
+  PAYS: [["33", "France (+33)"], ["32", "Belgique (+32)"], ["41", "Suisse (+41)"], ["352", "Luxembourg (+352)"], ["1", "Canada (+1)"],
+    ["262", "La Réunion (+262)"], ["590", "Guadeloupe (+590)"], ["596", "Martinique (+596)"], ["594", "Guyane (+594)"],
+    ["225", "Côte d'Ivoire (+225)"], ["221", "Sénégal (+221)"], ["212", "Maroc (+212)"], ["213", "Algérie (+213)"], ["216", "Tunisie (+216)"],
+    ["237", "Cameroun (+237)"], ["61", "Australie (+61)"]],
   AUTRE: "autre",
   DEFAUT: "33",
   /* un numéro enregistré : « + » puis 7 à 17 chiffres (indicatif de 1 à 3 chiffres + 6 à 14) */
@@ -135,10 +138,11 @@ const Telephone = {
     const c = this.PAYS.map(p => p[0]).sort((a, b) => b.length - a.length).find(k => t.slice(1).indexOf(k) === 0);
     return c ? { ind: c, num: t.slice(1 + c.length) } : { ind: this.AUTRE, num: t };
   },
-  /* le menu (id + "-ind") et le champ (id) ; tel : un numéro enregistré, pour pré-remplir */
-  champHTML(id, tel){
+  /* le menu (id + "-ind") et le champ (id) ; tel : un numéro enregistré, pour pré-remplir ; autre : le libellé de « Autre pays »
+     (v81 : « Autre (indicatif à saisir) » dans le parcours) */
+  champHTML(id, tel, autre){
     const d = this.decouper(tel), opt = (v, l) => `<option value="${esc(v)}"${v === d.ind ? " selected" : ""}>${esc(trad(l))}</option>`;
-    return `<div class="tel-ligne"><select id="${esc(id)}-ind" aria-label="${esc(trad("Indicatif du pays"))}">${this.PAYS.map(p => opt(p[0], p[1])).join("")}${opt(this.AUTRE, "Autre pays")}</select>`
+    return `<div class="tel-ligne"><select id="${esc(id)}-ind" aria-label="${esc(trad("Indicatif du pays"))}">${this.PAYS.map(p => opt(p[0], p[1])).join("")}${opt(this.AUTRE, autre || "Autre pays")}</select>`
       + `<input id="${esc(id)}" type="tel" inputmode="tel" autocomplete="tel" maxlength="24" placeholder="06 12 34 56 78" value="${esc(d.num)}"></div>`;
   },
   /* lecture du champ : { tel } ou { erreur } */
