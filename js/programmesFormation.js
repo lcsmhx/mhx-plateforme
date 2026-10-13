@@ -120,7 +120,8 @@ Object.assign(I18N.en, {
   "Bravo, séance notée !": "Nice work, workout saved!",
   "Aucune séance faite cette semaine": "No workouts done this week",
   "{n} séance faite cette semaine": "{n} workout done this week",
-  "{n} séances faites cette semaine": "{n} workouts done this week"
+  "{n} séances faites cette semaine": "{n} workouts done this week",
+  "Séances de la formation faites (30 j) :": "Course workouts done (30 days):"
 });
 
 /* ------------------------------------------------------------------

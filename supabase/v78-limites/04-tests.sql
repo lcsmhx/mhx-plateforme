@@ -150,7 +150,7 @@ insert into t_res select 3, 'limites : les 29 clés de l''inventaire aux valeurs
                   ('checkins', 2097152), ('repas', 1048576), ('journal_alimentaire', 1048576), ('feedbacks', 1048576), ('programme', 524288), ('atelier', 524288),
                   ('mens', 524288), ('formation', 524288), ('photos', 524288), ('notes_coach', 524288), ('intake', 262144),
                   ('complements', 131072), ('repas_suivi', 131072), ('challenge', 131072), ('suivi_prospect', 131072),
-                  ('activite', 65536), ('seances_formation', 65536), ('calc', 16384), ('calc_perso', 16384), ('objectifs_faits', 16384), ('prefs', 16384),
+                  ('activite', 65536), ('seances_formation', 262144), ('calc', 16384), ('calc_perso', 16384), ('objectifs_faits', 16384), ('prefs', 16384),
                   ('emails', 16384), ('contact', 16384), ('coach_notifs', 16384), ('coach_visite', 16384)) as a (outil, limite))
   and public.v78_limite('cle_inconnue_v78') is null and public.v78_limite('cle_inconnue_v78', true) is null
   and public.v78_limite(null) is null, null;

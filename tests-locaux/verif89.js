@@ -8,7 +8,8 @@
    B. un 2e toucher le même jour : « Déjà noté aujourd'hui. », aucune écriture de plus ;
    C. de retour sur la page : « Fait le … » à côté de la séance et « 1 séance faite cette semaine » ; page rechargée : pareil ;
       une séance d'une autre semaine (10 jours avant) ne compte pas dans la semaine ;
-   D. lecture de la clé ratée : « Pas de connexion » + Réessayer (jamais une page fausse), aucun bouton, rien d'écrit ;
+   D. lecture de la clé ratée : « Pas de connexion » + Réessayer (jamais une page fausse), aucun bouton, rien d'écrit ; relecture
+      ratée au moment du toucher : rien d'écrit, « Non enregistré : réessaie dans un instant. » ;
    E. coach : onglet Suivi de la fiche de Thomas : « Séances de la formation faites (30 j) : 2 » (aujourd'hui et il y a 10 jours ;
       il y a 40 jours ne compte pas) ; le coach n'écrit rien ;
    F. prospect : son onglet Programme reste la vitrine verrouillée : ni bouton, ni lecture de seances_formation, rien d'écrit ;
@@ -16,7 +17,7 @@
    H. anglais (US) : « I did this workout ✓ », « No workouts done this week », « Done on … » ;
    I. 360 px : aucun débordement, le bouton fait au moins 44 px de haut ;
    Z. aucune erreur de console ni erreur JS, aucun dialogue natif, aucun appel vers l'extérieur.
-   Sur la version d'avant (v89) : pas de bouton (A à I en échec).
+   Sur la version d'avant (v89) : pas de bouton (seuls F1 et Z1 passent).
    Usage : node verif89.js ../index.html
            VERIF89_PORT=10041 node verif89.js ../index.html     (autre port, si 10040 est pris)
            VERIF89_BLOCS="A.,E." node verif89.js …               (seulement les blocs dont le nom commence ainsi) */
@@ -458,6 +459,15 @@ const allerAttendre = async (page, h, sel) => { await page.evaluate(x => { locat
     await page.goto(URL0 + SEANCE); await pret(page); await attendre(page, 1500);
     const r = await page.evaluate(() => ({ flag: !!document.getElementById("page-hors-ligne"), bouton: !!document.getElementById("pf-fait-btn"), reessayer: !!document.querySelector("#page-hors-ligne [data-reessayer]") }));
     ok("D1 : la lecture des séances faites échoue : « Pas de connexion » + Réessayer, aucun bouton, rien d'écrit", r.flag && r.reessayer && !r.bouton && ecritures89(db, F.IDS.c1).length === 0, JSON.stringify([r, ecritures89(db).length]));
+    /* la page est affichée, puis la relecture faite au toucher échoue : rien n'est écrit, le message le dit */
+    const db2 = base();
+    const { page: p2 } = await contexte(b, THOMAS, db2);
+    await p2.goto(URL0 + SEANCE); await pret(p2); const vu2 = await attendre89(p2, "#pf-fait-btn");
+    db2.panneLecture = CLE;
+    if (vu2) { await p2.click("#pf-fait-btn"); await attendre(p2, 1800); }
+    const T2 = await toasts89(p2), m2 = await p2.evaluate(() => (document.getElementById("pf-fait-msg") || {}).textContent || "");
+    ok("D2 : page affichée, puis la relecture faite au toucher échoue : rien n'est écrit, « Non enregistré : réessaie dans un instant. », pas de « Noté »",
+      vu2 && ecritures89(db2, F.IDS.c1).length === 0 && T2.includes("Non enregistré : réessaie dans un instant.") && !/Noté/.test(m2), JSON.stringify([vu2, T2, m2, ecritures89(db2).length]));
   });
 
   /* =================== E. le coach =================== */
