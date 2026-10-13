@@ -754,7 +754,7 @@ const Forme = {
   /* le contenu d'une cle : null s'il n'est pas un objet (comme absent) */
   cle(cle, v){
     if (!this.objet(v)) return null;
-    const m = this.modeles[cle];
+    const m = Object.prototype.hasOwnProperty.call(this.modeles, cle) ? this.modeles[cle] : null;   // v86 : jamais un modèle hérité (« constructor »…)
     return m ? this.appliquer(m, v) : v;
   }
 };
@@ -1027,7 +1027,8 @@ const Store = {
             if (typeof Checkin !== "undefined" && cle === Checkin.cle && ms > ts && uid === u.id){ await Checkin.rattraper(); if (this.attenteLire()[k]) reste = true; continue; }
             this.lacher(uid, cle, e.t);
             if (cle === "activite") continue;
-            if (ms > ts) ecartees.push({ cle: cle, t: e.t, autre: uid !== u.id }); continue;
+            /* v86 (lot 1) : une date illisible en base (« infinity »…) écarte la copie elle aussi : le message le dit, comme pour une date plus récente */
+            if (ms > ts || isNaN(ms)) ecartees.push({ cle: cle, t: e.t, autre: uid !== u.id }); continue;
           }
           await this.envoyer(cle, e.v, uid, e.t, false, true);
           if (this.attenteLire()[k]) reste = true;
@@ -1121,7 +1122,7 @@ const Store = {
     const uid = this.cible();
     const lignes = await Auth.appel("/rest/v1/donnees?user_id=eq." + uid + "&select=outil,contenu,maj_le");
     const profil = await Auth.appel("/rest/v1/profils?id=eq." + uid + "&select=*");
-    const donnees = {};
+    const donnees = Object.create(null);   // v86 (lot 1) : une ligne « __proto__ » reste une rubrique ordinaire de l'export
     (lignes || []).forEach(l => { donnees[l.outil] = { contenu: l.contenu, modifie_le: l.maj_le }; });
     /* v67 (audit du 01/10, E4) : les accords donnes (conditions, newsletter, sante : date et version), lus dans les
        metadonnees du compte deja en memoire (aucun appel de plus) ; seulement ces champs, jamais un jeton ; seulement
@@ -1250,7 +1251,11 @@ const Catalogue = {
           const f = await fetch(CONFIG.nutrition.source_donnees + fichier, { cache: "no-store" });
           if (f.ok){
             const brut = await f.json();
-            liste = (table === "aliments") ? brut.map(a => Normaliser.aliment(a)) : brut;
+            /* v86 (lot 1) : en secours, les étiquettes de régime et d'allergènes d'une recette du fichier ne sont jamais reprises telles
+               quelles : recettes() les recalcule depuis les aliments (aujourd'hui, aucune recette du fichier n'en porte) */
+            liste = (table === "aliments") ? brut.map(a => Normaliser.aliment(a))
+              : (table === "recettes") ? brut.map(r => { if (!r || typeof r !== "object") return r; const c = Object.assign({}, r); delete c.regimes; delete c.allergenes; return c; })
+              : brut;
             this.secours = true;
             complet = true;
           }

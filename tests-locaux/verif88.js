@@ -17,8 +17,12 @@
       dans le journal ; la clé publique (anon) passe ; « Claude outputs/ » est ignoré par git ;
    I. « Créer un accès » (et « Supprimer un compte ») : un jeton qui expire est d'abord renouvelé (avant : « Session expirée »
       trompeur après une mise en veille) ;
+   J. une ligne écrite par un compte avec la clé « __proto__ » (faux suivi « archivé ») ne fait plus disparaître ce prospect de la
+      liste du coach (aucune fausse clé du coach lue) ;
+   K. « Organise ta diète » : une semaine ou un jour piégés dans le document ne touchent plus aux objets communs de la page ;
+   L. une copie hors ligne écartée parce que la date en base est illisible (« infinity ») : le message le dit ;
    Z. aucune erreur de console ni erreur JS, aucun dialogue natif, aucun appel vers l'extérieur.
-   Sur la version d'avant (v85) : A, B, C, D1, E, F1, G, H, I en échec.
+   Sur la version d'avant (v85) : A, B, C, D1, E, F1, G, H, I, J, K, L en échec.
    Usage : node verif88.js ../index.html
            VERIF88_PORT=10051 node verif88.js ../index.html     (autre port, si 10050 est pris)
            VERIF88_BLOCS="A.,D." node verif88.js …               (seulement les blocs dont le nom commence ainsi) */
@@ -603,6 +607,51 @@ const attendreSel = async (page, sel, ms) => { try { await page.waitForSelector(
     const appels = db.ecritures.filter(e => e.table === "/functions/v1/creer-acces").length - f0;
     ok("I1 : « Créer un accès » avec un jeton qui expire dans moins d'une minute (téléphone sorti de veille) : la session est d'abord renouvelée, puis la fonction est appelée une fois",
       db.renouvellements.length === r0 + 1 && appels === 1, JSON.stringify([out, r0, db.renouvellements.length, appels]));
+  });
+
+  /* =================== J. une ligne « __proto__ » écrite par un compte =================== */
+  await bloc("J. ligne __proto__", async () => {
+    const k = 3, ID = PID(k);
+    const piege = { suivi_prospect: { version: 1, archive_le: avant(J), issue: "signe", issue_le: avant(J) }, feedbacks: { liste: [] } };
+    const db = base({ comptes: [compte(k, { meta: META_V64(), donnees: [["__proto__", piege]] })] });
+    const { page } = await contexte(b, COACH, db);
+    await page.goto(URL0 + "#/prospects"); await pret(page); await attendre(page, 1200);
+    const l = await page.evaluate(() => Array.from(document.querySelectorAll("#lc-prospects #lc-liste li")).map(x => x.textContent.replace(/\s+/g, " ").trim()));
+    ok("J1 : un prospect qui a écrit dans son compte une ligne à clé « __proto__ » (avec un faux suivi « archivé, signé ») reste dans la liste Prospects du coach, comme un nouvel inscrit (aucune fausse clé du coach lue)",
+      l.filter(t => t.includes("Léa")).length === 1, JSON.stringify(l));
+  });
+
+  /* =================== K. la diète : semaine et jour piégés =================== */
+  await bloc("K. diète, clés piégées", async () => {
+    const db = base();
+    const { page } = await contexte(b, COACH, db);
+    await page.goto(URL0 + "#/tableau"); await pret(page);
+    const r = await page.evaluate(() => {
+      let ligne = null, err = "";
+      const D = { semaine: "__proto__", jour: "constructor", diete: {} };
+      try { ligne = outilFormation.ligneDiete(D); } catch (e) { err = String(e && e.message); }
+      const D2 = { semaine: 3, jour: 2, diete: {} }, l2 = outilFormation.ligneDiete(D2);
+      return { err, tableau: Array.isArray(ligne) && ligne.length === 6, pollue: Object.prototype.hasOwnProperty.call(Object.prototype, "1") || Object.prototype.hasOwnProperty.call(Object.prototype, "0"),
+        propre: Object.keys(D.diete).join(), normal: Array.isArray(l2) && l2.length === 6 && Object.keys(D2.diete).join() === "3" && Object.keys(D2.diete["3"]).join() === "2" };
+    });
+    ok("K1 : « Organise ta diète » avec une semaine « __proto__ » et un jour « constructor » (document écrit hors de l'app) : une ligne de 6 repas rangée sous une clé propre (semaine 1), aucun objet commun touché ; semaine 3 jour 2 : inchangé",
+      r.err === "" && r.tableau && !r.pollue && r.propre === "1" && r.normal, JSON.stringify(r));
+  });
+
+  /* =================== L. copie hors ligne et date illisible en base =================== */
+  await bloc("L. date illisible en base", async () => {
+    const db = base();
+    const ligne = db.donnees.find(d => d.user_id === F.IDS.c1 && d.outil === "objectifs_faits");
+    if (ligne) ligne.maj_le = "infinity"; else db.donnees.push({ user_id: F.IDS.c1, outil: "objectifs_faits", contenu: { mois: "2026-10", faits: [false, false, false] }, maj_le: "infinity" });
+    const { page } = await contexte(b, THOMAS, db);
+    await page.addInitScript(([c, id, t]) => {
+      if (location.hostname !== "localhost" || localStorage.getItem("__copie88")) return;
+      localStorage.setItem("__copie88", "1"); localStorage.setItem(c, JSON.stringify({ a: id, t, v: { mois: "2026-10", faits: [true, false, false] } }));
+    }, ["mhx_attente|" + F.IDS.c1 + "|objectifs_faits", F.IDS.c1, avant(20 * MIN)]);
+    await page.goto(URL0 + "#/accueil"); await pret(page); await attendre(page, 2500);
+    const Ts = await toasts88(page);
+    ok("L1 : une modification gardée hors ligne, et en base une date illisible (« infinity ») sur la même clé : la copie n'est pas envoyée, et le message « Une modification faite hors ligne n'a pas été envoyée… » le dit (avant : écartée sans un mot)",
+      Ts.some(t => /^Une modification faite hors ligne n'a pas été envoyée/.test(norm(t))) && ecr(db, "objectifs_faits", F.IDS.c1).length === 0, JSON.stringify([Ts, ecr(db, "objectifs_faits").length]));
   });
 
   /* =================== Z. console, hôtes externes =================== */
