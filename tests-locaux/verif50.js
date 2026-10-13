@@ -20,7 +20,8 @@
      Client et coach (fiche) inchangés ; chaque vérification « dans la fiche » s'assure que la fiche est bien ouverte.
    v52 (chantier 1, lot B) : le nom du prospect (profils.nom) est pré-rempli aussi : name = « prénom nom »,
      first_name, last_name ; Léa n'a pas de nom ici (nom ""), donc PRE ne change pas (aucun paramètre vide ajouté) ;
-     le paragraphe Calendly des conditions dit « Ton prénom, ton nom et ton email y sont pré-remplis ».
+     le paragraphe Calendly des conditions dit « Ton prénom, ton nom et ton email y sont pré-remplis » (v79.2 : « Ton prénom
+     et ton email (et ton nom, si ton compte en a un) », le nom n'étant plus demandé à l'inscription depuis la v74).
    v61 (lot 2, brief V2 E, F, G, décision 4) : adresse de l'événement de 15 min (…/ton-plan-d-action-offert-15-min-avec-lucas ;
      avant …/30min), utm_source=app, utm_medium=bouton (avant : app-mhx / app), codes d'origine avec « _ » (accueil_haut,
      reponses_haut, accueil_accompagnement, verrou_<page> ; avant : decouverte, decouverte-accompagnement, verrou-<page>),
@@ -342,10 +343,10 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
        v64 (brief V2 A2 et K) : accords.conditions (version enregistrée aux nouvelles inscriptions) = la version des CGU en PDF,
        CONFIG.textes_legaux.cgu_version (servie « 2026-10-15 ») ; avant : celle du texte court, qui passe à 2026-10-01 (K) */
     ok("DECOUVERTE.confidentialite : un paragraphe « Prise de rendez-vous » (Calendly, société américaine, pour le compte du coach, États-Unis, pré-remplissage à l'ouverture, écran d'origine) ; v61 : 2e paragraphe « Données collectées : … dont tes clics sur « Réserver mon plan d'action » », version 2026-10-01 (v64, celle des PDF) ; v64 : accords.conditions = CONFIG.textes_legaux.cgu_version (« 2026-10-15 » servie), plus la version du texte court",
-      !!d && d.i > -1 && ["ton bilan se réserve sur Calendly (société américaine)", "pour le compte du coach", "États-Unis", "pré-remplis dès que tu ouvres la page de réservation", "l'écran de l'app d'où tu viens", "Ton prénom, ton nom et ton email"].every(x => d.fr.includes(x))
-      && d.j === 1 && d.frD.includes("dont tes clics sur « " + CTA + " ».") && !d.frD.includes("Réserver mon bilan") && d.version === "2026-10-11" && d.cgu === LEGAUX_TEST.cgu_version && d.conditions === LEGAUX_TEST.cgu_version && d.conditions !== d.version, JSON.stringify(d));
+      !!d && d.i > -1 && ["ton bilan se réserve sur Calendly (société américaine)", "pour le compte du coach", "États-Unis", "pré-remplis dès que tu ouvres la page de réservation", "l'écran de l'app d'où tu viens", "Ton prénom et ton email (et ton nom, si ton compte en a un)"].every(x => d.fr.includes(x))
+      && d.j === 1 && d.frD.includes("dont tes clics sur « " + CTA + " ».") && !d.frD.includes("Réserver mon bilan") && d.version === "2026-10-13" && d.cgu === LEGAUX_TEST.cgu_version && d.conditions === LEGAUX_TEST.cgu_version && d.conditions !== d.version, JSON.stringify(d));
     ok("confidentialité en anglais : le paragraphe « Booking: » à la même place (Calendly, a US company, on the coach's behalf, pre-filled, app screen) ; v61 : « Data collected: … including your clicks on “Book my action plan” » à la même place que le français",
-      !!d && d.nFr === d.nEn && /^Booking: /.test(d.en) && ["Calendly (a US company)", "on the coach's behalf", "United States", "pre-filled as soon as you open the booking page", "the app screen you came from", "Your first name, last name and email"].every(x => d.en.includes(x))
+      !!d && d.nFr === d.nEn && /^Booking: /.test(d.en) && ["Calendly (a US company)", "on the coach's behalf", "United States", "pre-filled as soon as you open the booking page", "the app screen you came from", "Your first name and email (and your last name, if your account has one)"].every(x => d.en.includes(x))
       && /^Data collected: /.test(d.enD) && d.enD.includes("including your clicks on “" + CTA_EN + "”.") && !d.enD.includes("Book my assessment"), JSON.stringify(d && [d.en, d.enD]));
     const vue = await texte(page);
     /* v52 : questionnaire validé → « Modifier mes réponses » (#/decouverte/reponses) ; avant : « Voir mon résultat » (#/decouverte) */

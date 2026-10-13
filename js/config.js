@@ -16,7 +16,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-10-13 · 79.1",
+    version: "2026-10-13 · 79.2",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -101,12 +101,14 @@ const CONFIG = {
      cgu_version : la date de mise en ligne, au format AAAA-MM-JJ (« 2026-10-01 » pour « Version du 1er octobre 2026 ») :
      version des CGU enregistrée à chaque nouvelle inscription (métadonnée conditions_version) ET version de la politique
      enregistrée avec l'accord santé (sante_version) — les deux textes portent la même date (brief K).
+     v79.2 (décision de Lucas du 13/10) : « 2026-10-13 », avec le texte court de l'app (journal alimentaire, plus de Google
+     Fonts, nom facultatif) ; aucun accord n'est redemandé : Sante.accordDans ne compare jamais les versions.
      Si une valeur vaut « à compléter » (ou n'est pas valide), le banc de main est rouge (verif70, bloc A0) : rien
      n'est publié. Les branches de travail v2/* restent vertes. --------------------------------------------------- */
   textes_legaux: {
     cgu_pdf: "https://drive.google.com/drive/folders/1ncw9lOmVtBijzAVxLL715zxLiyqxNW0m?usp=drive_link",
     confidentialite_pdf: "https://drive.google.com/drive/folders/1ncw9lOmVtBijzAVxLL715zxLiyqxNW0m?usp=drive_link",
-    cgu_version: "2026-10-01"
+    cgu_version: "2026-10-13"
   },
 
   /* --- Découverte (prospects) : les réglages ; les textes sont dans DECOUVERTE --- */
@@ -713,7 +715,7 @@ const DECOUVERTE = {
   /* --- v52 : versions des textes acceptés à l'inscription, envoyées avec chaque accord (métadonnées du compte :
      conditions_version, sante_version, newsletter_version ; copie « version » de la clé emails). Un texte change
      (même une virgule) = sa version change ici. v64 (brief V2, A et K) : « conditions » = la version des CGU en PDF
-     (CONFIG.textes_legaux.cgu_version, 2026-10-01) ; avant : confidentialite.version (le texte court). --- */
+     (CONFIG.textes_legaux.cgu_version, 2026-10-01, puis 2026-10-13 en v79.2) ; avant : confidentialite.version (le texte court). --- */
   accords: {
     get conditions(){ return CONFIG.textes_legaux.cgu_version; },
     /* sante : « 2026-09-28 » = texte coupé « …conformément à la politique » (v52-v53, inscription fermée : comptes de test
@@ -734,20 +736,23 @@ const DECOUVERTE = {
      v64 : version 2026-10-01 (celle des PDF, décision de Lucas du 30/09) : deux faits seulement — l'accord santé n'est plus
      une « case dédiée » mais demandé au premier usage d'un outil qui traite ces données (calculateur, suivi du poids et des
      mensurations, « Organise ta diète ») ; newsletter : « 2 emails par semaine au plus » (et plus « 1 à 2 »).
+     v79.2 : version 2026-10-13 (décision de Lucas du 13/10, même date que cgu_version) : le journal alimentaire (2e, 4e et
+     5e paragraphes) ; plus de Google Fonts (7e : polices hébergées avec l'app depuis la v66) ; le nom, plus demandé à
+     l'inscription depuis la v74, devient « si ton compte en a un » (2e et 8e). Aucun accord n'est redemandé.
      Le texte change = la version change ; FR et EN gardent le même nombre de paragraphes, dans le même ordre
      (traduction par position) --- */
   confidentialite: {
-    version: "2026-10-11",
+    version: "2026-10-13",
     titre: "Conditions d'utilisation et confidentialité",
     paragraphes: [
       "L'espace gratuit de MHX Coaching donne des informations et un entraînement généraux, réservés aux adultes. Il ne remplace pas un avis médical : en cas de doute sur ta santé, parles-en à un professionnel avant de commencer.",
-      "Données collectées : ton prénom, ton nom, ton email, tes réponses aux 3 questions de départ et ton activité dans l'app, dont tes clics sur « Réserver mon plan d'action ». Données de santé : celles que tu saisis (poids, mensurations, âge, taille et activité dans le calculateur de calories), avec ton accord, demandé la première fois que tu utilises un outil qui les traite (calculateur, suivi du poids et des mensurations, outil « Organise ta diète »).",
+      "Données collectées : ton prénom, ton email (et ton nom, si ton compte en a un), tes réponses aux 3 questions de départ et ton activité dans l'app, dont tes clics sur « Réserver mon plan d'action ». Données de santé : celles que tu saisis (poids, mensurations, âge, taille et activité dans le calculateur de calories, aliments notés dans ton journal alimentaire), avec ton accord, demandé la première fois que tu utilises un outil qui les traite (calculateur, suivi du poids et des mensurations, outil « Organise ta diète », journal alimentaire).",
       "Usage : adapter ce qui s'affiche à tes réponses, calculer tes calories, suivre ta progression et te proposer un bilan avec le coach. Aucune revente, aucune publicité.",
-      "Suivi par le coach : il voit tes réponses et ton activité, et note, pour son suivi, l'issue de ton bilan et ses relances. Ces notes n'apparaissent pas dans l'app : tu peux en demander une copie ou la suppression en lui écrivant.",
-      "Données de santé (RGPD article 9) : tu dois accepter explicitement le traitement de tes données concernant ta santé (poids, mensurations, données du calculateur de calories). Tu peux les consulter ou les supprimer à tout moment. Ces données sont conservées tant que ton compte existe.",
+      "Suivi par le coach : il voit tes réponses, ton activité et ton journal alimentaire, et note, pour son suivi, l'issue de ton bilan et ses relances. Ces notes n'apparaissent pas dans l'app : tu peux en demander une copie ou la suppression en lui écrivant.",
+      "Données de santé (RGPD article 9) : tu dois accepter explicitement le traitement de tes données concernant ta santé (poids, mensurations, données du calculateur de calories, aliments notés dans ton journal alimentaire). Tu peux les consulter ou les supprimer à tout moment. Ces données sont conservées tant que ton compte existe.",
       "Hébergement : Supabase, serveurs en Europe (Irlande).",
-      "Contenus chargés depuis Google : les polices de caractères de l'app (Google Fonts) et les images d'aperçu des vidéos (YouTube) sont chargées depuis les serveurs de Google, qui reçoivent alors ton adresse IP. Une vidéo intégrée à l'app ne démarre que si tu cliques dessus ; elle est alors lue depuis YouTube, en mode de confidentialité renforcée.",
-      "Prise de rendez-vous : ton bilan se réserve sur Calendly (société américaine), qui enregistre ta réservation pour le compte du coach ; ces données peuvent être traitées aux États-Unis (cadre de protection des données UE–États-Unis). Ton prénom, ton nom et ton email y sont pré-remplis dès que tu ouvres la page de réservation, avec l'écran de l'app d'où tu viens.",
+      "Contenus chargés depuis Google : les images d'aperçu des vidéos (YouTube) sont chargées depuis les serveurs de Google, qui reçoivent alors ton adresse IP. Une vidéo intégrée à l'app ne démarre que si tu cliques dessus ; elle est alors lue depuis YouTube, en mode de confidentialité renforcée.",
+      "Prise de rendez-vous : ton bilan se réserve sur Calendly (société américaine), qui enregistre ta réservation pour le compte du coach ; ces données peuvent être traitées aux États-Unis (cadre de protection des données UE–États-Unis). Ton prénom et ton email (et ton nom, si ton compte en a un) y sont pré-remplis dès que tu ouvres la page de réservation, avec l'écran de l'app d'où tu viens.",
       "Newsletter (facultative) : si tu coches la case, tu reçois par email les conseils, témoignages et offres de coaching de MHX Coaching, 2 emails par semaine au plus. Désinscription en 1 clic dans chaque email, et retrait de ton accord possible à tout moment dans ton Profil.",
       "Tes droits : tu peux exporter ou supprimer ton compte et toutes tes données à tout moment depuis Profil, section « Mes données », ou en écrivant au coach.",
       "Conservation : tant que ton compte existe.",
@@ -1009,13 +1014,13 @@ const DECOUVERTE = {
       titre: "Terms of use and privacy",
       paragraphes: [
         "MHX Coaching's free space gives you general information and training, for adults only. It is not medical advice: if you have any doubt about your health, talk to a professional before starting.",
-        "Data collected: your first name, your last name, your email, your answers to the 3 starting questions and your activity in the app, including your clicks on “Book my action plan”. Health data: what you enter (weight, measurements, age, height and activity in the calorie calculator), with your consent, asked the first time you use a tool that processes it (calculator, weight and measurement tracking, “Organise ta diète” tool).",
+        "Data collected: your first name, your email (and your last name, if your account has one), your answers to the 3 starting questions and your activity in the app, including your clicks on “Book my action plan”. Health data: what you enter (weight, measurements, age, height and activity in the calorie calculator, foods logged in your food diary), with your consent, asked the first time you use a tool that processes it (calculator, weight and measurement tracking, “Organise ta diète” tool, food diary).",
         "Use: to adapt what you see to your answers, calculate your calories, track your progress and offer you an assessment with the coach. No resale, no advertising.",
-        "Coach follow-up: the coach sees your answers and activity, and records, for their follow-up, the outcome of your assessment and their follow-up messages. These notes don't appear in the app: you can ask for a copy or their deletion by writing to the coach.",
-        "Health data (GDPR article 9): you must explicitly accept the processing of your health data (weight, measurements, calorie calculator data). You can view or delete this data at any time. This data is kept as long as your account exists.",
+        "Coach follow-up: the coach sees your answers, your activity and your food diary, and records, for their follow-up, the outcome of your assessment and their follow-up messages. These notes don't appear in the app: you can ask for a copy or their deletion by writing to the coach.",
+        "Health data (GDPR article 9): you must explicitly accept the processing of your health data (weight, measurements, calorie calculator data, foods logged in your food diary). You can view or delete this data at any time. This data is kept as long as your account exists.",
         "Hosting: Supabase, servers in Europe (Ireland).",
-        "Content loaded from Google: the app's fonts (Google Fonts) and video preview images (YouTube) are loaded from Google's servers, which then receive your IP address. A video embedded in the app only starts if you click it; it then plays from YouTube, in privacy-enhanced mode.",
-        "Booking: your assessment is booked on Calendly (a US company), which records your booking on the coach's behalf; this data may be processed in the United States (EU–US Data Privacy Framework). Your first name, last name and email are pre-filled as soon as you open the booking page, along with the app screen you came from.",
+        "Content loaded from Google: video preview images (YouTube) are loaded from Google's servers, which then receive your IP address. A video embedded in the app only starts if you click it; it then plays from YouTube, in privacy-enhanced mode.",
+        "Booking: your assessment is booked on Calendly (a US company), which records your booking on the coach's behalf; this data may be processed in the United States (EU–US Data Privacy Framework). Your first name and email (and your last name, if your account has one) are pre-filled as soon as you open the booking page, along with the app screen you came from.",
         "Newsletter (optional): if you tick the box, you receive MHX Coaching's tips, testimonials and coaching offers by email, 2 emails per week at most. One-click unsubscribe in every email, and you can withdraw your consent at any time in your Profile.",
         "Your rights: you can export or delete your account and all your data at any time from Profile, section \"My data\", or by writing to the coach.",
         "Retention: as long as your account exists.",
