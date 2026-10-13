@@ -219,6 +219,9 @@ HORS_BANC="verif44 verif45 verif46 verif47 verif49"
 #   texte libre seul, retours, rechargements, erreurs, compte à rebours, carte cadeau, comptes existants, 360 / 390 / 430 px, anglais,
 #   moins de mouvement, et W : le moteur WebKit de Safari, installé pour la partie 3 dans pages.yml) ; les suites de l'ancien écran
 #   unique d'inscription adaptées au parcours (voir leurs en-têtes).
+# v82 (polices et confidentialité, accord de Lucas du 13/10) : verif72 D (22 @font-face : + IBM Plex Sans 700 et Instrument
+#   Serif 400, licence OFL d'Instrument Serif) ; verif50, verif55 et verif67 (texte court de confidentialité 2026-10-13b : ce que
+#   le parcours demande et à quoi ça sert, numéro pré-rempli dans Calendly) ; nombres inchangés.
 attendu() {
   case "$1" in
     flux) echo 19;; verif34) echo 13;; verif35) echo 14;; verif36) echo 13;; verif37) echo 12;; verif38) echo 66;;
