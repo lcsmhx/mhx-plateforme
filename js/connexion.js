@@ -267,7 +267,7 @@ function portail(mode){
         await Auth.connecter(email, mdp, jeton);
         /* v57 : une connexion ouvre la page d'arrivee (accueil ; tableau de bord du coach), comme apres « Se deconnecter ».
            L'adresse gardait la derniere page ouverte sur l'appareil quand la session avait pris fin sans deconnexion
-           (session expiree, « Rester connecte » decoche, navigateur ferme) : on arrivait sur la Speed Formation.
+           (session expiree, « Rester connecte » decoche, navigateur ferme) : on arrivait sur la Formation.
            Sauf « Me reconnecter » (session perdue en cours d'utilisation) : retour sur la page qu'on avait sous les yeux. */
         /* v78 (tâche 2) : arrivée par ?ouvrir=connexion dans un navigateur normal : la bannière d'installation dès cette visite */
         try { if (typeof Integre !== "undefined") Integre.noterConnexion(); } catch(e){}

@@ -23,7 +23,7 @@ let lienEmail = null;   // v47 : "rate_connecte" apres un lien d'email (mot affi
    l'emporte), et une page ouverte ne relit pas son document. Page laissee ouverte sur l'ordinateur, semaine 6 notee sur
    le telephone, puis une mesure ajoutee sur l'ordinateur : la semaine 6 etait effacee. Au retour sur l'app apres plus de
    5 minutes en arriere-plan, pour un client ou un prospect (pas le coach : ses pages relisent chaque compte), ce qui
-   attend part d'abord, puis la page est relue et redessinee sur place. Seulement Ma progression et la Speed Formation
+   attend part d'abord, puis la page est relue et redessinee sur place. Seulement Ma progression et la Formation
    (avec les cles qu'elles lisent), et jamais quand un champ a le focus, qu'une fenetre est ouverte, qu'une copie de ces
    cles attend encore son envoi ou qu'un champ de la page garde ce qui y a ete tape (une pesee a moitie saisie n'est
    jamais effacee). Dans le doute, rien n'est redessine.

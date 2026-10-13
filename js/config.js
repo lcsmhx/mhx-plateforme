@@ -16,7 +16,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-10-13 · 84",
+    version: "2026-10-13 · 85",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -27,7 +27,7 @@ const CONFIG = {
       /* v73 (E) : le lien d'inscription avec le code « partage » (décision de Lucas du 04/10/2026) : les inscrits venus par ce
          bouton sont comptés à part dans « Inscrits par source » */
       lien: "https://lcsmhx.github.io/mhx-plateforme/?ref=partage#/inscription",
-      texte: "Rejoins-moi sur l'app MHX Coaching : calculateur de calories, suivi du poids et Speed Formation, gratuit."
+      texte: "Rejoins-moi sur l'app MHX Coaching : calculateur de calories, suivi du poids et la Formation, gratuit."
     },
 
     /* Lien du formulaire de bilan Notion.
@@ -79,7 +79,7 @@ const CONFIG = {
        écrit (DECOUVERTE.whatsapp). Vide : pas de bouton. */
     whatsapp: "+61418876361",
     /* v52 — gratuit pour toujours : le calculateur (sa cle a lui, calc_perso), Ma progression (sans les
-       photos) et la Speed Formation sont ouverts au prospect, sans limite de duree */
+       photos) et la Formation sont ouverts au prospect, sans limite de duree */
     /* v79 : + le journal alimentaire (gratuit, derrière l'accord santé comme le calculateur ; interrupteur nouveautes.journal_alimentaire) */
     gratuit_ouverts: ["accueil", "decouverte", "profil", "calculateur", "mensurations", "formation", "journal-alimentaire"],
     /* v50 — onglets verrouilles qu'un prospect voit quand meme (cadenas + ce qu'apporte l'accompagnement) :
@@ -118,7 +118,7 @@ const CONFIG = {
      valeur à true ici, et c'est tout. */
   parcours: {
     fin_beta: "2026-11-15T23:59:59", fuseau: "Europe/Paris",
-    disponibles: { journal: true, programme: false, recettes: false, calculateur: true, suivi: true }
+    disponibles: { journal: true, programme: true, recettes: false, calculateur: true, suivi: true }
   },
 
   /* --- Découverte (prospects) : les réglages ; les textes sont dans DECOUVERTE --- */
@@ -423,7 +423,7 @@ const DECOUVERTE = {
   /* v52 : gratuit pour toujours — plus de « Jour n/7 » ni de fin de découverte côté prospect */
   /* v60 (brief V2, C) : 30 secondes, des réponses à toucher */
   lede_questionnaire: "3 questions, 30 secondes : dis-nous où tu en es.",
-  lede_accueil: "Ton espace gratuit, sans limite de temps : calculateur de calories, suivi de ton poids et Speed Formation.",
+  lede_accueil: "Ton espace gratuit, sans limite de temps : calculateur de calories, suivi de ton poids et la Formation.",
   charge_rate: "Tes réponses n'ont pas pu être chargées. Recharge la page.",
   /* v52 : l'action mise en avant sur l'accueil du prospect, une à la fois (d'abord le calcul, puis la pesée) */
   etapes: {
@@ -659,9 +659,9 @@ const DECOUVERTE = {
     indispo: "Les recettes n'ont pas pu être chargées. Recharge la page."
   },
   formation: {
-    titre: "Speed Formation",
-    ouverte: "Les bases de la nutrition et de l'entraînement, à ton rythme.",   // v52 : ouverte pour toujours
-    ouvrir: "Ouvrir la Speed Formation"
+    titre: "Formation",   // v85 (bloc 4, décision de Lucas) : la formation s'appelle maintenant « Formation » (son ancien nom ne paraît plus nulle part)
+    ouverte: "Cours et ebooks : alimentation, entraînement, mindset",   // v52 : ouverte pour toujours ; v85 : son sous-titre
+    ouvrir: "Ouvrir la Formation"
   },
   accomp: {
     titre: "Ce que l'accompagnement ajoute",   // v61 (brief V2, E2)
@@ -778,7 +778,7 @@ const DECOUVERTE = {
   en: {
     nom: "Discovery",
     lede_questionnaire: "3 questions, 30 seconds: tell us where you're at.",
-    lede_accueil: "Your free space, with no time limit: calorie calculator, weight tracking and Speed Formation.",
+    lede_accueil: "Your free space, with no time limit: calorie calculator, weight tracking and the Course.",
     charge_rate: "Your answers could not be loaded. Reload the page.",
     etapes: {
       calories: { titre: "Your first step", texte: "Your maintenance calories and macros, calculated from your body and your real activity.", bouton: "Calculate your calories (2 min)" },
@@ -974,9 +974,9 @@ const DECOUVERTE = {
       indispo: "The recipes could not be loaded. Reload the page."
     },
     formation: {
-      titre: "Speed Formation",
-      ouverte: "The basics of nutrition and training, at your pace.",
-      ouvrir: "Open the Speed Formation"
+      titre: "Course",
+      ouverte: "Courses and ebooks: nutrition, training, mindset",
+      ouvrir: "Open the Course"
     },
     accomp: {
       titre: "What coaching adds",

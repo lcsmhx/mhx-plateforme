@@ -250,7 +250,7 @@ ul.courses-l .coche{font-size:14px;color:var(--ink-2)}
 /* --- outil : formation --- */
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 /* .fo-jauge : meme barre que .bar (voir [B]) */
-/* v60 (brief V2, I) : les deux cartes du haut de la Speed Formation (prospect) — « Commence ici » (3 actions qui se
+/* v60 (brief V2, I) : les deux cartes du haut de la Formation (prospect) — « Commence ici » (3 actions qui se
    cochent, une seule ligne quand tout est fait) et « Ce qui t'attend dans ta formation » (chiffres en tuiles) */
 .fo-depart{border-color:var(--accent-line)}
 .fo-depart h2{margin:6px 0 12px}
@@ -1011,3 +1011,55 @@ ul.fc-lignes li > b{font-weight:500;text-align:right;min-width:0;overflow-wrap:a
 .fc-masthead{padding:0;margin:0;border-bottom:0;gap:0}
 .fc-outils .bandeau{margin:16px 0 0}
 .lc-plus{list-style:none;display:flex;justify-content:center;margin-top:4px}
+
+/* ==================================================================
+   v85 (bloc 4) — LES PROGRAMMES DE LA FORMATION (ProgFormation) : page du programme, onglets de phase, liste des séances,
+   écran d'une séance (échauffement replié, exercices, superset, options de HIIT), choix du programme, carte de l'accueil.
+   Les jetons du bloc 1 seulement (verre, or en accent, texte #07090d sur l'or) ; zones de toucher de 44 px.
+   ================================================================== */
+.pf .eyebrow{display:block;margin-bottom:4px}
+.pf-tete h2{margin:0}
+.pf-tete-haut{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.pf-semaine{margin:6px 0 0}
+#pf-changer{margin-top:14px}
+.pf-combien{margin-top:16px}
+.pf-combien summary{min-height:var(--h-toucher);display:flex;align-items:center}
+.pf-combien ul,.pf-methode ul,.pf-echauffement ul{margin:8px 0 0;padding-left:20px;color:var(--ink-2)}
+.pf-combien li,.pf-methode li,.pf-echauffement li{margin:4px 0}
+.pf-methode ul{color:var(--ink)}
+.pf-onglets{display:flex;gap:4px;padding:4px;margin:0 0 16px;border-radius:var(--r);border:1px solid var(--verre-bord);background:var(--verre)}
+.pf-onglets button{flex:1;min-height:var(--h-toucher);border:0;border-radius:calc(var(--r) - 5px);background:transparent;color:var(--ink-2);font:inherit;font-size:14px;font-weight:600;cursor:pointer;padding:0 6px}
+.pf-onglets [data-pf-phase]{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:6px 4px;line-height:1.2}
+.pf-onglets [data-pf-phase] small{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.pf-onglets [data-pf-phase] b{font-size:16px;font-variant-numeric:tabular-nums}
+.pf-onglets [data-pf-phase][aria-selected="true"] small{color:var(--accent)}
+.pf-onglets button[aria-selected="true"]{background:var(--verre-choisi);color:var(--ink);box-shadow:inset 0 0 0 1px var(--accent-line)}
+.pf-phase-t{margin:0 0 10px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.pf-seances,.pf-choix,.pf-exos{list-style:none;margin:0;padding:0}
+.pf-seance{display:flex;align-items:center;gap:12px;min-height:56px;padding:10px 14px;margin:0 0 8px;border-radius:var(--r);border:1px solid var(--verre-bord);background:var(--verre);color:var(--ink);text-decoration:none}
+.pf-seance:hover{background:var(--verre-choisi)}
+.pf-seance .txt,.pf-choix-l .txt{flex:1;min-width:0;display:flex;flex-direction:column}
+.pf-seance small,.pf-choix-l small{color:var(--ink-2);font-size:13px}
+.pf-seance .fleche{color:var(--ink-3);font-size:20px}
+.pf-pastilles{display:flex;flex-wrap:wrap;gap:6px;margin:0}
+.pf-seance-tete h2{margin:6px 0 8px}
+.pf-retour{display:inline-flex;align-items:center;min-height:var(--h-toucher);margin:-6px 0 4px}
+.pf-echauffement summary{min-height:var(--h-toucher);display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--ink);font-size:15px}
+.pf-echauffement h4{margin:14px 0 2px;font-size:13px;color:var(--ink-2)}
+.pf-consigne{margin:0 0 14px;color:var(--ink)}
+.pf-exo{padding:12px 0;border-top:1px solid var(--line)}
+.pf-exos > .pf-exo:first-child{border-top:0;padding-top:0}
+.pf-exo-haut{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pf-exo-nom{overflow-wrap:anywhere}
+.pf-chiffres{display:flex;flex-wrap:wrap;gap:6px 14px;margin:4px 0 0;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.pf-note{margin:4px 0 0}
+.pf-video{margin-top:8px;gap:6px}
+.pf-exo .video-cadre{margin-top:8px}
+.pf-superset{margin:4px 0 12px;padding:10px 12px;border-radius:var(--r);border:1px solid var(--accent-line);background:var(--accent-soft)}
+.pf-superset > .note{margin:0 0 8px}
+.pf-superset .pf-exo:first-child{border-top:0;padding-top:0}
+.pf-option > .note{margin:0 0 10px}
+.pf-choix-l{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 0;border-top:1px solid var(--line)}
+.pf-choix-l:first-child{border-top:0}
+.pf-choix-l.actuel b{color:var(--accent)}
+.pf-carte-nom{margin:0}

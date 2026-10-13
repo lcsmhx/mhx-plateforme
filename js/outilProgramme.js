@@ -954,11 +954,15 @@ const outilProgramme = {
   },
 
   html(){
+    /* v85 (bloc 4) : #/programme/formation, …/seance/…, …/choisir : les programmes de la formation (ProgFormation), en plus du
+       programme du coach (jamais dans une fiche consultée : le coach y garde l'éditeur) */
+    if (!Store.idConsulte && ProgFormation.sous(sousRoute)) return ProgFormation.zoneHTML();
     return `<div id="prog-vue"><section class="panel"><div class="empty">Chargement…</div></section></div><div id="prog-obj"></div><div id="prog-jr"></div><div id="prog-hist"></div>`;
   },
 
   async init(){
     const self = this;
+    if (!Store.idConsulte && ProgFormation.sous(sousRoute)) return ProgFormation.monter($("pf-zone"), sousRoute);   // v85 (bloc 4)
     const edition = Auth.estCoach() && Store.idConsulte;
     if (edition && !this.prets){ try { this.prets = await Catalogue.programmes(); } catch(e){ this.prets = []; } }
     if (edition && !this.exos){
@@ -981,7 +985,8 @@ const outilProgramme = {
       const J = await Store.lire(Journal.cle, Journal.vide());
       if (Store.nonLus.has(J)){ pageHorsLigne(zone); return; }   // v71 (F)
       if (!Array.isArray(J.seances)) J.seances = [];
-      const dessiner = () => { zone.innerHTML = self.vueLecture(P, J); self.brancherFiches(zone); };
+      /* v85 (bloc 4) : sous son programme (inchangé, en premier), le lien vers les programmes de la formation */
+      const dessiner = () => { zone.innerHTML = self.vueLecture(P, J) + ProgFormation.lienHTML(); self.brancherFiches(zone); };
       dessiner();
       /* apres une seance notee : on redessine (badge « notée », compteur) et on rebranche le journal */
       const apres = () => { dessiner(); Journal.brancher(zone, P, J, apres); };

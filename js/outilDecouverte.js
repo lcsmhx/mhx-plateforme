@@ -1,12 +1,11 @@
 /* v34 — ordre de la navigation client : Accueil · Mon programme · Nutrition ·
-   Ma progression · Mon bilan (devient « Mon suivi » en phase 8) · Speed
-   Formation · Mes compléments · Profil. Les outils du coach suivent. Les ids
+   Ma progression · Mon bilan (devient « Mon suivi » en phase 8) · Formation · Mes compléments · Profil. Les outils du coach suivent. Les ids
    (adresses #/…) ne changent pas : tous les liens existants restent valables. */
 
 /* ------------------------------------------------------------------
    DÉCOUVERTE — le parcours gratuit du prospect (remplace le Challenge 7 jours).
    Jour 1 = le jour de l'inscription (profils.cree_le) ; les CONFIG.decouverte.jours
-   premiers jours, la Speed Formation est ouverte, ensuite elle se verrouille.
+   premiers jours, la Formation est ouverte, ensuite elle se verrouille.
    Le questionnaire court va dans la cle intake (court_le = instant de sa validation).
    Les clics « Réserver mon bilan » et la case « J'ai réservé mon bilan » restent dans la
    cle existante « challenge » (cta.clics, reserve) : aucune cle renommee, et l'historique
@@ -806,7 +805,7 @@ const Connexions = {
    proposition de bilan (tant qu'il n'a pas choisi : « Réserver mon bilan » ou
    « Pas maintenant »), puis son accueil : une seule action mise en avant
    (« Calcule tes calories (2 min) », puis « Enregistre ta pesée de départ »),
-   la Speed Formation, les pages de l'accompagnement et « Réserver mon bilan »,
+   la Formation, les pages de l'accompagnement et « Réserver mon bilan »,
    discret. Gratuit pour toujours : aucune limite de durée. L'ancien écran
    « résultat » (calories calculées depuis le
    questionnaire, priorités, séance, recettes) n'est plus affiché : son code
@@ -1011,9 +1010,16 @@ const outilDecouverte = {
   /* ---------- v52 : l'accueil du prospect apres la page bilan ----------
      Une seule action mise en avant : « Calcule tes calories (2 min) » tant que son calcul n'est pas enregistre
      (calc_perso), puis « Enregistre ta pesée de départ » tant qu'il n'a aucune pesee (mens), puis l'accueil normal
-     (Speed Formation, pages de l'accompagnement, « Réserver mon bilan » discret). Decide sur une lecture seule
+     (Formation, pages de l'accompagnement, « Réserver mon bilan » discret). Decide sur une lecture seule
      (afficher : Store.lireTout), aucune ecriture a l'affichage. */
-  accueilHTML(I, C){ return this.cadeauHTML(I, C) + this.journalHTML() + this.etapeHTML(C) + this.formationHTML() + this.accompHTML(C); },
+  /* v85 (bloc 4) : la carte « Ton programme » (ProgFormation : nom, phase, « Voir mes séances ») après l'étape ; la préférence
+     rangée (prefs) est celle lue au démarrage : aucune lecture de plus */
+  accueilHTML(I, C){ return this.cadeauHTML(I, C) + this.journalHTML() + this.etapeHTML(C) + this.programmeHTML(I) + this.formationHTML() + this.accompHTML(C); },
+  programmeHTML(I){
+    if (!Auth.estProspect() || Store.idConsulte || typeof ProgFormation === "undefined") return "";
+    let pr = null; try { pr = Store.cache && Store.cache.prefs; } catch(e){ pr = null; }
+    return ProgFormation.carteHTML(I || {}, pr || {});
+  },
   /* v81 (bloc 2) : « Ton cadeau t'attend » — prospect arrivé par le nouveau parcours (intake.parcours_le), tant qu'il n'a
      jamais touché « Je réserve mon créneau offert » ; jamais un client, jamais le coach (ni sur une fiche consultée) */
   cadeauHTML(I, C){
@@ -1324,7 +1330,7 @@ const outilDecouverte = {
         ${(r.etapes || []).length ? `<h4>${esc(trad(L.preparation))}</h4><ol class="etapes">${r.etapes.map(e => `<li>${esc(trad(String(e)))}</li>`).join("")}</ol>` : ""}</details>`).join("");
     } catch(e){ if (boite.isConnected) boite.innerHTML = `<p class="note" style="margin:0">${esc(trad(L.indispo))}</p>`; }
   },
-  /* v52 : la Speed Formation est ouverte pour toujours */
+  /* v52 : la Formation est ouverte pour toujours */
   formationHTML(){
     const L = DECOUVERTE.formation;
     return `<section class="panel" id="dc-formation"><h2>${esc(trad(L.titre))}</h2><p class="note" style="margin:0">${esc(trad(L.ouverte))}</p>
