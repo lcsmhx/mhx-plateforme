@@ -134,7 +134,7 @@ const Echantillons = {
     const X = i => (g + i * (W - g - d) / Math.max(1, P.length - 1)).toFixed(1);
     const Y = v => (h + (max - v) / ecart * (H - h - b)).toFixed(1);
     const alt = trad(L.courbe_alt || "", { n: P.length, a: n1(P[0]), b: n1(P[P.length - 1]) });
-    const txt = (x, y, t, fort) => `<text x="${x}" y="${y}" text-anchor="middle" font-size="11" font-family="IBM Plex Mono, monospace" fill="${fort ? "var(--ink)" : "var(--ink-3)"}">${esc(t)}</text>`;
+    const txt = (x, y, t, fort) => `<text x="${x}" y="${y}" text-anchor="middle" font-size="11" font-family="IBM Plex Sans, sans-serif" fill="${fort ? "var(--ink)" : "var(--ink-3)"}">${esc(t)}</text>`;
     return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(alt)}" focusable="false">
       <line x1="${g - 12}" x2="${W - d + 12}" y1="${H - b + 8}" y2="${H - b + 8}" stroke="var(--axis)" stroke-width="1"/>
       <polyline points="${P.map((v, i) => X(i) + "," + Y(v)).join(" ")}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
@@ -256,6 +256,16 @@ function construireNav(){
     bl.onclick = basculerLangue;
   }
   Theme.majBoutons();
+  brancherLogo();
+}
+/* v80 (bloc 1) : le logo ramène à la page d'arrivée — le Tableau de bord du coach (même depuis la fiche d'un client : une
+   page du coach referme la fiche), l'Accueil d'un client ou d'un prospect. Déjà sur cette page : elle est redessinée. */
+function brancherLogo(){
+  const a = $("brand"); if (!a) return;
+  const cible = Auth.estCoach() && outilsVisibles().some(o => o.id === "tableau") ? "tableau" : "accueil";
+  a.href = lienOutil(cible);
+  a.setAttribute("aria-label", trad(cible === "tableau" ? "Tableau de bord" : "Accueil"));
+  a.onclick = e => { if (location.hash === lienOutil(cible)){ e.preventDefault(); afficher(cible); } };
 }
 
 /* --- barre du bas (telephone) --- */

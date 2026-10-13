@@ -51,38 +51,20 @@ const ICONES = {
   plus:         '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>'
 };
 
-/* --- THEME (v33) ------------------------------------------------------------
-   Le sombre est le theme de l'application. Le clair est un choix, range sur
-   l'appareil (comme la banniere d'installation) : il ne concerne que lui. */
+/* --- THEME (v33 ; v80, bloc 1 : tout en sombre) ------------------------------------
+   Décision de Lucas (mission du 13/10/2026) : le thème clair et son bouton n'existent plus. Un ancien choix « clair »
+   rangé sur l'appareil (mhx_theme) est ignoré : jamais relu, jamais effacé (il ne gêne rien). L'objet reste pour les
+   appels existants (navigation, connexion) ; un ancien bouton de thème encore présent dans la page est retiré. */
 const Theme = {
   cle: "mhx_theme",
   actuel: "dark",
-  charger(){
-    try { this.actuel = localStorage.getItem(this.cle) === "light" ? "light" : "dark"; } catch(e){ this.actuel = "dark"; }
-    this.appliquer();
-    return this.actuel;
-  },
+  charger(){ this.actuel = "dark"; this.appliquer(); return this.actuel; },
   appliquer(){
-    if (this.actuel === "light") document.documentElement.setAttribute("data-theme", "light");
-    else document.documentElement.removeAttribute("data-theme");
+    document.documentElement.removeAttribute("data-theme");
     const m = document.querySelector('meta[name="theme-color"]');
-    if (m) m.setAttribute("content", this.actuel === "light" ? "#f1f2f4" : "#07090d");
+    if (m) m.setAttribute("content", "#07090d");
   },
-  basculer(){
-    this.actuel = this.actuel === "light" ? "dark" : "light";
-    try { localStorage.setItem(this.cle, this.actuel); } catch(e){}
-    this.appliquer();
-    this.majBoutons();
-  },
-  /* tous les boutons de theme de la page (barre du haut, ecran de connexion) */
-  majBoutons(){
-    $$("[data-theme-bouton]").forEach(b => {
-      b.innerHTML = this.actuel === "light" ? SVG.lune : SVG.soleil;
-      b.title = trad(this.actuel === "light" ? "Passer en sombre" : "Passer en clair");
-      b.setAttribute("aria-label", b.title);
-      b.onclick = () => Theme.basculer();
-    });
-  }
+  majBoutons(){ $$("[data-theme-bouton]").forEach(b => b.remove()); }
 };
 Theme.charger();
 

@@ -1,41 +1,46 @@
 /* ==================================================================
-   [A] JETONS DE DESIGN (v33 — design system MHX)
-   Change une couleur ici et tout le site suit.
-   Le SOMBRE est le theme de l'application. Le clair reste disponible
-   (bouton dans la barre du haut) et se range sur l'appareil, cle
-   « mhx_theme ». Le dore est un ACCENT : boutons principaux, etats
-   actifs, chiffres cles — jamais une couleur de fond.
+   [A] STYLE COMMUN (v80, bloc 1 de la mission du 13/10/2026 : « verre dépoli » partout, prospect, client et coach)
+   LE fichier partagé : les jetons (couleurs, verre, flou, arrondis, hauteurs, halos de fond), les polices, puis les
+   classes réutilisables (verre, bouton or, bouton rouge, champ, carte, pastille, en-tête, barre du bas, fenêtre de
+   confirmation ; partie [A ter], à la fin). css/communs.css et css/outils.css ne font que les utiliser.
+   Tout en sombre (v80, décision de Lucas) : le thème clair et son bouton n'existent plus ; un ancien choix « clair »
+   rangé sur un appareil (mhx_theme) est ignoré. Le doré est un ACCENT (boutons principaux, états actifs, chiffres
+   clés), avec du texte #07090d posé dessus — jamais une couleur de fond de page.
+   Performance : le flou (backdrop-filter, toujours doublé de -webkit-backdrop-filter) est réservé à l'en-tête, à la
+   barre du bas et au fond des fenêtres : 3 éléments flous par écran au plus. Les cartes et les lignes des listes ont
+   le même fond semi-transparent, sans flou. Les halos du fond sont des dégradés radiaux fixes (body::before), jamais
+   des éléments floutés par filter: blur.
    ================================================================== */
 *,*::before,*::after{box-sizing:border-box}
 :root{
   color-scheme:dark;
-  --ground:#07090d; --surface:#0e1218; --sunken:#0a0d12; --raised:#141a23;
-  --ink:#eef1f5; --ink-2:#a3abb8; --ink-3:#848c9b;
-  --line:#1b212b; --line-strong:#2a3340;
-  --accent:#d4a844; --accent-ink:#0a0d13; --accent-soft:rgba(212,168,68,.10); --accent-line:rgba(212,168,68,.38);
-  --good:#3fc27b; --good-soft:rgba(63,194,123,.12);
-  --warn:#e6a53c; --warn-soft:rgba(230,165,60,.12);
-  --bad:#e5645e;  --bad-soft:rgba(229,100,94,.12);
-  --s1:#4a8fe8; --s2:#e0673a; --s3:#22b07c; --s4:#d4a844;
-  --grid:#1d232d; --axis:#313a46;
-  --nav-bg:rgba(7,9,13,.86);
-  --shadow:0 1px 2px rgba(0,0,0,.35),0 10px 30px -18px rgba(0,0,0,.7);
-  --r-sm:6px; --r:10px; --r-lg:14px;
+  /* couleurs (valeurs de la mission) */
+  --ground:#07090d;
+  --ink:#F4F5F7; --ink-2:#a3abb8; --ink-3:#8b93a1;
+  --accent:#D4A844; --accent-ink:#07090d; --accent-soft:rgba(212,168,68,.14); --accent-line:rgba(212,168,68,.55);
+  --good:#4ADE80; --good-soft:rgba(74,222,128,.12);
+  --warn:#FBBF24; --warn-soft:rgba(251,191,36,.12);
+  --bad:#F87171;  --bad-soft:rgba(248,113,113,.12);
+  --gris:#6B7280;
+  /* verre : fond 6 % de blanc, bordure 14 %, flou 18 px ; élément sélectionné : fond 12 % et bordure dorée */
+  --verre:rgba(255,255,255,.06); --verre-choisi:rgba(255,255,255,.12); --verre-bord:rgba(255,255,255,.14); --flou:18px;
+  --surface:var(--verre); --sunken:rgba(255,255,255,.04); --raised:rgba(255,255,255,.10);
+  --line:var(--verre-bord); --line-strong:rgba(255,255,255,.22);
+  /* fond plein, là où ce qui passe dessous ne doit pas se voir (colonne collée d'un tableau, info-bulle, message) */
+  --plein:#12161d;
+  /* fenêtre (modale, volet) : presque pleine, posée sur un fond flouté */
+  --fenetre:rgba(17,21,28,.94);
+  --s1:#4a8fe8; --s2:#e0673a; --s3:#22b07c; --s4:#D4A844;
+  --grid:rgba(255,255,255,.07); --axis:rgba(255,255,255,.18);
+  --nav-bg:rgba(7,9,13,.72);
+  --shadow:0 1px 2px rgba(0,0,0,.25),0 12px 32px -20px rgba(0,0,0,.7);
+  /* arrondis : 12 px (petits éléments), 16 px (boutons, champs), 20 px (cartes), 999 px (pastilles) */
+  --r-sm:12px; --r:16px; --r-lg:20px; --r-pastille:999px;
+  /* hauteurs : bouton 56 px, champ 60 px, bouton rond 44 px (zone de toucher minimale : 44 px) */
+  --h-bouton:56px; --h-champ:60px; --h-rond:44px; --h-toucher:44px;
+  /* halos du fond */
+  --halo-1:rgba(160,148,128,.40); --halo-2:rgba(72,88,118,.55); --halo-3:rgba(212,168,68,.16);
   --vite:.16s; --doux:.32s;
-}
-:root[data-theme="light"]{
-  color-scheme:light;
-  --ground:#f1f2f4; --surface:#ffffff; --sunken:#f5f6f8; --raised:#ffffff;
-  --ink:#0d1117; --ink-2:#4b5260; --ink-3:#656c7a;
-  --line:#e1e4e9; --line-strong:#c8cdd6;
-  --accent:#7f5f19; --accent-ink:#ffffff; --accent-soft:rgba(127,95,25,.10); --accent-line:rgba(127,95,25,.35);
-  --good:#1a8a4a; --good-soft:rgba(26,138,74,.10);
-  --warn:#a56a12; --warn-soft:rgba(165,106,18,.10);
-  --bad:#c2403b;  --bad-soft:rgba(194,64,59,.10);
-  --s1:#2a78d6; --s2:#d95926; --s3:#159a6a; --s4:#b8891a;
-  --grid:#e6e9ee; --axis:#c3c7cf;
-  --nav-bg:rgba(241,242,244,.9);
-  --shadow:0 1px 2px rgba(10,13,19,.05),0 8px 24px -14px rgba(10,13,19,.16);
 }
 
 /* ==================================================================
@@ -63,3 +68,114 @@
 @font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:500;font-display:swap;src:url(../polices/ibm-plex-mono-latin-500-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 @font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:600;font-display:swap;src:url(../polices/ibm-plex-mono-latin-ext-600-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
 @font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:600;font-display:swap;src:url(../polices/ibm-plex-mono-latin-600-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+
+/* ==================================================================
+   [A ter] CLASSES RÉUTILISABLES (v80) — une seule définition chacune, ici. Les noms déjà employés par l'app (.panel,
+   .btn, .topbar, .modale…) sont dans les mêmes règles que les nouveaux (.carte, .btn-or…) : les écrans gardent leurs
+   classes et leur organisation, seul le style change.
+   ================================================================== */
+/* --- fond de page : noir bleuté et 3 halos fixes (dégradés radiaux posés sur body::before, aucun filtre) --- */
+body{margin:0;background:var(--ground);color:var(--ink);
+  font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(circle 300px at 80px 100px,var(--halo-1),rgba(160,148,128,.22) 45%,transparent),
+             radial-gradient(circle 300px at calc(100% - 50px) 410px,var(--halo-2),rgba(72,88,118,.28) 45%,transparent),
+             radial-gradient(ellipse 300px 260px at 190px 100%,var(--halo-3),transparent)}
+
+/* --- verre : fond 6 %, bordure 14 %, sans flou (cartes, lignes des listes, champs, pastilles) --- */
+.verre{background:var(--verre);border:1px solid var(--verre-bord)}
+.verre.choisi,.verre[aria-pressed="true"],.verre[aria-selected="true"]{background:var(--verre-choisi);border-color:var(--accent)}
+/* --- verre flouté : SEULEMENT l'en-tête, la barre du bas et le fond des fenêtres (3 éléments flous par écran au plus) --- */
+.verre-flou,.topbar,.barre-bas,.fond{-webkit-backdrop-filter:saturate(140%) blur(var(--flou));backdrop-filter:saturate(140%) blur(var(--flou))}
+
+/* --- en-tête (barre du haut) --- */
+.topbar{position:sticky;top:0;z-index:20;background:var(--nav-bg);border-bottom:1px solid var(--verre-bord)}
+.topbar .wrap{display:flex;align-items:center;gap:14px;min-height:60px;flex-wrap:wrap;padding-top:10px;padding-bottom:10px}
+/* le logo ramène à la page d'arrivée (Tableau de bord du coach, Accueil d'un client ou d'un prospect) */
+a.brand{color:inherit;text-decoration:none;border-radius:var(--r-sm);min-height:var(--h-toucher);justify-content:center}
+
+/* --- barre du bas (téléphone) : 4 onglets + « Plus » --- */
+.barre-bas{display:none}
+@media (max-width:720px){
+  .barre-bas{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;justify-content:space-around;align-items:stretch;
+    background:var(--nav-bg);border-top:1px solid rgba(255,255,255,.10);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+  .barre-bas[hidden]{display:none}
+  .barre-bas a,.barre-bas button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:52px;
+    background:none;border:0;padding:4px 2px;border-radius:var(--r);color:var(--ink-2);text-decoration:none;font-family:inherit;cursor:pointer;
+    transition:color var(--vite),background var(--vite)}
+  .barre-bas .ico{display:inline-flex}
+  .barre-bas .ico svg{width:22px;height:22px;stroke-width:1.7}
+  .barre-bas .lbl{font-size:11.5px;font-weight:500;letter-spacing:.01em;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+  .barre-bas a[aria-current="page"],.barre-bas button.ici{color:var(--accent)}
+  .barre-bas a[aria-current="page"] .ico{background:var(--accent-soft);border-radius:999px;padding:4px 14px;margin:-4px -14px}
+}
+
+/* --- carte --- */
+.carte,.panel{background:var(--verre);border:1px solid var(--verre-bord);border-radius:var(--r-lg);padding:20px;
+  animation:apparition var(--doux) ease both}
+@media (min-width:720px){.carte,.panel{padding:24px}}
+.carte + .carte,.panel + .panel{margin-top:16px}
+@keyframes apparition{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* --- champ (input, select, textarea) et son libellé : verre, arrondi 16 px, 60 px de haut --- */
+label{display:block;font-size:13px;letter-spacing:0;text-transform:none;color:var(--ink-2);margin-bottom:6px;font-weight:500}
+input,select,textarea{width:100%;background:var(--verre);color:var(--ink);border:1px solid var(--verre-bord);
+  border-radius:var(--r);padding:10px 16px;font-family:inherit;font-size:15px;font-variant-numeric:tabular-nums;
+  transition:border-color var(--vite),box-shadow var(--vite)}
+input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=color]):not([type=hidden]),select{min-height:var(--h-champ)}
+textarea{padding:14px 16px}
+input::placeholder,textarea::placeholder{color:rgba(255,255,255,.35)}
+input:hover,select:hover,textarea:hover{border-color:var(--line-strong)}
+input:focus,select:focus,textarea:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+select option{background:var(--plein);color:var(--ink)}
+@media (max-width:720px){input,select,textarea{font-size:16px}}   /* v76 : 16 px sur téléphone, sinon l'iPhone zoome sur le champ touché */
+
+/* --- boutons : or (action principale, texte #07090d), contour (secondaire), rouge (supprimer) ; 56 px de haut --- */
+button.btn,a.btn,.btn-or{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:var(--h-bouton);
+  background:var(--accent);color:var(--accent-ink);border:1px solid var(--accent);border-radius:var(--r);text-decoration:none;
+  padding:10px 22px;font-family:inherit;font-size:16px;font-weight:600;cursor:pointer;
+  transition:filter var(--vite),background var(--vite),border-color var(--vite),color var(--vite),transform var(--vite)}
+button.btn:hover,a.btn:hover,.btn-or:hover{filter:brightness(1.06)}
+button.btn:active,a.btn:active,.btn-or:active{transform:translateY(1px)}
+button.btn:disabled,.btn-or:disabled{opacity:.55;cursor:default;filter:none;transform:none}
+/* secondaire : contour de verre, sans fond (la carte de verre est derrière) */
+button.ghost,a.btn.ghost{background:transparent;color:var(--ink);border-color:var(--verre-bord)}
+button.ghost:hover,a.btn.ghost:hover{color:var(--ink);border-color:var(--accent);filter:none;background:var(--verre)}
+/* rouge : supprimer */
+button.btn.danger,a.btn.danger,.btn-rouge{background:var(--bad-soft);color:var(--bad);border-color:var(--bad)}
+button.btn.danger:hover,a.btn.danger:hover,.btn-rouge:hover{background:rgba(248,113,113,.22);color:var(--bad);filter:none}
+/* petit bouton des écrans denses (coach) : 40 px de dessin, 44 px sur téléphone (zone de toucher) */
+button.btn.petit,a.btn.petit{min-height:40px;padding:6px 14px;font-size:13px;border-radius:var(--r-sm)}
+
+/* --- pastille --- */
+.pastille{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-family:inherit;font-weight:500;font-variant-numeric:tabular-nums;padding:2px 10px;border-radius:var(--r-pastille);border:1px solid var(--verre-bord);color:var(--ink-2);background:var(--verre);white-space:nowrap;line-height:1.6}
+.pastille.ok,.pastille.bon{border-color:transparent;background:var(--good-soft);color:var(--good)}
+.pastille.attention,.pastille.manque{border-color:transparent;background:var(--warn-soft);color:var(--warn)}
+.pastille.mauvais{border-color:transparent;background:var(--bad-soft);color:var(--bad)}
+
+/* --- fenêtre de confirmation (modale) et volet : posés sur un fond flouté ; messages (toasts) --- */
+.fond{position:fixed;inset:0;z-index:60;background:rgba(3,5,8,.55);
+  display:flex;align-items:center;justify-content:center;padding:20px;animation:fondu var(--vite) ease both}
+@keyframes fondu{from{opacity:0}to{opacity:1}}
+.fenetre,.modale{width:100%;max-width:440px;background:var(--fenetre);border:1px solid var(--verre-bord);border-radius:var(--r-lg);padding:22px;
+  box-shadow:0 24px 60px -20px rgba(0,0,0,.8);animation:apparition var(--doux) cubic-bezier(.2,.7,.2,1) both}
+.modale h2{margin-bottom:8px;font-size:18px}
+.modale .corps{font-size:14.5px;color:var(--ink-2);line-height:1.6;white-space:pre-line}
+.modale .champ{margin-top:14px}
+.modale .actions{margin-top:20px;justify-content:flex-end}
+@media (max-width:560px){
+  .fond{align-items:flex-end;padding:0 16px calc(16px + env(safe-area-inset-bottom))}
+  .modale{max-width:none;animation-name:glisse}
+  .modale .actions{flex-wrap:wrap}
+  .modale .actions .btn{flex:1 1 130px;width:auto}
+}
+@keyframes glisse{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+.fond.volet-fond{align-items:stretch;justify-content:flex-end;padding:0}
+.volet{width:100%;max-width:460px;height:100%;overflow-y:auto;background:var(--fenetre);border-left:1px solid var(--verre-bord);padding:22px;
+  animation:volet var(--doux) cubic-bezier(.2,.7,.2,1) both}
+.toast{pointer-events:auto;max-width:420px;width:auto;background:var(--plein);color:var(--ink);border:1px solid var(--verre-bord);border-left:3px solid var(--ink-3);
+  border-radius:var(--r);padding:12px 16px;font-size:14px;box-shadow:var(--shadow);animation:glisse var(--doux) cubic-bezier(.2,.7,.2,1) both}
+
+/* --- sans mouvement quand l'appareil le demande --- */
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}

@@ -226,12 +226,12 @@ const outilProfil = {
       <h2>Mon compte</h2>
       <p class="note" style="margin:0 0 18px">Adresse actuelle : <b>${esc((u && u.email) || "—")}</b>. C'est avec elle que tu te connectes.</p>
 ${Auth.estCoach() ? "" : `<div id="mc-tel-bloc" style="margin:0 0 26px">
-      <h3 style="font-family:Oswald,sans-serif;text-transform:uppercase;letter-spacing:.05em;font-size:14px;font-weight:500;color:var(--ink-2);margin:0 0 12px">Mon numéro</h3>
+      <h3 style="font-family:inherit;text-transform:uppercase;letter-spacing:.05em;font-size:14px;font-weight:500;color:var(--ink-2);margin:0 0 12px">Mon numéro</h3>
       <p class="note" style="margin:0 0 10px" id="mc-tel-ligne">Numéro actuel : <b id="mc-tel-actuel" data-notr>…</b></p>
       <div class="champ"><label for="mc-tel">Ton numéro (WhatsApp)</label>${Telephone.champHTML("mc-tel")}</div>
       <div class="actions"><button class="btn ghost" id="mc-tel-ok" disabled>Enregistrer mon numéro</button><span class="msg" id="mc-tel-msg" role="status" aria-live="polite"></span></div>
       </div>`}
-      <h3 style="font-family:Oswald,sans-serif;text-transform:uppercase;letter-spacing:.05em;font-size:14px;font-weight:500;color:var(--ink-2);margin:0 0 12px">Changer mon mot de passe</h3>
+      <h3 style="font-family:inherit;text-transform:uppercase;letter-spacing:.05em;font-size:14px;font-weight:500;color:var(--ink-2);margin:0 0 12px">Changer mon mot de passe</h3>
       <div class="grid g2">
         <div><label for="mc-actuel">Mot de passe actuel</label><input id="mc-actuel" type="password" autocomplete="current-password"></div>
         <div><label for="mc-nouveau">Nouveau mot de passe</label><input id="mc-nouveau" type="password" autocomplete="new-password"></div>
@@ -239,10 +239,10 @@ ${Auth.estCoach() ? "" : `<div id="mc-tel-bloc" style="margin:0 0 26px">
       </div>
       ${typeof Captcha !== "undefined" ? Captcha.htmlProfil() : ""}<div class="actions"><button class="btn ghost" id="mc-mdp">Changer mon mot de passe</button><span class="msg" id="mc-mdp-msg"></span></div>
 
-      <h3 style="font-family:Oswald,sans-serif;text-transform:uppercase;letter-spacing:.05em;font-size:14px;font-weight:500;color:var(--ink-2);margin:26px 0 12px">Changer mon adresse email</h3>
+      <h3 style="font-family:inherit;text-transform:uppercase;letter-spacing:.05em;font-size:14px;font-weight:500;color:var(--ink-2);margin:26px 0 12px">Changer mon adresse email</h3>
       ${ecrisNous("Pour changer ton adresse email, écris-nous à {e}, on s'en occupe rapidement.", "mc-email-aide", "note")}
 
-      <h3 style="font-family:Oswald,sans-serif;text-transform:uppercase;letter-spacing:.05em;font-size:14px;font-weight:500;color:var(--ink-2);margin:26px 0 12px">Partager l'app</h3>
+      <h3 style="font-family:inherit;text-transform:uppercase;letter-spacing:.05em;font-size:14px;font-weight:500;color:var(--ink-2);margin:26px 0 12px">Partager l'app</h3>
       <p class="note" style="margin:0 0 12px">Envoie le lien de l'app à un proche : l'espace gratuit est ouvert à tout le monde.</p>
       <div class="actions" style="margin-top:0"><button type="button" class="btn ghost" id="mc-partager">Partager l'app</button></div>
     </section>`;

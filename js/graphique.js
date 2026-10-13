@@ -35,13 +35,13 @@ const Graphique = {
 
     for (let v=yr.bas; v<=yr.haut+1e-9; v+=yr.pas){
       svg.appendChild(el("line",{x1:L,x2:L+pw,y1:Y(v),y2:Y(v),stroke:"var(--grid)","stroke-width":1}));
-      const lb = el("text",{x:L-9,y:Y(v)+4,"text-anchor":"end",fill:"var(--ink-3)","font-size":11,"font-family":'"IBM Plex Mono",monospace'});
+      const lb = el("text",{x:L-9,y:Y(v)+4,"text-anchor":"end",fill:"var(--ink-3)","font-size":11,"font-family":'"IBM Plex Sans",sans-serif'});
       lb.textContent = Math.round(v*10)/10; svg.appendChild(lb);
     }
     svg.appendChild(el("line",{x1:L,x2:L+pw,y1:T+ph,y2:T+ph,stroke:"var(--axis)","stroke-width":1}));
     const pasX = Math.max(1, Math.ceil((x1-x0)/6));
     for (let xv=x0; xv<=x1; xv+=pasX){
-      const t = el("text",{x:X(xv),y:T+ph+19,"text-anchor":"middle",fill:"var(--ink-3)","font-size":11,"font-family":'"IBM Plex Mono",monospace'});
+      const t = el("text",{x:X(xv),y:T+ph+19,"text-anchor":"middle",fill:"var(--ink-3)","font-size":11,"font-family":'"IBM Plex Sans",sans-serif'});
       t.textContent = "S"+xv; svg.appendChild(t);
     }
     const croix = el("line",{x1:0,x2:0,y1:T,y2:T+ph,stroke:"var(--line-strong)","stroke-width":1,opacity:0});

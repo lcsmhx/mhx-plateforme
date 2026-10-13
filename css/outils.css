@@ -5,15 +5,15 @@
 .obj-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
 .obj{background:var(--sunken);border:1px solid var(--line);border-radius:var(--r);padding:14px;cursor:pointer;text-align:left;color:var(--ink);font-family:inherit;transition:border-color var(--vite),background var(--vite)}
 .obj:hover{border-color:var(--line-strong)}
-.obj[aria-pressed="true"]{border-color:var(--accent-line);background:var(--accent-soft)}
+.obj[aria-pressed="true"]{border-color:var(--accent);background:var(--verre-choisi)}
 .obj[aria-pressed="true"] .val{color:var(--accent)}
-.obj .lbl{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);font-family:"IBM Plex Mono",monospace;font-weight:600}
-.obj .val{display:block;font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;font-size:26px;font-weight:600;margin-top:4px}
+.obj .lbl{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);font-family:inherit;font-variant-numeric:tabular-nums;font-weight:600}
+.obj .val{display:block;font-family:inherit;font-variant-numeric:tabular-nums;font-variant-numeric:tabular-nums;font-size:26px;font-weight:600;margin-top:4px}
 .macro{display:flex;flex-direction:column;gap:6px;background:var(--sunken);border:1px solid var(--line);border-radius:var(--r);padding:14px}
 .macro .m-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
 .macro .m-name{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);font-weight:600}
-.macro .m-g{font-family:"IBM Plex Mono",monospace;font-size:28px;font-weight:600;font-variant-numeric:tabular-nums}
-.m-sub{font-size:12px;color:var(--ink-3);font-family:"IBM Plex Mono",monospace}
+.macro .m-g{font-family:inherit;font-variant-numeric:tabular-nums;font-size:28px;font-weight:600;font-variant-numeric:tabular-nums}
+.m-sub{font-size:12px;color:var(--ink-3);font-family:inherit;font-variant-numeric:tabular-nums}
 .flag{margin-top:14px;padding:11px 14px;border:1px solid var(--line);border-left:3px solid var(--warn);background:var(--sunken);font-size:13px;color:var(--ink-2);border-radius:0 var(--r-sm) var(--r-sm) 0;line-height:1.6}
 .flag b{color:var(--ink)}
 .flag.grave{border-left-color:var(--bad);background:var(--bad-soft)}
@@ -28,13 +28,13 @@
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
 .chip{display:inline-flex;align-items:center;gap:7px;background:var(--sunken);border:1px solid var(--line-strong);border-radius:999px;padding:6px 13px;min-height:34px;font-size:13px;color:var(--ink-2);cursor:pointer;font-family:inherit;transition:border-color var(--vite),background var(--vite),color var(--vite)}
 .chip:hover{color:var(--ink)}
-.chip[aria-pressed="true"]{border-color:var(--accent-line);color:var(--ink);background:var(--accent-soft)}
+.chip[aria-pressed="true"]{border-color:var(--accent);color:var(--ink);background:var(--verre-choisi)}
 .chip .dot{width:9px;height:9px;border-radius:50%;background:var(--line-strong)}
 .chartbox{position:relative;background:var(--sunken);border:1px solid var(--line);border-radius:var(--r);padding:12px 8px 6px}
 svg.chart{display:block;width:100%;height:260px;overflow:visible}
-.tip{position:absolute;pointer-events:none;background:var(--raised);border:1px solid var(--line-strong);border-radius:var(--r-sm);
+.tip{position:absolute;pointer-events:none;background:var(--plein);border:1px solid var(--line-strong);border-radius:var(--r-sm);
   padding:8px 10px;font-size:12px;box-shadow:var(--shadow);opacity:0;transition:opacity .1s;white-space:nowrap;z-index:5}
-.tip b{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+.tip b{font-family:inherit;font-variant-numeric:tabular-nums;font-variant-numeric:tabular-nums}
 .tip .row{display:flex;align-items:center;gap:7px;margin-top:3px}
 .tip .sw{width:8px;height:8px;border-radius:2px;display:inline-block}
 .legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;font-size:12px;color:var(--ink-2)}
@@ -43,23 +43,23 @@ svg.chart{display:block;width:100%;height:260px;overflow:visible}
 
 /* --- outil : entraînement --- */
 .tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
-.tab{background:var(--surface);border:1px solid var(--line-strong);border-radius:8px;padding:9px 15px;min-height:38px;
+.tab{background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--r-sm);padding:9px 15px;min-height:var(--h-toucher);
   font-family:"IBM Plex Sans",sans-serif;font-size:14px;font-weight:500;color:var(--ink-2);cursor:pointer;transition:border-color var(--vite),background var(--vite),color var(--vite)}
 .tab:hover{color:var(--ink)}
-.tab[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent);border-color:var(--accent-line);font-weight:600}
+.tab[aria-pressed="true"]{background:var(--verre-choisi);color:var(--ink);border-color:var(--accent);font-weight:600}
 .exo{background:var(--sunken);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:14px}
 .exo-head{display:grid;grid-template-columns:1fr 152px 42px;gap:10px;align-items:end}
 .exo-head select{font-size:14px;padding:9px 6px}
 .sets{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:14px}
 .set{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:10px}
-.set .s-lbl{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin-bottom:8px}
+.set .s-lbl{font-family:inherit;font-variant-numeric:tabular-nums;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin-bottom:8px}
 .set .pair{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .set input{padding:7px 8px;font-size:14px;text-align:center}
-.set .cap{font-size:10px;color:var(--ink-3);text-align:center;margin-top:3px;font-family:"IBM Plex Mono",monospace;letter-spacing:.06em}
+.set .cap{font-size:10px;color:var(--ink-3);text-align:center;margin-top:3px;font-family:inherit;font-variant-numeric:tabular-nums;letter-spacing:.06em}
 .exo-foot{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
-.stat{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.stat{font-family:inherit;font-variant-numeric:tabular-nums;font-size:13px;color:var(--ink-2);font-variant-numeric:tabular-nums}
 .stat b{color:var(--ink);font-size:16px}
-.prev{font-size:12px;font-family:"IBM Plex Mono",monospace;padding:3px 9px;border-radius:999px;background:var(--surface);border:1px solid var(--line-strong)}
+.prev{font-size:12px;font-family:inherit;font-variant-numeric:tabular-nums;padding:3px 9px;border-radius:999px;background:var(--surface);border:1px solid var(--line-strong)}
 .up{color:var(--good);border-color:var(--good)} .down{color:var(--bad)} .same{color:var(--ink-3)}
 .extra{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:12px}
 .link-a{color:var(--accent);font-size:12px;text-decoration:none}
@@ -94,8 +94,8 @@ svg.chart{display:block;width:100%;height:260px;overflow:visible}
 .dc-plan .dc-projection{font-weight:600}   /* la ligne mise en valeur : son objectif dans 3 mois */
 #dc-bilan-libre{margin:10px 0 0}
 .dc-cta{display:flex;flex-direction:column;align-items:flex-start;gap:6px;margin-top:18px}
-.dc-cta .btn{min-height:46px;padding:11px 22px;text-align:center;white-space:normal;overflow-wrap:anywhere}
-.dc-cta-sous{margin:0;font-size:12.5px;color:var(--ink-3);font-family:"IBM Plex Mono",monospace;letter-spacing:.02em}
+.dc-cta .btn{padding:11px 22px;text-align:center;white-space:normal;overflow-wrap:anywhere}
+.dc-cta-sous{margin:0;font-size:12.5px;color:var(--ink-3);font-family:inherit;font-variant-numeric:tabular-nums;letter-spacing:.02em}
 .dc-haut-sous{margin:6px 0 0}
 button.lien-discret{background:none;border:0;padding:6px 0;min-height:44px;font:inherit;font-size:14px;color:var(--ink-3);text-decoration:underline;text-underline-offset:3px;cursor:pointer;text-align:left}
 button.lien-discret:hover{color:var(--ink-2)}
@@ -113,7 +113,7 @@ label.dc-opt{position:relative;display:block;margin:0;cursor:pointer;text-transf
 .dc-opt-c{display:flex;flex-direction:column;justify-content:center;gap:2px;min-height:44px;padding:10px 14px;border:1px solid var(--line-strong);border-radius:var(--r);background:var(--sunken);line-height:1.35;overflow-wrap:anywhere;transition:border-color var(--vite),background var(--vite)}
 .dc-opt-s{font-size:13px;font-weight:400;color:var(--ink-3)}
 .dc-opt:hover .dc-opt-c{border-color:var(--accent-line)}
-.dc-opt input:checked + .dc-opt-c{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
+.dc-opt input:checked + .dc-opt-c{border-color:var(--accent);background:var(--verre-choisi);box-shadow:inset 0 0 0 1px var(--accent)}
 .dc-opt input:checked + .dc-opt-c .dc-opt-l{color:var(--accent)}
 .dc-opt input:focus-visible + .dc-opt-c{outline:2px solid var(--accent);outline-offset:2px}
 .dc-q .dc-max{margin:6px 0 0}
@@ -144,7 +144,7 @@ label.dc-precision{margin:12px 0 6px;text-transform:none;letter-spacing:normal;f
 [data-sante-off]{opacity:.55;cursor:not-allowed}
 /* v52 : l'action mise en avant de l'accueil du prospect (son calcul, puis sa pesee de depart) */
 .dc-etape{border-color:var(--accent-line)}
-.dc-etape .btn{min-height:44px}
+.dc-etape .btn{min-height:var(--h-bouton)}
 /* v52 : calculateur du prospect — un bouton cache (hidden) le reste, meme avec la classe .btn */
 #calc-ok[hidden],#objs .obj[hidden]{display:none}
 #dc-accomp .liste-debloque a{color:var(--accent);font-weight:600;text-decoration:none}
@@ -155,11 +155,11 @@ label.dc-precision{margin:12px 0 6px;text-transform:none;letter-spacing:normal;f
 .repas-c .repas-tete button{font:inherit;font-size:12px;padding:6px 11px;min-height:32px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-2);border-radius:var(--r-sm);cursor:pointer}
 .repas-c .repas-tete button:hover{border-color:var(--accent);color:var(--accent)}
 .repas-macros{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-size:13px;color:var(--ink-3)}
-.repas-macros b{color:var(--ink);font-family:"IBM Plex Mono",ui-monospace,monospace}
+.repas-macros b{color:var(--ink);font-family:inherit;font-variant-numeric:tabular-nums}
 .repas-c h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin:0 0 8px}
 ul.ingr{list-style:none;margin:0;padding:0}
 ul.ingr li{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
-ul.ingr li b{font-family:"IBM Plex Mono",ui-monospace,monospace;color:var(--ink)}
+ul.ingr li b{font-family:inherit;font-variant-numeric:tabular-nums;color:var(--ink)}
 ol.etapes{margin:0;padding-left:18px;font-size:14px;color:var(--ink-2)}
 ol.etapes li{margin-bottom:6px}
 input.manque,select.manque,textarea.manque{border-color:var(--bad);box-shadow:0 0 0 3px var(--bad-soft)}
@@ -181,8 +181,6 @@ input.manque,select.manque,textarea.manque{border-color:var(--bad);box-shadow:0 
 /* le logo est dessine en noir : sur fond sombre (le theme par defaut) on
    l'inverse pour qu'il reste lisible, plutot que de maintenir deux fichiers */
 .b-logo,.logo-img{filter:invert(1)}
-:root[data-theme="light"] .b-logo,
-:root[data-theme="light"] .logo-img{filter:none}
 .logo-img{display:block;max-width:170px;max-height:64px;margin:0 auto 14px;object-fit:contain}
 .ex-fiche{margin-top:10px;font:inherit;font-size:12px;padding:5px 11px;min-height:30px;border:1px solid var(--line-strong);
   background:var(--surface);color:var(--ink-2);border-radius:var(--r-sm);cursor:pointer}
@@ -201,7 +199,7 @@ ul.erreurs li{margin-bottom:5px}
 .j-onglet.ici{border-color:var(--accent-line);background:var(--accent-soft)}
 .j-onglet.ici .j-nom{color:var(--accent)}
 .j-onglet .j-nom{font-size:13px;font-weight:600;color:var(--ink)}
-.j-onglet .j-kcal{font-size:11px;color:var(--ink-3);font-family:"IBM Plex Mono",ui-monospace,monospace}
+.j-onglet .j-kcal{font-size:11px;color:var(--ink-3);font-family:inherit;font-variant-numeric:tabular-nums}
 ul.courses-l li.pris{opacity:.5}
 ul.courses-l li.pris .coche{text-decoration:line-through}
 .bandeau-tete{display:flex;flex-direction:column;gap:2px}
@@ -221,11 +219,11 @@ ul.courses-l li.pris .coche{text-decoration:line-through}
 .repas-c .repas-tete .respect:hover{border-color:var(--good);color:var(--good)}
 .repas-c .repas-tete .respect.on{background:var(--good-soft);border-color:transparent;color:var(--good)}
 .repas-c details.prep{border:0;margin:0;padding:0}
-.repas-c details.prep summary{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin:0 0 8px}
+.repas-c details.prep summary{font-family:inherit;font-variant-numeric:tabular-nums;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin:0 0 8px}
 .repas-c details.prep[open] summary{color:var(--ink-2)}
 /* .jauge : meme barre que .bar (voir [B]) */
 .g-edit{display:inline-flex;align-items:center;gap:6px;color:var(--ink-3);font-size:13px}
-.g-edit input{width:78px;padding:5px 7px;text-align:right;font-family:"IBM Plex Mono",ui-monospace,monospace}
+.g-edit input{width:78px;padding:5px 7px;text-align:right;font-family:inherit;font-variant-numeric:tabular-nums}
 .g-edit .del{border:0;background:none;color:var(--ink-3);cursor:pointer;font-size:17px;line-height:1;padding:0 2px}
 .g-edit .del:hover{color:var(--bad)}
 ul.courses-l li{align-items:center}
@@ -242,7 +240,7 @@ ul.courses-l .coche{font-size:14px;color:var(--ink-2)}
 @media(max-width:560px){.res-l{flex-wrap:wrap}.res-l .meta{white-space:normal}}
 #cat-journal{max-height:320px;overflow-y:auto;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--sunken)}
 #cat-journal:empty{display:none}
-.j-ligne{padding:7px 12px;border-bottom:1px solid var(--line);font-size:13px;color:var(--ink-2);font-family:"IBM Plex Mono",ui-monospace,monospace}
+.j-ligne{padding:7px 12px;border-bottom:1px solid var(--line);font-size:13px;color:var(--ink-2);font-family:inherit;font-variant-numeric:tabular-nums}
 .j-ligne:last-child{border-bottom:0}
 .j-ligne b{color:var(--ink)}
 .j-ligne.attention{color:var(--warn)}
@@ -281,7 +279,7 @@ label.fo-case{display:flex;align-items:flex-start;gap:10px;cursor:pointer;flex:1
   padding:18px 22px;cursor:pointer;text-align:left;color:var(--ink)}
 .fo-tete:hover{background:var(--raised)}
 .fo-ico{font-size:20px;line-height:1}
-.fo-num{font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:600;color:var(--accent);width:36px;height:36px;border-radius:50%;background:var(--accent-soft);display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
+.fo-num{font-family:inherit;font-variant-numeric:tabular-nums;font-size:13px;font-weight:600;color:var(--accent);width:36px;height:36px;border-radius:50%;background:var(--accent-soft);display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
 .fo-mod.fini .fo-num{background:var(--good-soft);color:var(--good)}
 .fo-corps-tete{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
 .fo-obj-court{font-size:13px;color:var(--ink-3);line-height:1.4}
@@ -323,7 +321,7 @@ label.fo-case{display:flex;align-items:flex-start;gap:10px;cursor:pointer;flex:1
   text-align:center;font-size:14px;margin:14px 0}
 .fo-tab{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px}
 .fo-tab th,.fo-tab td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
-.fo-tab th{background:var(--sunken);font-family:"IBM Plex Mono",monospace;text-transform:uppercase;
+.fo-tab th{background:var(--sunken);font-family:inherit;font-variant-numeric:tabular-nums;text-transform:uppercase;
   letter-spacing:.08em;font-size:11px;font-weight:600;color:var(--ink-2)}
 .fo-faq{border:1px solid var(--line);border-radius:var(--r);padding:11px 14px;margin-bottom:9px;background:var(--surface)}
 .fo-faq summary{cursor:pointer;font-weight:600;font-size:14px}
@@ -338,7 +336,7 @@ label.fo-case{display:flex;align-items:flex-start;gap:10px;cursor:pointer;flex:1
 .fo-scroll{overflow-x:auto}
 .fo-diete{min-width:560px;margin:0}
 .fo-diete input[type=number]{width:78px;padding:6px 7px;text-align:center;font-size:13px}
-.fo-kcal,.fo-total td{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+.fo-kcal,.fo-total td{font-family:inherit;font-variant-numeric:tabular-nums;font-variant-numeric:tabular-nums}
 .fo-total td{background:var(--surface)}
 .fo-colonne{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px}
 .fo-colonne h4{margin-top:0}
@@ -370,7 +368,7 @@ label.fo-case{display:flex;align-items:flex-start;gap:10px;cursor:pointer;flex:1
 .co-rester{display:flex;align-items:center;gap:9px;margin:0 0 16px;cursor:pointer;min-height:44px;
   font-size:13px;text-transform:none;letter-spacing:0;color:var(--ink-2);font-weight:400}
 .co-rester input{width:20px;height:20px;margin:0;flex:0 0 auto;accent-color:var(--accent)}
-.version{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.06em;color:var(--ink-3)}
+.version{font-family:inherit;font-variant-numeric:tabular-nums;font-size:11px;letter-spacing:.06em;color:var(--ink-3)}
 .carte-co .co-aide{font-size:12px;color:var(--ink-3);text-align:center;margin:12px 0 0;line-height:1.5}
 /* v78 (tâche 3) : la place du CAPTCHA Turnstile (seulement si CONFIG.turnstile.cle_site est remplie), réservée avant son
    arrivée : rien ne saute. normal = 300 × 72, compact = 150 × 147 (moins de 300 px utiles : écran de 320 px) — tailles
@@ -420,10 +418,10 @@ label.fo-case{display:flex;align-items:flex-start;gap:10px;cursor:pointer;flex:1
 .integre-carte .integre-etapes li + li{margin-top:4px}
 .integre-etapes b{color:var(--ink)}
 .integre-etapes .integre-ouvrir{margin:0 0 8px}
-.integre-etapes .integre-ouvrir .btn{min-height:44px}
+.integre-etapes .integre-ouvrir .btn{min-height:var(--h-bouton)}
 .integre-etapes .integre-secours{margin:0 0 4px}
 .integre-carte > .actions{margin-top:12px}
-.integre-carte > .actions .btn{min-height:44px}
+.integre-carte > .actions .btn{min-height:var(--h-bouton)}
 
 /* --- outil : complements --- */
 .compl{list-style:none;margin:0;padding:0}
@@ -495,7 +493,7 @@ label.fo-case{display:flex;align-items:flex-start;gap:10px;cursor:pointer;flex:1
 /* v47 — fiche coach : les 7 etapes en lecture seule */
 .ch-etapes-fiche{margin:0 0 12px}
 .ch-etapes-fiche .ch-etape{cursor:default}
-.ch-etape{display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;color:var(--ink-3);font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:6px 2px;border-radius:var(--r-sm);text-align:center;line-height:1.2}
+.ch-etape{display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;color:var(--ink-3);font-family:inherit;font-variant-numeric:tabular-nums;font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:6px 2px;border-radius:var(--r-sm);text-align:center;line-height:1.2}
 .ch-etape .num{width:30px;height:30px;border-radius:50%;border:1px solid var(--line-strong);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;background:var(--sunken);color:var(--ink-2);transition:border-color var(--vite),background var(--vite)}
 .ch-etape.fait .num{background:var(--good-soft);border-color:var(--good);color:var(--good)}
 .ch-etape.actuel .num{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
@@ -582,7 +580,7 @@ button.ja-ligne:hover{background:var(--sunken)}
 .ja-nouveau{animation:ja-eclat 1.6s ease-out}
 @keyframes ja-eclat{0%,30%{background:var(--accent-soft)}100%{background:transparent}}
 .ja-vide{margin:2px 0 4px;font-size:14px;color:var(--ink-3)}
-button.btn.ja-ajouter{width:100%;min-height:44px;margin-top:10px}
+button.btn.ja-ajouter{width:100%;min-height:var(--h-bouton);margin-top:10px}
 .ja-sources{margin:14px 0 0;text-align:center;font-size:12px}
 .ja-sept{border-left:3px solid var(--accent)}
 .ja-sept + .ja-date{margin-top:16px}
@@ -590,7 +588,7 @@ button.btn.ja-ajouter{width:100%;min-height:44px;margin-top:10px}
 .ja-carte .ja-num{font-size:clamp(36px,10vw,46px)}
 .ja-carte-txt{margin:0;color:var(--ink-2);font-size:14px;line-height:1.55}
 .ja-carte-a{margin-top:14px}
-a.btn.ja-btn-ajout{width:100%;min-height:44px}
+a.btn.ja-btn-ajout{width:100%;min-height:var(--h-bouton)}
 /* le panneau qui monte du bas (UI.ouvrir, classe ja-feuille) */
 .modale.ja-feuille{position:relative;max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain}
 .modale.ja-feuille.ja-recherche{height:min(680px,calc(100dvh - 24px))}
@@ -638,8 +636,8 @@ a.btn.ja-btn-ajout{width:100%;min-height:44px}
 .ja-calcul-n{font-size:32px;line-height:1;color:var(--accent)}
 .ja-calcul small{flex-basis:100%;font-size:12.5px;color:var(--ink-3)}
 .ja-calcul small:empty{display:none}
-button.btn.ja-ok{width:100%;min-height:50px;font-size:16px}
-button.btn.ja-suppr{width:100%;min-height:44px}
+button.btn.ja-ok{width:100%;min-height:var(--h-bouton);font-size:16px}
+button.btn.ja-suppr{width:100%;min-height:var(--h-bouton)}
 .ja-action{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;min-height:56px;padding:10px 14px;background:var(--sunken);
   border:1px solid var(--line);border-radius:var(--r);color:var(--ink);text-align:left;font-family:inherit;cursor:pointer;transition:border-color var(--vite)}
 .ja-action b{font-size:15px;font-weight:600}

@@ -111,7 +111,7 @@ const Captcha = {
       try {
         this.id = T.render(z, {
           sitekey: this.cle(), action: ecran, language: I18N.langue === "en" ? "en" : "fr",
-          theme: Theme.actuel === "light" ? "light" : "dark", size: compact ? "compact" : "normal", appearance: "always",
+          theme: "dark", size: compact ? "compact" : "normal", appearance: "always",
           "response-field": false, "refresh-expired": "auto",
           callback: t => { if (n === this.tour){ this.etat = "pret"; this.liberer(t); } },
           "error-callback": () => { if (n === this.tour){ this.etat = "echec"; this.liberer(""); } return true; },
@@ -195,7 +195,6 @@ function portail(mode){
   <div class="portail">
     <div class="carte-co">
       <button type="button" class="co-langue" id="co-langue" data-notr>${I18N.langue === "en" ? "🇫🇷 Français" : "🇺🇸 English"}</button>
-      <button type="button" class="co-langue co-theme" data-theme-bouton data-notr></button>
       ${CONFIG.marque.logo ? `<img class="logo-img" src="${esc(CONFIG.marque.logo)}" alt="${esc(CONFIG.marque.nom)}">` : ""}
       <div class="logo">${esc(CONFIG.marque.nom)}</div>
       ${CONFIG.marque.programme ? `<div class="sous">${esc(CONFIG.marque.programme)}</div>` : ""}
