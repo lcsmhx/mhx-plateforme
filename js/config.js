@@ -550,6 +550,18 @@ const DECOUVERTE = {
     lien: "En savoir plus : politique de confidentialité",
     refus: "Pas de souci. Sans ton accord, le calculateur, le suivi, l'organisation de la diète et le journal alimentaire restent en pause. Le reste de ton espace reste ouvert, et tu peux changer d'avis quand tu veux."
   },
+  /* v88 (mission de nuit du 14/10/2026, demande de Lucas du 13/10) : la fenêtre qui redemande l'accord santé à un compte dont
+     l'accord date d'une version plus ancienne de la politique (RappelSante, auth-store.js). La phrase d'accord est celle de
+     la carte (sante.phrase) ; « J'accepte » aussi. */
+  sante_maj: {
+    titre: "Notre politique de confidentialité a changé",
+    texte: "Tu as donné ton accord pour l'usage de tes données de santé avec une version plus ancienne. Rien ne change pour tes données ni pour ton espace : tu peux confirmer ton accord pour la nouvelle version.",
+    lien: "Lire la politique de confidentialité",
+    oui: "J'accepte",
+    non: "Plus tard",
+    merci: "C'est noté : ton accord est enregistré pour la nouvelle version.",
+    rate: "Ton accord n'a pas pu être enregistré (connexion ?). On te le redemandera à ta prochaine visite."
+  },
   resultat: {
     titre: "Ton résultat",
     priorites_titre: "Tes 3 priorités",
@@ -869,6 +881,15 @@ const DECOUVERTE = {
       non: "Not now",
       lien: "Learn more: Privacy Policy",
       refus: "No problem. Without your consent, the calculator, tracking, diet planning and food diary stay paused. The rest of your space stays open, and you can change your mind anytime."
+    },
+    sante_maj: {
+      titre: "Our Privacy Policy has changed",
+      texte: "You gave your consent to the use of your health data under an older version. Nothing changes for your data or your space: you can confirm your consent for the new version.",
+      lien: "Read the Privacy Policy",
+      oui: "I agree",
+      non: "Later",
+      merci: "Got it: your consent is saved for the new version.",
+      rate: "Your consent couldn't be saved (connection?). We'll ask you again on your next visit."
     },
     resultat: {
       titre: "Your result",
