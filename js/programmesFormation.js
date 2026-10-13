@@ -230,7 +230,7 @@ const ProgFormation = {
   type(sc){ return sc.type === "hiit" || sc.type === "hiit_options" ? "HIIT" : sc.type === "circuit" ? "Circuit" : sc.type === "cardio" ? "Cardio" : ""; },
   ligneHTML(E, p, ph, si, sc){
     const t = this.type(sc), fac = this.facultative(E, p, si);
-    return `<li><a class="pf-seance" href="#/programme/seance/${esc(p.id)}/${ph}/${si}" data-pf-seance="${ph}-${si}">
+    return `<li><a class="pf-seance-l" href="#/programme/seance/${esc(p.id)}/${ph}/${si}" data-pf-seance="${ph}-${si}">
       <span class="txt"><b>${esc(trad(sc.nom))}</b><small>${esc(this.compte(sc))}</small></span>
       <span class="pf-pastilles">${t ? `<span class="pastille">${esc(trad(t))}</span>` : ""}${fac ? `<span class="pastille accent pf-fac">${esc(trad("Facultative"))}</span>` : ""}</span>
       <span class="fleche" aria-hidden="true">›</span></a></li>`;

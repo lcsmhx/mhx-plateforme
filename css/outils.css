@@ -1036,11 +1036,11 @@ ul.fc-lignes li > b{font-weight:500;text-align:right;min-width:0;overflow-wrap:a
 .pf-onglets button[aria-selected="true"]{background:var(--verre-choisi);color:var(--ink);box-shadow:inset 0 0 0 1px var(--accent-line)}
 .pf-phase-t{margin:0 0 10px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
 .pf-seances,.pf-choix,.pf-exos{list-style:none;margin:0;padding:0}
-.pf-seance{display:flex;align-items:center;gap:12px;min-height:56px;padding:10px 14px;margin:0 0 8px;border-radius:var(--r);border:1px solid var(--verre-bord);background:var(--verre);color:var(--ink);text-decoration:none}
-.pf-seance:hover{background:var(--verre-choisi)}
-.pf-seance .txt,.pf-choix-l .txt{flex:1;min-width:0;display:flex;flex-direction:column}
-.pf-seance small,.pf-choix-l small{color:var(--ink-2);font-size:13px}
-.pf-seance .fleche{color:var(--ink-3);font-size:20px}
+.pf-seance-l{display:flex;align-items:center;gap:12px;min-height:56px;padding:10px 14px;margin:0 0 8px;border-radius:var(--r);border:1px solid var(--verre-bord);background:var(--verre);color:var(--ink);text-decoration:none}
+.pf-seance-l:hover{background:var(--verre-choisi)}
+.pf-seance-l .txt,.pf-choix-l .txt{flex:1;min-width:0;display:flex;flex-direction:column}
+.pf-seance-l small,.pf-choix-l small{color:var(--ink-2);font-size:13px}
+.pf-seance-l .fleche{color:var(--ink-3);font-size:20px}
 .pf-pastilles{display:flex;flex-wrap:wrap;gap:6px;margin:0}
 .pf-seance-tete h2{margin:6px 0 8px}
 .pf-retour{display:inline-flex;align-items:center;min-height:var(--h-toucher);margin:-6px 0 4px}
