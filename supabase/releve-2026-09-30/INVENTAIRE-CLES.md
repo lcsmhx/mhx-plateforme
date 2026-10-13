@@ -2,7 +2,7 @@
 
 Fait dans le code de la branche `v2/v78-limites` (au départ de `main` = v77, `85973aa` + plan v78). Il complète le relevé du 30/09
 (`releve.sql`, requête 13), dont la liste de 25 clés **oubliait `contact` (v72) et `coach_visite` (v72 E)** : le projet de
-migration v66 aurait refusé le numéro de téléphone des inscrits et la visite du coach. La liste à jour compte **28 clés** (v79 : `journal_alimentaire`, le journal alimentaire) ;
+migration v66 aurait refusé le numéro de téléphone des inscrits et la visite du coach. La liste à jour compte **29 clés** (v90 : `seances_formation`, les séances faites des programmes de la formation ; v79 : `journal_alimentaire`, le journal alimentaire) ;
 c'est la seule liste admise par la migration v78 (`supabase/v78-limites/02-migration.sql`, fonction `public.v78_limite`).
 
 Taille = ce que la base mesure : `octet_length(contenu::text)`, le JSON tel que Postgres l'écrit (avec `", "` et `": "`, accents
@@ -18,7 +18,7 @@ donnera les vraies tailles (max, moyenne, p95) ; la migration s'arrête si une l
   `hist_programme`, `hist_repas`, `feedbacks`, `notes_coach`, `suivi_prospect`.
 - **L'anonyme** : rien.
 
-## Les 28 clés
+## Les 29 clés
 
 | Clé | Qui l'écrit (et où dans le code) | Forme | Bornes déjà imposées par le code | Taille lourde | Limite v78 | Marge |
 |---|---|---|---|---|---|---|
@@ -42,6 +42,7 @@ donnera les vraies tailles (max, moyenne, p95) ; la migration s'arrête si une l
 | `challenge` | prospect, le compte lui-même (jamais le coach) : `Decouverte.plusTard / clic / reserver` (`js/outilDecouverte.js:312, 323, 331`) | `{cta{clics[{jour, source, date}], plus_tard[{source, date}]}, reserve}` ; anciens prospects du challenge : `{version, debut, jours{1…7}, termine}` | 50 clics (`js/outilDecouverte.js:322`), 50 « Plus tard » (311) | 13 Ko | 128 Ko | ×10 |
 | `suivi_prospect` | coach seul, illisible par le prospect : `Commercial`, `CleCoach.ecrireSi` (`js/outilProspects.js:315`) | `{version, issue, issue_le, note, bilan_le, relances[], historique[{type, valeur?, le, note?}]}` | note ≤ 200 car. (`js/outilProspects.js:397`) ; 20 relances (323) ; 30 événements (320) | 10 Ko | 128 Ko | ×13 |
 | `activite` | prospect (et client si l'interrupteur `suivi_visites_clients` le permet) : `Activite`, `Store.ecrire` (`js/outilDecouverte.js:701`) | `{version, jours[], pages{}, temps_s, derniere}` | 60 jours (`js/outilDecouverte.js:529, 537, 548, 566`) ; noms de page ≤ 40 car. (528) | 1,4 Ko | 64 Ko | ×45 |
+| `seances_formation` (v90, 14/10/2026) | client, le compte lui-même (jamais le coach, qui la lit seulement ; pas le prospect) : `ProgFormation.noter`, `Store.ecrire` (`js/programmesFormation.js`) | `{v, faites[{p, f, s, d, t}]}` | 400 entrées (`MAX_FAITES`) | 0 Ko (nouvelle) | 64 Ko | — |
 | `calc` | coach, fiche du client ou pour lui-même : `js/outilCalculateur.js:332` | `{sexe, age, taille, poids, pas, heures, objectif}` | 7 champs | 0,1 Ko | 16 Ko | ×150 |
 | `calc_perso` | prospect, client (v52, v53) : `js/outilCalculateur.js:200, 205` | comme `calc` | 7 champs | 0,1 Ko | 16 Ko | ×150 |
 | `objectifs_faits` | client : `js/outilProgramme.js:470` | `{mois, faits[3]}` | 3 cases | < 0,1 Ko | 16 Ko | — |

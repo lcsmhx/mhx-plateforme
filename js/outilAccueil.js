@@ -150,7 +150,7 @@ const outilAccueil = {
      avec un lien vers l'editeur de chaque bloc. Lecture seule ici. Les
      notes privees et les feedbacks arrivent avec les phases 10 et 18. */
   async fiche(zone){
-    const cles = ["intake", "programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "checkins", "complements", "calc", "formation", "hist_programme", "hist_repas", "prefs", "feedbacks", "challenge", "suivi_prospect", "activite", "emails", "contact"];   // v47 : + challenge ; v49 : + suivi commercial ; v51 : + activite ; v52 : + emails (newsletter d'un prospect) ; v72 : + contact (numéro)
+    const cles = ["intake", "programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "checkins", "complements", "calc", "formation", "hist_programme", "hist_repas", "prefs", "feedbacks", "challenge", "suivi_prospect", "activite", "emails", "contact", "seances_formation"];   // v90 : + les séances faites des programmes de la formation   // v47 : + challenge ; v49 : + suivi commercial ; v51 : + activite ; v52 : + emails (newsletter d'un prospect) ; v72 : + contact (numéro)
     const uidFiche = Store.idConsulte;
     /* v79 : son journal alimentaire (s'il lui est ouvert : interrupteur) et son propre calcul (l'objectif du journal) */
     const avecJA = JournalAlim.pourCompte(uidFiche);
@@ -270,6 +270,7 @@ const outilAccueil = {
       ${SC ? `<div id="fiche-commercial">${Commercial.ficheHTML(Object.assign({}, pr || {}, profil), SC, d.suivi_prospect)}</div>` : ""}
       <section class="carte fc-carte fc-retour" id="fc-retour"><div class="fc-retour-l"><div><p class="fc-sur">${esc(trad("Retour de la semaine"))}</p><p class="fc-retour-t">${esc(retourTexte)}</p></div><a class="lc-lien" id="fc-lire" href="${esc(lienOutil("bilan"))}">${esc(trad("Lire"))}</a></div></section>
       <section class="carte fc-carte fc-poids" id="fc-poids">${l.ev ? `<p class="fc-kg"><b>${kg(l.ev.total)}</b> <span>${esc(trad("depuis le début"))}</span></p>${courbe}${l.ev.mois != null ? `<span class="pastille fc-4s">${esc(trad("4 dernières sem. : {v}", { v: kg(l.ev.mois) }))}</span>` : ""}` : `<p class="fc-kg"><span>${esc(trad("Poids : aucune mesure"))}</span></p>`}</section>
+      <section class="carte fc-carte fc-pf" id="fc-pf-faites"><p class="fc-pf-l">Séances de la formation faites (30 j) : <b>${ProgFormation.faites30j(d.seances_formation)}</b></p></section>
       <section class="carte fc-carte fc-reg" id="fc-regularite"><div class="fc-reg-l"><b>${esc(trad("Régularité"))}</b><span>${esc(regTexte)}</span></div><div class="fc-jauge" role="img" aria-label="${esc(regTexte)}"><span style="width:${regPct}%"></span></div></section>
       <section class="carte fc-carte" id="fc-etat"><ul class="fiche-l fc-lignes">${etat("Questionnaire", I.complet, trad("Rempli"), trad("à remplir"))}${etat("Programme", seances.length, progNom || trad("envoyé"), trad("à faire"))}${etat("Diète", nbJours, trad("envoyée"), trad("à définir"))}</ul></section>
       <div class="fc-outils" id="fc-outils">${bandeauConsultation()}</div>

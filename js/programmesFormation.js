@@ -111,7 +111,16 @@ Object.assign(I18N.en, {
   /* v87 (mission de nuit du 14/10) : deux noms du PDF qui ne sont plus reliés à un exercice de l'app (avant : « Tractions »,
      « Curl barre », traduits par le catalogue) */
   "Tractions assistées": "Assisted pull-ups",
-  "Curl barre EZ": "EZ-bar curl"
+  "Curl barre EZ": "EZ-bar curl",
+  /* v90 (lot 5) : « J'ai fait cette séance » */
+  "J'ai fait cette séance ✓": "I did this workout ✓",
+  "Fait le {d}": "Done on {d}",
+  "Noté : fait le {d}.": "Saved: done on {d}.",
+  "Déjà noté aujourd'hui.": "Already saved today.",
+  "Bravo, séance notée !": "Nice work, workout saved!",
+  "Aucune séance faite cette semaine": "No workouts done this week",
+  "{n} séance faite cette semaine": "{n} workout done this week",
+  "{n} séances faites cette semaine": "{n} workouts done this week"
 });
 
 /* ------------------------------------------------------------------
@@ -193,11 +202,55 @@ const ProgFormation = {
   /* une sous-adresse de #/programme qui appartient aux programmes de la formation */
   sous(sr){ return /^(formation|seance|choisir)(\/|$)/.test(String(sr || "")); },
   zoneHTML(){ return `<div id="pf-zone" class="pf"><section class="panel"><div class="empty">${esc(trad("Chargement…"))}</div></section></div>`; },
-  /* lecture : intake et prefs de la personne (jamais d'écriture ici) ; une lecture ratée (réseau) : null */
+  /* lecture : intake et prefs de la personne (jamais d'écriture ici) ; une lecture ratée (réseau) : null.
+     v90 : un client (lui-même, pas le coach qui consulte) lit aussi ses séances faites (seances_formation) ; le prospect, non :
+     son onglet Programme reste la vitrine verrouillée, sans autre lecture ni écriture */
   async lire(){
-    const [I, pr] = await Promise.all([Store.lire("intake", {}), Store.lire("prefs", {})]);
+    const avecFaites = this.faitesOuvertes();
+    const [I, pr, F] = await Promise.all([Store.lire("intake", {}), Store.lire("prefs", {}), avecFaites ? Store.lire(this.CLE_FAITES, { v: 1, faites: [] }) : Promise.resolve(null)]);
     if (!I || !pr || Store.nonLus.has(I) || Store.nonLus.has(pr)) return null;
-    return { I, pr };
+    if (avecFaites && (!F || Store.nonLus.has(F))) return null;
+    return { I, pr, faites: avecFaites ? this.faitesDe(F) : null };
+  },
+  /* ---------- v90 (mission de nuit du 14/10/2026, lot 5) : « J'AI FAIT CETTE SÉANCE » ----------
+     La date de chaque séance faite des programmes de la formation, rangée À PART, à la personne, SANS MIGRATION, dans la clé
+     « seances_formation » = { v: 1, faites: [{ p: id du programme, f: n° de phase, s: n° de séance, d: "AAAA-MM-JJ" (date
+     locale), t: instant ISO }] } (400 au plus : les plus anciennes partent). Rien n'est écrit dans le journal du programme du
+     coach : son compteur de la semaine et sa régularité ne changent pas. Écrit seulement au toucher du bouton (la clé est
+     relue d'abord ; la même séance déjà notée le même jour ne l'est pas deux fois). Seulement pour un client lui-même ; le coach
+     la lit (« Séances de la formation faites (30 j) : N », onglet Suivi de la fiche) ; le prospect n'a pas le bouton. */
+  CLE_FAITES: "seances_formation",
+  MAX_FAITES: 400,
+  faitesOuvertes(){ return !!(Auth.utilisateur() && !Auth.estProspect() && !Auth.estCoach() && !Store.idConsulte); },
+  /* les entrées lisibles seulement (une ligne abîmée ou écrite hors de l'app est ignorée, jamais réécrite à l'affichage) */
+  faitesDe(v){
+    const l = v && typeof v === "object" && Array.isArray(v.faites) ? v.faites : [];
+    return l.filter(x => x && typeof x === "object" && this.IDS.indexOf(x.p) > -1 && Number.isInteger(x.f) && x.f >= 0 && Number.isInteger(x.s) && x.s >= 0 && this.dateValide(x.d));
+  },
+  /* la dernière date où cette séance a été faite, ou null */
+  faiteLe(F, id, ph, si){ let d = null; (F || []).forEach(x => { if (x.p === id && x.f === ph && x.s === si && (!d || x.d > d)) d = x.d; }); return d; },
+  /* le lundi et le dimanche de la semaine en cours (dates locales) */
+  semaineEnCours(){ const t = new Date(); t.setHours(12, 0, 0, 0); t.setDate(t.getDate() - ((t.getDay() + 6) % 7)); const l = new Date(t); t.setDate(t.getDate() + 6);
+    const iso = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); return [iso(l), iso(t)]; },
+  faitesCetteSemaine(F){ const [a, z] = this.semaineEnCours(); return (F || []).filter(x => x.d >= a && x.d <= z).length; },
+  /* le coach : séances faites ces 30 derniers jours (aujourd'hui compris) */
+  faites30j(v){ const F = this.faitesDe(v), j = Decouverte.joursEcoules; return F.filter(x => { const n = j(x.d); return n != null && n >= 0 && n < 30; }).length; },
+  semaineHTML(F){ const n = this.faitesCetteSemaine(F); return esc(trad(!n ? "Aucune séance faite cette semaine" : n > 1 ? "{n} séances faites cette semaine" : "{n} séance faite cette semaine", { n })); },
+  /* « J'ai fait cette séance » : relit la clé, ajoute la date du jour (une fois par séance et par jour), écrit ; renvoie
+     "ok", "deja" ou "ko" (lecture ratée, écriture refusée) */
+  async noter(id, ph, si){
+    if (!this.faitesOuvertes()) return "ko";
+    let v = null;
+    try { v = await Store.lire(this.CLE_FAITES, { v: 1, faites: [] }); } catch(e){ v = null; }
+    if (!v || typeof v !== "object" || Store.nonLus.has(v)) return "ko";
+    const brut = Array.isArray(v.faites) ? v.faites.slice() : [], jour = aujourdhui();
+    if (brut.some(x => x && x.p === id && x.f === ph && x.s === si && x.d === jour)){ if (this._D) this._D.faites = this.faitesDe(v); return "deja"; }
+    brut.push({ p: id, f: ph, s: si, d: jour, t: new Date().toISOString() });
+    const nv = Object.assign({}, v, { v: 1, faites: brut.slice(-this.MAX_FAITES) });
+    if (Store.ecrire(this.CLE_FAITES, nv) === false) return "ko";
+    try { await Promise.race([Store.envoyerCle(this.CLE_FAITES), new Promise(r => setTimeout(r, 6000))]); } catch(e){}
+    if (this._D) this._D.faites = this.faitesDe(nv);
+    return "ok";
   },
   async monter(zone, sr){
     if (!zone) return;
@@ -209,7 +262,7 @@ const ProgFormation = {
     this.dessiner(zone, sr);
   },
   dessiner(zone, sr){
-    const D = this._D || { I: {}, pr: {} }, E = this.etat(D.I, D.pr), R = this.route(sr);
+    const D = this._D || { I: {}, pr: {} }, E = Object.assign(this.etat(D.I, D.pr), { faites: D.faites || null }), R = this.route(sr);
     if (R.vue === "seance") zone.innerHTML = this.seanceHTML(E, R);
     else if (R.vue === "choisir" || !E.p) zone.innerHTML = this.choisirHTML(E);
     else zone.innerHTML = this.pageHTML(E);
@@ -226,6 +279,7 @@ const ProgFormation = {
       <ul class="pf-seances">${f.seances.map((sc, si) => this.ligneHTML(E, p, i, si, sc)).join("")}</ul></div>`).join("");
     return `<section class="panel pf-tete" id="pf-tete">
         <div class="pf-tete-haut"><div><span class="eyebrow">${esc(trad("Ton programme"))}</span><h2 id="pf-nom">${esc(trad(p.nom))}</h2>
+          ${E.faites ? `<p class="note pf-faites-sem" id="pf-faites-sem">${this.semaineHTML(E.faites)}</p>` : ""}
           ${s ? `<p class="note pf-semaine" id="pf-semaine">${esc(s > 12 ? trad("Tes 12 semaines sont faites : recommence ou change de programme.") : trad("Semaine {n} sur 12", { n: s }))}</p>` : ""}</div></div>
         ${Store.idConsulte ? "" : `<a class="btn ghost petit" id="pf-changer" href="#/programme/choisir">${esc(trad("Changer de programme"))}</a>`}
         <details class="pf-combien" id="pf-combien"><summary>${esc(trad("Combien de séances ?"))}</summary><ul>${P.combien.map(x => `<li>${esc(trad(x))}</li>`).join("")}</ul></details>
@@ -241,9 +295,9 @@ const ProgFormation = {
   },
   type(sc){ return sc.type === "hiit" || sc.type === "hiit_options" ? "HIIT" : sc.type === "circuit" ? "Circuit" : sc.type === "cardio" ? "Cardio" : ""; },
   ligneHTML(E, p, ph, si, sc){
-    const t = this.type(sc), fac = this.facultative(E, p, si);
+    const t = this.type(sc), fac = this.facultative(E, p, si), fl = E.faites ? this.faiteLe(E.faites, p.id, ph, si) : null;   // v90 : « Fait le … »
     return `<li><a class="pf-seance-l" href="#/programme/seance/${esc(p.id)}/${ph}/${si}" data-pf-seance="${ph}-${si}">
-      <span class="txt"><b>${esc(trad(sc.nom))}</b><small>${esc(this.compte(sc))}</small></span>
+      <span class="txt"><b>${esc(trad(sc.nom))}</b><small>${esc(this.compte(sc))}</small>${fl ? `<small class="pf-fait-le">${esc(trad("Fait le {d}", { d: dateFr(fl) }))}</small>` : ""}</span>
       <span class="pf-pastilles">${t ? `<span class="pastille">${esc(trad(t))}</span>` : ""}${fac ? `<span class="pastille accent pf-fac">${esc(trad("Facultative"))}</span>` : ""}</span>
       <span class="fleche" aria-hidden="true">›</span></a></li>`;
   },
@@ -295,7 +349,12 @@ const ProgFormation = {
     return `<section class="panel pf-seance-tete">${retour}<span class="eyebrow">${esc(trad(p.nom))} · ${esc(trad(f.titre))}</span>
         <h2 id="pf-seance-nom">${esc(trad(sc.nom))}</h2><p class="pf-pastilles">${t ? `<span class="pastille">${esc(trad(t))}</span>` : ""}${fac ? `<span class="pastille accent pf-fac">${esc(trad("Facultative"))}</span>` : ""}</p></section>
       ${this.echauffementHTML()}
-      <section class="panel pf-seance" id="pf-seance" data-type="${esc(sc.type)}">${corps}</section>`;
+      <section class="panel pf-seance" id="pf-seance" data-type="${esc(sc.type)}">${corps}</section>${E.faites ? this.boutonFaitHTML(E, p, R) : ""}`;
+  },
+  boutonFaitHTML(E, p, R){
+    const fl = this.faiteLe(E.faites, p.id, R.ph, R.si);
+    return `<section class="panel pf-fait" id="pf-fait"><button type="button" class="btn" id="pf-fait-btn" data-pf-fait="${esc(p.id)}/${R.ph}/${R.si}">${esc(trad("J'ai fait cette séance ✓"))}</button>
+      <p class="note pf-fait-msg" id="pf-fait-msg" role="status" aria-live="polite">${fl ? esc(trad("Fait le {d}", { d: dateFr(fl) })) : ""}</p></section>`;
   },
   /* ---------- choisir (ou changer de) programme ---------- */
   choisirHTML(E){
@@ -322,6 +381,19 @@ const ProgFormation = {
   brancher(zone, sr){
     $$("[data-pf-phase]", zone).forEach(b => b.addEventListener("click", () => this.onglet(zone, "pf-phase", "pf-ph-", +b.dataset.pfPhase)));
     $$("[data-pf-option]", zone).forEach(b => b.addEventListener("click", () => this.onglet(zone, "pf-option", "pf-op-", +b.dataset.pfOption)));
+    /* v90 : « J'ai fait cette séance ✓ » */
+    const bf = zone.querySelector("[data-pf-fait]");
+    if (bf) bf.addEventListener("click", async () => {
+      if (bf.disabled) return;
+      const [id, ph, si] = bf.dataset.pfFait.split("/"), msg = zone.querySelector("#pf-fait-msg");
+      bf.disabled = true;
+      const r = await this.noter(id, +ph, +si);
+      if (!zone.isConnected) return;
+      bf.disabled = false;
+      if (r === "ko"){ UI.toast(trad("Non enregistré : réessaie dans un instant."), "attention"); return; }
+      if (msg) msg.textContent = r === "deja" ? trad("Déjà noté aujourd'hui.") : trad("Noté : fait le {d}.", { d: dateFr(aujourdhui()) });
+      if (r === "ok") UI.toast(trad("Bravo, séance notée !"), "ok");
+    });
     $$("[data-pf-choisir]", zone).forEach(b => b.addEventListener("click", async () => {
       b.disabled = true;
       const ok = await this.choisir(b.dataset.pfChoisir);

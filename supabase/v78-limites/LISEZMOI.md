@@ -12,7 +12,7 @@ dans ses propres lignes, **n'importe quelle clé et n'importe quelle taille** : 
 gratuits de la base (audit du 01/10), et un prénom de plusieurs mégaoctets passe aussi.
 
 ## Ce que la migration change (et ce qu'elle ne change pas)
-- La base n'accepte plus que **les 28 clés que l'app écrit** (27 au 12/10, plus `journal_alimentaire` en v79) (liste et raisons : `../releve-2026-09-30/INVENTAIRE-CLES.md`).
+- La base n'accepte plus que **les 29 clés que l'app écrit** (27 au 12/10, plus `journal_alimentaire` en v79 et `seances_formation` en v90) (liste et raisons : `../releve-2026-09-30/INVENTAIRE-CLES.md`).
 - Chaque clé a une **taille maximale**, 5 à 10 fois au-dessus de sa taille réaliste la plus lourde (16 Ko pour les petites
   clés, 4 Mo pour le journal, 16 Mo pour l'historique des diètes…). Un **prospect** : 256 Ko au plus par clé.
 - **Prénom et nom** : 100 caractères au plus (l'app en écrit 60 au plus à l'inscription).

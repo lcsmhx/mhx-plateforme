@@ -1205,7 +1205,7 @@ const Store = {
 
   /* cles ecrites par la personne sans outil a elles (v51 : activite du prospect, choix des emails de suivi ;
      v52 : calc_perso, le calcul du prospect lui-meme — le calculateur garde « calc », la cle du coach) */
-  clesSansOutil: ["activite", "emails", "calc_perso"],
+  clesSansOutil: ["activite", "emails", "calc_perso", "seances_formation"],   // v90 : les séances faites des programmes de la formation
   /* Sauvegarde manuelle : toujours disponible, en plus de la base */
   exporter(){
     const out = {};
