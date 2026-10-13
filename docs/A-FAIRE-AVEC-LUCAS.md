@@ -198,7 +198,7 @@ Ensuite, demander à GitHub d'effacer ses copies.
 ## 3. Limites d'écriture dans la base (v78) (HAUTE)
 
 **Quoi** : appliquer la migration prête dans `supabase/v78-limites/`. Après elle :
-- la base n'accepte plus que les **28 clés** de l'app ;
+- la base n'accepte plus que les **29 clés** de l'app ;
 - chaque clé a une taille maximale (256 Ko par clé pour un prospect) ;
 - le prénom et le nom font 100 caractères au plus.
 
@@ -213,12 +213,12 @@ Ensuite, demander à GitHub d'effacer ses copies.
 - rien à changer dans l'app.
 
 **Les clés de l'app sont-elles toutes dans la liste ? Oui (vérifié cette nuit)** :
-- La liste de `02-migration.sql` a 28 clés, dont `journal_alimentaire` (v79).
+- La liste de `02-migration.sql` a 29 clés, dont `journal_alimentaire` (v79) et `seances_formation` (v90, « J'ai fait cette séance », 256 Ko).
 - Le choix du programme de la formation (v85) est rangé dans `prefs.prog_formation`. C'est un champ de `prefs`, donc il est couvert. La limite de `prefs` (16 Ko) est très large pour ce petit objet.
 - L'accord santé redemandé (v88) est rangé dans les informations du compte, pas dans `donnees` : il n'est pas concerné.
 - Aucune clé que l'app écrit ou lit ne manque. Les seuls noms hors liste ne sont pas des clés de `donnees` : les tables du catalogue, le stockage du téléphone (`mhx_…`), « sexe » (une ligne d'affichage).
 - Le banc vérifie aussi ce point à chaque version (`garde-cles.js`).
-- Toute nouvelle clé (par exemple « J'ai fait cette séance », prévue plus tard) devra entrer dans la liste avant d'être publiée.
+- Toute nouvelle clé devra entrer dans la liste avant d'être publiée (c'est déjà fait pour `seances_formation`).
 
 **Temps estimé** : 2 à 3 h avec Claude, en une séance, à une heure calme (peu de clients connectés).
 
@@ -392,10 +392,10 @@ Ensuite, demander à GitHub d'effacer ses copies.
 
 **f. `donnees/` est lu en direct sur `main`** (lié au point 7) : un changement dans `donnees/` arrive chez les clients sans passer par le banc. Option : figer l'adresse sur un commit relu (30 min pour Claude). Ta décision.
 
-**g. Questions qui attendent ta réponse** : les textes « ton espace » du parcours (rien n'a été changé cette nuit) ; « Supprimer mon compte » qui efface le marqueur de l'appareil (`docs/MISSION-V72.md`) ; les 10 axes du module 5 et 4 défis de la Formation restés en français en anglais (choix d'une version passée, verif66) : les veux-tu en anglais ? ; le lot 5 « J'ai fait cette séance » (pas fait cette nuit, faute de temps).
+**g. Questions qui attendent ta réponse** : les textes « ton espace » du parcours (rien n'a été changé cette nuit) ; « Supprimer mon compte » qui efface le marqueur de l'appareil (`docs/MISSION-V72.md`) ; les 10 axes du module 5 et 4 défis de la Formation restés en français en anglais (choix d'une version passée, verif66) : les veux-tu en anglais ?.
 
 ---
 
 ## Déjà fait cette nuit (rien à faire)
 
-Voir `docs/mission-nuit/RAPPORT.md` : audit de sécurité (92 constats, 50 confirmés, 3 plausibles, 39 pour information, aucun réfuté), v86 sécurité, v87 vidéos des exercices, v88 rappel de l'accord santé, v89 qualité.
+Voir `docs/mission-nuit/RAPPORT.md` : audit de sécurité (92 constats, 50 confirmés, 3 plausibles, 39 pour information, aucun réfuté), v86 sécurité, v87 vidéos des exercices, v88 rappel de l'accord santé, v89 qualité, v90 « J'ai fait cette séance ✓ ».

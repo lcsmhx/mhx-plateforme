@@ -1,7 +1,7 @@
 # Rapport — mission de nuit du 14/10/2026
 
 ## 1. En une phrase
-L'app est stable et plus sûre ce matin : 4 versions sont en ligne (v86 à v89), chacune avec le banc GitHub vert et le site vérifié ; le seul problème grave trouvé n'est pas dans l'app mais dans le dépôt public (anciennes branches avec des données de vrais clients), et c'est à toi de le régler (point 5, n° 1).
+L'app est stable et plus sûre ce matin : 5 versions sont en ligne (v86 à v90), chacune avec le banc GitHub vert et le site vérifié ; le seul problème grave trouvé n'est pas dans l'app mais dans le dépôt public (anciennes branches avec des données de vrais clients), et c'est à toi de le régler (point 5, n° 1).
 
 ## 2. Les versions en ligne
 Lien : https://lcsmhx.github.io/mhx-plateforme/
@@ -12,12 +12,13 @@ Lien : https://lcsmhx.github.io/mhx-plateforme/
 | v87 | `ac031e3` | Vidéos des programmes de la formation : « Burpees » corrigé, 11 vidéos AZEOO ajoutées. |
 | v88 | `ea0d842` | L'accord santé redemandé une fois aux comptes dont l'accord date d'une ancienne version. |
 | v89 | `899429a` | Qualité : une dizaine de petits bugs, plus de « 14 jours », 158 phrases traduites en anglais, accessibilité. |
+| v90 | `a08838d` | « J'ai fait cette séance ✓ » sur les programmes de la formation (client), « Fait le … », séances de la semaine, ligne dans la fiche du coach. |
 
 Chaque version : banc GitHub vert sur sa branche puis sur main, publication réussie, site ouvert sans erreur dans un navigateur vierge, pied de page à la bonne version.
 
 ## 3. Lots abandonnés ou incomplets
-- **Lot 5 (« J'ai fait cette séance »)** : pas fait. La mission le permettait seulement si les lots 1 à 4 étaient finis 2 h avant la limite de 8 h 30 ; ce n'était pas le cas.
-- **Lot 4** : seulement les corrections sûres. Pas faits (notés pour plus tard) : agrandir certaines zones de toucher et renforcer certains contrastes (cela change un peu l'apparence), les écrans « Pas de connexion » du coach (fiche, calculateur, atelier), le bouton « Enregistrer dans ma bibliothèque » de l'atelier (il ne fait rien : à rebrancher avec un test), le contenu long des 2 leçons de la Formation en anglais.
+- **Lot 5** : fait (v90), pour les clients seulement : le prospect garde sa vitrine Programme verrouillée, sans bouton (voir les choix).
+- **Lot 4** : seulement une partie des corrections sûres, pour ne pas multiplier les changements avant ton voyage. Restent, vérifiés et notés pour plus tard : l'avertissement « allergies » qui disparaît dans la diète préparée par le coach si le questionnaire ne se lit pas (à faire en premier), « Programme envoyé » affiché avant la réponse du serveur, l'atelier qui peut écraser un programme prêt du même nom sans demander, le bouton « Enregistrer dans ma bibliothèque » de l'atelier (il ne fait rien), les écrans « Pas de connexion » du coach (fiche, calculateur, atelier), une case qui reste cochée alors que rien n'est enregistré, agrandir certaines zones de toucher et renforcer certains contrastes (cela change un peu l'apparence), le contenu long des 2 leçons de la Formation en anglais.
 - **Lot 1** : la barrière CSP du navigateur n'a pas été ajoutée (risque d'empêcher l'app de démarrer pendant ton voyage).
 - **Lot 2** : rien d'abandonné.
 
@@ -53,8 +54,8 @@ Le détail, pas à pas : `docs/A-FAIRE-AVEC-LUCAS.md`.
 ## 6. À tester sur ton téléphone
 1. **Ton compte de test** : si son accord santé est ancien, la fenêtre « Notre politique de confidentialité a changé » s'ouvre une fois → « Plus tard » → elle ne revient pas avant 7 jours (rien ne change pour tes données).
 2. **Programmes de la formation** (compte de test → Mon programme → Voir les programmes) : une séance HIIT montre « Burpees » sans vidéo ; « Soulevé de terre jambes tendues » a une vidéo AZEOO.
-3. **Coach, deux onglets** sur l'ordinateur : « Se déconnecter » dans l'un → l'autre revient à l'écran de connexion.
-4. **Accueil du compte de test** après un bilan envoyé : la carte « Bilan de la semaine envoyé › » ouvre Mon suivi.
+3. **« J'ai fait cette séance ✓ »** (compte de test → Mon programme → Voir les programmes → une séance → le bouton) : « Noté : fait le … », puis sur la page « Fait le … » et « 1 séance faite cette semaine » ; dans ta fiche coach du compte de test, onglet Suivi : « Séances de la formation faites (30 j) : 1 ».
+4. **Coach, deux onglets** sur l'ordinateur : « Se déconnecter » dans l'un → l'autre revient à l'écran de connexion.
 5. **La Formation en anglais** (bouton EN) : les tâches, ressources et la diète sont en anglais ; plus de « 14 jours » en français.
 
 ## 7. Les choix faits seul
@@ -64,7 +65,10 @@ Le détail, pas à pas : `docs/A-FAIRE-AVEC-LUCAS.md`.
 - **Lot 2** : « Burpees » délié partout (10 lignes), pas seulement dans les HIIT. « Tractions assistées » et « Curl barre EZ » déliés aussi (variantes pas sûrement identiques). Les vidéos ajoutées viennent toutes de la chaîne AZEOO, avec un titre identique, vérifiées par deux agents. « Rowing », « Extension mollets », « Vélo elliptique ou tapis », « Fentes statiques haltères », les step-ups : laissés sans vidéo (doute).
 - **Lot 3** : la fenêtre s'adresse aux prospects et aux clients qui ont déjà un accord d'une version plus ancienne (pas à ceux qui n'en ont aucun) ; le tout premier accord est gardé (date, version, écran) ; « Plus tard » est retenu sur le téléphone et effacé à la déconnexion.
 - **Lot 4** : les 10 axes du module 5 et 4 défis de la Formation restent en français en anglais (choix d'une version passée, vérifié par un test) ; les jours abrégés (Lun, Mar…) ne sont pas traduits (un prénom « Sam » deviendrait « Sat »).
-- **Numéros de tests** : verif88 (lot 1), verif90 (lot 3), verif91 (lot 4) ; verif89 est gardé pour le lot 5.
+- **Lot 5** : le bouton est pour les clients (le prospect garde sa vitrine Programme verrouillée, qui ne lit ni n'écrit rien d'autre) ; une séance n'est notée qu'une fois par jour ; rien n'entre dans le journal du programme du coach (son compteur et sa régularité ne bougent pas) ; un toucher compte quand même comme une activité du client (« Inactif depuis N j » repart de zéro, comme pour toute saisie) ; la clé `seances_formation` est ajoutée à la liste de `supabase/v78-limites/` (256 Ko, rien d'appliqué ; les tests SQL locaux n'ont pas pu être relancés, pas de Postgres sur le Mac).
+- **Pas de version en plus après le lot 5**, même s'il restait du temps : les lots 1 à 6 sont faits, et chaque version de plus est un risque de plus pendant ton absence.
+- **Heure** : mon estimation de l'heure a dérivé pendant la nuit (j'ai cru le lot 5 hors délai, puis l'horloge du Mac a montré qu'il restait le temps) : le lot 5 a donc été fait après une première version de ce rapport.
+- **Numéros de tests** : verif88 (lot 1), verif89 (lot 5), verif90 (lot 3), verif91 (lot 4).
 
 ---
 
