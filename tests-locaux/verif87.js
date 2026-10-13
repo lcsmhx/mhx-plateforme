@@ -436,7 +436,7 @@ const nbAttendu = sc => sc.options ? sc.options.map(o => o.exercices.length) : (
     /* v87 (mission de nuit du 14/10, lot 2) : « Burpees » du PDF (classique, avec saut) n'est plus « Burpees contrôlés » (sans saut) ; « Tractions
        assistées » et « Curl barre EZ » (avec « Curl biceps barre EZ ») ne sont plus reliés : nom du PDF, sans id ni vidéo */
     const delies = n => relies.filter(x => x.nom === n);
-    ok("E5 : « Burpees » (10 lignes, HIIT, circuits, full body), « Tractions assistées » (4) et « Curl barre EZ » (4) : nom du PDF, sans id ni vidéo ; plus aucun « Burpees contrôlés » ni « Tractions » ni « Curl barre » dans les programmes",
+    ok("E6 : « Burpees » (10 lignes, HIIT, circuits, full body), « Tractions assistées » (4) et « Curl barre EZ » (4) : nom du PDF, sans id ni vidéo ; plus aucun « Burpees contrôlés » ni « Tractions » ni « Curl barre » dans les programmes",
       delies("Burpees").length === 10 && delies("Tractions assistées").length === 4 && delies("Curl barre EZ").length === 4 && ["Burpees", "Tractions assistées", "Curl barre EZ"].every(n => delies(n).every(x => !x.ex && !x.yt))
         && !relies.some(x => ["burpees-controles", "tractions", "curl-barre"].includes(x.ex)), JSON.stringify(["Burpees", "Tractions assistées", "Curl barre EZ"].map(n => [n, delies(n).length])));
     await ouvrirPf(page, "#/programme/seance/salle-homme/0/0", "#pf-seance");

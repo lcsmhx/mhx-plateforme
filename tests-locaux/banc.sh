@@ -236,8 +236,8 @@ HORS_BANC="verif44 verif45 verif46 verif47 verif49"
 # v85 (bloc 4 : les programmes de la formation, « Speed Formation » devient « Formation », le programme n'est plus « Bientôt » dans
 #   le parcours) : verif87 44 (nouvelle suite, partie 6 : attribution objectif × sexe, choix, phase du moment, chaque séance des 3
 #   programmes, supersets, dropsets, HIIT, options, cardio, circuit, vidéos, programme du coach inchangé, accueil, Bientôt, Formation,
-#   anglais, 360 / 390 / 430 px, et W : WebKit ; VERIF87_WEBKIT=0 en local : 42).
-# v87 (mission de nuit du 14/10, lot 2 : vidéos des exercices des programmes) : verif87 44 → 45 (E5 : « Burpees », « Tractions
+#   anglais, 360 / 390 / 430 px, et W : WebKit ; VERIF87_WEBKIT=0 en local : 42 ; v87 : 43).
+# v87 (mission de nuit du 14/10, lot 2 : vidéos des exercices des programmes) : verif87 44 → 45 (E6 : « Burpees », « Tractions
 #   assistées », « Curl barre EZ » déliés ; E1 : les 11 noms à vidéo AZEOO, identifiant exact ; D1 : « Curl barre EZ ») ; verif56 : la
 #   séance 1 montre 6 vidéos au lieu de 4 (même nombre de vérifications).
 attendu() {
