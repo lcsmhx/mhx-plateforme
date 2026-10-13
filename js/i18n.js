@@ -882,6 +882,7 @@ I18N.en = {
 "Les photos ne sont pas encore activées.": "Photos are not enabled yet.", "Envoi refusé : reconnecte-toi puis réessaie.": "Upload refused: sign in again and retry.",
 "Photo trop lourde.": "Photo too large.", "Non enregistré : tes données n'ont pas pu être chargées. Recharge la page.": "Not saved: your data couldn't be loaded. Reload the page.", "Cette page n'a pas pu s'afficher : une de tes données est illisible. Les autres pages fonctionnent ; préviens ton coach.": "This page couldn't be displayed: some of your data can't be read. The other pages work; let your coach know.", "Le retrait n'a pas abouti, réessaie.": "The removal failed, please try again.", "Tes photos n'ont pas pu être chargées : recharge la page pour en ajouter.": "Your photos couldn't be loaded: reload the page to add some.", "Cette image ne peut pas être lue : choisis une photo JPEG ou PNG.": "This image can't be read: choose a JPEG or PNG photo.", "L'envoi n'a pas abouti, réessaie.": "The upload failed, please try again.", "indisponible": "unavailable",
 /* parcours du prospect (les textes de la Decouverte sont dans DECOUVERTE.en) */
+"Tes réponses n'ont pas pu être enregistrées : vérifie ta connexion, puis touche à nouveau le bouton.": "Your answers couldn't be saved: check your connection, then tap the button again.",   // v86 (lot 1)
 "Jour {n}": "Day {n}", "Chargement…": "Loading…",
 "Afficher": "Show", "Afficher le mot de passe": "Show the password",
 "Ton questionnaire": "Your questionnaire",

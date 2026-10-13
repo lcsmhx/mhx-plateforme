@@ -33,7 +33,9 @@ const outilBilan = {
   },
 
   charges(J, debut){
-    const par = {};
+    /* v86 (lot 1) : un objet sans prototype — un nom d'exercice écrit par le client (« constructor », « __proto__ »…) ne fait
+       plus planter la fiche ni « Préparer le call » */
+    const par = Object.create(null);
     (J.seances || []).filter(s => s.date >= debut).sort((a, b) => a.date < b.date ? -1 : 1).forEach(s => (s.exos || []).forEach(e => {
       const k = Normaliser.aplatir(e.nom || ""); if (!k) return;
       const kg = Math.max(0, ...(e.series || []).map(x => num(x.c)));

@@ -202,6 +202,11 @@ const ecr = (db, outil) => db.ecritures.filter(e => e.outil === outil && !e.refu
     await page.fill("#nc-texte", "Note qui ne passera pas."); await attendre(page, 1800);
     ok("refus 403 : les notes affichent « la base refuse » et gardent le texte", (await page.textContent("#nc-etat")).includes("la base refuse") && (await page.inputValue("#nc-texte")) === "Note qui ne passera pas.");
     await aller(page, "#/bilan", 1500);
+    /* v86 (lot 1 de la mission de nuit) : en quittant la fiche, le nouvel essai des notes échoue aussi (403) : le message ne peut plus
+       s'afficher dans la fiche fermée — une fenêtre le dit, avec le texte à copier ; on la ferme avant la suite */
+    const M38 = await page.evaluate(() => { const m = document.querySelector(".fond .modale.texte-a-copier"); return m ? { titre: (m.querySelector("h2") || {}).textContent, texte: (m.querySelector("textarea") || {}).value } : null; });
+    ok("refus 403 : en quittant la fiche, l'envoi des notes échoue encore : fenêtre « Notes privées non enregistrées » avec le texte à copier", !!M38 && M38.titre === "Notes privées non enregistrées" && M38.texte === "Note qui ne passera pas.", JSON.stringify(M38));
+    if (M38) { await page.click('.fond .modale.texte-a-copier [data-ui-b="0"]'); await attendre(page, 300); }
     await page.fill(`[data-fb-semaine="${lundiPrec}"] textarea`, "Feedback refusé.");
     await page.click(`[data-fb-semaine="${lundiPrec}"] [data-fb-enregistrer]`); await attendre(page, 900);
     ok("refus 403 : le feedback affiche « la base refuse », texte gardé", (await page.textContent(`[data-fb-semaine="${lundiPrec}"] [data-fb-msg]`)).includes("la base refuse") && (await page.inputValue(`[data-fb-semaine="${lundiPrec}"] textarea`)) === "Feedback refusé.");

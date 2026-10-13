@@ -12,6 +12,12 @@
       Mission blocs 1-2 (13/10/2026) : + les textes d'exemple EXACTS du champ email du parcours prospect (ADRESSES_EXEMPLE,
       « ton@email.com » de docs/maj-blocs-1-2/TEXTES.md, et sa version anglaise) : un texte d'exemple, pas l'adresse de
       quelqu'un ; toute autre adresse de ces domaines reste refusée.
+   3. v86 (mission de nuit du 14/10/2026, lot 1) : aucun secret dans les fichiers suivis (images exceptées) : clé « service_role »
+      ou tout jeton JWT dont le rôle n'est pas « anon » (le rôle est lu dans le jeton, jamais recopié), clé secrète Supabase
+      (sb_secret_…), clé Brevo (xkeysib-…, xsmtpsib-…), jeton GitHub (ghp_…, github_pat_…), clé privée (BEGIN … PRIVATE KEY), adresse
+      PostgreSQL avec mot de passe, clé Stripe live, clé Google (AIza…). Le journal ne recopie jamais le secret : le fichier, la
+      ligne et le genre seulement. (La clé secrète de Turnstile : verif83.) Les images (captures) ne peuvent pas être lues ici :
+      elles sont relues à la main avant chaque commit (comptes fictifs seulement).
    Le 12/10, avant la tâche 1 : 2 fichiers hors liste dans donnees/ et 1 adresse hors marque (docs/archive/) → code 1.
    Code de sortie 1 au moindre problème. Usage : node garde-depot.js ../index.html */
 const fs = require("fs"), path = require("path");
@@ -72,8 +78,33 @@ for (const f of suivis) {
   });
 }
 
-console.log(suivis.length + " fichiers suivis, " + dansDonnees.length + " dans donnees/ (" + LISTE_BLANCHE.length + " permis), " + lus + " lus, " + adresses + " adresses email relevées");
+/* 3. secrets (v86) */
+const SECRETS = [
+  ["jeton JWT", /eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/g],
+  ["clé secrète Supabase", /sb_secret_[A-Za-z0-9_-]{10,}/g],
+  ["clé Brevo", /x(?:keysib|smtpsib)-[A-Za-z0-9-]{20,}/g],
+  ["jeton GitHub", /\b(?:gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,})/g],
+  ["clé privée", /-----BEGIN (?:RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----/g],
+  ["adresse PostgreSQL avec mot de passe", /postgres(?:ql)?:\/\/[^:\s\/]+:[^@\s]{6,}@/g],
+  ["clé Stripe live", /\b[sr]k_live_[A-Za-z0-9]{10,}/g],
+  ["clé Google", /AIza[0-9A-Za-z_-]{35}/g]
+];
+const roleJwt = (j) => { try { return JSON.parse(Buffer.from(j.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf8")).role || "?"; } catch (e) { return "illisible"; } };
+let secretsLus = 0;
+for (const f of suivis) {
+  if (/\.(woff2?|png|jpe?g|gif|ico|pdf|zip|gz)$/i.test(f)) continue;
+  let t; try { t = fs.readFileSync(path.join(RACINE, f), "utf8"); } catch (e) { continue; }
+  secretsLus++;
+  t.split("\n").forEach((ligne, i) => {
+    for (const [genre, re] of SECRETS) for (const m of ligne.matchAll(re)) {
+      if (genre === "jeton JWT" && roleJwt(m[0]) === "anon") continue;   // la clé publique (anon) de l'app : normale
+      problemes.push(f + ":" + (i + 1) + " : " + genre + (genre === "jeton JWT" ? " (rôle « " + roleJwt(m[0]) + " »)" : "") + " — à retirer du dépôt public (et à changer, il a pu être lu)");
+    }
+  });
+}
+
+console.log(suivis.length + " fichiers suivis, " + dansDonnees.length + " dans donnees/ (" + LISTE_BLANCHE.length + " permis), " + lus + " lus, " + adresses + " adresses email relevées, " + secretsLus + " fichiers relus pour les secrets");
 const uniques = Array.from(new Set(problemes));
 uniques.forEach(x => console.log("  PROBLÈME " + x));
-console.log(uniques.length ? uniques.length + " problème(s)" : "aucun problème : donnees/ dans la liste blanche, aucune adresse email hors exemple ni hors marque");
+console.log(uniques.length ? uniques.length + " problème(s)" : "aucun problème : donnees/ dans la liste blanche, aucune adresse email hors exemple ni hors marque, aucun secret");
 if (uniques.length) process.exitCode = 1;
