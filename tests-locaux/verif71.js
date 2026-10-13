@@ -1,6 +1,7 @@
 /* verif71 — v64 (brief V2, lot 5, section B, et scénario 3 de la section 8) : l'ACCORD SANTÉ AU PREMIER USAGE, de bout en
    bout dans un vrai navigateur, avec des prospects fictifs (« pk@exemple.fr »), sur téléphone (390 px et 320 px), en thème
-   sombre et en thème clair, en français et en anglais. Supabase est simulé AVEC les métadonnées du compte : PUT
+   sombre et avec un ancien choix « clair » rangé sur l'appareil (ignoré, v80 : tout en sombre), en français et en anglais.
+   Supabase est simulé AVEC les métadonnées du compte : PUT
    /auth/v1/user { data } FUSIONNE data dans les métadonnées (une valeur null supprime la clé, comme GoTrue) et rend
    { id, email, user_metadata } ; GET /auth/v1/user et les jetons (connexion par mot de passe, renouvellement) rendent les
    métadonnées de la base ; le PUT et le GET peuvent être mis en panne (4xx, 5xx, coupure réseau, réponse vide ou sans
@@ -26,7 +27,7 @@
       diète déjà en base (ancien client repassé prospect) n'est pas affichée et reste intacte ; « J'accepte » dans la diète
       (session rangée « Rester connecté » décoché) : UN PUT exact (sante_ecran formation), diète redessinée active, saisie
       enregistrée ; page rechargée : plus de carte ;
-   D. anglais, thème clair : textes EN exacts (Ma progression, calculateur, diète), « Not now », échec (400) ;
+   D. anglais, ancien choix « clair » ignoré (v80) : textes EN exacts (Ma progression, calculateur, diète), « Not now », échec (400) ;
    E. « J'accepte » sur le calculateur (double tap) : le bouton se désactive pendant l'envoi, UN SEUL PUT exact (3 clés :
       consentement_sante = l'instant, ISO ; sante_version = la version servie ; sante_ecran = calculateur ; jamais null), fusionné en base (les
       autres métadonnées gardées), session mise à jour (mémoire et session rangée, jetons intacts), page repartie sans la
@@ -56,8 +57,9 @@
       coach dans la fiche d'un prospect sans accord : aucune carte (calculateur, Ma progression, diète), aucun GET ni PUT
       /auth/v1/user, Sante.aDemander() faux, garde du stockage ouverte, écritures comme avant (calc_perso, mens, diète ; calc
       du coach, dans son compte et dans la fiche) ; compte de test : données intactes ;
-   L. affichage : 390 px et 320 px, thèmes sombre et clair : rien ne déborde (carte, diète, message), texte lisible
-      (contraste), « J'accepte » et « Pas maintenant » d'au moins 44 px ;
+   L. affichage : 390 px et 320 px, thème sombre et ancien choix « clair » ignoré (v80 : thème sombre, aucun data-theme,
+      mêmes seuils) : rien ne déborde (carte, diète, message), texte lisible (contraste), « J'accepte » et « Pas
+      maintenant » d'au moins 44 px ;
    M. liens absents (« à compléter ») ou invalides (javascript:, ftp:) : le lien « En savoir plus » devient un texte simple ;
    Corrections après la relecture du code (v64, cdc9e68) :
    N. relecture lente : le GET /auth/v1/user de l'ouverture, lu SANS l'accord, arrive après « J'accepte » → l'accord reste
@@ -73,7 +75,8 @@
    S. après « J'accepte » : focus sur le premier champ actif (calculateur) ou sur #fo-sem (diète) ; la page vue
       « calculateur » comptée une seule fois dans la clé activite (comme une ouverture simple) ;
    T. style : titre h4 de la carte dans la diète en 15 px sans capitales ; lien « En savoir plus » souligné, doré : --accent
-      en thème sombre, #7f5f19 en thème clair (00df998), contraste d'au moins 4,5:1 ;
+      du thème sombre, #d4a844, y compris avec un ancien choix « clair » rangé (ignoré, v80 : le #7f5f19 du thème clair
+      n'existe plus), contraste d'au moins 4,5:1 ;
    U. copie retenue ET page ouverte pendant un « J'accepte » lent (5 s) : quand le PUT aboutit, deux pages repartent
       (calculateur, Ma progression) ; la copie part AVANT toute lecture de mens par Ma progression (Sante.apres attend une
       reprise déjà en cours, 00df998), 2 mesures affichées, une nouvelle mesure garde les 3 ;
@@ -370,7 +373,8 @@ async function repondre(r, who, db, appareil){
 }
 
 /* ---------- un navigateur (contexte) pour une personne, horloge contrôlée ----------
-   opts : viewport (MOBILE par défaut : 390 px), langue ("en"), theme ("light" ; sombre par défaut), rangement ("session" :
+   opts : viewport (MOBILE par défaut : 390 px), langue ("en"), theme ("light" : un ancien choix « clair » rangé dans
+   mhx_theme, que la v80 ignore — tout en sombre ; rien de rangé par défaut), rangement ("session" :
    « Rester connecté » décoché, la session dans sessionStorage) */
 const ERREURS = [];   // erreurs de console et erreurs JS de toute la suite (bloc Z)
 async function contexte(b, who, db, opts){
@@ -560,10 +564,11 @@ async function capturer(page, nom, sel){
    Contraste de chaque texte de la carte avec son fond réel (fonds semi-transparents composés jusqu'au corps de la page,
    comme verif66). Seuil 4,5:1 ; 3:1 pour les seules exceptions NOMMÉES (comme verif66 et verif69), et seulement quand le
    texte a exactement la couleur du jeton de l'app nommé (et dans le thème nommé) : le texte secondaire de toute l'app
-   (--ink-3 : 3,99:1 en sombre, 4,27:1 en clair) du lien discret « Pas maintenant » (button.lien-discret, le même que
-   « Plus tard » des invitations) et de la note ; en thème clair seulement, le bouton doré de l'app (blanc sur --accent :
-   4,29:1, la même exception que le bouton des invitations dans verif66). [sélecteur, jeton, thème] */
-const CONTRASTE = 4.5, CONTRASTE_EXC = 3, EXC = [[".sante-carte .lien-discret", "--ink-3"], [".sante-carte .note", "--ink-3"], [".sante-carte .btn", "--accent-ink", "light"]];
+   (--ink-3) du lien discret « Pas maintenant » (button.lien-discret, le même que « Plus tard » des invitations) et de la
+   note. v80 (tout en sombre) : l'exception « en thème clair seulement » du bouton doré (blanc sur --accent, 4,29:1) est
+   retirée — sans objet, l'app n'a plus de thème clair ; un ancien choix « clair » rangé sur l'appareil est ignoré et
+   jugé avec les seules exceptions du sombre. [sélecteur, jeton, thème] */
+const CONTRASTE = 4.5, CONTRASTE_EXC = 3, EXC = [[".sante-carte .lien-discret", "--ink-3"], [".sante-carte .note", "--ink-3"]];
 const affichage = page => page.evaluate(EXC => {
   const c = document.getElementById("sante-carte"); if (!c) return null;
   const jeton = v => { const s = document.createElement("span"); s.style.color = "var(" + v + ")"; document.body.appendChild(s); const x = getComputedStyle(s).color; s.remove(); return x; };
@@ -719,7 +724,7 @@ const detA = A => JSON.stringify(A ? { page: A.page, carte: A.carte, dehors: A.d
     }
   });
 
-  /* =================== D. anglais, thème clair =================== */
+  /* =================== D. anglais, ancien choix « clair » rangé sur l'appareil, ignoré (v80) =================== */
   await bloc("D. anglais", async () => {
     const k = 5;
     const db = base({ comptes: [compte(k, { donnees: [["formation", FO()]] })] });
@@ -728,7 +733,7 @@ const detA = A => JSON.stringify(A ? { page: A.page, carte: A.carte, dehors: A.d
     const C = await lireCarte(page);
     await page.click("#sante-non"); await attendre(page, 500);
     const R = await lireCarte(page);
-    ok("anglais, thème clair, Ma progression : la carte, textes EN EXACTS (« Your consent, just once », « To calculate your calories… at any time. », « I agree that my health data… tracking. », « I agree », « Not now », « Learn more: Privacy Policy »), sans espace insécable ; « Not now » : « No problem. Without your consent… anytime. » à sa place, focus dessus",
+    ok("anglais, ancien choix « clair » ignoré (v80), Ma progression : la carte, textes EN EXACTS (« Your consent, just once », « To calculate your calories… at any time. », « I agree that my health data… tracking. », « I agree », « Not now », « Learn more: Privacy Policy »), sans espace insécable ; « Not now » : « No problem. Without your consent… anytime. » à sa place, focus dessus",
       carteOk(C, "mensurations", "en") && verifRefus(R, "mensurations", "en"), det(C) + " " + JSON.stringify([C && C.txt, R && R.txt, R && R.focus]));
     await aller(page, "#/calculateur", 1500);
     const C2 = await lireCarte(page);
@@ -1137,7 +1142,8 @@ const detA = A => JSON.stringify(A ? { page: A.page, carte: A.carte, dehors: A.d
     }
   });
 
-  /* =================== L. affichage : 390 px et 320 px, sombre et clair =================== */
+  /* =================== L. affichage : 390 px et 320 px, sombre et ancien choix « clair » ignoré (v80) ===================
+     v80, tout en sombre : avec mhx_theme = "light" rangé, <html> n'a aucun data-theme (thème sombre), mêmes seuils */
   await bloc("L. affichage", async () => {
     const cas = [];
     const mesurer = async (nom, k, opts, h, diete, refus) => {
@@ -1146,7 +1152,7 @@ const detA = A => JSON.stringify(A ? { page: A.page, carte: A.carte, dehors: A.d
       await page.goto(URL0 + h); await pret(page, "#sante-carte"); await attendre(page, 1200);
       if (refus) { await page.click("#sante-non"); await attendre(page, 400); }
       const A = await affichage(page), C = await lireCarte(page);
-      cas.push({ nom, A, ok: sansDebord(A) && lisible(A, refus ? 1 : 6) && boutons44(A, refus) && A.theme === (opts.theme === "light" ? "light" : null) && (refus ? !!C && /sante-refus/.test(C.sig) : !!C && !!C.txt.oui) });
+      cas.push({ nom, A, ok: sansDebord(A) && lisible(A, refus ? 1 : 6) && boutons44(A, refus) && A.theme === null && (refus ? !!C && /sante-refus/.test(C.sig) : !!C && !!C.txt.oui) });
       await capturer(page, nom.replace(/[^a-z0-9]+/gi, "-") + ".png", "#sante-carte");
       const cx = page.context(), i = ouverts.indexOf(cx); if (i > -1) ouverts.splice(i, 1); await cx.close().catch(() => {});
     };
@@ -1159,16 +1165,16 @@ const detA = A => JSON.stringify(A ? { page: A.page, carte: A.carte, dehors: A.d
     await mesurer("320 sombre diete", 25, { viewport: ETROIT }, "#/formation", true);
     await mesurer("320 sombre refus diete", 26, { viewport: ETROIT }, "#/formation", true, true);
     const n320 = cas.length;
-    await mesurer("390 clair calculateur", 27, { theme: "light" }, "#/calculateur");
-    await mesurer("390 clair diete", 28, { theme: "light" }, "#/formation", true);
-    await mesurer("320 clair mensurations", 29, { viewport: ETROIT, theme: "light" }, "#/mensurations");
-    await mesurer("320 anglais clair diete", 30, { viewport: ETROIT, theme: "light", langue: "en" }, "#/formation", true);
+    await mesurer("390 clair ignore calculateur", 27, { theme: "light" }, "#/calculateur");
+    await mesurer("390 clair ignore diete", 28, { theme: "light" }, "#/formation", true);
+    await mesurer("320 clair ignore mensurations", 29, { viewport: ETROIT, theme: "light" }, "#/mensurations");
+    await mesurer("320 anglais clair ignore diete", 30, { viewport: ETROIT, theme: "light", langue: "en" }, "#/formation", true);
     const d = l => l.filter(x => !x.ok).map(x => x.nom + " " + detA(x.A)).join(" | ");
     ok("390 px, thème sombre (calculateur, diète, message « Pas maintenant ») : rien ne déborde (page, carte, textes), tout le texte de la carte lisible (contraste 4,5:1 ; 3:1 pour « Pas maintenant » et la note au gris --ink-3 de l'app), « J'accepte » et « Pas maintenant » d'au moins 44 px",
       n390 === 3 && cas.slice(0, n390).every(x => x.ok), d(cas.slice(0, n390)));
     ok("320 px, thème sombre (calculateur, Ma progression, diète, message de la diète) : rien ne déborde, texte lisible, boutons d'au moins 44 px",
       n320 - n390 === 4 && cas.slice(n390, n320).every(x => x.ok), d(cas.slice(n390, n320)));
-    ok("thème clair (390 px : calculateur, diète ; 320 px : Ma progression, diète en anglais) : rien ne déborde, texte lisible (4,5:1 ; 3:1 pour le gris --ink-3 et, en clair seulement, le bouton doré de l'app : blanc sur --accent, 4,29:1, comme verif66), boutons d'au moins 44 px",
+    ok("ancien choix « clair » rangé sur l'appareil, ignoré (v80) (390 px : calculateur, diète ; 320 px : Ma progression, diète en anglais) : thème sombre (aucun data-theme), rien ne déborde, texte lisible (mêmes seuils qu'en sombre : 4,5:1 ; 3:1 pour le seul gris --ink-3), boutons d'au moins 44 px",
       cas.length - n320 === 4 && cas.slice(n320).every(x => x.ok), d(cas.slice(n320)));
   });
 
@@ -1434,17 +1440,17 @@ const detA = A => JSON.stringify(A ? { page: A.page, carte: A.carte, dehors: A.d
     await mesurer(48, "", "#/formation"); await mesurer(49, "light", "#/formation");
     await mesurer(50, "", "#/calculateur"); await mesurer(51, "light", "#/calculateur");
     const bon = x => !!x && typeof x === "object";
-    ok("diète (module 02), thèmes sombre et clair : le titre h4 de la carte en 15 px, sans capitales ni espacement de .fo-outil h4 (text-transform none, letter-spacing normal)",
-      r.length === 4 && bon(r[0]) && bon(r[1]) && r[0].theme === null && r[1].theme === "light" && [r[0], r[1]].every(x => x.ecran === "formation" && x.h === "h4" && x.taille === "15px" && x.casse === "none" && x.espacement === "normal"),
+    ok("diète (module 02), thème sombre et ancien choix « clair » rangé sur l'appareil, ignoré (v80 : thème sombre, aucun data-theme) : le titre h4 de la carte en 15 px, sans capitales ni espacement de .fo-outil h4 (text-transform none, letter-spacing normal)",
+      r.length === 4 && bon(r[0]) && bon(r[1]) && r[0].theme === null && r[1].theme === null && [r[0], r[1]].every(x => x.ecran === "formation" && x.h === "h4" && x.taille === "15px" && x.casse === "none" && x.espacement === "normal"),
       JSON.stringify(r.slice(0, 2)));
-    /* le doré du lien : --accent en thème sombre ; en thème CLAIR #7f5f19, plus foncé que l'ancien --accent (contrat, 00df998 : #9a7420
-       n'y donnait que 4,29:1 sur la carte et 3,97:1 dans la diète) ; v76 : c'est désormais le --accent du thème clair (règle propre
-       au lien retirée) ; lisible (4,5:1) partout, souligné partout */
-    const DORE_CLAIR = "rgb(127, 95, 25)";
-    ok("lien « En savoir plus : politique de confidentialité » doré et souligné, diète et calculateur : thème sombre → la couleur --accent du thème ; thème CLAIR → #7f5f19 (v76 : le --accent du thème clair) ; contraste du lien sur son fond d'au moins 4,5:1 dans les 4 cas",
-      r.length === 4 && r.every(bon) && egal(r.map(x => [x.ecran, x.theme]), [["formation", null], ["formation", "light"], ["calculateur", null], ["calculateur", "light"]])
+    /* le doré du lien : --accent du thème sombre. Avant la v80, en thème CLAIR #7f5f19 (00df998, puis --accent du thème
+       clair en v76). v80, tout en sombre : un ancien choix « clair » rangé sur l'appareil est ignoré → le même doré que le
+       thème sombre, #d4a844, et le même --accent (#7f5f19 n'existe plus) ; lisible (4,5:1) partout, souligné partout */
+    const DORE_SOMBRE = "rgb(212, 168, 68)";
+    ok("lien « En savoir plus : politique de confidentialité » doré et souligné, diète et calculateur : thème sombre → la couleur --accent du thème ; ancien choix « clair » rangé sur l'appareil, ignoré (v80) → le même doré que le thème sombre, #d4a844 (le #7f5f19 du thème clair n'existe plus) ; contraste du lien sur son fond d'au moins 4,5:1 dans les 4 cas",
+      r.length === 4 && r.every(bon) && egal(r.map(x => [x.ecran, x.theme]), [["formation", null], ["formation", null], ["calculateur", null], ["calculateur", null]])
       && r.every(x => !!x.lien && x.souligne && x.nLiens === 1 && typeof x.ratio === "number" && x.ratio >= CONTRASTE)
-      && [r[0], r[2]].every(x => x.lien === x.accent) && [r[1], r[3]].every(x => x.lien === DORE_CLAIR && x.lien === x.accent) && r[0].accent !== r[1].accent,
+      && [r[0], r[2]].every(x => x.lien === x.accent) && [r[1], r[3]].every(x => x.lien === DORE_SOMBRE && x.lien === x.accent) && r[0].accent === r[1].accent && r[2].accent === r[3].accent,
       JSON.stringify(r.map(x => bon(x) ? [x.ecran, x.theme, x.lien, x.accent, x.souligne, x.ratio, x.nLiens] : x)));
   });
 

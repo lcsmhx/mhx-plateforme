@@ -1,14 +1,16 @@
 /* verif67 — v61 (brief V2, lot 2 : sections D, E, F, G et décision 4) : le plan d'action offert de 15 min, vérifié de bout
-   en bout dans un vrai navigateur, pour un prospect, en français et en anglais, sur téléphone (390 px), en thème sombre et
-   en thème clair. Un faux Calendly (hôte calendly.com, comme verif40) sert une page blanche à l'onglet que le bouton ouvre
-   et note l'adresse reçue : aucun appel ne part vers le vrai Calendly.
+   en bout dans un vrai navigateur, pour un prospect, en français et en anglais, sur téléphone (390 px), en thème sombre,
+   aussi avec un ancien choix « clair » rangé sur l'appareil (mhx_theme = "light"), ignoré depuis la v80 (app tout en
+   sombre : jamais de data-theme, doré du thème sombre). Un faux Calendly (hôte calendly.com, comme verif40) sert une page
+   blanche à l'onglet que le bouton ouvre et note l'adresse reçue : aucun appel ne part vers le vrai Calendly.
    A. page « Ton plan d'action » (juste après les 3 questions), français, 390 px, thème sombre : ordre exact (« Offert »,
       titre, projection, texte, « Ton plan est à toi… », petit texte gris, bouton, « 15 min · par téléphone · offert »,
       « Plus tard… »), textes EXACTS, typographie française (espaces insécables), « Offert » en capitales dorées, UN seul
       bouton doré (.btn) et « Plus tard » en lien gris souligné sans fond ni bordure (pas un .btn), zones de tap ≥ 44 px,
       lien Calendly exact (apres_questionnaire, pré-rempli), puis le clic : l'onglet ouvert reçoit ce lien, le clic est
       compté (challenge.cta.clics, source apres_questionnaire), intake.bilan_propose « reserver » écrit une fois, l'accueil ;
-   B. la même page en anglais, 390 px, thème clair (textes exacts, aucun texte français, doré du thème clair) ; « Plus
+   B. la même page en anglais, 390 px, ancien choix « clair » ignoré, v80 (pas de data-theme ; textes exacts, aucun texte
+      français, doré du thème sombre) ; « Plus
       tard » (deux taps, page défilée jusqu'en bas) : bilan_propose « plus_tard » écrit UNE fois, aucun clic compté,
       l'accueil en haut de page ; page rouverte par #/decouverte/bilan : rien de réécrit ;
    C. accueil du prospect, français, 390 px, thème sombre : son étape et la Speed Formation (titre, texte, seul lien
@@ -16,7 +18,8 @@
       (accueil_haut en contour + « 15 min avec Lucas · offert », accueil_accompagnement), liens exacts ; carte « Ce que
       l'accompagnement ajoute » (4 lignes exactes), note 15 min, case « J'ai déjà choisi mon créneau » ; les 2 clics
       (onglet ouvert, clic compté) ; la case (challenge.reserve, pastille « Bilan réservé le … », clics gardés) ;
-   D. accueil en anglais, 390 px, thème clair (4 descriptions anglaises comprises) ; « Edit my answers » (reponses_haut) ;
+   D. accueil en anglais, 390 px, ancien choix « clair » ignoré, v80 (pas de data-theme ; 4 descriptions anglaises
+      comprises) ; « Edit my answers » (reponses_haut) ;
    E. « Modifier mes réponses » en français : bouton du haut reponses_haut et sa ligne, seul lien Calendly de la page ;
       clic (onglet ouvert, clic compté, rien d'autre d'écrit) ;
    F. les 4 pages verrouillées de la vitrine (programme, journal, nutrition, suivi), français, 390 px, thème sombre :
@@ -28,7 +31,8 @@
    G. les pages verrouillées cachées (#/bilan, #/complements) : texte inchangé, même bouton (doré, nouvel onglet,
       noopener ; sa hauteur, 42 px comme en v60, n'est pas exigée : voir le bloc) et même ligne, verrou_bilan /
       verrou_complements, clics comptés ;
-   H. les 4 pages verrouillées en anglais, 390 px, thème clair (data-theme « light », bouton du doré clair), mêmes
+   H. les 4 pages verrouillées en anglais, 390 px, ancien choix « clair » ignoré, v80 (pas de data-theme, bouton du doré
+      du thème sombre), mêmes
       vérifications du bouton que F ; aucune clé « donnees » lue ; un clic compté (verrou_journal) ;
    I. F récapitulé : depuis CHAQUE écran (les 10 codes), l'onglet ouvert a reçu la nouvelle adresse, le pré-remplissage,
       utm_source=app, utm_medium=bouton, le bon utm_content ; les écrans du prospect relevés, liste EXACTE : 11 en
@@ -258,8 +262,8 @@ async function repondre(r, who, db){
 }
 
 /* ---------- un navigateur (contexte) pour une personne ----------
-   opts : viewport (MOBILE par défaut : 390 px), langue ("en"), theme ("light" : thème clair, rangé sur l'appareil comme le
-   fait le bouton de thème ; sombre par défaut) */
+   opts : viewport (MOBILE par défaut : 390 px), langue ("en"), theme ("light" : ancien choix « clair », rangé sur l'appareil
+   comme le faisait le bouton de thème ; v80 : ce bouton n'existe plus et ce choix est ignoré, l'app reste en sombre) */
 async function contexte(b, who, db, opts){
   opts = opts || {};
   const c = await b.newContext({ viewport: opts.viewport || MOBILE });
@@ -326,7 +330,7 @@ async function ouvrirCalendly(c, page, sel){
 }
 /* la couleur calculée d'une variable du thème (--accent, --ink-3) */
 const couleur = (page, v) => page.evaluate(v => { const s = document.createElement("span"); s.style.color = "var(" + v + ")"; document.body.appendChild(s); const c = getComputedStyle(s).color; s.remove(); return c; }, v);
-const OR_SOMBRE = "rgb(212, 168, 68)", OR_CLAIR = "rgb(127, 95, 25)";   // --accent des deux thèmes (css/jetons.css ; v76 : #7f5f19 en clair)
+const OR_SOMBRE = "rgb(212, 168, 68)";   // --accent (css/jetons.css) ; v80 : tout en sombre, l'ancien doré clair #7f5f19 (rgb(127, 95, 25)) n'existe plus
 const TRANSPARENT = "rgba(0, 0, 0, 0)";
 /* ce qui ne doit jamais s'afficher : un prix, un « undefined » */
 const PRIX = /€|\$ ?\d|\d ?\$|\bprix\b|\bprice\b|\btarifs?\b|\beuros?\b|\bEUR\b/i, BRUT = /undefined|\[object|\bNaN\b|\bnull\b/;
@@ -556,18 +560,18 @@ const verrouVu = (page, id) => page.evaluate(id => {
     ok("… puis l'accueil du prospect (plus la page « Ton plan d'action »)", !!(await page.$("#dc-accomp")) && !(await page.$("#dc-bilan")), await texte(page, "#vue"));
   });
 
-  /* =================== B. la même page en anglais, 390 px, thème clair ; « Plus tard » =================== */
+  /* =================== B. la même page en anglais, 390 px, ancien choix « clair » ignoré (v80) ; « Plus tard » =================== */
   await bloc("B. plan d'action en anglais, « Plus tard »", async () => {
     const k = 2, ID = PID(k), db = base({ comptes: [compte(k, [["intake", AVEC_CHOIX(k)]])] });
     const { page } = await ouvrir(b, db, k, "", "#dc-bilan", { langue: "en", theme: "light" });
     await attendre(page, 1000);
     const P = await planVu(page), T = P ? P.txt : [], th = await page.evaluate(() => document.documentElement.getAttribute("data-theme")), v = await texte(page, "#vue");
-    ok("anglais, thème clair : « Free », « Your action plan », « Your goal in 3 months: “Loving how I look in photos” », texte, « The plan is yours to keep… », « Book my action plan », « You pick the time, your coach calls you », « See my space first » (exacts, dans cet ordre, sans espace insécable) ; « If coaching is a good fit… » absent (v70)",
-      th === "light" && !P.libre && !v.includes(D.libre_en) && JSON.stringify(T.map(norm)) === JSON.stringify([D.offert_en, D.titre_en, D.projection_en("Loving how I look in photos"), D.texte_en, D.garde_en, D.bouton_en, D.sous_en, D.plus_tard_en]) && !T.some(x => /[  ]/.test(x || "")),
+    ok("anglais, ancien choix « clair » ignoré, v80 (pas de data-theme : thème sombre) : « Free », « Your action plan », « Your goal in 3 months: “Loving how I look in photos” », texte, « The plan is yours to keep… », « Book my action plan », « You pick the time, your coach calls you », « See my space first » (exacts, dans cet ordre, sans espace insécable) ; « If coaching is a good fit… » absent (v70)",
+      th === null && !P.libre && !v.includes(D.libre_en) && JSON.stringify(T.map(norm)) === JSON.stringify([D.offert_en, D.titre_en, D.projection_en("Loving how I look in photos"), D.texte_en, D.garde_en, D.bouton_en, D.sous_en, D.plus_tard_en]) && !T.some(x => /[  ]/.test(x || "")),
       JSON.stringify([th, T]));
     const ink3 = await couleur(page, "--ink-3"), francais = [D.offert, D.titre, D.texte, D.garde, D.libre, D.bouton, D.sous, D.plus_tard, "M'aimer sur les photos", "Écrire à ton coach sur WhatsApp"].filter(x => v.includes(x));   // v73 (D) : + le bouton WhatsApp
-    ok("anglais : aucun texte français de la page ; un seul élément doré (doré du thème clair ; v73 : seul autre .btn, « Message your coach on WhatsApp », contour), « Later… » gris, souligné, sans fond ni bordure ; « Free » en capitales dorées",
-      !francais.length && P.nBtn === 2 && P.nWa === 1 && JSON.stringify(P.dores) === '["dc-bilan-reserver"]' && P.sa.bg === OR_CLAIR && P.st.bg === TRANSPARENT && P.st.bord === "0px 0px 0px 0px" && /underline/.test(P.st.deco) && P.st.coul === ink3 && P.so.tt === "uppercase" && P.so.coul === OR_CLAIR,
+    ok("anglais : aucun texte français de la page ; un seul élément doré (doré du thème sombre, l'ancien choix « clair » ignoré, v80 ; v73 : seul autre .btn, « Message your coach on WhatsApp », contour), « Later… » gris, souligné, sans fond ni bordure ; « Free » en capitales dorées",
+      !francais.length && P.nBtn === 2 && P.nWa === 1 && JSON.stringify(P.dores) === '["dc-bilan-reserver"]' && P.sa.bg === OR_SOMBRE && P.st.bg === TRANSPARENT && P.st.bord === "0px 0px 0px 0px" && /underline/.test(P.st.deco) && P.st.coul === ink3 && P.so.tt === "uppercase" && P.so.coul === OR_SOMBRE,
       JSON.stringify([francais, P.dores, P.sa, P.st, P.so]));
     ok("anglais : même lien exact (apres_questionnaire, pré-rempli), 390 px sans débordement, aucun prix ni « undefined », aucune écriture à l'affichage",
       !!P.a && P.a.href === lienAtt("apres_questionnaire", k) && P.a.cible === "_blank" && !(await deborde(page)) && propre(v) && saisies(db).length === 0, JSON.stringify(P.a) + " · " + resume(db));
@@ -635,14 +639,14 @@ const verrouVu = (page, id) => page.evaluate(id => {
       JSON.stringify(C) + " · " + pastille);
   });
 
-  /* =================== D. accueil en anglais, 390 px, thème clair ; « Edit my answers » =================== */
+  /* =================== D. accueil en anglais, 390 px, ancien choix « clair » ignoré (v80) ; « Edit my answers » =================== */
   await bloc("D. accueil en anglais", async () => {
     const k = 4, db = base({ comptes: [compte(k, [["intake", AVEC_CHOIX(k, PLUS_TARD())]])] });
     const { page } = await ouvrir(b, db, k, "", "#dc-accomp", { langue: "en", theme: "light" });
     await attendre(page, 1300);
     const A = await accueilVu(page), v = await texte(page, "#vue");
-    ok("anglais, thème clair : bouton du haut « Book my action plan » (accueil_haut) + « Free 15-min call with your coach » ; carte « What coaching adds » : 4 lignes exactes (My program, Nutrition, My training log, My follow-up — descriptions anglaises)",
-      (await page.evaluate(() => document.documentElement.getAttribute("data-theme"))) === "light" && !!A.haut && A.haut.t === D.bouton_en && !!A.sous && A.sous.t === E.sous_en && A.titre === E.titre_en
+    ok("anglais, ancien choix « clair » ignoré, v80 (pas de data-theme : thème sombre) : bouton du haut « Book my action plan » (accueil_haut) + « Free 15-min call with your coach » ; carte « What coaching adds » : 4 lignes exactes (My program, Nutrition, My training log, My follow-up — descriptions anglaises)",
+      (await page.evaluate(() => document.documentElement.getAttribute("data-theme"))) === null && !!A.haut && A.haut.t === D.bouton_en && !!A.sous && A.sous.t === E.sous_en && A.titre === E.titre_en
       && JSON.stringify(A.lignes) === JSON.stringify(E.lignes_en.map(([n, d]) => [n, n + " — " + d])), JSON.stringify([A.haut, A.sous, A.titre, A.lignes]));
     const francais = NOUVEAUX.filter(x => v.includes(x));
     ok("anglais : carte « Book my action plan » (accueil_accompagnement), « Free 15-min call with your coach », « Already booked » ; les 2 liens exacts ; aucun texte français du lot 2, aucun ancien libellé ni durée à 30 min ; 390 px sans débordement ; aucune écriture",
@@ -723,7 +727,7 @@ const verrouVu = (page, id) => page.evaluate(id => {
       && JSON.stringify(cl.map(x => x.source)) === '["verrou_bilan","verrou_complements"]' && saisies(db).every(e => e.outil === "challenge"), JSON.stringify([recus, cl]) + " · " + resume(db));
   });
 
-  /* =================== H. les 4 pages verrouillées en anglais, 390 px, thème clair =================== */
+  /* =================== H. les 4 pages verrouillées en anglais, 390 px, ancien choix « clair » ignoré (v80) =================== */
   await bloc("H. pages verrouillées en anglais", async () => {
     const k = 8, ID = PID(k), db = base({ comptes: [compte(k, [["intake", AVEC_CHOIX(k, PLUS_TARD())]])] });
     const { c, page } = await ouvrir(b, db, k, "#/profil", "#vue .masthead", { langue: "en", theme: "light" });
@@ -734,9 +738,9 @@ const verrouVu = (page, id) => page.evaluate(id => {
       await aller(page, "#/" + id, 1800);
       const V = await verrouVu(page, id), lus = luHors(db, n0), v = await texte(page, "#vue"), francais = NOUVEAUX.filter(x => v.includes(x));
       const th = await page.evaluate(() => document.documentElement.getAttribute("data-theme"));
-      ok(`anglais, thème clair, #/${id} : l'exemple (« Example ») au-dessus, « ${nom} », « ${txt.slice(0, 45)}… », « Book my action plan » (bouton du doré clair, lien ${code} exact, nouvel onglet, noopener, 44 px), « Free 15-min call with your coach », « ${av.slice(0, 35)}… » ; aucun texte français du lot 2 ; aucune clé « donnees » lue`,
-        th === "light" && !!V.ech && V.ech.marque === "Example" && V.ech.avant && V.nEch === 1 && V.titre === nom && V.texte === txt && !!V.a && V.a.href === lienAtt(code, k) && V.a.t === D.bouton_en && V.nLiens === 1
-        && V.a.btn && V.a.bg === OR_CLAIR && V.a.cible === "_blank" && /noopener/.test(V.a.rel) && V.a.h >= 44
+      ok(`anglais, ancien choix « clair » ignoré, v80 (pas de data-theme), #/${id} : l'exemple (« Example ») au-dessus, « ${nom} », « ${txt.slice(0, 45)}… », « Book my action plan » (bouton du doré du thème sombre, lien ${code} exact, nouvel onglet, noopener, 44 px), « Free 15-min call with your coach », « ${av.slice(0, 35)}… » ; aucun texte français du lot 2 ; aucune clé « donnees » lue`,
+        th === null && !!V.ech && V.ech.marque === "Example" && V.ech.avant && V.nEch === 1 && V.titre === nom && V.texte === txt && !!V.a && V.a.href === lienAtt(code, k) && V.a.t === D.bouton_en && V.nLiens === 1
+        && V.a.btn && V.a.bg === OR_SOMBRE && V.a.cible === "_blank" && /noopener/.test(V.a.rel) && V.a.h >= 44
         && !!V.sous && V.sous.t === E.sous_en && norm(V.plus) === norm(av) && !francais.length && !lus.length && !(await deborde(page)), JSON.stringify([th, V, francais, lus]));
       await relever(page, true, "#/" + id);
     }

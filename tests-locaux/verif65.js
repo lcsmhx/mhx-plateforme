@@ -1,5 +1,6 @@
 /* verif65 — v60 (brief V2, section C) : les 3 questions « en 1 tap » du prospect, vérifiées de bout en bout dans un vrai
-   navigateur, pour un NOUVEAU prospect, en français et en anglais, sur téléphone (390 px), en thème sombre et en thème clair.
+   navigateur, pour un NOUVEAU prospect, en français et en anglais, sur téléphone (390 px), en thème sombre (v80 : un ancien choix
+   « clair » rangé sur l'appareil est ignoré, tout reste sombre).
    v61 (lot 2, brief V2, D) : la page qui suit le questionnaire est désormais « Ton plan d'action personnalisé » (EN « Your
    personalized action plan »), sa projection « Ton objectif dans 3 mois : « … » » (EN « Your goal in 3 months: “…” ») ;
    {projection} garde les règles du lot 1 (précision sinon libellé, 140 caractères, texte brut).
@@ -279,7 +280,7 @@ const choisis = e => e.opts.filter(o => o.on).map(o => o.v);
 const dores = (e, or) => e.opts.filter(o => o.bord === or).map(o => o.v);
 /* le choix se voit : bordure et libellé de la couleur d'accent (or), fond différent des cartes non choisies */
 const bienVisible = (e, or) => { const on = e.opts.filter(o => o.on), off = e.opts.filter(o => !o.on); return e.acc === or && on.length > 0 && on.every(o => o.bord === or && o.coul === or && off.every(x => x.fond !== o.fond)) && off.every(o => o.bord !== or); };
-const OR_SOMBRE = "rgb(212, 168, 68)", OR_CLAIR = "rgb(127, 95, 25)";   // --accent des deux thèmes (css/jetons.css ; v76 : #7f5f19 en clair)
+const OR_SOMBRE = "rgb(212, 168, 68)";   // --accent (css/jetons.css) ; v80 : plus de thème clair (son #7f5f19 n'existe plus)
 /* « Voir ma prochaine étape » touché : aria-disabled="true" n'est pas « disabled » (touché, il dit ce qui manque) ; Playwright
    le tient pour désactivé et attendrait : le tap part quand même, au centre du bouton, comme le doigt */
 const taperBouton = page => page.tap("#dc-voir", { force: true });
@@ -386,7 +387,7 @@ const structure = page => page.evaluate(() => {
     const { page } = await ouvrir(b, db, k, "", "#q-probleme", { viewport: MOBILE, toucher: true, langue: "en", theme: "light" });
     await attendre(page, 300);
     const S = await structure(page), [P, O, R] = S.fs;
-    ok("anglais, thème clair : « Your questionnaire », les 3 questions à toucher", (await page.evaluate(() => document.documentElement.getAttribute("data-theme"))) === "light" && S.h2 === TX.titre_en && S.fs.length === 3, JSON.stringify([S.h2, S.fs.length]));
+    ok("anglais, ancien choix « clair » rangé sur l'appareil (v80 : ignoré, thème sombre) : « Your questionnaire », les 3 questions à toucher", (await page.evaluate(() => document.documentElement.getAttribute("data-theme"))) === null && S.h2 === TX.titre_en && S.fs.length === 3, JSON.stringify([S.h2, S.fs.length]));
     ok("anglais : intro « " + TX.lede_en + " » et légendes exactes (sans espace insécable)", S.lede === TX.lede_en && JSON.stringify(S.fs.map(f => f.legende)) === JSON.stringify(TX.legendes_en), JSON.stringify([S.lede, S.fs.map(f => f.legende)]));
     ok("anglais, question 1 : « Lose fat — Get leaner »…, valeurs gardées en français (« Perdre du gras »…)",
       !!P && JSON.stringify(P.opts.map(o => [o.v, norm(o.l), norm(o.s)])) === JSON.stringify(TX.probleme.map(x => [x[0], x[2], x[3]])), JSON.stringify(P && P.opts));
@@ -524,7 +525,7 @@ const structure = page => page.evaluate(() => {
     const e1 = await etat(page, "obstacle"), mx = (await structure(page)).fs[1].maxMsg;
     ok("anglais : 3e pastille pas prise, « 2 answers max »", JSON.stringify(choisis(e1)) === '["temps","craquages"]' && !!mx && mx.txt === TX.max_en && mx.vu, JSON.stringify([choisis(e1), mx]));
     const e2 = await etat(page, "probleme");
-    ok("thème clair : le choix en doré du thème clair (accent #7f5f19) — bordure, libellé, fond ; les autres non", e2.theme === "light" && bienVisible(e1, OR_CLAIR) && bienVisible(e2, OR_CLAIR) && JSON.stringify(dores(e2, OR_CLAIR)) === '["Perdre du gras"]', JSON.stringify([e2.acc, e2.opts.map(o => [o.v, o.bord, o.fond])]));
+    ok("ancien choix « clair » ignoré (v80, tout en sombre) : le choix en doré (accent #d4a844) — bordure, libellé, fond ; les autres non", e2.theme === "sombre" && bienVisible(e1, OR_SOMBRE) && bienVisible(e2, OR_SOMBRE) && JSON.stringify(dores(e2, OR_SOMBRE)) === '["Perdre du gras"]', JSON.stringify([e2.acc, e2.opts.map(o => [o.v, o.bord, o.fond])]));
     await toucher(page, "projection", "energie");
     const cl = await claviers(page);
     await page.tap("#dc-voir"); await attendre(page, 1600);
@@ -642,8 +643,8 @@ const structure = page => page.evaluate(() => {
       && (await texte(page, "#mc-reponses-lien a")) === TX.modifier_en && propre(v) && saisies(db).length === 0, JSON.stringify(rp));
     await page.click("#mc-reponses-lien a"); await page.waitForSelector("#q-probleme", { timeout: 6000 }); await attendre(page, 500);
     const [p1, o1, r1] = [await etat(page, "probleme"), await etat(page, "obstacle"), await etat(page, "projection")], S = await structure(page);
-    ok("« Edit my answers » : cartes pré-cochées (Perdre du gras ; temps, craquages ; photos), dorées (thème clair), libellés anglais, précision « le soir » pré-remplie",
-      JSON.stringify([choisis(p1), choisis(o1), choisis(r1)]) === '[["Perdre du gras"],["temps","craquages"],["photos"]]' && [p1, o1, r1].every(e => bienVisible(e, OR_CLAIR)) && S.fs[1].zone.val === "le soir" && norm(S.fs[1].opts[0].l) === "Not enough time" && norm(S.fs[0].opts[0].l) === "Lose fat",
+    ok("« Edit my answers » : cartes pré-cochées (Perdre du gras ; temps, craquages ; photos), dorées (ancien choix « clair » ignoré, v80 : doré du thème sombre), libellés anglais, précision « le soir » pré-remplie",
+      JSON.stringify([choisis(p1), choisis(o1), choisis(r1)]) === '[["Perdre du gras"],["temps","craquages"],["photos"]]' && [p1, o1, r1].every(e => bienVisible(e, OR_SOMBRE)) && S.fs[1].zone.val === "le soir" && norm(S.fs[1].opts[0].l) === "Not enough time" && norm(S.fs[0].opts[0].l) === "Lose fat",
       JSON.stringify([choisis(p1), choisis(o1), choisis(r1), S.fs[1].zone]));
     const { page: p2 } = await contexte(b, COACH, db);
     /* v71 (D) : un prospect n'a plus de ligne dans Mes clients : sa fiche s'ouvre par Clients.ouvrir */

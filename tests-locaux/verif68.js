@@ -1,6 +1,7 @@
 /* verif68 — v62 (brief V2, lot 3 : section H, et le « Plus tard » par origine de la section L) : les invitations au bon
    moment du prospect, vérifiées de bout en bout dans un vrai navigateur, en français et en anglais, sur téléphone (390 px),
-   en thème sombre et en thème clair, avec des prospects fictifs (« pk@exemple.fr ») et une horloge contrôlée (page.clock :
+   en thème sombre (v80, bloc 1 : tout en sombre ; en anglais, un ancien choix « clair » rangé sur l'appareil, ignoré),
+   avec des prospects fictifs (« pk@exemple.fr ») et une horloge contrôlée (page.clock :
    midi du jour du lancement, puis setSystemTime pour « un autre jour » ; jamais d'attente réelle). Un faux Calendly (hôte
    calendly.com, comme verif67) sert une page blanche à l'onglet ouvert par le bouton et note l'adresse reçue.
    A. le parcours d'un prospect, français, 390 px, thème sombre : ouverture du calculateur avec un résultat de départ (tiré
@@ -14,7 +15,7 @@
       en attente : Mindset) ; revenue le même jour ou page rechargée : plus rien ; ENCORE UN AUTRE JOUR : la suivante
       (première pesée) ; « Plus tard » : retirée, fermée pour toujours, challenge.cta.plus_tard { source, date } écrit ;
       le jour d'après : plus rien ; aucune écriture en base à la simple ouverture d'une page ;
-   B. anglais, 390 px, thème clair : la carte du calculateur (calcul saisi champ par champ : 4 champs sur 5, rien pendant
+   B. anglais, 390 px, ancien choix « clair » rangé sur l'appareil, ignoré (v80 : thème sombre) : la carte du calculateur (calcul saisi champ par champ : 4 champs sur 5, rien pendant
       1,5 s — ni carte, ni écriture, ni lecture —, puis le 5e), le cas « Poids de départ » le même jour (en attente),
       l'accueil le lendemain (carte « Your starting point is set. » en haut) ; clic sur son bouton : l'onglet reçoit le
       lien declic_premiere_pesee, le clic est noté avec cette origine ;
@@ -33,9 +34,9 @@
       de l'appareil ne s'affiche pas (le lendemain non plus) ; case cochée sur l'appareil, page rechargée (rien en cache) :
       ensuite plus rien, sans relire la base ;
    F. « Commence ici » terminé : la vidéo de bienvenue lancée (3e action) → carte formation_commence_ici juste après
-      #fo-depart (replié en « Départ lancé ✓ ») ; en anglais, thème clair : les 3 actions déjà faites → la carte à
+      #fo-depart (replié en « Départ lancé ✓ ») ; en anglais, ancien choix « clair » ignoré (v80) : les 3 actions déjà faites → la carte à
       l'ouverture de #/formation, rien d'écrit en base ;
-   G. Mindset en anglais, thème clair : la 7e case → carte juste après la section du module 01, elle y reste quand la page
+   G. Mindset en anglais, ancien choix « clair » ignoré (v80) : la 7e case → carte juste après la section du module 01, elle y reste quand la page
       est redessinée (autre case), « Later » la retire pour de bon ; le cas « Poids de départ » le même jour → en attente ;
       le lendemain : carte en haut de l'accueil, avant « Your first step » ; première pesée par « Enregistrer la semaine » →
       carte juste après #mens-saisie (une 2e pesée : rien de plus) ; par « Poids de départ » → juste après sa section ;
@@ -69,7 +70,8 @@
            VERIF68_PORT=9841 node verif68.js ../index.html     (autre port, si 9840 est pris)
            VERIF68_BLOCS="A.,C." node verif68.js …              (seulement les blocs dont le nom commence ainsi)
            VERIF68_CAPTURES=<dossier> node verif68.js …         (4 captures PNG : carte du calculateur et carte en haut de
-                                                                 l'accueil, français sombre et anglais clair) */
+                                                                 l'accueil, français et anglais, thème sombre ; en anglais,
+                                                                 ancien choix « clair » rangé sur l'appareil, ignoré, v80) */
 const { chromium } = require("playwright"); const fs = require("fs"); const http = require("http"); const path = require("path");
 const F = require("./fixtures");
 const HTML = path.resolve(process.argv[2] || path.join(__dirname, "..", "index.html"));
@@ -253,7 +255,8 @@ async function repondre(r, who, db){
 }
 
 /* ---------- un navigateur (contexte) pour une personne, horloge contrôlée ----------
-   opts : viewport (MOBILE par défaut : 390 px), langue ("en"), theme ("light" ; sombre par défaut), memoire ({ id, valeur } :
+   opts : viewport (MOBILE par défaut : 390 px), langue ("en"), theme ("light" : un ancien choix « clair » rangé sur l'appareil
+   (mhx_theme), ignoré depuis la v80 — l'app reste en sombre ; rien par défaut), memoire ({ id, valeur } :
    la mémoire des invitations déjà sur l'appareil), bloque (le stockage de l'appareil refuse la clé « mhx_invitations| ») */
 const CLE = "mhx_invitations|";
 async function contexte(b, who, db, opts){
@@ -338,6 +341,7 @@ async function ouvrirCalendly(c, page, sel){
   return { url, recus: CAL_RECUS.slice(n0) };
 }
 const TRANSPARENT = "rgba(0, 0, 0, 0)";
+const DORE_SOMBRE = "rgb(212, 168, 68)";   // v80 : --accent du thème sombre (#d4a844), le seul thème
 const PRIX = /€|\$ ?\d|\d ?\$|\bprix\b|\bprice\b|\btarifs?\b|\beuros?\b|\bEUR\b/i, BRUT = /undefined|\[object|\bNaN\b|\bnull\b/;
 const propre = t => !PRIX.test(t) && !BRUT.test(t);
 /* aucune valeur saisie dans une carte : aucun chiffre hors « 15 min », ni kcal, kg, cm */
@@ -429,7 +433,9 @@ const placeVue = (page, code, ancre) => page.evaluate(({ code, fn }) => {
     apresH2: s && s.nextElementSibling && s.nextElementSibling.querySelector("h2") ? s.nextElementSibling.querySelector("h2").textContent.trim() : null };
 }, { code, fn: ANCRES[ancre] });
 /* la vérification commune d'une carte : structure, textes exacts, lien exact, style (bordure dorée, un bouton doré, « Plus
-   tard » en lien gris), 390 px, aucune valeur saisie, rien de brut */
+   tard » en lien gris, thème sombre), 390 px, aucune valeur saisie, rien de brut. v80 (bloc 1, tout en sombre) : en anglais
+   (en), ces prospects ont un ancien choix « clair » rangé sur l'appareil (mhx_theme = "light") : il est ignoré — <html> sans
+   data-theme, comme en français, et le doré est celui du thème sombre (avant : data-theme="light") */
 function verifCarte(C, code, en, k, p){
   if (!C) return { struct: false, textes: false, lien: false, style: false, att: null };
   const att = textesAtt(code, en, p);
@@ -439,7 +445,7 @@ function verifCarte(C, code, en, k, p){
   const textes = egal(C.txt, att) && (!en || !Object.values(C.txt).some(x => /[  ]/.test(x || ""))) && sansValeurs(C.tout) && propre(C.tout);
   const lien = !!C.a && C.a.href === lienAtt(code, k) && C.a.cible === "_blank" && /noopener/.test(C.a.rel) && C.a.inv === code && C.a.btn;
   const style = C.bordure === C.accentLigne && C.sa.bg === C.accent && C.sa.h >= 44 && Math.abs(C.sa.w - C.ctaW) <= 1 && C.st.bg === TRANSPARENT && C.st.bord === "0px 0px 0px 0px" && /underline/.test(C.st.deco) && C.st.h >= 44 && !C.deborde
-    && C.theme === (en ? "light" : null);
+    && C.theme === null && (!en || C.accent === DORE_SOMBRE);
   return { struct, textes, lien, style, att };
 }
 const detail = (C, V) => JSON.stringify(C ? { sig: C.sig, n: C.n, enfants: C.enfants, cta: C.cta, txt: C.txt, att: V && V.att, a: C.a, tard: C.tardAttr, bord: [C.bordure, C.accentLigne], sa: C.sa, st: C.st, ctaW: C.ctaW, theme: C.theme, deborde: C.deborde } : "carte absente");
@@ -538,7 +544,7 @@ const detail = (C, V) => JSON.stringify(C ? { sig: C.sig, n: C.n, enfants: C.enf
       ouvertures.length === 5 && ouvertures.every(x => x[1] === 0), JSON.stringify(ouvertures));
   });
 
-  /* =================== B. anglais, 390 px, thème clair =================== */
+  /* =================== B. anglais, 390 px, ancien choix « clair » rangé sur l'appareil, ignoré (v80) =================== */
   await bloc("B. parcours en anglais", async () => {
     const k = 2, ID = PID(k);
     const db = base({ comptes: [compte(k, [["intake", AVEC_CHOIX(k)]])] });
@@ -551,11 +557,11 @@ const detail = (C, V) => JSON.stringify(C ? { sig: C.sig, n: C.n, enfants: C.enf
     await page.fill("#heures", "3");
     await page.waitForSelector("#invitation-declic_calculateur", { timeout: 6000 }).catch(() => null); await attendre(page, 1800);
     const C = await carteVue(page, "declic_calculateur"), V = verifCarte(C, "declic_calculateur", true, k, PHOTOS.en), pl = await placeVue(page, "declic_calculateur", "macros");
-    ok("anglais, thème clair : calcul incomplet (4 champs sur 5, 1,5 s d'attente : aucune carte posée, rien d'enregistré, aucune lecture intake+challenge), puis complet et enregistré : la carte juste après les macros ; textes EXACTS (« Your calories are calculated. », « Your goal: “Loving how I look in photos” », « Knowing how much to eat… », « Book my action plan », « Free 15-min call with your coach », « Later »), sans espace insécable ni aucune valeur saisie",
+    ok("anglais, ancien choix « clair » ignoré (v80) : calcul incomplet (4 champs sur 5, 1,5 s d'attente : aucune carte posée, rien d'enregistré, aucune lecture intake+challenge), puis complet et enregistré : la carte juste après les macros ; textes EXACTS (« Your calories are calculated. », « Your goal: “Loving how I look in photos” », « Knowing how much to eat… », « Book my action plan », « Free 15-min call with your coach », « Later »), sans espace insécable ni aucune valeur saisie",
       avantDernier.n === 0 && avantDernier.poses === 0 && avantDernier.calc === 0 && avantDernier.L === 0 && V.struct && V.textes && pl.juste && ecr(db, "calc_perso", ID).length === 1, detail(C, V) + " · " + JSON.stringify([avantDernier, pl, C && C.tout]));
-    ok("anglais : lien exact (declic_calculateur, pré-rempli) ; bordure dorée et bouton doré du thème clair, « Later » gris souligné ; 390 px sans débordement",
+    ok("anglais : lien exact (declic_calculateur, pré-rempli) ; ancien choix « clair » rangé sur l'appareil ignoré (v80) : thème sombre (sans data-theme), bordure dorée et bouton doré du thème sombre (rgb(212, 168, 68)), « Later » gris souligné ; 390 px sans débordement",
       V.lien && V.style, detail(C, V));
-    await capturer(page, "calculateur-en-clair.png", "#invitation-declic_calculateur");
+    await capturer(page, "calculateur-en-sombre.png", "#invitation-declic_calculateur");
     /* le même jour : « Poids de départ » (Starting weight), toute première pesée */
     await aller(page, "#/mensurations", 1800); await page.waitForSelector("#pstart", { state: "attached", timeout: 6000 });
     await page.click("details:has(#pstart) > summary"); await page.fill("#pstart", "72"); await page.press("#pstart", "Tab"); await attendre(page, 2000);
@@ -564,9 +570,9 @@ const detail = (C, V) => JSON.stringify(C ? { sig: C.sig, n: C.n, enfants: C.enf
       n1.n === 0 && (contenuDe(db, ID, "mens") || {}).pstart === 72 && egal(codesAttente(m1), ["declic_premiere_pesee"]), JSON.stringify([n1, m1]) + " · " + resume(db));
     await visite(page, 1, ACCUEIL, "#dc-accomp"); await page.waitForSelector("#invitation-declic_premiere_pesee", { timeout: 6000 }).catch(() => null); await attendre(page, 1800);
     const Cp = await carteVue(page, "declic_premiere_pesee"), Vp = verifCarte(Cp, "declic_premiere_pesee", true, k, PHOTOS.en), plp = await placeVue(page, "declic_premiere_pesee", "entete");
-    ok("anglais, le lendemain : l'accueil montre la carte en haut, juste après l'en-tête : « Your starting point is set. », « Your goal: “Loving how I look in photos” », « From today, we measure your progress… », « Book my action plan », « Free 15-min call with your coach », « Later » ; lien declic_premiere_pesee ; thème clair, 390 px",
+    ok("anglais, le lendemain : l'accueil montre la carte en haut, juste après l'en-tête : « Your starting point is set. », « Your goal: “Loving how I look in photos” », « From today, we measure your progress… », « Book my action plan », « Free 15-min call with your coach », « Later » ; lien declic_premiere_pesee ; ancien choix « clair » ignoré (v80) : thème sombre, doré du sombre ; 390 px",
       Vp.struct && Vp.textes && Vp.lien && Vp.style && plp.juste, detail(Cp, Vp) + " · " + JSON.stringify(plp));
-    await capturer(page, "accueil-en-clair.png", "#invitation-declic_premiere_pesee", true);
+    await capturer(page, "accueil-en-sombre.png", "#invitation-declic_premiere_pesee", true);
     const o = await ouvrirCalendly(c, page, '[data-inv-cal="declic_premiere_pesee"]'), cl = ((challengeDe(db, ID).cta || {}).clics) || [], m2 = await memoire(page, ID);
     ok("clic sur « Book my action plan » de la carte : l'onglet ouvert reçoit exactement le lien declic_premiere_pesee (faux Calendly) ; clic noté en base (challenge.cta.clics : source declic_premiere_pesee, jour, date) et sur l'appareil (clic)",
       o.url === lienAtt("declic_premiere_pesee", k) && o.recus.length === 1 && cl.length === 1 && cl[0].source === "declic_premiere_pesee" && typeof cl[0].jour === "number" && ISO.test(cl[0].date) && !!m2 && ISO.test(m2.clic),
@@ -795,7 +801,8 @@ const detail = (C, V) => JSON.stringify(C ? { sig: C.sig, n: C.n, enfants: C.enf
     ok("carte formation_commence_ici : structure, textes EXACTS (« Bien joué, ton départ est lancé. », « Ton objectif : « M'aimer sur les photos » », « Prochaine étape : ton plan d'action, pour savoir quoi faire ces prochaines semaines. »), lien formation_commence_ici, style ; une lecture intake+challenge ; en base : formation.depart.video seul (une écriture)",
       V.struct && V.textes && V.lien && V.style && L.length === 1 && lectureExacte(L[0], ID) && saisies(db).length === 1 && ecr(db, "formation", ID).length === 1 && ISO.test(((contenuDe(db, ID, "formation") || {}).depart || {}).video || ""),
       detail(C, V) + " · " + resume(db));
-    /* anglais, thème clair : les 3 actions déjà faites → la carte à l'ouverture de la page */
+    /* anglais, ancien choix « clair » rangé sur l'appareil, ignoré (v80 : thème sombre) : les 3 actions déjà faites → la
+       carte à l'ouverture de la page */
     const k2 = 9, ID2 = PID(k2);
     const db2 = base({ comptes: [compte(k2, [["intake", AVEC_CHOIX(k2)], ["calc_perso", CP], ["mens", MENS_DEPART], ["formation", FO({ coches: {}, ouvert: "", depart: { video: avant(2 * H) } })]])] });
     const { page: p2 } = await contexte(b, quiP(k2), db2, { langue: "en", theme: "light" });
@@ -803,12 +810,12 @@ const detail = (C, V) => JSON.stringify(C ? { sig: C.sig, n: C.n, enfants: C.enf
     await p2.waitForSelector("#invitation-formation_commence_ici", { timeout: 6000 }).catch(() => null); await attendre(p2, 1800);
     const C2 = await carteVue(p2, "formation_commence_ici"), V2 = verifCarte(C2, "formation_commence_ici", true, k2, PHOTOS.en), pl2 = await placeVue(p2, "formation_commence_ici", "fo_depart");
     const dep2 = await p2.evaluate(() => { const d = document.getElementById("fo-depart"); return d ? d.textContent.replace(/\s+/g, " ").trim() : null; }), m2 = await memoire(p2, ID2);
-    ok("anglais, thème clair, les 3 actions déjà faites : à l'ouverture de #/formation, « You're off ✓ » puis la carte (« Nice work, you're off to a start. », « Your goal: “Loving how I look in photos” », « Next step: your action plan, so you know what to do over the next weeks. », lien formation_commence_ici) ; notée vue sur l'appareil ; rien d'écrit en base",
+    ok("anglais, ancien choix « clair » ignoré (v80 : thème sombre, doré du sombre), les 3 actions déjà faites : à l'ouverture de #/formation, « You're off ✓ » puis la carte (« Nice work, you're off to a start. », « Your goal: “Loving how I look in photos” », « Next step: your action plan, so you know what to do over the next weeks. », lien formation_commence_ici) ; notée vue sur l'appareil ; rien d'écrit en base",
       V2.struct && V2.textes && V2.lien && V2.style && pl2.juste && dep2 === "You're off ✓" && !!m2 && ISO.test(m2.vues.formation_commence_ici || "") && saisies(db2).length === 0,
       detail(C2, V2) + " · " + JSON.stringify([pl2, dep2, m2]) + " · " + resume(db2));
   });
 
-  /* =================== G. Mindset (anglais, clair), et les deux façons de faire la première pesée =================== */
+  /* ====== G. Mindset (anglais, ancien choix « clair » ignoré, v80), et les deux façons de faire la première pesée ====== */
   await bloc("G. Mindset et première pesée", async () => {
     const k = 10, ID = PID(k);
     const db = base({ comptes: [compte(k, [["intake", AVEC_CHOIX(k)], ["formation", FO()]])] });
@@ -817,7 +824,7 @@ const detail = (C, V) => JSON.stringify(C ? { sig: C.sig, n: C.n, enfants: C.enf
     await page.check('[data-coche="m1g"]');
     await page.waitForSelector("#invitation-declic_mindset", { timeout: 6000 }).catch(() => null); await attendre(page, 1800);
     const C = await carteVue(page, "declic_mindset"), V = verifCarte(C, "declic_mindset", true, k, PHOTOS.en), pl = await placeVue(page, "declic_mindset", "m1");
-    ok("anglais, thème clair, #/formation : la 7e case du module 01 Mindset (7/7) → la carte juste APRÈS la section du module (section.fo-mod) ; « Your why is clear. », « Your goal: “Loving how I look in photos” », « Now for the how… », lien declic_mindset, style",
+    ok("anglais, ancien choix « clair » ignoré (v80 : thème sombre, doré du sombre), #/formation : la 7e case du module 01 Mindset (7/7) → la carte juste APRÈS la section du module (section.fo-mod) ; « Your why is clear. », « Your goal: “Loving how I look in photos” », « Now for the how… », lien declic_mindset, style",
       V.struct && V.textes && V.lien && V.style && pl.juste && /fo-mod/.test(pl.ancre || ""), detail(C, V) + " · " + JSON.stringify(pl));
     await page.evaluate(() => { const s = document.querySelector('#vue [data-mod="m1"]').closest("section"); s.__v68 = "avant"; document.getElementById("invitation-declic_mindset").__v68 = "carte"; });
     await page.check('[data-coche="p1a"]'); await attendre(page, 1500);

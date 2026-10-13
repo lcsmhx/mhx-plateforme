@@ -300,7 +300,7 @@ async function repondre(r, db){
 }
 
 /* ---------- un navigateur (contexte) ----------
-   opts : viewport (MOBILE par défaut), langue ("en"), theme ("light"), qui (compte connecté : { id, email }), expire (la
+   opts : viewport (MOBILE par défaut), langue ("en"), theme ("light" : ancien choix rangé sur l'appareil, ignoré depuis la v80), qui (compte connecté : { id, email }), expire (la
    session rangée expire à cet instant : renouvellement au démarrage), neuf (appareil sans aucune trace), port */
 async function contexte(b, db, opts){
   opts = opts || {};
@@ -545,7 +545,7 @@ const avecE = (t, e) => String(t).split("{e}").join(e);
         const d = (db.bruts.token[0] || {}).t - t0, c = lireJ((db.bruts.token[0] || {}).brut) || {};
         ok("B : clic avant que le jeton soit prêt (script lent) — l'envoi attend le jeton (bien moins de 4 s), puis part avec lui ; connexion réussie",
           !avantClic && db.bruts.token.length === 1 && c.gotrue_meta_security && c.gotrue_meta_security.captcha_token === DUMMY && d > 400 && d < 3800, JSON.stringify({ avantClic, d, brut: (db.bruts.token[0] || {}).brut })); }
-      for (const [langue, theme] of [["fr", ""], ["en", "light"]]) {
+      for (const [langue, theme] of [["fr", ""], ["en", "light"]]) {   // EN : ancien choix « clair » rangé sur l'appareil, ignoré (v80 : tout en sombre)
         const db = base(); db.captcha = "1x"; db.inscription.id = PID(langue === "fr" ? 20 : 21);
         const page = await portailOuvert(b, db, "inscription", { langue, theme, neuf: true });
         await attendreWidget(page);
@@ -553,8 +553,8 @@ const avecE = (t, e) => String(t).split("{e}").join(e);
         await remplirInscription(page, "Zoé", "zoe-b" + langue + "@exemple.fr");
         await cliquerEtEntrer(page);
         const s = db.bruts.signup[0] || {}, c = lireJ(s.brut) || {};
-        ok("B : création de compte (" + langue.toUpperCase() + (theme ? ", thème clair" : "") + ") — widget : action « inscription », langue " + langue + ", thème " + (theme || "dark") + " ; corps de /signup : email, password, data (exactement comme sans CAPTCHA), puis gotrue_meta_security.captcha_token ; compte créé, l'app s'ouvre",
-          o.action === "inscription" && o.language === langue && o.theme === (theme || "dark") && db.bruts.signup.length === 1 && JSON.stringify(cles(s.brut)) === '["email","password","data","gotrue_meta_security"]'
+        ok("B : création de compte (" + langue.toUpperCase() + (theme ? ", ancien choix « clair » ignoré, v80" : "") + ") — widget : action « inscription », langue " + langue + ", thème dark ; corps de /signup : email, password, data (exactement comme sans CAPTCHA), puis gotrue_meta_security.captcha_token ; compte créé, l'app s'ouvre",
+          o.action === "inscription" && o.language === langue && o.theme === "dark" && db.bruts.signup.length === 1 && JSON.stringify(cles(s.brut)) === '["email","password","data","gotrue_meta_security"]'
             && JSON.stringify(Object.keys(c.data || {})) === '["prenom","nom","consentement","conditions_version","newsletter","newsletter_version"]' && c.gotrue_meta_security.captcha_token === DUMMY && db.inscriptions.length === 1,
           JSON.stringify({ o: { action: o.action, language: o.language, theme: o.theme }, brut: s.brut }));
       }

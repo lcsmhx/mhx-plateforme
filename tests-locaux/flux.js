@@ -1,4 +1,4 @@
-/* Tests de flux (phase 2) : fenetres de confirmation / saisie, theme.
+/* Tests de flux (phase 2) : fenetres de confirmation / saisie, theme (v80 : tout en sombre).
    Supabase simule : on verifie ce qui PARTIRAIT vers la base sans rien envoyer. */
 const http = require("http"); const fs = require("fs"); const path = require("path");
 const { chromium } = require("playwright");
@@ -104,14 +104,14 @@ async function contexte(browser, who, viewport, langue) {
     await page.click("[data-suppr]"); await page.waitForTimeout(300);
     await page.click(".modale .btn.danger"); await page.waitForTimeout(600);
     ok("bibliotheque : Confirmer = DELETE simule", ecritures.some(e => e.startsWith("DELETE /rest/v1/bibliotheque")), ecritures.join(" | "));
-    /* theme : bascule + persistance */
-    await page.click("#theme"); await page.waitForTimeout(200);
-    ok("theme : clair applique", (await page.getAttribute("html", "data-theme")) === "light");
+    /* theme — v80 (bloc 1, décision de Lucas) : tout en sombre ; plus de bouton de thème, un ancien choix « clair » est ignoré */
+    ok("theme (v80) : aucun bouton de thème dans la page", !(await page.$("#theme, [data-theme-bouton]")));
+    await page.evaluate(() => localStorage.setItem("mhx_theme", "light"));
     await page.reload(); await page.waitForLoadState("networkidle"); await page.waitForTimeout(400);
-    ok("theme : clair conserve apres rechargement", (await page.getAttribute("html", "data-theme")) === "light");
-    await page.screenshot({ path: path.join(OUT, "coach-bibliotheque-clair.png") });
-    await page.click("#theme"); await page.waitForTimeout(200);
-    ok("theme : retour au sombre", (await page.getAttribute("html", "data-theme")) === null);
+    ok("theme (v80) : ancien choix « clair » de l'appareil ignoré après rechargement", (await page.getAttribute("html", "data-theme")) === null && !(await page.$("#theme, [data-theme-bouton]")));
+    await page.screenshot({ path: path.join(OUT, "coach-bibliotheque-sombre.png") });
+    const sombre = await page.evaluate(() => ({ fond: getComputedStyle(document.body).backgroundColor, meta: (document.querySelector('meta[name="theme-color"]') || {}).content || "" }));
+    ok("theme (v80) : toujours sombre (fond #07090d, barre du navigateur #07090d)", sombre.fond === "rgb(7, 9, 13)" && sombre.meta.toLowerCase() === "#07090d", JSON.stringify(sombre));
     ok("coach : aucune erreur JS ni dialogue natif", erreurs.length === 0, erreurs.join(" | "));
     await ctx.close();
   }

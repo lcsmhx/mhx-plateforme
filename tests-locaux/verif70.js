@@ -17,7 +17,8 @@
       la page : servi avec les valeurs de test des suites (forcerLegaux) → refusé pour ses 2 liens de test ; avec des
       liens réalistes → complet ; enfin la page entière (disque) avec des liens réalistes → complète, et chaque lien
       Google Drive écrit ailleurs dans le site (PDF de la formation) : publiable seul, refusé comme lien des CGU ;
-   A1. écran « Crée ton espace gratuit » (#/inscription), français et anglais, thèmes sombre et clair, 390 px et 320 px
+   A1. écran « Crée ton espace gratuit » (#/inscription), français et anglais, thème sombre et ancien choix « clair »
+      rangé sur l'appareil (mhx_theme = light), ignoré (v80 : tout en sombre, data-theme absent), 390 px et 320 px
       (config servie avec les 3 valeurs de test valides, LEGAUX_TEST) : textes EXACTS du brief (A1 sous-titre, A2 case,
       A4 newsletter, A6 bouton ; titre, « Rester connecté » et mention A7 inchangés) ; exactement 3 cases (conditions et
       newsletter non cochées, « Rester connecté » cochée), #c-sante absente, aucun « données de santé » / « health
@@ -25,13 +26,16 @@
       (href = les 2 PDF de la config servie, target=_blank, rel=noopener ; jamais cliqués : aucun appel vers Google
       Drive) ; le point final collé au 2e lien et, mesuré par Range à 414, 390, 375, 360 et 320 px, sur la MÊME ligne
       que la dernière lettre de ce lien (le point orphelin du brief), sans défilement horizontal ; les 2 liens visibles
-      dans le thème (couleur dorée du thème, soulignés, contraste ≥ 3 avec la carte). La zone de tap de la case n'est
+      dans le thème (couleur dorée du thème, soulignés, contraste ≥ 3 avec la carte — v80 : la carte est en verre
+      semi-transparent, son fond est composé sur le fond opaque de la page, la couleur réellement vue ; l'ancien choix
+      « clair » ignoré : le doré du thème sombre, rgb(212, 168, 68)). La zone de tap de la case n'est
       pas exigée à 44 px : l'app ne la garantit nulle part pour ses cases (.co-rester input : 16 px, aussi sur l'écran de
       connexion) ;
       config « à compléter » (la branche de travail), et un lien « javascript: » : les 2 mots sont des span.lien-absent,
       sans lien, même texte, point collé ;
-   A2. inscription en français (sans newsletter, 390 px, thème sombre) et en anglais (avec newsletter, 390 px, thème
-      clair, une autre version servie, 2026-10-15) : sans la case des conditions → message exact (« Coche la case des
+   A2. inscription en français (sans newsletter, 390 px, thème sombre) et en anglais (avec newsletter, 390 px, ancien
+      choix « clair » rangé sur l'appareil, ignoré (v80), une autre version servie, 2026-10-15) : sans la case des
+      conditions → message exact (« Coche la case des
       conditions pour continuer. » / « Tick the terms box to continue. »), aucun appel, même avec la newsletter cochée ;
       un tap sur le texte de la case la coche ; cette seule case suffit : le compte se crée SANS accord santé ;
       POST /auth/v1/signup data = EXACTEMENT prenom, nom, consentement (instant ISO du clic), conditions_version (= la
@@ -229,7 +233,8 @@ async function repondre(r, db){
 }
 
 /* ---------- un navigateur (contexte), personne de connectée au départ ----------
-   opts : viewport (MOBILE par défaut), langue ("en"), theme ("clair" : mhx_theme = light ; sombre par défaut) */
+   opts : viewport (MOBILE par défaut), langue ("en"), theme ("clair" : mhx_theme = light rangé sur l'appareil, l'ancien
+   choix « clair », ignoré depuis la v80 ; sombre par défaut) */
 async function contexte(b, db, opts){
   opts = opts || {};
   const c = await b.newContext({ viewport: opts.viewport || MOBILE });
@@ -328,18 +333,25 @@ async function mesurer(page, largeur){
 const memeLigne = m => !!(m && m.lettre && m.point && m.texte === "." && Math.abs(m.lettre.top - m.point.top) <= 2 && Math.abs(m.lettre.bottom - m.point.bottom) <= 2
   && m.point.left >= m.lettre.right - 1 && m.point.right <= m.carteD && m.sw <= m.iw);
 
-/* couleurs : le lien doré du thème, souligné, lisible sur la carte */
+/* couleurs : le lien doré du thème, souligné, lisible sur la carte
+   v80 : la carte est en verre semi-transparent (rgba, transparente sur téléphone) : le fond comparé est la couleur
+   réellement vue, chaque fond de la carte et de ses parents (alpha compris) composé sur le fond opaque du body (#07090d) */
 const couleurs = page => page.evaluate(() => {
   const rgb = s => { const m = /rgba?\(([^)]+)\)/.exec(s || ""); return m ? m[1].split(",").slice(0, 3).map(x => +x.trim()) : null; };
+  const rgba = s => { const m = /rgba?\(([^)]+)\)/.exec(s || ""); if (!m) return null; const p = m[1].split(",").map(x => +x.trim()); return [p[0], p[1], p[2], p.length > 3 ? p[3] : 1]; };
   const hex = s => { const m = /^#([0-9a-f]{6})$/i.exec(String(s || "").trim()); return m ? [0, 2, 4].map(i => parseInt(m[1].slice(i, i + 2), 16)) : null; };
   const lum = c => { const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]); };
-  const fond = rgb(getComputedStyle(document.querySelector(".carte-co")).backgroundColor);
+  const couches = [];   // de la carte jusqu'au body exclu
+  for (let n = document.querySelector(".carte-co"); n && n !== document.body && n !== document.documentElement; n = n.parentElement) couches.push(rgba(getComputedStyle(n).backgroundColor));
+  let fond = rgb(getComputedStyle(document.body).backgroundColor);   // le fond opaque de la page
+  if (fond) for (const k of couches.reverse()) if (k) fond = fond.map((v, i) => k[i] * k[3] + v * (1 - k[3]));
   const accent = hex(getComputedStyle(document.documentElement).getPropertyValue("--accent"));
   return ["c-cgu-lien", "c-politique-lien"].map(id => {
     const x = document.getElementById(id); if (!x) return null;
     const cs = getComputedStyle(x), c = rgb(cs.color);
     const L1 = c ? lum(c) : 0, L2 = fond ? lum(fond) : 0, contraste = (Math.max(L1, L2) + 0.05) / (Math.min(L1, L2) + 0.05);
-    return { id, couleur: c, accent, dore: !!c && !!accent && c.join() === accent.join(), souligne: /underline/.test(cs.textDecorationLine), contraste: Math.round(contraste * 100) / 100, display: cs.display };
+    return { id, couleur: c, accent, dore: !!c && !!accent && c.join() === accent.join(), souligne: /underline/.test(cs.textDecorationLine), contraste: Math.round(contraste * 100) / 100, display: cs.display,
+      fond: fond ? fond.map(v => Math.round(v * 10) / 10) : null };
   });
 });
 
@@ -521,8 +533,9 @@ async function remplir(page, f){
   });
 
   /* =================== A1. écran d'inscription (config de test) =================== */
+  /* theme "clair" : l'ancien choix « clair » rangé sur l'appareil (mhx_theme = light), ignoré depuis la v80 (tout en sombre) */
   for (const [langue, theme, vp] of [["fr", "sombre", MOBILE], ["fr", "clair", PETIT], ["en", "sombre", PETIT], ["en", "clair", MOBILE]]) {
-    const T = TXA[langue], L = (langue === "en" ? "anglais" : "français") + ", thème " + theme + ", " + vp.width + " px";
+    const T = TXA[langue], L = (langue === "en" ? "anglais" : "français") + ", " + (theme === "clair" ? "ancien choix « clair » ignoré (v80)" : "thème " + theme) + ", " + vp.width + " px";
     await bloc("A1. écran d'inscription (" + L + ")", async () => {
       const db = base();
       const { page } = await contexte(b, db, { viewport: vp, langue: langue === "en" ? "en" : "", theme });
@@ -541,8 +554,8 @@ async function remplir(page, f){
           && JSON.stringify(e.dansCase) === '["A#c-cgu-lien","A#c-politique-lien"]' && !!e.fin && e.fin.type === 3 && e.fin.data === "." && e.fin.avant === "c-politique-lien" && !drive().length,
         JSON.stringify({ liens: e.liens, dansCase: e.dansCase, fin: e.fin, drive: drive() }));
       const coul = await couleurs(page);
-      ok(`inscription (${L}) : thème ${theme} appliqué (data-theme ${theme === "clair" ? "light" : "absent"}) ; les 2 liens dorés du thème (--accent), soulignés, en ligne (display inline), contraste ≥ 3 avec la carte`,
-        e.theme === (theme === "clair" ? "light" : null) && coul.every(x => x && x.dore && x.souligne && x.display === "inline" && x.contraste >= 3), JSON.stringify({ theme: e.theme, coul }));
+      ok(`inscription (${L}) : thème sombre appliqué (data-theme absent${theme === "clair" ? ", l'ancien choix « clair » rangé sur l'appareil ignoré" : ""}) ; les 2 liens dorés du thème (--accent${theme === "clair" ? " = le doré du thème sombre, rgb(212, 168, 68)" : ""}), soulignés, en ligne (display inline), contraste ≥ 3 avec la carte (verre composé sur le fond de la page)`,
+        e.theme === null && coul.every(x => x && x.dore && x.souligne && x.display === "inline" && x.contraste >= 3 && (theme !== "clair" || (!!x.accent && x.accent.join() === "212,168,68"))), JSON.stringify({ theme: e.theme, coul }));
       const mesures = {};
       for (const w of LARGEURS) mesures[w] = await mesurer(page, w);
       await page.setViewportSize(vp);
@@ -575,7 +588,8 @@ async function remplir(page, f){
     });
   }
 
-  /* =================== A2. inscription de bout en bout : une seule case, data exact, copie emails, Profil =================== */
+  /* =================== A2. inscription de bout en bout : une seule case, data exact, copie emails, Profil ===================
+     (theme "clair" : l'ancien choix « clair » rangé sur l'appareil, ignoré depuis la v80) */
   for (const [langue, news, theme, version, k] of [["fr", false, "sombre", LEGAUX_TEST.cgu_version, 1], ["en", true, "clair", "2026-10-15", 2]]) {
     const T = TXA[langue], L = langue === "en" ? "anglais" : "français", Q = news ? "avec la newsletter" : "sans la newsletter";
     await bloc("A2. inscription en " + L, async () => {

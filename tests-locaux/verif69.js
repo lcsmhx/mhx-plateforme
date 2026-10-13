@@ -1,6 +1,6 @@
 /* verif69 — v62 (brief V2, lot 3, section L) : le bloc « Mesure » de la page Prospects du coach (#/prospects), de bout en
    bout dans un vrai navigateur (coach fictif, prospects fictifs, Supabase simulé), sur ordinateur et téléphone (390 px), en
-   thème sombre et clair :
+   thème sombre (v80 : tout en sombre ; un ancien choix « clair » rangé sur l'appareil est ignoré) :
    A. place et forme : section.panel#pr-mesure juste après les 4 tuiles (À traiter, Signés, Perdus, Absents) et avant les
       filtres ; « Mesure » et le sélecteur « 7 derniers jours » (par défaut) / « 30 derniers jours » / « Depuis le
       28/09/2026 » ; 5 tuiles (libellés exacts, dans l'ordre) ; « Clics par écran » (Écran, Clics, Plus tard) ; case
@@ -32,7 +32,8 @@
    G. aucune donnée de santé (poids, calories, mensurations) ni email dans le bloc ; rien n'est lu en plus (la lecture
       groupée de la page et les clés du coach seulement), aucune requête quand on change de période ou qu'on coche la case,
       rien n'est écrit ;
-   H. affichage : téléphone 390 px en thème sombre, 320 px, et ordinateur en thème clair : rien ne déborde (ni les boîtes,
+   H. affichage : téléphone 390 px en thème sombre, 320 px, et ordinateur avec un ancien choix « clair » rangé sur
+      l'appareil, ignoré (v80 : thème sombre, pas de data-theme) : rien ne déborde (ni les boîtes,
       ni le texte des tuiles), tout le texte du bloc lisible (contraste : titres, sélecteur, tuiles, en-têtes, cellules,
       case, notes) ; 2 captures du bloc si VERIF69_CAPTURES est posé (pas des vérifications) ;
    I. données piégées (date objet, sources « __proto__ » / « constructor » / « hasOwnProperty » / « prototype » / non
@@ -57,7 +58,7 @@
    Usage : node verif69.js ../index.html
            VERIF69_PORT=9851 node verif69.js ../index.html     (autre port, si 9850 est pris)
            VERIF69_BLOCS="B.,I." node verif69.js …              (seulement les blocs dont le nom commence ainsi)
-           VERIF69_CAPTURES=<dossier> node verif69.js …         (captures du bloc : 390 px sombre, ordinateur clair) */
+           VERIF69_CAPTURES=<dossier> node verif69.js …         (captures du bloc : 390 px et ordinateur, en sombre) */
 const { chromium } = require("playwright"); const fs = require("fs"); const http = require("http"); const path = require("path");
 const F = require("./fixtures");
 const HTML = path.resolve(process.argv[2] || path.join(__dirname, "..", "index.html"));
@@ -209,8 +210,9 @@ async function repondre(r, who, db){
   return json([]);
 }
 
-/* ---------- un navigateur (contexte) : opts.viewport (ordinateur par défaut), opts.theme ("light" : thème clair, rangé
-   sur l'appareil comme le fait le bouton de thème ; sombre par défaut) ---------- */
+/* ---------- un navigateur (contexte) : opts.viewport (ordinateur par défaut), opts.theme ("light" : un ancien choix
+   « clair » rangé sur l'appareil comme le faisait le bouton de thème avant la v80 — ignoré depuis la v80, l'app reste en
+   sombre ; rien de rangé par défaut) ---------- */
 async function contexte(b, who, db, opts){
   opts = opts || {};
   const c = await b.newContext({ viewport: opts.viewport || ORDI });
@@ -333,11 +335,15 @@ function lireCSV(s){
 }
 const pad2 = n => String(n).padStart(2, "0");
 const frL = v => { const d = new Date(v); return pad2(d.getDate()) + "/" + pad2(d.getMonth() + 1) + "/" + d.getFullYear(); };   // la date (locale) d'un instant, comme l'export
-/* le contraste (WCAG) du texte des éléments sel sur le premier fond opaque en remontant. Seuil : 4,5:1 ; 3:1 (celui des
+/* le contraste (WCAG) du texte des éléments sel sur leur fond RÉEL : v80 (verre dépoli), les fonds semi-transparents
+   (panneau, tuiles, sélecteur) sont composés, du premier fond opaque en remontant (au moins le corps de la page, #07090d)
+   jusqu'à l'élément, comme verif71 — et non plus sautés (alpha ≤ 0,5) ou pris pour opaques (alpha > 0,5) ; un texte
+   semi-transparent est composé sur ce fond. Seuil : 4,5:1 ; 3:1 (celui des
    tuiles de l'app) pour les seules exceptions NOMMÉES — comme verif66 — et seulement si le texte a exactement la couleur du
    jeton de l'app : le texte secondaire de toute l'app (--ink-3, styles communs : libellés des tuiles .t-lbl, titres h3
-   comme « Clics par écran », en-têtes th, notes .note), mesuré à 3,99:1 en sombre et 4,27:1 en clair sur le panneau,
-   4,13:1 et 3,94:1 sur le fond des tuiles ; un de ces textes passé à une autre couleur retombe sous le seuil de 4,5:1.
+   comme « Clics par écran », en-têtes th, notes .note), mesuré avant la v80 à 3,99:1 sur le panneau et 4,13:1 sur le fond
+   des tuiles (sombre) ; un de ces textes passé à une autre couleur retombe sous le seuil de 4,5:1. v80 : plus de thème
+   clair, un ancien choix « clair » rangé sur l'appareil est jugé avec les mêmes exceptions qu'en sombre.
    Tout le reste du bloc (titre, sélecteur, chiffres, cellules, case) : 4,5:1 */
 const CONTRASTE = 4.5, CONTRASTE_EXC = 3, EXCEPTIONS_CONTRASTE = [[".t-lbl", "--ink-3"], ["h3", "--ink-3"], ["th", "--ink-3"], [".note", "--ink-3"]];
 const seuil = x => x.exc ? CONTRASTE_EXC : CONTRASTE;
@@ -352,9 +358,13 @@ const lisible = (page, sel) => page.$$eval(sel, (l, EXC) => {
     return null;
   };
   const lum = c => { const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]); };
-  const fond = e => { for (let x = e; x; x = x.parentElement) { const c = rgb(getComputedStyle(x).backgroundColor); if (c && c[3] > 0.5) return c; } return [255, 255, 255, 1]; };
+  /* la couleur h (alpha h[3]) posée sur la couleur opaque d */
+  const sur = (h, d) => [h[0] * h[3] + d[0] * (1 - h[3]), h[1] * h[3] + d[1] * (1 - h[3]), h[2] * h[3] + d[2] * (1 - h[3]), 1];
+  /* les fonds de l'élément et de ses parents jusqu'au premier opaque (blanc si aucun), composés du bas vers le haut */
+  const fond = e => { const pile = []; for (let x = e; x; x = x.parentElement) { const c = rgb(getComputedStyle(x).backgroundColor); if (c && c[3] > 0) { pile.push(c); if (c[3] >= 1) break; } }
+    let f = [255, 255, 255, 1]; for (let i = pile.length - 1; i >= 0; i--) f = sur(pile[i], f); return f; };
   const qui = e => e.tagName.toLowerCase() + (e.className ? "." + String(e.className).trim().replace(/\s+/g, ".") : "") + " « " + String(e.textContent || "").replace(/\s+/g, " ").trim().slice(0, 30) + " »";
-  return l.map(e => { const t = rgb(getComputedStyle(e).color), f = fond(e); if (!t) return { ratio: 0, fondClair: null, qui: qui(e), exc: false }; const a = lum(t), b = lum(f); return { ratio: +((Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)).toFixed(2), fondClair: b > 0.4, qui: qui(e), exc: exc(e) }; });
+  return l.map(e => { const t = rgb(getComputedStyle(e).color), f = fond(e); if (!t) return { ratio: 0, fondClair: null, qui: qui(e), exc: false }; const a = lum(sur(t, f)), b = lum(f); return { ratio: +((Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)).toFixed(2), fondClair: b > 0.4, qui: qui(e), exc: exc(e) }; });
 }, EXCEPTIONS_CONTRASTE).catch(() => []);
 /* tout le texte du bloc : titre, sélecteur, libellés et chiffres des tuiles, « Clics par écran », en-têtes, cellules, case, notes ;
    absentes : les sortes d'éléments introuvables (chacune doit être là, donc mesurée) */
@@ -857,7 +867,7 @@ const SANTE = /71[,.]4|1\s?873|83[,.]5|92[,.]3|\bkcal\b|\bkg\b|\bpoids\b|\btaill
     ok("G : rien n'est écrit (ni données, ni profils, ni fonctions), données de tous inchangées", intact(db) && db.fonctions.length === 0, resume(db));
   });
 
-  /* =================== H. affichage : 390 px sombre, 320 px, ordinateur clair =================== */
+  /* =================== H. affichage : 390 px sombre, 320 px, ordinateur (ancien choix « clair » ignoré, v80) =================== */
   await bloc("H. affichage", async () => {
     const db = decor(PRINCIPAUX);
     if (CAPT) fs.mkdirSync(CAPT, { recursive: true });
@@ -875,12 +885,13 @@ const SANTE = /71[,.]4|1\s?873|83[,.]5|92[,.]3|\bkcal\b|\bkg\b|\bpoids\b|\btaill
     const g2 = await geo(et.page);
     ok("H : 320 px (case cochée, tableau le plus long) : rien ne déborde (page, bloc, tableau, 5 tuiles, sélecteur), aucune cellule coupée", !!g2 && !g2.deborde && g2.blocOk && g2.tableOk && g2.tuilesOk && g2.selectOk && g2.cellules === 0, JSON.stringify(g2));
     ok("H : 320 px : le TEXTE de chacune des 5 tuiles tient dans sa tuile (libellés en capitales, chiffres)", !!g2 && g2.texteTuiles.length === 0, JSON.stringify(g2 && g2.texteTuiles));
+    /* v80 : l'ancien choix « clair » (mhx_theme = "light") reste rangé sur l'appareil — c'est lui qui prouve qu'il est ignoré */
     const ordi = await coachSur(b, db, "#/prospects", "#pr-mesure-chiffres", { viewport: ORDI, theme: "light" });
     const g3 = await geo(ordi.page), c3 = await lisible(ordi.page, TEXTE_BLOC), a3 = await absentes(ordi.page), m3 = await lireMesure(ordi.page);
-    ok("H : ordinateur, thème clair : data-theme=\"light\", rien ne déborde (texte des tuiles compris), tout le texte du bloc lisible sur fond clair (mêmes éléments et mêmes seuils), chiffres exacts (7 j)",
-      !!g3 && g3.theme === "light" && !g3.deborde && g3.blocOk && g3.tableOk && g3.tuilesOk && g3.texteTuiles.length === 0 && a3.length === 0 && c3.length > 20 && c3.every(x => x.ratio >= seuil(x) && x.fondClair === true) && conforme(m3, EXP["7"], "7"),
-      JSON.stringify(g3) + " " + JSON.stringify(a3) + " " + JSON.stringify(c3.filter(x => !(x.ratio >= seuil(x) && x.fondClair === true)).slice(0, 5)) + " exceptions " + c3.filter(x => x.exc).length);
-    if (CAPT) await ordi.page.locator("#pr-mesure").screenshot({ path: path.join(CAPT, "mesure-ordi-clair.png"), style: SANS_BARRES }).catch(e => console.log("capture ordi : " + e.message));
+    ok("H : ordinateur, ancien choix « clair » rangé sur l'appareil (mhx_theme = \"light\") ignoré, v80 : pas de data-theme (thème sombre), rien ne déborde (texte des tuiles compris), tout le texte du bloc lisible sur fond sombre (mêmes éléments et mêmes seuils), chiffres exacts (7 j)",
+      !!g3 && g3.theme === null && !g3.deborde && g3.blocOk && g3.tableOk && g3.tuilesOk && g3.texteTuiles.length === 0 && a3.length === 0 && c3.length > 20 && c3.every(x => x.ratio >= seuil(x) && x.fondClair === false) && conforme(m3, EXP["7"], "7"),
+      JSON.stringify(g3) + " " + JSON.stringify(a3) + " " + JSON.stringify(c3.filter(x => !(x.ratio >= seuil(x) && x.fondClair === false)).slice(0, 5)) + " exceptions " + c3.filter(x => x.exc).length);
+    if (CAPT) await ordi.page.locator("#pr-mesure").screenshot({ path: path.join(CAPT, "mesure-ordi-sombre.png"), style: SANS_BARRES }).catch(e => console.log("capture ordi : " + e.message));
     ok("H : aucune écriture", intact(db), resume(db));
   });
 

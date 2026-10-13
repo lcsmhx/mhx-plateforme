@@ -1,5 +1,6 @@
 /* verif66 — v60, lot 1 du brief V2 (parcours prospect), sections J et I de la Speed Formation (#/formation), vérifiées de
-   bout en bout dans un vrai navigateur, en français et en anglais, à 390 px, en thème sombre et clair :
+   bout en bout dans un vrai navigateur, en français et en anglais, à 390 px, en thème sombre (v80 : l'app est toute en
+   sombre ; un ancien choix « clair » rangé sur l'appareil, mhx_theme = "light", est ignoré) :
    J1. prospect, français (390 px, sombre) : les nouveaux textes (J1 intro « Ton parcours », J2 puce du module 0, J3
        objectif du module 1 — carte et ligne « Objectif : » —, J5 les 5 axes remplacés des challenges, J6 les 6 défis
        réécrits), typographie française lue SANS normalisation (espace insécable avant « : » dans l'intro, le contenu du
@@ -12,7 +13,7 @@
        glucides »…) dans toute la page ; aucun prix ;
    J2. client Thomas, français (390 px) : les mêmes textes (étiquettes « Objectif » + espace insécable), 15 axes et 10
        défis, aucun ancien texte, son challenge gardé ;
-   J3. prospect, anglais (390 px, clair) : J1, J2, J3 en anglais ; les 5 axes remplacés « Goal: » + objectif et défi
+   J3. prospect, anglais (390 px, ancien choix « clair » ignoré, v80) : J1, J2, J3 en anglais ; les 5 axes remplacés « Goal: » + objectif et défi
        anglais, les 10 autres entièrement en français (« Objectif : » inchangé, espace simple) ; les 6 défis réécrits en
        anglais, les 4 autres en français ; aucune espace insécable avant la ponctuation (typoFr ne fait rien en anglais) ;
        d6, d7, c3 gardés ; aucun ancien texte (anglais ni français) ; aucun prix ;
@@ -43,11 +44,12 @@
        lecture de calc_perso ni de mens (quel que soit l'ordre ou le découpage) ; la vignette de Thomas n'écrit rien ;
    I5. page servie retouchée (FORMATION.video_minutes à 4, une ressource de plus dans le module 6) : « Commence ici ·
        7 min » / « Start here · 7 min », tuile des documents à 15 (rien d'écrit en dur) ;
-   I6. prospect, anglais (390 px, clair) : les deux cartes en anglais (« Start here », actions, tuiles, lignes,
+   I6. prospect, anglais (390 px, ancien choix « clair » ignoré, v80) : les deux cartes en anglais (« Start here », actions, tuiles, lignes,
        « 0 / 48 steps », « (done) », « You're off ✓ » et, v62, l'invitation anglaise du brief H), pas de débordement ;
-   T. thèmes sombre et clair (390 px) : thème appliqué, chaque texte des deux cartes, et l'état replié « Départ lancé ✓ »
-      suivi de son invitation (v62), se détache de son fond (contraste d'au moins 4,5:1 ; 3:1 pour les seules exceptions
-      nommées, à la couleur exacte de leur jeton : EXCEPTIONS_CONTRASTE), fond des cartes différent d'un thème à l'autre, rien ne sort de l'écran,
+   T. thème sombre, puis ancien choix « clair » rangé sur l'appareil, ignoré (v80) (390 px) : thème sombre appliqué
+      (aucun data-theme), chaque texte des deux cartes, et l'état replié « Départ lancé ✓ » suivi de son invitation (v62),
+      se détache de son fond (contraste d'au moins 4,5:1 ; 3:1 pour les seules exceptions nommées, à la couleur exacte de
+      leur jeton : EXCEPTIONS_CONTRASTE), fond des cartes identique dans les deux cas, rien ne sort de l'écran,
       actions d'au moins 44 px (v62 : le bouton et « Plus tard » de l'invitation aussi) ;
    Z. aucun appel vers l'extérieur.
    Supabase simulé (gabarit de verif60, carte 6 §15) : rien ne part vers la vraie base (routage par NOM D'HÔTE, jamais
@@ -614,21 +616,16 @@ const horsEcran = (page, inv) => page.evaluate(inv => { const w = window.innerWi
    retombe sous le seuil de 4,5:1) : [sélecteur, jeton] */
 const CONTRASTE = 4.5, CONTRASTE_EXC = 3;
 const EXCEPTIONS_CONTRASTE = [
-  [".t-sub", "--ink-3"],   // libellés des tuiles : le texte secondaire de toute l'app (environ 3,9 à 4:1 dans les deux thèmes)
+  [".t-sub", "--ink-3"],   // libellés des tuiles : le texte secondaire de toute l'app (thème sombre, le seul depuis la v80)
   [".note", "--ink-3"],    // notes : le même texte secondaire
-  /* thème clair seulement : la couleur d'accent de l'app (--accent #9a7420 sur blanc : 4,29:1) — l'étiquette « Commence ici »
-     (comme toutes les étiquettes .eyebrow de l'app), « Départ lancé ✓ » et la coche ✓ (icône d'état, aria-hidden, blanche
-     sur son disque d'accent) ; en thème sombre, ces textes doivent atteindre 4,5:1 */
-  [".eyebrow", "--accent", "light"],
-  [".fo-depart-ligne", "--accent", "light"],
-  [".fo-depart-c", "--accent-ink", "light"],
+  /* v80 (bloc 1) : le thème clair n'existe plus ; ses 4 exceptions « thème clair seulement » (.eyebrow, .fo-depart-ligne,
+     .fo-depart-c, .invitation a.btn : la couleur d'accent claire) n'ont plus d'objet : retirées, ces textes doivent
+     atteindre 4,5:1 comme en thème sombre */
   /* relecture (v62) : l'invitation « Bien joué, ton départ est lancé. », mesurée aussi, reprend le bloc d'appel de la page
      « Ton plan d'action » et de l'accueil (div.dc-cta) : sa ligne « 15 min avec Lucas · offert » et « Plus tard » sont le
-     même texte secondaire (--ink-3 : 3,99:1 en sombre, 4,27:1 en clair), et en thème clair seulement le bouton doré de
-     l'app (blanc sur --accent : 4,29:1, comme la coche ✓ ci-dessus) ; limitées à l'invitation */
+     même texte secondaire (--ink-3) ; limitées à l'invitation */
   [".invitation .dc-cta-sous", "--ink-3"],
-  [".invitation .lien-discret", "--ink-3"],
-  [".invitation a.btn", "--accent-ink", "light"]
+  [".invitation .lien-discret", "--ink-3"]
 ];
 const tropFaibles = k => k.out.filter(x => !(x.r >= (x.exc ? CONTRASTE_EXC : CONTRASTE)));
 /* contraste de chaque texte des deux cartes avec son fond réel (fonds semi-transparents composés jusqu'au corps de la page) ;
@@ -731,7 +728,7 @@ const ISO = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$/;
   });
 
   /* =================== J3. prospect, anglais =================== */
-  await bloc("J3. prospect, anglais (390 px, clair) : textes J traduits, « Goal: » pour les 5 axes", async () => {
+  await bloc("J3. prospect, anglais (390 px, ancien choix « clair » ignoré, v80) : textes J traduits, « Goal: » pour les 5 axes", async () => {
     const ID = PID(2);
     const db = base({ comptes: [PROSPECT(2, "Emma", [["formation", FORM_AVANT("m5")]])] }); avecEn(db, ID);
     const { page } = await contexte(b, quiP(2), db, { viewport: MOBILE, langue: "en", stockage: { mhx_theme: "light" } });
@@ -1024,7 +1021,7 @@ const ISO = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$/;
   });
 
   /* =================== I6. prospect, anglais =================== */
-  await bloc("I6. prospect, anglais (390 px, clair) : les deux cartes", async () => {
+  await bloc("I6. prospect, anglais (390 px, ancien choix « clair » ignoré, v80) : les deux cartes", async () => {
     const vid = { depart: { video: avant(H) } };
     const db = base({ comptes: [PROSPECT(51, "Mia"), PROSPECT(52, "Lily", [["calc_perso", CP]]), PROSPECT(53, "Ava", [["formation", vid], ["calc_perso", CP], ["mens", MENS_DEPART]])] });
     [51, 52, 53].forEach(k => avecEn(db, PID(k)));
@@ -1038,7 +1035,8 @@ const ISO = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$/;
       !!a && a.h2 === I_EN.apercu && egal(a.tuiles, [["7", I_EN.tuiles[0]], ["7", I_EN.tuiles[1]], ["14", I_EN.tuiles[2]], ["25", I_EN.tuiles[3]]]) && egal(a.lignes, I_EN.lignes) && (await compteur(page)) === I_EN.compteur && !TELECHARGER.test(a.brut),
       JSON.stringify(a && [a.h2, a.tuiles, a.lignes]) + " " + await compteur(page) + " · " + JSON.stringify(a && (a.brut.match(TELECHARGER) || [""])[0]));
     const h = await horsEcran(page), th = await page.evaluate(() => document.documentElement.getAttribute("data-theme"));
-    ok("anglais, thème clair, 390 px : aucun débordement", th === "light" && h.bon, th + " " + JSON.stringify(h));
+    /* v80 : l'ancien choix « clair » rangé sur l'appareil (mhx_theme = "light") est ignoré : thème sombre, aucun data-theme */
+    ok("anglais, ancien choix « clair » rangé sur l'appareil, ignoré (v80) : thème sombre (aucun data-theme), 390 px : aucun débordement", th === null && h.bon, th + " " + JSON.stringify(h));
     await c.close();
     ({ c, page } = await contexte(b, quiP(52), db, opts));
     await ouvrirFormation(page); await attendre(page, 300);
@@ -1057,9 +1055,13 @@ const ISO = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$/;
     await c.close();
   });
 
-  /* =================== T. thèmes sombre et clair =================== */
+  /* =================== T. thème sombre, et ancien choix « clair » ignoré (v80) =================== */
+  /* v80 (bloc 1) : l'app est toute en sombre ; l'ancien choix « clair » rangé sur l'appareil (mhx_theme = "light", gardé
+     ici : c'est ce qui prouve qu'il est ignoré) donne exactement le thème sombre : aucun data-theme, même fond des cartes,
+     mêmes seuils de contraste et de taille, mêmes exceptions */
   let fondSombre = null;
-  for (const theme of ["sombre", "clair"]) await bloc("T. thème " + theme + " (390 px) : les deux cartes", async () => {
+  const NOM_T = { sombre: "thème sombre", clair: "ancien choix « clair » rangé sur l'appareil, ignoré (v80)" };
+  for (const theme of ["sombre", "clair"]) await bloc("T. " + NOM_T[theme] + " (390 px) : les deux cartes", async () => {
     const db = base({ comptes: [PROSPECT(61, "Rose", [["calc_perso", CP]])] });
     const { page } = await contexte(b, quiP(61), db, Object.assign({ viewport: MOBILE }, theme === "clair" ? { stockage: { mhx_theme: "light" } } : {}));
     await ouvrirFormation(page);
@@ -1076,11 +1078,11 @@ const ISO = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$/;
     const h2 = await horsEcran(x2.page, INV_SEL), tapInv = await x2.page.evaluate(s => Array.from(document.querySelectorAll(s + " > .dc-cta > a.btn, " + s + " > .dc-cta > button.lien-discret")).map(e => Math.round(e.getBoundingClientRect().height)), INV_SEL).catch(() => []);
     await x2.c.close();
     const tous = k.out.concat(k2.out), faibles = tropFaibles(k).concat(tropFaibles(k2)), exc = tous.filter(x => x.exc);
-    ok("thème " + theme + " : appliqué ; chaque texte des deux cartes (et « Départ lancé ✓ », l'état replié, suivi de son invitation « Bien joué… » : ses 6 textes) se détache de son fond : au moins 4,5:1, 3:1 pour les seules exceptions nommées (" + EXCEPTIONS_CONTRASTE.map(x => x[0] + (x[2] ? " en clair" : "")).join(", ") + ") ; " + tous.length + " textes, le plus faible " + Math.min(...tous.map(x => x.r)) + ":1" + (theme === "clair" ? " ; fond des cartes différent du thème sombre" : ""),
-      (theme === "clair" ? k.theme === "light" && k2.theme === "light" && !!fondSombre && k.fond !== fondSombre : k.theme === null && k2.theme === null) && k.out.length >= 12 && replie.length === 1 && dansInv.length === 6 && faibles.length === 0,
+    ok(NOM_T[theme] + " : thème sombre appliqué (aucun data-theme) ; chaque texte des deux cartes (et « Départ lancé ✓ », l'état replié, suivi de son invitation « Bien joué… » : ses 6 textes) se détache de son fond : au moins 4,5:1, 3:1 pour les seules exceptions nommées (" + EXCEPTIONS_CONTRASTE.map(x => x[0]).join(", ") + ") ; " + tous.length + " textes, le plus faible " + Math.min(...tous.map(x => x.r)) + ":1" + (theme === "clair" ? " ; fond des cartes identique au thème sombre" : ""),
+      (theme === "clair" ? k.theme === null && k2.theme === null && !!fondSombre && k.fond === fondSombre : k.theme === null && k2.theme === null) && k.out.length >= 12 && replie.length === 1 && dansInv.length === 6 && faibles.length === 0,
       JSON.stringify([k.theme, k.fond, fondSombre, replie, dansInv.map(x => [x.t, x.cls, x.r, x.exc]), faibles, exc.map(x => [x.t, x.exc, x.r])]));
     const h = await horsEcran(page), d = await carteDepart(page);
-    ok("thème " + theme + ", 390 px : rien ne sort de l'écran (page, cartes, tuiles ; et, les 3 faites, « Départ lancé ✓ » et son invitation), les 3 actions d'au moins 44 px de haut, le bouton et « Plus tard » de l'invitation aussi",
+    ok(NOM_T[theme] + ", 390 px : rien ne sort de l'écran (page, cartes, tuiles ; et, les 3 faites, « Départ lancé ✓ » et son invitation), les 3 actions d'au moins 44 px de haut, le bouton et « Plus tard » de l'invitation aussi",
       h.bon && !!d && d.actions.length === 3 && d.actions.every(a => a.h >= 44) && h2.bon && tapInv.length === 2 && tapInv.every(x => x >= 44),
       JSON.stringify(h) + " " + JSON.stringify(d && d.actions.map(a => a.h)) + " " + JSON.stringify(h2) + " " + JSON.stringify(tapInv));
   });
