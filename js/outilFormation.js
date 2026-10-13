@@ -640,9 +640,12 @@ const outilFormation = {
 
   /* --- Organise ta diete : 12 semaines x 7 jours x 6 repas --- */
   ligneDiete(D){
-    const s = String(D.semaine), j = String(D.jour);
-    const sem = D.diete[s] || (D.diete[s] = {});
-    if (!sem[j]) sem[j] = REPAS_SEM.map(() => ({ f:false, p:"", g:"", l:"" }));
+    /* v86 (lot 1) : la semaine et le jour venus du document sont bornés (1 à 12, 0 à 6) et lus seulement comme clés propres :
+       une valeur piégée (« __proto__ »…) ne touche jamais aux objets communs de la page ; une valeur normale ne change rien */
+    const ns = +D.semaine, nj = +D.jour, propre = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+    const s = String(Number.isInteger(ns) && ns >= 1 && ns <= 12 ? ns : 1), j = String(Number.isInteger(nj) && nj >= 0 && nj < JOURS_SEM.length ? nj : 0);
+    const sem = (propre(D.diete, s) && D.diete[s]) || (D.diete[s] = {});
+    if (!(propre(sem, j) && sem[j])) sem[j] = REPAS_SEM.map(() => ({ f:false, p:"", g:"", l:"" }));
     return sem[j];
   },
   kcal(r){ return (+r.p || 0) * 4 + (+r.g || 0) * 4 + (+r.l || 0) * 9; },

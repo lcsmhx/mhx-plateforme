@@ -417,7 +417,9 @@ const Clients = {
       /* v59 (Q13-4) : checkins compte par ses vraies saisies (ses entrées), pas par la date de sa ligne */
       const quand = saisie ? this.dateSaisie(d.outil, d.maj_le, c) : null;
       if (quand && (!parClient[d.user_id] || quand > parClient[d.user_id])) parClient[d.user_id] = quand;
-      (contenus[d.user_id] = contenus[d.user_id] || {})[d.outil] = c;
+      /* v86 (lot 1) : la boîte de chaque compte sans prototype — une ligne écrite par le compte avec une clé « __proto__ » ne
+         fait plus apparaître de fausses clés du coach (suivi_prospect, feedbacks) dans les listes ; les vraies clés restent lues */
+      (contenus[d.user_id] = contenus[d.user_id] || Object.create(null))[d.outil] = c;
     });
     (journaux || []).forEach(d => {
       if (!d || d.outil !== "journal_alimentaire" || typeof d.user_id !== "string" || typeof d.maj_le !== "string") return;

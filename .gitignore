@@ -1,3 +1,6 @@
 # Données locales de Claude Code : jamais versionnées (dépôt public)
 .claude/session-notes/
 .claude/settings.local.json
+# v86 (mission de nuit du 14/10) : sorties locales de Claude (peuvent contenir des données de vrais clients) et copie locale des réglages
+Claude outputs/
+.claude/settings.local.avant-auto.json
