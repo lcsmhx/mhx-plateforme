@@ -987,7 +987,9 @@ const ISO = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$/;
     /* v71 (D) : Jade est prospect : plus de ligne ni de bouton [data-ouvrir] dans Mes clients (les prospects sont dans Prospects) ;
        Mes clients ouverte (le tableau des clients rendu), puis sa fiche ouverte comme le bouton le faisait : Clients.ouvrir
        (nom affiché « Jade Essai » = Clients.nom, PROSPECT : prénom + « Essai ») */
-    await aller(page, "#/clients", 2000); await page.waitForSelector("#tb-clients [data-ouvrir]", { timeout: 8000 });
+    /* v84 (ménage du bloc 3) : le tableau des clients (#tb-clients, ses [data-ouvrir]) est dans « Suivi détaillé »
+       (#/suivi-clients, menu Plus ; avant : #/clients) */
+    await aller(page, "#/suivi-clients", 2000); await page.waitForSelector("#tb-clients [data-ouvrir]", { timeout: 8000 });
     await page.evaluate(([id, n]) => Clients.ouvrir(id, n, "accueil"), [IDP, "Jade Essai"]); await page.waitForSelector("#vue .bandeau", { timeout: 8000 }); await attendre(page, 800);
     const L0 = db.lectures.length;
     await aller(page, "#/formation", 2000); await page.waitForSelector("#fo-vue .prog-compteur", { timeout: 8000 });

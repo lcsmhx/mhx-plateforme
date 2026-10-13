@@ -407,11 +407,13 @@ const ecran = page => page.evaluate(() => {
       && !(await page.$("#dc-cadeau")) && !(await page.$("#dc-bilan")) && !(await page.$("#q-probleme")) && (await stock(page)) === "", JSON.stringify([db.onglets, cl, I2.bilan_propose, await stock(page)]));
     /* le coach : les réponses du nouveau prospect au même endroit qu'avant (carte Prospects, fiche), texte libre et sexe compris */
     const x2 = await contexte(b, db, { qui: COACH, viewport: LARGE });
-    await x2.page.goto(URL0 + "#/prospects"); await pret(x2.page); await attendre(x2.page, 800);
+    /* v84 (ménage du bloc 3) : les cartes des prospects (.sc-carte) ont quitté la page Prospects pour « Suivi commercial »
+       (menu Plus, #/suivi-commercial), telles quelles : la carte est lue à sa nouvelle place */
+    await x2.page.goto(URL0 + "#/suivi-commercial"); await pret(x2.page); await attendre(x2.page, 800);
     const carte = norm(await x2.page.evaluate(id => { const e = Array.from(document.querySelectorAll(".sc-carte")).find(c => c.innerHTML.indexOf(id) > -1 || /Zoé/.test(c.textContent)); return e ? e.textContent : ""; }, UID_NOUVEAU));
     await x2.page.goto(URL0 + "#/client/" + UID_NOUVEAU + "/accueil"); await pret(x2.page); await attendre(x2.page, 800);
     const fiche = norm(await x2.page.evaluate(() => document.getElementById("vue").textContent));
-    ok("A16 : le coach voit les réponses au même endroit qu'avant : carte Prospects (problème, ce qui l'a bloqué, dans 3 mois) et fiche (les 3 réponses, et « Sexe : Femme »)",
+    ok("A16 : le coach voit les réponses au même endroit qu'avant : carte Prospects (v84 : dans « Suivi commercial ») (problème, ce qui l'a bloqué, dans 3 mois) et fiche (les 3 réponses, et « Sexe : Femme »)",
       /Perdre du gras/.test(carte) && /Le manque de temps/.test(carte) && /Avoir de l'énergie toute la journée/.test(carte) && /Perdre du gras/.test(fiche) && /Le manque de temps/.test(fiche) && /Sexe\s*Femme/.test(fiche), (carte.slice(0, 300) + " | " + fiche.slice(0, 300)));
   });
 

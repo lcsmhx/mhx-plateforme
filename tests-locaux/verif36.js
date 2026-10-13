@@ -60,7 +60,7 @@ const server = http.createServer((req,res)=>{if(servirFichier(req,res,HTML))retu
     ok("suivi : objectif 3 case desactivee (statut coach non atteint)", await page.$eval('.obj-case[data-obj="2"]', e=>e.disabled));
     await c.close(); }
   { const {c,page}=await ctx(coach);
-    await page.goto("http://localhost:9555/#/clients"); await page.waitForTimeout(1200);
+    await page.goto("http://localhost:9555/#/suivi-clients"); await page.waitForTimeout(1200);   // v84 (ménage du bloc 3) : le tableau complet et ses boutons [data-bilan] sont dans « Suivi détaillé » (menu Plus)
     await page.click(`[data-bilan="${F.IDS.c1}"]`); await page.waitForTimeout(1200);
     const t = await page.textContent("#bilan-vue");
     ok("coach : « Ses bilans hebdomadaires » avec la reponse du client", t.includes("Ses bilans hebdomadaires") && t.includes("4 séances tenues"));

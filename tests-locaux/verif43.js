@@ -6,6 +6,10 @@
    2. un compte qui n'a jamais rien saisi était compté « Sans nouvelles depuis
       10 jours ou plus » : il est classé à part (« Jamais rien saisi »).
    v83 (bloc 3) : la fenêtre « Supprimer » d'un client s'ouvre depuis l'onglet Compte de sa fiche (plus depuis Comptes).
+   v84 (ménage du bloc 3) : le tableau « Suivi de mes clients » (#tb-clients, [data-ouvrir], [data-bilan]) et ses encadrés
+   (#alertes-clients) sont dans « Suivi détaillé » (#/suivi-clients), les comptes (#liste-clients) dans « Comptes » (#/comptes) ;
+   la liste « Clients » reste sur #/clients. Seules les adresses changent (aucun identifiant : lu sur la liste ET sur le
+   Suivi détaillé) ; même nombre (27).
    Supabase simulé (aucun appel réel), toute écriture est journalisée.
    Usage : node verif43.js ../index.html                                          */
 const { chromium } = require("playwright"); const fs = require("fs"); const http = require("http"); const path = require("path");
@@ -95,7 +99,11 @@ const flagsDe = (page) => page.$$eval("#alertes-clients .flag", l => l.map(x => 
 
     /* --- Mes clients --- */
     E.ici = "Mes clients"; await page.evaluate(() => { location.hash = "#/clients"; }); await attendre(page, 2200);
-    const vue = await texte(page, "#vue");
+    const vueListe = await texte(page, "#vue");
+    /* v84 (ménage du bloc 3) : le tableau et ses encadrés sont dans « Suivi détaillé » : l'absence d'identifiant est relevée sur
+       la liste (#/clients) ET sur le Suivi détaillé ; la ligne et les encadrés y sont lus */
+    E.ici = "Suivi détaillé"; await page.evaluate(() => { location.hash = "#/suivi-clients"; }); await page.waitForSelector(`#tb-clients [data-ouvrir="${N1}"]`).catch(() => {}); await attendre(page, 500);
+    const vue = vueListe + " " + await texte(page, "#vue");
     ok("Mes clients : aucun identifiant de compte affiché", !vue.includes(MARQUE));
     const ligne = await page.$(`#tb-clients tr:has([data-ouvrir="${N1}"])`);
     const ligneT = ligne ? (await ligne.textContent()).replace(/\s+/g, " ") : "";
@@ -107,6 +115,7 @@ const flagsDe = (page) => page.$$eval("#alertes-clients .flag", l => l.map(x => 
     ok("Mes clients : « Sans nouvelles depuis 10 jours ou plus » ne cite que Julien (12 j)", sansNouvelles.includes("Julien Démo") && !sansNouvelles.includes("Sans nom") && !sansNouvelles.includes("Nadia"), sansNouvelles || flags.join(" | "));
     ok("Mes clients : Julien n'est pas dans « Jamais rien saisi »", !jamais.includes("Julien"));
     ok("Mes clients : deux comptes → « Ces comptes n'ont encore rien enregistré »", jamais.includes("Ces comptes n'ont encore rien enregistré"), jamais);
+    E.ici = "Comptes"; await page.evaluate(() => { location.hash = "#/comptes"; }); await page.waitForSelector(`#liste-clients .client-l`).catch(() => {}); await attendre(page, 500);   // v84 (ménage du bloc 3) : les comptes sont dans « Comptes » (menu Plus)
     const comptes = await texte(page, "#liste-clients");
     ok("Comptes : « Sans nom » et « pas encore utilisé », sans identifiant", comptes.includes("Sans nom") && comptes.includes("pas encore utilisé") && !comptes.includes(MARQUE), comptes.slice(0, 200));
 
@@ -119,6 +128,7 @@ const flagsDe = (page) => page.$$eval("#alertes-clients .flag", l => l.map(x => 
          relève l'absence de .suppr sur la rangée, puis on ouvre la même fenêtre depuis la fiche (ouverte par son [data-ouvrir]),
          on remet l'onglet Suivi et on revient sur Mes clients pour la suite (fenêtre de statut, toujours dans Comptes) */
       const supprComptes = !!(await rangee.$(".suppr"));
+      await page.evaluate(() => { location.hash = "#/suivi-clients"; }); await page.waitForSelector(`[data-ouvrir="${N1}"]`).catch(() => {});   // v84 (ménage du bloc 3) : son [data-ouvrir] est dans « Suivi détaillé »
       await page.click(`[data-ouvrir="${N1}"]`); await page.waitForSelector("#fc-supprimer", { state: "attached" }).catch(() => {});
       await page.click('[data-onglet="compte"]'); await attendre(page, 300);
       await page.click("#fc-supprimer"); await attendre(page, 500);
@@ -127,7 +137,7 @@ const flagsDe = (page) => page.$$eval("#alertes-clients .flag", l => l.map(x => 
       await page.keyboard.press("Escape"); await attendre(page, 400);
       ok("Fiche, onglet Compte / Supprimer : Échap ferme la fenêtre", !(await page.$(".modale")));
       await page.click('[data-onglet="suivi"]'); await attendre(page, 200);   // v83 (bloc 3) : l'onglet choisi est gardé pour cette fiche
-      await page.evaluate(() => { location.hash = "#/clients"; }); await page.waitForSelector(`#liste-clients .client-l:has-text("Sans nom") .statut`).catch(() => {}); await attendre(page, 500);
+      await page.evaluate(() => { location.hash = "#/comptes"; }); await page.waitForSelector(`#liste-clients .client-l:has-text("Sans nom") .statut`).catch(() => {}); await attendre(page, 500);   // v84 (ménage du bloc 3) : retour sur « Comptes » (avant : #/clients)
       rangee = await page.$(`#liste-clients .client-l:has-text("Sans nom")`);   // v83 (bloc 3) : Mes clients redessiné au retour
       await (await rangee.$(".statut")).click(); await attendre(page, 500);
       const corps2 = await texte(page, ".modale .corps");
@@ -136,6 +146,7 @@ const flagsDe = (page) => page.$$eval("#alertes-clients .flag", l => l.map(x => 
     }
 
     /* --- fiche du compte sans nom, ouverte depuis Mes clients --- */
+    await page.evaluate(() => { location.hash = "#/suivi-clients"; }); await page.waitForSelector(`[data-ouvrir="${N1}"]`).catch(() => {});   // v84 (ménage du bloc 3) : le tableau (et son [data-ouvrir]) est dans « Suivi détaillé »
     E.ici = "fiche"; await page.click(`[data-ouvrir="${N1}"]`); await attendre(page, 2000);
     const h1 = await texte(page, "#acc-vue h1");
     ok("fiche : le titre est « Sans nom »", h1.startsWith("Sans nom"), h1);
@@ -148,13 +159,13 @@ const flagsDe = (page) => page.$$eval("#alertes-clients .flag", l => l.map(x => 
     ok("fiche / Son programme : le fil d'Ariane commence par « Sans nom — »", eb1.startsWith("Sans nom — "), eb1);
 
     /* --- « Préparer le call » depuis Mes clients --- */
-    E.ici = "préparer le call"; await page.evaluate(() => { location.hash = "#/clients"; }); await attendre(page, 2000);
+    E.ici = "préparer le call"; await page.evaluate(() => { location.hash = "#/suivi-clients"; }); await attendre(page, 2000);   // v84 (ménage du bloc 3) : [data-bilan] est dans « Suivi détaillé »
     await page.click(`[data-bilan="${N1}"]`); await attendre(page, 1800);
     const eb2 = await texte(page, ".masthead .eyebrow");
     ok("Préparer le call : le fil d'Ariane commence par « Sans nom — »", eb2.startsWith("Sans nom — "), eb2);
 
     /* --- « Ouvrir sa fiche » depuis Comptes --- */
-    E.ici = "ouvrir sa fiche"; await page.evaluate(() => { location.hash = "#/clients"; }); await attendre(page, 2000);
+    E.ici = "ouvrir sa fiche"; await page.evaluate(() => { location.hash = "#/comptes"; }); await attendre(page, 2000);   // v84 (ménage du bloc 3) : « Ouvrir sa fiche » est dans « Comptes »
     const bOuvrir = await page.$(`#liste-clients .client-l:has-text("Sans nom") .voir:not(.role):not(.statut):not(.suppr)`);
     if (bOuvrir) { await bOuvrir.click(); await attendre(page, 1800); }
     const eb3 = await texte(page, ".masthead .eyebrow"), band3 = await texte(page, ".bandeau-tete strong");
@@ -170,6 +181,7 @@ const flagsDe = (page) => page.$$eval("#alertes-clients .flag", l => l.map(x => 
     const E = { js: [], ecritures: [], ici: "un seul compte muet" };
     const { c, page } = await contexte(b, coach, E, avecN2);
     await page.goto(`http://localhost:${PORT}/#/clients`); await attendre(page, 2200);
+    await page.evaluate(() => { location.hash = "#/suivi-clients"; }); await attendre(page, 2200);   // v84 (ménage du bloc 3) : les encadrés (#alertes-clients) et le tableau sont dans « Suivi détaillé »
     const flags = await flagsDe(page);
     const jamais = flags.find(t => t.startsWith("Jamais rien saisi")) || "";
     ok("un seul compte muet : « Jamais rien saisi : Nadia Démo. Ce compte n'a encore rien enregistré… »", jamais.startsWith("Jamais rien saisi : Nadia Démo.") && jamais.includes("Ce compte n'a encore rien enregistré"), jamais || flags.join(" | "));
@@ -182,6 +194,7 @@ const flagsDe = (page) => page.$$eval("#alertes-clients .flag", l => l.map(x => 
     const E = { js: [], ecritures: [], ici: "témoin" };
     const { c, page } = await contexte(b, coach, E, base());
     await page.goto(`http://localhost:${PORT}/#/clients`); await attendre(page, 2200);
+    await page.evaluate(() => { location.hash = "#/suivi-clients"; }); await attendre(page, 2200);   // v84 (ménage du bloc 3) : les encadrés (#alertes-clients) et le tableau sont dans « Suivi détaillé »
     const flags = await flagsDe(page);
     ok("témoin (fixtures seules) : pas d'encadré « Jamais rien saisi »", !flags.some(t => t.startsWith("Jamais rien saisi")), flags.join(" | "));
     ok("témoin : « Sans nouvelles depuis 10 jours ou plus » cite Julien", flags.some(t => t.startsWith("Sans nouvelles") && t.includes("Julien Démo")), flags.join(" | "));

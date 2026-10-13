@@ -4,6 +4,9 @@
    autre compte, « Rester connecté » décoché, refus définitif, déconnexion), questionnaire et diagnostic
    enregistrés pendant la frappe, clients et coach inchangés.
    Supabase simulé : rien ne part vers la vraie base ; les écritures sont appliquées en mémoire.
+   v84 (ménage du bloc 3) : le tableau « Suivi de mes clients » (et le bouton Ouvrir [data-ouvrir] de Thomas) a quitté la page
+   Clients pour « Suivi détaillé » (#/suivi-clients) : la fiche du coach s'ouvre de là (la dernière vérification passe aussi par
+   la page Clients d'abord). Seules les adresses changent ; même nombre (42).
    Usage : node verif48.js ../index.html                                          */
 const { chromium } = require("playwright"); const fs = require("fs"); const http = require("http"); const path = require("path");
 const F = require("./fixtures"); const HTML = path.resolve(process.argv[2] || "../index.html");
@@ -307,7 +310,7 @@ const ecrituresIntake = (db, uid) => db.ecritures.filter(e => e.outil === "intak
     /* coach dans la fiche d'un client, hors ligne : sa modification est gardee (au nom du coach) et repart chez le bon client */
     const db = base(); db.panne = 1000;
     const { c, page } = await contexte(b, coach, db);
-    await page.goto(`http://localhost:${PORT}/#/clients`); await attendre(page, 2200);
+    await page.goto(`http://localhost:${PORT}/#/suivi-clients`); await attendre(page, 2200);   // v84 (ménage du bloc 3) : [data-ouvrir] est dans « Suivi détaillé »
     await page.click(`[data-ouvrir="${F.IDS.c1}"]`).catch(() => {}); await attendre(page, 1800);
     const accepte = await page.evaluate(() => Store.ecrire("complements", { liste: [{ nom: "Oméga 3", dose: "2 g" }] })); await attendre(page, 1500);
     const cp = (await copies(page, "local"))[F.IDS.c1 + "|complements"];
@@ -352,7 +355,7 @@ const ecrituresIntake = (db, uid) => db.ecritures.filter(e => e.outil === "intak
     /* session refusee pendant la redaction d'une note privee (coach) : le texte reste a l'ecran */
     const db = base();
     const { c, page } = await contexte(b, coach, db);
-    await page.goto(`http://localhost:${PORT}/#/clients`); await attendre(page, 2200);
+    await page.goto(`http://localhost:${PORT}/#/suivi-clients`); await attendre(page, 2200);   // v84 (ménage du bloc 3) : [data-ouvrir] est dans « Suivi détaillé »
     await page.click(`[data-ouvrir="${F.IDS.c1}"]`).catch(() => {}); await attendre(page, 2200);
     db.refreshMode = "refuse";
     await page.evaluate(() => { Auth.session.expire_le = 1; });
@@ -442,6 +445,7 @@ const ecrituresIntake = (db, uid) => db.ecritures.filter(e => e.outil === "intak
     const db = base();
     const { c, page } = await contexte(b, coach, db);
     await page.goto(`http://localhost:${PORT}/#/clients`); await attendre(page, 2200);
+    await page.evaluate(() => { location.hash = "#/suivi-clients"; }); await attendre(page, 2200);   // v84 (ménage du bloc 3) : Mes clients, puis « Suivi détaillé » où est [data-ouvrir]
     await page.click(`[data-ouvrir="${F.IDS.c1}"]`).catch(() => {}); await attendre(page, 1800);
     ok("coach : Mes clients puis la fiche de Thomas s'ouvrent, aucune écriture", (await texte(page, "#vue")).includes("Fiche client") && db.ecritures.length === 0);
     await c.close();

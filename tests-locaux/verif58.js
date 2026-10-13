@@ -39,6 +39,11 @@
       et clients), compteur, export CSV (BOM, colonnes, neutralisation) ;
    I. téléphone 390 px et ordi ; J. données piégées ; K. 1 000 prospects < 2 s ; L. prospect et client : pas de page coach,
       suivi_prospect illisible ; Z. aucun appel vers l'extérieur.
+   v84 (ménage du bloc 3) : l'écran d'avant a quitté Clients et Prospects sans rien perdre : le tableau « Suivi de mes clients »
+   (#tb-clients, [data-ouvrir]) est lu dans #/suivi-clients, les comptes (#liste-clients) dans #/comptes, les cartes, filtres,
+   compteur, Mesure, CSV et l'en-tête .pr-detail dans #/suivi-commercial, la newsletter (#pr-nl) dans #/newsletter ; la page
+   Prospects garde la liste et les Nouveautés. Les vérifications qui lisaient toute l'ancienne page (texte, débordement,
+   données piégées, 1 000 prospects) lisent chacune des pages qui en ont reçu un morceau. Même nombre de vérifications.
    Supabase simulé (gabarit de verif55, repris de verif57) : rien ne part vers la vraie base (routage par NOM D'HÔTE) ;
    règles de la base reproduites (HANDOFF §2.3, v49) ; appelant reconnu à son jeton ; chaque écriture appliquée en mémoire
    et notée (avec sa condition maj_le), chaque lecture aussi ; pannes simulées pour suivi_prospect (autre onglet qui écrit
@@ -468,12 +473,20 @@ const ordreClients = page => page.$$eval("#tb-clients [data-ouvrir]", l => l.map
 const ligneProspects = async page => { const r = await page.$eval("#clients-prospects", e => { const a = e.querySelector("a.link-a"); return { t: e.textContent, href: a ? a.getAttribute("href") : "" }; }).catch(() => null); return r ? { t: norm(r.t), href: r.href } : { t: "", href: "" }; };
 /* v83 (bloc 3) : la ligne « Les prospects sont dans Prospects → » est supprimée (décision 7) ; le nombre de prospects se lit
    sur la page Prospects : #lc-compte « N prospects » et l'en-tête « N comptes gratuits · M à traiter » */
-const nbProspects = async page => [await texte(page, "#lc-prospects #lc-compte"), (await texte(page, "#pr-vue .pr-detail .lede")).split(" · ")[0]];
+/* v84 (ménage du bloc 3) : « N prospects » se lit sur la page Prospects (la liste), « N comptes gratuits » dans le Suivi
+   commercial (#/suivi-commercial, menu Plus) : les deux pages sont ouvertes tour à tour (on finit sur le Suivi commercial) */
+const nbProspects = async page => {
+  await aller(page, "#/prospects", 300); await page.waitForSelector("#lc-prospects #lc-compte", { timeout: 8000 }); await attendre(page, 300);
+  const n = await texte(page, "#lc-prospects #lc-compte");
+  await aller(page, "#/suivi-commercial", 300); await page.waitForSelector("#pr-vue .pr-detail .lede", { timeout: 8000 }); await attendre(page, 300);
+  return [n, (await texte(page, "#pr-vue .pr-detail .lede")).split(" · ")[0]];
+};
 const lignesFiche = (page, sel) => page.$$eval(sel + " ul.fiche-l > li", l => l.map(li => [li.querySelector("span") ? li.querySelector("span").textContent.replace(/\s+/g, " ").trim() : "", li.querySelector("b") ? li.querySelector("b").textContent.replace(/\s+/g, " ").trim() : ""])).catch(() => []);
 const valeur = (L, k) => (L.find(x => x[0] === k) || [])[1];
 async function ficheDe(page, uid, nom, sel){
-  /* même adresse #/accueil d'une fiche à l'autre : on en sort d'abord (sinon aucun changement d'adresse, la fiche ne change pas) */
-  if ((await page.evaluate(() => location.hash)) !== "#/clients"){ await page.evaluate(() => { location.hash = "#/clients"; }); await page.waitForSelector("#tb-clients [data-ouvrir]", { timeout: 10000 }); await attendre(page, 300); }
+  /* même adresse #/accueil d'une fiche à l'autre : on en sort d'abord (sinon aucun changement d'adresse, la fiche ne change pas) ;
+     v84 (ménage du bloc 3) : le tableau (#tb-clients [data-ouvrir]) est dans « Suivi détaillé » (#/suivi-clients) */
+  if ((await page.evaluate(() => location.hash)) !== "#/suivi-clients"){ await page.evaluate(() => { location.hash = "#/suivi-clients"; }); await page.waitForSelector("#tb-clients [data-ouvrir]", { timeout: 10000 }); await attendre(page, 300); }
   await page.evaluate(([id, n]) => Clients.ouvrir(id, n, "accueil"), [uid, nom]);
   await page.waitForSelector(sel || "#fiche-reponses", { timeout: 10000 }); await attendre(page, 600);
 }
@@ -544,15 +557,19 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
     await page.click(`#tb-a-traiter [data-fiche="${ZOE}"]`); await page.waitForSelector("#fiche-commercial", { timeout: 8000 }); await attendre(page, 600);
     ok("A : un clic → la fiche de Zoé, « Passer client » à portée de main", !!(await page.$('#fiche-commercial [data-sc="client"]')) && (await page.evaluate(() => Store.idConsulte)) === ZOE);
     await aller(page, "#/tableau", 1500);
-    await page.click("#tb-t-prospects"); await page.waitForSelector("#pr-liste", { timeout: 8000 }); await attendre(page, 500);
-    ok("A : la tuile Prospects mène à la page Prospects, « À traiter » : les 4 mêmes (même définition que le badge)", (await page.evaluate(() => courant)) === "prospects" && JSON.stringify((await uids(page)).slice().sort()) === JSON.stringify([ZOE, INES, LEA, MARC].sort()), JSON.stringify(await uids(page)));
+    /* v84 (ménage du bloc 3) : la tuile mène à la page Prospects (la liste #lc-prospects) ; les cartes « À traiter » (#pr-liste)
+       sont dans le Suivi commercial (#/suivi-commercial, menu Plus) */
+    await page.click("#tb-t-prospects"); await page.waitForSelector("#lc-prospects", { timeout: 8000 }); await attendre(page, 500);
+    const pageA = await page.evaluate(() => courant);
+    await aller(page, "#/suivi-commercial", 300); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 }); await attendre(page, 500);
+    ok("A : la tuile Prospects mène à la page Prospects, « À traiter » : les 4 mêmes (même définition que le badge)", pageA === "prospects" && JSON.stringify((await uids(page)).slice().sort()) === JSON.stringify([ZOE, INES, LEA, MARC].sort()), pageA + " " + JSON.stringify(await uids(page)));
     ok("A : aucune écriture (tableau de bord, fiche, Prospects)", db.ecritures.length === 0, resume(db));
   });
 
   /* =================== B. Mes clients =================== */
   await bloc("B. Mes clients : colonnes et ordre", async () => {
     const db = decor();
-    const { page } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]");
+    const { page } = await coachSur(b, db, "#/suivi-clients", "#tb-clients [data-ouvrir]");   // v84 (ménage du bloc 3) : le tableau est dans « Suivi détaillé »
     const T = await ligneClient(page, TESTEUR.id), Th = await ligneClient(page, F.IDS.c1), S = await ligneClient(page, F.IDS.c2), Ju = await ligneClient(page, F.IDS.c3);
     /* v71 (D) : Léa (prospecte) n'a plus de ligne dans « Suivi de mes clients » ; la ligne sous le titre renvoie à Prospects ;
        ses visites et son clic se lisent sur sa carte Prospects (filtre « Tous ») */
@@ -560,24 +577,31 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
     ok("B : compte de test (feedback du dimanche, répondu) : retour « fait », note « 7/10 », smiley 😞, dernière visite « " + visiteTxt(ACT_TEST.derniere) + " », 2 jours actifs sur 30 (le jour d'il y a 40 jours ne compte pas)", T["Retour de la semaine"] === "fait" && T["Dernière note"] === "7/10" && T["Dernier smiley"] === "😞" && T["Dernière visite"] === visiteTxt(ACT_TEST.derniere) && T["Jours actifs (30 j)"] === "2", JSON.stringify(T));
     ok("B : Thomas (bilan du vendredi, sa règle) : retour « à lire », ni note ni smiley, visites « — » (non suivi, même avec une ancienne clé activite)", Th["Retour de la semaine"] === "à lire" && Th["Dernière note"] === "—" && Th["Dernier smiley"] === "—" && Th["Dernière visite"] === "—" && Th["Jours actifs (30 j)"] === "—", JSON.stringify(Th));
     ok("B : Sarah (note 4 : en chute) « 4/10 » ; Julien : visites « — », « Inactif depuis 12 j » gardé", S["Dernière note"] === "4/10" && Ju["Dernière visite"] === "—" && Ju["Jours actifs (30 j)"] === "—" && /12 j/.test(Ju["Activité"] || ""), JSON.stringify([S, Ju]));
-    const sansLigneB = !(await page.$("#clients-prospects")) && !!(await page.$("#lc-clients"));   /* v83 (bloc 3) : la ligne vers Prospects n'existe plus (la liste du haut est bien affichée) */
-    await aller(page, "#/prospects", 300); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 }); await filtre(page, "tous");
+    /* v84 (ménage du bloc 3) : la liste du haut est seule sur #/clients (ni le tableau, ni les comptes : ils sont dans le menu Plus) */
+    await aller(page, "#/clients", 300); await page.waitForSelector("#lc-clients", { timeout: 8000 }); await attendre(page, 400);
+    const sansLigneB = !(await page.$("#clients-prospects")) && !!(await page.$("#lc-clients")) && !(await page.$("#tb-clients, #liste-clients"));   /* v83 (bloc 3) : la ligne vers Prospects n'existe plus (la liste du haut est bien affichée) */
+    const tListeB = await texte(page, "#vue");   // v84 : le texte de Mes clients (la liste), relu plus bas avec le tableau et les comptes
+    await aller(page, "#/suivi-commercial", 300); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 }); await filtre(page, "tous");   // v84 : les cartes sont dans le Suivi commercial
     const cLea = await carte(page, LEA), nbB = await nbProspects(page);
     ok("B : prospecte Léa (v71) : plus de ligne dans « Suivi de mes clients » ; v83 : plus de ligne « Les prospects sont dans Prospects → », les 8 se lisent sur la page Prospects (« 8 prospects », « 8 comptes gratuits ») ; sa carte Prospects : visites suivies (« " + visiteTxt(avant(5 * H)) + " », 2 jours), « Clics plan d'action 1 (dernier : accueil, bouton du haut) », aucune température",
       !leaTb && lp.t === "" && lp.href === "" && sansLigneB && JSON.stringify(nbB) === JSON.stringify(["8 prospects", "8 comptes gratuits"]) && cLea.includes("Dernière visite " + visiteTxt(avant(5 * H))) && cLea.includes("Jours actifs (30 j) 2") && cLea.includes("Clics plan d'action 1 (dernier : accueil, bouton du haut)") && !/CHAUD|TIÈDE|FROID|NOUVEAU/.test(cLea), JSON.stringify([leaTb, lp, sansLigneB, nbB]) + " | " + cLea);
-    await aller(page, "#/clients", 300); await page.waitForSelector("#tb-clients [data-ouvrir]", { timeout: 8000 }); await attendre(page, 400);
+    await aller(page, "#/suivi-clients", 300); await page.waitForSelector("#tb-clients [data-ouvrir]", { timeout: 8000 }); await attendre(page, 400);   // v84 : le tableau, dans « Suivi détaillé »
     const o = await ordreClients(page);
     ok("B : en haut les 😞 non traités et les notes en chute (compte de test, Sarah), puis les retours à traiter (Thomas), puis le reste", JSON.stringify(o.slice(0, 2).sort()) === JSON.stringify([TESTEUR.id, F.IDS.c2].sort()) && o[2] === F.IDS.c1, JSON.stringify(o.slice(0, 5)));
-    const t = await texte(page, "#vue");
+    /* v84 (ménage du bloc 3) : ce que montrait Mes clients est sur trois pages : la liste (#/clients), le tableau (#/suivi-clients)
+       et les comptes (#/comptes) ; les trois textes sont relus */
+    const tTableauB = await texte(page, "#vue");
+    await aller(page, "#/comptes", 300); await page.waitForSelector("#liste-clients .client-l", { timeout: 8000 }); await attendre(page, 400);
+    const t = [tListeB, tTableauB, await texte(page, "#vue")].join(" ");
     ok("B : aucune température (CHAUD, TIÈDE, FROID, NOUVEAU) ni score de prospect dans Mes clients", !/CHAUD|TIÈDE|FROID|NOUVEAU|Score/.test(t), (t.match(/.{0,30}(CHAUD|TIÈDE|FROID|NOUVEAU|Score).{0,30}/) || [""])[0]);
-    const st = await page.$$eval("#liste-clients .client-l", l => l.map(e => ({ n: e.querySelector(".nom").textContent.trim(), b: (e.querySelector(".statut") || {}).textContent || "" }))).catch(() => []);
+    const st = await page.$$eval("#liste-clients .client-l", l => l.map(e => ({ n: e.querySelector(".nom").textContent.trim(), b: (e.querySelector(".statut") || {}).textContent || "" }))).catch(() => []);   // v84 : sur #/comptes
     ok("B : « Comptes » : « Passer client » pour chaque prospect, « Repasser prospect » pour chaque client", st.find(x => x.n === "Léa Martin").b === "Passer client" && st.find(x => x.n === "Thomas Démo").b === "Repasser prospect" && st.filter(x => x.b === "Passer client").length === 8, JSON.stringify(st.map(x => x.n + ":" + x.b)));
     ok("B : aucune écriture en affichant Mes clients", db.ecritures.length === 0, resume(db));
   });
   await bloc("B. Mes clients : feedback à traiter, « Passer client »", async () => {
     /* le compte de test sans réponse du coach : son feedback du dimanche est « à traiter » */
     const db = decor({ testOpts: { ck: ckTest(false), fb: null }, prospects: false });
-    const { page } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]");
+    const { page } = await coachSur(b, db, "#/suivi-clients", "#tb-clients [data-ouvrir]");   // v84 (ménage du bloc 3) : le tableau est dans « Suivi détaillé »
     const T = await ligneClient(page, TESTEUR.id);
     ok("B : compte de test, feedback du dimanche sans réponse : « à traiter » (en couleur), pas de smiley", T["Retour de la semaine"] === "à traiter" && T["Dernier smiley"] === "—" && !!(await page.$(`#tb-clients [data-ouvrir="${TESTEUR.id}"]`).then(x => x.evaluate(bt => !!bt.closest("tr").querySelector('[data-l="Retour de la semaine"] .pastille.mauvais')))), JSON.stringify(T));
     const o = await ordreClients(page);
@@ -585,7 +609,7 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
     /* « Passer client » depuis Comptes (inchangé) : un prospect ajouté */
     await page.close();
     const db2 = decor({ test: false, prospects: false, comptes: [prospect(2, "Marc", "Neuf", { cree: 10 * H })] });
-    const { page: p2 } = await coachSur(b, db2, "#/clients", "#liste-clients .client-l");
+    const { page: p2 } = await coachSur(b, db2, "#/comptes", "#liste-clients .client-l");   // v84 (ménage du bloc 3) : les comptes sont dans « Comptes »
     const bt = await p2.$$(".client-l .statut");
     let fait = false;
     for (const x of bt) { if ((await x.evaluate(e => e.closest(".client-l").textContent)).includes("Marc Neuf")) { await x.click(); fait = true; break; } }
@@ -596,15 +620,22 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
   /* =================== C. page Prospects =================== */
   await bloc("C. page Prospects", async () => {
     const db = decor();
-    const { page } = await coachSur(b, db, "#/prospects", "#pr-liste .sc-carte");
-    const t = await texte(page, "#pr-vue");
+    /* v84 (ménage du bloc 3) : la page Prospects garde la liste et les Nouveautés ; l'en-tête, le compteur, la Mesure, les
+       filtres et les cartes sont dans le Suivi commercial (#/suivi-commercial), la newsletter dans #/newsletter : le texte des
+       trois pages est relu (ce que lisait l'ancienne page Prospects, rien de moins) */
+    const { page } = await coachSur(b, db, "#/prospects", "#pr-nouveautes .nv-panneau");
+    const tListeC = await texte(page, "#pr-vue");
+    await aller(page, "#/newsletter", 300); await page.waitForSelector("#pr-nl", { timeout: 8000 }); await attendre(page, 400);
+    const tNlC = await texte(page, "#pr-vue");
+    await aller(page, "#/suivi-commercial", 300); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 }); await attendre(page, 400);
+    const t = [tListeC, await texte(page, "#pr-vue"), tNlC].join(" ");
     const TEMP = /score|\/100|qualification/i, TEMP2 = /CHAUD|TIÈDE|FROID|NOUVEAU|Chauds|Tièdes|Froids|Nouveaux/;   // en majuscules : « Nouveautés » reste
     /* v62 (brief V2, L) : le bloc « Mesure » a une tuile « Nouveaux inscrits » (légitime) ; elle seule est retirée (le
        libellé exact de la tuile de #pr-mesure-chiffres, présent UNE fois) avant de chercher une température : une
        pastille ou une tuile NOUVEAU / Nouveaux / CHAUD / TIÈDE / FROID ailleurs dans la page échoue toujours */
     const sansMesure = await page.evaluate(() => { const v = document.querySelector("#pr-vue"); if (!v) return { n: -1, t: "" }; const x = v.cloneNode(true);
       const l = Array.from(x.querySelectorAll("#pr-mesure-chiffres > .tile > .t-lbl")).filter(e => e.textContent.replace(/\s+/g, " ").trim() === "Nouveaux inscrits"); l.forEach(e => e.remove()); return { n: l.length, t: x.textContent }; });
-    const t2 = norm(sansMesure.t);
+    const t2 = [norm(sansMesure.t), tListeC, tNlC].join(" ");   // v84 : avec la liste, les Nouveautés et la newsletter (pages à part)
     ok("C : ni score, ni « /100 », ni température (CHAUD, TIÈDE, FROID, NOUVEAU), ni « Score moyen », ni « Chauds » (seule exception : la tuile « Nouveaux inscrits » du bloc Mesure)", sansMesure.n === 1 && !TEMP.test(t) && !TEMP.test(t2) && !TEMP2.test(t2), sansMesure.n + " · " + (t2.match(new RegExp(".{0,30}(" + TEMP2.source + ").{0,30}")) || t.match(new RegExp(".{0,30}(" + TEMP.source + ").{0,30}", "i")) || [""])[0]);
     ok("C : aucune requête au journal des emails (emails_prospects), aucune fonction appelée", !db.chemins.some(x => /emails_prospects|functions\/v1/.test(x)), JSON.stringify(db.chemins.filter(x => /emails|functions/.test(x))));
     ok("C : en-tête « 8 comptes gratuits · 4 à traiter »", (await texte(page, "#pr-vue .masthead .lede")) === "8 comptes gratuits · 4 à traiter", await texte(page, "#pr-vue .masthead .lede"));
@@ -649,6 +680,8 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
     await chercher(page, "dupre");
     ok("C : recherche « dupre » (sans accent) : Inès Dupré seule", JSON.stringify(await uids(page)) === JSON.stringify([INES]), JSON.stringify(await uids(page)));
     await chercher(page, "");
+    /* v84 (ménage du bloc 3) : les Nouveautés restent sous la liste, sur la page Prospects */
+    await aller(page, "#/prospects", 300); await page.waitForSelector("#pr-nouveautes .nv-panneau", { timeout: 8000 }); await attendre(page, 400);
     const nv = await page.$$eval("#pr-nouveautes .nv-liste li .nv-txt", l => l.map(e => e.textContent.replace(/\s+/g, " ").trim())).catch(() => []);
     ok("C : Nouveautés (page Prospects) : « Inès Dupré · a coché « J'ai réservé » » ; la case de Hugo (bilan déjà coché par le coach) n'est plus une nouveauté", nv.includes("Inès Dupré · a coché « J'ai réservé »") && !nv.some(x => x.startsWith("Hugo Réservé · a coché")), JSON.stringify(nv));
     ok("C : aucune écriture (page, filtres, tri, recherche)", db.ecritures.length === 0, resume(db));
@@ -658,7 +691,7 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
   await bloc("D. export CSV des prospects", async () => {
     const piege = prospect(10, "=cmd|' /C calc'!A0", "+1", { cree: 4 * J, q: 4 * J, rep: { probleme: "Perdre du gras", obstacle: "-2+3", projection: "@SUM(1+1)" }, email: "piege@exemple.fr" });
     const db = decor({ comptes: [piege] });
-    const { page } = await coachSur(b, db, "#/prospects", "#pr-liste .sc-carte");
+    const { page } = await coachSur(b, db, "#/suivi-commercial", "#pr-liste .sc-carte");   // v84 (ménage du bloc 3) : cartes, filtres et export CSV dans le Suivi commercial
     await filtre(page, "tous");
     const { nom, t } = await exporter(page);
     const L = lireCSV(t.replace(/^﻿/, ""));
@@ -700,12 +733,16 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
     const vTb = await texte(page, "#vue");   // v65 : plus aucun « Réserver » à l'écran (vérifié en fin de bloc)
     ok("D : tableau de bord (v63) : Rayan (clic d'hier après ta relance, rangé avant un clic plus ancien) est une urgence : Prospects 2 « 1 urgence » ; « À traiter maintenant » : Rayan seul, « A cliqué « Réserver mon plan d'action », pas de bilan coché » ; Sonia (clic le plus récent avant ta relance) n'y est pas",
       !!tp && tp.val === "2" && tp.badge === "1 urgence" && L.length === 1 && L[0].uid === RAYAN && L[0].t.includes("Rayan Désordre") && L[0].t.includes("A cliqué « Réserver mon plan d'action », pas de bilan coché"), JSON.stringify([tp, L]));
-    await page.click("#tb-t-prospects"); await page.waitForSelector("#pr-liste", { timeout: 8000 }); await attendre(page, 500);
+    /* v84 (ménage du bloc 3) : la tuile mène à la page Prospects (la liste, puis les Nouveautés) ; les cartes, « À traiter » et
+       les filtres sont dans le Suivi commercial (#/suivi-commercial) : les deux pages sont relues */
+    await page.click("#tb-t-prospects"); await page.waitForSelector("#pr-nouveautes .nv-panneau", { timeout: 8000 }); await attendre(page, 500);
+    const vListeD = await texte(page, "#vue"), nvPr = await texte(page, "#pr-nouveautes");
+    await aller(page, "#/suivi-commercial", 300); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 }); await attendre(page, 500);
     const ua = await uids(page), cr = await carte(page, RAYAN);
     const cpt = await page.$$eval("[data-filtre]", l => Object.fromEntries(l.map(e => [e.dataset.filtre, (e.querySelector(".meta") || {}).textContent])));
     await filtre(page, "tous");
     const cs = await carte(page, SONIA), motifS = !!(await page.$(`#pr-liste .sc-carte[data-uid="${SONIA}"] .sc-motif`));
-    const vPr = await texte(page, "#vue"), nvPr = await texte(page, "#pr-nouveautes");
+    const vPr = vListeD + " " + await texte(page, "#vue");
     ok("D : page Prospects (v63) : « À traiter » 1, Rayan seul, sa carte « à traiter A cliqué « Réserver mon plan d'action », pas de bilan coché » et « Clics plan d'action 2 (dernier : " + RQ + ") » (le clic d'hier) ; Sonia hors « À traiter » (carte sans motif), « Clics plan d'action 2 (dernier : " + RQ + ") » (son clic d'il y a 2 jours)",
       JSON.stringify(ua) === JSON.stringify([RAYAN]) && cpt.a_traiter === "1" && cr.includes("à traiter A cliqué « Réserver mon plan d'action », pas de bilan coché") && cr.includes("Clics plan d'action 2 (dernier : " + RQ + ")")
       && cs.includes("Clics plan d'action 2 (dernier : " + RQ + ")") && !motifS, JSON.stringify([ua, cpt, motifS]) + " | " + cr + " | " + cs);
@@ -736,7 +773,7 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
   /* =================== E. « Bilan réservé » coché par le coach =================== */
   await bloc("E. bilan réservé : création, retrait, remise", async () => {
     const db = decor();
-    const { page } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]");
+    const { page } = await coachSur(b, db, "#/suivi-clients", "#tb-clients [data-ouvrir]");   // v84 (ménage du bloc 3) : le tableau est dans « Suivi détaillé »
     await ficheDe(page, LEA, "Léa Martin");
     ok("E : fiche de Léa : bouton « Bilan réservé » dans le suivi commercial ; plus de bloc « Score de qualification »", !!(await page.$('#fiche-commercial [data-sc="bilan"]')) && !(await page.$("#fiche-score")) && !(await texte(page, "#vue")).includes("Score"), await texte(page, "#fiche-commercial"));
     const n0 = db.ecritures.length;
@@ -770,7 +807,7 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
     const di2 = await lignesFiche(page, "#fiche-decouverte");
     ok("E : Inès, retiré : « non (tu l'as retiré …) », la case reste affichée comme info, clé challenge jamais touchée", /^non \(tu l'as retiré/.test(valeur(di2, "Bilan réservé") || "") && valeur(di2, "Case « J'ai réservé mon bilan »") === "Le prospect a coché « J'ai réservé » le " + frL(avant(2 * J)) && ecr(db, "challenge").length === 0 && contenu(db, "challenge", INES).reserve === avant(2 * J), JSON.stringify(di2));
     /* les lecteurs suivent la coche : page Prospects, compteur, Mes clients, tableau de bord */
-    await aller(page, "#/prospects", 300); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 }); await attendre(page, 400);
+    await aller(page, "#/suivi-commercial", 300); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 }); await attendre(page, 400);   // v84 (ménage du bloc 3) : cartes, compteur, filtres et CSV dans le Suivi commercial
     await page.selectOption("#pr-tri", "priorite"); await attendre(page, 400);   // v72 (E) : l'ordre de priorité (plus le tri par défaut)
     ok("E : page Prospects (tri « priorité ») : Léa (bilan coché) sort de « À traiter » ; Hugo et Inès (bilan retiré, un clic sans bilan coché depuis) y entrent pour leur clic", JSON.stringify(await uids(page)) === JSON.stringify([ZOE, HUGO, INES, MARC]) && (await carte(page, INES)).includes("A cliqué « Réserver mon plan d'action », pas de bilan coché"), JSON.stringify(await uids(page)) + " " + await carte(page, INES));
     ok("E : compteur « … → bilans réservés 1 → … » (Léa ; Hugo et Inès retirés)", (await texte(page, "#pr-compteur")) === "Inscrits 9 → 3 questions remplies 8 → bilans réservés 1 → clients 1", await texte(page, "#pr-compteur"));
@@ -782,9 +819,10 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
     ok("E : CSV : Léa « oui » (coché le …), Inès « non » avec sa case datée", lea[7] === "oui" && lea[8] === frL(S3.bilan_le) && ines[7] === "non" && ines[8] === "" && ines[9] === frL(avant(2 * J)), JSON.stringify([lea.slice(7, 10), ines.slice(7, 10)]));
     /* v71 (D) : Mes clients ne liste plus les prospects : la pastille se lit sur la carte Prospects (encore à l'écran, filtre « Tous ») */
     const cL = await carte(page, LEA), cI = await carte(page, INES), nbE = await nbProspects(page);   /* v83 (bloc 3) : le nombre de prospects, sur la page Prospects */
-    await aller(page, "#/clients", 300); await page.waitForSelector("#tb-clients [data-ouvrir]", { timeout: 8000 }); await attendre(page, 400);
+    await aller(page, "#/suivi-clients", 300); await page.waitForSelector("#tb-clients [data-ouvrir]", { timeout: 8000 }); await attendre(page, 400);   // v84 : le tableau, dans « Suivi détaillé »
     const lp = await ligneProspects(page), dansTb = !!(await page.$(`#tb-clients [data-ouvrir="${LEA}"], #tb-clients [data-ouvrir="${INES}"]`));
-    const sansLigneE = !(await page.$("#clients-prospects")) && !!(await page.$("#lc-clients"));   /* v83 (bloc 3) : la ligne vers Prospects n'existe plus */
+    await aller(page, "#/clients", 300); await page.waitForSelector("#lc-clients", { timeout: 8000 }); await attendre(page, 400);   // v84 : la liste du haut, seule sur #/clients
+    const sansLigneE = !(await page.$("#clients-prospects")) && !!(await page.$("#lc-clients")) && !(await page.$("#tb-clients, #liste-clients"));   /* v83 (bloc 3) : la ligne vers Prospects n'existe plus */
     ok("E : Mes clients (v71) : ni Léa ni Inès dans « Suivi de mes clients » ; v83 : plus de ligne « Les prospects sont dans Prospects → », les 8 sur la page Prospects (« 8 prospects », « 8 comptes gratuits ») ; cartes Prospects : Léa « bilan réservé » (coché par le coach), Inès plus « bilan réservé » (« Bilan pas réservé ») mais « Clics plan d'action 1 (dernier : accueil, bouton du haut) »",
       !dansTb && lp.t === "" && lp.href === "" && sansLigneE && JSON.stringify(nbE) === JSON.stringify(["8 prospects", "8 comptes gratuits"]) && /bilan réservé/.test(cL) && !/bilan réservé/.test(cI) && cI.includes("Bilan pas réservé") && cI.includes("Clics plan d'action 1 (dernier : accueil, bouton du haut)"), JSON.stringify([dansTb, lp, sansLigneE, nbE]) + " | " + cL + " | " + cI);
     await aller(page, "#/tableau", 300); await page.waitForSelector("#tb-t-prospects", { timeout: 8000 }); await attendre(page, 400);
@@ -795,7 +833,7 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
     /* conflit : un autre onglet écrit le suivi de Paul entre la lecture et l'écriture → relu et rejoué, rien de perdu */
     const db = decor(); db.conflit = 1;
     const lu = db.donnees.find(d => d.user_id === PAUL && d.outil === "suivi_prospect").maj_le;
-    const { page } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]");
+    const { page } = await coachSur(b, db, "#/suivi-clients", "#tb-clients [data-ouvrir]");   // v84 (ménage du bloc 3) : le tableau est dans « Suivi détaillé »
     await ficheDe(page, PAUL, "Paul Relancé");
     await page.click('#fiche-commercial [data-sc="bilan"]'); await attendre(page, 2200);
     const S = SUIVI(db, PAUL) || {}, C = conds(db, PAUL);
@@ -803,14 +841,14 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
     /* 409 : la ligne de Hugo existe, mais la première lecture ne la voit pas → POST refusé (409) → relue → PATCH */
     const db2 = decor(); db2.cacheLigne = 1;
     const avantH = clone(SUIVI(db2, HUGO));
-    const { page: p2 } = await coachSur(b, db2, "#/clients", "#tb-clients [data-ouvrir]");
+    const { page: p2 } = await coachSur(b, db2, "#/suivi-clients", "#tb-clients [data-ouvrir]");   // v84 (ménage du bloc 3) : le tableau est dans « Suivi détaillé »
     await ficheDe(p2, HUGO, "Hugo Réservé");
     await p2.click('#fiche-commercial [data-sc="bilan_non"]'); await attendre(p2, 2200);
     const SH = SUIVI(db2, HUGO) || {};
     ok("E : création en course (409) : relue puis modifiée (PATCH conditionnel), rien de perdu (relance et historique d'avant gardés)", db2.chemins.filter(x => x === "POST /rest/v1/donnees").length === 1 && ecrSuivi(db2, HUGO).length === 1 && ecrSuivi(db2, HUGO)[0].m === "PATCH" && SH.bilan_le === null && egal(SH.relances, avantH.relances) && SH.historique.length === avantH.historique.length + 1, JSON.stringify([db2.chemins.filter(x => /donnees/.test(x) && !/^GET/.test(x)), SH]));
     /* verrou par prospect : écriture lente ; un 2e clic sur Léa pendant ce temps est ignoré avec un mot */
     const db3 = decor(); db3.retard.suivi_prospect = 2500;
-    const { page: p3 } = await coachSur(b, db3, "#/clients", "#tb-clients [data-ouvrir]");
+    const { page: p3 } = await coachSur(b, db3, "#/suivi-clients", "#tb-clients [data-ouvrir]");   // v84 (ménage du bloc 3) : le tableau est dans « Suivi détaillé »
     await ficheDe(p3, LEA, "Léa Martin");
     await p3.evaluate(() => { document.querySelector('#fiche-commercial [data-sc="bilan"]').click(); });
     await attendre(p3, 200);
@@ -847,7 +885,7 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
   /* =================== F. relances, issues, conflits, verrou, passage client (repris de verif49) =================== */
   await bloc("F. actions sur les cartes", async () => {
     const db = decor();
-    const { page } = await coachSur(b, db, "#/prospects", "#pr-liste .sc-carte");
+    const { page } = await coachSur(b, db, "#/suivi-commercial", "#pr-liste .sc-carte");   // v84 (ménage du bloc 3) : les cartes sont dans le Suivi commercial
     const clic = async (uid, act) => { await page.click(`#pr-liste .sc-carte[data-uid="${uid}"] [data-sc="${act}"]`); };
     await clic(LEA, "relance"); await attendre(page, 1800);
     const S = SUIVI(db, LEA) || {};
@@ -873,18 +911,18 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
   await bloc("F. conflit, 409, 504, verrou", async () => {
     const db = decor(); db.conflit = 1;
     const lu = db.donnees.find(d => d.user_id === PAUL && d.outil === "suivi_prospect").maj_le;
-    const { page } = await coachSur(b, db, "#/prospects", "#pr-liste .sc-carte");
+    const { page } = await coachSur(b, db, "#/suivi-commercial", "#pr-liste .sc-carte");   // v84 (ménage du bloc 3) : les cartes sont dans le Suivi commercial
     await filtre(page, "tous");
     await page.click(`#pr-liste .sc-carte[data-uid="${PAUL}"] [data-sc="relance"]`); await attendre(page, 2200);
     const C = conds(db, PAUL);
     ok("F : conflit d'écriture (autre onglet) : relu et rejoué, 3 relances gardées ; 1er PATCH maj_le=eq.<date lue>, le 2e sur la date de l'autre onglet", (SUIVI(db, PAUL) || {}).relances.length === 3 && C.length === 2 && C[0] === "eq." + lu && C[1] === "eq." + db.majAutreOnglet, JSON.stringify([C, SUIVI(db, PAUL)]));
     const db2 = decor(); db2.cacheLigne = 1;
-    const { page: p2 } = await coachSur(b, db2, "#/prospects", "#pr-liste .sc-carte");
+    const { page: p2 } = await coachSur(b, db2, "#/suivi-commercial", "#pr-liste .sc-carte");   // v84 (ménage du bloc 3) : les cartes sont dans le Suivi commercial
     await filtre(p2, "tous");
     await p2.click(`#pr-liste .sc-carte[data-uid="${PAUL}"] [data-sc="relance"]`); await attendre(p2, 2200);
     ok("F : création en course (409) : relue puis modifiée, les 2 relances gardées", ((SUIVI(db2, PAUL) || {}).relances || []).length === 2 && ecrSuivi(db2, PAUL).length === 1 && ecrSuivi(db2, PAUL)[0].m === "PATCH", JSON.stringify(SUIVI(db2, PAUL)));
     const db3 = decor(); db3.echecClient = true;
-    const { page: p3 } = await coachSur(b, db3, "#/prospects", "#pr-liste .sc-carte");
+    const { page: p3 } = await coachSur(b, db3, "#/suivi-commercial", "#pr-liste .sc-carte");   // v84 (ménage du bloc 3) : les cartes sont dans le Suivi commercial
     await filtre(p3, "tous");
     await p3.click(`#pr-liste .sc-carte[data-uid="${HUGO}"] [data-sc="signe"]`); await attendre(p3, 500); await bouton(p3, "Signé"); await attendre(p3, 1800); await bouton(p3, "Passer client"); await attendre(p3, 1800);
     const al = await texte(p3, ".modale");
@@ -893,7 +931,7 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
     await filtre(p3, "tous");
     ok("F : … la carte de Hugo montre SIGNÉ avec « Passer client »", (await carte(p3, HUGO)).includes("SIGNÉ") && !!(await p3.$(`#pr-liste .sc-carte[data-uid="${HUGO}"] [data-sc="client"]`)), await carte(p3, HUGO));
     const db4 = decor(); db4.retard.suivi_prospect = 2500;
-    const { page: p4 } = await coachSur(b, db4, "#/prospects", "#pr-liste .sc-carte");
+    const { page: p4 } = await coachSur(b, db4, "#/suivi-commercial", "#pr-liste .sc-carte");   // v84 (ménage du bloc 3) : les cartes sont dans le Suivi commercial
     await filtre(p4, "tous");
     await p4.evaluate(k => { document.querySelector(`.sc-carte[data-uid="${k}"] [data-sc="relance"]`).click(); }, PAUL);
     await attendre(p4, 200);
@@ -1012,7 +1050,7 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
   });
   await bloc("F. fiche d'un client avec un ancien suivi", async () => {
     const db = decor({ test: false, prospects: false, cles: [[F.IDS.c1, "suivi_prospect", { version: 1, issue: "absent", issue_le: avant(3 * J), bilan_le: avant(4 * J) }, avant(3 * J)]] });
-    const { page } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]");
+    const { page } = await coachSur(b, db, "#/suivi-clients", "#tb-clients [data-ouvrir]");   // v84 (ménage du bloc 3) : le tableau est dans « Suivi détaillé »
     await ficheDe(page, F.IDS.c1, "Thomas Démo", "#acc-vue .masthead h1");
     ok("F : fiche d'un client (ancien prospect « Absent ») : pas de « Suivi commercial », pas de bloc Découverte, pas de score, rien écrit", (await texte(page, "#vue")).includes("Fiche client") && !(await page.$("#fiche-commercial, #fiche-prospect, #fiche-score")) && db.ecritures.length === 0);
   });
@@ -1059,7 +1097,7 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
       await page.clock.fastForward(61000); await attendre(page, 1500); await cacher(page); await attendre(page, 1500);
       ok("G : « off » : même le compte de test n'écrit rien (activite), après la minute et en arrière-plan", ecr(db, "activite").length === 0 && db.ecritures.length === 0, resume(db));
       const dbc = decor();
-      const { page: pc } = await coachSur(b, dbc, "#/clients", "#tb-clients [data-ouvrir]");
+      const { page: pc } = await coachSur(b, dbc, "#/suivi-clients", "#tb-clients [data-ouvrir]");   // v84 (ménage du bloc 3) : le tableau est dans « Suivi détaillé »
       const T = await ligneClient(pc, TESTEUR.id);
       ok("G : « off » : Mes clients montre « — » pour les visites du compte de test (clé activite présente)", T["Dernière visite"] === "—" && T["Jours actifs (30 j)"] === "—", JSON.stringify(T));
     });
@@ -1071,7 +1109,7 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
       await page.clock.fastForward(61000); await attendre(page, 2000);
       const A = contenu(db, "activite", F.IDS.c1) || {};
       ok("G : « tous » : Thomas écrit sa clé activite (accueil compté)", ecr(db, "activite", F.IDS.c1).length === 1 && A.pages && A.pages.accueil === 1, resume(db) + " " + JSON.stringify(A));
-      const { page: pc } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]");
+      const { page: pc } = await coachSur(b, db, "#/suivi-clients", "#tb-clients [data-ouvrir]");   // v84 (ménage du bloc 3) : le tableau est dans « Suivi détaillé »
       const Ju = await ligneClient(pc, F.IDS.c3);
       ok("G : « tous » : Julien a une visite il y a 2 h (« " + visiteTxt(avant(2 * H)) + " », 1 jour actif) mais garde « Inactif depuis 12 j » (une visite n'est pas une saisie)", Ju["Dernière visite"] === visiteTxt(avant(2 * H)) && Ju["Jours actifs (30 j)"] === "1" && /12 j/.test(Ju["Activité"] || "") && (await pc.$eval(`#tb-clients [data-ouvrir="${F.IDS.c3}"]`, bt => bt.closest("tr").querySelector(".point").getAttribute("title"))).includes("Inactif depuis 12 j"), JSON.stringify(Ju));
     });
@@ -1085,7 +1123,7 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
       prospect(13, "=HYPERLINK(\"http://x\")", "@evil", { cree: 2 * J, q: 2 * J, rep: { probleme: "Perdre du gras" }, email: "-x@exemple.fr", emails: { newsletter: true, maj: PIEGE } })
     ];
     const db = decor({ comptes: pieges });
-    const { page } = await coachSur(b, db, "#/prospects", "#pr-nl");
+    const { page } = await coachSur(b, db, "#/newsletter", "#pr-nl");   // v84 (ménage du bloc 3) : la newsletter a sa page
     const L = await page.$$eval("#pr-nl .nv-liste li", l => l.map(e => ({ uid: e.dataset.nl, t: e.textContent.replace(/[  ]/g, " ").replace(/\s+/g, " ").trim() }))).catch(() => []);
     ok("H : liste newsletter : Léa, Karim (client) et le compte piégé (accord actif) ; ni Inès (non), ni Nina (retirée dans son Profil), ni Omar (ancien accord « emails de suivi » seul), ni une clé liste ou « true » en texte ; compteur 3", egal(L.map(x => x.uid), [LEA, KARIM, PID(13)]) && (await texte(page, "#pr-nl-n")) === "3" && (await texte(page, "#pr-nl")).includes("3 personnes ont accepté la newsletter"), JSON.stringify(L));
     ok("H : chaque ligne : prénom nom, email, « depuis le … » (date de l'accord), « client » pour Karim ; date piégée : « date inconnue »", L[0].t === "Léa Martin · lea@exemple.fr depuis le " + frL(avant(3 * J)) && L[1].t === "Karim Client · karim@exemple.fr client depuis le " + frL(avant(35 * J)) && L[2].t.endsWith("date inconnue") && !(await injecte(page)), JSON.stringify(L));
@@ -1098,13 +1136,13 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
   await bloc("H. liste newsletter : plus de 10, personne", async () => {
     const plus = []; for (let i = 0; i < 12; i++) plus.push(prospect(20 + i, "Abonné" + i, "N" + i, { cree: (10 + i) * J, news: true, newsLe: (10 + i) * J }));
     const db = decor({ comptes: plus });
-    const { page } = await coachSur(b, db, "#/prospects", "#pr-nl");
+    const { page } = await coachSur(b, db, "#/newsletter", "#pr-nl");   // v84 (ménage du bloc 3) : la newsletter a sa page
     const vis = () => page.$$eval("#pr-nl .nv-liste li", l => l.filter(e => !e.closest("[hidden]")).length).catch(() => -1);
     const v0 = await vis();
     await page.click("#pr-nl-plus"); await attendre(page, 300);
     ok("H : 14 personnes : 10 affichées, « Voir les 4 autres » les déplie ; compteur 14", v0 === 10 && (await vis()) === 14 && (await texte(page, "#pr-nl-n")) === "14" && !(await page.$("#pr-nl-plus")), v0 + " / " + (await vis()));
     const db2 = decor({ prospects: false });
-    const { page: p2 } = await coachSur(b, db2, "#/prospects", "#pr-nl");
+    const { page: p2 } = await coachSur(b, db2, "#/newsletter", "#pr-nl");   // v84 (ménage du bloc 3) : la newsletter a sa page
     ok("H : personne : « Personne n'a encore accepté la newsletter. », pas de bouton d'export", (await texte(p2, "#pr-nl")).includes("Personne n'a encore accepté la newsletter.") && !(await p2.$("#pr-nl-csv")) && (await texte(p2, "#pr-nl-n")) === "0");
   });
 
@@ -1114,13 +1152,26 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
       const db = decor();
       const { page } = await coachSur(b, db, "#/tableau", "#tb-a-traiter", { viewport });
       const d1 = !(await deborde(page));
-      await aller(page, "#/clients", 300); await page.waitForSelector("#tb-clients [data-ouvrir]", { timeout: 8000 }); await attendre(page, 500);
-      const d2 = !(await deborde(page)), carteMob = await page.$eval("#tb-clients tr", e => getComputedStyle(e).display).catch(() => "");
-      await aller(page, "#/prospects", 300); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 }); await filtre(page, "tous");
-      const d3 = !(await deborde(page));
+      /* v84 (ménage du bloc 3) : ce que montrait Mes clients est sur trois pages (la liste #/clients, le tableau #/suivi-clients,
+         les comptes #/comptes) et la page Prospects d'avant sur trois (la liste et les Nouveautés #/prospects, les cartes
+         #/suivi-commercial, la newsletter #/newsletter) : chacune est mesurée */
+      const larg = [];
+      const mesure = async () => { const x = !(await deborde(page)); if (!x) larg.push((await ou(page)).hash + " " + await largeur(page)); return x; };
+      await aller(page, "#/clients", 300); await page.waitForSelector("#lc-clients", { timeout: 8000 }); await attendre(page, 500);
+      const d2a = await mesure();
+      await aller(page, "#/suivi-clients", 300); await page.waitForSelector("#tb-clients [data-ouvrir]", { timeout: 8000 }); await attendre(page, 500);
+      const d2b = await mesure(), carteMob = await page.$eval("#tb-clients tr", e => getComputedStyle(e).display).catch(() => "");
+      await aller(page, "#/comptes", 300); await page.waitForSelector("#liste-clients .client-l", { timeout: 8000 }); await attendre(page, 500);
+      const d2 = d2a && d2b && await mesure();
+      await aller(page, "#/prospects", 300); await page.waitForSelector("#pr-nouveautes .nv-panneau", { timeout: 8000 }); await attendre(page, 500);
+      const d3a = await mesure();
+      await aller(page, "#/suivi-commercial", 300); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 }); await filtre(page, "tous");
+      const d3b = await mesure();
+      await aller(page, "#/newsletter", 300); await page.waitForSelector("#pr-nl", { timeout: 8000 }); await attendre(page, 500);
+      const d3 = d3a && d3b && await mesure();
       await ficheDe(page, LEA, "Léa Martin");
-      const d4 = !(await deborde(page));
-      ok(`I (${format}) : tableau de bord, Mes clients${viewport === MOBILE ? " (en cartes)" : ""}, page Prospects (cartes, newsletter), fiche : aucun défilement horizontal`, d1 && d2 && d3 && d4 && (viewport !== MOBILE || carteMob === "block"), [d1, d2, d3, d4, carteMob].join(",") + " " + await largeur(page));
+      const d4 = await mesure();
+      ok(`I (${format}) : tableau de bord, Mes clients${viewport === MOBILE ? " (en cartes)" : ""}, page Prospects (cartes, newsletter), fiche : aucun défilement horizontal`, d1 && d2 && d3 && d4 && (viewport !== MOBILE || carteMob === "block"), [d1, d2, d3, d4, carteMob].join(",") + " " + await largeur(page) + " " + larg.join(" | "));
       if (viewport === MOBILE) {
         const tailles = await page.$$eval('#fiche-commercial [data-sc]', l => l.map(e => Math.round(e.getBoundingClientRect().height)));
         ok("I (téléphone) : les boutons du suivi commercial (dont « Bilan réservé ») sont assez grands pour le doigt (≥ 30 px)", tailles.length >= 5 && tailles.every(h => h >= 30), JSON.stringify(tailles));
@@ -1138,11 +1189,16 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
     const db = decor({ comptes: pieges, cles: [[F.IDS.c3, "checkins", { liste: "x", avis: [{ semaine: 5, smiley: PIEGE }] }, avant(12 * J + 3 * H)]] });
     const { page } = await coachSur(b, db, "#/tableau", "#tb-vue .tb-tiles");
     const vues = [];
-    for (const [h, sel] of [["#/tableau", "#tb-vue .tb-tiles"], ["#/clients", "#tb-clients [data-ouvrir]"], ["#/prospects", "#pr-liste"]]) { await aller(page, h, 300); await page.waitForSelector(sel, { timeout: 8000 }); await attendre(page, 600); if (h === "#/prospects") await filtre(page, "tous"); vues.push(await texte(page, "#vue")); }
+    /* v84 (ménage du bloc 3) : Mes clients d'avant = la liste (#/clients), le tableau (#/suivi-clients) et les comptes (#/comptes) ;
+       Prospects d'avant = la liste et les Nouveautés (#/prospects), les cartes (#/suivi-commercial, « Tous ») et la newsletter
+       (#/newsletter) : chacune est relue ; les cartes (vues[5]) portent la carte piégée et « Nul » */
+    const PAGES_J = [["#/tableau", "#tb-vue .tb-tiles"], ["#/clients", "#lc-clients"], ["#/suivi-clients", "#tb-clients [data-ouvrir]"], ["#/comptes", "#liste-clients .client-l"],
+      ["#/prospects", "#pr-nouveautes .nv-panneau"], ["#/suivi-commercial", "#pr-liste"], ["#/newsletter", "#pr-nl"]];
+    for (const [h, sel] of PAGES_J) { await aller(page, h, 300); await page.waitForSelector(sel, { timeout: 8000 }); await attendre(page, 600); if (h === "#/suivi-commercial") await filtre(page, "tous"); vues.push(await texte(page, "#vue")); }
     await ficheDe(page, PID(40), "piégé");
     vues.push(await texte(page, "#vue"));
     ok("J : prospect piégé (nom, réponses, activité, suivi) : tableau de bord, Mes clients, Prospects, fiche : aucune balise injectée, aucun script exécuté", !(await injecte(page)), "injection");
-    ok("J : … ni « undefined », ni « null », ni « NaN », ni « [object » ; la carte piégée et « Nul » sont là", vues.every(v => !RIEN_DE_BRUT.test(v)) && vues[2].includes("Nul") && vues[2].includes(PIEGE.slice(0, 12)), vues.map(v => (v.match(/.{0,30}(undefined|null|NaN|\[object).{0,30}/) || [""])[0]).join(" | "));
+    ok("J : … ni « undefined », ni « null », ni « NaN », ni « [object » ; la carte piégée et « Nul » sont là", vues.every(v => !RIEN_DE_BRUT.test(v)) && vues[5].includes("Nul") && vues[5].includes(PIEGE.slice(0, 12)), vues.map(v => (v.match(/.{0,30}(undefined|null|NaN|\[object).{0,30}/) || [""])[0]).join(" | "));
     ok("J : données piégées : aucune écriture", db.ecritures.length === 0, resume(db));
   });
 
@@ -1152,12 +1208,18 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
     gen.forEach((x, i) => { x.id = "00000000-0000-4000-8000-3" + String(i).padStart(11, "0"); });
     const db = decor({ comptes: gen });
     const { page } = await coachSur(b, db, "#/tableau", "#tb-vue .tb-tiles", {});
-    const t0 = Date.now();
-    await page.evaluate(() => { location.hash = "#/prospects"; });
-    await page.waitForSelector("#pr-liste .sc-carte", { timeout: 15000 }); await page.waitForSelector("#pr-nl", { timeout: 15000 });
-    const total = Date.now() - t0;
-    const app = await page.evaluate(() => { const z = document.getElementById("pr-vue"); const t = performance.now(); outilProspects.rendre(z); return Math.round(performance.now() - t); }).catch(() => 99999);
-    ok(`K : 1 008 prospects : page complète en ${total} ms depuis le changement d'adresse, construite en ${app} ms côté app (chacun < 2 000)`, total < 2000 && app < 2000, "complet " + total + " ms · app " + app + " ms");
+    /* v84 (ménage du bloc 3) : la page Prospects d'avant est sur trois pages : la liste et les Nouveautés (#/prospects), la
+       newsletter (#/newsletter), les cartes (#/suivi-commercial) ; chacune complète en moins de 2 s depuis son changement
+       d'adresse, et les trois constructions côté app ensemble en moins de 2 s (ce que faisait la seule page d'avant) */
+    const chrono3 = async (h, sels) => { const t0 = Date.now(); await page.evaluate(x => { location.hash = x; }, h); for (const s of sels) await page.waitForSelector(s, { timeout: 15000 }); return Date.now() - t0; };
+    const tListe = await chrono3("#/prospects", ["#lc-prospects #lc-liste li", "#pr-nouveautes .nv-panneau"]);
+    const aListe = await page.evaluate(() => { const z = document.getElementById("pr-vue"); const t = performance.now(); outilProspects.rendreListe(z); return Math.round(performance.now() - t); }).catch(() => 99999);
+    const tNl = await chrono3("#/newsletter", ["#pr-nl"]);
+    const aNl = await page.evaluate(() => { const z = document.getElementById("pr-newsletter"); const t = performance.now(); outilProspects.preparer(); outilProspects.monterNewsletter(z); return Math.round(performance.now() - t); }).catch(() => 99999);
+    const tDet = await chrono3("#/suivi-commercial", ["#pr-liste .sc-carte"]);
+    const aDet = await page.evaluate(() => { const z = document.getElementById("pr-vue"); const t = performance.now(); outilProspects.rendre(z); return Math.round(performance.now() - t); }).catch(() => 99999);
+    const total = Math.max(tListe, tNl, tDet), app = aListe + aNl + aDet;
+    ok(`K : 1 008 prospects : page complète en ${total} ms depuis le changement d'adresse, construite en ${app} ms côté app (chacun < 2 000)`, total < 2000 && app < 2000, "complet " + total + " ms (Prospects " + tListe + ", Newsletter " + tNl + ", Suivi commercial " + tDet + ") · app " + app + " ms (" + [aListe, aNl, aDet].join(" + ") + ")");
     await filtre(page, "tous");
     ok("K : « Tous » : 50 cartes, « Afficher 50 de plus (958 restants) » ; « 1008 comptes gratuits »", (await page.$$("#pr-liste .sc-carte")).length === 50 && (await texte(page, "#pr-plus")) === "Afficher 50 de plus (958 restants)" && (await texte(page, "#pr-vue .masthead .lede")).startsWith("1008 comptes gratuits"), (await texte(page, "#pr-plus")) + " · " + (await texte(page, "#pr-vue .masthead .lede")));
     const { t } = await exporter(page);

@@ -39,7 +39,7 @@ const server = http.createServer((req,res)=>{if(servirFichier(req,res,HTML))retu
   { const {c,page}=await ctx(coach,false); await page.goto("http://localhost:9333/"); await page.waitForTimeout(1200);
     ok("coach : page par defaut = Tableau de bord", !!(await page.$("#tb-vue .tb-tiles")));
     ok("coach : pas d'onglet Accueil hors fiche", !(await page.$('#nav a[data-id="accueil"]')));
-    await page.evaluate(()=>{location.hash="#/clients"}); await page.waitForTimeout(900);
+    await page.evaluate(()=>{location.hash="#/suivi-clients"}); await page.waitForTimeout(900);   // v84 (ménage du bloc 3) : le tableau complet et ses « Ouvrir » ([data-ouvrir]) sont dans « Suivi détaillé » (menu Plus)
     await page.click(`[data-ouvrir="${F.IDS.c1}"]`); await page.waitForTimeout(900);
     ok("coach en fiche : onglet Accueil visible", !!(await page.$('#nav a[data-id="accueil"]')));
     await page.evaluate(()=>{location.hash="#/accueil"}); await page.waitForTimeout(900);

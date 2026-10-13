@@ -229,6 +229,10 @@ HORS_BANC="verif44 verif45 verif46 verif47 verif49"
 #   390 / 430 px et 44 px, anglais, et W : WebKit, installé aussi pour la partie 6 dans pages.yml ; VERIF86_WEBKIT=0 en local : 44) ;
 #   verif72 D (10 @font-face) ; les suites de l'ancien espace coach adaptées aux écrans de la v83 sans retirer de vérification (voir
 #   leurs commentaires « v83 (bloc 3) ») ; nombres inchangés.
+# v84 (ménage du bloc 3 : l'écran d'avant des pages Clients et Prospects passe dans 4 pages du menu Plus — Suivi détaillé, Comptes,
+#   Suivi commercial, Newsletter — ; « Archiver » en or ; la langue du parcours rangée dans prefs) : verif86 57 (A1, A5, B3, C7
+#   adaptés ; blocs J et J bis : rien ne disparaît, Archiver en or, parcours en anglais → WhatsApp en anglais) ; les suites de
+#   l'ancien écran adaptées à leur nouvelle adresse sans retirer de vérification (voir leurs commentaires « v84 ») ; nombres inchangés.
 # v85 (bloc 4 : les programmes de la formation, « Speed Formation » devient « Formation », le programme n'est plus « Bientôt » dans
 #   le parcours) : verif87 44 (nouvelle suite, partie 6 : attribution objectif × sexe, choix, phase du moment, chaque séance des 3
 #   programmes, supersets, dropsets, HIIT, options, cardio, circuit, vidéos, programme du coach inchangé, accueil, Bientôt, Formation,

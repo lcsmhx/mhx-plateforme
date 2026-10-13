@@ -55,6 +55,10 @@
    contact, écrite par CleCoach) ; avant, il rendait un corps vide et l'écriture du numéro aurait passé pour refusée.
    Inchangés : partie A (coach), l'inscription fermée (la connexion, jamais le parcours), les deux liens de la connexion
    (320 / 375 / 390 px, 12 à 24 px entre eux), « Mot de passe oublié », le changement d'adresse. Même nombre (48).
+   v84 (ménage du bloc 3) : l'écran d'avant a quitté la page Clients : le tableau « Suivi de mes clients » (#tb-clients) et ses
+   encadrés (#alertes-clients) sont lus dans « Suivi détaillé » (#/suivi-clients), les comptes (#liste-clients .client-l : statut,
+   Supprimer d'un compte d'équipe) dans « Comptes » (#/comptes) ; la liste « Clients » reste sur #/clients (et n'a plus le
+   tableau sous elle). Seules les adresses changent ; même nombre (48).
    Usage : node verif39.js ../index.html                                         */
 const { chromium } = require("playwright"); const fs = require("fs"); const http = require("http"); const path = require("path");
 const F = require("./fixtures"); const HTML = path.resolve(process.argv[2] || "../index.html");
@@ -234,7 +238,7 @@ const messageServeur = async page => { await page.waitForFunction(() => { const 
        vérifications de la tuile « Prospects en découverte » et de la section « Qui nécessite ton attention » sont retirées
        (2) ; les nouvelles tuiles et leurs urgences sont vérifiées par verif58 (bloc A). Le prospect reste sans alerte de
        suivi dans Mes clients (ci-dessous). */
-    await aller(page, "#/clients", 1800);
+    await aller(page, "#/suivi-clients", 1800);   // v84 (ménage du bloc 3) : le tableau « Suivi de mes clients » est dans « Suivi détaillé »
     /* v71 (D) : le tableau « Suivi de mes clients » ne liste plus les prospects : plus de ligne, de pastille « prospect »,
        de feu ni de bouton « Ouvrir » pour Léa dans #tb-clients ; une ligne sous le titre renvoie vers la page Prospects avec
        le nombre de comptes gratuits (toujours affichée). Avant : pastille « prospect » et feu vert sur la ligne de Léa. */
@@ -245,12 +249,17 @@ const messageServeur = async page => { await page.waitForFunction(() => { const 
     /* v83 (bloc 3, décision 7 de Lucas) : plus de lien « Les prospects sont dans Prospects → » sous le titre : on passe de Clients
        à Prospects par la barre du bas seulement ; Léa n'est pas non plus dans la liste « Clients » du haut (ni dans Tous, ni
        dans Archivés) ; le nombre de comptes gratuits est sur le Tableau de bord et la page Prospects */
-    const zp = await page.evaluate(id => ({ lien: !!document.getElementById("clients-prospects"), liste: Array.from(document.querySelectorAll("#lc-clients .lc-ligne")).map(x => x.dataset.uid),
+    await aller(page, "#/clients", 1800);   // v84 (ménage du bloc 3) : la liste « Clients » reste sur #/clients, sans le tableau d'avant sous elle (tb)
+    await page.waitForSelector("#lc-clients .lc-ligne", { timeout: 8000 }).catch(() => {});
+    const zp = await page.evaluate(id => ({ tb: !!document.getElementById("tb-clients") || !!document.getElementById("liste-clients"), lien: !!document.getElementById("clients-prospects"), liste: Array.from(document.querySelectorAll("#lc-clients .lc-ligne")).map(x => x.dataset.uid),
       compte: (document.getElementById("lc-compte") || {}).textContent, onglet: !!document.querySelector('#barre-bas a[data-id="prospects"][href="#/prospects"]') }), PROSPECT).catch(e => ({ erreur: String(e) }));
-    ok("mes clients (v83, décision 7) : plus de lien « Prospects → » en haut ; la liste « Clients » (3 clients) sans Léa ; l'onglet Prospects de la barre du bas mène à #/prospects (aucune alerte de suivi pour un prospect : il n'est plus dans ce tableau)",
-      zp.lien === false && zp.compte === "3 clients" && zp.liste.length === 3 && !zp.liste.includes(PROSPECT) && zp.onglet === true, JSON.stringify(zp));
+    ok("mes clients (v83, décision 7) : plus de lien « Prospects → » en haut ; la liste « Clients » (3 clients) sans Léa (v84 : et sans le tableau ni les comptes d'avant sous elle) ; l'onglet Prospects de la barre du bas mène à #/prospects (aucune alerte de suivi pour un prospect : il n'est plus dans ce tableau)",
+      zp.tb === false && zp.lien === false && zp.compte === "3 clients" && zp.liste.length === 3 && !zp.liste.includes(PROSPECT) && zp.onglet === true, JSON.stringify(zp));
+    await aller(page, "#/suivi-clients", 1800);   // v84 (ménage du bloc 3) : les encadrés (#alertes-clients) sont dans « Suivi détaillé »
+    await page.waitForSelector(`#tb-clients [data-ouvrir="${F.IDS.c1}"]`, { timeout: 8000 }).catch(() => {});
     const encadres = (await page.textContent("#alertes-clients")).replace(/\s+/g, " ");
     ok("mes clients : le prospect n'est pas dans les encadrés « Sans nouvelles… » / « Il manque quelque chose… »", !encadres.includes("Léa Démo") && encadres.includes("Julien Démo"), encadres.slice(0, 300));
+    await aller(page, "#/comptes", 1800);   // v84 (ménage du bloc 3) : les comptes (#liste-clients) sont dans « Comptes » (menu Plus)
     const compteLea = await ligneCompte(page, "Léa Démo").textContent();
     ok("comptes : Léa « prospect » avec « Passer client »", compteLea.includes("prospect") && compteLea.includes("Passer client"));
     const compteThomas = await ligneCompte(page, "Thomas Démo").textContent();
@@ -270,7 +279,7 @@ const messageServeur = async page => { await page.waitForFunction(() => { const 
     await ligneCompte(page, "Équipe Démo").locator(".suppr").click(); await attendre(page, 400);
     const apres = await page.evaluate(() => ({ h: location.hash, id: Store.idConsulte }));
     await page.click('.modale [data-ui-b="0"]').catch(() => {}); await attendre(page, 300);
-    ok("supprimer un compte d'équipe : ne navigue pas vers une fiche (bug corrigé)", apres.h === "#/clients" && !apres.id, JSON.stringify(apres));
+    ok("supprimer un compte d'équipe : ne navigue pas vers une fiche (bug corrigé)", apres.h === "#/comptes" && !apres.id, JSON.stringify(apres));   // v84 (ménage du bloc 3) : on reste sur « Comptes » (avant : #/clients)
     /* fiche d'un prospect : pastille « prospect », pas d'alertes de suivi */
     await ligneCompte(page, "Léa Démo").locator(".statut").click(); await attendre(page, 300);
     await page.click('.modale [data-ui-b="1"]'); await attendre(page, 1200);   // Léa repasse prospect
@@ -300,7 +309,7 @@ const messageServeur = async page => { await page.waitForFunction(() => { const 
     ok("créer un accès, statut refusé : message « encore prospect … Passer client »", (await page.textContent("#n-msg")).includes("encore « prospect »"));
     ok("créer un accès, statut refusé : une fenêtre le dit aussi (le message ne s'efface pas)", (await page.textContent(".modale").catch(() => "")).includes("encore « prospect »"));
     await page.click('.modale [data-ui-b]').catch(() => {}); await attendre(page, 300);
-    await aller(page, "#/clients", 2000);   // v83 : les Comptes sont sur la page Mes clients
+    await aller(page, "#/comptes", 2000);   // v83 : les Comptes sont sur la page Mes clients ; v84 (ménage du bloc 3) : sur la page « Comptes » (menu Plus)
     /* le bouton de statut qui echoue retrouve son libelle */
     await ligneCompte(page, "Léa Démo").locator(".statut").click(); await attendre(page, 300);
     await page.click('.modale [data-ui-b="1"]'); await attendre(page, 1000);
@@ -341,7 +350,8 @@ const messageServeur = async page => { await page.waitForFunction(() => { const 
     /* comportement inchangé : sans statut, aucun prospect (la tuile est cherchée par le début de son libellé) */
     const tSans = (await lireTuiles(page)).find(x => /^Prospects/.test(x.lbl)) || {};
     ok("sans colonne statut : tuile des prospects = 0", tSans.val === "0", JSON.stringify(tSans));
-    await aller(page, "#/clients", 1800);
+    await aller(page, "#/comptes", 1800);   // v84 (ménage du bloc 3) : les comptes (#liste-clients) sont dans « Comptes »
+    await page.waitForSelector("#liste-clients .client-l", { timeout: 8000 }).catch(() => {});
     ok("sans colonne statut : ni pastille ni bouton de statut", !(await page.textContent("#liste-clients")).includes("Passer client") && !(await page.textContent("#liste-clients")).includes("Repasser prospect"));
     await aller(page, "#/clients/nouveau", 1500);   // v83 : Créer un accès est un écran à part (« + »)
     await page.fill("#n-prenom", "Nina"); await page.fill("#n-email", "nina@exemple.fr"); await page.fill("#n-mdp", "motdepasse1");

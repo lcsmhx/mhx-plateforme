@@ -735,17 +735,23 @@ const blocSemaine = (page, s) => page.evaluate(x => { const ed = document.queryS
       cles: [[F.IDS.c3, "checkins", { liste: [ent(J12, isoL(new Date(Date.parse(J12))))], avis: [{ semaine: ilYA(20), fb: "x", smiley: "content", le: avant(H) }], fb_vu: avant(H) }, avant(H)]]
     });
     const { page } = await contexte(b, COACH, db);
-    await page.goto(URL0 + "#/clients"); await page.waitForSelector(`#tb-clients [data-ouvrir="${F.IDS.c3}"]`, { timeout: 10000 }); await attendre(page, 800);
+    await page.goto(URL0 + "#/suivi-clients"); await page.waitForSelector(`#tb-clients [data-ouvrir="${F.IDS.c3}"]`, { timeout: 10000 }); await attendre(page, 800);   // v84 (ménage du bloc 3) : le tableau complet est dans « Suivi détaillé »
     const Ju = await ligneClient(page, F.IDS.c3), Ch = await ligneClient(page, CHLOE), Le = await ligneClient(page, LEON), Ni = await ligneClient(page, NINA), Os = await ligneClient(page, OSCAR);
     ok("G : Mes clients : Julien (dernier feedback il y a 12 j, smiley et « réponse vue » il y a 1 h) garde « 12 j » et l'alerte « Inactif depuis 12 j »", Ju["Activité"] === "12 j" && Ju._point.includes("Inactif depuis 12 j"), JSON.stringify(Ju));
     ok("G : contre-épreuve : Chloé (feedback envoyé il y a 2 h) « aujourd'hui », sans alerte d'inactivité", Ch["Activité"] === "aujourd'hui" && !/Inactif|Jamais rien saisi/.test(Ch._point), JSON.stringify(Ch));
     const nLeon = Math.floor((Date.now() - new Date(ilYA(4) + "T00:00:00").getTime()) / J);
     ok(`G : Léon (ancienne entrée sans envoye_a, envoyée le ${fr(ilYA(4))} ; « réponse vue » il y a 1 h) : compté du jour de l'envoi, « il y a ${nLeon} j »`, Le["Activité"] === "il y a " + nLeon + " j", JSON.stringify(Le));
     ok("G : Nina (seulement des dates piégées, un smiley et fb_vu) : « jamais » et « Jamais rien saisi » ; Oscar (liste piégée, fb_vu il y a 1 h) : « 15 j », « Inactif depuis 15 j »", Ni["Activité"] === "jamais" && Ni._point.includes("Jamais rien saisi") && Os["Activité"] === "15 j" && Os._point.includes("Inactif depuis 15 j"), JSON.stringify([Ni, Os]));
+    /* v84 (ménage du bloc 3) : ce que montrait Mes clients est sur trois pages : le tableau (Suivi détaillé), les comptes
+       (« Comptes », menu Plus) et la liste Clients (#/clients) : les trois sont lues */
     const tout = await texte(page, "#vue");
-    ok("G : Mes clients : jamais « NaN », « undefined » ni « Invalid Date »", !/NaN|undefined|Invalid Date/.test(tout), (tout.match(/.{0,40}(NaN|undefined|Invalid Date).{0,40}/) || [""])[0]);
+    await aller(page, "#/comptes", 300); await page.waitForSelector("#liste-clients .client-l", { timeout: 10000 }).catch(() => {}); await attendre(page, 500);
+    const toutC = await texte(page, "#vue");
     const dJu = await page.evaluate(x => new Date(x).toLocaleDateString("fr-FR"), J12);
     const cJu = await ligneCompte(page, "Julien Démo"), cNi = await ligneCompte(page, "Nina Piégée");
+    await aller(page, "#/clients", 300); await page.waitForSelector("#lc-clients", { timeout: 10000 }).catch(() => {}); await attendre(page, 500);
+    const toutL = await texte(page, "#lc-zone"), tous = [tout, toutC, toutL].join(" | ");
+    ok("G : Mes clients (v84 : Suivi détaillé, Comptes et la liste Clients) : jamais « NaN », « undefined » ni « Invalid Date »", !!toutC && !!toutL && !/NaN|undefined|Invalid Date/.test(tous), (tous.match(/.{0,40}(NaN|undefined|Invalid Date).{0,40}/) || [""])[0] || JSON.stringify([tout.length, toutC.length, toutL.length]));
     ok(`G : Comptes : Julien « dernière saisie : ${dJu} » ; Nina « pas encore utilisé », « dernière saisie : jamais »`, !!cJu && cJu.meta === "dernière saisie : " + dJu && !!cNi && cNi.etats.includes("pas encore utilisé") && cNi.meta === "dernière saisie : jamais", JSON.stringify([cJu, cNi]));
     await fiche(page, F.IDS.c3, "Julien Démo", "accueil", "#vue .masthead");
     const al = await alertesFiche(page), tu = await tuile(page, "Activité");
@@ -771,7 +777,7 @@ const blocSemaine = (page, s) => page.evaluate(x => { const ed = document.queryS
     const ecrClient = db.ecritures.filter(e => e.table === "donnees").map(e => e.outil);
     ok("G2 : le compte de test ouvre Mon suivi : fb_vu écrit (une écriture de checkins ; ni saisie ni autre clé, hors visites)", ecr(db, "checkins").length === 1 && ckDe(db).fb_vu === fb.ecrit_a && ecrClient.every(o => o === "checkins" || o === "activite"), JSON.stringify(ecrClient));
     const { page } = await contexte(b, COACH, db);
-    await page.goto(URL0 + "#/clients"); await page.waitForSelector(`#tb-clients [data-ouvrir="${TESTEUR.id}"]`, { timeout: 10000 }); await attendre(page, 800);
+    await page.goto(URL0 + "#/suivi-clients"); await page.waitForSelector(`#tb-clients [data-ouvrir="${TESTEUR.id}"]`, { timeout: 10000 }); await attendre(page, 800);   // v84 (ménage du bloc 3) : le tableau complet est dans « Suivi détaillé »
     const T = await ligneClient(page, TESTEUR.id);
     ok("G2 : puis le coach, Mes clients : le compte de test garde « 12 j » et « Inactif depuis 12 j »", T["Activité"] === "12 j" && T._point.includes("Inactif depuis 12 j"), JSON.stringify(T));
   });

@@ -843,14 +843,16 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
       await page.goto(URL0 + "#/client/" + F.IDS.c1 + "/programme"); await pret(page, "#vue .bandeau"); await attendre(page, 1500);
       const e1 = await page.evaluate(() => ({ consulte: Store.idConsulte, courant, hash: location.hash, titre: ($("vue").querySelector(".bandeau strong") || {}).textContent, h1: ($("vue").querySelector(".masthead h1") || {}).textContent, prog: Array.from(document.querySelectorAll("#prog-vue input")).some(i => i.value === "Bloc 1 — 4 semaines"), nav: Array.from(document.querySelectorAll("#nav a")).map(a => a.dataset.id), bouton: ($("sortir-fiche") || {}).textContent, liens: Array.from(document.querySelectorAll("#vue .bandeau-actions a")).map(a => a.getAttribute("href")) }));
       ok("coach : rechargement sur #/client/<uuid>/programme → la fiche de Thomas (bandeau, « Son programme », SON programme), « Revenir à mes clients », liens du bandeau canoniques, pas d'onglet Entraînement", e1.consulte === F.IDS.c1 && e1.courant === "programme" && e1.hash === "#/client/" + F.IDS.c1 + "/programme" && e1.titre === "Fiche de Thomas Démo" && e1.h1 === "Son programme" && e1.prog && !e1.nav.includes("entrainement") && e1.bouton === "Revenir à mes clients" && e1.liens.length > 0 && e1.liens.every(h => h.startsWith("#/client/" + F.IDS.c1 + "/")), JSON.stringify(e1));
-      await page.goto(URL0 + "#/client/00000000-0000-4000-8000-00000000dead/programme"); await pret(page, "#tb-clients"); await attendre(page, 800);
+      await page.goto(URL0 + "#/client/00000000-0000-4000-8000-00000000dead/programme"); await pret(page, "#lc-clients"); await attendre(page, 800);   /* v84 (ménage du bloc 3) : #/clients n'a plus le tableau (#tb-clients, parti dans « Suivi détaillé ») : on attend sa liste (#lc-clients) */
       ok("coach : uuid inconnu → Mes clients (#/clients), aucune fiche ouverte", (await ou(page)).hash === "#/clients" && (await page.evaluate(() => Store.idConsulte)) === null, JSON.stringify(await ou(page)));
       await aller(page, "#/tableau", 1500); await page.waitForSelector("#tb-vue button[data-fiche]", { timeout: 8000 }); await page.click("#tb-vue button[data-fiche]"); await pret(page, "#vue .bandeau"); await attendre(page, 600);
       const b1 = await texte(page, "#sortir-fiche"); await page.click("#sortir-fiche"); await attendre(page, 1200); const d1 = await ou(page);
       ok("coach : fiche ouverte depuis le tableau de bord → « Revenir au tableau de bord » ramène sur #/tableau", b1 === "Revenir au tableau de bord" && d1.courant === "tableau" && d1.hash === "#/tableau", b1 + " " + JSON.stringify(d1));
-      await aller(page, "#/prospects", 1800); await page.click('[data-filtre="tous"]').catch(() => {}); await page.waitForSelector('#pr-liste [data-sc="fiche"]', { timeout: 8000 }); await page.click('#pr-liste [data-sc="fiche"]'); await pret(page, "#vue .bandeau"); await attendre(page, 600);
+      /* v84 (ménage du bloc 3) : les cartes (#pr-liste, [data-filtre]) sont dans « Suivi commercial » (#/suivi-commercial) : la fiche
+         ouverte depuis une carte ramène à cette page (« Revenir au suivi commercial », RETOURS) ; même vérification */
+      await aller(page, "#/suivi-commercial", 1800); await page.click('[data-filtre="tous"]').catch(() => {}); await page.waitForSelector('#pr-liste [data-sc="fiche"]', { timeout: 8000 }); await page.click('#pr-liste [data-sc="fiche"]'); await pret(page, "#vue .bandeau"); await attendre(page, 600);
       const b2 = await texte(page, "#sortir-fiche"); await page.click("#sortir-fiche"); await attendre(page, 1200); const d2 = await ou(page);
-      ok("coach : fiche ouverte depuis Prospects → « Revenir aux prospects » ramène sur #/prospects", b2 === "Revenir aux prospects" && d2.courant === "prospects" && d2.hash === "#/prospects", b2 + " " + JSON.stringify(d2));
+      ok("coach : fiche ouverte depuis une carte du Suivi commercial (v84 : les cartes de l'ancienne page Prospects) → « Revenir au suivi commercial » ramène sur #/suivi-commercial", b2 === "Revenir au suivi commercial" && d2.courant === "suivi-commercial" && d2.hash === "#/suivi-commercial", b2 + " " + JSON.stringify(d2));
       ok("coach : ces parcours n'écrivent rien", db.ecritures.length === 0, resume(db));
       await c.close();
     }
@@ -1434,7 +1436,8 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
     await bloc("G3. page Prospects et export CSV", async () => {
       const db = base({ comptes: comptes() });
       const { page } = await coachSur(db);
-      await aller(page, "#/prospects", 300); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 });
+      /* v84 (ménage du bloc 3) : les cartes, les filtres et l'export CSV (#pr-liste, [data-filtre], #pr-csv) sont dans « Suivi commercial » */
+      await aller(page, "#/suivi-commercial", 300); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 });
       await page.click('[data-filtre="tous"]'); await attendre(page, 500);
       /* v53 (chantier 4) : la carte liste les 3 réponses (Problème, Ce qui l'a bloqué, Dans 3 mois : .sc-reponses li) */
       const carte = uid => page.$eval(`#pr-liste .sc-carte[data-uid="${uid}"]`, e => ({ t: e.textContent.replace(/\s+/g, " ").trim(), infos: Array.from(e.querySelectorAll(".sc-infos")).map(x => x.textContent.replace(/\s+/g, " ").trim()), rep: Array.from(e.querySelectorAll(".sc-reponses li")).map(x => x.textContent.replace(/\s+/g, " ").trim()) })).catch(() => ({ t: "", infos: [], rep: [] }));
@@ -1460,7 +1463,7 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
         JSON.stringify(["Léa Martin", "Marc", "Zoé Durand", "Nina Petit", "Tom Liste", "Chloé Texte"].map(ligne)));
       const lp = L.find(l => l[1] === "piege@exemple.fr") || [];
       ok("CSV piégé : « Dans 3 mois » qui commence par « = » neutralisé (apostrophe), newsletter « oui » (vrai booléen)", lp[K3[1]] === "'=HYPERLINK(\"http://x\") " + XSS && lp[K3[0]] === XSS && lp[K3[2]] === "oui" && L.length === 8 && L.every(l => l.length === L[0].length), JSON.stringify(K3.map(i => lp[i])));
-      ok("page Prospects et export : aucune écriture", ecrDonnees(db).length === 0, resume(db));
+      ok("page Suivi commercial (v84 : les cartes de l'ancienne page Prospects) et export : aucune écriture", ecrDonnees(db).length === 0, resume(db));
     });
 
     await bloc("G4. téléphone 390 px", async () => {
@@ -1469,9 +1472,9 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
       await x.page.goto(URL0 + "#/clients"); await pret(x.page, "#vue");
       await ficheDe(x.page, NINA);
       ok("téléphone : fiche de Nina (longue réponse « Dans 3 mois ») sans défilement horizontal", !(await deborde(x.page)), await largeur(x.page));
-      await aller(x.page, "#/prospects", 300); await x.page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 });
+      await aller(x.page, "#/suivi-commercial", 300); await x.page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 });   // v84 (ménage du bloc 3) : les cartes sont dans « Suivi commercial »
       await x.page.click('[data-filtre="tous"]'); await attendre(x.page, 500);
-      ok("téléphone : page Prospects (cartes avec les réponses, prospect piégé) sans défilement horizontal, aucune écriture", !(await deborde(x.page)) && ecrDonnees(db).length === 0, await largeur(x.page));
+      ok("téléphone : page Suivi commercial (v84 : cartes avec les réponses, prospect piégé) sans défilement horizontal, aucune écriture", !(await deborde(x.page)) && ecrDonnees(db).length === 0, await largeur(x.page));
     });
   }
 

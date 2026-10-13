@@ -854,7 +854,7 @@ function lienOk(href, base, attendu){
        « Plus tard » noté avec son origine dans sa clé challenge), est compté ici pour que le coach n'écrive rien après */
     const nAvantCoach = saisies(db).length;
     const { c: c2, page: p2 } = await contexte(b, COACH, db);
-    await p2.goto(URL0 + "#/clients"); await pret(p2, "#tb-clients [data-ouvrir]");   // v71 (D) : plus de ligne pour un prospect
+    await p2.goto(URL0 + "#/suivi-clients"); await pret(p2, "#tb-clients [data-ouvrir]");   // v71 (D) : plus de ligne pour un prospect ; v84 (ménage du bloc 3) : le tableau (#tb-clients) est dans « Suivi détaillé »
     await ficheDe(p2, ID, "Nina"); await attendre(p2, 500);
     const note = await texte(p2, "#fiche-reponses p.note"), rf = await lignes(p2, "#fiche-reponses");
     /* v52 (lot G) : côté coach, des libellés courts (l'obstacle d'avant : « Obstacle principal ») ; mêmes valeurs, même ordre */
@@ -872,7 +872,7 @@ function lienOk(href, base, attendu){
     ok("ancien questionnaire commencé : les 3 nouvelles questions (pas l'âge ni le poids), rien d'écrit à l'affichage", !(await page.$("#q-age, #q-poids")) && !!(await page.$("#q-projection")) && saisies(db).length === 0, "");
     await c.close();
     const { c: c2, page: p2 } = await contexte(b, COACH, db);
-    await p2.goto(URL0 + "#/clients"); await pret(p2, "#tb-clients [data-ouvrir]");   // v71 (D) : plus de ligne pour un prospect
+    await p2.goto(URL0 + "#/suivi-clients"); await pret(p2, "#tb-clients [data-ouvrir]");   // v71 (D) : plus de ligne pour un prospect ; v84 (ménage du bloc 3) : le tableau (#tb-clients) est dans « Suivi détaillé »
     await ficheDe(p2, ID, "Hugo"); await attendre(p2, 500);
     /* v53 (chantier 4) : plus de score (« Questionnaire en cours (4/10 réponses) ») : la note des réponses suffit */
     ok("coach : « 4 / 10 réponses, pas encore validé. » (compté sur l'ancien questionnaire)", (await texte(p2, "#fiche-reponses p.note")) === "4 / 10 réponses, pas encore validé." && !(await p2.$("#fiche-score")), await texte(p2, "#fiche-reponses p.note"));
@@ -948,7 +948,7 @@ function lienOk(href, base, attendu){
     const C0 = { version: 1, jours: {}, cta: { clics: [{ jour: 3, source: "bilan-propose", date: avant(20 * MIN) }, { jour: 3, source: "apres_questionnaire", date: avant(10 * MIN) }] } };
     const db = base({ comptes: [compte(k, "Léa", "Martin", [["intake", I0], ["challenge", C0]])] });
     const { c, page } = await contexte(b, COACH, db);
-    await page.goto(URL0 + "#/clients"); await pret(page, "#tb-clients [data-ouvrir]");   // v71 (D) : plus de ligne pour un prospect
+    await page.goto(URL0 + "#/suivi-clients"); await pret(page, "#tb-clients [data-ouvrir]");   // v71 (D) : plus de ligne pour un prospect ; v84 (ménage du bloc 3) : le tableau (#tb-clients) est dans « Suivi détaillé »
     await ficheDe(page, ID, "Léa Martin"); await attendre(page, 600);
     const note = await texte(page, "#fiche-reponses p.note"), rf = await lignes(page, "#fiche-reponses");
     ok("fiche : « 3 / 3 réponses, validé le … »", note.startsWith("3 / 3 réponses, validé le "), note);
@@ -1398,7 +1398,7 @@ function lienOk(href, base, attendu){
     ok("coach, son compte : son calculateur d'avant (âge dès 14 ans, pas de garde-fou ni de mention ajoutés)", await page.$eval("#age", x => x.min === "14") && !(await page.$("#calc-etat, #calc-avis, #calc-imc, #calc-ok")), "");
     await page.fill("#poids", "81"); await attendre(page, 1400);
     ok("coach, son compte : il écrit calc chez lui, jamais calc_perso", ecr(db, "calc", F.IDS.coach).length >= 1 && ecr(db, "calc_perso").length === 0, resume(db));
-    await aller(page, "#/clients", 2200);
+    await aller(page, "#/suivi-clients", 2200);   // v84 (ménage du bloc 3) : le bouton « Ouvrir » ([data-ouvrir]) du tableau est dans « Suivi détaillé »
     await page.click(`[data-ouvrir="${F.IDS.c1}"]`); await page.waitForSelector("#vue .bandeau", { timeout: 8000 }); await attendre(page, 800);
     const actions = await page.$$eval("#vue .bandeau-actions a", l => l.map(a => [a.textContent.trim(), a.getAttribute("href")]));
     /* v53 (lot D-clients) : changement VOULU — « Ses séances » mène au journal du client (#/journal, lecture seule) au lieu
@@ -1490,7 +1490,8 @@ function lienOk(href, base, attendu){
       compte(32, "Paul", "Dujour", [], { cree: avant(2 * MIN) })
     ] });
     const { c, page } = await contexte(b, COACH, db);
-    await page.goto(URL0 + "#/clients"); await pret(page, "#tb-clients [data-ouvrir]"); await attendre(page, 600);
+    /* v84 (ménage du bloc 3) : « Suivi de mes clients » (le tableau #tb-clients et ses [data-ouvrir]) est dans « Suivi détaillé » (#/suivi-clients) */
+    await page.goto(URL0 + "#/suivi-clients"); await pret(page, "#tb-clients [data-ouvrir]"); await attendre(page, 600);
     /* v71 (D) : Léa, Zoé et Paul (prospects) n'ont plus de ligne ni de pastille dans « Suivi de mes clients » : la ligne sous
        le titre renvoie à Prospects ; « inscrit depuis 30 j » se lit dans la fiche (ci-dessous), « inscrit le … » sur les cartes */
     const dansTb = await page.$$eval("#tb-clients [data-ouvrir]", l => l.map(e => e.dataset.ouvrir)).catch(() => []);
@@ -1498,20 +1499,26 @@ function lienOk(href, base, attendu){
     /* v83 (bloc 3) : la ligne « Les prospects sont dans Prospects → (3 comptes gratuits). » n'existe plus (décision 7) : on passe
        par l'onglet Prospects de la navigation, et le nombre se lit sur la page Prospects (« 3 prospects », « 3 comptes gratuits · … ») */
     await aller(page, "#/prospects", 2400);
-    const nbP = { compte: await texte(page, "#lc-prospects #lc-compte"), lede: await texte(page, "#vue .masthead.pr-detail .lede") };
-    await aller(page, "#/clients", 600); await pret(page, "#tb-clients [data-ouvrir]"); await attendre(page, 600);
-    ok("Mes clients (v71) : ni Léa, ni Zoé, ni Paul dans « Suivi de mes clients » (les clients y sont ; aucune pastille « Découverte · inscrit… ») ; v83 (bloc 3) : plus de ligne « Les prospects sont dans Prospects → » (décision 7), l'onglet Prospects (#/prospects) dans la navigation, « 3 prospects » et « 3 comptes gratuits · … » sur la page Prospects", dansTb.includes(F.IDS.c1) && ![PID(30), PID(31), PID(32)].some(id => dansTb.includes(id)) && !/Léa Ancienne|Zoé Récente|Paul Dujour|Découverte · inscrit/.test(tbTexte) && lp.absente && lp.onglets.length === 2 && lp.onglets.every(h => h === "#/prospects") && nbP.compte === "3 prospects" && /^3 comptes gratuits · \d+ à traiter$/.test(nbP.lede), JSON.stringify([dansTb, lp, nbP]) + " · " + tbTexte.slice(0, 160));
-    const vc = await texte(page, "#vue");
-    ok("Mes clients : plus aucun « J n/7 » ni « Découverte terminée »", !/J\d+\/7|Découverte terminée|terminée/.test(vc), (vc.match(/J\d+\/7|terminée/) || [""])[0]);
+    const nbP = { compte: await texte(page, "#lc-prospects #lc-compte") };
+    /* v84 (ménage du bloc 3) : l'en-tête détaillé (header.masthead.pr-detail, « N comptes gratuits · M à traiter ») est dans « Suivi commercial » */
+    await aller(page, "#/suivi-commercial", 2400); nbP.lede = await texte(page, "#vue .masthead.pr-detail .lede");
+    await aller(page, "#/suivi-clients", 600); await pret(page, "#tb-clients [data-ouvrir]"); await attendre(page, 600);   // v84 (ménage du bloc 3) : retour au tableau, dans « Suivi détaillé »
+    ok("Mes clients (v71) : ni Léa, ni Zoé, ni Paul dans « Suivi de mes clients » (v84 : page « Suivi détaillé » ; les clients y sont ; aucune pastille « Découverte · inscrit… ») ; v83 (bloc 3) : plus de ligne « Les prospects sont dans Prospects → » (décision 7), l'onglet Prospects (#/prospects) dans la navigation, « 3 prospects » sur la page Prospects et « 3 comptes gratuits · … » (v84 : dans « Suivi commercial »)", dansTb.includes(F.IDS.c1) && ![PID(30), PID(31), PID(32)].some(id => dansTb.includes(id)) && !/Léa Ancienne|Zoé Récente|Paul Dujour|Découverte · inscrit/.test(tbTexte) && lp.absente && lp.onglets.length === 2 && lp.onglets.every(h => h === "#/prospects") && nbP.compte === "3 prospects" && /^3 comptes gratuits · \d+ à traiter$/.test(nbP.lede), JSON.stringify([dansTb, lp, nbP]) + " · " + tbTexte.slice(0, 160));
+    /* v84 (ménage du bloc 3) : l'écran d'avant de Mes clients est réparti entre #/clients (la liste), « Suivi détaillé » (le tableau, ici)
+       et « Comptes » (#liste-clients) : la même vérification lit les trois pages */
+    let vc = await texte(page, "#vue");
+    await aller(page, "#/clients", 600); await pret(page, "#lc-clients #lc-liste li"); vc += " " + await texte(page, "#vue");
+    await aller(page, "#/comptes", 600); await pret(page, "#liste-clients .client-l"); vc += " " + await texte(page, "#vue");
+    ok("Mes clients : plus aucun « J n/7 » ni « Découverte terminée » (v84 : liste, Suivi détaillé et Comptes)", !/J\d+\/7|Découverte terminée|terminée/.test(vc), (vc.match(/J\d+\/7|terminée/) || [""])[0]);
     await ficheDe(page, PID(30), "Léa Ancienne", "#fiche-decouverte"); await attendre(page, 800);   // v71 (D) : par Clients.ouvrir
     /* le bloc « Suivi commercial » (raisons, action : « découverte terminée ») part avec le score et la température (chantier 4) */
     const fd = await texte(page, "#fiche-decouverte"), lede = await texte(page, "#fc-suivi .fc-lede");   /* v83 (bloc 3) : la phrase d'en-tête de la fiche est en haut de l'onglet Suivi (p.lede.fc-lede), plus dans le masthead */
     ok("fiche : « inscrit depuis 30 j » (pastille et ligne du bloc Découverte, en-tête), plus de « jour n / 7 » ni de « terminée »", fd.includes("inscrit depuis 30 j") && lede.includes("Découverte : inscrit depuis 30 j, questionnaire rempli.") && !/jour \d+ ?\/ ?7|J\d+\/7|terminée/i.test(fd + " " + lede), fd.slice(0, 200) + " · " + lede);
-    await aller(page, "#/prospects", 2400);
+    await aller(page, "#/suivi-commercial", 2400);   // v84 (ménage du bloc 3) : les cartes, les filtres et l'export CSV sont dans « Suivi commercial »
     await page.click('[data-filtre="tous"]').catch(() => {}); await attendre(page, 600);
     const st = await page.$$eval("#vue .sc-carte .sc-nom small", l => l.map(x => x.textContent.replace(/\s+/g, " ").trim())).catch(() => []);
     /* v53 (chantier 4) : le sous-titre des cartes devient « inscrit le jj/mm/aaaa · il y a N jours » */
-    ok("page Prospects : sous-titre des cartes « inscrit le … », sans « J n/7 » ni « terminée »", st.length >= 3 && st.every(x => /^inscrit le \d{2}\/\d{2}\/\d{4} · /.test(x) && !/J\d+\/7|terminée/.test(x)), JSON.stringify(st));
+    ok("page Suivi commercial (v84 : les cartes de l'ancienne page Prospects) : sous-titre des cartes « inscrit le … », sans « J n/7 » ni « terminée »", st.length >= 3 && st.every(x => /^inscrit le \d{2}\/\d{2}\/\d{4} · /.test(x) && !/J\d+\/7|terminée/.test(x)), JSON.stringify(st));
     const [dl] = await Promise.all([page.waitForEvent("download", { timeout: 5000 }), page.click("#pr-csv")]);
     const t = fs.readFileSync(await dl.path(), "utf8");
     /* v53 (chantier 4) : plus de colonne « Découverte » (colonnes à jour, verif58) : on vérifie tout le fichier */
@@ -1822,7 +1829,7 @@ function lienOk(href, base, attendu){
       /* le coach dans la fiche d'un prospect : ses pages, sans exemple ni verrou */
       const k3 = 52, ID3 = PID(k3), db3 = base({ comptes: [prospectE(k3)] });
       const co = await contexte(b, COACH, db3);
-      await co.page.goto(URL0 + "#/clients"); await pret(co.page, "#tb-clients [data-ouvrir]");   // v71 (D) : plus de ligne pour un prospect
+      await co.page.goto(URL0 + "#/suivi-clients"); await pret(co.page, "#tb-clients [data-ouvrir]");   // v71 (D) : plus de ligne pour un prospect ; v84 (ménage du bloc 3) : le tableau (#tb-clients) est dans « Suivi détaillé »
       await ficheDe(co.page, ID3, "Léa Martin", "#vue .bandeau"); await attendre(co.page, 600);
       const vc = [];
       for (const h of ["#/programme", "#/nutrition", "#/suivi"]) { await aller(co.page, h, 1600); vc.push([h, await co.page.evaluate(() => Store.idConsulte), !!(await co.page.$("#vue .echantillon, #vue .verrou, #vue .ech-marque"))]); }

@@ -241,7 +241,8 @@ async function main() {
         await aller(page, "#/" + r); await capture(page, `coach-${r}-${vn}`);
       }
       /* fiche client */
-      await aller(page, "#/clients"); await page.waitForTimeout(500);
+      /* v84 (ménage du bloc 3) : le tableau complet (et son bouton « Ouvrir ») est dans « Suivi détaillé » (menu Plus) */
+      await aller(page, "#/suivi-clients"); await page.waitForTimeout(500);
       const ouvrirBtn = await page.$(`[data-ouvrir="${F.IDS.c1}"]`);
       if (ouvrirBtn) {
         await ouvrirBtn.click();
