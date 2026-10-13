@@ -16,7 +16,7 @@ const CONFIG = {
     /* Affiche en pied de page. Sert a repondre en trois secondes a la seule
        question qui compte apres une mise en ligne : « est-ce que je regarde
        bien la nouvelle version ? » */
-    version: "2026-10-13 · 79",
+    version: "2026-10-13 · 79.1",
     instagram: "https://www.instagram.com/lucasmhxcoaching/",
     pseudo: "@lucasmhxcoaching",
     email: "mhx.coaching@gmail.com",
@@ -139,7 +139,7 @@ const CONFIG = {
   nouveautes: {
     feedback_dimanche: "test",
     suivi_visites_clients: "test",   // v53 (chantier 4) : suivi des visites des CLIENTS (dernière visite, jours actifs) ; « tous » quand Lucas les aura prévenus
-    journal_alimentaire: "test",     // v79 : le journal alimentaire (page, cartes des accueils, fiche du coach) ; « tous » : tout le monde
+    journal_alimentaire: "tous",     // v79 : le journal alimentaire (page, cartes des accueils, fiche du coach) ; v79.1 : « tous » (vérifié en ligne avec le compte de test le 13/10)
     comptes_test: ["294c473f-a770-472c-8b5d-5a0e8ef0e5e4"]   // compte client de test de Lucas (v79 : le 9df6bb84… n'existe plus en base)
   },
 

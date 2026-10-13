@@ -402,8 +402,8 @@ const zones = (page, sel) => page.$$eval(sel, l => l.filter(e => e.offsetParent 
     const { page } = await contexte(b, TESTC, db);
     await page.goto(URL0 + "#/journal-alimentaire"); await pret(page, ".ja-repas"); await attendre(page, 1800);
     const L0 = lusJA(db, TESTC.id), E0 = saisies(db, TESTC.id), cat0 = db.catalogue.length;
-    ok("ouverture (" + (TEST_ID ? "compte de test lu dans CONFIG.nouveautes.comptes_test" : "IDENTIFIANT DU COMPTE DE TEST INTROUVABLE dans le fichier servi") + ", interrupteur « test ») : le journal est lu chez lui (outil=eq.journal_alimentaire), le catalogue pas encore ; aucune écriture à l'ouverture",
-      !!TEST_ID && L0.some(l => l.uid === TESTC.id && l.outil === "eq.journal_alimentaire") && cat0 === 0 && E0.length === 0, JSON.stringify([TEST_ID, L0, cat0]) + " " + resumeE(db));
+    ok("ouverture (" + (TEST_ID ? "compte de test lu dans CONFIG.nouveautes.comptes_test" : "IDENTIFIANT DU COMPTE DE TEST INTROUVABLE dans le fichier servi") + ", interrupteur « test ») : le journal est lu chez lui (outil=eq.journal_alimentaire), le catalogue est préchargé dès l'ouverture (v79.1 : la recherche est prête au premier « + Ajouter ») ; aucune écriture à l'ouverture",
+      !!TEST_ID && L0.some(l => l.uid === TESTC.id && l.outil === "eq.journal_alimentaire") && cat0 >= 1 && E0.length === 0, JSON.stringify([TEST_ID, L0, cat0]) + " " + resumeE(db));
     const R = await lirePage(page);
     await capturer(page, "fr-01-vide", true);
     ok("résumé : « Il te reste 2 240 kcal » (objectif de sa diète), « 0 sur 2 240 kcal », jauge à 0 % ; « Aujourd'hui », jour suivant désactivé ; 4 repas (Petit-déjeuner, Déjeuner, Dîner, Collations), chacun « Rien de noté pour l'instant. », « + Ajouter » et son menu",

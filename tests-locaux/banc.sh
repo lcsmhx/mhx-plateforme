@@ -213,6 +213,8 @@ HORS_BANC="verif44 verif45 verif46 verif47 verif49"
 # v79 (journal alimentaire) : verif69 G (lectures de Mes clients : la lecture groupée exclut journal_alimentaire, et la seule autre
 #   lecture admise est sa date, outil=eq.journal_alimentaire&select=user_id,outil,maj_le) et verif71 (textes de l'accord santé : la
 #   mention des aliments notés dans le journal, FR et EN) adaptées, nombres inchangés ; fichiers.js : interrupteur journal_alimentaire servi « test ».
+# v79.1 (interrupteur journal_alimentaire sur « tous », catalogue préchargé) : verif55 A0 (tous les interrupteurs de fichiers.js, plus
+#   seulement les deux premiers) et verif84 A (catalogue lu dès l'ouverture) adaptées, nombres inchangés.
 attendu() {
   case "$1" in
     flux) echo 19;; verif34) echo 13;; verif35) echo 14;; verif36) echo 13;; verif37) echo 12;; verif38) echo 66;;

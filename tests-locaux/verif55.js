@@ -491,9 +491,10 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
     /* le banc de la page testée (tests-locaux/fichiers.js à côté d'elle ; au banc, celui de cette suite) : c'est lui qui
        sert les interrupteurs sur « test », quelle que soit la valeur écrite dans le fichier (Lucas peut passer « tous ») */
     const FT = require(path.join(path.dirname(HTML), "tests-locaux", "fichiers.js"));
-    const NOMS = ["feedback_dimanche", "suivi_visites_clients"], V = ["test", "tous", "off", "Tous"];
+    /* v79 : tous les interrupteurs que le banc force (fichiers.js, NOUVEAUTES : + journal_alimentaire), pas seulement les deux premiers */
+    const NOMS = Array.isArray(FT.NOUVEAUTES) && FT.NOUVEAUTES.length ? FT.NOUVEAUTES : ["feedback_dimanche", "suivi_visites_clients"], V = ["test", "tous", "off", "Tous"];
     /* le fichier du disque avec la valeur v écrite dans chaque interrupteur (remplacement fait ici, sans fichiers.js) */
-    const ecrire = (t, v) => t.replace(/\b(feedback_dimanche|suivi_visites_clients): "[^"\n]*"/g, (x, n) => n + ': "' + v + '"');
+    const ecrire = (t, v) => t.replace(new RegExp("\\b(" + NOMS.join("|") + "): \"[^\"\\n]*\"", "g"), (x, n) => n + ': "' + v + '"');
     /* ce que servirFichier (du banc testé) sert pour ce texte, sans retouche de suite */
     const servi = (f, t) => { let corps = null; FT.servirFichier({ url: "/" + f + "?v=1" }, { writeHead(){}, end(x){ corps = String(x); } }, HTML, null, () => t); return corps; };
     /* v72 (A) : le banc sert aussi le téléphone obligatoire ÉTEINT (forcerTelephone, fichiers.js) : « exactement le fichier », avec ce
@@ -525,7 +526,9 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
         && FT.refusSimulation({ GITHUB_REF: "refs/heads/v2/simu-tous-x" }) === "";
       const d = { lus: NOMS.map(n => valeursNouveaute(lus, n)), servie: NOMS.map(n => valeursNouveaute(servie, n)), r, regle };
       ok("A0 : fichier simulé sur « tous » (BANC_SIMULER_NOUVEAUTES ; branches v2/simu-tous-* et v2/simu-off-*, refusée sur main) : le banc lit « tous » dans le fichier, sert « test » (avec() l'y retrouve) ; Thomas (hors test) : bilan du vendredi, visites non suivies",
-        JSON.stringify(d.lus) === '[["tous"],["tous"]]' && JSON.stringify(d.servie) === '[["test"],["test"]]' && JSON.stringify(r) === '["test","test","vendredi",false]' && regle, JSON.stringify(d));
+        /* v79 : chaque interrupteur du banc (NOMS = fichiers.js NOUVEAUTES), un par un : lu « tous », servi « test » */
+        d.lus.length === NOMS.length && d.lus.every(x => JSON.stringify(x) === '["tous"]') && d.servie.length === NOMS.length && d.servie.every(x => JSON.stringify(x) === '["test"]')
+        && JSON.stringify(r) === '["test","test","vendredi",false]' && regle, JSON.stringify(d));
       await c.close();
     } finally { if (avant === undefined) delete process.env.BANC_SIMULER_NOUVEAUTES; else process.env.BANC_SIMULER_NOUVEAUTES = avant; }
   });

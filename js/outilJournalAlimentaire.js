@@ -775,6 +775,9 @@ const outilJournalAlimentaire = {
       else if (t.dataset.jaMenu != null) ouvrirMenu(+t.dataset.jaMenu);
       else if (t.dataset.jaK != null) ouvrirLigne(+t.dataset.jaK);
     });
+    /* v79.1 : le catalogue (4 pages, plusieurs secondes sur téléphone) se charge dès l'ouverture de la page, sans attendre le
+       premier « + Ajouter » : la recherche est prête quand on en a besoin (une fois par visite : Catalogue le garde) */
+    setTimeout(() => { if (zone.isConnected) catalogue(); }, 400);
     /* #/journal-alimentaire/ajouter (bouton des accueils) : le panneau d'ajout, au repas de l'heure */
     if (sousRoute === "ajouter"){
       sousRoute = "";
