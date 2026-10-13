@@ -392,6 +392,9 @@ async function contexte(b, who, db, opts){
       localStorage.setItem("mhx_installe", "1"); localStorage.setItem("mhx_visites", "3");
       if (langue) localStorage.setItem("mhx_langue", langue);
       if (theme) localStorage.setItem("mhx_theme", theme);
+      /* v88 : cette suite ne teste pas la fenêtre « Notre politique de confidentialité a changé » (verif90) : « Plus tard » déjà
+         touché sur cet appareil pour ce compte (les inscrits v55 ont un accord d'une version plus ancienne) */
+      if (s && s.user && s.user.id) localStorage.setItem("mhx_rappel_politique|" + s.user.id, new Date().toISOString());
     }
   }, { s: who ? who.session : null, langue: opts.langue || "", theme: opts.theme || "", rangement: opts.rangement || "" });
   await c.clock.install({ time: T0 });   // midi du jour du lancement, puis l'horloge tourne
