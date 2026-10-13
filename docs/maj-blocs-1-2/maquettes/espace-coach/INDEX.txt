@@ -1,0 +1,4 @@
+Référence de STYLE uniquement pour le bloc 1 (couleurs, verre dépoli, boutons, champs, cartes, barre du bas, fenêtre de confirmation).
+La nouvelle organisation montrée ici (recherche, sélection multiple, fiche à onglets, bouton +) appartient au bloc 3 : ne pas la coder maintenant.
+Tableau.dc.html (tableau de bord) · Liste*.dc.html (listes clients/prospects) · FicheSuivi / FicheCompte (fiche client)
+Nouveau.dc.html (formulaire) · AccueilClient.dc.html / Progression.dc.html (côté client)

@@ -1,0 +1,14 @@
+Correspondance écrans du parcours -> fichiers (les noms de fichiers ne sont pas toujours parlants)
+1  Accueil (avec l'animation)      Main.dc.html
+2  Ton objectif ?                   Cgu.dc.html   (nom trompeur : c'est bien l'objectif)
+3  Qu'est-ce qui a coincé ?         Question.dc.html (vide) / Question2.dc.html (1 réponse cochée)
+4  Dans 3 mois                      Question3.dc.html
+5  Tu es ?                          Sexe.dc.html
+6  Prénom                           Prenom.dc.html
+7  Chargement                       Chargement.dc.html
+8  Compte (email, mot de passe)     Compte.dc.html
+9  WhatsApp                         Telephone.dc.html
+10 Ton espace                       Plan.dc.html
+11 Cadeau                           Cadeau.dc.html
+-- Carte cadeau sur l'accueil       AppAccueil.dc.html (SEULEMENT la carte cadeau ; les cartes séance et journal = blocs 4 et 5)
+Les textes de ces fichiers sont anciens : TEXTES.md fait foi.

@@ -9,6 +9,9 @@
       des tests (DOMAINES_EXEMPLE, et tout domaine en .invalid, .test, .example ou .localhost) et l'adresse de la marque
       (CONFIG.marque.email de js/config.js, avec ou sans « +étiquette »). Aucune adresse refusée n'est recopiée dans le
       journal : seulement le fichier, la ligne et le domaine (et pour donnees/, le début du nom du fichier).
+      Mission blocs 1-2 (13/10/2026) : + les textes d'exemple EXACTS du champ email du parcours prospect (ADRESSES_EXEMPLE,
+      « ton@email.com » de docs/maj-blocs-1-2/TEXTES.md, et sa version anglaise) : un texte d'exemple, pas l'adresse de
+      quelqu'un ; toute autre adresse de ces domaines reste refusée.
    Le 12/10, avant la tâche 1 : 2 fichiers hors liste dans donnees/ et 1 adresse hors marque (docs/archive/) → code 1.
    Code de sortie 1 au moindre problème. Usage : node garde-depot.js ../index.html */
 const fs = require("fs"), path = require("path");
@@ -27,6 +30,7 @@ const LISTE_BLANCHE = [
 const DOMAINES_EXEMPLE = ["exemple.fr", "exemple.org", "exemple.com", "exemple.net", "example.com", "example.org", "example.net",
   "e.fr", "gen.fr"];
 const SUFFIXES_EXEMPLE = [".invalid", ".test", ".example", ".localhost"];
+const ADRESSES_EXEMPLE = ["ton@email.com", "you@email.com"];
 
 let suivis;
 try { suivis = execFileSync("git", ["-C", RACINE, "ls-files", "-z"], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 }).split("\0").filter(Boolean); }
@@ -49,6 +53,7 @@ try {
 if (!/^[a-z0-9._%-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(marque)) problemes.push("js/config.js : adresse de la marque (CONFIG.marque.email) introuvable");
 const [marqueLocal, marqueDomaine] = marque.split("@");
 const permise = (adresse) => {
+  if (ADRESSES_EXEMPLE.includes(adresse.toLowerCase())) return true;
   const [local, domaine] = adresse.toLowerCase().split("@");
   if (DOMAINES_EXEMPLE.includes(domaine) || SUFFIXES_EXEMPLE.some(s => domaine.endsWith(s))) return true;
   return !!marque && domaine === marqueDomaine && (local === marqueLocal || local.startsWith(marqueLocal + "+"));
