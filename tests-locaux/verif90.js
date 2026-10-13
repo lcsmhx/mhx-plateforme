@@ -8,7 +8,7 @@
       d'accord de la carte, le lien vers la politique (target=_blank, rel=noopener), « Plus tard » puis « J'accepte » ;
       rien d'écrit avant un choix ;
    B. « J'accepte » : UN PUT exact (consentement_sante = maintenant, sante_version = la version actuelle, sante_ecran =
-      « nouvelle-version », le tout premier accord gardé dans sante_premier_accord et sante_premiere_version), les autres
+      « nouvelle-version », le tout premier accord gardé dans sante_premier_accord, sante_premiere_version et sante_premier_ecran), les autres
       métadonnées gardées, le message, la session rangée à jour, l'export des données avec les deux nouveaux champs ; page
       rechargée : plus de fenêtre, plus de relecture ;
    C. « Plus tard » : rien d'écrit dans le compte, l'appareil retient la date (mhx_rappel_politique|<id>) ; l'accord d'avant
@@ -460,9 +460,9 @@ const ouvrirAccueil = async (page) => { await page.goto(URL0 + "#/accueil"); awa
     await page.click(OUI);
     const fini = await attendreQue(() => auth(db, "PUT").length === 1, 5000); await attendre(page, 900);
     const P = auth(db, "PUT"), d = P[0] && P[0].corps && P[0].corps.data, tc = d ? Date.parse(d.consentement_sante) : NaN;
-    ok("B1 : « J'accepte » → UN PUT /auth/v1/user exact : consentement_sante = l'instant du clic, sante_version = la version actuelle, sante_ecran « nouvelle-version », sante_premier_accord et sante_premiere_version = l'accord d'avant (ces 5 champs, rien d'autre)",
-      vue && fini && P.length === 1 && !!d && egal(Object.keys(d).sort(), ["consentement_sante", "sante_ecran", "sante_premier_accord", "sante_premiere_version", "sante_version"]) && ISO.test(d.consentement_sante)
-      && Math.abs(tc - t0) < 5000 && d.sante_version === VERSION() && d.sante_ecran === "nouvelle-version" && d.sante_premier_accord === META_V55().consentement_sante && d.sante_premiere_version === "2026-09-28b", JSON.stringify(P));
+    ok("B1 : « J'accepte » → UN PUT /auth/v1/user exact : consentement_sante = l'instant du clic, sante_version = la version actuelle, sante_ecran « nouvelle-version », sante_premier_accord, sante_premiere_version et sante_premier_ecran = l'accord d'avant (ces 6 champs, rien d'autre)",
+      vue && fini && P.length === 1 && !!d && egal(Object.keys(d).sort(), ["consentement_sante", "sante_ecran", "sante_premier_accord", "sante_premier_ecran", "sante_premiere_version", "sante_version"]) && ISO.test(d.consentement_sante)
+      && Math.abs(tc - t0) < 5000 && d.sante_version === VERSION() && d.sante_ecran === "nouvelle-version" && d.sante_premier_accord === META_V55().consentement_sante && d.sante_premiere_version === "2026-09-28b" && d.sante_premier_ecran === "", JSON.stringify(P));
     const M = db.meta[ID], ancien = META_V55();
     ok("B2 : dans le compte : la nouvelle version, et toutes les autres métadonnées gardées (prénom, conditions, newsletter…)",
       M.sante_version === VERSION() && Object.keys(ancien).filter(c => !["consentement_sante", "sante_version"].includes(c)).every(c => egal(M[c], ancien[c])), JSON.stringify(M));

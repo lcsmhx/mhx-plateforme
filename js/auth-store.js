@@ -694,7 +694,7 @@ const Sante = {
    (Sante.accordDans ne compare jamais les versions) : personne ne perd l'accès à ses données ni à ses outils, rien n'est
    effacé. « J'accepte » : les mêmes métadonnées du compte que l'accord actuel (consentement_sante = la date, sante_version =
    la version actuelle, sante_ecran = « nouvelle-version »), et le tout premier accord gardé une fois pour toutes
-   (sante_premier_accord, sante_premiere_version, jamais réécrits) ; pas enregistré (réseau, refus) : un message, la
+   (sante_premier_accord, sante_premiere_version, sante_premier_ecran, jamais réécrits) ; pas enregistré (réseau, refus) : un message, la
    fenêtre reviendra à la prochaine ouverture. « Plus tard » (ou la fenêtre fermée) : rien n'est écrit dans le compte ;
    l'appareil retient la date (mhx_rappel_politique|<id>, retirée à la déconnexion comme toute clé d'un compte) et la
    fenêtre revient au plus tôt 7 jours après. Un compte dont l'accord porte déjà la version actuelle, ou sans accord (la
@@ -728,9 +728,9 @@ const RappelSante = {
   corpsHTML(){
     const T = DECOUVERTE.sante_maj, t = s => esc(typoFr(trad(s)));
     const lien = lienSur((CONFIG.textes_legaux || {}).confidentialite_pdf);
-    return `<p class="rappel-sante-texte">${t(T.texte)}</p>
-      <p class="rappel-sante-phrase"><strong>${t(DECOUVERTE.sante.phrase)}</strong></p>
-      <p class="note">${lien ? `<a href="${esc(lien)}" target="_blank" rel="noopener" id="rappel-sante-lien">${t(T.lien)}</a>` : `<span>${t(T.lien)}</span>`}</p>`;
+    /* sur une seule ligne : le corps des fenêtres garde les retours à la ligne (white-space: pre-line) */
+    return `<p class="rappel-sante-texte">${t(T.texte)}</p>` + `<p class="rappel-sante-phrase"><strong>${t(DECOUVERTE.sante.phrase)}</strong></p>`
+      + `<p class="note">${lien ? `<a href="${esc(lien)}" target="_blank" rel="noopener" id="rappel-sante-lien">${t(T.lien)}</a>` : `<span>${t(T.lien)}</span>`}</p>`;
   },
   /* « J'accepte » : lève une erreur si l'accord n'a pas pu être enregistré ; GoTrue fusionne data (les autres
      métadonnées restent) ; jamais de null */
@@ -740,6 +740,7 @@ const RappelSante = {
     if (!Object.prototype.hasOwnProperty.call(m0, "sante_premier_accord")){
       data.sante_premier_accord = m0.consentement_sante === true ? true : String(m0.consentement_sante || "");
       data.sante_premiere_version = typeof m0.sante_version === "string" ? m0.sante_version : "";
+      data.sante_premier_ecran = typeof m0.sante_ecran === "string" ? m0.sante_ecran : "";   // l'écran du premier accord (calculateur…), gardé lui aussi
     }
     const u = await Auth.appel("/auth/v1/user", { method: "PUT", body: { data: data } });
     const m = u && u.user_metadata;
@@ -1231,7 +1232,7 @@ const Store = {
   /* v67 (E4) : les accords rangés dans les metadonnees du compte (Accords, Sante ; emails_suivi : l'ancien accord v51) */
   /* v88 : + le tout premier accord santé, gardé quand l'accord est redonné pour une nouvelle version (RappelSante) */
   champsAccords: ["consentement", "conditions_version", "consentement_sante", "sante_version", "sante_ecran",
-                  "sante_premier_accord", "sante_premiere_version", "newsletter", "newsletter_version", "emails_suivi"],
+                  "sante_premier_accord", "sante_premiere_version", "sante_premier_ecran", "newsletter", "newsletter_version", "emails_suivi"],
   /* v67 (D5) : ce qu'une sauvegarde remplacerait, sans rien ecrire : [[cle, contenu]] ; erreur « format » (illisible) ou
      « vide » (rien a restaurer) */
   aRestaurer(texte){
