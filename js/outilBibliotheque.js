@@ -5,7 +5,7 @@ const outilBibliotheque = {
   id: "bibliotheque",
   cle: null,
   nom: "Bibliothèque",
-  principal_coach: true,
+  /* v83 (bloc 3) : plus dans la barre du bas du coach (Tableau · Clients · Prospects · Plus) : dans « Plus » et les raccourcis du Tableau de bord */
   icone: "📚",
   role: "coach",
   titre: "Ma bibliothèque",

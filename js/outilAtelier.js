@@ -9,7 +9,7 @@ const outilAtelier = {
   id: "atelier",
   cle: "atelier",
   role: "coach",
-  principal_coach: true,
+  /* v83 (bloc 3) : plus dans la barre du bas du coach (Tableau · Clients · Prospects · Plus) : dans « Plus » et les raccourcis du Tableau de bord */
   nom: "Mes séances",
   icone: "🧱",
   titre: "L'atelier",

@@ -16,6 +16,12 @@
    rien). Le seuil est la date d'inscription la plus récente vue au début de la visite précédente (horloge du serveur :
    rien ne se perd entre la lecture et l'écriture, quelle que soit l'heure du téléphone du coach). Aucune visite
    enregistrée : les inscrits des 7 derniers jours.
+   v83 (bloc 3, maquette Tableau) : titre « Tableau de bord » et « Ce qui demande ton attention aujourd'hui. », une loupe (la
+   recherche de la liste Clients), 3 compteurs (Clients, À traiter, Prospects ; les badges d'urgences restent dans Clients et
+   Prospects), puis « À traiter maintenant » (toujours affichée : « Rien à traiter pour l'instant. » quand elle est vide ;
+   chaque ligne ouvre la bonne fiche), puis tout le reste d'avant, en dessous : « Nouveaux depuis ta dernière visite »,
+   « Inscrits par source », « Raccourcis ». Les comptes archivés (Archive) sont exclus des compteurs, de « À traiter », des
+   nouveaux et des Nouveautés ; « Inscrits par source » reste une statistique de tous les inscrits.
    ------------------------------------------------------------------ */
 const outilTableau = {
   id: "tableau",
@@ -24,13 +30,14 @@ const outilTableau = {
   icone: "📈",
   role: "coach",
   principal_coach: true,
+  court: "Tableau",   // v83 (bloc 3) : la barre du bas du coach, Tableau · Clients · Prospects · Plus
   sans_entete: true,
   titre: "Tableau de bord",
   accroche: "",
   MAX_LIGNES: 5,
   AIDE_CLIENTS: "Urgences : un 😞 non traité, une note en chute, un retour de la semaine à lire (feedback du dimanche ou bilan du vendredi), un client inactif depuis 10 jours, une régularité faible, ou un calculateur qui ne correspond pas au questionnaire.",
 
-  html(){ return `<div id="tb-vue"><header class="masthead"><h1>Tableau de bord</h1></header><section class="panel"><div class="empty">Chargement…</div></section></div>`; },
+  html(){ return `<div id="tb-vue"><header class="masthead tb-tete"><div class="tb-tete-l"><h1>Tableau de bord</h1><p class="lede">Ce qui demande ton attention aujourd'hui.</p></div></header><section class="panel"><div class="empty">Chargement…</div></section></div>`; },
 
   /* les lignes « À traiter maintenant » : une par personne (sa raison la plus urgente), des plus urgentes aux autres.
      rang : 😞 0, note en chute 1, retour à lire 2, prospect signé 3, case « J'ai réservé » 4, absent à l'appel 5, clic 6,
@@ -45,9 +52,11 @@ const outilTableau = {
       const al = l.alertes.filter(a => a.niveau === "mauvais" || a.type === "bilan_recu"); if (!al.length) return;
       const r = a => a.type === "avis_triste" ? 0 : a.type === "note_chute" ? 1 : a.type === "bilan_recu" ? 2 : 8;
       const a = al.slice().sort((x, y) => r(x) - r(y))[0];
-      out.push({ rang: r(a), uid: l.p.id, nom: l.nom, texte: a.texte, cible: a.cible || "accueil", jours: l.jours || 0 });
+      /* v83 : le point de couleur de la ligne (maquette) : vert pour un retour à lire, ambre pour un 😞 ou une note en chute, rouge sinon */
+      const niveau = a.type === "bilan_recu" ? "ok" : a.type === "avis_triste" || a.type === "note_chute" ? "attention" : "mauvais";
+      out.push({ rang: r(a), uid: l.p.id, nom: l.nom, texte: a.texte, cible: a.cible || "accueil", jours: l.jours || 0, niveau });
     });
-    prospects.forEach(x => { if (x.a.urgent) out.push({ rang: this.RANG_PROSPECTS[x.a.motif] != null ? this.RANG_PROSPECTS[x.a.motif] : 8, uid: x.l.p.id, nom: x.l.nom, texte: Commercial.motifTexte(x.a), cible: "accueil", prospect: true, jours: 0, recence: x.a.recence }); });
+    prospects.forEach(x => { if (x.a.urgent) out.push({ rang: this.RANG_PROSPECTS[x.a.motif] != null ? this.RANG_PROSPECTS[x.a.motif] : 8, uid: x.l.p.id, nom: x.l.nom, texte: Commercial.motifTexte(x.a), cible: "accueil", prospect: true, jours: 0, recence: x.a.recence, niveau: "attention" }); });
     return out.sort((a, b) => a.rang - b.rang || b.jours - a.jours || (a.recence || 0) - (b.recence || 0));
   },
 
@@ -103,18 +112,20 @@ const outilTableau = {
     try { ({ profils, parClient, contenus } = await Clients.charger({ connexions: false })); }   // v56 : le compteur de connexions n'est pas affiche ici
     catch(e){ zone.innerHTML = `<section class="panel"><div class="empty">Impossible de charger tes clients pour le moment.</div></section>`; return; }
     if (!zone.isConnected) return;
-    const lignes = Clients.resumer(profils, parClient, contenus);
+    const toutes = Clients.resumer(profils, parClient, contenus);
+    const lignes = toutes.filter(l => !l.archive);   // v83 (bloc 3) : sans les comptes archivés (compteurs, à traiter, nouveaux, Nouveautés)
     const clients = lignes.filter(l => l.p.statut !== "prospect");
     const prospects = lignes.filter(l => l.p.statut === "prospect").map(l => ({ l, a: Commercial.analyseLigne(l) })).filter(x => x.a);
     const urgClients = clients.filter(l => Clients.urgent(l)).length, urgProspects = prospects.filter(x => x.a.urgent).length;
     const liste = this.aTraiter(clients, prospects);
-    const prenom = (Auth.profil && Auth.profil.prenom) || "";
     const pl = (n, s, p) => n > 1 ? p : s;
     /* le badge : le nombre d'urgences, en couleur seulement s'il y en a */
     const badge = (n, aide) => `<span class="pastille tb-badge${n ? " mauvais" : ""}" title="${esc(aide)}">${n} ${pl(n, "urgence", "urgences")}</span>`;
-    const tuile = (id, lbl, val, sub, n, aide, lien) => `<a class="tile tb-tuile" id="${id}" href="${lien}" title="${esc(aide)}"><div class="tb-tuile-tete"><span class="t-lbl">${lbl}</span>${badge(n, aide)}</div><div class="t-val readout">${val}</div><div class="t-sub">${sub}</div></a>`;
+    /* v83 : maquette — le nombre, puis le libellé ; le badge d'urgences reste dessous (Clients, Prospects) */
+    const tuile = (id, lbl, val, n, aide, lien) => `<a class="tile tb-tuile" id="${id}" href="${lien}" title="${esc(aide)}"><div class="t-val readout">${val}</div><div class="t-lbl">${lbl}</div><div class="tb-tuile-tete">${badge(n, aide)}</div></a>`;
     const total = urgClients + urgProspects;
-    const ligne = x => `<li><span class="tb-quoi"><b>${esc(x.nom)}</b>${x.prospect ? ` <span class="pastille accent">prospect</span>` : ""}<small>${esc(x.texte)}</small></span><button type="button" class="btn ghost petit" data-fiche="${esc(x.uid)}" data-nom="${esc(x.nom)}" data-cible="${esc(x.cible)}">Ouvrir</button></li>`;
+    /* v83 : toute la ligne ouvre la fiche (initiales, nom, point de couleur et raison, chevron) */
+    const ligne = x => `<li><button type="button" class="tb-at-b" data-fiche="${esc(x.uid)}" data-nom="${esc(x.nom)}" data-cible="${esc(x.cible)}">${Clients.avatar(x.nom)}<span class="tb-quoi"><b data-notr>${esc(x.nom)}</b>${x.prospect ? ` <span class="pastille accent">prospect</span>` : ""}<small><span class="point ${esc(x.niveau || "mauvais")}" aria-hidden="true"></span> ${esc(x.texte)}</small></span><span class="tb-chevron" aria-hidden="true">${SVG.chevron}</span></button></li>`;
     const reste = liste.length - this.MAX_LIGNES;
     /* v72 (E) : la visite (décidée ici, au rendu : la clé du coach est dans contenus), puis les inscrits d'après elle */
     const moi = Auth.utilisateur() && Auth.utilisateur().id, t = Date.now(), futur = t + 5 * 60000;
@@ -126,22 +137,22 @@ const outilTableau = {
     const nouveaux = lignes.filter(l => l.p.statut === "prospect" && this.iso(l.p.cree_le) && Date.parse(l.p.cree_le) > borne && Date.parse(l.p.cree_le) <= futur)
       .sort((a, b) => Date.parse(b.p.cree_le) - Date.parse(a.p.cree_le));
     zone.innerHTML = `
-      <header class="masthead">
+      <header class="masthead tb-tete">
         <span class="eyebrow">${esc(outilAccueil.dateLongue())}</span>
-        <h1>Bonjour${prenom ? " " + esc(prenom) : ""}</h1>
-        <p class="lede">${total ? `${total} ${pl(total, "urgence", "urgences")} aujourd'hui.` : "Rien d'urgent aujourd'hui."}</p>
+        <div class="tb-tete-l"><h1>Tableau de bord</h1><p class="lede">Ce qui demande ton attention aujourd'hui.</p></div>
+        <a class="rond" href="#/clients" data-tb-chercher aria-label="${esc(trad("Rechercher un client par son nom"))}" title="${esc(trad("Rechercher un client par son nom"))}">${SVG.loupe}</a>
       </header>
-      ${this.nouveauxHTML(nouveaux, vis)}
-      <section class="panel">
-        <div class="tiles tb-tiles">
-          ${tuile("tb-t-clients", "Clients", clients.length, pl(clients.length, "accompagnement en cours", "accompagnements en cours"), urgClients, this.AIDE_CLIENTS, "#/clients")}
-          ${tuile("tb-t-prospects", "Prospects", prospects.length, pl(prospects.length, "compte gratuit", "comptes gratuits"), urgProspects, Commercial.AIDE, "#/prospects")}
-        </div>
+      <section class="tiles tb-tiles" aria-label="${esc(trad("En bref"))}">
+        ${tuile("tb-t-clients", "Clients", clients.length, urgClients, this.AIDE_CLIENTS, "#/clients")}
+        <div class="tile tb-tuile tb-t-traiter${total ? " urgent" : ""}" id="tb-t-traiter"><div class="t-val readout">${total}</div><div class="t-lbl">À traiter</div></div>
+        ${tuile("tb-t-prospects", "Prospects", prospects.length, urgProspects, Commercial.AIDE, "#/prospects")}
       </section>
-      ${liste.length ? `<section class="panel" id="tb-a-traiter"><h2>À traiter maintenant</h2>
-        <ul class="tb-liste">${liste.slice(0, this.MAX_LIGNES).map(ligne).join("")}</ul>
-        ${reste > 0 ? `<p class="note" style="margin:10px 0 0">Et ${reste} autre${reste > 1 ? "s" : ""} : <a class="link-a" href="#/clients">Mes clients →</a> · <a class="link-a" href="#/prospects">Prospects →</a></p>` : ""}</section>` : ""}
-      ${this.sourcesHTML(this.sources(lignes))}
+      <section class="tb-section" id="tb-a-traiter"><h2 class="tb-sur">À traiter maintenant</h2>
+        ${liste.length ? `<ul class="tb-liste tb-at">${liste.slice(0, this.MAX_LIGNES).map(ligne).join("")}</ul>
+        ${reste > 0 ? `<p class="note" style="margin:10px 0 0">Et ${reste} autre${reste > 1 ? "s" : ""} : <a class="link-a" href="#/clients">Mes clients →</a> · <a class="link-a" href="#/prospects">Prospects →</a></p>` : ""}`
+        : `<p class="empty tb-rien">Rien à traiter pour l'instant.</p>`}</section>
+      ${this.nouveauxHTML(nouveaux, vis)}
+      ${this.sourcesHTML(this.sources(toutes))}
       <section class="panel">
         <h2>Raccourcis</h2>
         <div class="acces-l">
@@ -152,6 +163,8 @@ const outilTableau = {
         </div>
       </section>`;
     $$("[data-fiche]", zone).forEach(b => b.addEventListener("click", () => Clients.ouvrir(b.dataset.fiche, b.dataset.nom, b.dataset.cible)));
+    /* v83 : la loupe ouvre la liste Clients, le curseur dans sa recherche */
+    $$("[data-tb-chercher]", zone).forEach(a => a.addEventListener("click", () => { ListeCoach.etat("clients").focus = true; }));
     /* v72 (E) : « Et N autres » ouvre Prospects sur tous les prospects (le filtre « À traiter » cacherait les inscrits de plus de 48 h) */
     $$("[data-tb-tous]", zone).forEach(a => a.addEventListener("click", () => { outilProspects.filtre = "tous"; outilProspects.tri = "inscription"; }));
     /* v72 (E) : nouvelle visite : la seule écriture de cette page, une ligne du coach lui-même (règles de la base : le propriétaire),

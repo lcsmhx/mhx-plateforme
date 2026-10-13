@@ -414,6 +414,47 @@ const Commercial = {
 };
 
 /* ------------------------------------------------------------------
+   v83 (bloc 3, G) — LE MESSAGE WHATSAPP DU COACH À UN PROSPECT (fiche, bouton « WhatsApp »), pré-rempli avec ses réponses,
+   en français, ou en anglais si le prospect a choisi l'anglais dans l'app (prefs.langue). Les réponses en texte court
+   (PARCOURS_T.cadeau.courts, en minuscules : « perdre du gras », « le manque de temps et les craquages » ; en anglais, leur
+   traduction du dictionnaire) ; le texte libre tel qu'il l'a écrit (une ancienne réponse libre à « ce qui a coincé » aussi).
+   Une réponse absente : sa phrase est sautée. Le coach peut modifier le message dans WhatsApp avant de l'envoyer.
+   ------------------------------------------------------------------ */
+const MessageProspect = {
+  court(k){ const c = (typeof PARCOURS_T !== "undefined" && PARCOURS_T.cadeau && PARCOURS_T.cadeau.courts) || {}; return typeof k === "string" && Object.prototype.hasOwnProperty.call(c, k) ? c[k] : ""; },
+  en(fr){ return (I18N.en && Object.prototype.hasOwnProperty.call(I18N.en, fr) && I18N.en[fr]) || fr; },
+  /* { objectif, blocages: [..], libre } en texte court français ("" / [] si absent) */
+  reponses(I){
+    I = I && typeof I === "object" && !Array.isArray(I) ? I : {};
+    const objectif = this.court(typeof I.probleme === "string" ? I.probleme.trim() : "");
+    const choix = Decouverte.choixDe(I, "obstacle");
+    const blocages = (choix || []).map(k => this.court(k)).filter(Boolean);
+    let libre = Decouverte.precisionDe(I, "obstacle");
+    if (!libre && !choix && typeof I.obstacle === "string") libre = I.obstacle.trim();   // ancienne réponse libre (sans cases)
+    libre = Decouverte.extrait(libre.replace(/[«»"]/g, "").trim(), 300);
+    return { objectif, blocages, libre };
+  },
+  texte(prenom, I, anglais){
+    const R = this.reponses(I), p = typeof prenom === "string" ? Array.from(prenom.replace(/\s+/g, " ").trim()).slice(0, 60).join("") : "";
+    const marque = (CONFIG.marque && CONFIG.marque.nom) || "MHX Coaching";
+    if (anglais){
+      const bl = R.blocages.map(x => this.en(x)), et = bl.length > 1 ? bl.slice(0, -1).join(", ") + " and " + bl[bl.length - 1] : bl[0] || "";
+      const parts = [R.objectif ? "your goal is to " + this.en(R.objectif) : "", et ? "what's held you back so far: " + et : ""].filter(Boolean);
+      return ["Hi" + (p ? " " + p : "") + " 👋", "Welcome to " + marque + "!",
+        parts.length ? "I got your answers: " + parts.join(", and ") + "." : R.libre ? "I got your answers." : "",
+        R.libre ? "You also wrote: \"" + R.libre + "\"." : "",
+        "I'm putting together your action plan. Were you able to book your free 15-min call?"].filter(Boolean).join(" ");
+    }
+    const et = R.blocages.length > 1 ? R.blocages.slice(0, -1).join(", ") + " et " + R.blocages[R.blocages.length - 1] : R.blocages[0] || "";
+    const parts = [R.objectif ? "ton objectif, c'est " + R.objectif : "", et ? "ce qui a coincé jusqu'ici : " + et : ""].filter(Boolean);
+    return ["Salut" + (p ? " " + p : "") + " 👋", "Bienvenue chez " + marque + " !",
+      parts.length ? "J'ai bien reçu tes réponses : " + parts.join(", et ") + "." : R.libre ? "J'ai bien reçu tes réponses." : "",
+      R.libre ? "Tu m'as aussi écrit : « " + R.libre + " »." : "",
+      "Je prépare ton plan d'action. Tu as pu réserver ton appel offert de 15 min ?"].filter(Boolean).join(" ");
+  }
+};
+
+/* ------------------------------------------------------------------
    NOUVEAUTÉS (v51) — pour le coach : ce que ses prospects ont fait depuis sa dernière visite
    (inscriptions, questionnaires remplis, clics « Réserver mon bilan », cases « J'ai réservé »), calculé à partir
    des données déjà chargées par le tableau de bord ou la page Prospects (aucune requête de plus). Seule la
@@ -451,7 +492,8 @@ const Nouveautes = {
   evenements(lignes, vu){
     const t0 = this.seuil(vu), maxi = Date.now() + 5 * 60000, out = [];
     const ajoute = (l, type, quand) => { if (typeof quand !== "string" || !/^\d{4}-\d{2}-\d{2}/.test(quand)) return; const t = Date.parse(quand); if (!isNaN(t) && t > t0 && t <= maxi) out.push({ uid: l.p.id, nom: Clients.nom(l.p), type, t, quand }); };
-    (lignes || []).filter(l => l && l.p && l.p.statut === "prospect").forEach(l => {
+    /* v83 (bloc 3) : un compte archivé par le coach n'a plus de Nouveautés (badge et panneau) */
+    (lignes || []).filter(l => l && l.p && l.p.statut === "prospect" && !l.archive).forEach(l => {
       ajoute(l, "inscription", l.p.cree_le);
       if (l.dc) ajoute(l, "questionnaire", l.dc.court_le);
       Decouverte.clics(l.ch).forEach(c => ajoute(l, "clic", c.date));
@@ -619,6 +661,8 @@ const outilProspects = {
   nom: "Prospects",
   icone: "🎯",
   role: "coach",
+  principal_coach: true,   // v83 (bloc 3) : la barre du bas du coach, Tableau · Clients · Prospects · Plus (décision 7 : la seule façon de passer de Clients à Prospects)
+  court: "Prospects",
   sans_entete: true,
   titre: "Prospects",
   accroche: "",
@@ -627,15 +671,23 @@ const outilProspects = {
   filtre: "a_traiter", periode: "tout", bilanF: "tout", newsF: "tout", tri: "inscription", recherche: "",
   PAS: 50, limite: 50, NL_PREMIERS: 10,
   donnees: null, lignes: [], tous: [], _nlDeplie: false,
-  html(){ return `<div id="pr-vue"><header class="masthead"><h1>Prospects</h1></header><section class="panel"><div class="empty">Chargement…</div></section></div>`; },
+  /* v83 (bloc 3) : en haut, la liste de la maquette ListeProspects (ListeCoach : nombre, recherche par nom, Tous · À traiter ·
+     Archivés, « + », « Sélectionner », archivage) ; dessous, sans rien retirer, tout ce que la page montrait : nombre de comptes
+     gratuits et à traiter, compteur, Nouveautés, chiffres des 30 jours, Mesure, filtres détaillés, cartes, export CSV, newsletter.
+     « Créer un accès » : #/prospects/nouveau (Acces). Les comptes archivés ne sont que dans « Archivés » de la liste du haut. */
+  html(){
+    if (sousRoute === "nouveau") return Acces.html("prospects");
+    return `<div id="pr-vue"><div id="lc-zone">${ListeCoach.attente("prospects")}</div></div>`;
+  },
   /* garder = rechargement apres une action sur une carte : le coach garde sa place (nombre de prospects affiches) */
   async init(garder){
+    if (sousRoute === "nouveau") return Acces.init("prospects");
     const zone = $("pr-vue"); if (!zone) return;
     if (!garder && typeof Nouveautes !== "undefined") Nouveautes._deplie = false;
     if (!garder) this._nlDeplie = false;
     const t0 = new Date().toISOString();
     try { this.donnees = await Clients.charger(); }
-    catch(e){ zone.innerHTML = `<header class="masthead"><h1>Prospects</h1></header><section class="panel"><div class="empty">Impossible de charger les prospects pour le moment.</div></section>`; return; }
+    catch(e){ zone.innerHTML = `<div id="lc-zone"></div><section class="panel"><div class="empty">Impossible de charger les prospects pour le moment.</div></section>`; ListeCoach.erreur(zone.querySelector("#lc-zone"), "prospects"); return; }
     if (!zone.isConnected) return;
     if (!garder) this.limite = this.PAS;
     this.tCharge = t0;
@@ -645,7 +697,18 @@ const outilProspects = {
   preparer(){
     const { profils, parClient, contenus, connexions } = this.donnees;
     this.lignes = Clients.resumer(profils, parClient, contenus, connexions);
-    this.tous = this.lignes.filter(l => l.p.statut === "prospect").map(l => ({ l, a: Commercial.analyseLigne(l) })).filter(x => x.a);
+    /* v83 : avecArchives = la liste du haut (son filtre « Archivés ») ; tous = le reste de la page, sans les comptes archivés */
+    this.avecArchives = this.lignes.filter(l => l.p.statut === "prospect").map(l => ({ l, a: Commercial.analyseLigne(l) })).filter(x => x.a);
+    this.tous = this.avecArchives.filter(x => !x.l.archive);
+  },
+  /* v83 : les lignes de la liste du haut — la raison : le motif « à traiter », sinon l'inscription (et les relances) ; à droite,
+     l'issue de l'appel (SIGNÉ / PERDU / ABSENT) et « bilan réservé » ; triées comme la page (inscription récente d'abord) */
+  lignesListe(){
+    return this.trier(this.avecArchives).map(({ l, a }) => {
+      const pastilles = Commercial.pastille(a) + Commercial.pastilleBilan(a.bilan, a) + (a.illisible ? '<span class="pastille attention">données illisibles</span>' : "");
+      return { uid: l.p.id, nom: Clients.nom(l.p), archive: !!l.archive, niveau: a.urgent ? "accent" : "",   // maquette : point doré « à traiter »
+        raison: a.urgent ? Commercial.motifTexte(a) : Commercial.sousTitre(l.p, a), droite: pastilles ? `<span class="lc-pastilles">${pastilles}</span>` : "", a_traiter: !!a.urgent };
+    });
   },
   norm(s){ return String(s == null ? "" : s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\s+/g, " ").trim(); },
   statutOk(x, f){ return f === "tous" ? true : f === "a_traiter" ? x.a.urgent : f === "issues" ? !!x.a.issue : true; },
@@ -683,9 +746,9 @@ const outilProspects = {
     const opt = (v, t, cur) => `<option value="${v}"${v === cur ? " selected" : ""}>${esc(t)}</option>`;
     const aTraiter = tous.filter(x => x.a.urgent).length;
     zone.innerHTML = `
-      <header class="masthead">
+      <div id="lc-zone"></div>
+      <header class="masthead pr-detail">
         <span class="eyebrow">${esc(outilAccueil.dateLongue())}</span>
-        <h1>Prospects</h1>
         <p class="lede">${tous.length ? `${tous.length} ${pl(tous.length, "compte gratuit", "comptes gratuits")} · ${aTraiter} à traiter` : "Aucun prospect pour l'instant."}</p>
         <p class="note pr-compteur" id="pr-compteur" title="Inscrits : les prospects et les clients passés par l'inscription gratuite. Bilans réservés : ta coche « Bilan réservé », sinon la case « J'ai réservé » du prospect.">Inscrits <b>${K.inscrits}</b> → 3 questions remplies <b>${K.questions}</b> → bilans réservés <b>${K.bilans}</b> → clients <b>${K.clients}</b></p>
       </header>
@@ -730,6 +793,7 @@ const outilProspects = {
       UI.toast(liste.length + " prospect" + (liste.length > 1 ? "s" : "") + " exporté" + (liste.length > 1 ? "s" : "") + ".", "ok");
     });
     this.majListe(zone);
+    ListeCoach.monter(zone.querySelector("#lc-zone"), "prospects", this.lignesListe(), { recharger: async () => { if (zone.isConnected) await this.init(true); } });   // v83 (bloc 3)
     Mesure.monter(zone.querySelector("#pr-mesure"), this.lignes);   // v62 (brief V2, L)
     this.monterNewsletter(zone.querySelector("#pr-newsletter"));
     if (typeof Nouveautes !== "undefined") Nouveautes.monter(zone.querySelector("#pr-nouveautes"), this.lignes, true, this.tCharge);

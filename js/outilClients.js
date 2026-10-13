@@ -6,6 +6,8 @@ const outilClients = {
   cle: null,
   nom: "Mes clients",
   principal_coach: true,
+  court: "Clients",   // v83 (bloc 3) : la barre du bas du coach, Tableau · Clients · Prospects · Plus
+  sans_entete: true,  // v83 (bloc 3) : la liste du haut porte le titre « Clients » et le nombre (maquette Liste)
   icone: "👥",
   role: "coach",          // n'apparait que pour le coach
   titre: "Mes clients",
@@ -82,28 +84,25 @@ const outilClients = {
     } catch(e){ return null; }
   },
 
-  tableau(profils, parClient, contenus, connexions){
+  /* resumees (v83) : les clients déjà résumés (Clients.resumer) ; les archivés n'y sont plus (ni dans les alertes) */
+  tableau(profils, parClient, contenus, connexions, resumees){
     const tb = $("tb-clients"), zoneA = $("alertes-clients");
     if (!tb) return;
     /* v71 (D) : le tableau ne liste que les clients ; un compte sans colonne statut reste un client (comme partout) ;
-       les prospects sont sur la page Prospects, la ligne sous le titre le dit (toujours, meme a zero) ;
-       la section Comptes garde tout le monde (c'est la qu'on passe un prospect client) */
+       les prospects sont sur la page Prospects ; la section Comptes garde tout le monde (c'est la qu'on passe un prospect client).
+       v83 (bloc 3, décision 7 de Lucas) : plus de lien « Les prospects sont dans Prospects → » en haut : on passe de Clients à
+       Prospects par la barre du bas seulement (le nombre de prospects est sur le Tableau de bord et la page Prospects) */
     const tous = (profils || []).filter(p => p && p.role !== "coach");
-    const clients = tous.filter(p => p.statut !== "prospect"), nbProspects = tous.length - clients.length;
-    const zp = $("clients-prospects");
-    if (zp){
-      zp.hidden = false;
-      zp.innerHTML = `Les prospects sont dans <a class="link-a" href="#/prospects">Prospects →</a> (${nbProspects} compte${nbProspects > 1 ? "s" : ""} gratuit${nbProspects > 1 ? "s" : ""}).`;
-    }
-    if (!clients.length){
+    const clients = tous.filter(p => p.statut !== "prospect");
+    /* v37 — le resume de chaque client et son tri par urgence vivent dans
+       Clients.resumer : le tableau de bord et la fiche s'en servent aussi (ici, les clients seulement : un prospect
+       n'est plus classe par le score d'urgence devant les clients sains) */
+    const lignes = (resumees || Clients.resumer(clients, parClient, contenus, connexions)).filter(l => !l.archive);
+    if (!lignes.length){
       tb.innerHTML = '<tr><td colspan="18">Aucun client pour le moment.</td></tr>';
       if (zoneA) zoneA.innerHTML = "";
       return;
     }
-    /* v37 — le resume de chaque client et son tri par urgence vivent dans
-       Clients.resumer : le tableau de bord et la fiche s'en servent aussi (ici, les clients seulement : un prospect
-       n'est plus classe par le score d'urgence devant les clients sains) */
-    const lignes = Clients.resumer(clients, parClient, contenus, connexions);
 
     const pastille = (ok, txtOk, txtNon) =>
       `<span class="pastille${ok ? "" : " manque"}">${ok ? txtOk : txtNon}</span>`;
@@ -187,11 +186,16 @@ const outilClients = {
     }
   },
 
+  /* v83 (bloc 3) : en haut, la liste des clients de la maquette (titre, nombre, recherche, filtres, « + », « Sélectionner »,
+     ListeCoach) ; dessous, sans rien retirer, le tableau complet et ses alertes, puis les comptes. « Créer un accès » est un
+     écran à part (#/clients/nouveau, Acces), ouvert par « + ». */
   html(){
+    if (sousRoute === "nouveau") return Acces.html("clients");
     return `
+    <div id="lc-zone">${ListeCoach.attente("clients")}</div>
+
     <section class="panel">
       <h2>Suivi de mes clients</h2>
-      <p class="note" id="clients-prospects" hidden style="margin:0 0 10px"></p>
       <div id="alertes-clients"></div>
       <div class="scroll" style="margin-top:14px"><table class="tb-clients-table"><thead><tr>
         <th>Client</th><th>Retour</th><th>Note</th><th>Smiley</th><th>Visite</th><th>Connexions</th><th>Dernière connexion</th><th>Jours actifs</th><th>Activité</th><th>Régularité</th><th>Poids</th><th>Depuis le début</th><th>4 dernières sem.</th>
@@ -202,47 +206,49 @@ const outilClients = {
 
     <section class="panel">
       <h2>Comptes</h2>
-      <p class="note" style="margin:0 0 16px">« Supprimer » efface définitivement un compte et toutes ses données — c'est ce qu'il faut faire quand un client le demande. « Accès complet » donne à une personne de ton équipe exactement ta vue : toutes les fiches, tous les questionnaires de santé, tous les programmes. Donne-le à un compte créé pour elle, jamais en partageant ton mot de passe — sinon tu ne sauras plus qui a modifié quoi, et tu ne pourras pas le lui retirer.</p>
+      <p class="note" style="margin:0 0 16px">« Supprimer définitivement » efface un compte et toutes ses données — c'est ce qu'il faut faire quand un client le demande : il est dans l'onglet « Compte » de sa fiche (ici, seulement pour un compte de ton équipe, qui n'a pas de fiche). « Accès complet » donne à une personne de ton équipe exactement ta vue : toutes les fiches, tous les questionnaires de santé, tous les programmes. Donne-le à un compte créé pour elle, jamais en partageant ton mot de passe — sinon tu ne sauras plus qui a modifié quoi, et tu ne pourras pas le lui retirer. Un compte archivé n'est pas listé ici : il est dans « Archivés », en haut.</p>
       <div id="liste-clients"><div class="empty">Chargement…</div></div>
-    </section>
-
-    <section class="panel">
-      <h2>Créer un accès</h2>
-      <p class="note" style="margin-bottom:16px">La personne recevra ces identifiants. Elle pourra changer son mot de passe et son adresse elle-même, depuis son profil. Personne ne peut créer de compte sans passer par toi.</p>
-      <div class="grid g2">
-        <div><label for="n-prenom">Prénom</label><input id="n-prenom" type="text"></div>
-        <div><label for="n-nom">Nom</label><input id="n-nom" type="text"></div>
-        <div><label for="n-email">Email</label><input id="n-email" type="email"></div>
-        <div><label for="n-mdp">Mot de passe provisoire</label><input id="n-mdp" type="text"></div>
-        <div><label for="n-type">Type d'accès</label>
-          <select id="n-type">
-            <option value="client" selected>Client — ne voit que ses propres données</option>
-            <option value="coach">Équipe — voit tout, comme toi</option>
-          </select>
-        </div>
-      </div>
-      <p class="note" id="n-avert" hidden style="margin-top:4px;color:var(--warn)">Cette personne verra les fiches de tous tes clients, leur questionnaire de santé, leurs programmes et leur diète, et pourra les modifier.</p>
-      <div class="actions">
-        <button class="btn" id="n-creer">Créer le compte</button>
-        <button class="btn ghost" id="n-gen">Générer un mot de passe</button>
-        <span class="msg" id="n-msg"></span>
-      </div>
     </section>`;
   },
 
+  /* les lignes de la liste du haut (ListeCoach) : nom, raison (l'alerte la plus urgente, sinon la dernière saisie), poids
+     depuis le début à droite ; filtres « À traiter » (Clients.urgent) et « Inactifs » (10 jours ou plus sans saisie : l'alerte
+     « Inactif depuis N j », même définition que la zone d'alertes) */
+  lignesListe(lignes){
+    return (lignes || []).map(l => {
+      /* la raison : celle de « À traiter » du Tableau de bord (😞, note en chute, retour à lire, autre urgence), sinon la
+         première alerte, sinon la dernière saisie ; le point : vert pour un retour à lire, ambre pour un 😞 ou une note en
+         chute, rouge pour une autre urgence (comme le Tableau de bord), sinon ambre (une alerte) ou vert (rien) */
+      const urg = l.alertes.filter(x => x.niveau === "mauvais" || x.type === "bilan_recu");
+      const rg = x => x.type === "avis_triste" ? 0 : x.type === "note_chute" ? 1 : x.type === "bilan_recu" ? 2 : 8;
+      const a = urg.length ? urg.slice().sort((x, y) => rg(x) - rg(y))[0] : l.alertes[0];
+      const niveau = !a ? "ok" : a.type === "bilan_recu" ? "ok" : a.type === "avis_triste" || a.type === "note_chute" ? "attention" : a.niveau === "mauvais" ? "mauvais" : "attention";
+      const saisie = l.jours === null ? trad("Jamais rien saisi") : l.jours === 0 ? trad("Dernière saisie aujourd'hui") : trad("Dernière saisie il y a {n} j", { n: l.jours });
+      const v = l.ev ? l.ev.total : null;
+      return { uid: l.p.id, nom: l.nom, raison: a ? a.texte : saisie, niveau, archive: !!l.archive,
+        droite: v == null ? "" : `<b class="lc-kg">${(v > 0 ? "+" : v < 0 ? "−" : "") + n1(Math.abs(v))}&nbsp;kg</b>`,
+        a_traiter: Clients.urgent(l), inactifs: l.jours !== null && l.jours >= 10 };
+    });
+  },
+
   async init(){
+    if (sousRoute === "nouveau") return Acces.init("clients");
     const self = this;
 
     const charger = async () => {
       const box = $("liste-clients");
       try {
         const { profils, parClient, contenus, connexions } = await Clients.charger();
-        self.tableau(profils, parClient, contenus, connexions);
+        if (!box || !box.isConnected) return;
+        /* v83 : les clients résumés une fois (liste du haut, avec les archivés ; tableau complet, sans eux) */
+        const lignes = Clients.resumer((profils || []).filter(p => p && p.role !== "coach" && p.statut !== "prospect"), parClient, contenus, connexions);
+        ListeCoach.monter($("lc-zone"), "clients", self.lignesListe(lignes), { recharger: charger });
+        self.tableau(profils, parClient, contenus, connexions, lignes);
         /* Tous les comptes, coachs compris : c'est ici qu'on donne l'acces
-           complet a quelqu'un de l'equipe, et qu'on le retire. */
+           complet a quelqu'un de l'equipe, et qu'on le retire. v83 : sans les comptes archivés. */
         const moi = Auth.utilisateur() && Auth.utilisateur().id;
-        const comptes = (profils || []);
-        if (!comptes.length){ box.innerHTML = '<div class="empty">Aucun compte pour le moment. Crée le premier accès ci-dessous.</div>'; return; }
+        const comptes = (profils || []).filter(p => p && (p.role === "coach" || !Archive.le(contenus[p.id] && contenus[p.id].suivi_prospect)));
+        if (!comptes.length){ box.innerHTML = '<div class="empty">Aucun compte pour le moment. Crée le premier accès avec « + », en haut.</div>'; return; }
         box.innerHTML = "";
         comptes.forEach(p => {
           const d = parClient[p.id];
@@ -252,6 +258,8 @@ const outilClients = {
           el.className = "client-l";
           /* le client a choisi l'anglais : le coach le voit, et ecrit ses notes en anglais */
           const enAnglais = !estCoach && contenus[p.id] && contenus[p.id].prefs && contenus[p.id].prefs.langue === "en";
+          /* v83 : « Supprimer » d'un client ou d'un prospect est dans l'onglet Compte de sa fiche (décision de Lucas) ; il reste
+             ici pour un compte d'équipe (accès complet), qui n'a pas de fiche */
           el.innerHTML = `<span class="nom">${esc(Clients.nom(p))}${enAnglais ? ` <span class="pastille" title="Ce client utilise l'app en anglais : écris-lui tes notes en anglais">🇺🇸 anglais</span>` : ""}</span>
                           ${estCoach ? `<span class="pastille role-coach">accès complet</span>` : `<span class="pastille">${d ? "actif" : "pas encore utilisé"}</span>`}
                           ${!estCoach && "statut" in p ? `<span class="pastille${p.statut === "prospect" ? " accent" : " ok"}">${p.statut === "prospect" ? "prospect" : "client"}</span>` : ""}
@@ -259,139 +267,26 @@ const outilClients = {
                           ${estCoach ? "" : `<button class="voir" type="button">Ouvrir sa fiche</button>`}
                           ${cestMoi ? "" : `<button class="voir role" type="button" data-role="${estCoach ? "client" : "coach"}">${estCoach ? "Retirer l'accès complet" : "Donner l'accès complet"}</button>`}
                           ${!estCoach && "statut" in p ? `<button class="voir statut" type="button" data-statut="${p.statut === "prospect" ? "client" : "prospect"}">${p.statut === "prospect" ? "Passer client" : "Repasser prospect"}</button>` : ""}
-                          ${cestMoi ? "" : `<button class="voir suppr" type="button">Supprimer</button>`}`;
+                          ${cestMoi || !estCoach ? "" : `<button class="voir suppr" type="button">Supprimer</button>`}`;
           const bv = el.querySelector(".voir:not(.role):not(.statut):not(.suppr)");
           if (bv) bv.addEventListener("click", () => Clients.ouvrir(p.id, Clients.nom(p), "profil"));   // v43 : « Sans nom », comme dans la liste ; v71 (I) : Clients.ouvrir
           const bsup = el.querySelector(".suppr");
-          if (bsup) bsup.addEventListener("click", async () => {
-            const nom = Clients.nom(p);
-            if (!(await UI.confirmer("Supprimer définitivement le compte de " + nom + " ?\n\n" +
-                         "Son profil, ses mensurations, son programme, ses repas et sa progression seront effacés. " +
-                         "Tu n'y auras plus accès non plus.\n\nC'est définitif : il n'y a pas de corbeille.", { titre: "Supprimer un compte", ok: "Continuer", danger: true }))) return;
-            const mot = await UI.demander("Pour confirmer la suppression de " + nom + ", écris SUPPRIMER en majuscules :", "", { titre: "Supprimer un compte", ok: "Supprimer définitivement", danger: true });
-            if (mot === null) return;
-            if (String(mot).trim().toUpperCase() !== "SUPPRIMER"){
-              UI.alerte("Ce n'est pas le mot attendu : rien n'a été supprimé.");
-              return;
-            }
-            bsup.disabled = true; bsup.textContent = "…";
-            try {
-              await Auth.supprimerCompte(p.id, "SUPPRIMER");
-              if (Store.idConsulte === p.id){ Store.oublier(p.id); Store.idConsulte = null; Store.nomConsulte = null; }
-              await charger();
-            } catch(e){
-              bsup.disabled = false; bsup.textContent = "Supprimer";
-              UI.alerte("Suppression impossible : " + (e.message || "erreur inconnue"));
-            }
-          });
+          if (bsup) bsup.addEventListener("click", async () => { if (await Acces.supprimer(p, bsup) === "fait") await charger(); });
 
           /* v39 — prospect <-> client : seul un coach peut le changer (garanti par la base) */
           const bst = el.querySelector(".statut");
-          if (bst) bst.addEventListener("click", async () => {
-            const vers = bst.dataset.statut;
-            const nom = Clients.nom(p);
-            const message = vers === "client"
-              ? "Passer " + nom + " en client ?\n\nIl aura accès à tout son espace d'accompagnement."
-              : "Repasser " + nom + " en prospect ?\n\nIl redevient un compte gratuit : son espace sera limité au mode gratuit (" + ((CONFIG.marque.gratuit_ouverts || []).map(id => (OUTILS.find(o => o.id === id) || {}).nom).filter(Boolean).join(", ") || "accueil") + ") à sa prochaine ouverture de l'application, et il ne sera plus suivi comme un client. Ses données restent intactes.";
-            if (!(await UI.confirmer(message, { ok: vers === "client" ? "Passer client" : "Repasser prospect", danger: vers === "prospect" }))) return;
-            bst.disabled = true; bst.textContent = "…";
-            try {
-              const r = await Auth.appel("/rest/v1/profils?id=eq." + p.id, {
-                method: "PATCH", headers: { "Prefer": "return=representation" }, body: { statut: vers }
-              });
-              if (!Array.isArray(r) || !r[0] || r[0].statut !== vers) throw new Error("la base n'a pas confirmé le changement");
-              await charger();
-            } catch(e){
-              bst.disabled = false; bst.textContent = vers === "client" ? "Passer client" : "Repasser prospect";
-              UI.alerte("Changement impossible : " + (e.message || "erreur inconnue"));
-            }
-          });
+          if (bst) bst.addEventListener("click", async () => { if (await Acces.changerStatut(p, bst.dataset.statut, bst)) await charger(); });
 
           const br = el.querySelector(".role");
-          if (br) br.addEventListener("click", async () => {
-            const vers = br.dataset.role;
-            const nom = Clients.nom(p);
-            const message = vers === "coach"
-              ? "Donner l'accès complet à " + nom + " ?\n\nCette personne verra exactement ce que tu vois : les fiches de tous tes clients, leur questionnaire de santé, leurs programmes et leur diète. Elle pourra aussi les modifier."
-              : "Retirer l'accès complet à " + nom + " ?\n\nElle redeviendra un client ordinaire et ne verra plus que ses propres données.";
-            if (!(await UI.confirmer(message, { ok: vers === "coach" ? "Donner l'accès" : "Retirer l'accès", danger: vers === "coach" }))) return;
-            br.disabled = true; br.textContent = "…";
-            try {
-              await Auth.appel("/rest/v1/profils?id=eq." + p.id, {
-                method: "PATCH", headers: { "Prefer": "return=minimal" }, body: { role: vers }
-              });
-              await charger();
-            } catch(e){
-              br.disabled = false; br.textContent = vers === "coach" ? "Donner l'accès complet" : "Retirer l'accès complet";
-              UI.alerte("Changement impossible : " + (e.message || "erreur inconnue"));
-            }
-          });
+          if (br) br.addEventListener("click", async () => { if (await Acces.changerRole(p, br.dataset.role, br)) await charger(); });
           box.appendChild(el);
         });
       } catch(e){
-        box.innerHTML = '<div class="empty">Impossible de charger la liste.</div>';
+        if (box) box.innerHTML = '<div class="empty">Impossible de charger la liste.</div>';
         const tb = $("tb-clients"); if (tb) tb.innerHTML = '<tr><td colspan="18">Impossible de charger le suivi.</td></tr>';
+        ListeCoach.erreur($("lc-zone"), "clients");
       }
     };
-
-    $("n-type").addEventListener("change", () => {
-      $("n-avert").hidden = $("n-type").value !== "coach";
-    });
-
-    $("n-gen").addEventListener("click", () => {
-      const a = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-      /* un tirage fait pour les secrets (crypto), pas Math.random */
-      const r = new Uint32Array(10);
-      try { crypto.getRandomValues(r); } catch(e){ for (let i = 0; i < r.length; i++) r[i] = Math.floor(Math.random() * 4294967296); }
-      $("n-mdp").value = Array.from(r, x => a[x % a.length]).join("");
-    });
-
-    $("n-creer").addEventListener("click", async () => {
-      const prenom = $("n-prenom").value.trim(), nom = $("n-nom").value.trim();
-      const email = $("n-email").value.trim(), mdp = $("n-mdp").value;
-      const type = $("n-type") ? $("n-type").value : "client";
-      if (!email || !mdp){ flash("n-msg","Il faut au moins un email et un mot de passe."); return; }
-      if (type === "coach" && !(await UI.confirmer("Donner l'accès complet à " + (email) + " ?\n\nCette personne verra exactement ce que tu vois : toutes les fiches, les questionnaires de santé, les programmes et les diètes de tous tes clients.", { ok: "Donner l'accès", danger: true }))) return;
-      if (mdp.length < 8){ flash("n-msg","Le mot de passe doit faire au moins 8 caractères."); return; }
-      const b = $("n-creer"); b.disabled = true;
-      flash("n-msg", "Création…");
-      try {
-        /* Le serveur cree le compte, verifie que c'est bien un coach qui le
-           demande, et pose le role. Ta session n'est plus touchee : avant,
-           la creation te reconnectait sous le nouveau compte et il fallait
-           remettre la tienne en place a la main. */
-        const cree = await Auth.creerAcces(email, mdp, prenom, nom, type);
-        /* v39 : un compte cree par la base nait « prospect » ; un acces cree par
-           le coach est un client (ou un membre de l'equipe) : on le pose tout de suite */
-        let statutOk = true;
-        if (cree && cree.id){
-          try {
-            const r = await Auth.appel("/rest/v1/profils?id=eq." + cree.id, {
-              method: "PATCH", headers: { "Prefer": "return=representation" }, body: { statut: "client" }
-            });
-            statutOk = Array.isArray(r) && !!r[0] && r[0].statut === "client";
-          } catch(e){ statutOk = !!(e && e.code === "PGRST204"); }   // PGRST204 : la base n'a pas (encore) de colonne statut, rien a poser
-        } else statutOk = false;   // pas d'identifiant en retour : on ne peut pas verifier, on le dit
-        $("n-prenom").value = $("n-nom").value = $("n-email").value = $("n-mdp").value = "";
-        if ($("n-type")) $("n-type").value = "client";
-        if ($("n-avert")) $("n-avert").hidden = true;
-        /* la fonction renvoie le role REELLEMENT pose (v39) : un acces d'equipe refuse se voit */
-        const sansAcces = type === "coach" && cree && cree.role !== "coach";
-        if (!statutOk) UI.alerte("Le compte de " + (((prenom + " " + nom).trim()) || email) + " est créé, mais il est encore « prospect » : son espace resterait limité.\n\nClique « Passer client » sur sa ligne, dans la liste des comptes.");
-        else if (sansAcces) UI.alerte("Le compte de " + (((prenom + " " + nom).trim()) || email) + " est créé, mais sans l'accès complet.\n\nClique « Donner l'accès complet » sur sa ligne, dans la liste des comptes.");
-        flash("n-msg", !statutOk
-          ? "Compte créé, mais il est encore « prospect » : clique « Passer client » sur sa ligne."
-          : sansAcces
-          ? "Compte créé, mais sans l'accès complet : clique « Donner l'accès complet » sur sa ligne."
-          : type === "coach"
-          ? "Compte d'équipe créé, avec l'accès complet. Transmets-lui ses identifiants."
-          : "Compte créé. Transmets-lui ses identifiants.");
-        charger();
-      } catch(e){
-        flash("n-msg", e.message || "Création impossible.");
-      }
-      b.disabled = false;
-    });
 
     charger();
   }
@@ -533,6 +428,7 @@ const Clients = {
          table n'a pas pu etre lue */
       connexions: Connexions.lecture(cx && cx.ligne, Connexions.suiviPour(p), !!(cx && cx.lue)),
       suivi: (c.suivi_prospect && typeof c.suivi_prospect === "object") ? c.suivi_prospect : null,   // v49 : suivi commercial
+      archive: Archive.le(c.suivi_prospect),   // v83 (bloc 3) : archivé par le coach (instant), ou null
       activite: dernierMaj || null
     };
     /* regularite : la semaine passee (complete) sert au tri, celle en cours
@@ -654,7 +550,7 @@ const Clients = {
   ouvrir(p, nom, cible){
     /* v71 (I) : l'ecran d'origine (pour « Revenir … » : tableau, clients, prospects ; une fiche ouverte depuis une autre fiche
        garde l'origine de la premiere) et l'adresse canonique #/client/<uuid>/<outil>, qui survit a un rechargement */
-    if (["tableau", "clients", "prospects"].indexOf(courant) > -1) Store.retourVers = courant;
+    if (["tableau", "clients", "prospects"].indexOf(courant) > -1){ Store.retourVers = courant; ListeCoach.memoriser(courant); }   // v83 : la position de la page, retrouvée au retour
     else if (Store.idConsulte !== p || !Store.retourVers) Store.retourVers = "clients";
     Store.oublier(Store.idConsulte);
     Store.idConsulte = p; Store.nomConsulte = nom;
@@ -671,3 +567,339 @@ const Clients = {
   avatar(nom){ const neutre = !nom || nom === Clients.SANS_NOM; return `<span class="avatar${neutre ? " neutre" : ""}">${esc(Clients.initiales(nom))}</span>`; }
 };
 
+/* ------------------------------------------------------------------
+   v83 (bloc 3) — ARCHIVAGE (décision 1 de Lucas : dans les listes, on archive au lieu de supprimer).
+   Archiver = masquer la personne des listes, des compteurs, de « à traiter » et des Nouveautés du coach ; rien ne change pour
+   elle (compte, connexion, données) ; on restaure à tout moment. Rangé SANS migration dans la clé coach-seul « suivi_prospect »
+   (illisible et non modifiable par la personne : règles de la base ; déjà lue pour tous les comptes par Clients.charger et par
+   la fiche), champ archive_le = l'instant de l'archivage (ISO), remis à null pour restaurer. Écriture par Commercial.modifier :
+   écriture conditionnelle (CleCoach.ecrireSi) qui relit et garde tous les autres champs. Pas dans notes_coach (proposition de
+   la mission) : NotesCoach réécrit tout l'objet à chaque note (l'archivage serait effacé sans bruit) et les listes ne la lisent
+   pas. Aucun événement ajouté à l'historique du suivi (il est limité à 30 et sert à « Bilan réservé »). Jamais de DELETE.
+   ------------------------------------------------------------------ */
+const Archive = {
+  /* l'instant de l'archivage (texte ISO lisible), ou null : une valeur piégée ne fait rien tomber et ne compte pas */
+  le(S){
+    const v = (S && typeof S === "object" && !Array.isArray(S)) ? S.archive_le : null;
+    return typeof v === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(v) && !isNaN(Date.parse(v)) ? v : null;
+  },
+  est(l){ return !!(l && l.archive); },
+  /* archiver (oui) ou restaurer (non) ces comptes, un par un (une écriture conditionnelle chacun ; un compte dont une action
+     commerciale est en cours est laissé de côté) ; rend { ok: [uid], ko: [{ uid, e }] } */
+  async appliquer(uids, oui){
+    const ok = [], ko = [];
+    for (const uid of uids || []){
+      if (Commercial.occupe[uid]){ ko.push({ uid, e: new Error("une action est en cours pour ce compte") }); continue; }
+      Commercial.occupe[uid] = true;
+      try {
+        const le = oui ? new Date().toISOString() : null;
+        const S = await Commercial.modifier(uid, c => { c.archive_le = le; return c; });
+        if (!!this.le(S) !== !!oui) throw new Error("la base n'a pas confirmé le changement");
+        ok.push(uid);
+      } catch(e){ ko.push({ uid, e }); }
+      finally { delete Commercial.occupe[uid]; }
+    }
+    return { ok, ko };
+  }
+};
+
+/* ------------------------------------------------------------------
+   v83 (bloc 3) — LA LISTE DU COACH (maquettes Liste, ListeProspects, ListeSelection, ListeConfirmation), la même pour
+   Clients et Prospects : titre, nombre, recherche par nom (sans tenir compte des accents ni des majuscules), filtres en
+   pastilles, « + » (Créer un accès), « Sélectionner » ; chaque ligne : initiales, nom, raison, info à droite. Sélection :
+   des cases, « Tout sélectionner » (la liste filtrée), une barre en bas « N sélectionnés » + « Archiver » (« Restaurer » dans
+   « Archivés »), une fenêtre de confirmation (objet UI) avant tout archivage, même d'un seul compte, puis un message.
+   La recherche et le filtre sont gardés (le temps de la session), la position aussi au retour d'une fiche (Clients.ouvrir
+   la note, la croix de la fiche demande de la rendre : ListeCoach.revenir).
+   items : [{ uid, nom, raison, niveau (point : ok | attention | mauvais | ""), droite (HTML sûr), pastilles (HTML sûr),
+   archive, a_traiter, inactifs }]
+   ------------------------------------------------------------------ */
+const ListeCoach = {
+  etats: {},
+  etat(t){ return this.etats[t] || (this.etats[t] = { q: "", filtre: "tous", y: 0, revenir: false, focus: false, sel: null, garder: false, items: [], opts: {} }); },
+  /* sans accents ni majuscules (comme la recherche de la page Prospects) */
+  norm(s){ return String(s == null ? "" : s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\s+/g, " ").trim(); },
+  TEXTES: {
+    clients: { titre: "Clients", nb: ["{n} client", "{n} clients"], recherche: "Rechercher un client par son nom",
+      vide: { tous: "Aucun client pour le moment.", a_traiter: "Rien à traiter pour l'instant.", inactifs: "Aucun client inactif.", archives: "Aucun compte archivé." },
+      confirmer: ["Archiver {n} client ?", "Archiver {n} clients ?"], archives: ["{n} client archivé", "{n} clients archivés"], restaures: ["{n} client restauré", "{n} clients restaurés"] },
+    prospects: { titre: "Prospects", nb: ["{n} prospect", "{n} prospects"], recherche: "Rechercher un prospect par son nom",
+      vide: { tous: "Aucun prospect pour l'instant.", a_traiter: "Rien à traiter pour l'instant.", archives: "Aucun compte archivé." },
+      confirmer: ["Archiver {n} prospect ?", "Archiver {n} prospects ?"], archives: ["{n} prospect archivé", "{n} prospects archivés"], restaures: ["{n} prospect restauré", "{n} prospects restaurés"] }
+  },
+  FILTRES: { clients: [["tous", "Tous"], ["a_traiter", "À traiter"], ["inactifs", "Inactifs"], ["archives", "Archivés"]],
+             prospects: [["tous", "Tous"], ["a_traiter", "À traiter"], ["archives", "Archivés"]] },
+  UN: "Ce compte disparaît de tes listes. Tu le retrouves dans « Archivés ». Rien ne change pour la personne.",
+  PLUSIEURS: "Ces comptes disparaissent de tes listes. Tu les retrouves dans « Archivés ». Rien ne change pour eux.",
+  /* singulier / pluriel (« 0 client », mais « 0 clients » en anglais) */
+  plur(n, formes){ return trad(n > 1 || (n === 0 && I18N.langue === "en") ? formes[1] : formes[0], { n }); },
+  /* la page Clients ou Prospects la note en ouvrant une fiche (Clients.ouvrir) ; la croix de la fiche demande de la rendre */
+  memoriser(t){ if (this.TEXTES[t]) this.etat(t).y = window.scrollY || 0; },
+  revenir(t){ if (this.TEXTES[t]) this.etat(t).revenir = true; },
+  attente(t){ return `<section class="lc" data-liste="${t}"><div class="lc-tete"><div class="lc-titres"><h1>${esc(trad(this.TEXTES[t].titre))}</h1></div></div><div class="empty">${esc(trad("Chargement…"))}</div></section>`; },
+  erreur(zone, t){ if (zone && zone.isConnected) zone.innerHTML = `<section class="lc" data-liste="${t}"><div class="lc-tete"><div class="lc-titres"><h1>${esc(trad(this.TEXTES[t].titre))}</h1></div></div><div class="empty">${esc(trad("Impossible de charger la liste."))}</div></section>`; },
+  /* la liste filtrée (filtre, puis recherche) */
+  visibles(t){
+    const E = this.etat(t), q = this.norm(E.q);
+    return E.items.filter(x => E.filtre === "archives" ? x.archive : !x.archive && (E.filtre === "tous" || !!x[E.filtre]))
+      .filter(x => !q || this.norm(x.nom).indexOf(q) > -1);
+  },
+  monter(zone, t, items, opts){
+    if (!zone || !zone.isConnected) return;
+    const E = this.etat(t);
+    E.items = Array.isArray(items) ? items : []; E.opts = opts || {};
+    if (!E.garder) E.sel = null;   // une sélection ne survit pas à un départ de la page (sauf les comptes restés après une action ratée)
+    E.garder = false;
+    if (!this.FILTRES[t].some(f => f[0] === E.filtre)) E.filtre = "tous";
+    this.dessiner(zone, t);
+    if (E.revenir){ E.revenir = false; const y = E.y; setTimeout(() => { if (zone.isConnected) window.scrollTo(0, y); }, 0); }
+    if (E.focus){ E.focus = false; setTimeout(() => { const q = zone.querySelector("#lc-q"); if (q && zone.isConnected) q.focus(); }, 0); }
+  },
+  dessiner(zone, t){
+    const T = this.TEXTES[t], E = this.etat(t), sel = !!E.sel, n = E.items.filter(x => !x.archive).length;
+    const restaurer = E.filtre === "archives";
+    document.body.classList.toggle("lc-selection", sel);   // la barre de sélection remplace la barre du bas (maquette)
+    zone.innerHTML = `<section class="lc${sel ? " lc-sel" : ""}" id="lc-${t}" data-liste="${t}">
+      <div class="lc-tete">
+        <div class="lc-titres"><h1>${esc(trad(T.titre))}</h1><p class="lc-compte" id="lc-compte">${esc(this.plur(n, T.nb))}</p></div>
+        <div class="lc-actions">${sel
+          ? `<button type="button" class="lc-lien" data-sel-tout>${esc(trad("Tout sélectionner"))}</button><button type="button" class="lc-lien" data-sel-annuler>${esc(trad("Annuler"))}</button>`
+          : `<button type="button" class="lc-lien" data-sel-debut>${esc(trad("Sélectionner"))}</button><a class="rond" href="#/${t}/nouveau" data-lc-plus aria-label="${esc(trad("Créer un accès"))}" title="${esc(trad("Créer un accès"))}">${SVG.ajouter}</a>`}</div>
+      </div>
+      <label class="lc-recherche"><span class="lc-loupe" aria-hidden="true">${SVG.loupe}</span><input type="search" id="lc-q" placeholder="${esc(trad(T.recherche))}" aria-label="${esc(trad(T.recherche))}" value="${esc(E.q)}" autocomplete="off" maxlength="120"></label>
+      <div class="lc-filtres" role="group" aria-label="${esc(trad("Filtrer la liste"))}">${this.FILTRES[t].map(([k, lib]) => `<button type="button" class="lc-filtre" data-lc-filtre="${k}" aria-pressed="${E.filtre === k}">${esc(trad(lib))}</button>`).join("")}</div>
+      <ul class="lc-liste" id="lc-liste"></ul>
+      ${sel ? `<div class="lc-barre" id="lc-barre" role="region" aria-label="${esc(trad("Sélection"))}"><b id="lc-nb-sel" aria-live="polite"></b><button type="button" class="btn${restaurer ? "" : " danger"}" data-sel-archiver>${esc(trad(restaurer ? "Restaurer" : "Archiver"))}</button></div>` : ""}
+    </section>`;
+    this.brancher(zone, t);
+    this.majListe(zone, t);
+  },
+  ligneHTML(x, sel){
+    const coche = !!sel && sel.has(x.uid);
+    return `<li class="lc-ligne${coche ? " choisie" : ""}" data-uid="${esc(x.uid)}"><button type="button" class="lc-b" data-lc-ligne="${esc(x.uid)}" data-nom="${esc(x.nom)}"${sel ? ` role="checkbox" aria-checked="${coche}"` : ""}>
+      ${sel ? `<span class="lc-case" aria-hidden="true">${coche ? SVG.coche : ""}</span>` : ""}${Clients.avatar(x.nom)}
+      <span class="lc-txt"><span class="lc-nom">${x.niveau ? `<span class="point ${esc(x.niveau)}" aria-hidden="true"></span>` : ""}<b data-notr>${esc(x.nom)}</b>${x.pastilles || ""}</span><small>${esc(x.raison || "")}</small></span>
+      ${x.droite ? `<span class="lc-droite">${x.droite}</span>` : ""}</button></li>`;
+  },
+  majListe(zone, t){
+    const E = this.etat(t), boite = zone.querySelector("#lc-liste"); if (!boite) return;
+    const v = this.visibles(t);
+    if (E.sel){ const vus = new Set(v.map(x => x.uid)); E.sel.forEach(uid => { if (!vus.has(uid)) E.sel.delete(uid); }); }   // jamais un compte caché par le filtre ou la recherche
+    boite.innerHTML = v.length ? v.map(x => this.ligneHTML(x, E.sel)).join("")
+      : `<li class="lc-vide"><p class="empty">${esc(trad(E.q.trim() ? "Aucun résultat pour ce nom." : this.TEXTES[t].vide[E.filtre] || this.TEXTES[t].vide.tous))}</p></li>`;
+    this.majBarre(zone, t);
+  },
+  majBarre(zone, t){
+    const E = this.etat(t); if (!E.sel) return;
+    const nb = zone.querySelector("#lc-nb-sel"), b = zone.querySelector("[data-sel-archiver]"), n = E.sel.size;
+    if (nb) nb.textContent = trad(n > 1 || (n === 0 && I18N.langue === "en") ? "{n} sélectionnés" : "{n} sélectionné", { n });
+    if (b) b.disabled = !n;
+  },
+  brancher(zone, t){
+    const E = this.etat(t), q = zone.querySelector("#lc-q");
+    let minuteur = null;
+    if (q) q.addEventListener("input", () => { clearTimeout(minuteur); minuteur = setTimeout(() => { if (!zone.isConnected) return; E.q = q.value.slice(0, 120); this.majListe(zone, t); }, 120); });
+    $$("[data-lc-filtre]", zone).forEach(b => b.addEventListener("click", () => { E.filtre = b.dataset.lcFiltre; this.dessiner(zone, t); const f = zone.querySelector(`[data-lc-filtre="${E.filtre}"]`); if (f) f.focus(); }));
+    const debut = zone.querySelector("[data-sel-debut]");
+    if (debut) debut.addEventListener("click", () => { E.sel = new Set(); this.dessiner(zone, t); const a = zone.querySelector("[data-sel-annuler]"); if (a) a.focus(); });
+    const fin = zone.querySelector("[data-sel-annuler]");
+    if (fin) fin.addEventListener("click", () => { E.sel = null; this.dessiner(zone, t); const d = zone.querySelector("[data-sel-debut]"); if (d) d.focus(); });
+    const tout = zone.querySelector("[data-sel-tout]");
+    if (tout) tout.addEventListener("click", () => { this.visibles(t).forEach(x => E.sel.add(x.uid)); this.majListe(zone, t); });
+    const plus = zone.querySelector("[data-lc-plus]");
+    if (plus) plus.addEventListener("click", () => this.memoriser(t));
+    const boite = zone.querySelector("#lc-liste");
+    if (boite) boite.addEventListener("click", ev => {
+      const b = ev.target && ev.target.closest ? ev.target.closest("[data-lc-ligne]") : null; if (!b) return;
+      const uid = b.dataset.lcLigne;
+      if (E.sel){
+        if (E.sel.has(uid)) E.sel.delete(uid); else E.sel.add(uid);
+        const li = b.closest(".lc-ligne"), coche = E.sel.has(uid);
+        b.setAttribute("aria-checked", String(coche)); if (li) li.classList.toggle("choisie", coche);
+        const c = b.querySelector(".lc-case"); if (c) c.innerHTML = coche ? SVG.coche : "";
+        this.majBarre(zone, t);
+        return;
+      }
+      Clients.ouvrir(uid, b.dataset.nom, "accueil");
+    });
+    const agir = zone.querySelector("[data-sel-archiver]");
+    if (agir) agir.addEventListener("click", () => this.agir(zone, t, agir));
+  },
+  /* « Archiver » (avec la fenêtre de confirmation, même pour un seul compte) ou « Restaurer » (dans « Archivés ») */
+  async agir(zone, t, b){
+    const E = this.etat(t), T = this.TEXTES[t], uids = Array.from(E.sel || []), n = uids.length;
+    if (!n) return;
+    const restaurer = E.filtre === "archives";
+    if (!restaurer){
+      const oui = await UI.ouvrir({ titre: this.plur(n, T.confirmer), corps: trad(n > 1 ? this.PLUSIEURS : this.UN), annulation: false, boutons: [
+        { texte: trad("Annuler"), valeur: false, classe: "ghost" }, { texte: trad("Archiver"), valeur: true, classe: "danger", principal: true }] });
+      if (!oui || !zone.isConnected) return;
+    }
+    b.disabled = true; b.textContent = "…";
+    const r = await Archive.appliquer(uids, !restaurer);
+    if (r.ok.length) UI.toast(this.plur(r.ok.length, restaurer ? T.restaures : T.archives), "ok");
+    if (r.ko.length) UI.alerte(trad(r.ko.length > 1 ? "{n} comptes n'ont pas pu être changés ({c}). Ils sont restés sélectionnés : réessaie dans un instant." : "{n} compte n'a pas pu être changé ({c}). Il est resté sélectionné : réessaie dans un instant.", { n: r.ko.length, c: Commercial.cause(r.ko[0].e) }));
+    E.sel = r.ko.length ? new Set(r.ko.map(x => x.uid)) : null;
+    E.garder = !!r.ko.length;
+    if (E.opts && typeof E.opts.recharger === "function") await E.opts.recharger();
+    else if (zone.isConnected) this.dessiner(zone, t);
+  }
+};
+
+/* ------------------------------------------------------------------
+   v83 (bloc 3) — CRÉER UN ACCÈS (maquette Nouveau) : un écran à part, ouvert par « + » (#/clients/nouveau ou
+   #/prospects/nouveau), la croix ramène à la liste d'où l'on vient. Mêmes champs, mêmes rôles et même logique qu'avant
+   (Auth.creerAcces, statut client posé ensuite). Et les actions sur un compte, les mêmes partout (Comptes de Mes clients,
+   onglet Compte de la fiche) : changer le statut, l'accès complet, supprimer définitivement (double confirmation, inchangée).
+   ------------------------------------------------------------------ */
+const Acces = {
+  html(liste){
+    return `<div id="acces-vue" class="acces-vue" data-liste="${esc(liste)}">
+      <div class="fc-haut"><a class="rond" href="#/${esc(liste)}" id="acces-fermer" aria-label="${esc(trad("Fermer"))}" title="${esc(trad("Fermer"))}">${SVG.croix}</a></div>
+      <header class="masthead"><h1>Créer un accès</h1><p class="lede">La personne recevra ces identifiants. Elle pourra changer son mot de passe et son adresse elle-même, depuis son profil. Personne ne peut créer de compte sans passer par toi.</p></header>
+      <section class="panel">
+        <div class="grid g2">
+          <div><label for="n-prenom">Prénom</label><input id="n-prenom" type="text" autocomplete="off"></div>
+          <div><label for="n-nom">Nom</label><input id="n-nom" type="text" autocomplete="off"></div>
+          <div><label for="n-email">Email</label><input id="n-email" type="email" autocomplete="off"></div>
+          <div><label for="n-mdp">Mot de passe provisoire</label><input id="n-mdp" type="text" autocomplete="off">
+            <div class="acces-gen"><button class="btn ghost petit" type="button" id="n-gen">Générer un mot de passe</button></div></div>
+          <div><label for="n-type">Type d'accès</label>
+            <select id="n-type">
+              <option value="client" selected>Client — ne voit que ses propres données</option>
+              <option value="coach">Équipe — voit tout, comme toi</option>
+            </select>
+          </div>
+        </div>
+        <p class="note" id="n-avert" hidden style="margin-top:4px;color:var(--warn)">Cette personne verra les fiches de tous tes clients, leur questionnaire de santé, leurs programmes et leur diète, et pourra les modifier.</p>
+        <div class="actions acces-actions">
+          <button class="btn" type="button" id="n-creer">Créer le compte</button>
+          <span class="msg" id="n-msg" role="status" aria-live="polite"></span>
+        </div>
+      </section></div>`;
+  },
+  init(liste){
+    const f = $("acces-fermer"); if (f) f.addEventListener("click", () => ListeCoach.revenir(liste));
+    $("n-type").addEventListener("change", () => {
+      $("n-avert").hidden = $("n-type").value !== "coach";
+    });
+
+    $("n-gen").addEventListener("click", () => {
+      const a = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      /* un tirage fait pour les secrets (crypto), pas Math.random */
+      const r = new Uint32Array(10);
+      try { crypto.getRandomValues(r); } catch(e){ for (let i = 0; i < r.length; i++) r[i] = Math.floor(Math.random() * 4294967296); }
+      $("n-mdp").value = Array.from(r, x => a[x % a.length]).join("");
+    });
+
+    $("n-creer").addEventListener("click", async () => {
+      const prenom = $("n-prenom").value.trim(), nom = $("n-nom").value.trim();
+      const email = $("n-email").value.trim(), mdp = $("n-mdp").value;
+      const type = $("n-type") ? $("n-type").value : "client";
+      if (!email || !mdp){ flash("n-msg","Il faut au moins un email et un mot de passe."); return; }
+      if (type === "coach" && !(await UI.confirmer("Donner l'accès complet à " + (email) + " ?\n\nCette personne verra exactement ce que tu vois : toutes les fiches, les questionnaires de santé, les programmes et les diètes de tous tes clients.", { ok: "Donner l'accès", danger: true }))) return;
+      if (mdp.length < 8){ flash("n-msg","Le mot de passe doit faire au moins 8 caractères."); return; }
+      const b = $("n-creer"); b.disabled = true;
+      flash("n-msg", "Création…");
+      try {
+        /* Le serveur cree le compte, verifie que c'est bien un coach qui le
+           demande, et pose le role. Ta session n'est plus touchee : avant,
+           la creation te reconnectait sous le nouveau compte et il fallait
+           remettre la tienne en place a la main. */
+        const cree = await Auth.creerAcces(email, mdp, prenom, nom, type);
+        /* v39 : un compte cree par la base nait « prospect » ; un acces cree par
+           le coach est un client (ou un membre de l'equipe) : on le pose tout de suite */
+        let statutOk = true;
+        if (cree && cree.id){
+          try {
+            const r = await Auth.appel("/rest/v1/profils?id=eq." + cree.id, {
+              method: "PATCH", headers: { "Prefer": "return=representation" }, body: { statut: "client" }
+            });
+            statutOk = Array.isArray(r) && !!r[0] && r[0].statut === "client";
+          } catch(e){ statutOk = !!(e && e.code === "PGRST204"); }   // PGRST204 : la base n'a pas (encore) de colonne statut, rien a poser
+        } else statutOk = false;   // pas d'identifiant en retour : on ne peut pas verifier, on le dit
+        $("n-prenom").value = $("n-nom").value = $("n-email").value = $("n-mdp").value = "";
+        if ($("n-type")) $("n-type").value = "client";
+        if ($("n-avert")) $("n-avert").hidden = true;
+        /* la fonction renvoie le role REELLEMENT pose (v39) : un acces d'equipe refuse se voit */
+        const sansAcces = type === "coach" && cree && cree.role !== "coach";
+        if (!statutOk) UI.alerte("Le compte de " + (((prenom + " " + nom).trim()) || email) + " est créé, mais il est encore « prospect » : son espace resterait limité.\n\nClique « Passer client » sur sa ligne, dans la liste des comptes.");
+        else if (sansAcces) UI.alerte("Le compte de " + (((prenom + " " + nom).trim()) || email) + " est créé, mais sans l'accès complet.\n\nClique « Donner l'accès complet » sur sa ligne, dans la liste des comptes.");
+        flash("n-msg", !statutOk
+          ? "Compte créé, mais il est encore « prospect » : clique « Passer client » sur sa ligne."
+          : sansAcces
+          ? "Compte créé, mais sans l'accès complet : clique « Donner l'accès complet » sur sa ligne."
+          : type === "coach"
+          ? "Compte d'équipe créé, avec l'accès complet. Transmets-lui ses identifiants."
+          : "Compte créé. Transmets-lui ses identifiants.");
+      } catch(e){
+        flash("n-msg", e.message || "Création impossible.");
+      }
+      b.disabled = false;
+    });
+  },
+
+  /* « Supprimer » (définitivement) : double confirmation inchangée (fenêtre de l'app, puis le mot SUPPRIMER), fonction serveur
+     supprimer-acces. b : le bouton (« … » pendant l'appel). Rend "fait", "annule" ou "echec". */
+  async supprimer(p, b){
+    const nom = Clients.nom(p), texte = b ? b.textContent : "";
+    if (!(await UI.confirmer("Supprimer définitivement le compte de " + nom + " ?\n\n" +
+                 "Son profil, ses mensurations, son programme, ses repas et sa progression seront effacés. " +
+                 "Tu n'y auras plus accès non plus.\n\nC'est définitif : il n'y a pas de corbeille.", { titre: "Supprimer un compte", ok: "Continuer", danger: true }))) return "annule";
+    const mot = await UI.demander("Pour confirmer la suppression de " + nom + ", écris SUPPRIMER en majuscules :", "", { titre: "Supprimer un compte", ok: "Supprimer définitivement", danger: true });
+    if (mot === null) return "annule";
+    if (String(mot).trim().toUpperCase() !== "SUPPRIMER"){
+      UI.alerte("Ce n'est pas le mot attendu : rien n'a été supprimé.");
+      return "annule";
+    }
+    if (b){ b.disabled = true; b.textContent = "…"; }
+    try {
+      await Auth.supprimerCompte(p.id, "SUPPRIMER");
+      if (Store.idConsulte === p.id){ Store.oublier(p.id); Store.idConsulte = null; Store.nomConsulte = null; }
+      return "fait";
+    } catch(e){
+      if (b){ b.disabled = false; b.textContent = texte; }
+      UI.alerte("Suppression impossible : " + (e.message || "erreur inconnue"));
+      return "echec";
+    }
+  },
+  /* v39 — prospect <-> client : seul un coach peut le changer (garanti par la base). Rend true si c'est fait. */
+  async changerStatut(p, vers, b){
+    const nom = Clients.nom(p), texte = b ? b.textContent : "";
+    const message = vers === "client"
+      ? "Passer " + nom + " en client ?\n\nIl aura accès à tout son espace d'accompagnement."
+      : "Repasser " + nom + " en prospect ?\n\nIl redevient un compte gratuit : son espace sera limité au mode gratuit (" + ((CONFIG.marque.gratuit_ouverts || []).map(id => (OUTILS.find(o => o.id === id) || {}).nom).filter(Boolean).join(", ") || "accueil") + ") à sa prochaine ouverture de l'application, et il ne sera plus suivi comme un client. Ses données restent intactes.";
+    if (!(await UI.confirmer(message, { ok: vers === "client" ? "Passer client" : "Repasser prospect", danger: vers === "prospect" }))) return false;
+    if (b){ b.disabled = true; b.textContent = "…"; }
+    try {
+      const r = await Auth.appel("/rest/v1/profils?id=eq." + p.id, {
+        method: "PATCH", headers: { "Prefer": "return=representation" }, body: { statut: vers }
+      });
+      if (!Array.isArray(r) || !r[0] || r[0].statut !== vers) throw new Error("la base n'a pas confirmé le changement");
+      return true;
+    } catch(e){
+      if (b){ b.disabled = false; b.textContent = texte; }
+      UI.alerte("Changement impossible : " + (e.message || "erreur inconnue"));
+      return false;
+    }
+  },
+  /* l'accès complet (rôle coach) : le donner ou le retirer. Rend true si c'est fait. */
+  async changerRole(p, vers, b){
+    const nom = Clients.nom(p), texte = b ? b.textContent : "";
+    const message = vers === "coach"
+      ? "Donner l'accès complet à " + nom + " ?\n\nCette personne verra exactement ce que tu vois : les fiches de tous tes clients, leur questionnaire de santé, leurs programmes et leur diète. Elle pourra aussi les modifier."
+      : "Retirer l'accès complet à " + nom + " ?\n\nElle redeviendra un client ordinaire et ne verra plus que ses propres données.";
+    if (!(await UI.confirmer(message, { ok: vers === "coach" ? "Donner l'accès" : "Retirer l'accès", danger: vers === "coach" }))) return false;
+    if (b){ b.disabled = true; b.textContent = "…"; }
+    try {
+      await Auth.appel("/rest/v1/profils?id=eq." + p.id, {
+        method: "PATCH", headers: { "Prefer": "return=minimal" }, body: { role: vers }
+      });
+      return true;
+    } catch(e){
+      if (b){ b.disabled = false; b.textContent = texte; }
+      UI.alerte("Changement impossible : " + (e.message || "erreur inconnue"));
+      return false;
+    }
+  }
+};

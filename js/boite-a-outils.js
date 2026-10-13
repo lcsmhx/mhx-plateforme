@@ -167,17 +167,36 @@ function lienWhatsApp(){
     const L = DECOUVERTE.whatsapp || {};
     if (![L.bouton, L.message, L.message_sans_prenom].every(x => typeof x === "string" && x.trim())) return "";
     const p = Auth.profil && typeof Auth.profil.prenom === "string" ? Array.from(Auth.profil.prenom.replace(/\s+/g, " ").trim()).slice(0, 60).join("") : "";
-    let texte;
-    try { texte = encodeURIComponent(p ? trad(L.message, { p }) : trad(L.message_sans_prenom)); }
-    catch(e){ texte = encodeURIComponent(trad(L.message_sans_prenom)); }
-    return "https://wa.me/" + n + "?text=" + texte;
+    /* v83 : le lien wa.me est fabriqué par lienWaVers (le même pour le coach) ; un message impossible à encoder : sans prénom */
+    return lienWaVers(brut, p ? trad(L.message, { p }) : trad(L.message_sans_prenom)) || lienWaVers(brut, trad(L.message_sans_prenom));
   } catch(e){ return ""; }
+}
+/* v83 (bloc 3) — la logique wa.me, commune au prospect (lienWhatsApp) et au coach (bouton WhatsApp de la fiche d'un prospect) :
+   https://wa.me/<chiffres du numéro, sans le +>?text=<message encodé>. Numéro qui ne commence pas par + ou mal formé (7 à 17
+   chiffres, comme Telephone.valide), ou message impossible à encoder : "". Le message n'est jamais envoyé par l'app : WhatsApp
+   l'ouvre pré-rempli, la personne peut le modifier avant de l'envoyer. */
+function lienWaVers(numero, message){
+  const brut = String(numero || "").trim();
+  if (!/^\+/.test(brut)) return "";
+  const n = brut.slice(1).replace(/[\s.()-]/g, "");
+  if (!/^[1-9]\d{6,16}$/.test(n)) return "";
+  let texte = "";
+  try { texte = message ? "?text=" + encodeURIComponent(String(message)) : ""; } catch(e){ return ""; }
+  return "https://wa.me/" + n + texte;
 }
 /* le bouton (secondaire, dans son propre bloc, hors du cadre « verrou » et sans data-dc-cal : ce n'est pas une réservation) ;
    id : celui du bloc (v73 : « Ton plan d'action ») */
 function boutonWhatsApp(classe, id){
   const l = lienWhatsApp(); if (!l) return "";
   return `<div class="actions ${esc(classe || "")}"${id ? ` id="${esc(id)}"` : ""}><a class="btn ghost" href="${esc(l)}" target="_blank" rel="noopener" data-wa>${esc(trad(DECOUVERTE.whatsapp.bouton))}</a></div>`;
+}
+/* v83 (bloc 3, G) — le bouton WhatsApp du coach vers une personne (fiche d'un prospect) : la même logique wa.me (lienWaVers),
+   le message pré-rempli ; sans numéro valable, un bouton grisé « Pas de numéro ». Rien ne part tout seul. */
+function boutonWhatsAppVers(tel, message, classe, id){
+  const l = Telephone.valide(tel) ? lienWaVers(tel, message) : "";
+  const c = esc(classe || "btn"), i = id ? ` id="${esc(id)}"` : "";
+  return l ? `<a class="${c}"${i} href="${esc(l)}" target="_blank" rel="noopener" data-wa-coach>${SVG.whatsapp}<span>${esc(trad("WhatsApp"))}</span></a>`
+    : `<button type="button" class="${c} sans-numero"${i} disabled data-wa-coach>${esc(trad("Pas de numéro"))}</button>`;
 }
 /* v52 — « écris-nous » : une phrase (clé française, traduite par trad) dont {e} devient l'adresse email du coach, en lien
    mailto (CONFIG.marque.email). Sert tant que l'app n'envoie aucun email (mot de passe oublié, changement d'adresse). */

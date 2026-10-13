@@ -25,7 +25,14 @@ const SVG = {
   croix:  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
   retour: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>',
   /* v70 : « Partager l'app » */
-  partager: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M12 15V3M7 8l5-5 5 5"/></svg>'
+  partager: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M12 15V3M7 8l5-5 5 5"/></svg>',
+  /* v83 (bloc 3, espace coach) : « + » (Créer un accès), loupe, case cochée, téléphone (Appeler), WhatsApp, chevron */
+  ajouter: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
+  loupe:   '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>',
+  coche:   '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  tel:     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>',
+  whatsapp:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5l1.3-4.2A8.5 8.5 0 1 1 8 19.4z"/><path d="M9 8.8c.2 2.4 2.6 5 5.2 5.5l1-1.3 1.9.9c-.2 1-1 1.8-2 1.8C11 15.7 8 12.7 8 9.6c0-1 .8-1.8 1.8-2l.9 1.9z"/></svg>',
+  chevron: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>'
 };
 /* Une icone par outil (cle = id de l'outil). En trait, 24x24, couleur du texte. */
 const ICONES = {
@@ -48,7 +55,9 @@ const ICONES = {
   /* v79 : le journal alimentaire (fourchette et couteau) */
   "journal-alimentaire": '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10"/><path d="M17 21V3c-2 1.2-3 4-3 7 0 2 1.2 3 3 3"/></svg>',
   prospects:    '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>',
-  plus:         '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>'
+  plus:         '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>',
+  /* v83 (bloc 3) : le Tableau de bord du coach dans la barre du bas (la maison de la maquette) */
+  tableau:      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>'
 };
 
 /* --- THEME (v33 ; v80, bloc 1 : tout en sombre) ------------------------------------

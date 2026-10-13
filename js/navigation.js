@@ -341,12 +341,9 @@ function lienOutil(id){
   return Store.idConsulte && o && o.role !== "coach" ? "#/client/" + Store.idConsulte + "/" + id : "#/" + id;
 }
 const RETOURS = { tableau: "Revenir au tableau de bord", clients: "Revenir à mes clients", prospects: "Revenir aux prospects" };
-function bandeauConsultation(){
-  if (!Store.idConsulte) return "";
-  /* Sans ces boutons, le coach atterrit sur une page et ne devine pas que
-     tout le reste de la fiche est accessible par les onglets du haut.
-     Un mode implicite est un mode qu'on ne trouve pas. */
-  const actions = [
+/* les outils du client consulté (le bandeau des pages de sa fiche ; v83 : aussi « Ses outils », onglet Suivi de la fiche) */
+function actionsConsultation(){
+  return [
     { id:"accueil",      nom:"Fiche" },
     { id:"bilan",        nom:"Préparer le call" },
     { id:"suivi",        nom:"Son suivi" },
@@ -361,6 +358,14 @@ function bandeauConsultation(){
     /* v79 : son journal alimentaire (lecture seule), seulement s'il lui est ouvert (interrupteur) */
     { id:"journal-alimentaire", nom:"Son journal alimentaire" }
   ].filter(a => a.id !== "journal-alimentaire" || outilsVisibles().some(o => o.id === a.id));
+}
+function bandeauConsultation(){
+  /* v83 (bloc 3) : la fiche elle-même (accueil) a son propre en-tête (croix, onglets Suivi / Compte, « Ses outils ») */
+  if (!Store.idConsulte || courant === "accueil") return "";
+  /* Sans ces boutons, le coach atterrit sur une page et ne devine pas que
+     tout le reste de la fiche est accessible par les onglets du haut.
+     Un mode implicite est un mode qu'on ne trouve pas. */
+  const actions = actionsConsultation();
   return `<div class="bandeau">
     <div class="bandeau-tete">
       <strong>${Store.nomConsulte === Clients.SANS_NOM ? "Fiche — " : "Fiche de "}${esc(Store.nomConsulte || "ce client")}</strong>
@@ -419,6 +424,7 @@ document.addEventListener("click", e => {
 /* v64 : sansCompte = page reconstruite sur place apres l'accord sante (deja comptee a son ouverture) */
 async function afficher(id, silencieux, sansCompte){
   const jeton = ++affichage;
+  document.body.classList.remove("lc-selection");   // v83 (bloc 3) : la barre du bas revient en quittant une sélection
   const dispo = outilsVisibles();
   const outil = dispo.find(o => o.id === id) || dispo.find(o => o.id === outilParDefaut()) || dispo[0];
   courant = outil.id;
@@ -492,6 +498,7 @@ async function afficher(id, silencieux, sansCompte){
   const sortir = $("sortir-fiche");
   if (sortir) sortir.addEventListener("click", () => {
     const vers = Store.retourVers || "clients";   // v71 (I) : retour vers l'ecran d'origine (tableau, clients, prospects)
+    ListeCoach.revenir(vers);   // v83 (bloc 3) : la liste retrouve sa recherche, son filtre et sa position
     Store.oublier(Store.idConsulte); Store.idConsulte = null; Store.nomConsulte = null; Store.retourVers = null;
     location.hash = "#/" + vers;
   });
