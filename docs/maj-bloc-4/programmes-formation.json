@@ -1,0 +1,1743 @@
+{
+ "version": 1,
+ "source": "PDF de la formation de Lucas, transcrits le 13/10/2026 (seulement les séances et la méthode). Noms d'exercices tels que dans les PDF, fautes corrigées : à relier aux exercices de l'app.",
+ "echauffement": {
+  "duree": "5 min de cardio + 5 min d'ostéo-articulaire (30 s par mouvement)",
+  "cardio": [
+   "Jumping jacks (1 min)",
+   "Montées de genoux sur place (1 min)",
+   "Talons-fesses (1 min)",
+   "Pas chassés latéraux (1 min)",
+   "Burpees lents (1 min)"
+  ],
+  "haut_du_corps": [
+   "Rotations de la tête",
+   "Cercles des épaules (15 s avant / 15 s arrière)",
+   "Rotations des bras",
+   "Rotations des coudes",
+   "Rotations des poignets",
+   "Torsion du tronc",
+   "Élévation des bras au-dessus de la tête",
+   "Inclinaisons latérales du tronc",
+   "Rotation du thorax",
+   "Élévation des épaules"
+  ],
+  "bas_du_corps": [
+   "Flexion latérale des hanches",
+   "Rotations des hanches",
+   "Rotations des genoux",
+   "Rotations des chevilles (30 s par cheville)"
+  ]
+ },
+ "combien_de_seances": [
+  "1–2 j/semaine : séance HIIT ou Full body.",
+  "3–4 j/semaine : Haut/Bas du corps + Full body, ou Haut/Bas du corps + HIIT.",
+  "5–6 j/semaine : toutes les séances du programme chaque semaine (+ cardio le dernier jour)."
+ ],
+ "programmes": [
+  {
+   "id": "salle-homme",
+   "nom": "Programme salle 12 semaines · Homme",
+   "sexe": "homme",
+   "lieu": "salle",
+   "phases": [
+    {
+     "semaines": "1-4",
+     "titre": "Semaines 1 à 4",
+     "seances": [
+      {
+       "nom": "Séance 1 — Bas du corps",
+       "type": "muscu",
+       "exercices": [
+        {
+         "nom": "Squat arrière",
+         "series": "4",
+         "reps": "10",
+         "repos": "90 s"
+        },
+        {
+         "nom": "Presse à cuisses",
+         "series": "3",
+         "reps": "15",
+         "repos": "90 s"
+        },
+        {
+         "nom": "Fentes marchées",
+         "series": "4",
+         "reps": "10 / jambe",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Leg extensions",
+         "series": "4",
+         "reps": "15",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Mollets debout",
+         "series": "4",
+         "reps": "15",
+         "repos": "60 s"
+        }
+       ]
+      },
+      {
+       "nom": "Séance 2 — Haut du corps",
+       "type": "muscu",
+       "exercices": [
+        {
+         "nom": "Développé couché barre",
+         "series": "4",
+         "reps": "12",
+         "repos": "90 s"
+        },
+        {
+         "nom": "Développé incliné haltères",
+         "series": "4",
+         "reps": "12",
+         "repos": "90 s"
+        },
+        {
+         "nom": "Dips",
+         "series": "3",
+         "reps": "12",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Écarté couché haltères",
+         "series": "3",
+         "reps": "12",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Extension triceps poulie",
+         "series": "4",
+         "reps": "12",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Crunch abdos",
+         "series": "4",
+         "reps": "15-20",
+         "repos": "45 s"
+        }
+       ]
+      },
+      {
+       "nom": "Séance 3 — Bas du corps",
+       "type": "muscu",
+       "exercices": [
+        {
+         "nom": "Soulevé de terre jambes tendues",
+         "series": "4",
+         "reps": "12",
+         "repos": "90 s"
+        },
+        {
+         "nom": "Hip thrust",
+         "series": "4",
+         "reps": "12",
+         "repos": "90 s"
+        },
+        {
+         "nom": "Leg curl couché",
+         "series": "4",
+         "reps": "15",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Fentes marchées",
+         "series": "4",
+         "reps": "10 / jambe",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Mollets assis",
+         "series": "4",
+         "reps": "20",
+         "repos": "60 s"
+        }
+       ]
+      },
+      {
+       "nom": "Séance 4 — Haut du corps",
+       "type": "muscu",
+       "exercices": [
+        {
+         "nom": "Tractions assistées",
+         "series": "4",
+         "reps": "12",
+         "repos": "90 s"
+        },
+        {
+         "nom": "Rowing haltère",
+         "series": "4",
+         "reps": "12",
+         "repos": "90 s"
+        },
+        {
+         "nom": "Curl haltères",
+         "series": "4",
+         "reps": "12",
+         "repos": "90 s"
+        },
+        {
+         "nom": "Curl barre EZ",
+         "series": "3",
+         "reps": "15",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Planche statique",
+         "series": "3",
+         "reps": "20-30 s",
+         "repos": "45 s"
+        }
+       ]
+      },
+      {
+       "nom": "Séance 5 — Full body",
+       "type": "muscu",
+       "exercices": [
+        {
+         "nom": "Burpees",
+         "series": "5",
+         "reps": "12",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Fentes haltère",
+         "series": "4",
+         "reps": "15",
+         "repos": "90 s"
+        },
+        {
+         "nom": "Peck deck",
+         "series": "4",
+         "reps": "12",
+         "repos": "90 s"
+        },
+        {
+         "nom": "Rowing unilatéral haltère",
+         "series": "3",
+         "reps": "12",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Crunch abdos",
+         "series": "3",
+         "reps": "15-20",
+         "repos": "45 s"
+        }
+       ]
+      },
+      {
+       "nom": "Séance 6 — HIIT cardio",
+       "type": "hiit",
+       "consigne": "Circuit à répéter 4 à 5 fois selon le niveau.",
+       "exercices": [
+        {
+         "nom": "Burpees",
+         "travail": "30 s",
+         "repos": "30 s"
+        },
+        {
+         "nom": "Mountain climbers",
+         "travail": "30 s",
+         "repos": "30 s"
+        },
+        {
+         "nom": "Jump squats",
+         "travail": "30 s",
+         "repos": "30 s"
+        },
+        {
+         "nom": "Pompes",
+         "travail": "30 s",
+         "repos": "30 s"
+        },
+        {
+         "nom": "Planche statique",
+         "travail": "30 s",
+         "repos": "30 s"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "semaines": "5-8",
+     "titre": "Semaines 5 à 8 — Intensification",
+     "seances": [
+      {
+       "nom": "Séance 1 — Bas du corps",
+       "type": "muscu",
+       "exercices": [
+        {
+         "nom": "Squat avant",
+         "series": "4",
+         "reps": "12",
+         "repos": "60 s",
+         "technique": "superset",
+         "groupe": 1
+        },
+        {
+         "nom": "Presse à cuisses",
+         "series": "4",
+         "reps": "12",
+         "repos": "60 s",
+         "technique": "superset",
+         "groupe": 1
+        },
+        {
+         "nom": "Fentes marchées haltère",
+         "series": "4",
+         "reps": "10 / jambe",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Leg extensions",
+         "series": "4",
+         "reps": "20",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Mollets debout",
+         "series": "4",
+         "reps": "25",
+         "repos": "60 s"
+        }
+       ]
+      },
+      {
+       "nom": "Séance 2 — Haut du corps",
+       "type": "muscu",
+       "exercices": [
+        {
+         "nom": "Développé couché",
+         "series": "4",
+         "reps": "15",
+         "repos": "90 s",
+         "technique": "superset",
+         "groupe": 1
+        },
+        {
+         "nom": "Pompes",
+         "series": "4",
+         "reps": "15",
+         "repos": "90 s",
+         "technique": "superset",
+         "groupe": 1
+        },
+        {
+         "nom": "Dips sur banc",
+         "series": "4",
+         "reps": "15",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Extension triceps poulie",
+         "series": "4",
+         "reps": "20",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Crunch abdos",
+         "series": "4",
+         "reps": "25",
+         "repos": "45 s"
+        }
+       ]
+      },
+      {
+       "nom": "Séance 3 — Bas du corps",
+       "type": "muscu",
+       "exercices": [
+        {
+         "nom": "Soulevé de terre jambes tendues",
+         "series": "4",
+         "reps": "15",
+         "repos": "90-120 s",
+         "technique": "superset",
+         "groupe": 1
+        },
+        {
+         "nom": "Hip thrust",
+         "series": "4",
+         "reps": "15",
+         "repos": "90-120 s",
+         "technique": "superset",
+         "groupe": 1
+        },
+        {
+         "nom": "Leg curl couché",
+         "series": "4",
+         "reps": "20",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Fentes haltère",
+         "series": "3",
+         "reps": "15 / jambe",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Mollets assis",
+         "series": "4",
+         "reps": "25",
+         "repos": "60 s"
+        }
+       ]
+      },
+      {
+       "nom": "Séance 4 — Haut du corps",
+       "type": "muscu",
+       "exercices": [
+        {
+         "nom": "Tractions assistées",
+         "series": "4",
+         "reps": "15",
+         "repos": "90-120 s",
+         "technique": "superset",
+         "groupe": 1
+        },
+        {
+         "nom": "Rowing haltères",
+         "series": "4",
+         "reps": "15",
+         "repos": "90-120 s",
+         "technique": "superset",
+         "groupe": 1
+        },
+        {
+         "nom": "Curl haltères",
+         "series": "4",
+         "reps": "12",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Curl barre EZ",
+         "series": "3",
+         "reps": "15",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Planche statique",
+         "series": "3",
+         "reps": "60 s",
+         "repos": "30 s"
+        }
+       ]
+      },
+      {
+       "nom": "Séance 5 — Full body",
+       "type": "muscu",
+       "exercices": [
+        {
+         "nom": "Vélo elliptique ou tapis de marche",
+         "series": "—",
+         "reps": "20 min",
+         "repos": "—"
+        },
+        {
+         "nom": "Jumping jack",
+         "series": "3",
+         "reps": "30 s",
+         "repos": "60 s",
+         "technique": "superset",
+         "groupe": 1
+        },
+        {
+         "nom": "Squat goblet",
+         "series": "3",
+         "reps": "15",
+         "repos": "60 s",
+         "technique": "superset",
+         "groupe": 1
+        },
+        {
+         "nom": "Pompes",
+         "series": "4",
+         "reps": "15",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Rowing unilatéral haltère",
+         "series": "3",
+         "reps": "15",
+         "repos": "60 s"
+        }
+       ]
+      },
+      {
+       "nom": "Séance 6 — HIIT intensifié",
+       "type": "hiit",
+       "consigne": "Circuit à répéter 4 à 5 fois selon le niveau.",
+       "exercices": [
+        {
+         "nom": "Burpees",
+         "travail": "40 s",
+         "repos": "20 s"
+        },
+        {
+         "nom": "Mountain climbers",
+         "travail": "40 s",
+         "repos": "20 s"
+        },
+        {
+         "nom": "Jump squats",
+         "travail": "40 s",
+         "repos": "20 s"
+        },
+        {
+         "nom": "Pompes",
+         "travail": "40 s",
+         "repos": "20 s"
+        },
+        {
+         "nom": "Planche dynamique",
+         "travail": "40 s",
+         "repos": "20 s"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "semaines": "9-12",
+     "titre": "Semaines 9 à 12 — Intensification +",
+     "seances": [
+      {
+       "nom": "Séance 1 — Bas du corps",
+       "type": "muscu",
+       "exercices": [
+        {
+         "nom": "Squat arrière",
+         "series": "4",
+         "reps": "15",
+         "repos": "90 s",
+         "technique": "superset",
+         "groupe": 1
+        },
+        {
+         "nom": "Presse à cuisses",
+         "series": "4",
+         "reps": "15",
+         "repos": "90 s",
+         "technique": "superset",
+         "groupe": 1
+        },
+        {
+         "nom": "Fentes statiques haltères",
+         "series": "4",
+         "reps": "10 / jambe + 5",
+         "repos": "60 s",
+         "technique": "dropset"
+        },
+        {
+         "nom": "Leg extensions",
+         "series": "4",
+         "reps": "20",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Mollets debout",
+         "series": "5",
+         "reps": "25",
+         "repos": "60 s"
+        }
+       ]
+      },
+      {
+       "nom": "Séance 2 — Haut du corps",
+       "type": "muscu",
+       "exercices": [
+        {
+         "nom": "Développé couché",
+         "series": "5",
+         "reps": "15",
+         "repos": "120 s",
+         "technique": "superset",
+         "groupe": 1
+        },
+        {
+         "nom": "Pompes",
+         "series": "5",
+         "reps": "15",
+         "repos": "120 s",
+         "technique": "superset",
+         "groupe": 1
+        },
+        {
+         "nom": "Dips sur banc",
+         "series": "3",
+         "reps": "12-15 + 5",
+         "repos": "60 s",
+         "technique": "dropset"
+        },
+        {
+         "nom": "Extension triceps poulie",
+         "series": "4",
+         "reps": "20",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Crunch abdos",
+         "series": "4",
+         "reps": "25",
+         "repos": "30 s"
+        }
+       ]
+      },
+      {
+       "nom": "Séance 3 — Bas du corps",
+       "type": "muscu",
+       "exercices": [
+        {
+         "nom": "Soulevé de terre jambes tendues",
+         "series": "3",
+         "reps": "12-15",
+         "repos": "60 s",
+         "technique": "superset",
+         "groupe": 1
+        },
+        {
+         "nom": "Hip thrust",
+         "series": "3",
+         "reps": "12-15",
+         "repos": "60 s",
+         "technique": "superset",
+         "groupe": 1
+        },
+        {
+         "nom": "Fentes bulgares",
+         "series": "3",
+         "reps": "10 / jambe + 5",
+         "repos": "60 s",
+         "technique": "dropset"
+        },
+        {
+         "nom": "Leg curl couché",
+         "series": "3",
+         "reps": "15-20",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Mollets assis",
+         "series": "3",
+         "reps": "15-20",
+         "repos": "60 s"
+        }
+       ]
+      },
+      {
+       "nom": "Séance 4 — Haut du corps",
+       "type": "muscu",
+       "exercices": [
+        {
+         "nom": "Tractions assistées",
+         "series": "4",
+         "reps": "15",
+         "repos": "90 s",
+         "technique": "superset",
+         "groupe": 1
+        },
+        {
+         "nom": "Rowing haltères",
+         "series": "4",
+         "reps": "15",
+         "repos": "90 s",
+         "technique": "superset",
+         "groupe": 1
+        },
+        {
+         "nom": "Curl haltères",
+         "series": "4",
+         "reps": "12-15 + 5",
+         "repos": "60 s",
+         "technique": "dropset"
+        },
+        {
+         "nom": "Curl barre EZ",
+         "series": "3",
+         "reps": "15-20",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Planche dynamique",
+         "series": "3",
+         "reps": "90 s",
+         "repos": "45 s"
+        }
+       ]
+      },
+      {
+       "nom": "Séance 5 — Full body + cardio",
+       "type": "muscu",
+       "exercices": [
+        {
+         "nom": "Jumping jack",
+         "series": "4",
+         "reps": "30 s",
+         "repos": "60 s",
+         "technique": "superset",
+         "groupe": 1
+        },
+        {
+         "nom": "Squat goblet",
+         "series": "4",
+         "reps": "15",
+         "repos": "60 s",
+         "technique": "superset",
+         "groupe": 1
+        },
+        {
+         "nom": "Pompes",
+         "series": "3",
+         "reps": "12-15",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Rowing unilatéral haltère",
+         "series": "3",
+         "reps": "12-15",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Crunch abdos",
+         "series": "3",
+         "reps": "20",
+         "repos": "45 s"
+        }
+       ]
+      },
+      {
+       "nom": "Séance 6 — HIIT cardio",
+       "type": "hiit",
+       "consigne": "Circuit à répéter 4 à 5 fois selon le niveau.",
+       "exercices": [
+        {
+         "nom": "Burpees explosifs",
+         "travail": "45 s",
+         "repos": "15 s"
+        },
+        {
+         "nom": "Mountain climbers",
+         "travail": "45 s",
+         "repos": "15 s"
+        },
+        {
+         "nom": "Jump squats",
+         "travail": "45 s",
+         "repos": "15 s"
+        },
+        {
+         "nom": "Pompes avec claquement",
+         "travail": "45 s",
+         "repos": "15 s"
+        },
+        {
+         "nom": "Planche dynamique",
+         "travail": "45 s",
+         "repos": "15 s"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "salle-femme",
+   "nom": "Programme salle 12 semaines · Femme",
+   "sexe": "femme",
+   "lieu": "salle",
+   "phases": [
+    {
+     "semaines": "1-4",
+     "titre": "Semaines 1 à 4",
+     "seances": [
+      {
+       "nom": "Séance 1 — Bas du corps",
+       "type": "muscu",
+       "exercices": [
+        {
+         "nom": "Squat",
+         "series": "4",
+         "reps": "15",
+         "repos": "90-120 s"
+        },
+        {
+         "nom": "Fentes avant",
+         "series": "4",
+         "reps": "12 / jambe",
+         "repos": "90 s"
+        },
+        {
+         "nom": "Soulevé de terre jambes tendues",
+         "series": "4",
+         "reps": "15",
+         "repos": "90 s"
+        },
+        {
+         "nom": "Presse à cuisses",
+         "series": "4",
+         "reps": "15",
+         "repos": "90 s"
+        },
+        {
+         "nom": "Extension mollets debout",
+         "series": "4",
+         "reps": "20",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Abducteurs à la machine",
+         "series": "3",
+         "reps": "15",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Step-ups avec haltères",
+         "series": "3",
+         "reps": "12 / jambe",
+         "repos": "90 s"
+        }
+       ]
+      },
+      {
+       "nom": "Séance 2 — Haut du corps",
+       "type": "muscu",
+       "exercices": [
+        {
+         "nom": "Développé couché",
+         "series": "4",
+         "reps": "12",
+         "repos": "90-120 s"
+        },
+        {
+         "nom": "Tirage vertical (poulie haute)",
+         "series": "4",
+         "reps": "12",
+         "repos": "90 s"
+        },
+        {
+         "nom": "Développé militaire",
+         "series": "4",
+         "reps": "15",
+         "repos": "90 s"
+        },
+        {
+         "nom": "Rowing barre",
+         "series": "4",
+         "reps": "12",
+         "repos": "90 s"
+        },
+        {
+         "nom": "Curl biceps haltères",
+         "series": "3",
+         "reps": "15",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Extensions triceps poulie",
+         "series": "3",
+         "reps": "15",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Élévations latérales",
+         "series": "3",
+         "reps": "15",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Tirage horizontal à la machine",
+         "series": "3",
+         "reps": "12",
+         "repos": "60 s"
+        }
+       ]
+      },
+      {
+       "nom": "Séance 3 — Bas du corps",
+       "type": "muscu",
+       "exercices": [
+        {
+         "nom": "Squat bulgare",
+         "series": "4",
+         "reps": "12 / jambe",
+         "repos": "90-120 s"
+        },
+        {
+         "nom": "Hip thrust",
+         "series": "4",
+         "reps": "15",
+         "repos": "90 s"
+        },
+        {
+         "nom": "Soulevé de terre",
+         "series": "4",
+         "reps": "12",
+         "repos": "90 s"
+        },
+        {
+         "nom": "Leg curl",
+         "series": "4",
+         "reps": "15",
+         "repos": "90 s"
+        },
+        {
+         "nom": "Mollets debout à la machine",
+         "series": "4",
+         "reps": "20",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Fentes arrière avec haltères",
+         "series": "3",
+         "reps": "12 / jambe",
+         "repos": "90 s"
+        },
+        {
+         "nom": "Box jump",
+         "series": "3",
+         "reps": "15",
+         "repos": "90 s"
+        }
+       ]
+      },
+      {
+       "nom": "Séance 4 — HIIT (choisis 1 option)",
+       "type": "hiit_options",
+       "consigne": "30 s travail / 30 s repos — 3 tours. Progression : à la fin de chaque semaine, réduis le repos à 20 s.",
+       "options": [
+        {
+         "nom": "Option 1",
+         "echauffement": "5 min : Jumping jacks, Mountain climbers",
+         "exercices": [
+          "Burpees",
+          "Squats",
+          "Fentes alternées",
+          "Planche statique"
+         ]
+        },
+        {
+         "nom": "Option 2",
+         "echauffement": "5 min : Corde à sauter sans corde, High knees",
+         "exercices": [
+          "Jumping jacks",
+          "Squats sautés",
+          "Fentes latérales",
+          "Mountain climbers"
+         ]
+        },
+        {
+         "nom": "Option 3",
+         "echauffement": "5 min : Squats, Fentes",
+         "exercices": [
+          "Burpees",
+          "Pompes",
+          "Mountain climbers",
+          "Planche avec levée de jambe"
+         ]
+        }
+       ]
+      },
+      {
+       "nom": "Séance 5 — Full body",
+       "type": "muscu",
+       "exercices": [
+        {
+         "nom": "Squat",
+         "series": "4",
+         "reps": "15",
+         "repos": "90-120 s"
+        },
+        {
+         "nom": "Développé couché",
+         "series": "4",
+         "reps": "12",
+         "repos": "90 s"
+        },
+        {
+         "nom": "Soulevé de terre",
+         "series": "4",
+         "reps": "12",
+         "repos": "90 s"
+        },
+        {
+         "nom": "Tractions assistées",
+         "series": "3",
+         "reps": "10",
+         "repos": "90 s"
+        },
+        {
+         "nom": "Planche (gainage)",
+         "series": "3",
+         "reps": "60 s",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Burpees",
+         "series": "3",
+         "reps": "15",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Mountain climbers",
+         "series": "3",
+         "reps": "20",
+         "repos": "60 s"
+        }
+       ]
+      },
+      {
+       "nom": "Séance 6 — Cardio",
+       "type": "cardio",
+       "consigne": "30 min à intensité moyenne (marche rapide en pente, vélo elliptique…)."
+      }
+     ]
+    },
+    {
+     "semaines": "5-8",
+     "titre": "Semaines 5 à 8 — Intensification",
+     "seances": [
+      {
+       "nom": "Séance 1 — Bas du corps",
+       "type": "muscu",
+       "exercices": [
+        {
+         "nom": "Squat",
+         "series": "4",
+         "reps": "12",
+         "repos": "90-120 s"
+        },
+        {
+         "nom": "Fentes bulgares",
+         "series": "4",
+         "reps": "12",
+         "repos": "90 s",
+         "technique": "superset",
+         "groupe": 1
+        },
+        {
+         "nom": "Jump squats",
+         "series": "4",
+         "reps": "15",
+         "repos": "90 s",
+         "technique": "superset",
+         "groupe": 1
+        },
+        {
+         "nom": "Soulevé de terre jambes tendues",
+         "series": "4",
+         "reps": "12",
+         "repos": "90 s"
+        },
+        {
+         "nom": "Presse à cuisses",
+         "series": "4",
+         "reps": "12",
+         "repos": "90 s",
+         "technique": "superset",
+         "groupe": 2
+        },
+        {
+         "nom": "Extension mollets",
+         "series": "4",
+         "reps": "20",
+         "repos": "90 s",
+         "technique": "superset",
+         "groupe": 2
+        },
+        {
+         "nom": "Leg extension",
+         "series": "3",
+         "reps": "15",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Step-ups avec haltères",
+         "series": "3",
+         "reps": "12 / jambe",
+         "repos": "90 s"
+        }
+       ]
+      },
+      {
+       "nom": "Séance 2 — Haut du corps",
+       "type": "muscu",
+       "exercices": [
+        {
+         "nom": "Développé couché",
+         "series": "4",
+         "reps": "12",
+         "repos": "90-120 s",
+         "technique": "superset",
+         "groupe": 1
+        },
+        {
+         "nom": "Pompes",
+         "series": "4",
+         "reps": "15",
+         "repos": "90-120 s",
+         "technique": "superset",
+         "groupe": 1
+        },
+        {
+         "nom": "Tirage vertical",
+         "series": "4",
+         "reps": "12",
+         "repos": "90 s",
+         "technique": "superset",
+         "groupe": 2
+        },
+        {
+         "nom": "Tirage horizontal",
+         "series": "4",
+         "reps": "12",
+         "repos": "90 s",
+         "technique": "superset",
+         "groupe": 2
+        },
+        {
+         "nom": "Développé militaire",
+         "series": "4",
+         "reps": "12",
+         "repos": "90 s",
+         "technique": "superset",
+         "groupe": 3
+        },
+        {
+         "nom": "Élévations latérales",
+         "series": "4",
+         "reps": "15",
+         "repos": "90 s",
+         "technique": "superset",
+         "groupe": 3
+        },
+        {
+         "nom": "Dips",
+         "series": "3",
+         "reps": "12",
+         "repos": "90 s"
+        },
+        {
+         "nom": "Curl biceps barre EZ",
+         "series": "3",
+         "reps": "15",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Extensions triceps poulie",
+         "series": "3",
+         "reps": "15",
+         "repos": "60 s"
+        }
+       ]
+      },
+      {
+       "nom": "Séance 3 — Bas du corps",
+       "type": "muscu",
+       "exercices": [
+        {
+         "nom": "Squat bulgare",
+         "series": "4",
+         "reps": "12",
+         "repos": "90 s"
+        },
+        {
+         "nom": "Hip thrust",
+         "series": "4",
+         "reps": "12",
+         "repos": "90 s"
+        },
+        {
+         "nom": "Leg curl",
+         "series": "4",
+         "reps": "12",
+         "repos": "90 s",
+         "technique": "superset",
+         "groupe": 1
+        },
+        {
+         "nom": "Extension mollets",
+         "series": "4",
+         "reps": "20",
+         "repos": "90 s",
+         "technique": "superset",
+         "groupe": 1
+        },
+        {
+         "nom": "Fentes arrière avec haltères",
+         "series": "3",
+         "reps": "12 / jambe",
+         "repos": "90 s"
+        },
+        {
+         "nom": "Box jump",
+         "series": "3",
+         "reps": "15",
+         "repos": "90 s"
+        }
+       ]
+      },
+      {
+       "nom": "Séance 4 — HIIT (choisis 1 option)",
+       "type": "hiit_options",
+       "consigne": "40 s travail / 20 s repos — 4 tours. Progression : passe à 5 tours en semaines 7 et 8.",
+       "options": [
+        {
+         "nom": "Option 1",
+         "echauffement": "5 min : High knees, Cercles de bras",
+         "exercices": [
+          "Burpees",
+          "Squats sautés",
+          "Mountain climbers",
+          "Planche dynamique"
+         ]
+        },
+        {
+         "nom": "Option 2",
+         "echauffement": "5 min : Jumping jacks, Fentes",
+         "exercices": [
+          "Pompes avec clap",
+          "Planche avec rotation",
+          "Squats sautés",
+          "High knees"
+         ]
+        },
+        {
+         "nom": "Option 3",
+         "echauffement": "5 min : Fentes dynamiques, Squats sautés",
+         "exercices": [
+          "Fentes sautées",
+          "Jump squats",
+          "Planche avec touche d'épaule",
+          "Mountain climbers"
+         ]
+        }
+       ]
+      },
+      {
+       "nom": "Séance 5 — Full body",
+       "type": "muscu",
+       "exercices": [
+        {
+         "nom": "Squat",
+         "series": "4",
+         "reps": "12",
+         "repos": "90 s"
+        },
+        {
+         "nom": "Développé couché",
+         "series": "4",
+         "reps": "12",
+         "repos": "90 s",
+         "technique": "superset",
+         "groupe": 1
+        },
+        {
+         "nom": "Pompes",
+         "series": "4",
+         "reps": "15",
+         "repos": "90 s",
+         "technique": "superset",
+         "groupe": 1
+        },
+        {
+         "nom": "Soulevé de terre",
+         "series": "4",
+         "reps": "12",
+         "repos": "90 s",
+         "technique": "superset",
+         "groupe": 2
+        },
+        {
+         "nom": "Rowing",
+         "series": "4",
+         "reps": "12",
+         "repos": "90 s",
+         "technique": "superset",
+         "groupe": 2
+        },
+        {
+         "nom": "Planche latérale",
+         "series": "3",
+         "reps": "45 s",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Burpees",
+         "series": "3",
+         "reps": "15",
+         "repos": "60 s"
+        }
+       ]
+      },
+      {
+       "nom": "Séance 6 — Cardio",
+       "type": "cardio",
+       "consigne": "45 min à intensité moyenne (marche rapide en pente, vélo elliptique…)."
+      }
+     ]
+    },
+    {
+     "semaines": "9-12",
+     "titre": "Semaines 9 à 12 — Intensification +",
+     "seances": [
+      {
+       "nom": "Séance 1 — Bas du corps",
+       "type": "muscu",
+       "exercices": [
+        {
+         "nom": "Squat",
+         "series": "4",
+         "reps": "10-12",
+         "repos": "90 s",
+         "technique": "dropset",
+         "note": "Dropset sur la dernière série"
+        },
+        {
+         "nom": "Fentes bulgares",
+         "series": "4",
+         "reps": "12",
+         "repos": "90 s",
+         "technique": "superset",
+         "groupe": 1
+        },
+        {
+         "nom": "Jump squats",
+         "series": "4",
+         "reps": "15",
+         "repos": "90 s",
+         "technique": "superset",
+         "groupe": 1
+        },
+        {
+         "nom": "Soulevé de terre jambes tendues",
+         "series": "4",
+         "reps": "10-12",
+         "repos": "90 s"
+        },
+        {
+         "nom": "Leg curl",
+         "series": "4",
+         "reps": "12",
+         "repos": "90 s",
+         "technique": "superset",
+         "groupe": 2
+        },
+        {
+         "nom": "Extension mollets",
+         "series": "4",
+         "reps": "20",
+         "repos": "90 s",
+         "technique": "superset",
+         "groupe": 2
+        }
+       ]
+      },
+      {
+       "nom": "Séance 2 — Haut du corps",
+       "type": "muscu",
+       "exercices": [
+        {
+         "nom": "Développé couché",
+         "series": "4",
+         "reps": "10-12",
+         "repos": "90 s",
+         "technique": "dropset"
+        },
+        {
+         "nom": "Rowing barre",
+         "series": "4",
+         "reps": "12",
+         "repos": "90 s",
+         "technique": "superset",
+         "groupe": 1
+        },
+        {
+         "nom": "Tirage poitrine",
+         "series": "4",
+         "reps": "15",
+         "repos": "90 s",
+         "technique": "superset",
+         "groupe": 1
+        },
+        {
+         "nom": "Développé militaire",
+         "series": "4",
+         "reps": "12",
+         "repos": "90 s",
+         "technique": "superset",
+         "groupe": 2
+        },
+        {
+         "nom": "Pompes",
+         "series": "4",
+         "reps": "15",
+         "repos": "90 s",
+         "technique": "superset",
+         "groupe": 2
+        }
+       ]
+      },
+      {
+       "nom": "Séance 3 — Bas du corps",
+       "type": "muscu",
+       "exercices": [
+        {
+         "nom": "Squat bulgare",
+         "series": "4",
+         "reps": "10-12 / jambe",
+         "repos": "90 s",
+         "technique": "dropset",
+         "note": "Dropset sur la dernière série"
+        },
+        {
+         "nom": "Leg curl",
+         "series": "4",
+         "reps": "12",
+         "repos": "90 s",
+         "technique": "superset",
+         "groupe": 1
+        },
+        {
+         "nom": "Soulevé de terre jambes tendues",
+         "series": "4",
+         "reps": "12",
+         "repos": "90 s",
+         "technique": "superset",
+         "groupe": 1
+        },
+        {
+         "nom": "Fentes arrière",
+         "series": "4",
+         "reps": "12",
+         "repos": "90 s",
+         "technique": "superset",
+         "groupe": 2
+        },
+        {
+         "nom": "Hip thrust",
+         "series": "4",
+         "reps": "12",
+         "repos": "90 s",
+         "technique": "superset",
+         "groupe": 2
+        },
+        {
+         "nom": "Extension mollets à la presse",
+         "series": "4",
+         "reps": "20",
+         "repos": "60 s",
+         "technique": "superset",
+         "groupe": 3
+        },
+        {
+         "nom": "Mollets debout",
+         "series": "4",
+         "reps": "20",
+         "repos": "60 s",
+         "technique": "superset",
+         "groupe": 3
+        }
+       ]
+      },
+      {
+       "nom": "Séance 4 — HIIT (choisis 1 option)",
+       "type": "hiit_options",
+       "consigne": "50 s travail / 10 s repos — 5 tours. Dernière semaine : si possible, repos réduit à 5 s.",
+       "options": [
+        {
+         "nom": "Option 1",
+         "echauffement": "5 min : Corde à sauter sans corde, Mountain climbers",
+         "exercices": [
+          "Burpees avec saut",
+          "Squats sautés",
+          "Mountain climbers rapides",
+          "Planche avec levée de jambes"
+         ]
+        },
+        {
+         "nom": "Option 2",
+         "echauffement": "5 min : Jumping jacks, Squats",
+         "exercices": [
+          "Pompes explosives",
+          "Planche dynamique",
+          "Fentes sautées",
+          "High knees rapides"
+         ]
+        },
+        {
+         "nom": "Option 3",
+         "echauffement": "5 min : Squats, Fentes sautées",
+         "exercices": [
+          "Squats sautés avec levée de genoux",
+          "Burpees",
+          "Mountain climbers rapides",
+          "Planche avec rotation rapide"
+         ]
+        }
+       ]
+      },
+      {
+       "nom": "Séance 5 — Full body",
+       "type": "muscu",
+       "exercices": [
+        {
+         "nom": "Squat",
+         "series": "4",
+         "reps": "10-12",
+         "repos": "90 s",
+         "technique": "dropset",
+         "note": "Dropset sur la dernière série"
+        },
+        {
+         "nom": "Développé couché",
+         "series": "4",
+         "reps": "12",
+         "repos": "90 s",
+         "technique": "superset",
+         "groupe": 1
+        },
+        {
+         "nom": "Pompes",
+         "series": "4",
+         "reps": "15",
+         "repos": "90 s",
+         "technique": "superset",
+         "groupe": 1
+        },
+        {
+         "nom": "Soulevé de terre",
+         "series": "4",
+         "reps": "12",
+         "repos": "90 s",
+         "technique": "superset",
+         "groupe": 2
+        },
+        {
+         "nom": "Rowing barre",
+         "series": "4",
+         "reps": "12",
+         "repos": "90 s",
+         "technique": "superset",
+         "groupe": 2
+        },
+        {
+         "nom": "Développé militaire",
+         "series": "4",
+         "reps": "12",
+         "repos": "90 s",
+         "technique": "superset",
+         "groupe": 3
+        },
+        {
+         "nom": "Élévations latérales",
+         "series": "4",
+         "reps": "15",
+         "repos": "90 s",
+         "technique": "superset",
+         "groupe": 3
+        },
+        {
+         "nom": "Planche abdominale",
+         "series": "4",
+         "reps": "60 s",
+         "repos": "60 s",
+         "technique": "superset",
+         "groupe": 4
+        },
+        {
+         "nom": "Mountain climbers",
+         "series": "4",
+         "reps": "30 s",
+         "repos": "60 s",
+         "technique": "superset",
+         "groupe": 4
+        }
+       ]
+      },
+      {
+       "nom": "Séance 6 — Cardio",
+       "type": "cardio",
+       "consigne": "60 min à intensité moyenne (marche rapide en pente, vélo elliptique…)."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "maison",
+   "nom": "Full body à la maison",
+   "sexe": "tous",
+   "lieu": "maison",
+   "methode": [
+    "3 séances pour tout le corps, à faire chez toi. Des haltères et un tapis suffisent ; sans haltères, une bouteille d'eau ou rien du tout.",
+    "Vise le haut de la plage de répétitions (ex. 10-15 : essaie d'aller à 15). Si tu t'arrêtes à 10 ou 12, c'est normal : tu progresseras au fil des semaines.",
+    "Trop dur ? Fais l'exercice sans poids. Planche : commence sur les genoux. Pompes : sur les genoux, ou les mains sur un petit meuble."
+   ],
+   "phases": [
+    {
+     "semaines": "toutes",
+     "titre": "Toutes les semaines",
+     "seances": [
+      {
+       "nom": "Séance 1 — Full body",
+       "type": "muscu",
+       "exercices": [
+        {
+         "nom": "Squat avec haltères",
+         "series": "5",
+         "reps": "10-15",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Rowing à un bras avec haltère",
+         "series": "4",
+         "reps": "8-12 / côté",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Pompes",
+         "series": "4",
+         "reps": "8-12",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Fentes avec haltères",
+         "series": "4",
+         "reps": "12-16",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Curl biceps alterné avec haltères",
+         "series": "4",
+         "reps": "12-16",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Planche",
+         "series": "3",
+         "reps": "Le plus longtemps possible",
+         "repos": "45 s"
+        }
+       ]
+      },
+      {
+       "nom": "Séance 2 — Full body",
+       "type": "muscu",
+       "exercices": [
+        {
+         "nom": "Glute bridge",
+         "series": "4",
+         "reps": "15-20",
+         "repos": "45 s"
+        },
+        {
+         "nom": "Step-ups sur une chaise avec haltères",
+         "series": "3",
+         "reps": "15-20",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Hip thrust à l'haltère",
+         "series": "4",
+         "reps": "10-15",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Développé couché avec haltères au sol",
+         "series": "3",
+         "reps": "10-15",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Élévations latérales aux haltères",
+         "series": "3",
+         "reps": "10-15",
+         "repos": "60 s"
+        }
+       ]
+      },
+      {
+       "nom": "Séance 3 — Full body",
+       "type": "muscu",
+       "exercices": [
+        {
+         "nom": "Soulevé de terre aux haltères",
+         "series": "4",
+         "reps": "10-15",
+         "repos": "90 s"
+        },
+        {
+         "nom": "Chaise contre le mur",
+         "series": "3",
+         "reps": "Max",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Oiseau haltères",
+         "series": "3",
+         "reps": "10-15",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Développé militaire avec haltères",
+         "series": "3",
+         "reps": "8-12",
+         "repos": "60 s"
+        },
+        {
+         "nom": "Triceps kickback avec haltères",
+         "series": "3",
+         "reps": "8-12 / côté",
+         "repos": "60 s"
+        }
+       ]
+      },
+      {
+       "nom": "Séance bonus — Circuit",
+       "type": "circuit",
+       "consigne": "4 à 8 tours. 30 à 45 s d'action par exercice, le maximum de répétitions. 5 s de repos entre les exercices, 1 min 30 après chaque tour. Progression : commence par 4 tours de 30 s ; quand c'est trop facile, passe à 45 s ; puis ajoute un tour, et ainsi de suite.",
+       "exercices": [
+        {
+         "nom": "Squat haltère"
+        },
+        {
+         "nom": "Jumping jack"
+        },
+        {
+         "nom": "Burpees"
+        },
+        {
+         "nom": "Chaise contre le mur"
+        },
+        {
+         "nom": "Planche"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "attribution": {
+  "Perdre du gras": {
+   "homme": "salle-homme (toutes les séances, HIIT compris)",
+   "femme": "salle-femme (toutes les séances, HIIT et cardio compris)"
+  },
+  "Prendre du muscle": {
+   "homme": "salle-homme (séances 1 à 5, sans la séance 6)",
+   "femme": "salle-femme (séances 1 à 5, sans la séance 6)"
+  },
+  "Me remettre en forme": {
+   "homme": "maison",
+   "femme": "maison"
+  }
+ }
+}
