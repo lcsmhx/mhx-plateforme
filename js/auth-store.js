@@ -270,7 +270,11 @@ const Auth = {
       s = await this.appel("/auth/v1/token?grant_type=password", {
         method: "POST", avecJeton: false, body
       });
-    } catch(e){ if (/captcha/i.test(String((e && e.message) || ""))) throw e; throw new Error("Ton mot de passe actuel n'est pas le bon."); }
+    } catch(e){
+      if (/captcha/i.test(String((e && e.message) || ""))) throw e;
+      if (this.indispo(e)) throw new Error("Pas de connexion pour l'instant : ton mot de passe n'a pas changé. Réessaie dans un instant.");   // v89 (lot 4) : réseau ou serveur, pas un mauvais mot de passe
+      throw new Error("Ton mot de passe actuel n'est pas le bon.");
+    }
     /* jamais la session d'un autre compte (ni si la personne s'est deconnectee entre-temps) */
     const c = this.utilisateur();
     if (!s || !s.access_token || !s.refresh_token || !s.user || s.user.id !== u.id || !c || c.id !== u.id)
@@ -1405,6 +1409,10 @@ const Catalogue = {
     if (!propre) throw new Error("Il faut un nom.");
     const id = Normaliser.aplatir(propre).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
     if (!id) throw new Error("Ce nom ne donne pas d'identifiant valable.");
+    /* v89 (lot 4) : un exercice de la base avec cet identifiant (même nom, espaces ou majuscules près) n'est jamais écrasé (sa vidéo
+       et son groupe étaient remplacés pour tout le monde) : on le dit, il suffit de le choisir dans la liste */
+    const deja = (this._c["exercices"] || []).find(x => x && x.id === id);
+    if (deja) throw new Error("« " + (deja.nom || id) + " » est déjà dans ta base : choisis-le dans la liste.");
     const video = this.idYouTube(lien);
     const ligne = {
       id: id, nom: propre, groupe: groupe || "Autre",

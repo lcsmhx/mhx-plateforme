@@ -438,7 +438,7 @@ const outilMensurations = {
           ? `Aucune mesure enregistrée pour le moment.`
           : `Aucune mesure enregistrée pour le moment.<br>Commence par ton poids du jour : c'est ta semaine 1, et la base de ta courbe.<div class="cta-vide"><button type="button" class="btn" id="mens-go">Ajouter ma première mesure</button></div>`;
         const go = $("mens-go");
-        if (go) go.addEventListener("click", () => { const sa = $("mens-saisie"); if (sa) sa.hidden = false; const e = $("e-poids"); if (e){ e.scrollIntoView({ behavior:"smooth", block:"center" }); e.focus(); } });
+        if (go) go.addEventListener("click", () => { const sa = $("mens-saisie"); if (sa) sa.hidden = false; const e = $("e-poids"); if (e){ e.scrollIntoView({ behavior: defilementDoux(), block:"center" }); e.focus(); } });
         return;
       }
       { const bloc = tb.closest(".scroll"); if (bloc) bloc.hidden = false; const v = $("mens-vide"); if (v) v.remove(); }
@@ -552,7 +552,7 @@ const outilMensurations = {
     /* qui a deja saisi des mesures de balance les retrouve deplies */
     if (compoPresentes().length && $("compo-saisie")) $("compo-saisie").open = true;
     /* la saisie est repliee tant qu'il y a des mesures ; ouverte a la premiere fois */
-    const saisie = $("mens-saisie"), ouvrirSaisie = () => { if (!saisie) return; saisie.hidden = false; saisie.scrollIntoView({ behavior:"smooth", block:"start" }); const e = $("e-poids"); if (e) e.focus(); };
+    const saisie = $("mens-saisie"), ouvrirSaisie = () => { if (!saisie) return; saisie.hidden = false; saisie.scrollIntoView({ behavior: defilementDoux(), block:"start" }); const e = $("e-poids"); if (e) e.focus(); };
     if (saisie && !Store.idConsulte) saisie.hidden = D.mesures.length > 0;
     const ba = $("mens-ajouter"); if (ba) ba.addEventListener("click", ouvrirSaisie);
     const bf = $("mens-fermer"); if (bf) bf.addEventListener("click", () => { if (saisie) saisie.hidden = true; });

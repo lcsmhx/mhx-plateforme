@@ -1010,7 +1010,7 @@ const outilNutrition = {
         const { jour, i } = cible(b.dataset.ajoutI);
         $("nu-slot").value = jour.repas[i].moment;
         $("nu-q").focus();
-        $("nu-q").scrollIntoView({ behavior:"smooth", block:"center" });
+        $("nu-q").scrollIntoView({ behavior: defilementDoux(), block:"center" });
       }));
 
       const sv = $("nu-save");

@@ -489,7 +489,7 @@ const outilJournalAlimentaire = {
       if (consultation){ const s = $("ja-sept-txt"); if (s) s.textContent = J.ligne7(JA, jour, obj); }
       if (nouveau){
         const el = zone.querySelector(".ja-nouveau");
-        if (el) try { el.scrollIntoView({ block: "nearest", behavior: "smooth" }); } catch(e){}
+        if (el) try { el.scrollIntoView({ block: "nearest", behavior: defilementDoux() }); } catch(e){}
         const n = nouveau; setTimeout(() => { if (nouveau === n) nouveau = null; }, 50);
       }
     };

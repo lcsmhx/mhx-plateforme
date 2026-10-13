@@ -70,9 +70,9 @@ const Checkin = {
   champ(q, v){
     const val = v == null ? "" : v;
     if (q.type === "echelle5") return `<div class="seg echelle5" data-q="${esc(q.id)}" role="group" aria-label="${esc(q.label)}">${[1,2,3,4,5].map(n => `<button type="button" data-v="${n}" aria-pressed="${String(val) === String(n)}">${n}</button>`).join("")}</div>`;
-    if (q.type === "nombre") return `<input type="number" min="0" max="30" step="1" inputmode="numeric" data-q="${esc(q.id)}" value="${esc(val)}">`;
-    if (q.type === "select") return `<select data-q="${esc(q.id)}"><option value="">— choisis —</option>${(q.options || []).map(o => `<option value="${esc(o)}"${val === o ? " selected" : ""}>${esc(o)}</option>`).join("")}</select>`;
-    return `<textarea rows="2" data-q="${esc(q.id)}">${esc(val)}</textarea>`;
+    if (q.type === "nombre") return `<input type="number" min="0" max="30" step="1" inputmode="numeric" data-q="${esc(q.id)}" aria-label="${esc(trad(q.label))}" value="${esc(val)}">`;   // v89 : nom accessible
+    if (q.type === "select") return `<select data-q="${esc(q.id)}" aria-label="${esc(trad(q.label))}"><option value="">— choisis —</option>${(q.options || []).map(o => `<option value="${esc(o)}"${val === o ? " selected" : ""}>${esc(o)}</option>`).join("")}</select>`;
+    return `<textarea rows="2" data-q="${esc(q.id)}" aria-label="${esc(trad(q.label))}">${esc(val)}</textarea>`;
   },
 
   /* v53 : la semaine affichée (v) est gardée dans le formulaire : c'est elle qui est enregistrée, pas une semaine
@@ -429,7 +429,9 @@ const Checkin = {
     const e = this.etat(C, opts.uid);
     if (e.semaine.regle === "dimanche") return this.statutDimancheHTML(e, opts);
     if (e.fait){
-      return `<div class="acces fait${opts.lien ? "" : " statique"}"${opts.lien ? ` href="${opts.lien}"` : ""}><span class="ico">${ICONES.bilan}</span><span class="txt"><b>${esc(trad("Bilan de la semaine envoyé"))}</b><small>${esc(trad("le {d} — merci, ton coach le lit avant votre prochain échange", { d: dateFr(e.entree.envoye_le) }))}</small></span>${opts.lien ? `<span class="fleche">›</span>` : ""}</div>`;
+      /* v89 (lot 4) : avec un lien (accueil), une vraie balise <a> — avant, un <div href> qui ne faisait rien au toucher */
+      const b = opts.lien ? "a" : "div";
+      return `<${b} class="acces fait${opts.lien ? "" : " statique"}"${opts.lien ? ` href="${esc(opts.lien)}"` : ""}><span class="ico">${ICONES.bilan}</span><span class="txt"><b>${esc(trad("Bilan de la semaine envoyé"))}</b><small>${esc(trad("le {d} — merci, ton coach le lit avant votre prochain échange", { d: dateFr(e.entree.envoye_le) }))}</small></span>${opts.lien ? `<span class="fleche">›</span>` : ""}</${b}>`;
     }
     const sous = e.semaine.etat === "en_retard"
       ? trad("Ton bilan de la semaine du {a} au {b} n'est pas encore fait : tu as jusqu'à {j} soir.", { a: dateFr(e.semaine.debut), b: dateFr(e.semaine.fin), j: this.nomJour(e.semaine.limite) })

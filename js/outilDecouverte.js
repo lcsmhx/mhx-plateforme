@@ -1214,7 +1214,7 @@ const outilDecouverte = {
                                      : trad(L.verifie, { l: hors.map(q => lib(q) + " (" + trad("{a} à {b}", { a: B[q.id][0], b: B[q.id][1] }) + ")").join(", ") });
         flash("dc-msg", msg);
         const premier = $("q-" + (manquants.length ? manquants[0] : hors[0]).id);
-        if (premier){ premier.scrollIntoView({ behavior: "smooth", block: "center" }); if (!aToucher(manquants.length ? manquants[0] : hors[0])) premier.focus(); }
+        if (premier){ premier.scrollIntoView({ behavior: defilementDoux(), block: "center" }); if (!aToucher(manquants.length ? manquants[0] : hors[0])) premier.focus(); }
         $$(".manque", zone).forEach(el => el.classList.remove("manque"));
         manquants.concat(hors).forEach(q => { const el = $("q-" + q.id); if (el) el.classList.add("manque"); });
         return;
@@ -1378,6 +1378,8 @@ const outilDecouverte = {
       /* v71 (H) : plus aucun « Récupérer mon plan d'action » sur la page (en-tete, carte accomp, carte « plan », invitation),
          la ligne « Créneau choisi » en tete ; rien n'est redessine ni ecrit */
       $$("[data-dc-cal], [data-inv-cal]", zone).forEach(a => { const b = a.closest(".actions, .dc-cta"); if (b) b.remove(); else a.remove(); });
+      /* v89 (lot 4) : la carte « Ton cadeau t'attend » part aussi (elle restait sans son bouton jusqu'au prochain affichage) */
+      const cd = zone.querySelector("#dc-cadeau"); if (cd) cd.remove();
       const sous = zone.querySelector(".masthead .dc-haut-sous"); if (sous) sous.remove();
       const et = zone.querySelector('#dc-etape[data-etape="plan"]'); if (et) et.remove();
       const tete = zone.querySelector(".masthead"); if (tete && !zone.querySelector("#dc-reserve-haut")) tete.insertAdjacentHTML("beforeend", self.ligneReserveHTML(Decouverte.reserve(F)));

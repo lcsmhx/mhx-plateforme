@@ -372,10 +372,10 @@ const FORM_AVANT = ouvert => ({ coches: { p1a: true, p2a: true, m5a: true }, ouv
 
 /* ---------- les textes du brief (V2, section J), mot pour mot ---------- */
 const TX = {
-  intro: "Une méthode simple pour poser les bases en 14 jours : ton alimentation, ton entraînement et tes habitudes, sans programme complexe ni séance interminable. Conçue pour les personnes occupées : le plan s'intègre dans ta routine, entre le travail et la famille.",
-  intro_en: "A simple method to lay the foundations in 14 days: your nutrition, your training and your habits, with no complicated program or endless workouts. Built for busy people: the plan fits into your routine, between work and family.",
-  m0: "Des objectifs réalistes : ce qu'on peut viser en 14 jours, et ce qui demande plus de temps.",
-  m0_en: "Realistic goals: what you can aim for in 14 days, and what takes longer.",
+  intro: "Une méthode simple pour poser les bases : ton alimentation, ton entraînement et tes habitudes, sans programme complexe ni séance interminable. Conçue pour les personnes occupées : le plan s'intègre dans ta routine, entre le travail et la famille.",
+  intro_en: "A simple method to lay the foundations: your nutrition, your training and your habits, with no complicated program or endless workouts. Built for busy people: the plan fits into your routine, between work and family.",
+  m0: "Des objectifs réalistes : ce qu'on peut viser à court terme, et ce qui demande plus de temps.",   // v89 (mission de nuit) : plus de « 14 jours »
+  m0_en: "Realistic goals: what you can aim for in the short term, and what takes longer.",
   m1: "Travailler l'état d'esprit qui fait tenir une transformation dans la durée.",
   m1_en: "Build the mindset that makes a transformation last."
 };
@@ -666,8 +666,8 @@ const ISO = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$/;
     const { page } = await contexte(b, quiP(1), db, { viewport: MOBILE });
     await ouvrirFormation(page);
     const intro = await introParcours(page);
-    ok("J1 : « Ton parcours » : « Une méthode simple pour poser les bases en 14 jours : ton alimentation… » (texte du brief), espace insécable avant « : »",
-      intro.n === TX.intro && intro.brut.includes("jours\u00a0: ton alimentation") && intro.brut.includes("occupées\u00a0: le plan"), JSON.stringify(intro.brut.slice(0, 120)));
+    ok("J1 : « Ton parcours » : « Une méthode simple pour poser les bases : ton alimentation… » (texte du brief ; v89 : plus de « 14 jours »), espace insécable avant « : »",
+      intro.n === TX.intro && intro.brut.includes("bases\u00a0: ton alimentation") && intro.brut.includes("occupées\u00a0: le plan"), JSON.stringify(intro.brut.slice(0, 120)));
     const S = await sourceChallenges(page), m5 = await module5(page);
     const vus = axesVus(m5), att = axesAttendus(S, false), bruts = axesBruts(m5), brutDe = cle => bruts[AXES_ORDRE.indexOf(cle)] || [];
     ok("J5 : module 5 : 5 challenges, 15 axes ; les 5 axes remplacés avec l'objectif et le défi du brief (« Garder la faim sous contrôle. »…), les 10 autres inchangés (tels qu'en c800fe0) ; espace insécable dans « plus tôt : un grand verre », « lendemain : pas de repas », « 2 000 pas »",
@@ -687,7 +687,7 @@ const ISO = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$/;
     for (const m of ["m0", "m1", "m2", "m3", "m4", "m6"]) { tout += " " + await ouvrirModule(page, m); mods.push(Object.assign({ m }, await objModule(page, m))); }
     await ouvrirModule(page, "m0"); const o0 = await objModule(page, "m0");
     await ouvrirModule(page, "m1"); const o1 = await objModule(page, "m1");
-    ok("J2 et J3 : module 0 « Des objectifs réalistes : ce qu'on peut viser en 14 jours… » (espace insécable avant « : ») ; module 1 « Travailler l'état d'esprit qui fait tenir une transformation dans la durée. » (carte et ligne « Objectif : »)",
+    ok("J2 et J3 : module 0 « Des objectifs réalistes : ce qu'on peut viser à court terme… » (espace insécable avant « : ») ; module 1 « Travailler l'état d'esprit qui fait tenir une transformation dans la durée. » (carte et ligne « Objectif : »)",
       o0.contenu[0] === TX.m0 && (o0.contenuBrut[0] || "").includes("réalistes\u00a0: ce qu'on") && o1c.court === TX.m1 && o1.court === TX.m1 && o1.obj === "Objectif : " + TX.m1,
       JSON.stringify([o0.contenuBrut[0], o1c.court, o1.obj]));
     /* relecture : l'étiquette lue telle qu'affichée, sans normalisation ; et la règle du contrat sur tous les textes de la
@@ -740,7 +740,7 @@ const ISO = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$/;
     tout += " " + await ouvrirModule(page, "m1"); const o1 = await objModule(page, "m1");
     /* relecture : en anglais, typoFr ne fait rien : aucun texte traduit ne porte d'espace insécable avant la ponctuation */
     const en1 = [intro.brut, o0.contenuBrut[0], o1c.courtBrut, o1.objBrut];
-    ok("anglais : « A simple method to lay the foundations in 14 days… » (J1), « Realistic goals: what you can aim for… » (J2), « Build the mindset that makes a transformation last. » (J3 : carte et « Goal: ») ; aucune espace insécable avant « : »",
+    ok("anglais : « A simple method to lay the foundations… » (J1), « Realistic goals: what you can aim for… » (J2), « Build the mindset that makes a transformation last. » (J3 : carte et « Goal: ») ; aucune espace insécable avant « : »",
       intro.n === TX.intro_en && o0.contenu[0] === TX.m0_en && o1c.court === TX.m1_en && o1.obj === "Goal: " + TX.m1_en && o1.etiq === "Goal:" && en1.every(t => typeof t === "string" && !INSECABLE.test(t)),
       JSON.stringify([intro.n.slice(0, 50), o0.contenu[0], o1c.court, o1.obj, o1.etiq, en1.filter(t => typeof t !== "string" || INSECABLE.test(t))]));
     const vus = axesVus(m5), att = axesAttendus(S, true), bruts = axesBruts(m5), etiqAtt = AXES_ORDRE.map(k => J5[k] ? "Goal:" : "Objectif :");
