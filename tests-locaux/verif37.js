@@ -29,7 +29,7 @@ const server = http.createServer((req,res)=>{if(servirFichier(req,res,HTML))retu
   ok("tableau : Julien inactif signale", t.includes("Julien") && /Inactif depuis \d+ j/.test(t));
   ok("tableau : Thomas bilan hebdo recu (a lire)", t.includes("Bilan hebdo reçu"));
   ok("tableau : aucune ecriture", ecr.length===0, ecr.join(" | "));
-  await page.evaluate(()=>{location.hash="#/clients"}); await page.waitForTimeout(1500);
+  await page.evaluate(()=>{location.hash="#/suivi-clients"}); await page.waitForTimeout(1500);   // v84 (ménage du bloc 3) : les alertes regroupées (#alertes-clients) sont dans « Suivi détaillé » (menu Plus)
   const mc = (await page.textContent("#alertes-clients")).replace(/\s+/g," ");
   ok("mes clients : Sarah programme/diete a envoyer", mc.includes("Il manque quelque chose pour") && mc.includes("Sarah Démo (programme, diète)"), mc.slice(0,300));
   /* la fiche de Sarah (v53 : ouverte depuis Mes clients) */
@@ -52,7 +52,7 @@ const server = http.createServer((req,res)=>{if(servirFichier(req,res,HTML))retu
   const c2 = await b.newContext({ viewport:{width:390,height:844} });
   await c2.route("**/*", r => new URL(r.request().url()).hostname === "localhost" ? r.continue() : new URL(r.request().url()).hostname.endsWith(".supabase.co") ? (()=>{ const url=new URL(r.request().url()); const p=url.pathname,q=url.searchParams; let body=[]; if(p.startsWith("/auth/v1/token")) body=F.session(who.id,who.email); else if(p==="/rest/v1/profils"){const id=q.get("id"); body=id?F.profils.filter(x=>x.id===id.slice(3)):F.profils;} else if(p==="/rest/v1/donnees"){ body=F.donnees; const o=q.get("outil"); if(o&&o.startsWith("not.in.(")){const l=o.slice(8,-1).split(","); body=body.filter(x=>!l.includes(x.outil));} const sel=(q.get("select")||"*").split(","); if(!sel.includes("*")) body=body.map(x=>Object.fromEntries(sel.map(k=>[k,x[k]]))); } return r.fulfill({status:200,contentType:"application/json",body:JSON.stringify(body)}); })() : r.abort());
   await c2.addInitScript((s)=>{localStorage.setItem("mhx_session",JSON.stringify(s));localStorage.setItem("mhx_installe","1");localStorage.setItem("mhx_visites","3");},who.session);
-  const p2 = await c2.newPage(); await p2.goto("http://localhost:9666/#/clients"); await p2.waitForTimeout(1500);
+  const p2 = await c2.newPage(); await p2.goto("http://localhost:9666/#/suivi-clients"); await p2.waitForTimeout(1500);   // v84 (ménage du bloc 3) : le tableau complet (#tb-clients) est dans « Suivi détaillé » (menu Plus)
   const disp = await p2.$eval("#tb-clients tr", e=>getComputedStyle(e).display);
   ok("mes clients mobile : lignes en cartes (display block)", disp==="block", disp);
   const largeur = await p2.evaluate(()=>document.documentElement.scrollWidth<=390);

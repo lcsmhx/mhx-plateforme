@@ -13,6 +13,8 @@
       v71 (D) : le tableau ne liste plus les prospects (ligne « Les prospects sont dans Prospects → (n comptes gratuits). ») :
       Léa et Marc se lisent sur leur carte de la page Prospects, les mesures du tableau portent sur les clients ;
       v83 (bloc 3) : la ligne « Les prospects sont dans Prospects → » est supprimée, le nombre se lit sur la page Prospects ;
+      v84 (ménage du bloc 3) : le tableau complet (A, B, C) est dans « Suivi détaillé » (#/suivi-clients), les cartes et l'en-tête
+      « N comptes gratuits » dans « Suivi commercial » (#/suivi-commercial) ; la liste Clients reste seule sur #/clients ;
    D. la connexion ouvre la page d'arrivée : un client, un prospect et le coach dont l'adresse gardait une page (#/formation,
       #/prospects : dernière page ouverte sur l'appareil quand la session a pris fin sans « Se déconnecter ») arrivent sur
       leur page d'arrivée ; « Me reconnecter » (session perdue en cours d'utilisation) ramène sur la page ouverte ;
@@ -610,7 +612,7 @@ const ALERTE59 = (/\n  @supports selector\(:has\(\*\)\)\{[\s\S]*?\n  \}\n/.exec(
   /* v80 (bloc 1) : tout en sombre ; la 2e fois, un ancien choix « clair » est rangé sur l'appareil : il doit être ignoré */
   for (const theme of ["sombre", "clair"]) await bloc("A. Mes clients sur ordinateur (thème " + theme + (theme === "clair" ? " rangé sur l'appareil, ignoré" : "") + ")", async () => {
     const db = avecLignes(decor());
-    const { page } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]", Object.assign({ fuseau: FUSEAU }, theme === "clair" ? { stockage: { mhx_theme: "light" } } : {}));
+    const { page } = await coachSur(b, db, "#/suivi-clients", "#tb-clients [data-ouvrir]", Object.assign({ fuseau: FUSEAU }, theme === "clair" ? { stockage: { mhx_theme: "light" } } : {}));   // v84 (ménage du bloc 3) : le tableau complet est dans « Suivi détaillé »
     const t = " (" + theme + ")";
     if (theme === "sombre") {
       const th = await page.$$eval(".tb-clients-table thead th", l => l.map(e => e.textContent.trim()));
@@ -621,14 +623,19 @@ const ALERTE59 = (/\n  @supports selector\(:has\(\*\)\)\{[\s\S]*?\n  \}\n/.exec(
       /* v71 (D) : Léa et Marc (prospects) n'ont plus de ligne dans le tableau : la ligne sous le titre renvoie à la page Prospects,
          où leurs connexions se lisent sur leur carte (date longue) — lue ici dans un second navigateur du coach */
       const absents = await page.evaluate(ids => ids.map(id => !document.querySelector(`#tb-clients [data-ouvrir="${id}"]`)), [LEA, MARC]);
-      const notePr = await page.$eval("#clients-prospects", e => { const a = e.querySelector("a.link-a"); return { t: e.textContent, lien: a ? a.getAttribute("href") : "", cache: e.hidden }; }).catch(() => ({}));
       /* v83 (bloc 3) : la ligne « Les prospects sont dans Prospects → » est supprimée (décision 7) : absente de Mes clients (dont la
          liste du haut est affichée) ; le nombre de prospects se lit sur la page Prospects (#lc-compte, en-tête « N comptes gratuits · … ») */
-      const sansNote = !(await page.$("#clients-prospects")) && !!(await page.$("#lc-clients"));
       const NB_PR = prospects().filter(p => p.statut === "prospect").length;
-      const xp = await coachSur(b, db, "#/prospects", "#pr-liste", { fuseau: FUSEAU }); await filtre(xp.page, "tous");
+      /* v84 (ménage du bloc 3) : dans le second navigateur, les cartes et l'en-tête « N comptes gratuits » sont dans « Suivi commercial »,
+         « N prospects » sur la liste de la page Prospects ; l'ancienne ligne et la liste Clients se lisent sur #/clients */
+      const xp = await coachSur(b, db, "#/suivi-commercial", "#pr-liste", { fuseau: FUSEAU }); await filtre(xp.page, "tous");
       const Le = await faits(xp.page, LEA), Ma = await faits(xp.page, MARC);
-      const nbP = [await texte(xp.page, "#lc-prospects #lc-compte"), (await texte(xp.page, "#pr-vue .pr-detail .lede")).split(" · ")[0]];
+      const lede = (await texte(xp.page, "#pr-vue .pr-detail .lede")).split(" · ")[0];
+      await aller(xp.page, "#/prospects", 300); await xp.page.waitForSelector("#lc-prospects #lc-compte", { timeout: 10000 }).catch(() => {});
+      const nbP = [await texte(xp.page, "#lc-prospects #lc-compte"), lede];
+      await aller(xp.page, "#/clients", 300); await xp.page.waitForSelector("#lc-clients", { timeout: 10000 }).catch(() => {}); await attendre(xp.page, 300);
+      const notePr = await xp.page.$eval("#clients-prospects", e => { const a = e.querySelector("a.link-a"); return { t: e.textContent, lien: a ? a.getAttribute("href") : "", cache: e.hidden }; }).catch(() => ({}));
+      const sansNote = !(await xp.page.$("#clients-prospects")) && !!(await xp.page.$("#lc-clients"));
       ok("A : date courte à l'heure du coach : compte de test « " + quandCourt(CX_TEST.derniere) + " », Thomas « " + quandCourt(CX_THOMAS.derniere) + " » ; Léa (prospecte) n'est plus dans le tableau ; v83 : plus de ligne « Les prospects sont dans Prospects → », « " + NB_PR + " prospects » sur la page Prospects ; sa carte Prospects garde la date longue « " + quandCoach(CX_LEA.derniere) + " »",
         T["Dernière connexion"] === quandCourt(CX_TEST.derniere) && Th["Dernière connexion"] === quandCourt(CX_THOMAS.derniere) && COURT.test(T["Dernière connexion"]) && absents[0] && NB_PR === 8 && sansNote && notePr.t === undefined && JSON.stringify(nbP) === JSON.stringify([NB_PR + " prospects", NB_PR + " comptes gratuits"]) && Le["Dernière connexion"] === quandCoach(CX_LEA.derniere), JSON.stringify([T["Dernière connexion"], Th["Dernière connexion"], absents, notePr, sansNote, nbP, Le["Dernière connexion"]]));
       ok("A : nombres et « aucune » inchangés (12, 5 ; sur leurs cartes Prospects : Léa 3, Marc « 0 » et « aucune »), info-bulle inchangée", T["Connexions"] === "12" && Th["Connexions"] === "5" && Le["Connexions"] === "3" && Ma["Connexions"] === "0" && Ma["Dernière connexion"] === "aucune" && absents[1] && (await titre(page, TESTEUR.id, "Connexions")) === "Une connexion par jour au plus, comptées depuis le " + jourCoach(CX_TEST.premiere), JSON.stringify([T["Connexions"], Th["Connexions"], Le["Connexions"], Ma]));
@@ -649,7 +656,7 @@ const ALERTE59 = (/\n  @supports selector\(:has\(\*\)\)\{[\s\S]*?\n  \}\n/.exec(
     await page.mouse.move(1, 1);
     ok("A : la page ne déborde pas en largeur" + t + (theme === "clair" ? " ; le thème reste sombre (aucun data-theme)" : ""), !(await deborde(page)) && (await page.getAttribute("html", "data-theme")) === null, await largeur(page));
     if (theme === "sombre") {
-      await aller(page, "#/prospects", 1800); await filtre(page, "tous");
+      await aller(page, "#/suivi-commercial", 1800); await filtre(page, "tous");   // v84 (ménage du bloc 3) : les cartes sont dans « Suivi commercial »
       const fl = await faits(page, LEA);
       ok("A : page Prospects : la carte de Léa garde la date longue (" + quandCoach(CX_LEA.derniere) + ")", fl["Dernière connexion"] === quandCoach(CX_LEA.derniere), JSON.stringify(fl));
       ok("A : aucune écriture, aucune connexion notée pour le coach", db.ecritures.length === 0 && notees(db).length === 0, resume(db));
@@ -659,7 +666,7 @@ const ALERTE59 = (/\n  @supports selector\(:has\(\*\)\)\{[\s\S]*?\n  \}\n/.exec(
   /* =================== B. Mes clients sur tablette =================== */
   await bloc("B. Mes clients sur tablette", async () => {
     const db = avecLignes(decor());
-    const { page } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]", { viewport: TABLETTE, fuseau: FUSEAU });
+    const { page } = await coachSur(b, db, "#/suivi-clients", "#tb-clients [data-ouvrir]", { viewport: TABLETTE, fuseau: FUSEAU });   // v84 (ménage du bloc 3) : le tableau complet est dans « Suivi détaillé »
     const ids = [TESTEUR.id, F.IDS.c1, F.IDS.c2];   // v71 (D) : Sarah à la place de Léa (prospecte, plus dans le tableau)
     const g0 = await geo(page, ids, 0);
     await capture(page, "B-820-debut");
@@ -676,7 +683,7 @@ const ALERTE59 = (/\n  @supports selector\(:has\(\*\)\)\{[\s\S]*?\n  \}\n/.exec(
   /* =================== C. Mes clients sur téléphone =================== */
   await bloc("C. Mes clients sur téléphone", async () => {
     const db = avecLignes(decor());
-    const { page } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]", { viewport: TEL, fuseau: FUSEAU });
+    const { page } = await coachSur(b, db, "#/suivi-clients", "#tb-clients [data-ouvrir]", { viewport: TEL, fuseau: FUSEAU });   // v84 (ménage du bloc 3) : le tableau complet est dans « Suivi détaillé »
     await page.$eval(`#tb-clients [data-ouvrir="${TESTEUR.id}"]`, bt => bt.closest("tr").scrollIntoView({ block: "center" }));
     await capture(page, "C-375");
     const c = await page.$eval(`#tb-clients [data-ouvrir="${TESTEUR.id}"]`, bt => { const tr = bt.closest("tr"); return { l: Array.from(tr.querySelectorAll("td")).filter(td => td.getBoundingClientRect().height > 0).map(td => ({ l: td.dataset.l, avant: getComputedStyle(td, "::before").content, t: td.textContent.trim() })), pos: getComputedStyle(tr.querySelector("td")).position }; });
@@ -705,7 +712,7 @@ const ALERTE59 = (/\n  @supports selector\(:has\(\*\)\)\{[\s\S]*?\n  \}\n/.exec(
     const cartes = pg => pg.evaluate(() => { const sc = document.querySelector(".tb-clients-table").closest(".scroll"); const trop = Array.from(document.querySelectorAll("#tb-clients td")).filter(td => td.scrollWidth > td.clientWidth + 1).map(td => ((td.closest("tr").querySelector("td b") || {}).textContent || "?") + " / " + (td.dataset.l || "Client") + " : " + td.scrollWidth + " pour " + td.clientWidth); return { cadre: sc.scrollWidth + "/" + sc.clientWidth, defile: sc.scrollWidth > sc.clientWidth + 1, trop }; });
     const k375 = await cartes(page);
     ok("C : v58 : 375 px : aucune carte ne déborde (nom et pastilles repliés dans la carte), le tableau ne défile pas de côté", !k375.defile && k375.trop.length === 0, JSON.stringify(k375).slice(0, 400));
-    const x320 = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]", { viewport: { width: 320, height: 700 }, fuseau: FUSEAU });
+    const x320 = await coachSur(b, db, "#/suivi-clients", "#tb-clients [data-ouvrir]", { viewport: { width: 320, height: 700 }, fuseau: FUSEAU });   // v84 (ménage du bloc 3) : le tableau complet est dans « Suivi détaillé »
     const k320 = await cartes(x320.page);
     await x320.page.$eval(`#tb-clients [data-ouvrir="${TESTEUR.id}"]`, bt => bt.closest("tr").scrollIntoView({ block: "start" })); await capture(x320.page, "C-320-test");   // v71 (D) : le compte de test (Léa, prospecte, n'a plus de ligne)
     ok("C : v58 : 320 px : aucune carte ne déborde (pastilles repliées), le tableau ne défile pas de côté", !k320.defile && k320.trop.length === 0, JSON.stringify(k320).slice(0, 400));
@@ -762,7 +769,7 @@ const ALERTE59 = (/\n  @supports selector\(:has\(\*\)\)\{[\s\S]*?\n  \}\n/.exec(
     const resultat = r => r.trop.join(" ; ").slice(0, 700);
     const nomVu = (r, n) => Object.values(r.vus).every(B => B.o.qui.txt === n);
     /* le coach (#/clients), son nom suivi de « · coach » ; puis le témoin d'enregistrement affiché (il ne s'efface pas seul) */
-    const x1 = await coachSur(b, decor(), "#/clients", "#tb-clients [data-ouvrir]", TEL0);
+    const x1 = await coachSur(b, decor(), "#/clients", "#lc-clients", TEL0);   // v84 (ménage du bloc 3) : #/clients ne montre plus que la liste Clients (le tableau est dans « Suivi détaillé »)
     const r1 = await tourBarre(x1.page, pg => pg.evaluate(() => majEtat("")));
     ok("E : coach (#/clients) " + LIB + " : la page ne déborde pas ; EN et « Se déconnecter » entiers, sur une ligne, dans la barre, cliquables, 44 px de haut (v80) ; le nom n'est pas dans la barre (v76)", r1.trop.length === 0 && nomVu(r1, "Coach Démo · coach"), resultat(r1));
     const r1a = await tourBarre(x1.page, pg => pg.evaluate(() => majEtat("enregistrement")));

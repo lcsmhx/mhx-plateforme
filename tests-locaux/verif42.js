@@ -3,6 +3,9 @@
    le lui permet). Ce test crée trois clients fictifs aux données piégées et
    parcourt tous les écrans, côté coach et côté client : aucune erreur JS, et
    le tableau de bord du coach continue d'afficher les autres clients.
+   v84 (ménage du bloc 3) : le tableau « Suivi de mes clients » (#tb-clients) et les comptes ont quitté la page Clients pour
+   « Suivi détaillé » (#/suivi-clients) et « Comptes » (#/comptes) : le coach passe par les trois pages (mêmes données piégées,
+   même contrôle « aucune erreur JS ») et les lignes du tableau sont lues dans « Suivi détaillé ». Même nombre (20).
    Usage : node verif42.js ../index.html                                          */
 const { chromium } = require("playwright"); const fs = require("fs"); const http = require("http"); const path = require("path");
 const F = require("./fixtures"); const HTML = path.resolve(process.argv[2] || "../index.html");
@@ -113,8 +116,12 @@ const PAGES_FICHE = ["accueil", "bilan", "suivi", "profil", "programme", "journa
     /* v53 (chantier 4) : 2 tuiles (Clients, Prospects) ; Thomas (bilan à lire) et Julien (inactif) sont dans « À traiter maintenant » */
     ok("coach : le tableau de bord s'affiche et montre les clients sains (Thomas, Julien)", !!(await page.$("#tb-t-clients")) && /Thomas|Julien/.test(tb), tb.slice(0, 160));
     E.ici = "coach mes clients"; await page.evaluate(() => { location.hash = "#/clients"; }); await attendre(page, 2200);
+    /* v84 (ménage du bloc 3) : ce que la page Clients dessinait sous sa liste est dans « Comptes » et « Suivi détaillé » : le coach
+       les ouvre aussi (aucune erreur JS attendue), et le tableau #tb-clients est lu dans « Suivi détaillé » */
+    E.ici = "coach comptes"; await page.evaluate(() => { location.hash = "#/comptes"; }); await attendre(page, 2200);
+    E.ici = "coach suivi détaillé"; await page.evaluate(() => { location.hash = "#/suivi-clients"; }); await attendre(page, 2200);
     const lignes = await page.$$eval("#tb-clients tr", l => l.map(x => x.textContent));
-    ok("coach : « Mes clients » liste les 3 clients sains ET les 3 piégés", ["Thomas", "Sarah", "Julien", "Types", "Contenus", "Listes"].every(n => lignes.some(t => t.includes(n))), lignes.length + " lignes");
+    ok("coach : « Mes clients » (v84 : son tableau, dans « Suivi détaillé ») liste les 3 clients sains ET les 3 piégés", ["Thomas", "Sarah", "Julien", "Types", "Contenus", "Listes"].every(n => lignes.some(t => t.includes(n))), lignes.length + " lignes");
     for (const [id, g] of Object.entries(pieges)) {
       const nom = g.nom.join(" ");
       for (const pg of PAGES_FICHE) {
@@ -124,7 +131,7 @@ const PAGES_FICHE = ["accueil", "bilan", "suivi", "profil", "programme", "journa
         await page.evaluate(() => { location.hash = "#/clients"; }); await attendre(page, 250);
       }
     }
-    ok("coach : aucune erreur JS sur le tableau, Mes clients et les 30 pages des fiches piégées", E.js.length === 0, E.js.length + " erreur(s) : " + E.js.slice(0, 12).join(" | "));
+    ok("coach : aucune erreur JS sur le tableau, Mes clients (v84 : et Comptes, Suivi détaillé) et les 30 pages des fiches piégées", E.js.length === 0, E.js.length + " erreur(s) : " + E.js.slice(0, 12).join(" | "));
     ok("coach : aucune écriture en parcourant les fiches", E.ecritures.length === 0, E.ecritures.slice(0, 5).join(" | "));
     await c.close();
   }

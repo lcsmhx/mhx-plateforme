@@ -30,6 +30,11 @@
    dans l'ordre de TEXTES.md) ; tout le reste du Profil reste comparé strictement. Nombre de ✓ inchangé (137).
    v83 (bloc 3) : le badge des Nouveautés est vérifié sur ses deux copies (#nav et #barre-bas) ; bloc J : la fiche de Thomas,
    réorganisée (en-tête, onglets Suivi / Compte), est comparée à la référence morceau par morceau. Nombre de ✓ inchangé (137).
+   v84 (ménage du bloc 3) : l'écran d'avant quitte les pages Clients et Prospects : cartes, compteurs, filtres, recherche, tri,
+   export et fiches ouvertes depuis une carte sont lus dans « Suivi commercial » (#/suivi-commercial) ; les Nouveautés restent
+   sur #/prospects (sous la liste) ; H et I mesurent / regardent les deux pages ; Thomas tape aussi #/suivi-commercial et
+   #/newsletter ; J ouvre la fiche de Thomas et lit sa ligne dans « Suivi détaillé » (#/suivi-clients ; la référence, là où elle
+   les a), avec une différence voulue déclarée (le bouton « Revenir au suivi détaillé » du bandeau). Nombre de ✓ inchangé (137).
    Usage : node verif52.js ../index.html
            VERIF52_PORT=9700 node verif52.js ../index.html     (autre port, si 9682 est pris)
            VERIF52_BLOCS="G.,H. journal" node verif52.js …     (seulement les blocs dont le nom commence ainsi) */
@@ -374,7 +379,9 @@ const ENTETES = ["Nom", "Email", "Inscrit le", "Découverte", "Objectif", "Statu
 const lienPour = (prenom, nom, email) => CAL + "?utm_source=app&utm_medium=coach&utm_content=fiche_coach&name=" + encodeURIComponent([prenom, nom].filter(Boolean).join(" ")) + "&first_name=" + encodeURIComponent(prenom) + (nom ? "&last_name=" + encodeURIComponent(nom) : "") + (email ? "&email=" + encodeURIComponent(email) : "");
 /* la fiche d'un prospect, ouverte depuis sa carte (filtre « Tous ») */
 async function ouvrirFiche(page, uid){
-  if (!(await page.$("#pr-vue"))) { await aller(page, "#/prospects", 2200); }
+  /* v84 (ménage du bloc 3) : les cartes sont dans « Suivi commercial » ; #pr-vue existe aussi sur la page Prospects (liste seule) :
+     on attend les cartes (#pr-liste), à leur nouvelle place */
+  if (!(await page.$("#pr-liste"))) { await aller(page, "#/suivi-commercial", 2200); }
   await filtre(page, "tous");
   await page.click(`#pr-liste .sc-carte[data-uid="${uid}"] [data-sc="fiche"]`);
   await page.waitForSelector("#fiche-reponses", { timeout: 6000 }); await attendre(page, 500);   // v53 (chantier 4) : #fiche-score n'existe plus
@@ -389,7 +396,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
   await bloc("A. compteurs", async () => {
     const db = base();
     const { page } = await contexte(b, coach, db);
-    await page.goto(`http://localhost:${PORT}/#/prospects`); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 }); await attendre(page, 800);
+    await page.goto(`http://localhost:${PORT}/#/suivi-commercial`); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 }); await attendre(page, 800);   // v84 (ménage du bloc 3) : cartes, filtres, compteurs et export dans « Suivi commercial » (avant : #/prospects)
     /* v53 (chantier 4) : plus de score ni de température : l'en-tête (« 1 nouveau, 1 chaud… score moyen »), les tuiles
        Nouveaux / Chauds / Score moyen, les boutons de statut et l'ordre « À traiter » d'avant, les scores et statuts des cartes
        d'Inès et de Zoé sont retirés (6) ; la nouvelle page est vérifiée par verif58 (blocs C et D) */
@@ -397,7 +404,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     const cp = await carte(page, PIEGE);
     ok("carte piégée : le nom « =1+1 <img …> » et l'email « @piege.fr » restent du texte, aucune injection", cp.includes("=1+1 " + XSS) && cp.includes("@piege.fr") && !(await xss(page)), cp.slice(0, 200));
     await page.screenshot({ path: path.join(OUT, "prospects-desktop.png"), fullPage: true });
-    ok("aucune écriture à l'affichage de la page Prospects", db.ecritures.length === 0, JSON.stringify(db.ecritures).slice(0, 200));
+    ok("aucune écriture à l'affichage de la page Prospects (v84 : son écran détaillé, « Suivi commercial »)", db.ecritures.length === 0, JSON.stringify(db.ecritures).slice(0, 200));
   });
 
   /* v53 (chantier 4) : bloc « A. filtres » retiré (19 vérifications) — filtres de statut NOUVEAU / CHAUD / TIÈDE / FROID,
@@ -406,7 +413,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
   await bloc("A. recherche et tri", async () => {
     const db = base();
     const { page } = await contexte(b, coach, db);
-    await page.goto(`http://localhost:${PORT}/#/prospects`); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 }); await attendre(page, 500);
+    await page.goto(`http://localhost:${PORT}/#/suivi-commercial`); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 }); await attendre(page, 500);   // v84 (ménage du bloc 3) : cartes, filtres, compteurs et export dans « Suivi commercial » (avant : #/prospects)
     await filtre(page, "tous");
     await page.evaluate(() => { document.getElementById("pr-q").__marque = 1; });
     await page.click("#pr-q"); await page.keyboard.type("émi", { delay: 60 }); await attendre(page, 600);
@@ -429,7 +436,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
   await bloc("A. boutons des cartes après un filtre", async () => {
     const db = base();
     const { page } = await contexte(b, coach, db);
-    await page.goto(`http://localhost:${PORT}/#/prospects`); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 }); await attendre(page, 500);
+    await page.goto(`http://localhost:${PORT}/#/suivi-commercial`); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 }); await attendre(page, 500);   // v84 (ménage du bloc 3) : cartes, filtres, compteurs et export dans « Suivi commercial » (avant : #/prospects)
     await filtre(page, "issues"); await filtre(page, "tous");   // v53 : plus de filtres Froids / Tièdes
     await page.click(`#pr-liste .sc-carte[data-uid="${EMILIE}"] [data-sc="relance"]`); await attendre(page, 2600);
     const S = contenu(db, "suivi_prospect", EMILIE) || {};
@@ -448,7 +455,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
       [F.IDS.c2, "suivi_prospect", { version: 1, issue: "signe", issue_le: midiIlYA(10), historique: [{ type: "issue", valeur: "signe", le: midiIlYA(10) }] }, midiIlYA(10)],
       [F.IDS.c3, "suivi_prospect", { version: 1, issue: "signe", issue_le: midiIlYA(45), historique: [{ type: "issue", valeur: "signe", le: midiIlYA(45) }] }, midiIlYA(45)] ] });
     const { page } = await contexte(b, coach, db);
-    await page.goto(`http://localhost:${PORT}/#/prospects`); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 }); await attendre(page, 500);
+    await page.goto(`http://localhost:${PORT}/#/suivi-commercial`); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 }); await attendre(page, 500);   // v84 (ménage du bloc 3) : cartes, filtres, compteurs et export dans « Suivi commercial » (avant : #/prospects)
     const ts = await tuiles(page, "#pr-vue");
     ok("tuiles sur 30 jours : Signés 2 (Sam il y a 2 jours ; Sarah, cliente signée il y a 10 jours), Perdus 1 (Hugo ; Victor, perdu il y a 40 jours, ne compte plus), Absents 1 (Alice) ; Julien, signé il y a 45 jours, ne compte plus", tuile(ts, "Signés") === "2" && tuile(ts, "Perdus") === "1" && tuile(ts, "Absents") === "1", JSON.stringify(ts));
     const meta = await page.$$eval("[data-filtre]", l => Object.fromEntries(l.map(bt => [bt.dataset.filtre, (bt.querySelector(".meta") || {}).textContent]))).catch(() => ({}));
@@ -472,7 +479,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
   await bloc("B. export CSV", async () => {
     const db = base();
     const { page } = await contexte(b, coach, db);
-    await page.goto(`http://localhost:${PORT}/#/prospects`); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 }); await attendre(page, 500);
+    await page.goto(`http://localhost:${PORT}/#/suivi-commercial`); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 }); await attendre(page, 500);   // v84 (ménage du bloc 3) : cartes, filtres, compteurs et export dans « Suivi commercial » (avant : #/prospects)
     await filtre(page, "tous");   // v53 : « À traiter » a changé de définition (sans température) : l'export porte sur « Tous »
     const { nom, t } = await exporter(page); await attendre(page, 300);
     const csv = lireCSV(t.replace(/^﻿/, ""));
@@ -501,7 +508,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     const PROSPECTS_C = PROSPECTS.map(x => x.id !== INES ? x : Object.assign({}, x, { donnees: x.donnees.map(([o, c, m]) => o !== "challenge" ? [o, c, m] : [o, Object.assign({}, c, { cta: { clics: c.cta.clics.concat([{ jour: 1, source: "apres_questionnaire", date: CLIC_NOUVEAU }]) } }), m]) }));
     const db = base({ prospects: PROSPECTS_C, journal: JOURNAL });
     const { page } = await contexte(b, coach, db);
-    await page.goto(`http://localhost:${PORT}/#/prospects`); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 }); await attendre(page, 400);
+    await page.goto(`http://localhost:${PORT}/#/suivi-commercial`); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 }); await attendre(page, 400);   // v84 (ménage du bloc 3) : cartes, filtres, compteurs et export dans « Suivi commercial » (avant : #/prospects)
     await ouvrirFiche(page, INES);
     /* v53 (chantier 4) : bloc « Score de qualification » retiré (1) */
     const rep = await lignesLi(page, "#fiche-reponses"), repM = Object.fromEntries(rep);
@@ -552,19 +559,19 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
   await bloc("C. fiches de Léa, Zoé et du prospect piégé", async () => {
     const db = base();
     const { page } = await contexte(b, coach, db);
-    await page.goto(`http://localhost:${PORT}/#/prospects`); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 }); await attendre(page, 400);
+    await page.goto(`http://localhost:${PORT}/#/suivi-commercial`); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 }); await attendre(page, 400);   // v84 (ménage du bloc 3) : cartes, filtres, compteurs et export dans « Suivi commercial » (avant : #/prospects)
     await ouvrirFiche(page, LEA);
     const lienL = await page.$eval("#dc-lien", e => e.value).catch(() => "");
     /* v52 : rien répondu = nouveau questionnaire court, 3 questions (avant : « 0/10 réponses ») */
     ok("Léa (rien fait) : « 0 / 3 réponses, pas encore validé. » (v53 : plus de score), chronologie « Inscription » seule", (await texte(page, "#fiche-reponses p.note")) === "0 / 3 réponses, pas encore validé." && JSON.stringify((await chrono(page)).map(x => x.t)) === '["Inscription"]', await texte(page, "#fiche-reponses p.note"));
     ok("Léa sans email : lien avec son prénom et son nom, sans email (" + lienPour("Léa", "Martin", "") + "), pas de mailto, « Email inconnu : il apparaît quand le prospect a commencé son questionnaire. »", lienL === lienPour("Léa", "Martin", "") && !(await page.$("#dc-mail")) && (await texte(page, "#fiche-actions")).includes("Email inconnu : il apparaît quand le prospect a commencé son questionnaire."), lienL);
-    await aller(page, "#/prospects", 2000);
+    await aller(page, "#/suivi-commercial", 2000);   // v84 (ménage du bloc 3) : retour aux cartes, dans « Suivi commercial » (avant : #/prospects)
     await ouvrirFiche(page, ZOE);
     /* v53 (chantier 4) : score de Zoé retiré (1) */
     const cz = (await chrono(page)).map(x => x.t);
     ok("Zoé, chronologie : questionnaire commencé, inscription (v53 : plus d'emails de suivi dans la chronologie)", JSON.stringify(cz) === JSON.stringify(["Questionnaire commencé", "Inscription"]), JSON.stringify(cz));
     ok("Zoé : réponses « 5 / 10 réponses, pas encore validé. », mailto vers zoe.bernard@exemple.fr", (await texte(page, "#fiche-reponses p.note")) === "5 / 10 réponses, pas encore validé." && ((await page.getAttribute("#dc-mail", "href").catch(() => "")) || "").startsWith("mailto:zoe.bernard%40exemple.fr?"), await texte(page, "#fiche-reponses p.note"));
-    await aller(page, "#/prospects", 2000);
+    await aller(page, "#/suivi-commercial", 2000);   // v84 (ménage du bloc 3) : idem
     await ouvrirFiche(page, PIEGE);
     const cp = (await chrono(page)).map(x => x.t);
     const lienP = await page.$eval("#dc-lien", e => e.value).catch(() => "");
@@ -963,12 +970,20 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     const db = base({ nb: 1000 });
     const { page } = await contexte(b, coach, db);
     await page.goto(`http://localhost:${PORT}/#/tableau`); await page.waitForSelector("#tb-vue .tb-tiles", { timeout: 15000 }); await attendre(page, 400);   // v53 : 2 tuiles, sans panneau
+    /* v84 (ménage du bloc 3) : les Nouveautés restent sur la page Prospects (sous la liste #lc-prospects) ; les cartes sont dans
+       « Suivi commercial ». Chaque page est mesurée depuis son changement d'adresse jusqu'à son contenu complet (Prospects : liste
+       ET Nouveautés ; Suivi commercial : cartes), et construite côté app (rendreListe, rendre) : chacune < 2 000 ms */
     const t0 = Date.now();
     await page.evaluate(() => { location.hash = "#/prospects"; });
-    await page.waitForSelector("#pr-liste .sc-carte", { timeout: 15000 }); await page.waitForSelector("#pr-nouveautes .nv-panneau", { timeout: 15000 });
-    const total = Date.now() - t0;   // changement d'adresse → cartes ET Nouveautés (calculées après coup) affichées
+    await page.waitForSelector("#lc-prospects .lc-ligne", { timeout: 15000 }); await page.waitForSelector("#pr-nouveautes .nv-panneau", { timeout: 15000 });
+    const totalL = Date.now() - t0;   // changement d'adresse → liste ET Nouveautés (calculées après coup) affichées
+    const appL = await page.evaluate(() => { const z = document.getElementById("pr-vue"); const t = performance.now(); outilProspects.rendreListe(z); return Math.round(performance.now() - t); }).catch(() => 99999);
+    const t1 = Date.now();
+    await page.evaluate(() => { location.hash = "#/suivi-commercial"; });
+    await page.waitForSelector("#pr-liste .sc-carte", { timeout: 15000 });
+    const total = Date.now() - t1;   // changement d'adresse → cartes affichées
     const app = await page.evaluate(() => { const z = document.getElementById("pr-vue"); const t = performance.now(); outilProspects.rendre(z); return Math.round(performance.now() - t); }).catch(() => 99999);
-    ok(`1 008 prospects : page complète (cartes et Nouveautés) en ${total} ms depuis le changement d'adresse, construite en ${app} ms côté app (chacun < 2 000)`, total < 2000 && app < 2000, "complet " + total + " ms · app " + app + " ms");
+    ok(`1 008 prospects : page complète depuis le changement d'adresse et construite côté app, chacun < 2 000 ms (v84 : Prospects, liste et Nouveautés, en ${totalL} ms, construite en ${appL} ms ; Suivi commercial, cartes, en ${total} ms, construit en ${app} ms)`, total < 2000 && app < 2000 && totalL < 2000 && appL < 2000, "Prospects " + totalL + " ms · app " + appL + " ms · Suivi commercial " + total + " ms · app " + app + " ms");
     ok("1 008 prospects : « 1008 comptes gratuits », badge « 99+ »", (await texte(page, "#pr-vue .masthead .lede")).startsWith("1008 comptes gratuits") && JSON.stringify(await badge(page)) === badge2("99+") /* v83 (bloc 3) : badge en double */, (await texte(page, "#pr-vue .masthead .lede")) + " · " + JSON.stringify(await badge(page)));
     const tf = await page.evaluate(() => { const t = performance.now(); document.querySelector('[data-filtre="tous"]').click(); return Math.round(performance.now() - t); });
     ok(`filtre « Tous » en ${tf} ms : 50 cartes, « Afficher 50 de plus (958 restants) », « 1008 prospects »`, tf < 2000 && (await page.$$("#pr-liste .sc-carte")).length === 50 && (await texte(page, "#pr-plus")) === "Afficher 50 de plus (958 restants)" && (await texte(page, "#pr-compte")) === "1008 prospects", (await texte(page, "#pr-plus")) + " · " + (await texte(page, "#pr-compte")));
@@ -998,8 +1013,12 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
   await bloc("I. mobile 390 px", async () => {
     const db = base();
     const { page } = await contexte(b, coach, db, { viewport: { width: 390, height: 844 } });
-    await page.goto(`http://localhost:${PORT}/#/prospects`); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 }); await attendre(page, 600);
-    ok("mobile 390 px, page Prospects (compteurs, filtres, recherche, Nouveautés, cartes) : aucun débordement horizontal", !(await deborde(page)) && !!(await page.$("#pr-nouveautes .nv-panneau")), String(await page.evaluate(() => document.documentElement.scrollWidth)));
+    /* v84 (ménage du bloc 3) : la page Prospects garde la liste et les Nouveautés ; compteurs, filtres, recherche détaillée et cartes
+       sont dans « Suivi commercial » : les deux pages, chacune sans débordement, Nouveautés présentes sur la page Prospects */
+    await page.goto(`http://localhost:${PORT}/#/prospects`); await page.waitForSelector("#lc-prospects .lc-ligne", { timeout: 8000 }); await page.waitForSelector("#pr-nouveautes .nv-panneau", { timeout: 8000 }); await attendre(page, 600);
+    const debL = await deborde(page), largL = await page.evaluate(() => document.documentElement.scrollWidth), nvL = !!(await page.$("#pr-nouveautes .nv-panneau"));
+    await aller(page, "#/suivi-commercial", 600); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 }); await attendre(page, 600);
+    ok("mobile 390 px, page Prospects (compteurs, filtres, recherche, Nouveautés, cartes) : aucun débordement horizontal (v84 : Prospects avec la liste et les Nouveautés, puis Suivi commercial avec compteurs, filtres, recherche et cartes)", !debL && nvL && !(await deborde(page)), "Prospects " + largL + " · Nouveautés " + nvL + " · Suivi commercial " + String(await page.evaluate(() => document.documentElement.scrollWidth)));
     await filtre(page, "tous");
     ok("mobile : filtre « Tous » (8 cartes, dont la piégée), toujours sans débordement", (await uids(page)).length === 8 && !(await deborde(page)), String(await page.evaluate(() => document.documentElement.scrollWidth)));
     const bb = await page.$$eval('#barre-bas a[data-id="prospects"] .nav-badge, #nav a[data-id="prospects"] .nav-badge', l => l.map(e => e.textContent.trim())).catch(() => []);
@@ -1042,8 +1061,11 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     ok("client Thomas (programme, nutrition, formation, profil, arrière-plan, fermeture) : aucune écriture, aucune lecture d'activite, emails ni coach_notifs, aucun appel au journal des emails", a.db.ecritures.length === 0 && lu(a.db, "activite") + lu(a.db, "emails") + lu(a.db, "coach_notifs") === 0 && !a.db.chemins.some(x => x.includes("emails_prospects")), JSON.stringify(a.db.ecritures.map(e => e.outil)) + " " + JSON.stringify(a.db.lectures.map(x => x.outil)));
     await aller(a.page, "#/profil", 1800);
     ok("client Thomas : pas de bloc « Emails de suivi » dans son Profil, pas d'onglet Prospects", !(await a.page.$("#mc-emails-bloc, #mc-emails")) && !(await a.page.$('#nav a[data-id="prospects"]')));
-    await aller(a.page, "#/prospects", 1800);
-    ok("client Thomas tape #/prospects : rien du tableau de bord prospects", !(await a.page.$("#pr-vue, #pr-liste, .nv-panneau")));
+    /* v84 (ménage du bloc 3) : le tableau de bord prospects est maintenant réparti sur #/prospects, #/suivi-commercial et
+       #/newsletter : Thomas tape chacune des trois adresses, rien n'apparaît */
+    const rien = [];
+    for (const h of ["#/prospects", "#/suivi-commercial", "#/newsletter"]) { await aller(a.page, h, 1800); rien.push(!(await a.page.$("#pr-vue, #pr-liste, .nv-panneau, #pr-newsletter, #pr-nl"))); }
+    ok("client Thomas tape #/prospects : rien du tableau de bord prospects (v84 : ni #/suivi-commercial, ni #/newsletter)", rien.every(Boolean), JSON.stringify(rien));
     await a.c.close();
     if (!REF) { ok("référence " + REF_NOM + " (git show " + REF_NOM + ":index.html) introuvable : comparaison impossible", false, "git show a échoué"); return; }
     /* v59 (relecture) : avec les interrupteurs du fichier testé, des deux côtés (voir avecNouveautesFichier) */
@@ -1101,8 +1123,13 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
   await bloc("J. fiche d'un client et Mes clients", async () => {
     if (!REF) { ok("référence " + REF_NOM + " (git show " + REF_NOM + ":index.html) introuvable : comparaison impossible", false, "git show a échoué"); return; }
     const ouvrir = async (page) => { await page.click(`[data-ouvrir="${F.IDS.c1}"]`); await attendre(page, 2600); };
+    /* v84 (ménage du bloc 3) : le tableau complet (#tb-clients, ses boutons [data-ouvrir]) a quitté #/clients pour « Suivi détaillé »
+       (#/suivi-clients) : la page testée l'ouvre là ; la référence l'ouvre là où elle l'a (#/clients tant que la v84 n'est pas sur
+       main : reconnu à l'absence d'outilSuiviClients dans son js/liste-outils.js ; ensuite #/suivi-clients des deux côtés) */
+    const REF_V84 = (() => { try { return lireRef("js/liste-outils.js").includes("outilSuiviClients"); } catch (e) { return false; } })();
+    const ADR_REF = REF_V84 ? "#/suivi-clients" : "#/clients";
     /* v59 (relecture) : avec les interrupteurs du fichier testé, des deux côtés (voir avecNouveautesFichier) */
-    const [f, fM] = await avecNouveautesFichier(async () => [await vueDe(coach, `http://localhost:${PORT}/#/clients`, ouvrir), await vueDe(coach, `http://localhost:${PORT}/?ref=main#/clients`, ouvrir)]);
+    const [f, fM] = await avecNouveautesFichier(async () => [await vueDe(coach, `http://localhost:${PORT}/#/suivi-clients`, ouvrir), await vueDe(coach, `http://localhost:${PORT}/?ref=main` + ADR_REF, ouvrir)]);
     /* v72 (A) : la ligne « Téléphone : … » de l'en-tête de la fiche (Thomas n'a pas de numéro : « — ») est une différence VOULUE
        avec main tant que la v72 n'y est pas : présente, retirée du texte comparé (ensuite des deux côtés : comparaison stricte) */
     /* v72 (F) : de même, la ligne « Source : — » (Thomas n'est pas arrivé par un lien avec code) */
@@ -1140,8 +1167,16 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
           reste: reste.join(" | ") } };
     });
     const mf = await morceaux(f.page), mfM = await morceaux(fM.page);
-    const comF = JSON.stringify(mf.commun), comM = JSON.stringify(Object.assign({}, mfM.commun, { reste: FORM_V77(mfM.commun.reste) }));
-    ok("fiche de Thomas vue par le coach : sections identiques à main (" + f.h2.join(", ") + ") ; v83 : chaque morceau d'avant identique à main à sa nouvelle place (bandeau dans l'onglet Suivi, nom, phrase, alertes, de « En bref » à « Le reste »), en-tête de la fiche (nom seul, « Client », programme, « Préparer le call », onglets) ; v72 : Téléphone « — » et Source « — », présents (onglet Compte) ; v77 : formation sur 48 étapes", f.t.length > 300 && mf.neuf && !mf.bandeauHaut && comF === comM && mf.commun.h1 === "Thomas Démo" && !!mf.commun.bandeau && mf.commun.bandeau.startsWith("Fiche de Thomas Démo") && mf.commun.reste.startsWith("En bref") && mf.commun.reste.includes("Le reste") && mf.commun.tel === "—" && mf.commun.source === "—" && mf.telLbl === "Téléphone" && mf.sourceLbl === "Source" && mf.role === "Client" && !!mf.prog && fM.t.includes("Nom" + mf.prog) && mf.call === "#/client/" + F.IDS.c1 + "/bilan" && JSON.stringify(mf.onglets) === '["suivi:true","compte:false"]' && JSON.stringify(f.h2) === JSON.stringify(fM.h2), f.t.length + " / " + fM.t.length + " · " + JSON.stringify(f.h2) + " vs " + JSON.stringify(fM.h2) + " · " + JSON.stringify({ neuf: mf.neuf, bandeauHaut: mf.bandeauHaut, telLbl: mf.telLbl, sourceLbl: mf.sourceLbl, role: mf.role, prog: mf.prog, call: mf.call, onglets: mf.onglets }) + " · " + (() => { const x = comF, y = comM; let k = 0; while (k < x.length && x[k] === y[k]) k++; return JSON.stringify(x.slice(Math.max(0, k - 40), k + 60)) + " ≠ " + JSON.stringify(y.slice(Math.max(0, k - 40), k + 60)); })());
+    /* v84 (ménage du bloc 3) : différence VOULUE, le bouton de retour du bandeau nomme la page d'où la fiche est ouverte : « Revenir
+       au suivi détaillé » (page testée, ouverte depuis #/suivi-clients) ; « Revenir à mes clients » dans la référence tant qu'elle
+       l'ouvre depuis #/clients. Chaque libellé est vérifié exactement à la fin de son bandeau, puis remplacé par un repère des deux
+       côtés ; tout le reste du bandeau reste comparé strictement. Une fois la v84 sur main : le même libellé des deux côtés. */
+    const RETOUR_V84 = "Revenir au suivi détaillé", RETOUR_REF = REF_V84 ? RETOUR_V84 : "Revenir à mes clients";
+    const finRetour = (c, lib) => !!c.bandeau && c.bandeau.endsWith(" " + lib);
+    const sansRetour = (c, lib) => Object.assign({}, c, { bandeau: finRetour(c, lib) ? c.bandeau.slice(0, -lib.length) + "[revenir]" : c.bandeau });
+    const retours = { page: finRetour(mf.commun, RETOUR_V84), ref: finRetour(mfM.commun, RETOUR_REF) };
+    const comF = JSON.stringify(sansRetour(mf.commun, RETOUR_V84)), comM = JSON.stringify(Object.assign({}, sansRetour(mfM.commun, RETOUR_REF), { reste: FORM_V77(mfM.commun.reste) }));
+    ok("fiche de Thomas vue par le coach : sections identiques à main (" + f.h2.join(", ") + ") ; v83 : chaque morceau d'avant identique à main à sa nouvelle place (bandeau dans l'onglet Suivi, nom, phrase, alertes, de « En bref » à « Le reste »), en-tête de la fiche (nom seul, « Client », programme, « Préparer le call », onglets) ; v72 : Téléphone « — » et Source « — », présents (onglet Compte) ; v77 : formation sur 48 étapes ; v84 : ouverte depuis « Suivi détaillé », « Revenir au suivi détaillé » (référence : « Revenir à mes clients » tant qu'elle l'ouvre depuis #/clients)", f.t.length > 300 && mf.neuf && !mf.bandeauHaut && comF === comM && mf.commun.h1 === "Thomas Démo" && !!mf.commun.bandeau && mf.commun.bandeau.startsWith("Fiche de Thomas Démo") && mf.commun.reste.startsWith("En bref") && mf.commun.reste.includes("Le reste") && mf.commun.tel === "—" && mf.commun.source === "—" && mf.telLbl === "Téléphone" && mf.sourceLbl === "Source" && mf.role === "Client" && !!mf.prog && fM.t.includes("Nom" + mf.prog) && mf.call === "#/client/" + F.IDS.c1 + "/bilan" && JSON.stringify(mf.onglets) === '["suivi:true","compte:false"]' && JSON.stringify(f.h2) === JSON.stringify(fM.h2) && retours.page && retours.ref, "retours " + JSON.stringify(retours) + " · " + f.t.length + " / " + fM.t.length + " · " + JSON.stringify(f.h2) + " vs " + JSON.stringify(fM.h2) + " · " + JSON.stringify({ neuf: mf.neuf, bandeauHaut: mf.bandeauHaut, telLbl: mf.telLbl, sourceLbl: mf.sourceLbl, role: mf.role, prog: mf.prog, call: mf.call, onglets: mf.onglets }) + " · " + (() => { const x = comF, y = comM; let k = 0; while (k < x.length && x[k] === y[k]) k++; return JSON.stringify(x.slice(Math.max(0, k - 40), k + 60)) + " ≠ " + JSON.stringify(y.slice(Math.max(0, k - 40), k + 60)); })());
     ok("fiche de Thomas : ni score, ni réponses du questionnaire court, ni chronologie, ni lien de réservation, aucune écriture", !(await f.page.$("#fiche-score, #fiche-reponses, #fiche-chrono, #fiche-actions, #fiche-decouverte, #fiche-prospect, #dc-lien")) && f.db.ecritures.length === 0);
     await f.c.close(); await fM.c.close();
     /* v53 (chantier 4) : Mes clients gagne 5 colonnes (retour de la semaine, note, smiley, dernière visite, jours actifs) :
@@ -1150,9 +1185,10 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     /* v72 (A) : + la colonne Téléphone (changement voulu, hors comparaison) */
     const NOUVELLES = ["Retour de la semaine", "Dernière note", "Dernier smiley", "Dernière visite", "Jours actifs (30 j)", "Connexions", "Dernière connexion", "Téléphone"];
     const ligne = async (page) => page.$eval(`[data-ouvrir="${F.IDS.c1}"]`, (bt, nv) => Array.from(bt.closest("tr").querySelectorAll("td")).filter(td => nv.indexOf(td.dataset.l) === -1).map(td => td.textContent).join(" "), NOUVELLES).then(norm).catch(() => "");
-    const [m1, m2] = await avecNouveautesFichier(async () => [await vueDe(coach, `http://localhost:${PORT}/#/clients`), await vueDe(coach, `http://localhost:${PORT}/?ref=main#/clients`)]);
+    /* v84 (ménage du bloc 3) : la ligne du tableau est dans « Suivi détaillé » (#/suivi-clients) ; la référence, là où elle l'a (ADR_REF) */
+    const [m1, m2] = await avecNouveautesFichier(async () => [await vueDe(coach, `http://localhost:${PORT}/#/suivi-clients`), await vueDe(coach, `http://localhost:${PORT}/?ref=main` + ADR_REF)]);
     const l1 = await ligne(m1.page), l2 = await ligne(m2.page);
-    ok("Mes clients : ligne de Thomas identique à main (colonnes d'avant)", l1.length > 10 && l1 === l2, l1 + " | " + l2);
+    ok("Mes clients : ligne de Thomas identique à main (colonnes d'avant ; v84 : dans « Suivi détaillé »)", l1.length > 10 && l1 === l2, l1 + " | " + l2);
   });
 
   await bloc("J. coach : aucune activité suivie", async () => {
@@ -1162,10 +1198,13 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     const { page } = await contexte(b, coach, db, { horloge: true });
     const fermer = async () => { await cacher(page); await attendre(page, 1500); await montrer(page); await page.evaluate(() => window.dispatchEvent(new Event("pagehide"))); await attendre(page, 1200); await page.clock.fastForward(61000); await attendre(page, 1800); };
     await page.goto(`http://localhost:${PORT}/#/tableau`); await attendre(page, 2600);   // pas d'attente du panneau Nouveautés : ce bloc tourne aussi sur main
-    await aller(page, "#/prospects", 2200); await aller(page, "#/clients", 2200);
+    /* v84 (ménage du bloc 3) : l'écran d'avant de Prospects et de Mes clients est réparti sur Suivi commercial, Newsletter, Suivi
+       détaillé et Comptes : le coach passe par les pages Prospects et Mes clients ET par ces quatre pages, et finit sur « Suivi
+       détaillé », où est le bouton « Ouvrir » ([data-ouvrir]) de Thomas (avant : #/clients) */
+    for (const h of ["#/prospects", "#/suivi-commercial", "#/newsletter", "#/clients", "#/comptes", "#/suivi-clients"]) await aller(page, h, 2200);
     const n0 = db.lectures.length;
     await fermer();
-    ok("pages du coach (tableau de bord, Prospects, Mes clients), puis arrière-plan, fermeture et une minute : aucune lecture d'activite, aucune écriture", lu(db, "activite", n0) === 0 && db.ecritures.length === 0, JSON.stringify(db.lectures.slice(n0)) + " · " + JSON.stringify(db.ecritures.map(e => (e.user_id || e.table || "").slice(-4) + ":" + e.outil)));
+    ok("pages du coach (tableau de bord, Prospects, Mes clients ; v84 : et Suivi commercial, Newsletter, Comptes, Suivi détaillé), puis arrière-plan, fermeture et une minute : aucune lecture d'activite, aucune écriture", lu(db, "activite", n0) === 0 && db.ecritures.length === 0, JSON.stringify(db.lectures.slice(n0)) + " · " + JSON.stringify(db.ecritures.map(e => (e.user_id || e.table || "").slice(-4) + ":" + e.outil)));
     await page.click(`[data-ouvrir="${F.IDS.c1}"]`); await attendre(page, 2600);
     await aller(page, "#/programme", 2200);
     const enConsultation = (await texte(page, "#vue")).includes("Thomas");

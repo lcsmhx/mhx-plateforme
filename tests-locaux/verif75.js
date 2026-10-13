@@ -153,7 +153,7 @@ async function pret(page, sel){
 }
 const aller = async (page, h, ms) => { await page.evaluate(x => { location.hash = x; }, h); await attendre(page, ms || 1500); };
 async function ouvrirFiche(page, id){
-  await aller(page, "#/clients", 2000); await page.waitForSelector(`[data-ouvrir="${id}"]`, { timeout: 8000 });
+  await aller(page, "#/suivi-clients", 2000); await page.waitForSelector(`[data-ouvrir="${id}"]`, { timeout: 8000 });   // v84 (ménage du bloc 3) : [data-ouvrir] dans « Suivi détaillé » (menu Plus)
   await page.click(`[data-ouvrir="${id}"]`); await page.waitForSelector("#vue .bandeau", { timeout: 8000 }); await attendre(page, 800);
 }
 /* « Remplacer » sur le repas n° i du jour affiché, puis attend que la page ait fini (plus aucun bouton sur « … ») */

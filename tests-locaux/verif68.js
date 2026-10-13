@@ -1121,7 +1121,9 @@ const detail = (C, V) => JSON.stringify(C ? { sig: C.sig, n: C.n, enfants: C.enf
       const { page } = await contexte(b, COACH, db, { viewport: ORDI });
       /* v71 (D) : un prospect n'a plus de ligne (ni bouton « Ouvrir ») dans « Suivi de mes clients » : sa fiche s'ouvre par
          Clients.ouvrir (ce que fait le bouton de sa carte Prospects), une fois Mes clients chargée (les clients du décor y sont) */
-      await page.goto(URL0 + "#/clients"); await pret(page, "#tb-clients [data-ouvrir]");
+      /* v84 (ménage du bloc 3) : le tableau « Suivi de mes clients » (#tb-clients, ses [data-ouvrir]) est dans « Suivi détaillé »
+         (#/suivi-clients, menu Plus ; avant : #/clients) */
+      await page.goto(URL0 + "#/suivi-clients"); await pret(page, "#tb-clients [data-ouvrir]");
       await page.evaluate(([id, n]) => Clients.ouvrir(id, n, "accueil"), [IDP, "Léa Martin"]); await page.waitForSelector("#vue .bandeau", { timeout: 8000 }); await attendre(page, 800);
       await aller(page, "#/formation", 2000);
       const coche = !!(await page.$('[data-coche="m1g"]'));

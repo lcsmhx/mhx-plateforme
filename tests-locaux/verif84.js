@@ -654,7 +654,7 @@ const zones = (page, sel) => page.$$eval(sel, l => l.filter(e => e.offsetParent 
       JSON.stringify([navC, carteC, lusC, RC.courant, nbLignes(RC)]));
     await X.c.close();
     X = await contexte(b, COACH, db);
-    await X.page.goto(URL0 + "#/clients"); await pret(X.page, "#tb-clients"); await attendre(X.page, 800);
+    await X.page.goto(URL0 + "#/suivi-clients"); await pret(X.page, "#tb-clients"); await attendre(X.page, 800);   // v84 (ménage du bloc 3) : le tableau complet (#tb-clients) est dans « Suivi détaillé » (menu Plus)
     const navCo = await nav(X.page), n0 = db.n;
     await ouvrirFiche(X.page, F.IDS.c1, "Thomas Démo");
     const liens = await liensBandeau(X.page), fiche = !!(await X.page.$("#fiche-ja")), navF = await nav(X.page), lusF = lusJA(db, COACH.id, n0);
@@ -677,7 +677,7 @@ const zones = (page, sel) => page.$$eval(sel, l => l.filter(e => e.offsetParent 
     const kA = kcalDe(docT, AUJ), kH = kcalDe(docT, HIER), k3 = kcalDe(docT, J3);
     const sept = (fin, n, moy, obj) => `Sur les 7 jours jusqu'au ${dfr(fin)} : ${n} jour${n > 1 ? "s" : ""} rempli${n > 1 ? "s" : ""} sur 7, moyenne ${frN(moy)} kcal par jour rempli (objectif ${frN(obj)} kcal).`;
     const { page } = await contexte(b, COACH, db);
-    await page.goto(URL0 + "#/clients"); await pret(page, "#tb-clients"); await attendre(page, 800);
+    await page.goto(URL0 + "#/suivi-clients"); await pret(page, "#tb-clients"); await attendre(page, 800);   // v84 (ménage du bloc 3) : le tableau complet (#tb-clients) est dans « Suivi détaillé » (menu Plus)
     await ouvrirFiche(page, F.IDS.c1, "Thomas Démo"); await page.waitForSelector("#fiche-ja", { timeout: 6000 }).catch(() => {});
     const FJ = await page.evaluate(() => { const f = document.getElementById("fiche-ja"), t = x => x ? x.textContent.replace(/[  ]/g, " ").replace(/\s+/g, " ").trim() : null;
       return f ? { pastille: t(f.querySelector(".pastille")), note: t(f.querySelector("p.note")), lignes: [...f.querySelectorAll("li")].map(li => [t(li.querySelector("span")), t(li.querySelector("b"))]), lien: f.querySelector("a") && f.querySelector("a").getAttribute("href") } : null; });
@@ -841,7 +841,7 @@ const zones = (page, sel) => page.$$eval(sel, l => l.filter(e => e.offsetParent 
     ok("client, accueil : la carte du journal avec le même total (« " + frN(2240 - total) + " »), rien d'injecté, aucune écriture", carte === frN(2240 - total) && I2.pwn === "undefined" && I2.img === 0 && saisies(db, TESTC.id).length === 0, JSON.stringify([carte, I2]) + " " + resumeE(db));
     await X.c.close();
     X = await contexte(b, COACH, db); page = X.page;
-    await page.goto(URL0 + "#/clients"); await pret(page, "#tb-clients"); await attendre(page, 600);
+    await page.goto(URL0 + "#/suivi-clients"); await pret(page, "#tb-clients"); await attendre(page, 600);   // v84 (ménage du bloc 3) : le tableau complet (#tb-clients) est dans « Suivi détaillé » (menu Plus)
     await ouvrirFiche(page, TESTC.id, "Test Démo"); await page.waitForSelector("#fiche-ja", { timeout: 6000 }).catch(() => {});
     const fiche = await txt(page, "#fiche-ja"), I3 = await injecte();
     await page.click('#vue .bandeau-actions a[href$="/journal-alimentaire"]'); await page.waitForSelector(".ja-repas", { timeout: 8000 }); await attendre(page, 800);
@@ -888,7 +888,7 @@ const zones = (page, sel) => page.$$eval(sel, l => l.filter(e => e.offsetParent 
     const lignesJulien = async (avecJA) => {
       const db = base({ cles: avecJA ? [[F.IDS.c3, "journal_alimentaire", JA({ [AUJ]: [[1, "poulet-blanc-grille", 150]] }), avant(2 * H)]] : [] });
       const { c, page } = await contexte(b, COACH, db, { viewport: ORDI });
-      await page.goto(URL0 + "#/clients"); await pret(page, "#tb-clients [data-ouvrir]"); await attendre(page, 1000);
+      await page.goto(URL0 + "#/suivi-clients"); await pret(page, "#tb-clients [data-ouvrir]"); await attendre(page, 1000);   // v84 (ménage du bloc 3) : le tableau complet et ses lignes ([data-ouvrir], Activité, feu) sont dans « Suivi détaillé » (menu Plus)
       const l = await page.$eval(`[data-ouvrir="${F.IDS.c3}"]`, bt => { const tr = bt.closest("tr"), t = x => x ? x.textContent.replace(/\s+/g, " ").trim() : null; return { activite: t(tr.querySelector('[data-l="Activité"]')), feu: tr.querySelector(".point") ? tr.querySelector(".point").getAttribute("title") : null }; }).catch(e => ({ erreur: String(e) }));
       await c.close();
       return { db, l };

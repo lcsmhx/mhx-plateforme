@@ -266,7 +266,7 @@ const MOD = m => `#fo-vue .fo-tete[data-mod="${m}"]`, LEC = l => `#fo-vue [data-
     const avantT = clone(ligne(db, THOMAS, "formation")), avantS = clone(ligne(db, SARAH, "formation"));
     const { page } = await contexte(b, db, COACH);
     await page.goto(URL0 + "#/tableau"); await pret(page); await attendre(page, 800);
-    await aller(page, "#/clients", 2000); await page.waitForSelector(`[data-ouvrir="${THOMAS}"]`, { timeout: 8000 });
+    await aller(page, "#/suivi-clients", 2000); await page.waitForSelector(`[data-ouvrir="${THOMAS}"]`, { timeout: 8000 });   // v84 (ménage du bloc 3) : [data-ouvrir] dans « Suivi détaillé » (menu Plus)
     await page.click(`[data-ouvrir="${THOMAS}"]`); await page.waitForSelector("#vue .bandeau", { timeout: 8000 }); await attendre(page, 800);
     await aller(page, "#/formation", 1800); await page.waitForSelector(MOD("m2"), { timeout: 8000 }); await attendre(page, 600);
     const c0 = await foAff(page), consulte = await page.evaluate(() => Store.idConsulte);
@@ -280,7 +280,7 @@ const MOD = m => `#fo-vue .fo-tete[data-mod="${m}"]`, LEC = l => `#fo-vue [data-
     ok("le choix reste sur l'appareil du coach, pour ce client : mhx_aff|<Thomas>|formation = { semaine: 1, jour: 0, ouvert: \"m1\", lecon: \"mindset\", challenge: \"c3\" } (v67, 3e tour : + le challenge du document)",
       egal(L, { semaine: 1, jour: 0, ouvert: "m1", lecon: "mindset", challenge: "c3" }), JSON.stringify(L));
     /* la fiche de Sarah : son propre document (module 04), pas le choix fait chez Thomas */
-    await aller(page, "#/clients", 2000); await page.waitForSelector(`[data-ouvrir="${SARAH}"]`, { timeout: 8000 });
+    await aller(page, "#/suivi-clients", 2000); await page.waitForSelector(`[data-ouvrir="${SARAH}"]`, { timeout: 8000 });   // v84 (ménage du bloc 3) : [data-ouvrir] dans « Suivi détaillé » (menu Plus)
     await page.click(`[data-ouvrir="${SARAH}"]`); await page.waitForSelector("#vue .bandeau", { timeout: 8000 }); await attendre(page, 800);
     await aller(page, "#/formation", 1800); await page.waitForSelector(MOD("m4"), { timeout: 8000 }); await attendre(page, 600);
     const c2 = await foAff(page), consulte2 = await page.evaluate(() => Store.idConsulte);

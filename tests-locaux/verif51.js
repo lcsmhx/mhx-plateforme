@@ -248,10 +248,19 @@ const ligneDe = (page, id) => page.$eval(`[data-ouvrir="${id}"]`, b => b.closest
    lede : « N compte(s) gratuit(s) · M à traiter » }) */
 const noteProspects = page => page.evaluate(() => ({ absente: !document.getElementById("clients-prospects"),
   onglets: [...document.querySelectorAll('#nav a[data-id="prospects"], #barre-bas a[data-id="prospects"]')].map(a => a.getAttribute("href")) })).catch(() => ({ absente: false, onglets: [] }));
-const nbProspects = async page => ({ compte: await texte(page, "#lc-prospects #lc-compte"), lede: await texte(page, "#vue .masthead.pr-detail .lede") });
+/* v84 (ménage du bloc 3) : « N prospect(s) » se lit toujours sur la page Prospects (la liste) ; « N compte(s) gratuit(s) · M à
+   traiter » (l'en-tête .pr-detail) a déménagé dans « Suivi commercial » (#/suivi-commercial, menu Plus) : nbProspects va lire
+   chacun à sa place (avant : les deux sur #/prospects) */
+const nbProspects = async page => {
+  await aller(page, "#/prospects", 300); await page.waitForSelector("#lc-prospects #lc-compte", { timeout: 8000 }).catch(() => {});
+  const compte = await texte(page, "#lc-prospects #lc-compte");
+  await aller(page, "#/suivi-commercial", 300); await page.waitForSelector("#vue .masthead.pr-detail .lede", { timeout: 8000 }).catch(() => {});
+  return { compte, lede: await texte(page, "#vue .masthead.pr-detail .lede") };
+};
 const versProspects = np => np.absente && np.onglets.length === 2 && np.onglets.every(h => h === "#/prospects");
 const carteDe = (page, uid) => page.$eval(`#pr-liste .sc-carte[data-uid="${uid}"]`, e => { const n = t => String(t || "").replace(/[\u00a0\u202f]/g, " ").replace(/\s+/g, " ").trim(); const o = { _sous: n((e.querySelector(".sc-nom small") || {}).textContent), _pastilles: Array.from(e.querySelectorAll(".sc-tete .pastille")).map(x => n(x.textContent)) }; e.querySelectorAll(".sc-faits li").forEach(li => { o[n((li.querySelector("span") || {}).textContent)] = n((li.querySelector("b") || {}).textContent); }); return o; }).catch(() => ({}));
-const prospectsTous = async page => { await aller(page, "#/prospects", 300); await page.waitForSelector("#pr-liste", { timeout: 8000 }).catch(() => {}); await page.click('[data-filtre="tous"]').catch(() => {}); await attendre(page, 500); };
+/* v84 (ménage du bloc 3) : les cartes (#pr-liste) et leurs filtres détaillés sont dans « Suivi commercial » (avant : #/prospects) */
+const prospectsTous = async page => { await aller(page, "#/suivi-commercial", 300); await page.waitForSelector("#pr-liste", { timeout: 8000 }).catch(() => {}); await page.click('[data-filtre="tous"]').catch(() => {}); await attendre(page, 500); };
 const ouvrirFiche = async (page, uid, nom) => { await page.evaluate(([id, n]) => Clients.ouvrir(id, n, "accueil"), [uid, nom]).catch(() => {}); await attendre(page, 2200); };
 const dateFrDe = j => j.slice(8, 10) + "/" + j.slice(5, 7) + "/" + j.slice(0, 4);
 const deborde = page => page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
@@ -626,14 +635,19 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
     /* v71 (D) : Léa (prospect) n'a plus de ligne dans « Suivi de mes clients » (Thomas en garde une ; la ligne sous le titre
        renvoie à Prospects : 1 compte gratuit) ; sa fiche s'ouvre par Clients.ouvrir (avant : clic sur son bouton « Ouvrir »)
        et porte « inscrit depuis 2 j » (avant : la pastille « Découverte · inscrit depuis 2 j » de sa ligne) */
-    const l = await ligneDe(p2, PROSPECT), lT = await ligneDe(p2, F.IDS.c1), np = await noteProspects(p2);
+    /* v84 (ménage du bloc 3) : le tableau « Suivi de mes clients » (#tb-clients, les [data-ouvrir]) a quitté #/clients pour
+       « Suivi détaillé » (#/suivi-clients, menu Plus) : la ligne sous le titre (absente) se lit sur #/clients, avec l'absence du
+       tableau ; les lignes de Léa (aucune) et de Thomas (une) se lisent dans le Suivi détaillé */
+    const np = await noteProspects(p2), sansTableau = !(await p2.$("#tb-clients"));
+    await aller(p2, "#/suivi-clients", 2400);
+    const l = await ligneDe(p2, PROSPECT), lT = await ligneDe(p2, F.IDS.c1);
     /* v83 (bloc 3) : plus de ligne « Les prospects sont dans Prospects → » (décision 7) : l'onglet Prospects de la navigation, et
        le nombre (1) lu sur la page Prospects ; puis retour à Mes clients, d'où la fiche s'ouvre comme avant */
     await aller(p2, "#/prospects", 2400); const nb = await nbProspects(p2);
     await aller(p2, "#/clients", 2400);
     await ouvrirFiche(p2, PROSPECT, "Léa");
     const f = await texte(p2, "#fiche-decouverte");
-    ok("coach : prospect aux données piégées — sans ligne dans Mes clients (Thomas en a une ; v83 (bloc 3) : plus de ligne « Les prospects sont dans Prospects → », l'onglet Prospects #/prospects, « 1 prospect » et « 1 compte gratuit · … » sur la page Prospects), fiche « inscrit depuis 2 j » (v52 ; avant : « J3/7 »), bloc « Découverte » de la fiche lisible, aucune injection", l === "" && lT !== "" && versProspects(np) && nb.compte === "1 prospect" && /^1 compte gratuit · \d+ à traiter$/.test(nb.lede) && !!(await p2.$("#fiche-decouverte")) && f.includes("inscrit depuis 2 j") && f.includes("Obstacle principal") && !(await p2.evaluate(() => window.__xss)) && !(await p2.$("#vue img[src='x']")) && db2.ecritures.length === 0, (l || "(pas de ligne)") + " | " + JSON.stringify([np, nb]) + " | " + f.slice(0, 160));
+    ok("coach : prospect aux données piégées — sans ligne dans Mes clients (Thomas en a une ; v83 (bloc 3) : plus de ligne « Les prospects sont dans Prospects → », l'onglet Prospects #/prospects, « 1 prospect » et « 1 compte gratuit · … » sur la page Prospects), fiche « inscrit depuis 2 j » (v52 ; avant : « J3/7 »), bloc « Découverte » de la fiche lisible, aucune injection", l === "" && lT !== "" && sansTableau && versProspects(np) && nb.compte === "1 prospect" && /^1 compte gratuit · \d+ à traiter$/.test(nb.lede) && !!(await p2.$("#fiche-decouverte")) && f.includes("inscrit depuis 2 j") && f.includes("Obstacle principal") && !(await p2.evaluate(() => window.__xss)) && !(await p2.$("#vue img[src='x']")) && db2.ecritures.length === 0, (l || "(pas de ligne)") + " | " + JSON.stringify([np, nb]) + " | " + f.slice(0, 160));
     await c2.close();
   });
 
@@ -728,13 +742,17 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
        pastilles se lisent sur leurs cartes de la page Prospects (filtre « Tous ») : sous-titre « inscrit le … · il y a n jours »
        (avant : « Découverte · inscrit depuis n j ») et fait « Clics plan d'action » (avant : « a cliqué Plan d'action » ; le clic
        d'aujourd'hui de Léa, source decouverte = « accueil, bouton du haut ») */
-    const lLea = await ligneDe(page, PROSPECT), lMarc = await ligneDe(page, MARC), lT = await ligneDe(page, F.IDS.c1), tb = await texte(page, "#tb-clients"), np = await noteProspects(page);
+    /* v84 (ménage du bloc 3) : la ligne sous le titre (absente) et l'absence du tableau se lisent sur #/clients ; le tableau
+       (#tb-clients, les lignes) dans « Suivi détaillé » (#/suivi-clients, menu Plus ; avant : #/clients) */
+    const np = await noteProspects(page), sansTableau = !(await page.$("#tb-clients"));
+    await aller(page, "#/suivi-clients", 2200);
+    const lLea = await ligneDe(page, PROSPECT), lMarc = await ligneDe(page, MARC), lT = await ligneDe(page, F.IDS.c1), tb = await texte(page, "#tb-clients");
     await prospectsTous(page);
     const cLea = await carteDe(page, PROSPECT), cMarc = await carteDe(page, MARC), nb = await nbProspects(page);   /* v83 (bloc 3) : le nombre de prospects, sur la page Prospects */
     /* v52 (lot D) : « inscrit depuis n j » (avant : « Découverte J3/7 » / « Découverte terminée ») */
     /* v83 (bloc 3) : plus de ligne « Les prospects sont dans Prospects → (2 comptes gratuits). » (décision 7) : l'onglet Prospects
        de la navigation, « 2 prospects » et « 2 comptes gratuits · … » sur la page Prospects */
-    ok("Mes clients (v71 D) : ni Léa ni Marc (Thomas si), aucune pastille Découverte / prospect dans le tableau, v83 (bloc 3) : plus de ligne « Les prospects sont dans Prospects → », l'onglet Prospects (#/prospects), « 2 prospects » et « 2 comptes gratuits · … » sur la page Prospects ; page Prospects : Léa « inscrit le … · il y a 2 jours », « Clics plan d'action » 1 (dernier : accueil, bouton du haut), « Bilan » pas réservé ; Marc « il y a 10 jours », 0 clic", lLea === "" && lMarc === "" && lT !== "" && !/Découverte ·|a cliqué Plan d'action|bilan réservé|prospect|J\d+\/7|terminée/.test(tb) && versProspects(np) && nb.compte === "2 prospects" && /^2 comptes gratuits · \d+ à traiter$/.test(nb.lede) && cLea._sous === "inscrit le " + dateFrDe(ilYA(2)) + " · il y a 2 jours" && cLea["Clics plan d'action"] === "1 (dernier : accueil, bouton du haut)" && cLea.Bilan === "pas réservé" && cMarc._sous === "inscrit le " + dateFrDe(ilYA(10)) + " · il y a 10 jours" && cMarc["Clics plan d'action"] === "0", (lLea || "(pas de ligne)") + " | " + (lMarc || "(pas de ligne)") + " | " + JSON.stringify([np, nb]) + " | " + JSON.stringify(cLea) + " | " + JSON.stringify(cMarc));
+    ok("Mes clients (v71 D) : ni Léa ni Marc (Thomas si), aucune pastille Découverte / prospect dans le tableau, v83 (bloc 3) : plus de ligne « Les prospects sont dans Prospects → », l'onglet Prospects (#/prospects), « 2 prospects » et « 2 comptes gratuits · … » sur la page Prospects ; page Prospects : Léa « inscrit le … · il y a 2 jours », « Clics plan d'action » 1 (dernier : accueil, bouton du haut), « Bilan » pas réservé ; Marc « il y a 10 jours », 0 clic", lLea === "" && lMarc === "" && lT !== "" && sansTableau && !/Découverte ·|a cliqué Plan d'action|bilan réservé|prospect|J\d+\/7|terminée/.test(tb) && versProspects(np) && nb.compte === "2 prospects" && /^2 comptes gratuits · \d+ à traiter$/.test(nb.lede) && cLea._sous === "inscrit le " + dateFrDe(ilYA(2)) + " · il y a 2 jours" && cLea["Clics plan d'action"] === "1 (dernier : accueil, bouton du haut)" && cLea.Bilan === "pas réservé" && cMarc._sous === "inscrit le " + dateFrDe(ilYA(10)) + " · il y a 10 jours" && cMarc["Clics plan d'action"] === "0", (lLea || "(pas de ligne)") + " | " + (lMarc || "(pas de ligne)") + " | " + JSON.stringify([np, nb]) + " | " + JSON.stringify(cLea) + " | " + JSON.stringify(cMarc));
     await ouvrirFiche(page, PROSPECT, "Léa");   // v71 (D) : avant, clic sur son bouton « Ouvrir » de Mes clients
     const f = await texte(page, "#fiche-decouverte");
     ok("fiche de Léa : bloc « Découverte » (inscrit depuis 2 j — v52 ; avant : jour 3 / 7 —, questionnaire rempli, objectif, motivation 8 / 10, 1 clic, case pas cochée)", f.includes("inscrit depuis 2 j") && !f.includes("/ 7") && f.includes("rempli le") && f.includes("Perte de poids / sèche") && f.includes("8 / 10") && f.includes("1 clic") && f.includes("pas cochée"), f.slice(0, 300));
@@ -760,12 +778,16 @@ const deborde = page => page.evaluate(() => document.documentElement.scrollWidth
        sur la carte Prospects de Léa : pastille « bilan réservé » seule dans l'en-tête (avant : sur sa ligne, sans « a cliqué
        Plan d'action ») et fait « Bilan » « à vérifier (case cochée le <aujourd'hui>) » ; son clic d'hier reste compté dans
        « Clics plan d'action » ; Marc : « pas réservé », aucune pastille */
-    const lLea = await ligneDe(page, PROSPECT), lMarc = await ligneDe(page, MARC), lT = await ligneDe(page, F.IDS.c1), tb = await texte(page, "#tb-clients"), np = await noteProspects(page);
+    /* v84 (ménage du bloc 3) : la ligne sous le titre (absente) et l'absence du tableau se lisent sur #/clients ; le tableau
+       (#tb-clients, les lignes) dans « Suivi détaillé » (#/suivi-clients, menu Plus ; avant : #/clients) */
+    const np = await noteProspects(page), sansTableau = !(await page.$("#tb-clients"));
+    await aller(page, "#/suivi-clients", 2200);
+    const lLea = await ligneDe(page, PROSPECT), lMarc = await ligneDe(page, MARC), lT = await ligneDe(page, F.IDS.c1), tb = await texte(page, "#tb-clients");
     await prospectsTous(page);
     const cLea = await carteDe(page, PROSPECT), cMarc = await carteDe(page, MARC), nb = await nbProspects(page);   /* v83 (bloc 3) : le nombre de prospects, sur la page Prospects */
     /* v83 (bloc 3) : plus de ligne « Les prospects sont dans Prospects → (2 comptes gratuits). » (décision 7) : l'onglet Prospects
        de la navigation, « 2 prospects » et « 2 comptes gratuits · … » sur la page Prospects */
-    ok("Mes clients (même appareil, v71 D) : ni Léa ni Marc (Thomas si), aucune pastille de prospect dans le tableau, v83 (bloc 3) : plus de ligne « Les prospects sont dans Prospects → », l'onglet Prospects, « 2 prospects » et « 2 comptes gratuits · … » sur la page Prospects ; page Prospects : Léa « il y a 2 jours », pastille « bilan réservé » seule, « Bilan » à vérifier (case cochée aujourd'hui), 1 clic (hier) ; Marc « il y a 10 jours », « Bilan » pas réservé, aucune pastille (v52)", lLea === "" && lMarc === "" && lT !== "" && !/Découverte ·|a cliqué Plan d'action|bilan réservé|prospect/.test(tb) && versProspects(np) && nb.compte === "2 prospects" && /^2 comptes gratuits · \d+ à traiter$/.test(nb.lede) && cLea._sous === "inscrit le " + dateFrDe(ilYA(2)) + " · il y a 2 jours" && JSON.stringify(cLea._pastilles) === '["bilan réservé"]' && cLea.Bilan === "à vérifier (case cochée le " + dateFrDe(ilYA(0)) + ")" && cLea["Clics plan d'action"] === "1 (dernier : accueil, bouton du haut)" && cMarc._sous === "inscrit le " + dateFrDe(ilYA(10)) + " · il y a 10 jours" && cMarc.Bilan === "pas réservé" && JSON.stringify(cMarc._pastilles) === "[]", (lLea || "(pas de ligne)") + " | " + (lMarc || "(pas de ligne)") + " | " + JSON.stringify([np, nb]) + " | " + JSON.stringify(cLea) + " | " + JSON.stringify(cMarc));
+    ok("Mes clients (même appareil, v71 D) : ni Léa ni Marc (Thomas si), aucune pastille de prospect dans le tableau, v83 (bloc 3) : plus de ligne « Les prospects sont dans Prospects → », l'onglet Prospects, « 2 prospects » et « 2 comptes gratuits · … » sur la page Prospects ; page Prospects : Léa « il y a 2 jours », pastille « bilan réservé » seule, « Bilan » à vérifier (case cochée aujourd'hui), 1 clic (hier) ; Marc « il y a 10 jours », « Bilan » pas réservé, aucune pastille (v52)", lLea === "" && lMarc === "" && lT !== "" && sansTableau && !/Découverte ·|a cliqué Plan d'action|bilan réservé|prospect/.test(tb) && versProspects(np) && nb.compte === "2 prospects" && /^2 comptes gratuits · \d+ à traiter$/.test(nb.lede) && cLea._sous === "inscrit le " + dateFrDe(ilYA(2)) + " · il y a 2 jours" && JSON.stringify(cLea._pastilles) === '["bilan réservé"]' && cLea.Bilan === "à vérifier (case cochée le " + dateFrDe(ilYA(0)) + ")" && cLea["Clics plan d'action"] === "1 (dernier : accueil, bouton du haut)" && cMarc._sous === "inscrit le " + dateFrDe(ilYA(10)) + " · il y a 10 jours" && cMarc.Bilan === "pas réservé" && JSON.stringify(cMarc._pastilles) === "[]", (lLea || "(pas de ligne)") + " | " + (lMarc || "(pas de ligne)") + " | " + JSON.stringify([np, nb]) + " | " + JSON.stringify(cLea) + " | " + JSON.stringify(cMarc));
     await ouvrirFiche(page, PROSPECT, "Léa");   // v71 (D) : avant, clic sur son bouton « Ouvrir » de Mes clients
     const f = await texte(page, "#fiche-decouverte");
     /* v53 (chantier 4) : la case du prospect se lit « Le prospect a coché « J'ai réservé » le … » (le coach coche lui-même « Bilan réservé ») */

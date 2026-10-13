@@ -353,8 +353,10 @@ const valeurDe = (page, sel) => page.$eval(sel, e => e.value).catch(() => null);
 /* v71 (D) : Mes clients ne liste plus les prospects ; un client s'ouvre toujours par son bouton « Ouvrir », un prospect (sans
    bouton [data-ouvrir]) par Clients.ouvrir, comme le fait la page Prospects ; nom : celui du compte (nomDe), "" sinon */
 const nomDe = (db, id) => { const p = db.profils.find(x => x.id === id); return p ? ((p.prenom || "") + " " + (p.nom || "")).trim() : ""; };
+/* v84 (ménage du bloc 3) : le tableau « Suivi de mes clients » (#tb-clients, ses boutons « Ouvrir » [data-ouvrir]) a quitté
+   #/clients pour « Suivi détaillé » (#/suivi-clients, menu Plus) : la fiche d'un client s'ouvre de là */
 async function ouvrirFiche(page, id, nom){
-  await aller(page, "#/clients", 2000); await page.waitForSelector("#tb-clients [data-ouvrir]", { timeout: 8000 });
+  await aller(page, "#/suivi-clients", 2000); await page.waitForSelector("#tb-clients [data-ouvrir]", { timeout: 8000 });
   if (await page.$(`[data-ouvrir="${id}"]`)) await page.click(`[data-ouvrir="${id}"]`);
   else await page.evaluate(([i, n]) => Clients.ouvrir(i, n, "accueil"), [id, nom || ""]);
   await page.waitForSelector("#vue .bandeau", { timeout: 8000 }); await attendre(page, 800);
@@ -571,7 +573,7 @@ const NOUVEAU = { probleme: "Perdre du gras", obstacle: "Le manque de temps avec
     ok("coach, son compte : son calculateur d'avant (âge dès 14 ans, sans les garde-fous ni la mention du client)", await page.$eval("#age", x => x.min === "14") && !(await page.$("#calc-etat, #calc-avis, #calc-imc, #calc-ok")), "");
     await page.fill("#poids", "81"); await attendre(page, 1400);
     ok("… il écrit calc chez lui, jamais calc_perso", ecr(db, "calc", F.IDS.coach).length >= 1 && ecr(db, "calc_perso").length === 0, resume(db));
-    await aller(page, "#/clients", 2400);
+    await aller(page, "#/suivi-clients", 2400);   // v84 (ménage du bloc 3) : le tableau (ses lignes, son alerte d'écart) est dans « Suivi détaillé » (avant : #/clients)
     const ligne = id => page.$eval(`[data-ouvrir="${id}"]`, bt => bt.closest("tr").textContent.replace(/\s+/g, " ")).catch(() => "");
     const lT = await ligne(F.IDS.c1), lJ = await ligne(F.IDS.c3);
     ok("Mes clients : l'alerte d'écart lit calc, jamais calc_perso (Thomas : pas de « chiffres à vérifier » malgré un calc_perso très loin ; Julien, calc loin de son questionnaire : l'alerte)", lT.includes("Thomas") && !/chiffres à vérifier/.test(lT) && /chiffres à vérifier/.test(lJ), lT.slice(0, 120) + " | " + lJ.slice(0, 120));

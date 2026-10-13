@@ -43,6 +43,9 @@
      l'écran unique (DECOUVERTE.inscription, plus affichés), passent aussi au contrôle des prix. Nombre de vérifications inchangé (64).
    - v83 (bloc 3) : bloc I coach, la ligne de renvoi #clients-prospects n'existe plus (décision 7) : on vérifie son absence, Léa hors
      de la liste « Clients » (#lc-clients, 3 clients) et l'onglet Prospects de la barre du bas. Nombre de vérifications inchangé (64).
+   - v84 (ménage du bloc 3) : bloc I coach, le tableau « Suivi de mes clients » (#tb-clients) a quitté la page Clients pour « Suivi
+     détaillé » (#/suivi-clients) : l'absence de Léa y est relevée là, puis la liste « Clients » sur #/clients (sans le tableau
+     d'avant sous elle). Seules les adresses changent ; nombre de vérifications inchangé (64).
    Supabase simulé : rien ne part vers la vraie base ; les écritures dans donnees sont appliquées en mémoire,
    et TOUTE requête non-GET vers /rest/v1/* est relevée (méthode + adresse) pour les contrôles « aucune écriture ».
    Chaque bloc est protégé : une exception (élément absent, délai dépassé) note un ✗ et la suite continue ;
@@ -646,7 +649,7 @@ const cliquerVerrou = async (c, page) => {
   await bloc("I. coach sur la fiche d'un prospect", async () => {
     /* le coach consulte la fiche de Léa, prospecte dont la découverte est terminée */
     const { page } = await contexte(b, coach, base({ ilYA: 20 }));
-    await page.goto(`http://localhost:${PORT}/#/clients`); await attendre(page, 2000);
+    await page.goto(`http://localhost:${PORT}/#/suivi-clients`); await attendre(page, 2000);   // v84 (ménage du bloc 3) : le tableau #tb-clients est dans « Suivi détaillé »
     /* v71 (D) : « Suivi de mes clients » ne liste plus les prospects : Léa n'a plus de bouton [data-ouvrir] (avant : clic
        dessus). On attend le tableau (le bouton de Thomas, client), on relève l'absence de Léa et la ligne #clients-prospects
        (« Les prospects sont dans Prospects → (1 compte gratuit). », lien #/prospects), puis la fiche s'ouvre par
@@ -656,16 +659,18 @@ const cliquerVerrou = async (c, page) => {
     /* v83 (bloc 3, décision 7 de Lucas) : la ligne #clients-prospects (« Les prospects sont dans Prospects → ») est supprimée : on
        passe de Clients à Prospects par la barre du bas seulement. Nouvelle vérité : plus de #clients-prospects, Léa absente de la
        liste « Clients » du haut (#lc-clients, « 3 clients »), l'onglet Prospects de la barre du bas mène à #/prospects */
-    const renvoi = await page.evaluate(() => ({ lien: !!document.getElementById("clients-prospects"), liste: Array.from(document.querySelectorAll("#lc-clients .lc-ligne")).map(x => x.dataset.uid),
+    await aller(page, "#/clients", 1500);   // v84 (ménage du bloc 3) : la liste « Clients » reste sur #/clients, sans le tableau d'avant sous elle (tb)
+    await page.waitForSelector("#lc-clients .lc-ligne", { timeout: 6000 }).catch(() => {});
+    const renvoi = await page.evaluate(() => ({ tb: !!document.getElementById("tb-clients"), lien: !!document.getElementById("clients-prospects"), liste: Array.from(document.querySelectorAll("#lc-clients .lc-ligne")).map(x => x.dataset.uid),
       compte: (document.getElementById("lc-compte") || {}).textContent || "", onglet: !!document.querySelector('#barre-bas a[data-id="prospects"][href="#/prospects"]') })).catch(() => null);
-    const renvoiOk = !!renvoi && renvoi.lien === false && plat(renvoi.compte) === "3 clients" && renvoi.liste.length === 3 && !renvoi.liste.includes(PROSPECT) && renvoi.onglet === true;
+    const renvoiOk = !!renvoi && renvoi.tb === false && renvoi.lien === false && plat(renvoi.compte) === "3 clients" && renvoi.liste.length === 3 && !renvoi.liste.includes(PROSPECT) && renvoi.onglet === true;
     const ouvert = await page.evaluate(([id, n]) => { Clients.ouvrir(id, n, "accueil"); return Store.idConsulte === id; }, [PROSPECT, "Léa Démo"]).catch(() => false);
     const bandeau = await page.waitForSelector("#vue .bandeau", { timeout: 6000 }).then(() => true, () => false); await attendre(page, 1500);
     const okFiche = tableauPret && !leaListee && renvoiOk && ouvert && bandeau;
     const detailFiche = okFiche ? "" : "fiche de Léa : " + JSON.stringify({ tableauPret, leaListee, renvoi, ouvert, bandeau }) + " | ";
     await aller(page, "#/programme", 1500);
     const vu = await valeursVue(page);
-    ok("coach dans la fiche d'un prospect (v71 : Léa n'est plus dans #tb-clients ; v83 : ni dans la liste « Clients » (3 clients), plus de ligne « Prospects → », l'onglet Prospects de la barre du bas mène à #/prospects ; fiche ouverte par Clients.ouvrir, bandeau affiché) : rien n'est verrouillé, il voit son programme", okFiche && !(await page.$("#vue .verrou")) && (await page.$$("#nav .nav-cadenas")).length === 0 && vu.includes(TEMOIN), detailFiche + vu.slice(0, 300));
+    ok("coach dans la fiche d'un prospect (v71 : Léa n'est plus dans #tb-clients, v84 : dans « Suivi détaillé » ; v83 : ni dans la liste « Clients » (3 clients), plus de ligne « Prospects → », l'onglet Prospects de la barre du bas mène à #/prospects ; fiche ouverte par Clients.ouvrir, bandeau affiché) : rien n'est verrouillé, il voit son programme", okFiche && !(await page.$("#vue .verrou")) && (await page.$$("#nav .nav-cadenas")).length === 0 && vu.includes(TEMOIN), detailFiche + vu.slice(0, 300));
     await aller(page, "#/formation", 1500);
     /* ouverte ET affichée : ni cadenas, ni page en erreur, ni « Chargement… » ; la progression est celle de Léa (10 étapes cochées) */
     const fo = await page.evaluate(() => { const v = document.querySelector("#vue"); return { verrou: !!document.querySelector("#vue .verrou"), illisible: !!document.getElementById("page-illisible"), chargement: !!v && /Chargement…/.test(v.innerText), h1: ((document.querySelector("#vue h1") || {}).textContent || "").replace(/\s+/g, ""), progression: ((document.querySelector("#vue .prog-compteur .t-sub") || {}).textContent || "").trim(), modules: document.querySelectorAll("#vue .fo-mod").length }; });

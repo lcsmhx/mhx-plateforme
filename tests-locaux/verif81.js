@@ -302,20 +302,36 @@ const PREMIERE = "Première visite enregistrée : les inscrits des 7 derniers jo
     const p = await panneau(page);
     ok("E5 : 15 nouveaux : 10 lignes, puis « Et 5 autres : Prospects → » ; prénom piégé affiché comme du texte ; 320 px sans défilement horizontal",
       !!p && p.lignes.length === 10 && p.autresTexte === "Et 5 autres : Prospects →" && p.lignes[0].prenom === "<img src=x onerror=alert(1)>" && !p.img && p.sw <= p.iw, JSON.stringify(p));
-    await page.click("#tb-nouveaux [data-tb-tous]"); await pret(page); await page.waitForSelector(".sc-carte"); await attendre(page, 400);
-    const f = await page.evaluate(() => ({ hash: location.hash, filtre: (document.querySelector('[data-filtre][aria-pressed="true"]') || {}).dataset, tri: (document.getElementById("pr-tri") || {}).value }));
-    ok("E5 : « Prospects → » ouvre Prospects sur « Tous », triés par inscription récente", f.hash === "#/prospects" && f.filtre && f.filtre.filtre === "tous" && f.tri === "inscription", JSON.stringify(f));
+    /* v84 (ménage du bloc 3) : la page Prospects n'a plus que la liste (#lc-prospects, filtre [data-lc-filtre]) et les Nouveautés ;
+       les filtres détaillés [data-filtre], le tri #pr-tri et les cartes .sc-carte sont dans « Suivi commercial » (menu Plus).
+       « Prospects → » met la liste sur « Tous » (recherche vidée) et garde « Tous » / « inscription » pour le Suivi commercial :
+       on lit la liste sur #/prospects, puis (sans recharger) le filtre et le tri du Suivi commercial à sa nouvelle place */
+    await page.click("#tb-nouveaux [data-tb-tous]"); await pret(page); await page.waitForSelector("#lc-prospects .lc-ligne"); await attendre(page, 400);
+    const f = await page.evaluate(() => ({ hash: location.hash, liste: ((document.querySelector('#lc-prospects [data-lc-filtre][aria-pressed="true"]') || {}).dataset || {}).lcFiltre, q: (document.getElementById("lc-q") || {}).value }));
+    await page.evaluate(() => { location.hash = "#/suivi-commercial"; }); await pret(page); await page.waitForSelector(".sc-carte"); await attendre(page, 400);
+    Object.assign(f, await page.evaluate(() => ({ hash2: location.hash, filtre: (document.querySelector('[data-filtre][aria-pressed="true"]') || {}).dataset, tri: (document.getElementById("pr-tri") || {}).value })));
+    ok("E5 : « Prospects → » ouvre Prospects sur « Tous », triés par inscription récente (v84 : la liste sur « Tous », sans recherche ; le Suivi commercial sur « Tous », tri « inscription »)",
+      f.hash === "#/prospects" && f.liste === "tous" && f.q === "" && f.hash2 === "#/suivi-commercial" && f.filtre && f.filtre.filtre === "tous" && f.tri === "inscription", JSON.stringify(f));
   });
   await bloc("E6. autres pages, tri des Prospects", async () => {
     const db = base();
     const { page } = await contexte(b, db, { qui: COACH, viewport: LARGE });
-    await page.goto(URL0 + "#/clients"); await pret(page); await page.waitForSelector("#tb-clients [data-ouvrir]");
-    await page.evaluate(() => { location.hash = "#/prospects"; }); await pret(page); await page.waitForSelector("#pr-liste"); await attendre(page, 400);
+    /* v84 (ménage du bloc 3) : le tableau complet (#tb-clients) est dans « Suivi détaillé » (#/suivi-clients) ; les cartes, les filtres
+       détaillés et #pr-tri dans « Suivi commercial » (#/suivi-commercial). On passe par les pages Clients et Prospects (leurs listes)
+       ET par leurs nouvelles places : aucune n'écrit de visite ; l'ordre par défaut est lu dans la liste Prospects et dans le Suivi
+       commercial */
+    await page.goto(URL0 + "#/clients"); await pret(page); await page.waitForSelector("#lc-clients .lc-ligne");
+    await page.evaluate(() => { location.hash = "#/suivi-clients"; }); await pret(page); await page.waitForSelector("#tb-clients [data-ouvrir]");
+    await page.evaluate(() => { location.hash = "#/prospects"; }); await pret(page); await page.waitForSelector("#lc-prospects .lc-ligne"); await attendre(page, 400);
+    const liste = await page.evaluate(() => Array.from(document.querySelectorAll("#lc-prospects .lc-ligne")).map(l => l.dataset.uid));
+    await page.evaluate(() => { location.hash = "#/suivi-commercial"; }); await pret(page); await page.waitForSelector("#pr-liste"); await attendre(page, 400);
     await page.click('[data-filtre="tous"]'); await attendre(page, 500);
     const o = await page.evaluate(() => ({ tri: document.getElementById("pr-tri").value, uids: Array.from(document.querySelectorAll(".sc-carte")).map(c => c.dataset.uid) }));
+    o.liste = liste;
     await page.evaluate(id => Clients.ouvrir(id, "Zoé Martin", "accueil"), ZOE); await attendre(page, 2000);
-    ok("E6 : Mes clients, Prospects et une fiche (sans passer par le tableau de bord) : aucune écriture de visite", visites(db).length === 0 && db.ecritures.length === 0, resume(db));
-    ok("E6 : Prospects (« Tous ») : tri par défaut « inscription récente », du plus récent au plus ancien (Zoé, Hugo, Ana)", o.tri === "inscription" && JSON.stringify(o.uids) === JSON.stringify([ZOE, HUGO, ANA]), JSON.stringify(o));
+    ok("E6 : Mes clients, Prospects et une fiche (sans passer par le tableau de bord ; v84 : aussi Suivi détaillé et Suivi commercial) : aucune écriture de visite", visites(db).length === 0 && db.ecritures.length === 0, resume(db));
+    ok("E6 : Prospects (« Tous ») : tri par défaut « inscription récente », du plus récent au plus ancien (Zoé, Hugo, Ana) (v84 : la liste Prospects, et le tri et les cartes du Suivi commercial)",
+      o.tri === "inscription" && JSON.stringify(o.uids) === JSON.stringify([ZOE, HUGO, ANA]) && JSON.stringify(o.liste) === JSON.stringify([ZOE, HUGO, ANA]), JSON.stringify(o));
   });
 
   /* =================== F. la source des inscrits (côté coach) =================== */
@@ -346,7 +362,8 @@ const PREMIERE = "Première visite enregistrée : les inscrits des 7 derniers jo
     ok("F : tableau de bord « Inscrits par source » (30 derniers jours, hors comptes de test) : insta 1 (Zoé ; pas Paul, 40 j, ni le compte de test), salon 1 (Léon, passé client), tiktok 1 (Ana), — 1 (Hugo, sans code) ; total 4",
       s.h2 === "Inscrits par source" && JSON.stringify(s.lignes) === JSON.stringify([["insta", "1"], ["salon", "1"], ["tiktok", "1"], ["—", "1"]]) && JSON.stringify(s.total) === '["Total","4"]',
       JSON.stringify(s));
-    await page.evaluate(() => { location.hash = "#/prospects"; }); await pret(page); await page.waitForSelector("#pr-liste"); await page.click('[data-filtre="tous"]'); await attendre(page, 500);
+    /* v84 (ménage du bloc 3) : les cartes (.sc-carte) et leurs filtres sont dans « Suivi commercial » (#/suivi-commercial) */
+    await page.evaluate(() => { location.hash = "#/suivi-commercial"; }); await pret(page); await page.waitForSelector("#pr-liste"); await page.click('[data-filtre="tous"]'); await attendre(page, 500);
     const c = await page.evaluate(ids => ids.map(id => { const x = document.querySelector('.sc-carte[data-uid="' + id + '"] .sc-source'); return x ? x.textContent.replace(/\s+/g, " ").trim() : null; }), [ZOE, HUGO, PID(43)]);
     ok("F : cartes Prospects : « Source : insta » (Zoé), « Source : — » (Hugo, sans code ; code piégé : « — », aucune balise)", JSON.stringify(c) === JSON.stringify(["Source : insta", "Source : —", "Source : —"]), JSON.stringify(c));
     await page.evaluate(id => Clients.ouvrir(id, "Zoé Martin", "accueil"), ZOE); await attendre(page, 2000);

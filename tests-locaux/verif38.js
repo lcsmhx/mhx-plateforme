@@ -121,7 +121,8 @@ const coach = { id: F.IDS.coach, email: "c@e.fr", session: F.session(F.IDS.coach
 const thomas = { id: F.IDS.c1, email: "t@e.fr", session: F.session(F.IDS.c1, "t@e.fr") };
 const attendre = (page, ms) => page.waitForTimeout(ms);
 const aller = async (page, h, ms) => { await page.evaluate(x => { location.hash = x; }, h); await attendre(page, ms || 1300); };
-const ouvrirFiche = async (page, id) => { await aller(page, "#/clients", 1500); await page.click(`[data-ouvrir="${id}"]`); await attendre(page, 1500); };
+/* v84 (ménage du bloc 3) : les « Ouvrir » du tableau complet ([data-ouvrir]) sont dans « Suivi détaillé » (#/suivi-clients, menu Plus) */
+const ouvrirFiche = async (page, id) => { await aller(page, "#/suivi-clients", 1500); await page.click(`[data-ouvrir="${id}"]`); await attendre(page, 1500); };
 const ecr = (db, outil) => db.ecritures.filter(e => e.outil === outil && !e.refus);
 
 (async () => {
@@ -272,7 +273,7 @@ const ecr = (db, outil) => db.ecritures.filter(e => e.outil === outil && !e.refu
     const db = base();
     const { c, page } = await contexte(b, coach, { db, latence: 600 });
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 4000);
-    await aller(page, "#/clients", 3000); await page.click(`[data-ouvrir="${F.IDS.c1}"]`); await attendre(page, 3500);
+    await aller(page, "#/suivi-clients", 3000); await page.click(`[data-ouvrir="${F.IDS.c1}"]`); await attendre(page, 3500);   // v84 (ménage du bloc 3) : [data-ouvrir] dans « Suivi détaillé »
     await aller(page, "#/bilan", 5000);
     const eds = await page.$$eval("[data-fb-semaine]", l => l.map(e => e.dataset.fbSemaine));
     if (eds.length >= 2) {
@@ -371,7 +372,7 @@ const ecr = (db, outil) => db.ecritures.filter(e => e.outil === outil && !e.refu
     const db = base([{ user_id: F.IDS.c1, outil: "notes_coach", contenu: { texte: "Note existante.", maj: "2026-09-20T10:00:00.000Z" }, maj_le: "2026-09-20T10:00:00+00:00" }]);
     const { c, page } = await contexte(b, coach, { db, refreshKo: true });
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 1500);
-    await aller(page, "#/clients", 1500);
+    await aller(page, "#/suivi-clients", 1500);   // v84 (ménage du bloc 3) : [data-ouvrir] dans « Suivi détaillé »
     await page.evaluate(() => { Auth.session.expire_le = Date.now() - 1000; });
     await page.click(`[data-ouvrir="${F.IDS.c1}"]`); await attendre(page, 1800);
     const ferme = await page.$eval("#nc-texte", e => e.disabled).catch(() => true);

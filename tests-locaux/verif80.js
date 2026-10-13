@@ -567,7 +567,7 @@ const champTel = (page, id) => page.evaluate(id => {
       { user_id: MAEL.id, outil: "contact", contenu: { telephone: "<img src=x onerror=alert(1)>" }, maj_le: avant(J) }
     ]);
     const { page } = await contexte(b, db, { qui: COACH, viewport: LARGE });
-    await page.goto(URL0 + "#/clients"); await pret(page);
+    await page.goto(URL0 + "#/suivi-clients"); await pret(page);   // v84 (ménage du bloc 3) : le tableau complet (colonne Téléphone) est dans « Suivi détaillé » (menu Plus)
     await page.waitForSelector("#tb-clients [data-ouvrir]");
     const t = await page.evaluate(ids => {
       const th = Array.from(document.querySelectorAll(".tb-clients-table thead th")).map(x => x.textContent.trim());
@@ -581,7 +581,7 @@ const champTel = (page, id) => page.evaluate(id => {
       JSON.stringify(t));
     ok("A7 : « — » sans numéro (Julien) et pour un numéro piégé (Sarah : javascript:…) : aucun lien", !!t.julien && t.julien.t === "—" && !t.julien.liens.length && !!t.sarah && t.sarah.t === "—" && !t.sarah.liens.length, JSON.stringify(t));
     ok("A7 : le numéro enregistré aujourd'hui n'est pas une saisie : l'Activité de Sarah (dernière vraie saisie) ne passe pas à « aujourd'hui »", !!t.sarah && !/aujourd/.test(t.sarah.act || ""), JSON.stringify(t.sarah));
-    await page.evaluate(() => { location.hash = "#/prospects"; }); await pret(page);
+    await page.evaluate(() => { location.hash = "#/suivi-commercial"; }); await pret(page);   // v84 (ménage du bloc 3) : les cartes et les filtres détaillés sont dans « Suivi commercial » (menu Plus)
     await page.click('[data-filtre="tous"]').catch(() => {}); await attendre(page, 500);
     const pr = await page.evaluate(ids => ids.map(id => { const c = document.querySelector('.sc-carte[data-uid="' + id + '"]'), t = c && c.querySelector(".sc-tel");
       return t ? { t: t.textContent.replace(/\s+/g, " ").trim(), liens: Array.from(t.querySelectorAll("a")).map(a => a.getAttribute("href")), img: !!c.querySelector("img") } : null; }), [NOAH.id, INES.id, MAEL.id]);

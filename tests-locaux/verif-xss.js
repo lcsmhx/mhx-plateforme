@@ -96,7 +96,7 @@ const compter = (page) => page.evaluate(() => ({ exec: window.__xss || 0, balise
     const { c, page, erreurs } = await contexte(b, coach, lignes);
     await page.goto(`http://localhost:${PORT}/`); await page.waitForTimeout(1800);
     for (const [uid, routes] of pages) {
-      await page.evaluate(() => { location.hash = "#/clients"; }); await page.waitForTimeout(1500);
+      await page.evaluate(() => { location.hash = "#/suivi-clients"; }); await page.waitForTimeout(1500);   // v84 (ménage du bloc 3) : les « Ouvrir » du tableau complet ([data-ouvrir]) sont dans « Suivi détaillé » (menu Plus)
       await page.click(`[data-ouvrir="${uid}"]`); await page.waitForTimeout(1500);
       for (const r of routes) {
         await page.evaluate(h => { location.hash = h; }, "#/" + r); await page.waitForTimeout(1500);

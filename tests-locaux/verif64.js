@@ -37,6 +37,10 @@
       Nouveautés et le badge de l'onglet Prospects ; v71 (D) : Mes clients ne liste plus les prospects (« Les prospects sont
       dans Prospects → (N comptes gratuits). », lien), le fait « Bilan » de leur carte Prospects tient lieu de l'info-bulle
       de leur ligne ; v83 (bloc 3) : cette ligne est supprimée, le nombre se lit sur la page Prospects ;
+   v84 (ménage du bloc 3) : l'écran détaillé des prospects (en-tête, compteur, tuiles, filtres, cartes, export CSV) se lit dans
+      « Suivi commercial » (#/suivi-commercial), la newsletter dans « Newsletter » (#/newsletter), le tableau complet des
+      clients dans « Suivi détaillé » (#/suivi-clients) ; les Nouveautés, le badge et la liste (#lc-prospects) restent sur la
+      page Prospects (#/prospects) ;
    Z. aucun appel vers l'extérieur.
    Infrastructure (serveur, faux Supabase, personnes, décor) reprise de verif58 : rien ne part vers la vraie base (routage
    par NOM D'HÔTE) ; règles de la base reproduites ; chaque écriture appliquée en mémoire et notée, avec sa condition maj_le.
@@ -382,7 +386,10 @@ const faits = (page, uid) => page.$eval(`#pr-liste .sc-carte[data-uid="${uid}"]`
 /* v83 (bloc 3) : le nombre de la tuile « À traiter » du tableau de bord (à la place de « N urgences aujourd'hui. ») ; la ligne
    « Les prospects sont dans Prospects → » est supprimée de Mes clients : le nombre de prospects se lit sur la page Prospects */
 const traiterTb = page => texte(page, "#tb-t-traiter .t-val");
-const nbProspects = async page => [await texte(page, "#lc-prospects #lc-compte"), (await texte(page, "#pr-vue .pr-detail .lede")).split(" · ")[0]];
+/* v84 (ménage du bloc 3) : le nombre de la liste (#lc-prospects, page Prospects) et celui de l'en-tête du Suivi commercial
+   (#pr-vue .pr-detail) ne sont plus sur la même page : deux lectures, une sur chaque page */
+const nbListe = page => texte(page, "#lc-prospects #lc-compte");
+const nbSuivi = async page => (await texte(page, "#pr-vue .pr-detail .lede")).split(" · ")[0];
 const ligneProspects = async page => { const r = await page.$eval("#clients-prospects", e => { const a = e.querySelector("a.link-a"); return { t: e.textContent, href: a ? a.getAttribute("href") : "" }; }).catch(() => null); return r ? { t: norm(r.t), href: r.href } : { t: "", href: "" }; };
 const boutonsCarte = (page, uid) => page.$$eval(`#pr-liste .sc-carte[data-uid="${uid}"] [data-sc]`, l => l.map(e => e.dataset.sc)).catch(() => []);
 const boutonsFiche = page => page.$$eval("#fiche-commercial [data-sc]", l => l.map(e => e.dataset.sc + "=" + e.textContent.trim())).catch(() => []);
@@ -407,7 +414,8 @@ function lireCSV(s){
 }
 async function ficheDe(page, uid, nom, sel){
   /* même adresse #/accueil d'une fiche à l'autre : on en sort d'abord (sinon aucun changement d'adresse, la fiche ne change pas) */
-  if ((await page.evaluate(() => location.hash)) !== "#/clients"){ await page.evaluate(() => { location.hash = "#/clients"; }); await page.waitForSelector("#tb-clients [data-ouvrir]", { timeout: 10000 }); await attendre(page, 300); }
+  /* v84 (ménage du bloc 3) : le tableau complet (#tb-clients) est dans le Suivi détaillé (#/suivi-clients) */
+  if ((await page.evaluate(() => location.hash)) !== "#/suivi-clients"){ await page.evaluate(() => { location.hash = "#/suivi-clients"; }); await page.waitForSelector("#tb-clients [data-ouvrir]", { timeout: 10000 }); await attendre(page, 300); }
   await page.evaluate(([id, n]) => Clients.ouvrir(id, n, "accueil"), [uid, nom]);
   await page.waitForSelector(sel || "#fiche-reponses", { timeout: 10000 }); await attendre(page, 600);
 }
@@ -578,7 +586,7 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
   /* =================== B. page Prospects =================== */
   await bloc("B. page Prospects : les 3 motifs, puis les actions du coach", async () => {
     const db = decor({ comptes: [P.alice(), P.marc(), P.bruno(), P.victor(), P.omar(), P.hugo(), P.paul()] });
-    const { page } = await coachSur(b, db, "#/prospects", "#pr-liste .sc-carte");
+    const { page } = await coachSur(b, db, "#/suivi-commercial", "#pr-liste .sc-carte");   // v84 (ménage du bloc 3) : en-tête, tuiles, filtres et cartes dans le Suivi commercial
     /* v72 (E) : le tri par défaut des Prospects est « inscription récente » (verif81) ; l'ordre de priorité, toujours au choix, reste vérifié ici au mot près */
     await page.selectOption("#pr-tri", "priorite"); await attendre(page, 400);
     ok("B : « À traiter » (tri « priorité »), dans l'ordre : Alice (Absent), Marc (10 h), Bruno (bilan coché il y a 9 jours), Victor (Perdu il y a 31 jours)",
@@ -651,8 +659,14 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
     ok("C : « Ouvrir » sur Bruno : sa fiche, « à traiter » avec le même motif, boutons Signé, Perdu, Absent et « Retirer « Bilan réservé » »",
       (await page.evaluate(() => Store.idConsulte)) === BRUNO && (await texte(page, "#fiche-commercial .sc-motif")) === "à traiter Bilan réservé depuis 9 j : l'appel a-t-il eu lieu ?" && ["signe=Signé", "perdu=Perdu", "absent=Absent", "bilan_non=Retirer « Bilan réservé »"].every(x => bf.includes(x)), JSON.stringify(bf));
     await aller(page, "#/tableau", 1500);
-    await cliquer(page, "#tb-t-prospects"); await page.waitForSelector("#pr-liste", { timeout: 8000 }); await attendre(page, 600);
-    ok("C : la tuile Prospects mène à la page Prospects : « À traiter » = les 4 du badge (même définition)", egal((await uids(page)).slice().sort(), [ALICE, MARC, BRUNO, VICTOR].sort()), noms(await uids(page)));
+    /* v84 (ménage du bloc 3) : la tuile mène à la page Prospects, qui n'a plus que la liste (#lc-prospects, filtre « Tous » par
+       défaut) : son filtre « À traiter » = les 4 du badge ; les cartes « À traiter » du Suivi commercial (#pr-liste) aussi */
+    await cliquer(page, "#tb-t-prospects"); await page.waitForSelector("#lc-prospects", { timeout: 8000 }); await attendre(page, 600);
+    const hashC = await page.evaluate(() => location.hash);
+    await cliquer(page, '#lc-prospects [data-lc-filtre="a_traiter"]'); await attendre(page, 400);
+    const lcC = await page.$$eval("#lc-prospects .lc-ligne", l => l.map(e => e.dataset.uid)).catch(() => []);
+    await aller(page, "#/suivi-commercial", 300); await page.waitForSelector("#pr-liste", { timeout: 8000 }); await attendre(page, 600);
+    ok("C : la tuile Prospects mène à la page Prospects : « À traiter » = les 4 du badge (même définition)", hashC === "#/prospects" && egal(lcC.slice().sort(), [ALICE, MARC, BRUNO, VICTOR].sort()) && egal((await uids(page)).slice().sort(), [ALICE, MARC, BRUNO, VICTOR].sort()), hashC + " " + noms(lcC) + " | " + noms(await uids(page)));
     ok("C : aucune écriture (tableau de bord, fiche, Prospects)", db.ecritures.length === 0, resume(db));
   });
   await bloc("C. tableau de bord : 5 lignes au plus, dans l'ordre", async () => {
@@ -666,7 +680,7 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
     ok("C : 5 lignes : le 😞 du compte de test (« Sans nom », vers Préparer le call), Zoé (signé), Inès (case), Alice (absent), Léa (clic) ; « Et 4 autres »",
       egal(L.map(x => x.uid), [TESTEUR.id, ZOE, INES, ALICE, LEA]) && L[0].t.includes("Sans nom") && L[0].t.includes("😞") && L[0].cible === "bilan" && L[3].t.includes("Absent à l'appel : repropose-lui un créneau") && (await texte(page, "#tb-a-traiter")).includes("Et 4 autres : Mes clients → · Prospects →"),
       noms(L.map(x => x.uid)) + " " + await texte(page, "#tb-a-traiter"));
-    await aller(page, "#/prospects", 300); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 }); await attendre(page, 500);
+    await aller(page, "#/suivi-commercial", 300); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 }); await attendre(page, 500);   // v84 (ménage du bloc 3) : les cartes, dans le Suivi commercial
     await page.selectOption("#pr-tri", "priorite"); await attendre(page, 400);   // v72 (E) : « priorité » n'est plus le tri par défaut
     ok("C : page Prospects, « À traiter » (tri priorité) : Zoé, Inès, Alice, Léa, Marc, Bruno, Victor — signé, case, absent, clic, nouveau, appel, perdu ; tuile 7 = badge",
       egal(await uids(page), [ZOE, INES, ALICE, LEA, MARC, BRUNO, VICTOR]) && (await tuilePr(page, "À traiter")) === "7", noms(await uids(page)));
@@ -676,7 +690,7 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
   /* =================== D. « Bilan réservé (nouveau créneau) » après « Absent » ou « Perdu » =================== */
   await bloc("D. Absent qui reprend un créneau", async () => {
     const db = decor({ test: false, comptes: [P.alice(), P.zoe(), P.paul(), P.victor()] });
-    const { page } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]");
+    const { page } = await coachSur(b, db, "#/suivi-clients", "#tb-clients [data-ouvrir]");   // v84 (ménage du bloc 3) : le tableau complet, dans le Suivi détaillé
     await ficheDe(page, ALICE, "Alice Absente", "#fiche-commercial");
     const b0 = await boutonsFiche(page);
     ok("D : fiche d'Alice (Absente, coche d'avant l'appel) : ABSENT, à traiter, bouton « Bilan réservé (nouveau créneau) », pas de « Retirer »",
@@ -694,7 +708,7 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
     ok("D : la fiche : plus « ABSENT », « Revenu après l'issue « Absent » », « Prépare le bilan », boutons Signé / Perdu / Absent et « Retirer « Bilan réservé » » ; toast",
       !(await texte(page, "#fiche-commercial .seance-c-tete")).includes("ABSENT") && fc.includes("Revenu après l'issue « Absent »") && fc.includes("Prochaine action : Prépare le bilan") && ["signe=Signé", "perdu=Perdu", "absent=Absent", "bilan_non=Retirer « Bilan réservé »"].every(x => b1.includes(x)) && (await toasts(page)).some(x => x.includes("Bilan réservé noté pour Alice Absente.")),
       JSON.stringify(b1) + " " + fc.slice(0, 300));
-    await aller(page, "#/prospects", 300); await page.waitForSelector("#pr-liste", { timeout: 8000 }); await attendre(page, 500);
+    await aller(page, "#/suivi-commercial", 300); await page.waitForSelector("#pr-liste", { timeout: 8000 }); await attendre(page, 500);   // v84 (ménage du bloc 3) : les cartes, dans le Suivi commercial
     const aT = await uids(page);
     await filtre(page, "issues"); const aI = await uids(page);
     await filtre(page, "tous");
@@ -733,13 +747,16 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
   /* =================== E. la case « J'ai réservé » cochée après la décision du coach =================== */
   await bloc("E. case du prospect après le retrait du coach", async () => {
     const db = decor({ test: false, comptes: [P.nadia(), P.rose()] });
-    const { page } = await coachSur(b, db, "#/prospects", "#pr-liste");
+    const { page } = await coachSur(b, db, "#/suivi-commercial", "#pr-liste");   // v84 (ménage du bloc 3) : les cartes, dans le Suivi commercial
     await attendre(page, 600);
     ok("E : « À traiter » : Nadia (case cochée il y a 2 jours, APRÈS ton retrait) ; pas Rose (case d'avant le retrait)", egal(await uids(page), [NADIA]), noms(await uids(page)));
     const cn = await carte(page, NADIA);
     ok("E : carte de Nadia : « bilan réservé », « à traiter A coché « J'ai réservé » : à vérifier », « Bilan à vérifier (case cochée le " + frL(avant(2 * J)) + ") », « vérifie ton agenda »",
       cn.includes("bilan réservé") && (await motifCarte(page, NADIA)) === "à traiter A coché « J'ai réservé » : à vérifier" && cn.includes("Bilan à vérifier (case cochée le " + frL(avant(2 * J)) + ")") && cn.includes("Il a coché « J'ai réservé » il y a 2 jours : vérifie ton agenda"), cn);
+    /* v84 (ménage du bloc 3) : les Nouveautés restent sur la page Prospects (#/prospects) ; puis retour au Suivi commercial */
+    await aller(page, "#/prospects", 300); await page.waitForSelector("#pr-nouveautes .nv-panneau", { timeout: 8000 }); await attendre(page, 500);
     const nv = await page.$$eval("#pr-nouveautes .nv-liste li .nv-txt", l => l.map(e => e.textContent.replace(/\s+/g, " ").trim())).catch(() => []);
+    await aller(page, "#/suivi-commercial", 300); await page.waitForSelector("#pr-liste", { timeout: 8000 }); await attendre(page, 500);
     ok("E : Nouveautés : « Nadia Recoche · a coché « J'ai réservé » » ; rien pour la case de Rose (d'avant le retrait)", nv.includes("Nadia Recoche · a coché « J'ai réservé »") && !nv.some(x => x.startsWith("Rose Avant · a coché")), JSON.stringify(nv));
     await filtre(page, "tous"); await choisir(page, "#pr-bilan", "oui");
     const bo = await uids(page);
@@ -750,7 +767,7 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
     ok("E : fiche de Nadia : « Bilan réservé : à vérifier : le prospect a coché sa case », boutons « Bilan réservé » et « Retirer « Bilan réservé » »",
       dec === "à vérifier : le prospect a coché sa case" && bf.includes("bilan=Bilan réservé") && bf.includes("bilan_non=Retirer « Bilan réservé »"), dec + " " + JSON.stringify(bf));
     await cliquer(page, '#fiche-commercial [data-sc="bilan_non"]'); await attendre(page, 1500);
-    await aller(page, "#/prospects", 300); await page.waitForSelector("#pr-liste", { timeout: 8000 }); await attendre(page, 500);
+    await aller(page, "#/suivi-commercial", 300); await page.waitForSelector("#pr-liste", { timeout: 8000 }); await attendre(page, 500);   // v84 (ménage du bloc 3) : les cartes, dans le Suivi commercial
     await filtre(page, "a_traiter");   // le filtre choisi est gardé le temps de la session (« Tous » plus haut)
     ok("E : « Retirer » de nouveau (ta décision, après sa case) : Nadia sort de « À traiter », la case redevient une info ; une écriture, jamais la clé challenge",
       !(await uids(page)).includes(NADIA) && ecrSuivi(db, NADIA).length === 1 && ecr(db, "challenge").length === 0 && db.ecritures.length === 1, noms(await uids(page)) + " " + resume(db));
@@ -760,7 +777,7 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
      retour_jours : « Retirer « Bilan réservé » » dans la fiche fait tomber le « à vérifier », l'Absent reste */
   await bloc("E. Absent, case d'après l'appel restée à vérifier : « Retirer »", async () => {
     const db = decor({ test: false, comptes: [P.yann()] });
-    const { page } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]");
+    const { page } = await coachSur(b, db, "#/suivi-clients", "#tb-clients [data-ouvrir]");   // v84 (ménage du bloc 3) : le tableau complet, dans le Suivi détaillé
     await ficheDe(page, YANN, "Yann Vieux", "#fiche-commercial");
     const b0 = await boutonsFiche(page), f0 = await texte(page, "#fiche-commercial");
     ok("E : fiche de Yann (Absent il y a 20 jours, case cochée il y a 16 jours) : ABSENT, « pas encore vérifié par toi », boutons « Bilan réservé (nouveau créneau) » et « Retirer « Bilan réservé » »",
@@ -777,7 +794,7 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
     ok("E : la fiche se redessine : toujours ABSENT et à traiter, plus « pas encore vérifié par toi » ni « Retirer », « Bilan réservé (nouveau créneau) » reste",
       (await texte(page, "#fiche-commercial .seance-c-tete")).includes("ABSENT") && !!(await page.$("#fiche-commercial .sc-motif")) && !f1.includes("pas encore vérifié par toi") && !b1.some(x => x.startsWith("bilan_non=")) && b1.includes("bilan=Bilan réservé (nouveau créneau)"),
       JSON.stringify(b1) + " " + f1.slice(0, 400));
-    await aller(page, "#/prospects", 300); await page.waitForSelector("#pr-liste", { timeout: 8000 }); await attendre(page, 500);
+    await aller(page, "#/suivi-commercial", 300); await page.waitForSelector("#pr-liste", { timeout: 8000 }); await attendre(page, 500);   // v84 (ménage du bloc 3) : les cartes, dans le Suivi commercial
     const cy = await carte(page, YANN);
     ok("E : page Prospects, carte de Yann : « à traiter Absent à l'appel : repropose-lui un créneau », « Bilan pas réservé » (plus « à vérifier »)",
       (await motifCarte(page, YANN)) === "à traiter Absent à l'appel : repropose-lui un créneau" && cy.includes("Bilan pas réservé") && !cy.includes("à vérifier"), cy);
@@ -793,7 +810,7 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
       prospect(24, "Jean-Luc", "Normal", { cree: 2 * J, q: 2 * J, rep: { probleme: "Perdre du gras" }, email: "jl@exemple.fr", news: true })
     ];
     const db = decor({ test: false, comptes: pieges });
-    const { page } = await coachSur(b, db, "#/prospects", "#pr-liste");
+    const { page } = await coachSur(b, db, "#/suivi-commercial", "#pr-liste");   // v84 (ménage du bloc 3) : l'export des prospects, dans le Suivi commercial
     await filtre(page, "tous");
     const { t } = await exporter(page);
     const L = lireCSV(t.replace(/^﻿/, "")), ligne = n => L.find(l => l[0] === n) || [];
@@ -803,6 +820,7 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
     ok("F : … sans signe après les espaces (« ␣lou@exemple.fr »), un nom avec un tiret au milieu, les nombres (relances, clics) et les dates : inchangés",
       ligne("Lou Espace")[iE] === " lou@exemple.fr" && ligne("Jean-Luc Normal")[iE] === "jl@exemple.fr" && ligne("Jean-Luc Normal")[iR] === "0" && ligne("Jean-Luc Normal")[iC] === "0" && /^\d{2}\/\d{2}\/\d{4}$/.test(ligne("Jean-Luc Normal")[iI] || ""),
       JSON.stringify([ligne("Lou Espace"), ligne("Jean-Luc Normal")]));
+    await aller(page, "#/newsletter", 300); await page.waitForSelector("#pr-nl-csv", { timeout: 8000 }); await attendre(page, 400);   // v84 (ménage du bloc 3) : l'export de la newsletter, dans « Newsletter »
     const { t: tn } = await exporter(page, "#pr-nl-csv");
     const N = lireCSV(tn.replace(/^﻿/, "")), nl = n => N.find(l => l[0] === n) || [];
     ok("F : CSV de la newsletter : les mêmes emails neutralisés (« '␣␣=HYPERLINK(…) », « '␣@evil.fr »), « ␣lou@exemple.fr » et « jl@exemple.fr » inchangés",
@@ -813,7 +831,7 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
   /* =================== G. une analyse qui lève une erreur =================== */
   await bloc("G. analyse qui plante : le prospect reste", async () => {
     const db = decor({ test: false, comptes: [P.lea(), P.marc(), P.hugo(), P.omar()] });
-    const { page } = await coachSur(b, db, "#/prospects", "#pr-liste .sc-carte");
+    const { page } = await coachSur(b, db, "#/suivi-commercial", "#pr-liste .sc-carte");   // v84 (ménage du bloc 3) : outilProspects.rendre dessine le Suivi commercial
     /* une erreur imprévue dans l'analyse d'Omar (un bug futur, un champ nouveau lu sans garde) */
     await page.evaluate(id => { const o = Commercial.analyse; Commercial.analyse = function(p){ if (p && p.id === id) throw new Error("piège"); return o.apply(this, arguments); }; outilProspects.rendre(document.getElementById("pr-vue")); }, OMAR);
     await attendre(page, 500);
@@ -842,7 +860,7 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
   /* =================== H. le bilan d'avant l'appel, à l'écran et dans le CSV =================== */
   await bloc("H. bilan d'avant l'appel : carte, fiche, CSV", async () => {
     const db = decor({ test: false, comptes: [P.alice(), P.sara(), P.tina(), P.hugo()] });
-    const { page } = await coachSur(b, db, "#/prospects", "#pr-liste");
+    const { page } = await coachSur(b, db, "#/suivi-commercial", "#pr-liste");   // v84 (ménage du bloc 3) : les cartes et l'export, dans le Suivi commercial
     await filtre(page, "tous");
     const ca = await carte(page, ALICE), cs = await carte(page, SARA), ct = await carte(page, TINA), ch = await carte(page, HUGO);
     ok("H : Alice (coche d'avant son « Absent ») : « Bilan coché le " + frL(MIDI(5)) + ", avant l'appel », info-bulle « Bilan réservé : coché par toi, avant l'appel »",
@@ -856,8 +874,12 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
     ok("H : Hugo (coché hier, sans issue) : inchangé, « Bilan réservé le " + frL(MIDI(1)) + " », info-bulle « Bilan réservé : coché par toi »",
       ch.includes("Bilan réservé le " + frL(MIDI(1))) && (await titreBilan(page, HUGO)) === "Bilan réservé : coché par toi", ch + " | " + await titreBilan(page, HUGO));
     /* v59 (relecture) : Nouveautés et le badge de l'onglet Prospects suivent l'analyse (caseAVerifier), comme « À traiter » */
+    /* v84 (ménage du bloc 3) : Nouveautés, badge et nombre de la liste sur la page Prospects (#/prospects), puis retour au Suivi commercial */
+    await aller(page, "#/prospects", 300); await page.waitForSelector("#pr-nouveautes .nv-panneau", { timeout: 8000 }); await attendre(page, 500);
     const nvH = await page.$$eval("#pr-nouveautes .nv-liste li .nv-txt", l => l.map(e => e.textContent.replace(/\s+/g, " ").trim())).catch(() => []);
     const bgH = await page.$$eval('#nav a[data-id="prospects"] .nav-badge', l => l.map(e => e.textContent.trim())).catch(() => []);
+    const nbL = await nbListe(page);
+    await aller(page, "#/suivi-commercial", 300); await page.waitForSelector("#pr-liste", { timeout: 8000 }); await attendre(page, 500);
     ok("H : Nouveautés : « Sara Recase · a coché « J'ai réservé » » (sa case d'après l'appel, face à ta coche d'avant) ; pas la case de Tina (d'avant l'appel), son clic oui ; badge de l'onglet Prospects « 2 »",
       nvH.includes("Sara Recase · a coché « J'ai réservé »") && !nvH.some(x => x.startsWith("Tina Reclic · a coché")) && nvH.includes("Tina Reclic · clic « Réserver mon plan d'action »") && nvH.length === 2 && egal(bgH, ["2"]),
       JSON.stringify([nvH, bgH]));
@@ -872,9 +894,11 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
        disait l'info-bulle « bilan réservé » de leur ligne (v59, Decouverte.pastilleCoach) se lit sur leur carte Prospects, fait
        « Bilan », valeur exacte (la page est encore sur Prospects, filtre « Tous ») ; puis Mes clients : aucun des 4, la ligne */
     const fb = {}; for (const [k, u] of [["Alice", ALICE], ["Sara", SARA], ["Tina", TINA], ["Hugo", HUGO]]) fb[k] = (await faits(page, u)).Bilan;
-    const nbP = await nbProspects(page);   /* v83 (bloc 3) : le nombre de prospects, sur la page Prospects */
-    await aller(page, "#/clients", 300); await page.waitForSelector("#tb-clients [data-ouvrir]", { timeout: 8000 }); await attendre(page, 500);
+    const nbP = [nbL, await nbSuivi(page)];   /* v83 (bloc 3) : le nombre de prospects, sur la page Prospects ; v84 : la liste (page Prospects) et l'en-tête du Suivi commercial */
+    await aller(page, "#/suivi-clients", 300); await page.waitForSelector("#tb-clients [data-ouvrir]", { timeout: 8000 }); await attendre(page, 500);   // v84 (ménage du bloc 3) : le tableau, dans le Suivi détaillé
     const lp = await ligneProspects(page), dansTb = !!(await page.$([ALICE, SARA, TINA, HUGO].map(u => `#tb-clients [data-ouvrir="${u}"]`).join(", ")));
+    /* v84 (ménage du bloc 3) : la page Clients (#lc-clients) n'a pas la ligne vers Prospects (ni le Suivi détaillé, ci-dessus) */
+    await aller(page, "#/clients", 300); await page.waitForSelector("#lc-clients", { timeout: 8000 }).catch(() => {}); await attendre(page, 300);
     const sansNote = !(await page.$("#clients-prospects")) && !!(await page.$("#lc-clients"));   /* v83 (bloc 3) : la ligne vers Prospects n'existe plus */
     ok("H : Mes clients (v71) : ni Alice, Sara, Tina ni Hugo dans « Suivi de mes clients » ; v83 : plus de ligne « Les prospects sont dans Prospects → », « 4 prospects » sur la page Prospects ; cartes Prospects, fait « Bilan » : Sara « à vérifier (case cochée le " + frL(avant(20 * H)) + ") » (plus « réservé le »), Alice « coché le " + frL(MIDI(5)) + ", avant l'appel », Tina « case cochée le " + frL(avant(6 * J)) + ", avant l'appel », Hugo inchangé (« réservé le " + frL(MIDI(1)) + " »)",
       !dansTb && lp.t === "" && lp.href === "" && sansNote && egal(nbP, ["4 prospects", "4 comptes gratuits"]) && fb.Sara === "à vérifier (case cochée le " + frL(avant(20 * H)) + ")" && fb.Alice === "coché le " + frL(MIDI(5)) + ", avant l'appel" && fb.Tina === "case cochée le " + frL(avant(6 * J)) + ", avant l'appel" && fb.Hugo === "réservé le " + frL(MIDI(1)),

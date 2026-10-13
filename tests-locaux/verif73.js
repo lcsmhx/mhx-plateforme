@@ -239,7 +239,7 @@ const texte = async (page, sel) => norm(await page.textContent(sel).catch(() => 
   await bloc("B2. le coach retrouve sa saisie dans la fiche d'un client", async () => {
     const db = base();
     const { page } = await contexte(b, db, coach);
-    await ouvrir(page, "#/clients", `[data-ouvrir="${THOMAS}"]`);
+    await ouvrir(page, "#/suivi-clients", `[data-ouvrir="${THOMAS}"]`);   // v84 (ménage du bloc 3) : [data-ouvrir] dans « Suivi détaillé » (menu Plus)
     await page.evaluate(([T, C]) => {
       const P = { nom: "COPIE DU COACH", note: "", maj: "", seances: [{ nom: "Séance copie", note: "", exercices: [{ nom: "Squat", series: "3", reps: "8", repos: "90 s", note: "", lien: "", id: "" }] }] };
       localStorage.setItem("mhx_attente|" + T + "|programme", JSON.stringify({ a: C, t: new Date().toISOString(), v: P }));
@@ -285,7 +285,7 @@ const texte = async (page, sel) => norm(await page.textContent(sel).catch(() => 
   await bloc("C3. refus définitif chez le coach", async () => {
     const db = base(); db.refus = true;
     const { page } = await contexte(b, db, coach);
-    await ouvrir(page, "#/clients", `[data-ouvrir="${THOMAS}"]`);
+    await ouvrir(page, "#/suivi-clients", `[data-ouvrir="${THOMAS}"]`);   // v84 (ménage du bloc 3) : [data-ouvrir] dans « Suivi détaillé » (menu Plus)
     await page.click(`[data-ouvrir="${THOMAS}"]`); await page.waitForSelector("#vue .bandeau", { timeout: 10000 }); await attendre(page, 600);
     await aller(page, "#/programme", "#pg-nom");
     await page.fill("#pg-nom", "Bloc refusé (essai 73)"); await attendre(page, 1800);

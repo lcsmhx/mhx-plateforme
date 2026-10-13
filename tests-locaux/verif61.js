@@ -16,8 +16,10 @@
       verif62), nombre, date et heure (heure de l'appareil du coach), « 0 » / « aucune » pour un client jamais connecté depuis, info-bulle « comptées
       depuis le … », téléphone 390 px ; v71 (D) : plus de prospect dans ce tableau (la ligne sous le titre renvoie vers Prospects :
       leurs connexions, même piégées ou indisponibles, se lisent sur leur carte) ; v83 (bloc 3) : cette ligne est supprimée,
-      le nombre de prospects se lit sur la page Prospects (« 8 prospects », « 8 comptes gratuits ») ;
-   E. page Prospects : les deux lignes dans chaque carte, la phrase d'aide ;
+      le nombre de prospects se lit sur la page Prospects (« 8 prospects », « 8 comptes gratuits ») ; v84 (ménage du bloc 3) :
+      le tableau complet est dans « Suivi détaillé » (#/suivi-clients), les cartes, leurs filtres et l'en-tête « N comptes
+      gratuits » dans « Suivi commercial » (#/suivi-commercial) ; la liste Clients (#/clients) et son nombre restent en place ;
+   E. page Prospects (v84 : les cartes sont dans « Suivi commercial ») : les deux lignes dans chaque carte, la phrase d'aide ;
    F. rien côté client ni prospect : aucun texte du compteur, aucune lecture de la table ;
    G. l'interrupteur des visites (suivi_visites_clients) ne change rien au compteur : « tous » et « off », clients et
       prospects notés et affichés ;
@@ -496,7 +498,17 @@ const NOTE_PROSPECTS = "Les prospects sont dans Prospects → (8 comptes gratuit
    est affichée) et le nombre de prospects se lit sur la page Prospects (#lc-compte et l'en-tête « N comptes gratuits · M à traiter ») */
 const NB_PROSPECTS = JSON.stringify(["8 prospects", "8 comptes gratuits"]);
 const sansNoteProspects = async page => !(await page.$("#clients-prospects")) && !!(await page.$("#lc-clients"));
-const nbProspects = async page => JSON.stringify([await texte(page, "#lc-prospects #lc-compte"), (await texte(page, "#pr-vue .pr-detail .lede")).split(" · ")[0]]);
+/* v84 (ménage du bloc 3) : « 8 prospects » se lit sur la liste de la page Prospects, l'en-tête « 8 comptes gratuits · … » dans
+   « Suivi commercial » (menu Plus) : la page passe par la liste puis revient au Suivi commercial (elle y finit) */
+const nbProspects = async page => {
+  await aller(page, "#/prospects", 300); await page.waitForSelector("#lc-prospects #lc-compte", { timeout: 10000 }).catch(() => {});
+  const n = await texte(page, "#lc-prospects #lc-compte");
+  await aller(page, "#/suivi-commercial", 300); await page.waitForSelector("#pr-vue .pr-detail .lede", { timeout: 10000 }).catch(() => {}); await attendre(page, 400);
+  return JSON.stringify([n, (await texte(page, "#pr-vue .pr-detail .lede")).split(" · ")[0]]);
+};
+/* v84 (ménage du bloc 3) : la liste Clients (#lc-clients) est seule sur #/clients ; le tableau complet est dans « Suivi détaillé » :
+   la page va sur #/clients le temps de lire l'absence de l'ancienne ligne et la présence de la liste */
+const surClients = async page => { await aller(page, "#/clients", 300); await page.waitForSelector("#lc-clients", { timeout: 10000 }).catch(() => {}); await attendre(page, 300); };
 
 (async () => {
   await new Promise((r, k) => { server.once("error", e => k(new Error(e && e.code === "EADDRINUSE" ? "port " + PORT + " déjà pris (une autre suite tourne ?) : VERIF61_PORT=9771 node verif61.js ../index.html" : String(e)))); server.listen(PORT, r); });
@@ -531,7 +543,7 @@ const nbProspects = async page => JSON.stringify([await texte(page, "#lc-prospec
     ok("A : Thomas (un autre client, hors de l'interrupteur des visites) : UNE connexion notée, avec son jeton, malgré 3 pages ouvertes ; rien d'autre écrit", notees(db).length === 1 && notees(db, F.IDS.c1).length === 1 && notees(db)[0].jeton === "Bearer jeton-" + F.IDS.c1 && db.ecritures.length === 0, JSON.stringify(notees(db)) + " " + resume(db));
     const dbc = decor();
     const { page: pc } = await coachSur(b, dbc, "#/tableau", "#tb-vue");
-    for (const h of ["#/clients", "#/prospects"]) await aller(pc, h, 1200);
+    for (const h of ["#/clients", "#/prospects", "#/suivi-clients", "#/suivi-commercial"]) await aller(pc, h, 1200);   // v84 (ménage du bloc 3) : aussi les pages où le compteur s'affiche désormais
     await pc.evaluate(id => Clients.ouvrir(id, "Sans nom", "accueil"), TESTEUR.id); await attendre(pc, 1500);
     await aller(pc, "#/programme", 1000);
     await pc.reload(); await pret(pc, "#vue");
@@ -631,13 +643,13 @@ const nbProspects = async page => JSON.stringify([await texte(page, "#lc-prospec
     ok("C : fonction absente (404) : un seul essai, son accueil s'affiche, aucun message", notees(db).length === 1 && !!(await page.$("#dc-vue, #acc-vue")) && !/erreur|indisponible|connexion/i.test(vu) && (await toasts(page)).length === 0, notees(db).length + " | " + vu.slice(0, 200) + " | " + JSON.stringify(await toasts(page)));
     await cacher(page); await page.clock.fastForward(11 * MIN); await montrer(page); await attendre(page, 800);
     ok("C : … revenue après 11 min : plus d'essai avant le prochain chargement", notees(db).length === 1, String(notees(db).length));
-    const { page: pc } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]");
+    const { page: pc } = await coachSur(b, db, "#/suivi-clients", "#tb-clients [data-ouvrir]");   // v84 (ménage du bloc 3) : le tableau complet est dans « Suivi détaillé »
     /* v71 (D) : Léa (prospecte) n'a plus de ligne dans Mes clients : l'info-bulle se lit sur le compte de test, ses « — » sur sa carte Prospects */
-    const T = await ligneClient(pc, TESTEUR.id), np = await noteProspects(pc);
+    const T = await ligneClient(pc, TESTEUR.id);
     /* v83 (bloc 3) : tout est lu sur Mes clients, puis sur la page Prospects (le nombre de prospects, à la place de la ligne supprimée) */
-    const titreT = await titre(pc, TESTEUR.id, "Connexions"), leaT = await dansTableau(pc, LEA), sansNote = await sansNoteProspects(pc);
-    await aller(pc, "#/prospects", 1800); await filtre(pc, "tous");
-    const nbP = await nbProspects(pc);
+    const titreT = await titre(pc, TESTEUR.id, "Connexions"), leaT = await dansTableau(pc, LEA);
+    await surClients(pc); const np = await noteProspects(pc), sansNote = await sansNoteProspects(pc);   // v84 : l'ancienne ligne et la liste, sur #/clients
+    const nbP = await nbProspects(pc); await filtre(pc, "tous");   // v84 : la liste Prospects puis le Suivi commercial (cartes et filtres)
     ok("C : coach, table absente : Mes clients s'affiche, « — » dans les deux colonnes (compte de test), info-bulle « indisponibles » ; Léa (prospecte) n'y est plus ; v83 : plus de ligne « Les prospects sont dans Prospects → », « 8 prospects » sur la page Prospects", T["Connexions"] === "—" && T["Dernière connexion"] === "—" && /indisponibles/.test(titreT) && leaT === false && np.t === "" && !np.lien && sansNote && nbP === NB_PROSPECTS, JSON.stringify([T["Connexions"], T["Dernière connexion"], leaT, np, sansNote]) + " " + nbP + " " + titreT);
     const fm = await faits(pc, MARC), fl = await faits(pc, LEA);
     ok("C : … la page Prospects s'affiche, cartes avec « Connexions — » et « Dernière connexion — » (Marc et Léa)", (await pc.$$("#pr-liste .sc-carte")).length > 0 && fm["Connexions"] === "—" && fm["Dernière connexion"] === "—" && fl["Connexions"] === "—" && fl["Dernière connexion"] === "—", JSON.stringify([fm, fl]));
@@ -649,7 +661,7 @@ const nbProspects = async page => JSON.stringify([await texte(page, "#lc-prospec
     await page.goto(URL0 + "#/accueil"); await pret(page, "#acc-vue h1"); await attendre(page, 600);
     await cacher(page); await page.clock.fastForward(11 * MIN); await montrer(page); await attendre(page, 800);
     ok("C : fonction refusée (403, retour arrière) : un seul essai, l'accueil s'affiche, pas d'autre essai au retour", notees(db).length === 1 && !!(await page.$("#acc-vue h1")) && (await toasts(page)).length === 0, notees(db).length + " " + JSON.stringify(await toasts(page)));
-    const { page: pc } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]");
+    const { page: pc } = await coachSur(b, db, "#/suivi-clients", "#tb-clients [data-ouvrir]");   // v84 (ménage du bloc 3) : le tableau complet est dans « Suivi détaillé »
     const T = await ligneClient(pc, TESTEUR.id);
     ok("C : … coach, lecture refusée : « — » dans les deux colonnes", T["Connexions"] === "—" && T["Dernière connexion"] === "—", JSON.stringify(T));
     const dbp = decor(); dbp.cxPanne = true;
@@ -662,7 +674,7 @@ const nbProspects = async page => JSON.stringify([await texte(page, "#lc-prospec
   /* =================== D. Mes clients =================== */
   await bloc("D. Mes clients", async () => {
     const db = avecLignes(decor());
-    const { page } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]", { fuseau: FUSEAU });
+    const { page } = await coachSur(b, db, "#/suivi-clients", "#tb-clients [data-ouvrir]", { fuseau: FUSEAU });   // v84 (ménage du bloc 3) : le tableau complet est dans « Suivi détaillé »
     const th = await page.$$eval(".tb-clients-table thead th", l => l.map(e => e.textContent.trim()));
     const i = th.indexOf("Connexions");
     ok("D : en-têtes « Connexions » puis « Dernière connexion », juste après « Visite », avant « Jours actifs » (v57)", i > 0 && th[i - 1] === "Visite" && th[i + 1] === "Dernière connexion" && th[i + 2] === "Jours actifs", JSON.stringify(th));
@@ -674,10 +686,13 @@ const nbProspects = async page => JSON.stringify([await texte(page, "#lc-prospec
     /* v71 (D) : Léa et Marc (prospects) n'ont plus de ligne dans Mes clients ; leurs connexions se lisent sur leur carte Prospects,
        ouverte sur un second décor identique (la table de CE décor doit rester lue une seule fois, vérifié plus bas) ; l'info-bulle
        « Aucune connexion notée » (Mes clients seulement) se lit sur Karim, client sans ligne */
-    const Ka = await ligneClient(page, KARIM), np = await noteProspects(page), leaT = await dansTableau(page, LEA), marcT = await dansTableau(page, MARC), sansNote = await sansNoteProspects(page);
+    const Ka = await ligneClient(page, KARIM), leaT = await dansTableau(page, LEA), marcT = await dansTableau(page, MARC);
     const db2 = avecLignes(decor());
-    const { page: pp } = await coachSur(b, db2, "#/prospects", "#pr-liste", { fuseau: FUSEAU }); await filtre(pp, "tous");
+    /* v84 (ménage du bloc 3) : les cartes sont dans « Suivi commercial » ; l'ancienne ligne et la liste Clients se lisent sur #/clients,
+       sur le second décor (la table du premier doit rester lue une seule fois, vérifié plus bas) */
+    const { page: pp } = await coachSur(b, db2, "#/suivi-commercial", "#pr-liste", { fuseau: FUSEAU }); await filtre(pp, "tous");
     const Le = await faits(pp, LEA), Ma = await faits(pp, MARC), nbP = await nbProspects(pp);   /* v83 (bloc 3) : le nombre de prospects, sur la page Prospects */
+    await surClients(pp); const np = await noteProspects(pp), sansNote = await sansNoteProspects(pp);
     ok("D : prospects Léa et Marc : plus de ligne dans Mes clients ; v83 : plus de ligne « Les prospects sont dans Prospects → », « 8 prospects » sur la page Prospects ; carte Prospects de Léa : « 3 » et " + quandCoach(CX_LEA.derniere) + " ; Marc (jamais connecté depuis) : « 0 » et « aucune »", leaT === false && marcT === false && np.t === "" && !np.lien && sansNote && nbP === NB_PROSPECTS && Le["Connexions"] === "3" && Le["Dernière connexion"] === quandCoach(CX_LEA.derniere) && Ma["Connexions"] === "0" && Ma["Dernière connexion"] === "aucune", JSON.stringify([leaT, marcT, np, sansNote, nbP, Le["Connexions"], Le["Dernière connexion"], Ma["Connexions"], Ma["Dernière connexion"]]));
     ok("D : Karim (client, jamais connecté depuis, sans ligne) : « 0 » et « aucune », info-bulle « Aucune connexion notée »", Ka["Connexions"] === "0" && Ka["Dernière connexion"] === "aucune" && /Aucune connexion notée/.test(await titre(page, KARIM, "Connexions")), JSON.stringify([Ka["Connexions"], Ka["Dernière connexion"]]) + " " + (await titre(page, KARIM, "Connexions")));
     ok("D : la phrase sous le tableau explique les deux colonnes", /« Connexions » : le nombre de jours où il a ouvert l'app connecté/.test(await texte(page, "#vue")) && /« Dernière connexion » : la date et l'heure/.test(await texte(page, "#vue")), "");
@@ -687,7 +702,7 @@ const nbProspects = async page => JSON.stringify([await texte(page, "#lc-prospec
 
   await bloc("D. Mes clients sur téléphone", async () => {
     const db = avecLignes(decor());
-    const { page } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]", { viewport: MOBILE, fuseau: FUSEAU });
+    const { page } = await coachSur(b, db, "#/suivi-clients", "#tb-clients [data-ouvrir]", { viewport: MOBILE, fuseau: FUSEAU });   // v84 (ménage du bloc 3) : le tableau complet est dans « Suivi détaillé »
     const lbl = await page.$eval(`#tb-clients [data-ouvrir="${TESTEUR.id}"]`, bt => { const tr = bt.closest("tr"); const g = l => { const td = tr.querySelector(`td[data-l="${l}"]`); return td ? { t: td.textContent.trim(), avant: getComputedStyle(td, "::before").content, vis: td.getBoundingClientRect().width > 0 } : null; }; return [g("Connexions"), g("Dernière connexion")]; });
     ok("D : téléphone 390 px : les deux lignes de la carte portent leur libellé et leur valeur", lbl[0] && lbl[1] && lbl[0].vis && lbl[1].vis && /Connexions/.test(lbl[0].avant) && /Dernière connexion/.test(lbl[1].avant) && lbl[0].t === "12", JSON.stringify(lbl));
     ok("D : … la page ne déborde pas en largeur", !(await deborde(page)), await largeur(page));
@@ -696,7 +711,7 @@ const nbProspects = async page => JSON.stringify([await texte(page, "#lc-prospec
   /* =================== E. page Prospects =================== */
   await bloc("E. page Prospects", async () => {
     const db = avecLignes(decor());
-    const { page } = await coachSur(b, db, "#/prospects", "#pr-liste", { fuseau: FUSEAU });
+    const { page } = await coachSur(b, db, "#/suivi-commercial", "#pr-liste", { fuseau: FUSEAU });   // v84 (ménage du bloc 3) : les cartes sont dans « Suivi commercial »
     await filtre(page, "tous");
     const fl = await faits(page, LEA), fm = await faits(page, MARC), o = fl._ordre || [];
     ok("E : carte de Léa : « Connexions 3 » et « Dernière connexion " + quandCoach(CX_LEA.derniere) + " », juste après les jours actifs", fl["Connexions"] === "3" && fl["Dernière connexion"] === quandCoach(CX_LEA.derniere) && o.indexOf("Connexions") === o.indexOf("Jours actifs (30 j)") + 1 && o.indexOf("Dernière connexion") === o.indexOf("Connexions") + 1, JSON.stringify(fl));
@@ -716,8 +731,8 @@ const nbProspects = async page => JSON.stringify([await texte(page, "#lc-prospec
     const { page: pl } = await contexte(b, qui(LEA, "lea@exemple.fr"), db);
     await pl.goto(URL0); await pret(pl, "#vue");
     const vl = [];
-    for (const h of ["#/accueil", "#/formation", "#/calculateur", "#/profil", "#/clients", "#/prospects"]) { await aller(pl, h, 1100); vl.push(norm(await pl.evaluate(() => document.body.innerText))); }
-    ok("F : prospecte Léa (même en tapant #/clients ou #/prospects) : rien du compteur, aucune lecture de la table", vl.every(t => !TEXTE_CX.test(t)) && db.cxLectures.length === 0, (vl.find(t => TEXTE_CX.test(t)) || "").slice(0, 160) + " " + JSON.stringify(db.cxLectures));
+    for (const h of ["#/accueil", "#/formation", "#/calculateur", "#/profil", "#/clients", "#/prospects", "#/suivi-clients", "#/suivi-commercial"]) { await aller(pl, h, 1100); vl.push(norm(await pl.evaluate(() => document.body.innerText))); }   // v84 (ménage du bloc 3) : aussi les nouvelles pages du compteur
+    ok("F : prospecte Léa (même en tapant #/clients, #/prospects, v84 : #/suivi-clients ou #/suivi-commercial) : rien du compteur, aucune lecture de la table", vl.every(t => !TEXTE_CX.test(t)) && db.cxLectures.length === 0, (vl.find(t => TEXTE_CX.test(t)) || "").slice(0, 160) + " " + JSON.stringify(db.cxLectures));
   });
 
   /* =================== G. l'interrupteur des visites ne change rien =================== */
@@ -727,7 +742,7 @@ const nbProspects = async page => JSON.stringify([await texte(page, "#lc-prospec
       const { page } = await contexte(b, THOMAS, db);
       await page.goto(URL0); await pret(page, "#acc-vue h1"); await attendre(page, 600);
       ok("G : « tous » : Thomas est noté à l'ouverture, une fois", notees(db, F.IDS.c1).length === 1, JSON.stringify(notees(db)));
-      const { page: pc } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]", { fuseau: FUSEAU });
+      const { page: pc } = await coachSur(b, db, "#/suivi-clients", "#tb-clients [data-ouvrir]", { fuseau: FUSEAU });   // v84 (ménage du bloc 3) : le tableau complet est dans « Suivi détaillé »
       const Th = await ligneClient(pc, F.IDS.c1);
       ok("G : « tous » : Mes clients montre ses connexions (" + db.cx[F.IDS.c1].nombre + " : ses 5, plus son ouverture d'aujourd'hui si c'est un autre jour)", Th["Connexions"] === String(db.cx[F.IDS.c1].nombre) && db.cx[F.IDS.c1].nombre >= 5 && /^\d{2}\/\d{2}(\/\d{4})? \d{2}:\d{2}$/.test(Th["Dernière connexion"] || ""), JSON.stringify([Th["Connexions"], Th["Dernière connexion"]]));
     });
@@ -738,10 +753,10 @@ const nbProspects = async page => JSON.stringify([await texte(page, "#lc-prospec
       const { page: pl } = await contexte(b, qui(LEA, "lea@exemple.fr"), db);
       await pl.goto(URL0); await pret(pl, "#vue"); await attendre(pl, 600);
       ok("G : « off » : le compte de test est noté quand même, la prospecte Léa aussi", notees(db, TESTEUR.id).length === 1 && notees(db, LEA).length === 1, JSON.stringify(notees(db)));
-      const { page: pc } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]");
+      const { page: pc } = await coachSur(b, db, "#/suivi-clients", "#tb-clients [data-ouvrir]");   // v84 (ménage du bloc 3) : le tableau complet est dans « Suivi détaillé »
       /* v71 (D) : Léa (prospecte) n'est plus dans Mes clients : ses connexions se lisent sur sa carte Prospects */
       const T = await ligneClient(pc, TESTEUR.id), leaT = await dansTableau(pc, LEA);
-      await aller(pc, "#/prospects", 1800); await filtre(pc, "tous");
+      await aller(pc, "#/suivi-commercial", 1800); await filtre(pc, "tous");   // v84 : les cartes sont dans « Suivi commercial »
       const Le = await faits(pc, LEA);
       ok("G : « off » : Mes clients montre les connexions du compte de test (" + db.cx[TESTEUR.id].nombre + ") ; Léa (prospecte, plus dans Mes clients), sur sa carte Prospects : 4 (ses 3, plus son ouverture d'aujourd'hui)", T["Connexions"] === String(db.cx[TESTEUR.id].nombre) && db.cx[TESTEUR.id].nombre >= 12 && leaT === false && Le["Connexions"] === "4", JSON.stringify([T["Connexions"], leaT, Le["Connexions"]]));
     });
@@ -754,12 +769,12 @@ const nbProspects = async page => JSON.stringify([await texte(page, "#lc-prospec
     db.cx[LEA] = { user_id: LEA, nombre: -4, derniere: 1234, premiere: null };
     db.cx[MARC] = { user_id: MARC, nombre: 2.7, derniere: { a: 1 }, premiere: [PIEGE] };
     db.cx["pas-un-compte"] = { user_id: "pas-un-compte", nombre: 99, derniere: avant(H), premiere: avant(J) };
-    const { page } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]", { fuseau: FUSEAU });
+    const { page } = await coachSur(b, db, "#/suivi-clients", "#tb-clients [data-ouvrir]", { fuseau: FUSEAU });   // v84 (ménage du bloc 3) : le tableau complet est dans « Suivi détaillé »
     /* v71 (D) : Léa et Marc (prospects) ne sont plus dans Mes clients : leurs valeurs piégées se lisent sur leurs cartes Prospects */
     const T = await ligneClient(page, TESTEUR.id), leaT = await dansTableau(page, LEA), marcT = await dansTableau(page, MARC);
     const tout = norm(await page.evaluate(() => document.body.innerText));
     ok("H : nombre et dates piégés (compte de test) : « 0 » / « aucune », rien de brut, rien d'injecté ; Léa et Marc (prospects) : plus de ligne dans Mes clients", T["Connexions"] === "0" && T["Dernière connexion"] === "aucune" && leaT === false && marcT === false && !RIEN_DE_BRUT.test(tout) && !(await injecte(page)), JSON.stringify([T["Connexions"], T["Dernière connexion"], leaT, marcT]));
-    await aller(page, "#/prospects", 1800); await filtre(page, "tous");
+    await aller(page, "#/suivi-commercial", 1800); await filtre(page, "tous");   // v84 (ménage du bloc 3) : les cartes sont dans « Suivi commercial »
     const Le = await faits(page, LEA), Ma = await faits(page, MARC);
     ok("H : … la page Prospects s'affiche aussi, sans injection ; cartes de Léa : « 0 » / « aucune », de Marc : « 2 » (nombre décimal : arrondi à 2) / « aucune »", (await page.$$("#pr-liste .sc-carte")).length > 0 && Le["Connexions"] === "0" && Le["Dernière connexion"] === "aucune" && Ma["Connexions"] === "2" && Ma["Dernière connexion"] === "aucune" && !(await injecte(page)) && !RIEN_DE_BRUT.test(norm(await page.evaluate(() => document.body.innerText))), JSON.stringify([Le["Connexions"], Le["Dernière connexion"], Ma["Connexions"], Ma["Dernière connexion"]]));
   });

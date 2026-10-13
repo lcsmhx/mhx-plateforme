@@ -38,6 +38,9 @@
       déployée, et sa page de désinscription sont retirées) : bloc retiré (6 vérifications).
    v83 (bloc 3) : badge des Nouveautés vérifié sur ses deux copies (#nav, #barre-bas) ; alertes de la fiche en haut de l'onglet
    Suivi ; la ligne « Les prospects sont dans Prospects → » de Mes clients n'existe plus (nombre sur la tuile Prospects du tableau de bord).
+   v84 (ménage du bloc 3) : le tableau complet et ses alertes (#tb-clients, #alertes-clients) se lisent dans « Suivi détaillé »
+   (#/suivi-clients) ; les cartes, filtres, recherche et export CSV des prospects (#pr-liste, #pr-csv…) dans « Suivi commercial »
+   (#/suivi-commercial) ; les Nouveautés restent sur la page Prospects ; texte de la note des plus de 300 nouveautés.
    Supabase simulé : rien ne part vers la vraie base ; chaque écriture est appliquée en mémoire et notée, chaque lecture
    de « donnees » aussi ; réponses coupées à 1 000 lignes, en-tête Range et tri order= respectés. Dates relatives au
    lancement (la suite passe quel que soit le jour ou l'heure). Chaque bloc tourne à part (« ✗ BLOC INTERROMPU ») ;
@@ -293,7 +296,8 @@ async function exporter(page){
   return fs.readFileSync(await dl.path(), "utf8");
 }
 async function ouvrirFiche(page, uid){
-  if (!(await page.$("#pr-vue"))) await aller(page, "#/prospects", 2200);
+  /* v84 (ménage du bloc 3) : les cartes sont dans le Suivi commercial (#pr-vue existe aussi sur la page Prospects : on lit l'adresse) */
+  if ((await page.evaluate(() => location.hash)) !== "#/suivi-commercial") await aller(page, "#/suivi-commercial", 2200);
   await page.waitForSelector("#pr-liste", { timeout: 8000 });
   await filtre(page, "tous");
   await page.click(`#pr-liste .sc-carte[data-uid="${uid}"] [data-sc="fiche"]`);
@@ -516,7 +520,8 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
       cles: [[F.IDS.c3, "activite", { version: 1, jours: [ajd()], pages: { formation: 3 }, temps_s: 300, derniere: avant(H) }, avant(H)]]
     });
     const { page } = await contexte(b, coach, db);
-    await page.goto(`http://localhost:${PORT}/#/clients`); await page.waitForSelector(`[data-ouvrir="${F.IDS.c3}"]`, { timeout: 8000 }); await attendre(page, 800);
+    /* v84 (ménage du bloc 3) : le tableau complet et ses alertes sont dans « Suivi détaillé » (#/suivi-clients), plus sous la liste Clients */
+    await page.goto(`http://localhost:${PORT}/#/suivi-clients`); await page.waitForSelector(`[data-ouvrir="${F.IDS.c3}"]`, { timeout: 8000 }); await attendre(page, 800);
     const ligne = uid => page.$eval(`#tb-clients [data-ouvrir="${uid}"]`, bt => { const tr = bt.closest("tr"); return { act: tr.querySelector('td[data-l="Activité"]').textContent.trim(), feu: (tr.querySelector(".point") || {}).title || "" }; }).catch(() => ({}));
     const lj = await ligne(F.IDS.c3), lm = await ligne(MARC), ln = await ligne(NORA);
     ok("Mes clients : Julien (activite écrite il y a 1 h, dernière vraie saisie il y a 12 j) garde « 12 j » et l'alerte « Inactif depuis 12 j »", lj.act === "12 j" && lj.feu.includes("Inactif depuis 12 j"), JSON.stringify(lj));
@@ -531,7 +536,10 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     /* v83 (bloc 3) : la ligne #clients-prospects « Les prospects sont dans Prospects → (N comptes gratuits). » est SUPPRIMÉE
        (décision 7 de Lucas : on passe de Clients à Prospects par la barre du bas) ; le nombre de prospects reste sur la tuile
        Prospects du tableau de bord (lien #/prospects) : la ligne n'existe plus ET la tuile dit « 3 » (lue avant d'ouvrir les fiches) */
+    /* v84 (ménage du bloc 3) : la ligne n'est ni dans le Suivi détaillé (ici), ni sur la page Clients (la liste, #lc-clients bien là) */
     const lprosp = { absente: !(await page.$("#clients-prospects")) };
+    await aller(page, "#/clients", 1800); await page.waitForSelector("#lc-clients", { timeout: 8000 }).catch(() => {});
+    lprosp.absente = lprosp.absente && !!(await page.$("#lc-clients")) && !(await page.$("#clients-prospects"));
     await aller(page, "#/tableau", 2200); await page.waitForSelector("#tb-t-prospects", { timeout: 8000 }).catch(() => {});
     Object.assign(lprosp, await page.$eval("#tb-t-prospects", e => ({ val: e.querySelector(".t-val").textContent.replace(/\s+/g, " ").trim(), lbl: e.querySelector(".t-lbl").textContent.trim(), href: e.getAttribute("href") })).catch(() => ({ val: "", lbl: "", href: "" })));
     const ficheProspect = async (uid, nom) => {
@@ -539,7 +547,7 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
       await page.waitForSelector("#fiche-decouverte", { timeout: 8000 }); await attendre(page, 700);
       const t = (await tuile(page, "Activité")) || { val: "?", sub: "?" }; t.h1 = await texte(page, "#vue .masthead h1");
       await page.click("#sortir-fiche").catch(() => {}); await attendre(page, 800);
-      await aller(page, "#/clients", 1800); await page.waitForSelector(`#tb-clients [data-ouvrir="${F.IDS.c3}"]`, { timeout: 8000 });
+      await aller(page, "#/suivi-clients", 1800); await page.waitForSelector(`#tb-clients [data-ouvrir="${F.IDS.c3}"]`, { timeout: 8000 });   // v84 (ménage du bloc 3) : le tableau est dans le Suivi détaillé
       return t;
     };
     const tp = await ficheProspect(PIA, "Pia Active"), tr = await ficheProspect(REMI, "Rémi Muet"), te = await ficheProspect(EVA, "Eva Désinscrite");
@@ -550,7 +558,7 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     ok("fiche de Julien : l'alerte « Inactif depuis 12 j » est en haut de la fiche (v83 : onglet Suivi) (la clé activite, lue par la fiche, ne compte pas pour un client)", alertes.includes("Inactif depuis 12 j"), JSON.stringify(alertes));
     await page.click("#sortir-fiche").catch(() => {}); await attendre(page, 800);
     for (const [uid, nom, n] of [[MARC, "Marc", 15], [NORA, "Nora", 20]]) {
-      await aller(page, "#/clients", 1800); await page.waitForSelector(`#tb-clients [data-ouvrir="${uid}"]`, { timeout: 8000 });
+      await aller(page, "#/suivi-clients", 1800); await page.waitForSelector(`#tb-clients [data-ouvrir="${uid}"]`, { timeout: 8000 });   // v84 (ménage du bloc 3) : le tableau est dans le Suivi détaillé
       await page.click(`#tb-clients [data-ouvrir="${uid}"]`); await attendre(page, 2600);
       const al = await page.$$eval("#vue #fc-suivi > .attention-alertes .pastille" /* v83 (bloc 3) : en haut de l'onglet Suivi */, l => l.map(e => e.textContent.trim())).catch(() => []);
       ok(`fiche de ${nom} (clé ${uid === MARC ? "emails" : "coach_notifs"} récente) : « Inactif depuis ${n} j » en haut de la fiche (v83 : onglet Suivi)`, al.includes("Inactif depuis " + n + " j"), JSON.stringify(al));
@@ -637,7 +645,8 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
       { id: PC, prenom: "Chloé", nom: "Rien", cree: avant(5 * J) }
     ] });
     const { page } = await contexte(b, coach, db);
-    await page.goto(`http://localhost:${PORT}/#/prospects`); await page.waitForSelector("#pr-liste", { timeout: 8000 }); await attendre(page, 600);
+    /* v84 (ménage du bloc 3) : cartes, recherche et export CSV dans le Suivi commercial (#/suivi-commercial) */
+    await page.goto(`http://localhost:${PORT}/#/suivi-commercial`); await page.waitForSelector("#pr-liste", { timeout: 8000 }); await attendre(page, 600);
     await filtre(page, "tous");
     const ca = await carte(page, PA), cb = await carte(page, PB);
     ok("cartes : Anna affiche compte.a@exemple.fr (jamais sa réponse perso.a@…), Bruno (données d'avant la v51) affiche ancien.b@exemple.fr", ca.includes("compte.a@exemple.fr") && !ca.includes("perso.a@") && cb.includes("ancien.b@exemple.fr"), ca.slice(0, 160) + " | " + cb.slice(0, 160));
@@ -652,7 +661,7 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     await ouvrirFiche(page, PA);
     const ea = Object.fromEntries(await lignesLi(page, "#fiche-reponses")).Email, ma = await page.getAttribute("#dc-mail", "href").catch(() => "");
     ok("fiche d'Anna : « Email » compte.a@exemple.fr, « Lui écrire un email » vers compte.a@exemple.fr, lien de réservation avec cet email", ea === "compte.a@exemple.fr" && (ma || "").startsWith("mailto:compte.a%40exemple.fr?") && (await page.$eval("#dc-lien", e => e.value).catch(() => "")).includes("email=compte.a%40exemple.fr"), ea + " · " + (ma || "").slice(0, 60));
-    await aller(page, "#/prospects", 2200); await ouvrirFiche(page, PB);
+    await aller(page, "#/suivi-commercial", 2200); await ouvrirFiche(page, PB);   // v84 (ménage du bloc 3) : les cartes, dans le Suivi commercial
     const eb = Object.fromEntries(await lignesLi(page, "#fiche-reponses")).Email, mb = await page.getAttribute("#dc-mail", "href").catch(() => "");
     ok("fiche de Bruno : « Email » ancien.b@exemple.fr (repli sur l'ancien intake.email), mailto vers cette adresse", eb === "ancien.b@exemple.fr" && (mb || "").startsWith("mailto:ancien.b%40exemple.fr?"), eb + " · " + (mb || "").slice(0, 60));
     ok("côté coach : aucune écriture", db.ecritures.length === 0);
@@ -770,7 +779,8 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     await page.click("#pr-nouveautes [data-nv-plus]"); await attendre(page, 400);
     const vis = await nvVisibles(page, "#pr-nouveautes");
     const note = await page.$$eval("#pr-nouveautes p.nv-suite", l => l.filter(p => !p.hidden).map(p => p.textContent.replace(/\s+/g, " ").trim())).catch(() => []);
-    ok("dépliées : 300 nouveautés (de Masse M0000 à M0299), « Les 10 plus anciennes ne sont pas listées : filtre la liste ci-dessous par date d'inscription. »", vis.length === 300 && vis[0] === "Masse M0000 · inscription" && vis[299] === "Masse M0299 · inscription" && JSON.stringify(note) === JSON.stringify(["Les 10 plus anciennes ne sont pas listées : filtre la liste ci-dessous par date d'inscription."]), vis.length + " · " + JSON.stringify(note));
+    /* v84 (ménage du bloc 3) : le filtre par date d'inscription est dans « Suivi commercial » (menu Plus) : texte de la note */
+    ok("dépliées : 300 nouveautés (de Masse M0000 à M0299), « Les 10 plus anciennes ne sont pas listées : filtre les prospects par date d'inscription dans « Suivi commercial » (menu Plus). »", vis.length === 300 && vis[0] === "Masse M0000 · inscription" && vis[299] === "Masse M0299 · inscription" && JSON.stringify(note) === JSON.stringify(["Les 10 plus anciennes ne sont pas listées : filtre les prospects par date d'inscription dans « Suivi commercial » (menu Plus)."]), vis.length + " · " + JSON.stringify(note));
   });
 
   /* =================== G. mobile 390 px =================== */
@@ -781,9 +791,10 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
       ["intake", { sexe: "Femme", age: "30", objectif: obj, obstacle: "o".repeat(120), court_debut: avant(4 * J - H), email_compte: mail }, midiIlYA(3)],
       ["suivi_prospect", { version: 1, issue: "perdu", issue_le: midiIlYA(2), note, historique: [{ type: "issue", valeur: "perdu", le: midiIlYA(2), note }] }, midiIlYA(2)] ] }] });
     const { page } = await contexte(b, coach, db, { viewport: { width: 390, height: 844 } });
-    await page.goto(`http://localhost:${PORT}/#/prospects`); await page.waitForSelector("#pr-liste", { timeout: 8000 }); await attendre(page, 600);
+    /* v84 (ménage du bloc 3) : les cartes sont dans le Suivi commercial (#/suivi-commercial) */
+    await page.goto(`http://localhost:${PORT}/#/suivi-commercial`); await page.waitForSelector("#pr-liste", { timeout: 8000 }); await attendre(page, 600);
     await filtre(page, "tous");
-    ok("email de " + mail.length + " caractères sans tiret : la carte l'affiche en entier, page Prospects sans défilement horizontal", mail.length === 120 && (await carte(page, LONG)).includes(mail) && !(await deborde(page)), await largeur(page));
+    ok("email de " + mail.length + " caractères sans tiret : la carte l'affiche en entier, page Suivi commercial (v84) sans défilement horizontal", mail.length === 120 && (await carte(page, LONG)).includes(mail) && !(await deborde(page)), await largeur(page));
     await page.screenshot({ path: path.join(OUT, "prospects-email-long.png"), fullPage: true });
     await ouvrirFiche(page, LONG);
     const rep = Object.fromEntries(await lignesLi(page, "#fiche-reponses"));
@@ -833,7 +844,8 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     const { page } = await contexte(b, coach, db);
     /* v53 (chantier 4) : ces prospects (inscrits il y a 2 à 21 jours, sans clic) ne sont pas « à traiter » : la liste par
        défaut est vide, on attend la page puis on passe sur « Tous » */
-    await page.goto(`http://localhost:${PORT}/#/prospects`); await page.waitForSelector("#pr-liste", { timeout: 10000 }); await attendre(page, 600);
+    /* v84 (ménage du bloc 3) : les cartes et « Afficher plus » sont dans le Suivi commercial (#/suivi-commercial) */
+    await page.goto(`http://localhost:${PORT}/#/suivi-commercial`); await page.waitForSelector("#pr-liste", { timeout: 10000 }); await attendre(page, 600);
     await filtre(page, "tous");
     await page.click("#pr-plus"); await attendre(page, 400);
     const l0 = await uids(page);

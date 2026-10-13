@@ -154,7 +154,7 @@ const grandePng = (page) => page.evaluate(async () => {
   {
     db.lectures = [];
     const { c, page } = await contexte(b, coach, db);
-    await page.goto(`http://localhost:${PORT}/#/clients`); await attendre(page, 2000);
+    await page.goto(`http://localhost:${PORT}/#/suivi-clients`); await attendre(page, 2000);   // v84 (ménage du bloc 3) : [data-ouvrir] dans « Suivi détaillé » (menu Plus)
     await page.click(`[data-ouvrir="${C1}"]`); await attendre(page, 1500);
     await aller(page, "#/mensurations", 2000);
     ok("coach : photos du client visibles (lecture avec son jeton)", (await page.$$("#ph-comparaison img")).length >= 1);
@@ -235,7 +235,7 @@ const grandePng = (page) => page.evaluate(async () => {
       db4.lectures = [];
       const { c, page } = await contexte(b, qui, db4);
       if (qui === coach) {
-        await page.goto(`http://localhost:${PORT}/#/clients`); await attendre(page, 2000);
+        await page.goto(`http://localhost:${PORT}/#/suivi-clients`); await attendre(page, 2000);   // v84 (ménage du bloc 3) : [data-ouvrir] dans « Suivi détaillé » (menu Plus)
         await page.click(`[data-ouvrir="${C1}"]`); await attendre(page, 1500);
         await aller(page, "#/mensurations", 2200);
       } else { await page.goto(`http://localhost:${PORT}/#/mensurations`); await attendre(page, 2200); }

@@ -229,6 +229,10 @@ HORS_BANC="verif44 verif45 verif46 verif47 verif49"
 #   390 / 430 px et 44 px, anglais, et W : WebKit, installé aussi pour la partie 6 dans pages.yml ; VERIF86_WEBKIT=0 en local : 44) ;
 #   verif72 D (10 @font-face) ; les suites de l'ancien espace coach adaptées aux écrans de la v83 sans retirer de vérification (voir
 #   leurs commentaires « v83 (bloc 3) ») ; nombres inchangés.
+# v84 (ménage du bloc 3 : l'écran d'avant des pages Clients et Prospects passe dans 4 pages du menu Plus — Suivi détaillé, Comptes,
+#   Suivi commercial, Newsletter — ; « Archiver » en or ; la langue du parcours rangée dans prefs) : verif86 57 (A1, A5, B3, C7
+#   adaptés ; blocs J et J bis : rien ne disparaît, Archiver en or, parcours en anglais → WhatsApp en anglais) ; les suites de
+#   l'ancien écran adaptées à leur nouvelle adresse sans retirer de vérification (voir leurs commentaires « v84 ») ; nombres inchangés.
 attendu() {
   case "$1" in
     flux) echo 19;; verif34) echo 13;; verif35) echo 14;; verif36) echo 13;; verif37) echo 12;; verif38) echo 66;;

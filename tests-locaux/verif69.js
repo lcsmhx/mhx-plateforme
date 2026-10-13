@@ -54,6 +54,9 @@
    18/11/2026 à midi (heure locale) et tourne (aucun minuit franchi pendant la suite) ; les dates du décor sont fixes, en
    heure locale (comme celles de l'app). Infrastructure (serveur, faux Supabase) reprise de verif64 : rien ne part vers la
    vraie base (routage par NOM D'HÔTE), chaque écriture ou lecture est notée. La page et ses fichiers sont servis tels quels.
+   v84 (ménage du bloc 3) : le bloc Mesure, avec le compteur, les 4 tuiles, les filtres et les cartes, est dans « Suivi commercial »
+   (#/suivi-commercial, menu Plus) ; le tableau de Mes clients dans « Suivi détaillé » (#/suivi-clients) ; les Nouveautés restent
+   sur la page Prospects, la Newsletter a sa page (#/newsletter) : en I, elles sont lues à leur nouvelle place.
    Chaque bloc tourne à part (« ✗ BLOC INTERROMPU ») ; code de sortie 1 dès qu'un ✗ apparaît.
    Usage : node verif69.js ../index.html
            VERIF69_PORT=9851 node verif69.js ../index.html     (autre port, si 9850 est pris)
@@ -615,7 +618,7 @@ const SANTE = /71[,.]4|1\s?873|83[,.]5|92[,.]3|\bkcal\b|\bkg\b|\bpoids\b|\btaill
   await bloc("A. place et forme", async () => {
     ok("A : le compte de test est lu dans le fichier servi (CONFIG.nouveautes.comptes_test)", !!TEST_ID, String(TEST_ID));
     const db = decor(PRINCIPAUX);
-    const { page } = await coachSur(b, db, "#/prospects", "#pr-mesure-chiffres");
+    const { page } = await coachSur(b, db, "#/suivi-commercial", "#pr-mesure-chiffres");   // v84 (ménage du bloc 3) : le bloc Mesure est dans le Suivi commercial
     const place = await page.evaluate(() => {
       const n = s => String(s || "").replace(/[  ]/g, " ").replace(/\s+/g, " ").trim();
       const B = document.querySelector("#pr-mesure"), av = B && B.previousElementSibling, ap = B && B.nextElementSibling;
@@ -640,7 +643,7 @@ const SANTE = /71[,.]4|1\s?873|83[,.]5|92[,.]3|\bkcal\b|\bkg\b|\bpoids\b|\btaill
   /* =================== B. les 3 périodes, chiffres et tableau exacts =================== */
   await bloc("B. périodes", async () => {
     const db = decor(PRINCIPAUX);
-    const { page } = await coachSur(b, db, "#/prospects", "#pr-mesure-chiffres");
+    const { page } = await coachSur(b, db, "#/suivi-commercial", "#pr-mesure-chiffres");   // v84 (ménage du bloc 3) : le bloc Mesure est dans le Suivi commercial
     const debuts = await page.evaluate(() => { const p0 = Mesure.periode, r = {}; for (const p of ["7", "30", "tout"]) { Mesure.periode = p; r[p] = new Date(Mesure.debut()).toISOString(); } Mesure.periode = p0; return r; });
     ok("B : début des périodes (heure locale) : 7 j = 12/11 00:00 (minuit il y a 6 jours), 30 j = 20/10 00:00 (minuit il y a 29 jours), tout = 28/09/2026 00:00",
       egal(debuts, { "7": L(12, 11, 0, 0), "30": L(20, 10, 0, 0), tout: L(28, 9, 0, 0) }), JSON.stringify(debuts));
@@ -683,7 +686,7 @@ const SANTE = /71[,.]4|1\s?873|83[,.]5|92[,.]3|\bkcal\b|\bkg\b|\bpoids\b|\btaill
   /* =================== C. exclusions (coach, +test, compte de test de l'app) et case =================== */
   await bloc("C. exclusions", async () => {
     const db = decor(PRINCIPAUX);
-    const { page } = await coachSur(b, db, "#/prospects", "#pr-mesure-chiffres");
+    const { page } = await coachSur(b, db, "#/suivi-commercial", "#pr-mesure-chiffres");   // v84 (ménage du bloc 3) : le bloc Mesure est dans le Suivi commercial
     const exclus = await page.evaluate(() => outilProspects.lignes.filter(l => Mesure.estTest(l)).map(l => l.p.id).sort());
     ok("C : comptes de test reconnus : « tess+TEST@… » (email_compte, majuscules), « Ugo+Test@… » (email), le compte de CONFIG.nouveautes.comptes_test ; aucun autre",
       egal(exclus, [TESS, UGO, XID].sort()), JSON.stringify(exclus));
@@ -727,7 +730,7 @@ const SANTE = /71[,.]4|1\s?873|83[,.]5|92[,.]3|\bkcal\b|\bkg\b|\bpoids\b|\btaill
   /* =================== D. brief L, « FAIT QUAND » : 3 clics d'un prospect de test, 3 écrans =================== */
   await bloc("D. fait quand", async () => {
     const db = decor(PRINCIPAUX.filter(k => k !== "ugo" && k !== "x"));   // Tess, seul compte de test
-    const { page } = await coachSur(b, db, "#/prospects", "#pr-mesure-chiffres");
+    const { page } = await coachSur(b, db, "#/suivi-commercial", "#pr-mesure-chiffres");   // v84 (ménage du bloc 3) : le bloc Mesure est dans le Suivi commercial
     const n0 = db.chemins.length;
     const m0 = await lireMesure(page);
     ok("D : case décochée : chiffres et tableau des 7 jours sans Tess (ni Mon journal, ni première pesée)", conforme(m0, EXP["7"], "7"), detail(m0));
@@ -764,7 +767,7 @@ const SANTE = /71[,.]4|1\s?873|83[,.]5|92[,.]3|\bkcal\b|\bkg\b|\bpoids\b|\btaill
       egal(cl.map(x => x && x.source), ["accueil_haut", "verrou_programme", "verrou_journal"]) && cl.every(x => typeof x.date === "string" && Math.abs(Date.parse(x.date) - T0) < 5 * MIN)
       && db.refus.length === 0 && db.ecritures.every(e => e.table === "donnees" && e.user_id === TINA && ["challenge", "activite"].includes(e.outil)) && intactSauf(db, [TINA]), JSON.stringify(cl) + " " + resume(db));
     const e0 = db.ecritures.length, c0 = CAL_RECUS.length;
-    const { page } = await coachSur(b, db, "#/prospects", "#pr-mesure-chiffres");
+    const { page } = await coachSur(b, db, "#/suivi-commercial", "#pr-mesure-chiffres");   // v84 (ménage du bloc 3) : le bloc Mesure est dans le Suivi commercial
     const m0 = await lireMesure(page);
     ok("D (vrais clics) : le coach, case décochée : chiffres et tableau des 7 jours sans Tina", conforme(m0, EXP["7"], "7") && m0.test === false, detail(m0));
     await caseTest(page);
@@ -784,7 +787,7 @@ const SANTE = /71[,.]4|1\s?873|83[,.]5|92[,.]3|\bkcal\b|\bkg\b|\bpoids\b|\btaill
   /* =================== E. la ligne « Clics plan d'action » de chaque carte =================== */
   await bloc("E. cartes", async () => {
     const db = decor(PRINCIPAUX);
-    const { page } = await coachSur(b, db, "#/prospects", "#pr-mesure-chiffres");
+    const { page } = await coachSur(b, db, "#/suivi-commercial", "#pr-mesure-chiffres");   // v84 (ménage du bloc 3) : le bloc Mesure est dans le Suivi commercial
     await tous(page);
     const k = await clicsCartes(page);
     const vus = Object.keys(k).sort(), attendus = Object.keys(CARTES).sort();
@@ -804,7 +807,7 @@ const SANTE = /71[,.]4|1\s?873|83[,.]5|92[,.]3|\bkcal\b|\bkg\b|\bpoids\b|\btaill
      de la v63 —, le dernier est celui du 17/11) */
   await bloc("E. CSV « Dernier clic » et cartes", async () => {
     const db = decor(PRINCIPAUX.concat(["piege"]));
-    const { page } = await coachSur(b, db, "#/prospects", "#pr-mesure-chiffres");
+    const { page } = await coachSur(b, db, "#/suivi-commercial", "#pr-mesure-chiffres");   // v84 (ménage du bloc 3) : le bloc Mesure est dans le Suivi commercial
     await tous(page);
     const k = await clicsCartes(page);
     const Lc = lireCSV((await exporter(page)).replace(/^﻿/, "")), tete = Lc[0] || [];
@@ -834,7 +837,7 @@ const SANTE = /71[,.]4|1\s?873|83[,.]5|92[,.]3|\bkcal\b|\bkg\b|\bpoids\b|\btaill
   /* =================== F. période vide =================== */
   await bloc("F. période vide", async () => {
     const db = decor(["chloe", "farid"]);   // rien dans les 7 derniers jours
-    const { page } = await coachSur(b, db, "#/prospects", "#pr-mesure-chiffres");
+    const { page } = await coachSur(b, db, "#/suivi-commercial", "#pr-mesure-chiffres");   // v84 (ménage du bloc 3) : le bloc Mesure est dans le Suivi commercial
     const m0 = await lireMesure(page);
     ok("F : 7 j sans clic ni « Plus tard » : p#pr-mesure-vide « Aucun clic ni « Plus tard » sur cette période. », pas de tableau, tuiles à 0",
       !!m0 && m0.vide === "P:Aucun clic ni « Plus tard » sur cette période." && m0.lignes === null && chiffres(m0) === "0,0,0,0,0" && egal(m0.tuiles.map(t => t[0]), LBL), detail(m0));
@@ -848,7 +851,7 @@ const SANTE = /71[,.]4|1\s?873|83[,.]5|92[,.]3|\bkcal\b|\bkg\b|\bpoids\b|\btaill
   /* =================== G. ni santé ni email ; rien lu ni écrit en plus =================== */
   await bloc("G. santé, email, lectures", async () => {
     const db = decor(PRINCIPAUX);
-    const { page } = await coachSur(b, db, "#/prospects", "#pr-mesure-chiffres");
+    const { page } = await coachSur(b, db, "#/suivi-commercial", "#pr-mesure-chiffres");   // v84 (ménage du bloc 3) : le bloc Mesure est dans le Suivi commercial
     const vus = [];
     const n0 = db.chemins.length, l0 = db.lectures.length;
     for (const p of ["7", "30", "tout"]) { await periode(page, p); vus.push(await lireMesure(page)); }
@@ -871,7 +874,7 @@ const SANTE = /71[,.]4|1\s?873|83[,.]5|92[,.]3|\bkcal\b|\bkg\b|\bpoids\b|\btaill
   await bloc("H. affichage", async () => {
     const db = decor(PRINCIPAUX);
     if (CAPT) fs.mkdirSync(CAPT, { recursive: true });
-    const tel = await coachSur(b, db, "#/prospects", "#pr-mesure-chiffres", { viewport: MOBILE });
+    const tel = await coachSur(b, db, "#/suivi-commercial", "#pr-mesure-chiffres", { viewport: MOBILE });   // v84 (ménage du bloc 3) : le bloc Mesure est dans le Suivi commercial
     await periode(tel.page, "tout");
     const g1 = await geo(tel.page), c1 = await lisible(tel.page, TEXTE_BLOC), a1 = await absentes(tel.page), m1 = await lireMesure(tel.page);
     ok("H : téléphone 390 px, thème sombre : rien ne déborde (page, bloc, tableau, 5 tuiles et leur texte, sélecteur), aucune cellule coupée",
@@ -880,13 +883,13 @@ const SANTE = /71[,.]4|1\s?873|83[,.]5|92[,.]3|\bkcal\b|\bkg\b|\bpoids\b|\btaill
       a1.length === 0 && c1.length > 20 && c1.every(x => x.ratio >= seuil(x) && x.fondClair === false) && conforme(m1, EXP.tout, "tout"),
       JSON.stringify(a1) + " " + JSON.stringify(c1.filter(x => !(x.ratio >= seuil(x) && x.fondClair === false)).slice(0, 5)) + " exceptions " + c1.filter(x => x.exc).length + " " + detail(m1));
     if (CAPT) await tel.page.locator("#pr-mesure").screenshot({ path: path.join(CAPT, "mesure-390-sombre.png"), style: SANS_BARRES }).catch(e => console.log("capture 390 : " + e.message));
-    const et = await coachSur(b, db, "#/prospects", "#pr-mesure-chiffres", { viewport: ETROIT });
+    const et = await coachSur(b, db, "#/suivi-commercial", "#pr-mesure-chiffres", { viewport: ETROIT });   // v84 (ménage du bloc 3) : le bloc Mesure est dans le Suivi commercial
     await periode(et.page, "tout"); await caseTest(et.page);
     const g2 = await geo(et.page);
     ok("H : 320 px (case cochée, tableau le plus long) : rien ne déborde (page, bloc, tableau, 5 tuiles, sélecteur), aucune cellule coupée", !!g2 && !g2.deborde && g2.blocOk && g2.tableOk && g2.tuilesOk && g2.selectOk && g2.cellules === 0, JSON.stringify(g2));
     ok("H : 320 px : le TEXTE de chacune des 5 tuiles tient dans sa tuile (libellés en capitales, chiffres)", !!g2 && g2.texteTuiles.length === 0, JSON.stringify(g2 && g2.texteTuiles));
     /* v80 : l'ancien choix « clair » (mhx_theme = "light") reste rangé sur l'appareil — c'est lui qui prouve qu'il est ignoré */
-    const ordi = await coachSur(b, db, "#/prospects", "#pr-mesure-chiffres", { viewport: ORDI, theme: "light" });
+    const ordi = await coachSur(b, db, "#/suivi-commercial", "#pr-mesure-chiffres", { viewport: ORDI, theme: "light" });   // v84 (ménage du bloc 3) : le bloc Mesure est dans le Suivi commercial
     const g3 = await geo(ordi.page), c3 = await lisible(ordi.page, TEXTE_BLOC), a3 = await absentes(ordi.page), m3 = await lireMesure(ordi.page);
     ok("H : ordinateur, ancien choix « clair » rangé sur l'appareil (mhx_theme = \"light\") ignoré, v80 : pas de data-theme (thème sombre), rien ne déborde (texte des tuiles compris), tout le texte du bloc lisible sur fond sombre (mêmes éléments et mêmes seuils), chiffres exacts (7 j)",
       !!g3 && g3.theme === null && !g3.deborde && g3.blocOk && g3.tableOk && g3.tuilesOk && g3.texteTuiles.length === 0 && a3.length === 0 && c3.length > 20 && c3.every(x => x.ratio >= seuil(x) && x.fondClair === false) && conforme(m3, EXP["7"], "7"),
@@ -898,11 +901,11 @@ const SANTE = /71[,.]4|1\s?873|83[,.]5|92[,.]3|\bkcal\b|\bkg\b|\bpoids\b|\btaill
   /* =================== I. données piégées ; Mes clients inchangé =================== */
   await bloc("I. données piégées", async () => {
     const db = decor(PRINCIPAUX.concat(PIEGES));
-    const { page } = await coachSur(b, db, "#/clients", "#tb-clients [data-ouvrir]");
+    const { page } = await coachSur(b, db, "#/suivi-clients", "#tb-clients [data-ouvrir]");   // v84 (ménage du bloc 3) : le tableau de Mes clients, dans le Suivi détaillé
     await attendre(page, 500);
     const avant = await mesClients(page);
     const t0 = Date.now();
-    await aller(page, "#/prospects", 300);
+    await aller(page, "#/suivi-commercial", 300);   // v84 (ménage du bloc 3) : le bloc Mesure, dans le Suivi commercial
     await page.waitForSelector("#pr-mesure #pr-mesure-chiffres", { timeout: 15000 }).catch(() => {});
     const duree = Date.now() - t0;
     const m7 = await lireMesure(page);
@@ -928,20 +931,30 @@ const SANTE = /71[,.]4|1\s?873|83[,.]5|92[,.]3|\bkcal\b|\bkg\b|\bpoids\b|\btaill
     /* un bloc qui plante À L'AFFICHAGE de la page (Mesure.monter passe avant la Newsletter et les Nouveautés) : on arrive depuis
        Mes clients avec Decouverte.plusTardDe qui lève une erreur ; le message, et le reste de la page est là, identique à une
        visite normale ; remis en place (nouvelle visite) : de nouveau les chiffres */
-    const reste = () => page.evaluate(() => {
-      const n = s => String(s || "").replace(/[  ]/g, " ").replace(/\s+/g, " ").trim(), B = document.querySelector("#pr-mesure");
-      return { mesure: B ? Array.from(B.children).map(e => e.tagName + ":" + n(e.textContent)).join(" | ") : null, cartes: document.querySelectorAll("#pr-liste .sc-carte").length,
-        filtres: !!document.querySelector(".sc-filtres"), tuiles: Array.from(document.querySelectorAll("#pr-vue > section.panel:not(#pr-mesure) .tiles > .tile .t-lbl")).map(e => n(e.textContent)),
-        compteur: n((document.querySelector("#pr-compteur") || {}).textContent), nouveautes: n((document.querySelector("#pr-nouveautes") || {}).textContent),
-        newsletter: n((document.querySelector("#pr-newsletter #pr-nl") || {}).textContent) };
-    });
-    const complete = async () => { await page.waitForSelector("#pr-liste .sc-carte", { timeout: 15000 }).catch(() => {});
-      await page.waitForFunction(() => !!document.querySelector("#pr-nl") && (document.querySelector("#pr-nouveautes") || { textContent: "" }).textContent.trim().length > 0, null, { timeout: 8000 }).catch(() => {}); await attendre(page, 500); };
+    /* v84 (ménage du bloc 3) : le Suivi commercial n'a plus les Nouveautés (page Prospects) ni la Newsletter (sa page) : elles
+       sont lues à leur nouvelle place, dans le même état (le piège encore posé pour la visite cassée), puis comparées comme avant */
+    const nt = x => String(x || "").replace(/[  ]/g, " ").replace(/\s+/g, " ").trim();
+    const reste = async () => {
+      const r = await page.evaluate(() => {
+        const n = s => String(s || "").replace(/[  ]/g, " ").replace(/\s+/g, " ").trim(), B = document.querySelector("#pr-mesure");
+        return { mesure: B ? Array.from(B.children).map(e => e.tagName + ":" + n(e.textContent)).join(" | ") : null, cartes: document.querySelectorAll("#pr-liste .sc-carte").length,
+          filtres: !!document.querySelector(".sc-filtres"), tuiles: Array.from(document.querySelectorAll("#pr-vue > section.panel:not(#pr-mesure) .tiles > .tile .t-lbl")).map(e => n(e.textContent)),
+          compteur: n((document.querySelector("#pr-compteur") || {}).textContent) };
+      });
+      await aller(page, "#/prospects", 300);
+      await page.waitForFunction(() => (document.querySelector("#pr-nouveautes") || { textContent: "" }).textContent.trim().length > 0, null, { timeout: 8000 }).catch(() => {}); await attendre(page, 500);
+      r.nouveautes = nt(await page.textContent("#pr-nouveautes").catch(() => ""));
+      await aller(page, "#/newsletter", 300);
+      await page.waitForSelector("#pr-newsletter #pr-nl", { timeout: 8000 }).catch(() => {}); await attendre(page, 500);
+      r.newsletter = nt(await page.textContent("#pr-newsletter #pr-nl").catch(() => ""));
+      return r;
+    };
+    const complete = async () => { await page.waitForSelector("#pr-liste .sc-carte", { timeout: 15000 }).catch(() => {}); await attendre(page, 500); };
     await complete();
     const normal = await reste();
-    await aller(page, "#/clients", 300); await page.waitForSelector("#tb-clients [data-ouvrir]", { timeout: 10000 });
+    await aller(page, "#/suivi-clients", 300); await page.waitForSelector("#tb-clients [data-ouvrir]", { timeout: 10000 });   // v84 (ménage du bloc 3) : Mes clients, Suivi détaillé
     await page.evaluate(() => { window.__plusTardDe = Decouverte.plusTardDe; Decouverte.plusTardDe = () => { throw new Error("piège"); }; });
-    await aller(page, "#/prospects", 300); await complete();
+    await aller(page, "#/suivi-commercial", 300); await complete();   // v84 (ménage du bloc 3) : le bloc Mesure, dans le Suivi commercial
     const casse = await reste();
     await page.evaluate(() => { Decouverte.plusTardDe = window.__plusTardDe; delete window.__plusTardDe; });
     const court = x => Object.assign({}, x, { nouveautes: String(x.nouveautes).slice(0, 60), newsletter: String(x.newsletter).slice(0, 40) });
@@ -949,11 +962,11 @@ const SANTE = /71[,.]4|1\s?873|83[,.]5|92[,.]3|\bkcal\b|\bkg\b|\bpoids\b|\btaill
       casse.mesure === "H2:Mesure | P:Mesure indisponible pour le moment." && normal.cartes > 10 && casse.cartes === normal.cartes && casse.filtres && egal(normal.tuiles, ["À traiter", "Signés", "Perdus", "Absents"]) && egal(casse.tuiles, normal.tuiles)
       && !!normal.compteur && casse.compteur === normal.compteur && normal.nouveautes.length > 0 && casse.nouveautes === normal.nouveautes && /^Newsletter/.test(normal.newsletter) && casse.newsletter === normal.newsletter,
       JSON.stringify({ normal: court(normal), casse: court(casse) }));
-    await aller(page, "#/clients", 300); await page.waitForSelector("#tb-clients [data-ouvrir]", { timeout: 10000 });
-    await aller(page, "#/prospects", 300); await page.waitForSelector("#pr-mesure #pr-mesure-chiffres", { timeout: 15000 }).catch(() => {});
+    await aller(page, "#/suivi-clients", 300); await page.waitForSelector("#tb-clients [data-ouvrir]", { timeout: 10000 });   // v84 (ménage du bloc 3) : Mes clients, Suivi détaillé
+    await aller(page, "#/suivi-commercial", 300); await page.waitForSelector("#pr-mesure #pr-mesure-chiffres", { timeout: 15000 }).catch(() => {});   // v84 : le bloc Mesure, Suivi commercial
     const mr = await lireMesure(page);
     ok("I : remis en place (nouvelle visite) : le bloc revient, chiffres et tableau exacts (période gardée : depuis le 28/09)", conforme(mr, plus(EXP.tout, D_PIEGES), "tout"), detail(mr));
-    await aller(page, "#/clients", 300);
+    await aller(page, "#/suivi-clients", 300);   // v84 (ménage du bloc 3) : le tableau de Mes clients, dans le Suivi détaillé
     await page.waitForSelector("#tb-clients [data-ouvrir]", { timeout: 10000 }); await attendre(page, 500);
     const apres = await mesClients(page);
     ok("I : Mes clients identique avant et après la visite (clients, prospects, régularité, pastilles ; " + avant.length + " lignes)", avant.length >= 6 && egal(avant, apres),
@@ -964,7 +977,7 @@ const SANTE = /71[,.]4|1\s?873|83[,.]5|92[,.]3|\bkcal\b|\bkg\b|\bpoids\b|\btaill
   /* =================== J. les autres origines (brief L : « conservée, avec un code clair ») =================== */
   await bloc("J. autres origines", async () => {
     const db = decor(PRINCIPAUX.concat(["olga"]));
-    const { page } = await coachSur(b, db, "#/prospects", "#pr-mesure-chiffres");
+    const { page } = await coachSur(b, db, "#/suivi-commercial", "#pr-mesure-chiffres");   // v84 (ménage du bloc 3) : le bloc Mesure est dans le Suivi commercial
     const V = {};
     for (const p of ["7", "30", "tout"]) { await periode(page, p); V[p] = await lireMesure(page); }
     const E = p => plus(EXP[p], D_OLGA), M = V["7"];
