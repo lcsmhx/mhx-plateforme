@@ -10,6 +10,7 @@
    ------------------------------------------------------------------ */
 const outilAccueil = {
   id: "accueil",
+  onglet: null,   // v83 (bloc 3) : l'onglet de la fiche consultée ({ uid, nom : "suivi" | "compte" })
   cle: null,
   nom: "Accueil",
   icone: "🏠",
@@ -154,10 +155,13 @@ const outilAccueil = {
     /* v79 : son journal alimentaire (s'il lui est ouvert : interrupteur) et son propre calcul (l'objectif du journal) */
     const avecJA = JournalAlim.pourCompte(uidFiche);
     if (avecJA) cles.push("journal_alimentaire", "calc_perso");
-    const [{ valeurs: d, dates }, pr] = await Promise.all([
+    const [{ valeurs: d, dates }, pr, cx] = await Promise.all([
       Store.lireTout(cles, { dates: true }),
       /* v39 : prospect ou client ? (colonne absente ou lecture ratee : rien ne change) */
-      Auth.appel("/rest/v1/profils?id=eq." + uidFiche + "&select=*").then(r => Array.isArray(r) ? r[0] || null : null).catch(() => null)
+      Auth.appel("/rest/v1/profils?id=eq." + uidFiche + "&select=*").then(r => Array.isArray(r) ? r[0] || null : null).catch(() => null),
+      /* v83 (bloc 3) : sa dernière connexion et le nombre de ses connexions (onglet Compte), comme dans Mes clients ; lecture
+         ratée (table absente, panne) : « — », le reste de la fiche s'affiche */
+      Auth.appel("/rest/v1/connexions?user_id=eq." + uidFiche + "&select=user_id,nombre,derniere,premiere").then(r => ({ lue: Array.isArray(r), ligne: Array.isArray(r) ? r[0] || null : null })).catch(() => ({ lue: false, ligne: null }))
     ]);
     if (!zone.isConnected || Store.idConsulte !== uidFiche) return;   // on a change de fiche entre-temps
     const I = d.intake || {}, P = d.programme || {}, J = d.journal || { seances: [] }, R = d.repas || {}, S = d.repas_suivi || {}, M = d.mens || {}, CK = d.checkins || { liste: [] };
@@ -197,15 +201,76 @@ const outilAccueil = {
     const lien = (id, txt) => `<a class="link-a" href="#/${id}">${esc(txt)} →</a>`;
     const ligne = (k, v) => v == null || v === "" ? "" : `<li><span>${esc(k)}</span><b>${esc(String(v))}</b></li>`;
     const alertes = l.alertes;
+    /* v83 (bloc 3, maquettes FicheSuivi et FicheCompte) — la même fiche pour un client et un prospect : en-tête (croix =
+       retour là d'où l'on vient, initiales, nom, pastille Client ou Prospect, pastille du programme s'il est connu), bouton
+       principal (client : « Préparer le call » ; prospect : « WhatsApp » pré-rempli, ou « Pas de numéro ») et bouton rond
+       Appeler, puis 2 onglets. Suivi : (prospect : « Ses réponses » puis le « Suivi commercial » complet), le retour de la
+       semaine, le poids, la régularité sur 30 jours, questionnaire / programme / diète, « Ses outils » (le bandeau d'avant),
+       puis tout ce que la fiche montrait déjà. Compte : email, téléphone, source, rôle (« Changer »), dernière connexion,
+       l'accès complet, « Archiver ce compte » / « Restaurer ce compte », la zone rouge « Supprimer définitivement ». */
+    const prospectF = profil.statut === "prospect", tel = Contact.telephone(d.contact), arch = Archive.le(d.suivi_prospect);
+    const anglais = !!(d.prefs && d.prefs.langue === "en");
+    const progNom = seances.length && typeof P.nom === "string" && P.nom.trim() ? P.nom.trim().slice(0, 60) : "";
+    const pFiche = Object.assign({}, pr || {}, { id: uidFiche, prenom: pr && typeof pr.prenom === "string" ? pr.prenom : profil.prenom, nom: pr && typeof pr.nom === "string" ? pr.nom : profil.nom, statut: profil.statut });
+    const emailF = (typeof I.email_compte === "string" && I.email_compte.trim()) || (typeof I.email === "string" && I.email.trim()) || "";
+    const cxF = Connexions.lecture(cx && cx.ligne, Connexions.suiviPour(pFiche), !!(cx && cx.lue));
+    const principal = prospectF
+      ? boutonWhatsAppVers(tel, MessageProspect.texte(pFiche.prenom, I, anglais), "btn fc-principal", "fc-wa")
+      : `<a class="btn fc-principal" id="fc-call" href="${esc(lienOutil("bilan"))}">Préparer le call</a>`;
+    const appeler = Telephone.valide(tel) ? `<a class="rond fc-appeler" id="fc-appeler" href="tel:${esc(tel)}" aria-label="${esc(trad("Appeler"))}" title="${esc(trad("Appeler"))}">${SVG.tel}</a>`
+      : `<button type="button" class="rond fc-appeler" id="fc-appeler" disabled aria-label="${esc(trad("Appeler : pas de numéro"))}" title="${esc(trad("Pas de numéro"))}">${SVG.tel}</button>`;
+    const onglet = this.onglet && this.onglet.uid === uidFiche ? this.onglet.nom : "suivi";
+    /* le retour de la semaine (carte de la maquette) : reçu à lire, fait, non fait, ou rien encore */
+    const recu = alertes.find(a => a.type === "bilan_recu"), rt = l.retour;
+    const retourTexte = recu ? recu.texte : rt && rt.etat ? rt.nom + " : " + rt.texte : (dim ? "Feedback du dimanche" : "Bilan hebdo") + " : " + trad("rien de nouveau");
+    /* le poids depuis le début (et sa courbe), les 4 dernières semaines */
+    const mesuresP = (M.mesures || []).filter(m => m && m.poids != null && isFinite(m.poids) && typeof m.date === "string").slice().sort((a, b) => a.date < b.date ? -1 : 1).slice(-12).map(m => +m.poids);
+    const courbe = mesuresP.length > 1 ? (() => { const W = 300, H = 64, mi = Math.min(...mesuresP), ma = Math.max(...mesuresP), e = (ma - mi) || 1;
+      const pts = mesuresP.map((v, i) => [(4 + i * (W - 8) / (mesuresP.length - 1)).toFixed(1), (6 + (ma - v) / e * (H - 12)).toFixed(1)]);
+      return `<svg class="fc-courbe" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="${esc(trad("Courbe du poids"))}"><line x1="0" x2="${W}" y1="${H / 3}" y2="${H / 3}" class="fc-grille"/><line x1="0" x2="${W}" y1="${2 * H / 3}" y2="${2 * H / 3}" class="fc-grille"/><polyline points="${pts.map(p => p.join(",")).join(" ")}" fill="none" class="fc-trait"/><circle cx="${pts[pts.length - 1][0]}" cy="${pts[pts.length - 1][1]}" r="4" class="fc-point"/></svg>`; })() : "";
+    const kg = v => (v > 0 ? "+" : v < 0 ? "−" : "") + n1(Math.abs(v)) + " kg";
+    /* la régularité sur 30 jours : les jours actifs (visites suivies), sinon le score de la semaine */
+    const vis = Activite.lecture(d.activite, Activite.suiviPour(pFiche));
+    const regTexte = vis.suivi ? trad("{n} jours actifs sur 30", { n: vis.jours30 }) : r.score != null ? r.score + "/100 " + trad("cette semaine") : "—";
+    const regPct = vis.suivi ? Math.round(Math.min(30, vis.jours30) / 30 * 100) : r.score != null ? Math.max(0, Math.min(100, r.score)) : 0;
+    const etat = (lib, ok, val, manque) => `<li><span>${esc(lib)}</span><b class="${ok ? "fc-ok" : "fc-manque"}">${ok ? `${esc(val)} <span class="fc-coche" aria-hidden="true">${SVG.coche}</span>` : esc(manque)}</b></li>`;
+    /* « Ses réponses » (prospect) : objectif, ce qui bloque, avec ses mots, dans 3 mois, « Tu es ? » ; l'ancien format lisible */
+    const qo = Decouverte.defQ("obstacle"), qp = Decouverte.defQ("projection");
+    const choixO = Decouverte.choixDe(I, "obstacle"), choixP = Decouverte.choixDe(I, "projection");
+    const sansRep = esc(trad("Pas encore répondu"));
+    const rep = (lib, v) => `<li><span>${esc(lib)}</span><b data-notr>${v ? esc(v) : `<i class="fc-sans">${sansRep}</i>`}</b></li>`;
+    const ancienF = Decouverte.ancien(I);
+    const objectifRep = typeof I.probleme === "string" && I.probleme.trim() ? I.probleme.trim() : ancienF && typeof I.objectif === "string" ? I.objectif.trim() : "";
+    const bloque = choixO && choixO.length ? choixO.map(k => Decouverte.libelleChoix(qo, k)).filter(Boolean).join(" · ") : "";
+    const sesMots = choixO ? Decouverte.precisionDe(I, "obstacle") : (typeof I.obstacle === "string" ? I.obstacle.trim() : "");
+    const dans3 = choixP && choixP.length ? Decouverte.texteFr(qp, choixP, Decouverte.precisionDe(I, "projection")) : (typeof I.projection === "string" ? I.projection.trim() : "");
+    const reponsesHTML = prospectF ? `<section class="carte fc-carte" id="fc-reponses"><h2 class="fc-sur">${esc(trad("Ses réponses"))}</h2><ul class="fiche-l fc-lignes">
+        ${rep(trad("Objectif"), objectifRep)}${rep(trad("Ce qui bloque"), bloque)}${rep(trad("Avec ses mots"), Decouverte.extrait(sesMots, 400))}${rep(trad("Dans 3 mois"), Decouverte.extrait(dans3, 400))}${rep(trad("Tu es ?"), I.sexe === "Homme" || I.sexe === "Femme" ? trad(I.sexe) : "")}</ul>
+        ${ancienF ? `<p class="note" style="margin:8px 0 0">${esc(trad("Anciennes réponses (questionnaire d'avant) : toutes dans « Découverte », plus bas."))}</p>` : ""}</section>` : "";
     zone.innerHTML = `
-      <header class="masthead">
-        <span class="eyebrow">${esc(trad("Fiche client"))} · ${esc(this.dateLongue())}</span>
-        <h1>${esc(nomC)}${profil.statut === "prospect" ? ` <span class="pastille accent" title="Compte gratuit : pas encore accompagné">prospect</span>` : ""}${(d.prefs && d.prefs.langue === "en") ? ` <span class="pastille" title="Ce client utilise l'app en anglais">🇺🇸 anglais</span>` : ""}</h1>
-        <p class="lede">${profil.statut === "prospect" ? "Compte gratuit : pas de suivi à assurer tant qu'il n'est pas passé client." + (rdc ? " Découverte : " + (rdc.jour == null ? "date d'inscription inconnue" : Decouverte.depuisTexte(rdc.jour)) + (rdc.questionnaire ? ", questionnaire rempli." : ", questionnaire pas encore rempli.") : "") : alertes.length ? `${alertes.length} point${alertes.length > 1 ? "s" : ""} à regarder.` : "Rien à signaler : tout est en ordre."}</p>
-        <p class="fiche-tel" id="fiche-tel">Téléphone : ${Telephone.coachHTML(Contact.telephone(d.contact))}</p>
-        <p class="fiche-tel" id="fiche-source">Source : <span data-notr>${esc(Contact.ref(d.contact) || "—")}</span></p>
-        ${alertes.length ? `<div class="attention-alertes" style="margin-top:4px">${alertes.map(a => `<a class="pastille ${a.niveau === "info" ? "accent" : a.niveau}" href="#/${esc(a.cible)}">${esc(a.texte)}</a>`).join("")}</div>` : ""}
-      </header>
+      <div class="fc-tete">
+        <div class="fc-haut"><button type="button" class="rond" id="sortir-fiche" aria-label="${esc(trad("Fermer la fiche"))}" title="${esc(trad("Fermer la fiche"))}">${SVG.croix}</button></div>
+        <div class="fc-id"><span class="avatar grand fc-avatar${nomC === Clients.SANS_NOM ? " neutre" : ""}">${esc(Clients.initiales(nomC))}</span>
+          <div class="fc-id-t"><h1 data-notr>${esc(nomC)}</h1>
+            <div class="fc-pastilles"><span class="pastille fc-role-p">${esc(trad(prospectF ? "Prospect" : "Client"))}</span>${progNom ? `<span class="pastille fc-prog" data-notr>${esc(progNom)}</span>` : ""}${arch ? `<span class="pastille attention fc-archive">${esc(trad("Archivé"))}</span>` : ""}${anglais ? ` <span class="pastille" title="Ce client utilise l'app en anglais">🇺🇸 anglais</span>` : ""}</div></div></div>
+        <div class="fc-actions">${principal}${appeler}</div>
+        <div class="fc-onglets" role="tablist" aria-label="${esc(trad("Fiche"))}">
+          <button type="button" role="tab" id="fc-tab-suivi" data-onglet="suivi" aria-controls="fc-suivi" aria-selected="${onglet === "suivi"}"${onglet === "suivi" ? "" : ' tabindex="-1"'}>${esc(trad("Suivi"))}</button>
+          <button type="button" role="tab" id="fc-tab-compte" data-onglet="compte" aria-controls="fc-compte" aria-selected="${onglet === "compte"}"${onglet === "compte" ? "" : ' tabindex="-1"'}>${esc(trad("Compte"))}</button>
+        </div>
+      </div>
+      <div class="fc-panneau" role="tabpanel" id="fc-suivi" aria-labelledby="fc-tab-suivi"${onglet === "suivi" ? "" : " hidden"}>
+      <p class="lede fc-lede">${profil.statut === "prospect" ? "Compte gratuit : pas de suivi à assurer tant qu'il n'est pas passé client." + (rdc ? " Découverte : " + (rdc.jour == null ? "date d'inscription inconnue" : Decouverte.depuisTexte(rdc.jour)) + (rdc.questionnaire ? ", questionnaire rempli." : ", questionnaire pas encore rempli.") : "") : alertes.length ? `${alertes.length} point${alertes.length > 1 ? "s" : ""} à regarder.` : "Rien à signaler : tout est en ordre."}</p>
+      ${alertes.length ? `<div class="attention-alertes" style="margin:0 0 12px">${alertes.map(a => `<a class="pastille ${a.niveau === "info" ? "accent" : a.niveau}" href="#/${esc(a.cible)}">${esc(a.texte)}</a>`).join("")}</div>` : ""}
+      ${reponsesHTML}
+      ${SC ? `<div id="fiche-commercial">${Commercial.ficheHTML(Object.assign({}, pr || {}, profil), SC, d.suivi_prospect)}</div>` : ""}
+      <section class="carte fc-carte fc-retour" id="fc-retour"><div class="fc-retour-l"><div><p class="fc-sur">${esc(trad("Retour de la semaine"))}</p><p class="fc-retour-t">${esc(retourTexte)}</p></div><a class="lc-lien" id="fc-lire" href="${esc(lienOutil("bilan"))}">${esc(trad("Lire"))}</a></div></section>
+      <section class="carte fc-carte fc-poids" id="fc-poids">${l.ev ? `<p class="fc-kg"><b>${kg(l.ev.total)}</b> <span>${esc(trad("depuis le début"))}</span></p>${courbe}${l.ev.mois != null ? `<span class="pastille fc-4s">${esc(trad("4 dernières sem. : {v}", { v: kg(l.ev.mois) }))}</span>` : ""}` : `<p class="fc-kg"><span>${esc(trad("Poids : aucune mesure"))}</span></p>`}</section>
+      <section class="carte fc-carte fc-reg" id="fc-regularite"><div class="fc-reg-l"><b>${esc(trad("Régularité"))}</b><span>${esc(regTexte)}</span></div><div class="fc-jauge" role="img" aria-label="${esc(regTexte)}"><span style="width:${regPct}%"></span></div></section>
+      <section class="carte fc-carte" id="fc-etat"><ul class="fiche-l fc-lignes">${etat("Questionnaire", I.complet, trad("Rempli"), trad("à remplir"))}${etat("Programme", seances.length, progNom || trad("envoyé"), trad("à faire"))}${etat("Diète", nbJours, trad("envoyée"), trad("à définir"))}</ul></section>
+      <section class="panel fc-outils" id="fc-outils"><h2>${esc(trad("Ses outils"))}</h2>
+        <div class="bandeau-actions">${actionsConsultation().filter(a => a.id !== "accueil").map(a => `<a href="${lienOutil(a.id)}" class="b-act${a.fort ? " fort" : ""}">${esc(a.nom)}</a>`).join("")}</div>
+        <p class="note" style="margin:10px 0 0">Tu vois ses données. Tu écris pour lui dans les boutons dorés, dans « Préparer le call » (ton feedback) et dans la fiche (tes notes privées, qu'il ne voit jamais).</p></section>
       <section class="panel">
         <h2>En bref</h2>
         <div class="tiles">
@@ -217,7 +282,6 @@ const outilAccueil = {
           <div class="tile"><div class="t-lbl">${dim ? "Feedback du dimanche" : "Bilan hebdo"}</div><div class="t-val readout${dernierCk ? " pos" : ""}">${dernierCk ? "✓" : "—"}</div><div class="t-sub">${dernierCk ? "dernier envoyé le " + esc(dateFr(dernierCk.envoye_le)) : "jamais envoyé"}</div></div>
         </div>
       </section>
-      ${SC ? `<div id="fiche-commercial">${Commercial.ficheHTML(Object.assign({}, pr || {}, profil), SC, d.suivi_prospect)}</div>` : ""}
       ${profil.statut === "prospect" ? `<div id="fiche-prospect">${this.decouverteFicheHTML(pDc, d.challenge, I, d.suivi_prospect, d.activite, d.emails)}</div>` : ""}
       ${NotesCoach.html()}
       <div class="fiche-grille">
@@ -244,6 +308,25 @@ const outilAccueil = {
       <section class="panel"><h2>Le reste</h2>
         <ul class="ingr fiche-l">${ligne("Compléments", nbCompl ? nbCompl + " prescrit" + (nbCompl > 1 ? "s" : "") : "aucun")}${ligne("Formation", fo ? fo.pct + " % (" + fo.faits + " / " + fo.tot + ")" : "pas commencée")}${ligne("Anciens programmes", histP || "0")}${ligne("Anciennes diètes", histR || "0")}</ul>
         <p class="note" style="margin:10px 0 0">${lien("complements", "Ses compléments")} · ${lien("formation", "Sa formation")}</p></section>
+      </div>
+      </div>
+      <div class="fc-panneau" role="tabpanel" id="fc-compte" aria-labelledby="fc-tab-compte"${onglet === "compte" ? "" : " hidden"}>
+        <section class="carte fc-carte" id="fc-infos"><ul class="fiche-l fc-lignes">
+          <li><span>${esc(trad("Email"))}</span><b data-notr id="fc-email">${emailF ? esc(emailF) : "—"}</b></li>
+          <li><span>${esc(trad("Téléphone"))}</span><b id="fiche-tel">${Telephone.coachHTML(tel, "lc-lien")}</b></li>
+          <li><span>${esc(trad("Source"))}</span><b id="fiche-source" data-notr>${esc(Contact.ref(d.contact) || "—")}</b></li>
+          <li><span>${esc(trad("Rôle"))}</span><b><span id="fc-role">${esc(trad(prospectF ? "Prospect" : "Client"))}</span> <button type="button" class="lc-lien fc-changer" id="fc-changer" data-statut="${prospectF ? "client" : "prospect"}">${esc(trad("Changer"))}</button></b></li>
+          <li><span>${esc(trad("Dernière connexion"))}</span><b id="fc-derniere" title="${esc(Connexions.aide(cxF))}">${esc(Connexions.texteDerniere(cxF))}</b></li>
+          <li><span>${esc(trad("Connexions"))}</span><b id="fc-connexions" title="${esc(Connexions.aide(cxF))}">${esc(Connexions.texteNombre(cxF))}</b></li>
+        </ul></section>
+        <div class="fc-boutons">
+          <button type="button" class="btn ghost fc-large" id="fc-acces" data-role="coach">Donner l'accès complet</button>
+          <button type="button" class="btn ghost fc-large" id="fc-archiver" data-archiver="${arch ? "non" : "oui"}">${esc(trad(arch ? "Restaurer ce compte" : "Archiver ce compte"))}</button>
+          ${arch ? `<p class="note" id="fc-archive-note" style="margin:0">${esc(trad("Archivé le {d} : ce compte n'apparaît plus dans tes listes, tes compteurs ni « À traiter ». Rien n'a changé pour la personne.", { d: dateFr(Decouverte.dateLocale(arch) || arch.slice(0, 10)) }))}</p>` : ""}
+        </div>
+        <section class="zone-danger fc-danger" id="fc-danger"><h3>Supprimer définitivement</h3>
+          <p class="note">Efface le compte et toutes ses données : c'est ce qu'il faut faire quand une personne demande l'effacement de ses données. C'est définitif : il n'y a pas de corbeille.</p>
+          <button type="button" class="btn danger fc-large" id="fc-supprimer">Supprimer définitivement</button></section>
       </div>`;
     /* v51 — copier le lien de reservation du prospect (presse-papiers, sinon selection a copier a la main) */
     const brancherCopie = () => {
@@ -274,6 +357,40 @@ const outilAccueil = {
       });
       if (boite) rebrancher();
     }
+    /* v83 (bloc 3) — les onglets Suivi / Compte (un clic, ou les flèches gauche / droite au clavier) ; l'onglet choisi est
+       gardé pour cette fiche (retour d'un outil du client, action de l'onglet Compte) */
+    const onglets = $$("[data-onglet]", zone);
+    const montrer = (nom, focus) => {
+      this.onglet = { uid: uidFiche, nom };
+      onglets.forEach(t => { const oui = t.dataset.onglet === nom; t.setAttribute("aria-selected", String(oui)); if (oui) t.removeAttribute("tabindex"); else t.setAttribute("tabindex", "-1"); if (oui && focus) t.focus(); });
+      ["suivi", "compte"].forEach(k => { const x = zone.querySelector("#fc-" + k); if (x) x.hidden = k !== nom; });
+    };
+    onglets.forEach(t => {
+      t.addEventListener("click", () => montrer(t.dataset.onglet));
+      t.addEventListener("keydown", ev => { if (ev.key === "ArrowRight" || ev.key === "ArrowLeft"){ ev.preventDefault(); montrer(t.dataset.onglet === "suivi" ? "compte" : "suivi", true); } });
+    });
+    /* onglet Compte : le statut (« Changer »), l'accès complet, archiver / restaurer, supprimer définitivement (les mêmes
+       actions et les mêmes fenêtres que dans Comptes : Acces) ; après une action, la fiche est relue, ou quittée si le compte
+       n'en a plus (supprimé, ou passé en accès complet) */
+    const refaire = () => { if (Store.idConsulte === uidFiche && courant === "accueil") afficher("accueil", true, true); };
+    const quitter = vers => { ListeCoach.revenir(vers); if (Store.idConsulte === uidFiche){ Store.oublier(uidFiche); Store.idConsulte = null; Store.nomConsulte = null; } Store.retourVers = null; location.hash = "#/" + vers; };
+    const bc = zone.querySelector("#fc-changer");
+    if (bc) bc.addEventListener("click", async () => { if (await Acces.changerStatut(pFiche, bc.dataset.statut, bc)) refaire(); });
+    const ba = zone.querySelector("#fc-acces");
+    if (ba) ba.addEventListener("click", async () => { const vers = Store.retourVers || "clients"; if (await Acces.changerRole(pFiche, "coach", ba)) quitter(vers); });
+    const bar = zone.querySelector("#fc-archiver");
+    if (bar) bar.addEventListener("click", async () => {
+      const oui = bar.dataset.archiver === "oui", T = ListeCoach.TEXTES[prospectF ? "prospects" : "clients"];
+      if (oui && !(await UI.ouvrir({ titre: ListeCoach.plur(1, T.confirmer), corps: trad(ListeCoach.UN), annulation: false, boutons: [
+        { texte: trad("Annuler"), valeur: false, classe: "ghost" }, { texte: trad("Archiver"), valeur: true, classe: "danger", principal: true }] }))) return;
+      const avant = bar.textContent; bar.disabled = true; bar.textContent = "…";
+      const r = await Archive.appliquer([uidFiche], oui);
+      if (r.ok.length){ UI.toast(ListeCoach.plur(1, oui ? T.archives : T.restaures), "ok"); refaire(); return; }
+      bar.disabled = false; bar.textContent = avant;
+      UI.alerte(trad("Non enregistré ({c}). Réessaie dans un instant.", { c: Commercial.cause(r.ko[0] && r.ko[0].e) }));
+    });
+    const bs = zone.querySelector("#fc-supprimer");
+    if (bs) bs.addEventListener("click", async () => { const vers = Store.retourVers || "clients"; if (await Acces.supprimer(pFiche, bs) === "fait") quitter(vers); });
     /* v38 — notes privees : la fonction rendue enregistre ce qui attend quand on quitte la fiche */
     return NotesCoach.monter(Store.idConsulte);
   },
