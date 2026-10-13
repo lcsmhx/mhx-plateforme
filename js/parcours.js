@@ -583,8 +583,22 @@ const Parcours = {
     try { if (typeof Tracking !== "undefined") Tracking.enregistrer("diagnostic_completed"); } catch(e){}
     return true;
   },
+  /* v84 (ménage du bloc 3) : un parcours fait en anglais range la langue sur le compte (prefs.langue = "en", la préférence que
+     lisent déjà le démarrage, la fiche du coach et Comptes) : le message WhatsApp de sa fiche sort alors en anglais. Sans
+     migration ; une lecture d'abord, tous les autres champs gardés ; jamais par-dessus un choix déjà rangé (« fr » ou « en ») ;
+     le français n'est jamais écrit (sans préférence, tout reste en français, comme avant). Seulement pour le compte créé à
+     l'instant dans cet onglet (suiteDue) : les comptes existants ne changent pas. */
+  async noterLangue(){
+    if (I18N.langue !== "en") return;
+    let pr = null;
+    try { pr = await Store.lire("prefs", {}); } catch(e){ pr = null; }
+    if (!pr || typeof pr !== "object" || Store.nonLus.has(pr) || pr.langue === "en" || pr.langue === "fr") return;
+    if (Store.ecrire("prefs", Object.assign({}, pr, { langue: "en" })) === false) return;
+    try { await Promise.race([Store.envoyerCle("prefs"), new Promise(r => setTimeout(r, 6000))]); } catch(e){}
+  },
   async suite(){
     await this.enregistrer();
+    try { await this.noterLangue(); } catch(e){}
     const S = this.lire();
     this.afficher(S.etape === "cadeau" ? "cadeau" : "espace");
   },
