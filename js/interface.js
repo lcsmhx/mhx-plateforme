@@ -12,7 +12,8 @@ function flash(id, texte){
   e.textContent = texte;
   /* v60 : le meme message redit avant la fin reste ses 3,2 s (l'ancienne minuterie l'effacait trop tot) */
   clearTimeout(e._flash);
-  e._flash = setTimeout(() => { if (e.textContent === texte) e.textContent = ""; }, 3200);
+  /* v89 (lot 4) : en anglais, le texte affiché est la traduction (Traduction l'a remplacé) : il s'efface aussi */
+  e._flash = setTimeout(() => { if (e.textContent === texte || (typeof I18N !== "undefined" && I18N.langue === "en" && typeof Traduction !== "undefined" && e.textContent === Traduction.texte(texte))) e.textContent = ""; }, 3200);
 }
 
 /* --- ICONES (v33) -----------------------------------------------------------
@@ -118,8 +119,8 @@ const UI = {
       else if (o.croix) h += `<button type="button" class="del fermer-volet" data-ui-fermer aria-label="${esc(trad("Fermer"))}">${SVG.croix}</button>`;
       if (o.titre && o.volet && o.retour) h += `<div class="volet-tete"><a class="retour-volet" href="${esc(o.retour.href)}" data-ui-retour aria-label="${esc(o.retour.libelle)}" title="${esc(o.retour.libelle)}">${SVG.retour}</a><h2>${esc(o.titre)}</h2></div>`;
       else if (o.titre) h += `<h2>${esc(o.titre)}</h2>`;
-      if (o.corps) h += `<div class="corps">${o.html ? o.corps : esc(o.corps)}</div>`;
-      if (o.champ) h += `<div class="champ"><input id="ui-champ" type="${esc(o.champ.type || "text")}" value="${esc(o.champ.valeur || "")}" placeholder="${esc(o.champ.placeholder || "")}" autocomplete="off"></div>`;
+      if (o.corps) h += `<div class="corps" id="ui-corps">${o.html ? o.corps : esc(o.corps)}</div>`;
+      if (o.champ) h += `<div class="champ"><input id="ui-champ" type="${esc(o.champ.type || "text")}" value="${esc(o.champ.valeur || "")}" placeholder="${esc(o.champ.placeholder || "")}" autocomplete="off"${o.corps ? ' aria-labelledby="ui-corps"' : ""}></div>`;   // v89 : la question nomme le champ
       if (boutons.length) h += `<div class="actions">${boutons.map((b, i) => `<button type="button" class="btn${b.classe ? " " + b.classe : ""}" data-ui-b="${i}">${esc(b.texte)}</button>`).join("")}</div>`;
       boite.innerHTML = h;
       fond.appendChild(boite);

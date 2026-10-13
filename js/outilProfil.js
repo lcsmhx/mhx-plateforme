@@ -279,7 +279,11 @@ ${Auth.estCoach() ? "" : `<div id="mc-tel-bloc" style="margin:0 0 26px">
   async init(){
     /* v44 — prospect : seul le bloc « Mon compte » est a brancher */
     if (Auth.estProspect() && !Store.idConsulte){ this.brancherReponses(); this.brancherCompte(); return; }
+    const tete = document.querySelector("#vue .masthead");   // v89 : l'en-tête de CETTE page (un Profil quitté pendant la lecture n'est plus là)
     const D = await Store.lire(this.cle, {});
+    /* v89 (lot 4) : lecture ratée (réseau, 5xx) : « Pas de connexion » + Réessayer au-dessus du questionnaire (sinon il paraissait
+       effacé) ; rien n'est retiré ni écrit (Store refuse d'écrire une clé mal lue) */
+    if (Store.nonLus.has(D) && tete && tete.isConnected && !$("page-hors-ligne")) tete.insertAdjacentHTML("afterend", flagHorsLigne());
     /* Une question ajoutee apres coup laisse les anciens profils incomplets
        sans que personne ne s'en apercoive : on remet le drapeau a jour. */
     if (D.complet && QUESTIONS.some(q => q.requis && !D[q.id])) D.complet = false;
@@ -309,7 +313,7 @@ ${Auth.estCoach() ? "" : `<div id="mc-tel-bloc" style="margin:0 0 26px">
       if (manquants.length){
         flash("p-msg", "Il manque : " + manquants.map(q => q.label).join(", "));
         const premier = $("q-" + manquants[0].id);
-        if (premier){ premier.scrollIntoView({ behavior:"smooth", block:"center" }); premier.focus(); }
+        if (premier){ premier.scrollIntoView({ behavior: defilementDoux(), block:"center" }); premier.focus(); }
         manquants.forEach(q => { const e = $("q-" + q.id); if (e) e.classList.add("manque"); });
         return;
       }

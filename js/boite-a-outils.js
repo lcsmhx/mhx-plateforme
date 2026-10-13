@@ -10,8 +10,11 @@ const num = (v) => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
 /* Un nombre absent ou illisible s'affiche « — », jamais « NaN ». */
 /* en anglais : 3,288 et 79.4 (format americain) au lieu de 3 288 et 79,4 */
 const locale = () => (window.__langue === "en" ? "en-US" : "fr-FR");
-const fmt = (n) => isFinite(Number(n)) ? Math.round(Number(n)).toLocaleString(locale()) : "—";
-const n1  = (n) => isFinite(Number(n)) ? (Math.round(Number(n)*10)/10).toLocaleString(locale(),{minimumFractionDigits:1,maximumFractionDigits:1}) : "—";
+/* v89 (lot 4) : « || 0 » — un petit nombre négatif ne s'affiche plus « -0 » ou « -0,0 » */
+const fmt = (n) => isFinite(Number(n)) ? (Math.round(Number(n)) || 0).toLocaleString(locale()) : "—";
+const n1  = (n) => isFinite(Number(n)) ? ((Math.round(Number(n)*10)/10) || 0).toLocaleString(locale(),{minimumFractionDigits:1,maximumFractionDigits:1}) : "—";
+/* v89 (lot 4) : un défilement lancé par l'app est doux, sauf si la personne a demandé de réduire les animations */
+const defilementDoux = () => { try { return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"; } catch (e) { return "smooth"; } };
 /* v60 (brief V2) — typographie francaise des nouveaux textes, a l'affichage : espace insecable avant « : ; ? ! » et a
    l'interieur des guillemets « ». En francais seulement ; les sources et le dictionnaire anglais gardent des espaces
    simples (Traduction.norm ramene toute espace a une espace simple). A appliquer au texte, avant esc(). */

@@ -108,6 +108,9 @@ const Historique = {
     const dessiner = async () => {
       bouton.disabled = true;
       const H = await this.lire(type);
+      /* v89 (lot 4) : lecture ratée (réseau, 5xx) : « Pas de connexion », le bouton reste pour réessayer — avant, « Aucun ancien
+         programme » s'affichait à tort et le bouton disparaissait */
+      if (Store.nonLus.has(H)){ bouton.disabled = false; boite.innerHTML = `<p class="note ko" style="margin:8px 0 0" data-hist-hors-ligne>${esc(Store.idConsulte ? "Pas de connexion : les données de ce client n'ont pas pu être chargées." : trad("Pas de connexion : tes données n'ont pas pu être chargées."))}</p>`; return; }
       bouton.hidden = true;
       const l = (H && Array.isArray(H.liste)) ? H.liste : [];
       if (!l.length){

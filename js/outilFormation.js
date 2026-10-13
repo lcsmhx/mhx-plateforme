@@ -23,7 +23,7 @@ const FORMATION = {
     dont: "Dont 3 programmes d'entraînement (12 semaines femme, 12 semaines homme, full body maison) et 3 plans alimentaires (sans restriction, sans gluten, vegan).",
     outils: "Plus tes outils : organisation de la diète, priorités, notes et objectifs. Gratuit, sans limite de temps."
   },
-  intro:"Une méthode simple pour poser les bases en 14 jours : ton alimentation, ton entraînement et tes habitudes, sans programme complexe ni séance interminable. Conçue pour les personnes occupées : le plan s'intègre dans ta routine, entre le travail et la famille.",
+  intro:"Une méthode simple pour poser les bases : ton alimentation, ton entraînement et tes habitudes, sans programme complexe ni séance interminable. Conçue pour les personnes occupées : le plan s'intègre dans ta routine, entre le travail et la famille.",
 
   /* --- le processus, coche par coche --- */
   processus: [
@@ -66,7 +66,7 @@ const FORMATION = {
     { id:"m0", titre:"Module 0 — Introduction", icone:"🚀",
       objectif:"Poser les bases et définir les attentes.",
       contenu:[
-        "Des objectifs réalistes : ce qu'on peut viser en 14 jours, et ce qui demande plus de temps.",
+        "Des objectifs réalistes : ce qu'on peut viser à court terme, et ce qui demande plus de temps.",
         "La structure de la formation et les résultats attendus.",
         "L'évaluation initiale : mesurer ton point de départ."
       ],
@@ -700,7 +700,7 @@ const outilFormation = {
            <button type="button" class="fo-x" data-px="${cle}.${esc(t.id)}" aria-label="Supprimer">×</button></li>`).join("")
           : `<li class="note">Rien pour l'instant.</li>`}</ul>
         <div class="fo-ajout"><input type="text" data-pa="${cle}" placeholder="Ajouter une tâche…" aria-label="Nouvelle tâche">
-          <button type="button" class="btn ghost" data-pb="${cle}">+</button></div>
+          <button type="button" class="btn ghost" data-pb="${cle}" aria-label="Ajouter">+</button></div>
       </div>`;
     };
     return `<div class="fo-outil"><h3>Priorise tes tâches</h3>
@@ -855,7 +855,7 @@ const outilFormation = {
       if (a) a.addEventListener("click", ev => {
         ev.preventDefault();
         const boite = $("fo-presentation"), vg = boite && boite.querySelector(".video-vignette");
-        if (boite) boite.scrollIntoView({ behavior: "smooth", block: "center" });
+        if (boite) boite.scrollIntoView({ behavior: defilementDoux(), block: "center" });
         if (vg) vg.click();   // la lance (compte comme lancee)
       });
     }
@@ -878,7 +878,7 @@ const outilFormation = {
         D.ouvert = (D.ouvert === b.dataset.mod) ? "" : b.dataset.mod;
         garderAffichage(); dessiner();
         const t = zone.querySelector('[data-mod="' + D.ouvert + '"]');
-        if (t) t.scrollIntoView({ block:"start", behavior:"smooth" });
+        if (t) t.scrollIntoView({ block:"start", behavior: defilementDoux() });
       }));
       $$("[data-lecon]", zone).forEach(b => b.addEventListener("click", () => {
         D.lecon = (D.lecon === b.dataset.lecon) ? "" : b.dataset.lecon;
