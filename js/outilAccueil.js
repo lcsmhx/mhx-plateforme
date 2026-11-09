@@ -222,7 +222,10 @@ const outilAccueil = {
     const appeler = Telephone.valide(tel) ? `<a class="rond fc-appeler" id="fc-appeler" href="tel:${esc(tel)}" aria-label="${esc(trad("Appeler"))}" title="${esc(trad("Appeler"))}">${SVG.tel}</a>`
       : `<button type="button" class="rond fc-appeler" id="fc-appeler" disabled aria-label="${esc(trad("Appeler : pas de numéro"))}" title="${esc(trad("Pas de numéro"))}">${SVG.tel}</button>`;
     /* v99 : #/client/<id>/accueil/compte (Profil › Son compte) ouvre l'onglet Compte */
-    const onglet = sousRoute === "compte" ? "compte" : this.onglet && this.onglet.uid === uidFiche ? this.onglet.nom : "suivi";
+    /* v99 (relecture) : le panneau suit l'adresse seulement (…/accueil = Suivi, sous l'onglet Aperçu ; …/accueil/compte = Compte,
+       sous Profil) : « Aperçu » rouvre toujours le Suivi. Un clic sur Suivi / Compte met l'adresse à jour (une action de Compte
+       qui redessine la fiche reste sur Compte). */
+    const onglet = sousRoute === "compte" ? "compte" : "suivi";
     if (Telephone.valide(tel)) TelFiche.tels[uidFiche] = tel;
     /* le retour de la semaine (carte de la maquette) : reçu à lire, fait, non fait, ou rien encore */
     const recu = alertes.find(a => a.type === "bilan_recu"), rt = l.retour;
@@ -369,7 +372,12 @@ const outilAccueil = {
        gardé pour cette fiche (retour d'un outil du client, action de l'onglet Compte) */
     const onglets = $$("[data-onglet]", zone);
     const montrer = (nom, focus) => {
-      this.onglet = { uid: uidFiche, nom };
+      if (Store.idConsulte === uidFiche){
+        sousRoute = nom === "compte" ? "compte" : "";
+        try { history.replaceState(null, "", lienOutil("accueil") + (nom === "compte" ? "/compte" : "")); } catch(e){}
+        const ici = nom === "compte" ? "profil" : "apercu";
+        $$(".fiche-onglets .f-onglet").forEach(a => { const oui = a.dataset.ongletFiche === ici; a.classList.toggle("ici", oui); if (oui) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+      }
       onglets.forEach(t => { const oui = t.dataset.onglet === nom; t.setAttribute("aria-selected", String(oui)); if (oui) t.removeAttribute("tabindex"); else t.setAttribute("tabindex", "-1"); if (oui && focus) t.focus(); });
       ["suivi", "compte"].forEach(k => { const x = zone.querySelector("#fc-" + k); if (x) x.hidden = k !== nom; });
     };

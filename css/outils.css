@@ -1101,6 +1101,6 @@ ul.fc-lignes li > b{font-weight:500;text-align:right;min-width:0;overflow-wrap:a
 .f-onglet:hover{border-color:var(--accent);color:var(--ink)}
 .f-onglet.ici{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
 .fiche-wa:empty{display:none}
-.fiche-wa-l{min-height:var(--h-toucher)}
+a.btn.fiche-wa-l{min-height:var(--h-toucher)}
 .fc-tete .fiche-onglets{margin:12px 0}
 @media (max-width:560px){ .fiche-onglets{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch} .f-onglet{flex:none} }

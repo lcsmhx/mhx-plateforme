@@ -280,8 +280,22 @@ const ouvrir = async (page, chemin, sel) => { await page.goto(URL0 + "#/client/"
     const c = await page.evaluate(() => ({ hash: location.hash, compte: !document.getElementById("fc-compte").hidden, ici: (document.querySelector('.fiche-onglets .f-onglet[aria-current="page"]') || {}).textContent || null }));
     ok("A5 : Profil : Son questionnaire, Son compte ; « Son compte » ouvre l'onglet Compte de la fiche (Profil reste marqué)",
       JSON.stringify(p.pages) === JSON.stringify(["Son questionnaire", "Son compte"]) && /\/accueil\/compte$/.test(c.hash) && c.compte && c.ici === "Profil", JSON.stringify([p.pages, c]));
+    /* relecture : le bouton interne « Compte », puis Entraînement, puis Aperçu : Aperçu rouvre le Suivi */
+    await page.goto(URL0 + "#/client/" + C1 + "/accueil"); await pret(page, "#fc-suivi"); await attendre(page, 600);
+    await page.click("#fc-tab-compte"); await attendre(page, 300);
+    const apresCompte = await page.evaluate(() => ({ hash: location.hash, ici: (document.querySelector('.fiche-onglets .f-onglet[aria-current="page"]') || {}).textContent || null }));
+    await page.click('.fiche-onglets .f-onglet[data-onglet-fiche="entrainement"]'); await pret(page, "#pg-publier");
+    await page.click('#vue > .fiche-entete .f-onglet[data-onglet-fiche="apercu"]'); await pret(page, "#fc-suivi"); await attendre(page, 600);
+    const r = await page.evaluate(() => ({ suivi: !document.getElementById("fc-suivi").hidden, ici: (document.querySelector('.fiche-onglets .f-onglet[aria-current="page"]') || {}).textContent || null }));
+    ok("A5b : le bouton interne « Compte » met l'adresse et l'onglet à jour (…/accueil/compte, Profil) ; puis Entraînement puis Aperçu : le Suivi s'ouvre, Aperçu marqué",
+      /\/accueil\/compte$/.test(apresCompte.hash) && apresCompte.ici === "Profil" && r.suivi && r.ici === "Aperçu", JSON.stringify([apresCompte, r]));
     const tailles = await page.evaluate(() => Array.from(document.querySelectorAll(".f-onglet")).map(x => Math.round(x.getBoundingClientRect().height)));
     ok("A6 : onglets à 44 px", tailles.length === 5 && tailles.every(h => h >= 44), JSON.stringify(tailles));
+    const db3 = base(); avecTel(db3);
+    const { page: p3 } = await contexte(b, COACH, db3);
+    await ouvrir(p3, "programme", "[data-fiche-wa] a");
+    const hw = await p3.evaluate(() => Math.round(document.querySelector("[data-fiche-wa] a").getBoundingClientRect().height));
+    ok("A7 : le bouton WhatsApp de l'en-tête fait 44 px (ordinateur)", hw >= 44, String(hw));
   });
 
   /* =================== B. chaque ancienne adresse de la fiche : même page, bon onglet =================== */
