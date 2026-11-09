@@ -878,7 +878,7 @@ const outilFormation = {
           <span class="meta">${esc(dateFr(n.date) || "")}</span>
           <button type="button" class="fo-x" data-nx="${esc(n.id)}" aria-label="Supprimer">×</button>
         </div>
-        <textarea rows="4" data-nc="${esc(n.id)}" placeholder="Ta note…" aria-label="Contenu">${esc(n.texte)}</textarea>
+        <textarea rows="4" data-nc="${esc(n.id)}" placeholder="${esc(trad("Ta note…"))}" aria-label="${esc(trad("Contenu de la note"))}">${esc(n.texte)}</textarea>
       </div>`).join("") : `<p class="note">Aucune note. Écris ce qui t'aide : un déclic, une difficulté, une idée de repas.</p>`}
       <div class="actions"><button type="button" class="btn ghost" id="fo-note-add">+ Ajouter une note</button></div></div>`;
   },

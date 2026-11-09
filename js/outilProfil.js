@@ -311,7 +311,7 @@ ${Auth.estCoach() ? "" : `<div id="mc-tel-bloc" style="margin:0 0 26px">
       const manquants = enregistrer();
       if (manquants === null) return;
       if (manquants.length){
-        flash("p-msg", "Il manque : " + manquants.map(q => q.label).join(", "));
+        flash("p-msg", trad("Il manque : {l}", { l: manquants.map(q => trad(q.label)).join(", ") }));   // v102 : traduit
         const premier = $("q-" + manquants[0].id);
         if (premier){ premier.scrollIntoView({ behavior: defilementDoux(), block:"center" }); premier.focus(); }
         manquants.forEach(q => { const e = $("q-" + q.id); if (e) e.classList.add("manque"); });

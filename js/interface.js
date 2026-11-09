@@ -12,6 +12,12 @@ const dateFr = (iso) => {
   return window.__langue === "en" ? m[2] + "/" + m[3] + "/" + m[1] : m[3] + "/" + m[2] + "/" + m[1];   // US : mois/jour/annee
 };
 
+/* v102 : « Début : la raison. » + « Vérifie ta connexion et réessaie. » seulement pour une panne de réseau (pas un refus) */
+function messageEchec(debut, e){
+  const m = String((e && e.message) || "").trim().replace(/[.\s]+$/, "");
+  const reseau = !m || !!(e && e.reseau) || (typeof Auth !== "undefined" && Auth.indispo(e));
+  return debut + (m && !(e && e.reseau) ? " : " + m + "." : ".") + (reseau ? " " + trad("Vérifie ta connexion et réessaie.") : "");
+}
 function flash(id, texte){
   const e = $(id); if(!e) return;
   e.textContent = texte;
@@ -158,7 +164,19 @@ const UI = {
       document.body.classList.add("figee");
       this._ouverte = { fond, clavier, resoudre, annulation: o.annulation, focusAvant: document.activeElement };
       const champ = boite.querySelector("#ui-champ"), principal = boite.querySelector(".btn:not(.ghost)");
-      setTimeout(() => { if (champ){ champ.focus(); champ.select(); } else if (principal) principal.focus(); }, 30);
+      /* v102 : la fenêtre porte le nom de son titre ; sans champ ni bouton principal (le volet « Tout mon espace »), le focus
+         va à la croix (sinon au premier lien ou bouton) ; Tab et Maj+Tab restent dans la fenêtre */
+      const titre = boite.querySelector("h2");
+      if (titre){ if (!titre.id) titre.id = "ui-titre-" + Date.now().toString(36); boite.setAttribute("aria-labelledby", titre.id); }
+      const focusables = () => Array.from(boite.querySelectorAll("a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex='-1'])")).filter(x => x.offsetParent !== null || x === document.activeElement);
+      boite.addEventListener("keydown", ev => {
+        if (ev.key !== "Tab") return;
+        const l = focusables(); if (!l.length) return;
+        const premier = l[0], dernier = l[l.length - 1];
+        if (ev.shiftKey && document.activeElement === premier){ ev.preventDefault(); dernier.focus(); }
+        else if (!ev.shiftKey && document.activeElement === dernier){ ev.preventDefault(); premier.focus(); }
+      });
+      setTimeout(() => { if (champ){ champ.focus(); champ.select(); } else if (principal) principal.focus(); else { const x = boite.querySelector("[data-ui-fermer]") || focusables()[0]; if (x) x.focus(); } }, 30);
     });
   },
 

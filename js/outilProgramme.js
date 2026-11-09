@@ -329,8 +329,9 @@ const Journal = {
         self.brouillon.effacerDe(P, si);
         remplir();
       }));
-      $$("[data-jr-fin]", zone).forEach(b => b.addEventListener("click", () => {
+      $$("[data-jr-fin]", zone).forEach(b => b.addEventListener("click", async () => {
         const si = +b.dataset.jrFin, sc = P.seances[si], boite = b.closest(".jr-zone");
+        if (b.disabled) return;
         let aberrant = false;
         const exos = (sc.exercices || []).filter(e => e.nom).map((e, ei) => {
           const bloc = boite.querySelector(`[data-jr-ex="${ei}"]`);
@@ -345,6 +346,13 @@ const Journal = {
         }).filter(x => x.series.length);
         if (aberrant){ flash("jr-msg-" + si, "Vérifie tes chiffres : jusqu'à 100 reps et 500 kg par série."); return; }
         if (!exos.length){ flash("jr-msg-" + si, "Note au moins une série pour enregistrer ta séance."); return; }
+        /* v102 : les chiffres sont lus ci-dessus ; le journal est relu juste avant d'écrire (une séance notée sur un autre
+           appareil depuis l'ouverture de la page n'est jamais effacée), et l'écriture se fait même si la page a changé entre-temps ;
+           relecture impossible : comme avant (copie gardée sur l'appareil) */
+        b.disabled = true;
+        try { const frais = await Store.lire(self.cle, self.vide()); if (!Store.nonLus.has(frais) && Array.isArray(frais.seances)) J.seances = frais.seances; }
+        catch(e){}
+        finally { b.disabled = false; }
         const date = aujourdhui();
         /* v96 : la même séance notée deux fois le même jour remplace la première (reconnue par Journal.place) ; une séance
            notée garde sa place (si, lue par les anciennes versions de l'app) ET l'identifiant fixe de la séance (sid) */
@@ -355,6 +363,7 @@ const Journal = {
         if (J.seances.length > self.max) J.seances = J.seances.slice(-self.max);
         if (Store.ecrire(self.cle, J) === false) return;   // refusee (message deja affiche) : le brouillon reste
         self.brouillon.effacerDe(P, si);   // v71 (G) : seulement apres une ecriture acceptee, avant de redessiner
+        if (!zone.isConnected) return;   // v102 : page quittée pendant la relecture : la séance est enregistrée, rien à redessiner
         remplir();
         if (typeof apres === "function") apres();
         flash("jr-ok-" + si, "Séance enregistrée. Bravo !");
@@ -660,6 +669,26 @@ const BrouillonProg = {
     Store.envoyerCle(this.cle, moi);   // déjà attendu 700 ms : part tout de suite
     return true;
   },
+  /* v102 : un brouillon retiré (annulé, publié, identique au publié) laisse une marque datée, sans programme (entree() l'ignore) :
+     une copie plus ancienne rejouée plus tard (autre appareil, hors ligne) ne le fait pas revenir */
+  tombe(){ const m = new Date().toISOString(); return { retire_le: m, ecrit_le: m, appareil: this.appareil }; },
+  /* v102 : réunit deux documents de brouillons ENTRÉE PAR ENTRÉE (le plus récent écrit de chaque client gagne) ; les marques de
+     retrait de plus de 30 jours disparaissent. Sert à la reprise d'une copie gardée sur l'appareil (Store.reprendre,
+     Store.copieAServir) : jamais plus un document entier rejoué par-dessus les brouillons faits ailleurs. */
+  fusionnerEntrees(base, copie){
+    const out = this.vide(), b = Forme.objet(base) && Forme.objet(base.clients) ? base.clients : {}, c = Forme.objet(copie) && Forme.objet(copie.clients) ? copie.clients : {};
+    const limite = new Date(Date.now() - 30 * 86400000).toISOString();
+    new Set(Object.keys(b).concat(Object.keys(c))).forEach(k => {
+      const x = b[k], y = c[k];
+      const e = !Forme.objet(x) ? y : !Forme.objet(y) ? x : (String(y.ecrit_le || "") > String(x.ecrit_le || "") ? y : x);
+      if (!Forme.objet(e)) return;
+      if (e.retire_le && !e.programme && String(e.retire_le) < limite) return;
+      out.clients[k] = e;
+    });
+    return out;
+  },
+  enAttente(cle){ return Object.keys(this._minuteurs).some(k => k.indexOf(cle) === 0); },
+
   /* « Publier » et la sortie de page : la saisie qui attend part tout de suite (relue, fusionnée) et on attend la base */
   async vider(D, uid){
     if (this._minuteurs[this.cle + uid]){ clearTimeout(this._minuteurs[this.cle + uid]); delete this._minuteurs[this.cle + uid]; await this.fusionner(D, uid); }
@@ -672,7 +701,7 @@ const BrouillonProg = {
     const avant = this.entree(D, uid);
     if (!this.differe(b, P) && !(extra && extra.nouveau_bloc) && !(avant && avant.nouveau_bloc)){
       if (!avant) return true;   // rien à ranger, rien d'écrit
-      delete D.clients[uid];
+      D.clients[uid] = this.tombe();
     } else {
       const maintenant = new Date().toISOString();
       D.clients[uid] = Object.assign({}, avant || { base_maj: majPublie || null, debut_le: maintenant }, extra || {},
@@ -682,7 +711,7 @@ const BrouillonProg = {
   },
   retirer(D, uid){
     if (!this.entree(D, uid)) return true;
-    delete D.clients[uid];
+    D.clients[uid] = this.tombe();
     return this.planifier(D, uid);
   },
 
@@ -704,12 +733,23 @@ const BrouillonProg = {
   async publier(uid, P, b, D, majPublie){
     const moi = Store.moi(); if (!moi || !uid) return { ok: false };
     await this.vider(D, uid);   // le brouillon tapé à l'instant part d'abord (relu, fusionné)
-    await Store.envoyerConfirme("programme").catch(() => false);   // un objectif du mois tapé à l'instant aussi (relu ensuite)
+    const objOk = await Store.envoyerConfirme("programme").catch(() => false);   // un objectif du mois tapé à l'instant aussi (relu ensuite)
+    if (!objOk && Store.aUneCopie(uid, "programme")) return { ok: false, attente: true };   // v102 : il attend son envoi : on ne publie pas par-dessus
     let lP, lD;
     try { await Auth.assurer(); [lP, lD] = await Promise.all([this.ligne(uid, "programme"), this.ligne(moi, this.cle)]); }
     catch(e){ return { ok: false, refus: !!(e && e.statut >= 400 && e.statut < 500 && [401, 408, 429].indexOf(e.statut) === -1) }; }
-    if (Store.cible() !== uid) return { ok: false, annule: true };
+    if (Store.cible() !== uid) return { ok: false, quitte: true };   // v102 : fiche quittée (pas un « non » du coach)
     const enBase = Forme.cle("programme", lP && lP.contenu) || {};
+    /* v102 : la base a déjà exactement ce brouillon, publié (une réponse perdue au premier essai) : ni fenêtre, ni archive, ni
+       nouvelle semaine 1 ; le brouillon est retiré */
+    if (enBase.publie_le && this.empreinte(enBase) === this.empreinte(b)){
+      Object.keys(D.clients || {}).forEach(k => { if (k !== uid) delete D.clients[k]; });
+      const autres0 = Forme.objet(lD && lD.contenu) && Forme.objet(lD.contenu.clients) ? lD.contenu.clients : {};
+      Object.keys(autres0).forEach(k => { if (k !== uid) D.clients[k] = autres0[k]; });
+      D.clients[uid] = this.tombe(); this.planifier(D, uid);
+      Store.boite(uid).programme = P; Store.majLu[uid + "|programme"] = lP.maj_le || null;
+      return { ok: true, programme: enBase, D: D };
+    }
     /* 1. le programme publié a changé depuis l'ouverture de la page (autre appareil, ancienne version de l'app) */
     if (this.empreinte(enBase) !== this.empreinte(P)){
       const quand = lP && lP.maj_le ? this.dateHeure(lP.maj_le) : "";
@@ -721,13 +761,13 @@ const BrouillonProg = {
     if (this.autreAppareil(autres, moiE, b)){
       if (!(await UI.confirmer(trad("Ce brouillon a été modifié sur un autre appareil ({q}). Publier la version de cet appareil ? Celle de l'autre appareil sera remplacée.", { q: this.dateHeure(autres.ecrit_le) || "?" }), { ok: trad("Publier cette version"), annuler: trad("Ne rien publier"), danger: true }))) return { ok: false, annule: true };
     }
-    if (Store.cible() !== uid) return { ok: false, annule: true };
+    if (Store.cible() !== uid) return { ok: false, quitte: true };   // v102 : fiche quittée (pas un « non » du coach)
     /* 3. l'ancien programme (celui de la base) entre dans l'historique ; échec : on demande, comme avant */
     if (Historique.utile("programme", enBase)){
       const archive = Object.assign({}, enBase, { maj: enBase.maj || enBase.debut || aujourdhui() });
       if (!(await Historique.archiver("programme", archive)) && !(await UI.confirmer(trad("L'ancien programme n'a pas pu être rangé dans l'historique. Le remplacer quand même ?"), { ok: trad("Remplacer"), danger: true }))) return { ok: false, annule: true };
     }
-    if (Store.cible() !== uid) return { ok: false, annule: true };
+    if (Store.cible() !== uid) return { ok: false, quitte: true };   // v102 : fiche quittée (pas un « non » du coach)
     /* 4. le nouveau programme, en UNE écriture (tout ou rien) : sans copie d'attente, rien ne partira plus tard sans le coach */
     const N = JSON.parse(JSON.stringify(b));
     this.assurerSids(N);
@@ -760,7 +800,7 @@ const BrouillonProg = {
     Object.keys(D.clients || {}).forEach(k => { if (k !== uid) delete D.clients[k]; });
     const autresB = Forme.objet(lD && lD.contenu) && Forme.objet(lD.contenu.clients) ? lD.contenu.clients : {};
     Object.keys(autresB).forEach(k => { if (k !== uid) D.clients[k] = autresB[k]; });
-    delete D.clients[uid];
+    D.clients[uid] = this.tombe();
     this.planifier(D, uid);
     return { ok: true, programme: N, D: D };
   },
@@ -810,6 +850,10 @@ const BrouillonProg = {
     }));
   }
 };
+
+/* v102 : les copies gardées sur l'appareil de ces clés sont fusionnées entrée par entrée avant d'être rejouées ou servies */
+Store.fusions.brouillons_programme = (base, copie) => BrouillonProg.fusionnerEntrees(base, copie);
+Store.fusionEnAttente = cle => BrouillonProg.enAttente(cle);
 
 const outilProgramme = {
   id: "programme",
@@ -1402,7 +1446,28 @@ const outilProgramme = {
       $$("[data-identique]", zone).forEach(m => { const [si, ei] = m.dataset.identique.split(":").map(Number), sc = etat.B.seances[si], e = sc && (sc.exercices || [])[ei]; m.hidden = !(ref && sc && e && BrouillonProg.identique(ref, sc, e)); });
       return r;
     };
-    const sauverPublie = () => etat.publication ? false : Store.ecrire(self.cle, P);   // les 3 objectifs du mois : dans le programme publié, comme avant
+    /* les 3 objectifs du mois : dans le programme publié, comme avant ; v102 : 700 ms après la frappe, le programme est relu et
+       les objectifs y sont posés seulement s'il est toujours celui de cette page (sinon : publié ailleurs, on le dit, rien n'est
+       écrit) ; relecture impossible (hors ligne) : comme avant (copie gardée sur l'appareil) */
+    let minuteurObj = null;
+    const sauverPublie = () => {
+      if (etat.publication || Store.cible() !== uid) return false;
+      clearTimeout(minuteurObj);
+      minuteurObj = setTimeout(async () => {
+        if (Store.cible() !== uid) return;
+        let l = null;
+        try { l = await BrouillonProg.ligne(uid, self.cle); } catch(e){ Store.ecrire(self.cle, P); return; }
+        if (Store.cible() !== uid) return;
+        const enBase = Forme.cle(self.cle, l && l.contenu) || {};
+        if (BrouillonProg.empreinte(enBase) !== BrouillonProg.empreinte(P)){
+          UI.toast(trad("Le programme de ce client a été publié ailleurs : recharge la page avant de changer ses objectifs."), "attention", 9000);
+          return;
+        }
+        const N = Object.assign({}, enBase, { objectifs: P.objectifs });
+        Store.ecrire(self.cle, N);
+      }, 700);
+      return true;
+    };
 
     const majEtat = () => {
       const z = $("pg-etat"); if (!z) return;
@@ -1435,7 +1500,7 @@ const outilProgramme = {
         redessiner();
       } catch(err){
         b.disabled = false; b.textContent = "L'ajouter";
-        UI.alerte(trad("Ajout impossible : {e}. Vérifie ta connexion et réessaie.", { e: err.message || trad("erreur inconnue") }));
+        UI.alerte(messageEchec(trad("Ajout impossible"), err));
       }
     });
 
@@ -1464,6 +1529,7 @@ const outilProgramme = {
         if (!(await UI.confirmer(trad("Annuler le brouillon ? Tes changements non publiés seront perdus. Ton client garde la version publiée."), { ok: trad("Annuler le brouillon"), annuler: trad("Garder le brouillon"), danger: true }))) return;
         if (Store.cible() !== uid){ Store.ficheChangee(); return; }
         if (BrouillonProg.retirer(etat.D, uid) === false) return;
+        $$(".toast.annulable").forEach(x => x.remove());   // v102
         etat.B = BrouillonProg.depuis(P);
         redessiner();
         flash("pg-pub-msg", trad("Brouillon annulé : tu vois la version publiée."));
@@ -1474,6 +1540,7 @@ const outilProgramme = {
         if (BrouillonProg.differe(etat.B, P) && !(await UI.confirmer(trad("Ton brouillon sera remplacé par une copie du bloc publié, pour préparer le bloc suivant. Continuer ?"), { ok: trad("Préparer le nouveau bloc") }))) return;
         if (Store.cible() !== uid){ Store.ficheChangee(); return; }
         etat.B = BrouillonProg.nouveauBloc(P);
+        $$(".toast.annulable").forEach(x => x.remove());   // v102
         if (BrouillonProg.ranger(etat.D, uid, etat.B, P, majPublie(), { nouveau_bloc: { cycle: Math.max(1, parseInt(P.cycle, 10) || 1), nom: P.nom || "" } }) === false) return;
         redessiner();
         flash("pg-pub-msg", trad("Nouveau bloc prêt dans ton brouillon : fais évoluer les exercices marqués « ≈ identique », puis publie."));
@@ -1495,11 +1562,16 @@ const outilProgramme = {
       msg("");
       /* relecture : les objectifs du mois (écrits à part, dans le programme publié) sont bloqués pendant la publication */
       const objectifs = $$("#prog-obj input, #prog-obj select"); objectifs.forEach(x => { x.disabled = true; });
-      const fin = () => { etat.publication = false; objectifs.forEach(x => { if (x.isConnected) x.disabled = false; }); boutons.forEach(x => { if (x.isConnected){ x.disabled = false; x.textContent = x.dataset.libelle; } }); };
+      const corps = $$("#prog-vue > section:not(#pg-etat)"); corps.forEach(x => x.setAttribute("inert", ""));   // v102 : rien ne se tape pendant la publication
+      const fin = () => { etat.publication = false; corps.forEach(x => x.removeAttribute("inert")); objectifs.forEach(x => { if (x.isConnected) x.disabled = false; }); boutons.forEach(x => { if (x.isConnected){ x.disabled = false; x.textContent = x.dataset.libelle; } }); };
       try {
         const r = await BrouillonProg.publier(uid, P, b, etat.D, majPublie());
-        if (!zone.isConnected || Store.cible() !== uid) return;   // page ou fiche quittée : aucun message chez un autre client
+        if (!zone.isConnected || Store.cible() !== uid){   // page ou fiche quittée : aucun message sur la page d'un autre client
+          if (!r.ok && !r.annule) UI.toast(trad("Programme non publié : ton brouillon est gardé."), "mauvais", 9000);   // v102 : mais on le dit
+          return;
+        }
         if (r.ok){
+          $$(".toast.annulable").forEach(x => x.remove());   // v102 : « Annuler » agirait sur l'ancien brouillon
           /* le programme publié en mémoire devient la nouvelle version (même objet : la page et le cache le partagent) */
           Object.keys(P).forEach(k => delete P[k]); Object.assign(P, r.programme);
           etat.D = r.D;
@@ -1509,6 +1581,7 @@ const outilProgramme = {
           return;
         }
         if (r.annule) return;
+        if (r.attente){ msg(trad("Un changement des objectifs du mois attend son envoi : réessaie dans un instant.")); return; }
         const t = (($("etat") || {}).textContent || "").trim();
         msg(r.refus ? trad("Pas publié : la base a refusé cette modification. Ton brouillon est gardé.")
                     : trad("Pas publié : vérifie ta connexion et réessaie. Ton brouillon est gardé.") + (t && !r.refus ? " (" + t + ")" : ""));
@@ -1596,10 +1669,12 @@ const outilProgramme = {
         sel.onchange = async () => {
           if (!sel.value) return;
           if (!(await UI.confirmer(trad("Charger cet entraînement ? Il remplacera les séances de ton brouillon (ton client garde la version publiée)."), { ok: trad("Charger") }))) { sel.value = ""; return; }
-          const r = await Auth.appel("/rest/v1/bibliotheque?id=eq." + sel.value + "&select=contenu,nom,note");
-          if (r && r[0]){
+          let r = null;
+          try { r = await Auth.appel("/rest/v1/bibliotheque?id=eq." + sel.value + "&select=contenu,nom,note"); }
+          catch(e){ sel.value = ""; flashFixe("pg-msg", trad("Pas chargé : vérifie ta connexion et réessaie.")); return; }   // v102
+          if (r && r[0] && r[0].contenu){
             if (charger(r[0].contenu.seances, r[0].nom, "", true) === false) return false;
-          }
+          } else { sel.value = ""; flashFixe("pg-msg", trad("Cet entraînement n'existe plus dans ta bibliothèque.")); }
         };
       } catch(e){}
     };

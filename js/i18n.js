@@ -1718,3 +1718,20 @@ Object.assign(I18N.en, {
   "Changement impossible : vérifie ta connexion et réessaie.": "The change couldn't be made: check your connection and try again."
 });
 /* v101-finitions-fin */
+/* v102-robustesse (nuit du 10/11) */
+Object.assign(I18N.en, {
+  "Le programme de ce client a été publié ailleurs : recharge la page avant de changer ses objectifs.": "This client's program was published elsewhere: reload the page before changing their goals.",
+  "Un changement des objectifs du mois attend son envoi : réessaie dans un instant.": "A change to the monthly goals is waiting to be sent: try again in a moment.",
+  "Vérifie ta connexion et réessaie.": "Check your connection and try again.",
+  "Ajout impossible": "Couldn't add it",
+  "Pas chargé : vérifie ta connexion et réessaie.": "Not loaded: check your connection and try again.",
+  "Cet entraînement n'existe plus dans ta bibliothèque.": "This workout is no longer in your library.",
+  "Programme non publié : ton brouillon est gardé.": "Program not published: your draft is kept.",
+  "Diète non publiée : ton brouillon est gardé.": "Meal plan not published: your draft is kept.",
+  "Pas de connexion : les recettes n'ont pas pu être lues. Réessaie dans un instant.": "No connection: the recipes couldn't be loaded. Try again in a moment.",
+  "Je suis sur Android ou ordinateur": "I'm on Android or a computer",
+  "Ta note…": "Your note…",
+  "Contenu de la note": "Note text",
+  "{z} : entre 10 et 250 cm, vérifie la saisie.": "{z}: must be between 10 and 250 cm, check your entry."
+});
+/* v102-robustesse-fin */

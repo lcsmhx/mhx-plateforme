@@ -1117,3 +1117,10 @@ a.btn.fiche-wa-l{min-height:var(--h-toucher)}
 .sq-0{width:62%;height:20px}.sq-1{width:92%}.sq-2{width:78%}.sq-3{width:46%}
 @keyframes sq-vague{0%{background-position:100% 0}100%{background-position:-100% 0}}
 @media (prefers-reduced-motion: reduce){.sq-l{animation:none}}
+/* v102 : zones de toucher de 44 px côté client (« Respecté ? », « Remplacer », croix de la Formation, zones de Ma progression,
+   croix du tableau des mesures) ; un focus clavier visible sur les cases à cocher */
+.repas-c .repas-tete button,.repas-c .repas-tete .respect{min-height:var(--h-toucher)}
+.fo-x{min-width:var(--h-toucher);min-height:var(--h-toucher);display:inline-flex;align-items:center;justify-content:center}
+.chip{min-height:var(--h-toucher)}
+#vue table .del{min-width:var(--h-toucher);min-height:var(--h-toucher)}
+input[type=checkbox]:focus-visible,input[type=radio]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}

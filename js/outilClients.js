@@ -904,7 +904,7 @@ const Acces = {
           ? "Compte d'équipe créé, avec l'accès complet. Transmets-lui ses identifiants."
           : "Compte créé. Transmets-lui ses identifiants.");
       } catch(e){
-        flashFixe("n-msg", e.message || "Création impossible : vérifie ta connexion et réessaie.");
+        flashFixe("n-msg", e && e.reseau ? "Création impossible : vérifie ta connexion et réessaie." : (e.message || "Création impossible : vérifie ta connexion et réessaie."));
       }
       b.disabled = false;
     });
@@ -927,10 +927,14 @@ const Acces = {
     try {
       await Auth.supprimerCompte(p.id, "SUPPRIMER");
       if (Store.idConsulte === p.id){ Store.oublier(p.id); Store.idConsulte = null; Store.nomConsulte = null; }
+      /* v102 : ses brouillons (programme, diète) quittent aussi le compte du coach (droit à l'effacement) */
+      for (const Bx of [BrouillonProg, BrouillonRepas]){
+        try { const D = await Bx.lire(); if (!Store.nonLus.has(D) && Bx.entree(D, p.id)){ Bx.retirer(D, p.id); await Bx.vider(D, p.id); } } catch(e){}
+      }
       return "fait";
     } catch(e){
       if (b){ b.disabled = false; b.textContent = texte; }
-      UI.alerte("Suppression impossible : " + (e.message || "erreur inconnue") + ". Vérifie ta connexion et réessaie.");
+      UI.alerte(messageEchec("Suppression impossible", e));
       return "echec";
     }
   },
@@ -950,7 +954,7 @@ const Acces = {
       return true;
     } catch(e){
       if (b){ b.disabled = false; b.textContent = texte; }
-      UI.alerte("Changement impossible : " + (e.message || "erreur inconnue") + ". Vérifie ta connexion et réessaie.");
+      UI.alerte(messageEchec("Changement impossible", e));
       return false;
     }
   },
@@ -969,7 +973,7 @@ const Acces = {
       return true;
     } catch(e){
       if (b){ b.disabled = false; b.textContent = texte; }
-      UI.alerte("Changement impossible : " + (e.message || "erreur inconnue") + ". Vérifie ta connexion et réessaie.");
+      UI.alerte(messageEchec("Changement impossible", e));
       return false;
     }
   }

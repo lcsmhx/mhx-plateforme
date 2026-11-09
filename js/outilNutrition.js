@@ -56,7 +56,7 @@ const BrouillonRepas = Object.assign(Object.create(BrouillonProg), {
     let lR, lD;
     try { await Auth.assurer(); [lR, lD] = await Promise.all([this.ligne(uid, "repas"), this.ligne(moi, this.cle)]); }
     catch(e){ return { ok: false, refus: !!(e && e.statut >= 400 && e.statut < 500 && [401, 408, 429].indexOf(e.statut) === -1) }; }
-    if (Store.cible() !== uid) return { ok: false, annule: true };
+    if (Store.cible() !== uid) return { ok: false, quitte: true };   // v102 : fiche quittée (pas un « non » du coach)
     const enBase = outilNutrition.migrer(Object.assign(outilNutrition.vide(), Forme.cle("repas", lR && lR.contenu) || {}));
     const moiE = this.entree(D, uid);
     const nbClient = this.changesClient(enBase, moiE && moiE.depart ? moiE.depart : this.depart(Rpub));
@@ -69,12 +69,12 @@ const BrouillonRepas = Object.assign(Object.create(BrouillonProg), {
     else if (ailleurs) lignes.push(trad("Attention : la diète de ce client a été modifiée ailleurs (autre appareil ou autre onglet{q}) depuis que tu as ouvert cette page : ton brouillon la remplacera.", { q: lR && lR.maj_le ? ", " + this.dateHeure(lR.maj_le) : "" }));
     if (autreAppareil) lignes.push(trad("Ce brouillon a aussi été modifié sur un autre appareil ({q}) : c'est la version de cet appareil qui sera publiée.", { q: this.dateHeure(autres.ecrit_le) || "?" }));
     if (!(await UI.confirmer(lignes.join("\n\n"), { titre: trad("Publier les changements"), ok: trad("Publier"), annuler: trad("Ne rien publier"), danger: !!(nbClient || ailleurs || autreAppareil) }))) return { ok: false, annule: true };
-    if (Store.cible() !== uid) return { ok: false, annule: true };
+    if (Store.cible() !== uid) return { ok: false, quitte: true };   // v102 : fiche quittée (pas un « non » du coach)
     if (Historique.utile("repas", enBase)){
       const archive = Object.assign({}, enBase, { maj: enBase.maj || enBase.debut || aujourdhui() });
       if (!(await Historique.archiver("repas", archive)) && !(await UI.confirmer(trad("L'ancienne diète n'a pas pu être rangée dans l'historique. La remplacer quand même ?"), { ok: trad("Remplacer"), danger: true }))) return { ok: false, annule: true };
     }
-    if (Store.cible() !== uid) return { ok: false, annule: true };
+    if (Store.cible() !== uid) return { ok: false, quitte: true };   // v102 : fiche quittée (pas un « non » du coach)
     const N = JSON.parse(JSON.stringify(b));
     N.maj = new Date().toLocaleDateString("fr-FR");
     if (!N.debut || (moiE && moiE.nouveau_bloc)) N.debut = aujourdhui();
@@ -98,7 +98,7 @@ const BrouillonRepas = Object.assign(Object.create(BrouillonProg), {
     Object.keys(D.clients || {}).forEach(k => { if (k !== uid) delete D.clients[k]; });
     const autresB = Forme.objet(lD && lD.contenu) && Forme.objet(lD.contenu.clients) ? lD.contenu.clients : {};
     Object.keys(autresB).forEach(k => { if (k !== uid) D.clients[k] = autresB[k]; });
-    delete D.clients[uid];
+    D.clients[uid] = this.tombe();
     this.planifier(D, uid);
     return { ok: true, repas: N, D: D };
   },
@@ -121,6 +121,8 @@ const BrouillonRepas = Object.assign(Object.create(BrouillonProg), {
     </section>`;
   }
 });
+
+Store.fusions.brouillons_repas = (base, copie) => BrouillonRepas.fusionnerEntrees(base, copie);   // v102
 
 const outilNutrition = {
   id: "nutrition",
@@ -301,6 +303,9 @@ const outilNutrition = {
      de la diète (compatible), différentes du repas actuel et des recettes déjà servies dans la semaine (sauf s'il n'y en a
      pas assez), à la même énergie que le repas remplacé */
   async propositions(x, R, n){
+    /* v102 : le catalogue des recettes doit être lu en base : sinon « Pas de connexion », jamais « pas d'autre recette » */
+    const brut = await Catalogue.lire("recettes");
+    if (!Array.isArray(brut) || !(Catalogue._c && Catalogue._c.recettes === brut)) throw Object.assign(new Error("catalogue"), { reseau: true });
     const recettes = await Catalogue.recettes();
     const dans = new Set(); (R.jours || []).forEach(j => (j.repas || []).forEach(c => { if (c && c.recette_id) dans.add(c.recette_id); }));
     let l = recettes.filter(r => r.moment === x.moment && r.id !== x.recette_id && this.compatible(r, R.regime, R.allergenes));
@@ -1078,6 +1083,7 @@ const outilNutrition = {
         if (!(await UI.confirmer(trad("Annuler le brouillon ? Tes changements non publiés seront perdus. Ton client garde la version publiée."), { ok: trad("Annuler le brouillon"), annuler: trad("Garder le brouillon"), danger: true }))) return;
         if (Store.cible() !== uid){ Store.ficheChangee(); return; }
         if (BrouillonRepas.retirer(etatB.D, uid) === false) return;
+        $$(".toast.annulable").forEach(x => x.remove());   // v102
         remplacerB(ref); actif = Math.min(actif, Math.max(0, B.jours.length - 1));
         redessiner();
         flash("nu-pub-msg", trad("Brouillon annulé : tu vois la version publiée."));
@@ -1087,7 +1093,8 @@ const outilNutrition = {
         if (!Historique.utile("repas", R)){ flash("nu-pub-msg", trad("Publie d'abord une première diète : la nouvelle semaine part de la version publiée.")); return; }
         if (BrouillonRepas.differe(B, ref) && !(await UI.confirmer(trad("Ton brouillon sera remplacé par une copie de la diète publiée, pour préparer la suivante. Continuer ?"), { ok: trad("Préparer la nouvelle semaine") }))) return;
         if (Store.cible() !== uid){ Store.ficheChangee(); return; }
-        remplacerB(BrouillonRepas.nouveauBloc(R)); preremplir(B);   // relecture : régime, allergènes, repas, cible du questionnaire gardés
+        remplacerB(BrouillonRepas.nouveauBloc(R)); preremplir(B);
+        $$(".toast.annulable").forEach(x => x.remove());   // v102   // relecture : régime, allergènes, repas, cible du questionnaire gardés
         if (BrouillonRepas.ranger(etatB.D, uid, B, ref, Store.majLu[uid + "|" + self.cle] || null, { nouveau_bloc: { le: aujourdhui() }, depart: BrouillonRepas.depart(R) }) === false) return;
         redessiner();
         flash("nu-pub-msg", trad("Nouvelle semaine prête dans ton brouillon : varie les repas marqués « ≈ identique », puis publie."));
@@ -1102,11 +1109,16 @@ const outilNutrition = {
       etatB.publication = true;
       const boutons = ["nu-publier", "nu-publier-bas"].map(id => $(id)).filter(Boolean);
       boutons.forEach(x => { x.disabled = true; x.dataset.libelle = x.textContent; x.textContent = trad("Publication…"); });
+      const corps = $$("#nu-vue > section:not(#nu-etat)"); corps.forEach(x => x.setAttribute("inert", ""));   // v102 : rien ne se tape pendant la publication
       flashFixe("nu-pub-msg", "");
       try {
         const r = await BrouillonRepas.publier(uid, R, B, etatB.D);
-        if (!zone.isConnected || Store.cible() !== uid) return;
+        if (!zone.isConnected || Store.cible() !== uid){
+          if (!r.ok && !r.annule) UI.toast(trad("Diète non publiée : ton brouillon est gardé."), "mauvais", 9000);   // v102
+          return;
+        }
         if (r.ok){
+          $$(".toast.annulable").forEach(x => x.remove());   // v102
           Object.keys(R).forEach(k => { delete R[k]; }); Object.assign(R, outilNutrition.migrer(JSON.parse(JSON.stringify(r.repas))));
           etatB.D = r.D;
           ref = JSON.parse(JSON.stringify(R)); remplacerB(R);
@@ -1120,6 +1132,7 @@ const outilNutrition = {
                                         : trad("Pas publié : vérifie ta connexion et réessaie. Ton brouillon est gardé.") + (t ? " (" + t + ")" : ""));
       } finally {
         etatB.publication = false;
+        corps.forEach(x => x.removeAttribute("inert"));
         boutons.forEach(x => { if (x.isConnected){ x.disabled = false; x.textContent = x.dataset.libelle; } });
       }
     };
@@ -1284,9 +1297,11 @@ const outilNutrition = {
         const { jour, i } = cible(b.dataset.autre); const x = jour && jour.repas[i]; if (!x) return;
         b.disabled = true;
         let l = [];
-        try { l = await self.propositions(x, B, 3); } catch(e){ l = []; }
+        let panne = false;
+        try { l = await self.propositions(x, B, 3); } catch(e){ l = []; panne = true; }
         if (!b.isConnected) return;
         b.disabled = false;
+        if (panne){ flash("nu-msg", trad("Pas de connexion : les recettes n'ont pas pu être lues. Réessaie dans un instant.")); return; }
         if (!l.length){ flash("nu-msg", trad("Pas d'autre recette compatible pour ce repas.")); return; }
         l.pour = { recette_id: x.recette_id, moment: x.moment };   // le repas visé (revérifié à « Choisir »)
         propositions[b.dataset.autre] = l;

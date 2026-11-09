@@ -348,18 +348,21 @@ const outilMensurations = {
         d.innerHTML = `<label for="z${i}">Zone ${i+1}</label><input id="z${i}" type="text">`;
         b.appendChild(d);
         const inp = d.querySelector("input"); inp.value = z;
-        inp.addEventListener("input", () => {
-          D.zones[i] = inp.value || ("Zone "+(i+1));
-          sauver(); construireChips(); construireSaisie(); dessinerTable(); tout();
-        });
+        /* v102 : à la frappe, le nom seulement ; la page est refaite en quittant le champ (avant : à chaque lettre, ce qui
+           effaçait les centimètres tapés dans « Nouvelle mesure ») */
+        inp.addEventListener("input", () => { D.zones[i] = inp.value || ("Zone "+(i+1)); sauver(); });
+        inp.addEventListener("change", () => { construireChips(); construireSaisie(); dessinerTable(); tout(); });
       });
     };
     const construireSaisie = () => {
-      const b = $("entry-zones"); b.innerHTML = "";
+      const b = $("entry-zones");
+      const tapes = {}; $$("#entry-zones input").forEach(x => { tapes[x.id] = x.value; });   // v102 : les centimètres tapés restent
+      b.innerHTML = "";
       D.zones.forEach((z,i) => {
         const d = document.createElement("div");
         d.innerHTML = `<label for="ez${i}">${esc(z)}</label><input id="ez${i}" type="number" step="0.1" min="0" max="300" placeholder="cm">`;
         b.appendChild(d);
+        if (tapes["ez" + i]) d.querySelector("input").value = tapes["ez" + i];
       });
       const bc = $("entry-compo");
       if (bc) bc.innerHTML = cfg.composition.map(c =>
@@ -535,7 +538,7 @@ const outilMensurations = {
       if (sem < 0 || sem > 520){ flash("msg","Numéro de semaine invalide."); return; }
       if (isFinite(poids) && (poids < 30 || poids > 300)){ flash("msg","Poids entre 30 et 300 kg, vérifie la virgule."); return; }
       const horsBornes = D.zones.filter((z,i) => vals[i] != null && (vals[i] < 10 || vals[i] > 250));
-      if (horsBornes.length){ flash("msg", horsBornes[0] + " : entre 10 et 250 cm, vérifie la saisie."); return; }
+      if (horsBornes.length){ flash("msg", trad("{z} : entre 10 et 250 cm, vérifie la saisie.", { z: trad(horsBornes[0]) })); return; }   // v102 : traduit
       if (D.mesures.some(m => m.sem === sem) && !(await UI.confirmer(trad("La semaine {n} existe déjà. La remplacer ?", { n: sem }), { ok: trad("Oui, remplacer") }))) return;
       D.mesures = D.mesures.filter(m => m.sem !== sem);
       const mesure = { sem, date: $("e-date").value || "", poids: isFinite(poids) ? poids : null, vals };
