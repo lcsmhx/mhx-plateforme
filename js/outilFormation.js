@@ -609,6 +609,10 @@ const LECONS = {
    Tout ce que le client coche est enregistre sur son compte.
    ------------------------------------------------------------------ */
 const JOURS_SEM = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
+/* v95 (décision de Lucas du 10/11) : les étiquettes des jours de « Organise ta diète », abrégées, dans la langue de l'app.
+   Seulement ces boutons (data-notr : la couche de traduction n'y touche pas) ; aucune clé « Lun », « Sam »… dans I18N.en,
+   qui changerait aussi un prénom « Sam » écrit seul en « Sat ». */
+const JOURS_COURTS = { fr: ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"], en: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"] };
 const REPAS_SEM = ["Petit-déjeuner","Collation matin","Déjeuner","Collation après-midi","Dîner","Collation soir"];
 
 const outilFormation = {
@@ -827,7 +831,7 @@ const outilFormation = {
       <div class="fo-barre">
         <select id="fo-sem" aria-label="Semaine"${off}>${sem}</select>
         <div class="tabs" style="margin:0">${JOURS_SEM.map((n, i) =>
-          `<button type="button" class="tab" data-lecture-ok data-fj="${i}" aria-pressed="${D.jour === i}"${off}>${n.slice(0,3)}</button>`).join("")}</div>
+          `<button type="button" class="tab" data-lecture-ok data-notr data-fj="${i}" aria-pressed="${D.jour === i}" aria-label="${esc(trad(n))}"${off}>${JOURS_COURTS[I18N.langue === "en" ? "en" : "fr"][i]}</button>`).join("")}</div>
       </div>
       <div class="fo-scroll"><table class="fo-tab fo-diete">
         <tr><th>Repas</th><th>Fait</th><th>Prot. (g)</th><th>Gluc. (g)</th><th>Lip. (g)</th><th>Calories</th></tr>
