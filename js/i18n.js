@@ -3,7 +3,8 @@
    s'affiche, a partir du dictionnaire I18N.en (texte francais exact ->
    anglais) et de quelques motifs pour les phrases qui contiennent un nombre.
    Une entree absente = le texte reste en francais : rien ne peut casser.
-   Les ecrans du coach ne sont pas traduits (ils ne servent qu'a l'equipe).
+   Les ecrans du coach ne sont pas traduits (ils ne servent qu'a l'equipe) : v93, l'espace du coach est toujours en
+   francais (demarrage.js), meme sur un appareil reste en anglais.
    Ce que saisit l'utilisateur n'est jamais touche : seuls les textes qui
    correspondent EXACTEMENT a une entree du dictionnaire sont remplaces. */
 const I18N = {
@@ -100,6 +101,11 @@ const Traduction = {
   }
 };
 async function basculerLangue(){
+  /* v93 : l'espace du coach reste en français (demarrage.js) : le bouton le dit au lieu de recharger la page pour rien */
+  if (typeof Auth !== "undefined" && Auth.estCoach() && I18N.langue === "fr"){
+    try { UI.toast("Ton espace coach reste en français. Pour voir l'app en anglais, ouvre-la avec le compte client de test.", "attention", 7000); } catch(e){}
+    return;
+  }
   const l = I18N.langue === "en" ? "fr" : "en";
   const range = I18N.choisir(l);
   /* le choix suit le client d'un appareil a l'autre ; v85 (bloc 4) : prefs porte aussi le programme de la formation choisi

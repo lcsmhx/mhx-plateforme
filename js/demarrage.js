@@ -248,8 +248,16 @@ const Retour = {
      langue se règle ; attendue juste avant la navigation */
   const pContact = Contact.preparer().catch(() => null);
 
-  /* la langue choisie sur un autre appareil l'emporte */
-  try {
+  /* v93 : l'espace du coach est en français, toujours (ses écrans ne sont pas traduits : sur un appareil resté en anglais — un
+     compte client essayé en anglais, le choix est gardé sur l'appareil —, le dictionnaire en traduisait une partie, menu, fiche,
+     fenêtres, témoin, et le reste restait en français ; le bouton montrait « 🇫🇷 FR », la langue vers laquelle on bascule).
+     Réglé avant le premier affichage de son espace : la page se recharge une fois en français (les textes fixes de la page
+     ont déjà été traduits au démarrage). */
+  if (Auth.estCoach()){
+    if (I18N.langue !== "fr" && I18N.choisir("fr")){ location.reload(); return; }
+  }
+  /* la langue choisie sur un autre appareil l'emporte (client, prospect) */
+  else try {
     const pr = await Store.lire("prefs", {});
     if (pr && (pr.langue === "en" || pr.langue === "fr") && pr.langue !== I18N.langue){
       const ok = I18N.choisir(pr.langue);
