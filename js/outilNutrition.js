@@ -52,7 +52,7 @@ const BrouillonRepas = Object.assign(Object.create(BrouillonProg), {
   /* Publier : { ok, repas, D } ; { ok:false, annule } ; { ok:false, refus } ; { ok:false } (réseau) */
   async publier(uid, Rpub, b, D){
     const moi = Store.moi(); if (!moi || !uid) return { ok: false };
-    await Store.envoyerConfirme(this.cle, { chezMoi: true }).catch(() => false);
+    await this.vider(D, uid);   // le brouillon tapé à l'instant part d'abord (relu, fusionné : BrouillonProg, relecture v96)
     let lR, lD;
     try { await Auth.assurer(); [lR, lD] = await Promise.all([this.ligne(uid, "repas"), this.ligne(moi, this.cle)]); }
     catch(e){ return { ok: false, refus: !!(e && e.statut >= 400 && e.statut < 500 && [401, 408, 429].indexOf(e.statut) === -1) }; }
@@ -84,17 +84,23 @@ const BrouillonRepas = Object.assign(Object.create(BrouillonProg), {
         method: "POST", headers: { "Prefer": "resolution=merge-duplicates,return=minimal" },
         body: [{ user_id: uid, outil: "repas", contenu: N, maj_le: N.publie_le }]
       });
-    } catch(e){ return { ok: false, refus: !!(e && e.statut >= 400 && e.statut < 500 && [401, 408, 429].indexOf(e.statut) === -1) }; }
+    } catch(e){
+      /* réponse perdue (délai dépassé) alors que la base a écrit : on relit avant de dire « Pas publié » */
+      const refus = !!(e && e.statut >= 400 && e.statut < 500 && [401, 408, 429].indexOf(e.statut) === -1);
+      let arrive = false;
+      if (!refus) try { const l = await this.ligne(uid, "repas"); arrive = !!(l && Forme.objet(l.contenu) && l.contenu.publie_le === N.publie_le); } catch(e2){}
+      if (!arrive) return { ok: false, refus };
+    }
     Store.boite(uid).repas = Rpub;
     Store.majLu[uid + "|repas"] = N.publie_le;
     majEtat("enregistre");
-    const base = Forme.objet(lD && lD.contenu) ? JSON.parse(JSON.stringify(lD.contenu)) : this.vide();
-    if (!Forme.objet(base.clients)) base.clients = {};
-    Object.keys(D.clients || {}).forEach(k => { if (k !== uid && !base.clients[k]) base.clients[k] = D.clients[k]; });
-    delete base.clients[uid];
-    Store.origines.set(base, moi);
-    Store.ecrire(this.cle, base, { chezMoi: true });
-    return { ok: true, repas: N, D: base };
+    /* la base relue juste avant fait foi pour les brouillons des autres clients (jamais les entrées de la page) */
+    Object.keys(D.clients || {}).forEach(k => { if (k !== uid) delete D.clients[k]; });
+    const autresB = Forme.objet(lD && lD.contenu) && Forme.objet(lD.contenu.clients) ? lD.contenu.clients : {};
+    Object.keys(autresB).forEach(k => { if (k !== uid) D.clients[k] = autresB[k]; });
+    delete D.clients[uid];
+    this.planifier(D, uid);
+    return { ok: true, repas: N, D: D };
   },
 
   etatHTML(b, ref, Rpub, entree){
@@ -1056,7 +1062,7 @@ const outilNutrition = {
     };
 
     const brancherEtat = () => {
-      ["nu-publier", "nu-publier-bas"].forEach(id => { const x = $(id); if (x) x.addEventListener("click", publier); });
+      const x = $("nu-publier"); if (x) x.addEventListener("click", publier);   // nu-publier-bas : une fois par dessin (brancher)
       const ann = $("nu-annuler-brouillon");
       if (ann) ann.addEventListener("click", async () => {
         if (!(await UI.confirmer(trad("Annuler le brouillon ? Tes changements non publiés seront perdus. Ton client garde la version publiée."), { ok: trad("Annuler le brouillon"), annuler: trad("Garder le brouillon"), danger: true }))) return;
@@ -1282,6 +1288,7 @@ const outilNutrition = {
       const rk = $("nu-reprendre-kcal");
       if (rk) rk.addEventListener("click", () => { if (!ctx.calcCible) return; B.cible = Object.assign({}, ctx.calcCible); if (sauver() === false) return; redessiner(); });
       brancherEtat();
+      const bas = $("nu-publier-bas"); if (bas) bas.addEventListener("click", publier);
       $$("[data-retirer]", zone).forEach(b => b.addEventListener("click", () => {
         const { jour, i } = cible(b.dataset.retirer); jour.repas.splice(i, 1); sauver(); redessiner();
       }));
