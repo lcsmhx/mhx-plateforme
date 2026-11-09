@@ -1348,8 +1348,16 @@ const outilProgramme = {
       /* v85 (bloc 4) : sous son programme (inchangé, en premier), le lien vers les programmes de la formation */
       const dessiner = () => { zone.innerHTML = BrouillonProg.annonceHTML(P) + self.vueLecture(P, J) + ProgFormation.lienHTML(); self.brancherFiches(zone); BrouillonProg.brancherAnnonce(zone, P); };
       dessiner();
+      /* v100 (chantier 5) : « Mon journal » vit ici : l'historique des séances notées, sous le programme (même code que #/journal) */
+      let n = outilJournal.PAS;
+      const dessinerHist = () => {
+        const h = $("prog-jr"); if (!h) return;
+        h.innerHTML = outilJournal.historiqueHTML(J, n, false);
+        const plus = $("jr-plus"); if (plus) plus.addEventListener("click", () => { n += outilJournal.PAS; dessinerHist(); });
+      };
+      dessinerHist();
       /* apres une seance notee : on redessine (badge « notée », compteur) et on rebranche le journal */
-      const apres = () => { dessiner(); Journal.brancher(zone, P, J, apres); };
+      const apres = () => { dessiner(); dessinerHist(); Journal.brancher(zone, P, J, apres); };
       await Journal.brancher(zone, P, J, apres);
       Historique.monter("programme", "prog-hist");
       return;

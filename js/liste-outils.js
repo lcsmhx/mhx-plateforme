@@ -14,5 +14,11 @@ const ALIAS_ROUTES = { progression: "mensurations", repas: "nutrition", home: "a
 const MENU_COACH = ["tableau", "clients", "prospects", "mes-programmes", "catalogue", "entrainement", "profil"];
 const NOMS_MENU_COACH = { clients: "Clients", entrainement: "Mon entraînement", profil: "Réglages" };
 /* relecture : la page sortie du menu marque son entrée « parente » (là où l'on trouve son bouton) */
+/* v100 (chantier 5 de la nuit du 10/11, audit §8) : le menu d'un CLIENT accompagné (ni prospect, ni coach, ni fiche) : barre du
+   bas Accueil · Programme · Nutrition · Progression · Plus ; « Mon journal » vit dans Programme (l'historique des séances), « Mes
+   compléments » sous Nutrition, le calculateur est caché quand il a une diète (gardé pour les prospects). Les adresses restent :
+   #/journal, #/complements, #/calculateur ouvrent toujours leur page (et marquent leur entrée « parente »). */
+const CACHES_CLIENT = ["journal", "complements"];
+const PARENTS_CLIENT = { journal: "programme", complements: "nutrition", calculateur: "nutrition" };
 const PARENTS_MENU_COACH = { "suivi-clients": "clients", comptes: "clients", "suivi-commercial": "prospects", newsletter: "prospects", atelier: "mes-programmes", bibliotheque: "mes-programmes" };
 

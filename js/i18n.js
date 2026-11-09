@@ -1694,3 +1694,8 @@ Object.assign(I18N.en, {
   "Entraînement": "Training"
 });
 /* v99-fiche-fin */
+/* v100-client (chantier 5 de la nuit du 10/11) : le menu du client */
+Object.assign(I18N.en, {
+  "Les compléments conseillés par ton coach : doses et moments.": "The supplements your coach recommends: doses and timing."
+});
+/* v100-client-fin */
