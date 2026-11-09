@@ -92,13 +92,38 @@ const outilAtelier = {
         sauver(); redessiner();
       });
 
+      /* le contrôle commun à « Ma base » et « Ma bibliothèque » : un nom, au moins une séance, aucune séance vide (message, ou "") */
+      const aCorriger = () => {
+        lireEntete();
+        if (!P.nom.trim()) return "Donne un nom à ce programme.";
+        if (!P.seances.length) return "Il faut au moins une séance.";
+        if (P.seances.some(sc => !(sc.exercices || []).some(e => (e.nom || "").trim()))) return "Une séance n'a aucun exercice. Complète-la ou supprime-la.";
+        return "";
+      };
+
+      /* v91 : « Enregistrer dans ma bibliothèque » (jamais branché avant : le bouton ne faisait rien) — même table et même
+         format que la fiche d'un client ({ type: "entrainement", seances }), sous le nom du programme */
+      const biblio = $("pg-biblio-save");
+      if (biblio) biblio.addEventListener("click", async () => {
+        if (biblio.disabled) return;
+        const pb = aCorriger(); if (pb){ flash("pg-msg", pb); return; }
+        biblio.disabled = true; flashFixe("pg-msg", "Enregistrement…");
+        try {
+          await Auth.appel("/rest/v1/bibliotheque", {
+            method: "POST",
+            headers: { "Prefer": "return=minimal" },
+            body: [{ coach_id: Auth.utilisateur().id, nom: P.nom.trim(), note: P.note || "", contenu: { type: "entrainement", seances: JSON.parse(JSON.stringify(P.seances)) } }]
+          });
+          flash("pg-msg", "« " + P.nom.trim() + " » enregistré dans ta bibliothèque. Tu le retrouves sur la fiche de chaque client.");
+        } catch(e){
+          flashFixe("pg-msg", "Pas enregistré dans ta bibliothèque : vérifie ta connexion et réessaie.");
+        }
+        biblio.disabled = false;
+      });
+
       const base = $("at-base");
       if (base) base.addEventListener("click", async () => {
-        lireEntete();
-        if (!P.nom.trim()){ flash("pg-msg", "Donne un nom à ce programme."); return; }
-        if (!P.seances.length){ flash("pg-msg", "Il faut au moins une séance."); return; }
-        const vides = P.seances.filter(sc => !(sc.exercices || []).some(e => (e.nom || "").trim()));
-        if (vides.length){ flash("pg-msg", "Une séance n'a aucun exercice. Complète-la ou supprime-la."); return; }
+        const pb = aCorriger(); if (pb){ flash("pg-msg", pb); return; }
 
         const id = Normaliser.aplatir(P.nom).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
         const existe = prets.some(x => x.id === id);
