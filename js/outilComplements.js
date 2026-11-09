@@ -108,7 +108,7 @@ const outilComplements = {
     return h;
   },
 
-  html(){ return `<div id="cp-vue"><section class="panel"><div class="empty">Chargement…</div></section></div>`; },
+  html(){ return `<div id="cp-vue"><section class="panel">${squelette()}</section></div>`; },
 
   async init(){
     const self = this;
@@ -160,7 +160,11 @@ const outilComplements = {
       }));
 
       $$("[data-suppr-c]", zone).forEach(b => b.addEventListener("click", () => {
-        D.liste.splice(+b.dataset.supprC, 1); sauver(); redessiner();
+        const k = +b.dataset.supprC, x = D.liste.splice(k, 1)[0]; sauver(); redessiner();
+        UI.annulable(trad("Supprimé : {n}", { n: (x && x.nom) || trad("un complément") }), () => {   // v101
+          if (D.liste.indexOf(x) > -1) return;
+          D.liste.splice(Math.min(k, D.liste.length), 0, x); sauver(); redessiner();
+        }, zone);
       }));
 
       const n = $("cp-note");

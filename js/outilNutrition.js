@@ -875,7 +875,7 @@ const outilNutrition = {
     </section>`;
   },
 
-  html(){ return `<div id="nu-vue"><section class="panel"><div class="empty">Chargement…</div></section></div><div id="nu-hist"></div>`; },
+  html(){ return `<div id="nu-vue"><section class="panel">${squelette()}</section></div><div id="nu-hist"></div>`; },
 
   async init(){
     const self = this;
@@ -1312,17 +1312,30 @@ const outilNutrition = {
       if (rk) rk.addEventListener("click", () => { if (!ctx.calcCible) return; B.cible = Object.assign({}, ctx.calcCible); if (sauver() === false) return; redessiner(); });
       brancherEtat();
       const bas = $("nu-publier-bas"); if (bas) bas.addEventListener("click", publier);
+      /* v101 : « Supprimé : … · Annuler » pendant 10 s (le repas revient à sa place) */
       $$("[data-retirer]", zone).forEach(b => b.addEventListener("click", () => {
-        const { jour, i } = cible(b.dataset.retirer); jour.repas.splice(i, 1); sauver(); redessiner();
+        const { jour, i } = cible(b.dataset.retirer); const x = jour.repas.splice(i, 1)[0]; sauver(); redessiner();
+        UI.annulable(trad("Supprimé : {n}", { n: (x && x.nom) || trad("un repas") }), () => {
+          if (B.jours.indexOf(jour) < 0) return;
+          jour.repas.splice(Math.min(i, jour.repas.length), 0, x); sauver(); redessiner();
+        }, zone);
       }));
       $$("[data-suppr-i]", zone).forEach(b => b.addEventListener("click", async () => {
         const p = b.dataset.supprI.split(":").map(Number);
-        const jour = B.jours[p[0]];
-        jour.repas[p[1]].ingredients.splice(p[2], 1);
-        if (!jour.repas[p[1]].ingredients.length) jour.repas.splice(p[1], 1);
-        else await self.recalculer(jour.repas[p[1]]);
+        const jour = B.jours[p[0]], carte = jour.repas[p[1]];
+        const avantCarte = JSON.parse(JSON.stringify(carte));   // v101 : pour « Annuler » (la ligne et les macros d'avant)
+        const g = carte.ingredients.splice(p[2], 1)[0];
+        const vide = !carte.ingredients.length;
+        if (vide) jour.repas.splice(p[1], 1);
+        else await self.recalculer(carte);
         if (sauver() === false) return;
         redessiner();
+        UI.annulable(trad("Supprimé : {n}", { n: (g && g.nom) || trad("une ligne") }), () => {
+          if (B.jours.indexOf(jour) < 0) return;
+          if (vide){ if (jour.repas.indexOf(carte) < 0) jour.repas.splice(Math.min(p[1], jour.repas.length), 0, Object.assign(carte, avantCarte)); }
+          else { const k = jour.repas.indexOf(carte); if (k < 0) return; Object.keys(carte).forEach(c => { delete carte[c]; }); Object.assign(carte, avantCarte); }
+          sauver(); redessiner();
+        }, zone);
       }));
       $$("[data-gr]", zone).forEach(el => el.addEventListener("change", async () => {
         const p = el.dataset.gr.split(":").map(Number);
@@ -1352,7 +1365,7 @@ const outilNutrition = {
           });
           flash("nu-msg","Enregistré dans ta bibliothèque.");
           chargerBiblio();
-        } catch(e){ flash("nu-msg","Enregistrement impossible."); }
+        } catch(e){ flashFixe("nu-msg", trad("Pas enregistré dans ta bibliothèque : vérifie ta connexion et réessaie.")); }
       });
 
       chargerBiblio();

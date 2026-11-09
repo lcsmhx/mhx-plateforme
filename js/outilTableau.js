@@ -37,7 +37,7 @@ const outilTableau = {
   MAX_LIGNES: 5,
   AIDE_CLIENTS: "Urgences : un 😞 non traité, une note en chute, un retour de la semaine à lire (feedback du dimanche ou bilan du vendredi), un client inactif depuis 10 jours, une régularité faible, ou un calculateur qui ne correspond pas au questionnaire.",
 
-  html(){ return `<div id="tb-vue"><header class="masthead tb-tete"><div class="tb-tete-l"><h1>Tableau de bord</h1><p class="lede">Ce qui demande ton attention aujourd'hui.</p></div></header><section class="panel"><div class="empty">Chargement…</div></section></div>`; },
+  html(){ return `<div id="tb-vue"><header class="masthead tb-tete"><div class="tb-tete-l"><h1>Tableau de bord</h1><p class="lede">Ce qui demande ton attention aujourd'hui.</p></div></header><section class="panel">${squelette()}</section></div>`; },
 
   /* les lignes « À traiter maintenant » : une par personne (sa raison la plus urgente), des plus urgentes aux autres.
      rang : 😞 0, note en chute 1, retour à lire 2, prospect signé 3, case « J'ai réservé » 4, absent à l'appel 5, clic 6,

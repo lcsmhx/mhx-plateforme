@@ -20,7 +20,7 @@ const outilAccueil = {
   titre: "Accueil",
   accroche: "",
 
-  html(){ return `<div id="acc-vue"><header class="masthead"><h1>Bonjour</h1></header><section class="panel"><div class="empty">Chargement…</div></section></div>`; },
+  html(){ return `<div id="acc-vue"><header class="masthead"><h1>Bonjour</h1></header><section class="panel">${squelette()}</section></div>`; },
 
   dateLongue(){
     const t = new Date().toLocaleDateString(locale(), { weekday: "long", day: "numeric", month: "long" });

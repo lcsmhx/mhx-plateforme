@@ -1127,12 +1127,21 @@ const outilProgramme = {
       $$("[data-ajout-e]", zone).forEach(b => b.addEventListener("click", () => {
         P.seances[+b.dataset.ajoutE].exercices.push(PR.exoVide()); sauver(); redessiner();
       }));
+      /* v101 : « Supprimé : … · Annuler » pendant 10 s (l'élément revient à sa place) */
       $$("[data-suppr-e]", zone).forEach(b => b.addEventListener("click", () => {
-        const [si, ei] = b.dataset.supprE.split(":").map(Number);
-        P.seances[si].exercices.splice(ei, 1); sauver(); redessiner();
+        const [si, ei] = b.dataset.supprE.split(":").map(Number), sc = P.seances[si];
+        const ex = sc.exercices.splice(ei, 1)[0]; sauver(); redessiner();
+        UI.annulable(trad("Supprimé : {n}", { n: (ex && ex.nom) || trad("un exercice") }), () => {
+          if (P.seances.indexOf(sc) < 0) return;
+          sc.exercices.splice(Math.min(ei, sc.exercices.length), 0, ex); sauver(); redessiner();
+        }, zone);
       }));
       $$("[data-suppr-s]", zone).forEach(b => b.addEventListener("click", () => {
-        P.seances.splice(+b.dataset.supprS, 1); sauver(); redessiner();
+        const si = +b.dataset.supprS, sc = P.seances.splice(si, 1)[0]; sauver(); redessiner();
+        UI.annulable(trad("Supprimé : {n}", { n: (sc && sc.nom) || trad("une séance") }), () => {
+          if (P.seances.indexOf(sc) > -1) return;
+          P.seances.splice(Math.min(si, P.seances.length), 0, sc); sauver(); redessiner();
+        }, zone);
       }));
       const as = $("pg-ajout-s");
       if (as) as.addEventListener("click", () => { P.seances.push(PR.seanceVide(P.seances.length + 1)); sauver(); redessiner(); });
@@ -1318,7 +1327,7 @@ const outilProgramme = {
     /* v85 (bloc 4) : #/programme/formation, …/seance/…, …/choisir : les programmes de la formation (ProgFormation), en plus du
        programme du coach (jamais dans une fiche consultée : le coach y garde l'éditeur) */
     if (!Store.idConsulte && ProgFormation.sous(sousRoute)) return ProgFormation.zoneHTML();
-    return `<div id="prog-vue"><section class="panel"><div class="empty">Chargement…</div></section></div><div id="prog-obj"></div><div id="prog-jr"></div><div id="prog-hist"></div>`;
+    return `<div id="prog-vue"><section class="panel">${squelette()}</section></div><div id="prog-obj"></div><div id="prog-jr"></div><div id="prog-hist"></div>`;
   },
 
   async init(){
@@ -1424,7 +1433,7 @@ const outilProgramme = {
         redessiner();
       } catch(err){
         b.disabled = false; b.textContent = "L'ajouter";
-        UI.alerte("Ajout impossible : " + (err.message || "erreur inconnue"));
+        UI.alerte(trad("Ajout impossible : {e}. Vérifie ta connexion et réessaie.", { e: err.message || trad("erreur inconnue") }));
       }
     });
 
@@ -1544,7 +1553,7 @@ const outilProgramme = {
           });
           flash("pg-msg", "Enregistré dans ta bibliothèque.");
           chargerBiblio();
-        } catch(e){ flash("pg-msg", "Enregistrement impossible."); }
+        } catch(e){ flashFixe("pg-msg", trad("Pas enregistré dans ta bibliothèque : vérifie ta connexion et réessaie.")); }
       });
 
       chargerBiblio();

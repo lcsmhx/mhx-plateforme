@@ -936,7 +936,7 @@ const outilFormation = {
   },
 
   /* ================= montage ================= */
-  html(){ return `<div id="fo-vue"><section class="panel"><div class="empty">Chargement…</div></section></div>`; },
+  html(){ return `<div id="fo-vue"><section class="panel">${squelette()}</section></div>`; },
 
   async init(){
     const self = this;

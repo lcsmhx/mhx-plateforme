@@ -404,7 +404,7 @@ ${Auth.estCoach() ? "" : `<div id="mc-tel-bloc" style="margin:0 0 26px">
         await Auth.changerMotDePasse(actuel, nouveau, jeton);
         $("mc-actuel").value = $("mc-nouveau").value = $("mc-nouveau2").value = "";
         flash("mc-mdp-msg", "Mot de passe changé. Utilise le nouveau à ta prochaine connexion.");
-      } catch(e){ flash("mc-mdp-msg", (C && C.erreurProfil(e)) || e.message || "Changement impossible."); }
+      } catch(e){ flash("mc-mdp-msg", (C && C.erreurProfil(e)) || e.message || trad("Changement impossible : vérifie ta connexion et réessaie.")); }
       if (avec) C.apresEssai();   // v78 (tâche 3) : le jeton a servi (réussite ou non) : un nouveau pour le prochain changement
       bMdp.disabled = false;
     });
@@ -430,7 +430,7 @@ ${Auth.estCoach() ? "" : `<div id="mc-tel-bloc" style="margin:0 0 26px">
         flash("mc-email-msg", /email rate limit/.test(m) ? trad(T.trop_emails_compte)
           : /error sending|sending .*email|smtp/.test(m) ? trad(T.envoi_rate, { p: CONFIG.marque.pseudo || "" })
           : /rate limit|security purposes|after \d+ seconds/.test(m) ? trad(T.trop_demandes)
-          : (e && e.message) || trad("Changement impossible."));
+          : (e && e.message) || trad("Changement impossible : vérifie ta connexion et réessaie."));
       }
       bMail.disabled = false;
     });

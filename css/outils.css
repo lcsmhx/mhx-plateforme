@@ -1104,3 +1104,16 @@ ul.fc-lignes li > b{font-weight:500;text-align:right;min-width:0;overflow-wrap:a
 a.btn.fiche-wa-l{min-height:var(--h-toucher)}
 .fc-tete .fiche-onglets{margin:12px 0}
 @media (max-width:560px){ .fiche-onglets{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch} .f-onglet{flex:none} }
+/* v101 (chantier 6 de la nuit du 10/11) : la croix des volets (« Tout mon espace ») visible et à 44 × 44 px, sans chevaucher le
+   titre (le titre lui laisse sa place) ; même dessin que la croix du journal alimentaire */
+.fermer-volet{min-width:var(--h-toucher);min-height:var(--h-toucher);width:var(--h-toucher);height:var(--h-toucher);display:inline-flex;align-items:center;justify-content:center;
+  color:var(--ink-2);border:1px solid var(--line-strong);border-radius:999px;font-size:22px;line-height:1;padding:0;background:var(--surface)}
+.fermer-volet:hover{color:var(--ink);border-color:var(--accent)}
+.fermer-volet svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+.volet > h2,.volet > .volet-tete{padding-right:56px}
+/* v101 : écrans de chargement (squelettes), sans mouvement si l'appareil le demande */
+.squelette{display:flex;flex-direction:column;gap:12px;padding:6px 0;min-height:132px}
+.sq-l{display:block;height:14px;border-radius:7px;background:linear-gradient(90deg,var(--sunken) 0%,var(--raised) 50%,var(--sunken) 100%);background-size:200% 100%;animation:sq-vague 1.4s ease-in-out infinite}
+.sq-0{width:62%;height:20px}.sq-1{width:92%}.sq-2{width:78%}.sq-3{width:46%}
+@keyframes sq-vague{0%{background-position:100% 0}100%{background-position:-100% 0}}
+@media (prefers-reduced-motion: reduce){.sq-l{animation:none}}

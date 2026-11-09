@@ -14,12 +14,12 @@ const outilBibliotheque = {
   html(){
     return `<section class="panel">
       <h2>Mes entraînements</h2>
-      <div id="bib-entrainements"><div class="empty">Chargement…</div></div>
+      <div id="bib-entrainements">${squelette()}</div>
       <p class="note" style="margin-top:14px">Pour en ajouter un : ouvre la fiche d'un client, construis son programme, puis clique sur « Enregistrer dans ma bibliothèque ».</p>
     </section>
     <section class="panel">
       <h2>Mes journées types</h2>
-      <div id="bib-repas"><div class="empty">Chargement…</div></div>
+      <div id="bib-repas">${squelette()}</div>
       <p class="note" style="margin-top:14px">Pour en ajouter une : ouvre la fiche d'un client, va dans « Mes repas », compose la journée, puis enregistre-la ici.</p>
     </section>`;
   },
@@ -62,7 +62,7 @@ const outilBibliotheque = {
             el.querySelector("[data-suppr]").addEventListener("click", async () => {
               if (!(await UI.confirmer("Supprimer « " + x.nom + " » de ta bibliothèque ?", { ok: "Supprimer", danger: true }))) return;
               try { await Auth.appel("/rest/v1/bibliotheque?id=eq." + x.id, { method:"DELETE", headers:{ "Prefer":"return=minimal" } }); charger(); }
-              catch(e){ UI.alerte("Suppression impossible : " + (e.message || "erreur inconnue")); }
+              catch(e){ UI.alerte("Suppression impossible : " + (e.message || "erreur inconnue") + ". Vérifie ta connexion et réessaie."); }
             });
             g.box.appendChild(el);
           });
