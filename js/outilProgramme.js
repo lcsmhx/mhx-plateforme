@@ -691,6 +691,13 @@ const BrouillonProg = {
     const r = await Auth.appel("/rest/v1/donnees?user_id=eq." + uid + "&outil=eq." + encodeURIComponent(cle) + "&select=contenu,maj_le");
     return (r && r[0]) || null;
   },
+  /* le brouillon de la base a été écrit par un autre appareil (ou onglet) APRÈS la dernière écriture de cette page, et il est
+     différent : sans comparer les heures de deux appareils (leurs horloges peuvent différer). Entrée de la base écrite par un
+     autre appareil et identique à celle que la page a lue à l'ouverture (même ecrit_le, même appareil) : pas de conflit. */
+  autreAppareil(autres, moiE, b){
+    if (!Forme.objet(autres) || !Forme.objet(autres.programme) || autres.appareil === this.appareil || !this.differe(autres.programme, b)) return false;
+    return !moiE || moiE.appareil !== autres.appareil || String(moiE.ecrit_le || "") !== String(autres.ecrit_le || "");
+  },
   dateHeure(iso){ const d = new Date(iso); return isNaN(d) ? "" : d.toLocaleDateString(locale()) + " " + d.toLocaleTimeString(locale(), { hour: "2-digit", minute: "2-digit" }); },
 
   /* Publier : { ok, programme, D } ; { ok:false, annule } (le coach a dit non) ; { ok:false, refus } (base) ; { ok:false } (réseau) */
@@ -711,7 +718,7 @@ const BrouillonProg = {
     /* 2. le même brouillon a été modifié sur un autre appareil après cette page */
     const autres = Forme.objet(lD && lD.contenu) && Forme.objet(lD.contenu.clients) ? lD.contenu.clients[uid] : null;
     const moiE = this.entree(D, uid);
-    if (Forme.objet(autres) && Forme.objet(autres.programme) && autres.appareil !== this.appareil && (!moiE || String(autres.ecrit_le || "") > String(moiE.ecrit_le || "")) && this.differe(autres.programme, b)){
+    if (this.autreAppareil(autres, moiE, b)){
       if (!(await UI.confirmer(trad("Ce brouillon a été modifié sur un autre appareil ({q}). Publier la version de cet appareil ? Celle de l'autre appareil sera remplacée.", { q: this.dateHeure(autres.ecrit_le) || "?" }), { ok: trad("Publier cette version"), annuler: trad("Ne rien publier"), danger: true }))) return { ok: false, annule: true };
     }
     if (Store.cible() !== uid) return { ok: false, annule: true };
