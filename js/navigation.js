@@ -300,7 +300,7 @@ const DieteClient = {
 };
 function cachePourClient(o){
   if (!o || !clientAccompagne()) return false;
-  return CACHES_CLIENT.indexOf(o.id) > -1 || (o.id === "calculateur" && DieteClient.connue() === true);
+  return CACHES_CLIENT.indexOf(o.id) > -1 || (CACHES_AVEC_DIETE.indexOf(o.id) > -1 && DieteClient.connue() === true);
 }
 
 /* v98 : le menu du coach hors fiche (MENU_COACH, liste-outils.js), dans cet ordre ; ses autres pages gardent leur adresse */

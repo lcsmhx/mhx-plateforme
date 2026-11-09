@@ -1390,7 +1390,10 @@ function lienOk(href, base, attendu){
     const db = base();
     const { c, page } = await contexte(b, THOMAS, db);
     await page.goto(URL0); await pret(page, "#acc-vue");
-    ok("client : sa navigation d'avant, plus le journal (après le programme) et le calculateur (après Ma progression) — v53", JSON.stringify(await page.$$eval("#nav a", l => l.map(a => a.dataset.id))) === JSON.stringify(["accueil", "programme", "journal", "nutrition", "mensurations", "calculateur", "suivi", "formation", "complements", "profil"]), JSON.stringify(await page.$$eval("#nav a", l => l.map(a => a.dataset.id))));
+    /* v100 (menu du client) : le journal vit dans Programme ; avec une diète, le calculateur et les compléments sous Nutrition :
+       ils quittent le menu, leurs adresses ouvrent toujours leurs pages (vérifié juste après) */
+    await attendre(page, 800);
+    ok("client : sa navigation (v100 : Mon journal dans Programme ; avec une diète, Calculateur et Mes compléments sous Nutrition)", JSON.stringify(await page.$$eval("#nav a", l => l.map(a => a.dataset.id))) === JSON.stringify(["accueil", "programme", "nutrition", "mensurations", "suivi", "formation", "profil"]), JSON.stringify(await page.$$eval("#nav a", l => l.map(a => a.dataset.id))));
     const vus = [];
     for (const h of ["#/calculateur", "#/journal"]) { await aller(page, h, 1300); vus.push([h, await ou(page)]); }
     ok("client : #/calculateur et #/journal ouvrent ses pages, l'adresse gardée — v53", vus.every(([h, d]) => "#/" + d.courant === h && d.hash === h), JSON.stringify(vus));

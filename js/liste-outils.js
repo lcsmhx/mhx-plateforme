@@ -18,7 +18,8 @@ const NOMS_MENU_COACH = { clients: "Clients", entrainement: "Mon entraînement",
    bas Accueil · Programme · Nutrition · Progression · Plus ; « Mon journal » vit dans Programme (l'historique des séances), « Mes
    compléments » sous Nutrition, le calculateur est caché quand il a une diète (gardé pour les prospects). Les adresses restent :
    #/journal, #/complements, #/calculateur ouvrent toujours leur page (et marquent leur entrée « parente »). */
-const CACHES_CLIENT = ["journal", "complements"];
+const CACHES_CLIENT = ["journal"];
+const CACHES_AVEC_DIETE = ["calculateur", "complements"];   // relecture : sans diète, le lien « Mes compléments » de Nutrition n'existe pas
 const PARENTS_CLIENT = { journal: "programme", complements: "nutrition", calculateur: "nutrition" };
 const PARENTS_MENU_COACH = { "suivi-clients": "clients", comptes: "clients", "suivi-commercial": "prospects", newsletter: "prospects", atelier: "mes-programmes", bibliotheque: "mes-programmes" };
 
