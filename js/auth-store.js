@@ -908,6 +908,13 @@ const Store = {
     if (!Object.prototype.hasOwnProperty.call(this.fusions, cle)) return false;
     return cle !== "programme" || !!(e && e.o === 1);
   },
+  /* v102 (relecture 2) : une copie d'objectifs (marque o) plus ancienne que la ligne en base (ou du même instant : déjà arrivée)
+     ne passe jamais : des objectifs posés ensuite ailleurs ne sont pas remplacés par de vieux objectifs tapés hors ligne */
+  copieDepassee(cle, e, ligne){
+    if (cle !== "programme" || !e || e.o !== 1 || !ligne || !ligne.maj_le) return false;
+    const ts = new Date(e.t).getTime(), m = new Date(ligne.maj_le).getTime();
+    return isNaN(ts) || (!isNaN(m) && !(m < ts));
+  },
   cible(){ return this.idConsulte || (Auth.utilisateur() && Auth.utilisateur().id); },
   lectureSeule(){ return !!this.idConsulte; },
   boite(uid){ const k = uid || "_"; return this.boites[k] || (this.boites[k] = {}); },
@@ -955,7 +962,10 @@ const Store = {
     const u = Auth.utilisateur(), e = this.attenteLire()[uid + "|" + cle];
     if (!u || !u.id || !e || e.a !== u.id || typeof e.t !== "string" || !Forme.objet(e.v)) return null;
     if (Sante.bloque(cle, e.v)) return null;
-    if (this.aFusionner(cle, e)) return Object.assign({}, e, { v: this.fusions[cle](ligne && ligne.contenu, e.v) });   // v102
+    if (this.aFusionner(cle, e)){   // v102
+      if (this.copieDepassee(cle, e, ligne)) return null;
+      return Object.assign({}, e, { v: this.fusions[cle](ligne && ligne.contenu, e.v) });
+    }
     const ts = new Date(e.t).getTime(), m = ligne && ligne.maj_le;
     if (isNaN(ts)) return null;
     if (m && !(new Date(m).getTime() < ts)) return null;   // la base a aussi recent (copie deja arrivee) ou plus recent
@@ -1154,9 +1164,10 @@ const Store = {
           if (cle !== "programme" && uid !== u.id){ continue; }
           if (typeof this.fusionEnAttente === "function" && this.fusionEnAttente(cle)){ reste = true; continue; }
           try {
-            const r = await Auth.appel("/rest/v1/donnees?user_id=eq." + uid + "&outil=eq." + encodeURIComponent(cle) + "&select=contenu");
+            const r = await Auth.appel("/rest/v1/donnees?user_id=eq." + uid + "&outil=eq." + encodeURIComponent(cle) + "&select=contenu,maj_le");
             const cur = this.attenteLire()[k];
             if (!cur || cur.t !== e.t || this.attente[k]){ if (cur && cur.t !== e.t) reste = true; continue; }
+            if (this.copieDepassee(cle, e, r && r[0])){ this.lacher(uid, cle, e.t); continue; }   // v102 : la base a plus récent
             const v = this.fusions[cle](r && r[0] && r[0].contenu, e.v);
             if (r && r[0] && JSON.stringify(v) === JSON.stringify(r[0].contenu)){ this.lacher(uid, cle, e.t); continue; }   // rien de neuf
             if (!v){ this.lacher(uid, cle, e.t); continue; }

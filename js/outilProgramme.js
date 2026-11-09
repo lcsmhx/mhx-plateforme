@@ -1577,8 +1577,9 @@ const outilProgramme = {
     /* « Publier les changements » : relire la base (deux appareils), ranger l'ancien programme dans l'historique, écrire le
        nouveau d'un seul coup ; en cas d'échec rien n'a changé chez le client et le brouillon reste */
     const publier = async () => {
-      if (etat.publication) return;
-      await viderObjectifs();   // v102 (relecture) : un objectif tapé juste avant part d'abord (ou est écarté), jamais après
+      if (etat.publication || etat.vidage) return;   // v102 (relecture 2) : un double clic pendant l'envoi d'un objectif ne publie pas deux fois
+      etat.vidage = true;
+      try { await viderObjectifs(); } finally { etat.vidage = false; }   // v102 (relecture) : un objectif tapé juste avant part d'abord (ou est écarté), jamais après
       const msg = t => flashFixe("pg-pub-msg", t);
       const b = etat.B;
       const exos = (b.seances || []).reduce((n, sc) => n + (sc.exercices || []).filter(e => e.nom).length, 0);

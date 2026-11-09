@@ -298,6 +298,19 @@ const ouvrirCoach = async (b, db, chemin, sel, opts) => { const { page, c } = aw
     await p4.click("#pg-publier");
     await attendreQue(() => p4.evaluate(() => /^Publié/.test((document.getElementById("pg-pub-msg") || {}).textContent || "")), 8000); await attendre(p4, 2500);
     const fin4 = ligne(db4, C1, "programme").contenu;
+    /* relecture 2 : une vieille copie d'objectifs (tapés hors ligne le mois d'avant) ne remplace pas ceux posés ensuite ailleurs */
+    const db5 = base(); const l5 = ligne(db5, C1, "programme");
+    l5.contenu = Object.assign(clone(l5.contenu), { objectifs: { mois: AUJ0.slice(0, 7), liste: ["Novembre", "", ""], statuts: ["", "", ""] } }); l5.maj_le = avant(H);
+    const { page: p5 } = await ouvrirCoach(b, db5);
+    await p5.evaluate(([T, C, v, t]) => { localStorage.setItem("mhx_attente|" + T + "|programme", JSON.stringify({ o: 1, a: C, t, v })); },
+      [C1, COACH_ID, Object.assign(clone(l5.contenu), { objectifs: { mois: "2000-10", liste: ["Octobre", "", ""], statuts: ["", "", ""] } }), avant(2 * H)]);
+    const n5 = ecr(db5, "programme", C1).length;
+    await p5.reload(); await pret(p5, "#pg-publier"); await attendre(p5, 2500);
+    const v5 = await p5.$eval("#obj-0", e => e.value).catch(() => null);
+    const reste5 = await p5.evaluate(T => !!localStorage.getItem("mhx_attente|" + T + "|programme"), C1);
+    ok("B5 : une vieille copie d'objectifs (plus ancienne que la base) n'est ni affichée ni envoyée, puis retirée : « Novembre » reste",
+      v5 === "Novembre" && ecr(db5, "programme", C1).length === n5 && ligne(db5, C1, "programme").contenu.objectifs.liste[0] === "Novembre" && !reste5,
+      JSON.stringify([v5, ecr(db5, "programme", C1).length - n5, reste5]));
     ok("B4 : un objectif tapé puis « Publier » dans la seconde : la version publiée reste en ligne (5 séries) et garde l'objectif",
       fin4.seances[0].exercices[0].series === "5" && fin4.objectifs && fin4.objectifs.liste[0] === "Boire 2 L", JSON.stringify([fin4.seances[0].exercices[0].series, fin4.objectifs && fin4.objectifs.liste]));
   });
