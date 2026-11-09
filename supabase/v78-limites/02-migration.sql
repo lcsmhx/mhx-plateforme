@@ -90,6 +90,7 @@ as $$
                    when 'suivi_prospect'  then 131072
                    when 'activite'        then 65536      --  64 Ko
                    when 'seances_formation' then 262144   -- 256 Ko : séances faites des programmes de la formation (v90), 400 au plus (~36 Ko : marge ×7)
+                   when 'brouillons_programme' then 2097152  -- 2 Mo : brouillons des programmes, sur le compte du coach (v96), un par client
                    when 'calc'            then 16384      --  16 Ko : les petites clés
                    when 'calc_perso'      then 16384
                    when 'objectifs_faits' then 16384
