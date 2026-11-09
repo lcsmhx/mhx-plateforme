@@ -177,6 +177,33 @@ const Journal = {
     saisi(boite){ return Object.keys(this.depuis(boite)).length > 0; }
   },
 
+  /* v96 : la séance du programme P (son index, ou -1) que désigne une séance notée x. Nouvelle séance notée : par
+     l'identifiant fixe de la séance (sid). Ancienne (sans sid, ou programme sans identifiants) : par la place qu'elle avait
+     quand elle a été notée — P.places relie ces anciennes places aux identifiants (posé quand le programme a reçu ses
+     identifiants) ; sans P.places, la place telle quelle (comme avant la v96). Une séance retirée : -1 (jamais une autre). */
+  place(P, x){
+    const l = (P && Array.isArray(P.seances)) ? P.seances : [];
+    if (!x || typeof x !== "object") return -1;
+    const parSid = s => l.findIndex(sc => sc && typeof sc === "object" && sc.sid === s);
+    const avecSids = l.some(sc => sc && typeof sc === "object" && typeof sc.sid === "string" && sc.sid);
+    if (typeof x.sid === "string" && x.sid && avecSids) return parSid(x.sid);
+    const si = Number.isInteger(x.si) ? x.si : (typeof x.si === "string" && /^\d+$/.test(x.si) ? +x.si : -1);
+    if (si < 0) return -1;
+    if (avecSids && P.places && typeof P.places === "object" && !Array.isArray(P.places)){
+      const s = P.places[String(si)];
+      return typeof s === "string" ? parSid(s) : -1;
+    }
+    return si < l.length ? si : -1;
+  },
+  /* v96 : « 4 × 8 à 52,5 kg » (séries notées × répétitions les plus basses, à la charge la plus haute) */
+  resumeCourt(e){
+    const f = (e && Array.isArray(e.series) ? e.series : []).filter(s => num(s.r) > 0);
+    if (!f.length) return "";
+    const rmin = Math.min(...f.map(s => num(s.r))), rmax = Math.max(...f.map(s => num(s.r))), kg = Math.max(...f.map(s => num(s.c)));
+    const reps = rmin === rmax ? String(rmin) : rmin + "-" + rmax;
+    return f.length + " × " + reps + (kg > 0 ? " " + trad("à {kg} kg", { kg: this.kg(kg) }) : "");
+  },
+
   /* « 8-10 » -> {8,10} ; « 12 » -> {12,12} ; « 30 s », « 1 min » -> rien */
   cibleReps(reps){
     const s = String(reps || "");
@@ -224,11 +251,11 @@ const Journal = {
       .map(s => num(s.c) > 0 ? s.r + " × " + this.kg(num(s.c)) + " kg" : s.r + " reps").join(" · ");
   },
 
-  htmlSeance(J, sc, si, B){   // v71 (G) : B = brouillon de cette seance (Journal.brouillon.lire) ou null
+  htmlSeance(J, sc, si, B, P){   // v71 (G) : B = brouillon de cette seance (Journal.brouillon.lire) ou null ; v96 : P, le programme
     const exos = (sc.exercices || []).filter(e => e.nom);
     if (!exos.length) return "";
     let der = null;
-    for (let i = J.seances.length - 1; i >= 0; i--) if (J.seances[i].si === si){ der = J.seances[i]; break; }
+    for (let i = J.seances.length - 1; i >= 0; i--) if (this.place(P, J.seances[i]) === si){ der = J.seances[i]; break; }
     const corps = exos.map((e, ei) => {
       const prec = this.dernier(J, e.nom), c = this.conseil(e, prec);
       const rc = this.cibleReps(e.reps);
@@ -266,7 +293,7 @@ const Journal = {
     const remplir = () => {
       $$("[data-jr-place]", zone).forEach(pl => {
         const si = +pl.dataset.jrPlace, sc = (P.seances || [])[si];
-        pl.innerHTML = sc ? self.htmlSeance(J, sc, si, self.brouillon.lire(si)) : "";
+        pl.innerHTML = sc ? self.htmlSeance(J, sc, si, self.brouillon.lire(si), P) : "";
       });
       $$("[data-jr-ouvrir]", zone).forEach(b => b.addEventListener("click", () => {
         b.closest(".jr-zone").querySelector("[data-jr-form]").hidden = false;
@@ -301,8 +328,12 @@ const Journal = {
         if (aberrant){ flash("jr-msg-" + si, "Vérifie tes chiffres : jusqu'à 100 reps et 500 kg par série."); return; }
         if (!exos.length){ flash("jr-msg-" + si, "Note au moins une série pour enregistrer ta séance."); return; }
         const date = aujourdhui();
-        J.seances = J.seances.filter(x => !(x.si === si && x.date === date));
-        J.seances.push({ date: date, si: si, nom: sc.nom || "", exos: exos });
+        /* v96 : la même séance notée deux fois le même jour remplace la première (reconnue par Journal.place) ; une séance
+           notée garde sa place (si, lue par les anciennes versions de l'app) ET l'identifiant fixe de la séance (sid) */
+        J.seances = J.seances.filter(x => !(x.date === date && self.place(P, x) === si));
+        const ligne = { date: date, si: si, nom: sc.nom || "", exos: exos };
+        if (typeof sc.sid === "string" && sc.sid) ligne.sid = sc.sid;
+        J.seances.push(ligne);
         if (J.seances.length > self.max) J.seances = J.seances.slice(-self.max);
         if (Store.ecrire(self.cle, J) === false) return;   // refusee (message deja affiche) : le brouillon reste
         self.brouillon.effacer(si);   // v71 (G) : seulement apres une ecriture acceptee, avant de redessiner
@@ -509,6 +540,214 @@ const Regularite = {
   }
 };
 
+/* ------------------------------------------------------------------
+   v96 (chantier 1 de la nuit du 10/11, plan-etape3 3a à 3c) — LE BROUILLON DES PROGRAMMES
+   Le coach ne modifie plus le programme d'un client en direct : il travaille dans un brouillon rangé sur SON compte
+   (clé brouillons_programme, une entrée par client), et le client ne voit rien avant « Publier les changements ».
+     { v: 1, clients: { <compte du client>: { programme, base_maj, debut_le, ecrit_le, appareil, nouveau_bloc? } } }
+   - base_maj : maj_le du programme publié quand le brouillon a commencé (deux appareils : relu avant de publier) ;
+   - appareil : cette page (un autre appareil ou un autre onglet qui écrit le même brouillon se voit à la publication).
+   Le document programme garde sa forme : seuls des champs s'ajoutent (sid de chaque séance, places, publie_le,
+   bloc_annonce) ; une ancienne version de l'app le lit sans rien perdre. Aucune écriture à la lecture.
+   ------------------------------------------------------------------ */
+const BrouillonProg = {
+  cle: "brouillons_programme",
+  appareil: Math.random().toString(36).slice(2, 10),
+  vide(){ return { v: 1, clients: {} }; },
+
+  async lire(){
+    const D = await Store.lire(this.cle, this.vide(), { chezMoi: true });
+    if (!Forme.objet(D.clients)) D.clients = {};   // en mémoire seulement (rien n'est écrit à la lecture)
+    return D;
+  },
+  entree(D, uid){
+    const e = D && Forme.objet(D.clients) ? D.clients[uid] : null;
+    return (Forme.objet(e) && Forme.objet(e.programme)) ? e : null;
+  },
+
+  /* ce que voit le client (sans les champs techniques) : sert à dire « brouillon non publié » ou « rien à publier » */
+  empreinte(x){
+    const s = v => v == null ? "" : String(v);
+    x = Forme.objet(x) ? x : {};
+    return JSON.stringify({ nom: s(x.nom), note: s(x.note), cycle: s(x.cycle || 1), duree: s(x.duree_semaines || 4),
+      seances: (Array.isArray(x.seances) ? x.seances : []).filter(Forme.objet).map(sc => ({ nom: s(sc.nom), note: s(sc.note),
+        exercices: (Array.isArray(sc.exercices) ? sc.exercices : []).filter(Forme.objet).map(e => [s(e.nom), s(e.series), s(e.reps), s(e.repos), s(e.note), s(e.lien)]) })) });
+  },
+  differe(b, P){ return this.empreinte(b) !== this.empreinte(P); },
+
+  /* --- identifiants fixes des séances (le « ✓ notée » ne glisse plus quand une séance bouge ou disparaît) --- */
+  nouveauSid(vus){ let s; do { s = "s" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); } while (vus.has(s)); return s; },
+  /* une séance sans identifiant en reçoit un ; programme qui n'en avait aucun : P.places relie chaque ancienne place à
+     son identifiant, pour que les séances notées avant (rangées par leur place) restent sur la bonne séance */
+  assurerSids(b){
+    if (!Array.isArray(b.seances)) b.seances = [];
+    const ancien = !b.seances.some(sc => Forme.objet(sc) && typeof sc.sid === "string" && sc.sid) && !Forme.objet(b.places);
+    const vus = new Set();
+    b.seances.forEach((sc, i) => {
+      if (!Forme.objet(sc)) return;
+      if (typeof sc.sid !== "string" || !sc.sid || vus.has(sc.sid)){
+        sc.sid = this.nouveauSid(vus);
+        if (ancien){ if (!Forme.objet(b.places)) b.places = {}; b.places[String(i)] = sc.sid; }
+      }
+      vus.add(sc.sid);
+    });
+    return b;
+  },
+  /* une copie de travail du programme publié (identifiants posés dans la copie, jamais dans le publié) */
+  depuis(P){
+    const b = JSON.parse(JSON.stringify(Object.assign({ nom: "", note: "", seances: [], maj: "" }, P || {})));
+    delete b.objectifs;   // les objectifs du mois restent dans le programme publié (écrits tout de suite)
+    return this.assurerSids(b);
+  },
+  /* « Nouveau bloc à partir de celui-ci » : copie du publié, cycle + 1, nom « Bloc N » → « Bloc N+1 », semaine 1 à la publication */
+  nouveauBloc(P){
+    const b = this.depuis(P), c = Math.max(1, parseInt(P.cycle, 10) || 1);
+    b.cycle = c + 1; b.debut = ""; b.maj = "";
+    const m = /^(.*?\bbloc\s*)(\d+)(.*)$/i.exec(b.nom || "");
+    if (m) b.nom = m[1] + (parseInt(m[2], 10) + 1) + m[3];
+    return b;
+  },
+  /* le programme d'avant (pour « ≈ identique ») : seulement pendant un nouveau bloc */
+  reference(D, uid, P){ const e = this.entree(D, uid); return e && Forme.objet(e.nouveau_bloc) ? P : null; },
+  identique(ref, sc, e){
+    if (!ref || !e || !e.nom) return false;
+    const k = Normaliser.aplatir(e.nom), meme = x => Normaliser.aplatir(x.nom || "") === k && String(x.series || "") === String(e.series || "") && String(x.reps || "") === String(e.reps || "") && String(x.repos || "") === String(e.repos || "");
+    const l = (ref.seances || []).filter(Forme.objet);
+    const avant = l.find(x => sc.sid && x.sid === sc.sid) || l.find(x => Normaliser.aplatir(x.nom || "") === Normaliser.aplatir(sc.nom || ""));
+    return !!(avant && (avant.exercices || []).some(x => Forme.objet(x) && meme(x)));
+  },
+
+  /* range le brouillon de ce client (sur le compte du coach) ; identique au publié : l'entrée est retirée */
+  ranger(D, uid, b, P, majPublie, extra){
+    if (!Forme.objet(D.clients)) D.clients = {};
+    const avant = this.entree(D, uid);
+    if (!this.differe(b, P) && !(extra && extra.nouveau_bloc) && !(avant && avant.nouveau_bloc)){
+      if (!avant) return true;   // rien à ranger, rien d'écrit
+      delete D.clients[uid];
+    } else {
+      const maintenant = new Date().toISOString();
+      D.clients[uid] = Object.assign({}, avant || { base_maj: majPublie || null, debut_le: maintenant }, extra || {},
+        { programme: b, ecrit_le: maintenant, appareil: this.appareil });
+    }
+    return Store.ecrire(this.cle, D, { chezMoi: true });
+  },
+  retirer(D, uid){
+    if (!this.entree(D, uid)) return true;
+    delete D.clients[uid];
+    return Store.ecrire(this.cle, D, { chezMoi: true });
+  },
+
+  /* la ligne de la base, relue juste avant de publier (jamais le cache) ; erreur réseau : exception */
+  async ligne(uid, cle){
+    const r = await Auth.appel("/rest/v1/donnees?user_id=eq." + uid + "&outil=eq." + encodeURIComponent(cle) + "&select=contenu,maj_le");
+    return (r && r[0]) || null;
+  },
+  dateHeure(iso){ const d = new Date(iso); return isNaN(d) ? "" : d.toLocaleDateString(locale()) + " " + d.toLocaleTimeString(locale(), { hour: "2-digit", minute: "2-digit" }); },
+
+  /* Publier : { ok, programme, D } ; { ok:false, annule } (le coach a dit non) ; { ok:false, refus } (base) ; { ok:false } (réseau) */
+  async publier(uid, P, b, D, majPublie){
+    const moi = Store.moi(); if (!moi || !uid) return { ok: false };
+    await Store.envoyerConfirme(this.cle, { chezMoi: true }).catch(() => false);   // le brouillon tapé à l'instant part d'abord
+    await Store.envoyerConfirme("programme").catch(() => false);   // un objectif du mois tapé à l'instant aussi (relu ensuite)
+    let lP, lD;
+    try { await Auth.assurer(); [lP, lD] = await Promise.all([this.ligne(uid, "programme"), this.ligne(moi, this.cle)]); }
+    catch(e){ return { ok: false, refus: !!(e && e.statut >= 400 && e.statut < 500 && [401, 408, 429].indexOf(e.statut) === -1) }; }
+    if (Store.cible() !== uid) return { ok: false, annule: true };
+    const enBase = Forme.cle("programme", lP && lP.contenu) || {};
+    /* 1. le programme publié a changé depuis l'ouverture de la page (autre appareil, ancienne version de l'app) */
+    if (this.empreinte(enBase) !== this.empreinte(P)){
+      const quand = lP && lP.maj_le ? this.dateHeure(lP.maj_le) : "";
+      if (!(await UI.confirmer(trad("Le programme de ce client a été modifié ailleurs (autre appareil ou autre onglet{q}) depuis que tu as ouvert cette page. Le remplacer par ton brouillon ?", { q: quand ? ", " + quand : "" }), { ok: trad("Remplacer"), annuler: trad("Ne rien publier"), danger: true }))) return { ok: false, annule: true };
+    }
+    /* 2. le même brouillon a été modifié sur un autre appareil après cette page */
+    const autres = Forme.objet(lD && lD.contenu) && Forme.objet(lD.contenu.clients) ? lD.contenu.clients[uid] : null;
+    const moiE = this.entree(D, uid);
+    if (Forme.objet(autres) && Forme.objet(autres.programme) && autres.appareil !== this.appareil && (!moiE || String(autres.ecrit_le || "") > String(moiE.ecrit_le || "")) && this.differe(autres.programme, b)){
+      if (!(await UI.confirmer(trad("Ce brouillon a été modifié sur un autre appareil ({q}). Publier la version de cet appareil ? Celle de l'autre appareil sera remplacée.", { q: this.dateHeure(autres.ecrit_le) || "?" }), { ok: trad("Publier cette version"), annuler: trad("Ne rien publier"), danger: true }))) return { ok: false, annule: true };
+    }
+    if (Store.cible() !== uid) return { ok: false, annule: true };
+    /* 3. l'ancien programme (celui de la base) entre dans l'historique ; échec : on demande, comme avant */
+    if (Historique.utile("programme", enBase)){
+      const archive = Object.assign({}, enBase, { maj: enBase.maj || enBase.debut || aujourdhui() });
+      if (!(await Historique.archiver("programme", archive)) && !(await UI.confirmer(trad("L'ancien programme n'a pas pu être rangé dans l'historique. Le remplacer quand même ?"), { ok: trad("Remplacer"), danger: true }))) return { ok: false, annule: true };
+    }
+    if (Store.cible() !== uid) return { ok: false, annule: true };
+    /* 4. le nouveau programme, en UNE écriture (tout ou rien) : sans copie d'attente, rien ne partira plus tard sans le coach */
+    const N = JSON.parse(JSON.stringify(b));
+    this.assurerSids(N);
+    N.objectifs = enBase.objectifs || P.objectifs;   // les objectifs du mois : ceux de la base (écrits à part)
+    if (!N.objectifs) delete N.objectifs;
+    N.maj = new Date().toLocaleDateString("fr-FR");
+    if (!N.debut) N.debut = aujourdhui();     // la semaine 1 commence à la publication (nouveau programme, nouveau bloc)
+    const nb = moiE && Forme.objet(moiE.nouveau_bloc);
+    if (nb) N.bloc_annonce = { cycle: Math.max(1, parseInt(N.cycle, 10) || 1), nom: String(N.nom || ""), le: aujourdhui() };
+    N.publie_le = new Date().toISOString();
+    try {
+      await Auth.appel("/rest/v1/donnees?on_conflict=user_id,outil", {
+        method: "POST", headers: { "Prefer": "resolution=merge-duplicates,return=minimal" },
+        body: [{ user_id: uid, outil: "programme", contenu: N, maj_le: N.publie_le }]
+      });
+    } catch(e){ return { ok: false, refus: !!(e && e.statut >= 400 && e.statut < 500 && [401, 408, 429].indexOf(e.statut) === -1) }; }
+    Store.boite(uid).programme = P;   // la page garde le même objet (mis à jour par l'appelant)
+    Store.majLu[uid + "|programme"] = N.publie_le;
+    majEtat("enregistre");
+    /* 5. le brouillon de CE client quitte le document du coach (relu en base : les brouillons des autres clients écrits
+       depuis un autre appareil restent) ; s'il ne part pas, il reste identique au publié : il ne se montre plus */
+    const base = Forme.objet(lD && lD.contenu) ? JSON.parse(JSON.stringify(lD.contenu)) : this.vide();
+    if (!Forme.objet(base.clients)) base.clients = {};
+    Object.keys(D.clients || {}).forEach(k => { if (k !== uid && !base.clients[k]) base.clients[k] = D.clients[k]; });
+    delete base.clients[uid];
+    Store.origines.set(base, moi);
+    Store.ecrire(this.cle, base, { chezMoi: true });
+    return { ok: true, programme: N, D: base };
+  },
+
+  /* le bandeau en tête de l'éditeur : publié ou brouillon, et les 3 actions */
+  etatHTML(b, P, entree){
+    const brouillon = this.differe(b, P) || !!(entree && entree.nouveau_bloc);
+    const nb = entree && Forme.objet(entree.nouveau_bloc) ? entree.nouveau_bloc : null;
+    return `<section class="panel pg-etat${brouillon ? " brouillon" : ""}" id="pg-etat">
+      <div class="seance-c-tete" style="margin-bottom:6px"><h2 style="margin:0;flex:1">${esc(b.nom || trad("Programme"))}</h2>
+        ${brouillon ? `<span class="pastille attention" id="pg-statut">● ${esc(trad("Brouillon non publié"))}</span>` : `<span class="pastille ok" id="pg-statut">✓ ${esc(trad("Publié"))}</span>`}</div>
+      <p class="note" style="margin:0 0 10px">${esc(brouillon
+        ? (nb ? trad("Nouveau bloc en préparation (cycle {n}). Ton client voit toujours le bloc publié tant que tu n'as pas publié.", { n: String(Math.max(1, parseInt(b.cycle, 10) || 1)).padStart(2, "0") })
+              : trad("Ton client voit toujours la version publiée{d} tant que tu n'as pas publié.", { d: P.maj ? " " + trad("du {d}", { d: P.maj }) : "" }))
+        : (P.maj ? trad("Ton client voit exactement cette version (publiée le {d}).", { d: P.maj }) : trad("Tes changements restent dans un brouillon : ton client ne voit rien avant « Publier les changements ».")))}</p>
+      <div class="actions">
+        <button type="button" class="btn" id="pg-publier">${esc(trad("Publier les changements"))}</button>
+        ${brouillon ? `<button type="button" class="btn ghost" id="pg-annuler-brouillon">${esc(trad("Annuler le brouillon"))}</button>` : ""}
+        <button type="button" class="btn ghost" id="pg-nouveau-bloc">${esc(trad("Nouveau bloc à partir de celui-ci"))}</button>
+        <span class="msg" id="pg-pub-msg" role="status"></span>
+      </div>
+    </section>`;
+  },
+
+  /* chez le client : « Nouveau bloc », à sa prochaine ouverture (21 jours au plus, jusqu'à « OK » sur cet appareil) */
+  vuCle(){ const u = Auth.utilisateur(); return u && u.id ? "mhx_bloc_vu|" + u.id : null; },
+  annonce(P){
+    const a = P && Forme.objet(P.bloc_annonce) ? P.bloc_annonce : null;
+    if (!a || !/^\d{4}-\d{2}-\d{2}$/.test(String(a.le || "")) || Store.idConsulte) return null;
+    const age = (new Date(aujourdhui() + "T12:00:00") - new Date(a.le + "T12:00:00")) / 86400000;
+    if (!(age >= 0 && age <= 21)) return null;
+    const k = this.vuCle(); let vu = ""; try { vu = k ? localStorage.getItem(k) || "" : ""; } catch(e){}
+    const id = a.le + "|" + (parseInt(a.cycle, 10) || 1);
+    return vu === id ? null : { id, cycle: Math.max(1, parseInt(a.cycle, 10) || 1), nom: String(a.nom || "") };
+  },
+  annonceHTML(P){
+    const a = this.annonce(P); if (!a) return "";
+    return `<section class="panel bloc-annonce" id="bloc-annonce" role="status"><div class="flag info" style="margin-top:0">
+      <b>${esc(trad("Nouveau bloc"))}</b> · ${esc(trad("Cycle {n}", { n: String(a.cycle).padStart(2, "0") }))}<br>
+      ${esc(trad("Ton coach a préparé la suite de ton programme{n}. Ta semaine 1 commence maintenant.", { n: a.nom ? " : « " + a.nom + " »" : "" }))}
+      <div class="actions" style="margin-top:8px"><button type="button" class="btn ghost" data-bloc-vu="${esc(a.id)}">${esc(trad("C'est noté"))}</button></div></div></section>`;
+  },
+  brancherAnnonce(zone, P){
+    $$("[data-bloc-vu]", zone).forEach(x => x.addEventListener("click", () => {
+      const k = this.vuCle(); try { if (k) localStorage.setItem(k, x.dataset.blocVu); } catch(e){}
+      const s = x.closest(".bloc-annonce"); if (s) s.remove();
+    }));
+  }
+};
+
 const outilProgramme = {
   id: "programme",
   cle: "programme",
@@ -517,6 +756,27 @@ const outilProgramme = {
   icone: "📋",
   titre: "Le programme",
   accroche: "Les séances construites pour toi : les exercices, les séries, les répétitions et les temps de repos.",
+
+  /* v96 (3b) : la valeur après « + » ou « − » : séries ± 1 (1 à 20) ; répétitions ± 1 sur chaque nombre (« 8-10 » → « 9-11 »,
+     une durée « 30 s » ± 5 s) ; repos ± 15 s (« 2 min » → « 135 s ») ; une valeur sans nombre ne bouge pas, sauf vide + */
+  pas(f, v, d){
+    const s = String(v == null ? "" : v).trim();
+    if (f === "series"){ const n = parseInt(s, 10); if (isNaN(n)) return d > 0 ? "3" : s; return String(Math.max(1, Math.min(20, n + d))); }
+    if (f === "repos"){
+      const m = /^(\d+(?:[.,]\d+)?)\s*(min|mn|')?\s*(s|sec)?$/i.exec(s);
+      if (!s) return d > 0 ? "60 s" : s;
+      if (!m) return s;
+      let sec = parseFloat(m[1].replace(",", ".")) * (m[2] ? 60 : 1);
+      sec = Math.max(0, Math.round(sec) + 15 * d);
+      return sec + " s";
+    }
+    if (f === "reps"){
+      if (!/\d/.test(s)) return d > 0 && !s ? "10" : s;
+      const duree = /\d\s*(s|sec)\b/i.test(s), k = duree ? 5 : 1;
+      return s.replace(/\d+/g, x => String(Math.max(1, parseInt(x, 10) + d * k)));
+    }
+    return s;
+  },
 
   seanceVide(n){ return { nom: "Séance " + String.fromCharCode(64 + n), note: "", exercices: [ this.exoVide() ] }; },
   exoVide(){ return { nom:"", series:"", reps:"", repos:"", note:"", lien:"", id:"" }; },
@@ -589,9 +849,9 @@ const outilProgramme = {
   },
 
   /* seances notees cette semaine (lundi -> aujourd'hui), par index de seance */
-  faitesCetteSemaine(J){
+  faitesCetteSemaine(J, P){   // v96 : par séance du programme P (Journal.place), plus par la place notée
     const b = Regularite.bornes(0), out = {};
-    (J && J.seances || []).forEach(x => { if (x.date >= b.debut && x.date <= b.fin) out[x.si] = x.date; });
+    (J && J.seances || []).forEach(x => { if (x && x.date >= b.debut && x.date <= b.fin){ const i = Journal.place(P, x); if (i > -1) out[i] = x.date; } });
     return out;
   },
 
@@ -599,7 +859,7 @@ const outilProgramme = {
     if (!P.seances || !P.seances.length){
       return `<section class="panel"><div class="empty">Ton coach n'a pas encore déposé ton programme. Tu recevras un message quand il sera prêt.${ctaVide(true)}</div></section>`;
     }
-    const av = this.avancement(P), faites = this.faitesCetteSemaine(J);
+    const av = this.avancement(P), faites = this.faitesCetteSemaine(J, P);
     const seances = P.seances.filter(sc => (sc.exercices || []).some(e => e.nom));
     const nbFaites = seances.reduce((n, sc) => n + (faites[P.seances.indexOf(sc)] != null ? 1 : 0), 0);
     let h = `<section class="panel prog-tete">
@@ -814,9 +1074,30 @@ const outilProgramme = {
       const as = $("pg-ajout-s");
       if (as) as.addEventListener("click", () => { P.seances.push(PR.seanceVide(P.seances.length + 1)); sauver(); redessiner(); });
 
+      /* v96 (3b) : déplacer, dupliquer, + / − */
+      const echanger = (l, i, j) => { if (j < 0 || j >= l.length) return false; const x = l[i]; l[i] = l[j]; l[j] = x; return true; };
+      const copie = x => JSON.parse(JSON.stringify(x));
+      const sur = (attr, fn) => $$("[" + attr + "]", zone).forEach(b => b.addEventListener("click", () => { if (fn(b.getAttribute(attr)) !== false){ sauver(); redessiner(); } }));
+      sur("data-monter-s", v => echanger(P.seances, +v, +v - 1));
+      sur("data-descendre-s", v => echanger(P.seances, +v, +v + 1));
+      sur("data-dupliquer-s", v => { const sc = copie(P.seances[+v]); delete sc.sid; sc.nom = (sc.nom || trad("Séance")) + " " + trad("(copie)"); P.seances.splice(+v + 1, 0, sc); });
+      const ex = v => { const [si, ei] = v.split(":").map(Number); return { l: P.seances[si].exercices, ei }; };
+      sur("data-monter-e", v => { const x = ex(v); return echanger(x.l, x.ei, x.ei - 1); });
+      sur("data-descendre-e", v => { const x = ex(v); return echanger(x.l, x.ei, x.ei + 1); });
+      sur("data-dupliquer-e", v => { const x = ex(v); x.l.splice(x.ei + 1, 0, copie(x.l[x.ei])); });
+      $$("[data-pm]", zone).forEach(b => b.addEventListener("click", () => {
+        const [si, ei, f, d] = b.dataset.pm.split(":"), e = P.seances[+si].exercices[+ei];
+        const v = PR.pas(f, e[f], +d);
+        if (v === e[f]) return;
+        e[f] = v;
+        const champ = zone.querySelector('[data-f="' + f + '"][data-s="' + si + '"][data-e="' + ei + '"]');
+        if (champ) champ.value = v;
+        sauver();
+      }));
+
   },
 
-  vueEdition(P, mode){
+  vueEdition(P, mode, opts){
     /* Deux contextes, un seul editeur : « client » ecrit le programme d'une
        personne, « atelier » fabrique un modele reutilisable. Le corps des
        seances est strictement le meme — c'est le but : une seule fonction a
@@ -851,28 +1132,38 @@ const outilProgramme = {
       </div>
     </section>`;
 
-    h += this.blocSeances(P);
+    h += this.blocSeances(P, opts);
 
+    /* v96 : « Envoyer au client » devient « Publier les changements » (le brouillon, plus rien en direct) */
     h += `<section class="panel">
       <div class="actions">
         <button class="btn ghost" id="pg-ajout-s">+ Ajouter une séance</button>
-        <button class="btn" id="pg-save">Envoyer au client</button>
+        <button class="btn" id="pg-publier-bas">${esc(trad("Publier les changements"))}</button>
         <button class="btn ghost" id="pg-biblio-save">Enregistrer dans ma bibliothèque</button>
         <span class="msg" id="pg-msg"></span>
       </div>
-      <p class="note" style="margin-top:10px">Tout est enregistré au fil de la saisie et ton client voit chaque changement tout de suite, avant même l'envoi. « Envoyer au client » date le programme (« Programme mis à jour le … » chez lui), fait démarrer la semaine 1 s'il n'a pas encore de date de début, et le fait entrer dans l'historique quand un autre le remplacera.</p>
+      <p class="note" style="margin-top:10px">${esc(trad("Tes changements sont gardés dans un brouillon, sur ton compte : ton client ne les voit qu'après « Publier les changements ». La publication date le programme (« Programme mis à jour le … » chez lui), range l'ancien dans l'historique et fait démarrer la semaine 1 d'un nouveau programme ou d'un nouveau bloc."))}</p>
     </section>`;
     return h;
   },
 
   /* Le corps de l'editeur : les seances et leurs exercices. Partage entre la
      fiche d'un client et l'atelier. */
-  blocSeances(P){
+  blocSeances(P, opts){
+    opts = opts || {};
     let h = "";
+    const nbS = (P.seances || []).length;
+    /* v96 (3b) : ↑ ↓ et « Dupliquer » pour une séance ou un exercice ; + / − sur les séries, les répétitions et le repos (le
+       clavier reste possible) ; sous chaque exercice d'un client, ce qu'il a fait la dernière fois ; pendant un nouveau bloc,
+       « ≈ identique au bloc d'avant » sur un exercice inchangé */
+    const outil = (attr, val, txt, aria, off) => `<button type="button" class="outil-pg" ${attr}="${val}" aria-label="${esc(aria)}"${off ? " disabled" : ""}>${txt}</button>`;
+    const pm = (si, ei, f, aria) => `<span class="pm">${outil("data-pm", si + ":" + ei + ":" + f + ":-1", "−", trad("Diminuer") + " · " + aria)}${outil("data-pm", si + ":" + ei + ":" + f + ":1", "+", trad("Augmenter") + " · " + aria)}</span>`;
     (P.seances || []).forEach((sc, si) => {
+      const nbE = (sc.exercices || []).length;
       h += `<section class="panel seance">
         <div class="seance-tete">
           <div><label>Nom de la séance</label><input type="text" data-s="${si}" data-f="nom" value="${esc(sc.nom || "")}" placeholder="Séance A — Haut du corps"></div>
+          <div class="outils-pg">${outil("data-monter-s", si, "↑", trad("Monter la séance"), si === 0)}${outil("data-descendre-s", si, "↓", trad("Descendre la séance"), si === nbS - 1)}${outil("data-dupliquer-s", si, "⧉", trad("Dupliquer la séance"))}</div>
           <button class="del" data-suppr-s="${si}" aria-label="Supprimer la séance">×</button>
         </div>
         <div style="margin-bottom:12px"><label>Note sur la séance</label><input type="text" data-s="${si}" data-f="note" value="${esc(sc.note || "")}" placeholder="Consignes de la séance"></div>
@@ -889,15 +1180,18 @@ const outilProgramme = {
 
       (sc.exercices || []).forEach((e, ei) => {
         const f = this.trouve(e.nom);
+        const der = opts.J && e.nom ? Journal.dernier(opts.J, e.nom) : null, court = der ? Journal.resumeCourt(der.e) : "";
         h += `<div class="ex-ligne">
           <div class="nom-c"><label>Exercice</label>
             <input type="text" list="ex-catalogue" data-s="${si}" data-e="${ei}" data-f="nom" value="${esc(e.nom)}" placeholder="Commence à taper : Développé couché…">
             ${this.etatExo(e, f, si, ei)}
+            ${court ? `<p class="ex-derniere" data-derniere>${esc(trad("Dernière fois : {d} ({date})", { d: court, date: dateFr(der.date).slice(0, 5) }))}</p>` : ""}
+            ${opts.ref ? `<p class="ex-identique" data-identique="${si}:${ei}"${BrouillonProg.identique(opts.ref, sc, e) ? "" : " hidden"}>≈ ${esc(trad("identique au bloc d'avant : à faire évoluer ?"))}</p>` : ""}
           </div>
-          <div><label>Séries</label><input type="text" data-s="${si}" data-e="${ei}" data-f="series" value="${esc(e.series)}" placeholder="4"></div>
-          <div><label>Reps</label><input type="text" data-s="${si}" data-e="${ei}" data-f="reps" value="${esc(e.reps)}" placeholder="8-10"></div>
-          <div><label>Repos</label><input type="text" data-s="${si}" data-e="${ei}" data-f="repos" value="${esc(e.repos)}" placeholder="90 s"></div>
-          <div><button class="del" data-suppr-e="${si}:${ei}" aria-label="Supprimer l'exercice">×</button></div>
+          <div><label>Séries</label><input type="text" data-s="${si}" data-e="${ei}" data-f="series" value="${esc(e.series)}" placeholder="4">${pm(si, ei, "series", trad("séries"))}</div>
+          <div><label>Reps</label><input type="text" data-s="${si}" data-e="${ei}" data-f="reps" value="${esc(e.reps)}" placeholder="8-10">${pm(si, ei, "reps", trad("répétitions"))}</div>
+          <div><label>Repos</label><input type="text" data-s="${si}" data-e="${ei}" data-f="repos" value="${esc(e.repos)}" placeholder="90 s">${pm(si, ei, "repos", trad("repos"))}</div>
+          <div class="outils-ex">${outil("data-monter-e", si + ":" + ei, "↑", trad("Monter l'exercice"), ei === 0)}${outil("data-descendre-e", si + ":" + ei, "↓", trad("Descendre l'exercice"), ei === nbE - 1)}${outil("data-dupliquer-e", si + ":" + ei, "⧉", trad("Dupliquer l'exercice"))}<button class="del" data-suppr-e="${si}:${ei}" aria-label="Supprimer l'exercice">×</button></div>
           <div class="plein" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
             <div><label>Consigne</label><input type="text" data-s="${si}" data-e="${ei}" data-f="note" value="${esc(e.note)}" placeholder="Descente contrôlée"></div>
             <div><label>Lien vidéo</label><input type="url" data-s="${si}" data-e="${ei}" data-f="lien" value="${esc(e.lien)}" placeholder="https://"></div>
@@ -983,14 +1277,13 @@ const outilProgramme = {
     if (!zone) return;
     if (Store.nonLus.has(P)){ pageHorsLigne(zone); return; }   // v71 (F) : lecture ratee : « Pas de connexion », pas un programme vide
 
-    const sauver = () => Store.ecrire(self.cle, P);
-
+    /* le client voit son programme : lecture seule, « Noter ma séance » */
     if (!edition){
       const J = await Store.lire(Journal.cle, Journal.vide());
       if (Store.nonLus.has(J)){ pageHorsLigne(zone); return; }   // v71 (F)
       if (!Array.isArray(J.seances)) J.seances = [];
       /* v85 (bloc 4) : sous son programme (inchangé, en premier), le lien vers les programmes de la formation */
-      const dessiner = () => { zone.innerHTML = self.vueLecture(P, J) + ProgFormation.lienHTML(); self.brancherFiches(zone); };
+      const dessiner = () => { zone.innerHTML = BrouillonProg.annonceHTML(P) + self.vueLecture(P, J) + ProgFormation.lienHTML(); self.brancherFiches(zone); BrouillonProg.brancherAnnonce(zone, P); };
       dessiner();
       /* apres une seance notee : on redessine (badge « notée », compteur) et on rebranche le journal */
       const apres = () => { dessiner(); Journal.brancher(zone, P, J, apres); };
@@ -999,7 +1292,45 @@ const outilProgramme = {
       return;
     }
 
-    const redessiner = () => { zone.innerHTML = self.vueEdition(P); brancher(); };
+    /* ---------- v96 (chantier 1 de la nuit du 10/11) : le coach travaille dans un BROUILLON ----------
+       P = le programme publié (ce que voit le client), jamais modifié par la saisie ; B = le brouillon, rangé sur le compte
+       du coach (BrouillonProg, clé brouillons_programme), une entrée par client. Rien ne part chez le client avant
+       « Publier les changements » (une seule écriture, tout ou rien). Sans brouillon : B est une copie de P, rien n'est
+       écrit tant que le coach ne change rien (aucune conversion au chargement). Les 3 objectifs du mois restent écrits
+       tout de suite dans le programme publié, comme avant (ils ne font pas partie du brouillon). */
+    const uid = Store.cible();
+    const [D, J] = await Promise.all([BrouillonProg.lire(), Store.lire(Journal.cle, Journal.vide())]);
+    if (!$("prog-vue") || Store.cible() !== uid) return;   // page ou fiche quittée pendant la lecture
+    if (Store.nonLus.has(D)){ pageHorsLigne(zone); return; }   // brouillons illisibles : on n'écrit rien par-dessus
+    const etat = { D: D, J: Store.nonLus.has(J) ? null : J, B: null, publication: false };
+    const majPublie = () => Store.majLu[uid + "|" + self.cle] || null;
+    const entree = BrouillonProg.entree(D, uid);
+    /* un brouillon identique à la version publiée (publié depuis un autre appareil) n'est pas un brouillon */
+    etat.B = (entree && BrouillonProg.differe(entree.programme, P)) ? JSON.parse(JSON.stringify(entree.programme)) : BrouillonProg.depuis(P);
+    const B = () => etat.B;
+
+    /* chaque changement : le brouillon part sur le compte du coach (700 ms, copie gardée sur l'appareil comme toute saisie) */
+    const sauver = () => {
+      if (Store.cible() !== uid){ Store.ficheChangee(); return false; }
+      BrouillonProg.assurerSids(etat.B);
+      const r = BrouillonProg.ranger(etat.D, uid, etat.B, P, majPublie());
+      majEtat();
+      /* « ≈ identique au bloc d'avant » suit la saisie (sans redessiner : le curseur reste dans son champ) */
+      const ref = BrouillonProg.reference(etat.D, uid, P);
+      $$("[data-identique]", zone).forEach(m => { const [si, ei] = m.dataset.identique.split(":").map(Number), sc = etat.B.seances[si], e = sc && (sc.exercices || [])[ei]; m.hidden = !(ref && sc && e && BrouillonProg.identique(ref, sc, e)); });
+      return r;
+    };
+    const sauverPublie = () => Store.ecrire(self.cle, P);   // les 3 objectifs du mois : dans le programme publié, comme avant
+
+    const majEtat = () => {
+      const z = $("pg-etat"); if (!z) return;
+      z.outerHTML = BrouillonProg.etatHTML(etat.B, P, BrouillonProg.entree(etat.D, uid));
+      brancherEtat();
+    };
+    const redessiner = () => {
+      zone.innerHTML = BrouillonProg.etatHTML(etat.B, P, BrouillonProg.entree(etat.D, uid)) + self.vueEdition(etat.B, null, { J: etat.J, ref: BrouillonProg.reference(etat.D, uid, P) });
+      brancher();
+    };
 
     /* Le bouton « L'ajouter » apparait au fil de la frappe : on ecoute la
        zone entiere plutot que chaque bouton, sinon les nouveaux seraient morts. */
@@ -1007,7 +1338,7 @@ const outilProgramme = {
       const b = ev.target.closest("[data-ajout-base]");
       if (!b || !zone.contains(b)) return;
       const [si, ei] = b.dataset.ajoutBase.split(":").map(Number);
-      const ex = P.seances[si].exercices[ei];
+      const ex = B().seances[si].exercices[ei];
       const lien = await UI.demander("Lien YouTube de la démonstration pour « " + ex.nom + " » :\n\n" +
                           "Laisse vide si tu n'en as pas — tu pourras l'ajouter plus tard.", ex.lien || "", { titre: "Ajouter à ma base", ok: "Ajouter", type: "url", placeholder: "https://" });
       if (lien === null) return;                    // annulé
@@ -1026,16 +1357,92 @@ const outilProgramme = {
       }
     });
 
+    /* un programme complet chargé (catalogue, bibliothèque, proposition, historique) remplace les séances DU BROUILLON ;
+       sa semaine 1 commencera à la publication (debut vide) ; l'ancien programme entre dans l'historique à la publication */
+    const charger = (seances, nom, note, garderNom) => {
+      const b = etat.B;
+      b.debut = ""; b.maj = "";
+      b.seances = JSON.parse(JSON.stringify(seances || []));
+      b.seances.forEach(sc => { if (sc && typeof sc === "object") delete sc.sid; });   // de nouvelles séances : de nouveaux identifiants
+      if (nom && !(garderNom && b.nom)) b.nom = nom;
+      if (note && !(garderNom && b.note)) b.note = note;
+      b.seances.forEach(sc => (sc.exercices || []).forEach(e => {
+        const f = self.trouve(e.nom);
+        if (f){ e.id = f.id; if (!e.lien) e.lien = f.lien || (f.video_id ? "https://www.youtube.com/watch?v=" + f.video_id : ""); }
+      }));
+      if (sauver() === false) return false;   /* fiche changee pendant l'operation : rien n'est ecrit */
+      redessiner();
+      return true;
+    };
+
+    const brancherEtat = () => {
+      const pub = $("pg-publier"); if (pub) pub.addEventListener("click", publier);
+      const pub2 = $("pg-publier-bas"); if (pub2) pub2.addEventListener("click", publier);
+      const ann = $("pg-annuler-brouillon");
+      if (ann) ann.addEventListener("click", async () => {
+        if (!(await UI.confirmer(trad("Annuler le brouillon ? Tes changements non publiés seront perdus. Ton client garde la version publiée."), { ok: trad("Annuler le brouillon"), annuler: trad("Garder le brouillon"), danger: true }))) return;
+        if (Store.cible() !== uid){ Store.ficheChangee(); return; }
+        if (BrouillonProg.retirer(etat.D, uid) === false) return;
+        etat.B = BrouillonProg.depuis(P);
+        redessiner();
+        flash("pg-pub-msg", trad("Brouillon annulé : tu vois la version publiée."));
+      });
+      const nb = $("pg-nouveau-bloc");
+      if (nb) nb.addEventListener("click", async () => {
+        if (!Historique.utile("programme", P)){ flash("pg-pub-msg", trad("Publie d'abord un premier programme : le nouveau bloc part de la version publiée.")); return; }
+        if (BrouillonProg.differe(etat.B, P) && !(await UI.confirmer(trad("Ton brouillon sera remplacé par une copie du bloc publié, pour préparer le bloc suivant. Continuer ?"), { ok: trad("Préparer le nouveau bloc") }))) return;
+        if (Store.cible() !== uid){ Store.ficheChangee(); return; }
+        etat.B = BrouillonProg.nouveauBloc(P);
+        if (BrouillonProg.ranger(etat.D, uid, etat.B, P, majPublie(), { nouveau_bloc: { cycle: Math.max(1, parseInt(P.cycle, 10) || 1), nom: P.nom || "" } }) === false) return;
+        redessiner();
+        flash("pg-pub-msg", trad("Nouveau bloc prêt dans ton brouillon : fais évoluer les exercices marqués « ≈ identique », puis publie."));
+      });
+    };
+
+    /* « Publier les changements » : relire la base (deux appareils), ranger l'ancien programme dans l'historique, écrire le
+       nouveau d'un seul coup ; en cas d'échec rien n'a changé chez le client et le brouillon reste */
+    const publier = async () => {
+      if (etat.publication) return;
+      const msg = t => flashFixe("pg-pub-msg", t);
+      const b = etat.B;
+      const exos = (b.seances || []).reduce((n, sc) => n + (sc.exercices || []).filter(e => e.nom).length, 0);
+      if (!exos){ flash("pg-pub-msg", trad("Ce programme est vide : ajoute au moins une séance avec un exercice avant de le publier.")); return; }
+      if (!BrouillonProg.differe(b, P) && P.maj){ flash("pg-pub-msg", trad("Rien à publier : ton client voit déjà cette version.")); return; }
+      etat.publication = true;
+      const boutons = ["pg-publier", "pg-publier-bas"].map(id => $(id)).filter(Boolean);
+      boutons.forEach(x => { x.disabled = true; x.dataset.libelle = x.textContent; x.textContent = trad("Publication…"); });
+      msg("");
+      const fin = () => { etat.publication = false; boutons.forEach(x => { if (x.isConnected){ x.disabled = false; x.textContent = x.dataset.libelle; } }); };
+      try {
+        const r = await BrouillonProg.publier(uid, P, b, etat.D, majPublie());
+        if (!zone.isConnected || Store.cible() !== uid) return;   // page ou fiche quittée : aucun message chez un autre client
+        if (r.ok){
+          /* le programme publié en mémoire devient la nouvelle version (même objet : la page et le cache le partagent) */
+          Object.keys(P).forEach(k => delete P[k]); Object.assign(P, r.programme);
+          etat.D = r.D;
+          etat.B = BrouillonProg.depuis(P);
+          redessiner();
+          flash("pg-pub-msg", trad("Publié. Ton client voit la nouvelle version dès sa prochaine ouverture."));
+          return;
+        }
+        if (r.annule) return;
+        const t = (($("etat") || {}).textContent || "").trim();
+        msg(r.refus ? trad("Pas publié : la base a refusé cette modification. Ton brouillon est gardé.")
+                    : trad("Pas publié : vérifie ta connexion et réessaie. Ton brouillon est gardé.") + (t && !r.refus ? " (" + t + ")" : ""));
+      } finally { fin(); }
+    };
 
     const brancher = () => {
-      self.brancherEditeur(P, zone, sauver, redessiner);
+      const b = etat.B;
+      self.brancherEditeur(b, zone, sauver, redessiner);
+      brancherEtat();
 
       const n = $("pg-nom"), no = $("pg-note"), cy = $("pg-cycle"), du = $("pg-duree");
-      if (n)  n.addEventListener("input", () => { P.nom = n.value; sauver(); });
-      if (no) no.addEventListener("input", () => { P.note = no.value; sauver(); });
+      if (n)  n.addEventListener("input", () => { b.nom = n.value; sauver(); });
+      if (no) no.addEventListener("input", () => { b.note = no.value; sauver(); });
       /* le cycle et la duree : ce qui fait « Cycle 01 · Semaine 2 sur 4 » chez le client */
-      if (cy) cy.addEventListener("input", () => { const v = parseInt(cy.value, 10); if (v >= 1) P.cycle = v; sauver(); });
-      if (du) du.addEventListener("input", () => { const v = parseInt(du.value, 10); if (v >= 1) P.duree_semaines = v; sauver(); });
+      if (cy) cy.addEventListener("input", () => { const v = parseInt(cy.value, 10); if (v >= 1) b.cycle = v; sauver(); });
+      if (du) du.addEventListener("input", () => { const v = parseInt(du.value, 10); if (v >= 1) b.duree_semaines = v; sauver(); });
 
       const auto = $("pg-auto");
       if (auto) auto.addEventListener("click", async () => {
@@ -1046,54 +1453,21 @@ const outilProgramme = {
             : "Ton catalogue de programmes est vide : lance l'import.");
           return;
         }
-        if (P.seances.length && !(await UI.confirmer("Remplacer le programme en cours par « " + choix.prog.nom + " » ?", { ok: "Oui, remplacer" }))) return;
-        if (!(await Historique.avantRemplacement("programme", P))) return;
-        P.debut = aujourdhui(); P.maj = "";
-        P.nom = choix.prog.nom;
-        P.note = choix.prog.note || P.note;
-        P.seances = JSON.parse(JSON.stringify(choix.prog.seances || []));
-        /* on rebranche chaque exercice sur la base : le modele stocke des
-           noms, on veut les fiches et les videos qui vont avec */
-        P.seances.forEach(sc => (sc.exercices || []).forEach(e => {
-          const f = self.trouve(e.nom);
-          if (f){ e.id = f.id; if (!e.lien) e.lien = f.lien || (f.video_id ? "https://www.youtube.com/watch?v=" + f.video_id : ""); }
-        }));
-        if (sauver() === false) return false;   /* fiche changee pendant l'operation : rien n'est ecrit */
-        redessiner();
+        if (b.seances.length && !(await UI.confirmer("Remplacer le programme en cours par « " + choix.prog.nom + " » ?", { ok: "Oui, remplacer" }))) return;
+        if (charger(choix.prog.seances, choix.prog.nom, choix.prog.note, false) === false) return;
         flash("pg-auto-msg", "« " + choix.prog.nom + " » — retenu pour " +
-          (choix.pour.length ? choix.pour.join(", ") : "le meilleur compromis") + ". Relis-le avant d'envoyer.");
-      });
-
-      const save = $("pg-save");
-      if (save) save.addEventListener("click", async () => {
-        if (save.disabled) return;
-        /* Un programme vide envoye, c'est un client qui ouvre son onglet
-           et n'y trouve rien — sans savoir si c'est un bug ou un oubli. */
-        const exos = (P.seances || []).reduce((n, sc) => n + (sc.exercices || []).filter(e => e.nom).length, 0);
-        if (!exos){ flash("pg-msg", "Ce programme est vide : ajoute au moins une séance avec un exercice avant de l'envoyer."); return; }
-        P.maj = new Date().toLocaleDateString("fr-FR");
-        if (!P.debut) P.debut = aujourdhui();     // la semaine 1 commence a l'envoi
-        if (Store.ecrire(self.cle, P) === false){ flash("pg-msg", "Programme non envoyé : relis le message affiché."); return; }
-        /* v91 : « Programme envoyé » seulement quand la base a confirmé l'écriture (avant : dès le clic, même hors ligne) */
-        const libelle = save.textContent;
-        save.disabled = true; save.textContent = "Envoi…"; flashFixe("pg-msg", "");
-        const arrive = await Store.envoyerConfirme(self.cle);
-        if (!save.isConnected) return;   // page quittée pendant l'envoi : aucun message sur la page d'un autre client
-        save.disabled = false; save.textContent = libelle;
-        if (arrive){ flash("pg-msg", "Programme envoyé. Ton client le voit dès sa prochaine ouverture."); return; }
-        const t = (($("etat") || {}).textContent || "").trim();
-        flashFixe("pg-msg", "Pas envoyé : vérifie ta connexion et réessaie." + (t ? " (" + t + ")" : ""));
+          (choix.pour.length ? choix.pour.join(", ") : "le meilleur compromis") + ". " + trad("Relis-le avant de publier."));
       });
 
       const bs = $("pg-biblio-save");
       if (bs) bs.addEventListener("click", async () => {
-        const nom = await UI.demander("Sous quel nom l'enregistrer dans ta bibliothèque ?", P.nom || "Entraînement", { titre: "Ma bibliothèque", ok: "Enregistrer" });
+        const nom = await UI.demander("Sous quel nom l'enregistrer dans ta bibliothèque ?", b.nom || "Entraînement", { titre: "Ma bibliothèque", ok: "Enregistrer" });
         if (!nom) return;
         try {
           await Auth.appel("/rest/v1/bibliotheque", {
             method: "POST",
             headers: { "Prefer": "return=minimal" },
-            body: [{ coach_id: Auth.utilisateur().id, nom, note: P.note || "", contenu: { type:"entrainement", seances: P.seances } }]
+            body: [{ coach_id: Auth.utilisateur().id, nom, note: b.note || "", contenu: { type:"entrainement", seances: b.seances } }]
           });
           flash("pg-msg", "Enregistré dans ta bibliothèque.");
           chargerBiblio();
@@ -1123,14 +1497,8 @@ const outilProgramme = {
         if (!sel.value) return;
         const x = l.find(y => String(y.id) === sel.value);
         if (!x) return;
-        if (!(await UI.confirmer("Charger « " + x.nom + " » ? Il remplacera les séances actuelles de ce client.", { ok: "Charger" }))){ sel.value = ""; return; }
-        if (!(await Historique.avantRemplacement("programme", P))){ sel.value = ""; return; }
-        P.debut = aujourdhui(); P.maj = "";
-        P.seances = JSON.parse(JSON.stringify(x.seances || []));
-        if (!P.nom) P.nom = x.nom;
-        if (!P.note && x.note) P.note = x.note;
-        if (sauver() === false) return false;   /* fiche changee pendant l'operation : rien n'est ecrit */
-        redessiner();
+        if (!(await UI.confirmer(trad("Charger « {n} » ? Il remplacera les séances de ton brouillon (ton client garde la version publiée).", { n: x.nom }), { ok: trad("Charger") }))){ sel.value = ""; return; }
+        if (charger(x.seances, x.nom, x.note, true) === false) return false;
       };
     };
 
@@ -1143,30 +1511,24 @@ const outilProgramme = {
           l.map(x => `<option value="${x.id}">${esc(x.nom)}</option>`).join("");
         sel.onchange = async () => {
           if (!sel.value) return;
-          if (!(await UI.confirmer("Charger cet entraînement ? Il remplacera les séances actuelles de ce client.", { ok: "Charger" }))) { sel.value = ""; return; }
+          if (!(await UI.confirmer(trad("Charger cet entraînement ? Il remplacera les séances de ton brouillon (ton client garde la version publiée)."), { ok: trad("Charger") }))) { sel.value = ""; return; }
           const r = await Auth.appel("/rest/v1/bibliotheque?id=eq." + sel.value + "&select=contenu,nom,note");
           if (r && r[0]){
-            if (!(await Historique.avantRemplacement("programme", P))){ sel.value = ""; return; }
-            P.debut = aujourdhui(); P.maj = "";
-            P.seances = JSON.parse(JSON.stringify(r[0].contenu.seances || []));
-            if (!P.nom) P.nom = r[0].nom;
-            if (sauver() === false) return false;   /* fiche changee pendant l'operation : rien n'est ecrit */
-            redessiner();
+            if (charger(r[0].contenu.seances, r[0].nom, "", true) === false) return false;
           }
         };
       } catch(e){}
     };
 
     redessiner();
-    Regularite.objectifsCoach("prog-obj", P, sauver);
+    Regularite.objectifsCoach("prog-obj", P, sauverPublie);
     Journal.resumeCoach("prog-jr");
     Historique.monter("programme", "prog-hist", async (C) => {
-      if (!(await Historique.avantRemplacement("programme", P))) return false;
-      P.nom = C.nom || P.nom; P.note = C.note || ""; P.seances = C.seances || [];
-      P.debut = aujourdhui(); P.maj = "";
-      if (sauver() === false) return false;   /* fiche changee pendant l'operation : rien n'est ecrit */
-      redessiner();
-      UI.alerte(trad("Programme remis en place. Relis-le, puis clique sur « Envoyer » pour le dater."));
+      const b = etat.B;
+      b.nom = C.nom || b.nom; b.note = C.note || "";
+      if (charger(C.seances || [], "", "", true) === false) return false;
+      /* les séances remises gardent leur identifiant : les séances notées de l'époque restent reliées */
+      UI.alerte(trad("Programme remis dans ton brouillon. Relis-le, puis clique sur « Publier les changements »."));
       return true;
     });
   }

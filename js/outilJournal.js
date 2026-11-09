@@ -34,7 +34,7 @@ const outilJournal = {
   noterHTML(P, J){
     const l = this.seancesProgramme(P);
     if (!l.length) return `<section class="panel" id="jr-sans-programme"><div class="empty">${esc(trad("Ton coach n'a pas encore déposé ton programme : dès qu'il sera prêt, tu pourras noter tes séances ici."))}</div></section>`;
-    const faites = outilProgramme.faitesCetteSemaine(J);
+    const faites = outilProgramme.faitesCetteSemaine(J, P);
     return `<section class="panel"><h2>${esc(trad("Mes séances du programme"))}</h2>
       <p class="note" style="margin:0">${esc(trad("Choisis la séance que tu viens de faire et note tes répétitions et tes charges, série par série."))}</p></section>` +
       l.map(({ sc, si }) => `<section class="panel seance-c${faites[si] ? " faite" : ""}" id="jr-seance-${si}">

@@ -1067,3 +1067,16 @@ ul.fc-lignes li > b{font-weight:500;text-align:right;min-width:0;overflow-wrap:a
 .pf-carte-nom{margin:0}
 /* v90 (lot 5) : « J'ai fait cette séance » — les marges des nouveaux paragraphes, comme leurs voisins */
 .fc-pf-l{margin:0}.pf-faites-sem{margin:6px 0 0}.pf-fait-msg{margin:8px 0 0}
+/* v96 (chantier 1 de la nuit du 10/11) : brouillon du programme, outils rapides de l'éditeur (zones de toucher de 44 px) */
+.pg-etat.brouillon{border-color:var(--warn)}
+.outil-pg{display:inline-flex;align-items:center;justify-content:center;min-width:var(--h-toucher);min-height:var(--h-toucher);padding:0 8px;
+  background:transparent;border:1px solid var(--line-strong);border-radius:var(--r-sm);color:var(--ink-2);font:inherit;font-size:16px;cursor:pointer}
+.outil-pg:hover:not(:disabled){color:var(--ink);border-color:var(--accent)}
+.outil-pg:disabled{opacity:.35;cursor:default}
+.outils-pg,.outils-ex{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.outils-ex .del{min-width:var(--h-toucher);min-height:var(--h-toucher)}
+.ex-ligne .pm{display:flex;gap:4px;margin-top:6px}
+.ex-ligne .pm .outil-pg{flex:1;min-width:0;padding:0}
+.ex-derniere{font-size:12px;margin:6px 0 0;color:var(--ink-2);line-height:1.5}
+.ex-identique{font-size:12px;margin:4px 0 0;color:var(--warn);line-height:1.5}
+@media (max-width:640px){ .ex-ligne .outils-ex{grid-column:1/-1;justify-content:flex-end} }

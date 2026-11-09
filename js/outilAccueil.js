@@ -40,7 +40,7 @@ const outilAccueil = {
   prochaineSeance(P, J, bornes){
     const seances = (P.seances || []).map((sc, si) => ({ sc, si })).filter(x => (x.sc.exercices || []).some(e => e.nom));
     if (!seances.length) return null;
-    const faites = new Set((J.seances || []).filter(x => x.date >= bornes.debut && x.date <= bornes.fin).map(x => x.si));
+    const faites = new Set((J.seances || []).filter(x => x && x.date >= bornes.debut && x.date <= bornes.fin).map(x => Journal.place(P, x)).filter(i => i > -1));   // v96 : par séance (Journal.place)
     const reste = seances.filter(x => !faites.has(x.si));
     return { prochaine: reste.length ? reste[0] : null, faites: faites.size, total: seances.length };
   },
@@ -489,6 +489,7 @@ const outilAccueil = {
         <h1>${consult ? esc(trad("Vue d'ensemble")) + (prenom ? " — " + esc(prenom) : "") : esc(trad("Bonjour")) + (prenom ? " " + esc(prenom) : "")}</h1>
         <p class="lede">${esc(resume)}</p>
       </header>
+      ${consult ? "" : BrouillonProg.annonceHTML(P)}
       ${ja ? JournalAlim.carteAccueilHTML(JournalAlim.local(d.journal_alimentaire), JournalAlim.objectif(d, false)) : ""}
       ${dim ? Checkin.bandeauHTML(CK, moi) : ""}
       <section class="panel">
@@ -509,6 +510,7 @@ const outilAccueil = {
         <p class="note" style="margin:0 0 12px">${esc(trad("Tes quatre dernières semaines : régularité, poids, ce qui a bougé et la progression de tes charges."))}</p>
         <div class="actions" style="margin-top:0"><a class="btn ghost petit" href="#/suivi">${esc(trad("Voir mon bilan du mois"))}</a></div>
       </section>`;
+    if (!consult) BrouillonProg.brancherAnnonce(zone, P);   // v96 : « C'est noté » sous l'annonce du nouveau bloc
   }
 };
 
