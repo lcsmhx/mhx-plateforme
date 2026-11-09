@@ -1683,6 +1683,7 @@ Object.assign(I18N.en, {
   "Vue tableau": "Table view",
   "Comptes": "Accounts",
   "Vue détaillée": "Detailed view",
-  "Exporter la newsletter": "Export the newsletter"
+  "Exporter la newsletter": "Export the newsletter",
+  "Programmes": "Programs"
 });
 /* v98-menu-coach-fin */

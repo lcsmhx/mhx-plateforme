@@ -228,9 +228,12 @@ function construireNav(){
   /* le coach hors fiche : ses outils d'abord, ses propres onglets client ensuite */
   const coachSeul = Auth.estCoach() && !Store.idConsulte;
   const visibles = outilsVisibles().filter(o => !o.masque_nav && !horsVitrine(o));   // v50
-  const ordre = coachSeul ? menuCoach(visibles) : visibles;   // v98 : les 7 entrées du coach (MENU_COACH)
+  /* v98 : les 7 entrées du coach (MENU_COACH) ; dans la fiche d'un client : ses onglets, puis ces 7 entrées (plus les autres
+     pages du coach : elles gardent leur adresse) */
+  const fiche = Auth.estCoach() && !!Store.idConsulte;
+  const ordre = coachSeul ? menuCoach(visibles) : fiche ? visibles.filter(o => o.role !== "coach").concat(menuCoach(visibles.filter(o => o.role === "coach"))) : visibles;
   nav.innerHTML = ordre.map(o =>
-    `<a href="${esc(lienOutil(o.id))}" data-id="${esc(o.id)}">${iconeOutil(o)}${esc(coachSeul ? nomMenuCoach(o) : nomOnglet(o))}${cadenasNav(o)}</a>`
+    `<a href="${esc(lienOutil(o.id))}" data-id="${esc(o.id)}">${iconeOutil(o)}${esc(coachSeul || (fiche && o.role === "coach") ? nomMenuCoach(o) : nomOnglet(o))}${cadenasNav(o)}</a>`
   ).join("");
   construireBarreBas();
   if (typeof Nouveautes !== "undefined") Nouveautes.badge();   // v51 : le badge survit a la reconstruction

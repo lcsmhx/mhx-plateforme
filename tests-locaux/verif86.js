@@ -11,7 +11,7 @@
       aucun appel DELETE ; jamais « Supprimer » dans la sélection ;
    D. Tableau de bord : titre, sous-titre, 3 compteurs, « À traiter maintenant » (raisons), sans les archivés (compteurs,
       à traiter, « Nouveaux depuis ta dernière visite », Nouveautés) ; « Rien à traiter pour l'instant. » ; barre du bas
-      Tableau · Clients · Prospects · Plus ;
+      Tableau · Clients · Prospects · Plus (v98 : Tableau · Clients · Prospects · Programmes · Plus) ;
    E. fiches à onglets : client (Préparer le call, Appeler, Suivi : retour de la semaine, poids, régularité, questionnaire /
       programme / diète, « Ses outils », toute la fiche d'avant ; Compte dans l'ordre, Supprimer définitivement inchangé),
       prospect (« Ses réponses » : format v81, v60 et ancien ; Suivi commercial après), WhatsApp (numéro, texte encodé exact,
@@ -454,8 +454,11 @@ const PLUSIEURS = "Ces comptes disparaissent de tes listes. Tu les retrouves dan
     await page.click("#barre-bas [data-plus]"); await attendre(page, 400);
     const plus = await page.$$eval(".menu-plus a", l => l.map(a => a.dataset.id));
     await page.keyboard.press("Escape");
-    ok("D4 : barre du bas du coach : Tableau · Clients · Prospects · Plus ; « Plus » ouvre les autres outils du coach (Mes séances, Bibliothèque, Catalogue, Entraînement…)",
-      JSON.stringify(nav.map(x => x.replace(/\d+$/, ""))) === '["Tableau","Clients","Prospects","Plus"]' && ["atelier", "bibliotheque", "catalogue", "entrainement"].every(k => plus.includes(k)), JSON.stringify({ nav, plus }));
+    /* v98 (menu du coach en 7 entrées) : « Programmes » entre dans la barre (Mes séances et Bibliothèque y sont réunies) ; « Plus » garde
+       les autres outils du coach (Catalogue, Mon entraînement, Réglages) ; Mes séances et Bibliothèque restent à un geste */
+    const progs = await page.evaluate(() => (document.querySelector('#barre-bas a[data-id="mes-programmes"]') || {}).getAttribute ? document.querySelector('#barre-bas a[data-id="mes-programmes"]').getAttribute("href") : null);
+    ok("D4 : barre du bas du coach : Tableau · Clients · Prospects · Programmes · Plus (« Programmes » = Mes séances et Bibliothèque) ; « Plus » ouvre les autres outils du coach (Catalogue, Mon entraînement, Réglages)",
+      JSON.stringify(nav.map(x => x.replace(/\d+$/, ""))) === '["Tableau","Clients","Prospects","Programmes","Plus"]' && progs === "#/mes-programmes" && ["catalogue", "entrainement", "profil"].every(k => plus.includes(k)), JSON.stringify({ nav, plus, progs }));
     const db2 = base({ calme: true });
     const { page: p2 } = await contexte(b, db2);
     await p2.goto(URL0 + "#/tableau"); await pret(p2); await p2.waitForSelector("#tb-a-traiter"); await attendre(p2, 400);
@@ -615,8 +618,8 @@ const PLUSIEURS = "Ces comptes disparaissent de tes listes. Tu les retrouves dan
     const t = await page.evaluate(() => ({ h1: document.querySelector("#tb-vue h1").textContent, sous: document.querySelector("#tb-vue .tb-tete .lede").textContent,
       lbl: Array.from(document.querySelectorAll("#tb-vue .tb-tiles .t-lbl")).map(x => x.textContent), sur: document.querySelector("#tb-a-traiter h2").textContent,
       nav: Array.from(document.querySelectorAll("#barre-bas .lbl")).map(x => x.textContent) }));
-    ok("I1 : Tableau de bord en anglais : « Dashboard », « What needs your attention today. », Clients · To handle · Prospects, « To handle now » ; barre du bas Dashboard · Clients · Prospects · More",
-      t.h1 === "Dashboard" && t.sous === "What needs your attention today." && JSON.stringify(t.lbl) === '["Clients","To handle","Prospects"]' && t.sur === "To handle now" && JSON.stringify(t.nav) === '["Dashboard","Clients","Prospects","More"]', JSON.stringify(t));
+    ok("I1 : Tableau de bord en anglais : « Dashboard », « What needs your attention today. », Clients · To handle · Prospects, « To handle now » ; barre du bas Dashboard · Clients · Prospects · Programs · More (v98 : « Programs » ajouté)",
+      t.h1 === "Dashboard" && t.sous === "What needs your attention today." && JSON.stringify(t.lbl) === '["Clients","To handle","Prospects"]' && t.sur === "To handle now" && JSON.stringify(t.nav) === '["Dashboard","Clients","Prospects","Programs","More"]', JSON.stringify(t));
     await ouvrirListe(page, "clients"); await attendre(page, 300);
     const l = await page.evaluate(() => ({ compte: document.getElementById("lc-compte").textContent, sel: document.querySelector("[data-sel-debut]").textContent, ph: document.getElementById("lc-q").placeholder,
       filtres: Array.from(document.querySelectorAll("[data-lc-filtre]")).map(x => x.textContent), plus: document.querySelector("[data-lc-plus]").getAttribute("aria-label") }));
@@ -644,12 +647,15 @@ const PLUSIEURS = "Ces comptes disparaissent de tes listes. Tu les retrouves dan
       { user_id: ZOE, outil: "emails", contenu: { newsletter: true, maj: avant(2 * H) }, maj_le: avant(2 * H) });
     const { page } = await contexte(b, db);
     await page.goto(URL0 + "#/tableau"); await pret(page); await page.waitForSelector("#tb-a-traiter"); await attendre(page, 300);
-    await page.click("#barre-bas [data-plus]"); await attendre(page, 400);
-    const menu = await page.$$eval(".menu-plus a", l => l.map(a => a.dataset.id + "=" + a.textContent.trim() + "=" + a.getAttribute("href")));
-    const attendus = ["suivi-clients=Suivi détaillé=#/suivi-clients", "comptes=Comptes=#/comptes", "suivi-commercial=Suivi commercial=#/suivi-commercial", "newsletter=Newsletter=#/newsletter"];
-    ok("J1 : le menu Plus du coach donne les 4 nouvelles places de l'écran d'avant : « Suivi détaillé », « Comptes », « Suivi commercial », « Newsletter »",
+    /* v98 (menu du coach en 7 entrées) : les 4 places de l'écran d'avant ne sont plus dans « Plus » mais sur Clients (Vue tableau,
+       Comptes) et Prospects (Vue détaillée, Exporter la newsletter) ; mêmes adresses, mêmes écrans */
+    const liens = async (h, sel) => { await page.goto(URL0 + h); await pret(page); await page.waitForSelector(sel + " a"); return page.$$eval(sel + " a", l => l.map(a => a.textContent.trim() + "=" + a.getAttribute("href"))); };
+    const menu = (await liens("#/clients", "#vues-clients")).concat(await liens("#/prospects", "#vues-prospects"));
+    const attendus = ["Vue tableau=#/suivi-clients", "Comptes=#/comptes", "Vue détaillée=#/suivi-commercial", "Exporter la newsletter=#/newsletter"];
+    ok("J1 : Clients et Prospects donnent les 4 places de l'écran d'avant : « Vue tableau » (Suivi détaillé), « Comptes », « Vue détaillée » (Suivi commercial), « Exporter la newsletter »",
       attendus.every(x => menu.includes(x)), JSON.stringify(menu));
-    await page.click('.menu-plus a[data-id="suivi-clients"]'); await pret(page); await page.waitForSelector("#tb-clients [data-ouvrir]"); await attendre(page, 300);
+    await page.goto(URL0 + "#/clients"); await pret(page); await page.waitForSelector('#vues-clients a[href="#/suivi-clients"]');
+    await page.click('#vues-clients a[href="#/suivi-clients"]'); await pret(page); await page.waitForSelector("#tb-clients [data-ouvrir]"); await attendre(page, 300);
     const sd = await page.evaluate(() => ({ hash: location.hash, h1: (document.querySelector(".masthead h1") || {}).textContent, ths: document.querySelectorAll(".tb-clients-table th").length,
       lignes: Array.from(document.querySelectorAll("#tb-clients [data-ouvrir]")).map(x => x.dataset.ouvrir), call: document.querySelectorAll("#tb-clients [data-bilan]").length,
       alertes: Array.from(document.querySelectorAll("#alertes-clients .flag")).map(x => x.textContent.replace(/\s+/g, " ").trim()),

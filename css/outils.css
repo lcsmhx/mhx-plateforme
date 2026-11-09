@@ -1089,7 +1089,7 @@ ul.fc-lignes li > b{font-weight:500;text-align:right;min-width:0;overflow-wrap:a
 .repas-tete .actions-b .outil-pg{min-width:var(--h-toucher)}
 /* v98 (chantier 3 de la nuit du 10/11) : boutons des vues d'avant (Clients, Prospects) et onglets de « Mes programmes » */
 .vues-coach{margin:0 0 12px;justify-content:flex-end}
-.vues-coach .btn{min-height:var(--h-toucher)}
+.vues-coach .btn,.vues-coach .btn.petit{min-height:var(--h-toucher)}
 .mp-onglets{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
 .mp-onglets .tab{text-decoration:none;display:inline-flex;align-items:center}
 .mp-onglets .tab.on{border-color:var(--accent);color:var(--ink)}
