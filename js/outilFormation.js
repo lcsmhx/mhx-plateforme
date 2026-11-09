@@ -887,10 +887,12 @@ const outilFormation = {
 
       /* cases a cocher du parcours */
       $$("[data-coche]", zone).forEach(c => c.addEventListener("change", () => {
-        const avant = mindsetFini();
-        D.coches[c.dataset.coche] = c.checked;
-        if (!c.checked) delete D.coches[c.dataset.coche];
-        sauver(); dessiner();
+        const avant = mindsetFini(), k = c.dataset.coche, had = Object.prototype.hasOwnProperty.call(D.coches, k), ancien = D.coches[k];
+        D.coches[k] = c.checked;
+        if (!c.checked) delete D.coches[k];
+        /* v91 : rien d'enregistré (lecture seule du coach, lecture ratée) : la case revient à son état d'avant */
+        if (sauver() === false){ if (had) D.coches[k] = ancien; else delete D.coches[k]; dessiner(); return; }
+        dessiner();
         /* v62 (H) : les 7 cases du module 01 Mindset viennent d'etre cochees (prospect) */
         if (!avant && mindsetFini() && self.pourProspect()) Invitations.declencher("declic_mindset", poser("declic_mindset"));
       }));

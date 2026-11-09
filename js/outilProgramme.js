@@ -469,8 +469,9 @@ const Regularite = {
         ${obj ? `<p class="note" style="margin:12px 0 0">${esc(trad("Coche un objectif quand tu l'as atteint : ton coach le voit."))}</p>` : ""}
       </section>`;
       $$("[data-obj]", z).forEach(c => c.addEventListener("change", () => {
-        OF.faits[+c.dataset.obj] = c.checked;
-        Store.ecrire("objectifs_faits", OF);
+        const i = +c.dataset.obj, ancien = OF.faits[i];
+        OF.faits[i] = c.checked;
+        if (Store.ecrire("objectifs_faits", OF) === false) OF.faits[i] = ancien;   // v91 : rien d'enregistré : la case revient à son état d'avant
         dessiner();
       }));
     };
