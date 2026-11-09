@@ -249,7 +249,7 @@ const attendreQueDb = (f, ms) => attendreQue(async () => { try { return !!f(); }
     const { page } = await contexte(b, COACH, db);
     await page.goto(FICHE("programme")); await pret(page, "#pg-publier");
     await page.click('[data-suppr-e="0:0"]'); await attendre(page, 300);
-    const t1 = await toast(page);
+    const t1 = await toast(page);   // (A1 à A3 : le brouillon du programme)
     await attendreQueDb(() => brouillonsP(db) && brouillonsP(db).clients[C1] && brouillonsP(db).clients[C1].programme.seances[0].exercices[0].nom === "Tirage vertical");
     await annuler(page);
     await attendreQueDb(() => brouillonsP(db).clients[C1].programme.seances[0].exercices[0].nom === "Développé couché");
@@ -261,6 +261,15 @@ const attendreQueDb = (f, ms) => attendreQue(async () => { try { return !!f(); }
     await annuler(page); await attendre(page, 900);
     const noms = await page.evaluate(() => Array.from(document.querySelectorAll('[data-f="nom"][data-s]:not([data-e])')).map(x => x.value));
     ok("A2 : une séance supprimée puis « Annuler » : elle revient à sa place (Séance B en 2e)", /Supprimé : Séance B/.test(t2 || "") && noms[1] === "Séance B — Bas du corps", JSON.stringify([t2, noms]));
+    /* relecture : séance supprimée, puis un autre programme chargé, puis « Annuler » : rien ne s'ajoute au programme chargé */
+    await page.click('[data-suppr-s="1"]'); await attendre(page, 300);
+    await page.evaluate(() => { const s = document.getElementById("pg-prets"); s.value = s.querySelector("option[value]:not([value=''])").value; s.dispatchEvent(new Event("change")); });
+    await attendreQue(() => fenetre(page), 3000); await toucherFenetre(page, "Charger"); await attendre(page, 900);
+    const avantAnnuler = await page.evaluate(() => document.querySelectorAll('[data-f="nom"][data-s]:not([data-e])').length);
+    if (await toast(page)) await annuler(page); await attendre(page, 900);
+    const apresAnnuler = await page.evaluate(() => Array.from(document.querySelectorAll('[data-f="nom"][data-s]:not([data-e])')).map(x => x.value));
+    ok("A2b : séance supprimée, puis un programme prêt à l'emploi chargé, puis « Annuler » : la séance n'est pas ajoutée au programme chargé", apresAnnuler.length === avantAnnuler && !apresAnnuler.includes("Séance B — Bas du corps"), JSON.stringify([avantAnnuler, apresAnnuler]));
+    await page.click("#pg-annuler-brouillon").catch(() => {}); await attendre(page, 300); if (await fenetre(page)) await toucherFenetre(page, "Annuler le brouillon"); await attendre(page, 900);
     /* le message reste 10 s, puis disparaît */
     await page.click('[data-suppr-e="0:0"]'); await attendre(page, 9000);
     const encore = !!(await toast(page)); await attendre(page, 1800);
@@ -354,6 +363,9 @@ const attendreQueDb = (f, ms) => attendreQue(async () => { try { return !!f(); }
     await co.reload(); await pret(co, "#tb-vue");
     const l2 = await co.evaluate(() => Array.from(document.querySelectorAll("script[defer]")).map(s => (s.getAttribute("src") || "").split("?")[0]));
     ok("E4 : ouverture suivante du coach : les 4 fichiers sont chargés d'emblée, comme avant (la marque)", FICHIERS_COACH.every(f => l2.includes(f)), JSON.stringify(l2.length));
+    /* un client qui ouvre ensuite l'app sur ce même appareil : la marque est retirée */
+    const marqueClient = await cl.evaluate(() => { try { return localStorage.getItem("mhx_coach_fichiers"); } catch(e){ return "?"; } });
+    ok("E4b : un client sur un appareil : aucune marque « fichiers du coach » (retirée à son ouverture)", marqueClient === null, String(marqueClient));
     await c2.setOffline(true);
     for (const h of ["#/mes-programmes", "#/clients", "#/tableau"]){ await co.evaluate(x => { location.hash = x; }, h); await attendre(co, 1200); }
     const hc = await co.evaluate(() => courant);

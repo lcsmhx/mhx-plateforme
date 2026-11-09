@@ -1129,18 +1129,20 @@ const outilProgramme = {
       }));
       /* v101 : « Supprimé : … · Annuler » pendant 10 s (l'élément revient à sa place) */
       $$("[data-suppr-e]", zone).forEach(b => b.addEventListener("click", () => {
-        const [si, ei] = b.dataset.supprE.split(":").map(Number), sc = P.seances[si];
-        const ex = sc.exercices.splice(ei, 1)[0]; sauver(); redessiner();
+        const [si, ei] = b.dataset.supprE.split(":").map(Number), sc = P.seances[si], liste = sc.exercices;
+        const ex = liste.splice(ei, 1)[0]; sauver(); redessiner();
         UI.annulable(trad("Supprimé : {n}", { n: (ex && ex.nom) || trad("un exercice") }), () => {
-          if (P.seances.indexOf(sc) < 0) return;
-          sc.exercices.splice(Math.min(ei, sc.exercices.length), 0, ex); sauver(); redessiner();
+          /* relecture : seulement dans la liste d'où il vient (pas après un programme chargé ou un échauffement posé) */
+          if (P.seances.indexOf(sc) < 0 || sc.exercices !== liste || liste.indexOf(ex) > -1) return;
+          liste.splice(Math.min(ei, liste.length), 0, ex); sauver(); redessiner();
         }, zone);
       }));
       $$("[data-suppr-s]", zone).forEach(b => b.addEventListener("click", () => {
-        const si = +b.dataset.supprS, sc = P.seances.splice(si, 1)[0]; sauver(); redessiner();
+        const si = +b.dataset.supprS, liste = P.seances, sc = liste.splice(si, 1)[0]; sauver(); redessiner();
         UI.annulable(trad("Supprimé : {n}", { n: (sc && sc.nom) || trad("une séance") }), () => {
-          if (P.seances.indexOf(sc) > -1) return;
-          P.seances.splice(Math.min(si, P.seances.length), 0, sc); sauver(); redessiner();
+          /* relecture : seulement dans le programme d'où elle vient (pas dans un programme chargé entre-temps) */
+          if (P.seances !== liste || liste.indexOf(sc) > -1) return;
+          liste.splice(Math.min(si, liste.length), 0, sc); sauver(); redessiner();
         }, zone);
       }));
       const as = $("pg-ajout-s");
