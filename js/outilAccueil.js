@@ -221,7 +221,9 @@ const outilAccueil = {
       : `<a class="btn fc-principal" id="fc-call" href="${esc(lienOutil("bilan"))}">Préparer le call</a>`;
     const appeler = Telephone.valide(tel) ? `<a class="rond fc-appeler" id="fc-appeler" href="tel:${esc(tel)}" aria-label="${esc(trad("Appeler"))}" title="${esc(trad("Appeler"))}">${SVG.tel}</a>`
       : `<button type="button" class="rond fc-appeler" id="fc-appeler" disabled aria-label="${esc(trad("Appeler : pas de numéro"))}" title="${esc(trad("Pas de numéro"))}">${SVG.tel}</button>`;
-    const onglet = this.onglet && this.onglet.uid === uidFiche ? this.onglet.nom : "suivi";
+    /* v99 : #/client/<id>/accueil/compte (Profil › Son compte) ouvre l'onglet Compte */
+    const onglet = sousRoute === "compte" ? "compte" : this.onglet && this.onglet.uid === uidFiche ? this.onglet.nom : "suivi";
+    if (Telephone.valide(tel)) TelFiche.tels[uidFiche] = tel;
     /* le retour de la semaine (carte de la maquette) : reçu à lire, fait, non fait, ou rien encore */
     const recu = alertes.find(a => a.type === "bilan_recu"), rt = l.retour;
     const retourTexte = recu ? recu.texte : rt && rt.etat ? rt.nom + " : " + rt.texte : (dim ? "Feedback du dimanche" : "Bilan hebdo") + " : " + trad("rien de nouveau");
@@ -259,7 +261,8 @@ const outilAccueil = {
         <div class="fc-id"><span class="avatar grand fc-avatar${nomC === Clients.SANS_NOM ? " neutre" : ""}">${esc(Clients.initiales(nomC))}</span>
           <div class="fc-id-t"><h1 data-notr>${esc(nomC)}</h1>
             <div class="fc-pastilles"><span class="pastille fc-role-p"${prospectF ? ' title="Compte gratuit : pas encore accompagné"' : ""}>${esc(trad(prospectF ? "Prospect" : "Client"))}</span>${progNom ? `<span class="pastille fc-prog" data-notr>${esc(progNom)}</span>` : ""}${arch ? `<span class="pastille attention fc-archive">${esc(trad("Archivé"))}</span>` : ""}${anglais ? ` <span class="pastille" title="Ce client utilise l'app en anglais">🇺🇸 anglais</span>` : ""}</div></div></div></header>
-        <div class="fc-actions">${principal}${appeler}</div>
+        <div class="fc-actions">${principal}${prospectF ? "" : `<span data-fiche-wa>${TelFiche.html(uidFiche)}</span>`}${appeler}</div>
+        ${ongletsFicheHTML(onglet === "compte" ? "profil" : "apercu")}
         <div class="fc-onglets" role="tablist" aria-label="${esc(trad("Fiche"))}">
           <button type="button" role="tab" id="fc-tab-suivi" data-onglet="suivi" aria-controls="fc-suivi" aria-selected="${onglet === "suivi"}"${onglet === "suivi" ? "" : ' tabindex="-1"'}>${esc(trad("Suivi"))}</button>
           <button type="button" role="tab" id="fc-tab-compte" data-onglet="compte" aria-controls="fc-compte" aria-selected="${onglet === "compte"}"${onglet === "compte" ? "" : ' tabindex="-1"'}>${esc(trad("Compte"))}</button>
@@ -275,7 +278,7 @@ const outilAccueil = {
       <section class="carte fc-carte fc-pf" id="fc-pf-faites"><p class="fc-pf-l">${esc(trad("Séances de la formation faites (30 j) :"))} <b>${ProgFormation.faites30j(d.seances_formation)}</b></p></section>
       <section class="carte fc-carte fc-reg" id="fc-regularite"><div class="fc-reg-l"><b>${esc(trad("Régularité"))}</b><span>${esc(regTexte)}</span></div><div class="fc-jauge" role="img" aria-label="${esc(regTexte)}"><span style="width:${regPct}%"></span></div></section>
       <section class="carte fc-carte" id="fc-etat"><ul class="fiche-l fc-lignes">${etat("Questionnaire", I.complet, trad("Rempli"), trad("à remplir"))}${etat("Programme", seances.length, progNom || trad("envoyé"), trad("à faire"))}${etat("Diète", nbJours, trad("envoyée"), trad("à définir"))}</ul></section>
-      <div class="fc-outils" id="fc-outils">${bandeauConsultation()}</div>
+      <div class="fc-outils" id="fc-outils">${bandeauConsultation(true)}</div>
       <section class="panel">
         <h2>En bref</h2>
         <div class="tiles">
