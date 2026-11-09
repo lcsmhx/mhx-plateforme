@@ -380,6 +380,108 @@ const LECONS = {
       <details class="fo-faq"><summary>« Par où je commence, concrètement ? »</summary><p>Par l'étape 1 de la semaine 1 : écris ton pourquoi fort. Une phrase. Aujourd'hui.</p></details>
 
       <p class="fo-legal">Ce document a un but informatif et pédagogique. Il ne remplace pas un accompagnement psychologique ou un avis médical. En cas de difficulté personnelle importante, adresse-toi à un professionnel de santé.</p>
+    `,
+    /* v94 (brouillon, à relire par Lucas) : la leçon en anglais, même mise en page */
+    html_en: `
+      <p class="fo-chapo">This document is your map of the Mindset module. Before the workouts, before the supplements, before the program: this is where it all starts. Read it once all the way through, then come back to it every week.</p>
+
+      <h4>The map at a glance</h4>
+      <p>The module rests on 4 pillars, in this exact order — each one sets up the next.</p>
+      <ol class="fo-piliers">
+        <li><b>The power of the mind</b> — conscious and subconscious, the law of polarity, visualization</li>
+        <li><b>Motivation and discipline</b> — the fuel and the engine, the rule of 10</li>
+        <li><b>The goal</b> — a concrete goal, the S.M.A.R.T filter, action</li>
+        <li><b>Confidence</b> — the comfort zone, getting out of it, growing</li>
+      </ol>
+      <p class="fo-cle"><b>The logic of the path:</b> you understand how your mind works → you build discipline that doesn't depend on your mood → you set a clear, measurable goal → you take action, and action is what builds confidence. Then you start again, one notch higher.</p>
+
+      <h4>Pillar 1 — The power of the mind</h4>
+      <p class="fo-def"><b>The mind:</b> all your mental faculties — thought, awareness, imagination, perception, emotions — that let you understand, analyze and interact with yourself and the world.</p>
+      <div class="fo-duo">
+        <div><b>The conscious mind</b><br>It can choose. It perceives, analyzes and decides based on the information in front of it. It acts intentionally and rationally.<br><i>→ It's your pilot.</i></div>
+        <div><b>The subconscious mind</b><br>It can't choose. It processes information automatically, outside your awareness: memories, habits, beliefs, instinctive reactions.<br><i>→ It's your autopilot.</i></div>
+      </div>
+      <p class="fo-alerte"><b>What this changes for you:</b> your subconscious runs whatever it was given, with no filter. If you don't reprogram it on purpose — repetition, visualization, new habits — it will replay the old patterns forever, even when your conscious mind wants something else.</p>
+
+      <h5>The law of polarity</h5>
+      <p><b>Polarity:</b> two opposite or complementary elements within the same system. The law of polarity says everything has an opposite. No up without down, no hot without cold. And above all:</p>
+      <table class="fo-tab">
+        <tr><th>The pole that holds you back</th><th>Its opposite</th><th>What you do</th></tr>
+        <tr><td>Ignorance</td><td>Knowledge</td><td>You study</td></tr>
+        <tr><td>Doubt</td><td>Proof</td><td>You act and you measure</td></tr>
+        <tr><td>Fear</td><td>Habit</td><td>You repeat until it feels ordinary</td></tr>
+      </table>
+      <p class="fo-cle">To get rid of ignorance, you need understanding. <b>You can do anything if you study.</b></p>
+
+      <h5>Visualization</h5>
+      <p>Your brain doesn't always tell the difference between something you really lived and something you imagined intensely. A vivid mental image activates the same neural circuits as the real experience. So you prepare your mind — and sometimes your body — to carry out the action for real.</p>
+      <ol class="fo-etapes">
+        <li><b>Set a precise goal.</b> Nailing a performance, speaking in public with ease, reaching a health goal. The more precise the goal, the more powerful the visualization.</li>
+        <li><b>Create a detailed mental image.</b> Close your eyes and picture every detail. Feel the emotions you'll feel: joy, satisfaction, confidence. Include what you see, what you hear, what you feel physically.</li>
+        <li><b>Practice regularly.</b> A few minutes every day. Repetition strengthens the neural connections and anchors the image. That's what makes it more likely you'll actually take action.</li>
+      </ol>
+      <p><b>What you get out of it:</b> confidence (by seeing yourself succeed, you build belief in your abilities), less stress (you've already "lived" the situation, so the fear of the unknown drops), and action (the goal becomes clear and your commitment gets stronger).</p>
+
+      <h4>Pillar 2 — Motivation and discipline</h4>
+      <div class="fo-duo">
+        <div><b>Motivation</b><br>The force that pushes you to act, whether it comes from inner desires or outside influences. <b>It comes and goes.</b> It's the fuel.</div>
+        <div><b>Discipline</b><br>The ability to control yourself and stay consistent in what you do — <b>even without motivation</b>, despite distractions and obstacles. <b>It stays.</b> It's the engine.</div>
+      </div>
+      <p class="fo-alerte"><b>The line to remember:</b> motivation gets you started, discipline gets you to the finish. You can't control how motivated you feel today. You can control whether you show up anyway.</p>
+      <h5>The rule of 10</h5>
+      <p>The 10 levers to put in place, in order.</p>
+      <ol class="fo-etapes">
+        <li><b>Define a strong why</b> — the deep reason, not the surface one</li>
+        <li><b>Set clear, realistic goals</b> — see pillar 3</li>
+        <li><b>Build a routine</b> — same days, same times, fewer decisions to make</li>
+        <li><b>Use small wins</b> — one visible win every week</li>
+        <li><b>Handle the weak moments</b> — plan for them, they will come</li>
+        <li><b>Surround yourself with support</b> — a coach, a partner, a group</li>
+        <li><b>Be kind to yourself</b> — one slip isn't a failure</li>
+        <li><b>Visualize success every day</b> — see pillar 1</li>
+        <li><b>Track your progress</b> — weight, photos, loads, how you feel</li>
+        <li><b>Build patience and perseverance</b> — results come after, not during</li>
+      </ol>
+
+      <h4>Pillar 3 — The goal</h4>
+      <p class="fo-flux">A concrete, achievable goal → run it through the S.M.A.R.T filter → ACTION</p>
+      <table class="fo-tab">
+        <tr><th>Letter</th><th>What it means</th><th>Concrete example</th></tr>
+        <tr><td><b>S</b> — Specific</td><td>The goal must be precise and clear.</td><td>Not "I want to lose weight" but "I want to lose 5 kg of fat".</td></tr>
+        <tr><td><b>M</b> — Measurable</td><td>You must be able to measure your progress.</td><td>Your weight, but also your waist size and how your performance improves.</td></tr>
+        <tr><td><b>A</b> — Achievable</td><td>Realistic for your abilities and your lifestyle.</td><td>3 workouts a week if you work 50 hours, not 6.</td></tr>
+        <tr><td><b>R</b> — Relevant</td><td>Important to you, in line with your values.</td><td>If losing weight improves your well-being, it becomes relevant — and so, motivating.</td></tr>
+        <tr><td><b>T</b> — Time-bound</td><td>Set a deadline.</td><td>"I want to lose 5 kg in 10 weeks."</td></tr>
+      </table>
+      <p class="fo-cle"><b>Do it now</b> — write your goal in "My goals", module 4:<br>
+      I want …………………… (specific) · I'll measure it with …………………… (measurable) · It's achievable because …………………… · It matters to me because …………………… · Deadline: …… / …… / ……</p>
+      <p class="fo-alerte"><b>Step 3: action.</b> A goal that's written down and never acted on is worth nothing. Take the first action within 48 hours.</p>
+
+      <h4>Pillar 4 — Confidence</h4>
+      <p class="fo-cle"><b>Confidence comes from action.</b> Not before. You don't wait to feel ready before you act — you act, and the feeling of being ready comes afterward.</p>
+      <div class="fo-trio">
+        <div><b>Staying in your comfort zone</b><br>No growth. Boredom. Losing sight of your goals. Fears that grow. Losing confidence. And above all: going backward — not moving forward means falling behind.</div>
+        <div><b>How to get out of it</b><br>Understand your comfort zone. Set progressive goals. Accept fear and uncertainty. Find a mentor or a partner. Practice visualization.</div>
+        <div><b>Once you're out</b><br>Growth. You feel stronger. You crush your fears. Your self-esteem goes up. No more boredom.</div>
+      </div>
+      <p class="fo-alerte"><b>Top priority:</b> start by finding the source of your lack of confidence. As long as you don't know where it comes from, you're treating the symptom, not the cause.</p>
+
+      <h4>Your starting plan — 4 weeks</h4>
+      <div class="fo-plan">
+        <div><b>Week 1 — Understand</b><ul><li>Read this document all the way through, once</li><li>Write my strong why, in one sentence</li><li>Find the source of my lack of confidence</li><li>Spot one belief that holds me back</li></ul></div>
+        <div><b>Week 2 — Frame</b><ul><li>Write my goal in S.M.A.R.T format</li><li>Set my exact deadline</li><li>Choose my 2 or 3 progress indicators</li><li>Take my first action within 48 hours</li></ul></div>
+        <div><b>Week 3 — Build</b><ul><li>Build my routine, with set days and times</li><li>Start visualizing, 5 minutes a day</li><li>Write down my first small win</li><li>Tell the people around me or my accountability partner</li></ul></div>
+        <div><b>Week 4 — Step out of the zone</b><ul><li>Identify ONE thing outside my comfort zone</li><li>Do it</li><li>Reread my notes from the previous 3 weeks</li><li>Adjust the goal if needed, and start again one notch higher</li></ul></div>
+      </div>
+
+      <h4>Quick answers</h4>
+      <details class="fo-faq"><summary>"I'm never motivated"</summary><p>That's normal. Motivation is an emotion, it goes up and down. That's exactly why pillar 2 exists: discipline is the ability to act <b>without</b> motivation. You don't have a motivation problem, you have a routine problem. Go back to point 3 of the rule of 10.</p></details>
+      <details class="fo-faq"><summary>"I set goals and then give up on them"</summary><p>Your goal probably didn't pass the S.M.A.R.T filter. The two letters that most often cause failure: <b>A</b> (the goal was too big) and <b>T</b> (no deadline, so no urgency).</p></details>
+      <details class="fo-faq"><summary>"I don't believe in myself"</summary><p>You can't decide to be confident, you build it through action. Start by finding the source of the problem, then set yourself a deliberately small goal, small enough to succeed. One win, then another. It's the only mechanism that works.</p></details>
+      <details class="fo-faq"><summary>"Does visualization really work?"</summary><p>The principle is neurological: an intense mental image activates the same circuits as the real experience. It isn't magical thinking, it's preparation. It doesn't replace action, it makes action more likely and smoother.</p></details>
+      <details class="fo-faq"><summary>"Where do I start, concretely?"</summary><p>With step 1 of week 1: write your strong why. One sentence. Today.</p></details>
+
+      <p class="fo-legal">This document is for information and educational purposes. It does not replace psychological support or medical advice. If you're going through serious personal difficulties, talk to a health professional.</p>
     `
   },
 
@@ -438,6 +540,62 @@ const LECONS = {
         <li>Glucides : 50 × 4 = <b>200 calories</b></li>
         <li>Protéines : 30 × 4 = <b>120 calories</b></li>
         <li>Lipides : 20 × 9 = <b>180 calories</b></li>
+      </ul>
+      <p class="fo-cle">Total = 200 + 120 + 180 = <b>500 calories</b></p>
+    `,
+    /* v94 (brouillon, à relire par Lucas) : la leçon en anglais, même mise en page */
+    html_en: `
+      <h4>Chapter 1 — The basics</h4>
+      <p>Macronutrients are the nutrients that give us calories and energy. We need them to live, grow and keep our metabolism running. They fall into 3 main groups: carbohydrates, protein and fat.</p>
+      <p>Without these 3 macronutrients, the body can suffer from deficiencies and fatigue, and it slowly starts to shut down — like your car when it runs out of gas. That's why you have to eat them every day. All three groups provide calories, but not in the same amounts:</p>
+      <table class="fo-tab">
+        <tr><th>Macronutrient</th><th>Per gram</th></tr>
+        <tr><td>Carbohydrates</td><td>4 calories</td></tr>
+        <tr><td>Protein</td><td>4 calories</td></tr>
+        <tr><td>Fat</td><td>9 calories</td></tr>
+      </table>
+
+      <h4>Chapter 2 — Fat</h4>
+      <p>Imagine your body is a car. Fat is the oil and the fuel.</p>
+      <ol class="fo-etapes">
+        <li><b>A source of energy.</b> Avocados, nuts, butter, oil: your body turns them into energy, the way a car burns gas. You use that energy to run, to play, and even to think.</li>
+        <li><b>Energy storage.</b> Fat can be stored. If you haven't eaten for a while, your body draws on it to keep running.</li>
+        <li><b>Protection and insulation.</b> It protects your organs and keeps your body warm. That helps prevent injuries and keeps your temperature stable.</li>
+        <li><b>Building cells.</b> It makes up the membranes of all your cells — the protective walls that let them work.</li>
+        <li><b>Carrying nutrients.</b> Vitamins A, D, E and K need fat to move around your body. They're crucial for your vision, your skin, your bones and your blood.</li>
+      </ol>
+      <p class="fo-cle"><b>In short:</b> fat is the fuel and the parts of your car. It gives you energy, protects you, builds your cells and carries important nutrients.</p>
+
+      <h4>Chapter 3 — Protein</h4>
+      <p>This time, protein is the parts and the mechanics of the car.</p>
+      <ol class="fo-etapes">
+        <li><b>Building and repair.</b> Muscles, bones, skin, hair: when you get hurt or when you grow, your body uses protein to heal and get stronger.</li>
+        <li><b>Enzymes.</b> These are little machines that speed up chemical reactions, like digestion. Without them, turning food into energy would be much slower.</li>
+        <li><b>Hormones.</b> Some proteins are messages sent through your body — insulin, for example, regulates the sugar in your blood.</li>
+        <li><b>Transport and storage.</b> Hemoglobin carries oxygen in your blood, the way a truck carries goods.</li>
+        <li><b>Structure.</b> Collagen gives strength to your skin and your bones. Without structural proteins, your body would be fragile.</li>
+        <li><b>Immune system.</b> Antibodies are proteins: they fight infections, like soldiers protecting a castle.</li>
+      </ol>
+      <p class="fo-cle"><b>In short:</b> protein builds and repairs your body, helps chemical reactions happen, sends messages, carries substances, supports your structure and protects you from disease.</p>
+
+      <h4>Chapter 4 — Carbohydrates</h4>
+      <p>Carbohydrates are the main fuel.</p>
+      <ol class="fo-etapes">
+        <li><b>A source of quick energy.</b> Pasta, bread, fruit, vegetables: your body turns them into glucose, the gas in your car.</li>
+        <li><b>Energy storage.</b> The extra is stored as glycogen in your muscles and liver, a spare tank for intense efforts or between meals.</li>
+        <li><b>Brain function.</b> Your brain uses a lot of glucose: it helps you think clearly, learn and remember.</li>
+        <li><b>Muscle function.</b> Without enough carbs, your muscles tire faster and you feel weak.</li>
+        <li><b>Stable blood sugar.</b> Slow-release carbs — whole grains, vegetables, fruit — prevent spikes and crashes in your blood sugar.</li>
+        <li><b>Sparing protein.</b> With enough carbs, your body doesn't need to break down the protein in your muscles for energy.</li>
+      </ol>
+      <p class="fo-cle"><b>In short:</b> carbs give you quick energy, fuel your brain and your muscles, keep your blood sugar stable and protect your muscles.</p>
+
+      <h4>The math, in practice</h4>
+      <p>If you eat 50 g of carbs, 30 g of protein and 20 g of fat:</p>
+      <ul class="fo-calc">
+        <li>Carbs: 50 × 4 = <b>200 calories</b></li>
+        <li>Protein: 30 × 4 = <b>120 calories</b></li>
+        <li>Fat: 20 × 9 = <b>180 calories</b></li>
       </ul>
       <p class="fo-cle">Total = 200 + 120 + 180 = <b>500 calories</b></p>
     `
@@ -600,7 +758,7 @@ const outilFormation = {
             <button type="button" class="fo-lecon-tete" data-lecture-ok data-lecon="${esc(cle)}" aria-expanded="${on}">
               <span>📄 ${esc(L.titre)}</span><span class="meta">${esc(L.duree || "")}</span>
             </button>
-            ${on ? `<div class="fo-lecon-corps">${L.html}</div>` : ""}
+            ${on ? `<div class="fo-lecon-corps">${(I18N.langue === "en" && L.html_en) || L.html}</div>` : ""}
           </div>`;
         });
 

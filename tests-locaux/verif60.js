@@ -717,10 +717,11 @@ const NOUVEAU = { probleme: "Perdre du gras", obstacle: "Le manque de temps avec
     const axes = (mods.find(x => x.id === "m5") || {}).axes || [], CH = await page.evaluate(() => FORMATION.challenges.reduce((a, c) => a.concat(c.axes.map(x => {
       const n = t => String(t).replace(/\s+/g, " ").trim(), en = t => Object.prototype.hasOwnProperty.call(I18N.en, n(t)) ? I18N.en[n(t)] : null;
       return { cle: c.id + "|" + x.nom, obj: n(x.objectif), defi: n(x.defi), objEn: en(x.objectif), defiEn: en(x.defi) }; })), []));
-    const TRAD5 = ["c1|Discipline", "c2|Perte de gras", "c3|Perte de gras", "c4|Perte de gras", "c4|Séances de sport"];
+    /* v94 (traduction de la Formation, demande de Lucas du 09/11) : les 15 axes ont leur anglais (avant : les 5 du brief J5) */
+    const TRAD5 = ["c1", "c2", "c3", "c4", "c5"].reduce((l, c) => l.concat(["Perte de gras", "Discipline", "Séances de sport"].map(n => c + "|" + n)), []);
     const attenduAxe = x => x.objEn ? ["Goal:", "Goal: " + x.objEn, x.defiEn] : ["Objectif :", "Objectif : " + x.obj, x.defi];
     const ecartsAxes = axes.map((x, i) => [x, attenduAxe(CH[i] || {})]).filter(([x, y]) => JSON.stringify(x) !== JSON.stringify(y));
-    ok("… module 5 : les 5 axes remplacés (brief J5) en anglais, « Goal: » + objectif anglais puis défi anglais ; les 10 autres, pas encore traduits, restent entièrement en français, étiquette « Objectif : » comprise (jamais « Goal: » devant un objectif en français)",
+    ok("… module 5 : les 15 axes en anglais (v94 ; avant : les 5 du brief J5), « Goal: » + objectif anglais puis défi anglais (jamais « Goal: » devant un objectif en français)",
       axes.length === 15 && axes.length === CH.length && JSON.stringify(CH.filter(x => x.objEn).map(x => x.cle)) === JSON.stringify(TRAD5) && CH.every(x => !x.objEn === !x.defiEn)
       && ecartsAxes.length === 0, axes.length + " axes · traduits : " + JSON.stringify(CH.filter(x => x.objEn).map(x => x.cle)) + " · écarts : " + JSON.stringify(ecartsAxes.slice(0, 3)));
     await c.close();
