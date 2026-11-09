@@ -54,7 +54,7 @@
    J. client Thomas (calcul enregistré, une pesée, 7e case du Mindset), le compte client de test (identifiant lu dans
       CONFIG.nouveautes.comptes_test du fichier servi ; toute première pesée, calcul enregistré, 7e case du Mindset) et le
       coach dans la fiche d'un prospect (« Commence ici » fait ; fiche en lecture seule : la 7e case du Mindset ne se coche
-      pas à la souris, l'événement « change » lui est envoyé — case redessinée cochée, rien n'est enregistré — ; puis
+      pas à la souris, l'événement « change » lui est envoyé — v91 : rien n'est enregistré, la case redessinée décochée — ; puis
       calculateur, mensurations et accueil ouverts) : jamais de carte, aucune lecture in.(intake,challenge), aucune
       mémoire d'invitations sur l'appareil ;
    K. la page « Ton plan d'action » ne compte pas : nouveau prospect, 3 questions, page du plan, « Plus tard » (noté
@@ -1127,19 +1127,20 @@ const detail = (C, V) => JSON.stringify(C ? { sig: C.sig, n: C.n, enfants: C.enf
       await page.evaluate(([id, n]) => Clients.ouvrir(id, n, "accueil"), [IDP, "Léa Martin"]); await page.waitForSelector("#vue .bandeau", { timeout: 8000 }); await attendre(page, 800);
       await aller(page, "#/formation", 2000);
       const coche = !!(await page.$('[data-coche="m1g"]'));
-      /* la case est vraiment cochée par le coach (échec de page.check noté, pas avalé) et l'est encore à l'écran ensuite */
+      /* la case est vraiment cochée par le coach (échec noté, pas avalé) ; v91 (E2) : rien n'étant enregistré, le gestionnaire de la
+         page la redessine DÉCOCHÉE (avant : elle restait cochée) — une case encore cochée voudrait dire que le gestionnaire n'a pas tourné */
       let erreurCoche = "absente", cochee = false;
       /* pour le détail d'un échec : la case est-elle visible, active, et qu'y a-t-il sous son centre */
       const diag = await page.evaluate(() => { const c = document.querySelector('[data-coche="m1g"]'); if (!c) return null; const r = c.getBoundingClientRect(), s = getComputedStyle(c), x = r.left + r.width / 2, y = r.top + r.height / 2, e = document.elementFromPoint(x, y);
         return { hash: location.hash, disabled: c.disabled, checked: c.checked, rect: [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height)], display: s.display, visibility: s.visibility, opacity: s.opacity, pointer: s.pointerEvents,
           dessus: e ? e.tagName.toLowerCase() + (e.id ? "#" + e.id : "") + (e.className && typeof e.className === "string" ? "." + e.className.trim().split(/\s+/).join(".") : "") : null, fermes: [...document.querySelectorAll("details:not([open])")].filter(d => d.contains(c)).length, cache: !!c.closest("[hidden]") }; });
       /* la fiche consultée est en lecture seule : la case ne réagit pas à la souris (pointer-events: none) ; l'événement
-         « change » est donc envoyé à la page (le vrai gestionnaire de la page tourne : la case est redessinée cochée) */
+         « change » est donc envoyé à la page (le vrai gestionnaire de la page tourne : v91, la case est redessinée décochée) */
       if (coche) { erreurCoche = await page.evaluate(() => { const c = document.querySelector('[data-coche="m1g"]'); if (!c) return "absente"; c.checked = true; c.dispatchEvent(new Event("change", { bubbles: true })); return ""; }).catch(e => String((e && e.message) || e).split("\n")[0]); await attendre(page, 1500); cochee = await page.isChecked('[data-coche="m1g"]').catch(() => false); }
       await aller(page, "#/calculateur", 2000); await aller(page, "#/mensurations", 2000); await aller(page, "#/accueil", 2000);
       const n = await nbCartes(page), cles = await clesMemoire(page), consulte = await page.evaluate(() => Store.idConsulte);
-      ok("coach dans la fiche d'un prospect (« Commence ici » fait ; 7e case du Mindset : fiche en lecture seule, la case ne se coche pas à la souris, l'événement « change » est envoyé à la page → case redessinée cochée, rien enregistré) puis calculateur, mensurations et accueil de la fiche ouverts : jamais de carte, aucune lecture in.(intake,challenge), aucune mémoire d'invitations, rien écrit chez le prospect",
-        consulte === IDP && coche && erreurCoche === "" && cochee && n.n === 0 && n.poses === 0 && lecturesInv(db).length === 0 && !cles.length && saisies(db).length === 0,
+      ok("coach dans la fiche d'un prospect (« Commence ici » fait ; 7e case du Mindset : fiche en lecture seule, la case ne se coche pas à la souris, l'événement « change » est envoyé à la page → rien enregistré, case redessinée décochée (v91)) puis calculateur, mensurations et accueil de la fiche ouverts : jamais de carte, aucune lecture in.(intake,challenge), aucune mémoire d'invitations, rien écrit chez le prospect",
+        consulte === IDP && coche && erreurCoche === "" && !cochee && n.n === 0 && n.poses === 0 && lecturesInv(db).length === 0 && !cles.length && saisies(db).length === 0,
         JSON.stringify([consulte, coche, erreurCoche, cochee, diag, n, cles, lecturesInv(db)]) + " · " + resume(db));
     }
   });

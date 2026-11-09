@@ -259,6 +259,8 @@ HORS_BANC="verif44 verif45 verif46 verif47 verif49"
 # v91 (étape 1 « corrections sûres ») : verif92 22 (nouvelle suite, partie 8 : diète et questionnaire illisible, « Programme
 #   envoyé » après la réponse de la base, bibliothèque de l'atelier, nom déjà pris ajouté entre-temps, « Pas de connexion » du
 #   coach, cases non enregistrées, zones de toucher ; 2/22 sur la version d'avant — A3, Z1).
+#   verif68 (bloc J, coach dans la fiche d'un prospect) adaptée : la case du Mindset non enregistrée est redessinée décochée
+#   (avant : cochée, le défaut corrigé) ; même nombre de vérifications.
 attendu() {
   case "$1" in
     flux) echo 19;; verif34) echo 13;; verif35) echo 14;; verif36) echo 13;; verif37) echo 12;; verif38) echo 67;;
