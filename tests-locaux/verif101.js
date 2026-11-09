@@ -363,9 +363,13 @@ const attendreQueDb = (f, ms) => attendreQue(async () => { try { return !!f(); }
     await co.reload(); await pret(co, "#tb-vue");
     const l2 = await co.evaluate(() => Array.from(document.querySelectorAll("script[defer]")).map(s => (s.getAttribute("src") || "").split("?")[0]));
     ok("E4 : ouverture suivante du coach : les 4 fichiers sont chargés d'emblée, comme avant (la marque)", FICHIERS_COACH.every(f => l2.includes(f)), JSON.stringify(l2.length));
-    /* un client qui ouvre ensuite l'app sur ce même appareil : la marque est retirée */
+    /* un client qui ouvre ensuite l'app sur un appareil où la marque est posée : elle est retirée à son ouverture */
+    await cl.evaluate(() => { localStorage.setItem("mhx_coach_fichiers", "1"); });
+    await cl.reload(); await pret(cl, ".masthead");
     const marqueClient = await cl.evaluate(() => { try { return localStorage.getItem("mhx_coach_fichiers"); } catch(e){ return "?"; } });
-    ok("E4b : un client sur un appareil : aucune marque « fichiers du coach » (retirée à son ouverture)", marqueClient === null, String(marqueClient));
+    await cl.reload(); await pret(cl, ".masthead");
+    const apres = await charges(cl);
+    ok("E4b : la marque « fichiers du coach » posée sur l'appareil d'un client est retirée à son ouverture ; à l'ouverture suivante, il ne charge plus les 4 fichiers", marqueClient === null && FICHIERS_COACH.every(f => !apres.includes(f)), JSON.stringify([marqueClient, apres.filter(f => FICHIERS_COACH.includes(f))]));
     await c2.setOffline(true);
     for (const h of ["#/mes-programmes", "#/clients", "#/tableau"]){ await co.evaluate(x => { location.hash = x; }, h); await attendre(co, 1200); }
     const hc = await co.evaluate(() => courant);
