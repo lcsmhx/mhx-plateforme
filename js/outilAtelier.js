@@ -115,9 +115,9 @@ const outilAtelier = {
             headers: { "Prefer": "return=minimal" },
             body: [{ coach_id: Auth.utilisateur().id, nom: P.nom.trim(), note: P.note || "", contenu: { type: "entrainement", seances: JSON.parse(JSON.stringify(P.seances)) } }]
           });
-          flash("pg-msg", "« " + P.nom.trim() + " » enregistré dans ta bibliothèque. Tu le retrouves sur la fiche de chaque client.");
+          if (biblio.isConnected) flash("pg-msg", "« " + P.nom.trim() + " » enregistré dans ta bibliothèque. Tu le retrouves sur la fiche de chaque client.");
         } catch(e){
-          flashFixe("pg-msg", "Pas enregistré dans ta bibliothèque : vérifie ta connexion et réessaie.");
+          if (biblio.isConnected) flashFixe("pg-msg", "Pas enregistré dans ta bibliothèque : vérifie ta connexion et réessaie.");
         }
         biblio.disabled = false;
       });
@@ -137,6 +137,7 @@ const outilAtelier = {
           const r = await Auth.appel("/rest/v1/programmes_types?id=eq." + encodeURIComponent(id) + "&select=id");
           if (Array.isArray(r)) enBase = r.some(x => x && x.id === id);
         } catch(e){}
+        if (!base.isConnected) return;   // v91 : page quittée pendant la relecture : rien n'est écrit, aucun message ailleurs
         if (enBase === null){ base.disabled = false; flashFixe("pg-msg", "Pas enregistré : ta base n'a pas pu être relue. Vérifie ta connexion et réessaie."); return; }
         const existe = enBase || prets.some(x => x.id === id);
         flashFixe("pg-msg", "");
@@ -159,10 +160,11 @@ const outilAtelier = {
           delete Catalogue._c["programmes_types"];
           prets = await Catalogue.programmes();
           outilProgramme.prets = prets;
+          if (!base.isConnected) return;   // v91 : page quittée entre-temps : aucun message ailleurs
           remplirCharger();
           flash("pg-msg", existe ? "Programme remplacé dans ta base." : "Programme ajouté à ta base. Tu le retrouves dans « prêts à l'emploi » sur la fiche de n'importe quel client.");
         } catch(e){
-          flash("pg-msg", "Enregistrement impossible : " + (e.message || "erreur inconnue"));
+          if (base.isConnected) flash("pg-msg", "Enregistrement impossible : " + (e.message || "erreur inconnue"));
         }
         base.disabled = false;
       });

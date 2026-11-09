@@ -1078,6 +1078,7 @@ const outilProgramme = {
         const libelle = save.textContent;
         save.disabled = true; save.textContent = "Envoi…"; flashFixe("pg-msg", "");
         const arrive = await Store.envoyerConfirme(self.cle);
+        if (!save.isConnected) return;   // page quittée pendant l'envoi : aucun message sur la page d'un autre client
         save.disabled = false; save.textContent = libelle;
         if (arrive){ flash("pg-msg", "Programme envoyé. Ton client le voit dès sa prochaine ouverture."); return; }
         const t = (($("etat") || {}).textContent || "").trim();
