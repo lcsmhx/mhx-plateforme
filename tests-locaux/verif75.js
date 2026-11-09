@@ -14,7 +14,7 @@
       un 2e « Remplacer » ne voit aucun faux « changé entre-temps » (la copie part d'abord, ou est servie comme à
       l'ouverture) ; les deux remplacements arrivent en base.
    D. (D4) écrans du coach : « Ses repas » et « Son programme » disent la vérité — chaque changement est visible du client
-      tout de suite ; « Valider et envoyer » / « Envoyer au client » datent l'envoi (plus « Rien n'est envoyé
+      tout de suite (v96 : le programme, puis v97 : la diète, sont des brouillons jusqu'à « Publier les changements ») ; « Valider et envoyer » / « Envoyer au client » datent l'envoi (plus « Rien n'est envoyé
       automatiquement », ni « le lui rend visible »). Le conseil sur les allergies reste.
    E. (B2) client en anglais : une traduction du catalogue (exercices.traductions) qui contient une balise
       (<img onerror>) n'entre pas dans le dictionnaire et n'est jamais insérée en HTML ; les traductions propres (y compris
@@ -300,11 +300,13 @@ const sansJours = R => { const x = clone(R); delete x.jours; return canon(x); };
       tn.includes("Chaque changement est enregistré aussitôt et ton client le voit tout de suite, avant même que tu valides") && tn.includes("les allergies en premier")
         && tn.includes("« Valider et envoyer au client » date la semaine") && !tn.includes("Rien n'est envoyé automatiquement"),
       (tn.match(/.{0,40}(Rien n'est envoyé|Chaque changement).{0,120}/) || [""])[0]);
-    await aller(page, "#/programme", 2000); await page.waitForSelector("#pg-save", { timeout: 10000 });
+    /* v96 : le programme est un brouillon jusqu'à « Publier les changements » : le texte dit toujours la vérité au coach sur ce que
+       voit son client (avant : « ton client voit chaque changement tout de suite ») et sur ce que date l'envoi */
+    await aller(page, "#/programme", 2000); await page.waitForSelector("#pg-publier", { timeout: 10000 });
     const tp = norm(await page.evaluate(() => document.getElementById("vue").textContent));
-    ok("coach, « Son programme » : « ton client voit chaque changement tout de suite, avant même l'envoi », « Envoyer au client » date le programme ; plus « le lui rend visible »",
-      tp.includes("ton client voit chaque changement tout de suite, avant même l'envoi") && tp.includes("« Envoyer au client » date le programme") && !tp.includes("le lui rend visible"),
-      (tp.match(/.{0,40}(Tout est enregistré).{0,160}/) || [""])[0]);
+    ok("coach, « Son programme » : « ton client ne les voit qu'après « Publier les changements » », « La publication date le programme » ; plus « voit chaque changement tout de suite » ni « le lui rend visible »",
+      tp.includes("ton client ne les voit qu'après « Publier les changements »") && tp.includes("La publication date le programme") && !tp.includes("ton client voit chaque changement tout de suite") && !tp.includes("le lui rend visible"),
+      (tp.match(/.{0,40}(Tes changements sont gardés).{0,160}/) || [""])[0]);
     ok("… aucune écriture en ouvrant ces pages", db.ecritures.length === 0, JSON.stringify(db.ecritures.map(x => x.outil)));
   });
 
