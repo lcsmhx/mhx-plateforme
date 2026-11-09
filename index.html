@@ -64,10 +64,17 @@ var MHX_JS = [
    un fichier dont l'écran de connexion a besoin doit y être (même ordre que MHX_JS). */
 var MHX_SOCLE = ["js/config.js", "js/boite-a-outils.js", "js/i18n.js", "js/interface.js", "js/auth-store.js", "js/installation.js", "js/parcours.js", "js/connexion.js", "js/demarrage.js"];
 var MHX_CONNU = true; try { MHX_CONNU = !!(localStorage.getItem("mhx_session") || sessionStorage.getItem("mhx_session")); } catch (e) {}
+/* v101 (chantier 6 de la nuit du 10/11) : MHX_COACH = les fichiers de MHX_JS qui ne servent qu'à l'espace du coach (aucune page
+   d'un client, d'un prospect ni de l'écran sans compte ne s'en sert). Ils ne sont chargés que sur un appareil où le coach s'est
+   déjà connecté (« mhx_coach_fichiers ») ; ailleurs, après la connexion du coach, CodeCoach.assurer (navigation.js) les
+   charge avant le premier affichage. MHX_JS reste la liste complète (ordre, ?v=, banc). */
+var MHX_COACH = ["js/outilBibliotheque.js", "js/outilCatalogue.js", "js/outilTableau.js", "js/outilAtelier.js"];
+var MHX_AVEC_COACH = false; try { MHX_AVEC_COACH = localStorage.getItem("mhx_coach_fichiers") === "1"; } catch (e) {}
+var MHX_A_CHARGER = MHX_JS.filter(function (f) { return MHX_AVEC_COACH || MHX_COACH.indexOf(f) < 0; });
 document.write(MHX_CSS.map(function (f) { return '<link rel="stylesheet" href="' + f + '?v=' + MHX_FICHIERS + '">'; }).join(""));
-document.write((MHX_CONNU ? MHX_JS : MHX_SOCLE).map(function (f) { return '<script defer src="' + f + '?v=' + MHX_FICHIERS + '"><\/script>'; }).join(""));
+document.write((MHX_CONNU ? MHX_A_CHARGER : MHX_SOCLE).map(function (f) { return '<script defer src="' + f + '?v=' + MHX_FICHIERS + '"><\/script>'; }).join(""));
 if (!MHX_CONNU) window.addEventListener("load", function () { setTimeout(function () {
-  MHX_JS.filter(function (f) { return MHX_SOCLE.indexOf(f) < 0; }).forEach(function (f) {
+  MHX_A_CHARGER.filter(function (f) { return MHX_SOCLE.indexOf(f) < 0; }).forEach(function (f) {
     var s = document.createElement("script"); s.src = f + "?v=" + MHX_FICHIERS; s.async = false; document.body.appendChild(s); });
 }, 0); });
 </script>

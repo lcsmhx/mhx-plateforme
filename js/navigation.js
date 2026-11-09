@@ -8,6 +8,31 @@ let sousRoute = "";   // ce qui suit l'identifiant dans l'adresse (#/decouverte/
 let nettoyage = null;
 let affichage = 0;   // numero du dernier affichage demande
 
+/* v101 (chantier 6 de la nuit du 10/11) : le code de l'espace du coach (MHX_COACH, index.html) n'est chargé que pour le coach :
+   à sa connexion, avant le premier affichage, les fichiers absents sont ajoutés dans l'ordre de MHX_JS, puis OUTILS est refait ;
+   la marque « mhx_coach_fichiers » les fait charger d'emblée aux ouvertures suivantes (comme avant la v101). Un fichier qui ne
+   vient pas (hors ligne) : son outil manque au menu, le reste de l'espace s'ouvre. */
+const CodeCoach = {
+  CLE: "mhx_coach_fichiers",
+  absents(){
+    const l = typeof MHX_COACH !== "undefined" && Array.isArray(MHX_COACH) ? MHX_COACH : [];
+    return l.filter(f => !Array.from(document.scripts).some(s => (s.getAttribute("src") || "").split("?")[0] === f));
+  },
+  async assurer(){
+    try { localStorage.setItem(this.CLE, "1"); } catch(e){}
+    const l = this.absents();
+    for (const f of l){
+      await new Promise(fini => {
+        const s = document.createElement("script");
+        s.src = f + "?v=" + (typeof MHX_FICHIERS !== "undefined" ? MHX_FICHIERS : "");
+        s.async = false; s.onload = fini; s.onerror = fini;
+        document.body.appendChild(s);
+      });
+    }
+    if (l.length) OUTILS.splice(0, OUTILS.length, ...listeOutils());
+  }
+};
+
 function outilsVisibles(){
   /* role: "coach"      -> outil du coach, quitte la fiche client quand on l'ouvre
      masque_client: true -> outil du coach, mais qui reste dans la fiche du client
