@@ -193,7 +193,8 @@ const outilClients = {
      dans « Comptes » (outilComptes, menu Plus) ; mêmes contenus, mêmes boutons, mêmes identifiants. */
   html(){
     if (sousRoute === "nouveau") return Acces.html("clients");
-    return `<div id="lc-zone">${ListeCoach.attente("clients")}</div>`;
+    /* v98 : Suivi détaillé et Comptes ont quitté le menu : leurs écrans d'avant s'ouvrent d'ici */
+    return `<div class="actions vues-coach" id="vues-clients"><a class="btn ghost petit" href="#/suivi-clients">${esc(trad("Vue tableau"))}</a><a class="btn ghost petit" href="#/comptes">${esc(trad("Comptes"))}</a></div><div id="lc-zone">${ListeCoach.attente("clients")}</div>`;
   },
 
   /* les lignes de la liste du haut (ListeCoach) : nom, raison (l'alerte la plus urgente, sinon la dernière saisie), poids

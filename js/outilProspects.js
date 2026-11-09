@@ -681,7 +681,8 @@ const outilProspects = {
      CSV) et « Newsletter » (outilNewsletter, menu Plus : la liste et son export). */
   html(){
     if (sousRoute === "nouveau") return Acces.html("prospects");
-    return `<div id="pr-vue"><div id="lc-zone">${ListeCoach.attente("prospects")}</div></div>`;
+    /* v98 : Suivi commercial et Newsletter ont quitté le menu : leurs écrans d'avant s'ouvrent d'ici */
+    return `<div class="actions vues-coach" id="vues-prospects"><a class="btn ghost petit" href="#/suivi-commercial">${esc(trad("Vue détaillée"))}</a><a class="btn ghost petit" href="#/newsletter">${esc(trad("Exporter la newsletter"))}</a></div><div id="pr-vue"><div id="lc-zone">${ListeCoach.attente("prospects")}</div></div>`;
   },
   /* garder = rechargement apres une action (carte, archivage) : le coach garde sa place (nombre de prospects affiches) */
   async init(garder){
