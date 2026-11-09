@@ -250,7 +250,7 @@ const Parcours = {
   },
   html_accueil(){
     const T = PARCOURS_T.accueil, r = this.rebours(), M = CONFIG.marque || {};
-    return `<button type="button" class="pc-langue" id="pc-langue" data-notr>${I18N.langue === "en" ? "🇫🇷 FR" : "🇺🇸 EN"}</button>
+    return `<button type="button" class="pc-langue" id="pc-langue" data-notr aria-label="${esc(ariaLangue())}" title="${esc(ariaLangue())}">${libelleLangue()}</button>
       <div class="pc-scene" aria-hidden="true"><div class="pc-scene-in">${this.animationHTML()}</div></div>
       ${M.logo ? `<img class="pc-logo" src="${esc(M.logo)}" alt="${esc(M.nom || "")}">` : ""}
       <p class="pc-scene-lu">${PARCOURS_T.accueil.scenes.map(s => this.t(s[1]) + (this.dispo(s[0]) ? "" : " (" + this.t(T.bientot) + ")")).join(" · ")}</p>

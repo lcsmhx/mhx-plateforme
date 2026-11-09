@@ -123,7 +123,11 @@ async function basculerLangue(){
   if (range) location.reload();
   else afficher(courant);
 }
-function libelleLangue(){ return I18N.langue === "en" ? "🇫🇷 FR" : "🇺🇸 EN"; }
+/* v95 (décision de Lucas du 10/11) : le bouton de langue montre la langue ACTUELLE (« 🇫🇷 FR » quand l'app est en français ;
+   avant : celle vers laquelle on bascule, lue à l'envers) ; son aria-label (et sa bulle) dit la langue et ce que fait le bouton.
+   Le bouton porte data-notr : ces textes sont choisis ici selon la langue, jamais par la couche de traduction. */
+function libelleLangue(){ return I18N.langue === "en" ? "🇺🇸 EN" : "🇫🇷 FR"; }
+function ariaLangue(){ return I18N.langue === "en" ? "Language: English. Switch to French" : "Langue : français. Passer en anglais"; }
 
 /* --- CONTENUS TRADUITS (v28) ------------------------------------------------
    Les exercices et les programmes types portent leur traduction dans la base

@@ -775,7 +775,7 @@ const ALERTE59 = (/\n  @supports selector\(:has\(\*\)\)\{[\s\S]*?\n  \}\n/.exec(
     /* le coach (#/clients), son nom suivi de « · coach » ; puis le témoin d'enregistrement affiché (il ne s'efface pas seul) */
     const x1 = await coachSur(b, decor(), "#/clients", "#lc-clients", TEL0);   // v84 (ménage du bloc 3) : #/clients ne montre plus que la liste Clients (le tableau est dans « Suivi détaillé »)
     const r1 = await tourBarre(x1.page, pg => pg.evaluate(() => majEtat("")));
-    ok("E : coach (#/clients) " + LIB + " : la page ne déborde pas ; EN et « Se déconnecter » entiers, sur une ligne, dans la barre, cliquables, 44 px de haut (v80) ; le nom n'est pas dans la barre (v76)", r1.trop.length === 0 && nomVu(r1, "Coach Démo · coach"), resultat(r1));
+    ok("E : coach (#/clients) " + LIB + " : la page ne déborde pas ; FR et « Se déconnecter » entiers, sur une ligne, dans la barre, cliquables, 44 px de haut (v80) ; le nom n'est pas dans la barre (v76)", r1.trop.length === 0 && nomVu(r1, "Coach Démo · coach"), resultat(r1));
     const r1a = await tourBarre(x1.page, pg => pg.evaluate(() => majEtat("enregistrement")));
     const temoin = (r, t) => Object.values(r.vus).every(B => B.o.etat.vu && B.o.etat.txt === t);
     ok("E : témoin « Enregistrement… » affiché (coach) " + LIB + " : même chose, le témoin se raccourcit avec « … »",
@@ -786,7 +786,7 @@ const ALERTE59 = (/\n  @supports selector\(:has\(\*\)\)\{[\s\S]*?\n  \}\n/.exec(
     const H_ERR = "Hors ligne — gardé sur cet appareil, renvoi automatique", H_PERDU = "Hors ligne — modification non enregistrée", H_REFUS = "Non enregistré — modification refusée";
     const hauts = rs => rs.map(r => Object.keys(r.vus).map(L => L + ":" + r.vus[L].haut).join(" ")).join(" / ");
     const r1b = await tourBarre(x1.page, pg => pg.evaluate(() => majEtat("erreur")), true);
-    ok("E : alerte « " + H_ERR + " » (coach) " + LIB_A + " : texte entier (non raccourci), sur sa ligne au-dessus des boutons ; la page ne déborde pas, EN et « Se déconnecter » entiers sur une ligne, cliquables ; le nom n'est pas dans la barre (v76)",
+    ok("E : alerte « " + H_ERR + " » (coach) " + LIB_A + " : texte entier (non raccourci), sur sa ligne au-dessus des boutons ; la page ne déborde pas, FR et « Se déconnecter » entiers sur une ligne, cliquables ; le nom n'est pas dans la barre (v76)",
       r1b.trop.length === 0 && temoin(r1b, H_ERR) && !r1b.vus[320].o.qui.vu, resultat(r1b) + " hauteurs " + hauts([r1b]));
     /* un client (Thomas) ; le compte de test (client sans prénom ni nom : son email dans la barre) */
     const x2 = await contexte(b, THOMAS, decor(), TEL0);
@@ -812,21 +812,22 @@ const ALERTE59 = (/\n  @supports selector\(:has\(\*\)\)\{[\s\S]*?\n  \}\n/.exec(
     const x4 = await contexte(b, qui(PID(20), "mc@exemple.fr"), decor({ comptes: [prospect(20, LONG_P, LONG_N, { cree: 2 * J, q: 2 * J, rep: { probleme: "Perdre du gras", obstacle: "Le temps", projection: "Courir" }, email: "mc@exemple.fr" })] }), TEL0);
     await x4.page.goto(URL0); await pret(x4.page, "#vue");
     const r4 = await tourBarre(x4.page, pg => pg.evaluate(() => majEtat("")), false, true);
-    ok("E : prospect au nom de 60 + 60 caractères " + LIB + " : même chose (EN ; « Se déconnecter » n'est pas dans sa barre, v76)", r4.trop.length === 0 && nomVu(r4, LONG_P + " " + LONG_N), resultat(r4));
+    ok("E : prospect au nom de 60 + 60 caractères " + LIB + " : même chose (FR ; « Se déconnecter » n'est pas dans sa barre, v76)", r4.trop.length === 0 && nomVu(r4, LONG_P + " " + LONG_N), resultat(r4));
     /* v76 : le nom n'est plus dans la barre sur téléphone (texte entier gardé dans la page) ; les boutons gardent leur libellé entier ;
        le prospect n'a pas « Se déconnecter » dans sa barre (il est dans « Tout mon espace ») */
     const n4 = r4.vus[320].o, n3 = r3.vus[320].o;
+    /* v95 (décision de Lucas du 10/11) : le bouton de langue montre la langue ACTUELLE : « 🇫🇷 FR » en français, « 🇺🇸 EN » en anglais (avant : l'inverse) */
     ok("E : 320 px : le nom n'est pas dans la barre (prospect au nom long ; compte de test : son email), texte entier gardé ; les boutons gardent leur libellé entier ; « Se déconnecter » absent de la barre du prospect seulement",
-      !n4.qui.vu && n4.qui.txt === LONG_P + " " + LONG_N && !n3.qui.vu && n3.qui.txt === "test@exemple.fr" && !n4.deco.vu && n4.deco.txt === "Se déconnecter" && n3.deco.vu && !n3.deco.coupe && n3.deco.txt === "Se déconnecter" && [n4, n3].every(o => !o.langue.coupe && o.langue.txt === "🇺🇸 EN"),
+      !n4.qui.vu && n4.qui.txt === LONG_P + " " + LONG_N && !n3.qui.vu && n3.qui.txt === "test@exemple.fr" && !n4.deco.vu && n4.deco.txt === "Se déconnecter" && n3.deco.vu && !n3.deco.coupe && n3.deco.txt === "Se déconnecter" && [n4, n3].every(o => !o.langue.coupe && o.langue.txt === "🇫🇷 FR"),
       JSON.stringify([n4.qui, n3.qui, n4.deco]).slice(0, 500));
-    /* en anglais (« Log out », « 🇫🇷 FR ») : le compte de test, sans puis avec le témoin (« Offline — kept on this device… ») */
+    /* en anglais (« Log out », « 🇺🇸 EN ») : le compte de test, sans puis avec le témoin (« Offline — kept on this device… ») */
     const db5 = decor(); avecEn(db5, TESTEUR.id);
     const x5 = await contexte(b, TESTEUR, db5, TEL0);
     await x5.page.goto(URL0 + "#/accueil"); await pret(x5.page, "#vue");
     const r5 = await tourBarre(x5.page, pg => pg.evaluate(() => majEtat("")));
     const r5b = await tourBarre(x5.page, pg => pg.evaluate(() => majEtat("erreur")), true);
-    const en = Object.values(r5.vus).every(B => B.o.deco.txt === "Log out" && B.o.langue.txt === "🇫🇷 FR");
-    ok("E : en anglais (compte de test : « Log out », « 🇫🇷 FR ») " + LIB + " : même chose ; avec l'alerte « Offline — kept on this device, will resend automatically » " + LIB_A + " : entière sur sa ligne, comme en français",
+    const en = Object.values(r5.vus).every(B => B.o.deco.txt === "Log out" && B.o.langue.txt === "🇺🇸 EN");
+    ok("E : en anglais (compte de test : « Log out », « 🇺🇸 EN ») " + LIB + " : même chose ; avec l'alerte « Offline — kept on this device, will resend automatically » " + LIB_A + " : entière sur sa ligne, comme en français",
       en && r5.trop.length === 0 && r5b.trop.length === 0 && temoin(r5b, "Offline — kept on this device, will resend automatically"), resultat({ trop: (en ? [] : ["libellés : " + r5.vus[320].o.deco.txt + " / " + r5.vus[320].o.langue.txt]).concat(r5.trop, r5b.trop) }));
     /* navigateur sans :has (règle des alertes retirée) : l'alerte se raccourcit avec « … » comme le reste, la page ne déborde pas */
     let rS = null;
