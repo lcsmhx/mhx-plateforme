@@ -1,8 +1,10 @@
 /* verif93 — v93 (traductions, 09/11/2026) : la langue et les textes, dans un vrai navigateur (infrastructure de verif91 : Supabase
    simulé, comptes fictifs « pNN@exemple.fr » et clients des fixtures, aucune donnée réelle).
-   A. le coach est toujours en français, même sur un appareil resté en anglais : lang="fr", aucune phrase anglaise du dictionnaire
-      dans son espace (menu, tableau de bord, fiche, diète, programme, suivi, atelier), fenêtres de l'objet UI, témoin, « Pas de
-      connexion » en français ; son bouton de langue ne bascule pas ;
+   A. la langue du coach est celle de SON compte, jamais celle laissée sur l'appareil : sur un appareil resté en anglais, sans
+      choix sur son compte, son espace s'ouvre en français (lang="fr") et identique à celui d'un appareil en français (menu,
+      tableau de bord, fiche, diète, programme, suivi, atelier), fenêtres de l'objet UI, témoin, « Pas de connexion » en
+      français ; dans une fiche, son bouton de langue explique où la changer ; depuis son tableau de bord, son choix de
+      l'anglais est rangé sur son compte et gardé ;
    B. C. D. E. client, prospect, compte de test et écrans sans compte, EN ANGLAIS : chaque page parcourue, aucun texte visible de
       l'app resté en français (les données — recettes, aliments, exercices, notes, saisies — sont retirées avant de juger ; la
       Formation est hors de cette suite : sa traduction est un chantier à part) ; un nouveau texte visible sans sa paire dans
@@ -411,10 +413,20 @@ const avecPrefsEn = (db, uid) => { const pr = db.donnees.find(d => d.user_id ===
     const t = await page.evaluate(() => { const r = []; ["enregistrement", "enregistre", "erreur"].forEach(e => { majEtat(e); r.push(document.getElementById("etat").textContent); }); majEtat(""); return r.concat([flagHorsLigne().replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()]); });
     ok("A4 : chez le coach, témoin « Enregistrement… », « Enregistré », « Hors ligne — gardé sur cet appareil, renvoi automatique » et « Pas de connexion … Réessayer » en français",
       t[0] === "Enregistrement…" && t[1] === "Enregistré" && t[2] === "Hors ligne — gardé sur cet appareil, renvoi automatique" && /^Pas de connexion.*Réessayer$/.test(t[3]), JSON.stringify(t));
-    /* le bouton de langue du coach ne bascule pas : il le dit */
+    /* dans la fiche d'un client (la page est encore sur sa fiche) : le choix ne peut pas être rangé sur le compte du coach, le bouton le dit */
+    const prefsCoach = () => db.ecritures.filter(e => e.table === "donnees" && e.outil === "prefs" && e.user_id === F.IDS.coach);
     await page.click("#langue"); await attendre(page, 600);
-    const apres = await page.evaluate(() => ({ langue: I18N.langue, toast: Array.from(document.querySelectorAll("#toasts .toast")).map(x => x.textContent).join(" | ") }));
-    ok("A5 : le bouton de langue du coach : l'espace reste en français, un message l'explique", apres.langue === "fr" && /reste en français/.test(apres.toast), JSON.stringify(apres));
+    const apres = await page.evaluate(() => ({ langue: I18N.langue, consulte: !!Store.idConsulte, toast: Array.from(document.querySelectorAll("#toasts .toast")).map(x => x.textContent).join(" | ") }));
+    ok("A5 : dans la fiche d'un client, le bouton de langue du coach ne bascule pas : « Change la langue de ton espace depuis ton tableau de bord. », rien d'écrit",
+      apres.consulte && apres.langue === "fr" && /depuis ton tableau de bord/.test(apres.toast) && prefsCoach().length === 0, JSON.stringify(apres));
+    /* depuis son tableau de bord : le choix est rangé sur SON compte (prefs.langue), et il le garde (verif86, bloc I) */
+    await aller(page, "#/tableau", 1500);
+    await Promise.all([page.waitForEvent("load", { timeout: 10000 }).catch(() => {}), page.click("#langue")]);
+    await pret(page, "#tb-vue"); await attendre(page, 800);
+    const en = await page.evaluate(() => ({ langue: I18N.langue, h1: (document.querySelector("#tb-vue h1") || {}).textContent }));
+    const pc = prefsCoach().pop();
+    ok("A6 : depuis son tableau de bord, le coach choisit l'anglais : rangé sur son compte (prefs { langue: \"en\" }), son espace passe en anglais (« Dashboard ») et le reste après le rechargement",
+      en.langue === "en" && en.h1 === "Dashboard" && !!pc && pc.contenu && pc.contenu.langue === "en", JSON.stringify([en, pc && pc.contenu]));
   });
 
   /* =================== B. client en anglais : aucune phrase de l'app restée en français =================== */

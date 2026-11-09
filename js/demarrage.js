@@ -248,23 +248,24 @@ const Retour = {
      langue se règle ; attendue juste avant la navigation */
   const pContact = Contact.preparer().catch(() => null);
 
-  /* v93 : l'espace du coach est en français, toujours (ses écrans ne sont pas traduits : sur un appareil resté en anglais — un
-     compte client essayé en anglais, le choix est gardé sur l'appareil —, le dictionnaire en traduisait une partie, menu, fiche,
-     fenêtres, témoin, et le reste restait en français ; le bouton montrait « 🇫🇷 FR », la langue vers laquelle on bascule).
-     Réglé avant le premier affichage de son espace : la page se recharge une fois en français (les textes fixes de la page
-     ont déjà été traduits au démarrage). */
-  if (Auth.estCoach()){
-    /* un message de retour de lien (premier ou dernier lien d'un changement d'adresse, lien périmé) ne survivrait pas au
-       rechargement : dans ce cas, la langue est réglée en mémoire seulement, le rechargement attend l'ouverture suivante */
-    if (I18N.langue !== "fr"){ if (!emailChange && !premierLien && !lienEmail && I18N.choisir("fr")){ location.reload(); return; } I18N.langue = "fr"; document.documentElement.lang = "fr"; window.__langue = "fr"; }
-  }
-  /* la langue choisie sur un autre appareil l'emporte (client, prospect) */
-  else try {
+  /* la langue choisie sur un autre appareil l'emporte (la préférence du compte, prefs.langue)
+     v93 : pour le coach, c'est la langue de SON compte, jamais celle laissée sur l'appareil par un autre compte (un compte client
+     essayé en anglais : le choix est gardé sur l'appareil ; le dictionnaire traduisait alors une partie de l'espace du coach,
+     menu, fiche, fenêtres, témoin, et le bouton montrait « 🇫🇷 FR », la langue vers laquelle on bascule). Sans choix sur son
+     compte (prefs lue, sans langue) : français, réglé avant le premier affichage de son espace (un rechargement). Un coach qui
+     choisit l'anglais avec le bouton le range sur son compte (basculerLangue) : il le garde. Lecture ratée : rien ne change. */
+  try {
     const pr = await Store.lire("prefs", {});
+    const lu = !!pr && typeof pr === "object" && !Store.nonLus.has(pr);
     if (pr && (pr.langue === "en" || pr.langue === "fr") && pr.langue !== I18N.langue){
       const ok = I18N.choisir(pr.langue);
       if (pr.langue === "fr" && ok){ location.reload(); return; }
       if (pr.langue === "en") Traduction.noeud(document.body);
+    } else if (lu && Auth.estCoach() && pr.langue !== "en" && pr.langue !== "fr" && I18N.langue !== "fr"){
+      /* un message de retour de lien (changement d'adresse, lien périmé) ne survivrait pas au rechargement : dans ce cas, le
+         français est réglé en mémoire seulement, le rechargement attend l'ouverture suivante */
+      if (!emailChange && !premierLien && !lienEmail && I18N.choisir("fr")){ location.reload(); return; }
+      I18N.langue = "fr"; document.documentElement.lang = "fr"; window.__langue = "fr";
     }
   } catch(e){}
 

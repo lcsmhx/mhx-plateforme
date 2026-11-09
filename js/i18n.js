@@ -3,8 +3,8 @@
    s'affiche, a partir du dictionnaire I18N.en (texte francais exact ->
    anglais) et de quelques motifs pour les phrases qui contiennent un nombre.
    Une entree absente = le texte reste en francais : rien ne peut casser.
-   Les ecrans du coach ne sont pas traduits (ils ne servent qu'a l'equipe) : v93, l'espace du coach est toujours en
-   francais (demarrage.js), meme sur un appareil reste en anglais.
+   v93 : la langue du coach est celle rangee sur SON compte (demarrage.js), jamais celle laissee sur l'appareil par un
+   autre compte ; sans choix sur son compte, le francais.
    Ce que saisit l'utilisateur n'est jamais touche : seuls les textes qui
    correspondent EXACTEMENT a une entree du dictionnaire sont remplaces. */
 const I18N = {
@@ -101,9 +101,10 @@ const Traduction = {
   }
 };
 async function basculerLangue(){
-  /* v93 : l'espace du coach reste en français (demarrage.js) : le bouton le dit au lieu de recharger la page pour rien */
-  if (typeof Auth !== "undefined" && Auth.estCoach() && I18N.langue === "fr"){
-    try { UI.toast("Ton espace coach reste en français. Pour voir l'app en anglais, ouvre-la avec le compte client de test.", "attention", 7000); } catch(e){}
+  /* v93 : la langue du coach est celle de SON compte (demarrage.js) ; dans la fiche d'un client, elle ne peut pas y être rangée
+     (les écritures vont au client consulté) : le bouton le dit au lieu de basculer pour une seule ouverture */
+  if (typeof Auth !== "undefined" && Auth.estCoach() && Store.idConsulte){
+    try { UI.toast("Change la langue de ton espace depuis ton tableau de bord.", "attention", 6000); } catch(e){}
     return;
   }
   const l = I18N.langue === "en" ? "fr" : "en";
