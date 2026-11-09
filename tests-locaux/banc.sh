@@ -278,7 +278,7 @@ HORS_BANC="verif44 verif45 verif46 verif47 verif49"
 #   client » devenu « Publier les changements », mêmes 4 vérifications (jamais « publié » avant la réponse de la base, message qui
 #   reste, bouton désactivé pendant l'envoi), même nombre.
 # v97 (chantier 2 de la nuit du 10/11 : brouillon des diètes, fenêtre « Publier », « Changer ce repas » en 3 propositions,
-#   « Dupliquer sur », écart de calories, nouvelle semaine) : verif97 23 (nouvelle suite, partie 5 ; 2/12 sur la v96) ; verif95
+#   « Dupliquer sur », écart de calories, nouvelle semaine) : verif97 27 (nouvelle suite, partie 5 ; 2/12 sur la v96 ; 23 → 27 après la relecture : propositions jamais périmées, nouvelle semaine pré-remplie, copies sans marque) ; verif95
 #   (bloc B) : « Valider et envoyer » devenu « Publier les changements », mêmes 4 vérifications (B2 : rien de perdu, le brouillon
 #   reste et part au prochain « Publier », au lieu du renvoi automatique) ; verif92 (A3) : la quantité va dans le brouillon ;
 #   verif75 (A, D) : le bouton et le texte de la diète ; même nombre partout.
@@ -287,7 +287,7 @@ attendu() {
     flux) echo 19;; verif34) echo 13;; verif35) echo 14;; verif36) echo 13;; verif37) echo 12;; verif38) echo 67;;
     verif-xss) echo 5;; verif39) echo 48;; verif40) echo 64;; verif41) echo 25;; verif42) echo 20;; verif43) echo 27;;
     verif48) echo 42;; verif50) echo 57;; verif51) echo 89;; verif52) echo 137;; verif53) echo 114;;
-    verif54) echo 60;; verif55) echo 172;; verif56) echo 263;; verif57) echo 152;; verif58) echo 138;; verif60) echo 74;; verif61) echo 50;; verif62) echo 50;; verif63) echo 96;; verif64) echo 92;; verif65) echo 70;; verif66) echo 57;; verif67) echo 63;; verif68) echo 76;; verif69) echo 83;; verif70) echo 32;; verif71) echo 84;; verif72) echo 16;; verif73) echo 25;; verif74) echo 33;; verif75) echo 24;; verif76) echo 22;; verif77) echo 26;; verif78) echo 19;; verif79) echo 25;; verif80) echo 70;; verif81) echo 18;; verif82) echo 56;; verif83) echo 54;; verif84) echo 87;; verif85) echo 51;; verif86) echo 57;; verif87) echo 45;; verif88) echo 19;; verif90) echo 25;; verif91) echo 13;; verif89) echo 13;; verif92) echo 24;; verif93) echo 14;; verif94) echo 8;; verif95) echo 12;; verif96) echo 39;; verif97) echo 23;; rig) echo 90;; *) echo "";;
+    verif54) echo 60;; verif55) echo 172;; verif56) echo 263;; verif57) echo 152;; verif58) echo 138;; verif60) echo 74;; verif61) echo 50;; verif62) echo 50;; verif63) echo 96;; verif64) echo 92;; verif65) echo 70;; verif66) echo 57;; verif67) echo 63;; verif68) echo 76;; verif69) echo 83;; verif70) echo 32;; verif71) echo 84;; verif72) echo 16;; verif73) echo 25;; verif74) echo 33;; verif75) echo 24;; verif76) echo 22;; verif77) echo 26;; verif78) echo 19;; verif79) echo 25;; verif80) echo 70;; verif81) echo 18;; verif82) echo 56;; verif83) echo 54;; verif84) echo 87;; verif85) echo 51;; verif86) echo 57;; verif87) echo 45;; verif88) echo 19;; verif90) echo 25;; verif91) echo 13;; verif89) echo 13;; verif92) echo 24;; verif93) echo 14;; verif94) echo 8;; verif95) echo 12;; verif96) echo 39;; verif97) echo 27;; rig) echo 90;; *) echo "";;
   esac
 }
 # Partie de chaque suite pour les jobs parallèles de GitHub Actions (10 parties, durées équilibrées, 4 à 5 minutes chacune).
