@@ -155,7 +155,7 @@ const outilAccueil = {
     /* v79 : son journal alimentaire (s'il lui est ouvert : interrupteur) et son propre calcul (l'objectif du journal) */
     const avecJA = JournalAlim.pourCompte(uidFiche);
     if (avecJA) cles.push("journal_alimentaire", "calc_perso");
-    const [{ valeurs: d, dates }, pr, cx] = await Promise.all([
+    const [{ valeurs: d, dates, erreur }, pr, cx] = await Promise.all([
       Store.lireTout(cles, { dates: true }),
       /* v39 : prospect ou client ? (colonne absente ou lecture ratee : rien ne change) */
       Auth.appel("/rest/v1/profils?id=eq." + uidFiche + "&select=*").then(r => Array.isArray(r) ? r[0] || null : null).catch(() => null),
@@ -164,6 +164,8 @@ const outilAccueil = {
       Auth.appel("/rest/v1/connexions?user_id=eq." + uidFiche + "&select=user_id,nombre,derniere,premiere").then(r => ({ lue: Array.isArray(r), ligne: Array.isArray(r) ? r[0] || null : null })).catch(() => ({ lue: false, ligne: null }))
     ]);
     if (!zone.isConnected || Store.idConsulte !== uidFiche) return;   // on a change de fiche entre-temps
+    /* v91 : lecture groupée ratée : « Pas de connexion » + Réessayer (avant : une fiche vide, « Rien à signaler : tout est en ordre ») */
+    if (erreur){ zone.innerHTML = flagHorsLigne(); return; }
     const I = d.intake || {}, P = d.programme || {}, J = d.journal || { seances: [] }, R = d.repas || {}, S = d.repas_suivi || {}, M = d.mens || {}, CK = d.checkins || { liste: [] };
     if (!Array.isArray(J.seances)) J.seances = [];
     const nomC = Store.nomConsulte || "Client";

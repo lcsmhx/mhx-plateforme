@@ -43,6 +43,7 @@ const outilAtelier = {
 
     const zone = $("at-vue");
     if (!zone) return;
+    if (Store.nonLus.has(P)){ pageHorsLigne(zone); return; }   // v91 : brouillon illisible : « Pas de connexion » + Réessayer (avant : un brouillon vide)
     const sauver = () => Store.ecrire(self.cle, P);
 
     const redessiner = () => {
