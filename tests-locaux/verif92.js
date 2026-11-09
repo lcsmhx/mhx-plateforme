@@ -263,8 +263,9 @@ const horsLigne = page => page.evaluate(() => { const f = document.getElementByI
       ecr(db, "repas").length === n0 && /Questionnaire illisible/.test(msg || ""), JSON.stringify([ecr(db, "repas").length - n0, msg]));
     /* modification à la main : toujours permise */
     await page.evaluate(() => { const i = document.querySelector("[data-gr]"); i.value = String((+i.value || 0) + 5); i.dispatchEvent(new Event("change", { bubbles: true })); });
-    const ecrit = await attendreQue(() => ecr(db, "repas", C1).length > n0, 4000);
-    ok("A3 : une quantité changée à la main est enregistrée (la diète reste modifiable)", ecrit, JSON.stringify(ecr(db, "repas").length));
+    /* v97 : la diète du coach est un brouillon (brouillons_repas, sur son compte) : la quantité y est enregistrée */
+    const ecrit = await attendreQue(() => ecr(db, "brouillons_repas", F.IDS.coach).some(e => e.contenu && e.contenu.clients && e.contenu.clients[C1]), 4000);
+    ok("A3 : une quantité changée à la main est enregistrée (la diète reste modifiable)", ecrit && ecr(db, "repas").length === n0, JSON.stringify([ecr(db, "brouillons_repas").length, ecr(db, "repas").length]));
     /* Réessayer, la lecture refonctionne : bandeau retiré, boutons actifs */
     db.panneLecture = null;
     await page.click("#nu-intake-illisible [data-reessayer]");
