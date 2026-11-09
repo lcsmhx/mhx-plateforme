@@ -359,6 +359,8 @@ a.tb-tuile:hover{border-color:var(--accent-line)}
 .seg.echelle5{max-width:260px;flex:0 0 auto;width:100%}
 @media (min-width:560px){.seg.echelle5{width:260px}}
 .seg.echelle5 button{min-height:36px;font-family:inherit;font-variant-numeric:tabular-nums;font-weight:600}
+/* v91 : sur téléphone, la zone de toucher minimale (la règle de 40 px de la v76 était écrasée par celle-ci) */
+@media (max-width:720px){.seg.echelle5 button{min-height:var(--h-toucher)}}
 .checkin-echelles{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
 .checkin-echelles .pastille b{color:var(--ink);margin-left:2px}
 .checkin-rep{margin:8px 0;font-size:14px;line-height:1.55}
@@ -534,7 +536,7 @@ label.objectif{cursor:pointer;text-transform:none;letter-spacing:0;font-weight:4
 /* v69 : fleche de retour a gauche du titre du volet (« Tout mon espace » du prospect) — discrete, couleur du texte secondaire */
 .volet-tete{display:flex;align-items:center;gap:4px;margin:0 0 14px}
 .volet-tete h2{margin:0;min-width:0}
-.retour-volet{display:inline-flex;align-items:center;justify-content:center;flex:none;width:40px;height:40px;margin:-10px 0 -10px -12px;
+.retour-volet{display:inline-flex;align-items:center;justify-content:center;flex:none;width:var(--h-toucher);height:var(--h-toucher);margin:-12px -2px -12px -14px;
   border-radius:var(--r-sm);color:var(--ink-3);text-decoration:none;transition:color var(--vite),background var(--vite)}
 .retour-volet svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .retour-volet:hover,.retour-volet:focus-visible{color:var(--ink);background:var(--sunken)}

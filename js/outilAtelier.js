@@ -43,6 +43,7 @@ const outilAtelier = {
 
     const zone = $("at-vue");
     if (!zone) return;
+    if (Store.nonLus.has(P)){ pageHorsLigne(zone); return; }   // v91 : brouillon illisible : « Pas de connexion » + Réessayer (avant : un brouillon vide)
     const sauver = () => Store.ecrire(self.cle, P);
 
     const redessiner = () => {
@@ -92,19 +93,57 @@ const outilAtelier = {
         sauver(); redessiner();
       });
 
+      /* le contrôle commun à « Ma base » et « Ma bibliothèque » : un nom, au moins une séance, aucune séance vide (message, ou "") */
+      const aCorriger = () => {
+        lireEntete();
+        if (!P.nom.trim()) return "Donne un nom à ce programme.";
+        if (!P.seances.length) return "Il faut au moins une séance.";
+        if (P.seances.some(sc => !(sc.exercices || []).some(e => (e.nom || "").trim()))) return "Une séance n'a aucun exercice. Complète-la ou supprime-la.";
+        return "";
+      };
+
+      /* v91 : « Enregistrer dans ma bibliothèque » (jamais branché avant : le bouton ne faisait rien) — même table et même
+         format que la fiche d'un client ({ type: "entrainement", seances }), sous le nom du programme */
+      const biblio = $("pg-biblio-save");
+      if (biblio) biblio.addEventListener("click", async () => {
+        if (biblio.disabled) return;
+        const pb = aCorriger(); if (pb){ flash("pg-msg", pb); return; }
+        biblio.disabled = true; flashFixe("pg-msg", "Enregistrement…");
+        try {
+          await Auth.appel("/rest/v1/bibliotheque", {
+            method: "POST",
+            headers: { "Prefer": "return=minimal" },
+            body: [{ coach_id: Auth.utilisateur().id, nom: P.nom.trim(), note: P.note || "", contenu: { type: "entrainement", seances: JSON.parse(JSON.stringify(P.seances)) } }]
+          });
+          if (biblio.isConnected) flash("pg-msg", "« " + P.nom.trim() + " » enregistré dans ta bibliothèque. Tu le retrouves sur la fiche de chaque client.");
+        } catch(e){
+          if (biblio.isConnected) flashFixe("pg-msg", "Pas enregistré dans ta bibliothèque : vérifie ta connexion et réessaie.");
+        }
+        biblio.disabled = false;
+      });
+
       const base = $("at-base");
       if (base) base.addEventListener("click", async () => {
-        lireEntete();
-        if (!P.nom.trim()){ flash("pg-msg", "Donne un nom à ce programme."); return; }
-        if (!P.seances.length){ flash("pg-msg", "Il faut au moins une séance."); return; }
-        const vides = P.seances.filter(sc => !(sc.exercices || []).some(e => (e.nom || "").trim()));
-        if (vides.length){ flash("pg-msg", "Une séance n'a aucun exercice. Complète-la ou supprime-la."); return; }
+        const pb = aCorriger(); if (pb){ flash("pg-msg", pb); return; }
 
         const id = Normaliser.aplatir(P.nom).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
-        const existe = prets.some(x => x.id === id);
-        if (existe && !(await UI.confirmer("Un programme du même nom existe déjà dans ta base. Le remplacer ?", { ok: "Oui, remplacer" }))) return;
+        /* v91 : la base est relue juste avant d'enregistrer (avant : la liste chargée à l'ouverture de la page, et un programme
+           du même nom ajouté entre-temps — autre onglet, autre appareil — était écrasé sans question). Relecture impossible :
+           rien n'est écrit. Jamais d'écrasement sans « Oui, remplacer ». */
+        if (base.disabled) return;
+        base.disabled = true; flashFixe("pg-msg", "Vérification…");
+        let enBase = null;
+        try {
+          const r = await Auth.appel("/rest/v1/programmes_types?id=eq." + encodeURIComponent(id) + "&select=id");
+          if (Array.isArray(r)) enBase = r.some(x => x && x.id === id);
+        } catch(e){}
+        if (!base.isConnected) return;   // v91 : page quittée pendant la relecture : rien n'est écrit, aucun message ailleurs
+        if (enBase === null){ base.disabled = false; flashFixe("pg-msg", "Pas enregistré : ta base n'a pas pu être relue. Vérifie ta connexion et réessaie."); return; }
+        const existe = enBase || prets.some(x => x.id === id);
+        flashFixe("pg-msg", "");
+        if (existe && !(await UI.confirmer("Un programme du même nom existe déjà dans ta base. Le remplacer ?", { ok: "Oui, remplacer" }))){ base.disabled = false; return; }
 
-        base.disabled = true; flash("pg-msg", "Enregistrement…");
+        flash("pg-msg", "Enregistrement…");
         try {
           await Auth.appel("/rest/v1/programmes_types", {
             method: "POST",
@@ -121,10 +160,11 @@ const outilAtelier = {
           delete Catalogue._c["programmes_types"];
           prets = await Catalogue.programmes();
           outilProgramme.prets = prets;
+          if (!base.isConnected) return;   // v91 : page quittée entre-temps : aucun message ailleurs
           remplirCharger();
           flash("pg-msg", existe ? "Programme remplacé dans ta base." : "Programme ajouté à ta base. Tu le retrouves dans « prêts à l'emploi » sur la fiche de n'importe quel client.");
         } catch(e){
-          flash("pg-msg", "Enregistrement impossible : " + (e.message || "erreur inconnue"));
+          if (base.isConnected) flash("pg-msg", "Enregistrement impossible : " + (e.message || "erreur inconnue"));
         }
         base.disabled = false;
       });

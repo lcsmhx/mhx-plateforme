@@ -15,6 +15,12 @@ function flash(id, texte){
   /* v89 (lot 4) : en anglais, le texte affiché est la traduction (Traduction l'a remplacé) : il s'efface aussi */
   e._flash = setTimeout(() => { if (e.textContent === texte || (typeof I18N !== "undefined" && I18N.langue === "en" && typeof Traduction !== "undefined" && e.textContent === Traduction.texte(texte))) e.textContent = ""; }, 3200);
 }
+/* v91 : un message qui reste (échec d'un envoi : il ne doit pas disparaître avant d'être lu) ; le prochain flash le remplace */
+function flashFixe(id, texte){
+  const e = $(id); if (!e) return;
+  clearTimeout(e._flash);
+  e.textContent = texte;
+}
 
 /* --- ICONES (v33) -----------------------------------------------------------
    Quelques pictogrammes en SVG, dessines en trait, qui prennent la couleur du

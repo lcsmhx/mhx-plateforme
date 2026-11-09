@@ -355,6 +355,9 @@ const outilCalculateur = {
       if (pr && pr.statut === "prospect"){ this.CHAMPS.forEach(k => { D[k] = (k === "sexe" || k === "objectif") ? P[k] : this.nombre(P[k]); }); depuisPerso = true; }
     }
     if (!$("tdee")) return;   // page quittee pendant la lecture
+    /* v91 : son calcul illisible, ou pas de calcul et son questionnaire illisible : « Pas de connexion » + Réessayer (avant : les
+       chiffres de départ affichés comme si c'étaient les siens) */
+    if (Store.nonLus.has(D) || (D === depart && Store.nonLus.has(intake))){ pageHorsLigne(null); return; }
     const nd = $("calc-depart"); if (nd) nd.hidden = !depuisPerso;
     const self = this;
     let touche = false;
