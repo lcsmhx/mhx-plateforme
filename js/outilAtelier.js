@@ -126,20 +126,28 @@ const outilAtelier = {
       if (base) base.addEventListener("click", async () => {
         const pb = aCorriger(); if (pb){ flash("pg-msg", pb); return; }
 
-        const id = Normaliser.aplatir(P.nom).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
+        const forme = t => Normaliser.aplatir(t).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
+        let id = forme(P.nom);
         /* v91 : la base est relue juste avant d'enregistrer (avant : la liste chargée à l'ouverture de la page, et un programme
            du même nom ajouté entre-temps — autre onglet, autre appareil — était écrasé sans question). Relecture impossible :
            rien n'est écrit. Jamais d'écrasement sans « Oui, remplacer ». */
         if (base.disabled) return;
         base.disabled = true; flashFixe("pg-msg", "Vérification…");
-        let enBase = null;
+        /* v92 : la base est relue en entier (identifiant ET nom) : un programme du catalogue a son propre identifiant
+           (« corps-entier-2j-debutant »), différent de celui que l'atelier tire du nom (« corps-entier-2-seances ») ; repris
+           puis enregistré sous le même nom, il était COPIÉ sans question (un doublon) au lieu d'être proposé au remplacement.
+           Même identifiant d'abord, sinon même nom : c'est CE programme-là qui est remplacé (son identifiant est gardé). */
+        let lus = null;
         try {
-          const r = await Auth.appel("/rest/v1/programmes_types?id=eq." + encodeURIComponent(id) + "&select=id");
-          if (Array.isArray(r)) enBase = r.some(x => x && x.id === id);
+          const r = await Auth.appel("/rest/v1/programmes_types?select=id,nom&order=id.asc");
+          if (Array.isArray(r)) lus = r.filter(x => x && typeof x.id === "string");
         } catch(e){}
         if (!base.isConnected) return;   // v91 : page quittée pendant la relecture : rien n'est écrit, aucun message ailleurs
-        if (enBase === null){ base.disabled = false; flashFixe("pg-msg", "Pas enregistré : ta base n'a pas pu être relue. Vérifie ta connexion et réessaie."); return; }
-        const existe = enBase || prets.some(x => x.id === id);
+        if (lus === null){ base.disabled = false; flashFixe("pg-msg", "Pas enregistré : ta base n'a pas pu être relue. Vérifie ta connexion et réessaie."); return; }
+        const trouve = l => l.find(x => x.id === id) || l.find(x => forme(x.nom) === id) || null;
+        const cible = trouve(lus) || trouve(prets.filter(x => x && typeof x.id === "string"));
+        const existe = !!cible;
+        if (cible) id = cible.id;
         flashFixe("pg-msg", "");
         if (existe && !(await UI.confirmer("Un programme du même nom existe déjà dans ta base. Le remplacer ?", { ok: "Oui, remplacer" }))){ base.disabled = false; return; }
 

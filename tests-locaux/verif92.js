@@ -10,6 +10,8 @@
       du programme ; séance vide : rien d'écrit ; panne : message d'échec ;
    D. atelier, « Enregistrer dans ma base » : un programme du même identifiant ajouté APRÈS l'ouverture de la page demande
       « Le remplacer ? » (Annuler : rien d'écrit ; « Oui, remplacer » : une écriture) ; base illisible : rien d'écrit ;
+      v92 : un programme du catalogue repris puis enregistré sous le même nom (identifiant différent de celui tiré du nom) :
+      « Le remplacer ? », puis c'est lui qui est remplacé, sans copie ;
    E. « Pas de connexion » + Réessayer : fiche d'un client, calculateur du coach, atelier ; une case qui n'est pas
       enregistrée ne reste pas cochée (objectifs du mois, Formation, vus par le coach) ; zones de toucher à 44 px (échelles
       1-5 du bilan sur téléphone, croix de la bannière d'installation, flèche de retour du volet) ;
@@ -77,7 +79,7 @@ function base(opts){
     meta: { [F.IDS.coach]: { prenom: "Coach", nom: "Démo" }, [C1]: { prenom: "Thomas", nom: "Démo" }, [F.IDS.c2]: { prenom: "Sarah", nom: "Démo" }, [F.IDS.c3]: { prenom: "Julien", nom: "Démo" } },
     /* pannes : panneLecture (GET donnees dont le filtre outil contient ce nom → 500), panneEcriture (POST de cette clé → 500),
        refusEcriture (POST de cette clé → 403, refus définitif), lentEcriture { outil, ms } (POST retardé, puis réussi),
-       panneBiblio (POST bibliotheque → 500), pannePrets (GET programmes_types?id=… → 500) */
+       panneBiblio (POST bibliotheque → 500), pannePrets (relecture de programmes_types par l'atelier → 500) */
     panneLecture: null, panneEcriture: null, refusEcriture: null, lentEcriture: null, panneBiblio: false, pannePrets: false,
     programmes: clone(F.catalogue.programmes_types || []) };
 }
@@ -173,7 +175,8 @@ async function repondre(r, who, db){
   if (p === "/rest/v1/programmes_types") {
     if (m === "GET") {
       const id = q.get("id");
-      if (id && db.pannePrets) return json({ message: "panne simulée" }, 500);
+      /* la relecture de l'atelier (select=id,nom ; v91 : id=eq.…) en panne ; la liste complète de la page (select=*) répond */
+      if (db.pannePrets && (q.get("select") || "*") !== "*") return json({ message: "panne simulée" }, 500);
       let l = db.programmes; if (id && id.startsWith("eq.")) l = l.filter(x => x.id === id.slice(3));
       return json(colonnes(plage(clone(l)), q));
     }
@@ -366,6 +369,29 @@ const horsLigne = page => page.evaluate(() => { const f = document.getElementByI
     const r = { msg: await texte(page, "#pg-msg"), fen: await fenetre(page), dis: await page.evaluate(() => document.getElementById("at-base").disabled) };
     ok("D4 : la base ne peut pas être relue : « Pas enregistré : ta base n'a pas pu être relue. Vérifie ta connexion et réessaie. », aucune écriture de plus, bouton utilisable",
       r.msg === "Pas enregistré : ta base n'a pas pu être relue. Vérifie ta connexion et réessaie." && !r.fen && r.dis === false && table(db, "programmes_types").length === 1, JSON.stringify([r, table(db, "programmes_types").length]));
+  });
+
+  /* v92 : le cas vu par Lucas le 09/11 — un programme du CATALOGUE (identifiant « corps-entier-2j-debutant ») repris dans
+     l'atelier puis enregistré sous le même nom : avant, l'atelier cherchait seulement « corps-entier-2-seances » (tiré du nom),
+     ne trouvait rien et créait une copie sans question */
+  await bloc("D. atelier et programme repris du catalogue", async () => {
+    const db = base({ donnees: [[F.IDS.coach, "atelier", ATELIER("Brouillon 92")]] });
+    const ORIG = "corps-entier-2j-debutant", orig = clone(db.programmes.find(x => x.id === ORIG) || null), nb0 = db.programmes.length;
+    const { page } = await contexte(b, COACH, db);
+    await page.goto(URL0 + "#/atelier"); await pret(page, "#at-base"); await attendre(page, 500);
+    await page.selectOption("#at-charger", ORIG);
+    await attendreQue(async () => /Remplacer ce que tu as commencé/.test((await fenetre(page)) || ""), 5000);
+    await toucherFenetre(page, "Oui, remplacer"); await attendre(page, 1200);
+    const nom = await page.evaluate(() => (document.getElementById("at-nom") || {}).value);
+    await page.click("#at-base");
+    const vue = await attendreQue(async () => /existe déjà/.test((await fenetre(page)) || ""), 5000);
+    ok("D5 : « Corps entier — 2 séances » repris du catalogue (identifiant corps-entier-2j-debutant) puis enregistré sous le même nom : « Le remplacer ? » est demandé, rien n'est écrit avant la réponse",
+      !!orig && nom === orig.nom && vue && table(db, "programmes_types").length === 0, JSON.stringify([!!orig, nom, await fenetre(page), table(db, "programmes_types").map(e => e.corps[0] && e.corps[0].id)]));
+    await toucherFenetre(page, "Oui, remplacer");
+    await attendreQue(() => table(db, "programmes_types").length > 0, 5000); await attendre(page, 800);
+    const w = table(db, "programmes_types"), c = w[0] && w[0].corps[0];
+    ok("D6 : « Oui, remplacer » : c'est CE programme qui est remplacé (identifiant corps-entier-2j-debutant gardé), aucune copie « corps-entier-2-seances », le catalogue garde le même nombre de programmes",
+      w.length === 1 && !!c && c.id === ORIG && !db.programmes.some(x => x.id === "corps-entier-2-seances") && db.programmes.length === nb0, JSON.stringify([w.map(e => e.corps[0] && e.corps[0].id), db.programmes.length, nb0]));
   });
 
   /* =================== E. hors connexion, cases, zones de toucher =================== */
