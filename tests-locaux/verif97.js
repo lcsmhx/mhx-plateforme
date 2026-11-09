@@ -10,6 +10,8 @@
       aucune proposition ;
    F. ↑ ↓, « Dupliquer sur », écart avec « Ses calories » (simple avertissement, « Reprendre »), nouvelle semaine ;
    G. coach en anglais ;
+   H. relecture : propositions retirées quand un réglage change ou qu'un repas bouge, nouvelle semaine pré-remplie, copies sans
+      la marque « Changé par ton client » ;
    Z. aucune erreur de console ni erreur JS, aucun dialogue natif, aucun appel vers l'extérieur.
    Usage : node verif97.js ../index.html
            VERIF97_PORT=10103 node verif97.js ../index.html     (autre port, si 10102 est pris)
@@ -387,6 +389,37 @@ const regimeCle = { "Omnivore": "omnivore", "Végétarien": "vegetarien", "Vég�
     await c3.evaluate(() => { const a = document.querySelector('[data-autre="0:0"]'); if (a){ a.disabled = false; a.click(); } }); await attendre(c3, 2000);
     const n3 = await c3.evaluate(() => document.querySelectorAll("[data-choisir]").length);
     ok("E4 : questionnaire illisible : « Changer ce repas » ne propose rien (bloqué, « vérifie ses allergies »)", n3 === 0 && /Questionnaire illisible/.test(await texte(c3, "#nu-msg") || ""), String(n3));
+  });
+
+  /* =================== H. relecture : propositions jamais périmées, nouvelle semaine pré-remplie, copies sans marque =================== */
+  await bloc("H. relecture", async () => {
+    const db = base();
+    const { page: co } = await ouvrirCoach(b, db);
+    const ouvrirProps = async (cle) => { await co.click(`[data-autre="${cle}"]`); await attendreQue(() => co.evaluate(c => document.querySelectorAll(`[data-props="${c}"] [data-choisir]`).length > 0, cle), 6000); };
+    await ouvrirProps("0:0");
+    await co.click('#nu-allerg input[value="lait"]').catch(async () => { await co.click("#nu-allerg input:not(:checked)"); });
+    await attendre(co, 400);
+    const n1 = await co.evaluate(() => document.querySelectorAll("[data-choisir]").length);
+    ok("H1 : un allergène coché pendant que les 3 propositions sont affichées : elles disparaissent (elles ne valaient que pour les réglages d'avant)", n1 === 0, String(n1));
+    await ouvrirProps("0:1");
+    await co.click('[data-descendre-r="0:1"]'); await attendre(co, 600);
+    const n2 = await co.evaluate(() => document.querySelectorAll("[data-choisir]").length);
+    ok("H2 : un repas déplacé (↓) pendant que ses propositions sont affichées : elles disparaissent (jamais sous un autre repas)", n2 === 0, String(n2));
+    /* « Nouvelle semaine » : la diète publiée sans allergènes, le questionnaire dit « Gluten » : la case reste cochée */
+    const R1 = Object.assign(REPAS(), { allergenes: [] });
+    const db1 = base({ donnees: [[C1, "repas", R1]] });
+    const { page: c1 } = await ouvrirCoach(b, db1);
+    await c1.click("#nu-nouveau-bloc"); await attendreB(db1, B => B.clients && B.clients[C1] && B.clients[C1].nouveau_bloc); await attendre(c1, 300);
+    const coche = await c1.evaluate(() => { const c = document.querySelector('#nu-allerg input[value="gluten"]'); return c ? c.checked : null; });
+    ok("H3 : « Nouvelle semaine » garde les allergènes pris du questionnaire (Gluten coché, et dans le brouillon)", coche === true && (brouillons(db1).clients[C1].programme.allergenes || []).includes("gluten"), JSON.stringify([coche, brouillons(db1).clients[C1].programme.allergenes]));
+    /* « Dupliquer sur » un repas changé par le client : la copie n'a pas la marque « Changé par ton client » */
+    const R2 = REPAS(); R2.jours[0].repas[2].change_client = AUJ0;
+    const db2 = base({ donnees: [[C1, "repas", R2]] });
+    const { page: c2 } = await ouvrirCoach(b, db2);
+    await c2.selectOption('[data-dup-sur="0:2"]', "tous");
+    await attendreB(db2, B => B.clients && B.clients[C1]);
+    const marques = brouillons(db2).clients[C1].programme.jours.reduce((n, j) => n + j.repas.filter(x => x.change_client).length, 0);
+    ok("H4 : « Dupliquer sur » tous les jours un repas changé par le client : seul l'original garde « Changé par ton client » (le bilan ne compte pas 7 remplacements)", marques === 1, String(marques));
   });
 
   /* =================== F. ↑ ↓, « Dupliquer sur », écart de calories, nouvelle semaine =================== */

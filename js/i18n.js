@@ -1660,7 +1660,9 @@ Object.assign(I18N.en, {
   "Choisir": "Choose",
   "Garder ce repas": "Keep this meal",
   "Pas d'autre recette compatible pour ce repas.": "No other compatible recipe for this meal.",
-  "Repas copié sur {n} jour(s).": "Meal copied to {n} day(s)."
+  "Repas copié sur {n} jour(s).": "Meal copied to {n} day(s).",
+  "Propositions périmées : touche à nouveau « Changer ce repas ».": "Outdated suggestions: tap “Change this meal” again.",
+  "Diète remise dans ton brouillon. Relis-la, puis clique sur « Publier les changements ».": "Meal plan restored into your draft. Review it, then click “Publish changes”."
 });
 /* v97-nutrition-fin */
 /* v98-menu-coach (chantier 3 de la nuit du 10/11) : le menu du coach en 7 entrées, « Mes programmes » */

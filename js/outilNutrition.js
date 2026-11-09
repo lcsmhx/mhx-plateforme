@@ -995,44 +995,49 @@ const outilNutrition = {
     try { calc   = await Store.lire("calc", null); } catch(e){}
     ctx.autres = (intake.allergies || "").trim();
 
-    if (!B.regime && intake.regime_type){ B.regime = intake.regime_type; ctx.prerempli = true; }
-    /* Le nombre de repas vient de SA reponse : le plan est bati sur sa
-       journee, pas sur une journee moyenne. */
-    if (!B.nb_repas){
-      const n = self.nbDepuisReponse(intake.nb_repas);
-      if (n){ B.nb_repas = n; ctx.prerempli = true; }
-      else B.nb_repas = CONFIG.nutrition.repas_defaut;
-    }
-    if ((!B.allergenes || !B.allergenes.length) && intake.allergenes){
-      const noms = String(intake.allergenes).split("|").filter(Boolean);
-      B.allergenes = CONFIG.nutrition.allergenes.filter(a => noms.indexOf(a.nom) > -1).map(a => a.id);
-      if (B.allergenes.length) ctx.prerempli = true;
-    }
-    /* Le client n'a plus acces au calculateur : si le coach ne l'a pas encore
-       rempli, on calcule la cible directement depuis le questionnaire plutot
-       que de laisser le champ vide. */
-    let base = calc;
-    if ((!base || !base.poids) && num(intake.poids)){
-      base = { sexe: intake.sexe === "Femme" ? "F" : "H", age: num(intake.age) || 30,
-               taille: num(intake.taille) || 170, poids: num(intake.poids),
-               pas: num(intake.pas) || CONFIG.calcul.valeurs_depart.pas,
-               heures: (num(intake.seances) || 3) * 1.25,
-               objectif: /perte|s[èe]che/i.test(intake.objectif || "") ? "perte"
-                       : /prise|masse/i.test(intake.objectif || "") ? "prise" : "maintien" };
-      ctx.depuisQuestionnaire = true;
-    }
-    if (!B.cible && base && base.poids){
-      const calc = base;
-      const bmr  = outilCalculateur.metabolismeDeBase(calc);
-      const tdee = bmr * outilCalculateur.facteurActivite(calc).total;
-      const c = CONFIG.calcul;
-      /* v79 : une cible pré-remplie est calculée : jamais sous le plancher (1 200 / 1 500 kcal) ; celle que le coach tape reste la sienne */
-      const kcal = Math.max(calc.objectif === "perte" ? tdee * (1 - c.deficit_perte)
-                 : calc.objectif === "prise" ? tdee * (1 + c.surplus_prise) : tdee, outilCalculateur.plancher(calc.sexe));
-      const m = outilCalculateur.macros(kcal, calc.poids);
-      B.cible = { kcal: Math.round(kcal), prot: Math.round(m.prot), lip: Math.round(m.lip), gluc: Math.round(m.gluc) };
-      ctx.prerempli = true;
-    }
+    /* v97 (relecture) : le pré-remplissage (champs vides seulement) est une fonction : il s'applique au brouillon, à la
+       référence ET à une « nouvelle semaine » (sinon les allergènes pris du questionnaire seraient perdus sans le dire) */
+    const preremplir = X => {
+      if (!X.regime && intake.regime_type){ X.regime = intake.regime_type; ctx.prerempli = true; }
+      /* Le nombre de repas vient de SA reponse : le plan est bati sur sa
+         journee, pas sur une journee moyenne. */
+      if (!X.nb_repas){
+        const n = self.nbDepuisReponse(intake.nb_repas);
+        if (n){ X.nb_repas = n; ctx.prerempli = true; }
+        else X.nb_repas = CONFIG.nutrition.repas_defaut;
+      }
+      if ((!X.allergenes || !X.allergenes.length) && intake.allergenes){
+        const noms = String(intake.allergenes).split("|").filter(Boolean);
+        X.allergenes = CONFIG.nutrition.allergenes.filter(a => noms.indexOf(a.nom) > -1).map(a => a.id);
+        if (X.allergenes.length) ctx.prerempli = true;
+      }
+      /* Le client n'a plus acces au calculateur : si le coach ne l'a pas encore
+         rempli, on calcule la cible directement depuis le questionnaire plutot
+         que de laisser le champ vide. */
+      let base = calc;
+      if ((!base || !base.poids) && num(intake.poids)){
+        base = { sexe: intake.sexe === "Femme" ? "F" : "H", age: num(intake.age) || 30,
+                     taille: num(intake.taille) || 170, poids: num(intake.poids),
+                     pas: num(intake.pas) || CONFIG.calcul.valeurs_depart.pas,
+                     heures: (num(intake.seances) || 3) * 1.25,
+                     objectif: /perte|s[èe]che/i.test(intake.objectif || "") ? "perte"
+                                 : /prise|masse/i.test(intake.objectif || "") ? "prise" : "maintien" };
+        ctx.depuisQuestionnaire = true;
+      }
+      if (!X.cible && base && base.poids){
+        const calc = base;
+        const bmr  = outilCalculateur.metabolismeDeBase(calc);
+        const tdee = bmr * outilCalculateur.facteurActivite(calc).total;
+        const c = CONFIG.calcul;
+        /* v79 : une cible pré-remplie est calculée : jamais sous le plancher (1 200 / 1 500 kcal) ; celle que le coach tape reste la sienne */
+        const kcal = Math.max(calc.objectif === "perte" ? tdee * (1 - c.deficit_perte)
+                         : calc.objectif === "prise" ? tdee * (1 + c.surplus_prise) : tdee, outilCalculateur.plancher(calc.sexe));
+        const m = outilCalculateur.macros(kcal, calc.poids);
+        X.cible = { kcal: Math.round(kcal), prot: Math.round(m.prot), lip: Math.round(m.lip), gluc: Math.round(m.gluc) };
+        ctx.prerempli = true;
+      }
+    };
+    preremplir(B);
 
     /* la référence : la diète publiée, pré-remplie de la même façon (« Publié » tant que rien d'autre ne change) */
     let ref = JSON.parse(JSON.stringify(B));
@@ -1055,7 +1060,10 @@ const outilNutrition = {
       brancherEtat();
     };
     const propositions = {};   // « Changer ce repas » : les 3 propositions affichées, par repas (« jour:repas »)
+    let garderProps = false;
     const redessiner = () => {
+      if (!garderProps) Object.keys(propositions).forEach(k => { delete propositions[k]; });   // relecture : jamais des propositions périmées
+      garderProps = false;
       majRef();
       zone.innerHTML = BrouillonRepas.etatHTML(B, ref, R, BrouillonRepas.entree(etatB.D, uid)) + self.vueEdition(B, ctx, actif);
       brancher();
@@ -1077,7 +1085,7 @@ const outilNutrition = {
         if (!Historique.utile("repas", R)){ flash("nu-pub-msg", trad("Publie d'abord une première diète : la nouvelle semaine part de la version publiée.")); return; }
         if (BrouillonRepas.differe(B, ref) && !(await UI.confirmer(trad("Ton brouillon sera remplacé par une copie de la diète publiée, pour préparer la suivante. Continuer ?"), { ok: trad("Préparer la nouvelle semaine") }))) return;
         if (Store.cible() !== uid){ Store.ficheChangee(); return; }
-        remplacerB(BrouillonRepas.nouveauBloc(R));
+        remplacerB(BrouillonRepas.nouveauBloc(R)); preremplir(B);   // relecture : régime, allergènes, repas, cible du questionnaire gardés
         if (BrouillonRepas.ranger(etatB.D, uid, B, ref, Store.majLu[uid + "|" + self.cle] || null, { nouveau_bloc: { le: aujourdhui() }, depart: BrouillonRepas.depart(R) }) === false) return;
         redessiner();
         flash("nu-pub-msg", trad("Nouvelle semaine prête dans ton brouillon : varie les repas marqués « ≈ identique », puis publie."));
@@ -1180,9 +1188,10 @@ const outilNutrition = {
 
     const brancher = () => {
       ["nu-kcal","nu-regime","nu-note"].forEach(id => {
-        const el = $(id); if (el) el.addEventListener("change", () => { lireReglages(); sauver(); });
+        const el = $(id); if (el) el.addEventListener("change", () => { lireReglages(); sauver(); viderProps(); });
       });
-      $$("#nu-allerg input").forEach(c => c.addEventListener("change", () => { lireReglages(); sauver(); }));
+      $$("#nu-allerg input").forEach(c => c.addEventListener("change", () => { lireReglages(); sauver(); viderProps(); }));
+      $$("#nu-repas").forEach(c => c.addEventListener("change", () => { lireReglages(); sauver(); viderProps(); }));
       $$("[data-jed]", zone).forEach(b => b.addEventListener("click", () => { actif = +b.dataset.jed; redessiner(); }));
 
       const q = $("nu-q");
@@ -1241,17 +1250,28 @@ const outilNutrition = {
 
       /* v97 (4b) : « Changer ce repas » propose 3 recettes du même moment, filtrées par le régime et les allergènes de la
          diète (BrouillonRepas / outilNutrition.propositions) ; bloqué si le questionnaire est illisible (v91) */
+      /* relecture : un réglage changé (régime, allergènes, calories) retire les propositions affichées : elles ne valaient que
+         pour les réglages d'avant */
+      const viderProps = () => { Object.keys(propositions).forEach(k => { delete propositions[k]; }); $$("[data-props]", zone).forEach(z => { z.innerHTML = ""; }); };
       const montrerProps = (cle) => {
         const z = zone.querySelector('[data-props="' + cle + '"]'); if (!z) return;
         const l = propositions[cle] || [];
         z.innerHTML = l.length ? `<div class="props-repas"><p class="note" style="margin:0 0 8px">${esc(trad("Choisis un remplaçant (même moment, compatible avec son régime et ses allergies) :"))}</p>` +
           l.map((c, k) => `<div class="res-l"><span class="nom">${esc(c.nom)}</span><span class="meta">${fmt((c.macros || {}).kcal || 0)} kcal · ${fmt((c.macros || {}).proteines || 0)} g prot.</span><span class="actions-b"><button type="button" data-choisir="${cle}:${k}">${esc(trad("Choisir"))}</button></span></div>`).join("") +
           `<div class="actions" style="margin-top:6px"><button type="button" class="btn ghost petit" data-props-fermer="${cle}">${esc(trad("Garder ce repas"))}</button></div></div>` : "";
-        $$("[data-choisir]", z).forEach(c => c.addEventListener("click", () => {
-          const p = c.dataset.choisir.split(":").map(Number), jour = B.jours[p[0]], nouveau = (propositions[p[0] + ":" + p[1]] || [])[p[2]];
+        $$("[data-choisir]", z).forEach(c => c.addEventListener("click", async () => {
+          const p = c.dataset.choisir.split(":").map(Number), cleR = p[0] + ":" + p[1], jour = B.jours[p[0]], l = propositions[cleR], nouveau = l && l[p[2]];
           if (!jour || !nouveau || !jour.repas[p[1]]) return;
           if (illisible("nu-msg")) return;
-          jour.repas[p[1]] = nouveau; delete propositions[p[0] + ":" + p[1]];
+          /* relecture : le repas visé est toujours celui des propositions, et la recette passe encore le filtre régime + allergènes */
+          const vise = jour.repas[p[1]];
+          const fiche = (await Catalogue.recettes()).find(r => r.id === nouveau.recette_id);
+          if (!zone.isConnected || propositions[cleR] !== l) return;
+          if (String(vise.recette_id || "") !== String(l.pour.recette_id || "") || vise.moment !== l.pour.moment || !fiche || !self.compatible(fiche, B.regime, B.allergenes)){
+            delete propositions[cleR]; montrerProps(cleR); flash("nu-msg", trad("Propositions périmées : touche à nouveau « Changer ce repas »."));
+            return;
+          }
+          jour.repas[p[1]] = nouveau; delete propositions[cleR];
           if (sauver() === false) return;
           redessiner();
         }));
@@ -1266,6 +1286,7 @@ const outilNutrition = {
         if (!b.isConnected) return;
         b.disabled = false;
         if (!l.length){ flash("nu-msg", trad("Pas d'autre recette compatible pour ce repas.")); return; }
+        l.pour = { recette_id: x.recette_id, moment: x.moment };   // le repas visé (revérifié à « Choisir »)
         propositions[b.dataset.autre] = l;
         montrerProps(b.dataset.autre);
       }));
@@ -1279,7 +1300,7 @@ const outilNutrition = {
         const { jour, i } = cible(s.dataset.dupSur), x = jour && jour.repas[i]; if (!x || s.value === "") return;
         const cibles = s.value === "tous" ? B.jours.map((j, k) => k).filter(k => B.jours[k] !== jour) : [+s.value];
         const rang = c => (c.ordre != null ? c.ordre : CONFIG.nutrition.repas.findIndex(sl => sl.id === c.moment));
-        cibles.forEach(k => { const j = B.jours[k]; if (!j) return; if (!j.repas) j.repas = []; j.repas.push(JSON.parse(JSON.stringify(x))); j.repas.sort((a, b) => rang(a) - rang(b)); });
+        cibles.forEach(k => { const j = B.jours[k]; if (!j) return; if (!j.repas) j.repas = []; const copie = JSON.parse(JSON.stringify(x)); delete copie.change_client; j.repas.push(copie); j.repas.sort((a, b) => rang(a) - rang(b)); });
         if (sauver() === false) return;
         redessiner();
         flash("nu-msg", trad("Repas copié sur {n} jour(s).", { n: cibles.length }));
@@ -1365,7 +1386,7 @@ const outilNutrition = {
       B.debut = ""; B.maj = ""; actif = 0;
       if (sauver() === false) return false;   /* fiche changee pendant l'operation : rien n'est ecrit */
       redessiner();
-      UI.alerte(trad("Diète remise en place. Relis-la, puis clique sur « Envoyer » pour la dater."));
+      UI.alerte(trad("Diète remise dans ton brouillon. Relis-la, puis clique sur « Publier les changements »."));
       return true;
     });
   }
