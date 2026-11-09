@@ -1504,3 +1504,66 @@ Object.assign(I18N.en, {
   "Séance G": "Workout G"
 });
 /* v89-traductions-fin */
+/* v94-formation-debut */
+/* v94 (brouillon, à relire par Lucas) : la Formation en anglais — ce qui n'avait pas encore de version anglaise : titres des
+   modules, liens internes, ressources (les PDF eux-mêmes restent en français), les 5 challenges (titres, axes, objectifs, défis),
+   4 des 10 défis, les titres des 2 leçons (leur contenu : LECONS.*.html_en, dans outilFormation.js). Ton : simple, direct, « you ». */
+Object.assign(I18N.en, {
+  "Module 0 — Introduction": "Module 0 — Introduction",
+  "Module 1 — Mindset": "Module 1 — Mindset",
+  "Ton suivi de mensurations": "Your measurement tracking",
+  "Tes repas et ta liste de courses": "Your meals and your shopping list",
+  "Ton programme d'entraînement": "Your training program",
+  "Organise ta diète (PDF)": "Organise ta diète (PDF, in French)",
+  "Plan alimentaire sans restriction": "Meal plan — no restrictions",
+  "Plan alimentaire sans gluten": "Meal plan — gluten-free",
+  "Plan alimentaire vegan": "Meal plan — vegan",
+  "Guide START 1.0": "START 1.0 guide",
+  "Training 12 semaines — Femme": "12-week training — Women",
+  "Training 12 semaines — Homme": "12-week training — Men",
+  "Guide des compléments alimentaires": "Supplements guide",
+  "Les 9 lois d'un mindset incassable": "The 9 laws of an unbreakable mindset",
+  "Méthode 90 jours — discipline de fer": "90-day method — iron discipline",
+  "Guide circuit abdos": "Ab circuit guide",
+  "Semaine 1 — Découverte et mise en place": "Week 1 — Discovery and setup",
+  "Semaine 2 — Intensification": "Week 2 — Stepping it up",
+  "Semaine 3 — Structuration et progression": "Week 3 — Structure and progress",
+  "Semaine 4 — Finale intensification": "Week 4 — Final push",
+  "Semaine 5 — Évaluation et ajustement": "Week 5 — Review and adjust",
+  "Perte de gras": "Fat loss",
+  "Discipline": "Discipline",
+  "Séances de sport": "Workouts",
+  "Introduire un déficit calorique léger.": "Introduce a slight calorie deficit.",
+  "Suivre un plan alimentaire basique : réduire les portions de sucre, augmenter les légumes dans chaque repas.": "Follow a basic meal plan: cut down on sugar and add more vegetables to every meal.",
+  "Augmenter la fréquence d'entraînement.": "Train more often.",
+  "Ajouter une séance légère dans la semaine : marche rapide ou 15 minutes de cardio léger.": "Add one light session to your week: a brisk walk or 15 minutes of light cardio.",
+  "Renforcer la gestion du temps.": "Get better at managing your time.",
+  "Planifier la journée la veille au soir, repas et entraînements compris.": "Plan your day the night before, meals and workouts included.",
+  "Augmenter le volume d'entraînement.": "Increase your training volume.",
+  "Ajouter une deuxième séance : un circuit rapide au poids de corps.": "Add a second session: a quick bodyweight circuit.",
+  "Suivre une routine stricte.": "Stick to a strict routine.",
+  "Réduire une mauvaise habitude : limiter les distractions numériques pendant les repas ou le travail.": "Cut back on one bad habit: limit screen distractions during meals or work.",
+  "Ajouter de la diversité.": "Add some variety.",
+  "Intégrer une séance de renforcement sur un groupe musculaire précis : jambes, dos…": "Add a strength session for one specific muscle group: legs, back…",
+  "Rehausser la résilience mentale.": "Build up your mental resilience.",
+  "Se fixer un mini-objectif quotidien : méditer 10 minutes, lire 10 pages d'un livre de développement personnel.": "Set yourself a small daily goal: meditate for 10 minutes, read 10 pages of a personal growth book.",
+  "Évaluer les progrès.": "Review your progress.",
+  "Faire un bilan complet des habitudes alimentaires et des performances, puis ajuster.": "Take a full look at your eating habits and your performance, then adjust.",
+  "Consolider les habitudes créées.": "Lock in the habits you've built.",
+  "Se donner une récompense en fin de semaine : un repas plaisir équilibré.": "Reward yourself at the end of the week: a balanced treat meal.",
+  "Ajuster et faire évoluer.": "Adjust and keep progressing.",
+  "Revoir le programme pour l'adapter aux progrès : plus de poids ou plus de répétitions.": "Update your program to match your progress: more weight or more reps.",
+  "5 séances de circuit abdos": "5 ab circuit sessions",
+  "Réaliser un circuit abdos 5 fois dans la semaine : 3 à 5 exercices (crunch, gainage, relevés de jambes, obliques), 3 séries de 15 répétitions.": "Do an ab circuit 5 times this week: 3 to 5 exercises (crunches, planks, leg raises, obliques), 3 sets of 15 reps.",
+  "Une portion de légumes à chaque repas": "A serving of vegetables at every meal",
+  "Inclure des légumes, crus ou cuits, dans chacun de tes repas.": "Include vegetables, raw or cooked, in every one of your meals.",
+  "Aucune boisson calorique de la semaine": "No calorie drinks all week",
+  "Éviter jus de fruits, sodas, alcool et café sucré : les calories liquides sont les plus souvent oubliées.": "Skip fruit juice, soda, alcohol and sweetened coffee: liquid calories are the ones people forget the most.",
+  "Écrire ses objectifs chaque matin": "Write down your goals every morning",
+  "Quelques minutes chaque matin pour écrire ou relire tes objectifs, et rester concentré toute la journée.": "A few minutes every morning to write or reread your goals, and stay focused all day.",
+  "Mindset — le guide visuel": "Mindset — the visual guide",
+  "Comprendre l'alimentation": "Understanding nutrition"
+});
+/* « Organise ta diète » (module 2) : le choix de la semaine, « Semaine 1 » à « Semaine 12 » */
+I18N.motifs.push([/^Semaine (\d+)$/, "Week $1"]);
+/* v94-formation-fin */
