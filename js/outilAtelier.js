@@ -126,10 +126,22 @@ const outilAtelier = {
         const pb = aCorriger(); if (pb){ flash("pg-msg", pb); return; }
 
         const id = Normaliser.aplatir(P.nom).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
-        const existe = prets.some(x => x.id === id);
-        if (existe && !(await UI.confirmer("Un programme du même nom existe déjà dans ta base. Le remplacer ?", { ok: "Oui, remplacer" }))) return;
+        /* v91 : la base est relue juste avant d'enregistrer (avant : la liste chargée à l'ouverture de la page, et un programme
+           du même nom ajouté entre-temps — autre onglet, autre appareil — était écrasé sans question). Relecture impossible :
+           rien n'est écrit. Jamais d'écrasement sans « Oui, remplacer ». */
+        if (base.disabled) return;
+        base.disabled = true; flashFixe("pg-msg", "Vérification…");
+        let enBase = null;
+        try {
+          const r = await Auth.appel("/rest/v1/programmes_types?id=eq." + encodeURIComponent(id) + "&select=id");
+          if (Array.isArray(r)) enBase = r.some(x => x && x.id === id);
+        } catch(e){}
+        if (enBase === null){ base.disabled = false; flashFixe("pg-msg", "Pas enregistré : ta base n'a pas pu être relue. Vérifie ta connexion et réessaie."); return; }
+        const existe = enBase || prets.some(x => x.id === id);
+        flashFixe("pg-msg", "");
+        if (existe && !(await UI.confirmer("Un programme du même nom existe déjà dans ta base. Le remplacer ?", { ok: "Oui, remplacer" }))){ base.disabled = false; return; }
 
-        base.disabled = true; flash("pg-msg", "Enregistrement…");
+        flash("pg-msg", "Enregistrement…");
         try {
           await Auth.appel("/rest/v1/programmes_types", {
             method: "POST",
