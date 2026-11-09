@@ -294,7 +294,8 @@ HORS_BANC="verif44 verif45 verif46 verif47 verif49"
 #   Programme, compléments sous Nutrition, calculateur gardé sans diète, chaque ancienne adresse du client, prospect et écran sans
 #   compte identiques à la v99 ; échoue sur la v99).
 # v101 (chantier 6 de la nuit du 10/11 : finitions) : verif101 19 (nouvelle suite, partie 10 : « Annuler » 10 s, message d'échec,
-#   squelette, croix du volet, code du coach jamais chargé par un client, hors ligne client et coach ; 5/11 sur la v100).
+#   squelette, croix du volet, code du coach jamais chargé par un client, hors ligne client et coach ; 5/11 sur la v100) ; rig.js :
+#   chez le coach tous les fichiers, ailleurs tous sauf ceux de MHX_COACH, qui ne doivent pas y être chargés (même nombre de pages).
 attendu() {
   case "$1" in
     flux) echo 19;; verif34) echo 13;; verif35) echo 14;; verif36) echo 13;; verif37) echo 12;; verif38) echo 67;;

@@ -157,6 +157,10 @@ async function main() {
   const verifierFichiers = async (page, nom) => {
     const d = await page.evaluate(() => ({
       v: typeof MHX_FICHIERS === "undefined" ? null : MHX_FICHIERS,
+      /* v101 : les fichiers du coach (MHX_COACH) ne sont chargés que pour lui (ou sur un appareil marqué « mhx_coach_fichiers ») */
+      coach: typeof Auth !== "undefined" && typeof Auth.estCoach === "function" && Auth.estCoach(),
+      fichiersCoach: typeof MHX_COACH !== "undefined" && Array.isArray(MHX_COACH) ? MHX_COACH : [],
+      marque: (() => { try { return localStorage.getItem("mhx_coach_fichiers") === "1"; } catch (e) { return false; } })(),
       version: typeof CONFIG === "undefined" ? null : CONFIG.marque.version,
       /* ce que la page a réellement chargé (l'écran de connexion remplace le corps de la page, balises <script> comprises) */
       liens: performance.getEntriesByType("resource").map(e => new URL(e.name)).filter(u => u.origin === location.origin && /^\/(css|js)\//.test(u.pathname)).map(u => u.pathname.slice(1) + u.search)
@@ -169,8 +173,12 @@ async function main() {
       const charges = d.liens.map(x => x.split("?")[0]);
       const doubles = charges.filter((x, i) => charges.indexOf(x) !== i);
       if (doubles.length) pb.push("chargés deux fois : " + doubles.join(", "));
-      const oublies = SUR_DISQUE.filter(x => !charges.includes(x)), inconnus = charges.filter(x => !SUR_DISQUE.includes(x));
+      /* v101 : chez le coach, tous les fichiers ; ailleurs, tous sauf ceux du coach, qui ne doivent PAS y être chargés */
+      const horsCoach = x => !d.coach && d.fichiersCoach.includes(x);
+      const oublies = SUR_DISQUE.filter(x => !charges.includes(x) && !horsCoach(x)), inconnus = charges.filter(x => !SUR_DISQUE.includes(x));
       if (oublies.length) pb.push("jamais chargés : " + oublies.join(", "));
+      const tropTot = d.marque ? [] : charges.filter(horsCoach);
+      if (tropTot.length) pb.push("fichiers du coach chargés hors de l'espace du coach : " + tropTot.join(", "));
       if (inconnus.length) pb.push("chargés mais absents du dossier : " + inconnus.join(", "));
       if (!(typeof d.version === "string" && d.version.endsWith(" · " + d.v))) pb.push("CONFIG.marque.version (" + d.version + ") ne finit pas par « · " + d.v + " »");
       fichiersVerifies.version = d.v; fichiersVerifies.css = charges.filter(x => x.startsWith("css/")).length; fichiersVerifies.js = charges.filter(x => x.startsWith("js/")).length;
