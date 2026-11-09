@@ -17,7 +17,7 @@
       1-5 du bilan sur téléphone, croix de la bannière d'installation, flèche de retour du volet) ;
    Z. aucune erreur de console ni erreur JS, aucun dialogue natif, aucun appel vers l'extérieur.
    Usage : node verif92.js ../index.html
-           VERIF92_PORT=10093 node verif92.js ../index.html     (autre port, si 10092 est pris)
+           VERIF92_PORT=10095 node verif92.js ../index.html     (autre port, si 10092 est pris)
            VERIF92_BLOCS="A.,D." node verif92.js …               (seulement les blocs dont le nom commence ainsi) */
 const { chromium } = require("playwright"); const fs = require("fs"); const http = require("http"); const path = require("path");
 const F = require("./fixtures");
@@ -236,7 +236,7 @@ const toucherFenetre = (page, libelle) => page.evaluate(l => { const b = Array.f
 const horsLigne = page => page.evaluate(() => { const f = document.getElementById("page-hors-ligne"); return f ? { texte: f.textContent.replace(/\s+/g, " ").trim(), reessayer: !!f.querySelector("[data-reessayer]") } : null; });
 
 (async () => {
-  await new Promise((r, k) => { server.once("error", e => k(new Error(e && e.code === "EADDRINUSE" ? "port " + PORT + " déjà pris (une autre suite tourne ?) : VERIF92_PORT=10093 node verif92.js ../index.html" : String(e)))); server.listen(PORT, r); });
+  await new Promise((r, k) => { server.once("error", e => k(new Error(e && e.code === "EADDRINUSE" ? "port " + PORT + " déjà pris (une autre suite tourne ?) : VERIF92_PORT=10095 node verif92.js ../index.html" : String(e)))); server.listen(PORT, r); });
   const b = await chromium.launch();
 
   /* =================== A. diète du coach : questionnaire illisible =================== */

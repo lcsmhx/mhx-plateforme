@@ -17,25 +17,18 @@ const F = require("./fixtures");
 const HTML = path.resolve(process.argv[2] || path.join(__dirname, "..", "index.html"));
 const PORT = +process.env.VERIF93_PORT || 10093;
 const BLOCS = (process.env.VERIF93_BLOCS || "").split(",").map(x => x.trim()).filter(Boolean);
-const CAPT = process.env.VERIF93_CAPTURES ? path.resolve(process.env.VERIF93_CAPTURES) : "";
-const MOBILE = { width: 390, height: 844 }, ETROIT = { width: 320, height: 700 }, ORDI = { width: 1280, height: 900 };
+const MOBILE = { width: 390, height: 844 }, ORDI = { width: 1280, height: 900 };
 
 /* ---------- les textes légaux SERVIS (CONFIG.textes_legaux de js/config.js) : la suite remplace les 3 valeurs dans le
-   fichier servi (jamais sur le disque) ; test par défaut, « à compléter » ou invalides le temps du bloc M ---------- */
+   fichier servi (jamais sur le disque) ; les valeurs de test ---------- */
 const NOMS_LEGAUX = ["cgu_pdf", "confidentialite_pdf", "cgu_version"];
 /* verif88 (bloc F) : le lien Instagram de la marque servi tel quel (null) ou remplacé dans le config.js servi (jamais sur le disque) */
 let INSTA = null;
 const LEGAUX_TEST = { cgu_pdf: "https://drive.google.com/file/d/TEST-CGU-91/view", confidentialite_pdf: "https://drive.google.com/file/d/TEST-POLITIQUE-91/view", cgu_version: "2026-10-15" };
-const LEGAUX_ABSENTS = { cgu_pdf: "à compléter", confidentialite_pdf: "à compléter", cgu_version: "à compléter" };
-const LEGAUX_INVALIDES = { cgu_pdf: "ftp://exemple.fr/cgu.pdf", confidentialite_pdf: "javascript:alert(91)", cgu_version: "2026-10-15" };
-/* relecture (v64) : la version du texte court (DECOUVERTE.confidentialite.version), lue dans js/config.js du disque exécuté
-   seul (vm) : sante_version doit en être DISTINCTE (putOk) — sinon une version prise au mauvais endroit passerait */
-const VERSION_COURT = (() => { try { const ctx = {}; require("vm").runInNewContext(fs.readFileSync(path.join(path.dirname(HTML), "js", "config.js"), "utf8") + "\n;this.v = DECOUVERTE.confidentialite.version;", ctx, { timeout: 2000 }); return typeof ctx.v === "string" ? ctx.v : null; } catch (e) { return null; } })();
 let LEGAUX = LEGAUX_TEST;
 /* la valeur entre guillemets collée à « nom: » (la première occurrence : il n'y en a qu'une, bloc 0) */
 const motifLegal = (n, g) => new RegExp("\\b(" + n + ": )\"([^\"\\n]*)\"", g ? "g" : "");
 function poserLegaux(texte, valeurs){ let t = String(texte); for (const n of NOMS_LEGAUX) t = t.replace(motifLegal(n), (x, a) => a + JSON.stringify(String(valeurs[n]))); return t; }
-const valeursLegales = (texte, n) => Array.from(String(texte).matchAll(motifLegal(n, true)), m => m[2]);
 
 /* ---------- la page servie : le fichier testé (page, css/ et js/), config.js avec les textes légaux de la suite ---------- */
 const { servirFichier, source } = require("./fichiers");
@@ -65,32 +58,10 @@ async function bloc(nom, fn){
 /* ---------- dates : l'horloge de chaque navigateur part de T0 = midi (heure locale) du jour du lancement ---------- */
 const T0 = (() => { const d = new Date(); d.setHours(12, 0, 0, 0); return d.getTime(); })(), MIN = 60000, H = 3600000, J = 86400000;
 const avant = ms => new Date(T0 - ms).toISOString();
-const ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
 const clone = x => x === undefined ? undefined : JSON.parse(JSON.stringify(x));
-const egal = (x, y) => JSON.stringify(x) === JSON.stringify(y);
 /* texte comparé : espaces (insécables comprises) resserrées */
 const norm = t => String(t == null ? "" : t).replace(/[\u00a0\u202f]/g, " ").replace(/\s+/g, " ").trim();
 
-/* ---------- les textes attendus (brief V2, B, mot pour mot ; échec : DECOUVERTE.emails.refuse, contrat du lot 5) ----------
-   v64 (décision de Lucas du 30/09) : la carte s'affiche aussi sur « Organise ta diète » : les repas prévus y sont ajoutés dans
-   le texte, la phrase d'accord (entre parenthèses, après « calculs ») et le message après « Pas maintenant » ; le reste mot pour
-   mot. En anglais, le nom de l'outil tel qu'il s'affiche (la Speed Formation n'est pas traduite) : “Organise ta diète”.
-   v79 (mission de Lucas du 13/10) : + les aliments notés dans le journal alimentaire, dans les 3 textes (FR et EN), le reste
-   mot pour mot. */
-const SANTE = {
-  fr: { titre: "Ton accord, une seule fois",
-    texte: "Pour calculer tes calories et suivre ta progression, l'app enregistre ton poids, ta taille, tes mensurations, tes calculs, les repas prévus dans « Organise ta diète » et les aliments notés dans ton journal alimentaire. Ce sont des données de santé : elles restent privées, visibles seulement par toi et ton coach, et tu peux les supprimer à tout moment.",
-    phrase: "J'accepte que mes données de santé (poids, taille, mensurations, calculs, repas prévus dans « Organise ta diète », aliments notés dans le journal) servent à mes calculs et à mon suivi.",
-    oui: "J'accepte", non: "Pas maintenant", lien: "En savoir plus : politique de confidentialité",
-    refus: "Pas de souci. Sans ton accord, le calculateur, le suivi, l'organisation de la diète et le journal alimentaire restent en pause. Le reste de ton espace reste ouvert, et tu peux changer d'avis quand tu veux.",
-    echec: "Non enregistré : réessaie dans un instant." },
-  en: { titre: "Your consent, just once",
-    texte: "To calculate your calories and track your progress, the app saves your weight, height, measurements, results, the meals you plan in “Organise ta diète” and the foods you log in your food diary. This is health data: it stays private, visible only to you and your coach, and you can delete it at any time.",
-    phrase: "I agree that my health data (weight, height, measurements, results, meals planned in “Organise ta diète”, foods logged in the diary) is used for my calculations and tracking.",
-    oui: "I agree", non: "Not now", lien: "Learn more: Privacy Policy",
-    refus: "No problem. Without your consent, the calculator, tracking, diet planning and food diary stay paused. The rest of your space stays open, and you can change your mind anytime.",
-    echec: "Not saved: try again in a moment." }
-};
 
 /* ---------- les personnes ---------- */
 const MDP = "MotDePasse-fictif-91";
@@ -102,21 +73,11 @@ const PID = k => "00000000-0000-4000-8000-0000000093" + String(k).padStart(2, "0
 const EMAIL = k => "p" + k + "@exemple.fr";
 /* métadonnées d'un prospect inscrit en v64 (une seule case : conditions, newsletter non cochée ; AUCUN accord santé) */
 const META_V64 = () => ({ prenom: "Léa", nom: "Martin", consentement: avant(3 * J), conditions_version: "2026-10-01", newsletter: null, newsletter_version: "2026-09-30" });
-/* un prospect inscrit de la v52 à la v63 (case « données de santé » cochée à l'inscription) */
-const META_V55 = extra => Object.assign({ prenom: "Léa", nom: "Martin", consentement: avant(3 * J), conditions_version: "2026-09-29", consentement_sante: avant(3 * J), sante_version: "2026-09-28b", newsletter: null, newsletter_version: "2026-09-28c" }, extra || {});
 /* le choix de la newsletter déjà recopié dans la clé emails (Accords.copierEmails n'écrit donc rien au démarrage) */
 const EMAILS0 = { newsletter: false, maj: avant(3 * J), version: "2026-09-30", source: "inscription" };
 const AVEC_CHOIX = k => ({ probleme: "Perdre du gras", obstacle_choix: ["temps", "craquages"], obstacle: "Le manque de temps · Je craque sur la nourriture",
   projection_choix: ["photos"], projection: "M'aimer sur les photos", objectif: "Perte de poids / sèche", objectif_auto: "Perte de poids / sèche",
   court_debut: avant(3 * J), court_le: avant(3 * J - 5 * MIN), email_compte: EMAIL(k), bilan_propose: { choix: "plus_tard", le: avant(3 * J - 4 * MIN) } });
-const FO = extra => Object.assign({ coches: {}, ouvert: "", lecon: "", challenge: "", defis: {}, diete: {}, semaine: 1, jour: 0, priorites: { semaine: [], demain: [] }, notes: [], objectifs: [] }, extra || {});
-const LIGNE = (f, p, g, l) => ({ f, p, g, l });
-const DIETE_REMPLIE = { "1": { "0": [LIGNE(true, "30", "40", "10"), LIGNE(false, "25", "", ""), LIGNE(false, "", "", ""), LIGNE(false, "", "", ""), LIGNE(false, "", "", ""), LIGNE(false, "", "", "")] } };
-const CP = { sexe: "F", age: 30, taille: 165, poids: 60, pas: 6000, heures: 3, objectif: "perte" };
-const ZONES = ["Poitrine", "Épaules", "Bras gauche", "Bras droit", "Taille", "Ventre", "Hanches", "Cuisse gauche", "Cuisse droite", "Mollet"];
-const MENS1 = { dstart: "2026-01-05", pstart: 70.5, zones: ZONES, affichees: [4, 5], compo_affichee: "mg", mesures: [{ sem: 1, date: "2026-01-12", poids: 70.1, vals: { "4": 80 } }] };
-/* des chiffres déjà connus (ancien questionnaire) : un calculateur LANCÉ affiche aussitôt un résultat de départ */
-const CHIFFRES_Q = { age: 30, taille: 165, poids: 60, sexe: "Femme", seances: 3 };
 /* un prospect : opts.meta (métadonnées du compte en base ; META_V64 par défaut), opts.intake (ajouté au questionnaire),
    opts.donnees (en plus de intake et emails) */
 const compte = (k, opts) => { opts = opts || {}; return { id: PID(k), prenom: "Léa", nom: "Martin", cree: avant(4 * J), email: EMAIL(k), meta: opts.meta === undefined ? META_V64() : opts.meta,
@@ -331,8 +292,6 @@ async function contexte(b, who, db, opts){
   const page = surveiller(await c.newPage());
   return { c, page, appareil };
 }
-/* l'appareil passe hors ligne (navigator.onLine faux, événements offline / online) ou revient */
-async function couper(x, oui){ x.appareil.horsLigne = !!oui; await x.c.setOffline(!!oui); }
 function surveiller(page){
   page.on("pageerror", e => { ERREURS.push("JS " + String(e).slice(0, 200)); res.push("  ✗ ERREUR JS " + String(e).slice(0, 300)); });
   /* une ressource refusée (4xx/5xx simulés), une requête coupée ou hors ligne (simulés) : le navigateur le note, ce n'est
@@ -354,10 +313,6 @@ async function pret(page, sel){
 const URL0 = `http://localhost:${PORT}/`;
 const aller = async (page, h, ms) => { await page.evaluate(x => { location.hash = x; }, h); await attendre(page, ms || 1500); };
 const ACCUEIL = "#/decouverte";   // l'accueil du prospect (#/accueil le mène là)
-const ecr = (db, outil, uid) => db.ecritures.filter(e => e.table === "donnees" && e.outil === outil && (!uid || e.user_id === uid));
-/* les écritures en base, hors compteur de visites du prospect (clé activite) */
-const saisies = (db, uid) => db.ecritures.filter(e => !(e.table === "donnees" && e.outil === "activite") && (!uid || e.user_id === uid || e.id === uid));
-const resume = db => JSON.stringify(saisies(db).map(e => (e.table === "donnees" ? e.outil : e.table) + ":" + e.m));
 
 /* ---------- verif93 : la recherche des textes restés en français ----------
    Ce qui vient des DONNÉES (fixtures, catalogue d'aliments, de recettes, d'exercices et de programmes, saisies des comptes) n'est
@@ -418,7 +373,7 @@ async function parcourir(page, routes, data){
   }
   return trouves;
 }
-const dataDe = db => { const d = new Set(DATA); const sauf = DATA; const add = x => { if (typeof x === "string"){ const t = norm(x); if (t.length >= 3) d.add(t); } else if (Array.isArray(x)) x.forEach(add); else if (x && typeof x === "object") Object.values(x).forEach(add); }; add(db.donnees); add(db.profils); add(db.meta); return d; };
+const dataDe = db => { const d = new Set(DATA); const add = x => { if (typeof x === "string"){ const t = norm(x); if (t.length >= 3) d.add(t); } else if (Array.isArray(x)) x.forEach(add); else if (x && typeof x === "object") Object.values(x).forEach(add); }; add(db.donnees); add(db.profils); add(db.meta); return d; };
 const resumeTrouves = T => Object.keys(T).map(k => k + " : " + T[k].map(t => "« " + t.slice(0, 90) + " »").join(" ; ")).join(" || ");
 const nbTrouves = T => Object.values(T).reduce((n, l) => n + l.length, 0);
 const ROUTES_CLIENT = ["#/accueil", "#/programme", "#/journal", "#/nutrition", "#/mensurations", "#/calculateur", "#/suivi", "#/bilan", "#/complements", "#/profil"];

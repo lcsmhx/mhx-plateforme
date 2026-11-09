@@ -254,7 +254,9 @@ const Retour = {
      Réglé avant le premier affichage de son espace : la page se recharge une fois en français (les textes fixes de la page
      ont déjà été traduits au démarrage). */
   if (Auth.estCoach()){
-    if (I18N.langue !== "fr" && I18N.choisir("fr")){ location.reload(); return; }
+    /* un message de retour de lien (premier ou dernier lien d'un changement d'adresse, lien périmé) ne survivrait pas au
+       rechargement : dans ce cas, la langue est réglée en mémoire seulement, le rechargement attend l'ouverture suivante */
+    if (I18N.langue !== "fr"){ if (!emailChange && !premierLien && !lienEmail && I18N.choisir("fr")){ location.reload(); return; } I18N.langue = "fr"; document.documentElement.lang = "fr"; window.__langue = "fr"; }
   }
   /* la langue choisie sur un autre appareil l'emporte (client, prospect) */
   else try {
