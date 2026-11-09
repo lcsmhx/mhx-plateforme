@@ -1080,3 +1080,10 @@ ul.fc-lignes li > b{font-weight:500;text-align:right;min-width:0;overflow-wrap:a
 .ex-derniere{font-size:12px;margin:6px 0 0;color:var(--ink-2);line-height:1.5}
 .ex-identique{font-size:12px;margin:4px 0 0;color:var(--warn);line-height:1.5}
 @media (max-width:640px){ .ex-ligne .outils-ex{grid-column:1/-1;justify-content:flex-end} }
+/* v97 (chantier 2 de la nuit du 10/11) : brouillon de la diète, « Changer ce repas », « Dupliquer sur » */
+.nu-etat.brouillon{border-color:var(--warn)}
+.props-repas{margin-top:12px;padding:12px;border:1px solid var(--accent-line);border-radius:var(--r-sm);background:var(--sunken)}
+.props-repas .res-l button{min-height:var(--h-toucher)}
+.dup-sur{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.dup-sur label{margin:0}.dup-sur select{max-width:260px}
+.repas-tete .actions-b .outil-pg{min-width:var(--h-toucher)}
