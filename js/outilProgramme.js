@@ -1064,7 +1064,8 @@ const outilProgramme = {
       });
 
       const save = $("pg-save");
-      if (save) save.addEventListener("click", () => {
+      if (save) save.addEventListener("click", async () => {
+        if (save.disabled) return;
         /* Un programme vide envoye, c'est un client qui ouvre son onglet
            et n'y trouve rien — sans savoir si c'est un bug ou un oubli. */
         const exos = (P.seances || []).reduce((n, sc) => n + (sc.exercices || []).filter(e => e.nom).length, 0);
@@ -1072,7 +1073,14 @@ const outilProgramme = {
         P.maj = new Date().toLocaleDateString("fr-FR");
         if (!P.debut) P.debut = aujourdhui();     // la semaine 1 commence a l'envoi
         if (Store.ecrire(self.cle, P) === false){ flash("pg-msg", "Programme non envoyé : relis le message affiché."); return; }
-        flash("pg-msg", "Programme envoyé. Ton client le voit dès sa prochaine ouverture.");
+        /* v91 : « Programme envoyé » seulement quand la base a confirmé l'écriture (avant : dès le clic, même hors ligne) */
+        const libelle = save.textContent;
+        save.disabled = true; save.textContent = "Envoi…"; flashFixe("pg-msg", "");
+        const arrive = await Store.envoyerConfirme(self.cle);
+        save.disabled = false; save.textContent = libelle;
+        if (arrive){ flash("pg-msg", "Programme envoyé. Ton client le voit dès sa prochaine ouverture."); return; }
+        const t = (($("etat") || {}).textContent || "").trim();
+        flashFixe("pg-msg", "Pas envoyé : vérifie ta connexion et réessaie." + (t ? " (" + t + ")" : ""));
       });
 
       const bs = $("pg-biblio-save");

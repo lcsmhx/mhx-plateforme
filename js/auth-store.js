@@ -1067,6 +1067,16 @@ const Store = {
     clearTimeout(this.attente[k]); delete this.attente[k]; delete this.valeursEnAttente[k]; delete this.tEnAttente[k];
     return Promise.resolve(this.envoyer(cle, v, uid, t, false)).catch(() => {});
   },
+  /* v91 : envoie tout de suite la valeur en attente d'une clé et dit si la base l'a VRAIMENT reçue (« Programme envoyé » :
+     seulement après la réponse). true : arrivée ; false : refusée, hors ligne (copie gardée sur l'appareil, renvoi
+     automatique) ou perdue — le témoin du haut (#etat) dit lequel. Rien en attente (déjà parti) : arrivée seulement si
+     aucune copie n'attend encore son envoi. */
+  async envoyerConfirme(cle){
+    const uid = this.cible(); if (!uid) return false;
+    const r = await this.envoyerCle(cle);
+    if (r === true || r === false) return r;
+    return !this.aUneCopie(uid, cle) && !this.attente[uid + "|" + cle];
+  },
   toutEnvoyer(vite){
     const envois = [];
     Object.keys(this.attente).forEach(k => {
