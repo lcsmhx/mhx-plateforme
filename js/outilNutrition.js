@@ -1028,12 +1028,23 @@ const outilNutrition = {
       }));
 
       const sv = $("nu-save");
-      if (sv) sv.addEventListener("click", () => {
+      if (sv) sv.addEventListener("click", async () => {
+        if (sv.disabled) return;
         const nbRepas = R.jours.reduce((n, j) => n + (j.repas || []).length, 0);
         if (!nbRepas){ flash("nu-msg2","Il n'y a encore aucun repas à envoyer."); return; }
         R.maj = new Date().toLocaleDateString("fr-FR");
         if (Store.ecrire(self.cle, R) === false){ flash("nu-msg2", "Semaine non envoyée : relis le message affiché."); return; }
-        flash("nu-msg2", `Semaine envoyée — ${R.jours.length} jour${R.jours.length > 1 ? "s" : ""}. Ton client la voit dès sa prochaine ouverture.`);
+        /* v95 (comme « Programme envoyé » en v91) : « Semaine envoyée » seulement quand la base a confirmé l'écriture (avant :
+           dès le clic, même hors ligne) ; sinon un message qui reste, avec le témoin du haut (la copie gardée sur l'appareil
+           repart toute seule) */
+        const nb = R.jours.length, libelle = sv.textContent;
+        sv.disabled = true; sv.textContent = "Envoi…"; flashFixe("nu-msg2", "");
+        const arrive = await Store.envoyerConfirme(self.cle);
+        if (!sv.isConnected) return;   // page quittée pendant l'envoi : aucun message sur la page d'un autre client
+        sv.disabled = false; sv.textContent = libelle;
+        if (arrive){ flash("nu-msg2", `Semaine envoyée — ${nb} jour${nb > 1 ? "s" : ""}. Ton client la voit dès sa prochaine ouverture.`); return; }
+        const t = (($("etat") || {}).textContent || "").trim();
+        flashFixe("nu-msg2", "Pas envoyé : vérifie ta connexion et réessaie." + (t ? " (" + t + ")" : ""));
       });
 
       const bs = $("nu-biblio-save");
