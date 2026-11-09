@@ -524,8 +524,10 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     const { c, page } = await contexte(b, thomas, db);
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 2200);
     const ids = await navIds(page);
-    ok("client : navigation complète inchangée (programme, nutrition, mensurations, suivi, formation, compléments, profil), aucun cadenas, ni Challenge ni Découverte",
-      ["programme", "nutrition", "mensurations", "suivi", "formation", "complements", "profil"].every(x => ids.includes(x)) && !ids.includes("challenge") && !ids.includes("decouverte") && (await page.$$("#nav .nav-cadenas")).length === 0, JSON.stringify(ids));
+    /* v100 (menu du client) : avec une diète, « Mes compléments » vit sous Nutrition (lien de la page) : il quitte le menu */
+    const lienCompl = await (async () => { await page.goto(`http://localhost:${PORT}/#/nutrition`); await attendre(page, 2000); return !!(await page.$('#nu-complements a[href="#/complements"]')); })();
+    ok("client : navigation complète (programme, nutrition, mensurations, suivi, formation, profil ; v100 : compléments sous Nutrition), aucun cadenas, ni Challenge ni Découverte",
+      ["programme", "nutrition", "mensurations", "suivi", "formation", "profil"].every(x => ids.includes(x)) && lienCompl && !ids.includes("challenge") && !ids.includes("decouverte") && (await page.$$("#nav .nav-cadenas")).length === 0, JSON.stringify([ids, lienCompl]));
     await c.close();
   }
   {
@@ -613,7 +615,8 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     const barre = await page.$$eval("#barre-bas a", l => l.map(a => a.dataset.id)).catch(() => []);
     await page.click("#barre-bas [data-plus]").catch(() => {}); await attendre(page, 500);
     const plus = await page.$$eval(".menu-plus a", l => l.map(a => a.dataset.id)).catch(() => []);
-    ok("client mobile : barre du bas et « Plus » inchangés (aucun cadenas, compléments et suivi présents)", barre.length === 4 && plus.includes("complements") && [].concat(barre, plus).includes("suivi") && (await page.$$(".menu-plus .nav-cadenas, #barre-bas .nav-cadenas")).length === 0, JSON.stringify({ barre, plus }));
+    /* v100 : avec une diète, « Mes compléments » est sous Nutrition (barre du bas) et non plus dans « Plus » */
+    ok("client mobile : barre du bas et « Plus » (aucun cadenas ; Nutrition, qui mène aux compléments, et suivi présents)", barre.length === 4 && barre.includes("nutrition") && !plus.includes("complements") && [].concat(barre, plus).includes("suivi") && (await page.$$(".menu-plus .nav-cadenas, #barre-bas .nav-cadenas")).length === 0, JSON.stringify({ barre, plus }));
     await c.close();
   }
 

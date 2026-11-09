@@ -319,10 +319,17 @@ const prospect = db => { db.profils.find(p => p.id === C3).statut = "prospect"; 
       const { page, c } = await contexte(b, null, base());
       await page.goto(URL0 + a); await attendre(page, 2500);
       const r = await releve(page);
-      if (r.texte !== AVANT_SANS[a].texte || JSON.stringify(r.titres) !== JSON.stringify(AVANT_SANS[a].titres)) d2.push(a + " : " + r.texte.slice(0, 80));
+      const sansV = s => String(s).replace(/v\d{4}-\d{2}-\d{2} · \d+/g, "v…");   // le numéro de version du pied de page change à chaque version
+      if (sansV(r.texte) !== sansV(AVANT_SANS[a].texte) || JSON.stringify(r.titres) !== JSON.stringify(AVANT_SANS[a].titres)) d2.push(a + " : " + r.texte.slice(0, 80));
       await c.close(); ouverts.pop();
     }
-    ok("D2 : l'écran sans compte (#/, #/connexion) : exactement le même texte qu'avant", d2.length === 0, JSON.stringify(d2));
+    ok("D2 : l'écran sans compte (#/, #/connexion) : exactement le même texte qu'avant (hors numéro de version)", d2.length === 0, JSON.stringify(d2));
+    /* le coach, sur SA page « Mon programme » : comme avant (pas d'historique ajouté) */
+    const { page: co, c: cc } = await contexte(b, COACH, base());
+    await co.goto(URL0 + "#/programme"); await pret(co); await attendre(co, 1500);
+    const hc = await co.evaluate(() => !!document.getElementById("jr-historique"));
+    ok("D3 : le coach, sur sa propre page « Mon programme » : rien d'ajouté (pas d'historique de séances)", !hc, String(hc));
+    await cc.close(); ouverts.pop();
   });
 
   /* =================== E. la fiche du coach ne change pas =================== */

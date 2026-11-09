@@ -1103,7 +1103,7 @@ ul.fc-lignes li > b{font-weight:500;text-align:right;min-width:0;overflow-wrap:a
 .fiche-wa:empty{display:none}
 a.btn.fiche-wa-l{min-height:var(--h-toucher)}
 .fc-tete .fiche-onglets{margin:12px 0}
-@media (max-width:560px){ .fiche-onglets{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch} .f-onglet{flex:none} }
+@media (max-width:560px){ .f-onglet{padding:0 11px;font-size:13px} }
 /* v101 (chantier 6 de la nuit du 10/11) : la croix des volets (« Tout mon espace ») visible et à 44 × 44 px, sans chevaucher le
    titre (le titre lui laisse sa place) ; même dessin que la croix du journal alimentaire */
 .fermer-volet{min-width:var(--h-toucher);min-height:var(--h-toucher);width:var(--h-toucher);height:var(--h-toucher);display:inline-flex;align-items:center;justify-content:center;

@@ -1360,7 +1360,7 @@ const outilProgramme = {
       /* v100 (chantier 5) : « Mon journal » vit ici : l'historique des séances notées, sous le programme (même code que #/journal) */
       let n = outilJournal.PAS;
       const dessinerHist = () => {
-        const h = $("prog-jr"); if (!h) return;
+        const h = $("prog-jr"); if (!h || Auth.estCoach()) return;   // le client seulement (le coach garde sa page d'avant)
         h.innerHTML = outilJournal.historiqueHTML(J, n, false);
         const plus = $("jr-plus"); if (plus) plus.addEventListener("click", () => { n += outilJournal.PAS; dessinerHist(); });
       };
