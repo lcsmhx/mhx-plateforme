@@ -14,8 +14,7 @@
    J2. client Thomas, français (390 px) : les mêmes textes (étiquettes « Objectif » + espace insécable), 15 axes et 10
        défis, aucun ancien texte, son challenge gardé ;
    J3. prospect, anglais (390 px, ancien choix « clair » ignoré, v80) : J1, J2, J3 en anglais ; les 5 axes remplacés « Goal: » + objectif et défi
-       anglais, les 10 autres entièrement en français (« Objectif : » inchangé, espace simple) ; les 6 défis réécrits en
-       anglais, les 4 autres en français ; aucune espace insécable avant la ponctuation (typoFr ne fait rien en anglais) ;
+       anglais et, v94 (traduction de la Formation), les 10 autres aussi ; les 10 défis en anglais ; aucune espace insécable avant la ponctuation (typoFr ne fait rien en anglais) ;
        d6, d7, c3 gardés ; aucun ancien texte (anglais ni français) ; aucun prix ;
    I1. prospect, français (390 px, sombre) : #fo-depart puis #fo-apercu, au-dessus de « Ton parcours » ; « Commence
        ici » sans durée (affiché en capitales), titre, les 3 actions (liens, rien de fait, tactiles), les 4 tuiles
@@ -424,6 +423,27 @@ const J6_INCHANGES = {
   d8: ["Aucune boisson calorique de la semaine", "Éviter jus de fruits, sodas, alcool et café sucré : les calories liquides sont les plus souvent oubliées."],
   d10: ["Écrire ses objectifs chaque matin", "Quelques minutes chaque matin pour écrire ou relire tes objectifs, et rester concentré toute la journée."]
 };
+/* v94 (traduction de la Formation, demande de Lucas du 09/11) : en anglais, les 10 axes et les 4 défis ci-dessus ont aussi leur
+   anglais, écrit ici mot pour mot : nom de l'axe, objectif, défi ; défi → titre, description */
+const NOMS_AXES_EN = { "Perte de gras": "Fat loss", "Discipline": "Discipline", "Séances de sport": "Workouts" };
+const AXES_INCHANGES_EN = {
+  "c1|Perte de gras": ["Introduce a slight calorie deficit.", "Follow a basic meal plan: cut down on sugar and add more vegetables to every meal."],
+  "c1|Séances de sport": ["Train more often.", "Add one light session to your week: a brisk walk or 15 minutes of light cardio."],
+  "c2|Discipline": ["Get better at managing your time.", "Plan your day the night before, meals and workouts included."],
+  "c2|Séances de sport": ["Increase your training volume.", "Add a second session: a quick bodyweight circuit."],
+  "c3|Discipline": ["Stick to a strict routine.", "Cut back on one bad habit: limit screen distractions during meals or work."],
+  "c3|Séances de sport": ["Add some variety.", "Add a strength session for one specific muscle group: legs, back…"],
+  "c4|Discipline": ["Build up your mental resilience.", "Set yourself a small daily goal: meditate for 10 minutes, read 10 pages of a personal growth book."],
+  "c5|Perte de gras": ["Review your progress.", "Take a full look at your eating habits and your performance, then adjust."],
+  "c5|Discipline": ["Lock in the habits you've built.", "Reward yourself at the end of the week: a balanced treat meal."],
+  "c5|Séances de sport": ["Adjust and keep progressing.", "Update your program to match your progress: more weight or more reps."]
+};
+const J6_INCHANGES_EN = {
+  d3: ["5 ab circuit sessions", "Do an ab circuit 5 times this week: 3 to 5 exercises (crunches, planks, leg raises, obliques), 3 sets of 15 reps."],
+  d4: ["A serving of vegetables at every meal", "Include vegetables, raw or cooked, in every one of your meals."],
+  d8: ["No calorie drinks all week", "Skip fruit juice, soda, alcohol and sweetened coffee: liquid calories are the ones people forget the most."],
+  d10: ["Write down your goals every morning", "A few minutes every morning to write or reread your goals, and stay focused all day."]
+};
 const DEFIS_ORDRE = ["d1", "d2", "d3", "d4", "d5", "d6", "d7", "d8", "d9", "d10"];
 /* typographie française (typoFr) : une espace SIMPLE avant « : ; ? ! » » ou après « « » dans un texte affiché en français */
 const ESPACE_SIMPLE = / [:;?!»]|« /;
@@ -575,6 +595,7 @@ function axesAttendus(S, en){
   return AXES_ORDRE.map(cle => { const [id, nom] = cle.split("|"), j = J5[cle], x = S.axes.find(a => a.cle === cle);
     if (j) return en ? [id, x ? x.nomEn : "?", "Goal:", "Goal: " + j[2], j[3]] : [id, nom, "Objectif :", "Objectif : " + j[0], j[1]];
     const v = AXES_INCHANGES[cle];
+    if (en){ const e = AXES_INCHANGES_EN[cle]; return [id, NOMS_AXES_EN[nom], "Goal:", "Goal: " + e[0], e[1]]; }   // v94
     return [id, nom, "Objectif :", "Objectif : " + v[0], v[1]]; });
 }
 const axesVus = m5 => m5.chal.reduce((a, c) => a.concat(c.axes.map(x => [c.id, x[0], x[1], x[2], x[3]])), []);
@@ -583,7 +604,7 @@ const axesBruts = m5 => m5.chal.reduce((a, c) => a.concat(c.brut), []);
 function defisAttendus(S, en, coches){
   return DEFIS_ORDRE.map(id => { const j = J6[id], k = !!(coches || {})[id];
     if (j) return en ? [id, k, j[2], j[3]] : [id, k, j[0], j[1]];
-    return [id, k].concat(J6_INCHANGES[id]); });
+    return [id, k].concat(en ? J6_INCHANGES_EN[id] : J6_INCHANGES[id]); });   // v94 : d3, d4, d8, d10 traduits aussi
 }
 /* tous les textes de la formation qui passent par typoFr (contrat, « Typographie ») tels qu'affichés, sans normalisation :
    module 5 (étiquettes, lignes objectif et défis des axes, titres et descriptions des défis) + les modules lus par objModule */
@@ -743,12 +764,12 @@ const ISO = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$/;
     ok("anglais : « A simple method to lay the foundations… » (J1), « Realistic goals: what you can aim for… » (J2), « Build the mindset that makes a transformation last. » (J3 : carte et « Goal: ») ; aucune espace insécable avant « : »",
       intro.n === TX.intro_en && o0.contenu[0] === TX.m0_en && o1c.court === TX.m1_en && o1.obj === "Goal: " + TX.m1_en && o1.etiq === "Goal:" && en1.every(t => typeof t === "string" && !INSECABLE.test(t)),
       JSON.stringify([intro.n.slice(0, 50), o0.contenu[0], o1c.court, o1.obj, o1.etiq, en1.filter(t => typeof t !== "string" || INSECABLE.test(t))]));
-    const vus = axesVus(m5), att = axesAttendus(S, true), bruts = axesBruts(m5), etiqAtt = AXES_ORDRE.map(k => J5[k] ? "Goal:" : "Objectif :");
-    ok("anglais, module 5 : les 5 axes remplacés « Goal: » + objectif et défi anglais du brief ; les 10 autres entièrement en français (tels qu'en c800fe0), « Objectif : » inchangé (espace simple) ; aucune espace insécable avant la ponctuation",
-      vus.length === 15 && egal(vus, att) && vus.filter(x => x[2] === "Goal:").length === 5 && egal(bruts.map(x => x[0]), etiqAtt) && bruts.every(x => x.every(t => typeof t === "string" && !INSECABLE.test(t))),
+    const vus = axesVus(m5), att = axesAttendus(S, true), bruts = axesBruts(m5), etiqAtt = AXES_ORDRE.map(() => "Goal:");   // v94 : les 15 axes traduits
+    ok("anglais, module 5 : les 15 axes « Goal: » + objectif et défi anglais (les 5 du brief J5 et, v94, les 10 autres, mot pour mot) ; aucune espace insécable avant la ponctuation",
+      vus.length === 15 && egal(vus, att) && vus.filter(x => x[2] === "Goal:").length === 15 && egal(bruts.map(x => x[0]), etiqAtt) && bruts.every(x => x.every(t => typeof t === "string" && !INSECABLE.test(t))),
       JSON.stringify(vus.filter((x, i) => !egal(x, att[i])).slice(0, 2)) + " " + JSON.stringify(bruts.filter((x, i) => x[0] !== etiqAtt[i] || x.some(t => typeof t !== "string" || INSECABLE.test(t))).slice(0, 2)));
     const attD = defisAttendus(S, true, { d6: true, d7: true });
-    ok("anglais, 10 défis : les 6 réécrits en anglais (« Planned snacks, not random ones »…), d3, d4, d8, d10 en français (tels qu'en c800fe0) ; d6 et d7 cochés, c3 choisi ; aucune espace insécable avant la ponctuation",
+    ok("anglais, 10 défis : les 6 réécrits en anglais (« Planned snacks, not random ones »…) et, v94, d3, d4, d8, d10 en anglais aussi ; d6 et d7 cochés, c3 choisi ; aucune espace insécable avant la ponctuation",
       egal(m5.defis, attD) && m5.chal.filter(c => c.choisi).map(c => c.id).join() === "c3" && m5.defisBrut.length === 10 && m5.defisBrut.every(x => x.every(t => typeof t === "string" && !INSECABLE.test(t))),
       JSON.stringify(m5.defis.filter((x, i) => !egal(x, attD[i])).slice(0, 2)) + " " + JSON.stringify(m5.defisBrut.filter(x => x.some(t => typeof t !== "string" || INSECABLE.test(t))).slice(0, 2)));
     ok("anglais : aucun ancien texte (ni anglais : « lose your first », « guarantee »…, ni français), aucun prix", anciensVus(tout, ANCIENS_EN.concat(ANCIENS)).length === 0 && !PRIX.test(tout), JSON.stringify(anciensVus(tout, ANCIENS_EN.concat(ANCIENS))));
