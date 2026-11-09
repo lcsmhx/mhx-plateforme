@@ -393,8 +393,8 @@ const avecPrefsEn = (db, uid) => { const pr = db.donnees.find(d => d.user_id ===
     const { page } = await contexte(b, COACH, db, { langue: "en", viewport: ORDI });
     await page.goto(URL0 + "#/tableau"); await pret(page, "#tb-vue"); await attendre(page, 800);
     const etat = await page.evaluate(() => ({ lang: document.documentElement.lang, langue: I18N.langue, appareil: localStorage.getItem("mhx_langue"), bouton: (document.getElementById("langue") || {}).textContent }));
-    ok("A1 : coach sur un appareil resté en anglais : son espace s'ouvre en français (lang=\"fr\", choix de l'appareil remis à fr, bouton « 🇺🇸 EN »)",
-      etat.lang === "fr" && etat.langue === "fr" && etat.appareil === "fr" && etat.bouton === "🇺🇸 EN", JSON.stringify(etat));
+    ok("A1 : coach sur un appareil resté en anglais : son espace s'ouvre en français (lang=\"fr\", choix de l'appareil remis à fr, bouton « 🇫🇷 FR » : la langue actuelle, v95)",
+      etat.lang === "fr" && etat.langue === "fr" && etat.appareil === "fr" && etat.bouton === "🇫🇷 FR", JSON.stringify(etat));
     /* les mêmes pages, sur un appareil en français : le coach dont l'appareil était en anglais doit voir exactement les mêmes textes */
     const ROUTES_COACH = ["#/tableau", "#/clients", "#/prospects", "#/atelier", "#/client/" + F.IDS.c1 + "/accueil", "#/client/" + F.IDS.c1 + "/nutrition", "#/client/" + F.IDS.c1 + "/programme", "#/client/" + F.IDS.c1 + "/suivi"];
     const lire = async pg => { const o = {}; for (const r of ROUTES_COACH){ await aller(pg, r, 2200); o[r] = new Set((await visibles(pg)).textes); } return o; };

@@ -261,7 +261,7 @@ function construireNav(){
   const bl = $("langue");
   if (bl){
     bl.textContent = libelleLangue();
-    bl.title = I18N.langue === "en" ? "Passer en français" : "Switch to English";
+    bl.title = ariaLangue(); bl.setAttribute("aria-label", ariaLangue());
     bl.onclick = basculerLangue;
   }
   Theme.majBoutons();

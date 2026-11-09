@@ -197,7 +197,7 @@ function portail(mode){
   document.body.innerHTML = `
   <div class="portail">
     <div class="carte-co">
-      <button type="button" class="co-langue" id="co-langue" data-notr>${I18N.langue === "en" ? "🇫🇷 Français" : "🇺🇸 English"}</button>
+      <button type="button" class="co-langue" id="co-langue" data-notr aria-label="${esc(ariaLangue())}" title="${esc(ariaLangue())}">${I18N.langue === "en" ? "🇺🇸 English" : "🇫🇷 Français"}</button>
       ${CONFIG.marque.logo ? `<img class="logo-img" src="${esc(CONFIG.marque.logo)}" alt="${esc(CONFIG.marque.nom)}">` : ""}
       <div class="logo">${esc(CONFIG.marque.nom)}</div>
       ${CONFIG.marque.programme ? `<div class="sous">${esc(CONFIG.marque.programme)}</div>` : ""}
