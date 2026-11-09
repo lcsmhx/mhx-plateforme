@@ -486,7 +486,8 @@ const PLUSIEURS = "Ces comptes disparaissent de tes listes. Tu les retrouves dan
     ok("E2 : Suivi : retour de la semaine (« Bilan hebdo reçu — à lire », Lire → Préparer le call), poids depuis le début, régularité, questionnaire / programme / diète, le bandeau d'avant (« Fiche » et les outils du client ; son journal alimentaire seulement s'il lui est ouvert), puis toute la fiche d'avant (notes privées comprises)",
       /Retour de la semaine/i.test(f.retour) && /Bilan hebdo reçu — à lire/.test(f.retour) && f.lire === "#/client/" + THOMAS + "/bilan" && /kg/.test(f.poids) && /depuis le début/.test(f.poids) && /Régularité/.test(f.reg)
         && f.etat.length === 3 && /^Questionnaire Rempli/.test(f.etat[0]) && /^Programme Bloc 1/.test(f.etat[1]) && /^Diète envoyée/.test(f.etat[2])
-        && JSON.stringify(f.outils) === '["Fiche","Préparer le call","Son suivi","Son questionnaire","Son programme","Ses repas","Ses calories","Ses courbes","Ses séances"]' && !f.avant.length && f.notes, JSON.stringify(f));
+        /* v99 : le bandeau de l'onglet Suivi donne aussi « Ses compléments » (absent avant) et « Sa formation » */
+        && JSON.stringify(f.outils) === '["Fiche","Préparer le call","Son suivi","Son questionnaire","Son programme","Ses repas","Ses calories","Ses courbes","Ses séances","Ses compléments","Sa formation"]' && !f.avant.length && f.notes, JSON.stringify(f));
     await onglet(page, "compte");
     const c = await page.evaluate(() => { const p = document.getElementById("fc-compte");
       return { vis: !p.hidden, suivi: document.getElementById("fc-suivi").hidden, lignes: Array.from(p.querySelectorAll("#fc-infos li")).map(li => li.querySelector("span").textContent),

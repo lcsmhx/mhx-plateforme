@@ -437,7 +437,7 @@ function bandeauConsultation(tout){
     </div>
     <div class="bandeau-actions">
       ${actions.map(a => `<a href="${esc(lienOutil(a.id))}" class="b-act${a.fort ? " fort" : ""}${courant === a.id ? " ici" : ""}">${esc(a.nom)}</a>`).join("")}
-      ${sortir.replace(' id="sortir-fiche"', ' id="sortir-fiche-suivi"')}
+      ${sortir}
     </div>
   </div>`;
   }
@@ -589,7 +589,7 @@ async function afficher(id, silencieux, sansCompte){
   nettoyage = fin;
   if (avecDonnees){ initSauvegarde(); }
   /* « Revenir … » du bandeau et, v83 (bloc 3), la croix de la fiche (« Fermer la fiche ») : là d'où l'on vient */
-  ["sortir-fiche", "sortir-fiche-suivi", "fc-fermer"].forEach(id => { const b = $(id); if (b) b.addEventListener("click", sortirFiche); });
+  ["sortir-fiche", "fc-fermer"].forEach(id => { const b = $(id); if (b) b.addEventListener("click", sortirFiche); });
   if (Store.idConsulte) TelFiche.remplir(Store.idConsulte);   // v99 : WhatsApp dans l'en-tête de la fiche (lecture seule)
 
   brancherInstallation();
