@@ -13,4 +13,6 @@ const ALIAS_ROUTES = { progression: "mensurations", repas: "nutrition", home: "a
    l'atelier, Ma base et la bibliothèque. Sur téléphone : Tableau · Clients · Prospects · Programmes · Plus. */
 const MENU_COACH = ["tableau", "clients", "prospects", "mes-programmes", "catalogue", "entrainement", "profil"];
 const NOMS_MENU_COACH = { clients: "Clients", entrainement: "Mon entraînement", profil: "Réglages" };
+/* relecture : la page sortie du menu marque son entrée « parente » (là où l'on trouve son bouton) */
+const PARENTS_MENU_COACH = { "suivi-clients": "clients", comptes: "clients", "suivi-commercial": "prospects", newsletter: "prospects", atelier: "mes-programmes", bibliotheque: "mes-programmes" };
 

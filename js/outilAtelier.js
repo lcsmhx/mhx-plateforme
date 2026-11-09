@@ -79,6 +79,7 @@ const outilAtelier = {
 
       const ch = $("at-charger");
       if (ch) ch.addEventListener("change", async () => {
+        const copie = !!self.copie; self.copie = false;   // v98 (relecture) : le drapeau « Dupliquer » ne vaut que pour ce choix
         const m = prets.find(x => x.id === ch.value);
         if (!m) return;
         if (P.seances.length && !(await UI.confirmer("Remplacer ce que tu as commencé par « " + m.nom + " » ?", { ok: "Oui, remplacer" }))) { ch.value = ""; return; }
@@ -87,7 +88,7 @@ const outilAtelier = {
         P.seances_semaine = m.seances_semaine || 3;
         P.seances = JSON.parse(JSON.stringify(m.seances || []));
         /* v98 : « Dupliquer » (Mes programmes) : un autre nom, donc un nouveau programme à l'enregistrement */
-        if (self.copie){ P.nom = m.nom + " " + trad("(copie)"); self.copie = false; }
+        if (copie) P.nom = m.nom + " " + trad("(copie)");
         sauver(); redessiner();
         flash("pg-msg", "« " + P.nom + " » chargé. Modifie-le, puis enregistre.");
       });
