@@ -156,6 +156,15 @@ const Journal = {
   brouillon: {
     PREFIXE: "mhx_brouillon|",
     cle(si){ const u = Auth.utilisateur(); return (u && u.id && !Store.idConsulte) ? this.PREFIXE + u.id + "|" + si : null; },
+    /* v96 (relecture) : la clé de la séance en cours : l'identifiant de la séance (sid) s'il existe, sinon sa place ; un
+       brouillon d'avant la v96 (rangé par la place) est repris tant que la séance est encore à sa place d'origine */
+    k(P, si){ const sc = P && Array.isArray(P.seances) ? P.seances[si] : null; return sc && typeof sc.sid === "string" && sc.sid ? sc.sid : si; },
+    lireDe(P, si){
+      const k = this.k(P, si); if (k === si) return this.lire(si);
+      const b = this.lire(k); if (b) return b;
+      return (P && P.places && P.places[String(si)] === k) ? this.lire(si) : null;
+    },
+    effacerDe(P, si){ const k = this.k(P, si); this.effacer(k); if (k !== si && P && P.places && P.places[String(si)] === k) this.effacer(si); },
     lire(si){
       const k = this.cle(si); if (!k) return null;
       let x = null; try { x = JSON.parse(localStorage.getItem(k) || "null"); } catch(e){ x = null; }
@@ -189,11 +198,20 @@ const Journal = {
     if (typeof x.sid === "string" && x.sid && avecSids) return parSid(x.sid);
     const si = Number.isInteger(x.si) ? x.si : (typeof x.si === "string" && /^\d+$/.test(x.si) ? +x.si : -1);
     if (si < 0) return -1;
+    const telle = si < l.length ? si : -1;   // la place telle quelle (ce que voyait la version qui l'a notée)
     if (avecSids && P.places && typeof P.places === "object" && !Array.isArray(P.places)){
-      const s = P.places[String(si)];
-      return typeof s === "string" ? parSid(s) : -1;
+      const s = P.places[String(si)], parPlace = typeof s === "string" ? parSid(s) : -1;
+      /* relecture du 10/11 : P.places ne décrit que les places d'AVANT la publication qui a posé les identifiants
+         (places_le). Une séance notée après, sans identifiant (téléphone resté sur une ancienne version de l'app), désigne
+         la place telle quelle ; le jour même, le nom de la séance notée départage. */
+      const le = typeof P.places_le === "string" ? P.places_le : "", d = String(x.date || "");
+      if (!le || d < le) return parPlace;
+      if (d > le) return telle;
+      const nom = String(x.nom || "");
+      if (nom && telle > -1 && String((l[telle] || {}).nom || "") === nom && !(parPlace > -1 && String((l[parPlace] || {}).nom || "") === nom)) return telle;
+      return parPlace;
     }
-    return si < l.length ? si : -1;
+    return telle;
   },
   /* v96 : « 4 × 8 à 52,5 kg » (séries notées × répétitions les plus basses, à la charge la plus haute) */
   resumeCourt(e){
@@ -293,7 +311,7 @@ const Journal = {
     const remplir = () => {
       $$("[data-jr-place]", zone).forEach(pl => {
         const si = +pl.dataset.jrPlace, sc = (P.seances || [])[si];
-        pl.innerHTML = sc ? self.htmlSeance(J, sc, si, self.brouillon.lire(si), P) : "";
+        pl.innerHTML = sc ? self.htmlSeance(J, sc, si, self.brouillon.lireDe(P, si), P) : "";
       });
       $$("[data-jr-ouvrir]", zone).forEach(b => b.addEventListener("click", () => {
         b.closest(".jr-zone").querySelector("[data-jr-form]").hidden = false;
@@ -301,14 +319,14 @@ const Journal = {
       }));
       /* v71 (G) : chaque frappe met le brouillon de la seance sur l'appareil ; « Effacer le brouillon » le retire */
       $$("[data-jr-form]", zone).forEach(f => { const boite = f.closest(".jr-zone"), si = +boite.dataset.jr;
-        f.addEventListener("input", () => self.brouillon.ecrire(si, self.brouillon.depuis(boite)));
+        f.addEventListener("input", () => self.brouillon.ecrire(self.brouillon.k(P, si), self.brouillon.depuis(boite)));
       });
-      $$("[data-jr-effacer]", zone).forEach(b => b.addEventListener("click", () => { self.brouillon.effacer(+b.dataset.jrEffacer); remplir(); }));
+      $$("[data-jr-effacer]", zone).forEach(b => b.addEventListener("click", () => { self.brouillon.effacerDe(P, +b.dataset.jrEffacer); remplir(); }));
       /* v71 (G) : « Annuler » avec des chiffres saisis demande confirmation (fenetre de l'app) */
       $$("[data-jr-annuler]", zone).forEach(b => b.addEventListener("click", async () => {
         const boite = b.closest(".jr-zone"), si = +boite.dataset.jr;
         if (self.brouillon.saisi(boite) && !(await UI.confirmer(trad("Abandonner cette séance ? Les chiffres saisis seront effacés."), { ok: trad("Abandonner"), annuler: trad("Continuer"), danger: true }))) return;
-        self.brouillon.effacer(si);
+        self.brouillon.effacerDe(P, si);
         remplir();
       }));
       $$("[data-jr-fin]", zone).forEach(b => b.addEventListener("click", () => {
@@ -336,7 +354,7 @@ const Journal = {
         J.seances.push(ligne);
         if (J.seances.length > self.max) J.seances = J.seances.slice(-self.max);
         if (Store.ecrire(self.cle, J) === false) return;   // refusee (message deja affiche) : le brouillon reste
-        self.brouillon.effacer(si);   // v71 (G) : seulement apres une ecriture acceptee, avant de redessiner
+        self.brouillon.effacerDe(P, si);   // v71 (G) : seulement apres une ecriture acceptee, avant de redessiner
         remplir();
         if (typeof apres === "function") apres();
         flash("jr-ok-" + si, "Séance enregistrée. Bravo !");
@@ -617,6 +635,37 @@ const BrouillonProg = {
     return !!(avant && (avant.exercices || []).some(x => Forme.objet(x) && meme(x)));
   },
 
+  /* relecture du 10/11 : le document contient les brouillons de TOUS les clients. Une page n'écrit jamais l'ensemble tel
+     qu'elle l'a lu à l'ouverture (un brouillon fait depuis sur un autre appareil serait effacé, ou un brouillon publié
+     ailleurs reviendrait) : 700 ms après la saisie, elle relit la base, n'y remplace que l'entrée de SON client, puis
+     écrit (copie gardée sur l'appareil comme toute saisie). Base illisible (hors ligne) : la version de la page part, comme
+     toute saisie hors ligne (Store.reprendre ne l'enverra pas par-dessus une version plus récente). */
+  _minuteurs: {},
+  planifier(D, uid){
+    if (Store.nonLus.has(D)){ Store.lectureRatee(Store.moi() + "|" + this.cle); return false; }
+    try { Store.garder(Store.moi(), this.cle, D); } catch(e){}   // la copie sur l'appareil tout de suite (onglet fermé dans la seconde : rien de perdu)
+    clearTimeout(this._minuteurs[this.cle + uid]);
+    this._minuteurs[this.cle + uid] = setTimeout(() => { delete this._minuteurs[this.cle + uid]; this.fusionner(D, uid); }, 700);
+    return true;
+  },
+  async fusionner(D, uid){
+    const moi = Store.moi(); if (!moi) return false;
+    let base = null;
+    try { const l = await this.ligne(moi, this.cle); base = (l && Forme.objet(l.contenu)) ? l.contenu : this.vide(); } catch(e){ base = null; }
+    if (base && Forme.objet(base.clients)){
+      Object.keys(D.clients).forEach(k => { if (k !== uid) delete D.clients[k]; });
+      Object.keys(base.clients).forEach(k => { if (k !== uid) D.clients[k] = base.clients[k]; });
+    }
+    if (Store.ecrire(this.cle, D, { chezMoi: true }) === false) return false;
+    Store.envoyerCle(this.cle, moi);   // déjà attendu 700 ms : part tout de suite
+    return true;
+  },
+  /* « Publier » et la sortie de page : la saisie qui attend part tout de suite (relue, fusionnée) et on attend la base */
+  async vider(D, uid){
+    if (this._minuteurs[this.cle + uid]){ clearTimeout(this._minuteurs[this.cle + uid]); delete this._minuteurs[this.cle + uid]; await this.fusionner(D, uid); }
+    return await Store.envoyerConfirme(this.cle, { chezMoi: true }).catch(() => false);
+  },
+
   /* range le brouillon de ce client (sur le compte du coach) ; identique au publié : l'entrée est retirée */
   ranger(D, uid, b, P, majPublie, extra){
     if (!Forme.objet(D.clients)) D.clients = {};
@@ -629,12 +678,12 @@ const BrouillonProg = {
       D.clients[uid] = Object.assign({}, avant || { base_maj: majPublie || null, debut_le: maintenant }, extra || {},
         { programme: b, ecrit_le: maintenant, appareil: this.appareil });
     }
-    return Store.ecrire(this.cle, D, { chezMoi: true });
+    return this.planifier(D, uid);
   },
   retirer(D, uid){
     if (!this.entree(D, uid)) return true;
     delete D.clients[uid];
-    return Store.ecrire(this.cle, D, { chezMoi: true });
+    return this.planifier(D, uid);
   },
 
   /* la ligne de la base, relue juste avant de publier (jamais le cache) ; erreur réseau : exception */
@@ -647,7 +696,7 @@ const BrouillonProg = {
   /* Publier : { ok, programme, D } ; { ok:false, annule } (le coach a dit non) ; { ok:false, refus } (base) ; { ok:false } (réseau) */
   async publier(uid, P, b, D, majPublie){
     const moi = Store.moi(); if (!moi || !uid) return { ok: false };
-    await Store.envoyerConfirme(this.cle, { chezMoi: true }).catch(() => false);   // le brouillon tapé à l'instant part d'abord
+    await this.vider(D, uid);   // le brouillon tapé à l'instant part d'abord (relu, fusionné)
     await Store.envoyerConfirme("programme").catch(() => false);   // un objectif du mois tapé à l'instant aussi (relu ensuite)
     let lP, lD;
     try { await Auth.assurer(); [lP, lD] = await Promise.all([this.ligne(uid, "programme"), this.ligne(moi, this.cle)]); }
@@ -682,24 +731,31 @@ const BrouillonProg = {
     const nb = moiE && Forme.objet(moiE.nouveau_bloc);
     if (nb) N.bloc_annonce = { cycle: Math.max(1, parseInt(N.cycle, 10) || 1), nom: String(N.nom || ""), le: aujourdhui() };
     N.publie_le = new Date().toISOString();
+    if (Forme.objet(N.places) && typeof N.places_le !== "string") N.places_le = aujourdhui();   // relecture : depuis quand les identifiants valent
+    /* --- 5 (relecture) : réponse perdue (délai dépassé) alors que la base a écrit : on relit avant de dire « Pas publié » --- */
     try {
       await Auth.appel("/rest/v1/donnees?on_conflict=user_id,outil", {
         method: "POST", headers: { "Prefer": "resolution=merge-duplicates,return=minimal" },
         body: [{ user_id: uid, outil: "programme", contenu: N, maj_le: N.publie_le }]
       });
-    } catch(e){ return { ok: false, refus: !!(e && e.statut >= 400 && e.statut < 500 && [401, 408, 429].indexOf(e.statut) === -1) }; }
+    } catch(e){
+      const refus = !!(e && e.statut >= 400 && e.statut < 500 && [401, 408, 429].indexOf(e.statut) === -1);
+      let arrive = false;
+      if (!refus) try { const l = await this.ligne(uid, "programme"); arrive = !!(l && Forme.objet(l.contenu) && l.contenu.publie_le === N.publie_le); } catch(e2){}
+      if (!arrive) return { ok: false, refus };
+    }
     Store.boite(uid).programme = P;   // la page garde le même objet (mis à jour par l'appelant)
     Store.majLu[uid + "|programme"] = N.publie_le;
     majEtat("enregistre");
     /* 5. le brouillon de CE client quitte le document du coach (relu en base : les brouillons des autres clients écrits
        depuis un autre appareil restent) ; s'il ne part pas, il reste identique au publié : il ne se montre plus */
-    const base = Forme.objet(lD && lD.contenu) ? JSON.parse(JSON.stringify(lD.contenu)) : this.vide();
-    if (!Forme.objet(base.clients)) base.clients = {};
-    Object.keys(D.clients || {}).forEach(k => { if (k !== uid && !base.clients[k]) base.clients[k] = D.clients[k]; });
-    delete base.clients[uid];
-    Store.origines.set(base, moi);
-    Store.ecrire(this.cle, base, { chezMoi: true });
-    return { ok: true, programme: N, D: base };
+    /* (relecture : on ne recopie plus les entrées de la page, peut-être périmées : la base relue juste avant fait foi) */
+    Object.keys(D.clients || {}).forEach(k => { if (k !== uid) delete D.clients[k]; });
+    const autresB = Forme.objet(lD && lD.contenu) && Forme.objet(lD.contenu.clients) ? lD.contenu.clients : {};
+    Object.keys(autresB).forEach(k => { if (k !== uid) D.clients[k] = autresB[k]; });
+    delete D.clients[uid];
+    this.planifier(D, uid);
+    return { ok: true, programme: N, D: D };
   },
 
   /* le bandeau en tête de l'éditeur : publié ou brouillon, et les 3 actions */
@@ -1320,7 +1376,7 @@ const outilProgramme = {
       $$("[data-identique]", zone).forEach(m => { const [si, ei] = m.dataset.identique.split(":").map(Number), sc = etat.B.seances[si], e = sc && (sc.exercices || [])[ei]; m.hidden = !(ref && sc && e && BrouillonProg.identique(ref, sc, e)); });
       return r;
     };
-    const sauverPublie = () => Store.ecrire(self.cle, P);   // les 3 objectifs du mois : dans le programme publié, comme avant
+    const sauverPublie = () => etat.publication ? false : Store.ecrire(self.cle, P);   // les 3 objectifs du mois : dans le programme publié, comme avant
 
     const majEtat = () => {
       const z = $("pg-etat"); if (!z) return;
@@ -1359,11 +1415,11 @@ const outilProgramme = {
 
     /* un programme complet chargé (catalogue, bibliothèque, proposition, historique) remplace les séances DU BROUILLON ;
        sa semaine 1 commencera à la publication (debut vide) ; l'ancien programme entre dans l'historique à la publication */
-    const charger = (seances, nom, note, garderNom) => {
+    const charger = (seances, nom, note, garderNom, garderSids) => {
       const b = etat.B;
       b.debut = ""; b.maj = "";
       b.seances = JSON.parse(JSON.stringify(seances || []));
-      b.seances.forEach(sc => { if (sc && typeof sc === "object") delete sc.sid; });   // de nouvelles séances : de nouveaux identifiants
+      if (!garderSids) b.seances.forEach(sc => { if (sc && typeof sc === "object") delete sc.sid; });   // de nouvelles séances : de nouveaux identifiants
       if (nom && !(garderNom && b.nom)) b.nom = nom;
       if (note && !(garderNom && b.note)) b.note = note;
       b.seances.forEach(sc => (sc.exercices || []).forEach(e => {
@@ -1377,7 +1433,6 @@ const outilProgramme = {
 
     const brancherEtat = () => {
       const pub = $("pg-publier"); if (pub) pub.addEventListener("click", publier);
-      const pub2 = $("pg-publier-bas"); if (pub2) pub2.addEventListener("click", publier);
       const ann = $("pg-annuler-brouillon");
       if (ann) ann.addEventListener("click", async () => {
         if (!(await UI.confirmer(trad("Annuler le brouillon ? Tes changements non publiés seront perdus. Ton client garde la version publiée."), { ok: trad("Annuler le brouillon"), annuler: trad("Garder le brouillon"), danger: true }))) return;
@@ -1412,7 +1467,9 @@ const outilProgramme = {
       const boutons = ["pg-publier", "pg-publier-bas"].map(id => $(id)).filter(Boolean);
       boutons.forEach(x => { x.disabled = true; x.dataset.libelle = x.textContent; x.textContent = trad("Publication…"); });
       msg("");
-      const fin = () => { etat.publication = false; boutons.forEach(x => { if (x.isConnected){ x.disabled = false; x.textContent = x.dataset.libelle; } }); };
+      /* relecture : les objectifs du mois (écrits à part, dans le programme publié) sont bloqués pendant la publication */
+      const objectifs = $$("#prog-obj input, #prog-obj select"); objectifs.forEach(x => { x.disabled = true; });
+      const fin = () => { etat.publication = false; objectifs.forEach(x => { if (x.isConnected) x.disabled = false; }); boutons.forEach(x => { if (x.isConnected){ x.disabled = false; x.textContent = x.dataset.libelle; } }); };
       try {
         const r = await BrouillonProg.publier(uid, P, b, etat.D, majPublie());
         if (!zone.isConnected || Store.cible() !== uid) return;   // page ou fiche quittée : aucun message chez un autre client
@@ -1436,6 +1493,7 @@ const outilProgramme = {
       const b = etat.B;
       self.brancherEditeur(b, zone, sauver, redessiner);
       brancherEtat();
+      const pub2 = $("pg-publier-bas"); if (pub2) pub2.addEventListener("click", publier);   // relecture : une seule fois par dessin
 
       const n = $("pg-nom"), no = $("pg-note"), cy = $("pg-cycle"), du = $("pg-duree");
       if (n)  n.addEventListener("input", () => { b.nom = n.value; sauver(); });
@@ -1526,7 +1584,7 @@ const outilProgramme = {
     Historique.monter("programme", "prog-hist", async (C) => {
       const b = etat.B;
       b.nom = C.nom || b.nom; b.note = C.note || "";
-      if (charger(C.seances || [], "", "", true) === false) return false;
+      if (charger(C.seances || [], "", "", true, true) === false) return false;
       /* les séances remises gardent leur identifiant : les séances notées de l'époque restent reliées */
       UI.alerte(trad("Programme remis dans ton brouillon. Relis-le, puis clique sur « Publier les changements »."));
       return true;
