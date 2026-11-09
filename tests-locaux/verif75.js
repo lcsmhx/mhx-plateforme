@@ -204,7 +204,7 @@ const sansJours = R => { const x = clone(R); delete x.jours; return canon(x); };
     await co.page.goto(URL0); await pret(co.page);
     await ouvrirFiche(co.page, THOMAS);
     const fiche = norm(await co.page.evaluate(() => document.getElementById("vue").textContent));
-    await aller(co.page, "#/nutrition", 2000); await co.page.waitForSelector("#nu-save", { timeout: 10000 });
+    await aller(co.page, "#/nutrition", 2000); await co.page.waitForSelector("#nu-publier", { timeout: 10000 });   // v97 : « Publier les changements »
     await co.page.click(`#nu-vue [data-jed="${IDX}"]`); await attendre(co.page, 600);
     const pastilles = await co.page.evaluate(() => Array.from(document.querySelectorAll("#nu-vue .pastille")).filter(x => x.textContent.trim() === "Changé par ton client").length);
     ok("… fiche du coach : « Repas remplacés ce mois 2 » ; « Ses repas » : « Changé par ton client » sur les 2 repas du jour remplacés", /Repas remplacés ce mois\s*2/.test(fiche) && pastilles === 2,
@@ -294,12 +294,13 @@ const sansJours = R => { const x = clone(R); delete x.jours; return canon(x); };
     const { page } = await contexte(b, db, COACH);
     await page.goto(URL0); await pret(page);
     await ouvrirFiche(page, THOMAS);
-    await aller(page, "#/nutrition", 2000); await page.waitForSelector("#nu-save", { timeout: 10000 });
+    /* v97 : la diète est un brouillon jusqu'à « Publier les changements » : le texte dit toujours la vérité au coach */
+    await aller(page, "#/nutrition", 2000); await page.waitForSelector("#nu-publier", { timeout: 10000 });
     const tn = norm(await page.evaluate(() => document.getElementById("nu-vue").textContent));
-    ok("coach, « Ses repas » de Thomas : « chaque changement est enregistré aussitôt et ton client le voit tout de suite », « Valider et envoyer au client » date la semaine ; le conseil sur les allergies reste ; plus « Rien n'est envoyé automatiquement »",
-      tn.includes("Chaque changement est enregistré aussitôt et ton client le voit tout de suite, avant même que tu valides") && tn.includes("les allergies en premier")
-        && tn.includes("« Valider et envoyer au client » date la semaine") && !tn.includes("Rien n'est envoyé automatiquement"),
-      (tn.match(/.{0,40}(Rien n'est envoyé|Chaque changement).{0,120}/) || [""])[0]);
+    ok("coach, « Ses repas » de Thomas : « ton client ne les voit qu'après « Publier les changements » », « La publication date la semaine » ; le conseil sur les allergies reste ; plus « ton client le voit tout de suite » ni « Rien n'est envoyé automatiquement »",
+      tn.includes("ton client ne les voit qu'après « Publier les changements »") && tn.includes("les allergies en premier")
+        && tn.includes("La publication date la semaine") && !tn.includes("ton client le voit tout de suite") && !tn.includes("Rien n'est envoyé automatiquement"),
+      (tn.match(/.{0,40}(Rien n'est envoyé|Tes changements sont gardés).{0,120}/) || [""])[0]);
     /* v96 : le programme est un brouillon jusqu'à « Publier les changements » : le texte dit toujours la vérité au coach sur ce que
        voit son client (avant : « ton client voit chaque changement tout de suite ») et sur ce que date l'envoi */
     await aller(page, "#/programme", 2000); await page.waitForSelector("#pg-publier", { timeout: 10000 });
