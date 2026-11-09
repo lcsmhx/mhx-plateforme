@@ -441,10 +441,9 @@ function actionsConsultation(){
        l'outil du coach : toujours vide chez un client, le coach croyait qu'il n'avait rien note) */
     { id:"journal",      nom:"Ses séances" },
     /* v79 : son journal alimentaire (lecture seule), seulement s'il lui est ouvert (interrupteur) */
-    { id:"journal-alimentaire", nom:"Son journal alimentaire" },
-    /* v99 : ses compléments et sa formation (absents avant) */
-    { id:"complements",  nom:"Ses compléments" },
-    { id:"formation",    nom:"Sa formation" }
+    { id:"journal-alimentaire", nom:"Son journal alimentaire" }
+    /* v99 : ce bandeau (onglet Suivi de la fiche) reste celui d'avant ; ses compléments et sa formation sont dans les onglets
+       Nutrition et Suivi de l'en-tête */
   ].filter(a => v.some(o => o.id === a.id));
 }
 /* L'en-tête de chaque page de la fiche : « Fiche de … », WhatsApp, les 5 onglets, les pages de l'onglet ouvert, « Revenir … ».
@@ -474,7 +473,7 @@ function bandeauConsultation(tout){
     <span class="fiche-wa" data-fiche-wa>${TelFiche.html(Store.idConsulte)}</span>
     ${ongletsFicheHTML(ici)}
     <div class="bandeau-actions">
-      ${pages.length > 1 ? pages.map(p => { const actif = p[0] === courant || (p[0] === "accueil/compte" && courant === "accueil" && sousRoute === "compte");
+      ${pages.length ? pages.map(p => { const actif = p[0] === courant || (p[0] === "accueil/compte" && courant === "accueil" && sousRoute === "compte");
         return `<a href="${esc(lienPageFiche(p[0]))}" class="b-act${p[2] ? " fort" : ""}${actif ? " ici" : ""}"${actif ? ' aria-current="page"' : ""}>${esc(p[1])}</a>`; }).join("") : ""}
       ${sortir}
     </div>
