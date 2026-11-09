@@ -62,7 +62,7 @@ const BrouillonRepas = Object.assign(Object.create(BrouillonProg), {
     const nbClient = this.changesClient(enBase, moiE && moiE.depart ? moiE.depart : this.depart(Rpub));
     const ailleurs = this.empreinte(enBase) !== this.empreinte(Rpub);
     const autres = Forme.objet(lD && lD.contenu) && Forme.objet(lD.contenu.clients) ? lD.contenu.clients[uid] : null;
-    const autreAppareil = Forme.objet(autres) && Forme.objet(autres.programme) && autres.appareil !== this.appareil && (!moiE || String(autres.ecrit_le || "") > String(moiE.ecrit_le || "")) && this.differe(autres.programme, b);
+    const autreAppareil = this.autreAppareil(autres, moiE, b);   // sans comparer les heures de deux appareils (BrouillonProg)
     /* la fenêtre « Publier » : ce qui va changer chez le client, et ce qui s'est passé entre-temps */
     const lignes = [trad("Publier cette diète ? Ton client la verra à sa prochaine ouverture ; sa liste de courses et ses repas cochés repartiront de zéro.")];
     if (nbClient) lignes.push(trad(nbClient > 1 ? "Attention : ton client a changé {n} repas depuis le début de ton brouillon (« Remplacer ») : ton brouillon remplacera ses choix." : "Attention : ton client a changé {n} repas depuis le début de ton brouillon (« Remplacer ») : ton brouillon remplacera son choix.", { n: nbClient }));

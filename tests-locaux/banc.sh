@@ -283,7 +283,7 @@ HORS_BANC="verif44 verif45 verif46 verif47 verif49"
 #   reste et part au prochain « Publier », au lieu du renvoi automatique) ; verif92 (A3) : la quantité va dans le brouillon ;
 #   verif75 (A, D) : le bouton et le texte de la diète ; même nombre partout.
 # v98 (chantier 3 de la nuit du 10/11 : menu du coach en 7 entrées, « Mes programmes », vues d'avant depuis Clients et Prospects) :
-#   verif98 40 (nouvelle suite, partie 3 : un test par ancienne adresse du coach, 27, relevé sur la v97) ; verif86 (D4, I1, J1) :
+#   verif98 43 (nouvelle suite, partie 3 ; 40 → 43 après la relecture : entrée parente marquée, boutons de Ma base à 44 px, « Dupliquer » annulé : un test par ancienne adresse du coach, 27, relevé sur la v97) ; verif86 (D4, I1, J1) :
 #   la barre du bas du coach a « Programmes », les 4 places de l'écran d'avant sont sur Clients et Prospects (mêmes adresses,
 #   mêmes écrans vérifiés ensuite), même nombre.
 attendu() {
@@ -291,7 +291,7 @@ attendu() {
     flux) echo 19;; verif34) echo 13;; verif35) echo 14;; verif36) echo 13;; verif37) echo 12;; verif38) echo 67;;
     verif-xss) echo 5;; verif39) echo 48;; verif40) echo 64;; verif41) echo 25;; verif42) echo 20;; verif43) echo 27;;
     verif48) echo 42;; verif50) echo 57;; verif51) echo 89;; verif52) echo 137;; verif53) echo 114;;
-    verif54) echo 60;; verif55) echo 172;; verif56) echo 263;; verif57) echo 152;; verif58) echo 138;; verif60) echo 74;; verif61) echo 50;; verif62) echo 50;; verif63) echo 96;; verif64) echo 92;; verif65) echo 70;; verif66) echo 57;; verif67) echo 63;; verif68) echo 76;; verif69) echo 83;; verif70) echo 32;; verif71) echo 84;; verif72) echo 16;; verif73) echo 25;; verif74) echo 33;; verif75) echo 24;; verif76) echo 22;; verif77) echo 26;; verif78) echo 19;; verif79) echo 25;; verif80) echo 70;; verif81) echo 18;; verif82) echo 56;; verif83) echo 54;; verif84) echo 87;; verif85) echo 51;; verif86) echo 57;; verif87) echo 45;; verif88) echo 19;; verif90) echo 25;; verif91) echo 13;; verif89) echo 13;; verif92) echo 24;; verif93) echo 14;; verif94) echo 8;; verif95) echo 12;; verif96) echo 39;; verif97) echo 27;; verif98) echo 40;; rig) echo 90;; *) echo "";;
+    verif54) echo 60;; verif55) echo 172;; verif56) echo 263;; verif57) echo 152;; verif58) echo 138;; verif60) echo 74;; verif61) echo 50;; verif62) echo 50;; verif63) echo 96;; verif64) echo 92;; verif65) echo 70;; verif66) echo 57;; verif67) echo 63;; verif68) echo 76;; verif69) echo 83;; verif70) echo 32;; verif71) echo 84;; verif72) echo 16;; verif73) echo 25;; verif74) echo 33;; verif75) echo 24;; verif76) echo 22;; verif77) echo 26;; verif78) echo 19;; verif79) echo 25;; verif80) echo 70;; verif81) echo 18;; verif82) echo 56;; verif83) echo 54;; verif84) echo 87;; verif85) echo 51;; verif86) echo 57;; verif87) echo 45;; verif88) echo 19;; verif90) echo 25;; verif91) echo 13;; verif89) echo 13;; verif92) echo 24;; verif93) echo 14;; verif94) echo 8;; verif95) echo 12;; verif96) echo 39;; verif97) echo 27;; verif98) echo 43;; rig) echo 90;; *) echo "";;
   esac
 }
 # Partie de chaque suite pour les jobs parallèles de GitHub Actions (10 parties, durées équilibrées, 4 à 5 minutes chacune).

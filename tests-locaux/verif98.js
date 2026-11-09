@@ -258,6 +258,10 @@ const volet = async page => { await page.click("#barre-bas [data-plus]"); await 
     const { page: tel } = await contexte(b, COACH, db, { viewport: MOBILE });
     await tel.goto(URL0 + "#/tableau"); await pret(tel, "#tb-vue");
     const bb = await barre(tel), vl = await volet(tel);
+    /* relecture : une page sortie du menu marque son entrée parente (jamais « Plus » vide) */
+    await tel.goto(URL0 + "#/suivi-clients"); await pret(tel); await attendre(tel, 600);
+    const marque = await tel.evaluate(() => ({ cur: (document.querySelector('#barre-bas a[aria-current="page"]') || {}).textContent || "", plus: document.querySelector("#barre-bas [data-plus]").classList.contains("ici") }));
+    ok("A2b : téléphone, « Vue tableau » (#/suivi-clients) : « Clients » reste marqué, pas « Plus »", /Clients/.test(marque.cur) && !marque.plus, JSON.stringify(marque));
     ok("A2 : téléphone : barre du bas Tableau · Clients · Prospects · Programmes · Plus ; « Plus » : Catalogue, Mon entraînement, Réglages",
       JSON.stringify(bb) === JSON.stringify(["Tableau", "Clients", "Prospects", "Programmes", "Plus"]) && JSON.stringify(vl) === JSON.stringify(["Catalogue", "Mon entraînement", "Réglages"]), JSON.stringify([bb, vl]));
     /* le coach dans la fiche d'un client : la navigation de la fiche ne change pas (les onglets du client) */
@@ -305,7 +309,17 @@ const volet = async page => { await page.click("#barre-bas [data-plus]"); await 
     await page.goto(URL0 + "#/mes-programmes/base"); await pret(page, "[data-mp-prog]");
     await page.click(`[data-mp-modifier="${p0.id}"]`); await pret(page, "#at-vue #at-nom"); await attendre(page, 600);
     const m = await fenetre(page); if (m) await toucherFenetre(page, "Oui, remplacer"); await attendre(page, 900);
+    const h = await page.evaluate(() => Array.from(document.querySelectorAll("[data-mp-prog] button")).map(x => x.getBoundingClientRect().height));
     ok("C4 : « Modifier » reprend le programme sous son nom (après « Remplacer ce que tu as commencé ? » si un brouillon est en cours)", (await page.inputValue("#at-nom")) === p0.nom, await page.inputValue("#at-nom"));
+    await page.goto(URL0 + "#/mes-programmes/base"); await pret(page, "[data-mp-prog]");
+    const hb = await page.evaluate(() => Array.from(document.querySelectorAll("[data-mp-prog] button")).map(x => x.getBoundingClientRect().height));
+    ok("C4b : les boutons « Modifier » et « Dupliquer » de Ma base font 44 px", hb.length > 0 && hb.every(x => x >= 44), JSON.stringify(hb.slice(0, 4)));
+    /* relecture : « Dupliquer » puis « Annuler » sur « Remplacer ce que tu as commencé ? » : le choix suivant n'est pas une copie */
+    await page.click(`[data-mp-dupliquer="${p0.id}"]`); await pret(page, "#at-vue #at-nom"); await attendre(page, 800);
+    if (await fenetre(page)) await toucherFenetre(page, "Annuler"); await attendre(page, 500);
+    await page.selectOption("#at-charger", p0.id); await attendre(page, 500);
+    if (await fenetre(page)) await toucherFenetre(page, "Oui, remplacer"); await attendre(page, 800);
+    ok("C4c : « Dupliquer » annulé, puis le même programme repris : il garde son nom (pas « (copie) »)", (await page.inputValue("#at-nom")) === p0.nom, await page.inputValue("#at-nom"));
     await page.goto(URL0 + "#/mes-programmes/bibliotheque"); await pret(page, "#bib-entrainements .biblio-l");
     ok("C5 : « Ma bibliothèque » montre les entraînements et les journées types", !!(await page.$("#bib-entrainements .biblio-l")) && !!(await page.$("#bib-repas")), "");
     const ecr = db.ecritures.filter(e => e.table === "programmes_types" || e.table === "bibliotheque");

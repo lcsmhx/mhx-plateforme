@@ -1093,3 +1093,4 @@ ul.fc-lignes li > b{font-weight:500;text-align:right;min-width:0;overflow-wrap:a
 .mp-onglets{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
 .mp-onglets .tab{text-decoration:none;display:inline-flex;align-items:center}
 .mp-onglets .tab.on{border-color:var(--accent);color:var(--ink)}
+[data-mp-prog] button{min-height:var(--h-toucher)}
