@@ -176,7 +176,7 @@ const UI = {
         if (ev.shiftKey && document.activeElement === premier){ ev.preventDefault(); dernier.focus(); }
         else if (!ev.shiftKey && document.activeElement === dernier){ ev.preventDefault(); premier.focus(); }
       });
-      setTimeout(() => { if (champ){ champ.focus(); champ.select(); } else if (principal) principal.focus(); else { const x = boite.querySelector("[data-ui-fermer]") || focusables()[0]; if (x) x.focus(); } }, 30);
+      setTimeout(() => { if (champ){ champ.focus(); champ.select(); } else if (principal) principal.focus(); else if (!boite.contains(document.activeElement)){ const x = boite.querySelector("[data-ui-fermer]") || focusables()[0]; if (x) x.focus(); } }, 30);   // le focus déjà posé dans la fenêtre (ex. recherche du journal) reste
     });
   },
 

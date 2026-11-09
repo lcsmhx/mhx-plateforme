@@ -556,18 +556,18 @@ const Regularite = {
       <div class="grid g3">${[0, 1, 2].map(i => `<div><label for="obj-${i}">Objectif ${i + 1}</label><input id="obj-${i}" type="text" maxlength="120" value="${esc((o.liste || [])[i] || "")}" placeholder="${esc(exemples[i])}">
         <select id="obj-st-${i}" style="margin-top:6px">${opt("", "En cours", statuts[i] || "")}${opt("atteint", "Atteint", statuts[i])}${opt("non_atteint", "Non atteint", statuts[i])}</select></div>`).join("")}</div>
     </section>`;
-    const lire = () => {
+    const lire = (immediat) => {
       P.objectifs = Object.assign({}, P.objectifs || {}, {
         mois: (P.objectifs && P.objectifs.mois) || aujourdhui().slice(0, 7),
         liste: [0, 1, 2].map(k => $("obj-" + k).value.trim()),
         statuts: [0, 1, 2].map(k => $("obj-st-" + k).value)
       });
-      sauver();
+      sauver(immediat === true);   // v102 : un statut choisi part tout de suite (pas d'attente de frappe)
     };
     [0, 1, 2].forEach(i => {
       /* un objectif retape = nouveau mois d'objectifs ; un statut change sans toucher au mois */
       $("obj-" + i).addEventListener("input", () => { if (P.objectifs) P.objectifs.mois = aujourdhui().slice(0, 7); lire(); });
-      $("obj-st-" + i).addEventListener("change", lire);
+      $("obj-st-" + i).addEventListener("change", () => lire(true));
     });
   }
 };
@@ -1488,11 +1488,11 @@ const outilProgramme = {
       if (minuteurObj){ clearTimeout(minuteurObj); travailObj = envoyerObjectifs(); }
       if (travailObj) try { await travailObj; } catch(e){}
     };
-    const sauverPublie = () => {
+    const sauverPublie = (immediat) => {
       if (etat.publication) return false;
       copieObj = Store.garder(uid, self.cle, Object.assign({}, P, { objectifs: P.objectifs }), { o: 1 });
       clearTimeout(minuteurObj);
-      minuteurObj = setTimeout(() => { travailObj = envoyerObjectifs(); }, 700);
+      minuteurObj = setTimeout(() => { travailObj = envoyerObjectifs(); }, immediat ? 0 : 700);
       return true;
     };
 
