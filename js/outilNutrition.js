@@ -618,8 +618,13 @@ const outilNutrition = {
     const ecart = (jour && R.cible) ? Math.round(t.kcal - R.cible.kcal) : 0;
     const moy = this.moyenne(R);
 
+    /* v91 : questionnaire illisible (réseau) : ses allergies ne sont pas reprises ici. Bandeau en tête, et la composition
+       automatique (« Générer la semaine », « Refaire … », « Autre proposition ») bloquée tant qu'il n'est pas relu ; la diète
+       existante reste affichée et modifiable à la main. */
+    const bloque = ctx.intakeIllisible ? " disabled" : "";
     let h = `<section class="panel">
       <h2>Composer la semaine</h2>
+      ${ctx.intakeIllisible ? `<div class="flag grave" id="nu-intake-illisible" role="alert" style="margin-bottom:14px"><span><b>Questionnaire illisible : vérifie ses allergies avant de générer.</b> Son questionnaire n'a pas pu être lu (connexion) : ses allergies et ce qu'il a écrit ne sont pas repris ici. « Générer la semaine » et « Refaire » restent bloqués tant qu'il n'est pas relu ; tu peux toujours modifier la diète à la main.</span> <button type="button" class="btn petit" data-reessayer data-lecture-ok>Réessayer</button></div>` : ""}
       <div class="grid g2">
         <div><label for="nu-kcal">Calories visées</label><input id="nu-kcal" type="number" step="10" value="${R.cible ? Math.round(R.cible.kcal) : ""}" placeholder="2400"></div>
         <div><label for="nu-regime">Régime</label><select id="nu-regime">${CONFIG.nutrition.regimes.map(o => `<option value="${esc(o)}"${R.regime === o ? " selected" : ""}>${esc(o)}</option>`).join("")}</select></div>
@@ -635,8 +640,8 @@ const outilNutrition = {
         <div style="grid-column:1/-1"><label for="nu-note">Mot pour ton client</label><textarea id="nu-note" rows="2" placeholder="Consignes, substitutions autorisées…">${esc(R.note || "")}</textarea></div>
       </div>
       <div class="actions" style="margin-top:14px">
-        <button class="btn" id="nu-gen">Générer la semaine</button>
-        ${R.jours.length ? `<button class="btn ghost" id="nu-gen-jour">Refaire seulement ${esc((R.jours[actif]||{}).nom || "ce jour")}</button>` : ""}
+        <button class="btn" id="nu-gen"${bloque}>Générer la semaine</button>
+        ${R.jours.length ? `<button class="btn ghost" id="nu-gen-jour"${bloque}>Refaire seulement ${esc((R.jours[actif]||{}).nom || "ce jour")}</button>` : ""}
         <button class="btn ghost" id="nu-biblio-save">Enregistrer dans ma bibliothèque</button>
         <select id="nu-biblio" style="max-width:240px"><option value="">— charger depuis ma bibliothèque —</option></select>
         <span class="msg" id="nu-msg"></span>
@@ -814,6 +819,8 @@ const outilNutrition = {
     const ctx = { prerempli:false, autres:"" };
     let intake = {}, calc = null, actif = 0;
     try { intake = await Store.lire("intake", {}) || {}; } catch(e){}
+    /* v91 : lecture ratée (Store.nonLus : l'objet rendu est le défaut) : jamais « pas d'allergie » par défaut */
+    ctx.intakeIllisible = Store.nonLus.has(intake);
     try { calc   = await Store.lire("calc", null); } catch(e){}
     ctx.autres = (intake.allergies || "").trim();
 
@@ -941,8 +948,13 @@ const outilNutrition = {
         } catch(e){ return null; }
       };
 
+      /* v91 : questionnaire illisible : aucune composition automatique (boutons désactivés, et garde ici) */
+      const illisible = id => { if (!ctx.intakeIllisible) return false; flash(id, "Questionnaire illisible : vérifie ses allergies avant de générer. Touche « Réessayer »."); return true; };
+      if (ctx.intakeIllisible) $$("[data-autre]", zone).forEach(b => { b.disabled = true; });
+
       const g = $("nu-gen");
       if (g) g.addEventListener("click", async () => {
+        if (illisible("nu-msg")) return;
         lireReglages();
         if (!R.cible || !R.cible.kcal){ flash("nu-msg","Indique d'abord les calories visées."); return; }
         const nb = +($("nu-nb") ? $("nu-nb").value : 7) || 7;
@@ -961,6 +973,7 @@ const outilNutrition = {
 
       const gj = $("nu-gen-jour");
       if (gj) gj.addEventListener("click", async () => {
+        if (illisible("nu-msg")) return;
         lireReglages();
         if (!R.cible || !R.cible.kcal){ flash("nu-msg","Indique d'abord les calories visées."); return; }
         gj.disabled = true; gj.textContent = "Composition…";
@@ -979,6 +992,7 @@ const outilNutrition = {
       const cible = (cle) => { const [d, i] = cle.split(":").map(Number); return { jour: R.jours[d], i: i }; };
 
       $$("[data-autre]", zone).forEach(b => b.addEventListener("click", async () => {
+        if (illisible("nu-msg")) return;
         const { jour, i } = cible(b.dataset.autre); const x = jour.repas[i];
         const vus = []; R.jours.forEach(j => (j.repas || []).forEach(c => { if (c.recette_id) vus.push(c.recette_id); }));
         const remplacants = await self.composer(R.cible || { kcal: x.macros.kcal * 4, prot:0 }, R.regime, R.allergenes, vus, R.nb_repas);   // sa structure de journee, comme « Remplacer » cote client
