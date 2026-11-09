@@ -290,6 +290,16 @@ const ouvrirCoach = async (b, db, chemin, sel, opts) => { const { page, c } = aw
     await p3.click("#pg-publier"); await attendreQue(() => p3.evaluate(() => (document.getElementById("pg-pub-msg") || {}).textContent.trim() !== ""), 8000);
     const m3 = await texte(p3, "#pg-pub-msg");
     ok("B3 : un objectif qui attend son envoi : « Publier » ne passe pas par-dessus (« … attend son envoi : réessaie dans un instant. »)", /attend son envoi/.test(m3 || ""), m3);
+    /* relecture : un objectif tapé, puis « Publier » dans la seconde : la nouvelle version reste en ligne, avec l'objectif */
+    const db4 = base();
+    const { page: p4 } = await ouvrirCoach(b, db4);
+    await p4.fill('[data-f="series"][data-s="0"][data-e="0"]', "5"); await attendre(p4, 1300);
+    await p4.fill("#obj-0", "Boire 2 L");
+    await p4.click("#pg-publier");
+    await attendreQue(() => p4.evaluate(() => /^Publié/.test((document.getElementById("pg-pub-msg") || {}).textContent || "")), 8000); await attendre(p4, 2500);
+    const fin4 = ligne(db4, C1, "programme").contenu;
+    ok("B4 : un objectif tapé puis « Publier » dans la seconde : la version publiée reste en ligne (5 séries) et garde l'objectif",
+      fin4.seances[0].exercices[0].series === "5" && fin4.objectifs && fin4.objectifs.liste[0] === "Boire 2 L", JSON.stringify([fin4.seances[0].exercices[0].series, fin4.objectifs && fin4.objectifs.liste]));
   });
 
   /* =================== C. « Séance terminée » relit le journal =================== */
@@ -306,6 +316,17 @@ const ouvrirCoach = async (b, db, chemin, sel, opts) => { const { page, c } = aw
     const J = ligne(db, C1, "journal").contenu;
     ok("C1 : une séance notée ailleurs depuis l'ouverture de la page n'est pas effacée par « Séance terminée » (les deux restent)",
       J.seances.length === 2 && J.seances.some(x => x.nom === "Séance B — Bas du corps") && J.seances.some(x => x.si === 0), JSON.stringify(J.seances.map(x => x.si)));
+    /* relecture : sans réseau (lectures et écritures coupées), « Séance terminée » enregistre sur l'appareil, comme avant */
+    const db2 = base({ donnees: [[C1, "journal", { seances: [] }]] });
+    const { page: p2, c: c2 } = await contexte(b, THOMAS, db2);
+    await p2.goto(URL0 + "#/programme"); await pret(p2, "#prog-nb");
+    await c2.route(/\/rest\/v1\/donnees/, r => r.abort());
+    await p2.click('[data-jr="0"] [data-jr-ouvrir]');
+    await p2.fill('[data-jr="0"] [data-jr-ex="0"] [data-r="0"]', "9");
+    await p2.click('[data-jr-fin="0"]'); await attendre(p2, 2000);
+    const hors = await p2.evaluate(() => { const k = Object.keys(localStorage).find(x => x.startsWith("mhx_attente|") && x.endsWith("|journal")); const v = k ? JSON.parse(localStorage.getItem(k)).v : null; return { copie: !!v && v.seances.length === 1, msg: (document.querySelector("[id^=jr-ok-]") || {}).textContent || "" }; });
+    await c2.unroute(/\/rest\/v1\/donnees/);
+    ok("C2 : sans réseau, « Séance terminée » garde la séance sur l'appareil (« Séance enregistrée »), elle repartira seule", hors.copie && /Séance enregistrée/.test(hors.msg), JSON.stringify(hors));
   });
 
   /* =================== D. publication : éditeur inerte, page quittée, catalogue illisible =================== */

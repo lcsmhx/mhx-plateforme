@@ -350,8 +350,13 @@ const Journal = {
            appareil depuis l'ouverture de la page n'est jamais effacée), et l'écriture se fait même si la page a changé entre-temps ;
            relecture impossible : comme avant (copie gardée sur l'appareil) */
         b.disabled = true;
-        try { const frais = await Store.lire(self.cle, self.vide()); if (!Store.nonLus.has(frais) && Array.isArray(frais.seances)) J.seances = frais.seances; }
-        catch(e){}
+        try {
+          const moi = Store.cible();
+          const r = await Auth.appel("/rest/v1/donnees?user_id=eq." + moi + "&outil=eq." + self.cle + "&select=contenu,maj_le");
+          const copie = Store.copieAServir(moi, self.cle, r && r[0]);
+          const frais = Forme.cle(self.cle, copie ? copie.v : (r && r[0] && r[0].contenu));
+          if (frais && Array.isArray(frais.seances)) J.seances = frais.seances;
+        } catch(e){}   // hors ligne : la séance s'enregistre sur le journal de la page (copie gardée), comme avant
         finally { b.disabled = false; }
         const date = aujourdhui();
         /* v96 : la même séance notée deux fois le même jour remplace la première (reconnue par Journal.place) ; une séance
@@ -853,6 +858,14 @@ const BrouillonProg = {
 
 /* v102 : les copies gardées sur l'appareil de ces clés sont fusionnées entrée par entrée avant d'être rejouées ou servies */
 Store.fusions.brouillons_programme = (base, copie) => BrouillonProg.fusionnerEntrees(base, copie);
+/* v102 (relecture) : une copie du programme (objectifs du mois tapés hors ligne, ou d'une ancienne version de l'app) n'est jamais
+   rejouée par-dessus une autre version : si la base a le même programme, on y pose ses objectifs ; sinon, la base reste */
+Store.fusions.programme = (base, copie) => {
+  const b = Forme.objet(base) ? base : null, c = Forme.objet(copie) ? copie : null;
+  if (!c) return b;
+  if (!b) return c;
+  return BrouillonProg.empreinte(b) === BrouillonProg.empreinte(c) ? Object.assign({}, b, c.objectifs ? { objectifs: c.objectifs } : {}) : b;
+};
 Store.fusionEnAttente = cle => BrouillonProg.enAttente(cle);
 
 const outilProgramme = {
@@ -1446,26 +1459,40 @@ const outilProgramme = {
       $$("[data-identique]", zone).forEach(m => { const [si, ei] = m.dataset.identique.split(":").map(Number), sc = etat.B.seances[si], e = sc && (sc.exercices || [])[ei]; m.hidden = !(ref && sc && e && BrouillonProg.identique(ref, sc, e)); });
       return r;
     };
-    /* les 3 objectifs du mois : dans le programme publié, comme avant ; v102 : 700 ms après la frappe, le programme est relu et
-       les objectifs y sont posés seulement s'il est toujours celui de cette page (sinon : publié ailleurs, on le dit, rien n'est
-       écrit) ; relecture impossible (hors ligne) : comme avant (copie gardée sur l'appareil) */
-    let minuteurObj = null;
+    /* les 3 objectifs du mois : dans le programme publié, comme avant. v102 (relecture) :
+       - à chaque frappe, une copie « programme publié + objectifs » est gardée sur l'appareil, pour CE client (identifiant figé) ;
+       - 700 ms après, le programme est relu : les objectifs sont envoyés seulement s'il est toujours celui de cette page ; sinon
+         (publié ailleurs) rien n'est écrit, la copie est retirée et on le dit ;
+       - relecture impossible (hors ligne) : la copie reste et repartira seule, réunie à la base (Store.fusions.programme : jamais
+         par-dessus une autre version) ;
+       - « Publier » attend d'abord ce travail (jamais d'objectifs envoyés par-dessus une publication). */
+    let minuteurObj = null, travailObj = null, copieObj = null;
+    const envoyerObjectifs = async () => {
+      minuteurObj = null;
+      const t0 = copieObj; if (!t0) return;
+      let l = null;
+      try { l = await BrouillonProg.ligne(uid, self.cle); } catch(e){ Store.planifierReprise(); return; }   // la copie reste
+      const enBase = Forme.cle(self.cle, l && l.contenu) || {};
+      if (BrouillonProg.empreinte(enBase) !== BrouillonProg.empreinte(P)){
+        Store.lacher(uid, self.cle, t0);
+        if (copieObj === t0) copieObj = null;
+        UI.toast(trad("Le programme de ce client a été publié ailleurs : recharge la page avant de changer ses objectifs."), "attention", 9000);
+        return;
+      }
+      const N = Object.assign({}, enBase, { objectifs: P.objectifs });
+      Store.boite(uid)[self.cle] = P;
+      await Store.envoyer(self.cle, N, uid, t0);   // identifiant figé : part chez ce client même si la fiche a changé
+      if (copieObj === t0) copieObj = null;
+    };
+    const viderObjectifs = async () => {
+      if (minuteurObj){ clearTimeout(minuteurObj); travailObj = envoyerObjectifs(); }
+      if (travailObj) try { await travailObj; } catch(e){}
+    };
     const sauverPublie = () => {
-      if (etat.publication || Store.cible() !== uid) return false;
+      if (etat.publication) return false;
+      copieObj = Store.garder(uid, self.cle, Object.assign({}, P, { objectifs: P.objectifs }), { o: 1 });
       clearTimeout(minuteurObj);
-      minuteurObj = setTimeout(async () => {
-        if (Store.cible() !== uid) return;
-        let l = null;
-        try { l = await BrouillonProg.ligne(uid, self.cle); } catch(e){ Store.ecrire(self.cle, P); return; }
-        if (Store.cible() !== uid) return;
-        const enBase = Forme.cle(self.cle, l && l.contenu) || {};
-        if (BrouillonProg.empreinte(enBase) !== BrouillonProg.empreinte(P)){
-          UI.toast(trad("Le programme de ce client a été publié ailleurs : recharge la page avant de changer ses objectifs."), "attention", 9000);
-          return;
-        }
-        const N = Object.assign({}, enBase, { objectifs: P.objectifs });
-        Store.ecrire(self.cle, N);
-      }, 700);
+      minuteurObj = setTimeout(() => { travailObj = envoyerObjectifs(); }, 700);
       return true;
     };
 
@@ -1551,6 +1578,7 @@ const outilProgramme = {
        nouveau d'un seul coup ; en cas d'échec rien n'a changé chez le client et le brouillon reste */
     const publier = async () => {
       if (etat.publication) return;
+      await viderObjectifs();   // v102 (relecture) : un objectif tapé juste avant part d'abord (ou est écarté), jamais après
       const msg = t => flashFixe("pg-pub-msg", t);
       const b = etat.B;
       const exos = (b.seances || []).reduce((n, sc) => n + (sc.exercices || []).filter(e => e.nom).length, 0);

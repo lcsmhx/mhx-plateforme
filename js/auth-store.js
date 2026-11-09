@@ -902,6 +902,12 @@ const Store = {
      clé attend encore sa propre fusion (rien n'est rejoué pendant ce temps) */
   fusions: {},
   fusionEnAttente: null,
+  /* v102 : une copie passe par sa fusion seulement si la clé en a une ; pour « programme », seulement la copie des objectifs
+     (marque o) : une copie entière d'une ancienne version de l'app garde la règle d'avant (la plus récente gagne) */
+  aFusionner(cle, e){
+    if (!Object.prototype.hasOwnProperty.call(this.fusions, cle)) return false;
+    return cle !== "programme" || !!(e && e.o === 1);
+  },
   cible(){ return this.idConsulte || (Auth.utilisateur() && Auth.utilisateur().id); },
   lectureSeule(){ return !!this.idConsulte; },
   boite(uid){ const k = uid || "_"; return this.boites[k] || (this.boites[k] = {}); },
@@ -949,7 +955,7 @@ const Store = {
     const u = Auth.utilisateur(), e = this.attenteLire()[uid + "|" + cle];
     if (!u || !u.id || !e || e.a !== u.id || typeof e.t !== "string" || !Forme.objet(e.v)) return null;
     if (Sante.bloque(cle, e.v)) return null;
-    if (Object.prototype.hasOwnProperty.call(this.fusions, cle)) return Object.assign({}, e, { v: this.fusions[cle](ligne && ligne.contenu, e.v) });   // v102
+    if (this.aFusionner(cle, e)) return Object.assign({}, e, { v: this.fusions[cle](ligne && ligne.contenu, e.v) });   // v102
     const ts = new Date(e.t).getTime(), m = ligne && ligne.maj_le;
     if (isNaN(ts)) return null;
     if (m && !(new Date(m).getTime() < ts)) return null;   // la base a aussi recent (copie deja arrivee) ou plus recent
@@ -1033,10 +1039,11 @@ const Store = {
     } catch(e){}
     return out;
   },
-  garder(uid, cle, valeur){
+  /* v102 : « marque » (facultatif) s'ajoute à l'entrée (jamais au contenu) : { o: 1 } = copie des seuls objectifs du mois */
+  garder(uid, cle, valeur, marque){
     const u = Auth.utilisateur(), t = new Date().toISOString();
     if (!u || !u.id) return t;
-    try { Auth.magasin().setItem(this.PREFIXE_ATTENTE + uid + "|" + cle, JSON.stringify({ a: u.id, t: t, v: valeur })); } catch(e){}   // appareil plein ou stockage interdit : comme avant la v48
+    try { Auth.magasin().setItem(this.PREFIXE_ATTENTE + uid + "|" + cle, JSON.stringify(Object.assign({}, marque || {}, { a: u.id, t: t, v: valeur }))); } catch(e){}   // appareil plein ou stockage interdit : comme avant la v48
     return t;
   },
   aUneCopie(uid, cle){ try { return !!Auth.magasin().getItem(this.PREFIXE_ATTENTE + uid + "|" + cle); } catch(e){ return false; } },
@@ -1143,14 +1150,17 @@ const Store = {
         if (Sante.bloque(cle, e.v)) continue;   // v64 (B) : attend l'accord sante (ni lecture ni envoi ; pas de nouvelle reprise pour elle)
         /* v102 : brouillons (un document pour tous les clients) : jamais rejoués tels quels ; la copie est réunie à la base relue,
            entrée par entrée (la plus récente de chaque client gagne), puis envoyée ; rien pendant une saisie qui attend sa fusion */
-        if (Object.prototype.hasOwnProperty.call(this.fusions, cle)){
-          if (uid !== u.id){ continue; }
+        if (this.aFusionner(cle, e)){
+          if (cle !== "programme" && uid !== u.id){ continue; }
           if (typeof this.fusionEnAttente === "function" && this.fusionEnAttente(cle)){ reste = true; continue; }
           try {
             const r = await Auth.appel("/rest/v1/donnees?user_id=eq." + uid + "&outil=eq." + encodeURIComponent(cle) + "&select=contenu");
             const cur = this.attenteLire()[k];
             if (!cur || cur.t !== e.t || this.attente[k]){ if (cur && cur.t !== e.t) reste = true; continue; }
-            await this.envoyer(cle, this.fusions[cle](r && r[0] && r[0].contenu, e.v), uid, e.t, false, true);
+            const v = this.fusions[cle](r && r[0] && r[0].contenu, e.v);
+            if (r && r[0] && JSON.stringify(v) === JSON.stringify(r[0].contenu)){ this.lacher(uid, cle, e.t); continue; }   // rien de neuf
+            if (!v){ this.lacher(uid, cle, e.t); continue; }
+            await this.envoyer(cle, v, uid, e.t, false, true);
             if (this.attenteLire()[k]) reste = true;
           } catch(err){ reste = true; }
           continue;
