@@ -42,6 +42,9 @@ async function bloc(nom, fn){
 
 /* ---------- dates ---------- */
 const T0 = (() => { const d = new Date(); d.setHours(12, 0, 0, 0); return d.getTime(); })(), H = 3600000, J = 86400000;
+/* le lundi de cette semaine à midi : le relevé de « #/suivi » a été fait un lundi (formulaire du dimanche affiché, « en retard ») ;
+   sans cela le test D échouerait du mardi au samedi */
+const LUNDI0 = (() => { const d = new Date(T0); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return d.getTime(); })();
 const avant = ms => new Date(T0 - ms).toISOString();
 const clone = x => x === undefined ? undefined : JSON.parse(JSON.stringify(x));
 const norm = t => String(t == null ? "" : t).replace(/[  ]/g, " ").replace(/\s+/g, " ").trim();
@@ -198,7 +201,7 @@ async function contexte(b, who, db, opts){
       if (langue) localStorage.setItem("mhx_langue", langue);
     }
   }, { s: who ? who.session : null, langue: opts.langue || "" });
-  await c.clock.install({ time: T0 });
+  await c.clock.install({ time: opts.time || T0 });
   const page = surveiller(await c.newPage());
   return { c, page };
 }
@@ -330,7 +333,7 @@ const volet = async page => { await page.click("#barre-bas [data-plus]"); await 
   await bloc("D. anciennes adresses", async () => {
     for (const a of Object.keys(AVANT)) {
       const db = base();
-      const { page, c } = await contexte(b, COACH, db);
+      const { page, c } = await contexte(b, COACH, db, a === "#/suivi" ? { time: LUNDI0 } : {});
       await page.goto(URL0 + a); await pret(page); await attendre(page, 1800);
       const m = await marques(page), [co, h, t, ids] = AVANT[a];
       ok("D : " + a + " ouvre la même page qu'avant (" + co + " : « " + (t[0] || "") + " »)", m.courant === co && m.hash === h && JSON.stringify(m.titres) === JSON.stringify(t) && JSON.stringify(m.ids) === JSON.stringify(ids), JSON.stringify(m));
