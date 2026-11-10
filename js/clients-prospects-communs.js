@@ -59,8 +59,10 @@ const Clients = {
        legere en meme temps), compte comme une saisie ; lecture ratee : rien (la date des autres cles reste) */
     const [profils, donnees, journaux] = await Promise.all([
       this.pages("/rest/v1/profils?select=*&order=cree_le.desc,id.asc", l => String(l && l.id)),
-      this.pages("/rest/v1/donnees?select=user_id,outil,contenu,maj_le&outil=not.in.(hist_programme,hist_repas,notes_coach,journal_alimentaire)&order=user_id.asc,outil.asc", l => String(l && l.user_id) + "|" + String(l && l.outil)),
-      this.pages("/rest/v1/donnees?select=user_id,outil,maj_le&outil=eq.journal_alimentaire&order=user_id.asc", l => String(l && l.user_id)).catch(() => [])
+      /* v104 (partie 4) : ni les brouillons du coach (programme et repas : une entrée par client) ni son atelier ne sont lus ici
+         (aucune page qui appelle Clients.charger ne s'en sert) ; seule leur date est lue, avec celle du journal alimentaire */
+      this.pages("/rest/v1/donnees?select=user_id,outil,contenu,maj_le&outil=not.in.(hist_programme,hist_repas,notes_coach,journal_alimentaire,brouillons_programme,brouillons_repas,atelier)&order=user_id.asc,outil.asc", l => String(l && l.user_id) + "|" + String(l && l.outil)),
+      this.pages("/rest/v1/donnees?select=user_id,outil,maj_le&outil=in.(journal_alimentaire,brouillons_programme,brouillons_repas,atelier)&order=user_id.asc,outil.asc", l => String(l && l.user_id) + "|" + String(l && l.outil)).catch(() => [])
     ]);
     const parClient = {}, contenus = {};
     /* « Activite » = ce que le CLIENT a saisi. Ce que le coach ecrit dans
@@ -81,7 +83,7 @@ const Clients = {
       (contenus[d.user_id] = contenus[d.user_id] || Object.create(null))[d.outil] = c;
     });
     (journaux || []).forEach(d => {
-      if (!d || d.outil !== "journal_alimentaire" || typeof d.user_id !== "string" || typeof d.maj_le !== "string") return;
+      if (!d || ["journal_alimentaire", "brouillons_programme", "brouillons_repas", "atelier"].indexOf(d.outil) === -1 || typeof d.user_id !== "string" || typeof d.maj_le !== "string") return;
       const quand = this.dateSaisie(d.outil, d.maj_le, null);
       if (quand && (!parClient[d.user_id] || quand > parClient[d.user_id])) parClient[d.user_id] = quand;
     });

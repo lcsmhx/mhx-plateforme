@@ -67,8 +67,7 @@ const outilJournal = {
   async init(){
     const self = this, consultation = !!Store.idConsulte;
     /* le programme ne sert qu'au client (« Noter ma séance ») : le coach ne lit que le journal */
-    const P = consultation ? null : await Store.lire("programme", { nom:"", note:"", seances:[], maj:"" });
-    const J = await Store.lire(Journal.cle, Journal.vide());
+    const [P, J] = await Promise.all([consultation ? null : Store.lire("programme", { nom:"", note:"", seances:[], maj:"" }), Store.lire(Journal.cle, Journal.vide())]);   // v104 (partie 4) : ensemble
     const noter = $("jr-noter"), hist = $("jr-hist");
     if (!noter || !hist) return;   // page quittee pendant la lecture
     /* lecture ratee (reseau, 5xx) : « Pas de connexion » + Reessayer, jamais « Aucune séance notée » ni « pas encore déposé ton

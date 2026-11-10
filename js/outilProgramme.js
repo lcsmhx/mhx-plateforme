@@ -1494,7 +1494,8 @@ const outilProgramme = {
         this.idxExos = await Catalogue.indexExercices();
       } catch(e){ this.exos = []; this.idxExos = {}; }
     }
-    const P = await Store.lire(this.cle, { nom:"", note:"", seances:[], maj:"" });
+    /* v104 (partie 4) : côté client, le programme et le journal sont lus ensemble (un aller-retour de moins) */
+    const [P, J0] = await Promise.all([Store.lire(this.cle, { nom:"", note:"", seances:[], maj:"" }), edition ? null : Store.lire(Journal.cle, Journal.vide())]);
     /* le questionnaire sert a proposer un programme adapte */
     let intake = {};
     if (edition){ try { intake = await Store.lire("intake", {}) || {}; } catch(e){} }
@@ -1504,7 +1505,7 @@ const outilProgramme = {
 
     /* le client voit son programme : lecture seule, « Noter ma séance » */
     if (!edition){
-      const J = await Store.lire(Journal.cle, Journal.vide());
+      const J = J0;
       if (Store.nonLus.has(J)){ pageHorsLigne(zone); return; }   // v71 (F)
       if (!Array.isArray(J.seances)) J.seances = [];
       /* v85 (bloc 4) : sous son programme (inchangé, en premier), le lien vers les programmes de la formation */
