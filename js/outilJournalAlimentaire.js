@@ -379,8 +379,7 @@ const JournalAlim = {
       <ul class="ingr fiche-l">
         <li><span>Aujourd'hui</span><b>${L.length ? esc(fmt(t.kcal) + " kcal" + (obj ? " / " + fmt(obj.kcal) : "")) : "rien de noté"}</b></li>
         <li><span>Objectif</span><b>${obj ? esc(fmt(obj.kcal) + " kcal · " + (obj.source === "coach" ? "ta diète" : obj.source === "calc" ? "ton calcul" : "son calculateur")) : "pas d'objectif calculé"}</b></li>
-      </ul>
-      <p class="note" style="margin:10px 0 0"><a class="link-a" href="#/journal-alimentaire">Son journal, jour par jour →</a></p></section>`;
+      </ul></section>`;   // v104 (point 1) : plus de lien « … → » (« Son journal alimentaire » est dans l'onglet Nutrition de la fiche)
   }
 };
 

@@ -873,6 +873,19 @@ const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { 
       hors.consulte === null && hors.editeur === 0 && /Son métier et son rythme de travail/.test(q) && /Son entourage va-t-il soutenir sa démarche/.test(q) && !/ton rythme de travail|ta démarche/.test(q), JSON.stringify(hors));
   });
 
+  /* =================== Q. points 6 et 7 : Nutrition et Programme du coach repliés, sur téléphone =================== */
+  await bloc("Q. points 6 et 7", async () => {
+    const db = base();
+    const { page } = await contexte(b, COACH, db, { viewport: MOBILE });
+    await ouvrir(page, C1, "nutrition", "#nu-vue");
+    const n = await page.evaluate(() => ({ h: document.documentElement.scrollHeight, ouverts: Array.from(document.querySelectorAll("#nu-vue details")).filter(d => d.open).length, repas: document.querySelectorAll("#nu-vue .repas-c details, #nu-vue details.repas-c").length,
+      publier: !!Array.from(document.querySelectorAll("#vue button")).find(x => /Publier les changements/.test(x.textContent) && x.getClientRects().length) }));
+    await ouvrir(page, C1, "programme", "#pg-publier");
+    const p = await page.evaluate(() => ({ h: document.documentElement.scrollHeight, exos: document.querySelectorAll("#prog-vue details.ex-pli").length, ouverts: document.querySelectorAll("#prog-vue details.ex-pli[open]").length }));
+    ok("Q1 (points 6 et 7) : à 390 px, la Nutrition du coach tient en 3 écrans (≤ 2 532 px), tout replié, « Publier les changements » visible ; le Programme montre une ligne par exercice, tout replié, près de deux fois moins haut qu'avant (moins de 55 % des 12 928 px d'avant)",
+      n.h <= 2532 && n.ouverts === 0 && n.repas > 0 && n.publier && p.exos >= 10 && p.ouverts === 0 && p.h < 12928 * 0.55, JSON.stringify({ n, p }));
+  });
+
   /* =================== L. point 9 : en-tête sur ordinateur =================== */
   await bloc("L. point 9", async () => {
     const db = base();

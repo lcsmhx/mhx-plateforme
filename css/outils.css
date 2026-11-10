@@ -1095,7 +1095,7 @@ input[type=checkbox]:focus-visible,input[type=radio]:focus-visible{outline:2px s
    repliables, Homme / Femme du calculateur, les cases des objectifs du mois, « Conditions d'utilisation et confidentialité ») */
 @media (max-width:720px){
   .ex-fiche{min-height:var(--h-toucher);padding:0 14px;display:inline-flex;align-items:center}
-  #vue details > summary{min-height:var(--h-toucher);padding-top:11px;padding-bottom:11px;box-sizing:border-box}
+  #vue details:not([class]) > summary,#vue details.prep > summary{min-height:var(--h-toucher);padding-top:11px;padding-bottom:11px;box-sizing:border-box}   /* les volets simples (calculateur, mesures, préparation) ; ceux qui règlent leur hauteur gardent la leur */
   .seg button{min-height:var(--h-toucher)}
   label.objectif{min-height:var(--h-toucher);align-items:center}
   .objectif .obj-case{width:22px;height:22px;margin:0}
