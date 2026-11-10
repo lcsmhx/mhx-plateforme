@@ -14,7 +14,7 @@ const outilBilan = {
   accroche: "Tes quatre dernières semaines en un coup d'œil : ce que tu as fait, ce qui a bougé et ce qu'on travaille ensuite.",
   jours: 28,
 
-  html(){ return `<div id="bilan-vue"><section class="panel"><div class="empty">Chargement…</div></section></div>`; },
+  html(){ return `<div id="bilan-vue"><section class="panel">${squelette()}</section></div>`; },
 
   ok(v){ return v !== null && v !== undefined && v !== "" && isFinite(v); },
 

@@ -1068,7 +1068,7 @@ const outilSuivi = {
   titre: "Ton suivi",
   accroche: "Comment se passe ton accompagnement : ta régularité, tes objectifs du mois et ton bilan des quatre dernières semaines.",
 
-  html(){ return `<div id="suivi-fb-haut"></div><div id="suivi-checkin"></div><div id="suivi-fb-bas"></div><div id="suivi-reg"><section class="panel"><div class="empty">Chargement…</div></section></div><div id="suivi-bilan"></div>`; },
+  html(){ return `<div id="suivi-fb-haut"></div><div id="suivi-checkin"></div><div id="suivi-fb-bas"></div><div id="suivi-reg"><section class="panel">${squelette()}</section></div><div id="suivi-bilan"></div>`; },
 
   async init(){
     const { valeurs: d, dates, erreur } = await Store.lireTout(["programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "intake", "checkins", "feedbacks"], { dates: true });

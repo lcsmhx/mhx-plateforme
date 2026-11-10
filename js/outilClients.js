@@ -333,7 +333,7 @@ const outilComptes = {
     <section class="panel">
       <h2>Comptes</h2>
       <p class="note" style="margin:0 0 16px">« Supprimer définitivement » efface un compte et toutes ses données — c'est ce qu'il faut faire quand un client le demande : il est dans l'onglet « Compte » de sa fiche (ici, seulement pour un compte de ton équipe, qui n'a pas de fiche). « Accès complet » donne à une personne de ton équipe exactement ta vue : toutes les fiches, tous les questionnaires de santé, tous les programmes. Donne-le à un compte créé pour elle, jamais en partageant ton mot de passe — sinon tu ne sauras plus qui a modifié quoi, et tu ne pourras pas le lui retirer. Un compte archivé n'est pas listé ici : il est dans « Archivés », dans Clients ou Prospects.</p>
-      <div id="liste-clients"><div class="empty">Chargement…</div></div>
+      <div id="liste-clients">${squelette()}</div>
     </section>`;
   },
   async init(){
@@ -904,7 +904,7 @@ const Acces = {
           ? "Compte d'équipe créé, avec l'accès complet. Transmets-lui ses identifiants."
           : "Compte créé. Transmets-lui ses identifiants.");
       } catch(e){
-        flash("n-msg", e.message || "Création impossible.");
+        flashFixe("n-msg", e.message || "Création impossible : vérifie ta connexion et réessaie.");
       }
       b.disabled = false;
     });
@@ -930,7 +930,7 @@ const Acces = {
       return "fait";
     } catch(e){
       if (b){ b.disabled = false; b.textContent = texte; }
-      UI.alerte("Suppression impossible : " + (e.message || "erreur inconnue"));
+      UI.alerte("Suppression impossible : " + (e.message || "erreur inconnue") + ". Vérifie ta connexion et réessaie.");
       return "echec";
     }
   },
@@ -950,7 +950,7 @@ const Acces = {
       return true;
     } catch(e){
       if (b){ b.disabled = false; b.textContent = texte; }
-      UI.alerte("Changement impossible : " + (e.message || "erreur inconnue"));
+      UI.alerte("Changement impossible : " + (e.message || "erreur inconnue") + ". Vérifie ta connexion et réessaie.");
       return false;
     }
   },
@@ -969,7 +969,7 @@ const Acces = {
       return true;
     } catch(e){
       if (b){ b.disabled = false; b.textContent = texte; }
-      UI.alerte("Changement impossible : " + (e.message || "erreur inconnue"));
+      UI.alerte("Changement impossible : " + (e.message || "erreur inconnue") + ". Vérifie ta connexion et réessaie.");
       return false;
     }
   }

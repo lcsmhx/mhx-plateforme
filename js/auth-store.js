@@ -234,7 +234,7 @@ const Auth = {
     });
     let d = null;
     try { d = await r.json(); } catch(e){}
-    if (!r.ok) throw new Error((d && d.erreur) || "Création impossible.");
+    if (!r.ok) throw new Error((d && d.erreur) || "Création impossible : vérifie ta connexion et réessaie.");
     return d;
   },
 
@@ -324,7 +324,7 @@ const Auth = {
     });
     let d = null;
     try { d = await r.json(); } catch(e){}
-    if (!r.ok) throw new Error((d && d.erreur) || "Suppression impossible.");
+    if (!r.ok) throw new Error((d && d.erreur) || "Suppression impossible : vérifie ta connexion et réessaie. Si ça recommence, écris à ton coach.");
     return d;
   },
 
@@ -1735,7 +1735,7 @@ function initSauvegarde(){
       telecharger("mhx-" + Normaliser.aplatir(qui).replace(/[^a-z0-9]+/g, "-") + "-" + aujourdhui() + ".json",
                   JSON.stringify(tout, null, 2));
       flash("sv-msg", "Fichier téléchargé.");
-    } catch(e){ flash("sv-msg", "Export impossible pour le moment."); }
+    } catch(e){ flashFixe("sv-msg", "Export impossible pour le moment : vérifie ta connexion, puis réessaie."); }
     ex.disabled = false;
   });
 
@@ -1761,7 +1761,7 @@ function initSauvegarde(){
       location.hash = ""; location.reload();
     } catch(e){
       sup.disabled = false;
-      flash("sv-suppr-msg", e.message || "Suppression impossible.");
+      flashFixe("sv-suppr-msg", e.message || "Suppression impossible : vérifie ta connexion et réessaie. Si ça recommence, écris à ton coach.");
     }
   });
 
@@ -1770,9 +1770,9 @@ function initSauvegarde(){
     if (navigator.clipboard && navigator.clipboard.writeText){
       navigator.clipboard.writeText(t).then(
         () => flash("sv-msg","Sauvegarde copiée. Colle-la dans une note."),
-        () => flash("sv-msg","Copie impossible sur ce navigateur.")
+        () => flashFixe("sv-msg","Copie impossible sur ce navigateur : utilise « Télécharger toutes mes données » à la place.")
       );
-    } else flash("sv-msg","Copie impossible sur ce navigateur.");
+    } else flashFixe("sv-msg","Copie impossible sur ce navigateur : utilise « Télécharger toutes mes données » à la place.");
   });
   $("sv-paste").addEventListener("click", async () => {
     const t = await UI.demander(trad("Colle ici la sauvegarde que tu avais copiée :"), "", { titre: trad("Restaurer une sauvegarde"), ok: trad("Restaurer") });

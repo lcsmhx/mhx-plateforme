@@ -20,7 +20,7 @@ const outilAtelier = {
              objectif:"Prise de muscle", seances:[] };
   },
 
-  html(){ return `<div id="at-vue"><section class="panel"><div class="empty">Chargement…</div></section></div>`; },
+  html(){ return `<div id="at-vue"><section class="panel">${squelette()}</section></div>`; },
 
   async init(){
     const self = this;
@@ -179,7 +179,7 @@ const outilAtelier = {
           remplirCharger();
           flash("pg-msg", existe ? "Programme remplacé dans ta base." : "Programme ajouté à ta base. Tu le retrouves dans « prêts à l'emploi » sur la fiche de n'importe quel client.");
         } catch(e){
-          if (base.isConnected) flash("pg-msg", "Enregistrement impossible : " + (e.message || "erreur inconnue"));
+          if (base.isConnected) flashFixe("pg-msg", "Enregistrement impossible : " + (e.message || "erreur inconnue") + ". Vérifie ta connexion et réessaie.");
         }
         base.disabled = false;
       });
@@ -213,7 +213,7 @@ const outilMesProgrammes = {
     const ici = this.onglet();
     return `<nav class="tabs mp-onglets" aria-label="${esc(trad("Mes programmes"))}">${this.onglets().map(([s, nom]) =>
       `<a class="tab${s === ici ? " on" : ""}" href="#/mes-programmes${s ? "/" + s : ""}"${s === ici ? ' aria-current="page"' : ""} data-mp="${s}">${esc(trad(nom))}</a>`).join("")}</nav>
-      <div id="mp-zone">${ici === "" ? outilAtelier.html() : ici === "bibliotheque" ? outilBibliotheque.html() : `<section class="panel"><div class="empty">Chargement…</div></section>`}</div>`;
+      <div id="mp-zone">${ici === "" ? outilAtelier.html() : ici === "bibliotheque" ? outilBibliotheque.html() : `<section class="panel">${squelette()}</section>`}</div>`;
   },
   async init(){
     const ici = this.onglet();

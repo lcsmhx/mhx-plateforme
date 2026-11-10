@@ -1,6 +1,9 @@
 /* v52 : le calculateur juste apres Ma progression ; le journal d'entrainement (vitrine du prospect) apres le programme ;
    v84 : apres Prospects, les 4 pages du coach qui ont recu l'ecran d'avant de Clients et de Prospects (menu Plus) */
-const OUTILS = [outilAccueil, outilDecouverte, outilProgramme, outilJournal, outilNutrition, outilJournalAlimentaire, outilMensurations, outilCalculateur, outilSuivi, outilBilan, outilFormation, outilComplements, outilProfil, outilTableau, outilClients, outilProspects, outilMesProgrammes, outilSuiviClients, outilComptes, outilSuiviCommercial, outilNewsletter, outilAtelier, outilBibliotheque, outilCatalogue, outilEntrainement];
+/* v101 : les outils des fichiers de MHX_COACH (index.html) n'existent pas sur l'appareil d'un client : ils sont sautés ;
+   CodeCoach.assurer (navigation.js) les ajoute quand le coach se connecte (OUTILS est refait dans le même ordre) */
+function listeOutils(){ return [outilAccueil, outilDecouverte, outilProgramme, outilJournal, outilNutrition, outilJournalAlimentaire, outilMensurations, outilCalculateur, outilSuivi, outilBilan, outilFormation, outilComplements, outilProfil, (typeof outilTableau !== "undefined" ? outilTableau : null), outilClients, outilProspects, (typeof outilMesProgrammes !== "undefined" ? outilMesProgrammes : null), outilSuiviClients, outilComptes, outilSuiviCommercial, outilNewsletter, (typeof outilAtelier !== "undefined" ? outilAtelier : null), (typeof outilBibliotheque !== "undefined" ? outilBibliotheque : null), (typeof outilCatalogue !== "undefined" ? outilCatalogue : null), outilEntrainement].filter(Boolean); }
+const OUTILS = listeOutils();
 
 /* Adresses d'hier et de demain : #/progression ouvre « Ma progression »,
    #/suivi ouvre le bilan (puis « Mon suivi » quand il existera). */

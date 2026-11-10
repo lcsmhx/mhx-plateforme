@@ -914,7 +914,7 @@ const outilSuiviCommercial = {
   sans_entete: true,
   titre: "Suivi commercial",
   accroche: "",
-  html(){ return `<div id="pr-vue"><section class="panel"><div class="empty">Chargement…</div></section></div>`; },
+  html(){ return `<div id="pr-vue"><section class="panel">${squelette()}</section></div>`; },
   init(){ return outilProspects.monter(false, "detail"); }
 };
 
@@ -931,6 +931,6 @@ const outilNewsletter = {
   role: "coach",
   titre: "Newsletter",
   accroche: "Les personnes qui ont accepté la newsletter, à exporter pour ton outil d'envoi.",
-  html(){ return `<div id="pr-vue"><section class="panel"><div class="empty">Chargement…</div></section></div>`; },
+  html(){ return `<div id="pr-vue"><section class="panel">${squelette()}</section></div>`; },
   init(){ return outilProspects.monter(false, "newsletter"); }
 };

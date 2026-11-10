@@ -1701,3 +1701,20 @@ Object.assign(I18N.en, {
   "Les compléments conseillés par ton coach : doses et moments.": "The supplements your coach recommends: doses and timing."
 });
 /* v100-client-fin */
+/* v101-finitions (chantier 6 de la nuit du 10/11) : « Annuler » après une suppression, des messages qui disent quoi faire */
+Object.assign(I18N.en, {
+  "un exercice": "an exercise",
+  "une séance": "a session",
+  "un repas": "a meal",
+  "une ligne": "a line",
+  "un complément": "a supplement",
+  "Pas enregistré dans ta bibliothèque : vérifie ta connexion et réessaie.": "Not saved to your library: check your connection and try again.",
+  "Ajout impossible : {e}. Vérifie ta connexion et réessaie.": "Couldn't add it: {e}. Check your connection and try again.",
+  "erreur inconnue": "unknown error",
+  "Export impossible pour le moment : vérifie ta connexion, puis réessaie.": "Export unavailable right now: check your connection, then try again.",
+  "Suppression impossible : vérifie ta connexion et réessaie. Si ça recommence, écris à ton coach.": "Couldn't delete: check your connection and try again. If it happens again, message your coach.",
+  "Copie impossible sur ce navigateur : utilise « Télécharger toutes mes données » à la place.": "Copying isn't possible in this browser: use “Download all my data” instead.",
+  "Création impossible : vérifie ta connexion et réessaie.": "Couldn't create it: check your connection and try again.",
+  "Changement impossible : vérifie ta connexion et réessaie.": "The change couldn't be made: check your connection and try again."
+});
+/* v101-finitions-fin */

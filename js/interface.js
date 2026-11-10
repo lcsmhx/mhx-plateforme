@@ -1,5 +1,10 @@
 /* Les dates sont stockees au format ISO (2026-08-29) parce que c'est le seul
    qui se trie correctement. On les affiche a la francaise. */
+/* v101 (chantier 6 de la nuit du 10/11) : l'écran de chargement d'une page : des barres grises à la place d'un « Chargement… »
+   seul (la page ne saute plus quand elle se remplit) ; le texte « Chargement… » reste pour les lecteurs d'écran */
+function squelette(n){
+  return `<div class="squelette" aria-busy="true"><span class="sr-only">${esc(typeof trad === "function" ? trad("Chargement…") : "Chargement…")}</span>${Array.from({ length: n || 4 }, (_, i) => `<i class="sq-l sq-${i % 4}"></i>`).join("")}</div>`;
+}
 const dateFr = (iso) => {
   if (!iso) return "—";
   const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
@@ -191,6 +196,19 @@ const UI = {
     t.textContent = texte;
     z.appendChild(t);
     setTimeout(() => { t.classList.add("sortie"); setTimeout(() => t.remove(), 350); }, duree || 3200);
+    return t;
+  },
+
+  /* v101 (chantier 6 de la nuit du 10/11) : « Supprimé : … · Annuler » pendant 10 s après une suppression (même modèle que le
+     journal alimentaire, v79 : la suppression est faite et enregistrée tout de suite, « Annuler » la défait à l'identique).
+     retour() n'est appelé que si zone (la page d'origine) est encore affichée ; un seul message par page : le plus récent. */
+  annulable(texte, retour, zone){
+    $$(".toast.annulable").forEach(x => x.remove());
+    const t = this.toast(texte, "ok", 10000);
+    const b = document.createElement("button"); b.type = "button"; b.className = "ja-annuler"; b.textContent = trad("Annuler");
+    b.addEventListener("click", () => { t.remove(); if (!zone || zone.isConnected) retour(); }, { once: true });
+    t.classList.add("ja-toast", "annulable"); t.append(" ", b);
+    if (zone){ const v = setInterval(() => { if (!zone.isConnected){ t.remove(); clearInterval(v); } else if (!t.isConnected) clearInterval(v); }, 500); }
     return t;
   },
 

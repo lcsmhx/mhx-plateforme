@@ -275,6 +275,8 @@ const Retour = {
   /* v81 (bloc 2) : un compte créé à l'instant par le parcours (même onglet) : ses réponses partent dans intake, puis « Ton
      espace » et le cadeau, en plein écran, avant la navigation (aucune bannière d'installation pendant le parcours) */
   if (typeof Parcours !== "undefined" && Parcours.suiteDue()){ await Parcours.suite(); return; }
+  if (Auth.estCoach()) await CodeCoach.assurer();   // v101 : le code de l'espace du coach, pour lui seul
+  else { try { localStorage.removeItem(CodeCoach.CLE); } catch(e){} }   // un autre compte sur cet appareil : plus chargé ensuite
   construireNav();
   Contenus.charger();
   window.addEventListener("hashchange", routeDepuisAdresse);
