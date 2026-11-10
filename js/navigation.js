@@ -532,6 +532,100 @@ function ongletsFicheHTML(ici){
     return `<a class="f-onglet${g.id === ici ? " ici" : ""}" href="${esc(lienPageFiche(p[0]))}" data-onglet-fiche="${g.id}"${g.id === ici ? ' aria-current="page"' : ""}>${esc(trad(g.nom))}</a>`; }).join("")}</nav>`;
 }
 
+/* v104 (point 4) : dans la fiche d'un client, le coach lit « sa / ses / son » (Sa régularité, Ses objectifs du mois, Son
+   objectif…), jamais « ta / tes / ton » ; le client garde « ta / tes / ton » chez lui (rien ne change hors d'une fiche).
+   Une couche, comme celle de la traduction (i18n.js), sur les textes de #vue seulement (jamais data-notr, ni les champs) :
+   - un titre (h1 à h4, légende, étiquette, résumé, en-tête de tableau, étiquette de tuile…) qui commence par « Ta / Tes / Ton »
+     (« Your » en anglais) commence par « Sa / Ses / Son » (« Their ») ;
+   - une phrase qui parle au client (« Coche un objectif quand tu l'as atteint… ») : sa version pour le coach, mot pour mot
+     (PHRASES_FICHE ; en anglais, la traduction de l'une devient celle de l'autre). */
+const PHRASES_FICHE = {};
+/* v104 (point 4) : les phrases qui parlent au client, dans leur version pour le coach (fiche d'un client) */
+Object.assign(PHRASES_FICHE, {
+  "Comment s'est passée ta semaine ?": "Comment s'est passée sa semaine ?",
+  "Combien de séances as-tu réalisées ?": "Combien de séances a-t-il réalisées ?",
+  "Comment s'est passée ton alimentation ?": "Comment s'est passée son alimentation ?",
+  "Quelle a été ta principale réussite ?": "Quelle a été sa principale réussite ?",
+  "Quelle a été ta principale difficulté ?": "Quelle a été sa principale difficulté ?",
+  "As-tu besoin d'un ajustement ?": "A-t-il besoin d'un ajustement ?",
+  "Un indicateur de motivation, pas une mesure médicale : il compte ce que tu fais — séances, repas, mesure — pas ce que dit la balance.": "Un indicateur de motivation, pas une mesure médicale : il compte ce que ton client fait — séances, repas, mesure — pas ce que dit la balance.",
+  "Tes quatre dernières semaines en un coup d'œil : ce que tu as fait, ce qui a bougé et ce qu'on travaille ensuite.": "Ses quatre dernières semaines en un coup d'œil : ce qu'il a fait, ce qui a bougé et ce que vous travaillez ensuite.",
+  "Toutes tes mesures": "Toutes ses mesures",
+  "Renommer les zones que tu mesures": "Renommer les zones qu'il mesure",
+  "Son métier et ton rythme de travail": "Son métier et son rythme de travail",
+  "Quel est ton objectif principal ? *": "Quel est son objectif principal ? *",
+  "Décris ton objectif en une phrase, avec un chiffre si possible": "Son objectif en une phrase, avec un chiffre si possible",
+  "Pourquoi maintenant ? Qu'est-ce qui a déclenché ta décision ?": "Pourquoi maintenant ? Qu'est-ce qui a déclenché sa décision ?",
+  "À quel point es-tu prêt à changer tes habitudes ?": "À quel point est-il prêt à changer ses habitudes ?",
+  "Qu'est-ce qui t'a fait échouer par le passé, selon toi ?": "Qu'est-ce qui l'a fait échouer par le passé, selon lui ?",
+  "Es-tu suivi actuellement par un professionnel de santé ?": "Est-il suivi actuellement par un professionnel de santé ?",
+  "As-tu une contre-indication médicale au sport ou à un changement alimentaire ?": "A-t-il une contre-indication médicale au sport ou à un changement alimentaire ?",
+  "Quel est ton niveau ? *": "Quel est son niveau ? *",
+  "Que fais-tu comme activité physique actuellement ?": "Que fait-il comme activité physique actuellement ?",
+  "Où vas-tu t'entraîner ? *": "Où va-t-il s'entraîner ? *",
+  "Si à la maison : quel matériel as-tu ?": "Si à la maison : quel matériel a-t-il ?",
+  "Combien de séances par semaine peux-tu RÉELLEMENT tenir ? *": "Combien de séances par semaine peut-il RÉELLEMENT tenir ? *",
+  "Exercices ou types de séances que tu détestes / que tu adores": "Exercices ou types de séances qu'il déteste / qu'il adore",
+  "Fais-tu du cardio ? Lequel, combien de fois par semaine ?": "Fait-il du cardio ? Lequel, combien de fois par semaine ?",
+  "Nombre de pas moyen par jour (si tu le suis)": "Nombre de pas moyen par jour (s'il le suit)",
+  "C'est sur cette réponse que ton plan alimentaire sera bâti. Compte les collations comme des repas.": "C'est sur cette réponse que son plan alimentaire sera bâti. Les collations comptent comme des repas.",
+  "Qui cuisine ? Combien de temps peux-tu y consacrer par jour ?": "Qui cuisine ? Combien de temps peut-il y consacrer par jour ?",
+  "Combien de fois par semaine manges-tu à l'extérieur ou au restaurant ?": "Combien de fois par semaine mange-t-il à l'extérieur ou au restaurant ?",
+  "Sert à composer tes repas : aucun plat proposé ne sortira de ce cadre.": "Sert à composer ses repas : aucun plat proposé ne sortira de ce cadre.",
+  "Coche tout ce qui te concerne. Les aliments correspondants seront écartés de tes repas. Signale aussi toute allergie qui ne figure pas dans cette liste dans le champ suivant.": "Tout ce qui le concerne. Les aliments correspondants sont écartés de ses repas. Les allergies hors de cette liste sont dans le champ suivant.",
+  "Tout ce que la liste ci-dessus ne couvre pas. Ton coach en tient compte avant de valider tes repas.": "Tout ce que la liste ci-dessus ne couvre pas : à prendre en compte avant de valider ses repas.",
+  "Aliments que tu ne mangeras jamais, quoi qu'il arrive": "Aliments qu'il ne mangera jamais, quoi qu'il arrive",
+  "Aliments dont tu ne veux surtout pas te passer": "Aliments dont il ne veut surtout pas se passer",
+  "As-tu déjà suivi un régime ou compté tes calories ? Avec quel résultat ?": "A-t-il déjà suivi un régime ou compté ses calories ? Avec quel résultat ?",
+  "As-tu des contraintes de budget alimentaire ?": "A-t-il des contraintes de budget alimentaire ?",
+  "Qualité de ton sommeil": "Qualité de son sommeil",
+  "À quel moment de la journée as-tu tes coups de barre ?": "À quel moment de la journée a-t-il ses coups de barre ?",
+  "Son entourage va-t-il soutenir ta démarche ou la compliquer ?": "Son entourage va-t-il soutenir sa démarche ou la compliquer ?",
+  "Fumes-tu ?": "Fume-t-il ?",
+  "Tu es ?": "Sexe"
+});
+const VueFiche = {
+  titres: "h1,h2,h3,h4,legend,label,summary,th,dt,.t-lbl,.fc-sur,.eyebrow,.pastille,.sec-titre",
+  POSS: { Ta: "Sa", Tes: "Ses", Ton: "Son", Your: "Their", your: "their" },
+  AU_COACH: /^(feedback|client|clients|notes?|base|changements|brouillons?|agenda|avis|réponse|reply|answer)\b/i,
+  actif(){ return typeof Auth !== "undefined" && Auth.estCoach() && !!Store.idConsulte; },
+  _en: null,
+  en(){
+    if (!this._en){ this._en = {}; for (const fr in PHRASES_FICHE){ const a = I18N.en[fr], b = I18N.en[PHRASES_FICHE[fr]]; if (a && b) this._en[a] = b; } }
+    return this._en;
+  },
+  conv(v, titre){
+    const n = Traduction.norm(v); if (!n) return null;
+    const dico = I18N.langue === "en" ? this.en() : PHRASES_FICHE;
+    if (Object.prototype.hasOwnProperty.call(dico, n)) return dico[n];
+    /* ce qui appartient au coach (« Ton feedback… », « Ton client… », « Tes notes… ») garde « ton / tes » */
+    if (titre){ const m = /^(Ta|Tes|Ton|Your) (\S.*)$/.exec(n); if (m && !this.AU_COACH.test(m[2])) return this.POSS[m[1]] + " " + m[2]; }
+    return null;
+  },
+  tn(nd){
+    const p = nd.parentElement;
+    if (!p || Traduction.exclu(p) || !p.closest("#vue") || p.closest("input,select,option")) return;
+    if (I18N.langue === "en") Traduction.tn(nd);   // la traduction d'abord : la phrase pour le coach part de l'anglais
+    const v = nd.nodeValue, r = this.conv(v, !!p.closest(this.titres));
+    if (r != null && r !== Traduction.norm(v)) nd.nodeValue = v.match(/^\s*/)[0] + r + v.match(/\s*$/)[0];
+  },
+  noeud(racine){
+    if (!racine || !this.actif()) return;
+    if (racine.nodeType === 3){ this.tn(racine); return; }
+    if (racine.nodeType !== 1) return;
+    const w = document.createTreeWalker(racine, NodeFilter.SHOW_TEXT), l = []; let n; while ((n = w.nextNode())) l.push(n);
+    l.forEach(x => this.tn(x));
+  },
+  demarrer(){
+    if (this.obs || typeof MutationObserver === "undefined") return;
+    this.obs = new MutationObserver(ms => {
+      if (!this.actif()) return;
+      for (const m of ms){ if (m.type === "characterData") this.tn(m.target); else m.addedNodes.forEach(nd => this.noeud(nd)); }
+    });
+    const vue = $("vue"); if (vue) this.obs.observe(vue, { childList: true, subtree: true, characterData: true });
+  }
+};
+
 /* v42 — filet de securite : une page qui ne peut pas s'afficher (donnee
    illisible, ecrite hors de l'application) le dit, au lieu de rester blanche
    ou figee sur « Chargement… ». Les autres pages continuent de marcher.
@@ -618,6 +712,7 @@ async function afficher(id, silencieux, sansCompte){
     ${installationHaut ? "" : installation}`;
 
   construireNav();   // les libelles dependent du mode : on les rafraichit
+  if (Store.idConsulte && Auth.estCoach()){ VueFiche.demarrer(); VueFiche.noeud($("vue")); }   // v104 (point 4)
   /* Les outils que le coach REMPLIT depuis la fiche d'un client. Oublier
      d'inscrire un outil ici le rend muet : la page passe en lecture seule et
      tous ses boutons deviennent inertes, sans message d'erreur. */
