@@ -534,7 +534,16 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     const db = base();
     const { c, page } = await contexte(b, coach, db);
     const fiche = await ouvrirFiche(page, PROSPECT, "Léa");   // v71 (D) : par Clients.ouvrir
-    const ids = await navIds(page);
+    /* v104 (point 1) : changement voulu — dans une fiche, #nav garde les 7 entrées du coach ; les pages de la fiche sont dans
+       le bandeau .fiche-entete : ses 5 onglets (.f-onglet) et les pages de l'onglet ouvert (a.b-act). On ouvre chaque onglet
+       et on relève toutes ses pages (même liste qu'avant dans #nav : accueil, mensurations, suivi, complements…) et ses cadenas. */
+    const navCoach = await navIds(page);
+    const ids = [], cadenasFiche = [];
+    for (const o of await page.$$eval(".fiche-entete .f-onglet", l => l.map(a => a.getAttribute("href")))){
+      await aller(page, o, 1200);
+      const r = await page.$$eval(".fiche-entete a.b-act", l => l.map(a => [(a.getAttribute("href") || "").split("/").slice(3).join("/"), !!a.querySelector(".nav-cadenas, .cadenas") || /🔒/.test(a.textContent)]));
+      r.forEach(([id, cad]) => { if (!ids.includes(id)) ids.push(id); if (cad) cadenasFiche.push(id); });
+    }
     await aller(page, "#/programme", 1600);
     const verrou = !!(await page.$("#vue .verrou"));
     await aller(page, "#/mensurations", 1600);
@@ -542,8 +551,9 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     const fin = await idConsulte(page);
     /* « accueil » est client_seul : il n'apparait dans la navigation du coach que dans une fiche */
     ok("coach dans la fiche d'un prospect (bien ouverte : Accueil de la fiche présent) : tous les onglets de sa fiche, aucun cadenas, aucune page verrouillée, aucune écriture",
-      fiche === PROSPECT && fin === PROSPECT && ids.includes("accueil") && ids.includes("mensurations") && ids.includes("suivi") && ids.includes("complements") && (await page.$$("#nav .nav-cadenas")).length === 0 && !verrou && !verrou2 && db.ecritures.length === 0,
-      JSON.stringify({ fiche, fin, ids, verrou, verrou2, ecritures: db.ecritures.map(e => [e.table, e.user_id, e.outil]) }));
+      fiche === PROSPECT && fin === PROSPECT && ids.includes("accueil") && ids.includes("mensurations") && ids.includes("suivi") && ids.includes("complements") && (await page.$$("#nav .nav-cadenas")).length === 0 && cadenasFiche.length === 0
+        && JSON.stringify(navCoach) === JSON.stringify(["tableau","clients","prospects","mes-programmes","catalogue","entrainement","profil"]) && !verrou && !verrou2 && db.ecritures.length === 0,
+      JSON.stringify({ fiche, fin, ids, navCoach, cadenasFiche, verrou, verrou2, ecritures: db.ecritures.map(e => [e.table, e.user_id, e.outil]) }));
     await c.close();
   }
 

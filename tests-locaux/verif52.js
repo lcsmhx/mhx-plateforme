@@ -1184,7 +1184,8 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
       const eb = Array.from(v.querySelectorAll("h2")).find(h => n(h.textContent) === "En bref"), reste = [];
       for (let x = eb && eb.closest("section"); x; x = x.nextElementSibling) if (x.id !== "fiche-commercial") reste.push(n(x.textContent));
       const lbl = id => { const e = v.querySelector("#fc-compte #" + id); return e && e.closest("li") ? n(e.closest("li").querySelector("span").textContent) : null; };
-      return { neuf, v104, bandeauHaut: !!v.querySelector(":scope > .bandeau"), telLbl: neuf ? lbl("fiche-tel") : null, sourceLbl: neuf ? lbl("fiche-source") : null,
+      return { neuf, v104, parts104: v104 ? { tete: tx(":scope > .fiche-entete .bandeau-tete"), outils: tx("#fc-suivi #fc-outils .bandeau"), sortir: tx(":scope > .fiche-entete #sortir-fiche") } : null,
+        bandeauHaut: !!v.querySelector(":scope > .bandeau"), telLbl: neuf ? lbl("fiche-tel") : null, sourceLbl: neuf ? lbl("fiche-source") : null,
         role: tx(".fc-pastilles .fc-role-p"), prog: tx(".fc-pastilles .fc-prog"), call: v.querySelector("#fc-call") ? v.querySelector("#fc-call").getAttribute("href") : null,
         onglets: Array.from(v.querySelectorAll('[role="tab"][data-onglet]')).map(t => t.dataset.onglet + ":" + t.getAttribute("aria-selected")),
         /* v104 (point 4) : l'en-tête commun (5 onglets, Aperçu marqué, un seul « Revenir … »), le titre de page, son eyebrow, pas de croix */
@@ -1196,6 +1197,26 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
           reste: reste.join(" | ") } };
     });
     const mf = await morceaux(f.page), mfM = await morceaux(fM.page);
+    /* v104 (point 1) : changement voulu — la rangée des outils du client (#fc-outils, dans le Suivi de l'Aperçu) a disparu : ses
+       liens sont maintenant les pages des 5 onglets du bandeau (.fiche-entete a.b-act). Le « bandeau » d'avant est reconstruit
+       morceau par morceau : sa tête (bandeau du haut), puis chacun des liens d'avant, DANS L'ORDRE D'AVANT, au texte pris tel
+       qu'il est écrit dans les pages des onglets (un lien absent ou renommé = texte différent de la référence), puis « Revenir … »
+       (bandeau du haut). On revient ensuite à l'Aperçu. Une fois la v104 sur main : la même reconstruction des deux côtés. */
+    const pagesOnglets = async v => {
+      const pages = {};
+      for (const o of await v.page.$$eval("#vue > .fiche-entete .f-onglet", l => l.map(a => a.getAttribute("href")))){
+        await v.page.evaluate(h => { location.hash = h; }, o); await attendre(v.page, 1500);
+        for (const [h, t] of await v.page.$$eval("#vue > .fiche-entete a.b-act", l => l.map(a => [a.getAttribute("href") || "", a.textContent])))
+          pages[h.split("/").slice(3).join("/")] = norm(t);
+      }
+      await v.page.evaluate(id => { location.hash = "#/client/" + id + "/accueil"; }, F.IDS.c1); await attendre(v.page, 2000);
+      return pages;
+    };
+    const OUTILS_V103 = ["accueil", "bilan", "suivi", "profil", "programme", "nutrition", "calculateur", "mensurations", "journal", "journal-alimentaire"];
+    for (const [m, v] of [[mf, f], [mfM, fM]]) if (m.v104 && m.parts104 && m.parts104.outils === null && m.parts104.tete && m.parts104.sortir){
+      const p = await pagesOnglets(v);
+      m.commun.bandeau = [m.parts104.tete, OUTILS_V103.filter(id => id in p).map(id => p[id]).join(""), m.parts104.sortir].join(" ");
+    }
     /* v84 (ménage du bloc 3) : différence VOULUE, le bouton de retour du bandeau nomme la page d'où la fiche est ouverte : « Revenir
        au suivi détaillé » (page testée, ouverte depuis #/suivi-clients) ; « Revenir à mes clients » dans la référence tant qu'elle
        l'ouvre depuis #/clients. Chaque libellé est vérifié exactement à la fin de son bandeau, puis remplacé par un repère des deux
@@ -1204,12 +1225,30 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     const finRetour = (c, lib) => !!c.bandeau && c.bandeau.endsWith(" " + lib);
     const sansRetour = (c, lib) => Object.assign({}, c, { bandeau: finRetour(c, lib) ? c.bandeau.slice(0, -lib.length) + "[revenir]" : c.bandeau });
     const retours = { page: finRetour(mf.commun, RETOUR_V84), ref: finRetour(mfM.commun, RETOUR_REF) };
-    const comF = JSON.stringify(sansRetour(mf.commun, RETOUR_V84)), comM = JSON.stringify(Object.assign({}, sansRetour(mfM.commun, RETOUR_REF), { reste: FORM_V77(mfM.commun.reste) }, mf.v104 ? { eyebrow: "[eyebrow]" } : {}));
+    /* v104 (points 1, 3, 4 et 5) : changements voulus dans le bas de la fiche (de « En bref » à « Le reste ») : le texte de la
+       référence est converti en ce que la v104 doit afficher, puis comparé strictement (comme FORM_V77) :
+       - point 3 : plus de tuile « Régularité » dans « En bref » (un seul chiffre, #fc-regularite, en haut de l'Aperçu) ;
+       - point 1 : plus de liens « … → » sous les blocs (ils doublaient les pages des onglets de la fiche) ;
+       - point 5 : « Écrire ou modifier les objectifs → » (vers Programme) devient « Modifier » (lecture seule, lien vers Suivi) ;
+       - point 4 : les 6 questions du bilan hebdomadaire à la 3e personne (« sa semaine », « a-t-il réalisées »…).
+       Une fois la v104 sur main : rien à convertir, comparaison stricte des deux côtés. */
+    const LIENS_V103 = ["Son questionnaire complet", "Son programme", "Ses repas", "Ses calories", "Ses courbes", "Préparer le call", "Son suivi", "Ses compléments", "Sa formation"];
+    const BILAN_V104 = [["Comment s'est passée ta semaine ?", "Comment s'est passée sa semaine ?"], ["Combien de séances as-tu réalisées ?", "Combien de séances a-t-il réalisées ?"],
+      ["Comment s'est passée ton alimentation ?", "Comment s'est passée son alimentation ?"], ["Quelle a été ta principale réussite ?", "Quelle a été sa principale réussite ?"],
+      ["Quelle a été ta principale difficulté ?", "Quelle a été sa principale difficulté ?"], ["As-tu besoin d'un ajustement ?", "A-t-il besoin d'un ajustement ?"]];
+    const RESTE_V104 = x => {
+      if (!mf.v104 || mfM.v104) return x;
+      let y = x.replace(/(En bref )Régularité\d+\/100semaine passée : \d+ /, "$1").split(" Écrire ou modifier les objectifs →").join(" Modifier");
+      for (const l of LIENS_V103) y = y.split(" · " + l + " →").join("").split(" " + l + " →").join("");
+      for (const [a, b] of BILAN_V104) y = y.split(a).join(b);
+      return y;
+    };
+    const comF = JSON.stringify(sansRetour(mf.commun, RETOUR_V84)), comM = JSON.stringify(Object.assign({}, sansRetour(mfM.commun, RETOUR_REF), { reste: RESTE_V104(FORM_V77(mfM.commun.reste)) }, mf.v104 ? { eyebrow: "[eyebrow]" } : {}));
     /* v104 (point 4) : changement voulu — l'en-tête commun sur l'Aperçu (vérifié ici), le h2 du nom retiré des h2 comparés tant que
        la référence a le nom en h1 */
     const t104 = mf.tete104 || {}, h2F = mf.v104 && !mfM.v104 && f.h2[0] === mf.commun.h1 ? f.h2.slice(1) : f.h2;
     const tete104 = mf.v104 && mf.bandeauHaut && JSON.stringify(t104.onglets) === '["Aperçu:ici","Entraînement","Nutrition","Suivi","Profil"]' && t104.sortir === 1 && !t104.croix && t104.titre === "Fiche" && t104.eyebrow === "Thomas Démo — Fiche";
-    ok("fiche de Thomas vue par le coach : sections identiques à main (" + f.h2.join(", ") + ") ; v83 : chaque morceau d'avant identique à main à sa nouvelle place (bandeau dans l'onglet Suivi, nom, phrase, alertes, de « En bref » à « Le reste »), en-tête de la fiche (nom seul, « Client », programme, « Préparer le call », onglets) ; v72 : Téléphone « — » et Source « — », présents (onglet Compte) ; v77 : formation sur 48 étapes ; v84 : ouverte depuis « Suivi détaillé », « Revenir au suivi détaillé » (référence : « Revenir à mes clients » tant qu'elle l'ouvre depuis #/clients)", f.t.length > 300 && mf.neuf && tete104 && comF === comM && mf.commun.h1 === "Thomas Démo" && !!mf.commun.bandeau && mf.commun.bandeau.startsWith("Fiche de Thomas Démo") && mf.commun.reste.startsWith("En bref") && mf.commun.reste.includes("Le reste") && mf.commun.tel === "—" && mf.commun.source === "—" && mf.telLbl === "Téléphone" && mf.sourceLbl === "Source" && mf.role === "Client" && !!mf.prog && fM.t.includes("Nom" + mf.prog) && mf.call === "#/client/" + F.IDS.c1 + "/bilan" && JSON.stringify(mf.onglets) === '[]' && JSON.stringify(h2F) === JSON.stringify(fM.h2) && retours.page && retours.ref, "retours " + JSON.stringify(retours) + " · " + f.t.length + " / " + fM.t.length + " · " + JSON.stringify(f.h2) + " vs " + JSON.stringify(fM.h2) + " · " + JSON.stringify({ neuf: mf.neuf, bandeauHaut: mf.bandeauHaut, telLbl: mf.telLbl, sourceLbl: mf.sourceLbl, role: mf.role, prog: mf.prog, call: mf.call, onglets: mf.onglets, t104, h2F }) + " · " + (() => { const x = comF, y = comM; let k = 0; while (k < x.length && x[k] === y[k]) k++; return JSON.stringify(x.slice(Math.max(0, k - 40), k + 60)) + " ≠ " + JSON.stringify(y.slice(Math.max(0, k - 40), k + 60)); })());
+    ok("fiche de Thomas vue par le coach : sections identiques à main (" + f.h2.join(", ") + ") ; v83 : chaque morceau d'avant identique à main à sa nouvelle place (bandeau dans l'onglet Suivi, nom, phrase, alertes, de « En bref » à « Le reste »), en-tête de la fiche (nom seul, « Client », programme, « Préparer le call », onglets) ; v72 : Téléphone « — » et Source « — », présents (onglet Compte) ; v77 : formation sur 48 étapes ; v84 : ouverte depuis « Suivi détaillé », « Revenir au suivi détaillé » (référence : « Revenir à mes clients » tant qu'elle l'ouvre depuis #/clients) ; v104 : liens d'avant dans les pages des onglets, plus de tuile Régularité ni de liens « → », « Modifier » des objectifs, bilan à la 3e personne", f.t.length > 300 && mf.neuf && tete104 && comF === comM && mf.commun.h1 === "Thomas Démo" && !!mf.commun.bandeau && mf.commun.bandeau.startsWith("Fiche de Thomas Démo") && mf.commun.reste.startsWith("En bref") && mf.commun.reste.includes("Le reste") && mf.commun.tel === "—" && mf.commun.source === "—" && mf.telLbl === "Téléphone" && mf.sourceLbl === "Source" && mf.role === "Client" && !!mf.prog && fM.t.includes("Nom" + mf.prog) && mf.call === "#/client/" + F.IDS.c1 + "/bilan" && JSON.stringify(mf.onglets) === '[]' && JSON.stringify(h2F) === JSON.stringify(fM.h2) && retours.page && retours.ref, "retours " + JSON.stringify(retours) + " · " + f.t.length + " / " + fM.t.length + " · " + JSON.stringify(f.h2) + " vs " + JSON.stringify(fM.h2) + " · " + JSON.stringify({ neuf: mf.neuf, bandeauHaut: mf.bandeauHaut, telLbl: mf.telLbl, sourceLbl: mf.sourceLbl, role: mf.role, prog: mf.prog, call: mf.call, onglets: mf.onglets, t104, h2F }) + " · " + (() => { const x = comF, y = comM; let k = 0; while (k < x.length && x[k] === y[k]) k++; return JSON.stringify(x.slice(Math.max(0, k - 40), k + 60)) + " ≠ " + JSON.stringify(y.slice(Math.max(0, k - 40), k + 60)); })());
     ok("fiche de Thomas : ni score, ni réponses du questionnaire court, ni chronologie, ni lien de réservation, aucune écriture", !(await f.page.$("#fiche-score, #fiche-reponses, #fiche-chrono, #fiche-actions, #fiche-decouverte, #fiche-prospect, #dc-lien")) && f.db.ecritures.length === 0);
     await f.c.close(); await fM.c.close();
     /* v53 (chantier 4) : Mes clients gagne 5 colonnes (retour de la semaine, note, smiley, dernière visite, jours actifs) :

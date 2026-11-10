@@ -1016,8 +1016,10 @@ const ISO = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$/;
     await aller(page, "#/formation", 2000); await page.waitForSelector("#fo-vue .prog-compteur", { timeout: 8000 });
     const k = await page.evaluate(() => ({ consulte: Store.idConsulte, depart: !!document.getElementById("fo-depart"), apercu: !!document.getElementById("fo-apercu"), presentation: !!document.getElementById("fo-presentation") }));
     const lk = lecturesCalcMens(db, L0);
-    ok("coach dans la fiche d'un prospect, #/formation : ni l'une ni l'autre carte, « Ton parcours » en premier, aucune lecture de calc_perso ni de mens (quel que soit l'ordre ou le découpage), rien d'écrit",
-      k.consulte === IDP && !k.depart && !k.apercu && !k.presentation && (await ordre(page))[0] === "Ton parcours" && db.lectures.length > L0 && lk.length === 0 && saisies(db).length === 0,
+    /* v104 (point 4) : changement voulu — dans une fiche, le coach lit « Son parcours » (le titre « Ton parcours » à la 3e personne) ;
+       le client, chez lui, garde « Ton parcours » (vérifié plus haut) */
+    ok("coach dans la fiche d'un prospect, #/formation : ni l'une ni l'autre carte, « Son parcours » (v104 : « Ton parcours » à la 3e personne) en premier, aucune lecture de calc_perso ni de mens (quel que soit l'ordre ou le découpage), rien d'écrit",
+      k.consulte === IDP && !k.depart && !k.apercu && !k.presentation && (await ordre(page))[0] === "Son parcours" && db.lectures.length > L0 && lk.length === 0 && saisies(db).length === 0,
       JSON.stringify(k) + " " + resume(db) + " " + JSON.stringify(lk));
     await c.close();
   });

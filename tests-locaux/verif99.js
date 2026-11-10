@@ -239,6 +239,13 @@ const AVANT = {"accueil": ["accueil", ["Thomas Démo", "En bref", "Notes privée
 const IDS104 = ["acc-vue", "fc-ident", "fc-call", "fc-appeler", "fc-suivi", "fc-retour"];
 AVANT.accueil = ["accueil", ["Fiche", "Thomas Démo", "En bref"], IDS104];
 AVANT["accueil/compte"] = ["accueil", ["Son compte", "Thomas Démo", "En bref"], IDS104];
+/* v104 (point 4) : changement voulu — dans la fiche, le coach lit « Sa / Ses / Son » dans les titres : « Ses données », « Sa
+   maintenance » (calculateur), « Sa régularité » (suivi), « Son parcours » (formation) ; mêmes pages, mêmes ids.
+   v104 (point 5) : changement voulu — Son suivi gagne la zone des objectifs du mois du coach (#suivi-obj, ses champs #obj-0…)
+   avant le bilan du mois : les 6 premiers ids sont donc …, suivi-reg, suivi-obj, obj-0 (suivi-bilan vient après) */
+AVANT.calculateur = ["calculateur", ["Calculateur", "Ses données", "Sa maintenance"], AVANT.calculateur[2]];
+AVANT.suivi = ["suivi", ["Son suivi", "Bilan hebdomadaire", "Sa régularité"], ["suivi-fb-haut", "suivi-checkin", "suivi-fb-bas", "suivi-reg", "suivi-obj", "obj-0"]];
+AVANT.formation = ["formation", ["Formation", "Son parcours", "Le processus, étape par étape"], AVANT.formation[2]];
 const C2 = F.IDS.c2, TEL = "+33639980001";
 const ONGLET = { accueil: "Aperçu", "accueil/compte": "Profil", programme: "Entraînement", journal: "Entraînement", nutrition: "Nutrition", repas: "Nutrition", calculateur: "Nutrition", complements: "Nutrition", suivi: "Suivi", bilan: "Suivi", mensurations: "Suivi", progression: "Suivi", formation: "Suivi", profil: "Profil" };
 const avecTel = db => db.donnees.push({ user_id: C1, outil: "contact", contenu: { telephone: TEL }, maj_le: avant(J) });

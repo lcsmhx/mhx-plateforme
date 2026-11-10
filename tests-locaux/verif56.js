@@ -1415,10 +1415,19 @@ function lienOk(href, base, attendu){
     ok("coach, son compte : il écrit calc chez lui, jamais calc_perso", ecr(db, "calc", F.IDS.coach).length >= 1 && ecr(db, "calc_perso").length === 0, resume(db));
     await aller(page, "#/suivi-clients", 2200);   // v84 (ménage du bloc 3) : le bouton « Ouvrir » ([data-ouvrir]) du tableau est dans « Suivi détaillé »
     await page.click(`[data-ouvrir="${F.IDS.c1}"]`); await page.waitForSelector("#vue .bandeau", { timeout: 8000 }); await attendre(page, 800);
-    const actions = await page.$$eval("#vue .bandeau-actions a", l => l.map(a => [a.textContent.trim(), a.getAttribute("href")]));
+    /* v104 (point 1) : changement voulu — la fiche n'a plus qu'une navigation, le bandeau .fiche-entete : ses 5 onglets et les
+       pages de l'onglet ouvert (a.b-act) ; #nav garde les entrées du coach. Les liens d'avant sont relevés onglet par onglet
+       (« Ses calories » dans Nutrition, « Ses séances » dans Entraînement) ; « Son journal » dans sa navigation = la page
+       journal dans le bandeau de la fiche (plus dans #nav). On revient ensuite à l'Aperçu. */
+    const actions = [];
+    for (const o of await page.$$eval("#vue .fiche-entete .f-onglet", l => l.map(a => a.getAttribute("href")))){
+      await aller(page, o, 1200);
+      actions.push(...await page.$$eval("#vue .fiche-entete .bandeau-actions a.b-act", l => l.map(a => [a.textContent.trim(), a.getAttribute("href")])));
+    }
+    await aller(page, "#/client/" + F.IDS.c1 + "/accueil", 1500);
     /* v53 (lot D-clients) : changement VOULU — « Ses séances » mène au journal du client (#/journal, lecture seule) au lieu
        de #/entrainement (sa clé perf, vide) ; « Son journal » entre dans la navigation de sa fiche (détail : verif60 G) */
-    ok("fiche de Thomas : « Ses calories » → #/client/<uuid>/calculateur (v71 I : adresse canonique) ; v53 : « Ses séances » → …/journal, « Son journal » dans sa navigation", actions.some(([t, h]) => t === "Ses calories" && h === "#/client/" + F.IDS.c1 + "/calculateur") && actions.some(([t, h]) => t === "Ses séances" && h === "#/client/" + F.IDS.c1 + "/journal") && !!(await page.$('#nav a[data-id="journal"]')), JSON.stringify(actions));
+    ok("fiche de Thomas : « Ses calories » → #/client/<uuid>/calculateur (v71 I : adresse canonique) ; v53 : « Ses séances » → …/journal, « Son journal » dans sa navigation (v104 : le bandeau de la fiche, plus #nav)", actions.some(([t, h]) => t === "Ses calories" && h === "#/client/" + F.IDS.c1 + "/calculateur") && actions.some(([t, h]) => t === "Ses séances" && h === "#/client/" + F.IDS.c1 + "/journal") && !(await page.$('#nav a[data-id="journal"]')), JSON.stringify(actions));
     await aller(page, "#/calculateur", 1800);
     ok("fiche de Thomas, Ses calories : son calc (celui du coach) en départ", (await valeurDe(page, "#age")) === String(CALC_T.age) && (await valeurDe(page, "#poids")) === String(CALC_T.poids), (await valeurDe(page, "#age")) + " / " + JSON.stringify(CALC_T));
     const n0 = ecr(db, "calc", F.IDS.c1).length;

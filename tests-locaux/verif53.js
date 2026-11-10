@@ -569,8 +569,11 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     }
     await aller(page, "#/tableau", 2600);
     /* v53 (chantier 4) : plus de cartes « Qui nécessite ton attention » : Julien est dans « À traiter maintenant » */
-    const cj = await page.$$eval("#tb-a-traiter .tb-liste li", l => l.map(e => e.textContent.replace(/\s+/g, " ").trim()).filter(t => t.includes("Julien Démo"))).catch(() => []);
-    ok("tableau de bord, « À traiter maintenant » : Julien « Inactif depuis 12 j »", cj.length === 1 && cj[0].includes("Inactif depuis 12 j"), JSON.stringify(cj));
+    /* v104 (point 10) : changement voulu — un client inactif n'est plus une urgence : Julien est dans « À surveiller »
+       (ul.tb-surveiller, sous « À traiter maintenant »), et plus dans la liste des urgences */
+    const cj = await page.$$eval("#tb-a-traiter ul.tb-surveiller li", l => l.map(e => e.textContent.replace(/\s+/g, " ").trim()).filter(t => t.includes("Julien Démo"))).catch(() => []);
+    const cu = await page.$$eval("#tb-a-traiter > ul.tb-at:not(.tb-surveiller) li", l => l.map(e => e.textContent).filter(t => t.includes("Julien Démo"))).catch(() => []);
+    ok("tableau de bord, « À surveiller » (v104 ; plus « À traiter maintenant ») : Julien « Inactif depuis 12 j »", cj.length === 1 && cj[0].includes("Inactif depuis 12 j") && cu.length === 0, JSON.stringify([cj, cu]));
     /* v53 (chantier 4) : plus de température ni de raison « Aucune action depuis N jours » : les vérifications de la page
        Prospects (Pia TIÈDE ; Rémi et Eva FROID) et de la fiche de Pia (TIÈDE) sont retirées (3) ; l'activité de Pia compte
        toujours (v71 (D) : « auj. » sur la tuile « Activité » de sa fiche, ci-dessus ; avant : « aujourd'hui » dans Mes clients) */

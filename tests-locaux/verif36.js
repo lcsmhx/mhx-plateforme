@@ -66,7 +66,13 @@ const server = http.createServer((req,res)=>{if(servirFichier(req,res,HTML))retu
     ok("coach : « Ses bilans hebdomadaires » avec la reponse du client", t.includes("Ses bilans hebdomadaires") && t.includes("4 séances tenues"));
     ok("coach : points a aborder mentionnent les statuts", t.includes("non atteint"));
     await page.evaluate(()=>{location.hash="#/programme"}); await page.waitForTimeout(1200);
-    ok("coach : selecteurs de statut d'objectif presents", (await page.$$("#prog-obj select")).length===3);
+    /* v104 (point 5) : changement voulu — les objectifs du mois se MODIFIENT dans l'onglet Suivi de la fiche (#suivi-obj) ;
+       la page Programme les montre en lecture seule (#obj-lecture, aucun sélecteur) avec « Modifier » → #/client/<id>/suivi.
+       Même vérification qu'avant (3 sélecteurs), à la nouvelle place ; même écriture ensuite (clé programme, statuts). */
+    const lect = await page.evaluate((id) => { const z = document.getElementById("prog-obj"); const l = z && z.querySelector("[data-obj-modifier]");
+      return !!z && !!z.querySelector("#obj-lecture") && z.querySelectorAll("select").length === 0 && !!l && l.getAttribute("href") === "#/client/" + id + "/suivi"; }, F.IDS.c1);
+    await page.evaluate(()=>{location.hash="#/suivi"}); await page.waitForTimeout(1200);
+    ok("coach : selecteurs de statut d'objectif presents (onglet Suivi, #suivi-obj ; Programme en lecture seule avec « Modifier » → Suivi)", lect && (await page.$$("#suivi-obj select")).length===3);
     await page.selectOption("#obj-st-0", "atteint"); await page.waitForTimeout(1000);
     ok("coach : changer un statut = ecriture programme avec statuts", ecr.some(e=>e.includes('"outil":"programme"') && e.includes("statuts")), ecr.filter(e=>e.includes("programme")).join(" | "));
     await c.close(); }

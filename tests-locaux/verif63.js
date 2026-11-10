@@ -352,8 +352,11 @@ const tuile = (page, lbl) => page.$$eval("#vue .tile", (l, t) => { const x = l.f
 const aTraiterTb = page => page.$$eval("#tb-a-traiter .tb-liste li", l => l.map(li => li.textContent.replace(/[  ]/g, " ").replace(/\s+/g, " ").trim())).catch(() => []);
 /* les libellés « alimentation » (vendredi : la question ; dimanche : « Alimentation ») dans une zone */
 const alim = (page, sel) => page.$$eval(sel + " .checkin-rep .lbl", l => l.map(e => e.textContent.trim()).filter(t => t === "Alimentation" || t === "Comment s'est passée ton alimentation ?").length).catch(() => -1);
+/* v104 (point 4) : changement voulu — dans la fiche d'un client, le coach lit les questions du bilan à la 3e personne
+   (« Comment s'est passée son alimentation ? », « Combien de séances a-t-il réalisées ? ») ; blocSemaine ne sert que chez le
+   coach (#bilan-vue) : il compte la question à la 3e personne ; le client (alim, #suivi-checkin) garde « ton alimentation » */
 const blocSemaine = (page, s) => page.evaluate(x => { const ed = document.querySelector(`#bilan-vue [data-fb-semaine="${x}"]`), d = ed && ed.closest("details"); return d ? { t: d.textContent.replace(/[  ]/g, " ").replace(/\s+/g, " ").trim(), ech: d.querySelectorAll(".checkin-echelles .pastille:not(.fbd-note)").length, rep: d.querySelectorAll(".checkin-rep").length, note: !!d.querySelector(".fbd-note"),
-  alim: Array.from(d.querySelectorAll(".checkin-rep .lbl")).map(e => e.textContent.trim()).filter(t => t === "Alimentation" || t === "Comment s'est passée ton alimentation ?").length } : null; }, s).catch(() => null);
+  alim: Array.from(d.querySelectorAll(".checkin-rep .lbl")).map(e => e.textContent.trim()).filter(t => t === "Alimentation" || t === "Comment s'est passée son alimentation ?").length } : null; }, s).catch(() => null);
 
 (async () => {
   await new Promise((r, k) => { server.once("error", e => k(new Error(e && e.code === "EADDRINUSE" ? "port " + PORT + " déjà pris (une autre suite tourne ?) : VERIF63_PORT=9791 node verif63.js ../index.html" : String(e)))); server.listen(PORT, r); });
@@ -762,8 +765,11 @@ const blocSemaine = (page, s) => page.evaluate(x => { const ed = document.queryS
     ok("G : fiche de Nina (dates piégées) : « Jamais rien saisi », tuile « — » « jamais rien saisi »", alN.includes("Jamais rien saisi") && !!tuN && tuN.val === "—" && tuN.sub === "jamais rien saisi" && !/NaN/.test(await texte(page, "#vue")), JSON.stringify([alN, tuN]));
     await page.click("#sortir-fiche").catch(() => {}); await attendre(page, 600);
     await aller(page, "#/tableau", 2400);
-    const L = (await aTraiterTb(page)).filter(t => t.includes("Julien Démo"));
-    ok("G : tableau de bord, « À traiter maintenant » : Julien « Inactif depuis 12 j »", L.length === 1 && L[0].includes("Inactif depuis 12 j"), JSON.stringify(await aTraiterTb(page)));
+    /* v104 (point 10) : changement voulu — un client inactif n'est plus une urgence : Julien est dans « À surveiller »
+       (ul.tb-surveiller, sous « À traiter maintenant »), et plus dans la liste des urgences */
+    const L = (await page.$$eval("#tb-a-traiter ul.tb-surveiller li", l => l.map(li => li.textContent.replace(/[  ]/g, " ").replace(/\s+/g, " ").trim())).catch(() => [])).filter(t => t.includes("Julien Démo"));
+    const U = (await page.$$eval("#tb-a-traiter > ul.tb-at:not(.tb-surveiller) li", l => l.map(li => li.textContent)).catch(() => [])).filter(t => t.includes("Julien Démo"));
+    ok("G : tableau de bord, « À surveiller » (v104 ; plus « À traiter maintenant ») : Julien « Inactif depuis 12 j »", L.length === 1 && L[0].includes("Inactif depuis 12 j") && U.length === 0, JSON.stringify(await aTraiterTb(page)));
     ok("G : afficher n'écrit rien", db.ecritures.length === 0, resume(db));
   });
   await bloc("G2. de bout en bout : le compte de test ouvre Mon suivi, le coach voit toujours « 12 j »", async () => {
@@ -817,7 +823,7 @@ const blocSemaine = (page, s) => page.evaluate(x => { const ed = document.queryS
       !!B0 && B0.ech === 4 && B0.rep === 6 && !B0.note && !!B14 && B14.note && B14.ech === 0 && B14.rep === 1 && B14.t.includes("Séances du dimanche"), JSON.stringify([B0, B14]).slice(0, 500));
     const x = await page.evaluate(() => (window.__xss || 0) + document.querySelectorAll("img[data-xss]").length);
     ok("H2 : réponses piégées sous un feedback du dimanche : rien ne s'exécute, jamais « [object »", x === 0 && !!B21 && !B21.t.includes("[object") && !(await texte(page, "#bilan-vue")).includes("[object"), String(x) + " " + (B21 ? B21.t.slice(0, 300) : ""));
-    ok("H2 : … ses réponses du vendredi lisibles (séances 3, l'énergie écrite en texte)", !!B21 && B21.t.includes("Combien de séances as-tu réalisées ?3") && B21.t.includes('<img src="x"'), B21 ? B21.t.slice(0, 400) : "");
+    ok("H2 : … ses réponses du vendredi lisibles (séances 3, l'énergie écrite en texte)", !!B21 && B21.t.includes("Combien de séances a-t-il réalisées ?3") && B21.t.includes('<img src="x"'), B21 ? B21.t.slice(0, 400) : "");
   });
 
   /* =================== I. le coach en consultation =================== */
