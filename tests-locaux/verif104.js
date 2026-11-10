@@ -822,6 +822,31 @@ const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { 
       p.champs === 0 && p.lecture && /\/suivi$/.test(p.lien) && /Marcher 9 000 pas/.test(p.texte) && /\/suivi$/.test(a.lien) && a.champs === 0 && c.champs === 0 && c.lien >= 1, JSON.stringify({ p, a, c }));
   });
 
+  /* =================== K. point 8 : boutons « × » de 44 px, séparés des autres =================== */
+  await bloc("K. point 8", async () => {
+    const mes = [];
+    for (const vp of [MOBILE, ORDI]) {
+      const db = base();
+      const { page } = await contexte(b, COACH, db, { viewport: vp });
+      for (const [ch, sel] of [["programme", "#pg-publier"], ["complements", null], ["mensurations", null]]) {
+        await ouvrir(page, C1, ch, sel);
+        await page.evaluate(() => { const d = document.querySelector("#vue details.ex-pli"); if (d) d.open = true; });   // point 7 : le 1er exercice ouvert
+        await attendre(page, 300);
+        mes.push(await page.evaluate(([ch, w]) => {
+          const vis = e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
+          const x = Array.from(document.querySelectorAll("#vue .del, #vue .fo-x")).filter(vis);
+          const petits = x.map(e => e.getBoundingClientRect()).filter(r => r.width < 43.5 || r.height < 43.5).map(r => Math.round(r.width) + "×" + Math.round(r.height));
+          /* le voisin de gauche sur la même ligne (un autre bouton) : au moins 10 px d'écart */
+          const colles = x.filter(e => { const r = e.getBoundingClientRect(); const v = Array.from(e.parentElement.querySelectorAll("button, a.btn")).filter(o => o !== e && vis(o)).map(o => o.getBoundingClientRect())
+            .filter(o => Math.abs((o.top + o.bottom) / 2 - (r.top + r.bottom) / 2) < 10 && o.right <= r.left + 1); return v.some(o => r.left - o.right < 10); }).length;
+          return { ch, w, n: x.length, petits, colles };
+        }, [ch, vp.width]));
+      }
+    }
+    ok("K1 (point 8) : programme (exercice ouvert), compléments, mesures, à 390 et 1280 px : chaque « × » fait au moins 44 × 44 px et garde 10 px au moins avec le bouton voisin",
+      mes.filter(m => m.ch === "programme").every(m => m.n > 0) && mes.every(m => m.petits.length === 0 && m.colles === 0), JSON.stringify(mes));
+  });
+
   /* =================== L. point 9 : en-tête sur ordinateur =================== */
   await bloc("L. point 9", async () => {
     const db = base();
