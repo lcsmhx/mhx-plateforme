@@ -227,7 +227,7 @@ function construireNav(){
   const nav = $("nav");
   /* le coach hors fiche : ses outils d'abord, ses propres onglets client ensuite */
   const coachSeul = Auth.estCoach() && !Store.idConsulte;
-  const visibles = outilsVisibles().filter(o => !o.masque_nav && !horsVitrine(o));   // v50
+  const visibles = outilsVisibles().filter(o => !o.masque_nav && !horsVitrine(o) && !cachePourClient(o));   // v50 ; v100 : le menu du client
   /* v98 : les 7 entrées du coach (MENU_COACH) ; dans la fiche d'un client : ses onglets, puis ces 7 entrées (plus les autres
      pages du coach : elles gardent leur adresse) */
   const fiche = Auth.estCoach() && !!Store.idConsulte;
@@ -280,6 +280,29 @@ function brancherLogo(){
   a.onclick = e => { if (location.hash === lienOutil(cible)){ e.preventDefault(); afficher(cible); } };
 }
 
+/* v100 : un client accompagné (pas un prospect, pas le coach, pas une fiche) */
+function clientAccompagne(){ return Auth.connecte() && !!Auth.profil && !Auth.estCoach() && !Auth.estProspect() && !Store.idConsulte; }
+/* v100 : a-t-il une diète ? (lue une fois par visite, une seule ligne ; inconnu ou lecture ratée : le calculateur reste) */
+const DieteClient = {
+  etat: {},
+  connue(){ const u = Auth.utilisateur(); return u ? this.etat[u.id] : undefined; },
+  async verifier(){
+    const u = Auth.utilisateur(); if (!u || !clientAccompagne() || u.id in this.etat) return;
+    this.etat[u.id] = null;   // en cours
+    try {
+      const r = await Store.lireTout(["repas"]);
+      if (r.erreur){ delete this.etat[u.id]; return; }
+      const R = r.repas || {};
+      this.etat[u.id] = (R.jours || []).some(j => j && (j.repas || []).length) || (Array.isArray(R.repas) && R.repas.length > 0);
+    } catch(e){ delete this.etat[u.id]; return; }
+    if (this.etat[u.id] && clientAccompagne()){ construireNav(); marquerNav(courant); }
+  }
+};
+function cachePourClient(o){
+  if (!o || !clientAccompagne()) return false;
+  return CACHES_CLIENT.indexOf(o.id) > -1 || (CACHES_AVEC_DIETE.indexOf(o.id) > -1 && DieteClient.connue() === true);
+}
+
 /* v98 : le menu du coach hors fiche (MENU_COACH, liste-outils.js), dans cet ordre ; ses autres pages gardent leur adresse */
 function menuCoach(visibles){ return MENU_COACH.map(id => visibles.find(o => o.id === id)).filter(Boolean); }
 function nomMenuCoach(o){ return NOMS_MENU_COACH[o.id] || o.nom; }
@@ -290,7 +313,7 @@ function construireBarreBas(){
   if (!b){ b = document.createElement("nav"); b.id = "barre-bas"; b.className = "barre-bas"; b.setAttribute("aria-label", "Navigation"); document.body.appendChild(b); }
   const principaux = outilsPrincipaux();
   const coachSeul = Auth.estCoach() && !Store.idConsulte;
-  const visiblesNav = outilsVisibles().filter(o => !o.masque_nav && !horsVitrine(o));   // v50
+  const visiblesNav = outilsVisibles().filter(o => !o.masque_nav && !horsVitrine(o) && !cachePourClient(o));   // v50 ; v100 : le menu du client
   const enFiche = Auth.estCoach() && !!Store.idConsulte;
   const autres = (coachSeul ? menuCoach(visiblesNav) : enFiche ? visiblesNav.filter(o => o.role !== "coach").concat(menuCoach(visiblesNav.filter(o => o.role === "coach"))) : visiblesNav).filter(o => principaux.indexOf(o) === -1);   // v98 : le coach, ses 7 entrées (aussi dans une fiche)
   b.innerHTML = principaux.map(o =>
@@ -326,6 +349,7 @@ function marquerNav(id){
   if (id === "decouverte") id = "accueil";   // la Decouverte est l'accueil du prospect (sans onglet a elle) : « Accueil » est marque, pas « Plus »
   /* v98 (relecture) : le coach hors fiche, sur une page sortie du menu : son entrée « parente » est marquée (jamais « Plus » vide) */
   if (Auth.estCoach() && !Store.idConsulte && PARENTS_MENU_COACH[id]) id = PARENTS_MENU_COACH[id];
+  if (PARENTS_CLIENT[id] && cachePourClient(OUTILS.find(o => o.id === id))) id = PARENTS_CLIENT[id];   // v100 : sa page « parente »
   $$("#barre-bas a, .menu-plus a").forEach(a => { if (a.dataset.id === id) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
   const plus = document.querySelector("#barre-bas [data-plus]");
   /* v98 (relecture) : « Plus » marqué seulement si la page est vraiment dans son volet (le coach : ses 7 entrées) */
@@ -594,6 +618,7 @@ async function afficher(id, silencieux, sansCompte){
   brancherInstallation();
 
   marquerNav(outil.id);
+  DieteClient.verifier();   // v100 : le calculateur quitte le menu d'un client qui a une diète (une lecture par visite)
   if (!silencieux) window.scrollTo(0, 0);
 }
 

@@ -361,7 +361,8 @@ async function ouvrirFiche(page, id, nom){
   else await page.evaluate(([i, n]) => Clients.ouvrir(i, n, "accueil"), [id, nom || ""]);
   await page.waitForSelector("#vue .bandeau", { timeout: 8000 }); await attendre(page, 800);
 }
-const NAV_CLIENT = ["accueil", "programme", "journal", "nutrition", "mensurations", "calculateur", "suivi", "formation", "complements", "profil"];
+/* v100 (menu du client) : Mon journal dans Programme ; avec une diète (Thomas), Calculateur et Mes compléments sous Nutrition */
+const NAV_CLIENT = ["accueil", "programme", "nutrition", "mensurations", "suivi", "formation", "profil"];
 const TXD = {
   avis: "Ces chiffres sont une estimation générale, pas un avis médical. Si tu as un doute sur ta santé, parles-en à un professionnel.",
   avis_en: "These numbers are a general estimate, not medical advice. If you have any doubt about your health, talk to a professional.",
@@ -385,11 +386,13 @@ const NOUVEAU = { probleme: "Perdre du gras", obstacle: "Le manque de temps avec
   await bloc("A. client Thomas : navigation", async () => {
     const db = base();
     const { c, page } = await contexte(b, THOMAS, db);
-    await page.goto(URL0); await pret(page, "#acc-vue");
+    await page.goto(URL0); await pret(page, "#acc-vue"); await attendre(page, 800);
     const nav = await page.$$eval("#nav a", l => l.map(a => a.dataset.id));
-    ok("ordinateur : navigation du client = accueil, programme, journal, nutrition, progression, calculateur, suivi, formation, compléments, profil (v53 : journal et calculateur en plus), aucun cadenas", JSON.stringify(nav) === JSON.stringify(NAV_CLIENT) && (await page.$$("#nav .nav-cadenas")).length === 0, JSON.stringify(nav));
-    const noms = await page.$$eval('#nav a[data-id="journal"], #nav a[data-id="calculateur"]', l => l.map(a => a.textContent.replace(/\s+/g, " ").trim()));
-    ok("… onglets « Mon journal » et « Calculateur »", JSON.stringify(noms) === '["Mon journal","Calculateur"]', JSON.stringify(noms));
+    ok("ordinateur : navigation du client = accueil, programme, nutrition, progression, suivi, formation, profil (v100 : le journal dans Programme, calculateur et compléments sous Nutrition), aucun cadenas", JSON.stringify(nav) === JSON.stringify(NAV_CLIENT) && (await page.$$("#nav .nav-cadenas")).length === 0, JSON.stringify(nav));
+    /* v100 : leurs pages gardent leur nom (« Mon journal », « Calculateur ») et leur entrée parente est marquée */
+    const noms = [];
+    for (const [h, par] of [["#/journal", "programme"], ["#/calculateur", "nutrition"]]){ await aller(page, h, 1300); noms.push([await page.evaluate(() => ((document.querySelector("#vue .masthead .eyebrow") || {}).textContent || "").split(" — ").pop().trim()), await page.evaluate(p => !!document.querySelector('#nav a[data-id="' + p + '"][aria-current="page"]'), par)]); }
+    ok("… leurs pages « Mon journal » et « Calculateur », sous Programme et Nutrition (marqués)", JSON.stringify(noms) === '[["Mon journal",true],["Calculateur",true]]', JSON.stringify(noms));
     const vus = [];
     for (const h of ["#/calculateur", "#/journal", "#/entrainement"]) { await aller(page, h, 1600); vus.push([h, await ou(page), await texte(page, "#vue .masthead h1")]); }
     ok("#/calculateur et #/journal : ses pages, l'adresse gardée ; #/entrainement (l'outil du coach, clé perf) reste fermé : son accueil", vus[0][1].courant === "calculateur" && vus[0][1].hash === "#/calculateur" && vus[0][2] === "Calculateur métabolique"
@@ -650,10 +653,11 @@ const NOUVEAU = { probleme: "Perdre du gras", obstacle: "Le manque de temps avec
     ok("barre du bas du client inchangée : Accueil, Programme, Nutrition, Progression (+ Plus)", JSON.stringify(await page.$$eval("#barre-bas a[data-id]", l => l.map(a => a.dataset.id))) === '["accueil","programme","nutrition","mensurations"]' && !!(await page.$("#barre-bas [data-plus]")), "");
     await page.click("#barre-bas [data-plus]"); await attendre(page, 500);
     const plus = await page.$$eval(".menu-plus a", l => l.map(a => [a.dataset.id, a.textContent.replace(/\s+/g, " ").trim()]));
-    ok("« Plus » : Mon journal et le Calculateur, puis le reste (suivi, formation, compléments, profil)", JSON.stringify(plus.map(x => x[0])) === '["journal","calculateur","suivi","formation","complements","profil"]' && plus[0][1] === "Mon journal" && plus[1][1] === "Calculateur", JSON.stringify(plus));
-    await page.click('.menu-plus a[data-id="journal"]'); await attendre(page, 1800);
+    ok("« Plus » (v100) : suivi, formation, profil (le journal est dans Programme ; calculateur et compléments sous Nutrition)", JSON.stringify(plus.map(x => x[0])) === '["suivi","formation","profil"]', JSON.stringify(plus));
+    await page.keyboard.press("Escape"); await attendre(page, 300);
+    await aller(page, "#/journal", 1800);
     const bt = await page.$eval('[data-jr-ouvrir="0"]', x => x.getBoundingClientRect().height).catch(() => 0);
-    ok("#/journal (depuis « Plus ») : sans débordement horizontal, « Plus » marqué, bouton « Noter ma séance » tactile (" + Math.round(bt) + " px)", (await ou(page)).courant === "journal" && !(await deborde(page)) && await page.$eval("#barre-bas [data-plus]", x => x.classList.contains("ici")) && bt >= 40, (await largeur(page)) + " · " + bt);
+    ok("#/journal (son adresse) : sans débordement horizontal, « Programme » marqué (pas « Plus »), bouton « Noter ma séance » tactile (" + Math.round(bt) + " px)", (await ou(page)).courant === "journal" && !(await deborde(page)) && await page.$eval('#barre-bas a[data-id="programme"]', x => x.getAttribute("aria-current") === "page") && !(await page.$eval("#barre-bas [data-plus]", x => x.classList.contains("ici"))) && bt >= 40, (await largeur(page)) + " · " + bt);
     await page.click('[data-jr-ouvrir="0"]'); await attendre(page, 400);
     ok("… formulaire de la séance ouvert : toujours sans débordement", await page.isVisible("#jr-seance-0 [data-jr-form]") && !(await deborde(page)), await largeur(page));
     await aller(page, "#/calculateur", 1800);
@@ -666,11 +670,12 @@ const NOUVEAU = { probleme: "Perdre du gras", obstacle: "Le manque de temps avec
     const db = base(); avecEn(db, F.IDS.c1); avecEn(db, F.IDS.c2);
     let { c, page } = await contexte(b, THOMAS, db, { langue: "en" });
     await page.goto(URL0 + "#/journal"); await pret(page, "#jr-historique"); await attendre(page, 900);
-    const t = await page.evaluate(() => ({ h2: Array.from(document.querySelectorAll("#jr-vue h2")).map(x => x.textContent.replace(/\s+/g, " ").trim()), intro: (document.querySelector("#jr-noter .note") || {}).textContent, hist: (document.querySelector("#jr-historique .note") || {}).textContent, boutons: Array.from(document.querySelectorAll("[data-jr-ouvrir]")).map(x => x.textContent.trim()), h1: (document.querySelector("#vue .masthead h1") || {}).textContent, nav: Array.from(document.querySelectorAll('#nav a[data-id="journal"], #nav a[data-id="calculateur"]')).map(a => a.textContent.replace(/\s+/g, " ").trim()) }));
+    const t = await page.evaluate(() => ({ h2: Array.from(document.querySelectorAll("#jr-vue h2")).map(x => x.textContent.replace(/\s+/g, " ").trim()), intro: (document.querySelector("#jr-noter .note") || {}).textContent, hist: (document.querySelector("#jr-historique .note") || {}).textContent, boutons: Array.from(document.querySelectorAll("[data-jr-ouvrir]")).map(x => x.textContent.trim()), h1: (document.querySelector("#vue .masthead h1") || {}).textContent, nav: [((document.querySelector("#vue .masthead .eyebrow") || {}).textContent || "").split(" — ").pop().trim()] }));
     const h = await historique(page);
-    ok("anglais, #/journal : « My program workouts », « My logged workouts », « Most recent first. », « Log my workout », dates au format américain ; onglets « My training log » et « Calculator »", t.h2[0] === "My program workouts" && t.h2[t.h2.length - 1].startsWith("My logged workouts") && norm(t.intro) === "Pick the workout you just did and log your reps and weights, set by set." && norm(t.hist) === "Most recent first." && t.boutons.length === 4 && t.boutons.every(x => x === "Log my workout") && JSON.stringify(t.nav) === '["My training log","Calculator"]' && JSON.stringify(h) === JSON.stringify(attenduHist(JOURNAL_T, usDate)), JSON.stringify(t) + " " + JSON.stringify(h.slice(0, 1)));
+    ok("anglais, #/journal : « My program workouts », « My logged workouts », « Most recent first. », « Log my workout », dates au format américain ; page « My training log » (v100 : plus dans le menu, dans Programme)", t.h2[0] === "My program workouts" && t.h2[t.h2.length - 1].startsWith("My logged workouts") && norm(t.intro) === "Pick the workout you just did and log your reps and weights, set by set." && norm(t.hist) === "Most recent first." && t.boutons.length === 4 && t.boutons.every(x => x === "Log my workout") && JSON.stringify(t.nav) === '["My training log"]' && JSON.stringify(h) === JSON.stringify(attenduHist(JOURNAL_T, usDate)), JSON.stringify(t) + " " + JSON.stringify(h.slice(0, 1)));
     await aller(page, "#/calculateur", 1800);
-    ok("anglais, #/calculateur : « Save my numbers », « not medical advice »", (await texte(page, "#calc-ok")) === "Save my numbers" && (await texte(page, "#calc-avis")) === TXD.avis_en, (await texte(page, "#calc-ok")) + " · " + await texte(page, "#calc-avis"));
+    const nomCalc = await page.evaluate(() => ((document.querySelector("#vue .masthead .eyebrow") || {}).textContent || "").split(" — ").pop().trim());
+    ok("anglais, #/calculateur : « Save my numbers », « not medical advice », page « Calculator »", (await texte(page, "#calc-ok")) === "Save my numbers" && (await texte(page, "#calc-avis")) === TXD.avis_en && nomCalc === "Calculator", (await texte(page, "#calc-ok")) + " · " + await texte(page, "#calc-avis") + " · " + nomCalc);
     await page.fill("#age", "17"); await page.press("#age", "Tab"); await attendre(page, 900);
     ok("anglais : âge 17 → « The calculator is for adults only (18 and over): nothing is saved. », rien d'écrit", (await texte(page, "#calc-etat")) === TXD.mineur_en && saisies(db).length === 0, await texte(page, "#calc-etat"));
     await c.close();

@@ -718,6 +718,8 @@ const outilNutrition = {
     </section>`;
     (jour.repas || []).forEach((x, i) => h += this.carteRepas(x, false, actif + ":" + i, suivi));
     h += this.blocCourses(R, suivi, true);   // v71 (E) : bouton « Vider la liste » cote client seulement
+    /* v100 (chantier 5) : les compléments vivent sous Nutrition (leur page garde son adresse) */
+    if (!Store.idConsulte && !Auth.estProspect()) h += `<section class="panel" id="nu-complements"><div class="acces-l"><a class="acces" href="#/complements"><span class="ico">${ICONES.complements || ""}</span><span class="txt"><b>${esc(trad("Mes compléments"))}</b><small>${esc(trad("Les compléments conseillés par ton coach : doses et moments."))}</small></span><span class="fleche">›</span></a></div></section>`;
     h += `<section class="panel"><p class="note" style="margin:0">Les grammages sont donnés crus, sauf mention contraire. Si un plat ne te convient pas, touche « Remplacer » : l'app t'en propose un autre avec les mêmes calories.</p></section>`;
     if (R.maj) h += `<p class="note" style="text-align:center">Repas mis à jour le ${esc(R.maj)}</p>`;
     return h;
