@@ -1511,7 +1511,9 @@ const outilProgramme = {
       const dessiner = () => { zone.innerHTML = BrouillonProg.annonceHTML(P) + self.vueLecture(P, J) + ProgFormation.lienHTML(); self.brancherFiches(zone); BrouillonProg.brancherAnnonce(zone, P); };
       dessiner();
       /* v100 (chantier 5) : « Mon journal » vit ici : l'historique des séances notées, sous le programme (même code que #/journal) */
-      let n = outilJournal.PAS;
+      /* v104 (partie 3) : sous le programme, les 5 séances notées les plus récentes (la page tenait sur 6 écrans de téléphone) ;
+         « Afficher les séances plus anciennes » ajoute les suivantes, comme avant ; #/journal garde toute la liste */
+      let n = 5;
       const dessinerHist = () => {
         const h = $("prog-jr"); if (!h || Auth.estCoach()) return;   // le client seulement (le coach garde sa page d'avant)
         h.innerHTML = outilJournal.historiqueHTML(J, n, false);
