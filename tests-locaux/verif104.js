@@ -873,6 +873,25 @@ const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { 
       t.tete === "Thomas Démo's profile" && t.sortir === "Back to my clients" && JSON.stringify(t.pages) === '["Their program","Their sessions"]' && t.h1 === "Their program" && t.dico.every(Boolean), JSON.stringify(t));
   });
 
+  /* =================== O. point 12 : les fichiers du coach demandés ensemble (appareil neuf) =================== */
+  await bloc("O. point 12", async () => {
+    const db = base();
+    const { page } = await contexte(b, COACH, db);
+    const debuts = [], m0 = /var MHX_COACH = \[([\s\S]*?)\]/.exec(fs.readFileSync(HTML, "utf8")), LISTE_COACH = m0 ? (m0[1].match(/"[^"]+"/g) || []).map(x => x.slice(1, -1)) : [];
+    /* chaque fichier de MHX_COACH répond en 400 ms : demandés l'un après l'autre, le dernier partirait 2,4 s après le premier */
+    await page.route(/\/js\/[^?]+\.js/, async r => {
+      const f = new URL(r.request().url()).pathname.replace(/^\//, "");
+      const coach = LISTE_COACH.indexOf(f) > -1;
+      if (coach) { debuts.push({ f, t: Date.now() }); await new Promise(x => setTimeout(x, 400)); }
+      return r.fallback();
+    });
+    await page.goto(URL0 + "#/clients"); await pret(page, "#lc-clients #lc-liste li"); await attendre(page, 400);
+    const n = await page.evaluate(() => ({ coach: MHX_COACH.length, liste: document.querySelectorAll("#lc-clients #lc-liste li").length, objets: ["Clients", "outilClients", "outilProspects", "outilTableau"].every(x => { try { return typeof eval(x) !== "undefined"; } catch (e) { return false; } }) }));
+    const ecart = debuts.length ? debuts[debuts.length - 1].t - debuts[0].t : -1;
+    ok("O1 (point 12) : sur un appareil neuf, les fichiers du coach sont demandés ensemble (moins de 300 ms entre le premier et le dernier, au lieu de l'un après l'autre) et s'exécutent dans l'ordre (ses outils et sa liste Clients sont là)",
+      debuts.length === n.coach && n.coach >= 5 && ecart >= 0 && ecart < 300 && n.liste > 0 && n.objets, JSON.stringify({ n, ecart, debuts: debuts.map(d => d.f) }));
+  });
+
   /* =================== Z. console, hôtes externes =================== */
   await bloc("Z. console et hôtes externes", async () => {
     const autres = Array.from(externes).filter(h => !/^(fonts\.(googleapis|gstatic)\.com|i\.ytimg\.com|img\.youtube\.com|www\.youtube-nocookie\.com)$/.test(h));

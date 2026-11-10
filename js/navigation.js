@@ -22,16 +22,17 @@ const CodeCoach = {
     try { localStorage.setItem(this.CLE, "1"); } catch(e){}
     const l = this.absents();
     let manque = 0;
-    for (const f of l){
-      await new Promise(fini => {
-        const s = document.createElement("script");
-        const fin = ok => { clearTimeout(m); if (!ok) manque++; fini(); };
-        const m = setTimeout(() => fin(false), 10000);   // v102 : 10 s au plus par fichier (le démarrage ne reste jamais bloqué)
-        s.src = f + "?v=" + (typeof MHX_FICHIERS !== "undefined" ? MHX_FICHIERS : "");
-        s.async = false; s.onload = () => fin(true); s.onerror = () => fin(false);
-        document.body.appendChild(s);
-      });
-    }
+    /* v104 (point 12) : les fichiers sont demandés TOUS ENSEMBLE (téléchargés en parallèle) ; async = false garde l'ordre
+       d'exécution de MHX_COACH. Avant, l'un après l'autre : sur un appareil neuf en 4G lente, 7 fichiers coûtaient environ 0,5 s de
+       plus. Délai de garde : 10 s, plus 2 s par fichier qui le précède (il attend leur exécution). */
+    await Promise.all(l.map((f, i) => new Promise(fini => {
+      const s = document.createElement("script");
+      const fin = ok => { clearTimeout(m); if (!ok) manque++; fini(); };
+      const m = setTimeout(() => fin(false), 10000 + 2000 * i);   // v102 : le démarrage ne reste jamais bloqué
+      s.src = f + "?v=" + (typeof MHX_FICHIERS !== "undefined" ? MHX_FICHIERS : "");
+      s.async = false; s.onload = () => fin(true); s.onerror = () => fin(false);
+      document.body.appendChild(s);
+    })));
     if (l.length) OUTILS.splice(0, OUTILS.length, ...listeOutils());
     if (manque) setTimeout(() => { try { UI.toast("Une partie de ton espace n'a pas pu se charger (connexion) : recharge la page.", "attention", 9000); } catch(e){} }, 800);
   }
