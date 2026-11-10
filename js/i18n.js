@@ -1688,3 +1688,11 @@ Object.assign(I18N.en, {
   "Programmes": "Programs"
 });
 /* v98-menu-coach-fin */
+/* v99-fiche (chantier 4 de la nuit du 10/11) : les 5 onglets de la fiche d'un client */
+Object.assign(I18N.en, {
+  "Aperçu": "Overview",
+  "Ses compléments": "Their supplements",
+  "Sa formation": "Their course",
+  "Son compte": "Their account"
+});
+/* v99-fiche-fin */

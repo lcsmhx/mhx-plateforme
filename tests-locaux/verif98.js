@@ -312,7 +312,6 @@ const volet = async page => { await page.click("#barre-bas [data-plus]"); await 
     await page.goto(URL0 + "#/mes-programmes/base"); await pret(page, "[data-mp-prog]");
     await page.click(`[data-mp-modifier="${p0.id}"]`); await pret(page, "#at-vue #at-nom"); await attendre(page, 600);
     const m = await fenetre(page); if (m) await toucherFenetre(page, "Oui, remplacer"); await attendre(page, 900);
-    const h = await page.evaluate(() => Array.from(document.querySelectorAll("[data-mp-prog] button")).map(x => x.getBoundingClientRect().height));
     ok("C4 : « Modifier » reprend le programme sous son nom (après « Remplacer ce que tu as commencé ? » si un brouillon est en cours)", (await page.inputValue("#at-nom")) === p0.nom, await page.inputValue("#at-nom"));
     await page.goto(URL0 + "#/mes-programmes/base"); await pret(page, "[data-mp-prog]");
     const hb = await page.evaluate(() => Array.from(document.querySelectorAll("[data-mp-prog] button")).map(x => x.getBoundingClientRect().height));

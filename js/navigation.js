@@ -366,8 +366,44 @@ function lienOutil(id){
 const RETOURS = { tableau: "Revenir au tableau de bord", clients: "Revenir à mes clients", prospects: "Revenir aux prospects",
   /* v84 : les pages du menu Plus qui ont reçu l'écran d'avant de Clients et de Prospects */
   "suivi-clients": "Revenir au suivi détaillé", comptes: "Revenir aux comptes", "suivi-commercial": "Revenir au suivi commercial", newsletter: "Revenir à la newsletter" };
-/* les outils du client consulté (le bandeau des pages de sa fiche ; v83 : aussi dans l'onglet Suivi de la fiche) */
+/* v99 (chantier 4 de la nuit du 10/11, plan-fiche-client) : la fiche d'un client en 5 ONGLETS, un seul en-tête. Chaque onglet
+   réunit les pages EXISTANTES (rien n'est réécrit, chaque page garde son adresse #/client/<id>/<outil> et ses garde-fous :
+   lecture seule, « Pas de connexion », compte figé pendant une écriture). L'onglet affiché suit la page ouverte : une
+   ancienne adresse ouvre le bon onglet. Aperçu = la fiche ; Profil › « Son compte » = l'onglet Compte de la fiche
+   (#/client/<id>/accueil/compte). */
+const ONGLETS_FICHE = [
+  { id: "apercu", nom: "Aperçu", pages: [["accueil", "Fiche"]] },
+  { id: "entrainement", nom: "Entraînement", pages: [["programme", "Son programme", true], ["journal", "Ses séances"]] },
+  { id: "nutrition", nom: "Nutrition", pages: [["nutrition", "Ses repas", true], ["calculateur", "Ses calories", true], ["complements", "Ses compléments"], ["journal-alimentaire", "Son journal alimentaire"]] },
+  { id: "suivi", nom: "Suivi", pages: [["suivi", "Son suivi"], ["bilan", "Préparer le call"], ["mensurations", "Ses courbes"], ["formation", "Sa formation"]] },
+  { id: "profil", nom: "Profil", pages: [["profil", "Son questionnaire"], ["accueil/compte", "Son compte"]] }
+];
+/* les pages d'un onglet qui existent pour ce client (journal alimentaire : interrupteur) */
+function pagesOnglet(g){ const v = outilsVisibles(); return g.pages.filter(p => v.some(o => o.id === p[0].split("/")[0])); }
+/* l'onglet de la page ouverte (courant, sousRoute) */
+function ongletFiche(id, sous){
+  if (id === "accueil") return sous === "compte" ? "profil" : "apercu";
+  const g = ONGLETS_FICHE.find(x => x.pages.some(p => p[0] === id));
+  return g ? g.id : "apercu";
+}
+function lienPageFiche(p){ const [id, s] = p.split("/"); return lienOutil(id) + (s ? "/" + s : ""); }
+/* v99 : WhatsApp toujours visible dans l'en-tête : le numéro du client (clé contact), lu une fois par fiche */
+const TelFiche = {
+  tels: {},
+  html(uid){ const t = this.tels[uid]; const l = t ? lienWaVers(t, "") : ""; return l ? `<a class="btn ghost petit fiche-wa-l" href="${esc(l)}" target="_blank" rel="noopener">WhatsApp</a>` : ""; },
+  async remplir(uid){
+    if (!uid) return;
+    if (!(uid in this.tels)){
+      try { const r = await Auth.appel("/rest/v1/donnees?user_id=eq." + uid + "&outil=eq.contact&select=contenu"); this.tels[uid] = Contact.telephone(r && r[0] && r[0].contenu) || ""; }
+      catch(e){ return; }   // pas de connexion : pas de bouton (rien d'autre ne change)
+    }
+    if (Store.idConsulte !== uid) return;
+    $$("[data-fiche-wa]").forEach(z => { z.innerHTML = this.html(uid); });
+  }
+};
+/* les outils du client consulté, tous (l'onglet Suivi de la fiche : l'accès à tous les outils du client, comme avant) */
 function actionsConsultation(){
+  const v = outilsVisibles();
   return [
     { id:"accueil",      nom:"Fiche" },
     { id:"bilan",        nom:"Préparer le call" },
@@ -382,27 +418,47 @@ function actionsConsultation(){
     { id:"journal",      nom:"Ses séances" },
     /* v79 : son journal alimentaire (lecture seule), seulement s'il lui est ouvert (interrupteur) */
     { id:"journal-alimentaire", nom:"Son journal alimentaire" }
-  ].filter(a => a.id !== "journal-alimentaire" || outilsVisibles().some(o => o.id === a.id));
+    /* v99 : ce bandeau (onglet Suivi de la fiche) reste celui d'avant ; ses compléments et sa formation sont dans les onglets
+       Nutrition et Suivi de l'en-tête */
+  ].filter(a => v.some(o => o.id === a.id));
 }
-/* v83 (bloc 3) : sur la fiche elle-même (accueil), une fois la fiche dessinée, le bandeau quitte le haut de la page (la fiche a son
-   en-tête : croix, onglets) pour l'onglet Suivi (outilAccueil.fiche), tel qu'avant : l'accès à tous les outils du client. Pendant
-   le chargement de la fiche, ou si elle n'a pas pu s'afficher, il reste en haut (« Revenir … » et les outils restent là). */
-function bandeauConsultation(){
+/* L'en-tête de chaque page de la fiche : « Fiche de … », WhatsApp, les 5 onglets, les pages de l'onglet ouvert, « Revenir … ».
+   tout = true : l'ancien bandeau (tous les outils du client), dans l'onglet Suivi de la fiche elle-même (v83). */
+function bandeauConsultation(tout){
   if (!Store.idConsulte) return "";
-  /* Sans ces boutons, le coach atterrit sur une page et ne devine pas que
-     tout le reste de la fiche est accessible par les onglets du haut.
-     Un mode implicite est un mode qu'on ne trouve pas. */
-  const actions = actionsConsultation();
-  return `<div class="bandeau">
-    <div class="bandeau-tete">
-      <strong>${Store.nomConsulte === Clients.SANS_NOM ? "Fiche — " : "Fiche de "}${esc(Store.nomConsulte || "ce client")}</strong>
+  const nom = `<strong>${Store.nomConsulte === Clients.SANS_NOM ? "Fiche — " : "Fiche de "}${esc(Store.nomConsulte || "ce client")}</strong>`;
+  const sortir = `<button class="sortir" type="button" id="sortir-fiche">${esc(RETOURS[Store.retourVers] || RETOURS.clients)}</button>`;
+  if (tout){
+    const actions = actionsConsultation();
+    return `<div class="bandeau">
+    <div class="bandeau-tete">${nom}
       <span class="note">Tu vois ses données. Tu écris pour lui dans les boutons dorés, dans « Préparer le call » (ton feedback) et dans la fiche (tes notes privées, qu'il ne voit jamais).</span>
     </div>
     <div class="bandeau-actions">
       ${actions.map(a => `<a href="${esc(lienOutil(a.id))}" class="b-act${a.fort ? " fort" : ""}${courant === a.id ? " ici" : ""}">${esc(a.nom)}</a>`).join("")}
-      <button class="sortir" type="button" id="sortir-fiche">${esc(RETOURS[Store.retourVers] || RETOURS.clients)}</button>
+      ${sortir}
     </div>
   </div>`;
+  }
+  const ici = ongletFiche(courant, sousRoute), g = ONGLETS_FICHE.find(x => x.id === ici);
+  const pages = pagesOnglet(g);
+  return `<div class="bandeau fiche-entete">
+    <div class="bandeau-tete">${nom}
+      <span class="note">Tu vois ses données. Tu écris pour lui dans les boutons dorés, dans « Préparer le call » (ton feedback) et dans la fiche (tes notes privées, qu'il ne voit jamais).</span>
+    </div>
+    <span class="fiche-wa" data-fiche-wa>${TelFiche.html(Store.idConsulte)}</span>
+    ${ongletsFicheHTML(ici)}
+    <div class="bandeau-actions">
+      ${pages.length ? pages.map(p => { const actif = p[0] === courant || (p[0] === "accueil/compte" && courant === "accueil" && sousRoute === "compte");
+        return `<a href="${esc(lienPageFiche(p[0]))}" class="b-act${p[2] ? " fort" : ""}${actif ? " ici" : ""}"${actif ? ' aria-current="page"' : ""}>${esc(p[1])}</a>`; }).join("") : ""}
+      ${sortir}
+    </div>
+  </div>`;
+}
+/* les 5 onglets (liens : chaque onglet ouvre sa première page ; clavier : Tab et Entrée) */
+function ongletsFicheHTML(ici){
+  return `<nav class="fiche-onglets" aria-label="${esc(trad("Fiche"))}">${ONGLETS_FICHE.map(g => { const p = pagesOnglet(g)[0]; if (!p) return "";
+    return `<a class="f-onglet${g.id === ici ? " ici" : ""}" href="${esc(lienPageFiche(p[0]))}" data-onglet-fiche="${g.id}"${g.id === ici ? ' aria-current="page"' : ""}>${esc(trad(g.nom))}</a>`; }).join("")}</nav>`;
 }
 
 /* v42 — filet de securite : une page qui ne peut pas s'afficher (donnee
@@ -533,6 +589,7 @@ async function afficher(id, silencieux, sansCompte){
   if (avecDonnees){ initSauvegarde(); }
   /* « Revenir … » du bandeau et, v83 (bloc 3), la croix de la fiche (« Fermer la fiche ») : là d'où l'on vient */
   ["sortir-fiche", "fc-fermer"].forEach(id => { const b = $(id); if (b) b.addEventListener("click", sortirFiche); });
+  if (Store.idConsulte) TelFiche.remplir(Store.idConsulte);   // v99 : WhatsApp dans l'en-tête de la fiche (lecture seule)
 
   brancherInstallation();
 

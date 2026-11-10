@@ -1094,3 +1094,13 @@ ul.fc-lignes li > b{font-weight:500;text-align:right;min-width:0;overflow-wrap:a
 .mp-onglets .tab{text-decoration:none;display:inline-flex;align-items:center}
 .mp-onglets .tab.on{border-color:var(--accent);color:var(--ink)}
 [data-mp-prog] button{min-height:var(--h-toucher)}
+/* v99 (chantier 4 de la nuit du 10/11) : les 5 onglets de la fiche d'un client, WhatsApp dans l'en-tête */
+.fiche-onglets{display:flex;flex-wrap:wrap;gap:6px;width:100%;margin:6px 0 0}
+.f-onglet{display:inline-flex;align-items:center;min-height:var(--h-toucher);padding:0 14px;border:1px solid var(--line-strong);border-radius:var(--r-sm);
+  color:var(--ink-2);text-decoration:none;font-size:14px;font-weight:500}
+.f-onglet:hover{border-color:var(--accent);color:var(--ink)}
+.f-onglet.ici{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.fiche-wa:empty{display:none}
+a.btn.fiche-wa-l{min-height:var(--h-toucher)}
+.fc-tete .fiche-onglets{margin:12px 0}
+@media (max-width:560px){ .f-onglet{padding:0 11px;font-size:13px} }
