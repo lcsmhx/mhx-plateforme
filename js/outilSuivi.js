@@ -1084,7 +1084,7 @@ const outilSuivi = {
        reecrivait la liste sans elle (perdue). Les autres cles sont lues comme avant. */
     const copieOF = Store.copieAServir(Store.cible(), "objectifs_faits", { maj_le: dates.objectifs_faits || null });
     if (copieOF) d.objectifs_faits = Forme.cle("objectifs_faits", copieOF.v);
-    const P = d.programme || {}, J = d.journal || { seances: [] };
+    let P = d.programme || {}; const J = d.journal || { seances: [] };
     if (!Array.isArray(J.seances)) J.seances = [];
     /* le bilan hebdo : la cle est lue ici, mais on la re-lit par Store.lire
        pour que l'ecriture soit autorisee (drapeau de lecture) */
@@ -1104,7 +1104,10 @@ const outilSuivi = {
     }
     /* v104 (point 5) : le coach modifie ici, et seulement ici, les 3 objectifs du mois (ObjectifsCoach : l'écriture de la v102) ;
        le panneau à cocher du client n'est pas montré au coach (il ne peut pas cocher pour lui) */
-    const coach = Auth.estCoach();
+    const coach = Auth.estCoach() && !!Store.idConsulte;   // v104 (relecture) : la fiche d'un client seulement
+    /* v104 (relecture) : un objectif tapé hors ligne (copie gardée sur l'appareil, plus récente que la base) est montré, comme le
+       faisait la page Programme (Store.lire) : sinon la saisie suivante repartirait de l'ancien texte et l'effacerait */
+    if (coach){ const cp = Store.copieAServir(Store.cible(), "programme", { maj_le: dates.programme || null }); if (cp){ d.programme = Forme.cle("programme", cp.v) || d.programme; P = d.programme || {}; } }
     await Regularite.monterClient("suivi-reg", P, J, Object.assign({}, d, { sansObjectifs: coach }));
     let vider = null;
     if (coach){

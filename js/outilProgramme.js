@@ -606,13 +606,26 @@ const ObjectifsCoach = {
       await Store.envoyer(cle, N, uid, t0);   // identifiant figé : part chez ce client même si la fiche a changé
       if (copie === t0) copie = null;
     };
+    /* v104 (relecture) : pendant « Publier les changements » de CE client (page Programme), rien n'est écrit : la publication
+       reprend les objectifs de la base lus avant elle et écraserait un objectif tapé entre-temps. Les champs sont figés ; ils
+       reviennent dès la fin de la publication. */
+    const figer = () => {
+      const z = $(idZone); if (!z) return;
+      const oui = ObjectifsCoach.publiant === uid;
+      $$("input, select", z).forEach(x => { x.disabled = oui; });
+      const n = z.querySelector("[data-obj-publication]"); if (n) n.hidden = !oui;
+      if (oui) setTimeout(() => { if ($(idZone) === z && z.isConnected) figer(); }, 500);
+    };
     const sauver = (immediat) => {
+      if (ObjectifsCoach.publiant === uid){ UI.toast(trad("Publication du programme en cours : réessaie dans un instant."), "attention"); figer(); return false; }
       copie = Store.garder(uid, cle, Object.assign({}, P, { objectifs: P.objectifs }), { o: 1 });
       clearTimeout(minuteur);
       minuteur = setTimeout(() => { travail = envoyer(); }, immediat ? 0 : 700);
       return true;
     };
     Regularite.objectifsCoach(idZone, P, sauver, OF);
+    { const z = $(idZone), sec = z && z.querySelector("section.panel"); if (sec) sec.insertAdjacentHTML("beforeend", `<p class="note" data-obj-publication hidden style="margin:10px 0 0">${esc(trad("Publication du programme en cours : réessaie dans un instant."))}</p>`); }
+    figer();
     const vider = async () => {
       if (minuteur){ clearTimeout(minuteur); travail = envoyer(); }
       if (travail) try { await travail; } catch(e){}
@@ -621,6 +634,7 @@ const ObjectifsCoach = {
     return vider;
   },
   _vider: null,
+  publiant: null,   // v104 (relecture) : le compte dont le programme est en train d'être publié (page Programme)
   /* un objectif tapé dans Suivi juste avant part tout de suite (sortie de la page, « Publier les changements ») */
   async vider(){ if (this._vider) await this._vider(); },
   /* lecture seule (Programme, Préparer le call) : les objectifs et leur statut, puis « Modifier » (onglet Suivi) */
@@ -1652,14 +1666,14 @@ const outilProgramme = {
       const exos = (b.seances || []).reduce((n, sc) => n + (sc.exercices || []).filter(e => e.nom).length, 0);
       if (!exos){ flash("pg-pub-msg", trad("Ce programme est vide : ajoute au moins une séance avec un exercice avant de le publier.")); return; }
       if (!BrouillonProg.differe(b, P) && P.maj){ flash("pg-pub-msg", trad("Rien à publier : ton client voit déjà cette version.")); return; }
-      etat.publication = true;
+      etat.publication = true; ObjectifsCoach.publiant = uid;   // v104 (relecture) : Suivi n'écrit plus d'objectif pendant ce temps
       const boutons = ["pg-publier", "pg-publier-bas"].map(id => $(id)).filter(Boolean);
       boutons.forEach(x => { x.disabled = true; x.dataset.libelle = x.textContent; x.textContent = trad("Publication…"); });
       msg("");
       /* relecture : les objectifs du mois (écrits à part, dans le programme publié) sont bloqués pendant la publication */
       const objectifs = [];   // v104 (point 5) : plus de champs d'objectifs sur cette page
       const corps = $$("#prog-vue > section:not(#pg-etat)"); corps.forEach(x => x.setAttribute("inert", ""));   // v102 : rien ne se tape pendant la publication
-      const fin = () => { etat.publication = false; corps.forEach(x => x.removeAttribute("inert")); objectifs.forEach(x => { if (x.isConnected) x.disabled = false; }); boutons.forEach(x => { if (x.isConnected){ x.disabled = false; x.textContent = x.dataset.libelle; } }); };
+      const fin = () => { etat.publication = false; if (ObjectifsCoach.publiant === uid) ObjectifsCoach.publiant = null; corps.forEach(x => x.removeAttribute("inert")); objectifs.forEach(x => { if (x.isConnected) x.disabled = false; }); boutons.forEach(x => { if (x.isConnected){ x.disabled = false; x.textContent = x.dataset.libelle; } }); };
       try {
         const r = await BrouillonProg.publier(uid, P, b, etat.D, majPublie());
         if (!zone.isConnected || Store.cible() !== uid){   // page ou fiche quittée : aucun message sur la page d'un autre client
@@ -1784,6 +1798,7 @@ const outilProgramme = {
     redessiner();
     /* v104 (point 5) : les objectifs du mois en lecture seule (statut posé par le coach, case du client), « Modifier » → Suivi */
     { const zo = $("prog-obj"); if (zo){ const OF = await Store.lire("objectifs_faits", {}); if (zo.isConnected && Store.cible() === uid) zo.innerHTML = ObjectifsCoach.lectureHTML(P, Store.nonLus.has(OF) ? {} : OF); } }
+    if (Store.cible() !== uid || !zone.isConnected) return;   // v104 (relecture) : page ou fiche quittée pendant cette lecture
     Journal.resumeCoach("prog-jr");
     Historique.monter("programme", "prog-hist", async (C) => {
       const b = etat.B;

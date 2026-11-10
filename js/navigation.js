@@ -554,7 +554,7 @@ Object.assign(PHRASES_FICHE, {
   "Tes quatre dernières semaines en un coup d'œil : ce que tu as fait, ce qui a bougé et ce qu'on travaille ensuite.": "Ses quatre dernières semaines en un coup d'œil : ce qu'il a fait, ce qui a bougé et ce que vous travaillez ensuite.",
   "Toutes tes mesures": "Toutes ses mesures",
   "Renommer les zones que tu mesures": "Renommer les zones qu'il mesure",
-  "Son métier et ton rythme de travail": "Son métier et son rythme de travail",
+  "Ton métier et ton rythme de travail": "Son métier et son rythme de travail",
   "Quel est ton objectif principal ? *": "Quel est son objectif principal ? *",
   "Décris ton objectif en une phrase, avec un chiffre si possible": "Son objectif en une phrase, avec un chiffre si possible",
   "Pourquoi maintenant ? Qu'est-ce qui a déclenché ta décision ?": "Pourquoi maintenant ? Qu'est-ce qui a déclenché sa décision ?",
@@ -582,7 +582,7 @@ Object.assign(PHRASES_FICHE, {
   "As-tu des contraintes de budget alimentaire ?": "A-t-il des contraintes de budget alimentaire ?",
   "Qualité de ton sommeil": "Qualité de son sommeil",
   "À quel moment de la journée as-tu tes coups de barre ?": "À quel moment de la journée a-t-il ses coups de barre ?",
-  "Son entourage va-t-il soutenir ta démarche ou la compliquer ?": "Son entourage va-t-il soutenir sa démarche ou la compliquer ?",
+  "Ton entourage va-t-il soutenir ta démarche ou la compliquer ?": "Son entourage va-t-il soutenir sa démarche ou la compliquer ?",
   "Fumes-tu ?": "Fume-t-il ?",
   "Tu es ?": "Sexe"
 });

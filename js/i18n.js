@@ -1861,3 +1861,5 @@ Object.assign(I18N.en, {
   "À lire avant de publier": "Read before publishing",
   "Repas du jour": "Meals of the day"
 });
+/* v104 (relecture) : objectifs du mois figés pendant la publication du programme */
+Object.assign(I18N.en, { "Publication du programme en cours : réessaie dans un instant.": "The program is being published: try again in a moment." });
