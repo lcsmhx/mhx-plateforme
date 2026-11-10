@@ -499,8 +499,9 @@ function actionsConsultation(){
    tout = true : l'ancien bandeau (tous les outils du client), dans l'onglet Suivi de la fiche elle-même (v83). */
 function bandeauConsultation(tout){
   if (!Store.idConsulte) return "";
-  const nom = `<strong>${Store.nomConsulte === Clients.SANS_NOM ? "Fiche — " : "Fiche de "}${esc(Store.nomConsulte || "ce client")}</strong>`;
-  const sortir = `<button class="sortir" type="button" id="sortir-fiche">${esc(RETOURS[Store.retourVers] || RETOURS.clients)}</button>`;
+  /* v104 (point 11) : « Fiche de … » et « Revenir … » traduits (le nom reste tel quel) */
+  const nom = `<strong>${esc(trad(Store.nomConsulte === Clients.SANS_NOM ? "Fiche — {n}" : "Fiche de {n}", { n: Store.nomConsulte || trad("ce client") }))}</strong>`;
+  const sortir = `<button class="sortir" type="button" id="sortir-fiche">${esc(trad(RETOURS[Store.retourVers] || RETOURS.clients))}</button>`;
   /* v104 (point 4) : l'Aperçu garde le bandeau commun en haut ; cet ancien bandeau (tous les outils du client) ne répète plus
      « Fiche de … », la phrase d'aide ni « Revenir … » (un seul #sortir-fiche par page) : il ne garde que les liens */
   if (tout){
@@ -521,7 +522,7 @@ function bandeauConsultation(tout){
     ${ongletsFicheHTML(ici)}
     <div class="bandeau-actions">
       ${pages.length ? pages.map(p => { const actif = p[0] === courant || (p[0] === "accueil/compte" && courant === "accueil" && sousRoute === "compte");
-        return `<a href="${esc(lienPageFiche(p[0]))}" class="b-act${p[2] ? " fort" : ""}${actif ? " ici" : ""}"${actif ? ' aria-current="page"' : ""}>${esc(p[1])}</a>`; }).join("") : ""}
+        return `<a href="${esc(lienPageFiche(p[0]))}" class="b-act${p[2] ? " fort" : ""}${actif ? " ici" : ""}"${actif ? ' aria-current="page"' : ""}>${esc(trad(p[1]))}</a>`; }).join("") : ""}
       ${sortir}
     </div>
   </div>`;
@@ -703,8 +704,8 @@ async function afficher(id, silencieux, sansCompte){
   $("vue").innerHTML = `
     ${bandeauConsultation()}${installationHaut ? installation : ""}
     ${outil.sans_entete ? "" : `<header class="masthead">
-      <span class="eyebrow">${Store.idConsulte ? esc(Store.nomConsulte || "client") + " — " : (CONFIG.marque.programme ? esc(CONFIG.marque.programme) + " — " : "")}${esc(nomOnglet(outil))}</span>
-      <h1>${Store.idConsulte ? esc(nomOnglet(outil)) : esc(outil.titre)}</h1>
+      <span class="eyebrow">${Store.idConsulte ? esc(Store.nomConsulte || "client") + " — " : (CONFIG.marque.programme ? esc(CONFIG.marque.programme) + " — " : "")}${esc(Store.idConsulte ? trad(nomOnglet(outil)) : nomOnglet(outil))}</span>
+      <h1>${Store.idConsulte ? esc(trad(nomOnglet(outil))) : esc(outil.titre)}</h1>
       ${Store.idConsulte ? "" : `<p class="lede">${esc(outil.accroche)}</p>`}
     </header>`}
     ${verrouille ? pageVerrouillee(outil) : (pause ? Sante.carteHTML(outil.id) : "") + htmlSur(outil)}

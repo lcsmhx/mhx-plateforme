@@ -1814,3 +1814,32 @@ Object.assign(I18N.en, {
   "Urgences (une action de ta part aujourd'hui) : un 😞 non traité, une note en chute, ou un retour de la semaine à lire. Le reste (inactif, régularité faible, calculateur) est « À surveiller ».": "Urgent (an action from you today): an unhandled 😞, a falling score, or a weekly check-in to read. The rest (inactive, low consistency, calculator) is \"To keep an eye on\".",
   "Urgences (une action de ta part aujourd'hui) : inscrit depuis moins de 48 h, « J'ai réservé » à vérifier, clic sur la réservation sans créneau, absent à l'appel pas encore relancé, ou « Signé » à passer client.": "Urgent (an action from you today): signed up less than 48 h ago, \"I booked\" to check, clicked booking without a slot, missed the call and not yet followed up, or \"Signed\" to switch to client."
 });
+/* v104 (point 11) : les textes du coach qui restaient en français (fiche d'un client, calculateur) */
+Object.assign(I18N.en, {
+  "Fiche client": "Client profile",
+  "dernier : {d}": "last: {d}",
+  "Source": "Source",
+  "3. Maintenance": "3. Maintenance calories",
+  "Fiche de {n}": "{n}'s profile",
+  "Fiche — {n}": "Profile — {n}",
+  "ce client": "this client",
+  "Revenir au tableau de bord": "Back to the dashboard",
+  "Revenir à mes clients": "Back to my clients",
+  "Revenir aux prospects": "Back to prospects",
+  "Revenir au suivi détaillé": "Back to detailed tracking",
+  "Revenir aux comptes": "Back to accounts",
+  "Revenir au suivi commercial": "Back to sales tracking",
+  "Revenir à la newsletter": "Back to the newsletter",
+  "Son programme": "Their program",
+  "Ses séances": "Their sessions",
+  "Ses repas": "Their meals",
+  "Ses calories": "Their calories",
+  "Son journal alimentaire": "Their food diary",
+  "Ses courbes": "Their charts",
+  "Son questionnaire": "Their questionnaire",
+  "Son bilan": "Their review",
+  "Sa progression": "Their progress",
+  "Son profil": "Their profile",
+  "Son entraînement": "Their training",
+  "Son journal": "Their log"
+});

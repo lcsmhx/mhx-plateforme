@@ -30,8 +30,8 @@ const outilAccueil = {
     const cle = sousRoute === "compte" ? "accueil/compte" : "accueil";
     const page = ((ONGLETS_FICHE.map(g => g.pages).reduce((a, b) => a.concat(b), []).find(p => p[0] === cle)) || [cle, "Fiche"])[1];
     return `<header class="masthead">
-      <span class="eyebrow">${esc(Store.nomConsulte || "client") + " — "}${esc(page)}</span>
-      <h1>${esc(page)}</h1>
+      <span class="eyebrow">${esc(Store.nomConsulte || "client") + " — "}${esc(trad(page))}</span>
+      <h1>${esc(trad(page))}</h1>
     </header>`;
   },
 
