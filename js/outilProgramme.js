@@ -612,6 +612,10 @@ const ObjectifsCoach = {
     const figer = () => {
       const z = $(idZone); if (!z) return;
       const oui = ObjectifsCoach.publiant === uid;
+      /* fin de la publication pendant que Suivi était figé : la page est redessinée (P est maintenant l'ancien programme ; un
+         objectif tapé dessus serait écarté) */
+      if (!oui && z.dataset.fige === "1"){ if (Store.cible() === uid && courant === "suivi") afficher("suivi", true, true); return; }
+      z.dataset.fige = oui ? "1" : "";
       $$("input, select", z).forEach(x => { x.disabled = oui; });
       const n = z.querySelector("[data-obj-publication]"); if (n) n.hidden = !oui;
       if (oui) setTimeout(() => { if ($(idZone) === z && z.isConnected) figer(); }, 500);

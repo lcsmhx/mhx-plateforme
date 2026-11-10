@@ -1107,7 +1107,7 @@ const outilSuivi = {
     const coach = Auth.estCoach() && !!Store.idConsulte;   // v104 (relecture) : la fiche d'un client seulement
     /* v104 (relecture) : un objectif tapé hors ligne (copie gardée sur l'appareil, plus récente que la base) est montré, comme le
        faisait la page Programme (Store.lire) : sinon la saisie suivante repartirait de l'ancien texte et l'effacerait */
-    if (coach){ const cp = Store.copieAServir(Store.cible(), "programme", { maj_le: dates.programme || null }); if (cp){ d.programme = Forme.cle("programme", cp.v) || d.programme; P = d.programme || {}; } }
+    if (coach){ const cp = Store.copieAServir(Store.cible(), "programme", { maj_le: dates.programme || null, contenu: d.programme }); if (cp){ d.programme = Forme.cle("programme", cp.v) || d.programme; P = d.programme || {}; } }
     await Regularite.monterClient("suivi-reg", P, J, Object.assign({}, d, { sansObjectifs: coach }));
     let vider = null;
     if (coach){
