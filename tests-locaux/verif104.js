@@ -828,9 +828,9 @@ const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { 
     for (const vp of [MOBILE, ORDI]) {
       const db = base();
       const { page } = await contexte(b, COACH, db, { viewport: vp });
-      for (const [ch, sel] of [["programme", "#pg-publier"], ["complements", null], ["mensurations", null]]) {
+      for (const [ch, sel] of [["programme", "#pg-publier"], ["nutrition", "#nu-vue"], ["complements", null], ["mensurations", null]]) {
         await ouvrir(page, C1, ch, sel);
-        await page.evaluate(() => { const d = document.querySelector("#vue details.ex-pli"); if (d) d.open = true; });   // point 7 : le 1er exercice ouvert
+        await page.evaluate(() => { ["#vue details.ex-pli", "#vue details.repas-c, #vue .repas-c details, #vue details:has(.g-edit)"].forEach(q => { const d = document.querySelector(q); if (d) d.open = true; }); });   // points 6 et 7 : le 1er exercice et le 1er repas ouverts
         await attendre(page, 300);
         mes.push(await page.evaluate(([ch, w]) => {
           const vis = e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
@@ -843,8 +843,8 @@ const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { 
         }, [ch, vp.width]));
       }
     }
-    ok("K1 (point 8) : programme (exercice ouvert), compléments, mesures, à 390 et 1280 px : chaque « × » fait au moins 44 × 44 px et garde 10 px au moins avec le bouton voisin",
-      mes.filter(m => m.ch === "programme").every(m => m.n > 0) && mes.every(m => m.petits.length === 0 && m.colles === 0), JSON.stringify(mes));
+    ok("K1 (point 8) : programme (exercice ouvert), nutrition (repas ouvert), compléments, mesures, à 390 et 1280 px : chaque « × » fait au moins 44 × 44 px et garde 10 px au moins avec le bouton voisin",
+      mes.filter(m => m.ch === "programme" || m.ch === "nutrition").every(m => m.n > 0) && mes.every(m => m.petits.length === 0 && m.colles === 0), JSON.stringify(mes));
   });
 
   /* =================== L. point 9 : en-tête sur ordinateur =================== */
