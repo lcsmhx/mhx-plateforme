@@ -436,7 +436,7 @@ const Checkin = {
     const sous = e.semaine.etat === "en_retard"
       ? trad("Ton bilan de la semaine du {a} au {b} n'est pas encore fait : tu as jusqu'à {j} soir.", { a: dateFr(e.semaine.debut), b: dateFr(e.semaine.fin), j: this.nomJour(e.semaine.limite) })
       : trad("5 minutes, avant dimanche soir : c'est ce qui permet à ton coach d'ajuster");
-    return `<a class="acces attention" href="${opts.lien || "#/suivi"}"><span class="ico">${ICONES.bilan}</span><span class="txt"><b>${esc(trad("Ton bilan de la semaine est disponible"))}</b><small>${esc(sous)}</small></span><span class="fleche">›</span></a>`;
+    return `<a class="acces attention" href="${esc(opts.lien || "#/suivi")}"><span class="ico">${ICONES.bilan}</span><span class="txt"><b>${esc(trad("Ton bilan de la semaine est disponible"))}</b><small>${esc(sous)}</small></span><span class="fleche">›</span></a>`;
   },
   /* v53 — la carte de la règle du dimanche (accueil) : toujours un lien vers Mon suivi */
   statutDimancheHTML(e, opts){

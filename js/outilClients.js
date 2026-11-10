@@ -123,8 +123,8 @@ const outilClients = {
     /* v58 : une valeur en plusieurs morceaux (7 + /10, 72,5 kg + départ…) tient dans UN élément : sur téléphone, la ligne de la
        carte (flex, space-between) écartait chaque morceau aux deux bouts (« 7        /10 ») */
     const bloc = h => `<span class="tb-val">${h}</span>`;
-    const note = l => l.note == null ? '<span class="meta">—</span>' : bloc(`<b${l.alertes.some(a => a.type === "note_chute") ? ' class="neg"' : ""}>${l.note}</b><span class="meta">/10</span>`);
-    const smiley = l => l.smiley ? `<span class="fbd-smiley-l" title="${esc(l.smiley.lbl)}${l.alertes.some(a => a.type === "avis_triste") ? " — à traiter" : ""}">${l.smiley.emo}</span>` : '<span class="meta">—</span>';
+    const note = l => l.note == null ? '<span class="meta">—</span>' : bloc(`<b${l.alertes.some(a => a.type === "note_chute") ? ' class="neg"' : ""}>${esc(String(l.note))}</b><span class="meta">/10</span>`);
+    const smiley = l => l.smiley ? `<span class="fbd-smiley-l" title="${esc(l.smiley.lbl)}${l.alertes.some(a => a.type === "avis_triste") ? " — à traiter" : ""}">${esc(l.smiley.emo)}</span>` : '<span class="meta">—</span>';
     const visite = l => { const t = Activite.texteVisite(l.visites); return t === "—" ? '<span class="meta" title="Visites non suivies pour ce compte">—</span>' : `<span class="meta">${esc(t)}</span>`; };
     /* v56 : nombre de connexions et dernière connexion (date et heure) ; l'info-bulle dit depuis quand elles sont comptées.
        v57 : juste après la dernière visite, date courte (29/09 10:53) ; la colonne du nom reste à l'écran (css, .tb-clients-table) */

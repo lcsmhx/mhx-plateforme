@@ -158,7 +158,7 @@ const outilBilan = {
     }
     if (b.charges.length){
       h += `<section class="panel"><h2>Progression des charges</h2><div class="scroll"><table><thead><tr><th>Exercice</th><th>Début du mois</th><th>Maintenant</th><th>Séances</th></tr></thead><tbody>${
-        b.charges.slice(0, 8).map(x => `<tr><td>${esc(x.nom)}</td><td>${x.de ? Journal.kg(x.de) + " kg" : "—"}</td><td><b class="${x.a > x.de ? "pos" : ""}">${x.a ? Journal.kg(x.a) + " kg" : "—"}</b></td><td>${x.n}</td></tr>`).join("")
+        b.charges.slice(0, 8).map(x => `<tr><td>${esc(x.nom)}</td><td>${x.de ? esc(Journal.kg(x.de)) + " kg" : "—"}</td><td><b class="${x.a > x.de ? "pos" : ""}">${x.a ? esc(Journal.kg(x.a)) + " kg" : "—"}</b></td><td>${esc(String(x.n))}</td></tr>`).join("")
       }</tbody></table></div></section>`;
     }
     if (b.objectifs && !sansObjectifs){

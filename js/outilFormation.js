@@ -684,7 +684,7 @@ const outilFormation = {
     const act = [["video", "#fo-presentation", L.video], ["calcul", "#/calculateur", L.calcul], ["pesee", "#/mensurations", L.pesee]];
     return `<section class="panel fo-depart" id="fo-depart"><span class="eyebrow">${esc(min ? trad(L.etiquette_min, { x: min }) : trad(L.etiquette))}</span>
       <h2>${esc(typoFr(trad(L.titre)))}</h2>
-      <ol class="fo-depart-l">${act.map(a => { const f = !!e[a[0]]; return `<li${f ? ' class="fait"' : ""}><a href="${a[1]}" data-depart="${a[0]}"><span class="fo-depart-c" aria-hidden="true">${f ? "✓" : ""}</span><span class="fo-depart-t">${esc(trad(a[2]))}</span>${f ? `<span class="sr-only"> (${esc(trad(L.fait))})</span>` : ""}</a></li>`; }).join("")}</ol></section>`;
+      <ol class="fo-depart-l">${act.map(a => { const f = !!e[a[0]]; return `<li${f ? ' class="fait"' : ""}><a href="${esc(a[1])}" data-depart="${esc(a[0])}"><span class="fo-depart-c" aria-hidden="true">${f ? "✓" : ""}</span><span class="fo-depart-t">${esc(trad(a[2]))}</span>${f ? `<span class="sr-only"> (${esc(trad(L.fait))})</span>` : ""}</a></li>`; }).join("")}</ol></section>`;
   },
   chiffres(){
     const F = FORMATION, mods = F.modules || [];

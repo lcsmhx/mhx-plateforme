@@ -135,7 +135,7 @@ const outilTableau = {
     /* le badge : le nombre d'urgences, en couleur seulement s'il y en a */
     const badge = (n, aide) => `<span class="pastille tb-badge${n ? " mauvais" : ""}" title="${esc(aide)}">${n} ${pl(n, "urgence", "urgences")}</span>`;
     /* v83 : maquette — le nombre, puis le libellé ; le badge d'urgences reste dessous (Clients, Prospects) */
-    const tuile = (id, lbl, val, n, aide, lien) => `<a class="tile tb-tuile" id="${id}" href="${lien}" title="${esc(aide)}"><div class="t-val readout">${val}</div><div class="t-lbl">${lbl}</div><div class="tb-tuile-tete">${badge(n, aide)}</div></a>`;
+    const tuile = (id, lbl, val, n, aide, lien) => `<a class="tile tb-tuile" id="${esc(id)}" href="${esc(lien)}" title="${esc(aide)}"><div class="t-val readout">${esc(String(val))}</div><div class="t-lbl">${esc(lbl)}</div><div class="tb-tuile-tete">${badge(n, aide)}</div></a>`;
     const total = urgClients + urgProspects;
     /* v83 : toute la ligne ouvre la fiche (initiales, nom, point de couleur et raison, chevron) */
     const ligne = x => `<li><button type="button" class="tb-at-b" data-fiche="${esc(x.uid)}" data-nom="${esc(x.nom)}" data-cible="${esc(x.cible)}">${Clients.avatar(x.nom)}<span class="tb-quoi"><b data-notr>${esc(x.nom)}</b>${x.prospect ? ` <span class="pastille accent">prospect</span>` : ""}<small><span class="point ${esc(x.niveau || "mauvais")}" aria-hidden="true"></span> ${esc(x.texte)}</small></span><span class="tb-chevron" aria-hidden="true">${SVG.chevron}</span></button></li>`;

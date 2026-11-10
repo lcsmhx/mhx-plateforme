@@ -74,6 +74,11 @@ var MHX_CONNU = true; try { MHX_CONNU = !!(localStorage.getItem("mhx_session") |
 var MHX_COACH = ["js/outilBibliotheque.js", "js/outilCatalogue.js", "js/clients-prospects-communs.js", "js/outilClients.js", "js/outilProspects.js", "js/outilTableau.js", "js/outilAtelier.js"];
 var MHX_AVEC_COACH = false; try { MHX_AVEC_COACH = localStorage.getItem("mhx_coach_fichiers") === "1"; } catch (e) {}
 var MHX_A_CHARGER = MHX_JS.filter(function (f) { return MHX_AVEC_COACH || MHX_COACH.indexOf(f) < 0; });
+/* v104 (partie 4) : affichée dans le cadre (iframe) d'un autre site, l'app ne se charge pas : un lien l'ouvre dans sa propre page
+   (personne ne peut la recouvrir d'un faux écran pour faire cliquer ou taper à l'aveugle) */
+var MHX_CADRE = false; try { MHX_CADRE = window.top !== window.self; } catch (e) { MHX_CADRE = true; }
+if (MHX_CADRE) { MHX_CSS = []; MHX_A_CHARGER = []; MHX_SOCLE = []; MHX_CONNU = true;
+  document.write('<p style="font-family:sans-serif;padding:24px"><a href="' + String(location.href).replace(/[^\w\-.~:/?#@!$&()*+,;=%]/g, encodeURIComponent) + '" target="_top" rel="noopener">Ouvrir MHX Coaching · Open MHX Coaching</a></p>'); }
 document.write(MHX_CSS.map(function (f) { return '<link rel="stylesheet" href="' + f + '?v=' + MHX_FICHIERS + '">'; }).join(""));
 document.write((MHX_CONNU ? MHX_A_CHARGER : MHX_SOCLE).map(function (f) { return '<script defer src="' + f + '?v=' + MHX_FICHIERS + '"><\/script>'; }).join(""));
 if (!MHX_CONNU) window.addEventListener("load", function () { setTimeout(function () {
