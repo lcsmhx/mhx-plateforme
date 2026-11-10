@@ -448,76 +448,15 @@ label.fo-case{display:flex;align-items:flex-start;gap:10px;cursor:pointer;flex:1
 .client-l .voir.suppr{color:var(--bad);border-color:var(--bad)}
 .client-l .voir.suppr:hover{background:var(--bad);color:#fff}
 /* --- parcours du prospect (Découverte ; classes .ch-* héritées de l'ancien Challenge 7 jours) --- */
-.ch-etapes{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin:14px 0 4px;padding:0;list-style:none}
-.ch-etapes li{min-width:0;display:flex}
-.ch-etape{flex:1;min-width:0}
-@media (max-width:360px){.ch-etapes{gap:3px}.ch-etapes .ch-etape .num{width:26px;height:26px;font-size:11px}}
 .co-mdp input::-ms-reveal{display:none}
-/* v45 — jours 2 a 4 */
 .ch-exos{list-style:none;margin:0;padding:0}
 .ch-exos li{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px 0;border-bottom:1px solid var(--line)}
 .ch-exos li:last-child{border-bottom:0}
 .ch-exos b{font-size:15px;min-width:130px}
 .ch-exos .reps{color:var(--ink-2);font-size:14px;flex:1;min-width:160px}
 .ch-exos .video-cadre{flex-basis:100%;margin-top:6px}
-.ch-tours{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
-.ch-seg3,.ch-seg4{max-width:300px;flex:0 0 auto;width:100%}
-@media (min-width:560px){.ch-seg3,.ch-seg4{width:300px}}
-.ch-seg3 button,.ch-seg4 button{min-height:36px;font-weight:600}
-.ch-action{font-size:16px;line-height:1.55;margin:0;padding:14px 16px;background:var(--accent-soft);border:1px solid var(--accent-line);border-radius:var(--r)}
-.ch-intention{display:grid;gap:12px}
-@media (min-width:560px){.ch-intention{grid-template-columns:1fr 1fr}}
-.ch-info{border-left:3px solid var(--accent)}
-.ch-recap{margin-top:4px}
-.ch-recap li span{flex:0 0 auto;max-width:40%}
-.ch-recap li b{overflow-wrap:anywhere;min-width:0;text-align:right}
-/* v46 — jours 5 a 7 */
-.ch-blocs-l .ch-bloc{padding:12px 0;border-bottom:1px solid var(--line)}
-.ch-blocs-l .ch-bloc:first-child{padding-top:0}
-.ch-blocs-l .ch-bloc:last-child{border-bottom:0}
-.ch-bloc h3{margin:0 0 6px;font-size:15px}
-.ch-bloc p{margin:0 0 6px;line-height:1.55}
-.ch-projection{display:grid;gap:12px}
-@media (min-width:720px){.ch-projection{grid-template-columns:repeat(3,minmax(0,1fr))}}
-.ch-col{background:var(--sunken);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;min-width:0}
-.ch-col .eyebrow{display:block;margin-bottom:8px}
-.ch-col p{margin:0 0 8px;font-size:14.5px;line-height:1.5;overflow-wrap:anywhere}
-.ch-col p:last-child{margin-bottom:0}
-.ch-col-90{border-color:var(--accent-line);background:var(--accent-soft)}
-.ch-hero{text-align:center;border-color:var(--accent-line)}
-.ch-hero h2{margin-bottom:14px}
-.ch-cta{font-size:15px;padding:14px 26px;text-transform:uppercase;letter-spacing:.06em}
-.ch-case{display:flex;gap:10px;align-items:flex-start;justify-content:center;margin:16px 0 0;cursor:pointer;text-transform:none;letter-spacing:0;font-weight:400;color:var(--ink);font-size:14px}
-.ch-case input{width:18px;height:18px;accent-color:var(--accent);margin:1px 0 0;flex:0 0 auto}
-.tile .t-val.ch-t-texte{font-family:"IBM Plex Sans",sans-serif;font-size:15px;font-weight:600;line-height:1.35;padding-top:4px}
-.ch-segtexte{max-width:none;width:100%;flex-wrap:wrap}
-.ch-segtexte button{flex:1 1 42%;min-height:36px;font-weight:600}
-/* v47 — fiche coach : les 7 etapes en lecture seule */
-.ch-etapes-fiche{margin:0 0 12px}
-.ch-etapes-fiche .ch-etape{cursor:default}
-.ch-etape{display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;color:var(--ink-3);font-family:inherit;font-variant-numeric:tabular-nums;font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:6px 2px;border-radius:var(--r-sm);text-align:center;line-height:1.2}
-.ch-etape .num{width:30px;height:30px;border-radius:50%;border:1px solid var(--line-strong);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;background:var(--sunken);color:var(--ink-2);transition:border-color var(--vite),background var(--vite)}
-.ch-etape.fait .num{background:var(--good-soft);border-color:var(--good);color:var(--good)}
-.ch-etape.actuel .num{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-.ch-etape.actuel{color:var(--ink)}
-.ch-etape.ferme{opacity:.5;cursor:default}
-a.ch-etape:hover .num{border-color:var(--accent-line)}
-@media (max-width:480px){.ch-etape .lbl{display:none}}
-.ch-barre{margin-top:12px}
-.ch-choix{display:flex;flex-direction:column;gap:8px}
-.ch-choix label{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;background:var(--sunken);border:1px solid var(--line);border-radius:var(--r);cursor:pointer;text-transform:none;letter-spacing:0;font-weight:400;color:var(--ink);margin:0}
-.ch-choix label:has(input:checked){border-color:var(--accent-line);background:var(--accent-soft)}
-.ch-choix input{margin:3px 0 0;accent-color:var(--accent);flex:0 0 auto;width:16px;height:16px}
-.ch-choix b{display:block;font-size:15px;font-weight:600}
-.ch-choix small{font-size:13px;color:var(--ink-2)}
 .ch-lecture{margin:14px 0 0;padding-left:18px;line-height:1.7;font-size:14.5px}
 .ch-lecture li{margin-bottom:4px}
-.ch-bravo{border-color:var(--good-soft)}
-.ch-bravo .pastille{margin-bottom:10px}
-.ch-demain{color:var(--ink-2);font-size:14px;margin:10px 0 0}
-.ch-test{margin:0 0 12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-.ch-attente{text-align:center;padding:26px 16px;border:1px dashed var(--line-strong);border-radius:var(--r-lg);background:var(--sunken)}
-.ch-attente h2{margin-bottom:6px}
 .co-cgu span,.co-newsletter span{line-height:1.45}
 .co-cgu .lien{background:none;border:0;padding:0;color:var(--accent);text-decoration:underline;cursor:pointer;font:inherit;min-height:0;width:auto;display:inline}
 .co-cgu .lien-absent{color:inherit;text-decoration:none;cursor:default}   /* v64 : lien du PDF pas encore renseigne (branche de travail) */
