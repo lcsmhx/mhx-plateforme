@@ -40,6 +40,7 @@ var MHX_JS = [
     "js/outilBilan.js",
     "js/outilBibliotheque.js",
     "js/outilCatalogue.js",
+    "js/clients-prospects-communs.js",
     "js/outilClients.js",
     "js/outilProspects.js",
     "js/outilTableau.js",
@@ -68,7 +69,9 @@ var MHX_CONNU = true; try { MHX_CONNU = !!(localStorage.getItem("mhx_session") |
    d'un client, d'un prospect ni de l'écran sans compte ne s'en sert). Ils ne sont chargés que sur un appareil où le coach s'est
    déjà connecté (« mhx_coach_fichiers ») ; ailleurs, après la connexion du coach, CodeCoach.assurer (navigation.js) les
    charge avant le premier affichage. MHX_JS reste la liste complète (ordre, ?v=, banc). */
-var MHX_COACH = ["js/outilBibliotheque.js", "js/outilCatalogue.js", "js/outilTableau.js", "js/outilAtelier.js"];
+/* v104 (décision 10) : + les pages Clients et Prospects et leurs outils communs (js/clients-prospects-communs.js) : le client ne
+   s'en sert pas, il ne les télécharge plus. Même ordre que MHX_JS. */
+var MHX_COACH = ["js/outilBibliotheque.js", "js/outilCatalogue.js", "js/clients-prospects-communs.js", "js/outilClients.js", "js/outilProspects.js", "js/outilTableau.js", "js/outilAtelier.js"];
 var MHX_AVEC_COACH = false; try { MHX_AVEC_COACH = localStorage.getItem("mhx_coach_fichiers") === "1"; } catch (e) {}
 var MHX_A_CHARGER = MHX_JS.filter(function (f) { return MHX_AVEC_COACH || MHX_COACH.indexOf(f) < 0; });
 document.write(MHX_CSS.map(function (f) { return '<link rel="stylesheet" href="' + f + '?v=' + MHX_FICHIERS + '">'; }).join(""));
