@@ -228,9 +228,12 @@ function construireNav(){
   /* le coach hors fiche : ses outils d'abord, ses propres onglets client ensuite */
   const coachSeul = Auth.estCoach() && !Store.idConsulte;
   const visibles = outilsVisibles().filter(o => !o.masque_nav && !horsVitrine(o));   // v50
-  const ordre = coachSeul ? visibles.filter(o => o.role === "coach").concat(visibles.filter(o => o.role !== "coach")) : visibles;
+  /* v98 : les 7 entrées du coach (MENU_COACH) ; dans la fiche d'un client : ses onglets, puis ces 7 entrées (plus les autres
+     pages du coach : elles gardent leur adresse) */
+  const fiche = Auth.estCoach() && !!Store.idConsulte;
+  const ordre = coachSeul ? menuCoach(visibles) : fiche ? visibles.filter(o => o.role !== "coach").concat(menuCoach(visibles.filter(o => o.role === "coach"))) : visibles;
   nav.innerHTML = ordre.map(o =>
-    `<a href="${esc(lienOutil(o.id))}" data-id="${esc(o.id)}">${iconeOutil(o)}${esc(nomOnglet(o))}${cadenasNav(o)}</a>`
+    `<a href="${esc(lienOutil(o.id))}" data-id="${esc(o.id)}">${iconeOutil(o)}${esc(coachSeul || (fiche && o.role === "coach") ? nomMenuCoach(o) : nomOnglet(o))}${cadenasNav(o)}</a>`
   ).join("");
   construireBarreBas();
   if (typeof Nouveautes !== "undefined") Nouveautes.badge();   // v51 : le badge survit a la reconstruction
@@ -277,12 +280,19 @@ function brancherLogo(){
   a.onclick = e => { if (location.hash === lienOutil(cible)){ e.preventDefault(); afficher(cible); } };
 }
 
+/* v98 : le menu du coach hors fiche (MENU_COACH, liste-outils.js), dans cet ordre ; ses autres pages gardent leur adresse */
+function menuCoach(visibles){ return MENU_COACH.map(id => visibles.find(o => o.id === id)).filter(Boolean); }
+function nomMenuCoach(o){ return NOMS_MENU_COACH[o.id] || o.nom; }
+
 /* --- barre du bas (telephone) --- */
 function construireBarreBas(){
   let b = $("barre-bas");
   if (!b){ b = document.createElement("nav"); b.id = "barre-bas"; b.className = "barre-bas"; b.setAttribute("aria-label", "Navigation"); document.body.appendChild(b); }
   const principaux = outilsPrincipaux();
-  const autres = outilsVisibles().filter(o => principaux.indexOf(o) === -1 && !o.masque_nav && !horsVitrine(o));   // v50
+  const coachSeul = Auth.estCoach() && !Store.idConsulte;
+  const visiblesNav = outilsVisibles().filter(o => !o.masque_nav && !horsVitrine(o));   // v50
+  const enFiche = Auth.estCoach() && !!Store.idConsulte;
+  const autres = (coachSeul ? menuCoach(visiblesNav) : enFiche ? visiblesNav.filter(o => o.role !== "coach").concat(menuCoach(visiblesNav.filter(o => o.role === "coach"))) : visiblesNav).filter(o => principaux.indexOf(o) === -1);   // v98 : le coach, ses 7 entrées (aussi dans une fiche)
   b.innerHTML = principaux.map(o =>
     `<a href="${esc(lienOutil(o.id))}" data-id="${esc(o.id)}"${estVerrouille(o) ? ' class="verrouille"' : ""}>${iconeOutil(o)}<span class="lbl">${esc(nomCourt(o))}</span>${cadenasNav(o)}</a>`).join("") +
     (autres.length ? `<button type="button" data-plus><span class="ico" aria-hidden="true">${ICONES.plus}</span><span class="lbl">Plus</span></button>` : "");
@@ -293,7 +303,7 @@ function construireBarreBas(){
     ? { href: "#/accueil", libelle: trad("Retour à l'accueil") } : null;
   if (plus) plus.addEventListener("click", () => {
     UI.volet({ titre: trad("Tout mon espace"), retour: retourAccueil, corps: `<ul class="menu-plus">` + autres.map(o =>
-      `<li><a href="${esc(lienOutil(o.id))}" data-id="${esc(o.id)}"${courant === o.id ? ' aria-current="page"' : ""}>${iconeOutil(o)}<span>${esc(nomOnglet(o))}${cadenasNav(o)}</span></a></li>`).join("") + `</ul>` +
+      `<li><a href="${esc(lienOutil(o.id))}" data-id="${esc(o.id)}"${courant === o.id ? ' aria-current="page"' : ""}>${iconeOutil(o)}<span>${esc(coachSeul || (enFiche && o.role === "coach") ? nomMenuCoach(o) : nomOnglet(o))}${cadenasNav(o)}</span></a></li>`).join("") + `</ul>` +
       /* v70 : « Partager l'app » sous la liste (lien copie ou feuille de partage du telephone) */
       `<div class="menu-plus-partage"><button type="button" class="btn ghost petit" data-partager>${SVG.partager}<span>${esc(trad("Partager l'app"))}</span></button></div>` +
       /* v76 : « Se déconnecter » du prospect, en bas du volet (il n'est plus dans sa barre du haut sur téléphone) */
@@ -314,9 +324,13 @@ function nomCourt(o){
 
 function marquerNav(id){
   if (id === "decouverte") id = "accueil";   // la Decouverte est l'accueil du prospect (sans onglet a elle) : « Accueil » est marque, pas « Plus »
+  /* v98 (relecture) : le coach hors fiche, sur une page sortie du menu : son entrée « parente » est marquée (jamais « Plus » vide) */
+  if (Auth.estCoach() && !Store.idConsulte && PARENTS_MENU_COACH[id]) id = PARENTS_MENU_COACH[id];
   $$("#barre-bas a, .menu-plus a").forEach(a => { if (a.dataset.id === id) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
   const plus = document.querySelector("#barre-bas [data-plus]");
-  if (plus) plus.classList.toggle("ici", !outilsPrincipaux().some(o => o.id === id) && !horsVitrine(OUTILS.find(o => o.id === id)));   // v50 : une page cachee n'est pas dans « Plus »
+  /* v98 (relecture) : « Plus » marqué seulement si la page est vraiment dans son volet (le coach : ses 7 entrées) */
+  const dansPlus = Auth.estCoach() && !Store.idConsulte ? MENU_COACH.indexOf(id) > -1 : true;
+  if (plus) plus.classList.toggle("ici", dansPlus && !outilsPrincipaux().some(o => o.id === id) && !horsVitrine(OUTILS.find(o => o.id === id)));   // v50 : une page cachee n'est pas dans « Plus »
   $$("#nav a").forEach(a => {
     if (a.dataset.id === id){
       a.setAttribute("aria-current","page");

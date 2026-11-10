@@ -1665,3 +1665,26 @@ Object.assign(I18N.en, {
   "Diète remise dans ton brouillon. Relis-la, puis clique sur « Publier les changements ».": "Meal plan restored into your draft. Review it, then click “Publish changes”."
 });
 /* v97-nutrition-fin */
+/* v98-menu-coach (chantier 3 de la nuit du 10/11) : le menu du coach en 7 entrées, « Mes programmes » */
+Object.assign(I18N.en, {
+  "Mes programmes": "My programs",
+  "Mes séances": "My sessions",
+  "Ma base": "My ready-made programs",
+  "Ma bibliothèque": "My saved items",
+  "Ces programmes sont proposés dans « Programmes prêts à l'emploi », sur la fiche de chaque client. « Modifier » et « Dupliquer » les reprennent dans « Mes séances » : enregistre-les ensuite dans ta base.": "These programs are offered in “Ready-made programs” on each client's profile. “Edit” and “Duplicate” open them in “My sessions”: then save them to your ready-made programs.",
+  "séances / semaine": "sessions / week",
+  "exercices": "exercises",
+  "Modifier": "Edit",
+  "Dupliquer": "Duplicate",
+  "Aucun programme dans ta base pour le moment. Construis-en un dans « Mes séances », puis « Enregistrer dans ma base ».": "No ready-made program yet. Build one in “My sessions”, then “Save to my ready-made programs”.",
+  "Tes programmes réutilisables au même endroit : tes séances en cours, ta base de programmes prêts à l'emploi et ta bibliothèque.": "Your reusable programs in one place: your sessions in progress, your ready-made programs and your saved items.",
+  "Clients": "Clients",
+  "Mon entraînement": "My training",
+  "Réglages": "Settings",
+  "Vue tableau": "Table view",
+  "Comptes": "Accounts",
+  "Vue détaillée": "Detailed view",
+  "Exporter la newsletter": "Export the newsletter",
+  "Programmes": "Programs"
+});
+/* v98-menu-coach-fin */

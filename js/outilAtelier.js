@@ -58,6 +58,10 @@ const outilAtelier = {
       if (!sel) return;
       sel.innerHTML = `<option value="">— repartir de zéro —</option>` +
         prets.map(x => `<option value="${esc(x.id)}">${esc(x.nom)}${x.lieu ? " · " + esc(x.lieu) : ""}</option>`).join("");
+      /* v98 : « Modifier » ou « Dupliquer » depuis « Mes programmes › Ma base » : le programme demandé est repris ici, comme
+         avec la liste « Reprendre un programme existant » (même confirmation si un brouillon est commencé) */
+      const demande = self.aCharger; self.aCharger = null;
+      if (demande && prets.some(x => x.id === demande.id)) setTimeout(() => { if (!sel.isConnected) return; self.copie = !!demande.copie; sel.value = demande.id; sel.dispatchEvent(new Event("change")); }, 0);
     };
 
     function lireEntete(){
@@ -75,6 +79,7 @@ const outilAtelier = {
 
       const ch = $("at-charger");
       if (ch) ch.addEventListener("change", async () => {
+        const copie = !!self.copie; self.copie = false;   // v98 (relecture) : le drapeau « Dupliquer » ne vaut que pour ce choix
         const m = prets.find(x => x.id === ch.value);
         if (!m) return;
         if (P.seances.length && !(await UI.confirmer("Remplacer ce que tu as commencé par « " + m.nom + " » ?", { ok: "Oui, remplacer" }))) { ch.value = ""; return; }
@@ -82,8 +87,10 @@ const outilAtelier = {
         P.niveau = m.niveau || "Debutant"; P.objectif = m.objectif || "Prise de muscle";
         P.seances_semaine = m.seances_semaine || 3;
         P.seances = JSON.parse(JSON.stringify(m.seances || []));
+        /* v98 : « Dupliquer » (Mes programmes) : un autre nom, donc un nouveau programme à l'enregistrement */
+        if (copie) P.nom = m.nom + " " + trad("(copie)");
         sauver(); redessiner();
-        flash("pg-msg", "« " + m.nom + " » chargé. Modifie-le, puis enregistre.");
+        flash("pg-msg", "« " + P.nom + " » chargé. Modifie-le, puis enregistre.");
       });
 
       const vider = $("at-vider");
@@ -182,3 +189,55 @@ const outilAtelier = {
   }
 };
 
+
+/* ------------------------------------------------------------------
+   v98 (chantier 3 de la nuit du 10/11, plan-menu-coach et plan-etape3 3d) — MES PROGRAMMES
+   Un seul écran pour les programmes réutilisables du coach : « Mes séances » (l'atelier), « Ma base » (programmes_types,
+   les « programmes prêts à l'emploi » de chaque fiche) et « Ma bibliothèque » (entraînements et journées types). Les données
+   restent dans leurs tables ; les anciennes adresses (#/atelier, #/bibliotheque) ouvrent toujours leur page d'avant.
+   Sous-adresses : #/mes-programmes (Mes séances), #/mes-programmes/base, #/mes-programmes/bibliotheque.
+   ------------------------------------------------------------------ */
+const outilMesProgrammes = {
+  id: "mes-programmes",
+  cle: null,
+  role: "coach",
+  nom: "Mes programmes",
+  court: "Programmes",
+  principal_coach: true,   // la barre du bas du coach : Tableau · Clients · Prospects · Programmes · Plus
+  icone: "🗂️",
+  titre: "Mes programmes",
+  accroche: "Tes programmes réutilisables au même endroit : tes séances en cours, ta base de programmes prêts à l'emploi et ta bibliothèque.",
+  onglets(){ return [["", "Mes séances"], ["base", "Ma base"], ["bibliotheque", "Ma bibliothèque"]]; },
+  onglet(){ const s = String(sousRoute || ""); return this.onglets().some(o => o[0] === s) ? s : ""; },
+  html(){
+    const ici = this.onglet();
+    return `<nav class="tabs mp-onglets" aria-label="${esc(trad("Mes programmes"))}">${this.onglets().map(([s, nom]) =>
+      `<a class="tab${s === ici ? " on" : ""}" href="#/mes-programmes${s ? "/" + s : ""}"${s === ici ? ' aria-current="page"' : ""} data-mp="${s}">${esc(trad(nom))}</a>`).join("")}</nav>
+      <div id="mp-zone">${ici === "" ? outilAtelier.html() : ici === "bibliotheque" ? outilBibliotheque.html() : `<section class="panel"><div class="empty">Chargement…</div></section>`}</div>`;
+  },
+  async init(){
+    const ici = this.onglet();
+    if (ici === "") return outilAtelier.init();
+    if (ici === "bibliotheque") return outilBibliotheque.init();
+    return this.base();
+  },
+  /* « Ma base » : les programmes prêts à l'emploi ; Modifier / Dupliquer les reprennent dans « Mes séances » */
+  async base(){
+    const zone = $("mp-zone"); if (!zone) return;
+    let l = null;
+    try { l = await Catalogue.programmes(); } catch(e){ l = null; }
+    if (!zone.isConnected) return;
+    if (!Array.isArray(l)){ pageHorsLigne(zone); return; }
+    const nbExos = p => (p.seances || []).reduce((n, s) => n + ((s.exercices || []).filter(e => e && e.nom).length), 0);
+    zone.innerHTML = `<section class="panel"><h2>${esc(trad("Ma base"))} <span class="pastille">${fmt(l.length)}</span></h2>
+      <p class="note" style="margin-top:0">${esc(trad("Ces programmes sont proposés dans « Programmes prêts à l'emploi », sur la fiche de chaque client. « Modifier » et « Dupliquer » les reprennent dans « Mes séances » : enregistre-les ensuite dans ta base."))}</p>
+      ${l.length ? l.map(p => `<div class="biblio-l" data-mp-prog="${esc(p.id)}"><span class="nom">${esc(p.nom || "")}</span>
+        <span class="meta">${esc([p.lieu, p.seances_semaine ? p.seances_semaine + " " + trad("séances / semaine") : "", p.niveau, p.objectif].filter(Boolean).join(" · "))} · ${fmt(nbExos(p))} ${esc(trad("exercices"))}</span>
+        <span class="actions-b"><button type="button" data-mp-modifier="${esc(p.id)}">${esc(trad("Modifier"))}</button><button type="button" data-mp-dupliquer="${esc(p.id)}">${esc(trad("Dupliquer"))}</button></span></div>`).join("")
+      : `<div class="empty">${esc(trad("Aucun programme dans ta base pour le moment. Construis-en un dans « Mes séances », puis « Enregistrer dans ma base »."))}</div>`}
+    </section>`;
+    const reprendre = (id, copie) => { outilAtelier.aCharger = { id, copie }; location.hash = "#/mes-programmes"; };
+    $$("[data-mp-modifier]", zone).forEach(b => b.addEventListener("click", () => reprendre(b.dataset.mpModifier, false)));
+    $$("[data-mp-dupliquer]", zone).forEach(b => b.addEventListener("click", () => reprendre(b.dataset.mpDupliquer, true)));
+  }
+};
