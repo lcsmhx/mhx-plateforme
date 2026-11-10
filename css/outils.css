@@ -1133,3 +1133,6 @@ input[type=checkbox]:focus-visible,input[type=radio]:focus-visible{outline:2px s
 .outils-ex .del::before,.seance-tete > .del::before{content:"";position:absolute;left:-7px;top:8px;bottom:8px;border-left:1px solid var(--line-strong)}
 .g-edit{display:inline-flex;align-items:center;gap:4px}
 .g-edit .del{margin-left:8px;padding:0}
+/* v104 (point 10) : « À surveiller » sous les urgences du tableau de bord (point gris : rien d'urgent) */
+.point.neutre{background:var(--ink-3)}
+.tb-sur2{margin-top:18px}

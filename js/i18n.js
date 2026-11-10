@@ -1807,3 +1807,10 @@ Object.assign(I18N.en, {
   "Son entourage va-t-il soutenir sa démarche ou la compliquer ?": "Will the people around them support their efforts or make it harder?",
   "Fume-t-il ?": "Do they smoke?"
 });
+/* v104 (point 10) : tableau de bord, urgences = une action du coach aujourd'hui */
+Object.assign(I18N.en, {
+  "À surveiller": "To keep an eye on",
+  "Et {n} de plus dans Mes clients et Prospects.": "And {n} more in My clients and Prospects.",
+  "Urgences (une action de ta part aujourd'hui) : un 😞 non traité, une note en chute, ou un retour de la semaine à lire. Le reste (inactif, régularité faible, calculateur) est « À surveiller ».": "Urgent (an action from you today): an unhandled 😞, a falling score, or a weekly check-in to read. The rest (inactive, low consistency, calculator) is \"To keep an eye on\".",
+  "Urgences (une action de ta part aujourd'hui) : inscrit depuis moins de 48 h, « J'ai réservé » à vérifier, clic sur la réservation sans créneau, absent à l'appel pas encore relancé, ou « Signé » à passer client.": "Urgent (an action from you today): signed up less than 48 h ago, \"I booked\" to check, clicked booking without a slot, missed the call and not yet followed up, or \"Signed\" to switch to client."
+});
