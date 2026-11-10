@@ -648,7 +648,9 @@ const outilNutrition = {
     else if (suivi.courses_pour !== pour){ suivi.courses = {}; suivi.courses_pour = pour; if (R.publie_le) suivi.mange = {}; }
   },
 
-  blocCourses(R, suivi, client){
+  /* v104 (point 6) : ctxCoach (page du coach seulement) : la liste est une rangée repliée (<details data-pli="courses">,
+     précédée d'un trait, dans le cadre de « Ajouter à la main ») ; chez le client (sans ctxCoach), rien ne change */
+  blocCourses(R, suivi, client, ctxCoach){
     if (!(R.jours || []).some(j => (j.repas || []).length)) return "";
     const actifs = (suivi && suivi.joursCourses) || {};
     const coches = (suivi && suivi.courses) || {};
@@ -657,8 +659,7 @@ const outilNutrition = {
     const total = rayons.reduce((n, r) => n + r.lignes.length, 0);
     const faits  = rayons.reduce((n, r) => n + r.lignes.filter(l => coches[l.id]).length, 0);
 
-    let h = `<section class="panel">
-      <h2>Liste de courses</h2>
+    let h = `
       <p class="note" style="margin-top:0">Coche les jours que tu veux acheter : la liste se recalcule. ${nbJours} jour${nbJours > 1 ? "s" : ""} sélectionné${nbJours > 1 ? "s" : ""}.</p>
       <div class="coches" style="margin-bottom:16px">${(R.jours || []).map((j, i) =>
         (j.repas || []).length ? `<label class="coche"><input type="checkbox" data-jc="${i}"${actifs[i] === false ? "" : " checked"}> ${esc(j.nom)}</label>` : "").join("")}</div>
@@ -670,8 +671,10 @@ const outilNutrition = {
         r.lignes.map(l => `<li class="${coches[l.id] ? "pris" : ""}"><label class="coche"><input type="checkbox" data-course="${esc(l.id)}"${coches[l.id] ? " checked" : ""}> ${esc(l.nom)}</label><b>${fmt(l.grammes)} g</b></li>`).join("") +
         `</ul>`;
     });
-    h += `<p class="note" style="margin-top:16px">Les poids sont ceux qui entrent dans les recettes — crus pour la viande, le poisson et les féculents. Prévois un peu plus pour les pertes à la cuisson.</p></section>`;
-    return h;
+    h += `<p class="note" style="margin-top:16px">Les poids sont ceux qui entrent dans les recettes — crus pour la viande, le poisson et les féculents. Prévois un peu plus pour les pertes à la cuisson.</p>`;
+    if (ctxCoach) return `<div class="pli-sep"></div>${this.pli(ctxCoach, "courses", "Liste de courses", esc(total > 1 ? trad("{n} articles", { n: total }) : trad("{n} article", { n: total })), h)}`;
+    return `<section class="panel">
+      <h2>Liste de courses</h2>` + h + `</section>`;
   },
 
   /* ================= onglets des jours ================= */
@@ -734,6 +737,7 @@ const outilNutrition = {
 
   carteRepas(x, edition, cle, suivi, opts){
     opts = opts || {};
+    if (edition) return this.carteRepasCoach(x, cle, opts);   // v104 (point 6) : la carte du coach est repliée ; celle du client ne change pas
     const m = x.macros || { kcal:0, proteines:0, glucides:0, lipides:0 };
     const coche = suivi && suivi.mange && suivi.mange[cle];
     return `<section class="panel repas-c${coche ? " mange" : ""}">
@@ -778,6 +782,64 @@ const outilNutrition = {
     </section>`;
   },
 
+  /* v104 (point 6) : fiche d'un client, onglet Nutrition : chaque repas est REPLIÉ par défaut (<details>) : on voit le
+     moment, le nom, les kcal et les protéines ; un clic (ou Entrée / Espace) ouvre les commandes d'édition, les ingrédients
+     et la préparation. opts.ouvert : le coach l'avait ouvert pendant la visite (gardé après un redessin). Mêmes attributs
+     data-… qu'avant : le branchement (brancher) ne change pas. */
+  carteRepasCoach(x, cle, opts){
+    const m = x.macros || { kcal:0, proteines:0, glucides:0, lipides:0 };
+    return `<div class="repas-c repas-pli">
+      <details class="nu-pli" data-pli-repas="${cle}"${opts.ouvert ? " open" : ""}>
+        <summary>
+          <span class="pli-txt">
+            <span class="pli-resume"><span class="eyebrow">${esc(x.moment_nom || "")}</span><span><b>${fmt(m.kcal)}</b> kcal</span><span><b>${fmt(m.proteines)}</b> g prot.</span></span>
+            <h2>${esc(x.nom)}</h2>
+            ${x.change_client ? `<span class="pastille">Changé par ton client</span>` : ""}
+            ${opts.identique ? `<span class="ex-identique" data-repas-identique="${cle}">≈ ${esc(trad("identique à la semaine d'avant : à varier ?"))}</span>` : ""}
+          </span>
+        </summary>
+        <div class="repas-tete repas-outils"><span class="actions-b">
+          ${x.recette_id ? `<button data-autre="${cle}">${esc(trad("Changer ce repas"))}</button>` : ""}
+          <button type="button" class="outil-pg" data-monter-r="${cle}" aria-label="${esc(trad("Monter le repas"))}"${opts.premier ? " disabled" : ""}>↑</button>
+          <button type="button" class="outil-pg" data-descendre-r="${cle}" aria-label="${esc(trad("Descendre le repas"))}"${opts.dernier ? " disabled" : ""}>↓</button>
+          <button data-retirer="${cle}">Retirer</button></span>
+        </div>
+        <div class="repas-macros">
+          <span><b>${fmt(m.kcal)}</b> kcal</span>
+          <span><b>${fmt(m.proteines)}</b> g prot.</span>
+          <span><b>${fmt(m.glucides)}</b> g gluc.</span>
+          <span><b>${fmt(m.lipides)}</b> g lip.</span>
+          ${x.temps_min ? `<span>${fmt(x.temps_min)} min</span>` : ""}
+        </div>
+        ${opts.jours && opts.jours.length > 1 ? `<div class="dup-sur"><label for="dup-${esc(cle)}">${esc(trad("Dupliquer sur"))}</label><select id="dup-${esc(cle)}" data-dup-sur="${cle}"><option value="">${esc(trad("— choisis un jour —"))}</option>${opts.jours.map((j, k) => k === opts.jour ? "" : `<option value="${k}">${esc(j.nom || "")}</option>`).join("")}<option value="tous">${esc(trad("Tous les autres jours"))}</option></select></div>` : ""}
+        <div data-props="${cle}"></div>
+        ${x.inconnus ? `<div class="flag">${fmt(x.inconnus)} ingrédient${x.inconnus>1?"s":""} absent${x.inconnus>1?"s":""} du catalogue : les macros affichées sont incomplètes.</div>` : ""}
+        <div class="grid g2" style="margin-top:14px">
+          <div>
+            <h3>Ingrédients</h3>
+            <ul class="ingr">${(x.ingredients || []).map((g, j) =>
+              `<li><span>${esc(g.nom)}</span><span class="g-edit"><input type="number" min="0" step="5" value="${esc(g.grammes)}" data-gr="${cle}:${j}"> g <button class="del" data-suppr-i="${cle}:${j}" aria-label="Retirer">×</button></span></li>`).join("")}</ul>
+            <div class="actions" style="margin-top:10px"><button class="btn ghost" data-ajout-i="${cle}">+ Ajouter un aliment</button></div>
+          </div>
+          <div>
+            <h3>Préparation</h3>
+            ${(x.etapes && x.etapes.length) ? `<ol class="etapes">${x.etapes.map(e => `<li>${esc(e)}</li>`).join("")}</ol>` : `<p class="note" style="margin:0">Aucune préparation : ce repas se compose tel quel.</p>`}
+          </div>
+        </div>
+      </details>
+    </div>`;
+  },
+
+  /* v104 (point 6) : un bloc long de la page du coach, replié (<details data-pli="…">) ; ouvert si le coach l'avait ouvert
+     pendant la visite (ctx.plis) ou si « ouvrir » le demande (ex. Composer la semaine quand la diète est vide) */
+  pli(ctx, cle, titre, resume, corps, ouvrir){
+    const ouvert = ouvrir || !!(ctx.plis && ctx.plis.has(cle));
+    return `<details class="nu-pli" data-pli="${cle}"${ouvert ? " open" : ""}>
+      <summary><span class="pli-txt"><h2>${titre}</h2>${resume ? `<span class="pli-resume">${resume}</span>` : ""}</span></summary>
+      ${corps}
+    </details>`;
+  },
+
   /* ================= vue coach ================= */
   vueEdition(R, ctx, actif){
     const jour = R.jours[actif] || null;
@@ -789,9 +851,15 @@ const outilNutrition = {
        automatique (« Générer la semaine », « Refaire … », « Autre proposition ») bloquée tant qu'il n'est pas relu ; la diète
        existante reste affichée et modifiable à la main. */
     const bloque = ctx.intakeIllisible ? " disabled" : "";
+    /* v104 (point 6) : « Composer la semaine » est replié (ouvert d'office si la diète est vide) ; les avertissements
+       (questionnaire illisible, calories, allergies écrites, catalogue de secours) et le message nu-msg restent visibles
+       sous le résumé, hors du bloc replié */
+    const nbJ = R.jours.length || 7, nbRj = R.nb_repas || CONFIG.nutrition.repas_defaut;
+    const resumeC = [R.cible && R.cible.kcal ? trad("{a} kcal", { a: fmt(R.cible.kcal) }) : "", R.regime ? trad(R.regime) : "",
+                     trad("{n} repas", { n: nbRj }), nbJ > 1 ? trad("{n} jours", { n: nbJ }) : trad("1 jour")].filter(Boolean).join(" · ");
     let h = `<section class="panel">
-      <h2>Composer la semaine</h2>
       ${ctx.intakeIllisible ? `<div class="flag grave" id="nu-intake-illisible" role="alert" style="margin-bottom:14px"><span><b>Questionnaire illisible : vérifie ses allergies avant de générer.</b> Son questionnaire n'a pas pu être lu (connexion) : ses allergies et ce qu'il a écrit ne sont pas repris ici. « Générer la semaine » et « Refaire » restent bloqués tant qu'il n'est pas relu ; tu peux toujours modifier la diète à la main.</span> <button type="button" class="btn petit" data-reessayer data-lecture-ok>Réessayer</button></div>` : ""}
+      ${this.pli(ctx, "composer", "Composer la semaine", esc(resumeC), `
       <div class="grid g2">
         <div><label for="nu-kcal">Calories visées</label><input id="nu-kcal" type="number" step="10" value="${R.cible ? Math.round(R.cible.kcal) : ""}" placeholder="2400"></div>
         <div><label for="nu-regime">Régime</label><select id="nu-regime">${CONFIG.nutrition.regimes.map(o => `<option value="${esc(o)}"${R.regime === o ? " selected" : ""}>${esc(o)}</option>`).join("")}</select></div>
@@ -811,32 +879,33 @@ const outilNutrition = {
         ${R.jours.length ? `<button class="btn ghost" id="nu-gen-jour"${bloque}>Refaire seulement ${esc((R.jours[actif]||{}).nom || "ce jour")}</button>` : ""}
         <button class="btn ghost" id="nu-biblio-save">Enregistrer dans ma bibliothèque</button>
         <select id="nu-biblio" style="max-width:240px"><option value="">— charger depuis ma bibliothèque —</option></select>
-        <span class="msg" id="nu-msg"></span>
       </div>
+      ${ctx.prerempli ? `<p class="note" style="margin-top:10px">Pré-rempli avec ${ctx.depuisQuestionnaire ? "son questionnaire — passe par « Ses calories » si tu veux affiner son activité" : "son profil et son calculateur"}.</p>` : ""}`, !R.jours.length)}
+      <span class="msg" id="nu-msg"></span>
       ${ctx.calcCible && R.cible && Math.abs(ctx.calcCible.kcal - R.cible.kcal) >= 20 ? `<div class="flag" id="nu-ecart-kcal" role="status" style="margin-top:12px"><b>⚠ ${esc(trad("Ses calories ({a}) ≠ cette diète ({b})", { a: fmt(ctx.calcCible.kcal), b: fmt(R.cible.kcal) }))}</b> · ${esc(trad("« Ses calories » a changé depuis : rien n'est recalculé sans toi."))} <button type="button" class="btn petit" id="nu-reprendre-kcal">${esc(trad("Reprendre {a} kcal", { a: fmt(ctx.calcCible.kcal) }))}</button></div>` : ""}
-      ${ctx.prerempli ? `<p class="note" style="margin-top:10px">Pré-rempli avec ${ctx.depuisQuestionnaire ? "son questionnaire — passe par « Ses calories » si tu veux affiner son activité" : "son profil et son calculateur"}.</p>` : ""}
       ${Catalogue.secours ? `<div class="flag" style="margin-top:12px"><b>Catalogue de secours.</b> Ta base ne répond pas — projet Supabase en pause, ou import jamais lancé. L'application lit les données depuis le dépôt pour rester utilisable, mais rien n'est enregistré tant que la base ne répond pas.</div>` : ""}
-      ${ctx.autres ? `<div class="flag" style="margin-top:12px"><b>À vérifier avant d'envoyer :</b> ce client a écrit « ${esc(ctx.autres)} » dans ses allergies. Aucun filtre automatique ne couvre ce texte : relis les ingrédients toi-même.</div>` : ""}
-    </section>`;
+      ${ctx.autres ? `<div class="flag" style="margin-top:12px"><b>À vérifier avant d'envoyer :</b> ce client a écrit « ${esc(ctx.autres)} » dans ses allergies. Aucun filtre automatique ne couvre ce texte : relis les ingrédients toi-même.</div>` : ""}`;
 
     if (!R.jours.length){
-      h += `<section class="panel"><div class="empty">Aucun repas pour l'instant. Renseigne les calories visées et clique sur « Générer la semaine ».</div></section>`;
-      return h + this.blocEnvoi(R);
+      h += `</section><section class="panel"><div class="empty">Aucun repas pour l'instant. Renseigne les calories visées et clique sur « Générer la semaine ».</div></section>`;
+      return h + this.blocEnvoi(R, ctx);
     }
 
-    h += `<section class="panel">
-      <h2>La semaine en moyenne</h2>
+    /* v104 (point 6) : « La semaine en moyenne » repliée (ses kcal et ses protéines dans le résumé), dans le même cadre que
+       « Composer la semaine » : deux rangées l'une sous l'autre */
+    h += `<div class="pli-sep"></div>
+      ${this.pli(ctx, "moyenne", "La semaine en moyenne", `<span><b>${fmt(moy.kcal)}</b> ${esc(trad("kcal / jour"))}</span><span><b>${fmt(moy.proteines)}</b> ${esc(trad("g prot. / jour"))}</span>`, `
       <div class="grid g4 bilan-jour">
         <div class="tuile"><span class="t-lbl">Calories</span><span class="t-val readout">${fmt(moy.kcal)}</span><span class="t-u">kcal / jour</span></div>
         <div class="tuile"><span class="t-lbl">Protéines</span><span class="t-val readout">${fmt(moy.proteines)}</span><span class="t-u">g / jour</span></div>
         <div class="tuile"><span class="t-lbl">Glucides</span><span class="t-val readout">${fmt(moy.glucides)}</span><span class="t-u">g / jour</span></div>
         <div class="tuile"><span class="t-lbl">Lipides</span><span class="t-val readout">${fmt(moy.lipides)}</span><span class="t-u">g / jour</span></div>
       </div>
-      ${R.cible ? `<p class="note" style="margin-top:14px">Cible : ${fmt(R.cible.kcal)} kcal · ${fmt(R.cible.prot)} g prot. · ${fmt(R.cible.gluc)} g gluc. · ${fmt(R.cible.lip)} g lip. — moyenne de la semaine à <b>${moy.kcal - R.cible.kcal > 0 ? "+" : ""}${fmt(moy.kcal - R.cible.kcal)} kcal</b> et <b>${moy.proteines - R.cible.prot > 0 ? "+" : ""}${fmt(moy.proteines - R.cible.prot)} g</b> de protéines.</p>` : ""}
+      ${R.cible ? `<p class="note" style="margin-top:14px">Cible : ${fmt(R.cible.kcal)} kcal · ${fmt(R.cible.prot)} g prot. · ${fmt(R.cible.gluc)} g gluc. · ${fmt(R.cible.lip)} g lip. — moyenne de la semaine à <b>${moy.kcal - R.cible.kcal > 0 ? "+" : ""}${fmt(moy.kcal - R.cible.kcal)} kcal</b> et <b>${moy.proteines - R.cible.prot > 0 ? "+" : ""}${fmt(moy.proteines - R.cible.prot)} g</b> de protéines.</p>` : ""}`)}
     </section>`;
 
     h += this.ongletsJours(R, actif, "jed");
-    h += `<section class="panel">
+    h += `<section class="panel nu-jour">
       <h2>${esc(jour.nom)}</h2>
       <div class="grid g4 bilan-jour">
         <div class="tuile"><span class="t-lbl">Calories</span><span class="t-val readout">${fmt(t.kcal)}</span><span class="t-u">kcal</span></div>
@@ -850,12 +919,15 @@ const outilNutrition = {
       ${(jour.diagnostic && jour.diagnostic.length) ? `<div class="flag"><b>Ce que le catalogue ne permet pas d'atteindre ici :</b> ${esc(jour.diagnostic.join(" · "))}.</div>` : ""}
     </section>`;
 
+    /* v104 (point 6) : les repas du jour, repliés, en rangées dans un seul cadre */
     const nbR = (jour.repas || []).length;
-    (jour.repas || []).forEach((x, i) => h += this.carteRepas(x, true, actif + ":" + i, null, { premier: i === 0, dernier: i === nbR - 1, jours: R.jours, jour: actif,
-      identique: !!(ctx.ref && BrouillonRepas.identiqueRepas(ctx.ref, actif, i, x)) }));
+    if (nbR) h += `<section class="panel repas-liste" aria-label="${esc(trad("Repas du jour"))}">` + jour.repas.map((x, i) => this.carteRepas(x, true, actif + ":" + i, null, { premier: i === 0, dernier: i === nbR - 1, jours: R.jours, jour: actif,
+      identique: !!(ctx.ref && BrouillonRepas.identiqueRepas(ctx.ref, actif, i, x)), ouvert: !!(ctx.repasOuvert && ctx.repasOuvert(x)) })).join(`<div class="pli-sep"></div>`) + `</section>`;
 
+    /* v104 (point 6) : « Ajouter à la main » (« + Ajouter un aliment » d'un repas l'ouvre) et la liste de courses, repliés,
+       en deux rangées d'un même cadre */
     h += `<section class="panel">
-      <h2>Ajouter à la main</h2>
+      ${this.pli(ctx, "ajout", "Ajouter à la main", "", `
       <div class="grid g2">
         <div style="grid-column:1/-1"><label for="nu-q">Chercher un aliment ou une recette</label>
           <input id="nu-q" type="search" placeholder="Poulet, flocons d'avoine, saumon…" autocomplete="off"></div>
@@ -863,22 +935,25 @@ const outilNutrition = {
         <div><label for="nu-gr">Quantité (g)</label><input id="nu-gr" type="number" min="0" step="10" value="100"></div>
       </div>
       <div id="nu-res" class="resultats"></div>
-      <p class="note" style="margin-top:12px">L'ajout se fait dans <b>${esc(jour.nom)}</b>. Ce qui ne respecte pas le régime ou les allergies du client est signalé en rouge : tu peux quand même l'ajouter, mais en connaissance de cause.</p>
+      <p class="note" style="margin-top:12px">L'ajout se fait dans <b>${esc(jour.nom)}</b>. Ce qui ne respecte pas le régime ou les allergies du client est signalé en rouge : tu peux quand même l'ajouter, mais en connaissance de cause.</p>`)}
+      ${this.blocCourses(R, { joursCourses:{}, courses:{} }, false, ctx)}
     </section>`;
-
-    h += this.blocCourses(R, { joursCourses:{}, courses:{} });
-    return h + this.blocEnvoi(R);
+    return h + this.blocEnvoi(R, ctx);
   },
 
-  blocEnvoi(R){
+  /* v104 (point 6) : le bouton reste visible ; les trois notes passent sous « À lire avant de publier », replié */
+  blocEnvoi(R, ctx){
+    const ouvert = !!(ctx && ctx.plis && ctx.plis.has("envoi"));
     return `<section class="panel">
       <div class="actions">
         <button class="btn" id="nu-publier-bas">${esc(trad("Publier les changements"))}</button>
         <span class="msg" id="nu-msg2"></span>
       </div>
-      <p class="note" style="margin-top:10px">Un mot sur les glucides : ils apparaissent souvent 20 à 40 g sous la cible théorique alors que les calories tombent juste. C'est normal — la cible compte 4 kcal par gramme de glucide, les valeurs réelles des aliments en donnent un peu moins. Fie-toi aux calories et aux protéines.</p>
+      <details class="nu-pli nu-pli-notes" data-pli="envoi"${ouvert ? " open" : ""}><summary><span class="pli-txt"><span>${esc(trad("À lire avant de publier"))}</span></span></summary>
+      <p class="note" style="margin-top:0">Un mot sur les glucides : ils apparaissent souvent 20 à 40 g sous la cible théorique alors que les calories tombent juste. C'est normal — la cible compte 4 kcal par gramme de glucide, les valeurs réelles des aliments en donnent un peu moins. Fie-toi aux calories et aux protéines.</p>
       <p class="note">${esc(trad("Tes changements sont gardés dans un brouillon, sur ton compte : ton client ne les voit qu'après « Publier les changements ». Relis les ingrédients — les allergies en premier — avant de publier. La publication date la semaine (« Repas mis à jour le … » chez lui), range l'ancienne dans l'historique et remet à zéro sa liste de courses et ses repas cochés."))}</p>
       <p class="note">Le filtre travaille sur la composition des aliments. Il ne remplace pas ta lecture : une allergie sévère, un interdit religieux qui dépend de la certification, un aliment que le client ne supporte pas sans le savoir — c'est toi qui les attrapes.</p>
+      </details>
     </section>`;
   },
 
@@ -1050,7 +1125,17 @@ const outilNutrition = {
 
     /* la référence : la diète publiée, pré-remplie de la même façon (« Publié » tant que rien d'autre ne change) */
     let ref = JSON.parse(JSON.stringify(B));
-    const remplacerB = x => { Object.keys(B).forEach(k => { delete B[k]; }); Object.assign(B, JSON.parse(JSON.stringify(x))); };
+    /* v104 (point 6) : ce que le coach a ouvert pendant la visite (rien n'est écrit) : les blocs repliés par leur nom
+       (ctx.plis), les repas par l'objet du repas (il suit le repas quand on le monte, le descend, le retire puis l'annule) ;
+       une copie du brouillon (remplacerB : publication, nouvelle semaine…) rouvre les mêmes places jour + repas */
+    const plis = new Set(), repasOuverts = new WeakSet();
+    ctx.plis = plis; ctx.repasOuvert = x => repasOuverts.has(x);
+    const placesOuvertes = () => { const l = []; (B.jours || []).forEach((j, d) => (j.repas || []).forEach((x, i) => { if (repasOuverts.has(x)) l.push([d, i]); })); return l; };
+    const remplacerB = x => {
+      const places = placesOuvertes();
+      Object.keys(B).forEach(k => { delete B[k]; }); Object.assign(B, JSON.parse(JSON.stringify(x)));
+      places.forEach(([d, i]) => { const x2 = ((B.jours || [])[d] || { repas: [] }).repas[i]; if (x2) repasOuverts.add(x2); });
+    };
     const entree0 = BrouillonRepas.entree(etatB.D, uid);
     if (entree0 && BrouillonRepas.differe(entree0.programme, ref)) remplacerB(outilNutrition.migrer(Object.assign(outilNutrition.vide(), entree0.programme)));
     ctx.calcCible = self.cibleDepuis(calc);
@@ -1210,6 +1295,14 @@ const outilNutrition = {
       $$("#nu-allerg input").forEach(c => c.addEventListener("change", () => { lireReglages(); sauver(); viderProps(); }));
       $$("#nu-repas").forEach(c => c.addEventListener("change", () => { lireReglages(); sauver(); viderProps(); }));
       $$("[data-jed]", zone).forEach(b => b.addEventListener("click", () => { actif = +b.dataset.jed; redessiner(); }));
+      /* v104 (point 6) : ouvrir / replier un bloc ou un repas est retenu pour les prochains dessins (un élément déjà
+         remplacé par un nouveau dessin ne compte plus : sa clé « jour:repas » viserait peut-être un autre repas) */
+      $$("details[data-pli]", zone).forEach(d => d.addEventListener("toggle", () => { if (d.isConnected) plis[d.open ? "add" : "delete"](d.dataset.pli); }));
+      $$("details[data-pli-repas]", zone).forEach(d => d.addEventListener("toggle", () => {
+        if (!d.isConnected) return;
+        const [jd, ji] = d.dataset.pliRepas.split(":").map(Number), x = ((B.jours[jd] || {}).repas || [])[ji];
+        if (x) repasOuverts[d.open ? "add" : "delete"](x);
+      }));
 
       const q = $("nu-q");
       if (q) q.addEventListener("input", () => { clearTimeout(minuteur); minuteur = setTimeout(() => chercher(q.value.trim()), 200); });
@@ -1288,6 +1381,7 @@ const outilNutrition = {
             delete propositions[cleR]; montrerProps(cleR); flash("nu-msg", trad("Propositions périmées : touche à nouveau « Changer ce repas »."));
             return;
           }
+          if (repasOuverts.has(vise)) repasOuverts.add(nouveau);   // v104 (point 6) : le remplaçant reste ouvert
           jour.repas[p[1]] = nouveau; delete propositions[cleR];
           if (sauver() === false) return;
           redessiner();
@@ -1364,6 +1458,7 @@ const outilNutrition = {
       }));
       $$("[data-ajout-i]", zone).forEach(b => b.addEventListener("click", () => {
         const { jour, i } = cible(b.dataset.ajoutI);
+        const pa = zone.querySelector('details[data-pli="ajout"]'); if (pa){ pa.open = true; plis.add("ajout"); }   // v104 (point 6)
         $("nu-slot").value = jour.repas[i].moment;
         $("nu-q").focus();
         $("nu-q").scrollIntoView({ behavior: defilementDoux(), block:"center" });

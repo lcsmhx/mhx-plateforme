@@ -1848,3 +1848,16 @@ Object.assign(I18N.en, {
 /* v104 (point 7) */ Object.assign(I18N.en, {
   "Nouvel exercice": "New exercise"
 });
+/* v104 (point 6) : fiche d'un client, onglet Nutrition du coach : les résumés des blocs repliés (repas, « Composer la
+   semaine », « La semaine en moyenne », liste de courses, notes avant publication) */
+Object.assign(I18N.en, {
+  "{a} kcal": "{a} Cal",
+  "{n} repas": "{n} meals",
+  "{n} jours": "{n} days",
+  "1 jour": "1 day",
+  "g prot. / jour": "g protein / day",
+  "{n} articles": "{n} items",
+  "{n} article": "{n} item",
+  "À lire avant de publier": "Read before publishing",
+  "Repas du jour": "Meals of the day"
+});

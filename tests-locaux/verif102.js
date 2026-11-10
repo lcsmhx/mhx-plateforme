@@ -375,6 +375,8 @@ const ouvrirEx = async (page, si, ei) => { const d = `details[data-pli="${si}:${
     const { page: p4, c: c4 } = await contexte(b, COACH, base());
     await c4.route(/\/rest\/v1\/recettes/, r => r.abort());
     await p4.goto(FICHE("nutrition")); await pret(p4, "#nu-publier");
+    /* v104 (point 6) : les repas du coach sont repliés : il ouvre le premier (clic sur son résumé) avant « Changer ce repas » */
+    await p4.evaluate(() => { const s = document.querySelector('#nu-vue details[data-pli-repas="0:0"] > summary'); if (s) s.click(); }); await attendre(p4, 150);
     await p4.click('[data-autre="0:0"]'); await attendre(p4, 2500);
     const m4 = await texte(p4, "#nu-msg");
     ok("D4 : « Changer ce repas » sans catalogue : « Pas de connexion : les recettes n'ont pas pu être lues… », jamais « pas d'autre recette »", /^Pas de connexion : les recettes/.test(m4 || ""), m4);

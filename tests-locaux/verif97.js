@@ -246,7 +246,10 @@ const brouillons = db => { const l = db.donnees.find(x => x.user_id === COACH_ID
 const publiee = db => { const l = db.donnees.find(x => x.user_id === C1 && x.outil === "repas"); return l ? l.contenu : null; };
 const suivi = db => { const l = db.donnees.find(x => x.user_id === C1 && x.outil === "repas_suivi"); return l ? l.contenu : null; };
 const attendreB = (db, f) => attendreQue(async () => { const B = brouillons(db); return !!(B && f(B)); }, 5000);
-const ouvrirCoach = async (b, db) => { const { page, c } = await contexte(b, COACH, db); await page.goto(FICHE("nutrition")); await pret(page, "#nu-publier"); return { page, c }; };
+/* v104 (point 6) : sur la fiche, les repas et les blocs longs de la Nutrition du coach sont repliés : il les ouvre (clic sur
+   leur résumé) avant de s'en servir ; ils restent ouverts après chaque redessin de la page */
+const deplier = async page => { await page.evaluate(() => document.querySelectorAll("#nu-vue details.nu-pli:not([open]) > summary").forEach(s => s.click())); await attendre(page, 150); };
+const ouvrirCoach = async (b, db) => { const { page, c } = await contexte(b, COACH, db); await page.goto(FICHE("nutrition")); await pret(page, "#nu-publier"); await deplier(page); return { page, c }; };
 const ouvrirClient = async (b, db) => { const { page, c } = await contexte(b, THOMAS, db); await page.goto(URL0 + "#/nutrition"); await pret(page, ".repas-c"); return { page, c }; };
 const statut = page => texte(page, "#nu-statut");
 /* la vue du client : jour affiché, repas (nom, grammages), articles cochés de la liste de courses, repas « respectés » */
@@ -312,7 +315,7 @@ const sansBrouillon = (B, k) => !B || !B.clients || !B.clients[k] || !B.clients[
     ok("B1 : une quantité changée part dans le brouillon (brouillons_repas, compte du coach), jamais chez le client ; « ● Brouillon non publié »",
       e.programme.jours[0].repas[0].ingredients[0].grammes === g0 + 5 && ecr(db, "repas").length === 0 && /Brouillon non publié/.test(await statut(co) || "") && ecr(db, "brouillons_repas").every(x => x.user_id === COACH_ID),
       JSON.stringify([e.programme.jours[0].repas[0].ingredients[0].grammes, ecr(db, "repas").length]));
-    await co.reload(); await pret(co, "#nu-publier");
+    await co.reload(); await pret(co, "#nu-publier"); await deplier(co);
     const gr = await co.evaluate(() => (document.querySelector("[data-gr]") || {}).value);
     ok("B2 : rechargement : le brouillon revient", gr === String(g0 + 5) && /Brouillon non publié/.test(await statut(co) || ""), gr);
     await co.click("#nu-annuler-brouillon"); await attendre(co, 300);

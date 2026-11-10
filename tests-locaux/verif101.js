@@ -279,7 +279,9 @@ const ouvrirEx = async (page, si, ei) => { const d = `details[data-pli="${si}:${
     ok("A3 : « Annuler » reste proposé 10 s (encore là à 9 s, parti à 11 s)", encore && parti, JSON.stringify([encore, parti]));
     /* diète : un repas, puis une ligne d'ingrédient */
     await page.goto(FICHE("nutrition")); await pret(page, "#nu-publier");
-    const n0 = await page.evaluate(() => document.querySelectorAll(".repas-c").length);
+    /* v104 (point 6) : les repas du coach sont repliés : il les ouvre (clic sur leur résumé) avant de s'en servir */
+    await page.evaluate(() => document.querySelectorAll("#nu-vue details.nu-pli:not([open]) > summary").forEach(s => s.click())); await attendre(page, 150);
+    const n0 =await page.evaluate(() => document.querySelectorAll(".repas-c").length);
     await page.click('[data-retirer="0:1"]'); await attendre(page, 300);
     const t3 = await toast(page);
     await annuler(page); await attendre(page, 900);

@@ -1101,3 +1101,36 @@ input[type=checkbox]:focus-visible,input[type=radio]:focus-visible{outline:2px s
   .objectif .obj-case{width:22px;height:22px;margin:0}
   #mc-conditions{min-height:var(--h-toucher);display:inline-flex;align-items:center}
 }
+/* v104 (point 6) : fiche d'un client, onglet Nutrition du coach : les repas et les blocs longs sont repliés (<details>) ;
+   le résumé est une cible de 44 px au moins, une flèche dit s'il est ouvert, un focus clavier visible */
+.nu-pli{border:0;margin:0;padding:0}
+.nu-pli > summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:var(--h-toucher);
+  font-size:inherit;font-weight:inherit;color:var(--ink);border-radius:var(--r-sm);cursor:pointer}
+.nu-pli > summary::-webkit-details-marker{display:none}
+.nu-pli > summary::after{content:"";flex:none;width:8px;height:8px;margin:0 8px 4px 0;border-right:2px solid var(--ink-3);border-bottom:2px solid var(--ink-3);
+  transform:rotate(45deg);transition:transform var(--vite)}
+.nu-pli[open] > summary::after{transform:rotate(-135deg);margin-bottom:-4px}
+.nu-pli > summary:hover{color:var(--ink)}
+.nu-pli > summary:hover::after{border-color:var(--accent)}
+.nu-pli > summary:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
+.nu-pli[open] > summary{margin-bottom:14px}
+.nu-pli .pli-txt{display:flex;flex-direction:column;gap:2px;min-width:0}
+.nu-pli .pli-txt h2{margin:0;overflow-wrap:anywhere}
+.nu-pli .pli-resume{display:flex;flex-wrap:wrap;gap:2px 14px;font-size:13px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.nu-pli .pli-resume b{color:var(--ink);font-weight:600}
+.nu-pli .pli-txt .pastille{align-self:flex-start;margin-top:4px}
+.pli-sep{height:1px;background:var(--line);margin:10px 0}
+.nu-pli .pli-resume .eyebrow{font-size:11px}
+.repas-pli .repas-outils{margin:0 0 4px}
+.repas-pli .repas-macros{margin-top:10px}
+.nu-pli-notes{margin-top:8px}
+.nu-pli-notes > summary{font-size:14px;font-weight:600;color:var(--ink-2)}
+.nu-pli-notes[open] > summary{margin-bottom:6px}
+/* le résumé du jour (kcal, protéines, glucides, lipides) sur une ligne au téléphone */
+@media (max-width:560px){
+  .nu-jour .bilan-jour{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+  .nu-jour .bilan-jour .tuile{padding:8px 6px;gap:0}
+  .nu-jour .bilan-jour .t-lbl{font-size:9px;letter-spacing:.04em;overflow-wrap:anywhere}
+  .nu-jour .bilan-jour .t-val{font-size:18px;margin-top:2px}
+}
+@media (prefers-reduced-motion: reduce){.nu-pli > summary::after{transition:none}}
