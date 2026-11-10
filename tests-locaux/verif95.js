@@ -277,47 +277,63 @@ const FR = "Langue : français. Passer en anglais", EN = "Language: English. Swi
     await attendreQue(() => page.evaluate(() => { const b = document.getElementById("nu-save"), m = document.getElementById("nu-msg2"); return !!b && !b.disabled && !!m && m.textContent.trim() !== ""; }), 9000);
     return { msg: await texte(page, "#nu-msg2"), bouton: await texte(page, "#nu-save") };
   };
+  /* v97 : « Valider et envoyer au client » est devenu « Publier les changements » (brouillon sur le compte du coach, fenêtre
+     « Publier »). Ce que B protège ne change pas : jamais « publié » avant la réponse de la base, un message qui dit d'agir et
+     qui reste, rien de perdu (le brouillon reste, et part au prochain « Publier »), « Publication… » pendant l'envoi. */
+  const changerDiete = async (page) => {
+    await page.evaluate(() => { const i = document.querySelector("[data-gr]"); i.value = String((+i.value || 0) + 5); i.dispatchEvent(new Event("change", { bubbles: true })); });
+    await attendreQue(() => page.evaluate(() => /Brouillon non publié/.test((document.getElementById("nu-statut") || {}).textContent || "")), 4000);
+    await attendre(page, 900);
+  };
+  const publierDiete = async (page) => {
+    await page.click("#nu-publier");
+    await attendreQue(() => fenetre(page), 4000);
+    await toucherFenetre(page, "Publier");
+    await attendreQue(() => page.evaluate(() => { const b = document.getElementById("nu-publier"), m = document.getElementById("nu-pub-msg"); return !!b && !b.disabled && !!m && m.textContent.trim() !== ""; }), 9000);
+    return { msg: await texte(page, "#nu-pub-msg"), bouton: await texte(page, "#nu-publier"), statut: await texte(page, "#nu-statut") };
+  };
   await bloc("B. semaine envoyée : panne puis renvoi", async () => {
     const db = base(); db.panneEcriture = "repas";
-    const { c, page } = await contexte(b, COACH, db);
-    await page.goto(FICHE("nutrition")); await pret(page, "#nu-save");
-    const r = await envoyerSemaine(page);
+    const { page } = await contexte(b, COACH, db);
+    await page.goto(FICHE("nutrition")); await pret(page, "#nu-publier");
+    await changerDiete(page);
+    const r = await publierDiete(page);
     await attendre(page, 4500);   // un flash s'efface après 3,2 s : celui-ci reste
-    const plusTard = await texte(page, "#nu-msg2");
-    ok("B1 : écriture de la diète en panne (500) : jamais « Semaine envoyée » ; « Pas envoyé : vérifie ta connexion et réessaie. » avec le témoin du haut (« Hors ligne … »), toujours là 4,5 s après ; le bouton redevient « Valider et envoyer au client »",
-      /^Pas envoyé : vérifie ta connexion et réessaie\. \(Hors ligne/.test(r.msg || "") && plusTard === r.msg && !/Semaine envoyée/.test(r.msg || "") && r.bouton === "Valider et envoyer au client" && db.refus.length > 0,
+    const plusTard = await texte(page, "#nu-pub-msg");
+    ok("B1 : écriture de la diète en panne (500) : jamais « Publié » ; « Pas publié : vérifie ta connexion et réessaie. Ton brouillon est gardé. », toujours là 4,5 s après ; le bouton redevient « Publier les changements »",
+      /^Pas publié : vérifie ta connexion et réessaie\. Ton brouillon est gardé\./.test(r.msg || "") && plusTard === r.msg && !/^Publié/.test(r.msg || "") && r.bouton === "Publier les changements" && db.refus.length > 0,
       JSON.stringify([r, plusTard, db.refus.length]));
-    /* la base revient : la copie gardée sur l'appareil repart toute seule (reprise après 30 s), sans nouveau clic */
-    const copie = await page.evaluate(id => Store.aUneCopie(id, "repas"), C1);
+    /* rien de perdu : le brouillon reste (sur le compte du coach) ; la base revient : un nouveau « Publier » envoie la semaine */
+    const garde = /Brouillon non publié/.test(await texte(page, "#nu-statut") || "") && !!((db.donnees.find(x => x.user_id === F.IDS.coach && x.outil === "brouillons_repas") || {}).contenu || { clients: {} }).clients[C1];
     db.panneEcriture = null;
     const n0 = ecr(db, "repas", C1).length;
-    await c.clock.fastForward(31000);
-    const renvoye = await attendreQue(() => ecr(db, "repas", C1).length > n0, 8000);
-    const e = ecr(db, "repas", C1).pop(), apres = await page.evaluate(id => Store.aUneCopie(id, "repas"), C1);
-    ok("B2 : la copie de la semaine est gardée sur l'appareil, puis renvoyée automatiquement quand la base répond (sans nouveau clic), avec sa date d'envoi ; plus de copie en attente",
-      copie === true && renvoye && !!(e && e.contenu && e.contenu.maj) && apres === false, JSON.stringify({ copie, renvoye, maj: e && e.contenu && e.contenu.maj, apres }));
+    const r2 = await publierDiete(page);
+    const e = ecr(db, "repas", C1).pop();
+    ok("B2 : rien n'est perdu : le brouillon reste (« Brouillon non publié », gardé sur le compte du coach) ; quand la base répond, « Publier » envoie la semaine avec sa date",
+      garde && /^Publié/.test(r2.msg || "") && ecr(db, "repas", C1).length === n0 + 1 && !!(e && e.contenu && e.contenu.maj), JSON.stringify({ garde, r2, maj: e && e.contenu && e.contenu.maj }));
   });
   await bloc("B. semaine envoyée : refus", async () => {
     const db = base(); db.refusEcriture = "repas";
     const { page } = await contexte(b, COACH, db);
-    await page.goto(FICHE("nutrition")); await pret(page, "#nu-save");
-    const r = await envoyerSemaine(page);
-    ok("B3 : écriture refusée par la base (403) : jamais « Semaine envoyée » ; « Pas envoyé : vérifie ta connexion et réessaie. (Non enregistré — modification refusée) » ; rien d'écrit",
-      /^Pas envoyé : vérifie ta connexion et réessaie\. \(Non enregistré — modification refusée\)/.test(r.msg || "") && !/Semaine envoyée/.test(r.msg || "") && ecr(db, "repas").length === 0, JSON.stringify([r, ecr(db, "repas").length]));
+    await page.goto(FICHE("nutrition")); await pret(page, "#nu-publier");
+    await changerDiete(page);
+    const r = await publierDiete(page);
+    ok("B3 : écriture refusée par la base (403) : jamais « Publié » ; « Pas publié : la base a refusé cette modification. Ton brouillon est gardé. » ; rien d'écrit",
+      r.msg === "Pas publié : la base a refusé cette modification. Ton brouillon est gardé." && ecr(db, "repas").length === 0, JSON.stringify([r, ecr(db, "repas").length]));
   });
   await bloc("B. semaine envoyée : réponse lente", async () => {
     const db = base(); db.lentEcriture = { outil: "repas", ms: 2000 };
     const { page } = await contexte(b, COACH, db);
-    await page.goto(FICHE("nutrition")); await pret(page, "#nu-save");
-    await page.click("#nu-save"); await attendre(page, 500);
-    const pendant = await page.evaluate(() => ({ dis: document.getElementById("nu-save").disabled, txt: document.getElementById("nu-save").textContent.trim(), msg: document.getElementById("nu-msg2").textContent.trim() }));
-    await attendreQue(() => page.evaluate(() => /Semaine envoyée/.test(document.getElementById("nu-msg2").textContent)), 6000);
-    const e = ecr(db, "repas", C1).pop(), apres = { msg: await texte(page, "#nu-msg2"), bouton: await texte(page, "#nu-save") };
-    const nb = e && e.contenu && Array.isArray(e.contenu.jours) ? e.contenu.jours.length : -1;
-    ok("B4 : pendant l'envoi (base lente) : « Envoi… », bouton désactivé, pas encore « Semaine envoyée » ; après la réponse : « Semaine envoyée — N jours. Ton client la voit dès sa prochaine ouverture. », la semaine écrite porte sa date",
-      pendant.dis === true && pendant.txt === "Envoi…" && !/Semaine envoyée/.test(pendant.msg)
-        && apres.msg === "Semaine envoyée — " + nb + " jour" + (nb > 1 ? "s" : "") + ". Ton client la voit dès sa prochaine ouverture." && apres.bouton === "Valider et envoyer au client" && !!(e && e.contenu && e.contenu.maj),
-      JSON.stringify([pendant, apres, nb]));
+    await page.goto(FICHE("nutrition")); await pret(page, "#nu-publier");
+    await changerDiete(page);
+    await page.click("#nu-publier"); await attendreQue(() => fenetre(page), 4000); await toucherFenetre(page, "Publier"); await attendre(page, 700);
+    const pendant = await page.evaluate(() => ({ dis: document.getElementById("nu-publier").disabled, txt: document.getElementById("nu-publier").textContent.trim(), msg: document.getElementById("nu-pub-msg").textContent.trim() }));
+    await attendreQue(() => page.evaluate(() => /^Publié/.test(document.getElementById("nu-pub-msg").textContent)), 6000);
+    const e = ecr(db, "repas", C1).pop(), apres = { msg: await texte(page, "#nu-pub-msg"), bouton: await texte(page, "#nu-publier") };
+    ok("B4 : pendant la publication (base lente) : « Publication… », bouton désactivé, pas encore « Publié » ; après la réponse : « Publié. Ton client voit la nouvelle version dès sa prochaine ouverture. », la semaine écrite porte sa date",
+      pendant.dis === true && pendant.txt === "Publication…" && !/Publié/.test(pendant.msg)
+        && apres.msg === "Publié. Ton client voit la nouvelle version dès sa prochaine ouverture." && apres.bouton === "Publier les changements" && !!(e && e.contenu && e.contenu.maj),
+      JSON.stringify([pendant, apres]));
   });
 
   /* =================== C. jours abrégés =================== */

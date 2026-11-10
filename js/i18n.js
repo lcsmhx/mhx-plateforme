@@ -1626,3 +1626,42 @@ Object.assign(I18N.en, {
   "Charger": "Load"
 });
 /* v96-programmes-fin */
+/* v97-nutrition (chantier 2 de la nuit du 10/11) : le brouillon de la diète, « Changer ce repas », « Dupliquer sur », l'écart
+   de calories */
+Object.assign(I18N.en, {
+  "Publier cette diète ? Ton client la verra à sa prochaine ouverture ; sa liste de courses et ses repas cochés repartiront de zéro.": "Publish this meal plan? Your client will see it next time they open the app; their shopping list and ticked meals will start from scratch.",
+  "Attention : ton client a changé {n} repas depuis le début de ton brouillon (« Remplacer ») : ton brouillon remplacera ses choix.": "Careful: your client changed {n} meals since you started your draft (“Replace”): your draft will replace their choices.",
+  "Attention : ton client a changé {n} repas depuis le début de ton brouillon (« Remplacer ») : ton brouillon remplacera son choix.": "Careful: your client changed {n} meal since you started your draft (“Replace”): your draft will replace their choice.",
+  "Attention : la diète de ce client a été modifiée ailleurs (autre appareil ou autre onglet{q}) depuis que tu as ouvert cette page : ton brouillon la remplacera.": "Careful: this client's meal plan was changed elsewhere (another device or tab{q}) since you opened this page: your draft will replace it.",
+  "Ce brouillon a aussi été modifié sur un autre appareil ({q}) : c'est la version de cet appareil qui sera publiée.": "This draft was also changed on another device ({q}): this device's version is the one that will be published.",
+  "Publier": "Publish",
+  "L'ancienne diète n'a pas pu être rangée dans l'historique. La remplacer quand même ?": "The previous meal plan couldn't be saved to the history. Replace it anyway?",
+  "Sa diète": "Their meal plan",
+  "Nouvelle semaine type en préparation. Ton client voit toujours l'ancienne tant que tu n'as pas publié.": "New typical week in progress. Your client still sees the previous one until you publish.",
+  "Nouvelle semaine à partir de celle-ci": "New week from this one",
+  "identique à la semaine d'avant : à varier ?": "same as the previous week: time for some variety?",
+  "Changer ce repas": "Change this meal",
+  "Monter le repas": "Move meal up",
+  "Descendre le repas": "Move meal down",
+  "Dupliquer sur": "Copy to",
+  "— choisis un jour —": "— pick a day —",
+  "Tous les autres jours": "All other days",
+  "Ses calories ({a}) ≠ cette diète ({b})": "Their calories ({a}) ≠ this meal plan ({b})",
+  "« Ses calories » a changé depuis : rien n'est recalculé sans toi.": "“Their calories” changed since: nothing is recalculated without you.",
+  "Reprendre {a} kcal": "Use {a} kcal",
+  "Tes changements sont gardés dans un brouillon, sur ton compte : ton client ne les voit qu'après « Publier les changements ». Relis les ingrédients — les allergies en premier — avant de publier. La publication date la semaine (« Repas mis à jour le … » chez lui), range l'ancienne dans l'historique et remet à zéro sa liste de courses et ses repas cochés.": "Your changes are kept in a draft, on your account: your client only sees them after “Publish changes”. Check the ingredients — allergies first — before publishing. Publishing dates the week (“Meals updated on …” on their side), files the previous one in the history and resets their shopping list and ticked meals.",
+  "Publie d'abord une première diète : la nouvelle semaine part de la version publiée.": "Publish a first meal plan first: the new week starts from the published version.",
+  "Ton brouillon sera remplacé par une copie de la diète publiée, pour préparer la suivante. Continuer ?": "Your draft will be replaced by a copy of the published meal plan, to prepare the next one. Continue?",
+  "Préparer la nouvelle semaine": "Prepare the new week",
+  "Nouvelle semaine prête dans ton brouillon : varie les repas marqués « ≈ identique », puis publie.": "New week ready in your draft: vary the meals marked “≈ same”, then publish.",
+  "Il n'y a encore aucun repas à publier.": "There are no meals to publish yet.",
+  "Charger « {n} » ? Il remplacera les repas de ton brouillon (ton client garde la version publiée).": "Load “{n}”? It will replace the meals in your draft (your client keeps the published version).",
+  "Choisis un remplaçant (même moment, compatible avec son régime et ses allergies) :": "Pick a replacement (same meal time, compatible with their diet and allergies):",
+  "Choisir": "Choose",
+  "Garder ce repas": "Keep this meal",
+  "Pas d'autre recette compatible pour ce repas.": "No other compatible recipe for this meal.",
+  "Repas copié sur {n} jour(s).": "Meal copied to {n} day(s).",
+  "Propositions périmées : touche à nouveau « Changer ce repas ».": "Outdated suggestions: tap “Change this meal” again.",
+  "Diète remise dans ton brouillon. Relis-la, puis clique sur « Publier les changements ».": "Meal plan restored into your draft. Review it, then click “Publish changes”."
+});
+/* v97-nutrition-fin */

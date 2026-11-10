@@ -4,6 +4,124 @@
    Le client la consulte. Les aliments et recettes viennent du
    catalogue Supabase (Catalogue.aliments / Catalogue.recettes).
    ------------------------------------------------------------------ */
+/* ------------------------------------------------------------------
+   v97 (chantier 2 de la nuit du 10/11, plan-etape4) — LE BROUILLON DES DIÈTES
+   Même mécanique que les programmes (BrouillonProg, v96) : le coach travaille dans un brouillon rangé sur SON compte
+   (clé brouillons_repas, une entrée par client) ; le client ne voit rien avant « Publier les changements ».
+     { v: 1, clients: { <compte du client>: { programme (la diète), base_maj, depart, debut_le, ecrit_le, appareil, nouveau_bloc? } } }
+   - depart : les repas de la version publiée quand le brouillon a commencé (« recette|nom » par jour et par repas) : à la
+     publication, un repas que le client a changé depuis (« Remplacer », change_client) est compté et annoncé.
+   Le document repas garde sa forme (on ajoute seulement publie_le) ; la liste de courses et les repas cochés du client ne
+   repartent de zéro qu'à la publication (alignerCourses). Aucune écriture à la lecture.
+   ------------------------------------------------------------------ */
+const BrouillonRepas = Object.assign(Object.create(BrouillonProg), {
+  cle: "brouillons_repas",
+  /* ce que voit le client (sans maj, debut, publie_le ni les champs du coach) */
+  empreinte(x){
+    x = Forme.objet(x) ? x : {};
+    const s = v => v == null ? "" : String(v), n = v => Math.round(Number(v) || 0);
+    const c = Forme.objet(x.cible) ? x.cible : null;
+    const jours = Array.isArray(x.jours) ? x.jours : (Array.isArray(x.repas) && x.repas.length ? [{ nom: "", repas: x.repas }] : []);
+    return JSON.stringify({ nom: s(x.nom), note: s(x.note), regime: s(x.regime), nb: n(x.nb_repas),
+      allergenes: (Array.isArray(x.allergenes) ? x.allergenes : []).map(s).sort(),
+      cible: c ? [n(c.kcal), n(c.prot), n(c.gluc), n(c.lip)] : null,
+      jours: jours.filter(Forme.objet).map(j => [s(j.nom), (Array.isArray(j.repas) ? j.repas : []).filter(Forme.objet).map(r => [s(r.moment), s(r.nom), s(r.recette_id),
+        (Array.isArray(r.ingredients) ? r.ingredients : []).filter(Forme.objet).map(i => s(i.aliment_id) + ":" + n(i.grammes)).join(",")])]) });
+  },
+  depuis(R){
+    const b = JSON.parse(JSON.stringify(Object.assign(outilNutrition.vide(), R || {})));
+    return outilNutrition.migrer(b);
+  },
+  cleRepas(c){ return Forme.objet(c) ? String(c.recette_id || "") + "|" + String(c.nom || "") : ""; },
+  depart(R){ return ((R && R.jours) || []).map(j => ((j && j.repas) || []).map(c => this.cleRepas(c))); },
+  /* les repas que le client a changés (« Remplacer ») depuis le début du brouillon */
+  changesClient(enBase, depart){
+    let n = 0;
+    ((enBase && enBase.jours) || []).forEach((j, d) => ((j && j.repas) || []).forEach((c, i) => {
+      if (Forme.objet(c) && c.change_client && (!depart || !depart[d] || depart[d][i] !== this.cleRepas(c))) n++;
+    }));
+    return n;
+  },
+  nouveauBloc(R){ const b = this.depuis(R); b.debut = ""; b.maj = ""; const m = /^(.*?\bbloc\s*)(\d+)(.*)$/i.exec(b.nom || ""); if (m) b.nom = m[1] + (parseInt(m[2], 10) + 1) + m[3]; return b; },
+  /* « ≈ identique à la semaine d'avant » : même repas, même jour, même place */
+  identiqueRepas(ref, d, i, c){
+    const j = ref && Array.isArray(ref.jours) ? ref.jours[d] : null, a = j && Array.isArray(j.repas) ? j.repas[i] : null;
+    return !!(a && Forme.objet(c) && this.cleRepas(a) === this.cleRepas(c));
+  },
+
+  /* Publier : { ok, repas, D } ; { ok:false, annule } ; { ok:false, refus } ; { ok:false } (réseau) */
+  async publier(uid, Rpub, b, D){
+    const moi = Store.moi(); if (!moi || !uid) return { ok: false };
+    await this.vider(D, uid);   // le brouillon tapé à l'instant part d'abord (relu, fusionné : BrouillonProg, relecture v96)
+    let lR, lD;
+    try { await Auth.assurer(); [lR, lD] = await Promise.all([this.ligne(uid, "repas"), this.ligne(moi, this.cle)]); }
+    catch(e){ return { ok: false, refus: !!(e && e.statut >= 400 && e.statut < 500 && [401, 408, 429].indexOf(e.statut) === -1) }; }
+    if (Store.cible() !== uid) return { ok: false, annule: true };
+    const enBase = outilNutrition.migrer(Object.assign(outilNutrition.vide(), Forme.cle("repas", lR && lR.contenu) || {}));
+    const moiE = this.entree(D, uid);
+    const nbClient = this.changesClient(enBase, moiE && moiE.depart ? moiE.depart : this.depart(Rpub));
+    const ailleurs = this.empreinte(enBase) !== this.empreinte(Rpub);
+    const autres = Forme.objet(lD && lD.contenu) && Forme.objet(lD.contenu.clients) ? lD.contenu.clients[uid] : null;
+    const autreAppareil = Forme.objet(autres) && Forme.objet(autres.programme) && autres.appareil !== this.appareil && (!moiE || String(autres.ecrit_le || "") > String(moiE.ecrit_le || "")) && this.differe(autres.programme, b);
+    /* la fenêtre « Publier » : ce qui va changer chez le client, et ce qui s'est passé entre-temps */
+    const lignes = [trad("Publier cette diète ? Ton client la verra à sa prochaine ouverture ; sa liste de courses et ses repas cochés repartiront de zéro.")];
+    if (nbClient) lignes.push(trad(nbClient > 1 ? "Attention : ton client a changé {n} repas depuis le début de ton brouillon (« Remplacer ») : ton brouillon remplacera ses choix." : "Attention : ton client a changé {n} repas depuis le début de ton brouillon (« Remplacer ») : ton brouillon remplacera son choix.", { n: nbClient }));
+    else if (ailleurs) lignes.push(trad("Attention : la diète de ce client a été modifiée ailleurs (autre appareil ou autre onglet{q}) depuis que tu as ouvert cette page : ton brouillon la remplacera.", { q: lR && lR.maj_le ? ", " + this.dateHeure(lR.maj_le) : "" }));
+    if (autreAppareil) lignes.push(trad("Ce brouillon a aussi été modifié sur un autre appareil ({q}) : c'est la version de cet appareil qui sera publiée.", { q: this.dateHeure(autres.ecrit_le) || "?" }));
+    if (!(await UI.confirmer(lignes.join("\n\n"), { titre: trad("Publier les changements"), ok: trad("Publier"), annuler: trad("Ne rien publier"), danger: !!(nbClient || ailleurs || autreAppareil) }))) return { ok: false, annule: true };
+    if (Store.cible() !== uid) return { ok: false, annule: true };
+    if (Historique.utile("repas", enBase)){
+      const archive = Object.assign({}, enBase, { maj: enBase.maj || enBase.debut || aujourdhui() });
+      if (!(await Historique.archiver("repas", archive)) && !(await UI.confirmer(trad("L'ancienne diète n'a pas pu être rangée dans l'historique. La remplacer quand même ?"), { ok: trad("Remplacer"), danger: true }))) return { ok: false, annule: true };
+    }
+    if (Store.cible() !== uid) return { ok: false, annule: true };
+    const N = JSON.parse(JSON.stringify(b));
+    N.maj = new Date().toLocaleDateString("fr-FR");
+    if (!N.debut || (moiE && moiE.nouveau_bloc)) N.debut = aujourdhui();
+    N.publie_le = new Date().toISOString();
+    try {
+      await Auth.appel("/rest/v1/donnees?on_conflict=user_id,outil", {
+        method: "POST", headers: { "Prefer": "resolution=merge-duplicates,return=minimal" },
+        body: [{ user_id: uid, outil: "repas", contenu: N, maj_le: N.publie_le }]
+      });
+    } catch(e){
+      /* réponse perdue (délai dépassé) alors que la base a écrit : on relit avant de dire « Pas publié » */
+      const refus = !!(e && e.statut >= 400 && e.statut < 500 && [401, 408, 429].indexOf(e.statut) === -1);
+      let arrive = false;
+      if (!refus) try { const l = await this.ligne(uid, "repas"); arrive = !!(l && Forme.objet(l.contenu) && l.contenu.publie_le === N.publie_le); } catch(e2){}
+      if (!arrive) return { ok: false, refus };
+    }
+    Store.boite(uid).repas = Rpub;
+    Store.majLu[uid + "|repas"] = N.publie_le;
+    majEtat("enregistre");
+    /* la base relue juste avant fait foi pour les brouillons des autres clients (jamais les entrées de la page) */
+    Object.keys(D.clients || {}).forEach(k => { if (k !== uid) delete D.clients[k]; });
+    const autresB = Forme.objet(lD && lD.contenu) && Forme.objet(lD.contenu.clients) ? lD.contenu.clients : {};
+    Object.keys(autresB).forEach(k => { if (k !== uid) D.clients[k] = autresB[k]; });
+    delete D.clients[uid];
+    this.planifier(D, uid);
+    return { ok: true, repas: N, D: D };
+  },
+
+  etatHTML(b, ref, Rpub, entree){
+    const brouillon = this.differe(b, ref) || !!(entree && entree.nouveau_bloc);
+    return `<section class="panel nu-etat${brouillon ? " brouillon" : ""}" id="nu-etat">
+      <div class="seance-c-tete" style="margin-bottom:6px"><h2 style="margin:0;flex:1">${esc(b.nom || trad("Sa diète"))}</h2>
+        ${brouillon ? `<span class="pastille attention" id="nu-statut">● ${esc(trad("Brouillon non publié"))}</span>` : `<span class="pastille ok" id="nu-statut">✓ ${esc(trad("Publié"))}</span>`}</div>
+      <p class="note" style="margin:0 0 10px">${esc(brouillon
+        ? (entree && entree.nouveau_bloc ? trad("Nouvelle semaine type en préparation. Ton client voit toujours l'ancienne tant que tu n'as pas publié.")
+                                         : trad("Ton client voit toujours la version publiée{d} tant que tu n'as pas publié.", { d: Rpub.maj ? " " + trad("du {d}", { d: Rpub.maj }) : "" }))
+        : (Rpub.maj ? trad("Ton client voit exactement cette version (publiée le {d}).", { d: Rpub.maj }) : trad("Tes changements restent dans un brouillon : ton client ne voit rien avant « Publier les changements ».")))}</p>
+      <div class="actions">
+        <button type="button" class="btn" id="nu-publier">${esc(trad("Publier les changements"))}</button>
+        ${brouillon ? `<button type="button" class="btn ghost" id="nu-annuler-brouillon">${esc(trad("Annuler le brouillon"))}</button>` : ""}
+        <button type="button" class="btn ghost" id="nu-nouveau-bloc">${esc(trad("Nouvelle semaine à partir de celle-ci"))}</button>
+        <span class="msg" id="nu-pub-msg" role="status"></span>
+      </div>
+    </section>`;
+  }
+});
+
 const outilNutrition = {
   id: "nutrition",
   cle: "repas",
@@ -177,6 +295,38 @@ const outilNutrition = {
     }
     sortie.manquants = manquants.map(sl => sl.nom);
     return sortie;
+  },
+
+  /* v97 (4b) : « Changer ce repas » : jusqu'à n recettes du même moment, TOUJOURS compatibles avec le régime et les allergies
+     de la diète (compatible), différentes du repas actuel et des recettes déjà servies dans la semaine (sauf s'il n'y en a
+     pas assez), à la même énergie que le repas remplacé */
+  async propositions(x, R, n){
+    const recettes = await Catalogue.recettes();
+    const dans = new Set(); (R.jours || []).forEach(j => (j.repas || []).forEach(c => { if (c && c.recette_id) dans.add(c.recette_id); }));
+    let l = recettes.filter(r => r.moment === x.moment && r.id !== x.recette_id && this.compatible(r, R.regime, R.allergenes));
+    const neufs = l.filter(r => !dans.has(r.id));
+    if (neufs.length >= n) l = neufs;
+    l = l.map(r => ({ r, k: Math.random() })).sort((a, b) => a.k - b.k).slice(0, n).map(o => o.r);
+    const slot = CONFIG.nutrition.repas.find(s => s.id === x.moment) || { id: x.moment, nom: x.moment_nom || "" };
+    const kcal = (x.macros && x.macros.kcal) || 0, sortie = [];
+    for (const r of l){
+      const base = await Catalogue.macros(r, 1);
+      let f = kcal > 0 && base.kcal > 0 ? kcal / base.kcal : 1;
+      f = Math.min(CONFIG.nutrition.facteur_max, Math.max(CONFIG.nutrition.facteur_min, f));
+      const c = await this.figer(r, f, slot);
+      if (x.ordre != null) c.ordre = x.ordre;
+      if (x.moment_nom) c.moment_nom = x.moment_nom;
+      sortie.push(c);
+    }
+    return sortie;
+  },
+  /* v97 (4d) : la cible que donnent « Ses calories » (clé calc) ; null sans poids */
+  cibleDepuis(calc){
+    if (!calc || !num(calc.poids)) return null;
+    const bmr = outilCalculateur.metabolismeDeBase(calc), tdee = bmr * outilCalculateur.facteurActivite(calc).total, c = CONFIG.calcul;
+    const kcal = Math.max(calc.objectif === "perte" ? tdee * (1 - c.deficit_perte) : calc.objectif === "prise" ? tdee * (1 + c.surplus_prise) : tdee, outilCalculateur.plancher(calc.sexe));
+    const m = outilCalculateur.macros(kcal, calc.poids);
+    return { kcal: Math.round(kcal), prot: Math.round(m.prot), lip: Math.round(m.lip), gluc: Math.round(m.gluc) };
   },
 
   /* On fige la recette dans le plan : le client garde ses grammages
@@ -483,10 +633,12 @@ const outilNutrition = {
   /* v71 (E) : les articles coches valent pour UNE diete (R.maj, pose par « Valider et envoyer », vide apres « Generer la
      semaine ») : une autre diete = panier vide. Ancien document sans courses_pour : on retient la diete d'aujourd'hui sans
      rien vider. En memoire seulement, comme la remise a zero de mange : ecrit avec la prochaine coche, jamais a l'ouverture. */
+  /* v97 : une diète publiée porte publie_le (instant) : deux publications le même jour vident aussi le panier ; un ancien
+     document sans publie_le garde sa règle (R.maj). Une autre diète : les repas cochés du jour repartent aussi de zéro. */
   alignerCourses(R, suivi){
-    const pour = String(R.maj || "");
+    const pour = String(R.publie_le || R.maj || "");
     if (typeof suivi.courses_pour !== "string") suivi.courses_pour = pour;
-    else if (suivi.courses_pour !== pour){ suivi.courses = {}; suivi.courses_pour = pour; }
+    else if (suivi.courses_pour !== pour){ suivi.courses = {}; suivi.courses_pour = pour; if (R.publie_le) suivi.mange = {}; }
   },
 
   blocCourses(R, suivi, client){
@@ -571,7 +723,8 @@ const outilNutrition = {
     return h;
   },
 
-  carteRepas(x, edition, cle, suivi){
+  carteRepas(x, edition, cle, suivi, opts){
+    opts = opts || {};
     const m = x.macros || { kcal:0, proteines:0, glucides:0, lipides:0 };
     const coche = suivi && suivi.mange && suivi.mange[cle];
     return `<section class="panel repas-c${coche ? " mange" : ""}">
@@ -580,9 +733,12 @@ const outilNutrition = {
           <span class="eyebrow">${esc(x.moment_nom || "")}</span>
           <h2 style="margin:2px 0 0">${esc(x.nom)}</h2>
           ${edition && x.change_client ? `<span class="pastille">Changé par ton client</span>` : ""}
+          ${opts.identique ? `<p class="ex-identique" data-repas-identique="${cle}">≈ ${esc(trad("identique à la semaine d'avant : à varier ?"))}</p>` : ""}
         </div>
         ${edition ? `<span class="actions-b">
-          ${x.recette_id ? `<button data-autre="${cle}">Autre proposition</button>` : ""}
+          ${x.recette_id ? `<button data-autre="${cle}">${esc(trad("Changer ce repas"))}</button>` : ""}
+          <button type="button" class="outil-pg" data-monter-r="${cle}" aria-label="${esc(trad("Monter le repas"))}"${opts.premier ? " disabled" : ""}>↑</button>
+          <button type="button" class="outil-pg" data-descendre-r="${cle}" aria-label="${esc(trad("Descendre le repas"))}"${opts.dernier ? " disabled" : ""}>↓</button>
           <button data-retirer="${cle}">Retirer</button></span>`
         : `<span class="actions-b">${x.recette_id ? `<button type="button" data-remplacer="${cle}">Remplacer</button>` : ""}<button type="button" class="respect${coche ? " on" : ""}" data-mange="${cle}" aria-pressed="${coche ? "true" : "false"}">${coche ? "✓ " + esc(trad("Respecté")) : esc(trad("Respecté ?"))}</button></span>`}
       </div>
@@ -593,6 +749,8 @@ const outilNutrition = {
         <span><b>${fmt(m.lipides)}</b> g lip.</span>
         ${x.temps_min ? `<span>${fmt(x.temps_min)} min</span>` : ""}
       </div>
+      ${edition && opts.jours && opts.jours.length > 1 ? `<div class="dup-sur"><label for="dup-${esc(cle)}">${esc(trad("Dupliquer sur"))}</label><select id="dup-${esc(cle)}" data-dup-sur="${cle}"><option value="">${esc(trad("— choisis un jour —"))}</option>${opts.jours.map((j, k) => k === opts.jour ? "" : `<option value="${k}">${esc(j.nom || "")}</option>`).join("")}<option value="tous">${esc(trad("Tous les autres jours"))}</option></select></div>` : ""}
+      ${edition ? `<div data-props="${cle}"></div>` : ""}
       ${x.inconnus ? `<div class="flag">${fmt(x.inconnus)} ingrédient${x.inconnus>1?"s":""} absent${x.inconnus>1?"s":""} du catalogue : les macros affichées sont incomplètes.</div>` : ""}
       <div class="grid g2" style="margin-top:14px">
         <div>
@@ -646,6 +804,7 @@ const outilNutrition = {
         <select id="nu-biblio" style="max-width:240px"><option value="">— charger depuis ma bibliothèque —</option></select>
         <span class="msg" id="nu-msg"></span>
       </div>
+      ${ctx.calcCible && R.cible && Math.abs(ctx.calcCible.kcal - R.cible.kcal) >= 20 ? `<div class="flag" id="nu-ecart-kcal" role="status" style="margin-top:12px"><b>⚠ ${esc(trad("Ses calories ({a}) ≠ cette diète ({b})", { a: fmt(ctx.calcCible.kcal), b: fmt(R.cible.kcal) }))}</b> · ${esc(trad("« Ses calories » a changé depuis : rien n'est recalculé sans toi."))} <button type="button" class="btn petit" id="nu-reprendre-kcal">${esc(trad("Reprendre {a} kcal", { a: fmt(ctx.calcCible.kcal) }))}</button></div>` : ""}
       ${ctx.prerempli ? `<p class="note" style="margin-top:10px">Pré-rempli avec ${ctx.depuisQuestionnaire ? "son questionnaire — passe par « Ses calories » si tu veux affiner son activité" : "son profil et son calculateur"}.</p>` : ""}
       ${Catalogue.secours ? `<div class="flag" style="margin-top:12px"><b>Catalogue de secours.</b> Ta base ne répond pas — projet Supabase en pause, ou import jamais lancé. L'application lit les données depuis le dépôt pour rester utilisable, mais rien n'est enregistré tant que la base ne répond pas.</div>` : ""}
       ${ctx.autres ? `<div class="flag" style="margin-top:12px"><b>À vérifier avant d'envoyer :</b> ce client a écrit « ${esc(ctx.autres)} » dans ses allergies. Aucun filtre automatique ne couvre ce texte : relis les ingrédients toi-même.</div>` : ""}
@@ -682,7 +841,9 @@ const outilNutrition = {
       ${(jour.diagnostic && jour.diagnostic.length) ? `<div class="flag"><b>Ce que le catalogue ne permet pas d'atteindre ici :</b> ${esc(jour.diagnostic.join(" · "))}.</div>` : ""}
     </section>`;
 
-    (jour.repas || []).forEach((x, i) => h += this.carteRepas(x, true, actif + ":" + i, null));
+    const nbR = (jour.repas || []).length;
+    (jour.repas || []).forEach((x, i) => h += this.carteRepas(x, true, actif + ":" + i, null, { premier: i === 0, dernier: i === nbR - 1, jours: R.jours, jour: actif,
+      identique: !!(ctx.ref && BrouillonRepas.identiqueRepas(ctx.ref, actif, i, x)) }));
 
     h += `<section class="panel">
       <h2>Ajouter à la main</h2>
@@ -703,11 +864,11 @@ const outilNutrition = {
   blocEnvoi(R){
     return `<section class="panel">
       <div class="actions">
-        <button class="btn" id="nu-save">Valider et envoyer au client</button>
+        <button class="btn" id="nu-publier-bas">${esc(trad("Publier les changements"))}</button>
         <span class="msg" id="nu-msg2"></span>
       </div>
       <p class="note" style="margin-top:10px">Un mot sur les glucides : ils apparaissent souvent 20 à 40 g sous la cible théorique alors que les calories tombent juste. C'est normal — la cible compte 4 kcal par gramme de glucide, les valeurs réelles des aliments en donnent un peu moins. Fie-toi aux calories et aux protéines.</p>
-      <p class="note">Chaque changement est enregistré aussitôt et ton client le voit tout de suite, avant même que tu valides : relis les ingrédients — les allergies en premier — dès que la semaine est composée. « Valider et envoyer au client » date la semaine (« Repas mis à jour le … » chez lui) et la fait entrer dans l'historique quand une autre la remplacera.</p>
+      <p class="note">${esc(trad("Tes changements sont gardés dans un brouillon, sur ton compte : ton client ne les voit qu'après « Publier les changements ». Relis les ingrédients — les allergies en premier — avant de publier. La publication date la semaine (« Repas mis à jour le … » chez lui), range l'ancienne dans l'historique et remet à zéro sa liste de courses et ses repas cochés."))}</p>
       <p class="note">Le filtre travaille sur la composition des aliments. Il ne remplace pas ta lecture : une allergie sévère, un interdit religieux qui dépend de la certification, un aliment que le client ne supporte pas sans le savoir — c'est toi qui les attrapes.</p>
     </section>`;
   },
@@ -722,7 +883,7 @@ const outilNutrition = {
     if (!zone) return;
     /* v71 (F) : lecture ratee (R passe par migrer : drapeau Store.charge) : « Pas de connexion », pas « pas encore valide tes repas » */
     if (Store.charge[Store.cible() + "|" + self.cle] === false){ pageHorsLigne(zone); return; }
-    const sauver = () => Store.ecrire(self.cle, R);
+    let sauver = () => Store.ecrire(self.cle, R);
 
     /* ---------- cote client ---------- */
     if (!edition){
@@ -816,6 +977,16 @@ const outilNutrition = {
     }
 
     /* ---------- cote coach ---------- */
+    /* v97 (chantier 2 de la nuit du 10/11) : le coach travaille dans un BROUILLON (BrouillonRepas, sur son compte) : R = la
+       diète publiée (ce que voit le client, jamais modifiée par la saisie), B = le brouillon. Le pré-remplissage (régime,
+       allergènes, repas par jour, cible) se fait sur B et sur la référence (ref) : il ne compte pas comme un brouillon et
+       n'écrit rien tant que le coach ne change rien. */
+    const uid = Store.cible();
+    const D0 = await BrouillonRepas.lire();
+    if (!$("nu-vue") || Store.cible() !== uid) return;
+    if (Store.nonLus.has(D0)){ pageHorsLigne(zone); return; }
+    const etatB = { D: D0, publication: false };
+    const B = BrouillonRepas.depuis(R);
     const ctx = { prerempli:false, autres:"" };
     let intake = {}, calc = null, actif = 0;
     try { intake = await Store.lire("intake", {}) || {}; } catch(e){}
@@ -824,46 +995,132 @@ const outilNutrition = {
     try { calc   = await Store.lire("calc", null); } catch(e){}
     ctx.autres = (intake.allergies || "").trim();
 
-    if (!R.regime && intake.regime_type){ R.regime = intake.regime_type; ctx.prerempli = true; }
-    /* Le nombre de repas vient de SA reponse : le plan est bati sur sa
-       journee, pas sur une journee moyenne. */
-    if (!R.nb_repas){
-      const n = self.nbDepuisReponse(intake.nb_repas);
-      if (n){ R.nb_repas = n; ctx.prerempli = true; }
-      else R.nb_repas = CONFIG.nutrition.repas_defaut;
-    }
-    if ((!R.allergenes || !R.allergenes.length) && intake.allergenes){
-      const noms = String(intake.allergenes).split("|").filter(Boolean);
-      R.allergenes = CONFIG.nutrition.allergenes.filter(a => noms.indexOf(a.nom) > -1).map(a => a.id);
-      if (R.allergenes.length) ctx.prerempli = true;
-    }
-    /* Le client n'a plus acces au calculateur : si le coach ne l'a pas encore
-       rempli, on calcule la cible directement depuis le questionnaire plutot
-       que de laisser le champ vide. */
-    let base = calc;
-    if ((!base || !base.poids) && num(intake.poids)){
-      base = { sexe: intake.sexe === "Femme" ? "F" : "H", age: num(intake.age) || 30,
-               taille: num(intake.taille) || 170, poids: num(intake.poids),
-               pas: num(intake.pas) || CONFIG.calcul.valeurs_depart.pas,
-               heures: (num(intake.seances) || 3) * 1.25,
-               objectif: /perte|s[èe]che/i.test(intake.objectif || "") ? "perte"
-                       : /prise|masse/i.test(intake.objectif || "") ? "prise" : "maintien" };
-      ctx.depuisQuestionnaire = true;
-    }
-    if (!R.cible && base && base.poids){
-      const calc = base;
-      const bmr  = outilCalculateur.metabolismeDeBase(calc);
-      const tdee = bmr * outilCalculateur.facteurActivite(calc).total;
-      const c = CONFIG.calcul;
-      /* v79 : une cible pré-remplie est calculée : jamais sous le plancher (1 200 / 1 500 kcal) ; celle que le coach tape reste la sienne */
-      const kcal = Math.max(calc.objectif === "perte" ? tdee * (1 - c.deficit_perte)
-                 : calc.objectif === "prise" ? tdee * (1 + c.surplus_prise) : tdee, outilCalculateur.plancher(calc.sexe));
-      const m = outilCalculateur.macros(kcal, calc.poids);
-      R.cible = { kcal: Math.round(kcal), prot: Math.round(m.prot), lip: Math.round(m.lip), gluc: Math.round(m.gluc) };
-      ctx.prerempli = true;
-    }
+    /* v97 (relecture) : le pré-remplissage (champs vides seulement) est une fonction : il s'applique au brouillon, à la
+       référence ET à une « nouvelle semaine » (sinon les allergènes pris du questionnaire seraient perdus sans le dire) */
+    const preremplir = X => {
+      if (!X.regime && intake.regime_type){ X.regime = intake.regime_type; ctx.prerempli = true; }
+      /* Le nombre de repas vient de SA reponse : le plan est bati sur sa
+         journee, pas sur une journee moyenne. */
+      if (!X.nb_repas){
+        const n = self.nbDepuisReponse(intake.nb_repas);
+        if (n){ X.nb_repas = n; ctx.prerempli = true; }
+        else X.nb_repas = CONFIG.nutrition.repas_defaut;
+      }
+      if ((!X.allergenes || !X.allergenes.length) && intake.allergenes){
+        const noms = String(intake.allergenes).split("|").filter(Boolean);
+        X.allergenes = CONFIG.nutrition.allergenes.filter(a => noms.indexOf(a.nom) > -1).map(a => a.id);
+        if (X.allergenes.length) ctx.prerempli = true;
+      }
+      /* Le client n'a plus acces au calculateur : si le coach ne l'a pas encore
+         rempli, on calcule la cible directement depuis le questionnaire plutot
+         que de laisser le champ vide. */
+      let base = calc;
+      if ((!base || !base.poids) && num(intake.poids)){
+        base = { sexe: intake.sexe === "Femme" ? "F" : "H", age: num(intake.age) || 30,
+                     taille: num(intake.taille) || 170, poids: num(intake.poids),
+                     pas: num(intake.pas) || CONFIG.calcul.valeurs_depart.pas,
+                     heures: (num(intake.seances) || 3) * 1.25,
+                     objectif: /perte|s[èe]che/i.test(intake.objectif || "") ? "perte"
+                                 : /prise|masse/i.test(intake.objectif || "") ? "prise" : "maintien" };
+        ctx.depuisQuestionnaire = true;
+      }
+      if (!X.cible && base && base.poids){
+        const calc = base;
+        const bmr  = outilCalculateur.metabolismeDeBase(calc);
+        const tdee = bmr * outilCalculateur.facteurActivite(calc).total;
+        const c = CONFIG.calcul;
+        /* v79 : une cible pré-remplie est calculée : jamais sous le plancher (1 200 / 1 500 kcal) ; celle que le coach tape reste la sienne */
+        const kcal = Math.max(calc.objectif === "perte" ? tdee * (1 - c.deficit_perte)
+                         : calc.objectif === "prise" ? tdee * (1 + c.surplus_prise) : tdee, outilCalculateur.plancher(calc.sexe));
+        const m = outilCalculateur.macros(kcal, calc.poids);
+        X.cible = { kcal: Math.round(kcal), prot: Math.round(m.prot), lip: Math.round(m.lip), gluc: Math.round(m.gluc) };
+        ctx.prerempli = true;
+      }
+    };
+    preremplir(B);
 
-    const redessiner = () => { zone.innerHTML = self.vueEdition(R, ctx, actif); brancher(); };
+    /* la référence : la diète publiée, pré-remplie de la même façon (« Publié » tant que rien d'autre ne change) */
+    let ref = JSON.parse(JSON.stringify(B));
+    const remplacerB = x => { Object.keys(B).forEach(k => { delete B[k]; }); Object.assign(B, JSON.parse(JSON.stringify(x))); };
+    const entree0 = BrouillonRepas.entree(etatB.D, uid);
+    if (entree0 && BrouillonRepas.differe(entree0.programme, ref)) remplacerB(outilNutrition.migrer(Object.assign(outilNutrition.vide(), entree0.programme)));
+    ctx.calcCible = self.cibleDepuis(calc);
+    const majRef = () => { const e = BrouillonRepas.entree(etatB.D, uid); ctx.ref = e && e.nouveau_bloc ? R : null; };
+    majRef();
+    sauver = () => {
+      if (Store.cible() !== uid){ Store.ficheChangee(); return false; }
+      const extra = BrouillonRepas.entree(etatB.D, uid) ? null : { depart: BrouillonRepas.depart(R) };
+      const r = BrouillonRepas.ranger(etatB.D, uid, B, ref, Store.majLu[uid + "|" + self.cle] || null, extra);
+      majEtatB();
+      return r;
+    };
+    const majEtatB = () => {
+      const z = $("nu-etat"); if (!z) return;
+      z.outerHTML = BrouillonRepas.etatHTML(B, ref, R, BrouillonRepas.entree(etatB.D, uid));
+      brancherEtat();
+    };
+    const propositions = {};   // « Changer ce repas » : les 3 propositions affichées, par repas (« jour:repas »)
+    let garderProps = false;
+    const redessiner = () => {
+      if (!garderProps) Object.keys(propositions).forEach(k => { delete propositions[k]; });   // relecture : jamais des propositions périmées
+      garderProps = false;
+      majRef();
+      zone.innerHTML = BrouillonRepas.etatHTML(B, ref, R, BrouillonRepas.entree(etatB.D, uid)) + self.vueEdition(B, ctx, actif);
+      brancher();
+    };
+
+    const brancherEtat = () => {
+      const x = $("nu-publier"); if (x) x.addEventListener("click", publier);   // nu-publier-bas : une fois par dessin (brancher)
+      const ann = $("nu-annuler-brouillon");
+      if (ann) ann.addEventListener("click", async () => {
+        if (!(await UI.confirmer(trad("Annuler le brouillon ? Tes changements non publiés seront perdus. Ton client garde la version publiée."), { ok: trad("Annuler le brouillon"), annuler: trad("Garder le brouillon"), danger: true }))) return;
+        if (Store.cible() !== uid){ Store.ficheChangee(); return; }
+        if (BrouillonRepas.retirer(etatB.D, uid) === false) return;
+        remplacerB(ref); actif = Math.min(actif, Math.max(0, B.jours.length - 1));
+        redessiner();
+        flash("nu-pub-msg", trad("Brouillon annulé : tu vois la version publiée."));
+      });
+      const nb = $("nu-nouveau-bloc");
+      if (nb) nb.addEventListener("click", async () => {
+        if (!Historique.utile("repas", R)){ flash("nu-pub-msg", trad("Publie d'abord une première diète : la nouvelle semaine part de la version publiée.")); return; }
+        if (BrouillonRepas.differe(B, ref) && !(await UI.confirmer(trad("Ton brouillon sera remplacé par une copie de la diète publiée, pour préparer la suivante. Continuer ?"), { ok: trad("Préparer la nouvelle semaine") }))) return;
+        if (Store.cible() !== uid){ Store.ficheChangee(); return; }
+        remplacerB(BrouillonRepas.nouveauBloc(R)); preremplir(B);   // relecture : régime, allergènes, repas, cible du questionnaire gardés
+        if (BrouillonRepas.ranger(etatB.D, uid, B, ref, Store.majLu[uid + "|" + self.cle] || null, { nouveau_bloc: { le: aujourdhui() }, depart: BrouillonRepas.depart(R) }) === false) return;
+        redessiner();
+        flash("nu-pub-msg", trad("Nouvelle semaine prête dans ton brouillon : varie les repas marqués « ≈ identique », puis publie."));
+      });
+    };
+
+    const publier = async () => {
+      if (etatB.publication) return;
+      const nbRepas = B.jours.reduce((n, j) => n + (j.repas || []).length, 0);
+      if (!nbRepas){ flash("nu-pub-msg", trad("Il n'y a encore aucun repas à publier.")); return; }
+      if (!BrouillonRepas.differe(B, ref) && R.maj && !(BrouillonRepas.entree(etatB.D, uid) || {}).nouveau_bloc){ flash("nu-pub-msg", trad("Rien à publier : ton client voit déjà cette version.")); return; }
+      etatB.publication = true;
+      const boutons = ["nu-publier", "nu-publier-bas"].map(id => $(id)).filter(Boolean);
+      boutons.forEach(x => { x.disabled = true; x.dataset.libelle = x.textContent; x.textContent = trad("Publication…"); });
+      flashFixe("nu-pub-msg", "");
+      try {
+        const r = await BrouillonRepas.publier(uid, R, B, etatB.D);
+        if (!zone.isConnected || Store.cible() !== uid) return;
+        if (r.ok){
+          Object.keys(R).forEach(k => { delete R[k]; }); Object.assign(R, outilNutrition.migrer(JSON.parse(JSON.stringify(r.repas))));
+          etatB.D = r.D;
+          ref = JSON.parse(JSON.stringify(R)); remplacerB(R);
+          redessiner();
+          flash("nu-pub-msg", trad("Publié. Ton client voit la nouvelle version dès sa prochaine ouverture."));
+          return;
+        }
+        if (r.annule) return;
+        const t = (($("etat") || {}).textContent || "").trim();
+        flashFixe("nu-pub-msg", r.refus ? trad("Pas publié : la base a refusé cette modification. Ton brouillon est gardé.")
+                                        : trad("Pas publié : vérifie ta connexion et réessaie. Ton brouillon est gardé.") + (t ? " (" + t + ")" : ""));
+      } finally {
+        etatB.publication = false;
+        boutons.forEach(x => { if (x.isConnected){ x.disabled = false; x.textContent = x.dataset.libelle; } });
+      }
+    };
 
     const lireReglages = () => {
       const k = $("nu-kcal"), rg = $("nu-regime"), no = $("nu-note");
@@ -871,12 +1128,12 @@ const outilNutrition = {
         const kcal = num(k.value);
         const poids = (calc && calc.poids) || num(intake.poids) || 0;
         const m = poids ? outilCalculateur.macros(kcal, poids) : { prot:0, lip:0, gluc:0 };
-        R.cible = { kcal: Math.round(kcal), prot: Math.round(m.prot), lip: Math.round(m.lip), gluc: Math.round(m.gluc) };
+        B.cible = { kcal: Math.round(kcal), prot: Math.round(m.prot), lip: Math.round(m.lip), gluc: Math.round(m.gluc) };
       }
-      if (rg) R.regime = rg.value;
-      if (no) R.note = no.value;
-      R.allergenes = $$("#nu-allerg input:checked").map(c => c.value);
-      const nr = $("nu-repas"); if (nr) R.nb_repas = +nr.value || CONFIG.nutrition.repas_defaut;
+      if (rg) B.regime = rg.value;
+      if (no) B.note = no.value;
+      B.allergenes = $$("#nu-allerg input:checked").map(c => c.value);
+      const nr = $("nu-repas"); if (nr) B.nb_repas = +nr.value || CONFIG.nutrition.repas_defaut;
     };
 
     let minuteur = null;
@@ -890,8 +1147,8 @@ const outilNutrition = {
       const rr = recs.filter(r => score(r.nom) > -1).sort((a,b) => score(a.nom) - score(b.nom)).slice(0, 6);
       if (!ra.length && !rr.length){ box.innerHTML = `<div class="empty">Rien ne correspond à « ${esc(q)} ».</div>`; return; }
       const ligne = (o, type) => {
-        const ok = self.compatible(o, R.regime, R.allergenes);
-        const pourquoi = ok ? "" : ((o.allergenes || []).filter(x => (R.allergenes || []).indexOf(x) > -1)
+        const ok = self.compatible(o, B.regime, B.allergenes);
+        const pourquoi = ok ? "" : ((o.allergenes || []).filter(x => (B.allergenes || []).indexOf(x) > -1)
               .map(x => (CONFIG.nutrition.allergenes.find(z => z.id === x) || {}).nom).join(", ") || "hors régime");
         return `<div class="res-l${ok ? "" : " exclu"}">
           <span class="nom">${esc(o.nom)}</span>
@@ -905,7 +1162,7 @@ const outilNutrition = {
         const [type, ...reste] = b.dataset.add.split(":");
         const id = reste.join(":");
         const slot = CONFIG.nutrition.repas.find(s => s.id === $("nu-slot").value);
-        const jour = R.jours[actif]; if (!jour) return;
+        const jour = B.jours[actif]; if (!jour) return;
         if (type === "recette"){
           const r = (await Catalogue.recettes()).find(x => x.id === id);
           if (r) jour.repas.push(await self.figer(r, 1, slot));
@@ -931,9 +1188,10 @@ const outilNutrition = {
 
     const brancher = () => {
       ["nu-kcal","nu-regime","nu-note"].forEach(id => {
-        const el = $(id); if (el) el.addEventListener("change", () => { lireReglages(); sauver(); });
+        const el = $(id); if (el) el.addEventListener("change", () => { lireReglages(); sauver(); viderProps(); });
       });
-      $$("#nu-allerg input").forEach(c => c.addEventListener("change", () => { lireReglages(); sauver(); }));
+      $$("#nu-allerg input").forEach(c => c.addEventListener("change", () => { lireReglages(); sauver(); viderProps(); }));
+      $$("#nu-repas").forEach(c => c.addEventListener("change", () => { lireReglages(); sauver(); viderProps(); }));
       $$("[data-jed]", zone).forEach(b => b.addEventListener("click", () => { actif = +b.dataset.jed; redessiner(); }));
 
       const q = $("nu-q");
@@ -956,17 +1214,16 @@ const outilNutrition = {
       if (g) g.addEventListener("click", async () => {
         if (illisible("nu-msg")) return;
         lireReglages();
-        if (!R.cible || !R.cible.kcal){ flash("nu-msg","Indique d'abord les calories visées."); return; }
+        if (!B.cible || !B.cible.kcal){ flash("nu-msg","Indique d'abord les calories visées."); return; }
         const nb = +($("nu-nb") ? $("nu-nb").value : 7) || 7;
         g.disabled = true;
         const sh = await lireShaker();
-        const jours = await self.composerSemaine(R.cible, R.regime, R.allergenes, nb,
-                        (i, n) => { g.textContent = `Composition… jour ${i} sur ${n}`; }, R.nb_repas, sh);
+        const jours = await self.composerSemaine(B.cible, B.regime, B.allergenes, nb,
+                        (i, n) => { g.textContent = `Composition… jour ${i} sur ${n}`; }, B.nb_repas, sh);
         g.disabled = false; g.textContent = "Générer la semaine";
         if (!jours.length || !jours[0].repas.length){ flash("nu-msg","Aucune recette ne correspond à ces critères. Importe le catalogue ou assouplis les filtres."); return; }
-        if (!(await Historique.avantRemplacement("repas", R))) return;
-        R.debut = aujourdhui(); R.maj = "";
-        R.jours = jours; actif = 0;
+        B.debut = ""; B.maj = "";   // v97 : semaine 1 à la publication ; l'ancienne entre dans l'historique à la publication
+        B.jours = jours; actif = 0;
         if (sauver() === false) return false;   /* fiche changee pendant l'operation : rien n'est ecrit */
         redessiner();
       });
@@ -975,37 +1232,90 @@ const outilNutrition = {
       if (gj) gj.addEventListener("click", async () => {
         if (illisible("nu-msg")) return;
         lireReglages();
-        if (!R.cible || !R.cible.kcal){ flash("nu-msg","Indique d'abord les calories visées."); return; }
+        if (!B.cible || !B.cible.kcal){ flash("nu-msg","Indique d'abord les calories visées."); return; }
         gj.disabled = true; gj.textContent = "Composition…";
         /* on evite les recettes des autres jours pour garder la variete */
         const vus = [];
-        R.jours.forEach((j, i) => { if (i !== actif) (j.repas || []).forEach(c => { if (c.recette_id) vus.push(c.recette_id); }); });
-        const liste = await self.composer(R.cible, R.regime, R.allergenes, vus, R.nb_repas, await lireShaker());
+        B.jours.forEach((j, i) => { if (i !== actif) (j.repas || []).forEach(c => { if (c.recette_id) vus.push(c.recette_id); }); });
+        const liste = await self.composer(B.cible, B.regime, B.allergenes, vus, B.nb_repas, await lireShaker());
         gj.disabled = false;
         if (!liste.length){ flash("nu-msg","Aucune recette compatible."); return; }
-        R.jours[actif] = { nom: R.jours[actif].nom, repas: liste, manquants: liste.manquants || [],
+        B.jours[actif] = { nom: B.jours[actif].nom, repas: liste, manquants: liste.manquants || [],
                            complement: liste.complement || null, diagnostic: liste.diagnostic || [] };
         if (sauver() === false) return;
         redessiner();
       });
 
-      const cible = (cle) => { const [d, i] = cle.split(":").map(Number); return { jour: R.jours[d], i: i }; };
+      const cible = (cle) => { const [d, i] = cle.split(":").map(Number); return { jour: B.jours[d], i: i }; };
 
+      /* v97 (4b) : « Changer ce repas » propose 3 recettes du même moment, filtrées par le régime et les allergènes de la
+         diète (BrouillonRepas / outilNutrition.propositions) ; bloqué si le questionnaire est illisible (v91) */
+      /* relecture : un réglage changé (régime, allergènes, calories) retire les propositions affichées : elles ne valaient que
+         pour les réglages d'avant */
+      const viderProps = () => { Object.keys(propositions).forEach(k => { delete propositions[k]; }); $$("[data-props]", zone).forEach(z => { z.innerHTML = ""; }); };
+      const montrerProps = (cle) => {
+        const z = zone.querySelector('[data-props="' + cle + '"]'); if (!z) return;
+        const l = propositions[cle] || [];
+        z.innerHTML = l.length ? `<div class="props-repas"><p class="note" style="margin:0 0 8px">${esc(trad("Choisis un remplaçant (même moment, compatible avec son régime et ses allergies) :"))}</p>` +
+          l.map((c, k) => `<div class="res-l"><span class="nom">${esc(c.nom)}</span><span class="meta">${fmt((c.macros || {}).kcal || 0)} kcal · ${fmt((c.macros || {}).proteines || 0)} g prot.</span><span class="actions-b"><button type="button" data-choisir="${cle}:${k}">${esc(trad("Choisir"))}</button></span></div>`).join("") +
+          `<div class="actions" style="margin-top:6px"><button type="button" class="btn ghost petit" data-props-fermer="${cle}">${esc(trad("Garder ce repas"))}</button></div></div>` : "";
+        $$("[data-choisir]", z).forEach(c => c.addEventListener("click", async () => {
+          const p = c.dataset.choisir.split(":").map(Number), cleR = p[0] + ":" + p[1], jour = B.jours[p[0]], l = propositions[cleR], nouveau = l && l[p[2]];
+          if (!jour || !nouveau || !jour.repas[p[1]]) return;
+          if (illisible("nu-msg")) return;
+          /* relecture : le repas visé est toujours celui des propositions, et la recette passe encore le filtre régime + allergènes */
+          const vise = jour.repas[p[1]];
+          const fiche = (await Catalogue.recettes()).find(r => r.id === nouveau.recette_id);
+          if (!zone.isConnected || propositions[cleR] !== l) return;
+          if (String(vise.recette_id || "") !== String(l.pour.recette_id || "") || vise.moment !== l.pour.moment || !fiche || !self.compatible(fiche, B.regime, B.allergenes)){
+            delete propositions[cleR]; montrerProps(cleR); flash("nu-msg", trad("Propositions périmées : touche à nouveau « Changer ce repas »."));
+            return;
+          }
+          jour.repas[p[1]] = nouveau; delete propositions[cleR];
+          if (sauver() === false) return;
+          redessiner();
+        }));
+        $$("[data-props-fermer]", z).forEach(c => c.addEventListener("click", () => { delete propositions[c.dataset.propsFermer]; montrerProps(c.dataset.propsFermer); }));
+      };
       $$("[data-autre]", zone).forEach(b => b.addEventListener("click", async () => {
         if (illisible("nu-msg")) return;
-        const { jour, i } = cible(b.dataset.autre); const x = jour.repas[i];
-        const vus = []; R.jours.forEach(j => (j.repas || []).forEach(c => { if (c.recette_id) vus.push(c.recette_id); }));
-        const remplacants = await self.composer(R.cible || { kcal: x.macros.kcal * 4, prot:0 }, R.regime, R.allergenes, vus, R.nb_repas);   // sa structure de journee, comme « Remplacer » cote client
-        const nouveau = remplacants.find(n => n.moment === x.moment);
-        if (nouveau){ jour.repas[i] = nouveau; if (sauver() === false) return; redessiner(); }
-        else flash("nu-msg", "Pas d'autre recette disponible pour ce repas.");
+        const { jour, i } = cible(b.dataset.autre); const x = jour && jour.repas[i]; if (!x) return;
+        b.disabled = true;
+        let l = [];
+        try { l = await self.propositions(x, B, 3); } catch(e){ l = []; }
+        if (!b.isConnected) return;
+        b.disabled = false;
+        if (!l.length){ flash("nu-msg", trad("Pas d'autre recette compatible pour ce repas.")); return; }
+        l.pour = { recette_id: x.recette_id, moment: x.moment };   // le repas visé (revérifié à « Choisir »)
+        propositions[b.dataset.autre] = l;
+        montrerProps(b.dataset.autre);
       }));
+      Object.keys(propositions).forEach(montrerProps);
+
+      /* v97 (4b) : ↑ ↓ dans la journée, « Dupliquer sur » un autre jour (ou tous) */
+      const echangerR = (cle, d) => { const { jour, i } = cible(cle), j = i + d; if (!jour || j < 0 || j >= jour.repas.length) return; const x = jour.repas[i]; jour.repas[i] = jour.repas[j]; jour.repas[j] = x; if (sauver() === false) return; redessiner(); };
+      $$("[data-monter-r]", zone).forEach(b => b.addEventListener("click", () => echangerR(b.dataset.monterR, -1)));
+      $$("[data-descendre-r]", zone).forEach(b => b.addEventListener("click", () => echangerR(b.dataset.descendreR, 1)));
+      $$("[data-dup-sur]", zone).forEach(s => s.addEventListener("change", () => {
+        const { jour, i } = cible(s.dataset.dupSur), x = jour && jour.repas[i]; if (!x || s.value === "") return;
+        const cibles = s.value === "tous" ? B.jours.map((j, k) => k).filter(k => B.jours[k] !== jour) : [+s.value];
+        const rang = c => (c.ordre != null ? c.ordre : CONFIG.nutrition.repas.findIndex(sl => sl.id === c.moment));
+        cibles.forEach(k => { const j = B.jours[k]; if (!j) return; if (!j.repas) j.repas = []; const copie = JSON.parse(JSON.stringify(x)); delete copie.change_client; j.repas.push(copie); j.repas.sort((a, b) => rang(a) - rang(b)); });
+        if (sauver() === false) return;
+        redessiner();
+        flash("nu-msg", trad("Repas copié sur {n} jour(s).", { n: cibles.length }));
+      }));
+      /* v97 (4d) : « Reprendre » la cible de « Ses calories » : seulement sur ce clic */
+      const rk = $("nu-reprendre-kcal");
+      if (rk) rk.addEventListener("click", () => { if (!ctx.calcCible) return; B.cible = Object.assign({}, ctx.calcCible); if (sauver() === false) return; redessiner(); });
+      brancherEtat();
+      const bas = $("nu-publier-bas"); if (bas) bas.addEventListener("click", publier);
       $$("[data-retirer]", zone).forEach(b => b.addEventListener("click", () => {
         const { jour, i } = cible(b.dataset.retirer); jour.repas.splice(i, 1); sauver(); redessiner();
       }));
       $$("[data-suppr-i]", zone).forEach(b => b.addEventListener("click", async () => {
         const p = b.dataset.supprI.split(":").map(Number);
-        const jour = R.jours[p[0]];
+        const jour = B.jours[p[0]];
         jour.repas[p[1]].ingredients.splice(p[2], 1);
         if (!jour.repas[p[1]].ingredients.length) jour.repas.splice(p[1], 1);
         else await self.recalculer(jour.repas[p[1]]);
@@ -1014,7 +1324,7 @@ const outilNutrition = {
       }));
       $$("[data-gr]", zone).forEach(el => el.addEventListener("change", async () => {
         const p = el.dataset.gr.split(":").map(Number);
-        const jour = R.jours[p[0]];
+        const jour = B.jours[p[0]];
         jour.repas[p[1]].ingredients[p[2]].grammes = Math.max(0, Math.round(num(el.value)));
         await self.recalculer(jour.repas[p[1]]);
         if (sauver() === false) return;
@@ -1027,36 +1337,16 @@ const outilNutrition = {
         $("nu-q").scrollIntoView({ behavior: defilementDoux(), block:"center" });
       }));
 
-      const sv = $("nu-save");
-      if (sv) sv.addEventListener("click", async () => {
-        if (sv.disabled) return;
-        const nbRepas = R.jours.reduce((n, j) => n + (j.repas || []).length, 0);
-        if (!nbRepas){ flash("nu-msg2","Il n'y a encore aucun repas à envoyer."); return; }
-        R.maj = new Date().toLocaleDateString("fr-FR");
-        if (Store.ecrire(self.cle, R) === false){ flash("nu-msg2", "Semaine non envoyée : relis le message affiché."); return; }
-        /* v95 (comme « Programme envoyé » en v91) : « Semaine envoyée » seulement quand la base a confirmé l'écriture (avant :
-           dès le clic, même hors ligne) ; sinon un message qui reste, avec le témoin du haut (la copie gardée sur l'appareil
-           repart toute seule) */
-        const nb = R.jours.length, libelle = sv.textContent;
-        sv.disabled = true; sv.textContent = "Envoi…"; flashFixe("nu-msg2", "");
-        const arrive = await Store.envoyerConfirme(self.cle);
-        if (!sv.isConnected) return;   // page quittée pendant l'envoi : aucun message sur la page d'un autre client
-        sv.disabled = false; sv.textContent = libelle;
-        if (arrive){ flash("nu-msg2", `Semaine envoyée — ${nb} jour${nb > 1 ? "s" : ""}. Ton client la voit dès sa prochaine ouverture.`); return; }
-        const t = (($("etat") || {}).textContent || "").trim();
-        flashFixe("nu-msg2", "Pas envoyé : vérifie ta connexion et réessaie." + (t ? " (" + t + ")" : ""));
-      });
-
       const bs = $("nu-biblio-save");
       if (bs) bs.addEventListener("click", async () => {
-        if (!R.jours.length){ flash("nu-msg","Compose d'abord une semaine."); return; }
-        const nom = await UI.demander("Sous quel nom l'enregistrer dans ta bibliothèque ?", R.nom || "Semaine type", { titre: "Ma bibliothèque", ok: "Enregistrer" });
+        if (!B.jours.length){ flash("nu-msg","Compose d'abord une semaine."); return; }
+        const nom = await UI.demander("Sous quel nom l'enregistrer dans ta bibliothèque ?", B.nom || "Semaine type", { titre: "Ma bibliothèque", ok: "Enregistrer" });
         if (!nom) return;
         try {
           await Auth.appel("/rest/v1/bibliotheque", {
             method:"POST", headers:{ "Prefer":"return=minimal" },
-            body:[{ coach_id: Auth.utilisateur().id, nom, note: R.note || "",
-                    contenu: { type:"repas", jours: R.jours, cible: R.cible, regime: R.regime, allergenes: R.allergenes } }]
+            body:[{ coach_id: Auth.utilisateur().id, nom, note: B.note || "",
+                    contenu: { type:"repas", jours: B.jours, cible: B.cible, regime: B.regime, allergenes: B.allergenes } }]
           });
           flash("nu-msg","Enregistré dans ta bibliothèque.");
           chargerBiblio();
@@ -1077,13 +1367,12 @@ const outilNutrition = {
           if (!sel.value) return;
           const x = repas.find(y => String(y.id) === sel.value);
           if (!x) return;
-          if (!(await UI.confirmer("Charger « " + x.nom + " » ? Cela remplacera les repas actuels de ce client.", { ok: "Charger" }))){ sel.value = ""; return; }
-          if (!(await Historique.avantRemplacement("repas", R))){ sel.value = ""; return; }
-          R.debut = aujourdhui(); R.maj = "";
+          if (!(await UI.confirmer(trad("Charger « {n} » ? Il remplacera les repas de ton brouillon (ton client garde la version publiée).", { n: x.nom }), { ok: trad("Charger") }))){ sel.value = ""; return; }
+          B.debut = ""; B.maj = "";
           /* les entrees d'avant la semaine ne contiennent qu'une journee */
-          R.jours = x.contenu.jours ? JSON.parse(JSON.stringify(x.contenu.jours))
+          B.jours = x.contenu.jours ? JSON.parse(JSON.stringify(x.contenu.jours))
                                     : [{ nom: self.JOURS[0], repas: JSON.parse(JSON.stringify(x.contenu.repas || [])) }];
-          if (x.contenu.cible) R.cible = x.contenu.cible;
+          if (x.contenu.cible) B.cible = x.contenu.cible;
           actif = 0; if (sauver() === false) return false;   /* fiche changee pendant l'operation : rien n'est ecrit */
           redessiner();
         };
@@ -1092,13 +1381,12 @@ const outilNutrition = {
 
     redessiner();
     Historique.monter("repas", "nu-hist", async (C) => {
-      if (!(await Historique.avantRemplacement("repas", R))) return false;
-      ["nom", "note", "cible", "regime", "allergenes", "nb_repas"].forEach(k => { if (C[k] !== undefined) R[k] = C[k]; });
-      R.jours = C.jours || [];
-      R.debut = aujourdhui(); R.maj = ""; actif = 0;
+      ["nom", "note", "cible", "regime", "allergenes", "nb_repas"].forEach(k => { if (C[k] !== undefined) B[k] = C[k]; });
+      B.jours = JSON.parse(JSON.stringify(C.jours || []));
+      B.debut = ""; B.maj = ""; actif = 0;
       if (sauver() === false) return false;   /* fiche changee pendant l'operation : rien n'est ecrit */
       redessiner();
-      UI.alerte(trad("Diète remise en place. Relis-la, puis clique sur « Envoyer » pour la dater."));
+      UI.alerte(trad("Diète remise dans ton brouillon. Relis-la, puis clique sur « Publier les changements »."));
       return true;
     });
   }

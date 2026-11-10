@@ -31,7 +31,7 @@ etat_disque() { git -C .. status --porcelain --untracked-files=no 2>/dev/null; }
 DISQUE_DEBUT=$(etat_disque)
 
 # Suites du banc, et suites volontairement hors banc (verif44 à verif47 testent le Challenge 7 jours supprimé).
-SUITES="flux verif34 verif35 verif36 verif37 verif38 verif-xss verif39 verif40 verif41 verif42 verif43 verif48 verif50 verif51 verif52 verif53 verif54 verif55 verif56 verif57 verif58 verif60 verif61 verif62 verif63 verif64 verif65 verif66 verif67 verif68 verif69 verif70 verif71 verif72 verif73 verif74 verif75 verif76 verif77 verif78 verif79 verif80 verif81 verif82 verif83 verif84 verif85 verif86 verif87 verif88 verif90 verif91 verif89 verif92 verif93 verif94 verif95 verif96"
+SUITES="flux verif34 verif35 verif36 verif37 verif38 verif-xss verif39 verif40 verif41 verif42 verif43 verif48 verif50 verif51 verif52 verif53 verif54 verif55 verif56 verif57 verif58 verif60 verif61 verif62 verif63 verif64 verif65 verif66 verif67 verif68 verif69 verif70 verif71 verif72 verif73 verif74 verif75 verif76 verif77 verif78 verif79 verif80 verif81 verif82 verif83 verif84 verif85 verif86 verif87 verif88 verif90 verif91 verif89 verif92 verif93 verif94 verif95 verif96 verif97"
 # v53 (chantier 4) : verif49 (score sur 100 et température NOUVEAU / CHAUD / TIÈDE / FROID, journal des emails) sort du banc ;
 # ses blocs relances, issues, conflits, verrou et passage client sont repris dans verif58 (bloc F).
 HORS_BANC="verif44 verif45 verif46 verif47 verif49"
@@ -277,12 +277,17 @@ HORS_BANC="verif44 verif45 verif46 verif47 verif49"
 #   outils rapides, « Nouveau bloc ») : verif96 39 (nouvelle suite, partie 9 ; 4/15 sur la v95 ; 34 → 39 après la relecture : deux appareils sur deux clients, séance notée par une ancienne version de l'app, séance en cours rangée par identifiant) ; verif92 (bloc B) : « Envoyer au
 #   client » devenu « Publier les changements », mêmes 4 vérifications (jamais « publié » avant la réponse de la base, message qui
 #   reste, bouton désactivé pendant l'envoi), même nombre.
+# v97 (chantier 2 de la nuit du 10/11 : brouillon des diètes, fenêtre « Publier », « Changer ce repas » en 3 propositions,
+#   « Dupliquer sur », écart de calories, nouvelle semaine) : verif97 27 (nouvelle suite, partie 5 ; 2/12 sur la v96 ; 23 → 27 après la relecture : propositions jamais périmées, nouvelle semaine pré-remplie, copies sans marque) ; verif95
+#   (bloc B) : « Valider et envoyer » devenu « Publier les changements », mêmes 4 vérifications (B2 : rien de perdu, le brouillon
+#   reste et part au prochain « Publier », au lieu du renvoi automatique) ; verif92 (A3) : la quantité va dans le brouillon ;
+#   verif75 (A, D) : le bouton et le texte de la diète ; même nombre partout.
 attendu() {
   case "$1" in
     flux) echo 19;; verif34) echo 13;; verif35) echo 14;; verif36) echo 13;; verif37) echo 12;; verif38) echo 67;;
     verif-xss) echo 5;; verif39) echo 48;; verif40) echo 64;; verif41) echo 25;; verif42) echo 20;; verif43) echo 27;;
     verif48) echo 42;; verif50) echo 57;; verif51) echo 89;; verif52) echo 137;; verif53) echo 114;;
-    verif54) echo 60;; verif55) echo 172;; verif56) echo 263;; verif57) echo 152;; verif58) echo 138;; verif60) echo 74;; verif61) echo 50;; verif62) echo 50;; verif63) echo 96;; verif64) echo 92;; verif65) echo 70;; verif66) echo 57;; verif67) echo 63;; verif68) echo 76;; verif69) echo 83;; verif70) echo 32;; verif71) echo 84;; verif72) echo 16;; verif73) echo 25;; verif74) echo 33;; verif75) echo 24;; verif76) echo 22;; verif77) echo 26;; verif78) echo 19;; verif79) echo 25;; verif80) echo 70;; verif81) echo 18;; verif82) echo 56;; verif83) echo 54;; verif84) echo 87;; verif85) echo 51;; verif86) echo 57;; verif87) echo 45;; verif88) echo 19;; verif90) echo 25;; verif91) echo 13;; verif89) echo 13;; verif92) echo 24;; verif93) echo 14;; verif94) echo 8;; verif95) echo 12;; verif96) echo 39;; rig) echo 90;; *) echo "";;
+    verif54) echo 60;; verif55) echo 172;; verif56) echo 263;; verif57) echo 152;; verif58) echo 138;; verif60) echo 74;; verif61) echo 50;; verif62) echo 50;; verif63) echo 96;; verif64) echo 92;; verif65) echo 70;; verif66) echo 57;; verif67) echo 63;; verif68) echo 76;; verif69) echo 83;; verif70) echo 32;; verif71) echo 84;; verif72) echo 16;; verif73) echo 25;; verif74) echo 33;; verif75) echo 24;; verif76) echo 22;; verif77) echo 26;; verif78) echo 19;; verif79) echo 25;; verif80) echo 70;; verif81) echo 18;; verif82) echo 56;; verif83) echo 54;; verif84) echo 87;; verif85) echo 51;; verif86) echo 57;; verif87) echo 45;; verif88) echo 19;; verif90) echo 25;; verif91) echo 13;; verif89) echo 13;; verif92) echo 24;; verif93) echo 14;; verif94) echo 8;; verif95) echo 12;; verif96) echo 39;; verif97) echo 27;; rig) echo 90;; *) echo "";;
   esac
 }
 # Partie de chaque suite pour les jobs parallèles de GitHub Actions (10 parties, durées équilibrées, 4 à 5 minutes chacune).
@@ -292,7 +297,7 @@ partie() {
     verif53|verif64|verif69|verif70|verif81|verif89|verif94) echo 2;;
     verif51|verif34|verif35|verif63|verif79|verif85) echo 3;;
     verif38|verif36|verif37|verif66|verif76|verif80) echo 4;;
-    verif48|verif43|flux|verif58|verif78|verif90) echo 5;;
+    verif48|verif43|flux|verif58|verif78|verif90|verif97) echo 5;;
     verif41|verif57|verif61|verif67|verif77|verif86|verif87) echo 6;;
     verif42|verif50|verif65|verif72|verif75|verif84|verif95) echo 7;;
     verif40|verif54|verif62|verif71|verif82|verif92) echo 8;;
