@@ -1076,6 +1076,20 @@ ul.fc-lignes li > b{font-weight:500;text-align:right;min-width:0;overflow-wrap:a
 .ex-derniere{font-size:12px;margin:6px 0 0;color:var(--ink-2);line-height:1.5}
 .ex-identique{font-size:12px;margin:4px 0 0;color:var(--warn);line-height:1.5}
 @media (max-width:640px){ .ex-ligne .outils-ex{grid-column:1/-1;justify-content:flex-end} }
+/* v104 (point 7) : éditeur du programme d'un client : une ligne compacte par exercice (cible de 44 px), le détail s'ouvre au toucher */
+details.ex-pli{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);margin:0 0 8px;padding:0}
+details.ex-pli > summary{list-style:none;display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;min-height:var(--h-toucher);padding:8px 40px 8px 14px;
+  position:relative;font-size:14px;color:var(--ink);font-weight:400;border-radius:var(--r)}
+details.ex-pli > summary::-webkit-details-marker{display:none}
+details.ex-pli > summary::after{content:"\203A";position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:20px;line-height:1;color:var(--ink-3);transition:transform .15s}
+details.ex-pli[open] > summary::after{transform:translateY(-50%) rotate(90deg)}
+details.ex-pli > summary:hover{color:var(--ink)}
+details.ex-pli > summary:hover::after{color:var(--accent)}
+details.ex-pli > summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.ex-resume-nom{font-weight:600;flex:1;min-width:0;overflow-wrap:anywhere}
+.ex-resume-chiffres{font-variant-numeric:tabular-nums;font-size:13px;color:var(--ink-3);white-space:nowrap}
+.ex-resume-id{font-size:13px;color:var(--warn);font-weight:600}
+details.ex-pli > .ex-ligne{margin:0;border:0;border-top:1px solid var(--line);border-radius:0 0 var(--r) var(--r)}
 /* v97 (chantier 2 de la nuit du 10/11) : brouillon de la diète, « Changer ce repas », « Dupliquer sur » */
 .nu-etat.brouillon{border-color:var(--warn)}
 .props-repas{margin-top:12px;padding:12px;border:1px solid var(--accent-line);border-radius:var(--r-sm);background:var(--sunken)}

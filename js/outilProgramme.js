@@ -969,6 +969,17 @@ const outilProgramme = {
 
   seanceVide(n){ return { nom: "Séance " + String.fromCharCode(64 + n), note: "", exercices: [ this.exoVide() ] }; },
   exoVide(){ return { nom:"", series:"", reps:"", repos:"", note:"", lien:"", id:"" }; },
+  /* v104 (point 7) : la ligne compacte d'un exercice dans l'éditeur du coach (« Squat barre » + « 4 × 8-10 · 150 s ») */
+  resumeExo(e){
+    const v = x => String(x == null ? "" : x).trim();
+    const rp = v(e.repos), repos = /^\d+$/.test(rp) ? rp + " s" : rp;
+    return { nom: v(e.nom) || trad("Nouvel exercice"), chiffres: [[v(e.series), v(e.reps)].filter(Boolean).join(" × "), repos].filter(Boolean).join(" · ") };
+  },
+  majResume(zone, si, ei, e){
+    const r = this.resumeExo(e), n = zone.querySelector('[data-resume-nom="' + si + ':' + ei + '"]'), c = zone.querySelector('[data-resume-chiffres="' + si + ':' + ei + '"]');
+    if (n) n.textContent = r.nom;
+    if (c) c.textContent = r.chiffres;
+  },
 
   /* Une ligne « Développé couché — 4 x 8-10 » ne dit pas comment faire le
      mouvement. La fiche s'ouvre sous l'exercice, sans quitter la page. */
@@ -1205,8 +1216,10 @@ const outilProgramme = {
      le selecteur d'exercice, les echauffements, l'ajout et la suppression.
      L'atelier appelle exactement la meme fonction que la fiche client — ce
      qui evite d'avoir deux editeurs qui divergent au fil des corrections. */
-  brancherEditeur(P, zone, sauver, redessiner){
+  brancherEditeur(P, zone, sauver, redessiner, ouvrir){
     const PR = this;
+    /* v104 (point 7) : ouvrir(ex) (fiche d'un client seulement) : un exercice ajouté ou dupliqué s'ouvre au dessin suivant */
+    const ouvre = x => { if (ouvrir && x) ouvrir(x); };
       $$("[data-f]", zone).forEach(el => {
         el.addEventListener("input", () => {
           const si = +el.dataset.s, f = el.dataset.f;
@@ -1227,6 +1240,7 @@ const outilProgramme = {
             }
             PR.majEtat(el, ex, fiche, si, +el.dataset.e);
           }
+          PR.majResume(zone, si, +el.dataset.e, ex);   // v104 (point 7) : la ligne compacte suit la saisie
           sauver();
         });
       });
@@ -1251,7 +1265,8 @@ const outilProgramme = {
       }));
 
       $$("[data-ajout-e]", zone).forEach(b => b.addEventListener("click", () => {
-        P.seances[+b.dataset.ajoutE].exercices.push(PR.exoVide()); sauver(); redessiner();
+        const nv = PR.exoVide(); ouvre(nv);
+        P.seances[+b.dataset.ajoutE].exercices.push(nv); sauver(); redessiner();
       }));
       /* v101 : « Supprimé : … · Annuler » pendant 10 s (l'élément revient à sa place) */
       $$("[data-suppr-e]", zone).forEach(b => b.addEventListener("click", () => {
@@ -1284,7 +1299,7 @@ const outilProgramme = {
       const ex = v => { const [si, ei] = v.split(":").map(Number); return { l: P.seances[si].exercices, ei }; };
       sur("data-monter-e", v => { const x = ex(v); return echanger(x.l, x.ei, x.ei - 1); });
       sur("data-descendre-e", v => { const x = ex(v); return echanger(x.l, x.ei, x.ei + 1); });
-      sur("data-dupliquer-e", v => { const x = ex(v); x.l.splice(x.ei + 1, 0, copie(x.l[x.ei])); });
+      sur("data-dupliquer-e", v => { const x = ex(v), c = copie(x.l[x.ei]); ouvre(c); x.l.splice(x.ei + 1, 0, c); });
       $$("[data-pm]", zone).forEach(b => b.addEventListener("click", () => {
         const [si, ei, f, d] = b.dataset.pm.split(":"), e = P.seances[+si].exercices[+ei];
         const v = PR.pas(f, e[f], +d);
@@ -1292,6 +1307,7 @@ const outilProgramme = {
         e[f] = v;
         const champ = zone.querySelector('[data-f="' + f + '"][data-s="' + si + '"][data-e="' + ei + '"]');
         if (champ) champ.value = v;
+        PR.majResume(zone, si, ei, e);   // v104 (point 7)
         sauver();
       }));
 
@@ -1381,6 +1397,14 @@ const outilProgramme = {
       (sc.exercices || []).forEach((e, ei) => {
         const f = this.trouve(e.nom);
         const der = opts.J && e.nom ? Journal.dernier(opts.J, e.nom) : null, court = der ? Journal.resumeCourt(der.e) : "";
+        /* v104 (point 7) : fiche d'un client (opts.ouverts) : une ligne compacte par exercice (nom · séries × reps · repos) ;
+           un toucher (ou Entrée / Espace) ouvre le détail complet, inchangé. L'atelier garde la vue complète. */
+        const pli = !!opts.ouverts, r = pli ? this.resumeExo(e) : null;
+        if (pli) h += `<details class="ex-pli" data-pli="${si}:${ei}"${opts.ouverts.has(e) ? " open" : ""}><summary class="ex-resume">`
+          + `<span class="ex-resume-nom" data-resume-nom="${si}:${ei}">${esc(r.nom)}</span>`
+          + `<span class="ex-resume-chiffres" data-resume-chiffres="${si}:${ei}">${esc(r.chiffres)}</span>`
+          + (opts.ref ? `<span class="ex-resume-id" data-identique-pli="${si}:${ei}" title="${esc(trad("identique au bloc d'avant : à faire évoluer ?"))}"${BrouillonProg.identique(opts.ref, sc, e) ? "" : " hidden"}>≈</span>` : "")
+          + `</summary>`;
         h += `<div class="ex-ligne">
           <div class="nom-c"><label>Exercice</label>
             <input type="text" list="ex-catalogue" data-s="${si}" data-e="${ei}" data-f="nom" value="${esc(e.nom)}" placeholder="Commence à taper : Développé couché…">
@@ -1397,6 +1421,7 @@ const outilProgramme = {
             <div><label>Lien vidéo</label><input type="url" data-s="${si}" data-e="${ei}" data-f="lien" value="${esc(e.lien)}" placeholder="https://"></div>
           </div>
         </div>`;
+        if (pli) h += `</details>`;
       });
 
       h += `<div class="actions"><button class="btn ghost" data-ajout-e="${si}">+ Ajouter un exercice</button></div></section>`;
@@ -1526,6 +1551,7 @@ const outilProgramme = {
       /* « ≈ identique au bloc d'avant » suit la saisie (sans redessiner : le curseur reste dans son champ) */
       const ref = BrouillonProg.reference(etat.D, uid, P);
       $$("[data-identique]", zone).forEach(m => { const [si, ei] = m.dataset.identique.split(":").map(Number), sc = etat.B.seances[si], e = sc && (sc.exercices || [])[ei]; m.hidden = !(ref && sc && e && BrouillonProg.identique(ref, sc, e)); });
+      $$("[data-identique-pli]", zone).forEach(m => { const x = zone.querySelector('[data-identique="' + m.dataset.identiquePli + '"]'); m.hidden = !x || x.hidden; });   // v104 (point 7) : le « ≈ » de la ligne compacte
       return r;
     };
     /* v104 (point 5) : les 3 objectifs du mois se modifient dans l'onglet Suivi (ObjectifsCoach) ; ici, lecture seule et
@@ -1536,8 +1562,11 @@ const outilProgramme = {
       z.outerHTML = BrouillonProg.etatHTML(etat.B, P, BrouillonProg.entree(etat.D, uid));
       brancherEtat();
     };
+    /* v104 (point 7) : les exercices ouverts pendant la visite, repérés par l'objet lui-même (il reste le même après ↑ ↓,
+       une saisie, un ajout à la base) ; un brouillon remplacé (programme chargé, annulé, publié, nouveau bloc) repart replié */
+    const ouverts = new WeakSet();
     const redessiner = () => {
-      zone.innerHTML = BrouillonProg.etatHTML(etat.B, P, BrouillonProg.entree(etat.D, uid)) + self.vueEdition(etat.B, null, { J: etat.J, ref: BrouillonProg.reference(etat.D, uid, P) });
+      zone.innerHTML = BrouillonProg.etatHTML(etat.B, P, BrouillonProg.entree(etat.D, uid)) + self.vueEdition(etat.B, null, { J: etat.J, ref: BrouillonProg.reference(etat.D, uid, P), ouverts: ouverts });
       brancher();
     };
 
@@ -1654,7 +1683,13 @@ const outilProgramme = {
 
     const brancher = () => {
       const b = etat.B;
-      self.brancherEditeur(b, zone, sauver, redessiner);
+      self.brancherEditeur(b, zone, sauver, redessiner, x => ouverts.add(x));
+      /* v104 (point 7) : ouvrir ou refermer un exercice est retenu (rien n'est écrit) */
+      $$("details[data-pli]", zone).forEach(d => d.addEventListener("toggle", () => {
+        if (!d.isConnected) return;
+        const [si, ei] = d.dataset.pli.split(":").map(Number), sc = b.seances[si], e = sc && (sc.exercices || [])[ei];
+        if (e){ if (d.open) ouverts.add(e); else ouverts.delete(e); }
+      }));
       brancherEtat();
       const pub2 = $("pg-publier-bas"); if (pub2) pub2.addEventListener("click", publier);   // relecture : une seule fois par dessin
 

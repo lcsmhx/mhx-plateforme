@@ -1843,3 +1843,6 @@ Object.assign(I18N.en, {
   "Son entraînement": "Their training",
   "Son journal": "Their log"
 });
+/* v104 (point 7) */ Object.assign(I18N.en, {
+  "Nouvel exercice": "New exercise"
+});
