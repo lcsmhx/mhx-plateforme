@@ -394,6 +394,8 @@ Ensuite, demander à GitHub d'effacer ses copies.
 
 **g. Questions qui attendent ta réponse** : les textes « ton espace » du parcours (rien n'a été changé cette nuit) ; « Supprimer mon compte » qui efface le marqueur de l'appareil (`docs/MISSION-V72.md`) ; les 10 axes du module 5 et 4 défis de la Formation restés en français en anglais (choix d'une version passée, verif66) : les veux-tu en anglais ?.
 
+**h. Alléger encore l'app du client (décision du 10/11/2026 : oui, mais plus tard)** : depuis la v101, le client ne charge plus 4 fichiers du coach. Les 2 plus gros fichiers du coach (`js/outilClients.js` et `js/outilProspects.js`, environ 165 Ko bruts à eux deux) contiennent aussi des outils communs dont le client a besoin : il les charge donc encore. Les séparer (les outils communs dans leur propre fichier) allégerait l'app du client. À faire plus tard, sur une branche, avec le banc. Rien n'est codé pour l'instant.
+
 ---
 
 ## Déjà fait cette nuit (rien à faire)
