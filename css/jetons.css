@@ -16,7 +16,10 @@
   color-scheme:dark;
   /* couleurs (valeurs de la mission) */
   --ground:#07090d;
-  --ink:#F4F5F7; --ink-2:#a3abb8; --ink-3:#9ea6b3;   /* v103 (décision 9 de Lucas) : #8b93a1 → #9ea6b3 */
+  --ink:#F4F5F7; --ink-2:#c1c9d6; --ink-3:#acb4c1;
+  /* v103 (décision 9) : --ink-3 #8b93a1 → #9ea6b3. v104 : halo du haut à 25 % ; --ink-3 #9ea6b3 → #acb4c1 pour 4,5:1 au moins
+     au centre de ce halo, nu, dans une carte (6 %) et dans une réponse choisie (12 %) ; --ink-2 #a3abb8 → #c1c9d6 pour rester
+     distinct du gris pâle (1,25:1 entre eux, contre 1,06 en v103) et sous le blanc (1,53:1). */
   --accent:#D4A844; --accent-ink:#07090d; --accent-soft:rgba(212,168,68,.14); --accent-line:rgba(212,168,68,.55);
   --good:#4ADE80; --good-soft:rgba(74,222,128,.12);
   --warn:#FBBF24; --warn-soft:rgba(251,191,36,.12);
@@ -38,8 +41,8 @@
   --r-sm:12px; --r:16px; --r-lg:20px; --r-pastille:999px;
   /* hauteurs : bouton 56 px, champ 60 px, bouton rond 44 px (zone de toucher minimale : 44 px) */
   --h-bouton:56px; --h-champ:60px; --h-rond:44px; --h-toucher:44px;
-  /* halos du fond (v103 : halo du haut 40 % → 35 %, gris pâle --ink-3 lisible dessus à 4,5:1 au moins) */
-  --halo-1:rgba(160,148,128,.35); --halo-2:rgba(72,88,118,.55); --halo-3:rgba(212,168,68,.16);
+  /* halos du fond (v103 : halo du haut 40 % → 35 % ; v104 : 35 % → 25 %, voir --ink-3) */
+  --halo-1:rgba(160,148,128,.25); --halo-2:rgba(72,88,118,.55); --halo-3:rgba(212,168,68,.16);
   --vite:.16s; --doux:.32s;
 }
 
