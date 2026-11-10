@@ -257,8 +257,12 @@ const outilAccueil = {
     const kg = v => (v > 0 ? "+" : v < 0 ? "−" : "") + n1(Math.abs(v)) + " kg";
     /* la régularité sur 30 jours : les jours actifs (visites suivies), sinon le score de la semaine */
     const vis = Activite.lecture(d.activite, Activite.suiviPour(pFiche));
-    const regTexte = vis.suivi ? trad("{n} jours actifs sur 30", { n: vis.jours30 }) : r.score != null ? r.score + "/100 " + trad("cette semaine") : "—";
-    const regPct = vis.suivi ? Math.round(Math.min(30, vis.jours30) / 30 * 100) : r.score != null ? Math.max(0, Math.min(100, r.score)) : 0;
+    /* v104 (point 3) : UN chiffre de régularité, la semaine passée (semaine complète : celle de Clients, du tableau de bord et des
+       alertes), la période écrite ; plus de tuile « Régularité » en double dans « En bref ». Les jours actifs (visites suivies)
+       ne sont pas la régularité : ils ont leur ligne à eux. */
+    const regTexte = prec.score != null ? prec.score + "/100 · " + trad("semaine passée") : "— · " + trad("semaine passée");
+    const regPct = prec.score != null ? Math.max(0, Math.min(100, prec.score)) : 0;
+    const joursActifs = vis.suivi ? trad("{n} jours actifs sur 30", { n: vis.jours30 }) : "";
     const etat = (lib, ok, val, manque) => `<li><span>${esc(lib)}</span><b class="${ok ? "fc-ok" : "fc-manque"}">${ok ? `${esc(val)} <span class="fc-coche" aria-hidden="true">${SVG.coche}</span>` : esc(manque)}</b></li>`;
     /* « Ses réponses » (prospect) : objectif, ce qui bloque, avec ses mots, dans 3 mois, « Tu es ? » ; l'ancien format lisible */
     const qo = Decouverte.defQ("obstacle"), qp = Decouverte.defQ("projection");
@@ -292,13 +296,12 @@ const outilAccueil = {
       <section class="carte fc-carte fc-retour" id="fc-retour"><div class="fc-retour-l"><div><p class="fc-sur">${esc(trad("Retour de la semaine"))}</p><p class="fc-retour-t">${esc(retourTexte)}</p></div><a class="lc-lien" id="fc-lire" href="${esc(lienOutil("bilan"))}">${esc(trad("Lire"))}</a></div></section>
       <section class="carte fc-carte fc-poids" id="fc-poids">${l.ev ? `<p class="fc-kg"><b>${kg(l.ev.total)}</b> <span>${esc(trad("depuis le début"))}</span></p>${courbe}${l.ev.mois != null ? `<span class="pastille fc-4s">${esc(trad("4 dernières sem. : {v}", { v: kg(l.ev.mois) }))}</span>` : ""}` : `<p class="fc-kg"><span>${esc(trad("Poids : aucune mesure"))}</span></p>`}</section>
       <section class="carte fc-carte fc-pf" id="fc-pf-faites"><p class="fc-pf-l">${esc(trad("Séances de la formation faites (30 j) :"))} <b>${ProgFormation.faites30j(d.seances_formation)}</b></p></section>
-      <section class="carte fc-carte fc-reg" id="fc-regularite"><div class="fc-reg-l"><b>${esc(trad("Régularité"))}</b><span>${esc(regTexte)}</span></div><div class="fc-jauge" role="img" aria-label="${esc(regTexte)}"><span style="width:${regPct}%"></span></div></section>
+      <section class="carte fc-carte fc-reg" id="fc-regularite"><div class="fc-reg-l"><b>${esc(trad("Régularité"))}</b><span>${esc(regTexte)}</span></div><div class="fc-jauge" role="img" aria-label="${esc(trad("Régularité") + " : " + regTexte)}"><span style="width:${regPct}%"></span></div>${joursActifs ? `<p class="note fc-actifs" style="margin:8px 0 0">${esc(joursActifs)}</p>` : ""}</section>
       <section class="carte fc-carte" id="fc-etat"><ul class="fiche-l fc-lignes">${etat("Questionnaire", I.complet, trad("Rempli"), trad("à remplir"))}${etat("Programme", seances.length, progNom || trad("envoyé"), trad("à faire"))}${etat("Diète", nbJours, trad("envoyée"), trad("à définir"))}</ul></section>
       ${/* v104 (point 1) : plus de rangée de raccourcis (Fiche, Préparer le call, Son suivi…) : la fiche se parcourt par ses 5 onglets */ ""}
       <section class="panel">
         <h2>En bref</h2>
         <div class="tiles">
-          <div class="tile"><div class="t-lbl">Régularité</div><div class="t-val readout ${Regularite.niveau(r.score)}">${r.score == null ? "—" : r.score}<small>/100</small></div><div class="t-sub">${prec.score != null ? "semaine passée : " + prec.score : "en cours"}</div></div>
           <div class="tile"><div class="t-lbl">Poids</div><div class="t-val readout">${l.ev ? n1(l.ev.actuel) : "—"}<small>kg</small></div><div class="t-sub">${l.ev ? `départ ${n1(l.ev.depart)} · <span class="${l.sens ? (l.ev.total * l.sens < -0.2 ? "pos" : l.ev.total * l.sens > 0.2 ? "neg" : "") : ""}">${l.ev.total > 0 ? "+" : ""}${n1(l.ev.total)} kg</span>` : "aucune mesure"}</div></div>
           <div class="tile"><div class="t-lbl">Séances</div><div class="t-val readout">${r.parts.seances ? r.parts.seances.faites : "—"}<small>${r.parts.seances ? "/ " + r.parts.seances.cible : ""}</small></div><div class="t-sub">notées cette semaine</div></div>
           <div class="tile"><div class="t-lbl">Repas respectés</div><div class="t-val readout">${b.repas != null ? b.repas : "—"}<small>${b.repas != null ? "%" : ""}</small></div><div class="t-sub">sur 28 jours</div></div>
@@ -317,8 +320,7 @@ const outilAccueil = {
       <section class="panel"><div class="seance-c-tete"><h2>Programme</h2>${seances.length ? `<span class="pastille ok">envoyé</span>` : `<span class="pastille attention">à faire</span>`}</div>
         <ul class="ingr fiche-l">${ligne("Nom", P.nom)}${seances.length ? ligne("Cycle", "Cycle " + String(av.cycle).padStart(2, "0") + (av.semaine != null ? " · semaine " + Math.min(av.semaine, av.duree) + " / " + av.duree : "")) : ""}${ligne("Séances / semaine", seances.length || "")}${ligne("Envoyé le", P.maj)}${ligne("Dernière séance notée", derniereSeance ? dateFr(derniereSeance.date) + " — " + (derniereSeance.nom || "") : "")}</ul></section>
       <section class="panel"><div class="seance-c-tete"><h2>Nutrition</h2>${nbJours ? `<span class="pastille ok">envoyée</span>` : `<span class="pastille attention">à faire</span>`}</div>
-        <ul class="ingr fiche-l">${ligne("Cible", cible ? fmt(cible.kcal) + " kcal · " + fmt(cible.prot) + " g prot." : "")}${ligne("Régime", R.regime)}${ligne("Allergènes écartés", (R.allergenes || []).join(", "))}${ligne("Jours différents", nbJours || "")}${ligne("Envoyée le", R.maj)}${ligne("Repas respectés (28 j)", b.repas != null ? b.repas + " %" : "")}${ligne("Repas remplacés ce mois", b.remplaces.length || "")}</ul>
-        <p class="note" style="margin:10px 0 0">${lien("nutrition", "Ses repas")} · ${lien("calculateur", "Ses calories")}</p></section>
+        <ul class="ingr fiche-l">${ligne("Cible", cible && num(cible.kcal) > 0 ? fmt(cible.kcal) + " kcal" + (num(cible.prot) > 0 ? " · " + fmt(cible.prot) + " g prot." : "") : "")}${ligne("Régime", R.regime)}${ligne("Allergènes écartés", (R.allergenes || []).join(", "))}${ligne("Jours différents", nbJours || "")}${ligne("Envoyée le", R.maj)}${ligne("Repas respectés (28 j)", b.repas != null ? b.repas + " %" : "")}${ligne("Repas remplacés ce mois", b.remplaces.length || "")}</ul></section>
       ${avecJA ? JournalAlim.ficheHTML(JournalAlim.remettre(d.journal_alimentaire || JournalAlim.vide()), JournalAlim.objectif({ repas: R, calc: d.calc, calc_perso: d.calc_perso }, profil.statut === "prospect")) : ""}
       <section class="panel"><h2>Poids et mensurations</h2>
         <ul class="ingr fiche-l">${ligne("Poids actuel", l.ev ? n1(l.ev.actuel) + " kg" : "")}${ligne("Départ", l.ev ? n1(l.ev.depart) + " kg" : "")}${ligne("Depuis le début", l.ev ? (l.ev.total > 0 ? "+" : "") + n1(l.ev.total) + " kg" : "")}${ligne("4 dernières semaines", l.ev && l.ev.mois != null ? (l.ev.mois > 0 ? "+" : "") + n1(l.ev.mois) + " kg" : "")}${ligne("Mesures", (M.mesures || []).length || "")}${ligne("Dernière mesure", l.ev && l.ev.date ? dateFr(l.ev.date) : "")}${b.zones.map(z => ligne(z.nom, n1(z.de) + " → " + n1(z.a) + " cm")).join("")}</ul></section>
