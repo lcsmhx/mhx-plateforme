@@ -1232,7 +1232,8 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
        - point 5 : « Écrire ou modifier les objectifs → » (vers Programme) devient « Modifier » (lecture seule, lien vers Suivi) ;
        - point 4 : les 6 questions du bilan hebdomadaire à la 3e personne (« sa semaine », « a-t-il réalisées »…).
        Une fois la v104 sur main : rien à convertir, comparaison stricte des deux côtés. */
-    const LIENS_V103 = ["Son questionnaire complet", "Son programme", "Ses repas", "Ses calories", "Ses courbes", "Préparer le call", "Son suivi", "Ses compléments", "Sa formation"];
+    /* v104 (point 1) : + « Son journal, jour par jour → » sous le bloc Journal alimentaire (retiré après coup, même raison) */
+    const LIENS_V103 = ["Son questionnaire complet", "Son programme", "Ses repas", "Ses calories", "Ses courbes", "Préparer le call", "Son suivi", "Ses compléments", "Sa formation", "Son journal, jour par jour"];
     const BILAN_V104 = [["Comment s'est passée ta semaine ?", "Comment s'est passée sa semaine ?"], ["Combien de séances as-tu réalisées ?", "Combien de séances a-t-il réalisées ?"],
       ["Comment s'est passée ton alimentation ?", "Comment s'est passée son alimentation ?"], ["Quelle a été ta principale réussite ?", "Quelle a été sa principale réussite ?"],
       ["Quelle a été ta principale difficulté ?", "Quelle a été sa principale difficulté ?"], ["As-tu besoin d'un ajustement ?", "A-t-il besoin d'un ajustement ?"]];
