@@ -1068,7 +1068,7 @@ const outilSuivi = {
   titre: "Ton suivi",
   accroche: "Comment se passe ton accompagnement : ta régularité, tes objectifs du mois et ton bilan des quatre dernières semaines.",
 
-  html(){ return `<div id="suivi-fb-haut"></div><div id="suivi-checkin"></div><div id="suivi-fb-bas"></div><div id="suivi-reg"><section class="panel">${squelette()}</section></div><div id="suivi-bilan"></div>`; },
+  html(){ return `<div id="suivi-fb-haut"></div><div id="suivi-checkin"></div><div id="suivi-fb-bas"></div><div id="suivi-reg"><section class="panel">${squelette()}</section></div><div id="suivi-obj"></div><div id="suivi-bilan"></div>`; },
 
   async init(){
     const { valeurs: d, dates, erreur } = await Store.lireTout(["programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "intake", "checkins", "feedbacks"], { dates: true });
@@ -1102,10 +1102,20 @@ const outilSuivi = {
       const zf = $(Feedback.recent(d.feedbacks) ? "suivi-fb-haut" : "suivi-fb-bas");
       if (zf && fb) zf.innerHTML = fb;
     }
-    await Regularite.monterClient("suivi-reg", P, J, d);
-    const zb = $("suivi-bilan"); if (!zb) return;
+    /* v104 (point 5) : le coach modifie ici, et seulement ici, les 3 objectifs du mois (ObjectifsCoach : l'écriture de la v102) ;
+       le panneau à cocher du client n'est pas montré au coach (il ne peut pas cocher pour lui) */
+    const coach = Auth.estCoach();
+    await Regularite.monterClient("suivi-reg", P, J, Object.assign({}, d, { sansObjectifs: coach }));
+    let vider = null;
+    if (coach){
+      const uid = Store.cible(), zo = $("suivi-obj");
+      if (zo && uid){ vider = ObjectifsCoach.monter("suivi-obj", P, uid, d.objectifs_faits); const sec = zo.querySelector("section.panel"); if (sec) sec.classList.add("obj-coach"); }
+    }
+    const zb = $("suivi-bilan"); if (!zb) return vider;
     const b = outilBilan.calculer({ programme: P, journal: J, repas: d.repas || {}, repas_suivi: d.repas_suivi || {}, mens: d.mens || {}, objectifs_faits: d.objectifs_faits || {} });
-    zb.innerHTML = `<div class="suivi-sep"><h2 style="margin:0">${esc(trad("Ton bilan du mois"))}</h2><p class="note" style="margin:4px 0 0">${esc(outilBilan.accroche)}</p></div>` + outilBilan.vue(b, false, (d.intake && d.intake.objectif) || "");
+    /* v104 (point 5) : plus de liste « Objectifs du mois » en double sous le bilan (elle est juste au-dessus) */
+    zb.innerHTML = `<div class="suivi-sep"><h2 style="margin:0">${esc(trad("Ton bilan du mois"))}</h2><p class="note" style="margin:4px 0 0">${esc(outilBilan.accroche)}</p></div>` + outilBilan.vue(b, false, (d.intake && d.intake.objectif) || "", true);
+    return vider;   // la sortie de la page envoie tout de suite un objectif tapé à l'instant
   }
 };
 
