@@ -485,14 +485,15 @@ async function contexte(b, who, db, opts){
   ouverts.push(c);
   c.setDefaultTimeout(8000);
   await c.route("**/*", r => repondre(r, who, db));
-  await c.addInitScript(({ s }) => {
+  await c.addInitScript(({ s, lg }) => {
     if (!/^https?:$/.test(location.protocol) || location.hostname !== "localhost") return;
     if (!localStorage.getItem("__init")) {
       localStorage.setItem("__init", "1");
       if (s) localStorage.setItem("mhx_session", JSON.stringify(s));
       localStorage.setItem("mhx_installe", "1"); localStorage.setItem("mhx_visites", "3");
+      if (lg) localStorage.setItem("mhx_langue", lg);   // partie 2 : opts.langue (avec prefs.langue du compte : avecPrefsEnTous)
     }
-  }, { s: who ? who.session : null });
+  }, { s: who ? who.session : null, lg: opts.langue || null });
   await c.clock.install({ time: T0 });
   const page = await c.newPage();
   page.on("pageerror", e => { ERREURS.push("JS " + String(e).slice(0, 200)); res.push("  ✗ ERREUR JS " + String(e).slice(0, 300)); });
@@ -540,6 +541,8 @@ const lireTete = page => page.evaluate(() => {
 const forme = t => JSON.stringify({ premier: t.premier, nbBandeaux: t.nbBandeaux, enfants: t.enfants, tete: t.tete, nbOnglets: t.nbOnglets, onglets: t.onglets, sortir: t.sortir, sortirFin: t.sortirFin, sortirTexte: t.sortirTexte,
   titreCls: t.titre && t.titre.cls, titreEnfants: t.titre && t.titre.enfants, apres: t.apres, h1Seul: t.h1Seul });
 const debordeLarg = page => page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
+/* partie 2 : tous les comptes en anglais (prefs.langue, sinon la page se recharge en boucle) */
+const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { const pr = db.donnees.find(d => d.user_id === id && d.outil === "prefs"); if (pr) pr.contenu = Object.assign({}, pr.contenu, { langue: "en" }); else db.donnees.push({ user_id: id, outil: "prefs", contenu: { langue: "en" }, maj_le: avant(40 * J) }); }); };
 
 
   await new Promise((r, k) => { server.once("error", e => k(new Error(e && e.code === "EADDRINUSE" ? "port " + PORT + " déjà pris : VERIF104_PORT=10141 node verif104.js ../index.html" : String(e)))); server.listen(PORT, r); });
@@ -685,6 +688,189 @@ const debordeLarg = page => page.evaluate(() => document.documentElement.scrollW
     const listeP = await page.evaluate(() => document.querySelectorAll("#lc-prospects #lc-liste li").length);
     ok("3N-coach : le coach (appareil neuf) reçoit les 3 fichiers à sa connexion ; ses listes Clients et Prospects s'affichent",
       TROIS.every(f => r.charges.indexOf(f) > -1) && r.objets.length === 10 && listeC > 0 && listeP > 0, JSON.stringify({ r, listeC, listeP }));
+  });
+
+  /* ==========================================================================================================
+     PARTIE 2 (audit de Cowork), points 1 à 5 et 9 à 11 — fiche d'un client et espace coach
+     ========================================================================================================== */
+  const MENU7 = '["tableau","clients","prospects","mes-programmes","catalogue","entrainement","profil"]';
+  const visTextes = (page, sel) => page.evaluate(s => Array.from(document.querySelectorAll(s)).filter(e => e.getClientRects().length && getComputedStyle(e).visibility !== "hidden").map(e => e.textContent.replace(/\s+/g, " ").trim()), sel);
+
+  /* =================== F. point 1 : une seule navigation dans la fiche =================== */
+  await bloc("F. point 1", async () => {
+    const db = base();
+    const { page } = await contexte(b, COACH, db);
+    await ouvrir(page, C1, "accueil", "#fc-suivi");
+    const n = await page.evaluate(() => ({
+      nav: Array.from(document.querySelectorAll("#nav a")).map(a => a.dataset.id), versClient: Array.from(document.querySelectorAll("#nav a")).filter(a => /#\/client\//.test(a.getAttribute("href"))).length,
+      raccourcis: !!document.querySelector("#fc-outils, #fc-suivi .bandeau-actions"),
+      fleches: Array.from(document.querySelectorAll("#vue a")).filter(a => /→\s*$/.test(a.textContent)).map(a => a.textContent.trim()),
+      call: Array.from(document.querySelectorAll("#vue a, #vue button")).filter(e => e.getClientRects().length && e.textContent.replace(/\s+/g, " ").trim() === "Préparer le call").length
+    }));
+    ok("F1 (point 1) : dans la fiche, le menu du haut est celui du coach (ses 7 entrées dans l'ordre, aucune vers les outils du client), plus de rangée de raccourcis ni de lien « … → », un seul « Préparer le call »",
+      JSON.stringify(n.nav) === MENU7 && n.versClient === 0 && !n.raccourcis && n.fleches.length === 0 && n.call === 1, JSON.stringify(n));
+    /* les anciennes adresses s'ouvrent toujours */
+    const vus = [];
+    for (const [ch, sel] of [["bilan", "#bilan-vue"], ["journal", null], ["calculateur", null], ["mensurations", null], ["formation", null], ["complements", null]]) {
+      await ouvrir(page, C1, ch, sel);
+      vus.push(ch + ":" + (await page.evaluate(c => location.hash.endsWith("/" + c) && !document.getElementById("page-illisible") && document.querySelectorAll("#vue .fiche-entete").length === 1, ch)));
+    }
+    ok("F2 (point 1) : les adresses #/client/<id>/bilan, journal, calculateur, mensurations, formation, compléments s'ouvrent toujours dans la fiche", vus.every(v => /:true$/.test(v)), JSON.stringify(vus));
+    /* « Réglages » depuis la fiche : la fiche se referme, les réglages du coach s'ouvrent (pas le questionnaire du client) */
+    await page.click('#nav a[data-id="profil"]'); await pret(page); await attendre(page, 600);
+    const r = await page.evaluate(() => ({ hash: location.hash, consulte: Store.idConsulte, bandeau: !!document.querySelector("#vue .fiche-entete"), nav: Array.from(document.querySelectorAll("#nav a")).map(a => a.dataset.id) }));
+    ok("F3 (point 1) : « Réglages » du menu, depuis la fiche : #/profil du coach, fiche refermée, menu du coach", r.hash === "#/profil" && r.consulte === null && !r.bandeau && JSON.stringify(r.nav) === MENU7, JSON.stringify(r));
+  });
+
+  /* =================== G. point 2 : téléphone, barre du bas du coach, 5 onglets sur une ligne =================== */
+  await bloc("G. point 2", async () => {
+    const db = base();
+    const { page } = await contexte(b, COACH, db, { viewport: MOBILE });
+    const L = [];
+    for (const [ch, , sel] of PAGES) {
+      await ouvrir(page, C1, ch, sel);
+      L.push(await page.evaluate(() => {
+        const bb = Array.from(document.querySelectorAll("#barre-bas a")).map(a => a.dataset.id), ici = (document.querySelector('#barre-bas a[aria-current="page"]') || {}).dataset;
+        const o = Array.from(document.querySelectorAll("#vue > .fiche-entete .f-onglet")), tops = o.map(a => Math.round(a.getBoundingClientRect().top));
+        return { bb, ici: ici ? ici.id : null, plus: !!document.querySelector("#barre-bas [data-plus]"), n: o.length, uneLigne: new Set(tops).size === 1, deborde: document.documentElement.scrollWidth > innerWidth + 1 };
+      }));
+    }
+    ok("G1 (point 2) : sur les 5 onglets de la fiche à 390 px, la barre du bas est celle du coach (Tableau · Clients · Prospects · Programmes · Plus, « Clients » marqué) et les 5 onglets tiennent sur une ligne",
+      L.every(x => JSON.stringify(x.bb) === '["tableau","clients","prospects","mes-programmes"]' && x.plus && x.ici === "clients" && x.n === 5 && x.uneLigne && !x.deborde), JSON.stringify(L));
+    await page.click("#barre-bas [data-plus]"); await attendre(page, 500);
+    const v = await page.evaluate(() => Array.from(document.querySelectorAll(".volet .menu-plus a")).map(a => a.dataset.id));
+    ok("G2 (point 2) : « Plus » dans la fiche : les autres entrées du coach (Catalogue, Mon entraînement, Réglages), aucun outil du client", JSON.stringify(v) === '["catalogue","entrainement","profil"]', JSON.stringify(v));
+  });
+
+  /* =================== H. point 3 : un seul chiffre de régularité, pas de « 0 g prot. » =================== */
+  await bloc("H. point 3", async () => {
+    const db = base();
+    const r = db.donnees.find(d => d.user_id === C1 && d.outil === "repas"); r.contenu.cible = Object.assign({}, r.contenu.cible, { prot: 0 });
+    const { page } = await contexte(b, COACH, db);
+    await ouvrir(page, C1, "accueil", "#fc-suivi");
+    const h = await page.evaluate(() => ({
+      reg: (document.querySelector("#fc-regularite") || {}).textContent || "",
+      tuiles: Array.from(document.querySelectorAll("#fc-suivi .tile .t-lbl")).map(e => e.textContent.trim()),
+      cible: Array.from(document.querySelectorAll("#fc-suivi li")).filter(li => /^Cible/.test(li.textContent.trim())).map(li => li.textContent.replace(/\s+/g, " ").trim()),
+      nbReg: Array.from(document.querySelectorAll("#fc-suivi *")).filter(e => !e.children.length && /\/100/.test(e.textContent)).length
+    }));
+    ok("H1 (point 3) : Aperçu : un seul chiffre de régularité (« … /100 · semaine passée »), plus de tuile « Régularité » ; protéines non renseignées : la cible n'affiche pas « 0 g prot. »",
+      /\/100 · semaine passée/.test(h.reg) && h.tuiles.indexOf("Régularité") === -1 && h.nbReg === 1 && h.cible.length === 1 && /2\s?240 kcal$/.test(h.cible[0]) && !/prot/.test(h.cible[0]), JSON.stringify(h));
+  });
+
+  /* =================== I. point 4 : « sa / ses / son » pour le coach, « ta / tes / ton » chez le client =================== */
+  await bloc("I. point 4", async () => {
+    const db = base();
+    const { page } = await contexte(b, COACH, db);
+    const tu = [];
+    for (const [ch, , sel] of PAGES.concat([["bilan", "", "#bilan-vue"], ["mensurations", "", null]])) {
+      await ouvrir(page, C1, ch, sel);
+      const t = await page.evaluate(() => Array.from(document.querySelectorAll("#vue h1, #vue h2, #vue h3, #vue label, #vue .t-lbl, #vue legend, #vue summary")).filter(e => e.getClientRects().length && !e.closest("[data-notr]"))
+        .map(e => e.textContent.replace(/\s+/g, " ").trim()).filter(x => /^(Ta|Tes|Ton) /.test(x) && !/^(Ton|Tes|Ta) (feedback|client|notes?|base|changements|brouillon)/i.test(x)));
+      t.forEach(x => tu.push(ch + " : " + x));
+    }
+    await ouvrir(page, C1, "suivi", "#suivi-reg");
+    const s = await visTextes(page, "#vue h2");
+    const q = await visTextes(page, "#vue .ck-q, #vue dt, #vue .q");
+    ok("I1 (point 4) : dans la fiche, aucun titre ni étiquette en « ta / tes / ton » ; Suivi : « Sa régularité », « Ses objectifs du mois », « Son bilan du mois »",
+      tu.length === 0 && ["Sa régularité", "Ses objectifs du mois", "Son bilan du mois"].every(x => s.indexOf(x) > -1), JSON.stringify({ tu, s }));
+    const txt = await page.evaluate(() => document.getElementById("vue").innerText);
+    ok("I2 (point 4) : les questions du bilan à la 3e personne (« Comment s'est passée sa semaine ? »), plus « ta semaine »",
+      /Comment s'est passée sa semaine \?/i.test(txt) && !/Comment s'est passée ta semaine/i.test(txt), JSON.stringify(q).slice(0, 300));
+    /* le client, chez lui : inchangé */
+    const CL = qui(C1, "thomas@exemple.fr", { prenom: "Thomas", nom: "Démo" });
+    const { page: pc } = await contexte(b, CL, base());
+    await pc.goto(URL0 + "#/suivi"); await pret(pc, "#suivi-reg h2"); await attendre(pc, 500);
+    const sc = await visTextes(pc, "#vue h2");
+    ok("I3 (point 4) : le client garde « Ta régularité », « Tes objectifs du mois », « Ton bilan du mois » (et ses cases à cocher)",
+      ["Ta régularité", "Tes objectifs du mois", "Ton bilan du mois"].every(x => sc.indexOf(x) > -1) && (await pc.$$(".obj-case")).length > 0, JSON.stringify(sc));
+    /* en anglais, le coach lit « Their » */
+    const dbe = base(); avecPrefsEnTous(dbe);
+    const { page: pe } = await contexte(b, COACH, dbe, { langue: "en" });
+    await ouvrir(pe, C1, "suivi", "#suivi-reg h2");
+    const se = await visTextes(pe, "#vue h2");
+    ok("I4 (point 4) : en anglais, le coach lit « Their consistency », « Their goals for the month » (jamais « Your »)", se.indexOf("Their consistency") > -1 && se.indexOf("Their goals for the month") > -1 && !se.some(x => /^Your /.test(x)), JSON.stringify(se));
+  });
+
+  /* =================== J. point 5 : les objectifs du mois se modifient seulement dans Suivi =================== */
+  await bloc("J. point 5", async () => {
+    const db = base();
+    const { page } = await contexte(b, COACH, db);
+    await ouvrir(page, C1, "suivi", "#obj-0");
+    const s = await page.evaluate(() => {
+      const i = document.getElementById("obj-0"); if (i) i.scrollIntoView({ block: "center" });
+      const r = i && i.getBoundingClientRect(), x = r && document.elementFromPoint(r.left + 5, r.top + r.height / 2);
+      return { champ: !!i, cliquable: !!i && !i.disabled && getComputedStyle(i).pointerEvents !== "none" && x === i, statuts: document.querySelectorAll("#suivi-obj select").length, cases: document.querySelectorAll("#vue .obj-case").length,
+        listes: Array.from(document.querySelectorAll("#vue h2")).filter(h => /objectifs du mois/i.test(h.textContent)).length };
+    });
+    ok("J1 (point 5) : Suivi de la fiche : les 3 objectifs et leurs statuts se modifient ici (champs actifs, page en lecture seule par ailleurs), pas de cases du client, un seul bloc « objectifs du mois »",
+      s.champ && s.cliquable && s.statuts === 3 && s.cases === 0 && s.listes === 1, JSON.stringify(s));
+    const avantN = db.ecritures.length;
+    await page.fill("#obj-0", "Marcher 9 000 pas"); await attendre(page, 2200);
+    const ec = db.ecritures.slice(avantN).filter(e => e.table === "donnees" && e.outil === "programme" && e.user_id === C1);
+    const enBase = db.donnees.find(d => d.user_id === C1 && d.outil === "programme").contenu;
+    ok("J2 (point 5) : un objectif tapé dans Suivi part dans le programme publié du client (une écriture, séances intactes)",
+      ec.length === 1 && enBase.objectifs && enBase.objectifs.liste[0] === "Marcher 9 000 pas" && (enBase.seances || []).length === 4, JSON.stringify({ n: ec.length, o: enBase.objectifs }));
+    await ouvrir(page, C1, "programme", "#pg-publier");
+    const p = await page.evaluate(() => ({ champs: document.querySelectorAll("#obj-0, #obj-st-0").length, lecture: !!document.querySelector("#obj-lecture"), lien: (document.querySelector("#obj-lecture [data-obj-modifier]") || {}).hash || "",
+      texte: (document.querySelector("#obj-lecture") || {}).textContent || "" }));
+    await ouvrir(page, C1, "accueil", "#fc-suivi");
+    const a = await page.evaluate(() => ({ lien: (document.getElementById("fc-obj-modifier") || {}).hash || "", champs: document.querySelectorAll("#obj-0").length }));
+    await ouvrir(page, C1, "bilan", "#bilan-vue");
+    const c = await page.evaluate(() => ({ champs: document.querySelectorAll("#obj-0").length, lien: Array.from(document.querySelectorAll("#bilan-vue a")).filter(x => /\/suivi$/.test(x.hash)).length }));
+    ok("J3 (point 5) : Programme, Aperçu et Préparer le call : objectifs en lecture seule (le nouveau texte affiché) et un lien « Modifier » vers Suivi, aucun champ",
+      p.champs === 0 && p.lecture && /\/suivi$/.test(p.lien) && /Marcher 9 000 pas/.test(p.texte) && /\/suivi$/.test(a.lien) && a.champs === 0 && c.champs === 0 && c.lien >= 1, JSON.stringify({ p, a, c }));
+  });
+
+  /* =================== L. point 9 : en-tête sur ordinateur =================== */
+  await bloc("L. point 9", async () => {
+    const db = base();
+    const mes = [];
+    for (const w of [1200, 1280, 1440]) {
+      const { page } = await contexte(b, COACH, db, { viewport: { width: w, height: 900 } });
+      await page.goto(URL0 + "#/tableau"); await pret(page, "#tb-a-traiter"); await attendre(page, 400);
+      mes.push(await page.evaluate(w => {
+        const t = document.querySelector(".topbar"), n = document.getElementById("nav"), nr = n.getBoundingClientRect();
+        const a = Array.from(n.querySelectorAll("a")), dedans = a.every(x => { const r = x.getBoundingClientRect(); return r.left >= nr.left - 1 && r.right <= nr.right + 1; });
+        const tops = [document.getElementById("brand"), n, document.getElementById("compte")].map(e => Math.round(e.getBoundingClientRect().top + e.getBoundingClientRect().height / 2));
+        return { w, h: Math.round(t.getBoundingClientRect().height), n: a.length, dedans, uneLigne: Math.max(...tops) - Math.min(...tops) <= 6, deborde: n.scrollWidth > n.clientWidth + 1 };
+      }, w));
+    }
+    ok("L1 (point 9) : dès 1200 px, l'en-tête du coach tient sur une ligne (logo, menu, compte), 72 px de haut au plus, et ses 7 entrées sont visibles en entier",
+      mes.every(m => m.n === 7 && m.dedans && m.uneLigne && m.h <= 72 && !m.deborde), JSON.stringify(mes));
+  });
+
+  /* =================== M. point 10 : urgences = action du jour, clients d'abord =================== */
+  await bloc("M. point 10", async () => {
+    const db = base();
+    /* un nouveau prospect inscrit il y a 2 h (DM de bienvenue : urgent) ; Julien (inactif depuis 12 j : à surveiller) ; Thomas (bilan reçu : urgent) */
+    const NV = EXTRA(77);
+    db.profils.push({ id: NV, prenom: "Nina", nom: "Démo", role: "client", statut: "prospect", cree_le: avant(2 * H) });
+    const { page } = await contexte(b, COACH, db);
+    await page.goto(URL0 + "#/tableau"); await pret(page, "#tb-a-traiter"); await attendre(page, 500);
+    const m = await page.evaluate(() => {
+      const lis = sel => Array.from(document.querySelectorAll(sel)).map(li => ({ nom: (li.querySelector("b") || {}).textContent, prospect: !!li.querySelector(".pastille.accent") }));
+      return { urg: lis("#tb-a-traiter > ul.tb-at:not(.tb-surveiller) li"), surv: lis("#tb-a-traiter ul.tb-surveiller li"),
+        bc: (document.querySelector("#tb-t-clients .tb-badge") || {}).textContent, bp: (document.querySelector("#tb-t-prospects .tb-badge") || {}).textContent,
+        total: (document.querySelector("#tb-t-traiter .t-val") || {}).textContent };
+    });
+    const iP = m.urg.findIndex(x => x.prospect), dernierClient = m.urg.map(x => x.prospect).lastIndexOf(false);
+    ok("M1 (point 10) : « À traiter maintenant » : seulement les urgences du jour, les clients d'abord puis les prospects (bilan reçu de Thomas, puis la prospecte inscrite il y a 2 h) ; Julien (inactif) dans « À surveiller » ; badges et total ne comptent que les urgences",
+      m.urg.some(x => x.nom === "Thomas Démo") && m.urg.some(x => x.nom === "Nina Démo" && x.prospect) && iP > dernierClient && !m.urg.some(x => x.nom === "Julien Démo") && m.surv.some(x => x.nom === "Julien Démo")
+        && m.bc === m.urg.filter(x => !x.prospect).length + " urgence" + (m.urg.filter(x => !x.prospect).length > 1 ? "s" : "") && m.bp === m.urg.filter(x => x.prospect).length + " urgence" + (m.urg.filter(x => x.prospect).length > 1 ? "s" : "")
+        && +m.total === m.urg.length, JSON.stringify(m));
+  });
+
+  /* =================== N. point 11 : textes traduits =================== */
+  await bloc("N. point 11", async () => {
+    const dbe = base(); avecPrefsEnTous(dbe);
+    const { page } = await contexte(b, COACH, dbe, { langue: "en" });
+    await ouvrir(page, C1, "programme", "#pg-publier");
+    const t = await page.evaluate(() => ({ tete: (document.querySelector("#vue > .fiche-entete .bandeau-tete strong") || {}).textContent, sortir: (document.getElementById("sortir-fiche") || {}).textContent,
+      pages: Array.from(document.querySelectorAll("#vue > .fiche-entete a.b-act")).map(a => a.textContent.trim()), h1: (document.querySelector("#vue .masthead h1") || {}).textContent,
+      dico: ["Fiche client", "dernier : {d}", "Source", "3. Maintenance"].map(k => Object.prototype.hasOwnProperty.call(I18N.en, k) && !!I18N.en[k]) }));
+    ok("N1 (point 11) : en anglais, l'en-tête de la fiche est traduit (« Thomas Démo's profile », « Back to my clients », « Their program », « Their sessions ») ainsi que « Fiche client », « dernier : {d} », « Source », « 3. Maintenance »",
+      t.tete === "Thomas Démo's profile" && t.sortir === "Back to my clients" && JSON.stringify(t.pages) === '["Their program","Their sessions"]' && t.h1 === "Their program" && t.dico.every(Boolean), JSON.stringify(t));
   });
 
   /* =================== Z. console, hôtes externes =================== */

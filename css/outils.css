@@ -1136,3 +1136,5 @@ input[type=checkbox]:focus-visible,input[type=radio]:focus-visible{outline:2px s
 /* v104 (point 10) : « À surveiller » sous les urgences du tableau de bord (point gris : rien d'urgent) */
 .point.neutre{background:var(--ink-3)}
 .tb-sur2{margin-top:18px}
+/* v104 (point 5) : sur téléphone, les 3 objectifs du mois (onglet Suivi de la fiche) l'un sous l'autre : le texte n'est plus coupé */
+@media (max-width:560px){ .obj-coach .grid.g3{grid-template-columns:1fr} }

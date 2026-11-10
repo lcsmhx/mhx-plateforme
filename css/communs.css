@@ -575,7 +575,7 @@ body.figee{overflow:hidden}
 #tb-nouveaux .tb-nv-tel{margin-left:auto}
 /* v104 (point 9) : l'en-tête sur ordinateur est plus bas. De 721 à 1199 px : deux lignes (logo et compte, puis le menu) au lieu
    de trois ; dès 1200 px : UNE ligne (logo, menu, compte), les 7 entrées du coach visibles en entier (entrées un peu plus
-   serrées ; le nom « … · coach » se cache sous 1440 px, il reste dans Réglages) */
+   serrées ; le nom « … · coach » se cache, il reste dans Réglages) */
 @media (min-width:721px){
   .topbar .wrap{row-gap:6px;padding-top:8px;padding-bottom:8px}
   .topbar .brand{order:0} .topbar .compte{order:1} .topbar .nav{order:2;flex:1 1 100%}
@@ -587,4 +587,4 @@ body.figee{overflow:hidden}
   .topbar .compte{order:2;flex:none;margin-left:0}
   .topbar .nav a{padding:7px 10px;gap:6px;font-size:13.5px}
 }
-@media (min-width:1200px) and (max-width:1439px){ .topbar .compte .qui{display:none} }
+@media (min-width:1200px){ .topbar .compte .qui{display:none} }
