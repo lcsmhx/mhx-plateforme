@@ -1735,3 +1735,20 @@ Object.assign(I18N.en, {
   "{z} : entre 10 et 250 cm, vérifie la saisie.": "{z}: must be between 10 and 250 cm, check your entry."
 });
 /* v102-robustesse-fin */
+/* v104-supprimer-acces : les messages de la fonction serveur supprimer-acces (Profil > Supprimer mon compte, via e.message) ;
+   « Les photos n'ont pas pu être effacées… » : celui de la version en ligne, tant que la nouvelle n'est pas déployée */
+Object.assign(I18N.en, {
+  "Suppression interrompue : le compte n'est pas supprimé, mais une partie des photos a pu être effacée. Réessaie.": "Deletion interrupted: the account isn't deleted, but some of the photos may have been erased. Try again.",
+  "Les brouillons du coach n'ont pas pu être mis à jour : rien n'a été supprimé. Réessaie.": "The coach's drafts couldn't be updated: nothing was deleted. Try again.",
+  "Les brouillons du coach n'ont été mis à jour qu'en partie : le compte n'est pas supprimé. Réessaie.": "The coach's drafts were only partly updated: the account isn't deleted. Try again.",
+  "Les photos n'ont pas pu être effacées : rien n'a été supprimé. Réessaie.": "The photos couldn't be erased: nothing was deleted. Try again.",
+  "Méthode non autorisée.": "Method not allowed.",
+  "Il faut être connecté.": "You need to be signed in.",
+  "Session invalide.": "Invalid session.",
+  "Compte introuvable.": "Account not found.",
+  "Seul un coach peut supprimer un autre compte.": "Only a coach can delete another account.",
+  "C'est le dernier compte coach : il ne peut pas être supprimé.": "This is the last coach account: it can't be deleted.",
+  "Confirmation manquante.": "Confirmation missing.",
+  "Suppression incomplète.": "Deletion incomplete."
+});
+/* v104-supprimer-acces-fin */

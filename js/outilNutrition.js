@@ -123,6 +123,8 @@ const BrouillonRepas = Object.assign(Object.create(BrouillonProg), {
 });
 
 Store.fusions.brouillons_repas = (base, copie) => BrouillonRepas.fusionnerEntrees(base, copie);   // v102
+/* v104 : fusionner, fusionnerEntrees et marqueServeur viennent de BrouillonProg : ici aussi, la marque posée par le serveur
+   (compte du client supprimé) gagne toujours sur la saisie de la page */
 
 const outilNutrition = {
   id: "nutrition",

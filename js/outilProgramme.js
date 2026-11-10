@@ -669,6 +669,9 @@ const BrouillonProg = {
     if (base && Forme.objet(base.clients)){
       Object.keys(D.clients).forEach(k => { if (k !== uid) delete D.clients[k]; });
       Object.keys(base.clients).forEach(k => { if (k !== uid) D.clients[k] = base.clients[k]; });
+      /* v104 : le compte de ce client a été supprimé pendant la saisie (marque du serveur) : la marque reste, la saisie de
+         la page ne fait pas revenir son brouillon */
+      if (this.marqueServeur(base.clients[uid])) D.clients[uid] = base.clients[uid];
     }
     if (Store.ecrire(this.cle, D, { chezMoi: true }) === false) return false;
     Store.envoyerCle(this.cle, moi);   // déjà attendu 700 ms : part tout de suite
@@ -677,6 +680,8 @@ const BrouillonProg = {
   /* v102 : un brouillon retiré (annulé, publié, identique au publié) laisse une marque datée, sans programme (entree() l'ignore) :
      une copie plus ancienne rejouée plus tard (autre appareil, hors ligne) ne le fait pas revenir */
   tombe(){ const m = new Date().toISOString(); return { retire_le: m, ecrit_le: m, appareil: this.appareil }; },
+  /* v104 : la marque posée par la fonction supprimer-acces (compte du client supprimé) : définitive, elle gagne toujours */
+  marqueServeur(e){ return !!(Forme.objet(e) && e.appareil === "serveur" && !e.programme); },
   /* v102 : réunit deux documents de brouillons ENTRÉE PAR ENTRÉE (le plus récent écrit de chaque client gagne) ; les marques de
      retrait de plus de 30 jours disparaissent. Sert à la reprise d'une copie gardée sur l'appareil (Store.reprendre,
      Store.copieAServir) : jamais plus un document entier rejoué par-dessus les brouillons faits ailleurs. */
@@ -685,7 +690,10 @@ const BrouillonProg = {
     const limite = new Date(Date.now() - 30 * 86400000).toISOString();
     new Set(Object.keys(b).concat(Object.keys(c))).forEach(k => {
       const x = b[k], y = c[k];
-      const e = !Forme.objet(x) ? y : !Forme.objet(y) ? x : (String(y.ecrit_le || "") > String(x.ecrit_le || "") ? y : x);
+      const sx = this.marqueServeur(x), sy = this.marqueServeur(y);
+      const e = !Forme.objet(x) ? y : !Forme.objet(y) ? x
+        : sx !== sy ? (sx ? x : y)   // v104 : une marque du serveur gagne quel que soit ecrit_le (compte supprimé)
+        : (String(y.ecrit_le || "") > String(x.ecrit_le || "") ? y : x);
       if (!Forme.objet(e)) return;
       if (e.retire_le && !e.programme && String(e.retire_le) < limite) return;
       out.clients[k] = e;

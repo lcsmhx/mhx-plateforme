@@ -210,12 +210,17 @@ const effacements = b => b.appels.filter(a => /^DELETE /.test(a));
 
   await bloc("H. le reste de la fonction inchangé", async () => {
     const neuf = fs.readFileSync(NOUVELLE, "utf8"), vieux = fs.readFileSync(EN_LIGNE, "utf8");
-    /* la nouvelle version = la version en ligne + l'en-tête v103 + retirerDesBrouillons + son appel : rien d'autre */
+    /* la nouvelle version = la version en ligne + l'en-tête v103 + retirerDesBrouillons + son appel : rien d'autre.
+       v104 (adapté) : Lucas a demandé de changer le message des photos et d'ajouter une seconde passe après l'effacement :
+       ces deux changements v104 (et leur en-tête) sont aussi retirés avant la comparaison ; tout le reste doit être identique */
     const sans = neuf
+      .replace(/\n   v104 \(relecture de la v103[\s\S]*?d'échec exacts\.\n/, "")
+      .replace(/    \/\* v104 : message exact[\s\S]*?\n    return repondre\(\{ erreur: "Suppression interrompue[^\n]*/, '    return repondre({ erreur: "Les photos n\'ont pas pu être effacées : rien n\'a été supprimé. Réessaie." }, 500);')
+      .replace(/\n  \/\* v104 : seconde passe[\s\S]*?catch \{ \/\* au mieux \*\/ \}/, "")
       .replace(/\n\n   v103 \(décision de Lucas[\s\S]*?LISEZMOI\.md de ce dossier\.\n/, "\n")
       .replace(/\/\* v103 — Le coach prépare[\s\S]*?\n}\n\n(?=Deno\.serve)/, "")
       .replace(/\n  \/\* v103 : les brouillons du coach pour ce compte[\s\S]*?\n  }\n(?=\n  \/\* v41 : les photos)/, "");
-    ok("H1 : en dehors de l'ajout v103, le fichier est exactement la version en ligne (rien d'autre n'a changé)", sans === vieux,
+    ok("H1 : en dehors des ajouts v103 et v104, le fichier est exactement la version en ligne (rien d'autre n'a changé)", sans === vieux,
       (() => { const a = sans.split("\n"), c = vieux.split("\n"); const i = a.findIndex((x, k) => x !== c[k]); return "ligne " + (i + 1) + " : " + a[i] + " ≠ " + c[i]; })());
   });
 
