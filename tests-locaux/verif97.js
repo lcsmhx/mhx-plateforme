@@ -269,6 +269,8 @@ const publier = async (page, choix) => {
 };
 const regimeCle = { "Omnivore": "omnivore", "Végétarien": "vegetarien", "Végétalien (vegan)": "vegan", "Pescétarien": "pescetarien", "Paléo": "paleo", "Sans gluten": "sans_gluten", "Sans lactose": "sans_lactose", "Sans porc ni alcool": "sans_porc" };
 
+/* v102 : un brouillon retiré laisse une marque datée sans programme (retire_le) : « aucun brouillon » = pas d'entrée ou cette marque */
+const sansBrouillon = (B, k) => !B || !B.clients || !B.clients[k] || !B.clients[k].programme;
 (async () => {
   await new Promise((r, k) => { server.once("error", e => k(new Error(e && e.code === "EADDRINUSE" ? "port " + PORT + " déjà pris (une autre suite tourne ?) : VERIF97_PORT=10103 node verif97.js ../index.html" : String(e)))); server.listen(PORT, r); });
   const b = await chromium.launch();
@@ -315,13 +317,13 @@ const regimeCle = { "Omnivore": "omnivore", "Végétarien": "vegetarien", "Vég�
     ok("B2 : rechargement : le brouillon revient", gr === String(g0 + 5) && /Brouillon non publié/.test(await statut(co) || ""), gr);
     await co.click("#nu-annuler-brouillon"); await attendre(co, 300);
     await toucherFenetre(co, "Annuler le brouillon");
-    await attendreB(db, B => !B.clients[C1]); await attendre(co, 300);
+    await attendreB(db, B => sansBrouillon(B, C1)); await attendre(co, 300);
     ok("B3 : « Annuler le brouillon » : retiré, la version publiée revient, rien chez le client", (await co.evaluate(() => (document.querySelector("[data-gr]") || {}).value)) === String(g0) && ecr(db, "repas").length === 0 && /Publié/.test(await statut(co) || ""), "");
     await changerGr(co, 10);
     await attendreB(db, B => B.clients && B.clients[C1]);
     const h0 = ecr(db, "hist_repas").length;
     const r = await publier(co);
-    await attendreB(db, B => !B.clients[C1]);
+    await attendreB(db, B => sansBrouillon(B, C1));
     const R = publiee(db), H = db.donnees.find(x => x.user_id === C1 && x.outil === "hist_repas").contenu;
     ok("B4 : la fenêtre « Publier » prévient (liste de courses et repas cochés à zéro) ; « Publié » ; une seule écriture de la diète, datée (maj, publie_le) ; l'ancienne semaine dans l'historique ; brouillon retiré",
       /sa liste de courses et ses repas cochés repartiront de zéro/.test(r.modale || "") && /^Publié/.test(r.msg || "") && ecr(db, "repas").length === 1 && R.jours[0].repas[0].ingredients[0].grammes === g0 + 10 && !!R.maj && !!R.publie_le

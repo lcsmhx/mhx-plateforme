@@ -263,6 +263,8 @@ const publier = async (page) => {
 };
 const champ = (si, ei, f) => `[data-f="${f}"][data-s="${si}"][data-e="${ei}"]`;
 
+/* v102 : un brouillon retiré laisse une marque datée sans programme (retire_le) : « aucun brouillon » = pas d'entrée ou cette marque */
+const sansBrouillon = (B, k) => !B || !B.clients || !B.clients[k] || !B.clients[k].programme;
 (async () => {
   await new Promise((r, k) => { server.once("error", e => k(new Error(e && e.code === "EADDRINUSE" ? "port " + PORT + " déjà pris (une autre suite tourne ?) : VERIF96_PORT=10099 node verif96.js ../index.html" : String(e)))); server.listen(PORT, r); });
   const b = await chromium.launch();
@@ -318,15 +320,15 @@ const champ = (si, ei, f) => `[data-f="${f}"][data-s="${si}"][data-e="${ei}"]`;
       (await co.inputValue(champ(0, 0, "series"))) === "5" && /Brouillon non publié/.test(await statut(co) || ""), await co.inputValue(champ(0, 0, "series")));
     await co.click("#pg-annuler-brouillon"); await attendre(co, 300);
     const m = await fenetre(co); await toucherFenetre(co, "Annuler le brouillon");
-    await attendreBrouillon(db, B => !B.clients[C1]); await attendre(co, 300);
+    await attendreBrouillon(db, B => sansBrouillon(B, C1)); await attendre(co, 300);
     ok("B4 : « Annuler le brouillon » (avec confirmation) : le brouillon de ce client est retiré, l'éditeur montre la version publiée, « ✓ Publié », rien chez le client",
-      /Tes changements non publiés seront perdus/.test(m || "") && !brouillons(db).clients[C1] && (await co.inputValue(champ(0, 0, "series"))) === "4" && /Publié/.test(await statut(co) || "") && ecr(db, "programme").length === 0, JSON.stringify([m, brouillons(db)]));
+      /Tes changements non publiés seront perdus/.test(m || "") && sansBrouillon(brouillons(db), C1) && (await co.inputValue(champ(0, 0, "series"))) === "4" && /Publié/.test(await statut(co) || "") && ecr(db, "programme").length === 0, JSON.stringify([m, brouillons(db)]));
     /* publier : l'ancien dans l'historique, le nouveau d'un coup, le brouillon retiré */
     await co.fill(champ(0, 0, "reps"), "6-8");
     await attendreBrouillon(db, B => B.clients && B.clients[C1]);
     const avantHist = ecr(db, "hist_programme").length;
     const r = await publier(co);
-    await attendreBrouillon(db, B => !B.clients[C1]); await attendre(co, 300);
+    await attendreBrouillon(db, B => sansBrouillon(B, C1)); await attendre(co, 300);
     const P = publie(db), H = db.donnees.find(x => x.user_id === C1 && x.outil === "hist_programme").contenu;
     ok("B5 : « Publier les changements » : « Publié. … » ; une seule écriture du programme (tout ou rien) avec la modification, sa date et un identifiant fixe par séance ; l'ancien bloc entre dans l'historique ; le brouillon est retiré ; « ✓ Publié »",
       r.msg === "Publié. Ton client voit la nouvelle version dès sa prochaine ouverture." && ecr(db, "programme").length === 1 && P.seances[0].exercices[0].reps === "6-8" && !!P.maj
@@ -379,7 +381,7 @@ const champ = (si, ei, f) => `[data-f="${f}"][data-s="${si}"][data-e="${ei}"]`;
     await attendre(co, 2500);
     const B = brouillons(db) || { clients: {} };
     ok("B13 : saisie dans la fiche d'un client puis changement de fiche dans la seconde : le brouillon reste rangé pour CE client (9 séries), rien chez l'autre, rien de publié",
-      !!B.clients[C1] && B.clients[C1].programme.seances[0].exercices[0].series === "9" && !B.clients[C2] && ecr(db, "programme").length === 0, JSON.stringify(Object.keys(B.clients || {})));
+      !sansBrouillon(B, C1) && B.clients[C1].programme.seances[0].exercices[0].series === "9" && sansBrouillon(B, C2) && ecr(db, "programme").length === 0, JSON.stringify(Object.keys(B.clients || {})));
   });
 
   /* =================== C. le « ✓ notée » ne glisse jamais =================== */
@@ -506,14 +508,14 @@ const champ = (si, ei, f) => `[data-f="${f}"][data-s="${si}"][data-e="${ei}"]`;
     await p1.fill(champ(0, 0, "series"), "5"); await attendre(p1, 1800);
     const B = brouillons(db) || { clients: {} };
     ok("G1 : deux appareils, deux clients : le brouillon fait sur l'un (client 2) reste quand l'autre page (ouverte avant) écrit celui du client 1",
-      !!B.clients[C1] && !!B.clients[C2] && B.clients[C1].programme.seances[0].exercices[0].series === "5" && B.clients[C2].programme.seances[0].exercices[0].series === "7", JSON.stringify(Object.keys(B.clients)));
+      !sansBrouillon(B, C1) && !sansBrouillon(B, C2) && B.clients[C1].programme.seances[0].exercices[0].series === "5" && B.clients[C2].programme.seances[0].exercices[0].series === "7", JSON.stringify(Object.keys(B.clients)));
     /* G2 : le client 2 est publié sur l'autre page ; la page du client 1 (qui avait lu l'ancien brouillon du client 2) publie : pas de brouillon fantôme */
     await publier(p2); await attendre(p2, 1500);
     await p1.fill(champ(0, 0, "reps"), "6-8"); await attendre(p1, 900);
     await publier(p1); await attendre(p1, 1800);
     const B2 = brouillons(db) || { clients: {} };
     ok("G2 : après les deux publications, plus aucun brouillon (aucun brouillon fantôme du client 2 remis par la page du client 1)",
-      !B2.clients[C1] && !B2.clients[C2] && publie(db, C2).seances[0].exercices[0].series === "7" && publie(db).seances[0].exercices[0].reps === "6-8", JSON.stringify(Object.keys(B2.clients)));
+      sansBrouillon(B2, C1) && sansBrouillon(B2, C2) && publie(db, C2).seances[0].exercices[0].series === "7" && publie(db).seances[0].exercices[0].reps === "6-8", JSON.stringify(Object.keys(B2.clients)));
     /* G3 / G4 : un téléphone resté sur l'ancienne version note une séance APRÈS la publication qui a posé les identifiants
        (sans sid, par sa place du moment) : le « ✓ notée » reste sur la séance qu'il a notée */
     const hier = new Date(T0 - J).toISOString().slice(0, 10);

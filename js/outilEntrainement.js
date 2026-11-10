@@ -69,6 +69,7 @@ const outilEntrainement = {
       seances: Array.from({length: cfg.nb_seances}, (_,i) => self.nouvelleSeance(i)),
       historique: []
     });
+    if (Store.nonLus.has(D)){ if (courant === "entrainement") pageHorsLigne(null); return; }   // v102 : « Pas de connexion », pas un journal vide
     const sauver = () => Store.ecrire(self.cle, D);
 
     const derniereSeance = si => {

@@ -223,15 +223,19 @@ const Auth = {
      verifie d'abord que l'appelant est bien un coach. */
   async creerAcces(email, motdepasse, prenom, nom, role){
     await this.assurer();   // v86 (lot 1) : un jeton qui expire (téléphone en veille) est d'abord renouvelé, comme pour les photos
-    const r = await fetch(CONFIG.supabase.url + "/functions/v1/creer-acces", {
+    /* v102 : une coupure donne un message français (drapeau reseau) et la demande s'arrête après 15 s */
+    const ctl = typeof AbortController !== "undefined" ? new AbortController() : null, minuteur = ctl ? setTimeout(() => ctl.abort(), 15000) : null;
+    let r;
+    try { r = await fetch(CONFIG.supabase.url + "/functions/v1/creer-acces", {
       method: "POST",
       headers: {
         "apikey": CONFIG.supabase.cle,
         "Authorization": "Bearer " + ((this.session && this.session.access_token) || ""),
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ email, motdepasse, prenom, nom, role: role || "client" })
-    });
+      body: JSON.stringify({ email, motdepasse, prenom, nom, role: role || "client" }),
+      signal: ctl ? ctl.signal : undefined
+    }); } catch(e){ throw Object.assign(new Error("Pas de connexion"), { reseau: true }); } finally { clearTimeout(minuteur); }
     let d = null;
     try { d = await r.json(); } catch(e){}
     if (!r.ok) throw new Error((d && d.erreur) || "Création impossible : vérifie ta connexion et réessaie.");
@@ -313,15 +317,19 @@ const Auth = {
      protege que ceux qui passent par l'ecran. */
   async supprimerCompte(id, confirmation){
     await this.assurer();   // v86 (lot 1) : un jeton qui expire est d'abord renouvelé (sinon « Session expirée » trompeur)
-    const r = await fetch(CONFIG.supabase.url + "/functions/v1/supprimer-acces", {
+    /* v102 : une coupure donne un message français (drapeau reseau) et la demande s'arrête après 15 s */
+    const ctl = typeof AbortController !== "undefined" ? new AbortController() : null, minuteur = ctl ? setTimeout(() => ctl.abort(), 15000) : null;
+    let r;
+    try { r = await fetch(CONFIG.supabase.url + "/functions/v1/supprimer-acces", {
       method: "POST",
       headers: {
         "apikey": CONFIG.supabase.cle,
         "Authorization": "Bearer " + ((this.session && this.session.access_token) || ""),
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ id: id || undefined, confirmation: confirmation })
-    });
+      body: JSON.stringify({ id: id || undefined, confirmation: confirmation }),
+      signal: ctl ? ctl.signal : undefined
+    }); } catch(e){ throw Object.assign(new Error("Pas de connexion"), { reseau: true }); } finally { clearTimeout(minuteur); }
     let d = null;
     try { d = await r.json(); } catch(e){}
     if (!r.ok) throw new Error((d && d.erreur) || "Suppression impossible : vérifie ta connexion et réessaie. Si ça recommence, écris à ton coach.");
@@ -889,6 +897,24 @@ const Store = {
      (une lecture plus ancienne qui reussit apres coup remet charge[k] a true) */
   nonLus: new WeakSet(),
 
+  /* v102 : clé → fonction (base, copie) qui réunit une copie gardée sur l'appareil avec la base au lieu de la rejouer telle quelle
+     (brouillons des programmes et des diètes : un document pour tous les clients) ; fusionEnAttente(clé) : une saisie de cette
+     clé attend encore sa propre fusion (rien n'est rejoué pendant ce temps) */
+  fusions: {},
+  fusionEnAttente: null,
+  /* v102 : une copie passe par sa fusion seulement si la clé en a une ; pour « programme », seulement la copie des objectifs
+     (marque o) : une copie entière d'une ancienne version de l'app garde la règle d'avant (la plus récente gagne) */
+  aFusionner(cle, e){
+    if (!Object.prototype.hasOwnProperty.call(this.fusions, cle)) return false;
+    return cle !== "programme" || !!(e && e.o === 1);
+  },
+  /* v102 (relecture 2) : une copie d'objectifs (marque o) plus ancienne que la ligne en base (ou du même instant : déjà arrivée)
+     ne passe jamais : des objectifs posés ensuite ailleurs ne sont pas remplacés par de vieux objectifs tapés hors ligne */
+  copieDepassee(cle, e, ligne){
+    if (cle !== "programme" || !e || e.o !== 1 || !ligne || !ligne.maj_le) return false;
+    const ts = new Date(e.t).getTime(), m = new Date(ligne.maj_le).getTime();
+    return isNaN(ts) || (!isNaN(m) && !(m < ts));
+  },
   cible(){ return this.idConsulte || (Auth.utilisateur() && Auth.utilisateur().id); },
   lectureSeule(){ return !!this.idConsulte; },
   boite(uid){ const k = uid || "_"; return this.boites[k] || (this.boites[k] = {}); },
@@ -936,6 +962,10 @@ const Store = {
     const u = Auth.utilisateur(), e = this.attenteLire()[uid + "|" + cle];
     if (!u || !u.id || !e || e.a !== u.id || typeof e.t !== "string" || !Forme.objet(e.v)) return null;
     if (Sante.bloque(cle, e.v)) return null;
+    if (this.aFusionner(cle, e)){   // v102
+      if (this.copieDepassee(cle, e, ligne)) return null;
+      return Object.assign({}, e, { v: this.fusions[cle](ligne && ligne.contenu, e.v) });
+    }
     const ts = new Date(e.t).getTime(), m = ligne && ligne.maj_le;
     if (isNaN(ts)) return null;
     if (m && !(new Date(m).getTime() < ts)) return null;   // la base a aussi recent (copie deja arrivee) ou plus recent
@@ -1019,10 +1049,11 @@ const Store = {
     } catch(e){}
     return out;
   },
-  garder(uid, cle, valeur){
+  /* v102 : « marque » (facultatif) s'ajoute à l'entrée (jamais au contenu) : { o: 1 } = copie des seuls objectifs du mois */
+  garder(uid, cle, valeur, marque){
     const u = Auth.utilisateur(), t = new Date().toISOString();
     if (!u || !u.id) return t;
-    try { Auth.magasin().setItem(this.PREFIXE_ATTENTE + uid + "|" + cle, JSON.stringify({ a: u.id, t: t, v: valeur })); } catch(e){}   // appareil plein ou stockage interdit : comme avant la v48
+    try { Auth.magasin().setItem(this.PREFIXE_ATTENTE + uid + "|" + cle, JSON.stringify(Object.assign({}, marque || {}, { a: u.id, t: t, v: valeur }))); } catch(e){}   // appareil plein ou stockage interdit : comme avant la v48
     return t;
   },
   aUneCopie(uid, cle){ try { return !!Auth.magasin().getItem(this.PREFIXE_ATTENTE + uid + "|" + cle); } catch(e){ return false; } },
@@ -1127,6 +1158,24 @@ const Store = {
         /* ecrite par un autre compte sur cet appareil : jamais envoyee ; retiree seulement au demarrage */
         if (e.a !== u.id){ if (auDemarrage) this.lacher(uid, cle); continue; }
         if (Sante.bloque(cle, e.v)) continue;   // v64 (B) : attend l'accord sante (ni lecture ni envoi ; pas de nouvelle reprise pour elle)
+        /* v102 : brouillons (un document pour tous les clients) : jamais rejoués tels quels ; la copie est réunie à la base relue,
+           entrée par entrée (la plus récente de chaque client gagne), puis envoyée ; rien pendant une saisie qui attend sa fusion */
+        if (this.aFusionner(cle, e)){
+          if (cle !== "programme" && uid !== u.id){ continue; }
+          if (typeof this.fusionEnAttente === "function" && this.fusionEnAttente(cle)){ reste = true; continue; }
+          try {
+            const r = await Auth.appel("/rest/v1/donnees?user_id=eq." + uid + "&outil=eq." + encodeURIComponent(cle) + "&select=contenu,maj_le");
+            const cur = this.attenteLire()[k];
+            if (!cur || cur.t !== e.t || this.attente[k]){ if (cur && cur.t !== e.t) reste = true; continue; }
+            if (this.copieDepassee(cle, e, r && r[0])){ this.lacher(uid, cle, e.t); continue; }   // v102 : la base a plus récent
+            const v = this.fusions[cle](r && r[0] && r[0].contenu, e.v);
+            if (r && r[0] && JSON.stringify(v) === JSON.stringify(r[0].contenu)){ this.lacher(uid, cle, e.t); continue; }   // rien de neuf
+            if (!v){ this.lacher(uid, cle, e.t); continue; }
+            await this.envoyer(cle, v, uid, e.t, false, true);
+            if (this.attenteLire()[k]) reste = true;
+          } catch(err){ reste = true; }
+          continue;
+        }
         try {
           const r = await Auth.appel("/rest/v1/donnees?user_id=eq." + uid + "&outil=eq." + encodeURIComponent(cle) + "&select=maj_le");
           const m = r && r[0] && r[0].maj_le;
@@ -1761,7 +1810,7 @@ function initSauvegarde(){
       location.hash = ""; location.reload();
     } catch(e){
       sup.disabled = false;
-      flashFixe("sv-suppr-msg", e.message || "Suppression impossible : vérifie ta connexion et réessaie. Si ça recommence, écris à ton coach.");
+      flashFixe("sv-suppr-msg", e && e.reseau ? "Suppression impossible : vérifie ta connexion et réessaie. Si ça recommence, écris à ton coach." : (e.message || "Suppression impossible : vérifie ta connexion et réessaie. Si ça recommence, écris à ton coach."));
     }
   });
 

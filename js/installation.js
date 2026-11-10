@@ -240,7 +240,7 @@ function bandeauInstallation(){
     <p>Tu l'ouvres d'un doigt, elle s'affiche en plein écran, et tu n'as plus à retenir l'adresse.</p>
     <ol id="inst-etapes">${suite ? I.etapesSuite(ios) : ios ? etapesIOS() : etapesAndroid()}</ol>
     <p class="note" style="margin:0 0 12px">
-      <button type="button" class="lien-bouton" id="inst-bascule">${ios ? "Je suis sur Android ou ordinateur" : "Je suis sur iPhone"}</button>
+      <button type="button" class="lien-bouton" id="inst-bascule">${esc(trad(ios ? "Je suis sur Android ou ordinateur" : "Je suis sur iPhone"))}</button>
     </p>
     <div class="actions">
       <button class="btn" id="inst-fait">C'est fait</button>
@@ -273,7 +273,7 @@ function brancherInstallation(){
     ios = !ios;
     if (ici){ Integre.basculer(ici, ios); bascule.textContent = ios ? "Je suis sur Android" : "Je suis sur iPhone"; return; }
     $("inst-etapes").innerHTML = suite ? Integre.etapesSuite(ios) : ios ? etapesIOS() : etapesAndroid();
-    bascule.textContent = ios ? "Je suis sur Android ou ordinateur" : "Je suis sur iPhone";
+    bascule.textContent = trad(ios ? "Je suis sur Android ou ordinateur" : "Je suis sur iPhone");
   });
 
   const fait = $("inst-fait");

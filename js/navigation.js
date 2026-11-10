@@ -21,15 +21,19 @@ const CodeCoach = {
   async assurer(){
     try { localStorage.setItem(this.CLE, "1"); } catch(e){}
     const l = this.absents();
+    let manque = 0;
     for (const f of l){
       await new Promise(fini => {
         const s = document.createElement("script");
+        const fin = ok => { clearTimeout(m); if (!ok) manque++; fini(); };
+        const m = setTimeout(() => fin(false), 10000);   // v102 : 10 s au plus par fichier (le démarrage ne reste jamais bloqué)
         s.src = f + "?v=" + (typeof MHX_FICHIERS !== "undefined" ? MHX_FICHIERS : "");
-        s.async = false; s.onload = fini; s.onerror = fini;
+        s.async = false; s.onload = () => fin(true); s.onerror = () => fin(false);
         document.body.appendChild(s);
       });
     }
     if (l.length) OUTILS.splice(0, OUTILS.length, ...listeOutils());
+    if (manque) setTimeout(() => { try { UI.toast("Une partie de ton espace n'a pas pu se charger (connexion) : recharge la page.", "attention", 9000); } catch(e){} }, 800);
   }
 };
 

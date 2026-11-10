@@ -179,7 +179,7 @@ const outilAtelier = {
           remplirCharger();
           flash("pg-msg", existe ? "Programme remplacé dans ta base." : "Programme ajouté à ta base. Tu le retrouves dans « prêts à l'emploi » sur la fiche de n'importe quel client.");
         } catch(e){
-          if (base.isConnected) flashFixe("pg-msg", "Enregistrement impossible : " + (e.message || "erreur inconnue") + ". Vérifie ta connexion et réessaie.");
+          if (base.isConnected) flashFixe("pg-msg", messageEchec("Enregistrement impossible", e));
         }
         base.disabled = false;
       });
@@ -227,7 +227,8 @@ const outilMesProgrammes = {
     let l = null;
     try { l = await Catalogue.programmes(); } catch(e){ l = null; }
     if (!zone.isConnected) return;
-    if (!Array.isArray(l)){ pageHorsLigne(zone); return; }
+    /* v102 : la liste lue en base, pas un repli vide ou les fichiers de secours : sinon « Pas de connexion » */
+    if (!Array.isArray(l) || !(Catalogue._c && Catalogue._c.programmes_types === l)){ pageHorsLigne(zone); return; }
     const nbExos = p => (p.seances || []).reduce((n, s) => n + ((s.exercices || []).filter(e => e && e.nom).length), 0);
     zone.innerHTML = `<section class="panel"><h2>${esc(trad("Ma base"))} <span class="pastille">${fmt(l.length)}</span></h2>
       <p class="note" style="margin-top:0">${esc(trad("Ces programmes sont proposés dans « Programmes prêts à l'emploi », sur la fiche de chaque client. « Modifier » et « Dupliquer » les reprennent dans « Mes séances » : enregistre-les ensuite dans ta base."))}</p>
