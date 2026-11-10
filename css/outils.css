@@ -1126,3 +1126,10 @@ input[type=checkbox]:focus-visible,input[type=radio]:focus-visible{outline:2px s
 /* v104 (point 5) : les objectifs du mois se modifient dans l'onglet Suivi de la fiche (page en lecture seule par ailleurs) */
 .lecture-seule .panel.obj-coach input,.lecture-seule .panel.obj-coach select{pointer-events:auto;opacity:1}
 .fc-actifs{color:var(--ink-2)}
+/* v104 (point 8) : tous les boutons « × » (supprimer, retirer) font au moins 44 × 44 px et sont séparés des autres boutons
+   (un écart et un trait avant eux) : on ne supprime plus en visant « dupliquer » ou « descendre » */
+.del,.g-edit .del,.fo-x{min-width:var(--h-toucher);min-height:var(--h-toucher);display:inline-flex;align-items:center;justify-content:center;font-size:18px}
+.outils-ex .del,.seance-tete > .del{margin-left:12px;position:relative}
+.outils-ex .del::before,.seance-tete > .del::before{content:"";position:absolute;left:-7px;top:8px;bottom:8px;border-left:1px solid var(--line-strong)}
+.g-edit{display:inline-flex;align-items:center;gap:4px}
+.g-edit .del{margin-left:8px;padding:0}
