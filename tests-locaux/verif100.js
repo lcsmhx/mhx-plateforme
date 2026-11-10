@@ -42,6 +42,9 @@ async function bloc(nom, fn){
 
 /* ---------- dates ---------- */
 const T0 = (() => { const d = new Date(); d.setHours(12, 0, 0, 0); return d.getTime(); })(), H = 3600000, J = 86400000;
+/* le lundi de cette semaine à midi : les relevés de la v99 (blocs C et D) ont été faits un lundi (« Lundi aujourd'hui » sur
+   #/nutrition et #/repas) ; sans cela le bloc C échouerait du mardi au dimanche */
+const LUNDI0 = (() => { const d = new Date(T0); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return d.getTime(); })();
 const avant = ms => new Date(T0 - ms).toISOString();
 const clone = x => x === undefined ? undefined : JSON.parse(JSON.stringify(x));
 const norm = t => String(t == null ? "" : t).replace(/[  ]/g, " ").replace(/\s+/g, " ").trim();
@@ -198,7 +201,7 @@ async function contexte(b, who, db, opts){
       if (langue) localStorage.setItem("mhx_langue", langue);
     }
   }, { s: who ? who.session : null, langue: opts.langue || "" });
-  await c.clock.install({ time: T0 });
+  await c.clock.install({ time: opts.time || T0 });
   const page = surveiller(await c.newPage());
   return { c, page };
 }
@@ -292,7 +295,7 @@ const prospect = db => { db.profils.find(p => p.id === C3).statut = "prospect"; 
     const parent = { "#/journal": "Mon programme", "#/complements": "Nutrition", "#/calculateur": "Nutrition" };
     for (const a of Object.keys(AVANT_CLIENT)) {
       const db = base();
-      const { page, c } = await contexte(b, THOMAS, db);
+      const { page, c } = await contexte(b, THOMAS, db, { time: LUNDI0 });
       await page.goto(URL0 + a); await pret(page); await attendre(page, 1800);
       const r = await releve(page), v = AVANT_CLIENT[a], m = parent[a] ? await marque(page) : null;
       ok("C : " + a + " ouvre la même page qu'avant (" + v.courant + ")" + (parent[a] ? " et marque « " + parent[a] + " »" : ""),
@@ -307,7 +310,7 @@ const prospect = db => { db.profils.find(p => p.id === C3).statut = "prospect"; 
     const diffs = [];
     for (const a of Object.keys(AVANT_PROSPECT)) {
       const db = base(); const who = prospect(db);
-      const { page, c } = await contexte(b, who, db);
+      const { page, c } = await contexte(b, who, db, { time: LUNDI0 });
       await page.goto(URL0 + a); await pret(page); await attendre(page, 1800);
       const r = await releve(page), v = AVANT_PROSPECT[a];
       if (!(r.courant === v.courant && JSON.stringify(r.titres) === JSON.stringify(v.titres) && JSON.stringify(r.ids) === JSON.stringify(sansIds(v.ids)) && JSON.stringify(r.nav) === JSON.stringify(v.nav) && JSON.stringify(r.bas) === JSON.stringify(v.bas))) diffs.push(a);
@@ -316,7 +319,7 @@ const prospect = db => { db.profils.find(p => p.id === C3).statut = "prospect"; 
     ok("D1 : un prospect : les " + Object.keys(AVANT_PROSPECT).length + " adresses montrent exactement la même page et le même menu qu'avant", diffs.length === 0, JSON.stringify(diffs));
     const d2 = [];
     for (const a of Object.keys(AVANT_SANS)) {
-      const { page, c } = await contexte(b, null, base());
+      const { page, c } = await contexte(b, null, base(), { time: LUNDI0 });
       await page.goto(URL0 + a); await attendre(page, 2500);
       const r = await releve(page);
       const sansV = s => String(s).replace(/v\d{4}-\d{2}-\d{2} · \d+/g, "v…");   // le numéro de version du pied de page change à chaque version
