@@ -918,8 +918,9 @@ const zones = (page, sel) => page.$$eval(sel, l => l.filter(e => e.offsetParent 
     const A = await lignesJulien(true), Bt = await lignesJulien(false);
     const L = A.db.lectures.filter(x => x.par === COACH.id && !x.uid);
     const groupee = L.find(x => /^not\.in\./.test(x.outil) && x.select === "user_id,outil,contenu,maj_le");
-    const legere = L.find(x => x.outil === "eq.journal_alimentaire");
-    ok("lectures de Mes clients : la lecture groupée exclut le journal (not.in.(…, journal_alimentaire)) ; une lecture légère outil=eq.journal_alimentaire&select=user_id,outil,maj_le ; le contenu d'aucun journal n'est téléchargé",
+    /* v104 (partie 4) : la lecture légère porte aussi la date des brouillons et de l'atelier du coach : outil=in.(journal_alimentaire,…) */
+    const legere = L.find(x => x.outil === "eq.journal_alimentaire" || (/^in\.\(/.test(x.outil) && liste(x.outil.slice(3)).includes("journal_alimentaire")));
+    ok("lectures de Mes clients : la lecture groupée exclut le journal (not.in.(…, journal_alimentaire)) ; une lecture légère outil=eq.journal_alimentaire (v104 : outil=in.(journal_alimentaire,…)) & select=user_id,outil,maj_le ; le contenu d'aucun journal n'est téléchargé",
       !!groupee && liste(groupee.outil.slice(7)).includes("journal_alimentaire") && !!legere && legere.select === "user_id,outil,maj_le" && !L.some(x => litJA(x.outil) && /contenu|\*/.test(x.select)) && A.db.ecritures.length === 0,
       JSON.stringify(L.map(x => [x.outil, x.select])));
     ok("Julien (dernière saisie il y a 12 jours) qui a noté son journal il y a 2 h : pas « Inactif » (activité « aujourd'hui ») ; témoin sans ce journal : « 12 j », « Inactif depuis 12 j »",

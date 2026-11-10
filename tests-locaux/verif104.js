@@ -847,6 +847,32 @@ const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { 
       mes.filter(m => m.ch === "programme" || m.ch === "nutrition").every(m => m.n > 0) && mes.every(m => m.petits.length === 0 && m.colles === 0), JSON.stringify(mes));
   });
 
+  /* =================== J'. point 5 (relecture) : pas d'objectif écrit pendant une publication ; pas d'éditeur hors fiche =================== */
+  await bloc("J'. point 5 relecture", async () => {
+    const db = base();
+    const { page } = await contexte(b, COACH, db);
+    await ouvrir(page, C1, "suivi", "#obj-0");
+    const n0 = db.ecritures.length;
+    /* une publication du programme de ce client est en cours (lancée sur la page Programme) quand le coach ouvre Suivi */
+    await page.evaluate(u => { ObjectifsCoach.publiant = u; }, C1);
+    await ouvrir(page, C1, "suivi", "#obj-0");
+    await page.evaluate(() => { const i = document.getElementById("obj-0"); i.disabled = false; i.value = "Tapé pendant la publication"; i.dispatchEvent(new Event("input", { bubbles: true })); });   // même un champ forcé n'écrit rien
+    await attendre(page, 1500);
+    const fige = await page.evaluate(() => ({ champs: Array.from(document.querySelectorAll("#suivi-obj input, #suivi-obj select")).every(x => x.disabled), note: !document.querySelector("#suivi-obj [data-obj-publication]").hidden }));
+    await page.evaluate(() => { ObjectifsCoach.publiant = null; });
+    await attendre(page, 900);
+    const libre = await page.evaluate(() => Array.from(document.querySelectorAll("#suivi-obj input, #suivi-obj select")).every(x => !x.disabled));
+    ok("J4 (point 5, relecture) : pendant la publication du programme de ce client, les objectifs de Suivi sont figés (avec un message) et rien n'est écrit ; ils reviennent ensuite",
+      fige.champs && fige.note && libre && db.ecritures.length === n0, JSON.stringify({ fige, libre, ecrit: db.ecritures.length - n0 }));
+    await page.evaluate(() => sortirFiche()); await attendre(page, 600);
+    await page.goto(URL0 + "#/suivi"); await pret(page, "#suivi-reg"); await attendre(page, 600);
+    const hors = await page.evaluate(() => ({ consulte: Store.idConsulte, editeur: document.querySelectorAll("#suivi-obj #obj-0").length }));
+    await ouvrir(page, C1, "profil", "#q-age");
+    const q = await page.evaluate(() => document.getElementById("vue").innerText);
+    ok("J5 (relecture) : hors fiche (#/suivi du coach), pas d'éditeur d'objectifs ; dans la fiche, « Son métier et son rythme de travail » et « Son entourage va-t-il soutenir sa démarche… » (plus de « ton » ou « ta » restés au milieu)",
+      hors.consulte === null && hors.editeur === 0 && /Son métier et son rythme de travail/.test(q) && /Son entourage va-t-il soutenir sa démarche/.test(q) && !/ton rythme de travail|ta démarche/.test(q), JSON.stringify(hors));
+  });
+
   /* =================== L. point 9 : en-tête sur ordinateur =================== */
   await bloc("L. point 9", async () => {
     const db = base();
