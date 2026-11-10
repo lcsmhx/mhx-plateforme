@@ -892,6 +892,41 @@ const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { 
       debuts.length === n.coach && n.coach >= 5 && ecart >= 0 && ecart < 300 && n.liste > 0 && n.objets, JSON.stringify({ n, ecart, debuts: debuts.map(d => d.f) }));
   });
 
+  /* =================== P. partie 4 : corrections sûres (sécurité, lectures) =================== */
+  await bloc("P. partie 4", async () => {
+    /* P1 : l'app affichée dans le cadre (iframe) d'une autre page ne se charge pas : un lien l'ouvre dans sa propre page */
+    const db = base();
+    const { page } = await contexte(b, COACH, db);
+    await page.goto(URL0 + "#/tableau"); await pret(page, "#tb-a-traiter");   // la page elle-même (hors cadre) s'ouvre
+    await page.setContent(`<!doctype html><iframe id="f" src="${URL0}#/tableau" style="width:800px;height:600px"></iframe>`);
+    await attendre(page, 2500);
+    const fr = page.frames().find(f => f !== page.mainFrame());
+    const c = fr ? await fr.evaluate(() => ({ app: typeof appPrete !== "undefined", scripts: document.querySelectorAll("script[src]").length, lien: (document.querySelector('a[target="_top"]') || {}).textContent || "" })).catch(e => ({ err: String(e) })) : null;
+    ok("P1 (partie 4) : dans le cadre d'une autre page, l'app ne se charge pas (aucun script, pas d'appPrete) et propose seulement un lien vers sa propre page",
+      !!c && c.app === false && c.scripts === 0 && /Ouvrir MHX Coaching/.test(c.lien), JSON.stringify(c));
+    /* P2 : Clients.charger ne télécharge plus les brouillons du coach ni son atelier (une entrée par client), seulement leur date */
+    const db2 = base();
+    db2.donnees.push({ user_id: F.IDS.coach, outil: "brouillons_programme", contenu: { v: 1, clients: { [C1]: { programme: { nom: "Bloc 2", seances: [] } } } }, maj_le: avant(2 * H) });
+    db2.donnees.push({ user_id: F.IDS.coach, outil: "atelier", contenu: { nom: "Modèle", seances: [] }, maj_le: avant(3 * H) });
+    const { page: p2 } = await contexte(b, COACH, db2);
+    const urls = [];
+    p2.on("request", r => { if (/\/rest\/v1\/donnees/.test(r.url())) urls.push(decodeURIComponent(r.url())); });
+    await p2.goto(URL0 + "#/clients"); await pret(p2, "#lc-clients #lc-liste li"); await attendre(p2, 400);
+    const groupee = urls.filter(u => /select=user_id,outil,contenu,maj_le/.test(u) && /outil=not\.in\./.test(u));
+    const legere = urls.filter(u => /select=user_id,outil,maj_le&/.test(u));
+    ok("P2 (partie 4) : la liste Clients ne télécharge plus le contenu des brouillons ni de l'atelier du coach (exclus de la lecture groupée), seulement leur date (lecture légère)",
+      groupee.length >= 1 && groupee.every(u => /brouillons_programme/.test(u) && /brouillons_repas/.test(u) && /atelier/.test(u)) && legere.some(u => /outil=in\.\(journal_alimentaire,brouillons_programme,brouillons_repas,atelier\)/.test(u)), JSON.stringify({ groupee, legere }).slice(0, 600));
+    /* P3 : « Le programme » du client lit son programme et son journal ENSEMBLE */
+    const CL = qui(C1, "thomas@exemple.fr", { prenom: "Thomas", nom: "Démo" });
+    const { page: p3 } = await contexte(b, CL, base());
+    const t = {};
+    await p3.route(/supabase\.co\/rest\/v1\/donnees\?.*outil=eq\.(programme|journal)(&|$)/, async r => { const o = /outil=eq\.(programme|journal)/.exec(r.request().url())[1]; if (!t[o]) t[o] = Date.now(); await new Promise(x => setTimeout(x, 500)); return r.fallback(); });
+    await p3.goto(URL0 + "#/programme"); await pret(p3, "#prog-vue .seance"); await attendre(p3, 600);
+    const vu = await p3.evaluate(() => document.querySelectorAll("#prog-vue .seance, #prog-vue section").length);
+    ok("P3 (partie 4) : « Le programme » du client demande son programme et son journal ensemble (moins de 300 ms d'écart, au lieu de l'un après l'autre), la page s'affiche",
+      t.programme && t.journal && Math.abs(t.programme - t.journal) < 300 && vu > 0, JSON.stringify({ ecart: t.programme && t.journal ? t.journal - t.programme : null, vu }));
+  });
+
   /* =================== Z. console, hôtes externes =================== */
   await bloc("Z. console et hôtes externes", async () => {
     const autres = Array.from(externes).filter(h => !/^(fonts\.(googleapis|gstatic)\.com|i\.ytimg\.com|img\.youtube\.com|www\.youtube-nocookie\.com)$/.test(h));
