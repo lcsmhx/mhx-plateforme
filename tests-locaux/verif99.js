@@ -255,6 +255,8 @@ const marques = page => page.evaluate(() => {
 });
 const ouvrir = async (page, chemin, sel) => { await page.goto(URL0 + "#/client/" + C1 + "/" + chemin); await pret(page, sel); await attendre(page, 900); };
 
+/* v104 (point 7) : dans la fiche d'un client, chaque exercice est replié en une ligne : le coach l'ouvre avant d'y toucher */
+const ouvrirEx = async (page, si, ei) => { const d = `details[data-pli="${si}:${ei}"]`; if (await page.$(d) && !(await page.$eval(d, x => x.open))) await page.click(d + " > summary"); };
 (async () => {
   await new Promise((r, k) => { server.once("error", e => k(new Error(e && e.code === "EADDRINUSE" ? "port " + PORT + " déjà pris (une autre suite tourne ?) : VERIF99_PORT=10107 node verif99.js ../index.html" : String(e)))); server.listen(PORT, r); });
   const b = await chromium.launch();
@@ -330,7 +332,7 @@ const ouvrir = async (page, chemin, sel) => { await page.goto(URL0 + "#/client/"
     const db = base({ donnees: [[C2, "programme", clone(F.donnees.find(x => x.user_id === C1 && x.outil === "programme").contenu)]] });
     const { page } = await contexte(b, COACH, db);
     await ouvrir(page, "programme", "#pg-publier");
-    await page.fill('[data-f="series"][data-s="0"][data-e="0"]', "6");
+    await ouvrirEx(page, 0, 0); await page.fill('[data-f="series"][data-s="0"][data-e="0"]', "6");
     await page.click('.fiche-onglets .f-onglet[data-onglet-fiche="nutrition"]');
     await page.evaluate(h => { location.hash = h; }, "#/client/" + C2 + "/programme");
     await attendre(page, 2500);

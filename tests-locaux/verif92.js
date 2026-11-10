@@ -235,6 +235,8 @@ const fenetre = page => page.evaluate(() => { const m = document.querySelector("
 const toucherFenetre = (page, libelle) => page.evaluate(l => { const b = Array.from(document.querySelectorAll(".fond .modale [data-ui-b]")).find(x => x.textContent.trim() === l); if (b) b.click(); return !!b; }, libelle);
 const horsLigne = page => page.evaluate(() => { const f = document.getElementById("page-hors-ligne"); return f ? { texte: f.textContent.replace(/\s+/g, " ").trim(), reessayer: !!f.querySelector("[data-reessayer]") } : null; });
 
+/* v104 (point 7) : dans la fiche d'un client, chaque exercice est replié en une ligne : le coach l'ouvre avant d'y toucher */
+const ouvrirEx = async (page, si, ei) => { const d = `details[data-pli="${si}:${ei}"]`; if (await page.$(d) && !(await page.$eval(d, x => x.open))) await page.click(d + " > summary"); };
 (async () => {
   await new Promise((r, k) => { server.once("error", e => k(new Error(e && e.code === "EADDRINUSE" ? "port " + PORT + " déjà pris (une autre suite tourne ?) : VERIF92_PORT=10095 node verif92.js ../index.html" : String(e)))); server.listen(PORT, r); });
   const b = await chromium.launch();
@@ -280,7 +282,7 @@ const horsLigne = page => page.evaluate(() => { const f = document.getElementByI
      client avant la publication). Ce que B protège ne change pas : jamais « publié » avant la réponse de la base, un message
      qui dit d'agir et qui reste, le bouton désactivé pendant l'envoi. Un changement est d'abord fait dans le brouillon. */
   const changer = async (page) => {
-    await page.fill('[data-f="series"][data-s="0"][data-e="0"]', "5");
+    await ouvrirEx(page, 0, 0); await page.fill('[data-f="series"][data-s="0"][data-e="0"]', "5");
     await attendreQue(() => page.evaluate(() => /Brouillon non publié/.test((document.getElementById("pg-statut") || {}).textContent || "")), 3000);
     await attendre(page, 900);   // le brouillon part (700 ms)
   };

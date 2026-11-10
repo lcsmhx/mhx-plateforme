@@ -239,6 +239,8 @@ const avecProgramme = (B) => !!(B && B.programme);
 const AUJ0 = new Date(T0).toISOString().slice(0, 10);
 const ouvrirCoach = async (b, db, chemin, sel, opts) => { const { page, c } = await contexte(b, COACH, db, opts); await page.goto(FICHE(chemin || "programme")); await pret(page, sel || "#pg-publier"); return { page, c }; };
 
+/* v104 (point 7) : dans la fiche d'un client, chaque exercice est replié en une ligne : le coach l'ouvre avant d'y toucher */
+const ouvrirEx = async (page, si, ei) => { const d = `details[data-pli="${si}:${ei}"]`; if (await page.$(d) && !(await page.$eval(d, x => x.open))) await page.click(d + " > summary"); };
 (async () => {
   await new Promise((r, k) => { server.once("error", e => k(new Error(e && e.code === "EADDRINUSE" ? "port " + PORT + " déjà pris (une autre suite tourne ?) : VERIF102_PORT=10113 node verif102.js ../index.html" : String(e)))); server.listen(PORT, r); });
   const b = await chromium.launch();
@@ -286,14 +288,14 @@ const ouvrirCoach = async (b, db, chemin, sel, opts) => { const { page, c } = aw
     const db3 = base(); db3.panneEcriture = "programme";
     const { page: p3 } = await ouvrirCoach(b, db3);
     await p3.fill("#obj-0", "Dormir 8 h"); await attendre(p3, 2200);
-    await p3.fill('[data-f="series"][data-s="0"][data-e="0"]', "5"); await attendre(p3, 1500);
+    await ouvrirEx(p3, 0, 0); await p3.fill('[data-f="series"][data-s="0"][data-e="0"]', "5"); await attendre(p3, 1500);
     await p3.click("#pg-publier"); await attendreQue(() => p3.evaluate(() => (document.getElementById("pg-pub-msg") || {}).textContent.trim() !== ""), 8000);
     const m3 = await texte(p3, "#pg-pub-msg");
     ok("B3 : un objectif qui attend son envoi : « Publier » ne passe pas par-dessus (« … attend son envoi : réessaie dans un instant. »)", /attend son envoi/.test(m3 || ""), m3);
     /* relecture : un objectif tapé, puis « Publier » dans la seconde : la nouvelle version reste en ligne, avec l'objectif */
     const db4 = base();
     const { page: p4 } = await ouvrirCoach(b, db4);
-    await p4.fill('[data-f="series"][data-s="0"][data-e="0"]', "5"); await attendre(p4, 1300);
+    await ouvrirEx(p4, 0, 0); await p4.fill('[data-f="series"][data-s="0"][data-e="0"]', "5"); await attendre(p4, 1300);
     await p4.fill("#obj-0", "Boire 2 L");
     await p4.click("#pg-publier");
     await attendreQue(() => p4.evaluate(() => /^Publié/.test((document.getElementById("pg-pub-msg") || {}).textContent || "")), 8000); await attendre(p4, 2500);
@@ -346,7 +348,7 @@ const ouvrirCoach = async (b, db, chemin, sel, opts) => { const { page, c } = aw
   await bloc("D. publication et catalogue", async () => {
     const db = base(); db.lentEcriture = { outil: "programme", ms: 2500 };
     const { page } = await ouvrirCoach(b, db);
-    await page.fill('[data-f="series"][data-s="0"][data-e="0"]', "5"); await attendre(page, 1200);
+    await ouvrirEx(page, 0, 0); await page.fill('[data-f="series"][data-s="0"][data-e="0"]', "5"); await attendre(page, 1200);
     await page.click("#pg-publier"); await attendre(page, 700);
     const inerte = await page.evaluate(() => document.querySelectorAll("#prog-vue > section[inert]").length);
     await attendreQue(() => page.evaluate(() => /^Publié/.test((document.getElementById("pg-pub-msg") || {}).textContent || "")), 8000);
@@ -356,7 +358,7 @@ const ouvrirCoach = async (b, db, chemin, sel, opts) => { const { page, c } = aw
     const db2 = base(); db2.panneEcriture = "programme";
     const { page: p2, c: cp2 } = await ouvrirCoach(b, db2);
     await cp2.route(/outil=eq\.programme&select=contenu,maj_le/, async r => { await new Promise(k => setTimeout(k, 1500)); return r.fallback(); });   // la relecture d'avant la publication prend du temps
-    await p2.fill('[data-f="series"][data-s="0"][data-e="0"]', "5"); await attendre(p2, 1200);
+    await ouvrirEx(p2, 0, 0); await p2.fill('[data-f="series"][data-s="0"][data-e="0"]', "5"); await attendre(p2, 1200);
     db2.lentEcriture = { outil: "programme", ms: 1500 };
     await p2.click("#pg-publier"); await attendre(p2, 300);
     await p2.evaluate(() => { location.hash = "#/clients"; }); await attendre(p2, 3500);
