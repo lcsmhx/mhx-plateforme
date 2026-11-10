@@ -257,12 +257,13 @@ function construireNav(){
   /* le coach hors fiche : ses outils d'abord, ses propres onglets client ensuite */
   const coachSeul = Auth.estCoach() && !Store.idConsulte;
   const visibles = outilsVisibles().filter(o => !o.masque_nav && !horsVitrine(o) && !cachePourClient(o));   // v50 ; v100 : le menu du client
-  /* v98 : les 7 entrées du coach (MENU_COACH) ; dans la fiche d'un client : ses onglets, puis ces 7 entrées (plus les autres
-     pages du coach : elles gardent leur adresse) */
+  /* v98 : les 7 entrées du coach (MENU_COACH) ; les autres pages du coach gardent leur adresse.
+     v104 (point 1) : dans la fiche d'un client, le menu du haut reste ces 7 entrées, sans les outils du client (une seule
+     navigation dans la fiche : ses 5 onglets ; chaque adresse #/client/<id>/<outil> s'ouvre toujours) */
   const fiche = Auth.estCoach() && !!Store.idConsulte;
-  const ordre = coachSeul ? menuCoach(visibles) : fiche ? visibles.filter(o => o.role !== "coach").concat(menuCoach(visibles.filter(o => o.role === "coach"))) : visibles;
+  const ordre = coachSeul ? menuCoach(visibles) : fiche ? menuCoach(visiblesHorsFiche().filter(o => !o.masque_nav)) : visibles;
   nav.innerHTML = ordre.map(o =>
-    `<a href="${esc(lienOutil(o.id))}" data-id="${esc(o.id)}">${iconeOutil(o)}${esc(coachSeul || (fiche && o.role === "coach") ? nomMenuCoach(o) : nomOnglet(o))}${cadenasNav(o)}</a>`
+    `<a href="${esc(lienMenu(o))}" data-id="${esc(o.id)}"${fiche && o.role !== "coach" ? " data-quitter-fiche" : ""}>${iconeOutil(o)}${esc(coachSeul || fiche ? nomMenuCoach(o) : nomOnglet(o))}${cadenasNav(o)}</a>`
   ).join("");
   construireBarreBas();
   if (typeof Nouveautes !== "undefined") Nouveautes.badge();   // v51 : le badge survit a la reconstruction
@@ -334,6 +335,19 @@ function cachePourClient(o){
 
 /* v98 : le menu du coach hors fiche (MENU_COACH, liste-outils.js), dans cet ordre ; ses autres pages gardent leur adresse */
 function menuCoach(visibles){ return MENU_COACH.map(id => visibles.find(o => o.id === id)).filter(Boolean); }
+/* v104 (points 1 et 2) : les pages du coach telles qu'il les voit hors fiche (ses Réglages et son entraînement compris : dans une
+   fiche, outilsVisibles donne les outils du client consulté) */
+function visiblesHorsFiche(){ const id = Store.idConsulte; Store.idConsulte = null; try { return outilsVisibles(); } finally { Store.idConsulte = id; } }
+/* l'adresse d'une entrée du menu du coach : dans une fiche, « Réglages » et « Mon entraînement » (pas des outils « coach » :
+   #/client/<id>/profil serait le questionnaire du client) referment d'abord la fiche (data-quitter-fiche, plus bas) */
+function lienMenu(o){ return Auth.estCoach() && Store.idConsulte && o.role !== "coach" && MENU_COACH.indexOf(o.id) > -1 ? "#/" + o.id : lienOutil(o.id); }
+document.addEventListener("click", e => {
+  const a = e.target && e.target.closest ? e.target.closest("a[data-quitter-fiche]") : null;
+  if (!a || !Store.idConsulte) return;
+  e.preventDefault();
+  Store.oublier(Store.idConsulte); Store.idConsulte = null; Store.nomConsulte = null; Store.retourVers = null;
+  if (location.hash === a.getAttribute("href")) afficher(a.dataset.id); else location.hash = a.getAttribute("href");
+}, true);
 function nomMenuCoach(o){ return NOMS_MENU_COACH[o.id] || o.nom; }
 
 /* --- barre du bas (telephone) --- */
@@ -380,6 +394,9 @@ function marquerNav(id){
   if (Auth.estCoach() && !Store.idConsulte && PARENTS_MENU_COACH[id]) id = PARENTS_MENU_COACH[id];
   if (PARENTS_CLIENT[id] && cachePourClient(OUTILS.find(o => o.id === id))) id = PARENTS_CLIENT[id];   // v100 : sa page « parente »
   $$("#barre-bas a, .menu-plus a").forEach(a => { if (a.dataset.id === id) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+  /* v104 (points 1 et 2) : dans la fiche d'un client, l'entrée marquée est celle d'où l'on vient (Tableau, Clients, Prospects ;
+     une page du menu Plus marque sa parente) */
+  if (Auth.estCoach() && Store.idConsulte){ const v = Store.retourVers || "clients"; id = PARENTS_MENU_COACH[v] || v; }
   const plus = document.querySelector("#barre-bas [data-plus]");
   /* v98 (relecture) : « Plus » marqué seulement si la page est vraiment dans son volet (le coach : ses 7 entrées) */
   const dansPlus = Auth.estCoach() && !Store.idConsulte ? MENU_COACH.indexOf(id) > -1 : true;
