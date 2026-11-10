@@ -3,9 +3,9 @@
    A. diète du coach, questionnaire illisible : bandeau « Questionnaire illisible : vérifie ses allergies avant de générer »
       + Réessayer, « Générer la semaine », « Refaire … » et « Autre proposition » bloqués (rien n'est composé ni écrit), la diète
       existante reste affichée et modifiable à la main ; après « Réessayer » (questionnaire relu) : débloqué ;
-   B. programme, « Envoyer au client » : « Programme envoyé » seulement après la réponse de la base ; écriture en panne ou
-      refusée : « Pas envoyé : vérifie ta connexion et réessaie » avec le texte du témoin du haut ; « Envoi… » et bouton
-      désactivé pendant l'envoi ;
+   B. programme (v96 : « Publier les changements », avant : « Envoyer au client ») : « Publié » seulement après la réponse de
+      la base ; écriture en panne ou refusée : « Pas publié : … Ton brouillon est gardé. », un message qui reste ;
+      « Publication… » et bouton désactivé pendant l'envoi ;
    C. atelier, « Enregistrer dans ma bibliothèque » : une écriture bibliotheque { type: "entrainement", seances } sous le nom
       du programme ; séance vide : rien d'écrit ; panne : message d'échec ;
    D. atelier, « Enregistrer dans ma base » : un programme du même identifiant ajouté APRÈS l'ouverture de la page demande
@@ -275,39 +275,51 @@ const horsLigne = page => page.evaluate(() => { const f = document.getElementByI
   });
 
   /* =================== B. « Envoyer au client » =================== */
+  /* v96 : « Envoyer au client » est devenu « Publier les changements » (brouillon sur le compte du coach, rien chez le
+     client avant la publication). Ce que B protège ne change pas : jamais « publié » avant la réponse de la base, un message
+     qui dit d'agir et qui reste, le bouton désactivé pendant l'envoi. Un changement est d'abord fait dans le brouillon. */
+  const changer = async (page) => {
+    await page.fill('[data-f="series"][data-s="0"][data-e="0"]', "5");
+    await attendreQue(() => page.evaluate(() => /Brouillon non publié/.test((document.getElementById("pg-statut") || {}).textContent || "")), 3000);
+    await attendre(page, 900);   // le brouillon part (700 ms)
+  };
   const envoyer = async (page) => {
-    await page.click("#pg-save");
-    await attendreQue(() => page.evaluate(() => { const b = document.getElementById("pg-save"), m = document.getElementById("pg-msg"); return !!b && !b.disabled && !!m && m.textContent.trim() !== ""; }), 9000);
-    return { msg: await texte(page, "#pg-msg"), bouton: await texte(page, "#pg-save") };
+    await changer(page);
+    await page.click("#pg-publier");
+    await attendreQue(() => page.evaluate(() => { const b = document.getElementById("pg-publier"), m = document.getElementById("pg-pub-msg"); return !!b && !b.disabled && !!m && m.textContent.trim() !== ""; }), 9000);
+    return { msg: await texte(page, "#pg-pub-msg"), bouton: await texte(page, "#pg-publier"), statut: await texte(page, "#pg-statut") };
   };
   await bloc("B. programme envoyé : panne", async () => {
     const db = base(); db.panneEcriture = "programme";
     const { page } = await contexte(b, COACH, db);
-    await page.goto(FICHE("programme")); await pret(page, "#pg-save");
+    await page.goto(FICHE("programme")); await pret(page, "#pg-publier");
     const r = await envoyer(page);
-    ok("B1 : écriture du programme en panne (500) : jamais « Programme envoyé » ; « Pas envoyé : vérifie ta connexion et réessaie. » avec le témoin du haut (« Hors ligne … ») ; le bouton redevient « Envoyer au client »",
-      /^Pas envoyé : vérifie ta connexion et réessaie\. \(Hors ligne/.test(r.msg || "") && !/Programme envoyé/.test(r.msg || "") && r.bouton === "Envoyer au client" && db.refus.length > 0, JSON.stringify([r, db.refus]));
+    await attendre(page, 4000);   // le message reste (flashFixe)
+    const reste = await texte(page, "#pg-pub-msg");
+    ok("B1 : écriture du programme en panne (500) : jamais « Publié » ; « Pas publié : vérifie ta connexion et réessaie. Ton brouillon est gardé. », un message qui reste ; le bouton redevient « Publier les changements », le brouillon reste « non publié »",
+      /^Pas publié : vérifie ta connexion et réessaie\. Ton brouillon est gardé\./.test(r.msg || "") && !/^Publié/.test(r.msg || "") && reste === r.msg && r.bouton === "Publier les changements" && /Brouillon non publié/.test(r.statut || "") && db.refus.length > 0, JSON.stringify([r, reste, db.refus]));
   });
   await bloc("B. programme envoyé : refus", async () => {
     const db = base(); db.refusEcriture = "programme";
     const { page } = await contexte(b, COACH, db);
-    await page.goto(FICHE("programme")); await pret(page, "#pg-save");
+    await page.goto(FICHE("programme")); await pret(page, "#pg-publier");
     const r = await envoyer(page);
-    ok("B2 : écriture refusée par la base (403) : jamais « Programme envoyé » ; « Pas envoyé : vérifie ta connexion et réessaie. (Non enregistré — modification refusée) »",
-      /^Pas envoyé : vérifie ta connexion et réessaie\. \(Non enregistré — modification refusée\)/.test(r.msg || "") && !/Programme envoyé/.test(r.msg || "") && ecr(db, "programme").length === 0, JSON.stringify([r, ecr(db, "programme").length]));
+    ok("B2 : écriture refusée par la base (403) : jamais « Publié » ; « Pas publié : la base a refusé cette modification. Ton brouillon est gardé. », rien d'écrit chez le client",
+      r.msg === "Pas publié : la base a refusé cette modification. Ton brouillon est gardé." && ecr(db, "programme").length === 0, JSON.stringify([r, ecr(db, "programme").length]));
   });
   await bloc("B. programme envoyé : réponse lente", async () => {
     const db = base(); db.lentEcriture = { outil: "programme", ms: 2000 };
     const { page } = await contexte(b, COACH, db);
-    await page.goto(FICHE("programme")); await pret(page, "#pg-save");
-    await page.click("#pg-save"); await attendre(page, 500);
-    const pendant = await page.evaluate(() => ({ dis: document.getElementById("pg-save").disabled, txt: document.getElementById("pg-save").textContent.trim(), msg: document.getElementById("pg-msg").textContent.trim() }));
-    ok("B3 : pendant l'envoi (base lente) : « Envoi… », bouton désactivé, pas encore « Programme envoyé »",
-      pendant.dis === true && pendant.txt === "Envoi…" && !/Programme envoyé/.test(pendant.msg), JSON.stringify(pendant));
-    await attendreQue(() => page.evaluate(() => /Programme envoyé/.test(document.getElementById("pg-msg").textContent)), 6000);
-    const e = ecr(db, "programme", C1).pop(), apres = { msg: await texte(page, "#pg-msg"), bouton: await texte(page, "#pg-save") };
-    ok("B4 : la base a répondu : « Programme envoyé. Ton client le voit dès sa prochaine ouverture. », le programme écrit porte sa date d'envoi, le bouton revient",
-      apres.msg === "Programme envoyé. Ton client le voit dès sa prochaine ouverture." && apres.bouton === "Envoyer au client" && !!(e && e.contenu && e.contenu.maj) && !!(e && e.t), JSON.stringify([apres, e && e.contenu && e.contenu.maj]));
+    await page.goto(FICHE("programme")); await pret(page, "#pg-publier");
+    await changer(page);
+    await page.click("#pg-publier"); await attendre(page, 500);
+    const pendant = await page.evaluate(() => ({ dis: document.getElementById("pg-publier").disabled, txt: document.getElementById("pg-publier").textContent.trim(), msg: document.getElementById("pg-pub-msg").textContent.trim() }));
+    ok("B3 : pendant la publication (base lente) : « Publication… », bouton désactivé, pas encore « Publié »",
+      pendant.dis === true && pendant.txt === "Publication…" && !/Publié/.test(pendant.msg), JSON.stringify(pendant));
+    await attendreQue(() => page.evaluate(() => /^Publié/.test(document.getElementById("pg-pub-msg").textContent)), 6000);
+    const e = ecr(db, "programme", C1).pop(), apres = { msg: await texte(page, "#pg-pub-msg"), bouton: await texte(page, "#pg-publier") };
+    ok("B4 : la base a répondu : « Publié. Ton client voit la nouvelle version dès sa prochaine ouverture. », le programme écrit porte sa date, le bouton revient",
+      apres.msg === "Publié. Ton client voit la nouvelle version dès sa prochaine ouverture." && apres.bouton === "Publier les changements" && !!(e && e.contenu && e.contenu.maj) && !!(e && e.t) && e.contenu.seances[0].exercices[0].series === "5", JSON.stringify([apres, e && e.contenu && e.contenu.maj]));
   });
 
   /* =================== C. atelier : « Enregistrer dans ma bibliothèque » =================== */

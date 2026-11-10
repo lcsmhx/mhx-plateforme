@@ -895,12 +895,15 @@ const Store = {
   /* les outils ecrivent Store.cache[cle] : on leur sert la boite du moment */
   get cache(){ return this.boite(this.cible()); },
 
-  async lire(cle, defaut){
-    const uid = this.cible(); if (!uid) return defaut;
+  /* v96 : moi() = le compte connecte ; opts.chezMoi (lire, ecrire, envoyerConfirme) : la cle du compte connecte meme dans
+     la fiche d'un client (les brouillons des programmes, rangés sur le compte du coach, jamais chez le client) */
+  moi(){ const u = Auth.utilisateur(); return (u && u.id) || null; },
+  async lire(cle, defaut, opts){
+    const uid = (opts && opts.chezMoi) ? this.moi() : this.cible(); if (!uid) return defaut;
     const k = uid + "|" + cle;
     /* v67 (D1) : la saisie de cette cle qui attend ses 700 ms part d'abord (la base relue la contient) ; 4 s au plus
        (reseau qui ne repond plus : sa copie gardee sur l'appareil prend le relais, plus bas) */
-    try { await Promise.race([this.envoyerCle(cle), new Promise(r => setTimeout(r, 4000))]); } catch(e){}
+    try { await Promise.race([this.envoyerCle(cle, uid), new Promise(r => setTimeout(r, 4000))]); } catch(e){}
     try {
       const r = await Auth.appel("/rest/v1/donnees?user_id=eq." + uid + "&outil=eq." + encodeURIComponent(cle) + "&select=contenu,maj_le");
       /* v67 (D1) : une saisie gardee sur l'appareil (hors ligne, envoi en cours) plus recente que la base passe devant :
@@ -966,8 +969,9 @@ const Store = {
   },
 
   /* renvoie true si l'ecriture part (dans 700 ms), false si elle est refusee */
-  ecrire(cle, valeur){
-    const uid = this.cible(); if (!uid) return false;
+  ecrire(cle, valeur, opts){
+    const chezMoi = !!(opts && opts.chezMoi);
+    const uid = chezMoi ? this.moi() : this.cible(); if (!uid) return false;
     if (this.clesCoachSeul.indexOf(cle) > -1) return false;
     if (Sante.bloque(cle, valeur)) return false;   // v64 (B) : rien avant l'accord sante (ni cache, ni copie, ni envoi)
     const origine = valeur && typeof valeur === "object" ? this.origines.get(valeur) : undefined;
@@ -978,7 +982,7 @@ const Store = {
        rester aligne sur MODIFIABLES (plus bas) ET sur les regles de la base :
        les complements y manquaient, donc ce que le coach saisissait pour un
        client disparaissait a la fermeture, sans aucun message. */
-    if (this.lectureSeule() && !(Auth.estCoach() && ["programme", "repas", "calc", "complements"].indexOf(cle) > -1)) return false;
+    if (this.lectureSeule() && !chezMoi && !(Auth.estCoach() && ["programme", "repas", "calc", "complements"].indexOf(cle) > -1)) return false;
     const k = uid + "|" + cle;
     if (this.charge[k] === false || this.nonLus.has(valeur)){ this.lectureRatee(k); return false; }   // on n'a pas pu lire : on n'ecrit pas, et on le dit
     clearTimeout(this.attente[k]);
@@ -1059,8 +1063,8 @@ const Store = {
     try { Auth.magasin().removeItem(this.PREFIXE_ATTENTE + uid + "|" + cle); } catch(e){}
   },
   /* v51 : envoie tout de suite la valeur en attente d'une cle (sans attendre les 700 ms) et attend la reponse */
-  envoyerCle(cle){
-    const uid = this.cible(); if (!uid) return Promise.resolve();
+  envoyerCle(cle, uidChoisi){
+    const uid = uidChoisi || this.cible(); if (!uid) return Promise.resolve();
     const k = uid + "|" + cle, v = this.valeursEnAttente[k];
     if (v === undefined || !this.attente[k]) return Promise.resolve();
     const t = this.tEnAttente[k];
@@ -1071,9 +1075,9 @@ const Store = {
      seulement après la réponse). true : arrivée ; false : refusée, hors ligne (copie gardée sur l'appareil, renvoi
      automatique) ou perdue — le témoin du haut (#etat) dit lequel. Rien en attente (déjà parti) : arrivée seulement si
      aucune copie n'attend encore son envoi. */
-  async envoyerConfirme(cle){
-    const uid = this.cible(); if (!uid) return false;
-    const r = await this.envoyerCle(cle);
+  async envoyerConfirme(cle, opts){
+    const uid = (opts && opts.chezMoi) ? this.moi() : this.cible(); if (!uid) return false;
+    const r = await this.envoyerCle(cle, uid);
     if (r === true || r === false) return r;
     return !this.aUneCopie(uid, cle) && !this.attente[uid + "|" + cle];
   },
