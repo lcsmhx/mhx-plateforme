@@ -947,12 +947,13 @@ main .tiles.tb-tiles{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .tb-section .link-a,#tb-nouveaux .link-a{display:inline-flex;align-items:center;min-height:var(--h-toucher);font-size:13px}
 
 /* --- fiche à onglets (Suivi, Compte) --- */
-.fc-tete{margin:4px 0 14px}
+/* v104 (point 4) : l'identité et les actions, sous le titre de page (l'en-tête est le bandeau commun des 5 onglets) */
+.fc-ident{margin:0 0 14px}
 .fc-haut{display:flex;justify-content:flex-end}
-.fc-id{display:flex;align-items:center;gap:14px;margin-top:6px}
+.fc-id{display:flex;align-items:center;gap:14px}
 .fc-avatar{flex:none;width:56px;height:56px;font-size:18px;border:1px solid var(--accent);background:var(--accent-soft)}
 .fc-id-t{min-width:0;display:flex;flex-direction:column;gap:8px}
-.fc-id-t h1{margin:0;font-size:22px;font-weight:700;line-height:1.1;overflow-wrap:anywhere}
+.fc-id-t h2{margin:0;font-size:22px;font-weight:700;line-height:1.1;letter-spacing:-.02em;overflow-wrap:anywhere}
 .fc-pastilles{display:flex;flex-wrap:wrap;gap:6px}
 .fc-pastilles .pastille{padding:4px 12px;font-size:12.5px}
 .fc-role-p{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600}
@@ -961,10 +962,6 @@ main .tiles.tb-tiles{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .fc-principal svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .btn.sans-numero,.btn.sans-numero:disabled{background:var(--verre);border-color:var(--verre-bord);color:var(--ink-3);opacity:1}
 .fc-appeler{width:var(--h-bouton);height:var(--h-bouton)}
-.fc-onglets{display:flex;gap:4px;padding:4px;margin-top:14px;border-radius:var(--r);border:1px solid var(--verre-bord);background:var(--verre)}
-.fc-onglets button{flex:1;min-height:var(--h-toucher);border:0;border-radius:calc(var(--r) - 5px);background:transparent;color:var(--ink-2);
-  font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:background var(--vite),color var(--vite)}
-.fc-onglets button[aria-selected="true"]{background:rgba(255,255,255,.14);color:var(--ink)}
 .fc-panneau > .carte,.fc-panneau > .fc-carte{margin:0 0 10px}
 .fc-panneau > .panel{margin-top:16px}
 .fc-carte{padding:14px 16px}
@@ -1010,7 +1007,6 @@ ul.fc-lignes li > b{font-weight:500;text-align:right;min-width:0;overflow-wrap:a
 /* --- zones de toucher de 44 px (décision 8) sur les listes détaillées de l'espace coach --- */
 .client-l .voir,#tb-clients .voir{min-height:var(--h-toucher)}
 .bandeau .sortir{min-height:var(--h-toucher)}
-.fc-masthead{padding:0;margin:0;border-bottom:0;gap:0}
 .fc-outils .bandeau{margin:16px 0 0}
 .lc-plus{list-style:none;display:flex;justify-content:center;margin-top:4px}
 
@@ -1102,7 +1098,6 @@ ul.fc-lignes li > b{font-weight:500;text-align:right;min-width:0;overflow-wrap:a
 .f-onglet.ici{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
 .fiche-wa:empty{display:none}
 a.btn.fiche-wa-l{min-height:var(--h-toucher)}
-.fc-tete .fiche-onglets{margin:12px 0}
 @media (max-width:560px){ .f-onglet{padding:0 11px;font-size:13px} }
 /* v101 (chantier 6 de la nuit du 10/11) : la croix des volets (« Tout mon espace ») visible et à 44 × 44 px, sans chevaucher le
    titre (le titre lui laisse sa place) ; même dessin que la croix du journal alimentaire */

@@ -476,20 +476,19 @@ function actionsConsultation(){
   ].filter(a => v.some(o => o.id === a.id));
 }
 /* L'en-tête de chaque page de la fiche : « Fiche de … », WhatsApp, les 5 onglets, les pages de l'onglet ouvert, « Revenir … ».
+   v104 (point 4) : l'Aperçu (la fiche elle-même) l'a aussi, comme les 4 autres onglets.
    tout = true : l'ancien bandeau (tous les outils du client), dans l'onglet Suivi de la fiche elle-même (v83). */
 function bandeauConsultation(tout){
   if (!Store.idConsulte) return "";
   const nom = `<strong>${Store.nomConsulte === Clients.SANS_NOM ? "Fiche — " : "Fiche de "}${esc(Store.nomConsulte || "ce client")}</strong>`;
   const sortir = `<button class="sortir" type="button" id="sortir-fiche">${esc(RETOURS[Store.retourVers] || RETOURS.clients)}</button>`;
+  /* v104 (point 4) : l'Aperçu garde le bandeau commun en haut ; cet ancien bandeau (tous les outils du client) ne répète plus
+     « Fiche de … », la phrase d'aide ni « Revenir … » (un seul #sortir-fiche par page) : il ne garde que les liens */
   if (tout){
     const actions = actionsConsultation();
     return `<div class="bandeau">
-    <div class="bandeau-tete">${nom}
-      <span class="note">Tu vois ses données. Tu écris pour lui dans les boutons dorés, dans « Préparer le call » (ton feedback) et dans la fiche (tes notes privées, qu'il ne voit jamais).</span>
-    </div>
     <div class="bandeau-actions">
       ${actions.map(a => `<a href="${esc(lienOutil(a.id))}" class="b-act${a.fort ? " fort" : ""}${courant === a.id ? " ici" : ""}">${esc(a.nom)}</a>`).join("")}
-      ${sortir}
     </div>
   </div>`;
   }

@@ -134,13 +134,17 @@ const flagsDe = (page) => page.$$eval("#alertes-clients .flag", l => l.map(x => 
       const supprComptes = !!(await rangee.$(".suppr"));
       await page.evaluate(() => { location.hash = "#/suivi-clients"; }); await page.waitForSelector(`[data-ouvrir="${N1}"]`).catch(() => {});   // v84 (ménage du bloc 3) : son [data-ouvrir] est dans « Suivi détaillé »
       await page.click(`[data-ouvrir="${N1}"]`); await page.waitForSelector("#fc-supprimer", { state: "attached" }).catch(() => {});
-      await page.click('[data-onglet="compte"]'); await attendre(page, 300);
+      /* v104 (point 4) : changement voulu — plus de bouton interne « Compte » : Profil › « Son compte » (bandeau commun) */
+      await page.click('#vue > .fiche-entete .f-onglet[data-onglet-fiche="profil"]'); await page.waitForSelector('#vue > .fiche-entete a.b-act[href$="/accueil/compte"]');
+      await page.click('#vue > .fiche-entete a.b-act[href$="/accueil/compte"]'); await page.waitForSelector("#fc-compte:not([hidden]) #fc-supprimer"); await attendre(page, 300);
       await page.click("#fc-supprimer"); await attendre(page, 500);
       const corps = await texte(page, ".modale .corps");
       ok("Fiche, onglet Compte / Supprimer (v83 : plus dans Comptes pour un client) : la fenêtre parle de « Sans nom », plus de « ce compte »", !supprComptes && corps.includes("le compte de Sans nom") && !corps.includes("ce compte") && !corps.includes(MARQUE), "suppr dans Comptes : " + supprComptes + " · " + corps.slice(0, 160));
       await page.keyboard.press("Escape"); await attendre(page, 400);
       ok("Fiche, onglet Compte / Supprimer : Échap ferme la fenêtre", !(await page.$(".modale")));
-      await page.click('[data-onglet="suivi"]'); await attendre(page, 200);   // v83 (bloc 3) : l'onglet choisi est gardé pour cette fiche
+      /* v83 (bloc 3) : l'onglet choisi est gardé pour cette fiche ; v104 (point 4) : changement voulu — l'onglet Aperçu (bandeau
+         commun) rouvre le Suivi */
+      await page.click('#vue > .fiche-entete .f-onglet[data-onglet-fiche="apercu"]'); await page.waitForSelector("#fc-suivi:not([hidden])"); await attendre(page, 200);
       await page.evaluate(() => { location.hash = "#/comptes"; }); await page.waitForSelector(`#liste-clients .client-l:has-text("Sans nom") .statut`).catch(() => {}); await attendre(page, 500);   // v84 (ménage du bloc 3) : retour sur « Comptes » (avant : #/clients)
       rangee = await page.$(`#liste-clients .client-l:has-text("Sans nom")`);   // v83 (bloc 3) : Mes clients redessiné au retour
       await (await rangee.$(".statut")).click(); await attendre(page, 500);
@@ -152,7 +156,7 @@ const flagsDe = (page) => page.$$eval("#alertes-clients .flag", l => l.map(x => 
     /* --- fiche du compte sans nom, ouverte depuis Mes clients --- */
     await page.evaluate(() => { location.hash = "#/suivi-clients"; }); await page.waitForSelector(`[data-ouvrir="${N1}"]`).catch(() => {});   // v84 (ménage du bloc 3) : le tableau (et son [data-ouvrir]) est dans « Suivi détaillé »
     E.ici = "fiche"; await page.click(`[data-ouvrir="${N1}"]`); await attendre(page, 2000);
-    const h1 = await texte(page, "#acc-vue h1");
+    const h1 = await texte(page, "#acc-vue .fc-ident h2");   // v104 (point 4) : changement voulu — le nom est sous le titre de page « Fiche » (h2 de #fc-ident)
     ok("fiche : le titre est « Sans nom »", h1.startsWith("Sans nom"), h1);
     const bandeau = await texte(page, ".bandeau-tete strong");
     ok("fiche : le bandeau dit « Fiche — Sans nom » (ni « ce client », ni l'identifiant)", bandeau === "Fiche — Sans nom", bandeau);

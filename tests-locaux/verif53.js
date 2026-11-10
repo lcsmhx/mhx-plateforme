@@ -545,7 +545,9 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     const ficheProspect = async (uid, nom) => {
       await page.evaluate(([id, n]) => Clients.ouvrir(id, n, "accueil"), [uid, nom]);
       await page.waitForSelector("#fiche-decouverte", { timeout: 8000 }); await attendre(page, 700);
-      const t = (await tuile(page, "Activité")) || { val: "?", sub: "?" }; t.h1 = await texte(page, "#vue .masthead h1");
+      /* v104 (point 4) : changement voulu — le nom n'est plus le h1 de la fiche (le h1 est le titre de page « Fiche », comme les
+         autres onglets) : il est dans le h2 de l'identité (#fc-ident) */
+      const t = (await tuile(page, "Activité")) || { val: "?", sub: "?" }; t.h1 = await texte(page, "#vue .fc-ident h2");
       await page.click("#sortir-fiche").catch(() => {}); await attendre(page, 800);
       await aller(page, "#/suivi-clients", 1800); await page.waitForSelector(`#tb-clients [data-ouvrir="${F.IDS.c3}"]`, { timeout: 8000 });   // v84 (ménage du bloc 3) : le tableau est dans le Suivi détaillé
       return t;
@@ -553,7 +555,8 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     const tp = await ficheProspect(PIA, "Pia Active"), tr = await ficheProspect(REMI, "Rémi Muet"), te = await ficheProspect(EVA, "Eva Désinscrite");
     ok("Mes clients (v71) : Pia, Rémi et Eva n'y sont plus ; v83 : plus de ligne « Les prospects sont dans Prospects → », tuile « Prospects » du tableau de bord à 3 (lien #/prospects) ; fiche de Pia (activite il y a 1 h) : tuile « Activité » « auj. » ; Eva (clé emails il y a 1 h, rien d'autre depuis 8 jours) comme Rémi (" + tr.val + "), pas « auj. »", absents.length === 3 && lprosp.absente && lprosp.val === "3" && lprosp.lbl === "Prospects" && lprosp.href === "#/prospects" /* v83 (bloc 3) */ && tp.h1.startsWith("Pia Active") && tp.val === "auj." && tp.sub === "depuis sa dernière saisie" && tr.h1.startsWith("Rémi Muet") && tr.val !== "auj." && tr.sub === "depuis sa dernière saisie" && te.h1.startsWith("Eva Désinscrite") && te.val === tr.val && te.sub === tr.sub, JSON.stringify({ absents, lprosp, tp, tr, te }));
     await page.click(`#tb-clients [data-ouvrir="${F.IDS.c3}"]`); await attendre(page, 2600);
-    /* v83 (bloc 3) : les alertes de la fiche sont en haut de l'onglet Suivi (#fc-suivi), sous l'en-tête .fc-tete */
+    /* v83 (bloc 3) : les alertes de la fiche sont en haut de l'onglet Suivi (#fc-suivi), sous l'en-tête .fc-tete
+       (v104 (point 4) : changement voulu — sous le bandeau commun, le titre de page et l'identité #fc-ident ; sélecteur inchangé) */
     const alertes = await page.$$eval("#vue #fc-suivi > .attention-alertes .pastille", l => l.map(e => e.textContent.trim())).catch(() => []);
     ok("fiche de Julien : l'alerte « Inactif depuis 12 j » est en haut de la fiche (v83 : onglet Suivi) (la clé activite, lue par la fiche, ne compte pas pour un client)", alertes.includes("Inactif depuis 12 j"), JSON.stringify(alertes));
     await page.click("#sortir-fiche").catch(() => {}); await attendre(page, 800);

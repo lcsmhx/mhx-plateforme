@@ -447,7 +447,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     ok("… la carte est redessinée dans le même filtre : « Relancé aujourd'hui : attends sa réponse. », toast « Suivi de Émilie Rousseau enregistré. »", ce.includes("Relancé aujourd'hui : attends sa réponse.") && (await page.getAttribute('[data-filtre="tous"]', "aria-pressed")) === "true" && (await toasts(page)).includes("Suivi de Émilie Rousseau enregistré."), ce.slice(0, 200) + " · " + JSON.stringify(await toasts(page)));
     await filtre(page, "tous"); await chercher(page, "karim");
     await page.click(`#pr-liste .sc-carte[data-uid="${KARIM}"] [data-sc="fiche"]`); await page.waitForSelector("#fiche-reponses", { timeout: 6000 }); await attendre(page, 400);
-    ok("après une recherche, « Ouvrir la fiche » sur la carte de Karim : sa fiche s'ouvre (« Karim Benali », ses réponses)", (await texte(page, "#vue .masthead h1")).startsWith("Karim Benali") && (await texte(page, "#fiche-reponses")).includes("karim@exemple.org"), await texte(page, "#vue .masthead h1"));
+    ok("après une recherche, « Ouvrir la fiche » sur la carte de Karim : sa fiche s'ouvre (« Karim Benali », ses réponses)", (await texte(page, "#vue .fc-ident h2" /* v104 (point 4) : changement voulu — le nom est sous le titre de page « Fiche » */)).startsWith("Karim Benali") && (await texte(page, "#fiche-reponses")).includes("karim@exemple.org"), await texte(page, "#vue .fc-ident h2" /* v104 (point 4) : changement voulu — le nom est sous le titre de page « Fiche » */));
     ok("seule écriture : la relance (aucune autre clé touchée)", db.ecritures.length === 1, JSON.stringify(db.ecritures.map(e => e.outil)));
   });
 
@@ -579,7 +579,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     const lienP = await page.$eval("#dc-lien", e => e.value).catch(() => "");
     ok("prospect piégé : fiche affichée, « 3 / 10 réponses » (v53 : plus de score), chronologie « Inscription » seule (dates piégées ignorées)", (await texte(page, "#fiche-reponses p.note")).startsWith("3 / 10 réponses") && JSON.stringify(cp) === '["Inscription"]', (await texte(page, "#fiche-reponses p.note")) + " " + JSON.stringify(cp));
     ok("prospect piégé : « 0 jour d'activité, 0 min dans l'app. » (pages piégées écartées), lien sans email (« @piege.fr » invalide), pas de mailto", (await texte(page, "#fiche-chrono p.note")) === "0 jour d'activité, 0 min dans l'app." && lienP === lienPour("=1+1", XSS, "") && !(await page.$("#dc-mail")), (await texte(page, "#fiche-chrono p.note")) + " · " + lienP);
-    ok("prospect piégé : aucune injection (nom, obstacle, modèle d'email), aucune écriture", !(await xss(page)) && (await texte(page, "#vue .masthead h1")).startsWith("=1+1 " + XSS) && db.ecritures.length === 0, await texte(page, "#vue .masthead h1"));
+    ok("prospect piégé : aucune injection (nom, obstacle, modèle d'email), aucune écriture", !(await xss(page)) && (await texte(page, "#vue .fc-ident h2" /* v104 (point 4) : changement voulu — le nom est sous le titre de page « Fiche » */)).startsWith("=1+1 " + XSS) && db.ecritures.length === 0, await texte(page, "#vue .fc-ident h2" /* v104 (point 4) : changement voulu — le nom est sous le titre de page « Fiche » */));
   });
 
   /* ---------- D. Journal des emails absent ---------- */
@@ -619,7 +619,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     await page.reload(); await attendre(page, 2600);
     ok("après rechargement (coach_notifs relu en base) : toujours 1 nouveauté, badge « 1 »", (await page.$$("#pr-nouveautes .nv-liste li")).length === 1 && JSON.stringify(await badge(page)) === badge2("1") /* v83 (bloc 3) : badge en double */, JSON.stringify(await badge(page)));
     await page.click(`#pr-nouveautes [data-nv-ouvrir="${NINA}"]`); await attendre(page, 2400);
-    ok("« Ouvrir » dans les Nouveautés : la fiche de Nina s'ouvre", (await texte(page, "#vue .masthead h1")).startsWith("Nina Nouvelle") && !!(await page.$("#fiche-reponses")), await texte(page, "#vue .masthead h1"));
+    ok("« Ouvrir » dans les Nouveautés : la fiche de Nina s'ouvre", (await texte(page, "#vue .fc-ident h2" /* v104 (point 4) : changement voulu — le nom est sous le titre de page « Fiche » */)).startsWith("Nina Nouvelle") && !!(await page.$("#fiche-reponses")), await texte(page, "#vue .fc-ident h2" /* v104 (point 4) : changement voulu — le nom est sous le titre de page « Fiche » */));
     ok("Nouveautés : une seule écriture en tout (coach_notifs), aucune injection", db.ecritures.length === 1 && !(await xss(page)), JSON.stringify(db.ecritures.map(e => e.outil)));
   });
   await bloc("E. Nouveautés depuis la dernière visite", async () => {
@@ -659,7 +659,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     await page.goto(`http://localhost:${PORT}/#/prospects`); await page.waitForSelector("#pr-nouveautes .nv-panneau", { timeout: 8000 }); await attendre(page, 400);
     await verifier("#pr-nouveautes", "Nouveautés de la page Prospects");
     await page.click(`#pr-nouveautes [data-nv-ouvrir="${QUOTE}"]`); await attendre(page, 2400);
-    ok("« Ouvrir » sur le nom piégé : sa fiche s'ouvre, nom affiché tel quel, aucune injection", (await texte(page, "#vue .masthead h1")).startsWith(norm(litQ)) && !!(await page.$("#fiche-reponses")) && !(await xss(page)), await texte(page, "#vue .masthead h1"));
+    ok("« Ouvrir » sur le nom piégé : sa fiche s'ouvre, nom affiché tel quel, aucune injection", (await texte(page, "#vue .fc-ident h2" /* v104 (point 4) : changement voulu — le nom est sous le titre de page « Fiche » */)).startsWith(norm(litQ)) && !!(await page.$("#fiche-reponses")) && !(await xss(page)), await texte(page, "#vue .fc-ident h2" /* v104 (point 4) : changement voulu — le nom est sous le titre de page « Fiche » */));
   });
   await bloc("E. Nouveautés : dates non ISO", async () => {
     /* Date.parse de Chrome accepte des chaînes non ISO (« <img src=x…> » = une date de 2001, « Sep 26 2026 10:00 » = une vraie
@@ -1167,18 +1167,30 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
        phrase, alertes, téléphone, source, et tout le bas de la fiche de « En bref » à « Le reste »), les mêmes h2, plus la
        nouvelle vérité (plus de bandeau en haut de #vue, en-tête de la fiche, téléphone et source dans l'onglet Compte). Une fois
        la v83 sur main, la même structure des deux côtés : comparaison stricte, morceau par morceau. */
+    /* v104 (point 4) : changement voulu \u2014 l'Aper\u00e7u a l'en-t\u00eate des 4 autres onglets : le bandeau commun revient en haut de #vue
+       (\u00ab Fiche de \u2026 \u00bb et sa phrase, WhatsApp, les 5 onglets, \u00ab Revenir \u2026 \u00bb) ; le bandeau de l'onglet Suivi (#fc-outils) ne garde
+       que les liens des outils ; le titre de page (\u00ab Fiche \u00bb) passe avant le nom, qui devient un h2 de #fc-ident ; plus de croix
+       ni de boutons Suivi / Compte (role="tab"). Morceau par morceau, toujours au texte identique \u00e0 la r\u00e9f\u00e9rence : le \u00ab bandeau \u00bb
+       d'avant = sa t\u00eate (bandeau du haut) + les liens (#fc-outils) + \u00ab Revenir \u2026 \u00bb (bandeau du haut), dans cet ordre ; le nom
+       = le h2 de #fc-ident ; l'eyebrow (cach\u00e9e \u00e0 l'\u00e9cran depuis la v76 ; avant \u00ab Fiche client \u00b7 date \u00bb, maintenant \u00ab Nom \u2014
+       Fiche \u00bb comme les autres onglets) est v\u00e9rifi\u00e9e \u00e0 part et sortie de la comparaison ; le h2 du nom est retir\u00e9 de la liste
+       des h2 compar\u00e9e (il \u00e9tait le h1 de la r\u00e9f\u00e9rence). Une fois la v104 sur main : la m\u00eame structure des deux c\u00f4t\u00e9s. */
     const morceaux = page => page.evaluate(() => {
       const n = t => String(t || "").replace(/[\u00a0\u202f]/g, " ").replace(/\s+/g, " ").trim();
-      const v = document.getElementById("vue"), neuf = !!v.querySelector(".fc-tete");
+      const v = document.getElementById("vue"), v104 = !!v.querySelector(".fc-ident"), neuf = v104 || !!v.querySelector(".fc-tete");
       const tx = sel => { const e = v.querySelector(sel); return e ? n(e.textContent) : null; };
+      const bandeau104 = () => [tx(":scope > .fiche-entete .bandeau-tete"), tx("#fc-suivi #fc-outils .bandeau"), tx(":scope > .fiche-entete #sortir-fiche")].every(x => x) ? [tx(":scope > .fiche-entete .bandeau-tete"), tx("#fc-suivi #fc-outils .bandeau"), tx(":scope > .fiche-entete #sortir-fiche")].join(" ") : null;
       const sans = (t, pre) => t == null ? null : t.startsWith(pre) ? t.slice(pre.length) : "?" + t;
       const eb = Array.from(v.querySelectorAll("h2")).find(h => n(h.textContent) === "En bref"), reste = [];
       for (let x = eb && eb.closest("section"); x; x = x.nextElementSibling) if (x.id !== "fiche-commercial") reste.push(n(x.textContent));
       const lbl = id => { const e = v.querySelector("#fc-compte #" + id); return e && e.closest("li") ? n(e.closest("li").querySelector("span").textContent) : null; };
-      return { neuf, bandeauHaut: !!v.querySelector(":scope > .bandeau"), telLbl: neuf ? lbl("fiche-tel") : null, sourceLbl: neuf ? lbl("fiche-source") : null,
+      return { neuf, v104, bandeauHaut: !!v.querySelector(":scope > .bandeau"), telLbl: neuf ? lbl("fiche-tel") : null, sourceLbl: neuf ? lbl("fiche-source") : null,
         role: tx(".fc-pastilles .fc-role-p"), prog: tx(".fc-pastilles .fc-prog"), call: v.querySelector("#fc-call") ? v.querySelector("#fc-call").getAttribute("href") : null,
         onglets: Array.from(v.querySelectorAll('[role="tab"][data-onglet]')).map(t => t.dataset.onglet + ":" + t.getAttribute("aria-selected")),
-        commun: { bandeau: neuf ? tx("#fc-suivi #fc-outils .bandeau") : tx(":scope > .bandeau"), eyebrow: tx(".masthead .eyebrow"), h1: tx(".masthead h1"),
+        /* v104 (point 4) : l'en-tête commun (5 onglets, Aperçu marqué, un seul « Revenir … »), le titre de page, son eyebrow, pas de croix */
+        tete104: v104 ? { onglets: Array.from(v.querySelectorAll(":scope > .fiche-entete .f-onglet")).map(t => n(t.textContent) + (t.getAttribute("aria-current") ? ":ici" : "")),
+          sortir: v.querySelectorAll("#sortir-fiche").length, croix: !!v.querySelector("#fc-fermer"), titre: tx("#acc-vue > .masthead h1"), eyebrow: tx("#acc-vue > .masthead .eyebrow") } : null,
+        commun: { bandeau: v104 ? bandeau104() : neuf ? tx("#fc-suivi #fc-outils .bandeau") : tx(":scope > .bandeau"), eyebrow: v104 ? "[eyebrow]" : tx(".masthead .eyebrow"), h1: v104 ? tx(".fc-ident h2") : tx(".masthead h1"),
           lede: neuf ? tx("#fc-suivi > .fc-lede") : tx(".masthead > .lede"), alertes: neuf ? tx("#fc-suivi > .attention-alertes") : tx(".masthead > .attention-alertes"),
           tel: neuf ? tx("#fc-compte #fiche-tel") : sans(tx("#fiche-tel"), "Téléphone : "), source: neuf ? tx("#fc-compte #fiche-source") : sans(tx("#fiche-source"), "Source : "),
           reste: reste.join(" | ") } };
@@ -1192,8 +1204,12 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     const finRetour = (c, lib) => !!c.bandeau && c.bandeau.endsWith(" " + lib);
     const sansRetour = (c, lib) => Object.assign({}, c, { bandeau: finRetour(c, lib) ? c.bandeau.slice(0, -lib.length) + "[revenir]" : c.bandeau });
     const retours = { page: finRetour(mf.commun, RETOUR_V84), ref: finRetour(mfM.commun, RETOUR_REF) };
-    const comF = JSON.stringify(sansRetour(mf.commun, RETOUR_V84)), comM = JSON.stringify(Object.assign({}, sansRetour(mfM.commun, RETOUR_REF), { reste: FORM_V77(mfM.commun.reste) }));
-    ok("fiche de Thomas vue par le coach : sections identiques à main (" + f.h2.join(", ") + ") ; v83 : chaque morceau d'avant identique à main à sa nouvelle place (bandeau dans l'onglet Suivi, nom, phrase, alertes, de « En bref » à « Le reste »), en-tête de la fiche (nom seul, « Client », programme, « Préparer le call », onglets) ; v72 : Téléphone « — » et Source « — », présents (onglet Compte) ; v77 : formation sur 48 étapes ; v84 : ouverte depuis « Suivi détaillé », « Revenir au suivi détaillé » (référence : « Revenir à mes clients » tant qu'elle l'ouvre depuis #/clients)", f.t.length > 300 && mf.neuf && !mf.bandeauHaut && comF === comM && mf.commun.h1 === "Thomas Démo" && !!mf.commun.bandeau && mf.commun.bandeau.startsWith("Fiche de Thomas Démo") && mf.commun.reste.startsWith("En bref") && mf.commun.reste.includes("Le reste") && mf.commun.tel === "—" && mf.commun.source === "—" && mf.telLbl === "Téléphone" && mf.sourceLbl === "Source" && mf.role === "Client" && !!mf.prog && fM.t.includes("Nom" + mf.prog) && mf.call === "#/client/" + F.IDS.c1 + "/bilan" && JSON.stringify(mf.onglets) === '["suivi:true","compte:false"]' && JSON.stringify(f.h2) === JSON.stringify(fM.h2) && retours.page && retours.ref, "retours " + JSON.stringify(retours) + " · " + f.t.length + " / " + fM.t.length + " · " + JSON.stringify(f.h2) + " vs " + JSON.stringify(fM.h2) + " · " + JSON.stringify({ neuf: mf.neuf, bandeauHaut: mf.bandeauHaut, telLbl: mf.telLbl, sourceLbl: mf.sourceLbl, role: mf.role, prog: mf.prog, call: mf.call, onglets: mf.onglets }) + " · " + (() => { const x = comF, y = comM; let k = 0; while (k < x.length && x[k] === y[k]) k++; return JSON.stringify(x.slice(Math.max(0, k - 40), k + 60)) + " ≠ " + JSON.stringify(y.slice(Math.max(0, k - 40), k + 60)); })());
+    const comF = JSON.stringify(sansRetour(mf.commun, RETOUR_V84)), comM = JSON.stringify(Object.assign({}, sansRetour(mfM.commun, RETOUR_REF), { reste: FORM_V77(mfM.commun.reste) }, mf.v104 ? { eyebrow: "[eyebrow]" } : {}));
+    /* v104 (point 4) : changement voulu — l'en-tête commun sur l'Aperçu (vérifié ici), le h2 du nom retiré des h2 comparés tant que
+       la référence a le nom en h1 */
+    const t104 = mf.tete104 || {}, h2F = mf.v104 && !mfM.v104 && f.h2[0] === mf.commun.h1 ? f.h2.slice(1) : f.h2;
+    const tete104 = mf.v104 && mf.bandeauHaut && JSON.stringify(t104.onglets) === '["Aperçu:ici","Entraînement","Nutrition","Suivi","Profil"]' && t104.sortir === 1 && !t104.croix && t104.titre === "Fiche" && t104.eyebrow === "Thomas Démo — Fiche";
+    ok("fiche de Thomas vue par le coach : sections identiques à main (" + f.h2.join(", ") + ") ; v83 : chaque morceau d'avant identique à main à sa nouvelle place (bandeau dans l'onglet Suivi, nom, phrase, alertes, de « En bref » à « Le reste »), en-tête de la fiche (nom seul, « Client », programme, « Préparer le call », onglets) ; v72 : Téléphone « — » et Source « — », présents (onglet Compte) ; v77 : formation sur 48 étapes ; v84 : ouverte depuis « Suivi détaillé », « Revenir au suivi détaillé » (référence : « Revenir à mes clients » tant qu'elle l'ouvre depuis #/clients)", f.t.length > 300 && mf.neuf && tete104 && comF === comM && mf.commun.h1 === "Thomas Démo" && !!mf.commun.bandeau && mf.commun.bandeau.startsWith("Fiche de Thomas Démo") && mf.commun.reste.startsWith("En bref") && mf.commun.reste.includes("Le reste") && mf.commun.tel === "—" && mf.commun.source === "—" && mf.telLbl === "Téléphone" && mf.sourceLbl === "Source" && mf.role === "Client" && !!mf.prog && fM.t.includes("Nom" + mf.prog) && mf.call === "#/client/" + F.IDS.c1 + "/bilan" && JSON.stringify(mf.onglets) === '[]' && JSON.stringify(h2F) === JSON.stringify(fM.h2) && retours.page && retours.ref, "retours " + JSON.stringify(retours) + " · " + f.t.length + " / " + fM.t.length + " · " + JSON.stringify(f.h2) + " vs " + JSON.stringify(fM.h2) + " · " + JSON.stringify({ neuf: mf.neuf, bandeauHaut: mf.bandeauHaut, telLbl: mf.telLbl, sourceLbl: mf.sourceLbl, role: mf.role, prog: mf.prog, call: mf.call, onglets: mf.onglets, t104, h2F }) + " · " + (() => { const x = comF, y = comM; let k = 0; while (k < x.length && x[k] === y[k]) k++; return JSON.stringify(x.slice(Math.max(0, k - 40), k + 60)) + " ≠ " + JSON.stringify(y.slice(Math.max(0, k - 40), k + 60)); })());
     ok("fiche de Thomas : ni score, ni réponses du questionnaire court, ni chronologie, ni lien de réservation, aucune écriture", !(await f.page.$("#fiche-score, #fiche-reponses, #fiche-chrono, #fiche-actions, #fiche-decouverte, #fiche-prospect, #dc-lien")) && f.db.ecritures.length === 0);
     await f.c.close(); await fM.c.close();
     /* v53 (chantier 4) : Mes clients gagne 5 colonnes (retour de la semaine, note, smiley, dernière visite, jours actifs) :

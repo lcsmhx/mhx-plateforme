@@ -233,6 +233,12 @@ const avecPrefsEn = (db, uid) => { const pr = db.donnees.find(d => d.user_id ===
 const bouton = (page, sel) => page.evaluate(s => { const e = document.querySelector(s); return e ? { txt: e.textContent.trim(), aria: e.getAttribute("aria-label"), title: e.getAttribute("title") } : null; }, sel);
 const FR = "Langue : français. Passer en anglais", EN = "Language: English. Switch to French";
 const AVANT = {"accueil": ["accueil", ["Thomas Démo", "En bref", "Notes privées"], ["acc-vue", "fc-fermer", "fc-call", "fc-appeler", "fc-tab-suivi", "fc-tab-compte"]], "accueil/compte": ["accueil", ["Thomas Démo", "En bref", "Notes privées"], ["acc-vue", "fc-fermer", "fc-call", "fc-appeler", "fc-tab-suivi", "fc-tab-compte"]], "programme": ["programme", ["Son programme", "Bloc 1 — 4 semaines", "Réglages du programme"], ["prog-vue", "pg-etat", "pg-statut", "pg-publier", "pg-nouveau-bloc", "pg-pub-msg"]], "journal": ["journal", ["Son journal", "Séances notées par ton client"], ["jr-vue", "jr-noter", "jr-hist", "jr-historique", "jr-nb"]], "nutrition": ["nutrition", ["Nutrition", "Sa diète", "Composer la semaine"], ["nu-vue", "nu-etat", "nu-statut", "nu-publier", "nu-nouveau-bloc", "nu-pub-msg"]], "calculateur": ["calculateur", ["Calculateur", "Tes données", "Ta maintenance"], ["sexe", "age", "taille", "poids", "pas", "heures"]], "complements": ["complements", ["Ses compléments", "Ajouter un complément", "Sa liste"], ["cp-vue", "cp-libre", "cp-note"]], "suivi": ["suivi", ["Son suivi", "Bilan hebdomadaire", "Ta régularité"], ["suivi-fb-haut", "suivi-checkin", "suivi-fb-bas", "suivi-reg", "suivi-bilan"]], "bilan": ["bilan", ["Son bilan", "Points à aborder pendant le call", "Les 4 dernières semaines"], ["bilan-vue"]], "mensurations": ["mensurations", ["Sa progression", "Poids", "Nouvelle mesure"], ["k-poids", "k-poids-d", "k-depart", "k-depart-d", "k-delta", "k-sem"]], "formation": ["formation", ["Formation", "Ton parcours", "Le processus, étape par étape"], ["fo-vue"]], "profil": ["profil", ["Profil", "1 · Identité & logistique", "2 · Ton objectif"], ["q-nom", "q-age", "q-sexe", "q-ville", "q-fuseau", "q-email"]], "repas": ["nutrition", ["Nutrition", "Sa diète", "Composer la semaine"], ["nu-vue", "nu-etat", "nu-statut", "nu-publier", "nu-nouveau-bloc", "nu-pub-msg"]], "progression": ["mensurations", ["Sa progression", "Poids", "Nouvelle mesure"], ["k-poids", "k-poids-d", "k-depart", "k-depart-d", "k-delta", "k-sem"]]};   // relevé sur la v98 (même faux Supabase) : [outil, titres, identifiants]
+/* v104 (point 4) : changement voulu — l'Aperçu a l'en-tête des autres onglets : le titre de page (« Fiche » ; « Son compte »
+   sous Profil) passe avant le nom (h2), plus de croix (fc-fermer) ni de boutons Suivi / Compte (fc-tab-*), l'identité et les
+   actions sont dans #fc-ident ; « Préparer le call » (fc-call) et Appeler (fc-appeler) restent */
+const IDS104 = ["acc-vue", "fc-ident", "fc-call", "fc-appeler", "fc-suivi", "fc-retour"];
+AVANT.accueil = ["accueil", ["Fiche", "Thomas Démo", "En bref"], IDS104];
+AVANT["accueil/compte"] = ["accueil", ["Son compte", "Thomas Démo", "En bref"], IDS104];
 const C2 = F.IDS.c2, TEL = "+33639980001";
 const ONGLET = { accueil: "Aperçu", "accueil/compte": "Profil", programme: "Entraînement", journal: "Entraînement", nutrition: "Nutrition", repas: "Nutrition", calculateur: "Nutrition", complements: "Nutrition", suivi: "Suivi", bilan: "Suivi", mensurations: "Suivi", progression: "Suivi", formation: "Suivi", profil: "Profil" };
 const avecTel = db => db.donnees.push({ user_id: C1, outil: "contact", contenu: { telephone: TEL }, maj_le: avant(J) });
@@ -271,8 +277,11 @@ const ouvrir = async (page, chemin, sel) => { await page.goto(URL0 + "#/client/"
     /* depuis la liste : la fiche s'ouvre sur Aperçu */
     await page.goto(URL0 + "#/clients"); await pret(page, `[data-uid="${C1}"], [data-ouvrir="${C1}"], #lc-liste`);
     await page.goto(URL0 + "#/client/" + C1); await pret(page, "#fc-suivi"); await attendre(page, 900);
-    const a = await page.evaluate(() => ({ hash: location.hash, ici: (document.querySelector('.fiche-onglets .f-onglet[aria-current="page"]') || {}).textContent || null, wa: !!document.querySelector(".fc-actions [data-fiche-wa] a") }));
-    ok("A4 : la fiche s'ouvre sur « Aperçu » (la fiche : alertes, régularité, poids…), avec WhatsApp dans son en-tête", (/\/accueil$/.test(a.hash) || a.hash.endsWith(C1)) && a.ici === "Aperçu" && a.wa, JSON.stringify(a));
+    /* v104 (point 4) : changement voulu — le WhatsApp de l'Aperçu est celui du bandeau commun (#vue > .fiche-entete), plus
+       celui des actions (.fc-actions) : un seul lien WhatsApp pour un client */
+    const a = await page.evaluate(() => ({ hash: location.hash, ici: (document.querySelector('.fiche-onglets .f-onglet[aria-current="page"]') || {}).textContent || null, wa: !!document.querySelector("#vue > .fiche-entete [data-fiche-wa] a"),
+      nbWa: Array.from(document.querySelectorAll('#vue a[href*="wa.me"]')).filter(x => x.getClientRects().length > 0).length }));   // visibles (celui du panneau Compte, caché, compte à part)
+    ok("A4 : la fiche s'ouvre sur « Aperçu » (la fiche : alertes, régularité, poids…), avec WhatsApp dans son en-tête (une seule fois)", (/\/accueil$/.test(a.hash) || a.hash.endsWith(C1)) && a.ici === "Aperçu" && a.wa && a.nbWa === 1, JSON.stringify(a));
     /* Profil › Son compte : l'onglet Compte de la fiche */
     await page.click('.fiche-onglets .f-onglet[data-onglet-fiche="profil"]'); await pret(page); await attendre(page, 900);
     const p = await lireTete(page);
@@ -280,15 +289,19 @@ const ouvrir = async (page, chemin, sel) => { await page.goto(URL0 + "#/client/"
     const c = await page.evaluate(() => ({ hash: location.hash, compte: !document.getElementById("fc-compte").hidden, ici: (document.querySelector('.fiche-onglets .f-onglet[aria-current="page"]') || {}).textContent || null }));
     ok("A5 : Profil : Son questionnaire, Son compte ; « Son compte » ouvre l'onglet Compte de la fiche (Profil reste marqué)",
       JSON.stringify(p.pages) === JSON.stringify(["Son questionnaire", "Son compte"]) && /\/accueil\/compte$/.test(c.hash) && c.compte && c.ici === "Profil", JSON.stringify([p.pages, c]));
-    /* relecture : le bouton interne « Compte », puis Entraînement, puis Aperçu : Aperçu rouvre le Suivi */
+    /* relecture : depuis Aperçu, le Compte, puis Entraînement, puis Aperçu : Aperçu rouvre le Suivi.
+       v104 (point 4) : changement voulu — plus de bouton interne « Compte » (#fc-tab-compte) : depuis Aperçu, le Compte s'ouvre
+       par Profil › « Son compte » (bandeau commun) ; mêmes vérifications ensuite (adresse, onglet marqué, Aperçu rouvre le Suivi) */
     await page.goto(URL0 + "#/client/" + C1 + "/accueil"); await pret(page, "#fc-suivi"); await attendre(page, 600);
-    await page.click("#fc-tab-compte"); await attendre(page, 300);
-    const apresCompte = await page.evaluate(() => ({ hash: location.hash, ici: (document.querySelector('.fiche-onglets .f-onglet[aria-current="page"]') || {}).textContent || null }));
+    const sansBoutons = await page.evaluate(() => !document.querySelector('[id^="fc-tab-"], [data-onglet]'));
+    await page.click('#vue > .fiche-entete .f-onglet[data-onglet-fiche="profil"]'); await pret(page); await attendre(page, 600);
+    await page.click('#vue > .fiche-entete a.b-act:nth-of-type(2)'); await pret(page, "#fc-compte"); await attendre(page, 600);
+    const apresCompte = await page.evaluate(() => ({ hash: location.hash, compte: !document.getElementById("fc-compte").hidden, ici: (document.querySelector('.fiche-onglets .f-onglet[aria-current="page"]') || {}).textContent || null }));
     await page.click('.fiche-onglets .f-onglet[data-onglet-fiche="entrainement"]'); await pret(page, "#pg-publier");
     await page.click('#vue > .fiche-entete .f-onglet[data-onglet-fiche="apercu"]'); await pret(page, "#fc-suivi"); await attendre(page, 600);
     const r = await page.evaluate(() => ({ suivi: !document.getElementById("fc-suivi").hidden, ici: (document.querySelector('.fiche-onglets .f-onglet[aria-current="page"]') || {}).textContent || null }));
-    ok("A5b : le bouton interne « Compte » met l'adresse et l'onglet à jour (…/accueil/compte, Profil) ; puis Entraînement puis Aperçu : le Suivi s'ouvre, Aperçu marqué",
-      /\/accueil\/compte$/.test(apresCompte.hash) && apresCompte.ici === "Profil" && r.suivi && r.ici === "Aperçu", JSON.stringify([apresCompte, r]));
+    ok("A5b : depuis Aperçu (sans boutons internes Suivi / Compte), Profil › Son compte met l'adresse et l'onglet à jour (…/accueil/compte, Profil) ; puis Entraînement puis Aperçu : le Suivi s'ouvre, Aperçu marqué",
+      sansBoutons && /\/accueil\/compte$/.test(apresCompte.hash) && apresCompte.compte && apresCompte.ici === "Profil" && r.suivi && r.ici === "Aperçu", JSON.stringify([sansBoutons, apresCompte, r]));
     const tailles = await page.evaluate(() => Array.from(document.querySelectorAll(".f-onglet")).map(x => Math.round(x.getBoundingClientRect().height)));
     ok("A6 : onglets à 44 px", tailles.length === 5 && tailles.every(h => h >= 44), JSON.stringify(tailles));
     const db3 = base(); avecTel(db3);

@@ -541,7 +541,7 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
     ok("A : 1 urgence client : badge « 1 urgence » en couleur (mauvais) ; Prospects « 0 urgence » neutre ; tuile « À traiter » 1", tc.val === "2" && tc.badge === "1 urgence" && /\bmauvais\b/.test(tc.cls) && tp.badge === "0 urgence" && !/mauvais/.test(tp.cls) && (await traiterTb(page)) === "1", JSON.stringify([tc, tp, await traiterTb(page)]));   /* v83 (bloc 3) : « 1 urgence aujourd'hui. » → la tuile À traiter (1) */
     ok("A : « À traiter maintenant » : une ligne, Julien « Inactif depuis 12 j », bouton vers sa fiche (vue d'ensemble)", L.length === 1 && L[0].uid === F.IDS.c3 && L[0].t.includes("Julien Démo") && L[0].t.includes("Inactif depuis 12 j") && L[0].cible === "accueil", JSON.stringify(L));
     ok("A : info-bulle des tuiles : ce qui compte comme urgence (clients : 😞, note en chute, retour à lire, inactivité ; prospects : 48 h, clic « Réserver mon plan d'action » ; v65 : plus « Réserver »)", /😞/.test(tc.titre) && /note en chute/.test(tc.titre) && /48 h/.test(tp.titre) && /« Réserver mon plan d'action »/.test(tp.titre) && !/Réserver(?! mon plan d'action)/.test(tp.titre), tc.titre + " | " + tp.titre);
-    await page.click(`#tb-a-traiter [data-fiche="${F.IDS.c3}"]`); await page.waitForSelector("#acc-vue .masthead h1", { timeout: 8000 }); await attendre(page, 800);
+    await page.click(`#tb-a-traiter [data-fiche="${F.IDS.c3}"]`); await page.waitForSelector("#acc-vue #fc-ident", { timeout: 8000 }); await attendre(page, 800);   // v104 (point 4) : changement voulu — le titre de page est là dès le chargement : on attend l'identité (#fc-ident)
     ok("A : un clic sur « Ouvrir » → la fiche de Julien (bandeau de consultation, écran « accueil »)", (await page.evaluate(() => [courant, Store.idConsulte])).join("|") === "accueil|" + F.IDS.c3, JSON.stringify(await ou(page)));
     ok("A : aucune écriture", db.ecritures.length === 0, resume(db));
   });
@@ -1055,8 +1055,10 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
   await bloc("F. fiche d'un client avec un ancien suivi", async () => {
     const db = decor({ test: false, prospects: false, cles: [[F.IDS.c1, "suivi_prospect", { version: 1, issue: "absent", issue_le: avant(3 * J), bilan_le: avant(4 * J) }, avant(3 * J)]] });
     const { page } = await coachSur(b, db, "#/suivi-clients", "#tb-clients [data-ouvrir]");   // v84 (ménage du bloc 3) : le tableau est dans « Suivi détaillé »
-    await ficheDe(page, F.IDS.c1, "Thomas Démo", "#acc-vue .masthead h1");
-    ok("F : fiche d'un client (ancien prospect « Absent ») : pas de « Suivi commercial », pas de bloc Découverte, pas de score, rien écrit", (await texte(page, "#vue")).includes("Fiche client") && !(await page.$("#fiche-commercial, #fiche-prospect, #fiche-score")) && db.ecritures.length === 0);
+    /* v104 (point 4) : changement voulu — le titre de page (#acc-vue .masthead h1) est là dès le chargement et l'eyebrow « Fiche
+       client · date » n'existe plus : la fiche chargée se reconnaît à son identité (#fc-ident) */
+    await ficheDe(page, F.IDS.c1, "Thomas Démo", "#acc-vue #fc-ident");
+    ok("F : fiche d'un client (ancien prospect « Absent ») : pas de « Suivi commercial », pas de bloc Découverte, pas de score, rien écrit", !!(await page.$("#vue #fc-ident")) && !(await page.$("#fiche-commercial, #fiche-prospect, #fiche-score")) && db.ecritures.length === 0);
   });
 
   /* =================== G. suivi des visites des clients =================== */

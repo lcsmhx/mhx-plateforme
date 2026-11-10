@@ -43,7 +43,7 @@ const server = http.createServer((req,res)=>{if(servirFichier(req,res,HTML))retu
     await page.click(`[data-ouvrir="${F.IDS.c1}"]`); await page.waitForTimeout(900);
     ok("coach en fiche : onglet Accueil visible", !!(await page.$('#nav a[data-id="accueil"]')));
     await page.evaluate(()=>{location.hash="#/accueil"}); await page.waitForTimeout(900);
-    ok("coach en fiche : fiche de Thomas", (await page.textContent("#acc-vue h1")||"").includes("Thomas"));
+    ok("coach en fiche : fiche de Thomas", (await page.textContent("#acc-vue .fc-ident h2")||"").includes("Thomas"));   // v104 (point 4) : changement voulu — le nom est sous le titre de page « Fiche » (h2 de #fc-ident)
     ok("coach en fiche : lecture seule (pas de bouton Cocher mes objectifs actif)", (await page.$$eval("#vue .obj-case", l => l.filter(e => !e.disabled).length)) === 0);   // v52 : vraie condition (était toujours vraie)
     await c.close(); }
   await b.close(); server.close(); console.log(res.join("\n"));

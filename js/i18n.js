@@ -1752,3 +1752,5 @@ Object.assign(I18N.en, {
   "Suppression incomplète.": "Deletion incomplete."
 });
 /* v104-supprimer-acces-fin */
+/* v104 (point 4) : fiche d'un prospect, le bouton du message WhatsApp pré-rempli (le WhatsApp du bandeau ouvre une conversation vide) */
+Object.assign(I18N.en, { "Message WhatsApp prêt": "Ready-made WhatsApp message" });
