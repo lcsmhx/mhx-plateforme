@@ -95,6 +95,8 @@ const Traduction = {
         else if (m.type === "attributes") { if (!this.exclu(m.target)) this.attributs(m.target); }
         else m.addedNodes.forEach(nd => this.noeud(nd));
       }
+      /* v104 (partie 4) : les textes que cette passe vient de traduire ne sont pas repassés (ils l'étaient tous une 2e fois) */
+      this.obs.takeRecords();
     });
     this.obs.observe(document.body, { childList:true, subtree:true, characterData:true, attributes:true, attributeFilter:["placeholder","title","aria-label"] });
     this.noeud(document.body);

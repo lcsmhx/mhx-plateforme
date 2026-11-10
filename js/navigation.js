@@ -623,6 +623,7 @@ const VueFiche = {
     this.obs = new MutationObserver(ms => {
       if (!this.actif()) return;
       for (const m of ms){ if (m.type === "characterData") this.tn(m.target); else m.addedNodes.forEach(nd => this.noeud(nd)); }
+      this.obs.takeRecords();   // v104 (partie 4) : ses propres changements ne sont pas repassés
     });
     const vue = $("vue"); if (vue) this.obs.observe(vue, { childList: true, subtree: true, characterData: true });
   }
@@ -714,7 +715,7 @@ async function afficher(id, silencieux, sansCompte){
     ${installationHaut ? "" : installation}`;
 
   construireNav();   // les libelles dependent du mode : on les rafraichit
-  if (Store.idConsulte && Auth.estCoach()){ VueFiche.demarrer(); VueFiche.noeud($("vue")); }   // v104 (point 4)
+  if (Store.idConsulte && Auth.estCoach()){ VueFiche.demarrer(); VueFiche.noeud($("vue")); if (VueFiche.obs) VueFiche.obs.takeRecords(); }   // v104 (point 4) ; partie 4 : la page n'est pas parcourue deux fois
   /* Les outils que le coach REMPLIT depuis la fiche d'un client. Oublier
      d'inscrire un outil ici le rend muet : la page passe en lecture seule et
      tous ses boutons deviennent inertes, sans message d'erreur. */
