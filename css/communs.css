@@ -588,3 +588,6 @@ body.figee{overflow:hidden}
   .topbar .nav a{padding:7px 10px;gap:6px;font-size:13.5px}
 }
 @media (min-width:1200px){ .topbar .compte .qui{display:none} }
+/* v104 (partie 3) : écran de connexion — « Mot de passe oublié ? », « Créer mon compte », « Retour à la connexion » : zones de
+   toucher de 44 px de haut (le texte ne bouge pas : seule la zone autour grandit) */
+.bascule button{min-height:var(--h-toucher);margin:0 8px;padding:0 4px}
