@@ -1091,7 +1091,10 @@ ul.fc-lignes li > b{font-weight:500;text-align:right;min-width:0;overflow-wrap:a
 .mp-onglets .tab.on{border-color:var(--accent);color:var(--ink)}
 [data-mp-prog] button{min-height:var(--h-toucher)}
 /* v99 (chantier 4 de la nuit du 10/11) : les 5 onglets de la fiche d'un client, WhatsApp dans l'en-tête */
-.fiche-onglets{display:flex;flex-wrap:wrap;gap:6px;width:100%;margin:6px 0 0}
+/* v104 (point 2) : les 5 onglets sur une seule ligne (défilement horizontal si l'écran est trop étroit) */
+.fiche-onglets{display:flex;flex-wrap:nowrap;gap:6px;width:100%;margin:6px 0 0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.fiche-onglets::-webkit-scrollbar{display:none}
+.fiche-onglets .f-onglet{flex:none;white-space:nowrap}
 .f-onglet{display:inline-flex;align-items:center;min-height:var(--h-toucher);padding:0 14px;border:1px solid var(--line-strong);border-radius:var(--r-sm);
   color:var(--ink-2);text-decoration:none;font-size:14px;font-weight:500}
 .f-onglet:hover{border-color:var(--accent);color:var(--ink)}
@@ -1099,6 +1102,7 @@ ul.fc-lignes li > b{font-weight:500;text-align:right;min-width:0;overflow-wrap:a
 .fiche-wa:empty{display:none}
 a.btn.fiche-wa-l{min-height:var(--h-toucher)}
 @media (max-width:560px){ .f-onglet{padding:0 11px;font-size:13px} }
+@media (max-width:420px){ .fiche-onglets{gap:4px} .f-onglet{padding:0 9px;font-size:12.5px} }
 /* v101 (chantier 6 de la nuit du 10/11) : la croix des volets (« Tout mon espace ») visible et à 44 × 44 px, sans chevaucher le
    titre (le titre lui laisse sa place) ; même dessin que la croix du journal alimentaire */
 .fermer-volet{min-width:var(--h-toucher);min-height:var(--h-toucher);width:var(--h-toucher);height:var(--h-toucher);display:inline-flex;align-items:center;justify-content:center;
