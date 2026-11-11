@@ -923,7 +923,7 @@ const verrouVu = (page, id) => page.evaluate(id => {
       JSON.stringify(clics.slice(0, 12)) === JSON.stringify(att.slice(0, 12)) && !(await page.evaluate(() => window.__xss)) && !(await page.$("#vue img[src='x']")), JSON.stringify(clics.slice(0, 12)));
     const fd = await lignes(page, "#fiche-decouverte"), val = x => (fd.find(l => l[0] === x) || [])[1] || "";
     ok("les autres libellés du coach (v65, décision de Lucas du 30/09 : le nom du bouton d'aujourd'hui, plus « Réserver ») : « Bouton « Réserver mon plan d'action » : 16 clics, le dernier le … », « Case « J'ai réservé mon bilan » : pas cochée », pastille « a cliqué Plan d'action »",
-      /^16 clics, le dernier le \S.*$/.test(val("Bouton « Réserver mon plan d'action »")) && val("Case « J'ai réservé mon bilan »") === "pas cochée" && (await texte(page, "#fiche-decouverte .seance-c-tete")).includes("a cliqué Plan d'action") && !/Réserver(?! mon plan d'action)/.test(await texte(page, "#fiche-decouverte")),
+      /^16 clics, le dernier le \S.*$/.test(val("Bouton « Réserver mon plan d'action »")) && val("Case « J'ai réservé mon bilan »") === "pas cochée" && (await texte(page, "#fiche-decouverte > summary")).includes("a cliqué Plan d'action") /* v106 (lot 4) : Découverte repliée, ses pastilles dans sa ligne de titre */ && !/Réserver(?! mon plan d'action)/.test(await texte(page, "#fiche-decouverte")),
       JSON.stringify(fd) + " · " + (await texte(page, "#fiche-decouverte .seance-c-tete")));
     /* v63 (lot 4, point 2) : « le dernier le <date> » = la date (jour local, JJ/MM/AAAA) du clic le PLUS RÉCENT, ici le 1er de la
        liste (rangée du plus récent au plus ancien), pas celle du dernier de la liste ; dates relues par le navigateur (son fuseau) */

@@ -37,18 +37,19 @@ const server = http.createServer((req,res)=>{if(servirFichier(req,res,HTML))retu
     ok("navigation : plus aucun emoji (icones SVG)", emojis===0, String(emojis));
     await c.close(); }
   { const {c,page}=await ctx(coach,false); await page.goto("http://localhost:9333/"); await page.waitForTimeout(1200);
-    ok("coach : page par defaut = Tableau de bord", !!(await page.$("#tb-vue .tb-tiles")));
+    ok("coach : page par defaut = Tableau de bord", !!(await page.$("#tb-vue .tb-chiffres")));   // v106 (lot 5) : « Aujourd'hui », ses 4 chiffres
     ok("coach : pas d'onglet Accueil hors fiche", !(await page.$('#nav a[data-id="accueil"]')));
     await page.evaluate(()=>{location.hash="#/suivi-clients"}); await page.waitForTimeout(900);   // v84 (ménage du bloc 3) : le tableau complet et ses « Ouvrir » ([data-ouvrir]) sont dans « Suivi détaillé » (menu Plus)
     await page.click(`[data-ouvrir="${F.IDS.c1}"]`); await page.waitForTimeout(900);
     /* v104 (point 1) : changement voulu — la fiche ne passe plus par le menu du haut (#nav = les 7 entrées du coach, sans
        « accueil ») ; son accueil (l'Aperçu, page « Fiche ») est le 1er onglet du bandeau .fiche-entete, et y est ouvert */
-    ok("coach en fiche : onglet Accueil visible (onglet « Aperçu » du bandeau de la fiche, ouvert, → #/client/<id>/accueil ; plus dans #nav ; v105 (point 2) : plus de bouton « Fiche », sa seule page)",
+    /* v106 (lot 2) : l'onglet « Aperçu » a ses pages (Aperçu marquée, Son questionnaire) dans la rangée fine sous les onglets */
+    ok("coach en fiche : onglet Accueil visible (onglet « Aperçu » du bandeau de la fiche, ouvert, → #/client/<id>/accueil ; plus dans #nav ; v106 : sa page « Aperçu » marquée)",
       await page.evaluate((id) => { const o = document.querySelector('.fiche-entete .f-onglet[data-onglet-fiche="apercu"]');
-        const f = !!o && o.getAttribute("href") === "#/client/" + id + "/accueil" && !document.querySelector(".fiche-entete a.b-act");
+        const f = !!o && o.getAttribute("href") === "#/client/" + id + "/accueil" && !!document.querySelector('.fiche-entete a.b-act[aria-current="page"][href$="/accueil"]');
         return !!o && o.classList.contains("ici") && f && !document.querySelector('#nav a[data-id="accueil"]'); }, F.IDS.c1));
     await page.evaluate(()=>{location.hash="#/accueil"}); await page.waitForTimeout(900);
-    ok("coach en fiche : fiche de Thomas", (await page.textContent("#vue > .fiche-entete .bandeau-tete strong")||"").includes("Thomas"));   // v105 (point 2) : le nom n'est plus que dans le bandeau « Fiche de … »
+    ok("coach en fiche : fiche de Thomas", (await page.textContent("#vue > .fiche-entete .fe-nom").catch(() => "")||"").includes("Thomas"));   // v106 (lot 2) : le prénom dans l'en-tête sur une ligne   // v105 (point 2) : le nom n'est plus que dans le bandeau « Fiche de … »
     ok("coach en fiche : lecture seule (pas de bouton Cocher mes objectifs actif)", (await page.$$eval("#vue .obj-case", l => l.filter(e => !e.disabled).length)) === 0);   // v52 : vraie condition (était toujours vraie)
     await c.close(); }
   await b.close(); server.close(); console.log(res.join("\n"));

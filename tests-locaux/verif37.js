@@ -36,17 +36,23 @@ const server = http.createServer((req,res)=>{if(servirFichier(req,res,HTML))retu
   await page.evaluate(id=>Clients.ouvrir(id, "Sarah Démo", "programme"), F.IDS.c2); await page.waitForTimeout(1200);
   await page.evaluate(()=>{location.hash="#/accueil"}); await page.waitForTimeout(1500);
   const f = await page.textContent("#acc-vue");
-  const h1 = await page.textContent("#vue > .fiche-entete .bandeau-tete strong"); /* v105 (point 2) : le nom n'est plus que dans le bandeau « Fiche de … » */ ok("fiche : en-tete au nom du client ouvert", /Sarah|Julien|Thomas/.test(h1), h1);
-  ok("fiche : blocs profil / objectifs / programme / nutrition / poids / bilan / reste", ["Profil","Objectifs du mois","Programme","Nutrition","Poids et mensurations","Bilan hebdomadaire","Le reste"].every(x=>f.includes(x)));
-  ok("fiche : questionnaire complet et programme a faire (Sarah)", f.includes("questionnaire complet") && f.includes("à faire"));
+  const h1 = await page.textContent("#vue > .fiche-entete .fe-nom").catch(() => ""); /* v106 (lot 2) : le prénom dans l'en-tête sur une ligne */ ok("fiche : en-tete au nom du client ouvert", /Sarah|Julien|Thomas/.test(h1), h1);
+  /* v106 (lot 4) : changement voulu — l'Aperçu sans doublons : plus des cartes Profil, Objectifs, Programme, Nutrition, Poids,
+     Bilan, Le reste (les onglets les montrent) ; il garde le retour de la semaine, le poids, la régularité et l'état */
+  ok("fiche : Aperçu (v106) : retour de la semaine, poids, régularité, questionnaire / programme / diète", ["Retour de la semaine","Régularité","Questionnaire","Programme","Diète"].every(x=>f.includes(x)), f.slice(0, 300));
+  ok("fiche : questionnaire rempli et programme a faire (Sarah)", f.includes("Rempli") && f.includes("à faire"), f.slice(0, 300));
   /* fiche de Thomas : alertes + bilan recu */
   await page.evaluate(()=>{location.hash="#/tableau"}); await page.waitForTimeout(1200);
-  await page.click(`#tb-a-traiter [data-fiche="${F.IDS.c1}"]`); await page.waitForTimeout(1200);   // v53 : « À traiter maintenant » → Préparer le call
+  await page.click(`#tb-a-traiter [data-fiche="${F.IDS.c1}"]`); await page.waitForTimeout(1500);   // v53 : « À traiter maintenant » → Préparer le call ; v106 : « Retours à lire » → Bilans
+  /* v106 (lots 3 et 4) : ses réponses au bilan sont dans « Bilans » (où mène sa ligne), le cycle dans « Son programme » */
+  const fb = await page.textContent("#bilan-vue").catch(() => "");
   await page.evaluate(()=>{location.hash="#/accueil"}); await page.waitForTimeout(1500);
   const f2 = await page.textContent("#acc-vue");
-  ok("fiche Thomas : bilan hebdo recu avec reponses", f2.includes("4 séances tenues"));
+  await page.evaluate(()=>{location.hash="#/programme"}); await page.waitForTimeout(1500);
+  const fp = await page.textContent("#vue").catch(() => "");
+  ok("fiche Thomas : bilan hebdo recu avec reponses (v106 : dans Bilans)", fb.includes("4 séances tenues"), fb.slice(0, 200));
   ok("fiche Thomas : objectif non atteint (alertes de la fiche)", f2.includes("Objectif non atteint"));
-  ok("fiche Thomas : cycle affiche", /Cycle 01/.test(f2));
+  ok("fiche Thomas : cycle affiche (v106 : ligne Programme de l Aperçu)", /Cycle 01/.test(f2), f2.slice(0, 300));
   /* mes clients en mobile : cartes */
   await c.close();
   const c2 = await b.newContext({ viewport:{width:390,height:844} });
