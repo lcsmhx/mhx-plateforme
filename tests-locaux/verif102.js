@@ -424,7 +424,7 @@ const ouvrirEx = async (page, si, ei) => { const d = `details[data-pli="${si}:${
     const db = base();
     const { page } = await contexte(b, THOMAS, db, { viewport: MOBILE });
     await page.goto(URL0 + "#/accueil"); await pret(page, ".masthead");
-    await page.click("#rond-profil");   // v106 (lot 6) : plus de « Plus » pour le client : le volet de son rond de profil (« Mon profil ») await attendre(page, 400);
+    await page.click("#rond-profil"); await attendre(page, 400);   // v106 (lot 6) : plus de « Plus » pour le client : le volet de son rond de profil (« Mon profil »)
     const f1 = await page.evaluate(() => ({ focus: document.activeElement && document.activeElement.matches("[data-ui-fermer]"), nom: !!document.querySelector(".volet[aria-labelledby]") }));
     for (let i = 0; i < 12; i++) await page.keyboard.press("Tab");
     const dedans = await page.evaluate(() => !!(document.activeElement && document.activeElement.closest(".volet")));

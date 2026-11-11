@@ -333,7 +333,7 @@ const ouvrirEx = async (page, si, ei) => { const d = `details[data-pli="${si}:${
     const db = base();
     const { page } = await contexte(b, THOMAS, db, { viewport: MOBILE });
     await page.goto(URL0 + "#/accueil"); await pret(page, ".masthead");
-    await page.click("#rond-profil");   // v106 (lot 6) : plus de « Plus » pour le client : le volet de son rond de profil (« Mon profil ») await attendre(page, 500);
+    await page.click("#rond-profil"); await attendre(page, 500);   // v106 (lot 6) : plus de « Plus » pour le client : le volet de son rond de profil (« Mon profil »)
     const x = await page.evaluate(() => { const b = document.querySelector(".volet .fermer-volet"), t = document.querySelector(".volet h2"), r = b.getBoundingClientRect(), rt = t.getBoundingClientRect(), s = b.querySelector("svg"), cs = getComputedStyle(s);
       const titreR = (() => { const rg = document.createRange(); rg.selectNodeContents(t); const q = rg.getBoundingClientRect(); return q; })();
       return { w: Math.round(r.width), h: Math.round(r.height), trait: cs.stroke, larg: Math.round(s.getBoundingClientRect().width), chevauche: !(titreR.right <= r.left || titreR.left >= r.right || titreR.bottom <= r.top || titreR.top >= r.bottom) }; });
