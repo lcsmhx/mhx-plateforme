@@ -720,7 +720,7 @@ const outilNutrition = {
       <p class="note" style="margin:8px 0 18px">${fmt(mange.kcal)} kcal consommées sur ${fmt(t.kcal)} — il te reste <b>${fmt(reste)} kcal</b> aujourd'hui.</p>
       ${/* v106 (lot 6, test QA) : sur téléphone, le détail du jour (calories et macros, objectif) est replié d'un toucher, pour voir
          le premier repas au premier écran ; ouvert sur un écran plus large */ ""}
-      <details class="nu-detail"${typeof matchMedia === "function" && matchMedia("(max-width:720px)").matches ? "" : " open"}><summary>${esc(trad("Calories et macros du jour"))}</summary>
+      <details class="nu-detail"${(this.detailOuvert != null ? this.detailOuvert : !(typeof matchMedia === "function" && matchMedia("(max-width:1023px)").matches)) ? " open" : ""}><summary>${esc(trad("Calories et macros du jour"))}</summary>
       <div class="grid g4 bilan-jour">
         <div class="tuile"><span class="t-lbl">Calories</span><span class="t-val readout">${fmt(t.kcal)}</span><span class="t-u">kcal prévus</span></div>
         <div class="tuile"><span class="t-lbl">Protéines</span><span class="t-val readout">${fmt(t.proteines)}</span><span class="t-u">g</span></div>
@@ -990,8 +990,10 @@ const outilNutrition = {
          depuis (nouvelle semaine, envoi, retouche) : on n'ecrit rien par-dessus. */
       const connues = new Set([self.signature(R)]);
 
+      self.detailOuvert = null;   // v106 (lot 6, relecture) : l'état du détail du jour, gardé pendant la visite (une case cochée redessine)
       const dessiner = () => {
         zone.innerHTML = self.vueLecture(R, suivi, actif);
+        { const dt = zone.querySelector("details.nu-detail"); if (dt) dt.addEventListener("toggle", () => { self.detailOuvert = dt.open; }); }
         $$("[data-jour]", zone).forEach(b => b.addEventListener("click", () => { actif = +b.dataset.jour; dessiner(); }));
         $$("[data-mange]", zone).forEach(c => c.addEventListener("click", () => {
           suivi.mange[c.dataset.mange] = !suivi.mange[c.dataset.mange];

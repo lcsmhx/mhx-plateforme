@@ -848,7 +848,6 @@ body.nav106 .compte button.rond-profil.ici .avatar{box-shadow:0 0 0 2px var(--ac
 @media (max-width:1023px){
   body.nav106-client #vue > .masthead .lede.ouvert{white-space:normal;overflow:visible}   /* v106 (lot 6, test QA) : dépliée d'un toucher */
   body.nav106-client #vue > .masthead .lede[data-lede-pli]{cursor:pointer}
-  .seance-c-tete{flex-wrap:wrap}
 }
 /* v106 (lot 6, test QA) : Nutrition — le détail du jour repliable (fermé sur téléphone) */
 details.nu-detail > summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-size:13.5px;color:var(--ink-2);list-style:none}

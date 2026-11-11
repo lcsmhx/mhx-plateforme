@@ -7,6 +7,7 @@ let courant = OUTILS[0].id;
 let sousRoute = "";   // ce qui suit l'identifiant dans l'adresse (#/decouverte/reponses -> "reponses")
 let nettoyage = null;
 let affichage = 0;   // numero du dernier affichage demande
+let ancreApresAffichage = null;   // v106 (lot 6) : posé par une page (outilProgramme.viserSeance), lu une fois à la fin d'afficher()
 
 /* v101 (chantier 6 de la nuit du 10/11) : le code de l'espace du coach (MHX_COACH, index.html) n'est chargé que pour le coach :
    à sa connexion, avant le premier affichage, les fichiers absents sont ajoutés dans l'ordre de MHX_JS, puis OUTILS est refait ;
@@ -942,7 +943,7 @@ async function afficher(id, silencieux, sansCompte){
     ${enFiche ? (outil.sans_entete ? "" : `<h1 class="sr-only">${esc(trad(nomPageFiche()))}</h1>`) : outil.sans_entete ? "" : `<header class="masthead">
       <span class="eyebrow">${CONFIG.marque.programme ? esc(CONFIG.marque.programme) + " — " : ""}${esc(nomOnglet(outil))}</span>
       <h1>${esc(outil.titre)}</h1>
-      <p class="lede"${Nav106.client() ? ` title="${esc(trad(outil.accroche))}" tabindex="0" data-lede-pli` : ""}>${esc(outil.accroche)}</p>
+      <p class="lede"${Nav106.client() && typeof matchMedia === "function" && matchMedia("(max-width:1023px)").matches ? ` tabindex="0" role="button" aria-expanded="false" data-lede-pli` : ""}>${esc(outil.accroche)}</p>
     </header>`}
     ${verrouille ? pageVerrouillee(outil) : (pause ? Sante.carteHTML(outil.id) : "") + htmlSur(outil)}
     ${avecDonnees ? blocSauvegarde() : ""}
@@ -997,7 +998,7 @@ async function afficher(id, silencieux, sansCompte){
 
   brancherInstallation();
   /* v106 (lot 6) : l'explication du haut, sur une ligne au téléphone, se déplie d'un toucher (ou Entrée) */
-  { const l = document.querySelector("#vue > .masthead [data-lede-pli]"); if (l){ const plier = () => l.classList.toggle("ouvert"); l.addEventListener("click", plier); l.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); plier(); } }); } }
+  { const l = document.querySelector("#vue > .masthead [data-lede-pli]"); if (l){ const plier = () => { const o = l.classList.toggle("ouvert"); l.setAttribute("aria-expanded", String(o)); }; l.addEventListener("click", plier); l.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); plier(); } }); } }
 
   marquerNav(outil.id);
   DieteClient.verifier();   // v100 : le calculateur quitte le menu d'un client qui a une diète (une lecture par visite)
@@ -1006,5 +1007,4 @@ async function afficher(id, silencieux, sansCompte){
   if (ancre && ancre.isConnected){ try { ancre.scrollIntoView({ block: "start" }); } catch(e){ window.scrollTo(0, 0); } }
   else if (!silencieux) window.scrollTo(0, 0);
 }
-let ancreApresAffichage = null;   // v106 (lot 6) : posé par une page (outilProgramme.viserSeance), lu une fois à la fin d'afficher()
 

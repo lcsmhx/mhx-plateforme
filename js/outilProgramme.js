@@ -1506,7 +1506,7 @@ const outilProgramme = {
   viserSeance(zone, si){
     const cible = zone.querySelector("#seance-" + si); if (!cible) return;
     $$("section.seance-c", zone).forEach(sec => {
-      if (sec === cible || sec.querySelector("[data-seance-voir]")) return;
+      if (sec === cible || sec.querySelector("[data-seance-voir]") || sec.querySelector("[data-jr-effacer]")) return;   // une séance en cours (brouillon) reste dépliée
       sec.classList.add("replie");
       const tete = sec.querySelector(".seance-c-tete"); if (!tete) return;
       const b = document.createElement("button"); b.type = "button"; b.className = "lc-lien seance-voir"; b.setAttribute("data-seance-voir", ""); b.setAttribute("aria-expanded", "false");
@@ -1515,6 +1515,7 @@ const outilProgramme = {
       tete.appendChild(b);
     });
     const o = cible.querySelector("[data-jr-ouvrir]"); if (o && !o.hidden) o.click();
+    const t = cible.querySelector(".seance-c-tete h2"); if (t){ t.setAttribute("tabindex", "-1"); try { t.focus({ preventScroll: true }); } catch(e){} }   // le clavier et les lecteurs d'écran arrivent sur la séance
     ancreApresAffichage = cible;   // afficher() y amène l'écran à la fin (au lieu du haut de la page)
   },
   async init(){
@@ -1560,7 +1561,7 @@ const outilProgramme = {
       await Journal.brancher(zone, P, J, apres);
       /* v106 (lot 6) : « Noter ma séance » de l'accueil (#/programme/noter-<n>) ouvre directement cette séance ; les autres sont repliées */
       const mN = /^noter-(\d+)$/.exec(sousRoute || "");
-      if (mN) self.viserSeance(zone, +mN[1]);
+      if (mN){ self.viserSeance(zone, +mN[1]); sousRoute = ""; try { history.replaceState(null, "", "#/programme"); } catch(e){} }
       Historique.monter("programme", "prog-hist");
       return;
     }
