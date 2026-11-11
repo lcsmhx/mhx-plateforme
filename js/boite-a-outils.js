@@ -151,10 +151,11 @@ const Telephone = {
   /* lecture du champ : { tel } ou { erreur } */
   lire(id){ const i = $(id + "-ind"), c = $(id); return this.normaliser(i ? i.value : this.DEFAUT, c ? c.value : ""); },
   /* côté coach (écrans non traduits) : le numéro et ses deux liens, ou « — » */
-  coachHTML(t, classe){
+  /* v106 (lot 2) : WhatsApp ouvre le message prêt du coach (messageWhatsAppCoach), le même partout */
+  coachHTML(t, classe, message){
     if (!this.valide(t)) return '<span class="meta">—</span>';
-    const c = esc(classe || "btn ghost petit");
-    return `<span class="tel-coach"><span class="tel-num" data-notr>${esc(t)}</span> <a class="${c}" href="tel:${esc(t)}">Appeler</a> <a class="${c}" href="https://wa.me/${esc(t.slice(1))}" target="_blank" rel="noopener">WhatsApp</a></span>`;
+    const c = esc(classe || "btn ghost petit"), wa = lienWaVers(t, message || "") || "https://wa.me/" + t.slice(1).replace(/\D/g, "");
+    return `<span class="tel-coach"><span class="tel-num" data-notr>${esc(t)}</span> <a class="${c}" href="tel:${esc(t)}">Appeler</a> <a class="${c}" href="${esc(wa)}" target="_blank" rel="noopener" data-wa-coach>WhatsApp</a></span>`;
   }
 };
 /* v72 (D) — « Écrire à ton coach sur WhatsApp » (v73 : « ton coach ») (prospect connecté, jamais une fiche consultée) : https://wa.me/<chiffres du numéro

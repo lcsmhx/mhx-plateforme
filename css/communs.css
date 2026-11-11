@@ -640,7 +640,7 @@ body.nav106 .compte .qui,body.nav106 #langue,body.nav106 #deco{display:none}
 .bib-onglets .tab.on{border-color:var(--accent);color:var(--ink);background:var(--verre-choisi);font-weight:600}
 .sous-onglets{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 0 18px;padding:2px 0}
 .sous-onglets::-webkit-scrollbar{display:none}
-.s-onglet{display:inline-flex;align-items:center;flex:none;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid transparent;
+.s-onglet{display:inline-flex;align-items:center;flex:none;min-height:var(--h-toucher);padding:0 14px;border-radius:999px;border:1px solid transparent;
   color:var(--ink-2);text-decoration:none;font-size:14px;font-weight:500;white-space:nowrap}
 .s-onglet:hover{color:var(--ink);background:var(--raised)}
 .s-onglet.on{color:var(--ink);border-color:var(--verre-bord);background:var(--verre-choisi);font-weight:600}
@@ -650,9 +650,17 @@ body.nav106 .compte .qui,body.nav106 #langue,body.nav106 #deco{display:none}
   body.nav106 .topbar .wrap{flex-wrap:nowrap;min-height:52px;padding-top:6px;padding-bottom:6px;gap:8px}
   body.nav106 .topbar .brand,body.nav106 .topbar .nav{display:none}
   body.nav106 .titre-page{display:block;order:0;flex:1 1 auto;min-width:0;font-weight:600;font-size:17px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  body.nav106 .nav-chercher{order:1;flex:none;width:var(--h-rond);justify-content:center;padding:0;border-radius:50%}
+  body.nav106 .nav-chercher{flex:none;width:var(--h-rond);justify-content:center;padding:0;border-radius:50%}
   body.nav106 .nav-chercher .lbl,body.nav106 .rond-profil .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-  body.nav106 .topbar .compte{order:2;flex:0 1 auto;min-width:0;margin-left:0;justify-content:flex-end}
+  body.nav106 .compte button.rond-profil{width:var(--h-rond);height:var(--h-rond);min-height:0;padding:0;justify-content:center;flex:none;position:relative}
+  /* la boîte du compte s'efface : témoin, loupe et rond sont sur la même ligne que le titre ; une alerte du témoin passe sur
+     sa ligne à elle, au-dessus (v59) */
+  body.nav106 .topbar .compte{display:contents}
+  body.nav106 .topbar .etat{order:1;flex:0 1 auto;min-width:0}
+  body.nav106 .nav-chercher{order:2}
+  body.nav106 .compte button.rond-profil{order:3}
+  body.nav106 .topbar .wrap:has(> .compte > .etat.erreur),body.nav106 .topbar .wrap:has(> .compte > .etat.perdu),body.nav106 .topbar .wrap:has(> .compte > .etat.refuse){flex-wrap:wrap;row-gap:4px}
+  body.nav106 .topbar .etat.erreur,body.nav106 .topbar .etat.perdu,body.nav106 .topbar .etat.refuse{order:-1}
   /* le titre est dans la ligne du haut : le grand titre de la page ne se répète pas dessous (gardé pour les lecteurs d'écran) ;
      le reste de l'en-tête de la page (explication, compteurs) reste */
   body.nav106-coach .masthead{padding:14px 0 12px;margin-bottom:16px}
@@ -714,3 +722,44 @@ body.nav106 .compte .qui,body.nav106 #langue,body.nav106 #deco{display:none}
   body.nav106 .topbar .compte{align-items:center}
   body.nav106 .rond-profil{width:auto;padding:3px;justify-content:center}
 }
+
+/* ==================================================================
+   v106 (lot 2) — L'EN-TÊTE DE LA FICHE (EnteteFiche, navigation.js) : une ligne collée en haut au défilement (retour, prénom,
+   statut, « vu il y a X », WhatsApp, Appeler, Notes, « ⋯ »), les 4 onglets à largeur égale, la rangée fine (40 px) des pages
+   de l'onglet. Sur téléphone et tablette, il remplace la barre du haut ; sur ordinateur, il colle sous rien (la barre est à
+   gauche). Un seul doré plein : l'onglet ouvert.
+   ================================================================== */
+#vue > .fiche-entete{position:sticky;top:0;z-index:15;display:flex;flex-direction:column;align-items:stretch;flex-wrap:nowrap;gap:6px;
+  margin:0 -16px 16px;padding:6px 16px 6px;border:0;border-bottom:1px solid var(--verre-bord);border-radius:0;background:var(--nav-bg);
+  -webkit-backdrop-filter:saturate(140%) blur(var(--flou));backdrop-filter:saturate(140%) blur(var(--flou))}
+@media (min-width:720px){#vue > .fiche-entete{margin:0 -24px 18px;padding:10px 24px 10px}}
+.fe-ligne{display:flex;align-items:center;gap:6px;min-height:var(--h-rond)}
+.fe-retour{flex:none}
+.fe-retour svg,.fe-actions .rond svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.fe-qui{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;justify-content:center;line-height:1.15;padding-left:4px}
+.fe-nom{font-size:17px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fe-etat{display:flex;align-items:center;gap:6px;min-width:0;font-size:12.5px;color:var(--ink-3);white-space:nowrap;overflow:hidden}
+.fe-etat .pastille{font-size:11px;padding:0 7px;line-height:1.5}
+.fe-vu-t{overflow:hidden;text-overflow:ellipsis}
+.fe-vu-t.inactif{color:var(--warn);font-weight:600}
+.fe-actions{display:flex;align-items:center;gap:6px;flex:none}
+.fe-actions .rond[disabled]{opacity:.4}
+.fe-actions [data-fiche-wa]:empty,.fe-actions [data-fiche-tel]:empty{display:none}
+#vue > .fiche-entete .fiche-onglets{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin:0;padding:2px;border:1px solid var(--verre-bord);border-radius:var(--r-sm);background:var(--sunken)}
+#vue > .fiche-entete .f-onglet{justify-content:center;min-height:var(--h-toucher);padding:0 6px;border:0;border-radius:calc(var(--r-sm) - 2px);font-size:14px;color:var(--ink-2);background:none}
+#vue > .fiche-entete .f-onglet:hover{color:var(--ink)}
+#vue > .fiche-entete .f-onglet.ici{background:var(--accent);color:var(--accent-ink)}
+#vue > .fiche-entete .fiche-pages{margin:0;gap:4px;padding:0}
+#vue > .fiche-entete .fiche-pages .b-act{min-height:var(--h-toucher);border:1px solid transparent;background:none;color:var(--ink-2);font-size:13.5px;padding:0 12px;border-radius:999px}
+#vue > .fiche-entete .fiche-pages .b-act.ici{background:var(--verre-choisi);border-color:var(--verre-bord);color:var(--ink);font-weight:600}
+#vue > .fiche-entete .menu-points-l{min-width:230px}
+.volet-notes .notes-coach{border:0;background:none;padding:0;box-shadow:none}
+.volet-notes .notes-coach .seance-c-tete h2{display:none}
+.volet-notes #nc-texte{min-height:46vh}
+/* téléphone et tablette : l'en-tête de la fiche remplace la barre du haut */
+@media (max-width:1023px){
+  body.nav106.en-fiche .topbar{display:none}
+  body.nav106.en-fiche main.wrap{padding-top:0}
+}
+#vue > .fiche-entete .fe-actions .rond,#vue > .fiche-entete .fe-retour{width:var(--h-rond);height:var(--h-rond);min-width:0}
+@media (max-width:420px){ .fe-ligne,.fe-actions{gap:4px} }   /* les boutons gardent 44 px */

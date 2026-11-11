@@ -523,99 +523,185 @@ function lienOutil(id){
   const o = OUTILS.find(x => x.id === id);
   return Store.idConsulte && o && o.role !== "coach" ? "#/client/" + Store.idConsulte + "/" + id : "#/" + id;
 }
-const RETOURS = { tableau: "Revenir au tableau de bord", clients: "Revenir à mes clients", prospects: "Revenir aux prospects",
+/* v106 (lot 1 et 2) : le retour de la fiche (flèche de son en-tête) porte le nom de la page où il ramène */
+const RETOURS = { tableau: "Revenir à Aujourd'hui", clients: "Revenir à mes clients", prospects: "Revenir aux prospects",
   /* v84 : les pages du menu Plus qui ont reçu l'écran d'avant de Clients et de Prospects */
-  "suivi-clients": "Revenir au suivi détaillé", comptes: "Revenir aux comptes", "suivi-commercial": "Revenir au suivi commercial", newsletter: "Revenir à la newsletter" };
-/* v99 (chantier 4 de la nuit du 10/11, plan-fiche-client) : la fiche d'un client en 5 ONGLETS, un seul en-tête. Chaque onglet
+  "suivi-clients": "Revenir à la vue tableau", comptes: "Revenir aux comptes", "suivi-commercial": "Revenir à la vue détaillée", newsletter: "Revenir à la newsletter" };
+/* v99 (chantier 4 de la nuit du 10/11, plan-fiche-client) : la fiche d'un client en ONGLETS, un seul en-tête. Chaque onglet
    réunit les pages EXISTANTES (rien n'est réécrit, chaque page garde son adresse #/client/<id>/<outil> et ses garde-fous :
    lecture seule, « Pas de connexion », compte figé pendant une écriture). L'onglet affiché suit la page ouverte : une
-   ancienne adresse ouvre le bon onglet. Aperçu = la fiche ; Profil › « Son compte » = l'onglet Compte de la fiche
-   (#/client/<id>/accueil/compte). */
+   ancienne adresse ouvre le bon onglet.
+   v106 (lot 2, refonte de l'ergonomie) : 4 onglets — Aperçu, Programme (l'ancien « Entraînement »), Nutrition, Suivi ; l'ancien
+   onglet Profil est rangé : « Son questionnaire » sous Aperçu, « Son compte » (#/client/<id>/accueil/compte) dans le menu « ⋯ »
+   de l'en-tête (la page ne s'affiche dans la rangée des pages que quand elle est ouverte : 4e valeur). */
 const ONGLETS_FICHE = [
-  { id: "apercu", nom: "Aperçu", pages: [["accueil", "Fiche"]] },
-  { id: "entrainement", nom: "Entraînement", pages: [["programme", "Son programme", true], ["journal", "Ses séances"]] },
+  { id: "apercu", nom: "Aperçu", pages: [["accueil", "Aperçu"], ["profil", "Son questionnaire"], ["accueil/compte", "Son compte", false, true]] },
+  { id: "programme", nom: "Programme", pages: [["programme", "Son programme", true], ["journal", "Ses séances"]] },
   { id: "nutrition", nom: "Nutrition", pages: [["nutrition", "Ses repas", true], ["calculateur", "Ses calories", true], ["complements", "Ses compléments"], ["journal-alimentaire", "Son journal alimentaire"]] },
-  { id: "suivi", nom: "Suivi", pages: [["suivi", "Son suivi"], ["bilan", "Préparer le call"], ["mensurations", "Ses courbes"], ["formation", "Sa formation"]] },
-  { id: "profil", nom: "Profil", pages: [["profil", "Son questionnaire"], ["accueil/compte", "Son compte"]] }
+  { id: "suivi", nom: "Suivi", pages: [["suivi", "Son suivi"], ["bilan", "Préparer le call"], ["mensurations", "Ses courbes"], ["formation", "Sa formation"]] }
 ];
 /* les pages d'un onglet qui existent pour ce client (journal alimentaire : interrupteur) */
 function pagesOnglet(g){ const v = outilsVisibles(); return g.pages.filter(p => v.some(o => o.id === p[0].split("/")[0])); }
 /* l'onglet de la page ouverte (courant, sousRoute) */
 function ongletFiche(id, sous){
-  if (id === "accueil") return sous === "compte" ? "profil" : "apercu";
+  if (id === "accueil") return "apercu";
   const g = ONGLETS_FICHE.find(x => x.pages.some(p => p[0] === id));
   return g ? g.id : "apercu";
 }
 function lienPageFiche(p){ const [id, s] = p.split("/"); return lienOutil(id) + (s ? "/" + s : ""); }
-/* v99 : WhatsApp toujours visible dans l'en-tête : le numéro du client (clé contact), lu une fois par fiche */
-const TelFiche = {
-  tels: {},
-  html(uid){ const t = this.tels[uid]; const l = t ? lienWaVers(t, "") : ""; return l ? `<a class="btn ghost petit fiche-wa-l" href="${esc(l)}" target="_blank" rel="noopener">WhatsApp</a>` : ""; },
+/* la page de la fiche ouverte (« Son compte » : …/accueil/compte ; « Aperçu » : …/accueil) */
+function pageFicheActive(p){ return p[0] === "accueil/compte" ? courant === "accueil" && sousRoute === "compte" : p[0] === courant && !(courant === "accueil" && sousRoute === "compte"); }
+/* v106 (lot 2) : le nom de la page ouverte (le même que son lien : titre pour les lecteurs d'écran) */
+function nomPageFiche(){
+  for (const g of ONGLETS_FICHE) for (const p of g.pages) if (pageFicheActive(p)) return p[1];
+  const o = OUTILS.find(x => x.id === courant); return o ? nomOnglet(o) : "Fiche";
+}
+/* v106 (lot 2) — L'EN-TÊTE DE LA FICHE, sur une ligne et toujours visible (collé en haut au défilement) : retour, prénom, statut,
+   « vu il y a X » (orange quand le client n'a rien saisi depuis 10 jours, la règle « inactif » de Clients.alertes), WhatsApp
+   (toujours le message prêt), Appeler, Notes (volet), « ⋯ » (Son compte, passer client / prospect, accès complet, archiver,
+   supprimer : les actions de l'ancien onglet Compte, mêmes fonctions, mêmes fenêtres de confirmation). Dessous : les 4 onglets,
+   puis la rangée fine des pages de l'onglet. Ce qui dépend du compte (statut, numéro, connexion, dernière saisie, archivage)
+   est lu une fois par fiche, après l'affichage (EnteteFiche.remplir) : la page n'attend pas. */
+const EnteteFiche = {
+  infos: {},
+  /* ce qui n'est pas une saisie du client (même liste que Clients.charger : ce que le coach écrit, et ce qui n'est pas une saisie) */
+  PAS_SAISIE: ["programme", "repas", "calc", "complements", "feedbacks", "notes_coach", "suivi_prospect", "emails", "coach_notifs", "contact", "coach_visite", "activite", "hist_programme", "hist_repas", "brouillons_programme", "brouillons_repas", "atelier"],
+  oublier(uid){ if (uid) delete this.infos[uid]; },
+  prenom(nom){ const n = String(nom || "").trim(); return n === Clients.SANS_NOM ? n : (n.split(/\s+/)[0] || n); },
+  html(){
+    const uid = Store.idConsulte, nom = Store.nomConsulte || trad("ce client"), ret = trad(RETOURS[Store.retourVers] || RETOURS.clients);
+    const ici = ongletFiche(courant, sousRoute), g = ONGLETS_FICHE.find(x => x.id === ici), pages = pagesOnglet(g).filter(p => !p[3] || pageFicheActive(p));
+    const i = this.infos[uid];
+    return `<div class="bandeau fiche-entete" id="fiche-entete">
+      <div class="fe-ligne">
+        <button class="rond fe-retour" type="button" id="sortir-fiche" aria-label="${esc(ret)}" title="${esc(ret)}">${SVG.retour}<span class="sr-only">${esc(ret)}</span></button>
+        <div class="fe-qui"><strong class="fe-nom" data-notr title="${esc(nom)}">${esc(this.prenom(nom))}</strong>
+          <span class="fe-etat"><span data-fe-statut>${i ? this.statutHTML(i) : ""}</span><span class="fe-vu" data-fe-vu>${i ? this.vuHTML(i) : ""}</span></span></div>
+        <div class="fe-actions">
+          <span class="fiche-wa" data-fiche-wa>${i ? this.waHTML(i) : ""}</span>
+          <span data-fiche-tel>${i ? this.telHTML(i) : ""}</span>
+          <button class="rond fe-notes" type="button" id="fe-notes" aria-label="${esc(trad("Notes privées"))}" title="${esc(trad("Notes privées"))}" aria-haspopup="dialog">${SVG.note}</button>
+          ${menuPointsHTML([{ href: lienPageFiche("accueil/compte"), texte: "Son compte", attrs: 'data-fe-compte' }].concat(i ? this.actions(i) : []), { id: "fiche-points", libelle: "Actions du compte" })}
+        </div>
+      </div>
+      ${ongletsFicheHTML(ici)}
+      ${pages.length > 1 ? `<nav class="sous-onglets bandeau-actions fiche-pages" aria-label="${esc(trad(g.nom))}">${pages.map(p => { const actif = pageFicheActive(p);
+        return `<a href="${esc(lienPageFiche(p[0]))}" class="s-onglet b-act${actif ? " on ici" : ""}"${actif ? ' aria-current="page"' : ""}>${esc(trad(p[1]))}</a>`; }).join("")}</nav>` : ""}
+    </div>`;
+  },
+  statutHTML(i){ return `<span class="pastille fe-statut${i.prospect ? " accent" : ""}">${esc(trad(i.prospect ? "Prospect" : "Client"))}</span>${i.arch ? ` <span class="pastille attention fc-archive">${esc(trad("Archivé"))}</span>` : ""}`; },
+  /* « vu il y a X » : sa dernière connexion (table connexions) ; orange : un client sans saisie depuis 10 jours ou plus */
+  vuTexte(cx){
+    if (!cx || !cx.lue) return "";
+    if (!cx.derniere) return trad("jamais connecté");
+    const m = Math.max(0, (Date.now() - Date.parse(cx.derniere)) / 60000);
+    if (m < 60) return trad("vu il y a {n} min", { n: Math.max(1, Math.floor(m)) });
+    if (m < 1440) return trad("vu il y a {n} h", { n: Math.floor(m / 60) });
+    return trad("vu il y a {n} j", { n: Math.floor(m / 1440) });
+  },
+  inactif(i){ return !i.prospect && i.jours !== null && i.jours >= 10; },
+  vuHTML(i){
+    const t = this.vuTexte(i.cx), aide = i.prospect ? "" : i.jours === null ? trad("Jamais rien saisi") : i.jours === 0 ? trad("Dernière saisie aujourd'hui") : trad("Dernière saisie il y a {n} j", { n: i.jours });
+    if (!t && !aide) return "";
+    return `<span class="fe-vu-t${this.inactif(i) ? " inactif" : ""}" title="${esc(aide)}">${esc(t || aide)}${this.inactif(i) ? `<span class="sr-only"> · ${esc(aide)}</span>` : ""}</span>`;
+  },
+  waHTML(i){
+    const l = Telephone.valide(i.tel) ? lienWaVers(i.tel, messageWhatsAppCoach(i.pr, i.I, i.anglais)) : "";
+    return l ? `<a class="rond fiche-wa-l" href="${esc(l)}" target="_blank" rel="noopener" data-wa-coach aria-label="${esc(trad("WhatsApp : message prêt"))}" title="${esc(trad("WhatsApp : message prêt"))}">${SVG.whatsapp}</a>`
+      : `<button type="button" class="rond fiche-wa-l" disabled aria-label="${esc(trad("WhatsApp : pas de numéro"))}" title="${esc(trad("Pas de numéro"))}">${SVG.whatsapp}</button>`;
+  },
+  telHTML(i){
+    return Telephone.valide(i.tel) ? `<a class="rond fc-appeler" id="fc-appeler" href="tel:${esc(i.tel)}" aria-label="${esc(trad("Appeler"))}" title="${esc(trad("Appeler"))}">${SVG.tel}</a>`
+      : `<button type="button" class="rond fc-appeler" id="fc-appeler" disabled aria-label="${esc(trad("Appeler : pas de numéro"))}" title="${esc(trad("Pas de numéro"))}">${SVG.tel}</button>`;
+  },
+  /* les actions du compte (avant : l'onglet Compte de la fiche), mêmes identifiants qu'avant */
+  actions(i){
+    return [
+      { texte: i.prospect ? "Passer client" : "Repasser prospect", attrs: `id="fc-changer" data-statut="${i.prospect ? "client" : "prospect"}"` },
+      { texte: "Donner l'accès complet", attrs: 'id="fc-acces" data-role="coach"' },
+      { texte: i.arch ? "Restaurer ce compte" : "Archiver ce compte", attrs: `id="fc-archiver" data-archiver="${i.arch ? "non" : "oui"}"` },
+      { texte: "Supprimer définitivement", attrs: 'id="fc-supprimer"', danger: true }
+    ];
+  },
+  /* lu une fois par fiche : profil, numéro, réponses (message prêt), langue, archivage, connexions, dernière saisie */
+  async lire(uid){
+    if (this.infos[uid]) return this.infos[uid];
+    const q = "/rest/v1/donnees?user_id=eq." + uid;
+    const [pr, cx, lignes, dates] = await Promise.all([
+      Auth.appel("/rest/v1/profils?id=eq." + uid + "&select=*").then(r => Array.isArray(r) ? r[0] || null : null),
+      Auth.appel("/rest/v1/connexions?user_id=eq." + uid + "&select=user_id,nombre,derniere,premiere").then(r => ({ lue: Array.isArray(r), ligne: Array.isArray(r) ? r[0] || null : null })).catch(() => ({ lue: false, ligne: null })),
+      Auth.appel(q + "&outil=in.(contact,intake,prefs,suivi_prospect,checkins)&select=outil,contenu,maj_le"),
+      Auth.appel(q + "&outil=not.in.(" + this.PAS_SAISIE.join(",") + ")&select=outil,maj_le")
+    ]);
+    if (!pr) throw new Error("profil introuvable");
+    const c = Object.create(null), majs = Object.create(null);
+    (Array.isArray(lignes) ? lignes : []).forEach(l => { if (l && typeof l.outil === "string"){ c[l.outil] = typeof Forme !== "undefined" ? Forme.cle(l.outil, l.contenu) : l.contenu; majs[l.outil] = l.maj_le; } });
+    let dernier = null;
+    (Array.isArray(dates) ? dates : []).forEach(l => {
+      if (!l || typeof l.outil !== "string" || typeof l.maj_le !== "string") return;
+      const quand = l.outil === "checkins" ? Clients.dateSaisie("checkins", majs.checkins || l.maj_le, c.checkins) : l.maj_le;
+      if (quand && (!dernier || quand > dernier)) dernier = quand;
+    });
+    const prospect = pr.statut === "prospect", I = c.intake && typeof c.intake === "object" ? c.intake : {};
+    const info = { pr: Object.assign({}, pr, { id: uid }), prospect, tel: Contact.telephone(c.contact) || "", I, anglais: !!(c.prefs && c.prefs.langue === "en"),
+      arch: Archive.le(c.suivi_prospect), cx: Connexions.lecture(cx && cx.ligne, Connexions.suiviPour(pr), !!(cx && cx.lue)),
+      jours: dernier && !isNaN(Date.parse(dernier)) ? Math.max(0, Math.floor((Date.now() - Date.parse(dernier)) / 86400000)) : null };
+    this.infos[uid] = info;
+    return info;
+  },
+  /* après l'affichage : les zones de l'en-tête se remplissent ; lecture ratée (hors ligne) : l'en-tête reste sans elles */
   async remplir(uid){
     if (!uid) return;
-    if (!(uid in this.tels)){
-      try { const r = await Auth.appel("/rest/v1/donnees?user_id=eq." + uid + "&outil=eq.contact&select=contenu"); this.tels[uid] = Contact.telephone(r && r[0] && r[0].contenu) || ""; }
-      catch(e){ return; }   // pas de connexion : pas de bouton (rien d'autre ne change)
-    }
-    if (Store.idConsulte !== uid) return;
-    $$("[data-fiche-wa]").forEach(z => { z.innerHTML = this.html(uid); });
+    let i = null;
+    try { i = await this.lire(uid); } catch(e){ return; }
+    const z = $("fiche-entete"); if (!z || Store.idConsulte !== uid) return;
+    const pose = (sel, h) => { const e = z.querySelector(sel); if (e && e.innerHTML !== h) e.innerHTML = h; };
+    pose("[data-fe-statut]", this.statutHTML(i)); pose("[data-fe-vu]", this.vuHTML(i)); pose("[data-fiche-wa]", this.waHTML(i)); pose("[data-fiche-tel]", this.telHTML(i));
+    const l = z.querySelector("#fiche-points .menu-points-l");
+    if (l && !l.querySelector("#fc-supprimer")){ const t = document.createElement("div"); t.innerHTML = menuPointsHTML(this.actions(i)); const n = t.querySelector(".menu-points-l"); if (n) Array.from(n.children).forEach(x => l.appendChild(x)); }
+    this.brancher(z, uid, i);
+  },
+  brancher(z, uid, i){
+    if (z.dataset.feBranche === uid) return;
+    z.dataset.feBranche = uid;
+    const pFiche = i.pr;
+    /* après une action : la fiche est relue (son en-tête aussi), ou quittée si le compte n'en a plus (supprimé, ou passé en accès
+       complet) — comme avant dans l'onglet Compte */
+    const refaire = () => { this.oublier(uid); if (Store.idConsulte === uid) afficher(courant, true, true); };
+    const quitter = vers => { this.oublier(uid); ListeCoach.revenir(vers); if (Store.idConsulte === uid){ Store.oublier(uid); Store.idConsulte = null; Store.nomConsulte = null; } Store.retourVers = null; location.hash = "#/" + vers; };
+    const sur = (id, f) => { const b = z.querySelector("#" + id); if (b) b.addEventListener("click", () => f(b)); };
+    sur("fc-changer", async b => { if (await Acces.changerStatut(pFiche, b.dataset.statut, b)) refaire(); });
+    sur("fc-acces", async b => { const vers = Store.retourVers || "clients"; if (await Acces.changerRole(pFiche, "coach", b)) quitter(vers); });
+    sur("fc-archiver", async b => {
+      const oui = b.dataset.archiver === "oui", T = ListeCoach.TEXTES[i.prospect ? "prospects" : "clients"];
+      if (oui && !(await UI.ouvrir({ titre: ListeCoach.plur(1, T.confirmer), corps: trad(ListeCoach.UN), annulation: false, boutons: [
+        { texte: trad("Annuler"), valeur: false, classe: "ghost" }, { texte: trad("Archiver"), valeur: true, principal: true }] }))) return;   // v84 : « Archiver » en or (le rouge reste à « Supprimer définitivement »)
+      const avant = b.textContent; b.disabled = true; b.textContent = "…";
+      const r = await Archive.appliquer([uid], oui);
+      if (r.ok.length){ UI.toast(ListeCoach.plur(1, oui ? T.archives : T.restaures), "ok"); refaire(); return; }
+      b.disabled = false; b.textContent = avant;
+      UI.alerte(trad("Non enregistré ({c}). Réessaie dans un instant.", { c: Commercial.cause(r.ko[0] && r.ko[0].e) }));
+    });
+    sur("fc-supprimer", async b => { const vers = Store.retourVers || "clients"; if (await Acces.supprimer(pFiche, b) === "fait") quitter(vers); });
+  },
+  /* « Notes » : les notes privées dans un volet, depuis chaque onglet (NotesCoach : même champ, même enregistrement) ; ce qui
+     attend part à la fermeture */
+  async notes(){
+    const uid = Store.idConsulte; if (!uid) return;
+    let fin = () => {};
+    const p = UI.volet({ titre: trad("Notes privées"), corps: NotesCoach.html(), classe: "volet-notes" });
+    setTimeout(() => { if (Store.idConsulte === uid) fin = NotesCoach.monter(uid); const t = $("nc-texte"); if (t && !t.disabled) try { t.focus(); } catch(e){} }, 0);
+    await p;
+    try { fin(); } catch(e){}
   }
 };
-/* les outils du client consulté, tous (l'onglet Suivi de la fiche : l'accès à tous les outils du client, comme avant) */
-function actionsConsultation(){
-  const v = outilsVisibles();
-  return [
-    { id:"accueil",      nom:"Fiche" },
-    { id:"bilan",        nom:"Préparer le call" },
-    { id:"suivi",        nom:"Son suivi" },
-    { id:"profil",       nom:"Son questionnaire" },
-    { id:"programme",    nom:"Son programme",  fort:true },
-    { id:"nutrition",    nom:"Ses repas",      fort:true },
-    { id:"calculateur",  nom:"Ses calories", fort:true },
-    { id:"mensurations", nom:"Ses courbes" },
-    /* v53 : le journal du client (cle journal, #/journal en lecture seule), et non plus #/entrainement (sa cle perf,
-       l'outil du coach : toujours vide chez un client, le coach croyait qu'il n'avait rien note) */
-    { id:"journal",      nom:"Ses séances" },
-    /* v79 : son journal alimentaire (lecture seule), seulement s'il lui est ouvert (interrupteur) */
-    { id:"journal-alimentaire", nom:"Son journal alimentaire" }
-    /* v99 : ce bandeau (onglet Suivi de la fiche) reste celui d'avant ; ses compléments et sa formation sont dans les onglets
-       Nutrition et Suivi de l'en-tête */
-  ].filter(a => v.some(o => o.id === a.id));
-}
-/* L'en-tête de chaque page de la fiche : « Fiche de … », WhatsApp, les 5 onglets, les pages de l'onglet ouvert, « Revenir … ».
-   v104 (point 4) : l'Aperçu (la fiche elle-même) l'a aussi, comme les 4 autres onglets.
-   tout = true : l'ancien bandeau (tous les outils du client), dans l'onglet Suivi de la fiche elle-même (v83). */
-function bandeauConsultation(tout){
+document.addEventListener("click", e => { const b = e.target && e.target.closest ? e.target.closest("#fe-notes") : null; if (b) EnteteFiche.notes(); });
+/* L'en-tête de chaque page de la fiche (v106 : EnteteFiche) */
+function bandeauConsultation(){
   if (!Store.idConsulte) return "";
-  /* v104 (point 11) : « Fiche de … » et « Revenir … » traduits (le nom reste tel quel) */
-  const nom = `<strong>${esc(trad(Store.nomConsulte === Clients.SANS_NOM ? "Fiche — {n}" : "Fiche de {n}", { n: Store.nomConsulte || trad("ce client") }))}</strong>`;
-  const sortir = `<button class="sortir" type="button" id="sortir-fiche">${esc(trad(RETOURS[Store.retourVers] || RETOURS.clients))}</button>`;
-  /* v104 (point 4) : l'Aperçu garde le bandeau commun en haut ; cet ancien bandeau (tous les outils du client) ne répète plus
-     « Fiche de … », la phrase d'aide ni « Revenir … » (un seul #sortir-fiche par page) : il ne garde que les liens */
-  if (tout){
-    const actions = actionsConsultation();
-    return `<div class="bandeau">
-    <div class="bandeau-actions">
-      ${actions.map(a => `<a href="${esc(lienOutil(a.id))}" class="b-act${a.fort ? " fort" : ""}${courant === a.id ? " ici" : ""}">${esc(a.nom)}</a>`).join("")}
-    </div>
-  </div>`;
-  }
-  const ici = ongletFiche(courant, sousRoute), g = ONGLETS_FICHE.find(x => x.id === ici);
-  const pages = pagesOnglet(g);
-  return `<div class="bandeau fiche-entete">
-    <div class="bandeau-tete">${nom}
-      <span class="note">Tu vois ses données. Tu écris pour lui dans les boutons dorés, dans « Préparer le call » (ton feedback) et dans la fiche (tes notes privées, qu'il ne voit jamais).</span>
-    </div>
-    <span class="fiche-wa" data-fiche-wa>${TelFiche.html(Store.idConsulte)}</span>
-    ${ongletsFicheHTML(ici)}
-    <div class="bandeau-actions">
-      ${pages.length > 1 ? pages.map(p => {   /* v105 (point 2) : une page seule (Aperçu : « Fiche ») n'a plus son bouton */ const actif = p[0] === courant || (p[0] === "accueil/compte" && courant === "accueil" && sousRoute === "compte");
-        return `<a href="${esc(lienPageFiche(p[0]))}" class="b-act${p[2] ? " fort" : ""}${actif ? " ici" : ""}"${actif ? ' aria-current="page"' : ""}>${esc(trad(p[1]))}</a>`; }).join("") : ""}
-      ${sortir}
-    </div>
-  </div>`;
+  return EnteteFiche.html();
 }
-/* les 5 onglets (liens : chaque onglet ouvre sa première page ; clavier : Tab et Entrée) */
+/* les onglets (liens : chaque onglet ouvre sa première page ; clavier : Tab et Entrée) */
 function ongletsFicheHTML(ici){
   return `<nav class="fiche-onglets" aria-label="${esc(trad("Fiche"))}">${ONGLETS_FICHE.map(g => { const p = pagesOnglet(g)[0]; if (!p) return "";
     return `<a class="f-onglet${g.id === ici ? " ici" : ""}" href="${esc(lienPageFiche(p[0]))}" data-onglet-fiche="${g.id}"${g.id === ici ? ' aria-current="page"' : ""}>${esc(trad(g.nom))}</a>`; }).join("")}</nav>`;
@@ -773,6 +859,9 @@ function sortirFiche(){
 /* v64 : sansCompte = page reconstruite sur place apres l'accord sante (deja comptee a son ouverture) */
 async function afficher(id, silencieux, sansCompte){
   const jeton = ++affichage;
+  /* v106 (lot 2) : changer de page referme le volet des notes privées (ce qui attend part tout de suite, comme avant en quittant
+     la fiche) */
+  if (document.querySelector(".volet-notes")) UI.fermer();
   document.body.classList.remove("lc-selection");   // v83 (bloc 3) : la barre du bas revient en quittant une sélection
   const dispo = outilsVisibles();
   const outil = dispo.find(o => o.id === id) || dispo.find(o => o.id === outilParDefaut()) || dispo[0];
@@ -793,12 +882,16 @@ async function afficher(id, silencieux, sansCompte){
      connexion arrivée par ?ouvrir=connexion (Integre.suiteConnexion : la suite des étapes vues dans Instagram, TikTok ou
      Facebook). Ailleurs, la page est identique au caractère près. */
   const installation = bandeauInstallation(), installationHaut = !!installation && typeof Integre !== "undefined" && Integre.suiteConnexion();
+  /* v106 (lot 2) : dans une fiche, l'en-tête de la fiche porte tout : plus de titre de page répété (un titre pour les lecteurs
+     d'écran seulement, le nom de la page) */
+  const enFiche = !!Store.idConsulte && Auth.estCoach();
+  document.body.classList.toggle("en-fiche", enFiche);
   $("vue").innerHTML = `
     ${bandeauConsultation()}${installationHaut ? installation : ""}
-    ${outil.sans_entete ? "" : `<header class="masthead">
-      <span class="eyebrow">${Store.idConsulte ? esc(Store.nomConsulte || "client") + " — " : (CONFIG.marque.programme ? esc(CONFIG.marque.programme) + " — " : "")}${esc(Store.idConsulte ? trad(nomOnglet(outil)) : nomOnglet(outil))}</span>
-      <h1>${Store.idConsulte ? esc(trad(nomOnglet(outil))) : esc(outil.titre)}</h1>
-      ${Store.idConsulte ? "" : `<p class="lede">${esc(outil.accroche)}</p>`}
+    ${enFiche ? (outil.sans_entete ? "" : `<h1 class="sr-only">${esc(trad(nomPageFiche()))}</h1>`) : outil.sans_entete ? "" : `<header class="masthead">
+      <span class="eyebrow">${CONFIG.marque.programme ? esc(CONFIG.marque.programme) + " — " : ""}${esc(nomOnglet(outil))}</span>
+      <h1>${esc(outil.titre)}</h1>
+      <p class="lede">${esc(outil.accroche)}</p>
     </header>`}
     ${verrouille ? pageVerrouillee(outil) : (pause ? Sante.carteHTML(outil.id) : "") + htmlSur(outil)}
     ${avecDonnees ? blocSauvegarde() : ""}
@@ -849,7 +942,7 @@ async function afficher(id, silencieux, sansCompte){
   if (avecDonnees){ initSauvegarde(); }
   /* « Revenir … » du bandeau et, v83 (bloc 3), la croix de la fiche (« Fermer la fiche ») : là d'où l'on vient */
   ["sortir-fiche", "fc-fermer"].forEach(id => { const b = $(id); if (b) b.addEventListener("click", sortirFiche); });
-  if (Store.idConsulte) TelFiche.remplir(Store.idConsulte);   // v99 : WhatsApp dans l'en-tête de la fiche (lecture seule)
+  if (Store.idConsulte && Auth.estCoach()) EnteteFiche.remplir(Store.idConsulte);   // v106 (lot 2) : statut, « vu il y a », WhatsApp, Appeler, « ⋯ » (lecture seule)
 
   brancherInstallation();
 

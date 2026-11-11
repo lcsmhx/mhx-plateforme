@@ -139,6 +139,8 @@ const Clients = {
             bilan: Decouverte.bilanPropose(c.intake) } : null,   // v62 (L) : son choix sur la page « Ton plan d'action » (« Plus tard » d'avant la v62)
       newsletter: Accords.newsletterCoach(c.emails),   // v52 (lot G) : { oui, depuis } d'après la clé emails (CSV)
       tel: Contact.telephone(c.contact),   // v72 (A) : son numéro (clé contact), "" si aucun ou illisible
+      /* v106 (lot 2) : le message WhatsApp prêt (le même que l'en-tête de sa fiche) */
+      msgWa: (() => { try { return messageWhatsAppCoach(p, c.intake && typeof c.intake === "object" ? c.intake : {}, !!(c.prefs && c.prefs.langue === "en")); } catch(e){ return ""; } })(),
       ref: Contact.ref(c.contact),   // v72 (F) : le code de son lien d'inscription (clé contact), "" si aucun ou illisible
       act: (c.activite && typeof c.activite === "object") ? c.activite : null,   // v51 : activite (chronologie de la fiche)
       /* v53 (chantier 4) : dernière visite et jours actifs sur 30 jours ; un compte non suivi (client hors interrupteur
@@ -926,7 +928,7 @@ const Commercial = {
     return `<article class="sc-carte${a.urgent ? " urgent" : ""}" data-uid="${esc(p.id)}">
       <div class="sc-tete">${Clients.avatar(nom)}<div class="sc-nom"><b>${esc(nom)}</b><small>${esc(this.sousTitre(p, a))}</small></div>${this.pastille(a)}${this.pastilleBilan(B, a)}${a.illisible ? '<span class="pastille attention">données illisibles</span>' : ""}</div>
       ${dc.email ? `<p class="sc-infos">${esc(dc.email)}</p>` : ""}
-      <p class="sc-tel">Téléphone : ${Telephone.coachHTML(l.tel)}</p>
+      <p class="sc-tel">Téléphone : ${Telephone.coachHTML(l.tel, "", l.msgWa)}</p>
       <p class="sc-tel sc-source">Source : <span data-notr>${esc(l.ref || "—")}</span></p>
       ${reponses.length ? `<ul class="sc-reponses">${reponses.map(([k, v]) => `<li><span>${esc(k)}</span> ${esc(v)}</li>`).join("")}</ul>` : `<p class="sc-infos sc-sans">${dc.ancien ? "Anciennes réponses : dans sa fiche." : "Pas encore de réponse à ses 3 questions."}</p>`}
       <ul class="sc-faits">${faits.map(([k, v]) => `<li><span>${esc(k)}</span> <b>${esc(v)}</b></li>`).join("")}</ul>
@@ -1068,6 +1070,13 @@ const Commercial = {
    traduction du dictionnaire) ; le texte libre tel qu'il l'a écrit (une ancienne réponse libre à « ce qui a coincé » aussi).
    Une réponse absente : sa phrase est sautée. Le coach peut modifier le message dans WhatsApp avant de l'envoyer.
    ------------------------------------------------------------------ */
+/* v106 (lot 2) — le message WhatsApp prêt du coach, le même partout (en-tête de la fiche, Vue tableau, Vue détaillée, tableau de
+   bord) : un prospect, MessageProspect (ses réponses) ; un client, une salutation à son prénom. Dans sa langue (prefs.langue). */
+function messageWhatsAppCoach(p, I, anglais){
+  const prenom = p && typeof p.prenom === "string" ? Array.from(p.prenom.replace(/\s+/g, " ").trim()).slice(0, 60).join("") : "";
+  if (p && p.statut === "prospect") return MessageProspect.texte(prenom, I, anglais);
+  return (anglais ? "Hi" : "Salut") + (prenom ? " " + prenom : "") + " 👋";
+}
 const MessageProspect = {
   court(k){ const c = (typeof PARCOURS_T !== "undefined" && PARCOURS_T.cadeau && PARCOURS_T.cadeau.courts) || {}; return typeof k === "string" && Object.prototype.hasOwnProperty.call(c, k) ? c[k] : ""; },
   en(fr){ return (I18N.en && Object.prototype.hasOwnProperty.call(I18N.en, fr) && I18N.en[fr]) || fr; },

@@ -511,7 +511,8 @@ async function pret(page, sel){
   await attendre(page, 500);
 }
 const URL0 = `http://localhost:${PORT}/`;
-const PAGES = [["accueil", "Aperçu", "#fc-suivi"], ["programme", "Entraînement", "#pg-publier"], ["nutrition", "Nutrition", "#nu-vue"], ["suivi", "Suivi", "#suivi-reg"], ["profil", "Profil", "#q-age"]];
+/* v106 (lot 2) : 4 onglets — « Son questionnaire » (profil) est sous Aperçu ; « Entraînement » s'appelle « Programme » */
+const PAGES = [["accueil", "Aperçu", "#fc-suivi"], ["programme", "Programme", "#pg-publier"], ["nutrition", "Nutrition", "#nu-vue"], ["suivi", "Suivi", "#suivi-reg"], ["profil", "Aperçu", "#q-age"]];
 const ouvrir = async (page, uid, chemin, sel) => { await page.goto(URL0 + "#/client/" + uid + "/" + chemin); await pret(page, sel); await attendre(page, 900); };
 /* l'en-tête de la page affichée, tel que le coach le voit */
 const lireTete = page => page.evaluate(() => {
@@ -526,11 +527,13 @@ const lireTete = page => page.evaluate(() => {
   return {
     hash: location.hash, nbBandeaux: be.length, premier: !!b && v.firstElementChild === b,
     enfants: b ? Array.from(b.children).map(c => c.tagName + "." + c.className) : null,
-    tete: b ? n((b.querySelector(".bandeau-tete strong") || {}).textContent) : null,
+    /* v106 (lot 2) : la ligne de l'en-tête montre le prénom ; le nom entier est sa bulle (title) */
+    tete: b ? n((b.querySelector(".fe-nom") || {}).title) : null, prenom: b ? n((b.querySelector(".fe-nom") || {}).textContent) : null,
+    srH1: n((Array.from(v.querySelectorAll("h1")).find(h => !vis(h) || h.classList.contains("sr-only")) || {}).textContent) || null, h1Visibles: h1s.filter(h => !h.classList.contains("sr-only")).length,
     nbOnglets: v.querySelectorAll(".fiche-onglets").length, onglets: Array.from(v.querySelectorAll(".fiche-onglets .f-onglet")).map(a => n(a.textContent)),
     ici: n((v.querySelector('.fiche-onglets .f-onglet[aria-current="page"]') || {}).textContent) || null,
     pageIci: n((v.querySelector('.fiche-entete a.b-act[aria-current="page"]') || {}).textContent) || null,
-    sortir: sortir.length, sortirFin: !!(b && b.querySelector(".bandeau-actions > #sortir-fiche:last-child")), sortirTexte: sortir[0] ? n(sortir[0].textContent) : null,
+    sortir: sortir.length, sortirFin: !!(b && b.querySelector(".fe-ligne > #sortir-fiche:first-child")) /* v106 : la flèche en tête de ligne */, sortirTexte: sortir[0] ? n(sortir[0].textContent) : null,
     titre: m ? { cls: m.className, enfants: Array.from(m.children).map(c => c.tagName + "." + c.className), eyebrow: n((m.querySelector(".eyebrow") || {}).textContent), h1: n((m.querySelector("h1") || {}).textContent) } : null,
     apres: !!(b && m && (b.compareDocumentPosition(m) & 4)), h1Seul: h1s.length === 1 && !!m && m.contains(h1s[0]), entre,
     anciens: ["#fc-fermer", '[id^="fc-tab-"]', "[data-onglet]", ".fc-tete", ".fc-onglets"].filter(s => v.querySelector(s)),
@@ -538,7 +541,7 @@ const lireTete = page => page.evaluate(() => {
   };
 });
 /* la forme commune (sans ce qui dépend de l'onglet : onglet marqué, pages, titre) */
-const forme = t => JSON.stringify({ premier: t.premier, nbBandeaux: t.nbBandeaux, enfants: t.enfants, tete: t.tete, nbOnglets: t.nbOnglets, onglets: t.onglets, sortir: t.sortir, sortirFin: t.sortirFin, sortirTexte: t.sortirTexte,
+const forme = t => JSON.stringify({ premier: t.premier, nbBandeaux: t.nbBandeaux, enfants: t.enfants, tete: t.tete, prenom: t.prenom, h1Visibles: t.h1Visibles, nbOnglets: t.nbOnglets, onglets: t.onglets, sortir: t.sortir, sortirFin: t.sortirFin, sortirTexte: t.sortirTexte,
   titreCls: t.titre && t.titre.cls, titreEnfants: t.titre && t.titre.enfants, apres: t.apres, h1Seul: t.h1Seul });
 /* v105 (point 2) : l'Aperçu n'a plus de titre de page visible (un seul en-tête : le bandeau) : sa forme, sans le titre */
 const formeSansTitre = t => JSON.stringify(Object.assign(JSON.parse(forme(t)), { titreCls: null, titreEnfants: null, apres: null, h1Seul: null }));
@@ -550,7 +553,7 @@ const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { 
   await new Promise((r, k) => { server.once("error", e => k(new Error(e && e.code === "EADDRINUSE" ? "port " + PORT + " déjà pris : VERIF104_PORT=10141 node verif104.js ../index.html" : String(e)))); server.listen(PORT, r); });
   const b = await chromium.launch();
 
-  /* =================== A et B. le même en-tête sur les 5 onglets, client puis prospect =================== */
+  /* =================== A et B. le même en-tête sur chaque onglet (v106 : 4), client puis prospect =================== */
   for (const [qui, uid, nom, statut] of [["client", C1, "Thomas Démo", "Client"], ["prospect", C2, "Sarah Démo", "Prospect"]]) {
     await bloc("A. " + qui, async () => {
       const db = base();
@@ -558,15 +561,17 @@ const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { 
       const T = {};
       for (const [ch, ong, sel] of PAGES) { await ouvrir(page, uid, ch, sel); T[ch] = await lireTete(page); }
       const ref = T.programme, aper = T.accueil;
-      ok("A1 (" + qui + ") : Entraînement (référence) : le bandeau .fiche-entete en premier dans #vue (« Fiche de " + nom + " », WhatsApp, les 5 onglets, les pages, « Revenir à mes clients » en dernier), puis le titre « " + nom + " — … » / h1",
-        ref.nbBandeaux === 1 && ref.premier && JSON.stringify(ref.enfants) === '["DIV.bandeau-tete","SPAN.fiche-wa","NAV.fiche-onglets","DIV.bandeau-actions"]' && ref.tete === "Fiche de " + nom
-          && ref.nbOnglets === 1 && JSON.stringify(ref.onglets) === '["Aperçu","Entraînement","Nutrition","Suivi","Profil"]' && ref.sortir === 1 && ref.sortirFin && ref.sortirTexte === "Revenir à mes clients"
-          && !!ref.titre && ref.titre.cls === "masthead" && JSON.stringify(ref.titre.enfants) === '["SPAN.eyebrow","H1."]' && ref.titre.eyebrow === nom + " — " + ref.titre.h1 && ref.apres && ref.h1Seul, JSON.stringify(ref));
+      /* v106 (lot 2) : changement voulu — l'en-tête de la fiche tient sur une ligne (flèche de retour en tête, prénom, statut,
+         « vu il y a », WhatsApp, Appeler, Notes, « ⋯ »), puis les 4 onglets, puis la rangée des pages ; plus de phrase d'aide ni
+         de titre de page répété (un h1 pour les lecteurs d'écran, au nom de la page ouverte) */
+      ok("A1 (" + qui + ") : Programme (référence) : l'en-tête .fiche-entete en premier dans #vue (ligne : retour « Revenir à mes clients » en tête, prénom — nom entier en bulle —, puis les 4 onglets et les pages) ; aucun titre de page visible, h1 « Son programme » pour les lecteurs d'écran",
+        ref.nbBandeaux === 1 && ref.premier && JSON.stringify(ref.enfants) === '["DIV.fe-ligne","NAV.fiche-onglets","NAV.sous-onglets bandeau-actions fiche-pages"]' && ref.tete === nom && ref.prenom === nom.split(" ")[0]
+          && ref.nbOnglets === 1 && JSON.stringify(ref.onglets) === '["Aperçu","Programme","Nutrition","Suivi"]' && ref.sortir === 1 && ref.sortirFin && ref.sortirTexte === "Revenir à mes clients"
+          && ref.titre === null && ref.h1Visibles === 0 && ref.srH1 === "Son programme" && ref.pageIci === "Son programme", JSON.stringify(ref));
       for (const [ch, ong] of PAGES) {
         const t = T[ch];
         ok("A2 (" + qui + ") : onglet « " + ong + " » : même en-tête que les autres onglets (même forme et même ordre, onglets une seule fois, un seul « Revenir … »), titre de page au même format, rien entre les deux, « " + ong + " » marqué",
-          (ch === "accueil" ? formeSansTitre(t) === formeSansTitre(ref) && t.ici === ong && t.titre === null   // v105 (point 2) : changement voulu — l'Aperçu sans titre visible
-            : forme(t) === forme(ref) && t.ici === ong && !!t.titre && t.titre.eyebrow === nom + " — " + t.titre.h1 && Array.isArray(t.entre) && t.entre.length === 0), JSON.stringify({ t, ref: forme(ref) }));
+          forme(t) === forme(ref) && t.ici === ong && t.titre === null && !!t.srH1 && t.srH1 === t.pageIci, JSON.stringify({ t, ref: forme(ref) }));   // v106 (lot 2) : aucun titre visible ; le h1 caché porte le nom de la page ouverte
       }
       ok("A3 (" + qui + ") : aucun onglet n'a la croix (#fc-fermer), les boutons Suivi / Compte (#fc-tab-*, [data-onglet]) ni l'ancien en-tête (.fc-tete)",
         PAGES.every(([ch]) => T[ch].anciens.length === 0), JSON.stringify(PAGES.map(([ch]) => [ch, T[ch].anciens])));
@@ -577,32 +582,36 @@ const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { 
         const w = document.createTreeWalker(v, NodeFilter.SHOW_TEXT); let x, noms = 0, fiches = 0;
         while ((x = w.nextNode())) { const p = x.parentElement; if (!p || !vis(p) || p.closest("[hidden]")) continue; const t = x.nodeValue.replace(/\s+/g, " ").trim(); if (t.includes(nom)) noms++; if (t === "Fiche") fiches++; }
         const h1 = v.querySelector("#acc-vue > h1.sr-only");
-        return { noms, fiches, bAct: v.querySelectorAll(".fiche-entete a.b-act").length, h1: h1 ? h1.textContent : null, h1s: v.querySelectorAll("h1").length }; }, nom);
-      ok("A4 (" + qui + ") : Aperçu (v105) : un seul en-tête — le nom « " + nom + " » une seule fois (« Fiche de " + nom + " »), ni bouton « Fiche » ni grand titre « Fiche » visibles ; un seul h1 « Fiche », pour les lecteurs d'écran",
-        aper.titre === null && aper.pageIci === null && /\/accueil$/.test(aper.hash) && aper.tete === "Fiche de " + nom && A4.noms === 1 && A4.fiches === 0 && A4.bAct === 0 && A4.h1 === "Fiche" && A4.h1s === 1, JSON.stringify({ aper, A4 }));
+        return { noms, prenoms: Array.from(v.querySelectorAll(".fe-nom")).filter(vis).map(e => e.textContent.trim()), fiches, bAct: v.querySelectorAll(".fiche-entete a.b-act").length, h1: (v.querySelector("h1.sr-only") || {}).textContent || null, h1s: v.querySelectorAll("h1").length }; }, nom);
+      /* v106 (lot 2) : changement voulu — le prénom une seule fois (en-tête), le nom entier jamais en double ; la rangée des pages
+         d'Aperçu : « Aperçu » (marqué) et « Son questionnaire » ; le h1 caché s'appelle « Aperçu » (le nom de son lien) */
+      ok("A4 (" + qui + ") : Aperçu (v105, v106) : un seul en-tête — le prénom une seule fois, le nom entier nulle part en double, ni bouton ni grand titre « Fiche » ; rangée « Aperçu » (marqué) · « Son questionnaire » ; un seul h1 « Aperçu », pour les lecteurs d'écran",
+        aper.titre === null && aper.pageIci === "Aperçu" && /\/accueil$/.test(aper.hash) && aper.tete === nom && JSON.stringify(A4.prenoms) === JSON.stringify([nom.split(" ")[0]]) && A4.noms === 0 && A4.fiches === 0 && A4.bAct === 2 && A4.h1 === "Aperçu" && A4.h1s === 1, JSON.stringify({ aper, A4 }));
       /* B. l'identité et les actions, sous le titre */
       await ouvrir(page, uid, "accueil", "#fc-suivi");
       const id = await page.evaluate(() => {
-        const n = t => String(t || "").replace(/\s+/g, " ").trim(), v = document.getElementById("vue"), m = v.querySelector("#acc-vue > .masthead"), f = v.querySelector("#fc-ident");
+        const n = t => String(t || "").replace(/\s+/g, " ").trim(), v = document.getElementById("vue"), m = v.querySelector(".fiche-entete"), f = v.querySelector("#fc-ident"), e = v.querySelector(".fiche-entete");   // v106 (lot 2) : statut, WhatsApp et Appeler dans l'en-tête
         const vis = e => !!e && e.getClientRects().length > 0;
         const textes = Array.from(v.querySelectorAll("a, button")).filter(vis).map(x => n(x.textContent)).filter(Boolean);
         return { sous: !!(m && f && (m.compareDocumentPosition(f) & 4)), avantSuivi: !!(f && (f.compareDocumentPosition(v.querySelector("#fc-suivi")) & 4)),
-          avatar: n((f && f.querySelector(".fc-avatar") || {}).textContent), nom: n((f && f.querySelector("h2") || {}).textContent), role: n((f && f.querySelector(".fc-role-p") || {}).textContent),
-          call: f && f.querySelector("#fc-call") ? n(f.querySelector("#fc-call").textContent) : null, wa: f && f.querySelector("#fc-wa") ? { t: n(f.querySelector("#fc-wa").textContent), href: f.querySelector("#fc-wa").getAttribute("href") } : null,
-          appeler: f && f.querySelector("#fc-appeler") ? f.querySelector("#fc-appeler").getAttribute("href") : null,
+          avatar: n((f && f.querySelector(".fc-avatar") || {}).textContent), nom: n((f && f.querySelector("h2") || {}).textContent), role: n((e && e.querySelector(".fe-statut") || {}).textContent), roleIdent: !!(f && f.querySelector(".fc-role-p, .fe-statut")),
+          call: f && f.querySelector("#fc-call") ? n(f.querySelector("#fc-call").textContent) : null, wa: e && e.querySelector("[data-fiche-wa] a") ? { t: n(e.querySelector("[data-fiche-wa] a").getAttribute("aria-label")), href: e.querySelector("[data-fiche-wa] a").getAttribute("href") } : null, waIdent: !!(f && f.querySelector("#fc-wa, a[href*='wa.me']")),
+          appeler: e && e.querySelector("#fc-appeler") ? e.querySelector("#fc-appeler").getAttribute("href") : null, appelerIdent: !!(f && f.querySelector("#fc-appeler")),
           doublons: textes.filter((x, i) => /whatsapp/i.test(x) && textes.indexOf(x) !== i) };
       });
       const T2 = await lireTete(page);
       if (qui === "client") {
-        ok("B1 (client) : sous le bandeau, avant le Suivi : « Client », « Préparer le call », Appeler (tel:) ; v105 (point 2) : ni initiales ni nom répétés ; un seul lien WhatsApp visible, celui du bandeau",
-          id.avantSuivi && !id.avatar && !id.nom && id.role === statut && id.call === "Préparer le call" && !id.wa && id.appeler === "tel:" + TEL1
+        /* v106 (lot 2) : changement voulu — « Client », WhatsApp (message prêt) et Appeler sont dans l'en-tête, une seule fois */
+        ok("B1 (client) : en-tête : « Client », WhatsApp (message prêt : « Salut Thomas 👋 »), Appeler (tel:) ; sous l'en-tête, avant le Suivi : « Préparer le call », sans statut, WhatsApp ni Appeler en double ; ni initiales ni nom répétés ; un seul lien WhatsApp visible",
+          id.avantSuivi && !id.avatar && !id.nom && id.role === statut && !id.roleIdent && id.call === "Préparer le call" && !!id.wa && /^https:\/\/wa\.me\/\d+\?text=Salut%20Thomas/.test(id.wa.href) && !id.waIdent && id.appeler === "tel:" + TEL1 && !id.appelerIdent
             && T2.waVisibles.length === 1 && T2.waVisibles[0].dansBandeau, JSON.stringify({ id, wa: T2.waVisibles }));
       } else {
-        ok("B2 (prospect) : sous le bandeau : « Prospect », le message WhatsApp prêt (#fc-wa, texte pré-rempli) et Appeler ; v105 (point 2) : ni initiales ni nom répétés ; le WhatsApp du bandeau aussi ; jamais deux boutons au même texte",
-          id.avantSuivi && !id.avatar && !id.nom && id.role === statut && !id.call && !!id.wa && /^https:\/\/wa\.me\/33639980002\?text=./.test(id.wa.href) && id.appeler === "tel:" + TEL2
-            && T2.waVisibles.length === 2 && T2.waVisibles.filter(w => w.dansBandeau).length === 1 && id.doublons.length === 0, JSON.stringify({ id, wa: T2.waVisibles }));
+        /* v106 (lot 2) : changement voulu — un seul WhatsApp, celui de l'en-tête, qui ouvre le message prêt du prospect (ses réponses) */
+        ok("B2 (prospect) : en-tête : « Prospect », WhatsApp = le message prêt (texte pré-rempli), Appeler (tel:) ; rien en double sous l'en-tête ; ni initiales ni nom répétés ; un seul lien WhatsApp visible",
+          id.avantSuivi && !id.avatar && !id.nom && id.role === statut && !id.roleIdent && !id.call && !!id.wa && /^https:\/\/wa\.me\/33639980002\?text=./.test(id.wa.href) && !id.waIdent && id.appeler === "tel:" + TEL2 && !id.appelerIdent
+            && T2.waVisibles.length === 1 && T2.waVisibles[0].dansBandeau && id.doublons.length === 0, JSON.stringify({ id, wa: T2.waVisibles }));
       }
-      ok("A5 (" + qui + ") : aucune écriture en parcourant les 5 onglets", db.ecritures.length === 0, JSON.stringify(db.ecritures.map(e => e.outil || e.table)));
+      ok("A5 (" + qui + ") : aucune écriture en parcourant les onglets", db.ecritures.length === 0, JSON.stringify(db.ecritures.map(e => e.outil || e.table)));
     });
   }
 
@@ -616,8 +625,8 @@ const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { 
     const h0 = await page.evaluate(() => location.hash), l1 = await page.evaluate(() => (document.querySelector("#vue > .fiche-entete #sortir-fiche") || {}).textContent || null);
     await page.click("#vue > .fiche-entete #sortir-fiche"); await pret(page, "#tb-vue"); await attendre(page, 300);
     const r1 = await page.evaluate(() => ({ hash: location.hash, consulte: Store.idConsulte }));
-    ok("C1 : Tableau de bord → Aperçu → « Revenir au tableau de bord » (bandeau) : retour au Tableau de bord, la fiche est quittée",
-      /\/accueil$/.test(h0) && l1 === "Revenir au tableau de bord" && r1.hash === "#/tableau" && r1.consulte === null, JSON.stringify({ h0, l1, r1 }));
+    ok("C1 : Aujourd'hui → Aperçu → « Revenir à Aujourd'hui » (flèche de l'en-tête, v106) : retour à Aujourd'hui, la fiche est quittée",
+      /\/accueil$/.test(h0) && l1 === "Revenir à Aujourd'hui" && r1.hash === "#/tableau" && r1.consulte === null, JSON.stringify({ h0, l1, r1 }));
     /* liste Clients (longue) : la position est retrouvée */
     await page.goto(URL0 + "#/clients"); await pret(page, "#lc-clients #lc-liste li"); await attendre(page, 400);
     const cible = EXTRA(20);
@@ -645,16 +654,20 @@ const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { 
     const db = base();
     const { page } = await contexte(b, COACH, db);
     await ouvrir(page, C1, "accueil", "#fc-suivi");
-    await page.click('#vue > .fiche-entete .f-onglet[data-onglet-fiche="profil"]'); await pret(page, "#q-age"); await attendre(page, 400);
+    /* v106 (lot 2) : changement voulu — « Son compte » s'ouvre par le menu « ⋯ » de l'en-tête ; ses actions (Passer client,
+       accès complet, archiver, Supprimer définitivement) sont dans ce menu, sur chaque onglet */
     const pages = await page.evaluate(() => Array.from(document.querySelectorAll("#vue > .fiche-entete .bandeau-actions a.b-act")).map(a => a.textContent.trim()));
-    await page.click('#vue > .fiche-entete a.b-act[href$="/accueil/compte"]'); await pret(page, "#fc-compte"); await attendre(page, 600);
+    await page.click("#fiche-points summary"); await attendre(page, 300);
+    const menu = await page.evaluate(() => Array.from(document.querySelectorAll("#fiche-points .menu-points-l a, #fiche-points .menu-points-l button")).map(x => (x.id || x.getAttribute("href").split("/").slice(-2).join("/")) + ":" + x.textContent.trim()));
+    await page.click("#fiche-points a[data-fe-compte]"); await pret(page, "#fc-compte"); await attendre(page, 600);
     const c = await page.evaluate(() => ({ hash: location.hash, compte: !document.getElementById("fc-compte").hidden, suivi: !document.getElementById("fc-suivi").hidden,
       ici: (document.querySelector('#vue > .fiche-entete .f-onglet[aria-current="page"]') || {}).textContent || null, page: (document.querySelector('#vue > .fiche-entete a.b-act[aria-current="page"]') || {}).textContent || null,
-      h1: ((document.querySelector("#acc-vue > .masthead h1") || {}).textContent || "").trim(), infos: !!document.querySelector("#fc-compte #fc-infos #fc-email"), supprimer: !!document.querySelector("#fc-compte #fc-supprimer") }));
+      h1: ((document.querySelector("#vue h1.sr-only") || {}).textContent || "").trim(), infos: !!document.querySelector("#fc-compte #fc-infos #fc-email"), supprimer: !!document.querySelector("#vue > .fiche-entete #fiche-points #fc-supprimer") }));
     const tc = await lireTete(page);
-    ok("D1 : Profil (Son questionnaire, Son compte) › « Son compte » : #/client/…/accueil/compte, le panneau Compte (#fc-compte : email, Supprimer définitivement) seul visible, Profil et « Son compte » marqués, titre « Son compte », même en-tête",
-      JSON.stringify(pages) === '["Son questionnaire","Son compte"]' && /\/accueil\/compte$/.test(c.hash) && c.compte && !c.suivi && c.ici === "Profil" && c.page === "Son compte" && c.h1 === "Son compte" && c.infos && c.supprimer
-        && tc.nbBandeaux === 1 && tc.premier && tc.nbOnglets === 1 && tc.sortir === 1 && tc.anciens.length === 0 && tc.entre && tc.entre.length === 0, JSON.stringify({ pages, c, tc }));
+    ok("D1 : « ⋯ » (Son compte, Repasser prospect, Donner l'accès complet, Archiver ce compte, Supprimer définitivement) › « Son compte » : #/client/…/accueil/compte, le panneau Compte (#fc-compte : email) seul visible, Aperçu et « Son compte » marqués, titre « Son compte », même en-tête",
+      JSON.stringify(pages) === '["Aperçu","Son questionnaire"]' && JSON.stringify(menu) === JSON.stringify(["accueil/compte:Son compte", "fc-changer:Repasser prospect", "fc-acces:Donner l'accès complet", "fc-archiver:Archiver ce compte", "fc-supprimer:Supprimer définitivement"])
+        && /\/accueil\/compte$/.test(c.hash) && c.compte && !c.suivi && c.ici === "Aperçu" && c.page === "Son compte" && c.h1 === "Son compte" && c.infos && c.supprimer
+        && tc.nbBandeaux === 1 && tc.premier && tc.nbOnglets === 1 && tc.sortir === 1 && tc.anciens.length === 0 && tc.titre === null, JSON.stringify({ pages, menu, c, tc }));
     await page.click('#vue > .fiche-entete .f-onglet[data-onglet-fiche="apercu"]'); await pret(page, "#fc-suivi"); await attendre(page, 600);
     const s = await page.evaluate(() => ({ hash: location.hash, suivi: !document.getElementById("fc-suivi").hidden, compte: !document.getElementById("fc-compte").hidden, ici: (document.querySelector('#vue > .fiche-entete .f-onglet[aria-current="page"]') || {}).textContent || null }));
     ok("D2 : puis « Aperçu » : le Suivi revient (#fc-suivi), Compte caché, Aperçu marqué", /\/accueil$/.test(s.hash) && s.suivi && !s.compte && s.ici === "Aperçu", JSON.stringify(s));
@@ -667,7 +680,7 @@ const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { 
     const deb = [];
     for (const uid of [C1, C2]) for (const [ch, , sel] of PAGES) { await ouvrir(page, uid, ch, sel); if (await debordeLarg(page)) deb.push((uid === C1 ? "client " : "prospect ") + ch); }
     await ouvrir(page, C1, "accueil/compte", "#fc-compte"); if (await debordeLarg(page)) deb.push("client accueil/compte");
-    ok("E1 : téléphone (390 px) : aucun débordement sur le côté (5 onglets du client et du prospect, Son compte)", deb.length === 0, JSON.stringify(deb));
+    ok("E1 : téléphone (390 px) : aucun débordement sur le côté (onglets du client et du prospect, Son compte)", deb.length === 0, JSON.stringify(deb));
   });
 
   /* =================== 3N. l'app d'un client ne télécharge plus Clients, Prospects ni leurs outils communs ; le coach les a =================== */
@@ -748,11 +761,17 @@ const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { 
       }));
     }
     /* v106 (lot 1) : changement voulu — 4 cases (Aujourd'hui · Clients · Prospects · Bibliothèque), plus de « Plus » */
-    ok("G1 (point 2) : sur les 5 onglets de la fiche à 390 px, la barre du bas est celle du coach (Aujourd'hui · Clients · Prospects · Bibliothèque, sans « Plus », « Clients » marqué) et les 5 onglets tiennent sur une ligne",
-      L.every(x => JSON.stringify(x.bb) === '["tableau","clients","prospects","mes-programmes"]' && !x.plus && x.ici === "clients" && x.n === 5 && x.uneLigne && !x.deborde), JSON.stringify(L));
+    ok("G1 (point 2) : sur chaque onglet de la fiche à 390 px, la barre du bas est celle du coach (Aujourd'hui · Clients · Prospects · Bibliothèque, sans « Plus », « Clients » marqué) et les 4 onglets (v106) tiennent sur une ligne",
+      L.every(x => JSON.stringify(x.bb) === '["tableau","clients","prospects","mes-programmes"]' && !x.plus && x.ici === "clients" && x.n === 4 && x.uneLigne && !x.deborde), JSON.stringify(L));
+    /* v106 (lot 2) : sur téléphone, dans une fiche, son en-tête remplace la barre du haut (collé en haut) ; sur ordinateur, le rond
+       de profil (barre latérale) donne les autres pages du coach, qui referment la fiche */
+    const tel = await page.evaluate(() => { const t = document.querySelector(".topbar"), e = document.querySelector("#vue > .fiche-entete"); window.scrollTo(0, 600);
+      return { barreHaut: getComputedStyle(t).display, colle: getComputedStyle(e).position, haut: Math.round(e.getBoundingClientRect().top) }; });
+    await page.setViewportSize({ width: 1280, height: 900 }); await attendre(page, 400);
     await page.click("#rond-profil"); await attendre(page, 500);
     const v = await page.evaluate(() => Array.from(document.querySelectorAll(".volet #menu-profil a")).map(a => a.dataset.id + (a.hasAttribute("data-quitter-fiche") ? "↩" : "")));
-    ok("G2 (point 2) : le rond de profil dans la fiche : les autres pages du coach (Réglages, Mon entraînement, qui referment la fiche), aucun outil du client", JSON.stringify(v) === '["profil↩","entrainement↩"]', JSON.stringify(v));
+    ok("G2 (point 2) : à 390 px dans la fiche, l'en-tête de la fiche remplace la barre du haut et reste collé en haut au défilement ; sur ordinateur, le rond de profil donne les autres pages du coach (Réglages, Mon entraînement, qui referment la fiche), aucun outil du client",
+      tel.barreHaut === "none" && tel.colle === "sticky" && tel.haut === 0 && JSON.stringify(v) === '["profil↩","entrainement↩"]', JSON.stringify([tel, v]));
   });
 
   /* =================== H. point 3 : un seul chiffre de régularité, pas de « 0 g prot. » =================== */
@@ -945,11 +964,12 @@ const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { 
     const dbe = base(); avecPrefsEnTous(dbe);
     const { page } = await contexte(b, COACH, dbe, { langue: "en" });
     await ouvrir(page, C1, "programme", "#pg-publier");
-    const t = await page.evaluate(() => ({ tete: (document.querySelector("#vue > .fiche-entete .bandeau-tete strong") || {}).textContent, sortir: (document.getElementById("sortir-fiche") || {}).textContent,
-      pages: Array.from(document.querySelectorAll("#vue > .fiche-entete a.b-act")).map(a => a.textContent.trim()), h1: (document.querySelector("#vue .masthead h1") || {}).textContent,
+    /* v106 (lot 2) : changement voulu — plus de « Fiche de … » (le prénom, jamais traduit) ; les onglets et le statut traduits */
+    const t = await page.evaluate(() => ({ tete: Array.from(document.querySelectorAll("#vue > .fiche-entete .f-onglet")).map(a => a.textContent.trim()).join(" · ") + " | " + ((document.querySelector("#vue > .fiche-entete .fe-statut") || {}).textContent || ""), sortir: (document.getElementById("sortir-fiche") || {}).textContent,
+      pages: Array.from(document.querySelectorAll("#vue > .fiche-entete a.b-act")).map(a => a.textContent.trim()), h1: (document.querySelector("#vue h1.sr-only") || {}).textContent,
       dico: ["Fiche client", "dernier : {d}", "Source", "3. Maintenance"].map(k => Object.prototype.hasOwnProperty.call(I18N.en, k) && !!I18N.en[k]) }));
-    ok("N1 (point 11) : en anglais, l'en-tête de la fiche est traduit (« Thomas Démo's profile », « Back to my clients », « Their program », « Their sessions ») ainsi que « Fiche client », « dernier : {d} », « Source », « 3. Maintenance »",
-      t.tete === "Thomas Démo's profile" && t.sortir === "Back to my clients" && JSON.stringify(t.pages) === '["Their program","Their sessions"]' && t.h1 === "Their program" && t.dico.every(Boolean), JSON.stringify(t));
+    ok("N1 (point 11) : en anglais, l'en-tête de la fiche est traduit (« Overview · Program · Nutrition · Follow-up », « Client », « Back to my clients », « Their program », « Their sessions ») ainsi que « Fiche client », « dernier : {d} », « Source », « 3. Maintenance »",
+      t.tete === "Overview · Program · Nutrition · Follow-up | Client" && t.sortir === "Back to my clients" && JSON.stringify(t.pages) === '["Their program","Their sessions"]' && t.h1 === "Their program" && t.dico.every(Boolean), JSON.stringify(t));
   });
 
   /* =================== O. point 12 : les fichiers du coach demandés ensemble (appareil neuf) =================== */

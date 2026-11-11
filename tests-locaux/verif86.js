@@ -283,14 +283,17 @@ const ligne0 = (db, uid, outil) => db.donnees.find(d => d.user_id === uid && d.o
 const suiviDe = (db, uid) => (ligne0(db, uid, "suivi_prospect") || {}).contenu || null;
 const ecr = (db, outil, uid) => db.ecritures.filter(e => e.table === "donnees" && e.outil === outil && !e.refus && (!uid || e.user_id === uid));
 const sansDelete = db => !db.chemins.some(c => c.startsWith("DELETE ")) && !db.ecritures.some(e => e.m === "DELETE");
-const fiche = async (page, uid, nom) => { await page.evaluate(([u, n]) => Clients.ouvrir(u, n, "accueil"), [uid, nom]); await pret(page); await page.waitForSelector("#fc-suivi"); await attendre(page, 300); };
+const fiche = async (page, uid, nom) => { await page.evaluate(([u, n]) => Clients.ouvrir(u, n, "accueil"), [uid, nom]); await pret(page); await page.waitForSelector("#fc-suivi"); await page.waitForSelector("#fiche-points #fc-supprimer", { state: "attached" }); await attendre(page, 300); };
+/* v106 (lot 2) : WhatsApp (toujours le message prêt), Appeler et les actions du compte sont dans l'en-tête de la fiche */
+const WA = "#vue > .fiche-entete [data-fiche-wa] .fiche-wa-l";
+const menuFiche = async page => { if (!(await page.$("#fiche-points[open]"))) { await page.click("#fiche-points summary"); await attendre(page, 250); } };
 /* v104 (point 4) : changement voulu — plus de boutons internes Suivi / Compte ([data-onglet]) : « compte » = Profil › « Son
    compte » (#/client/<id>/accueil/compte), « suivi » = l'onglet Aperçu, par les liens du bandeau commun ; le panneau attendu
    doit être visible */
 const onglet = async (page, k) => {
-  if (k === "compte"){
-    await page.click('#vue > .fiche-entete .f-onglet[data-onglet-fiche="profil"]'); await pret(page);
-    await page.click('#vue > .fiche-entete a.b-act[href$="/accueil/compte"]'); await pret(page); await page.waitForSelector("#fc-compte:not([hidden])");
+  if (k === "compte"){   // v106 (lot 2) : par le menu « ⋯ » de l'en-tête
+    await page.waitForSelector("#fiche-points summary"); await page.click("#fiche-points summary"); await attendre(page, 250);
+    await page.click("#fiche-points a[data-fe-compte]"); await pret(page); await page.waitForSelector("#fc-compte:not([hidden])");
   } else { await page.click('#vue > .fiche-entete .f-onglet[data-onglet-fiche="apercu"]'); await pret(page); await page.waitForSelector("#fc-suivi:not([hidden])"); }
   await attendre(page, 150);
 };
@@ -496,7 +499,8 @@ const PLUSIEURS = "Ces comptes disparaissent de tes listes. Tu les retrouves dan
     const f = await page.evaluate(() => { const v = s => document.querySelector(s); const vis = s => { const e = v(s); return !!e && !e.hidden && e.getBoundingClientRect().height > 0; };
       /* v104 (point 4) : changement voulu — le nom est sous le titre de page (.fc-ident h2) ; plus de croix ni de boutons Suivi /
          Compte : le bandeau commun (#vue > .bandeau.fiche-entete) avec ses 5 onglets (Aperçu marqué) et un seul « Revenir … » */
-      return { hash: location.hash, h1: v("#vue > .fiche-entete .bandeau-tete strong").textContent, h2Ident: !!v(".fc-ident h2"),   /* v105 (point 2) : le nom n'est plus que dans le bandeau */ role: v(".fc-role-p").textContent, prog: (v(".fc-prog") || {}).textContent, call: v("#fc-call") && v("#fc-call").getAttribute("href"), callT: (v("#fc-call") || {}).textContent,
+      /* v106 (lot 2) : l'en-tête sur une ligne (prénom, nom entier en bulle, statut, Appeler) */
+      return { hash: location.hash, h1: v("#vue > .fiche-entete .fe-nom").title, h2Ident: !!v(".fc-ident h2"),   /* v105 (point 2) : le nom n'est plus que dans le bandeau */ role: v("#vue > .fiche-entete .fe-statut").textContent, prog: (v(".fc-prog") || {}).textContent, call: v("#fc-call") && v("#fc-call").getAttribute("href"), callT: (v("#fc-call") || {}).textContent,
         tel: v("#fc-appeler") && v("#fc-appeler").getAttribute("href"), onglets: Array.from(document.querySelectorAll("[data-onglet]")).map(x => x.textContent + ":" + x.getAttribute("aria-selected")),
         ongletsFiche: Array.from(document.querySelectorAll("#vue > .fiche-entete .f-onglet")).map(x => x.textContent + (x.getAttribute("aria-current") ? ":ici" : "")),
         titre: (v("#acc-vue > h1.sr-only") || {}).textContent, mast: !!v("#acc-vue > .masthead"), sortir: Array.from(document.querySelectorAll("#sortir-fiche")).map(x => x.textContent),
@@ -504,7 +508,7 @@ const PLUSIEURS = "Ces comptes disparaissent de tes listes. Tu les retrouves dan
         retour: (v("#fc-retour") || {}).textContent, lire: (v("#fc-lire") || {}).getAttribute ? v("#fc-lire").getAttribute("href") : null, poids: (v("#fc-poids") || {}).textContent, reg: (v("#fc-regularite") || {}).textContent,
         etat: Array.from(document.querySelectorAll("#fc-etat li")).map(li => (li.querySelector("span").textContent + " " + li.querySelector("b").textContent).replace(/\s+/g, " ").trim()), outils: Array.from(document.querySelectorAll("#fc-outils a")).map(a => a.textContent),
         avant: ["En bref", "Profil", "Objectifs du mois", "Programme", "Nutrition", "Poids et mensurations", "Bilan hebdomadaire", "Le reste"].filter(h => !Array.from(document.querySelectorAll("#fc-suivi h2")).some(x => x.textContent === h)),
-        notes: !!document.querySelector("#fc-suivi .notes-coach"), bandeau: !!document.querySelector("#vue > .bandeau.fiche-entete"), bandeauSuivi: !!document.querySelector("#fc-suivi #fc-outils .bandeau") && !document.querySelector("#fc-suivi #fc-outils #sortir-fiche"),
+        notes: !!document.querySelector("#vue > .fiche-entete #fe-notes") && !document.querySelector("#fc-suivi .notes-coach") /* v106 (lot 2) : les notes dans un volet (bouton de l'en-tête) */, bandeau: !!document.querySelector("#vue > .bandeau.fiche-entete"), bandeauSuivi: !!document.querySelector("#fc-suivi #fc-outils .bandeau") && !document.querySelector("#fc-suivi #fc-outils #sortir-fiche"),
         /* v104 (point 1) : changement voulu — plus de rangée de raccourcis (#fc-outils) dans l'Aperçu : les pages de l'onglet ouvert
            sont dans le bandeau commun (a.b-act ; l'Aperçu : « Fiche », marquée) */
         fcOutils: !!v("#fc-outils"), pagesApercu: Array.from(document.querySelectorAll("#vue > .fiche-entete .bandeau-actions a.b-act")).map(a => a.textContent + (a.getAttribute("aria-current") ? ":ici" : "")) }; });
@@ -516,11 +520,12 @@ const PLUSIEURS = "Ces comptes disparaissent de tes listes. Tu les retrouves dan
       pagesF[g] = await page.$$eval("#vue > .fiche-entete .bandeau-actions a.b-act", l => l.map(a => a.textContent.trim()));
     }
     await aller(page, "#/client/" + THOMAS + "/accueil"); await page.waitForSelector("#fc-suivi"); await attendre(page, 300);
-    const PAGES_V104 = { apercu: [] /* v105 (point 2) : plus de bouton « Fiche » (sa seule page) */, entrainement: ["Son programme", "Ses séances"], nutrition: ["Ses repas", "Ses calories", "Ses compléments"], suivi: ["Son suivi", "Préparer le call", "Ses courbes", "Sa formation"], profil: ["Son questionnaire", "Son compte"] };
+    /* v106 (lot 2) : changement voulu — 4 onglets ; « Son questionnaire » sous Aperçu, « Son compte » dans le menu « ⋯ » */
+    const PAGES_V104 = { apercu: ["Aperçu", "Son questionnaire"], programme: ["Son programme", "Ses séances"], nutrition: ["Ses repas", "Ses calories", "Ses compléments"], suivi: ["Son suivi", "Préparer le call", "Ses courbes", "Sa formation"] };
     ok("E1 : la fiche d'un client (depuis la liste) : l'en-tête commun (5 onglets, Aperçu ouvert, un seul « Revenir à mes clients »), le titre « Fiche » (v105 : pour les lecteurs d'écran seulement ; le nom seulement dans le bandeau), pastille « Client » et celle du programme, « Préparer le call » (#/client/…/bilan), Appeler (tel:) ; Suivi ouvert, Compte fermé ; ni croix ni boutons Suivi / Compte ; v104 (point 1) : plus de rangée #fc-outils, la page « Fiche » marquée dans le bandeau commun",
-      f.hash === "#/client/" + THOMAS + "/accueil" && f.h1 === "Fiche de Thomas Démo" && !f.h2Ident && f.role === "Client" && f.prog === "Bloc 1 — 4 semaines" && f.callT === "Préparer le call" && f.call === "#/client/" + THOMAS + "/bilan" && f.tel === "tel:" + TEL_THOMAS
-        && JSON.stringify(f.onglets) === "[]" && JSON.stringify(f.ongletsFiche) === '["Aperçu:ici","Entraînement","Nutrition","Suivi","Profil"]' && f.titre === "Fiche" && !f.mast && JSON.stringify(f.sortir) === '["Revenir à mes clients"]'
-        && f.suivi && !f.compte && !f.croix && f.bandeau && !f.bandeauSuivi && !f.fcOutils && JSON.stringify(f.pagesApercu) === '[]', JSON.stringify(f));   // v105 (point 2) : plus de bouton « Fiche » ni de grand titre visible (h1 pour les lecteurs d'écran)
+      f.hash === "#/client/" + THOMAS + "/accueil" && f.h1 === "Thomas Démo" /* v106 : le nom entier en bulle du prénom */ && !f.h2Ident && f.role === "Client" && f.prog === "Bloc 1 — 4 semaines" && f.callT === "Préparer le call" && f.call === "#/client/" + THOMAS + "/bilan" && f.tel === "tel:" + TEL_THOMAS
+        && JSON.stringify(f.onglets) === "[]" && JSON.stringify(f.ongletsFiche) === '["Aperçu:ici","Programme","Nutrition","Suivi"]' && f.titre === "Aperçu" && !f.mast && JSON.stringify(f.sortir) === '["Revenir à mes clients"]'
+        && f.suivi && !f.compte && !f.croix && f.bandeau && !f.bandeauSuivi && !f.fcOutils && JSON.stringify(f.pagesApercu) === '["Aperçu:ici","Son questionnaire"]', JSON.stringify(f));   // v106 (lot 2) : 4 onglets, h1 caché « Aperçu », la rangée « Aperçu » · « Son questionnaire »   // v105 (point 2) : plus de bouton « Fiche » ni de grand titre visible (h1 pour les lecteurs d'écran)
     /* v105 (point 2) : « Fiche » n'est plus un bouton du bandeau (l'onglet Aperçu, sa seule page, y mène) */
     ok("E2 : Suivi : retour de la semaine (« Bilan hebdo reçu — à lire », Lire → Préparer le call), poids depuis le début, régularité, questionnaire / programme / diète, le bandeau d'avant (« Fiche » et les outils du client ; son journal alimentaire seulement s'il lui est ouvert ; v104 : les pages des 5 onglets du bandeau commun), puis toute la fiche d'avant (notes privées comprises)",
       /Retour de la semaine/i.test(f.retour) && /Bilan hebdo reçu — à lire/.test(f.retour) && f.lire === "#/client/" + THOMAS + "/bilan" && /kg/.test(f.poids) && /depuis le début/.test(f.poids) && /Régularité/.test(f.reg)
@@ -530,45 +535,49 @@ const PLUSIEURS = "Ces comptes disparaissent de tes listes. Tu les retrouves dan
     await onglet(page, "compte");
     const c = await page.evaluate(() => { const p = document.getElementById("fc-compte");
       return { vis: !p.hidden, suivi: document.getElementById("fc-suivi").hidden, lignes: Array.from(p.querySelectorAll("#fc-infos li")).map(li => li.querySelector("span").textContent),
-        tel: norm0(p.querySelector("#fiche-tel").textContent), role: p.querySelector("#fc-role").textContent, changer: p.querySelector("#fc-changer").textContent, derniere: p.querySelector("#fc-derniere").textContent,
-        ordre: Array.from(p.querySelectorAll("#fc-acces, #fc-archiver, #fc-supprimer")).map(x => x.textContent.trim()), zone: (p.querySelector("#fc-danger h3") || {}).textContent };
+        /* v106 (lot 2) : changement voulu — « Changer » (Repasser prospect), l'accès complet, l'archivage et « Supprimer
+           définitivement » (en rouge) sont dans le menu « ⋯ » de l'en-tête, dans cet ordre */
+        tel: norm0(p.querySelector("#fiche-tel").textContent), role: p.querySelector("#fc-role").textContent, changer: (document.querySelector("#fiche-points #fc-changer") || {}).textContent, derniere: p.querySelector("#fc-derniere").textContent,
+        ordre: Array.from(document.querySelectorAll("#fiche-points #fc-acces, #fiche-points #fc-archiver, #fiche-points #fc-supprimer")).map(x => x.textContent.trim()), zone: document.querySelector("#fiche-points #fc-supprimer.danger") ? "Supprimer définitivement" : "" };
       function norm0(t){ return String(t).replace(/\s+/g, " ").trim(); } });
     ok("E3 : Compte, dans l'ordre : Email, Téléphone (numéro, Appeler, WhatsApp), Source, Rôle « Client » + « Changer », Dernière connexion, Connexions ; puis « Donner l'accès complet », « Archiver ce compte », la zone rouge « Supprimer définitivement »",
-      c.vis && c.suivi && JSON.stringify(c.lignes) === '["Email","Téléphone","Source","Rôle","Dernière connexion","Connexions"]' && c.tel === TEL_THOMAS + " Appeler WhatsApp" && c.role === "Client" && c.changer === "Changer"
+      c.vis && c.suivi && JSON.stringify(c.lignes) === '["Email","Téléphone","Source","Rôle","Dernière connexion","Connexions"]' && c.tel === TEL_THOMAS + " Appeler WhatsApp" && c.role === "Client" && c.changer === "Repasser prospect"
         && /\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}/.test(c.derniere) && JSON.stringify(c.ordre) === '["Donner l\'accès complet","Archiver ce compte","Supprimer définitivement"]' && c.zone === "Supprimer définitivement", JSON.stringify(c));
-    await page.click("#fc-supprimer"); await attendre(page, 300);
+    await menuFiche(page); await page.click("#fc-supprimer"); await attendre(page, 300);
     const ms = await modale(page); await page.keyboard.press("Escape"); await attendre(page, 300);
     ok("E4 : « Supprimer définitivement » : la double confirmation d'avant (« Supprimer un compte », texte inchangé) ; Échap : rien n'est envoyé",
       !!ms && ms.titre === "Supprimer un compte" && /^Supprimer définitivement le compte de Thomas Démo \?/.test(ms.corps) && JSON.stringify(ms.boutons) === '["Annuler","Continuer"]' && !db.chemins.some(x => /supprimer-acces/.test(x)), JSON.stringify(ms));
     await fiche(page, ZOE, "Zoé Martin");
     const z = await page.evaluate(() => { const v = s => document.querySelector(s);
-      return { role: v(".fc-role-p").textContent, wa: v("#fc-wa") && v("#fc-wa").getAttribute("href"), waT: (v("#fc-wa") || {}).textContent, cible: v("#fc-wa") && v("#fc-wa").getAttribute("target"),
+      const w = v("#vue > .fiche-entete [data-fiche-wa] .fiche-wa-l");
+      return { role: v("#vue > .fiche-entete .fe-statut").textContent, wa: w && w.getAttribute("href"), waT: (w || {}).getAttribute ? w.getAttribute("aria-label") : null, cible: w && w.getAttribute("target"),
         call: !!v("#fc-call"), rep: Array.from(document.querySelectorAll("#fc-reponses li")).map(li => [li.querySelector("span").textContent, li.querySelector("b").textContent.trim()]),
         ordre: (() => { const r = v("#fc-reponses"), s = v("#fiche-commercial"), t = v("#fc-retour"); return !!(r && s && t && (r.compareDocumentPosition(s) & 4) && (s.compareDocumentPosition(t) & 4)); })(),
         sc: (v("#fiche-commercial h2") || {}).textContent, boutons: Array.from(document.querySelectorAll("#fiche-commercial [data-sc]")).map(x => x.textContent.trim()) }; });
     const waZ = "https://wa.me/33639980011?text=" + encodeURIComponent(MSG_ZOE);
     /* v104 (point 4) : changement voulu — le bouton du message prêt s'appelle « Message WhatsApp prêt » (le bandeau commun a
        déjà un « WhatsApp », conversation vide) */
-    ok("E5 : fiche d'un prospect : pastille « Prospect », « Message WhatsApp prêt » à la place de « Préparer le call » : lien wa.me vers son numéro, texte pré-rempli encodé exact (objectif, 2 blocages, son texte libre), nouvel onglet",
-      z.role === "Prospect" && z.wa === waZ && norm(z.waT) === "Message WhatsApp prêt" && z.cible === "_blank" && !z.call && decodeURIComponent(z.wa.split("?text=")[1]) === MSG_ZOE, JSON.stringify({ z, waZ }));
+    /* v106 (lot 2) : changement voulu — un seul WhatsApp, dans l'en-tête, qui ouvre toujours le message prêt */
+    ok("E5 : fiche d'un prospect : pastille « Prospect », WhatsApp de l'en-tête = « WhatsApp : message prêt » (pas de « Préparer le call ») : lien wa.me vers son numéro, texte pré-rempli encodé exact (objectif, 2 blocages, son texte libre), nouvel onglet",
+      z.role === "Prospect" && z.wa === waZ && norm(z.waT) === "WhatsApp : message prêt" && z.cible === "_blank" && !z.call && decodeURIComponent(z.wa.split("?text=")[1]) === MSG_ZOE, JSON.stringify({ z, waZ }));
     /* v104 (point 4) : changement voulu — dans la fiche, la question « Tu es ? » se lit « Sexe » (PHRASES_FICHE) */
     ok("E6 : d'abord « Ses réponses » (format du parcours v81) : Objectif, Ce qui bloque, Avec ses mots, Dans 3 mois, Sexe (v104 : « Tu es ? » à la 3e personne) ; puis le Suivi commercial complet (Bilan réservé, J'ai relancé, Signé, Perdu, Absent)",
       JSON.stringify(z.rep) === JSON.stringify([["Objectif", "Perdre du gras"], ["Ce qui bloque", "Le manque de temps · Je craque sur la nourriture"], ["Avec ses mots", "Je travaille de nuit"], ["Dans 3 mois", "Avoir de l'énergie toute la journée"], ["Sexe", "Femme"]])
         && z.ordre && z.sc === "Suivi commercial" && JSON.stringify(z.boutons) === '["Bilan réservé","J\'ai relancé","Signé","Perdu","Absent"]', JSON.stringify(z));
     await fiche(page, HUGO, "Hugo Bernard");
-    const h = await page.evaluate(() => ({ wa: (document.getElementById("fc-wa") || {}).textContent, dis: (document.getElementById("fc-wa") || {}).disabled, tag: (document.getElementById("fc-wa") || {}).tagName,
-      tel: (document.getElementById("fc-appeler") || {}).disabled, rep: Array.from(document.querySelectorAll("#fc-reponses li")).map(li => li.querySelector("b").textContent.trim()) }));
+    const h = await page.evaluate(w => ({ wa: (document.querySelector(w) || {}).getAttribute("aria-label"), dis: (document.querySelector(w) || {}).disabled, tag: (document.querySelector(w) || {}).tagName,
+      tel: (document.getElementById("fc-appeler") || {}).disabled, rep: Array.from(document.querySelectorAll("#fc-reponses li")).map(li => li.querySelector("b").textContent.trim()) }), WA);
     await fiche(page, ANA, "Ana Lopez");
     const a = await page.evaluate(() => ({ rep: Array.from(document.querySelectorAll("#fc-reponses li")).map(li => li.querySelector("b").textContent.trim()), note: (document.querySelector("#fc-reponses .note") || {}).textContent || "",
       decouverte: !!document.getElementById("fiche-decouverte") }));
     ok("E7 : sans numéro : bouton grisé « Pas de numéro » (et Appeler inactif) ; « Ses réponses » au format v60 (sans texte libre ni « Tu es ? » : « Pas encore répondu ») et à l'ancien format (questionnaire de 10 questions) lisibles",
-      h.tag === "BUTTON" && norm(h.wa) === "Pas de numéro" && h.dis === true && h.tel === true
+      h.tag === "BUTTON" && norm(h.wa) === "WhatsApp : pas de numéro" && h.dis === true && h.tel === true
         && JSON.stringify(h.rep) === JSON.stringify(["Prendre du muscle", "La motivation retombe vite", "Pas encore répondu", "Tenir une routine sans me forcer", "Pas encore répondu"])
         && JSON.stringify(a.rep) === JSON.stringify(["Remise en forme", "Pas encore répondu", "Trop de travail le soir", "Pas encore répondu", "Femme"]) && /Anciennes réponses/.test(a.note) && a.decouverte, JSON.stringify({ h, a }));
     await fiche(page, LEO, "Leo Smith");
-    const lw = await page.$eval("#fc-wa", x => x.getAttribute("href"));
+    const lw = await page.$eval(WA, x => x.getAttribute("href"));
     await fiche(page, NOE, "Noé Petit");
-    const nw = await page.$eval("#fc-wa", x => x.getAttribute("href"));
+    const nw = await page.$eval(WA, x => x.getAttribute("href"));
     ok("E8 : WhatsApp en anglais pour le prospect qui a choisi l'anglais (numéro américain) ; en français sans texte libre (la phrase « Tu m'as aussi écrit » est sautée)",
       lw === "https://wa.me/12025550147?text=" + encodeURIComponent(MSG_LEO) && nw === "https://wa.me/33639980014?text=" + encodeURIComponent(MSG_NOE), JSON.stringify({ lw: decodeURIComponent(lw), nw: decodeURIComponent(nw) }));
     ok("E9 : aucun appel DELETE en ouvrant les fiches", sansDelete(db), JSON.stringify(db.chemins.filter(c => !c.startsWith("GET "))));
@@ -586,7 +595,7 @@ const PLUSIEURS = "Ces comptes disparaissent de tes listes. Tu les retrouves dan
     await page.click("#sortir-fiche"); await pret(page); await page.waitForSelector("#tb-a-traiter"); await attendre(page, 300);
     const retour = await page.evaluate(() => location.hash);
     ok("F1 : Tableau de bord → une ligne « À traiter » (Julien, inactif) ouvre sa fiche → « Revenir au tableau de bord » y ramène",
-      h1 === "#/client/" + JULIEN + "/accueil" && lib1 === "Revenir au tableau de bord" && retour === "#/tableau", JSON.stringify({ h1, lib1, retour }));
+      h1 === "#/client/" + JULIEN + "/accueil" && lib1 === "Revenir à Aujourd'hui" /* v106 */ && retour === "#/tableau", JSON.stringify({ h1, lib1, retour }));
     await ouvrirListe(page, "clients"); await filtrer(page, "tous"); await chercher(page, "émo");
     await page.evaluate(id => document.querySelector('.lc-ligne[data-uid="' + id + '"]').scrollIntoView({ block: "center" }), SARAH); await attendre(page, 200);
     const y0 = await page.evaluate(() => window.scrollY);
@@ -618,14 +627,14 @@ const PLUSIEURS = "Ces comptes disparaissent de tes listes. Tu les retrouves dan
     const { page } = await contexte(b, db);
     await page.goto(URL0 + "#/prospects"); await pret(page); await page.waitForSelector("#lc-prospects #lc-liste li"); await attendre(page, 300);
     await fiche(page, HUGO, "Hugo Bernard"); await onglet(page, "compte");
-    await page.click("#fc-archiver"); await attendre(page, 300);
+    await menuFiche(page); await page.click("#fc-archiver"); await attendre(page, 300);   // v106 (lot 2) : dans le menu « ⋯ » de l'en-tête
     const m = await modale(page); await bouton(page, "Archiver");
     await page.waitForFunction(() => !!document.querySelector(".fc-archive"), null, { timeout: 8000 }); await attendre(page, 400);
     /* v104 (point 4) : changement voulu — « toujours sur Compte » se lit dans l'adresse (…/accueil/compte), le panneau Compte
        visible et Profil › « Son compte » marqués dans le bandeau (plus de bouton interne « Compte ») */
     const a = await page.evaluate(() => { const ici = (document.querySelector('#vue > .fiche-entete .f-onglet[aria-current="page"]') || {}).textContent, pg = (document.querySelector('#vue > .fiche-entete a.b-act[aria-current="page"]') || {}).textContent;
       return { pastille: document.querySelector(".fc-archive").textContent, b: document.getElementById("fc-archiver").textContent,
-        onglet: /\/accueil\/compte$/.test(location.hash) && !document.getElementById("fc-compte").hidden && ici === "Profil" && pg === "Son compte" ? "Compte" : [location.hash, ici, pg].join(" ") }; });
+        onglet: /\/accueil\/compte$/.test(location.hash) && !document.getElementById("fc-compte").hidden && ici === "Aperçu" /* v106 */ && pg === "Son compte" ? "Compte" : [location.hash, ici, pg].join(" ") }; });
     const toastA = await dernierToast(page), HA = suiviDe(db, HUGO) || {};
     ok("G1 : depuis la fiche (onglet Compte) : « Archiver ce compte » demande confirmation (« Archiver 1 prospect ? ») ; après : « 1 prospect archivé », pastille « Archivé », « Restaurer ce compte », toujours sur Compte ; le suivi commercial gardé",
       !!m && m.titre === "Archiver 1 prospect ?" && norm(m.corps) === UN && toastA === "1 prospect archivé" && a.pastille === "Archivé" && a.b === "Restaurer ce compte" && a.onglet === "Compte"
@@ -636,7 +645,7 @@ const PLUSIEURS = "Ces comptes disparaissent de tes listes. Tu les retrouves dan
     const HR = suiviDe(db, HUGO) || {};
     ok("G2 : le Suivi commercial reste utilisable sur un compte archivé : « J'ai relancé » enregistre la relance et garde archive_le (et le reste du suivi)",
       Array.isArray(HR.relances) && HR.relances.length === 1 && HR.archive_le === HA.archive_le && HR.bilan_le === SUIVI_HUGO.bilan_le && HR.historique.length === 2, JSON.stringify(HR));
-    await onglet(page, "compte"); await page.click("#fc-archiver");
+    await onglet(page, "compte"); await menuFiche(page); await page.click("#fc-archiver");
     await page.waitForFunction(() => !document.querySelector(".fc-archive"), null, { timeout: 8000 }); await attendre(page, 400);
     const toastR = await dernierToast(page), HZ = suiviDe(db, HUGO) || {};
     ok("G3 : « Restaurer ce compte » (sans fenêtre) : « 1 prospect restauré », archive_le remis à null, relance et bilan gardés ; aucun DELETE",
@@ -687,10 +696,10 @@ const PLUSIEURS = "Ces comptes disparaissent de tes listes. Tu les retrouves dan
     /* v104 (point 4) : changement voulu — plus de boutons Suivi / Compte ni de croix : les 5 onglets du bandeau commun en anglais
        (Overview marqué), le titre de page « Profile » (« Fiche »), aucune croix */
     const f = await page.evaluate(() => ({ onglets: Array.from(document.querySelectorAll("#vue > .fiche-entete .f-onglet")).map(x => x.textContent + (x.getAttribute("aria-current") ? ":ici" : "")), titre: document.querySelector("#fc-reponses h2").textContent,
-      rep: Array.from(document.querySelectorAll("#fc-reponses li span")).map(x => x.textContent), croix: !!document.getElementById("fc-fermer") || !!document.querySelector("[data-onglet]"), role: document.querySelector(".fc-role-p").textContent,
+      rep: Array.from(document.querySelectorAll("#fc-reponses li span")).map(x => x.textContent), croix: !!document.getElementById("fc-fermer") || !!document.querySelector("[data-onglet]"), role: document.querySelector("#vue > .fiche-entete .fe-statut").textContent,
       h1: (document.querySelector("#acc-vue > h1.sr-only") || {}).textContent }));   // v105 (point 2) : le h1 « Fiche » caché à l'écran
-    ok("I3 : fiche en anglais : onglets Overview (marqué) · Training · Nutrition · Follow-up · Profile, titre « Profile », « Their answers » (Goal, What's holding them back, In their own words, In 3 months, Sex — v104 (point 4) : « You are…? » à la 3e personne), sans croix ni boutons Suivi / Compte",
-      JSON.stringify(f.onglets) === '["Overview:ici","Training","Nutrition","Follow-up","Profile"]' && f.h1 === "Profile" && f.titre === "Their answers" && JSON.stringify(f.rep) === JSON.stringify(["Goal", "What's holding them back", "In their own words", "In 3 months", "Sex"]) && !f.croix && f.role === "Prospect", JSON.stringify(f));
+    ok("I3 : fiche en anglais : onglets Overview (marqué) · Program · Nutrition · Follow-up (v106), titre « Overview », « Their answers » (Goal, What's holding them back, In their own words, In 3 months, Sex — v104 (point 4) : « You are…? » à la 3e personne), sans croix ni boutons Suivi / Compte",
+      JSON.stringify(f.onglets) === '["Overview:ici","Program","Nutrition","Follow-up"]' && f.h1 === "Overview" /* v106 (lot 2) : 4 onglets, le h1 caché au nom de la page */ && f.titre === "Their answers" && JSON.stringify(f.rep) === JSON.stringify(["Goal", "What's holding them back", "In their own words", "In 3 months", "Sex"]) && !f.croix && f.role === "Prospect", JSON.stringify(f));
   });
 
   /* =================== J. v84 : ménage du bloc 3 =================== */
@@ -725,7 +734,7 @@ const PLUSIEURS = "Ces comptes disparaissent de tes listes. Tu les retrouves dan
     const libJ3 = await txt(page, "#sortir-fiche");   // v104 (point 4) : changement voulu — « Revenir … » à la place de la croix
     await page.click("#sortir-fiche"); await pret(page); await page.waitForSelector("#tb-clients [data-ouvrir]"); await attendre(page, 300);
     const h2 = await page.evaluate(() => location.hash);
-    ok("J3 : « Ouvrir » ouvre la fiche (#/client/…/accueil) et « Revenir au suivi détaillé » ramène au « Suivi détaillé »", h1 === "#/client/" + JULIEN + "/accueil" && libJ3 === "Revenir au suivi détaillé" && h2 === "#/suivi-clients", JSON.stringify({ h1, libJ3, h2 }));
+    ok("J3 : « Ouvrir » ouvre la fiche (#/client/…/accueil) et « Revenir au suivi détaillé » ramène au « Suivi détaillé »", h1 === "#/client/" + JULIEN + "/accueil" && libJ3 === "Revenir à la vue tableau" /* v106 */ && h2 === "#/suivi-clients", JSON.stringify({ h1, libJ3, h2 }));
     await aller(page, "#/comptes"); await page.waitForSelector("#liste-clients .client-l"); await attendre(page, 300);
     const cp = await page.evaluate(() => Array.from(document.querySelectorAll("#liste-clients .client-l")).map(x => ({ nom: x.querySelector(".nom").textContent.replace(/\s+/g, " ").trim(),
       pastilles: Array.from(x.querySelectorAll(".pastille")).map(y => y.textContent.trim()), meta: x.querySelector(".meta").textContent.trim(), boutons: Array.from(x.querySelectorAll("button")).map(y => y.textContent.trim()) })));
@@ -754,7 +763,7 @@ const PLUSIEURS = "Ces comptes disparaissent de tes listes. Tu les retrouves dan
     const libJ7 = await txt(page, "#sortir-fiche");   // v104 (point 4) : changement voulu — « Revenir … » à la place de la croix
     await page.click("#sortir-fiche"); await pret(page); await page.waitForSelector("#pr-liste"); await attendre(page, 300);
     const f2 = await page.evaluate(() => location.hash);
-    ok("J7 : la carte ouvre la fiche, « Revenir au suivi commercial » ramène au « Suivi commercial »", f1 === "#/client/" + ZOE + "/accueil" && libJ7 === "Revenir au suivi commercial" && f2 === "#/suivi-commercial", JSON.stringify({ f1, libJ7, f2 }));
+    ok("J7 : la carte ouvre la fiche, « Revenir au suivi commercial » ramène au « Suivi commercial »", f1 === "#/client/" + ZOE + "/accueil" && libJ7 === "Revenir à la vue détaillée" /* v106 */ && f2 === "#/suivi-commercial", JSON.stringify({ f1, libJ7, f2 }));
     await aller(page, "#/newsletter"); await page.waitForSelector("#pr-nl"); await attendre(page, 300);
     const nl = await page.evaluate(() => ({ n: (document.getElementById("pr-nl-n") || {}).textContent, uids: Array.from(document.querySelectorAll("#pr-nl-liste li")).map(x => x.dataset.nl), csv: !!document.getElementById("pr-nl-csv"), h1: (document.querySelector(".masthead h1") || {}).textContent }));
     ok("J8 : « Newsletter » : la liste et son export CSV, archivés compris (Inès, archivée, y est, avec Zoé)",
@@ -770,8 +779,10 @@ const PLUSIEURS = "Ces comptes disparaissent de tes listes. Tu les retrouves dan
     await page.click("[data-sel-annuler]"); await attendre(page, 200);
     await fiche(page, SARAH, "Sarah Démo"); await onglet(page, "compte");
     const cFiche = await couleurs("#fc-archiver"), cSuppr = await couleurs("#fc-supprimer");
-    ok("J9 : « Archiver » en or, texte #07090d posé dessus (barre de sélection, fenêtre de confirmation, onglet Compte) ; « Supprimer définitivement » reste rouge",
-      [cBarre, cFen, cFiche].every(c => c && c.fond === OR && c.texte === NOIR) && cSuppr && cSuppr.texte === ROUGE && cSuppr.fond !== OR && !ecr(db, "suivi_prospect", SARAH).length, JSON.stringify({ cBarre, cFen, cFiche, cSuppr }));
+    /* v106 (lot 2) : changement voulu — dans la fiche, « Archiver ce compte » est un choix du menu « ⋯ » (texte normal, jamais
+       rouge : un seul doré plein par écran) ; la fenêtre de confirmation garde son bouton « Archiver » en or */
+    ok("J9 : « Archiver » en or, texte #07090d posé dessus (barre de sélection, fenêtre de confirmation) ; dans le menu « ⋯ » de la fiche, « Archiver ce compte » jamais en rouge ; « Supprimer définitivement » reste rouge",
+      [cBarre, cFen].every(c => c && c.fond === OR && c.texte === NOIR) && cFiche && cFiche.texte !== ROUGE && cSuppr && cSuppr.texte === ROUGE && cSuppr.fond !== OR && !ecr(db, "suivi_prospect", SARAH).length, JSON.stringify({ cBarre, cFen, cFiche, cSuppr }));
   });
 
   /* =================== J bis. v84 : un parcours fait en anglais =================== */
@@ -795,7 +806,7 @@ const PLUSIEURS = "Ces comptes disparaissent de tes listes. Tu les retrouves dan
     const { page } = await contexte(b, db);
     await page.goto(URL0 + "#/prospects"); await pret(page); await page.waitForSelector("#lc-prospects #lc-liste li"); await attendre(page, 300);
     await fiche(page, MAX, "Max");
-    const wa = await page.$eval("#fc-wa", x => x.getAttribute("href")).catch(() => null);
+    const wa = await page.$eval(WA, x => x.getAttribute("href")).catch(() => null);   // v106 (lot 2) : le WhatsApp de l'en-tête
     const MSG_MAX = "Hi Max 👋 Welcome to MHX Coaching! I got your answers: your goal is to build muscle, and what's held you back so far: lack of time. I'm putting together your action plan. Were you able to book your free 15-min call?";
     ok("J11 : sur la fiche de ce prospect, le message WhatsApp pré-rempli sort en anglais (« Hi Max 👋 Welcome to MHX Coaching! … »)",
       wa === "https://wa.me/33639980096?text=" + encodeURIComponent(MSG_MAX), decodeURIComponent(String(wa)));

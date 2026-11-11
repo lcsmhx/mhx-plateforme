@@ -1753,7 +1753,7 @@ Object.assign(I18N.en, {
 });
 /* v104-supprimer-acces-fin */
 /* v104 (point 4) : fiche d'un prospect, le bouton du message WhatsApp pré-rempli (le WhatsApp du bandeau ouvre une conversation vide) */
-Object.assign(I18N.en, { "Message WhatsApp prêt": "Ready-made WhatsApp message" });
+Object.assign(I18N.en, { });
 /* v104 (partie 2, points 1 à 5) : fiche d'un client côté coach */
 Object.assign(I18N.en, {
   "semaine passée": "last week",
@@ -1820,15 +1820,10 @@ Object.assign(I18N.en, {
   "dernier : {d}": "last: {d}",
   "Source": "Source",
   "3. Maintenance": "3. Maintenance calories",
-  "Fiche de {n}": "{n}'s profile",
-  "Fiche — {n}": "Profile — {n}",
   "ce client": "this client",
-  "Revenir au tableau de bord": "Back to the dashboard",
   "Revenir à mes clients": "Back to my clients",
   "Revenir aux prospects": "Back to prospects",
-  "Revenir au suivi détaillé": "Back to detailed tracking",
   "Revenir aux comptes": "Back to accounts",
-  "Revenir au suivi commercial": "Back to sales tracking",
   "Revenir à la newsletter": "Back to the newsletter",
   "Son programme": "Their program",
   "Ses séances": "Their sessions",
@@ -1875,4 +1870,12 @@ Object.assign(I18N.en, {
   "Impossible de charger tes modèles.": "Your templates could not be loaded.",
   "Pour en ajouter un : ouvre la fiche d'un client, construis son programme, puis clique sur « Enregistrer dans mes modèles ».": "To add one: open a client's profile, build their program, then tap “Save to my templates”.",
   "« Ma base » rend le programme disponible dans « Programmes prêts à l'emploi », sur la fiche de n'importe quel client. « Mes modèles » le garde pour toi seul.": "“My base” makes the program available in “Ready-made programs” on any client's profile. “My templates” keeps it for you only."
+});
+/* v106 (lot 2) : l'en-tête de la fiche (EnteteFiche) */
+Object.assign(I18N.en, {
+  "Actions du compte": "Account actions", "Notes privées": "Private notes", "jamais connecté": "never signed in",
+  "vu il y a {n} min": "seen {n} min ago", "vu il y a {n} h": "seen {n} h ago", "vu il y a {n} j": "seen {n} d ago",
+  "WhatsApp : message prêt": "WhatsApp: ready-made message", "WhatsApp : pas de numéro": "WhatsApp: no number",
+  "Passer client": "Make client", "Repasser prospect": "Back to prospect", "Prospect": "Prospect", "Client": "Client",
+  "Revenir à Aujourd'hui": "Back to Today", "Revenir à la vue tableau": "Back to the table view", "Revenir à la vue détaillée": "Back to the detailed view"
 });

@@ -51,6 +51,7 @@ const SVG = {
   tel:     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>',
   whatsapp:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5l1.3-4.2A8.5 8.5 0 1 1 8 19.4z"/><path d="M9 8.8c.2 2.4 2.6 5 5.2 5.5l1-1.3 1.9.9c-.2 1-1 1.8-2 1.8C11 15.7 8 12.7 8 9.6c0-1 .8-1.8 1.8-2l.9 1.9z"/></svg>',
   chevron: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>',
+  note:    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h5"/></svg>',   // v106 : « Notes » de la fiche
   points:  '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg>'   // v106 : le menu « ⋯ »
 };
 /* Une icone par outil (cle = id de l'outil). En trait, 24x24, couleur du texte. */

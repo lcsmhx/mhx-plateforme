@@ -135,9 +135,9 @@ const flagsDe = (page) => page.$$eval("#alertes-clients .flag", l => l.map(x => 
       await page.evaluate(() => { location.hash = "#/suivi-clients"; }); await page.waitForSelector(`[data-ouvrir="${N1}"]`).catch(() => {});   // v84 (ménage du bloc 3) : son [data-ouvrir] est dans « Suivi détaillé »
       await page.click(`[data-ouvrir="${N1}"]`); await page.waitForSelector("#fc-supprimer", { state: "attached" }).catch(() => {});
       /* v104 (point 4) : changement voulu — plus de bouton interne « Compte » : Profil › « Son compte » (bandeau commun) */
-      await page.click('#vue > .fiche-entete .f-onglet[data-onglet-fiche="profil"]'); await page.waitForSelector('#vue > .fiche-entete a.b-act[href$="/accueil/compte"]');
-      await page.click('#vue > .fiche-entete a.b-act[href$="/accueil/compte"]'); await page.waitForSelector("#fc-compte:not([hidden]) #fc-supprimer"); await attendre(page, 300);
-      await page.click("#fc-supprimer"); await attendre(page, 500);
+      /* v106 (lot 2) : changement voulu — « Supprimer définitivement » est dans le menu « ⋯ » de l'en-tête de la fiche */
+      await page.waitForSelector("#fiche-points #fc-supprimer", { state: "attached" }); await page.click("#fiche-points summary"); await attendre(page, 300);
+      await page.click("#fiche-points #fc-supprimer"); await attendre(page, 500);
       const corps = await texte(page, ".modale .corps");
       ok("Fiche, onglet Compte / Supprimer (v83 : plus dans Comptes pour un client) : la fenêtre parle de « Sans nom », plus de « ce compte »", !supprComptes && corps.includes("le compte de Sans nom") && !corps.includes("ce compte") && !corps.includes(MARQUE), "suppr dans Comptes : " + supprComptes + " · " + corps.slice(0, 160));
       await page.keyboard.press("Escape"); await attendre(page, 400);
@@ -156,28 +156,30 @@ const flagsDe = (page) => page.$$eval("#alertes-clients .flag", l => l.map(x => 
     /* --- fiche du compte sans nom, ouverte depuis Mes clients --- */
     await page.evaluate(() => { location.hash = "#/suivi-clients"; }); await page.waitForSelector(`[data-ouvrir="${N1}"]`).catch(() => {});   // v84 (ménage du bloc 3) : le tableau (et son [data-ouvrir]) est dans « Suivi détaillé »
     E.ici = "fiche"; await page.click(`[data-ouvrir="${N1}"]`); await attendre(page, 2000);
-    const h1 = await texte(page, "#vue > .fiche-entete .bandeau-tete strong");   // v105 (point 2) : le nom n'est plus que dans le bandeau (plus de h2 dans #fc-ident)
-    ok("fiche : le titre est « Sans nom », une seule fois (v105)", h1 === "Fiche — Sans nom" && !(await page.$("#acc-vue .fc-ident h2")), h1);
-    const bandeau = await texte(page, ".bandeau-tete strong");
-    ok("fiche : le bandeau dit « Fiche — Sans nom » (ni « ce client », ni l'identifiant)", bandeau === "Fiche — Sans nom", bandeau);
+    /* v106 (lot 2) : changement voulu — l'en-tête de la fiche montre le prénom (ici « Sans nom », entier), le nom entier en bulle */
+    const h1 = await texte(page, "#vue > .fiche-entete .fe-nom");   // v105 (point 2) : le nom n'est plus que dans le bandeau (plus de h2 dans #fc-ident)
+    ok("fiche : le titre est « Sans nom », une seule fois (v105, v106)", h1 === "Sans nom" && !(await page.$("#acc-vue .fc-ident h2")), h1);
+    const bandeau = await page.$eval("#vue > .fiche-entete .fe-nom", e => e.title);
+    ok("fiche : l'en-tête dit « Sans nom » (ni « ce client », ni l'identifiant)", bandeau === "Sans nom", bandeau);
     const fiche = await texte(page, "#vue");
     ok("fiche : aucun identifiant affiché, activité « jamais rien saisi »", !fiche.includes(MARQUE) && fiche.includes("jamais rien saisi"), fiche.slice(0, 200));
     await page.evaluate(() => { location.hash = "#/programme"; }); await attendre(page, 1600);
-    const eb1 = await texte(page, ".masthead .eyebrow");
-    ok("fiche / Son programme : le fil d'Ariane commence par « Sans nom — »", eb1.startsWith("Sans nom — "), eb1);
+    /* v106 (lot 2) : plus de fil d'Ariane répété sous l'en-tête : le nom est celui de l'en-tête de la fiche, sur chaque page */
+    const eb1 = await texte(page, "#vue > .fiche-entete .fe-nom");
+    ok("fiche / Son programme : l'en-tête dit « Sans nom »", eb1 === "Sans nom", eb1);
 
     /* --- « Préparer le call » depuis Mes clients --- */
     E.ici = "préparer le call"; await page.evaluate(() => { location.hash = "#/suivi-clients"; }); await attendre(page, 2000);   // v84 (ménage du bloc 3) : [data-bilan] est dans « Suivi détaillé »
     await page.click(`[data-bilan="${N1}"]`); await attendre(page, 1800);
-    const eb2 = await texte(page, ".masthead .eyebrow");
-    ok("Préparer le call : le fil d'Ariane commence par « Sans nom — »", eb2.startsWith("Sans nom — "), eb2);
+    const eb2 = await texte(page, "#vue > .fiche-entete .fe-nom");
+    ok("Préparer le call : l'en-tête dit « Sans nom » (v106)", eb2 === "Sans nom", eb2);
 
     /* --- « Ouvrir sa fiche » depuis Comptes --- */
     E.ici = "ouvrir sa fiche"; await page.evaluate(() => { location.hash = "#/comptes"; }); await attendre(page, 2000);   // v84 (ménage du bloc 3) : « Ouvrir sa fiche » est dans « Comptes »
     const bOuvrir = await page.$(`#liste-clients .client-l:has-text("Sans nom") .voir:not(.role):not(.statut):not(.suppr)`);
     if (bOuvrir) { await bOuvrir.click(); await attendre(page, 1800); }
-    const eb3 = await texte(page, ".masthead .eyebrow"), band3 = await texte(page, ".bandeau-tete strong");
-    ok("Comptes → Ouvrir sa fiche : « Sans nom » dans le fil d'Ariane et le bandeau (plus « ce client »)", !!bOuvrir && eb3.startsWith("Sans nom — ") && band3 === "Fiche — Sans nom", eb3 + " / " + band3);
+    const eb3 = await texte(page, "#vue > .fiche-entete .fe-nom"), band3 = await page.$eval("#vue > .fiche-entete .fe-nom", e => e.title).catch(() => "");
+    ok("Comptes → Ouvrir sa fiche : « Sans nom » dans l'en-tête (texte et bulle ; plus « ce client ») (v106)", !!bOuvrir && eb3 === "Sans nom" && band3 === "Sans nom", eb3 + " / " + band3);
 
     ok("coach : aucune erreur JS", E.js.length === 0, E.js.join(" | "));
     ok("coach : aucune écriture (fenêtres annulées, fiches en lecture)", E.ecritures.length === 0, E.ecritures.join(" | "));

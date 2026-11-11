@@ -250,8 +250,18 @@ AVANT.profil = [AVANT.profil[0], AVANT.profil[1].map(t => t === "2 · Ton object
 AVANT.calculateur = ["calculateur", ["Calculateur", "Ses données", "Sa maintenance"], AVANT.calculateur[2]];
 AVANT.suivi = ["suivi", ["Son suivi", "Bilan hebdomadaire", "Sa régularité"], ["suivi-fb-haut", "suivi-checkin", "suivi-fb-bas", "suivi-reg", "suivi-obj", "obj-0"]];
 AVANT.formation = ["formation", ["Formation", "Son parcours", "Le processus, étape par étape"], AVANT.formation[2]];
+/* v106 (lot 2) : changements voulus — 4 onglets (Aperçu, Programme, Nutrition, Suivi) : « Son questionnaire » sous Aperçu, « Son
+   compte » par le menu « ⋯ » de l'en-tête (Aperçu marqué) ; le titre de chaque page (pour les lecteurs d'écran) est le nom de son
+   lien (« Ses séances », « Ses calories », « Sa formation ») ; Appeler (fc-appeler) et les notes privées sont dans l'en-tête ;
+   les identifiants de l'en-tête (fiche-entete, fe-notes, fiche-points, fc-changer…) ne comptent pas comme contenu de la page */
+AVANT.accueil = ["accueil", ["Aperçu", "En bref", "Profil"], ["acc-vue", "fc-ident", "fc-call", "fc-suivi", "fc-retour", "fc-lire"]];
+AVANT["accueil/compte"] = ["accueil", ["Son compte", "En bref", "Profil"], ["acc-vue", "fc-ident", "fc-call", "fc-suivi", "fc-retour", "fc-lire"]];
+AVANT.journal = ["journal", ["Ses séances"].concat(AVANT.journal[1].slice(1)), AVANT.journal[2]];
+AVANT.calculateur = ["calculateur", ["Ses calories"].concat(AVANT.calculateur[1].slice(1)), AVANT.calculateur[2]];
+AVANT.formation = ["formation", ["Sa formation"].concat(AVANT.formation[1].slice(1)), AVANT.formation[2]];
+for (const [k, nom] of [["nutrition", "Ses repas"], ["repas", "Ses repas"], ["bilan", "Préparer le call"], ["mensurations", "Ses courbes"], ["progression", "Ses courbes"], ["profil", "Son questionnaire"]]) AVANT[k] = [AVANT[k][0], [nom].concat(AVANT[k][1].slice(1)), AVANT[k][2]];
 const C2 = F.IDS.c2, TEL = "+33639980001";
-const ONGLET = { accueil: "Aperçu", "accueil/compte": "Profil", programme: "Entraînement", journal: "Entraînement", nutrition: "Nutrition", repas: "Nutrition", calculateur: "Nutrition", complements: "Nutrition", suivi: "Suivi", bilan: "Suivi", mensurations: "Suivi", progression: "Suivi", formation: "Suivi", profil: "Profil" };
+const ONGLET = { accueil: "Aperçu", "accueil/compte": "Aperçu", programme: "Programme", journal: "Programme", nutrition: "Nutrition", repas: "Nutrition", calculateur: "Nutrition", complements: "Nutrition", suivi: "Suivi", bilan: "Suivi", mensurations: "Suivi", progression: "Suivi", formation: "Suivi", profil: "Aperçu" };
 const avecTel = db => db.donnees.push({ user_id: C1, outil: "contact", contenu: { telephone: TEL }, maj_le: avant(J) });
 const lireTete = page => page.evaluate(() => ({
   onglets: Array.from(document.querySelectorAll(".fiche-onglets .f-onglet")).map(a => a.textContent.trim()),
@@ -261,7 +271,7 @@ const lireTete = page => page.evaluate(() => ({
 const marques = page => page.evaluate(() => {
   const v = document.getElementById("vue") || document.body;
   const t = Array.from(v.querySelectorAll("h1, h2")).slice(0, 3).map(x => x.textContent.replace(/\s+/g, " ").trim()).filter(x => !/^Fiche (de|—)/.test(x));
-  const ids = Array.from(v.querySelectorAll("[id]")).map(x => x.id).filter(x => !/^(etat|sortir-fiche)$/.test(x)).slice(0, 6);
+  const ids = Array.from(v.querySelectorAll("[id]")).filter(x => !x.closest(".fiche-entete")).map(x => x.id).filter(x => !/^(etat|sortir-fiche)$/.test(x)).slice(0, 6);   // v106 : hors de l'en-tête
   return { courant: typeof courant !== "undefined" ? courant : null, titres: t, ids };
 });
 const ouvrir = async (page, chemin, sel) => { await page.goto(URL0 + "#/client/" + C1 + "/" + chemin); await pret(page, sel); await attendre(page, 900); };
@@ -278,8 +288,8 @@ const ouvrirEx = async (page, si, ei) => { const d = `details[data-pli="${si}:${
     const { page } = await contexte(b, COACH, db);
     await ouvrir(page, "programme", ".fiche-onglets");
     const t = await lireTete(page);
-    ok("A1 : un seul en-tête : 5 onglets Aperçu · Entraînement · Nutrition · Suivi · Profil ; « Entraînement » ouvert (Son programme, Ses séances) ; WhatsApp ; « Revenir … »",
-      JSON.stringify(t.onglets) === JSON.stringify(["Aperçu", "Entraînement", "Nutrition", "Suivi", "Profil"]) && t.ici === "Entraînement" && JSON.stringify(t.pages) === JSON.stringify(["Son programme", "Ses séances"])
+    ok("A1 : un seul en-tête : 4 onglets Aperçu · Programme · Nutrition · Suivi (v106) ; « Programme » ouvert (Son programme, Ses séances) ; WhatsApp ; « Revenir … »",
+      JSON.stringify(t.onglets) === JSON.stringify(["Aperçu", "Programme", "Nutrition", "Suivi"]) && t.ici === "Programme" && JSON.stringify(t.pages) === JSON.stringify(["Son programme", "Ses séances"])
         && /^https:\/\/wa\.me\/33639980001/.test(t.wa || "") && t.sortir, JSON.stringify(t));
     await ouvrir(page, "suivi", ".fiche-onglets");
     const s = await lireTete(page);
@@ -295,28 +305,28 @@ const ouvrirEx = async (page, si, ei) => { const d = `details[data-pli="${si}:${
     const a = await page.evaluate(() => ({ hash: location.hash, ici: (document.querySelector('.fiche-onglets .f-onglet[aria-current="page"]') || {}).textContent || null, wa: !!document.querySelector("#vue > .fiche-entete [data-fiche-wa] a"),
       nbWa: Array.from(document.querySelectorAll('#vue a[href*="wa.me"]')).filter(x => x.getClientRects().length > 0).length }));   // visibles (celui du panneau Compte, caché, compte à part)
     ok("A4 : la fiche s'ouvre sur « Aperçu » (la fiche : alertes, régularité, poids…), avec WhatsApp dans son en-tête (une seule fois)", (/\/accueil$/.test(a.hash) || a.hash.endsWith(C1)) && a.ici === "Aperçu" && a.wa && a.nbWa === 1, JSON.stringify(a));
-    /* Profil › Son compte : l'onglet Compte de la fiche */
-    await page.click('.fiche-onglets .f-onglet[data-onglet-fiche="profil"]'); await pret(page); await attendre(page, 900);
+    /* v106 (lot 2) : changement voulu — plus d'onglet Profil : Aperçu montre « Aperçu » et « Son questionnaire » ; « Son compte »
+       s'ouvre par le menu « ⋯ » de l'en-tête (Aperçu reste marqué, « Son compte » apparaît alors dans la rangée des pages) */
     const p = await lireTete(page);
-    await page.click('#vue > .fiche-entete a.b-act:nth-of-type(2)'); await pret(page, "#fc-compte"); await attendre(page, 900);
-    const c = await page.evaluate(() => ({ hash: location.hash, compte: !document.getElementById("fc-compte").hidden, ici: (document.querySelector('.fiche-onglets .f-onglet[aria-current="page"]') || {}).textContent || null }));
-    ok("A5 : Profil : Son questionnaire, Son compte ; « Son compte » ouvre l'onglet Compte de la fiche (Profil reste marqué)",
-      JSON.stringify(p.pages) === JSON.stringify(["Son questionnaire", "Son compte"]) && /\/accueil\/compte$/.test(c.hash) && c.compte && c.ici === "Profil", JSON.stringify([p.pages, c]));
+    const sonCompte = async () => { await page.click("#fiche-points summary"); await attendre(page, 300); await page.click("#fiche-points a[data-fe-compte]"); await pret(page, "#fc-compte"); await attendre(page, 900); };
+    await sonCompte();
+    const c = await page.evaluate(() => ({ hash: location.hash, compte: !document.getElementById("fc-compte").hidden, ici: (document.querySelector('.fiche-onglets .f-onglet[aria-current="page"]') || {}).textContent || null, page: (document.querySelector('#vue > .fiche-entete a.b-act[aria-current="page"]') || {}).textContent || null }));
+    ok("A5 : Aperçu : Aperçu, Son questionnaire ; « ⋯ » › « Son compte » ouvre le panneau Compte de la fiche (Aperçu reste marqué, « Son compte » marqué dans la rangée)",
+      JSON.stringify(p.pages) === JSON.stringify(["Aperçu", "Son questionnaire"]) && /\/accueil\/compte$/.test(c.hash) && c.compte && c.ici === "Aperçu" && c.page === "Son compte", JSON.stringify([p.pages, c]));
     /* relecture : depuis Aperçu, le Compte, puis Entraînement, puis Aperçu : Aperçu rouvre le Suivi.
        v104 (point 4) : changement voulu — plus de bouton interne « Compte » (#fc-tab-compte) : depuis Aperçu, le Compte s'ouvre
        par Profil › « Son compte » (bandeau commun) ; mêmes vérifications ensuite (adresse, onglet marqué, Aperçu rouvre le Suivi) */
     await page.goto(URL0 + "#/client/" + C1 + "/accueil"); await pret(page, "#fc-suivi"); await attendre(page, 600);
     const sansBoutons = await page.evaluate(() => !document.querySelector('[id^="fc-tab-"], [data-onglet]'));
-    await page.click('#vue > .fiche-entete .f-onglet[data-onglet-fiche="profil"]'); await pret(page); await attendre(page, 600);
-    await page.click('#vue > .fiche-entete a.b-act:nth-of-type(2)'); await pret(page, "#fc-compte"); await attendre(page, 600);
+    await sonCompte();
     const apresCompte = await page.evaluate(() => ({ hash: location.hash, compte: !document.getElementById("fc-compte").hidden, ici: (document.querySelector('.fiche-onglets .f-onglet[aria-current="page"]') || {}).textContent || null }));
-    await page.click('.fiche-onglets .f-onglet[data-onglet-fiche="entrainement"]'); await pret(page, "#pg-publier");
+    await page.click('.fiche-onglets .f-onglet[data-onglet-fiche="programme"]'); await pret(page, "#pg-publier");
     await page.click('#vue > .fiche-entete .f-onglet[data-onglet-fiche="apercu"]'); await pret(page, "#fc-suivi"); await attendre(page, 600);
     const r = await page.evaluate(() => ({ suivi: !document.getElementById("fc-suivi").hidden, ici: (document.querySelector('.fiche-onglets .f-onglet[aria-current="page"]') || {}).textContent || null }));
-    ok("A5b : depuis Aperçu (sans boutons internes Suivi / Compte), Profil › Son compte met l'adresse et l'onglet à jour (…/accueil/compte, Profil) ; puis Entraînement puis Aperçu : le Suivi s'ouvre, Aperçu marqué",
-      sansBoutons && /\/accueil\/compte$/.test(apresCompte.hash) && apresCompte.compte && apresCompte.ici === "Profil" && r.suivi && r.ici === "Aperçu", JSON.stringify([sansBoutons, apresCompte, r]));
+    ok("A5b : depuis Aperçu (sans boutons internes Suivi / Compte), « ⋯ » › Son compte met l'adresse à jour (…/accueil/compte, Aperçu marqué) ; puis Programme puis Aperçu : le Suivi s'ouvre, Aperçu marqué",
+      sansBoutons && /\/accueil\/compte$/.test(apresCompte.hash) && apresCompte.compte && apresCompte.ici === "Aperçu" && r.suivi && r.ici === "Aperçu", JSON.stringify([sansBoutons, apresCompte, r]));
     const tailles = await page.evaluate(() => Array.from(document.querySelectorAll(".f-onglet")).map(x => Math.round(x.getBoundingClientRect().height)));
-    ok("A6 : onglets à 44 px", tailles.length === 5 && tailles.every(h => h >= 44), JSON.stringify(tailles));
+    ok("A6 : onglets à 44 px (4 onglets, v106)", tailles.length === 4 && tailles.every(h => h >= 44), JSON.stringify(tailles));
     const db3 = base(); avecTel(db3);
     const { page: p3 } = await contexte(b, COACH, db3);
     await ouvrir(p3, "programme", "[data-fiche-wa] a");
@@ -387,7 +397,7 @@ const ouvrirEx = async (page, si, ei) => { const d = `details[data-pli="${si}:${
     const { page: en } = await contexte(b, COACH, db2, { langue: "en" });
     await en.goto(URL0 + "#/client/" + C1 + "/programme"); await pret(en, ".fiche-onglets"); await attendre(en, 800);
     const o = await en.evaluate(() => Array.from(document.querySelectorAll("#vue > .fiche-entete .f-onglet")).map(a => a.textContent.trim()));
-    ok("E2 : coach en anglais : Overview · Training · Nutrition · Follow-up · Profile", JSON.stringify(o) === JSON.stringify(["Overview", "Training", "Nutrition", "Follow-up", "Profile"]), JSON.stringify(o));
+    ok("E2 : coach en anglais : Overview · Program · Nutrition · Follow-up (v106 : 4 onglets)", JSON.stringify(o) === JSON.stringify(["Overview", "Program", "Nutrition", "Follow-up"]), JSON.stringify(o));
   });
 
   /* =================== Z. console, hôtes externes =================== */

@@ -553,7 +553,7 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     /* « accueil » est client_seul : il n'apparait dans la navigation du coach que dans une fiche */
     ok("coach dans la fiche d'un prospect (bien ouverte : Accueil de la fiche présent) : tous les onglets de sa fiche, aucun cadenas, aucune page verrouillée, aucune écriture",
       fiche === PROSPECT && fin === PROSPECT && ids.includes("accueil") && ids.includes("mensurations") && ids.includes("suivi") && ids.includes("complements") && (await page.$$("#nav .nav-cadenas")).length === 0 && cadenasFiche.length === 0
-        && JSON.stringify(navCoach) === JSON.stringify(["tableau","clients","prospects","mes-programmes","catalogue","entrainement","profil"]) && !verrou && !verrou2 && db.ecritures.length === 0,
+        && JSON.stringify(navCoach) === JSON.stringify(["tableau","clients","prospects","mes-programmes"]) /* v106 (lot 1) : les 4 entrées du coach */ && !verrou && !verrou2 && db.ecritures.length === 0,
       JSON.stringify({ fiche, fin, ids, navCoach, cadenasFiche, verrou, verrou2, ecritures: db.ecritures.map(e => [e.table, e.user_id, e.outil]) }));
     await c.close();
   }

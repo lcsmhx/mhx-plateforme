@@ -297,8 +297,8 @@ const PROFIL = ["Réglages", "Mon entraînement", "Langue🇫🇷 FR", "Partager
     const nf = await navOrdi(page);
     const coachF = ["Aujourd'hui", "Clients", "Prospects", "Bibliothèque"];   // v106 (lot 1) : les 4 entrées du coach
     const bf = await page.evaluate(() => ({ onglets: Array.from(document.querySelectorAll("#vue .fiche-entete .f-onglet")).map(a => a.textContent.trim()), pages: Array.from(document.querySelectorAll("#vue .fiche-entete a.b-act")).map(a => a.textContent.trim()) }));
-    ok("A3 : dans la fiche d'un client : ses onglets (Entraînement, Nutrition…) et Son programme dans le bandeau de la fiche, le menu du haut = les 4 entrées du coach (Aujourd'hui, Clients, Prospects, Bibliothèque), ni Suivi détaillé ni une page du client dans le menu",
-      JSON.stringify(nf) === JSON.stringify(coachF) && bf.pages.includes("Son programme") && bf.onglets.includes("Nutrition") && bf.onglets.includes("Entraînement") && !nf.includes("Son programme") && !nf.includes("Nutrition")
+    ok("A3 : dans la fiche d'un client : ses onglets (Programme — v106 : l'ancien « Entraînement » —, Nutrition…) et Son programme dans le bandeau de la fiche, le menu du haut = les 4 entrées du coach (Aujourd'hui, Clients, Prospects, Bibliothèque), ni Suivi détaillé ni une page du client dans le menu",
+      JSON.stringify(nf) === JSON.stringify(coachF) && bf.pages.includes("Son programme") && bf.onglets.includes("Nutrition") && bf.onglets.includes("Programme") && !nf.includes("Son programme") && !nf.includes("Nutrition")
         && ![...nf, ...bf.onglets, ...bf.pages].includes("Suivi détaillé") && ![...bf.onglets, ...bf.pages].includes("Bibliothèque"), JSON.stringify([nf, bf]));
     /* un client : son menu ne change pas */
     const { page: cl } = await contexte(b, THOMAS, db);

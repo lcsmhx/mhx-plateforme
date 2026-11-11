@@ -123,6 +123,8 @@ const attendre = (page, ms) => page.waitForTimeout(ms);
 const aller = async (page, h, ms) => { await page.evaluate(x => { location.hash = x; }, h); await attendre(page, ms || 1300); };
 /* v84 (ménage du bloc 3) : les « Ouvrir » du tableau complet ([data-ouvrir]) sont dans « Suivi détaillé » (#/suivi-clients, menu Plus) */
 const ouvrirFiche = async (page, id) => { await aller(page, "#/suivi-clients", 1500); await page.click(`[data-ouvrir="${id}"]`); await attendre(page, 1500); };
+/* v106 (lot 2) : les notes privées sont dans un volet, ouvert par le bouton « Notes » de l'en-tête de la fiche (#fe-notes) */
+const ouvrirNotes = async page => { if (!(await page.$(".volet-notes #nc-texte"))) { await page.click("#fe-notes", { timeout: 4000 }); await page.waitForSelector(".volet-notes #nc-texte", { timeout: 4000 }); await attendre(page, 900); } };
 const ecr = (db, outil) => db.ecritures.filter(e => e.outil === outil && !e.refus);
 
 (async () => {
@@ -134,9 +136,9 @@ const ecr = (db, outil) => db.ecritures.filter(e => e.outil === outil && !e.refu
     const db = base();
     const { c, page } = await contexte(b, coach, { db });
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 1500);
-    await ouvrirFiche(page, F.IDS.c1);
-    const fiche = await page.textContent("#acc-vue");
-    ok("fiche : panneau « Notes privées » (jamais visibles par le client)", fiche.includes("Notes privées") && fiche.includes("jamais visibles par le client"));
+    await ouvrirFiche(page, F.IDS.c1); await ouvrirNotes(page);   // v106 (lot 2) : les notes privées s'ouvrent par « Notes » de l'en-tête (un volet)
+    const fiche = await page.textContent("#acc-vue"), volet = await page.textContent(".volet-notes");
+    ok("fiche : « Notes » de l'en-tête ouvre le volet « Notes privées » (jamais visibles par le client) (v106)", volet.includes("Notes privées") && volet.includes("jamais visibles par le client"));
     ok("fiche : la vue n'est pas en lecture seule (accueil dans MODIFIABLES)", !(await page.$eval("#vue", e => e.className.includes("lecture-seule"))));
     ok("fiche : champ des notes ouvert après lecture", !(await page.$eval("#nc-texte", e => e.disabled)));
     ok("fiche : ton feedback sur ce bilan « à écrire »", fiche.includes("Ton feedback sur ce bilan") && fiche.includes("à écrire"));
@@ -183,7 +185,7 @@ const ecr = (db, outil) => db.ecritures.filter(e => e.outil === outil && !e.refu
     ok("tableau : le bilan de Thomas n'est plus « à lire » une fois le feedback écrit", !tb.includes("Bilan hebdo reçu"), tb.slice(0, 300));
     /* v53 (chantier 4) : la tuile « Bilans à traiter » n'existe plus (2 tuiles, Clients et Prospects) : vérification retirée ;
        le bilan lu sort de « À traiter maintenant » (ci-dessus), la tuile Clients est vérifiée par verif58 */
-    await ouvrirFiche(page, F.IDS.c3);
+    await ouvrirFiche(page, F.IDS.c3); await ouvrirNotes(page);   // v106 (lot 2) : les notes privées s'ouvrent par « Notes » de l'en-tête (un volet)
     await page.fill("#nc-texte", "Relancer Julien par message."); await attendre(page, 1800);
     ok("notes chez Julien enregistrées", ecr(db, "notes_coach").some(e => e.user_id === F.IDS.c3));
     await aller(page, "#/tableau", 1800);
@@ -198,7 +200,7 @@ const ecr = (db, outil) => db.ecritures.filter(e => e.outil === outil && !e.refu
     const db = base();
     const { c, page } = await contexte(b, coach, { db, refus403: true });
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 1500);
-    await ouvrirFiche(page, F.IDS.c1);
+    await ouvrirFiche(page, F.IDS.c1); await ouvrirNotes(page);   // v106 (lot 2) : les notes privées s'ouvrent par « Notes » de l'en-tête (un volet)
     await page.fill("#nc-texte", "Note qui ne passera pas."); await attendre(page, 1800);
     ok("refus 403 : les notes affichent « la base refuse » et gardent le texte", (await page.textContent("#nc-etat")).includes("la base refuse") && (await page.inputValue("#nc-texte")) === "Note qui ne passera pas.");
     await aller(page, "#/bilan", 1500);
@@ -216,7 +218,7 @@ const ecr = (db, outil) => db.ecritures.filter(e => e.outil === outil && !e.refu
     const db = base([{ user_id: F.IDS.c1, outil: "notes_coach", contenu: { texte: "Ancienne note importante", maj: "2026-09-20T10:00:00Z" }, maj_le: "2026-09-20T10:00:00Z" }]);
     const { c, page } = await contexte(b, coach, { db, lectureKo: "notes_coach" });
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 1500);
-    await ouvrirFiche(page, F.IDS.c1);
+    await ouvrirFiche(page, F.IDS.c1); await ouvrirNotes(page);   // v106 (lot 2) : les notes privées s'ouvrent par « Notes » de l'en-tête (un volet)
     ok("lecture en panne : le champ reste fermé, rien n'est écrit", (await page.$eval("#nc-texte", e => e.disabled)) && (await page.textContent("#nc-etat")).includes("n'ont pas pu être lues") && ecr(db, "notes_coach").length === 0);
     await c.close();
   }
@@ -224,7 +226,7 @@ const ecr = (db, outil) => db.ecritures.filter(e => e.outil === outil && !e.refu
     const db = base([{ user_id: F.IDS.c1, outil: "notes_coach", contenu: { texte: "Ancienne note importante", maj: "2026-09-20T10:00:00Z" }, maj_le: "2026-09-20T10:00:00Z" }]);
     const { c, page } = await contexte(b, coach, { db });
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 1500);
-    await ouvrirFiche(page, F.IDS.c1);
+    await ouvrirFiche(page, F.IDS.c1); await ouvrirNotes(page);   // v106 (lot 2) : les notes privées s'ouvrent par « Notes » de l'en-tête (un volet)
     ok("notes existantes : relues dans la fiche, aucune écriture à l'ouverture", (await page.inputValue("#nc-texte")) === "Ancienne note importante" && ecr(db, "notes_coach").length === 0 && (await page.textContent("#nc-etat")).includes("Dernière modification"));
     await page.screenshot({ path: path.join(OUT, "coach-fiche-notes.png"), fullPage: true });
     await c.close();
@@ -239,7 +241,7 @@ const ecr = (db, outil) => db.ecritures.filter(e => e.outil === outil && !e.refu
     const { c, page } = await contexte(b, coach, { db });
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 1800);
     ok("feedback écrit avant le bilan : le bilan reste « à lire » au tableau", (await page.textContent("#tb-vue")).includes("Bilan hebdo reçu"));
-    await ouvrirFiche(page, F.IDS.c1);
+    await ouvrirFiche(page, F.IDS.c1); await ouvrirNotes(page);   // v106 (lot 2) : les notes privées s'ouvrent par « Notes » de l'en-tête (un volet)
     ok("fiche : « écrit avant ce bilan, à relire »", (await page.textContent("#acc-vue")).includes("écrit avant ce bilan, à relire"));
     await aller(page, "#/bilan", 1500);
     const t = await page.textContent("#bilan-vue");
@@ -298,7 +300,7 @@ const ecr = (db, outil) => db.ecritures.filter(e => e.outil === outil && !e.refu
     const db = base([{ user_id: F.IDS.c1, outil: "notes_coach", contenu: { texte: "Ancienne note importante", maj: "2026-09-20T10:00:00.000Z" }, maj_le: "2026-09-20T10:00:00Z" }]);
     const { c, page } = await contexte(b, coach, { db });
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 1500);
-    await ouvrirFiche(page, F.IDS.c1);
+    await ouvrirFiche(page, F.IDS.c1); await ouvrirNotes(page);   // v106 (lot 2) : les notes privées s'ouvrent par « Notes » de l'en-tête (un volet)
     await page.fill("#nc-texte", "Nouvelle version."); await attendre(page, 1800);
     const n = ecr(db, "notes_coach");
     ok("notes : la version trouvée à l'ouverture est gardée dans « avant »", n.length === 1 && n[0].contenu.avant && n[0].contenu.avant.texte === "Ancienne note importante", JSON.stringify(n.map(x => x.contenu)));
@@ -379,7 +381,7 @@ const ecr = (db, outil) => db.ecritures.filter(e => e.outil === outil && !e.refu
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 1500);
     await aller(page, "#/suivi-clients", 1500);   // v84 (ménage du bloc 3) : [data-ouvrir] dans « Suivi détaillé »
     await page.evaluate(() => { Auth.session.expire_le = Date.now() - 1000; });
-    await page.click(`[data-ouvrir="${F.IDS.c1}"]`); await attendre(page, 1800);
+    await page.click(`[data-ouvrir="${F.IDS.c1}"]`); await attendre(page, 1800); await page.evaluate(() => { if (!document.querySelector(".volet-notes")) EnteteFiche.notes(); }).catch(() => {}); await attendre(page, 1800);   // v106 (lot 2) : le volet des notes, ouvert même sous le bandeau de session perdue
     const ferme = await page.$eval("#nc-texte", e => e.disabled).catch(() => true);
     ok("session perdue : notes fermées (pas affichées vides), message « n'ont pas pu être lues »", ferme && (await page.textContent("#nc-etat").catch(() => "")).includes("n'ont pas pu être lues") && ecr(db, "notes_coach").length === 0);
     await c.close();
@@ -391,7 +393,7 @@ const ecr = (db, outil) => db.ecritures.filter(e => e.outil === outil && !e.refu
     const opts = { db, perdre: { outil: "notes_coach", fois: 1 } };
     const { c, page } = await contexte(b, coach, opts);
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 1500);
-    await ouvrirFiche(page, F.IDS.c1);
+    await ouvrirFiche(page, F.IDS.c1); await ouvrirNotes(page);   // v106 (lot 2) : les notes privées s'ouvrent par « Notes » de l'en-tête (un volet)
     await page.fill("#nc-texte", "V0. Phrase 1."); await attendre(page, 1800);
     ok("notes : réponse perdue → « la connexion a échoué » (l'écriture, elle, est passée)", (await page.textContent("#nc-etat")).includes("connexion a échoué") && db.lignes.find(x => x.user_id === F.IDS.c1 && x.outil === "notes_coach").contenu.texte === "V0. Phrase 1.");
     await page.type("#nc-texte", " Phrase 2."); await attendre(page, 1800);
@@ -420,7 +422,7 @@ const ecr = (db, outil) => db.ecritures.filter(e => e.outil === outil && !e.refu
     const db = base([{ user_id: F.IDS.c1, outil: "notes_coach", contenu: { texte: "Note.", maj: "2026-09-20T10:00:00.000Z" }, maj_le: "2026-09-20T10:00:00+00:00" }]);
     const { c, page } = await contexte(b, coach, { db, patchVide: true });
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 1500);
-    await ouvrirFiche(page, F.IDS.c1);
+    await ouvrirFiche(page, F.IDS.c1); await ouvrirNotes(page);   // v106 (lot 2) : les notes privées s'ouvrent par « Notes » de l'en-tête (un volet)
     await page.fill("#nc-texte", "Note modifiée."); await attendre(page, 1800);
     ok("refus silencieux de la base (mise à jour vide) : « la base refuse », pas un faux conflit", (await page.textContent("#nc-etat")).includes("la base refuse") && (await page.inputValue("#nc-texte")) === "Note modifiée.");
     await c.close();

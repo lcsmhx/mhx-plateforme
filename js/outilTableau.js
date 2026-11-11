@@ -109,7 +109,7 @@ const outilTableau = {
   nouveauxHTML(nouveaux, vis){
     const reste = nouveaux.length - this.VISITE.MAX;
     const ligne = l => { const pr = String((l.p && l.p.prenom) || "").trim() || Clients.nom(l.p);
-      return `<li><span class="tb-quoi"><b data-notr>${esc(pr)}</b><small>inscrit le ${esc(this.quand(l.p.cree_le))}</small></span><span class="tb-nv-tel">${Telephone.coachHTML(l.tel)}</span></li>`; };
+      return `<li><span class="tb-quoi"><b data-notr>${esc(pr)}</b><small>inscrit le ${esc(this.quand(l.p.cree_le))}</small></span><span class="tb-nv-tel">${Telephone.coachHTML(l.tel, "", l.msgWa)}</span></li>`; };
     return `<section class="panel" id="tb-nouveaux"><h2>Nouveaux depuis ta dernière visite</h2>
       <p class="note" style="margin:0 0 10px">${vis.depuis ? `Ta dernière visite : le ${esc(this.quand(vis.depuis))}.` : "Première visite enregistrée : les inscrits des 7 derniers jours."}</p>
       ${nouveaux.length ? `<ul class="tb-liste">${nouveaux.slice(0, this.VISITE.MAX).map(ligne).join("")}</ul>

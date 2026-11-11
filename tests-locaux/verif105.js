@@ -282,21 +282,27 @@ async function principal(){
       await ouvrir(page, uid, "accueil", "#fc-suivi");
       const t = await textesVisibles(page);
       const d = await page.evaluate(() => { const v = document.getElementById("vue");
-        return { tete: (v.querySelector(".fiche-entete .bandeau-tete strong") || {}).textContent, bAct: v.querySelectorAll(".fiche-entete a.b-act").length,
+        /* v106 (lot 2) : l'en-tête sur une ligne — le prénom (nom entier en bulle), le statut, WhatsApp et Appeler y sont */
+        return { tete: (v.querySelector(".fiche-entete .fe-nom") || {}).title, prenom: (v.querySelector(".fiche-entete .fe-nom") || {}).textContent, bAct: v.querySelectorAll(".fiche-entete a.b-act").length, bActIci: (v.querySelector('.fiche-entete a.b-act[aria-current="page"]') || {}).textContent || null,
           h1: Array.from(v.querySelectorAll("h1")).map(h => [h.textContent, h.className, Math.round(h.getBoundingClientRect().width)]),
-          ident: !!v.querySelector("#fc-ident"), h2Ident: !!v.querySelector("#fc-ident h2"), avatar: !!v.querySelector("#fc-ident .avatar"), role: (v.querySelector("#fc-ident .fc-role-p") || {}).textContent,
-          call: !!v.querySelector("#fc-call"), wa: !!v.querySelector("#fc-wa"), appeler: !!v.querySelector("#fc-appeler"), sortir: v.querySelectorAll("#sortir-fiche").length,
+          ident: !!v.querySelector("#fc-ident"), h2Ident: !!v.querySelector("#fc-ident h2"), avatar: !!v.querySelector("#fc-ident .avatar"), role: (v.querySelector(".fiche-entete .fe-statut") || {}).textContent,
+          call: !!v.querySelector("#fc-call"), wa: !!v.querySelector('.fiche-entete [data-fiche-wa] a[href*="?text="]'), appeler: !!v.querySelector(".fiche-entete #fc-appeler"), sortir: v.querySelectorAll("#sortir-fiche").length,
           deborde: document.documentElement.scrollWidth > window.innerWidth + 1 }; });
-      ok("B1 (" + qui + ", " + taille + " px) : le nom « " + nom + " » une seule fois à l'écran, dans l'en-tête « Fiche de " + nom + " » ; plus de nom ni d'initiales sous l'en-tête",
-        t.filter(x => x.includes(nom)).length === 1 && d.tete === "Fiche de " + nom && !d.h2Ident && !d.avatar, JSON.stringify({ noms: t.filter(x => x.includes(nom)), d }));
-      ok("B2 (" + qui + ", " + taille + " px) : « Fiche » n'est plus ni un bouton ni un grand titre (aucun texte « Fiche » seul visible) ; un seul h1, « Fiche », pour les lecteurs d'écran",
-        !t.includes("Fiche") && d.bAct === 0 && d.h1.length === 1 && d.h1[0][0] === "Fiche" && d.h1[0][1] === "sr-only" && d.h1[0][2] <= 1, JSON.stringify({ d, fiche: t.filter(x => /^Fiche$/.test(x)) }));
+      /* v106 (lot 2) : changement voulu — le prénom une seule fois (en-tête), le nom entier en bulle ; « Aperçu » et « Son
+         questionnaire » dans la rangée des pages ; le h1 caché porte le nom de la page, « Aperçu » */
+      const prenom = nom.split(" ")[0];
+      ok("B1 (" + qui + ", " + taille + " px) : le prénom « " + prenom + " » une seule fois à l'écran, dans l'en-tête (nom entier en bulle) ; plus de nom ni d'initiales sous l'en-tête",
+        t.filter(x => x.includes(prenom)).length === 1 && d.prenom === prenom && d.tete === nom && !d.h2Ident && !d.avatar, JSON.stringify({ noms: t.filter(x => x.includes(prenom)), d }));
+      ok("B2 (" + qui + ", " + taille + " px) : « Fiche » n'est plus ni un bouton ni un grand titre (aucun texte « Fiche » seul visible) ; un seul h1, « Aperçu » (le nom de son lien), pour les lecteurs d'écran",
+        !t.includes("Fiche") && d.bAct === 2 && d.bActIci === "Aperçu" && d.h1.length === 1 && d.h1[0][0] === "Aperçu" && d.h1[0][1] === "sr-only" && d.h1[0][2] <= 1, JSON.stringify({ d, fiche: t.filter(x => /^Fiche$/.test(x)) }));
       ok("B3 (" + qui + ", " + taille + " px) : le reste de l'en-tête et de l'identité reste : « Revenir à mes clients » (une fois), la pastille « " + (qui === "client" ? "Client" : "Prospect") + " », " + (qui === "client" ? "« Préparer le call »" : "le message WhatsApp prêt") + ", Appeler ; pas de débordement",
-        d.sortir === 1 && t.includes("Revenir à mes clients") && d.ident && d.role === (qui === "client" ? "Client" : "Prospect") && (qui === "client" ? d.call : d.wa) && d.appeler && !d.deborde, JSON.stringify(d));
+        d.sortir === 1 && (await page.$eval("#sortir-fiche", e => e.getAttribute("aria-label"))) === "Revenir à mes clients" /* v106 : la flèche, au nom lu par les lecteurs d'écran */ && d.ident && d.role === (qui === "client" ? "Client" : "Prospect") && (qui === "client" ? d.call : d.wa) && d.appeler && !d.deborde, JSON.stringify(d));
       /* les onglets à plusieurs pages gardent leurs boutons de page */
       await ouvrir(page, uid, "profil", "#q-age");
       const pr = await page.$$eval("#vue .fiche-entete a.b-act", l => l.map(a => a.textContent.trim()));
-      ok("B4 (" + qui + ", " + taille + " px) : l'onglet Profil garde ses 2 pages (« Son questionnaire », « Son compte »)", JSON.stringify(pr) === '["Son questionnaire","Son compte"]', JSON.stringify(pr));
+      /* v106 (lot 2) : « Son questionnaire » est une page d'Aperçu ; « Son compte » est dans le menu « ⋯ » de l'en-tête */
+      const compte = await page.$$eval("#fiche-points a[data-fe-compte]", l => l.map(a => a.textContent.trim()));
+      ok("B4 (" + qui + ", " + taille + " px) : « Son questionnaire » garde sa page (sous Aperçu : « Aperçu », « Son questionnaire ») et « Son compte » reste joignable (menu « ⋯ »)", JSON.stringify(pr) === '["Aperçu","Son questionnaire"]' && JSON.stringify(compte) === '["Son compte"]', JSON.stringify([pr, compte]));
       ok("B5 (" + qui + ", " + taille + " px) : aucune écriture", db.ecritures.length === 0, JSON.stringify(db.ecritures));
     });
   }
@@ -305,9 +311,9 @@ async function principal(){
     const { page } = await contexte(b, COACH, db, { langue: "en", viewport: MOBILE });
     await ouvrir(page, C1, "accueil", "#fc-suivi");
     const t = await textesVisibles(page);
-    const d = await page.evaluate(() => ({ tete: (document.querySelector("#vue .fiche-entete .bandeau-tete strong") || {}).textContent, bAct: document.querySelectorAll("#vue .fiche-entete a.b-act").length, h1: Array.from(document.querySelectorAll("#vue h1")).map(h => h.textContent + "|" + h.className) }));
-    ok("B6 (anglais, 390 px) : le nom une seule fois (« Thomas Démo's profile »), aucun bouton de page « Profile » (« Fiche »), un seul h1 (« Profile », caché à l'écran)",
-      t.filter(x => x.includes("Thomas Démo")).length === 1 && d.tete === "Thomas Démo's profile" && d.bAct === 0 && JSON.stringify(d.h1) === '["Profile|sr-only"]', JSON.stringify({ noms: t.filter(x => x.includes("Thomas")), d }));
+    const d = await page.evaluate(() => ({ tete: (document.querySelector("#vue .fiche-entete .fe-nom") || {}).title, bAct: Array.from(document.querySelectorAll("#vue .fiche-entete a.b-act")).map(a => a.textContent.trim()), h1: Array.from(document.querySelectorAll("#vue h1")).map(h => h.textContent + "|" + h.className) }));
+    ok("B6 (anglais, 390 px) : le prénom une seule fois (nom entier en bulle, jamais traduit), aucun bouton « Profile » (« Fiche ») ; pages « Overview », « Their questionnaire » ; un seul h1 (« Overview », caché à l'écran) (v106)",
+      t.filter(x => x.includes("Thomas")).length === 1 && d.tete === "Thomas Démo" && JSON.stringify(d.bAct) === '["Overview","Their questionnaire"]' && JSON.stringify(d.h1) === '["Overview|sr-only"]', JSON.stringify({ noms: t.filter(x => x.includes("Thomas")), d }));
   });
 
   /* =================== C. point 3 : les titres du questionnaire à la 3e personne dans la fiche =================== */

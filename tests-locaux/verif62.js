@@ -547,6 +547,8 @@ const barre = page => page.evaluate(() => {
     return { g: a(r.left), d: a(r.right), t: a(r.top), b: a(r.bottom), l: a(r.width), h: a(r.height), vu: cs.display !== "none" && r.width > 0, coupe: e.scrollWidth > e.clientWidth + 1, to: cs.textOverflow, txt: e.textContent, ici: !!x && e.contains(x) };
   };
   const o = { brand: m(w.querySelector(".brand")) }; ["compte", "etat", "qui", "langue", "deco"].forEach(id => { o[id] = m(document.getElementById(id)); });
+  /* v106 (lot 1) : la ligne du haut du coach — son titre, la loupe et le rond de profil */
+  [["titre", "titre-page"], ["loupe", "nav-chercher"], ["rond", "rond-profil"]].forEach(([k, id]) => { const e = document.getElementById(id); if (e) o[k] = m(e); });
   return { deb: a(rw.left + parseFloat(cw.paddingLeft)), fin: a(rw.right - parseFloat(cw.paddingRight)), o, haut: Math.round(document.querySelector(".topbar").getBoundingClientRect().height),
     page: document.documentElement.scrollWidth, ecran: window.innerWidth };
 });
@@ -557,20 +559,24 @@ const barre = page => page.evaluate(() => {
    v76 (barre du haut sur une ligne) : sur téléphone, le nom n'est plus dans la barre (display:none : affiché = défaut) ; les
    boutons font 40 px de haut (zone de toucher ; 44 px et plus = sur deux lignes) ; prospect : « Se déconnecter » est dans « Tout
    mon espace », pas dans sa barre (affiché = défaut) : la ligne des boutons est alors celle de EN */
-function defautsBarre(B, L, alerte, prospect){
+/* v106 (lot 1) : coach = la nouvelle ligne du haut du coach (titre de la page, loupe, rond de profil) : « FR » et « Se déconnecter »
+   ne doivent plus y être (ils sont derrière le rond) ; mêmes garanties pour la loupe et le rond (44 px, entiers, cliquables, sur
+   une ligne), le titre se raccourcit avec « … » */
+function defautsBarre(B, L, alerte, prospect, coach){
   const p = [], o = B.o;
   if (B.page > B.ecran + 1) p.push("page de " + B.page + " px");
   if (o.qui.vu) p.push("nom affiché dans la barre (" + o.qui.l + " px)");
-  if (prospect ? o.deco.vu : !o.deco.vu) p.push(prospect ? "« Se déconnecter » dans la barre du prospect" : "« Se déconnecter » caché");
+  if (coach){ if (o.deco.vu || o.langue.vu) p.push("« FR » ou « Se déconnecter » dans la barre du coach"); if (!o.titre || !o.titre.vu) p.push("titre de la page absent"); }
+  else if (prospect ? o.deco.vu : !o.deco.vu) p.push(prospect ? "« Se déconnecter » dans la barre du prospect" : "« Se déconnecter » caché");
   /* v80 (bloc 1) : plus de bouton de thème ; boutons ronds de 44 px (zone de toucher), 48 px et plus = sur deux lignes */
-  const boutons = prospect ? ["langue"] : ["langue", "deco"], ref = o[boutons[boutons.length - 1]];
-  ["brand", "compte"].concat(boutons, o.etat.vu ? ["etat"] : []).forEach(k => { if (o[k].g < B.deb - 0.5 || o[k].d > B.fin + 0.5) p.push(k + " hors de la barre (" + o[k].g + "-" + o[k].d + " pour " + B.deb + "-" + B.fin + ")"); });
+  const boutons = coach ? ["loupe", "rond"] : prospect ? ["langue"] : ["langue", "deco"], ref = o[boutons[boutons.length - 1]];
+  (coach ? ["titre"] : ["brand", "compte"]).concat(boutons, o.etat.vu ? ["etat"] : []).forEach(k => { if (o[k].g < B.deb - 0.5 || o[k].d > B.fin + 0.5) p.push(k + " hors de la barre (" + o[k].g + "-" + o[k].d + " pour " + B.deb + "-" + B.fin + ")"); });
   boutons.forEach(k => {
     const x = o[k];
     if (x.h < 44 || x.h >= 48 || x.coupe || !x.ici) p.push(k + " « " + x.txt + " » " + x.l + " x " + x.h + (x.coupe ? " coupé" : "") + (x.ici ? "" : " caché"));
     if (Math.abs(x.t - ref.t) > 2) p.push(k + " pas sur la ligne de « " + ref.txt + " »");
   });
-  ["etat"].forEach(k => { if (o[k].coupe && o[k].to !== "ellipsis") p.push(k + " coupé sans « … »"); });
+  (coach ? ["etat", "titre"] : ["etat"]).forEach(k => { if (o[k].coupe && o[k].to !== "ellipsis") p.push(k + " coupé sans « … »"); });
   if (alerte) {
     const e = o.etat;
     if (!e.vu || e.coupe || !e.ici) p.push("alerte « " + e.txt + " »" + (e.vu ? "" : " cachée") + (e.coupe ? " raccourcie (" + e.l + " px)" : "") + (e.ici ? "" : " recouverte"));
@@ -581,13 +587,13 @@ function defautsBarre(B, L, alerte, prospect){
 }
 /* la barre à chaque largeur (même page, fenêtre redimensionnée) ; avant(page) : juste avant chaque mesure (témoin…) ; alerte : voir
    defautsBarre (largeurs : LARGEURS_ALERTE) */
-async function tourBarre(page, avant, alerte, prospect){
+async function tourBarre(page, avant, alerte, prospect, coach){
   const trop = [], vus = {};
   for (const L of alerte ? LARGEURS_ALERTE : LARGEURS) {
     await page.setViewportSize({ width: L, height: 700 }); await attendre(page, 250);
     if (avant) await avant(page);
     const B = await barre(page); vus[L] = B;
-    const d = defautsBarre(B, L, alerte, prospect); if (d) trop.push(d);
+    const d = defautsBarre(B, L, alerte, prospect, coach); if (d) trop.push(d);
   }
   return { trop, vus };
 }
@@ -774,9 +780,11 @@ const ALERTE59 = (/\n  @supports selector\(:has\(\*\)\)\{[\s\S]*?\n  \}\n/.exec(
     const nomVu = (r, n) => Object.values(r.vus).every(B => B.o.qui.txt === n);
     /* le coach (#/clients), son nom suivi de « · coach » ; puis le témoin d'enregistrement affiché (il ne s'efface pas seul) */
     const x1 = await coachSur(b, decor(), "#/clients", "#lc-clients", TEL0);   // v84 (ménage du bloc 3) : #/clients ne montre plus que la liste Clients (le tableau est dans « Suivi détaillé »)
-    const r1 = await tourBarre(x1.page, pg => pg.evaluate(() => majEtat("")));
-    ok("E : coach (#/clients) " + LIB + " : la page ne déborde pas ; FR et « Se déconnecter » entiers, sur une ligne, dans la barre, cliquables, 44 px de haut (v80) ; le nom n'est pas dans la barre (v76)", r1.trop.length === 0 && nomVu(r1, "Coach Démo · coach"), resultat(r1));
-    const r1a = await tourBarre(x1.page, pg => pg.evaluate(() => majEtat("enregistrement")));
+    /* v106 (lot 1) : changement voulu — la ligne du haut du coach : titre de la page, loupe, rond de profil ; « FR » et « Se
+       déconnecter » sont derrière le rond (les mêmes garanties s'appliquent à la loupe et au rond) */
+    const r1 = await tourBarre(x1.page, pg => pg.evaluate(() => majEtat("")), false, false, true);
+    ok("E : coach (#/clients) " + LIB + " : la page ne déborde pas ; titre, loupe et rond de profil entiers, sur une ligne, dans la barre, cliquables, 44 px de haut ; ni « FR » ni « Se déconnecter » ni le nom dans la barre (v106)", r1.trop.length === 0 && nomVu(r1, "Coach Démo · coach"), resultat(r1));
+    const r1a = await tourBarre(x1.page, pg => pg.evaluate(() => majEtat("enregistrement")), false, false, true);
     const temoin = (r, t) => Object.values(r.vus).every(B => B.o.etat.vu && B.o.etat.txt === t);
     ok("E : témoin « Enregistrement… » affiché (coach) " + LIB + " : même chose, le témoin se raccourcit avec « … »",
       r1a.trop.length === 0 && temoin(r1a, "Enregistrement…"), resultat(r1a));
@@ -785,8 +793,8 @@ const ALERTE59 = (/\n  @supports selector\(:has\(\*\)\)\{[\s\S]*?\n  \}\n/.exec(
     const LIB_A = "à " + LARGEURS_ALERTE.join(", ").replace(/, (\d+)$/, " et $1") + " px";
     const H_ERR = "Hors ligne — gardé sur cet appareil, renvoi automatique", H_PERDU = "Hors ligne — modification non enregistrée", H_REFUS = "Non enregistré — modification refusée";
     const hauts = rs => rs.map(r => Object.keys(r.vus).map(L => L + ":" + r.vus[L].haut).join(" ")).join(" / ");
-    const r1b = await tourBarre(x1.page, pg => pg.evaluate(() => majEtat("erreur")), true);
-    ok("E : alerte « " + H_ERR + " » (coach) " + LIB_A + " : texte entier (non raccourci), sur sa ligne au-dessus des boutons ; la page ne déborde pas, FR et « Se déconnecter » entiers sur une ligne, cliquables ; le nom n'est pas dans la barre (v76)",
+    const r1b = await tourBarre(x1.page, pg => pg.evaluate(() => majEtat("erreur")), true, false, true);
+    ok("E : alerte « " + H_ERR + " » (coach) " + LIB_A + " : texte entier (non raccourci), sur sa ligne au-dessus des boutons ; la page ne déborde pas, loupe et rond entiers sur une ligne, cliquables ; le nom n'est pas dans la barre (v76, v106)",
       r1b.trop.length === 0 && temoin(r1b, H_ERR) && !r1b.vus[320].o.qui.vu, resultat(r1b) + " hauteurs " + hauts([r1b]));
     /* un client (Thomas) ; le compte de test (client sans prénom ni nom : son email dans la barre) */
     const x2 = await contexte(b, THOMAS, decor(), TEL0);

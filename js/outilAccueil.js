@@ -27,15 +27,9 @@ const outilAccueil = {
   /* v104 (point 4) : le titre de page de la fiche, au même format que celui des 4 autres onglets (afficher, navigation.js :
      « Nom — page », puis la page en titre) ; la page est celle du bandeau : « Fiche » sous Aperçu, « Son compte » sous Profil */
   titreFiche(){
-    const cle = sousRoute === "compte" ? "accueil/compte" : "accueil";
-    const page = ((ONGLETS_FICHE.map(g => g.pages).reduce((a, b) => a.concat(b), []).find(p => p[0] === cle)) || [cle, "Fiche"])[1];
-    /* v105 (point 2) : l'Aperçu n'a qu'un en-tête, le bandeau « Fiche de … » : plus de grand titre « Fiche » (gardé pour les
-       lecteurs d'écran seulement) */
-    if (cle === "accueil") return `<h1 class="sr-only">${esc(trad(page))}</h1>`;
-    return `<header class="masthead">
-      <span class="eyebrow">${esc(Store.nomConsulte || "client") + " — "}${esc(trad(page))}</span>
-      <h1>${esc(trad(page))}</h1>
-    </header>`;
+    /* v105 (point 2) : l'Aperçu n'a qu'un en-tête, le bandeau : plus de grand titre (gardé pour les lecteurs d'écran seulement).
+       v106 (lot 2) : « Son compte » aussi ; le titre est le nom du lien de la page (« Aperçu », « Son compte ») */
+    return `<h1 class="sr-only">${esc(trad(nomPageFiche()))}</h1>`;
   },
 
   dateLongue(){
@@ -238,17 +232,14 @@ const outilAccueil = {
     const cxF = Connexions.lecture(cx && cx.ligne, Connexions.suiviPour(pFiche), !!(cx && cx.lue));
     /* v104 (point 4) : le WhatsApp du bandeau (le même sur les 5 onglets) ouvre une conversation vide ; celui-ci ouvre le message
        prêt du prospect : il s'appelle « Message WhatsApp prêt », pour ne pas porter le même texte que celui du bandeau */
-    const principal = prospectF
-      ? boutonWhatsAppVers(tel, MessageProspect.texte(pFiche.prenom, I, anglais), "btn fc-principal", "fc-wa").replace(`<span>${esc(trad("WhatsApp"))}</span>`, `<span>${esc(trad("Message WhatsApp prêt"))}</span>`)
-      : `<a class="btn fc-principal" id="fc-call" href="${esc(lienOutil("bilan"))}">Préparer le call</a>`;
-    const appeler = Telephone.valide(tel) ? `<a class="rond fc-appeler" id="fc-appeler" href="tel:${esc(tel)}" aria-label="${esc(trad("Appeler"))}" title="${esc(trad("Appeler"))}">${SVG.tel}</a>`
-      : `<button type="button" class="rond fc-appeler" id="fc-appeler" disabled aria-label="${esc(trad("Appeler : pas de numéro"))}" title="${esc(trad("Pas de numéro"))}">${SVG.tel}</button>`;
+    /* v106 (lot 2) : le statut, WhatsApp (message prêt) et Appeler sont dans l'en-tête de la fiche (EnteteFiche, navigation.js) ;
+       ici reste « Préparer le call » d'un client */
+    const principal = prospectF ? "" : `<a class="btn fc-principal" id="fc-call" href="${esc(lienOutil("bilan"))}">Préparer le call</a>`;
     /* v99 : #/client/<id>/accueil/compte (Profil › Son compte) ouvre l'onglet Compte */
     /* v99 (relecture) : le panneau suit l'adresse seulement (…/accueil = Suivi, sous l'onglet Aperçu ; …/accueil/compte = Compte,
        sous Profil) : « Aperçu » rouvre toujours le Suivi (une action de Compte qui redessine la fiche reste sur Compte).
        v104 (point 4) : seule l'adresse choisit le panneau (les boutons Suivi / Compte ont disparu) */
     const onglet = sousRoute === "compte" ? "compte" : "suivi";
-    if (Telephone.valide(tel)) TelFiche.tels[uidFiche] = tel;
     /* le retour de la semaine (carte de la maquette) : reçu à lire, fait, non fait, ou rien encore */
     const recu = alertes.find(a => a.type === "bilan_recu"), rt = l.retour;
     const retourTexte = recu ? recu.texte : rt && rt.etat ? rt.nom + " : " + rt.texte : (dim ? "Feedback du dimanche" : "Bilan hebdo") + " : " + trad("rien de nouveau");
@@ -287,8 +278,8 @@ const outilAccueil = {
       ${this.titreFiche()}
       <section class="fc-ident" id="fc-ident">
         <div class="fc-id"><div class="fc-id-t">
-            <div class="fc-pastilles"><span class="pastille fc-role-p"${prospectF ? ' title="Compte gratuit : pas encore accompagné"' : ""}>${esc(trad(prospectF ? "Prospect" : "Client"))}</span>${progNom ? `<span class="pastille fc-prog" data-notr>${esc(progNom)}</span>` : ""}${arch ? `<span class="pastille attention fc-archive">${esc(trad("Archivé"))}</span>` : ""}${anglais ? ` <span class="pastille" title="Ce client utilise l'app en anglais">🇺🇸 anglais</span>` : ""}</div></div></div>
-        <div class="fc-actions">${principal}${appeler}</div>
+            <div class="fc-pastilles">${progNom ? `<span class="pastille fc-prog" data-notr>${esc(progNom)}</span>` : ""}${anglais ? ` <span class="pastille" title="Ce client utilise l'app en anglais">🇺🇸 anglais</span>` : ""}</div></div></div>
+        ${principal ? `<div class="fc-actions">${principal}</div>` : ""}
       </section>
       <div class="fc-panneau" id="fc-suivi"${onglet === "suivi" ? "" : " hidden"}>
       <p class="lede fc-lede">${profil.statut === "prospect" ? "Compte gratuit : pas de suivi à assurer tant qu'il n'est pas passé client." + (rdc ? " Découverte : " + (rdc.jour == null ? "date d'inscription inconnue" : Decouverte.depuisTexte(rdc.jour)) + (rdc.questionnaire ? ", questionnaire rempli." : ", questionnaire pas encore rempli.") : "") : alertes.length ? `${alertes.length} point${alertes.length > 1 ? "s" : ""} à regarder.` : "Rien à signaler : tout est en ordre."}</p>
@@ -312,7 +303,7 @@ const outilAccueil = {
         </div>
       </section>
       ${profil.statut === "prospect" ? `<div id="fiche-prospect">${this.decouverteFicheHTML(pDc, d.challenge, I, d.suivi_prospect, d.activite, d.emails)}</div>` : ""}
-      ${NotesCoach.html()}
+      ${/* v106 (lot 2) : les notes privées s'ouvrent par « Notes » de l'en-tête (un volet, depuis chaque onglet) */ ""}
       <div class="fiche-grille">
       <section class="panel"><div class="seance-c-tete"><h2>Profil</h2>${I.complet ? `<span class="pastille ok">questionnaire complet</span>` : `<span class="pastille attention">questionnaire incomplet</span>`}</div>
         <ul class="ingr fiche-l">${ligne("Âge", I.age ? I.age + " ans" : "")}${ligne("Sexe", I.sexe)}${ligne("Taille", I.taille ? I.taille + " cm" : "")}${ligne("Poids déclaré", I.poids ? I.poids + " kg" : "")}${ligne("Poids objectif", I.poids_obj ? I.poids_obj + " kg" : "")}${ligne("Objectif", I.objectif)}${ligne("Niveau", I.niveau)}${ligne("Lieu", I.lieu)}${ligne("Séances / semaine", I.seances)}${ligne("Régime", I.regime_type)}${ligne("Allergènes", String(I.allergenes || "").split("|").filter(Boolean).join(", "))}${ligne("Ville", I.ville)}</ul></section>
@@ -336,20 +327,13 @@ const outilAccueil = {
       <div class="fc-panneau" id="fc-compte"${onglet === "compte" ? "" : " hidden"}>
         <section class="carte fc-carte" id="fc-infos"><ul class="fiche-l fc-lignes">
           <li><span>${esc(trad("Email"))}</span><b data-notr id="fc-email">${emailF ? esc(emailF) : "—"}</b></li>
-          <li><span>${esc(trad("Téléphone"))}</span><b id="fiche-tel">${Telephone.coachHTML(tel, "lc-lien")}</b></li>
+          <li><span>${esc(trad("Téléphone"))}</span><b id="fiche-tel">${Telephone.coachHTML(tel, "lc-lien", messageWhatsAppCoach(pFiche, I, anglais))}</b></li>
           <li><span>${esc(trad("Source"))}</span><b id="fiche-source" data-notr>${esc(Contact.ref(d.contact) || "—")}</b></li>
-          <li><span>${esc(trad("Rôle"))}</span><b><span id="fc-role">${esc(trad(prospectF ? "Prospect" : "Client"))}</span> <button type="button" class="lc-lien fc-changer" id="fc-changer" data-statut="${prospectF ? "client" : "prospect"}">${esc(trad("Changer"))}</button></b></li>
+          <li><span>${esc(trad("Rôle"))}</span><b><span id="fc-role">${esc(trad(prospectF ? "Prospect" : "Client"))}</span></b></li>
           <li><span>${esc(trad("Dernière connexion"))}</span><b id="fc-derniere" title="${esc(Connexions.aide(cxF))}">${esc(Connexions.texteDerniere(cxF))}</b></li>
           <li><span>${esc(trad("Connexions"))}</span><b id="fc-connexions" title="${esc(Connexions.aide(cxF))}">${esc(Connexions.texteNombre(cxF))}</b></li>
         </ul></section>
-        <div class="fc-boutons">
-          <button type="button" class="btn ghost fc-large" id="fc-acces" data-role="coach">Donner l'accès complet</button>
-          <button type="button" class="btn fc-large" id="fc-archiver" data-archiver="${arch ? "non" : "oui"}">${esc(trad(arch ? "Restaurer ce compte" : "Archiver ce compte"))}</button>
-          ${arch ? `<p class="note" id="fc-archive-note" style="margin:0">${esc(trad("Archivé le {d} : ce compte n'apparaît plus dans tes listes, tes compteurs ni « À traiter ». Rien n'a changé pour la personne.", { d: dateFr(Decouverte.dateLocale(arch) || arch.slice(0, 10)) }))}</p>` : ""}
-        </div>
-        <section class="zone-danger fc-danger" id="fc-danger"><h3>Supprimer définitivement</h3>
-          <p class="note">Efface le compte et toutes ses données : c'est ce qu'il faut faire quand une personne demande l'effacement de ses données. C'est définitif : il n'y a pas de corbeille.</p>
-          <button type="button" class="btn danger fc-large" id="fc-supprimer">Supprimer définitivement</button></section>
+        ${arch ? `<p class="note" id="fc-archive-note" style="margin:0">${esc(trad("Archivé le {d} : ce compte n'apparaît plus dans tes listes, tes compteurs ni « À traiter ». Rien n'a changé pour la personne.", { d: dateFr(Decouverte.dateLocale(arch) || arch.slice(0, 10)) }))}</p>` : ""}
       </div>`;
     /* v51 — copier le lien de reservation du prospect (presse-papiers, sinon selection a copier a la main) */
     const brancherCopie = () => {
@@ -382,30 +366,10 @@ const outilAccueil = {
     }
     /* v104 (point 4) : les boutons Suivi / Compte (v83, bloc 3) ont disparu : le panneau Suivi s'ouvre par l'onglet Aperçu,
        le panneau Compte par Profil › « Son compte » (des liens du bandeau, comme les pages des autres onglets) */
-    /* onglet Compte : le statut (« Changer »), l'accès complet, archiver / restaurer, supprimer définitivement (les mêmes
-       actions et les mêmes fenêtres que dans Comptes : Acces) ; après une action, la fiche est relue, ou quittée si le compte
-       n'en a plus (supprimé, ou passé en accès complet) */
-    const refaire = () => { if (Store.idConsulte === uidFiche && courant === "accueil") afficher("accueil", true, true); };
-    const quitter = vers => { ListeCoach.revenir(vers); if (Store.idConsulte === uidFiche){ Store.oublier(uidFiche); Store.idConsulte = null; Store.nomConsulte = null; } Store.retourVers = null; location.hash = "#/" + vers; };
-    const bc = zone.querySelector("#fc-changer");
-    if (bc) bc.addEventListener("click", async () => { if (await Acces.changerStatut(pFiche, bc.dataset.statut, bc)) refaire(); });
-    const ba = zone.querySelector("#fc-acces");
-    if (ba) ba.addEventListener("click", async () => { const vers = Store.retourVers || "clients"; if (await Acces.changerRole(pFiche, "coach", ba)) quitter(vers); });
-    const bar = zone.querySelector("#fc-archiver");
-    if (bar) bar.addEventListener("click", async () => {
-      const oui = bar.dataset.archiver === "oui", T = ListeCoach.TEXTES[prospectF ? "prospects" : "clients"];
-      if (oui && !(await UI.ouvrir({ titre: ListeCoach.plur(1, T.confirmer), corps: trad(ListeCoach.UN), annulation: false, boutons: [
-        { texte: trad("Annuler"), valeur: false, classe: "ghost" }, { texte: trad("Archiver"), valeur: true, principal: true }] }))) return;   // v84 : « Archiver » en or (le rouge reste à « Supprimer définitivement »)
-      const avant = bar.textContent; bar.disabled = true; bar.textContent = "…";
-      const r = await Archive.appliquer([uidFiche], oui);
-      if (r.ok.length){ UI.toast(ListeCoach.plur(1, oui ? T.archives : T.restaures), "ok"); refaire(); return; }
-      bar.disabled = false; bar.textContent = avant;
-      UI.alerte(trad("Non enregistré ({c}). Réessaie dans un instant.", { c: Commercial.cause(r.ko[0] && r.ko[0].e) }));
-    });
-    const bs = zone.querySelector("#fc-supprimer");
-    if (bs) bs.addEventListener("click", async () => { const vers = Store.retourVers || "clients"; if (await Acces.supprimer(pFiche, bs) === "fait") quitter(vers); });
-    /* v38 — notes privees : la fonction rendue enregistre ce qui attend quand on quitte la fiche */
-    return NotesCoach.monter(Store.idConsulte);
+    /* v106 (lot 2) : les actions du compte (statut, accès complet, archiver / restaurer, supprimer définitivement) sont dans le menu
+       « ⋯ » de l'en-tête de la fiche (EnteteFiche.brancher, navigation.js) : mêmes fonctions, mêmes fenêtres */
+    /* v106 (lot 2) : les notes privées (v38) sont dans le volet « Notes » de l'en-tête (EnteteFiche.notes) */
+    return null;
   },
 
   async init(){

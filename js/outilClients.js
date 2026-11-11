@@ -147,7 +147,7 @@ const outilClients = {
       <td data-l="Questionnaire">${pastille(l.intake, "rempli", "à remplir")}</td>
       <td data-l="Programme">${pastille(l.programme, "envoyé", "à faire")}</td>
       <td data-l="Diète">${pastille(l.diete, "envoyée", "à faire")}</td>
-      <td data-l="Téléphone" class="td-tel">${Telephone.coachHTML(l.tel, "voir")}</td>
+      <td data-l="Téléphone" class="td-tel">${Telephone.coachHTML(l.tel, "voir", l.msgWa)}</td>
       <td data-l="" class="td-actions"><button class="voir" type="button" data-bilan="${esc(l.p.id)}" data-nom="${esc(l.nom)}">Préparer le call</button> <button class="voir" type="button" data-ouvrir="${esc(l.p.id)}" data-nom="${esc(l.nom)}">Ouvrir</button></td>
     </tr>`).join("");
 
