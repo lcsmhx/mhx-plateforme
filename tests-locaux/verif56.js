@@ -1393,7 +1393,11 @@ function lienOk(href, base, attendu){
     /* v100 (menu du client) : le journal vit dans Programme ; avec une diète, le calculateur et les compléments sous Nutrition :
        ils quittent le menu, leurs adresses ouvrent toujours leurs pages (vérifié juste après) */
     await attendre(page, 800);
-    ok("client : sa navigation (v100 : Mon journal dans Programme ; avec une diète, Calculateur et Mes compléments sous Nutrition)", JSON.stringify(await page.$$eval("#nav a", l => l.map(a => a.dataset.id))) === JSON.stringify(["accueil", "programme", "nutrition", "mensurations", "suivi", "formation", "profil"]), JSON.stringify(await page.$$eval("#nav a", l => l.map(a => a.dataset.id))));
+    /* v106 (lot 6) : changement voulu — 5 entrées ; Formation et Profil derrière le rond de profil */
+    await page.click("#rond-profil"); await attendre(page, 400);
+    const rd = await page.$$eval(".volet-profil #menu-profil a", l => l.map(a => a.dataset.id)).catch(() => []);
+    await page.keyboard.press("Escape"); await attendre(page, 300);
+    ok("client : sa navigation (v106 : 5 entrées, Formation et Profil derrière le rond ; v100 : Mon journal dans Programme ; avec une diète, Calculateur et Mes compléments sous Nutrition)", JSON.stringify(await page.$$eval("#nav a", l => l.map(a => a.dataset.id))) === JSON.stringify(["accueil", "programme", "nutrition", "mensurations", "suivi"]) && JSON.stringify(rd) === '["profil","formation"]', JSON.stringify([await page.$$eval("#nav a", l => l.map(a => a.dataset.id)), rd]));
     const vus = [];
     for (const h of ["#/calculateur", "#/journal"]) { await aller(page, h, 1300); vus.push([h, await ou(page)]); }
     ok("client : #/calculateur et #/journal ouvrent ses pages, l'adresse gardée — v53", vus.every(([h, d]) => "#/" + d.courant === h && d.hash === h), JSON.stringify(vus));
@@ -1401,7 +1405,7 @@ function lienOk(href, base, attendu){
     await c.close();
     const m = await contexte(b, THOMAS, db, { viewport: MOBILE });
     await m.page.goto(URL0); await pret(m.page, "#acc-vue");
-    ok("client (téléphone) : barre du bas inchangée (Accueil, Programme, Nutrition, Progression, Plus)", JSON.stringify(await m.page.$$eval("#barre-bas a[data-id]", l => l.map(a => a.dataset.id))) === '["accueil","programme","nutrition","mensurations"]' && !!(await m.page.$("#barre-bas [data-plus]")), "");
+    ok("client (téléphone) : barre du bas Accueil, Programme, Nutrition, Progression, Suivi, sans « Plus » (v106)", JSON.stringify(await m.page.$$eval("#barre-bas a[data-id]", l => l.map(a => a.dataset.id))) === '["accueil","programme","nutrition","mensurations","suivi"]' && !(await m.page.$("#barre-bas [data-plus]")), "");
     await m.c.close();
   });
 
@@ -1445,12 +1449,13 @@ function lienOk(href, base, attendu){
     ok("téléphone : barre du bas Accueil, Calculateur, Progression, Formation (+ Plus)", JSON.stringify(await page.$$eval("#barre-bas a[data-id]", l => l.map(a => a.dataset.id))) === '["accueil","calculateur","mensurations","formation"]' && JSON.stringify(await page.$$eval("#barre-bas a[data-id] .lbl", l => l.map(a => a.textContent.trim()))) === '["Accueil","Calculateur","Progression","Formation"]' && !!(await page.$("#barre-bas [data-plus]")), JSON.stringify(await page.$$eval("#barre-bas a[data-id] .lbl", l => l.map(a => a.textContent.trim()))));
     await page.click("#barre-bas [data-plus]"); await attendre(page, 500);
     const plus = await page.$$eval(".menu-plus a", l => l.map(a => a.dataset.id + (a.querySelector(".nav-cadenas") ? "🔒" : "")));
-    ok("« Plus » : la vitrine verrouillée (programme, journal, nutrition, suivi) et le Profil", JSON.stringify(plus) === JSON.stringify(["programme🔒", "journal🔒", "nutrition🔒", "suivi🔒", "profil"]), JSON.stringify(plus));
+    /* v106 (lot 6) : changement voulu — « Mon programme » sans cadenas ; journal, nutrition, suivi dans la carte de l'accueil */
+    ok("« Plus » : Mon programme (sans cadenas, v106) et le Profil ; les pages à cadenas sont dans la carte de l'accueil", JSON.stringify(plus) === JSON.stringify(["programme", "profil"]), JSON.stringify(plus));
     ok("téléphone : accueil sans débordement horizontal", !(await deborde(page)), await largeur(page));
     await c.close();
     ({ c, page } = await ouvrir(b, db, k, "", "#dc-accomp")); await attendre(page, 800);
     const nav = await page.$$eval("#nav a", l => l.map(a => a.dataset.id + (a.querySelector(".nav-cadenas") ? "🔒" : "")));
-    ok("ordinateur : calculateur juste après Ma progression, ouverts avec la Formation (v85 : avant « Speed Formation ») ; journal dans la vitrine ; compléments et bilan cachés", JSON.stringify(nav) === JSON.stringify(["accueil", "programme🔒", "journal🔒", "nutrition🔒", "mensurations", "calculateur", "suivi🔒", "formation", "profil"]), JSON.stringify(nav));
+    ok("ordinateur : calculateur juste après Ma progression, ouverts avec la Formation (v85 : avant « Speed Formation ») ; Mon programme sans cadenas, les pages à cadenas dans la carte de l'accueil (v106) ; compléments et bilan cachés", JSON.stringify(nav) === JSON.stringify(["accueil", "programme", "mensurations", "calculateur", "formation", "profil"]), JSON.stringify(nav));
     const L0 = db.lectures.length;
     await aller(page, "#/journal", 1500);
     /* v52 : lots D + E — la page verrouillée du journal montre d'abord son exemple (#ech-journal, lot E : détaillé en E1) */
@@ -1789,7 +1794,10 @@ function lienOk(href, base, attendu){
            navigation), pas un outil ajouté par le test. v53 (lot D-clients) : il n'est plus prospect_seul mais client_seul
            (l'onglet « Mon journal » du client, et le coach dans une fiche) ; pour le prospect, toujours la page verrouillée */
         const nav = await page.evaluate(() => { const a = document.querySelector('#nav a[data-id="journal"]'); const o = OUTILS.find(x => x.id === "journal"); return a ? { cadenas: !!a.querySelector(".nav-cadenas"), sr: (a.querySelector(".sr-only") || {}).textContent || "", vrai: typeof outilJournal !== "undefined" && o === outilJournal && o.client_seul === true && !o.prospect_seul && o.cle === null, ordre: [...document.querySelectorAll("#nav a")].map(x => x.dataset.id).join(",") } : null; });
-        if (viewport === ORDI) ok("l'onglet journal (vitrine) apparaît dans la navigation du prospect, avec son cadenas (« (verrouillé) ») : le vrai onglet du lot D (outilJournal), juste après le programme", !!nav && nav.cadenas && nav.sr === " (verrouillé)" && nav.vrai && nav.ordre === "accueil,programme,journal,nutrition,mensurations,calculateur,suivi,formation,profil", JSON.stringify(nav));
+        /* v106 (lot 6) : changement voulu — l'onglet journal (à cadenas) quitte la navigation du prospect pour la carte de son accueil ;
+           c'est toujours le vrai onglet du lot D (outilJournal) et son adresse montre la page verrouillée (vérifié dessous) */
+        const vrai = await page.evaluate(() => { const o = OUTILS.find(x => x.id === "journal"); return typeof outilJournal !== "undefined" && o === outilJournal && o.client_seul === true && !o.prospect_seul && o.cle === null; });
+        if (viewport === ORDI) ok("l'onglet journal (à cadenas) n'est plus dans la navigation du prospect (v106 : dans la carte de son accueil) : le vrai onglet du lot D (outilJournal), son adresse toujours verrouillée", !nav && vrai && (await page.evaluate(() => (CONFIG.marque.gratuit_carte || []).includes("journal"))), JSON.stringify({ nav, vrai }));
         const n0 = db.lectures.length;
         await aller(page, "#/journal", 1600);
         const v = await vueVerrou(page, "journal"), j = await journalVu(page);

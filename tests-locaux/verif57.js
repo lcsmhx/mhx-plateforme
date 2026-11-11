@@ -687,9 +687,9 @@ const NOUVEAUX = ["Ton bilan de la semaine du {a} au {b} n'est pas encore fait :
     const db2 = base({ comptes: [compteTest({ liste: [e14] }, { liste: [f14] })] });
     const { page: pm } = await sur(b, TESTEUR, db2, 23, 10, 0, "#/accueil", "#acc-vue h1", { viewport: MOBILE });
     await attendre(pm, 800);
-    ok("F : téléphone : le badge sur le bouton « Plus » (Mon suivi est derrière lui)", !!(await pm.$("#barre-bas [data-plus] .fbd-badge")) && !(await pm.$('#barre-bas a[data-id="suivi"]')), "");
-    await pm.click("#barre-bas [data-plus]"); await attendre(pm, 500);
-    ok("F : … et sur « Mon suivi » dans le volet « Plus »", !!(await pm.$('.menu-plus a[data-id="suivi"] .fbd-badge')), "");
+    /* v106 (lot 6) : changement voulu — « Suivi » est une des 5 entrées de la barre du bas (plus de « Plus ») : le badge est sur elle */
+    ok("F : téléphone : le badge sur « Suivi » de la barre du bas (v106 ; avant : sur « Plus »)", !!(await pm.$('#barre-bas a[data-id="suivi"] .fbd-badge')) && !(await pm.$("#barre-bas [data-plus]")), "");
+    ok("F : … un seul badge dans la barre du bas, avec son nom pour les lecteurs d'écran", (await pm.$$("#barre-bas .fbd-badge")).length === 1 && (await pm.$eval('#barre-bas a[data-id="suivi"] .fbd-badge', x => x.getAttribute("aria-label")).catch(() => "")) === "Ton coach a répondu", "");
     ok("F : téléphone : rien d'écrit avant d'ouvrir Mon suivi", db2.ecritures.length === 0, resume(db2));
     /* une vieille réponse (plus de 14 jours) : ni badge, ni écriture */
     const db3 = base({ comptes: [compteTest({ liste: [entreeDim(0, 7)] }, { liste: [fbk(0, "Vieille réponse.")] })] });

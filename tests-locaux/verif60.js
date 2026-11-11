@@ -27,7 +27,7 @@
       dans Mes clients, sa fiche s'ouvre par Clients.ouvrir (ouvrirFiche) ;
    I. prospect inchangé (navigation, #/journal verrouillé avec son exemple et sans lecture, calculateur sur calc_perso,
       barre du bas) ;
-   J. téléphone 390 px (barre du bas du client inchangée, « Plus », pas de débordement, bouton tactile) ;
+   J. téléphone 390 px (barre du bas du client à 5 entrées (v106), le rond de profil, pas de débordement, bouton tactile) ;
    K. anglais ; v59 : Speed Formation (titres courts, objectifs et contenu des modules, « Goal: », « Your to-do list »,
       bouton de la vidéo, note du module 3 ; les challenges du module 5, pas encore traduits, restent en français, leur
       « Objectif : » compris) ; v60 (brief V2, J3 et J5) : objectif du module 1 réécrit (« Build the mindset that makes a
@@ -362,7 +362,9 @@ async function ouvrirFiche(page, id, nom){
   await page.waitForSelector("#vue .bandeau", { timeout: 8000 }); await attendre(page, 800);
 }
 /* v100 (menu du client) : Mon journal dans Programme ; avec une diète (Thomas), Calculateur et Mes compléments sous Nutrition */
-const NAV_CLIENT = ["accueil", "programme", "nutrition", "mensurations", "suivi", "formation", "profil"];
+/* v106 (lot 6) : changement voulu — 5 entrées (Accueil, Programme, Nutrition, Progression, Suivi) ; Formation et Profil derrière le rond de profil */
+const NAV_CLIENT = ["accueil", "programme", "nutrition", "mensurations", "suivi"], ROND_CLIENT = ["profil", "formation"];
+const rondIds = async page => { await page.click("#rond-profil"); await new Promise(r => setTimeout(r, 400)); const l = await page.$$eval(".volet-profil #menu-profil a", x => x.map(a => a.dataset.id)).catch(() => []); await page.keyboard.press("Escape"); await new Promise(r => setTimeout(r, 300)); return l; };
 const TXD = {
   avis: "Ces chiffres sont une estimation générale, pas un avis médical. Si tu as un doute sur ta santé, parles-en à un professionnel.",
   avis_en: "These numbers are a general estimate, not medical advice. If you have any doubt about your health, talk to a professional.",
@@ -388,7 +390,8 @@ const NOUVEAU = { probleme: "Perdre du gras", obstacle: "Le manque de temps avec
     const { c, page } = await contexte(b, THOMAS, db);
     await page.goto(URL0); await pret(page, "#acc-vue"); await attendre(page, 800);
     const nav = await page.$$eval("#nav a", l => l.map(a => a.dataset.id));
-    ok("ordinateur : navigation du client = accueil, programme, nutrition, progression, suivi, formation, profil (v100 : le journal dans Programme, calculateur et compléments sous Nutrition), aucun cadenas", JSON.stringify(nav) === JSON.stringify(NAV_CLIENT) && (await page.$$("#nav .nav-cadenas")).length === 0, JSON.stringify(nav));
+    const rd = await rondIds(page);
+    ok("ordinateur : navigation du client = accueil, programme, nutrition, progression, suivi ; formation et profil derrière le rond de profil (v106) (v100 : le journal dans Programme, calculateur et compléments sous Nutrition), aucun cadenas", JSON.stringify(nav) === JSON.stringify(NAV_CLIENT) && JSON.stringify(rd) === JSON.stringify(ROND_CLIENT) && (await page.$$("#nav .nav-cadenas")).length === 0, JSON.stringify([nav, rd]));
     /* v100 : leurs pages gardent leur nom (« Mon journal », « Calculateur ») et leur entrée parente est marquée */
     const noms = [];
     for (const [h, par] of [["#/journal", "programme"], ["#/calculateur", "nutrition"]]){ await aller(page, h, 1300); noms.push([await page.evaluate(() => ((document.querySelector("#vue .masthead .eyebrow") || {}).textContent || "").split(" — ").pop().trim()), await page.evaluate(p => !!document.querySelector('#nav a[data-id="' + p + '"][aria-current="page"]'), par)]); }
@@ -642,7 +645,10 @@ const NOUVEAU = { probleme: "Perdre du gras", obstacle: "Le manque de temps avec
     let { c, page } = await contexte(b, qui(ID, "p1@exemple.fr"), db);
     await page.goto(URL0); await pret(page, "#vue"); await attendre(page, 1200);
     const nav = await page.$$eval("#nav a", l => l.map(a => a.dataset.id + (a.querySelector(".nav-cadenas") ? "🔒" : "")));
-    ok("prospect (ordinateur) : navigation de la v52 (journal dans la vitrine, verrouillé ; calculateur ouvert)", JSON.stringify(nav) === JSON.stringify(["accueil", "programme🔒", "journal🔒", "nutrition🔒", "mensurations", "calculateur", "suivi🔒", "formation", "profil"]), JSON.stringify(nav));
+    /* v106 (lot 6) : changement voulu — « Mon programme » sans cadenas ; ses pages à cadenas (journal, nutrition, suivi) quittent sa
+       navigation pour la carte « Ce que l'accompagnement ajoute » de son accueil ; leurs adresses (#/journal ci-dessous) restent */
+    const carte = await page.$$eval("#dc-accomp [data-dc-vitrine]", l => l.map(a => a.dataset.dcVitrine)).catch(() => []);
+    ok("prospect (ordinateur) : navigation v106 (Mon programme sans cadenas ; journal, nutrition et suivi dans la carte de l’accueil, avec le programme sur mesure ; calculateur ouvert)", JSON.stringify(nav) === JSON.stringify(["accueil", "programme", "mensurations", "calculateur", "formation", "profil"]) && JSON.stringify(carte) === '["programme","nutrition","journal","suivi"]', JSON.stringify([nav, carte]));
     const L0 = db.lectures.length;
     await aller(page, "#/journal", 1600);
     ok("#/journal : toujours la page verrouillée avec son exemple (rien de l'onglet du client), aucune clé lue", !!(await page.$("#vue #ech-journal.echantillon")) && !!(await page.$("#vue .verrou")) && !(await page.$("#jr-vue")) && db.lectures.slice(L0).filter(l => l.outil !== "eq.challenge").length === 0, JSON.stringify(db.lectures.slice(L0).map(l => l.outil)));
@@ -660,14 +666,13 @@ const NOUVEAU = { probleme: "Perdre du gras", obstacle: "Le manque de temps avec
     const db = base();
     const { c, page } = await contexte(b, THOMAS, db, { viewport: MOBILE });
     await page.goto(URL0); await pret(page, "#acc-vue");
-    ok("barre du bas du client inchangée : Accueil, Programme, Nutrition, Progression (+ Plus)", JSON.stringify(await page.$$eval("#barre-bas a[data-id]", l => l.map(a => a.dataset.id))) === '["accueil","programme","nutrition","mensurations"]' && !!(await page.$("#barre-bas [data-plus]")), "");
-    await page.click("#barre-bas [data-plus]"); await attendre(page, 500);
-    const plus = await page.$$eval(".menu-plus a", l => l.map(a => [a.dataset.id, a.textContent.replace(/\s+/g, " ").trim()]));
-    ok("« Plus » (v100) : suivi, formation, profil (le journal est dans Programme ; calculateur et compléments sous Nutrition)", JSON.stringify(plus.map(x => x[0])) === '["suivi","formation","profil"]', JSON.stringify(plus));
-    await page.keyboard.press("Escape"); await attendre(page, 300);
+    /* v106 (lot 6) : changement voulu — 5 entrées, sans « Plus » ; Formation et Profil derrière le rond de profil */
+    ok("barre du bas du client (v106) : Accueil, Programme, Nutrition, Progression, Suivi, sans « Plus »", JSON.stringify(await page.$$eval("#barre-bas a[data-id]", l => l.map(a => a.dataset.id))) === JSON.stringify(NAV_CLIENT) && !(await page.$("#barre-bas [data-plus]")), "");
+    const plus = await rondIds(page);
+    ok("le rond de profil (v106 ; v100 : « Plus ») : profil, formation (le journal est dans Programme ; calculateur et compléments sous Nutrition)", JSON.stringify(plus) === JSON.stringify(ROND_CLIENT), JSON.stringify(plus));
     await aller(page, "#/journal", 1800);
     const bt = await page.$eval('[data-jr-ouvrir="0"]', x => x.getBoundingClientRect().height).catch(() => 0);
-    ok("#/journal (son adresse) : sans débordement horizontal, « Programme » marqué (pas « Plus »), bouton « Noter ma séance » tactile (" + Math.round(bt) + " px)", (await ou(page)).courant === "journal" && !(await deborde(page)) && await page.$eval('#barre-bas a[data-id="programme"]', x => x.getAttribute("aria-current") === "page") && !(await page.$eval("#barre-bas [data-plus]", x => x.classList.contains("ici"))) && bt >= 40, (await largeur(page)) + " · " + bt);
+    ok("#/journal (son adresse) : sans débordement horizontal, « Programme » marqué (pas « Plus »), bouton « Noter ma séance » tactile (" + Math.round(bt) + " px)", (await ou(page)).courant === "journal" && !(await deborde(page)) && await page.$eval('#barre-bas a[data-id="programme"]', x => x.getAttribute("aria-current") === "page") && !(await page.$("#barre-bas [data-plus].ici")) /* v106 (lot 6) : plus de « Plus » */ && bt >= 40, (await largeur(page)) + " · " + bt);
     await page.click('[data-jr-ouvrir="0"]'); await attendre(page, 400);
     ok("… formulaire de la séance ouvert : toujours sans débordement", await page.isVisible("#jr-seance-0 [data-jr-form]") && !(await deborde(page)), await largeur(page));
     await aller(page, "#/calculateur", 1800);

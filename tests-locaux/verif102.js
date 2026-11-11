@@ -424,11 +424,11 @@ const ouvrirEx = async (page, si, ei) => { const d = `details[data-pli="${si}:${
     const db = base();
     const { page } = await contexte(b, THOMAS, db, { viewport: MOBILE });
     await page.goto(URL0 + "#/accueil"); await pret(page, ".masthead");
-    await page.click("#barre-bas [data-plus]"); await attendre(page, 400);
+    await page.click("#rond-profil");   // v106 (lot 6) : plus de « Plus » pour le client : le volet de son rond de profil (« Mon profil ») await attendre(page, 400);
     const f1 = await page.evaluate(() => ({ focus: document.activeElement && document.activeElement.matches("[data-ui-fermer]"), nom: !!document.querySelector(".volet[aria-labelledby]") }));
     for (let i = 0; i < 12; i++) await page.keyboard.press("Tab");
     const dedans = await page.evaluate(() => !!(document.activeElement && document.activeElement.closest(".volet")));
-    ok("F1 : le volet « Tout mon espace » : le focus clavier y entre (sur la croix), il porte le nom de son titre, et Tab reste dedans", f1.focus && f1.nom && dedans, JSON.stringify([f1, dedans]));
+    ok("F1 : le volet « Mon profil » (v106 ; avant : « Tout mon espace ») : le focus clavier y entre (sur la croix), il porte le nom de son titre, et Tab reste dedans", f1.focus && f1.nom && dedans, JSON.stringify([f1, dedans]));
     await page.keyboard.press("Escape"); await attendre(page, 300);
     await page.goto(URL0 + "#/nutrition"); await pret(page, ".repas-c");
     const h = await page.evaluate(() => Array.from(document.querySelectorAll(".repas-c .repas-tete button")).map(x => Math.round(x.getBoundingClientRect().height)));

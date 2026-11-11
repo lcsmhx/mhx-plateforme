@@ -1515,7 +1515,7 @@ const outilProgramme = {
       tete.appendChild(b);
     });
     const o = cible.querySelector("[data-jr-ouvrir]"); if (o && !o.hidden) o.click();
-    try { cible.scrollIntoView({ block: "start", behavior: defilementDoux() }); } catch(e){}
+    ancreApresAffichage = cible;   // afficher() y amène l'écran à la fin (au lieu du haut de la page)
   },
   async init(){
     const self = this;

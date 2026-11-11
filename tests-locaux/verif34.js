@@ -30,7 +30,7 @@ const server = http.createServer((req,res)=>{if(servirFichier(req,res,HTML))retu
     await page.evaluate(()=>{location.hash="#/nutrition"}); await page.waitForTimeout(800);
     ok("client : bloc Mes donnees absent de Nutrition", !(await page.$("#sv-export")));
     const barre = await page.$$eval("#barre-bas a, #barre-bas button", l=>l.map(x=>x.textContent.trim()));
-    ok("barre du bas : Accueil, Programme, Nutrition, Progression, Plus", JSON.stringify(barre)===JSON.stringify(["Accueil","Programme","Nutrition","Progression","Plus"]), barre.join("|"));
+    ok("barre du bas : Accueil, Programme, Nutrition, Progression, Suivi (v106 : sans « Plus »)", JSON.stringify(barre)===JSON.stringify(["Accueil","Programme","Nutrition","Progression","Suivi"]), barre.join("|"));
     const actif = await page.$eval("#barre-bas a[aria-current=page]", a=>a.dataset.id).catch(()=>null);
     ok("barre du bas : onglet actif = nutrition", actif==="nutrition", String(actif));
     const emojis = await page.$$eval("#nav a .ico, #barre-bas .ico", l=>l.filter(x=>!x.querySelector("svg")).length);

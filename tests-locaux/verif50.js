@@ -464,9 +464,10 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     await page.goto(`http://localhost:${PORT}/#/decouverte`); await attendre(page, 2600);
     const ids = await navIds(page);
     /* v52 (lot D) : + journal (vitrine), Ma progression et calculateur (ouverts) */
-    ok("prospect (jour 2) : navigation = accueil, programme, journal, nutrition, progression, calculateur, suivi, formation, profil", JSON.stringify(ids) === '["accueil","programme","journal","nutrition","mensurations","calculateur","suivi","formation","profil"]', JSON.stringify(ids));
+    /* v106 (lot 6) : changement voulu — « Mon programme » sans cadenas ; journal, nutrition, suivi dans la carte de l'accueil */
+    ok("prospect (jour 2) : navigation = accueil, programme, progression, calculateur, formation, profil (v106)", JSON.stringify(ids) === '["accueil","programme","mensurations","calculateur","formation","profil"]', JSON.stringify(ids));
     ok("prospect : plus d'onglet Challenge, pas de Découverte en double, ni compléments ou bilan", !["challenge", "decouverte", "complements", "bilan"].some(x => ids.includes(x)), JSON.stringify(ids));
-    ok("prospect (jour 2) : cadenas sur la vitrine programme, journal, nutrition, suivi ; progression, calculateur, formation ouverts", (await cadenasIds(page)) === "journal,nutrition,programme,suivi", await cadenasIds(page));
+    ok("prospect (jour 2) : plus aucun cadenas dans la navigation (v106) ; les pages à cadenas dans la carte de l'accueil", (await cadenasIds(page)) === "" && JSON.stringify(await page.$$eval("#dc-accomp [data-dc-vitrine]", l => l.map(a => a.dataset.dcVitrine)).catch(() => [])) === '["programme","nutrition","journal","suivi"]', await cadenasIds(page));
     /* v52 : lots D + E — les quatre pages de la vitrine (journal compris) : l'exemple, puis l'appel, aucune donnée lue */
     for (const r of ["programme", "journal", "nutrition", "suivi"]) {
       const avant = db.lectures.length;
@@ -526,8 +527,12 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     const ids = await navIds(page);
     /* v100 (menu du client) : avec une diète, « Mes compléments » vit sous Nutrition (lien de la page) : il quitte le menu */
     const lienCompl = await (async () => { await page.goto(`http://localhost:${PORT}/#/nutrition`); await attendre(page, 2000); return !!(await page.$('#nu-complements a[href="#/complements"]')); })();
-    ok("client : navigation complète (programme, nutrition, mensurations, suivi, formation, profil ; v100 : compléments sous Nutrition), aucun cadenas, ni Challenge ni Découverte",
-      ["programme", "nutrition", "mensurations", "suivi", "formation", "profil"].every(x => ids.includes(x)) && lienCompl && !ids.includes("challenge") && !ids.includes("decouverte") && (await page.$$("#nav .nav-cadenas")).length === 0, JSON.stringify([ids, lienCompl]));
+    /* v106 (lot 6) : Formation et Profil derrière le rond de profil */
+    await page.click("#rond-profil").catch(() => {}); await attendre(page, 400);
+    const rond50 = await page.$$eval(".volet-profil #menu-profil a", l => l.map(a => a.dataset.id)).catch(() => []);
+    await page.keyboard.press("Escape"); await attendre(page, 300);
+    ok("client : navigation complète (programme, nutrition, mensurations, suivi ; formation et profil derrière le rond, v106 ; v100 : compléments sous Nutrition), aucun cadenas, ni Challenge ni Découverte",
+      ["programme", "nutrition", "mensurations", "suivi"].every(x => ids.includes(x)) && ["formation", "profil"].every(x => rond50.includes(x)) && lienCompl && !ids.includes("challenge") && !ids.includes("decouverte") && (await page.$$("#nav .nav-cadenas")).length === 0, JSON.stringify([ids, lienCompl]));
     await c.close();
   }
   {
@@ -607,10 +612,12 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     await page.click("#barre-bas [data-plus]").catch(() => {}); await attendre(page, 500);
     const plus = await page.$$eval(".menu-plus a", l => l.map(a => a.dataset.id)).catch(() => []);
     const plusCad = await page.$$eval(".menu-plus a .nav-cadenas", l => l.length).catch(() => 0);
-    ok("prospect mobile : « Plus » = programme, journal, nutrition, suivi (avec cadenas) et profil (rien de caché, pas de Challenge)", JSON.stringify(plus) === '["programme","journal","nutrition","suivi","profil"]' && plusCad === 4, JSON.stringify(plus) + " cadenas " + plusCad);
+    ok("prospect mobile : « Plus » = programme (sans cadenas, v106) et profil (pas de Challenge) ; journal, nutrition, suivi dans la carte de l'accueil", JSON.stringify(plus) === '["programme","profil"]' && plusCad === 0, JSON.stringify(plus) + " cadenas " + plusCad);
     await page.screenshot({ path: path.join(OUT, "prospect-plus-mobile.png") });
-    await page.click('.menu-plus a[data-id="suivi"]').catch(() => {}); await attendre(page, 1400);
-    ok("un lien du menu « Plus » ferme le volet et ouvre la page (#/suivi verrouillée, « Plus » surligné)", !(await page.$(".volet")) && (await page.evaluate(() => location.hash)) === "#/suivi" && !!(await page.$("#vue .verrou")) && (await page.$eval("#barre-bas [data-plus]", e => e.classList.contains("ici")).catch(() => false)));
+    await page.click('.menu-plus a[data-id="programme"]').catch(() => {}); await attendre(page, 1400);
+    ok("un lien du menu « Plus » ferme le volet et ouvre la page (v106 : #/programme, son programme gratuit, « Plus » surligné)", !(await page.$(".volet")) && (await page.evaluate(() => location.hash)) === "#/programme" && !!(await page.$("#vue #pf-zone")) && (await page.$eval("#barre-bas [data-plus]", e => e.classList.contains("ici")).catch(() => false)));
+    await aller(page, "#/suivi", 1400);
+    ok("… #/suivi (sa page à cadenas, dans la carte de l'accueil) : toujours la page verrouillée par son adresse, « Plus » ne s'allume pas (v106)", !!(await page.$("#vue .verrou")) && !(await page.$eval("#barre-bas [data-plus]", e => e.classList.contains("ici")).catch(() => true)));
     await aller(page, "#/complements", 1400);   // v52 : Ma progression est ouverte ; page cachée : compléments
     const deb = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     ok("page cachée (#/complements) sur mobile : verrouillée, « Plus » ne s'allume pas, aucun débordement horizontal", !!(await page.$("#vue .verrou")) && !(await page.$eval("#barre-bas [data-plus]", e => e.classList.contains("ici")).catch(() => true)) && deb <= 0, "débordement " + deb);
@@ -627,7 +634,7 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     await page.click("#barre-bas [data-plus]").catch(() => {}); await attendre(page, 500);
     const plus = await page.$$eval(".menu-plus a", l => l.map(a => a.dataset.id)).catch(() => []);
     /* v100 : avec une diète, « Mes compléments » est sous Nutrition (barre du bas) et non plus dans « Plus » */
-    ok("client mobile : barre du bas et « Plus » (aucun cadenas ; Nutrition, qui mène aux compléments, et suivi présents)", barre.length === 4 && barre.includes("nutrition") && !plus.includes("complements") && [].concat(barre, plus).includes("suivi") && (await page.$$(".menu-plus .nav-cadenas, #barre-bas .nav-cadenas")).length === 0, JSON.stringify({ barre, plus }));
+    ok("client mobile : barre du bas et « Plus » (aucun cadenas ; Nutrition, qui mène aux compléments, et suivi présents)", barre.length === 5 /* v106 (lot 6) : + Suivi, sans « Plus » */ && barre.includes("nutrition") && !plus.includes("complements") && [].concat(barre, plus).includes("suivi") && (await page.$$(".menu-plus .nav-cadenas, #barre-bas .nav-cadenas")).length === 0, JSON.stringify({ barre, plus }));
     await c.close();
   }
 

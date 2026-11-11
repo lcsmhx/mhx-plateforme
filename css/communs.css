@@ -845,3 +845,19 @@ body.nav106 .compte button.rond-profil.ici .avatar{box-shadow:0 0 0 2px var(--ac
 .seance-c .seance-voir{margin-left:auto;min-height:44px}
 .seance-c{scroll-margin-top:84px}
 @media (min-width:1024px){ .seance-c{scroll-margin-top:16px} }
+@media (max-width:1023px){
+  body.nav106-client #vue > .masthead .lede.ouvert{white-space:normal;overflow:visible}   /* v106 (lot 6, test QA) : dépliée d'un toucher */
+  body.nav106-client #vue > .masthead .lede[data-lede-pli]{cursor:pointer}
+  .seance-c-tete{flex-wrap:wrap}
+}
+/* v106 (lot 6, test QA) : Nutrition — le détail du jour repliable (fermé sur téléphone) */
+details.nu-detail > summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-size:13.5px;color:var(--ink-2);list-style:none}
+details.nu-detail > summary::-webkit-details-marker{display:none}
+details.nu-detail > summary::after{content:"";width:8px;height:8px;margin-left:8px;border-right:1.6px solid currentColor;border-bottom:1.6px solid currentColor;transform:rotate(45deg) translateY(-2px);transition:transform .2s}
+details.nu-detail[open] > summary::after{transform:rotate(-135deg) translateY(-2px)}
+details.nu-detail[open] > summary{margin-bottom:8px}
+/* v106 (lot 6, tests) : une alerte du témoin a toujours sa propre ligne au-dessus du titre et du rond (même quand elle tiendrait
+   à côté, comme sur la ligne du client, plus courte : sans loupe) ; sans :has, elle se raccourcit avec « … » comme avant */
+@media (max-width:1023px){
+  body.nav106 .topbar .wrap:has(> .compte > .etat.erreur) > .compte > .etat,body.nav106 .topbar .wrap:has(> .compte > .etat.perdu) > .compte > .etat,body.nav106 .topbar .wrap:has(> .compte > .etat.refuse) > .compte > .etat{flex-basis:100%}
+}

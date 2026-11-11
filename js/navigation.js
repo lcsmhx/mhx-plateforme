@@ -70,8 +70,17 @@ function estVerrouille(o){
    du prospect ; son adresse reste valable (page verrouillee). Rien ne change pour un client ni pour le coach. */
 function horsVitrine(o){
   if (!o || !Auth.estProspect() || Store.idConsulte || !estVerrouille(o)) return false;
-  const v = CONFIG.marque && CONFIG.marque.gratuit_vitrine;
-  return Array.isArray(v) && v.indexOf(o.id) === -1;
+  const v = CONFIG.marque && CONFIG.marque.gratuit_vitrine, k = (CONFIG.marque && CONFIG.marque.gratuit_carte) || [];
+  return Array.isArray(v) && v.indexOf(o.id) === -1 && k.indexOf(o.id) === -1;   // v106 (lot 6) : une page de la carte de l'accueil reste montrée (liens de la Formation…)
+}
+/* v106 (lot 6) : hors du MENU du prospect — les pages cachées (horsVitrine) et les pages à cadenas regroupées dans la carte de
+   son accueil (CONFIG.marque.gratuit_carte, sauf celles de gratuit_vitrine) ; leurs adresses restent valables */
+function horsMenu(o){
+  if (horsVitrine(o)) return true;
+  if (!o || !Auth.estProspect() || Store.idConsulte || !estVerrouille(o)) return false;
+  const v = CONFIG.marque && CONFIG.marque.gratuit_vitrine, k = (CONFIG.marque && CONFIG.marque.gratuit_carte) || [];
+  if (!Array.isArray(v) || !Array.isArray(k)) return false;   // vitrine absente ou illisible : tout se remontre, comme horsVitrine
+  return k.indexOf(o.id) > -1 && v.indexOf(o.id) === -1;
 }
 /* v106 (lot 6) : « Mon programme » du prospect n'a plus de cadenas dans la navigation (CONFIG.marque.sans_cadenas) */
 function cadenasVu(o){ const s = (CONFIG.marque && CONFIG.marque.sans_cadenas) || []; return estVerrouille(o) && s.indexOf(o.id) === -1; }
@@ -238,14 +247,14 @@ function outilsPrincipaux(){
     const barre = CONFIG.marque && CONFIG.marque.gratuit_barre;
     const choisis = Array.isArray(barre) ? barre.map(id => v.find(o => o.id === id && !o.masque_nav && !estVerrouille(o))).filter(Boolean) : [];
     if (choisis.length) return choisis.slice(0, 4);
-    return v.filter(o => !o.masque_nav && !estVerrouille(o)).concat(v.filter(o => o.principal && estVerrouille(o) && !horsVitrine(o))).slice(0, 4);
+    return v.filter(o => !o.masque_nav && !estVerrouille(o)).concat(v.filter(o => o.principal && estVerrouille(o) && !horsMenu(o))).slice(0, 4);
   }
   /* v106 (lot 1) : le coach, ses 4 entrées dans l'ordre du menu (Aujourd'hui, Clients, Prospects, Bibliothèque), aussi dans une fiche */
   if (!coach && Nav106.client()) return menuClient(v);   // v106 (lot 6)
   return coach ? menuCoach(v) : v.filter(o => o.principal).slice(0, 4);
 }
 /* v106 (lot 6) : les 5 entrées du client (barre du bas, menu), dans l'ordre de MENU_CLIENT, parmi ce qui lui est visible */
-function menuClient(v){ return MENU_CLIENT.map(id => v.find(o => o.id === id && !o.masque_nav && !horsVitrine(o) && !cachePourClient(o))).filter(Boolean); }
+function menuClient(v){ return MENU_CLIENT.map(id => v.find(o => o.id === id && !o.masque_nav && !horsMenu(o) && !cachePourClient(o))).filter(Boolean); }
 function iconeOutil(o){
   return ICONES[o.id] ? `<span class="ico" aria-hidden="true">${ICONES[o.id]}</span>` : `<span class="ico" aria-hidden="true">${o.icone || ""}</span>`;
 }
@@ -265,7 +274,7 @@ function construireNav(){
   const nav = $("nav");
   /* le coach hors fiche : ses outils d'abord, ses propres onglets client ensuite */
   const coachSeul = Auth.estCoach() && !Store.idConsulte;
-  const visibles = outilsVisibles().filter(o => !o.masque_nav && !horsVitrine(o) && !cachePourClient(o));   // v50 ; v100 : le menu du client
+  const visibles = outilsVisibles().filter(o => !o.masque_nav && !horsMenu(o) && !cachePourClient(o));   // v50 ; v100 : le menu du client
   /* v98 : les 7 entrées du coach (MENU_COACH) ; les autres pages du coach gardent leur adresse.
      v104 (point 1) : dans la fiche d'un client, le menu du haut reste ces 7 entrées, sans les outils du client (une seule
      navigation dans la fiche : ses 5 onglets ; chaque adresse #/client/<id>/<outil> s'ouvre toujours) */
@@ -426,7 +435,7 @@ const MenuProfil = {
     if (!Auth.estCoach()){
       /* v106 (lot 6) : le client — Profil et Formation, puis ses autres pages hors des 5 entrées (journal alimentaire, calculateur
          ou compléments quand ils lui sont ouverts), dans l'ordre de la liste des outils */
-      const vis = v.filter(o => !o.masque_nav && !horsVitrine(o) && !cachePourClient(o)), cinq = menuClient(vis);
+      const vis = v.filter(o => !o.masque_nav && !horsMenu(o) && !cachePourClient(o)), cinq = menuClient(vis);
       const d = MENU_PROFIL_CLIENT.map(id => vis.find(o => o.id === id)).filter(Boolean);
       return d.concat(vis.filter(o => cinq.indexOf(o) === -1 && d.indexOf(o) === -1));
     }
@@ -461,7 +470,7 @@ function construireBarreBas(){
   if (!b){ b = document.createElement("nav"); b.id = "barre-bas"; b.className = "barre-bas"; b.setAttribute("aria-label", "Navigation"); document.body.appendChild(b); }
   const principaux = outilsPrincipaux();
   const coachSeul = Auth.estCoach() && !Store.idConsulte;
-  const visiblesNav = outilsVisibles().filter(o => !o.masque_nav && !horsVitrine(o) && !cachePourClient(o));   // v50 ; v100 : le menu du client
+  const visiblesNav = outilsVisibles().filter(o => !o.masque_nav && !horsMenu(o) && !cachePourClient(o));   // v50 ; v100 : le menu du client
   const enFiche = Auth.estCoach() && !!Store.idConsulte;
   const autres = Nav106.client() ? [] /* v106 (lot 6) : ses autres pages sont derrière le rond de profil */ : (coachSeul ? menuCoach(visiblesNav) : enFiche ? menuCoach(visiblesHorsFiche().filter(o => !o.masque_nav)) : visiblesNav).filter(o => principaux.indexOf(o) === -1);   // v98 : le coach, ses 7 entrées ; v104 (point 2) : dans une fiche aussi, sans les outils du client
   b.innerHTML = principaux.map(o =>
@@ -507,7 +516,7 @@ function marquerNav(id){
   const plus = document.querySelector("#barre-bas [data-plus]");
   /* v98 (relecture) : « Plus » marqué seulement si la page est vraiment dans son volet (le coach : ses 7 entrées) */
   const dansPlus = Auth.estCoach() ? MENU_COACH.indexOf(id) > -1 : true;   // v104 (point 2) : aussi dans une fiche
-  if (plus) plus.classList.toggle("ici", dansPlus && !outilsPrincipaux().some(o => o.id === id) && !horsVitrine(OUTILS.find(o => o.id === id)));   // v50 : une page cachee n'est pas dans « Plus »
+  if (plus) plus.classList.toggle("ici", dansPlus && !outilsPrincipaux().some(o => o.id === id) && !horsMenu(OUTILS.find(o => o.id === id)));   // v50 : une page cachee n'est pas dans « Plus »
   $$("#nav a").forEach(a => {
     if (a.dataset.id === id){
       a.setAttribute("aria-current","page");
@@ -933,7 +942,7 @@ async function afficher(id, silencieux, sansCompte){
     ${enFiche ? (outil.sans_entete ? "" : `<h1 class="sr-only">${esc(trad(nomPageFiche()))}</h1>`) : outil.sans_entete ? "" : `<header class="masthead">
       <span class="eyebrow">${CONFIG.marque.programme ? esc(CONFIG.marque.programme) + " — " : ""}${esc(nomOnglet(outil))}</span>
       <h1>${esc(outil.titre)}</h1>
-      <p class="lede"${Nav106.client() ? ` title="${esc(trad(outil.accroche))}"` : ""}>${esc(outil.accroche)}</p>
+      <p class="lede"${Nav106.client() ? ` title="${esc(trad(outil.accroche))}" tabindex="0" data-lede-pli` : ""}>${esc(outil.accroche)}</p>
     </header>`}
     ${verrouille ? pageVerrouillee(outil) : (pause ? Sante.carteHTML(outil.id) : "") + htmlSur(outil)}
     ${avecDonnees ? blocSauvegarde() : ""}
@@ -987,9 +996,15 @@ async function afficher(id, silencieux, sansCompte){
   if (Store.idConsulte && Auth.estCoach()) EnteteFiche.remplir(Store.idConsulte);   // v106 (lot 2) : statut, « vu il y a », WhatsApp, Appeler, « ⋯ » (lecture seule)
 
   brancherInstallation();
+  /* v106 (lot 6) : l'explication du haut, sur une ligne au téléphone, se déplie d'un toucher (ou Entrée) */
+  { const l = document.querySelector("#vue > .masthead [data-lede-pli]"); if (l){ const plier = () => l.classList.toggle("ouvert"); l.addEventListener("click", plier); l.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); plier(); } }); } }
 
   marquerNav(outil.id);
   DieteClient.verifier();   // v100 : le calculateur quitte le menu d'un client qui a une diète (une lecture par visite)
-  if (!silencieux) window.scrollTo(0, 0);
+  /* v106 (lot 6) : une page peut demander, pendant son init, d'arriver sur un élément (« Noter ma séance » : la séance du jour) */
+  const ancre = ancreApresAffichage; ancreApresAffichage = null;
+  if (ancre && ancre.isConnected){ try { ancre.scrollIntoView({ block: "start" }); } catch(e){ window.scrollTo(0, 0); } }
+  else if (!silencieux) window.scrollTo(0, 0);
 }
+let ancreApresAffichage = null;   // v106 (lot 6) : posé par une page (outilProgramme.viserSeance), lu une fois à la fin d'afficher()
 

@@ -423,9 +423,12 @@ const cliquerVerrou = async (c, page) => {
     /* navigation */
     const ids = await navIds(page), cad = await cadenasNav(page);
     /* v52 (lot D) : + journal (vitrine), mensurations et calculateur (ouverts) */
-    ok("prospect jour 4 : navigation = accueil, programme, journal, nutrition, mensurations, calculateur, suivi, formation, profil (plus d'onglet Challenge ni Découverte en double)", JSON.stringify(ids) === '["accueil","programme","journal","nutrition","mensurations","calculateur","suivi","formation","profil"]', JSON.stringify(ids));
-    ok("prospect jour 4 : cadenas sur la vitrine (programme, journal, nutrition, suivi) seulement — ni sur accueil, progression, calculateur, formation, profil", JSON.stringify(cad) === '["programme","journal","nutrition","suivi"]', JSON.stringify(cad));
-    ok("prospect jour 4 : chaque onglet verrouillé est annoncé « (verrouillé) » aux lecteurs d'écran", cad.length > 0 && await page.$$eval("#nav a", l => l.filter(a => a.querySelector(".nav-cadenas")).every(a => (a.querySelector(".sr-only") || {}).textContent === " (verrouillé)")));
+    /* v106 (lot 6) : changement voulu — « Mon programme » (son programme gratuit) sans cadenas ; les pages à cadenas (journal,
+       nutrition, suivi) quittent la navigation pour la carte « Ce que l'accompagnement ajoute » de son accueil */
+    ok("prospect jour 4 : navigation = accueil, programme, mensurations, calculateur, formation, profil (v106 ; plus d'onglet Challenge ni Découverte en double)", JSON.stringify(ids) === '["accueil","programme","mensurations","calculateur","formation","profil"]', JSON.stringify(ids));
+    ok("prospect jour 4 : plus aucun cadenas dans la navigation (v106 : Mon programme ouvert, les pages à cadenas dans la carte de l'accueil)", JSON.stringify(cad) === '[]', JSON.stringify(cad));
+    const carte40 = await page.$$eval("#dc-accomp [data-dc-vitrine]", l => l.map(a => a.dataset.dcVitrine)).catch(() => []);
+    ok("prospect jour 4 : la carte de l'accueil mène aux pages de l'accompagnement (programme sur mesure, journal, nutrition, suivi) ; aucun « (verrouillé) » dans la navigation", JSON.stringify(carte40) === '["programme","nutrition","journal","suivi"]' && (await page.$$eval("#nav a .sr-only", l => l.filter(x => /verrouillé/.test(x.textContent)).length)) === 0, JSON.stringify(carte40));
     const barre = await barreIds(page);
     /* v52 (lot D) : accueil, calculateur, progression, Speed Formation (avant : accueil, formation, profil, programme verrouillé) */
     ok("prospect jour 4 : barre du bas = accueil, calculateur, progression, Formation (aucun onglet verrouillé) ; le reste derrière « Plus »", JSON.stringify(barre) === '["accueil","calculateur","mensurations","formation"]' && !!(await page.$("#barre-bas [data-plus]")) && (await page.$$eval("#barre-bas a.verrouille", l => l.map(a => a.dataset.id))).join() === "", JSON.stringify(barre));
@@ -518,7 +521,7 @@ const cliquerVerrou = async (c, page) => {
          la vitrine verrouillée est dans « Plus », avec ses cadenas */
       const okPlus = await cliquer(page, "#barre-bas [data-plus]"); await attendre(page, 600);
       const plus = await page.$$eval(".volet .menu-plus a", l => l.map(a => a.dataset.id + (a.querySelector(".nav-cadenas") ? "🔒" : ""))).catch(() => []);
-      ok("prospect mobile : « Plus » = programme, journal, nutrition, suivi (verrouillés, avec cadenas) et profil ; ni compléments, ni bilan, ni challenge", okPlus && JSON.stringify(plus) === '["programme🔒","journal🔒","nutrition🔒","suivi🔒","profil"]', (okPlus ? "" : "bouton « Plus » absent | ") + JSON.stringify(plus));
+      ok("prospect mobile : « Plus » = programme (sans cadenas, v106) et profil ; ni compléments, ni bilan, ni challenge", okPlus && JSON.stringify(plus) === '["programme","profil"]', (okPlus ? "" : "bouton « Plus » absent | ") + JSON.stringify(plus));
       textesFr += "\n" + await toutLeTexte(page);
       await page.keyboard.press("Escape"); await attendre(page, 300);
       await aller(page, "#/programme", 1300);
@@ -533,7 +536,7 @@ const cliquerVerrou = async (c, page) => {
       const { c, page } = await contexte(b, lea, db, { viewport: { width: largeur, height: 800 } });
       await page.goto(`http://localhost:${PORT}/`); await attendre(page, 1800);
       const d = await page.evaluate(() => ({ s: document.documentElement.scrollWidth, c: document.documentElement.clientWidth }));
-      ok(`prospect ${largeur} px : aucun défilement horizontal (barre du haut avec 4 cadenas)`, d.s <= d.c && (await cadenasNav(page)).length === 4, JSON.stringify(d));
+      ok(`prospect ${largeur} px : aucun défilement horizontal (barre du haut ; v106 : sans cadenas)`, d.s <= d.c && (await cadenasNav(page)).length === 0, JSON.stringify(d));
       await c.close();
     }
   });
@@ -679,7 +682,7 @@ const cliquerVerrou = async (c, page) => {
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 1800);
     ok("client : aucun cadenas dans la navigation", (await page.$$("#nav .nav-cadenas")).length === 0);
     const barreC = await barreIds(page);
-    ok("client : barre du bas inchangée (ses onglets principaux)", JSON.stringify(barreC) === '["accueil","programme","nutrition","mensurations"]', JSON.stringify(barreC));
+    ok("client : barre du bas = ses 5 entrées (v106 : + Suivi, sans « Plus »)", JSON.stringify(barreC) === '["accueil","programme","nutrition","mensurations","suivi"]' && !(await page.$("#barre-bas [data-plus]")), JSON.stringify(barreC));
     ok("client : son accueil habituel (pas d'écran Découverte)", !!(await page.$("#acc-vue")) && !(await page.$(DC_ECRAN)));
     await aller(page, "#/programme", 1500);
     ok("client : son programme s'affiche (pas de verrou)", !(await page.$("#vue .verrou")) && (await texte(page, "#vue")).includes("Séance"));

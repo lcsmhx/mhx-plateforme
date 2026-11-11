@@ -566,10 +566,10 @@ function defautsBarre(B, L, alerte, prospect, coach){
   const p = [], o = B.o;
   if (B.page > B.ecran + 1) p.push("page de " + B.page + " px");
   if (o.qui.vu) p.push("nom affiché dans la barre (" + o.qui.l + " px)");
-  if (coach){ if (o.deco.vu || o.langue.vu) p.push("« FR » ou « Se déconnecter » dans la barre du coach"); if (!o.titre || !o.titre.vu) p.push("titre de la page absent"); }
+  if (coach){ if (o.deco.vu || o.langue.vu) p.push("« FR » ou « Se déconnecter » dans la barre " + (coach === "client" ? "du client" : "du coach")); if (!o.titre || !o.titre.vu) p.push("titre de la page absent"); }
   else if (prospect ? o.deco.vu : !o.deco.vu) p.push(prospect ? "« Se déconnecter » dans la barre du prospect" : "« Se déconnecter » caché");
   /* v80 (bloc 1) : plus de bouton de thème ; boutons ronds de 44 px (zone de toucher), 48 px et plus = sur deux lignes */
-  const boutons = coach ? ["loupe", "rond"] : prospect ? ["langue"] : ["langue", "deco"], ref = o[boutons[boutons.length - 1]];
+  const boutons = coach === "client" ? ["rond"] /* v106 (lot 6) */ : coach ? ["loupe", "rond"] : prospect ? ["langue"] : ["langue", "deco"], ref = o[boutons[boutons.length - 1]];
   (coach ? ["titre"] : ["brand", "compte"]).concat(boutons, o.etat.vu ? ["etat"] : []).forEach(k => { if (o[k].g < B.deb - 0.5 || o[k].d > B.fin + 0.5) p.push(k + " hors de la barre (" + o[k].g + "-" + o[k].d + " pour " + B.deb + "-" + B.fin + ")"); });
   boutons.forEach(k => {
     const x = o[k];
@@ -748,7 +748,9 @@ const ALERTE59 = (/\n  @supports selector\(:has\(\*\)\)\{[\s\S]*?\n  \}\n/.exec(
     /* « Se déconnecter » depuis la Speed Formation, puis connexion : l'accueil (comme avant la v57) */
     await aller(x1.page, "#/formation", 1500);
     const f1 = await ou(x1.page);
-    await x1.page.click("#deco"); await x1.page.waitForSelector("#c-email"); await attendre(x1.page, 300);
+    /* v106 (lot 6) : « Se déconnecter » du client est derrière le rond de profil, avec la confirmation de l'app */
+    await x1.page.click("#rond-profil"); await attendre(x1.page, 400); await x1.page.click(".volet-profil [data-mp-deco]"); await attendre(x1.page, 400);
+    await x1.page.click('.modale [data-ui-b="1"]'); await x1.page.waitForSelector("#c-email"); await attendre(x1.page, 300);
     await connecter(x1.page, "test@exemple.fr");
     const d2 = await ou(x1.page);
     ok("D : « Se déconnecter » depuis la Speed Formation, puis connexion : l'accueil", f1.courant === "formation" && d2.courant === "accueil", JSON.stringify([f1, d2]));
@@ -799,12 +801,14 @@ const ALERTE59 = (/\n  @supports selector\(:has\(\*\)\)\{[\s\S]*?\n  \}\n/.exec(
     /* un client (Thomas) ; le compte de test (client sans prénom ni nom : son email dans la barre) */
     const x2 = await contexte(b, THOMAS, decor(), TEL0);
     await x2.page.goto(URL0 + "#/accueil"); await pret(x2.page, "#vue");
-    const r2 = await tourBarre(x2.page, pg => pg.evaluate(() => majEtat("")));
-    ok("E : client Thomas (#/accueil) " + LIB + " : la page ne déborde pas, les deux boutons entiers sur une ligne, dans la barre, 44 px de haut (v80)", r2.trop.length === 0 && nomVu(r2, "Thomas Démo"), resultat(r2));
+    /* v106 (lot 6) : changement voulu — la ligne du haut du client : titre de la page et rond de profil ; « FR » et « Se déconnecter »
+       sont derrière le rond (mêmes garanties : entiers, une ligne, dans la barre, 44 px) */
+    const r2 = await tourBarre(x2.page, pg => pg.evaluate(() => majEtat("")), false, false, "client");
+    ok("E : client Thomas (#/accueil) " + LIB + " : la page ne déborde pas, titre et rond de profil entiers sur une ligne, dans la barre, 44 px de haut ; ni « FR » ni « Se déconnecter » dans la barre (v80, v106)", r2.trop.length === 0 && nomVu(r2, "Thomas Démo"), resultat(r2));
     /* ses trois alertes (hors ligne gardée, hors ligne perdue, refusée), puis l'alerte passée : la barre redevient celle sans témoin */
     const geo0 = await (async () => { await x2.page.setViewportSize({ width: 375, height: 700 }); await attendre(x2.page, 250); await x2.page.evaluate(() => majEtat("")); return geoBarre(x2.page); })();
     const rA = [];
-    for (const [etat, t] of [["erreur", H_ERR], ["perdu", H_PERDU], ["refuse", H_REFUS]]) { const r = await tourBarre(x2.page, pg => pg.evaluate(e => majEtat(e), etat), true); rA.push([etat, t, r]); }
+    for (const [etat, t] of [["erreur", H_ERR], ["perdu", H_PERDU], ["refuse", H_REFUS]]) { const r = await tourBarre(x2.page, pg => pg.evaluate(e => majEtat(e), etat), true, false, "client"); rA.push([etat, t, r]); }
     await x2.page.setViewportSize({ width: 375, height: 700 }); await attendre(x2.page, 250);
     await x2.page.evaluate(() => { majEtat("enregistrement"); majEtat(""); }); await attendre(x2.page, 100);
     const geo1 = await geoBarre(x2.page);
@@ -814,7 +818,7 @@ const ALERTE59 = (/\n  @supports selector\(:has\(\*\)\)\{[\s\S]*?\n  \}\n/.exec(
       rA.map(([e, , r]) => e + " : " + (resultat(r) || "ok")).join(" ; ").slice(0, 700) + " hauteurs " + hauts(rA.map(x => x[2])) + (geo1 === geo0 ? "" : " ; après l'alerte : " + geo1 + " au lieu de " + geo0));
     const x3 = await contexte(b, TESTEUR, decor(), TEL0);
     await x3.page.goto(URL0 + "#/accueil"); await pret(x3.page, "#vue");
-    const r3 = await tourBarre(x3.page, pg => pg.evaluate(() => majEtat("")));
+    const r3 = await tourBarre(x3.page, pg => pg.evaluate(() => majEtat("")), false, false, "client");
     ok("E : compte de test (client sans nom : « test@exemple.fr » dans la barre) " + LIB + " : même chose", r3.trop.length === 0 && nomVu(r3, "test@exemple.fr"), resultat(r3));
     /* un prospect au nom de 60 + 60 caractères (le plus long que permet l'inscription) */
     const x4 = await contexte(b, qui(PID(20), "mc@exemple.fr"), decor({ comptes: [prospect(20, LONG_P, LONG_N, { cree: 2 * J, q: 2 * J, rep: { probleme: "Perdre du gras", obstacle: "Le temps", projection: "Courir" }, email: "mc@exemple.fr" })] }), TEL0);
@@ -825,24 +829,25 @@ const ALERTE59 = (/\n  @supports selector\(:has\(\*\)\)\{[\s\S]*?\n  \}\n/.exec(
        le prospect n'a pas « Se déconnecter » dans sa barre (il est dans « Tout mon espace ») */
     const n4 = r4.vus[320].o, n3 = r3.vus[320].o;
     /* v95 (décision de Lucas du 10/11) : le bouton de langue montre la langue ACTUELLE : « 🇫🇷 FR » en français, « 🇺🇸 EN » en anglais (avant : l'inverse) */
-    ok("E : 320 px : le nom n'est pas dans la barre (prospect au nom long ; compte de test : son email), texte entier gardé ; les boutons gardent leur libellé entier ; « Se déconnecter » absent de la barre du prospect seulement",
-      !n4.qui.vu && n4.qui.txt === LONG_P + " " + LONG_N && !n3.qui.vu && n3.qui.txt === "test@exemple.fr" && !n4.deco.vu && n4.deco.txt === "Se déconnecter" && n3.deco.vu && !n3.deco.coupe && n3.deco.txt === "Se déconnecter" && [n4, n3].every(o => !o.langue.coupe && o.langue.txt === "🇫🇷 FR"),
+    ok("E : 320 px : le nom n'est pas dans la barre (prospect au nom long ; compte de test : son email), texte entier gardé ; les boutons gardent leur libellé entier ; « Se déconnecter » absent de la barre du prospect (v76) et du client (v106 : derrière son rond de profil)",
+      !n4.qui.vu && n4.qui.txt === LONG_P + " " + LONG_N && !n3.qui.vu && n3.qui.txt === "test@exemple.fr" && !n4.deco.vu && n4.deco.txt === "Se déconnecter" && !n3.deco.vu && n3.deco.txt === "Se déconnecter" && n3.rond && n3.rond.vu && !n3.rond.coupe && !n4.langue.coupe && n4.langue.txt === "🇫🇷 FR" && n3.langue.txt === "🇫🇷 FR",
       JSON.stringify([n4.qui, n3.qui, n4.deco]).slice(0, 500));
     /* en anglais (« Log out », « 🇺🇸 EN ») : le compte de test, sans puis avec le témoin (« Offline — kept on this device… ») */
     const db5 = decor(); avecEn(db5, TESTEUR.id);
     const x5 = await contexte(b, TESTEUR, db5, TEL0);
     await x5.page.goto(URL0 + "#/accueil"); await pret(x5.page, "#vue");
-    const r5 = await tourBarre(x5.page, pg => pg.evaluate(() => majEtat("")));
-    const r5b = await tourBarre(x5.page, pg => pg.evaluate(() => majEtat("erreur")), true);
+    const r5 = await tourBarre(x5.page, pg => pg.evaluate(() => majEtat("")), false, false, "client");
+    const r5b = await tourBarre(x5.page, pg => pg.evaluate(() => majEtat("erreur")), true, false, "client");
     const en = Object.values(r5.vus).every(B => B.o.deco.txt === "Log out" && B.o.langue.txt === "🇺🇸 EN");
     ok("E : en anglais (compte de test : « Log out », « 🇺🇸 EN ») " + LIB + " : même chose ; avec l'alerte « Offline — kept on this device, will resend automatically » " + LIB_A + " : entière sur sa ligne, comme en français",
       en && r5.trop.length === 0 && r5b.trop.length === 0 && temoin(r5b, "Offline — kept on this device, will resend automatically"), resultat({ trop: (en ? [] : ["libellés : " + r5.vus[320].o.deco.txt + " / " + r5.vus[320].o.langue.txt]).concat(r5.trop, r5b.trop) }));
     /* navigateur sans :has (règle des alertes retirée) : l'alerte se raccourcit avec « … » comme le reste, la page ne déborde pas */
     let rS = null;
-    if (ALERTE59) await avec([[ALERTE59, "\n"]], async () => { await x2.page.reload(); await pret(x2.page, "#vue"); rS = await tourBarre(x2.page, pg => pg.evaluate(() => majEtat("perdu"))); });
+    if (ALERTE59) await avec([[ALERTE59, "\n"]], async () => { await x2.page.reload(); await pret(x2.page, "#vue"); rS = await tourBarre(x2.page, pg => pg.evaluate(() => majEtat("perdu")), false, false, "client"); });
     await x2.page.reload(); await pret(x2.page, "#vue");
     ok("E : navigateur sans :has (règle des alertes retirée), Thomas, alerte « " + H_PERDU + " » " + LIB + " : la page ne déborde pas, les boutons entiers ; l'alerte se raccourcit avec « … »",
-      !!rS && rS.trop.length === 0 && temoin(rS, H_PERDU) && rS.vus[320].o.etat.coupe && rS.vus[320].o.etat.to === "ellipsis",
+      /* v106 (lot 6) : la ligne du client (titre et rond, sans loupe) laisse parfois la place à l'alerte entière : coupée, elle l'est avec « … » */
+      !!rS && rS.trop.length === 0 && temoin(rS, H_PERDU) && (!rS.vus[320].o.etat.coupe || rS.vus[320].o.etat.to === "ellipsis"),
       rS ? resultat(rS) : "règle des alertes introuvable dans css/communs.css (« @supports selector(:has(*)) » dans la règle v59)");
     /* les écarts et les marges ne se resserrent que sous 360 px (Thomas, témoin vide) */
     const st = {};

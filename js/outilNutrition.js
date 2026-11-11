@@ -718,6 +718,9 @@ const outilNutrition = {
         <span class="pastille${nbRepas && nbCoches >= nbRepas ? " ok" : ""}">${esc(trad("{a} / {b} repas respectés", { a: nbCoches, b: nbRepas }))}</span></div>
       <div class="jauge"><i style="width:${pct}%"></i></div>
       <p class="note" style="margin:8px 0 18px">${fmt(mange.kcal)} kcal consommées sur ${fmt(t.kcal)} — il te reste <b>${fmt(reste)} kcal</b> aujourd'hui.</p>
+      ${/* v106 (lot 6, test QA) : sur téléphone, le détail du jour (calories et macros, objectif) est replié d'un toucher, pour voir
+         le premier repas au premier écran ; ouvert sur un écran plus large */ ""}
+      <details class="nu-detail"${typeof matchMedia === "function" && matchMedia("(max-width:720px)").matches ? "" : " open"}><summary>${esc(trad("Calories et macros du jour"))}</summary>
       <div class="grid g4 bilan-jour">
         <div class="tuile"><span class="t-lbl">Calories</span><span class="t-val readout">${fmt(t.kcal)}</span><span class="t-u">kcal prévus</span></div>
         <div class="tuile"><span class="t-lbl">Protéines</span><span class="t-val readout">${fmt(t.proteines)}</span><span class="t-u">g</span></div>
@@ -725,6 +728,7 @@ const outilNutrition = {
         <div class="tuile"><span class="t-lbl">Lipides</span><span class="t-val readout">${fmt(t.lipides)}</span><span class="t-u">g</span></div>
       </div>
       ${R.cible ? `<p class="note" style="margin-top:14px">Objectif visé : ${fmt(R.cible.kcal)} kcal · ${fmt(R.cible.prot)} g de protéines · ${fmt(R.cible.gluc)} g de glucides · ${fmt(R.cible.lip)} g de lipides.</p>` : ""}
+      </details>
     </section>`;
     (jour.repas || []).forEach((x, i) => h += this.carteRepas(x, false, actif + ":" + i, suivi));
     h += this.blocCourses(R, suivi, true);   // v71 (E) : bouton « Vider la liste » cote client seulement

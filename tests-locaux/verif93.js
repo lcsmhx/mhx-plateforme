@@ -446,7 +446,8 @@ const avecPrefsEn = (db, uid) => { const pr = db.donnees.find(d => d.user_id ===
     const { page } = await contexte(b, THOMAS, db, { langue: "en", viewport: MOBILE });
     await page.goto(URL0 + "#/accueil"); await pret(page); await attendre(page, 1000);
     const T = await parcourir(page, ["#/accueil"], dataDe(db));
-    const plus = await page.$("#barre-bas [data-plus]");
+    /* v106 (lot 6) : le client n'a plus de « Plus » : le volet de son rond de profil est relu à la place (« volet Plus » gardé comme nom) */
+    const plus = await page.$("#barre-bas [data-plus]") || await page.$("#rond-profil");
     if (plus){ await plus.click(); await attendre(page, 900); const v = await visibles(page); const fr = v.textes.filter(t => resteFrancais(norm(t), dataDe(db))); if (fr.length) T["volet Plus"] = fr; }
     ok("B2 : client en anglais sur téléphone : accueil, barre du bas et volet « Plus » sans phrase restée en français", nbTrouves(T) === 0, nbTrouves(T) + " : " + resumeTrouves(T));
   });
