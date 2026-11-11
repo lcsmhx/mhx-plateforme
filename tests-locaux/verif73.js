@@ -52,6 +52,15 @@ const clone = x => x === undefined ? undefined : JSON.parse(JSON.stringify(x));
 const norm = t => String(t || "").replace(/[  ]/g, " ").replace(/\s+/g, " ").trim();
 const attendre = (page, ms) => page.waitForTimeout(ms);
 
+/* v106 (lot 6) : « Se déconnecter » du client est derrière son rond de profil, avec la confirmation de l'app (« Se déconnecter ») ;
+   le bouton #deco d'avant reste utilisé s'il est visible (prospect sur ordinateur, ancienne version) */
+const decoClient = async page => {
+  if (await page.isVisible("#deco").catch(() => false)) return page.click("#deco");
+  await page.click("#rond-profil"); await page.waitForSelector(".volet-profil [data-mp-deco]", { timeout: 5000 });
+  await page.click(".volet-profil [data-mp-deco]"); await page.waitForSelector('.modale [data-ui-b="1"]', { timeout: 5000 });
+  await page.click('.modale [data-ui-b="1"]');
+};
+
 const THOMAS = F.IDS.c1, COACH = F.IDS.coach;
 
 /* ---------- le faux Supabase : écritures appliquées en mémoire ; panne (POST coupés), refus (403), lentPost (POST pendu) ---------- */
@@ -266,7 +275,7 @@ const texte = async (page, sel) => norm(await page.textContent(sel).catch(() => 
     await page.evaluate(() => window.dispatchEvent(new Event("online"))); await attendre(page, 1500);
     ok("… jamais renvoyée (retour du réseau : aucun nouvel envoi)", db.posts.length === envois && envois === 1, "envois " + db.posts.length);
     db.refus = false;
-    await page.click("#deco"); await attendre(page, 5200);
+    await decoClient(page); await attendre(page, 5200);
     /* v71 (B) : le refus gardé est compté avant d'effacer (sans « n'ont pas encore pu être envoyées » : rien n'attend) */
     const dlg = await texte(page, ".modale");
     await page.click(".modale button:has-text(\"Me déconnecter quand même\")").catch(() => {}); await attendre(page, 1800);

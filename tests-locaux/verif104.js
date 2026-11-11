@@ -541,6 +541,8 @@ const lireTete = page => page.evaluate(() => {
   };
 });
 /* la forme commune (sans ce qui dépend de l'onglet : onglet marqué, pages, titre) */
+/* v106 (revue UX) : l'en-tête de la fiche montre le prénom et l'initiale du nom (« Thomas D. ») */
+const court106 = n => { const m = String(n || "").split(" ").filter(Boolean); return m.length > 1 ? m[0] + " " + m[1].charAt(0).toUpperCase() + "." : (m[0] || ""); };
 const forme = t => JSON.stringify({ premier: t.premier, nbBandeaux: t.nbBandeaux, enfants: t.enfants, tete: t.tete, prenom: t.prenom, h1Visibles: t.h1Visibles, nbOnglets: t.nbOnglets, onglets: t.onglets, sortir: t.sortir, sortirFin: t.sortirFin, sortirTexte: t.sortirTexte,
   titreCls: t.titre && t.titre.cls, titreEnfants: t.titre && t.titre.enfants, apres: t.apres, h1Seul: t.h1Seul });
 /* v105 (point 2) : l'Aperçu n'a plus de titre de page visible (un seul en-tête : le bandeau) : sa forme, sans le titre */
@@ -565,7 +567,7 @@ const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { 
          « vu il y a », WhatsApp, Appeler, Notes, « ⋯ »), puis les 4 onglets, puis la rangée des pages ; plus de phrase d'aide ni
          de titre de page répété (un h1 pour les lecteurs d'écran, au nom de la page ouverte) */
       ok("A1 (" + qui + ") : Programme (référence) : l'en-tête .fiche-entete en premier dans #vue (ligne : retour « Revenir à mes clients » en tête, prénom — nom entier en bulle —, puis les 4 onglets et les pages) ; aucun titre de page visible, h1 « Son programme » pour les lecteurs d'écran",
-        ref.nbBandeaux === 1 && ref.premier && JSON.stringify(ref.enfants) === '["DIV.fe-ligne","P.etat fe-temoin","NAV.fiche-onglets","NAV.sous-onglets bandeau-actions fiche-pages"]' /* + la copie du témoin d'enregistrement (vide, cachée) */ && ref.tete === nom && ref.prenom === nom.split(" ")[0]
+        ref.nbBandeaux === 1 && ref.premier && JSON.stringify(ref.enfants) === '["DIV.fe-ligne","P.etat fe-temoin","NAV.fiche-onglets","NAV.sous-onglets bandeau-actions fiche-pages"]' /* + la copie du témoin d'enregistrement (vide, cachée) */ && ref.tete === nom && ref.prenom === court106(nom)
           && ref.nbOnglets === 1 && JSON.stringify(ref.onglets) === '["Aperçu","Programme","Nutrition","Suivi"]' && ref.sortir === 1 && ref.sortirFin && ref.sortirTexte === "Revenir à mes clients"
           && ref.titre === null && ref.h1Visibles === 0 && ref.srH1 === "Son programme" && ref.pageIci === "Son programme", JSON.stringify(ref));
       for (const [ch, ong] of PAGES) {
@@ -586,7 +588,7 @@ const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { 
       /* v106 (lot 2) : changement voulu — le prénom une seule fois (en-tête), le nom entier jamais en double ; la rangée des pages
          d'Aperçu : « Aperçu » (marqué) et « Son questionnaire » ; le h1 caché s'appelle « Aperçu » (le nom de son lien) */
       ok("A4 (" + qui + ") : Aperçu (v105, v106) : un seul en-tête — le prénom une seule fois, le nom entier nulle part en double, ni bouton ni grand titre « Fiche » ; rangée « Aperçu » (marqué) · « Son questionnaire » ; un seul h1 « Aperçu », pour les lecteurs d'écran",
-        aper.titre === null && aper.pageIci === "Aperçu" && /\/accueil$/.test(aper.hash) && aper.tete === nom && JSON.stringify(A4.prenoms) === JSON.stringify([nom.split(" ")[0]]) && A4.noms === 0 && A4.fiches === 0 && A4.bAct === 2 && A4.h1 === "Aperçu" && A4.h1s === 1, JSON.stringify({ aper, A4 }));
+        aper.titre === null && aper.pageIci === "Aperçu" && /\/accueil$/.test(aper.hash) && aper.tete === nom && JSON.stringify(A4.prenoms) === JSON.stringify([court106(nom)]) && A4.noms === 0 && A4.fiches === 0 && A4.bAct === 2 && A4.h1 === "Aperçu" && A4.h1s === 1, JSON.stringify({ aper, A4 }));
       /* B. l'identité et les actions, sous le titre */
       await ouvrir(page, uid, "accueil", "#fc-suivi");
       const id = await page.evaluate(() => {
@@ -968,7 +970,7 @@ const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { 
     });
     ok("M1 (point 10, v106) : « Aujourd'hui » : Thomas (bilan reçu) dans « Retours à lire » (colonne Clients), Julien (inactif) dans « Clients inactifs », la prospecte inscrite il y a 2 h dans « Nouveaux prospects » (colonne Prospects) ; le badge Prospects = les urgences des prospects ; « À traiter » = toutes les lignes",
       m.retours.includes("Thomas Démo") && m.inactifs.includes("Julien Démo") && m.nouveaux.includes("Nina Démo") && !m.retours.includes("Julien Démo") && JSON.stringify(m.cols) === '["tb-col-clients","tb-col-prospects","tb-col-clients-suite"]' /* v106 (relecture) : les inactifs après les prospects dans la page, sous les retours sur ordinateur */
-        && m.urgP >= 1 && m.badge === String(m.urgP) && +m.total === m.lignes, JSON.stringify(m));
+        && m.urgP >= 1 && m.badge === String(m.urgP) && +m.total === m.retours.length + m.urgP /* v106 (revue UX) : « À traiter » = les urgences du jour (retours à lire + urgences des prospects), plus toutes les lignes */, JSON.stringify(m));
   });
 
   /* =================== N. point 11 : textes traduits =================== */

@@ -596,7 +596,8 @@ const EnteteFiche = {
   /* ce qui n'est pas une saisie du client (même liste que Clients.charger : ce que le coach écrit, et ce qui n'est pas une saisie) */
   PAS_SAISIE: ["programme", "repas", "calc", "complements", "feedbacks", "notes_coach", "suivi_prospect", "emails", "coach_notifs", "contact", "coach_visite", "activite", "hist_programme", "hist_repas", "brouillons_programme", "brouillons_repas", "atelier"],
   oublier(uid){ if (uid){ delete this.infos[uid]; delete this.encours[uid]; } },
-  prenom(nom){ const n = String(nom || "").trim(); return n === Clients.SANS_NOM ? n : (n.split(/\s+/)[0] || n); },
+  /* v106 (revue UX) : le prénom et l'initiale du nom (« Thomas D. ») : deux clients au même prénom ne se confondent pas */
+  prenom(nom){ const n = String(nom || "").trim(); if (n === Clients.SANS_NOM) return n; const m = n.split(/\s+/).filter(Boolean); return m.length > 1 ? m[0] + " " + m[1].charAt(0).toUpperCase() + "." : (m[0] || n); },
   html(){
     const uid = Store.idConsulte, nom = Store.nomConsulte || trad("ce client"), ret = trad(RETOURS[Store.retourVers] || RETOURS.clients);
     const ici = ongletFiche(courant, sousRoute), g = ONGLETS_FICHE.find(x => x.id === ici), pages = pagesOnglet(g).filter(p => !p[3] || pageFicheActive(p));

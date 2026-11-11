@@ -266,6 +266,15 @@ async function contexte(b, who, db, opts){
 
 /* ---------- aides ---------- */
 const attendre = (page, ms) => page.waitForTimeout(ms);
+
+/* v106 (lot 6) : « Se déconnecter » du client est derrière son rond de profil, avec la confirmation de l'app (« Se déconnecter ») ;
+   le bouton #deco d'avant reste utilisé s'il est visible (prospect sur ordinateur, ancienne version) */
+const decoClient = async page => {
+  if (await page.isVisible("#deco").catch(() => false)) return page.click("#deco");
+  await page.click("#rond-profil"); await page.waitForSelector(".volet-profil [data-mp-deco]", { timeout: 5000 });
+  await page.click(".volet-profil [data-mp-deco]"); await page.waitForSelector('.modale [data-ui-b="1"]', { timeout: 5000 });
+  await page.click('.modale [data-ui-b="1"]');
+};
 async function pret(page, sel){
   await page.waitForFunction(() => typeof appPrete !== "undefined" && appPrete === true, null, { timeout: 10000 });
   if (sel) await page.waitForSelector(sel, { timeout: 10000 });
@@ -882,7 +891,7 @@ const blocSemaine = (page, s) => page.evaluate(x => { const ed = document.queryS
     if (!lent) {
       /* v59 (contre-relecture) : « Se déconnecter » (barre du haut) au lieu de « Me reconnecter » : sans session, la copie
          compte — l'alerte « non envoyées » s'affiche ; « Annuler » : rien n'est effacé */
-      await page.click("#deco"); await attendre(page, 1500);
+      await decoClient(page); await attendre(page, 1500);
       const dlg = await texte(page, ".modale");
       await page.click('.modale [data-ui-b="0"]').catch(() => {}); await attendre(page, 400);
       const cp2 = await copie(page, TESTEUR.id, "checkins");
@@ -1065,7 +1074,7 @@ const blocSemaine = (page, s) => page.evaluate(x => { const ed = document.queryS
     db.retardLecture.checkins = 1500;   // réseau normal mais lent : la relecture prend 1,5 s
     for (const g of await page.$$("[data-checkin] .echelle5")) { const bt = await g.$$("button"); await bt[3].click(); }
     await page.fill('[data-checkin] textarea[data-q="semaine"]', "Envoyé juste avant la déconnexion");
-    await page.click("[data-checkin] button[type=submit]"); await page.click("#deco");
+    await page.click("[data-checkin] button[type=submit]"); await decoClient(page);
     await attendre(page, 5000);
     const dialogue = await texte(page, ".modale"), CK = ckDe(db), m = (CK.liste || []).find(x => x && x.semaine === isoJ(14)) || {};
     ok("Q : « Envoyer mon bilan » puis « Se déconnecter » tout de suite : l'envoi finit d'abord — aucune alerte « non envoyées (hors ligne) », le bilan en base (une écriture), puis déconnecté",

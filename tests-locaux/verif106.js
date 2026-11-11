@@ -277,8 +277,8 @@ async function principal(){
         wa: (h.querySelector("[data-fiche-wa] a") || {}).href || "", tel: (h.querySelector("[data-fiche-tel] a") || { getAttribute: () => "" }).getAttribute("href"), notes: !!h.querySelector("#fe-notes"),
         points: !!h.querySelector("#fiche-points"), uneLigne: Math.max(...tops) - Math.min(...tops) <= 8, h: Math.round(r.height),
         onglets: Array.from(h.querySelectorAll(".fiche-onglets a")).map(a => a.textContent.trim() + (a.getAttribute("aria-current") ? ":ici" : "")), topbar: getComputedStyle(document.querySelector(".topbar")).display }; });
-    ok("B1 : 390 px : une ligne — retour, « Thomas » (nom entier en bulle), « Client », WhatsApp (message prêt), Appeler, Notes, ⋯ — puis les 4 onglets (Aperçu marqué) ; la barre du haut cachée",
-      e.prenom === "Thomas" && e.bulle === "Thomas Démo" && e.statut === "Client" && e.retour && /^https:\/\/wa\.me\/33639980001\?text=Salut%20Thomas/.test(e.wa) && e.tel === "tel:" + TEL1 && e.notes && e.points && e.uneLigne
+    ok("B1 : 390 px : une ligne — retour, « Thomas D. » (nom entier en bulle), « Client », WhatsApp (message prêt), Appeler, Notes, ⋯ — puis les 4 onglets (Aperçu marqué) ; la barre du haut cachée",
+      e.prenom === "Thomas D." /* revue UX : l'initiale du nom */ && e.bulle === "Thomas Démo" && e.statut === "Client" && e.retour && /^https:\/\/wa\.me\/33639980001\?text=Salut%20Thomas/.test(e.wa) && e.tel === "tel:" + TEL1 && e.notes && e.points && e.uneLigne
         && JSON.stringify(e.onglets) === '["Aperçu:ici","Programme","Nutrition","Suivi"]' && e.topbar === "none", JSON.stringify(e));
     await page.evaluate(() => window.scrollTo(0, 1500)); await attendre(page, 500);
     const c = await page.evaluate(() => { const r = document.getElementById("fiche-entete").getBoundingClientRect(); return { top: Math.round(r.top), vis: r.bottom > 0 }; });

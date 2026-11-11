@@ -223,7 +223,7 @@ const outilAccueil = {
     const alertes = l.alertes;
     /* v106 (lot 4, test QA) : les alertes « à remplir / à envoyer » (questionnaire, programme, diète) ne sont pas répétées en
        pastilles : la ligne Questionnaire / Programme / Diète de l'Aperçu les dit */
-    const alertesV = alertes.filter(a => a.type !== "manque");
+    const alertesV = alertes.filter(a => a.type !== "manque" && a.type !== "bilan_recu");   // v106 (revue UX) : le retour reçu est dit par la carte « Retour de la semaine »
     /* v83 (bloc 3, maquettes FicheSuivi et FicheCompte) — la même fiche pour un client et un prospect : en-tête (croix =
        retour là d'où l'on vient, initiales, nom, pastille Client ou Prospect, pastille du programme s'il est connu), bouton
        principal (client : « Préparer le call » ; prospect : « WhatsApp » pré-rempli, ou « Pas de numéro ») et bouton rond

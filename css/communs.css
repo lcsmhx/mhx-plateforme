@@ -860,3 +860,8 @@ details.nu-detail[open] > summary{margin-bottom:8px}
 @media (max-width:1023px){
   body.nav106 .topbar .wrap:has(> .compte > .etat.erreur) > .compte > .etat,body.nav106 .topbar .wrap:has(> .compte > .etat.perdu) > .compte > .etat,body.nav106 .topbar .wrap:has(> .compte > .etat.refuse) > .compte > .etat{flex-basis:100%}
 }
+@media (max-width:1023px){
+  body.nav106-client #vue > .masthead .lede[data-lede-pli]{position:relative;padding-right:20px}
+  body.nav106-client #vue > .masthead .lede[data-lede-pli]::after{content:"";position:absolute;right:4px;top:6px;width:7px;height:7px;border-right:1.6px solid currentColor;border-bottom:1.6px solid currentColor;transform:rotate(45deg)}
+  body.nav106-client #vue > .masthead .lede.ouvert[data-lede-pli]::after{transform:rotate(-135deg);top:9px}
+}

@@ -107,6 +107,15 @@ const thomas = { id: F.IDS.c1, email: "t@e.fr", session: F.session(F.IDS.c1, "t@
 const julien = { id: F.IDS.c3, email: "j@e.fr", session: F.session(F.IDS.c3, "j@e.fr") };
 const expiree = w => Object.assign({}, w.session, { expire_le: Date.now() - 1000 });
 const attendre = (page, ms) => page.waitForTimeout(ms);
+
+/* v106 (lot 6) : « Se déconnecter » du client est derrière son rond de profil, avec la confirmation de l'app (« Se déconnecter ») ;
+   le bouton #deco d'avant reste utilisé s'il est visible (prospect sur ordinateur, ancienne version) */
+const decoClient = async page => {
+  if (await page.isVisible("#deco").catch(() => false)) return page.click("#deco");
+  await page.click("#rond-profil"); await page.waitForSelector(".volet-profil [data-mp-deco]", { timeout: 5000 });
+  await page.click(".volet-profil [data-mp-deco]"); await page.waitForSelector('.modale [data-ui-b="1"]', { timeout: 5000 });
+  await page.click('.modale [data-ui-b="1"]');
+};
 const texte = async (page, sel) => norm(await page.textContent(sel || "#vue").catch(() => ""));
 const stock = (page, m, k) => page.evaluate(([m, k]) => (m === "session" ? sessionStorage : localStorage).getItem(k), [m, k]);
 /* les copies en attente : une cle par copie, « mhx_attente|compte|cle » */
@@ -264,12 +273,12 @@ const ecrituresIntake = (db, uid) => db.ecritures.filter(e => e.outil === "intak
     await page.goto(`http://localhost:${PORT}/#/profil`); await attendre(page, 2200);
     await page.selectOption("#q-stress", "6"); await attendre(page, 1500);
     const avant = !(await aucuneCopie(page));
-    await page.click("#deco").catch(() => {}); await attendre(page, 5200);
+    await decoClient(page).catch(() => {}); await attendre(page, 5200);
     const dialogue = await texte(page, ".modale");
     ok("déconnexion avec des modifications non envoyées (hors ligne) : on le dit avant de tout effacer", avant && dialogue.includes("n'ont pas encore pu être envoyées") && !!(await stock(page, "local", "mhx_session")), dialogue.slice(0, 200));
     await page.click(".modale button:has-text(\"Annuler\")").catch(() => {}); await attendre(page, 500);
     ok("… « Annuler » : toujours connecté, la copie reste", !!(await stock(page, "local", "mhx_session")) && !(await aucuneCopie(page)));
-    await page.click("#deco").catch(() => {}); await attendre(page, 5200);
+    await decoClient(page).catch(() => {}); await attendre(page, 5200);
     await page.click(".modale button:has-text(\"Me déconnecter quand même\")").catch(() => {}); await attendre(page, 1800);
     ok("… « Me déconnecter quand même » : déconnecté, plus rien sur l'appareil", (await aucuneCopie(page)) && !(await stock(page, "local", "mhx_session")));
     await c.close();
@@ -337,7 +346,7 @@ const ecrituresIntake = (db, uid) => db.ecritures.filter(e => e.outil === "intak
     const { c, page } = await contexte(b, thomas, db);
     await page.goto(`http://localhost:${PORT}/#/profil`); await attendre(page, 2200);
     await page.fill("#q-objectif_phrase", "Courir 10 km en mars");
-    await page.click("#deco").catch(() => {}); await attendre(page, 2500);
+    await decoClient(page).catch(() => {}); await attendre(page, 2500);
     ok("déconnexion juste après une frappe : la saisie est envoyée d'abord, puis déconnexion", ecrituresIntake(db, F.IDS.c1).some(x => x.contenu.objectif_phrase === "Courir 10 km en mars") && !(await stock(page, "local", "mhx_session")));
     await c.close();
   }

@@ -661,8 +661,8 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
     const { page } = await coachSur(b, db, "#/tableau", "#tb-vue .tb-chiffres");
     const R = await groupeTb(page, "retours"), I = await groupeTb(page, "inactifs"), N = await groupeTb(page, "nouveaux"), B = await groupeTb(page, "reserves"), L = await groupeTb(page, "relancer");
     const urg = N.urg + B.urg + L.urg;
-    ok("C : « À traiter » 6 (toutes les lignes : Julien, Marc, Bruno, Hugo, Alice, Victor) ; urgences des prospects 2 (Alice, Marc) = le badge de l'onglet Prospects (v106 : plus de tuiles)",
-      (await traiterTb(page)) === "6" && urg === 2 && JSON.stringify(await badge(page)) === badge2("2"), JSON.stringify({ t: await traiterTb(page), urg, b: await badge(page) }));
+    ok("C : « À traiter » 2 (les urgences : Alice, Marc ; Julien, Bruno, Hugo, Victor sont dans la liste) ; urgences des prospects 2 (Alice, Marc) = le badge de l'onglet Prospects (v106 : plus de tuiles)",
+      (await traiterTb(page)) === "2" /* v106 (revue UX) : « À traiter » = les urgences du jour (retours à lire + urgences des prospects), plus toutes les lignes */ && urg === 2 && JSON.stringify(await badge(page)) === badge2("2"), JSON.stringify({ t: await traiterTb(page), urg, b: await badge(page) }));
     ok("C : Retours à lire : personne ; Clients inactifs : Julien ; Nouveaux prospects : Marc ; Bilans réservés : Bruno (bilan à conclure), puis Hugo (coché hier) ; À relancer : Alice (absent), puis Victor (« Perdu ») ; ni Omar ni Paul (v106)",
       R.n === 0 && egal(uidsG(I), [F.IDS.c3]) && egal(uidsG(N), [MARC]) && egal(uidsG(B), [BRUNO, HUGO]) && egal(uidsG(L), [ALICE, VICTOR]),
       [uidsG(I), uidsG(N), uidsG(B), uidsG(L)].map(noms).join(" | "));
@@ -694,8 +694,8 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
     const R = await groupeTb(page, "retours"), I = await groupeTb(page, "inactifs"), N = await groupeTb(page, "nouveaux"), B = await groupeTb(page, "reserves"), L = await groupeTb(page, "relancer");
     /* v106 (lot 5) : changement voulu — plus de plafond à 5 lignes : chaque groupe dans son ordre ; urgences des prospects (badge) :
        Zoé (signé), Inès (case), Alice (absent), Léa (clic), Marc (nouveau) = 5 */
-    ok("C : « À traiter » 9 (toutes les lignes) ; Retours à lire : le compte de test (1) ; urgences des prospects 5 (= le badge)",
-      (await traiterTb(page)) === "9" && R.n === 1 && N.urg + B.urg + L.urg === 5 && JSON.stringify(await badge(page)) === badge2("5"), JSON.stringify({ t: await traiterTb(page), R: R.n, u: [N.urg, B.urg, L.urg], b: await badge(page) }));
+    ok("C : « À traiter » 6 (les urgences : le retour du compte de test + 5 prospects) ; Retours à lire : le compte de test (1) ; urgences des prospects 5 (= le badge)",
+      (await traiterTb(page)) === "6" /* v106 (revue UX) : « À traiter » = les urgences du jour (retours à lire + urgences des prospects), plus toutes les lignes */ && R.n === 1 && N.urg + B.urg + L.urg === 5 && JSON.stringify(await badge(page)) === badge2("5"), JSON.stringify({ t: await traiterTb(page), R: R.n, u: [N.urg, B.urg, L.urg], b: await badge(page) }));
     ok("C : groupes dans l'ordre : Retours (😞 du compte de test, « Sans nom », vers Bilans), Inactifs (Julien), Nouveaux (Marc), Réservés (Inès case, Bruno appel), À relancer (Zoé signé, Alice absent, Léa clic, Victor perdu) ; pas de « Et 1 autre »",
       egal(uidsG(R), [TESTEUR.id]) && R.l[0].t.includes("Sans nom") && R.l[0].t.includes("😞") && R.l[0].cible === "bilan" && egal(uidsG(I), [F.IDS.c3]) && egal(uidsG(N), [MARC]) && egal(uidsG(B), [INES, BRUNO])
         && egal(uidsG(L), [ZOE, ALICE, LEA, VICTOR]) && L.l[1].t.includes("Absent à l'appel : repropose-lui un créneau") && !(await texte(page, "#tb-a-traiter")).includes("Et 1 autre"),

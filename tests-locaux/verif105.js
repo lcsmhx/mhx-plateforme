@@ -300,7 +300,7 @@ async function principal(){
          questionnaire » dans la rangée des pages ; le h1 caché porte le nom de la page, « Aperçu » */
       const prenom = nom.split(" ")[0];
       ok("B1 (" + qui + ", " + taille + " px) : le prénom « " + prenom + " » une seule fois à l'écran, dans l'en-tête (nom entier en bulle) ; plus de nom ni d'initiales sous l'en-tête",
-        t.filter(x => x.includes(prenom)).length === 1 && d.prenom === prenom && d.tete === nom && !d.h2Ident && !d.avatar, JSON.stringify({ noms: t.filter(x => x.includes(prenom)), d }));
+        t.filter(x => x.includes(prenom)).length === 1 && d.prenom === prenom + " " + nom.split(" ")[1].charAt(0) + "." /* v106 (revue UX) : « Thomas D. » */ && d.tete === nom && !d.h2Ident && !d.avatar, JSON.stringify({ noms: t.filter(x => x.includes(prenom)), d }));
       ok("B2 (" + qui + ", " + taille + " px) : « Fiche » n'est plus ni un bouton ni un grand titre (aucun texte « Fiche » seul visible) ; un seul h1, « Aperçu » (le nom de son lien), pour les lecteurs d'écran",
         !t.includes("Fiche") && d.bAct === 2 && d.bActIci === "Aperçu" && d.h1.length === 1 && d.h1[0][0] === "Aperçu" && d.h1[0][1] === "sr-only" && d.h1[0][2] <= 1, JSON.stringify({ d, fiche: t.filter(x => /^Fiche$/.test(x)) }));
       ok("B3 (" + qui + ", " + taille + " px) : le reste de l'en-tête et de l'identité reste : « Revenir à mes clients » (une fois), la pastille « " + (qui === "client" ? "Client" : "Prospect") + " », " + (qui === "client" ? "plus de bouton « Préparer le call » (v106)" : "le message WhatsApp prêt") + ", Appeler ; pas de débordement",

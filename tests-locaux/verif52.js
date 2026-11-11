@@ -1078,7 +1078,9 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     await page.goto(url); await attendre(page, 2600);
     if (action) await action(page, db);
     const t = await texte(page, "#vue"), h2 = await page.$$eval("#vue h2", l => l.map(e => e.textContent.replace(/\s+/g, " ").trim())).catch(() => []);
-    const ret = { t, h2, db, page, c };
+    /* v106 (lot 6) : les blocs de l'accueil du client (même texte, l'ordre a changé : « Aujourd'hui » en premier) */
+    const blocs = await page.$$eval("#acc-vue > *", l => l.map(e => e.textContent.replace(/\s+/g, " ").trim()).filter(Boolean)).catch(() => []);
+    const ret = { t, h2, db, page, c, blocs, aujPremier: await page.evaluate(() => { const x = document.querySelector("#acc-vue > .masthead"); return !!(x && x.nextElementSibling && x.nextElementSibling.id === "acc-aujourdhui"); }).catch(() => false) };
     return ret;
   };
   await bloc("J. client Thomas", async () => {
@@ -1096,7 +1098,10 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     if (!REF) { ok("référence " + REF_NOM + " (git show " + REF_NOM + ":index.html) introuvable : comparaison impossible", false, "git show a échoué"); return; }
     /* v59 (relecture) : avec les interrupteurs du fichier testé, des deux côtés (voir avecNouveautesFichier) */
     const [acc, accM] = await avecNouveautesFichier(async () => [await vueDe(thomas, `http://localhost:${PORT}/#/accueil`), await vueDe(thomas, `http://localhost:${PORT}/?ref=main#/accueil`)]);
-    ok("client Thomas, accueil : texte identique à main", acc.t.length > 200 && acc.t === accM.t, acc.t.length + " / " + accM.t.length + " car. · premier écart : " + (() => { let i = 0; while (i < acc.t.length && acc.t[i] === accM.t[i]) i++; return JSON.stringify(acc.t.slice(Math.max(0, i - 40), i + 60)) + " ≠ " + JSON.stringify(accM.t.slice(Math.max(0, i - 40), i + 60)); })());
+    /* v106 (lot 6) : changement voulu — « Aujourd'hui » passe en premier : tant que main a l'ancien ordre, les mêmes blocs au texte
+       identique (dans un autre ordre), et « Aujourd'hui » juste sous l'en-tête ; ensuite, comparaison stricte */
+    const memesBlocs = JSON.stringify(acc.blocs.slice().sort()) === JSON.stringify(accM.blocs.slice().sort());
+    ok("client Thomas, accueil : texte identique à main (v106 : mêmes blocs, « Aujourd'hui » en premier)", acc.t.length > 200 && (acc.t === accM.t || (memesBlocs && acc.aujPremier && !accM.aujPremier)), acc.t.length + " / " + accM.t.length + " car. · premier écart : " + (() => { let i = 0; while (i < acc.t.length && acc.t[i] === accM.t[i]) i++; return JSON.stringify(acc.t.slice(Math.max(0, i - 40), i + 60)) + " ≠ " + JSON.stringify(accM.t.slice(Math.max(0, i - 40), i + 60)); })());
     await acc.c.close(); await accM.c.close();
     const [pro, proM] = await avecNouveautesFichier(async () => [await vueDe(thomas, `http://localhost:${PORT}/#/profil`), await vueDe(thomas, `http://localhost:${PORT}/?ref=main#/profil`)]);
     /* v52 (chantier 1, lot A) : seule différence VOULUE du Profil de Thomas avec main (v51) : la note du changement
@@ -1307,7 +1312,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
       const nombres = v => (v.replace(/\u2212/g, "-").match(/-?\d+(?:[.,]\d+)?(?:\/\d+\/\d+)?/g) || []);
       const retrouvee = v => toutN.includes(v) || (nombres(v).length > 0 && nombres(v).every(x => toutN.includes(x)) && (v.match(/Séance [A-Z]/) || [""]).every(x => toutN.includes(x)));
       const manquantes = vals.filter(([k, v]) => !vides.has(v) && !retrouvee(v)).map(([k, v]) => k + " : " + v);
-      const MANQUE = ["Questionnaire à remplir", "Programme à envoyer", "Diète à envoyer"];
+      const MANQUE = ["Questionnaire à remplir", "Programme à envoyer", "Diète à envoyer", "Bilan hebdo reçu — à lire"];   // revue UX : « Bilan hebdo reçu » est dit par la carte « Retour de la semaine » (vérifié dessous)
       const alRef = (mfM.commun.alertes || "");
       const alAtt = MANQUE.reduce((t, m) => t.split(m).join(""), alRef).trim();
       const al = n(await f.page.$eval("#fc-suivi > .attention-alertes", e => e.textContent).catch(() => ""));
@@ -1315,8 +1320,8 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
       const tete = await f.page.evaluate(() => ({ prenom: (document.querySelector("#vue > .fiche-entete .fe-nom") || {}).textContent, statut: ((document.querySelector("#vue > .fiche-entete .fe-statut") || {}).textContent || "").trim(),
         onglets: Array.from(document.querySelectorAll("#vue > .fiche-entete .fiche-onglets a")).map(a => a.textContent.trim() + (a.getAttribute("aria-current") ? ":ici" : "")),
         sortir: document.querySelectorAll("#sortir-fiche").length, retour: ((document.querySelector("#sortir-fiche .sr-only") || {}).textContent || "").trim() }));
-      ok106 = vals.length > 20 && manquantes.length === 0 && lede === mfM.commun.lede && al === alAtt.replace(/\s+/g, " ") && mf.commun.tel === "—" && mf.commun.source === "—" && mf.telLbl === "Téléphone" && mf.sourceLbl === "Source"
-        && tete.prenom === "Thomas" && tete.statut === "Client" && JSON.stringify(tete.onglets) === '["Aperçu:ici","Programme","Nutrition","Suivi"]' && tete.sortir === 1 && tete.retour === "Revenir à la vue tableau" /* v106 (lot 1) : « Suivi détaillé » s'appelle « Vue tableau » */ && retours.ref;
+      ok106 = vals.length > 20 && manquantes.length === 0 && lede === mfM.commun.lede && al === alAtt.replace(/\s+/g, " ") && (!/Bilan hebdo reçu — à lire/.test(alRef) || /Bilan hebdo reçu — à lire/.test(n(await f.page.$eval("#fc-retour", e => e.textContent).catch(() => "")))) && mf.commun.tel === "—" && mf.commun.source === "—" && mf.telLbl === "Téléphone" && mf.sourceLbl === "Source"
+        && tete.prenom === "Thomas D." /* revue UX */ && tete.statut === "Client" && JSON.stringify(tete.onglets) === '["Aperçu:ici","Programme","Nutrition","Suivi"]' && tete.sortir === 1 && tete.retour === "Revenir à la vue tableau" /* v106 (lot 1) : « Suivi détaillé » s'appelle « Vue tableau » */ && retours.ref;
       info106 = JSON.stringify({ n: vals.length, manquantes, lede, refLede: mfM.commun.lede, al, alAtt, tel: mf.commun.tel, source: mf.commun.source, tete });
     }
     ok("fiche de Thomas vue par le coach : sections identiques à main (" + f.h2.join(", ") + ") ; v106 : aucune valeur des cartes d'avant perdue (chacune dans une page des 4 onglets), même phrase et mêmes alertes, nouvel en-tête ; v83 : chaque morceau d'avant identique à main à sa nouvelle place (bandeau dans l'onglet Suivi, nom, phrase, alertes, de « En bref » à « Le reste »), en-tête de la fiche (nom seul, « Client », programme, « Préparer le call », onglets) ; v72 : Téléphone « — » et Source « — », présents (onglet Compte) ; v77 : formation sur 48 étapes ; v84 : ouverte depuis « Suivi détaillé », « Revenir au suivi détaillé » (référence : « Revenir à mes clients » tant qu'elle l'ouvre depuis #/clients) ; v104 : liens d'avant dans les pages des onglets, plus de tuile Régularité ni de liens « → », « Modifier » des objectifs, bilan à la 3e personne", ok106 !== null ? ok106 : f.t.length > 300 && mf.neuf && tete104 && comF === comM && (v105 || mf.commun.h1 === "Thomas Démo") && !!mf.commun.bandeau && mf.commun.bandeau.startsWith("Fiche de Thomas Démo") && mf.commun.reste.startsWith("En bref") && mf.commun.reste.includes("Le reste") && mf.commun.tel === "—" && mf.commun.source === "—" && mf.telLbl === "Téléphone" && mf.sourceLbl === "Source" && mf.role === "Client" && !!mf.prog && fM.t.includes("Nom" + mf.prog) && mf.call === "#/client/" + F.IDS.c1 + "/bilan" && JSON.stringify(mf.onglets) === '[]' && JSON.stringify(h2F) === JSON.stringify(h2M) && retours.page && retours.ref, (ok106 !== null ? "v106 " + info106 + " · " : "") + "retours " + JSON.stringify(retours) + " · " + f.t.length + " / " + fM.t.length + " · " + JSON.stringify(f.h2) + " vs " + JSON.stringify(fM.h2) + " · " + JSON.stringify({ neuf: mf.neuf, bandeauHaut: mf.bandeauHaut, telLbl: mf.telLbl, sourceLbl: mf.sourceLbl, role: mf.role, prog: mf.prog, call: mf.call, onglets: mf.onglets, t104, h2F }) + " · " + (() => { const x = comF, y = comM; let k = 0; while (k < x.length && x[k] === y[k]) k++; return JSON.stringify(x.slice(Math.max(0, k - 40), k + 60)) + " ≠ " + JSON.stringify(y.slice(Math.max(0, k - 40), k + 60)); })());
