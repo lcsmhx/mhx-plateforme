@@ -870,7 +870,7 @@ const NOUVEAUX = ["Ton bilan de la semaine du {a} au {b} n'est pas encore fait :
     await heure(page, a(27, 10)); await voir(page, "suivi");
     ok("L : dimanche suivant, avec ces données : le formulaire s'affiche", !!(await page.$("[data-fbd]")) && (await xss(page)) === 0, "");
     const { page: pc } = await sur(b, COACH, db, 22, 10, 0, "", null);
-    for (const [cb, sel] of [["accueil", "#acc-vue .masthead"], ["bilan", "#bilan-vue .panel"], ["suivi", "#suivi-checkin .panel"]]) { await fiche(pc, cb, sel); const x = await xss(pc); n += x; if (x) detail += cb + " "; }
+    for (const [cb, sel] of [["accueil", "#acc-vue #fc-ident" /* v105 (point 2) : plus de grand titre visible dans l'Aperçu de la fiche */], ["bilan", "#bilan-vue .panel"], ["suivi", "#suivi-checkin .panel"]]) { await fiche(pc, cb, sel); const x = await xss(pc); n += x; if (x) detail += cb + " "; }
     await aller(pc, "#/tableau", 1800); n += await xss(pc); await aller(pc, "#/clients", 1800); n += await xss(pc);
     ok("L : coach : fiche, Préparer le call, Son suivi, tableau de bord, Mes clients : rien ne s'exécute, aucune page illisible", n === 0 && !(await pc.$("#page-illisible")), detail);
     /* un avis qui n'est pas une liste : le smiley la remplace par une vraie liste, la liste des feedbacks intacte */

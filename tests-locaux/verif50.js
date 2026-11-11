@@ -541,7 +541,8 @@ const TXT_FORMATION_FERMEE = "Ta période découverte est terminée : la Speed F
     const ids = [], cadenasFiche = [];
     for (const o of await page.$$eval(".fiche-entete .f-onglet", l => l.map(a => a.getAttribute("href")))){
       await aller(page, o, 1200);
-      const r = await page.$$eval(".fiche-entete a.b-act", l => l.map(a => [(a.getAttribute("href") || "").split("/").slice(3).join("/"), !!a.querySelector(".nav-cadenas, .cadenas") || /🔒/.test(a.textContent)]));
+      /* v105 (point 2) : un onglet à une seule page (Aperçu) n'a plus de bouton de page : son onglet (marqué) en tient lieu */
+      const r = await page.$$eval(".fiche-entete a.b-act, .fiche-entete a.f-onglet[aria-current]", l => l.map(a => [(a.getAttribute("href") || "").split("/").slice(3).join("/"), !!a.querySelector(".nav-cadenas, .cadenas") || /🔒/.test(a.textContent)]));
       r.forEach(([id, cad]) => { if (!ids.includes(id)) ids.push(id); if (cad) cadenasFiche.push(id); });
     }
     await aller(page, "#/programme", 1600);
