@@ -1305,10 +1305,7 @@ Object.assign(I18N.en, {
   "{n} compte n'a pas pu être changé ({c}). Il est resté sélectionné : réessaie dans un instant.": "{n} account couldn't be changed ({c}). It's still selected: try again in a moment.",
   "Créer un accès": "Create an account", "Impossible de charger la liste.": "Couldn't load the list.",
   "Jamais rien saisi": "Never logged anything", "Dernière saisie aujourd'hui": "Last entry today", "Dernière saisie il y a {n} j": "Last entry {n} d ago",
-  "Fermer la fiche": "Close profile", "Fiche": "Profile", "Compte": "Account",
-  "Ses réponses": "Their answers", "Objectif": "Goal", "Ce qui bloque": "What's holding them back", "Avec ses mots": "In their own words",
-  "Pas encore répondu": "Not answered yet",
-  "Anciennes réponses (questionnaire d'avant) : toutes dans « Découverte », plus bas.": "Older answers (previous questionnaire): all under “Discovery,” below.",
+  "Fermer la fiche": "Close profile", "Fiche": "Profile", "Compte": "Account", "Objectif": "Goal",
   "Pas de numéro": "No number", "Appeler": "Call", "Appeler : pas de numéro": "Call: no number",
   "Archivé": "Archived", "Archiver ce compte": "Archive this account", "Restaurer ce compte": "Restore this account",
   "Archivé le {d} : ce compte n'apparaît plus dans tes listes, tes compteurs ni « À traiter ». Rien n'a changé pour la personne.": "Archived on {d}: this account no longer shows up in your lists, your counters, or “To handle.” Nothing has changed for this person.",
@@ -1877,3 +1874,8 @@ Object.assign(I18N.en, {
 });
 /* v106 (lot 3) : la vue « Bilans » de la fiche */
 Object.assign(I18N.en, { "Bilans": "Check-ins", "Courbes": "Charts" });
+/* v106 (lot 4) : l'Aperçu et la fiche d'un prospect */
+Object.assign(I18N.en, { "Tout voir": "See all", "Réponses au questionnaire court": "Short questionnaire answers", "{n} / {t} réponses": "{n} / {t} answers",
+  ", validé le {d}": ", submitted on {d}", ", pas encore validé": ", not submitted yet", "Problème": "Problem", "Ce qui l'a bloqué": "What held them back",
+  "Séances par semaine": "Sessions per week", "Déjà essayé": "Already tried", "Pourquoi maintenant": "Why now", "Obstacle principal": "Main obstacle",
+  "Contacter": "Contact", "Chronologie": "Timeline" });

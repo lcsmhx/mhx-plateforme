@@ -61,6 +61,7 @@ const outilAccueil = {
      v53 (chantier 4) : plus de score ; « Bilan réservé » suit la coche du coach (Commercial.bilan), la case du prospect
      reste lisible comme info ; dernière visite et jours actifs sur 30 jours */
   decouverteFicheHTML(p, C, I, S, A, EM){
+    /* v106 (lot 4) : sans ses réponses (une seule fois, « Réponses au questionnaire court » en haut) ni « Contacter » (en haut, contacterHTML) */
     try { return this._decouverteFicheHTML(p, C, I, EM, S, A) + this.prospectDetailHTML(p, C, (I && typeof I === "object") ? I : {}, S, A); }
     catch(e){ console.warn("[MHX] bloc découverte illisible", e); return `<section class="panel" id="fiche-decouverte"><h2>Découverte</h2><div class="empty">Données de la découverte illisibles — à vérifier.</div></section>`; }
   },
@@ -81,7 +82,8 @@ const outilAccueil = {
       ["Nom", s(p && p.nom).trim()],
       ["Newsletter", nl.oui ? "oui" + (nl.depuis ? " (depuis le " + dt(nl.depuis) + ")" : "") : "non"],
       ["Questionnaire court", r.questionnaire ? "rempli le " + dt(r.questionnaire) : "pas encore rempli"]
-    ].concat(Decouverte.reponsesCoach(I), [
+    /* v106 (lot 4) : ses réponses sont une seule fois, dans « Réponses au questionnaire court » (en haut de la fiche) */
+    ].concat([
       /* v65 (décision de Lucas du 30/09) : le nom du bouton d'aujourd'hui, comme la chronologie (avant : « Réserver mon bilan ») */
       ["Bouton « Réserver mon plan d'action »", r.clics ? r.clics + " clic" + (r.clics > 1 ? "s" : "") + (r.dernierClic ? ", le dernier le " + dt(r.dernierClic) : "") : "jamais cliqué"],
       /* v59 : une coche ou une case d'avant l'issue « Absent » / « Perdu » le dit (elle a servi à cet appel) */
@@ -105,16 +107,6 @@ const outilAccueil = {
     const s = v => (typeof v === "string" || typeof v === "number") ? String(v).slice(0, 400) : "";
     const dt = v => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v)) ? dateFr(Decouverte.dateLocale(v) || v.slice(0, 10)) : "—";
     const heure = v => { if (typeof v !== "string" || v.length <= 10) return ""; const d = new Date(v); return isNaN(d) ? "" : " " + String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); };
-    const nbQ = Decouverte.liste(I).length || (CONFIG.decouverte.questions || []).length;
-    /* v52 : les questions de SON questionnaire court (les 3 nouvelles, ou les 10 d'un ancien prospect), puis celles de
-       l'autre qui ont une valeur : les anciennes reponses restent lisibles. Lot G : libelles courts du coach (Problème…) */
-    const qs = Decouverte.reponsesCoach(I, true);
-    /* email_compte : l'email du compte, copie par l'app (v51) ; a defaut, le champ « Email » du questionnaire complet */
-    const email = s(I.email_compte).trim() || s(I.email).trim();
-    const rep = [["Email", email]].concat(qs);
-    const repHTML = `<section class="panel" id="fiche-reponses"><h2>Réponses au questionnaire court</h2>
-      <p class="note" style="margin:0 0 8px">${Decouverte.repondues(I)} / ${nbQ} réponses${Decouverte.questionnaireFait(I) ? ", validé le " + esc(dt(I.court_le)) : ", pas encore validé"}.</p>
-      <ul class="ingr fiche-l">${rep.map(([k, v]) => `<li><span>${esc(k)}</span><b>${v ? esc(v) : "—"}</b></li>`).join("")}</ul></section>`;
     const ev = [];
     const futur = Date.now() + 5 * 60000;
     const ajoute = (quand, texte) => { if (typeof quand === "string" && /^\d{4}-\d{2}-\d{2}/.test(quand) && !isNaN(Date.parse(quand)) && Date.parse(quand) <= futur) ev.push({ t: Date.parse(quand), quand, texte }); };
@@ -139,6 +131,30 @@ const outilAccueil = {
     const chronoHTML = `<section class="panel" id="fiche-chrono"><h2>Chronologie</h2>
       ${ev.length ? `<ol class="dc-chrono">${ev.slice(0, 40).map(e => `<li><time datetime="${esc(e.quand)}">${esc(dt(e.quand) + heure(e.quand))}</time><span>${esc(e.texte)}</span></li>`).join("")}</ol>` : `<div class="empty">Rien pour l'instant.</div>`}
       <p class="note" style="margin:10px 0 0">${act.jours.length} jour${act.jours.length > 1 ? "s" : ""} d'activité, ${Math.floor(act.temps_s / 60)} min dans l'app${pages ? " · pages vues : " + esc(pages) : ""}.</p></section>`;
+    return chronoHTML;   // v106 (lot 4) : ses réponses (reponsesCourtHTML) et « Contacter » sont en haut de la fiche
+  },
+
+  /* v51 (v106 : seul bloc des réponses d'un prospect, en haut de sa fiche) — ses réponses au questionnaire court, puis celles de
+     l'ancien questionnaire qui ont une valeur ; son email. Tout ce qui vient du prospect passe par s() / dt() et esc(). */
+  reponsesCourtHTML(I){
+    I = (I && typeof I === "object") ? I : {};
+    const s = v => (typeof v === "string" || typeof v === "number") ? String(v).slice(0, 400) : "";
+    const dt = v => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v)) ? dateFr(Decouverte.dateLocale(v) || v.slice(0, 10)) : "—";
+    const nbQ = Decouverte.liste(I).length || (CONFIG.decouverte.questions || []).length;
+    const email = s(I.email_compte).trim() || s(I.email).trim();
+    const rep = [["Email", email]].concat(Decouverte.reponsesCoach(I, true));
+    /* v106 (lot 4) : seul bloc des réponses, il remplace aussi « Ses réponses » (v81, traduit) : ses textes sont traduits pour un
+       coach en anglais (les réponses du prospect, jamais : data-notr) */
+    return `<section class="panel" id="fiche-reponses"><h2>${esc(trad("Réponses au questionnaire court"))}</h2>
+      <p class="note" style="margin:0 0 8px">${esc(trad("{n} / {t} réponses", { n: Decouverte.repondues(I), t: nbQ }))}${esc(Decouverte.questionnaireFait(I) ? trad(", validé le {d}", { d: dt(I.court_le) }) : trad(", pas encore validé"))}.</p>
+      <ul class="ingr fiche-l">${rep.map(([k, v]) => `<li><span>${esc(trad(k))}</span><b data-notr>${v ? esc(v) : "—"}</b></li>`).join("")}</ul></section>`;
+  },
+
+  /* v106 (lot 4) — « Contacter » (v51), en haut de la fiche d'un prospect : son lien de réservation et un email prêt */
+  contacterHTML(p, I){
+    I = (I && typeof I === "object") ? I : {};
+    const s = v => (typeof v === "string" || typeof v === "number") ? String(v).slice(0, 400) : "";
+    const email = s(I.email_compte).trim() || s(I.email).trim();
     const prenom = s(p && p.prenom).trim(), nomP = s(p && p.nom).trim();
     const emailOk = /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(email) && email.length <= 254;
     const lien = lienCalendlyPour(prenom, emailOk ? email : "", "fiche_coach", nomP);   // v52 : + son nom (inscription)
@@ -150,9 +166,9 @@ const outilAccueil = {
     const mailto = emailOk && lien ? "mailto:" + encodeURIComponent(email) + "?subject=" + encodeURIComponent("Ton bilan " + marque) + "&body=" + encodeURIComponent(corps) : "";
     const actionsHTML = `<section class="panel" id="fiche-actions"><h2>Contacter</h2>
       ${lien ? `<p class="note" style="margin:0 0 8px">Son lien de réservation${esc(remplisTxt)} :</p><input type="text" id="dc-lien" readonly value="${esc(lien)}" aria-label="Lien de réservation du prospect" style="width:100%">` : ""}
-      <div class="actions">${lien ? `<button type="button" class="btn ghost petit" id="dc-copier">Copier le lien</button>` : ""}${mailto ? `<a class="btn petit" id="dc-mail" href="${esc(mailto)}">Lui écrire un email</a>` : `<span class="note">Email inconnu : il apparaît quand le prospect a commencé son questionnaire.</span>`}<span class="msg" id="dc-copie-msg" role="status" aria-live="polite"></span></div>
+      <div class="actions">${lien ? `<button type="button" class="btn ghost petit" id="dc-copier">Copier le lien</button>` : ""}${mailto ? `<a class="btn ghost petit" id="dc-mail" href="${esc(mailto)}">Lui écrire un email</a>` : `<span class="note">Email inconnu : il apparaît quand le prospect a commencé son questionnaire.</span>`}<span class="msg" id="dc-copie-msg" role="status" aria-live="polite"></span></div>
       <p class="note" style="margin:10px 0 0">« Lui écrire un email » ouvre ta messagerie avec un message prêt, que tu relis avant d'envoyer. Rien n'est envoyé par l'app.</p></section>`;
-    return repHTML + chronoHTML + actionsHTML;
+    return actionsHTML;
   },
 
   /* ---------- FICHE CLIENT (v37, phase 18) ----------
@@ -160,11 +176,9 @@ const outilAccueil = {
      avec un lien vers l'editeur de chaque bloc. Lecture seule ici. Les
      notes privees et les feedbacks arrivent avec les phases 10 et 18. */
   async fiche(zone){
-    const cles = ["intake", "programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "checkins", "complements", "calc", "formation", "hist_programme", "hist_repas", "prefs", "feedbacks", "challenge", "suivi_prospect", "activite", "emails", "contact", "seances_formation"];   // v90 : + les séances faites des programmes de la formation   // v47 : + challenge ; v49 : + suivi commercial ; v51 : + activite ; v52 : + emails (newsletter d'un prospect) ; v72 : + contact (numéro)
+    /* v106 (lot 4) : plus de lecture de complements, formation, hist_programme, hist_repas ni du journal alimentaire : ils ne servaient qu'aux cartes qui résumaient les autres onglets */
+    const cles = ["intake", "programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "checkins", "calc", "prefs", "feedbacks", "challenge", "suivi_prospect", "activite", "emails", "contact", "seances_formation"];   // v90 : + les séances faites des programmes de la formation   // v47 : + challenge ; v49 : + suivi commercial ; v51 : + activite ; v52 : + emails (newsletter d'un prospect) ; v72 : + contact (numéro)
     const uidFiche = Store.idConsulte;
-    /* v79 : son journal alimentaire (s'il lui est ouvert : interrupteur) et son propre calcul (l'objectif du journal) */
-    const avecJA = JournalAlim.pourCompte(uidFiche);
-    if (avecJA) cles.push("journal_alimentaire", "calc_perso");
     const [{ valeurs: d, dates, erreur }, pr, cx] = await Promise.all([
       Store.lireTout(cles, { dates: true }),
       /* v39 : prospect ou client ? (colonne absente ou lecture ratee : rien ne change) */
@@ -187,31 +201,18 @@ const outilAccueil = {
        v59 (Q13-4) : checkins compte par ses vraies saisies (Clients.dateSaisie : ni smiley, ni « réponse vue »), comme dans Mes clients */
     const dernier = Object.keys(dates).filter(k => ecritParCoach.indexOf(k) === -1 && k !== "emails" && k !== "contact" && dates[k] && (k !== "activite" || profil.statut === "prospect")).map(k => Clients.dateSaisie(k, dates[k], d[k])).filter(Boolean).sort().pop() || null;
     const l = Clients.resumerUn(profil, d, dernier);
-    const r = Regularite.calculer({ programme: P, journal: J, repas: R, repas_suivi: S, mens: M }, 0), prec = Regularite.calculer({ programme: P, journal: J, repas: R, repas_suivi: S, mens: M }, -1);
-    const b = outilBilan.calculer({ programme: P, journal: J, repas: R, repas_suivi: S, mens: M, objectifs_faits: d.objectifs_faits || {} });
-    const av = outilProgramme.avancement(P);
+    const prec = Regularite.calculer({ programme: P, journal: J, repas: R, repas_suivi: S, mens: M }, -1);
     const seances = (P.seances || []).filter(sc => (sc.exercices || []).some(e => e.nom));
-    const derniereSeance = J.seances.length ? J.seances[J.seances.length - 1] : null;
     const e = Checkin.etat(CK, uidFiche);
     /* v53 (chantier 3) : la regle de ce client ; feedback du dimanche : « reçu », ou « non fait » des le lundi */
     const dim = e.semaine.regle === "dimanche";
-    const dernierCk = (CK.liste || []).length ? CK.liste[CK.liste.length - 1] : null;
-    const fbCk = dernierCk ? Feedback.repond(d.feedbacks, dernierCk) : null;
-    const fbAvant = (dernierCk && !fbCk) ? Feedback.pour(d.feedbacks, dernierCk.semaine) : null;
-    const obj = (P.objectifs && (P.objectifs.liste || []).some(Boolean)) ? P.objectifs : null;
-    const cible = R.cible || null;
     const nbJours = (R.jours || []).filter(j => (j.repas || []).length).length;
-    const nbCompl = ((d.complements || {}).liste || []).length;
-    const histP = ((d.hist_programme || {}).liste || []).length, histR = ((d.hist_repas || {}).liste || []).length;
-    const fo = d.formation ? outilFormation.compte(outilFormation.migrer(d.formation)) : null;
     /* la decouverte d'un prospect (jour depuis l'inscription, questionnaire court, clics, bilan reserve) */
     const pDc = Object.assign({}, profil, pr || {});
     let rdc = null; try { rdc = profil.statut === "prospect" ? Decouverte.resume(pDc, d.challenge, I) : null; } catch(e){ rdc = null; }
     /* v49 : le suivi commercial d'un prospect (un client n'en a plus : son bloc disparait) */
     let SC = null;
     try { if (profil.statut === "prospect") SC = Commercial.analyse(pDc, d.challenge, d.suivi_prospect, dernier, I); } catch(e){ SC = null; }
-    /* v104 (point 1) : plus de liens « … → » sous chaque bloc (ils doublaient les onglets de la fiche) */
-    const ligne = (k, v) => v == null || v === "" ? "" : `<li><span>${esc(k)}</span><b>${esc(String(v))}</b></li>`;
     const alertes = l.alertes;
     /* v83 (bloc 3, maquettes FicheSuivi et FicheCompte) — la même fiche pour un client et un prospect : en-tête (croix =
        retour là d'où l'on vient, initiales, nom, pastille Client ou Prospect, pastille du programme s'il est connu), bouton
@@ -258,19 +259,9 @@ const outilAccueil = {
     const regPct = prec.score != null ? Math.max(0, Math.min(100, prec.score)) : 0;
     const joursActifs = vis.suivi ? trad("{n} jours actifs sur 30", { n: vis.jours30 }) : "";
     const etat = (lib, ok, val, manque) => `<li><span>${esc(lib)}</span><b class="${ok ? "fc-ok" : "fc-manque"}">${ok ? `${esc(val)} <span class="fc-coche" aria-hidden="true">${SVG.coche}</span>` : esc(manque)}</b></li>`;
-    /* « Ses réponses » (prospect) : objectif, ce qui bloque, avec ses mots, dans 3 mois, « Tu es ? » ; l'ancien format lisible */
-    const qo = Decouverte.defQ("obstacle"), qp = Decouverte.defQ("projection");
-    const choixO = Decouverte.choixDe(I, "obstacle"), choixP = Decouverte.choixDe(I, "projection");
-    const sansRep = esc(trad("Pas encore répondu"));
-    const rep = (lib, v) => `<li><span>${esc(lib)}</span><b data-notr>${v ? esc(v) : `<i class="fc-sans">${sansRep}</i>`}</b></li>`;
-    const ancienF = Decouverte.ancien(I);
-    const objectifRep = typeof I.probleme === "string" && I.probleme.trim() ? I.probleme.trim() : ancienF && typeof I.objectif === "string" ? I.objectif.trim() : "";
-    const bloque = choixO && choixO.length ? choixO.map(k => Decouverte.libelleChoix(qo, k)).filter(Boolean).join(" · ") : "";
-    const sesMots = choixO ? Decouverte.precisionDe(I, "obstacle") : (typeof I.obstacle === "string" ? I.obstacle.trim() : "");
-    const dans3 = choixP && choixP.length ? Decouverte.texteFr(qp, choixP, Decouverte.precisionDe(I, "projection")) : (typeof I.projection === "string" ? I.projection.trim() : "");
-    const reponsesHTML = prospectF ? `<section class="carte fc-carte" id="fc-reponses"><h2 class="fc-sur">${esc(trad("Ses réponses"))}</h2><ul class="fiche-l fc-lignes">
-        ${rep(trad("Objectif"), objectifRep)}${rep(trad("Ce qui bloque"), bloque)}${rep(trad("Avec ses mots"), Decouverte.extrait(sesMots, 400))}${rep(trad("Dans 3 mois"), Decouverte.extrait(dans3, 400))}${rep(trad("Tu es ?"), I.sexe === "Homme" || I.sexe === "Femme" ? trad(I.sexe) : "")}</ul>
-        ${ancienF ? `<p class="note" style="margin:8px 0 0">${esc(trad("Anciennes réponses (questionnaire d'avant) : toutes dans « Découverte », plus bas."))}</p>` : ""}</section>` : "";
+    /* v106 (lot 4) : ses réponses une seule fois (avant aussi dans « Ses réponses » et dans « Découverte ») : le bloc
+       « Réponses au questionnaire court » (son email, ses réponses, les anciennes comprises) */
+    const reponsesHTML = prospectF ? this.reponsesCourtHTML(I) : "";
     /* v104 (point 4) : le bandeau du haut (posé par afficher, comme sur les autres onglets) reste ; la fiche commence par le
        titre de page, puis l'identité (initiales, nom, pastilles) et les actions (Préparer le call ou message WhatsApp prêt,
        Appeler) ; WhatsApp (client) est celui du bandeau. Plus de croix, d'onglets en double ni de boutons Suivi / Compte. */
@@ -282,47 +273,24 @@ const outilAccueil = {
         ${principal ? `<div class="fc-actions">${principal}</div>` : ""}
       </section>
       <div class="fc-panneau" id="fc-suivi"${onglet === "suivi" ? "" : " hidden"}>
+      ${/* v106 (lot 4) : l'Aperçu montre une seule fois l'essentiel — un client : l'état (phrase et alertes), le dernier retour, le
+         poids, la régularité, questionnaire / programme / diète (« Tout voir » ouvre son questionnaire, replié par thème) ; plus de
+         « En bref » ni de grille de cartes qui résumait les autres onglets (tout y est). Un prospect : le suivi commercial et
+         « Contacter » en haut, ses réponses une seule fois, ses séances de la formation, puis la découverte et la chronologie ; pas
+         de cartes « client » (retour, poids, régularité, diète). */ ""}
       <p class="lede fc-lede">${profil.statut === "prospect" ? "Compte gratuit : pas de suivi à assurer tant qu'il n'est pas passé client." + (rdc ? " Découverte : " + (rdc.jour == null ? "date d'inscription inconnue" : Decouverte.depuisTexte(rdc.jour)) + (rdc.questionnaire ? ", questionnaire rempli." : ", questionnaire pas encore rempli.") : "") : alertes.length ? `${alertes.length} point${alertes.length > 1 ? "s" : ""} à regarder.` : "Rien à signaler : tout est en ordre."}</p>
       ${alertes.length ? `<div class="attention-alertes" style="margin:0 0 12px">${alertes.map(a => `<a class="pastille ${a.niveau === "info" ? "accent" : a.niveau}" href="#/${esc(a.cible)}">${esc(a.texte)}</a>`).join("")}</div>` : ""}
-      ${reponsesHTML}
-      ${SC ? `<div id="fiche-commercial">${Commercial.ficheHTML(Object.assign({}, pr || {}, profil), SC, d.suivi_prospect)}</div>` : ""}
-      <section class="carte fc-carte fc-retour" id="fc-retour"><div class="fc-retour-l"><div><p class="fc-sur">${esc(trad("Retour de la semaine"))}</p><p class="fc-retour-t">${esc(retourTexte)}</p></div><a class="lc-lien" id="fc-lire" href="${esc(lienOutil("bilan"))}">${esc(trad("Lire"))}</a></div></section>
-      <section class="carte fc-carte fc-poids" id="fc-poids">${l.ev ? `<p class="fc-kg"><b>${kg(l.ev.total)}</b> <span>${esc(trad("depuis le début"))}</span></p>${courbe}${l.ev.mois != null ? `<span class="pastille fc-4s">${esc(trad("4 dernières sem. : {v}", { v: kg(l.ev.mois) }))}</span>` : ""}` : `<p class="fc-kg"><span>${esc(trad("Poids : aucune mesure"))}</span></p>`}</section>
-      <section class="carte fc-carte fc-pf" id="fc-pf-faites"><p class="fc-pf-l">${esc(trad("Séances de la formation faites (30 j) :"))} <b>${ProgFormation.faites30j(d.seances_formation)}</b></p></section>
-      <section class="carte fc-carte fc-reg" id="fc-regularite"><div class="fc-reg-l"><b>${esc(trad("Régularité"))}</b><span>${esc(regTexte)}</span></div><div class="fc-jauge" role="img" aria-label="${esc(trad("Régularité") + " : " + regTexte)}"><span style="width:${regPct}%"></span></div>${joursActifs ? `<p class="note fc-actifs" style="margin:8px 0 0">${esc(joursActifs)}</p>` : ""}</section>
-      <section class="carte fc-carte" id="fc-etat"><ul class="fiche-l fc-lignes">${etat("Questionnaire", I.complet, trad("Rempli"), trad("à remplir"))}${etat("Programme", seances.length, progNom || trad("envoyé"), trad("à faire"))}${etat("Diète", nbJours, trad("envoyée"), trad("à définir"))}</ul></section>
-      ${/* v104 (point 1) : plus de rangée de raccourcis (Fiche, Préparer le call, Son suivi…) : la fiche se parcourt par ses 5 onglets */ ""}
-      <section class="panel">
-        <h2>En bref</h2>
-        <div class="tiles">
-          <div class="tile"><div class="t-lbl">Poids</div><div class="t-val readout">${l.ev ? n1(l.ev.actuel) : "—"}<small>kg</small></div><div class="t-sub">${l.ev ? `départ ${n1(l.ev.depart)} · <span class="${l.sens ? (l.ev.total * l.sens < -0.2 ? "pos" : l.ev.total * l.sens > 0.2 ? "neg" : "") : ""}">${l.ev.total > 0 ? "+" : ""}${n1(l.ev.total)} kg</span>` : "aucune mesure"}</div></div>
-          <div class="tile"><div class="t-lbl">Séances</div><div class="t-val readout">${r.parts.seances ? r.parts.seances.faites : "—"}<small>${r.parts.seances ? "/ " + r.parts.seances.cible : ""}</small></div><div class="t-sub">notées cette semaine</div></div>
-          <div class="tile"><div class="t-lbl">Repas respectés</div><div class="t-val readout">${b.repas != null ? b.repas : "—"}<small>${b.repas != null ? "%" : ""}</small></div><div class="t-sub">sur 28 jours</div></div>
-          <div class="tile"><div class="t-lbl">Activité</div><div class="t-val readout${l.jours != null && l.jours >= 10 ? " neg" : ""}">${l.jours == null ? "—" : l.jours === 0 ? "auj." : l.jours + "<small>j</small>"}</div><div class="t-sub">${l.jours == null ? "jamais rien saisi" : "depuis sa dernière saisie"}</div></div>
-          <div class="tile"><div class="t-lbl">${dim ? "Feedback du dimanche" : "Bilan hebdo"}</div><div class="t-val readout${dernierCk ? " pos" : ""}">${dernierCk ? "✓" : "—"}</div><div class="t-sub">${dernierCk ? "dernier envoyé le " + esc(dateFr(dernierCk.envoye_le)) : "jamais envoyé"}</div></div>
-        </div>
-      </section>
-      ${profil.statut === "prospect" ? `<div id="fiche-prospect">${this.decouverteFicheHTML(pDc, d.challenge, I, d.suivi_prospect, d.activite, d.emails)}</div>` : ""}
-      ${/* v106 (lot 2) : les notes privées s'ouvrent par « Notes » de l'en-tête (un volet, depuis chaque onglet) */ ""}
-      <div class="fiche-grille">
-      <section class="panel"><div class="seance-c-tete"><h2>Profil</h2>${I.complet ? `<span class="pastille ok">questionnaire complet</span>` : `<span class="pastille attention">questionnaire incomplet</span>`}</div>
-        <ul class="ingr fiche-l">${ligne("Âge", I.age ? I.age + " ans" : "")}${ligne("Sexe", I.sexe)}${ligne("Taille", I.taille ? I.taille + " cm" : "")}${ligne("Poids déclaré", I.poids ? I.poids + " kg" : "")}${ligne("Poids objectif", I.poids_obj ? I.poids_obj + " kg" : "")}${ligne("Objectif", I.objectif)}${ligne("Niveau", I.niveau)}${ligne("Lieu", I.lieu)}${ligne("Séances / semaine", I.seances)}${ligne("Régime", I.regime_type)}${ligne("Allergènes", String(I.allergenes || "").split("|").filter(Boolean).join(", "))}${ligne("Ville", I.ville)}</ul></section>
-      <section class="panel"><div class="seance-c-tete"><h2>Objectifs du mois</h2>${obj ? `<span class="pastille">${b.statuts.filter(x => x === "atteint").length} / ${obj.liste.filter(Boolean).length}</span>` : ""}</div>
-        ${obj ? obj.liste.map((t, i) => t ? `<div class="objectif${b.statuts[i] === "atteint" ? " atteint" : ""}${b.statuts[i] === "non_atteint" ? " rate" : ""}"><span class="num">0${i + 1}</span><span class="texte" data-notr>${esc(t)}</span><span class="pastille ${Regularite.classeStatut(b.statuts[i])}">${esc(Regularite.libelleStatut(b.statuts[i]))}</span></div>` : "").join("") : `<div class="empty">Pas d'objectifs ce mois-ci.</div>`}
-        <p class="note" style="margin:10px 0 0"><a class="link-a" id="fc-obj-modifier" href="${esc(lienOutil("bilan"))}">${esc(trad("Modifier"))}</a></p></section>
-      <section class="panel"><div class="seance-c-tete"><h2>Programme</h2>${seances.length ? `<span class="pastille ok">envoyé</span>` : `<span class="pastille attention">à faire</span>`}</div>
-        <ul class="ingr fiche-l">${ligne("Nom", P.nom)}${seances.length ? ligne("Cycle", "Cycle " + String(av.cycle).padStart(2, "0") + (av.semaine != null ? " · semaine " + Math.min(av.semaine, av.duree) + " / " + av.duree : "")) : ""}${ligne("Séances / semaine", seances.length || "")}${ligne("Envoyé le", P.maj)}${ligne("Dernière séance notée", derniereSeance ? dateFr(derniereSeance.date) + " — " + (derniereSeance.nom || "") : "")}</ul></section>
-      <section class="panel"><div class="seance-c-tete"><h2>Nutrition</h2>${nbJours ? `<span class="pastille ok">envoyée</span>` : `<span class="pastille attention">à faire</span>`}</div>
-        <ul class="ingr fiche-l">${ligne("Cible", cible && num(cible.kcal) > 0 ? fmt(cible.kcal) + " kcal" + (num(cible.prot) > 0 ? " · " + fmt(cible.prot) + " g prot." : "") : "")}${ligne("Régime", R.regime)}${ligne("Allergènes écartés", (R.allergenes || []).join(", "))}${ligne("Jours différents", nbJours || "")}${ligne("Envoyée le", R.maj)}${ligne("Repas respectés (28 j)", b.repas != null ? b.repas + " %" : "")}${ligne("Repas remplacés ce mois", b.remplaces.length || "")}</ul></section>
-      ${avecJA ? JournalAlim.ficheHTML(JournalAlim.remettre(d.journal_alimentaire || JournalAlim.vide()), JournalAlim.objectif({ repas: R, calc: d.calc, calc_perso: d.calc_perso }, profil.statut === "prospect")) : ""}
-      <section class="panel"><h2>Poids et mensurations</h2>
-        <ul class="ingr fiche-l">${ligne("Poids actuel", l.ev ? n1(l.ev.actuel) + " kg" : "")}${ligne("Départ", l.ev ? n1(l.ev.depart) + " kg" : "")}${ligne("Depuis le début", l.ev ? (l.ev.total > 0 ? "+" : "") + n1(l.ev.total) + " kg" : "")}${ligne("4 dernières semaines", l.ev && l.ev.mois != null ? (l.ev.mois > 0 ? "+" : "") + n1(l.ev.mois) + " kg" : "")}${ligne("Mesures", (M.mesures || []).length || "")}${ligne("Dernière mesure", l.ev && l.ev.date ? dateFr(l.ev.date) : "")}${b.zones.map(z => ligne(z.nom, n1(z.de) + " → " + n1(z.a) + " cm")).join("")}</ul></section>
-      <section class="panel"><div class="seance-c-tete"><h2>${dim ? "Feedback du dimanche" : "Bilan hebdomadaire"}</h2>${e.fait ? `<span class="pastille ok">${dim ? "reçu" : "reçu cette semaine"}</span>` : dim && e.semaine.etat !== "ouvert" ? `<span class="pastille attention">non fait</span>` : dernierCk ? `<span class="pastille">${esc(trad("dernier : {d}", { d: dateFr(dernierCk.envoye_le) }))}</span>` : `<span class="pastille attention">aucun</span>`}</div>
-        ${dernierCk ? `<p class="note" style="margin:0 0 8px">${esc(Checkin.periode(dernierCk))}</p>${Checkin.reponsesHTML(dernierCk)}${Checkin.avisCoachHTML(CK, dernierCk.semaine, d.feedbacks)}` : `<div class="empty">${dim ? "Aucun feedback du dimanche envoyé pour le moment." : "Aucun bilan hebdomadaire envoyé pour le moment."}</div>`}
-        ${dernierCk ? `<p class="note" style="margin:10px 0 0">Ton feedback sur ce bilan : ${fbCk ? "envoyé le " + esc(dateFr(fbCk.date)) : fbAvant ? "<b>écrit avant ce bilan, à relire</b>" : "<b>à écrire</b>"}</p>` : ""}</section>
-      <section class="panel"><h2>Le reste</h2>
-        <ul class="ingr fiche-l">${ligne("Compléments", nbCompl ? nbCompl + " prescrit" + (nbCompl > 1 ? "s" : "") : "aucun")}${ligne("Formation", fo ? fo.pct + " % (" + fo.faits + " / " + fo.tot + ")" : "pas commencée")}${ligne("Anciens programmes", histP || "0")}${ligne("Anciennes diètes", histR || "0")}</ul></section>
-      </div>
+      ${prospectF ? `
+        ${SC ? `<div id="fiche-commercial">${Commercial.ficheHTML(Object.assign({}, pr || {}, profil), SC, d.suivi_prospect)}</div>` : ""}
+        ${this.contacterHTML(pDc, I)}
+        ${reponsesHTML}
+        <section class="carte fc-carte fc-pf" id="fc-pf-faites"><p class="fc-pf-l">${esc(trad("Séances de la formation faites (30 j) :"))} <b>${ProgFormation.faites30j(d.seances_formation)}</b></p></section>
+        <div id="fiche-prospect">${this.decouverteFicheHTML(pDc, d.challenge, I, d.suivi_prospect, d.activite, d.emails)}</div>` : `
+        <section class="carte fc-carte fc-retour" id="fc-retour"><div class="fc-retour-l"><div><p class="fc-sur">${esc(trad("Retour de la semaine"))}</p><p class="fc-retour-t">${esc(retourTexte)}</p></div><a class="lc-lien" id="fc-lire" href="${esc(lienOutil("bilan"))}">${esc(trad("Lire"))}</a></div></section>
+        <section class="carte fc-carte fc-poids" id="fc-poids">${l.ev ? `<p class="fc-kg"><b>${kg(l.ev.total)}</b> <span>${esc(trad("depuis le début"))}</span></p>${courbe}${l.ev.mois != null ? `<span class="pastille fc-4s">${esc(trad("4 dernières sem. : {v}", { v: kg(l.ev.mois) }))}</span>` : ""}` : `<p class="fc-kg"><span>${esc(trad("Poids : aucune mesure"))}</span></p>`}</section>
+        <section class="carte fc-carte fc-reg" id="fc-regularite"><div class="fc-reg-l"><b>${esc(trad("Régularité"))}</b><span>${esc(regTexte)}</span></div><div class="fc-jauge" role="img" aria-label="${esc(trad("Régularité") + " : " + regTexte)}"><span style="width:${regPct}%"></span></div>${joursActifs ? `<p class="note fc-actifs" style="margin:8px 0 0">${esc(joursActifs)}</p>` : ""}</section>
+        <section class="carte fc-carte" id="fc-etat"><ul class="fiche-l fc-lignes">${etat("Questionnaire", I.complet, trad("Rempli"), trad("à remplir")).replace("<span>Questionnaire</span>", `<span>${esc(trad("Questionnaire"))} <a class="lc-lien fc-tout-voir" id="fc-questionnaire" href="${esc(lienOutil("profil"))}">${esc(trad("Tout voir"))}</a></span>`)}${etat("Programme", seances.length, progNom || trad("envoyé"), trad("à faire"))}${etat("Diète", nbJours, trad("envoyée"), trad("à définir"))}</ul></section>
+      `}
       </div>
       <div class="fc-panneau" id="fc-compte"${onglet === "compte" ? "" : " hidden"}>
         <section class="carte fc-carte" id="fc-infos"><ul class="fiche-l fc-lignes">

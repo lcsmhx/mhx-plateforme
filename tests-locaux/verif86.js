@@ -527,11 +527,11 @@ const PLUSIEURS = "Ces comptes disparaissent de tes listes. Tu les retrouves dan
         && JSON.stringify(f.onglets) === "[]" && JSON.stringify(f.ongletsFiche) === '["Aperçu:ici","Programme","Nutrition","Suivi"]' && f.titre === "Aperçu" && !f.mast && JSON.stringify(f.sortir) === '["Revenir à mes clients"]'
         && f.suivi && !f.compte && !f.croix && f.bandeau && !f.bandeauSuivi && !f.fcOutils && JSON.stringify(f.pagesApercu) === '["Aperçu:ici","Son questionnaire"]', JSON.stringify(f));   // v106 (lot 2) : 4 onglets, h1 caché « Aperçu », la rangée « Aperçu » · « Son questionnaire »   // v105 (point 2) : plus de bouton « Fiche » ni de grand titre visible (h1 pour les lecteurs d'écran)
     /* v105 (point 2) : « Fiche » n'est plus un bouton du bandeau (l'onglet Aperçu, sa seule page, y mène) */
-    ok("E2 : Suivi : retour de la semaine (« Bilan hebdo reçu — à lire », Lire → Préparer le call), poids depuis le début, régularité, questionnaire / programme / diète, le bandeau d'avant (« Fiche » et les outils du client ; son journal alimentaire seulement s'il lui est ouvert ; v104 : les pages des 5 onglets du bandeau commun), puis toute la fiche d'avant (notes privées comprises)",
+    ok("E2 : Suivi (v106 : sans « En bref » ni les cartes qui résumaient les autres onglets) : retour de la semaine (« Bilan hebdo reçu — à lire », Lire → Préparer le call), poids depuis le début, régularité, questionnaire / programme / diète, le bandeau d'avant (« Fiche » et les outils du client ; son journal alimentaire seulement s'il lui est ouvert ; v104 : les pages des 5 onglets du bandeau commun), puis toute la fiche d'avant (notes privées comprises)",
       /Retour de la semaine/i.test(f.retour) && /Bilan hebdo reçu — à lire/.test(f.retour) && f.lire === "#/client/" + THOMAS + "/bilan" && /kg/.test(f.poids) && /depuis le début/.test(f.poids) && /Régularité/.test(f.reg)
-        && f.etat.length === 3 && /^Questionnaire Rempli/.test(f.etat[0]) && /^Programme Bloc 1/.test(f.etat[1]) && /^Diète envoyée/.test(f.etat[2])
+        && f.etat.length === 3 && /^Questionnaire Tout voir Rempli/.test(f.etat[0]) /* v106 (lot 4) : « Tout voir » ouvre son questionnaire */ && (await page.$eval("#fc-questionnaire", a => a.getAttribute("href")).catch(() => "")) === "#/client/" + THOMAS + "/profil" && /^Programme Bloc 1/.test(f.etat[1]) && /^Diète envoyée/.test(f.etat[2])
         && JSON.stringify(f.outils) === "[]" && JSON.stringify(pagesF) === JSON.stringify(PAGES_V104)
-        && ["Bilans","Son questionnaire","Son programme","Ses repas","Ses calories","Courbes","Ses séances"].every(o => Object.values(pagesF).some(l => l.includes(o))) && !f.avant.length && f.notes, JSON.stringify([f, pagesF]));
+        && ["Bilans","Son questionnaire","Son programme","Ses repas","Ses calories","Courbes","Ses séances"].every(o => Object.values(pagesF).some(l => l.includes(o))) && f.avant.length === 8 /* v106 (lot 4) : changement voulu — « En bref » et les 8 cartes qui résumaient les autres onglets ont quitté l'Aperçu */ && f.notes, JSON.stringify([f, pagesF]));
     await onglet(page, "compte");
     const c = await page.evaluate(() => { const p = document.getElementById("fc-compte");
       return { vis: !p.hidden, suivi: document.getElementById("fc-suivi").hidden, lignes: Array.from(p.querySelectorAll("#fc-infos li")).map(li => li.querySelector("span").textContent),
@@ -551,8 +551,10 @@ const PLUSIEURS = "Ces comptes disparaissent de tes listes. Tu les retrouves dan
     const z = await page.evaluate(() => { const v = s => document.querySelector(s);
       const w = v("#vue > .fiche-entete [data-fiche-wa] .fiche-wa-l");
       return { role: v("#vue > .fiche-entete .fe-statut").textContent, wa: w && w.getAttribute("href"), waT: (w || {}).getAttribute ? w.getAttribute("aria-label") : null, cible: w && w.getAttribute("target"),
-        call: !!v("#fc-call"), rep: Array.from(document.querySelectorAll("#fc-reponses li")).map(li => [li.querySelector("span").textContent, li.querySelector("b").textContent.trim()]),
-        ordre: (() => { const r = v("#fc-reponses"), s = v("#fiche-commercial"), t = v("#fc-retour"); return !!(r && s && t && (r.compareDocumentPosition(s) & 4) && (s.compareDocumentPosition(t) & 4)); })(),
+        call: !!v("#fc-call"), rep: Array.from(document.querySelectorAll("#fiche-reponses li")).map(li => [li.querySelector("span").textContent, li.querySelector("b").textContent.trim()]),
+        /* v106 (lot 4) : changement voulu — le suivi commercial et « Contacter » d'abord, puis ses réponses (une seule fois), et plus de
+           cartes « client » (retour de la semaine, poids, régularité…) */
+        ordre: (() => { const r = v("#fiche-reponses"), s = v("#fiche-commercial"), c = v("#fiche-actions"); return !!(r && s && c && (s.compareDocumentPosition(c) & 4) && (c.compareDocumentPosition(r) & 4)) && !v("#fc-retour") && !v("#fc-regularite") && !v("#fc-poids") && !v("#fc-reponses") && document.querySelectorAll("#fiche-reponses").length === 1 /* v106 (lot 4) : le bloc « Réponses au questionnaire court » est le seul */; })(),
         sc: (v("#fiche-commercial h2") || {}).textContent, boutons: Array.from(document.querySelectorAll("#fiche-commercial [data-sc]")).map(x => x.textContent.trim()) }; });
     const waZ = "https://wa.me/33639980011?text=" + encodeURIComponent(MSG_ZOE);
     /* v104 (point 4) : changement voulu — le bouton du message prêt s'appelle « Message WhatsApp prêt » (le bandeau commun a
@@ -561,19 +563,20 @@ const PLUSIEURS = "Ces comptes disparaissent de tes listes. Tu les retrouves dan
     ok("E5 : fiche d'un prospect : pastille « Prospect », WhatsApp de l'en-tête = « WhatsApp : message prêt » (pas de « Préparer le call ») : lien wa.me vers son numéro, texte pré-rempli encodé exact (objectif, 2 blocages, son texte libre), nouvel onglet",
       z.role === "Prospect" && z.wa === waZ && norm(z.waT) === "WhatsApp : message prêt" && z.cible === "_blank" && !z.call && decodeURIComponent(z.wa.split("?text=")[1]) === MSG_ZOE, JSON.stringify({ z, waZ }));
     /* v104 (point 4) : changement voulu — dans la fiche, la question « Tu es ? » se lit « Sexe » (PHRASES_FICHE) */
-    ok("E6 : d'abord « Ses réponses » (format du parcours v81) : Objectif, Ce qui bloque, Avec ses mots, Dans 3 mois, Sexe (v104 : « Tu es ? » à la 3e personne) ; puis le Suivi commercial complet (Bilan réservé, J'ai relancé, Signé, Perdu, Absent)",
-      JSON.stringify(z.rep) === JSON.stringify([["Objectif", "Perdre du gras"], ["Ce qui bloque", "Le manque de temps · Je craque sur la nourriture"], ["Avec ses mots", "Je travaille de nuit"], ["Dans 3 mois", "Avoir de l'énergie toute la journée"], ["Sexe", "Femme"]])
+    ok("E6 : d'abord le Suivi commercial et « Contacter », puis ses réponses une seule fois (v106 : « Réponses au questionnaire court ») : Email, Problème, Ce qui l'a bloqué (avec ses mots), Dans 3 mois, Sexe ; et dans le Suivi commercial : Objectif, Ce qui bloque, Avec ses mots, Dans 3 mois, Sexe (v104 : « Tu es ? » à la 3e personne) ; puis le Suivi commercial complet (Bilan réservé, J'ai relancé, Signé, Perdu, Absent)",
+      /* v106 (lot 4) : changement voulu — un seul bloc de réponses, « Réponses au questionnaire court » (libellés du coach), avec son email */
+      JSON.stringify(z.rep) === JSON.stringify([["Email", "zoe@exemple.fr"], ["Problème", "Perdre du gras"], ["Ce qui l'a bloqué", "Le manque de temps · Je craque sur la nourriture — Je travaille de nuit"], ["Dans 3 mois", "Avoir de l'énergie toute la journée"], ["Sexe", "Femme"]])
         && z.ordre && z.sc === "Suivi commercial" && JSON.stringify(z.boutons) === '["Bilan réservé","J\'ai relancé","Signé","Perdu","Absent"]', JSON.stringify(z));
     await fiche(page, HUGO, "Hugo Bernard");
     const h = await page.evaluate(w => ({ wa: (document.querySelector(w) || {}).getAttribute("aria-label"), dis: (document.querySelector(w) || {}).disabled, tag: (document.querySelector(w) || {}).tagName,
-      tel: (document.getElementById("fc-appeler") || {}).disabled, rep: Array.from(document.querySelectorAll("#fc-reponses li")).map(li => li.querySelector("b").textContent.trim()) }), WA);
+      tel: (document.getElementById("fc-appeler") || {}).disabled, rep: Array.from(document.querySelectorAll("#fiche-reponses li")).map(li => li.querySelector("b").textContent.trim()) }), WA);
     await fiche(page, ANA, "Ana Lopez");
-    const a = await page.evaluate(() => ({ rep: Array.from(document.querySelectorAll("#fc-reponses li")).map(li => li.querySelector("b").textContent.trim()), note: (document.querySelector("#fc-reponses .note") || {}).textContent || "",
+    const a = await page.evaluate(() => ({ rep: Array.from(document.querySelectorAll("#fiche-reponses li")).map(li => li.querySelector("b").textContent.trim()), note: Array.from(document.querySelectorAll("#fiche-reponses .note")).map(x => x.textContent).join(" "),   // v106 (lot 4) : la ligne « n / N réponses » vient d'abord
       decouverte: !!document.getElementById("fiche-decouverte") }));
-    ok("E7 : sans numéro : bouton grisé « Pas de numéro » (et Appeler inactif) ; « Ses réponses » au format v60 (sans texte libre ni « Tu es ? » : « Pas encore répondu ») et à l'ancien format (questionnaire de 10 questions) lisibles",
+    ok("E7 : sans numéro : bouton grisé « Pas de numéro » (et Appeler inactif) ; les réponses au format v60 (sans texte libre ni « Tu es ? ») et à l'ancien format (questionnaire de 10 questions, « — » sans réponse) lisibles, une seule fois (v106)",
       h.tag === "BUTTON" && norm(h.wa) === "WhatsApp : pas de numéro" && h.dis === true && h.tel === true
-        && JSON.stringify(h.rep) === JSON.stringify(["Prendre du muscle", "La motivation retombe vite", "Pas encore répondu", "Tenir une routine sans me forcer", "Pas encore répondu"])
-        && JSON.stringify(a.rep) === JSON.stringify(["Remise en forme", "Pas encore répondu", "Trop de travail le soir", "Pas encore répondu", "Femme"]) && /Anciennes réponses/.test(a.note) && a.decouverte, JSON.stringify({ h, a }));
+        && JSON.stringify(h.rep) === JSON.stringify(["hugo@exemple.fr", "Prendre du muscle", "La motivation retombe vite", "Tenir une routine sans me forcer"])
+        && JSON.stringify(a.rep) === JSON.stringify(["ana@exemple.fr", "Femme", "31", "—", "—", "Remise en forme", "—", "—", "Trop de travail le soir", "—", "7 / 10"]) && /5 \/ 10 réponses/.test(a.note) && a.decouverte, JSON.stringify({ h, a }));
     await fiche(page, LEO, "Leo Smith");
     const lw = await page.$eval(WA, x => x.getAttribute("href"));
     await fiche(page, NOE, "Noé Petit");
@@ -695,11 +698,11 @@ const PLUSIEURS = "Ces comptes disparaissent de tes listes. Tu les retrouves dan
     await fiche(page, ZOE, "Zoé Martin");
     /* v104 (point 4) : changement voulu — plus de boutons Suivi / Compte ni de croix : les 5 onglets du bandeau commun en anglais
        (Overview marqué), le titre de page « Profile » (« Fiche »), aucune croix */
-    const f = await page.evaluate(() => ({ onglets: Array.from(document.querySelectorAll("#vue > .fiche-entete .f-onglet")).map(x => x.textContent + (x.getAttribute("aria-current") ? ":ici" : "")), titre: document.querySelector("#fc-reponses h2").textContent,
-      rep: Array.from(document.querySelectorAll("#fc-reponses li span")).map(x => x.textContent), croix: !!document.getElementById("fc-fermer") || !!document.querySelector("[data-onglet]"), role: document.querySelector("#vue > .fiche-entete .fe-statut").textContent,
+    const f = await page.evaluate(() => ({ onglets: Array.from(document.querySelectorAll("#vue > .fiche-entete .f-onglet")).map(x => x.textContent + (x.getAttribute("aria-current") ? ":ici" : "")), titre: document.querySelector("#fiche-reponses h2").textContent,
+      rep: Array.from(document.querySelectorAll("#fiche-reponses li span")).map(x => x.textContent), croix: !!document.getElementById("fc-fermer") || !!document.querySelector("[data-onglet]"), role: document.querySelector("#vue > .fiche-entete .fe-statut").textContent,
       h1: (document.querySelector("#acc-vue > h1.sr-only") || {}).textContent }));   // v105 (point 2) : le h1 « Fiche » caché à l'écran
-    ok("I3 : fiche en anglais : onglets Overview (marqué) · Program · Nutrition · Follow-up (v106), titre « Overview », « Their answers » (Goal, What's holding them back, In their own words, In 3 months, Sex — v104 (point 4) : « You are…? » à la 3e personne), sans croix ni boutons Suivi / Compte",
-      JSON.stringify(f.onglets) === '["Overview:ici","Program","Nutrition","Follow-up"]' && f.h1 === "Overview" /* v106 (lot 2) : 4 onglets, le h1 caché au nom de la page */ && f.titre === "Their answers" && JSON.stringify(f.rep) === JSON.stringify(["Goal", "What's holding them back", "In their own words", "In 3 months", "Sex"]) && !f.croix && f.role === "Prospect", JSON.stringify(f));
+    ok("I3 : fiche en anglais : onglets Overview (marqué) · Program · Nutrition · Follow-up (v106), titre « Overview », « Short questionnaire answers » (v106 : Email, Problem, What held them back, In 3 months, Sex — v104 (point 4) : « You are…? » à la 3e personne), sans croix ni boutons Suivi / Compte",
+      JSON.stringify(f.onglets) === '["Overview:ici","Program","Nutrition","Follow-up"]' && f.h1 === "Overview" /* v106 (lot 2) : 4 onglets, le h1 caché au nom de la page */ && f.titre === "Short questionnaire answers" && JSON.stringify(f.rep) === JSON.stringify(["Email", "Problem", "What held them back", "In 3 months", "Sex"]) /* v106 (lot 4) : le bloc unique des réponses, traduit */ && !f.croix && f.role === "Prospect", JSON.stringify(f));
   });
 
   /* =================== J. v84 : ménage du bloc 3 =================== */

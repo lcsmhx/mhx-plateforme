@@ -182,8 +182,10 @@ const outilProfil = {
     QUESTIONS.forEach(q => {
       if (q.retiree && !Store.idConsulte) return;   // v73 (C) : question retirée, lue seulement en consultation
       if (q.section){
-        if (ouverte) corps += `</div></section>`;
-        corps += `<section class="panel"><h2>${esc(q.section)}</h2><div class="grid g2">`;
+        /* v106 (lot 4) : dans la fiche d'un client, le questionnaire est replié par thème (« Tout voir » de l'Aperçu l'ouvre) :
+           chaque section est un <details> fermé, son titre reste visible */
+        if (ouverte) corps += Store.idConsulte ? `</div></details>` : `</div></section>`;
+        corps += Store.idConsulte ? `<details class="panel q-theme"><summary><h2>${esc(q.section)}</h2></summary><div class="grid g2">` : `<section class="panel"><h2>${esc(q.section)}</h2><div class="grid g2">`;
         ouverte = true;
         return;
       }
@@ -197,7 +199,7 @@ const outilProfil = {
         ${q.aide ? `<p class="note" style="margin:-2px 0 8px">${esc(q.aide)}</p>` : ""}
         ${Store.idConsulte ? this.lectureHTML(q, D[q.id]) : this.champ(q, D[q.id])}</div>`;
     });
-    if (ouverte) corps += `</div></section>`;
+    if (ouverte) corps += Store.idConsulte ? `</div></details>` : `</div></section>`;
     /* v106 (lot 1) : les Réglages du coach s'ouvrent sur « Mon compte » ; son questionnaire reste dessous */
     if (Auth.estCoach() && !Store.idConsulte) return this.compteHTML() + corps + `
     <section class="panel">

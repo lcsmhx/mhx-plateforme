@@ -747,7 +747,7 @@ body.nav106 .compte .qui,body.nav106 #langue,body.nav106 #deco{display:none}
 #vue > .fiche-entete .fiche-onglets{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin:0;padding:2px;border:1px solid var(--verre-bord);border-radius:var(--r-sm);background:var(--sunken)}
 #vue > .fiche-entete .f-onglet{justify-content:center;min-height:var(--h-toucher);padding:0 6px;border:0;border-radius:calc(var(--r-sm) - 2px);font-size:14px;color:var(--ink-2);background:none}
 #vue > .fiche-entete .f-onglet:hover{color:var(--ink)}
-#vue > .fiche-entete .f-onglet.ici{background:var(--accent);color:var(--accent-ink)}
+#vue > .fiche-entete .f-onglet.ici{background:var(--accent-soft);color:var(--accent);font-weight:600;box-shadow:inset 0 0 0 1px var(--accent-line)}   /* le doré plein reste aux boutons d'action de la page */
 #vue > .fiche-entete .fiche-pages{margin:0;gap:4px;padding:0;flex-wrap:nowrap;overflow-x:auto}
 #vue > .fiche-entete.fe-reduit .fiche-pages{display:none}   /* en descendant : la ligne et les onglets restent, les pages reviennent en haut */
 /* la copie du témoin d'enregistrement (téléphone et tablette, où la barre du haut est cachée dans une fiche) */
@@ -770,3 +770,28 @@ html:has(body.en-fiche){scroll-padding-top:190px}
 #vue > .fiche-entete .fe-actions .rond,#vue > .fiche-entete .fe-retour{width:var(--h-rond);height:var(--h-rond);min-width:0}
 @media (max-width:420px){ .fe-ligne,.fe-actions{gap:4px} }   /* les boutons gardent 44 px */
 @media (max-width:380px){ #vue > .fiche-entete .f-onglet{font-size:13px;padding:0 2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap} .fe-nom{font-size:16px} }
+
+/* v106 (lot 4) — le questionnaire d'un client, replié par thème dans sa fiche (outilProfil) ; « Tout voir » de l'Aperçu y mène */
+details.q-theme{border-top:1px solid var(--verre-bord);margin-top:0;padding-top:0}
+details.q-theme > summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:var(--h-toucher);cursor:pointer;color:var(--ink)}
+details.q-theme > summary::-webkit-details-marker{display:none}
+details.q-theme > summary::after{content:"";width:9px;height:9px;border-right:2px solid var(--ink-3);border-bottom:2px solid var(--ink-3);transform:rotate(45deg);margin-right:6px;transition:transform var(--vite)}
+details.q-theme[open] > summary::after{transform:rotate(-135deg)}
+details.q-theme > summary h2{margin:0}
+details.q-theme[open] > summary{margin-bottom:14px}
+.fc-tout-voir{display:inline-flex;align-items:center;min-height:var(--h-toucher);margin-left:8px;font-size:13px}
+
+/* v106 (lot 3, test QA) — « Bilans » : la zone de réponse au dernier bilan au premier écran du téléphone (réponses du client plus
+   serrées) ; zones de toucher de 44 px pour replier un bilan et pour « Envoyer le feedback » */
+.hist-entree > summary{min-height:var(--h-toucher);display:flex;flex-wrap:wrap;align-items:center;column-gap:6px}
+.fb-editeur .btn{min-height:var(--h-toucher)}
+@media (max-width:720px){
+  #bilan-retours > .panel{padding:14px 14px 10px}
+  #bilan-retours h2{font-size:15px;margin-bottom:6px}
+  #bilan-retours .hist-entree{padding:4px 0}
+  #bilan-retours .checkin-echelles{margin:4px 0 6px}
+  #bilan-retours .checkin-rep{margin:0 0 6px;font-size:14px;line-height:1.35}
+  #bilan-retours .fb-editeur{margin-top:8px;padding-top:8px}
+  #bilan-retours .fb-editeur textarea{min-height:72px}
+  #bilan-retours .fb-editeur .actions{margin-top:6px}
+}
