@@ -1224,9 +1224,9 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     /* v105 (point 2) : changements voulus — l'Aperçu n'a plus de bouton « Fiche » (sa seule page), ni le nom répété sous l'en-tête
        (h2 de #fc-ident ; le nom est dans le bandeau « Fiche de … »), ni le grand titre « Fiche » (gardé pour les lecteurs d'écran) :
        retirés de la référence tant qu'elle les a ; tout le reste comparé strictement. Une fois la v105 sur main : rien à retirer. */
-    const v105 = mf.v104 && mf.commun.h1 === null && mfM.commun.h1 === "Thomas Démo";
+    const v105 = mf.v104 && mf.commun.h1 === null; /* la version testée est la v105 ou plus ; la référence peut être la v104 (retraits ci-dessous) ou déjà la v105 */
     if (v105 && pagesV.get(mf) && pagesV.get(mfM) && !("accueil" in pagesV.get(mf)) && pagesV.get(mfM).accueil === "Fiche") delete pagesV.get(mfM).accueil;
-    if (v105) mfM.commun.h1 = null;
+    if (v105 && mfM.commun.h1 === "Thomas Démo") mfM.commun.h1 = null;
     for (const [m, p] of pagesV) m.commun.bandeau = [m.parts104.tete, OUTILS_V103.filter(id => id in p).map(id => p[id]).join(""), m.parts104.sortir].join(" ");
     /* v84 (ménage du bloc 3) : différence VOULUE, le bouton de retour du bandeau nomme la page d'où la fiche est ouverte : « Revenir
        au suivi détaillé » (page testée, ouverte depuis #/suivi-clients) ; « Revenir à mes clients » dans la référence tant qu'elle
