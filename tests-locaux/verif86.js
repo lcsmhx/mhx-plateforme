@@ -449,27 +449,31 @@ const PLUSIEURS = "Ces comptes disparaissent de tes listes. Tu les retrouves dan
     const db = base();
     const { page } = await contexte(b, db);
     await page.goto(URL0 + "#/tableau"); await pret(page); await page.waitForSelector("#tb-a-traiter"); await attendre(page, 500);
+    /* v106 (lot 5) : changement voulu — « Aujourd'hui » : 4 chiffres-boutons (À traiter, Retours à lire, Nouveaux, Inactifs), puis
+       une liste groupée, une ligne par personne (sa raison la plus urgente) : Clients (Retours à lire, Clients inactifs) et
+       Prospects (Nouveaux prospects, Bilans réservés, À relancer) ; plus de tuiles, de « Raccourcis » ni de « Nouveaux depuis ta
+       dernière visite » à part (ses inscrits sont le groupe « Nouveaux prospects ») ; « Inscrits par source » est dans la Vue
+       détaillée des Prospects. Mêmes personnes qu'avant, jamais les comptes archivés (Paul, Inès). */
     const t = await page.evaluate(() => ({ h1: document.querySelector("#tb-vue h1").textContent, sous: document.querySelector("#tb-vue .tb-tete .lede").textContent,
-      compteurs: Array.from(document.querySelectorAll("#tb-vue .tb-tiles .tb-tuile")).map(x => x.querySelector(".t-lbl").textContent + " " + x.querySelector(".t-val").textContent),
-      /* v104 (point 10) : changement voulu — « À traiter maintenant » = les urgences seulement (la 1re liste) ; le reste (Julien,
-         inactif) est dans « À surveiller » (ul.tb-surveiller, juste dessous) */
-      sur: document.querySelector("#tb-a-traiter h2").textContent, lignes: Array.from(document.querySelectorAll("#tb-a-traiter > ul.tb-at:not(.tb-surveiller) [data-fiche]")).map(x => x.dataset.fiche),
-      raisons: Array.from(document.querySelectorAll("#tb-a-traiter > ul.tb-at:not(.tb-surveiller) [data-fiche] small")).map(x => x.textContent.trim()),
-      surveiller: Array.from(document.querySelectorAll("#tb-a-traiter ul.tb-surveiller [data-fiche]")).map(x => [x.dataset.fiche, x.querySelector("small").textContent.trim()]),
-      titreSurv: (document.querySelector("#tb-a-traiter ul.tb-surveiller") && document.getElementById(document.querySelector("#tb-a-traiter ul.tb-surveiller").getAttribute("aria-labelledby")) || {}).textContent || "",
-      nouveaux: Array.from(document.querySelectorAll("#tb-nouveaux .tb-liste li b")).map(x => x.textContent),
-      ordre: (() => { const a = document.getElementById("tb-a-traiter"), n = document.getElementById("tb-nouveaux"), s = document.getElementById("tb-sources"); return !!(a && n && s && (a.compareDocumentPosition(n) & 4) && (n.compareDocumentPosition(s) & 4)); })(),
-      raccourcis: Array.from(document.querySelectorAll("#tb-vue .acces b")).map(x => x.textContent),
+      chiffres: Array.from(document.querySelectorAll("#tb-vue .tb-chiffre")).map(x => x.querySelector(".t-lbl").textContent + " " + x.querySelector(".t-val").textContent),
+      groupes: Object.fromEntries(Array.from(document.querySelectorAll("#tb-a-traiter .tb-groupe")).map(g => [g.id.replace("tb-g-", ""), Array.from(g.querySelectorAll("[data-fiche]")).map(x => [x.dataset.fiche, x.dataset.cible, x.querySelector("small").textContent.trim()])])),
+      colonnes: Array.from(document.querySelectorAll("#tb-a-traiter .tb-col")).map(c => c.id + ":" + Array.from(c.querySelectorAll(".tb-groupe")).map(g => g.id.replace("tb-g-", "")).join(",")),
+      waNouveaux: Array.from(document.querySelectorAll("#tb-g-nouveaux .tb-wa")).map(a => a.getAttribute("href")),
+      anciens: ["#tb-nouveaux", "#tb-sources", "#tb-t-clients", ".tb-tiles", "#tb-vue .acces"].filter(x => document.querySelector(x)),
       badge: (document.querySelector('#barre-bas a[data-id="prospects"] .nav-badge') || {}).textContent || "" }));
-    /* v106 (lot 1) : changement voulu — le tableau de bord porte le nom de son entrée du menu, « Aujourd'hui » */
-    ok("D1 : « Aujourd'hui » (v106 : le nom de l'entrée du menu), « Ce qui demande ton attention aujourd'hui. », 3 compteurs dans l'ordre : Clients 5, À traiter 4 (v104 : les urgences seulement, sans Julien inactif), Prospects 5 (sans les 2 archivés)",
-      t.h1 === "Aujourd'hui" && t.sous === "Ce qui demande ton attention aujourd'hui." && JSON.stringify(t.compteurs) === '["Clients 5","À traiter 4","Prospects 5"]', JSON.stringify(t));
-    ok("D2 : « À traiter maintenant » : Thomas (retour à lire) d'abord, les 3 nouveaux prospects ; v104 (point 10) : Julien (inactif) dessous, dans « À surveiller », avec la raison existante ; jamais Paul ni Inès (archivés)",
-      t.sur === "À traiter maintenant" && t.lignes[0] === THOMAS && t.lignes.length === 4 && JSON.stringify(t.lignes.slice(1, 4).sort()) === JSON.stringify([ZOE, LEO, NOE].sort())
-        && t.titreSurv === "À surveiller" && JSON.stringify(t.surveiller) === JSON.stringify([[JULIEN, "Inactif depuis 12 j"]])
-        && t.raisons[0] === "Bilan hebdo reçu — à lire" && ![...t.lignes, ...t.surveiller.map(x => x[0])].includes(PAUL) && ![...t.lignes, ...t.surveiller.map(x => x[0])].includes(INES), JSON.stringify(t));
-    ok("D3 : dessous, tout le reste d'avant : « Nouveaux depuis ta dernière visite » (Zoé, Noé, Leo, Hugo ; pas Inès, archivée), « Inscrits par source », raccourcis (Mes clients, Mes séances, Bibliothèque, Catalogue) ; badge de l'onglet Prospects = les 3 urgences (Zoé, Noé, Leo ; v105 : plus les nouveautés), sans l'archivée",
-      t.ordre && JSON.stringify(t.nouveaux) === '["Zoé","Noé","Leo","Hugo"]' && JSON.stringify(t.raccourcis) === '["Mes clients","Mes séances","Bibliothèque","Catalogue"]' && t.badge === "3", JSON.stringify(t));
+    const G = t.groupes || {}, ids = k => (G[k] || []).map(x => x[0]);
+    ok("D1 : « Aujourd'hui », « Ce qui demande ton attention aujourd'hui. », 4 chiffres-boutons : À traiter (toutes les lignes), Retours à lire 1, Nouveaux, Inactifs 1 ; clients à gauche (Retours à lire, Clients inactifs), prospects à droite (Nouveaux prospects, Bilans réservés, À relancer)",
+      t.h1 === "Aujourd'hui" && t.sous === "Ce qui demande ton attention aujourd'hui." && t.chiffres.length === 4 && t.chiffres[1] === "Retours à lire 1" && t.chiffres[3] === "Inactifs 1"
+        && t.chiffres[0] === "À traiter " + Object.values(G).reduce((n, l) => n + l.length, 0) && t.chiffres[2] === "Nouveaux " + ids("nouveaux").length
+        && JSON.stringify(t.colonnes) === '["tb-col-clients:retours,inactifs","tb-col-prospects:nouveaux,reserves,relancer"]', JSON.stringify(t));
+    ok("D2 : Retours à lire : Thomas (« Bilan hebdo reçu — à lire » → Bilans) ; Clients inactifs : Julien (« Inactif depuis 12 j » → Aperçu) ; Nouveaux prospects : Zoé, Noé, Leo (inscrits depuis moins de 48 h, du plus récent au plus ancien) ; Bilans réservés : Hugo (inscrit depuis la dernière visite, mais son bilan réservé est sa raison la plus urgente) ; WhatsApp = message prêt pour qui a un numéro ; jamais Paul ni Inès (archivés)",
+      JSON.stringify(G.retours) === JSON.stringify([[THOMAS, "bilan", "Bilan hebdo reçu — à lire"]]) && JSON.stringify(G.inactifs) === JSON.stringify([[JULIEN, "accueil", "Inactif depuis 12 j"]])
+        && JSON.stringify(ids("nouveaux")) === JSON.stringify([ZOE, NOE, LEO]) && JSON.stringify(G.reserves) === JSON.stringify([[HUGO, "accueil", "Bilan réservé"]]) && t.waNouveaux.length >= 1 && t.waNouveaux.every(h => /^https:\/\/wa\.me\/\d+\?text=/.test(h))
+        && !Object.values(G).some(l => l.some(x => x[0] === PAUL || x[0] === INES)), JSON.stringify(G) + " " + JSON.stringify(t.waNouveaux));
+    await page.goto(URL0 + "#/suivi-commercial"); await pret(page); await page.waitForSelector("#tb-sources"); const src = await page.evaluate(() => !!document.querySelector("#tb-sources #tb-sources-t") || /Aucun inscrit/.test(document.getElementById("tb-sources").textContent));
+    await page.goto(URL0 + "#/tableau"); await pret(page); await page.waitForSelector("#tb-a-traiter"); await attendre(page, 300);
+    ok("D3 : plus de tuiles, de « Raccourcis » ni de bloc « Nouveaux depuis ta dernière visite » à part ; « Inscrits par source » dans Prospects › Vue détaillée ; badge de l'onglet Prospects = les 3 urgences (Zoé, Noé, Leo), sans l'archivée",
+      t.anciens.length === 0 && src && t.badge === "3", JSON.stringify({ anciens: t.anciens, src, badge: t.badge }));
     const nav = await page.evaluate(() => Array.from(document.querySelectorAll("#barre-bas a, #barre-bas button")).map(x => x.textContent.trim()));
     /* v106 (lot 1) : changement voulu — plus de « Plus » : Réglages et Mon entraînement derrière le rond de profil, le Catalogue en
        onglet de la Bibliothèque (vérifié ici aussi) */
@@ -486,8 +490,8 @@ const PLUSIEURS = "Ces comptes disparaissent de tes listes. Tu les retrouves dan
     const db2 = base({ calme: true });
     const { page: p2 } = await contexte(b, db2);
     await p2.goto(URL0 + "#/tableau"); await pret(p2); await p2.waitForSelector("#tb-a-traiter"); await attendre(p2, 400);
-    const v = await p2.evaluate(() => ({ rien: (document.querySelector("#tb-a-traiter .tb-rien") || {}).textContent, compteurs: Array.from(document.querySelectorAll("#tb-vue .tb-tiles .t-val")).map(x => x.textContent) }));
-    ok("D5 : rien à traiter : la section reste, « Rien à traiter pour l'instant. » ; compteurs 2 · 0 · 0 (Paul archivé ne compte pas)", v.rien === "Rien à traiter pour l'instant." && JSON.stringify(v.compteurs) === '["2","0","0"]', JSON.stringify(v));
+    const v = await p2.evaluate(() => ({ rien: (document.querySelector("#tb-vue .tb-rien-tout") || {}).textContent, compteurs: Array.from(document.querySelectorAll("#tb-vue .tb-chiffre .t-val")).map(x => x.textContent), lignes: document.querySelectorAll("#tb-a-traiter [data-fiche]").length }));
+    ok("D5 : rien à traiter : « Rien à traiter pour l'instant. », les 4 chiffres à 0, aucune ligne (Paul archivé ne compte pas) (v106)", v.rien === "Rien à traiter pour l'instant." && JSON.stringify(v.compteurs) === '["0","0","0","0"]' && v.lignes === 0, JSON.stringify(v));
   });
 
   /* =================== E. fiches à onglets, WhatsApp =================== */
@@ -679,11 +683,11 @@ const PLUSIEURS = "Ces comptes disparaissent de tes listes. Tu les retrouves dan
     const { page } = await contexte(b, db, { langue: "en" });
     await page.goto(URL0 + "#/tableau"); await pret(page); await page.waitForSelector("#tb-a-traiter"); await attendre(page, 500);
     const t = await page.evaluate(() => ({ h1: document.querySelector("#tb-vue h1").textContent, sous: document.querySelector("#tb-vue .tb-tete .lede").textContent,
-      lbl: Array.from(document.querySelectorAll("#tb-vue .tb-tiles .t-lbl")).map(x => x.textContent), sur: document.querySelector("#tb-a-traiter h2").textContent,
+      lbl: Array.from(document.querySelectorAll("#tb-vue .tb-chiffre .t-lbl")).map(x => x.textContent), sur: Array.from(document.querySelectorAll("#tb-a-traiter .tb-sur")).map(x => x.firstChild.textContent.trim()).join(" · "),
       nav: Array.from(document.querySelectorAll("#barre-bas .lbl")).map(x => x.textContent) }));
     /* v106 (lot 1) : changement voulu — « Today » et la barre à 4 cases (Today · Clients · Prospects · Library) */
-    ok("I1 : « Aujourd'hui » en anglais : « Today », « What needs your attention today. », Clients · To handle · Prospects, « To handle now » ; barre du bas Today · Clients · Prospects · Library (v106)",
-      t.h1 === "Today" && t.sous === "What needs your attention today." && JSON.stringify(t.lbl) === '["Clients","To handle","Prospects"]' && t.sur === "To handle now" && JSON.stringify(t.nav) === '["Today","Clients","Prospects","Library"]', JSON.stringify(t));
+    ok("I1 : « Aujourd'hui » en anglais : « Today », « What needs your attention today. », To handle · Check-ins to read · New · Inactive, les groupes traduits (v106) ; barre du bas Today · Clients · Prospects · Library (v106)",
+      t.h1 === "Today" && t.sous === "What needs your attention today." && JSON.stringify(t.lbl) === '["To handle","Check-ins to read","New","Inactive"]' && t.sur === "Check-ins to read · Inactive clients · New prospects · Booked calls · To follow up" /* v106 (lot 5) */ && JSON.stringify(t.nav) === '["Today","Clients","Prospects","Library"]', JSON.stringify(t));
     await ouvrirListe(page, "clients"); await attendre(page, 300);
     const l = await page.evaluate(() => ({ compte: document.getElementById("lc-compte").textContent, sel: document.querySelector("[data-sel-debut]").textContent, ph: document.getElementById("lc-q").placeholder,
       filtres: Array.from(document.querySelectorAll("[data-lc-filtre]")).map(x => x.textContent), plus: document.querySelector("[data-lc-plus]").getAttribute("aria-label") }));

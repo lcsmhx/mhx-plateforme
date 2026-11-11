@@ -307,13 +307,7 @@ ul.fiche-l li b{min-width:0;overflow-wrap:anywhere}
 a.pastille{text-decoration:none;cursor:pointer}
 
 /* --- tableau de bord coach --- */
-.tb-tiles{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
-a.tb-tuile{text-decoration:none;color:inherit;transition:border-color var(--vite)}
-a.tb-tuile:hover{border-color:var(--accent-line)}
-.tb-tuile.attention .t-val{color:var(--warn)}
 /* v53 (chantier 4) — les 2 tuiles : le badge d'urgences (couleur seulement s'il y en a), « À traiter maintenant » */
-.tb-tuile-tete{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
-.tb-badge{font-size:11px}
 .tb-liste{list-style:none;margin:0;padding:0}
 .tb-liste li{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line);min-width:0}
 .tb-liste li:first-child{border-top:0}
@@ -569,8 +563,6 @@ body.figee{overflow:hidden}
 
 /* v72 (E) — « Nouveaux depuis ta dernière visite » (tableau de bord du coach) : prénom et date, puis le numéro et ses liens,
    qui passent à la ligne sur un écran étroit */
-#tb-nouveaux .tb-liste li{flex-wrap:wrap;gap:6px 12px}
-#tb-nouveaux .tb-nv-tel{margin-left:auto}
 /* v104 (point 9) : l'en-tête sur ordinateur est plus bas. De 721 à 1199 px : deux lignes (logo et compte, puis le menu) au lieu
    de trois ; dès 1200 px : UNE ligne (logo, menu, compte), les 7 entrées du coach visibles en entier (entrées un peu plus
    serrées ; le nom « … · coach » se cache, il reste dans Réglages) */
@@ -663,9 +655,8 @@ body.nav106 .compte .qui,body.nav106 #langue,body.nav106 #deco{display:none}
   /* le titre est dans la ligne du haut : le grand titre de la page ne se répète pas dessous (gardé pour les lecteurs d'écran) ;
      le reste de l'en-tête de la page (explication, compteurs) reste */
   body.nav106-coach .masthead{padding:14px 0 12px;margin-bottom:16px}
-  body.nav106-coach .masthead > h1,body.nav106 .lc-titres h1{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  body.nav106-coach .masthead h1,body.nav106 .lc-titres h1{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
   body.nav106 .barre-bas a{min-width:0;position:relative}   /* le badge se place sur l'icône de sa case */
-  body.nav106 .tb-tete [data-tb-chercher]{display:none}   /* la loupe est dans la ligne du haut */
   body.nav106 .barre-bas .lbl{font-size:11px}
 }
 /* de 721 à 1 023 px, la barre du bas existe aussi (avant : téléphone seulement) */
@@ -706,7 +697,6 @@ body.nav106 .compte .qui,body.nav106 #langue,body.nav106 #deco{display:none}
   body.nav106 .barre-bas{display:none}
   body.nav106 footer .wrap,body.nav106 main.wrap{max-width:1040px}
   body.nav106 main.wrap{padding-top:24px}   /* le contenu ne colle pas au bord haut */
-  body.nav106 .tb-tete [data-tb-chercher]{display:none}   /* la loupe est dans la barre latérale (« Rechercher ») */
 }
 @media (min-width:1024px) and (max-width:1279px){
   body.nav106{padding-left:72px}
@@ -795,3 +785,30 @@ details.q-theme[open] > summary{margin-bottom:14px}
   #bilan-retours .fb-editeur textarea{min-height:72px}
   #bilan-retours .fb-editeur .actions{margin-top:6px}
 }
+
+/* ==================================================================
+   v106 (lot 5) — « AUJOURD'HUI » : 4 chiffres-boutons, puis la liste groupée (clients à gauche, prospects à droite sur ordinateur)
+   ================================================================== */
+.tb-chiffres{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:0 0 18px}
+.tb-chiffre{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-height:64px;padding:10px 12px;border-radius:var(--r);border:1px solid var(--verre-bord);
+  background:var(--verre);color:var(--ink-2);font:inherit;text-align:left;cursor:pointer}
+.tb-chiffre .t-val{font-size:24px;font-weight:600;color:var(--ink);line-height:1.1}
+.tb-chiffre .t-lbl{font-size:12px;line-height:1.2}
+.tb-chiffre.actif{border-color:var(--accent-line)}
+.tb-chiffre.actif .t-val{color:var(--accent)}
+.tb-chiffre:hover{border-color:var(--accent)}
+.tb-colonnes{display:grid;gap:18px}
+.tb-col-t{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin:0 0 8px}
+.tb-groupe{margin:0 0 16px}
+.tb-groupe .tb-sur{display:flex;align-items:center;gap:8px;margin:0 0 6px}
+.tb-n{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:20px;padding:0 6px;border-radius:999px;background:var(--raised);color:var(--ink-2);font-size:12px}
+.tb-g-note{margin:0 0 6px}
+.tb-groupe .tb-rien{margin:0;padding:2px 0 4px;color:var(--ink-3)}
+.tb-rien-tout{margin:0 0 16px}
+.tb-l{display:flex;align-items:center;gap:6px}
+.tb-l > .tb-at-b{flex:1 1 auto;min-width:0}
+.tb-l > .tb-wa{flex:none}
+.tb-l > .tb-wa svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tb-tout{min-height:var(--h-toucher);display:inline-flex;align-items:center;margin-top:4px}
+@media (max-width:380px){ .tb-chiffre{padding:8px} .tb-chiffre .t-val{font-size:20px} .tb-chiffre .t-lbl{font-size:11px} }
+@media (min-width:1024px){ .tb-colonnes{grid-template-columns:repeat(2,minmax(0,1fr));gap:28px;align-items:start} }

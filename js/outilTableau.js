@@ -22,6 +22,15 @@
    chaque ligne ouvre la bonne fiche), puis tout le reste d'avant, en dessous : « Nouveaux depuis ta dernière visite »,
    « Inscrits par source », « Raccourcis ». Les comptes archivés (Archive) sont exclus des compteurs, de « À traiter », des
    nouveaux et des Nouveautés ; « Inscrits par source » reste une statistique de tous les inscrits.
+   v106 (lot 5, refonte de l'ergonomie) — « AUJOURD'HUI » : en haut, 4 chiffres qui sont des boutons vers leur groupe (à traiter,
+   retours à lire, nouveaux, inactifs) ; puis UNE liste groupée, une ligne par personne avec sa raison la plus urgente, toute la
+   ligne cliquable : Retours à lire (bilan ou feedback reçu, 😞, note en chute → fiche › Suivi › Bilans), Clients inactifs (aucune
+   saisie depuis 10 jours → Aperçu), Nouveaux prospects (inscrits depuis ta dernière visite ou depuis moins de 48 h → leur fiche ;
+   WhatsApp = message prêt), Bilans réservés (« Bilan réservé » ou « J'ai réservé » → leur fiche, suivi commercial), À relancer
+   (signé à passer client, absent, a cliqué, perdu → leur fiche). Plus de plafond à 5 lignes : un groupe long se replie sur place
+   (« Tout voir (N) »). Plus de tuiles ni de « Raccourcis » ; « Inscrits par source » est dans Prospects › Vue détaillée. Sur
+   ordinateur, 2 colonnes : les clients à gauche, les prospects à droite. La visite du coach (v72 E) et le badge de l'onglet
+   Prospects (v105) ne changent pas.
    ------------------------------------------------------------------ */
 const outilTableau = {
   id: "tableau",
@@ -32,10 +41,6 @@ const outilTableau = {
   sans_entete: true,
   titre: "Aujourd'hui",   // v106 (lot 1) : le nom de l'entrée du menu
   accroche: "",
-  MAX_LIGNES: 5,
-  /* v104 (point 10) : les règles des urgences (bulle des compteurs) */
-  AIDE_CLIENTS: "Urgences (une action de ta part aujourd'hui) : un 😞 non traité, une note en chute, ou un retour de la semaine à lire. Le reste (inactif, régularité faible, calculateur) est « À surveiller ».",
-  AIDE_PROSPECTS: "Urgences (une action de ta part aujourd'hui) : inscrit depuis moins de 48 h, « J'ai réservé » à vérifier, clic sur la réservation sans créneau, absent à l'appel pas encore relancé, ou « Signé » à passer client.",
 
   html(){ return `<div id="tb-vue"><header class="masthead tb-tete"><div class="tb-tete-l"><h1>Aujourd'hui</h1><p class="lede">Ce qui demande ton attention aujourd'hui.</p></div></header><section class="panel">${squelette()}</section></div>`; },
 
@@ -56,19 +61,53 @@ const outilTableau = {
   URG_CLIENTS: ["avis_triste", "note_chute", "bilan_recu"],
   URG_PROSPECTS: ["nouveau", "case", "clic", "absent", "signe"],
   urgentProspect(a){ return !!(a && a.urgent && this.URG_PROSPECTS.indexOf(a.motif) > -1); },
-  aTraiter(clients, prospects){
-    const out = [];
+  /* v106 (lot 5) : les groupes de « Aujourd'hui », chacun trié (le plus urgent d'abord). nouveaux : les prospects inscrits depuis la
+     visite précédente du coach (v72 E). Une personne n'est que dans un groupe : celui de sa raison la plus urgente. */
+  GROUPES: [
+    { id: "retours", titre: "Retours à lire", col: "clients", vide: "Aucun retour à lire." },
+    { id: "inactifs", titre: "Clients inactifs", col: "clients", vide: "Aucun client inactif." },
+    { id: "nouveaux", titre: "Nouveaux prospects", col: "prospects", vide: "Aucun nouvel inscrit." },
+    { id: "reserves", titre: "Bilans réservés", col: "prospects", vide: "Aucun bilan réservé à suivre." },
+    { id: "relancer", titre: "À relancer", col: "prospects", vide: "Personne à relancer." }
+  ],
+  REPLI: 5,          // un groupe plus long se replie sur place : « Tout voir (N) »
+  deplies: {},       // les groupes dépliés pendant la session
+  groupes(clients, prospects, nouveaux){
+    const G = { retours: [], inactifs: [], nouveaux: [], reserves: [], relancer: [] };
+    const rg = a => a.type === "avis_triste" ? 0 : a.type === "note_chute" ? 1 : 2;
     clients.forEach(l => {
-      const al = l.alertes.filter(a => a.niveau === "mauvais" || a.type === "bilan_recu"); if (!al.length) return;
-      const r = a => a.type === "avis_triste" ? 0 : a.type === "note_chute" ? 1 : a.type === "bilan_recu" ? 2 : 8;
-      const a = al.slice().sort((x, y) => r(x) - r(y))[0];
-      /* v83 : le point de couleur de la ligne (maquette) : vert pour un retour à lire, ambre pour un 😞 ou une note en chute, rouge sinon */
-      const niveau = a.type === "bilan_recu" ? "ok" : a.type === "avis_triste" || a.type === "note_chute" ? "attention" : "mauvais";
-      out.push({ rang: r(a), uid: l.p.id, nom: l.nom, texte: a.texte, cible: a.cible || "accueil", jours: l.jours || 0, niveau, urgent: this.URG_CLIENTS.indexOf(a.type) > -1 });
+      const ret = l.alertes.filter(a => this.URG_CLIENTS.indexOf(a.type) > -1).sort((x, y) => rg(x) - rg(y))[0];
+      const base = { uid: l.p.id, nom: l.nom, jours: l.jours || 0 };
+      if (ret){ G.retours.push(Object.assign(base, { texte: ret.texte, cible: "bilan", niveau: ret.type === "bilan_recu" ? "ok" : "attention", rang: rg(ret) })); return; }
+      const ina = l.alertes.find(a => a.type === "inactif" && a.niveau === "mauvais");
+      if (ina) G.inactifs.push(Object.assign(base, { texte: ina.texte, cible: "accueil", niveau: "mauvais", rang: 0 }));
     });
-    prospects.forEach(x => { if (x.a.urgent) out.push({ rang: this.RANG_PROSPECTS[x.a.motif] != null ? this.RANG_PROSPECTS[x.a.motif] : 8, uid: x.l.p.id, nom: x.l.nom, texte: Commercial.motifTexte(x.a), cible: "accueil", prospect: true, jours: 0, recence: x.a.recence, niveau: "attention", urgent: this.urgentProspect(x.a) }); });
-    /* v104 (point 10) : les urgences d'abord, les clients avant les prospects, puis le rang d'avant */
-    return out.sort((a, b) => (b.urgent - a.urgent) || ((a.prospect ? 1 : 0) - (b.prospect ? 1 : 0)) || a.rang - b.rang || b.jours - a.jours || (a.recence || 0) - (b.recence || 0));
+    const neufs = new Set((nouveaux || []).map(l => l.p.id));
+    prospects.forEach(x => {
+      const a = x.a, m = a.motif, l = x.l;
+      const base = { uid: l.p.id, nom: l.nom, prospect: true, cible: "accueil", recence: a.recence || 0, rang: this.RANG_PROSPECTS[m] != null ? this.RANG_PROSPECTS[m] : 8 };
+      if (m === "case" || m === "appel" || (a.reserve && !a.issue)) G.reserves.push(Object.assign(base, { texte: m ? Commercial.motifTexte(a) : trad("Bilan réservé"), niveau: "accent" }));
+      else if (m === "signe" || m === "absent" || m === "clic" || m === "perdu") G.relancer.push(Object.assign(base, { texte: Commercial.motifTexte(a), niveau: m === "signe" ? "ok" : "attention" }));
+      else if (m === "nouveau" || neufs.has(l.p.id)) G.nouveaux.push(Object.assign(base, { texte: m === "nouveau" ? Commercial.motifTexte(a) : trad("Inscrit le {d}", { d: this.quand(l.p.cree_le) }), niveau: "accent", cree: Date.parse(l.p.cree_le) || 0, tel: l.tel, msgWa: l.msgWa }));
+    });
+    G.retours.sort((a, b) => a.rang - b.rang || b.jours - a.jours);
+    G.inactifs.sort((a, b) => b.jours - a.jours);
+    G.nouveaux.sort((a, b) => b.cree - a.cree);
+    ["reserves", "relancer"].forEach(k => G[k].sort((a, b) => a.rang - b.rang || a.recence - b.recence));
+    return G;
+  },
+  ligneHTML(x){
+    /* toute la ligne ouvre la fiche (initiales, nom, point de couleur et raison, chevron) ; un nouveau prospect a aussi son
+       WhatsApp (message prêt), à côté */
+    const wa = x.prospect && x.tel && Telephone.valide(x.tel) ? lienWaVers(x.tel, x.msgWa || "") || lienWaVers(x.tel, "") : "";
+    return `<li class="tb-l"><button type="button" class="tb-at-b" data-fiche="${esc(x.uid)}" data-nom="${esc(x.nom)}" data-cible="${esc(x.cible)}">${Clients.avatar(x.nom)}<span class="tb-quoi"><b data-notr>${esc(x.nom)}</b><small><span class="point ${esc(x.niveau || "neutre")}" aria-hidden="true"></span> ${esc(x.texte)}</small></span><span class="tb-chevron" aria-hidden="true">${SVG.chevron}</span></button>${wa ? `<a class="rond tb-wa" href="${esc(wa)}" target="_blank" rel="noopener" data-wa-coach aria-label="${esc(trad("WhatsApp : message prêt"))}" title="${esc(trad("WhatsApp : message prêt"))}">${SVG.whatsapp}</a>` : ""}</li>`;
+  },
+  groupeHTML(g, l, note){
+    const ouvert = !!this.deplies[g.id], n = l.length, vus = ouvert ? l : l.slice(0, this.REPLI);
+    return `<section class="tb-groupe" id="tb-g-${g.id}" aria-labelledby="tb-g-${g.id}-t"><h3 class="tb-sur" id="tb-g-${g.id}-t">${esc(trad(g.titre))} <span class="tb-n">${n}</span></h3>
+      ${note ? `<p class="note tb-g-note">${esc(note)}</p>` : ""}
+      ${n ? `<ul class="tb-liste tb-at">${vus.map(x => this.ligneHTML(x)).join("")}</ul>${n > this.REPLI ? `<button type="button" class="lc-lien tb-tout" data-tb-deplier="${g.id}" aria-expanded="${ouvert}">${esc(ouvert ? trad("Replier") : trad("Tout voir ({n})", { n }))}</button>` : ""}`
+        : `<p class="note tb-rien">${esc(trad(g.vide))}</p>`}</section>`;
   },
 
   /* v72 (E) — la visite du coach */
@@ -106,17 +145,6 @@ const outilTableau = {
         <tfoot><tr><td><b>Total</b></td><td><b>${S.total}</b></td></tr></tfoot></table>`
         : `<p class="empty" style="margin:0">Aucun inscrit sur les 30 derniers jours.</p>`}</section>`;
   },
-  nouveauxHTML(nouveaux, vis){
-    const reste = nouveaux.length - this.VISITE.MAX;
-    const ligne = l => { const pr = String((l.p && l.p.prenom) || "").trim() || Clients.nom(l.p);
-      return `<li><span class="tb-quoi"><b data-notr>${esc(pr)}</b><small>inscrit le ${esc(this.quand(l.p.cree_le))}</small></span><span class="tb-nv-tel">${Telephone.coachHTML(l.tel, "", l.msgWa)}</span></li>`; };
-    return `<section class="panel" id="tb-nouveaux"><h2>Nouveaux depuis ta dernière visite</h2>
-      <p class="note" style="margin:0 0 10px">${vis.depuis ? `Ta dernière visite : le ${esc(this.quand(vis.depuis))}.` : "Première visite enregistrée : les inscrits des 7 derniers jours."}</p>
-      ${nouveaux.length ? `<ul class="tb-liste">${nouveaux.slice(0, this.VISITE.MAX).map(ligne).join("")}</ul>
-        ${reste > 0 ? `<p class="note" style="margin:10px 0 0">Et ${reste} autre${reste > 1 ? "s" : ""} : <a class="link-a" href="#/prospects" data-tb-tous>Prospects →</a></p>` : ""}`
-        : `<p class="empty" style="margin:0">Aucun nouvel inscrit depuis ta dernière visite.</p>`}</section>`;
-  },
-
   async init(){
     const zone = $("tb-vue"); if (!zone) return;
     let profils, parClient, contenus;
@@ -127,17 +155,8 @@ const outilTableau = {
     const lignes = toutes.filter(l => !l.archive);   // v83 (bloc 3) : sans les comptes archivés (compteurs, à traiter, nouveaux, Nouveautés)
     const clients = lignes.filter(l => l.p.statut !== "prospect");
     const prospects = lignes.filter(l => l.p.statut === "prospect").map(l => ({ l, a: Commercial.analyseLigne(l) })).filter(x => x.a);
-    const tout = this.aTraiter(clients, prospects), liste = tout.filter(x => x.urgent), surveiller = tout.filter(x => !x.urgent);   // v104 (point 10)
-    const urgClients = liste.filter(x => !x.prospect).length, urgProspects = liste.filter(x => x.prospect).length;
-    const pl = (n, s, p) => n > 1 ? p : s;
-    /* le badge : le nombre d'urgences, en couleur seulement s'il y en a */
-    const badge = (n, aide) => `<span class="pastille tb-badge${n ? " mauvais" : ""}" title="${esc(aide)}">${n} ${pl(n, "urgence", "urgences")}</span>`;
-    /* v83 : maquette — le nombre, puis le libellé ; le badge d'urgences reste dessous (Clients, Prospects) */
-    const tuile = (id, lbl, val, n, aide, lien) => `<a class="tile tb-tuile" id="${esc(id)}" href="${esc(lien)}" title="${esc(aide)}"><div class="t-val readout">${esc(String(val))}</div><div class="t-lbl">${esc(lbl)}</div><div class="tb-tuile-tete">${badge(n, aide)}</div></a>`;
-    const total = urgClients + urgProspects;
-    /* v83 : toute la ligne ouvre la fiche (initiales, nom, point de couleur et raison, chevron) */
-    const ligne = x => `<li><button type="button" class="tb-at-b" data-fiche="${esc(x.uid)}" data-nom="${esc(x.nom)}" data-cible="${esc(x.cible)}">${Clients.avatar(x.nom)}<span class="tb-quoi"><b data-notr>${esc(x.nom)}</b>${x.prospect ? ` <span class="pastille accent">prospect</span>` : ""}<small><span class="point ${esc(x.niveau || "mauvais")}" aria-hidden="true"></span> ${esc(x.texte)}</small></span><span class="tb-chevron" aria-hidden="true">${SVG.chevron}</span></button></li>`;
-    const reste = liste.length - this.MAX_LIGNES;
+    /* v105 : le badge de l'onglet Prospects = les urgences prospects (inchangé) */
+    const urgProspects = prospects.filter(x => this.urgentProspect(x.a)).length;
     /* v72 (E) : la visite (décidée ici, au rendu : la clé du coach est dans contenus), puis les inscrits d'après elle */
     const moi = Auth.utilisateur() && Auth.utilisateur().id, t = Date.now(), futur = t + 5 * 60000;
     const V = this.visiteLue(moi && contenus[moi] ? contenus[moi][this.VISITE.cle] : null);
@@ -145,42 +164,40 @@ const outilTableau = {
     const crees = (profils || []).map(p => p && this.iso(p.cree_le)).filter(x => x && Date.parse(x) <= t).sort();
     const vis = this.visite(V, t, crees.length ? crees[crees.length - 1] : null);
     const borne = vis.seuil ? Date.parse(vis.seuil) : t - this.VISITE.JOURS * 86400000;
-    const nouveaux = lignes.filter(l => l.p.statut === "prospect" && this.iso(l.p.cree_le) && Date.parse(l.p.cree_le) > borne && Date.parse(l.p.cree_le) <= futur)
-      .sort((a, b) => Date.parse(b.p.cree_le) - Date.parse(a.p.cree_le));
+    const nouveaux = lignes.filter(l => l.p.statut === "prospect" && this.iso(l.p.cree_le) && Date.parse(l.p.cree_le) > borne && Date.parse(l.p.cree_le) <= futur);
+    const G = this.groupes(clients, prospects, nouveaux);
+    const total = Object.keys(G).reduce((n, k) => n + G[k].length, 0);
+    const noteVisite = vis.depuis ? trad("Depuis ta dernière visite, le {d}.", { d: this.quand(vis.depuis) }) : trad("Première visite enregistrée : les inscrits des 7 derniers jours.");
+    const chiffre = (id, n, lbl, vers) => `<button type="button" class="tb-chiffre${n ? " actif" : ""}" id="${id}" data-tb-aller="${vers}"><span class="t-val readout">${n}</span><span class="t-lbl">${esc(trad(lbl))}</span></button>`;
+    const colonne = (col, titre) => `<div class="tb-col" id="tb-col-${col}"><h2 class="tb-col-t">${esc(trad(titre))}</h2>${this.GROUPES.filter(g => g.col === col).map(g => this.groupeHTML(g, G[g.id], g.id === "nouveaux" ? noteVisite : "")).join("")}</div>`;
     zone.innerHTML = `
       <header class="masthead tb-tete">
         <span class="eyebrow">${esc(outilAccueil.dateLongue())}</span>
         <div class="tb-tete-l"><h1>Aujourd'hui</h1><p class="lede">Ce qui demande ton attention aujourd'hui.</p></div>
-        <a class="rond" href="#/clients" data-tb-chercher aria-label="${esc(trad("Rechercher un client par son nom"))}" title="${esc(trad("Rechercher un client par son nom"))}">${SVG.loupe}</a>
       </header>
-      <section class="tiles tb-tiles" aria-label="${esc(trad("En bref"))}">
-        ${tuile("tb-t-clients", "Clients", clients.length, urgClients, this.AIDE_CLIENTS, "#/clients")}
-        <div class="tile tb-tuile tb-t-traiter${total ? " urgent" : ""}" id="tb-t-traiter"><div class="t-val readout">${total}</div><div class="t-lbl">À traiter</div></div>
-        ${tuile("tb-t-prospects", "Prospects", prospects.length, urgProspects, this.AIDE_PROSPECTS, "#/prospects")}
-      </section>
-      <section class="tb-section" id="tb-a-traiter"><h2 class="tb-sur">À traiter maintenant</h2>
-        ${liste.length ? `<ul class="tb-liste tb-at">${liste.slice(0, this.MAX_LIGNES).map(ligne).join("")}</ul>
-        ${reste > 0 ? `<p class="note" style="margin:10px 0 0">Et ${reste} autre${reste > 1 ? "s" : ""} : <a class="link-a" href="#/clients">Mes clients →</a> · <a class="link-a" href="#/prospects">Prospects →</a></p>` : ""}`
-        : `<p class="empty tb-rien">Rien à traiter pour l'instant.</p>`}
-        ${surveiller.length ? `<h3 class="tb-sur tb-sur2" id="tb-surveiller-t">${esc(trad("À surveiller"))}</h3><ul class="tb-liste tb-at tb-surveiller" aria-labelledby="tb-surveiller-t">${surveiller.slice(0, this.MAX_LIGNES).map(x => ligne(Object.assign({}, x, { niveau: "neutre" }))).join("")}</ul>
-        ${surveiller.length > this.MAX_LIGNES ? `<p class="note" style="margin:10px 0 0">${esc(trad("Et {n} de plus dans Mes clients et Prospects.", { n: surveiller.length - this.MAX_LIGNES }))}</p>` : ""}` : ""}</section>
-      ${this.nouveauxHTML(nouveaux, vis)}
-      ${this.sourcesHTML(this.sources(toutes))}
-      <section class="panel">
-        <h2>Raccourcis</h2>
-        <div class="acces-l">
-          <a class="acces" href="#/clients"><span class="ico">${ICONES.clients}</span><span class="txt"><b>Mes clients</b><small>liste, recherche, création d'accès</small></span><span class="fleche">›</span></a>
-          <a class="acces" href="#/atelier"><span class="ico">${ICONES.atelier}</span><span class="txt"><b>Mes séances</b><small>construire un programme modèle</small></span><span class="fleche">›</span></a>
-          <a class="acces" href="#/bibliotheque"><span class="ico">${ICONES.bibliotheque}</span><span class="txt"><b>Bibliothèque</b><small>entraînements et journées types</small></span><span class="fleche">›</span></a>
-          <a class="acces" href="#/catalogue"><span class="ico">${ICONES.catalogue}</span><span class="txt"><b>Catalogue</b><small>aliments, recettes, programmes, exercices</small></span><span class="fleche">›</span></a>
-        </div>
-      </section>`;
-    $$("[data-fiche]", zone).forEach(b => b.addEventListener("click", () => Clients.ouvrir(b.dataset.fiche, b.dataset.nom, b.dataset.cible)));
-    /* v83 : la loupe ouvre la liste Clients, le curseur dans sa recherche */
-    $$("[data-tb-chercher]", zone).forEach(a => a.addEventListener("click", () => { ListeCoach.etat("clients").focus = true; }));
-    /* v72 (E) : « Et N autres » ouvre Prospects sur tous les prospects (le filtre « À traiter » cacherait les inscrits de plus de 48 h) */
-    /* v84 : la liste Prospects (son filtre « Tous », sans recherche) ; le Suivi commercial (menu Plus) garde aussi « Tous » */
-    $$("[data-tb-tous]", zone).forEach(a => a.addEventListener("click", () => { const E = ListeCoach.etat("prospects"); E.filtre = "tous"; E.q = ""; outilProspects.filtre = "tous"; outilProspects.tri = "inscription"; }));
+      <nav class="tb-chiffres" aria-label="${esc(trad("En bref"))}">
+        ${chiffre("tb-c-traiter", total, "À traiter", "tb-a-traiter")}${chiffre("tb-c-retours", G.retours.length, "Retours à lire", "tb-g-retours")}${chiffre("tb-c-nouveaux", G.nouveaux.length, "Nouveaux", "tb-g-nouveaux")}${chiffre("tb-c-inactifs", G.inactifs.length, "Inactifs", "tb-g-inactifs")}
+      </nav>
+      ${total ? "" : `<p class="empty tb-rien-tout">${esc(trad("Rien à traiter pour l'instant."))}</p>`}
+      <div class="tb-colonnes" id="tb-a-traiter">${colonne("clients", "Clients")}${colonne("prospects", "Prospects")}</div>`;
+    /* v106 (lot 5) : « Tout voir (N) » déplie le groupe sur place (et « Replier ») ; un chiffre du haut mène à son groupe (et le
+       déplie s'il est long) */
+    const brancherGroupe = sec => {
+      $$("[data-fiche]", sec).forEach(b => b.addEventListener("click", () => Clients.ouvrir(b.dataset.fiche, b.dataset.nom, b.dataset.cible)));
+      $$("[data-tb-deplier]", sec).forEach(b => b.addEventListener("click", () => {
+        const id = b.dataset.tbDeplier, g = this.GROUPES.find(x => x.id === id), z = $("tb-g-" + id); if (!g || !z) return;
+        this.deplies[id] = !this.deplies[id];
+        const t = document.createElement("div"); t.innerHTML = this.groupeHTML(g, G[id], id === "nouveaux" ? noteVisite : "");
+        const n = t.firstElementChild; z.replaceWith(n); brancherGroupe(n);
+        const nb = n.querySelector("[data-tb-deplier]"); if (nb) try { nb.focus(); } catch(e){}
+      }));
+    };
+    $$(".tb-groupe", zone).forEach(brancherGroupe);
+    $$("[data-tb-aller]", zone).forEach(b => b.addEventListener("click", () => {
+      const z = $(b.dataset.tbAller); if (!z) return;
+      const d = z.querySelector('[data-tb-deplier][aria-expanded="false"]'); if (d) d.click();
+      const cible = $(b.dataset.tbAller); if (cible) cible.scrollIntoView({ behavior: "smooth", block: "start" });
+    }));
     /* v72 (E) : nouvelle visite : la seule écriture de cette page, une ligne du coach lui-même (règles de la base : le propriétaire),
        directe (pas de copie sur l'appareil ni d'« Enregistrement… » : rien que le coach ait saisi) ; ratée : la visite suivante
        repartira de l'ancienne */

@@ -1879,3 +1879,10 @@ Object.assign(I18N.en, { "Tout voir": "See all", "Réponses au questionnaire cou
   ", validé le {d}": ", submitted on {d}", ", pas encore validé": ", not submitted yet", "Problème": "Problem", "Ce qui l'a bloqué": "What held them back",
   "Séances par semaine": "Sessions per week", "Déjà essayé": "Already tried", "Pourquoi maintenant": "Why now", "Obstacle principal": "Main obstacle",
   "Contacter": "Contact", "Chronologie": "Timeline" });
+/* v106 (lot 5) : « Aujourd'hui », le tableau de bord en groupes */
+Object.assign(I18N.en, { "Retours à lire": "Check-ins to read", "Clients inactifs": "Inactive clients", "Nouveaux prospects": "New prospects",
+  "Bilans réservés": "Booked calls", "À relancer": "To follow up", "Aucun retour à lire.": "No check-ins to read.", "Aucun client inactif.": "No inactive clients.",
+  "Aucun nouvel inscrit.": "No new sign-ups.", "Aucun bilan réservé à suivre.": "No booked calls to follow.", "Personne à relancer.": "Nobody to follow up.",
+  "Replier": "Collapse", "Tout voir ({n})": "See all ({n})", "Inscrit le {d}": "Signed up on {d}", "Depuis ta dernière visite, le {d}.": "Since your last visit, on {d}.",
+  "Première visite enregistrée : les inscrits des 7 derniers jours.": "First recorded visit: sign-ups from the last 7 days.",
+  "Nouveaux": "New", "Inactifs": "Inactive", "Bilan réservé": "Call booked" });

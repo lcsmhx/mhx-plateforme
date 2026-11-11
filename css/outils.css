@@ -865,12 +865,6 @@ body.lc-selection .barre-bas{display:none}
 .tb-tete{flex-direction:row;align-items:flex-start;justify-content:space-between;gap:12px;border-bottom:0;margin-bottom:6px;padding-bottom:6px}
 .tb-tete h1{margin:0;font-size:28px;line-height:1.15}
 .tb-tete .lede{margin-top:6px;font-size:14.5px}
-main .tiles.tb-tiles{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.tb-tiles .tb-tuile{padding:14px 12px;border-radius:18px;background:var(--verre);border-color:var(--verre-bord);gap:0}
-.tb-tiles .tb-tuile .t-val{order:0;margin:0;font-size:26px;font-weight:700;line-height:1}
-.tb-tiles .tb-tuile .t-lbl{order:1;margin-top:6px;font-size:12.5px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--ink-2)}
-.tb-tiles .tb-tuile-tete{order:2;margin-top:8px}
-.tb-section{margin:22px 0}
 .tb-sur,.fc-sur{margin:0;font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent)}
 .tb-liste.tb-at{display:flex;flex-direction:column;gap:8px;margin-top:10px}
 .tb-liste.tb-at li{display:block;padding:0;border:0}
@@ -880,7 +874,6 @@ main .tiles.tb-tiles{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .tb-chevron{flex:none;display:inline-flex;color:var(--ink-2)}
 .tb-chevron svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .tb-rien{background:var(--verre);border:1px solid var(--verre-bord);border-radius:var(--r);margin-top:10px;padding:24px 16px}
-.tb-section .link-a,#tb-nouveaux .link-a{display:inline-flex;align-items:center;min-height:var(--h-toucher);font-size:13px}
 
 /* --- fiche à onglets (Suivi, Compte) --- */
 /* v104 (point 4) : l'identité et les actions, sous le titre de page (l'en-tête est le bandeau commun des 5 onglets) */
@@ -1069,7 +1062,6 @@ input[type=checkbox]:focus-visible,input[type=radio]:focus-visible{outline:2px s
 .g-edit .del{margin-left:8px;padding:0}
 /* v104 (point 10) : « À surveiller » sous les urgences du tableau de bord (point gris : rien d'urgent) */
 .point.neutre{background:var(--ink-3)}
-.tb-sur2{margin-top:18px}
 /* v104 (point 5) : sur téléphone, les 3 objectifs du mois (onglet Suivi de la fiche) l'un sous l'autre : le texte n'est plus coupé */
 @media (max-width:560px){ .obj-coach .grid.g3{grid-template-columns:1fr} }
 /* v104 (partie 3) : zones de toucher de 44 px sur téléphone, pages du client et du prospect (« Comment faire ? », les volets
