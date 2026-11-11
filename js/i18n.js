@@ -95,6 +95,8 @@ const Traduction = {
         else if (m.type === "attributes") { if (!this.exclu(m.target)) this.attributs(m.target); }
         else m.addedNodes.forEach(nd => this.noeud(nd));
       }
+      /* v104 (partie 4) : les textes que cette passe vient de traduire ne sont pas repassés (ils l'étaient tous une 2e fois) */
+      this.obs.takeRecords();
     });
     this.obs.observe(document.body, { childList:true, subtree:true, characterData:true, attributes:true, attributeFilter:["placeholder","title","aria-label"] });
     this.noeud(document.body);
@@ -1735,3 +1737,129 @@ Object.assign(I18N.en, {
   "{z} : entre 10 et 250 cm, vérifie la saisie.": "{z}: must be between 10 and 250 cm, check your entry."
 });
 /* v102-robustesse-fin */
+/* v104-supprimer-acces : les messages de la fonction serveur supprimer-acces (Profil > Supprimer mon compte, via e.message) ;
+   « Les photos n'ont pas pu être effacées… » : celui de la version en ligne, tant que la nouvelle n'est pas déployée */
+Object.assign(I18N.en, {
+  "Suppression interrompue : le compte n'est pas supprimé, mais une partie des photos a pu être effacée. Réessaie.": "Deletion interrupted: the account isn't deleted, but some of the photos may have been erased. Try again.",
+  "Les brouillons du coach n'ont pas pu être mis à jour : rien n'a été supprimé. Réessaie.": "The coach's drafts couldn't be updated: nothing was deleted. Try again.",
+  "Les brouillons du coach n'ont été mis à jour qu'en partie : le compte n'est pas supprimé. Réessaie.": "The coach's drafts were only partly updated: the account isn't deleted. Try again.",
+  "Les photos n'ont pas pu être effacées : rien n'a été supprimé. Réessaie.": "The photos couldn't be erased: nothing was deleted. Try again.",
+  "Méthode non autorisée.": "Method not allowed.",
+  "Il faut être connecté.": "You need to be signed in.",
+  "Session invalide.": "Invalid session.",
+  "Compte introuvable.": "Account not found.",
+  "Seul un coach peut supprimer un autre compte.": "Only a coach can delete another account.",
+  "C'est le dernier compte coach : il ne peut pas être supprimé.": "This is the last coach account: it can't be deleted.",
+  "Confirmation manquante.": "Confirmation missing.",
+  "Suppression incomplète.": "Deletion incomplete."
+});
+/* v104-supprimer-acces-fin */
+/* v104 (point 4) : fiche d'un prospect, le bouton du message WhatsApp pré-rempli (le WhatsApp du bandeau ouvre une conversation vide) */
+Object.assign(I18N.en, { "Message WhatsApp prêt": "Ready-made WhatsApp message" });
+/* v104 (partie 2, points 1 à 5) : fiche d'un client côté coach */
+Object.assign(I18N.en, {
+  "semaine passée": "last week",
+  "Ses objectifs du mois": "Their goals for the month",
+  "Statut de l'objectif {n}": "Status of goal {n}",
+  "Coché par ton client": "Ticked by your client",
+  "Modifier les objectifs du mois": "Edit the goals for the month",
+  "Pas d'objectifs ce mois-ci.": "No goals this month.",
+  "Remplis-les juste après ton call du mois : ils s'affichent dans « Mon suivi » et sur l'accueil de ton client, qui peut les cocher. Le statut que tu poses (atteint / non atteint) l'emporte sur sa case.": "Fill them in right after your monthly call: they show in \"My progress\" and on your client's home page, where they can tick them. The status you set (achieved / not achieved) overrides their tick."
+});
+/* v104 (point 4) : les phrases pour le coach dans la fiche d'un client (PHRASES_FICHE, navigation.js) */
+Object.assign(I18N.en, {
+  "Comment s'est passée sa semaine ?": "How did their week go?",
+  "Combien de séances a-t-il réalisées ?": "How many sessions did they do?",
+  "Comment s'est passée son alimentation ?": "How did their eating go?",
+  "Quelle a été sa principale réussite ?": "What was their main win?",
+  "Quelle a été sa principale difficulté ?": "What was their main difficulty?",
+  "A-t-il besoin d'un ajustement ?": "Do they need an adjustment?",
+  "Un indicateur de motivation, pas une mesure médicale : il compte ce que ton client fait — séances, repas, mesure — pas ce que dit la balance.": "A motivation indicator, not a medical measure: it counts what your client does — sessions, meals, weigh-in — not what the scale says.",
+  "Ses quatre dernières semaines en un coup d'œil : ce qu'il a fait, ce qui a bougé et ce que vous travaillez ensuite.": "Their last four weeks at a glance: what they did, what changed and what you work on next.",
+  "Toutes ses mesures": "All their measurements",
+  "Renommer les zones qu'il mesure": "Rename the areas they measure",
+  "Son métier et son rythme de travail": "Their job and work pattern",
+  "Quel est son objectif principal ? *": "What is their main goal? *",
+  "Son objectif en une phrase, avec un chiffre si possible": "Their goal in one sentence, with a number if possible",
+  "Pourquoi maintenant ? Qu'est-ce qui a déclenché sa décision ?": "Why now? What triggered their decision?",
+  "À quel point est-il prêt à changer ses habitudes ?": "How ready are they to change their habits?",
+  "Qu'est-ce qui l'a fait échouer par le passé, selon lui ?": "What made them fail in the past, in their view?",
+  "Est-il suivi actuellement par un professionnel de santé ?": "Are they currently followed by a health professional?",
+  "A-t-il une contre-indication médicale au sport ou à un changement alimentaire ?": "Do they have a medical contraindication to exercise or a change of diet?",
+  "Quel est son niveau ? *": "What is their level? *",
+  "Que fait-il comme activité physique actuellement ?": "What physical activity do they do now?",
+  "Où va-t-il s'entraîner ? *": "Where will they train? *",
+  "Si à la maison : quel matériel a-t-il ?": "If at home: what equipment do they have?",
+  "Combien de séances par semaine peut-il RÉELLEMENT tenir ? *": "How many sessions a week can they REALLY keep up? *",
+  "Exercices ou types de séances qu'il déteste / qu'il adore": "Exercises or session types they hate / love",
+  "Fait-il du cardio ? Lequel, combien de fois par semaine ?": "Do they do cardio? Which kind, how many times a week?",
+  "Nombre de pas moyen par jour (s'il le suit)": "Average steps per day (if they track it)",
+  "C'est sur cette réponse que son plan alimentaire sera bâti. Les collations comptent comme des repas.": "Their meal plan is built on this answer. Snacks count as meals.",
+  "Qui cuisine ? Combien de temps peut-il y consacrer par jour ?": "Who cooks? How much time can they spend on it each day?",
+  "Combien de fois par semaine mange-t-il à l'extérieur ou au restaurant ?": "How many times a week do they eat out or at a restaurant?",
+  "Sert à composer ses repas : aucun plat proposé ne sortira de ce cadre.": "Used to build their meals: no suggested dish will go outside this frame.",
+  "Tout ce qui le concerne. Les aliments correspondants sont écartés de ses repas. Les allergies hors de cette liste sont dans le champ suivant.": "Everything that applies to them. Matching foods are kept out of their meals. Allergies not on this list are in the next field.",
+  "Tout ce que la liste ci-dessus ne couvre pas : à prendre en compte avant de valider ses repas.": "Everything the list above doesn't cover: to take into account before approving their meals.",
+  "Aliments qu'il ne mangera jamais, quoi qu'il arrive": "Foods they will never eat, whatever happens",
+  "Aliments dont il ne veut surtout pas se passer": "Foods they really don't want to give up",
+  "A-t-il déjà suivi un régime ou compté ses calories ? Avec quel résultat ?": "Have they ever dieted or counted calories? With what result?",
+  "A-t-il des contraintes de budget alimentaire ?": "Do they have food budget constraints?",
+  "Qualité de son sommeil": "Quality of their sleep",
+  "À quel moment de la journée a-t-il ses coups de barre ?": "When in the day do they hit an energy slump?",
+  "Son entourage va-t-il soutenir sa démarche ou la compliquer ?": "Will the people around them support their efforts or make it harder?",
+  "Fume-t-il ?": "Do they smoke?"
+});
+/* v104 (point 10) : tableau de bord, urgences = une action du coach aujourd'hui */
+Object.assign(I18N.en, {
+  "À surveiller": "To keep an eye on",
+  "Et {n} de plus dans Mes clients et Prospects.": "And {n} more in My clients and Prospects.",
+  "Urgences (une action de ta part aujourd'hui) : un 😞 non traité, une note en chute, ou un retour de la semaine à lire. Le reste (inactif, régularité faible, calculateur) est « À surveiller ».": "Urgent (an action from you today): an unhandled 😞, a falling score, or a weekly check-in to read. The rest (inactive, low consistency, calculator) is \"To keep an eye on\".",
+  "Urgences (une action de ta part aujourd'hui) : inscrit depuis moins de 48 h, « J'ai réservé » à vérifier, clic sur la réservation sans créneau, absent à l'appel pas encore relancé, ou « Signé » à passer client.": "Urgent (an action from you today): signed up less than 48 h ago, \"I booked\" to check, clicked booking without a slot, missed the call and not yet followed up, or \"Signed\" to switch to client."
+});
+/* v104 (point 11) : les textes du coach qui restaient en français (fiche d'un client, calculateur) */
+Object.assign(I18N.en, {
+  "Fiche client": "Client profile",
+  "dernier : {d}": "last: {d}",
+  "Source": "Source",
+  "3. Maintenance": "3. Maintenance calories",
+  "Fiche de {n}": "{n}'s profile",
+  "Fiche — {n}": "Profile — {n}",
+  "ce client": "this client",
+  "Revenir au tableau de bord": "Back to the dashboard",
+  "Revenir à mes clients": "Back to my clients",
+  "Revenir aux prospects": "Back to prospects",
+  "Revenir au suivi détaillé": "Back to detailed tracking",
+  "Revenir aux comptes": "Back to accounts",
+  "Revenir au suivi commercial": "Back to sales tracking",
+  "Revenir à la newsletter": "Back to the newsletter",
+  "Son programme": "Their program",
+  "Ses séances": "Their sessions",
+  "Ses repas": "Their meals",
+  "Ses calories": "Their calories",
+  "Son journal alimentaire": "Their food diary",
+  "Ses courbes": "Their charts",
+  "Son questionnaire": "Their questionnaire",
+  "Son bilan": "Their review",
+  "Sa progression": "Their progress",
+  "Son profil": "Their profile",
+  "Son entraînement": "Their training",
+  "Son journal": "Their log"
+});
+/* v104 (point 7) */ Object.assign(I18N.en, {
+  "Nouvel exercice": "New exercise"
+});
+/* v104 (point 6) : fiche d'un client, onglet Nutrition du coach : les résumés des blocs repliés (repas, « Composer la
+   semaine », « La semaine en moyenne », liste de courses, notes avant publication) */
+Object.assign(I18N.en, {
+  "{a} kcal": "{a} Cal",
+  "{n} repas": "{n} meals",
+  "{n} jours": "{n} days",
+  "1 jour": "1 day",
+  "g prot. / jour": "g protein / day",
+  "{n} articles": "{n} items",
+  "{n} article": "{n} item",
+  "À lire avant de publier": "Read before publishing",
+  "Repas du jour": "Meals of the day"
+});
+/* v104 (relecture) : objectifs du mois figés pendant la publication du programme */
+Object.assign(I18N.en, { "Publication du programme en cours : réessaie dans un instant.": "The program is being published: try again in a moment." });

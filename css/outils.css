@@ -448,76 +448,15 @@ label.fo-case{display:flex;align-items:flex-start;gap:10px;cursor:pointer;flex:1
 .client-l .voir.suppr{color:var(--bad);border-color:var(--bad)}
 .client-l .voir.suppr:hover{background:var(--bad);color:#fff}
 /* --- parcours du prospect (Découverte ; classes .ch-* héritées de l'ancien Challenge 7 jours) --- */
-.ch-etapes{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin:14px 0 4px;padding:0;list-style:none}
-.ch-etapes li{min-width:0;display:flex}
-.ch-etape{flex:1;min-width:0}
-@media (max-width:360px){.ch-etapes{gap:3px}.ch-etapes .ch-etape .num{width:26px;height:26px;font-size:11px}}
 .co-mdp input::-ms-reveal{display:none}
-/* v45 — jours 2 a 4 */
 .ch-exos{list-style:none;margin:0;padding:0}
 .ch-exos li{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px 0;border-bottom:1px solid var(--line)}
 .ch-exos li:last-child{border-bottom:0}
 .ch-exos b{font-size:15px;min-width:130px}
 .ch-exos .reps{color:var(--ink-2);font-size:14px;flex:1;min-width:160px}
 .ch-exos .video-cadre{flex-basis:100%;margin-top:6px}
-.ch-tours{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
-.ch-seg3,.ch-seg4{max-width:300px;flex:0 0 auto;width:100%}
-@media (min-width:560px){.ch-seg3,.ch-seg4{width:300px}}
-.ch-seg3 button,.ch-seg4 button{min-height:36px;font-weight:600}
-.ch-action{font-size:16px;line-height:1.55;margin:0;padding:14px 16px;background:var(--accent-soft);border:1px solid var(--accent-line);border-radius:var(--r)}
-.ch-intention{display:grid;gap:12px}
-@media (min-width:560px){.ch-intention{grid-template-columns:1fr 1fr}}
-.ch-info{border-left:3px solid var(--accent)}
-.ch-recap{margin-top:4px}
-.ch-recap li span{flex:0 0 auto;max-width:40%}
-.ch-recap li b{overflow-wrap:anywhere;min-width:0;text-align:right}
-/* v46 — jours 5 a 7 */
-.ch-blocs-l .ch-bloc{padding:12px 0;border-bottom:1px solid var(--line)}
-.ch-blocs-l .ch-bloc:first-child{padding-top:0}
-.ch-blocs-l .ch-bloc:last-child{border-bottom:0}
-.ch-bloc h3{margin:0 0 6px;font-size:15px}
-.ch-bloc p{margin:0 0 6px;line-height:1.55}
-.ch-projection{display:grid;gap:12px}
-@media (min-width:720px){.ch-projection{grid-template-columns:repeat(3,minmax(0,1fr))}}
-.ch-col{background:var(--sunken);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;min-width:0}
-.ch-col .eyebrow{display:block;margin-bottom:8px}
-.ch-col p{margin:0 0 8px;font-size:14.5px;line-height:1.5;overflow-wrap:anywhere}
-.ch-col p:last-child{margin-bottom:0}
-.ch-col-90{border-color:var(--accent-line);background:var(--accent-soft)}
-.ch-hero{text-align:center;border-color:var(--accent-line)}
-.ch-hero h2{margin-bottom:14px}
-.ch-cta{font-size:15px;padding:14px 26px;text-transform:uppercase;letter-spacing:.06em}
-.ch-case{display:flex;gap:10px;align-items:flex-start;justify-content:center;margin:16px 0 0;cursor:pointer;text-transform:none;letter-spacing:0;font-weight:400;color:var(--ink);font-size:14px}
-.ch-case input{width:18px;height:18px;accent-color:var(--accent);margin:1px 0 0;flex:0 0 auto}
-.tile .t-val.ch-t-texte{font-family:"IBM Plex Sans",sans-serif;font-size:15px;font-weight:600;line-height:1.35;padding-top:4px}
-.ch-segtexte{max-width:none;width:100%;flex-wrap:wrap}
-.ch-segtexte button{flex:1 1 42%;min-height:36px;font-weight:600}
-/* v47 — fiche coach : les 7 etapes en lecture seule */
-.ch-etapes-fiche{margin:0 0 12px}
-.ch-etapes-fiche .ch-etape{cursor:default}
-.ch-etape{display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;color:var(--ink-3);font-family:inherit;font-variant-numeric:tabular-nums;font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:6px 2px;border-radius:var(--r-sm);text-align:center;line-height:1.2}
-.ch-etape .num{width:30px;height:30px;border-radius:50%;border:1px solid var(--line-strong);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;background:var(--sunken);color:var(--ink-2);transition:border-color var(--vite),background var(--vite)}
-.ch-etape.fait .num{background:var(--good-soft);border-color:var(--good);color:var(--good)}
-.ch-etape.actuel .num{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-.ch-etape.actuel{color:var(--ink)}
-.ch-etape.ferme{opacity:.5;cursor:default}
-a.ch-etape:hover .num{border-color:var(--accent-line)}
-@media (max-width:480px){.ch-etape .lbl{display:none}}
-.ch-barre{margin-top:12px}
-.ch-choix{display:flex;flex-direction:column;gap:8px}
-.ch-choix label{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;background:var(--sunken);border:1px solid var(--line);border-radius:var(--r);cursor:pointer;text-transform:none;letter-spacing:0;font-weight:400;color:var(--ink);margin:0}
-.ch-choix label:has(input:checked){border-color:var(--accent-line);background:var(--accent-soft)}
-.ch-choix input{margin:3px 0 0;accent-color:var(--accent);flex:0 0 auto;width:16px;height:16px}
-.ch-choix b{display:block;font-size:15px;font-weight:600}
-.ch-choix small{font-size:13px;color:var(--ink-2)}
 .ch-lecture{margin:14px 0 0;padding-left:18px;line-height:1.7;font-size:14.5px}
 .ch-lecture li{margin-bottom:4px}
-.ch-bravo{border-color:var(--good-soft)}
-.ch-bravo .pastille{margin-bottom:10px}
-.ch-demain{color:var(--ink-2);font-size:14px;margin:10px 0 0}
-.ch-test{margin:0 0 12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-.ch-attente{text-align:center;padding:26px 16px;border:1px dashed var(--line-strong);border-radius:var(--r-lg);background:var(--sunken)}
-.ch-attente h2{margin-bottom:6px}
 .co-cgu span,.co-newsletter span{line-height:1.45}
 .co-cgu .lien{background:none;border:0;padding:0;color:var(--accent);text-decoration:underline;cursor:pointer;font:inherit;min-height:0;width:auto;display:inline}
 .co-cgu .lien-absent{color:inherit;text-decoration:none;cursor:default}   /* v64 : lien du PDF pas encore renseigne (branche de travail) */
@@ -947,12 +886,13 @@ main .tiles.tb-tiles{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .tb-section .link-a,#tb-nouveaux .link-a{display:inline-flex;align-items:center;min-height:var(--h-toucher);font-size:13px}
 
 /* --- fiche à onglets (Suivi, Compte) --- */
-.fc-tete{margin:4px 0 14px}
+/* v104 (point 4) : l'identité et les actions, sous le titre de page (l'en-tête est le bandeau commun des 5 onglets) */
+.fc-ident{margin:0 0 14px}
 .fc-haut{display:flex;justify-content:flex-end}
-.fc-id{display:flex;align-items:center;gap:14px;margin-top:6px}
+.fc-id{display:flex;align-items:center;gap:14px}
 .fc-avatar{flex:none;width:56px;height:56px;font-size:18px;border:1px solid var(--accent);background:var(--accent-soft)}
 .fc-id-t{min-width:0;display:flex;flex-direction:column;gap:8px}
-.fc-id-t h1{margin:0;font-size:22px;font-weight:700;line-height:1.1;overflow-wrap:anywhere}
+.fc-id-t h2{margin:0;font-size:22px;font-weight:700;line-height:1.1;letter-spacing:-.02em;overflow-wrap:anywhere}
 .fc-pastilles{display:flex;flex-wrap:wrap;gap:6px}
 .fc-pastilles .pastille{padding:4px 12px;font-size:12.5px}
 .fc-role-p{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600}
@@ -961,10 +901,6 @@ main .tiles.tb-tiles{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .fc-principal svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .btn.sans-numero,.btn.sans-numero:disabled{background:var(--verre);border-color:var(--verre-bord);color:var(--ink-3);opacity:1}
 .fc-appeler{width:var(--h-bouton);height:var(--h-bouton)}
-.fc-onglets{display:flex;gap:4px;padding:4px;margin-top:14px;border-radius:var(--r);border:1px solid var(--verre-bord);background:var(--verre)}
-.fc-onglets button{flex:1;min-height:var(--h-toucher);border:0;border-radius:calc(var(--r) - 5px);background:transparent;color:var(--ink-2);
-  font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:background var(--vite),color var(--vite)}
-.fc-onglets button[aria-selected="true"]{background:rgba(255,255,255,.14);color:var(--ink)}
 .fc-panneau > .carte,.fc-panneau > .fc-carte{margin:0 0 10px}
 .fc-panneau > .panel{margin-top:16px}
 .fc-carte{padding:14px 16px}
@@ -1010,7 +946,6 @@ ul.fc-lignes li > b{font-weight:500;text-align:right;min-width:0;overflow-wrap:a
 /* --- zones de toucher de 44 px (décision 8) sur les listes détaillées de l'espace coach --- */
 .client-l .voir,#tb-clients .voir{min-height:var(--h-toucher)}
 .bandeau .sortir{min-height:var(--h-toucher)}
-.fc-masthead{padding:0;margin:0;border-bottom:0;gap:0}
 .fc-outils .bandeau{margin:16px 0 0}
 .lc-plus{list-style:none;display:flex;justify-content:center;margin-top:4px}
 
@@ -1080,6 +1015,20 @@ ul.fc-lignes li > b{font-weight:500;text-align:right;min-width:0;overflow-wrap:a
 .ex-derniere{font-size:12px;margin:6px 0 0;color:var(--ink-2);line-height:1.5}
 .ex-identique{font-size:12px;margin:4px 0 0;color:var(--warn);line-height:1.5}
 @media (max-width:640px){ .ex-ligne .outils-ex{grid-column:1/-1;justify-content:flex-end} }
+/* v104 (point 7) : éditeur du programme d'un client : une ligne compacte par exercice (cible de 44 px), le détail s'ouvre au toucher */
+details.ex-pli{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);margin:0 0 8px;padding:0}
+details.ex-pli > summary{list-style:none;display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;min-height:var(--h-toucher);padding:8px 40px 8px 14px;
+  position:relative;font-size:14px;color:var(--ink);font-weight:400;border-radius:var(--r)}
+details.ex-pli > summary::-webkit-details-marker{display:none}
+details.ex-pli > summary::after{content:"\203A";position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:20px;line-height:1;color:var(--ink-3);transition:transform .15s}
+details.ex-pli[open] > summary::after{transform:translateY(-50%) rotate(90deg)}
+details.ex-pli > summary:hover{color:var(--ink)}
+details.ex-pli > summary:hover::after{color:var(--accent)}
+details.ex-pli > summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.ex-resume-nom{font-weight:600;flex:1;min-width:0;overflow-wrap:anywhere}
+.ex-resume-chiffres{font-variant-numeric:tabular-nums;font-size:13px;color:var(--ink-3);white-space:nowrap}
+.ex-resume-id{font-size:13px;color:var(--warn);font-weight:600}
+details.ex-pli > .ex-ligne{margin:0;border:0;border-top:1px solid var(--line);border-radius:0 0 var(--r) var(--r)}
 /* v97 (chantier 2 de la nuit du 10/11) : brouillon de la diète, « Changer ce repas », « Dupliquer sur » */
 .nu-etat.brouillon{border-color:var(--warn)}
 .props-repas{margin-top:12px;padding:12px;border:1px solid var(--accent-line);border-radius:var(--r-sm);background:var(--sunken)}
@@ -1095,15 +1044,18 @@ ul.fc-lignes li > b{font-weight:500;text-align:right;min-width:0;overflow-wrap:a
 .mp-onglets .tab.on{border-color:var(--accent);color:var(--ink)}
 [data-mp-prog] button{min-height:var(--h-toucher)}
 /* v99 (chantier 4 de la nuit du 10/11) : les 5 onglets de la fiche d'un client, WhatsApp dans l'en-tête */
-.fiche-onglets{display:flex;flex-wrap:wrap;gap:6px;width:100%;margin:6px 0 0}
+/* v104 (point 2) : les 5 onglets sur une seule ligne (défilement horizontal si l'écran est trop étroit) */
+.fiche-onglets{display:flex;flex-wrap:nowrap;gap:6px;width:100%;margin:6px 0 0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.fiche-onglets::-webkit-scrollbar{display:none}
+.fiche-onglets .f-onglet{flex:none;white-space:nowrap}
 .f-onglet{display:inline-flex;align-items:center;min-height:var(--h-toucher);padding:0 14px;border:1px solid var(--line-strong);border-radius:var(--r-sm);
   color:var(--ink-2);text-decoration:none;font-size:14px;font-weight:500}
 .f-onglet:hover{border-color:var(--accent);color:var(--ink)}
 .f-onglet.ici{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
 .fiche-wa:empty{display:none}
 a.btn.fiche-wa-l{min-height:var(--h-toucher)}
-.fc-tete .fiche-onglets{margin:12px 0}
 @media (max-width:560px){ .f-onglet{padding:0 11px;font-size:13px} }
+@media (max-width:420px){ .fiche-onglets{gap:4px} .f-onglet{padding:0 9px;font-size:12.5px} }
 /* v101 (chantier 6 de la nuit du 10/11) : la croix des volets (« Tout mon espace ») visible et à 44 × 44 px, sans chevaucher le
    titre (le titre lui laisse sa place) ; même dessin que la croix du journal alimentaire */
 .fermer-volet{min-width:var(--h-toucher);min-height:var(--h-toucher);width:var(--h-toucher);height:var(--h-toucher);display:inline-flex;align-items:center;justify-content:center;
@@ -1124,3 +1076,61 @@ a.btn.fiche-wa-l{min-height:var(--h-toucher)}
 .chip{min-height:var(--h-toucher)}
 #vue table .del{min-width:var(--h-toucher);min-height:var(--h-toucher)}
 input[type=checkbox]:focus-visible,input[type=radio]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* v104 (point 5) : les objectifs du mois se modifient dans l'onglet Suivi de la fiche (page en lecture seule par ailleurs) */
+.lecture-seule .panel.obj-coach input,.lecture-seule .panel.obj-coach select{pointer-events:auto;opacity:1}
+.fc-actifs{color:var(--ink-2)}
+/* v104 (point 8) : tous les boutons « × » (supprimer, retirer) font au moins 44 × 44 px et sont séparés des autres boutons
+   (un écart et un trait avant eux) : on ne supprime plus en visant « dupliquer » ou « descendre » */
+.del,.g-edit .del,.fo-x{min-width:var(--h-toucher);min-height:var(--h-toucher);display:inline-flex;align-items:center;justify-content:center;font-size:18px}
+.outils-ex .del,.seance-tete > .del{margin-left:12px;position:relative}
+.outils-ex .del::before,.seance-tete > .del::before{content:"";position:absolute;left:-7px;top:8px;bottom:8px;border-left:1px solid var(--line-strong)}
+.g-edit{display:inline-flex;align-items:center;gap:4px}
+.g-edit .del{margin-left:8px;padding:0}
+/* v104 (point 10) : « À surveiller » sous les urgences du tableau de bord (point gris : rien d'urgent) */
+.point.neutre{background:var(--ink-3)}
+.tb-sur2{margin-top:18px}
+/* v104 (point 5) : sur téléphone, les 3 objectifs du mois (onglet Suivi de la fiche) l'un sous l'autre : le texte n'est plus coupé */
+@media (max-width:560px){ .obj-coach .grid.g3{grid-template-columns:1fr} }
+/* v104 (partie 3) : zones de toucher de 44 px sur téléphone, pages du client et du prospect (« Comment faire ? », les volets
+   repliables, Homme / Femme du calculateur, les cases des objectifs du mois, « Conditions d'utilisation et confidentialité ») */
+@media (max-width:720px){
+  .ex-fiche{min-height:var(--h-toucher);padding:0 14px;display:inline-flex;align-items:center}
+  #vue details:not([class]) > summary,#vue details.prep > summary{min-height:var(--h-toucher);padding-top:11px;padding-bottom:11px;box-sizing:border-box}   /* les volets simples (calculateur, mesures, préparation) ; ceux qui règlent leur hauteur gardent la leur */
+  .seg button{min-height:var(--h-toucher)}
+  label.objectif{min-height:var(--h-toucher);align-items:center}
+  .objectif .obj-case{width:22px;height:22px;margin:0}
+  #mc-conditions{min-height:var(--h-toucher);display:inline-flex;align-items:center}
+}
+/* v104 (point 6) : fiche d'un client, onglet Nutrition du coach : les repas et les blocs longs sont repliés (<details>) ;
+   le résumé est une cible de 44 px au moins, une flèche dit s'il est ouvert, un focus clavier visible */
+.nu-pli{border:0;margin:0;padding:0}
+.nu-pli > summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:var(--h-toucher);
+  font-size:inherit;font-weight:inherit;color:var(--ink);border-radius:var(--r-sm);cursor:pointer}
+.nu-pli > summary::-webkit-details-marker{display:none}
+.nu-pli > summary::after{content:"";flex:none;width:8px;height:8px;margin:0 8px 4px 0;border-right:2px solid var(--ink-3);border-bottom:2px solid var(--ink-3);
+  transform:rotate(45deg);transition:transform var(--vite)}
+.nu-pli[open] > summary::after{transform:rotate(-135deg);margin-bottom:-4px}
+.nu-pli > summary:hover{color:var(--ink)}
+.nu-pli > summary:hover::after{border-color:var(--accent)}
+.nu-pli > summary:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
+.nu-pli[open] > summary{margin-bottom:14px}
+.nu-pli .pli-txt{display:flex;flex-direction:column;gap:2px;min-width:0}
+.nu-pli .pli-txt h2{margin:0;overflow-wrap:anywhere}
+.nu-pli .pli-resume{display:flex;flex-wrap:wrap;gap:2px 14px;font-size:13px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.nu-pli .pli-resume b{color:var(--ink);font-weight:600}
+.nu-pli .pli-txt .pastille{align-self:flex-start;margin-top:4px}
+.pli-sep{height:1px;background:var(--line);margin:10px 0}
+.nu-pli .pli-resume .eyebrow{font-size:11px}
+.repas-pli .repas-outils{margin:0 0 4px}
+.repas-pli .repas-macros{margin-top:10px}
+.nu-pli-notes{margin-top:8px}
+.nu-pli-notes > summary{font-size:14px;font-weight:600;color:var(--ink-2)}
+.nu-pli-notes[open] > summary{margin-bottom:6px}
+/* le résumé du jour (kcal, protéines, glucides, lipides) sur une ligne au téléphone */
+@media (max-width:560px){
+  .nu-jour .bilan-jour{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+  .nu-jour .bilan-jour .tuile{padding:8px 6px;gap:0}
+  .nu-jour .bilan-jour .t-lbl{font-size:9px;letter-spacing:.04em;overflow-wrap:anywhere}
+  .nu-jour .bilan-jour .t-val{font-size:18px;margin-top:2px}
+}
+@media (prefers-reduced-motion: reduce){.nu-pli > summary::after{transition:none}}

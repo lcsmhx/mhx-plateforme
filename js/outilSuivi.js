@@ -436,7 +436,7 @@ const Checkin = {
     const sous = e.semaine.etat === "en_retard"
       ? trad("Ton bilan de la semaine du {a} au {b} n'est pas encore fait : tu as jusqu'à {j} soir.", { a: dateFr(e.semaine.debut), b: dateFr(e.semaine.fin), j: this.nomJour(e.semaine.limite) })
       : trad("5 minutes, avant dimanche soir : c'est ce qui permet à ton coach d'ajuster");
-    return `<a class="acces attention" href="${opts.lien || "#/suivi"}"><span class="ico">${ICONES.bilan}</span><span class="txt"><b>${esc(trad("Ton bilan de la semaine est disponible"))}</b><small>${esc(sous)}</small></span><span class="fleche">›</span></a>`;
+    return `<a class="acces attention" href="${esc(opts.lien || "#/suivi")}"><span class="ico">${ICONES.bilan}</span><span class="txt"><b>${esc(trad("Ton bilan de la semaine est disponible"))}</b><small>${esc(sous)}</small></span><span class="fleche">›</span></a>`;
   },
   /* v53 — la carte de la règle du dimanche (accueil) : toujours un lien vers Mon suivi */
   statutDimancheHTML(e, opts){
@@ -1068,7 +1068,7 @@ const outilSuivi = {
   titre: "Ton suivi",
   accroche: "Comment se passe ton accompagnement : ta régularité, tes objectifs du mois et ton bilan des quatre dernières semaines.",
 
-  html(){ return `<div id="suivi-fb-haut"></div><div id="suivi-checkin"></div><div id="suivi-fb-bas"></div><div id="suivi-reg"><section class="panel">${squelette()}</section></div><div id="suivi-bilan"></div>`; },
+  html(){ return `<div id="suivi-fb-haut"></div><div id="suivi-checkin"></div><div id="suivi-fb-bas"></div><div id="suivi-reg"><section class="panel">${squelette()}</section></div><div id="suivi-obj"></div><div id="suivi-bilan"></div>`; },
 
   async init(){
     const { valeurs: d, dates, erreur } = await Store.lireTout(["programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "intake", "checkins", "feedbacks"], { dates: true });
@@ -1084,7 +1084,7 @@ const outilSuivi = {
        reecrivait la liste sans elle (perdue). Les autres cles sont lues comme avant. */
     const copieOF = Store.copieAServir(Store.cible(), "objectifs_faits", { maj_le: dates.objectifs_faits || null });
     if (copieOF) d.objectifs_faits = Forme.cle("objectifs_faits", copieOF.v);
-    const P = d.programme || {}, J = d.journal || { seances: [] };
+    let P = d.programme || {}; const J = d.journal || { seances: [] };
     if (!Array.isArray(J.seances)) J.seances = [];
     /* le bilan hebdo : la cle est lue ici, mais on la re-lit par Store.lire
        pour que l'ecriture soit autorisee (drapeau de lecture) */
@@ -1102,10 +1102,23 @@ const outilSuivi = {
       const zf = $(Feedback.recent(d.feedbacks) ? "suivi-fb-haut" : "suivi-fb-bas");
       if (zf && fb) zf.innerHTML = fb;
     }
-    await Regularite.monterClient("suivi-reg", P, J, d);
-    const zb = $("suivi-bilan"); if (!zb) return;
+    /* v104 (point 5) : le coach modifie ici, et seulement ici, les 3 objectifs du mois (ObjectifsCoach : l'écriture de la v102) ;
+       le panneau à cocher du client n'est pas montré au coach (il ne peut pas cocher pour lui) */
+    const coach = Auth.estCoach() && !!Store.idConsulte;   // v104 (relecture) : la fiche d'un client seulement
+    /* v104 (relecture) : un objectif tapé hors ligne (copie gardée sur l'appareil, plus récente que la base) est montré, comme le
+       faisait la page Programme (Store.lire) : sinon la saisie suivante repartirait de l'ancien texte et l'effacerait */
+    if (coach){ const cp = Store.copieAServir(Store.cible(), "programme", { maj_le: dates.programme || null, contenu: d.programme }); if (cp){ d.programme = Forme.cle("programme", cp.v) || d.programme; P = d.programme || {}; } }
+    await Regularite.monterClient("suivi-reg", P, J, Object.assign({}, d, { sansObjectifs: coach }));
+    let vider = null;
+    if (coach){
+      const uid = Store.cible(), zo = $("suivi-obj");
+      if (zo && uid){ vider = ObjectifsCoach.monter("suivi-obj", P, uid, d.objectifs_faits); const sec = zo.querySelector("section.panel"); if (sec) sec.classList.add("obj-coach"); }
+    }
+    const zb = $("suivi-bilan"); if (!zb) return vider;
     const b = outilBilan.calculer({ programme: P, journal: J, repas: d.repas || {}, repas_suivi: d.repas_suivi || {}, mens: d.mens || {}, objectifs_faits: d.objectifs_faits || {} });
-    zb.innerHTML = `<div class="suivi-sep"><h2 style="margin:0">${esc(trad("Ton bilan du mois"))}</h2><p class="note" style="margin:4px 0 0">${esc(outilBilan.accroche)}</p></div>` + outilBilan.vue(b, false, (d.intake && d.intake.objectif) || "");
+    /* v104 (point 5) : plus de liste « Objectifs du mois » en double sous le bilan (elle est juste au-dessus) */
+    zb.innerHTML = `<div class="suivi-sep"><h2 style="margin:0">${esc(trad("Ton bilan du mois"))}</h2><p class="note" style="margin:4px 0 0">${esc(outilBilan.accroche)}</p></div>` + outilBilan.vue(b, false, (d.intake && d.intake.objectif) || "", true);
+    return vider;   // la sortie de la page envoie tout de suite un objectif tapé à l'instant
   }
 };
 

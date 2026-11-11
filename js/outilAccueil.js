@@ -20,7 +20,20 @@ const outilAccueil = {
   titre: "Accueil",
   accroche: "",
 
-  html(){ return `<div id="acc-vue"><header class="masthead"><h1>Bonjour</h1></header><section class="panel">${squelette()}</section></div>`; },
+  /* v104 (point 4) : dans la fiche d'un client, le titre de page est celui des autres onglets dès le chargement (plus de
+     « Bonjour » le temps de lire) */
+  html(){ return `<div id="acc-vue">${Store.idConsulte ? this.titreFiche() : `<header class="masthead"><h1>Bonjour</h1></header>`}<section class="panel">${squelette()}</section></div>`; },
+
+  /* v104 (point 4) : le titre de page de la fiche, au même format que celui des 4 autres onglets (afficher, navigation.js :
+     « Nom — page », puis la page en titre) ; la page est celle du bandeau : « Fiche » sous Aperçu, « Son compte » sous Profil */
+  titreFiche(){
+    const cle = sousRoute === "compte" ? "accueil/compte" : "accueil";
+    const page = ((ONGLETS_FICHE.map(g => g.pages).reduce((a, b) => a.concat(b), []).find(p => p[0] === cle)) || [cle, "Fiche"])[1];
+    return `<header class="masthead">
+      <span class="eyebrow">${esc(Store.nomConsulte || "client") + " — "}${esc(trad(page))}</span>
+      <h1>${esc(trad(page))}</h1>
+    </header>`;
+  },
 
   dateLongue(){
     const t = new Date().toLocaleDateString(locale(), { weekday: "long", day: "numeric", month: "long" });
@@ -165,7 +178,7 @@ const outilAccueil = {
     ]);
     if (!zone.isConnected || Store.idConsulte !== uidFiche) return;   // on a change de fiche entre-temps
     /* v91 : lecture groupée ratée : « Pas de connexion » + Réessayer (avant : une fiche vide, « Rien à signaler : tout est en ordre ») */
-    if (erreur){ zone.innerHTML = flagHorsLigne(); return; }
+    if (erreur){ zone.innerHTML = this.titreFiche() + flagHorsLigne(); return; }   // v104 (point 4) : sous le titre de page, comme les autres onglets
     const I = d.intake || {}, P = d.programme || {}, J = d.journal || { seances: [] }, R = d.repas || {}, S = d.repas_suivi || {}, M = d.mens || {}, CK = d.checkins || { liste: [] };
     if (!Array.isArray(J.seances)) J.seances = [];
     const nomC = Store.nomConsulte || "Client";
@@ -200,7 +213,7 @@ const outilAccueil = {
     /* v49 : le suivi commercial d'un prospect (un client n'en a plus : son bloc disparait) */
     let SC = null;
     try { if (profil.statut === "prospect") SC = Commercial.analyse(pDc, d.challenge, d.suivi_prospect, dernier, I); } catch(e){ SC = null; }
-    const lien = (id, txt) => `<a class="link-a" href="#/${id}">${esc(txt)} →</a>`;
+    /* v104 (point 1) : plus de liens « … → » sous chaque bloc (ils doublaient les onglets de la fiche) */
     const ligne = (k, v) => v == null || v === "" ? "" : `<li><span>${esc(k)}</span><b>${esc(String(v))}</b></li>`;
     const alertes = l.alertes;
     /* v83 (bloc 3, maquettes FicheSuivi et FicheCompte) — la même fiche pour un client et un prospect : en-tête (croix =
@@ -209,22 +222,28 @@ const outilAccueil = {
        Appeler, puis 2 onglets. Suivi : (prospect : « Ses réponses » puis le « Suivi commercial » complet), le retour de la
        semaine, le poids, la régularité sur 30 jours, questionnaire / programme / diète, le bandeau d'avant (tous les outils du client),
        puis tout ce que la fiche montrait déjà. Compte : email, téléphone, source, rôle (« Changer »), dernière connexion,
-       l'accès complet, « Archiver ce compte » / « Restaurer ce compte », la zone rouge « Supprimer définitivement ». */
+       l'accès complet, « Archiver ce compte » / « Restaurer ce compte », la zone rouge « Supprimer définitivement ».
+       v104 (point 4) : l'en-tête est celui des 4 autres onglets (bandeau .fiche-entete : « Revenir … », WhatsApp, les 5 onglets,
+       les pages de l'onglet ; puis le titre de page). Plus de croix (« Revenir … » fait la même chose : sortirFiche), plus de
+       boutons Suivi / Compte (Suivi = Aperçu, Compte = Profil › Son compte, #/client/<id>/accueil/compte). L'identité et les
+       actions restent, sous le titre de page. */
     const prospectF = profil.statut === "prospect", tel = Contact.telephone(d.contact), arch = Archive.le(d.suivi_prospect);
     const anglais = !!(d.prefs && d.prefs.langue === "en");
     const progNom = seances.length && typeof P.nom === "string" && P.nom.trim() ? P.nom.trim().slice(0, 60) : "";
     const pFiche = Object.assign({}, pr || {}, { id: uidFiche, prenom: pr && typeof pr.prenom === "string" ? pr.prenom : profil.prenom, nom: pr && typeof pr.nom === "string" ? pr.nom : profil.nom, statut: profil.statut });
     const emailF = (typeof I.email_compte === "string" && I.email_compte.trim()) || (typeof I.email === "string" && I.email.trim()) || "";
     const cxF = Connexions.lecture(cx && cx.ligne, Connexions.suiviPour(pFiche), !!(cx && cx.lue));
+    /* v104 (point 4) : le WhatsApp du bandeau (le même sur les 5 onglets) ouvre une conversation vide ; celui-ci ouvre le message
+       prêt du prospect : il s'appelle « Message WhatsApp prêt », pour ne pas porter le même texte que celui du bandeau */
     const principal = prospectF
-      ? boutonWhatsAppVers(tel, MessageProspect.texte(pFiche.prenom, I, anglais), "btn fc-principal", "fc-wa")
+      ? boutonWhatsAppVers(tel, MessageProspect.texte(pFiche.prenom, I, anglais), "btn fc-principal", "fc-wa").replace(`<span>${esc(trad("WhatsApp"))}</span>`, `<span>${esc(trad("Message WhatsApp prêt"))}</span>`)
       : `<a class="btn fc-principal" id="fc-call" href="${esc(lienOutil("bilan"))}">Préparer le call</a>`;
     const appeler = Telephone.valide(tel) ? `<a class="rond fc-appeler" id="fc-appeler" href="tel:${esc(tel)}" aria-label="${esc(trad("Appeler"))}" title="${esc(trad("Appeler"))}">${SVG.tel}</a>`
       : `<button type="button" class="rond fc-appeler" id="fc-appeler" disabled aria-label="${esc(trad("Appeler : pas de numéro"))}" title="${esc(trad("Pas de numéro"))}">${SVG.tel}</button>`;
     /* v99 : #/client/<id>/accueil/compte (Profil › Son compte) ouvre l'onglet Compte */
     /* v99 (relecture) : le panneau suit l'adresse seulement (…/accueil = Suivi, sous l'onglet Aperçu ; …/accueil/compte = Compte,
-       sous Profil) : « Aperçu » rouvre toujours le Suivi. Un clic sur Suivi / Compte met l'adresse à jour (une action de Compte
-       qui redessine la fiche reste sur Compte). */
+       sous Profil) : « Aperçu » rouvre toujours le Suivi (une action de Compte qui redessine la fiche reste sur Compte).
+       v104 (point 4) : seule l'adresse choisit le panneau (les boutons Suivi / Compte ont disparu) */
     const onglet = sousRoute === "compte" ? "compte" : "suivi";
     if (Telephone.valide(tel)) TelFiche.tels[uidFiche] = tel;
     /* le retour de la semaine (carte de la maquette) : reçu à lire, fait, non fait, ou rien encore */
@@ -238,8 +257,12 @@ const outilAccueil = {
     const kg = v => (v > 0 ? "+" : v < 0 ? "−" : "") + n1(Math.abs(v)) + " kg";
     /* la régularité sur 30 jours : les jours actifs (visites suivies), sinon le score de la semaine */
     const vis = Activite.lecture(d.activite, Activite.suiviPour(pFiche));
-    const regTexte = vis.suivi ? trad("{n} jours actifs sur 30", { n: vis.jours30 }) : r.score != null ? r.score + "/100 " + trad("cette semaine") : "—";
-    const regPct = vis.suivi ? Math.round(Math.min(30, vis.jours30) / 30 * 100) : r.score != null ? Math.max(0, Math.min(100, r.score)) : 0;
+    /* v104 (point 3) : UN chiffre de régularité, la semaine passée (semaine complète : celle de Clients, du tableau de bord et des
+       alertes), la période écrite ; plus de tuile « Régularité » en double dans « En bref ». Les jours actifs (visites suivies)
+       ne sont pas la régularité : ils ont leur ligne à eux. */
+    const regTexte = prec.score != null ? prec.score + "/100 · " + trad("semaine passée") : "— · " + trad("semaine passée");
+    const regPct = prec.score != null ? Math.max(0, Math.min(100, prec.score)) : 0;
+    const joursActifs = vis.suivi ? trad("{n} jours actifs sur 30", { n: vis.jours30 }) : "";
     const etat = (lib, ok, val, manque) => `<li><span>${esc(lib)}</span><b class="${ok ? "fc-ok" : "fc-manque"}">${ok ? `${esc(val)} <span class="fc-coche" aria-hidden="true">${SVG.coche}</span>` : esc(manque)}</b></li>`;
     /* « Ses réponses » (prospect) : objectif, ce qui bloque, avec ses mots, dans 3 mois, « Tu es ? » ; l'ancien format lisible */
     const qo = Decouverte.defQ("obstacle"), qp = Decouverte.defQ("projection");
@@ -254,24 +277,18 @@ const outilAccueil = {
     const reponsesHTML = prospectF ? `<section class="carte fc-carte" id="fc-reponses"><h2 class="fc-sur">${esc(trad("Ses réponses"))}</h2><ul class="fiche-l fc-lignes">
         ${rep(trad("Objectif"), objectifRep)}${rep(trad("Ce qui bloque"), bloque)}${rep(trad("Avec ses mots"), Decouverte.extrait(sesMots, 400))}${rep(trad("Dans 3 mois"), Decouverte.extrait(dans3, 400))}${rep(trad("Tu es ?"), I.sexe === "Homme" || I.sexe === "Femme" ? trad(I.sexe) : "")}</ul>
         ${ancienF ? `<p class="note" style="margin:8px 0 0">${esc(trad("Anciennes réponses (questionnaire d'avant) : toutes dans « Découverte », plus bas."))}</p>` : ""}</section>` : "";
-    /* v83 : le bandeau du haut de la page (posé par afficher pendant le chargement) laisse sa place à l'en-tête de la fiche ; le
-       même bandeau est dans l'onglet Suivi */
-    const bandeauHaut = $("vue") && $("vue").querySelector(":scope > .bandeau"); if (bandeauHaut) bandeauHaut.remove();
+    /* v104 (point 4) : le bandeau du haut (posé par afficher, comme sur les autres onglets) reste ; la fiche commence par le
+       titre de page, puis l'identité (initiales, nom, pastilles) et les actions (Préparer le call ou message WhatsApp prêt,
+       Appeler) ; WhatsApp (client) est celui du bandeau. Plus de croix, d'onglets en double ni de boutons Suivi / Compte. */
     zone.innerHTML = `
-      <div class="fc-tete">
-        <div class="fc-haut"><button type="button" class="rond" id="fc-fermer" aria-label="${esc(trad("Fermer la fiche"))}" title="${esc(trad("Fermer la fiche"))}">${SVG.croix}</button></div>
-        <header class="masthead fc-masthead"><span class="eyebrow">${esc(trad("Fiche client"))} · ${esc(this.dateLongue())}</span>
+      ${this.titreFiche()}
+      <section class="fc-ident" id="fc-ident">
         <div class="fc-id"><span class="avatar grand fc-avatar${nomC === Clients.SANS_NOM ? " neutre" : ""}">${esc(Clients.initiales(nomC))}</span>
-          <div class="fc-id-t"><h1 data-notr>${esc(nomC)}</h1>
-            <div class="fc-pastilles"><span class="pastille fc-role-p"${prospectF ? ' title="Compte gratuit : pas encore accompagné"' : ""}>${esc(trad(prospectF ? "Prospect" : "Client"))}</span>${progNom ? `<span class="pastille fc-prog" data-notr>${esc(progNom)}</span>` : ""}${arch ? `<span class="pastille attention fc-archive">${esc(trad("Archivé"))}</span>` : ""}${anglais ? ` <span class="pastille" title="Ce client utilise l'app en anglais">🇺🇸 anglais</span>` : ""}</div></div></div></header>
-        <div class="fc-actions">${principal}${prospectF ? "" : `<span data-fiche-wa>${TelFiche.html(uidFiche)}</span>`}${appeler}</div>
-        ${ongletsFicheHTML(onglet === "compte" ? "profil" : "apercu")}
-        <div class="fc-onglets" role="tablist" aria-label="${esc(trad("Fiche"))}">
-          <button type="button" role="tab" id="fc-tab-suivi" data-onglet="suivi" aria-controls="fc-suivi" aria-selected="${onglet === "suivi"}"${onglet === "suivi" ? "" : ' tabindex="-1"'}>${esc(trad("Suivi"))}</button>
-          <button type="button" role="tab" id="fc-tab-compte" data-onglet="compte" aria-controls="fc-compte" aria-selected="${onglet === "compte"}"${onglet === "compte" ? "" : ' tabindex="-1"'}>${esc(trad("Compte"))}</button>
-        </div>
-      </div>
-      <div class="fc-panneau" role="tabpanel" id="fc-suivi" aria-labelledby="fc-tab-suivi"${onglet === "suivi" ? "" : " hidden"}>
+          <div class="fc-id-t"><h2 class="fc-nom" data-notr>${esc(nomC)}</h2>
+            <div class="fc-pastilles"><span class="pastille fc-role-p"${prospectF ? ' title="Compte gratuit : pas encore accompagné"' : ""}>${esc(trad(prospectF ? "Prospect" : "Client"))}</span>${progNom ? `<span class="pastille fc-prog" data-notr>${esc(progNom)}</span>` : ""}${arch ? `<span class="pastille attention fc-archive">${esc(trad("Archivé"))}</span>` : ""}${anglais ? ` <span class="pastille" title="Ce client utilise l'app en anglais">🇺🇸 anglais</span>` : ""}</div></div></div>
+        <div class="fc-actions">${principal}${appeler}</div>
+      </section>
+      <div class="fc-panneau" id="fc-suivi"${onglet === "suivi" ? "" : " hidden"}>
       <p class="lede fc-lede">${profil.statut === "prospect" ? "Compte gratuit : pas de suivi à assurer tant qu'il n'est pas passé client." + (rdc ? " Découverte : " + (rdc.jour == null ? "date d'inscription inconnue" : Decouverte.depuisTexte(rdc.jour)) + (rdc.questionnaire ? ", questionnaire rempli." : ", questionnaire pas encore rempli.") : "") : alertes.length ? `${alertes.length} point${alertes.length > 1 ? "s" : ""} à regarder.` : "Rien à signaler : tout est en ordre."}</p>
       ${alertes.length ? `<div class="attention-alertes" style="margin:0 0 12px">${alertes.map(a => `<a class="pastille ${a.niveau === "info" ? "accent" : a.niveau}" href="#/${esc(a.cible)}">${esc(a.texte)}</a>`).join("")}</div>` : ""}
       ${reponsesHTML}
@@ -279,13 +296,12 @@ const outilAccueil = {
       <section class="carte fc-carte fc-retour" id="fc-retour"><div class="fc-retour-l"><div><p class="fc-sur">${esc(trad("Retour de la semaine"))}</p><p class="fc-retour-t">${esc(retourTexte)}</p></div><a class="lc-lien" id="fc-lire" href="${esc(lienOutil("bilan"))}">${esc(trad("Lire"))}</a></div></section>
       <section class="carte fc-carte fc-poids" id="fc-poids">${l.ev ? `<p class="fc-kg"><b>${kg(l.ev.total)}</b> <span>${esc(trad("depuis le début"))}</span></p>${courbe}${l.ev.mois != null ? `<span class="pastille fc-4s">${esc(trad("4 dernières sem. : {v}", { v: kg(l.ev.mois) }))}</span>` : ""}` : `<p class="fc-kg"><span>${esc(trad("Poids : aucune mesure"))}</span></p>`}</section>
       <section class="carte fc-carte fc-pf" id="fc-pf-faites"><p class="fc-pf-l">${esc(trad("Séances de la formation faites (30 j) :"))} <b>${ProgFormation.faites30j(d.seances_formation)}</b></p></section>
-      <section class="carte fc-carte fc-reg" id="fc-regularite"><div class="fc-reg-l"><b>${esc(trad("Régularité"))}</b><span>${esc(regTexte)}</span></div><div class="fc-jauge" role="img" aria-label="${esc(regTexte)}"><span style="width:${regPct}%"></span></div></section>
+      <section class="carte fc-carte fc-reg" id="fc-regularite"><div class="fc-reg-l"><b>${esc(trad("Régularité"))}</b><span>${esc(regTexte)}</span></div><div class="fc-jauge" role="img" aria-label="${esc(trad("Régularité") + " : " + regTexte)}"><span style="width:${regPct}%"></span></div>${joursActifs ? `<p class="note fc-actifs" style="margin:8px 0 0">${esc(joursActifs)}</p>` : ""}</section>
       <section class="carte fc-carte" id="fc-etat"><ul class="fiche-l fc-lignes">${etat("Questionnaire", I.complet, trad("Rempli"), trad("à remplir"))}${etat("Programme", seances.length, progNom || trad("envoyé"), trad("à faire"))}${etat("Diète", nbJours, trad("envoyée"), trad("à définir"))}</ul></section>
-      <div class="fc-outils" id="fc-outils">${bandeauConsultation(true)}</div>
+      ${/* v104 (point 1) : plus de rangée de raccourcis (Fiche, Préparer le call, Son suivi…) : la fiche se parcourt par ses 5 onglets */ ""}
       <section class="panel">
         <h2>En bref</h2>
         <div class="tiles">
-          <div class="tile"><div class="t-lbl">Régularité</div><div class="t-val readout ${Regularite.niveau(r.score)}">${r.score == null ? "—" : r.score}<small>/100</small></div><div class="t-sub">${prec.score != null ? "semaine passée : " + prec.score : "en cours"}</div></div>
           <div class="tile"><div class="t-lbl">Poids</div><div class="t-val readout">${l.ev ? n1(l.ev.actuel) : "—"}<small>kg</small></div><div class="t-sub">${l.ev ? `départ ${n1(l.ev.depart)} · <span class="${l.sens ? (l.ev.total * l.sens < -0.2 ? "pos" : l.ev.total * l.sens > 0.2 ? "neg" : "") : ""}">${l.ev.total > 0 ? "+" : ""}${n1(l.ev.total)} kg</span>` : "aucune mesure"}</div></div>
           <div class="tile"><div class="t-lbl">Séances</div><div class="t-val readout">${r.parts.seances ? r.parts.seances.faites : "—"}<small>${r.parts.seances ? "/ " + r.parts.seances.cible : ""}</small></div><div class="t-sub">notées cette semaine</div></div>
           <div class="tile"><div class="t-lbl">Repas respectés</div><div class="t-val readout">${b.repas != null ? b.repas : "—"}<small>${b.repas != null ? "%" : ""}</small></div><div class="t-sub">sur 28 jours</div></div>
@@ -297,31 +313,25 @@ const outilAccueil = {
       ${NotesCoach.html()}
       <div class="fiche-grille">
       <section class="panel"><div class="seance-c-tete"><h2>Profil</h2>${I.complet ? `<span class="pastille ok">questionnaire complet</span>` : `<span class="pastille attention">questionnaire incomplet</span>`}</div>
-        <ul class="ingr fiche-l">${ligne("Âge", I.age ? I.age + " ans" : "")}${ligne("Sexe", I.sexe)}${ligne("Taille", I.taille ? I.taille + " cm" : "")}${ligne("Poids déclaré", I.poids ? I.poids + " kg" : "")}${ligne("Poids objectif", I.poids_obj ? I.poids_obj + " kg" : "")}${ligne("Objectif", I.objectif)}${ligne("Niveau", I.niveau)}${ligne("Lieu", I.lieu)}${ligne("Séances / semaine", I.seances)}${ligne("Régime", I.regime_type)}${ligne("Allergènes", String(I.allergenes || "").split("|").filter(Boolean).join(", "))}${ligne("Ville", I.ville)}</ul>
-        <p class="note" style="margin:10px 0 0">${lien("profil", "Son questionnaire complet")}</p></section>
+        <ul class="ingr fiche-l">${ligne("Âge", I.age ? I.age + " ans" : "")}${ligne("Sexe", I.sexe)}${ligne("Taille", I.taille ? I.taille + " cm" : "")}${ligne("Poids déclaré", I.poids ? I.poids + " kg" : "")}${ligne("Poids objectif", I.poids_obj ? I.poids_obj + " kg" : "")}${ligne("Objectif", I.objectif)}${ligne("Niveau", I.niveau)}${ligne("Lieu", I.lieu)}${ligne("Séances / semaine", I.seances)}${ligne("Régime", I.regime_type)}${ligne("Allergènes", String(I.allergenes || "").split("|").filter(Boolean).join(", "))}${ligne("Ville", I.ville)}</ul></section>
       <section class="panel"><div class="seance-c-tete"><h2>Objectifs du mois</h2>${obj ? `<span class="pastille">${b.statuts.filter(x => x === "atteint").length} / ${obj.liste.filter(Boolean).length}</span>` : ""}</div>
         ${obj ? obj.liste.map((t, i) => t ? `<div class="objectif${b.statuts[i] === "atteint" ? " atteint" : ""}${b.statuts[i] === "non_atteint" ? " rate" : ""}"><span class="num">0${i + 1}</span><span class="texte" data-notr>${esc(t)}</span><span class="pastille ${Regularite.classeStatut(b.statuts[i])}">${esc(Regularite.libelleStatut(b.statuts[i]))}</span></div>` : "").join("") : `<div class="empty">Pas d'objectifs ce mois-ci.</div>`}
-        <p class="note" style="margin:10px 0 0">${lien("programme", "Écrire ou modifier les objectifs")}</p></section>
+        <p class="note" style="margin:10px 0 0"><a class="link-a" id="fc-obj-modifier" href="${esc(lienOutil("suivi"))}">${esc(trad("Modifier"))}</a></p></section>
       <section class="panel"><div class="seance-c-tete"><h2>Programme</h2>${seances.length ? `<span class="pastille ok">envoyé</span>` : `<span class="pastille attention">à faire</span>`}</div>
-        <ul class="ingr fiche-l">${ligne("Nom", P.nom)}${seances.length ? ligne("Cycle", "Cycle " + String(av.cycle).padStart(2, "0") + (av.semaine != null ? " · semaine " + Math.min(av.semaine, av.duree) + " / " + av.duree : "")) : ""}${ligne("Séances / semaine", seances.length || "")}${ligne("Envoyé le", P.maj)}${ligne("Dernière séance notée", derniereSeance ? dateFr(derniereSeance.date) + " — " + (derniereSeance.nom || "") : "")}</ul>
-        <p class="note" style="margin:10px 0 0">${lien("programme", "Son programme")}</p></section>
+        <ul class="ingr fiche-l">${ligne("Nom", P.nom)}${seances.length ? ligne("Cycle", "Cycle " + String(av.cycle).padStart(2, "0") + (av.semaine != null ? " · semaine " + Math.min(av.semaine, av.duree) + " / " + av.duree : "")) : ""}${ligne("Séances / semaine", seances.length || "")}${ligne("Envoyé le", P.maj)}${ligne("Dernière séance notée", derniereSeance ? dateFr(derniereSeance.date) + " — " + (derniereSeance.nom || "") : "")}</ul></section>
       <section class="panel"><div class="seance-c-tete"><h2>Nutrition</h2>${nbJours ? `<span class="pastille ok">envoyée</span>` : `<span class="pastille attention">à faire</span>`}</div>
-        <ul class="ingr fiche-l">${ligne("Cible", cible ? fmt(cible.kcal) + " kcal · " + fmt(cible.prot) + " g prot." : "")}${ligne("Régime", R.regime)}${ligne("Allergènes écartés", (R.allergenes || []).join(", "))}${ligne("Jours différents", nbJours || "")}${ligne("Envoyée le", R.maj)}${ligne("Repas respectés (28 j)", b.repas != null ? b.repas + " %" : "")}${ligne("Repas remplacés ce mois", b.remplaces.length || "")}</ul>
-        <p class="note" style="margin:10px 0 0">${lien("nutrition", "Ses repas")} · ${lien("calculateur", "Ses calories")}</p></section>
+        <ul class="ingr fiche-l">${ligne("Cible", cible && num(cible.kcal) > 0 ? fmt(cible.kcal) + " kcal" + (num(cible.prot) > 0 ? " · " + fmt(cible.prot) + " g prot." : "") : "")}${ligne("Régime", R.regime)}${ligne("Allergènes écartés", (R.allergenes || []).join(", "))}${ligne("Jours différents", nbJours || "")}${ligne("Envoyée le", R.maj)}${ligne("Repas respectés (28 j)", b.repas != null ? b.repas + " %" : "")}${ligne("Repas remplacés ce mois", b.remplaces.length || "")}</ul></section>
       ${avecJA ? JournalAlim.ficheHTML(JournalAlim.remettre(d.journal_alimentaire || JournalAlim.vide()), JournalAlim.objectif({ repas: R, calc: d.calc, calc_perso: d.calc_perso }, profil.statut === "prospect")) : ""}
       <section class="panel"><h2>Poids et mensurations</h2>
-        <ul class="ingr fiche-l">${ligne("Poids actuel", l.ev ? n1(l.ev.actuel) + " kg" : "")}${ligne("Départ", l.ev ? n1(l.ev.depart) + " kg" : "")}${ligne("Depuis le début", l.ev ? (l.ev.total > 0 ? "+" : "") + n1(l.ev.total) + " kg" : "")}${ligne("4 dernières semaines", l.ev && l.ev.mois != null ? (l.ev.mois > 0 ? "+" : "") + n1(l.ev.mois) + " kg" : "")}${ligne("Mesures", (M.mesures || []).length || "")}${ligne("Dernière mesure", l.ev && l.ev.date ? dateFr(l.ev.date) : "")}${b.zones.map(z => ligne(z.nom, n1(z.de) + " → " + n1(z.a) + " cm")).join("")}</ul>
-        <p class="note" style="margin:10px 0 0">${lien("mensurations", "Ses courbes")}</p></section>
+        <ul class="ingr fiche-l">${ligne("Poids actuel", l.ev ? n1(l.ev.actuel) + " kg" : "")}${ligne("Départ", l.ev ? n1(l.ev.depart) + " kg" : "")}${ligne("Depuis le début", l.ev ? (l.ev.total > 0 ? "+" : "") + n1(l.ev.total) + " kg" : "")}${ligne("4 dernières semaines", l.ev && l.ev.mois != null ? (l.ev.mois > 0 ? "+" : "") + n1(l.ev.mois) + " kg" : "")}${ligne("Mesures", (M.mesures || []).length || "")}${ligne("Dernière mesure", l.ev && l.ev.date ? dateFr(l.ev.date) : "")}${b.zones.map(z => ligne(z.nom, n1(z.de) + " → " + n1(z.a) + " cm")).join("")}</ul></section>
       <section class="panel"><div class="seance-c-tete"><h2>${dim ? "Feedback du dimanche" : "Bilan hebdomadaire"}</h2>${e.fait ? `<span class="pastille ok">${dim ? "reçu" : "reçu cette semaine"}</span>` : dim && e.semaine.etat !== "ouvert" ? `<span class="pastille attention">non fait</span>` : dernierCk ? `<span class="pastille">${esc(trad("dernier : {d}", { d: dateFr(dernierCk.envoye_le) }))}</span>` : `<span class="pastille attention">aucun</span>`}</div>
         ${dernierCk ? `<p class="note" style="margin:0 0 8px">${esc(Checkin.periode(dernierCk))}</p>${Checkin.reponsesHTML(dernierCk)}${Checkin.avisCoachHTML(CK, dernierCk.semaine, d.feedbacks)}` : `<div class="empty">${dim ? "Aucun feedback du dimanche envoyé pour le moment." : "Aucun bilan hebdomadaire envoyé pour le moment."}</div>`}
-        ${dernierCk ? `<p class="note" style="margin:10px 0 0">Ton feedback sur ce bilan : ${fbCk ? "envoyé le " + esc(dateFr(fbCk.date)) : fbAvant ? "<b>écrit avant ce bilan, à relire</b>" : "<b>à écrire</b>"}</p>` : ""}
-        <p class="note" style="margin:10px 0 0">${lien("bilan", "Préparer le call")} · ${lien("suivi", "Son suivi")}</p></section>
+        ${dernierCk ? `<p class="note" style="margin:10px 0 0">Ton feedback sur ce bilan : ${fbCk ? "envoyé le " + esc(dateFr(fbCk.date)) : fbAvant ? "<b>écrit avant ce bilan, à relire</b>" : "<b>à écrire</b>"}</p>` : ""}</section>
       <section class="panel"><h2>Le reste</h2>
-        <ul class="ingr fiche-l">${ligne("Compléments", nbCompl ? nbCompl + " prescrit" + (nbCompl > 1 ? "s" : "") : "aucun")}${ligne("Formation", fo ? fo.pct + " % (" + fo.faits + " / " + fo.tot + ")" : "pas commencée")}${ligne("Anciens programmes", histP || "0")}${ligne("Anciennes diètes", histR || "0")}</ul>
-        <p class="note" style="margin:10px 0 0">${lien("complements", "Ses compléments")} · ${lien("formation", "Sa formation")}</p></section>
+        <ul class="ingr fiche-l">${ligne("Compléments", nbCompl ? nbCompl + " prescrit" + (nbCompl > 1 ? "s" : "") : "aucun")}${ligne("Formation", fo ? fo.pct + " % (" + fo.faits + " / " + fo.tot + ")" : "pas commencée")}${ligne("Anciens programmes", histP || "0")}${ligne("Anciennes diètes", histR || "0")}</ul></section>
       </div>
       </div>
-      <div class="fc-panneau" role="tabpanel" id="fc-compte" aria-labelledby="fc-tab-compte"${onglet === "compte" ? "" : " hidden"}>
+      <div class="fc-panneau" id="fc-compte"${onglet === "compte" ? "" : " hidden"}>
         <section class="carte fc-carte" id="fc-infos"><ul class="fiche-l fc-lignes">
           <li><span>${esc(trad("Email"))}</span><b data-notr id="fc-email">${emailF ? esc(emailF) : "—"}</b></li>
           <li><span>${esc(trad("Téléphone"))}</span><b id="fiche-tel">${Telephone.coachHTML(tel, "lc-lien")}</b></li>
@@ -368,23 +378,8 @@ const outilAccueil = {
       });
       if (boite) rebrancher();
     }
-    /* v83 (bloc 3) — les onglets Suivi / Compte (un clic, ou les flèches gauche / droite au clavier) ; l'onglet choisi est
-       gardé pour cette fiche (retour d'un outil du client, action de l'onglet Compte) */
-    const onglets = $$("[data-onglet]", zone);
-    const montrer = (nom, focus) => {
-      if (Store.idConsulte === uidFiche){
-        sousRoute = nom === "compte" ? "compte" : "";
-        try { history.replaceState(null, "", lienOutil("accueil") + (nom === "compte" ? "/compte" : "")); } catch(e){}
-        const ici = nom === "compte" ? "profil" : "apercu";
-        $$(".fiche-onglets .f-onglet").forEach(a => { const oui = a.dataset.ongletFiche === ici; a.classList.toggle("ici", oui); if (oui) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
-      }
-      onglets.forEach(t => { const oui = t.dataset.onglet === nom; t.setAttribute("aria-selected", String(oui)); if (oui) t.removeAttribute("tabindex"); else t.setAttribute("tabindex", "-1"); if (oui && focus) t.focus(); });
-      ["suivi", "compte"].forEach(k => { const x = zone.querySelector("#fc-" + k); if (x) x.hidden = k !== nom; });
-    };
-    onglets.forEach(t => {
-      t.addEventListener("click", () => montrer(t.dataset.onglet));
-      t.addEventListener("keydown", ev => { if (ev.key === "ArrowRight" || ev.key === "ArrowLeft"){ ev.preventDefault(); montrer(t.dataset.onglet === "suivi" ? "compte" : "suivi", true); } });
-    });
+    /* v104 (point 4) : les boutons Suivi / Compte (v83, bloc 3) ont disparu : le panneau Suivi s'ouvre par l'onglet Aperçu,
+       le panneau Compte par Profil › « Son compte » (des liens du bandeau, comme les pages des autres onglets) */
     /* onglet Compte : le statut (« Changer »), l'accès complet, archiver / restaurer, supprimer définitivement (les mêmes
        actions et les mêmes fenêtres que dans Comptes : Acces) ; après une action, la fiche est relue, ou quittée si le compte
        n'en a plus (supprimé, ou passé en accès complet) */

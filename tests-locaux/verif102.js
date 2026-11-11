@@ -239,6 +239,8 @@ const avecProgramme = (B) => !!(B && B.programme);
 const AUJ0 = new Date(T0).toISOString().slice(0, 10);
 const ouvrirCoach = async (b, db, chemin, sel, opts) => { const { page, c } = await contexte(b, COACH, db, opts); await page.goto(FICHE(chemin || "programme")); await pret(page, sel || "#pg-publier"); return { page, c }; };
 
+/* v104 (point 7) : dans la fiche d'un client, chaque exercice est replié en une ligne : le coach l'ouvre avant d'y toucher */
+const ouvrirEx = async (page, si, ei) => { const d = `details[data-pli="${si}:${ei}"]`; if (await page.$(d) && !(await page.$eval(d, x => x.open))) await page.click(d + " > summary"); };
 (async () => {
   await new Promise((r, k) => { server.once("error", e => k(new Error(e && e.code === "EADDRINUSE" ? "port " + PORT + " déjà pris (une autre suite tourne ?) : VERIF102_PORT=10113 node verif102.js ../index.html" : String(e)))); server.listen(PORT, r); });
   const b = await chromium.launch();
@@ -267,9 +269,14 @@ const ouvrirCoach = async (b, db, chemin, sel, opts) => { const { page, c } = aw
   });
 
   /* =================== B. objectifs du mois : jamais par-dessus une publication faite ailleurs =================== */
+  /* v104 (point 5) : changement voulu — les objectifs du mois d'un client se tapent dans l'onglet Suivi de sa fiche
+     (#/client/<id>/suivi, mêmes champs #obj-0..2, même écriture, ObjectifsCoach) et plus sur la page Programme (lecture seule) ;
+     « Publier les changements » reste sur Programme. Mêmes scénarios : l'objectif est tapé dans Suivi ; pour B3 et B4, on passe
+     de Suivi à Programme (navigation dans la page, comme le coach) avant « Publier » ; B4 garde « dans la seconde ». */
+  const versPage = async (page, outil, sel) => { await page.evaluate(h => { location.hash = h; }, "#/client/" + C1 + "/" + outil); await page.waitForSelector(sel, { timeout: 8000 }); };
   await bloc("B. objectifs du mois", async () => {
     const db = base();
-    const { page } = await ouvrirCoach(b, db);
+    const { page } = await ouvrirCoach(b, db, "suivi", "#obj-0");
     /* un autre appareil publie pendant que cette page est ouverte */
     const l = ligne(db, C1, "programme"); l.contenu = clone(l.contenu); l.contenu.seances[0].exercices[0].series = "6"; l.maj_le = new Date(T0 + 60000).toISOString();
     const n0 = ecr(db, "programme", C1).length;
@@ -278,34 +285,37 @@ const ouvrirCoach = async (b, db, chemin, sel, opts) => { const { page, c } = aw
     ok("B1 : un objectif tapé après une publication faite ailleurs : rien n'est écrit (la publication reste), le coach est prévenu",
       ecr(db, "programme", C1).length === n0 && ligne(db, C1, "programme").contenu.seances[0].exercices[0].series === "6" && /publié ailleurs/.test(t), JSON.stringify([ecr(db, "programme", C1).length - n0, t]));
     const db2 = base();
-    const { page: p2 } = await ouvrirCoach(b, db2);
+    const { page: p2 } = await ouvrirCoach(b, db2, "suivi", "#obj-0");
     await p2.fill("#obj-0", "Marcher 8 000 pas"); await attendre(p2, 2200);
     const e = ecr(db2, "programme", C1).pop();
     ok("B2 : sans publication ailleurs : l'objectif est écrit dans le programme publié, le reste inchangé", !!e && e.contenu.objectifs && e.contenu.objectifs.liste[0] === "Marcher 8 000 pas" && e.contenu.seances[0].exercices[0].series === "4", JSON.stringify(e && e.contenu.objectifs));
     /* un objectif qui attend son envoi (panne) bloque la publication */
     const db3 = base(); db3.panneEcriture = "programme";
-    const { page: p3 } = await ouvrirCoach(b, db3);
+    const { page: p3 } = await ouvrirCoach(b, db3, "suivi", "#obj-0");
     await p3.fill("#obj-0", "Dormir 8 h"); await attendre(p3, 2200);
-    await p3.fill('[data-f="series"][data-s="0"][data-e="0"]', "5"); await attendre(p3, 1500);
+    await versPage(p3, "programme", "#pg-publier"); await attendre(p3, 800);
+    await ouvrirEx(p3, 0, 0); await p3.fill('[data-f="series"][data-s="0"][data-e="0"]', "5"); await attendre(p3, 1500);
     await p3.click("#pg-publier"); await attendreQue(() => p3.evaluate(() => (document.getElementById("pg-pub-msg") || {}).textContent.trim() !== ""), 8000);
     const m3 = await texte(p3, "#pg-pub-msg");
     ok("B3 : un objectif qui attend son envoi : « Publier » ne passe pas par-dessus (« … attend son envoi : réessaie dans un instant. »)", /attend son envoi/.test(m3 || ""), m3);
     /* relecture : un objectif tapé, puis « Publier » dans la seconde : la nouvelle version reste en ligne, avec l'objectif */
     const db4 = base();
     const { page: p4 } = await ouvrirCoach(b, db4);
-    await p4.fill('[data-f="series"][data-s="0"][data-e="0"]', "5"); await attendre(p4, 1300);
+    await ouvrirEx(p4, 0, 0); await p4.fill('[data-f="series"][data-s="0"][data-e="0"]', "5"); await attendre(p4, 1300);
+    await versPage(p4, "suivi", "#obj-0");
     await p4.fill("#obj-0", "Boire 2 L");
+    await versPage(p4, "programme", "#pg-publier");
     await p4.click("#pg-publier");
     await attendreQue(() => p4.evaluate(() => /^Publié/.test((document.getElementById("pg-pub-msg") || {}).textContent || "")), 8000); await attendre(p4, 2500);
     const fin4 = ligne(db4, C1, "programme").contenu;
     /* relecture 2 : une vieille copie d'objectifs (tapés hors ligne le mois d'avant) ne remplace pas ceux posés ensuite ailleurs */
     const db5 = base(); const l5 = ligne(db5, C1, "programme");
     l5.contenu = Object.assign(clone(l5.contenu), { objectifs: { mois: AUJ0.slice(0, 7), liste: ["Novembre", "", ""], statuts: ["", "", ""] } }); l5.maj_le = avant(H);
-    const { page: p5 } = await ouvrirCoach(b, db5);
+    const { page: p5 } = await ouvrirCoach(b, db5, "suivi", "#obj-0");
     await p5.evaluate(([T, C, v, t]) => { localStorage.setItem("mhx_attente|" + T + "|programme", JSON.stringify({ o: 1, a: C, t, v })); },
       [C1, COACH_ID, Object.assign(clone(l5.contenu), { objectifs: { mois: "2000-10", liste: ["Octobre", "", ""], statuts: ["", "", ""] } }), avant(2 * H)]);
     const n5 = ecr(db5, "programme", C1).length;
-    await p5.reload(); await pret(p5, "#pg-publier"); await attendre(p5, 2500);
+    await p5.reload(); await pret(p5, "#obj-0"); await attendre(p5, 2500);
     const v5 = await p5.$eval("#obj-0", e => e.value).catch(() => null);
     const reste5 = await p5.evaluate(T => !!localStorage.getItem("mhx_attente|" + T + "|programme"), C1);
     ok("B5 : une vieille copie d'objectifs (plus ancienne que la base) n'est ni affichée ni envoyée, puis retirée : « Novembre » reste",
@@ -346,7 +356,7 @@ const ouvrirCoach = async (b, db, chemin, sel, opts) => { const { page, c } = aw
   await bloc("D. publication et catalogue", async () => {
     const db = base(); db.lentEcriture = { outil: "programme", ms: 2500 };
     const { page } = await ouvrirCoach(b, db);
-    await page.fill('[data-f="series"][data-s="0"][data-e="0"]', "5"); await attendre(page, 1200);
+    await ouvrirEx(page, 0, 0); await page.fill('[data-f="series"][data-s="0"][data-e="0"]', "5"); await attendre(page, 1200);
     await page.click("#pg-publier"); await attendre(page, 700);
     const inerte = await page.evaluate(() => document.querySelectorAll("#prog-vue > section[inert]").length);
     await attendreQue(() => page.evaluate(() => /^Publié/.test((document.getElementById("pg-pub-msg") || {}).textContent || "")), 8000);
@@ -356,7 +366,7 @@ const ouvrirCoach = async (b, db, chemin, sel, opts) => { const { page, c } = aw
     const db2 = base(); db2.panneEcriture = "programme";
     const { page: p2, c: cp2 } = await ouvrirCoach(b, db2);
     await cp2.route(/outil=eq\.programme&select=contenu,maj_le/, async r => { await new Promise(k => setTimeout(k, 1500)); return r.fallback(); });   // la relecture d'avant la publication prend du temps
-    await p2.fill('[data-f="series"][data-s="0"][data-e="0"]', "5"); await attendre(p2, 1200);
+    await ouvrirEx(p2, 0, 0); await p2.fill('[data-f="series"][data-s="0"][data-e="0"]', "5"); await attendre(p2, 1200);
     db2.lentEcriture = { outil: "programme", ms: 1500 };
     await p2.click("#pg-publier"); await attendre(p2, 300);
     await p2.evaluate(() => { location.hash = "#/clients"; }); await attendre(p2, 3500);
@@ -373,6 +383,8 @@ const ouvrirCoach = async (b, db, chemin, sel, opts) => { const { page, c } = aw
     const { page: p4, c: c4 } = await contexte(b, COACH, base());
     await c4.route(/\/rest\/v1\/recettes/, r => r.abort());
     await p4.goto(FICHE("nutrition")); await pret(p4, "#nu-publier");
+    /* v104 (point 6) : les repas du coach sont repliés : il ouvre le premier (clic sur son résumé) avant « Changer ce repas » */
+    await p4.evaluate(() => { const s = document.querySelector('#nu-vue details[data-pli-repas="0:0"] > summary'); if (s) s.click(); }); await attendre(p4, 150);
     await p4.click('[data-autre="0:0"]'); await attendre(p4, 2500);
     const m4 = await texte(p4, "#nu-msg");
     ok("D4 : « Changer ce repas » sans catalogue : « Pas de connexion : les recettes n'ont pas pu être lues… », jamais « pas d'autre recette »", /^Pas de connexion : les recettes/.test(m4 || ""), m4);

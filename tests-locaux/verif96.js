@@ -262,6 +262,8 @@ const publier = async (page) => {
   return { msg: await texte(page, "#pg-pub-msg"), modale: await fenetre(page) };
 };
 const champ = (si, ei, f) => `[data-f="${f}"][data-s="${si}"][data-e="${ei}"]`;
+/* v104 (point 7) : dans la fiche d'un client, chaque exercice est replié en une ligne : le coach l'ouvre avant de remplir ses champs */
+const ouvrirEx = async (page, si, ei) => { const d = `details[data-pli="${si}:${ei}"]`; if (await page.$(d) && !(await page.$eval(d, x => x.open))) await page.click(d + " > summary"); };
 
 /* v102 : un brouillon retiré laisse une marque datée sans programme (retire_le) : « aucun brouillon » = pas d'entrée ou cette marque */
 const sansBrouillon = (B, k) => !B || !B.clients || !B.clients[k] || !B.clients[k].programme;
@@ -305,7 +307,7 @@ const sansBrouillon = (B, k) => !B || !B.clients || !B.clients[k] || !B.clients[
   await bloc("B. brouillon", async () => {
     const db = base();
     const { page: co } = await ouvrirCoach(b, db);
-    await co.fill(champ(0, 0, "series"), "5");
+    await ouvrirEx(co, 0, 0); await co.fill(champ(0, 0, "series"), "5");
     await attendreBrouillon(db, B => B.clients && B.clients[C1]);
     await attendre(co, 300);
     const B1 = brouillons(db), e1 = B1 && B1.clients[C1];
@@ -324,7 +326,7 @@ const sansBrouillon = (B, k) => !B || !B.clients || !B.clients[k] || !B.clients[
     ok("B4 : « Annuler le brouillon » (avec confirmation) : le brouillon de ce client est retiré, l'éditeur montre la version publiée, « ✓ Publié », rien chez le client",
       /Tes changements non publiés seront perdus/.test(m || "") && sansBrouillon(brouillons(db), C1) && (await co.inputValue(champ(0, 0, "series"))) === "4" && /Publié/.test(await statut(co) || "") && ecr(db, "programme").length === 0, JSON.stringify([m, brouillons(db)]));
     /* publier : l'ancien dans l'historique, le nouveau d'un coup, le brouillon retiré */
-    await co.fill(champ(0, 0, "reps"), "6-8");
+    await ouvrirEx(co, 0, 0); await co.fill(champ(0, 0, "reps"), "6-8");
     await attendreBrouillon(db, B => B.clients && B.clients[C1]);
     const avantHist = ecr(db, "hist_programme").length;
     const r = await publier(co);
@@ -347,9 +349,9 @@ const sansBrouillon = (B, k) => !B || !B.clients || !B.clients[k] || !B.clients[
     const { page: p1 } = await ouvrirCoach(b, db);
     const { page: p2 } = await ouvrirCoach(b, db);
     /* l'appareil 2 publie ; l'appareil 1, ouvert avant, publie ensuite */
-    await p2.fill(champ(0, 0, "series"), "6"); await attendre(p2, 900);
+    await ouvrirEx(p2, 0, 0); await p2.fill(champ(0, 0, "series"), "6"); await attendre(p2, 900);
     const r2 = await publier(p2);
-    await p1.fill(champ(1, 0, "series"), "2"); await attendre(p1, 900);
+    await ouvrirEx(p1, 1, 0); await p1.fill(champ(1, 0, "series"), "2"); await attendre(p1, 900);
     const r1 = await publier(p1);
     ok("B8 : deux appareils : la page ouverte avant une publication faite ailleurs demande « … modifié ailleurs … Le remplacer par ton brouillon ? » avant d'écrire",
       /^Publié/.test(r2.msg || "") && /modifié ailleurs/.test(r1.modale || "") && ecr(db, "programme").length === 1, JSON.stringify([r2.msg, r1.modale, ecr(db, "programme").length]));
@@ -362,9 +364,9 @@ const sansBrouillon = (B, k) => !B || !B.clients || !B.clients[k] || !B.clients[
     /* le même brouillon modifié sur un autre appareil après cette page */
     const db2 = base();
     const { page: q1 } = await ouvrirCoach(b, db2);
-    await q1.fill(champ(0, 0, "series"), "5"); await attendreBrouillon(db2, B => B.clients && B.clients[C1]);
+    await ouvrirEx(q1, 0, 0); await q1.fill(champ(0, 0, "series"), "5"); await attendreBrouillon(db2, B => B.clients && B.clients[C1]);
     const { page: q2 } = await ouvrirCoach(b, db2);
-    await q2.fill(champ(0, 0, "series"), "7"); await attendreBrouillon(db2, B => B.clients && B.clients[C1] && B.clients[C1].programme.seances[0].exercices[0].series === "7");
+    await ouvrirEx(q2, 0, 0); await q2.fill(champ(0, 0, "series"), "7"); await attendreBrouillon(db2, B => B.clients && B.clients[C1] && B.clients[C1].programme.seances[0].exercices[0].series === "7");
     const r = await publier(q1);
     ok("B11 : le même brouillon modifié depuis sur un autre appareil : « Ce brouillon a été modifié sur un autre appareil … » avant de publier",
       /modifié sur un autre appareil/.test(r.modale || "") && ecr(db2, "programme").length === 0, JSON.stringify(r));
@@ -376,7 +378,7 @@ const sansBrouillon = (B, k) => !B || !B.clients || !B.clients[k] || !B.clients[
   await bloc("B. changement de fiche", async () => {
     const db = base();
     const { page: co } = await ouvrirCoach(b, db);
-    await co.fill(champ(0, 0, "series"), "9");
+    await ouvrirEx(co, 0, 0); await co.fill(champ(0, 0, "series"), "9");
     await co.evaluate(h => { location.hash = h; }, "#/client/" + C2 + "/programme");
     await attendre(co, 2500);
     const B = brouillons(db) || { clients: {} };
@@ -434,11 +436,11 @@ const sansBrouillon = (B, k) => !B || !B.clients || !B.clients[k] || !B.clients[
     const db = base({ donnees: [[C1, "journal", { seances: [Object.assign(seanceJ(0, "Séance A — Haut du corps"), { date: "2026-11-02" })] }]] });
     const { page: co } = await ouvrirCoach(b, db);
     const lire = async () => [await co.inputValue(champ(0, 0, "series")), await co.inputValue(champ(0, 0, "reps")), await co.inputValue(champ(0, 0, "repos"))];
-    await co.click('[data-pm="0:0:series:1"]'); await co.click('[data-pm="0:0:reps:1"]'); await co.click('[data-pm="0:0:repos:1"]');
+    await ouvrirEx(co, 0, 0); await co.click('[data-pm="0:0:series:1"]'); await co.click('[data-pm="0:0:reps:1"]'); await co.click('[data-pm="0:0:repos:1"]');
     const plus = await lire();
     await co.click('[data-pm="0:0:series:-1"]'); await co.click('[data-pm="0:0:repos:-1"]'); await co.click('[data-pm="0:0:repos:-1"]');
     const moins = await lire();
-    await co.fill(champ(0, 0, "series"), "3");
+    await ouvrirEx(co, 0, 0); await co.fill(champ(0, 0, "series"), "3");
     await attendreBrouillon(db, B => B.clients && B.clients[C1] && B.clients[C1].programme.seances[0].exercices[0].series === "3");
     const B = brouillons(db).clients[C1].programme;
     ok("D1 : + / − : séries 4 → 5 → 4, répétitions « 8-10 » → « 9-11 », repos « 90 s » → « 105 s » → « 75 s » ; le clavier marche toujours (3) ; tout va dans le brouillon",
@@ -446,8 +448,8 @@ const sansBrouillon = (B, k) => !B || !B.clients || !B.clients[k] || !B.clients[
       JSON.stringify([plus, moins, B.seances[0].exercices[0]]));
     const sid0 = B.seances[0].sid;
     await co.click('[data-dupliquer-s="0"]'); await attendre(co, 300);
-    await co.click('[data-descendre-e="0:0"]'); await attendre(co, 300);
-    await co.click('[data-dupliquer-e="1:0"]');
+    await ouvrirEx(co, 0, 0); await co.click('[data-descendre-e="0:0"]'); await attendre(co, 300);
+    await ouvrirEx(co, 1, 0); await co.click('[data-dupliquer-e="1:0"]');
     await attendreBrouillon(db, B => B.clients && B.clients[C1] && B.clients[C1].programme.seances.length === 5 && B.clients[C1].programme.seances[1].exercices.length === 5);
     const B2 = brouillons(db).clients[C1].programme;
     ok("D2 : « Dupliquer » une séance (nouvel identifiant, « (copie) ») ; ↓ sur un exercice ; « Dupliquer » un exercice",
@@ -458,6 +460,7 @@ const sansBrouillon = (B, k) => !B || !B.clients || !B.clients[k] || !B.clients[
     const der = await co.evaluate(() => Array.from(document.querySelectorAll("[data-derniere]")).map(x => x.textContent.trim()));
     ok("D3 : sous l'exercice, ce que le client a fait la dernière fois : « Dernière fois : 4 × 8 à 52,5 kg (02/11) »",
       der.includes("Dernière fois : 4 × 8 à 52,5 kg (02/11)"), JSON.stringify(der));
+    await co.evaluate(() => document.querySelectorAll("details[data-pli]").forEach(d => { d.open = true; }));   // v104 (point 7) : tous les exercices ouverts pour mesurer
     const tailles = await co.evaluate(() => Array.from(document.querySelectorAll(".outil-pg, .outils-ex .del")).slice(0, 40).map(x => { const r = x.getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height)]; }));
     ok("D4 : les boutons ↑ ↓ ⧉ × de l'éditeur font au moins 44 px de haut (+ / − : 44 px de haut)", tailles.length > 10 && tailles.every(([w, h]) => h >= 44 && w >= 30), JSON.stringify(tailles.slice(0, 8)));
     await co.setViewportSize(MOBILE); await attendre(co, 300);
@@ -478,7 +481,7 @@ const sansBrouillon = (B, k) => !B || !B.clients || !B.clients[k] || !B.clients[
     ok("E1 : « Nouveau bloc » : brouillon « Bloc 2 — 4 semaines », cycle 2, « Nouveau bloc en préparation » ; chaque exercice inchangé porte « ≈ identique au bloc d'avant » ; rien chez le client",
       !!e && e.programme.nom === "Bloc 2 — 4 semaines" && e.programme.cycle === 2 && !!e.nouveau_bloc && /Nouveau bloc en préparation/.test(await texte(co, "#pg-etat") || "") && marques === nbExos && ecr(db, "programme").length === 0,
       JSON.stringify([e && e.programme.nom, e && e.programme.cycle, marques, nbExos]));
-    await co.click('[data-pm="0:0:reps:1"]'); await attendre(co, 900);
+    await ouvrirEx(co, 0, 0); await co.click('[data-pm="0:0:reps:1"]'); await attendre(co, 900);
     const m2 = await co.evaluate(() => { const x = document.querySelector('[data-identique="0:0"]'); return x ? x.hidden : null; });
     ok("E2 : l'exercice modifié perd sa marque « ≈ identique » tout de suite", m2 === true, String(m2));
     const r = await publier(co);
@@ -504,14 +507,14 @@ const sansBrouillon = (B, k) => !B || !B.clients || !B.clients[k] || !B.clients[
     const db = base({ donnees: [[C2, "programme", PROG()]] });
     const { page: p1 } = await ouvrirCoach(b, db);
     const { page: p2, c: c2 } = await contexte(b, COACH, db); await p2.goto(FICHE2("programme")); await pret(p2, "#pg-publier");
-    await p2.fill(champ(0, 0, "series"), "7"); await attendre(p2, 1800);
-    await p1.fill(champ(0, 0, "series"), "5"); await attendre(p1, 1800);
+    await ouvrirEx(p2, 0, 0); await p2.fill(champ(0, 0, "series"), "7"); await attendre(p2, 1800);
+    await ouvrirEx(p1, 0, 0); await p1.fill(champ(0, 0, "series"), "5"); await attendre(p1, 1800);
     const B = brouillons(db) || { clients: {} };
     ok("G1 : deux appareils, deux clients : le brouillon fait sur l'un (client 2) reste quand l'autre page (ouverte avant) écrit celui du client 1",
       !sansBrouillon(B, C1) && !sansBrouillon(B, C2) && B.clients[C1].programme.seances[0].exercices[0].series === "5" && B.clients[C2].programme.seances[0].exercices[0].series === "7", JSON.stringify(Object.keys(B.clients)));
     /* G2 : le client 2 est publié sur l'autre page ; la page du client 1 (qui avait lu l'ancien brouillon du client 2) publie : pas de brouillon fantôme */
     await publier(p2); await attendre(p2, 1500);
-    await p1.fill(champ(0, 0, "reps"), "6-8"); await attendre(p1, 900);
+    await ouvrirEx(p1, 0, 0); await p1.fill(champ(0, 0, "reps"), "6-8"); await attendre(p1, 900);
     await publier(p1); await attendre(p1, 1800);
     const B2 = brouillons(db) || { clients: {} };
     ok("G2 : après les deux publications, plus aucun brouillon (aucun brouillon fantôme du client 2 remis par la page du client 1)",
@@ -543,13 +546,54 @@ const sansBrouillon = (B, k) => !B || !B.clients || !B.clients[k] || !B.clients[
     const db = base(); avecPrefsEn(db, COACH_ID);
     const { page: co } = await contexte(b, COACH, db, { langue: "en" });
     await co.goto(FICHE("programme")); await pret(co, "#pg-publier");
-    await co.fill(champ(0, 0, "series"), "5"); await attendre(co, 900);
+    await ouvrirEx(co, 0, 0); await co.fill(champ(0, 0, "series"), "5"); await attendre(co, 900);
     const t = { pub: await texte(co, "#pg-publier"), st: await statut(co), nb: await texte(co, "#pg-nouveau-bloc") };
     ok("F1 : coach en anglais : « Publish changes », « ● Unpublished draft », « New block from this one »",
       t.pub === "Publish changes" && /Unpublished draft/.test(t.st || "") && t.nb === "New block from this one", JSON.stringify(t));
   });
 
   /* =================== Z. console, hôtes externes =================== */
+  /* =================== H. v104 (point 7) : une ligne compacte par exercice, le détail au toucher =================== */
+  await bloc("H. vue compacte", async () => {
+    const db = base();
+    const { page: co } = await ouvrirCoach(b, db);
+    await co.setViewportSize(MOBILE); await attendre(co, 300);
+    const lignes = () => co.evaluate(() => Array.from(document.querySelectorAll("#prog-vue details[data-pli]")).map(d => {
+      const s = d.querySelector("summary"), c = d.querySelector('[data-f="series"]');
+      return { cle: d.dataset.pli, open: d.open, nom: s.querySelector("[data-resume-nom]").textContent, ch: s.querySelector("[data-resume-chiffres]").textContent,
+               h: Math.round(s.getBoundingClientRect().height), champ: !!c && c.checkVisibility() }; }));
+    const l0 = await lignes(), nbExos = PROG().seances.reduce((n, sc) => n + (sc.exercices || []).length, 0);
+    const sq = l0.find(x => x.nom === "Squat barre");
+    ok("H1 : chaque exercice est une ligne repliée « Développé couché · 4 × 8-10 · 90 s » (44 px de haut au moins), son détail caché",
+      l0.length === nbExos && l0.every(x => !x.open && x.h >= 44 && !x.champ) && l0[0].nom === "Développé couché" && l0[0].ch === "4 × 8-10 · 90 s" && !!sq && sq.ch === "4 × 8-10 · 150 s",
+      JSON.stringify(l0.slice(0, 2).concat(sq ? [sq] : [])));
+    /* au clavier : Entrée ouvre, la saisie ne referme rien et garde le curseur, la ligne suit */
+    await co.focus('details[data-pli="0:0"] > summary'); await co.keyboard.press("Enter"); await attendre(co, 200);
+    await co.click(champ(0, 0, "series"), { clickCount: 3 }); await co.keyboard.type("5"); await attendre(co, 900);
+    const apres = await co.evaluate(() => { const d = document.querySelector('details[data-pli="0:0"]'), a = document.activeElement;
+      return { open: d.open, focus: !!a && a.dataset.f === "series" && a.dataset.s === "0" && a.dataset.e === "0", ch: d.querySelector("[data-resume-chiffres]").textContent }; });
+    await co.focus('details[data-pli="1:0"] > summary'); await co.keyboard.press(" "); await attendre(co, 200);
+    const espace = await co.$eval('details[data-pli="1:0"]', d => d.open);
+    await attendreBrouillon(db, B => B.clients && B.clients[C1] && B.clients[C1].programme.seances[0].exercices[0].series === "5");
+    ok("H2 : Entrée ouvre le détail ; la saisie (séries 5) le garde ouvert, le curseur reste dans le champ, la ligne affiche « 5 × 8-10 · 90 s » ; Espace ouvre aussi",
+      apres.open && apres.focus && apres.ch === "5 × 8-10 · 90 s" && espace, JSON.stringify([apres, espace]));
+    /* ↓ : l'exercice ouvert reste ouvert à sa nouvelle place */
+    await co.click('[data-descendre-e="0:0"]'); await attendre(co, 400);
+    const l1 = await lignes(), ouv1 = l1.filter(x => x.open).map(x => x.cle + ":" + x.nom);
+    ok("H3 : ↓ sur un exercice ouvert : il reste ouvert à sa nouvelle place (Développé couché en 2e), les autres gardent leur état",
+      JSON.stringify(ouv1) === JSON.stringify(["0:1:Développé couché", "1:0:Squat barre"]), JSON.stringify(ouv1));
+    /* un exercice ajouté s'ouvre ; un exercice refermé reste fermé après un nouveau dessin */
+    await co.click('[data-ajout-e="0"]'); await attendre(co, 400);
+    await co.click('details[data-pli="0:1"] > summary'); await attendre(co, 200);
+    await co.click('[data-dupliquer-s="1"]'); await attendre(co, 400);
+    const l2 = await lignes(), ouv2 = l2.filter(x => x.open).map(x => x.cle + ":" + x.nom);
+    await attendre(co, 900);
+    const B = brouillons(db) && brouillons(db).clients[C1] && brouillons(db).clients[C1].programme;
+    ok("H4 : « + Ajouter un exercice » : le nouveau s'ouvre (« Nouvel exercice ») ; un exercice refermé reste fermé après « Dupliquer » une séance ; tout dans le brouillon, rien chez le client",
+      JSON.stringify(ouv2) === JSON.stringify(["0:4:Nouvel exercice", "1:0:Squat barre"]) && !!B && B.seances[0].exercices.length === 5 && B.seances[0].exercices[1].series === "5" && B.seances.length === PROG().seances.length + 1 && ecr(db, "programme").length === 0,
+      JSON.stringify([ouv2, B && B.seances.length]));
+  });
+
   await bloc("Z. console et hôtes externes", async () => {
     const autres = Array.from(externes).filter(h => !/^(fonts\.(googleapis|gstatic)\.com|i\.ytimg\.com|img\.youtube\.com|www\.youtube-nocookie\.com)$/.test(h));
     ok("Z1 : aucune erreur de console ni erreur JS ni dialogue natif pendant la suite, aucun appel vers l'extérieur",

@@ -35,7 +35,9 @@ const outilTableau = {
   titre: "Tableau de bord",
   accroche: "",
   MAX_LIGNES: 5,
-  AIDE_CLIENTS: "Urgences : un 😞 non traité, une note en chute, un retour de la semaine à lire (feedback du dimanche ou bilan du vendredi), un client inactif depuis 10 jours, une régularité faible, ou un calculateur qui ne correspond pas au questionnaire.",
+  /* v104 (point 10) : les règles des urgences (bulle des compteurs) */
+  AIDE_CLIENTS: "Urgences (une action de ta part aujourd'hui) : un 😞 non traité, une note en chute, ou un retour de la semaine à lire. Le reste (inactif, régularité faible, calculateur) est « À surveiller ».",
+  AIDE_PROSPECTS: "Urgences (une action de ta part aujourd'hui) : inscrit depuis moins de 48 h, « J'ai réservé » à vérifier, clic sur la réservation sans créneau, absent à l'appel pas encore relancé, ou « Signé » à passer client.",
 
   html(){ return `<div id="tb-vue"><header class="masthead tb-tete"><div class="tb-tete-l"><h1>Tableau de bord</h1><p class="lede">Ce qui demande ton attention aujourd'hui.</p></div></header><section class="panel">${squelette()}</section></div>`; },
 
@@ -46,6 +48,16 @@ const outilTableau = {
      de gestion (bilan à conclure, « Perdu » à relancer) passent après les urgences des clients ; à rang égal, un prospect
      le plus récemment actif d'abord (comme la page Prospects) */
   RANG_PROSPECTS: { signe: 3, case: 4, absent: 5, clic: 6, nouveau: 7, appel: 9, perdu: 10 },
+  /* v104 (point 10) : une URGENCE = ce qui demande une action du coach aujourd'hui.
+     1. Client : un 😞 non traité, une note en chute, ou un retour de la semaine reçu à lire.
+     2. Prospect : inscrit depuis moins de 48 h (DM de bienvenue), « J'ai réservé » coché à vérifier, clic sur la réservation sans
+        créneau, absent à l'appel pas encore relancé, ou « Signé » à passer client.
+     3. Le reste (client inactif, régularité faible, calculateur ≠ questionnaire ; bilan à conclure, « Perdu » à relancer) : « À
+        surveiller », sous les urgences, sans compter dans les badges ni dans « À traiter ».
+     Les clients d'abord, les prospects ensuite (dans les urgences comme dans « À surveiller »). */
+  URG_CLIENTS: ["avis_triste", "note_chute", "bilan_recu"],
+  URG_PROSPECTS: ["nouveau", "case", "clic", "absent", "signe"],
+  urgentProspect(a){ return !!(a && a.urgent && this.URG_PROSPECTS.indexOf(a.motif) > -1); },
   aTraiter(clients, prospects){
     const out = [];
     clients.forEach(l => {
@@ -54,10 +66,11 @@ const outilTableau = {
       const a = al.slice().sort((x, y) => r(x) - r(y))[0];
       /* v83 : le point de couleur de la ligne (maquette) : vert pour un retour à lire, ambre pour un 😞 ou une note en chute, rouge sinon */
       const niveau = a.type === "bilan_recu" ? "ok" : a.type === "avis_triste" || a.type === "note_chute" ? "attention" : "mauvais";
-      out.push({ rang: r(a), uid: l.p.id, nom: l.nom, texte: a.texte, cible: a.cible || "accueil", jours: l.jours || 0, niveau });
+      out.push({ rang: r(a), uid: l.p.id, nom: l.nom, texte: a.texte, cible: a.cible || "accueil", jours: l.jours || 0, niveau, urgent: this.URG_CLIENTS.indexOf(a.type) > -1 });
     });
-    prospects.forEach(x => { if (x.a.urgent) out.push({ rang: this.RANG_PROSPECTS[x.a.motif] != null ? this.RANG_PROSPECTS[x.a.motif] : 8, uid: x.l.p.id, nom: x.l.nom, texte: Commercial.motifTexte(x.a), cible: "accueil", prospect: true, jours: 0, recence: x.a.recence, niveau: "attention" }); });
-    return out.sort((a, b) => a.rang - b.rang || b.jours - a.jours || (a.recence || 0) - (b.recence || 0));
+    prospects.forEach(x => { if (x.a.urgent) out.push({ rang: this.RANG_PROSPECTS[x.a.motif] != null ? this.RANG_PROSPECTS[x.a.motif] : 8, uid: x.l.p.id, nom: x.l.nom, texte: Commercial.motifTexte(x.a), cible: "accueil", prospect: true, jours: 0, recence: x.a.recence, niveau: "attention", urgent: this.urgentProspect(x.a) }); });
+    /* v104 (point 10) : les urgences d'abord, les clients avant les prospects, puis le rang d'avant */
+    return out.sort((a, b) => (b.urgent - a.urgent) || ((a.prospect ? 1 : 0) - (b.prospect ? 1 : 0)) || a.rang - b.rang || b.jours - a.jours || (a.recence || 0) - (b.recence || 0));
   },
 
   /* v72 (E) — la visite du coach */
@@ -116,13 +129,13 @@ const outilTableau = {
     const lignes = toutes.filter(l => !l.archive);   // v83 (bloc 3) : sans les comptes archivés (compteurs, à traiter, nouveaux, Nouveautés)
     const clients = lignes.filter(l => l.p.statut !== "prospect");
     const prospects = lignes.filter(l => l.p.statut === "prospect").map(l => ({ l, a: Commercial.analyseLigne(l) })).filter(x => x.a);
-    const urgClients = clients.filter(l => Clients.urgent(l)).length, urgProspects = prospects.filter(x => x.a.urgent).length;
-    const liste = this.aTraiter(clients, prospects);
+    const tout = this.aTraiter(clients, prospects), liste = tout.filter(x => x.urgent), surveiller = tout.filter(x => !x.urgent);   // v104 (point 10)
+    const urgClients = liste.filter(x => !x.prospect).length, urgProspects = liste.filter(x => x.prospect).length;
     const pl = (n, s, p) => n > 1 ? p : s;
     /* le badge : le nombre d'urgences, en couleur seulement s'il y en a */
     const badge = (n, aide) => `<span class="pastille tb-badge${n ? " mauvais" : ""}" title="${esc(aide)}">${n} ${pl(n, "urgence", "urgences")}</span>`;
     /* v83 : maquette — le nombre, puis le libellé ; le badge d'urgences reste dessous (Clients, Prospects) */
-    const tuile = (id, lbl, val, n, aide, lien) => `<a class="tile tb-tuile" id="${id}" href="${lien}" title="${esc(aide)}"><div class="t-val readout">${val}</div><div class="t-lbl">${lbl}</div><div class="tb-tuile-tete">${badge(n, aide)}</div></a>`;
+    const tuile = (id, lbl, val, n, aide, lien) => `<a class="tile tb-tuile" id="${esc(id)}" href="${esc(lien)}" title="${esc(aide)}"><div class="t-val readout">${esc(String(val))}</div><div class="t-lbl">${esc(lbl)}</div><div class="tb-tuile-tete">${badge(n, aide)}</div></a>`;
     const total = urgClients + urgProspects;
     /* v83 : toute la ligne ouvre la fiche (initiales, nom, point de couleur et raison, chevron) */
     const ligne = x => `<li><button type="button" class="tb-at-b" data-fiche="${esc(x.uid)}" data-nom="${esc(x.nom)}" data-cible="${esc(x.cible)}">${Clients.avatar(x.nom)}<span class="tb-quoi"><b data-notr>${esc(x.nom)}</b>${x.prospect ? ` <span class="pastille accent">prospect</span>` : ""}<small><span class="point ${esc(x.niveau || "mauvais")}" aria-hidden="true"></span> ${esc(x.texte)}</small></span><span class="tb-chevron" aria-hidden="true">${SVG.chevron}</span></button></li>`;
@@ -145,12 +158,14 @@ const outilTableau = {
       <section class="tiles tb-tiles" aria-label="${esc(trad("En bref"))}">
         ${tuile("tb-t-clients", "Clients", clients.length, urgClients, this.AIDE_CLIENTS, "#/clients")}
         <div class="tile tb-tuile tb-t-traiter${total ? " urgent" : ""}" id="tb-t-traiter"><div class="t-val readout">${total}</div><div class="t-lbl">À traiter</div></div>
-        ${tuile("tb-t-prospects", "Prospects", prospects.length, urgProspects, Commercial.AIDE, "#/prospects")}
+        ${tuile("tb-t-prospects", "Prospects", prospects.length, urgProspects, this.AIDE_PROSPECTS, "#/prospects")}
       </section>
       <section class="tb-section" id="tb-a-traiter"><h2 class="tb-sur">À traiter maintenant</h2>
         ${liste.length ? `<ul class="tb-liste tb-at">${liste.slice(0, this.MAX_LIGNES).map(ligne).join("")}</ul>
         ${reste > 0 ? `<p class="note" style="margin:10px 0 0">Et ${reste} autre${reste > 1 ? "s" : ""} : <a class="link-a" href="#/clients">Mes clients →</a> · <a class="link-a" href="#/prospects">Prospects →</a></p>` : ""}`
-        : `<p class="empty tb-rien">Rien à traiter pour l'instant.</p>`}</section>
+        : `<p class="empty tb-rien">Rien à traiter pour l'instant.</p>`}
+        ${surveiller.length ? `<h3 class="tb-sur tb-sur2" id="tb-surveiller-t">${esc(trad("À surveiller"))}</h3><ul class="tb-liste tb-at tb-surveiller" aria-labelledby="tb-surveiller-t">${surveiller.slice(0, this.MAX_LIGNES).map(x => ligne(Object.assign({}, x, { niveau: "neutre" }))).join("")}</ul>
+        ${surveiller.length > this.MAX_LIGNES ? `<p class="note" style="margin:10px 0 0">${esc(trad("Et {n} de plus dans Mes clients et Prospects.", { n: surveiller.length - this.MAX_LIGNES }))}</p>` : ""}` : ""}</section>
       ${this.nouveauxHTML(nouveaux, vis)}
       ${this.sourcesHTML(this.sources(toutes))}
       <section class="panel">

@@ -447,7 +447,8 @@ const ecrituresIntake = (db, uid) => db.ecritures.filter(e => e.outil === "intak
     await page.goto(`http://localhost:${PORT}/#/clients`); await attendre(page, 2200);
     await page.evaluate(() => { location.hash = "#/suivi-clients"; }); await attendre(page, 2200);   // v84 (ménage du bloc 3) : Mes clients, puis « Suivi détaillé » où est [data-ouvrir]
     await page.click(`[data-ouvrir="${F.IDS.c1}"]`).catch(() => {}); await attendre(page, 1800);
-    ok("coach : Mes clients puis la fiche de Thomas s'ouvrent, aucune écriture", (await texte(page, "#vue")).includes("Fiche client") && db.ecritures.length === 0);
+    /* v104 (point 4) : changement voulu — plus d'eyebrow « Fiche client · date » : la fiche chargée se reconnaît à son identité (#fc-ident) */
+    ok("coach : Mes clients puis la fiche de Thomas s'ouvrent, aucune écriture", !!(await page.$("#vue #fc-ident")) && db.ecritures.length === 0);
     await c.close();
   }
 

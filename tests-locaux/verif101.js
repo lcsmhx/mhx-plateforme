@@ -239,6 +239,8 @@ const brouillonsP = db => (db.donnees.find(x => x.user_id === COACH_ID && x.outi
 const brouillonsR = db => (db.donnees.find(x => x.user_id === COACH_ID && x.outil === "brouillons_repas") || {}).contenu || null;
 const attendreQueDb = (f, ms) => attendreQue(async () => { try { return !!f(); } catch(e){ return false; } }, ms || 5000);
 
+/* v104 (point 7) : dans la fiche d'un client, chaque exercice est replié en une ligne : le coach l'ouvre avant d'y toucher */
+const ouvrirEx = async (page, si, ei) => { const d = `details[data-pli="${si}:${ei}"]`; if (await page.$(d) && !(await page.$eval(d, x => x.open))) await page.click(d + " > summary"); };
 (async () => {
   await new Promise((r, k) => { server.once("error", e => k(new Error(e && e.code === "EADDRINUSE" ? "port " + PORT + " déjà pris (une autre suite tourne ?) : VERIF101_PORT=10111 node verif101.js ../index.html" : String(e)))); server.listen(PORT, r); });
   const b = await chromium.launch();
@@ -248,7 +250,7 @@ const attendreQueDb = (f, ms) => attendreQue(async () => { try { return !!f(); }
     const db = base();
     const { page } = await contexte(b, COACH, db);
     await page.goto(FICHE("programme")); await pret(page, "#pg-publier");
-    await page.click('[data-suppr-e="0:0"]'); await attendre(page, 300);
+    await ouvrirEx(page, 0, 0); await page.click('[data-suppr-e="0:0"]'); await attendre(page, 300);
     const t1 = await toast(page);   // (A1 à A3 : le brouillon du programme)
     await attendreQueDb(() => brouillonsP(db) && brouillonsP(db).clients[C1] && brouillonsP(db).clients[C1].programme.seances[0].exercices[0].nom === "Tirage vertical");
     await annuler(page);
@@ -271,13 +273,15 @@ const attendreQueDb = (f, ms) => attendreQue(async () => { try { return !!f(); }
     ok("A2b : séance supprimée, puis un programme prêt à l'emploi chargé, puis « Annuler » : la séance n'est pas ajoutée au programme chargé", apresAnnuler.length === avantAnnuler && !apresAnnuler.includes("Séance B — Bas du corps"), JSON.stringify([avantAnnuler, apresAnnuler]));
     await page.click("#pg-annuler-brouillon").catch(() => {}); await attendre(page, 300); if (await fenetre(page)) await toucherFenetre(page, "Annuler le brouillon"); await attendre(page, 900);
     /* le message reste 10 s, puis disparaît */
-    await page.click('[data-suppr-e="0:0"]'); await attendre(page, 9000);
+    await ouvrirEx(page, 0, 0); await page.click('[data-suppr-e="0:0"]'); await attendre(page, 9000);
     const encore = !!(await toast(page)); await attendre(page, 1800);
     const parti = !(await toast(page));
     ok("A3 : « Annuler » reste proposé 10 s (encore là à 9 s, parti à 11 s)", encore && parti, JSON.stringify([encore, parti]));
     /* diète : un repas, puis une ligne d'ingrédient */
     await page.goto(FICHE("nutrition")); await pret(page, "#nu-publier");
-    const n0 = await page.evaluate(() => document.querySelectorAll(".repas-c").length);
+    /* v104 (point 6) : les repas du coach sont repliés : il les ouvre (clic sur leur résumé) avant de s'en servir */
+    await page.evaluate(() => document.querySelectorAll("#nu-vue details.nu-pli:not([open]) > summary").forEach(s => s.click())); await attendre(page, 150);
+    const n0 =await page.evaluate(() => document.querySelectorAll(".repas-c").length);
     await page.click('[data-retirer="0:1"]'); await attendre(page, 300);
     const t3 = await toast(page);
     await annuler(page); await attendre(page, 900);

@@ -126,7 +126,7 @@ const outilBilan = {
     return out;
   },
 
-  vue(b, coach, objectif){
+  vue(b, coach, objectif, sansObjectifs){   // v104 (point 5) : sansObjectifs (onglet Suivi) : la liste est déjà au-dessus
     const perte = /perte|s[èe]che/i.test(objectif || "") ? -1 : /prise|masse/i.test(objectif || "") ? 1 : 0;
     const cls = (delta, sens) => !sens ? "" : (delta * sens > 0.2 ? "pos" : delta * sens < -0.2 ? "neg" : "");
     const signe = (v, u) => (v > 0 ? "+" : v < 0 ? "−" : "") + n1(Math.abs(v)) + " " + u;
@@ -134,7 +134,7 @@ const outilBilan = {
     if (coach){
       h += `<section class="panel"><h2>Points à aborder pendant le call</h2>
         <ul class="obj-l">${this.points(b, objectif).map(t => `<li>${esc(t)}</li>`).join("")}</ul>
-        <div class="actions"><a class="btn ghost" href="#/programme">Écrire les objectifs du mois</a></div>
+        <div class="actions"><a class="btn ghost" href="${esc(lienOutil("suivi"))}">${esc(trad("Modifier les objectifs du mois"))}</a></div>
       </section>`;
     }
     if (b.vide){
@@ -158,10 +158,10 @@ const outilBilan = {
     }
     if (b.charges.length){
       h += `<section class="panel"><h2>Progression des charges</h2><div class="scroll"><table><thead><tr><th>Exercice</th><th>Début du mois</th><th>Maintenant</th><th>Séances</th></tr></thead><tbody>${
-        b.charges.slice(0, 8).map(x => `<tr><td>${esc(x.nom)}</td><td>${x.de ? Journal.kg(x.de) + " kg" : "—"}</td><td><b class="${x.a > x.de ? "pos" : ""}">${x.a ? Journal.kg(x.a) + " kg" : "—"}</b></td><td>${x.n}</td></tr>`).join("")
+        b.charges.slice(0, 8).map(x => `<tr><td>${esc(x.nom)}</td><td>${x.de ? esc(Journal.kg(x.de)) + " kg" : "—"}</td><td><b class="${x.a > x.de ? "pos" : ""}">${x.a ? esc(Journal.kg(x.a)) + " kg" : "—"}</b></td><td>${esc(String(x.n))}</td></tr>`).join("")
       }</tbody></table></div></section>`;
     }
-    if (b.objectifs){
+    if (b.objectifs && !sansObjectifs){
       h += `<section class="panel"><h2>Objectifs du mois</h2>${b.objectifs.liste.map((t, i) => t ? `<div class="objectif${b.statuts[i] === "atteint" ? " atteint" : ""}${b.statuts[i] === "non_atteint" ? " rate" : ""}"><span class="num">0${i + 1}</span><span class="texte" data-notr>${esc(t)}</span><span class="pastille ${Regularite.classeStatut(b.statuts[i])}">${esc(Regularite.libelleStatut(b.statuts[i]))}</span></div>` : "").join("")}</section>`;
     }
     return h;

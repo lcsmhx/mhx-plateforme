@@ -41,9 +41,14 @@ const server = http.createServer((req,res)=>{if(servirFichier(req,res,HTML))retu
     ok("coach : pas d'onglet Accueil hors fiche", !(await page.$('#nav a[data-id="accueil"]')));
     await page.evaluate(()=>{location.hash="#/suivi-clients"}); await page.waitForTimeout(900);   // v84 (ménage du bloc 3) : le tableau complet et ses « Ouvrir » ([data-ouvrir]) sont dans « Suivi détaillé » (menu Plus)
     await page.click(`[data-ouvrir="${F.IDS.c1}"]`); await page.waitForTimeout(900);
-    ok("coach en fiche : onglet Accueil visible", !!(await page.$('#nav a[data-id="accueil"]')));
+    /* v104 (point 1) : changement voulu — la fiche ne passe plus par le menu du haut (#nav = les 7 entrées du coach, sans
+       « accueil ») ; son accueil (l'Aperçu, page « Fiche ») est le 1er onglet du bandeau .fiche-entete, et y est ouvert */
+    ok("coach en fiche : onglet Accueil visible (onglet « Aperçu » du bandeau de la fiche, ouvert, page « Fiche » → #/client/<id>/accueil ; plus dans #nav)",
+      await page.evaluate((id) => { const o = document.querySelector('.fiche-entete .f-onglet[data-onglet-fiche="apercu"]');
+        const f = [...document.querySelectorAll(".fiche-entete a.b-act")].find(a => a.getAttribute("href") === "#/client/" + id + "/accueil");
+        return !!o && o.classList.contains("ici") && !!f && !document.querySelector('#nav a[data-id="accueil"]'); }, F.IDS.c1));
     await page.evaluate(()=>{location.hash="#/accueil"}); await page.waitForTimeout(900);
-    ok("coach en fiche : fiche de Thomas", (await page.textContent("#acc-vue h1")||"").includes("Thomas"));
+    ok("coach en fiche : fiche de Thomas", (await page.textContent("#acc-vue .fc-ident h2")||"").includes("Thomas"));   // v104 (point 4) : changement voulu — le nom est sous le titre de page « Fiche » (h2 de #fc-ident)
     ok("coach en fiche : lecture seule (pas de bouton Cocher mes objectifs actif)", (await page.$$eval("#vue .obj-case", l => l.filter(e => !e.disabled).length)) === 0);   // v52 : vraie condition (était toujours vraie)
     await c.close(); }
   await b.close(); server.close(); console.log(res.join("\n"));

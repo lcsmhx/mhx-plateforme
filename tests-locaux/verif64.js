@@ -420,7 +420,11 @@ async function ficheDe(page, uid, nom, sel){
   await page.waitForSelector(sel || "#fiche-reponses", { timeout: 10000 }); await attendre(page, 600);
 }
 const tuileTb = (page, id) => page.$eval("#" + id, e => ({ href: e.getAttribute("href"), val: ((e.querySelector(".t-val") || {}).textContent || "").trim(), badge: ((e.querySelector(".tb-badge") || {}).textContent || "").trim(), cls: (e.querySelector(".tb-badge") || {}).className || "", titre: e.getAttribute("title") || "" })).catch(() => null);
-const aTraiterTb = page => page.$$eval("#tb-a-traiter .tb-liste li", l => l.map(li => ({ t: li.textContent.replace(/[  ]/g, " ").replace(/\s+/g, " ").trim(), uid: li.querySelector("[data-fiche]") ? li.querySelector("[data-fiche]").dataset.fiche : "", cible: li.querySelector("[data-fiche]") ? li.querySelector("[data-fiche]").dataset.cible : "" }))).catch(() => []);
+/* v104 (point 10) : « À traiter maintenant » = la 1re liste (les urgences du jour : clients 😞, note en chute, retour à lire ;
+   prospects nouveau, case, clic, absent, signé), les clients d'abord ; le reste (client inactif… ; prospect appel = bilan à
+   conclure, perdu) est dans « À surveiller » (ul.tb-surveiller, juste dessous) : deux relevés */
+const surveillerTb = page => page.$$eval("#tb-a-traiter ul.tb-surveiller li", l => l.map(li => ({ t: li.textContent.replace(/[  ]/g, " ").replace(/\s+/g, " ").trim(), uid: li.querySelector("[data-fiche]") ? li.querySelector("[data-fiche]").dataset.fiche : "" }))).catch(() => []);
+const aTraiterTb = page => page.$$eval("#tb-a-traiter > ul.tb-at:not(.tb-surveiller) li", l => l.map(li => ({ t: li.textContent.replace(/[  ]/g, " ").replace(/\s+/g, " ").trim(), uid: li.querySelector("[data-fiche]") ? li.querySelector("[data-fiche]").dataset.fiche : "", cible: li.querySelector("[data-fiche]") ? li.querySelector("[data-fiche]").dataset.cible : "" }))).catch(() => []);
 const toasts = page => page.evaluate(() => (window.__toasts || []).slice()).catch(() => []);
 /* une ligne « libellé : valeur » d'un bloc de la fiche (ul.fiche-l) */
 const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, k) => { const li = l.find(x => x.querySelector("span") && x.querySelector("span").textContent.replace(/\s+/g, " ").trim() === k); return li && li.querySelector("b") ? li.querySelector("b").textContent.replace(/\s+/g, " ").trim() : ""; }, k).catch(() => "");
@@ -643,17 +647,21 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
     /* Thomas et Sarah retirés : côté clients, le 😞 du compte de test et Julien (inactif depuis 12 jours) */
     const db = decor({ test: false, comptes: [P.alice(), P.marc(), P.bruno(), P.victor(), P.omar(), P.hugo(), P.paul()], sans: [F.IDS.c1, F.IDS.c2] });
     const { page } = await coachSur(b, db, "#/tableau", "#tb-vue .tb-tiles");
-    const tp = await tuileTb(page, "tb-t-prospects"), L = await aTraiterTb(page);
-    /* v83 (bloc 3) : « 5 urgences aujourd'hui. » → la tuile « À traiter » (5) */
-    ok("C : tuile Prospects 7, badge « 4 urgences » en couleur (Alice, Marc, Bruno, Victor) ; tuile « À traiter » 5 (avec Julien)",
-      tp && tp.val === "7" && tp.badge === "4 urgences" && /mauvais/.test(tp.cls) && (await traiterTb(page)) === "5", JSON.stringify(tp) + " " + await traiterTb(page));
-    ok("C : « À traiter maintenant » : 5 lignes, Alice (absent), Marc (nouveau), Julien (urgence d'un client), puis Bruno (bilan à conclure) et Victor (« Perdu » à relancer)",
-      egal(L.map(x => x.uid), [ALICE, MARC, F.IDS.c3, BRUNO, VICTOR]), noms(L.map(x => x.uid)));
+    const tp = await tuileTb(page, "tb-t-prospects"), L = await aTraiterTb(page), S = await surveillerTb(page);
+    /* v83 (bloc 3) : « 5 urgences aujourd'hui. » → la tuile « À traiter ».
+       v104 (point 10) : changement voulu — urgences = Alice (absent) et Marc (nouveau) ; Bruno (bilan à conclure), Victor (« Perdu »
+       à relancer) et Julien (inactif) passent dans « À surveiller », hors badge et hors tuile « À traiter » */
+    ok("C : tuile Prospects 7, badge « 2 urgences » en couleur (Alice, Marc ; v104 : Bruno et Victor à surveiller) ; tuile « À traiter » 2 (v104 : sans Julien)",
+      tp && tp.val === "7" && tp.badge === "2 urgences" && /mauvais/.test(tp.cls) && (await traiterTb(page)) === "2", JSON.stringify(tp) + " " + await traiterTb(page));
+    ok("C : « À traiter maintenant » : Alice (absent), Marc (nouveau) ; « À surveiller » (v104) : Julien (client inactif, d'abord), puis Bruno (bilan à conclure) et Victor (« Perdu » à relancer)",
+      egal(L.map(x => x.uid), [ALICE, MARC]) && egal(S.map(x => x.uid), [F.IDS.c3, BRUNO, VICTOR]), noms(L.map(x => x.uid)) + " | " + noms(S.map(x => x.uid)));
     ok("C : textes : « Absent à l'appel : repropose-lui un créneau », « Inscrit il y a 10 h : DM de bienvenue », « Bilan réservé depuis 9 j : l'appel a-t-il eu lieu ? », « Perdu depuis 31 j : relance-le » ; pas de « Et … autres »",
-      L.length === 5 && L[0].t.includes("Absent à l'appel : repropose-lui un créneau") && L[1].t.includes("Inscrit il y a 10 h : DM de bienvenue") && L[3].t.includes("Bilan réservé depuis 9 j : l'appel a-t-il eu lieu ?") && L[4].t.includes("Perdu depuis 31 j : relance-le") && !(await texte(page, "#tb-a-traiter")).includes("Et "),
-      JSON.stringify(L.map(x => x.t)));
-    ok("C : info-bulle de la tuile Prospects : la même aide que la page (Absent sans limite de durée, Perdu depuis 30 jours ou plus, 7 jours ; 48 h, « Réserver mon plan d'action » ; v65 : plus « Réserver »)",
-      /« Absent » \(sans limite de durée\)/.test(tp.titre) && /« Perdu » depuis 30 jours ou plus/.test(tp.titre) && /plus de 7 jours/.test(tp.titre) && /48 h/.test(tp.titre) && /« Réserver mon plan d'action »/.test(tp.titre) && !/Réserver(?! mon plan d'action)/.test(tp.titre), tp.titre);
+      L.length === 2 && S.length === 3 && L[0].t.includes("Absent à l'appel : repropose-lui un créneau") && L[1].t.includes("Inscrit il y a 10 h : DM de bienvenue") && S[1].t.includes("Bilan réservé depuis 9 j : l'appel a-t-il eu lieu ?") && S[2].t.includes("Perdu depuis 31 j : relance-le") && !(await texte(page, "#tb-a-traiter")).includes("Et "),
+      JSON.stringify([L.map(x => x.t), S.map(x => x.t)]));
+    /* v104 (point 10) : changement voulu — la bulle de la tuile Prospects dit les urgences du tableau de bord (plus l'aide de la
+       page Prospects, dont « À traiter » garde les 7 motifs) ; toujours aucun « Réserver » nu (v65) */
+    ok("C : info-bulle de la tuile Prospects (v104) : les urgences du jour (48 h, « J'ai réservé » à vérifier, clic sur la réservation sans créneau, absent pas encore relancé, « Signé » à passer client) ; v65 : plus « Réserver »",
+      /48 h/.test(tp.titre) && /« J'ai réservé » à vérifier/.test(tp.titre) && /clic sur la réservation sans créneau/.test(tp.titre) && /absent à l'appel pas encore relancé/.test(tp.titre) && /« Signé » à passer client/.test(tp.titre) && !/Réserver(?! mon plan d'action)/.test(tp.titre), tp.titre);
     await cliquer(page, `#tb-a-traiter [data-fiche="${BRUNO}"]`); await page.waitForSelector("#fiche-commercial", { timeout: 8000 }).catch(() => {}); await attendre(page, 600);
     const bf = await boutonsFiche(page);
     ok("C : « Ouvrir » sur Bruno : sa fiche, « à traiter » avec le même motif, boutons Signé, Perdu, Absent et « Retirer « Bilan réservé » »",
@@ -666,20 +674,23 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
     await cliquer(page, '#lc-prospects [data-lc-filtre="a_traiter"]'); await attendre(page, 400);
     const lcC = await page.$$eval("#lc-prospects .lc-ligne", l => l.map(e => e.dataset.uid)).catch(() => []);
     await aller(page, "#/suivi-commercial", 300); await page.waitForSelector("#pr-liste", { timeout: 8000 }); await attendre(page, 600);
-    ok("C : la tuile Prospects mène à la page Prospects : « À traiter » = les 4 du badge (même définition)", hashC === "#/prospects" && egal(lcC.slice().sort(), [ALICE, MARC, BRUNO, VICTOR].sort()) && egal((await uids(page)).slice().sort(), [ALICE, MARC, BRUNO, VICTOR].sort()), hashC + " " + noms(lcC) + " | " + noms(await uids(page)));
+    ok("C : la tuile Prospects mène à la page Prospects : « À traiter » = les 4 (v104 : les 2 urgences du badge, plus Bruno et Victor « À surveiller » au tableau de bord : la page garde sa définition)", hashC === "#/prospects" && egal(lcC.slice().sort(), [ALICE, MARC, BRUNO, VICTOR].sort()) && egal((await uids(page)).slice().sort(), [ALICE, MARC, BRUNO, VICTOR].sort()), hashC + " " + noms(lcC) + " | " + noms(await uids(page)));
     ok("C : aucune écriture (tableau de bord, fiche, Prospects)", db.ecritures.length === 0, resume(db));
   });
   await bloc("C. tableau de bord : 5 lignes au plus, dans l'ordre", async () => {
     /* tous les motifs + le compte de test (😞) et Julien : 9 urgences, 5 lignes */
     const db = decor({ comptes: [P.zoe(), P.ines(), P.alice(), P.lea(), P.marc(), P.bruno(), P.victor(), P.omar()], sans: [F.IDS.c1, F.IDS.c2] });
     const { page } = await coachSur(b, db, "#/tableau", "#tb-a-traiter");
-    const tc = await tuileTb(page, "tb-t-clients"), tp = await tuileTb(page, "tb-t-prospects"), L = await aTraiterTb(page);
-    /* v83 (bloc 3) : « 9 urgences aujourd'hui. » → la tuile « À traiter » (9) */
-    ok("C : Clients « 2 urgences » (compte de test, Julien), Prospects 8 « 7 urgences » ; tuile « À traiter » 9",
-      tc && tc.badge === "2 urgences" && tp && tp.val === "8" && tp.badge === "7 urgences" && (await traiterTb(page)) === "9", JSON.stringify([tc, tp, await traiterTb(page)]));
-    ok("C : 5 lignes : le 😞 du compte de test (« Sans nom », vers Préparer le call), Zoé (signé), Inès (case), Alice (absent), Léa (clic) ; « Et 4 autres »",
-      egal(L.map(x => x.uid), [TESTEUR.id, ZOE, INES, ALICE, LEA]) && L[0].t.includes("Sans nom") && L[0].t.includes("😞") && L[0].cible === "bilan" && L[3].t.includes("Absent à l'appel : repropose-lui un créneau") && (await texte(page, "#tb-a-traiter")).includes("Et 4 autres : Mes clients → · Prospects →"),
-      noms(L.map(x => x.uid)) + " " + await texte(page, "#tb-a-traiter"));
+    const tc = await tuileTb(page, "tb-t-clients"), tp = await tuileTb(page, "tb-t-prospects"), L = await aTraiterTb(page), S = await surveillerTb(page);
+    /* v83 (bloc 3) : « 9 urgences aujourd'hui. » → la tuile « À traiter ».
+       v104 (point 10) : changement voulu — Julien (inactif), Bruno (bilan à conclure) et Victor (« Perdu ») ne sont plus des
+       urgences : Clients « 1 urgence », Prospects « 5 urgences », tuile 6 ; eux trois dans « À surveiller » */
+    ok("C : Clients « 1 urgence » (compte de test ; v104 : Julien à surveiller), Prospects 8 « 5 urgences » (v104 : sans Bruno ni Victor) ; tuile « À traiter » 6",
+      tc && tc.badge === "1 urgence" && tp && tp.val === "8" && tp.badge === "5 urgences" && (await traiterTb(page)) === "6", JSON.stringify([tc, tp, await traiterTb(page)]));
+    ok("C : 5 lignes : le 😞 du compte de test (« Sans nom », vers Préparer le call), Zoé (signé), Inès (case), Alice (absent), Léa (clic) ; « Et 1 autre » (Marc) ; « À surveiller » (v104) : Julien, Bruno, Victor",
+      egal(L.map(x => x.uid), [TESTEUR.id, ZOE, INES, ALICE, LEA]) && L[0].t.includes("Sans nom") && L[0].t.includes("😞") && L[0].cible === "bilan" && L[3].t.includes("Absent à l'appel : repropose-lui un créneau") && (await texte(page, "#tb-a-traiter")).includes("Et 1 autre : Mes clients → · Prospects →")
+        && egal(S.map(x => x.uid), [F.IDS.c3, BRUNO, VICTOR]),
+      noms(L.map(x => x.uid)) + " | " + noms(S.map(x => x.uid)) + " " + await texte(page, "#tb-a-traiter"));
     await aller(page, "#/suivi-commercial", 300); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 }); await attendre(page, 500);   // v84 (ménage du bloc 3) : les cartes, dans le Suivi commercial
     await page.selectOption("#pr-tri", "priorite"); await attendre(page, 400);   // v72 (E) : « priorité » n'est plus le tri par défaut
     ok("C : page Prospects, « À traiter » (tri priorité) : Zoé, Inès, Alice, Léa, Marc, Bruno, Victor — signé, case, absent, clic, nouveau, appel, perdu ; tuile 7 = badge",

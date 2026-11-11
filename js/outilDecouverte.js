@@ -842,8 +842,7 @@ const outilDecouverte = {
     const sous = courant === "decouverte" ? sousRoute : "";
     this._form = sous === "reponses";
     this._bilan = sous === "bilan";
-    const I = await Store.lire("intake", {});
-    const C = await Store.lire(Decouverte.cle, Decouverte.vide());
+    const [I, C] = await Promise.all([Store.lire("intake", {}), Store.lire(Decouverte.cle, Decouverte.vide())]);   // v104 (partie 4) : ensemble (un aller-retour de moins)
     this._inv = null; this._invCarte = null;   // v62 (H) : l'invitation en attente, choisie une fois par visite
     /* v52 : l'action mise en avant sur son accueil (son calcul, puis sa pesee de depart) : lecture seule, sans toucher
        au cache, et seulement une fois le questionnaire valide (avant, l'accueil ne s'affiche pas) */

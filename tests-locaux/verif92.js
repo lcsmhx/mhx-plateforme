@@ -235,6 +235,8 @@ const fenetre = page => page.evaluate(() => { const m = document.querySelector("
 const toucherFenetre = (page, libelle) => page.evaluate(l => { const b = Array.from(document.querySelectorAll(".fond .modale [data-ui-b]")).find(x => x.textContent.trim() === l); if (b) b.click(); return !!b; }, libelle);
 const horsLigne = page => page.evaluate(() => { const f = document.getElementById("page-hors-ligne"); return f ? { texte: f.textContent.replace(/\s+/g, " ").trim(), reessayer: !!f.querySelector("[data-reessayer]") } : null; });
 
+/* v104 (point 7) : dans la fiche d'un client, chaque exercice est replié en une ligne : le coach l'ouvre avant d'y toucher */
+const ouvrirEx = async (page, si, ei) => { const d = `details[data-pli="${si}:${ei}"]`; if (await page.$(d) && !(await page.$eval(d, x => x.open))) await page.click(d + " > summary"); };
 (async () => {
   await new Promise((r, k) => { server.once("error", e => k(new Error(e && e.code === "EADDRINUSE" ? "port " + PORT + " déjà pris (une autre suite tourne ?) : VERIF92_PORT=10095 node verif92.js ../index.html" : String(e)))); server.listen(PORT, r); });
   const b = await chromium.launch();
@@ -280,7 +282,7 @@ const horsLigne = page => page.evaluate(() => { const f = document.getElementByI
      client avant la publication). Ce que B protège ne change pas : jamais « publié » avant la réponse de la base, un message
      qui dit d'agir et qui reste, le bouton désactivé pendant l'envoi. Un changement est d'abord fait dans le brouillon. */
   const changer = async (page) => {
-    await page.fill('[data-f="series"][data-s="0"][data-e="0"]', "5");
+    await ouvrirEx(page, 0, 0); await page.fill('[data-f="series"][data-s="0"][data-e="0"]', "5");
     await attendreQue(() => page.evaluate(() => /Brouillon non publié/.test((document.getElementById("pg-statut") || {}).textContent || "")), 3000);
     await attendre(page, 900);   // le brouillon part (700 ms)
   };
@@ -435,13 +437,17 @@ const horsLigne = page => page.evaluate(() => { const f = document.getElementByI
   await bloc("E. cases non enregistrées", async () => {
     const db = base();
     const { page } = await contexte(b, COACH, db);
-    await page.goto(FICHE("suivi")); await pret(page, "[data-obj]"); await attendre(page, 800);
-    const avantO = await page.evaluate(() => { const c = document.querySelector('[data-obj="1"]'); return c ? { coche: c.checked, dis: c.disabled } : null; });
-    await page.evaluate(() => { const c = document.querySelector('[data-obj="1"]'); (c.closest("label") || c).click(); });
+    /* v104 (point 5) : changement voulu — dans « Son suivi », le coach n'a plus le panneau à cases du client (.obj-case,
+       [data-obj]) : il y modifie les objectifs eux-mêmes (#suivi-obj : #obj-0..2 et #obj-st-0..2, clé programme). Plus de case
+       à toucher : on vérifie qu'il n'y en a aucune, que son panneau est là, et qu'une écriture d'objectifs_faits forcée depuis
+       la page est refusée (la case ne pouvait rien enregistrer ; l'écriture directe non plus) */
+    await page.goto(FICHE("suivi")); await pret(page, "#suivi-obj #obj-st-0"); await attendre(page, 800);
+    const avantO = await page.evaluate(() => ({ cases: document.querySelectorAll("#vue [data-obj], #vue .obj-case").length,
+      coach: [0, 1, 2].every(i => !!document.querySelector("#suivi-obj #obj-" + i) && !!document.querySelector("#suivi-obj #obj-st-" + i)) }));
+    const forceO = await page.evaluate(() => Store.ecrire("objectifs_faits", { [new Date().toISOString().slice(0, 7)]: [true, true, true] }));
     await attendre(page, 1200);
-    const apresO = await page.evaluate(() => { const c = document.querySelector('[data-obj="1"]'); return c ? c.checked : null; });
-    ok("E4 : coach, objectif du mois touché dans « Son suivi » (lecture seule) : rien n'est enregistré et la case ne reste pas cochée",
-      !!avantO && avantO.coche === false && avantO.dis === false && apresO === false && ecr(db, "objectifs_faits").length === 0, JSON.stringify([avantO, apresO, ecr(db, "objectifs_faits").length]));
+    ok("E4 : coach, objectifs du mois dans « Son suivi » : plus de case du client (v104 : le coach a ses champs #obj-0..2 / #obj-st-0..2), une écriture d'objectifs_faits forcée est refusée, rien n'est enregistré",
+      avantO.cases === 0 && avantO.coach && forceO === false && ecr(db, "objectifs_faits").length === 0, JSON.stringify([avantO, forceO, ecr(db, "objectifs_faits").length]));
     await page.goto(FICHE("formation")); await pret(page, "[data-coche]"); await attendre(page, 800);
     const id = await page.evaluate(() => { const c = Array.from(document.querySelectorAll("[data-coche]")).find(x => !x.checked && !x.disabled); if (!c) return null; (c.closest("label") || c).click(); return c.dataset.coche; });
     await attendre(page, 1200);

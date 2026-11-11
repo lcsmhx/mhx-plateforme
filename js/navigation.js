@@ -22,16 +22,17 @@ const CodeCoach = {
     try { localStorage.setItem(this.CLE, "1"); } catch(e){}
     const l = this.absents();
     let manque = 0;
-    for (const f of l){
-      await new Promise(fini => {
-        const s = document.createElement("script");
-        const fin = ok => { clearTimeout(m); if (!ok) manque++; fini(); };
-        const m = setTimeout(() => fin(false), 10000);   // v102 : 10 s au plus par fichier (le démarrage ne reste jamais bloqué)
-        s.src = f + "?v=" + (typeof MHX_FICHIERS !== "undefined" ? MHX_FICHIERS : "");
-        s.async = false; s.onload = () => fin(true); s.onerror = () => fin(false);
-        document.body.appendChild(s);
-      });
-    }
+    /* v104 (point 12) : les fichiers sont demandés TOUS ENSEMBLE (téléchargés en parallèle) ; async = false garde l'ordre
+       d'exécution de MHX_COACH. Avant, l'un après l'autre : sur un appareil neuf en 4G lente, 7 fichiers coûtaient environ 0,5 s de
+       plus. Délai de garde : 10 s, plus 2 s par fichier qui le précède (il attend leur exécution). */
+    await Promise.all(l.map((f, i) => new Promise(fini => {
+      const s = document.createElement("script");
+      const fin = ok => { clearTimeout(m); if (!ok) manque++; fini(); };
+      const m = setTimeout(() => fin(false), 10000 + 2000 * i);   // v102 : le démarrage ne reste jamais bloqué
+      s.src = f + "?v=" + (typeof MHX_FICHIERS !== "undefined" ? MHX_FICHIERS : "");
+      s.async = false; s.onload = () => fin(true); s.onerror = () => fin(false);
+      document.body.appendChild(s);
+    })));
     if (l.length) OUTILS.splice(0, OUTILS.length, ...listeOutils());
     if (manque) setTimeout(() => { try { UI.toast("Une partie de ton espace n'a pas pu se charger (connexion) : recharge la page.", "attention", 9000); } catch(e){} }, 800);
   }
@@ -225,7 +226,9 @@ function outilParDefaut(){
    derriere « Plus ». En consultation d'une fiche, ce sont ceux du client. */
 function outilsPrincipaux(){
   const v = outilsVisibles();
-  const coach = Auth.estCoach() && !Store.idConsulte;
+  /* v104 (point 2) : dans la fiche d'un client aussi, la barre du bas reste celle du coach (Tableau · Clients · Prospects ·
+     Programmes · Plus) : on navigue dans la fiche par ses 5 onglets */
+  const coach = Auth.estCoach();
   /* v40 : un prospect voit d'abord ce qui lui est ouvert (accueil, formation,
      profil), puis un onglet verrouille ; le reste derriere « Plus ».
      v52 : l'ordre est celui de CONFIG.marque.gratuit_barre (accueil, calculateur, progression, Formation) */
@@ -257,12 +260,13 @@ function construireNav(){
   /* le coach hors fiche : ses outils d'abord, ses propres onglets client ensuite */
   const coachSeul = Auth.estCoach() && !Store.idConsulte;
   const visibles = outilsVisibles().filter(o => !o.masque_nav && !horsVitrine(o) && !cachePourClient(o));   // v50 ; v100 : le menu du client
-  /* v98 : les 7 entrées du coach (MENU_COACH) ; dans la fiche d'un client : ses onglets, puis ces 7 entrées (plus les autres
-     pages du coach : elles gardent leur adresse) */
+  /* v98 : les 7 entrées du coach (MENU_COACH) ; les autres pages du coach gardent leur adresse.
+     v104 (point 1) : dans la fiche d'un client, le menu du haut reste ces 7 entrées, sans les outils du client (une seule
+     navigation dans la fiche : ses 5 onglets ; chaque adresse #/client/<id>/<outil> s'ouvre toujours) */
   const fiche = Auth.estCoach() && !!Store.idConsulte;
-  const ordre = coachSeul ? menuCoach(visibles) : fiche ? visibles.filter(o => o.role !== "coach").concat(menuCoach(visibles.filter(o => o.role === "coach"))) : visibles;
+  const ordre = coachSeul ? menuCoach(visibles) : fiche ? menuCoach(visiblesHorsFiche().filter(o => !o.masque_nav)) : visibles;
   nav.innerHTML = ordre.map(o =>
-    `<a href="${esc(lienOutil(o.id))}" data-id="${esc(o.id)}">${iconeOutil(o)}${esc(coachSeul || (fiche && o.role === "coach") ? nomMenuCoach(o) : nomOnglet(o))}${cadenasNav(o)}</a>`
+    `<a href="${esc(lienMenu(o))}" data-id="${esc(o.id)}"${fiche && o.role !== "coach" ? " data-quitter-fiche" : ""}>${iconeOutil(o)}${esc(coachSeul || fiche ? nomMenuCoach(o) : nomOnglet(o))}${cadenasNav(o)}</a>`
   ).join("");
   construireBarreBas();
   if (typeof Nouveautes !== "undefined") Nouveautes.badge();   // v51 : le badge survit a la reconstruction
@@ -332,6 +336,19 @@ function cachePourClient(o){
   return CACHES_CLIENT.indexOf(o.id) > -1 || (CACHES_AVEC_DIETE.indexOf(o.id) > -1 && DieteClient.connue() === true);
 }
 
+/* v104 (points 1 et 2) : les pages du coach telles qu'il les voit hors fiche (ses Réglages et son entraînement compris : dans une
+   fiche, outilsVisibles donne les outils du client consulté) */
+function visiblesHorsFiche(){ const id = Store.idConsulte; Store.idConsulte = null; try { return outilsVisibles(); } finally { Store.idConsulte = id; } }
+/* l'adresse d'une entrée du menu du coach : dans une fiche, « Réglages » et « Mon entraînement » (pas des outils « coach » :
+   #/client/<id>/profil serait le questionnaire du client) referment d'abord la fiche (data-quitter-fiche, plus bas) */
+function lienMenu(o){ return Auth.estCoach() && Store.idConsulte && o.role !== "coach" && MENU_COACH.indexOf(o.id) > -1 ? "#/" + o.id : lienOutil(o.id); }
+document.addEventListener("click", e => {
+  const a = e.target && e.target.closest ? e.target.closest("a[data-quitter-fiche]") : null;
+  if (!a || !Store.idConsulte) return;
+  e.preventDefault();
+  Store.oublier(Store.idConsulte); Store.idConsulte = null; Store.nomConsulte = null; Store.retourVers = null;
+  if (location.hash === a.getAttribute("href")) afficher(a.dataset.id); else location.hash = a.getAttribute("href");
+}, true);
 /* v98 : le menu du coach hors fiche (MENU_COACH, liste-outils.js), dans cet ordre ; ses autres pages gardent leur adresse */
 function menuCoach(visibles){ return MENU_COACH.map(id => visibles.find(o => o.id === id)).filter(Boolean); }
 function nomMenuCoach(o){ return NOMS_MENU_COACH[o.id] || o.nom; }
@@ -344,7 +361,7 @@ function construireBarreBas(){
   const coachSeul = Auth.estCoach() && !Store.idConsulte;
   const visiblesNav = outilsVisibles().filter(o => !o.masque_nav && !horsVitrine(o) && !cachePourClient(o));   // v50 ; v100 : le menu du client
   const enFiche = Auth.estCoach() && !!Store.idConsulte;
-  const autres = (coachSeul ? menuCoach(visiblesNav) : enFiche ? visiblesNav.filter(o => o.role !== "coach").concat(menuCoach(visiblesNav.filter(o => o.role === "coach"))) : visiblesNav).filter(o => principaux.indexOf(o) === -1);   // v98 : le coach, ses 7 entrées (aussi dans une fiche)
+  const autres = (coachSeul ? menuCoach(visiblesNav) : enFiche ? menuCoach(visiblesHorsFiche().filter(o => !o.masque_nav)) : visiblesNav).filter(o => principaux.indexOf(o) === -1);   // v98 : le coach, ses 7 entrées ; v104 (point 2) : dans une fiche aussi, sans les outils du client
   b.innerHTML = principaux.map(o =>
     `<a href="${esc(lienOutil(o.id))}" data-id="${esc(o.id)}"${estVerrouille(o) ? ' class="verrouille"' : ""}>${iconeOutil(o)}<span class="lbl">${esc(nomCourt(o))}</span>${cadenasNav(o)}</a>`).join("") +
     (autres.length ? `<button type="button" data-plus><span class="ico" aria-hidden="true">${ICONES.plus}</span><span class="lbl">Plus</span></button>` : "");
@@ -355,7 +372,7 @@ function construireBarreBas(){
     ? { href: "#/accueil", libelle: trad("Retour à l'accueil") } : null;
   if (plus) plus.addEventListener("click", () => {
     UI.volet({ titre: trad("Tout mon espace"), retour: retourAccueil, corps: `<ul class="menu-plus">` + autres.map(o =>
-      `<li><a href="${esc(lienOutil(o.id))}" data-id="${esc(o.id)}"${courant === o.id ? ' aria-current="page"' : ""}>${iconeOutil(o)}<span>${esc(coachSeul || (enFiche && o.role === "coach") ? nomMenuCoach(o) : nomOnglet(o))}${cadenasNav(o)}</span></a></li>`).join("") + `</ul>` +
+      `<li><a href="${esc(lienMenu(o))}" data-id="${esc(o.id)}"${enFiche && o.role !== "coach" ? " data-quitter-fiche" : ""}${courant === o.id && !enFiche ? ' aria-current="page"' : ""}>${iconeOutil(o)}<span>${esc(coachSeul || enFiche ? nomMenuCoach(o) : nomOnglet(o))}${cadenasNav(o)}</span></a></li>`).join("") + `</ul>` +
       /* v70 : « Partager l'app » sous la liste (lien copie ou feuille de partage du telephone) */
       `<div class="menu-plus-partage"><button type="button" class="btn ghost petit" data-partager>${SVG.partager}<span>${esc(trad("Partager l'app"))}</span></button></div>` +
       /* v76 : « Se déconnecter » du prospect, en bas du volet (il n'est plus dans sa barre du haut sur téléphone) */
@@ -370,7 +387,7 @@ function construireBarreBas(){
 }
 /* le libelle sous l'icone, court : « Programme » plutot que « Mon programme » */
 function nomCourt(o){
-  if (o.court && !Store.idConsulte) return o.court;
+  if (o.court && (!Store.idConsulte || o.role === "coach")) return o.court;   // v104 (point 2) : la barre du coach, aussi dans une fiche
   return nomOnglet(o).replace(/^(Mon|Mes|Ma|Son|Ses|Sa) /, "").replace(/^./, c => c.toUpperCase());
 }
 
@@ -378,11 +395,14 @@ function marquerNav(id){
   if (id === "decouverte") id = "accueil";   // la Decouverte est l'accueil du prospect (sans onglet a elle) : « Accueil » est marque, pas « Plus »
   /* v98 (relecture) : le coach hors fiche, sur une page sortie du menu : son entrée « parente » est marquée (jamais « Plus » vide) */
   if (Auth.estCoach() && !Store.idConsulte && PARENTS_MENU_COACH[id]) id = PARENTS_MENU_COACH[id];
+  /* v104 (points 1 et 2) : dans la fiche d'un client, l'entrée marquée est celle d'où l'on vient (Tableau, Clients, Prospects ;
+     une page du menu Plus marque sa parente) */
+  if (Auth.estCoach() && Store.idConsulte){ const v = Store.retourVers || "clients"; id = PARENTS_MENU_COACH[v] || v; }
   if (PARENTS_CLIENT[id] && cachePourClient(OUTILS.find(o => o.id === id))) id = PARENTS_CLIENT[id];   // v100 : sa page « parente »
   $$("#barre-bas a, .menu-plus a").forEach(a => { if (a.dataset.id === id) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
   const plus = document.querySelector("#barre-bas [data-plus]");
   /* v98 (relecture) : « Plus » marqué seulement si la page est vraiment dans son volet (le coach : ses 7 entrées) */
-  const dansPlus = Auth.estCoach() && !Store.idConsulte ? MENU_COACH.indexOf(id) > -1 : true;
+  const dansPlus = Auth.estCoach() ? MENU_COACH.indexOf(id) > -1 : true;   // v104 (point 2) : aussi dans une fiche
   if (plus) plus.classList.toggle("ici", dansPlus && !outilsPrincipaux().some(o => o.id === id) && !horsVitrine(OUTILS.find(o => o.id === id)));   // v50 : une page cachee n'est pas dans « Plus »
   $$("#nav a").forEach(a => {
     if (a.dataset.id === id){
@@ -476,20 +496,20 @@ function actionsConsultation(){
   ].filter(a => v.some(o => o.id === a.id));
 }
 /* L'en-tête de chaque page de la fiche : « Fiche de … », WhatsApp, les 5 onglets, les pages de l'onglet ouvert, « Revenir … ».
+   v104 (point 4) : l'Aperçu (la fiche elle-même) l'a aussi, comme les 4 autres onglets.
    tout = true : l'ancien bandeau (tous les outils du client), dans l'onglet Suivi de la fiche elle-même (v83). */
 function bandeauConsultation(tout){
   if (!Store.idConsulte) return "";
-  const nom = `<strong>${Store.nomConsulte === Clients.SANS_NOM ? "Fiche — " : "Fiche de "}${esc(Store.nomConsulte || "ce client")}</strong>`;
-  const sortir = `<button class="sortir" type="button" id="sortir-fiche">${esc(RETOURS[Store.retourVers] || RETOURS.clients)}</button>`;
+  /* v104 (point 11) : « Fiche de … » et « Revenir … » traduits (le nom reste tel quel) */
+  const nom = `<strong>${esc(trad(Store.nomConsulte === Clients.SANS_NOM ? "Fiche — {n}" : "Fiche de {n}", { n: Store.nomConsulte || trad("ce client") }))}</strong>`;
+  const sortir = `<button class="sortir" type="button" id="sortir-fiche">${esc(trad(RETOURS[Store.retourVers] || RETOURS.clients))}</button>`;
+  /* v104 (point 4) : l'Aperçu garde le bandeau commun en haut ; cet ancien bandeau (tous les outils du client) ne répète plus
+     « Fiche de … », la phrase d'aide ni « Revenir … » (un seul #sortir-fiche par page) : il ne garde que les liens */
   if (tout){
     const actions = actionsConsultation();
     return `<div class="bandeau">
-    <div class="bandeau-tete">${nom}
-      <span class="note">Tu vois ses données. Tu écris pour lui dans les boutons dorés, dans « Préparer le call » (ton feedback) et dans la fiche (tes notes privées, qu'il ne voit jamais).</span>
-    </div>
     <div class="bandeau-actions">
       ${actions.map(a => `<a href="${esc(lienOutil(a.id))}" class="b-act${a.fort ? " fort" : ""}${courant === a.id ? " ici" : ""}">${esc(a.nom)}</a>`).join("")}
-      ${sortir}
     </div>
   </div>`;
   }
@@ -503,7 +523,7 @@ function bandeauConsultation(tout){
     ${ongletsFicheHTML(ici)}
     <div class="bandeau-actions">
       ${pages.length ? pages.map(p => { const actif = p[0] === courant || (p[0] === "accueil/compte" && courant === "accueil" && sousRoute === "compte");
-        return `<a href="${esc(lienPageFiche(p[0]))}" class="b-act${p[2] ? " fort" : ""}${actif ? " ici" : ""}"${actif ? ' aria-current="page"' : ""}>${esc(p[1])}</a>`; }).join("") : ""}
+        return `<a href="${esc(lienPageFiche(p[0]))}" class="b-act${p[2] ? " fort" : ""}${actif ? " ici" : ""}"${actif ? ' aria-current="page"' : ""}>${esc(trad(p[1]))}</a>`; }).join("") : ""}
       ${sortir}
     </div>
   </div>`;
@@ -513,6 +533,101 @@ function ongletsFicheHTML(ici){
   return `<nav class="fiche-onglets" aria-label="${esc(trad("Fiche"))}">${ONGLETS_FICHE.map(g => { const p = pagesOnglet(g)[0]; if (!p) return "";
     return `<a class="f-onglet${g.id === ici ? " ici" : ""}" href="${esc(lienPageFiche(p[0]))}" data-onglet-fiche="${g.id}"${g.id === ici ? ' aria-current="page"' : ""}>${esc(trad(g.nom))}</a>`; }).join("")}</nav>`;
 }
+
+/* v104 (point 4) : dans la fiche d'un client, le coach lit « sa / ses / son » (Sa régularité, Ses objectifs du mois, Son
+   objectif…), jamais « ta / tes / ton » ; le client garde « ta / tes / ton » chez lui (rien ne change hors d'une fiche).
+   Une couche, comme celle de la traduction (i18n.js), sur les textes de #vue seulement (jamais data-notr, ni les champs) :
+   - un titre (h1 à h4, légende, étiquette, résumé, en-tête de tableau, étiquette de tuile…) qui commence par « Ta / Tes / Ton »
+     (« Your » en anglais) commence par « Sa / Ses / Son » (« Their ») ;
+   - une phrase qui parle au client (« Coche un objectif quand tu l'as atteint… ») : sa version pour le coach, mot pour mot
+     (PHRASES_FICHE ; en anglais, la traduction de l'une devient celle de l'autre). */
+const PHRASES_FICHE = {};
+/* v104 (point 4) : les phrases qui parlent au client, dans leur version pour le coach (fiche d'un client) */
+Object.assign(PHRASES_FICHE, {
+  "Comment s'est passée ta semaine ?": "Comment s'est passée sa semaine ?",
+  "Combien de séances as-tu réalisées ?": "Combien de séances a-t-il réalisées ?",
+  "Comment s'est passée ton alimentation ?": "Comment s'est passée son alimentation ?",
+  "Quelle a été ta principale réussite ?": "Quelle a été sa principale réussite ?",
+  "Quelle a été ta principale difficulté ?": "Quelle a été sa principale difficulté ?",
+  "As-tu besoin d'un ajustement ?": "A-t-il besoin d'un ajustement ?",
+  "Un indicateur de motivation, pas une mesure médicale : il compte ce que tu fais — séances, repas, mesure — pas ce que dit la balance.": "Un indicateur de motivation, pas une mesure médicale : il compte ce que ton client fait — séances, repas, mesure — pas ce que dit la balance.",
+  "Tes quatre dernières semaines en un coup d'œil : ce que tu as fait, ce qui a bougé et ce qu'on travaille ensuite.": "Ses quatre dernières semaines en un coup d'œil : ce qu'il a fait, ce qui a bougé et ce que vous travaillez ensuite.",
+  "Toutes tes mesures": "Toutes ses mesures",
+  "Renommer les zones que tu mesures": "Renommer les zones qu'il mesure",
+  "Ton métier et ton rythme de travail": "Son métier et son rythme de travail",
+  "Quel est ton objectif principal ? *": "Quel est son objectif principal ? *",
+  "Décris ton objectif en une phrase, avec un chiffre si possible": "Son objectif en une phrase, avec un chiffre si possible",
+  "Pourquoi maintenant ? Qu'est-ce qui a déclenché ta décision ?": "Pourquoi maintenant ? Qu'est-ce qui a déclenché sa décision ?",
+  "À quel point es-tu prêt à changer tes habitudes ?": "À quel point est-il prêt à changer ses habitudes ?",
+  "Qu'est-ce qui t'a fait échouer par le passé, selon toi ?": "Qu'est-ce qui l'a fait échouer par le passé, selon lui ?",
+  "Es-tu suivi actuellement par un professionnel de santé ?": "Est-il suivi actuellement par un professionnel de santé ?",
+  "As-tu une contre-indication médicale au sport ou à un changement alimentaire ?": "A-t-il une contre-indication médicale au sport ou à un changement alimentaire ?",
+  "Quel est ton niveau ? *": "Quel est son niveau ? *",
+  "Que fais-tu comme activité physique actuellement ?": "Que fait-il comme activité physique actuellement ?",
+  "Où vas-tu t'entraîner ? *": "Où va-t-il s'entraîner ? *",
+  "Si à la maison : quel matériel as-tu ?": "Si à la maison : quel matériel a-t-il ?",
+  "Combien de séances par semaine peux-tu RÉELLEMENT tenir ? *": "Combien de séances par semaine peut-il RÉELLEMENT tenir ? *",
+  "Exercices ou types de séances que tu détestes / que tu adores": "Exercices ou types de séances qu'il déteste / qu'il adore",
+  "Fais-tu du cardio ? Lequel, combien de fois par semaine ?": "Fait-il du cardio ? Lequel, combien de fois par semaine ?",
+  "Nombre de pas moyen par jour (si tu le suis)": "Nombre de pas moyen par jour (s'il le suit)",
+  "C'est sur cette réponse que ton plan alimentaire sera bâti. Compte les collations comme des repas.": "C'est sur cette réponse que son plan alimentaire sera bâti. Les collations comptent comme des repas.",
+  "Qui cuisine ? Combien de temps peux-tu y consacrer par jour ?": "Qui cuisine ? Combien de temps peut-il y consacrer par jour ?",
+  "Combien de fois par semaine manges-tu à l'extérieur ou au restaurant ?": "Combien de fois par semaine mange-t-il à l'extérieur ou au restaurant ?",
+  "Sert à composer tes repas : aucun plat proposé ne sortira de ce cadre.": "Sert à composer ses repas : aucun plat proposé ne sortira de ce cadre.",
+  "Coche tout ce qui te concerne. Les aliments correspondants seront écartés de tes repas. Signale aussi toute allergie qui ne figure pas dans cette liste dans le champ suivant.": "Tout ce qui le concerne. Les aliments correspondants sont écartés de ses repas. Les allergies hors de cette liste sont dans le champ suivant.",
+  "Tout ce que la liste ci-dessus ne couvre pas. Ton coach en tient compte avant de valider tes repas.": "Tout ce que la liste ci-dessus ne couvre pas : à prendre en compte avant de valider ses repas.",
+  "Aliments que tu ne mangeras jamais, quoi qu'il arrive": "Aliments qu'il ne mangera jamais, quoi qu'il arrive",
+  "Aliments dont tu ne veux surtout pas te passer": "Aliments dont il ne veut surtout pas se passer",
+  "As-tu déjà suivi un régime ou compté tes calories ? Avec quel résultat ?": "A-t-il déjà suivi un régime ou compté ses calories ? Avec quel résultat ?",
+  "As-tu des contraintes de budget alimentaire ?": "A-t-il des contraintes de budget alimentaire ?",
+  "Qualité de ton sommeil": "Qualité de son sommeil",
+  "À quel moment de la journée as-tu tes coups de barre ?": "À quel moment de la journée a-t-il ses coups de barre ?",
+  "Ton entourage va-t-il soutenir ta démarche ou la compliquer ?": "Son entourage va-t-il soutenir sa démarche ou la compliquer ?",
+  "Fumes-tu ?": "Fume-t-il ?",
+  "Tu es ?": "Sexe"
+});
+const VueFiche = {
+  titres: "h1,h2,h3,h4,legend,label,summary,th,dt,.t-lbl,.fc-sur,.eyebrow,.pastille,.sec-titre",
+  POSS: { Ta: "Sa", Tes: "Ses", Ton: "Son", Your: "Their", your: "their" },
+  AU_COACH: /^(feedback|client|clients|notes?|base|changements|brouillons?|agenda|avis|réponse|reply|answer)\b/i,
+  actif(){ return typeof Auth !== "undefined" && Auth.estCoach() && !!Store.idConsulte; },
+  _en: null,
+  en(){
+    if (!this._en){ this._en = {}; for (const fr in PHRASES_FICHE){ const a = I18N.en[fr], b = I18N.en[PHRASES_FICHE[fr]]; if (a && b) this._en[a] = b; } }
+    return this._en;
+  },
+  conv(v, titre){
+    const n = Traduction.norm(v); if (!n) return null;
+    const dico = I18N.langue === "en" ? this.en() : PHRASES_FICHE;
+    if (Object.prototype.hasOwnProperty.call(dico, n)) return dico[n];
+    /* ce qui appartient au coach (« Ton feedback… », « Ton client… », « Tes notes… ») garde « ton / tes » */
+    if (titre){ const m = /^(Ta|Tes|Ton|Your) (\S.*)$/.exec(n); if (m && !this.AU_COACH.test(m[2])) return this.POSS[m[1]] + " " + m[2]; }
+    return null;
+  },
+  tn(nd){
+    const p = nd.parentElement;
+    if (!p || Traduction.exclu(p) || !p.closest("#vue") || p.closest("input,select,option")) return;
+    if (I18N.langue === "en") Traduction.tn(nd);   // la traduction d'abord : la phrase pour le coach part de l'anglais
+    const v = nd.nodeValue, r = this.conv(v, !!p.closest(this.titres));
+    if (r != null && r !== Traduction.norm(v)) nd.nodeValue = v.match(/^\s*/)[0] + r + v.match(/\s*$/)[0];
+  },
+  noeud(racine){
+    if (!racine || !this.actif()) return;
+    if (racine.nodeType === 3){ this.tn(racine); return; }
+    if (racine.nodeType !== 1) return;
+    const w = document.createTreeWalker(racine, NodeFilter.SHOW_TEXT), l = []; let n; while ((n = w.nextNode())) l.push(n);
+    l.forEach(x => this.tn(x));
+  },
+  demarrer(){
+    if (this.obs || typeof MutationObserver === "undefined") return;
+    this.obs = new MutationObserver(ms => {
+      if (!this.actif()) return;
+      for (const m of ms){ if (m.type === "characterData") this.tn(m.target); else m.addedNodes.forEach(nd => this.noeud(nd)); }
+      this.obs.takeRecords();   // v104 (partie 4) : ses propres changements ne sont pas repassés
+    });
+    const vue = $("vue"); if (vue) this.obs.observe(vue, { childList: true, subtree: true, characterData: true });
+  }
+};
 
 /* v42 — filet de securite : une page qui ne peut pas s'afficher (donnee
    illisible, ecrite hors de l'application) le dit, au lieu de rester blanche
@@ -591,8 +706,8 @@ async function afficher(id, silencieux, sansCompte){
   $("vue").innerHTML = `
     ${bandeauConsultation()}${installationHaut ? installation : ""}
     ${outil.sans_entete ? "" : `<header class="masthead">
-      <span class="eyebrow">${Store.idConsulte ? esc(Store.nomConsulte || "client") + " — " : (CONFIG.marque.programme ? esc(CONFIG.marque.programme) + " — " : "")}${esc(nomOnglet(outil))}</span>
-      <h1>${Store.idConsulte ? esc(nomOnglet(outil)) : esc(outil.titre)}</h1>
+      <span class="eyebrow">${Store.idConsulte ? esc(Store.nomConsulte || "client") + " — " : (CONFIG.marque.programme ? esc(CONFIG.marque.programme) + " — " : "")}${esc(Store.idConsulte ? trad(nomOnglet(outil)) : nomOnglet(outil))}</span>
+      <h1>${Store.idConsulte ? esc(trad(nomOnglet(outil))) : esc(outil.titre)}</h1>
       ${Store.idConsulte ? "" : `<p class="lede">${esc(outil.accroche)}</p>`}
     </header>`}
     ${verrouille ? pageVerrouillee(outil) : (pause ? Sante.carteHTML(outil.id) : "") + htmlSur(outil)}
@@ -600,6 +715,7 @@ async function afficher(id, silencieux, sansCompte){
     ${installationHaut ? "" : installation}`;
 
   construireNav();   // les libelles dependent du mode : on les rafraichit
+  if (Store.idConsulte && Auth.estCoach()){ VueFiche.demarrer(); VueFiche.noeud($("vue")); if (VueFiche.obs) VueFiche.obs.takeRecords(); }   // v104 (point 4) ; partie 4 : la page n'est pas parcourue deux fois
   /* Les outils que le coach REMPLIT depuis la fiche d'un client. Oublier
      d'inscrire un outil ici le rend muet : la page passe en lecture seule et
      tous ses boutons deviennent inertes, sans message d'erreur. */

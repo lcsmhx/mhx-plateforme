@@ -392,7 +392,9 @@ const geo = page => page.evaluate(() => {
 /* les lectures de « donnees » depuis n0 qui ne sont ni la lecture groupée de la page (Clients.charger) ni une clé du coach */
 /* v79 : la lecture groupée de Mes clients ne télécharge plus les journaux alimentaires (jusqu'à 1 Mo par compte) ; leur DATE
    seule est lue à part (LEGERE, select=user_id,outil,maj_le : jamais un contenu) — seule autre lecture admise, exactement */
-const GROUPEE = "not.in.(hist_programme,hist_repas,notes_coach,journal_alimentaire)", LEGERE = "eq.journal_alimentaire";
+/* v104 (partie 4) : les brouillons du coach et son atelier rejoignent le journal alimentaire : exclus de la lecture groupée, leur
+   date seule lue à part (même lecture légère, select=user_id,outil,maj_le : jamais un contenu) */
+const GROUPEE = "not.in.(hist_programme,hist_repas,notes_coach,journal_alimentaire,brouillons_programme,brouillons_repas,atelier)", LEGERE = "in.(journal_alimentaire,brouillons_programme,brouillons_repas,atelier)";
 const luEnPlus = (db, n0) => db.lectures.slice(n0).filter(l => !(l.uid === COACH.id || (!l.uid && l.outil === GROUPEE) || (!l.uid && l.outil === LEGERE && l.select === "user_id,outil,maj_le")));
 
 /* ---------- le décor ---------- */

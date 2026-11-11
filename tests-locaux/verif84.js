@@ -385,7 +385,23 @@ async function ouvrirFiche(page, id, nom){
 }
 /* la valeur d'une ligne (« Aujourd'hui », « Objectif »…) du panneau #fiche-ja lu ; null si la ligne n'y est pas (une seule attendue) */
 const valeurFiche = (FJ, cle) => { const l = ((FJ && FJ.lignes) || []).filter(x => x[0] === cle); return l.length === 1 ? l[0][1] : null; };
-const liensBandeau = page => page.$$eval("#vue .bandeau-actions a", l => l.map(a => [a.textContent.trim(), a.getAttribute("href")])).catch(() => []);
+/* v104 (point 1) : changement voulu — la fiche n'a plus qu'une navigation, le bandeau .fiche-entete (5 onglets, les pages de
+   l'onglet ouvert) : ses liens sont relevés onglet par onglet, puis retour à l'Aperçu (#/client/<id>/accueil) ; « Son journal
+   alimentaire » s'ouvre par l'onglet Nutrition puis sa page */
+const liensBandeau = async page => {
+  const l = [];
+  for (const o of await page.$$eval("#vue .fiche-entete .f-onglet", x => x.map(a => a.getAttribute("href"))).catch(() => [])){
+    await aller(page, o, 1200);
+    l.push(...await page.$$eval("#vue .fiche-entete .bandeau-actions a.b-act", x => x.map(a => [a.textContent.trim(), a.getAttribute("href")])).catch(() => []));
+  }
+  const id = await page.evaluate(() => Store.idConsulte).catch(() => null);
+  if (id) await aller(page, "#/client/" + id + "/accueil", 1500);
+  return l;
+};
+const versJournalAlimentaire = async page => {
+  await page.click('#vue .fiche-entete .f-onglet[data-onglet-fiche="nutrition"]'); await attendre(page, 1200);
+  await page.click('#vue .fiche-entete .bandeau-actions a[href$="/journal-alimentaire"]');
+};
 const nav = page => page.$$eval("#nav a", l => l.map(a => a.dataset.id)).catch(() => []);
 /* les mots français qui ne doivent jamais rester sur un écran anglais */
 const MOTS_FR = ["Aujourd'hui", "Ajouter", "Petit-déjeuner", "Déjeuner", "Dîner", "Collations", "Il te reste", "Récents", "Les plus courants", "Supprimer", "Rien de noté"];
@@ -660,7 +676,7 @@ const zones = (page, sel) => page.$$eval(sel, l => l.filter(e => e.offsetParent 
     await X.page.goto(URL0 + "#/suivi-clients"); await pret(X.page, "#tb-clients"); await attendre(X.page, 800);   // v84 (ménage du bloc 3) : le tableau complet (#tb-clients) est dans « Suivi détaillé » (menu Plus)
     const navCo = await nav(X.page), n0 = db.n;
     await ouvrirFiche(X.page, F.IDS.c1, "Thomas Démo");
-    const liens = await liensBandeau(X.page), fiche = !!(await X.page.$("#fiche-ja")), navF = await nav(X.page), lusF = lusJA(db, COACH.id, n0);
+    const fiche = !!(await X.page.$("#fiche-ja")), navF = await nav(X.page), liens = await liensBandeau(X.page), lusF = lusJA(db, COACH.id, n0);   // v104 (point 1) : #fiche-ja et #nav lus sur l'Aperçu, avant le tour des onglets ; son journal jamais lu, tour des onglets compris
     await aller(X.page, "#/client/" + F.IDS.c1 + "/journal-alimentaire", 1800);
     const RF = await lirePage(X.page);
     ok("coach : pas d'onglet hors fiche ; fiche de Thomas sans lien « Son journal alimentaire », sans #fiche-ja, sans onglet, son journal jamais lu ; #/client/<Thomas>/journal-alimentaire ne l'ouvre pas ; rien d'écrit",
@@ -689,7 +705,7 @@ const zones = (page, sel) => page.$$eval(sel, l => l.filter(e => e.offsetParent 
     ok("fiche de Thomas : #fiche-ja « Journal alimentaire » (« noté aujourd'hui ») : « " + sept(AUJ, 3, (kA + kH + k3) / 3, 2240) + " » ; Aujourd'hui « " + frN(kA) + " kcal / 2 240 », objectif « 2 240 kcal · ta diète » ; lien « Son journal alimentaire » dans le bandeau",
       !!FJ && FJ.pastille === "noté aujourd'hui" && FJ.note === sept(AUJ, 3, (kA + kH + k3) / 3, 2240) && valeurFiche(FJ, "Aujourd'hui") === frN(kA) + " kcal / 2 240" && valeurFiche(FJ, "Objectif") === "2 240 kcal · ta diète"
       && liens.some(([t, h]) => t === "Son journal alimentaire" && h === "#/client/" + F.IDS.c1 + "/journal-alimentaire"), JSON.stringify([FJ, liens]));
-    await page.click('#vue .bandeau-actions a[href$="/journal-alimentaire"]');
+    await versJournalAlimentaire(page);   // v104 (point 1) : onglet Nutrition, puis « Son journal alimentaire »
     await page.waitForSelector(".ja-repas", { timeout: 8000 }); await attendre(page, 800);
     const R0 = await lirePage(page);
     const bout = await page.evaluate(() => ({ ajout: document.querySelectorAll("[data-ja-ajout], [data-ja-menu], button.ja-ligne, #ja-calc").length, div: document.querySelectorAll("div.ja-ligne").length, lectureOk: ["ja-prec", "ja-suiv"].every(i => document.getElementById(i).hasAttribute("data-lecture-ok")) }));
@@ -713,7 +729,7 @@ const zones = (page, sel) => page.$$eval(sel, l => l.filter(e => e.offsetParent 
     const kP = kcalDe(docP, AUJ);
     ok("fiche d'un prospect : #fiche-ja avec l'objectif de SON calculateur (" + frN(OBJ_CP) + " kcal · son calculateur ; sa diète de 1 000 kcal ignorée) : « " + sept(AUJ, 1, kP, OBJ_CP) + " »",
       !!FP && FP.note === sept(AUJ, 1, kP, OBJ_CP) && valeurFiche(FP, "Aujourd'hui") === frN(kP) + " kcal / " + frN(OBJ_CP) && valeurFiche(FP, "Objectif") === frN(OBJ_CP) + " kcal · son calculateur", JSON.stringify(FP));
-    await page.click('#vue .bandeau-actions a[href$="/journal-alimentaire"]');
+    await versJournalAlimentaire(page);   // v104 (point 1) : onglet Nutrition, puis « Son journal alimentaire »
     await page.waitForSelector(".ja-repas", { timeout: 8000 }); await attendre(page, 800);
     const RP = await lirePage(page), nbB = await page.evaluate(() => document.querySelectorAll("[data-ja-ajout], [data-ja-menu], button.ja-ligne").length);
     await page.click("#ja-prec"); await attendre(page, 300);
@@ -847,7 +863,7 @@ const zones = (page, sel) => page.$$eval(sel, l => l.filter(e => e.offsetParent 
     await page.goto(URL0 + "#/suivi-clients"); await pret(page, "#tb-clients"); await attendre(page, 600);   // v84 (ménage du bloc 3) : le tableau complet (#tb-clients) est dans « Suivi détaillé » (menu Plus)
     await ouvrirFiche(page, TESTC.id, "Test Démo"); await page.waitForSelector("#fiche-ja", { timeout: 6000 }).catch(() => {});
     const fiche = await txt(page, "#fiche-ja"), I3 = await injecte();
-    await page.click('#vue .bandeau-actions a[href$="/journal-alimentaire"]'); await page.waitForSelector(".ja-repas", { timeout: 8000 }); await attendre(page, 800);
+    await versJournalAlimentaire(page); await page.waitForSelector(".ja-repas", { timeout: 8000 });   // v104 (point 1) : onglet Nutrition, puis sa page await attendre(page, 800);
     const RC = await lirePage(page), I4 = await injecte();
     ok("coach (compte de test en « test ») : fiche (#fiche-ja, « " + frN(total) + " kcal / 2 240 ») et page en consultation (2 lignes, nom piégé en texte) : rien d'injecté, aucune écriture ; aucune erreur JS ni de console pendant le bloc",
       !!fiche && fiche.includes(frN(total) + " kcal / 2 240") && I3.pwn === "undefined" && I3.img === 0 && nbLignes(RC) === 2 && RC.repas[1].lignes[0].nom === NOM && RC.lecture && I4.pwn === "undefined" && I4.img === 0
@@ -902,8 +918,9 @@ const zones = (page, sel) => page.$$eval(sel, l => l.filter(e => e.offsetParent 
     const A = await lignesJulien(true), Bt = await lignesJulien(false);
     const L = A.db.lectures.filter(x => x.par === COACH.id && !x.uid);
     const groupee = L.find(x => /^not\.in\./.test(x.outil) && x.select === "user_id,outil,contenu,maj_le");
-    const legere = L.find(x => x.outil === "eq.journal_alimentaire");
-    ok("lectures de Mes clients : la lecture groupée exclut le journal (not.in.(…, journal_alimentaire)) ; une lecture légère outil=eq.journal_alimentaire&select=user_id,outil,maj_le ; le contenu d'aucun journal n'est téléchargé",
+    /* v104 (partie 4) : la lecture légère porte aussi la date des brouillons et de l'atelier du coach : outil=in.(journal_alimentaire,…) */
+    const legere = L.find(x => x.outil === "eq.journal_alimentaire" || (/^in\.\(/.test(x.outil) && liste(x.outil.slice(3)).includes("journal_alimentaire")));
+    ok("lectures de Mes clients : la lecture groupée exclut le journal (not.in.(…, journal_alimentaire)) ; une lecture légère outil=eq.journal_alimentaire (v104 : outil=in.(journal_alimentaire,…)) & select=user_id,outil,maj_le ; le contenu d'aucun journal n'est téléchargé",
       !!groupee && liste(groupee.outil.slice(7)).includes("journal_alimentaire") && !!legere && legere.select === "user_id,outil,maj_le" && !L.some(x => litJA(x.outil) && /contenu|\*/.test(x.select)) && A.db.ecritures.length === 0,
       JSON.stringify(L.map(x => [x.outil, x.select])));
     ok("Julien (dernière saisie il y a 12 jours) qui a noté son journal il y a 2 h : pas « Inactif » (activité « aujourd'hui ») ; témoin sans ce journal : « 12 j », « Inactif depuis 12 j »",

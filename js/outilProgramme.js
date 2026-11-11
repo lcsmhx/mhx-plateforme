@@ -515,6 +515,7 @@ const Regularite = {
       const obj = (P.objectifs && (P.objectifs.liste || []).some(Boolean)) ? P.objectifs : null;
       if (obj && OF.mois !== obj.mois){ OF.mois = obj.mois; OF.faits = []; }
       const nbObj = obj ? obj.liste.filter(Boolean).length : 0, nbFaits = obj ? obj.liste.filter((t, i) => t && this.statutObjectif(P, OF, i) === "atteint").length : 0;
+      /* v104 (point 5) : pre.sansObjectifs (le coach, onglet Suivi) : pas de panneau à cocher, le coach a le sien (ObjectifsCoach) */
       z.innerHTML = `<section class="panel"><h2>${esc(trad("Ta régularité"))}</h2>
         <div class="tiles">
           <div class="tile"><div class="t-lbl">Score de régularité</div><div class="t-val readout ${this.niveau(r.score)}">${r.score == null ? "—" : r.score}<small>/100</small></div><div class="t-sub">remis à zéro chaque lundi</div></div>
@@ -525,12 +526,12 @@ const Regularite = {
         <div class="reg-evo" aria-label="${esc(trad("Régularité des cinq dernières semaines"))}">${evo.map((v, i) => `<div class="reg-evo-col${i === evo.length - 1 ? " ici" : ""}"><div class="reg-evo-barre"><i style="height:${v == null ? 0 : Math.max(4, v)}%"></i></div><span class="reg-evo-val ${this.niveau(v)}">${v == null ? "—" : v}</span><span class="reg-evo-lbl">${i === evo.length - 1 ? esc(trad("en cours")) : "S−" + (evo.length - 1 - i)}</span></div>`).join("")}</div>
         <p class="note" style="margin:12px 0 0">${esc(trad("Un indicateur de motivation, pas une mesure médicale : il compte ce que tu fais — séances, repas, mesure — pas ce que dit la balance."))}</p>
       </section>
-      <section class="panel"><div class="seance-c-tete"><h2>${esc(trad("Tes objectifs du mois"))}</h2>${obj ? `<span class="pastille${nbFaits === nbObj ? " ok" : ""}">${nbFaits} / ${nbObj}</span>` : ""}</div>
+      ${pre && pre.sansObjectifs ? "" : `<section class="panel"><div class="seance-c-tete"><h2>${esc(trad("Tes objectifs du mois"))}</h2>${obj ? `<span class="pastille${nbFaits === nbObj ? " ok" : ""}">${nbFaits} / ${nbObj}</span>` : ""}</div>
         ${obj ? obj.liste.map((t, i) => { if (!t) return ""; const st = this.statutObjectif(P, OF, i), tranche = st === "non_atteint" || ((obj.statuts || [])[i] === "atteint");
              return `<label class="objectif${st === "atteint" ? " atteint" : ""}${st === "non_atteint" ? " rate" : ""}"><input type="checkbox" class="obj-case" data-obj="${i}"${OF.faits[i] ? " checked" : ""}${tranche ? " disabled" : ""}><span class="texte" data-notr>${esc(t)}</span><span class="pastille ${this.classeStatut(st)}">${esc(this.libelleStatut(st))}</span></label>`; }).join("")
              : `<div class="empty">${esc(trad("Ton coach écrit tes trois objectifs après votre call. Ils apparaîtront ici."))}</div>`}
         ${obj ? `<p class="note" style="margin:12px 0 0">${esc(trad("Coche un objectif quand tu l'as atteint : ton coach le voit."))}</p>` : ""}
-      </section>`;
+      </section>`}`;
       $$("[data-obj]", z).forEach(c => c.addEventListener("change", () => {
         const i = +c.dataset.obj, ancien = OF.faits[i];
         OF.faits[i] = c.checked;
@@ -543,18 +544,20 @@ const Regularite = {
   },
 
   /* Cote coach : les 3 objectifs, sur la fiche programme du client */
-  objectifsCoach(idZone, P, sauver){
+  objectifsCoach(idZone, P, sauver, OFc){
     const z = $(idZone); if (!z) return;
     const o = P.objectifs || { mois: "", liste: ["", "", ""] };
     const moisTxt = o.mois ? new Date(o.mois + "-15T12:00:00").toLocaleDateString(locale(), { month: "long", year: "numeric" }) : "";
     const exemples = ["Ex. 3 séances par semaine", "Ex. 2 L d'eau par jour", "Ex. 8 000 pas par jour"];
     const statuts = o.statuts || ["", "", ""];
     const opt = (v, l, sel) => `<option value="${v}"${sel === v ? " selected" : ""}>${l}</option>`;
-    z.innerHTML = `<section class="panel"><h2>Les 3 objectifs du mois</h2>
-      <p class="note" style="margin:0 0 12px">Remplis-les juste après ton call du mois : ils s'affichent dans « Mon suivi » et sur l'accueil de ton client, qui peut les cocher. Le statut que tu poses (atteint / non atteint) l'emporte sur sa case.</p>
+    /* v104 (point 5) : la case du client (s'il a coché) est montrée à côté de chaque objectif */
+    const faits = (OFc && OFc.mois === o.mois && Array.isArray(OFc.faits)) ? OFc.faits : [];
+    z.innerHTML = `<section class="panel"><h2>${esc(trad("Ses objectifs du mois"))}</h2>
+      <p class="note" style="margin:0 0 12px">${esc(trad("Remplis-les juste après ton call du mois : ils s'affichent dans « Mon suivi » et sur l'accueil de ton client, qui peut les cocher. Le statut que tu poses (atteint / non atteint) l'emporte sur sa case."))}</p>
       ${moisTxt ? `<p class="note" style="margin:0 0 12px">${esc(trad("Dernière mise à jour : {mois}.", { mois: moisTxt }))}</p>` : ""}
       <div class="grid g3">${[0, 1, 2].map(i => `<div><label for="obj-${i}">Objectif ${i + 1}</label><input id="obj-${i}" type="text" maxlength="120" value="${esc((o.liste || [])[i] || "")}" placeholder="${esc(exemples[i])}">
-        <select id="obj-st-${i}" style="margin-top:6px">${opt("", "En cours", statuts[i] || "")}${opt("atteint", "Atteint", statuts[i])}${opt("non_atteint", "Non atteint", statuts[i])}</select></div>`).join("")}</div>
+        <select id="obj-st-${i}" style="margin-top:6px" aria-label="${esc(trad("Statut de l'objectif {n}", { n: i + 1 }))}">${opt("", "En cours", statuts[i] || "")}${opt("atteint", "Atteint", statuts[i])}${opt("non_atteint", "Non atteint", statuts[i])}</select>${faits[i] ? `<p class="note" style="margin:6px 0 0">${esc(trad("Coché par ton client"))}</p>` : ""}</div>`).join("")}</div>
     </section>`;
     const lire = (immediat) => {
       P.objectifs = Object.assign({}, P.objectifs || {}, {
@@ -569,6 +572,82 @@ const Regularite = {
       $("obj-" + i).addEventListener("input", () => { if (P.objectifs) P.objectifs.mois = aujourdhui().slice(0, 7); lire(); });
       $("obj-st-" + i).addEventListener("change", () => lire(true));
     });
+  }
+};
+
+/* v104 (point 5) : les 3 objectifs du mois d'un client se modifient à UN seul endroit, l'onglet Suivi de sa fiche
+   (#/client/<id>/suivi) ; ailleurs (Aperçu, Programme, Préparer le call) : lecture seule et un lien « Modifier ». L'écriture est
+   celle de la v102, sortie telle quelle de la page Programme (ObjectifsCoach.monter) :
+   - à chaque frappe, une copie « programme publié + objectifs » est gardée sur l'appareil, pour CE client (identifiant figé) ;
+   - 700 ms après, le programme est relu : les objectifs sont envoyés seulement s'il est toujours celui que la page a lu ; sinon
+     (publié ailleurs) rien n'est écrit, la copie est retirée et on le dit ;
+   - relecture impossible (hors ligne) : la copie reste et repartira seule, réunie à la base (Store.fusions.programme : jamais
+     par-dessus une autre version) ;
+   - « Publier les changements » (page Programme) envoie d'abord un objectif tapé juste avant (ObjectifsCoach.vider), puis
+     BrouillonProg.publier attend toute copie d'objectifs encore en route (attente). */
+const ObjectifsCoach = {
+  monter(idZone, P, uid, OF){
+    const cle = "programme";
+    let minuteur = null, travail = null, copie = null;
+    const envoyer = async () => {
+      minuteur = null;
+      const t0 = copie; if (!t0) return;
+      let l = null;
+      try { l = await BrouillonProg.ligne(uid, cle); } catch(e){ Store.planifierReprise(); return; }   // la copie reste
+      const enBase = Forme.cle(cle, l && l.contenu) || {};
+      if (BrouillonProg.empreinte(enBase) !== BrouillonProg.empreinte(P)){
+        Store.lacher(uid, cle, t0);
+        if (copie === t0) copie = null;
+        UI.toast(trad("Le programme de ce client a été publié ailleurs : recharge la page avant de changer ses objectifs."), "attention", 9000);
+        return;
+      }
+      const N = Object.assign({}, enBase, { objectifs: P.objectifs });
+      Store.boite(uid)[cle] = P;
+      await Store.envoyer(cle, N, uid, t0);   // identifiant figé : part chez ce client même si la fiche a changé
+      if (copie === t0) copie = null;
+    };
+    /* v104 (relecture) : pendant « Publier les changements » de CE client (page Programme), rien n'est écrit : la publication
+       reprend les objectifs de la base lus avant elle et écraserait un objectif tapé entre-temps. Les champs sont figés ; ils
+       reviennent dès la fin de la publication. */
+    const figer = () => {
+      const z = $(idZone); if (!z) return;
+      const oui = ObjectifsCoach.publiant === uid;
+      /* fin de la publication pendant que Suivi était figé : la page est redessinée (P est maintenant l'ancien programme ; un
+         objectif tapé dessus serait écarté) */
+      if (!oui && z.dataset.fige === "1"){ if (Store.cible() === uid && courant === "suivi") afficher("suivi", true, true); return; }
+      z.dataset.fige = oui ? "1" : "";
+      $$("input, select", z).forEach(x => { x.disabled = oui; });
+      const n = z.querySelector("[data-obj-publication]"); if (n) n.hidden = !oui;
+      if (oui) setTimeout(() => { if ($(idZone) === z && z.isConnected) figer(); }, 500);
+    };
+    const sauver = (immediat) => {
+      if (ObjectifsCoach.publiant === uid){ UI.toast(trad("Publication du programme en cours : réessaie dans un instant."), "attention"); figer(); return false; }
+      copie = Store.garder(uid, cle, Object.assign({}, P, { objectifs: P.objectifs }), { o: 1 });
+      clearTimeout(minuteur);
+      minuteur = setTimeout(() => { travail = envoyer(); }, immediat ? 0 : 700);
+      return true;
+    };
+    Regularite.objectifsCoach(idZone, P, sauver, OF);
+    { const z = $(idZone), sec = z && z.querySelector("section.panel"); if (sec) sec.insertAdjacentHTML("beforeend", `<p class="note" data-obj-publication hidden style="margin:10px 0 0">${esc(trad("Publication du programme en cours : réessaie dans un instant."))}</p>`); }
+    figer();
+    const vider = async () => {
+      if (minuteur){ clearTimeout(minuteur); travail = envoyer(); }
+      if (travail) try { await travail; } catch(e){}
+    };
+    this._vider = vider;
+    return vider;
+  },
+  _vider: null,
+  publiant: null,   // v104 (relecture) : le compte dont le programme est en train d'être publié (page Programme)
+  /* un objectif tapé dans Suivi juste avant part tout de suite (sortie de la page, « Publier les changements ») */
+  async vider(){ if (this._vider) await this._vider(); },
+  /* lecture seule (Programme, Préparer le call) : les objectifs et leur statut, puis « Modifier » (onglet Suivi) */
+  lectureHTML(P, OF){
+    const obj = (P && P.objectifs && (P.objectifs.liste || []).some(Boolean)) ? P.objectifs : null;
+    const lien = `<p class="note" style="margin:10px 0 0"><a class="link-a" data-obj-modifier href="${esc(lienOutil("suivi"))}">${esc(trad("Modifier"))}</a></p>`;
+    return `<section class="panel" id="obj-lecture"><h2>${esc(trad("Objectifs du mois"))}</h2>${obj ? obj.liste.map((t, i) => { if (!t) return ""; const st = Regularite.statutObjectif(P, OF || {}, i);
+      return `<div class="objectif${st === "atteint" ? " atteint" : ""}${st === "non_atteint" ? " rate" : ""}"><span class="num">0${i + 1}</span><span class="texte" data-notr>${esc(t)}</span><span class="pastille ${Regularite.classeStatut(st)}">${esc(Regularite.libelleStatut(st))}</span></div>`; }).join("")
+      : `<div class="empty">${esc(trad("Pas d'objectifs ce mois-ci."))}</div>`}${lien}</section>`;
   }
 };
 
@@ -669,6 +748,9 @@ const BrouillonProg = {
     if (base && Forme.objet(base.clients)){
       Object.keys(D.clients).forEach(k => { if (k !== uid) delete D.clients[k]; });
       Object.keys(base.clients).forEach(k => { if (k !== uid) D.clients[k] = base.clients[k]; });
+      /* v104 : le compte de ce client a été supprimé pendant la saisie (marque du serveur) : la marque reste, la saisie de
+         la page ne fait pas revenir son brouillon */
+      if (this.marqueServeur(base.clients[uid])) D.clients[uid] = base.clients[uid];
     }
     if (Store.ecrire(this.cle, D, { chezMoi: true }) === false) return false;
     Store.envoyerCle(this.cle, moi);   // déjà attendu 700 ms : part tout de suite
@@ -677,6 +759,8 @@ const BrouillonProg = {
   /* v102 : un brouillon retiré (annulé, publié, identique au publié) laisse une marque datée, sans programme (entree() l'ignore) :
      une copie plus ancienne rejouée plus tard (autre appareil, hors ligne) ne le fait pas revenir */
   tombe(){ const m = new Date().toISOString(); return { retire_le: m, ecrit_le: m, appareil: this.appareil }; },
+  /* v104 : la marque posée par la fonction supprimer-acces (compte du client supprimé) : définitive, elle gagne toujours */
+  marqueServeur(e){ return !!(Forme.objet(e) && e.appareil === "serveur" && !e.programme); },
   /* v102 : réunit deux documents de brouillons ENTRÉE PAR ENTRÉE (le plus récent écrit de chaque client gagne) ; les marques de
      retrait de plus de 30 jours disparaissent. Sert à la reprise d'une copie gardée sur l'appareil (Store.reprendre,
      Store.copieAServir) : jamais plus un document entier rejoué par-dessus les brouillons faits ailleurs. */
@@ -685,7 +769,10 @@ const BrouillonProg = {
     const limite = new Date(Date.now() - 30 * 86400000).toISOString();
     new Set(Object.keys(b).concat(Object.keys(c))).forEach(k => {
       const x = b[k], y = c[k];
-      const e = !Forme.objet(x) ? y : !Forme.objet(y) ? x : (String(y.ecrit_le || "") > String(x.ecrit_le || "") ? y : x);
+      const sx = this.marqueServeur(x), sy = this.marqueServeur(y);
+      const e = !Forme.objet(x) ? y : !Forme.objet(y) ? x
+        : sx !== sy ? (sx ? x : y)   // v104 : une marque du serveur gagne quel que soit ecrit_le (compte supprimé)
+        : (String(y.ecrit_le || "") > String(x.ecrit_le || "") ? y : x);
       if (!Forme.objet(e)) return;
       if (e.retire_le && !e.programme && String(e.retire_le) < limite) return;
       out.clients[k] = e;
@@ -900,6 +987,17 @@ const outilProgramme = {
 
   seanceVide(n){ return { nom: "Séance " + String.fromCharCode(64 + n), note: "", exercices: [ this.exoVide() ] }; },
   exoVide(){ return { nom:"", series:"", reps:"", repos:"", note:"", lien:"", id:"" }; },
+  /* v104 (point 7) : la ligne compacte d'un exercice dans l'éditeur du coach (« Squat barre » + « 4 × 8-10 · 150 s ») */
+  resumeExo(e){
+    const v = x => String(x == null ? "" : x).trim();
+    const rp = v(e.repos), repos = /^\d+$/.test(rp) ? rp + " s" : rp;
+    return { nom: v(e.nom) || trad("Nouvel exercice"), chiffres: [[v(e.series), v(e.reps)].filter(Boolean).join(" × "), repos].filter(Boolean).join(" · ") };
+  },
+  majResume(zone, si, ei, e){
+    const r = this.resumeExo(e), n = zone.querySelector('[data-resume-nom="' + si + ':' + ei + '"]'), c = zone.querySelector('[data-resume-chiffres="' + si + ':' + ei + '"]');
+    if (n) n.textContent = r.nom;
+    if (c) c.textContent = r.chiffres;
+  },
 
   /* Une ligne « Développé couché — 4 x 8-10 » ne dit pas comment faire le
      mouvement. La fiche s'ouvre sous l'exercice, sans quitter la page. */
@@ -1136,8 +1234,10 @@ const outilProgramme = {
      le selecteur d'exercice, les echauffements, l'ajout et la suppression.
      L'atelier appelle exactement la meme fonction que la fiche client — ce
      qui evite d'avoir deux editeurs qui divergent au fil des corrections. */
-  brancherEditeur(P, zone, sauver, redessiner){
+  brancherEditeur(P, zone, sauver, redessiner, ouvrir){
     const PR = this;
+    /* v104 (point 7) : ouvrir(ex) (fiche d'un client seulement) : un exercice ajouté ou dupliqué s'ouvre au dessin suivant */
+    const ouvre = x => { if (ouvrir && x) ouvrir(x); };
       $$("[data-f]", zone).forEach(el => {
         el.addEventListener("input", () => {
           const si = +el.dataset.s, f = el.dataset.f;
@@ -1158,6 +1258,7 @@ const outilProgramme = {
             }
             PR.majEtat(el, ex, fiche, si, +el.dataset.e);
           }
+          PR.majResume(zone, si, +el.dataset.e, ex);   // v104 (point 7) : la ligne compacte suit la saisie
           sauver();
         });
       });
@@ -1182,7 +1283,8 @@ const outilProgramme = {
       }));
 
       $$("[data-ajout-e]", zone).forEach(b => b.addEventListener("click", () => {
-        P.seances[+b.dataset.ajoutE].exercices.push(PR.exoVide()); sauver(); redessiner();
+        const nv = PR.exoVide(); ouvre(nv);
+        P.seances[+b.dataset.ajoutE].exercices.push(nv); sauver(); redessiner();
       }));
       /* v101 : « Supprimé : … · Annuler » pendant 10 s (l'élément revient à sa place) */
       $$("[data-suppr-e]", zone).forEach(b => b.addEventListener("click", () => {
@@ -1215,7 +1317,7 @@ const outilProgramme = {
       const ex = v => { const [si, ei] = v.split(":").map(Number); return { l: P.seances[si].exercices, ei }; };
       sur("data-monter-e", v => { const x = ex(v); return echanger(x.l, x.ei, x.ei - 1); });
       sur("data-descendre-e", v => { const x = ex(v); return echanger(x.l, x.ei, x.ei + 1); });
-      sur("data-dupliquer-e", v => { const x = ex(v); x.l.splice(x.ei + 1, 0, copie(x.l[x.ei])); });
+      sur("data-dupliquer-e", v => { const x = ex(v), c = copie(x.l[x.ei]); ouvre(c); x.l.splice(x.ei + 1, 0, c); });
       $$("[data-pm]", zone).forEach(b => b.addEventListener("click", () => {
         const [si, ei, f, d] = b.dataset.pm.split(":"), e = P.seances[+si].exercices[+ei];
         const v = PR.pas(f, e[f], +d);
@@ -1223,6 +1325,7 @@ const outilProgramme = {
         e[f] = v;
         const champ = zone.querySelector('[data-f="' + f + '"][data-s="' + si + '"][data-e="' + ei + '"]');
         if (champ) champ.value = v;
+        PR.majResume(zone, si, ei, e);   // v104 (point 7)
         sauver();
       }));
 
@@ -1312,6 +1415,14 @@ const outilProgramme = {
       (sc.exercices || []).forEach((e, ei) => {
         const f = this.trouve(e.nom);
         const der = opts.J && e.nom ? Journal.dernier(opts.J, e.nom) : null, court = der ? Journal.resumeCourt(der.e) : "";
+        /* v104 (point 7) : fiche d'un client (opts.ouverts) : une ligne compacte par exercice (nom · séries × reps · repos) ;
+           un toucher (ou Entrée / Espace) ouvre le détail complet, inchangé. L'atelier garde la vue complète. */
+        const pli = !!opts.ouverts, r = pli ? this.resumeExo(e) : null;
+        if (pli) h += `<details class="ex-pli" data-pli="${si}:${ei}"${opts.ouverts.has(e) ? " open" : ""}><summary class="ex-resume">`
+          + `<span class="ex-resume-nom" data-resume-nom="${si}:${ei}">${esc(r.nom)}</span>`
+          + `<span class="ex-resume-chiffres" data-resume-chiffres="${si}:${ei}">${esc(r.chiffres)}</span>`
+          + (opts.ref ? `<span class="ex-resume-id" data-identique-pli="${si}:${ei}" title="${esc(trad("identique au bloc d'avant : à faire évoluer ?"))}"${BrouillonProg.identique(opts.ref, sc, e) ? "" : " hidden"}>≈</span>` : "")
+          + `</summary>`;
         h += `<div class="ex-ligne">
           <div class="nom-c"><label>Exercice</label>
             <input type="text" list="ex-catalogue" data-s="${si}" data-e="${ei}" data-f="nom" value="${esc(e.nom)}" placeholder="Commence à taper : Développé couché…">
@@ -1328,6 +1439,7 @@ const outilProgramme = {
             <div><label>Lien vidéo</label><input type="url" data-s="${si}" data-e="${ei}" data-f="lien" value="${esc(e.lien)}" placeholder="https://"></div>
           </div>
         </div>`;
+        if (pli) h += `</details>`;
       });
 
       h += `<div class="actions"><button class="btn ghost" data-ajout-e="${si}">+ Ajouter un exercice</button></div></section>`;
@@ -1400,7 +1512,8 @@ const outilProgramme = {
         this.idxExos = await Catalogue.indexExercices();
       } catch(e){ this.exos = []; this.idxExos = {}; }
     }
-    const P = await Store.lire(this.cle, { nom:"", note:"", seances:[], maj:"" });
+    /* v104 (partie 4) : côté client, le programme et le journal sont lus ensemble (un aller-retour de moins) */
+    const [P, J0] = await Promise.all([Store.lire(this.cle, { nom:"", note:"", seances:[], maj:"" }), edition ? null : Store.lire(Journal.cle, Journal.vide())]);
     /* le questionnaire sert a proposer un programme adapte */
     let intake = {};
     if (edition){ try { intake = await Store.lire("intake", {}) || {}; } catch(e){} }
@@ -1410,14 +1523,16 @@ const outilProgramme = {
 
     /* le client voit son programme : lecture seule, « Noter ma séance » */
     if (!edition){
-      const J = await Store.lire(Journal.cle, Journal.vide());
+      const J = J0;
       if (Store.nonLus.has(J)){ pageHorsLigne(zone); return; }   // v71 (F)
       if (!Array.isArray(J.seances)) J.seances = [];
       /* v85 (bloc 4) : sous son programme (inchangé, en premier), le lien vers les programmes de la formation */
       const dessiner = () => { zone.innerHTML = BrouillonProg.annonceHTML(P) + self.vueLecture(P, J) + ProgFormation.lienHTML(); self.brancherFiches(zone); BrouillonProg.brancherAnnonce(zone, P); };
       dessiner();
       /* v100 (chantier 5) : « Mon journal » vit ici : l'historique des séances notées, sous le programme (même code que #/journal) */
-      let n = outilJournal.PAS;
+      /* v104 (partie 3) : sous le programme, les 5 séances notées les plus récentes (la page tenait sur 6 écrans de téléphone) ;
+         « Afficher les séances plus anciennes » ajoute les suivantes, comme avant ; #/journal garde toute la liste */
+      let n = 5;
       const dessinerHist = () => {
         const h = $("prog-jr"); if (!h || Auth.estCoach()) return;   // le client seulement (le coach garde sa page d'avant)
         h.innerHTML = outilJournal.historiqueHTML(J, n, false);
@@ -1457,52 +1572,22 @@ const outilProgramme = {
       /* « ≈ identique au bloc d'avant » suit la saisie (sans redessiner : le curseur reste dans son champ) */
       const ref = BrouillonProg.reference(etat.D, uid, P);
       $$("[data-identique]", zone).forEach(m => { const [si, ei] = m.dataset.identique.split(":").map(Number), sc = etat.B.seances[si], e = sc && (sc.exercices || [])[ei]; m.hidden = !(ref && sc && e && BrouillonProg.identique(ref, sc, e)); });
+      $$("[data-identique-pli]", zone).forEach(m => { const x = zone.querySelector('[data-identique="' + m.dataset.identiquePli + '"]'); m.hidden = !x || x.hidden; });   // v104 (point 7) : le « ≈ » de la ligne compacte
       return r;
     };
-    /* les 3 objectifs du mois : dans le programme publié, comme avant. v102 (relecture) :
-       - à chaque frappe, une copie « programme publié + objectifs » est gardée sur l'appareil, pour CE client (identifiant figé) ;
-       - 700 ms après, le programme est relu : les objectifs sont envoyés seulement s'il est toujours celui de cette page ; sinon
-         (publié ailleurs) rien n'est écrit, la copie est retirée et on le dit ;
-       - relecture impossible (hors ligne) : la copie reste et repartira seule, réunie à la base (Store.fusions.programme : jamais
-         par-dessus une autre version) ;
-       - « Publier » attend d'abord ce travail (jamais d'objectifs envoyés par-dessus une publication). */
-    let minuteurObj = null, travailObj = null, copieObj = null;
-    const envoyerObjectifs = async () => {
-      minuteurObj = null;
-      const t0 = copieObj; if (!t0) return;
-      let l = null;
-      try { l = await BrouillonProg.ligne(uid, self.cle); } catch(e){ Store.planifierReprise(); return; }   // la copie reste
-      const enBase = Forme.cle(self.cle, l && l.contenu) || {};
-      if (BrouillonProg.empreinte(enBase) !== BrouillonProg.empreinte(P)){
-        Store.lacher(uid, self.cle, t0);
-        if (copieObj === t0) copieObj = null;
-        UI.toast(trad("Le programme de ce client a été publié ailleurs : recharge la page avant de changer ses objectifs."), "attention", 9000);
-        return;
-      }
-      const N = Object.assign({}, enBase, { objectifs: P.objectifs });
-      Store.boite(uid)[self.cle] = P;
-      await Store.envoyer(self.cle, N, uid, t0);   // identifiant figé : part chez ce client même si la fiche a changé
-      if (copieObj === t0) copieObj = null;
-    };
-    const viderObjectifs = async () => {
-      if (minuteurObj){ clearTimeout(minuteurObj); travailObj = envoyerObjectifs(); }
-      if (travailObj) try { await travailObj; } catch(e){}
-    };
-    const sauverPublie = (immediat) => {
-      if (etat.publication) return false;
-      copieObj = Store.garder(uid, self.cle, Object.assign({}, P, { objectifs: P.objectifs }), { o: 1 });
-      clearTimeout(minuteurObj);
-      minuteurObj = setTimeout(() => { travailObj = envoyerObjectifs(); }, immediat ? 0 : 700);
-      return true;
-    };
+    /* v104 (point 5) : les 3 objectifs du mois se modifient dans l'onglet Suivi (ObjectifsCoach) ; ici, lecture seule et
+       « Modifier ». Une copie d'objectifs encore en route (tapée dans Suivi juste avant) : BrouillonProg.publier attend. */
 
     const majEtat = () => {
       const z = $("pg-etat"); if (!z) return;
       z.outerHTML = BrouillonProg.etatHTML(etat.B, P, BrouillonProg.entree(etat.D, uid));
       brancherEtat();
     };
+    /* v104 (point 7) : les exercices ouverts pendant la visite, repérés par l'objet lui-même (il reste le même après ↑ ↓,
+       une saisie, un ajout à la base) ; un brouillon remplacé (programme chargé, annulé, publié, nouveau bloc) repart replié */
+    const ouverts = new WeakSet();
     const redessiner = () => {
-      zone.innerHTML = BrouillonProg.etatHTML(etat.B, P, BrouillonProg.entree(etat.D, uid)) + self.vueEdition(etat.B, null, { J: etat.J, ref: BrouillonProg.reference(etat.D, uid, P) });
+      zone.innerHTML = BrouillonProg.etatHTML(etat.B, P, BrouillonProg.entree(etat.D, uid)) + self.vueEdition(etat.B, null, { J: etat.J, ref: BrouillonProg.reference(etat.D, uid, P), ouverts: ouverts });
       brancher();
     };
 
@@ -1579,20 +1664,20 @@ const outilProgramme = {
     const publier = async () => {
       if (etat.publication || etat.vidage) return;   // v102 (relecture 2) : un double clic pendant l'envoi d'un objectif ne publie pas deux fois
       etat.vidage = true;
-      try { await viderObjectifs(); } finally { etat.vidage = false; }   // v102 (relecture) : un objectif tapé juste avant part d'abord (ou est écarté), jamais après
+      try { await ObjectifsCoach.vider(); } finally { etat.vidage = false; }   // v104 (point 5) : tapé dans Suivi   // v102 (relecture) : un objectif tapé juste avant part d'abord (ou est écarté), jamais après
       const msg = t => flashFixe("pg-pub-msg", t);
       const b = etat.B;
       const exos = (b.seances || []).reduce((n, sc) => n + (sc.exercices || []).filter(e => e.nom).length, 0);
       if (!exos){ flash("pg-pub-msg", trad("Ce programme est vide : ajoute au moins une séance avec un exercice avant de le publier.")); return; }
       if (!BrouillonProg.differe(b, P) && P.maj){ flash("pg-pub-msg", trad("Rien à publier : ton client voit déjà cette version.")); return; }
-      etat.publication = true;
+      etat.publication = true; ObjectifsCoach.publiant = uid;   // v104 (relecture) : Suivi n'écrit plus d'objectif pendant ce temps
       const boutons = ["pg-publier", "pg-publier-bas"].map(id => $(id)).filter(Boolean);
       boutons.forEach(x => { x.disabled = true; x.dataset.libelle = x.textContent; x.textContent = trad("Publication…"); });
       msg("");
       /* relecture : les objectifs du mois (écrits à part, dans le programme publié) sont bloqués pendant la publication */
-      const objectifs = $$("#prog-obj input, #prog-obj select"); objectifs.forEach(x => { x.disabled = true; });
+      const objectifs = [];   // v104 (point 5) : plus de champs d'objectifs sur cette page
       const corps = $$("#prog-vue > section:not(#pg-etat)"); corps.forEach(x => x.setAttribute("inert", ""));   // v102 : rien ne se tape pendant la publication
-      const fin = () => { etat.publication = false; corps.forEach(x => x.removeAttribute("inert")); objectifs.forEach(x => { if (x.isConnected) x.disabled = false; }); boutons.forEach(x => { if (x.isConnected){ x.disabled = false; x.textContent = x.dataset.libelle; } }); };
+      const fin = () => { etat.publication = false; if (ObjectifsCoach.publiant === uid) ObjectifsCoach.publiant = null; corps.forEach(x => x.removeAttribute("inert")); objectifs.forEach(x => { if (x.isConnected) x.disabled = false; }); boutons.forEach(x => { if (x.isConnected){ x.disabled = false; x.textContent = x.dataset.libelle; } }); };
       try {
         const r = await BrouillonProg.publier(uid, P, b, etat.D, majPublie());
         if (!zone.isConnected || Store.cible() !== uid){   // page ou fiche quittée : aucun message sur la page d'un autre client
@@ -1619,7 +1704,13 @@ const outilProgramme = {
 
     const brancher = () => {
       const b = etat.B;
-      self.brancherEditeur(b, zone, sauver, redessiner);
+      self.brancherEditeur(b, zone, sauver, redessiner, x => ouverts.add(x));
+      /* v104 (point 7) : ouvrir ou refermer un exercice est retenu (rien n'est écrit) */
+      $$("details[data-pli]", zone).forEach(d => d.addEventListener("toggle", () => {
+        if (!d.isConnected) return;
+        const [si, ei] = d.dataset.pli.split(":").map(Number), sc = b.seances[si], e = sc && (sc.exercices || [])[ei];
+        if (e){ if (d.open) ouverts.add(e); else ouverts.delete(e); }
+      }));
       brancherEtat();
       const pub2 = $("pg-publier-bas"); if (pub2) pub2.addEventListener("click", publier);   // relecture : une seule fois par dessin
 
@@ -1709,7 +1800,9 @@ const outilProgramme = {
     };
 
     redessiner();
-    Regularite.objectifsCoach("prog-obj", P, sauverPublie);
+    /* v104 (point 5) : les objectifs du mois en lecture seule (statut posé par le coach, case du client), « Modifier » → Suivi */
+    { const zo = $("prog-obj"); if (zo){ const OF = await Store.lire("objectifs_faits", {}); if (zo.isConnected && Store.cible() === uid) zo.innerHTML = ObjectifsCoach.lectureHTML(P, Store.nonLus.has(OF) ? {} : OF); } }
+    if (Store.cible() !== uid || !zone.isConnected) return;   // v104 (relecture) : page ou fiche quittée pendant cette lecture
     Journal.resumeCoach("prog-jr");
     Historique.monter("programme", "prog-hist", async (C) => {
       const b = etat.B;

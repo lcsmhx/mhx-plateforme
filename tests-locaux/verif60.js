@@ -544,14 +544,24 @@ const NOUVEAU = { probleme: "Perdre du gras", obstacle: "Le manque de temps avec
     await aller(page, "#/journal", 1500); const hors = await ou(page);
     ok("coach hors fiche : pas d'onglet journal ; #/journal → son tableau de bord", !navCoach.includes("journal") && hors.courant === "tableau", JSON.stringify(navCoach) + " " + JSON.stringify(hors));
     await ouvrirFiche(page, F.IDS.c1);
-    const actions = await page.$$eval("#vue .bandeau-actions a", l => l.map(a => [a.textContent.trim(), a.getAttribute("href")]));
+    /* v104 (point 1) : changement voulu — la fiche n'a plus qu'une navigation, le bandeau .fiche-entete (5 onglets, les pages de
+       l'onglet ouvert) ; #nav garde les 7 entrées du coach. Les liens sont relevés onglet par onglet. */
+    const actions = [], pagesOnglet = {};
+    for (const [g, o] of await page.$$eval("#vue .fiche-entete .f-onglet", l => l.map(a => [a.dataset.ongletFiche, a.getAttribute("href")]))){
+      await aller(page, o, 1200);
+      pagesOnglet[g] = await page.$$eval("#vue .fiche-entete .bandeau-actions a.b-act", l => l.map(a => [a.textContent.trim(), a.getAttribute("href")]));
+      actions.push(...pagesOnglet[g]);
+    }
     /* v71 (I) : les liens du bandeau portent l'adresse canonique #/client/<uuid>/<outil> */
     ok("fiche de Thomas : « Ses séances » → #/client/<uuid>/journal (plus #/entrainement), « Ses calories » → #/client/<uuid>/calculateur", actions.some(([t, hr]) => t === "Ses séances" && hr === "#/client/" + F.IDS.c1 + "/journal") && !actions.some(([, hr]) => /\/entrainement$/.test(hr)) && actions.some(([t, hr]) => t === "Ses calories" && hr === "#/client/" + F.IDS.c1 + "/calculateur"), JSON.stringify(actions));
-    const navF = await page.$$eval("#nav a", l => l.map(a => [a.dataset.id, a.textContent.replace(/\s+/g, " ").trim()]));
-    const iJ = navF.findIndex(x => x[0] === "journal");
-    ok("… sa navigation (fiche) : « Son journal » juste après « Son programme »", iJ > 0 && navF[iJ][1] === "Son journal" && navF[iJ - 1][0] === "programme", JSON.stringify(navF.map(x => x[0])));
+    /* v104 (point 1) : « sa navigation (fiche) » = les pages de l'onglet Entraînement du bandeau : son journal (« Ses séances »)
+       juste après « Son programme » ; #nav (celui du coach) n'a ni journal ni programme du client */
+    const navF = await page.$$eval("#nav a", l => l.map(a => a.dataset.id));
+    const pE = (pagesOnglet.entrainement || []).map(([t, hr]) => [hr.split("/").pop(), t]), iJ = pE.findIndex(x => x[0] === "journal");
+    ok("… sa navigation (fiche) : « Son journal » juste après « Son programme » (v104 : onglet Entraînement du bandeau, « Ses séances » après « Son programme » ; rien dans #nav)", iJ > 0 && pE[iJ][1] === "Ses séances" && pE[iJ - 1][0] === "programme" && !navF.includes("journal") && !navF.includes("programme"), JSON.stringify([pE, navF]));
+    await page.click('#vue .fiche-entete .f-onglet[data-onglet-fiche="entrainement"]'); await attendre(page, 1500);   // v104 (point 1) : l'onglet Entraînement, puis sa page
     const L0 = db.lectures.length;
-    await page.click('#vue .bandeau-actions a[href$="/journal"]'); await attendre(page, 1800);   // v71 (I) : lien canonique #/client/<uuid>/journal
+    await page.click('#vue .fiche-entete .bandeau-actions a[href$="/journal"]'); await attendre(page, 1800);   // v71 (I) : lien canonique #/client/<uuid>/journal
     const etat = await page.evaluate(() => ({ consulte: Store.idConsulte, hash: location.hash, courant, lecture: $("vue").classList.contains("lecture-seule"), h1: ($("vue").querySelector(".masthead h1") || {}).textContent }));
     const h = await historique(page);
     ok("clic « Ses séances » : #/journal dans sa fiche (« Son journal », lecture seule) : ses 10 séances, les plus récentes d'abord", etat.consulte === F.IDS.c1 && etat.hash === "#/client/" + F.IDS.c1 + "/journal" && etat.courant === "journal" && etat.lecture && etat.h1 === "Son journal" && JSON.stringify(h) === JSON.stringify(attenduHist(JOURNAL_T)), JSON.stringify(etat) + " " + JSON.stringify(h.slice(0, 2)));
@@ -747,7 +757,8 @@ const NOUVEAU = { probleme: "Perdre du gras", obstacle: "Le manque de temps avec
     await c.close();
     ({ c, page } = await contexte(b, COACH, db));
     await page.goto(URL0 + "#/tableau"); await pret(page); await ouvrirFiche(page, PID(4));
-    await page.click('#vue .bandeau-actions a[href$="/journal"]'); await attendre(page, 1800);   // v71 (I) : lien canonique #/client/<uuid>/journal
+    await page.click('#vue .fiche-entete .f-onglet[data-onglet-fiche="entrainement"]'); await attendre(page, 1500);   // v104 (point 1) : l'onglet Entraînement du bandeau, puis « Ses séances »
+    await page.click('#vue .fiche-entete .bandeau-actions a[href$="/journal"]'); await attendre(page, 1800);   // v71 (I) : lien canonique #/client/<uuid>/journal
     const v2 = await vu(page);
     ok("coach, fiche de ce client, « Ses séances » : même chose, aucune injection, aucune écriture", !v2.xss && !v2.img && v2.items === 3 && db.ecritures.length === 0, JSON.stringify(v2) + " " + resume(db));
     await c.close();
