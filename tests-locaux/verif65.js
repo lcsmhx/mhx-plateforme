@@ -584,8 +584,8 @@ const structure = page => page.evaluate(() => {
     await p2.goto(URL0 + "#/suivi-clients"); await pret(p2, "#tb-clients [data-ouvrir]");   // v84 (ménage du bloc 3) : le tableau complet est dans « Suivi détaillé »
     await p2.evaluate(([id, n]) => Clients.ouvrir(id, n, "accueil"), [ID, "Léa Martin"]); await p2.waitForSelector("#fiche-reponses", { timeout: 8000 }); await attendre(p2, 600);
     const rf = await lignes(p2, "#fiche-reponses"), fd = await lignes(p2, "#fiche-decouverte"), v = k2 => (fd.find(x => x[0] === k2) || [])[1];
-    ok("coach, fiche du prospect : « Ce qui l'a bloqué » et « Dans 3 mois » en texte brut (réponses et bloc Découverte), aucune balise créée, aucun script lancé",
-      JSON.stringify(rf.slice(1, 4)) === JSON.stringify([["Problème", "Perdre du gras"], ["Ce qui l'a bloqué", "Le manque de temps — " + B], ["Dans 3 mois", PIEGE]]) && v("Ce qui l'a bloqué") === "Le manque de temps — " + B && v("Dans 3 mois") === PIEGE && !(await injecte(p2)),
+    ok("coach, fiche du prospect : « Ce qui l'a bloqué » et « Dans 3 mois » en texte brut (réponses ; v106 : une seule fois, plus dans Découverte), aucune balise créée, aucun script lancé",
+      JSON.stringify(rf.slice(1, 4)) === JSON.stringify([["Problème", "Perdre du gras"], ["Ce qui l'a bloqué", "Le manque de temps — " + B], ["Dans 3 mois", PIEGE]]) && v("Ce qui l'a bloqué") === undefined && v("Dans 3 mois") === undefined /* v106 (lot 4) : changement voulu — ses réponses une seule fois (#fiche-reponses), plus répétées dans Découverte */ && !(await injecte(p2)),
       JSON.stringify([rf, fd.filter(x => /bloqué|3 mois/.test(x[0]))]));
     await aller(p2, "#/suivi-commercial", 300); await p2.waitForSelector('#pr-vue [data-filtre="tous"]', { timeout: 8000 });   // v84 (ménage du bloc 3) : les cartes et leurs filtres sont dans « Suivi commercial »
     await p2.click('#pr-vue [data-filtre="tous"]'); await p2.waitForSelector(`#pr-liste .sc-carte[data-uid="${ID}"]`, { timeout: 8000 }); await attendre(p2, 500);

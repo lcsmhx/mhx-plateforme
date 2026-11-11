@@ -492,14 +492,18 @@ async function ficheDe(page, uid, nom, sel){
 }
 const chrono = page => page.$$eval("#fiche-chrono .dc-chrono li span", l => l.map(e => e.textContent.trim())).catch(() => []);
 const badgeNv = page => page.$$eval('#nav a[data-id="prospects"] .nav-badge', l => l.map(e => e.textContent.trim())).catch(() => []);
-/* v83 (bloc 3) : l'ordre des tuiles du tableau de bord (id:href:libellé) ; le nombre de la tuile « À traiter » */
-const tuilesTb = page => page.$$eval("#tb-vue .tb-tuile", l => l.map(e => e.id + ":" + (e.getAttribute("href") || "") + ":" + ((e.querySelector(".t-lbl") || {}).textContent || ""))).catch(() => []);
-const traiterTb = page => texte(page, "#tb-t-traiter .t-val");
-const tuileTb = (page, id) => page.$eval("#" + id, e => ({ href: e.getAttribute("href"), lbl: (e.querySelector(".t-lbl") || {}).textContent, val: ((e.querySelector(".t-val") || {}).textContent || "").trim(), badge: ((e.querySelector(".tb-badge") || {}).textContent || "").trim(), cls: (e.querySelector(".tb-badge") || {}).className || "", titre: e.getAttribute("title") || "" })).catch(() => null);
-/* v104 (point 10) : « À traiter maintenant » = la 1re liste (les urgences du jour) ; « À surveiller » (ul.tb-surveiller, juste
-   dessous, point gris) = le reste (client inactif, régularité faible, calculateur ; prospect appel, perdu) : deux relevés */
+const traiterTb = page => texte(page, "#tb-c-traiter .t-val");   // v106 (lot 5) : le chiffre « À traiter » d'« Aujourd'hui »
+/* v106 (lot 5) : les 4 chiffres d'« Aujourd'hui » (id → groupe visé : libellé = valeur) ; un groupe (déplié avant d'être relu) :
+   son nombre, ses urgences (data-urgences) et ses lignes (comme lignesTb) ; urgP = les urgences des groupes de prospects */
+const chiffresTb = page => page.$$eval("#tb-vue .tb-chiffre", l => l.map(e => e.id + "→" + e.dataset.tbAller + ":" + ((e.querySelector(".t-lbl") || {}).textContent || "") + "=" + ((e.querySelector(".t-val") || {}).textContent || ""))).catch(() => []);
+const groupeTb = async (page, id) => {
+  const d = await page.$('#tb-g-' + id + ' [data-tb-deplier][aria-expanded="false"]'); if (d) { await d.click(); await new Promise(r => setTimeout(r, 300)); }
+  return page.$eval("#tb-g-" + id, g => ({ n: parseInt((g.querySelector(".tb-n") || {}).textContent, 10), urg: parseInt(g.dataset.urgences || "0", 10), vide: ((g.querySelector(".tb-rien") || {}).textContent || "").trim(),
+    l: Array.from(g.querySelectorAll(".tb-l")).map(li => { const x = li.querySelector("[data-fiche]"); return { t: li.textContent.replace(/[\u00a0\u202f]/g, " ").replace(/\s+/g, " ").trim(), uid: x ? x.dataset.fiche : "", cible: x ? x.dataset.cible : "", point: ((li.querySelector(".point") || {}).className || "").replace("point", "").trim() }; }) })).catch(() => ({ n: -1, urg: -1, vide: "", l: [] }));
+};
+const urgP = page => page.$$eval("#tb-col-prospects .tb-groupe", l => l.length ? l.reduce((n, g) => n + parseInt(g.dataset.urgences || "0", 10), 0) : -1).catch(() => -1);
 const lignesTb = sel => page => page.$$eval(sel, l => l.map(li => ({ t: li.textContent.replace(/[  ]/g, " ").replace(/\s+/g, " ").trim(), uid: (li.querySelector("[data-fiche]") || {}).dataset ? li.querySelector("[data-fiche]").dataset.fiche : "", cible: li.querySelector("[data-fiche]") ? li.querySelector("[data-fiche]").dataset.cible : "", point: ((li.querySelector(".point") || {}).className || "").replace("point", "").trim() }))).catch(() => []);
-const aTraiterTb = lignesTb("#tb-a-traiter > ul.tb-at:not(.tb-surveiller) li"), surveillerTb = lignesTb("#tb-a-traiter ul.tb-surveiller li");
+const toutesTb = lignesTb("#tb-a-traiter .tb-l");   // v106 (lot 5) : toutes les lignes d'« Aujourd'hui », dans l'ordre (colonne Clients puis Prospects)
 const injecte = page => page.evaluate(() => !!window.__xss || !!document.querySelector("[data-xss]")).catch(() => true);
 const cacher = page => page.evaluate(() => { Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "hidden" }); document.dispatchEvent(new Event("visibilitychange")); });
 const montrer = page => page.evaluate(() => { Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "visible" }); document.dispatchEvent(new Event("visibilitychange")); });
@@ -521,16 +525,18 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
     /* Sarah seule (programme et diète à envoyer : des alertes « attention », pas des urgences), aucun prospect */
     const db = decor({ test: false, prospects: false, sans: [F.IDS.c1, F.IDS.c3], cles: [] });
     db.donnees = db.donnees.filter(d => !(d.user_id === F.IDS.c2 && d.outil === "checkins"));
-    const { page } = await coachSur(b, db, "", "#tb-vue .tb-tiles");
-    const tc = await tuileTb(page, "tb-t-clients"), tp = await tuileTb(page, "tb-t-prospects");
-    /* v83 (bloc 3) : trois tuiles dans l'ordre Clients (lien), À traiter (sans lien), Prospects (lien) */
-    const ordreT = await tuilesTb(page);
-    ok("A : trois tuiles (v83), « Clients » → #/clients, « À traiter » (sans lien), « Prospects » → #/prospects", JSON.stringify(ordreT) === JSON.stringify(["tb-t-clients:#/clients:Clients", "tb-t-traiter::À traiter", "tb-t-prospects:#/prospects:Prospects"]) && tc && tc.href === "#/clients" && tc.lbl === "Clients" && tp && tp.href === "#/prospects" && tp.lbl === "Prospects", JSON.stringify(ordreT) + " " + JSON.stringify([tc, tp]));
-    ok("A : Clients 1 (Sarah), Prospects 0 ; badges « 0 urgence » sans couleur (pastille neutre, ni « mauvais » ni « attention »)", tc.val === "1" && tp.val === "0" && tc.badge === "0 urgence" && tp.badge === "0 urgence" && !/mauvais|attention|accent|ok/.test(tc.cls + " " + tp.cls), JSON.stringify([tc, tp]));
-    /* v83 (bloc 3) : « À traiter maintenant » toujours là, sans ligne, « Rien à traiter pour l'instant. » ; tuile À traiter 0 ;
-       l'accroche ne compte plus les urgences */
-    const rien0 = [!!(await page.$("#tb-a-traiter")), (await page.$$("#tb-a-traiter li, #tb-a-traiter [data-fiche]")).length, await texte(page, "#tb-a-traiter .tb-rien"), await traiterTb(page), await texte(page, "#tb-vue .lede")];
-    ok("A : aucune urgence : « À traiter maintenant » sans ligne, « Rien à traiter pour l'instant. », tuile À traiter 0 (v83)", JSON.stringify(rien0) === JSON.stringify([true, 0, "Rien à traiter pour l'instant.", "0", "Ce qui demande ton attention aujourd'hui."]), JSON.stringify(rien0));
+    const { page } = await coachSur(b, db, "", "#tb-vue .tb-chiffres");
+    /* v106 (lot 5) : changement voulu — plus de tuiles : 4 chiffres-boutons vers leur groupe, puis une liste groupée (Clients :
+       Retours à lire, Clients inactifs ; Prospects : Nouveaux prospects, Bilans réservés, À relancer) */
+    const ch = await chiffresTb(page);
+    ok("A : 4 chiffres dans l'ordre (v106), chacun mène à son groupe : À traiter → la liste, Retours à lire, Nouveaux, Inactifs",
+      JSON.stringify(ch) === JSON.stringify(["tb-c-traiter→tb-a-traiter:À traiter=0", "tb-c-retours→tb-g-retours:Retours à lire=0", "tb-c-nouveaux→tb-g-nouveaux:Nouveaux=0", "tb-c-inactifs→tb-g-inactifs:Inactifs=0"]), JSON.stringify(ch));
+    const gs = await page.$$eval("#tb-a-traiter .tb-groupe", l => l.map(g => g.id + ":" + g.querySelectorAll(".tb-l").length + ":" + ((g.querySelector(".tb-rien") || {}).textContent || "").trim()));
+    ok("A : Sarah seule (alertes « attention » seulement) : les 5 groupes vides, chacun avec sa phrase ; aucune urgence (pas de badge Prospects)",
+      JSON.stringify(gs) === JSON.stringify(["tb-g-retours:0:Aucun retour à lire.", "tb-g-inactifs:0:Aucun client inactif.", "tb-g-nouveaux:0:Aucun nouvel inscrit.", "tb-g-reserves:0:Aucun bilan réservé à suivre.", "tb-g-relancer:0:Personne à relancer."]) && (await urgP(page)) === 0 && (await badgeNv(page)).length === 0, JSON.stringify(gs));
+    /* v83 (bloc 3) : « Rien à traiter pour l'instant. » ; l'accroche ne compte plus les urgences */
+    const rien0 = [!!(await page.$("#tb-a-traiter")), (await page.$$("#tb-a-traiter li, #tb-a-traiter [data-fiche]")).length, await texte(page, "#tb-vue .tb-rien-tout"), await traiterTb(page), await texte(page, "#tb-vue .lede")];
+    ok("A : aucune urgence : liste sans ligne, « Rien à traiter pour l'instant. », « À traiter » 0 (v83, v106)", JSON.stringify(rien0) === JSON.stringify([true, 0, "Rien à traiter pour l'instant.", "0", "Ce qui demande ton attention aujourd'hui."]), JSON.stringify(rien0));
     const t = await texte(page, "#tb-vue");
     ok("A : plus de tuile « Prospects en découverte », ni « Clients actifs », ni Nouveautés, ni score, ni température", !/Prospects en découverte|Clients actifs|Bilans à traiter|Nouveautés|\/100|CHAUD|TIÈDE|FROID|NOUVEAU/.test(t) && !(await page.$("#tb-nouveautes, #tb-prospects, .attention-c")), t.slice(0, 300));
     ok("A : aucune écriture, aucune requête au journal des emails", db.ecritures.length === 0 && !db.chemins.some(x => /emails_prospects/.test(x)), resume(db));
@@ -541,40 +547,44 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
        point gris), hors badge et hors tuile « À traiter » ; même scénario, mêmes vérifications à la nouvelle place */
     const db = decor({ test: false, prospects: false, sans: [F.IDS.c1] });
     db.donnees = db.donnees.filter(d => !(d.user_id === F.IDS.c2 && d.outil === "checkins"));
-    const { page } = await coachSur(b, db, "#/tableau", "#tb-vue .tb-tiles");
-    const tc = await tuileTb(page, "tb-t-clients"), tp = await tuileTb(page, "tb-t-prospects"), L = await aTraiterTb(page), S = await surveillerTb(page);
-    ok("A : un client à surveiller, aucune urgence (v104) : Clients 2, badge « 0 urgence » neutre ; Prospects « 0 urgence » neutre ; tuile « À traiter » 0", tc.val === "2" && tc.badge === "0 urgence" && !/mauvais|attention/.test(tc.cls) && tp.badge === "0 urgence" && !/mauvais/.test(tp.cls) && (await traiterTb(page)) === "0", JSON.stringify([tc, tp, await traiterTb(page)]));   /* v83 (bloc 3) : « 1 urgence aujourd'hui. » → la tuile À traiter */
-    ok("A : « À traiter maintenant » sans ligne (« Rien à traiter pour l'instant. ») ; « À surveiller » : une ligne, Julien « Inactif depuis 12 j », point gris, bouton vers sa fiche (vue d'ensemble)", L.length === 0 && (await texte(page, "#tb-a-traiter .tb-rien")) === "Rien à traiter pour l'instant." && (await texte(page, "#tb-surveiller-t")) === "À surveiller"
-      && S.length === 1 && S[0].uid === F.IDS.c3 && S[0].t.includes("Julien Démo") && S[0].t.includes("Inactif depuis 12 j") && S[0].cible === "accueil" && S[0].point === "neutre", JSON.stringify([L, S]));
-    /* v104 (point 10) : les bulles disent la nouvelle règle (urgence = une action du coach aujourd'hui ; l'inactivité est « À surveiller ») ;
-       côté prospects : 48 h, « J'ai réservé », clic sur la réservation sans créneau, absent, « Signé » ; toujours aucun « Réserver » nu (v65) */
-    ok("A : info-bulle des tuiles : ce qui compte comme urgence (clients : 😞, note en chute, retour à lire ; l'inactivité « À surveiller » ; prospects : 48 h, « J'ai réservé », clic sur la réservation, absent, « Signé » ; v65 : plus « Réserver »)",
-      /😞/.test(tc.titre) && /note en chute/.test(tc.titre) && /retour de la semaine à lire/.test(tc.titre) && /inactif[^»]*« À surveiller »/.test(tc.titre) && /48 h/.test(tp.titre) && /« J'ai réservé »/.test(tp.titre) && /clic sur la réservation/.test(tp.titre) && /absent/.test(tp.titre) && /« Signé »/.test(tp.titre) && !/Réserver(?! mon plan d'action)/.test(tp.titre), tc.titre + " | " + tp.titre);
-    await page.click(`#tb-a-traiter [data-fiche="${F.IDS.c3}"]`); await page.waitForSelector("#acc-vue #fc-ident", { timeout: 8000 }); await attendre(page, 800);   // v104 (point 4) : changement voulu — le titre de page est là dès le chargement : on attend l'identité (#fc-ident)
+    const { page } = await coachSur(b, db, "#/tableau", "#tb-vue .tb-chiffres");
+    /* v106 (lot 5) : changement voulu — Julien est dans le groupe « Clients inactifs » (point rouge : alerte « mauvais ») */
+    const R = await groupeTb(page, "retours"), I = await groupeTb(page, "inactifs");
+    ok("A : un client inactif, aucune urgence (v104, v106) : « À traiter » 1, Retours à lire 0, Inactifs 1 ; aucune urgence prospect (pas de badge)",
+      (await traiterTb(page)) === "1" && JSON.stringify(await chiffresTb(page)) === JSON.stringify(["tb-c-traiter→tb-a-traiter:À traiter=1", "tb-c-retours→tb-g-retours:Retours à lire=0", "tb-c-nouveaux→tb-g-nouveaux:Nouveaux=0", "tb-c-inactifs→tb-g-inactifs:Inactifs=1"]) && (await urgP(page)) === 0 && (await badgeNv(page)).length === 0, JSON.stringify(await chiffresTb(page)));
+    ok("A : « Retours à lire » vide (« Aucun retour à lire. ») ; « Clients inactifs » : une ligne, Julien « Inactif depuis 12 j », point rouge, bouton vers sa fiche (Aperçu)", R.n === 0 && R.vide === "Aucun retour à lire."
+      && I.l.length === 1 && I.l[0].uid === F.IDS.c3 && I.l[0].t.includes("Julien Démo") && I.l[0].t.includes("Inactif depuis 12 j") && I.l[0].cible === "accueil" && I.l[0].point === "mauvais", JSON.stringify([R, I]));
+    /* v106 (lot 5) : plus d'info-bulle de tuile : le titre de chaque groupe dit ce qu'il contient ; toujours aucun « Réserver » nu (v65) */
+    const titres = await page.$$eval("#tb-a-traiter .tb-groupe h3", l => l.map(h => h.firstChild.textContent.trim()));
+    ok("A : les titres des groupes (v106) : Retours à lire, Clients inactifs | Nouveaux prospects, Bilans réservés, À relancer ; v65 : aucun « Réserver » nu",
+      JSON.stringify(titres) === JSON.stringify(["Retours à lire", "Clients inactifs", "Nouveaux prospects", "Bilans réservés", "À relancer"]) && !/Réserver(?! mon plan d'action)/.test(await texte(page, "#tb-vue")), JSON.stringify(titres));
+    await page.click(`#tb-a-traiter [data-fiche="${F.IDS.c3}"]`); await page.waitForSelector("#acc-vue #fc-suivi" /* v106 : #fc-ident est vide (le nom est dans l en-tête) */, { timeout: 8000 }); await attendre(page, 800);   // v104 (point 4) : changement voulu — le titre de page est là dès le chargement : on attend l'identité (#fc-ident)
     ok("A : un clic sur « Ouvrir » → la fiche de Julien (bandeau de consultation, écran « accueil »)", (await page.evaluate(() => [courant, Store.idConsulte])).join("|") === "accueil|" + F.IDS.c3, JSON.stringify(await ou(page)));
     ok("A : aucune écriture", db.ecritures.length === 0, resume(db));
   });
   await bloc("A. tableau de bord, plusieurs urgences", async () => {
     const db = decor();
     const { page } = await coachSur(b, db, "#/tableau", "#tb-a-traiter");
-    const tc = await tuileTb(page, "tb-t-clients"), tp = await tuileTb(page, "tb-t-prospects"), L = await aTraiterTb(page), S = await surveillerTb(page);
-    /* v104 (point 10) : changement voulu — Julien (inactif) n'est plus une urgence : Clients « 3 urgences », tuile « À traiter » 7 ;
-       il est dans « À surveiller » ; « Et 2 autres » (Léa, Marc) sous les 5 urgences affichées */
-    ok("A : Clients 5 (Thomas, Sarah, Julien, le compte de test, Karim) « 3 urgences » (v104 : Julien inactif à surveiller) ; Prospects 8 « 4 urgences » (Zoé signée, Inès case cochée, Léa clic, Marc 10 h) ; en couleur ; tuile « À traiter » 7", tc.val === "5" && tc.badge === "3 urgences" && /mauvais/.test(tc.cls) && tp.val === "8" && tp.badge === "4 urgences" && /mauvais/.test(tp.cls) && (await traiterTb(page)) === "7", JSON.stringify([tc, tp, await traiterTb(page)]));   /* v83 (bloc 3) : « 8 urgences aujourd'hui. » → la tuile À traiter */
-    const att = [TESTEUR.id, F.IDS.c2, F.IDS.c1, ZOE, INES];
-    ok("A : « À traiter maintenant » : 5 lignes au plus, dans l'ordre : 😞 (compte de test, « Sans nom »), note en chute (Sarah), bilan à lire (Thomas), Zoé « Signé : à passer client », Inès « A coché « J'ai réservé » »", L.length === 5 && JSON.stringify(L.map(x => x.uid)) === JSON.stringify(att) && L[0].t.includes("Sans nom") && L[0].t.includes("😞 sur ta réponse — à traiter") && L[1].t.includes("Note en chute : 4/10") && L[2].t.includes("Bilan hebdo reçu — à lire") && L[3].t.includes("Signé : à passer client") && L[4].t.includes("A coché « J'ai réservé » : à vérifier"), JSON.stringify(L));
-    ok("A : « Et 2 autres » (Léa, Marc ; v104 : Julien dans « À surveiller », « Inactif depuis 12 j », point gris) avec les liens Mes clients et Prospects ; boutons vers le bon onglet (😞 → Préparer le call, prospect → sa fiche)", (await texte(page, "#tb-a-traiter")).includes("Et 2 autres : Mes clients → · Prospects →") && L[0].cible === "bilan" && L[3].cible === "accueil"
-      && S.length === 1 && S[0].uid === F.IDS.c3 && S[0].t.includes("Inactif depuis 12 j") && S[0].point === "neutre", await texte(page, "#tb-a-traiter") + " " + JSON.stringify(S));
-    ok("A : le badge de l'onglet Prospects = les 4 urgences de la tuile Prospects (v105 ; avant : les nouveautés), sans panneau", JSON.stringify(await badgeNv(page)) === '["4"]' && !(await page.$("#tb-nouveautes")), JSON.stringify(await badgeNv(page)));
+    /* v106 (lot 5) : changement voulu — plus de plafond à 5 lignes ni de « Et 2 autres » : chaque personne dans son groupe */
+    const R = await groupeTb(page, "retours"), I = await groupeTb(page, "inactifs"), N = await groupeTb(page, "nouveaux"), B = await groupeTb(page, "reserves"), L = await groupeTb(page, "relancer");
+    ok("A : « À traiter » 9 (toutes les lignes, Hugo compris : bilan coché à venir) ; Retours à lire 3, Nouveaux 1, Inactifs 1 ; urgences des prospects 4 (Zoé signée, Inès case cochée, Léa clic, Marc 10 h) (v106)",
+      JSON.stringify(await chiffresTb(page)) === JSON.stringify(["tb-c-traiter→tb-a-traiter:À traiter=9", "tb-c-retours→tb-g-retours:Retours à lire=3", "tb-c-nouveaux→tb-g-nouveaux:Nouveaux=1", "tb-c-inactifs→tb-g-inactifs:Inactifs=1"]) && (await urgP(page)) === 4, JSON.stringify([await chiffresTb(page), await urgP(page)]));
+    ok("A : Retours à lire, dans l'ordre : 😞 (compte de test, « Sans nom »), note en chute (Sarah), bilan à lire (Thomas), vers Bilans ; Clients inactifs : Julien « Inactif depuis 12 j »",
+      JSON.stringify(R.l.map(x => x.uid)) === JSON.stringify([TESTEUR.id, F.IDS.c2, F.IDS.c1]) && R.l[0].t.includes("Sans nom") && R.l[0].t.includes("😞 sur ta réponse — à traiter") && R.l.every(x => x.cible === "bilan")
+        && I.l.length === 1 && I.l[0].uid === F.IDS.c3 && I.l[0].t.includes("Inactif depuis 12 j"), JSON.stringify([R.l, I.l]));
+    ok("A : Prospects : Nouveaux (Marc), Bilans réservés (Inès « A coché « J'ai réservé » », puis Hugo, bilan coché à venir), À relancer (Zoé « Signé : à passer client », Léa clic), vers leur fiche ; pas de « Et … autres »",
+      JSON.stringify(N.l.map(x => x.uid)) === JSON.stringify([MARC]) && JSON.stringify(B.l.map(x => x.uid)) === JSON.stringify([INES, HUGO]) && B.l[0].t.includes("A coché « J'ai réservé »") && B.l[1].t.includes("Bilan réservé") && JSON.stringify(L.l.map(x => x.uid)) === JSON.stringify([ZOE, LEA]) && L.l[0].t.includes("Signé : à passer client")
+        && N.l.concat(B.l, L.l).every(x => x.cible === "accueil") && !(await texte(page, "#tb-a-traiter")).includes("Et 2 autres"), JSON.stringify([N.l, B.l, L.l]));
+    ok("A : le badge de l'onglet Prospects = les 4 urgences des groupes de prospects (v105, v106), sans panneau", JSON.stringify(await badgeNv(page)) === '["4"]' && !(await page.$("#tb-nouveautes")), JSON.stringify(await badgeNv(page)));
     await page.click(`#tb-a-traiter [data-fiche="${ZOE}"]`); await page.waitForSelector("#fiche-commercial", { timeout: 8000 }); await attendre(page, 600);
     ok("A : un clic → la fiche de Zoé, « Passer client » à portée de main", !!(await page.$('#fiche-commercial [data-sc="client"]')) && (await page.evaluate(() => Store.idConsulte)) === ZOE);
     await aller(page, "#/tableau", 1500);
     /* v84 (ménage du bloc 3) : la tuile mène à la page Prospects (la liste #lc-prospects) ; les cartes « À traiter » (#pr-liste)
        sont dans le Suivi commercial (#/suivi-commercial, menu Plus) */
-    await page.click("#tb-t-prospects"); await page.waitForSelector("#lc-prospects", { timeout: 8000 }); await attendre(page, 500);
+    await page.click('#nav a[data-id="prospects"]'); await page.waitForSelector("#lc-prospects", { timeout: 8000 }); await attendre(page, 500);   // v106 (lot 5) : l'entrée Prospects du menu (plus de tuile)
     const pageA = await page.evaluate(() => courant);
     await aller(page, "#/suivi-commercial", 300); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 }); await attendre(page, 500);
-    ok("A : la tuile Prospects mène à la page Prospects, « À traiter » : les 4 mêmes (même définition que le badge)", pageA === "prospects" && JSON.stringify((await uids(page)).slice().sort()) === JSON.stringify([ZOE, INES, LEA, MARC].sort()), pageA + " " + JSON.stringify(await uids(page)));
+    ok("A : l'entrée Prospects mène à la page Prospects, « À traiter » : les 4 mêmes (même définition que le badge)", pageA === "prospects" && JSON.stringify((await uids(page)).slice().sort()) === JSON.stringify([ZOE, INES, LEA, MARC].sort()), pageA + " " + JSON.stringify(await uids(page)));
     ok("A : aucune écriture (tableau de bord, fiche, Prospects)", db.ecritures.length === 0, resume(db));
   });
 
@@ -740,14 +750,14 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
       extra: [["challenge", cl([["apres_questionnaire", 2 * J, 5], ["decouverte", 5 * J, 2]]), avant(2 * J)]] });
     const db = decor({ test: false, prospects: false, sans: [F.IDS.c1, F.IDS.c3], comptes: [rayan, sonia] });
     db.donnees = db.donnees.filter(d => !(d.user_id === F.IDS.c2 && d.outil === "checkins"));
-    const { page } = await coachSur(b, db, "#/tableau", "#tb-vue .tb-tiles");
-    const tp = await tuileTb(page, "tb-t-prospects"), L = await aTraiterTb(page);
+    const { page } = await coachSur(b, db, "#/tableau", "#tb-vue .tb-chiffres");
+    const L = (await toutesTb(page)).filter(x => x.uid === RAYAN || x.uid === SONIA), uP = await urgP(page);   // v106 (lot 5) : plus de tuile Prospects
     const vTb = await texte(page, "#vue");   // v65 : plus aucun « Réserver » à l'écran (vérifié en fin de bloc)
-    ok("D : tableau de bord (v63) : Rayan (clic d'hier après ta relance, rangé avant un clic plus ancien) est une urgence : Prospects 2 « 1 urgence » ; « À traiter maintenant » : Rayan seul, « A cliqué « Réserver mon plan d'action », pas de bilan coché » ; Sonia (clic le plus récent avant ta relance) n'y est pas",
-      !!tp && tp.val === "2" && tp.badge === "1 urgence" && L.length === 1 && L[0].uid === RAYAN && L[0].t.includes("Rayan Désordre") && L[0].t.includes("A cliqué « Réserver mon plan d'action », pas de bilan coché"), JSON.stringify([tp, L]));
+    ok("D : tableau de bord (v63) : Rayan (clic d'hier après ta relance, rangé avant un clic plus ancien) est une urgence : 1 urgence prospect (v106 : dans les groupes) ; Rayan seul sur « Aujourd'hui », « A cliqué « Réserver mon plan d'action », pas de bilan coché » ; Sonia (clic le plus récent avant ta relance) n'y est pas",
+      uP === 1 && L.length === 1 && L[0].uid === RAYAN && L[0].t.includes("Rayan Désordre") && L[0].t.includes("A cliqué « Réserver mon plan d'action », pas de bilan coché"), JSON.stringify([uP, L]));
     /* v84 (ménage du bloc 3) : la tuile mène à la page Prospects (la liste, puis les Nouveautés) ; les cartes, « À traiter » et
        les filtres sont dans le Suivi commercial (#/suivi-commercial) : les deux pages sont relues */
-    await page.click("#tb-t-prospects"); await page.waitForSelector("#pr-nouveautes .nv-panneau", { timeout: 8000 }); await attendre(page, 500);
+    await page.click('#nav a[data-id="prospects"]'); await page.waitForSelector("#pr-nouveautes .nv-panneau", { timeout: 8000 }); await attendre(page, 500);   // v106 (lot 5) : l'entrée Prospects (plus de tuile)
     const vListeD = await texte(page, "#vue"), nvPr = await texte(page, "#pr-nouveautes");
     await aller(page, "#/suivi-commercial", 300); await page.waitForSelector("#pr-liste .sc-carte", { timeout: 8000 }); await attendre(page, 500);
     const ua = await uids(page), cr = await carte(page, RAYAN);
@@ -770,7 +780,7 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
     await ficheDe(page, RAYAN, "Rayan Désordre");
     const rs = await page.$$eval("#fiche-commercial ul.sc-raisons:not(.sc-histo) > li", l => l.map(e => e.textContent.replace(/\s+/g, " ").trim())).catch(() => []);
     const dec = await lignesFiche(page, "#fiche-decouverte"), motifR = !!(await page.$("#fiche-commercial .sc-motif"));
-    const vFi = await texte(page, "#vue"), pFi = await texte(page, "#fiche-decouverte .seance-c-tete");
+    const vFi = await texte(page, "#vue"), pFi = await texte(page, "#fiche-decouverte > summary");   // v106 (lot 4) : Découverte repliée, ses pastilles dans la ligne du titre
     ok("D : fiche de Rayan (v63) : « Suivi commercial » à traiter, « A cliqué « Réserver mon plan d'action » (2 fois), la dernière hier. » ; « Bouton « Réserver mon plan d'action » » : « 2 clics, le dernier le " + frL(avant(J)) + " » — le même clic que le tableau de bord, la carte et le CSV ; aucune écriture",
       motifR && rs.includes("A cliqué « Réserver mon plan d'action » (2 fois), la dernière hier.") && valeur(dec, "Bouton « Réserver mon plan d'action »") === "2 clics, le dernier le " + frL(avant(J)) && db.ecritures.length === 0,
       JSON.stringify([motifR, rs, valeur(dec, "Bouton « Réserver mon plan d'action »")]) + " " + resume(db));
@@ -841,8 +851,8 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
     const sansLigneE = !(await page.$("#clients-prospects")) && !!(await page.$("#lc-clients")) && !(await page.$("#tb-clients, #liste-clients"));   /* v83 (bloc 3) : la ligne vers Prospects n'existe plus */
     ok("E : Mes clients (v71) : ni Léa ni Inès dans « Suivi de mes clients » ; v83 : plus de ligne « Les prospects sont dans Prospects → », les 8 sur la page Prospects (« 8 prospects », « 8 comptes gratuits ») ; cartes Prospects : Léa « bilan réservé » (coché par le coach), Inès plus « bilan réservé » (« Bilan pas réservé ») mais « Clics plan d'action 1 (dernier : accueil, bouton du haut) »",
       !dansTb && lp.t === "" && lp.href === "" && sansLigneE && JSON.stringify(nbE) === JSON.stringify(["8 prospects", "8 comptes gratuits"]) && /bilan réservé/.test(cL) && !/bilan réservé/.test(cI) && cI.includes("Bilan pas réservé") && cI.includes("Clics plan d'action 1 (dernier : accueil, bouton du haut)"), JSON.stringify([dansTb, lp, sansLigneE, nbE]) + " | " + cL + " | " + cI);
-    await aller(page, "#/tableau", 300); await page.waitForSelector("#tb-t-prospects", { timeout: 8000 }); await attendre(page, 400);
-    ok("E : tableau de bord : Prospects « 4 urgences » (Zoé, Hugo et Inès pour leur clic, Marc)", (await tuileTb(page, "tb-t-prospects")).badge === "4 urgences", JSON.stringify(await tuileTb(page, "tb-t-prospects")));
+    await aller(page, "#/tableau", 300); await page.waitForSelector("#tb-col-prospects", { timeout: 8000 }); await attendre(page, 400);
+    ok("E : tableau de bord : 4 urgences prospects (Zoé, Hugo et Inès pour leur clic, Marc ; v106 : dans les groupes)", (await urgP(page)) === 4, String(await urgP(page)));
     ok("E : seules des écritures de suivi_prospect (5 : Léa 3, Hugo 1, Inès 1), jamais d'autre clé", db.ecritures.length === 5 && db.ecritures.every(e => e.table === "donnees" && e.outil === "suivi_prospect"), resume(db));
   });
   await bloc("E. bilan réservé : conflit, 409, verrou", async () => {
@@ -1069,7 +1079,7 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
     const { page } = await coachSur(b, db, "#/suivi-clients", "#tb-clients [data-ouvrir]");   // v84 (ménage du bloc 3) : le tableau est dans « Suivi détaillé »
     /* v104 (point 4) : changement voulu — le titre de page (#acc-vue .masthead h1) est là dès le chargement et l'eyebrow « Fiche
        client · date » n'existe plus : la fiche chargée se reconnaît à son identité (#fc-ident) */
-    await ficheDe(page, F.IDS.c1, "Thomas Démo", "#acc-vue #fc-ident");
+    await ficheDe(page, F.IDS.c1, "Thomas Démo", "#acc-vue #fc-suivi" /* v106 : #fc-ident est vide (le nom est dans l en-tête) */);
     ok("F : fiche d'un client (ancien prospect « Absent ») : pas de « Suivi commercial », pas de bloc Découverte, pas de score, rien écrit", !!(await page.$("#vue #fc-ident")) && !(await page.$("#fiche-commercial, #fiche-prospect, #fiche-score")) && db.ecritures.length === 0);
   });
 
@@ -1097,12 +1107,12 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
     ok("G : Thomas (pas le compte de test) : pages, arrière-plan, 11 minutes : aucune écriture d'activite, aucune lecture de sa clé activite", ecr(db, "activite").length === 0 && lu(db, "activite") === 0 && db.ecritures.length === 0, resume(db) + " " + JSON.stringify(db.lectures.filter(x => /activite/.test(x.outil))));
     const db2 = decor({ prospects: false });
     const { page: p2 } = await contexte(b, COACH, db2, { horloge: true });
-    await p2.goto(URL0 + "#/tableau"); await pret(p2, "#tb-vue .tb-tiles");
+    await p2.goto(URL0 + "#/tableau"); await pret(p2, "#tb-vue .tb-chiffres");
     /* v84 (ménage du bloc 3) : le tableau, les comptes, les cartes et la newsletter que montraient #/clients et #/prospects sont
        sur #/suivi-clients, #/comptes, #/suivi-commercial et #/newsletter : le coach passe aussi par ces quatre pages (comme
        « J. coach : aucune activité suivie » de verif52), chacune affichée (son écran est là) avant d'aller plus loin */
     const vusG = [];
-    for (const [h, sel] of [["#/clients", "#lc-clients"], ["#/suivi-clients", "#tb-clients [data-ouvrir]"], ["#/comptes", "#liste-clients .client-l"], ["#/prospects", "#lc-prospects"], ["#/suivi-commercial", "#pr-vue .pr-detail"], ["#/newsletter", "#pr-nl"], ["#/tableau", "#tb-vue .tb-tiles"]]) {
+    for (const [h, sel] of [["#/clients", "#lc-clients"], ["#/suivi-clients", "#tb-clients [data-ouvrir]"], ["#/comptes", "#liste-clients .client-l"], ["#/prospects", "#lc-prospects"], ["#/suivi-commercial", "#pr-vue .pr-detail"], ["#/newsletter", "#pr-nl"], ["#/tableau", "#tb-vue .tb-chiffres"]]) {
       await aller(p2, h, 1200); if (!(await p2.waitForSelector(sel, { timeout: 8000 }).then(() => true, () => false))) vusG.push(h);
     }
     await p2.evaluate(id => Clients.ouvrir(id, "Sans nom", "accueil"), TESTEUR.id); await attendre(p2, 1500);
@@ -1211,12 +1221,12 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
       prospect(41, "Nul", "", { cree: 2 * J, emails: null, act: ["x"], suivi: ["x"] })
     ];
     const db = decor({ comptes: pieges, cles: [[F.IDS.c3, "checkins", { liste: "x", avis: [{ semaine: 5, smiley: PIEGE }] }, avant(12 * J + 3 * H)]] });
-    const { page } = await coachSur(b, db, "#/tableau", "#tb-vue .tb-tiles");
+    const { page } = await coachSur(b, db, "#/tableau", "#tb-vue .tb-chiffres");
     const vues = [];
     /* v84 (ménage du bloc 3) : Mes clients d'avant = la liste (#/clients), le tableau (#/suivi-clients) et les comptes (#/comptes) ;
        Prospects d'avant = la liste et les Nouveautés (#/prospects), les cartes (#/suivi-commercial, « Tous ») et la newsletter
        (#/newsletter) : chacune est relue ; les cartes (vues[5]) portent la carte piégée et « Nul » */
-    const PAGES_J = [["#/tableau", "#tb-vue .tb-tiles"], ["#/clients", "#lc-clients"], ["#/suivi-clients", "#tb-clients [data-ouvrir]"], ["#/comptes", "#liste-clients .client-l"],
+    const PAGES_J = [["#/tableau", "#tb-vue .tb-chiffres"], ["#/clients", "#lc-clients"], ["#/suivi-clients", "#tb-clients [data-ouvrir]"], ["#/comptes", "#liste-clients .client-l"],
       ["#/prospects", "#pr-nouveautes .nv-panneau"], ["#/suivi-commercial", "#pr-liste"], ["#/newsletter", "#pr-nl"]];
     for (const [h, sel] of PAGES_J) { await aller(page, h, 300); await page.waitForSelector(sel, { timeout: 8000 }); await attendre(page, 600); if (h === "#/suivi-commercial") await filtre(page, "tous"); vues.push(await texte(page, "#vue")); }
     await ficheDe(page, PID(40), "piégé");
@@ -1231,7 +1241,7 @@ const conds = (db, uid) => db.conditions.filter(x => x.uid === uid && x.outil ==
     const gen = []; for (let i = 0; i < 1000; i++) gen.push(prospect(0, "Prospect", "N" + String(i).padStart(4, "0"), { cree: (i + 1) * H, q: i % 2 ? (i + 1) * H : null, rep: i % 2 ? { probleme: "Perdre du gras", obstacle: "Le temps", projection: "Courir" } : null, email: "p" + String(i).padStart(4, "0") + "@gen.fr", clics: i % 7 ? [] : [H], news: i % 3 === 0 }));
     gen.forEach((x, i) => { x.id = "00000000-0000-4000-8000-3" + String(i).padStart(11, "0"); });
     const db = decor({ comptes: gen });
-    const { page } = await coachSur(b, db, "#/tableau", "#tb-vue .tb-tiles", {});
+    const { page } = await coachSur(b, db, "#/tableau", "#tb-vue .tb-chiffres", {});
     /* v84 (ménage du bloc 3) : la page Prospects d'avant est sur trois pages : la liste et les Nouveautés (#/prospects), la
        newsletter (#/newsletter), les cartes (#/suivi-commercial) ; chacune complète en moins de 2 s depuis son changement
        d'adresse, et les trois constructions côté app ensemble en moins de 2 s (ce que faisait la seule page d'avant) */

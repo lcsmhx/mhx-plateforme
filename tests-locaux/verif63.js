@@ -348,8 +348,9 @@ const ligneClient = (page, uid) => page.$eval(`#tb-clients [data-ouvrir="${uid}"
 const ligneCompte = (page, nom) => page.$$eval("#liste-clients .client-l", (l, n) => { const x = l.find(e => (e.querySelector(".nom") || {}).textContent.trim().startsWith(n)); if (!x) return null; const ps = Array.from(x.querySelectorAll(".pastille")).map(p => p.textContent.trim()); return { etats: ps, meta: (x.querySelector(".meta") || {}).textContent.trim() }; }, nom).catch(() => null);
 /* v83 (bloc 3) : les pastilles d'alerte de la fiche ne sont plus dans l'en-tête (.masthead) mais en haut de l'onglet Suivi (#fc-suivi, ouvert par défaut) */
 const alertesFiche = page => page.$$eval("#vue #fc-suivi:not([hidden]) .attention-alertes .pastille", l => l.map(e => e.textContent.trim())).catch(() => []);
+/* v106 (lot 4) : plus de tuile « Activité » sur l'Aperçu : la dernière saisie est l'aide (bulle) du « vu il y a » de l'en-tête de la fiche */
+const aideVu = async page => { await page.waitForSelector("#fiche-entete [data-fe-vu] .fe-vu-t", { timeout: 8000 }).catch(() => {}); return page.$eval("#fiche-entete [data-fe-vu] .fe-vu-t", e => e.title).catch(() => null); };
 const tuile = (page, lbl) => page.$$eval("#vue .tile", (l, t) => { const x = l.find(e => (e.querySelector(".t-lbl") || {}).textContent.trim() === t); return x ? { val: x.querySelector(".t-val").textContent.replace(/\s+/g, "").trim(), sub: x.querySelector(".t-sub").textContent.trim() } : null; }, lbl).catch(() => null);
-const aTraiterTb = page => page.$$eval("#tb-a-traiter .tb-liste li", l => l.map(li => li.textContent.replace(/[  ]/g, " ").replace(/\s+/g, " ").trim())).catch(() => []);
 /* les libellés « alimentation » (vendredi : la question ; dimanche : « Alimentation ») dans une zone */
 const alim = (page, sel) => page.$$eval(sel + " .checkin-rep .lbl", l => l.map(e => e.textContent.trim()).filter(t => t === "Alimentation" || t === "Comment s'est passée ton alimentation ?").length).catch(() => -1);
 /* v104 (point 4) : changement voulu — dans la fiche d'un client, le coach lit les questions du bilan à la 3e personne
@@ -757,19 +758,18 @@ const blocSemaine = (page, s) => page.evaluate(x => { const ed = document.queryS
     ok("G : Mes clients (v84 : Suivi détaillé, Comptes et la liste Clients) : jamais « NaN », « undefined » ni « Invalid Date »", !!toutC && !!toutL && !/NaN|undefined|Invalid Date/.test(tous), (tous.match(/.{0,40}(NaN|undefined|Invalid Date).{0,40}/) || [""])[0] || JSON.stringify([tout.length, toutC.length, toutL.length]));
     ok(`G : Comptes : Julien « dernière saisie : ${dJu} » ; Nina « pas encore utilisé », « dernière saisie : jamais »`, !!cJu && cJu.meta === "dernière saisie : " + dJu && !!cNi && cNi.etats.includes("pas encore utilisé") && cNi.meta === "dernière saisie : jamais", JSON.stringify([cJu, cNi]));
     await fiche(page, F.IDS.c3, "Julien Démo", "accueil", "#vue #fc-ident");   // v105 (point 2) : plus de grand titre visible dans l'Aperçu de la fiche
-    const al = await alertesFiche(page), tu = await tuile(page, "Activité");
-    ok("G : fiche de Julien : « Inactif depuis 12 j » en haut de l'onglet Suivi (v83), tuile « Activité » 12 j", al.includes("Inactif depuis 12 j") && !!tu && tu.val === "12j" && tu.sub === "depuis sa dernière saisie", JSON.stringify([al, tu]));
+    const al = await alertesFiche(page), tu = await aideVu(page);
+    ok("G : fiche de Julien : « Inactif depuis 12 j » en haut de l'onglet Suivi (v83), « Dernière saisie il y a 12 j » (v106 : en-tête ; avant : tuile « Activité »)", al.includes("Inactif depuis 12 j") && tu === "Dernière saisie il y a 12 j", JSON.stringify([al, tu]));
     await aller(page, "#/clients", 1500);
     await fiche(page, NINA, "Nina Piégée", "accueil", "#vue #fc-ident");   // v105 (point 2)
-    const alN = await alertesFiche(page), tuN = await tuile(page, "Activité");
-    ok("G : fiche de Nina (dates piégées) : « Jamais rien saisi », tuile « — » « jamais rien saisi »", alN.includes("Jamais rien saisi") && !!tuN && tuN.val === "—" && tuN.sub === "jamais rien saisi" && !/NaN/.test(await texte(page, "#vue")), JSON.stringify([alN, tuN]));
+    const alN = await alertesFiche(page), tuN = await aideVu(page);
+    ok("G : fiche de Nina (dates piégées) : « Jamais rien saisi » (alerte et en-tête ; v106 : plus de tuile)", alN.includes("Jamais rien saisi") && tuN === "Jamais rien saisi" && !/NaN/.test(await texte(page, "#vue")), JSON.stringify([alN, tuN]));
     await page.click("#sortir-fiche").catch(() => {}); await attendre(page, 600);
     await aller(page, "#/tableau", 2400);
-    /* v104 (point 10) : changement voulu — un client inactif n'est plus une urgence : Julien est dans « À surveiller »
-       (ul.tb-surveiller, sous « À traiter maintenant »), et plus dans la liste des urgences */
-    const L = (await page.$$eval("#tb-a-traiter ul.tb-surveiller li", l => l.map(li => li.textContent.replace(/[  ]/g, " ").replace(/\s+/g, " ").trim())).catch(() => [])).filter(t => t.includes("Julien Démo"));
-    const U = (await page.$$eval("#tb-a-traiter > ul.tb-at:not(.tb-surveiller) li", l => l.map(li => li.textContent)).catch(() => [])).filter(t => t.includes("Julien Démo"));
-    ok("G : tableau de bord, « À surveiller » (v104 ; plus « À traiter maintenant ») : Julien « Inactif depuis 12 j »", L.length === 1 && L[0].includes("Inactif depuis 12 j") && U.length === 0, JSON.stringify(await aTraiterTb(page)));
+    /* v106 (lot 5) : changement voulu — Julien est dans le groupe « Clients inactifs » d'« Aujourd'hui », pas dans « Retours à lire » */
+    const L = (await page.$$eval("#tb-g-inactifs .tb-l", l => l.map(li => li.textContent.replace(/[  ]/g, " ").replace(/\s+/g, " ").trim())).catch(() => [])).filter(t => t.includes("Julien Démo"));
+    const U = (await page.$$eval("#tb-g-retours .tb-l", l => l.map(li => li.textContent)).catch(() => [])).filter(t => t.includes("Julien Démo"));
+    ok("G : tableau de bord, « Clients inactifs » (v106 ; v104 : « À surveiller ») : Julien « Inactif depuis 12 j »", L.length === 1 && L[0].includes("Inactif depuis 12 j") && U.length === 0, JSON.stringify([L, U]));
     ok("G : afficher n'écrit rien", db.ecritures.length === 0, resume(db));
   });
   await bloc("G2. de bout en bout : le compte de test ouvre Mon suivi, le coach voit toujours « 12 j »", async () => {
@@ -806,8 +806,10 @@ const blocSemaine = (page, s) => page.evaluate(x => { const ed = document.queryS
     const B = await blocSemaine(pc, isoJ(14));
     ok("H : coach, Préparer le call : la note et les réponses du vendredi, « Alimentation » une seule fois", !!B && B.t.includes("Note de la semaine 8/10") && B.t.includes("4 séances tenues") && B.t.includes("Énergie 4/5") && B.alim === 1, JSON.stringify(B).slice(0, 400));
     await voir(pc, "accueil"); await pc.waitForSelector("#acc-vue #fc-ident", { timeout: 10000 });   // v105 (point 2) : plus de grand titre visible dans l'Aperçu de la fiche
-    const fi = await texte(pc, "#acc-vue");
-    ok("H : coach, fiche : le dernier feedback avec sa note et ses réponses du vendredi", fi.includes("Note de la semaine 8/10") && fi.includes("4 séances tenues"), fi.slice(fi.indexOf("Feedback du dimanche"), fi.indexOf("Feedback du dimanche") + 300));
+    const fi = await texte(pc, "#acc-vue"), lire = await pc.$eval("#fc-lire", a => a.getAttribute("href")).catch(() => "");
+    /* v106 (lot 4) : changement voulu — l'Aperçu ne répète plus le détail du feedback (carte « Bilan hebdomadaire ») : la carte
+       « Retour de la semaine » l'annonce et « Lire » mène à Bilans, où sa note et ses réponses sont vérifiées juste au-dessus */
+    ok("H : coach, fiche : l'Aperçu annonce le feedback du dimanche (carte « Retour de la semaine »), « Lire » mène à Bilans (sa note et ses réponses, ci-dessus) (v106)", fi.includes("Retour de la semaine") && fi.includes("Feedback du dimanche") && /\/bilan$/.test(lire), fi.slice(0, 300) + " · " + lire);
     ok("H : jamais d'écriture de feedbacks, aucun refus de la base (affichage seul côté coach)", ecr(db, "feedbacks").length === 0 && db.refus.length === 0 && ecr(db, "checkins").length === 1, resume(db) + " " + JSON.stringify(db.refus));
   });
   await bloc("H2. une entrée du vendredi avec des réponses du dimanche (coach)", async () => {
@@ -831,7 +833,7 @@ const blocSemaine = (page, s) => page.evaluate(x => { const ed = document.queryS
     const db = base({ comptes: [compteTest({ liste: [e14] }, { liste: [f14] })] });
     const { page } = await sur(b, COACH, db, 23, 10, 0, "", null);
     await espion(page);
-    await fiche(page, TESTEUR.id, "Sans nom", "suivi", "#suivi-checkin .fbd");
+    await fiche(page, TESTEUR.id, "Sans nom", "suivi", "#bilan-retours [data-fb-semaine]");   // v106 (lot 3) : « Son suivi » (…/suivi) ouvre « Bilans », ses retours en haut
     const n0 = lu(db, "checkins");
     await attendre(page, 1800);
     ok("I : Son suivi d'un compte avec une réponse non vue : aucune écriture (ni tentative), aucune relecture de checkins après l'affichage", db.ecritures.length === 0 && (await ecrits(page)).length === 0 && lu(db, "checkins") === n0 && !(await page.$("[data-smiley]")), resume(db) + " " + JSON.stringify(await ecrits(page)) + " " + n0 + "/" + lu(db, "checkins"));

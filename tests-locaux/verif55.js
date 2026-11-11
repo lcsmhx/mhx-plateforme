@@ -1415,19 +1415,19 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
       const db = base({ comptes: comptes() });
       const { page } = await coachSur(db);
       const f = await ficheDe(page, LEA);
-      ok("fiche de Léa Martin (bloc « Découverte ») : Nom « Martin », Newsletter « oui (depuis le " + frDe(NEWS_LE) + ") », questionnaire rempli, puis Problème, Ce qui l'a bloqué, Dans 3 mois ; l'objectif posé par l'app n'est pas répété",
-        JSON.stringify(sans(f.dec, "Découverte")) === JSON.stringify([["Nom", "Martin"], ["Newsletter", "oui (depuis le " + frDe(NEWS_LE) + ")"], ["Questionnaire court", "rempli le " + frDe(avant(3 * J))], ["Problème", "Perdre du gras"], ["Ce qui l'a bloqué", "Le manque de temps"], ["Dans 3 mois", "Rentrer dans mon jean d'avant"]].concat(FIN_V53)), JSON.stringify(f.dec));
+      ok("fiche de Léa Martin (bloc « Découverte ») : Nom « Martin », Newsletter « oui (depuis le " + frDe(NEWS_LE) + ") », questionnaire rempli (v106 : ses réponses dans le bloc des réponses seulement) ; l'objectif posé par l'app n'est pas répété",
+        JSON.stringify(sans(f.dec, "Découverte")) === JSON.stringify([["Nom", "Martin"], ["Newsletter", "oui (depuis le " + frDe(NEWS_LE) + ")"], ["Questionnaire court", "rempli le " + frDe(avant(3 * J))]].concat(FIN_V53)) /* v106 (lot 4) : changement voulu — ses réponses une seule fois, dans « Réponses au questionnaire court » (vérifiées juste dessous), plus dans Découverte */, JSON.stringify(f.dec));
       ok("… « Réponses au questionnaire court » : Email, Problème, Ce qui l'a bloqué, Dans 3 mois (libellés courts du coach)", JSON.stringify(f.rep) === JSON.stringify([["Email", "lea.martin@exemple.fr"], ["Problème", "Perdre du gras"], ["Ce qui l'a bloqué", "Le manque de temps"], ["Dans 3 mois", "Rentrer dans mon jean d'avant"]]), JSON.stringify(f.rep));
       const m = await ficheDe(page, MARC);
       const ATT_M = [["Sexe", "Homme"], ["Âge", "40"], ["Taille (cm)", "180"], ["Poids actuel (kg)", "90"], ["Objectif", "Prise de muscle"], ["Séances par semaine", "3"], ["Déjà essayé", "La salle, seul"], ["Obstacle principal", "Je lâche au bout de 2 semaines"], ["Pourquoi maintenant", "Mon mariage en juin"], ["Motivation", "8 / 10"]];
       /* v74 : la ligne « Nom » n'apparaît que si le nom existe (avant : « pas renseigné ») */
       ok("ancien prospect Marc (nom vide, ancien accord « emails de suivi » seul) : pas de ligne « Nom » (v74), Newsletter « non », ses 10 anciennes réponses (obstacle d'avant « Obstacle principal », motivation « 8 / 10 »), pas de Problème",
-        JSON.stringify(sans(m.dec, "Découverte")) === JSON.stringify([["Newsletter", "non"], ["Questionnaire court", "rempli le " + frDe(avant(20 * J))]].concat(ATT_M, FIN_V53)), JSON.stringify(m.dec));
+        JSON.stringify(sans(m.dec, "Découverte")) === JSON.stringify([["Newsletter", "non"], ["Questionnaire court", "rempli le " + frDe(avant(20 * J))]].concat(FIN_V53)) && JSON.stringify(m.rep.slice(1)) === JSON.stringify(ATT_M) /* v106 (lot 4) : ses 10 anciennes réponses dans le bloc des réponses seulement */, JSON.stringify([m.dec, m.rep]));
       ok("… ses réponses (bloc du bas) : Email puis les mêmes libellés", JSON.stringify(m.rep) === JSON.stringify([["Email", "marc@exemple.fr"]].concat(ATT_M)), JSON.stringify(m.rep));
       const z = await ficheDe(page, ZOE), n = await ficheDe(page, NINA);
       ok("Zoé (rien répondu, pas de clé emails) : Nom « Durand », Newsletter « non », questionnaire pas encore rempli, aucune réponse inventée ; ses 3 questions « — »",
         JSON.stringify(sans(z.dec, "Découverte")) === JSON.stringify([["Nom", "Durand"], ["Newsletter", "non"], ["Questionnaire court", "pas encore rempli"]].concat(FIN_V53)) && JSON.stringify(z.rep) === JSON.stringify([["Email", "—"], ["Problème", "—"], ["Ce qui l'a bloqué", "—"], ["Dans 3 mois", "—"]]), JSON.stringify([z.dec, z.rep]));
-      ok("Nina (newsletter décochée dans son Profil) : Newsletter « non » ; sa réponse « Dans 3 mois » entière", (n.dec.find(x => x[0] === "Newsletter") || [])[1] === "non" && (n.dec.find(x => x[0] === "Dans 3 mois") || [])[1] === LONGUE, JSON.stringify(n.dec));
+      ok("Nina (newsletter décochée dans son Profil) : Newsletter « non » ; sa réponse « Dans 3 mois » entière", (n.dec.find(x => x[0] === "Newsletter") || [])[1] === "non" && (n.rep.find(x => x[0] === "Dans 3 mois") || [])[1] === LONGUE /* v106 (lot 4) : dans le bloc des réponses */, JSON.stringify([n.dec, n.rep]));
       ok("fiches de Léa, Marc, Zoé et Nina : ni « undefined », ni « null », ni « NaN », ni « [object »", [f, m, z, n].every(x => !RIEN_DE_BRUT.test(x.vue)), [f, m, z, n].map(x => (x.vue.match(RIEN_DE_BRUT) || [""])[0]).join("|"));
       ok("coach : aucune écriture en affichant ces fiches", ecrDonnees(db).length === 0, resume(db));
     });
@@ -1436,7 +1436,7 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
       const db = base({ comptes: comptes() });
       const { page } = await coachSur(db);
       const p = await ficheDe(page, PIEGE);
-      const v = k => (p.dec.find(x => x[0] === k) || [])[1];
+      const v = k => (p.dec.find(x => x[0] === k) || p.rep.find(x => x[0] === k) || [])[1];   // v106 (lot 4) : nom et newsletter dans Découverte, ses réponses dans le bloc des réponses
       ok("prospect piégé : nom, problème, obstacle et « Dans 3 mois » affichés tels quels (texte), Newsletter « oui » sans date (date illisible)", v("Nom") === XSS && v("Problème") === XSS && v("Ce qui l'a bloqué") === XSS && v("Dans 3 mois") === "=HYPERLINK(\"http://x\") " + XSS && v("Newsletter") === "oui", JSON.stringify(p.dec));
       ok("… aucune balise injectée (fiche), ni « undefined » ni « null »", !(await injecte(page)) && !RIEN_DE_BRUT.test(p.vue), (p.vue.match(RIEN_DE_BRUT) || [""])[0]);
       const t = await ficheDe(page, TAB), c = await ficheDe(page, CHAINE);

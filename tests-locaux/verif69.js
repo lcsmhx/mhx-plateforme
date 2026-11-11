@@ -623,11 +623,13 @@ const SANTE = /71[,.]4|1\s?873|83[,.]5|92[,.]3|\bkcal\b|\bkg\b|\bpoids\b|\btaill
     const { page } = await coachSur(b, db, "#/suivi-commercial", "#pr-mesure-chiffres");   // v84 (ménage du bloc 3) : le bloc Mesure est dans le Suivi commercial
     const place = await page.evaluate(() => {
       const n = s => String(s || "").replace(/[  ]/g, " ").replace(/\s+/g, " ").trim();
-      const B = document.querySelector("#pr-mesure"), av = B && B.previousElementSibling, ap = B && B.nextElementSibling;
+      /* v106 (lot 5) : changement voulu — « Inscrits par source » (#tb-sources, venu du tableau de bord) se place juste après la Mesure,
+         avant les filtres et la liste */
+      const B = document.querySelector("#pr-mesure"), av = B && B.previousElementSibling, src = B && B.nextElementSibling, ap = src && src.id === "tb-sources" ? src.nextElementSibling : null;
       return { avant: av ? Array.from(av.querySelectorAll(".tile .t-lbl")).map(e => n(e.textContent)) : [], apres: !!(ap && ap.querySelector(".sc-filtres") && ap.querySelector("#pr-liste")),
                dansVue: !!(B && B.closest("#pr-vue")), panneau: !!(B && B.tagName === "SECTION" && B.classList.contains("panel")) };
     });
-    ok("A : section.panel#pr-mesure juste après les 4 tuiles (À traiter, Signés, Perdus, Absents) et juste avant les filtres et la liste",
+    ok("A : section.panel#pr-mesure juste après les 4 tuiles (À traiter, Signés, Perdus, Absents), puis « Inscrits par source » (v106), puis les filtres et la liste",
       place.panneau && place.dansVue && egal(place.avant, ["À traiter", "Signés", "Perdus", "Absents"]) && place.apres, JSON.stringify(place));
     const M = await lireMesure(page);
     ok("A : « Mesure » et le sélecteur de période : « 7 derniers jours » (7, choisi par défaut), « 30 derniers jours » (30), « Depuis le 28/09/2026 » (tout)",

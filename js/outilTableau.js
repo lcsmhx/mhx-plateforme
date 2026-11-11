@@ -78,7 +78,7 @@ const outilTableau = {
     prospects.forEach(x => {
       const a = x.a, m = a.motif, l = x.l;
       const base = { uid: l.p.id, nom: l.nom, prospect: true, cible: "accueil", recence: a.recence || 0, rang: this.RANG_PROSPECTS[m] != null ? this.RANG_PROSPECTS[m] : 8, urgent: this.urgentProspect(a) };
-      if (m === "case" || m === "appel" || (!m && !a.issue && (a.coche || a.caseAVerifier))) G.reserves.push(Object.assign(base, { texte: m ? Commercial.motifTexte(a) : trad("Bilan réservé"), niveau: "accent" }));
+      if (m === "case" || m === "appel" || (!m && !a.issue && (a.coche || a.caseAVerifier))) G.reserves.push(Object.assign(base, { texte: m ? Commercial.motifTexte(a) : trad("Bilan réservé"), niveau: "accent" }, m ? {} : { rang: 12 }));   // un bilan à venir (sans motif) après ceux qui demandent une action
       else if (m === "signe" || m === "absent" || m === "clic" || m === "perdu") G.relancer.push(Object.assign(base, { texte: Commercial.motifTexte(a), niveau: m === "signe" ? "ok" : "attention" }));
       else if (m === "nouveau" || neufs.has(l.p.id)) G.nouveaux.push(Object.assign(base, { texte: m === "nouveau" ? Commercial.motifTexte(a) : trad("Inscrit le {d}", { d: this.quand(l.p.cree_le) }), niveau: "accent", cree: Date.parse(l.p.cree_le) || 0, tel: l.tel, msgWa: l.msgWa }));
     });
@@ -91,8 +91,10 @@ const outilTableau = {
   ligneHTML(x){
     /* toute la ligne ouvre la fiche (initiales, nom, point de couleur et raison, chevron) ; un nouveau prospect a aussi son
        WhatsApp (message prêt), à côté */
-    const wa = x.prospect && x.tel && Telephone.valide(x.tel) ? lienWaVers(x.tel, x.msgWa || "") || lienWaVers(x.tel, "") : "";
-    return `<li class="tb-l"><button type="button" class="tb-at-b" data-fiche="${esc(x.uid)}" data-nom="${esc(x.nom)}" data-cible="${esc(x.cible)}">${Clients.avatar(x.nom)}<span class="tb-quoi"><b data-notr>${esc(x.nom)}</b><small><span class="point ${esc(x.niveau || "neutre")}" aria-hidden="true"></span> ${esc(x.texte)}</small></span><span class="tb-chevron" aria-hidden="true">${SVG.chevron}</span></button>${wa ? `<a class="rond tb-wa" href="${esc(wa)}" target="_blank" rel="noopener" data-wa-coach aria-label="${esc(trad("WhatsApp : message prêt"))}" title="${esc(trad("WhatsApp : message prêt"))}">${SVG.whatsapp}</a>` : ""}</li>`;
+    const okTel = x.prospect && x.tel && Telephone.valide(x.tel), wa = okTel ? lienWaVers(x.tel, x.msgWa || "") || lienWaVers(x.tel, "") : "";
+    /* comme l'ancien bloc « Nouveaux depuis ta dernière visite » : Appeler et WhatsApp (message prêt) */
+    const appeler = okTel ? `<a class="rond tb-wa tb-tel" href="tel:${esc(x.tel)}" aria-label="${esc(trad("Appeler"))}" title="${esc(trad("Appeler"))}">${SVG.tel}</a>` : "";
+    return `<li class="tb-l"><button type="button" class="tb-at-b" data-fiche="${esc(x.uid)}" data-nom="${esc(x.nom)}" data-cible="${esc(x.cible)}">${Clients.avatar(x.nom)}<span class="tb-quoi"><b data-notr>${esc(x.nom)}</b><small><span class="point ${esc(x.niveau || "neutre")}" aria-hidden="true"></span> ${esc(x.texte)}</small></span><span class="tb-chevron" aria-hidden="true">${SVG.chevron}</span></button>${appeler}${wa ? `<a class="rond tb-wa" href="${esc(wa)}" target="_blank" rel="noopener" data-wa-coach aria-label="${esc(trad("WhatsApp : message prêt"))}" title="${esc(trad("WhatsApp : message prêt"))}">${SVG.whatsapp}</a>` : ""}</li>`;
   },
   groupeHTML(g, l, note){
     const ouvert = !!this.deplies[g.id], n = l.length, vus = ouvert ? l : l.slice(0, this.REPLI);
@@ -189,7 +191,7 @@ const outilTableau = {
     $$("[data-tb-aller]", zone).forEach(b => b.addEventListener("click", () => {
       const z = $(b.dataset.tbAller); if (!z) return;
       const d = z.classList.contains("tb-groupe") ? z.querySelector('[data-tb-deplier][aria-expanded="false"]') : null; if (d) d.click();   // un groupe long se déplie ; « À traiter » mène juste en haut de la liste
-      const cible = $(b.dataset.tbAller); if (cible) cible.scrollIntoView({ behavior: "smooth", block: "start" });
+      const cible = $(b.dataset.tbAller); if (cible) cible.scrollIntoView({ behavior: defilementDoux(), block: "start" });
     }));
     /* v72 (E) : nouvelle visite : la seule écriture de cette page, une ligne du coach lui-même (règles de la base : le propriétaire),
        directe (pas de copie sur l'appareil ni d'« Enregistrement… » : rien que le coach ait saisi) ; ratée : la visite suivante

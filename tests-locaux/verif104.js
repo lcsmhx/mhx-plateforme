@@ -601,9 +601,10 @@ const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { 
       });
       const T2 = await lireTete(page);
       if (qui === "client") {
-        /* v106 (lot 2) : changement voulu — « Client », WhatsApp (message prêt) et Appeler sont dans l'en-tête, une seule fois */
-        ok("B1 (client) : en-tête : « Client », WhatsApp (message prêt : « Salut Thomas 👋 »), Appeler (tel:) ; sous l'en-tête, avant le Suivi : « Préparer le call », sans statut, WhatsApp ni Appeler en double ; ni initiales ni nom répétés ; un seul lien WhatsApp visible",
-          id.avantSuivi && !id.avatar && !id.nom && id.role === statut && !id.roleIdent && id.call === "Bilans" /* v106 (lot 3) : le nom de la page où il mène */ && !!id.wa && /^https:\/\/wa\.me\/\d+\?text=Salut%20Thomas/.test(id.wa.href) && !id.waIdent && id.appeler === "tel:" + TEL1 && !id.appelerIdent
+        /* v106 (lot 2) : changement voulu — « Client », WhatsApp (message prêt) et Appeler sont dans l'en-tête, une seule fois ;
+           v106 (lot 4, test QA) : plus de bouton « Préparer le call » / « Bilans » sur l'Aperçu (la carte du dernier retour et l'onglet Suivi y mènent) */
+        ok("B1 (client) : en-tête : « Client », WhatsApp (message prêt : « Salut Thomas 👋 »), Appeler (tel:) ; sous l'en-tête, avant le Suivi : plus de bouton « Préparer le call » (v106), sans statut, WhatsApp ni Appeler en double ; ni initiales ni nom répétés ; un seul lien WhatsApp visible",
+          id.avantSuivi && !id.avatar && !id.nom && id.role === statut && !id.roleIdent && id.call === null /* v106 (lot 4) */ && !!id.wa && /^https:\/\/wa\.me\/\d+\?text=Salut%20Thomas/.test(id.wa.href) && !id.waIdent && id.appeler === "tel:" + TEL1 && !id.appelerIdent
             && T2.waVisibles.length === 1 && T2.waVisibles[0].dansBandeau, JSON.stringify({ id, wa: T2.waVisibles }));
       } else {
         /* v106 (lot 2) : changement voulu — un seul WhatsApp, celui de l'en-tête, qui ouvre le message prêt du prospect (ses réponses) */
@@ -730,10 +731,11 @@ const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { 
       nav: Array.from(document.querySelectorAll("#nav a")).map(a => a.dataset.id), versClient: Array.from(document.querySelectorAll("#nav a")).filter(a => /#\/client\//.test(a.getAttribute("href"))).length,
       raccourcis: !!document.querySelector("#fc-outils, #fc-suivi .bandeau-actions"),
       fleches: Array.from(document.querySelectorAll("#vue a")).filter(a => /→\s*$/.test(a.textContent)).map(a => a.textContent.trim()),
-      call: Array.from(document.querySelectorAll("#vue a, #vue button")).filter(e => e.getClientRects().length && e.textContent.replace(/\s+/g, " ").trim() === "Bilans").length   // v106 (lot 3) : « Préparer le call » est devenu « Bilans »
+      call: Array.from(document.querySelectorAll("#vue a, #vue button")).filter(e => e.getClientRects().length && e.textContent.replace(/\s+/g, " ").trim() === "Bilans").length,   // v106 (lot 3) : « Préparer le call » est devenu « Bilans »
+      suivi: (Array.from(document.querySelectorAll("#vue .fiche-onglets a")).find(a => /Suivi/.test(a.textContent)) || {}).hash || ""   // v106 (lot 4) : l'onglet Suivi mène à Bilans
     }));
-    ok("F1 (point 1) : dans la fiche, le menu du haut est celui du coach (ses 4 entrées dans l'ordre, aucune vers les outils du client), plus de rangée de raccourcis ni de lien « … → », un seul « Bilans » (v106)",
-      JSON.stringify(n.nav) === MENU7 && n.versClient === 0 && !n.raccourcis && n.fleches.length === 0 && n.call === 1, JSON.stringify(n));
+    ok("F1 (point 1) : dans la fiche, le menu du haut est celui du coach (ses 4 entrées dans l'ordre, aucune vers les outils du client), plus de rangée de raccourcis ni de lien « … → » ; plus de bouton « Bilans » sur l'Aperçu : l'onglet Suivi y mène (v106)",
+      JSON.stringify(n.nav) === MENU7 && n.versClient === 0 && !n.raccourcis && n.fleches.length === 0 && n.call === 0 && /\/bilan$/.test(n.suivi), JSON.stringify(n));
     /* les anciennes adresses s'ouvrent toujours */
     const vus = [];
     for (const [ch, sel] of [["bilan", "#bilan-vue"], ["journal", null], ["calculateur", null], ["mensurations", null], ["formation", null], ["complements", null]]) {
@@ -784,10 +786,13 @@ const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { 
       reg: (document.querySelector("#fc-regularite") || {}).textContent || "",
       tuiles: Array.from(document.querySelectorAll("#fc-suivi .tile .t-lbl")).map(e => e.textContent.trim()),
       cible: Array.from(document.querySelectorAll("#fc-suivi li")).filter(li => /^Cible/.test(li.textContent.trim())).map(li => li.textContent.replace(/\s+/g, " ").trim()),
+      zeroProt: /(^|[^\d])0 g prot/.test((document.getElementById("vue") || {}).textContent || ""),
       nbReg: Array.from(document.querySelectorAll("#fc-suivi *")).filter(e => !e.children.length && /\/100/.test(e.textContent)).length
     }));
-    ok("H1 (point 3) : Aperçu : un seul chiffre de régularité (« … /100 · semaine passée »), plus de tuile « Régularité » ; protéines non renseignées : la cible n'affiche pas « 0 g prot. »",
-      /\/100 · semaine passée/.test(h.reg) && h.tuiles.indexOf("Régularité") === -1 && h.nbReg === 1 && h.cible.length === 1 && /2\s?240 kcal$/.test(h.cible[0]) && !/prot/.test(h.cible[0]), JSON.stringify(h));
+    /* v106 (lot 4) : changement voulu — la carte Nutrition (et sa ligne « Cible ») a quitté l'Aperçu (onglet Nutrition) : plus de
+       ligne Cible ici, et toujours aucun « 0 g prot. » nulle part sur l'Aperçu */
+    ok("H1 (point 3) : Aperçu : un seul chiffre de régularité (« … /100 · semaine passée »), plus de tuile « Régularité » ; protéines non renseignées : aucun « 0 g prot. » (la ligne Cible a quitté l'Aperçu, v106)",
+      /\/100 · semaine passée/.test(h.reg) && h.tuiles.indexOf("Régularité") === -1 && h.nbReg === 1 && h.cible.length === 0 && !h.zeroProt, JSON.stringify(h));
   });
 
   /* =================== I. point 4 : « sa / ses / son » pour le coach, « ta / tes / ton » chez le client =================== */
@@ -852,10 +857,11 @@ const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { 
     const a = await page.evaluate(() => ({ lien: (document.getElementById("fc-obj-modifier") || {}).hash || "", champs: document.querySelectorAll("#obj-0").length }));
     await ouvrir(page, C1, "bilan", "#bilan-vue");
     const c = await page.evaluate(() => ({ champs: document.querySelectorAll("#obj-0").length, valeur: (document.getElementById("obj-0") || {}).value || "", lien: Array.from(document.querySelectorAll("#bilan-vue a")).filter(x => /\/(suivi|bilan)$/.test(x.hash)).length }));
-    /* v106 (lot 3) : changement voulu — les objectifs se modifient dans « Bilans » (Suivi) : Programme et Aperçu les montrent en
-       lecture seule avec « Modifier » vers Bilans ; Bilans a l'éditeur (une seule fois, sans lien vers lui-même) */
-    ok("J3 (point 5) : Programme et Aperçu : objectifs en lecture seule (le nouveau texte affiché) et un lien « Modifier » vers Bilans, aucun champ ; Bilans : l'éditeur, avec le nouveau texte",
-      p.champs === 0 && p.lecture && /\/bilan$/.test(p.lien) && /Marcher 9 000 pas/.test(p.texte) && /\/bilan$/.test(a.lien) && a.champs === 0 && c.champs === 1 && c.valeur === "Marcher 9 000 pas" && c.lien === 0, JSON.stringify({ p, a, c }));
+    /* v106 (lot 3) : changement voulu — les objectifs se modifient dans « Bilans » (Suivi) : Programme les montre en lecture seule
+       avec « Modifier » vers Bilans ; Bilans a l'éditeur (une seule fois, sans lien vers lui-même). v106 (lot 4) : l'Aperçu ne
+       répète plus les objectifs (carte retirée) : ni champ ni lien « Modifier » */
+    ok("J3 (point 5) : Programme : objectifs en lecture seule (le nouveau texte affiché) et un lien « Modifier » vers Bilans, aucun champ ; Aperçu : ni champ ni objectifs (v106) ; Bilans : l'éditeur, avec le nouveau texte",
+      p.champs === 0 && p.lecture && /\/bilan$/.test(p.lien) && /Marcher 9 000 pas/.test(p.texte) && a.lien === "" && a.champs === 0 && c.champs === 1 && c.valeur === "Marcher 9 000 pas" && c.lien === 0, JSON.stringify({ p, a, c }));
   });
 
   /* =================== K. point 8 : boutons « × » de 44 px, séparés des autres =================== */
@@ -904,7 +910,7 @@ const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { 
     await page.goto(URL0 + "#/suivi"); await pret(page, "#suivi-reg"); await attendre(page, 600);
     const hors = await page.evaluate(() => ({ consulte: Store.idConsulte, editeur: document.querySelectorAll("#suivi-obj #obj-0").length }));
     await ouvrir(page, C1, "profil", "#q-age");
-    const q = await page.evaluate(() => document.getElementById("vue").innerText);
+    const q = await page.evaluate(() => { document.querySelectorAll("#vue details").forEach(d => { d.open = true; }); return document.getElementById("vue").innerText; });   // v106 (lot 4) : thèmes du questionnaire repliés dans la fiche
     ok("J5 (relecture) : hors fiche (#/suivi du coach), pas d'éditeur d'objectifs ; dans la fiche, « Son métier et son rythme de travail » et « Son entourage va-t-il soutenir sa démarche… » (plus de « ton » ou « ta » restés au milieu)",
       hors.consulte === null && hors.editeur === 0 && /Son métier et son rythme de travail/.test(q) && /Son entourage va-t-il soutenir sa démarche/.test(q) && !/ton rythme de travail|ta démarche/.test(q), JSON.stringify(hors));
   });
@@ -950,17 +956,19 @@ const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { 
     db.profils.push({ id: NV, prenom: "Nina", nom: "Démo", role: "client", statut: "prospect", cree_le: avant(2 * H) });
     const { page } = await contexte(b, COACH, db);
     await page.goto(URL0 + "#/tableau"); await pret(page, "#tb-a-traiter"); await attendre(page, 500);
+    /* v106 (lot 5) : changement voulu — « Aujourd'hui » range chaque personne dans un groupe (sa raison la plus urgente) : les
+       clients à gauche (Retours à lire, Clients inactifs), les prospects à droite ; le badge de l'onglet Prospects compte toujours les
+       urgences des prospects ; le chiffre « À traiter » = toutes les lignes */
     const m = await page.evaluate(() => {
-      const lis = sel => Array.from(document.querySelectorAll(sel)).map(li => ({ nom: (li.querySelector("b") || {}).textContent, prospect: !!li.querySelector(".pastille.accent") }));
-      return { urg: lis("#tb-a-traiter > ul.tb-at:not(.tb-surveiller) li"), surv: lis("#tb-a-traiter ul.tb-surveiller li"),
-        bc: (document.querySelector("#tb-t-clients .tb-badge") || {}).textContent, bp: (document.querySelector("#tb-t-prospects .tb-badge") || {}).textContent,
-        total: (document.querySelector("#tb-t-traiter .t-val") || {}).textContent };
+      const g = id => Array.from(document.querySelectorAll("#tb-g-" + id + " .tb-l b")).map(b => b.textContent);
+      return { retours: g("retours"), inactifs: g("inactifs"), nouveaux: g("nouveaux"), cols: Array.from(document.querySelectorAll("#tb-a-traiter .tb-col")).map(c => c.id),
+        urgP: Array.from(document.querySelectorAll("#tb-col-prospects .tb-groupe")).reduce((n, x) => n + parseInt(x.dataset.urgences || "0", 10), 0),
+        lignes: document.querySelectorAll("#tb-a-traiter .tb-l").length, total: (document.querySelector("#tb-c-traiter .t-val") || {}).textContent,
+        badge: (document.querySelector('#barre-bas a[data-id="prospects"] .nav-badge, #nav a[data-id="prospects"] .nav-badge') || {}).textContent || "" };
     });
-    const iP = m.urg.findIndex(x => x.prospect), dernierClient = m.urg.map(x => x.prospect).lastIndexOf(false);
-    ok("M1 (point 10) : « À traiter maintenant » : seulement les urgences du jour, les clients d'abord puis les prospects (bilan reçu de Thomas, puis la prospecte inscrite il y a 2 h) ; Julien (inactif) dans « À surveiller » ; badges et total ne comptent que les urgences",
-      m.urg.some(x => x.nom === "Thomas Démo") && m.urg.some(x => x.nom === "Nina Démo" && x.prospect) && iP > dernierClient && !m.urg.some(x => x.nom === "Julien Démo") && m.surv.some(x => x.nom === "Julien Démo")
-        && m.bc === m.urg.filter(x => !x.prospect).length + " urgence" + (m.urg.filter(x => !x.prospect).length > 1 ? "s" : "") && m.bp === m.urg.filter(x => x.prospect).length + " urgence" + (m.urg.filter(x => x.prospect).length > 1 ? "s" : "")
-        && +m.total === m.urg.length, JSON.stringify(m));
+    ok("M1 (point 10, v106) : « Aujourd'hui » : Thomas (bilan reçu) dans « Retours à lire » (colonne Clients), Julien (inactif) dans « Clients inactifs », la prospecte inscrite il y a 2 h dans « Nouveaux prospects » (colonne Prospects) ; le badge Prospects = les urgences des prospects ; « À traiter » = toutes les lignes",
+      m.retours.includes("Thomas Démo") && m.inactifs.includes("Julien Démo") && m.nouveaux.includes("Nina Démo") && !m.retours.includes("Julien Démo") && JSON.stringify(m.cols) === '["tb-col-clients","tb-col-prospects"]'
+        && m.urgP >= 1 && m.badge === String(m.urgP) && +m.total === m.lignes, JSON.stringify(m));
   });
 
   /* =================== N. point 11 : textes traduits =================== */

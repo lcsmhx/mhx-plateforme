@@ -380,7 +380,7 @@ const panneauFerme = page => page.waitForFunction(() => !document.querySelector(
 async function ouvrirFiche(page, id, nom){
   await page.evaluate(([i, n]) => Clients.ouvrir(i, n, "accueil"), [id, nom]);
   await page.waitForSelector("#vue .bandeau", { timeout: 8000 });
-  await page.waitForFunction(() => [...document.querySelectorAll("#vue section.panel h2")].some(h => h.textContent.trim() === "Nutrition"), null, { timeout: 8000 });
+  await page.waitForSelector("#vue #fc-suivi", { timeout: 8000 });   // v106 (lot 4) : l'Aperçu n'a plus de carte « Nutrition » (onglet Nutrition) : on attend le panneau de l'Aperçu
   await attendre(page, 500);
 }
 /* la valeur d'une ligne (« Aujourd'hui », « Objectif »…) du panneau #fiche-ja lu ; null si la ligne n'y est pas (une seule attendue) */

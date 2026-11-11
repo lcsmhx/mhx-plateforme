@@ -603,9 +603,12 @@ const NOUVEAUX = ["Ton bilan de la semaine du {a} au {b} n'est pas encore fait :
     ok("D : mise à jour d'une réponse : texte nouveau, ecrit_a renouvelé, champ inconnu (x_coach) recopié, bilan gardé", r7b.texte === "Bien joué, continue." && r7b.x_coach === "garde" && r7b.bilan === e7.envoye_a && r7b.ecrit_a > f7.ecrit_a && r7b.date === isoJ(21), JSON.stringify(r7b));
     const es = await ecrits(page);
     ok("D : le coach n'écrit jamais checkins (ni appel à Store.ecrire, ni requête, ni refus de la base)", ecr(db, "checkins").length === 0 && es.indexOf("checkins") === -1 && db.refus.length === 0, JSON.stringify(es) + " " + JSON.stringify(db.refus));
+    /* v106 (lots 3 et 4) : changement voulu — l'Aperçu ne répète plus le bloc « Feedback du dimanche » : sa carte « Retour de la
+       semaine » l'annonce, « Lire » mène à Bilans, qui montre le feedback reçu et sa note */
+    const bi = await texte(page, "#bilan-vue");
     await voir(page, "accueil");
-    const fi = await texte(page, "#acc-vue");
-    ok("D : fiche : « Feedback du dimanche » (tuile et bloc), « reçu », sa note", fi.includes("Feedback du dimanche") && fi.includes("reçu") && fi.includes("Note de la semaine 4/10"), fi.slice(fi.indexOf("Feedback du dimanche"), fi.indexOf("Feedback du dimanche") + 200));
+    const fi = await texte(page, "#acc-vue"), lire = await page.$eval("#fc-lire", a => a.getAttribute("href")).catch(() => "");
+    ok("D : fiche : l'Aperçu annonce le « Feedback du dimanche » (« Lire » vers Bilans) ; Bilans : « reçu » et sa note (v106)", fi.includes("Feedback du dimanche") && /\/bilan$/.test(lire) && /feedbacks? du dimanche/i.test(bi) && bi.includes("Note de la semaine 4/10"), fi.slice(0, 200) + " · " + lire + " · " + bi.slice(0, 300));
     /* le client voit la réponse sous son feedback */
     const { page: pc } = await sur(b, TESTEUR, db, 22, 10, 0, "#/suivi", "#suivi-checkin .fbd-reponse");
     const tc = await texte(pc, "#suivi-checkin");
@@ -697,9 +700,10 @@ const NOUVEAUX = ["Ton bilan de la semaine du {a} au {b} n'est pas encore fait :
     const db4 = base({ comptes: [compteTest({ liste: [e14] }, { liste: [f14] })] });
     const { page: pc } = await sur(b, COACH, db4, 23, 10, 0, "", null);
     await espion(pc);
-    await fiche(pc, "suivi", "#suivi-checkin .fbd"); await attendre(pc, 1200);
-    const tc = await texte(pc, "#suivi-checkin"), es = await ecrits(pc);
-    ok("F : Son suivi (coach) : la même page en lecture (réponse, smiley du client), aucune écriture de fb_vu (ni tentative)", tc.includes("Réponse toute récente.") && db4.ecritures.length === 0 && es.length === 0 && !(await pc.$("[data-smiley]")), JSON.stringify(es) + resume(db4));
+    /* v106 (lot 3) : changement voulu — dans la fiche, « Son suivi » (…/suivi) ouvre « Bilans » : ses retours et ta réponse en haut */
+    await fiche(pc, "suivi", "#bilan-retours [data-fb-semaine]"); await attendre(pc, 1200);
+    const tc = await pc.$eval("#bilan-retours", e => e.textContent + " " + Array.from(e.querySelectorAll("textarea")).map(t => t.value).join(" ")).catch(() => ""), es = await ecrits(pc);
+    ok("F : Son suivi (coach ; v106 : Bilans) : la réponse en lecture, aucun smiley du client, aucune écriture de fb_vu (ni tentative)", tc.includes("Réponse toute récente.") && db4.ecritures.length === 0 && es.length === 0 && !(await pc.$("[data-smiley]")), JSON.stringify(es) + resume(db4));
     /* Thomas : rien de tout cela, aucune lecture de plus au démarrage */
     const db5 = base();
     const { page: pt } = await sur(b, THOMAS, db5, 23, 10, 0, "#/programme", null);
@@ -783,7 +787,7 @@ const NOUVEAUX = ["Ton bilan de la semaine du {a} au {b} n'est pas encore fait :
     await heure(page, a(22, 10));
     await fiche(page, "accueil", "#acc-vue .attention-alertes");
     const al = await page.$$eval("#acc-vue .attention-alertes .pastille", l => l.map(x => x.className.replace("pastille", "").trim() + "|" + x.textContent.trim()));
-    ok("H : fiche : « 😞 sur ta réponse — à traiter » et « Note en chute : 8 → 4/10 » en tête (mauvais), liens vers Préparer le call", al[0] && al[1] && al.slice(0, 2).sort().join(" / ") === "mauvais|Note en chute : 8 → 4/10 / mauvais|😞 sur ta réponse — à traiter" && (await page.$$eval('#acc-vue .attention-alertes .pastille.mauvais[href="#/bilan"]', l => l.length)) === 2, JSON.stringify(al));
+    ok("H : fiche : « 😞 sur ta réponse — à traiter » et « Note en chute : 8 → 4/10 » en tête (mauvais), liens vers Préparer le call", al[0] && al[1] && al.slice(0, 2).sort().join(" / ") === "mauvais|Note en chute : 8 → 4/10 / mauvais|😞 sur ta réponse — à traiter" && (await page.$$eval('#acc-vue .attention-alertes .pastille.mauvais[href="#/bilan"]', l => l.filter(x => /😞|Note en chute/.test(x.textContent)).length)) === 2 /* v106 (lot 3) : « Régularité faible » mène aussi à Bilans (la régularité y est) : on compte ces deux-là */, JSON.stringify(al));
     ok("H : les alertes sont calculées à l'affichage : rien n'est écrit", db.ecritures.length === 0, resume(db));
   });
 
@@ -842,7 +846,7 @@ const NOUVEAUX = ["Ton bilan de la semaine du {a} au {b} n'est pas encore fait :
     await attendre(page, 1000);
     ok("K : le client ne peut pas écrire feedbacks : Store.ecrire refuse, la base aussi (403), rien de changé", r.s === false && r.p === 403 && egal(fbDe(db), { liste: [fbk(7, "R")] }) && db.refus.length === 1, JSON.stringify(r) + JSON.stringify(db.refus));
     const { page: pc } = await sur(b, COACH, db, 22, 10, 0, "", null);
-    await fiche(pc, "suivi", "#suivi-checkin .fbd");
+    await fiche(pc, "suivi", "#bilan-retours [data-fb-semaine]");   // v106 (lot 3) : « Son suivi » ouvre « Bilans »
     const r2 = await pc.evaluate(async id => {
       const s = Store.ecrire("checkins", { liste: [] });
       let p; try { await Auth.appel("/rest/v1/donnees?on_conflict=user_id,outil", { method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=minimal" }, body: [{ user_id: id, outil: "checkins", contenu: { liste: [] }, maj_le: new Date().toISOString() }] }); p = "passé"; } catch (e) { p = e.statut; }
@@ -870,7 +874,7 @@ const NOUVEAUX = ["Ton bilan de la semaine du {a} au {b} n'est pas encore fait :
     await heure(page, a(27, 10)); await voir(page, "suivi");
     ok("L : dimanche suivant, avec ces données : le formulaire s'affiche", !!(await page.$("[data-fbd]")) && (await xss(page)) === 0, "");
     const { page: pc } = await sur(b, COACH, db, 22, 10, 0, "", null);
-    for (const [cb, sel] of [["accueil", "#acc-vue #fc-ident" /* v105 (point 2) : plus de grand titre visible dans l'Aperçu de la fiche */], ["bilan", "#bilan-vue .panel"], ["suivi", "#suivi-checkin .panel"]]) { await fiche(pc, cb, sel); const x = await xss(pc); n += x; if (x) detail += cb + " "; }
+    for (const [cb, sel] of [["accueil", "#acc-vue #fc-ident" /* v105 (point 2) : plus de grand titre visible dans l'Aperçu de la fiche */], ["bilan", "#bilan-vue .panel"], ["suivi", "#bilan-vue .panel" /* v106 (lot 3) : « Son suivi » ouvre « Bilans » */]]) { await fiche(pc, cb, sel); const x = await xss(pc); n += x; if (x) detail += cb + " "; }
     await aller(pc, "#/tableau", 1800); n += await xss(pc); await aller(pc, "#/clients", 1800); n += await xss(pc);
     ok("L : coach : fiche, Préparer le call, Son suivi, tableau de bord, Mes clients : rien ne s'exécute, aucune page illisible", n === 0 && !(await pc.$("#page-illisible")), detail);
     /* un avis qui n'est pas une liste : le smiley la remplace par une vraie liste, la liste des feedbacks intacte */

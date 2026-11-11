@@ -403,6 +403,7 @@ const Nav106 = {
     if (Store.idConsulte) x = Store.nomConsulte || trad("Fiche");
     else if (Auth.estCoach() && MENU_COACH.indexOf(outil.id) > -1) x = trad(nomMenuCoach(outil));
     else if (Auth.estCoach() && PARENTS_MENU_COACH[outil.id] === "mes-programmes") x = trad(NOMS_MENU_COACH["mes-programmes"]);
+    else if (Auth.estCoach() && MENU_PROFIL_COACH.indexOf(outil.id) > -1 && NOMS_MENU_COACH[outil.id]) x = trad(NOMS_MENU_COACH[outil.id]);   // le nom de son lien (Réglages, Mon entraînement)
     else x = trad(outil.titre || nomOnglet(outil));
     t.toggleAttribute("data-notr", !!Store.idConsulte);   // un nom n'est jamais traduit
     t.textContent = x;
@@ -604,7 +605,7 @@ const EnteteFiche = {
   },
   inactif(i){ return !i.prospect && i.jours !== null && i.jours >= 10; },
   vuHTML(i){
-    const t = this.vuTexte(i.cx), aide = i.prospect ? "" : i.jours === null ? trad("Jamais rien saisi") : i.jours === 0 ? trad("Dernière saisie aujourd'hui") : trad("Dernière saisie il y a {n} j", { n: i.jours });
+    const t = this.vuTexte(i.cx), aide = i.jours === null ? trad("Jamais rien saisi") : i.jours === 0 ? trad("Dernière saisie aujourd'hui") : trad("Dernière saisie il y a {n} j", { n: i.jours });
     if (!t && !aide) return "";
     return `<span class="fe-vu-t${this.inactif(i) ? " inactif" : ""}" title="${esc(aide)}">${esc(t || aide)}${this.inactif(i) ? `<span class="sr-only"> · ${esc(aide)}</span>` : ""}</span>`;
   },
@@ -644,7 +645,8 @@ const EnteteFiche = {
       Auth.appel("/rest/v1/profils?id=eq." + uid + "&select=*").then(r => Array.isArray(r) ? r[0] || null : null),
       Auth.appel("/rest/v1/connexions?user_id=eq." + uid + "&select=user_id,nombre,derniere,premiere").then(r => ({ lue: Array.isArray(r), ligne: Array.isArray(r) ? r[0] || null : null })).catch(() => ({ lue: false, ligne: null })),
       Auth.appel(q + "&outil=in.(contact,intake,prefs,suivi_prospect,checkins)&select=outil,contenu,maj_le"),
-      Auth.appel(q + "&outil=not.in.(" + this.PAS_SAISIE.join(",") + ")&select=outil,maj_le")
+      /* les pages vues (activite) sont une activité pour un prospect seulement (comme Mes clients et l'ancienne tuile « Activité ») */
+      Auth.appel(q + "&outil=not.in.(" + this.PAS_SAISIE.filter(k => k !== "activite").join(",") + ")&select=outil,maj_le")
     ]);
     if (!pr) throw new Error("profil introuvable");
     const c = Object.create(null), majs = Object.create(null);
@@ -652,6 +654,7 @@ const EnteteFiche = {
     let dernier = null;
     (Array.isArray(dates) ? dates : []).forEach(l => {
       if (!l || typeof l.outil !== "string" || typeof l.maj_le !== "string") return;
+      if (l.outil === "activite" && pr.statut !== "prospect") return;
       const quand = l.outil === "checkins" ? Clients.dateSaisie("checkins", majs.checkins || l.maj_le, c.checkins) : l.maj_le;
       if (quand && (!dernier || quand > dernier)) dernier = quand;
     });

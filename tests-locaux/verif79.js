@@ -358,12 +358,14 @@ const flagOk = (f, texte) => !!f && f.present && f.nb === 1 && /\bflag\b/.test(f
     await delai(page, 1500);
     await page.evaluate(([id, nom]) => Clients.ouvrir(id, nom, "programme"), [THOMAS, "Thomas Démo"]);   // la fiche s'ouvre sur Mon programme (lecture eq.programme, pas figée)
     await page.waitForSelector("#vue .bandeau", { timeout: 8000 }); await attendre(page, 1500);
-    db.fige = ["in.("];
+    /* v106 (lot 3) : changement voulu — dans une fiche, « Son suivi » (#/suivi) ouvre « Bilans » (outilBilan), qui lit clé par clé
+       (Store.lire, eq.<clé>) : on fige la lecture du journal ; le « Pas de connexion » s'affiche dans #bilan-vue */
+    db.fige = ["eq.journal"];
     const e0 = ecrDonnees(db).length;
     await aller(page, "#/suivi");
-    await page.waitForSelector("#suivi-reg #page-hors-ligne", { timeout: 10000 }); await attendre(page, 600);
-    const f = await horsLigne(page, "#suivi-reg");
-    ok("coach, fiche de Thomas (Clients.ouvrir), Mon suivi avec la lecture groupée figée : « Pas de connexion : les données de ce client n'ont pas pu être chargées. » + « Réessayer » dans #suivi-reg (flag grave, role=alert), la fiche toujours ouverte (Store.idConsulte = Thomas), rien d'écrit",
+    await page.waitForSelector("#bilan-vue #page-hors-ligne", { timeout: 20000 }); await attendre(page, 600);
+    const f = await horsLigne(page, "#bilan-vue");
+    ok("coach, fiche de Thomas (Clients.ouvrir), Son suivi (v106 : Bilans) avec une lecture figée : « Pas de connexion : les données de ce client n'ont pas pu être chargées. » + « Réessayer » dans #bilan-vue (flag grave, role=alert), la fiche toujours ouverte (Store.idConsulte = Thomas), rien d'écrit",
       flagOk(f, TX.horsLigneCoach) && f.dansZone && f.consulte === THOMAS && ecrDonnees(db).length === e0, JSON.stringify([f, ecrDonnees(db).length - e0]));
   });
 

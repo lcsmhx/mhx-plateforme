@@ -540,20 +540,27 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     const lprosp = { absente: !(await page.$("#clients-prospects")) };
     await aller(page, "#/clients", 1800); await page.waitForSelector("#lc-clients", { timeout: 8000 }).catch(() => {});
     lprosp.absente = lprosp.absente && !!(await page.$("#lc-clients")) && !(await page.$("#clients-prospects"));
-    await aller(page, "#/tableau", 2200); await page.waitForSelector("#tb-t-prospects", { timeout: 8000 }).catch(() => {});
-    Object.assign(lprosp, await page.$eval("#tb-t-prospects", e => ({ val: e.querySelector(".t-val").textContent.replace(/\s+/g, " ").trim(), lbl: e.querySelector(".t-lbl").textContent.trim(), href: e.getAttribute("href") })).catch(() => ({ val: "", lbl: "", href: "" })));
+    /* v106 (lot 5) : changement voulu — plus de tuile Prospects sur « Aujourd'hui » : le nombre (3) est relu en tête de la page
+       Prospects (#lc-compte), le lien est l'entrée Prospects du menu (#/prospects) */
+    await aller(page, "#/prospects", 2200); await page.waitForSelector("#lc-compte", { timeout: 8000 }).catch(() => {});
+    Object.assign(lprosp, { val: ((await page.textContent("#lc-compte").catch(() => "")) || "").trim().split(" ")[0], lbl: "Prospects",
+      href: await page.$eval('#nav a[data-id="prospects"]', a => a.getAttribute("href")).catch(() => "") });
     const ficheProspect = async (uid, nom) => {
       await page.evaluate(([id, n]) => Clients.ouvrir(id, n, "accueil"), [uid, nom]);
       await page.waitForSelector("#fiche-decouverte", { timeout: 8000 }); await attendre(page, 700);
       /* v104 (point 4) : changement voulu — le nom n'est plus le h1 de la fiche (le h1 est le titre de page « Fiche », comme les
          autres onglets) : il est dans le h2 de l'identité (#fc-ident) */
-      const t = (await tuile(page, "Activité")) || { val: "?", sub: "?" }; t.h1 = "Fiche de " + (await page.$eval("#vue > .fiche-entete .fe-nom", e => e.title).catch(() => ""));   // v106 (lot 2) : le nom entier est la bulle du prénom, dans l'en-tête de la fiche   // v105 (point 2) : le nom n'est plus que dans le bandeau « Fiche de … »
+      /* v106 (lot 4) : changement voulu — plus de tuile « Activité » : sa dernière saisie est l'aide (bulle) du « vu il y a » de l'en-tête
+         (« Dernière saisie aujourd'hui » = l'ancien « auj. ») */
+      await page.waitForSelector("#fiche-entete [data-fe-vu] .fe-vu-t", { timeout: 8000 }).catch(() => {});
+      const aide = await page.$eval("#fiche-entete [data-fe-vu] .fe-vu-t", e => e.title).catch(() => "?");
+      const t = { val: aide === "Dernière saisie aujourd'hui" ? "auj." : aide, sub: aide ? "depuis sa dernière saisie" : "?" }; t.h1 = "Fiche de " + (await page.$eval("#vue > .fiche-entete .fe-nom", e => e.title).catch(() => ""));   // v106 (lot 2) : le nom entier est la bulle du prénom, dans l'en-tête de la fiche   // v105 (point 2) : le nom n'est plus que dans le bandeau « Fiche de … »
       await page.click("#sortir-fiche").catch(() => {}); await attendre(page, 800);
       await aller(page, "#/suivi-clients", 1800); await page.waitForSelector(`#tb-clients [data-ouvrir="${F.IDS.c3}"]`, { timeout: 8000 });   // v84 (ménage du bloc 3) : le tableau est dans le Suivi détaillé
       return t;
     };
     const tp = await ficheProspect(PIA, "Pia Active"), tr = await ficheProspect(REMI, "Rémi Muet"), te = await ficheProspect(EVA, "Eva Désinscrite");
-    ok("Mes clients (v71) : Pia, Rémi et Eva n'y sont plus ; v83 : plus de ligne « Les prospects sont dans Prospects → », tuile « Prospects » du tableau de bord à 3 (lien #/prospects) ; fiche de Pia (activite il y a 1 h) : tuile « Activité » « auj. » ; Eva (clé emails il y a 1 h, rien d'autre depuis 8 jours) comme Rémi (" + tr.val + "), pas « auj. »", absents.length === 3 && lprosp.absente && lprosp.val === "3" && lprosp.lbl === "Prospects" && lprosp.href === "#/prospects" /* v83 (bloc 3) */ && tp.h1.startsWith("Fiche de Pia Active") && tp.val === "auj." && tp.sub === "depuis sa dernière saisie" && tr.h1.startsWith("Fiche de Rémi Muet") && tr.val !== "auj." && tr.sub === "depuis sa dernière saisie" && te.h1.startsWith("Fiche de Eva Désinscrite") && te.val === tr.val && te.sub === tr.sub, JSON.stringify({ absents, lprosp, tp, tr, te }));
+    ok("Mes clients (v71) : Pia, Rémi et Eva n'y sont plus ; v83 : plus de ligne « Les prospects sont dans Prospects → », 3 prospects (v106 : en tête de la page Prospects, lien #/prospects) ; fiche de Pia (activite il y a 1 h) : dernière saisie « aujourd'hui » (v106 : bulle de l'en-tête) ; Eva (clé emails il y a 1 h, rien d'autre depuis 8 jours) comme Rémi (" + tr.val + "), pas « auj. »", absents.length === 3 && lprosp.absente && lprosp.val === "3" && lprosp.lbl === "Prospects" && lprosp.href === "#/prospects" /* v83 (bloc 3) */ && tp.h1.startsWith("Fiche de Pia Active") && tp.val === "auj." && tp.sub === "depuis sa dernière saisie" && tr.h1.startsWith("Fiche de Rémi Muet") && tr.val !== "auj." && tr.sub === "depuis sa dernière saisie" && te.h1.startsWith("Fiche de Eva Désinscrite") && te.val === tr.val && te.sub === tr.sub, JSON.stringify({ absents, lprosp, tp, tr, te }));
     await page.click(`#tb-clients [data-ouvrir="${F.IDS.c3}"]`); await attendre(page, 2600);
     /* v83 (bloc 3) : les alertes de la fiche sont en haut de l'onglet Suivi (#fc-suivi), sous l'en-tête .fc-tete
        (v104 (point 4) : changement voulu — sous le bandeau commun, le titre de page et l'identité #fc-ident ; sélecteur inchangé) */
@@ -571,9 +578,10 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     /* v53 (chantier 4) : plus de cartes « Qui nécessite ton attention » : Julien est dans « À traiter maintenant » */
     /* v104 (point 10) : changement voulu — un client inactif n'est plus une urgence : Julien est dans « À surveiller »
        (ul.tb-surveiller, sous « À traiter maintenant »), et plus dans la liste des urgences */
-    const cj = await page.$$eval("#tb-a-traiter ul.tb-surveiller li", l => l.map(e => e.textContent.replace(/\s+/g, " ").trim()).filter(t => t.includes("Julien Démo"))).catch(() => []);
-    const cu = await page.$$eval("#tb-a-traiter > ul.tb-at:not(.tb-surveiller) li", l => l.map(e => e.textContent).filter(t => t.includes("Julien Démo"))).catch(() => []);
-    ok("tableau de bord, « À surveiller » (v104 ; plus « À traiter maintenant ») : Julien « Inactif depuis 12 j »", cj.length === 1 && cj[0].includes("Inactif depuis 12 j") && cu.length === 0, JSON.stringify([cj, cu]));
+    /* v106 (lot 5) : changement voulu — « Aujourd'hui » : Julien dans le groupe « Clients inactifs » (#tb-g-inactifs), pas dans « Retours à lire » */
+    const cj = await page.$$eval("#tb-g-inactifs .tb-l", l => l.map(e => e.textContent.replace(/\s+/g, " ").trim()).filter(t => t.includes("Julien Démo"))).catch(() => []);
+    const cu = await page.$$eval("#tb-g-retours .tb-l", l => l.map(e => e.textContent).filter(t => t.includes("Julien Démo"))).catch(() => []);
+    ok("tableau de bord, « Clients inactifs » (v106 ; v104 : « À surveiller ») : Julien « Inactif depuis 12 j », pas dans « Retours à lire »", cj.length === 1 && cj[0].includes("Inactif depuis 12 j") && cu.length === 0, JSON.stringify([cj, cu]));
     /* v53 (chantier 4) : plus de température ni de raison « Aucune action depuis N jours » : les vérifications de la page
        Prospects (Pia TIÈDE ; Rémi et Eva FROID) et de la fiche de Pia (TIÈDE) sont retirées (3) ; l'activité de Pia compte
        toujours (v71 (D) : « auj. » sur la tuile « Activité » de sa fiche, ci-dessus ; avant : « aujourd'hui » dans Mes clients) */
@@ -740,10 +748,11 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     const db = base({ comptes: NV });
     const { page } = await contexte(b, coach, db);
     /* v105 : le tableau de bord ne lit plus coach_notifs : le badge de l'onglet Prospects y est le nombre d'urgences de sa tuile Prospects */
-    await page.goto(`http://localhost:${PORT}/#/tableau`); await page.waitForSelector("#tb-vue .tb-tiles", { timeout: 8000 }); await page.waitForFunction(() => document.querySelector('#nav a[data-id="prospects"] .nav-badge'), null, { timeout: 8000 }); await attendre(page, 500);
+    await page.goto(`http://localhost:${PORT}/#/tableau`); await page.waitForSelector("#tb-vue .tb-chiffres" /* v106 (lot 5) : les 4 chiffres */, { timeout: 8000 }); await page.waitForFunction(() => document.querySelector('#nav a[data-id="prospects"] .nav-badge'), null, { timeout: 8000 }); await attendre(page, 500);
     const n1 = luDirect(db, "coach_notifs");
-    const tU = String(await page.$eval("#tb-t-prospects .tb-badge", e => parseInt(e.textContent, 10)).catch(() => -1));
-    ok("tableau de bord : badge = les urgences de la tuile Prospects (v105), coach_notifs pas lu", tU !== "0" && tU !== "-1" && JSON.stringify(await badge(page)) === badge2(tU) && n1 === 0, "lectures " + n1 + " · " + JSON.stringify(await badge(page)));
+    /* v106 (lot 5) : changement voulu — plus de tuile Prospects : ses urgences = la somme des urgences des groupes de la colonne Prospects */
+    const tU = String(await page.$$eval("#tb-col-prospects .tb-groupe", l => l.length ? l.reduce((n, g) => n + parseInt(g.dataset.urgences || "0", 10), 0) : -1).catch(() => -1));
+    ok("tableau de bord : badge = les urgences des groupes de prospects (v105 ; v106 : plus de tuile), coach_notifs pas lu", tU !== "0" && tU !== "-1" && JSON.stringify(await badge(page)) === badge2(tU) && n1 === 0, "lectures " + n1 + " · " + JSON.stringify(await badge(page)));
     /* un autre appareil du coach marque tout comme vu */
     const vu = new Date().toISOString();
     db.donnees.push({ user_id: F.IDS.coach, outil: "coach_notifs", contenu: { vu }, maj_le: vu });
@@ -763,7 +772,7 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     const n0 = luDirect(db, "coach_notifs"), t0 = Date.now();
     await page.click("#pr-nouveautes [data-nv-vu]");
     await page.evaluate(() => { location.hash = "#/tableau"; });   // aussitôt, pendant le délai d'écriture (700 ms) puis son envoi
-    await page.waitForSelector("#tb-vue .tb-tiles", { timeout: 8000 }); await attendre(page, 400);
+    await page.waitForSelector("#tb-vue .tb-chiffres" /* v106 (lot 5) : les 4 chiffres */, { timeout: 8000 }); await attendre(page, 400);
     const bd = await badge(page), dejaEcrit = contenu(db, "coach_notifs", F.IDS.coach);
     /* v67 (audit du 01/10, D1) : Store.lire envoie d'abord l'écriture en attente de la clé : le tableau de bord relit la date
        APRÈS l'arrivée de l'écriture (avant : il la relisait avant, la base ne l'avait pas encore) */

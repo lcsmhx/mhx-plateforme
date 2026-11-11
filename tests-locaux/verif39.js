@@ -194,11 +194,6 @@ const coach = { id: F.IDS.coach, email: "c@e.fr", session: F.session(F.IDS.coach
 const attendre = (page, ms) => page.waitForTimeout(ms);
 const aller = async (page, h, ms) => { await page.evaluate(x => { location.hash = x; }, h); await attendre(page, ms || 1400); };
 const ligneCompte = (page, nom) => page.locator("#liste-clients .client-l", { hasText: nom });
-/* les tuiles du tableau de bord : libellé, valeur, sous-titre, lien */
-const lireTuiles = page => page.$$eval("#tb-vue .tb-tuile", l => l.map(t => {
-  const txt = sel => { const e = t.querySelector(sel); return e ? e.textContent.replace(/\s+/g, " ").trim() : ""; };
-  return { lbl: txt(".t-lbl"), val: txt(".t-val"), sub: txt(".t-sub"), href: t.getAttribute("href") };
-}));
 /* v81 — le parcours du prospect : l'écran affiché (data-etape de #pc), un bouton inactif (aria-disabled : touché, il ne fait
    rien), les erreurs de l'écran Compte, le texte d'un écran (sans le compte à rebours, « plus que N jours », qui dit
    « 14 jours » le 1er novembre et « 7 jours » le 8) et la présence d'un champ Nom, rangés par écran dans vus */
@@ -348,8 +343,12 @@ const messageServeur = async page => { await page.waitForFunction(() => { const 
     const { c, page } = await contexte(b, coach, db);
     await page.goto(`http://localhost:${PORT}/`); await attendre(page, 1800);
     /* comportement inchangé : sans statut, aucun prospect (la tuile est cherchée par le début de son libellé) */
-    const tSans = (await lireTuiles(page)).find(x => /^Prospects/.test(x.lbl)) || {};
-    ok("sans colonne statut : tuile des prospects = 0", tSans.val === "0", JSON.stringify(tSans));
+    /* v106 (lot 5) : changement voulu — plus de tuile Prospects : « Aujourd'hui » range les prospects dans leur colonne (Nouveaux
+       prospects, Bilans réservés, À relancer) ; sans statut, aucune ligne dans cette colonne et « Nouveaux » à 0 */
+    await page.waitForSelector("#tb-col-prospects", { timeout: 8000 }).catch(() => {});
+    const tSans = await page.evaluate(() => ({ col: !!document.getElementById("tb-col-prospects"), lignes: document.querySelectorAll("#tb-col-prospects .tb-l").length,
+      nouveaux: ((document.querySelector("#tb-c-nouveaux .t-val") || {}).textContent || "").trim() }));
+    ok("sans colonne statut : aucun prospect sur « Aujourd'hui » (colonne Prospects vide, « Nouveaux » 0 ; v106 : plus de tuile)", tSans.col && tSans.lignes === 0 && tSans.nouveaux === "0", JSON.stringify(tSans));
     await aller(page, "#/comptes", 1800);   // v84 (ménage du bloc 3) : les comptes (#liste-clients) sont dans « Comptes »
     await page.waitForSelector("#liste-clients .client-l", { timeout: 8000 }).catch(() => {});
     ok("sans colonne statut : ni pastille ni bouton de statut", !(await page.textContent("#liste-clients")).includes("Passer client") && !(await page.textContent("#liste-clients")).includes("Repasser prospect"));

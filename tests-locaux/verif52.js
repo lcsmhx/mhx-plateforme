@@ -332,7 +332,8 @@ const badge2 = n => JSON.stringify([n, n]);
 const urgN = page => page.evaluate(() => (outilProspects.lignes || []).filter(l => l && l.p && l.p.statut === "prospect" && !l.archive).filter(l => outilTableau.urgentProspect(Commercial.analyseLigne(l))).length).catch(() => -1);
 /* les décors de ces vérifications ont tous des urgences : 0 (ou -1, calcul impossible) = attendu non vérifiable, la vérification échoue */
 const badgeU = async page => { const u = await urgN(page); return u > 0 ? badge2(u > 99 ? "99+" : String(u)) : "aucune urgence : attendu non vérifiable"; };
-const tuileU = page => page.$eval("#tb-t-prospects .tb-badge", e => parseInt(e.textContent, 10)).catch(() => -1);
+/* v106 (lot 5) : plus de tuile Prospects : ses urgences = la somme des urgences des groupes de la colonne Prospects d'« Aujourd'hui » */
+const tuileU = page => page.$$eval("#tb-col-prospects .tb-groupe", l => l.length ? l.reduce((n, g) => n + parseInt(g.dataset.urgences || "0", 10), 0) : -1).catch(() => -1);
 const ecr = (db, outil, uid) => db.ecritures.filter(e => e.outil === outil && (!uid || e.user_id === uid));
 const contenu = (db, outil, uid) => (db.donnees.find(x => x.user_id === uid && x.outil === outil) || {}).contenu;
 /* la clé k fait-elle partie de ce qu'une lecture de « donnees » renvoie ? filtre outil = eq.k, in.(…,k,…),
@@ -617,7 +618,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     ok("« Tout marquer comme vu » : clé du coach coach_notifs = { vu : maintenant } (une écriture)", ecr(db, "coach_notifs", F.IDS.coach).length === 1 && typeof N.vu === "string" && Math.abs(Date.parse(N.vu) - t0) < 10000 && db.ecritures.length === 1, JSON.stringify(N));
     ok("… panneau « Rien de nouveau chez tes prospects depuis ta dernière visite (" + fr(N.vu || 0) + " " + hm(N.vu || 0) + "). », badge des urgences inchangé (v105)", (await texte(page, "#pr-nouveautes")).includes("Rien de nouveau chez tes prospects depuis ta dernière visite (" + fr(N.vu || 0) + " " + hm(N.vu || 0) + ").") && JSON.stringify(await badge(page)) === await badgeU(page), (await texte(page, "#pr-nouveautes")) + " · " + JSON.stringify(await badge(page)));
     await aller(page, "#/tableau", 2200);
-    ok("tableau de bord ensuite : badge = les urgences de la tuile Prospects (v105)", !!(await page.$("#tb-vue .tb-tiles")) && (await tuileU(page)) > 0 && JSON.stringify(await badge(page)) === badge2(String(await tuileU(page))), JSON.stringify(await badge(page)));
+    ok("tableau de bord ensuite : badge = les urgences des groupes de prospects (v105 ; v106 : plus de tuile)", !!(await page.$("#tb-vue .tb-chiffres")) && (await tuileU(page)) > 0 && JSON.stringify(await badge(page)) === badge2(String(await tuileU(page))), JSON.stringify(await badge(page)));
     /* un nouveau prospect s'inscrit après la visite */
     await attendre(page, 1100);
     db.profils.push({ id: NINA, prenom: "Nina", nom: "Nouvelle", role: "client", statut: "prospect", cree_le: new Date().toISOString() });
@@ -983,7 +984,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
   await bloc("H. 1 000 prospects", async () => {
     const db = base({ nb: 1000 });
     const { page } = await contexte(b, coach, db);
-    await page.goto(`http://localhost:${PORT}/#/tableau`); await page.waitForSelector("#tb-vue .tb-tiles", { timeout: 15000 }); await attendre(page, 400);   // v53 : 2 tuiles, sans panneau
+    await page.goto(`http://localhost:${PORT}/#/tableau`); await page.waitForSelector("#tb-vue .tb-chiffres", { timeout: 15000 }); await attendre(page, 400);   // v53 : 2 tuiles, sans panneau ; v106 (lot 5) : les 4 chiffres
     /* v84 (ménage du bloc 3) : les Nouveautés restent sur la page Prospects (sous la liste #lc-prospects) ; les cartes sont dans
        « Suivi commercial ». Chaque page est mesurée depuis son changement d'adresse jusqu'à son contenu complet (Prospects : liste
        ET Nouveautés ; Suivi commercial : cartes), et construite côté app (rendreListe, rendre) : chacune < 2 000 ms */
@@ -1053,7 +1054,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     ok("mobile : fiche d'Inès (réponses, chronologie, lien de réservation) sans débordement", !!(await page.$("#dc-lien")) && !(await deborde(page)), String(await page.evaluate(() => document.documentElement.scrollWidth)));
     await page.screenshot({ path: path.join(OUT, "fiche-mobile.png"), fullPage: true });
     await aller(page, "#/tableau", 2400);
-    ok("mobile : tableau de bord (2 tuiles, À traiter maintenant), sans débordement", !!(await page.$("#tb-vue .tb-tiles")) && !(await deborde(page)));   // v53 : sans panneau des Nouveautés
+    ok("mobile : tableau de bord (v106 : 4 chiffres, liste groupée), sans débordement", !!(await page.$("#tb-vue .tb-chiffres")) && !!(await page.$("#tb-a-traiter")) && !(await deborde(page)));   // v53 : sans panneau des Nouveautés
   });
   await bloc("I. mobile, Profil du prospect", async () => {
     const db = base();
@@ -1263,7 +1264,62 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     const t104 = mf.tete104 || {}, h2F = mf.v104 && !mfM.v104 && f.h2[0] === mf.commun.h1 ? f.h2.slice(1) : f.h2;
     const tete104 = mf.v104 && mf.bandeauHaut && JSON.stringify(t104.onglets) === '["Aperçu:ici","Entraînement","Nutrition","Suivi","Profil"]' && t104.sortir === 1 && !t104.croix && (v105 ? t104.titre === null && t104.eyebrow === null && (await f.page.$eval("#acc-vue > h1.sr-only", e => e.textContent).catch(() => "")) === "Fiche" : t104.titre === "Fiche" && t104.eyebrow === "Thomas Démo — Fiche");
     const h2M = v105 && fM.h2[0] === "Thomas Démo" ? fM.h2.slice(1) : fM.h2;
-    ok("fiche de Thomas vue par le coach : sections identiques à main (" + f.h2.join(", ") + ") ; v83 : chaque morceau d'avant identique à main à sa nouvelle place (bandeau dans l'onglet Suivi, nom, phrase, alertes, de « En bref » à « Le reste »), en-tête de la fiche (nom seul, « Client », programme, « Préparer le call », onglets) ; v72 : Téléphone « — » et Source « — », présents (onglet Compte) ; v77 : formation sur 48 étapes ; v84 : ouverte depuis « Suivi détaillé », « Revenir au suivi détaillé » (référence : « Revenir à mes clients » tant qu'elle l'ouvre depuis #/clients) ; v104 : liens d'avant dans les pages des onglets, plus de tuile Régularité ni de liens « → », « Modifier » des objectifs, bilan à la 3e personne", f.t.length > 300 && mf.neuf && tete104 && comF === comM && (v105 || mf.commun.h1 === "Thomas Démo") && !!mf.commun.bandeau && mf.commun.bandeau.startsWith("Fiche de Thomas Démo") && mf.commun.reste.startsWith("En bref") && mf.commun.reste.includes("Le reste") && mf.commun.tel === "—" && mf.commun.source === "—" && mf.telLbl === "Téléphone" && mf.sourceLbl === "Source" && mf.role === "Client" && !!mf.prog && fM.t.includes("Nom" + mf.prog) && mf.call === "#/client/" + F.IDS.c1 + "/bilan" && JSON.stringify(mf.onglets) === '[]' && JSON.stringify(h2F) === JSON.stringify(h2M) && retours.page && retours.ref, "retours " + JSON.stringify(retours) + " · " + f.t.length + " / " + fM.t.length + " · " + JSON.stringify(f.h2) + " vs " + JSON.stringify(fM.h2) + " · " + JSON.stringify({ neuf: mf.neuf, bandeauHaut: mf.bandeauHaut, telLbl: mf.telLbl, sourceLbl: mf.sourceLbl, role: mf.role, prog: mf.prog, call: mf.call, onglets: mf.onglets, t104, h2F }) + " · " + (() => { const x = comF, y = comM; let k = 0; while (k < x.length && x[k] === y[k]) k++; return JSON.stringify(x.slice(Math.max(0, k - 40), k + 60)) + " ≠ " + JSON.stringify(y.slice(Math.max(0, k - 40), k + 60)); })());
+    /* v106 (lots 2 à 4) : changement voulu — la fiche est réorganisée (en-tête sur une ligne, 4 onglets, Aperçu sans doublons :
+       plus de « En bref » ni des cartes Profil, Objectifs, Programme, Nutrition, Poids, Bilan, Le reste, qui résumaient les onglets).
+       Tant que la référence a l'ancienne fiche, on vérifie qu'AUCUNE INFORMATION n'est perdue : chaque valeur des cartes d'avant
+       (« libellé : valeur » et tuiles) se retrouve, telle quelle, dans une page des 4 onglets de la nouvelle fiche ; la phrase du
+       haut et les alertes (sauf « à remplir / à envoyer », dites par la ligne Questionnaire / Programme / Diète) sont identiques ;
+       téléphone et source « — » (Son compte) ; l'en-tête (prénom, « Client », 4 onglets, un seul « Revenir au suivi détaillé »).
+       Une fois la v106 sur main : la même fiche des deux côtés, comparée strictement (branche d'avant). */
+    const V106 = !!(await f.page.$("#vue > .fiche-entete .fe-nom")), REF106 = !!(await fM.page.$("#vue > .fiche-entete .fe-nom"));
+    let ok106 = null, info106 = "";
+    if (V106 && !REF106){
+      const n = t => String(t || "").replace(/[\u00a0\u202f]/g, " ").replace(/\s+/g, " ").trim();
+      /* les valeurs des cartes d'avant (référence), de « En bref » à « Le reste » */
+      const vals = await fM.page.evaluate(() => {
+        const n = t => String(t || "").replace(/[\u00a0\u202f]/g, " ").replace(/\s+/g, " ").trim(), v = document.getElementById("vue"), out = [];
+        const eb = Array.from(v.querySelectorAll("h2")).find(h => n(h.textContent) === "En bref");
+        for (let x = eb && eb.closest("section"); x; x = x.nextElementSibling){
+          if (x.id === "fiche-commercial") continue;
+          x.querySelectorAll("ul.fiche-l > li").forEach(li => { const k = li.querySelector("span"), b = li.querySelector("b"); if (k && b) out.push([n(k.textContent), n(b.textContent)]); });
+          x.querySelectorAll(".objectif .texte").forEach(e => out.push(["Objectif", n(e.textContent)]));
+        }
+        return out;
+      });
+      /* tout le texte de la nouvelle fiche : chaque page de chaque onglet (thèmes repliés ouverts), puis retour à l'Aperçu */
+      let tout = "";
+      for (const o of await f.page.$$eval("#vue > .fiche-entete .fiche-onglets a", l => l.map(a => a.getAttribute("href")))){
+        await f.page.evaluate(h => { location.hash = h; }, o); await attendre(f.page, 1500);
+        const pages = await f.page.$$eval("#vue > .fiche-entete .fiche-pages a", l => l.map(a => a.getAttribute("href"))).catch(() => []);
+        for (const p of (pages.length ? pages : [o])){
+          await f.page.evaluate(h => { location.hash = h; }, p); await attendre(f.page, 1500);
+          tout += " " + await f.page.evaluate(() => { document.querySelectorAll("#vue details").forEach(d => { d.open = true; }); const v = document.getElementById("vue");
+            return v.innerText + " " + Array.from(v.querySelectorAll("input, select, textarea")).map(x => x.tagName === "SELECT" ? (x.selectedOptions[0] || {}).textContent || "" : x.value).join(" "); });   // les réponses du questionnaire sont des champs
+        }
+      }
+      await f.page.evaluate(id => { location.hash = "#/client/" + id + "/accueil"; }, F.IDS.c1); await attendre(f.page, 2000);
+      tout = n(tout);
+      /* une valeur vide ou « — » ne dit rien ; « 0 » ou « aucun » non plus (rien à perdre) */
+      const vides = new Set(["", "—", "0", "aucun", "pas commencée"]);
+      /* une valeur est retrouvée si elle est là telle quelle, ou si chacun de ses nombres (dates comprises) est là : la mise en forme
+         change d'une page à l'autre (« 32 ans » dans la carte, « 32 » dans le champ du questionnaire ; « Cycle 01 · semaine 4 / 4 ») */
+      const toutN = tout.replace(/\u2212/g, "-");
+      const nombres = v => (v.replace(/\u2212/g, "-").match(/-?\d+(?:[.,]\d+)?(?:\/\d+\/\d+)?/g) || []);
+      const retrouvee = v => toutN.includes(v) || (nombres(v).length > 0 && nombres(v).every(x => toutN.includes(x)) && (v.match(/Séance [A-Z]/) || [""]).every(x => toutN.includes(x)));
+      const manquantes = vals.filter(([k, v]) => !vides.has(v) && !retrouvee(v)).map(([k, v]) => k + " : " + v);
+      const MANQUE = ["Questionnaire à remplir", "Programme à envoyer", "Diète à envoyer"];
+      const alRef = (mfM.commun.alertes || "");
+      const alAtt = MANQUE.reduce((t, m) => t.split(m).join(""), alRef).trim();
+      const al = n(await f.page.$eval("#fc-suivi > .attention-alertes", e => e.textContent).catch(() => ""));
+      const lede = n(await f.page.$eval("#fc-suivi > .fc-lede", e => e.textContent).catch(() => ""));
+      const tete = await f.page.evaluate(() => ({ prenom: (document.querySelector("#vue > .fiche-entete .fe-nom") || {}).textContent, statut: ((document.querySelector("#vue > .fiche-entete .fe-statut") || {}).textContent || "").trim(),
+        onglets: Array.from(document.querySelectorAll("#vue > .fiche-entete .fiche-onglets a")).map(a => a.textContent.trim() + (a.getAttribute("aria-current") ? ":ici" : "")),
+        sortir: document.querySelectorAll("#sortir-fiche").length, retour: ((document.querySelector("#sortir-fiche .sr-only") || {}).textContent || "").trim() }));
+      ok106 = vals.length > 20 && manquantes.length === 0 && lede === mfM.commun.lede && al === alAtt.replace(/\s+/g, " ") && mf.commun.tel === "—" && mf.commun.source === "—" && mf.telLbl === "Téléphone" && mf.sourceLbl === "Source"
+        && tete.prenom === "Thomas" && tete.statut === "Client" && JSON.stringify(tete.onglets) === '["Aperçu:ici","Programme","Nutrition","Suivi"]' && tete.sortir === 1 && tete.retour === "Revenir à la vue tableau" /* v106 (lot 1) : « Suivi détaillé » s'appelle « Vue tableau » */ && retours.ref;
+      info106 = JSON.stringify({ n: vals.length, manquantes, lede, refLede: mfM.commun.lede, al, alAtt, tel: mf.commun.tel, source: mf.commun.source, tete });
+    }
+    ok("fiche de Thomas vue par le coach : sections identiques à main (" + f.h2.join(", ") + ") ; v106 : aucune valeur des cartes d'avant perdue (chacune dans une page des 4 onglets), même phrase et mêmes alertes, nouvel en-tête ; v83 : chaque morceau d'avant identique à main à sa nouvelle place (bandeau dans l'onglet Suivi, nom, phrase, alertes, de « En bref » à « Le reste »), en-tête de la fiche (nom seul, « Client », programme, « Préparer le call », onglets) ; v72 : Téléphone « — » et Source « — », présents (onglet Compte) ; v77 : formation sur 48 étapes ; v84 : ouverte depuis « Suivi détaillé », « Revenir au suivi détaillé » (référence : « Revenir à mes clients » tant qu'elle l'ouvre depuis #/clients) ; v104 : liens d'avant dans les pages des onglets, plus de tuile Régularité ni de liens « → », « Modifier » des objectifs, bilan à la 3e personne", ok106 !== null ? ok106 : f.t.length > 300 && mf.neuf && tete104 && comF === comM && (v105 || mf.commun.h1 === "Thomas Démo") && !!mf.commun.bandeau && mf.commun.bandeau.startsWith("Fiche de Thomas Démo") && mf.commun.reste.startsWith("En bref") && mf.commun.reste.includes("Le reste") && mf.commun.tel === "—" && mf.commun.source === "—" && mf.telLbl === "Téléphone" && mf.sourceLbl === "Source" && mf.role === "Client" && !!mf.prog && fM.t.includes("Nom" + mf.prog) && mf.call === "#/client/" + F.IDS.c1 + "/bilan" && JSON.stringify(mf.onglets) === '[]' && JSON.stringify(h2F) === JSON.stringify(h2M) && retours.page && retours.ref, (ok106 !== null ? "v106 " + info106 + " · " : "") + "retours " + JSON.stringify(retours) + " · " + f.t.length + " / " + fM.t.length + " · " + JSON.stringify(f.h2) + " vs " + JSON.stringify(fM.h2) + " · " + JSON.stringify({ neuf: mf.neuf, bandeauHaut: mf.bandeauHaut, telLbl: mf.telLbl, sourceLbl: mf.sourceLbl, role: mf.role, prog: mf.prog, call: mf.call, onglets: mf.onglets, t104, h2F }) + " · " + (() => { const x = comF, y = comM; let k = 0; while (k < x.length && x[k] === y[k]) k++; return JSON.stringify(x.slice(Math.max(0, k - 40), k + 60)) + " ≠ " + JSON.stringify(y.slice(Math.max(0, k - 40), k + 60)); })());
     ok("fiche de Thomas : ni score, ni réponses du questionnaire court, ni chronologie, ni lien de réservation, aucune écriture", !(await f.page.$("#fiche-score, #fiche-reponses, #fiche-chrono, #fiche-actions, #fiche-decouverte, #fiche-prospect, #dc-lien")) && f.db.ecritures.length === 0);
     await f.c.close(); await fM.c.close();
     /* v53 (chantier 4) : Mes clients gagne 5 colonnes (retour de la semaine, note, smiley, dernière visite, jours actifs) :
@@ -1275,7 +1331,9 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     /* v84 (ménage du bloc 3) : la ligne du tableau est dans « Suivi détaillé » (#/suivi-clients) ; la référence, là où elle l'a (ADR_REF) */
     const [m1, m2] = await avecNouveautesFichier(async () => [await vueDe(coach, `http://localhost:${PORT}/#/suivi-clients`), await vueDe(coach, `http://localhost:${PORT}/?ref=main` + ADR_REF)]);
     const l1 = await ligne(m1.page), l2 = await ligne(m2.page);
-    ok("Mes clients : ligne de Thomas identique à main (colonnes d'avant ; v84 : dans « Suivi détaillé »)", l1.length > 10 && l1 === l2, l1 + " | " + l2);
+    /* v106 (lot 3) : changement voulu — le bouton « Préparer le call » de la ligne s'appelle « Bilans » (le nom de la page où il mène) */
+    const l2b = l2.split(" Préparer le call ").join(" Bilans ");
+    ok("Mes clients : ligne de Thomas identique à main (colonnes d'avant ; v84 : dans « Suivi détaillé » ; v106 : « Bilans » au lieu de « Préparer le call »)", l1.length > 10 && l1 === l2b, l1 + " | " + l2);
   });
 
   await bloc("J. coach : aucune activité suivie", async () => {

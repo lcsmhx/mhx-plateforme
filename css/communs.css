@@ -815,3 +815,15 @@ details.q-theme[open] > summary{margin-bottom:14px}
    la réponse au bilan encore plus serrée sur téléphone */
 details.q-theme > summary .fc-repli-p{display:inline-flex;gap:6px;flex-wrap:wrap;margin-left:auto;margin-right:8px}
 @media (max-width:720px){ #bilan-retours .fb-editeur textarea{min-height:56px} #bilan-retours .checkin-rep{margin:0 0 4px} #bilan-retours .fbd-avis-coach{margin-top:6px} }
+
+/* v106 (lot 5, test QA) : sous 1024 px (une colonne), l'ordre de la mission — Retours à lire, Nouveaux prospects, Bilans réservés,
+   À relancer, puis Clients inactifs (les urgences d'abord) ; les titres « Clients » / « Prospects » ne servent qu'aux 2 colonnes.
+   Un chiffre touché amène son groupe sous la barre du haut, pas dessous. */
+.tb-groupe,#tb-a-traiter{scroll-margin-top:84px}
+@media (max-width:1023px){
+  .tb-colonnes{display:flex;flex-direction:column;gap:0}
+  .tb-colonnes > .tb-col{display:contents}
+  .tb-colonnes .tb-col-t{display:none}
+  #tb-g-retours{order:1} #tb-g-nouveaux{order:2} #tb-g-reserves{order:3} #tb-g-relancer{order:4} #tb-g-inactifs{order:5}
+}
+@media (min-width:1024px){ .tb-groupe,#tb-a-traiter{scroll-margin-top:16px} }

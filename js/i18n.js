@@ -1885,3 +1885,5 @@ Object.assign(I18N.en, { "Retours à lire": "Check-ins to read", "Clients inacti
   "Première visite enregistrée : les inscrits des 7 derniers jours.": "First recorded visit: sign-ups from the last 7 days.",
   "Nouveaux": "New", "Inactifs": "Inactive", "Bilan réservé": "Call booked" });
 Object.assign(I18N.en, { "Inscrits depuis ta dernière visite (le {d}) ou depuis moins de 48 h.": "Signed up since your last visit ({d}) or in the last 48 h." });
+Object.assign(I18N.en, { "Questionnaire": "Questionnaire" });   // v106 (lot 4) : la ligne « Questionnaire · Tout voir » de l'Aperçu
+Object.assign(I18N.en, { "Repas remplacés ce mois": "Meals swapped this month" });   // v106 (lot 4) : ligne de l'Aperçu

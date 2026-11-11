@@ -215,21 +215,27 @@ const ecr = (db, outil, uid) => db.ecritures.filter(e => e.table === "donnees" &
 const resume = db => JSON.stringify(db.ecritures.map(e => (e.table === "donnees" ? e.outil : e.table) + ":" + e.m));
 const ligne0 = (db, uid, outil) => db.donnees.find(d => d.user_id === uid && d.outil === outil) || null;
 const visites = db => ecr(db, "coach_visite");
-/* le panneau tel qu'affiché */
+/* le panneau tel qu'affiché.
+   v106 (lot 5) : changement voulu — « Nouveaux depuis ta dernière visite » est devenu le groupe « Nouveaux prospects » d'« Aujourd'hui »
+   (#tb-g-nouveaux, colonne Prospects) : sous l'en-tête et les 4 chiffres ; chaque ligne ouvre la fiche (toute la ligne), avec Appeler
+   et WhatsApp (message prêt) ; un inscrit de moins de 48 h y est aussi (« Inscrit il y a N h : DM de bienvenue ») ; au-delà de 5
+   lignes, « Tout voir (N) » déplie le groupe sur place. La visite du coach (seuil, écritures) ne change pas. */
 const panneau = page => page.evaluate(() => {
-  const s = document.getElementById("tb-nouveaux"); if (!s) return null;
-  /* v83 (bloc 3) : ordre du tableau de bord = en-tête, tuiles, « À traiter maintenant » (#tb-a-traiter), puis ce panneau */
-  const head = document.querySelector("#tb-vue header.masthead"), tuiles = document.querySelector("#tb-vue .tb-tiles"), aTraiter = document.getElementById("tb-a-traiter");
-  return { h2: (s.querySelector("h2") || {}).textContent, note: ((s.querySelector("p.note") || {}).textContent || "").replace(/[  ]/g, " ").trim(),
-    vide: ((s.querySelector("p.empty") || {}).textContent || "").trim(),
-    lignes: Array.from(s.querySelectorAll(".tb-liste li")).map(li => ({ prenom: (li.querySelector("b") || {}).textContent, quand: ((li.querySelector("small") || {}).textContent || "").trim(),
-      tel: ((li.querySelector(".tb-nv-tel") || {}).textContent || "").replace(/\s+/g, " ").trim(), liens: Array.from(li.querySelectorAll("a")).map(a => a.getAttribute("href")) })),
-    autres: ((s.querySelector("[data-tb-tous]") || {}).textContent || "").trim(), autresTexte: ((s.querySelector("[data-tb-tous]") || { parentNode: {} }).parentNode.textContent || "").replace(/\s+/g, " ").trim(),
-    ordre: !!(head && tuiles && aTraiter && (head.compareDocumentPosition(tuiles) & Node.DOCUMENT_POSITION_FOLLOWING) && (tuiles.compareDocumentPosition(aTraiter) & Node.DOCUMENT_POSITION_FOLLOWING) && (aTraiter.compareDocumentPosition(s) & Node.DOCUMENT_POSITION_FOLLOWING)),
-    nTuiles: document.querySelectorAll("#tb-vue .tb-tuile").length, ouvrir: s.querySelectorAll("[data-fiche], button").length, img: !!s.querySelector("img"),
+  const s = document.getElementById("tb-g-nouveaux"); if (!s) return null;
+  const head = document.querySelector("#tb-vue header.masthead"), chiffres = document.querySelector("#tb-vue .tb-chiffres"), aTraiter = document.getElementById("tb-a-traiter");
+  const lignes = Array.from(s.querySelectorAll(".tb-liste li"));
+  return { h2: ((s.querySelector("h3") || {}).firstChild || {}).textContent ? s.querySelector("h3").firstChild.textContent.trim() : null, note: ((s.querySelector("p.note.tb-g-note") || {}).textContent || "").replace(/[\u00a0\u202f]/g, " ").trim(),
+    vide: ((s.querySelector("p.tb-rien") || {}).textContent || "").trim(), n: parseInt((s.querySelector(".tb-n") || {}).textContent, 10),
+    lignes: lignes.map(li => ({ prenom: ((li.querySelector("b") || {}).textContent || "").split(" ")[0], nom: (li.querySelector("b") || {}).textContent, quand: ((li.querySelector("small") || {}).textContent || "").trim(),
+      liens: Array.from(li.querySelectorAll("a")).map(a => a.getAttribute("href")), fiche: !!li.querySelector("button[data-fiche]") })),
+    autres: ((s.querySelector("[data-tb-deplier]") || {}).textContent || "").trim(),
+    ordre: !!(head && chiffres && aTraiter && (head.compareDocumentPosition(chiffres) & Node.DOCUMENT_POSITION_FOLLOWING) && (chiffres.compareDocumentPosition(aTraiter) & Node.DOCUMENT_POSITION_FOLLOWING) && aTraiter.contains(s)),
+    nChiffres: document.querySelectorAll("#tb-vue .tb-chiffre").length, ouvrir: lignes.filter(li => li.querySelector("button[data-fiche]")).length, img: !!s.querySelector("img"),
     sw: document.documentElement.scrollWidth, iw: window.innerWidth };
 });
-const PREMIERE = "Première visite enregistrée : les inscrits des 7 derniers jours.", VIDE = "Aucun nouvel inscrit depuis ta dernière visite.", H2 = "Nouveaux depuis ta dernière visite";
+const PREMIERE = "Première visite enregistrée : les inscrits des 7 derniers jours.", VIDE = "Aucun nouvel inscrit.", H2 = "Nouveaux prospects";
+const DEPUIS = le => "Inscrits depuis ta dernière visite (le " + quand(le) + ") ou depuis moins de 48 h.";   // v106 (lot 5)
+const DM = h => "Inscrit il y a " + h + " h : DM de bienvenue";   // v106 (lot 5) : un inscrit de moins de 48 h
 
 (async () => {
   await new Promise((r, k) => { server.once("error", e => k(new Error(e && e.code === "EADDRINUSE" ? "port " + PORT + " déjà pris (une autre suite tourne ?) : VERIF81_PORT=9971 node verif81.js ../index.html" : String(e)))); server.listen(PORT, r); });
@@ -241,41 +247,42 @@ const PREMIERE = "Première visite enregistrée : les inscrits des 7 derniers jo
     const db = base();
     const { page } = await contexte(b, db, { qui: COACH, viewport: LARGE, horloge: true });
     const t1 = Date.now();
-    await page.goto(URL0); await pret(page); await page.waitForSelector("#tb-nouveaux"); await attendre(page, 600);
+    await page.goto(URL0); await pret(page); await page.waitForSelector("#tb-g-nouveaux"); await attendre(page, 600);
     const p1 = await panneau(page), V1 = visites(db);
     /* v83 (bloc 3) : le panneau est maintenant sous l'en-tête, les tuiles et « À traiter maintenant » ; 3 tuiles (Clients, À traiter, Prospects) au lieu de 2 */
-    ok("E1 : première visite : « Nouveaux depuis ta dernière visite » sur le tableau de bord (après l'en-tête, les tuiles et « À traiter maintenant », trois tuiles toujours, aucun bouton « Ouvrir »), « " + PREMIERE + " »",
-      !!p1 && p1.h2 === H2 && p1.note === PREMIERE && p1.ordre && p1.nTuiles === 3 && p1.ouvrir === 0, JSON.stringify(p1));
-    ok("E1 : les prospects inscrits depuis moins de 7 jours, du plus récent au plus ancien (Zoé il y a 2 h, Hugo il y a 3 j ; pas Ana, 10 j ; jamais un client) : prénom, « inscrit le jj/mm à hh:mm », numéro + Appeler / WhatsApp (Zoé) ou « — » (Hugo)",
-      !!p1 && JSON.stringify(p1.lignes.map(l => l.prenom)) === '["Zoé","Hugo"]' && p1.lignes[0].quand === "inscrit le " + quand(avant(2 * H)) && p1.lignes[1].quand === "inscrit le " + quand(avant(3 * J))
-        && p1.lignes[0].tel === TEL_ZOE + " Appeler WhatsApp" && p1.lignes[0].liens.length === 2 && p1.lignes[0].liens[0] === "tel:" + TEL_ZOE && p1.lignes[0].liens[1].startsWith("https://wa.me/33639980011?text=Salut%20Zo%C3%A9")   /* v106 (lot 2) : WhatsApp = le message prêt */ && p1.lignes[1].tel === "—" && !p1.lignes[1].liens.length,
+    ok("E1 : première visite : « Nouveaux prospects » sur « Aujourd'hui » (après l'en-tête et les 4 chiffres, dans la liste groupée ; chaque ligne ouvre la fiche), « " + PREMIERE + " » (v106)",
+      !!p1 && p1.h2 === H2 && p1.note === PREMIERE && p1.ordre && p1.nChiffres === 4 && p1.ouvrir === p1.lignes.length && p1.lignes.length > 0, JSON.stringify(p1));
+    ok("E1 : les prospects inscrits depuis moins de 7 jours, du plus récent au plus ancien (Zoé il y a 2 h, Hugo il y a 3 j ; pas Ana, 10 j ; jamais un client) : nom, « Inscrit il y a 2 h : DM de bienvenue » (Zoé, moins de 48 h) ou « Inscrit le jj/mm à hh:mm » (Hugo), Appeler et WhatsApp = message prêt (Zoé) ; rien sans numéro (Hugo) (v106)",
+      !!p1 && JSON.stringify(p1.lignes.map(l => l.prenom)) === '["Zoé","Hugo"]' && p1.lignes[0].quand === DM(2) && p1.lignes[1].quand === "Inscrit le " + quand(avant(3 * J))
+        && p1.lignes[0].liens.length === 2 && p1.lignes[0].liens[0] === "tel:" + TEL_ZOE && p1.lignes[0].liens[1].startsWith("https://wa.me/33639980011?text=Salut%20Zo%C3%A9") && !p1.lignes[1].liens.length,
       JSON.stringify(p1 && p1.lignes));
     const c1 = V1[0] && V1[0].contenu;
     ok("E1 : UNE écriture, du coach chez lui-même (clé coach_visite), exactement { le: maintenant, jusqua: l'inscription la plus récente (Zoé), avant: null, avant_le: null }",
       V1.length === 1 && V1[0].user_id === COACH.id && JSON.stringify(Object.keys(c1)) === '["le","jusqua","avant","avant_le"]' && isoPres(c1.le, t1) && c1.jusqua === avant(2 * H) && c1.avant === null && c1.avant_le === null
         && db.ecritures.length === 1,
       JSON.stringify(V1) + " · " + resume(db));
-    await page.reload(); await pret(page); await page.waitForSelector("#tb-nouveaux"); await attendre(page, 500);
+    await page.reload(); await pret(page); await page.waitForSelector("#tb-g-nouveaux"); await attendre(page, 500);
     const p2_ = await panneau(page);
     ok("E2 : rechargement dans les 30 min : la même visite, la même liste, aucune écriture", !!p2_ && p2_.note === PREMIERE && JSON.stringify(p2_.lignes.map(l => l.prenom)) === '["Zoé","Hugo"]' && visites(db).length === 1 && db.ecritures.length === 1,
       JSON.stringify({ p2_, ecr: resume(db) }));
-    await page.clock.fastForward(31 * MIN); await page.reload(); await pret(page); await page.waitForSelector("#tb-nouveaux"); await attendre(page, 500);
+    await page.clock.fastForward(31 * MIN); await page.reload(); await pret(page); await page.waitForSelector("#tb-g-nouveaux"); await attendre(page, 500);
     const t3 = await page.evaluate(() => Date.now());
     const p3 = await panneau(page), V3 = visites(db);
-    ok("E3 : 31 min plus tard : nouvelle visite, « Ta dernière visite : le jj/mm à hh:mm. », aucun inscrit depuis : « " + VIDE + " »",
-      !!p3 && p3.note === "Ta dernière visite : le " + quand(c1.le) + "." && !p3.lignes.length && p3.vide === VIDE, JSON.stringify(p3));
+    /* v106 (lot 5) : Zoé (inscrite il y a moins de 48 h) reste, comme urgence ; Hugo (3 j, avant la visite précédente) n'y est plus */
+    ok("E3 : 31 min plus tard : nouvelle visite, « Inscrits depuis ta dernière visite (le jj/mm à hh:mm) ou depuis moins de 48 h. » ; plus Hugo (inscrit avant), Zoé seulement (moins de 48 h)",
+      !!p3 && p3.note === DEPUIS(c1.le) && JSON.stringify(p3.lignes.map(l => l.prenom)) === '["Zoé"]', JSON.stringify(p3));
     const c3 = V3[1] && V3[1].contenu;
     ok("E3 : … une écriture de plus : { le: maintenant, jusqua: la même inscription la plus récente, avant: l'ancien jusqua, avant_le: l'ancien le }",
       V3.length === 2 && isoPres(c3.le, t3) && c3.jusqua === avant(2 * H) && c3.avant === c1.jusqua && c3.avant_le === c1.le, JSON.stringify(V3.map(x => x.contenu)));
     db.profils.push({ id: PID(4), prenom: "Inès", nom: "Moreau", role: "client", statut: "prospect", cree_le: new Date(t3 - MIN).toISOString() });
-    await page.reload(); await pret(page); await page.waitForSelector("#tb-nouveaux"); await attendre(page, 500);
+    await page.reload(); await pret(page); await page.waitForSelector("#tb-g-nouveaux"); await attendre(page, 500);
     const p4 = await panneau(page);
-    ok("E3 : un prospect inscrit pendant la visite apparaît au rechargement (Inès), sans nouvelle écriture", !!p4 && JSON.stringify(p4.lignes.map(l => l.prenom)) === '["Inès"]' && visites(db).length === 2, JSON.stringify({ p4, ecr: resume(db) }));
+    ok("E3 : un prospect inscrit pendant la visite apparaît au rechargement (Inès, avant Zoé), sans nouvelle écriture", !!p4 && JSON.stringify(p4.lignes.map(l => l.prenom)) === '["Inès","Zoé"]' && visites(db).length === 2, JSON.stringify({ p4, ecr: resume(db) }));
   });
   await bloc("E1b. date d'inscription future", async () => {
     const db = base({ profils: [{ id: PID(9), prenom: "Futur", nom: "Proche", role: "client", statut: "prospect", cree_le: new Date(Date.now() + 3 * MIN).toISOString() }] });
     const { page } = await contexte(b, db, { qui: COACH, viewport: LARGE });
-    await page.goto(URL0); await pret(page); await page.waitForSelector("#tb-nouveaux"); await attendre(page, 600);
+    await page.goto(URL0); await pret(page); await page.waitForSelector("#tb-g-nouveaux"); await attendre(page, 600);
     const V = visites(db);
     ok("E1 : une date d'inscription dans le futur (profil modifiable par son compte) ne devient jamais le seuil de la visite suivante : jusqua = l'inscription passée la plus récente (Zoé)",
       V.length === 1 && V[0].contenu.jusqua === avant(2 * H), JSON.stringify(V.map(x => x.contenu)));
@@ -283,13 +290,13 @@ const PREMIERE = "Première visite enregistrée : les inscrits des 7 derniers jo
   await bloc("E4. visite récente, clé piégée", async () => {
     { const db = base({ visite: true });
       const { page } = await contexte(b, db, { qui: COACH, viewport: LARGE });
-      await page.goto(URL0); await pret(page); await page.waitForSelector("#tb-nouveaux"); await attendre(page, 800);
+      await page.goto(URL0); await pret(page); await page.waitForSelector("#tb-g-nouveaux"); await attendre(page, 800);
       const p = await panneau(page), V = ligne0(db, COACH.id, "coach_visite").contenu;
-      ok("E4 : visite récente (données fictives, au lancement de la suite) : même visite, aucune écriture ; seuil = sa valeur « avant » : aucun nouvel inscrit (Zoé est plus ancienne)",
-        !!p && p.note === "Ta dernière visite : le " + quand(V.avant_le) + "." && p.vide === VIDE && db.ecritures.length === 0, JSON.stringify({ p, ecr: resume(db) })); }
+      ok("E4 : visite récente (données fictives, au lancement de la suite) : même visite, aucune écriture ; seuil = sa valeur « avant » : Hugo n'y est pas ; Zoé seulement (moins de 48 h, v106)",
+        !!p && p.note === DEPUIS(V.avant_le) && JSON.stringify(p.lignes.map(l => l.prenom)) === '["Zoé"]' && db.ecritures.length === 0, JSON.stringify({ p, ecr: resume(db) })); }
     { const db = base({ extra: [{ user_id: COACH.id, outil: "coach_visite", contenu: { le: "<img src=x onerror=alert(1)>", jusqua: 3, avant: "demain" }, maj_le: avant(J) }] });
       const { page } = await contexte(b, db, { qui: COACH, viewport: LARGE });
-      await page.goto(URL0); await pret(page); await page.waitForSelector("#tb-nouveaux"); await attendre(page, 600);
+      await page.goto(URL0); await pret(page); await page.waitForSelector("#tb-g-nouveaux"); await attendre(page, 600);
       const p = await panneau(page), V = visites(db);
       ok("E4 : clé de visite piégée ou illisible : ignorée (première visite, aucune balise injectée), puis remplacée par une visite propre",
         !!p && p.note === PREMIERE && !p.img && V.length === 1 && Object.values(V[0].contenu).every(x => x === null || /^\d{4}-\d{2}-\d{2}T/.test(x)), JSON.stringify({ p, V })); }
@@ -298,20 +305,18 @@ const PREMIERE = "Première visite enregistrée : les inscrits des 7 derniers jo
     const plus = Array.from({ length: 13 }, (_, k) => ({ id: PID(20 + k), prenom: k === 0 ? "<img src=x onerror=alert(1)>" : "Prospect" + k, nom: "Test", role: "client", statut: "prospect", cree_le: avant((k + 1) * 10 * MIN) }));
     const db = base({ profils: plus });
     const { page } = await contexte(b, db, { qui: COACH, viewport: PETIT });
-    await page.goto(URL0); await pret(page); await page.waitForSelector("#tb-nouveaux"); await attendre(page, 600);
+    await page.goto(URL0); await pret(page); await page.waitForSelector("#tb-g-nouveaux"); await attendre(page, 600);
     const p = await panneau(page);
-    ok("E5 : 15 nouveaux : 10 lignes, puis « Et 5 autres : Prospects → » ; prénom piégé affiché comme du texte ; 320 px sans défilement horizontal",
-      !!p && p.lignes.length === 10 && p.autresTexte === "Et 5 autres : Prospects →" && p.lignes[0].prenom === "<img src=x onerror=alert(1)>" && !p.img && p.sw <= p.iw, JSON.stringify(p));
-    /* v84 (ménage du bloc 3) : la page Prospects n'a plus que la liste (#lc-prospects, filtre [data-lc-filtre]) et les Nouveautés ;
-       les filtres détaillés [data-filtre], le tri #pr-tri et les cartes .sc-carte sont dans « Suivi commercial » (menu Plus).
-       « Prospects → » met la liste sur « Tous » (recherche vidée) et garde « Tous » / « inscription » pour le Suivi commercial :
-       on lit la liste sur #/prospects, puis (sans recharger) le filtre et le tri du Suivi commercial à sa nouvelle place */
-    await page.click("#tb-nouveaux [data-tb-tous]"); await pret(page); await page.waitForSelector("#lc-prospects .lc-ligne"); await attendre(page, 400);
-    const f = await page.evaluate(() => ({ hash: location.hash, liste: ((document.querySelector('#lc-prospects [data-lc-filtre][aria-pressed="true"]') || {}).dataset || {}).lcFiltre, q: (document.getElementById("lc-q") || {}).value }));
-    await page.evaluate(() => { location.hash = "#/suivi-commercial"; }); await pret(page); await page.waitForSelector(".sc-carte"); await attendre(page, 400);
-    Object.assign(f, await page.evaluate(() => ({ hash2: location.hash, filtre: (document.querySelector('[data-filtre][aria-pressed="true"]') || {}).dataset, tri: (document.getElementById("pr-tri") || {}).value })));
-    ok("E5 : « Prospects → » ouvre Prospects sur « Tous », triés par inscription récente (v84 : la liste sur « Tous », sans recherche ; le Suivi commercial sur « Tous », tri « inscription »)",
-      f.hash === "#/prospects" && f.liste === "tous" && f.q === "" && f.hash2 === "#/suivi-commercial" && f.filtre && f.filtre.filtre === "tous" && f.tri === "inscription", JSON.stringify(f));
+    /* v106 (lot 5) : changement voulu — plus de plafond à 10 lignes ni de « Prospects → » : le groupe montre 5 lignes et se déplie sur
+       place (« Tout voir (15) »), puis se replie (« Replier ») */
+    ok("E5 : 15 nouveaux : 5 lignes, puis « Tout voir (15) » ; prénom piégé affiché comme du texte ; 320 px sans défilement horizontal",
+      !!p && p.n === 15 && p.lignes.length === 5 && p.autres === "Tout voir (15)" && p.lignes[0].nom.startsWith("<img src=x onerror=alert(1)>") && !p.img && p.sw <= p.iw, JSON.stringify(p));
+    await page.click("#tb-g-nouveaux [data-tb-deplier]"); await attendre(page, 400);
+    const pd = await panneau(page), ex = await page.$eval("#tb-g-nouveaux [data-tb-deplier]", b => b.getAttribute("aria-expanded"));
+    await page.click("#tb-g-nouveaux [data-tb-deplier]"); await attendre(page, 400);
+    const pr = await panneau(page);
+    ok("E5 : « Tout voir (15) » déplie le groupe sur place (15 lignes, aria-expanded true, « Replier »), « Replier » le replie (5 lignes), sans défilement horizontal",
+      !!pd && pd.lignes.length === 15 && ex === "true" && pd.autres === "Replier" && !pd.img && pd.sw <= pd.iw && !!pr && pr.lignes.length === 5 && pr.autres === "Tout voir (15)", JSON.stringify({ n: pd && pd.lignes.length, ex, a: pd && pd.autres, r: pr && pr.lignes.length }));
   });
   await bloc("E6. autres pages, tri des Prospects", async () => {
     const db = base();
@@ -355,11 +360,12 @@ const PREMIERE = "Première visite enregistrée : les inscrits des 7 derniers jo
     const db = base({ profils: pros, extra });
     const zoe = db.donnees.find(d => d.user_id === ZOE && d.outil === "contact"); zoe.contenu.ref = "insta";
     const { page } = await contexte(b, db, { qui: COACH, viewport: LARGE });
-    await page.goto(URL0); await pret(page); await page.waitForSelector("#tb-sources");
+    /* v106 (lot 5) : changement voulu — « Inscrits par source » est passé du tableau de bord à la Vue détaillée (#/suivi-commercial) */
+    await page.goto(URL0); await pret(page); await page.evaluate(() => { location.hash = "#/suivi-commercial"; }); await pret(page); await page.waitForSelector("#tb-sources");
     const s = await page.evaluate(() => { const S = document.getElementById("tb-sources");
       return { h2: S.querySelector("h2").textContent, lignes: Array.from(S.querySelectorAll("tbody tr")).map(tr => Array.from(tr.querySelectorAll("td")).map(td => td.textContent.trim())),
         total: Array.from(S.querySelectorAll("tfoot td")).map(td => td.textContent.trim()) }; });
-    ok("F : tableau de bord « Inscrits par source » (30 derniers jours, hors comptes de test) : insta 1 (Zoé ; pas Paul, 40 j, ni le compte de test), salon 1 (Léon, passé client), tiktok 1 (Ana), — 1 (Hugo, sans code) ; total 4",
+    ok("F : Vue détaillée (v106 ; avant : tableau de bord) « Inscrits par source » (30 derniers jours, hors comptes de test) : insta 1 (Zoé ; pas Paul, 40 j, ni le compte de test), salon 1 (Léon, passé client), tiktok 1 (Ana), — 1 (Hugo, sans code) ; total 4",
       s.h2 === "Inscrits par source" && JSON.stringify(s.lignes) === JSON.stringify([["insta", "1"], ["salon", "1"], ["tiktok", "1"], ["—", "1"]]) && JSON.stringify(s.total) === '["Total","4"]',
       JSON.stringify(s));
     /* v84 (ménage du bloc 3) : les cartes (.sc-carte) et leurs filtres sont dans « Suivi commercial » (#/suivi-commercial) */
@@ -377,7 +383,7 @@ const PREMIERE = "Première visite enregistrée : les inscrits des 7 derniers jo
     ok("F : fiche (onglet Compte, ligne Source) : « Source : insta » (Zoé) ; « Source : — » (Thomas, sans code)", f1 === "Source : insta" && f2 === "Source : —", JSON.stringify({ f1, f2 }));
     const d0 = base({ profils: [] }); d0.profils = d0.profils.filter(p => p.statut !== "prospect"); d0.donnees = d0.donnees.filter(d => d.outil !== "contact");
     const { page: p0 } = await contexte(b, d0, { qui: COACH, viewport: PETIT });
-    await p0.goto(URL0); await pret(p0); await p0.waitForSelector("#tb-sources");
+    await p0.goto(URL0); await pret(p0); await p0.evaluate(() => { location.hash = "#/suivi-commercial"; }); await pret(p0); await p0.waitForSelector("#tb-sources");   // v106 (lot 5)
     const v = await p0.evaluate(() => ({ t: ((document.querySelector("#tb-sources .empty") || {}).textContent || "").trim(), sw: document.documentElement.scrollWidth, iw: innerWidth }));
     ok("F : aucun inscrit sur 30 jours : « Aucun inscrit sur les 30 derniers jours. » ; 320 px sans défilement horizontal", v.t === "Aucun inscrit sur les 30 derniers jours." && v.sw <= v.iw, JSON.stringify(v));
   });

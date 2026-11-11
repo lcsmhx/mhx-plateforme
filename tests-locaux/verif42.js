@@ -114,7 +114,8 @@ const PAGES_FICHE = ["accueil", "bilan", "suivi", "profil", "programme", "journa
     E.ici = "coach tableau"; await page.goto(`http://localhost:${PORT}/#/tableau`); await attendre(page, 2200);
     const tb = await page.textContent("#vue");
     /* v53 (chantier 4) : 2 tuiles (Clients, Prospects) ; Thomas (bilan à lire) et Julien (inactif) sont dans « À traiter maintenant » */
-    ok("coach : le tableau de bord s'affiche et montre les clients sains (Thomas, Julien)", !!(await page.$("#tb-t-clients")) && /Thomas|Julien/.test(tb), tb.slice(0, 160));
+    /* v106 (lot 5) : changement voulu — plus de tuile Clients : la colonne Clients d'« Aujourd'hui » (#tb-col-clients) */
+    ok("coach : le tableau de bord s'affiche et montre les clients sains (Thomas, Julien)", !!(await page.$("#tb-col-clients")) && /Thomas|Julien/.test(tb), tb.slice(0, 160));
     E.ici = "coach mes clients"; await page.evaluate(() => { location.hash = "#/clients"; }); await attendre(page, 2200);
     /* v84 (ménage du bloc 3) : ce que la page Clients dessinait sous sa liste est dans « Comptes » et « Suivi détaillé » : le coach
        les ouvre aussi (aucune erreur JS attendue), et le tableau #tb-clients est lu dans « Suivi détaillé » */

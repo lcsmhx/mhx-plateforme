@@ -892,7 +892,7 @@ const champTel = (page, id) => page.evaluate(id => {
         !!dern && dern.ville === "Lyon 3e" && dern.whatsapp === ANCIEN, JSON.stringify({ n: W.length, dern })); }
     { const n0 = db.ecritures.length;
       const { page } = await contexte(b, db, { qui: COACH, viewport: LARGE });
-      await page.goto(URL0 + "#/client/" + THOMAS.id + "/profil"); await pret(page); await page.waitForSelector("#q-ville"); await attendre(page, 800);
+      await page.goto(URL0 + "#/client/" + THOMAS.id + "/profil"); await pret(page); await page.waitForSelector("#q-ville", { state: "attached" }); await attendre(page, 800);   // v106 (lot 4) : les thèmes du questionnaire sont repliés dans la fiche
       const v = await page.evaluate(() => { const e = document.getElementById("q-whatsapp"), l = document.querySelector('label[for="q-whatsapp"]');
         return { lecture: e && e.dataset.lecture, t: e && e.textContent.trim(), libelle: l && l.textContent.trim() }; });
       ok("v73 C : coach, fiche de Thomas (son questionnaire, en lecture) : l'ancienne réponse « Numéro WhatsApp (avec indicatif) » toujours lisible ; rien d'écrit",

@@ -265,6 +265,10 @@ for (const [k, nom] of [["nutrition", "Ses repas"], ["repas", "Ses repas"], ["bi
    « Sa formation » s'appellent « Courbes » et « Formation » (le nom de leur lien) */
 AVANT.suivi = AVANT.bilan = ["bilan", ["Bilans", "Ses bilans hebdomadaires et ton feedback", "Ses objectifs du mois"], ["bilan-vue", "bilan-retours", "suivi-obj", "obj-0", "obj-st-0", "obj-1"]];
 for (const [k, nom] of [["mensurations", "Courbes"], ["progression", "Courbes"], ["formation", "Formation"]]) AVANT[k] = [AVANT[k][0], [nom].concat(AVANT[k][1].slice(1)), AVANT[k][2]];
+/* v106 (lot 4) : changement voulu — l'Aperçu sans doublons : plus de « En bref » ni de cartes « Profil »… (les onglets les montrent),
+   plus de bouton « Préparer le call » (fc-call) ; les cartes : dernier retour (fc-retour, « Lire »), poids (fc-poids), régularité, état */
+AVANT.accueil = ["accueil", ["Aperçu"], ["acc-vue", "fc-ident", "fc-suivi", "fc-retour", "fc-lire", "fc-poids"]];
+AVANT["accueil/compte"] = ["accueil", ["Son compte"], ["acc-vue", "fc-ident", "fc-suivi", "fc-retour", "fc-lire", "fc-poids"]];
 const C2 = F.IDS.c2, TEL = "+33639980001";
 const ONGLET = { accueil: "Aperçu", "accueil/compte": "Aperçu", programme: "Programme", journal: "Programme", nutrition: "Nutrition", repas: "Nutrition", calculateur: "Nutrition", complements: "Nutrition", suivi: "Suivi", bilan: "Suivi", mensurations: "Suivi", progression: "Suivi", formation: "Suivi", profil: "Aperçu" };
 const avecTel = db => db.donnees.push({ user_id: C1, outil: "contact", contenu: { telephone: TEL }, maj_le: avant(J) });

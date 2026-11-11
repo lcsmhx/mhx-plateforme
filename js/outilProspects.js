@@ -139,7 +139,7 @@ const outilProspects = {
         ${tuile("Absents", cmpt("absent"), "30 derniers jours")}
       </div></section>
       <section class="panel" id="pr-mesure"></section>
-      ${/* v106 (lot 5) : « Inscrits par source » descend du tableau de bord à la Vue détaillée */ typeof outilTableau !== "undefined" ? outilTableau.sourcesHTML(outilTableau.sources(this.lignes)) : ""}
+      ${/* v106 (lot 5) : « Inscrits par source » descend du tableau de bord à la Vue détaillée */ typeof outilTableau !== "undefined" ? outilTableau.sourcesHTML(outilTableau.sources(this.lignes.filter(l => !l.archive)))   /* sans les comptes archivés, comme le tableau de bord avant */ : ""}
       <section class="panel">
         <div class="seg sc-filtres" role="group" aria-label="Filtrer">${[["a_traiter", "À traiter"], ["issues", "Appel fait"], ["tous", "Tous"]].map(f => `<button type="button" data-filtre="${f[0]}" aria-pressed="${this.filtre === f[0]}">${esc(f[1])} <span class="meta">${tous.filter(x => this.statutOk(x, f[0])).length}</span></button>`).join("")}</div>
         <div class="pr-outils">

@@ -95,11 +95,12 @@ const flagsDe = (page) => page.$$eval("#alertes-clients .flag", l => l.map(x => 
        carte, le nom du bouton « Ouvrir ». « Sans nom » reste vérifié dans Mes clients (ci-dessous) et, sur « À traiter
        maintenant », par verif58 (bloc A). */
     ok("tableau de bord : son identifiant n'apparaît nulle part", !tb.includes(MARQUE));
-    ok("tableau de bord : 5 clients (les deux comptes ajoutés comptent)", (await texte(page, "#tb-t-clients .t-val")) === "5", tb.slice(0, 120));
+    /* v106 (lot 5) : changement voulu — plus de tuile Clients sur « Aujourd'hui » : le nombre de clients est relu en tête de Mes clients (ci-dessous) */
 
     /* --- Mes clients --- */
     E.ici = "Mes clients"; await page.evaluate(() => { location.hash = "#/clients"; }); await attendre(page, 2200);
     const vueListe = await texte(page, "#vue");
+    ok("Mes clients : 5 clients (les deux comptes ajoutés comptent ; v106 : avant, tuile du tableau de bord)", (await texte(page, "#lc-compte")) === "5 clients", vueListe.slice(0, 120));
     /* v84 (ménage du bloc 3) : le panneau Comptes, qui était dans le #vue de #/clients, est dans « Comptes » (#/comptes) : tout
        son #vue (en-tête, note, rangées) est lu aussi pour l'absence d'identifiant */
     E.ici = "Comptes (vue)"; await page.evaluate(() => { location.hash = "#/comptes"; }); await page.waitForSelector(`#liste-clients .client-l`).catch(() => {}); await attendre(page, 500);
@@ -162,7 +163,7 @@ const flagsDe = (page) => page.$$eval("#alertes-clients .flag", l => l.map(x => 
     const bandeau = await page.$eval("#vue > .fiche-entete .fe-nom", e => e.title);
     ok("fiche : l'en-tête dit « Sans nom » (ni « ce client », ni l'identifiant)", bandeau === "Sans nom", bandeau);
     const fiche = await texte(page, "#vue");
-    ok("fiche : aucun identifiant affiché, activité « jamais rien saisi »", !fiche.includes(MARQUE) && fiche.includes("jamais rien saisi"), fiche.slice(0, 200));
+    ok("fiche : aucun identifiant affiché, activité « jamais rien saisi »", !fiche.includes(MARQUE) && /jamais rien saisi/i.test(fiche) /* v106 (lot 4) : la tuile « Activité » est devenue l'alerte « Jamais rien saisi » */, fiche.slice(0, 200));
     await page.evaluate(() => { location.hash = "#/programme"; }); await attendre(page, 1600);
     /* v106 (lot 2) : plus de fil d'Ariane répété sous l'en-tête : le nom est celui de l'en-tête de la fiche, sur chaque page */
     const eb1 = await texte(page, "#vue > .fiche-entete .fe-nom");

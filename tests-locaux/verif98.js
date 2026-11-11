@@ -248,6 +248,11 @@ for (const a of ["#/tableau", "#/accueil", "#/journal", "#/home"]) if (AVANT[a] 
    D vérifie aussi #q-nom) */
 for (const a of ["#/tableau", "#/accueil", "#/journal", "#/home"]) if (AVANT[a] && AVANT[a][0] === "tableau") AVANT[a][2] = ["Aujourd'hui", "À traiter maintenant", "Nouveaux depuis ta dernière visite"];
 AVANT["#/suivi-clients"][2] = ["Vue tableau", "Suivi de mes clients"];
+/* v106 (lot 5) : changement voulu — « Aujourd'hui » : 4 chiffres-boutons (#tb-c-*) puis la liste groupée (#tb-a-traiter : colonnes
+   Clients et Prospects) ; même page, même outil */
+for (const a of ["#/tableau", "#/accueil", "#/journal", "#/home"]) if (AVANT[a] && AVANT[a][0] === "tableau"){ AVANT[a][2] = ["Aujourd'hui", "Clients", "Prospects"]; AVANT[a][3] = ["tb-vue", "tb-c-traiter", "tb-c-retours", "tb-c-nouveaux", "tb-c-inactifs", "tb-a-traiter"]; }
+/* v106 (lot 5) : changement voulu — « Inscrits par source » est descendu du tableau de bord dans la Vue détaillée (#/suivi-commercial) */
+AVANT["#/suivi-commercial"][2] = ["Suivi commercial", "Mesure", "Inscrits par source"];
 AVANT["#/atelier"] = ["mes-programmes", "#/mes-programmes", ["Bibliothèque", "Le modèle"], ["mp-zone", "at-vue", "at-nom", "at-lieu", "at-seances", "at-niveau"]];
 AVANT["#/bibliotheque"] = ["mes-programmes", "#/mes-programmes/bibliotheque", ["Bibliothèque", "Mes entraînements", "Mes journées types"], ["mp-zone", "bib-entrainements", "bib-repas"]];
 AVANT["#/catalogue"][2] = ["Bibliothèque", "Ce que contient ton catalogue", "Recharger depuis le dépôt"];
