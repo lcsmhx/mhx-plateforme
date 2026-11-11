@@ -1,14 +1,14 @@
 /* ------------------------------------------------------------------
    OUTIL — Le bilan du mois (les 28 derniers jours).
    Cote client : ce qu'il a fait et ce qui a bouge, noir sur blanc.
-   Cote coach : la meme chose, plus les points a aborder pendant le call,
-   tires des donnees. Cet outil ne fait que lire : il n'ecrit rien.
+   Cote coach (v106 : la vue « Bilans » de la fiche) : ses bilans et la reponse du coach (feedbacks), les objectifs du
+   mois (ObjectifsCoach), les points a aborder pendant le call, tires des donnees.
    ------------------------------------------------------------------ */
 const outilBilan = {
   id: "bilan",
   cle: null,
   nom: "Mon bilan",
-  masque_nav: true,      // v35 : vit dans « Mon suivi » ; le coach y accede par « Préparer le call »
+  masque_nav: true,      // v35 : vit dans « Mon suivi » ; le coach y accède par « Bilans » (v106 ; avant « Préparer le call »)
   icone: "📊",
   titre: "Ton bilan du mois",
   accroche: "Tes quatre dernières semaines en un coup d'œil : ce que tu as fait, ce qui a bougé et ce qu'on travaille ensuite.",
@@ -170,12 +170,18 @@ const outilBilan = {
 
   async init(){
     const zone = $("bilan-vue"); if (!zone) return;
-    const coach = Auth.estCoach() && !!Store.idConsulte;
+    const coach = Auth.estCoach() && !!Store.idConsulte, uid0 = Store.idConsulte;
+    /* v106 (lot 3, relecture) : ses feedbacks sont lus avec le reste (la zone de réponse s'affiche d'emblée, la page ne saute pas) */
+    let F = null, lu = true;
     const [programme, journal, repas, repas_suivi, mens, objectifs_faits, intake, checkins] = await Promise.all([
       Store.lire("programme", {}), Store.lire("journal", { seances: [] }), Store.lire("repas", {}),
       Store.lire("repas_suivi", {}), Store.lire("mens", {}), Store.lire("objectifs_faits", {}), Store.lire("intake", {}),
-      Store.lire(Checkin.cle, Checkin.vide())
+      Store.lire(Checkin.cle, Checkin.vide()),
+      coach ? CleCoach.lire(uid0, Feedback.cle).then(x => { F = x; }, () => { lu = false; }) : null
     ]);
+    /* v106 (lot 3, relecture) : la page ou la fiche a changé pendant la lecture : rien n'est posé (jamais les objectifs d'un client
+       dans l'éditeur d'un autre) */
+    if (!zone.isConnected || Store.idConsulte !== uid0) return;
     /* lecture ratee : « Pas de connexion » + Reessayer, pas un bilan vide ni des « points à aborder » tires de donnees non lues */
     if ([programme, journal, repas, repas_suivi, mens, objectifs_faits, intake, checkins].some(v => Store.nonLus.has(v))){ pageHorsLigne(zone); return; }
     /* v106 (lot 3) — « BILANS », la vue du coach dans l'onglet Suivi de la fiche (avant : « Son suivi » et « Préparer le call ») :
@@ -187,7 +193,7 @@ const outilBilan = {
     zone.innerHTML = (coach ? `<div id="bilan-retours"></div><div id="suivi-obj"></div>` : "") + this.vue(b, coach, (intake && intake.objectif) || "", coach);
     let vider = null;
     if (coach){
-      const uid = Store.idConsulte, zo = $("suivi-obj");
+      const uid = uid0, zo = zone.querySelector("#suivi-obj");
       if (zo && uid){ vider = ObjectifsCoach.monter("suivi-obj", P, uid, objectifs_faits); const sec = zo.querySelector("section.panel"); if (sec) sec.classList.add("obj-coach"); }
       await Regularite.monterClient("suivi-reg", P, journal, { repas, repas_suivi, mens, objectifs_faits, sansObjectifs: true });
     }
@@ -195,9 +201,7 @@ const outilBilan = {
        v38 — et, sous chaque bilan, le feedback du coach (cle feedbacks). La
        semaine en cours a aussi son editeur tant qu'elle n'a pas de bilan. */
     if (coach){
-      const uid = Store.idConsulte;
-      let F = null, lu = true;
-      try { F = await CleCoach.lire(uid, Feedback.cle); } catch(e){ lu = false; }
+      const uid = uid0;
       if (!zone.isConnected || Store.idConsulte !== uid) return vider;   // on a change de page entre-temps
       /* v53 (chantier 3) : la regle de CE client (bilan du vendredi, ou feedback du dimanche) ; les entrees se lisent
          selon leur format (Checkin.reponsesHTML), les smileys du client sous chacune, un 😞 non traite en evidence

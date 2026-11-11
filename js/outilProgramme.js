@@ -515,7 +515,7 @@ const Regularite = {
       const obj = (P.objectifs && (P.objectifs.liste || []).some(Boolean)) ? P.objectifs : null;
       if (obj && OF.mois !== obj.mois){ OF.mois = obj.mois; OF.faits = []; }
       const nbObj = obj ? obj.liste.filter(Boolean).length : 0, nbFaits = obj ? obj.liste.filter((t, i) => t && this.statutObjectif(P, OF, i) === "atteint").length : 0;
-      /* v104 (point 5) : pre.sansObjectifs (le coach, onglet Suivi) : pas de panneau à cocher, le coach a le sien (ObjectifsCoach) */
+      /* v104 (point 5) : pre.sansObjectifs (le coach, onglet Suivi › Bilans, v106) : pas de panneau à cocher, le coach a le sien (ObjectifsCoach) */
       z.innerHTML = `<section class="panel"><h2>${esc(trad("Ta régularité"))}</h2>
         <div class="tiles">
           <div class="tile"><div class="t-lbl">Score de régularité</div><div class="t-val readout ${this.niveau(r.score)}">${r.score == null ? "—" : r.score}<small>/100</small></div><div class="t-sub">remis à zéro chaque lundi</div></div>
@@ -641,7 +641,7 @@ const ObjectifsCoach = {
   publiant: null,   // v104 (relecture) : le compte dont le programme est en train d'être publié (page Programme)
   /* un objectif tapé dans Suivi juste avant part tout de suite (sortie de la page, « Publier les changements ») */
   async vider(){ if (this._vider) await this._vider(); },
-  /* lecture seule (Programme, Préparer le call) : les objectifs et leur statut, puis « Modifier » (onglet Suivi) */
+  /* lecture seule (Programme, Aperçu) : les objectifs et leur statut, puis « Modifier » (v106 : vers « Bilans », onglet Suivi) */
   lectureHTML(P, OF){
     const obj = (P && P.objectifs && (P.objectifs.liste || []).some(Boolean)) ? P.objectifs : null;
     const lien = `<p class="note" style="margin:10px 0 0"><a class="link-a" data-obj-modifier href="${esc(lienOutil("bilan"))}">${esc(trad("Modifier"))}</a></p>`;
@@ -1575,7 +1575,7 @@ const outilProgramme = {
       $$("[data-identique-pli]", zone).forEach(m => { const x = zone.querySelector('[data-identique="' + m.dataset.identiquePli + '"]'); m.hidden = !x || x.hidden; });   // v104 (point 7) : le « ≈ » de la ligne compacte
       return r;
     };
-    /* v104 (point 5) : les 3 objectifs du mois se modifient dans l'onglet Suivi (ObjectifsCoach) ; ici, lecture seule et
+    /* v104 (point 5) : les 3 objectifs du mois se modifient dans l'onglet Suivi › Bilans (ObjectifsCoach, v106) ; ici, lecture seule et
        « Modifier ». Une copie d'objectifs encore en route (tapée dans Suivi juste avant) : BrouillonProg.publier attend. */
 
     const majEtat = () => {

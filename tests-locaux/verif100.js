@@ -239,7 +239,7 @@ const AVANT_CLIENT = {"#/accueil": {"courant": "accueil", "hash": "#/accueil", "
 /* v104 (point 5) : changement voulu — la page Suivi a une zone de plus, #suivi-obj (les objectifs du mois que le coach modifie
    dans une fiche), entre la régularité et le bilan du mois ; chez le client elle reste vide (il garde ses cases ailleurs) :
    même page, mêmes titres, un id de plus avant suivi-bilan */
-AVANT_CLIENT["#/suivi"].ids = ["suivi-fb-haut", "suivi-checkin", "suivi-fb-bas", "suivi-reg", "suivi-obj", "suivi-bilan"];
+/* v106 (lot 3) : les objectifs du coach sont dans « Bilans » (outilBilan) : la page Suivi du client retrouve ses zones d'avant la v104 */
 const C3 = F.IDS.c3;
 const releve = page => page.evaluate(() => {
   const v = document.getElementById("vue") || document.body;

@@ -233,7 +233,7 @@ const outilAccueil = {
     /* v104 (point 4) : le WhatsApp du bandeau (le même sur les 5 onglets) ouvre une conversation vide ; celui-ci ouvre le message
        prêt du prospect : il s'appelle « Message WhatsApp prêt », pour ne pas porter le même texte que celui du bandeau */
     /* v106 (lot 2) : le statut, WhatsApp (message prêt) et Appeler sont dans l'en-tête de la fiche (EnteteFiche, navigation.js) ;
-       ici reste « Préparer le call » d'un client */
+       ici reste « Bilans » d'un client (v106 : avant « Préparer le call ») */
     const principal = prospectF ? "" : `<a class="btn ghost fc-principal" id="fc-call" href="${esc(lienOutil("bilan"))}">${esc(trad("Bilans"))}</a>`;   // v106 (lot 3) : le nom de la page où il mène ; discret (un seul doré plein)
     /* v99 : #/client/<id>/accueil/compte (Profil › Son compte) ouvre l'onglet Compte */
     /* v99 (relecture) : le panneau suit l'adresse seulement (…/accueil = Suivi, sous l'onglet Aperçu ; …/accueil/compte = Compte,

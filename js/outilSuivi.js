@@ -1058,7 +1058,7 @@ const NotesCoach = {
    la regularite et son evolution, les objectifs du mois (a cocher), et le
    bilan des quatre dernieres semaines. Il reutilise Regularite.monterClient
    et outilBilan tels quels ; les phases 9 et 10 y ajouteront le bilan
-   hebdomadaire et le feedback du coach. Le coach le voit en fiche client.
+   hebdomadaire et le feedback du coach. Le coach, lui, lit et répond dans « Bilans » (v106, outilBilan).
    ------------------------------------------------------------------ */
 const outilSuivi = {
   id: "suivi",
@@ -1068,7 +1068,7 @@ const outilSuivi = {
   titre: "Ton suivi",
   accroche: "Comment se passe ton accompagnement : ta régularité, tes objectifs du mois et ton bilan des quatre dernières semaines.",
 
-  html(){ return `<div id="suivi-fb-haut"></div><div id="suivi-checkin"></div><div id="suivi-fb-bas"></div><div id="suivi-reg"><section class="panel">${squelette()}</section></div><div id="suivi-obj"></div><div id="suivi-bilan"></div>`; },
+  html(){ return `<div id="suivi-fb-haut"></div><div id="suivi-checkin"></div><div id="suivi-fb-bas"></div><div id="suivi-reg"><section class="panel">${squelette()}</section></div><div id="suivi-bilan"></div>`; },
 
   async init(){
     const { valeurs: d, dates, erreur } = await Store.lireTout(["programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "intake", "checkins", "feedbacks"], { dates: true });

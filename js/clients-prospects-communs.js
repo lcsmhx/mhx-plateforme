@@ -244,7 +244,7 @@ const Clients = {
          ecrit sous CE bilan ; un mot ecrit avant son arrivee ne compte pas) */
       const recent = Checkin.liste(ck).filter(x => x.envoye_le && x.envoye_le >= il7 && !Feedback.repond(c.feedbacks, x));
       if (recent.length) out.push({ type: "bilan_recu", niveau: "info", cible: "bilan", texte: recent.some(x => x.format === "dimanche") ? "Feedback du dimanche reçu — à lire" : "Bilan hebdo reçu — à lire" });
-      else if (dim ? ((l.programme || l.diete) && !e.fait && e.semaine.etat !== "ouvert") : (!e.fait && e.semaine.fin < auj)) out.push({ type: "bilan_manque", niveau: "attention", cible: "suivi", texte: dim ? "Feedback du dimanche non fait" : "Bilan hebdo non complété" });
+      else if (dim ? ((l.programme || l.diete) && !e.fait && e.semaine.etat !== "ouvert") : (!e.fait && e.semaine.fin < auj)) out.push({ type: "bilan_manque", niveau: "attention", cible: "bilan", texte: dim ? "Feedback du dimanche non fait" : "Bilan hebdo non complété" });
     }
     /* v53 — ce que le client a dit du feedback (calcule a l'affichage, rien n'est stocke) : un 😞 sur la reponse du
        coach, tant qu'il n'y a pas repondu depuis ; une note en chute (5 ou moins, ou 2 points de moins que la
@@ -255,7 +255,7 @@ const Clients = {
     if (chute) prio.push({ type: "note_chute", niveau: "mauvais", cible: "bilan", texte: chute.avant != null && chute.avant - chute.note >= 2 ? `Note en chute : ${chute.avant} → ${chute.note}/10` : `Note en chute : ${chute.note}/10` });
     /* objectif du mois non atteint (statut pose par le coach) */
     const o = c.programme && c.programme.objectifs;
-    if (o && o.mois === auj.slice(0, 7)) (o.statuts || []).forEach((st, i) => { if (st === "non_atteint" && (o.liste || [])[i]) out.push({ type: "objectif", niveau: "attention", cible: "suivi", texte: `Objectif non atteint : ${(o.liste || [])[i]}` }); });
+    if (o && o.mois === auj.slice(0, 7)) (o.statuts || []).forEach((st, i) => { if (st === "non_atteint" && (o.liste || [])[i]) out.push({ type: "objectif", niveau: "attention", cible: "bilan", texte: `Objectif non atteint : ${(o.liste || [])[i]}` }); });
     /* stagnation : au moins trois mesures sur trois semaines, et le poids n'a pas bouge */
     if (l.sens && c.mens && (c.mens.mesures || []).length >= 3){
       const m = c.mens.mesures.filter(x => x.date && x.poids != null).slice().sort((a, b) => a.date < b.date ? -1 : 1);

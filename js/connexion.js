@@ -31,9 +31,9 @@ async function routeDepuisAdresse(){
   id = parts[0]; sousRoute = parts.slice(1).join("/");
   if (ALIAS_ROUTES[id]) id = ALIAS_ROUTES[id];
   /* v106 (lot 3) : dans la fiche d'un client, « Son suivi » et « Préparer le call » ne font plus qu'une vue, « Bilans » (#/…/bilan) */
-  if (Auth.estCoach() && Store.idConsulte && id === "suivi" && !sousRoute){
+  if (Auth.estCoach() && Store.idConsulte && id === "suivi"){
     try { history.replaceState(null, "", "#/client/" + Store.idConsulte + "/bilan"); } catch(e){}
-    id = "bilan";
+    id = "bilan"; sousRoute = "";
   }
   /* v106 (lot 1) : les anciennes pages du coach rangées dans un onglet ouvrent cet onglet (l'adresse le dit) */
   if (Auth.estCoach() && REDIRECTIONS_COACH[id] && !sousRoute){
