@@ -40,3 +40,99 @@ Information, pas des ordres. Le détail technique est dans `HANDOFF-CLAUDE-CODE.
 - **v88** (14/10/2026, mission de nuit, lot 3, demande de Lucas du 13/10 ; rien côté base) : l'accord santé redemandé une fois aux comptes (prospect ou client, jamais le coach) dont l'accord date d'une version plus ancienne de la politique (`RappelSante`, js/auth-store.js) : fenêtre courte, « J'accepte » (mêmes métadonnées que l'accord actuel, premier accord gardé dans `sante_premier_accord`, `sante_premiere_version`, `sante_premier_ecran`) ou « Plus tard » (revient au plus tôt 7 jours après, date sur l'appareil effacée à la déconnexion) ; l'accord d'avant reste valable ; nouvelle suite verif90 (25), verif71, verif77 et verif84 adaptées (décor).
 - **v89** (14/10/2026, mission de nuit, lot 4 : qualité ; rien côté base) : carte « Bilan de la semaine envoyé › » devenue un vrai lien ; carte cadeau retirée après « J'ai déjà réservé » ; message court effacé aussi en anglais ; plus de « -0 » ; défilements sans mouvement si « réduire les animations » (`defilementDoux`) ; plus de « 14 jours » dans la Formation ; « L'ajouter » n'écrase plus un exercice de la base ; mot de passe : une panne n'est plus « mot de passe incorrect » ; noms accessibles (bilan du vendredi, UI.demander, bouton « + ») ; « Pas de connexion » pour l'historique et le Profil ; 158 phrases visibles traduites en anglais (bloc balisé à la fin de js/i18n.js) ; nouvelle suite verif91 (13), verif66 sans « 14 jours ».
 - **v90** (14/10/2026, mission de nuit, lot 5 ; rien côté base) : « J'ai fait cette séance ✓ » sur l'écran d'une séance des programmes de la formation, pour un client (le prospect garde sa vitrine Programme verrouillée) : la date rangée à part dans la clé `seances_formation` `{v, faites[{p, f, s, d, t}]}` (sans migration, 400 au plus, une fois par séance et par jour) ; « Fait le … » à côté de la séance et le nombre de séances faites cette semaine sur la page ; rien dans `journal` (compteur et régularité du programme du coach inchangés) ; « Séances de la formation faites (30 j) : N » dans l'onglet Suivi de la fiche du coach ; export et restauration ; FR et EN ; `supabase/v78-limites/` : la clé ajoutée aux 5 copies (29 clés, 256 Ko), rien d'appliqué ; nouvelle suite verif89 (13).
+- **v91** (09/11/2026, étape 1 « corrections sûres » de l'audit du 09/11 ; rien côté base ; fusion `35a6fd4`).
+  - Diète du coach, questionnaire illisible :
+    - un bandeau « Questionnaire illisible : vérifie ses allergies avant de générer » avec Réessayer ;
+    - « Générer la semaine », « Refaire … » et « Autre proposition » sont bloqués ;
+    - la diète existante reste modifiable à la main.
+  - « Envoyer au client » (programme) : le bouton affiche « Envoi… ». « Programme envoyé » ne s'affiche qu'après la réponse de la base (`Store.envoyerConfirme`) ; sinon : « Pas envoyé : vérifie ta connexion et réessaie », avec le témoin (`flashFixe`).
+  - Atelier :
+    - « Enregistrer dans ma bibliothèque » est branché ;
+    - « Enregistrer dans ma base » relit la base avant d'écrire et demande « Le remplacer ? ».
+  - « Pas de connexion » + Réessayer pour la fiche du client, le calculateur du coach et l'atelier.
+  - Une case non enregistrée revient décochée.
+  - Zones de toucher à 44 px.
+  - Nouvelle suite verif92 (22, partie 8). verif68 bloc J adapté.
+- **v92** (09/11/2026 ; rien côté base ; fusion `b1d2392`).
+  - « Enregistrer dans ma base » relit la base par identifiant ET par nom : un programme du catalogue repris sous le même nom est remplacé, plus copié.
+  - verif92 passe de 22 à 24.
+  - Le doublon créé avant la correction a été supprimé par Lucas le 10/11.
+- **v93** (09/11/2026, traductions ; rien côté base ; fusion `f968c01`, banc n° 184).
+  - La langue du coach est celle rangée sur son compte (`prefs.langue`), jamais celle laissée sur l'appareil par un autre compte.
+  - Sans choix sur son compte : français, réglé avant le premier affichage.
+  - Son choix de l'anglais, fait depuis le tableau de bord, est gardé.
+  - Dans une fiche, le bouton explique où changer la langue.
+  - Nouvelle suite verif93 (14, partie 1). verif92 : port de secours 10095.
+- **v94** (10/11/2026, traduction anglaise de la Formation ; rien côté base ; fusion `0289e21`, banc branche n° 185, main n° 186).
+  - Les leçons Mindset et Alimentation ont leur version anglaise de même structure (`LECONS.*.html_en`).
+  - Sont aussi traduits :
+    - les titres des modules ;
+    - les ressources (les PDF restent en français : « Organise ta diète (PDF, in French) ») ;
+    - les 5 challenges, 15 axes et 10 défis ;
+    - « Semaine N » → « Week N ».
+  - Le bloc `v94-formation` est dans `js/i18n.js`.
+  - Nouvelle suite verif94 (8, partie 2). verif60 et verif66 (J3) : les axes et défis sont vérifiés en anglais, avec le même nombre de vérifications.
+- **v95** (10/11/2026, décisions de Lucas du 10/11 ; rien côté base ; fusion `a80a023`, banc branche n° 187, main n° 188).
+  - Le bouton de langue montre la langue **actuelle** (« 🇫🇷 FR » quand l'app est en français) :
+    - aria-label et bulle « Langue : français. Passer en anglais » / « Language: English. Switch to French » ;
+    - dans la barre du haut, l'accueil du parcours et l'écran de connexion.
+  - « Semaine envoyée » (diète du coach) suit la même règle que « Programme envoyé » :
+    - le message ne s'affiche qu'après la réponse de la base ;
+    - en cas d'échec, un message reste affiché ;
+    - la semaine est renvoyée automatiquement.
+  - Jours abrégés de « Organise ta diète » dans la langue de l'app (`JOURS_COURTS`, `data-notr`) : aucune clé « Lun », « Sam »… n'est ajoutée au dictionnaire.
+  - Nouvelle suite verif95 (12, partie 7 ; 3/12 sur la v94). verif62 (E) et verif93 (A1) attendent le nouveau libellé, avec le même nombre de vérifications.
+- **v96** (10/11/2026, mission de nuit, chantier 1 ; rien côté base ; fusion `07760a5` du tag `nuit-v96`, banc branche n° 192, main n° 209, vert après relance de 2 parties bloquées par l'installation de GitHub).
+  - Le programme d'un client se modifie dans un **brouillon** rangé sur le compte du coach (clé `brouillons_programme`, une entrée par client) ; le client ne voit rien avant « Publier les changements ».
+  - Publication en une seule écriture ; programme relu avant de publier (deux appareils) ; « Nouveau bloc à partir de celui-ci » (message 21 jours chez le client ou jusqu'à « C'est noté ») ; boutons + / − ; identifiants fixes des séances (`sid`).
+  - Les objectifs du mois restent hors brouillon ; une publication ratée ne repart pas seule (décisions de Lucas).
+  - Nouvelle suite verif96 (39, partie 9). verif92, verif75 et verif95 adaptées, ce qu'elles protègent est gardé.
+- **v97** (10/11/2026, chantier 2 ; rien côté base ; fusion `858aebf`, main n° 210).
+  - Même brouillon pour la diète (clé `brouillons_repas`) ; fenêtre « Publier » toujours affichée (remise à zéro de la liste de courses et des repas cochés à la publication seulement).
+  - « Changer ce repas » : 3 recettes du même moment, régime et allergies respectés ; « Ma base » : Modifier et Dupliquer seulement.
+  - Nouvelle suite verif97 (27, partie 5).
+- **v98** (10/11/2026, chantier 3 ; rien côté base ; fusion `278238d`, puis correctif de test `951673e`, main n° 212).
+  - Menu du coach en 7 entrées (Tableau de bord, Clients, Prospects, Mes programmes, Catalogue, Mon entraînement, Réglages) ; barre du bas du téléphone avec « Programmes » ; toutes les anciennes adresses ouvrent la même page.
+  - Nouvelle suite verif98 (43, partie 3) ; son test D de « #/suivi » se joue le lundi de la semaine (`951673e`), il échouait du mardi au samedi.
+- **v99** (10/11/2026, chantier 4 ; rien côté base ; fusion `0fabcc3`, main n° 213).
+  - Fiche d'un client en 5 onglets (Aperçu, Entraînement, Nutrition, Suivi, Profil) sous un seul en-tête ; WhatsApp toujours visible ; anciennes adresses vers le bon onglet.
+  - Nouvelle suite verif99 (29, partie 8).
+- **v100** (10/11/2026, chantier 5 ; rien côté base ; fusion `64dcf46`, puis correctif de test `a3701b2`, main n° 214).
+  - Menu du client : barre du bas Accueil · Programme · Nutrition · Progression · Plus ; « Mon journal » dans Programme ; « Mes compléments » sous Nutrition ; calculateur caché avec une diète. Prospect inchangé.
+  - Nouvelle suite verif100 (26, partie 4) ; ses blocs C et D se jouent le lundi de la semaine (`a3701b2`).
+- **v101** (10/11/2026, chantier 6 ; rien côté base ; fusion `33f8e52`, main n° 215).
+  - « Supprimé : … · Annuler » pendant 10 s ; messages d'échec qui disent quoi faire ; écrans de chargement ; croix des volets à 44 px ; le client ne télécharge plus 4 fichiers du coach (hors ligne inchangé).
+  - Nouvelle suite verif101 (19, partie 10) ; rig.js vérifie quels fichiers sont chargés chez le coach et chez le client.
+- **v102** (10/11/2026, chantier 8 « finitions et robustesse » ; rien côté base ; fusion `6e2fad9`, main n° 216).
+  - Une copie des brouillons gardée sur un appareil est réunie à la base client par client (marque de retrait datée) ; objectifs du mois jamais par-dessus une publication faite ailleurs ; « Séance terminée » relit le journal ; éditeur inerte pendant « Publication… » ; brouillons d'un client supprimé par le coach effacés ; focus clavier gardé dans les fenêtres ; zones de 44 px ; traductions.
+  - Nouvelle suite verif102 (20, partie 6). verif96 et verif97 : « aucun brouillon » accepte une marque de retrait.
+- **v103** (10/11/2026, décisions 8 et 9 du 10/11 ; rien côté base ; branche `v2/v103-decisions`, commit `f7b4faf`, banc branche n° 217 ; fusion `497f28f`, main n° 218).
+  - Gris pâle `--ink-3` : #8b93a1 → #9ea6b3, et halo du haut de 40 % à 35 % (choix de Lucas) : 4,64:1 au centre du halo (avant 3,30:1), 8,1:1 sur le fond noir.
+  - `supabase/fonctions/supprimer-acces/` : la fonction retire aussi, sur le compte du coach, le brouillon de programme et le brouillon de diète du compte supprimé (marque de retrait de la v102, écriture conditionnelle, 3 essais ; en cas d'échec rien n'est supprimé). **Pas encore déployée** : la version en ligne reste celle de `supabase/releve-2026-09-30` ; le déploiement attend un « ok » séparé de Lucas.
+  - Nouvelle suite verif103 (17, partie 9, sans navigateur : la fonction est chargée dans Node avec Deno et la base simulés ; elle échoue sur la version en ligne).
+  - `docs/A-FAIRE-AVEC-LUCAS.md`, point 8 h : séparer plus tard les outils communs des fichiers Clients et Prospects (fait en v104).
+- **v104** (11/11/2026, mission « gros chantier » et mission de nuit du 10 au 11/11 ; rien côté base ; branche `v2/v104-gros-chantier`, dernier commit `c11b645`, banc branche n° 229 ; fusion `a7f1deb`, main n° 230 ; site « 2026-11-10 · 104 » ; rapport `Claude outputs/rapport-nuit-2026-11-11.md`).
+  - Partie 1 :
+    - restes de la relecture v103 dans `supprimer-acces` du dépôt (la marque du serveur gagne sur la saisie du coach, messages d'échec exacts, lecture des brouillons limitée aux comptes coach ; toujours pas déployée) ;
+    - halo du haut à 25 %, gris pâle #acb4c1 (4,5:1 au moins dans les cartes), gris moyen #c1c9d6 ;
+    - outils communs de Clients et de Prospects déplacés tels quels dans `js/clients-prospects-communs.js` ; les trois fichiers ne sont chargés que pour le coach (`MHX_COACH`) : le client ne télécharge plus environ 165 Ko (point 8 h fait) ;
+    - l'en-tête de l'Aperçu de la fiche est celui des 4 autres onglets ; « Message WhatsApp prêt » pour un prospect.
+  - Fiche d'un client :
+    - une seule navigation, les 5 onglets ; le menu du haut (7 entrées) et la barre du bas du téléphone restent ceux du coach ; plus de rangée de raccourcis ni de liens « → » ; anciennes adresses gardées ;
+    - un seul chiffre de régularité (« semaine passée », comme Clients et le tableau de bord) ;
+    - le coach lit « sa / ses / son » (41 phrases, « Their » en anglais : `VueFiche` et `PHRASES_FICHE`, `js/navigation.js`) ; le client garde « ta / tes / ton » ;
+    - objectifs du mois modifiés seulement dans l'onglet Suivi (`ObjectifsCoach`, `js/outilProgramme.js`), figés pendant la publication du programme ; ailleurs en lecture seule avec « Modifier » ;
+    - Nutrition repliée (un repas = une ligne ; 8 944 → 2 467 px sur téléphone) et Programme compact (un exercice = une ligne ; 12 928 → 6 471 px) ;
+    - boutons « × » à 44 × 44 px au moins, écartés des autres.
+  - Espace coach : en-tête d'ordinateur sur une ligne dès 1200 px ; tableau de bord : « À traiter maintenant » = urgences du jour (`URG_CLIENTS` / `URG_PROSPECTS`, `js/outilTableau.js`), clients d'abord, le reste dans « À surveiller » ; traductions anglaises de la fiche.
+  - Client et prospect : zones de toucher de 44 px sur téléphone ; 5 séances notées sous le programme au lieu de 20.
+  - Vitesse : fichiers du coach demandés ensemble sur un appareil neuf (4,60 → 4,22 s) ; client 3,89 → 3,70 s.
+  - Sécurité et optimisation : valeurs toujours passées par `esc()` ; l'app refuse de se charger dans le cadre (iframe) d'un autre site (`MHX_CADRE`, `index.html`) ; lectures plus légères (la liste du coach ne télécharge plus ses brouillons ni son atelier) ; 58 règles CSS de l'ancien Challenge 7 jours retirées.
+  - Nouvelle suite verif104 (82, partie 1) ; verif96 39 → 43 ; 24 suites adaptées au changement voulu sans retirer de vérification.
+  - Point 13 (consigne du « Squat barre » qui parle d'haltères) : dans `donnees/programmes.json`, pas touché ; note pour Grok Bot dans `NOTESCLAUDE.md`.
+- **v105** (11/11/2026, finitions demandées par Lucas ; rien côté base ; branche `v2/v105-finitions`, dernier commit `d47735c`, banc branche n° 235 ; fusion `3ffb2c2`, main n° 236 ; site « 2026-11-11 · 105 »).
+  - Le badge de l'onglet Prospects compte les urgences prospects du tableau de bord (`Nouveautes.urgences`, appelée par Prospects ; le tableau de bord pose le même nombre), plus les nouveautés ; aria-label « N urgences chez tes prospects » (FR et EN).
+  - Aperçu de la fiche : un seul en-tête (le bandeau « Fiche de … ») ; plus de bouton « Fiche » quand l'onglet n'a qu'une page ; titre « Fiche » réservé aux lecteurs d'écran ; plus de nom ni d'initiales en double.
+  - Profil d'un client vu par le coach : « 2 · Son objectif » et les autres titres du questionnaire en « son / sa / ses » (`VueFiche.conv` accepte le numéro devant) ; deux titres anglais en « they ».
+  - Nouvelle suite verif105 (36, partie 7 ; 17/36 sur la v104) ; 15 suites adaptées (34, 37, 43, 50, 52, 53, 54, 57, 58, 63, 64, 86, 88, 99, 104) sans retirer de vérification.
+  - Tests de Cowork dans le Chrome de Lucas : v96 à v105 ✅ ; v104 : la page sur téléphone n'a pas pu être simulée (protection contre le cadre d'un autre site), à vérifier par Lucas sur son téléphone.
