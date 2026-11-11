@@ -34,6 +34,12 @@ const MENU_PROFIL_COACH = ["profil", "entrainement"];
    compléments » sous Nutrition, le calculateur est caché quand il a une diète (gardé pour les prospects). Les adresses restent :
    #/journal, #/complements, #/calculateur ouvrent toujours leur page (et marquent leur entrée « parente »). */
 const CACHES_CLIENT = ["journal"];
+/* v106 (lot 6) : le CLIENT accompagné passe à la nouvelle navigation (Nav106) : barre du bas à 5 entrées, sans « Plus » (Accueil,
+   Programme, Nutrition, Progression, Suivi), la même barre latérale que le coach sur ordinateur ; ses autres pages (Profil,
+   Formation d'abord, puis le journal alimentaire, le calculateur ou les compléments quand ils lui sont ouverts) sont derrière le
+   rond de profil, avec Langue, Partager l'app et Se déconnecter. Le prospect garde sa navigation (proposition dans le rapport). */
+const MENU_CLIENT = ["accueil", "programme", "nutrition", "mensurations", "suivi"];
+const MENU_PROFIL_CLIENT = ["profil", "formation"];
 const CACHES_AVEC_DIETE = ["calculateur", "complements"];   // relecture : sans diète, le lien « Mes compléments » de Nutrition n'existe pas
 const PARENTS_CLIENT = { journal: "programme", complements: "nutrition", calculateur: "nutrition" };
 const PARENTS_MENU_COACH = { "suivi-clients": "clients", comptes: "clients", "suivi-commercial": "prospects", newsletter: "prospects", atelier: "mes-programmes", bibliotheque: "mes-programmes", catalogue: "mes-programmes" };   // v106 : + le Catalogue (onglet de la Bibliothèque)

@@ -1501,6 +1501,22 @@ const outilProgramme = {
     return `<div id="prog-vue"><section class="panel">${squelette()}</section></div><div id="prog-obj"></div><div id="prog-jr"></div><div id="prog-hist"></div>`;
   },
 
+  /* v106 (lot 6) : la séance visée s'ouvre (son formulaire « Noter ma séance »), en haut de l'écran ; les autres séances sont
+     repliées (leur titre et un bouton « Voir la séance » qui les déplie) */
+  viserSeance(zone, si){
+    const cible = zone.querySelector("#seance-" + si); if (!cible) return;
+    $$("section.seance-c", zone).forEach(sec => {
+      if (sec === cible || sec.querySelector("[data-seance-voir]")) return;
+      sec.classList.add("replie");
+      const tete = sec.querySelector(".seance-c-tete"); if (!tete) return;
+      const b = document.createElement("button"); b.type = "button"; b.className = "lc-lien seance-voir"; b.setAttribute("data-seance-voir", ""); b.setAttribute("aria-expanded", "false");
+      b.textContent = trad("Voir la séance");
+      b.addEventListener("click", () => { const r = sec.classList.toggle("replie"); b.setAttribute("aria-expanded", String(!r)); b.textContent = trad(r ? "Voir la séance" : "Replier"); });
+      tete.appendChild(b);
+    });
+    const o = cible.querySelector("[data-jr-ouvrir]"); if (o && !o.hidden) o.click();
+    try { cible.scrollIntoView({ block: "start", behavior: defilementDoux() }); } catch(e){}
+  },
   async init(){
     const self = this;
     if (!Store.idConsulte && ProgFormation.sous(sousRoute)) return ProgFormation.monter($("pf-zone"), sousRoute);   // v85 (bloc 4)
@@ -1542,6 +1558,9 @@ const outilProgramme = {
       /* apres une seance notee : on redessine (badge « notée », compteur) et on rebranche le journal */
       const apres = () => { dessiner(); dessinerHist(); Journal.brancher(zone, P, J, apres); };
       await Journal.brancher(zone, P, J, apres);
+      /* v106 (lot 6) : « Noter ma séance » de l'accueil (#/programme/noter-<n>) ouvre directement cette séance ; les autres sont repliées */
+      const mN = /^noter-(\d+)$/.exec(sousRoute || "");
+      if (mN) self.viserSeance(zone, +mN[1]);
       Historique.monter("programme", "prog-hist");
       return;
     }

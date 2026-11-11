@@ -1341,7 +1341,8 @@ const outilDecouverte = {
     /* v61 (brief V2, E2) : « Ce que l'accompagnement ajoute », « Récupérer mon plan d'action » (origine accueil_accompagnement),
        « 15 min avec Lucas pour faire le point… », case « J'ai déjà choisi mon créneau » (meme case, meme cle) */
     const L = DECOUVERTE.accomp, r = Decouverte.reserve(C), cal = r ? "" : lienCalendly("accueil_accompagnement"), K = DECOUVERTE.cta || {};   // v71 (H) : reserve → plus de bouton
-    const vitrine = ((CONFIG.marque && CONFIG.marque.gratuit_vitrine) || []).map(id => OUTILS.find(o => o.id === id)).filter(o => o && AVANTAGES[o.id]);
+    /* v106 (lot 6) : les pages à cadenas, regroupées ici (CONFIG.marque.gratuit_carte ; elles ne sont plus dans sa navigation) */
+    const vitrine = ((CONFIG.marque && (CONFIG.marque.gratuit_carte || CONFIG.marque.gratuit_vitrine)) || []).map(id => OUTILS.find(o => o.id === id)).filter(o => o && AVANTAGES[o.id]);
     return `<section class="panel" id="dc-accomp"><h2>${esc(trad(L.titre))}</h2>
       <ul class="liste-debloque">${vitrine.map(o => `<li><a href="#/${esc(o.id)}" data-dc-vitrine="${esc(o.id)}">${esc(trad(o.nom))}</a> — ${esc(trad(AVANTAGES[o.id]))}</li>`).join("")}</ul>
       ${cal ? `<div class="actions"><a class="btn ghost" href="${esc(cal)}" target="_blank" rel="noopener" data-dc-cal="accueil_accompagnement">${esc(trad(K.bouton))}</a></div>` : ""}

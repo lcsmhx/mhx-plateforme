@@ -828,3 +828,20 @@ details.q-theme > summary .fc-repli-p{display:inline-flex;gap:6px;flex-wrap:wrap
 }
 @media (min-width:1024px){ .tb-groupe,#tb-a-traiter{scroll-margin-top:16px} }
 #fc-pf-faites > span{flex:1 1 auto;min-width:0}   /* v106 (relecture) : le libellé long passe à la ligne à 320 px */
+
+/* v106 (lot 6) — le client : 5 cases dans la barre du bas ; sur téléphone, le titre de la page est dans la ligne du haut : le
+   grand titre des pages (masthead générique) est gardé pour les lecteurs d'écran, son explication tient sur une ligne (bulle :
+   le texte entier) ; l'accueil garde son « Bonjour … » */
+@media (max-width:1023px){
+  body.nav106-client #vue > .masthead{padding:12px 0 10px;margin-bottom:14px}
+  body.nav106-client #vue > .masthead h1{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  body.nav106-client #vue > .masthead .lede{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;margin:0}
+  body.nav106-client .barre-bas .lbl{font-size:10.5px}
+}
+body.nav106 .compte button.rond-profil.ici .avatar{box-shadow:0 0 0 2px var(--accent)}   /* v106 (lot 6) : la page ouverte est derrière le rond */
+/* v106 (lot 6) : « Noter ma séance » de l'accueil : les autres séances repliées (titre et « Voir la séance ») */
+.seance-c.replie > :not(.seance-c-tete){display:none}
+.seance-c.replie{padding-bottom:14px}
+.seance-c .seance-voir{margin-left:auto;min-height:44px}
+.seance-c{scroll-margin-top:84px}
+@media (min-width:1024px){ .seance-c{scroll-margin-top:16px} }

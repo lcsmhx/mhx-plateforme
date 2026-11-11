@@ -87,7 +87,13 @@ const CONFIG = {
        montre toujours la page verrouillee). v52 : programme, nutrition, journal d'entrainement et suivi
        (bilan hebdo compris) ; la formation n'est plus verrouillee. Pour tout remontrer : ajouter
        "complements", "bilan". */
-    gratuit_vitrine: ["programme", "nutrition", "journal", "suivi"],
+    /* v106 (lot 6) : seul « Mon programme » reste dans sa navigation, SANS cadenas (il contient le programme gratuit de la
+       formation ; la page garde dessous la carte du programme sur mesure) ; les pages à cadenas (nutrition, journal, suivi)
+       quittent la navigation et sont regroupées dans une carte de son accueil (gratuit_carte, « Ce que l'accompagnement
+       ajoute ») ; leurs adresses montrent toujours la page verrouillée */
+    gratuit_vitrine: ["programme"],
+    gratuit_carte: ["nutrition", "journal", "suivi"],
+    sans_cadenas: ["programme"],
     /* v52 — la barre du bas (telephone) du prospect, dans cet ordre ; le reste est derriere « Plus » */
     gratuit_barre: ["accueil", "calculateur", "mensurations", "formation"]
   },

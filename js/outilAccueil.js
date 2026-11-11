@@ -429,7 +429,8 @@ const outilAccueil = {
     const acces = [];
     const ps = this.prochaineSeance(P, J, r.bornes);
     if (ps){
-      if (ps.prochaine) acces.push({ id: "programme", ico: ICONES.programme, t: trad("Noter ma séance"), s: ps.prochaine.sc.nom || trad("Séance {n}", { n: ps.prochaine.si + 1 }) });
+      /* v106 (lot 6) : « Noter ma séance » ouvre directement cette séance (#/programme/noter-<n>), les autres repliées */
+      if (ps.prochaine) acces.push({ id: "programme", href: "#/programme/noter-" + ps.prochaine.si, ico: ICONES.programme, t: trad("Noter ma séance"), s: ps.prochaine.sc.nom || trad("Séance {n}", { n: ps.prochaine.si + 1 }) });
       else acces.push({ id: "programme", ico: ICONES.programme, t: trad("Toutes tes séances de la semaine sont notées"), s: trad("Bravo. Revoir mon programme"), ok: true });
     }
     if (aDiete){
@@ -445,7 +446,7 @@ const outilAccueil = {
     if (!consult && !I.complet) acces.unshift({ id: "profil", ico: ICONES.profil, t: trad("Compléter mon profil"), s: trad("C'est ce qui permet à ton coach de construire ton suivi") });
     if (!consult && !aProgramme && !aDiete) acces.push({ id: "formation", ico: ICONES.formation, t: trad("Commencer la Formation"), s: trad("Les bases, à ton rythme") });
 
-    const ligne = a => `<a class="acces${a.ok ? " fait" : ""}" href="#/${a.id}"><span class="ico">${a.ico}</span><span class="txt"><b>${esc(a.t)}</b><small>${esc(a.s)}</small></span><span class="fleche">›</span></a>`;
+    const ligne = a => `<a class="acces${a.ok ? " fait" : ""}" href="${esc(a.href || "#/" + a.id)}"><span class="ico">${a.ico}</span><span class="txt"><b>${esc(a.t)}</b><small>${esc(a.s)}</small></span><span class="fleche">›</span></a>`;
 
     zone.innerHTML = `
       <header class="masthead">
@@ -453,18 +454,19 @@ const outilAccueil = {
         <h1>${consult ? esc(trad("Vue d'ensemble")) + (prenom ? " — " + esc(prenom) : "") : esc(trad("Bonjour")) + (prenom ? " " + esc(prenom) : "")}</h1>
         <p class="lede">${esc(resume)}</p>
       </header>
+      ${/* v106 (lot 6) : « Aujourd'hui » en premier (séance du jour, repas, mesure), puis le bilan ou le feedback à remplir ; le reste dessous */ ""}
+      ${acces.length ? `<section class="panel" id="acc-aujourdhui"><h2>${esc(trad("Aujourd'hui"))}</h2><div class="acces-l">${acces.map(ligne).join("")}</div></section>` : ""}
+      ${dim ? Checkin.bandeauHTML(CK, moi) : ""}
+      ${dim ? `<section class="panel" id="acc-fbd"><h2>${esc(trad("Feedback de la semaine"))}</h2><div class="acces-l">${nonVus.length ? Checkin.accesReponseHTML(nonVus[0]) : ""}${Checkin.statutHTML(CK, { lien: "#/suivi", uid: moi })}</div></section>`
+        : (aProgramme || aDiete || fbR) ? `<section class="panel"><h2>${esc(trad("Bilan hebdomadaire"))}</h2><div class="acces-l">${fbR ? Feedback.accesHTML(fbR) : ""}${(aProgramme || aDiete) ? Checkin.statutHTML(CK, { lien: "#/suivi", uid: moi }) : ""}</div></section>` : ""}
       ${consult ? "" : BrouillonProg.annonceHTML(P)}
       ${ja ? JournalAlim.carteAccueilHTML(JournalAlim.local(d.journal_alimentaire), JournalAlim.objectif(d, false)) : ""}
-      ${dim ? Checkin.bandeauHTML(CK, moi) : ""}
       <section class="panel">
         <h2>${esc(trad("Cette semaine"))}</h2>
         <div class="tiles">${tuiles}</div>
         <p class="note" style="margin:12px 0 0">${esc(trad("La régularité mesure ce que tu fais — séances, repas, mesure — pas ce que dit la balance."))}</p>
       </section>
-      ${dim ? `<section class="panel" id="acc-fbd"><h2>${esc(trad("Feedback de la semaine"))}</h2><div class="acces-l">${nonVus.length ? Checkin.accesReponseHTML(nonVus[0]) : ""}${Checkin.statutHTML(CK, { lien: "#/suivi", uid: moi })}</div></section>`
-        : (aProgramme || aDiete || fbR) ? `<section class="panel"><h2>${esc(trad("Bilan hebdomadaire"))}</h2><div class="acces-l">${fbR ? Feedback.accesHTML(fbR) : ""}${(aProgramme || aDiete) ? Checkin.statutHTML(CK, { lien: "#/suivi", uid: moi }) : ""}</div></section>` : ""}
       ${!consult && !aProgramme ? ProgFormation.carteHTML(I, (Store.cache && Store.cache.prefs) || {}) : ""}
-      ${acces.length ? `<section class="panel"><h2>${esc(trad("Aujourd'hui"))}</h2><div class="acces-l">${acces.map(ligne).join("")}</div></section>` : ""}
       ${obj ? `<section class="panel"><h2>${esc(trad("Tes objectifs du mois"))}</h2>
         ${obj.liste.map((t, i) => { if (!t) return ""; const st = Regularite.statutObjectif(P, OF, i); return `<div class="objectif${st === "atteint" ? " atteint" : ""}${st === "non_atteint" ? " rate" : ""}"><span class="num">0${i + 1}</span><span class="texte" data-notr>${esc(t)}</span><span class="pastille ${Regularite.classeStatut(st)}">${esc(Regularite.libelleStatut(st))}</span></div>`; }).join("")}
         <div class="actions"><a class="btn ghost petit" href="#/suivi">${esc(trad("Cocher mes objectifs"))}</a></div>

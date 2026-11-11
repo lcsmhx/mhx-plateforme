@@ -73,7 +73,9 @@ function horsVitrine(o){
   const v = CONFIG.marque && CONFIG.marque.gratuit_vitrine;
   return Array.isArray(v) && v.indexOf(o.id) === -1;
 }
-function cadenasNav(o){ return estVerrouille(o) ? `<span class="nav-cadenas" aria-hidden="true">${SVG.cadenas}</span><span class="sr-only"> (${esc(trad("verrouillé"))})</span>` : ""; }
+/* v106 (lot 6) : « Mon programme » du prospect n'a plus de cadenas dans la navigation (CONFIG.marque.sans_cadenas) */
+function cadenasVu(o){ const s = (CONFIG.marque && CONFIG.marque.sans_cadenas) || []; return estVerrouille(o) && s.indexOf(o.id) === -1; }
+function cadenasNav(o){ return cadenasVu(o) ? `<span class="nav-cadenas" aria-hidden="true">${SVG.cadenas}</span><span class="sr-only"> (${esc(trad("verrouillé"))})</span>` : ""; }
 /* v61 (brief V2, E2) : ce que l'accompagnement ajoute — accueil du prospect (carte) et pages verrouillées (note) ; jamais
    un ecran client */
 const AVANTAGES = {
@@ -239,8 +241,11 @@ function outilsPrincipaux(){
     return v.filter(o => !o.masque_nav && !estVerrouille(o)).concat(v.filter(o => o.principal && estVerrouille(o) && !horsVitrine(o))).slice(0, 4);
   }
   /* v106 (lot 1) : le coach, ses 4 entrées dans l'ordre du menu (Aujourd'hui, Clients, Prospects, Bibliothèque), aussi dans une fiche */
+  if (!coach && Nav106.client()) return menuClient(v);   // v106 (lot 6)
   return coach ? menuCoach(v) : v.filter(o => o.principal).slice(0, 4);
 }
+/* v106 (lot 6) : les 5 entrées du client (barre du bas, menu), dans l'ordre de MENU_CLIENT, parmi ce qui lui est visible */
+function menuClient(v){ return MENU_CLIENT.map(id => v.find(o => o.id === id && !o.masque_nav && !horsVitrine(o) && !cachePourClient(o))).filter(Boolean); }
 function iconeOutil(o){
   return ICONES[o.id] ? `<span class="ico" aria-hidden="true">${ICONES[o.id]}</span>` : `<span class="ico" aria-hidden="true">${o.icone || ""}</span>`;
 }
@@ -265,7 +270,7 @@ function construireNav(){
      v104 (point 1) : dans la fiche d'un client, le menu du haut reste ces 7 entrées, sans les outils du client (une seule
      navigation dans la fiche : ses 5 onglets ; chaque adresse #/client/<id>/<outil> s'ouvre toujours) */
   const fiche = Auth.estCoach() && !!Store.idConsulte;
-  const ordre = coachSeul ? menuCoach(visibles) : fiche ? menuCoach(visiblesHorsFiche().filter(o => !o.masque_nav)) : visibles;
+  const ordre = coachSeul ? menuCoach(visibles) : fiche ? menuCoach(visiblesHorsFiche().filter(o => !o.masque_nav)) : Nav106.client() ? menuClient(visibles) : visibles;   // v106 (lot 6) : le client, ses 5 entrées
   /* v106 (lot 1) : avec la nouvelle navigation, le nom dans un <span class="lbl"> (caché sur la barre latérale réduite aux
      icônes, où la bulle le dit) */
   nav.innerHTML = ordre.map(o => { const n = coachSeul || fiche ? nomMenuCoach(o) : nomOnglet(o), q = fiche && o.role !== "coach" ? " data-quitter-fiche" : "";
@@ -363,13 +368,15 @@ function nomMenuCoach(o){ return NOMS_MENU_COACH[o.id] || o.nom; }
    du bas à 4 cases égales, sans « Plus » ; à partir de 1 024 px, la barre latérale (logo, recherche, les 4 entrées, le rond en
    bas ; réduite aux icônes sous 1 280 px). Lot 1 : le coach ; « FR » et « Se déconnecter » passent derrière le rond. */
 const Nav106 = {
-  actif(){ return typeof Auth !== "undefined" && Auth.connecte() && Auth.estCoach(); },
+  actif(){ return typeof Auth !== "undefined" && Auth.connecte() && (Auth.estCoach() || (!Auth.estProspect() && !!Auth.profil)); },   // v106 (lot 6) : + le client accompagné
+  client(){ return this.actif() && !Auth.estCoach(); },
   nom(){ const p = Auth.profil, u = Auth.utilisateur(); return p && (p.prenom || p.nom) ? ((p.prenom || "") + " " + (p.nom || "")).trim() : (u ? u.email || "" : ""); },
   initiales(){ const n = this.nom(); if (!n || /@/.test(n)) return "?"; return n.split(/\s+/).filter(Boolean).slice(0, 2).map(x => x[0].toUpperCase()).join("") || "?"; },
   majTete(){
     const actif = this.actif();
     document.body.classList.toggle("nav106", actif);
     document.body.classList.toggle("nav106-coach", actif && Auth.estCoach());
+    document.body.classList.toggle("nav106-client", actif && !Auth.estCoach());   // v106 (lot 6)
     const r = $("rond-profil"), c = $("nav-chercher"), t = $("titre-page");
     if (t) t.hidden = !actif;
     if (r){
@@ -416,7 +423,14 @@ const ICO_SORTIE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4h3
 const MenuProfil = {
   pages(){
     const fiche = Auth.estCoach() && !!Store.idConsulte, v = fiche ? visiblesHorsFiche() : outilsVisibles();
-    return (Auth.estCoach() ? MENU_PROFIL_COACH : []).map(id => v.find(o => o.id === id)).filter(Boolean);
+    if (!Auth.estCoach()){
+      /* v106 (lot 6) : le client — Profil et Formation, puis ses autres pages hors des 5 entrées (journal alimentaire, calculateur
+         ou compléments quand ils lui sont ouverts), dans l'ordre de la liste des outils */
+      const vis = v.filter(o => !o.masque_nav && !horsVitrine(o) && !cachePourClient(o)), cinq = menuClient(vis);
+      const d = MENU_PROFIL_CLIENT.map(id => vis.find(o => o.id === id)).filter(Boolean);
+      return d.concat(vis.filter(o => cinq.indexOf(o) === -1 && d.indexOf(o) === -1));
+    }
+    return MENU_PROFIL_COACH.map(id => v.find(o => o.id === id)).filter(Boolean);
   },
   ouvrir(){
     const fiche = Auth.estCoach() && !!Store.idConsulte;
@@ -449,9 +463,9 @@ function construireBarreBas(){
   const coachSeul = Auth.estCoach() && !Store.idConsulte;
   const visiblesNav = outilsVisibles().filter(o => !o.masque_nav && !horsVitrine(o) && !cachePourClient(o));   // v50 ; v100 : le menu du client
   const enFiche = Auth.estCoach() && !!Store.idConsulte;
-  const autres = (coachSeul ? menuCoach(visiblesNav) : enFiche ? menuCoach(visiblesHorsFiche().filter(o => !o.masque_nav)) : visiblesNav).filter(o => principaux.indexOf(o) === -1);   // v98 : le coach, ses 7 entrées ; v104 (point 2) : dans une fiche aussi, sans les outils du client
+  const autres = Nav106.client() ? [] /* v106 (lot 6) : ses autres pages sont derrière le rond de profil */ : (coachSeul ? menuCoach(visiblesNav) : enFiche ? menuCoach(visiblesHorsFiche().filter(o => !o.masque_nav)) : visiblesNav).filter(o => principaux.indexOf(o) === -1);   // v98 : le coach, ses 7 entrées ; v104 (point 2) : dans une fiche aussi, sans les outils du client
   b.innerHTML = principaux.map(o =>
-    `<a href="${esc(Auth.estCoach() ? lienMenu(o) : lienOutil(o.id))}" data-id="${esc(o.id)}"${enFiche && o.role !== "coach" ? " data-quitter-fiche" : ""}${estVerrouille(o) ? ' class="verrouille"' : ""}>${iconeOutil(o)}<span class="lbl">${esc(Auth.estCoach() ? nomMenuCoach(o) : nomCourt(o))}</span>${cadenasNav(o)}</a>`).join("") +
+    `<a href="${esc(Auth.estCoach() ? lienMenu(o) : lienOutil(o.id))}" data-id="${esc(o.id)}"${enFiche && o.role !== "coach" ? " data-quitter-fiche" : ""}${cadenasVu(o) ? ' class="verrouille"' : ""}>${iconeOutil(o)}<span class="lbl">${esc(Auth.estCoach() ? nomMenuCoach(o) : nomCourt(o))}</span>${cadenasNav(o)}</a>`).join("") +
     (autres.length ? `<button type="button" data-plus><span class="ico" aria-hidden="true">${ICONES.plus}</span><span class="lbl">Plus</span></button>` : "");
   const plus = b.querySelector("[data-plus]");
   /* v69 : le prospect revient a l'accueil par une fleche a gauche du titre (la croix seule ne suffisait pas sur telephone) ;
@@ -488,6 +502,8 @@ function marquerNav(id){
   if (Auth.estCoach() && Store.idConsulte){ const v = Store.retourVers || "clients"; id = PARENTS_MENU_COACH[v] || v; }
   if (PARENTS_CLIENT[id] && cachePourClient(OUTILS.find(o => o.id === id))) id = PARENTS_CLIENT[id];   // v100 : sa page « parente »
   $$("#barre-bas a, .menu-plus a").forEach(a => { if (a.dataset.id === id) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+  /* v106 (lot 6) : une page derrière le rond de profil (Profil, Formation… ; Réglages du coach) marque le rond */
+  { const r = $("rond-profil"); if (r) r.classList.toggle("ici", Nav106.actif() && !(Auth.estCoach() && Store.idConsulte) && MenuProfil.pages().some(o => o.id === id)); }
   const plus = document.querySelector("#barre-bas [data-plus]");
   /* v98 (relecture) : « Plus » marqué seulement si la page est vraiment dans son volet (le coach : ses 7 entrées) */
   const dansPlus = Auth.estCoach() ? MENU_COACH.indexOf(id) > -1 : true;   // v104 (point 2) : aussi dans une fiche
@@ -917,7 +933,7 @@ async function afficher(id, silencieux, sansCompte){
     ${enFiche ? (outil.sans_entete ? "" : `<h1 class="sr-only">${esc(trad(nomPageFiche()))}</h1>`) : outil.sans_entete ? "" : `<header class="masthead">
       <span class="eyebrow">${CONFIG.marque.programme ? esc(CONFIG.marque.programme) + " — " : ""}${esc(nomOnglet(outil))}</span>
       <h1>${esc(outil.titre)}</h1>
-      <p class="lede">${esc(outil.accroche)}</p>
+      <p class="lede"${Nav106.client() ? ` title="${esc(trad(outil.accroche))}"` : ""}>${esc(outil.accroche)}</p>
     </header>`}
     ${verrouille ? pageVerrouillee(outil) : (pause ? Sante.carteHTML(outil.id) : "") + htmlSur(outil)}
     ${avecDonnees ? blocSauvegarde() : ""}

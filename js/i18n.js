@@ -1888,3 +1888,4 @@ Object.assign(I18N.en, { "Inscrits depuis ta dernière visite (le {d}) ou depuis
 Object.assign(I18N.en, { "Questionnaire": "Questionnaire" });   // v106 (lot 4) : la ligne « Questionnaire · Tout voir » de l'Aperçu
 Object.assign(I18N.en, { "Repas remplacés ce mois": "Meals swapped this month" });   // v106 (lot 4) : ligne de l'Aperçu
 Object.assign(I18N.en, { "Ton feedback sur ce bilan :": "Your feedback on this check-in:", "écrit avant ce bilan, à relire": "written before this check-in, to review", "à écrire": "to write" });   // v106 (relecture)
+Object.assign(I18N.en, { "Voir la séance": "See the session" });   // v106 (lot 6)
