@@ -883,11 +883,7 @@ body.lc-selection .barre-bas{display:none}
 .fc-id-t{min-width:0;display:flex;flex-direction:column;gap:8px}
 .fc-pastilles{display:flex;flex-wrap:wrap;gap:6px}
 .fc-pastilles .pastille{padding:4px 12px;font-size:12.5px}
-.fc-actions{display:flex;gap:10px;margin-top:14px}
-.fc-principal{flex:1;min-width:0}
-.fc-principal svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .btn.sans-numero,.btn.sans-numero:disabled{background:var(--verre);border-color:var(--verre-bord);color:var(--ink-3);opacity:1}
-.fc-appeler{width:var(--h-bouton);height:var(--h-bouton)}
 .fc-panneau > .carte,.fc-panneau > .fc-carte{margin:0 0 10px}
 .fc-panneau > .panel{margin-top:16px}
 .fc-carte{padding:14px 16px}

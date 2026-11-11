@@ -203,11 +203,19 @@ function avecProspects(db, n, m){
 const badges = page => page.$$eval('#nav a[data-id="prospects"] .nav-badge, #barre-bas a[data-id="prospects"] .nav-badge, .menu-plus a[data-id="prospects"] .nav-badge',
   l => l.map(e => ({ t: e.textContent.trim(), aria: e.getAttribute("aria-label"), vis: e.getClientRects().length > 0 }))).catch(() => []);
 /* le tableau de bord : le nombre de la pastille de la tuile Prospects, et les lignes « prospect » de « À traiter maintenant » */
-const tableau = page => page.evaluate(() => {
-  const p = document.querySelector("#tb-t-prospects .tb-badge");
-  const urg = Array.from(document.querySelectorAll("#tb-a-traiter ul.tb-at:not(.tb-surveiller) li")).filter(li => li.querySelector(".pastille.accent"));
-  return { tuile: p ? parseInt(p.textContent, 10) : null, lignes: urg.length, total: parseInt((document.querySelector("#tb-t-traiter .t-val") || {}).textContent, 10) };
-});
+/* v106 (lot 5) : changement voulu — plus de tuile Prospects : « Aujourd'hui » groupe les prospects (Nouveaux prospects, Bilans
+   réservés, À relancer) ; chaque groupe dit combien de ses lignes sont des urgences (data-urgences) ; tuile = leur somme ; lignes =
+   les lignes de la colonne Prospects (dépliées) dont la raison est une urgence ; total = le chiffre « À traiter » */
+const tableau = async page => {
+  for (const b of await page.$$('#tb-col-prospects [data-tb-deplier][aria-expanded="false"]')) { await b.click(); await new Promise(r => setTimeout(r, 200)); }
+  return page.evaluate(() => {
+    const gs = Array.from(document.querySelectorAll("#tb-col-prospects .tb-groupe"));
+    const urgent = /DM de bienvenue|réservé|clic|Absent|Signé/i;
+    return { tuile: gs.length ? gs.reduce((n, g) => n + parseInt(g.dataset.urgences || "0", 10), 0) : null,
+      lignes: Array.from(document.querySelectorAll("#tb-col-prospects .tb-l")).filter(li => urgent.test(li.textContent)).length,
+      total: parseInt((document.querySelector("#tb-c-traiter .t-val") || {}).textContent, 10) };
+  });
+};
 /* les textes visibles de #vue (nœuds texte) */
 const textesVisibles = page => page.evaluate(() => {
   const v = document.getElementById("vue"), out = [], w = document.createTreeWalker(v, NodeFilter.SHOW_TEXT); let x;
@@ -226,9 +234,9 @@ async function principal(){
     db.profils.push({ id: NV(50), prenom: "Archive", nom: "Test", role: "client", statut: "prospect", cree_le: avant(H) });
     db.donnees.push({ user_id: NV(50), outil: "suivi_prospect", contenu: { version: 1, archive_le: avant(30 * 60000) }, maj_le: avant(30 * 60000) });
     const { page } = await contexte(b, COACH, db);
-    await page.goto(URL0 + "#/tableau"); await pret(page, "#tb-vue .tb-tiles"); await attendre(page, 800);
+    await page.goto(URL0 + "#/tableau"); await pret(page, "#tb-vue .tb-chiffres"); await attendre(page, 800);
     const T = await tableau(page), B1 = await badges(page);
-    ok("A1 : tableau de bord : le badge de l'onglet Prospects (barre du haut et barre du bas) = le nombre d'urgences de la tuile Prospects = les lignes « prospect » de « À traiter maintenant » (3 nouveaux inscrits, pas l'archivé)",
+    ok("A1 : tableau de bord : le badge de l'onglet Prospects (barre du haut et barre du bas) = les urgences des groupes de prospects d'« Aujourd'hui » = leurs lignes urgentes (v106) (3 nouveaux inscrits, pas l'archivé)",
       T.tuile === 3 && T.lignes === 3 && B1.length === 2 && B1.every(x => x.t === "3"), JSON.stringify({ T, B1 }));
     await page.goto(URL0 + "#/prospects"); await pret(page, "#pr-nouveautes .nv-panneau"); await attendre(page, 800);
     const nv = parseInt(await page.$eval("#pr-nouveautes .seance-c-tete .pastille", e => e.textContent).catch(() => "-1"), 10), B2 = await badges(page);
@@ -238,7 +246,7 @@ async function principal(){
     const B3 = await badges(page), pan = await page.$eval("#pr-nouveautes", e => e.textContent).catch(() => "");
     ok("A3 : « Tout marquer comme vu » vide le panneau des Nouveautés mais ne touche pas au badge des urgences (toujours « 3 »)",
       /Rien de nouveau chez tes prospects/.test(pan) && B3.length === 2 && B3.every(x => x.t === "3"), JSON.stringify({ B3, pan: pan.slice(0, 120) }));
-    await page.goto(URL0 + "#/tableau"); await pret(page, "#tb-vue .tb-tiles"); await attendre(page, 800);
+    await page.goto(URL0 + "#/tableau"); await pret(page, "#tb-vue .tb-chiffres"); await attendre(page, 800);
     const B4 = await badges(page);
     ok("A4 : retour au tableau de bord : toujours « 3 », avec l'aria-label « 3 urgences chez tes prospects »",
       B4.length === 2 && B4.every(x => x.t === "3" && x.aria === "3 urgences chez tes prospects"), JSON.stringify(B4));
@@ -253,23 +261,23 @@ async function principal(){
     const db = avecProspects(base(), 0, 6);
     db.profils.find(p => p.id === C2).cree_le = avant(20 * J);   // Sarah : inscrite il y a longtemps
     const { page } = await contexte(b, COACH, db);
-    await page.goto(URL0 + "#/tableau"); await pret(page, "#tb-vue .tb-tiles"); await attendre(page, 800);
+    await page.goto(URL0 + "#/tableau"); await pret(page, "#tb-vue .tb-chiffres"); await attendre(page, 800);
     const T = await tableau(page), B1 = await badges(page);
     await page.goto(URL0 + "#/prospects"); await pret(page, "#pr-nouveautes .nv-panneau"); await attendre(page, 800);
     const nv = parseInt(await page.$eval("#pr-nouveautes .seance-c-tete .pastille", e => e.textContent).catch(() => "-1"), 10), B2 = await badges(page);
-    ok("A7 : aucune urgence prospect (tuile « 0 urgence ») mais 6 nouveautés : aucun badge, ni au tableau de bord ni sur la page Prospects",
+    ok("A7 : aucune urgence prospect (v106 : 0 dans les groupes) mais 6 nouveautés : aucun badge, ni au tableau de bord ni sur la page Prospects",
       T.tuile === 0 && B1.length === 0 && nv >= 6 && B2.length === 0, JSON.stringify({ T, B1, nv, B2 }));
   });
   await bloc("A. 120 urgences, téléphone, anglais", async () => {
     const db = avecProspects(base(), 120, 0);
     const { page } = await contexte(b, COACH, db, { viewport: MOBILE });
-    await page.goto(URL0 + "#/tableau"); await pret(page, "#tb-vue .tb-tiles"); await attendre(page, 1200);
+    await page.goto(URL0 + "#/tableau"); await pret(page, "#tb-vue .tb-chiffres"); await attendre(page, 1200);
     const T = await tableau(page), B = await badges(page);
-    ok("A8 : 120 urgences (téléphone 390 px) : la tuile dit 120, le badge de la barre du bas « 99+ » (visible)",
+    ok("A8 : 120 urgences (téléphone 390 px) : les groupes en comptent 120 (v106), le badge de la barre du bas « 99+ » (visible)",
       T.tuile === 120 && B.length >= 1 && B.every(x => x.t === "99+") && B.some(x => x.vis), JSON.stringify({ T, B }));
     const db2 = avecProspects(base(), 2, 3); avecPrefsEnTous(db2);
     const { page: p2 } = await contexte(b, COACH, db2, { langue: "en" });
-    await p2.goto(URL0 + "#/tableau"); await pret(p2, "#tb-vue .tb-tiles"); await attendre(p2, 1000);
+    await p2.goto(URL0 + "#/tableau"); await pret(p2, "#tb-vue .tb-chiffres"); await attendre(p2, 1000);
     const B2 = await badges(p2);
     ok("A9 : en anglais : badge « 2 », aria-label « 2 urgent items among your prospects »", B2.length === 2 && B2.every(x => x.t === "2" && x.aria === "2 urgent items among your prospects"), JSON.stringify(B2));
   });
@@ -295,8 +303,8 @@ async function principal(){
         t.filter(x => x.includes(prenom)).length === 1 && d.prenom === prenom && d.tete === nom && !d.h2Ident && !d.avatar, JSON.stringify({ noms: t.filter(x => x.includes(prenom)), d }));
       ok("B2 (" + qui + ", " + taille + " px) : « Fiche » n'est plus ni un bouton ni un grand titre (aucun texte « Fiche » seul visible) ; un seul h1, « Aperçu » (le nom de son lien), pour les lecteurs d'écran",
         !t.includes("Fiche") && d.bAct === 2 && d.bActIci === "Aperçu" && d.h1.length === 1 && d.h1[0][0] === "Aperçu" && d.h1[0][1] === "sr-only" && d.h1[0][2] <= 1, JSON.stringify({ d, fiche: t.filter(x => /^Fiche$/.test(x)) }));
-      ok("B3 (" + qui + ", " + taille + " px) : le reste de l'en-tête et de l'identité reste : « Revenir à mes clients » (une fois), la pastille « " + (qui === "client" ? "Client" : "Prospect") + " », " + (qui === "client" ? "« Préparer le call »" : "le message WhatsApp prêt") + ", Appeler ; pas de débordement",
-        d.sortir === 1 && (await page.$eval("#sortir-fiche", e => e.getAttribute("aria-label"))) === "Revenir à mes clients" /* v106 : la flèche, au nom lu par les lecteurs d'écran */ && d.ident && d.role === (qui === "client" ? "Client" : "Prospect") && (qui === "client" ? d.call : d.wa) && d.appeler && !d.deborde, JSON.stringify(d));
+      ok("B3 (" + qui + ", " + taille + " px) : le reste de l'en-tête et de l'identité reste : « Revenir à mes clients » (une fois), la pastille « " + (qui === "client" ? "Client" : "Prospect") + " », " + (qui === "client" ? "plus de bouton « Préparer le call » (v106)" : "le message WhatsApp prêt") + ", Appeler ; pas de débordement",
+        d.sortir === 1 && (await page.$eval("#sortir-fiche", e => e.getAttribute("aria-label"))) === "Revenir à mes clients" /* v106 : la flèche, au nom lu par les lecteurs d'écran */ && d.ident && d.role === (qui === "client" ? "Client" : "Prospect") && (qui === "client" ? !d.call /* v106 (lot 4) : plus de bouton « Bilans » sur l'Aperçu (la carte du dernier retour et l'onglet Suivi y mènent) */ : d.wa) && d.appeler && !d.deborde, JSON.stringify(d));
       /* les onglets à plusieurs pages gardent leurs boutons de page */
       await ouvrir(page, uid, "profil", "#q-age");
       const pr = await page.$$eval("#vue .fiche-entete a.b-act", l => l.map(a => a.textContent.trim()));
@@ -319,7 +327,10 @@ async function principal(){
   /* =================== C. point 3 : les titres du questionnaire à la 3e personne dans la fiche =================== */
   const lireProfil = async page => page.evaluate(() => {
     const v = document.getElementById("vue"), n = x => String(x || "").replace(/\s+/g, " ").trim();
-    const titres = Array.from(v.querySelectorAll("h1,h2,h3,h4,legend,label,summary,th,dt,.sec-titre")).filter(e => e.getClientRects().length && !e.closest("[hidden]")).map(e => n(e.textContent));
+    /* v106 (lot 4) : dans la fiche, chaque thème du questionnaire est un <details> replié (son h2 dans le <summary>) : on l'ouvre
+       pour tout lire, et le <summary> qui porte un h2 n'est pas compté deux fois */
+    v.querySelectorAll("details.q-theme").forEach(d => { d.open = true; });
+    const titres = Array.from(v.querySelectorAll("h1,h2,h3,h4,legend,label,summary,th,dt,.sec-titre")).filter(e => e.getClientRects().length && !e.closest("[hidden]") && !(e.tagName === "SUMMARY" && e.querySelector("h2"))).map(e => n(e.textContent));
     return { titres, sections: titres.filter(x => /^\d+ · /.test(x)) };
   });
   await bloc("C. français", async () => {

@@ -96,9 +96,10 @@ const outilAccueil = {
     const ligne = (k, v) => v ? `<li><span>${esc(k)}</span><b>${esc(String(v))}</b></li>` : "";
     const pastilles = (r.jour != null ? `<span class="pastille">${Decouverte.depuisTexte(r.jour)}</span>` : "")
       + (B.reserve ? " " + Commercial.pastilleBilan(B) : r.clics ? ` <span class="pastille accent">a cliqué Plan d'action</span>` : "");
-    return `<section class="panel" id="fiche-decouverte"><div class="seance-c-tete"><h2>Découverte</h2>${pastilles}</div>
+    /* v106 (lot 4, test QA) : repliée (le suivi commercial, en haut, dit déjà l'essentiel) ; tout reste lisible d'un toucher */
+    return `<details class="panel q-theme" id="fiche-decouverte"><summary><h2>Découverte</h2><span class="fc-repli-p">${pastilles}</span></summary>
       <ul class="ingr fiche-l">${lignes.map(x => ligne(x[0], x[1])).join("")}</ul>
-      <p class="note" style="margin:10px 0 0">Lecture seule : rien ne s'écrit d'ici.</p></section>`;
+      <p class="note" style="margin:10px 0 0">Lecture seule : rien ne s'écrit d'ici.</p></details>`;
   },
 
   /* v51 — detail d'un prospect pour le coach : reponses, chronologie, lien de reservation, email (v53 : plus de score
@@ -128,9 +129,9 @@ const outilAccueil = {
     ajoute(act.derniere, "Dernière visite dans l'app");
     ev.sort((x, y) => y.t - x.t);
     const pages = Object.keys(act.pages).sort((x, y) => act.pages[y] - act.pages[x]).slice(0, 8).map(k => k + " (" + act.pages[k] + ")").join(", ");
-    const chronoHTML = `<section class="panel" id="fiche-chrono"><h2>Chronologie</h2>
+    const chronoHTML = `<details class="panel q-theme" id="fiche-chrono"><summary><h2>Chronologie</h2></summary>
       ${ev.length ? `<ol class="dc-chrono">${ev.slice(0, 40).map(e => `<li><time datetime="${esc(e.quand)}">${esc(dt(e.quand) + heure(e.quand))}</time><span>${esc(e.texte)}</span></li>`).join("")}</ol>` : `<div class="empty">Rien pour l'instant.</div>`}
-      <p class="note" style="margin:10px 0 0">${act.jours.length} jour${act.jours.length > 1 ? "s" : ""} d'activité, ${Math.floor(act.temps_s / 60)} min dans l'app${pages ? " · pages vues : " + esc(pages) : ""}.</p></section>`;
+      <p class="note" style="margin:10px 0 0">${act.jours.length} jour${act.jours.length > 1 ? "s" : ""} d'activité, ${Math.floor(act.temps_s / 60)} min dans l'app${pages ? " · pages vues : " + esc(pages) : ""}.</p></details>`;   // v106 (lot 4, test QA) : repliée
     return chronoHTML;   // v106 (lot 4) : ses réponses (reponsesCourtHTML) et « Contacter » sont en haut de la fiche
   },
 
@@ -147,7 +148,7 @@ const outilAccueil = {
        coach en anglais (les réponses du prospect, jamais : data-notr) */
     return `<section class="panel" id="fiche-reponses"><h2>${esc(trad("Réponses au questionnaire court"))}</h2>
       <p class="note" style="margin:0 0 8px">${esc(trad("{n} / {t} réponses", { n: Decouverte.repondues(I), t: nbQ }))}${esc(Decouverte.questionnaireFait(I) ? trad(", validé le {d}", { d: dt(I.court_le) }) : trad(", pas encore validé"))}.</p>
-      <ul class="ingr fiche-l">${rep.map(([k, v]) => `<li><span>${esc(trad(k))}</span><b data-notr>${v ? esc(v) : "—"}</b></li>`).join("")}</ul></section>`;
+      <ul class="ingr fiche-l">${rep.map(([k, v]) => `<li><span>${esc(trad(k))}</span><b data-notr>${v ? esc(v === "Homme" || v === "Femme" ? trad(v) : v) : "—"}</b></li>`).join("")}</ul></section>`;
   },
 
   /* v106 (lot 4) — « Contacter » (v51), en haut de la fiche d'un prospect : son lien de réservation et un email prêt */
@@ -214,6 +215,9 @@ const outilAccueil = {
     let SC = null;
     try { if (profil.statut === "prospect") SC = Commercial.analyse(pDc, d.challenge, d.suivi_prospect, dernier, I); } catch(e){ SC = null; }
     const alertes = l.alertes;
+    /* v106 (lot 4, test QA) : les alertes « à remplir / à envoyer » (questionnaire, programme, diète) ne sont pas répétées en
+       pastilles : la ligne Questionnaire / Programme / Diète de l'Aperçu les dit */
+    const alertesV = alertes.filter(a => a.type !== "manque");
     /* v83 (bloc 3, maquettes FicheSuivi et FicheCompte) — la même fiche pour un client et un prospect : en-tête (croix =
        retour là d'où l'on vient, initiales, nom, pastille Client ou Prospect, pastille du programme s'il est connu), bouton
        principal (client : « Préparer le call » ; prospect : « WhatsApp » pré-rempli, ou « Pas de numéro ») et bouton rond
@@ -235,7 +239,9 @@ const outilAccueil = {
        prêt du prospect : il s'appelle « Message WhatsApp prêt », pour ne pas porter le même texte que celui du bandeau */
     /* v106 (lot 2) : le statut, WhatsApp (message prêt) et Appeler sont dans l'en-tête de la fiche (EnteteFiche, navigation.js) ;
        ici reste « Bilans » d'un client (v106 : avant « Préparer le call ») */
-    const principal = prospectF ? "" : `<a class="btn ghost fc-principal" id="fc-call" href="${esc(lienOutil("bilan"))}">${esc(trad("Bilans"))}</a>`;   // v106 (lot 3) : le nom de la page où il mène ; discret (un seul doré plein)
+    /* v106 (lot 4, test QA) : plus de bouton « Bilans » (« Préparer le call ») ici : la carte du dernier retour (« Lire ») et
+       l'onglet Suivi y mènent déjà ; pour un prospect, la phrase du haut est gardée pour les lecteurs d'écran seulement (le suivi
+       commercial, juste dessous, dit la même chose) */
     /* v99 : #/client/<id>/accueil/compte (Profil › Son compte) ouvre l'onglet Compte */
     /* v99 (relecture) : le panneau suit l'adresse seulement (…/accueil = Suivi, sous l'onglet Aperçu ; …/accueil/compte = Compte,
        sous Profil) : « Aperçu » rouvre toujours le Suivi (une action de Compte qui redessine la fiche reste sur Compte).
@@ -270,7 +276,6 @@ const outilAccueil = {
       <section class="fc-ident" id="fc-ident">
         <div class="fc-id"><div class="fc-id-t">
             <div class="fc-pastilles">${progNom ? `<span class="pastille fc-prog" data-notr>${esc(progNom)}</span>` : ""}${anglais ? ` <span class="pastille" title="Ce client utilise l'app en anglais">🇺🇸 anglais</span>` : ""}</div></div></div>
-        ${principal ? `<div class="fc-actions">${principal}</div>` : ""}
       </section>
       <div class="fc-panneau" id="fc-suivi"${onglet === "suivi" ? "" : " hidden"}>
       ${/* v106 (lot 4) : l'Aperçu montre une seule fois l'essentiel — un client : l'état (phrase et alertes), le dernier retour, le
@@ -278,8 +283,8 @@ const outilAccueil = {
          « En bref » ni de grille de cartes qui résumait les autres onglets (tout y est). Un prospect : le suivi commercial et
          « Contacter » en haut, ses réponses une seule fois, ses séances de la formation, puis la découverte et la chronologie ; pas
          de cartes « client » (retour, poids, régularité, diète). */ ""}
-      <p class="lede fc-lede">${profil.statut === "prospect" ? "Compte gratuit : pas de suivi à assurer tant qu'il n'est pas passé client." + (rdc ? " Découverte : " + (rdc.jour == null ? "date d'inscription inconnue" : Decouverte.depuisTexte(rdc.jour)) + (rdc.questionnaire ? ", questionnaire rempli." : ", questionnaire pas encore rempli.") : "") : alertes.length ? `${alertes.length} point${alertes.length > 1 ? "s" : ""} à regarder.` : "Rien à signaler : tout est en ordre."}</p>
-      ${alertes.length ? `<div class="attention-alertes" style="margin:0 0 12px">${alertes.map(a => `<a class="pastille ${a.niveau === "info" ? "accent" : a.niveau}" href="#/${esc(a.cible)}">${esc(a.texte)}</a>`).join("")}</div>` : ""}
+      <p class="lede fc-lede${prospectF ? " sr-only" : ""}">${profil.statut === "prospect" ? "Compte gratuit : pas de suivi à assurer tant qu'il n'est pas passé client." + (rdc ? " Découverte : " + (rdc.jour == null ? "date d'inscription inconnue" : Decouverte.depuisTexte(rdc.jour)) + (rdc.questionnaire ? ", questionnaire rempli." : ", questionnaire pas encore rempli.") : "") : alertes.length ? `${alertes.length} point${alertes.length > 1 ? "s" : ""} à regarder.` : "Rien à signaler : tout est en ordre."}</p>
+      ${alertesV.length ? `<div class="attention-alertes" style="margin:0 0 12px">${alertesV.map(a => `<a class="pastille ${a.niveau === "info" ? "accent" : a.niveau}" href="#/${esc(a.cible)}">${esc(a.texte)}</a>`).join("")}</div>` : ""}
       ${prospectF ? `
         ${SC ? `<div id="fiche-commercial">${Commercial.ficheHTML(Object.assign({}, pr || {}, profil), SC, d.suivi_prospect)}</div>` : ""}
         ${this.contacterHTML(pDc, I)}

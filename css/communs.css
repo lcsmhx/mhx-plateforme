@@ -561,8 +561,6 @@ body.figee{overflow:hidden}
 .verrou-wa{justify-content:center;margin:12px auto 0}
 .dc-wa .btn,.verrou-wa .btn{min-height:var(--h-bouton);text-align:center}
 
-/* v72 (E) — « Nouveaux depuis ta dernière visite » (tableau de bord du coach) : prénom et date, puis le numéro et ses liens,
-   qui passent à la ligne sur un écran étroit */
 /* v104 (point 9) : l'en-tête sur ordinateur est plus bas. De 721 à 1199 px : deux lignes (logo et compte, puis le menu) au lieu
    de trois ; dès 1200 px : UNE ligne (logo, menu, compte), les 7 entrées du coach visibles en entier (entrées un peu plus
    serrées ; le nom « … · coach » se cache, il reste dans Réglages) */
@@ -803,12 +801,17 @@ details.q-theme[open] > summary{margin-bottom:14px}
 .tb-groupe .tb-sur{display:flex;align-items:center;gap:8px;margin:0 0 6px}
 .tb-n{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:20px;padding:0 6px;border-radius:999px;background:var(--raised);color:var(--ink-2);font-size:12px}
 .tb-g-note{margin:0 0 6px}
-.tb-groupe .tb-rien{margin:0;padding:2px 0 4px;color:var(--ink-3)}
+.tb-groupe .tb-rien{margin:0;padding:2px 0 4px;color:var(--ink-3);background:none;border:0}
 .tb-rien-tout{margin:0 0 16px}
-.tb-l{display:flex;align-items:center;gap:6px}
+.tb-liste.tb-at li.tb-l{display:flex;align-items:center;gap:6px}
 .tb-l > .tb-at-b{flex:1 1 auto;min-width:0}
 .tb-l > .tb-wa{flex:none}
 .tb-l > .tb-wa svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .tb-tout{min-height:var(--h-toucher);display:inline-flex;align-items:center;margin-top:4px}
 @media (max-width:380px){ .tb-chiffre{padding:8px} .tb-chiffre .t-val{font-size:20px} .tb-chiffre .t-lbl{font-size:11px} }
 @media (min-width:1024px){ .tb-colonnes{grid-template-columns:repeat(2,minmax(0,1fr));gap:28px;align-items:start} }
+
+/* v106 (lot 4, test QA) : la fiche d'un prospect — Découverte et Chronologie repliées (titre et pastilles sur la ligne) ; lot 3 :
+   la réponse au bilan encore plus serrée sur téléphone */
+details.q-theme > summary .fc-repli-p{display:inline-flex;gap:6px;flex-wrap:wrap;margin-left:auto;margin-right:8px}
+@media (max-width:720px){ #bilan-retours .fb-editeur textarea{min-height:56px} #bilan-retours .checkin-rep{margin:0 0 4px} #bilan-retours .fbd-avis-coach{margin-top:6px} }

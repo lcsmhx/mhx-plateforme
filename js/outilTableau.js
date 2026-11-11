@@ -44,20 +44,12 @@ const outilTableau = {
 
   html(){ return `<div id="tb-vue"><header class="masthead tb-tete"><div class="tb-tete-l"><h1>Aujourd'hui</h1><p class="lede">Ce qui demande ton attention aujourd'hui.</p></div></header><section class="panel">${squelette()}</section></div>`; },
 
-  /* les lignes « À traiter maintenant » : une par personne (sa raison la plus urgente), des plus urgentes aux autres.
-     rang : 😞 0, note en chute 1, retour à lire 2, prospect signé 3, case « J'ai réservé » 4, absent à l'appel 5, clic 6,
-     nouvel inscrit 7, autre urgence d'un client 8, bilan à conclure (coché depuis plus de 7 j) 9, « Perdu » à relancer 10.
-     v59 : une table (plus un décalage du rang de la page Prospects, qui se déréglait avec les nouveaux motifs) ; les rappels
-     de gestion (bilan à conclure, « Perdu » à relancer) passent après les urgences des clients ; à rang égal, un prospect
-     le plus récemment actif d'abord (comme la page Prospects) */
+  /* le rang des motifs des prospects (v59) : signé 3, « J'ai réservé » 4, absent 5, clic 6, nouvel inscrit 7, bilan à conclure 9,
+     « Perdu » à relancer 10 ; v106 (lot 5) : l'ordre des lignes dans « Bilans réservés » et « À relancer » */
   RANG_PROSPECTS: { signe: 3, case: 4, absent: 5, clic: 6, nouveau: 7, appel: 9, perdu: 10 },
-  /* v104 (point 10) : une URGENCE = ce qui demande une action du coach aujourd'hui.
-     1. Client : un 😞 non traité, une note en chute, ou un retour de la semaine reçu à lire.
-     2. Prospect : inscrit depuis moins de 48 h (DM de bienvenue), « J'ai réservé » coché à vérifier, clic sur la réservation sans
-        créneau, absent à l'appel pas encore relancé, ou « Signé » à passer client.
-     3. Le reste (client inactif, régularité faible, calculateur ≠ questionnaire ; bilan à conclure, « Perdu » à relancer) : « À
-        surveiller », sous les urgences, sans compter dans les badges ni dans « À traiter ».
-     Les clients d'abord, les prospects ensuite (dans les urgences comme dans « À surveiller »). */
+  /* v104 (point 10) : une URGENCE = ce qui demande une action du coach aujourd'hui (client : 😞, note en chute, retour à lire ;
+     prospect : nouvel inscrit, « J'ai réservé », clic, absent, signé). v106 (lot 5) : les retours à lire forment leur groupe ; les
+     urgences des prospects font le badge de l'onglet Prospects. */
   URG_CLIENTS: ["avis_triste", "note_chute", "bilan_recu"],
   URG_PROSPECTS: ["nouveau", "case", "clic", "absent", "signe"],
   urgentProspect(a){ return !!(a && a.urgent && this.URG_PROSPECTS.indexOf(a.motif) > -1); },
@@ -85,8 +77,8 @@ const outilTableau = {
     const neufs = new Set((nouveaux || []).map(l => l.p.id));
     prospects.forEach(x => {
       const a = x.a, m = a.motif, l = x.l;
-      const base = { uid: l.p.id, nom: l.nom, prospect: true, cible: "accueil", recence: a.recence || 0, rang: this.RANG_PROSPECTS[m] != null ? this.RANG_PROSPECTS[m] : 8 };
-      if (m === "case" || m === "appel" || (a.reserve && !a.issue)) G.reserves.push(Object.assign(base, { texte: m ? Commercial.motifTexte(a) : trad("Bilan réservé"), niveau: "accent" }));
+      const base = { uid: l.p.id, nom: l.nom, prospect: true, cible: "accueil", recence: a.recence || 0, rang: this.RANG_PROSPECTS[m] != null ? this.RANG_PROSPECTS[m] : 8, urgent: this.urgentProspect(a) };
+      if (m === "case" || m === "appel" || (!m && !a.issue && (a.coche || a.caseAVerifier))) G.reserves.push(Object.assign(base, { texte: m ? Commercial.motifTexte(a) : trad("Bilan réservé"), niveau: "accent" }));
       else if (m === "signe" || m === "absent" || m === "clic" || m === "perdu") G.relancer.push(Object.assign(base, { texte: Commercial.motifTexte(a), niveau: m === "signe" ? "ok" : "attention" }));
       else if (m === "nouveau" || neufs.has(l.p.id)) G.nouveaux.push(Object.assign(base, { texte: m === "nouveau" ? Commercial.motifTexte(a) : trad("Inscrit le {d}", { d: this.quand(l.p.cree_le) }), niveau: "accent", cree: Date.parse(l.p.cree_le) || 0, tel: l.tel, msgWa: l.msgWa }));
     });
@@ -104,14 +96,15 @@ const outilTableau = {
   },
   groupeHTML(g, l, note){
     const ouvert = !!this.deplies[g.id], n = l.length, vus = ouvert ? l : l.slice(0, this.REPLI);
-    return `<section class="tb-groupe" id="tb-g-${g.id}" aria-labelledby="tb-g-${g.id}-t"><h3 class="tb-sur" id="tb-g-${g.id}-t">${esc(trad(g.titre))} <span class="tb-n">${n}</span></h3>
+    /* data-urgences : combien de ces lignes sont des urgences (le badge de l'onglet Prospects les compte) */
+    return `<section class="tb-groupe" id="tb-g-${g.id}" aria-labelledby="tb-g-${g.id}-t" data-urgences="${l.filter(x => x.urgent).length}"><h3 class="tb-sur" id="tb-g-${g.id}-t">${esc(trad(g.titre))} <span class="tb-n">${n}</span></h3>
       ${note ? `<p class="note tb-g-note">${esc(note)}</p>` : ""}
-      ${n ? `<ul class="tb-liste tb-at">${vus.map(x => this.ligneHTML(x)).join("")}</ul>${n > this.REPLI ? `<button type="button" class="lc-lien tb-tout" data-tb-deplier="${g.id}" aria-expanded="${ouvert}">${esc(ouvert ? trad("Replier") : trad("Tout voir ({n})", { n }))}</button>` : ""}`
+      ${n ? `<ul class="tb-liste tb-at">${vus.map(x => this.ligneHTML(x)).join("")}</ul>${n > this.REPLI ? `<button type="button" class="lc-lien tb-tout" data-tb-deplier="${g.id}" aria-controls="tb-g-${g.id}" aria-expanded="${ouvert}">${esc(ouvert ? trad("Replier") : trad("Tout voir ({n})", { n }))}</button>` : ""}`
         : `<p class="note tb-rien">${esc(trad(g.vide))}</p>`}</section>`;
   },
 
   /* v72 (E) — la visite du coach */
-  VISITE: { cle: "coach_visite", PAUSE: 30 * 60000, JOURS: 7, MAX: 10 },
+  VISITE: { cle: "coach_visite", PAUSE: 30 * 60000, JOURS: 7 },
   iso(v){ return typeof v === "string" && /^\d{4}-\d{2}-\d{2}T/.test(v) && !isNaN(Date.parse(v)) ? v : null; },
   /* la visite enregistrée, revalidée (écrite par le coach, mais jamais lue sans contrôle), ou null */
   visiteLue(V){
@@ -125,7 +118,7 @@ const outilTableau = {
     const seuil = V ? (V.jusqua || V.le) : null;
     return { seuil, depuis: V ? V.le : null, nouvelle: { le: new Date(t).toISOString(), jusqua: maxCree, avant: seuil, avant_le: V ? V.le : null } };
   },
-  quand(iso){ const d = new Date(iso), p = n => String(n).padStart(2, "0"); return p(d.getDate()) + "/" + p(d.getMonth() + 1) + " à " + p(d.getHours()) + ":" + p(d.getMinutes()); },
+  quand(iso){ const d = new Date(iso), p = n => String(n).padStart(2, "0"); return p(d.getDate()) + "/" + p(d.getMonth() + 1) + (I18N.langue === "en" ? " at " : " à ") + p(d.getHours()) + ":" + p(d.getMinutes()); },
   /* v72 (F) — les inscrits des 30 derniers jours (aujourd'hui compris, depuis minuit il y a 29 jours) par source (le code du
      lien d'inscription, clé contact) : les comptes passés par l'inscription gratuite, hors coach et hors comptes de test (même
      règle que la Mesure de la page Prospects, sans sa case « Inclure les comptes de test ») */
@@ -167,7 +160,7 @@ const outilTableau = {
     const nouveaux = lignes.filter(l => l.p.statut === "prospect" && this.iso(l.p.cree_le) && Date.parse(l.p.cree_le) > borne && Date.parse(l.p.cree_le) <= futur);
     const G = this.groupes(clients, prospects, nouveaux);
     const total = Object.keys(G).reduce((n, k) => n + G[k].length, 0);
-    const noteVisite = vis.depuis ? trad("Depuis ta dernière visite, le {d}.", { d: this.quand(vis.depuis) }) : trad("Première visite enregistrée : les inscrits des 7 derniers jours.");
+    const noteVisite = vis.depuis ? trad("Inscrits depuis ta dernière visite (le {d}) ou depuis moins de 48 h.", { d: this.quand(vis.depuis) }) : trad("Première visite enregistrée : les inscrits des 7 derniers jours.");
     const chiffre = (id, n, lbl, vers) => `<button type="button" class="tb-chiffre${n ? " actif" : ""}" id="${id}" data-tb-aller="${vers}"><span class="t-val readout">${n}</span><span class="t-lbl">${esc(trad(lbl))}</span></button>`;
     const colonne = (col, titre) => `<div class="tb-col" id="tb-col-${col}"><h2 class="tb-col-t">${esc(trad(titre))}</h2>${this.GROUPES.filter(g => g.col === col).map(g => this.groupeHTML(g, G[g.id], g.id === "nouveaux" ? noteVisite : "")).join("")}</div>`;
     zone.innerHTML = `
@@ -189,13 +182,13 @@ const outilTableau = {
         this.deplies[id] = !this.deplies[id];
         const t = document.createElement("div"); t.innerHTML = this.groupeHTML(g, G[id], id === "nouveaux" ? noteVisite : "");
         const n = t.firstElementChild; z.replaceWith(n); brancherGroupe(n);
-        const nb = n.querySelector("[data-tb-deplier]"); if (nb) try { nb.focus(); } catch(e){}
+        const nb = n.querySelector("[data-tb-deplier]"); if (nb) try { nb.focus({ preventScroll: true }); } catch(e){}
       }));
     };
     $$(".tb-groupe", zone).forEach(brancherGroupe);
     $$("[data-tb-aller]", zone).forEach(b => b.addEventListener("click", () => {
       const z = $(b.dataset.tbAller); if (!z) return;
-      const d = z.querySelector('[data-tb-deplier][aria-expanded="false"]'); if (d) d.click();
+      const d = z.classList.contains("tb-groupe") ? z.querySelector('[data-tb-deplier][aria-expanded="false"]') : null; if (d) d.click();   // un groupe long se déplie ; « À traiter » mène juste en haut de la liste
       const cible = $(b.dataset.tbAller); if (cible) cible.scrollIntoView({ behavior: "smooth", block: "start" });
     }));
     /* v72 (E) : nouvelle visite : la seule écriture de cette page, une ligne du coach lui-même (règles de la base : le propriétaire),

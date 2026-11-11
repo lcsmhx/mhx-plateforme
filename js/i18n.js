@@ -1284,7 +1284,7 @@ Object.assign(I18N.en, {
 Object.assign(I18N.en, {
   "Tableau de bord": "Dashboard", "Tableau": "Dashboard",
   "Ce qui demande ton attention aujourd'hui.": "What needs your attention today.",
-  "À traiter": "To handle", "À traiter maintenant": "To handle now", "Rien à traiter pour l'instant.": "Nothing to handle for now.",
+  "À traiter": "To handle", "Rien à traiter pour l'instant.": "Nothing to handle for now.",
   "En bref": "At a glance",
   "Rechercher un client par son nom": "Search for a client by name", "Rechercher un prospect par son nom": "Search for a prospect by name",
   "Aucun résultat pour ce nom.": "No results for that name.",
@@ -1802,8 +1802,6 @@ Object.assign(I18N.en, {
 });
 /* v104 (point 10) : tableau de bord, urgences = une action du coach aujourd'hui */
 Object.assign(I18N.en, {
-  "À surveiller": "To keep an eye on",
-  "Et {n} de plus dans Mes clients et Prospects.": "And {n} more in My clients and Prospects.",
   "Urgences (une action de ta part aujourd'hui) : un 😞 non traité, une note en chute, ou un retour de la semaine à lire. Le reste (inactif, régularité faible, calculateur) est « À surveiller ».": "Urgent (an action from you today): an unhandled 😞, a falling score, or a weekly check-in to read. The rest (inactive, low consistency, calculator) is \"To keep an eye on\".",
   "Urgences (une action de ta part aujourd'hui) : inscrit depuis moins de 48 h, « J'ai réservé » à vérifier, clic sur la réservation sans créneau, absent à l'appel pas encore relancé, ou « Signé » à passer client.": "Urgent (an action from you today): signed up less than 48 h ago, \"I booked\" to check, clicked booking without a slot, missed the call and not yet followed up, or \"Signed\" to switch to client."
 });
@@ -1883,6 +1881,7 @@ Object.assign(I18N.en, { "Tout voir": "See all", "Réponses au questionnaire cou
 Object.assign(I18N.en, { "Retours à lire": "Check-ins to read", "Clients inactifs": "Inactive clients", "Nouveaux prospects": "New prospects",
   "Bilans réservés": "Booked calls", "À relancer": "To follow up", "Aucun retour à lire.": "No check-ins to read.", "Aucun client inactif.": "No inactive clients.",
   "Aucun nouvel inscrit.": "No new sign-ups.", "Aucun bilan réservé à suivre.": "No booked calls to follow.", "Personne à relancer.": "Nobody to follow up.",
-  "Replier": "Collapse", "Tout voir ({n})": "See all ({n})", "Inscrit le {d}": "Signed up on {d}", "Depuis ta dernière visite, le {d}.": "Since your last visit, on {d}.",
+  "Replier": "Collapse", "Tout voir ({n})": "See all ({n})", "Inscrit le {d}": "Signed up on {d}",
   "Première visite enregistrée : les inscrits des 7 derniers jours.": "First recorded visit: sign-ups from the last 7 days.",
   "Nouveaux": "New", "Inactifs": "Inactive", "Bilan réservé": "Call booked" });
+Object.assign(I18N.en, { "Inscrits depuis ta dernière visite (le {d}) ou depuis moins de 48 h.": "Signed up since your last visit ({d}) or in the last 48 h." });
