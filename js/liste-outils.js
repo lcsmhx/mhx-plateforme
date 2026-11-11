@@ -14,7 +14,9 @@ const ALIAS_ROUTES = { progression: "mensurations", repas: "nutrition", home: "a
    dans le menu (la page garde son titre). Les autres pages du coach (Suivi détaillé, Comptes, Suivi commercial, Newsletter,
    Mes séances, Bibliothèque) et ses propres onglets « client » quittent le menu, mais chaque adresse #/… ouvre toujours la
    même page qu'avant (outilsVisibles ne change pas) : Clients et Prospects y mènent par leurs boutons, Mes programmes réunit
-   l'atelier, Ma base et la bibliothèque. Sur téléphone : Tableau · Clients · Prospects · Programmes · Plus. */
+   l'atelier, Ma base et la bibliothèque. Sur téléphone : Tableau · Clients · Prospects · Programmes · Plus.
+   v106 (lot 1) : remplacé par les 4 entrées ci-dessous (les pages sorties du menu s'ouvrent depuis le menu « ⋯ » des listes, les
+   onglets de la Bibliothèque et le rond de profil). */
 /* v106 (lot 1, refonte de l'ergonomie) : 4 entrées — Aujourd'hui (le tableau de bord), Clients, Prospects, Bibliothèque (Mes
    programmes et le Catalogue, en deux onglets). Réglages, Mon entraînement, la langue, « Partager l'app » et « Se déconnecter »
    passent derrière le rond de profil (MenuProfil, navigation.js). Plus de « Plus » : la barre du bas a 4 cases égales. Les

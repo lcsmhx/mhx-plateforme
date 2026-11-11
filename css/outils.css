@@ -1034,12 +1034,8 @@ details.ex-pli > .ex-ligne{margin:0;border:0;border-top:1px solid var(--line);bo
 .dup-sur{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
 .dup-sur label{margin:0}.dup-sur select{max-width:260px}
 .repas-tete .actions-b .outil-pg{min-width:var(--h-toucher)}
-/* v98 (chantier 3 de la nuit du 10/11) : boutons des vues d'avant (Clients, Prospects) et onglets de « Mes programmes » */
-.vues-coach{margin:0 0 12px;justify-content:flex-end}
-.vues-coach .btn,.vues-coach .btn.petit{min-height:var(--h-toucher)}
-.mp-onglets{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
-.mp-onglets .tab{text-decoration:none;display:inline-flex;align-items:center}
-.mp-onglets .tab.on{border-color:var(--accent);color:var(--ink)}
+/* v98 : les boutons de « Ma base » (v106 : les vues d'avant sont dans le menu « ⋯ » des listes, les onglets de la Bibliothèque
+   dans .bib-onglets et .sous-onglets, css/communs.css) */
 [data-mp-prog] button{min-height:var(--h-toucher)}
 /* v99 (chantier 4 de la nuit du 10/11) : les 5 onglets de la fiche d'un client, WhatsApp dans l'en-tête */
 /* v104 (point 2) : les 5 onglets sur une seule ligne (défilement horizontal si l'écran est trop étroit) */

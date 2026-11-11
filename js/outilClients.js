@@ -5,8 +5,6 @@ const outilClients = {
   id: "clients",
   cle: null,
   nom: "Mes clients",
-  principal_coach: true,
-  court: "Clients",   // v83 (bloc 3) : la barre du bas du coach, Tableau · Clients · Prospects · Plus
   sans_entete: true,  // v83 (bloc 3) : la liste du haut porte le titre « Clients » et le nombre (maquette Liste)
   icone: "👥",
   role: "coach",          // n'apparait que pour le coach

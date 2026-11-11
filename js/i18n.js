@@ -106,7 +106,7 @@ async function basculerLangue(){
   /* v93 : la langue du coach est celle de SON compte (demarrage.js) ; dans la fiche d'un client, elle ne peut pas y être rangée
      (les écritures vont au client consulté) : le bouton le dit au lieu de basculer pour une seule ouverture */
   if (typeof Auth !== "undefined" && Auth.estCoach() && Store.idConsulte){
-    try { UI.toast("Change la langue de ton espace depuis ton tableau de bord.", "attention", 6000); } catch(e){}
+    try { UI.toast("Change la langue de ton espace hors de la fiche d'un client.", "attention", 6000); } catch(e){}   // v106 (relecture du lot 1)
     return;
   }
   const l = I18N.langue === "en" ? "fr" : "en";
@@ -1679,14 +1679,12 @@ Object.assign(I18N.en, {
   "Modifier": "Edit",
   "Dupliquer": "Duplicate",
   "Aucun programme dans ta base pour le moment. Construis-en un dans « Mes séances », puis « Enregistrer dans ma base ».": "No ready-made program yet. Build one in “My sessions”, then “Save to my ready-made programs”.",
-  "Tes programmes réutilisables au même endroit : tes séances en cours, ta base de programmes prêts à l'emploi et ta bibliothèque.": "Your reusable programs in one place: your sessions in progress, your ready-made programs and your saved items.",
   "Clients": "Clients",
   "Mon entraînement": "My training",
   "Réglages": "Settings",
   "Vue tableau": "Table view",
   "Comptes": "Accounts",
   "Vue détaillée": "Detailed view",
-  "Exporter la newsletter": "Export the newsletter",
   "Programmes": "Programs"
 });
 /* v98-menu-coach-fin */
@@ -1867,7 +1865,7 @@ Object.assign(I18N.en, { "Publication du programme en cours : réessaie dans un 
 Object.assign(I18N.en, { "{n} urgence chez tes prospects": "{n} urgent item among your prospects", "{n} urgences chez tes prospects": "{n} urgent items among your prospects" });
 /* v106 (lot 1) : navigation à 4 entrées, rond de profil, menu « ⋯ », Bibliothèque et « Mes modèles » */
 Object.assign(I18N.en, {
-  "Rechercher": "Search", "Mon profil et mes réglages": "My profile and settings", "Coach": "Coach", "Langue": "Language",
+  "Rechercher": "Search", "Change la langue de ton espace hors de la fiche d'un client.": "Change your space's language outside a client's profile.", "Mon profil et mes réglages": "My profile and settings", "Coach": "Coach", "Langue": "Language",
   "Te déconnecter de ton espace ?": "Log out of your space?", "Plus d'options": "More options", "Autres vues": "Other views",
   "Newsletter": "Newsletter", "Catalogue": "Catalog", "Prospects": "Prospects",
   "Tes séances, ta base de programmes, tes modèles et le catalogue de l'app.": "Your sessions, your program base, your templates and the app catalog.",

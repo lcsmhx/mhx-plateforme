@@ -31,7 +31,7 @@ async function routeDepuisAdresse(){
   id = parts[0]; sousRoute = parts.slice(1).join("/");
   if (ALIAS_ROUTES[id]) id = ALIAS_ROUTES[id];
   /* v106 (lot 1) : les anciennes pages du coach rangées dans un onglet ouvrent cet onglet (l'adresse le dit) */
-  if (Auth.estCoach() && !Store.idConsulte && REDIRECTIONS_COACH[id] && !sousRoute){
+  if (Auth.estCoach() && REDIRECTIONS_COACH[id] && !sousRoute){
     const c = REDIRECTIONS_COACH[id].split("/");
     try { history.replaceState(null, "", "#/" + c.join("/")); } catch(e){}
     id = c[0]; sousRoute = c.slice(1).join("/");

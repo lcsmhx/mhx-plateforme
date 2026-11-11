@@ -617,7 +617,7 @@ body.nav106 .compte .qui,body.nav106 #langue,body.nav106 #deco{display:none}
 .menu-plus button{display:flex;align-items:center;gap:12px;width:100%;padding:13px 4px;background:none;border:0;color:var(--ink);font:inherit;font-size:15px;font-weight:500;cursor:pointer;text-align:left;min-height:var(--h-toucher)}
 .menu-plus button .ico{display:inline-flex;color:var(--ink-3)}
 .menu-plus button .ico svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.menu-plus button:hover,.menu-plus a:hover{color:var(--accent)}
+.volet-profil .menu-plus button:hover,.volet-profil .menu-plus a:hover{color:var(--accent)}
 .menu-plus .mp-val{margin-left:auto;font-size:13px;color:var(--ink-3)}
 /* le menu « ⋯ » (menuPointsHTML, interface.js) */
 .menu-points{position:relative;display:inline-block;border:0;margin:0;padding:0}
@@ -652,11 +652,11 @@ body.nav106 .compte .qui,body.nav106 #langue,body.nav106 #deco{display:none}
   body.nav106 .titre-page{display:block;order:0;flex:1 1 auto;min-width:0;font-weight:600;font-size:17px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   body.nav106 .nav-chercher{order:1;flex:none;width:var(--h-rond);justify-content:center;padding:0;border-radius:50%}
   body.nav106 .nav-chercher .lbl,body.nav106 .rond-profil .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-  body.nav106 .topbar .compte{order:2;flex:none;margin-left:0;justify-content:flex-end}
-  /* le titre est dans la ligne du haut : le grand titre de la page ne se répète pas dessous */
-  body.nav106-coach .masthead{display:none}
-  body.nav106 .lc-titres h1{display:none}
-  body.nav106-coach main.wrap{padding-top:14px}
+  body.nav106 .topbar .compte{order:2;flex:0 1 auto;min-width:0;margin-left:0;justify-content:flex-end}
+  /* le titre est dans la ligne du haut : le grand titre de la page ne se répète pas dessous (gardé pour les lecteurs d'écran) ;
+     le reste de l'en-tête de la page (explication, compteurs) reste */
+  body.nav106-coach .masthead{padding:14px 0 12px;margin-bottom:16px}
+  body.nav106-coach .masthead > h1,body.nav106 .lc-titres h1{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
   body.nav106 .barre-bas a{min-width:0}
   body.nav106 .barre-bas .lbl{font-size:11px}
 }
@@ -674,6 +674,8 @@ body.nav106 .compte .qui,body.nav106 #langue,body.nav106 #deco{display:none}
   body.nav106 .barre-bas a[aria-current="page"] .ico{background:var(--accent-soft);border-radius:999px;padding:4px 14px;margin:-4px -14px}
   body.nav106 main{padding-bottom:96px}
   body.nav106 .toasts{bottom:calc(84px + env(safe-area-inset-bottom))}
+  body.nav106 footer .wrap{padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+  body.nav106 .bandeau.session-perdue{bottom:calc(76px + env(safe-area-inset-bottom))}
 }
 
 /* --- ordinateur : la barre latérale --- */

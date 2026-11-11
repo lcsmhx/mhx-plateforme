@@ -5,7 +5,7 @@ const outilBibliotheque = {
   id: "bibliotheque",
   cle: null,
   nom: "Mes modèles",
-  /* v83 (bloc 3) : plus dans la barre du bas du coach (Tableau · Clients · Prospects · Plus) : dans « Plus » et les raccourcis du Tableau de bord */
+  /* v106 (lot 1) : « Mes modèles », l'onglet de la Bibliothèque (#/mes-programmes/bibliotheque ; #/bibliotheque y mène) */
   icone: "📚",
   role: "coach",
   titre: "Mes modèles",

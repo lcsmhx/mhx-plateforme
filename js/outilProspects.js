@@ -12,8 +12,6 @@ const outilProspects = {
   nom: "Prospects",
   icone: "🎯",
   role: "coach",
-  principal_coach: true,   // v83 (bloc 3) : la barre du bas du coach, Tableau · Clients · Prospects · Plus (décision 7 : la seule façon de passer de Clients à Prospects)
-  court: "Prospects",
   sans_entete: true,
   titre: "Prospects",
   accroche: "",

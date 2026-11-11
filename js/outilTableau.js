@@ -29,8 +29,6 @@ const outilTableau = {
   nom: "Tableau de bord",
   icone: "📈",
   role: "coach",
-  principal_coach: true,
-  court: "Tableau",   // v83 (bloc 3) : la barre du bas du coach, Tableau · Clients · Prospects · Plus
   sans_entete: true,
   titre: "Aujourd'hui",   // v106 (lot 1) : le nom de l'entrée du menu
   accroche: "",

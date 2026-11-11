@@ -415,13 +415,15 @@ const avecPrefsEn = (db, uid) => { const pr = db.donnees.find(d => d.user_id ===
       t[0] === "Enregistrement…" && t[1] === "Enregistré" && t[2] === "Hors ligne — gardé sur cet appareil, renvoi automatique" && /^Pas de connexion.*Réessayer$/.test(t[3]), JSON.stringify(t));
     /* dans la fiche d'un client (la page est encore sur sa fiche) : le choix ne peut pas être rangé sur le compte du coach, le bouton le dit */
     const prefsCoach = () => db.ecritures.filter(e => e.table === "donnees" && e.outil === "prefs" && e.user_id === F.IDS.coach);
-    await page.click("#langue"); await attendre(page, 600);
+    /* v106 (lot 1) : la langue du coach est dans le volet du rond de profil */
+    await page.click("#rond-profil"); await attendre(page, 400); await page.click(".volet [data-mp-langue]"); await attendre(page, 600);
     const apres = await page.evaluate(() => ({ langue: I18N.langue, consulte: !!Store.idConsulte, toast: Array.from(document.querySelectorAll("#toasts .toast")).map(x => x.textContent).join(" | ") }));
-    ok("A5 : dans la fiche d'un client, le bouton de langue du coach ne bascule pas : « Change la langue de ton espace depuis ton tableau de bord. », rien d'écrit",
-      apres.consulte && apres.langue === "fr" && /depuis ton tableau de bord/.test(apres.toast) && prefsCoach().length === 0, JSON.stringify(apres));
+    ok("A5 : dans la fiche d'un client, le bouton de langue du coach ne bascule pas : « Change la langue de ton espace hors de la fiche d'un client. » (v106), rien d'écrit",
+      apres.consulte && apres.langue === "fr" && /hors de la fiche d'un client/.test(apres.toast) && prefsCoach().length === 0, JSON.stringify(apres));
     /* depuis son tableau de bord : le choix est rangé sur SON compte (prefs.langue), et il le garde (verif86, bloc I) */
     await aller(page, "#/tableau", 1500);
-    await Promise.all([page.waitForEvent("load", { timeout: 10000 }).catch(() => {}), page.click("#langue")]);
+    await page.click("#rond-profil"); await attendre(page, 400);   // v106 (lot 1)
+    await Promise.all([page.waitForEvent("load", { timeout: 10000 }).catch(() => {}), page.click(".volet [data-mp-langue]")]);
     await pret(page, "#tb-vue"); await attendre(page, 800);
     const en = await page.evaluate(() => ({ langue: I18N.langue, h1: (document.querySelector("#tb-vue h1") || {}).textContent }));
     const pc = prefsCoach().pop();

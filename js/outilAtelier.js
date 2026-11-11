@@ -194,7 +194,8 @@ const outilAtelier = {
    v98 (chantier 3 de la nuit du 10/11, plan-menu-coach et plan-etape3 3d) — MES PROGRAMMES
    Un seul écran pour les programmes réutilisables du coach : « Mes séances » (l'atelier), « Ma base » (programmes_types,
    les « programmes prêts à l'emploi » de chaque fiche) et « Ma bibliothèque » (entraînements et journées types). Les données
-   restent dans leurs tables ; les anciennes adresses (#/atelier, #/bibliotheque) ouvrent toujours leur page d'avant.
+   restent dans leurs tables ; v106 (lot 1) : les anciennes adresses (#/atelier, #/bibliotheque) mènent à leur onglet ici, et
+   « Ma bibliothèque » s'appelle « Mes modèles ».
    Sous-adresses : #/mes-programmes (Mes séances), #/mes-programmes/base, #/mes-programmes/bibliotheque.
    ------------------------------------------------------------------ */
 const outilMesProgrammes = {
@@ -202,8 +203,6 @@ const outilMesProgrammes = {
   cle: null,
   role: "coach",
   nom: "Mes programmes",
-  court: "Programmes",
-  principal_coach: true,   // v106 (lot 1) : l'entrée « Bibliothèque » du menu du coach (Aujourd'hui · Clients · Prospects · Bibliothèque)
   icone: "🗂️",
   /* v106 (lot 1) : la page de l'entrée « Bibliothèque » : deux onglets, « Mes programmes » (ici : Mes séances, Ma base, Mes modèles —
      l'ancienne « Ma bibliothèque ») et « Catalogue » (#/catalogue) */

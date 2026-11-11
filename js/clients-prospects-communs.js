@@ -370,7 +370,7 @@ const ListeCoach = {
     clients: [["#/suivi-clients", "Vue tableau"], ["#/comptes", "Comptes"], ["#/clients/nouveau", "Créer un accès"]],
     prospects: [["#/suivi-commercial", "Vue détaillée"], ["#/newsletter", "Newsletter"]]
   },
-  menuPoints(t){ return menuPointsHTML((this.MENUS[t] || []).map(([href, texte]) => ({ href, texte, attrs: `data-lc-vue="${esc(href.slice(2))}"` })), { id: "vues-" + t, libelle: "Autres vues" }); },
+  menuPoints(t){ return menuPointsHTML((this.MENUS[t] || []).map(([href, texte]) => ({ href, texte })), { id: "vues-" + t, libelle: "Autres vues" }); },
   attente(t){ return `<section class="lc" data-liste="${t}">${this.tetePlus(t)}<div class="empty">${esc(trad("Chargement…"))}</div></section>`; },
   erreur(zone, t){ if (zone && zone.isConnected) zone.innerHTML = `<section class="lc" data-liste="${t}">${this.tetePlus(t)}<div class="empty">${esc(trad("Impossible de charger la liste."))}</div></section>`; },
   /* la liste filtrée (filtre, puis recherche) */
