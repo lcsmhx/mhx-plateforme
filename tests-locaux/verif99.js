@@ -241,6 +241,8 @@ const IDS104 = ["acc-vue", "fc-ident", "fc-call", "fc-appeler", "fc-suivi", "fc-
    « Fiche de … ») ; « Fiche » reste le h1 de l'Aperçu pour les lecteurs d'écran (caché à l'écran) */
 AVANT.accueil = ["accueil", ["Fiche", "En bref", "Notes privées"], IDS104];
 AVANT["accueil/compte"] = ["accueil", ["Son compte", "En bref", "Notes privées"], IDS104];
+/* v105 (point 3) : changement voulu — dans la fiche, le titre numéroté du questionnaire passe à la 3e personne (« 2 · Son objectif ») */
+AVANT.profil = [AVANT.profil[0], AVANT.profil[1].map(t => t === "2 · Ton objectif" ? "2 · Son objectif" : t), AVANT.profil[2]];
 /* v104 (point 4) : changement voulu — dans la fiche, le coach lit « Sa / Ses / Son » dans les titres : « Ses données », « Sa
    maintenance » (calculateur), « Sa régularité » (suivi), « Son parcours » (formation) ; mêmes pages, mêmes ids.
    v104 (point 5) : changement voulu — Son suivi gagne la zone des objectifs du mois du coach (#suivi-obj, ses champs #obj-0…)
