@@ -557,14 +557,14 @@ const NOUVEAU = { probleme: "Perdre du gras", obstacle: "Le manque de temps avec
     /* v104 (point 1) : « sa navigation (fiche) » = les pages de l'onglet Entraînement du bandeau : son journal (« Ses séances »)
        juste après « Son programme » ; #nav (celui du coach) n'a ni journal ni programme du client */
     const navF = await page.$$eval("#nav a", l => l.map(a => a.dataset.id));
-    const pE = (pagesOnglet.entrainement || []).map(([t, hr]) => [hr.split("/").pop(), t]), iJ = pE.findIndex(x => x[0] === "journal");
+    const pE = (pagesOnglet.programme || pagesOnglet.entrainement || [])   /* v106 (lot 2) : l'onglet « Entraînement » s'appelle « Programme » */.map(([t, hr]) => [hr.split("/").pop(), t]), iJ = pE.findIndex(x => x[0] === "journal");
     ok("… sa navigation (fiche) : « Son journal » juste après « Son programme » (v104 : onglet Entraînement du bandeau, « Ses séances » après « Son programme » ; rien dans #nav)", iJ > 0 && pE[iJ][1] === "Ses séances" && pE[iJ - 1][0] === "programme" && !navF.includes("journal") && !navF.includes("programme"), JSON.stringify([pE, navF]));
-    await page.click('#vue .fiche-entete .f-onglet[data-onglet-fiche="entrainement"]'); await attendre(page, 1500);   // v104 (point 1) : l'onglet Entraînement, puis sa page
+    await page.click('#vue .fiche-entete .f-onglet[data-onglet-fiche="programme"]'); await attendre(page, 1500);   // v104 (point 1) : l'onglet Entraînement, puis sa page
     const L0 = db.lectures.length;
     await page.click('#vue .fiche-entete .bandeau-actions a[href$="/journal"]'); await attendre(page, 1800);   // v71 (I) : lien canonique #/client/<uuid>/journal
-    const etat = await page.evaluate(() => ({ consulte: Store.idConsulte, hash: location.hash, courant, lecture: $("vue").classList.contains("lecture-seule"), h1: ($("vue").querySelector(".masthead h1") || {}).textContent }));
+    const etat = await page.evaluate(() => ({ consulte: Store.idConsulte, hash: location.hash, courant, lecture: $("vue").classList.contains("lecture-seule"), h1: ($("vue").querySelector(":scope > h1") || {}).textContent }));   // v106 (lot 2) : le titre (pour les lecteurs d'écran) porte le nom du lien
     const h = await historique(page);
-    ok("clic « Ses séances » : #/journal dans sa fiche (« Son journal », lecture seule) : ses 10 séances, les plus récentes d'abord", etat.consulte === F.IDS.c1 && etat.hash === "#/client/" + F.IDS.c1 + "/journal" && etat.courant === "journal" && etat.lecture && etat.h1 === "Son journal" && JSON.stringify(h) === JSON.stringify(attenduHist(JOURNAL_T)), JSON.stringify(etat) + " " + JSON.stringify(h.slice(0, 2)));
+    ok("clic « Ses séances » : #/journal dans sa fiche (« Ses séances », v106 : le nom du lien ; lecture seule) : ses 10 séances, les plus récentes d'abord", etat.consulte === F.IDS.c1 && etat.hash === "#/client/" + F.IDS.c1 + "/journal" && etat.courant === "journal" && etat.lecture && etat.h1 === "Ses séances" && JSON.stringify(h) === JSON.stringify(attenduHist(JOURNAL_T)), JSON.stringify(etat) + " " + JSON.stringify(h.slice(0, 2)));
     const champs = await page.$$eval("#vue .masthead ~ * input, #vue .masthead ~ * textarea, #vue .masthead ~ * select, #vue [data-jr-ouvrir], #vue [data-jr-fin], #vue [data-jr-place], #jr-noter *", l => l.length);
     ok("… ni « Noter ma séance », ni champ, ni formulaire : l'historique seul ; lu chez Thomas : son journal (jamais perf)", champs === 0 && db.lectures.slice(L0).some(x => x.uid === F.IDS.c1 && x.outil === "eq.journal") && lu(db, "perf", L0) === 0, champs + " · " + JSON.stringify(db.lectures.slice(L0).map(x => x.outil)));
     await attendre(page, 800);
@@ -757,7 +757,7 @@ const NOUVEAU = { probleme: "Perdre du gras", obstacle: "Le manque de temps avec
     await c.close();
     ({ c, page } = await contexte(b, COACH, db));
     await page.goto(URL0 + "#/tableau"); await pret(page); await ouvrirFiche(page, PID(4));
-    await page.click('#vue .fiche-entete .f-onglet[data-onglet-fiche="entrainement"]'); await attendre(page, 1500);   // v104 (point 1) : l'onglet Entraînement du bandeau, puis « Ses séances »
+    await page.click('#vue .fiche-entete .f-onglet[data-onglet-fiche="programme"]'); await attendre(page, 1500);   // v104 (point 1) : l'onglet Entraînement du bandeau, puis « Ses séances »
     await page.click('#vue .fiche-entete .bandeau-actions a[href$="/journal"]'); await attendre(page, 1800);   // v71 (I) : lien canonique #/client/<uuid>/journal
     const v2 = await vu(page);
     ok("coach, fiche de ce client, « Ses séances » : même chose, aucune injection, aucune écriture", !v2.xss && !v2.img && v2.items === 3 && db.ecritures.length === 0, JSON.stringify(v2) + " " + resume(db));

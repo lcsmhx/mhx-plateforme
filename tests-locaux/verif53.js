@@ -547,7 +547,7 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
       await page.waitForSelector("#fiche-decouverte", { timeout: 8000 }); await attendre(page, 700);
       /* v104 (point 4) : changement voulu — le nom n'est plus le h1 de la fiche (le h1 est le titre de page « Fiche », comme les
          autres onglets) : il est dans le h2 de l'identité (#fc-ident) */
-      const t = (await tuile(page, "Activité")) || { val: "?", sub: "?" }; t.h1 = await texte(page, "#vue > .fiche-entete .bandeau-tete strong");   // v105 (point 2) : le nom n'est plus que dans le bandeau « Fiche de … »
+      const t = (await tuile(page, "Activité")) || { val: "?", sub: "?" }; t.h1 = "Fiche de " + (await page.$eval("#vue > .fiche-entete .fe-nom", e => e.title).catch(() => ""));   // v106 (lot 2) : le nom entier est la bulle du prénom, dans l'en-tête de la fiche   // v105 (point 2) : le nom n'est plus que dans le bandeau « Fiche de … »
       await page.click("#sortir-fiche").catch(() => {}); await attendre(page, 800);
       await aller(page, "#/suivi-clients", 1800); await page.waitForSelector(`#tb-clients [data-ouvrir="${F.IDS.c3}"]`, { timeout: 8000 });   // v84 (ménage du bloc 3) : le tableau est dans le Suivi détaillé
       return t;

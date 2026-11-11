@@ -248,7 +248,7 @@ const PREMIERE = "Première visite enregistrée : les inscrits des 7 derniers jo
       !!p1 && p1.h2 === H2 && p1.note === PREMIERE && p1.ordre && p1.nTuiles === 3 && p1.ouvrir === 0, JSON.stringify(p1));
     ok("E1 : les prospects inscrits depuis moins de 7 jours, du plus récent au plus ancien (Zoé il y a 2 h, Hugo il y a 3 j ; pas Ana, 10 j ; jamais un client) : prénom, « inscrit le jj/mm à hh:mm », numéro + Appeler / WhatsApp (Zoé) ou « — » (Hugo)",
       !!p1 && JSON.stringify(p1.lignes.map(l => l.prenom)) === '["Zoé","Hugo"]' && p1.lignes[0].quand === "inscrit le " + quand(avant(2 * H)) && p1.lignes[1].quand === "inscrit le " + quand(avant(3 * J))
-        && p1.lignes[0].tel === TEL_ZOE + " Appeler WhatsApp" && JSON.stringify(p1.lignes[0].liens) === JSON.stringify(["tel:" + TEL_ZOE, "https://wa.me/33639980011"]) && p1.lignes[1].tel === "—" && !p1.lignes[1].liens.length,
+        && p1.lignes[0].tel === TEL_ZOE + " Appeler WhatsApp" && p1.lignes[0].liens.length === 2 && p1.lignes[0].liens[0] === "tel:" + TEL_ZOE && p1.lignes[0].liens[1].startsWith("https://wa.me/33639980011?text=Salut%20Zo%C3%A9")   /* v106 (lot 2) : WhatsApp = le message prêt */ && p1.lignes[1].tel === "—" && !p1.lignes[1].liens.length,
       JSON.stringify(p1 && p1.lignes));
     const c1 = V1[0] && V1[0].contenu;
     ok("E1 : UNE écriture, du coach chez lui-même (clé coach_visite), exactement { le: maintenant, jusqua: l'inscription la plus récente (Zoé), avant: null, avant_le: null }",

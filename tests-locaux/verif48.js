@@ -357,6 +357,7 @@ const ecrituresIntake = (db, uid) => db.ecritures.filter(e => e.outil === "intak
     const { c, page } = await contexte(b, coach, db);
     await page.goto(`http://localhost:${PORT}/#/suivi-clients`); await attendre(page, 2200);   // v84 (ménage du bloc 3) : [data-ouvrir] est dans « Suivi détaillé »
     await page.click(`[data-ouvrir="${F.IDS.c1}"]`).catch(() => {}); await attendre(page, 2200);
+    await page.click("#fe-notes").catch(() => {}); await attendre(page, 1500);   // v106 (lot 2) : les notes privées s'ouvrent par « Notes » de l'en-tête (un volet)
     db.refreshMode = "refuse";
     await page.evaluate(() => { Auth.session.expire_le = 1; });
     await page.fill("#nc-texte", "Relancer mardi, parle de son genou").catch(() => {}); await attendre(page, 4200);

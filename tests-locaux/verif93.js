@@ -427,8 +427,8 @@ const avecPrefsEn = (db, uid) => { const pr = db.donnees.find(d => d.user_id ===
     await pret(page, "#tb-vue"); await attendre(page, 800);
     const en = await page.evaluate(() => ({ langue: I18N.langue, h1: (document.querySelector("#tb-vue h1") || {}).textContent }));
     const pc = prefsCoach().pop();
-    ok("A6 : depuis son tableau de bord, le coach choisit l'anglais : rangé sur son compte (prefs { langue: \"en\" }), son espace passe en anglais (« Dashboard ») et le reste après le rechargement",
-      en.langue === "en" && en.h1 === "Dashboard" && !!pc && pc.contenu && pc.contenu.langue === "en", JSON.stringify([en, pc && pc.contenu]));
+    ok("A6 : depuis son tableau de bord, le coach choisit l'anglais : rangé sur son compte (prefs { langue: \"en\" }), son espace passe en anglais (« Today », v106 : le tableau de bord s'appelle « Aujourd'hui ») et le reste après le rechargement",
+      en.langue === "en" && en.h1 === "Today" && !!pc && pc.contenu && pc.contenu.langue === "en", JSON.stringify([en, pc && pc.contenu]));
   });
 
   /* =================== B. client en anglais : aucune phrase de l'app restée en français =================== */

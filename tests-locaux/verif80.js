@@ -577,7 +577,8 @@ const champTel = (page, id) => page.evaluate(id => {
     }, [THOMAS.id, F.IDS.c2, F.IDS.c3]);
     ok("A7 : Mes clients : colonne « Téléphone » (après Diète) ; Thomas : +33639980001, « Appeler » (tel:+33639980001) et « WhatsApp » (https://wa.me/33639980001, nouvel onglet)",
       t.th.indexOf("Téléphone") === t.th.indexOf("Diète") + 1 && t.th.length === 18 && !!t.thomas && t.thomas.t.indexOf(TEL_THOMAS) === 0
-        && JSON.stringify(t.thomas.liens) === JSON.stringify([{ t: "Appeler", href: "tel:" + TEL_THOMAS, target: null, rel: null }, { t: "WhatsApp", href: "https://wa.me/33639980001", target: "_blank", rel: "noopener" }]),
+        /* v106 (lot 2) : changement voulu — WhatsApp ouvre le message prêt (?text=…) */
+        && JSON.stringify(t.thomas.liens) === JSON.stringify([{ t: "Appeler", href: "tel:" + TEL_THOMAS, target: null, rel: null }, { t: "WhatsApp", href: "https://wa.me/33639980001?text=" + encodeURIComponent("Salut Thomas 👋"), target: "_blank", rel: "noopener" }]),
       JSON.stringify(t));
     ok("A7 : « — » sans numéro (Julien) et pour un numéro piégé (Sarah : javascript:…) : aucun lien", !!t.julien && t.julien.t === "—" && !t.julien.liens.length && !!t.sarah && t.sarah.t === "—" && !t.sarah.liens.length, JSON.stringify(t));
     ok("A7 : le numéro enregistré aujourd'hui n'est pas une saisie : l'Activité de Sarah (dernière vraie saisie) ne passe pas à « aujourd'hui »", !!t.sarah && !/aujourd/.test(t.sarah.act || ""), JSON.stringify(t.sarah));
@@ -586,20 +587,22 @@ const champTel = (page, id) => page.evaluate(id => {
     const pr = await page.evaluate(ids => ids.map(id => { const c = document.querySelector('.sc-carte[data-uid="' + id + '"]'), t = c && c.querySelector(".sc-tel");
       return t ? { t: t.textContent.replace(/\s+/g, " ").trim(), liens: Array.from(t.querySelectorAll("a")).map(a => a.getAttribute("href")), img: !!c.querySelector("img") } : null; }), [NOAH.id, INES.id, MAEL.id]);
     ok("A7 : cartes Prospects : « Téléphone : +33639980002 Appeler WhatsApp » (tel: et wa.me) ; « Téléphone : — » sans numéro ou numéro piégé (aucune balise injectée)",
-      !!pr[0] && pr[0].t === "Téléphone : " + TEL_NOAH + " Appeler WhatsApp" && JSON.stringify(pr[0].liens) === JSON.stringify(["tel:" + TEL_NOAH, "https://wa.me/33639980002"])
+      !!pr[0] && pr[0].t === "Téléphone : " + TEL_NOAH + " Appeler WhatsApp" && pr[0].liens.length === 2 && pr[0].liens[0] === "tel:" + TEL_NOAH && pr[0].liens[1].startsWith("https://wa.me/33639980002?text=Salut%20Noah")   /* v106 (lot 2) : le message prêt */
         && !!pr[1] && pr[1].t === "Téléphone : —" && !pr[1].liens.length && !!pr[2] && pr[2].t === "Téléphone : —" && !pr[2].liens.length && !pr[2].img,
       JSON.stringify(pr));
     await page.evaluate(id => Clients.ouvrir(id, "Noah Petit", "accueil"), NOAH.id); await attendre(page, 2000);
     /* v83 (bloc 3) : #fiche-tel est maintenant la VALEUR de la ligne « Téléphone » de #fc-infos (onglet Compte de la fiche) ;
        on relit l'étiquette de sa ligne et on recompose « Téléphone : <valeur> » (même texte attendu qu'avant) */
     const f1 = await page.evaluate(() => { const x = document.getElementById("fiche-tel"), li = x && x.closest("#fc-infos li"), lbl = li && li.querySelector(":scope > span");
-      return x && lbl ? { t: lbl.textContent.replace(/\s+/g, " ").trim() + " : " + x.textContent.replace(/\s+/g, " ").trim(), liens: Array.from(x.querySelectorAll("a")).map(a => a.getAttribute("href")) } : null; });
+      return x && lbl ? { t: lbl.textContent.replace(/\s+/g, " ").trim() + " : " + x.textContent.replace(/\s+/g, " ").trim(), liens: Array.from(x.querySelectorAll("a")).map(a => a.getAttribute("href")),
+        tete: [(document.querySelector(".fiche-entete #fc-appeler") || {}).getAttribute ? document.querySelector(".fiche-entete #fc-appeler").getAttribute("href") : null, (document.querySelector(".fiche-entete [data-fiche-wa] a") || {}).getAttribute ? document.querySelector(".fiche-entete [data-fiche-wa] a").getAttribute("href") : null] } : null; });
     await page.evaluate(id => Clients.ouvrir(id, "Julien Démo", "accueil"), F.IDS.c3); await attendre(page, 2000);
     /* v83 (bloc 3) : idem, étiquette « Téléphone » de la ligne + valeur « — » */
     const f2 = await page.evaluate(() => { const x = document.getElementById("fiche-tel"), li = x && x.closest("#fc-infos li"), lbl = li && li.querySelector(":scope > span");
       return x && lbl ? lbl.textContent.replace(/\s+/g, " ").trim() + " : " + x.textContent.replace(/\s+/g, " ").trim() : null; });
-    ok("A7 : fiche (onglet Compte, ligne Téléphone) : prospect Noah « Téléphone : +33639980002 Appeler WhatsApp » ; client sans numéro « Téléphone : — »",
-      !!f1 && f1.t === "Téléphone : " + TEL_NOAH + " Appeler WhatsApp" && JSON.stringify(f1.liens) === JSON.stringify(["tel:" + TEL_NOAH, "https://wa.me/33639980002"]) && f2 === "Téléphone : —",
+    /* v106 (lot 2) : changement voulu — dans « Son compte », le numéro seul ; Appeler et WhatsApp (message prêt) sont dans l'en-tête */
+    ok("A7 : fiche (Son compte, ligne Téléphone) : prospect Noah « Téléphone : +33639980002 » (Appeler et WhatsApp dans l'en-tête) ; client sans numéro « Téléphone : — »",
+      !!f1 && f1.t === "Téléphone : " + TEL_NOAH && f1.liens.length === 0 && f1.tete[0] === "tel:" + TEL_NOAH && /^https:\/\/wa\.me\/33639980002\?text=Salut%20Noah/.test(f1.tete[1] || "") && f2 === "Téléphone : —",
       JSON.stringify({ f1, f2 }));
     ok("A7 : le coach n'a rien écrit", db.ecritures.length === 0, resume(db));
   });

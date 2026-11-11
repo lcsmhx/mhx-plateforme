@@ -350,6 +350,8 @@ const couvre = (o, k) => {
 };
 /* lectures qui renvoient la clé (depuis la n-ième lecture) */
 const lu = (db, outil, depuis) => db.lectures.slice(depuis || 0).filter(x => couvre(x.outil, outil)).length;
+/* v106 (lot 2) : l'en-tête de la fiche montre le prénom ; le nom entier (tel quel) est sa bulle : « Fiche de <nom> » se recompose ici */
+const nomFiche = async page => "Fiche de " + (await page.$eval("#vue > .fiche-entete .fe-nom", e => e.title).catch(() => ""));
 const xss = page => page.evaluate(() => !!window.__xss || !!document.querySelector("#vue img[src='x'], #vue script, .nv-panneau img, .nv-panneau i, [onmouseover], [onerror]")).catch(() => true);
 const ajd = () => iso(new Date());   // « aujourd'hui » au moment du contrôle (et non du lancement : minuit peut passer pendant la suite)
 const deborde = page => page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
@@ -453,7 +455,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     ok("… la carte est redessinée dans le même filtre : « Relancé aujourd'hui : attends sa réponse. », toast « Suivi de Émilie Rousseau enregistré. »", ce.includes("Relancé aujourd'hui : attends sa réponse.") && (await page.getAttribute('[data-filtre="tous"]', "aria-pressed")) === "true" && (await toasts(page)).includes("Suivi de Émilie Rousseau enregistré."), ce.slice(0, 200) + " · " + JSON.stringify(await toasts(page)));
     await filtre(page, "tous"); await chercher(page, "karim");
     await page.click(`#pr-liste .sc-carte[data-uid="${KARIM}"] [data-sc="fiche"]`); await page.waitForSelector("#fiche-reponses", { timeout: 6000 }); await attendre(page, 400);
-    ok("après une recherche, « Ouvrir la fiche » sur la carte de Karim : sa fiche s'ouvre (« Karim Benali », ses réponses)", (await texte(page, "#vue > .fiche-entete .bandeau-tete strong" /* v105 (point 2) : le nom n'est plus que dans le bandeau « Fiche de … » */)).startsWith("Fiche de " + "Karim Benali") && (await texte(page, "#fiche-reponses")).includes("karim@exemple.org"), await texte(page, "#vue > .fiche-entete .bandeau-tete strong" /* v104 (point 4) : changement voulu — le nom est sous le titre de page « Fiche » */));
+    ok("après une recherche, « Ouvrir la fiche » sur la carte de Karim : sa fiche s'ouvre (« Karim Benali », ses réponses)", (await nomFiche(page)).startsWith("Fiche de " + "Karim Benali") && (await texte(page, "#fiche-reponses")).includes("karim@exemple.org"), await nomFiche(page));
     ok("seule écriture : la relance (aucune autre clé touchée)", db.ecritures.length === 1, JSON.stringify(db.ecritures.map(e => e.outil)));
   });
 
@@ -585,7 +587,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     const lienP = await page.$eval("#dc-lien", e => e.value).catch(() => "");
     ok("prospect piégé : fiche affichée, « 3 / 10 réponses » (v53 : plus de score), chronologie « Inscription » seule (dates piégées ignorées)", (await texte(page, "#fiche-reponses p.note")).startsWith("3 / 10 réponses") && JSON.stringify(cp) === '["Inscription"]', (await texte(page, "#fiche-reponses p.note")) + " " + JSON.stringify(cp));
     ok("prospect piégé : « 0 jour d'activité, 0 min dans l'app. » (pages piégées écartées), lien sans email (« @piege.fr » invalide), pas de mailto", (await texte(page, "#fiche-chrono p.note")) === "0 jour d'activité, 0 min dans l'app." && lienP === lienPour("=1+1", XSS, "") && !(await page.$("#dc-mail")), (await texte(page, "#fiche-chrono p.note")) + " · " + lienP);
-    ok("prospect piégé : aucune injection (nom, obstacle, modèle d'email), aucune écriture", !(await xss(page)) && (await texte(page, "#vue > .fiche-entete .bandeau-tete strong" /* v105 (point 2) : le nom n'est plus que dans le bandeau « Fiche de … » */)).startsWith("Fiche de " + "=1+1 " + XSS) && db.ecritures.length === 0, await texte(page, "#vue > .fiche-entete .bandeau-tete strong" /* v104 (point 4) : changement voulu — le nom est sous le titre de page « Fiche » */));
+    ok("prospect piégé : aucune injection (nom, obstacle, modèle d'email), aucune écriture", !(await xss(page)) && (await nomFiche(page)).startsWith("Fiche de " + "=1+1 " + XSS) && db.ecritures.length === 0, await nomFiche(page));
   });
 
   /* ---------- D. Journal des emails absent ---------- */
@@ -625,7 +627,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     await page.reload(); await attendre(page, 2600);
     ok("après rechargement (coach_notifs relu en base) : toujours 1 nouveauté, badge = urgences (v105)", (await page.$$("#pr-nouveautes .nv-liste li")).length === 1 && JSON.stringify(await badge(page)) === await badgeU(page), JSON.stringify(await badge(page)));
     await page.click(`#pr-nouveautes [data-nv-ouvrir="${NINA}"]`); await attendre(page, 2400);
-    ok("« Ouvrir » dans les Nouveautés : la fiche de Nina s'ouvre", (await texte(page, "#vue > .fiche-entete .bandeau-tete strong" /* v105 (point 2) : le nom n'est plus que dans le bandeau « Fiche de … » */)).startsWith("Fiche de " + "Nina Nouvelle") && !!(await page.$("#fiche-reponses")), await texte(page, "#vue > .fiche-entete .bandeau-tete strong" /* v104 (point 4) : changement voulu — le nom est sous le titre de page « Fiche » */));
+    ok("« Ouvrir » dans les Nouveautés : la fiche de Nina s'ouvre", (await nomFiche(page)).startsWith("Fiche de " + "Nina Nouvelle") && !!(await page.$("#fiche-reponses")), await nomFiche(page));
     ok("Nouveautés : une seule écriture en tout (coach_notifs), aucune injection", db.ecritures.length === 1 && !(await xss(page)), JSON.stringify(db.ecritures.map(e => e.outil)));
   });
   await bloc("E. Nouveautés depuis la dernière visite", async () => {
@@ -665,7 +667,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     await page.goto(`http://localhost:${PORT}/#/prospects`); await page.waitForSelector("#pr-nouveautes .nv-panneau", { timeout: 8000 }); await attendre(page, 400);
     await verifier("#pr-nouveautes", "Nouveautés de la page Prospects");
     await page.click(`#pr-nouveautes [data-nv-ouvrir="${QUOTE}"]`); await attendre(page, 2400);
-    ok("« Ouvrir » sur le nom piégé : sa fiche s'ouvre, nom affiché tel quel, aucune injection", (await texte(page, "#vue > .fiche-entete .bandeau-tete strong" /* v105 (point 2) : le nom n'est plus que dans le bandeau « Fiche de … » */)).startsWith("Fiche de " + norm(litQ)) && !!(await page.$("#fiche-reponses")) && !(await xss(page)), await texte(page, "#vue > .fiche-entete .bandeau-tete strong" /* v104 (point 4) : changement voulu — le nom est sous le titre de page « Fiche » */));
+    ok("« Ouvrir » sur le nom piégé : sa fiche s'ouvre, nom affiché tel quel, aucune injection", (await nomFiche(page)).startsWith("Fiche de " + norm(litQ)) && !!(await page.$("#fiche-reponses")) && !(await xss(page)), await nomFiche(page));
   });
   await bloc("E. Nouveautés : dates non ISO", async () => {
     /* Date.parse de Chrome accepte des chaînes non ISO (« <img src=x…> » = une date de 2001, « Sep 26 2026 10:00 » = une vraie

@@ -457,6 +457,7 @@ const attendreSel = async (page, sel, ms) => { try { await page.waitForSelector(
     const { page } = await contexte(b, COACH, db);
     await page.goto(URL0 + "#/tableau"); await pret(page);
     await page.evaluate(id => Clients.ouvrir(id, "Thomas Démo", "accueil"), F.IDS.c1);
+    await attendreSel(page, "#fe-notes", 8000); await page.click("#fe-notes");   // v106 (lot 2) : les notes privées sont dans un volet (« Notes » de l'en-tête) ; changer de page le referme et envoie le texte
     const ouvert = await attendreSel(page, "#nc-texte:not([disabled])", 8000);
     db.panneEcriture = "notes_coach"; db.retardEcriture = 900;
     const TEXTE = "Note fictive de la suite : genou droit à surveiller.";

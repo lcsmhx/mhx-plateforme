@@ -826,7 +826,7 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
       const cible = await page.$eval('#tb-vue button[data-fiche][data-cible="accueil"]', x => ({ id: x.dataset.fiche, nom: x.dataset.nom }));
       await page.click(`#tb-vue button[data-fiche="${cible.id}"][data-cible="accueil"]`);
       await page.waitForSelector("#vue .bandeau strong", { timeout: 8000 }).catch(() => {}); await attendre(page, 900);
-      const d1 = await ou(page), fiche = await page.evaluate(() => Store.idConsulte), titre = await texte(page, "#vue .bandeau strong");
+      const d1 = await ou(page), fiche = await page.evaluate(() => Store.idConsulte), titre = "Fiche de " + (await page.$eval("#vue .fiche-entete .fe-nom", e => e.title).catch(() => ""));   // v106 (lot 2) : le nom entier est la bulle du prénom de l'en-tête
       /* v71 (I) : l'adresse porte la fiche (#/client/<uuid>/accueil), posée par Clients.ouvrir */
       ok(`coach (${viewport.width} px) : « Ouvrir » (${cible.nom}) ouvre bien sa fiche (Store.idConsulte, #/client/<uuid>/accueil, bandeau « Fiche de ${cible.nom} »)`, fiche === cible.id && d1.courant === "accueil" && d1.hash === "#/client/" + cible.id + "/accueil" && titre === "Fiche de " + cible.nom, JSON.stringify([d1, fiche, titre]));
       await aller(page, "#/clients", 1500); const d2 = await ou(page);
@@ -854,7 +854,7 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
       ok("coach : uuid inconnu → Mes clients (#/clients), aucune fiche ouverte", (await ou(page)).hash === "#/clients" && (await page.evaluate(() => Store.idConsulte)) === null, JSON.stringify(await ou(page)));
       await aller(page, "#/tableau", 1500); await page.waitForSelector("#tb-vue button[data-fiche]", { timeout: 8000 }); await page.click("#tb-vue button[data-fiche]"); await pret(page, "#vue .bandeau"); await attendre(page, 600);
       const b1 = await texte(page, "#sortir-fiche"); await page.click("#sortir-fiche"); await attendre(page, 1200); const d1 = await ou(page);
-      ok("coach : fiche ouverte depuis le tableau de bord → « Revenir au tableau de bord » ramène sur #/tableau", b1 === "Revenir au tableau de bord" && d1.courant === "tableau" && d1.hash === "#/tableau", b1 + " " + JSON.stringify(d1));
+      ok("coach : fiche ouverte depuis le tableau de bord → « Revenir au tableau de bord » ramène sur #/tableau", b1 === "Revenir à Aujourd'hui" /* v106 : le nom de la page */ && d1.courant === "tableau" && d1.hash === "#/tableau", b1 + " " + JSON.stringify(d1));
       /* v84 (ménage du bloc 3) : les cartes (#pr-liste, [data-filtre]) sont dans « Suivi commercial » (#/suivi-commercial) : la fiche
          ouverte depuis une carte ramène à cette page (« Revenir au suivi commercial », RETOURS) ; même vérification */
       await aller(page, "#/suivi-commercial", 1800); await page.click('[data-filtre="tous"]').catch(() => {}); await page.waitForSelector('#pr-liste [data-sc="fiche"]', { timeout: 8000 }); await page.click('#pr-liste [data-sc="fiche"]'); await pret(page, "#vue .bandeau"); await attendre(page, 600);
@@ -863,7 +863,7 @@ const contenu0 = (db, uid) => (db.donnees.find(d => d.user_id === uid && d.outil
          → « Revenir aux prospects » (#sortir-fiche, RETOURS.prospects) ramène sur #/prospects ; les deux chemins dans le même ok */
       await aller(page, "#/prospects", 1800); await page.waitForSelector("#lc-prospects [data-lc-ligne]", { timeout: 8000 }); await page.click("#lc-prospects [data-lc-ligne]"); await pret(page, "#vue .bandeau"); await attendre(page, 600);
       const b3 = await texte(page, "#sortir-fiche"); await page.click("#sortir-fiche"); await attendre(page, 1200); const d3 = await ou(page);
-      ok("coach : fiche ouverte depuis une carte du Suivi commercial (v84 : les cartes de l'ancienne page Prospects) → « Revenir au suivi commercial » ramène sur #/suivi-commercial ; depuis la liste de la page Prospects → « Revenir aux prospects » ramène sur #/prospects", b2 === "Revenir au suivi commercial" && d2.courant === "suivi-commercial" && d2.hash === "#/suivi-commercial" && b3 === "Revenir aux prospects" && d3.courant === "prospects" && d3.hash === "#/prospects", b2 + " " + JSON.stringify(d2) + " · " + b3 + " " + JSON.stringify(d3));
+      ok("coach : fiche ouverte depuis une carte du Suivi commercial (v84 : les cartes de l'ancienne page Prospects) → « Revenir au suivi commercial » ramène sur #/suivi-commercial ; depuis la liste de la page Prospects → « Revenir aux prospects » ramène sur #/prospects", b2 === "Revenir à la vue détaillée" /* v106 */ && d2.courant === "suivi-commercial" && d2.hash === "#/suivi-commercial" && b3 === "Revenir aux prospects" && d3.courant === "prospects" && d3.hash === "#/prospects", b2 + " " + JSON.stringify(d2) + " · " + b3 + " " + JSON.stringify(d3));
       ok("coach : ces parcours n'écrivent rien", db.ecritures.length === 0, resume(db));
       await c.close();
     }
