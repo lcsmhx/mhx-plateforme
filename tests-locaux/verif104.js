@@ -967,7 +967,7 @@ const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { 
         badge: (document.querySelector('#barre-bas a[data-id="prospects"] .nav-badge, #nav a[data-id="prospects"] .nav-badge') || {}).textContent || "" };
     });
     ok("M1 (point 10, v106) : « Aujourd'hui » : Thomas (bilan reçu) dans « Retours à lire » (colonne Clients), Julien (inactif) dans « Clients inactifs », la prospecte inscrite il y a 2 h dans « Nouveaux prospects » (colonne Prospects) ; le badge Prospects = les urgences des prospects ; « À traiter » = toutes les lignes",
-      m.retours.includes("Thomas Démo") && m.inactifs.includes("Julien Démo") && m.nouveaux.includes("Nina Démo") && !m.retours.includes("Julien Démo") && JSON.stringify(m.cols) === '["tb-col-clients","tb-col-prospects"]'
+      m.retours.includes("Thomas Démo") && m.inactifs.includes("Julien Démo") && m.nouveaux.includes("Nina Démo") && !m.retours.includes("Julien Démo") && JSON.stringify(m.cols) === '["tb-col-clients","tb-col-prospects","tb-col-clients-suite"]' /* v106 (relecture) : les inactifs après les prospects dans la page, sous les retours sur ordinateur */
         && m.urgP >= 1 && m.badge === String(m.urgP) && +m.total === m.lignes, JSON.stringify(m));
   });
 

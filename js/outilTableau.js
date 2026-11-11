@@ -57,15 +57,15 @@ const outilTableau = {
      visite précédente du coach (v72 E). Une personne n'est que dans un groupe : celui de sa raison la plus urgente. */
   GROUPES: [
     { id: "retours", titre: "Retours à lire", col: "clients", vide: "Aucun retour à lire." },
-    { id: "inactifs", titre: "Clients inactifs", col: "clients", vide: "Aucun client inactif." },
     { id: "nouveaux", titre: "Nouveaux prospects", col: "prospects", vide: "Aucun nouvel inscrit." },
     { id: "reserves", titre: "Bilans réservés", col: "prospects", vide: "Aucun bilan réservé à suivre." },
-    { id: "relancer", titre: "À relancer", col: "prospects", vide: "Personne à relancer." }
+    { id: "relancer", titre: "À relancer", col: "prospects", vide: "Personne à relancer." },
+    { id: "inactifs", titre: "Clients inactifs", col: "clients-suite", vide: "Aucun client inactif." }   // après les prospects dans la page (ordre de la mission) ; sous les retours sur ordinateur
   ],
   REPLI: 5,          // un groupe plus long se replie sur place : « Tout voir (N) »
   deplies: {},       // les groupes dépliés pendant la session
   groupes(clients, prospects, nouveaux){
-    const G = { retours: [], inactifs: [], nouveaux: [], reserves: [], relancer: [] };
+    const G = { retours: [], inactifs: [], nouveaux: [], reserves: [], relancer: [] };   // (l'ordre de la page : GROUPES)
     const rg = a => a.type === "avis_triste" ? 0 : a.type === "note_chute" ? 1 : 2;
     clients.forEach(l => {
       const ret = l.alertes.filter(a => this.URG_CLIENTS.indexOf(a.type) > -1).sort((x, y) => rg(x) - rg(y))[0];
@@ -164,7 +164,7 @@ const outilTableau = {
     const total = Object.keys(G).reduce((n, k) => n + G[k].length, 0);
     const noteVisite = vis.depuis ? trad("Inscrits depuis ta dernière visite (le {d}) ou depuis moins de 48 h.", { d: this.quand(vis.depuis) }) : trad("Première visite enregistrée : les inscrits des 7 derniers jours.");
     const chiffre = (id, n, lbl, vers) => `<button type="button" class="tb-chiffre${n ? " actif" : ""}" id="${id}" data-tb-aller="${vers}"><span class="t-val readout">${n}</span><span class="t-lbl">${esc(trad(lbl))}</span></button>`;
-    const colonne = (col, titre) => `<div class="tb-col" id="tb-col-${col}"><h2 class="tb-col-t">${esc(trad(titre))}</h2>${this.GROUPES.filter(g => g.col === col).map(g => this.groupeHTML(g, G[g.id], g.id === "nouveaux" ? noteVisite : "")).join("")}</div>`;
+    const colonne = (col, titre) => `<div class="tb-col" id="tb-col-${col}">${titre ? `<h2 class="tb-col-t">${esc(trad(titre))}</h2>` : ""}${this.GROUPES.filter(g => g.col === col).map(g => this.groupeHTML(g, G[g.id], g.id === "nouveaux" ? noteVisite : "")).join("")}</div>`;
     zone.innerHTML = `
       <header class="masthead tb-tete">
         <span class="eyebrow">${esc(outilAccueil.dateLongue())}</span>
@@ -174,7 +174,7 @@ const outilTableau = {
         ${chiffre("tb-c-traiter", total, "À traiter", "tb-a-traiter")}${chiffre("tb-c-retours", G.retours.length, "Retours à lire", "tb-g-retours")}${chiffre("tb-c-nouveaux", G.nouveaux.length, "Nouveaux", "tb-g-nouveaux")}${chiffre("tb-c-inactifs", G.inactifs.length, "Inactifs", "tb-g-inactifs")}
       </nav>
       ${total ? "" : `<p class="empty tb-rien-tout">${esc(trad("Rien à traiter pour l'instant."))}</p>`}
-      <div class="tb-colonnes" id="tb-a-traiter">${colonne("clients", "Clients")}${colonne("prospects", "Prospects")}</div>`;
+      <div class="tb-colonnes" id="tb-a-traiter">${colonne("clients", "Clients")}${colonne("prospects", "Prospects")}${colonne("clients-suite", "")}</div>`;
     /* v106 (lot 5) : « Tout voir (N) » déplie le groupe sur place (et « Replier ») ; un chiffre du haut mène à son groupe (et le
        déplie s'il est long) */
     const brancherGroupe = sec => {

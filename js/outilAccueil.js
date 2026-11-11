@@ -177,11 +177,13 @@ const outilAccueil = {
      avec un lien vers l'editeur de chaque bloc. Lecture seule ici. Les
      notes privees et les feedbacks arrivent avec les phases 10 et 18. */
   async fiche(zone){
-    /* v106 (lot 4, relecture) : on garde toutes les lectures d'avant (même si leurs cartes ont quitté l'Aperçu) : leurs dates font
-       la « dernière saisie » (alerte d'inactivité, analyse commerciale), comme l'en-tête de la fiche et Mes clients */
-    const cles = ["intake", "programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "checkins", "complements", "calc", "formation", "hist_programme", "hist_repas", "prefs", "feedbacks", "challenge", "suivi_prospect", "activite", "emails", "contact", "seances_formation"];   // v90 : + les séances faites des programmes de la formation   // v47 : + challenge ; v49 : + suivi commercial ; v51 : + activite ; v52 : + emails (newsletter d'un prospect) ; v72 : + contact (numéro)
+    /* v106 (lot 4, relectures) : les saisies du client sont toutes lues (formation, journal alimentaire et son calculateur quand
+       ils lui sont ouverts) : leurs dates font la « dernière saisie » (alerte d'inactivité, analyse commerciale), comme l'en-tête
+       de la fiche et Mes clients ; pas les clés écrites par le coach qui ne servent plus ici (complements, hist_programme, hist_repas) */
+    const cles = ["intake", "programme", "journal", "repas", "repas_suivi", "mens", "objectifs_faits", "checkins", "calc", "formation", "prefs", "feedbacks", "challenge", "suivi_prospect", "activite", "emails", "contact", "seances_formation"];   // v90 : + les séances faites des programmes de la formation   // v47 : + challenge ; v49 : + suivi commercial ; v51 : + activite ; v52 : + emails (newsletter d'un prospect) ; v72 : + contact (numéro)
     const uidFiche = Store.idConsulte;
-    if (JournalAlim.pourCompte(uidFiche)) cles.push("journal_alimentaire", "calc_perso");
+    const avecJA = JournalAlim.pourCompte(uidFiche);   // une seule fois : la carte suit ce qui a été lu
+    if (avecJA) cles.push("journal_alimentaire", "calc_perso");
     const [{ valeurs: d, dates, erreur }, pr, cx] = await Promise.all([
       Store.lireTout(cles, { dates: true }),
       /* v39 : prospect ou client ? (colonne absente ou lecture ratee : rien ne change) */
@@ -261,8 +263,8 @@ const outilAccueil = {
     const fbAvant = (dernierCk && !fbCk) ? Feedback.pour(d.feedbacks, dernierCk.semaine) : null;
     /* v106 (lot 4, relecture des tests) : la carte « Journal alimentaire » reste (comptes où le journal est allumé) : elle seule dit
        le total du jour et d'où vient l'objectif (sa diète, ton calcul, son calculateur) */
-    let jaHTML = ""; try { if (JournalAlim.pourCompte(uidFiche)) jaHTML = JournalAlim.ficheHTML(JournalAlim.remettre(d.journal_alimentaire || JournalAlim.vide()), JournalAlim.objectif({ repas: R, calc: d.calc, calc_perso: d.calc_perso }, profil.statut === "prospect")); } catch(e){ jaHTML = ""; }
-    const fbEtat = dernierCk ? `<p class="note fc-fb-etat" style="margin:6px 0 0">Ton feedback sur ce bilan : ${fbCk ? "envoyé le " + esc(dateFr(fbCk.date)) : fbAvant ? "<b>écrit avant ce bilan, à relire</b>" : "<b>à écrire</b>"}</p>` : "";
+    let jaHTML = ""; try { if (avecJA) jaHTML = JournalAlim.ficheHTML(JournalAlim.remettre(d.journal_alimentaire || JournalAlim.vide()), JournalAlim.objectif({ repas: R, calc: d.calc, calc_perso: d.calc_perso }, profil.statut === "prospect")); } catch(e){ jaHTML = ""; }
+    const fbEtat = dernierCk ? `<p class="note fc-fb-etat" style="margin:6px 0 0">${esc(trad("Ton feedback sur ce bilan :"))} ${fbCk ? esc(trad("envoyé le {d}", { d: dateFr(fbCk.date) })) : `<b>${esc(trad(fbAvant ? "écrit avant ce bilan, à relire" : "à écrire"))}</b>`}</p>` : "";
     /* le poids depuis le début (et sa courbe), les 4 dernières semaines */
     const mesuresP = (M.mesures || []).filter(m => m && m.poids != null && isFinite(m.poids) && typeof m.date === "string").slice().sort((a, b) => a.date < b.date ? -1 : 1).slice(-12).map(m => +m.poids);
     const courbe = mesuresP.length > 1 ? (() => { const W = 300, H = 64, mi = Math.min(...mesuresP), ma = Math.max(...mesuresP), e = (ma - mi) || 1;
