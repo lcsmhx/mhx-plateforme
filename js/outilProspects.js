@@ -33,7 +33,8 @@ const outilProspects = {
   html(){
     if (sousRoute === "nouveau") return Acces.html("prospects");
     /* v98 : Suivi commercial et Newsletter ont quitté le menu : leurs écrans d'avant s'ouvrent d'ici */
-    return `<div class="actions vues-coach" id="vues-prospects"><a class="btn ghost petit" href="#/suivi-commercial">${esc(trad("Vue détaillée"))}</a><a class="btn ghost petit" href="#/newsletter">${esc(trad("Exporter la newsletter"))}</a></div><div id="pr-vue"><div id="lc-zone">${ListeCoach.attente("prospects")}</div></div>`;
+    /* v106 (lot 1) : Vue détaillée et Newsletter sont dans le menu « ⋯ » de la liste (ListeCoach.menuPoints) */
+    return `<div id="pr-vue"><div id="lc-zone">${ListeCoach.attente("prospects")}</div></div>`;
   },
   /* garder = rechargement apres une action (carte, archivage) : le coach garde sa place (nombre de prospects affiches) */
   async init(garder){
@@ -264,7 +265,7 @@ const outilSuiviCommercial = {
   icone: "📈",
   role: "coach",
   sans_entete: true,
-  titre: "Suivi commercial",
+  titre: "Vue détaillée",   // v106 (lot 1) : le nom du lien qui y mène (menu « ⋯ » de Prospects)
   accroche: "",
   html(){ return `<div id="pr-vue"><section class="panel">${squelette()}</section></div>`; },
   init(){ return outilProspects.monter(false, "detail"); }

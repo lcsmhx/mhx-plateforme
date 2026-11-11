@@ -1672,7 +1672,7 @@ Object.assign(I18N.en, {
   "Mes programmes": "My programs",
   "Mes séances": "My sessions",
   "Ma base": "My ready-made programs",
-  "Ma bibliothèque": "My saved items",
+  "Mes modèles": "My templates",
   "Ces programmes sont proposés dans « Programmes prêts à l'emploi », sur la fiche de chaque client. « Modifier » et « Dupliquer » les reprennent dans « Mes séances » : enregistre-les ensuite dans ta base.": "These programs are offered in “Ready-made programs” on each client's profile. “Edit” and “Duplicate” open them in “My sessions”: then save them to your ready-made programs.",
   "séances / semaine": "sessions / week",
   "exercices": "exercises",
@@ -1710,7 +1710,7 @@ Object.assign(I18N.en, {
   "un repas": "a meal",
   "une ligne": "a line",
   "un complément": "a supplement",
-  "Pas enregistré dans ta bibliothèque : vérifie ta connexion et réessaie.": "Not saved to your library: check your connection and try again.",
+  "Pas enregistré dans tes modèles : vérifie ta connexion et réessaie.": "Not saved to your templates: check your connection and try again.",
   "Ajout impossible : {e}. Vérifie ta connexion et réessaie.": "Couldn't add it: {e}. Check your connection and try again.",
   "erreur inconnue": "unknown error",
   "Export impossible pour le moment : vérifie ta connexion, puis réessaie.": "Export unavailable right now: check your connection, then try again.",
@@ -1727,7 +1727,7 @@ Object.assign(I18N.en, {
   "Vérifie ta connexion et réessaie.": "Check your connection and try again.",
   "Ajout impossible": "Couldn't add it",
   "Pas chargé : vérifie ta connexion et réessaie.": "Not loaded: check your connection and try again.",
-  "Cet entraînement n'existe plus dans ta bibliothèque.": "This workout is no longer in your library.",
+  "Cet entraînement n'existe plus dans tes modèles.": "This workout is no longer in your templates.",
   "Programme non publié : ton brouillon est gardé.": "Program not published: your draft is kept.",
   "Diète non publiée : ton brouillon est gardé.": "Meal plan not published: your draft is kept.",
   "Pas de connexion : les recettes n'ont pas pu être lues. Réessaie dans un instant.": "No connection: the recipes couldn't be loaded. Try again in a moment.",
@@ -1865,3 +1865,16 @@ Object.assign(I18N.en, {
 Object.assign(I18N.en, { "Publication du programme en cours : réessaie dans un instant.": "The program is being published: try again in a moment." });
 /* v105 : le badge de l'onglet Prospects compte les urgences */
 Object.assign(I18N.en, { "{n} urgence chez tes prospects": "{n} urgent item among your prospects", "{n} urgences chez tes prospects": "{n} urgent items among your prospects" });
+/* v106 (lot 1) : navigation à 4 entrées, rond de profil, menu « ⋯ », Bibliothèque et « Mes modèles » */
+Object.assign(I18N.en, {
+  "Rechercher": "Search", "Mon profil et mes réglages": "My profile and settings", "Coach": "Coach", "Langue": "Language",
+  "Te déconnecter de ton espace ?": "Log out of your space?", "Plus d'options": "More options", "Autres vues": "Other views",
+  "Newsletter": "Newsletter", "Catalogue": "Catalog", "Prospects": "Prospects",
+  "Tes séances, ta base de programmes, tes modèles et le catalogue de l'app.": "Your sessions, your program base, your templates and the app catalog.",
+  "Enregistrer dans mes modèles": "Save to my templates", "Charger depuis mes modèles": "Load from my templates",
+  "— charger depuis mes modèles —": "— load from my templates —", "Enregistré dans tes modèles.": "Saved to your templates.",
+  "Sous quel nom l'enregistrer dans tes modèles ?": "Under what name should it be saved to your templates?",
+  "Impossible de charger tes modèles.": "Your templates could not be loaded.",
+  "Pour en ajouter un : ouvre la fiche d'un client, construis son programme, puis clique sur « Enregistrer dans mes modèles ».": "To add one: open a client's profile, build their program, then tap “Save to my templates”.",
+  "« Ma base » rend le programme disponible dans « Programmes prêts à l'emploi », sur la fiche de n'importe quel client. « Mes modèles » le garde pour toi seul.": "“My base” makes the program available in “Ready-made programs” on any client's profile. “My templates” keeps it for you only."
+});

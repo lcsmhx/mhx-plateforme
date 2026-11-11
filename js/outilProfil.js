@@ -124,9 +124,10 @@ const outilProfil = {
   cle: "intake",
   nom: "Profil",
   icone: "📝",
-  titre: "Ton profil",
+  /* v106 (lot 1) : pour le coach, la page « Réglages » du rond de profil, qui s'ouvre sur « Mon compte » */
+  get titre(){ return typeof Auth !== "undefined" && Auth.estCoach() && !Store.idConsulte ? "Réglages" : "Ton profil"; },
   /* v44 : un prospect n'a que son compte ici (le questionnaire complet arrive avec l'accompagnement) */
-  get accroche(){ return (Auth.estProspect() && !Store.idConsulte) ? "Ton compte et tes réglages." : "Plus tes réponses sont précises, plus ton programme sera adapté. Ne cherche pas la bonne réponse : cherche la vraie. Compte 10 à 15 minutes."; },
+  get accroche(){ return (Auth.estProspect() && !Store.idConsulte) || (Auth.estCoach() && !Store.idConsulte) ? "Ton compte et tes réglages." : "Plus tes réponses sont précises, plus ton programme sera adapté. Ne cherche pas la bonne réponse : cherche la vraie. Compte 10 à 15 minutes."; },
 
   /* v71 (C) : en consultation (Store.idConsulte), chaque reponse est rendue en texte, pas en champ desactive :
      le coach lit une reponse longue en entier. Vide, ou valeur piegee (objet, liste) : « — ». esc() obligatoire ;
@@ -197,6 +198,14 @@ const outilProfil = {
         ${Store.idConsulte ? this.lectureHTML(q, D[q.id]) : this.champ(q, D[q.id])}</div>`;
     });
     if (ouverte) corps += `</div></section>`;
+    /* v106 (lot 1) : les Réglages du coach s'ouvrent sur « Mon compte » ; son questionnaire reste dessous */
+    if (Auth.estCoach() && !Store.idConsulte) return this.compteHTML() + corps + `
+    <section class="panel">
+      <div class="actions">
+        <button class="btn" id="p-save">Enregistrer mon profil</button>
+        <span class="msg" id="p-msg"></span>
+      </div>
+    </section>`;
     /* v71 (C) : en consultation, pas de bouton « Enregistrer mon profil » (rien n'est modifiable) */
     return corps + (Store.idConsulte ? "" : `
     <section class="panel">

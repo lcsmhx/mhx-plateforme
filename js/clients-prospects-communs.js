@@ -363,7 +363,14 @@ const ListeCoach = {
   PAGES: ["suivi-clients", "comptes", "suivi-commercial", "newsletter"],
   reprendre(t){ const E = this.etats[t]; if (!E || !E.revenir) return; E.revenir = false; const y = E.y; setTimeout(() => window.scrollTo(0, y), 0); },
   /* le titre et « + » (Créer un accès reste joignable pendant le chargement et si la liste n'a pas pu se charger) */
-  tetePlus(t){ return `<div class="lc-tete"><div class="lc-titres"><h1>${esc(trad(this.TEXTES[t].titre))}</h1></div><div class="lc-actions"><a class="rond" href="#/${t}/nouveau" data-lc-plus aria-label="${esc(trad("Créer un accès"))}" title="${esc(trad("Créer un accès"))}">${SVG.ajouter}</a></div></div>`; },
+  tetePlus(t){ return `<div class="lc-tete"><div class="lc-titres"><h1>${esc(trad(this.TEXTES[t].titre))}</h1></div><div class="lc-actions"><a class="rond" href="#/${t}/nouveau" data-lc-plus aria-label="${esc(trad("Créer un accès"))}" title="${esc(trad("Créer un accès"))}">${SVG.ajouter}</a>${this.menuPoints(t)}</div></div>`; },
+  /* v106 (lot 1) : le menu « ⋯ » de la liste : les vues d'avant de Clients (Vue tableau, Comptes, Créer un accès) et de Prospects
+     (Vue détaillée, Newsletter), qui étaient dans le menu « Plus » puis en boutons au-dessus de la liste */
+  MENUS: {
+    clients: [["#/suivi-clients", "Vue tableau"], ["#/comptes", "Comptes"], ["#/clients/nouveau", "Créer un accès"]],
+    prospects: [["#/suivi-commercial", "Vue détaillée"], ["#/newsletter", "Newsletter"]]
+  },
+  menuPoints(t){ return menuPointsHTML((this.MENUS[t] || []).map(([href, texte]) => ({ href, texte, attrs: `data-lc-vue="${esc(href.slice(2))}"` })), { id: "vues-" + t, libelle: "Autres vues" }); },
   attente(t){ return `<section class="lc" data-liste="${t}">${this.tetePlus(t)}<div class="empty">${esc(trad("Chargement…"))}</div></section>`; },
   erreur(zone, t){ if (zone && zone.isConnected) zone.innerHTML = `<section class="lc" data-liste="${t}">${this.tetePlus(t)}<div class="empty">${esc(trad("Impossible de charger la liste."))}</div></section>`; },
   /* la liste filtrée (filtre, puis recherche) */
@@ -392,7 +399,7 @@ const ListeCoach = {
         <div class="lc-titres"><h1>${esc(trad(T.titre))}</h1><p class="lc-compte" id="lc-compte">${esc(this.plur(n, T.nb))}</p></div>
         <div class="lc-actions">${sel
           ? `<button type="button" class="lc-lien" data-sel-tout>${esc(trad("Tout sélectionner"))}</button><button type="button" class="lc-lien" data-sel-annuler>${esc(trad("Annuler"))}</button>`
-          : `<button type="button" class="lc-lien" data-sel-debut>${esc(trad("Sélectionner"))}</button><a class="rond" href="#/${t}/nouveau" data-lc-plus aria-label="${esc(trad("Créer un accès"))}" title="${esc(trad("Créer un accès"))}">${SVG.ajouter}</a>`}</div>
+          : `<button type="button" class="lc-lien" data-sel-debut>${esc(trad("Sélectionner"))}</button><a class="rond" href="#/${t}/nouveau" data-lc-plus aria-label="${esc(trad("Créer un accès"))}" title="${esc(trad("Créer un accès"))}">${SVG.ajouter}</a>${this.menuPoints(t)}`}</div>
       </div>
       <label class="lc-recherche"><span class="lc-loupe" aria-hidden="true">${SVG.loupe}</span><input type="search" id="lc-q" placeholder="${esc(trad(T.recherche))}" aria-label="${esc(trad(T.recherche))}" value="${esc(E.q)}" autocomplete="off" maxlength="120"></label>
       <div class="lc-filtres" role="group" aria-label="${esc(trad("Filtrer la liste"))}">${this.FILTRES[t].map(([k, lib]) => `<button type="button" class="lc-filtre" data-lc-filtre="${k}" aria-pressed="${E.filtre === k}">${esc(trad(lib))}</button>`).join("")}</div>

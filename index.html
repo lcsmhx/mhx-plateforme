@@ -15,7 +15,7 @@
    v76 (tâche 9) : ce bloc est en tête de page (juste après <title>) et les scripts sont en « defer » : ils se
    téléchargent pendant la lecture de la page et s'exécutent dans l'ordre de MHX_JS, une fois le HTML lu (comme
    avant, quand ils étaient en bas de page). */
-var MHX_FICHIERS = "105";
+var MHX_FICHIERS = "106";
 var MHX_CSS = [
     "css/jetons.css",
     "css/communs.css",
@@ -136,12 +136,15 @@ if (!MHX_CONNU) window.addEventListener("load", function () { setTimeout(functio
         <span class="b-sub" id="brand-sub" hidden></span>
       </div>
     </a>
+    <span class="titre-page" id="titre-page" hidden></span>
+    <button type="button" class="nav-chercher" id="nav-chercher" hidden><span class="ico" aria-hidden="true"></span><span class="lbl">Rechercher</span></button>
     <nav class="nav" id="nav" aria-label="Outils"></nav>
     <div class="compte" id="compte" hidden>
       <span class="etat" id="etat"></span>
       <span class="qui" id="qui"></span>
       <button type="button" id="langue" data-notr></button>
       <button type="button" id="deco">Se déconnecter</button>
+      <button type="button" class="rond-profil" id="rond-profil" hidden></button>
     </div>
   </div>
 </div>

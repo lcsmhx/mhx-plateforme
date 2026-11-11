@@ -30,6 +30,12 @@ async function routeDepuisAdresse(){
   }
   id = parts[0]; sousRoute = parts.slice(1).join("/");
   if (ALIAS_ROUTES[id]) id = ALIAS_ROUTES[id];
+  /* v106 (lot 1) : les anciennes pages du coach rangées dans un onglet ouvrent cet onglet (l'adresse le dit) */
+  if (Auth.estCoach() && !Store.idConsulte && REDIRECTIONS_COACH[id] && !sousRoute){
+    const c = REDIRECTIONS_COACH[id].split("/");
+    try { history.replaceState(null, "", "#/" + c.join("/")); } catch(e){}
+    id = c[0]; sousRoute = c.slice(1).join("/");
+  }
   /* v52 : une page qui n'est pas pour cette personne (client sur #/calculateur, coach hors fiche sur #/accueil…)
      affiche la page d'arrivee ET l'adresse le dit. replaceState ne declenche pas hashchange : pas de boucle.
      Sans ce correctif, un « Ouvrir » du coach qui pose #/accueil (deja dans l'adresse) ne faisait rien.

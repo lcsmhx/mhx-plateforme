@@ -50,7 +50,8 @@ const SVG = {
   coche:   '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
   tel:     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>',
   whatsapp:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5l1.3-4.2A8.5 8.5 0 1 1 8 19.4z"/><path d="M9 8.8c.2 2.4 2.6 5 5.2 5.5l1-1.3 1.9.9c-.2 1-1 1.8-2 1.8C11 15.7 8 12.7 8 9.6c0-1 .8-1.8 1.8-2l.9 1.9z"/></svg>',
-  chevron: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>'
+  chevron: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>',
+  points:  '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg>'   // v106 : le menu « ⋯ »
 };
 /* Une icone par outil (cle = id de l'outil). En trait, 24x24, couleur du texte. */
 const ICONES = {
@@ -239,3 +240,27 @@ const UI = {
   }
 };
 
+/* v106 (lot 1, refonte de l'ergonomie) — le menu « ⋯ » : une petite liste d'actions sous un bouton rond (élément <details>,
+   au clavier comme au doigt). items : [{ href, texte, attrs }] (un lien) ou [{ texte, attrs, danger }] (un bouton : celui qui
+   l'affiche branche son clic par ses attributs). Un clic ailleurs, Échap ou un choix le referme. */
+function menuPointsHTML(items, opts){
+  opts = opts || {};
+  const l = (items || []).filter(Boolean);
+  if (!l.length) return "";
+  const lib = trad(opts.libelle || "Plus d'options");
+  return `<details class="menu-points${opts.classe ? " " + esc(opts.classe) : ""}"${opts.id ? ` id="${esc(opts.id)}"` : ""}><summary class="rond" aria-label="${esc(lib)}" title="${esc(lib)}"><span aria-hidden="true" class="mpts-ico">${SVG.points}</span></summary>
+    <div class="menu-points-l">${l.map(x => x.href
+      ? `<a href="${esc(x.href)}"${x.attrs ? " " + x.attrs : ""}>${esc(trad(x.texte))}</a>`
+      : `<button type="button"${x.danger ? ' class="danger"' : ""}${x.attrs ? " " + x.attrs : ""}>${esc(trad(x.texte))}</button>`).join("")}</div></details>`;
+}
+document.addEventListener("click", e => {
+  const dedans = e.target && e.target.closest ? e.target.closest("details.menu-points") : null;
+  document.querySelectorAll("details.menu-points[open]").forEach(d => {
+    if (d !== dedans) d.removeAttribute("open");
+    else if (e.target.closest(".menu-points-l a, .menu-points-l button")) setTimeout(() => d.removeAttribute("open"), 0);
+  });
+});
+document.addEventListener("keydown", e => {
+  if (e.key !== "Escape") return;
+  document.querySelectorAll("details.menu-points[open]").forEach(d => { d.removeAttribute("open"); const s = d.querySelector("summary"); if (s) s.focus(); });
+});

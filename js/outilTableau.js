@@ -32,14 +32,14 @@ const outilTableau = {
   principal_coach: true,
   court: "Tableau",   // v83 (bloc 3) : la barre du bas du coach, Tableau · Clients · Prospects · Plus
   sans_entete: true,
-  titre: "Tableau de bord",
+  titre: "Aujourd'hui",   // v106 (lot 1) : le nom de l'entrée du menu
   accroche: "",
   MAX_LIGNES: 5,
   /* v104 (point 10) : les règles des urgences (bulle des compteurs) */
   AIDE_CLIENTS: "Urgences (une action de ta part aujourd'hui) : un 😞 non traité, une note en chute, ou un retour de la semaine à lire. Le reste (inactif, régularité faible, calculateur) est « À surveiller ».",
   AIDE_PROSPECTS: "Urgences (une action de ta part aujourd'hui) : inscrit depuis moins de 48 h, « J'ai réservé » à vérifier, clic sur la réservation sans créneau, absent à l'appel pas encore relancé, ou « Signé » à passer client.",
 
-  html(){ return `<div id="tb-vue"><header class="masthead tb-tete"><div class="tb-tete-l"><h1>Tableau de bord</h1><p class="lede">Ce qui demande ton attention aujourd'hui.</p></div></header><section class="panel">${squelette()}</section></div>`; },
+  html(){ return `<div id="tb-vue"><header class="masthead tb-tete"><div class="tb-tete-l"><h1>Aujourd'hui</h1><p class="lede">Ce qui demande ton attention aujourd'hui.</p></div></header><section class="panel">${squelette()}</section></div>`; },
 
   /* les lignes « À traiter maintenant » : une par personne (sa raison la plus urgente), des plus urgentes aux autres.
      rang : 😞 0, note en chute 1, retour à lire 2, prospect signé 3, case « J'ai réservé » 4, absent à l'appel 5, clic 6,
@@ -152,7 +152,7 @@ const outilTableau = {
     zone.innerHTML = `
       <header class="masthead tb-tete">
         <span class="eyebrow">${esc(outilAccueil.dateLongue())}</span>
-        <div class="tb-tete-l"><h1>Tableau de bord</h1><p class="lede">Ce qui demande ton attention aujourd'hui.</p></div>
+        <div class="tb-tete-l"><h1>Aujourd'hui</h1><p class="lede">Ce qui demande ton attention aujourd'hui.</p></div>
         <a class="rond" href="#/clients" data-tb-chercher aria-label="${esc(trad("Rechercher un client par son nom"))}" title="${esc(trad("Rechercher un client par son nom"))}">${SVG.loupe}</a>
       </header>
       <section class="tiles tb-tiles" aria-label="${esc(trad("En bref"))}">

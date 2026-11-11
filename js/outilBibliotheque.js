@@ -4,18 +4,18 @@
 const outilBibliotheque = {
   id: "bibliotheque",
   cle: null,
-  nom: "Bibliothèque",
+  nom: "Mes modèles",
   /* v83 (bloc 3) : plus dans la barre du bas du coach (Tableau · Clients · Prospects · Plus) : dans « Plus » et les raccourcis du Tableau de bord */
   icone: "📚",
   role: "coach",
-  titre: "Ma bibliothèque",
+  titre: "Mes modèles",
   accroche: "Tes entraînements et tes journées types enregistrés, prêts à être réutilisés. Depuis la fiche d'un client, tu les charges en deux clics.",
 
   html(){
     return `<section class="panel">
       <h2>Mes entraînements</h2>
       <div id="bib-entrainements">${squelette()}</div>
-      <p class="note" style="margin-top:14px">Pour en ajouter un : ouvre la fiche d'un client, construis son programme, puis clique sur « Enregistrer dans ma bibliothèque ».</p>
+      <p class="note" style="margin-top:14px">Pour en ajouter un : ouvre la fiche d'un client, construis son programme, puis clique sur « Enregistrer dans mes modèles ».</p>
     </section>
     <section class="panel">
       <h2>Mes journées types</h2>
@@ -60,7 +60,7 @@ const outilBibliotheque = {
               <span class="meta">${resume(x)}</span>
               <span class="actions-b"><button data-suppr="${x.id}">Supprimer</button></span>`;
             el.querySelector("[data-suppr]").addEventListener("click", async () => {
-              if (!(await UI.confirmer("Supprimer « " + x.nom + " » de ta bibliothèque ?", { ok: "Supprimer", danger: true }))) return;
+              if (!(await UI.confirmer("Supprimer « " + x.nom + " » de tes modèles ?", { ok: "Supprimer", danger: true }))) return;
               try { await Auth.appel("/rest/v1/bibliotheque?id=eq." + x.id, { method:"DELETE", headers:{ "Prefer":"return=minimal" } }); charger(); }
               catch(e){ UI.alerte(messageEchec("Suppression impossible", e)); }
             });
@@ -68,7 +68,7 @@ const outilBibliotheque = {
           });
         });
       } catch(e){
-        [boxE, boxR].forEach(b => { if (b) b.innerHTML = '<div class="empty">Impossible de charger la bibliothèque.</div>'; });
+        [boxE, boxR].forEach(b => { if (b) b.innerHTML = '<div class="empty">Impossible de charger tes modèles.</div>'; });
       }
     };
     charger();

@@ -1,6 +1,7 @@
 /* verif98 — v98 (chantier 3 de la nuit du 10/11/2026, plan-menu-coach : le menu du coach en 7 entrées), dans un vrai
    navigateur (Supabase simulé, gabarit de verif95 : coach et clients des fixtures, aucune donnée réelle).
    A. le menu du coach : 7 entrées dans l'ordre (ordinateur), Tableau · Clients · Prospects · Programmes · Plus (téléphone) ;
+      v106 (lot 1) : 4 entrées (Aujourd'hui · Clients · Prospects · Bibliothèque) sur les deux, le reste derrière le rond de profil ;
       la fiche d'un client et le menu d'un client ne changent pas ;
    B. Clients et Prospects ouvrent les vues d'avant (Vue tableau, Comptes, Vue détaillée, Exporter la newsletter), 44 px ;
    C. « Mes programmes » : Mes séances (l'atelier), Ma base (Modifier, Dupliquer), Ma bibliothèque ; rien d'écrit en parcourant ;
@@ -240,6 +241,18 @@ const AVANT = {"#/tableau": ["tableau", "#/tableau", ["Tableau de bord", "À tra
    un client n'est pas une urgence (ici Julien, inactif) : même page, mêmes titres h1/h2 ; le 6e id est désormais tb-surveiller-t
    (tb-nouveaux vient juste après) */
 for (const a of ["#/tableau", "#/accueil", "#/journal", "#/home"]) if (AVANT[a] && AVANT[a][0] === "tableau") AVANT[a][3] = ["tb-vue", "tb-t-clients", "tb-t-traiter", "tb-t-prospects", "tb-a-traiter", "tb-surveiller-t"];
+/* v106 (lot 1, navigation à 4 entrées) : changements voulus, même page et mêmes éléments — le tableau de bord s'appelle
+   « Aujourd'hui » (le nom de son entrée) ; Suivi détaillé arrive sous le nom de son lien, « Vue tableau » ; l'atelier et l'ancienne
+   « Ma bibliothèque » sont des onglets de la Bibliothèque (#/atelier et #/bibliotheque y mènent, l'adresse le dit) ; le Catalogue
+   est le second onglet de la Bibliothèque ; les Réglages du coach s'ouvrent sur « Mon compte » (son questionnaire reste dessous :
+   D vérifie aussi #q-nom) */
+for (const a of ["#/tableau", "#/accueil", "#/journal", "#/home"]) if (AVANT[a] && AVANT[a][0] === "tableau") AVANT[a][2] = ["Aujourd'hui", "À traiter maintenant", "Nouveaux depuis ta dernière visite"];
+AVANT["#/suivi-clients"][2] = ["Vue tableau", "Suivi de mes clients"];
+AVANT["#/atelier"] = ["mes-programmes", "#/mes-programmes", ["Bibliothèque", "Le modèle"], ["mp-zone", "at-vue", "at-nom", "at-lieu", "at-seances", "at-niveau"]];
+AVANT["#/bibliotheque"] = ["mes-programmes", "#/mes-programmes/bibliotheque", ["Bibliothèque", "Mes entraînements", "Mes journées types"], ["mp-zone", "bib-entrainements", "bib-repas"]];
+AVANT["#/catalogue"][2] = ["Bibliothèque", "Ce que contient ton catalogue", "Recharger depuis le dépôt"];
+AVANT["#/profil"][2] = ["Réglages", "Mon compte", "1 · Identité & logistique"]; AVANT["#/profil"][3] = ["mc-actuel", "mc-nouveau", "mc-nouveau2", "mc-mdp", "mc-mdp-msg", "mc-email-aide"];
+const AUSSI = { "#/profil": "#q-nom", "#/atelier": "#at-objectif", "#/catalogue": "#cat-couverture" };
 const marques = page => page.evaluate(() => {
   const v = document.getElementById("vue") || document.body;
   const t = Array.from(v.querySelectorAll("h1, h2")).slice(0, 3).map(x => x.textContent.replace(/\s+/g, " ").trim());
@@ -248,7 +261,9 @@ const marques = page => page.evaluate(() => {
 });
 const navOrdi = page => page.evaluate(() => Array.from(document.querySelectorAll("#nav a")).map(a => a.textContent.replace(/\s+/g, " ").trim()));
 const barre = page => page.evaluate(() => Array.from(document.querySelectorAll("#barre-bas a, #barre-bas button")).map(a => a.textContent.replace(/\s+/g, " ").trim()));
-const volet = async page => { await page.click("#barre-bas [data-plus]"); await attendre(page, 500); const l = await page.evaluate(() => Array.from(document.querySelectorAll(".volet .menu-plus a")).map(a => a.textContent.replace(/\s+/g, " ").trim())); await page.keyboard.press("Escape"); await attendre(page, 300); return l; };
+/* v106 (lot 1) : plus de « Plus » ; le rond de profil ouvre le volet : ses pages (liens) puis Langue, Partager l'app, Se déconnecter */
+const volet = async page => { await page.click("#rond-profil"); await attendre(page, 500); const l = await page.evaluate(() => Array.from(document.querySelectorAll(".volet #menu-profil a, .volet #menu-profil button")).map(a => a.textContent.replace(/\s+/g, " ").trim())); await page.keyboard.press("Escape"); await attendre(page, 300); return l; };
+const PROFIL = ["Réglages", "Mon entraînement", "Langue🇫🇷 FR", "Partager l'app", "Se déconnecter"];
 
 (async () => {
   await new Promise((r, k) => { server.once("error", e => k(new Error(e && e.code === "EADDRINUSE" ? "port " + PORT + " déjà pris (une autre suite tourne ?) : VERIF98_PORT=10105 node verif98.js ../index.html" : String(e)))); server.listen(PORT, r); });
@@ -260,28 +275,31 @@ const volet = async page => { await page.click("#barre-bas [data-plus]"); await 
     const { page } = await contexte(b, COACH, db);
     await page.goto(URL0 + "#/tableau"); await pret(page, "#tb-vue");
     const n = await navOrdi(page);
-    ok("A1 : ordinateur : 7 entrées, dans l'ordre : Tableau de bord · Clients · Prospects · Mes programmes · Catalogue · Mon entraînement · Réglages",
-      JSON.stringify(n) === JSON.stringify(["Tableau de bord", "Clients", "Prospects", "Mes programmes", "Catalogue", "Mon entraînement", "Réglages"]), JSON.stringify(n));
+    /* v106 (lot 1) : changement voulu — 4 entrées ; Réglages et Mon entraînement derrière le rond de profil (le Catalogue : onglet de
+       la Bibliothèque, bloc C) ; aucune destination perdue */
+    const vo = await volet(page);
+    ok("A1 : ordinateur : 4 entrées, dans l'ordre : Aujourd'hui · Clients · Prospects · Bibliothèque ; le rond de profil : Réglages, Mon entraînement, Langue, Partager l'app, Se déconnecter",
+      JSON.stringify(n) === JSON.stringify(["Aujourd'hui", "Clients", "Prospects", "Bibliothèque"]) && JSON.stringify(vo) === JSON.stringify(PROFIL), JSON.stringify([n, vo]));
     const { page: tel } = await contexte(b, COACH, db, { viewport: MOBILE });
     await tel.goto(URL0 + "#/tableau"); await pret(tel, "#tb-vue");
     const bb = await barre(tel), vl = await volet(tel);
     /* relecture : une page sortie du menu marque son entrée parente (jamais « Plus » vide) */
     await tel.goto(URL0 + "#/suivi-clients"); await pret(tel); await attendre(tel, 600);
-    const marque = await tel.evaluate(() => ({ cur: (document.querySelector('#barre-bas a[aria-current="page"]') || {}).textContent || "", plus: document.querySelector("#barre-bas [data-plus]").classList.contains("ici") }));
-    ok("A2b : téléphone, « Vue tableau » (#/suivi-clients) : « Clients » reste marqué, pas « Plus »", /Clients/.test(marque.cur) && !marque.plus, JSON.stringify(marque));
-    ok("A2 : téléphone : barre du bas Tableau · Clients · Prospects · Programmes · Plus ; « Plus » : Catalogue, Mon entraînement, Réglages",
-      JSON.stringify(bb) === JSON.stringify(["Tableau", "Clients", "Prospects", "Programmes", "Plus"]) && JSON.stringify(vl) === JSON.stringify(["Catalogue", "Mon entraînement", "Réglages"]), JSON.stringify([bb, vl]));
+    const marque = await tel.evaluate(() => ({ cur: (document.querySelector('#barre-bas a[aria-current="page"]') || {}).textContent || "", plus: !!document.querySelector("#barre-bas [data-plus]") }));
+    ok("A2b : téléphone, « Vue tableau » (#/suivi-clients) : « Clients » reste marqué (et il n'y a plus de « Plus »)", /Clients/.test(marque.cur) && !marque.plus, JSON.stringify(marque));
+    ok("A2 : téléphone : barre du bas Aujourd'hui · Clients · Prospects · Bibliothèque (4 cases, sans « Plus ») ; le rond de profil : Réglages, Mon entraînement, Langue, Partager l'app, Se déconnecter",
+      JSON.stringify(bb) === JSON.stringify(["Aujourd'hui", "Clients", "Prospects", "Bibliothèque"]) && JSON.stringify(vl) === JSON.stringify(PROFIL), JSON.stringify([bb, vl]));
     /* le coach dans la fiche d'un client : la navigation de la fiche ne change pas (les onglets du client) */
     /* v104 (point 1) : changement voulu — dans une fiche, le menu du haut reste celui du coach (ses 7 entrées, dans le même ordre
        que hors fiche) ; les onglets du client (Entraînement, Nutrition…) et ses pages (Son programme…) sont dans le bandeau
        .fiche-entete, et seulement là ; toujours ni Suivi détaillé ni Bibliothèque */
     await page.goto(FICHE("programme")); await pret(page, "#pg-publier");
     const nf = await navOrdi(page);
-    const coachF = ["Tableau de bord", "Clients", "Prospects", "Mes programmes", "Catalogue", "Mon entraînement", "Réglages"];
+    const coachF = ["Aujourd'hui", "Clients", "Prospects", "Bibliothèque"];   // v106 (lot 1) : les 4 entrées du coach
     const bf = await page.evaluate(() => ({ onglets: Array.from(document.querySelectorAll("#vue .fiche-entete .f-onglet")).map(a => a.textContent.trim()), pages: Array.from(document.querySelectorAll("#vue .fiche-entete a.b-act")).map(a => a.textContent.trim()) }));
-    ok("A3 : dans la fiche d'un client : ses onglets (Entraînement, Nutrition…) et Son programme dans le bandeau de la fiche, le menu du haut = les 7 entrées du coach (Tableau de bord, Clients, Prospects, Mes programmes, Catalogue, Mon entraînement, Réglages), plus Suivi détaillé ni Bibliothèque",
+    ok("A3 : dans la fiche d'un client : ses onglets (Entraînement, Nutrition…) et Son programme dans le bandeau de la fiche, le menu du haut = les 4 entrées du coach (Aujourd'hui, Clients, Prospects, Bibliothèque), ni Suivi détaillé ni une page du client dans le menu",
       JSON.stringify(nf) === JSON.stringify(coachF) && bf.pages.includes("Son programme") && bf.onglets.includes("Nutrition") && bf.onglets.includes("Entraînement") && !nf.includes("Son programme") && !nf.includes("Nutrition")
-        && ![...nf, ...bf.onglets, ...bf.pages].includes("Suivi détaillé") && ![...nf, ...bf.onglets, ...bf.pages].includes("Bibliothèque"), JSON.stringify([nf, bf]));
+        && ![...nf, ...bf.onglets, ...bf.pages].includes("Suivi détaillé") && ![...bf.onglets, ...bf.pages].includes("Bibliothèque"), JSON.stringify([nf, bf]));
     /* un client : son menu ne change pas */
     const { page: cl } = await contexte(b, THOMAS, db);
     await cl.goto(URL0 + "#/accueil"); await pret(cl, ".masthead");
@@ -294,13 +312,15 @@ const volet = async page => { await page.click("#barre-bas [data-plus]"); await 
   await bloc("B. vues d'avant", async () => {
     const db = base();
     const { page } = await contexte(b, COACH, db);
-    const suivre = async (depart, sel, attendu) => { await page.goto(URL0 + depart); await pret(page, sel); await page.click(sel); await attendre(page, 1500); return (await marques(page)).courant === attendu; };
-    const r = [await suivre("#/clients", '#vues-clients a[href="#/suivi-clients"]', "suivi-clients"), await suivre("#/clients", '#vues-clients a[href="#/comptes"]', "comptes"),
+    /* v106 (lot 1) : changement voulu — ces vues sont dans le menu « ⋯ » de la liste (#vues-clients, #vues-prospects), qui s'ouvre
+       d'abord ; Clients y ajoute « Créer un accès » */
+    const suivre = async (depart, sel, attendu) => { await page.goto(URL0 + depart); await pret(page, sel.split(" ")[0] + " summary"); await page.click(sel.split(" ")[0] + " summary"); await attendre(page, 300); await page.click(sel); await attendre(page, 1500); const m = await marques(page); return m.courant === attendu || (attendu === "clients/nouveau" && m.hash === "#/clients/nouveau"); };
+    const r = [await suivre("#/clients", '#vues-clients a[href="#/suivi-clients"]', "suivi-clients"), await suivre("#/clients", '#vues-clients a[href="#/comptes"]', "comptes"), await suivre("#/clients", '#vues-clients a[href="#/clients/nouveau"]', "clients/nouveau"),
                await suivre("#/prospects", '#vues-prospects a[href="#/suivi-commercial"]', "suivi-commercial"), await suivre("#/prospects", '#vues-prospects a[href="#/newsletter"]', "newsletter")];
-    ok("B1 : Clients : « Vue tableau » ouvre Suivi détaillé, « Comptes » ouvre Comptes ; Prospects : « Vue détaillée » ouvre Suivi commercial, « Exporter la newsletter » ouvre Newsletter", r.every(Boolean), JSON.stringify(r));
-    await page.goto(URL0 + "#/clients"); await pret(page, "#vues-clients .btn");
-    const t = await page.evaluate(() => Array.from(document.querySelectorAll(".vues-coach .btn")).map(x => x.getBoundingClientRect().height));
-    ok("B2 : ces boutons font au moins 44 px de haut", t.length > 0 && t.every(h => h >= 44), JSON.stringify(t));
+    ok("B1 : Clients, menu « ⋯ » : « Vue tableau » ouvre Suivi détaillé, « Comptes » ouvre Comptes, « Créer un accès » ouvre la création ; Prospects : « Vue détaillée » ouvre Suivi commercial, « Newsletter » ouvre Newsletter", r.every(Boolean), JSON.stringify(r));
+    await page.goto(URL0 + "#/clients"); await pret(page, "#vues-clients summary"); await page.click("#vues-clients summary"); await attendre(page, 300);
+    const t = await page.evaluate(() => [document.querySelector("#vues-clients summary")].concat(Array.from(document.querySelectorAll("#vues-clients .menu-points-l a"))).map(x => x.getBoundingClientRect().height));
+    ok("B2 : le bouton « ⋯ » et ses choix font au moins 44 px de haut", t.length === 4 && t.every(h => h >= 44), JSON.stringify(t));
   });
 
   /* =================== C. « Mes programmes » =================== */
@@ -309,8 +329,10 @@ const volet = async page => { await page.click("#barre-bas [data-plus]"); await 
     const { page } = await contexte(b, COACH, db);
     await page.goto(URL0 + "#/mes-programmes"); await pret(page, "#at-vue #at-nom");
     const onglets = await page.evaluate(() => Array.from(document.querySelectorAll(".mp-onglets a")).map(a => a.textContent.trim()));
-    ok("C1 : « Mes programmes » s'ouvre sur « Mes séances » (l'atelier) ; onglets Mes séances · Ma base · Ma bibliothèque",
-      JSON.stringify(onglets) === JSON.stringify(["Mes séances", "Ma base", "Ma bibliothèque"]) && !!(await page.$("#at-vue #at-nom")), JSON.stringify(onglets));
+    const bib = await page.evaluate(() => Array.from(document.querySelectorAll(".bib-onglets a")).map(a => a.textContent.trim() + (a.getAttribute("aria-current") ? "*" : "")));
+    /* v106 (lot 1) : « Ma bibliothèque » devient « Mes modèles » ; au-dessus, les deux onglets de la Bibliothèque */
+    ok("C1 : la Bibliothèque s'ouvre sur « Mes programmes » › « Mes séances » (l'atelier) ; onglets Mes programmes* · Catalogue, puis Mes séances · Ma base · Mes modèles",
+      JSON.stringify(onglets) === JSON.stringify(["Mes séances", "Ma base", "Mes modèles"]) && JSON.stringify(bib) === JSON.stringify(["Mes programmes*", "Catalogue"]) && !!(await page.$("#at-vue #at-nom")), JSON.stringify([onglets, bib]));
     await page.click('.mp-onglets a[data-mp="base"]'); await pret(page, "[data-mp-prog]");
     const nb = await page.evaluate(() => document.querySelectorAll("[data-mp-prog]").length);
     ok("C2 : « Ma base » liste les programmes prêts à l'emploi (" + db.programmes.length + ")", nb === db.programmes.length && nb > 0, String(nb));
@@ -332,7 +354,7 @@ const volet = async page => { await page.click("#barre-bas [data-plus]"); await 
     if (await fenetre(page)) await toucherFenetre(page, "Oui, remplacer"); await attendre(page, 800);
     ok("C4c : « Dupliquer » annulé, puis le même programme repris : il garde son nom (pas « (copie) »)", (await page.inputValue("#at-nom")) === p0.nom, await page.inputValue("#at-nom"));
     await page.goto(URL0 + "#/mes-programmes/bibliotheque"); await pret(page, "#bib-entrainements .biblio-l");
-    ok("C5 : « Ma bibliothèque » montre les entraînements et les journées types", !!(await page.$("#bib-entrainements .biblio-l")) && !!(await page.$("#bib-repas")), "");
+    ok("C5 : « Mes modèles » montre les entraînements et les journées types", !!(await page.$("#bib-entrainements .biblio-l")) && !!(await page.$("#bib-repas")), "");
     const ecr = db.ecritures.filter(e => e.table === "programmes_types" || e.table === "bibliotheque");
     ok("C6 : rien n'est écrit dans la base de programmes ni dans la bibliothèque en parcourant ces écrans", ecr.length === 0, JSON.stringify(ecr.map(e => e.table)));
   });
@@ -344,7 +366,8 @@ const volet = async page => { await page.click("#barre-bas [data-plus]"); await 
       const { page, c } = await contexte(b, COACH, db, a === "#/suivi" ? { time: LUNDI0 } : {});
       await page.goto(URL0 + a); await pret(page); await attendre(page, 1800);
       const m = await marques(page), [co, h, t, ids] = AVANT[a];
-      ok("D : " + a + " ouvre la même page qu'avant (" + co + " : « " + (t[0] || "") + " »)", m.courant === co && m.hash === h && JSON.stringify(m.titres) === JSON.stringify(t) && JSON.stringify(m.ids) === JSON.stringify(ids), JSON.stringify(m));
+      const aussi = AUSSI[a] ? !!(await page.$("#vue " + AUSSI[a])) : true;   // v106 (lot 1)
+      ok("D : " + a + " ouvre la même page qu'avant (" + co + " : « " + (t[0] || "") + " »)", m.courant === co && m.hash === h && JSON.stringify(m.titres) === JSON.stringify(t) && JSON.stringify(m.ids) === JSON.stringify(ids) && aussi, JSON.stringify(m) + " " + AUSSI[a]);
       await c.close(); ouverts.pop();
     }
   });

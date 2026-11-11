@@ -331,11 +331,11 @@ const ouvrirEx = async (page, si, ei) => { const d = `details[data-pli="${si}:${
     const { page } = await contexte(b, COACH, db);
     await page.goto(URL0 + "#/atelier"); await pret(page, "#pg-biblio-save");
     await page.click("#pg-biblio-save");
-    await attendreQue(() => table(db, "bibliotheque").length > 0 && page.evaluate(() => /bibliothèque/.test(document.getElementById("pg-msg").textContent)), 6000);
+    await attendreQue(() => table(db, "bibliotheque").length > 0 && page.evaluate(() => /tes modèles/.test(document.getElementById("pg-msg").textContent)), 6000);   // v106 (lot 1) : « Ma bibliothèque » s'appelle « Mes modèles »
     const l = table(db, "bibliotheque"), c = l[0] && [].concat(l[0].corps)[0], msg = await texte(page, "#pg-msg");
-    ok("C1 : « Enregistrer dans ma bibliothèque » : une écriture bibliotheque (nom du programme, coach, { type: \"entrainement\", seances }), message de succès",
+    ok("C1 : « Enregistrer dans mes modèles » (v106 : l'ancienne « Ma bibliothèque ») : une écriture bibliotheque (nom du programme, coach, { type: \"entrainement\", seances }), message de succès",
       l.length === 1 && !!c && c.nom === "Atelier 92" && c.coach_id === F.IDS.coach && c.contenu && c.contenu.type === "entrainement"
-        && JSON.stringify(c.contenu.seances) === JSON.stringify(ATELIER("x").seances) && /enregistré dans ta bibliothèque/.test(msg || ""), JSON.stringify([l.length, c && c.nom, c && c.contenu && c.contenu.type, msg]));
+        && JSON.stringify(c.contenu.seances) === JSON.stringify(ATELIER("x").seances) && /enregistré dans tes modèles/.test(msg || ""), JSON.stringify([l.length, c && c.nom, c && c.contenu && c.contenu.type, msg]));
     /* une séance vide (« + Ajouter une séance ») : même contrôle qu'« Enregistrer dans ma base », rien n'est écrit */
     await page.click("#pg-ajout-s"); await attendre(page, 800);
     await page.click("#pg-biblio-save"); await attendre(page, 1200);
@@ -350,8 +350,8 @@ const ouvrirEx = async (page, si, ei) => { const d = `details[data-pli="${si}:${
     await page.click("#pg-biblio-save");
     await attendreQue(() => page.evaluate(() => /^Pas enregistré/.test(document.getElementById("pg-msg").textContent)), 6000);
     const r = { msg: await texte(page, "#pg-msg"), dis: await page.evaluate(() => document.getElementById("pg-biblio-save").disabled) };
-    ok("C3 : bibliothèque en panne : « Pas enregistré dans ta bibliothèque : vérifie ta connexion et réessaie. », le bouton reste utilisable",
-      r.msg === "Pas enregistré dans ta bibliothèque : vérifie ta connexion et réessaie." && r.dis === false, JSON.stringify(r));
+    ok("C3 : bibliothèque en panne : « Pas enregistré dans tes modèles : vérifie ta connexion et réessaie. » (v106), le bouton reste utilisable",
+      r.msg === "Pas enregistré dans tes modèles : vérifie ta connexion et réessaie." && r.dis === false, JSON.stringify(r));
   });
 
   /* =================== D. atelier : un programme du même nom ajouté entre-temps =================== */

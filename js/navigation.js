@@ -238,7 +238,8 @@ function outilsPrincipaux(){
     if (choisis.length) return choisis.slice(0, 4);
     return v.filter(o => !o.masque_nav && !estVerrouille(o)).concat(v.filter(o => o.principal && estVerrouille(o) && !horsVitrine(o))).slice(0, 4);
   }
-  return v.filter(o => coach ? o.principal_coach : o.principal).slice(0, 4);
+  /* v106 (lot 1) : le coach, ses 4 entrées dans l'ordre du menu (Aujourd'hui, Clients, Prospects, Bibliothèque), aussi dans une fiche */
+  return coach ? menuCoach(v) : v.filter(o => o.principal).slice(0, 4);
 }
 function iconeOutil(o){
   return ICONES[o.id] ? `<span class="ico" aria-hidden="true">${ICONES[o.id]}</span>` : `<span class="ico" aria-hidden="true">${o.icone || ""}</span>`;
@@ -265,9 +266,13 @@ function construireNav(){
      navigation dans la fiche : ses 5 onglets ; chaque adresse #/client/<id>/<outil> s'ouvre toujours) */
   const fiche = Auth.estCoach() && !!Store.idConsulte;
   const ordre = coachSeul ? menuCoach(visibles) : fiche ? menuCoach(visiblesHorsFiche().filter(o => !o.masque_nav)) : visibles;
-  nav.innerHTML = ordre.map(o =>
-    `<a href="${esc(lienMenu(o))}" data-id="${esc(o.id)}"${fiche && o.role !== "coach" ? " data-quitter-fiche" : ""}>${iconeOutil(o)}${esc(coachSeul || fiche ? nomMenuCoach(o) : nomOnglet(o))}${cadenasNav(o)}</a>`
+  /* v106 (lot 1) : avec la nouvelle navigation, le nom dans un <span class="lbl"> (caché sur la barre latérale réduite aux
+     icônes, où la bulle le dit) */
+  nav.innerHTML = ordre.map(o => { const n = coachSeul || fiche ? nomMenuCoach(o) : nomOnglet(o), q = fiche && o.role !== "coach" ? " data-quitter-fiche" : "";
+    return Nav106.actif() ? `<a href="${esc(lienMenu(o))}" data-id="${esc(o.id)}"${q} title="${esc(trad(n))}">${iconeOutil(o)}<span class="lbl">${esc(n)}</span>${cadenasNav(o)}</a>`
+      : `<a href="${esc(lienMenu(o))}" data-id="${esc(o.id)}"${q}>${iconeOutil(o)}${esc(n)}${cadenasNav(o)}</a>`; }
   ).join("");
+  Nav106.majTete();
   construireBarreBas();
   if (typeof Nouveautes !== "undefined") Nouveautes.badge();   // v51 : le badge survit a la reconstruction
   if (typeof Checkin !== "undefined") Checkin.badge();         // v53 : « ton coach a répondu » (feedback du dimanche)
@@ -309,7 +314,7 @@ function brancherLogo(){
   const a = $("brand"); if (!a) return;
   const cible = Auth.estCoach() && outilsVisibles().some(o => o.id === "tableau") ? "tableau" : "accueil";
   a.href = lienOutil(cible);
-  a.setAttribute("aria-label", trad(cible === "tableau" ? "Tableau de bord" : "Accueil"));
+  a.setAttribute("aria-label", trad(cible === "tableau" ? "Aujourd'hui" : "Accueil"));   // v106 : le nom de l'entrée du menu
   a.onclick = e => { if (location.hash === lienOutil(cible)){ e.preventDefault(); afficher(cible); } };
 }
 
@@ -341,7 +346,7 @@ function cachePourClient(o){
 function visiblesHorsFiche(){ const id = Store.idConsulte; Store.idConsulte = null; try { return outilsVisibles(); } finally { Store.idConsulte = id; } }
 /* l'adresse d'une entrée du menu du coach : dans une fiche, « Réglages » et « Mon entraînement » (pas des outils « coach » :
    #/client/<id>/profil serait le questionnaire du client) referment d'abord la fiche (data-quitter-fiche, plus bas) */
-function lienMenu(o){ return Auth.estCoach() && Store.idConsulte && o.role !== "coach" && MENU_COACH.indexOf(o.id) > -1 ? "#/" + o.id : lienOutil(o.id); }
+function lienMenu(o){ return Auth.estCoach() && Store.idConsulte && o.role !== "coach" && (MENU_COACH.indexOf(o.id) > -1 || MENU_PROFIL_COACH.indexOf(o.id) > -1) ? "#/" + o.id : lienOutil(o.id); }   // v106 : aussi les pages du rond de profil
 document.addEventListener("click", e => {
   const a = e.target && e.target.closest ? e.target.closest("a[data-quitter-fiche]") : null;
   if (!a || !Store.idConsulte) return;
@@ -353,6 +358,88 @@ document.addEventListener("click", e => {
 function menuCoach(visibles){ return MENU_COACH.map(id => visibles.find(o => o.id === id)).filter(Boolean); }
 function nomMenuCoach(o){ return NOMS_MENU_COACH[o.id] || o.nom; }
 
+/* v106 (lot 1, refonte de l'ergonomie) — NAVIGATION À 4 ENTRÉES. La classe « nav106 » sur <body> porte la nouvelle mise en
+   page (css/communs.css, fin) : jusqu'à 1 023 px, une ligne fine en haut (titre de la page, loupe, rond de profil) et la barre
+   du bas à 4 cases égales, sans « Plus » ; à partir de 1 024 px, la barre latérale (logo, recherche, les 4 entrées, le rond en
+   bas ; réduite aux icônes sous 1 280 px). Lot 1 : le coach ; « FR » et « Se déconnecter » passent derrière le rond. */
+const Nav106 = {
+  actif(){ return typeof Auth !== "undefined" && Auth.connecte() && Auth.estCoach(); },
+  nom(){ const p = Auth.profil, u = Auth.utilisateur(); return p && (p.prenom || p.nom) ? ((p.prenom || "") + " " + (p.nom || "")).trim() : (u ? u.email || "" : ""); },
+  initiales(){ const n = this.nom(); if (!n || /@/.test(n)) return "?"; return n.split(/\s+/).filter(Boolean).slice(0, 2).map(x => x[0].toUpperCase()).join("") || "?"; },
+  majTete(){
+    const actif = this.actif();
+    document.body.classList.toggle("nav106", actif);
+    document.body.classList.toggle("nav106-coach", actif && Auth.estCoach());
+    const r = $("rond-profil"), c = $("nav-chercher"), t = $("titre-page");
+    if (t) t.hidden = !actif;
+    if (r){
+      r.hidden = !actif;
+      if (actif){
+        const lib = trad("Mon profil et mes réglages");
+        r.innerHTML = `<span class="avatar" aria-hidden="true" data-notr>${esc(this.initiales())}</span><span class="lbl" data-notr>${esc(this.nom())}</span>`;
+        r.setAttribute("aria-label", lib); r.title = lib; r.setAttribute("aria-haspopup", "dialog");
+        r.onclick = () => MenuProfil.ouvrir();
+      }
+    }
+    if (c){
+      c.hidden = !(actif && Auth.estCoach());
+      if (!c.hidden){
+        const lib = trad("Rechercher un client par son nom");
+        c.querySelector(".ico").innerHTML = SVG.loupe; c.setAttribute("aria-label", lib); c.title = lib;
+        c.onclick = () => this.chercher();
+      }
+    }
+  },
+  /* la loupe : la liste des clients, curseur dans sa recherche (comme la loupe du tableau de bord) ; d'une fiche, la referme */
+  chercher(){
+    try { ListeCoach.etat("clients").focus = true; } catch(e){}
+    if (Store.idConsulte){ Store.oublier(Store.idConsulte); Store.idConsulte = null; Store.nomConsulte = null; Store.retourVers = null; }
+    if (location.hash === "#/clients") afficher("clients"); else location.hash = "#/clients";
+  },
+  /* le titre de la ligne du haut : le nom du lien qui y mène (menu du coach), le nom de la fiche ouverte, sinon le titre de la page */
+  titre(outil){
+    const t = $("titre-page"); if (!t || !outil) return;
+    let x = "";
+    if (Store.idConsulte) x = Store.nomConsulte || trad("Fiche");
+    else if (Auth.estCoach() && MENU_COACH.indexOf(outil.id) > -1) x = trad(nomMenuCoach(outil));
+    else if (Auth.estCoach() && PARENTS_MENU_COACH[outil.id] === "mes-programmes") x = trad(NOMS_MENU_COACH["mes-programmes"]);
+    else x = trad(outil.titre || nomOnglet(outil));
+    t.toggleAttribute("data-notr", !!Store.idConsulte);   // un nom n'est jamais traduit
+    t.textContent = x;
+  }
+};
+/* v106 (lot 1) : le volet du rond de profil — Réglages (qui s'ouvre sur « Mon compte »), Mon entraînement, Langue, Partager
+   l'app, Se déconnecter (avec confirmation, UI.confirmer). Dans une fiche, Réglages et Mon entraînement la referment d'abord. */
+const ICO_LANGUE = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"/></svg>';
+const ICO_SORTIE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 16l-4-4 4-4M6 12h10"/></svg>';
+const MenuProfil = {
+  pages(){
+    const fiche = Auth.estCoach() && !!Store.idConsulte, v = fiche ? visiblesHorsFiche() : outilsVisibles();
+    return (Auth.estCoach() ? MENU_PROFIL_COACH : []).map(id => v.find(o => o.id === id)).filter(Boolean);
+  },
+  ouvrir(){
+    const fiche = Auth.estCoach() && !!Store.idConsulte;
+    const lignes = this.pages().map(o => `<li><a href="${esc(lienMenu(o))}" data-id="${esc(o.id)}"${fiche && o.role !== "coach" ? " data-quitter-fiche" : ""}${courant === o.id && !fiche ? ' aria-current="page"' : ""}>${iconeOutil(o)}<span>${esc(Auth.estCoach() ? nomMenuCoach(o) : nomOnglet(o))}</span></a></li>`).join("");
+    const corps = `<p class="mp-qui"><span class="avatar" aria-hidden="true" data-notr>${esc(Nav106.initiales())}</span><span class="mp-qui-t"><b data-notr>${esc(Nav106.nom())}</b>${Auth.estCoach() ? `<small>${esc(trad("Coach"))}</small>` : ""}</span></p>
+      <ul class="menu-plus" id="menu-profil">${lignes}
+        <li><button type="button" data-mp-langue><span class="ico" aria-hidden="true">${ICO_LANGUE}</span><span>${esc(trad("Langue"))}</span><span class="mp-val" data-notr>${esc(libelleLangue())}</span></button></li>
+        <li><button type="button" data-mp-partager><span class="ico" aria-hidden="true">${SVG.partager}</span><span>${esc(trad("Partager l'app"))}</span></button></li>
+        <li><button type="button" data-mp-deco><span class="ico" aria-hidden="true">${ICO_SORTIE}</span><span>${esc(trad("Se déconnecter"))}</span></button></li>
+      </ul>`;
+    UI.volet({ titre: trad("Mon profil"), corps, classe: "volet-profil" });
+    setTimeout(() => {
+      const z = document.querySelector(".volet-profil"); if (!z) return;
+      $$("#menu-profil a", z).forEach(a => a.addEventListener("click", () => UI.fermer()));
+      const l = z.querySelector("[data-mp-langue]"); if (l) l.addEventListener("click", () => { UI.fermer(); basculerLangue(); });
+      const p = z.querySelector("[data-mp-partager]"); if (p) p.addEventListener("click", () => partagerApp());
+      const d = z.querySelector("[data-mp-deco]"); if (d) d.addEventListener("click", async () => {
+        UI.fermer();
+        if (await UI.confirmer(trad("Te déconnecter de ton espace ?"), { ok: trad("Se déconnecter") })) Auth.deconnecter();
+      });
+    }, 0);
+  }
+};
+
 /* --- barre du bas (telephone) --- */
 function construireBarreBas(){
   let b = $("barre-bas");
@@ -363,7 +450,7 @@ function construireBarreBas(){
   const enFiche = Auth.estCoach() && !!Store.idConsulte;
   const autres = (coachSeul ? menuCoach(visiblesNav) : enFiche ? menuCoach(visiblesHorsFiche().filter(o => !o.masque_nav)) : visiblesNav).filter(o => principaux.indexOf(o) === -1);   // v98 : le coach, ses 7 entrées ; v104 (point 2) : dans une fiche aussi, sans les outils du client
   b.innerHTML = principaux.map(o =>
-    `<a href="${esc(lienOutil(o.id))}" data-id="${esc(o.id)}"${estVerrouille(o) ? ' class="verrouille"' : ""}>${iconeOutil(o)}<span class="lbl">${esc(nomCourt(o))}</span>${cadenasNav(o)}</a>`).join("") +
+    `<a href="${esc(Auth.estCoach() ? lienMenu(o) : lienOutil(o.id))}" data-id="${esc(o.id)}"${enFiche && o.role !== "coach" ? " data-quitter-fiche" : ""}${estVerrouille(o) ? ' class="verrouille"' : ""}>${iconeOutil(o)}<span class="lbl">${esc(Auth.estCoach() ? nomMenuCoach(o) : nomCourt(o))}</span>${cadenasNav(o)}</a>`).join("") +
     (autres.length ? `<button type="button" data-plus><span class="ico" aria-hidden="true">${ICONES.plus}</span><span class="lbl">Plus</span></button>` : "");
   const plus = b.querySelector("[data-plus]");
   /* v69 : le prospect revient a l'accueil par une fleche a gauche du titre (la croix seule ne suffisait pas sur telephone) ;
@@ -718,6 +805,7 @@ async function afficher(id, silencieux, sansCompte){
     ${installationHaut ? "" : installation}`;
 
   construireNav();   // les libelles dependent du mode : on les rafraichit
+  Nav106.titre(outil);   // v106 (lot 1) : le titre de la page dans la ligne du haut (téléphone, tablette)
   if (Store.idConsulte && Auth.estCoach()){ VueFiche.demarrer(); VueFiche.noeud($("vue")); if (VueFiche.obs) VueFiche.obs.takeRecords(); }   // v104 (point 4) ; partie 4 : la page n'est pas parcourue deux fois
   /* Les outils que le coach REMPLIT depuis la fiche d'un client. Oublier
      d'inscrire un outil ici le rend muet : la page passe en lecture seule et

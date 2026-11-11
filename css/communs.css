@@ -592,3 +592,120 @@ body.figee{overflow:hidden}
 /* v104 (partie 3) : écran de connexion — « Mot de passe oublié ? », « Créer mon compte », « Retour à la connexion » : zones de
    toucher de 44 px de haut (le texte ne bouge pas : seule la zone autour grandit) */
 .bascule button{min-height:var(--h-toucher);margin:3px 8px;padding:0 4px}
+
+/* ==================================================================
+   v106 (lot 1, refonte de l'ergonomie) — NAVIGATION À 4 ENTRÉES (classe « nav106 » sur <body>, Nav106 dans navigation.js).
+   Jusqu'à 1 023 px : une ligne fine en haut (titre de la page, loupe, rond de profil) et la barre du bas à 4 cases égales.
+   À partir de 1 024 px : la barre latérale (230 px ; 72 px, icônes seules, sous 1 280 px). « FR », le nom et « Se
+   déconnecter » ne sont plus affichés en permanence : ils sont derrière le rond de profil (MenuProfil).
+   ================================================================== */
+.titre-page[hidden],.nav-chercher[hidden],.rond-profil[hidden]{display:none!important}
+body.nav106 .compte .qui,body.nav106 #langue,body.nav106 #deco{display:none}
+.nav-chercher,.rond-profil{display:inline-flex;align-items:center;gap:10px;min-height:var(--h-rond);border:1px solid var(--verre-bord);background:var(--verre);
+  color:var(--ink-2);font:inherit;font-size:14px;cursor:pointer;transition:color var(--vite),border-color var(--vite),background var(--vite)}
+.nav-chercher:hover,.rond-profil:hover{color:var(--ink);border-color:var(--accent-line)}
+.nav-chercher .ico{display:inline-flex}
+.nav-chercher .ico svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.rond-profil{border-radius:999px;padding:3px}
+.rond-profil .avatar{width:36px;height:36px}
+.rond-profil .lbl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;color:var(--ink)}
+/* le volet du rond de profil */
+.mp-qui{display:flex;align-items:center;gap:12px;margin:0 0 10px;padding:4px 4px 14px;border-bottom:1px solid var(--line)}
+.mp-qui-t{display:flex;flex-direction:column;min-width:0}
+.mp-qui-t b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-qui-t small{font-size:12.5px;color:var(--ink-3)}
+.menu-plus button{display:flex;align-items:center;gap:12px;width:100%;padding:13px 4px;background:none;border:0;color:var(--ink);font:inherit;font-size:15px;font-weight:500;cursor:pointer;text-align:left;min-height:var(--h-toucher)}
+.menu-plus button .ico{display:inline-flex;color:var(--ink-3)}
+.menu-plus button .ico svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.menu-plus button:hover,.menu-plus a:hover{color:var(--accent)}
+.menu-plus .mp-val{margin-left:auto;font-size:13px;color:var(--ink-3)}
+/* le menu « ⋯ » (menuPointsHTML, interface.js) */
+.menu-points{position:relative;display:inline-block;border:0;margin:0;padding:0}
+.menu-points > summary.rond{font-size:inherit;color:var(--ink)}
+.menu-points > summary.rond:hover{color:var(--ink);border-color:var(--accent-line)}
+.menu-points > summary{list-style:none}
+.menu-points > summary::-webkit-details-marker{display:none}
+.menu-points .mpts-ico{display:inline-flex}
+.menu-points .mpts-ico svg{width:20px;height:20px;stroke:currentColor;fill:currentColor;stroke-width:1}
+.menu-points[open] > summary{border-color:var(--accent-line);color:var(--ink)}
+.menu-points-l{position:absolute;right:0;top:calc(100% + 6px);z-index:40;min-width:210px;display:flex;flex-direction:column;padding:6px;
+  background:var(--fenetre);border:1px solid var(--verre-bord);border-radius:var(--r);box-shadow:0 12px 32px rgba(0,0,0,.45)}
+.menu-points-l a,.menu-points-l button{display:flex;align-items:center;min-height:var(--h-toucher);padding:0 12px;border-radius:var(--r-sm);
+  color:var(--ink);text-decoration:none;font:inherit;font-size:14.5px;background:none;border:0;cursor:pointer;text-align:left;white-space:nowrap}
+.menu-points-l a:hover,.menu-points-l button:hover,.menu-points-l a:focus-visible,.menu-points-l button:focus-visible{background:var(--raised)}
+.menu-points-l button.danger{color:var(--bad)}
+/* les onglets de la Bibliothèque, et la rangée fine des sous-pages (40 px) */
+.bib-onglets{margin-bottom:12px}
+.bib-onglets .tab{text-decoration:none;display:inline-flex;align-items:center}
+.bib-onglets .tab.on{border-color:var(--accent);color:var(--ink);background:var(--verre-choisi);font-weight:600}
+.sous-onglets{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 0 18px;padding:2px 0}
+.sous-onglets::-webkit-scrollbar{display:none}
+.s-onglet{display:inline-flex;align-items:center;flex:none;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid transparent;
+  color:var(--ink-2);text-decoration:none;font-size:14px;font-weight:500;white-space:nowrap}
+.s-onglet:hover{color:var(--ink);background:var(--raised)}
+.s-onglet.on{color:var(--ink);border-color:var(--verre-bord);background:var(--verre-choisi);font-weight:600}
+
+/* --- téléphone et tablette debout : ligne fine en haut, barre du bas à 4 cases --- */
+@media (max-width:1023px){
+  body.nav106 .topbar .wrap{flex-wrap:nowrap;min-height:52px;padding-top:6px;padding-bottom:6px;gap:8px}
+  body.nav106 .topbar .brand,body.nav106 .topbar .nav{display:none}
+  body.nav106 .titre-page{display:block;order:0;flex:1 1 auto;min-width:0;font-weight:600;font-size:17px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  body.nav106 .nav-chercher{order:1;flex:none;width:var(--h-rond);justify-content:center;padding:0;border-radius:50%}
+  body.nav106 .nav-chercher .lbl,body.nav106 .rond-profil .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  body.nav106 .topbar .compte{order:2;flex:none;margin-left:0;justify-content:flex-end}
+  /* le titre est dans la ligne du haut : le grand titre de la page ne se répète pas dessous */
+  body.nav106-coach .masthead{display:none}
+  body.nav106 .lc-titres h1{display:none}
+  body.nav106-coach main.wrap{padding-top:14px}
+  body.nav106 .barre-bas a{min-width:0}
+  body.nav106 .barre-bas .lbl{font-size:11px}
+}
+/* de 721 à 1 023 px, la barre du bas existe aussi (avant : téléphone seulement) */
+@media (min-width:721px) and (max-width:1023px){
+  body.nav106 .barre-bas{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;justify-content:space-around;align-items:stretch;
+    background:var(--nav-bg);border-top:1px solid rgba(255,255,255,.10);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+  body.nav106 .barre-bas[hidden]{display:none}
+  body.nav106 .barre-bas a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:52px;
+    background:none;border:0;padding:4px 2px;border-radius:var(--r);color:var(--ink-2);text-decoration:none;font-family:inherit;cursor:pointer;position:relative}
+  body.nav106 .barre-bas .ico{display:inline-flex}
+  body.nav106 .barre-bas .ico svg{width:22px;height:22px;stroke-width:1.7}
+  body.nav106 .barre-bas .lbl{font-weight:500;white-space:nowrap}
+  body.nav106 .barre-bas a[aria-current="page"]{color:var(--accent)}
+  body.nav106 .barre-bas a[aria-current="page"] .ico{background:var(--accent-soft);border-radius:999px;padding:4px 14px;margin:-4px -14px}
+  body.nav106 main{padding-bottom:96px}
+  body.nav106 .toasts{bottom:calc(84px + env(safe-area-inset-bottom))}
+}
+
+/* --- ordinateur : la barre latérale --- */
+@media (min-width:1024px){
+  body.nav106{padding-left:230px}
+  body.nav106 .topbar{position:fixed;top:0;left:0;bottom:0;width:230px;border-bottom:0;border-right:1px solid var(--verre-bord);overflow-y:auto;z-index:25}
+  body.nav106 .topbar .wrap{flex-direction:column;align-items:stretch;flex-wrap:nowrap;max-width:none;min-height:100%;padding:18px 12px 14px;gap:6px}
+  body.nav106 .topbar .brand{order:0;flex:none;margin:0 0 14px;padding:4px 10px;align-items:center;justify-content:flex-start}
+  body.nav106 .titre-page{display:none}
+  body.nav106 .nav-chercher{order:1;width:100%;padding:0 12px;border-radius:var(--r-sm);margin-bottom:10px}
+  body.nav106 .topbar .nav{order:2;flex:none;flex-direction:column;margin:0;padding:0;overflow:visible;gap:2px;-webkit-mask-image:none;mask-image:none;justify-content:flex-start}
+  body.nav106 .topbar .nav a{border-radius:var(--r-sm);padding:10px 12px;min-height:44px;font-size:14.5px;gap:12px}
+  body.nav106 .topbar .nav .ico{display:inline-flex}
+  body.nav106 .topbar .nav .ico svg{width:19px;height:19px}
+  body.nav106 .topbar .nav .nav-badge{margin-left:auto}
+  body.nav106 .topbar .compte{order:3;margin-top:auto;margin-left:0;flex:none;flex-direction:column;align-items:stretch;gap:8px;padding-top:12px;border-top:1px solid var(--verre-bord)}
+  body.nav106 .compte .etat:empty{display:none}
+  body.nav106 .rond-profil{width:100%;border-radius:var(--r-sm);padding:4px 10px 4px 4px;justify-content:flex-start;background:none;border-color:transparent}
+  body.nav106 .rond-profil:hover{background:var(--raised)}
+  body.nav106 .barre-bas{display:none}
+  body.nav106 footer .wrap,body.nav106 main.wrap{max-width:1040px}
+}
+@media (min-width:1024px) and (max-width:1279px){
+  body.nav106{padding-left:72px}
+  body.nav106 .topbar{width:72px}
+  body.nav106 .topbar .wrap{padding:14px 10px;align-items:center}
+  body.nav106 .topbar .brand{padding:0;margin-bottom:12px}
+  body.nav106 .topbar .b-logo{max-width:48px}
+  body.nav106 .topbar .lbl,body.nav106 .topbar .b-texte{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  body.nav106 .nav-chercher{width:48px;height:48px;padding:0;justify-content:center;border-radius:50%}
+  body.nav106 .topbar .nav a{width:48px;height:48px;padding:0;justify-content:center}
+  body.nav106 .topbar .nav .nav-badge{position:absolute;top:2px;right:0;margin:0}
+  body.nav106 .topbar .compte{align-items:center}
+  body.nav106 .rond-profil{width:auto;padding:3px;justify-content:center}
+}

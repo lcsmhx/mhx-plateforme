@@ -877,8 +877,8 @@ const outilNutrition = {
       <div class="actions" style="margin-top:14px">
         <button class="btn" id="nu-gen"${bloque}>Générer la semaine</button>
         ${R.jours.length ? `<button class="btn ghost" id="nu-gen-jour"${bloque}>Refaire seulement ${esc((R.jours[actif]||{}).nom || "ce jour")}</button>` : ""}
-        <button class="btn ghost" id="nu-biblio-save">Enregistrer dans ma bibliothèque</button>
-        <select id="nu-biblio" style="max-width:240px"><option value="">— charger depuis ma bibliothèque —</option></select>
+        <button class="btn ghost" id="nu-biblio-save">Enregistrer dans mes modèles</button>
+        <select id="nu-biblio" style="max-width:240px"><option value="">— charger depuis mes modèles —</option></select>
       </div>
       ${ctx.prerempli ? `<p class="note" style="margin-top:10px">Pré-rempli avec ${ctx.depuisQuestionnaire ? "son questionnaire — passe par « Ses calories » si tu veux affiner son activité" : "son profil et son calculateur"}.</p>` : ""}`, !R.jours.length)}
       <span class="msg" id="nu-msg"></span>
@@ -1467,7 +1467,7 @@ const outilNutrition = {
       const bs = $("nu-biblio-save");
       if (bs) bs.addEventListener("click", async () => {
         if (!B.jours.length){ flash("nu-msg","Compose d'abord une semaine."); return; }
-        const nom = await UI.demander("Sous quel nom l'enregistrer dans ta bibliothèque ?", B.nom || "Semaine type", { titre: "Ma bibliothèque", ok: "Enregistrer" });
+        const nom = await UI.demander("Sous quel nom l'enregistrer dans tes modèles ?", B.nom || "Semaine type", { titre: "Mes modèles", ok: "Enregistrer" });
         if (!nom) return;
         try {
           await Auth.appel("/rest/v1/bibliotheque", {
@@ -1475,9 +1475,9 @@ const outilNutrition = {
             body:[{ coach_id: Auth.utilisateur().id, nom, note: B.note || "",
                     contenu: { type:"repas", jours: B.jours, cible: B.cible, regime: B.regime, allergenes: B.allergenes } }]
           });
-          flash("nu-msg","Enregistré dans ta bibliothèque.");
+          flash("nu-msg","Enregistré dans tes modèles.");
           chargerBiblio();
-        } catch(e){ flashFixe("nu-msg", trad("Pas enregistré dans ta bibliothèque : vérifie ta connexion et réessaie.")); }
+        } catch(e){ flashFixe("nu-msg", trad("Pas enregistré dans tes modèles : vérifie ta connexion et réessaie.")); }
       });
 
       chargerBiblio();
@@ -1488,7 +1488,7 @@ const outilNutrition = {
       try {
         const l = await Auth.appel("/rest/v1/bibliotheque?select=id,nom,contenu&order=cree_le.desc");
         const repas = (l || []).filter(x => x.contenu && x.contenu.type === "repas");
-        sel.innerHTML = `<option value="">— charger depuis ma bibliothèque —</option>` +
+        sel.innerHTML = `<option value="">— charger depuis mes modèles —</option>` +
           repas.map(x => `<option value="${x.id}">${esc(x.nom)}</option>`).join("");
         sel.onchange = async () => {
           if (!sel.value) return;

@@ -1345,7 +1345,7 @@ const outilProgramme = {
           <div><label for="pg-cycle">Cycle n°</label><input id="pg-cycle" type="number" min="1" max="99" step="1" value="${esc(P.cycle || 1)}"></div>
           <div><label for="pg-duree">Durée (semaines)</label><input id="pg-duree" type="number" min="1" max="52" step="1" value="${esc(P.duree_semaines || 4)}"></div>
         </div>
-        <div><label for="pg-biblio">Charger depuis ma bibliothèque</label><select id="pg-biblio"><option value="">— choisis un entraînement —</option></select></div>
+        <div><label for="pg-biblio">Charger depuis mes modèles</label><select id="pg-biblio"><option value="">— choisis un entraînement —</option></select></div>
         <div><label for="pg-lieu">Où s'entraîne-t-il ?</label><select id="pg-lieu">
           <option value="">Tous les lieux</option>
           ${this.lieux().map(l => `<option value="${esc(l)}"${this.lieuChoisi === l ? " selected" : ""}>${esc(l)}</option>`).join("")}
@@ -1373,7 +1373,7 @@ const outilProgramme = {
       <div class="actions">
         <button class="btn ghost" id="pg-ajout-s">+ Ajouter une séance</button>
         <button class="btn" id="pg-publier-bas">${esc(trad("Publier les changements"))}</button>
-        <button class="btn ghost" id="pg-biblio-save">Enregistrer dans ma bibliothèque</button>
+        <button class="btn ghost" id="pg-biblio-save">Enregistrer dans mes modèles</button>
         <span class="msg" id="pg-msg"></span>
       </div>
       <p class="note" style="margin-top:10px">${esc(trad("Tes changements sont gardés dans un brouillon, sur ton compte : ton client ne les voit qu'après « Publier les changements ». La publication date le programme (« Programme mis à jour le … » chez lui), range l'ancien dans l'historique et fait démarrer la semaine 1 d'un nouveau programme ou d'un nouveau bloc."))}</p>
@@ -1486,11 +1486,11 @@ const outilProgramme = {
       <div class="actions">
         <button class="btn ghost" id="pg-ajout-s">+ Ajouter une séance</button>
         <button class="btn" id="at-base">Enregistrer dans ma base</button>
-        <button class="btn ghost" id="pg-biblio-save">Enregistrer dans ma bibliothèque</button>
+        <button class="btn ghost" id="pg-biblio-save">Enregistrer dans mes modèles</button>
         <button class="btn ghost" id="at-vider">Repartir de zéro</button>
         <span class="msg" id="pg-msg"></span>
       </div>
-      <p class="note" style="margin-top:10px">« Ma base » rend le programme disponible dans « Programmes prêts à l'emploi », sur la fiche de n'importe quel client. « Ma bibliothèque » le garde pour toi seul.</p>
+      <p class="note" style="margin-top:10px">« Ma base » rend le programme disponible dans « Programmes prêts à l'emploi », sur la fiche de n'importe quel client. « Mes modèles » le garde pour toi seul.</p>
     </section>`;
   },
 
@@ -1738,7 +1738,7 @@ const outilProgramme = {
 
       const bs = $("pg-biblio-save");
       if (bs) bs.addEventListener("click", async () => {
-        const nom = await UI.demander("Sous quel nom l'enregistrer dans ta bibliothèque ?", b.nom || "Entraînement", { titre: "Ma bibliothèque", ok: "Enregistrer" });
+        const nom = await UI.demander("Sous quel nom l'enregistrer dans tes modèles ?", b.nom || "Entraînement", { titre: "Mes modèles", ok: "Enregistrer" });
         if (!nom) return;
         try {
           await Auth.appel("/rest/v1/bibliotheque", {
@@ -1746,9 +1746,9 @@ const outilProgramme = {
             headers: { "Prefer": "return=minimal" },
             body: [{ coach_id: Auth.utilisateur().id, nom, note: b.note || "", contenu: { type:"entrainement", seances: b.seances } }]
           });
-          flash("pg-msg", "Enregistré dans ta bibliothèque.");
+          flash("pg-msg", "Enregistré dans tes modèles.");
           chargerBiblio();
-        } catch(e){ flashFixe("pg-msg", trad("Pas enregistré dans ta bibliothèque : vérifie ta connexion et réessaie.")); }
+        } catch(e){ flashFixe("pg-msg", trad("Pas enregistré dans tes modèles : vérifie ta connexion et réessaie.")); }
       });
 
       chargerBiblio();
@@ -1794,7 +1794,7 @@ const outilProgramme = {
           catch(e){ sel.value = ""; flashFixe("pg-msg", trad("Pas chargé : vérifie ta connexion et réessaie.")); return; }   // v102
           if (r && r[0] && r[0].contenu){
             if (charger(r[0].contenu.seances, r[0].nom, "", true) === false) return false;
-          } else { sel.value = ""; flashFixe("pg-msg", trad("Cet entraînement n'existe plus dans ta bibliothèque.")); }
+          } else { sel.value = ""; flashFixe("pg-msg", trad("Cet entraînement n'existe plus dans tes modèles.")); }
         };
       } catch(e){}
     };

@@ -8,11 +8,12 @@ const outilCatalogue = {
   nom: "Catalogue",
   icone: "📦",
   role: "coach",
-  titre: "Le catalogue",
+  /* v106 (lot 1) : le second onglet de la Bibliothèque (ongletsBibliotheque, outilAtelier.js) */
+  titre: "Bibliothèque",
   accroche: "Les aliments, les recettes et les programmes dans lesquels l'application pioche. Tu peux les recharger à tout moment depuis le dépôt.",
 
   html(){
-    return `<section class="panel">
+    return (typeof ongletsBibliotheque === "function" ? ongletsBibliotheque("catalogue") : "") + `<section class="panel">
       <h2>Ce que contient ton catalogue</h2>
       <div class="grid g4 bilan-jour" id="cat-compteurs">
         <div class="tuile"><span class="t-lbl">Aliments</span><span class="t-val readout" id="cat-n-aliments">…</span><span class="t-u">fiches</span></div>

@@ -109,7 +109,7 @@ const outilAtelier = {
         return "";
       };
 
-      /* v91 : « Enregistrer dans ma bibliothèque » (jamais branché avant : le bouton ne faisait rien) — même table et même
+      /* v91 : « Enregistrer dans mes modèles » (jamais branché avant : le bouton ne faisait rien) — même table et même
          format que la fiche d'un client ({ type: "entrainement", seances }), sous le nom du programme */
       const biblio = $("pg-biblio-save");
       if (biblio) biblio.addEventListener("click", async () => {
@@ -122,9 +122,9 @@ const outilAtelier = {
             headers: { "Prefer": "return=minimal" },
             body: [{ coach_id: Auth.utilisateur().id, nom: P.nom.trim(), note: P.note || "", contenu: { type: "entrainement", seances: JSON.parse(JSON.stringify(P.seances)) } }]
           });
-          if (biblio.isConnected) flash("pg-msg", "« " + P.nom.trim() + " » enregistré dans ta bibliothèque. Tu le retrouves sur la fiche de chaque client.");
+          if (biblio.isConnected) flash("pg-msg", "« " + P.nom.trim() + " » enregistré dans tes modèles. Tu le retrouves sur la fiche de chaque client.");
         } catch(e){
-          if (biblio.isConnected) flashFixe("pg-msg", "Pas enregistré dans ta bibliothèque : vérifie ta connexion et réessaie.");
+          if (biblio.isConnected) flashFixe("pg-msg", "Pas enregistré dans tes modèles : vérifie ta connexion et réessaie.");
         }
         biblio.disabled = false;
       });
@@ -203,16 +203,18 @@ const outilMesProgrammes = {
   role: "coach",
   nom: "Mes programmes",
   court: "Programmes",
-  principal_coach: true,   // la barre du bas du coach : Tableau · Clients · Prospects · Programmes · Plus
+  principal_coach: true,   // v106 (lot 1) : l'entrée « Bibliothèque » du menu du coach (Aujourd'hui · Clients · Prospects · Bibliothèque)
   icone: "🗂️",
-  titre: "Mes programmes",
-  accroche: "Tes programmes réutilisables au même endroit : tes séances en cours, ta base de programmes prêts à l'emploi et ta bibliothèque.",
-  onglets(){ return [["", "Mes séances"], ["base", "Ma base"], ["bibliotheque", "Ma bibliothèque"]]; },
+  /* v106 (lot 1) : la page de l'entrée « Bibliothèque » : deux onglets, « Mes programmes » (ici : Mes séances, Ma base, Mes modèles —
+     l'ancienne « Ma bibliothèque ») et « Catalogue » (#/catalogue) */
+  titre: "Bibliothèque",
+  accroche: "Tes séances, ta base de programmes, tes modèles et le catalogue de l'app.",
+  onglets(){ return [["", "Mes séances"], ["base", "Ma base"], ["bibliotheque", "Mes modèles"]]; },
   onglet(){ const s = String(sousRoute || ""); return this.onglets().some(o => o[0] === s) ? s : ""; },
   html(){
     const ici = this.onglet();
-    return `<nav class="tabs mp-onglets" aria-label="${esc(trad("Mes programmes"))}">${this.onglets().map(([s, nom]) =>
-      `<a class="tab${s === ici ? " on" : ""}" href="#/mes-programmes${s ? "/" + s : ""}"${s === ici ? ' aria-current="page"' : ""} data-mp="${s}">${esc(trad(nom))}</a>`).join("")}</nav>
+    return ongletsBibliotheque("mes-programmes") + `<nav class="sous-onglets mp-onglets" aria-label="${esc(trad("Mes programmes"))}">${this.onglets().map(([s, nom]) =>
+      `<a class="s-onglet${s === ici ? " on" : ""}" href="#/mes-programmes${s ? "/" + s : ""}"${s === ici ? ' aria-current="page"' : ""} data-mp="${s}">${esc(trad(nom))}</a>`).join("")}</nav>
       <div id="mp-zone">${ici === "" ? outilAtelier.html() : ici === "bibliotheque" ? outilBibliotheque.html() : `<section class="panel">${squelette()}</section>`}</div>`;
   },
   async init(){
@@ -242,3 +244,9 @@ const outilMesProgrammes = {
     $$("[data-mp-dupliquer]", zone).forEach(b => b.addEventListener("click", () => reprendre(b.dataset.mpDupliquer, true)));
   }
 };
+/* v106 (lot 1) : les deux onglets de la Bibliothèque du coach, en tête de « Mes programmes » (#/mes-programmes…) et du
+   « Catalogue » (#/catalogue) : chaque onglet garde son adresse */
+function ongletsBibliotheque(ici){
+  return `<nav class="tabs bib-onglets" aria-label="${esc(trad("Bibliothèque"))}">${[["mes-programmes", "Mes programmes"], ["catalogue", "Catalogue"]].map(([id, nom]) =>
+    `<a class="tab${id === ici ? " on" : ""}" href="#/${id}" data-bib="${id}"${id === ici ? ' aria-current="page"' : ""}>${esc(trad(nom))}</a>`).join("")}</nav>`;
+}

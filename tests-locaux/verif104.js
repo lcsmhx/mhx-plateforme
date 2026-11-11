@@ -704,7 +704,8 @@ const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { 
   /* ==========================================================================================================
      PARTIE 2 (audit de Cowork), points 1 à 5 et 9 à 11 — fiche d'un client et espace coach
      ========================================================================================================== */
-  const MENU7 = '["tableau","clients","prospects","mes-programmes","catalogue","entrainement","profil"]';
+  /* v106 (lot 1) : changement voulu — le menu du coach a 4 entrées ; Réglages et Mon entraînement sont derrière le rond de profil */
+  const MENU7 = '["tableau","clients","prospects","mes-programmes"]';
   const visTextes = (page, sel) => page.evaluate(s => Array.from(document.querySelectorAll(s)).filter(e => e.getClientRects().length && getComputedStyle(e).visibility !== "hidden").map(e => e.textContent.replace(/\s+/g, " ").trim()), sel);
 
   /* =================== F. point 1 : une seule navigation dans la fiche =================== */
@@ -718,7 +719,7 @@ const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { 
       fleches: Array.from(document.querySelectorAll("#vue a")).filter(a => /→\s*$/.test(a.textContent)).map(a => a.textContent.trim()),
       call: Array.from(document.querySelectorAll("#vue a, #vue button")).filter(e => e.getClientRects().length && e.textContent.replace(/\s+/g, " ").trim() === "Préparer le call").length
     }));
-    ok("F1 (point 1) : dans la fiche, le menu du haut est celui du coach (ses 7 entrées dans l'ordre, aucune vers les outils du client), plus de rangée de raccourcis ni de lien « … → », un seul « Préparer le call »",
+    ok("F1 (point 1) : dans la fiche, le menu du haut est celui du coach (ses 4 entrées dans l'ordre, aucune vers les outils du client), plus de rangée de raccourcis ni de lien « … → », un seul « Préparer le call »",
       JSON.stringify(n.nav) === MENU7 && n.versClient === 0 && !n.raccourcis && n.fleches.length === 0 && n.call === 1, JSON.stringify(n));
     /* les anciennes adresses s'ouvrent toujours */
     const vus = [];
@@ -728,9 +729,9 @@ const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { 
     }
     ok("F2 (point 1) : les adresses #/client/<id>/bilan, journal, calculateur, mensurations, formation, compléments s'ouvrent toujours dans la fiche", vus.every(v => /:true$/.test(v)), JSON.stringify(vus));
     /* « Réglages » depuis la fiche : la fiche se referme, les réglages du coach s'ouvrent (pas le questionnaire du client) */
-    await page.click('#nav a[data-id="profil"]'); await pret(page); await attendre(page, 600);
+    await page.click("#rond-profil"); await attendre(page, 500); await page.click('.volet #menu-profil a[data-id="profil"]'); await pret(page); await attendre(page, 600);   // v106 (lot 1) : par le rond de profil
     const r = await page.evaluate(() => ({ hash: location.hash, consulte: Store.idConsulte, bandeau: !!document.querySelector("#vue .fiche-entete"), nav: Array.from(document.querySelectorAll("#nav a")).map(a => a.dataset.id) }));
-    ok("F3 (point 1) : « Réglages » du menu, depuis la fiche : #/profil du coach, fiche refermée, menu du coach", r.hash === "#/profil" && r.consulte === null && !r.bandeau && JSON.stringify(r.nav) === MENU7, JSON.stringify(r));
+    ok("F3 (point 1) : « Réglages » (rond de profil), depuis la fiche : #/profil du coach, fiche refermée, menu du coach", r.hash === "#/profil" && r.consulte === null && !r.bandeau && JSON.stringify(r.nav) === MENU7, JSON.stringify(r));
   });
 
   /* =================== G. point 2 : téléphone, barre du bas du coach, 5 onglets sur une ligne =================== */
@@ -746,11 +747,12 @@ const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { 
         return { bb, ici: ici ? ici.id : null, plus: !!document.querySelector("#barre-bas [data-plus]"), n: o.length, uneLigne: new Set(tops).size === 1, deborde: document.documentElement.scrollWidth > innerWidth + 1 };
       }));
     }
-    ok("G1 (point 2) : sur les 5 onglets de la fiche à 390 px, la barre du bas est celle du coach (Tableau · Clients · Prospects · Programmes · Plus, « Clients » marqué) et les 5 onglets tiennent sur une ligne",
-      L.every(x => JSON.stringify(x.bb) === '["tableau","clients","prospects","mes-programmes"]' && x.plus && x.ici === "clients" && x.n === 5 && x.uneLigne && !x.deborde), JSON.stringify(L));
-    await page.click("#barre-bas [data-plus]"); await attendre(page, 500);
-    const v = await page.evaluate(() => Array.from(document.querySelectorAll(".volet .menu-plus a")).map(a => a.dataset.id));
-    ok("G2 (point 2) : « Plus » dans la fiche : les autres entrées du coach (Catalogue, Mon entraînement, Réglages), aucun outil du client", JSON.stringify(v) === '["catalogue","entrainement","profil"]', JSON.stringify(v));
+    /* v106 (lot 1) : changement voulu — 4 cases (Aujourd'hui · Clients · Prospects · Bibliothèque), plus de « Plus » */
+    ok("G1 (point 2) : sur les 5 onglets de la fiche à 390 px, la barre du bas est celle du coach (Aujourd'hui · Clients · Prospects · Bibliothèque, sans « Plus », « Clients » marqué) et les 5 onglets tiennent sur une ligne",
+      L.every(x => JSON.stringify(x.bb) === '["tableau","clients","prospects","mes-programmes"]' && !x.plus && x.ici === "clients" && x.n === 5 && x.uneLigne && !x.deborde), JSON.stringify(L));
+    await page.click("#rond-profil"); await attendre(page, 500);
+    const v = await page.evaluate(() => Array.from(document.querySelectorAll(".volet #menu-profil a")).map(a => a.dataset.id + (a.hasAttribute("data-quitter-fiche") ? "↩" : "")));
+    ok("G2 (point 2) : le rond de profil dans la fiche : les autres pages du coach (Réglages, Mon entraînement, qui referment la fiche), aucun outil du client", JSON.stringify(v) === '["profil↩","entrainement↩"]', JSON.stringify(v));
   });
 
   /* =================== H. point 3 : un seul chiffre de régularité, pas de « 0 g prot. » =================== */
@@ -901,18 +903,20 @@ const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { 
   await bloc("L. point 9", async () => {
     const db = base();
     const mes = [];
-    for (const w of [1200, 1280, 1440]) {
+    /* v106 (lot 1) : changement voulu — dès 1 024 px, plus d'en-tête en haut : une barre latérale à gauche (72 px, icônes seules,
+       sous 1 280 px ; 230 px au-delà), ses 4 entrées visibles en entier et l'une sous l'autre, la page à sa droite sans recouvrement */
+    for (const w of [1024, 1200, 1280, 1440]) {
       const { page } = await contexte(b, COACH, db, { viewport: { width: w, height: 900 } });
       await page.goto(URL0 + "#/tableau"); await pret(page, "#tb-a-traiter"); await attendre(page, 400);
       mes.push(await page.evaluate(w => {
-        const t = document.querySelector(".topbar"), n = document.getElementById("nav"), nr = n.getBoundingClientRect();
-        const a = Array.from(n.querySelectorAll("a")), dedans = a.every(x => { const r = x.getBoundingClientRect(); return r.left >= nr.left - 1 && r.right <= nr.right + 1; });
-        const tops = [document.getElementById("brand"), n, document.getElementById("compte")].map(e => Math.round(e.getBoundingClientRect().top + e.getBoundingClientRect().height / 2));
-        return { w, h: Math.round(t.getBoundingClientRect().height), n: a.length, dedans, uneLigne: Math.max(...tops) - Math.min(...tops) <= 6, deborde: n.scrollWidth > n.clientWidth + 1 };
+        const t = document.querySelector(".topbar"), tr = t.getBoundingClientRect(), n = document.getElementById("nav"), nr = n.getBoundingClientRect();
+        const a = Array.from(n.querySelectorAll("a")), dedans = a.every(x => { const r = x.getBoundingClientRect(); return r.left >= nr.left - 1 && r.right <= nr.right + 1 && r.bottom <= innerHeight; });
+        const tops = a.map(x => Math.round(x.getBoundingClientRect().top)), v = document.getElementById("vue").getBoundingClientRect();
+        return { w, larg: Math.round(tr.width), haut: Math.round(tr.height), gauche: Math.round(tr.left), n: a.length, dedans, colonne: new Set(tops).size === a.length, vue: Math.round(v.left), bas: !!document.querySelector("#barre-bas a") && getComputedStyle(document.getElementById("barre-bas")).display !== "none", rond: getComputedStyle(document.getElementById("rond-profil")).display !== "none" };
       }, w));
     }
-    ok("L1 (point 9) : dès 1200 px, l'en-tête du coach tient sur une ligne (logo, menu, compte), 72 px de haut au plus, et ses 7 entrées sont visibles en entier",
-      mes.every(m => m.n === 7 && m.dedans && m.uneLigne && m.h <= 72 && !m.deborde), JSON.stringify(mes));
+    ok("L1 (point 9) : dès 1 024 px, la barre latérale du coach (72 px sous 1 280 px, 230 px au-delà, toute la hauteur) : ses 4 entrées visibles en entier, l'une sous l'autre, le rond de profil, la page à sa droite, pas de barre du bas",
+      mes.every(m => m.n === 4 && m.dedans && m.colonne && m.gauche === 0 && m.haut >= 899 && m.larg === (m.w < 1280 ? 72 : 230) && m.vue >= m.larg && !m.bas && m.rond), JSON.stringify(mes));
   });
 
   /* =================== M. point 10 : urgences = action du jour, clients d'abord =================== */

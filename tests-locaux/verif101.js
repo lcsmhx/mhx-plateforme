@@ -312,7 +312,8 @@ const ouvrirEx = async (page, si, ei) => { const d = `details[data-pli="${si}:${
     await page.goto(FICHE("programme")); await pret(page, "#pg-biblio-save");
     await page.click("#pg-biblio-save"); await attendreQue(() => fenetre(page), 3000); await toucherFenetre(page, "Enregistrer"); await attendre(page, 1500);
     const m = await texte(page, "#pg-msg"); await attendre(page, 3500);
-    ok("B1 : bibliothèque en panne : « Pas enregistré dans ta bibliothèque : vérifie ta connexion et réessaie. », un message qui reste", m === "Pas enregistré dans ta bibliothèque : vérifie ta connexion et réessaie." && (await texte(page, "#pg-msg")) === m, m);
+    /* v106 (lot 1) : « Ma bibliothèque » s'appelle « Mes modèles » */
+    ok("B1 : modèles en panne : « Pas enregistré dans tes modèles : vérifie ta connexion et réessaie. », un message qui reste", m === "Pas enregistré dans tes modèles : vérifie ta connexion et réessaie." && (await texte(page, "#pg-msg")) === m, m);
   });
 
   /* =================== C. écrans de chargement =================== */
@@ -361,9 +362,12 @@ const ouvrirEx = async (page, si, ei) => { const d = `details[data-pli="${si}:${
     await co.goto(URL0 + "#/tableau"); await pret(co, "#tb-vue");
     const l1 = await charges(co), marque = await co.evaluate(() => localStorage.getItem("mhx_coach_fichiers"));
     const pages = [];
-    for (const h of ["#/mes-programmes", "#/catalogue", "#/bibliotheque", "#/atelier", "#/tableau"]){ await co.goto(URL0 + h); await pret(co); await attendre(co, 600); pages.push(await co.evaluate(() => courant)); }
+    /* v106 (lot 1) : #/bibliotheque et #/atelier mènent aux onglets de la Bibliothèque (« Mes modèles », « Mes séances ») : la page
+       est vérifiée par son contenu (#bib-entrainements, #at-vue) */
+    const CONTENU = { "#/mes-programmes": "#at-vue", "#/catalogue": "#cat-compteurs", "#/bibliotheque": "#bib-entrainements", "#/atelier": "#at-vue", "#/tableau": "#tb-vue" };
+    for (const h of ["#/mes-programmes", "#/catalogue", "#/bibliotheque", "#/atelier", "#/tableau"]){ await co.goto(URL0 + h); await pret(co); await attendre(co, 600); pages.push(await co.evaluate(s => courant + (document.querySelector("#vue " + s) ? "" : ":vide"), CONTENU[h])); }
     ok("E3 : le coach (appareil neuf) : les 4 fichiers sont chargés à sa connexion, marque posée ; Tableau, Mes programmes, Catalogue, Bibliothèque, Mes séances s'ouvrent",
-      FICHIERS_COACH.every(f => l1.includes(f)) && marque === "1" && JSON.stringify(pages) === JSON.stringify(["mes-programmes", "catalogue", "bibliotheque", "atelier", "tableau"]), JSON.stringify([marque, pages]));
+      FICHIERS_COACH.every(f => l1.includes(f)) && marque === "1" && JSON.stringify(pages) === JSON.stringify(["mes-programmes", "catalogue", "mes-programmes", "mes-programmes", "tableau"]), JSON.stringify([marque, pages]));
     await co.reload(); await pret(co, "#tb-vue");
     const l2 = await co.evaluate(() => Array.from(document.querySelectorAll("script[defer]")).map(s => (s.getAttribute("src") || "").split("?")[0]));
     ok("E4 : ouverture suivante du coach : les 4 fichiers sont chargés d'emblée, comme avant (la marque)", FICHIERS_COACH.every(f => l2.includes(f)), JSON.stringify(l2.length));

@@ -353,7 +353,7 @@ const prospect = db => { db.profils.find(p => p.id === C3).statut = "prospect"; 
     const pn = await page.evaluate(() => Array.from(document.querySelectorAll("#vue > .fiche-entete a.b-act")).map(a => [a.textContent.trim(), a.getAttribute("href")]));
     ok("E1 : la fiche d'un client (coach) garde « Ses séances » (Entraînement), « Ses calories » et « Ses compléments » (Nutrition) ; son menu de fiche garde Son journal (v104 : dans le bandeau de la fiche, #nav = le coach)",
       p.includes("Ses séances") && p.includes("Son programme") && pn.some(([t, h]) => t === "Ses calories" && h === "#/client/" + C1 + "/calculateur") && pn.some(([t, h]) => t === "Ses compléments" && h === "#/client/" + C1 + "/complements")
-        && JSON.stringify(n) === JSON.stringify(["Tableau de bord", "Clients", "Prospects", "Mes programmes", "Catalogue", "Mon entraînement", "Réglages"]), JSON.stringify([p, pn, n]));
+        && JSON.stringify(n) === JSON.stringify(["Aujourd'hui", "Clients", "Prospects", "Bibliothèque"]) /* v106 (lot 1) : les 4 entrées du coach */, JSON.stringify([p, pn, n]));
   });
 
   /* =================== Z. console, hôtes externes =================== */
