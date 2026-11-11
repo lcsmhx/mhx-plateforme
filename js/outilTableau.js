@@ -190,6 +190,7 @@ const outilTableau = {
       Auth.appel("/rest/v1/donnees?on_conflict=user_id,outil", { method: "POST", headers: { "Prefer": "resolution=merge-duplicates,return=minimal" },
         body: [{ user_id: moi, outil: this.VISITE.cle, contenu: vis.nouvelle, maj_le: new Date(t).toISOString() }] }).catch(e => console.warn("[MHX] visite du coach non enregistrée", e && e.statut));
     }
-    Nouveautes.compter(lignes);   // v51 : le badge de l'onglet Prospects (le panneau est sur la page Prospects)
+    /* v105 : le badge de l'onglet Prospects = les urgences prospects de cette page (avant : les nouveautés) */
+    if (!Store.idConsulte){ Nouveautes.urg = urgProspects; Nouveautes.badge(); }
   }
 };

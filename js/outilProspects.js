@@ -26,7 +26,7 @@ const outilProspects = {
      Archivés, « + », « Sélectionner », archivage). « Créer un accès » : #/prospects/nouveau (Acces). Les comptes archivés ne
      sont que dans « Archivés » de la liste.
      v84 (ménage du bloc 3) : l'écran d'avant, qui faisait doublon sous la liste, a quitté la page sans rien perdre. Sous la liste
-     reste le panneau Nouveautés (le badge de l'onglet Prospects et « Tout marquer comme vu » vivent avec lui). Le reste, tel quel
+     reste le panneau Nouveautés (avec « Tout marquer comme vu » ; v105 : le badge de l'onglet Prospects compte les urgences). Le reste, tel quel
      et avec les mêmes identifiants : « Suivi commercial » (outilSuiviCommercial, menu Plus : nombre de comptes gratuits et à
      traiter, compteur Inscrits → clients, chiffres des 30 jours, Mesure, filtres détaillés, cartes avec leurs boutons, export
      CSV) et « Newsletter » (outilNewsletter, menu Plus : la liste et son export). */
@@ -60,13 +60,14 @@ const outilProspects = {
     if (vue === "detail"){ this.rendre(zone); ListeCoach.reprendre("suivi-commercial"); }
     else if (vue === "newsletter"){ this.preparer(); zone.innerHTML = `<div id="pr-newsletter"></div>`; this.monterNewsletter(zone.querySelector("#pr-newsletter")); ListeCoach.reprendre("newsletter"); }
     else this.rendreListe(zone);
+    if (typeof Nouveautes !== "undefined") Nouveautes.urgences(this.tous);   // v105 : le badge = les urgences (Prospects, Suivi commercial, Newsletter)
   },
   /* v84 : la page Prospects — la liste, puis les Nouveautés */
   rendreListe(zone){
     this.preparer();
     zone.innerHTML = `<div id="lc-zone"></div><div id="pr-nouveautes"></div>`;
     ListeCoach.monter(zone.querySelector("#lc-zone"), "prospects", this.lignesListe(), { recharger: async () => { if (zone.isConnected) await this.monter(true, "liste"); } });   // v83 (bloc 3)
-    if (typeof Nouveautes !== "undefined") Nouveautes.monter(zone.querySelector("#pr-nouveautes"), this.lignes, true, this.tCharge);
+    if (typeof Nouveautes !== "undefined"){ Nouveautes.monter(zone.querySelector("#pr-nouveautes"), this.lignes, true, this.tCharge); }   // v105 : le badge = les urgences
   },
   /* chaque prospect : sa ligne (Clients.resumer) et son analyse (issue, prochaine action, à traiter) */
   preparer(){

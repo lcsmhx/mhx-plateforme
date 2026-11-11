@@ -440,7 +440,6 @@ label.objectif{cursor:pointer;text-transform:none;letter-spacing:0;font-weight:4
 /* --- avatar (initiales) --- */
 .avatar{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:var(--accent-soft);color:var(--accent);
   font-family:inherit;font-variant-numeric:tabular-nums;font-size:13px;font-weight:600;letter-spacing:.02em;flex:0 0 auto;border:1px solid var(--accent-line)}
-.avatar.grand{width:52px;height:52px;font-size:17px}
 .avatar.neutre{background:var(--raised);color:var(--ink-2);border-color:var(--line-strong)}
 
 /* --- timeline (historique, feedbacks) --- */

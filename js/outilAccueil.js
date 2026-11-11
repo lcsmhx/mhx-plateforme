@@ -29,6 +29,9 @@ const outilAccueil = {
   titreFiche(){
     const cle = sousRoute === "compte" ? "accueil/compte" : "accueil";
     const page = ((ONGLETS_FICHE.map(g => g.pages).reduce((a, b) => a.concat(b), []).find(p => p[0] === cle)) || [cle, "Fiche"])[1];
+    /* v105 (point 2) : l'Aperçu n'a qu'un en-tête, le bandeau « Fiche de … » : plus de grand titre « Fiche » (gardé pour les
+       lecteurs d'écran seulement) */
+    if (cle === "accueil") return `<h1 class="sr-only">${esc(trad(page))}</h1>`;
     return `<header class="masthead">
       <span class="eyebrow">${esc(Store.nomConsulte || "client") + " — "}${esc(trad(page))}</span>
       <h1>${esc(trad(page))}</h1>
@@ -283,8 +286,7 @@ const outilAccueil = {
     zone.innerHTML = `
       ${this.titreFiche()}
       <section class="fc-ident" id="fc-ident">
-        <div class="fc-id"><span class="avatar grand fc-avatar${nomC === Clients.SANS_NOM ? " neutre" : ""}">${esc(Clients.initiales(nomC))}</span>
-          <div class="fc-id-t"><h2 class="fc-nom" data-notr>${esc(nomC)}</h2>
+        <div class="fc-id"><div class="fc-id-t">
             <div class="fc-pastilles"><span class="pastille fc-role-p"${prospectF ? ' title="Compte gratuit : pas encore accompagné"' : ""}>${esc(trad(prospectF ? "Prospect" : "Client"))}</span>${progNom ? `<span class="pastille fc-prog" data-notr>${esc(progNom)}</span>` : ""}${arch ? `<span class="pastille attention fc-archive">${esc(trad("Archivé"))}</span>` : ""}${anglais ? ` <span class="pastille" title="Ce client utilise l'app en anglais">🇺🇸 anglais</span>` : ""}</div></div></div>
         <div class="fc-actions">${principal}${appeler}</div>
       </section>

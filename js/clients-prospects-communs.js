@@ -1107,6 +1107,15 @@ const Nouveautes = {
   cle: "coach_notifs",
   JOURS_PAR_DEFAUT: 7,
   n: 0, _vu: undefined, _lecture: null, erreur: false, _deplie: false, _tCharge: null,
+  /* v105 : le badge de l'onglet Prospects = les urgences prospects du tableau de bord (outilTableau.urgentProspect),
+     plus le nombre de nouveautés (qui reste dans le panneau de la page Prospects) */
+  urg: 0,
+  /* tous = les prospects non archivés déjà analysés ({ l, a } : outilProspects.preparer) */
+  urgences(tous){
+    if (!Auth.estCoach() || Store.idConsulte) return;
+    this.urg = (tous || []).filter(x => x && x.l && !x.l.archive && outilTableau.urgentProspect(x.a)).length;
+    this.badge();
+  },
   /* v53 (chantier 4) : « reserve » = la case « J'ai réservé » cochée par le prospect (une action du prospect, à vérifier) ;
      elle ne compte plus dès que le coach a décidé du bilan (coché ou retiré : Commercial.bilan) ; v59 : sauf une case
      cochée APRÈS sa dernière décision ; elle suit l'analyse (caseAVerifier) : ni une coche en cours, ni l'appel qui a suivi
@@ -1167,14 +1176,6 @@ const Nouveautes = {
       ${suite}
       <div class="actions"><button type="button" class="btn ghost petit" data-nv-vu>Tout marquer comme vu</button><span class="msg" role="status" aria-live="polite"></span></div></section>`;
   },
-  /* v53 (chantier 4) : le tableau de bord n'affiche plus le panneau (il est sur la page Prospects) mais calcule toujours
-     le nombre de nouveautés et le badge de l'onglet Prospects */
-  async compter(lignes){
-    if (!Auth.estCoach() || Store.idConsulte) return;
-    const vu = await this.vu();
-    if (Store.idConsulte) return;
-    this.n = this.evenements(lignes, vu).length; this.badge();
-  },
   /* tCharge : l'instant ou les lignes affichees ont ete lues — « Tout marquer comme vu » ne marque rien de plus recent */
   async monter(boite, lignes, complet, tCharge){
     if (!boite || !Auth.estCoach() || Store.idConsulte) return;
@@ -1210,15 +1211,15 @@ const Nouveautes = {
     this._vu = vu; this.n = 0; this.badge();
     return true;
   },
-  /* badge sur l'onglet Prospects (barre du haut, barre du bas, menu « Plus ») */
+  /* badge sur l'onglet Prospects (barre du haut, barre du bas, menu « Plus ») : v105, les urgences prospects */
   badge(){
-    const n = (Auth.estCoach() && !Store.idConsulte) ? this.n : 0;
+    const n = (Auth.estCoach() && !Store.idConsulte) ? this.urg : 0;
     $$('#nav a[data-id="prospects"], #barre-bas a[data-id="prospects"], .menu-plus a[data-id="prospects"]').forEach(a => {
       let b = a.querySelector(".nav-badge");
       if (n > 0){
         if (!b){ b = document.createElement("span"); b.className = "nav-badge"; a.appendChild(b); }
         b.textContent = n > 99 ? "99+" : String(n);
-        b.setAttribute("aria-label", n + " nouveauté" + (n > 1 ? "s" : "") + " chez tes prospects");
+        b.setAttribute("aria-label", trad(n > 1 ? "{n} urgences chez tes prospects" : "{n} urgence chez tes prospects", { n }));
       } else if (b) b.remove();
     });
   }

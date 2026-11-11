@@ -540,6 +540,8 @@ const lireTete = page => page.evaluate(() => {
 /* la forme commune (sans ce qui dépend de l'onglet : onglet marqué, pages, titre) */
 const forme = t => JSON.stringify({ premier: t.premier, nbBandeaux: t.nbBandeaux, enfants: t.enfants, tete: t.tete, nbOnglets: t.nbOnglets, onglets: t.onglets, sortir: t.sortir, sortirFin: t.sortirFin, sortirTexte: t.sortirTexte,
   titreCls: t.titre && t.titre.cls, titreEnfants: t.titre && t.titre.enfants, apres: t.apres, h1Seul: t.h1Seul });
+/* v105 (point 2) : l'Aperçu n'a plus de titre de page visible (un seul en-tête : le bandeau) : sa forme, sans le titre */
+const formeSansTitre = t => JSON.stringify(Object.assign(JSON.parse(forme(t)), { titreCls: null, titreEnfants: null, apres: null, h1Seul: null }));
 const debordeLarg = page => page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
 /* partie 2 : tous les comptes en anglais (prefs.langue, sinon la page se recharge en boucle) */
 const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { const pr = db.donnees.find(d => d.user_id === id && d.outil === "prefs"); if (pr) pr.contenu = Object.assign({}, pr.contenu, { langue: "en" }); else db.donnees.push({ user_id: id, outil: "prefs", contenu: { langue: "en" }, maj_le: avant(40 * J) }); }); };
@@ -563,12 +565,21 @@ const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { 
       for (const [ch, ong] of PAGES) {
         const t = T[ch];
         ok("A2 (" + qui + ") : onglet « " + ong + " » : même en-tête que les autres onglets (même forme et même ordre, onglets une seule fois, un seul « Revenir … »), titre de page au même format, rien entre les deux, « " + ong + " » marqué",
-          forme(t) === forme(ref) && t.ici === ong && !!t.titre && t.titre.eyebrow === nom + " — " + t.titre.h1 && Array.isArray(t.entre) && t.entre.length === 0, JSON.stringify({ t, ref: forme(ref) }));
+          (ch === "accueil" ? formeSansTitre(t) === formeSansTitre(ref) && t.ici === ong && t.titre === null   // v105 (point 2) : changement voulu — l'Aperçu sans titre visible
+            : forme(t) === forme(ref) && t.ici === ong && !!t.titre && t.titre.eyebrow === nom + " — " + t.titre.h1 && Array.isArray(t.entre) && t.entre.length === 0), JSON.stringify({ t, ref: forme(ref) }));
       }
       ok("A3 (" + qui + ") : aucun onglet n'a la croix (#fc-fermer), les boutons Suivi / Compte (#fc-tab-*, [data-onglet]) ni l'ancien en-tête (.fc-tete)",
         PAGES.every(([ch]) => T[ch].anciens.length === 0), JSON.stringify(PAGES.map(([ch]) => [ch, T[ch].anciens])));
-      ok("A4 (" + qui + ") : Aperçu : le titre de page est « Fiche » (la page « Fiche » du bandeau, marquée), eyebrow « " + nom + " — Fiche »",
-        !!aper.titre && aper.titre.h1 === "Fiche" && aper.titre.eyebrow === nom + " — Fiche" && aper.pageIci === "Fiche" && /\/accueil$/.test(aper.hash), JSON.stringify(aper));
+      /* v105 (point 2) : changement voulu — l'Aperçu n'a qu'un en-tête, le bandeau « Fiche de … » : plus de bouton « Fiche » (sa
+         seule page), plus de grand titre « Fiche » visible (h1 gardé pour les lecteurs d'écran), le nom une seule fois */
+      await ouvrir(page, uid, "accueil", "#fc-suivi");
+      const A4 = await page.evaluate(nom => { const v = document.getElementById("vue"), vis = e => !!e && e.getClientRects().length > 0 && e.getBoundingClientRect().width > 2;
+        const w = document.createTreeWalker(v, NodeFilter.SHOW_TEXT); let x, noms = 0, fiches = 0;
+        while ((x = w.nextNode())) { const p = x.parentElement; if (!p || !vis(p) || p.closest("[hidden]")) continue; const t = x.nodeValue.replace(/\s+/g, " ").trim(); if (t.includes(nom)) noms++; if (t === "Fiche") fiches++; }
+        const h1 = v.querySelector("#acc-vue > h1.sr-only");
+        return { noms, fiches, bAct: v.querySelectorAll(".fiche-entete a.b-act").length, h1: h1 ? h1.textContent : null, h1s: v.querySelectorAll("h1").length }; }, nom);
+      ok("A4 (" + qui + ") : Aperçu (v105) : un seul en-tête — le nom « " + nom + " » une seule fois (« Fiche de " + nom + " »), ni bouton « Fiche » ni grand titre « Fiche » visibles ; un seul h1 « Fiche », pour les lecteurs d'écran",
+        aper.titre === null && aper.pageIci === null && /\/accueil$/.test(aper.hash) && aper.tete === "Fiche de " + nom && A4.noms === 1 && A4.fiches === 0 && A4.bAct === 0 && A4.h1 === "Fiche" && A4.h1s === 1, JSON.stringify({ aper, A4 }));
       /* B. l'identité et les actions, sous le titre */
       await ouvrir(page, uid, "accueil", "#fc-suivi");
       const id = await page.evaluate(() => {
@@ -583,12 +594,12 @@ const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { 
       });
       const T2 = await lireTete(page);
       if (qui === "client") {
-        ok("B1 (client) : sous le titre, avant le Suivi : initiales « TD », nom, « Client », « Préparer le call », Appeler (tel:) ; un seul lien WhatsApp visible, celui du bandeau",
-          id.sous && id.avantSuivi && id.avatar === "TD" && id.nom === nom && id.role === statut && id.call === "Préparer le call" && !id.wa && id.appeler === "tel:" + TEL1
+        ok("B1 (client) : sous le bandeau, avant le Suivi : « Client », « Préparer le call », Appeler (tel:) ; v105 (point 2) : ni initiales ni nom répétés ; un seul lien WhatsApp visible, celui du bandeau",
+          id.avantSuivi && !id.avatar && !id.nom && id.role === statut && id.call === "Préparer le call" && !id.wa && id.appeler === "tel:" + TEL1
             && T2.waVisibles.length === 1 && T2.waVisibles[0].dansBandeau, JSON.stringify({ id, wa: T2.waVisibles }));
       } else {
-        ok("B2 (prospect) : sous le titre : initiales, nom, « Prospect », le message WhatsApp prêt (#fc-wa, texte pré-rempli) et Appeler ; le WhatsApp du bandeau aussi ; jamais deux boutons au même texte",
-          id.sous && id.avantSuivi && id.nom === nom && id.role === statut && !id.call && !!id.wa && /^https:\/\/wa\.me\/33639980002\?text=./.test(id.wa.href) && id.appeler === "tel:" + TEL2
+        ok("B2 (prospect) : sous le bandeau : « Prospect », le message WhatsApp prêt (#fc-wa, texte pré-rempli) et Appeler ; v105 (point 2) : ni initiales ni nom répétés ; le WhatsApp du bandeau aussi ; jamais deux boutons au même texte",
+          id.avantSuivi && !id.avatar && !id.nom && id.role === statut && !id.call && !!id.wa && /^https:\/\/wa\.me\/33639980002\?text=./.test(id.wa.href) && id.appeler === "tel:" + TEL2
             && T2.waVisibles.length === 2 && T2.waVisibles.filter(w => w.dansBandeau).length === 1 && id.doublons.length === 0, JSON.stringify({ id, wa: T2.waVisibles }));
       }
       ok("A5 (" + qui + ") : aucune écriture en parcourant les 5 onglets", db.ecritures.length === 0, JSON.stringify(db.ecritures.map(e => e.outil || e.table)));

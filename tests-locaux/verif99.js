@@ -237,8 +237,12 @@ const AVANT = {"accueil": ["accueil", ["Thomas Démo", "En bref", "Notes privée
    sous Profil) passe avant le nom (h2), plus de croix (fc-fermer) ni de boutons Suivi / Compte (fc-tab-*), l'identité et les
    actions sont dans #fc-ident ; « Préparer le call » (fc-call) et Appeler (fc-appeler) restent */
 const IDS104 = ["acc-vue", "fc-ident", "fc-call", "fc-appeler", "fc-suivi", "fc-retour"];
-AVANT.accueil = ["accueil", ["Fiche", "Thomas Démo", "En bref"], IDS104];
-AVANT["accueil/compte"] = ["accueil", ["Son compte", "Thomas Démo", "En bref"], IDS104];
+/* v105 (point 2) : changement voulu — le nom n'est plus répété sous l'en-tête (h2 de #fc-ident retiré : il est dans le bandeau
+   « Fiche de … ») ; « Fiche » reste le h1 de l'Aperçu pour les lecteurs d'écran (caché à l'écran) */
+AVANT.accueil = ["accueil", ["Fiche", "En bref", "Notes privées"], IDS104];
+AVANT["accueil/compte"] = ["accueil", ["Son compte", "En bref", "Notes privées"], IDS104];
+/* v105 (point 3) : changement voulu — dans la fiche, le titre numéroté du questionnaire passe à la 3e personne (« 2 · Son objectif ») */
+AVANT.profil = [AVANT.profil[0], AVANT.profil[1].map(t => t === "2 · Ton objectif" ? "2 · Son objectif" : t), AVANT.profil[2]];
 /* v104 (point 4) : changement voulu — dans la fiche, le coach lit « Sa / Ses / Son » dans les titres : « Ses données », « Sa
    maintenance » (calculateur), « Sa régularité » (suivi), « Son parcours » (formation) ; mêmes pages, mêmes ids.
    v104 (point 5) : changement voulu — Son suivi gagne la zone des objectifs du mois du coach (#suivi-obj, ses champs #obj-0…)

@@ -1863,3 +1863,5 @@ Object.assign(I18N.en, {
 });
 /* v104 (relecture) : objectifs du mois figés pendant la publication du programme */
 Object.assign(I18N.en, { "Publication du programme en cours : réessaie dans un instant.": "The program is being published: try again in a moment." });
+/* v105 : le badge de l'onglet Prospects compte les urgences */
+Object.assign(I18N.en, { "{n} urgence chez tes prospects": "{n} urgent item among your prospects", "{n} urgences chez tes prospects": "{n} urgent items among your prospects" });

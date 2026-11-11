@@ -522,7 +522,7 @@ function bandeauConsultation(tout){
     <span class="fiche-wa" data-fiche-wa>${TelFiche.html(Store.idConsulte)}</span>
     ${ongletsFicheHTML(ici)}
     <div class="bandeau-actions">
-      ${pages.length ? pages.map(p => { const actif = p[0] === courant || (p[0] === "accueil/compte" && courant === "accueil" && sousRoute === "compte");
+      ${pages.length > 1 ? pages.map(p => {   /* v105 (point 2) : une page seule (Aperçu : « Fiche ») n'a plus son bouton */ const actif = p[0] === courant || (p[0] === "accueil/compte" && courant === "accueil" && sousRoute === "compte");
         return `<a href="${esc(lienPageFiche(p[0]))}" class="b-act${p[2] ? " fort" : ""}${actif ? " ici" : ""}"${actif ? ' aria-current="page"' : ""}>${esc(trad(p[1]))}</a>`; }).join("") : ""}
       ${sortir}
     </div>
@@ -593,7 +593,9 @@ const VueFiche = {
   actif(){ return typeof Auth !== "undefined" && Auth.estCoach() && !!Store.idConsulte; },
   _en: null,
   en(){
-    if (!this._en){ this._en = {}; for (const fr in PHRASES_FICHE){ const a = I18N.en[fr], b = I18N.en[PHRASES_FICHE[fr]]; if (a && b) this._en[a] = b; } }
+    if (!this._en){ this._en = {}; for (const fr in PHRASES_FICHE){ const a = I18N.en[fr], b = I18N.en[PHRASES_FICHE[fr]]; if (a && b) this._en[a] = b; }
+      /* v105 (point 3) : deux titres du questionnaire neutres en français mais en « you » en anglais */
+      Object.assign(this._en, { "Other allergies, intolerances or foods you avoid": "Other allergies, intolerances or foods they avoid", "Supplements you currently take": "Supplements they currently take" }); }
     return this._en;
   },
   conv(v, titre){
@@ -601,7 +603,8 @@ const VueFiche = {
     const dico = I18N.langue === "en" ? this.en() : PHRASES_FICHE;
     if (Object.prototype.hasOwnProperty.call(dico, n)) return dico[n];
     /* ce qui appartient au coach (« Ton feedback… », « Ton client… », « Tes notes… ») garde « ton / tes » */
-    if (titre){ const m = /^(Ta|Tes|Ton|Your) (\S.*)$/.exec(n); if (m && !this.AU_COACH.test(m[2])) return this.POSS[m[1]] + " " + m[2]; }
+    /* v105 (point 3) : aussi un titre numéroté du questionnaire (« 2 · Ton objectif » → « 2 · Son objectif ») */
+    if (titre){ const m = /^(\d+ · )?(Ta|Tes|Ton|Your) (\S.*)$/.exec(n); if (m && !this.AU_COACH.test(m[3])) return (m[1] || "") + this.POSS[m[2]] + " " + m[3]; }
     return null;
   },
   tn(nd){

@@ -547,13 +547,13 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
       await page.waitForSelector("#fiche-decouverte", { timeout: 8000 }); await attendre(page, 700);
       /* v104 (point 4) : changement voulu — le nom n'est plus le h1 de la fiche (le h1 est le titre de page « Fiche », comme les
          autres onglets) : il est dans le h2 de l'identité (#fc-ident) */
-      const t = (await tuile(page, "Activité")) || { val: "?", sub: "?" }; t.h1 = await texte(page, "#vue .fc-ident h2");
+      const t = (await tuile(page, "Activité")) || { val: "?", sub: "?" }; t.h1 = await texte(page, "#vue > .fiche-entete .bandeau-tete strong");   // v105 (point 2) : le nom n'est plus que dans le bandeau « Fiche de … »
       await page.click("#sortir-fiche").catch(() => {}); await attendre(page, 800);
       await aller(page, "#/suivi-clients", 1800); await page.waitForSelector(`#tb-clients [data-ouvrir="${F.IDS.c3}"]`, { timeout: 8000 });   // v84 (ménage du bloc 3) : le tableau est dans le Suivi détaillé
       return t;
     };
     const tp = await ficheProspect(PIA, "Pia Active"), tr = await ficheProspect(REMI, "Rémi Muet"), te = await ficheProspect(EVA, "Eva Désinscrite");
-    ok("Mes clients (v71) : Pia, Rémi et Eva n'y sont plus ; v83 : plus de ligne « Les prospects sont dans Prospects → », tuile « Prospects » du tableau de bord à 3 (lien #/prospects) ; fiche de Pia (activite il y a 1 h) : tuile « Activité » « auj. » ; Eva (clé emails il y a 1 h, rien d'autre depuis 8 jours) comme Rémi (" + tr.val + "), pas « auj. »", absents.length === 3 && lprosp.absente && lprosp.val === "3" && lprosp.lbl === "Prospects" && lprosp.href === "#/prospects" /* v83 (bloc 3) */ && tp.h1.startsWith("Pia Active") && tp.val === "auj." && tp.sub === "depuis sa dernière saisie" && tr.h1.startsWith("Rémi Muet") && tr.val !== "auj." && tr.sub === "depuis sa dernière saisie" && te.h1.startsWith("Eva Désinscrite") && te.val === tr.val && te.sub === tr.sub, JSON.stringify({ absents, lprosp, tp, tr, te }));
+    ok("Mes clients (v71) : Pia, Rémi et Eva n'y sont plus ; v83 : plus de ligne « Les prospects sont dans Prospects → », tuile « Prospects » du tableau de bord à 3 (lien #/prospects) ; fiche de Pia (activite il y a 1 h) : tuile « Activité » « auj. » ; Eva (clé emails il y a 1 h, rien d'autre depuis 8 jours) comme Rémi (" + tr.val + "), pas « auj. »", absents.length === 3 && lprosp.absente && lprosp.val === "3" && lprosp.lbl === "Prospects" && lprosp.href === "#/prospects" /* v83 (bloc 3) */ && tp.h1.startsWith("Fiche de Pia Active") && tp.val === "auj." && tp.sub === "depuis sa dernière saisie" && tr.h1.startsWith("Fiche de Rémi Muet") && tr.val !== "auj." && tr.sub === "depuis sa dernière saisie" && te.h1.startsWith("Fiche de Eva Désinscrite") && te.val === tr.val && te.sub === tr.sub, JSON.stringify({ absents, lprosp, tp, tr, te }));
     await page.click(`#tb-clients [data-ouvrir="${F.IDS.c3}"]`); await attendre(page, 2600);
     /* v83 (bloc 3) : les alertes de la fiche sont en haut de l'onglet Suivi (#fc-suivi), sous l'en-tête .fc-tete
        (v104 (point 4) : changement voulu — sous le bandeau commun, le titre de page et l'identité #fc-ident ; sélecteur inchangé) */
@@ -733,22 +733,23 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     const N = contenu(db, "coach_notifs", F.IDS.coach) || {};
     ok("réseau revenu, nouveau clic : relu puis écrit une fois, coach_notifs.vu = maintenant au format ISO", ecr(db, "coach_notifs").length === 1 && typeof N.vu === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/.test(N.vu) && Math.abs(Date.parse(N.vu) - t0) < 10000 && lu(db, "coach_notifs") === n0 + 2, JSON.stringify(N));
     const pan2 = await texte(page, "#pr-nouveautes");
-    ok("… panneau « Rien de nouveau chez tes prospects depuis ta dernière visite (" + fr(N.vu || 0) + " " + hm(N.vu || 0) + "). », avertissement retiré, badge disparu", pan2.includes("Rien de nouveau chez tes prospects depuis ta dernière visite (" + fr(N.vu || 0) + " " + hm(N.vu || 0) + ").") && !pan2.includes("n'a pas pu être lue") && (await badge(page)).length === 0, pan2 + " · " + JSON.stringify(await badge(page)));
+    ok("… panneau « Rien de nouveau chez tes prospects depuis ta dernière visite (" + fr(N.vu || 0) + " " + hm(N.vu || 0) + "). », avertissement retiré (v105 : le badge compte les urgences, verif105)", pan2.includes("Rien de nouveau chez tes prospects depuis ta dernière visite (" + fr(N.vu || 0) + " " + hm(N.vu || 0) + ").") && !pan2.includes("n'a pas pu être lue"), pan2 + " · " + JSON.stringify(await badge(page)));
     ok("seule écriture : coach_notifs", db.ecritures.length === 1, JSON.stringify(db.ecritures.map(e => e.outil || e.table)));
   });
   await bloc("F. dernière visite relue à chaque affichage", async () => {
     const db = base({ comptes: NV });
     const { page } = await contexte(b, coach, db);
-    /* v53 (chantier 4) : le tableau de bord n'a plus le panneau, mais calcule toujours le badge (même lecture de coach_notifs) */
+    /* v105 : le tableau de bord ne lit plus coach_notifs : le badge de l'onglet Prospects y est le nombre d'urgences de sa tuile Prospects */
     await page.goto(`http://localhost:${PORT}/#/tableau`); await page.waitForSelector("#tb-vue .tb-tiles", { timeout: 8000 }); await page.waitForFunction(() => document.querySelector('#nav a[data-id="prospects"] .nav-badge'), null, { timeout: 8000 }); await attendre(page, 500);
     const n1 = luDirect(db, "coach_notifs");
-    ok("tableau de bord : 12 nouveautés, badge « 12 », coach_notifs lu une fois", JSON.stringify(await badge(page)) === badge2("12") /* v83 (bloc 3) : badge en double */ && n1 === 1, "lectures " + n1 + " · " + JSON.stringify(await badge(page)));
+    const tU = String(await page.$eval("#tb-t-prospects .tb-badge", e => parseInt(e.textContent, 10)).catch(() => -1));
+    ok("tableau de bord : badge = les urgences de la tuile Prospects (v105), coach_notifs pas lu", tU !== "0" && tU !== "-1" && JSON.stringify(await badge(page)) === badge2(tU) && n1 === 0, "lectures " + n1 + " · " + JSON.stringify(await badge(page)));
     /* un autre appareil du coach marque tout comme vu */
     const vu = new Date().toISOString();
     db.donnees.push({ user_id: F.IDS.coach, outil: "coach_notifs", contenu: { vu }, maj_le: vu });
     await attendre(page, 1100);
     await aller(page, "#/prospects", 2400);
-    ok("tout marqué comme vu sur un autre appareil : la page Prospects relit la date (1 lecture de plus) → « Rien de nouveau… depuis ta dernière visite », badge disparu, sans recharger", luDirect(db, "coach_notifs") === n1 + 1 && (await texte(page, "#pr-nouveautes")).includes("Rien de nouveau chez tes prospects depuis ta dernière visite (" + fr(vu) + " " + hm(vu) + ").") && (await badge(page)).length === 0, "lectures " + luDirect(db, "coach_notifs") + " · " + (await texte(page, "#pr-nouveautes")).slice(0, 120));
+    ok("tout marqué comme vu sur un autre appareil : la page Prospects relit la date (1 lecture de plus) → « Rien de nouveau… depuis ta dernière visite », badge des urgences inchangé, sans recharger", luDirect(db, "coach_notifs") === n1 + 1 && (await texte(page, "#pr-nouveautes")).includes("Rien de nouveau chez tes prospects depuis ta dernière visite (" + fr(vu) + " " + hm(vu) + ").") && JSON.stringify(await badge(page)) === badge2(tU), "lectures " + luDirect(db, "coach_notifs") + " · " + (await texte(page, "#pr-nouveautes")).slice(0, 120));
     ok("aucune écriture", db.ecritures.length === 0);
   });
   await bloc("F. « Tout marquer comme vu » puis page Prospects avant l'arrivée de l'écriture", async () => {
@@ -757,7 +758,8 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     /* v53 (chantier 4) : « Tout marquer comme vu » est sur la page Prospects ; on part aussitôt sur le tableau de bord (qui relit
        la date pour son badge), puis on revient */
     await page.goto(`http://localhost:${PORT}/#/prospects`); await page.waitForSelector("#pr-nouveautes [data-nv-vu]", { timeout: 8000 }); await attendre(page, 500);
-    ok("avant : 12 nouveautés, badge « 12 »", (await texte(page, "#pr-nouveautes .seance-c-tete .pastille")) === "12" && JSON.stringify(await badge(page)) === badge2("12") /* v83 (bloc 3) : badge en double */, JSON.stringify(await badge(page)));
+    const bAvant = await badge(page);
+    ok("avant : 12 nouveautés ; le badge compte les urgences, pas les nouveautés (v105)", (await texte(page, "#pr-nouveautes .seance-c-tete .pastille")) === "12" && bAvant.length === 2 && bAvant[0] === bAvant[1] && bAvant[0] !== "12", JSON.stringify(bAvant));
     const n0 = luDirect(db, "coach_notifs"), t0 = Date.now();
     await page.click("#pr-nouveautes [data-nv-vu]");
     await page.evaluate(() => { location.hash = "#/tableau"; });   // aussitôt, pendant le délai d'écriture (700 ms) puis son envoi
@@ -765,14 +767,14 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     const bd = await badge(page), dejaEcrit = contenu(db, "coach_notifs", F.IDS.coach);
     /* v67 (audit du 01/10, D1) : Store.lire envoie d'abord l'écriture en attente de la clé : le tableau de bord relit la date
        APRÈS l'arrivée de l'écriture (avant : il la relisait avant, la base ne l'avait pas encore) */
-    ok("#/tableau ouvert aussitôt après « Tout marquer comme vu » (date relue avant l'écriture ; le tableau de bord attend que l'écriture parte avant de relire, la base ne l'a pas encore) : aucune ancienne nouveauté comptée, pas de badge", dejaEcrit === undefined && luDirect(db, "coach_notifs") === n0 + 1 && bd.length === 0 && (await page.evaluate(() => Nouveautes.n)) === 0, JSON.stringify({ dejaEcrit, lectures: luDirect(db, "coach_notifs") - n0, bd }));
+    ok("#/tableau ouvert aussitôt après « Tout marquer comme vu » (date relue avant l'écriture ; le tableau de bord attend que l'écriture parte avant de relire, la base ne l'a pas encore) : aucune ancienne nouveauté comptée, badge des urgences inchangé (v105 : le tableau de bord ne relit plus la date)", dejaEcrit === undefined && luDirect(db, "coach_notifs") === n0 + 1 && JSON.stringify(bd) === JSON.stringify(bAvant) && (await page.evaluate(() => Nouveautes.n)) === 0, JSON.stringify({ dejaEcrit, lectures: luDirect(db, "coach_notifs") - n0, bd }));
     await attendre(page, 3500);
     const N = contenu(db, "coach_notifs", F.IDS.coach) || {};
     const bd2 = await badge(page), nv2 = await page.evaluate(() => Nouveautes.n);   // v67 : toujours sur #/tableau, après l'écriture
-    ok("… l'écriture arrive ensuite (après la relecture de la page Prospects, avant celle du tableau de bord) : une seule, coach_notifs.vu = l'instant où la page a été lue (juste avant le clic), au format ISO ; toujours ni badge ni nouveauté comptée", bd2.length === 0 && nv2 === 0 && ecr(db, "coach_notifs").length === 1 && typeof N.vu === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/.test(N.vu) && Math.abs(Date.parse(N.vu) - t0) < 5000 && db.journal.lastIndexOf("L coach_notifs") > db.journal.indexOf("E coach_notifs") && luDirect(db, "coach_notifs") === n0 + 2, JSON.stringify([bd2, nv2]) + " · " + JSON.stringify(N) + " · " + JSON.stringify(db.journal.filter(x => /coach_notifs/.test(x))));
+    ok("… l'écriture arrive ensuite (après la relecture de la page Prospects, avant celle du tableau de bord) : une seule, coach_notifs.vu = l'instant où la page a été lue (juste avant le clic), au format ISO ; badge des urgences inchangé, aucune nouveauté comptée (v105 : le tableau de bord ne relit plus la date)", JSON.stringify(bd2) === JSON.stringify(bAvant) && nv2 === 0 && ecr(db, "coach_notifs").length === 1 && typeof N.vu === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/.test(N.vu) && Math.abs(Date.parse(N.vu) - t0) < 5000 && luDirect(db, "coach_notifs") === n0 + 1, JSON.stringify([bd2, nv2]) + " · " + JSON.stringify(N) + " · " + JSON.stringify(db.journal.filter(x => /coach_notifs/.test(x))));
     await aller(page, "#/prospects", 2400);
     const pan2 = await texte(page, "#pr-nouveautes");
-    ok("retour à la page Prospects : « Rien de nouveau … (" + fr(N.vu || 0) + " " + hm(N.vu || 0) + ") », pas de badge", pan2.includes("Rien de nouveau chez tes prospects depuis ta dernière visite (" + fr(N.vu || 0) + " " + hm(N.vu || 0) + ").") && (await badge(page)).length === 0, pan2.slice(0, 200) + " · " + JSON.stringify(await badge(page)));
+    ok("retour à la page Prospects : « Rien de nouveau … (" + fr(N.vu || 0) + " " + hm(N.vu || 0) + ") », badge des urgences inchangé (v105)", pan2.includes("Rien de nouveau chez tes prospects depuis ta dernière visite (" + fr(N.vu || 0) + " " + hm(N.vu || 0) + ").") && JSON.stringify(await badge(page)) === JSON.stringify(bAvant), pan2.slice(0, 200) + " · " + JSON.stringify(await badge(page)));
     ok("seule écriture : coach_notifs", db.ecritures.length === 1, JSON.stringify(db.ecritures.map(e => e.outil || e.table)));
   });
   await bloc("F. plus de 300 nouveautés", async () => {

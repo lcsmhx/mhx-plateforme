@@ -756,11 +756,11 @@ const blocSemaine = (page, s) => page.evaluate(x => { const ed = document.queryS
     const toutL = await texte(page, "#lc-zone"), tous = [tout, toutC, toutL].join(" | ");
     ok("G : Mes clients (v84 : Suivi détaillé, Comptes et la liste Clients) : jamais « NaN », « undefined » ni « Invalid Date »", !!toutC && !!toutL && !/NaN|undefined|Invalid Date/.test(tous), (tous.match(/.{0,40}(NaN|undefined|Invalid Date).{0,40}/) || [""])[0] || JSON.stringify([tout.length, toutC.length, toutL.length]));
     ok(`G : Comptes : Julien « dernière saisie : ${dJu} » ; Nina « pas encore utilisé », « dernière saisie : jamais »`, !!cJu && cJu.meta === "dernière saisie : " + dJu && !!cNi && cNi.etats.includes("pas encore utilisé") && cNi.meta === "dernière saisie : jamais", JSON.stringify([cJu, cNi]));
-    await fiche(page, F.IDS.c3, "Julien Démo", "accueil", "#vue .masthead");
+    await fiche(page, F.IDS.c3, "Julien Démo", "accueil", "#vue #fc-ident");   // v105 (point 2) : plus de grand titre visible dans l'Aperçu de la fiche
     const al = await alertesFiche(page), tu = await tuile(page, "Activité");
     ok("G : fiche de Julien : « Inactif depuis 12 j » en haut de l'onglet Suivi (v83), tuile « Activité » 12 j", al.includes("Inactif depuis 12 j") && !!tu && tu.val === "12j" && tu.sub === "depuis sa dernière saisie", JSON.stringify([al, tu]));
     await aller(page, "#/clients", 1500);
-    await fiche(page, NINA, "Nina Piégée", "accueil", "#vue .masthead");
+    await fiche(page, NINA, "Nina Piégée", "accueil", "#vue #fc-ident");   // v105 (point 2)
     const alN = await alertesFiche(page), tuN = await tuile(page, "Activité");
     ok("G : fiche de Nina (dates piégées) : « Jamais rien saisi », tuile « — » « jamais rien saisi »", alN.includes("Jamais rien saisi") && !!tuN && tuN.val === "—" && tuN.sub === "jamais rien saisi" && !/NaN/.test(await texte(page, "#vue")), JSON.stringify([alN, tuN]));
     await page.click("#sortir-fiche").catch(() => {}); await attendre(page, 600);
@@ -805,7 +805,7 @@ const blocSemaine = (page, s) => page.evaluate(x => { const ed = document.queryS
     await fiche(pc, TESTEUR.id, "Sans nom", "bilan", `#bilan-vue [data-fb-semaine="${isoJ(14)}"]`);
     const B = await blocSemaine(pc, isoJ(14));
     ok("H : coach, Préparer le call : la note et les réponses du vendredi, « Alimentation » une seule fois", !!B && B.t.includes("Note de la semaine 8/10") && B.t.includes("4 séances tenues") && B.t.includes("Énergie 4/5") && B.alim === 1, JSON.stringify(B).slice(0, 400));
-    await voir(pc, "accueil"); await pc.waitForSelector("#acc-vue .masthead", { timeout: 10000 });
+    await voir(pc, "accueil"); await pc.waitForSelector("#acc-vue #fc-ident", { timeout: 10000 });   // v105 (point 2) : plus de grand titre visible dans l'Aperçu de la fiche
     const fi = await texte(pc, "#acc-vue");
     ok("H : coach, fiche : le dernier feedback avec sa note et ses réponses du vendredi", fi.includes("Note de la semaine 8/10") && fi.includes("4 séances tenues"), fi.slice(fi.indexOf("Feedback du dimanche"), fi.indexOf("Feedback du dimanche") + 300));
     ok("H : jamais d'écriture de feedbacks, aucun refus de la base (affichage seul côté coach)", ecr(db, "feedbacks").length === 0 && db.refus.length === 0 && ecr(db, "checkins").length === 1, resume(db) + " " + JSON.stringify(db.refus));

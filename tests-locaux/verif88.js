@@ -571,7 +571,8 @@ const attendreSel = async (page, sel, ms) => { try { await page.waitForSelector(
       try { Store.idConsulte = 'x" data-pirate="1'; Store.nomConsulte = "Test"; h = bandeauConsultation(); } catch (e) { err = String(e && e.message); }
       finally { Store.idConsulte = avant[0]; Store.nomConsulte = avant[1]; }
       const d = document.createElement("div"); d.innerHTML = h;
-      return { err, pirates: d.querySelectorAll("[data-pirate]").length, liens: d.querySelectorAll("a.b-act").length, href: (d.querySelector("a.b-act") || { getAttribute: () => "" }).getAttribute("href") };
+      /* v105 (point 2) : les onglets (a.f-onglet) aussi ; un onglet à une seule page n'a plus de bouton de page (a.b-act) */
+      return { err, pirates: d.querySelectorAll("[data-pirate]").length, liens: d.querySelectorAll("a.b-act, a.f-onglet").length, href: (d.querySelector("a.f-onglet") || { getAttribute: () => "" }).getAttribute("href") };
     });
     ok("G1 : un identifiant consulté avec des guillemets n'ajoute aucun attribut aux liens du bandeau de la fiche (échappé ; aujourd'hui l'identifiant est toujours un UUID)",
       g.err === "" && g.liens > 0 && g.pirates === 0 && g.href.includes('x" data-pirate="1'), JSON.stringify(g));

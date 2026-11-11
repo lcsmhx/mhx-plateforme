@@ -389,6 +389,10 @@ const traiterTb = page => texte(page, "#tb-t-traiter .t-val");
 /* v84 (ménage du bloc 3) : le nombre de la liste (#lc-prospects, page Prospects) et celui de l'en-tête du Suivi commercial
    (#pr-vue .pr-detail) ne sont plus sur la même page : deux lectures, une sur chaque page */
 const nbListe = page => texte(page, "#lc-prospects #lc-compte");
+/* v105 : le badge de l'onglet Prospects = les urgences prospects du tableau de bord (vérifié en détail par verif105) : l'attendu
+   est recalculé ici avec la même règle, sur la page Prospects */
+const urgN = page => page.evaluate(() => (outilProspects.lignes || []).filter(l => l && l.p && l.p.statut === "prospect" && !l.archive).filter(l => outilTableau.urgentProspect(Commercial.analyseLigne(l))).length).catch(() => -1);
+
 const nbSuivi = async page => (await texte(page, "#pr-vue .pr-detail .lede")).split(" · ")[0];
 const ligneProspects = async page => { const r = await page.$eval("#clients-prospects", e => { const a = e.querySelector("a.link-a"); return { t: e.textContent, href: a ? a.getAttribute("href") : "" }; }).catch(() => null); return r ? { t: norm(r.t), href: r.href } : { t: "", href: "" }; };
 const boutonsCarte = (page, uid) => page.$$eval(`#pr-liste .sc-carte[data-uid="${uid}"] [data-sc]`, l => l.map(e => e.dataset.sc)).catch(() => []);
@@ -889,11 +893,11 @@ const valeurFiche = (page, sel, k) => page.$$eval(sel + " ul.fiche-l > li", (l, 
     await aller(page, "#/prospects", 300); await page.waitForSelector("#pr-nouveautes .nv-panneau", { timeout: 8000 }); await attendre(page, 500);
     const nvH = await page.$$eval("#pr-nouveautes .nv-liste li .nv-txt", l => l.map(e => e.textContent.replace(/\s+/g, " ").trim())).catch(() => []);
     const bgH = await page.$$eval('#nav a[data-id="prospects"] .nav-badge', l => l.map(e => e.textContent.trim())).catch(() => []);
-    const nbL = await nbListe(page);
+    const nbL = await nbListe(page), uH = await urgN(page);
     await aller(page, "#/suivi-commercial", 300); await page.waitForSelector("#pr-liste", { timeout: 8000 }); await attendre(page, 500);
-    ok("H : Nouveautés : « Sara Recase · a coché « J'ai réservé » » (sa case d'après l'appel, face à ta coche d'avant) ; pas la case de Tina (d'avant l'appel), son clic oui ; badge de l'onglet Prospects « 2 »",
-      nvH.includes("Sara Recase · a coché « J'ai réservé »") && !nvH.some(x => x.startsWith("Tina Reclic · a coché")) && nvH.includes("Tina Reclic · clic « Réserver mon plan d'action »") && nvH.length === 2 && egal(bgH, ["2"]),
-      JSON.stringify([nvH, bgH]));
+    ok("H : Nouveautés : « Sara Recase · a coché « J'ai réservé » » (sa case d'après l'appel, face à ta coche d'avant) ; pas la case de Tina (d'avant l'appel), son clic oui ; badge de l'onglet Prospects = ses urgences (v105 ; avant : les 2 nouveautés)",
+      nvH.includes("Sara Recase · a coché « J'ai réservé »") && !nvH.some(x => x.startsWith("Tina Reclic · a coché")) && nvH.includes("Tina Reclic · clic « Réserver mon plan d'action »") && nvH.length === 2 && uH > 0 && egal(bgH, [String(uH)]),
+      JSON.stringify([nvH, bgH, uH]));
     const { t } = await exporter(page);
     const L = lireCSV(t.replace(/^\uFEFF/, "")), ligne = n => L.find(l => l[0] === n) || [], iB = L[0].indexOf("Bilan réservé"), iL = L[0].indexOf("Bilan réservé le"), iC = L[0].indexOf("Case « J'ai réservé » (prospect)");
     const cols = n => [ligne(n)[iB], ligne(n)[iL], ligne(n)[iC]];
