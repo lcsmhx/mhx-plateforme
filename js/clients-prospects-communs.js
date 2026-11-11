@@ -1110,10 +1110,10 @@ const Nouveautes = {
   /* v105 : le badge de l'onglet Prospects = les urgences prospects du tableau de bord (outilTableau.urgentProspect),
      plus le nombre de nouveautés (qui reste dans le panneau de la page Prospects) */
   urg: 0,
-  urgences(lignes){
+  /* tous = les prospects non archivés déjà analysés ({ l, a } : outilProspects.preparer) */
+  urgences(tous){
     if (!Auth.estCoach() || Store.idConsulte) return;
-    this.urg = (lignes || []).filter(l => l && l.p && l.p.statut === "prospect" && !l.archive)
-      .filter(l => outilTableau.urgentProspect(Commercial.analyseLigne(l))).length;
+    this.urg = (tous || []).filter(x => x && x.l && !x.l.archive && outilTableau.urgentProspect(x.a)).length;
     this.badge();
   },
   /* v53 (chantier 4) : « reserve » = la case « J'ai réservé » cochée par le prospect (une action du prospect, à vérifier) ;

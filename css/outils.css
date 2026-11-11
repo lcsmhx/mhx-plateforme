@@ -890,9 +890,7 @@ main .tiles.tb-tiles{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .fc-ident{margin:0 0 14px}
 .fc-haut{display:flex;justify-content:flex-end}
 .fc-id{display:flex;align-items:center;gap:14px}
-.fc-avatar{flex:none;width:56px;height:56px;font-size:18px;border:1px solid var(--accent);background:var(--accent-soft)}
 .fc-id-t{min-width:0;display:flex;flex-direction:column;gap:8px}
-.fc-id-t h2{margin:0;font-size:22px;font-weight:700;line-height:1.1;letter-spacing:-.02em;overflow-wrap:anywhere}
 .fc-pastilles{display:flex;flex-wrap:wrap;gap:6px}
 .fc-pastilles .pastille{padding:4px 12px;font-size:12.5px}
 .fc-role-p{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600}

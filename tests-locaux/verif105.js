@@ -222,14 +222,17 @@ async function principal(){
   /* =================== A. point 1 : le badge de l'onglet Prospects = les urgences du tableau de bord =================== */
   await bloc("A. badge Prospects", async () => {
     const db = avecProspects(base(), 3, 6);
+    /* un 4e nouvel inscrit, archivé par le coach : ni urgence ni nouveauté, nulle part */
+    db.profils.push({ id: NV(50), prenom: "Archive", nom: "Test", role: "client", statut: "prospect", cree_le: avant(H) });
+    db.donnees.push({ user_id: NV(50), outil: "suivi_prospect", contenu: { version: 1, archive_le: avant(30 * 60000) }, maj_le: avant(30 * 60000) });
     const { page } = await contexte(b, COACH, db);
     await page.goto(URL0 + "#/tableau"); await pret(page, "#tb-vue .tb-tiles"); await attendre(page, 800);
     const T = await tableau(page), B1 = await badges(page);
-    ok("A1 : tableau de bord : le badge de l'onglet Prospects (barre du haut et barre du bas) = le nombre d'urgences de la tuile Prospects = les lignes « prospect » de « À traiter maintenant » (3 nouveaux inscrits)",
+    ok("A1 : tableau de bord : le badge de l'onglet Prospects (barre du haut et barre du bas) = le nombre d'urgences de la tuile Prospects = les lignes « prospect » de « À traiter maintenant » (3 nouveaux inscrits, pas l'archivé)",
       T.tuile === 3 && T.lignes === 3 && B1.length === 2 && B1.every(x => x.t === "3"), JSON.stringify({ T, B1 }));
     await page.goto(URL0 + "#/prospects"); await pret(page, "#pr-nouveautes .nv-panneau"); await attendre(page, 800);
     const nv = parseInt(await page.$eval("#pr-nouveautes .seance-c-tete .pastille", e => e.textContent).catch(() => "-1"), 10), B2 = await badges(page);
-    ok("A2 : page Prospects : 9 nouveautés dans le panneau (les 3 nouveaux et les 6 inscrits de la semaine), mais le badge reste « 3 » (les urgences, pas les nouveautés)",
+    ok("A2 : page Prospects : 9 nouveautés dans le panneau (les 3 nouveaux et les 6 inscrits de la semaine), mais le badge reste « 3 » (les urgences, pas les nouveautés ; l'inscrit archivé ne compte pas non plus, calculé depuis cette page)",
       nv === 9 && B2.length === 2 && B2.every(x => x.t === "3"), JSON.stringify({ nv, B2 }));
     await page.click("#pr-nouveautes [data-nv-vu]"); await attendre(page, 1800);
     const B3 = await badges(page), pan = await page.$eval("#pr-nouveautes", e => e.textContent).catch(() => "");

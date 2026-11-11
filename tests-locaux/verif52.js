@@ -330,7 +330,8 @@ const badge2 = n => JSON.stringify([n, n]);
 /* v105 : le badge de l'onglet Prospects = les urgences prospects du tableau de bord (vérifié en détail par verif105) : l'attendu
    est recalculé ici avec la même règle (page Prospects ou Suivi commercial), ou lu sur la tuile Prospects (tableau de bord) */
 const urgN = page => page.evaluate(() => (outilProspects.lignes || []).filter(l => l && l.p && l.p.statut === "prospect" && !l.archive).filter(l => outilTableau.urgentProspect(Commercial.analyseLigne(l))).length).catch(() => -1);
-const badgeU = async page => { const u = await urgN(page); return u > 0 ? badge2(u > 99 ? "99+" : String(u)) : "[]"; };
+/* les décors de ces vérifications ont tous des urgences : 0 (ou -1, calcul impossible) = attendu non vérifiable, la vérification échoue */
+const badgeU = async page => { const u = await urgN(page); return u > 0 ? badge2(u > 99 ? "99+" : String(u)) : "aucune urgence : attendu non vérifiable"; };
 const tuileU = page => page.$eval("#tb-t-prospects .tb-badge", e => parseInt(e.textContent, 10)).catch(() => -1);
 const ecr = (db, outil, uid) => db.ecritures.filter(e => e.outil === outil && (!uid || e.user_id === uid));
 const contenu = (db, outil, uid) => (db.donnees.find(x => x.user_id === uid && x.outil === outil) || {}).contenu;
