@@ -10,7 +10,7 @@ const outilCatalogue = {
   role: "coach",
   /* v106 (lot 1) : le second onglet de la Bibliothèque (ongletsBibliotheque, outilAtelier.js) */
   titre: "Bibliothèque",
-  accroche: "Les aliments, les recettes et les programmes dans lesquels l'application pioche. Tu peux les recharger à tout moment depuis le dépôt.",
+  accroche: "Tes séances, ta base de programmes, tes modèles et le catalogue de l'app.",   // v106 : la phrase de la Bibliothèque (les deux onglets)
 
   html(){
     return (typeof ongletsBibliotheque === "function" ? ongletsBibliotheque("catalogue") : "") + `<section class="panel">

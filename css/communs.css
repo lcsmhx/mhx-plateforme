@@ -657,7 +657,8 @@ body.nav106 .compte .qui,body.nav106 #langue,body.nav106 #deco{display:none}
      le reste de l'en-tête de la page (explication, compteurs) reste */
   body.nav106-coach .masthead{padding:14px 0 12px;margin-bottom:16px}
   body.nav106-coach .masthead > h1,body.nav106 .lc-titres h1{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-  body.nav106 .barre-bas a{min-width:0}
+  body.nav106 .barre-bas a{min-width:0;position:relative}   /* le badge se place sur l'icône de sa case */
+  body.nav106 .tb-tete [data-tb-chercher]{display:none}   /* la loupe est dans la ligne du haut */
   body.nav106 .barre-bas .lbl{font-size:11px}
 }
 /* de 721 à 1 023 px, la barre du bas existe aussi (avant : téléphone seulement) */
@@ -697,6 +698,8 @@ body.nav106 .compte .qui,body.nav106 #langue,body.nav106 #deco{display:none}
   body.nav106 .rond-profil:hover{background:var(--raised)}
   body.nav106 .barre-bas{display:none}
   body.nav106 footer .wrap,body.nav106 main.wrap{max-width:1040px}
+  body.nav106 main.wrap{padding-top:24px}   /* le contenu ne colle pas au bord haut */
+  body.nav106 .tb-tete [data-tb-chercher]{display:none}   /* la loupe est dans la barre latérale (« Rechercher ») */
 }
 @media (min-width:1024px) and (max-width:1279px){
   body.nav106{padding-left:72px}
