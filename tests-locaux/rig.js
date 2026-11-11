@@ -232,7 +232,10 @@ async function main() {
       for (const r of ["programme", "profil", "formation", "nutrition", "complements", "mensurations", "suivi", "bilan", "calculateur", "journal"]) {
         await aller(page, "#/" + r); await capture(page, `client-${r}-${vn}`);
       }
-      if (vn === "mobile"){ const plus = await page.$("#barre-bas [data-plus]"); if (plus){ await plus.click(); await page.waitForTimeout(400); await page.screenshot({ path: path.join(OUT, `client-menu-plus-${vn}.png`) }); await page.keyboard.press("Escape"); await page.waitForTimeout(300); } else journal.erreurs.push("[rig] barre du bas absente sur mobile"); }
+      /* v106 (lot 6) : le client n'a plus de « Plus » : sa barre du bas a 5 entrées et ses autres pages sont derrière le rond de profil ;
+         la barre du bas reste exigée sur mobile, et l'un des deux menus (« Plus » d'avant ou rond de profil) doit s'ouvrir */
+      if (vn === "mobile"){ const barre = await page.$("#barre-bas a, #barre-bas button"), plus = await page.$("#barre-bas [data-plus]"), rond = plus ? null : await page.$("#rond-profil");
+        if (barre && (plus || rond)){ await (plus || rond).click(); await page.waitForTimeout(400); await page.screenshot({ path: path.join(OUT, `client-menu-plus-${vn}.png`) }); await page.keyboard.press("Escape"); await page.waitForTimeout(300); } else journal.erreurs.push("[rig] barre du bas absente sur mobile"); }
       /* flux : ouvrir le journal de séance puis l'historique des programmes */
       await aller(page, "#/programme");
       const jr = await page.$("[data-jr-ouvrir]"); if (jr) { await jr.click(); await capture(page, `client-programme-journal-${vn}`); }

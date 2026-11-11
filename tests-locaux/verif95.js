@@ -247,7 +247,10 @@ const FR = "Langue : français. Passer en anglais", EN = "Language: English. Swi
     ok("A1 : app en français : le bouton montre « 🇫🇷 FR » (la langue actuelle) ; aria-label et bulle « " + FR + " »",
       !!fr && fr.txt === "🇫🇷 FR" && fr.aria === FR && fr.title === FR, JSON.stringify(fr));
     /* un clic bascule toujours : l'app passe en anglais, le bouton montre alors « 🇺🇸 EN » */
-    await Promise.all([page.waitForEvent("load", { timeout: 10000 }).catch(() => {}), page.click("#langue")]);
+    /* v106 (lot 6) : le client change de langue dans le menu de son rond de profil (#langue reste dans la page, caché) */
+    const parMenu = !(await page.isVisible("#langue").catch(() => false));
+    if (parMenu) { await page.click("#rond-profil"); await page.waitForSelector(".volet [data-mp-langue]", { timeout: 5000 }); }
+    await Promise.all([page.waitForEvent("load", { timeout: 10000 }).catch(() => {}), page.click(parMenu ? ".volet [data-mp-langue]" : "#langue")]);
     await pret(page, "#langue"); await attendre(page, 600);
     const en = await bouton(page, "#langue"), l = await page.evaluate(() => ({ langue: I18N.langue, lang: document.documentElement.lang }));
     ok("A2 : un clic passe l'app en anglais (lang=\"en\") ; le bouton montre « 🇺🇸 EN », aria-label et bulle « " + EN + " » (pas retouchés par la traduction)",

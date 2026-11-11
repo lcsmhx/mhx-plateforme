@@ -690,9 +690,15 @@ const outilNutrition = {
   },
 
   /* ================= vue client ================= */
+  /* v106 (lot 6, demande de Lucas) : le journal alimentaire du client est une vue de Nutrition (quand il lui est ouvert) */
+  lienJournalAlim(){
+    if (Store.idConsulte || Auth.estProspect() || !outilsVisibles().some(o => o.id === "journal-alimentaire")) return "";
+    return `<a class="acces" id="nu-lien-ja" href="#/journal-alimentaire"><span class="ico">${ICONES["journal-alimentaire"] || ""}</span><span class="txt"><b>${esc(trad("Mon journal alimentaire"))}</b><small>${esc(trad("Ce que tu manges dans la journée, noté aliment par aliment."))}</small></span><span class="fleche">›</span></a>`;
+  },
   vueLecture(R, suivi, actif){
     if (!(R.jours || []).some(j => (j.repas || []).length)){
-      return `<section class="panel"><div class="empty">Ton coach n'a pas encore validé tes repas. Remplis ton profil — régime et allergies comprises — pour qu'il puisse les préparer.${ctaVide(true)}</div></section>`;
+      const ja = this.lienJournalAlim();
+      return `<section class="panel"><div class="empty">Ton coach n'a pas encore validé tes repas. Remplis ton profil — régime et allergies comprises — pour qu'il puisse les préparer.${ctaVide(true)}</div></section>${ja ? `<section class="panel" id="nu-vues"><div class="acces-l">${ja}</div></section>` : ""}`;
     }
     const jour = R.jours[actif] || R.jours[0];
     const t = this.totaux(jour);
@@ -733,7 +739,7 @@ const outilNutrition = {
     (jour.repas || []).forEach((x, i) => h += this.carteRepas(x, false, actif + ":" + i, suivi));
     h += this.blocCourses(R, suivi, true);   // v71 (E) : bouton « Vider la liste » cote client seulement
     /* v100 (chantier 5) : les compléments vivent sous Nutrition (leur page garde son adresse) */
-    if (!Store.idConsulte && !Auth.estProspect()) h += `<section class="panel" id="nu-complements"><div class="acces-l"><a class="acces" href="#/complements"><span class="ico">${ICONES.complements || ""}</span><span class="txt"><b>${esc(trad("Mes compléments"))}</b><small>${esc(trad("Les compléments conseillés par ton coach : doses et moments."))}</small></span><span class="fleche">›</span></a></div></section>`;
+    if (!Store.idConsulte && !Auth.estProspect()) h += `<section class="panel" id="nu-complements"><div class="acces-l"><a class="acces" href="#/complements"><span class="ico">${ICONES.complements || ""}</span><span class="txt"><b>${esc(trad("Mes compléments"))}</b><small>${esc(trad("Les compléments conseillés par ton coach : doses et moments."))}</small></span><span class="fleche">›</span></a>${this.lienJournalAlim()}</div></section>`;   // v106 : + le journal alimentaire
     h += `<section class="panel"><p class="note" style="margin:0">Les grammages sont donnés crus, sauf mention contraire. Si un plat ne te convient pas, touche « Remplacer » : l'app t'en propose un autre avec les mêmes calories.</p></section>`;
     if (R.maj) h += `<p class="note" style="text-align:center">Repas mis à jour le ${esc(R.maj)}</p>`;
     return h;

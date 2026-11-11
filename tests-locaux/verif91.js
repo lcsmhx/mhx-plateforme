@@ -428,7 +428,8 @@ const TRAD89 = (() => {
       return el ? { tag: el.tagName, href: el.getAttribute("href"), fleche: !!el.querySelector(".fleche") } : null;
     });
     let hash = null;
-    if (c && c.tag === "A") { await page.click("#vue a.acces.fait"); await attendre(page, 1200); hash = await page.evaluate(() => location.hash); }
+    /* v106 (lot 6) : « Aujourd'hui » passe en premier et peut avoir sa propre carte .acces.fait : on clique celle du bilan */
+    if (c && c.tag === "A") { await page.click("#vue a.acces.fait:has-text(\"Bilan de la semaine envoyé\")"); await attendre(page, 1200); hash = await page.evaluate(() => location.hash); }
     ok("A1 : accueil du client, bilan de la semaine envoyé : la carte « Bilan de la semaine envoyé › » est un vrai lien (<a href=\"#/suivi\">) et ouvre Mon suivi",
       !!c && c.tag === "A" && c.href === "#/suivi" && c.fleche && hash === "#/suivi", JSON.stringify([c, hash]));
   });

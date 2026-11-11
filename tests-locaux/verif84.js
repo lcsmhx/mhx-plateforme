@@ -402,7 +402,19 @@ const versJournalAlimentaire = async page => {
   await page.click('#vue .fiche-entete .f-onglet[data-onglet-fiche="nutrition"]'); await attendre(page, 1200);
   await page.click('#vue .fiche-entete .bandeau-actions a[href$="/journal-alimentaire"]');
 };
-const nav = page => page.$$eval("#nav a", l => l.map(a => a.dataset.id)).catch(() => []);
+/* v106 (lot 6, demande de Lucas) : le client a 5 onglets ; son journal alimentaire est une vue de Nutrition : on lit les onglets
+   et, pour un client, le lien #nu-lien-ja de sa page Nutrition (« journal-alimentaire » s'il y est) ; le coach : #nav seul, comme avant */
+const nav = async page => {
+  const a = await page.$$eval("#nav a", l => l.map(x => x.dataset.id)).catch(() => []);
+  if (!(await page.evaluate(() => document.body.classList.contains("nav106-client")).catch(() => false))) return a;
+  const ici = await page.evaluate(() => location.hash).catch(() => "");
+  await page.evaluate(() => { location.hash = "#/nutrition"; }); await page.waitForSelector("#nu-vue > *", { timeout: 8000 }).catch(() => {});
+  await page.waitForTimeout(400);
+  const lien = await page.$eval("#nu-vue a#nu-lien-ja", e => e.getAttribute("href")).catch(() => null);
+  const menu = await page.evaluate(() => typeof MenuProfil !== "undefined" ? MenuProfil.pages().map(o => o.id) : []).catch(() => []);
+  await page.evaluate(h => { location.hash = h; }, ici); await page.waitForTimeout(1500);
+  return a.concat(lien === "#/journal-alimentaire" && !menu.includes("journal-alimentaire") ? ["journal-alimentaire"] : [], menu.includes("journal-alimentaire") ? ["menu-profil:journal-alimentaire"] : []);
+};
 /* les mots français qui ne doivent jamais rester sur un écran anglais */
 const MOTS_FR = ["Aujourd'hui", "Ajouter", "Petit-déjeuner", "Déjeuner", "Dîner", "Collations", "Il te reste", "Récents", "Les plus courants", "Supprimer", "Rien de noté"];
 const textesEcran = page => page.evaluate(() => [document.getElementById("vue"), document.querySelector(".modale.ja-feuille"), document.getElementById("toasts")].filter(Boolean).map(e => e.innerText).join("\n")).catch(() => "");
@@ -668,7 +680,7 @@ const zones = (page, sel) => page.$$eval(sel, l => l.filter(e => e.offsetParent 
     const navC = await nav(X.page), carteC = await txt(X.page, "#ja-carte .ja-num"), lusC = lusJA(db, TESTC.id);
     await aller(X.page, "#/journal-alimentaire", 1800);
     const RC = await lirePage(X.page);
-    ok("le compte de test : l'onglet (« journal-alimentaire »), la carte de l'accueil (« Il te reste " + frN(2240 - 310) + " », lue avec le reste : in.(…)) et la page (sa ligne de riz)",
+    ok("le compte de test : le lien de sa page Nutrition (« journal-alimentaire », v106 : une vue de Nutrition, pas le menu du profil), la carte de l'accueil (« Il te reste " + frN(2240 - 310) + " », lue avec le reste : in.(…)) et la page (sa ligne de riz)",
       navC.includes("journal-alimentaire") && carteC === frN(2240 - 310) && lusC.some(l => /^in\./.test(l.outil)) && RC.courant === "journal-alimentaire" && nbLignes(RC) === 1 && RC.repas[1].lignes[0].nom === "Riz blanc, cuit",
       JSON.stringify([navC, carteC, lusC, RC.courant, nbLignes(RC)]));
     await X.c.close();

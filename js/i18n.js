@@ -1111,6 +1111,7 @@ Object.assign(I18N.en, {
    de l'objectif calculé (js/outilCalculateur.js). Les écrans du coach ne sont pas traduits. */
 Object.assign(I18N.en, {
   "Mon journal alimentaire": "My food diary",
+  "Ce que tu manges dans la journée, noté aliment par aliment.": "What you eat during the day, logged food by food.",
   "Journal alimentaire": "Food diary",
   "Hier": "Yesterday",
   "Demain": "Tomorrow",

@@ -33,7 +33,9 @@ const MENU_PROFIL_COACH = ["profil", "entrainement"];
    bas Accueil · Programme · Nutrition · Progression · Plus ; « Mon journal » vit dans Programme (l'historique des séances), « Mes
    compléments » sous Nutrition, le calculateur est caché quand il a une diète (gardé pour les prospects). Les adresses restent :
    #/journal, #/complements, #/calculateur ouvrent toujours leur page (et marquent leur entrée « parente »). */
-const CACHES_CLIENT = ["journal"];
+/* v106 (lot 6, demande de Lucas) : le journal alimentaire du client est une vue de Nutrition (lien dans la page Nutrition),
+   plus une entrée du menu du profil ; son adresse #/journal-alimentaire reste et allume l'onglet Nutrition */
+const CACHES_CLIENT = ["journal", "journal-alimentaire"];
 /* v106 (lot 6) : le CLIENT accompagné passe à la nouvelle navigation (Nav106) : barre du bas à 5 entrées, sans « Plus » (Accueil,
    Programme, Nutrition, Progression, Suivi), la même barre latérale que le coach sur ordinateur ; ses autres pages (Profil,
    Formation d'abord, puis le journal alimentaire, le calculateur ou les compléments quand ils lui sont ouverts) sont derrière le
@@ -41,6 +43,6 @@ const CACHES_CLIENT = ["journal"];
 const MENU_CLIENT = ["accueil", "programme", "nutrition", "mensurations", "suivi"];
 const MENU_PROFIL_CLIENT = ["profil", "formation"];
 const CACHES_AVEC_DIETE = ["calculateur", "complements"];   // relecture : sans diète, le lien « Mes compléments » de Nutrition n'existe pas
-const PARENTS_CLIENT = { journal: "programme", complements: "nutrition", calculateur: "nutrition" };
+const PARENTS_CLIENT = { journal: "programme", complements: "nutrition", calculateur: "nutrition", "journal-alimentaire": "nutrition" };
 const PARENTS_MENU_COACH = { "suivi-clients": "clients", comptes: "clients", "suivi-commercial": "prospects", newsletter: "prospects", atelier: "mes-programmes", bibliotheque: "mes-programmes", catalogue: "mes-programmes" };   // v106 : + le Catalogue (onglet de la Bibliothèque)
 
