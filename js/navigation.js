@@ -538,13 +538,15 @@ const ONGLETS_FICHE = [
   { id: "apercu", nom: "Aperçu", pages: [["accueil", "Aperçu"], ["profil", "Son questionnaire"], ["accueil/compte", "Son compte", false, true]] },
   { id: "programme", nom: "Programme", pages: [["programme", "Son programme", true], ["journal", "Ses séances"]] },
   { id: "nutrition", nom: "Nutrition", pages: [["nutrition", "Ses repas", true], ["calculateur", "Ses calories", true], ["complements", "Ses compléments"], ["journal-alimentaire", "Son journal alimentaire"]] },
-  { id: "suivi", nom: "Suivi", pages: [["suivi", "Son suivi"], ["bilan", "Préparer le call"], ["mensurations", "Ses courbes"], ["formation", "Sa formation"]] }
+  /* v106 (lot 3) : « Son suivi » et « Préparer le call » ne font plus qu'une vue, « Bilans » (outilBilan) ; #/client/<id>/suivi y mène */
+  { id: "suivi", nom: "Suivi", pages: [["bilan", "Bilans"], ["mensurations", "Courbes"], ["formation", "Formation"]] }
 ];
 /* les pages d'un onglet qui existent pour ce client (journal alimentaire : interrupteur) */
 function pagesOnglet(g){ const v = outilsVisibles(); return g.pages.filter(p => v.some(o => o.id === p[0].split("/")[0])); }
 /* l'onglet de la page ouverte (courant, sousRoute) */
 function ongletFiche(id, sous){
   if (id === "accueil") return "apercu";
+  if (id === "suivi") return "suivi";   // v106 (lot 3) : l'ancienne page « Son suivi » (son adresse mène à « Bilans »)
   const g = ONGLETS_FICHE.find(x => x.pages.some(p => p[0] === id));
   return g ? g.id : "apercu";
 }

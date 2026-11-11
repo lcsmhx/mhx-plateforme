@@ -260,6 +260,11 @@ AVANT.journal = ["journal", ["Ses séances"].concat(AVANT.journal[1].slice(1)), 
 AVANT.calculateur = ["calculateur", ["Ses calories"].concat(AVANT.calculateur[1].slice(1)), AVANT.calculateur[2]];
 AVANT.formation = ["formation", ["Sa formation"].concat(AVANT.formation[1].slice(1)), AVANT.formation[2]];
 for (const [k, nom] of [["nutrition", "Ses repas"], ["repas", "Ses repas"], ["bilan", "Préparer le call"], ["mensurations", "Ses courbes"], ["progression", "Ses courbes"], ["profil", "Son questionnaire"]]) AVANT[k] = [AVANT[k][0], [nom].concat(AVANT[k][1].slice(1)), AVANT[k][2]];
+/* v106 (lot 3) : changement voulu — « Son suivi » et « Préparer le call » ne font qu'une vue, « Bilans » (son adresse, et celle de
+   « Son suivi », y mènent) : en haut ses bilans et la réponse du coach, puis les objectifs du mois (éditeur) ; « Ses courbes » et
+   « Sa formation » s'appellent « Courbes » et « Formation » (le nom de leur lien) */
+AVANT.suivi = AVANT.bilan = ["bilan", ["Bilans", "Ses bilans hebdomadaires et ton feedback", "Ses objectifs du mois"], ["bilan-vue", "bilan-retours", "suivi-obj", "obj-0", "obj-st-0", "obj-1"]];
+for (const [k, nom] of [["mensurations", "Courbes"], ["progression", "Courbes"], ["formation", "Formation"]]) AVANT[k] = [AVANT[k][0], [nom].concat(AVANT[k][1].slice(1)), AVANT[k][2]];
 const C2 = F.IDS.c2, TEL = "+33639980001";
 const ONGLET = { accueil: "Aperçu", "accueil/compte": "Aperçu", programme: "Programme", journal: "Programme", nutrition: "Nutrition", repas: "Nutrition", calculateur: "Nutrition", complements: "Nutrition", suivi: "Suivi", bilan: "Suivi", mensurations: "Suivi", progression: "Suivi", formation: "Suivi", profil: "Aperçu" };
 const avecTel = db => db.donnees.push({ user_id: C1, outil: "contact", contenu: { telephone: TEL }, maj_le: avant(J) });
@@ -293,7 +298,7 @@ const ouvrirEx = async (page, si, ei) => { const d = `details[data-pli="${si}:${
         && /^https:\/\/wa\.me\/33639980001/.test(t.wa || "") && t.sortir, JSON.stringify(t));
     await ouvrir(page, "suivi", ".fiche-onglets");
     const s = await lireTete(page);
-    ok("A2 : Suivi : Son suivi, Préparer le call, Ses courbes, Sa formation", s.ici === "Suivi" && JSON.stringify(s.pages) === JSON.stringify(["Son suivi", "Préparer le call", "Ses courbes", "Sa formation"]), JSON.stringify(s));
+    ok("A2 : Suivi : Bilans, Courbes, Formation (v106 : « Son suivi » et « Préparer le call » réunis dans « Bilans »)", s.ici === "Suivi" && JSON.stringify(s.pages) === JSON.stringify(["Bilans", "Courbes", "Formation"]), JSON.stringify(s));
     await ouvrir(page, "nutrition", ".fiche-onglets");
     const n = await lireTete(page);
     ok("A3 : Nutrition : Ses repas, Ses calories, Ses compléments (absents du bandeau avant)", n.ici === "Nutrition" && JSON.stringify(n.pages) === JSON.stringify(["Ses repas", "Ses calories", "Ses compléments"]), JSON.stringify(n));
@@ -382,8 +387,11 @@ const ouvrirEx = async (page, si, ei) => { const d = `details[data-pli="${si}:${
     const nu = await page.evaluate(() => !!document.getElementById("nu-publier") && !document.getElementById("page-hors-ligne"));
     ok("D1 : son programme illisible : « Pas de connexion » + Réessayer dans l'onglet Entraînement ; l'onglet Nutrition s'ouvre normalement", !!p && p.reessayer && nu, JSON.stringify([p, nu]));
     const ls = [];
-    for (const k of ["journal", "suivi", "mensurations", "profil", "formation"]) { await ouvrir(page, k, ".fiche-onglets"); ls.push(k + ":" + (await page.evaluate(() => document.getElementById("vue").classList.contains("lecture-seule")))); }
-    ok("D2 : ce qui était en lecture seule le reste (Ses séances, Son suivi, Ses courbes, Son questionnaire, Sa formation)", ls.every(x => x.endsWith(":true")), JSON.stringify(ls));
+    /* v106 (lot 3) : changement voulu — « Son suivi » (lecture seule) n'existe plus dans la fiche : son adresse ouvre « Bilans », où
+       le coach écrit (réponse au bilan, objectifs du mois, comme avant dans « Préparer le call » et l'éditeur d'objectifs de Suivi) */
+    for (const k of ["journal", "mensurations", "profil", "formation"]) { await ouvrir(page, k, ".fiche-onglets"); ls.push(k + ":" + (await page.evaluate(() => document.getElementById("vue").classList.contains("lecture-seule")))); }
+    await ouvrir(page, "suivi", ".fiche-onglets"); const versBilans = await page.evaluate(() => /\/bilan$/.test(location.hash) && courant === "bilan");
+    ok("D2 : ce qui était en lecture seule le reste (Ses séances, Courbes, Son questionnaire, Formation) ; l'adresse de « Son suivi » ouvre « Bilans » (v106)", ls.every(x => x.endsWith(":true")) && versBilans, JSON.stringify([ls, versBilans]));
   });
 
   /* =================== E. téléphone, anglais =================== */

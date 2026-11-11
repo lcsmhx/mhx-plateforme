@@ -575,8 +575,8 @@ const Regularite = {
   }
 };
 
-/* v104 (point 5) : les 3 objectifs du mois d'un client se modifient à UN seul endroit, l'onglet Suivi de sa fiche
-   (#/client/<id>/suivi) ; ailleurs (Aperçu, Programme, Préparer le call) : lecture seule et un lien « Modifier ». L'écriture est
+/* v104 (point 5) : les 3 objectifs du mois d'un client se modifient à UN seul endroit, l'onglet Suivi de sa fiche (v106 : sa vue « Bilans »,
+   #/client/<id>/bilan) ; ailleurs (Aperçu, Programme) : lecture seule et un lien « Modifier ». L'écriture est
    celle de la v102, sortie telle quelle de la page Programme (ObjectifsCoach.monter) :
    - à chaque frappe, une copie « programme publié + objectifs » est gardée sur l'appareil, pour CE client (identifiant figé) ;
    - 700 ms après, le programme est relu : les objectifs sont envoyés seulement s'il est toujours celui que la page a lu ; sinon
@@ -614,7 +614,7 @@ const ObjectifsCoach = {
       const oui = ObjectifsCoach.publiant === uid;
       /* fin de la publication pendant que Suivi était figé : la page est redessinée (P est maintenant l'ancien programme ; un
          objectif tapé dessus serait écarté) */
-      if (!oui && z.dataset.fige === "1"){ if (Store.cible() === uid && courant === "suivi") afficher("suivi", true, true); return; }
+      if (!oui && z.dataset.fige === "1"){ if (Store.cible() === uid && courant === "bilan") afficher("bilan", true, true); return; }   // v106 (lot 3) : les objectifs sont dans « Bilans »
       z.dataset.fige = oui ? "1" : "";
       $$("input, select", z).forEach(x => { x.disabled = oui; });
       const n = z.querySelector("[data-obj-publication]"); if (n) n.hidden = !oui;
@@ -644,7 +644,7 @@ const ObjectifsCoach = {
   /* lecture seule (Programme, Préparer le call) : les objectifs et leur statut, puis « Modifier » (onglet Suivi) */
   lectureHTML(P, OF){
     const obj = (P && P.objectifs && (P.objectifs.liste || []).some(Boolean)) ? P.objectifs : null;
-    const lien = `<p class="note" style="margin:10px 0 0"><a class="link-a" data-obj-modifier href="${esc(lienOutil("suivi"))}">${esc(trad("Modifier"))}</a></p>`;
+    const lien = `<p class="note" style="margin:10px 0 0"><a class="link-a" data-obj-modifier href="${esc(lienOutil("bilan"))}">${esc(trad("Modifier"))}</a></p>`;
     return `<section class="panel" id="obj-lecture"><h2>${esc(trad("Objectifs du mois"))}</h2>${obj ? obj.liste.map((t, i) => { if (!t) return ""; const st = Regularite.statutObjectif(P, OF || {}, i);
       return `<div class="objectif${st === "atteint" ? " atteint" : ""}${st === "non_atteint" ? " rate" : ""}"><span class="num">0${i + 1}</span><span class="texte" data-notr>${esc(t)}</span><span class="pastille ${Regularite.classeStatut(st)}">${esc(Regularite.libelleStatut(st))}</span></div>`; }).join("")
       : `<div class="empty">${esc(trad("Pas d'objectifs ce mois-ci."))}</div>`}${lien}</section>`;

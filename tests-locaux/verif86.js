@@ -521,9 +521,9 @@ const PLUSIEURS = "Ces comptes disparaissent de tes listes. Tu les retrouves dan
     }
     await aller(page, "#/client/" + THOMAS + "/accueil"); await page.waitForSelector("#fc-suivi"); await attendre(page, 300);
     /* v106 (lot 2) : changement voulu — 4 onglets ; « Son questionnaire » sous Aperçu, « Son compte » dans le menu « ⋯ » */
-    const PAGES_V104 = { apercu: ["Aperçu", "Son questionnaire"], programme: ["Son programme", "Ses séances"], nutrition: ["Ses repas", "Ses calories", "Ses compléments"], suivi: ["Son suivi", "Préparer le call", "Ses courbes", "Sa formation"] };
+    const PAGES_V104 = { apercu: ["Aperçu", "Son questionnaire"], programme: ["Son programme", "Ses séances"], nutrition: ["Ses repas", "Ses calories", "Ses compléments"], suivi: ["Bilans", "Courbes", "Formation"] /* v106 (lot 3) */ };
     ok("E1 : la fiche d'un client (depuis la liste) : l'en-tête commun (5 onglets, Aperçu ouvert, un seul « Revenir à mes clients »), le titre « Fiche » (v105 : pour les lecteurs d'écran seulement ; le nom seulement dans le bandeau), pastille « Client » et celle du programme, « Préparer le call » (#/client/…/bilan), Appeler (tel:) ; Suivi ouvert, Compte fermé ; ni croix ni boutons Suivi / Compte ; v104 (point 1) : plus de rangée #fc-outils, la page « Fiche » marquée dans le bandeau commun",
-      f.hash === "#/client/" + THOMAS + "/accueil" && f.h1 === "Thomas Démo" /* v106 : le nom entier en bulle du prénom */ && !f.h2Ident && f.role === "Client" && f.prog === "Bloc 1 — 4 semaines" && f.callT === "Préparer le call" && f.call === "#/client/" + THOMAS + "/bilan" && f.tel === "tel:" + TEL_THOMAS
+      f.hash === "#/client/" + THOMAS + "/accueil" && f.h1 === "Thomas Démo" /* v106 : le nom entier en bulle du prénom */ && !f.h2Ident && f.role === "Client" && f.prog === "Bloc 1 — 4 semaines" && f.callT === "Bilans" /* v106 (lot 3) */ && f.call === "#/client/" + THOMAS + "/bilan" && f.tel === "tel:" + TEL_THOMAS
         && JSON.stringify(f.onglets) === "[]" && JSON.stringify(f.ongletsFiche) === '["Aperçu:ici","Programme","Nutrition","Suivi"]' && f.titre === "Aperçu" && !f.mast && JSON.stringify(f.sortir) === '["Revenir à mes clients"]'
         && f.suivi && !f.compte && !f.croix && f.bandeau && !f.bandeauSuivi && !f.fcOutils && JSON.stringify(f.pagesApercu) === '["Aperçu:ici","Son questionnaire"]', JSON.stringify(f));   // v106 (lot 2) : 4 onglets, h1 caché « Aperçu », la rangée « Aperçu » · « Son questionnaire »   // v105 (point 2) : plus de bouton « Fiche » ni de grand titre visible (h1 pour les lecteurs d'écran)
     /* v105 (point 2) : « Fiche » n'est plus un bouton du bandeau (l'onglet Aperçu, sa seule page, y mène) */
@@ -531,7 +531,7 @@ const PLUSIEURS = "Ces comptes disparaissent de tes listes. Tu les retrouves dan
       /Retour de la semaine/i.test(f.retour) && /Bilan hebdo reçu — à lire/.test(f.retour) && f.lire === "#/client/" + THOMAS + "/bilan" && /kg/.test(f.poids) && /depuis le début/.test(f.poids) && /Régularité/.test(f.reg)
         && f.etat.length === 3 && /^Questionnaire Rempli/.test(f.etat[0]) && /^Programme Bloc 1/.test(f.etat[1]) && /^Diète envoyée/.test(f.etat[2])
         && JSON.stringify(f.outils) === "[]" && JSON.stringify(pagesF) === JSON.stringify(PAGES_V104)
-        && ["Préparer le call","Son suivi","Son questionnaire","Son programme","Ses repas","Ses calories","Ses courbes","Ses séances"].every(o => Object.values(pagesF).some(l => l.includes(o))) && !f.avant.length && f.notes, JSON.stringify([f, pagesF]));
+        && ["Bilans","Son questionnaire","Son programme","Ses repas","Ses calories","Courbes","Ses séances"].every(o => Object.values(pagesF).some(l => l.includes(o))) && !f.avant.length && f.notes, JSON.stringify([f, pagesF]));
     await onglet(page, "compte");
     const c = await page.evaluate(() => { const p = document.getElementById("fc-compte");
       return { vis: !p.hidden, suivi: document.getElementById("fc-suivi").hidden, lignes: Array.from(p.querySelectorAll("#fc-infos li")).map(li => li.querySelector("span").textContent),

@@ -1102,23 +1102,13 @@ const outilSuivi = {
       const zf = $(Feedback.recent(d.feedbacks) ? "suivi-fb-haut" : "suivi-fb-bas");
       if (zf && fb) zf.innerHTML = fb;
     }
-    /* v104 (point 5) : le coach modifie ici, et seulement ici, les 3 objectifs du mois (ObjectifsCoach : l'écriture de la v102) ;
-       le panneau à cocher du client n'est pas montré au coach (il ne peut pas cocher pour lui) */
-    const coach = Auth.estCoach() && !!Store.idConsulte;   // v104 (relecture) : la fiche d'un client seulement
-    /* v104 (relecture) : un objectif tapé hors ligne (copie gardée sur l'appareil, plus récente que la base) est montré, comme le
-       faisait la page Programme (Store.lire) : sinon la saisie suivante repartirait de l'ancien texte et l'effacerait */
-    if (coach){ const cp = Store.copieAServir(Store.cible(), "programme", { maj_le: dates.programme || null, contenu: d.programme }); if (cp){ d.programme = Forme.cle("programme", cp.v) || d.programme; P = d.programme || {}; } }
-    await Regularite.monterClient("suivi-reg", P, J, Object.assign({}, d, { sansObjectifs: coach }));
-    let vider = null;
-    if (coach){
-      const uid = Store.cible(), zo = $("suivi-obj");
-      if (zo && uid){ vider = ObjectifsCoach.monter("suivi-obj", P, uid, d.objectifs_faits); const sec = zo.querySelector("section.panel"); if (sec) sec.classList.add("obj-coach"); }
-    }
-    const zb = $("suivi-bilan"); if (!zb) return vider;
+    /* v106 (lot 3) : dans la fiche d'un client, le coach n'arrive plus ici : #/client/<id>/suivi ouvre « Bilans » (outilBilan), où
+       il modifie les objectifs du mois (ObjectifsCoach, v104) ; cette page est celle du client */
+    await Regularite.monterClient("suivi-reg", P, J, d);
+    const zb = $("suivi-bilan"); if (!zb) return;
     const b = outilBilan.calculer({ programme: P, journal: J, repas: d.repas || {}, repas_suivi: d.repas_suivi || {}, mens: d.mens || {}, objectifs_faits: d.objectifs_faits || {} });
     /* v104 (point 5) : plus de liste « Objectifs du mois » en double sous le bilan (elle est juste au-dessus) */
     zb.innerHTML = `<div class="suivi-sep"><h2 style="margin:0">${esc(trad("Ton bilan du mois"))}</h2><p class="note" style="margin:4px 0 0">${esc(outilBilan.accroche)}</p></div>` + outilBilan.vue(b, false, (d.intake && d.intake.objectif) || "", true);
-    return vider;   // la sortie de la page envoie tout de suite un objectif tapé à l'instant
   }
 };
 

@@ -1758,7 +1758,6 @@ Object.assign(I18N.en, {
   "Ses objectifs du mois": "Their goals for the month",
   "Statut de l'objectif {n}": "Status of goal {n}",
   "Coché par ton client": "Ticked by your client",
-  "Modifier les objectifs du mois": "Edit the goals for the month",
   "Pas d'objectifs ce mois-ci.": "No goals this month.",
   "Remplis-les juste après ton call du mois : ils s'affichent dans « Mon suivi » et sur l'accueil de ton client, qui peut les cocher. Le statut que tu poses (atteint / non atteint) l'emporte sur sa case.": "Fill them in right after your monthly call: they show in \"My progress\" and on your client's home page, where they can tick them. The status you set (achieved / not achieved) overrides their tick."
 });
@@ -1877,3 +1876,5 @@ Object.assign(I18N.en, {
   "Passer client": "Make client", "Repasser prospect": "Back to prospect", "Prospect": "Prospect", "Client": "Client",
   "Revenir à Aujourd'hui": "Back to Today", "Revenir à la vue tableau": "Back to the table view", "Revenir à la vue détaillée": "Back to the detailed view"
 });
+/* v106 (lot 3) : la vue « Bilans » de la fiche */
+Object.assign(I18N.en, { "Bilans": "Check-ins", "Courbes": "Charts" });

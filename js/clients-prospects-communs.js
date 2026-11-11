@@ -232,7 +232,7 @@ const Clients = {
     if (!l.intake) out.push({ type: "manque", niveau: "attention", cible: "profil", texte: "Questionnaire à remplir" });
     if (!l.programme) out.push({ type: "manque", niveau: "attention", cible: "programme", texte: "Programme à envoyer" });
     if (!l.diete) out.push({ type: "manque", niveau: "attention", cible: "nutrition", texte: "Diète à envoyer" });
-    if (l.reg != null && l.reg < seuils.moyen) out.push({ type: "regularite", niveau: "mauvais", cible: "suivi", texte: `Régularité faible : ${l.reg}/100` });
+    if (l.reg != null && l.reg < seuils.moyen) out.push({ type: "regularite", niveau: "mauvais", cible: "bilan",   /* v106 (lot 3) : la régularité est dans « Bilans » */ texte: `Régularité faible : ${l.reg}/100` });
     /* bilan hebdomadaire : recu (a lire) ou manquant.
        v53 (chantier 3) : la regle de CE client — bilan du vendredi (comme avant), ou feedback du dimanche : « reçu —
        à lire » meme sans programme, « non fait » des le lundi (semaine passee sans feedback, fenetre fermee ou en retard) */

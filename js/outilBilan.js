@@ -131,11 +131,12 @@ const outilBilan = {
     const cls = (delta, sens) => !sens ? "" : (delta * sens > 0.2 ? "pos" : delta * sens < -0.2 ? "neg" : "");
     const signe = (v, u) => (v > 0 ? "+" : v < 0 ? "−" : "") + n1(Math.abs(v)) + " " + u;
     let h = "";
+    /* v106 (lot 3) : les objectifs du mois se modifient sur cette même page (« Bilans », juste au-dessus) : plus de lien ; la
+       régularité de la semaine (#suivi-reg) se pose juste après ces points */
     if (coach){
-      h += `<section class="panel"><h2>Points à aborder pendant le call</h2>
+      h += `<section class="panel bilan-points"><h2>Points à aborder pendant le call</h2>
         <ul class="obj-l">${this.points(b, objectif).map(t => `<li>${esc(t)}</li>`).join("")}</ul>
-        <div class="actions"><a class="btn ghost" href="${esc(lienOutil("suivi"))}">${esc(trad("Modifier les objectifs du mois"))}</a></div>
-      </section>`;
+      </section><div id="suivi-reg"></div>`;
     }
     if (b.vide){
       return h + `<section class="panel"><div class="empty">Pas encore assez de données. Le bilan se remplit au fil des séances notées, des repas cochés et des mesures.</div></section>`;
@@ -177,8 +178,19 @@ const outilBilan = {
     ]);
     /* lecture ratee : « Pas de connexion » + Reessayer, pas un bilan vide ni des « points à aborder » tires de donnees non lues */
     if ([programme, journal, repas, repas_suivi, mens, objectifs_faits, intake, checkins].some(v => Store.nonLus.has(v))){ pageHorsLigne(zone); return; }
-    const b = this.calculer({ programme, journal, repas, repas_suivi, mens, objectifs_faits });
-    zone.innerHTML = this.vue(b, coach, (intake && intake.objectif) || "");
+    /* v106 (lot 3) — « BILANS », la vue du coach dans l'onglet Suivi de la fiche (avant : « Son suivi » et « Préparer le call ») :
+       en haut, ses bilans ou feedbacks reçus et la zone de réponse (le dernier ouvert) ; dessous, les objectifs du mois (le seul
+       endroit où le coach les modifie, ObjectifsCoach) ; puis la préparation du call : points à aborder, régularité, les 4
+       dernières semaines. Les blocs qui étaient en double (bilan relu, feedback, bilan du mois) n'y sont qu'une fois. */
+    const P = programme;   // Store.lire sert déjà la copie gardée sur l'appareil si elle est plus récente (un objectif tapé hors ligne)
+    const b = this.calculer({ programme: P, journal, repas, repas_suivi, mens, objectifs_faits });
+    zone.innerHTML = (coach ? `<div id="bilan-retours"></div><div id="suivi-obj"></div>` : "") + this.vue(b, coach, (intake && intake.objectif) || "", coach);
+    let vider = null;
+    if (coach){
+      const uid = Store.idConsulte, zo = $("suivi-obj");
+      if (zo && uid){ vider = ObjectifsCoach.monter("suivi-obj", P, uid, objectifs_faits); const sec = zo.querySelector("section.panel"); if (sec) sec.classList.add("obj-coach"); }
+      await Regularite.monterClient("suivi-reg", P, journal, { repas, repas_suivi, mens, objectifs_faits, sansObjectifs: true });
+    }
     /* v36 — ce que le client a ecrit dans ses bilans hebdo : a lire avant le call.
        v38 — et, sous chaque bilan, le feedback du coach (cle feedbacks). La
        semaine en cours a aussi son editeur tant qu'elle n'a pas de bilan. */
@@ -186,7 +198,7 @@ const outilBilan = {
       const uid = Store.idConsulte;
       let F = null, lu = true;
       try { F = await CleCoach.lire(uid, Feedback.cle); } catch(e){ lu = false; }
-      if (!zone.isConnected || Store.idConsulte !== uid) return;   // on a change de page entre-temps
+      if (!zone.isConnected || Store.idConsulte !== uid) return vider;   // on a change de page entre-temps
       /* v53 (chantier 3) : la regle de CE client (bilan du vendredi, ou feedback du dimanche) ; les entrees se lisent
          selon leur format (Checkin.reponsesHTML), les smileys du client sous chacune, un 😞 non traite en evidence
          (et remonte meme s'il n'est plus dans les 4 derniers) ; le coach repond juste en dessous, au meme endroit */
@@ -199,7 +211,8 @@ const outilBilan = {
         const n = Checkin.note(x);
         return (n != null ? " · note " + n + "/10" : "") + (tristes.indexOf(x.semaine) > -1 ? " · 😞 à traiter" : "");
       };
-      zone.insertAdjacentHTML("beforeend", `<section class="panel"><h2>${dim ? "Ses feedbacks du dimanche et ta réponse" : "Ses bilans hebdomadaires et ton feedback"}</h2>
+      const zr = zone.querySelector("#bilan-retours"); if (!zr) return vider;
+      zr.innerHTML = (`<section class="panel bilan-retours"><h2>${dim ? "Ses feedbacks du dimanche et ta réponse" : "Ses bilans hebdomadaires et ton feedback"}</h2>
         ${lu ? "" : `<p class="msg ko">Ses feedbacks n'ont pas pu être lus : recharge la page pour écrire. Rien n'a été modifié.</p>`}
         ${enPlus.map(s => { const x = Checkin.entree(checkins, s); return `<details class="hist-entree" open><summary><b>${esc(Checkin.periode(x || { semaine: s, fin: Feedback.finDe(s) }))}</b> <span class="hist-dates">${x ? "envoyé le " + esc(dateFr(x.envoye_le)) : "sans feedback"} · 😞 à traiter</span></summary>${x ? Checkin.reponsesHTML(x) : ""}${Checkin.avisCoachHTML(checkins, s, F)}${Feedback.editeurHTML(s, x ? x.fin : Feedback.finDe(s), F, x, !lu)}</details>`; }).join("")}
         ${l.map((x, i) => `<details class="hist-entree"${i === 0 || tristes.indexOf(x.semaine) > -1 ? " open" : ""}><summary><b>${esc(Checkin.periode(x))}</b> <span class="hist-dates">envoyé le ${esc(dateFr(x.envoye_le))}${esc(resume(x))}${Feedback.repond(F, x) ? " · feedback envoyé" : Feedback.pour(F, x.semaine) ? " · feedback à relire" : ""}</span></summary>${Checkin.reponsesHTML(x)}${Checkin.avisCoachHTML(checkins, x.semaine, F)}${Feedback.editeurHTML(x.semaine, x.fin, F, x, !lu)}</details>`).join("")}
@@ -208,6 +221,7 @@ const outilBilan = {
       </section>`);
       Feedback.brancher(zone, uid, F);
     }
+    return vider;   // v106 (lot 3) : la sortie de la page envoie tout de suite un objectif tapé à l'instant
   }
 };
 

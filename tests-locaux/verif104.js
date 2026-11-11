@@ -603,7 +603,7 @@ const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { 
       if (qui === "client") {
         /* v106 (lot 2) : changement voulu — « Client », WhatsApp (message prêt) et Appeler sont dans l'en-tête, une seule fois */
         ok("B1 (client) : en-tête : « Client », WhatsApp (message prêt : « Salut Thomas 👋 »), Appeler (tel:) ; sous l'en-tête, avant le Suivi : « Préparer le call », sans statut, WhatsApp ni Appeler en double ; ni initiales ni nom répétés ; un seul lien WhatsApp visible",
-          id.avantSuivi && !id.avatar && !id.nom && id.role === statut && !id.roleIdent && id.call === "Préparer le call" && !!id.wa && /^https:\/\/wa\.me\/\d+\?text=Salut%20Thomas/.test(id.wa.href) && !id.waIdent && id.appeler === "tel:" + TEL1 && !id.appelerIdent
+          id.avantSuivi && !id.avatar && !id.nom && id.role === statut && !id.roleIdent && id.call === "Bilans" /* v106 (lot 3) : le nom de la page où il mène */ && !!id.wa && /^https:\/\/wa\.me\/\d+\?text=Salut%20Thomas/.test(id.wa.href) && !id.waIdent && id.appeler === "tel:" + TEL1 && !id.appelerIdent
             && T2.waVisibles.length === 1 && T2.waVisibles[0].dansBandeau, JSON.stringify({ id, wa: T2.waVisibles }));
       } else {
         /* v106 (lot 2) : changement voulu — un seul WhatsApp, celui de l'en-tête, qui ouvre le message prêt du prospect (ses réponses) */
@@ -730,9 +730,9 @@ const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { 
       nav: Array.from(document.querySelectorAll("#nav a")).map(a => a.dataset.id), versClient: Array.from(document.querySelectorAll("#nav a")).filter(a => /#\/client\//.test(a.getAttribute("href"))).length,
       raccourcis: !!document.querySelector("#fc-outils, #fc-suivi .bandeau-actions"),
       fleches: Array.from(document.querySelectorAll("#vue a")).filter(a => /→\s*$/.test(a.textContent)).map(a => a.textContent.trim()),
-      call: Array.from(document.querySelectorAll("#vue a, #vue button")).filter(e => e.getClientRects().length && e.textContent.replace(/\s+/g, " ").trim() === "Préparer le call").length
+      call: Array.from(document.querySelectorAll("#vue a, #vue button")).filter(e => e.getClientRects().length && e.textContent.replace(/\s+/g, " ").trim() === "Bilans").length   // v106 (lot 3) : « Préparer le call » est devenu « Bilans »
     }));
-    ok("F1 (point 1) : dans la fiche, le menu du haut est celui du coach (ses 4 entrées dans l'ordre, aucune vers les outils du client), plus de rangée de raccourcis ni de lien « … → », un seul « Préparer le call »",
+    ok("F1 (point 1) : dans la fiche, le menu du haut est celui du coach (ses 4 entrées dans l'ordre, aucune vers les outils du client), plus de rangée de raccourcis ni de lien « … → », un seul « Bilans » (v106)",
       JSON.stringify(n.nav) === MENU7 && n.versClient === 0 && !n.raccourcis && n.fleches.length === 0 && n.call === 1, JSON.stringify(n));
     /* les anciennes adresses s'ouvrent toujours */
     const vus = [];
@@ -804,8 +804,10 @@ const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { 
     await ouvrir(page, C1, "suivi", "#suivi-reg");
     const s = await visTextes(page, "#vue h2");
     const q = await visTextes(page, "#vue .ck-q, #vue dt, #vue .q");
-    ok("I1 (point 4) : dans la fiche, aucun titre ni étiquette en « ta / tes / ton » ; Suivi : « Sa régularité », « Ses objectifs du mois », « Son bilan du mois »",
-      tu.length === 0 && ["Sa régularité", "Ses objectifs du mois", "Son bilan du mois"].every(x => s.indexOf(x) > -1), JSON.stringify({ tu, s }));
+    /* v106 (lot 3) : changement voulu — Suivi › Bilans : la régularité, les objectifs et les 4 dernières semaines une seule fois
+       (« Son bilan du mois », en double avec « Préparer le call », n'y est plus) */
+    ok("I1 (point 4) : dans la fiche, aucun titre ni étiquette en « ta / tes / ton » ; Suivi › Bilans : « Ses bilans hebdomadaires et ton feedback », « Sa régularité », « Ses objectifs du mois », « Les 4 dernières semaines »",
+      tu.length === 0 && ["Ses bilans hebdomadaires et ton feedback", "Sa régularité", "Ses objectifs du mois", "Les 4 dernières semaines"].every(x => s.indexOf(x) > -1) && s.indexOf("Son bilan du mois") === -1, JSON.stringify({ tu, s }));
     const txt = await page.evaluate(() => document.getElementById("vue").innerText);
     ok("I2 (point 4) : les questions du bilan à la 3e personne (« Comment s'est passée sa semaine ? »), plus « ta semaine »",
       /Comment s'est passée sa semaine \?/i.test(txt) && !/Comment s'est passée ta semaine/i.test(txt), JSON.stringify(q).slice(0, 300));
@@ -849,9 +851,11 @@ const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { 
     await ouvrir(page, C1, "accueil", "#fc-suivi");
     const a = await page.evaluate(() => ({ lien: (document.getElementById("fc-obj-modifier") || {}).hash || "", champs: document.querySelectorAll("#obj-0").length }));
     await ouvrir(page, C1, "bilan", "#bilan-vue");
-    const c = await page.evaluate(() => ({ champs: document.querySelectorAll("#obj-0").length, lien: Array.from(document.querySelectorAll("#bilan-vue a")).filter(x => /\/suivi$/.test(x.hash)).length }));
-    ok("J3 (point 5) : Programme, Aperçu et Préparer le call : objectifs en lecture seule (le nouveau texte affiché) et un lien « Modifier » vers Suivi, aucun champ",
-      p.champs === 0 && p.lecture && /\/suivi$/.test(p.lien) && /Marcher 9 000 pas/.test(p.texte) && /\/suivi$/.test(a.lien) && a.champs === 0 && c.champs === 0 && c.lien >= 1, JSON.stringify({ p, a, c }));
+    const c = await page.evaluate(() => ({ champs: document.querySelectorAll("#obj-0").length, valeur: (document.getElementById("obj-0") || {}).value || "", lien: Array.from(document.querySelectorAll("#bilan-vue a")).filter(x => /\/(suivi|bilan)$/.test(x.hash)).length }));
+    /* v106 (lot 3) : changement voulu — les objectifs se modifient dans « Bilans » (Suivi) : Programme et Aperçu les montrent en
+       lecture seule avec « Modifier » vers Bilans ; Bilans a l'éditeur (une seule fois, sans lien vers lui-même) */
+    ok("J3 (point 5) : Programme et Aperçu : objectifs en lecture seule (le nouveau texte affiché) et un lien « Modifier » vers Bilans, aucun champ ; Bilans : l'éditeur, avec le nouveau texte",
+      p.champs === 0 && p.lecture && /\/bilan$/.test(p.lien) && /Marcher 9 000 pas/.test(p.texte) && /\/bilan$/.test(a.lien) && a.champs === 0 && c.champs === 1 && c.valeur === "Marcher 9 000 pas" && c.lien === 0, JSON.stringify({ p, a, c }));
   });
 
   /* =================== K. point 8 : boutons « × » de 44 px, séparés des autres =================== */

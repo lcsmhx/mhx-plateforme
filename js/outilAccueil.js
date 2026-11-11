@@ -234,7 +234,7 @@ const outilAccueil = {
        prêt du prospect : il s'appelle « Message WhatsApp prêt », pour ne pas porter le même texte que celui du bandeau */
     /* v106 (lot 2) : le statut, WhatsApp (message prêt) et Appeler sont dans l'en-tête de la fiche (EnteteFiche, navigation.js) ;
        ici reste « Préparer le call » d'un client */
-    const principal = prospectF ? "" : `<a class="btn ghost fc-principal" id="fc-call" href="${esc(lienOutil("bilan"))}">Préparer le call</a>`;
+    const principal = prospectF ? "" : `<a class="btn ghost fc-principal" id="fc-call" href="${esc(lienOutil("bilan"))}">${esc(trad("Bilans"))}</a>`;   // v106 (lot 3) : le nom de la page où il mène ; discret (un seul doré plein)
     /* v99 : #/client/<id>/accueil/compte (Profil › Son compte) ouvre l'onglet Compte */
     /* v99 (relecture) : le panneau suit l'adresse seulement (…/accueil = Suivi, sous l'onglet Aperçu ; …/accueil/compte = Compte,
        sous Profil) : « Aperçu » rouvre toujours le Suivi (une action de Compte qui redessine la fiche reste sur Compte).
@@ -309,7 +309,7 @@ const outilAccueil = {
         <ul class="ingr fiche-l">${ligne("Âge", I.age ? I.age + " ans" : "")}${ligne("Sexe", I.sexe)}${ligne("Taille", I.taille ? I.taille + " cm" : "")}${ligne("Poids déclaré", I.poids ? I.poids + " kg" : "")}${ligne("Poids objectif", I.poids_obj ? I.poids_obj + " kg" : "")}${ligne("Objectif", I.objectif)}${ligne("Niveau", I.niveau)}${ligne("Lieu", I.lieu)}${ligne("Séances / semaine", I.seances)}${ligne("Régime", I.regime_type)}${ligne("Allergènes", String(I.allergenes || "").split("|").filter(Boolean).join(", "))}${ligne("Ville", I.ville)}</ul></section>
       <section class="panel"><div class="seance-c-tete"><h2>Objectifs du mois</h2>${obj ? `<span class="pastille">${b.statuts.filter(x => x === "atteint").length} / ${obj.liste.filter(Boolean).length}</span>` : ""}</div>
         ${obj ? obj.liste.map((t, i) => t ? `<div class="objectif${b.statuts[i] === "atteint" ? " atteint" : ""}${b.statuts[i] === "non_atteint" ? " rate" : ""}"><span class="num">0${i + 1}</span><span class="texte" data-notr>${esc(t)}</span><span class="pastille ${Regularite.classeStatut(b.statuts[i])}">${esc(Regularite.libelleStatut(b.statuts[i]))}</span></div>` : "").join("") : `<div class="empty">Pas d'objectifs ce mois-ci.</div>`}
-        <p class="note" style="margin:10px 0 0"><a class="link-a" id="fc-obj-modifier" href="${esc(lienOutil("suivi"))}">${esc(trad("Modifier"))}</a></p></section>
+        <p class="note" style="margin:10px 0 0"><a class="link-a" id="fc-obj-modifier" href="${esc(lienOutil("bilan"))}">${esc(trad("Modifier"))}</a></p></section>
       <section class="panel"><div class="seance-c-tete"><h2>Programme</h2>${seances.length ? `<span class="pastille ok">envoyé</span>` : `<span class="pastille attention">à faire</span>`}</div>
         <ul class="ingr fiche-l">${ligne("Nom", P.nom)}${seances.length ? ligne("Cycle", "Cycle " + String(av.cycle).padStart(2, "0") + (av.semaine != null ? " · semaine " + Math.min(av.semaine, av.duree) + " / " + av.duree : "")) : ""}${ligne("Séances / semaine", seances.length || "")}${ligne("Envoyé le", P.maj)}${ligne("Dernière séance notée", derniereSeance ? dateFr(derniereSeance.date) + " — " + (derniereSeance.nom || "") : "")}</ul></section>
       <section class="panel"><div class="seance-c-tete"><h2>Nutrition</h2>${nbJours ? `<span class="pastille ok">envoyée</span>` : `<span class="pastille attention">à faire</span>`}</div>
